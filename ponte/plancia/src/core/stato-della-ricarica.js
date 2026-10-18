@@ -23,8 +23,11 @@ const clean = (value) => String(value ?? "").trim();
 const GUASTO = /\b(error|errore|fault|guast|fehler|failure|failed)\b/i;
 const STACCATO =
   /\b(disconnect\w*|scollegat\w*|staccat\w*|unplug\w*|not[ _-]?connected|no[ _-]?vehicle|no[ _-]?car|nessun\w* (auto|veicolo))\b/i;
+/* «Completata», «in pausa», «programmata» e «rigenerazione» sono gli stati
+ * della ricarica di GdAAuto (`stato_ricarica`): nessuno sta caricando dal
+ * cavo, e prima non dicevano niente — si finiva sul cavo e sulla potenza. */
 const NON_IN_CARICA =
-  /\b(not[ _-]?charging|non in carica|discharg\w*|charg\w* (complete|finished|done|stopped|paused)|complete|finished|done|stopped|paused|suspended\w*|waiting|ready|pronta|attesa)\b/i;
+  /\b(not[ _-]?charging|non in carica|discharg\w*|charg\w* (complete|finished|done|stopped|paused)|complete|finished|done|stopped|paused|suspended\w*|waiting|ready|pronta|attesa|completat\w*|in pausa|programmat\w*|rigenerazion\w*)\b/i;
 const IN_CARICA =
   /\b(charging|in carica|ricarica in corso|ricaricando|l[äa]dt|laden|cargando|en charge)\b/i;
 const ATTACCATO =

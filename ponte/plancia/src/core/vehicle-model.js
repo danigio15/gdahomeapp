@@ -60,10 +60,37 @@ export const VEHICLE_PHOTO_FIELDS = Object.freeze({ idle: "img", plugged: "imgPl
  * farebbe ballare il tempo a chi non ha toccato niente. */
 export const VEHICLE_CAPACITY_FIELD = "kwh";
 
-/** La capacita' dichiarata, o `null` quando non c'e' o non e' un numero. */
-export function capacitaDellaBatteria(car = {}) {
+/* La casella del sensore della capacita', che un'auto connessa dice da se'
+ * (GdAAuto `capacita_batteria`). */
+export const CASELLA_DELLA_CAPACITA = "dm.ev_capacita_batteria";
+
+/**
+ * I kilowattora di uno stato di Home Assistant, nell'unita' che dichiara: Wh
+ * e MWh si portano a kWh. `null` se non e' un numero che una batteria d'auto
+ * possa avere — zero, negativo, o piu' di quanto la casella accetta a mano.
+ */
+export function kilowattoraDalloStato(stato) {
+  const n = Number(clean(stato?.state).replace(",", "."));
+  if (!clean(stato?.state) || !Number.isFinite(n)) return null;
+  const unita = clean(stato?.attributes?.unit_of_measurement).toLowerCase();
+  const kwh = unita === "wh" ? n / 1000 : unita === "mwh" ? n * 1000 : n;
+  return kwh > 0 && kwh <= 300 ? kwh : null;
+}
+
+/**
+ * La capacita' dichiarata, o `null` quando non c'e' o non e' un numero.
+ *
+ * Con gli stati, quando la casella scritta e' vuota, si chiede al sensore
+ * della capacita' di QUESTA vettura, se ne ha uno: lo scritto vince, ma il
+ * vuoto non vuol dire piu' «settanta» quando l'auto lo sa.
+ */
+export function capacitaDellaBatteria(car = {}, states = null) {
   const letto = Number(clean(car?.[VEHICLE_CAPACITY_FIELD]).replace(",", "."));
-  return Number.isFinite(letto) && letto > 0 ? letto : null;
+  if (Number.isFinite(letto) && letto > 0) return letto;
+  if (!states || typeof states !== "object") return null;
+  const sensore = clean((car?.ov || car?.overrides || {})[CASELLA_DELLA_CAPACITA]);
+  if (!sensore || sensore.startsWith("dm.")) return null;
+  return kilowattoraDalloStato(states[sensore]);
 }
 
 /* Auto o moto (#75).

@@ -163,10 +163,16 @@ test("sull'auto elettrica il blocco resta, con le sole gomme", async () => {
   const sezione = await leggi("sections/auto-termica-section.js");
   /* Prima: niente motore termico, blocco rimosso, gomme comprese. */
   assert.doesNotMatch(sezione, /if \(!tipo\) \{\s*if \(blocco\) blocco\.remove\(\);/);
-  assert.match(sezione, /const soloGomme = !tipo;/);
-  /* Si toglie solo quando non c'e' nemmeno una gomma da dire. */
-  assert.match(sezione, /if \(soloGomme && !gomme\.quadretto && !gomme\.riassunto\)/);
-  assert.match(sezione, /soloGomme \? gommeSoleMarkup\(gomme\) : quadroMarkup\(lettura, tipo\)/);
+  assert.match(sezione, /const elettrica = !tipo;/);
+  /* Si toglie solo quando non c'e' nemmeno una gomma da dire, ne' un dato
+   * dell'auto connessa: anche quelli valgono per ogni motore. */
+  assert.match(
+    sezione,
+    /if \(elettrica && !conDati && !gomme\.quadretto && !gomme\.riassunto\)/,
+  );
+  assert.match(sezione, /const soloGomme = elettrica && !conDati;/);
+  assert.match(sezione, /: gommeSoleMarkup\(gomme\);/);
+  assert.match(sezione, /\? quadroMarkup\(lettura, tipo\)/);
 });
 
 test("il quadretto disegna quattro posti, anche quelli non mappati", async () => {

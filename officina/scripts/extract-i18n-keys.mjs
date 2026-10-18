@@ -291,6 +291,10 @@ const CATALOG_MODULES = Object.freeze([
      alla scheda Home scrive sopra ogni casella, e che la ricerca nel Config
      scrive per mandare chi le cerca dove si compilano (#131). */
   "src/core/come-sta-la-casa.js",
+  /* I dati dell'auto connessa — Energia residua, Consumo medio, Marcia — che
+     la scheda dell'auto scrive accanto a ogni casella, e la pagina Auto e la
+     sua finestra in Home sopra ogni lettura. */
+  "src/core/auto-termica.js",
 ]);
 
 /*

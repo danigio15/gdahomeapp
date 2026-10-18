@@ -80,6 +80,12 @@ const REACHED_OTHERWISE = new Set([
    * le legge solo lui: la ricerca nel Config le nomina per mandare dove si
    * compilano una casella che nessuno ha ancora aperto (#131). */
   "come-sta-la-casa-section.js",
+  /* E la scheda dell'auto scrive le etichette dei dati dell'auto connessa —
+   * Energia residua, Consumo medio, Marcia — che stanno in
+   * `src/core/auto-termica.js` (`CASELLE_DELL_AUTO`), anche lui fra i
+   * cataloghi importati e anche lui con le righe `{ it, en }`: le stesse che
+   * scrivono la pagina Auto e la finestra dell'auto in Home. */
+  "auto-termica-section.js",
 ]);
 
 /* L'elenco si legge dal sorgente, non si importa: l'estrattore riscrive i file

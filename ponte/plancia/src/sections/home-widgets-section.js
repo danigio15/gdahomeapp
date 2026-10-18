@@ -85,10 +85,13 @@ import { cavoDalloStato, codiceDellaRicarica } from "../core/stato-della-ricaric
 import { inKilowatt, oreEMinuti, tempoDellaRicarica } from "../core/il-tempo-della-ricarica.js";
 import {
   CAPACITA_DI_CASA_KEY,
+  CASELLA_DELLA_CAPACITA,
   VEHICLE_CAPACITY_FIELD,
   capacitaDellaBatteria,
+  kilowattoraDalloStato,
 } from "../core/vehicle-model.js";
 import { eDellaWallbox } from "../core/wallbox-device-binding.js";
+import { casellaDellAuto } from "../core/auto-termica.js";
 import { laPastigliaDellaNotte } from "./ricarica-di-notte-section.js";
 import { statoUmanoEV } from "./il-popup-dell-auto-racconta-section.js";
 import { poolList } from "../core/pool-model.js";
@@ -2682,8 +2685,9 @@ function letturaVettura(states, auto, fuori, indice, visti = new Set()) {
     target: sbircia("dm.ev_target_soc"),
     /* La capacita' della batteria di QUESTA vettura: senza, il tempo che manca
      * si conterebbe su settanta kilowattora per tutte le auto del mondo, e su
-     * una batteria da quaranta uscirebbe quasi doppio. */
-    capacita: capacitaDellaBatteria(auto || {}),
+     * una batteria da quaranta uscirebbe quasi doppio. Scritta, o detta dal
+     * suo sensore quando non la si e' scritta. */
+    capacita: capacitaDellaBatteria(auto || {}, states),
     altre: altreCaselleEv(states, mappa, fuori, visti),
   };
 }
@@ -2780,6 +2784,9 @@ const GLIFI_EV = Object.freeze([
 ]);
 
 function glifoEv(riferimento) {
+  /* I dati dell'auto connessa il loro disegno lo portano scritto. */
+  const dato = casellaDellAuto(riferimento);
+  if (dato) return dato.glifo;
   for (const [prova, glifo] of GLIFI_EV) if (prova.test(riferimento)) return glifo;
   return "🚗";
 }
@@ -2852,9 +2859,13 @@ function letturaAttiva(states, fuori) {
     /* Chi non ha profili la capacita' la dichiara in una casella sua: e' la
      * stessa che legge la pagina Auto, e senza le due direbbero due tempi
      * diversi per la stessa carica. */
-    capacita: capacitaDellaBatteria({
-      [VEHICLE_CAPACITY_FIELD]: readJson(CAPACITA_DI_CASA_KEY, ""),
-    }),
+    capacita:
+      capacitaDellaBatteria({
+        [VEHICLE_CAPACITY_FIELD]: readJson(CAPACITA_DI_CASA_KEY, ""),
+      }) ??
+      kilowattoraDalloStato(
+        stateOf(states, refValue(states, CASELLA_DELLA_CAPACITA, new Set())?.entity),
+      ),
     altre: altreCaselleEv(states, mappa, fuori, visti),
   };
 }

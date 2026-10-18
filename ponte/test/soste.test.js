@@ -180,6 +180,27 @@ test("l'auto si ripulisce: senza carica di partenza niente conti, il resto ha un
     minimaArrivo: 15,
     kwColonnine: 100,
   });
+  /* Coi nomi del contratto delle sorelle (GdAAuto), quello che l'auto
+   * misura vale piu' di quello che la pagina ha stimato. */
+  const misurata = autoPulita({
+    batteria: 62,
+    kwh: 70,
+    consumo: 17,
+    capacita_kwh: 67.1,
+    consumo_medio_kwh100: 15.8,
+  });
+  assert.equal(misurata.kwh, 67.1);
+  assert.equal(misurata.consumo, 15.8);
+  /* Ma un numero che non sta in piedi non vince su niente. */
+  const storta = autoPulita({
+    batteria: 62,
+    kwh: 52,
+    consumo: 16,
+    capacita_kwh: 1,
+    consumo_medio_kwh100: 400,
+  });
+  assert.equal(storta.kwh, 52);
+  assert.equal(storta.consumo, 16);
   assert.equal(calcolaLeSoste({ kmTotali: -5, auto: AUTO }), null);
   assert.equal(calcolaLeSoste({ kmTotali: KM, auto: { batteria: null } }), null);
 });

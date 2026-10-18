@@ -162,13 +162,20 @@ export function sullaLinea(linea, progressivi, lat, lon) {
  *   minimaArrivo  la carica minima alla meta (10, 15, 20, 30; di serie 15)
  *   kwColonnine   la potenza minima delle colonnine (50, 100, 150; di serie
  *                 100)
+ *
+ * Coi nomi del contratto delle sorelle (`docs/DATI-AUTO.md` di GdAAuto)
+ * possono arrivare anche quelli che l'auto misura: `capacita_kwh` e
+ * `consumo_medio_kwh100` valgono piu' di `kwh` e `consumo`, quando ci sono e
+ * stanno in piedi.
  */
 export function autoPulita(dato) {
   if (!dato || typeof dato !== "object") return null;
   const batteria = numero(dato.batteria);
   if (!entro(batteria, 0, 100)) return null;
-  const kwh = numero(dato.kwh);
-  const consumo = numero(dato.consumo);
+  const capacitaVera = numero(dato.capacita_kwh);
+  const consumoMisurato = numero(dato.consumo_medio_kwh100);
+  const kwh = entro(capacitaVera, 5, 250) ? capacitaVera : numero(dato.kwh);
+  const consumo = entro(consumoMisurato, 5, 60) ? consumoMisurato : numero(dato.consumo);
   const kwMax = numero(dato.kwMax);
   const minima = numero(dato.minimaArrivo);
   const colonnine = numero(dato.kwColonnine);

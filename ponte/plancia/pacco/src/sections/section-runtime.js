@@ -11,6 +11,7 @@ import {
   CAMPO_ESCLUSIONE,
   CAMPO_TIPO,
   CAPACITA_DI_CASA_KEY,
+  CASELLA_DELLA_CAPACITA,
   CASELLE_CALDAIA,
   CASELLE_SOLARE,
   CASELLE_STUFA,
@@ -316,6 +317,7 @@ import {
   isWindowOnly,
   jsArg,
   keptSemanticsVersion,
+  kilowattoraDalloStato,
   kioskAttivo,
   lEnergiaInParole,
   laFilaDelSempreServe,
@@ -552,7 +554,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-JTT53BOM.js";
+} from "../../chunk-URJ62I7I.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2699,6 +2701,7 @@ var SOURCE_INDEX = Object.freeze({
   "Auto collegata ✓ — partirà da sola": "Car plugged in ✓ — it will start by itself",
   "Auto elettrica": "Electric car",
   "Auto ibrida": "Hybrid car",
+  "Auto in sonno (sì/no)": "Car asleep (yes/no)",
   "Auto staccata": "Car unplugged",
   "Autoconsumo": "Self-consumption",
   "automatico": "automatic",
@@ -2711,9 +2714,12 @@ var SOURCE_INDEX = Object.freeze({
   "Automazioni con Premium": "Automations with Premium",
   "autonomia": "range",
   "Autonomia": "Range",
+  "Autonomia a carburante (km)": "Fuel range (km)",
   "Autonomia al target": "Range at target",
   "Autonomia al Target": "Range to target",
+  "Autonomia di omologazione (km)": "Rated range (km)",
   "Autonomia residua": "Runtime left",
+  "Autonomia totale (km)": "Total range (km)",
   "Autopulizia": "Self-clean",
   "Autosufficienza": "Self-sufficiency",
   "Autosufficienza Energetica": "Energy self-sufficiency",
@@ -2805,6 +2811,7 @@ var SOURCE_INDEX = Object.freeze({
   "Batteria di accumulo": "Storage battery",
   "Batteria di servizio 12 V (% o V)": "Service battery 12 V (% or V)",
   "Batteria e autonomia dell'auto elettrica, e le soste di ricarica se non basta.": "The electric car's battery and range, and the charging stops if it is not enough.",
+  "Batteria in riscaldamento (acceso/spento)": "Battery heating (on/off)",
   "Batteria nuova": "New battery",
   "Batteria orologio": "Watch battery",
   "Batteria quasi scarica: ${prima.name}": "Battery low: ${prima.name}",
@@ -2910,6 +2917,7 @@ var SOURCE_INDEX = Object.freeze({
   "Cantante": "Singer",
   "Cantina": "Cellar",
   "Capacità": "Capacity",
+  "Capacità della batteria (dal sensore, kWh)": "Battery capacity (from the sensor, kWh)",
   "Capacità della batteria (kWh)": "Battery capacity (kWh)",
   "Capelli": "Hair",
   "Cappa": "Range hood",
@@ -3113,6 +3121,7 @@ var SOURCE_INDEX = Object.freeze({
   "Citofono nuovo": "New intercom",
   "clima": "climate",
   "Clima": "Climate",
+  "Clima acceso (acceso/spento)": "Climate on (on/off)",
   "Clima Attivi": "Active climate",
   "Clima del terrario": "Terrarium climate",
   "Clima dell'auto": "Car climate",
@@ -3185,7 +3194,9 @@ var SOURCE_INDEX = Object.freeze({
   "Comando ▲": "▲ command",
   "Comando ▼": "▼ command",
   "Comando d'avvio": "Start command",
+  "Comando del clima (switch)": "Climate control (switch)",
   "Comando del muto": "Mute command",
+  "Comando della ricarica (switch)": "Charging control (switch)",
   "Comando di stop": "Stop command",
   "Comando inviato…": "Command sent…",
   "Comando ON/OFF": "On/off control",
@@ -3288,6 +3299,7 @@ var SOURCE_INDEX = Object.freeze({
   "Consumo della casa": "House consumption",
   "consumo in Watt": "power draw in Watts",
   "Consumo istantaneo": "Instant consumption",
+  "Consumo medio (kWh/100 km)": "Average consumption (kWh/100 km)",
   "Consumo Total": "Total consumption",
   "Consumo totale": "Total consumption",
   "Consumo Totale": "Total consumption",
@@ -3327,6 +3339,7 @@ var SOURCE_INDEX = Object.freeze({
   "Copio la foto…": "Copying the photo…",
   "Corpo caldaia": "Boiler body",
   "Corrente": "Current",
+  "Corrente all'esterno, V2L (acceso/spento)": "Power outlet, V2L (on/off)",
   "Corrente presente": "Power on",
   "Corridoio": "Hallway",
   "Corta": "Short",
@@ -3698,10 +3711,15 @@ var SOURCE_INDEX = Object.freeze({
   "Energia · Banner KPI": "Energy · Banner KPI",
   "Energia acquistata": "Purchased energy",
   "Energia autoprodotta consumata": "Self-produced energy consumed",
+  "Energia degli ultimi 7 giorni (kWh)": "Energy in the last 7 days (kWh)",
   "Energia del mese": "Energy this month",
   "Energia dell'anno": "Energy this year",
+  "Energia dell'ultima ricarica (kWh)": "Energy of the last charge (kWh)",
   "Energia della sessione": "Session energy",
   "Energia di oggi (kWh)": "Energy today (kWh)",
+  "Energia di oggi per il clima (kWh)": "Energy today for climate (kWh)",
+  "Energia di oggi per il resto (kWh)": "Energy today for everything else (kWh)",
+  "Energia di oggi per la guida (kWh)": "Energy today for driving (kWh)",
   "Energia elettrodomestici": "Appliance energy",
   "energia giornaliera": "daily energy",
   "Energia giornaliera": "Daily energy",
@@ -3711,6 +3729,7 @@ var SOURCE_INDEX = Object.freeze({
   "Energia oggi": "Energy today",
   "Energia prelevata oggi (kWh)": "Energy imported today (kWh)",
   "Energia residua": "Remaining energy",
+  "Energia residua (kWh)": "Remaining energy (kWh)",
   "Energia salvata": "Energy saved",
   "Energia sessione": "Session energy",
   "Energia sessione (kWh)": "Session energy (kWh)",
@@ -3904,7 +3923,9 @@ var SOURCE_INDEX = Object.freeze({
   "fine alle ${ora}": "done at ${ora}",
   "Fine alle ${ora}": "Done at ${ora}",
   "FINE ALLE ${ora}": "ENDS AT ${ora}",
+  "Fine dell'ultima ricarica (data e ora)": "End of the last charge (date and time)",
   "Fine della fascia": "End of the window",
+  "Fine della ricarica programmata (ora)": "Scheduled charging end (time)",
   "FINE DOMANI ALLE ${ora}": "ENDS TOMORROW AT ${ora}",
   "Finestra": "Window",
   "Finestra / Tapparella": "Window / Shutter",
@@ -3961,6 +3982,7 @@ var SOURCE_INDEX = Object.freeze({
   "Freccia su": "Arrow up",
   "Freddo": "Cool",
   "Freddo / Clima": "Cold / Climate",
+  "Freno di stazionamento (tirato/rilasciato)": "Parking brake (on/off)",
   "Fresco": "Cool",
   "Friggitrice ad aria": "Air fryer",
   "Frigorifero": "Fridge",
@@ -4413,6 +4435,8 @@ var SOURCE_INDEX = Object.freeze({
   "Ingresso": "Entrance",
   "Iniziato ${quando}": "Started ${quando}",
   "Inizio": "Starts",
+  "Inizio dell'ultima ricarica (data e ora)": "Start of the last charge (date and time)",
+  "Inizio della ricarica programmata (ora)": "Scheduled charging start (time)",
   "Inquadratura · il disegno": "Framing · the drawing",
   "Inquadratura · la tua foto": "Framing · your photo",
   "Insegnante": "Teacher",
@@ -4485,6 +4509,7 @@ var SOURCE_INDEX = Object.freeze({
   "Irrigazione": "Irrigation",
   "irrigazione avviata": "watering started",
   "ISTANTANEO": "INSTANT",
+  "Km degli ultimi 7 giorni (km)": "Distance in the last 7 days (km)",
   "kW medio": "avg kW",
   "kW picco": "peak kW",
   "kWh ×": "kWh × 0.25€",
@@ -4909,6 +4934,7 @@ var SOURCE_INDEX = Object.freeze({
   "Mappe del robot": "Robot maps",
   "Marchio": "Brand",
   "Marchio e modello del veicolo": "Vehicle brand and model",
+  "Marcia (P/R/N/D)": "Gear (P/R/N/D)",
   "Marzo": "March",
   "Massima": "Max",
   "Massimo ${MAX_FLOW_LOADS} carichi nel flusso.": "At most ${MAX_FLOW_LOADS} loads fit in the flow.",
@@ -4984,6 +5010,7 @@ var SOURCE_INDEX = Object.freeze({
   "Modalità estate": "Summer mode",
   "Modalità kiosk attiva": "Kiosk mode on",
   "Modalità kiosk disattivata": "Kiosk mode off",
+  "Modalità sentinella (acceso/spento)": "Sentry mode (on/off)",
   "Modelli": "Templates",
   "Modello": "Model",
   "moderato": "moderate",
@@ -5750,12 +5777,15 @@ var SOURCE_INDEX = Object.freeze({
   "Potenza ceduta alla rete": "Power fed into the grid",
   "Potenza condizionatori (W)": "Air conditioner power (W)",
   "Potenza consumo casa (W)": "Home consumption power (W)",
+  "Potenza del riscaldatore (W)": "Heater power (W)",
   "Potenza della batteria": "Battery power",
   "Potenza di aspirazione": "Suction power",
   "potenza di casa": "home power",
+  "Potenza di ricarica dell'auto (kW)": "Car charging power (kW)",
   "Potenza fotovoltaico (W)": "Solar power (W)",
   "Potenza in carica": "Charging power",
   "Potenza in scarica": "Discharging power",
+  "Potenza in uso (kW)": "Power in use (kW)",
   "Potenza in watt oltre la quale la card risulta accesa.": "Power in watts above which the card is shown as running.",
   "Potenza istantanea": "Instant power",
   "Potenza istantanea (W)": "Instant power (W)",
@@ -6116,6 +6146,8 @@ var SOURCE_INDEX = Object.freeze({
   "Riattiva l'audio": "Unmute",
   "Riavvia": "Restart",
   "Ricarica notturna": "Night charging",
+  "Ricarica programmata (acceso/spento)": "Scheduled charging (on/off)",
+  "Ricarica rapida (acceso/spento)": "Fast charging (on/off)",
   "Ricarica sempre EVCC / Always charge (select)": "EVCC always charge (select)",
   "Ricarica: ${minuti} in ${n} soste": "Charging: ${minuti} in ${n} stops",
   "Ricarica: ${minuti} in 1 sosta": "Charging: ${minuti} in 1 stop",
@@ -6305,6 +6337,7 @@ var SOURCE_INDEX = Object.freeze({
   "Sblocca": "Unlock",
   "sbloccate · tocca per chiudere a chiave": "unlocked · tap to lock",
   "Sbloccato": "Unlocked",
+  "Sbrinamento del parabrezza (acceso/spento)": "Windscreen defrost (on/off)",
   "Scadenza": "Schedule",
   "Scala della barra Potenza attuale. Vuoto = valore tipico per il tipo.": "Scale of the current power bar. Empty = typical value for the type.",
   "Scala: a": "Scale: to",
@@ -6953,6 +6986,7 @@ var SOURCE_INDEX = Object.freeze({
   "Temperatura del boiler": "Tank temperature",
   "temperatura dell'acqua": "water temperature",
   "Temperatura dell'acqua": "Water temperature",
+  "Temperatura della batteria (°C)": "Battery temperature (°C)",
   "Temperatura della caldaia": "Boiler temperature",
   "Temperatura della stanza": "Room temperature",
   "Temperatura della terra": "Soil temperature",
@@ -6967,6 +7001,7 @@ var SOURCE_INDEX = Object.freeze({
   "Temperatura min (barra)": "Min temperature (bar)",
   "Temperatura MOS": "MOS temperature",
   "Temperatura mostrata": "Temperature shown",
+  "Temperatura nell'abitacolo (°C)": "Cabin temperature (°C)",
   "Temperatura olio": "Oil temperature",
   "Temperatura percepita": "Feels-like temperature",
   "Temperatura piscina": "Pool temperature",
@@ -6980,6 +7015,7 @@ var SOURCE_INDEX = Object.freeze({
   "Temperature e raffreddamento": "Temperatures & cooling",
   "Temperature e umidità": "Temperature and humidity",
   "Tempo al target": "Time to target",
+  "Tempo alla fine della ricarica (min)": "Time to the end of charging (min)",
   "Tempo di rientro": "Time to home",
   "Tempo e gradi scelti: manca solo l'avvio": "Time and temperature set: it only needs starting",
   "tempo in miglioramento": "weather improving",
@@ -7043,6 +7079,7 @@ var SOURCE_INDEX = Object.freeze({
   "Tinta": "Hue",
   "Tipo": "Type",
   "Tipo / immagine": "Type / artwork",
+  "Tipo dell'ultima ricarica (AC/DC)": "Type of the last charge (AC/DC)",
   "Tipo di BMS": "BMS type",
   "Tipo di pagina": "Page type",
   "Titolo": "Title",
@@ -7217,6 +7254,7 @@ var SOURCE_INDEX = Object.freeze({
   "Ultimi squilli": "Last rings",
   "Ultimo": "Last",
   "Ultimo aggiornamento": "Last update",
+  "Ultimo aggiornamento dell'auto (data e ora)": "Car's last update (date and time)",
   "Ultimo cambio ${quando}": "Last change ${quando}",
   "Ultimo cambio d'acqua": "Last water change",
   "Ultimo ciclo": "Last cycle",
@@ -7406,6 +7444,7 @@ var SOURCE_INDEX = Object.freeze({
   "Veicoli": "Vehicles",
   "Velo": "Veil",
   "Velocità": "Speed",
+  "Velocità (km/h)": "Speed (km/h)",
   "Velocità del vento": "Wind speed",
   "Velocità della ventola (fan o select)": "Fan speed (fan or select)",
   "Velocità Ventola": "Fan speed",
@@ -25658,6 +25697,614 @@ function oraDiArrivo(minuti, adesso = Date.now()) {
   return new Date(adesso + totale * 6e4);
 }
 
+// src/core/auto-termica.js
+var pulito22 = (valore3) => String(valore3 ?? "").trim();
+var minuscolo3 = (valore3) => pulito22(valore3).toLowerCase();
+var numero12 = (valore3) => {
+  if (valore3 === null || valore3 === void 0 || pulito22(valore3) === "") return null;
+  const n = Number(valore3);
+  return Number.isFinite(n) ? n : null;
+};
+var CASELLE_TERMICHE = Object.freeze([
+  Object.freeze({ ref: "dm.ev_carburante", campo: "carburante", tipo: "percento", glifo: "⛽" }),
+  Object.freeze({ ref: "dm.ev_motore", campo: "motore", tipo: "acceso", glifo: "🔑" }),
+  Object.freeze({ ref: "dm.ev_portiere", campo: "portiere", tipo: "serratura", glifo: "🚪" }),
+  Object.freeze({ ref: "dm.ev_finestrini", campo: "finestrini", tipo: "apertura", glifo: "🪟" }),
+  /* Il bagagliaio e il cofano (#326).
+   *
+   * «Allo stesso modo delle portiere (bloccate/aperte) e' possibile inserire un
+   * binary_sensor per il "Bagagliaio" e per il "Cofano motore"
+   * (chiuso/aperto)?» Sono due aperture come i finestrini — un binary_sensor
+   * che dice aperto o chiuso — e leggono lo stesso dialetto: chi resta aperto
+   * si vede, chi e' chiuso sta zitto. */
+  Object.freeze({ ref: "dm.ev_bagagliaio", campo: "bagagliaio", tipo: "apertura", glifo: "🧳" }),
+  Object.freeze({ ref: "dm.ev_cofano", campo: "cofano", tipo: "apertura", glifo: "🔧" }),
+  /* Dove sta l'auto (#326).
+   *
+   * «Perche' non inserire una voce tipo "location" dove come entita' si
+   * inserisce un "device_tracker." che verra' utilizzata per mostrare dove si
+   * trova l'auto?» Non e' un numero e non e' un interruttore: e' una parola —
+   * «casa», «lavoro», «in viaggio» — e si legge come tale. */
+  Object.freeze({ ref: "dm.ev_posizione", campo: "posizione", tipo: "luogo", glifo: "📍" }),
+  Object.freeze({ ref: "dm.ev_allarme", campo: "allarme", tipo: "allarme", glifo: "🚨" }),
+  /* La batteria di servizio (#348).
+   *
+   * «Nella sezione batteria 12 V in questo momento e' a 14 V, mi da' 14%.»
+   * La casella era una percentuale e basta: un sensore in volt — che e' la
+   * forma in cui la meta' delle integrazioni pubblica la batteria da 12 V —
+   * veniva letto come un livello, e i quattordici volt di un alternatore che
+   * carica diventavano un quattordici per cento di batteria quasi a terra.
+   * Adesso la casella legge l'unita' che il sensore dichiara: percento e'
+   * un livello, volt e' una tensione, e si mostra quello che si e' letto. */
+  Object.freeze({
+    ref: "dm.ev_batteria_servizio",
+    campo: "batteriaServizio",
+    tipo: "batteria",
+    glifo: "🔋"
+  }),
+  Object.freeze({ ref: "dm.ev_temperatura_olio", campo: "olio", tipo: "gradi", glifo: "🛢️" }),
+  Object.freeze({ ref: "dm.ev_temperatura_esterna", campo: "esterna", tipo: "gradi", glifo: "🌡️" }),
+  Object.freeze({ ref: "dm.ev_ultimo_viaggio", campo: "ultimoViaggio", tipo: "km", glifo: "🧭" }),
+  Object.freeze({
+    ref: "dm.ev_carburante_totale",
+    campo: "carburanteTotale",
+    tipo: "litri",
+    glifo: "⛽"
+  }),
+  Object.freeze({ ref: "dm.ev_pneumatici", campo: "pneumatici", tipo: "pressione", glifo: "🛞" }),
+  /* Le quattro ruote, una casella per ognuna.
+   *
+   * «E' possibile inserire un solo pneumatico, spero al prossimo rilascio sia
+   * possibile inserirne 4» (#319). Chi ha il TPMS ha quattro sensori, uno per
+   * ruota, e ne poteva mappare uno. La casella di prima resta dov'e' e vale
+   * quello che ha sempre valso — un sensore riepilogativo, o l'avviso unico
+   * dell'auto — cosi' chi l'ha compilata non si accorge di niente. */
+  Object.freeze({
+    ref: "dm.ev_pneumatico_ant_sx",
+    campo: "pneumaticoAntSx",
+    tipo: "pressione",
+    glifo: "🛞",
+    ruota: "antSx"
+  }),
+  Object.freeze({
+    ref: "dm.ev_pneumatico_ant_dx",
+    campo: "pneumaticoAntDx",
+    tipo: "pressione",
+    glifo: "🛞",
+    ruota: "antDx"
+  }),
+  Object.freeze({
+    ref: "dm.ev_pneumatico_post_sx",
+    campo: "pneumaticoPostSx",
+    tipo: "pressione",
+    glifo: "🛞",
+    ruota: "postSx"
+  }),
+  Object.freeze({
+    ref: "dm.ev_pneumatico_post_dx",
+    campo: "pneumaticoPostDx",
+    tipo: "pressione",
+    glifo: "🛞",
+    ruota: "postDx"
+  })
+]);
+var RUOTE = Object.freeze([
+  Object.freeze({ ruota: "antSx", campo: "pneumaticoAntSx", ref: "dm.ev_pneumatico_ant_sx" }),
+  Object.freeze({ ruota: "antDx", campo: "pneumaticoAntDx", ref: "dm.ev_pneumatico_ant_dx" }),
+  Object.freeze({ ruota: "postSx", campo: "pneumaticoPostSx", ref: "dm.ev_pneumatico_post_sx" }),
+  Object.freeze({ ruota: "postDx", campo: "pneumaticoPostDx", ref: "dm.ev_pneumatico_post_dx" })
+]);
+var RIFERIMENTI_TERMICI = Object.freeze(CASELLE_TERMICHE.map((voce3) => voce3.ref));
+var CASELLE_DELL_AUTO = Object.freeze([
+  /* La batteria e il consumo. */
+  Object.freeze({
+    ref: "dm.ev_energia_residua",
+    campo: "energiaResidua",
+    tipo: "misura",
+    glifo: "🔋",
+    it: "Energia residua (kWh)",
+    en: "Remaining energy (kWh)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_capacita_batteria",
+    campo: "capacitaBatteria",
+    tipo: "misura",
+    glifo: "🔋",
+    it: "Capacità della batteria (dal sensore, kWh)",
+    en: "Battery capacity (from the sensor, kWh)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_consumo_medio",
+    campo: "consumoMedio",
+    tipo: "misura",
+    glifo: "📉",
+    it: "Consumo medio (kWh/100 km)",
+    en: "Average consumption (kWh/100 km)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_temperatura_batteria",
+    campo: "temperaturaBatteria",
+    tipo: "gradi",
+    glifo: "🌡️",
+    it: "Temperatura della batteria (°C)",
+    en: "Battery temperature (°C)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_temperatura_interna",
+    campo: "interna",
+    tipo: "gradi",
+    glifo: "🌡️",
+    it: "Temperatura nell'abitacolo (°C)",
+    en: "Cabin temperature (°C)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_potenza_riscaldatore",
+    campo: "potenzaRiscaldatore",
+    tipo: "misura",
+    glifo: "♨️",
+    it: "Potenza del riscaldatore (W)",
+    en: "Heater power (W)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_clima",
+    campo: "clima",
+    tipo: "acceso",
+    glifo: "❄️",
+    it: "Clima acceso (acceso/spento)",
+    en: "Climate on (on/off)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_batteria_in_riscaldamento",
+    campo: "batteriaInRiscaldamento",
+    tipo: "acceso",
+    glifo: "♨️",
+    it: "Batteria in riscaldamento (acceso/spento)",
+    en: "Battery heating (on/off)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_velocita",
+    campo: "velocita",
+    tipo: "misura",
+    glifo: "🏁",
+    it: "Velocità (km/h)",
+    en: "Speed (km/h)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_potenza_istantanea",
+    campo: "potenzaIstantanea",
+    tipo: "misura",
+    glifo: "⚡",
+    it: "Potenza in uso (kW)",
+    en: "Power in use (kW)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_autonomia_nominale",
+    campo: "autonomiaNominale",
+    tipo: "misura",
+    glifo: "🛣️",
+    it: "Autonomia di omologazione (km)",
+    en: "Rated range (km)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_autonomia_carburante",
+    campo: "autonomiaCarburante",
+    tipo: "misura",
+    glifo: "🛣️",
+    it: "Autonomia a carburante (km)",
+    en: "Fuel range (km)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_autonomia_totale",
+    campo: "autonomiaTotale",
+    tipo: "misura",
+    glifo: "🛣️",
+    it: "Autonomia totale (km)",
+    en: "Total range (km)"
+  }),
+  /* La ricarica. */
+  Object.freeze({
+    ref: "dm.ev_potenza_ricarica",
+    campo: "potenzaRicarica",
+    tipo: "misura",
+    glifo: "⚡",
+    it: "Potenza di ricarica dell'auto (kW)",
+    en: "Car charging power (kW)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_tempo_ricarica",
+    campo: "tempoRicarica",
+    tipo: "misura",
+    glifo: "⏱️",
+    it: "Tempo alla fine della ricarica (min)",
+    en: "Time to the end of charging (min)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_ricarica_rapida",
+    campo: "ricaricaRapida",
+    tipo: "acceso",
+    glifo: "⚡",
+    it: "Ricarica rapida (acceso/spento)",
+    en: "Fast charging (on/off)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_ricarica_programmata",
+    campo: "ricaricaProgrammata",
+    tipo: "acceso",
+    glifo: "🕒",
+    it: "Ricarica programmata (acceso/spento)",
+    en: "Scheduled charging (on/off)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_ricarica_inizio",
+    campo: "ricaricaInizio",
+    tipo: "parola",
+    glifo: "🕒",
+    it: "Inizio della ricarica programmata (ora)",
+    en: "Scheduled charging start (time)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_ricarica_fine",
+    campo: "ricaricaFine",
+    tipo: "parola",
+    glifo: "🕒",
+    it: "Fine della ricarica programmata (ora)",
+    en: "Scheduled charging end (time)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_v2l",
+    campo: "v2l",
+    tipo: "acceso",
+    glifo: "🔌",
+    it: "Corrente all'esterno, V2L (acceso/spento)",
+    en: "Power outlet, V2L (on/off)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_comando_ricarica",
+    campo: "comandoRicarica",
+    tipo: "acceso",
+    glifo: "🔌",
+    it: "Comando della ricarica (switch)",
+    en: "Charging control (switch)"
+  }),
+  /* Lo storico: oggi, la settimana, l'ultima ricarica. */
+  Object.freeze({
+    ref: "dm.ev_energia_oggi_guida",
+    campo: "energiaOggiGuida",
+    tipo: "misura",
+    glifo: "⚡",
+    it: "Energia di oggi per la guida (kWh)",
+    en: "Energy today for driving (kWh)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_energia_oggi_clima",
+    campo: "energiaOggiClima",
+    tipo: "misura",
+    glifo: "⚡",
+    it: "Energia di oggi per il clima (kWh)",
+    en: "Energy today for climate (kWh)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_energia_oggi_altro",
+    campo: "energiaOggiAltro",
+    tipo: "misura",
+    glifo: "⚡",
+    it: "Energia di oggi per il resto (kWh)",
+    en: "Energy today for everything else (kWh)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_km_7_giorni",
+    campo: "km7Giorni",
+    tipo: "misura",
+    glifo: "🛣️",
+    it: "Km degli ultimi 7 giorni (km)",
+    en: "Distance in the last 7 days (km)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_energia_7_giorni",
+    campo: "energia7Giorni",
+    tipo: "misura",
+    glifo: "⚡",
+    it: "Energia degli ultimi 7 giorni (kWh)",
+    en: "Energy in the last 7 days (kWh)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_ultima_ricarica_energia",
+    campo: "ultimaRicaricaEnergia",
+    tipo: "misura",
+    glifo: "🔌",
+    it: "Energia dell'ultima ricarica (kWh)",
+    en: "Energy of the last charge (kWh)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_ultima_ricarica_tipo",
+    campo: "ultimaRicaricaTipo",
+    tipo: "parola",
+    glifo: "🔌",
+    it: "Tipo dell'ultima ricarica (AC/DC)",
+    en: "Type of the last charge (AC/DC)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_ultima_ricarica_inizio",
+    campo: "ultimaRicaricaInizio",
+    tipo: "ora",
+    glifo: "🕒",
+    it: "Inizio dell'ultima ricarica (data e ora)",
+    en: "Start of the last charge (date and time)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_ultima_ricarica_fine",
+    campo: "ultimaRicaricaFine",
+    tipo: "ora",
+    glifo: "🕒",
+    it: "Fine dell'ultima ricarica (data e ora)",
+    en: "End of the last charge (date and time)"
+  }),
+  /* L'auto. */
+  Object.freeze({
+    ref: "dm.ev_marcia",
+    campo: "marcia",
+    tipo: "marcia",
+    glifo: "⚙️",
+    it: "Marcia (P/R/N/D)",
+    en: "Gear (P/R/N/D)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_sentinella",
+    campo: "sentinella",
+    tipo: "acceso",
+    glifo: "👁️",
+    it: "Modalità sentinella (acceso/spento)",
+    en: "Sentry mode (on/off)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_freno_stazionamento",
+    campo: "frenoStazionamento",
+    tipo: "acceso",
+    glifo: "🅿️",
+    it: "Freno di stazionamento (tirato/rilasciato)",
+    en: "Parking brake (on/off)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_sbrinamento",
+    campo: "sbrinamento",
+    tipo: "acceso",
+    glifo: "❄️",
+    it: "Sbrinamento del parabrezza (acceso/spento)",
+    en: "Windscreen defrost (on/off)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_in_sonno",
+    campo: "inSonno",
+    tipo: "acceso",
+    glifo: "💤",
+    it: "Auto in sonno (sì/no)",
+    en: "Car asleep (yes/no)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_ultimo_aggiornamento",
+    campo: "ultimoAggiornamento",
+    tipo: "ora",
+    glifo: "🕒",
+    it: "Ultimo aggiornamento dell'auto (data e ora)",
+    en: "Car's last update (date and time)"
+  }),
+  Object.freeze({
+    ref: "dm.ev_comando_clima",
+    campo: "comandoClima",
+    tipo: "acceso",
+    glifo: "❄️",
+    it: "Comando del clima (switch)",
+    en: "Climate control (switch)"
+  })
+]);
+var RIFERIMENTI_DELL_AUTO = Object.freeze(CASELLE_DELL_AUTO.map((voce3) => voce3.ref));
+function casellaDellAuto(ref) {
+  const cercato = pulito22(ref);
+  return CASELLE_DELL_AUTO.find((voce3) => voce3.ref === cercato) || null;
+}
+function senzaParentesi(etichetta3) {
+  return pulito22(etichetta3).replace(/\s*[(（][^()（）]*[)）]$/, "");
+}
+function luogoDalloStato(grezzo) {
+  const voce3 = String(grezzo ?? "").trim();
+  if (!voce3) return "";
+  const basso = voce3.toLowerCase();
+  if (["unknown", "unavailable", "none", "null"].includes(basso)) return "";
+  if (basso === "home") return "casa";
+  if (basso === "not_home") return "fuori";
+  return voce3;
+}
+var ACCESO2 = /^(on|true|1|running|started|acceso|acceso[_ ]?motore|in[_ ]moto|on_running)$/;
+var SPENTO2 = /^(off|false|0|stopped|spento|fermo|idle|parked)$/;
+function accesoDalloStato(stato3) {
+  const voce3 = minuscolo3(stato3);
+  if (!voce3) return null;
+  if (ACCESO2.test(voce3)) return true;
+  if (SPENTO2.test(voce3)) return false;
+  return null;
+}
+function serraturaDalloStato(stato3) {
+  const voce3 = minuscolo3(stato3);
+  if (!voce3) return null;
+  if (/^(locked|bloccat[oae]|chius[oae]\s+a\s+chiave|closed_locked)$/.test(voce3)) return "bloccate";
+  if (/^(unlocked|sbloccat[oae]|unlocking|locking)$/.test(voce3)) return "sbloccate";
+  if (/^(open|aperta|aperte|aperto|on|opening)$/.test(voce3)) return "aperte";
+  if (/^(closed|chius[oae]|off)$/.test(voce3)) return "chiuse";
+  return null;
+}
+function aperturaDalloStato(stato3) {
+  const voce3 = minuscolo3(stato3);
+  if (!voce3) return null;
+  if (/^(open|on|true|apert[oaie]|opened|partially_open|semi)$/.test(voce3)) return "aperti";
+  if (/^(closed|off|false|chius[oaie])$/.test(voce3)) return "chiusi";
+  return null;
+}
+function allarmeDalloStato(stato3) {
+  const voce3 = minuscolo3(stato3);
+  if (!voce3) return null;
+  if (/^(triggered|scattat[oa]|alarm|allarme)$/.test(voce3)) return "scattato";
+  if (/^(armed|armed_away|armed_home|on|true|1|attiv[oa]|inserit[oa]|in[_ ]esecuzione|running|enabled)$/.test(
+    voce3
+  ))
+    return "inserito";
+  if (/^(disarmed|off|false|0|spent[oa]|disinserit[oa]|disabled)$/.test(voce3)) return "disinserito";
+  return null;
+}
+function batteriaDalloStato(stato3, unita3 = "") {
+  const n = numero12(minuscolo3(stato3));
+  if (n === null) return null;
+  const dichiarata = pulito22(unita3);
+  if (/^mv$/i.test(dichiarata)) return { valore: n / 1e3, unita: "V" };
+  if (/^v$/i.test(dichiarata)) return { valore: n, unita: "V" };
+  if (!dichiarata || dichiarata === "%")
+    return { valore: Math.max(0, Math.min(100, n)), unita: "%" };
+  return { valore: n, unita: dichiarata };
+}
+function marciaDalloStato(stato3) {
+  const voce3 = minuscolo3(stato3).replace(/[\s_-]+/g, " ");
+  if (!voce3) return null;
+  if (/^(p|park\w*|parcheggi\w*|parken)$/.test(voce3)) return "P";
+  if (/^(r|reverse|retromarcia|retro|rückwärts)$/.test(voce3)) return "R";
+  if (/^(n|neutral|folle|neutro|leerlauf)$/.test(voce3)) return "N";
+  if (/^(d|drive|avanti|marcia avanti|fahren|b)$/.test(voce3)) return "D";
+  return null;
+}
+function istanteDalloStato(stato3) {
+  const voce3 = pulito22(stato3);
+  if (!voce3) return null;
+  const quando4 = Date.parse(voce3);
+  return Number.isFinite(quando4) ? quando4 : null;
+}
+function istanteDetto(quando4, { lingua: lingua3 = "it", adesso = Date.now() } = {}) {
+  if (!Number.isFinite(quando4)) return "";
+  const data = new Date(quando4);
+  const oggi = new Date(adesso).toDateString() === data.toDateString();
+  try {
+    return oggi ? data.toLocaleTimeString(lingua3, { hour: "2-digit", minute: "2-digit" }) : data.toLocaleString(lingua3, {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  } catch (_error) {
+    return data.toISOString().slice(0, 16).replace("T", " ");
+  }
+}
+function pneumaticiDalloStato(stato3, unita3 = "") {
+  const voce3 = minuscolo3(stato3);
+  if (!voce3) return null;
+  const n = numero12(voce3);
+  if (n !== null) return { pressione: n, unita: pulito22(unita3) || "bar", avviso: null };
+  if (/^(on|true|low|bass[ao]|warning|avviso|problem)$/.test(voce3))
+    return { pressione: null, unita: "", avviso: true };
+  if (/^(off|false|ok|normal|normale|good)$/.test(voce3))
+    return { pressione: null, unita: "", avviso: false };
+  return null;
+}
+function ruoteDellAuto(lettura3 = {}) {
+  const fuori = [];
+  for (const voce3 of RUOTE) {
+    const valore3 = lettura3?.[voce3.campo];
+    if (!valore3) continue;
+    fuori.push({ ruota: voce3.ruota, ref: voce3.ref, ...valore3 });
+  }
+  return fuori;
+}
+function pneumaticiInAvviso(lettura3 = {}) {
+  if (lettura3?.pneumatici?.avviso === true) return true;
+  return ruoteDellAuto(lettura3).some((ruota) => ruota.avviso === true);
+}
+function letturaTermica(mappa2 = {}, states = {}, resolve = null) {
+  const statoDi6 = (ref) => {
+    let entity2 = pulito22(mappa2?.[ref]);
+    if (!entity2 && typeof resolve === "function") {
+      try {
+        const risolto = pulito22(resolve(ref));
+        if (risolto && risolto !== ref) entity2 = risolto;
+      } catch (_error) {
+        entity2 = "";
+      }
+    }
+    if (!entity2) return { entity: "", stato: null };
+    return { entity: entity2, stato: states?.[entity2] || null };
+  };
+  const fuori = { caselle: {} };
+  for (const voce3 of [...CASELLE_TERMICHE, ...CASELLE_DELL_AUTO]) {
+    const { entity: entity2, stato: stato3 } = statoDi6(voce3.ref);
+    if (!entity2) continue;
+    const grezzo = stato3 ? pulito22(stato3.state) : "";
+    const unita3 = pulito22(stato3?.attributes?.unit_of_measurement);
+    const muto2 = !stato3 || /^(unknown|unavailable|none|)$/i.test(grezzo);
+    let valore3 = null;
+    if (!muto2)
+      switch (voce3.tipo) {
+        case "percento": {
+          const n = numero12(grezzo);
+          valore3 = n === null ? null : Math.max(0, Math.min(100, n));
+          break;
+        }
+        case "batteria":
+          valore3 = batteriaDalloStato(grezzo, unita3);
+          break;
+        case "gradi":
+        case "km":
+        case "litri":
+        case "misura":
+          valore3 = numero12(grezzo);
+          break;
+        case "marcia":
+          valore3 = marciaDalloStato(grezzo);
+          break;
+        case "ora":
+          valore3 = istanteDalloStato(grezzo);
+          break;
+        case "acceso":
+          valore3 = accesoDalloStato(grezzo);
+          break;
+        case "serratura":
+          valore3 = serraturaDalloStato(grezzo);
+          break;
+        case "apertura":
+          valore3 = aperturaDalloStato(grezzo);
+          break;
+        case "allarme":
+          valore3 = allarmeDalloStato(grezzo);
+          break;
+        case "luogo":
+          valore3 = luogoDalloStato(grezzo);
+          break;
+        case "pressione":
+          valore3 = pneumaticiDalloStato(grezzo, unita3);
+          break;
+        default:
+          valore3 = grezzo;
+      }
+    fuori.caselle[voce3.campo] = {
+      ref: voce3.ref,
+      entity: entity2,
+      grezzo,
+      unita: unita3,
+      muto: muto2,
+      valore: valore3,
+      tipo: voce3.tipo,
+      glifo: voce3.glifo
+    };
+    fuori[voce3.campo] = valore3;
+  }
+  const servizio2 = fuori.batteriaServizio;
+  fuori.batteriaServizio = servizio2 ? servizio2.valore : servizio2 === void 0 ? void 0 : null;
+  fuori.batteriaServizioUnita = servizio2 ? servizio2.unita : "%";
+  const autonomia = statoDi6("dm.ev_autonomia");
+  const odometro = statoDi6("dm.ev_odometro");
+  fuori.autonomia = autonomia.entity ? numero12(autonomia.stato?.state) : null;
+  fuori.autonomiaUnita = pulito22(autonomia.stato?.attributes?.unit_of_measurement) || "km";
+  fuori.odometro = odometro.entity ? numero12(odometro.stato?.state) : null;
+  fuori.odometroUnita = pulito22(odometro.stato?.attributes?.unit_of_measurement) || "km";
+  fuori.attenzione = fuori.allarme === "scattato" || fuori.portiere === "aperte" && fuori.motore === false || pneumaticiInAvviso(fuori) || fuori.carburante !== null && fuori.carburante !== void 0 && fuori.carburante <= 10;
+  fuori.qualcosa = Object.keys(fuori.caselle).length > 0;
+  return fuori;
+}
+
 // src/core/ev-console.js
 var clean9 = (value) => String(value ?? "").trim();
 var EVCC_REFS = Object.freeze({
@@ -25687,7 +26334,7 @@ function evccPresence(states = {}, resolve = (value) => value) {
 }
 
 // src/core/ricarica-di-notte.js
-var pulito22 = (valore3) => String(valore3 ?? "").trim();
+var pulito23 = (valore3) => String(valore3 ?? "").trim();
 var MINUTO2 = 6e4;
 var ORA2 = 60 * MINUTO2;
 var CHIAVE_RICARICA_NOTTE = "cd_ricarica_notte";
@@ -25718,12 +26365,12 @@ function impostazioniPulite(dato) {
   const letto = leggiJson(dato);
   const d = letto && typeof letto === "object" && !Array.isArray(letto) ? letto : {};
   const ora5 = (valore3, ripiego) => {
-    const testo4 = pulito22(valore3);
+    const testo4 = pulito23(valore3);
     if (ORA_BUONA.test(testo4)) return testo4;
     const minuti = minutiDellOra(testo4);
     return minuti === null ? ripiego : oraDeiMinuti(minuti);
   };
-  const poi = pulito22(d.poi).toLowerCase() === "smart" ? "pv" : pulito22(d.poi).toLowerCase();
+  const poi = pulito23(d.poi).toLowerCase() === "smart" ? "pv" : pulito23(d.poi).toLowerCase();
   const giorni = Array.isArray(d.giorni) && d.giorni.length === 7 ? d.giorni.map((g) => g === true) : [...IMPOSTAZIONI_DI_SERIE.giorni];
   const sotto = Math.round(Number(d.sotto));
   return {
@@ -25789,7 +26436,7 @@ var RIFERIMENTI = Object.freeze({
 });
 var ENTITA = /^[a-z_]+\.[a-z0-9_]+$/;
 function prefissoDiEvcc(modo) {
-  const id = pulito22(modo);
+  const id = pulito23(modo);
   const pezzi = /^(?:select|input_select)\.(evcc_[a-z0-9_]*?)(?:charge_)?mode$/.exec(id);
   return pezzi ? pezzi[1] : "";
 }
@@ -25797,7 +26444,7 @@ function entitaDellaRicarica(risolvi3, { batteria = "" } = {}) {
   const leggi3 = (rif) => {
     let detto3 = "";
     try {
-      detto3 = pulito22(risolvi3?.(rif));
+      detto3 = pulito23(risolvi3?.(rif));
     } catch (_errore) {
       detto3 = "";
     }
@@ -25807,7 +26454,7 @@ function entitaDellaRicarica(risolvi3, { batteria = "" } = {}) {
   const p = prefissoDiEvcc(modo);
   const diEvcc = (...nomi2) => p ? nomi2.map((nome) => nome.replace("@", p)) : [];
   const limiteScritto = leggi3(RIFERIMENTI.limite);
-  const soc = [...diEvcc("sensor.@vehicle_soc"), pulito22(batteria), ...RIFERIMENTI.soc.map(leggi3)];
+  const soc = [...diEvcc("sensor.@vehicle_soc"), pulito23(batteria), ...RIFERIMENTI.soc.map(leggi3)];
   const limite = [
     ...limiteScritto.includes("evcc") ? [limiteScritto] : [],
     ...diEvcc("sensor.@effective_limit_soc", "number.@limit_soc", "select.@limit_soc"),
@@ -25828,23 +26475,23 @@ function entitaDellaRicarica(risolvi3, { batteria = "" } = {}) {
 }
 var MUTO3 = /^(unavailable|unknown|none|)$/i;
 function percentuale2(stato3) {
-  const testo4 = pulito22(stato3?.state).replace("%", "").replace(",", ".");
+  const testo4 = pulito23(stato3?.state).replace("%", "").replace(",", ".");
   if (MUTO3.test(testo4)) return null;
   const n = Number(testo4);
   return Number.isFinite(n) && n >= 0 && n <= 100 ? n : null;
 }
 function kilowattora(stato3) {
-  const testo4 = pulito22(stato3?.state).replace(",", ".");
+  const testo4 = pulito23(stato3?.state).replace(",", ".");
   if (MUTO3.test(testo4)) return null;
   const n = Number(testo4);
   if (!Number.isFinite(n) || n < 0) return null;
-  const unita3 = pulito22(stato3?.attributes?.unit_of_measurement).toLowerCase();
+  const unita3 = pulito23(stato3?.attributes?.unit_of_measurement).toLowerCase();
   if (unita3 === "wh") return n / 1e3;
   if (unita3 === "mwh") return n * 1e3;
   return n;
 }
-var ACCESO2 = /^(on|true|1|home|connected|plugged|collegat[ao]|attaccat[ao]|yes)$/i;
-var SPENTO2 = /^(off|false|0|not_home|disconnected|unplugged|scollegat[ao]|staccat[ao]|no)$/i;
+var ACCESO3 = /^(on|true|1|home|connected|plugged|collegat[ao]|attaccat[ao]|yes)$/i;
+var SPENTO3 = /^(off|false|0|not_home|disconnected|unplugged|scollegat[ao]|staccat[ao]|no)$/i;
 function letturaDellAuto(entita3, stati2) {
   const di = (id) => {
     try {
@@ -25861,12 +26508,12 @@ function letturaDellAuto(entita3, stati2) {
     return null;
   };
   const modoStato = di(entita3?.modo);
-  const modo = modoStato && !MUTO3.test(pulito22(modoStato.state)) ? pulito22(modoStato.state) : "";
-  const opzioni2 = Array.isArray(modoStato?.attributes?.options) ? modoStato.attributes.options.map(pulito22).filter(Boolean) : [];
+  const modo = modoStato && !MUTO3.test(pulito23(modoStato.state)) ? pulito23(modoStato.state) : "";
+  const opzioni2 = Array.isArray(modoStato?.attributes?.options) ? modoStato.attributes.options.map(pulito23).filter(Boolean) : [];
   let collegata = primo(entita3?.cavo, (stato3) => {
-    const s = pulito22(stato3?.state);
-    if (ACCESO2.test(s)) return true;
-    if (SPENTO2.test(s)) return false;
+    const s = pulito23(stato3?.state);
+    if (ACCESO3.test(s)) return true;
+    if (SPENTO3.test(s)) return false;
     return null;
   });
   if (collegata === null)
@@ -25890,7 +26537,7 @@ function letturaDellAuto(entita3, stati2) {
   };
 }
 var prezzoBuono = (valore3) => {
-  const n = Number(pulito22(valore3).replace(",", "."));
+  const n = Number(pulito23(valore3).replace(",", "."));
   return Number.isFinite(n) && n > 0 && n < 100 ? n : null;
 };
 function prezzoDellaNotte({
@@ -25909,7 +26556,7 @@ function prezzoDellaNotte({
     if (suo2) return { prezzo: suo2, fonte: "fascia", fascia: nomeDellaFascia(quale) };
   }
   const letto = leggiJson(costo);
-  const scritto3 = letto === null ? pulito22(costo) : letto;
+  const scritto3 = letto === null ? pulito23(costo) : letto;
   let unica = null;
   if (typeof scritto3 === "number") unica = prezzoBuono(scritto3);
   else if (typeof scritto3 === "string" && ENTITA.test(scritto3)) {
@@ -26688,267 +27335,6 @@ function stile() {
   color:#4338ca;background:rgba(99,102,241,.12)}
 [data-theme="dark"] .dm-f-evcc-notte{color:#c7d2fe;background:rgba(129,140,248,.2)}
 `;
-}
-
-// src/core/auto-termica.js
-var pulito23 = (valore3) => String(valore3 ?? "").trim();
-var minuscolo3 = (valore3) => pulito23(valore3).toLowerCase();
-var numero12 = (valore3) => {
-  if (valore3 === null || valore3 === void 0 || pulito23(valore3) === "") return null;
-  const n = Number(valore3);
-  return Number.isFinite(n) ? n : null;
-};
-var CASELLE_TERMICHE = Object.freeze([
-  Object.freeze({ ref: "dm.ev_carburante", campo: "carburante", tipo: "percento", glifo: "⛽" }),
-  Object.freeze({ ref: "dm.ev_motore", campo: "motore", tipo: "acceso", glifo: "🔑" }),
-  Object.freeze({ ref: "dm.ev_portiere", campo: "portiere", tipo: "serratura", glifo: "🚪" }),
-  Object.freeze({ ref: "dm.ev_finestrini", campo: "finestrini", tipo: "apertura", glifo: "🪟" }),
-  /* Il bagagliaio e il cofano (#326).
-   *
-   * «Allo stesso modo delle portiere (bloccate/aperte) e' possibile inserire un
-   * binary_sensor per il "Bagagliaio" e per il "Cofano motore"
-   * (chiuso/aperto)?» Sono due aperture come i finestrini — un binary_sensor
-   * che dice aperto o chiuso — e leggono lo stesso dialetto: chi resta aperto
-   * si vede, chi e' chiuso sta zitto. */
-  Object.freeze({ ref: "dm.ev_bagagliaio", campo: "bagagliaio", tipo: "apertura", glifo: "🧳" }),
-  Object.freeze({ ref: "dm.ev_cofano", campo: "cofano", tipo: "apertura", glifo: "🔧" }),
-  /* Dove sta l'auto (#326).
-   *
-   * «Perche' non inserire una voce tipo "location" dove come entita' si
-   * inserisce un "device_tracker." che verra' utilizzata per mostrare dove si
-   * trova l'auto?» Non e' un numero e non e' un interruttore: e' una parola —
-   * «casa», «lavoro», «in viaggio» — e si legge come tale. */
-  Object.freeze({ ref: "dm.ev_posizione", campo: "posizione", tipo: "luogo", glifo: "📍" }),
-  Object.freeze({ ref: "dm.ev_allarme", campo: "allarme", tipo: "allarme", glifo: "🚨" }),
-  /* La batteria di servizio (#348).
-   *
-   * «Nella sezione batteria 12 V in questo momento e' a 14 V, mi da' 14%.»
-   * La casella era una percentuale e basta: un sensore in volt — che e' la
-   * forma in cui la meta' delle integrazioni pubblica la batteria da 12 V —
-   * veniva letto come un livello, e i quattordici volt di un alternatore che
-   * carica diventavano un quattordici per cento di batteria quasi a terra.
-   * Adesso la casella legge l'unita' che il sensore dichiara: percento e'
-   * un livello, volt e' una tensione, e si mostra quello che si e' letto. */
-  Object.freeze({
-    ref: "dm.ev_batteria_servizio",
-    campo: "batteriaServizio",
-    tipo: "batteria",
-    glifo: "🔋"
-  }),
-  Object.freeze({ ref: "dm.ev_temperatura_olio", campo: "olio", tipo: "gradi", glifo: "🛢️" }),
-  Object.freeze({ ref: "dm.ev_temperatura_esterna", campo: "esterna", tipo: "gradi", glifo: "🌡️" }),
-  Object.freeze({ ref: "dm.ev_ultimo_viaggio", campo: "ultimoViaggio", tipo: "km", glifo: "🧭" }),
-  Object.freeze({
-    ref: "dm.ev_carburante_totale",
-    campo: "carburanteTotale",
-    tipo: "litri",
-    glifo: "⛽"
-  }),
-  Object.freeze({ ref: "dm.ev_pneumatici", campo: "pneumatici", tipo: "pressione", glifo: "🛞" }),
-  /* Le quattro ruote, una casella per ognuna.
-   *
-   * «E' possibile inserire un solo pneumatico, spero al prossimo rilascio sia
-   * possibile inserirne 4» (#319). Chi ha il TPMS ha quattro sensori, uno per
-   * ruota, e ne poteva mappare uno. La casella di prima resta dov'e' e vale
-   * quello che ha sempre valso — un sensore riepilogativo, o l'avviso unico
-   * dell'auto — cosi' chi l'ha compilata non si accorge di niente. */
-  Object.freeze({
-    ref: "dm.ev_pneumatico_ant_sx",
-    campo: "pneumaticoAntSx",
-    tipo: "pressione",
-    glifo: "🛞",
-    ruota: "antSx"
-  }),
-  Object.freeze({
-    ref: "dm.ev_pneumatico_ant_dx",
-    campo: "pneumaticoAntDx",
-    tipo: "pressione",
-    glifo: "🛞",
-    ruota: "antDx"
-  }),
-  Object.freeze({
-    ref: "dm.ev_pneumatico_post_sx",
-    campo: "pneumaticoPostSx",
-    tipo: "pressione",
-    glifo: "🛞",
-    ruota: "postSx"
-  }),
-  Object.freeze({
-    ref: "dm.ev_pneumatico_post_dx",
-    campo: "pneumaticoPostDx",
-    tipo: "pressione",
-    glifo: "🛞",
-    ruota: "postDx"
-  })
-]);
-var RUOTE = Object.freeze([
-  Object.freeze({ ruota: "antSx", campo: "pneumaticoAntSx", ref: "dm.ev_pneumatico_ant_sx" }),
-  Object.freeze({ ruota: "antDx", campo: "pneumaticoAntDx", ref: "dm.ev_pneumatico_ant_dx" }),
-  Object.freeze({ ruota: "postSx", campo: "pneumaticoPostSx", ref: "dm.ev_pneumatico_post_sx" }),
-  Object.freeze({ ruota: "postDx", campo: "pneumaticoPostDx", ref: "dm.ev_pneumatico_post_dx" })
-]);
-var RIFERIMENTI_TERMICI = Object.freeze(CASELLE_TERMICHE.map((voce3) => voce3.ref));
-function luogoDalloStato(grezzo) {
-  const voce3 = String(grezzo ?? "").trim();
-  if (!voce3) return "";
-  const basso = voce3.toLowerCase();
-  if (["unknown", "unavailable", "none", "null"].includes(basso)) return "";
-  if (basso === "home") return "casa";
-  if (basso === "not_home") return "fuori";
-  return voce3;
-}
-var ACCESO3 = /^(on|true|1|running|started|acceso|acceso[_ ]?motore|in[_ ]moto|on_running)$/;
-var SPENTO3 = /^(off|false|0|stopped|spento|fermo|idle|parked)$/;
-function accesoDalloStato(stato3) {
-  const voce3 = minuscolo3(stato3);
-  if (!voce3) return null;
-  if (ACCESO3.test(voce3)) return true;
-  if (SPENTO3.test(voce3)) return false;
-  return null;
-}
-function serraturaDalloStato(stato3) {
-  const voce3 = minuscolo3(stato3);
-  if (!voce3) return null;
-  if (/^(locked|bloccat[oae]|chius[oae]\s+a\s+chiave|closed_locked)$/.test(voce3)) return "bloccate";
-  if (/^(unlocked|sbloccat[oae]|unlocking|locking)$/.test(voce3)) return "sbloccate";
-  if (/^(open|aperta|aperte|aperto|on|opening)$/.test(voce3)) return "aperte";
-  if (/^(closed|chius[oae]|off)$/.test(voce3)) return "chiuse";
-  return null;
-}
-function aperturaDalloStato(stato3) {
-  const voce3 = minuscolo3(stato3);
-  if (!voce3) return null;
-  if (/^(open|on|true|apert[oaie]|opened|partially_open|semi)$/.test(voce3)) return "aperti";
-  if (/^(closed|off|false|chius[oaie])$/.test(voce3)) return "chiusi";
-  return null;
-}
-function allarmeDalloStato(stato3) {
-  const voce3 = minuscolo3(stato3);
-  if (!voce3) return null;
-  if (/^(triggered|scattat[oa]|alarm|allarme)$/.test(voce3)) return "scattato";
-  if (/^(armed|armed_away|armed_home|on|true|1|attiv[oa]|inserit[oa]|in[_ ]esecuzione|running|enabled)$/.test(
-    voce3
-  ))
-    return "inserito";
-  if (/^(disarmed|off|false|0|spent[oa]|disinserit[oa]|disabled)$/.test(voce3)) return "disinserito";
-  return null;
-}
-function batteriaDalloStato(stato3, unita3 = "") {
-  const n = numero12(minuscolo3(stato3));
-  if (n === null) return null;
-  const dichiarata = pulito23(unita3);
-  if (/^mv$/i.test(dichiarata)) return { valore: n / 1e3, unita: "V" };
-  if (/^v$/i.test(dichiarata)) return { valore: n, unita: "V" };
-  if (!dichiarata || dichiarata === "%")
-    return { valore: Math.max(0, Math.min(100, n)), unita: "%" };
-  return { valore: n, unita: dichiarata };
-}
-function pneumaticiDalloStato(stato3, unita3 = "") {
-  const voce3 = minuscolo3(stato3);
-  if (!voce3) return null;
-  const n = numero12(voce3);
-  if (n !== null) return { pressione: n, unita: pulito23(unita3) || "bar", avviso: null };
-  if (/^(on|true|low|bass[ao]|warning|avviso|problem)$/.test(voce3))
-    return { pressione: null, unita: "", avviso: true };
-  if (/^(off|false|ok|normal|normale|good)$/.test(voce3))
-    return { pressione: null, unita: "", avviso: false };
-  return null;
-}
-function ruoteDellAuto(lettura3 = {}) {
-  const fuori = [];
-  for (const voce3 of RUOTE) {
-    const valore3 = lettura3?.[voce3.campo];
-    if (!valore3) continue;
-    fuori.push({ ruota: voce3.ruota, ref: voce3.ref, ...valore3 });
-  }
-  return fuori;
-}
-function pneumaticiInAvviso(lettura3 = {}) {
-  if (lettura3?.pneumatici?.avviso === true) return true;
-  return ruoteDellAuto(lettura3).some((ruota) => ruota.avviso === true);
-}
-function letturaTermica(mappa2 = {}, states = {}, resolve = null) {
-  const statoDi6 = (ref) => {
-    let entity2 = pulito23(mappa2?.[ref]);
-    if (!entity2 && typeof resolve === "function") {
-      try {
-        const risolto = pulito23(resolve(ref));
-        if (risolto && risolto !== ref) entity2 = risolto;
-      } catch (_error) {
-        entity2 = "";
-      }
-    }
-    if (!entity2) return { entity: "", stato: null };
-    return { entity: entity2, stato: states?.[entity2] || null };
-  };
-  const fuori = { caselle: {} };
-  for (const voce3 of CASELLE_TERMICHE) {
-    const { entity: entity2, stato: stato3 } = statoDi6(voce3.ref);
-    if (!entity2) continue;
-    const grezzo = stato3 ? pulito23(stato3.state) : "";
-    const unita3 = pulito23(stato3?.attributes?.unit_of_measurement);
-    const muto2 = !stato3 || /^(unknown|unavailable|none|)$/i.test(grezzo);
-    let valore3 = null;
-    if (!muto2)
-      switch (voce3.tipo) {
-        case "percento": {
-          const n = numero12(grezzo);
-          valore3 = n === null ? null : Math.max(0, Math.min(100, n));
-          break;
-        }
-        case "batteria":
-          valore3 = batteriaDalloStato(grezzo, unita3);
-          break;
-        case "gradi":
-        case "km":
-        case "litri":
-          valore3 = numero12(grezzo);
-          break;
-        case "acceso":
-          valore3 = accesoDalloStato(grezzo);
-          break;
-        case "serratura":
-          valore3 = serraturaDalloStato(grezzo);
-          break;
-        case "apertura":
-          valore3 = aperturaDalloStato(grezzo);
-          break;
-        case "allarme":
-          valore3 = allarmeDalloStato(grezzo);
-          break;
-        case "luogo":
-          valore3 = luogoDalloStato(grezzo);
-          break;
-        case "pressione":
-          valore3 = pneumaticiDalloStato(grezzo, unita3);
-          break;
-        default:
-          valore3 = grezzo;
-      }
-    fuori.caselle[voce3.campo] = {
-      ref: voce3.ref,
-      entity: entity2,
-      grezzo,
-      unita: unita3,
-      muto: muto2,
-      valore: valore3,
-      tipo: voce3.tipo,
-      glifo: voce3.glifo
-    };
-    fuori[voce3.campo] = valore3;
-  }
-  const servizio2 = fuori.batteriaServizio;
-  fuori.batteriaServizio = servizio2 ? servizio2.valore : servizio2 === void 0 ? void 0 : null;
-  fuori.batteriaServizioUnita = servizio2 ? servizio2.unita : "%";
-  const autonomia = statoDi6("dm.ev_autonomia");
-  const odometro = statoDi6("dm.ev_odometro");
-  fuori.autonomia = autonomia.entity ? numero12(autonomia.stato?.state) : null;
-  fuori.autonomiaUnita = pulito23(autonomia.stato?.attributes?.unit_of_measurement) || "km";
-  fuori.odometro = odometro.entity ? numero12(odometro.stato?.state) : null;
-  fuori.odometroUnita = pulito23(odometro.stato?.attributes?.unit_of_measurement) || "km";
-  fuori.attenzione = fuori.allarme === "scattato" || fuori.portiere === "aperte" && fuori.motore === false || pneumaticiInAvviso(fuori) || fuori.carburante !== null && fuori.carburante !== void 0 && fuori.carburante <= 10;
-  fuori.qualcosa = Object.keys(fuori.caselle).length > 0;
-  return fuori;
 }
 
 // src/sections/page-masthead-section.js
@@ -27738,8 +28124,10 @@ function etichettaDellaCasella(ref) {
       return `${t("Pressione pneumatici", "Tyre pressure")} — ${parolaDellaRuota("postSx")}`;
     case "dm.ev_pneumatico_post_dx":
       return `${t("Pressione pneumatici", "Tyre pressure")} — ${parolaDellaRuota("postDx")}`;
-    default:
-      return clean(ref);
+    default: {
+      const voce3 = casellaDellAuto(ref);
+      return voce3 ? t(voce3.it, voce3.en) : clean(ref);
+    }
   }
 }
 function etichettaScelta(ref, predefinita) {
@@ -27774,13 +28162,16 @@ function mettiLeCaselle() {
   if (/auto elettrica|electric|^.?\s*auto$|^.?\s*car$/i.test(String(sezione2.label || "")))
     sezione2.label = `🚗 ${t("Veicoli", "Vehicles")}`;
   let aggiunte = 0;
-  for (const voce3 of CASELLE_TERMICHE) {
-    if (sezione2.slots.some((slot) => slot?.ref === voce3.ref)) continue;
+  const aggiungi5 = (voce3) => {
+    if (sezione2.slots.some((slot) => slot?.ref === voce3.ref)) return;
     sezione2.slots.push({ ref: voce3.ref, lbl: etichettaDellaCasella(voce3.ref) });
     aggiunte += 1;
-  }
+  };
+  for (const voce3 of CASELLE_TERMICHE) aggiungi5(voce3);
+  for (const voce3 of CASELLE_DELL_AUTO) aggiungi5(voce3);
   const refs = lexicalGlobal("CD_SLOT_REFS");
-  if (refs && typeof refs.add === "function") for (const ref of RIFERIMENTI_TERMICI) refs.add(ref);
+  if (refs && typeof refs.add === "function")
+    for (const ref of [...RIFERIMENTI_TERMICI, ...RIFERIMENTI_DELL_AUTO]) refs.add(ref);
   return aggiunte > 0;
 }
 function rinominaLaLinguettaDellAuto() {
@@ -27917,7 +28308,18 @@ function scriviLaCapacita(valore3) {
   return true;
 }
 function capacitaDellAutoInUso() {
-  return capacitaDellaBatteria(activeVehicle() || {}) ?? capacitaDiCasa() ?? CAPACITA_DI_SERIE;
+  const auto = activeVehicle();
+  return capacitaDellaBatteria(auto || {}) ?? (auto ? null : capacitaDiCasa()) ?? capacitaDalSensore() ?? capacitaDiCasa() ?? CAPACITA_DI_SERIE;
+}
+function capacitaDalSensore() {
+  let entita3 = "";
+  try {
+    entita3 = clean(root.resolveEntity?.(CASELLA_DELLA_CAPACITA));
+  } catch (_error) {
+    entita3 = "";
+  }
+  if (!entita3 || entita3 === CASELLA_DELLA_CAPACITA) return null;
+  return kilowattoraDalloStato(allStates()?.[entita3]);
 }
 function arco2(percentuale5) {
   const valore3 = Number.isFinite(percentuale5) ? Math.max(0, Math.min(100, percentuale5)) : 0;
@@ -27965,10 +28367,91 @@ function gommeMarkup(lettura3) {
     </div>`;
   return { riassunto: riassunto3, quadretto };
 }
+function parolaInTessera(glifo2, etichetta3, testo4, ref) {
+  if (!clean(testo4)) return "";
+  const nome = etichettaScelta(ref, etichetta3);
+  return `<button type="button" class="dm-termica-misura" data-dm-storico="${esc(ref)}" data-dm-nome="${esc(nome)}">
+    <i aria-hidden="true">${glifo2}</i>
+    <span class="dm-termica-misura-testo"><small>${esc(nome)}</small><b>${esc(testo4)}</b></span>
+  </button>`;
+}
+var MOMENTANEE = /* @__PURE__ */ new Set([
+  "dm.ev_velocita",
+  "dm.ev_potenza_istantanea",
+  "dm.ev_potenza_riscaldatore",
+  "dm.ev_potenza_ricarica",
+  "dm.ev_tempo_ricarica"
+]);
+var COMANDI = /* @__PURE__ */ new Set(["dm.ev_comando_clima", "dm.ev_comando_ricarica"]);
+function datiMarkup(lettura3, adesso = Date.now()) {
+  const caselle2 = lettura3?.caselle || {};
+  const valore3 = (campo5) => {
+    const v = caselle2[campo5]?.valore;
+    return v === void 0 ? null : v;
+  };
+  const diSerie = (ref) => senzaParentesi(etichettaDellaCasella(ref));
+  const nomeDi17 = (ref) => etichettaScelta(ref, diSerie(ref));
+  const tessere2 = [];
+  const pillole2 = [];
+  for (const voce3 of CASELLE_DELL_AUTO) {
+    const casella6 = caselle2[voce3.campo];
+    const v = casella6 ? casella6.valore : null;
+    if (v === null || v === void 0) continue;
+    switch (voce3.tipo) {
+      case "misura":
+      case "gradi": {
+        if (MOMENTANEE.has(voce3.ref) && v === 0) break;
+        let unita3 = voce3.tipo === "gradi" ? "°" : casella6.unita ? ` ${casella6.unita}` : "";
+        if (voce3.ref === "dm.ev_ultima_ricarica_energia" && clean(valore3("ultimaRicaricaTipo")))
+          unita3 += ` · ${clean(valore3("ultimaRicaricaTipo")).toUpperCase()}`;
+        const cifre3 = Number.isInteger(v) || Math.abs(v) >= 100 ? 0 : 1;
+        tessere2.push(misura(voce3.glifo, diSerie(voce3.ref), v, unita3, voce3.ref, cifre3));
+        break;
+      }
+      case "marcia":
+        tessere2.push(parolaInTessera(voce3.glifo, diSerie(voce3.ref), v, voce3.ref));
+        break;
+      case "acceso": {
+        if (COMANDI.has(voce3.ref)) break;
+        if (v !== true) break;
+        if (voce3.ref === "dm.ev_ricarica_programmata") {
+          const dalle = clean(valore3("ricaricaInizio"));
+          const alle = clean(valore3("ricaricaFine"));
+          const orari = dalle && alle ? ` · ${dalle}–${alle}` : dalle ? ` · ${dalle}` : "";
+          pillole2.push(pillola(voce3.glifo, `${nomeDi17(voce3.ref)}${orari}`, "acceso"));
+          break;
+        }
+        const tono = voce3.ref === "dm.ev_in_sonno" ? "spento" : "acceso";
+        pillole2.push(pillola(voce3.glifo, nomeDi17(voce3.ref), tono));
+        break;
+      }
+      default:
+        break;
+    }
+  }
+  if (valore3("clima") === null && valore3("comandoClima") === true)
+    pillole2.unshift(pillola("❄️", nomeDi17("dm.ev_clima"), "acceso"));
+  const aggiornata = valore3("ultimoAggiornamento");
+  if (aggiornata !== null) {
+    const ref = "dm.ev_ultimo_aggiornamento";
+    const detto3 = istanteDetto(aggiornata, { lingua: locale(), adesso });
+    tessere2.push(parolaInTessera("🕒", diSerie(ref), detto3, ref));
+  }
+  return { pillole: pillole2, tessere: tessere2.join("") };
+}
 function gommeSoleMarkup(gomme) {
   return `<div class="dm-termica-testa">
       <span class="dm-termica-titolo">${esc(t("Pneumatici", "Tyres"))}</span>
     </div>
+    ${gomme.quadretto}
+    ${gomme.riassunto ? `<div class="dm-termica-griglia">${gomme.riassunto}</div>` : ""}`;
+}
+function datiSoliMarkup(dati, gomme) {
+  return `<div class="dm-termica-testa">
+      <span class="dm-termica-titolo">${esc(t("L'auto", "The car"))}</span>
+      <div class="dm-termica-pillole">${dati.pillole.join("")}</div>
+    </div>
+    ${dati.tessere ? `<div class="dm-termica-griglia">${dati.tessere}</div>` : ""}
     ${gomme.quadretto}
     ${gomme.riassunto ? `<div class="dm-termica-griglia">${gomme.riassunto}</div>` : ""}`;
 }
@@ -28046,7 +28529,10 @@ function quadroMarkup(lettura3, tipo) {
     misura("⛽", t("Consumato in totale", "Total fuel used"), lettura3.carburanteTotale, " L", "dm.ev_carburante_totale"),
     gomme.riassunto
   ].join("");
-  const vuoto6 = !serbatoio && !righe3 && !tessere2 && !gomme.quadretto && !pillole2.length ? `<div class="dm-termica-vuoto">${esc(
+  const dati = datiMarkup(lettura3);
+  pillole2.push(...dati.pillole);
+  const tutte = `${tessere2}${dati.tessere}`;
+  const vuoto6 = !serbatoio && !righe3 && !tutte && !gomme.quadretto && !pillole2.length ? `<div class="dm-termica-vuoto">${esc(
     t(
       "Compila le caselle dell'auto — carburante, autonomia, portiere, motore — dalla scheda Auto della configurazione.",
       "Fill in the car's fields — fuel, range, doors, engine — from the Car tab in the settings."
@@ -28057,7 +28543,7 @@ function quadroMarkup(lettura3, tipo) {
       <div class="dm-termica-pillole">${pillole2.join("")}</div>
     </div>
     <div class="dm-termica-quadro">${serbatoio}<div class="dm-termica-righe">${righe3}</div></div>
-    ${tessere2 ? `<div class="dm-termica-griglia">${tessere2}</div>` : ""}
+    ${tutte ? `<div class="dm-termica-griglia">${tutte}</div>` : ""}
     ${gomme.quadretto}
     ${vuoto6}`;
 }
@@ -28081,8 +28567,11 @@ function dipingi() {
   let blocco3 = page2.querySelector(":scope .dm-termica");
   const lettura3 = letturaTermica(auto?.ov || auto?.overrides || {}, allStates(), root.resolveEntity);
   const gomme = gommeMarkup(lettura3);
-  const soloGomme = !tipo;
-  if (soloGomme && !gomme.quadretto && !gomme.riassunto) {
+  const elettrica = !tipo;
+  const dati = datiMarkup(lettura3);
+  const conDati = Boolean(dati.tessere || dati.pillole.length);
+  const soloGomme = elettrica && !conDati;
+  if (elettrica && !conDati && !gomme.quadretto && !gomme.riassunto) {
     if (blocco3) blocco3.remove();
     state22.firma = "";
     return;
@@ -28097,7 +28586,7 @@ function dipingi() {
   }
   blocco3.dataset.soloGomme = String(soloGomme);
   blocco3.dataset.attenzione = String(Boolean(lettura3.attenzione));
-  blocco3.innerHTML = soloGomme ? gommeSoleMarkup(gomme) : quadroMarkup(lettura3, tipo);
+  blocco3.innerHTML = !elettrica ? quadroMarkup(lettura3, tipo) : conDati ? datiSoliMarkup(dati, gomme) : gommeSoleMarkup(gomme);
 }
 function schedule3() {
   if (state22.frame) return;
@@ -33182,7 +33671,7 @@ var MISURE2 = Object.freeze([
   "ph",
   "misura"
 ]);
-var COMANDI = Object.freeze([
+var COMANDI2 = Object.freeze([
   "luci",
   "lampada",
   "uvb",
@@ -33191,7 +33680,7 @@ var COMANDI = Object.freeze([
   "riscaldatore",
   "comando"
 ]);
-var GENERI = Object.freeze([...MISURE2, "livello", ...COMANDI]);
+var GENERI = Object.freeze([...MISURE2, "livello", ...COMANDI2]);
 var TIPI = Object.freeze(["acquario", "terrario"]);
 function tipoValido(tipo) {
   const scritto3 = pulito28(tipo);
@@ -33374,7 +33863,7 @@ function letturaDellaRiga(riga3, states = {}, nomeDi17 = (entity2) => entity2, t
     unita: pulito28(attributi2.unit_of_measurement),
     da: istanteDelCambio(stato3)
   };
-  if (COMANDI.includes(genere))
+  if (COMANDI2.includes(genere))
     return Object.freeze({ ...base, muto: tace2, acceso: tace2 ? null : eAcceso3(entity2, grezzo) });
   if (genere === "livello" && entity2.startsWith("binary_sensor.")) {
     const classe3 = pulito28(attributi2.device_class).toLowerCase();
@@ -33488,7 +33977,7 @@ function comeStaLAcquario(letture2 = [], { serie: serie2 = {}, config = {}, ades
       giorni: basso || lettura3.muto ? null : giorniAlRabbocco(serie2?.[lettura3.entity], lettura3)
     };
   });
-  const comandi = elenco15.filter((lettura3) => COMANDI.includes(lettura3.genere));
+  const comandi = elenco15.filter((lettura3) => COMANDI2.includes(lettura3.genere));
   const fuori = misure.filter((voce3) => voce3.verdetto === "low" || voce3.verdetto === "high");
   const bassi = livelli.filter((voce3) => voce3.basso);
   const mute = elenco15.filter((lettura3) => lettura3.muto);
@@ -54518,8 +55007,25 @@ var NOMI_EV = Object.freeze({
   "dm.ev_bagagliaio": () => t("Bagagliaio", "Boot"),
   "dm.ev_cofano": () => t("Cofano", "Bonnet"),
   "dm.ev_motore": () => t("Motore", "Engine"),
-  "dm.ev_km_dall_ultima_ricarica": () => t("Dall'ultima carica", "Since last charge")
+  "dm.ev_km_dall_ultima_ricarica": () => t("Dall'ultima carica", "Since last charge"),
+  /* I dati dell'auto connessa: le stesse parole della scheda, senza la
+   * parentesi dell'unita', che il valore scrive gia'. */
+  ...Object.fromEntries(
+    CASELLE_DELL_AUTO.map((voce3) => [voce3.ref, () => senzaParentesi(t(voce3.it, voce3.en))])
+  )
 });
+function valoreDellaRiga(riga3) {
+  const dato = casellaDellAuto(riga3?.rif);
+  const grezzo = clean(riga3?.stato);
+  if (dato?.tipo === "ora" && grezzo) {
+    const detto3 = istanteDetto(Date.parse(grezzo), { lingua: locale() });
+    if (detto3) return detto3;
+  }
+  if (dato?.tipo === "marcia" && grezzo) return marciaDalloStato(grezzo) || clean(riga3?.value);
+  if (dato?.ref === "dm.ev_ultima_ricarica_tipo" && /^(ac|dc)$/i.test(grezzo))
+    return grezzo.toUpperCase();
+  return clean(riga3?.value);
+}
 var GIA_DETTE = /* @__PURE__ */ new Set([
   "dm.ev_target_soc",
   "dm.ev_potenza_ricarica",
@@ -54680,7 +55186,7 @@ function disegnaUnAuto(vettura, righe3, conNome) {
     if (eApertura && eChiusa(riga3)) return false;
     return Boolean(clean(riga3.value));
   });
-  const altreMarkup = altre.length ? `${titoletto(t("Le altre letture", "Other readings"))}<div class="dm-f-ev-due">${altre.map((riga3) => casella(nomeSenzaAuto(riga3), esc(riga3.value))).join("")}</div>` : "";
+  const altreMarkup = altre.length ? `${titoletto(t("Le altre letture", "Other readings"))}<div class="dm-f-ev-due">${altre.map((riga3) => casella(nomeSenzaAuto(riga3), esc(valoreDellaRiga(riga3)))).join("")}</div>` : "";
   return `<div class="dm-f-ev-auto"${conNome ? ` data-auto="${esc(vettura.nome)}"` : ""}>
     ${eroe}
     ${dove.length ? `${titoletto(t("Dov'è e quanto ha fatto", "Where it is and how far it went"))}<div class="dm-f-ev-due">${dove.join("")}</div>` : ""}
@@ -62469,8 +62975,9 @@ function letturaVettura(states, auto, fuori, indice, visti = /* @__PURE__ */ new
     target: sbircia("dm.ev_target_soc"),
     /* La capacita' della batteria di QUESTA vettura: senza, il tempo che manca
      * si conterebbe su settanta kilowattora per tutte le auto del mondo, e su
-     * una batteria da quaranta uscirebbe quasi doppio. */
-    capacita: capacitaDellaBatteria(auto || {}),
+     * una batteria da quaranta uscirebbe quasi doppio. Scritta, o detta dal
+     * suo sensore quando non la si e' scritta. */
+    capacita: capacitaDellaBatteria(auto || {}, states),
     altre: altreCaselleEv(states, mappa2, fuori, visti)
   };
 }
@@ -62536,6 +63043,8 @@ var GLIFI_EV = Object.freeze([
   [/solare/, "☀️"]
 ]);
 function glifoEv(riferimento) {
+  const dato = casellaDellAuto(riferimento);
+  if (dato) return dato.glifo;
   for (const [prova, glifo2] of GLIFI_EV) if (prova.test(riferimento)) return glifo2;
   return "🚗";
 }
@@ -62590,7 +63099,9 @@ function letturaAttiva(states, fuori) {
      * diversi per la stessa carica. */
     capacita: capacitaDellaBatteria({
       [VEHICLE_CAPACITY_FIELD]: readJson(CAPACITA_DI_CASA_KEY, "")
-    }),
+    }) ?? kilowattoraDalloStato(
+      stateOf(states, refValue(states, CASELLA_DELLA_CAPACITA, /* @__PURE__ */ new Set())?.entity)
+    ),
     altre: altreCaselleEv(states, mappa2, fuori, visti)
   };
 }
@@ -111389,6 +111900,21 @@ function consumoStimato({ kwh: kwh4, carica: carica2, autonomia } = {}) {
   const consumo = pacco * percento6 / 100 / km * 100;
   return consumo >= 8 && consumo <= 40 ? Math.round(consumo * 10) / 10 : CONSUMO_DI_SERIE;
 }
+function consumoMisurato(stato3) {
+  const n = numero51(stato3?.state);
+  if (n === null || n <= 0) return null;
+  const unita3 = String(stato3?.attributes?.unit_of_measurement ?? "").trim().toLowerCase().replace(/\s+/g, "");
+  const MIGLIO = 1.609344;
+  let kwh100 = null;
+  if (unita3 === "" || unita3 === "kwh/100km") kwh100 = n;
+  else if (unita3 === "kwh/100mi") kwh100 = n / MIGLIO;
+  else if (unita3 === "wh/km") kwh100 = n / 10;
+  else if (unita3 === "wh/mi") kwh100 = n / 10 / MIGLIO;
+  else if (unita3 === "km/kwh") kwh100 = 100 / n;
+  else if (unita3 === "mi/kwh") kwh100 = 100 / (n * MIGLIO);
+  if (kwh100 === null || kwh100 < 5 || kwh100 > 60) return null;
+  return Math.round(kwh100 * 10) / 10;
+}
 function caricaAllaPartenza(scelta3, adesso, obiettivo2 = null) {
   if (scelta3 === 100 || scelta3 === "100") return 100;
   const ora5 = numero51(adesso);
@@ -116233,6 +116759,22 @@ function numeroDi2(stato3) {
   const n = Number.parseFloat(String(stato3?.state ?? "").replace(",", "."));
   return Number.isFinite(n) ? n : null;
 }
+function accesoDi(stato3) {
+  const detto3 = String(stato3?.state ?? "").trim().toLowerCase();
+  if (/^(on|true|1)$/.test(detto3)) return true;
+  if (/^(off|false|0)$/.test(detto3)) return false;
+  return null;
+}
+function wattDi2(stato3) {
+  const n = numeroDi2(stato3);
+  if (n === null) return null;
+  return /^kw$/i.test(String(stato3?.attributes?.unit_of_measurement ?? "").trim()) ? n * 1e3 : n;
+}
+function gradiDi2(stato3) {
+  const n = numeroDi2(stato3);
+  if (n === null) return null;
+  return /f$/i.test(String(stato3?.attributes?.unit_of_measurement ?? "").trim()) ? Math.round((n - 32) * 5 / 9 * 10) / 10 : n;
+}
 function entitaDi5(car, ref, inUso) {
   const propria = clean((car?.ov || car?.overrides || {})[ref]);
   if (propria) return propria;
@@ -116268,7 +116810,10 @@ function datiDellAuto(car) {
     const detto3 = clean(statoDi5(entitaDi5(car, "dm.ev_stato_ricarica", false))?.state);
     inCarica = /^[cd]$|charg|in carica|ricaric/i.test(detto3);
   }
-  const kwh4 = capacitaDellaBatteria(car) ?? (profiles().length ? null : capacitaDellAutoInUso()) ?? CAPACITA_DI_SERIE;
+  const capacitaVera = capacitaDellaBatteria(car) ?? (profiles().length ? null : capacitaDiCasa()) ?? kilowattoraDalloStato(statoDi5(entitaDi5(car, CASELLA_DELLA_CAPACITA, inUso)));
+  const kwh4 = capacitaVera ?? CAPACITA_DI_SERIE;
+  const consumoMedio = consumoMisurato(statoDi5(entitaDi5(car, "dm.ev_consumo_medio", inUso)));
+  const clima = accesoDi(statoDi5(entitaDi5(car, "dm.ev_clima", inUso))) ?? accesoDi(statoDi5(entitaDi5(car, "dm.ev_comando_clima", inUso)));
   const fine = inCarica && carica2 !== null && obiettivo2 !== null ? tempoDellaRicarica({
     codice: "C",
     soc: carica2,
@@ -116287,7 +116832,21 @@ function datiDellAuto(car) {
     collegata,
     fineAlle: fine?.stato === "carica" ? Date.now() + fine.minuti * 6e4 : null,
     kwh: kwh4,
-    consumo: consumoStimato({ kwh: kwh4, carica: carica2, autonomia })
+    consumo: consumoMedio ?? consumoStimato({ kwh: kwh4, carica: carica2, autonomia }),
+    /* I dati del consumo per gdanav, coi nomi del contratto delle sorelle
+     * (`docs/DATI-AUTO.md` di GdAAuto). Un dato che manca resta `null`, e il
+     * conto di la' resta com'era. */
+    perGdanav: {
+      energia_kwh: kilowattoraDalloStato(statoDi5(entitaDi5(car, "dm.ev_energia_residua", inUso))),
+      capacita_kwh: capacitaVera,
+      consumo_medio_kwh100: consumoMedio,
+      potenza_clima_w: wattDi2(statoDi5(entitaDi5(car, "dm.ev_potenza_riscaldatore", inUso))),
+      clima_acceso: clima,
+      batteria_in_riscaldamento: accesoDi(
+        statoDi5(entitaDi5(car, "dm.ev_batteria_in_riscaldamento", inUso))
+      ),
+      temperatura_interna_c: gradiDi2(statoDi5(entitaDi5(car, "dm.ev_temperatura_interna", inUso)))
+    }
   };
 }
 function lAutoDelViaggio(b2) {
@@ -116313,13 +116872,17 @@ function autoPerLaStrada(b2) {
   const scelte5 = opzioniDellAuto(b2, dati);
   const batteria = caricaAllaPartenza(scelte5.partenza, dati.carica, dati.obiettivo);
   if (batteria === null) return null;
+  const misurati = Object.fromEntries(
+    Object.entries(dati.perGdanav || {}).filter(([, valore3]) => valore3 !== null)
+  );
   return {
     batteria: Math.round(batteria),
     kwh: dati.kwh,
     consumo: dati.consumo,
     kwMax: null,
     minimaArrivo: scelte5.minimaArrivo,
-    kwColonnine: scelte5.kwColonnine
+    kwColonnine: scelte5.kwColonnine,
+    ...misurati
   };
 }
 var cifre2 = (n, massimo = 0) => Number(n).toLocaleString(activeLocale?.() || "it", { maximumFractionDigits: massimo });
@@ -118085,9 +118648,71 @@ html body #editor-modal #ed-body .ed-row.dm-room-config-row .ed-row-new{
 
 // src/core/auto-device-binding.js
 var clean27 = (value) => String(value ?? "").trim();
+var CHIAVI_DI_GDAAUTO = Object.freeze([
+  ["batteria", "dm.ev_batteria_auto"],
+  ["autonomia", "dm.ev_autonomia"],
+  ["energia_residua", "dm.ev_energia_residua"],
+  ["capacita_batteria", "dm.ev_capacita_batteria"],
+  ["consumo_medio", "dm.ev_consumo_medio"],
+  ["temperatura_esterna", "dm.ev_temperatura_esterna"],
+  ["temperatura_batteria", "dm.ev_temperatura_batteria"],
+  ["temperatura_interna", "dm.ev_temperatura_interna"],
+  ["potenza_riscaldatore", "dm.ev_potenza_riscaldatore"],
+  ["clima_acceso", "dm.ev_clima"],
+  ["batteria_in_riscaldamento", "dm.ev_batteria_in_riscaldamento"],
+  ["velocita", "dm.ev_velocita"],
+  ["potenza", "dm.ev_potenza_istantanea"],
+  ["odometro", "dm.ev_odometro"],
+  ["autonomia_nominale", "dm.ev_autonomia_nominale"],
+  ["stato_ricarica", "dm.ev_stato_ricarica"],
+  ["in_carica", "dm.ev_stato_ricarica"],
+  ["cavo_collegato", "dm.ev_cavo_collegato"],
+  ["potenza_ricarica", "dm.ev_potenza_ricarica"],
+  ["tempo_ricarica", "dm.ev_tempo_ricarica"],
+  ["limite_ricarica", "dm.ev_target_soc"],
+  ["ricarica_rapida", "dm.ev_ricarica_rapida"],
+  ["ricarica_programmata", "dm.ev_ricarica_programmata"],
+  ["ricarica_inizio", "dm.ev_ricarica_inizio"],
+  ["ricarica_fine", "dm.ev_ricarica_fine"],
+  ["v2l", "dm.ev_v2l"],
+  ["comando_ricarica", "dm.ev_comando_ricarica"],
+  ["energia_oggi_guida", "dm.ev_energia_oggi_guida"],
+  ["energia_oggi_clima", "dm.ev_energia_oggi_clima"],
+  ["energia_oggi_altro", "dm.ev_energia_oggi_altro"],
+  ["km_7_giorni", "dm.ev_km_7_giorni"],
+  ["energia_7_giorni", "dm.ev_energia_7_giorni"],
+  ["ultima_ricarica_energia", "dm.ev_ultima_ricarica_energia"],
+  ["ultima_ricarica_tipo", "dm.ev_ultima_ricarica_tipo"],
+  ["ultima_ricarica_inizio", "dm.ev_ultima_ricarica_inizio"],
+  ["ultima_ricarica_fine", "dm.ev_ultima_ricarica_fine"],
+  ["serratura", "dm.ev_portiere"],
+  ["portiere", "dm.ev_portiere"],
+  ["bagagliaio", "dm.ev_bagagliaio"],
+  ["finestrini", "dm.ev_finestrini"],
+  ["quadro", "dm.ev_motore"],
+  ["marcia", "dm.ev_marcia"],
+  ["posizione", "dm.ev_posizione"],
+  ["pneumatici_ant_sx", "dm.ev_pneumatico_ant_sx"],
+  ["pneumatici_ant_dx", "dm.ev_pneumatico_ant_dx"],
+  ["pneumatici_post_sx", "dm.ev_pneumatico_post_sx"],
+  ["pneumatici_post_dx", "dm.ev_pneumatico_post_dx"],
+  ["pneumatici_allarme", "dm.ev_pneumatici"],
+  ["antifurto", "dm.ev_allarme"],
+  ["sentinella", "dm.ev_sentinella"],
+  ["freno_stazionamento", "dm.ev_freno_stazionamento"],
+  ["sbrinamento", "dm.ev_sbrinamento"],
+  ["in_sonno", "dm.ev_in_sonno"],
+  ["ultimo_aggiornamento", "dm.ev_ultimo_aggiornamento"],
+  ["clima", "dm.ev_comando_clima"],
+  ["carburante", "dm.ev_carburante"],
+  ["autonomia_carburante", "dm.ev_autonomia_carburante"],
+  ["autonomia_totale", "dm.ev_autonomia_totale"]
+]);
+var PIATTAFORMA_GDAAUTO = "gdaauto";
+var eDiGdaauto = (voce3) => clean27(voce3?.platform).toLowerCase() === PIATTAFORMA_GDAAUTO && Boolean(clean27(voce3?.translation_key));
 var PAROLE6 = Object.freeze({
   batteria: /\b(soc|state of charge|batteria(?! di servizio| 12)|battery(?! voltage| 12)|hv batt|traction batt)\b/i,
-  batteriaServizio: /\b(12\s?v|aux(iliary)? batt|batteria (di )?servizio|starter batt|bordbatterie)\b/i,
+  batteriaServizio: /\b(12\s?v|aux(iliary)? batt|batteria (di )?servizio|batteria ausiliaria|starter batt|bordbatterie)\b/i,
   carburante: /\b(fuel|carburante|benzina|gasolio|diesel|tank|serbatoio|kraftstoff|combustible|niveau de carburant)\b/i,
   autonomia: /\b(range|autonomia|reichweite|autonomie|autonom[ií]a|dte|distance to empty)\b/i,
   odometro: /\b(odometer|odometro|contachilometri|kilometerstand|kilometraje|totalizzatore)\b/i,
@@ -118095,7 +118720,7 @@ var PAROLE6 = Object.freeze({
   carburanteTotale: /\b(fuel (used|consumed)|carburante (consumato|totale)|verbrauch(t)?|consommation totale)\b/i,
   ricarica: /\b(charging|charge state|stato (di )?ricarica|ladezustand|estado de carga|en charge|plug|cavo|cable)\b/i,
   potenza: /\b(charg\w* power|potenza (di )?ricarica|ladeleistung|puissance)\b/i,
-  target: /\b(target|limite|soglia|ladeziel|objetivo)\b/i,
+  target: /\b(target|limite|soglia|ladeziel|objetivo|charg\w* limit)\b/i,
   motore: /\b(engine|motore|ignition|quadro|z[üu]ndung|encendido|moteur)\b/i,
   /* Le portiere si chiedono in due tempi: prima «e' chiusa a chiave?», che e'
    * il riepilogo che la card vuole (bloccate/aperte), e solo dopo la singola
@@ -118109,8 +118734,33 @@ var PAROLE6 = Object.freeze({
   allarme: /\b(alarm|allarm|antifurt|alarma|alarme)\b/i,
   olio: /\b(oil|olio|[öo]l\b|aceite|huile)\b/i,
   esterna: /\b(outside|outdoor|external|ambient|esterna|au(ss|ß)en|exterior|ext[ée]rieur)\b/i,
-  pneumatici: /\b(tyre|tire|pneumatic|pneumatici|reifen|neum[áa]tic|pneu)\b/i
+  interna: /\b(interior|inside|indoor|cabin|abitacolo|interna|innen\w*|habitacle|int[ée]rieur)\b/i,
+  pneumatici: /\b(tyre|tire|pneumatic|pneumatici|reifen|neum[áa]tic|pneu)\b/i,
+  /* Le autonomie che NON sono quella di adesso (#2d del resoconto): quella
+   * di omologazione, quella a carburante, quella totale di un'ibrida e quella
+   * al limite di carica. Prima arrivavano in ordine alfabetico, e «Autonomia
+   * di omologazione» batteva «Autonomia stimata» per una «d» prima della «s»:
+   * il consumo che se ne ricava usciva basso, e la pagina prometteva
+   * chilometri che l'auto non fa. Ognuna ha la sua casella. */
+  autonomiaNominale: /\b(rated|nominal\w*|omologazion\w*|wltp|epa|nedc|cltc|ideal|typical)\b/i,
+  autonomiaCarburante: /\b(fuel|carburante|benzina|gasolio|diesel|kraftstoff|combustible|petrol|gas)\b/i,
+  autonomiaTotale: /\b(total\w*|combined|combinat\w*|gesamt\w*)\b/i,
+  autonomiaAlLimite: /\b(at (the )?(charge )?limit|al limite|at target|al target)\b/i,
+  /* Quello che non e' dell'auto, anche se ne usa le parole: l'additivo dei
+   * diesel ha un «tank» e un «range» suoi (#444). */
+  adblue: /\b(adblue|urea|def)\b/i,
+  /* Un consumo, comunque lo si scriva: non e' una distanza e non e' carburante
+   * usato, anche se dice «ultimo viaggio» o «Verbrauch». */
+  consumo: /\b(consum\w*|consumption|verbrauch\w*|consommation|efficien\w*|economy)\b/i,
+  capacita: /\b(capacit\w*|capacity|kapazit\w*|capacidad)\b/i,
+  energiaResidua: /\b(energia residua|remaining energy|energy remaining|available energy|restenergie|[ée]nergie restante)\b/i,
+  rimanente: /\b(remaining|rimanent\w*|left|to full|alla fine|manca\w*|restzeit|restante)\b/i
 });
+var UNITA_DEL_CONSUMO = /^(k?wh\s?\/\s?100\s?(km|mi)|wh\s?\/\s?(km|mi)|(km|mi)\s?\/\s?kwh)$/i;
+var UNITA_DI_DISTANZA = /^(k?m|mi|ft)$/i;
+var UNITA_DI_VOLUME = /^(l|gal|ml)$/i;
+var UNITA_DI_ENERGIA = /^(k?wh|mwh)$/i;
+var UNITA_DI_TEMPO = /^(s|min|h|d)$/i;
 var RUOTE3 = Object.freeze([
   [
     "dm.ev_pneumatico_ant_sx",
@@ -118144,11 +118794,11 @@ function legaLAutoAlDispositivo({ entities = [], states = {} } = {}) {
   );
   const libere = new Set(elenco15.map((voce3) => clean27(voce3.entity_id)));
   const mappa2 = {};
-  const prendi = (ref, domanda) => {
+  const prendi = (ref, domanda, { ancheImpostazioni = false } = {}) => {
     if (mappa2[ref]) return false;
     for (const voce3 of elenco15) {
       const id = clean27(voce3.entity_id);
-      if (!libere.has(id) || SOLO_IMPOSTAZIONE(voce3)) continue;
+      if (!libere.has(id) || !ancheImpostazioni && SOLO_IMPOSTAZIONE(voce3)) continue;
       if (!domanda(voce3)) continue;
       mappa2[ref] = id;
       libere.delete(id);
@@ -118156,85 +118806,202 @@ function legaLAutoAlDispositivo({ entities = [], states = {} } = {}) {
     }
     return false;
   };
-  const conClasse = (nome) => (voce3) => classe2(voce3, states) === nome;
-  const conParola = (chiave2, dom) => (voce3) => (!dom || dominio4(voce3) === dom) && PAROLE6[chiave2].test(parole2(voce3, states));
+  const chiave2 = (voce3) => clean27(voce3?.translation_key);
+  for (const [nome2, ref] of CHIAVI_DI_GDAAUTO) {
+    const sua = (voce3) => eDiGdaauto(voce3) && chiave2(voce3) === nome2;
+    prendi(ref, (voce3) => sua(voce3) && dominio4(voce3) === "lock", { ancheImpostazioni: true });
+    prendi(ref, sua, { ancheImpostazioni: true });
+  }
+  for (const voce3 of elenco15) if (eDiGdaauto(voce3)) libere.delete(clean27(voce3.entity_id));
+  const conClasse = (nome2) => (voce3) => classe2(voce3, states) === nome2;
+  const conParola = (chiave3, dom) => (voce3) => (!dom || dominio4(voce3) === dom) && PAROLE6[chiave3].test(parole2(voce3, states));
   const percentuale5 = (voce3) => unita2(voce3, states) === "%";
+  const distanza3 = (voce3) => conClasse("distance")(voce3) || UNITA_DI_DISTANZA.test(unita2(voce3, states));
+  const gradi9 = (voce3) => conClasse("temperature")(voce3) || /°\s?[cf]$/i.test(unita2(voce3, states));
+  const nome = (voce3) => clean27(voce3?.name);
   prendi("dm.ev_posizione", (voce3) => dominio4(voce3) === "device_tracker");
-  prendi(
-    "dm.ev_batteria_servizio",
-    (voce3) => percentuale5(voce3) && PAROLE6.batteriaServizio.test(parole2(voce3, states))
-  );
+  const diServizio = (voce3) => PAROLE6.batteriaServizio.test(parole2(voce3, states)) || /\b(car battery level|lv batt\w*|low voltage)\b/i.test(nome(voce3));
+  prendi("dm.ev_batteria_servizio", (voce3) => percentuale5(voce3) && diServizio(voce3));
   prendi(
     "dm.ev_batteria_servizio",
     (voce3) => (conClasse("voltage")(voce3) || /^m?v$/i.test(unita2(voce3, states))) && PAROLE6.batteriaServizio.test(parole2(voce3, states))
   );
-  prendi("dm.ev_batteria_auto", (voce3) => conClasse("battery")(voce3) && dominio4(voce3) === "sensor");
+  prendi(
+    "dm.ev_batteria_auto",
+    (voce3) => conClasse("battery")(voce3) && dominio4(voce3) === "sensor" && !diServizio(voce3) && !conParola("target")(voce3)
+  );
   prendi(
     "dm.ev_batteria_auto",
     (voce3) => percentuale5(voce3) && conParola("batteria")(voce3) && !conParola("target")(voce3)
   );
   prendi(
     "dm.ev_carburante",
-    (voce3) => percentuale5(voce3) && PAROLE6.carburante.test(parole2(voce3, states))
+    (voce3) => percentuale5(voce3) && PAROLE6.carburante.test(parole2(voce3, states)) && !conParola("adblue")(voce3)
   );
-  prendi("dm.ev_autonomia", (voce3) => conClasse("distance")(voce3) && conParola("autonomia")(voce3));
-  prendi("dm.ev_autonomia", conParola("autonomia", "sensor"));
+  const unAutonomia = (voce3) => dominio4(voce3) === "sensor" && conParola("autonomia")(voce3) && !conParola("adblue")(voce3);
+  const qualificata = (voce3) => conParola("autonomiaNominale")(voce3) || conParola("autonomiaCarburante")(voce3) || conParola("autonomiaTotale")(voce3) || conParola("autonomiaAlLimite")(voce3);
+  prendi(
+    "dm.ev_autonomia_al_limite_di_carica",
+    (voce3) => unAutonomia(voce3) && distanza3(voce3) && conParola("autonomiaAlLimite")(voce3)
+  );
+  prendi(
+    "dm.ev_autonomia_nominale",
+    (voce3) => unAutonomia(voce3) && distanza3(voce3) && conParola("autonomiaNominale")(voce3)
+  );
+  prendi(
+    "dm.ev_autonomia_carburante",
+    (voce3) => unAutonomia(voce3) && distanza3(voce3) && conParola("autonomiaCarburante")(voce3)
+  );
+  prendi(
+    "dm.ev_autonomia_totale",
+    (voce3) => unAutonomia(voce3) && distanza3(voce3) && conParola("autonomiaTotale")(voce3)
+  );
+  prendi(
+    "dm.ev_autonomia",
+    (voce3) => conClasse("distance")(voce3) && unAutonomia(voce3) && !qualificata(voce3)
+  );
+  prendi("dm.ev_autonomia", (voce3) => unAutonomia(voce3) && !qualificata(voce3));
   prendi("dm.ev_odometro", conParola("odometro", "sensor"));
-  prendi("dm.ev_ultimo_viaggio", conParola("ultimoViaggio", "sensor"));
-  prendi("dm.ev_carburante_totale", conParola("carburanteTotale", "sensor"));
+  const unConsumo = (voce3) => conParola("consumo")(voce3) || UNITA_DEL_CONSUMO.test(unita2(voce3, states));
+  prendi(
+    "dm.ev_ultimo_viaggio",
+    (voce3) => conParola("ultimoViaggio", "sensor")(voce3) && !unConsumo(voce3) && (distanza3(voce3) || !unita2(voce3, states))
+  );
+  prendi(
+    "dm.ev_consumo_medio",
+    (voce3) => dominio4(voce3) === "sensor" && UNITA_DEL_CONSUMO.test(unita2(voce3, states)) && !conParola("ultimoViaggio")(voce3)
+  );
+  prendi(
+    "dm.ev_carburante_totale",
+    (voce3) => conParola("carburanteTotale", "sensor")(voce3) && !conParola("ultimoViaggio")(voce3) && (UNITA_DI_VOLUME.test(unita2(voce3, states)) || !unita2(voce3, states))
+  );
+  const inKwh2 = (voce3) => conClasse("energy_storage")(voce3) || UNITA_DI_ENERGIA.test(unita2(voce3, states));
+  prendi(
+    "dm.ev_capacita_batteria",
+    (voce3) => dominio4(voce3) === "sensor" && inKwh2(voce3) && conParola("capacita")(voce3)
+  );
+  prendi(
+    "dm.ev_energia_residua",
+    (voce3) => dominio4(voce3) === "sensor" && inKwh2(voce3) && conParola("energiaResidua")(voce3)
+  );
   const nuda = (voce3) => !/\bbatter/i.test(clean27(voce3?.name));
   const lettera = (voce3) => eUnaLettera(states?.[clean27(voce3?.entity_id)]?.state);
+  const apertura = (voce3) => ["door", "window", "opening", "lock", "garage_door"].includes(classe2(voce3, states));
   prendi(
     "dm.ev_cavo_collegato",
-    (voce3) => parlaDelCavo(parole2(voce3, states)) && (dominio4(voce3) === "binary_sensor" || lettera(voce3))
+    (voce3) => dominio4(voce3) === "binary_sensor" && conClasse("plug")(voce3)
+  );
+  prendi(
+    "dm.ev_cavo_collegato",
+    (voce3) => parlaDelCavo(parole2(voce3, states)) && !apertura(voce3) && (dominio4(voce3) === "binary_sensor" || lettera(voce3))
+  );
+  const NON_STATI = /* @__PURE__ */ new Set([
+    "button",
+    "lock",
+    "number",
+    "input_number",
+    "select",
+    "input_select",
+    "cover",
+    "device_tracker",
+    "image",
+    "camera",
+    "event",
+    "update",
+    "text",
+    "input_text",
+    "datetime",
+    "date",
+    "time"
+  ]);
+  const CLASSI_DA_MISURA = /* @__PURE__ */ new Set([
+    "power",
+    "energy",
+    "energy_storage",
+    "duration",
+    "timestamp",
+    "date",
+    "current",
+    "voltage",
+    "battery",
+    "distance",
+    "temperature",
+    "speed",
+    "door",
+    "window",
+    "opening",
+    "lock",
+    "plug"
+  ]);
+  const ALTRO_DALLO_STATO = /\b(sched\w*|programmat\w*|timer|start\w*|inizio|end|fine|stop\w*|time|tempo|remaining|rimanent\w*|left|until|limit\w*|current|corrente|power|potenza|energy|energia|cost\w*|rate|rapid\w*|fast|speed|veloc\w*|lock\w*)\b/i;
+  const unoStato = (voce3) => conParola("ricarica")(voce3) && !NON_STATI.has(dominio4(voce3)) && !unita2(voce3, states) && !CLASSI_DA_MISURA.has(classe2(voce3, states)) && !ALTRO_DALLO_STATO.test(parole2(voce3, states));
+  prendi(
+    "dm.ev_stato_ricarica",
+    (voce3) => dominio4(voce3) === "binary_sensor" && conClasse("battery_charging")(voce3)
   );
   prendi(
     "dm.ev_stato_ricarica",
-    (voce3) => conParola("ricarica")(voce3) && nuda(voce3) && dominio4(voce3) !== "sensor"
+    (voce3) => unoStato(voce3) && nuda(voce3) && dominio4(voce3) !== "sensor"
   );
-  prendi("dm.ev_stato_ricarica", (voce3) => conParola("ricarica")(voce3) && nuda(voce3));
-  prendi(
-    "dm.ev_stato_ricarica",
-    (voce3) => conParola("ricarica")(voce3) && dominio4(voce3) !== "sensor"
-  );
-  prendi("dm.ev_stato_ricarica", conParola("ricarica", "sensor"));
+  prendi("dm.ev_stato_ricarica", (voce3) => unoStato(voce3) && nuda(voce3));
+  prendi("dm.ev_stato_ricarica", (voce3) => unoStato(voce3) && dominio4(voce3) !== "sensor");
+  prendi("dm.ev_stato_ricarica", (voce3) => unoStato(voce3) && dominio4(voce3) === "sensor");
   prendi(
     "dm.ev_potenza_ricarica",
     (voce3) => conClasse("power")(voce3) && conParola("potenza")(voce3)
   );
   prendi("dm.ev_potenza_ricarica", conParola("potenza", "sensor"));
+  prendi(
+    "dm.ev_tempo_ricarica",
+    (voce3) => dominio4(voce3) === "sensor" && (conClasse("duration")(voce3) || UNITA_DI_TEMPO.test(unita2(voce3, states))) && /\b(charg\w*|ricaric\w*|carica|lade\w*|recharge)\b/i.test(parole2(voce3, states)) && conParola("rimanente")(voce3)
+  );
   const comandabile = (voce3) => ["select", "input_select", "number", "input_number"].includes(dominio4(voce3));
   const parlaDiCarica = (voce3) => /\b(soc|charg\w*|carica|limit\w*|ladeziel|ladelimit)\b/i.test(parole2(voce3, states));
+  const corrente2 = (voce3) => /^m?a$/i.test(unita2(voce3, states)) || conClasse("current")(voce3) || /\b(corrente|current|ampere|amps?|strom|courant)\b/i.test(parole2(voce3, states));
   prendi(
     "dm.ev_target_soc",
-    (voce3) => comandabile(voce3) && conParola("target")(voce3) && (percentuale5(voce3) || parlaDiCarica(voce3))
+    (voce3) => comandabile(voce3) && conParola("target")(voce3) && !corrente2(voce3) && (percentuale5(voce3) || parlaDiCarica(voce3))
   );
-  prendi("dm.ev_target_soc", (voce3) => percentuale5(voce3) && conParola("target")(voce3));
+  prendi(
+    "dm.ev_target_soc",
+    (voce3) => percentuale5(voce3) && conParola("target")(voce3) && !corrente2(voce3)
+  );
+  const delCavo = (voce3) => /\b(cable|cavo|kabel|charg\w*|ricaric\w*|port|presa)\b/i.test(parole2(voce3, states));
+  prendi("dm.ev_portiere", (voce3) => dominio4(voce3) === "lock" && !delCavo(voce3));
   prendi("dm.ev_portiere", (voce3) => dominio4(voce3) === "lock");
   prendi("dm.ev_portiere", (voce3) => classe2(voce3, states) === "lock");
   prendi("dm.ev_portiere", conParola("serratura"));
   prendi("dm.ev_portiere", (voce3) => classe2(voce3, states) === "door");
   prendi("dm.ev_portiere", conParola("portiere"));
   prendi("dm.ev_finestrini", (voce3) => classe2(voce3, states) === "window");
-  prendi("dm.ev_finestrini", conParola("finestrini"));
+  prendi(
+    "dm.ev_finestrini",
+    (voce3) => conParola("finestrini")(voce3) && !["switch", "button"].includes(dominio4(voce3)) && !/\b(heat\w*|riscald\w*|beheiz\w*|defrost\w*|sbrin\w*|d[ée]givr\w*)\b/i.test(
+      parole2(voce3, states)
+    )
+  );
   prendi("dm.ev_bagagliaio", conParola("bagagliaio"));
   prendi("dm.ev_cofano", conParola("cofano"));
   prendi("dm.ev_allarme", conParola("allarme"));
-  prendi("dm.ev_motore", conParola("motore"));
   prendi(
-    "dm.ev_temperatura_olio",
-    (voce3) => conClasse("temperature")(voce3) && conParola("olio")(voce3)
+    "dm.ev_motore",
+    (voce3) => conParola("motore")(voce3) && dominio4(voce3) !== "button" && !unita2(voce3, states) && !gradi9(voce3)
   );
+  prendi("dm.ev_temperatura_olio", (voce3) => gradi9(voce3) && conParola("olio")(voce3));
+  prendi("dm.ev_temperatura_esterna", (voce3) => gradi9(voce3) && conParola("esterna")(voce3));
+  prendi("dm.ev_temperatura_interna", (voce3) => gradi9(voce3) && conParola("interna")(voce3));
   prendi(
-    "dm.ev_temperatura_esterna",
-    (voce3) => conClasse("temperature")(voce3) && conParola("esterna")(voce3)
+    "dm.ev_temperatura_batteria",
+    (voce3) => gradi9(voce3) && /\b(batter\w*|pack|hv|akku|bms|cell\w*)\b/i.test(parole2(voce3, states)) && !diServizio(voce3)
   );
+  const unaGomma = (voce3) => PAROLE6.pneumatici.test(parole2(voce3, states)) && !gradi9(voce3) && !["battery", "voltage", "signal_strength"].includes(classe2(voce3, states)) && !/^(%|m?v)$/i.test(unita2(voce3, states)) && !/\b(temperatur\w*|temp|batter\w*)\b/i.test(parole2(voce3, states));
   for (const [ref, ruota] of RUOTE3)
-    prendi(
-      ref,
-      (voce3) => PAROLE6.pneumatici.test(parole2(voce3, states)) && ruota.test(parole2(voce3, states))
-    );
-  prendi("dm.ev_pneumatici", conParola("pneumatici"));
+    prendi(ref, (voce3) => unaGomma(voce3) && ruota.test(parole2(voce3, states)));
+  prendi("dm.ev_pneumatici", unaGomma);
+  if (!mappa2["dm.ev_autonomia"] && !mappa2["dm.ev_batteria_auto"] && mappa2["dm.ev_autonomia_carburante"]) {
+    mappa2["dm.ev_autonomia"] = mappa2["dm.ev_autonomia_carburante"];
+    delete mappa2["dm.ev_autonomia_carburante"];
+  }
   return { mappa: mappa2, tipo: motoreDalleCaselle(mappa2) };
 }
 function motoreDalleCaselle(mappa2 = {}) {
@@ -125250,7 +126017,13 @@ var CASELLE_SENZA_MOTO = Object.freeze([
   "dm.ev_portiere",
   "dm.ev_finestrini",
   "dm.ev_bagagliaio",
-  "dm.ev_cofano"
+  "dm.ev_cofano",
+  /* E dei dati dell'auto connessa, quelli dell'abitacolo: una moto non ha un
+   * parabrezza da sbrinare ne' un clima da accendere. */
+  "dm.ev_sbrinamento",
+  "dm.ev_clima",
+  "dm.ev_comando_clima",
+  "dm.ev_temperatura_interna"
 ]);
 function disegnoDelVeicolo(car, misura7 = 34) {
   return disegnoDiCasa(eUnaMoto(car) ? "moto" : "ev", { misura: misura7, ripiego: "ev" });
@@ -134310,7 +135083,7 @@ function conICampiDelContatore(bozza3, body, indice) {
   }
   return fuori;
 }
-function valoreDellaRiga(letta2) {
+function valoreDellaRiga2(letta2) {
   if (!letta2 || letta2.muto) return "—";
   const cifre3 = Math.abs(letta2.valore) < 100 ? 1 : 0;
   return `${formatNumber(letta2.valore, cifre3)}${letta2.unita ? ` ${letta2.unita}` : ""}`;
@@ -134381,7 +135154,7 @@ var scheda4 = costruisciSchedaDichiarata({
   },
   statoDellaRiga: (letta2) => letta2?.muto ? "muta" : "bene",
   didascalia: (letta2) => letta2 ? nomiDeiGeneri()[letta2.genere] || "" : "",
-  accanto: valoreDellaRiga,
+  accanto: valoreDellaRiga2,
   /* Cambiare il genere cambia le caselle: il prezzo non c'è per la
    * pressione, la forcella non c'è per il gas. Si salva quello che c'è
    * scritto e si ridisegna, come quando si tocca un disegno. E il disegno di

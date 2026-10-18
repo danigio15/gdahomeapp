@@ -127,6 +127,339 @@ export const RUOTE = Object.freeze([
 /** I riferimenti, per chi deve sapere se uno stato riguarda un'auto termica. */
 export const RIFERIMENTI_TERMICI = Object.freeze(CASELLE_TERMICHE.map((voce) => voce.ref));
 
+/* I dati che un'auto connessa racconta, di qualunque motore.
+ *
+ * «Ogni dato di GdAAuto deve avere la sua casella in GdAHome.» Sono le chiavi
+ * del contratto delle tre sorelle (`docs/DATI-AUTO.md` di GdAAuto), ognuna
+ * con la casella `dm.ev_<chiave>` che il legame riempie da solo e che si puo'
+ * scegliere anche a mano, nella stessa scheda delle altre. Valgono anche per
+ * un'auto che arriva da un'altra integrazione: la casella e' della vettura,
+ * non di chi la riempie.
+ *
+ * `misura` e' un numero con l'unita' che il sensore dichiara — kWh, W, km,
+ * minuti — e si scrive quella, come per la batteria di servizio (#348).
+ * `parola` e' un testo da mostrare com'e' («07:30», «dc»), `ora` un istante,
+ * `marcia` la lettera del cambio. */
+export const CASELLE_DELL_AUTO = Object.freeze([
+  /* La batteria e il consumo. */
+  Object.freeze({
+    ref: "dm.ev_energia_residua",
+    campo: "energiaResidua",
+    tipo: "misura",
+    glifo: "🔋",
+    it: "Energia residua (kWh)",
+    en: "Remaining energy (kWh)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_capacita_batteria",
+    campo: "capacitaBatteria",
+    tipo: "misura",
+    glifo: "🔋",
+    it: "Capacità della batteria (dal sensore, kWh)",
+    en: "Battery capacity (from the sensor, kWh)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_consumo_medio",
+    campo: "consumoMedio",
+    tipo: "misura",
+    glifo: "📉",
+    it: "Consumo medio (kWh/100 km)",
+    en: "Average consumption (kWh/100 km)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_temperatura_batteria",
+    campo: "temperaturaBatteria",
+    tipo: "gradi",
+    glifo: "🌡️",
+    it: "Temperatura della batteria (°C)",
+    en: "Battery temperature (°C)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_temperatura_interna",
+    campo: "interna",
+    tipo: "gradi",
+    glifo: "🌡️",
+    it: "Temperatura nell'abitacolo (°C)",
+    en: "Cabin temperature (°C)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_potenza_riscaldatore",
+    campo: "potenzaRiscaldatore",
+    tipo: "misura",
+    glifo: "♨️",
+    it: "Potenza del riscaldatore (W)",
+    en: "Heater power (W)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_clima",
+    campo: "clima",
+    tipo: "acceso",
+    glifo: "❄️",
+    it: "Clima acceso (acceso/spento)",
+    en: "Climate on (on/off)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_batteria_in_riscaldamento",
+    campo: "batteriaInRiscaldamento",
+    tipo: "acceso",
+    glifo: "♨️",
+    it: "Batteria in riscaldamento (acceso/spento)",
+    en: "Battery heating (on/off)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_velocita",
+    campo: "velocita",
+    tipo: "misura",
+    glifo: "🏁",
+    it: "Velocità (km/h)",
+    en: "Speed (km/h)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_potenza_istantanea",
+    campo: "potenzaIstantanea",
+    tipo: "misura",
+    glifo: "⚡",
+    it: "Potenza in uso (kW)",
+    en: "Power in use (kW)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_autonomia_nominale",
+    campo: "autonomiaNominale",
+    tipo: "misura",
+    glifo: "🛣️",
+    it: "Autonomia di omologazione (km)",
+    en: "Rated range (km)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_autonomia_carburante",
+    campo: "autonomiaCarburante",
+    tipo: "misura",
+    glifo: "🛣️",
+    it: "Autonomia a carburante (km)",
+    en: "Fuel range (km)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_autonomia_totale",
+    campo: "autonomiaTotale",
+    tipo: "misura",
+    glifo: "🛣️",
+    it: "Autonomia totale (km)",
+    en: "Total range (km)",
+  }),
+  /* La ricarica. */
+  Object.freeze({
+    ref: "dm.ev_potenza_ricarica",
+    campo: "potenzaRicarica",
+    tipo: "misura",
+    glifo: "⚡",
+    it: "Potenza di ricarica dell'auto (kW)",
+    en: "Car charging power (kW)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_tempo_ricarica",
+    campo: "tempoRicarica",
+    tipo: "misura",
+    glifo: "⏱️",
+    it: "Tempo alla fine della ricarica (min)",
+    en: "Time to the end of charging (min)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_ricarica_rapida",
+    campo: "ricaricaRapida",
+    tipo: "acceso",
+    glifo: "⚡",
+    it: "Ricarica rapida (acceso/spento)",
+    en: "Fast charging (on/off)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_ricarica_programmata",
+    campo: "ricaricaProgrammata",
+    tipo: "acceso",
+    glifo: "🕒",
+    it: "Ricarica programmata (acceso/spento)",
+    en: "Scheduled charging (on/off)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_ricarica_inizio",
+    campo: "ricaricaInizio",
+    tipo: "parola",
+    glifo: "🕒",
+    it: "Inizio della ricarica programmata (ora)",
+    en: "Scheduled charging start (time)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_ricarica_fine",
+    campo: "ricaricaFine",
+    tipo: "parola",
+    glifo: "🕒",
+    it: "Fine della ricarica programmata (ora)",
+    en: "Scheduled charging end (time)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_v2l",
+    campo: "v2l",
+    tipo: "acceso",
+    glifo: "🔌",
+    it: "Corrente all'esterno, V2L (acceso/spento)",
+    en: "Power outlet, V2L (on/off)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_comando_ricarica",
+    campo: "comandoRicarica",
+    tipo: "acceso",
+    glifo: "🔌",
+    it: "Comando della ricarica (switch)",
+    en: "Charging control (switch)",
+  }),
+  /* Lo storico: oggi, la settimana, l'ultima ricarica. */
+  Object.freeze({
+    ref: "dm.ev_energia_oggi_guida",
+    campo: "energiaOggiGuida",
+    tipo: "misura",
+    glifo: "⚡",
+    it: "Energia di oggi per la guida (kWh)",
+    en: "Energy today for driving (kWh)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_energia_oggi_clima",
+    campo: "energiaOggiClima",
+    tipo: "misura",
+    glifo: "⚡",
+    it: "Energia di oggi per il clima (kWh)",
+    en: "Energy today for climate (kWh)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_energia_oggi_altro",
+    campo: "energiaOggiAltro",
+    tipo: "misura",
+    glifo: "⚡",
+    it: "Energia di oggi per il resto (kWh)",
+    en: "Energy today for everything else (kWh)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_km_7_giorni",
+    campo: "km7Giorni",
+    tipo: "misura",
+    glifo: "🛣️",
+    it: "Km degli ultimi 7 giorni (km)",
+    en: "Distance in the last 7 days (km)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_energia_7_giorni",
+    campo: "energia7Giorni",
+    tipo: "misura",
+    glifo: "⚡",
+    it: "Energia degli ultimi 7 giorni (kWh)",
+    en: "Energy in the last 7 days (kWh)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_ultima_ricarica_energia",
+    campo: "ultimaRicaricaEnergia",
+    tipo: "misura",
+    glifo: "🔌",
+    it: "Energia dell'ultima ricarica (kWh)",
+    en: "Energy of the last charge (kWh)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_ultima_ricarica_tipo",
+    campo: "ultimaRicaricaTipo",
+    tipo: "parola",
+    glifo: "🔌",
+    it: "Tipo dell'ultima ricarica (AC/DC)",
+    en: "Type of the last charge (AC/DC)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_ultima_ricarica_inizio",
+    campo: "ultimaRicaricaInizio",
+    tipo: "ora",
+    glifo: "🕒",
+    it: "Inizio dell'ultima ricarica (data e ora)",
+    en: "Start of the last charge (date and time)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_ultima_ricarica_fine",
+    campo: "ultimaRicaricaFine",
+    tipo: "ora",
+    glifo: "🕒",
+    it: "Fine dell'ultima ricarica (data e ora)",
+    en: "End of the last charge (date and time)",
+  }),
+  /* L'auto. */
+  Object.freeze({
+    ref: "dm.ev_marcia",
+    campo: "marcia",
+    tipo: "marcia",
+    glifo: "⚙️",
+    it: "Marcia (P/R/N/D)",
+    en: "Gear (P/R/N/D)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_sentinella",
+    campo: "sentinella",
+    tipo: "acceso",
+    glifo: "👁️",
+    it: "Modalità sentinella (acceso/spento)",
+    en: "Sentry mode (on/off)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_freno_stazionamento",
+    campo: "frenoStazionamento",
+    tipo: "acceso",
+    glifo: "🅿️",
+    it: "Freno di stazionamento (tirato/rilasciato)",
+    en: "Parking brake (on/off)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_sbrinamento",
+    campo: "sbrinamento",
+    tipo: "acceso",
+    glifo: "❄️",
+    it: "Sbrinamento del parabrezza (acceso/spento)",
+    en: "Windscreen defrost (on/off)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_in_sonno",
+    campo: "inSonno",
+    tipo: "acceso",
+    glifo: "💤",
+    it: "Auto in sonno (sì/no)",
+    en: "Car asleep (yes/no)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_ultimo_aggiornamento",
+    campo: "ultimoAggiornamento",
+    tipo: "ora",
+    glifo: "🕒",
+    it: "Ultimo aggiornamento dell'auto (data e ora)",
+    en: "Car's last update (date and time)",
+  }),
+  Object.freeze({
+    ref: "dm.ev_comando_clima",
+    campo: "comandoClima",
+    tipo: "acceso",
+    glifo: "❄️",
+    it: "Comando del clima (switch)",
+    en: "Climate control (switch)",
+  }),
+]);
+
+/** I riferimenti dei dati dell'auto, come quelli termici. */
+export const RIFERIMENTI_DELL_AUTO = Object.freeze(CASELLE_DELL_AUTO.map((voce) => voce.ref));
+
+/** La voce di un dato dell'auto, o `null` se il riferimento non e' fra questi. */
+export function casellaDellAuto(ref) {
+  const cercato = pulito(ref);
+  return CASELLE_DELL_AUTO.find((voce) => voce.ref === cercato) || null;
+}
+
+/* L'etichetta senza la parentesi in fondo: «Energia residua (kWh)» nella
+ * scheda dice che entita' scegliere, sulla pagina basta «Energia residua» —
+ * l'unita' la scrive il numero. Anche la parentesi larga del giapponese e del
+ * cinese, «（kWh）». */
+export function senzaParentesi(etichetta) {
+  return pulito(etichetta).replace(/\s*[(（][^()（）]*[)）]$/, "");
+}
+
 /* ── i dialetti ───────────────────────────────────────────────────────── */
 
 /* Dove sta l'auto, in parole (#326).
@@ -217,6 +550,49 @@ export function batteriaDalloStato(stato, unita = "") {
   return { valore: n, unita: dichiarata };
 }
 
+/* La marcia, comunque la scriva l'integrazione: la lettera del cambio, che si
+ * legge uguale in tutte le lingue. GdAAuto dice `parcheggio`, `avanti`,
+ * `folle`, `retromarcia`. */
+export function marciaDalloStato(stato) {
+  const voce = minuscolo(stato).replace(/[\s_-]+/g, " ");
+  if (!voce) return null;
+  if (/^(p|park\w*|parcheggi\w*|parken)$/.test(voce)) return "P";
+  if (/^(r|reverse|retromarcia|retro|rückwärts)$/.test(voce)) return "R";
+  if (/^(n|neutral|folle|neutro|leerlauf)$/.test(voce)) return "N";
+  if (/^(d|drive|avanti|marcia avanti|fahren|b)$/.test(voce)) return "D";
+  return null;
+}
+
+/* Un istante, come lo scrive Home Assistant: i millisecondi, o null. */
+export function istanteDalloStato(stato) {
+  const voce = pulito(stato);
+  if (!voce) return null;
+  const quando = Date.parse(voce);
+  return Number.isFinite(quando) ? quando : null;
+}
+
+/**
+ * Un istante detto come lo si dice: l'ora se e' di oggi, se no anche il
+ * giorno. Vuoto se non e' un istante.
+ */
+export function istanteDetto(quando, { lingua = "it", adesso = Date.now() } = {}) {
+  if (!Number.isFinite(quando)) return "";
+  const data = new Date(quando);
+  const oggi = new Date(adesso).toDateString() === data.toDateString();
+  try {
+    return oggi
+      ? data.toLocaleTimeString(lingua, { hour: "2-digit", minute: "2-digit" })
+      : data.toLocaleString(lingua, {
+          day: "numeric",
+          month: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+  } catch (_error) {
+    return data.toISOString().slice(0, 16).replace("T", " ");
+  }
+}
+
 /* I pneumatici: una pressione con la sua unita', oppure un avviso si'/no. */
 export function pneumaticiDalloStato(stato, unita = "") {
   const voce = minuscolo(stato);
@@ -279,7 +655,7 @@ export function letturaTermica(mappa = {}, states = {}, resolve = null) {
     return { entity, stato: states?.[entity] || null };
   };
   const fuori = { caselle: {} };
-  for (const voce of CASELLE_TERMICHE) {
+  for (const voce of [...CASELLE_TERMICHE, ...CASELLE_DELL_AUTO]) {
     const { entity, stato } = statoDi(voce.ref);
     if (!entity) continue;
     const grezzo = stato ? pulito(stato.state) : "";
@@ -299,7 +675,14 @@ export function letturaTermica(mappa = {}, states = {}, resolve = null) {
         case "gradi":
         case "km":
         case "litri":
+        case "misura":
           valore = numero(grezzo);
+          break;
+        case "marcia":
+          valore = marciaDalloStato(grezzo);
+          break;
+        case "ora":
+          valore = istanteDalloStato(grezzo);
           break;
         case "acceso":
           valore = accesoDalloStato(grezzo);
