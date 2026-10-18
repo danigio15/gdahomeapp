@@ -187,7 +187,7 @@ const UN_PEZZO =
   'x.innerHTML=\'<img alt="Dashboard Modern">' +
   '<span class="a">Dashboard</span><span class="b">MODERN</span>\'';
 
-test("senza installatore la plancia resta vestita di gdahome", () => {
+test("senza installatore la plancia resta vestita di GdAHome", () => {
   const fatto = vestiDiGdahome(IL_RUNTIME, Buffer.from(UN_PEZZO, "utf8"), "text/javascript");
   const testo = fatto.corpo.toString("utf8");
   assert.match(testo, /alt="GdAHome"/);

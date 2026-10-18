@@ -818,7 +818,7 @@ test.describe("la plancia a muro", () => {
       document.querySelector("body>header .ha-menu-btn").onclick = () => (window.__BARRA__ += 1);
     });
 
-  test("nell'app il ☰ apre il menu di gdahome, non la barra", async ({ page }, testInfo) => {
+  test("nell'app il ☰ apre il menu di GdAHome, non la barra", async ({ page }, testInfo) => {
     await apriLaCasaAMuro(page, testInfo, { muro: MURO_DI_PROVA });
     await spiaDellApp(page);
     await muro(page).locator('[data-mu-fa="menu"]').click();

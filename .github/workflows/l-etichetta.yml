@@ -162,7 +162,7 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "$NOME" -m "gdahome $NOME" "$SHA"
+          git tag -a "$NOME" -m "GdAHome $NOME" "$SHA"
           git push origin "refs/tags/$NOME"
 
       # La release nasce con l'etichetta, e non dopo.
@@ -190,8 +190,8 @@ jobs:
           # esisteva nemmeno.
           git checkout --quiet "$SHA" -- ponte/CHANGELOG.md
           node strumenti/le-note-della-versione.mjs "$quale" > note.md
-          gh release create "$NOME" --title "gdahome $quale" --notes-file note.md ||
-            gh release edit "$NOME" --title "gdahome $quale" --notes-file note.md
+          gh release create "$NOME" --title "GdAHome $quale" --notes-file note.md ||
+            gh release edit "$NOME" --title "GdAHome $quale" --notes-file note.md
           {
             printf '## Le note di `%s`\n' "$NOME"
             echo ""

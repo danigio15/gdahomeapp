@@ -188,7 +188,7 @@ self.addEventListener("fetch", (evento) => {
         });
       },
       (male) =>
-        new Response(`gdahome: ${male.message}`, {
+        new Response(`GdAHome: ${male.message}`, {
           status: 502,
           headers: { "content-type": "text/plain; charset=utf-8" },
         }),

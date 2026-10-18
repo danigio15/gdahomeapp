@@ -163,7 +163,7 @@ test("il gettone e' quello del contratto, e si verifica con la pubblica di prova
     assert.deepEqual(
       Object.keys(gettoni),
       ["gdahome"],
-      "una licenza gdahome da' il gettone gdahome e basta",
+      "una licenza GdAHome da' il gettone GdAHome e basta",
     );
     assert.deepEqual(sue, [
       { lic: una.lic, app: "gdahome", origine: "regalo", scade: una.scade, prova: false },

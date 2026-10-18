@@ -206,7 +206,7 @@ test("una plancia rifatta con lo stesso titolo ha un'istanza nuova, e il cassett
   }
 });
 
-test("la prima plancia scritta «gdahome» dalle versioni di prima diventa «GdAHome»", () => {
+test("la prima plancia scritta «GdAHome» dalle versioni di prima diventa «GdAHome»", () => {
   const { cartella, via } = unPosto();
   try {
     writeFileSync(

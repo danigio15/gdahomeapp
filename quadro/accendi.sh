@@ -577,7 +577,7 @@ chmod 600 "$CONFIGURAZIONE/ambiente"
 
 cat >/etc/systemd/system/quadro.service <<FINE
 [Unit]
-Description=Il quadro di gdahome
+Description=Il quadro di GdAHome
 Documentation=https://github.com/$REPO_DEL_QUADRO
 After=network-online.target
 Wants=network-online.target

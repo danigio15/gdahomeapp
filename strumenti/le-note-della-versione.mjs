@@ -36,7 +36,7 @@ export const DOVE_STA_IL_CHANGELOG = join("ponte", "CHANGELOG.md");
  * CHANGELOG racconta cosa cambia, questo racconta come si prende. Sta qui e
  * non nel workflow perche' e' testo per chi legge, e il testo per chi legge si
  * prova. */
-export const COME_SI_PRENDE = `**L'add-on si aggiorna da se'**: Impostazioni → Add-on → gdahome, e c'e' il
+export const COME_SI_PRENDE = `**L'add-on si aggiorna da se'**: Impostazioni → Add-on → GdAHome, e c'e' il
 tasto. Chi non ce l'ha ancora lo trova nel negozio degli add-on aggiungendo
 questa repository fra gli Archivi; COME_PROVARLA.md lo spiega per intero.
 

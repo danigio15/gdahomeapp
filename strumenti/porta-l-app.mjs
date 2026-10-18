@@ -121,7 +121,7 @@ writeFileSync(
   join(DESTINAZIONE, "ORIGINE.json"),
   JSON.stringify(
     {
-      cosa: "gdahome da aprire in un browser, costruita con flutter build web",
+      cosa: "GdAHome da aprire in un browser, costruita con flutter build web",
       commit,
       portata_il: new Date().toISOString(),
       file: quanti,

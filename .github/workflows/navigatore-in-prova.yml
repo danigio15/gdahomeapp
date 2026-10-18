@@ -26,7 +26,7 @@ concurrency:
 
 jobs:
   pacchetto:
-    name: gdahome col navigatore in auto, per il test interno
+    name: GdAHome col navigatore in auto, per il test interno
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -108,7 +108,7 @@ jobs:
           flutter build appbundle "${comuni[@]}"
           flutter build apk "${comuni[@]}"
           {
-            echo "### gdahome col navigatore in auto"
+            echo "### GdAHome col navigatore in auto"
             echo ""
             echo "Costruito (numero $NUMERO, chiave vera: $VERA). Su GitHub non resta niente: l'app va solo nei negozi."
           } >> "$GITHUB_STEP_SUMMARY"

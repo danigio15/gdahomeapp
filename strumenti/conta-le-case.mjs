@@ -143,7 +143,7 @@ export function iFile(giorni, conti) {
       scaricamenti: conti.scaricamenti,
       giorni,
     },
-    "bollino-case.json": ilBollino("case con gdahome", conti.case, VERDE),
+    "bollino-case.json": ilBollino("case con GdAHome", conti.case, VERDE),
     "bollino-scaricamenti.json": ilBollino(
       conti.dal ? `scaricamenti dal ${conti.dal}` : "scaricamenti",
       conti.scaricamenti,

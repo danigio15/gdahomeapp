@@ -33,7 +33,7 @@ import { dirname, join } from "node:path";
 const QUI = dirname(fileURLToPath(import.meta.url));
 const PAGINE = {
   "il cruscotto dell'installatore": readFileSync(join(QUI, "..", "console", "index.html"), "utf8"),
-  "il cruscotto gdahome": readFileSync(join(QUI, "..", "gestore", "index.html"), "utf8"),
+  "il cruscotto GdAHome": readFileSync(join(QUI, "..", "gestore", "index.html"), "utf8"),
 };
 
 /* Il blocco `@media` dell'affiancata, dalla soglia alla sua graffa. */

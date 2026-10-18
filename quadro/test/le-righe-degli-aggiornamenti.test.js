@@ -264,5 +264,5 @@ test("quando dice «manutenzione chiusa», dice anche dove si apre — con le pa
   assert.ok(come, "nelle traduzioni non c'e' piu' la casella della manutenzione");
   assert.ok(PAGINA.includes(come), `il quadro non chiama quella casella col suo nome: «${come}»`);
   /* E la strada per arrivarci, che senza il nome da solo non basta. */
-  assert.match(PAGINA, /Impostazioni › Add-on › gdahome › Configurazione/);
+  assert.match(PAGINA, /Impostazioni › Add-on › GdAHome › Configurazione/);
 });
