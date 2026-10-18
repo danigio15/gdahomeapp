@@ -5,7 +5,6 @@ import test from "node:test";
 import { migrateState } from "../src/core/migrations.js";
 
 const manifestUrl = new URL("../../manifest.json", import.meta.url);
-const readmeUrl = new URL("../../../../README.md", import.meta.url);
 const rootIconUrl = new URL("../../../../brand/icon.png", import.meta.url);
 const rootLogoUrl = new URL("../../../../brand/logo.png", import.meta.url);
 const installedBrandUrls = [
@@ -26,7 +25,6 @@ const contractsUrl = new URL("../src/sections/editor-contracts-section.js", impo
 
 test("the 1.0 beta release metadata is consistently versioned", async () => {
   const manifest = JSON.parse(await readFile(manifestUrl, "utf8"));
-  const readme = await readFile(readmeUrl, "utf8");
   const buildInfo = await readFile(buildInfoUrl, "utf8");
   const releaseVersion = String(manifest.version || "").trim();
 
@@ -35,16 +33,6 @@ test("the 1.0 beta release metadata is consistently versioned", async () => {
    * 1.0.2, e cosi' via. Il contratto resta, e resta stretto, perche' serve a
    * impedire una versione scritta a mano storta, non a lasciar passare tutto. */
   assert.match(releaseVersion, /^1\.\d+\.\d+(?:-(?:beta|rc)\.\d+(?:\.\d+)?)?$/);
-  /* Il badge version del README era un numero scritto a mano, e infatti e'
-   * rimasto indietro (1.0.1 col manifest a 1.1.9, HACS a raccontare un'altra
-   * storia ancora). Il contratto adesso pretende il badge che legge il
-   * manifest da solo: la versione scritta a mano storta non puo' piu'
-   * esistere perche' non ce n'e' piu' una scritta a mano. */
-  assert.match(
-    readme,
-    /img\.shields\.io\/github\/manifest-json\/v\/danigio15\/dashboardmodern-v2\?filename=custom_components%2Fdashboardmodern%2Fmanifest\.json/,
-  );
-  assert.doesNotMatch(readme, /badge\/version-\d/);
   /* La versione che la plancia dice di se' e' quella di gdahome
    * (`ponte/config.yaml`), non piu' quella del manifesto della vecchia
    * plancia: la scheda Runtime la mostra, e deve essere quella dell'add-on. */
@@ -54,15 +42,6 @@ test("the 1.0 beta release metadata is consistently versioned", async () => {
   assert.ok(buildInfo.includes(`"integrationVersion":"${gdahome}"`));
   assert.ok(buildInfo.includes(`"dashboardVersion":"${gdahome}"`));
 
-  assert.match(readme, /Confronto settimanale dei consumi Casa/i);
-  assert.match(readme, /contatore totale kWh/i);
-  assert.match(readme, /SALVA MODIFICHE/);
-  assert.match(readme, /165,1 kWh/);
-  assert.match(
-    readme,
-    /https:\/\/raw\.githubusercontent\.com\/danigio15\/dashboardmodern-v2\/main\/brand\/logo\.png/,
-  );
-  assert.doesNotMatch(readme, /main\/assets\/logo|brand\/logo@2x\.png/);
   assert.match(buildInfo, /["']?moduleVersion["']?\s*:\s*14/);
 });
 

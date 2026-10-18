@@ -609,7 +609,7 @@ jobs:
               echo ""
               echo "Compila: i plugin nativi stanno in piedi e i permessi sono a posto."
               echo "Per installarla su un iPhone serve l'account sviluppatore Apple"
-              echo "(99 €/anno) e quattro segreti su GitHub: vedi docs/IPHONE.md."
+              echo "(99 €/anno) e quattro segreti su GitHub."
             } >> "$GITHUB_STEP_SUMMARY"
           fi
 
