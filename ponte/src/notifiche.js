@@ -378,7 +378,7 @@ export class Notifiche {
     plance = null,
     registri = null,
     /* Chi porta la busta al centralino: `{spingi({telefono, gettone, busta,
-     * urgente}) → bool, diIGettoni(elenco)}`. Lo mette `index.js` (la
+     * urgente, aspetta}) → bool, diIGettoni(elenco)}`. Lo mette `index.js` (la
      * chiamata); senza, le notifiche si preparano e non partono. */
     postino = null,
     registro = null,
@@ -1173,6 +1173,10 @@ export class Notifiche {
         gettone: voce.gettone,
         busta,
         urgente: evento.urgenza === "urgente",
+        /* Col filo del centralino giu' la notifica aspetta che torni
+         * (`chiamata.js`); la prova no: chi l'ha premuta deve sapere subito
+         * che non e' partita. */
+        aspetta: evento.tipo !== "prova",
       });
       if (!partita) continue;
       this._detto.set(chiave, ora);

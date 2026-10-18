@@ -782,6 +782,20 @@ test("la notifica di prova arriva solo a chi la chiede", async () => {
     assert.equal(detto.success, true);
     assert.equal(banco.spinte.length, 1);
     assert.equal(banco.apri(banco.spinte[0], banco.a).tipo, "prova");
+    /* La prova non aspetta il filo del centralino: «non e' partita» subito. */
+    assert.equal(banco.spinte[0].aspetta, false);
+  } finally {
+    banco.spegni();
+  }
+});
+
+test("una notifica vera aspetta il filo del centralino, se e' giu'", async () => {
+  const banco = unBanco();
+  try {
+    await banco.registra(banco.a);
+    await banco.notifiche.consegna(antifurto());
+    const perA = banco.spinte.find((s) => s.telefono === banco.a.dispositivo.id);
+    assert.equal(perA.aspetta, true);
   } finally {
     banco.spegni();
   }
