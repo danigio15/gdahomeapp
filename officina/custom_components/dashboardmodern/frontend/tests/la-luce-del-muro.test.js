@@ -12,6 +12,7 @@ import {
   LUCE_SPENTA,
   MURO_VUOTO,
   chiCeVicino,
+  eNotteAllOra,
   eNotteDellaLuce,
   giornataDellaLuce,
   livelloDellaLuce,
@@ -19,6 +20,7 @@ import {
   lucePulita,
   muroPulito,
   notteDalSole,
+  notteDellaGiornata,
 } from "../src/core/plancia-a-muro.js";
 
 const ORA = (hh, mm = 0) => new Date(2026, 9, 18, hh, mm);
@@ -151,4 +153,52 @@ test("l'anteprima di una giornata: notte, riposo e qualcuno che passa", () => {
   assert.equal(a(10), 20);
   assert.equal(a(13), 90);
   assert.equal(a(22), 3);
+});
+
+/* «L'anteprima sembra al contrario»: la notte va ai bordi della giornata,
+ * dalla mezzanotte all'alba e da mezz'ora dopo il tramonto alla mezzanotte,
+ * al livello della notte; il giorno in mezzo al livello del riposo; e i 90%
+ * solo quando passa qualcuno. */
+test("l'anteprima col sole di casa: la notte ai bordi, il giorno in mezzo", () => {
+  const muro = muroPulito({ luce: { attiva: true, vicino: 90, riposo: 20, notte: 3 } });
+  const sole = {
+    state: "above_horizon",
+    attributes: {
+      next_setting: ORA(18, 30).toISOString(),
+      next_rising: new Date(ORA(7, 20).getTime() + 24 * 3600e3).toISOString(),
+    },
+  };
+  const notte = notteDellaGiornata(muro, sole);
+  assert.deepEqual(notte, { da: 19, a: 7 + 20 / 60, dalSole: true });
+  const punti = giornataDellaLuce(muro, (ora) => eNotteAllOra(notte, ora), 96);
+  const a = (ora) => punti.find(([quando]) => quando === ora)[1];
+  for (const ora of [0, 3, 6, 6.75]) assert.equal(a(ora), 3, `alle ${ora}`);
+  assert.equal(a(7.25), 90, "alle 7:15 passa qualcuno");
+  for (const ora of [8, 10, 12, 15, 18, 18.75]) assert.equal(a(ora), 20, `alle ${ora}`);
+  assert.equal(a(13.25), 90, "a pranzo passa qualcuno");
+  for (const ora of [19, 21, 23, 24]) assert.equal(a(ora), 3, `alle ${ora}`);
+  assert.equal(a(19.75), 90, "la sera passa qualcuno");
+});
+
+test("l'anteprima senza un sole credibile, o con l'orario, usa la fascia della notte", () => {
+  const muro = muroPulito({ notte: { da: "22:30", a: "06:00" }, luce: { attiva: true } });
+  /* Un tramonto che cade prima dell'alba nello stesso giorno non e' una
+   * notte del sole: metterebbe il buio a meta' giornata. */
+  const storto = {
+    state: "below_horizon",
+    attributes: {
+      next_setting: ORA(5, 0).toISOString(),
+      next_rising: ORA(15, 0).toISOString(),
+    },
+  };
+  assert.deepEqual(notteDellaGiornata(muro, storto), { da: 22.5, a: 6, dalSole: false });
+  assert.deepEqual(notteDellaGiornata(muro, null), { da: 22.5, a: 6, dalSole: false });
+  const orario = muroPulito({ ...muro, luce: { attiva: true, giorno: "orario" } });
+  const sole = {
+    attributes: { next_setting: ORA(18, 30).toISOString(), next_rising: ORA(7, 20).toISOString() },
+  };
+  assert.equal(notteDellaGiornata(orario, sole).dalSole, false);
+  assert.equal(eNotteAllOra({ da: 22.5, a: 6 }, 23), true);
+  assert.equal(eNotteAllOra({ da: 22.5, a: 6 }, 12), false);
+  assert.equal(eNotteAllOra({ da: 1, a: 5 }, 3), true);
 });

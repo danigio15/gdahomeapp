@@ -545,7 +545,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-H44LXMQ5.js";
+} from "../../chunk-O6V45RD4.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -96308,6 +96308,26 @@ function giornataDellaLuce(muro, notte, passi2 = 96) {
   }
   return punti;
 }
+var oreDelGiorno = (data) => data.getHours() + data.getMinutes() / 60;
+function notteDellaGiornata(muro, sole = null) {
+  if (muro?.luce?.giorno !== "orario") {
+    const tramonto = Date.parse(sole?.attributes?.next_setting || "");
+    const alba = Date.parse(sole?.attributes?.next_rising || "");
+    if (Number.isFinite(tramonto) && Number.isFinite(alba)) {
+      const da = oreDelGiorno(new Date(tramonto + DOPO_IL_TRAMONTO_MS));
+      const a = oreDelGiorno(new Date(alba));
+      if (da > a) return { da, a, dalSole: true };
+    }
+  }
+  return {
+    da: minutiDa3(muro?.notte?.da || MURO_VUOTO.notte.da) / 60,
+    a: minutiDa3(muro?.notte?.a || MURO_VUOTO.notte.a) / 60,
+    dalSole: false
+  };
+}
+function eNotteAllOra({ da, a }, ora5) {
+  return da > a ? ora5 >= da || ora5 < a : ora5 >= da && ora5 < a;
+}
 function temaDelMomento(muro, adesso = /* @__PURE__ */ new Date(), temaDellaPlancia = "dark") {
   const tema = muro?.tema || "plancia";
   if (tema === "scuro") return "dark";
@@ -99112,7 +99132,21 @@ function pillolaDellaLuce(muro) {
   if (!muro.luce?.attiva || Date.now() >= luce.pillolaFino) return "";
   const sensore = muro.risveglio?.entita || "";
   const chi = luce.pillolaDi === "prossimita" ? t("prossimità del tablet", "tablet proximity") : clean(allStates()?.[sensore]?.attributes?.friendly_name) || t("sensore di presenza", "presence sensor");
-  return `<div class="mu-luce-pillola" role="status"><i aria-hidden="true"></i><span>${esc(t("Qualcuno vicino", "Someone nearby"))} · ${esc(chi)} · ${muro.luce.vicino}%</span></div>`;
+  const sopra = luce.sopra ? ` style="top:${luce.sopra}px"` : "";
+  return `<div class="mu-luce-pillola" role="status"${sopra}><i aria-hidden="true"></i><span>${esc(t("Qualcuno vicino", "Someone nearby"))} · ${esc(chi)} · ${muro.luce.vicino}%</span></div>`;
+}
+function mettiLaPillola(nodo2) {
+  const tela2 = nodo2.firstElementChild;
+  const testa2 = tela2?.querySelector?.(".mu-testa");
+  let sopra = 16;
+  if (testa2) {
+    let dove = 0;
+    for (let n = testa2; n && n !== tela2; n = n.offsetParent) dove += n.offsetTop;
+    sopra = Math.round(dove + testa2.offsetHeight + 12);
+  }
+  luce.sopra = sopra;
+  const pillola2 = tela2?.querySelector?.(".mu-luce-pillola");
+  if (pillola2 && pillola2.style.top !== `${sopra}px`) pillola2.style.top = `${sopra}px`;
 }
 function restituisciLoSchermo() {
   root.clearTimeout?.(luce.timer);
@@ -99223,6 +99257,7 @@ function disegna5() {
     }
   }
   adattaLeLinguette(nodo2);
+  mettiLaPillola(nodo2);
   battitoDellaMusica();
   rimettiLaVoce(nodo2);
   if (state112.riposo) posizionaIlRiposo(nodo2);
@@ -100608,13 +100643,14 @@ ${MURO}[data-compatto="1"] .mu-sq-mini span{display:grid;justify-items:center;ga
 ${MURO}[data-compatto="1"] .mu-sq-mini img,${MURO}[data-compatto="1"] .mu-sq-mini .mu-sq-senza{position:static;width:52px;height:32px;border-radius:6px;object-fit:cover}
 @media (prefers-reduced-motion:reduce){${MURO} .mu-sq-campana .onda,${MURO} .mu-squillo.squilla .mu-sq-campana>svg{animation:none}}
 ${MURO}[data-compatto="1"] .mu-avviso-grande{gap:10px;padding:14px}
-/* La pillola di chi ha acceso lo schermo: due secondi, in basso al centro,
- * sopra le card ma sotto gli avvisi grandi. */
-${MURO} .mu-luce-pillola{position:absolute;left:50%;bottom:16px;z-index:40;transform:translateX(-50%);display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);padding:9px 18px;border-radius:999px;font-weight:700;font-size:16px;color:#bbf7d0;background:rgba(5,46,26,.94);box-shadow:inset 0 0 0 1px rgba(34,197,94,.45),0 8px 24px rgba(0,0,0,.3);pointer-events:none;animation:muLucePillola .25s ease-out}
+/* La pillola di chi ha acceso lo schermo: due secondi, in alto al centro
+ * sotto la testa (mettiLaPillola), sopra le card ma sotto gli avvisi
+ * grandi. */
+${MURO} .mu-luce-pillola{position:absolute;left:50%;top:16px;z-index:40;transform:translateX(-50%);display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);padding:9px 18px;border-radius:999px;font-weight:700;font-size:16px;color:#bbf7d0;background:rgba(5,46,26,.94);box-shadow:inset 0 0 0 1px rgba(34,197,94,.45),0 10px 30px rgba(0,0,0,.28),0 2px 8px rgba(0,0,0,.18);pointer-events:none;animation:muLucePillola .25s ease-out}
 ${MURO} .mu-luce-pillola span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 ${MURO} .mu-luce-pillola i{flex:none;width:9px;height:9px;border-radius:50%;background:#22c55e}
-${MURO}[data-compatto="1"] .mu-luce-pillola{font-size:13px;padding:7px 12px;bottom:10px}
-@keyframes muLucePillola{from{opacity:0;transform:translate(-50%,8px)}}
+${MURO}[data-compatto="1"] .mu-luce-pillola{font-size:13px;padding:7px 12px}
+@keyframes muLucePillola{from{opacity:0;transform:translate(-50%,-8px)}}
 ${MURO}[data-compatto="1"] .mu-avg-disco{width:92px;height:92px;box-shadow:0 0 0 10px rgba(255,255,255,.08)}
 ${MURO}[data-compatto="1"] .mu-avg-disco .dm-oggetto,${MURO}[data-compatto="1"] .mu-avg-disco svg{width:54px!important;height:54px!important}
 ${MURO}[data-compatto="1"] .mu-avg-tit{font-size:30px}
@@ -102016,56 +102052,34 @@ function chiediLeCapacita() {
   }
 }
 var cursore = (via, valore3, minimo, etichetta3) => `<span class="mu-ed-volume mu-ed-luce-cursore"><input type="range" min="${minimo}" max="100" step="1" data-mu-ed-campo="${esc(via)}" value="${valore3}" aria-label="${esc(etichetta3)}"><b data-mu-ed-percento>${valore3}%</b></span>`;
-function notteDellAnteprima(m) {
-  const sole = allStates()?.["sun.sun"];
-  const tramonto = new Date(Date.parse(sole?.attributes?.next_setting || "") + DOPO_IL_TRAMONTO_MS);
-  const alba = new Date(Date.parse(sole?.attributes?.next_rising || ""));
-  const ore = (data) => data.getHours() + data.getMinutes() / 60;
-  if (m.luce.giorno !== "orario" && Number.isFinite(tramonto.getTime()) && Number.isFinite(alba.getTime())) {
-    const da = ore(tramonto);
-    const a = ore(alba);
-    return { da, a, dalSole: true };
-  }
-  const [hDa, mDa] = m.notte.da.split(":").map(Number);
-  const [hA, mA] = m.notte.a.split(":").map(Number);
-  return { da: hDa + mDa / 60, a: hA + mA / 60, dalSole: false };
-}
 function anteprimaDellaGiornata(m) {
-  const { da, a, dalSole } = notteDellAnteprima(m);
-  const eNotte3 = (ora5) => da > a ? ora5 >= da || ora5 < a : ora5 >= da && ora5 < a;
-  const L = 46;
-  const W = 600;
-  const H7 = 136;
-  const T = 8;
-  const B = 26;
-  const w = W - L - 14;
-  const h = H7 - T - B;
-  const x = (ora5) => (L + ora5 / 24 * w).toFixed(1);
-  const y = (v) => (T + h - v / 100 * h).toFixed(1);
-  const fasce = (da > a ? [
-    [0, a],
-    [da, 24]
-  ] : [[da, a]]).map(
-    ([i, f]) => `<rect class="notte" x="${x(i)}" y="${T}" width="${(x(f) - x(i)).toFixed(1)}" height="${h}"/>`
+  const notte = notteDellaGiornata(m, allStates()?.["sun.sun"]);
+  const x = (ora5) => (ora5 / 24 * 1e3).toFixed(1);
+  const y = (v) => (100 - v).toFixed(1);
+  const fasce = (notte.da > notte.a ? [
+    [0, notte.a],
+    [notte.da, 24]
+  ] : [[notte.da, notte.a]]).map(
+    ([i, f]) => `<rect class="notte" x="${x(i)}" y="0" width="${(x(f) - x(i)).toFixed(1)}" height="100"/>`
   ).join("");
-  const righe3 = [0, 50, 100].map(
-    (v) => `<line x1="${L}" x2="${W - 14}" y1="${y(v)}" y2="${y(v)}"/><text class="asse-y" x="${L - 6}" y="${Number(y(v)) + 4}" text-anchor="end">${v}%</text>`
-  ).join("");
-  const ore = [0, 6, 12, 18, 24].map(
-    (o) => `<text x="${x(o)}" y="${H7 - 4}" text-anchor="middle">${String(o).padStart(2, "0")}</text>`
-  ).join("");
+  const righe3 = [0, 50, 100].map((v) => `<line x1="0" x2="1000" y1="${y(v)}" y2="${y(v)}"/>`).join("");
   const vicini = PASSAGGI_DI_ESEMPIO.map(
-    ([i, f]) => `<rect class="vicino" x="${x(i)}" y="${T + h - 4}" width="${(x(f) - x(i)).toFixed(1)}" height="4" rx="2"/>`
+    ([i, f]) => `<rect class="vicino" x="${x(i)}" y="96" width="${(x(f) - x(i)).toFixed(1)}" height="4"/>`
   ).join("");
   let linea = "";
   let prima = null;
-  for (const [ora5, v] of giornataDellaLuce(m, eNotte3)) {
+  for (const [ora5, v] of giornataDellaLuce(m, (ora6) => eNotteAllOra(notte, ora6))) {
     linea += prima === null ? `M${x(ora5)},${y(v)}` : `L${x(ora5)},${y(prima)}L${x(ora5)},${y(v)}`;
     prima = v;
   }
-  return `<div class="mu-ed-giornata">
-    <div class="mu-ed-leg"><span><i class="luce"></i>${esc(t("Luminosità", "Brightness"))}</span><span><i class="vicino"></i>${esc(t("Qualcuno vicino (esempio)", "Someone nearby (example)"))}</span><span><i class="notte"></i>${esc(dalSole ? t("Notte (dal sole)", "Night (from the sun)") : t("Notte (dall'orario)", "Night (from the hours)"))}</span></div>
-    <svg viewBox="0 0 ${W} ${H7}" role="img" aria-label="${esc(t("Anteprima di una giornata", "Preview of a day"))}">${fasce}${righe3}${ore}${vicini}<path class="luce" d="${linea}"/></svg>
+  const ore = [0, 6, 12, 18, 24].map((o) => `<span style="left:${o / 24 * 100}%">${String(o).padStart(2, "0")}</span>`).join("");
+  return `<div class="mu-ed-giornata" data-mu-ed-giornata data-notte="${notte.da.toFixed(2)}-${notte.a.toFixed(2)}">
+    <div class="mu-ed-leg"><span><i class="luce"></i>${esc(t("Luminosità", "Brightness"))}</span><span><i class="vicino"></i>${esc(t("Qualcuno vicino (esempio)", "Someone nearby (example)"))}</span><span><i class="notte"></i>${esc(notte.dalSole ? t("Notte (dal sole)", "Night (from the sun)") : t("Notte (dall'orario)", "Night (from the hours)"))}</span></div>
+    <div class="mu-ed-grafico">
+      <div class="mu-ed-asse-y" aria-hidden="true"><span>100%</span><span>50%</span><span>0%</span></div>
+      <svg viewBox="0 0 1000 100" preserveAspectRatio="none" role="img" aria-label="${esc(t("Anteprima di una giornata", "Preview of a day"))}">${fasce}${righe3}${vicini}<path class="luce" d="${linea}"/></svg>
+      <div class="mu-ed-ore" aria-hidden="true">${ore}</div>
+    </div>
   </div>`;
 }
 function luceMarkup(m) {
@@ -102126,7 +102140,7 @@ function luceMarkup(m) {
     ${anteprimaDellaGiornata(m)}` : "";
   const sensore = m.risveglio.entita;
   const letto = sensore ? allStates()?.[sensore] : null;
-  const statoDelSensore = letto ? `<span class="mu-ed-ent"><i class="${letto.state === "on" ? "on" : ""}"></i>${esc(sensore)} · ${esc(letto.state === "on" ? t("rileva", "detecting") : t("nessuno", "nobody"))}</span>` : "";
+  const statoDelSensore = letto ? `<span class="mu-ed-stato-sensore" data-mu-ed-stato-sensore><i class="${letto.state === "on" ? "on" : ""}"></i>${esc(clean(letto.attributes?.friendly_name) || t("sensore di presenza", "presence sensor"))} · ${esc(letto.state === "on" ? t("rileva", "detecting") : t("nessuno", "nobody"))}</span>` : "";
   const notaDelTablet = capacita?.prossimita ? t("Questo tablet ce l'ha.", "This tablet has one.") : sullIPad ? t("Sull'iPad non c'è.", "The iPad does not have one.") : senzaVicino ? t("Questo tablet non ce l'ha.", "This tablet does not have one.") : t("Solo nell'app gdahome su Android.", "Only in the gdahome app on Android.");
   return `<div class="mu-ed-luce" data-mu-ed-luce>
     <div class="mu-ed-luce-testa"><span class="mu-ed-luce-ic" aria-hidden="true">☀️</span><div class="mu-ed-testo"><b>${esc(t("Luminosità dello schermo", "Screen brightness"))}</b><small>${esc(t("La comanda il pannello, solo nell'app gdahome sul tablet", "The panel sets it, only in the gdahome app on the tablet"))}</small></div>${interruttore("luce.attiva", l.attiva, "luce")}</div>
@@ -102796,26 +102810,28 @@ html[data-theme="dark"] #ed-body .mu-ed-luce-cursore b{color:#fde68a}
 #ed-body .mu-ed-fonte>.mu-ed-testo{flex:1 1 200px}
 #ed-body .mu-ed-chip{display:inline-block;margin-left:4px;padding:2px 7px;border-radius:6px;font-size:9.5px;font-weight:900;letter-spacing:.08em;vertical-align:1px;color:#1d4ed8;background:color-mix(in srgb,#3b82f6 14%,transparent)}
 html[data-theme="dark"] #ed-body .mu-ed-chip{color:#bfdbfe}
-#ed-body .mu-ed-ent{display:inline-flex;align-items:center;gap:7px;max-width:100%;margin-top:6px;padding:4px 9px;border-radius:8px;font:600 11.5px ui-monospace,monospace;overflow-wrap:anywhere;background:color-mix(in srgb,var(--text,#0f172a) 6%,transparent)}
-#ed-body .mu-ed-ent i{flex:none;width:8px;height:8px;border-radius:50%;background:#94a3b8}
-#ed-body .mu-ed-ent i.on{background:#22c55e}
+#ed-body .mu-ed-stato-sensore{display:flex;align-items:center;gap:7px;margin-top:5px;font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b);overflow-wrap:anywhere}
+#ed-body .mu-ed-stato-sensore i{flex:none;width:8px;height:8px;border-radius:50%;background:#94a3b8}
+#ed-body .mu-ed-stato-sensore i.on{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.2)}
 #ed-body .mu-ed-giornata{margin-top:8px;padding:10px 12px;border-radius:12px;background:var(--card-background-color,var(--card-bg,#fff));border:1px solid var(--divider-color,#dbe4ee)}
-#ed-body .mu-ed-giornata svg{display:block;width:100%;max-width:640px;height:auto}
-#ed-body .mu-ed-giornata text{font-size:10px;font-weight:700;fill:var(--text-dim,#64748b)}
-/* Sul telefono il disegno si stringe a meno di meta': le ore crescono dentro,
- * e fuori restano leggibili; le percentuali a sinistra non ci stanno, e la
- * legenda dice gia' cosa si guarda. La scelta del sensore va a capo intera. */
-@media (max-width:600px){#ed-body .mu-ed-giornata text{font-size:22px}#ed-body .mu-ed-giornata text.asse-y{display:none}#ed-body .mu-ed-fonte>.mu-ed-dx{flex:1 1 100%}}
-#ed-body .mu-ed-giornata line{stroke:color-mix(in srgb,var(--text,#0f172a) 10%,transparent)}
-#ed-body .mu-ed-giornata rect.notte{fill:color-mix(in srgb,#334155 22%,transparent)}
+#ed-body .mu-ed-grafico{display:grid;grid-template-columns:auto 1fr;column-gap:8px}
+#ed-body .mu-ed-grafico svg{grid-column:2;display:block;width:100%;height:130px;overflow:visible}
+#ed-body .mu-ed-asse-y{grid-row:1;display:flex;flex-direction:column;justify-content:space-between;height:142px;margin:-6px 0;line-height:12px;font-size:10.5px;font-weight:700;text-align:right;color:var(--text-dim,#64748b)}
+#ed-body .mu-ed-ore{grid-column:2;position:relative;height:18px;margin-top:4px;font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b)}
+#ed-body .mu-ed-ore span{position:absolute;top:0;transform:translateX(-50%)}
+#ed-body .mu-ed-ore span:first-child{transform:none}
+#ed-body .mu-ed-ore span:last-child{transform:translateX(-100%)}
+@media (max-width:600px){#ed-body .mu-ed-fonte>.mu-ed-dx{flex:1 1 100%}#ed-body .mu-ed-grafico svg{height:110px}#ed-body .mu-ed-asse-y{height:122px}}
+#ed-body .mu-ed-giornata line{stroke:color-mix(in srgb,var(--text,#0f172a) 12%,transparent);vector-effect:non-scaling-stroke}
+#ed-body .mu-ed-giornata rect.notte{fill:color-mix(in srgb,#64748b 26%,transparent)}
 #ed-body .mu-ed-giornata rect.vicino{fill:#22c55e}
-#ed-body .mu-ed-giornata path.luce{fill:none;stroke:#f59e0b;stroke-width:2}
-#ed-body .mu-ed-leg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:6px;font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
+#ed-body .mu-ed-giornata path.luce{fill:none;stroke:#f59e0b;stroke-width:2.5;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+#ed-body .mu-ed-leg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:14px;font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
 #ed-body .mu-ed-leg span{display:inline-flex;align-items:center;gap:6px}
 #ed-body .mu-ed-leg i{width:10px;height:10px;border-radius:3px}
 #ed-body .mu-ed-leg i.luce{background:#f59e0b}
 #ed-body .mu-ed-leg i.vicino{background:#22c55e}
-#ed-body .mu-ed-leg i.notte{background:color-mix(in srgb,#334155 40%,transparent)}
+#ed-body .mu-ed-leg i.notte{background:color-mix(in srgb,#64748b 45%,transparent)}
 #ed-body .mu-ed-lucchetto{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px}
 #ed-body .mu-ed-lucchetto b{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:26px;text-transform:uppercase}
 #ed-body .mu-ed-lucchetto p{max-width:520px;font-size:14px;line-height:1.55;color:var(--text-dim,#64748b)}

@@ -4006,7 +4006,26 @@ function pillolaDellaLuce(muro) {
       ? t("prossimità del tablet", "tablet proximity")
       : clean(allStates()?.[sensore]?.attributes?.friendly_name) ||
         t("sensore di presenza", "presence sensor");
-  return `<div class="mu-luce-pillola" role="status"><i aria-hidden="true"></i><span>${esc(t("Qualcuno vicino", "Someone nearby"))} · ${esc(chi)} · ${muro.luce.vicino}%</span></div>`;
+  const sopra = luce.sopra ? ` style="top:${luce.sopra}px"` : "";
+  return `<div class="mu-luce-pillola" role="status"${sopra}><i aria-hidden="true"></i><span>${esc(t("Qualcuno vicino", "Someone nearby"))} · ${esc(chi)} · ${muro.luce.vicino}%</span></div>`;
+}
+
+/* La pillola sta in alto al centro, appena sotto la testa: in basso copriva
+ * il nome di una card. La testa cambia altezza col tablet (compatta,
+ * verticale, menu di lato), quindi la si misura dopo ogni disegno; la misura
+ * vale dal disegno dopo, e per quello in corso si mette a mano. */
+function mettiLaPillola(nodo) {
+  const tela = nodo.firstElementChild;
+  const testa = tela?.querySelector?.(".mu-testa");
+  let sopra = 16;
+  if (testa) {
+    let dove = 0;
+    for (let n = testa; n && n !== tela; n = n.offsetParent) dove += n.offsetTop;
+    sopra = Math.round(dove + testa.offsetHeight + 12);
+  }
+  luce.sopra = sopra;
+  const pillola = tela?.querySelector?.(".mu-luce-pillola");
+  if (pillola && pillola.style.top !== `${sopra}px`) pillola.style.top = `${sopra}px`;
 }
 
 /* Spento il pannello lo schermo torna del sistema, e i sensori si fermano. */
@@ -4152,6 +4171,7 @@ export function disegna() {
     }
   }
   adattaLeLinguette(nodo);
+  mettiLaPillola(nodo);
   battitoDellaMusica();
   rimettiLaVoce(nodo);
   if (state.riposo) posizionaIlRiposo(nodo);
@@ -5809,13 +5829,14 @@ ${MURO}[data-compatto="1"] .mu-sq-mini span{display:grid;justify-items:center;ga
 ${MURO}[data-compatto="1"] .mu-sq-mini img,${MURO}[data-compatto="1"] .mu-sq-mini .mu-sq-senza{position:static;width:52px;height:32px;border-radius:6px;object-fit:cover}
 @media (prefers-reduced-motion:reduce){${MURO} .mu-sq-campana .onda,${MURO} .mu-squillo.squilla .mu-sq-campana>svg{animation:none}}
 ${MURO}[data-compatto="1"] .mu-avviso-grande{gap:10px;padding:14px}
-/* La pillola di chi ha acceso lo schermo: due secondi, in basso al centro,
- * sopra le card ma sotto gli avvisi grandi. */
-${MURO} .mu-luce-pillola{position:absolute;left:50%;bottom:16px;z-index:40;transform:translateX(-50%);display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);padding:9px 18px;border-radius:999px;font-weight:700;font-size:16px;color:#bbf7d0;background:rgba(5,46,26,.94);box-shadow:inset 0 0 0 1px rgba(34,197,94,.45),0 8px 24px rgba(0,0,0,.3);pointer-events:none;animation:muLucePillola .25s ease-out}
+/* La pillola di chi ha acceso lo schermo: due secondi, in alto al centro
+ * sotto la testa (mettiLaPillola), sopra le card ma sotto gli avvisi
+ * grandi. */
+${MURO} .mu-luce-pillola{position:absolute;left:50%;top:16px;z-index:40;transform:translateX(-50%);display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);padding:9px 18px;border-radius:999px;font-weight:700;font-size:16px;color:#bbf7d0;background:rgba(5,46,26,.94);box-shadow:inset 0 0 0 1px rgba(34,197,94,.45),0 10px 30px rgba(0,0,0,.28),0 2px 8px rgba(0,0,0,.18);pointer-events:none;animation:muLucePillola .25s ease-out}
 ${MURO} .mu-luce-pillola span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 ${MURO} .mu-luce-pillola i{flex:none;width:9px;height:9px;border-radius:50%;background:#22c55e}
-${MURO}[data-compatto="1"] .mu-luce-pillola{font-size:13px;padding:7px 12px;bottom:10px}
-@keyframes muLucePillola{from{opacity:0;transform:translate(-50%,8px)}}
+${MURO}[data-compatto="1"] .mu-luce-pillola{font-size:13px;padding:7px 12px}
+@keyframes muLucePillola{from{opacity:0;transform:translate(-50%,-8px)}}
 ${MURO}[data-compatto="1"] .mu-avg-disco{width:92px;height:92px;box-shadow:0 0 0 10px rgba(255,255,255,.08)}
 ${MURO}[data-compatto="1"] .mu-avg-disco .dm-oggetto,${MURO}[data-compatto="1"] .mu-avg-disco svg{width:54px!important;height:54px!important}
 ${MURO}[data-compatto="1"] .mu-avg-tit{font-size:30px}

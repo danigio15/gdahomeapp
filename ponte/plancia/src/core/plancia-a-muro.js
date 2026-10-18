@@ -2174,6 +2174,41 @@ export function giornataDellaLuce(muro, notte, passi = 96) {
   return punti;
 }
 
+const oreDelGiorno = (data) => data.getHours() + data.getMinutes() / 60;
+
+/**
+ * Le ore della notte per l'anteprima: `{ da, a, dalSole }`, in ore del giorno
+ * (0–24) dell'orologio di chi guarda. Col sole, da mezz'ora dopo il tramonto
+ * all'alba di `sun.sun`; con l'orario, o senza un sole che si possa leggere,
+ * la fascia di «Di notte schermo nero».
+ *
+ * Una notte che comincia prima di finire nello stesso giorno — il tramonto
+ * prima dell'alba, come la mattina presto con certe letture — col sole non e'
+ * una notte: la notte del sole scavalca sempre la mezzanotte. In quel caso si
+ * torna all'orario, che almeno sta ai bordi della giornata.
+ */
+export function notteDellaGiornata(muro, sole = null) {
+  if (muro?.luce?.giorno !== "orario") {
+    const tramonto = Date.parse(sole?.attributes?.next_setting || "");
+    const alba = Date.parse(sole?.attributes?.next_rising || "");
+    if (Number.isFinite(tramonto) && Number.isFinite(alba)) {
+      const da = oreDelGiorno(new Date(tramonto + DOPO_IL_TRAMONTO_MS));
+      const a = oreDelGiorno(new Date(alba));
+      if (da > a) return { da, a, dalSole: true };
+    }
+  }
+  return {
+    da: minutiDa(muro?.notte?.da || MURO_VUOTO.notte.da) / 60,
+    a: minutiDa(muro?.notte?.a || MURO_VUOTO.notte.a) / 60,
+    dalSole: false,
+  };
+}
+
+/** Se un'ora del giorno (0–24) sta nella notte `{ da, a }`. */
+export function eNotteAllOra({ da, a }, ora) {
+  return da > a ? ora >= da || ora < a : ora >= da && ora < a;
+}
+
 /**
  * Il tema da usare: quello della plancia, uno fisso, o «con l'orario» —
  * chiaro dalle sette alle diciannove, scuro il resto.

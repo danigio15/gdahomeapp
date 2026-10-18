@@ -86,7 +86,11 @@ test.describe("la luminosita' del tablet a muro", () => {
       "aria-checked",
       "true",
     );
-    await expect(presenza).toContainText("binary_sensor.presenza · nessuno");
+    /* Il sensore si vede una volta sola, nella casella; sotto la descrizione
+     * come sta adesso, col suo nome e non con l'entita'. */
+    const stato = presenza.locator("[data-mu-ed-stato-sensore]");
+    await expect(stato).toHaveText("Presenza ingresso · nessuno");
+    await expect(presenza.locator(".mu-ed-testo")).not.toContainText("binary_sensor.");
     /* L'app ha detto che e' un iPad: niente prossimita', niente luce della
      * stanza. */
     expect(await detti(page)).toContain("capacita?");
@@ -103,6 +107,13 @@ test.describe("la luminosita' del tablet a muro", () => {
     ).toBeDisabled();
     await expect(luce).toContainText("Sull'iPad la luce della stanza non si legge");
     await expect(luce.locator(".mu-ed-giornata svg path.luce")).toHaveCount(1);
+    /* Il disegno prende tutta la larghezza della scheda, meno la colonna
+     * delle percentuali. */
+    const larghezze = await luce.locator(".mu-ed-giornata").evaluate((g) => ({
+      scheda: g.clientWidth,
+      disegno: g.querySelector("svg").getBoundingClientRect().width,
+    }));
+    expect(larghezze.disegno).toBeGreaterThan(larghezze.scheda * 0.85);
     /* Il cursore scrive al rilascio, e il numero accanto segue il dito. */
     await body.locator('[data-mu-ed-campo="luce.notte"]').evaluate((cursore) => {
       cursore.value = "0";
@@ -190,6 +201,15 @@ test.describe("la luminosita' del tablet a muro", () => {
     const pillola = muro.locator(".mu-luce-pillola");
     await expect(pillola).toHaveText("Qualcuno vicino · Presenza ingresso · 90%");
     await expect(muro.locator(".mu-riposo")).toHaveCount(0);
+    /* In alto al centro, appena sotto la testa: in basso copriva una card. */
+    const dove = await muro.evaluate((m) => {
+      const p = m.querySelector(".mu-luce-pillola").getBoundingClientRect();
+      const testa = m.querySelector(".mu-testa").getBoundingClientRect();
+      return { sopra: p.top - testa.bottom, centro: p.left + p.width / 2 - innerWidth / 2 };
+    });
+    expect(dove.sopra).toBeGreaterThan(0);
+    expect(dove.sopra).toBeLessThan(30);
+    expect(Math.abs(dove.centro)).toBeLessThan(2);
     expect((await detti(page)).at(-1)).toBe("luce:90");
     await expect(pillola).toHaveCount(0, { timeout: 4000 });
     /* Se ne va: dopo il tempo scelto si riabbassa. */
