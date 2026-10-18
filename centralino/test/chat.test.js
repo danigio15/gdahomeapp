@@ -332,7 +332,7 @@ test("la pagina della console si apre, e non chiede la chiave per aprirsi", asyn
     assert.equal(risposta.status, 200);
     assert.match(risposta.headers.get("content-type"), /text\/html/);
     const pagina = await risposta.text();
-    assert.match(pagina, /Assistenza gdahome/);
+    assert.match(pagina, /Assistenza GdAHome/);
     /* E non si porta niente da fuori: nessuna richiesta a nessun altro. */
     assert.doesNotMatch(pagina, /https?:\/\/(?!127\.0\.0\.1)/);
   } finally {

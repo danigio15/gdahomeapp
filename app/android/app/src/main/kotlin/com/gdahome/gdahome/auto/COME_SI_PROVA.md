@@ -1,4 +1,4 @@
-# gdahome in auto — la prova
+# GdAHome in auto — la prova
 
 Non è un rilascio: è il poco che serve per **guardarla**.
 
@@ -148,7 +148,7 @@ premuto in macchina è una cosa che si vuole adesso: trovato un'ora dopo — il
 telefono in tasca, l'app mai riaperta — non è più quello che uno voleva, ed
 eseguirlo vorrebbe dire aprire il cancello a casa vuota. Scaduto si butta e
 non si fa niente: è il verso giusto in cui sbagliare. Per questo il tasto in
-macchina dice «parte appena apri gdahome sul telefono, entro due minuti», e
+macchina dice «parte appena apri GdAHome sul telefono, entro due minuti», e
 non «è partito».
 
 ## Senza Premium
@@ -163,7 +163,7 @@ attaccato:
 adb shell run-as com.gdahome.gdahome sh -c 'echo "{\"premium\":false,\"fino\":null}" > files/gdahome-auto-licenza.json'
 ```
 
-e si torna sullo schermo dell'auto: al posto dei dispositivi c'è «gdahome
+e si torna sullo schermo dell'auto: al posto dei dispositivi c'è «GdAHome
 Premium». Togliere il file fa lo stesso — un biglietto che manca vale «no».
 L'app, alla prossima lettura delle case, lo riscrive giusto.
 
@@ -172,7 +172,7 @@ L'app, alla prossima lettura delle case, lo riscrive giusto.
 Android Auto tiene su il **processo** dell'app — il servizio dell'auto gira lì
 dentro — ma non la parte Flutter. Con l'app chiusa il comando restava scritto e
 scadeva, e chi aveva premuto «Cancello» guidando doveva poi prendere il telefono
-e aprire gdahome: esattamente quello che in macchina non si vuole fare.
+e aprire GdAHome: esattamente quello che in macchina non si vuole fare.
 
 `IlPonteDellAuto.kt` accende un **motore Flutter senza schermo** sul secondo
 ingresso `inAuto` (`lib/main.dart` → `lib/auto/in_auto.dart`), e quello esegue.
@@ -211,7 +211,7 @@ di `la_foto.dart`, non un ricordarsene.
 | **tutte, col lucchetto acceso** | chi l'ha messo ha detto che in casa non si entra senza che sia lui a tenere il telefono |
 
 Quelle restano come prima: partono quando l'app torna viva. E il tasto in
-macchina lo dice — «fatto» per le une, «parte appena apri gdahome sul telefono»
+macchina lo dice — «fatto» per le une, «parte appena apri GdAHome sul telefono»
 per le altre — perché `subito` viaggia con ogni azione dentro la fotografia.
 
 ## Cosa non si è potuto provare qui

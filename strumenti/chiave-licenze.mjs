@@ -154,7 +154,7 @@ if (detti.senzaCentralino && !x)
   );
 if (detti.senzaCentralino && detti.gdanav)
   fermati(
-    "--senza-centralino non tocca gdanav: dentro gdahome segue la casa, e da sola non e' ancora nel negozio",
+    "--senza-centralino non tocca gdanav: dentro GdAHome segue la casa, e da sola non e' ancora nel negozio",
   );
 if (x) {
   if (!eUnaChiave(x))
@@ -221,7 +221,7 @@ if (d) {
       "  Poi cancellala da qui: non va in nessun file della repository, in\n" +
       "  nessun segreto di GitHub e in nessuna chat. Chi ce l'ha fa Premium\n" +
       "  chiunque. Se esce, si rilancia questo script e si rilascia tutto.\n\n" +
-      "  Prima del rilascio: ponte, centralino, app gdahome e gdanav\n" +
+      "  Prima del rilascio: ponte, centralino, app GdAHome e gdanav\n" +
       "  devono uscire tutti con questa pubblica.\n\n",
   );
 }

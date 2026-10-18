@@ -185,7 +185,7 @@ test("nelle premesse della plancia un `</script>` resta una stringa", () => {
 test("una cartella chiesta come file non fa cadere il ponte", async () => {
   const cartella = mkdtempSync(join(tmpdir(), "app-cartelle-"));
   mkdirSync(join(cartella, "assets", "fonts"), { recursive: true });
-  writeFileSync(join(cartella, "index.html"), "<!doctype html><title>gdahome</title>");
+  writeFileSync(join(cartella, "index.html"), "<!doctype html><title>GdAHome</title>");
   const accanto = `${cartella}-vecchia`;
   mkdirSync(accanto, { recursive: true });
   writeFileSync(join(accanto, "segreto.txt"), "no");

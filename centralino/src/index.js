@@ -243,7 +243,7 @@ export async function alzaIlCentralino({
       spento: "licenze spente: da fuori entrano tutti",
       registra:
         "licenze in registra: i gettoni si verificano e si contano (/salute), ma da fuori entrano tutti",
-      impone: "licenze in impone: da fuori si entra con gdahome Premium",
+      impone: "licenze in impone: da fuori si entra con GdAHome Premium",
     }[modo],
   );
   if (dellaRevoche && !revoche) {

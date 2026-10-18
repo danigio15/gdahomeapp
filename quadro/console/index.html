@@ -4194,7 +4194,7 @@
        * dire di no, e qui si vede prima di premere.
        * ─────────────────────────────────────────────────────────────────── */
 
-      const IL_NOME_DELLA_APP = { gdahome: "gdahome Premium", gdanav: "gdanav Premium" };
+      const IL_NOME_DELLA_APP = { gdahome: "GdAHome Premium", gdanav: "gdanav Premium" };
       const LE_APP = ["gdahome", "gdanav"];
 
       /* Una durata a parole: «1 mese», «1 anno», «per sempre». I mesi
@@ -4280,7 +4280,7 @@
         return `
           <h1 class="titolone">Licenze</h1>
           <p class="sottotitolo">
-            Le licenze Premium che puoi regalare ai tuoi clienti. <b>gdahome Premium</b> vale per tutta la casa, e comprende gdanav Premium; <b>gdanav Premium</b> da solo vale per un telefono, e si consegna con un codice.
+            Le licenze Premium che puoi regalare ai tuoi clienti. <b>GdAHome Premium</b> vale per tutta la casa, e comprende gdanav Premium; <b>gdanav Premium</b> da solo vale per un telefono, e si consegna con un codice.
           </p>
 
           <div class="abbina">
@@ -4305,7 +4305,7 @@
                   <div class="campo">
                     <label for="licenza-app">App</label>
                     <select id="licenza-app">
-                      <option value="gdahome"${primaApp === "gdahome" ? " selected" : ""}>gdahome Premium</option>
+                      <option value="gdahome"${primaApp === "gdahome" ? " selected" : ""}>GdAHome Premium</option>
                       <option value="gdanav"${primaApp === "gdanav" ? " selected" : ""}>gdanav Premium</option>
                     </select>
                   </div>
@@ -5090,7 +5090,7 @@
         };
 
         const versioni = [
-          ["gdahome (il ponte)", c.ponte, c.aggiornamenti?.gdahome],
+          ["GdAHome (il ponte)", c.ponte, c.aggiornamenti?.gdahome],
           ["la plancia", c.plancia, false],
           ["Home Assistant Core", c.ha, c.aggiornamenti?.ha],
           ["Supervisor", c.supervisor, false],
@@ -5364,7 +5364,7 @@
             <div class="avvertenza" style="margin-top: 0">
               <span class="gettone" aria-hidden="true">!</span>
               <span>
-                Questo impianto dice quante plance ha, ma non quali: l'add-on gdahome di casa è precedente alla 1.5.9.13. Aggiornalo dalla schermata Aggiornamenti, e i nomi si scelgono da qui.
+                Questo impianto dice quante plance ha, ma non quali: l'add-on GdAHome di casa è precedente alla 1.5.9.13. Aggiornalo dalla schermata Aggiornamenti, e i nomi si scelgono da qui.
               </span>
             </div>
           </section>`;
@@ -5803,7 +5803,7 @@
                   ? `<div class="limite" style="margin-top: 16px">
                       <span class="gettone" aria-hidden="true">◴</span>
                       <span>
-                        <b>${plurale(quanti, "aggiornamento in attesa", "aggiornamenti in attesa")}, ma questo impianto non manda l'elenco.</b> Il numero arriva, i nomi no: è una versione di gdahome precedente alla 1.5.9, che non inviava ancora l'elenco. Aggiorna l'add-on su quell'impianto e qui compaiono nomi, icone, note e il tasto per installare.
+                        <b>${plurale(quanti, "aggiornamento in attesa", "aggiornamenti in attesa")}, ma questo impianto non manda l'elenco.</b> Il numero arriva, i nomi no: è una versione di GdAHome precedente alla 1.5.9, che non inviava ancora l'elenco. Aggiorna l'add-on su quell'impianto e qui compaiono nomi, icone, note e il tasto per installare.
                       </span>
                     </div>`
                   : `<p class="nota">Nessun aggiornamento in attesa: l'impianto è aggiornato.</p>`
@@ -5834,7 +5834,7 @@
                 : `<div class="limite" style="margin-top: 16px">
                     <span class="gettone" aria-hidden="true">◴</span>
                     <span>
-                      <b>Questo impianto non ha attivato la manutenzione.</b> Gli aggiornamenti si vedono ma non si possono installare: vedere e intervenire sono due permessi diversi. <br /><br /> La attiva <b>chi abita la casa</b>, dal suo Home Assistant: <b>Impostazioni › Add-on › gdahome › Configurazione</b>, la casella <i>«Lascia che chi ti ha fatto l'impianto aggiorni da lontano»</i>, poi <b>Salva</b>; l'add-on si riavvia da solo. Da qui non si può attivare, ed è voluto: sarebbe un permesso che si concede da solo.
+                      <b>Questo impianto non ha attivato la manutenzione.</b> Gli aggiornamenti si vedono ma non si possono installare: vedere e intervenire sono due permessi diversi. <br /><br /> La attiva <b>chi abita la casa</b>, dal suo Home Assistant: <b>Impostazioni › Add-on › GdAHome › Configurazione</b>, la casella <i>«Lascia che chi ti ha fatto l'impianto aggiorni da lontano»</i>, poi <b>Salva</b>; l'add-on si riavvia da solo. Da qui non si può attivare, ed è voluto: sarebbe un permesso che si concede da solo.
                     </span>
                   </div>`
             }
@@ -6187,7 +6187,7 @@
                 <p class="verdetto">
                   ${
                     !aperta && daQui
-                      ? "Questo impianto non ha attivato la manutenzione: da qui non si installa niente, ed è una scelta di chi abita la casa. La attiva lui, dal suo Home Assistant: Impostazioni › Add-on › gdahome › Configurazione, la casella «Lascia che chi ti ha fatto l'impianto aggiorni da lontano». "
+                      ? "Questo impianto non ha attivato la manutenzione: da qui non si installa niente, ed è una scelta di chi abita la casa. La attiva lui, dal suo Home Assistant: Impostazioni › Add-on › GdAHome › Configurazione, la casella «Lascia che chi ti ha fatto l'impianto aggiorni da lontano». "
                       : ""
                   }${
                     dalSuoApparecchio
@@ -6215,7 +6215,7 @@
               <li class="bene">
                 <span class="bollino" aria-hidden="true">✓</span>
                 <span class="cosa">
-                  <b>Quelli che richiedono un riavvio, uno per volta.</b> gdahome e Home Assistant si riavviano durante l'installazione: due insieme sullo stesso impianto vogliono dire non sapere quale dei due ha causato un problema.
+                  <b>Quelli che richiedono un riavvio, uno per volta.</b> GdAHome e Home Assistant si riavviano durante l'installazione: due insieme sullo stesso impianto vogliono dire non sapere quale dei due ha causato un problema.
                 </span>
               </li>
             </ul>
@@ -6272,7 +6272,7 @@
                         Scade fra <b data-orologio="${Number(primo.scadeFra)}">—</b> · generato ${testo(daQuanto(primo.fattoIl))}
                       </div>`
                     : `<p class="nota" style="margin: 16px 0 12px">
-                        Nessun codice attivo. Generane uno e invialo a chi abita la casa: vale un giorno, e va inserito nella configurazione dell'add-on gdahome. L'abbinamento avviene da solo al primo rapporto.
+                        Nessun codice attivo. Generane uno e invialo a chi abita la casa: vale un giorno, e va inserito nella configurazione dell'add-on GdAHome. L'abbinamento avviene da solo al primo rapporto.
                       </p>`
                 }
 
@@ -6280,7 +6280,7 @@
                   <li>
                     <span>
                       In casa del cliente, apri Home Assistant e vai in
-                      <span class="strada">Impostazioni → Add-on → gdahome → Configurazione</span>.
+                      <span class="strada">Impostazioni → Add-on → GdAHome → Configurazione</span>.
                     </span>
                   </li>
                   <li>

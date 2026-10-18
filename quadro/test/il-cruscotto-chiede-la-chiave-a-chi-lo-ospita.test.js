@@ -75,7 +75,7 @@ test("la risposta si prende solo da chi ci tiene, e da un'origine nuova solo dop
   assert.match(CRUSCOTTO, /localStorage\.removeItem\(DOVE_STA_LA_CHIAVE\)/);
 });
 
-test("dall'app gdahome la chiave arriva dalla pagina stessa, e si prende", () => {
+test("dall'app GdAHome la chiave arriva dalla pagina stessa, e si prende", () => {
   /* «Da app gdahome non vengono passati i codici.» La WebView dell'app scrive
    * `window.postMessage(...)` dentro la pagina: il messaggio parte da questa
    * finestra, non da chi la contiene ne' da chi l'ha aperta. Si scartava, e

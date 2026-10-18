@@ -5,7 +5,7 @@ Fino a settembre 2026 arrivava da fuori. Era la copia verbatim di una release
 di dashboardmodern-v2, la portava dentro strumenti/porta-la-plancia.mjs, e qui
 non si toccava niente perche' al prossimo import si sarebbe rifatta da zero.
 Quella repository non c'e' piu': **la plancia vive qui**, e qui si correggono i
-suoi difetti, come ogni altra parte di gdahome.
+suoi difetti, come ogni altra parte di GdAHome.
 
 Cambia una cosa sola nel modo di lavorarci, ed e' importante.
 
@@ -37,7 +37,7 @@ e ai loghi delle auto che coprono: distribuire delle immagini tenendo chiusa la
 carta che dice a che patto si usano sarebbe il contrario di quello che quella
 carta e'.
 
-Quello che invece resta fuori di qui sono le **aggiunte di gdahome alla
+Quello che invece resta fuori di qui sono le **aggiunte di GdAHome alla
 pagina** — il nome, il marchio, le tessere che nell'app non ci vanno. Stanno in
 ponte/src/premesse.js per Home Assistant e in app/lib/plancia/premesse.dart per
 l'app, e ci restano: cambiare il nome dentro novecento file vorrebbe dire
@@ -45,7 +45,7 @@ toccare chiavi, percorsi e classi che si chiamano cosi' per funzionare, e
 guadagnarci niente. Quello che deve cambiare e' quello che si legge.
 
 **La licenza di questa cartella e' la sua, e sta qui accanto: LICENSE.** Non e'
-quella di gdahome, che sta alla radice della repository. Sono due licenze
+quella di GdAHome, che sta alla radice della repository. Sono due licenze
 diverse perche' sono due lavori dello stesso autore nati in due momenti
 diversi, e questa vieta a chiunque altro di ridistribuirla, di farne versioni
 derivate e di metterla in un prodotto a pagamento.

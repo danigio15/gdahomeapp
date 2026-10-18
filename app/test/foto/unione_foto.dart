@@ -354,7 +354,7 @@ void main() {
     home: dentro,
   );
 
-  testWidgets('oggi: il menu di gdahome', (tester) async {
+  testWidgets('oggi: il menu di GdAHome', (tester) async {
     await unaCasa(tester);
     final chiave = GlobalKey<BarraDelleSezioniState>();
     await tester.pumpWidget(
@@ -481,7 +481,7 @@ void main() {
     await laFoto(tester, 'oggi-gdanav');
   });
 
-  testWidgets('domani: gdanav dentro gdahome, con l\'auto della plancia', (
+  testWidgets('domani: gdanav dentro GdAHome, con l\'auto della plancia', (
     tester,
   ) async {
     await unaCasa(tester);
@@ -503,7 +503,7 @@ void main() {
     await laFoto(tester, 'domani-gdanav');
   });
 
-  testWidgets('domani: la barra di gdahome aperta sopra gdanav', (
+  testWidgets('domani: la barra di GdAHome aperta sopra gdanav', (
     tester,
   ) async {
     await unaCasa(tester);
@@ -525,7 +525,7 @@ void main() {
     await laFoto(tester, 'domani-gdanav-menu');
   });
 
-  testWidgets('domani: la fonte gdahome, dentro gdanav', (tester) async {
+  testWidgets('domani: la fonte GdAHome, dentro gdanav', (tester) async {
     tester.view.physicalSize = const Size(1170, 2532);
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);

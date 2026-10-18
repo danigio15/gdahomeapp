@@ -21,7 +21,7 @@ Widget _dentro(Widget figlio, {Brightness luce = Brightness.light}) =>
     );
 
 void main() {
-  testWidgets('l\'attesa dell\'app ha il marchio di gdahome, la rotella e '
+  testWidgets('l\'attesa dell\'app ha il marchio di GdAHome, la rotella e '
       '«Caricamento…»: niente «DASHBOARDMODERN», niente «da fuori»', (
     tester,
   ) async {

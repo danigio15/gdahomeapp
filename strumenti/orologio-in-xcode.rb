@@ -52,7 +52,7 @@ orologio.build_configurations.each do |c|
   s['PRODUCT_NAME'] = '$(TARGET_NAME)'
   s['PRODUCT_BUNDLE_IDENTIFIER'] = OROLOGIO
   s['GENERATE_INFOPLIST_FILE'] = 'YES'
-  s['INFOPLIST_KEY_CFBundleDisplayName'] = 'gdahome'
+  s['INFOPLIST_KEY_CFBundleDisplayName'] = 'GdAHome'
   # E' l'orologio dell'app per iPhone, e senza iPhone non sa niente: le chiavi
   # di casa stanno li'.
   s['INFOPLIST_KEY_WKCompanionAppBundleIdentifier'] = TELEFONO

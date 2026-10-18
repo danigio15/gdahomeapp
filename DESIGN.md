@@ -237,7 +237,7 @@ Questo documento descrive il sito pubblico in `sito/` (`index.html`, `privacy.ht
 
 **Creative North Star: "Il sito dell'app"**
 
-Il sito è fatto come i siti delle app che chi arriva qui già conosce, e fatto con cura: il blu di gdahome è un colore vero, che si prende tutta la copertina, la colonna Premium del listino e il piede; le sezioni si alternano fra bianco e un campo azzurrino, così lo scorrimento ha un ritmo; le schermate vere dell'app stanno dentro un telefono disegnato in CSS, con una cornice scura e un'ombra che le stacca dalla pagina; i tasti e le schede sono arrotondati e intorno c'è aria.
+Il sito è fatto come i siti delle app che chi arriva qui già conosce, e fatto con cura: il blu di GdAHome è un colore vero, che si prende tutta la copertina, la colonna Premium del listino e il piede; le sezioni si alternano fra bianco e un campo azzurrino, così lo scorrimento ha un ritmo; le schermate vere dell'app stanno dentro un telefono disegnato in CSS, con una cornice scura e un'ombra che le stacca dalla pagina; i tasti e le schede sono arrotondati e intorno c'è aria.
 
 Il colore è pieno e piatto. Non ci sono fondi a sfumature, vetro sfocato, aloni, testo sfumato: sono il vestito di mille siti usciti uguali nello stesso anno, e il sito li rifiuta per scelta. L'ombra è una sola famiglia, morbida e spostata in basso come la fa la luce, in tre pesi. Il sistema è chiaro soltanto (`color-scheme: light only`): è una copertina, e una copertina si presenta sempre allo stesso modo.
 
@@ -255,7 +255,7 @@ Quindici valori in `:root` di `stile.css`, con nomi italiani; tre famiglie vere 
 
 ### Primary
 
-- **Blu di gdahome** (`blu`): i collegamenti nel testo, il tasto pieno su carta («Installa l'add-on» in testata, «Manda» nel modulo), il bordo di 2px sopra ogni voce di scheda tecnica e di «tre strade», il cerchio numerato dei passi, la parola «come» nei passi, il bordo del campo di modulo a fuoco, la selezione del testo.
+- **Blu di GdAHome** (`blu`): i collegamenti nel testo, il tasto pieno su carta («Installa l'add-on» in testata, «Manda» nel modulo), il bordo di 2px sopra ogni voce di scheda tecnica e di «tre strade», il cerchio numerato dei passi, la parola «come» nei passi, il bordo del campo di modulo a fuoco, la selezione del testo.
 - **Blu scuro** (`blu-scuro`): il fondo della copertina e della colonna Premium del listino; lo stato hover dei collegamenti e del tasto pieno; il testo del tasto bianco sulla copertina e della pastiglia «Ultimo aggiornamento» nell'informativa.
 - **Blu chiaro** (`blu-chiaro`): il fondo delle pastiglie di serie sotto il puntatore e della pastiglia nell'informativa. Un blu che si tocca, non che si legge.
 - **Su blu** (`su-blu`): il testo di secondo livello quando sta sul blu scuro o sulla notte: la guida della copertina, la nota sotto i tasti, il periodo del prezzo Premium, tutto il piede.
@@ -425,4 +425,4 @@ Fascia notte con testo su-blu a 0.95rem: a sinistra la frase e sotto, oltre un f
 - **Don't** scrivere etichette in maiuscolo o con spaziatura allargata, né mettere occhielli o righe introduttive sopra un titolo.
 - **Don't** fare griglie di scatole uguali con icona, titolo e testo: le voci sono colonne di testo con un bordo blu sopra.
 - **Don't** aggiungere un tema scuro: il sito è `color-scheme: light only`.
-- **Don't** scrivere `gdahome` e `gdanav` in maiuscolo.
+- **Don't** scrivere il nome dell'app in un altro modo da **GdAHome** (né «gdahome», né «GDAHOME»), né `gdanav` in maiuscolo.

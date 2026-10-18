@@ -917,7 +917,7 @@ chmod 600 "$CONFIGURAZIONE/ambiente"
 
 cat >/etc/systemd/system/tramite.service <<FINE
 [Unit]
-Description=Il tramite di gdahome
+Description=Il tramite di GdAHome
 Documentation=https://github.com/$REPO_DEL_TRAMITE
 After=network-online.target
 Wants=network-online.target

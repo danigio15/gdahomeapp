@@ -4,7 +4,7 @@ Tre pezzi, in quest'ordine:
 
 1. **il ponte**, l'add-on dentro Home Assistant — senza, l'app non ha niente a
    cui bussare;
-2. **il centralino**, che serve solo per entrare **da fuori casa** (con gdahome
+2. **il centralino**, che serve solo per entrare **da fuori casa** (con GdAHome
    Premium) — si mette in piedi in cinque minuti;
 3. **l'app** sul telefono.
 
@@ -18,10 +18,10 @@ Se vuoi solo provarla sul divano, il 2 puoi saltarlo.
 **Supervisor**, cioè **Home Assistant OS** oppure **Home Assistant
 Supervised**. Su **Container** — Home Assistant in Docker — il negozio degli
 add-on non esiste, e non si installa nessun add-on di nessuno: non è una
-mancanza di gdahome. Chi ha Container e vuole gdahome passa a Supervised sulla
+mancanza di GdAHome. Chi ha Container e vuole GdAHome passa a Supervised sulla
 stessa macchina, Docker ce l'ha già.
 
-L'add-on si chiama **gdahome**, e la repository è pubblica: si installa **dal
+L'add-on si chiama **GdAHome**, e la repository è pubblica: si installa **dal
 negozio**, come qualunque altro add-on. Cinque minuti la prima volta, e poi si
 aggiorna da sé.
 
@@ -30,16 +30,16 @@ aggiorna da sé.
 1. **Impostazioni → Add-on → Negozio degli add-on**, menu in alto a destra →
    **Archivi**: incolla `https://github.com/danigio15/gdahomeapp`, premi
    **Aggiungi**, chiudi.
-2. Nell'elenco compare **gdahome**. Aprilo e premi **Installa**. **La prima
+2. Nell'elenco compare **GdAHome**. Aprilo e premi **Installa**. **La prima
    volta ci mette qualche minuto**: Home Assistant non se lo scarica già
    pronto, se lo costruisce sul posto — su un Raspberry anche cinque o dieci
    minuti. Le volte dopo è immediato.
-3. **Avvialo.** Nella barra laterale compare **gdahome**: è la console, quella
+3. **Avvialo.** Nella barra laterale compare **GdAHome**: è la console, quella
    che fa i codici di abbinamento e che stacca i telefoni.
 
 Da qui in poi gli aggiornamenti arrivano come per ogni altro add-on: quando si
 pubblica una versione nuova, la scheda dell'add-on mostra **Aggiorna**
-(Impostazioni → Componenti aggiuntivi → gdahome → Aggiorna). Non serve nessun
+(Impostazioni → Componenti aggiuntivi → GdAHome → Aggiorna). Non serve nessun
 gettone di GitHub.
 
 ### B. A mano, per svilupparlo
@@ -59,7 +59,7 @@ Serve a chi cambia il codice e lo vuole provare senza pubblicare niente.
    tenerlo uguale allo slug è l'unico modo per non perdersi fra i comandi qui
    sotto.
 4. **Negozio degli add-on**, menu in alto a destra → **Ricarica**: compare una
-   sezione **Local add-ons** con dentro **gdahome**.
+   sezione **Local add-ons** con dentro **GdAHome**.
 5. Installalo e avvialo.
 
 #### Per aggiornarlo: si ricopia la cartella
@@ -75,7 +75,7 @@ cartella, e nel negozio premi **Ricarica**; poi nella pagina dell'add-on premi
 **Aggiorna** (o, dai tre puntini, **Ricostruisci**, se la versione è rimasta
 la stessa). Il blocco qui sotto fa tutto il giro dal terminale.
 
-Prima lo faceva l'add-on da sé, con un bottone «Aggiorna gdahome» nella sua
+Prima lo faceva l'add-on da sé, con un bottone «Aggiorna GdAHome» nella sua
 pagina. Per riuscirci voleva la cartella `addons` di Home Assistant in
 scrittura — quella di tutti gli add-on locali, non solo la sua — e anche così,
 alla fine, «Aggiorna» toccava premerlo a mano, perché un add-on non può
@@ -152,7 +152,7 @@ Il ponte, da solo, si raggiunge solo dalla rete di casa. Per entrare da fuori
 chiama fuori e resta in attesa in un posto dove il telefono lo va a trovare.
 Quel posto è il centralino.
 
-Il centralino di gdahome è `tramite.gdahome.org`, ed è quello che l'app usa
+Il centralino di GdAHome è `tramite.gdahome.org`, ed è quello che l'app usa
 senza che nessuno configuri niente: sta scritto nel codice, e il ponte lo
 chiama da sé. **Questo punto serve solo a chi vuole il proprio.**
 
@@ -161,7 +161,7 @@ Si mette su **una macchina propria**: il programma è in
 mette in piedi da zero.
 
 Poi il suo indirizzo va scritto **dentro l'add-on**: nella sua scheda una
-casella per metterlo non c'è, apposta — l'indirizzo giusto è quello di gdahome,
+casella per metterlo non c'è, apposta — l'indirizzo giusto è quello di GdAHome,
 e una casella che non va toccata prima o poi qualcuno la tocca. Con una copia
 locale dell'add-on si fa una volta sola:
 
@@ -173,9 +173,9 @@ Scrive i tre posti dove quell'indirizzo sta — il difetto dell'add-on, quello
 dell'app, quello della chat — e una prova tiene fermo che i primi due restino
 identici. Poi **Negozio degli add-on → Ricarica**, e si installa da lì.
 
-Apri **gdahome** nella barra laterale: sotto «Da fuori casa» deve dire
+Apri **GdAHome** nella barra laterale: sotto «Da fuori casa» deve dire
 **«Collegato a wss://…: da fuori casa si entra.»**, con dentro il tuo
-indirizzo. Se invece c'è quello di gdahome, l'add-on che gira non è la tua
+indirizzo. Se invece c'è quello di GdAHome, l'add-on che gira non è la tua
 copia.
 
 Se dice altro, lì c'è scritto cosa non va.
@@ -192,7 +192,7 @@ Se dice altro, lì c'è scritto cosa non va.
 
 ### Il codice
 
-Nella barra laterale di Home Assistant apri **gdahome** e premi **Genera QR
+Nella barra laterale di Home Assistant apri **GdAHome** e premi **Genera QR
 code**. Compare il **QR code**, e vale cinque minuti. (Sotto, per chi non
 può inquadrarlo, ci sono le stesse cose in lettere: sedici, in quattro gruppi
 da quattro.)
@@ -267,7 +267,7 @@ portava dietro, ora è una cartella come le altre e i suoi difetti si correggono
 in questa.
 
 Per chi la usa non cambia niente, ed è il punto: una versione nuova della
-plancia è una versione nuova di **gdahome**. In Home Assistant compare
+plancia è una versione nuova di **GdAHome**. In Home Assistant compare
 **Aggiorna** sulla pagina dell'add-on, e da lì la plancia nuova arriva a tutti i
 telefoni abbinati senza che nessuno debba fare altro.
 
@@ -281,8 +281,8 @@ dicono le prove, non le case.
 
 Il link ce l'hai già: lo dà l'add-on.
 
-1. In Home Assistant, barra laterale → **gdahome**.
-2. Scheda «gdahome in un browser» → **Apri gdahome**.
+1. In Home Assistant, barra laterale → **GdAHome**.
+2. Scheda «GdAHome in un browser» → **Apri GdAHome**.
 
 È la stessa app del telefono, e si adatta da sola allo schermo: su un computer
 la barra resta aperta di fianco, su tablet e telefono si apre a scomparsa —
@@ -292,7 +292,7 @@ L'indirizzo sta **dietro l'ingress** di Home Assistant — ci arriva solo chi è
 già entrato, e non c'è nessuna porta nuova aperta sul router.
 
 Se la scheda non c'è, l'add-on non si porta ancora dietro l'app: **Actions →
-«gdahome dentro l'add-on» → Run workflow**, poi aggiorna l'add-on.
+«GdAHome dentro l'add-on» → Run workflow**, poi aggiorna l'add-on.
 
 Una cosa da sapere, e conviene saperla prima: se apri Home Assistant su un
 indirizzo **`http`**, dal browser **la plancia non si disegna**. Tutto il resto
@@ -308,14 +308,14 @@ lì il server sta dentro l'app.
 Quello dell'add-on **non è un link**: vive finché vive la pagina di Home
 Assistant che lo tiene aperto, e in una scheda a parte dopo qualche minuto
 risponde **401**. Per averne uno da salvare fra i preferiti, da aprire da
-qualsiasi rete e da mandare a qualcuno, gdahome sta **anche sul centralino**:
+qualsiasi rete e da mandare a qualcuno, GdAHome sta **anche sul centralino**:
 
 ```
 https://tramite.gdahome.org/app/
 ```
 
 L'indirizzo corto, **webapp.gdahome.org**, porta lì da solo. Lo trovi già
-scritto, pronto da copiare, nella console dell'add-on: **gdahome → gdahome in
+scritto, pronto da copiare, nella console dell'add-on: **GdAHome → GdAHome in
 un browser → «Da fuori casa, o da un browser qualsiasi»**.
 
 Ce la mette la macchina del centralino, ogni volta che si aggiorna: copia

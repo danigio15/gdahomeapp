@@ -1,27 +1,27 @@
-# Le licenze: gdahome Premium e gdanav Premium
+# Le licenze: GdAHome Premium e gdanav Premium
 
 Questo file e' il contratto fra i pezzi: il quadro che le rilascia, l'add-on
-che le tiene, il centralino che le fa rispettare, l'app gdahome e gdanav che le
+che le tiene, il centralino che le fa rispettare, l'app GdAHome e gdanav che le
 mostrano. Chi tocca uno di questi pezzi legge qui prima.
 
 ## Cosa si paga
 
 | | Base / gratis | Premium |
 | --- | --- | --- |
-| **gdahome** (4,99 €/mese · 49,99 €/anno) | una plancia (la principale), una casa, collegamento solo in casa | fino a 30 plance e 10 case, collegamento da fuori casa (centralino), configurazione della plancia dall'app, dispositivi Zigbee dall'app con «Dove lo metto?», plancia a muro (tablet e NSPanel), la casa al polso (Apple Watch, Wear OS) e in auto (Android Auto, CarPlay), **gdanav Premium compreso** |
-| **gdanav** (2,99 €/mese · 29,99 €/anno) | auto termica completa (percorso, distributori, prezzi); auto elettrica con la batteria scritta a mano e percorso senza soste; traffico, autovelox e meteo per tutti | Home Assistant e fonti automatiche della batteria (OBD, Android Auto, gdahome), percorso con le soste alle colonnine e il loro stato in tempo reale, Android Auto e CarPlay |
+| **GdAHome** (4,99 €/mese · 49,99 €/anno) | una plancia (la principale), una casa, collegamento solo in casa | fino a 30 plance e 10 case, collegamento da fuori casa (centralino), configurazione della plancia dall'app, dispositivi Zigbee dall'app con «Dove lo metto?», plancia a muro (tablet e NSPanel), la casa al polso (Apple Watch, Wear OS) e in auto (Android Auto, CarPlay), **gdanav Premium compreso** |
+| **gdanav** (2,99 €/mese · 29,99 €/anno) | auto termica completa (percorso, distributori, prezzi); auto elettrica con la batteria scritta a mano e percorso senza soste; traffico, autovelox e meteo per tutti | Home Assistant e fonti automatiche della batteria (OBD, Android Auto, GdAHome), percorso con le soste alle colonnine e il loro stato in tempo reale, Android Auto e CarPlay |
 
 I prezzi stanno nei negozi (Play Console, App Store Connect), non nel codice.
 Prodotti:
 
 | | Google Play | App Store |
 | --- | --- | --- |
-| gdahome | abbonamento `gdahome_premium`, piani base `mensile` e `annuale` | `gdahome_premium_mensile`, `gdahome_premium_annuale` (gruppo «gdahome Premium») |
+| GdAHome | abbonamento `gdahome_premium`, piani base `mensile` e `annuale` | `gdahome_premium_mensile`, `gdahome_premium_annuale` (gruppo «GdAHome Premium») |
 | gdanav | abbonamento `gdanav_premium`, piani base `mensile` e `annuale` | `gdanav_premium_mensile`, `gdanav_premium_annuale` (gruppo «gdanav Premium») |
 
 ## Di chi e' una licenza
 
-- **gdahome: della casa**, non del telefono. Il soggetto e' l'identita' della
+- **GdAHome: della casa**, non del telefono. Il soggetto e' l'identita' della
   casa verso il centralino, `casa_` + 32 cifre esadecimali
   (`ponte/src/identita.js`). Tutti i telefoni abbinati a quella casa, e la web
   app, sono Premium insieme a lei.
@@ -29,16 +29,16 @@ Prodotti:
   esadecimali, nato una volta sola nell'archivio sicuro di gdanav. L'abbonamento
   comprato nel negozio resta controllato dal telefono come oggi; il quadro
   serve per i **codici regalo**.
-- **gdanav dentro gdahome** segue la casa: gdahome Premium = gdanav Premium.
+- **gdanav dentro GdAHome** segue la casa: GdAHome Premium = gdanav Premium.
 
 ## Da dove arriva
 
-1. **Negozio**: l'app gdahome compra, manda la ricevuta alla casa sul filo
+1. **Negozio**: l'app GdAHome compra, manda la ricevuta alla casa sul filo
    cifrato (`ponte/licenza/negozio`), la casa la gira al quadro, il quadro la
    controlla con Google o Apple e segna la licenza fino alla scadenza
    dell'abbonamento.
    La prima volta un abbonamento ha **14 giorni di prova gratuita**, per
-   gdahome e per gdanav: nella Play Console e' un'offerta «prova gratuita»
+   GdAHome e per gdanav: nella Play Console e' un'offerta «prova gratuita»
    su tutti e due i piani base (`mensile` e `annuale`), in App Store Connect
    un'offerta introduttiva «free trial 2 weeks» su tutti e due i prodotti.
    Durante la prova la licenza (e il gettone) lo dice con `prova: true`, e
@@ -60,10 +60,10 @@ Prodotti:
    rete in quei giorni; chi disdice tiene Premium al massimo tre giorni in piu'.
 2. **Regalo del gestore**: dalla pagina del gestore del quadro si regalano
    licenze a una casa (per `casa_…`) o si generano **codici regalo** (per
-   gdahome o gdanav, di N mesi o per sempre).
+   GdAHome o gdanav, di N mesi o per sempre).
 3. **Regalo dell'installatore**: quando il gestore crea (o modifica) un
    installatore gli da' un **pacchetto**: per ogni app, quante licenze **di
-   ogni durata** — per esempio 10 gdahome di 1 mese, 5 gdahome di 1 anno, 2
+   ogni durata** — per esempio 10 GdAHome di 1 mese, 5 GdAHome di 1 anno, 2
    gdanav per sempre. La durata la decide il gestore (nella sua pagina: 1, 3,
    6, 12, 24 mesi o per sempre; dall'API qualunque numero di mesi da 1 a 120,
    o `"sempre"`). L'installatore dalla sua pagina ne assegna una a una delle
@@ -72,7 +72,7 @@ Prodotti:
    la assegna, o quando il cliente riscatta il codice. Ogni app + durata e' un
    conto a se': se la toglie (o annulla il codice non usato), torna in quello.
 
-Un codice regalo si riscatta dall'app gdahome (per la casa) o da gdanav (per
+Un codice regalo si riscatta dall'app GdAHome (per la casa) o da gdanav (per
 il telefono): `GDA-XXXX-XXXX-XXXX`, alfabeto senza lettere ambigue
 (`ABCDEFGHJKMNPQRSTUVWXYZ23456789`), una volta sola.
 
@@ -302,17 +302,17 @@ La casa manda il gettone quando si presenta e ogni volta che lo rinnova
 (messaggio `{"t": "licenza", "tipo": "licenza", "gettone": "…"}` sul filo della
 casa: il protocollo del centralino usa `t`, si mandano tutti e due; stringa
 vuota = nessuna licenza; si accetta anche `gettone` dentro `sono-io`). Un
-telefono che bussa a `/telefono/<casa>` di una casa **senza gettone gdahome
+telefono che bussa a `/telefono/<casa>` di una casa **senza gettone GdAHome
 valido** viene chiuso con codice `4402` e motivo `premium-richiesto`.
 L'abbinamento (`/abbinamento/…`) resta aperto a tutti. Con la chiave vuota il
 controllo e' spento (tutti passano, come oggi): si accende insieme alla chiave.
 
-## L'app gdahome
+## L'app GdAHome
 
 - Chiede `ponte/licenza/stato` a ogni collegamento, e ogni 6 ore finche' il
   filo resta su (un tablet acceso per giorni non torna Base col gettone
   vecchio); verifica il gettone, lo ricorda per casa. Premium = la casa in uso
-  ha un gettone gdahome valido.
+  ha un gettone GdAHome valido.
 - Una casa che le licenze non le sa tenere — il comando non lo conosce, o
   risponde `attive: false` — si ricorda come `senza_licenze` e resta Base: li'
   Premium non si puo' comprare, e la pagina Premium dice di aggiornare
@@ -376,7 +376,7 @@ controllo e' spento (tutti passano, come oggi): si accende insieme alla chiave.
   dal telefono (`LOrologio.swift`, `IlTramiteDellOrologio.kt`). Senza Premium
   all'orologio arriva solo `{"v":1,"premium":false}` — nessun nome di casa,
   nessuna guida — e lui mostra la schermata che dice dove si attiva; un tocco
-  rimasto da prima viene rifiutato dal telefono («Serve gdahome Premium»)
+  rimasto da prima viene rifiutato dal telefono («Serve GdAHome Premium»)
   prima di scrivere il comando.
 
 ## Il giorno dei pagamenti: le app vecchie si fermano
@@ -412,14 +412,14 @@ riaprire tutto si rimette `0`.
 - **L'app nuova** (`app/lib/aggiornamento_obbligatorio.dart`) la chiede anche
   da se' al centralino di difetto (in `https`) all'avvio, tornando davanti e
   ogni 6 ore, la ricorda sul telefono (senza rete non si riapre) e, se e'
-  sotto, si copre tutta con «C'è una versione nuova di gdahome: aggiornala per
+  sotto, si copre tutta con «C'è una versione nuova di GdAHome: aggiornala per
   continuare» e il bottone per il negozio. La stessa pagina compare quando la
   casa risponde `aggiorna-l-app`. Nel browser non si ferma mai (l'app web la
   serve l'add-on, sempre della sua stessa costruzione), e nemmeno nelle
   costruzioni di prova, a meno di `--dart-define=VERSIONE_MINIMA_SEMPRE=true`.
 - **Le app della prova di oggi** il controllo non ce l'hanno e il numero non
   lo dicono: le ferma l'add-on aggiornato, che le rifiuta; la frase del no
-  («questa versione di gdahome e' vecchia: aggiornala dal negozio per
+  («questa versione di GdAHome e' vecchia: aggiornala dal negozio per
   continuare») la mostrano come mostrano ogni no della casa.
 
 **Prima di accenderla**: l'add-on che esce insieme alla versione a pagamento

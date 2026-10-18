@@ -68,7 +68,7 @@ class HuiRoot extends HTMLElement {
       "<style>:host{display:block;height:100%}" +
       ".header{position:fixed;top:0;left:var(--mdc-drawer-width,0);right:0;height:56px;z-index:4;background:#03a9f4;color:#fff}" +
       "#view{padding-top:56px;height:calc(100% - 56px);box-sizing:content-box}" +
-      /* Nella Plancia di gdahome la barra della dashboard non c'e': la toglie
+      /* Nella Plancia di GdAHome la barra della dashboard non c'e': la toglie
        * chi la apre, la tessera o \`apri.html\`, con questo stesso foglio. */
       ".header{display:none!important}:host{--header-height:0px}#view{padding-top:0;height:100%}" +
       "hui-panel-view{display:block;height:100%}</style>" +

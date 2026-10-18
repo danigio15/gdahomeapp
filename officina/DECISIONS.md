@@ -178,7 +178,7 @@ Accepted. Supersedes a first version of this record, which placed the feature he
 
 ### Context
 
-A professional installer who deploys gdahome across many homes runs their own Home Assistant, and wants a sidebar entry that opens the fleet dashboard watching every installation they maintain.
+A professional installer who deploys GdAHome across many homes runs their own Home Assistant, and wants a sidebar entry that opens the fleet dashboard watching every installation they maintain.
 
 Sidebar panels are registered by integrations, so the first implementation put the feature here: a WebSocket command the add-on called, and a custom panel this integration registered. It was tested, documented, and inert.
 

@@ -1,6 +1,6 @@
-# Per chi sviluppa gdahome
+# Per chi sviluppa GdAHome
 
-Il [README](../README.md) è per chi usa gdahome e per chi lo installa. Qui c'è
+Il [README](../README.md) è per chi usa GdAHome e per chi lo installa. Qui c'è
 il resto: come sono fatti i pezzi, come si parlano, come si prova e come si
 pubblica. Qui i pezzi si chiamano col loro nome di casa.
 
@@ -44,7 +44,7 @@ scambio di chiavi che gli passa davanti senza che lui ne ricavi niente, e da lì
 in poi ogni messaggio è cifrato punta a punta. Una prova registra tutto quello
 che lo attraversa e controlla che non ci sia dentro niente di leggibile.
 
-Quello di gdahome è `tramite.gdahome.org`, scritto nel codice del ponte e
+Quello di GdAHome è `tramite.gdahome.org`, scritto nel codice del ponte e
 dell'app. **Chi preferisce il proprio** se ne accende uno su una macchina sua:
 è [`centralino/`](../centralino/README.md), in Node, con uno script che lo
 mette in piedi da zero.
@@ -89,7 +89,7 @@ due porte, l'abbinamento, cosa finisce sul disco — sta in
 
 Il ponte si presenta a Home Assistant col segno che gli dà il Supervisor, e la
 sua scheda — quella dei QR code — sta dietro l'**ingress**, cioè dietro
-l'autenticazione di Home Assistant. Un gdahome come container a sé vorrebbe
+l'autenticazione di Home Assistant. Un GdAHome come container a sé vorrebbe
 dire: un segno a lunga vita al posto di quello del Supervisor, la scheda su una
 porta vera **con un'autenticazione propria** (senza ingress i codici di
 abbinamento resterebbero esposti), e l'aggiornamento automatico da rifare.
@@ -156,7 +156,7 @@ Per **guardarla** girare, con le fotografie delle schermate, c'è
 
 ## I contatori
 
-Le **case** sono quante, in quattordici giorni, hanno scaricato gdahome da qui:
+Le **case** sono quante, in quattordici giorni, hanno scaricato GdAHome da qui:
 un add-on si aggiunge fra gli Archivi, e da lì è **Home Assistant a clonare la
 repository** ogni volta che rinfresca il negozio. Quei cloni GitHub li conta —
 non è telemetria, dall'add-on non esce niente. Gli **scaricamenti** sono tutti
@@ -165,17 +165,17 @@ i passaggi da quando si conta. I numeri li rifà
 sta [sul ramo `contatori`](https://github.com/danigio15/gdahomeapp/blob/contatori/traffico.json).
 
 <p>
-  <img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdanigio15%2Fgdahomeapp%2Fcontatori%2Fbollino-case.json&cacheSeconds=300" alt="Case con gdahome">
+  <img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdanigio15%2Fgdahomeapp%2Fcontatori%2Fbollino-case.json&cacheSeconds=300" alt="Case con GdAHome">
   <img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdanigio15%2Fgdahomeapp%2Fcontatori%2Fbollino-scaricamenti.json&cacheSeconds=300" alt="Scaricamenti">
   <a href="https://github.com/danigio15/gdahomeapp/actions/workflows/prove.yml"><img src="https://github.com/danigio15/gdahomeapp/actions/workflows/prove.yml/badge.svg" alt="Le prove"></a>
 </p>
 
 ## La licenza e la repository pubblica
 
-Il codice di gdahome ha la sua licenza ([`LICENSE`](../LICENSE)), la Licenza
-d'uso di gdahome 2.0, e vale anche per la plancia in `ponte/plancia/`, che prima
+Il codice di GdAHome ha la sua licenza ([`LICENSE`](../LICENSE)), la Licenza
+d'uso di GdAHome 2.0, e vale anche per la plancia in `ponte/plancia/`, che prima
 era DashboardModern con una licenza sua: [`ponte/plancia/LICENSE`](../ponte/plancia/LICENSE)
-ora rimanda lì. Il nome e il marchio di gdahome si applicano quando i file
+ora rimanda lì. Il nome e il marchio di GdAHome si applicano quando i file
 vengono serviti, non nei file.
 
 Questa repository è **pubblica**, e deve restarlo: il Supervisor va a prendere

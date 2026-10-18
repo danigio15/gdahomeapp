@@ -137,7 +137,7 @@ test("il nome e' quello che si legge, e le versioni sono quelle vere", () => {
   assert.equal(termostato.installabile, false);
 });
 
-test("si sa prima quali portano giu' il filo: gdahome, e Home Assistant", () => {
+test("si sa prima quali portano giu' il filo: GdAHome, e Home Assistant", () => {
   /* E' la riga che fa la differenza fra un'attesa e un guasto. Chi preme
    * «Installa» su gdahome vede l'app sconnettersi un istante dopo: se non
    * gliel'ha detto nessuno pensa di aver rotto qualcosa, e la volta dopo quel

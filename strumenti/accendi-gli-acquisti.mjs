@@ -146,7 +146,7 @@ export const I_PASSI_A_MANO = Object.freeze([
   {
     quando: "prima",
     che: "I prodotti nei negozi, attivi",
-    come: `gdahome: abbonamento \`gdahome_premium\`, piani \`mensile\` e \`annuale\` (Play Console) e
+    come: `GdAHome: abbonamento \`gdahome_premium\`, piani \`mensile\` e \`annuale\` (Play Console) e
     \`gdahome_premium_mensile\`/\`_annuale\` (App Store Connect). Con la prova gratuita di 14 giorni.
     Se non sono attivi, una casa che diventa Base ha un lucchetto e nessuna strada per comprare.`,
   },

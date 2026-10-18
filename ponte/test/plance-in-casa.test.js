@@ -560,7 +560,7 @@ test("chi usa ancora le tessere si tiene la risorsa, una e all'indirizzo fisso",
   }
 });
 
-test("le Plance di gdahome di prima non contano come chi usa le tessere", async () => {
+test("le Plance di GdAHome di prima non contano come chi usa le tessere", async () => {
   /* Hanno ancora `custom:gdahome-plancia`, ma sono proprio quelle che questo
    * giro riscrive: contarle vorrebbe dire non togliere mai la risorsa. */
   const b = banco({

@@ -116,10 +116,10 @@ test("il totale conta solo la finestra per le case, e tutta la storia per gli sc
 });
 
 test("i bollini escono nella forma che shields.io sa disegnare", () => {
-  const bollino = ilBollino("case con gdahome", 12, "16a34a");
+  const bollino = ilBollino("case con GdAHome", 12, "16a34a");
   assert.deepEqual(bollino, {
     schemaVersion: 1,
-    label: "case con gdahome",
+    label: "case con GdAHome",
     message: "12",
     color: "16a34a",
   });

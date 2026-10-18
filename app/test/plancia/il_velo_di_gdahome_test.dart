@@ -8,7 +8,7 @@ void main() {
   const diSerie =
       '<body><div id="cd-boot-overlay"><img src="data:image/png;base64,AAAA" alt=""><b>DashboardModern</b><i></i></div>';
 
-  test('il velo di serie diventa quello di gdahome: logo e parola', () {
+  test('il velo di serie diventa quello di GdAHome: logo e parola', () {
     final fatto = colVeloDiGdahome(diSerie);
     expect(fatto, isNot(contains('DashboardModern')));
     expect(fatto, contains('<b>gdahome</b>'));

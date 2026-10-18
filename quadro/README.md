@@ -14,7 +14,7 @@ Per accenderlo, [qui sotto](#accenderlo). Manca solo il record DNS.
 
 ## A cosa serve
 
-Un installatore mette gdahome in quaranta case. Dopo la consegna non ci torna
+Un installatore mette GdAHome in quaranta case. Dopo la consegna non ci torna
 più, e quello che succede lì dentro non lo sa nessuno: il Wi-Fi che cambia, la
 presa Zigbee che sparisce, Home Assistant fermo a sei mesi fa, il backup che
 non gira dal giorno dell'installazione. Se ne accorge quando squilla il
@@ -33,7 +33,7 @@ tolta — i dieci controlli sono rimasti quelli.
 
 ## Dove sta
 
-**Uno solo, su una macchina di gdahome.** Chi installa non accende niente, non
+**Uno solo, su una macchina di GdAHome.** Chi installa non accende niente, non
 compra nessun dominio e non tiene su nessun server: lo si aggiunge, gli si
 dà una chiave, e apre una pagina. Dentro ci stanno le case di installatori diversi, e
 ognuno vede solo le sue.
@@ -408,7 +408,7 @@ Aprendo una casa:
 | **La salute** | la striscia dei giorni, quante entità e quante non rispondono, batterie sotto soglia e la più bassa, ultimo backup, errori nel registro, da quanti giorni il collegamento da fuori non si riavvia |
 | **I dispositivi non collegati** | i loro nomi, fino a dodici (sotto c'è perché, e perché è cambiato) |
 | **Gli aggiornamenti** | cosa c'è da installare, da quale versione a quale, e **il tasto per farlo** dove quella casa ha aperto la manutenzione |
-| **Le versioni** | gdahome, la plancia, Home Assistant Core, Supervisor, il sistema — con «c'è la nuova» dove c'è |
+| **Le versioni** | GdAHome, la plancia, Home Assistant Core, Supervisor, il sistema — con «c'è la nuova» dove c'è |
 | **Il rapporto** | il testo grezzo, come è arrivato |
 
 ### Le tre domande che la macchina risponde da sola
@@ -486,7 +486,7 @@ e nient'altro.
   "aggiornamenti": { "quanti": 0, "ha": false, "addon": 0, "gdahome": false, "firmware": 0 },
   "plance": {
     "quante": 3, "configurate": 3,
-    "elenco": [{ "profilo": "primary", "titolo": "gdahome" }, { "profilo": "suocero", "titolo": "Suocero" }]
+    "elenco": [{ "profilo": "primary", "titolo": "GdAHome" }, { "profilo": "suocero", "titolo": "Suocero" }]
   },
   "configurazione": false,
   "telefoni": { "abbinati": 2, "visti7gg": 2 },
@@ -509,7 +509,7 @@ porta solo la revisione (vedi «Configurare la plancia da lontano»). Il quadro
 dice **che c'è da guardare**, e finisce lì: guardare dentro casa è un'altra
 cosa, e non si fa da qui (vedi «Cosa il quadro non può fare»).
 
-I **titoli delle plance** invece ci sono («gdahome», «Suocero»), col profilo
+I **titoli delle plance** invece ci sono («GdAHome», «Suocero»), col profilo
 di ognuna: servono all'installatore per scegliere, dal cruscotto, come chiamare
 ogni plancia nel menu laterale e all'avvio — e la scelta torna alla casa nella
 risposta al rapporto (`vesti`). Sono i nomi di cose che stanno in casa, non di
@@ -790,7 +790,7 @@ quadro ha quindi **tre verbi**, e nessun altro:
 
 | | |
 |---|---|
-| `installa` | installa una voce `update.` — Home Assistant, un add-on, gdahome, un firmware che si installi da sé |
+| `installa` | installa una voce `update.` — Home Assistant, un add-on, GdAHome, un firmware che si installi da sé |
 | `riavvia` | riavvia Home Assistant tutto, lo stesso «Riavvia» di Impostazioni. Con la manutenzione, come `installa` |
 | `configura` | riscrive com'è fatta una plancia — sezioni, stanze, entità, disposizione. **Con un permesso suo**, il terzo: vedi «Configurare la plancia da lontano» |
 
@@ -807,7 +807,7 @@ tutte: se nel frattempo quella versione è già stata installata, o ne è uscita
 un'altra, il salto non torna più e **non si fa niente**. Un tasto premuto ieri
 non installa una cosa diversa oggi.
 
-**Il quadro non bussa mai.** Non potrebbe: una casa di gdahome un indirizzo
+**Il quadro non bussa mai.** Non potrebbe: una casa di GdAHome un indirizzo
 pubblico non ce l'ha, ed è tutto il punto del ponte. L'ordine viaggia **nella
 risposta al rapporto**: la casa deposita i suoi numeri, e nella risposta si
 trova, se c'è, una cosa da fare. Nessuna porta da aprire, nessun servizio in
@@ -830,7 +830,7 @@ si legge parola per parola. Chi ci abita non deve fidarsi di un riassunto: legge
 la cosa stessa che è partita.
 
 Il comando si consegna **una volta sola**. Se una casa se lo porta via e poi non
-ne parla più — succede proprio quando quello che si installa è gdahome, perché
+ne parla più — succede proprio quando quello che si installa è GdAHome, perché
 il processo che dovrebbe raccontare com'è andata è quello che si sta
 aggiornando — non glielo si rioffre al rapporto dopo: sarebbe un'installazione
 al minuto. Il prezzo è che una risposta persa per strada va ripremuta a mano.
@@ -841,7 +841,7 @@ Tre regole che il ponte applica e il quadro non può scavalcare:
    condizione perché il verbo esista. Un aggiornamento che va storto senza
    backup dietro è una casa da rifare.
 2. **Quelli che vogliono un riavvio, uno per volta.** `aggiornamenti.js` li marca
-   già (`stacca`): gdahome e Home Assistant si riavviano installandosi. Due
+   già (`stacca`): GdAHome e Home Assistant si riavviano installandosi. Due
    insieme sulla stessa casa vogliono dire non sapere quale dei due non è
    tornato.
 3. **Quello che non si installa da sé non ha un tasto.** `installabile` lo dice
@@ -1061,7 +1061,7 @@ persona qualunque, per cui cinque euro al mese e un dominio da comprare sono la
 differenza fra usare l'app e disinstallarla. Cloudflare regalava il piano e
 l'indirizzo, e quella era tutta la ragione del pezzo.
 
-Il quadro invece lo accende **l'installatore**: uno che monta gdahome in
+Il quadro invece lo accende **l'installatore**: uno che monta GdAHome in
 quaranta case, che quelle installazioni le fattura, e che un server e un dominio
 ce li ha gia'. Cinque euro al mese su quaranta impianti sono dodici centesimi a
 impianto all'anno. La barriera che `nuvola/` abbatteva, qui non c'e'. E il vincolo
@@ -1110,7 +1110,7 @@ metterlo ce l'ha gia': nessuno.
   Stanno tutte in cima a `src/controlli.js` con un nome, che è il minimo perché
   un giorno si possano cambiare sapendo quante sono.
 - **Se un aggiornamento in attesa fa suonare la spia.** Per ora no, a meno
-  che tocchi Home Assistant o gdahome o siano tre: una casa che diventa ambra
+  che tocchi Home Assistant o GdAHome o siano tre: una casa che diventa ambra
   perché un add-on ha una versione nuova da ieri insegna a non guardare più le
   case ambra. Fra i dieci controlli invece contano tutti, e quella riga è severa
   apposta: lì la domanda è «questo impianto è in ordine?», nell'elenco è «devo

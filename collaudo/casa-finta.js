@@ -165,7 +165,7 @@ const DA_AGGIORNARE = [
     entity_id: "update.gdahome_update",
     state: "on",
     attributes: {
-      friendly_name: "gdahome Update",
+      friendly_name: "GdAHome Update",
       title: "gdahome",
       installed_version: "0.20.0",
       latest_version: "0.21.0",

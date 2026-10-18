@@ -2,13 +2,13 @@
 
 **Non si fa, ed è tenuto qui perché un giorno qualcuno lo ripropone.**
 
-Questo documento progettava come gdahome riconosce gli installatori quando il
+Questo documento progettava come GdAHome riconosce gli installatori quando il
 quadro sta su una macchina **loro**: un *tesserino* firmato Ed25519 dentro il
 codice di abbinamento, che il ponte verifica offline. La tappa 1 era anche stata
 costruita, e funzionava.
 
 È caduto per una ragione che lo rende inutile, non sbagliato: **il quadro adesso
-è uno solo e sta su una macchina di gdahome** (`quadro/README.md`). Tutto questo
+è uno solo e sta su una macchina di GdAHome** (`quadro/README.md`). Tutto questo
 meccanismo esisteva per imporre un limite a un programma che girava su ferro
 altrui — dove un contatore si toglie in trenta secondi, e l'unica presa possibile
 era una firma da controllare in casa del cliente. Con il quadro ospitato qui, il
@@ -35,7 +35,7 @@ Oggi niente lega una casa a un installatore, e non per svista: la matricola se
 la fabbrica la casa da sola — `casa_` e trentadue cifre di caso — e non si
 registra da nessuna parte. Il centralino vede arrivare un numero e lo instrada.
 Il quadro quel legame ce l'ha, ma **il quadro sta sulla macchina
-dell'installatore**, e lì gdahome non entra: è la scelta su cui regge tutta la
+dell'installatore**, e lì GdAHome non entra: è la scelta su cui regge tutta la
 privacy del quadro.
 
 Quindi la domanda «quante case gestisce Rossi» oggi non ha nessuna risposta, e
@@ -72,7 +72,7 @@ L'albo fa tutte e due, ma in due posti diversi.
 ```
 
 **Il tesserino limita** — perché chi lo verifica è il ponte, che è programma di
-gdahome e gira in casa del cliente, non dell'installatore.
+GdAHome e gira in casa del cliente, non dell'installatore.
 
 **Il battito fa vedere** — il quadro dice quante case segue, e in cambio il
 tesserino gli viene rinnovato.
@@ -89,10 +89,10 @@ tesserino gli viene rinnovato.
   `centralino/test/centralino.test.js` che lo tengono. L'altra è una **postura,
   non una garanzia**: i messaggi li gira senza guardarli, ma li gira in chiaro,
   e chi tiene accesa quella macchina potrebbe guardarli. Aggiungerci il
-  commercio vuol dire allargare il solo pezzo di gdahome che sta in mezzo fra un
+  commercio vuol dire allargare il solo pezzo di GdAHome che sta in mezzo fra un
   telefono e una casa — che è precisamente il punto dove conviene aggiungere il
   meno possibile.
-* **Non tocca una casa senza quadro.** Chi si installa gdahome da sé non incontra
+* **Non tocca una casa senza quadro.** Chi si installa GdAHome da sé non incontra
   mai l'albo: nessun tesserino, nessun controllo, niente da pagare, per sempre.
   Il progetto esiste per non chiedere niente a chi abita una casa, e questo non
   cambia. **Il tesserino chiude il quadro, mai la casa.**
@@ -105,7 +105,7 @@ tesserino gli viene rinnovato.
 * **Non riceve elenchi.** Il battito porta **un numero**, mai le matricole e mai
   i nomi che l'installatore ha dato alle case. È la stessa disciplina del
   rapporto, girata: *il rapporto non dice all'installatore chi abita la casa,
-  il battito non dice a gdahome quali case ha l'installatore.*
+  il battito non dice a GdAHome quali case ha l'installatore.*
 
 ## Il tesserino
 
@@ -198,7 +198,7 @@ Una pagina, come le altre console del progetto:
 | l'ultimo battito | e chi ha smesso di batterne |
 | in scadenza | chi va rinnovato questo mese |
 
-Il conto totale delle case di gdahome lei ce l'ha già da un'altra parte e per
+Il conto totale delle case di GdAHome lei ce l'ha già da un'altra parte e per
 un'altra strada — `strumenti/conta-le-case.mjs`, che legge i cloni della
 repository da GitHub. Sono due misure diverse e vanno lette diverse: quella dice
 **quante case esistono**, questa dice **quante ne segue un installatore**. Una
@@ -212,7 +212,7 @@ può impedire, e chi scrive che lo impedisce sta vendendo fumo.
 
 Ma il conto è diverso da quello di prima. Modificare il proprio quadro costa
 trenta secondi e non lo vede nessuno. Forcare l'add-on vuol dire: mantenerlo a
-ogni versione di gdahome, convincere ogni cliente a installare un add-on che non
+ogni versione di GdAHome, convincere ogni cliente a installare un add-on che non
 è nel negozio ufficiale, e restare indietro sugli aggiornamenti — visibilmente,
 in casa di gente che ha pagato per un impianto che funziona.
 

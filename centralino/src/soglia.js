@@ -77,22 +77,22 @@ export function laSoglia({ sito = "", app = "" } = {}) {
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Il centralino di gdahome</title>
+<title>Il centralino di GdAHome</title>
 <meta name="robots" content="noindex" />
-<meta name="description" content="Accesso da remoto per l'app domotica gdahome (Home Assistant). Il traffico è cifrato fra il telefono e la casa." />
+<meta name="description" content="Accesso da remoto per l'app domotica GdAHome (Home Assistant). Il traffico è cifrato fra il telefono e la casa." />
 <style>${STILE}</style>
 </head>
 <body>
 <main>
-  <h1>gdahome</h1>
+  <h1>GdAHome</h1>
   <p class="sotto">Il centralino</p>
   <p>
-    È il servizio di accesso da remoto di gdahome, l'app per la casa
+    È il servizio di accesso da remoto di GdAHome, l'app per la casa
     domotica con Home Assistant: collega l'app alla propria casa quando si è
     fuori, con i dati cifrati fra il telefono e la casa. Da qui non si apre
-    niente: gdahome si usa dall'app o dal browser.
+    niente: GdAHome si usa dall'app o dal browser.
   </p>
-  ${lApp ? `<p><a class="tasto" href="https://${lApp}">Apri gdahome</a></p>` : ""}
+  ${lApp ? `<p><a class="tasto" href="https://${lApp}">Apri GdAHome</a></p>` : ""}
   <ul>
     ${righe
       .map(
