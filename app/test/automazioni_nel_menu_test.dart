@@ -3,9 +3,9 @@
 ///
 /// Prima era una voce spenta fra le Avanzate, che un giorno avrebbe aperto le
 /// automazioni di Home Assistant. Adesso apre le nostre — la pagina
-/// Automazioni della plancia, a schermo pieno — e sta nella Casa accanto a
-/// «Configurazione plancia», col bollino PREMIUM; senza Premium ha il
-/// lucchetto, come la Configurazione e Zigbee.
+/// Automazioni della plancia, a schermo pieno — e sta in testa alle Avanzate,
+/// col bollino PREMIUM; senza Premium ha il lucchetto, come la Configurazione
+/// e Zigbee.
 library;
 
 import 'dart:io';
@@ -46,15 +46,17 @@ Widget _conLaBarra(
 
 void main() {
   test(
-    'sta nella Casa, subito dopo «Configurazione plancia», ed e\' pronta',
+    'sta in testa alle Avanzate, ed e\' pronta',
     () {
-      expect(Sezione.automazioni.gruppo, GruppoDellaBarra.casa);
+      expect(Sezione.automazioni.gruppo, GruppoDellaBarra.avanzate);
       expect(Sezione.automazioni.pronta, isTrue);
-      final voci = vociDellaBarra();
-      expect(
-        voci.indexOf(Sezione.automazioni),
-        voci.indexOf(Sezione.configurazione) + 1,
-      );
+      final avanzate = vociDellaBarra(
+        conLaConsole: true,
+        conIlCruscotto: true,
+        conLaGestione: true,
+        conZigbee: true,
+      ).where((s) => s.gruppo == GruppoDellaBarra.avanzate).toList();
+      expect(avanzate.first, Sezione.automazioni);
     },
   );
 
