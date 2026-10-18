@@ -554,7 +554,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-4BUKZI3B.js";
+} from "../../chunk-I7YUY6X3.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -26906,8 +26906,8 @@ function campoOra(nome) {
   return `<input type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="5" placeholder="hh:mm" data-rn="${nome}">`;
 }
 function oraScritta(testo4) {
-  const pulito68 = clean(testo4).replace(".", ":");
-  const soloCifre = /^\d{3,4}$/.test(pulito68) ? `${pulito68.slice(0, -2)}:${pulito68.slice(-2)}` : pulito68;
+  const pulito69 = clean(testo4).replace(".", ":");
+  const soloCifre = /^\d{3,4}$/.test(pulito69) ? `${pulito69.slice(0, -2)}:${pulito69.slice(-2)}` : pulito69;
   const minuti = minutiDellOra(soloCifre);
   if (minuti === null) return "";
   return `${String(Math.floor(minuti / 60)).padStart(2, "0")}:${String(minuti % 60).padStart(2, "0")}`;
@@ -43968,9 +43968,9 @@ function segnoDellaVoce(voce3) {
   return CLASSI_CHE_TRASMETTONO.has(voce3.classe) ? SEGNI_DELLE_VOCI.onde : SEGNI_DELLE_VOCI.nota;
 }
 function fondoDellaMiniatura(url) {
-  const pulito68 = clean(url);
-  if (!pulito68) return "";
-  return pulito68.replace(/["'()\\\s]/g, (carattere) => encodeURIComponent(carattere));
+  const pulito69 = clean(url);
+  if (!pulito69) return "";
+  return pulito69.replace(/["'()\\\s]/g, (carattere) => encodeURIComponent(carattere));
 }
 function nomeDiUnPosto(passo, titolo3) {
   if (!clean(passo?.id) && passo?.tipo === "favorites") return t("Preferiti di Sonos", "Sonos favourites");
@@ -45524,6 +45524,131 @@ function aggiornamentiDaFare(states) {
   });
 }
 
+// src/core/loghi-degli-aggiornamenti.js
+var pulito37 = (valore3) => String(valore3 ?? "").trim();
+var ATTESA_DEL_LOGO = 12e3;
+var QUANTI_INSIEME = 4;
+var I_MARCHI = /^https:\/\/brands\.home-assistant\.io\/[A-Za-z0-9_./-]+\.(?:png|svg)$/;
+var ICONA_DI_UN_ADDON = /^\/api\/hassio\/addons\/[a-z0-9_-]+\/(?:icon|logo)$/;
+function indirizzoDiretto(foto, { colPonte = false } = {}) {
+  if (colPonte) return "";
+  const dove = pulito37(foto);
+  if (!dove || dove.includes("..")) return "";
+  if (ICONA_DI_UN_ADDON.test(dove)) return dove;
+  if (I_MARCHI.test(dove)) return dove;
+  return "";
+}
+var STATI_DEL_NO = /* @__PURE__ */ new Set([403, 404, 410]);
+var CODICI_DEL_NO = /* @__PURE__ */ new Set(["not_found", "unauthorized"]);
+var CODICI_DI_CHI_NON_SA = /* @__PURE__ */ new Set(["unknown_command", "not_supported"]);
+var SOLO_IMMAGINI = /^image\/(?:png|jpeg|gif|webp|svg\+xml|x-icon|vnd\.microsoft\.icon)$/;
+function esitoDellaRisposta(risposta) {
+  if (!risposta || typeof risposta !== "object") return { esito: "caduto" };
+  const stato3 = Number(risposta.stato);
+  if (STATI_DEL_NO.has(stato3)) return { esito: "niente" };
+  if (stato3 !== 200) return { esito: "caduto" };
+  const corpo4 = pulito37(risposta.corpo);
+  if (!corpo4 || !/^[A-Za-z0-9+/=]+$/.test(corpo4)) return { esito: "niente" };
+  if (pulito37(risposta.compresso)) return { esito: "niente" };
+  const tipo = pulito37(risposta.tipo).toLowerCase().split(";")[0].trim() || "image/png";
+  if (!SOLO_IMMAGINI.test(tipo)) return { esito: "niente" };
+  return { esito: "preso", url: `data:${tipo};base64,${corpo4}` };
+}
+function esitoDelGuasto(errore) {
+  const codice = pulito37(errore?.code).toLowerCase();
+  if (CODICI_DEL_NO.has(codice)) return "niente";
+  if (CODICI_DI_CHI_NON_SA.has(codice)) return "nonSa";
+  const frase4 = pulito37(errore?.message).toLowerCase();
+  if (/unknown[_ ]command|non conosco/.test(frase4)) return "nonSa";
+  return "caduto";
+}
+function fraQuantoSiRiprova(tentativi) {
+  const quanti2 = Math.max(1, Number(tentativi) || 1);
+  return Math.min(12e4, 3e3 * 2 ** Math.min(quanti2 - 1, 6));
+}
+function creaLaMemoriaDeiLoghi({
+  chiedi: chiedi7 = null,
+  arrivato = () => {
+  },
+  riprova: riprova2 = () => {
+  },
+  colPonte = () => false,
+  adesso = () => Date.now(),
+  insieme: insieme3 = QUANTI_INSIEME
+} = {}) {
+  const memoria = /* @__PURE__ */ new Map();
+  const coda = [];
+  let inCorso2 = 0;
+  const diretto = (foto) => indirizzoDiretto(foto, { colPonte: colPonte() === true });
+  function segna2(entita3, voce3) {
+    const prima = memoria.get(entita3);
+    memoria.set(entita3, voce3);
+    if (voce3.url && voce3.url !== prima?.url) arrivato(entita3, voce3.url);
+  }
+  function cadutoDi(entita3, foto) {
+    const prima = memoria.get(entita3);
+    const tentativi = (prima?.tentativi || 0) + 1;
+    const fra2 = fraQuantoSiRiprova(tentativi);
+    segna2(entita3, { esito: "caduto", url: diretto(foto), tentativi, dopo: adesso() + fra2 });
+    riprova2(entita3, fra2);
+  }
+  function prossimo() {
+    while (inCorso2 < insieme3 && coda.length) {
+      const { entita: entita3, foto } = coda.shift();
+      inCorso2 += 1;
+      Promise.resolve().then(() => chiedi7(entita3)).then(
+        (risposta) => {
+          if (risposta === null || risposta === void 0) {
+            segna2(entita3, { esito: "niente", url: diretto(foto), tentativi: 0, dopo: 0 });
+            return;
+          }
+          const detto3 = esitoDellaRisposta(risposta);
+          if (detto3.esito === "preso")
+            segna2(entita3, { esito: "preso", url: detto3.url, tentativi: 0, dopo: 0 });
+          else if (detto3.esito === "niente")
+            segna2(entita3, { esito: "niente", url: diretto(foto), tentativi: 0, dopo: 0 });
+          else cadutoDi(entita3, foto);
+        },
+        (errore) => {
+          const detto3 = esitoDelGuasto(errore);
+          if (detto3 === "caduto") cadutoDi(entita3, foto);
+          else segna2(entita3, { esito: "niente", url: diretto(foto), tentativi: 0, dopo: 0 });
+        }
+      ).finally(() => {
+        inCorso2 -= 1;
+        prossimo();
+      });
+    }
+  }
+  function logo2(entita3, foto = "") {
+    const chi = pulito37(entita3);
+    if (!chi) return "";
+    const voce3 = memoria.get(chi);
+    if (voce3?.esito === "preso" || voce3?.esito === "niente" || voce3?.esito === "attesa")
+      return voce3.url || "";
+    if (voce3?.esito === "caduto" && adesso() < voce3.dopo) return voce3.url || "";
+    if (typeof chiedi7 !== "function") {
+      const url = diretto(foto);
+      memoria.set(chi, { esito: "niente", url, tentativi: 0, dopo: 0 });
+      return url;
+    }
+    memoria.set(chi, {
+      esito: "attesa",
+      url: voce3?.url || "",
+      tentativi: voce3?.tentativi || 0,
+      dopo: 0
+    });
+    coda.push({ entita: chi, foto });
+    prossimo();
+    return voce3?.url || "";
+  }
+  return {
+    logo: logo2,
+    /** Cosa sa di quell'entita' (per le prove). */
+    voce: (entita3) => memoria.get(pulito37(entita3)) || null
+  };
+}
+
 // src/core/arieggiare.js
 var CHIAVE_SOGLIA_UMIDITA = "cd_umidita_soglia";
 var SOGLIA_PREDEFINITA = 60;
@@ -45693,8 +45818,8 @@ function doorPinMatches(door, typed) {
 }
 
 // src/core/rilevamenti-telecamera.js
-var pulito37 = (valore3) => String(valore3 ?? "").trim();
-var minuscolo7 = (valore3) => pulito37(valore3).toLowerCase();
+var pulito38 = (valore3) => String(valore3 ?? "").trim();
+var minuscolo7 = (valore3) => pulito38(valore3).toLowerCase();
 var CHIAVE_RILEVAMENTI = "cd_rilevamenti";
 var TIPI_RILEVAMENTO = Object.freeze(["persona", "animale", "veicolo", "movimento"]);
 var PAROLE5 = Object.freeze({
@@ -45722,15 +45847,15 @@ var FORME = Object.freeze([
   ["movimento", /(^|[._\s-])(motion|movimento|moviment|occupancy|presence|presenza)/i]
 ]);
 function tipoDelSensore(entity2, stato3 = null) {
-  const id = pulito37(entity2);
+  const id = pulito38(entity2);
   if (!id.startsWith("binary_sensor.")) return "";
-  const nome = `${id} ${pulito37(stato3?.attributes?.friendly_name)}`;
+  const nome = `${id} ${pulito38(stato3?.attributes?.friendly_name)}`;
   for (const [tipo, forma2] of FORME) if (forma2.test(nome)) return tipo;
   const classe3 = minuscolo7(stato3?.attributes?.device_class);
   return classe3 === "motion" || classe3 === "occupancy" ? "movimento" : "";
 }
 function sensoriDellaTelecamera(camera, states = {}) {
-  const id = pulito37(camera);
+  const id = pulito38(camera);
   const radice3 = id.includes(".") ? id.split(".")[1] : id;
   if (!radice3) return {};
   const trovati = {};
@@ -45747,11 +45872,11 @@ function normalizzaRilevamenti(stored) {
   const grezzo = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
   const pulita = {};
   for (const [camera, voci4] of Object.entries(grezzo)) {
-    const id = pulito37(camera);
+    const id = pulito38(camera);
     if (!id.includes(".")) continue;
     const sua = {};
     for (const tipo of TIPI_RILEVAMENTO) {
-      const entity2 = pulito37(voci4?.[tipo]);
+      const entity2 = pulito38(voci4?.[tipo]);
       if (entity2.includes(".")) sua[tipo] = entity2;
     }
     if (Object.keys(sua).length) pulita[id] = sua;
@@ -45762,13 +45887,13 @@ function acceso2(stato3) {
   return minuscolo7(stato3?.state) === "on";
 }
 function istante2(stato3) {
-  const quando4 = Date.parse(pulito37(stato3?.last_changed) || pulito37(stato3?.last_updated) || "");
+  const quando4 = Date.parse(pulito38(stato3?.last_changed) || pulito38(stato3?.last_updated) || "");
   return Number.isFinite(quando4) ? quando4 : null;
 }
 function rilevamentiAccesi(config, states = {}, telecamere3 = [], locale3 = "it") {
   const scelte5 = normalizzaRilevamenti(config);
   const nomi2 = new Map(
-    (Array.isArray(telecamere3) ? telecamere3 : []).map((camera) => [pulito37(camera?.entity), pulito37(camera?.name)]).filter(([entity2]) => entity2)
+    (Array.isArray(telecamere3) ? telecamere3 : []).map((camera) => [pulito38(camera?.entity), pulito38(camera?.name)]).filter(([entity2]) => entity2)
   );
   const righe3 = [];
   for (const [camera, voci4] of Object.entries(scelte5)) {
@@ -45796,7 +45921,7 @@ function rilevamentiAccesi(config, states = {}, telecamere3 = [], locale3 = "it"
   return righe3;
 }
 function testoYaml(valore3) {
-  const testo4 = pulito37(valore3);
+  const testo4 = pulito38(valore3);
   if (!testo4) return '""';
   if (/^[\w .\-/]+$/.test(testo4) && !/^\d/.test(testo4)) return testo4;
   return `"${testo4.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`;
@@ -45806,9 +45931,9 @@ function automazioneDiHomeAssistant(config, opzioni2 = {}) {
   const camere = Object.keys(scelte5);
   if (!camere.length) return "";
   const locale3 = opzioni2.locale || "it";
-  const servizio2 = pulito37(opzioni2.servizio) || "notify.mobile_app_telefono";
+  const servizio2 = pulito38(opzioni2.servizio) || "notify.mobile_app_telefono";
   const nomi2 = new Map(
-    (Array.isArray(opzioni2.telecamere) ? opzioni2.telecamere : []).map((camera) => [pulito37(camera?.entity), pulito37(camera?.name)]).filter(([entity2]) => entity2)
+    (Array.isArray(opzioni2.telecamere) ? opzioni2.telecamere : []).map((camera) => [pulito38(camera?.entity), pulito38(camera?.name)]).filter(([entity2]) => entity2)
   );
   const righe3 = [];
   righe3.push(
@@ -45872,9 +45997,9 @@ function automazioneDiHomeAssistant(config, opzioni2 = {}) {
 }
 
 // src/core/stampanti-model.js
-var pulito38 = (valore3) => String(valore3 ?? "").trim();
-var minuscolo8 = (valore3) => pulito38(valore3).toLowerCase();
-var chiave = (valore3) => pulito38(valore3).normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+var pulito39 = (valore3) => String(valore3 ?? "").trim();
+var minuscolo8 = (valore3) => pulito39(valore3).toLowerCase();
+var chiave = (valore3) => pulito39(valore3).normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 var CHIAVE_STAMPANTI = "cd_stampanti";
 var MASSIMO_STAMPANTI = 8;
 var STATI_MUTI2 = /* @__PURE__ */ new Set(["", "unknown", "unavailable", "none"]);
@@ -45912,16 +46037,16 @@ function tintaDellaCartuccia(nome) {
 }
 var NOME_DI_CARTUCCIA = /(inchiostro|cartuccia|toner|ink|cartridge|marker|nero|black|ciano|cyan|magenta|giallo|yellow|colore|colour|color|tricrom)/;
 function percentuale4(stato3) {
-  const grezzo = pulito38(stato3?.state);
+  const grezzo = pulito39(stato3?.state);
   if (STATI_MUTI2.has(minuscolo8(grezzo))) return null;
   const numero57 = Number(grezzo.replace(",", "."));
   if (!Number.isFinite(numero57)) return null;
   return Math.min(100, Math.max(0, Math.round(numero57)));
 }
 function nomeLeggibile2(entity2, stato3) {
-  const amichevole = pulito38(stato3?.attributes?.friendly_name);
+  const amichevole = pulito39(stato3?.attributes?.friendly_name);
   if (amichevole) return amichevole;
-  const coda = pulito38(entity2).split(".")[1] || "";
+  const coda = pulito39(entity2).split(".")[1] || "";
   return coda.replaceAll("_", " ").replace(/^\p{Ll}/u, (lettera) => lettera.toUpperCase());
 }
 function radiceDelNome(entity2) {
@@ -45961,16 +46086,16 @@ function letturaDellaCartuccia(entity2, states = {}) {
   };
 }
 function normalizzata2(voce3, indice) {
-  const entity2 = pulito38(voce3?.entity || voce3?.entita || voce3?.entity_id);
-  const nome = pulito38(voce3?.nome || voce3?.name);
-  const cartucce = Array.isArray(voce3?.cartucce) ? voce3.cartucce.map(pulito38).filter(Boolean) : [];
+  const entity2 = pulito39(voce3?.entity || voce3?.entita || voce3?.entity_id);
+  const nome = pulito39(voce3?.nome || voce3?.name);
+  const cartucce = Array.isArray(voce3?.cartucce) ? voce3.cartucce.map(pulito39).filter(Boolean) : [];
   return {
-    id: pulito38(voce3?.id) || `stampante-${chiave(nome || entity2) || indice + 1}`,
+    id: pulito39(voce3?.id) || `stampante-${chiave(nome || entity2) || indice + 1}`,
     nome,
     entity: entity2,
     cartucce,
-    pagine: pulito38(voce3?.pagine),
-    stanza: pulito38(voce3?.stanza || voce3?.room_id)
+    pagine: pulito39(voce3?.pagine),
+    stanza: pulito39(voce3?.stanza || voce3?.room_id)
   };
 }
 function normalizzaStampanti(stored) {
@@ -45994,12 +46119,12 @@ function letturaDellaStampante(voce3, states = {}, resolve = (valore3) => valore
   const riga3 = normalizzata2(voce3, 0);
   let entity2 = riga3.entity;
   try {
-    entity2 = pulito38(resolve(riga3.entity)) || riga3.entity;
+    entity2 = pulito39(resolve(riga3.entity)) || riga3.entity;
   } catch (_errore) {
     entity2 = riga3.entity;
   }
   const stato3 = states?.[entity2] || states?.[riga3.entity] || null;
-  const grezzo = pulito38(stato3?.state);
+  const grezzo = pulito39(stato3?.state);
   const quale = statoDellaStampante(grezzo);
   const scelte5 = riga3.cartucce.length ? riga3.cartucce : cartucceTrovate(entity2, states);
   const cartucce = scelte5.map((id) => letturaDellaCartuccia(id, states));
@@ -46017,7 +46142,7 @@ function letturaDellaStampante(voce3, states = {}, resolve = (valore3) => valore
     parola: grezzo,
     /* Il perche' si e' fermata, quando l'integrazione lo dice: «carta finita»
      * risparmia il giro fino alla stampante. */
-    motivo: pulito38(stato3?.attributes?.printer_state_message || stato3?.attributes?.reason),
+    motivo: pulito39(stato3?.attributes?.printer_state_message || stato3?.attributes?.reason),
     muta: quale === "muta",
     stampa: quale === "stampa",
     ferma: quale === "ferma",
@@ -46029,7 +46154,7 @@ function letturaDellaStampante(voce3, states = {}, resolve = (valore3) => valore
   };
 }
 function percentualeLibera(stato3) {
-  const grezzo = pulito38(stato3?.state);
+  const grezzo = pulito39(stato3?.state);
   if (STATI_MUTI2.has(minuscolo8(grezzo))) return null;
   const numero57 = Number(grezzo.replace(",", "."));
   return Number.isFinite(numero57) ? numero57 : null;
@@ -48649,7 +48774,7 @@ function creaSorveglianza(fermoDopo = FERMO_DOPO_MS) {
 }
 
 // src/core/telecamera-dal-vivo.js
-var pulito39 = (valore3) => String(valore3 ?? "").trim();
+var pulito40 = (valore3) => String(valore3 ?? "").trim();
 var PORTA_ISTANTANEA = "/api/camera_proxy/";
 var PORTA_FLUSSO = "/api/camera_proxy_stream/";
 function vuoleIlVivo(cam = {}) {
@@ -48657,21 +48782,21 @@ function vuoleIlVivo(cam = {}) {
   return scelta3 === true || scelta3 === "true" || scelta3 === 1 || scelta3 === "1";
 }
 function flussoDaIstantanea(entityPicture) {
-  const foto = pulito39(entityPicture);
+  const foto = pulito40(entityPicture);
   if (!foto || !foto.includes(PORTA_ISTANTANEA)) return "";
   return foto.replace(PORTA_ISTANTANEA, PORTA_FLUSSO);
 }
 function percorsoDelFlusso(entity2) {
-  const nome = pulito39(entity2);
+  const nome = pulito40(entity2);
   return nome ? `${PORTA_FLUSSO}${encodeURIComponent(nome)}` : "";
 }
 function percorsoDellIstantanea(entity2) {
-  const nome = pulito39(entity2);
+  const nome = pulito40(entity2);
   return nome ? `${PORTA_ISTANTANEA}${encodeURIComponent(nome)}` : "";
 }
 function stessoFlusso(immagine2, indirizzo) {
   if (!immagine2 || !indirizzo) return false;
-  return pulito39(immagine2.dataset?.dmCameraStream) === pulito39(indirizzo);
+  return pulito40(immagine2.dataset?.dmCameraStream) === pulito40(indirizzo);
 }
 var PAUSA_DOPO_CADUTA_MS = 6e4;
 function flussoInPausa(immagine2, adesso = Date.now()) {
@@ -49135,13 +49260,13 @@ if (doc?.readyState === "loading") {
 }
 
 // src/core/accanto-alle-persone.js
-var pulito40 = (valore3) => String(valore3 ?? "").trim();
+var pulito41 = (valore3) => String(valore3 ?? "").trim();
 var CHIAVE_ACCANTO = "cd_people_accanto";
 var COSE_ACCANTO = Object.freeze(["assistente", "niente"]);
 var ACCANTO_DI_SERIE = "assistente";
 function normalizzaAccanto(salvato2) {
   const dato = salvato2 && typeof salvato2 === "object" && !Array.isArray(salvato2) ? salvato2 : {};
-  const mostra2 = pulito40(dato.mostra);
+  const mostra2 = pulito41(dato.mostra);
   return { mostra: mostra2 === "niente" ? "niente" : ACCANTO_DI_SERIE };
 }
 function postoAccanto({ colonne = 0, persone: persone4 = 0, telefono = false } = {}) {
@@ -49153,7 +49278,7 @@ function postoAccanto({ colonne = 0, persone: persone4 = 0, telefono = false } =
 }
 
 // src/core/assistente-di-casa.js
-var pulito41 = (valore3) => String(valore3 ?? "").trim();
+var pulito42 = (valore3) => String(valore3 ?? "").trim();
 var elenco5 = (valore3) => Array.isArray(valore3) ? valore3.filter(Boolean) : [];
 var numero36 = (valore3) => {
   if (valore3 === null || valore3 === void 0 || valore3 === "") return null;
@@ -49182,7 +49307,7 @@ function opzioniDellAssistente(salvate) {
   return {
     categorie,
     notteDalle: Number.isFinite(notte) && notte >= 18 && notte <= 23 ? notte : 23,
-    sensibilita: SENSIBILITA.includes(pulito41(dato.sensibilita)) ? pulito41(dato.sensibilita) : "normale"
+    sensibilita: SENSIBILITA.includes(pulito42(dato.sensibilita)) ? pulito42(dato.sensibilita) : "normale"
   };
 }
 function durata2(ms, lingua3) {
@@ -49203,7 +49328,7 @@ function decimale(valore3, lingua3) {
   }
 }
 function nomi(voci4, lingua3) {
-  const scritti = voci4.map((voce3) => pulito41(voce3?.name || voce3?.nome || voce3?.entity));
+  const scritti = voci4.map((voce3) => pulito42(voce3?.name || voce3?.nome || voce3?.entity));
   if (scritti.length <= 2) return scritti.join(pick(" e ", " and ", lingua3));
   const altre = scritti.length - 1;
   return `${scritti[0]} ${pick(`e altre ${altre}`, `and ${altre} more`, lingua3)}`;
@@ -49218,7 +49343,7 @@ var PIOVOSE = /* @__PURE__ */ new Set([
   "snowy"
 ]);
 function pioggiaFra(previsioni, adesso, condizioneDiAdesso = "") {
-  if (PIOVOSE.has(pulito41(condizioneDiAdesso))) return 0;
+  if (PIOVOSE.has(pulito42(condizioneDiAdesso))) return 0;
   for (const voce3 of elenco5(previsioni)) {
     const quando4 = Date.parse(voce3?.datetime || "");
     if (!Number.isFinite(quando4)) continue;
@@ -49226,7 +49351,7 @@ function pioggiaFra(previsioni, adesso, condizioneDiAdesso = "") {
     if (fra2 < -ORA5) continue;
     if (fra2 > 3 * ORA5) break;
     const probabilita = numero36(voce3?.precipitation_probability);
-    if (PIOVOSE.has(pulito41(voce3?.condition)) || probabilita !== null && probabilita >= 60)
+    if (PIOVOSE.has(pulito42(voce3?.condition)) || probabilita !== null && probabilita >= 60)
       return Math.max(0, Math.round(fra2 / MINUTO3));
   }
   return null;
@@ -49270,7 +49395,7 @@ function daQuandoVuota(c) {
   const uscita = numero36(c.persone?.ultimaUscita);
   return uscita ? Math.max(0, c.adesso - uscita) : null;
 }
-var stessaStanza = (a, b2) => pulito41(a).toLowerCase() === pulito41(b2).toLowerCase() && pulito41(a);
+var stessaStanza = (a, b2) => pulito42(a).toLowerCase() === pulito42(b2).toLowerCase() && pulito42(a);
 var RILEVATORI = [];
 var rilevatore = (tipo, categoria, guarda2) => RILEVATORI.push({ tipo, categoria, guarda: guarda2 });
 rilevatore("acqua", "sicurezza", (c, o, l) => {
@@ -49342,9 +49467,9 @@ rilevatore(
 );
 var LUCE_CHE_RESTA = /acquari|aquari|vasca\s*pesci|fish\s*tank|terrari|rettil|paludari|vivari|notturn|night\s*light|segnapasso|luce\s*(di\s*)?cortesia|\bnotte\b|giardin|esterno|esterne|esterni|outdoor|garden|vialett|cortil|crepuscol/i;
 function luceDaLasciare(luce2, c = {}) {
-  const id = pulito41(luce2?.entity);
+  const id = pulito42(luce2?.entity);
   if (elenco5(c.lasciate).includes(id)) return true;
-  return LUCE_CHE_RESTA.test(`${id.replace(/[._]/g, " ")} ${pulito41(luce2?.name)}`);
+  return LUCE_CHE_RESTA.test(`${id.replace(/[._]/g, " ")} ${pulito42(luce2?.name)}`);
 }
 rilevatore("vuota-luci", "risparmio", (c, o, l) => {
   if (!casaVuota(c)) return [];
@@ -49471,7 +49596,7 @@ rilevatore("serrature", "sicurezza", (c, o, l) => {
   const vuota = casaVuota(c);
   const notte = eNotte(c, o);
   if (!vuota && !notte) return [];
-  const chiudibili = aperte.filter((s) => pulito41(s.entity).startsWith("lock."));
+  const chiudibili = aperte.filter((s) => pulito42(s.entity).startsWith("lock."));
   return [
     {
       urgenza: vuota ? "urgente" : "oggi",
@@ -49543,7 +49668,7 @@ rilevatore("finestra-clima", "risparmio", (c, o, l) => {
   for (const unita3 of elenco5(c.clima).filter((x) => x.on && x.stanza)) {
     const finestra6 = elenco5(c.finestre).find((f) => stessaStanza(f.stanza, unita3.stanza));
     if (!finestra6) continue;
-    const caldo = /heat/.test(pulito41(unita3.mode));
+    const caldo = /heat/.test(pulito42(unita3.mode));
     fuori.push({
       urgenza: "oggi",
       disegno: "window",
@@ -49618,10 +49743,10 @@ rilevatore("pioggia", "comfort", (c, o, l) => {
 });
 rilevatore("notte-luci", "risparmio", (c, o, l) => {
   if (!eNotte(c, o) || casaVuota(c)) return [];
-  const occupate = new Set(elenco5(c.stanzeOccupate).map((s) => pulito41(s).toLowerCase()));
+  const occupate = new Set(elenco5(c.stanzeOccupate).map((s) => pulito42(s).toLowerCase()));
   const sapere = Boolean(c.ciSonoPresenze);
   const accese = elenco5(c.luci).filter(
-    (x) => x.on && !luceDaLasciare(x, c) && (sapere ? x.stanza && !occupate.has(pulito41(x.stanza).toLowerCase()) : (numero36(x.daMs) || 0) >= ORA5)
+    (x) => x.on && !luceDaLasciare(x, c) && (sapere ? x.stanza && !occupate.has(pulito42(x.stanza).toLowerCase()) : (numero36(x.daMs) || 0) >= ORA5)
   );
   if (!accese.length) return [];
   return [
@@ -49726,7 +49851,7 @@ rilevatore("sole-auto", "risparmio", (c, o, l) => {
   const kw = decimale(avanza / 1e3, l);
   return elenco5(c.auto).filter(
     (v) => v.attaccata && !((numero36(v.kw) || 0) > 0.2) && (numero36(v.percentuale) ?? 0) < (numero36(v.target) ?? 100)
-  ).slice(0, 1).map((v) => ({ v, auto: pulito41(v.nome) || pick("l'auto", "the car", l) })).map(({ v, auto }) => ({
+  ).slice(0, 1).map((v) => ({ v, auto: pulito42(v.nome) || pick("l'auto", "the car", l) })).map(({ v, auto }) => ({
     urgenza: "idea",
     disegno: "ev",
     titolo: pick(`Carica ${auto} col sole`, `Charge ${auto} on solar`, l),
@@ -49736,7 +49861,7 @@ rilevatore("sole-auto", "risparmio", (c, o, l) => {
       l
     ),
     azioni: [vedi(l, "ev", "ev")],
-    entita: [`auto:${pulito41(v.nome)}`]
+    entita: [`auto:${pulito42(v.nome)}`]
   }));
 });
 rilevatore("rete-alta", "risparmio", (c, o, l) => {
@@ -49772,14 +49897,14 @@ rilevatore("rifiuti", "promemoria", (c, o, l) => {
     titolo: pick(`Porta fuori: ${r.name}`, `Take out: ${r.name}`, l),
     motivo: r.quando === "domani" ? pick("Il ritiro è domani mattina.", "Collection is tomorrow morning.", l) : pick("Il ritiro è stamattina.", "Collection is this morning.", l),
     azioni: [fatto(l)],
-    entita: [`rifiuti:${pulito41(r.name)}`],
+    entita: [`rifiuti:${pulito42(r.name)}`],
     scade: c.adesso + 12 * ORA5
   }));
 });
 rilevatore(
   "evento",
   "promemoria",
-  (c, o, l) => elenco5(c.eventi).filter((e) => !e.tuttoIlGiorno && e.inizio > c.adesso && e.inizio - c.adesso <= 90 * MINUTO3).slice(0, 1).map((e) => ({ e, cosa: pulito41(e.summary) || pick("Un impegno", "An appointment", l) })).map(({ e, cosa }) => ({
+  (c, o, l) => elenco5(c.eventi).filter((e) => !e.tuttoIlGiorno && e.inizio > c.adesso && e.inizio - c.adesso <= 90 * MINUTO3).slice(0, 1).map((e) => ({ e, cosa: pulito42(e.summary) || pick("Un impegno", "An appointment", l) })).map(({ e, cosa }) => ({
     urgenza: e.inizio - c.adesso <= 30 * MINUTO3 ? "oggi" : "idea",
     disegno: "calendar",
     titolo: pick(
@@ -49789,7 +49914,7 @@ rilevatore(
     ),
     motivo: pick("Dal calendario di casa.", "From the home calendar.", l),
     azioni: [vedi(l, "", "agenda")],
-    entita: [`evento:${pulito41(e.summary)}:${e.inizio}`],
+    entita: [`evento:${pulito42(e.summary)}:${e.inizio}`],
     scade: e.inizio
   }))
 );
@@ -49808,7 +49933,7 @@ rilevatore("comfort", "comfort", (c, o, l) => {
       titolo: fredda ? pick(`${s.name} è fredda: ${gradi9}°`, `${s.name} is cold: ${gradi9}°`, l) : pick(`${s.name} è calda: ${gradi9}°`, `${s.name} is hot: ${gradi9}°`, l),
       motivo: pick("Vuoi regolare il clima?", "Adjust the climate?", l),
       azioni: [vedi(l, "clima", "clima")],
-      entita: [s.entity || `stanza:${pulito41(s.name)}`]
+      entita: [s.entity || `stanza:${pulito42(s.name)}`]
     };
   });
 });
@@ -49828,7 +49953,7 @@ rilevatore("aria", "comfort", (c, o, l) => {
         l
       ),
       azioni: [fatto(l)],
-      entita: [co2.entityCo2 || `co2:${pulito41(co2.name)}`]
+      entita: [co2.entityCo2 || `co2:${pulito42(co2.name)}`]
     });
   const umida = stanzeDiCasa(c).find((s) => (numero36(s.umidita) || 0) >= 70);
   const percento6 = umida ? Math.round(umida.umidita) : 0;
@@ -49843,7 +49968,7 @@ rilevatore("aria", "comfort", (c, o, l) => {
       ),
       motivo: pick("Arieggia un po'.", "Let some air in.", l),
       azioni: [fatto(l)],
-      entita: [`umidita:${pulito41(umida.name)}`]
+      entita: [`umidita:${pulito42(umida.name)}`]
     });
   return fuori;
 });
@@ -49931,7 +50056,7 @@ function memoriaPulita(salvata) {
   ).slice(-ISTANZE_MASSIME)) {
     const fino = numero36(voce3?.fino) || 0;
     const fatto2 = voce3?.fatto === true;
-    if (fino > 0 || fatto2) istanze[pulito41(id)] = { fino, fatto: fatto2 };
+    if (fino > 0 || fatto2) istanze[pulito42(id)] = { fino, fatto: fatto2 };
   }
   return { tipi, istanze };
 }
@@ -49944,8 +50069,8 @@ function pesoDelTipo(memoria, tipo, adesso) {
 }
 function conLaRisposta(memoria, suggerimento, risposta, adesso, fino = 0) {
   const m = memoriaPulita(memoria);
-  const tipo = pulito41(suggerimento?.tipo);
-  const id = pulito41(suggerimento?.id);
+  const tipo = pulito42(suggerimento?.tipo);
+  const id = pulito42(suggerimento?.id);
   if (!id) return m;
   const voce3 = m.tipi[tipo] || { no: 0, si: 0, ultimo: 0 };
   if (suggerimento?.urgenza === "urgente" && (risposta === "no" || risposta === "tardi")) {
@@ -50006,7 +50131,7 @@ function suggerimentiDellaCasa(contesto2 = {}, memoria = {}, opzioni2 = {}, ling
       trovati = [];
     }
     for (const s of trovati) {
-      const entita3 = elenco5(s.entita).map(pulito41).filter(Boolean);
+      const entita3 = elenco5(s.entita).map(pulito42).filter(Boolean);
       tutti.push({
         ...s,
         tipo: r.tipo,
@@ -50045,7 +50170,7 @@ function conIFiniti(prima, macchine, adesso) {
   const fuori = {};
   const vecchie = prima && typeof prima === "object" ? prima : {};
   for (const m of elenco5(macchine)) {
-    const id = pulito41(m.id || m.entity);
+    const id = pulito42(m.id || m.entity);
     if (!id) continue;
     const lavora = m.mode === "running";
     const era = vecchie[id] || {};
@@ -50058,7 +50183,7 @@ function conIFiniti(prima, macchine, adesso) {
 }
 
 // src/core/assist-model.js
-var pulito42 = (valore3) => String(valore3 ?? "").trim();
+var pulito43 = (valore3) => String(valore3 ?? "").trim();
 var CHIAVE_ASSIST = "cd_assist";
 var SEZIONE_ASSIST = "assist";
 var TIPO_CONVERSAZIONE = "conversation/process";
@@ -50066,8 +50191,8 @@ var CONVERSAZIONE_MS = 5 * 60 * 1e3;
 function normalizzaAssist(stored) {
   const dato = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
   return {
-    agente: pulito42(dato.agente ?? dato.agent_id),
-    lingua: pulito42(dato.lingua ?? dato.language),
+    agente: pulito43(dato.agente ?? dato.agent_id),
+    lingua: pulito43(dato.lingua ?? dato.language),
     /* La risposta letta ad alta voce: spenta di serie. Chi apre Assist di
      * notte, o in ufficio, non deve sentirsi rispondere dal tablet. */
     voce: dato.voce === true,
@@ -50085,10 +50210,10 @@ function assistAcceso(sezioni2, config) {
 var AGENTE_DI_SERIE = "conversation.home_assistant";
 var MODELLI_LINGUISTICI = /(openai|chatgpt|gpt|google|gemini|generative|anthropic|claude|ollama|llama|mistral|groq|openrouter|azure|llm|deepseek|perplexity|local_?ai|extended_openai)/i;
 function agenteDaUsare(scelto, states = {}) {
-  const voce3 = pulito42(scelto);
+  const voce3 = pulito43(scelto);
   if (voce3 && voce3.toLowerCase() !== "auto") return voce3;
-  const agenti = Object.keys(states || {}).filter((id) => id.startsWith("conversation.") && id !== AGENTE_DI_SERIE).filter((id) => pulito42(states[id]?.state) !== "unavailable").sort();
-  const testo4 = (id) => `${id} ${pulito42(states[id]?.attributes?.friendly_name)}`;
+  const agenti = Object.keys(states || {}).filter((id) => id.startsWith("conversation.") && id !== AGENTE_DI_SERIE).filter((id) => pulito43(states[id]?.state) !== "unavailable").sort();
+  const testo4 = (id) => `${id} ${pulito43(states[id]?.attributes?.friendly_name)}`;
   return agenti.find((id) => MODELLI_LINGUISTICI.test(testo4(id))) || agenti[0] || "";
 }
 function domandaPerHomeAssistant({
@@ -50097,29 +50222,29 @@ function domandaPerHomeAssistant({
   agente = "",
   conversazione = ""
 } = {}) {
-  const frase4 = pulito42(testo4);
+  const frase4 = pulito43(testo4);
   if (!frase4) return null;
   const richiesta = { type: TIPO_CONVERSAZIONE, text: frase4 };
-  const parlata = pulito42(lingua3);
+  const parlata = pulito43(lingua3);
   if (parlata) richiesta.language = parlata;
-  const chi = pulito42(agente);
+  const chi = pulito43(agente);
   if (chi) richiesta.agent_id = chi;
-  const filo = pulito42(conversazione);
+  const filo = pulito43(conversazione);
   if (filo) richiesta.conversation_id = filo;
   return richiesta;
 }
 function frase(risultato) {
   const risposta = risultato?.response;
-  return pulito42(risposta?.speech?.plain?.speech || risposta?.speech?.ssml?.speech);
+  return pulito43(risposta?.speech?.plain?.speech || risposta?.speech?.ssml?.speech);
 }
 function rispostaDi(risultato) {
-  const tipo = pulito42(risultato?.response?.response_type) || "action_done";
+  const tipo = pulito43(risultato?.response?.response_type) || "action_done";
   const testo4 = frase(risultato);
   return {
     testo: testo4,
     tipo,
     errore: tipo === "error",
-    conversazione: pulito42(risultato?.conversation_id),
+    conversazione: pulito43(risultato?.conversation_id),
     /* Senza parole non c'e' niente da mostrare: capita che un comando riesca
      * in silenzio, e allora lo si dice invece di lasciare una riga vuota. */
     muta: !testo4
@@ -50132,7 +50257,7 @@ function filoDaRiannodare(ultimoMs, adessoMs) {
   return adesso - ultimo > CONVERSAZIONE_MS;
 }
 function filoDaMandare(conversazione, ultimoMs, adessoMs) {
-  return filoDaRiannodare(ultimoMs, adessoMs) ? "" : pulito42(conversazione);
+  return filoDaRiannodare(ultimoMs, adessoMs) ? "" : pulito43(conversazione);
 }
 var VARIANTI = Object.freeze({
   it: "it-IT",
@@ -50152,13 +50277,13 @@ var VARIANTI = Object.freeze({
   zh: "zh-CN"
 });
 function linguaPerIlMicrofono(locale3) {
-  const voce3 = pulito42(locale3) || "it";
+  const voce3 = pulito43(locale3) || "it";
   if (voce3.includes("-")) return voce3;
   return VARIANTI[voce3.toLowerCase()] || voce3;
 }
 
 // src/core/capire-le-domande.js
-var pulito43 = (valore3) => String(valore3 ?? "").trim();
+var pulito44 = (valore3) => String(valore3 ?? "").trim();
 var elenco6 = (valore3) => Array.isArray(valore3) ? valore3.filter(Boolean) : [];
 var RIPARAZIONI = /* @__PURE__ */ new Map([
   ["com", "come"],
@@ -50211,7 +50336,7 @@ var VUOTE = new Set(
   "il lo la i gli le l un uno una un di a ad da in con su per tra fra del dello della dei degli delle dell al allo alla ai agli alle all dal dallo dalla dai dagli dalle dall nel nello nella nei negli nelle nell sul sullo sulla sui sugli sulle sull e ed o mi ti ci si me te ce se the of on at to an and my your our me us it its is are be please per favore pf grazie".split(" ")
 );
 function radice2(parola) {
-  let r = pulito43(parola);
+  let r = pulito44(parola);
   if (/^\d/.test(r)) return r;
   if (r.length > 4 && /[^s]s$/.test(r)) r = r.slice(0, -1);
   while (r.length > 3 && /[aeiou]$/.test(r)) r = r.slice(0, -1);
@@ -50242,8 +50367,8 @@ function tolleranza(lunghezza) {
   return 0;
 }
 function somiglia(a, b2) {
-  const x = pulito43(a);
-  const y = pulito43(b2);
+  const x = pulito44(a);
+  const y = pulito44(b2);
   if (!x || !y) return false;
   if (x === y) return true;
   if (/\d/.test(x) || /\d/.test(y)) return false;
@@ -50546,7 +50671,7 @@ function nomiDellaStanza(nome) {
 function trovaStanza(f, aree2 = []) {
   let migliore = "";
   let punti = 0;
-  for (const area of new Set(elenco6(aree2).map(pulito43).filter(Boolean))) {
+  for (const area of new Set(elenco6(aree2).map(pulito44).filter(Boolean))) {
     for (const nome of nomiDellaStanza(area)) {
       const dove = nomeNellaFrase(nome, f);
       if (!dove.tutte) continue;
@@ -50816,8 +50941,8 @@ function capisci(testo4, sapere = {}, memoria = {}, opzioni2 = {}) {
   const con = (intento, resto = {}) => ({ ...base, intento, ...resto });
   const attesa = memoria?.inAttesa;
   if (attesa) {
-    if (attesa.codice && /^[a-z0-9]{3,12}$/i.test(pulito43(testo4).replace(/\s+/g, "")) && !f.tocca("no"))
-      return con("codice", { codice: pulito43(testo4).replace(/\s+/g, "") });
+    if (attesa.codice && /^[a-z0-9]{3,12}$/i.test(pulito44(testo4).replace(/\s+/g, "")) && !f.tocca("no"))
+      return con("codice", { codice: pulito44(testo4).replace(/\s+/g, "") });
     if (f.parole.length <= 4 && f.tocca("si") && !f.tocca("no")) return con("conferma");
     if (f.parole.length <= 4 && f.tocca("no")) return con("annulla");
   }
@@ -50933,11 +51058,11 @@ function migliorePerNome(f, voci4 = [], stanza2 = "") {
   let migliore = null;
   let punti = 0;
   for (const voce3 of elenco6(voci4)) {
-    const nome = pulito43(voce3.nome || voce3.name);
+    const nome = pulito44(voce3.nome || voce3.name);
     if (!nome) continue;
     const dove = nomeNellaFrase(nome, f, stanzaParole);
     if (!dove.tutte || !dove.parole) continue;
-    if (stanza2 && voce3.area && pulito43(voce3.area).toLowerCase() !== stanza2.toLowerCase()) {
+    if (stanza2 && voce3.area && pulito44(voce3.area).toLowerCase() !== stanza2.toLowerCase()) {
       if (dove.parole < 2) continue;
     }
     const valore3 = dove.parole * 10 + (stanza2 && voce3.area === stanza2 ? 5 : 0);
@@ -50950,7 +51075,7 @@ function migliorePerNome(f, voci4 = [], stanza2 = "") {
 }
 
 // src/core/sapere-della-casa.js
-var pulito44 = (valore3) => String(valore3 ?? "").trim();
+var pulito45 = (valore3) => String(valore3 ?? "").trim();
 var elenco7 = (valore3) => Array.isArray(valore3) ? valore3.filter(Boolean) : [];
 var numero37 = (valore3) => {
   if (valore3 === null || valore3 === void 0 || valore3 === "" || typeof valore3 === "boolean")
@@ -50976,7 +51101,7 @@ var NON_STANZA = /(frig|freez|congel|forno|oven|cpu|processor|nas\b|server|batte
 var ACCUMULO = /(accumul|storage|powerwall|home batter|batteria (?:di casa|impianto|fotovolt|inverter)|battery (?:storage|soc|level)|state of charge|\bsoc\b)/i;
 var CANCELLO = /(cancell|garage|basculante|carrabile|gate)/i;
 function nomeDi4(entity2, stato3) {
-  return pulito44(stato3?.attributes?.friendly_name) || pulito44(entity2).split(".")[1]?.replace(/_/g, " ") || entity2;
+  return pulito45(stato3?.attributes?.friendly_name) || pulito45(entity2).split(".")[1]?.replace(/_/g, " ") || entity2;
 }
 function daQuando2(stato3, adesso) {
   const quando4 = Date.parse(stato3?.last_changed || stato3?.last_updated || "");
@@ -50986,13 +51111,13 @@ function trovaArea(fonti) {
   if (typeof fonti.areaDi === "function")
     return (entity2) => {
       try {
-        return pulito44(fonti.areaDi(entity2));
+        return pulito45(fonti.areaDi(entity2));
       } catch (_errore) {
         return "";
       }
     };
   const mappa2 = fonti.areaDi && typeof fonti.areaDi === "object" ? fonti.areaDi : {};
-  return (entity2) => pulito44(mappa2[entity2]);
+  return (entity2) => pulito45(mappa2[entity2]);
 }
 var media2 = (valori) => {
   const buoni = valori.filter((v) => v !== null);
@@ -51025,7 +51150,7 @@ function stanzeDaHomeAssistant(entita3) {
   })).filter((v) => v.temperatura !== null || v.umidita !== null).sort((a, b2) => a.stanza.localeCompare(b2.stanza));
 }
 function fuoriDallaCasa(states, entita3, fonti) {
-  const meteoId = pulito44(fonti.meteo) || Object.keys(states).find((id) => id.startsWith("weather.")) || "";
+  const meteoId = pulito45(fonti.meteo) || Object.keys(states).find((id) => id.startsWith("weather.")) || "";
   const meteo3 = states[meteoId];
   const sensore2 = entita3.find(
     (e) => e.dominio === "sensor" && e.classe === "temperature" && ESTERNO.test(`${e.entity} ${e.nome} ${e.area}`) && !/(meteo|weather)/i.test(e.entity) && numero37(e.stato) !== null
@@ -51036,11 +51161,11 @@ function fuoriDallaCasa(states, entita3, fonti) {
   const a = meteo3?.attributes || {};
   return {
     meteo: meteo3 ? meteoId : "",
-    condizione: meteo3 && !MUTI12.has(pulito44(meteo3.state)) ? pulito44(meteo3.state) : "",
+    condizione: meteo3 && !MUTI12.has(pulito45(meteo3.state)) ? pulito45(meteo3.state) : "",
     temperatura: numero37(fonti.fuori?.temperatura) ?? (sensore2 ? numero37(sensore2.stato) : numero37(a.temperature)),
     umidita: umido ? numero37(umido.stato) : numero37(a.humidity),
     vento: numero37(a.wind_speed),
-    unitaVento: pulito44(a.wind_speed_unit) || "km/h",
+    unitaVento: pulito45(a.wind_speed_unit) || "km/h",
     sensore: sensore2?.nome || ""
   };
 }
@@ -51049,10 +51174,10 @@ function personeDellaCasa(states, fonti, adesso) {
   const zone = new Map(
     Object.entries(states).filter(([id]) => id.startsWith("zone.")).map(([id, s]) => [id.slice(5), nomeDi4(id, s)])
   );
-  const voci4 = scelte5.length ? scelte5.map((p) => ({ nome: pulito44(p.nome || p.name), entity: pulito44(p.entity) })) : Object.entries(states).filter(([id]) => id.startsWith("person.")).map(([id, s]) => ({ nome: nomeDi4(id, s), entity: id }));
+  const voci4 = scelte5.length ? scelte5.map((p) => ({ nome: pulito45(p.nome || p.name), entity: pulito45(p.entity) })) : Object.entries(states).filter(([id]) => id.startsWith("person.")).map(([id, s]) => ({ nome: nomeDi4(id, s), entity: id }));
   return voci4.filter((p) => p.nome).map((p) => {
     const s = states[p.entity];
-    const stato3 = pulito44(s?.state);
+    const stato3 = pulito45(s?.state);
     const zona = stato3 && !["home", "not_home", "unknown", "unavailable"].includes(stato3) ? zone.get(stato3.toLowerCase().replace(/\s+/g, "_")) || stato3 : "";
     return {
       nome: p.nome,
@@ -51081,7 +51206,7 @@ function energiaDiOggi(entita3, fonti) {
     if (!oggi.test(testo4)) continue;
     let kwh4 = numero37(e.stato);
     if (kwh4 === null) continue;
-    if (/^wh$/i.test(pulito44(e.attributi?.unit_of_measurement))) kwh4 /= 1e3;
+    if (/^wh$/i.test(pulito45(e.attributi?.unit_of_measurement))) kwh4 /= 1e3;
     if (/(produz|solar|fotovolt|\bpv\b|yield|produc)/i.test(testo4)) fuori.produzione ??= kwh4;
     else if (/(immess|export|cedut|vendut|feed)/i.test(testo4)) fuori.immissione ??= kwh4;
     else if (/(prelev|import|rete|grid)/i.test(testo4)) fuori.prelievo ??= kwh4;
@@ -51100,7 +51225,7 @@ function energiaAdesso(entita3, fonti) {
   };
   if (fuori.soc === null) {
     const soc = entita3.find(
-      (e) => e.dominio === "sensor" && (e.classe === "battery" || /%/.test(pulito44(e.attributi?.unit_of_measurement))) && ACCUMULO.test(`${e.entity} ${e.nome}`) && numero37(e.stato) !== null
+      (e) => e.dominio === "sensor" && (e.classe === "battery" || /%/.test(pulito45(e.attributi?.unit_of_measurement))) && ACCUMULO.test(`${e.entity} ${e.nome}`) && numero37(e.stato) !== null
     );
     if (soc) fuori.soc = numero37(soc.stato);
   }
@@ -51110,7 +51235,7 @@ function energiaAdesso(entita3, fonti) {
     );
     if (!e) return null;
     const v = numero37(e.stato);
-    return /^kw$/i.test(pulito44(e.attributi?.unit_of_measurement)) ? v * 1e3 : v;
+    return /^kw$/i.test(pulito45(e.attributi?.unit_of_measurement)) ? v * 1e3 : v;
   };
   fuori.solare ??= watt5(/(solar|fotovolt|\bpv\b|produz)/i);
   fuori.rete ??= watt5(/(grid|rete|contatore|meter)/i);
@@ -51120,7 +51245,7 @@ function energiaAdesso(entita3, fonti) {
 function eventiDelCalendario(states, fonti) {
   if (Array.isArray(fonti.eventi))
     return elenco7(fonti.eventi).map((e) => ({
-      titolo: pulito44(e.summary || e.titolo || e.message),
+      titolo: pulito45(e.summary || e.titolo || e.message),
       inizio: numero37(e.inizio) ?? Date.parse(e.start?.dateTime || e.start?.date || e.start || ""),
       fine: numero37(e.fine) ?? Date.parse(e.end?.dateTime || e.end?.date || e.end || ""),
       tuttoIlGiorno: Boolean(
@@ -51128,7 +51253,7 @@ function eventiDelCalendario(states, fonti) {
       )
     })).filter((e) => e.titolo && Number.isFinite(e.inizio)).sort((a, b2) => a.inizio - b2.inizio);
   return Object.entries(states).filter(([id, s]) => id.startsWith("calendar.") && s?.attributes?.message).map(([, s]) => ({
-    titolo: pulito44(s.attributes.message),
+    titolo: pulito45(s.attributes.message),
     inizio: Date.parse(String(s.attributes.start_time || "").replace(" ", "T")),
     fine: Date.parse(String(s.attributes.end_time || "").replace(" ", "T")),
     tuttoIlGiorno: Boolean(s.attributes.all_day)
@@ -51146,8 +51271,8 @@ function sapereDellaCasa(fonti = {}) {
       dominio: dominio5,
       nome: nomeDi4(id, s),
       area: areaDi(id),
-      stato: pulito44(s.state),
-      classe: pulito44(s.attributes?.device_class),
+      stato: pulito45(s.state),
+      classe: pulito45(s.attributes?.device_class),
       attributi: s.attributes || {},
       daQuando: daQuando2(s, adesso),
       gruppo: Array.isArray(s.attributes?.entity_id) && s.attributes.entity_id.length > 0,
@@ -51156,26 +51281,26 @@ function sapereDellaCasa(fonti = {}) {
   });
   const scelte5 = /* @__PURE__ */ new Map();
   for (const voce3 of elenco7(fonti.luci)) {
-    const id = pulito44(voce3?.entity);
+    const id = pulito45(voce3?.entity);
     if (id.includes(".")) scelte5.set(id, voce3);
   }
   for (const e of entita3) {
     const voce3 = scelte5.get(e.entity);
     if (!voce3) continue;
     e.luce = true;
-    e.nome = pulito44(voce3.nome || voce3.name) || e.nome;
-    e.area = pulito44(voce3.stanza) || e.area;
+    e.nome = pulito45(voce3.nome || voce3.name) || e.nome;
+    e.area = pulito45(voce3.stanza) || e.area;
   }
   const varchi = /* @__PURE__ */ new Map();
   for (const voce3 of elenco7(fonti.varchi)) {
-    const id = pulito44(voce3?.entity);
+    const id = pulito45(voce3?.entity);
     if (id.includes(".")) varchi.set(id, voce3);
   }
   for (const e of entita3) {
     const voce3 = varchi.get(e.entity);
     if (!voce3) continue;
     e.varco = true;
-    e.nome = pulito44(voce3.nome || voce3.name) || e.nome;
+    e.nome = pulito45(voce3.nome || voce3.name) || e.nome;
     if (voce3.tipo === "finestra") e.classe = "window";
     else if (voce3.tipo === "porta" && e.classe === "window") e.classe = "door";
     else if (!["window", "door", "opening", "garage_door"].includes(e.classe)) e.classe = "door";
@@ -51185,14 +51310,14 @@ function sapereDellaCasa(fonti = {}) {
   }
   const aree2 = /* @__PURE__ */ new Set();
   for (const a of elenco7(fonti.aree))
-    aree2.add(pulito44(typeof a === "object" ? a.name || a.nome : a));
+    aree2.add(pulito45(typeof a === "object" ? a.name || a.nome : a));
   for (const s of elenco7(fonti.stanze))
-    aree2.add(pulito44(typeof s === "object" ? s.name || s.nome : s));
+    aree2.add(pulito45(typeof s === "object" ? s.name || s.nome : s));
   for (const e of entita3) if (e.area) aree2.add(e.area);
   aree2.delete("");
   const configurate2 = elenco7(fonti.temperature).map((r) => ({
-    stanza: pulito44(r.name || r.nome || r.stanza),
-    entity: pulito44(r.entity),
+    stanza: pulito45(r.name || r.nome || r.stanza),
+    entity: pulito45(r.entity),
     temperatura: numero37(r.temperature ?? r.temperatura),
     umidita: numero37(r.humidity ?? r.umidita),
     /* Il balcone segnato «All'aperto» (#251) resta fra le stanze — «quanti
@@ -51201,18 +51326,18 @@ function sapereDellaCasa(fonti = {}) {
     ...r.fuori === true ? { fuori: true } : {}
   })).filter((r) => r.stanza && (r.temperatura !== null || r.umidita !== null));
   const dentro3 = configurate2.length ? configurate2 : stanzeDaHomeAssistant(entita3);
-  const unitaTemperatura = pulito44(states[dentro3[0]?.entity]?.attributes?.unit_of_measurement) === "°F" ? "°F" : "°C";
-  const centrale = (pulito44(fonti.antifurto) && states[pulito44(fonti.antifurto)] ? pulito44(fonti.antifurto) : "") || Object.keys(states).find((id) => id.startsWith("alarm_control_panel.")) || "";
+  const unitaTemperatura = pulito45(states[dentro3[0]?.entity]?.attributes?.unit_of_measurement) === "°F" ? "°F" : "°C";
+  const centrale = (pulito45(fonti.antifurto) && states[pulito45(fonti.antifurto)] ? pulito45(fonti.antifurto) : "") || Object.keys(states).find((id) => id.startsWith("alarm_control_panel.")) || "";
   const previsioni = fonti.previsioni && typeof fonti.previsioni === "object" ? fonti.previsioni : {};
   const fuori = fuoriDallaCasa(states, entita3, fonti);
   const giorni = elenco7(previsioni.giorni).length ? elenco7(previsioni.giorni) : elenco7(states[fuori.meteo]?.attributes?.forecast);
   const telecamere3 = (Array.isArray(fonti.telecamere) ? elenco7(fonti.telecamere).map((c) => ({
-    entity: pulito44(c.entity),
-    nome: pulito44(c.name || c.nome) || nomeDi4(c.entity, states[c.entity])
+    entity: pulito45(c.entity),
+    nome: pulito45(c.name || c.nome) || nomeDi4(c.entity, states[c.entity])
   })) : entita3.filter((e) => e.dominio === "camera").map((e) => ({ entity: e.entity, nome: e.nome }))).filter((c) => c.entity).map((c) => ({ ...c, area: areaDi(c.entity) }));
   return {
     adesso,
-    lingua: pulito44(fonti.lingua) || "it",
+    lingua: pulito45(fonti.lingua) || "it",
     aree: [...aree2].sort((a, b2) => a.localeCompare(b2)),
     entita: entita3,
     dentro: dentro3,
@@ -51223,32 +51348,32 @@ function sapereDellaCasa(fonti = {}) {
     energia: energiaAdesso(entita3, fonti),
     energiaOggi: energiaDiOggi(entita3, fonti),
     elettrodomestici: elenco7(fonti.elettrodomestici).map((a) => ({
-      nome: pulito44(a.name || a.nome),
-      stato: pulito44(a.mode || a.stato),
-      tipo: pulito44(a.type || a.tipo),
+      nome: pulito45(a.name || a.nome),
+      stato: pulito45(a.mode || a.stato),
+      tipo: pulito45(a.type || a.tipo),
       restano: numero37(a.restano),
       prontaAlle: numero37(a.prontaAlle),
-      fase: pulito44(a.fase),
-      programma: pulito44(a.programma),
-      stanza: pulito44(a.stanza)
+      fase: pulito45(a.fase),
+      programma: pulito45(a.programma),
+      stanza: pulito45(a.stanza)
     })),
     auto: elenco7(fonti.auto).map((v) => ({
-      nome: pulito44(v.nome || v.name),
+      nome: pulito45(v.nome || v.name),
       percentuale: numero37(v.percentuale),
       km: numero37(v.km),
       inCarica: Boolean(v.inCarica),
-      fine: pulito44(v.fine),
+      fine: pulito45(v.fine),
       carburante: v.carburante === true
     })),
     telecamere: telecamere3,
     eventi: eventiDelCalendario(states, fonti),
     rifiuti: elenco7(fonti.rifiuti).map((r) => ({
-      nome: pulito44(r.name || r.nome),
-      quando: pulito44(r.quando),
+      nome: pulito45(r.name || r.nome),
+      quando: pulito45(r.quando),
       giorni: numero37(r.giorni)
     })),
     batterieBasse: Array.isArray(fonti.batterieBasse) ? elenco7(fonti.batterieBasse).map((b2) => ({
-      nome: pulito44(b2.name || b2.nome),
+      nome: pulito45(b2.name || b2.nome),
       livello: numero37(b2.level ?? b2.livello)
     })) : entita3.filter(
       (e) => e.dominio === "sensor" && e.classe === "battery" && !ACCUMULO.test(`${e.entity} ${e.nome}`) && numero37(e.stato) !== null && numero37(e.stato) <= 20
@@ -51256,20 +51381,20 @@ function sapereDellaCasa(fonti = {}) {
       nome: e.nome.replace(/\s*(batteria|battery)\s*$/i, "") || e.nome,
       livello: numero37(e.stato)
     })).sort((a, b2) => a.livello - b2.livello),
-    nonRispondono: Array.isArray(fonti.nonRispondono) ? elenco7(fonti.nonRispondono).map((n) => ({ nome: pulito44(n.name || n.nome) })) : entita3.filter(
+    nonRispondono: Array.isArray(fonti.nonRispondono) ? elenco7(fonti.nonRispondono).map((n) => ({ nome: pulito45(n.name || n.nome) })) : entita3.filter(
       (e) => (DOMINI_COMANDABILI.includes(e.dominio) || e.dominio === "camera") && e.stato === "unavailable"
     ).map((e) => ({ nome: e.nome })),
     aggiornamenti: Array.isArray(fonti.aggiornamenti) ? elenco7(fonti.aggiornamenti).map((u) => ({
-      nome: pulito44(u.name || u.nome || u.title),
-      versione: pulito44(u.versione || u.latest_version || u.a)
+      nome: pulito45(u.name || u.nome || u.title),
+      versione: pulito45(u.versione || u.latest_version || u.a)
     })) : entita3.filter((e) => e.dominio === "update" && e.stato === "on").map((e) => ({
-      nome: pulito44(e.attributi?.title) || e.nome.replace(/\s*(update|aggiornamento)\s*$/i, ""),
-      versione: pulito44(e.attributi?.latest_version)
+      nome: pulito45(e.attributi?.title) || e.nome.replace(/\s*(update|aggiornamento)\s*$/i, ""),
+      versione: pulito45(e.attributi?.latest_version)
     })),
     antifurto: centrale ? {
       entity: centrale,
       nome: nomeDi4(centrale, states[centrale]),
-      stato: pulito44(states[centrale].state),
+      stato: pulito45(states[centrale].state),
       attributi: states[centrale].attributes || {},
       statoHa: states[centrale]
     } : null
@@ -51289,7 +51414,7 @@ function eUnCancello(e) {
 }
 
 // src/core/rispondere-alle-domande.js
-var pulito45 = (valore3) => String(valore3 ?? "").trim();
+var pulito46 = (valore3) => String(valore3 ?? "").trim();
 var elenco8 = (valore3) => Array.isArray(valore3) ? valore3.filter(Boolean) : [];
 var numero38 = (valore3) => {
   if (valore3 === null || valore3 === void 0 || valore3 === "" || typeof valore3 === "boolean")
@@ -51373,7 +51498,7 @@ function giornoDetto(adesso, ms, lingua3) {
 }
 var maiuscola2 = (testo4) => testo4 ? testo4[0].toUpperCase() + testo4.slice(1) : testo4;
 function elencoNomi(nomi2, lingua3, quanti2 = 4) {
-  const voci4 = elenco8(nomi2).map(pulito45).filter(Boolean);
+  const voci4 = elenco8(nomi2).map(pulito46).filter(Boolean);
   const e = dire(lingua3, " e ", " and ");
   if (voci4.length <= quanti2) {
     if (voci4.length <= 1) return voci4.join("");
@@ -51409,8 +51534,8 @@ var PIOGGIA = /* @__PURE__ */ new Set([
   "lightning"
 ]);
 function condizioneDetta(condizione, lingua3) {
-  const voce3 = CONDIZIONI[pulito45(condizione)];
-  return voce3 ? dire(lingua3, voce3[0], voce3[1]) : pulito45(condizione).replace(/[-_]/g, " ");
+  const voce3 = CONDIZIONI[pulito46(condizione)];
+  return voce3 ? dire(lingua3, voce3[0], voce3[1]) : pulito46(condizione).replace(/[-_]/g, " ");
 }
 var chiedi4 = (etichetta3, testo4) => ({ tipo: "chiedi", etichetta: etichetta3, testo: testo4 || etichetta3 });
 var fai = (etichetta3, servizi2, fatto2, pericolo = false) => ({
@@ -51497,7 +51622,7 @@ var RISPOSTE_VUOTE = /(non conosco nessun|non ho capito|non so come|non sono riu
 function rispostaCheNonRisponde(risposta) {
   if (!risposta) return true;
   if (risposta.errore) return true;
-  const testo4 = pulito45(risposta.testo).normalize("NFD").replace(/[̀-ͯ]/g, "");
+  const testo4 = pulito46(risposta.testo).normalize("NFD").replace(/[̀-ͯ]/g, "");
   if (!testo4) return false;
   return RISPOSTE_VUOTE.test(testo4);
 }
@@ -51804,7 +51929,7 @@ function rigaDellaPrevisione(p, l, u = "°") {
   if (pioggia !== null && pioggia >= 20)
     pezzi.push(
       /* «pioggia, pioggia all'80%» si dice una volta sola. */
-      PIOGGIA.has(pulito45(p.condition)) ? dire(l, `probabilità ${Math.round(pioggia)}%`, `${Math.round(pioggia)}% chance`) : dire(l, `pioggia ${alPercento2(pioggia, l)}`, `${Math.round(pioggia)}% chance of rain`)
+      PIOGGIA.has(pulito46(p.condition)) ? dire(l, `probabilità ${Math.round(pioggia)}%`, `${Math.round(pioggia)}% chance`) : dire(l, `pioggia ${alPercento2(pioggia, l)}`, `${Math.round(pioggia)}% chance of rain`)
     );
   return pezzi.filter(Boolean).join(", ");
 }
@@ -51885,7 +52010,7 @@ RISPOSTE.meteo = (c, s) => {
         `I don't have the forecast for ${giornoDetto(s.adesso, s.adesso + giorno2 * GIORNO2, l)} yet.`
       ) : dire(l, "Non ho un meteo configurato.", "There's no weather configured.")
     };
-  const piove = p ? PIOGGIA.has(pulito45(p.condition)) || (numero38(p.precipitation_probability) ?? 0) >= 50 : PIOGGIA.has(f.condizione);
+  const piove = p ? PIOGGIA.has(pulito46(p.condition)) || (numero38(p.precipitation_probability) ?? 0) >= 50 : PIOGGIA.has(f.condizione);
   const chips = [];
   if (giorno2 === 0)
     chips.push(chiedi4(dire(l, "E domani?", "And tomorrow?"), dire(l, "e domani", "and tomorrow")));
@@ -51904,7 +52029,7 @@ RISPOSTE.meteo = (c, s) => {
   );
   let apertura = "";
   if (pioggiaChiesta || nevChiesta) {
-    const neve = p ? /snow/.test(pulito45(p.condition)) : /snow/.test(f.condizione);
+    const neve = p ? /snow/.test(pulito46(p.condition)) : /snow/.test(f.condizione);
     const si = nevChiesta ? neve : piove;
     const cosa = nevChiesta ? dire(l, "neve", "snow") : dire(l, "pioggia", "rain");
     const prob = p && numero38(p.precipitation_probability) !== null ? ` (${Math.round(p.precipitation_probability)}%)` : "";
@@ -52029,9 +52154,9 @@ function luciDellaCasa(s) {
 function luciDette(accese, l, inUnaStanza) {
   const perStanza = /* @__PURE__ */ new Map();
   for (const e of accese) {
-    const stanza2 = inUnaStanza ? "" : pulito45(e.area);
+    const stanza2 = inUnaStanza ? "" : pulito46(e.area);
     if (!perStanza.has(stanza2)) perStanza.set(stanza2, []);
-    perStanza.get(stanza2).push(pulito45(e.nome) || e.entity);
+    perStanza.get(stanza2).push(pulito46(e.nome) || e.entity);
   }
   const stanze4 = [...perStanza.keys()].filter(Boolean);
   const perNome2 = (nomi2) => {
@@ -52040,7 +52165,7 @@ function luciDette(accese, l, inUnaStanza) {
     return [...quanti2].map(([n, q]) => q > 1 ? `${n} (${q})` : n);
   };
   if (accese.length <= 4 || stanze4.length === 0)
-    return elencoNomi(perNome2(accese.map((e) => pulito45(e.nome) || e.entity)), l, 5);
+    return elencoNomi(perNome2(accese.map((e) => pulito46(e.nome) || e.entity)), l, 5);
   const pezzi = [];
   for (const [stanza2, nomi2] of perStanza) {
     if (!stanza2) {
@@ -52104,9 +52229,9 @@ RISPOSTE.luci = (c, s) => {
     `${accese.length} lights are on${dove}: ${nomi2}.`
   );
   const comandabili = accese.filter((e) => e.comandabile);
-  const stanzeAccese = c.stanza ? [] : [...new Set(comandabili.map((e) => pulito45(e.area)).filter(Boolean))];
+  const stanzeAccese = c.stanza ? [] : [...new Set(comandabili.map((e) => pulito46(e.area)).filter(Boolean))];
   const perStanza = stanzeAccese.length > 1 ? stanzeAccese.slice(0, 3).map((stanza2) => {
-    const qui = comandabili.filter((e) => pulito45(e.area) === stanza2);
+    const qui = comandabili.filter((e) => pulito46(e.area) === stanza2);
     return fai(
       dire(l, `Spegni in ${stanza2}`, `Turn off in ${stanza2}`),
       servizi(
@@ -52787,7 +52912,7 @@ RISPOSTE.serratura_comando = (c, s, m) => {
   );
   const fatto2 = sblocca2 ? dire(l, `Mando il comando: sblocco ${nomi2}.`, `Sending it: unlocking ${nomi2}.`) : dire(l, `Mando il comando: chiudo a chiave ${nomi2}.`, `Sending it: locking ${nomi2}.`);
   const codice = voci4.some((e) => {
-    const formato = pulito45(e.attributi?.code_format).toLowerCase();
+    const formato = pulito46(e.attributi?.code_format).toLowerCase();
     return formato && formato !== "none" && formato !== "null";
   });
   if (codice)
@@ -52955,7 +53080,7 @@ RISPOSTE.stato_dispositivo = (c, s) => {
   else if (e.stato === "off") stato3 = dire(l, "spento", "off");
   else if (e.stato === "unavailable") stato3 = dire(l, "non raggiungibile", "unavailable");
   else {
-    const unita3 = pulito45(a.unit_of_measurement);
+    const unita3 = pulito46(a.unit_of_measurement);
     stato3 = `${e.stato}${unita3 ? ` ${unita3}` : ""}`;
   }
   const da = e.daQuando !== null && e.daQuando >= MINUTO4 ? dire(l, ` (da ${durata3(e.daQuando, l)})`, ` (for ${durata3(e.daQuando, l)})`) : "";
@@ -56334,8 +56459,8 @@ registraFinestra("citofono", { disegna: finestraCitofono });
 registraFinestra("robot", { disegna: finestraRobot });
 
 // src/core/il-tipo-del-sensore.js
-var pulito46 = (valore3) => String(valore3 ?? "").trim();
-var minuscolo9 = (valore3) => pulito46(valore3).toLowerCase();
+var pulito47 = (valore3) => String(valore3 ?? "").trim();
+var minuscolo9 = (valore3) => pulito47(valore3).toLowerCase();
 var PER_CLASSE = Object.freeze({
   window: { disegno: "window", tipo: "finestra" },
   door: { disegno: "door", tipo: "porta" },
@@ -56425,7 +56550,7 @@ var PRIORITA = Object.freeze([
   "energy"
 ]);
 function tipoFraLeEntita(entita3, { states = {}, nome = "" } = {}) {
-  const elenco15 = (Array.isArray(entita3) ? entita3 : [entita3]).map(pulito46).filter(Boolean);
+  const elenco15 = (Array.isArray(entita3) ? entita3 : [entita3]).map(pulito47).filter(Boolean);
   let migliore = -1;
   let scelta3 = null;
   for (const id of elenco15) {
@@ -56445,10 +56570,10 @@ function tipoFraLeEntita(entita3, { states = {}, nome = "" } = {}) {
   });
 }
 function tipoDelDispositivo(entity2, { states = {}, di = {}, nome = "" } = {}) {
-  const id = pulito46(entity2);
-  const suo2 = pulito46(di?.[id]);
+  const id = pulito47(entity2);
+  const suo2 = pulito47(di?.[id]);
   if (suo2) {
-    const fratelli = Object.entries(di || {}).filter(([altra, dispositivo]) => altra !== id && pulito46(dispositivo) === suo2).map(([altra]) => altra).filter((altra) => PRIORITA.includes(minuscolo9(states?.[altra]?.attributes?.device_class)));
+    const fratelli = Object.entries(di || {}).filter(([altra, dispositivo]) => altra !== id && pulito47(dispositivo) === suo2).map(([altra]) => altra).filter((altra) => PRIORITA.includes(minuscolo9(states?.[altra]?.attributes?.device_class)));
     if (fratelli.length) return tipoFraLeEntita(fratelli, { states });
   }
   const parlante = classeDalNome(nome || states?.[id]?.attributes?.friendly_name || id);
@@ -56460,8 +56585,8 @@ function tipoDelDispositivo(entity2, { states = {}, di = {}, nome = "" } = {}) {
 var UN_MINUTO2 = 6e4;
 var UNORA = 60 * UN_MINUTO2;
 var UN_GIORNO = 24 * UNORA;
-var pulito47 = (valore3) => String(valore3 ?? "").trim();
-var minuscolo10 = (valore3) => pulito47(valore3).toLowerCase();
+var pulito48 = (valore3) => String(valore3 ?? "").trim();
+var minuscolo10 = (valore3) => pulito48(valore3).toLowerCase();
 var ATTIVO = "attivo";
 var RIPOSO2 = "riposo";
 var MUTO5 = "muto";
@@ -58078,11 +58203,11 @@ ${P3} .dm-f-fumo-pila[data-bassa="true"]{color:${AMBRA}}
 ${P3} .dm-f-fumo-nota{margin:4px 0 0;padding:11px 13px;border-radius:16px;font-size:12.5px;font-weight:750;line-height:1.4;
   color:var(--text-dim,#475569);background:color-mix(in srgb,var(--text-dim,#64748b) 7%,var(--card-bg,#fff))}`;
 function nomePulitoDellaSonda(nome) {
-  const pulito68 = clean(nome).replace(
+  const pulito69 = clean(nome).replace(
     /^(sensore\s+)?(di\s+)?(perdita|perdite|allagamento|acqua|water\s+leak|leak|flood)(\s+(d'|di\s+)?acqua)?\s+/i,
     ""
   ).trim();
-  return pulito68 ? pulito68.charAt(0).toLocaleUpperCase() + pulito68.slice(1) : clean(nome);
+  return pulito69 ? pulito69.charAt(0).toLocaleUpperCase() + pulito69.slice(1) : clean(nome);
 }
 function disegnaAllagamenti(widget, states) {
   const k = "allagamenti";
@@ -58357,8 +58482,8 @@ ${P3} .dm-f-nonrisponde-tasto{font:inherit;cursor:pointer;margin-top:4px;padding
 ${P3} .dm-f-nonrisponde-tasto[data-dm-w-in-corso="true"]{opacity:.6}
 html[data-theme="dark"] ${P3} .dm-f-nonrisponde-tasto{background:#f8fafc;color:#0f172a}`;
 function nomePulitoDellaPila(nome) {
-  const pulito68 = clean(nome).replace(/\b(livello\s+(della\s+)?)?(batteria|battery|batt)(\s+level)?\b/gi, " ").replace(/\s{2,}/g, " ").replace(/^[\s·:,-]+|[\s·:,-]+$/g, "").trim();
-  return pulito68 ? pulito68.charAt(0).toLocaleUpperCase() + pulito68.slice(1) : clean(nome);
+  const pulito69 = clean(nome).replace(/\b(livello\s+(della\s+)?)?(batteria|battery|batt)(\s+level)?\b/gi, " ").replace(/\s{2,}/g, " ").replace(/^[\s·:,-]+|[\s·:,-]+$/g, "").trim();
+  return pulito69 ? pulito69.charAt(0).toLocaleUpperCase() + pulito69.slice(1) : clean(nome);
 }
 var PROSSIME = 60;
 var PILE_IN_GRANDE = 6;
@@ -66122,25 +66247,51 @@ function fumoDetail(widget) {
     )
   ).join("");
 }
-var LOGHI = /* @__PURE__ */ new Map();
+var LOGHI = creaLaMemoriaDeiLoghi({
+  /* La domanda al ponte la fa la persistenza della configurazione: importarla
+   * da qui la caricherebbe (con i suoi effetti sul salvataggio) anche dove la
+   * Home e' l'unica cosa accesa. La si chiede a runtime, quando c'e'. Una
+   * lettura: se e' partita prima che la porta fosse aperta, si rimanda. */
+  chiedi: (entita3) => {
+    const chiedi7 = root.dmBridgeRequest;
+    if (typeof chiedi7 !== "function") return Promise.reject(new Error("bridge not ready"));
+    return chiedi7(
+      "ponte/aggiornamenti/logo",
+      { entity_id: entita3 },
+      { attesa: ATTESA_DEL_LOGO, rimanda: true }
+    );
+  },
+  arrivato: posaIlLogo,
+  riprova: (entita3, fra2) => {
+    root.setTimeout?.(() => {
+      if (doc?.querySelector?.(`[data-dm-w-agg="${CSS.escape(entita3)}"]`))
+        logoDellAggiornamento(entita3);
+    }, fra2 + 50);
+  },
+  /* Dentro l'app e nella pagina del ponte (`__GDAHOME__`) non c'e' mai un
+   * indirizzo diretto: c'e' il ponte. */
+  colPonte: () => root.__GDAHOME__ === true
+});
+function segnoDellAggiornamento(logo2, nome) {
+  return logo2 ? `<img class="dm-w-agg-img" src="${esc(logo2)}" alt="" decoding="async">` : `<span class="dm-w-agg-iniziale">${esc(clean(nome).charAt(0).toUpperCase() || "?")}</span>`;
+}
 function logoDellAggiornamento(entita3) {
-  const voce3 = LOGHI.get(entita3);
-  if (voce3 !== void 0) return voce3 || "";
-  LOGHI.set(entita3, null);
-  const chiedi7 = root.dmBridgeRequest;
-  if (typeof chiedi7 !== "function") {
-    LOGHI.delete(entita3);
-    return "";
+  const foto = clean(allStates()?.[entita3]?.attributes?.entity_picture);
+  return LOGHI.logo(entita3, foto);
+}
+function posaIlLogo(entita3, url) {
+  if (!url) return;
+  for (const riga3 of doc?.querySelectorAll?.(`[data-dm-w-agg="${CSS.escape(entita3)}"]`) || []) {
+    const posto = riga3.querySelector(".dm-w-agg-logo");
+    if (!posto) continue;
+    const ce = posto.querySelector("img.dm-w-agg-img");
+    if (ce) {
+      if (ce.getAttribute("src") !== url) ce.setAttribute("src", url);
+      continue;
+    }
+    posto.innerHTML = segnoDellAggiornamento(url, "");
   }
-  Promise.resolve(chiedi7("ponte/aggiornamenti/logo", { entity_id: entita3 })).then((risposta) => {
-    const corpo4 = clean(risposta?.corpo);
-    if (Number(risposta?.stato) !== 200 || !corpo4) return;
-    const tipo = clean(risposta?.tipo) || "image/png";
-    LOGHI.set(entita3, `data:${tipo};base64,${corpo4}`);
-    senzaCadere(renderHomeWidgets);
-  }).catch(() => {
-  });
-  return "";
+  senzaCadere(renderHomeWidgets);
 }
 function siInstallaDaQui(voce3) {
   return voce3?.installabile === true || voce3?.installabile === void 0;
@@ -66153,8 +66304,7 @@ function aggiornamentiDetail(widget) {
     const nome = clean(voce3?.nome) || clean(voce3?.entity);
     const note = clean(voce3?.note);
     const entity2 = clean(voce3?.entity);
-    const logo2 = logoDellAggiornamento(entity2);
-    const segno2 = logo2 ? `<img class="dm-w-agg-img" src="${esc(logo2)}" alt="">` : `<span class="dm-w-agg-iniziale">${esc(nome.charAt(0).toUpperCase() || "?")}</span>`;
+    const segno2 = segnoDellAggiornamento(logoDellAggiornamento(entity2), nome);
     const tasto2 = voce3?.inCorso ? `<b class="dm-w-agg-corso">${esc(t("In corso", "Installing"))}</b>` : siInstallaDaQui(voce3) ? `<button type="button" class="dm-w-agg-via" data-dm-w-update="${esc(entity2)}"
                title="${esc(t("Installa questo aggiornamento", "Install this update"))}">${esc(
       t("Installa", "Install")
@@ -69415,6 +69565,17 @@ function installHomeWidgetsSection() {
   });
   doc.addEventListener("click", onClick8);
   bindEscape();
+  doc.addEventListener?.(
+    "error",
+    (event) => {
+      const img = event.target;
+      if (!img?.matches?.("img.dm-w-agg-img")) return;
+      const riga3 = img.closest?.("[data-dm-w-agg]");
+      const nome = clean(riga3?.querySelector?.(".dm-w-agg-testo b")?.textContent);
+      img.outerHTML = segnoDellAggiornamento("", nome);
+    },
+    true
+  );
   doc.addEventListener("change", onChange4);
   doc.addEventListener("input", onInput2);
   doc.addEventListener("keydown", onKeydown);
@@ -74584,12 +74745,12 @@ var CERCHI_AL_MASSIMO = 8;
 var PREFISSO_DELLA_STANZA = "stanza-";
 var CERCHIO_ALTRO = "stanza-altro";
 var PREFISSO_DEL_PIANO = "piano-";
-var pulito48 = (valore3) => valore3 == null ? "" : String(valore3).trim();
+var pulito49 = (valore3) => valore3 == null ? "" : String(valore3).trim();
 var WALLBOX_NOME = /wallbox|colonnina|ev[ _-]?charger|car[ _-]?charger/i;
 function eLaWallbox(carico = {}, entitaDellaWallbox = []) {
-  if (pulito48(carico?.metadata?.flow_kind) === "ev") return true;
-  if (pulito48(carico?.id) === "load-wallbox") return true;
-  const note = new Set((entitaDellaWallbox || []).map(pulito48).filter(Boolean));
+  if (pulito49(carico?.metadata?.flow_kind) === "ev") return true;
+  if (pulito49(carico?.id) === "load-wallbox") return true;
+  const note = new Set((entitaDellaWallbox || []).map(pulito49).filter(Boolean));
   if (note.size) {
     for (const campo5 of [
       "power_entity",
@@ -74598,22 +74759,22 @@ function eLaWallbox(carico = {}, entitaDellaWallbox = []) {
       "total_energy_entity",
       "history_entity"
     ])
-      if (pulito48(carico?.[campo5]) && note.has(pulito48(carico[campo5]))) return true;
+      if (pulito49(carico?.[campo5]) && note.has(pulito49(carico[campo5]))) return true;
   }
-  return WALLBOX_NOME.test(pulito48(carico?.name));
+  return WALLBOX_NOME.test(pulito49(carico?.name));
 }
-var gruppoDi = (voce3) => pulito48(voce3?.metadata?.beta27_subload_group);
-var gruppoDelCerchio = (carico) => pulito48(carico?.metadata?.flow_group) || pulito48(carico?.id);
+var gruppoDi = (voce3) => pulito49(voce3?.metadata?.beta27_subload_group);
+var gruppoDelCerchio = (carico) => pulito49(carico?.metadata?.flow_group) || pulito49(carico?.id);
 function misurabile(voce3) {
   return Boolean(
-    pulito48(voce3?.power_entity) || pulito48(voce3?.power) || pulito48(voce3?.daily_energy_entity) || pulito48(voce3?.daily) || pulito48(voce3?.monthly_energy_entity) || pulito48(voce3?.monthly) || pulito48(voce3?.total_energy_entity) || pulito48(voce3?.history_entity) || /* La casella dei modelli vecchi: il flusso la sa leggere (vedi
+    pulito49(voce3?.power_entity) || pulito49(voce3?.power) || pulito49(voce3?.daily_energy_entity) || pulito49(voce3?.daily) || pulito49(voce3?.monthly_energy_entity) || pulito49(voce3?.monthly) || pulito49(voce3?.total_energy_entity) || pulito49(voce3?.history_entity) || /* La casella dei modelli vecchi: il flusso la sa leggere (vedi
      * `fonteDiRipiego`), e un apparecchio con lei sola ha la sua stanza. */
-    pulito48(voce3?.energy_entity)
+    pulito49(voce3?.energy_entity)
   );
 }
-var potenzaDi = (voce3) => pulito48(voce3?.power_entity) || pulito48(voce3?.power);
+var potenzaDi = (voce3) => pulito49(voce3?.power_entity) || pulito49(voce3?.power);
 function stanzaDi(voce3, stanze4) {
-  const scritte = [voce3?.room_id, voce3?.roomId, voce3?.room].map(pulito48).filter(Boolean);
+  const scritte = [voce3?.room_id, voce3?.roomId, voce3?.room].map(pulito49).filter(Boolean);
   if (!scritte.length) return null;
   for (const scritta of scritte) {
     const minuscola = scritta.toLowerCase();
@@ -74626,10 +74787,10 @@ function stanzaDi(voce3, stanze4) {
 }
 function elencoDelleStanze(stanze4 = []) {
   return (Array.isArray(stanze4) ? stanze4 : []).map((stanza2, indice) => ({
-    id: pulito48(stanza2?.id) || pulito48(stanza2?.room_id) || `room-${indice}`,
-    nome: pulito48(stanza2?.name) || pulito48(stanza2?.nome),
-    icona: pulito48(stanza2?.icon),
-    piano: pulito48(stanza2?.floor),
+    id: pulito49(stanza2?.id) || pulito49(stanza2?.room_id) || `room-${indice}`,
+    nome: pulito49(stanza2?.name) || pulito49(stanza2?.nome),
+    icona: pulito49(stanza2?.icon),
+    piano: pulito49(stanza2?.floor),
     indice
   })).filter((stanza2) => stanza2.nome);
 }
@@ -74778,7 +74939,7 @@ function cerchiDelleStanze({
 }
 
 // src/core/kwh-dalla-potenza.js
-var pulito49 = (valore3) => String(valore3 ?? "").trim();
+var pulito50 = (valore3) => String(valore3 ?? "").trim();
 var numero43 = (valore3) => {
   if (valore3 === "" || valore3 == null) return null;
   const n = Number(String(valore3).replace(",", "."));
@@ -74795,19 +74956,19 @@ function domandaDeiKwhDallaPotenza(entita3, periodo, adesso) {
     type: "recorder/statistics_during_period",
     start_time: inizioDelPeriodo(periodo, adesso).toISOString(),
     end_time: new Date(Number(adesso)).toISOString(),
-    statistic_ids: [...new Set((entita3 || []).map(pulito49).filter(Boolean))],
+    statistic_ids: [...new Set((entita3 || []).map(pulito50).filter(Boolean))],
     period: "hour",
     types: ["mean"]
   };
 }
 function wattPerUnita(unita3) {
-  const scritta = pulito49(unita3).toLowerCase();
+  const scritta = pulito50(unita3).toLowerCase();
   if (scritta === "kw") return 1e3;
   if (scritta === "mw") return 1e6;
   return 1;
 }
 function kwhDallaPotenza(risposta, entity2, unita3 = "W") {
-  const elenco15 = risposta?.[pulito49(entity2)];
+  const elenco15 = risposta?.[pulito50(entity2)];
   if (!Array.isArray(elenco15) || !elenco15.length) return null;
   const fattore = wattPerUnita(unita3);
   let wattora = 0;
@@ -74825,7 +74986,7 @@ function domandaDellaStoria(entita3, periodo, adesso) {
     type: "history/history_during_period",
     start_time: inizioDelPeriodo(periodo, adesso).toISOString(),
     end_time: new Date(Number(adesso)).toISOString(),
-    entity_ids: [...new Set((entita3 || []).map(pulito49).filter(Boolean))],
+    entity_ids: [...new Set((entita3 || []).map(pulito50).filter(Boolean))],
     include_start_time_state: true,
     significant_changes_only: false,
     minimal_response: true,
@@ -74834,11 +74995,11 @@ function domandaDellaStoria(entita3, periodo, adesso) {
 }
 function istante3(valore3) {
   if (typeof valore3 === "number") return valore3 < 1e12 ? valore3 * 1e3 : valore3;
-  const letto = Date.parse(pulito49(valore3));
+  const letto = Date.parse(pulito50(valore3));
   return Number.isFinite(letto) ? letto : null;
 }
 function righeDellaStoria2(risposta, entity2) {
-  const elenco15 = risposta?.[pulito49(entity2)];
+  const elenco15 = risposta?.[pulito50(entity2)];
   if (!Array.isArray(elenco15)) return [];
   return elenco15.map((voce3) => ({
     quando: istante3(voce3?.lc ?? voce3?.lu ?? voce3?.last_changed ?? voce3?.last_updated),
@@ -74862,7 +75023,7 @@ function kwhDallaStoriaDellaPotenza(risposta, entity2, unita3 = "W", inizio, ade
   return wattora / 1e3;
 }
 function kwhPerUnita(unita3) {
-  const scritta = pulito49(unita3).toLowerCase();
+  const scritta = pulito50(unita3).toLowerCase();
   if (scritta === "wh") return 1e-3;
   if (scritta === "mwh") return 1e3;
   return 1;
@@ -78152,8 +78313,8 @@ function nomeDellaLettura2(entity2, nome, unit, tokenElettrodomestico, usate) {
 function nomeInParole(nome, tokenElettrodomestico) {
   const via = new Set(tokenElettrodomestico);
   const tutte = clean(nome).replaceAll(/[_\-.]+/g, " ").split(/\s+/).filter(Boolean);
-  const pulito68 = tutte.filter((pezzo2) => !via.has(pezzo2.toLowerCase())).join(" ").trim();
-  if (pulito68) return pulito68;
+  const pulito69 = tutte.filter((pezzo2) => !via.has(pezzo2.toLowerCase())).join(" ").trim();
+  if (pulito69) return pulito69;
   const senzaDoppioni = tutte.filter(
     (pezzo2, i) => i === 0 || pezzo2.toLowerCase() !== tutte[i - 1].toLowerCase()
   );
@@ -79039,9 +79200,9 @@ if (doc?.readyState === "loading")
 else senzaCadere(installEnergyAnalysisSection);
 
 // src/core/dove-lo-metto.js
-var pulito50 = (valore3) => String(valore3 ?? "").trim();
+var pulito51 = (valore3) => String(valore3 ?? "").trim();
 function dominioDi6(entita3) {
-  const testo4 = pulito50(entita3);
+  const testo4 = pulito51(entita3);
   const punto2 = testo4.indexOf(".");
   return punto2 > 0 ? testo4.slice(0, punto2).toLowerCase() : "";
 }
@@ -79117,7 +79278,7 @@ var LE_SEZIONI = Object.freeze([
     chiavi: ["cd_entita_mie"]
   })
 ]);
-var sezione = (chiave2) => LE_SEZIONI.find((voce3) => voce3.chiave === pulito50(chiave2)) || null;
+var sezione = (chiave2) => LE_SEZIONI.find((voce3) => voce3.chiave === pulito51(chiave2)) || null;
 var vuoleLaStanza = (chiave2) => Boolean(sezione(chiave2)?.vuoleLaStanza);
 var RACCONTA_DI_SE = /* @__PURE__ */ new Set([
   "battery",
@@ -79141,16 +79302,16 @@ var CHI_DECIDE = [
   "binary_sensor",
   "sensor"
 ];
-var classeDi4 = (voce3) => pulito50(voce3?.device_class ?? voce3?.classe ?? voce3?.attributes?.device_class).toLowerCase();
+var classeDi4 = (voce3) => pulito51(voce3?.device_class ?? voce3?.classe ?? voce3?.attributes?.device_class).toLowerCase();
 function puoDecidere(voce3 = {}) {
   const dominio5 = dominioDi6(voce3.entity ?? voce3.entita ?? voce3);
   if (!dominio5 || SERVE_A_GOVERNARLO.has(dominio5)) return false;
-  const categoria = pulito50(voce3.entity_category ?? voce3.categoria).toLowerCase();
+  const categoria = pulito51(voce3.entity_category ?? voce3.categoria).toLowerCase();
   if (categoria === "diagnostic" || categoria === "config") return false;
   return !RACCONTA_DI_SE.has(classeDi4(voce3));
 }
 function entitaPrincipale(entita3 = []) {
-  const voci4 = (Array.isArray(entita3) ? entita3 : [entita3]).map((voce3) => typeof voce3 === "string" ? { entity: voce3 } : voce3 || {}).filter((voce3) => pulito50(voce3.entity ?? voce3.entita));
+  const voci4 = (Array.isArray(entita3) ? entita3 : [entita3]).map((voce3) => typeof voce3 === "string" ? { entity: voce3 } : voce3 || {}).filter((voce3) => pulito51(voce3.entity ?? voce3.entita));
   const candidate = voci4.filter(puoDecidere);
   const scala2 = (voce3) => {
     const posto = CHI_DECIDE.indexOf(dominioDi6(voce3.entity ?? voce3.entita));
@@ -79171,59 +79332,59 @@ function laSezioneGiusta(voce3 = {}) {
   const dominio5 = dominioDi6(quale.entity ?? quale.entita ?? quale);
   const classe3 = classeDi4(quale);
   if (dominio5 === "light")
-    return { chiave: "luci", perche: "lampadina", entity: pulito50(quale.entity) };
+    return { chiave: "luci", perche: "lampadina", entity: pulito51(quale.entity) };
   if (dominio5 === "climate")
-    return { chiave: "clima", perche: "clima", entity: pulito50(quale.entity) };
+    return { chiave: "clima", perche: "clima", entity: pulito51(quale.entity) };
   if (dominio5 === "cover")
     return {
       chiave: "tapparelle",
       perche: TAPPARELLE.has(classe3) ? classe3 : "copertura",
-      entity: pulito50(quale.entity)
+      entity: pulito51(quale.entity)
     };
   if (dominio5 === "lock")
-    return { chiave: "varchi", perche: "serratura", entity: pulito50(quale.entity) };
+    return { chiave: "varchi", perche: "serratura", entity: pulito51(quale.entity) };
   if (dominio5 === "switch" && PRESE.has(classe3))
-    return { chiave: "prese", perche: "presa", entity: pulito50(quale.entity) };
+    return { chiave: "prese", perche: "presa", entity: pulito51(quale.entity) };
   if (dominio5 === "binary_sensor" && VARCHI.has(classe3))
-    return { chiave: "varchi", perche: classe3, entity: pulito50(quale.entity) };
+    return { chiave: "varchi", perche: classe3, entity: pulito51(quale.entity) };
   if (dominio5 === "binary_sensor" && PRESENZA.has(classe3))
-    return { chiave: "presenza", perche: classe3, entity: pulito50(quale.entity) };
+    return { chiave: "presenza", perche: classe3, entity: pulito51(quale.entity) };
   if (dominio5 === "sensor" && DELLA_STANZA.has(classe3))
-    return { chiave: "temp", perche: classe3, entity: pulito50(quale.entity) };
+    return { chiave: "temp", perche: classe3, entity: pulito51(quale.entity) };
   return null;
 }
 function cosaAltroPorta(voce3 = {}, principale = "") {
   const tutte = Array.isArray(voce3?.entities ?? voce3?.entita) ? voce3.entities ?? voce3.entita : [];
-  const scelta3 = pulito50(principale);
-  const voci4 = tutte.map((una) => typeof una === "string" ? { entity: una } : una || {}).filter((una) => pulito50(una.entity) && pulito50(una.entity) !== scelta3);
+  const scelta3 = pulito51(principale);
+  const voci4 = tutte.map((una) => typeof una === "string" ? { entity: una } : una || {}).filter((una) => pulito51(una.entity) && pulito51(una.entity) !== scelta3);
   return {
     quante: voci4.length,
     /* Quelle che potrebbero avere un posto loro: la temperatura di un sensore
      * di presenza, la potenza di una presa. Il resto e' batteria e segnale. */
-    daMettere: voci4.filter((una) => puoDecidere(una) && laSezioneGiusta(una)).map((una) => pulito50(una.entity))
+    daMettere: voci4.filter((una) => puoDecidere(una) && laSezioneGiusta(una)).map((una) => pulito51(una.entity))
   };
 }
 function comeLoScrivo(quale, voce3 = {}) {
   const suo2 = sezione(quale);
   if (!suo2) return [];
-  const entita3 = pulito50(voce3.entity);
-  const nome = pulito50(voce3.nome || voce3.name) || entita3;
-  const stanza2 = pulito50(voce3.stanza);
+  const entita3 = pulito51(voce3.entity);
+  const nome = pulito51(voce3.nome || voce3.name) || entita3;
+  const stanza2 = pulito51(voce3.stanza);
   const righe3 = [
     { campo: "entity", valore: entita3 },
     { campo: "nome", valore: nome }
   ];
   if (suo2.chiave !== "clima" && stanza2) righe3.push({ campo: "stanza", valore: stanza2 });
   if (suo2.chiave === "prese" || suo2.chiave === "entita_mie")
-    righe3.push({ campo: "icona", valore: pulito50(voce3.icona) || suo2.icona });
+    righe3.push({ campo: "icona", valore: pulito51(voce3.icona) || suo2.icona });
   return righe3;
 }
 function laVoceDaScrivere(quale, voce3 = {}, dentro3 = {}, daImportare = []) {
   const suo2 = sezione(quale);
-  const entita3 = pulito50(voce3.entity);
+  const entita3 = pulito51(voce3.entity);
   if (!suo2 || !entita3) return null;
-  const nome = pulito50(voce3.nome || voce3.name) || entita3;
-  const stanza2 = pulito50(voce3.stanza_id || voce3.room_id);
+  const nome = pulito51(voce3.nome || voce3.name) || entita3;
+  const stanza2 = pulito51(voce3.stanza_id || voce3.room_id);
   if (suo2.chiave === "luci") {
     const luci = { ...dentro3.cd_luci || {} };
     luci[entita3] = nome;
@@ -79236,10 +79397,10 @@ function laVoceDaScrivere(quale, voce3 = {}, dentro3 = {}, daImportare = []) {
     const nuova2 = {
       entity: entita3,
       name: nome,
-      icon: pulito50(voce3.icona) || suo2.icona,
+      icon: pulito51(voce3.icona) || suo2.icona,
       room_id: stanza2
     };
-    const dove2 = prese.findIndex((riga3) => pulito50(riga3?.entity) === entita3);
+    const dove2 = prese.findIndex((riga3) => pulito51(riga3?.entity) === entita3);
     if (dove2 >= 0) prese[dove2] = { ...prese[dove2], ...nuova2 };
     else prese.push(nuova2);
     return { cd_prese: prese };
@@ -79247,7 +79408,7 @@ function laVoceDaScrivere(quale, voce3 = {}, dentro3 = {}, daImportare = []) {
   if (suo2.chiave === "clima") {
     const unita3 = Array.isArray(dentro3.cd_clima_units) ? [...dentro3.cd_clima_units] : [];
     const nuova2 = { name: nome, entity: entita3, type: "clima" };
-    const dove2 = unita3.findIndex((riga3) => pulito50(riga3?.entity) === entita3);
+    const dove2 = unita3.findIndex((riga3) => pulito51(riga3?.entity) === entita3);
     if (dove2 >= 0) unita3[dove2] = { ...unita3[dove2], ...nuova2 };
     else unita3.push(nuova2);
     return { cd_clima_units: unita3 };
@@ -79255,7 +79416,7 @@ function laVoceDaScrivere(quale, voce3 = {}, dentro3 = {}, daImportare = []) {
   if (suo2.chiave === "tapparelle") {
     const tapparelle = Array.isArray(dentro3.cd_tapparelle) ? [...dentro3.cd_tapparelle] : [];
     const nuova2 = { entity: entita3, name: nome, room_id: stanza2 };
-    const dove2 = tapparelle.findIndex((riga3) => pulito50(riga3?.entity) === entita3);
+    const dove2 = tapparelle.findIndex((riga3) => pulito51(riga3?.entity) === entita3);
     if (dove2 >= 0) tapparelle[dove2] = { ...tapparelle[dove2], ...nuova2 };
     else tapparelle.push(nuova2);
     return { cd_tapparelle: tapparelle };
@@ -79263,15 +79424,15 @@ function laVoceDaScrivere(quale, voce3 = {}, dentro3 = {}, daImportare = []) {
   if (suo2.chiave === "varchi" || suo2.chiave === "presenza") {
     const cassetto = suo2.chiavi[0];
     const dato = dentro3[cassetto] && typeof dentro3[cassetto] === "object" ? dentro3[cassetto] : {};
-    const riga3 = { entity: entita3, name: nome, icon: pulito50(voce3.icona) || pulito50(voce3.icon) };
+    const riga3 = { entity: entita3, name: nome, icon: pulito51(voce3.icona) || pulito51(voce3.icon) };
     const gia = righeDichiarate(dato);
     if (gia === null) {
       const trovate = (Array.isArray(daImportare) ? daImportare : []).filter(
-        (una) => pulito50(una?.entity) !== entita3
+        (una) => pulito51(una?.entity) !== entita3
       );
       return { [cassetto]: conLeRighe(dato, [...trovate, riga3]) };
     }
-    const dove2 = gia.findIndex((una) => pulito50(una?.entity) === entita3);
+    const dove2 = gia.findIndex((una) => pulito51(una?.entity) === entita3);
     const righe3 = [...gia];
     if (dove2 >= 0) righe3[dove2] = { ...righe3[dove2], ...riga3, icon: riga3.icon || righe3[dove2].icon };
     else righe3.push(riga3);
@@ -79280,18 +79441,18 @@ function laVoceDaScrivere(quale, voce3 = {}, dentro3 = {}, daImportare = []) {
   if (suo2.chiave === "temp") {
     if (!stanza2) return null;
     const stanze4 = Array.isArray(dentro3.cd_stanze) ? [...dentro3.cd_stanze] : [];
-    const dove2 = stanze4.findIndex((una) => pulito50(una?.id) === stanza2);
+    const dove2 = stanze4.findIndex((una) => pulito51(una?.id) === stanza2);
     if (dove2 < 0) return null;
     const sua = { ...stanze4[dove2] };
-    const umidita = pulito50(voce3.classe || voce3.device_class).toLowerCase() === "humidity";
+    const umidita = pulito51(voce3.classe || voce3.device_class).toLowerCase() === "humidity";
     const casella6 = umidita ? "hum" : "temp";
-    if (!pulito50(sua[casella6])) {
+    if (!pulito51(sua[casella6])) {
       sua[casella6] = entita3;
-      if (!umidita && !pulito50(sua.temp_name)) sua.temp_name = nome;
+      if (!umidita && !pulito51(sua.temp_name)) sua.temp_name = nome;
     } else {
       const extra = Array.isArray(sua.metadata?.temperature_entries) ? [...sua.metadata.temperature_entries] : [];
       const gia = extra.findIndex(
-        (una) => pulito50(una?.temp) === entita3 || pulito50(una?.hum) === entita3
+        (una) => pulito51(una?.temp) === entita3 || pulito51(una?.hum) === entita3
       );
       const riga3 = { id: `temperature-extra-${extra.length + 1}`, name: nome, [casella6]: entita3 };
       if (gia >= 0) extra[gia] = { ...extra[gia], ...riga3 };
@@ -79305,14 +79466,14 @@ function laVoceDaScrivere(quale, voce3 = {}, dentro3 = {}, daImportare = []) {
   const nuova = {
     entity: entita3,
     nome,
-    icona: pulito50(voce3.icona) || suo2.icona,
+    icona: pulito51(voce3.icona) || suo2.icona,
     /* In quale pagina compare. Senza, la voce esiste e non si vede da nessuna
      * parte: «home» e' la pagina che tutti guardano, ed e' dove uno si
      * aspetta di trovare quello che ha appena aggiunto. */
-    sezione: pulito50(voce3.dove) || "home",
+    sezione: pulito51(voce3.dove) || "home",
     room_id: stanza2
   };
-  const dove = mie.findIndex((riga3) => pulito50(riga3?.entity) === entita3);
+  const dove = mie.findIndex((riga3) => pulito51(riga3?.entity) === entita3);
   if (dove >= 0) mie[dove] = { ...mie[dove], ...nuova };
   else mie.push(nuova);
   return { cd_entita_mie: mie };
@@ -80780,7 +80941,7 @@ function installTemperatureLayoutSection() {
 
 // src/core/il-grafico-delle-stanze.js
 var CHIAVE_GRAFICO_STANZE = "cd_grafico_stanze";
-var pulito51 = (valore3) => String(valore3 ?? "").trim();
+var pulito52 = (valore3) => String(valore3 ?? "").trim();
 var MISURE5 = Object.freeze([
   Object.freeze({
     chiave: "temperatura",
@@ -80804,7 +80965,7 @@ var MISURE5 = Object.freeze([
   })
 ]);
 function misuraDelGrafico(chiave2) {
-  return MISURE5.find((misura7) => misura7.chiave === pulito51(chiave2)) || MISURE5[0];
+  return MISURE5.find((misura7) => misura7.chiave === pulito52(chiave2)) || MISURE5[0];
 }
 function scriviIlValore(valore3, misura7 = MISURE5[0], virgola = ",") {
   const numero57 = Number(valore3);
@@ -80813,21 +80974,21 @@ function scriviIlValore(valore3, misura7 = MISURE5[0], virgola = ",") {
 }
 function serieSpente(stored) {
   const elenco15 = Array.isArray(stored?.spente) ? stored.spente : [];
-  return new Set(elenco15.map(pulito51).filter(Boolean));
+  return new Set(elenco15.map(pulito52).filter(Boolean));
 }
 function serieAccese(serie2 = [], spente = /* @__PURE__ */ new Set()) {
   const fuori = spente instanceof Set ? spente : serieSpente({ spente });
-  const dentro3 = serie2.filter((voce3) => !fuori.has(pulito51(voce3?.id)));
+  const dentro3 = serie2.filter((voce3) => !fuori.has(pulito52(voce3?.id)));
   return dentro3.length ? dentro3 : serie2;
 }
 function laSiPuoSpegnere(serie2 = [], spente = /* @__PURE__ */ new Set(), id = "") {
   const fuori = spente instanceof Set ? spente : serieSpente({ spente });
-  const quale = pulito51(id);
+  const quale = pulito52(id);
   if (!quale || fuori.has(quale)) return true;
-  return serieAccese(serie2, fuori).some((voce3) => pulito51(voce3?.id) !== quale);
+  return serieAccese(serie2, fuori).some((voce3) => pulito52(voce3?.id) !== quale);
 }
 function conLaSerieGirata(stored, serie2 = [], id = "") {
-  const quale = pulito51(id);
+  const quale = pulito52(id);
   if (!quale) return null;
   const fuori = serieSpente(stored);
   if (fuori.has(quale)) {
@@ -83066,8 +83227,8 @@ function cercaNelConfig(parola, magazzino2 = {}) {
 }
 
 // src/core/le-caselle-del-config.js
-var pulito52 = (valore3) => String(valore3 ?? "").trim();
-var appiattisci2 = (valore3) => pulito52(valore3).normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase();
+var pulito53 = (valore3) => String(valore3 ?? "").trim();
+var appiattisci2 = (valore3) => pulito53(valore3).normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase();
 var SCHEDA_DELLA_FAMIGLIA = Object.freeze({
   "dm.home_": "sez0",
   "dm.ev_": "sez2",
@@ -83107,14 +83268,14 @@ function leCaselleDellEnergia(gruppi2 = ENERGY_GROUPS) {
 function leCaselleDelGuscio(raccolte = []) {
   const fuori = [];
   for (const raccolta2 of Array.isArray(raccolte) ? raccolte : []) {
-    const ref = pulito52(raccolta2?.ref);
-    const nome = pulito52(raccolta2?.nome);
+    const ref = pulito53(raccolta2?.ref);
+    const nome = pulito53(raccolta2?.nome);
     if (!ref || !nome || isRetiredEditorSlot(ref)) continue;
     const scheda8 = Object.entries(SCHEDA_DELLA_FAMIGLIA).find(
       ([inizio]) => ref.startsWith(inizio)
     )?.[1];
     if (!scheda8) continue;
-    fuori.push(casella4(ref, nome, nome, scheda8, "", pulito52(raccolta2?.dove)));
+    fuori.push(casella4(ref, nome, nome, scheda8, "", pulito53(raccolta2?.dove)));
   }
   return fuori;
 }
@@ -85539,7 +85700,7 @@ function installTesseraDallaSchedaSection() {
 }
 
 // src/core/la-foto-per-lauto.js
-var pulito53 = (valore3) => String(valore3 ?? "").trim();
+var pulito54 = (valore3) => String(valore3 ?? "").trim();
 var MISURE_AL_MASSIMO = 3;
 var AZIONI_AL_MASSIMO = 6;
 var DISPOSITIVI_AL_MASSIMO = 6;
@@ -85547,26 +85708,26 @@ var GENERI_IN_AUTO = Object.freeze(["porta", "varco", "luce", "presa"]);
 var SI_VOGLIONO_TUTTI = /* @__PURE__ */ new Set(["porta", "varco"]);
 var IN_CASA2 = "home";
 function eInCasa(entity2, states = {}) {
-  return pulito53(states?.[pulito53(entity2)]?.state).toLowerCase() === IN_CASA2;
+  return pulito54(states?.[pulito54(entity2)]?.state).toLowerCase() === IN_CASA2;
 }
 function leMisure(energia) {
   if (!energia) return [];
   const fuori = [];
   for (const riga3 of Array.isArray(energia.righe) ? energia.righe : []) {
     if (fuori.length >= MISURE_AL_MASSIMO) break;
-    const nome = pulito53(riga3?.nome);
-    const valore3 = pulito53(riga3?.valore);
+    const nome = pulito54(riga3?.nome);
+    const valore3 = pulito54(riga3?.valore);
     if (nome && valore3) fuori.push({ nome, valore: valore3 });
   }
   if (fuori.length) return fuori;
-  const grande = pulito53(energia.valore);
-  return grande ? [{ nome: pulito53(energia.nome) || "Energia", valore: grande }] : [];
+  const grande = pulito54(energia.valore);
+  return grande ? [{ nome: pulito54(energia.nome) || "Energia", valore: grande }] : [];
 }
 function lePersone(persone4, states) {
   const fuori = [];
   for (const persona of Array.isArray(persone4) ? persone4 : []) {
     if (persona?.nascosta === true) continue;
-    const nome = pulito53(persona?.name);
+    const nome = pulito54(persona?.name);
     if (!nome) continue;
     fuori.push({ nome, inCasa: eInCasa(persona?.entity, states) });
   }
@@ -85577,26 +85738,26 @@ var CHIEDE_UNA_VOCE = /* @__PURE__ */ new Set(["select", "input_select"]);
 var NON_ESCE_DALLA_PLANCIA = /* @__PURE__ */ new Set(["builtin", "luci_group"]);
 function laRicettaDellAzione(azione, risolvi3) {
   if (!azione) return null;
-  const tipo = pulito53(azione.type).toLowerCase();
+  const tipo = pulito54(azione.type).toLowerCase();
   if (NON_ESCE_DALLA_PLANCIA.has(tipo)) return null;
-  if (pulito53(azione.confirm)) return null;
+  if (pulito54(azione.confirm)) return null;
   const risolta2 = typeof risolvi3 === "function" ? risolvi3(azione) : null;
-  const entita3 = pulito53(risolta2?.entita);
+  const entita3 = pulito54(risolta2?.entita);
   if (!entita3.includes(".")) return null;
   const dominio5 = tipo === "script" ? "script" : tipo === "scene" ? "scene" : entita3.split(".")[0].toLowerCase();
   if (DIPENDE_DA_ADESSO.has(dominio5)) return null;
   const dati = risolta2?.dati && typeof risolta2.dati === "object" ? { ...risolta2.dati } : {};
-  if (CHIEDE_UNA_VOCE.has(dominio5) && !pulito53(dati.option)) return null;
-  const servizio2 = pulito53(risolta2?.servizio) || (dominio5 === "script" || dominio5 === "scene" ? "turn_on" : "toggle");
+  if (CHIEDE_UNA_VOCE.has(dominio5) && !pulito54(dati.option)) return null;
+  const servizio2 = pulito54(risolta2?.servizio) || (dominio5 === "script" || dominio5 === "scene" ? "turn_on" : "toggle");
   return { dominio: dominio5, servizio: servizio2, entita: entita3, dati };
 }
 var NON_SI_COMMUTA_AL_BUIO = /* @__PURE__ */ new Set(["lock", "media_player"]);
 var SI_COMMUTANO = /* @__PURE__ */ new Set(["light", "switch", "input_boolean", "fan", "cover"]);
 function laRicettaDelDispositivo(entita3, risolvi3) {
-  const scritta = pulito53(entita3);
+  const scritta = pulito54(entita3);
   if (!scritta.includes(".")) return null;
   const risolta2 = typeof risolvi3 === "function" ? risolvi3(scritta) : null;
-  const vera2 = pulito53(risolta2?.entita) || scritta;
+  const vera2 = pulito54(risolta2?.entita) || scritta;
   if (!vera2.includes(".")) return null;
   const dominio5 = vera2.split(".")[0].toLowerCase();
   if (NON_SI_COMMUTA_AL_BUIO.has(dominio5) || !SI_COMMUTANO.has(dominio5)) return null;
@@ -85606,11 +85767,11 @@ function iDispositiviPerLAuto(candidati = [], risolvi3 = null) {
   const perGenere = new Map(GENERI_IN_AUTO.map((genere) => [genere, []]));
   const visti = /* @__PURE__ */ new Set();
   for (const grezzo of Array.isArray(candidati) ? candidati : []) {
-    const genere = pulito53(grezzo?.genere).toLowerCase();
+    const genere = pulito54(grezzo?.genere).toLowerCase();
     const posto = perGenere.get(genere);
     if (!posto) continue;
-    const entity2 = pulito53(grezzo?.entity);
-    const nome = pulito53(grezzo?.nome);
+    const entity2 = pulito54(grezzo?.entity);
+    const nome = pulito54(grezzo?.nome);
     if (!entity2 || !nome || visti.has(entity2)) continue;
     if (grezzo?.comando === false) continue;
     const acceso6 = grezzo?.acceso === true;
@@ -85618,7 +85779,7 @@ function iDispositiviPerLAuto(candidati = [], risolvi3 = null) {
     const ricetta = laRicettaDelDispositivo(entity2, risolvi3);
     if (!ricetta) continue;
     visti.add(entity2);
-    posto.push({ id: entity2, nome, genere, acceso: acceso6, stato: pulito53(grezzo?.stato), ricetta });
+    posto.push({ id: entity2, nome, genere, acceso: acceso6, stato: pulito54(grezzo?.stato), ricetta });
   }
   const fuori = [];
   for (const genere of GENERI_IN_AUTO) {
@@ -85633,13 +85794,13 @@ function iTastiColPosto(azioni2, risolvi3) {
   const fuori = [];
   for (const [posto, azione] of (Array.isArray(azioni2) ? azioni2 : []).entries()) {
     if (fuori.length >= AZIONI_AL_MASSIMO) break;
-    const nome = pulito53(azione?.name);
+    const nome = pulito54(azione?.name);
     if (!nome) continue;
     fuori.push({
       posto,
       id: `${posto}|${nome}`,
       nome,
-      segno: pulito53(azione?.icon),
+      segno: pulito54(azione?.icon),
       ricetta: laRicettaDellAzione(azione, risolvi3)
     });
   }
@@ -85663,7 +85824,7 @@ function leRicetteDeiDispositivi(candidati = [], risolvi3 = null) {
   return iDispositiviPerLAuto(candidati, risolvi3).map((uno) => ({ id: uno.id, ...uno.ricetta }));
 }
 function ilTastoDelComando(id, azioni2 = []) {
-  const quale = pulito53(id);
+  const quale = pulito54(id);
   if (!quale) return null;
   const tasto2 = iTastiColPosto(azioni2).find((uno) => uno.id === quale);
   return tasto2 ? { posto: tasto2.posto, nome: tasto2.nome } : null;
@@ -85680,7 +85841,7 @@ function laFotoPerLAuto({
   adesso = Date.now()
 } = {}) {
   const foto = {
-    casa: pulito53(casa),
+    casa: pulito54(casa),
     quando: Number.isFinite(adesso) ? adesso : Date.now(),
     /* I dispositivi per primi: sono la ragione per cui questa fotografia
      * esiste, e in auto è la prima schermata. */
@@ -85911,28 +86072,28 @@ var QUICK_CLIMATE_HEAT_DEFAULT = Object.freeze({
 });
 var MIN = 5;
 var MAX = 35;
-var pulito54 = (valore3) => String(valore3 ?? "").trim();
+var pulito55 = (valore3) => String(valore3 ?? "").trim();
 function normalizeQuickClimate(stored) {
   const dato = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
-  const mode = pulito54(dato.mode).toLowerCase();
-  const fan = pulito54(dato.fan);
+  const mode = pulito55(dato.mode).toLowerCase();
+  const fan = pulito55(dato.fan);
   const gradi9 = Number(dato.temperature);
   return {
     mode: QUICK_CLIMATE_MODES.includes(mode) ? mode : QUICK_CLIMATE_DEFAULT.mode,
     /* `null` non e' «zero gradi»: e' «la temperatura non la tocco». Si
      * distingue dalla casella vuota, che e' proprio quello che si vuol dire. */
-    temperature: dato.temperature === null || pulito54(dato.temperature) === "" ? null : Number.isFinite(gradi9) ? Math.min(MAX, Math.max(MIN, Math.round(gradi9 * 2) / 2)) : QUICK_CLIMATE_DEFAULT.temperature,
+    temperature: dato.temperature === null || pulito55(dato.temperature) === "" ? null : Number.isFinite(gradi9) ? Math.min(MAX, Math.max(MIN, Math.round(gradi9 * 2) / 2)) : QUICK_CLIMATE_DEFAULT.temperature,
     fan
   };
 }
 function quickClimateForUnit(entity2, perUnita, globale) {
-  const chiave2 = pulito54(entity2);
+  const chiave2 = pulito55(entity2);
   const dato = perUnita && typeof perUnita === "object" && !Array.isArray(perUnita) ? perUnita[chiave2] : null;
   return normalizeQuickClimate(dato && typeof dato === "object" ? dato : globale);
 }
 function quickClimatePresetForZone(preset, zona) {
   const scelta3 = normalizeQuickClimate(preset);
-  if (pulito54(zona).toLowerCase() !== "caldo") return scelta3;
+  if (pulito55(zona).toLowerCase() !== "caldo") return scelta3;
   if (scelta3.mode === "cool" || scelta3.mode === "dry") return { ...scelta3, mode: "heat" };
   return scelta3;
 }
@@ -85948,7 +86109,7 @@ function quickClimateSteps(preset, attributi2 = null, { zona = "" } = {}) {
 }
 var RAFFRESCANO = /* @__PURE__ */ new Set(["cool", "dry", "fan_only"]);
 var gradi8 = (valore3) => {
-  if (valore3 === null || valore3 === void 0 || pulito54(valore3) === "") return null;
+  if (valore3 === null || valore3 === void 0 || pulito55(valore3) === "") return null;
   const dato = Number(valore3);
   return Number.isFinite(dato) ? dato : null;
 };
@@ -85967,7 +86128,7 @@ function temperaturaDelPreset(scelta3, attributi2, zona) {
   return coppiaCon(lettura3, quale, voluto, { scala: [minimo, massimo] });
 }
 function quickClimatePresetOf(entity2, zona, perUnita, globale) {
-  const caldo = pulito54(zona).toLowerCase() === "caldo";
+  const caldo = pulito55(zona).toLowerCase() === "caldo";
   const ripiego = caldo ? QUICK_CLIMATE_HEAT_DEFAULT : normalizeQuickClimate(globale);
   return quickClimatePresetForZone(quickClimateForUnit(entity2, perUnita, ripiego), zona);
 }
@@ -87557,13 +87718,13 @@ function installSecurityDoorsEditorSection() {
 senzaCadere(installSecurityDoorsEditorSection);
 
 // src/core/telecamera-rtsp.js
-var pulito55 = (valore3) => String(valore3 ?? "").trim();
+var pulito56 = (valore3) => String(valore3 ?? "").trim();
 function sembraRtsp(testo4) {
-  return /^rtsps?:\/\//i.test(pulito55(testo4));
+  return /^rtsps?:\/\//i.test(pulito56(testo4));
 }
-var ripulisciNome = (valore3) => pulito55(valore3).replace(/[^A-Za-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "");
+var ripulisciNome = (valore3) => pulito56(valore3).replace(/[^A-Za-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "");
 function analizzaRtsp(testo4) {
-  const grezzo = pulito55(testo4);
+  const grezzo = pulito56(testo4);
   if (!sembraRtsp(grezzo)) return null;
   const schema = grezzo.slice(0, grezzo.indexOf("://")).toLowerCase();
   const resto = grezzo.slice(grezzo.indexOf("://") + 3);
@@ -87591,7 +87752,7 @@ function analizzaRtsp(testo4) {
     porta,
     percorso,
     nome,
-    utente: pulito55(utente),
+    utente: pulito56(utente),
     conCredenziali: Boolean(credenziali),
     mascherato
   };
@@ -87604,10 +87765,10 @@ function rigaGo2rtc(indirizzo, nomeScelto2 = "") {
 }
 function cosaManca(cam = {}) {
   const indirizzo = analizzaRtsp(cam.rtsp);
-  const entita3 = /^camera\.[a-z0-9_]+$/i.test(pulito55(cam.entity));
+  const entita3 = /^camera\.[a-z0-9_]+$/i.test(pulito56(cam.entity));
   if (!indirizzo) return entita3 ? "pronta" : "senza-indirizzo";
   if (entita3) return "pronta";
-  return pulito55(cam.stream) ? "senza-entita-con-flusso" : "senza-entita";
+  return pulito56(cam.stream) ? "senza-entita-con-flusso" : "senza-entita";
 }
 
 // src/sections/telecamera-rtsp-section.js
@@ -94452,16 +94613,16 @@ if (doc?.readyState === "loading") {
 }
 
 // src/core/azione-accesa.js
-var pulito56 = (valore3) => String(valore3 ?? "").trim();
-var minuscolo11 = (valore3) => pulito56(valore3).toLowerCase();
+var pulito57 = (valore3) => String(valore3 ?? "").trim();
+var minuscolo11 = (valore3) => pulito57(valore3).toLowerCase();
 var ACCESI4 = /* @__PURE__ */ new Set(["on", "open", "opening", "playing", "cleaning", "heat", "cool", "auto"]);
 var MUTI14 = /* @__PURE__ */ new Set(["", "unavailable", "unknown", "none"]);
 var SENZA_STATO = /* @__PURE__ */ new Set(["scene", "script_run", "service", "url", "navigate"]);
 var E_UN_MENU2 = /^(select|input_select)\./;
 function entitaDellAzione(azione) {
   if (!azione || typeof azione !== "object") return "";
-  const entity2 = pulito56(azione.entity || azione.entity_id);
-  if (pulito56(azione.option) && E_UN_MENU2.test(entity2)) return entity2;
+  const entity2 = pulito57(azione.entity || azione.entity_id);
+  if (pulito57(azione.option) && E_UN_MENU2.test(entity2)) return entity2;
   const tipo = minuscolo11(azione.type);
   if (SENZA_STATO.has(tipo)) return "";
   return entity2;
@@ -94469,7 +94630,7 @@ function entitaDellAzione(azione) {
 function azioneAccesa(azione, states = {}, risolvi3 = null) {
   if (!azione || typeof azione !== "object") return null;
   if (minuscolo11(azione.type) === "luci_group") {
-    const luci = Array.isArray(azione.lights) ? azione.lights.map(pulito56).filter(Boolean) : [];
+    const luci = Array.isArray(azione.lights) ? azione.lights.map(pulito57).filter(Boolean) : [];
     if (!luci.length) return null;
     let vive = 0;
     for (const luce2 of luci) {
@@ -94491,7 +94652,7 @@ function azioneAccesa(azione, states = {}, risolvi3 = null) {
 function risolta(entity2, risolvi3) {
   if (typeof risolvi3 !== "function") return entity2;
   try {
-    return pulito56(risolvi3(entity2)) || entity2;
+    return pulito57(risolvi3(entity2)) || entity2;
   } catch (_errore) {
     return entity2;
   }
@@ -94703,12 +94864,12 @@ function installAzioniRapideVassoio() {
 }
 
 // src/core/gruppi-delle-azioni.js
-var pulito57 = (valore3) => String(valore3 ?? "").replace(/\s+/g, " ").trim();
+var pulito58 = (valore3) => String(valore3 ?? "").replace(/\s+/g, " ").trim();
 var LUNGHEZZA_DEL_GRUPPO = 24;
 function gruppoDellAzione(azione) {
-  return pulito57(azione?.gruppo).slice(0, LUNGHEZZA_DEL_GRUPPO);
+  return pulito58(azione?.gruppo).slice(0, LUNGHEZZA_DEL_GRUPPO);
 }
-var chiaveDelGruppo = (nome) => pulito57(nome).toLocaleLowerCase("it");
+var chiaveDelGruppo = (nome) => pulito58(nome).toLocaleLowerCase("it");
 function gruppiDelleAzioni(azioni2 = [], acceso6 = () => null) {
   const elenco15 = Array.isArray(azioni2) ? azioni2 : [];
   const perChiave = /* @__PURE__ */ new Map();
@@ -94741,7 +94902,7 @@ function nomiDeiGruppi(azioni2 = []) {
 }
 function conIlGruppo2(azione, nome) {
   const prossima = { ...azione && typeof azione === "object" ? azione : {} };
-  const scritto3 = pulito57(nome).slice(0, LUNGHEZZA_DEL_GRUPPO);
+  const scritto3 = pulito58(nome).slice(0, LUNGHEZZA_DEL_GRUPPO);
   if (scritto3) prossima.gruppo = scritto3;
   else delete prossima.gruppo;
   return prossima;
@@ -96628,7 +96789,7 @@ function installModoChiosco() {
 senzaCadere(installModoChiosco);
 
 // src/core/la-pagina-meteo.js
-var pulito58 = (valore3) => String(valore3 ?? "").trim();
+var pulito59 = (valore3) => String(valore3 ?? "").trim();
 var numero47 = (valore3) => {
   if (valore3 === "" || valore3 == null) return null;
   const n = Number(String(valore3).replace(",", "."));
@@ -96655,19 +96816,19 @@ var DELLA_PAGINA = MISURE_DELLA_STAZIONE.filter((misura7) => misura7.pagina).map
   (misura7) => misura7.pagina
 );
 var entitaScritta2 = (valore3) => {
-  const testo4 = pulito58(valore3);
+  const testo4 = pulito59(valore3);
   return testo4.includes(".") ? testo4 : "";
 };
 function normalizzaMeteo(salvato2) {
   const dato = salvato2 && typeof salvato2 === "object" && !Array.isArray(salvato2) ? salvato2 : {};
   const fuori = {};
   for (const chiave2 of DELLA_PAGINA) fuori[chiave2] = entitaScritta2(dato[chiave2]);
-  const scritto3 = Array.isArray(dato.ordine) ? dato.ordine.map(pulito58) : [];
+  const scritto3 = Array.isArray(dato.ordine) ? dato.ordine.map(pulito59) : [];
   const ordine = [];
   for (const blocco3 of [...scritto3, ...BLOCCHI])
     if (BLOCCHI.includes(blocco3) && !ordine.includes(blocco3)) ordine.push(blocco3);
   fuori.ordine = ordine;
-  fuori.spenti = (Array.isArray(dato.spenti) ? dato.spenti.map(pulito58) : []).filter(
+  fuori.spenti = (Array.isArray(dato.spenti) ? dato.spenti.map(pulito59) : []).filter(
     (blocco3, indice, tutti) => BLOCCHI.includes(blocco3) && tutti.indexOf(blocco3) === indice
   );
   return fuori;
@@ -96700,7 +96861,7 @@ var ventoUnita = /^(km\/h|m\/s|mph|kn|kt|knots|ft\/s|bft)$/i;
 var pressioneUnita = /^(hpa|mbar|mb|kpa|pa|inhg|mmhg|psi)$/i;
 var NON_ARIA = /(soil|terra|suolo|water|acqua|pool|piscina|cpu|battery|batteria|inverter|boiler|frigo|fridge|freezer|probe|sonda|dew|rugiada|chill|heat_?index|indice)/;
 function testo2(entity2, stato3) {
-  return `${entity2} ${pulito58(stato3?.attributes?.friendly_name)}`.toLowerCase();
+  return `${entity2} ${pulito59(stato3?.attributes?.friendly_name)}`.toLowerCase();
 }
 var RICONOSCITORI = Object.freeze({
   temperatura: {
@@ -96755,17 +96916,17 @@ var RICONOSCITORI = Object.freeze({
   }
 });
 function famigliaDi2(entity2) {
-  return pulito58(entity2).split(".")[1]?.split("_")[0] || "";
+  return pulito59(entity2).split(".")[1]?.split("_")[0] || "";
 }
 function trovaLaStazione(states, scelte5 = {}) {
   const sensori = Object.entries(states && typeof states === "object" ? states : {}).filter(([entity2]) => entity2.startsWith("sensor.")).map(([entity2, stato3]) => ({
     entity: entity2,
-    classe: pulito58(stato3?.attributes?.device_class).toLowerCase(),
-    unita: pulito58(stato3?.attributes?.unit_of_measurement),
+    classe: pulito59(stato3?.attributes?.device_class).toLowerCase(),
+    unita: pulito59(stato3?.attributes?.unit_of_measurement),
     nome: testo2(entity2, stato3)
   }));
   const prese = new Set(
-    Object.values(scelte5 || {}).map(pulito58).filter(Boolean)
+    Object.values(scelte5 || {}).map(pulito59).filter(Boolean)
   );
   const trovate = {};
   const migliore = (chiave2, ammessa2) => {
@@ -96787,7 +96948,7 @@ function trovaLaStazione(states, scelte5 = {}) {
     return meglio > 0 ? vincente : null;
   };
   const prendi = (chiave2, ammessa2) => {
-    if (pulito58(scelte5?.[chiave2])) return;
+    if (pulito59(scelte5?.[chiave2])) return;
     const vincente = migliore(chiave2, ammessa2);
     if (!vincente) return;
     trovate[chiave2] = vincente.entity;
@@ -96809,17 +96970,17 @@ function trovaLaStazione(states, scelte5 = {}) {
 function letturaDi3(stato3) {
   const valore3 = numero47(stato3?.state);
   if (valore3 === null) return null;
-  const quando4 = Date.parse(pulito58(stato3?.last_updated || stato3?.last_changed));
+  const quando4 = Date.parse(pulito59(stato3?.last_updated || stato3?.last_changed));
   return {
     valore: valore3,
-    unita: pulito58(stato3?.attributes?.unit_of_measurement),
+    unita: pulito59(stato3?.attributes?.unit_of_measurement),
     quando: Number.isFinite(quando4) ? quando4 : null
   };
 }
 function inEttopascal(valore3, unita3 = "hPa") {
   const n = numero47(valore3);
   if (n === null) return null;
-  const misura7 = pulito58(unita3).toLowerCase();
+  const misura7 = pulito59(unita3).toLowerCase();
   if (misura7 === "kpa") return n * 10;
   if (misura7 === "pa") return n / 100;
   if (misura7 === "inhg") return n * 33.8639;
@@ -96830,7 +96991,7 @@ function inEttopascal(valore3, unita3 = "hPa") {
 function inCelsius(valore3, unita3 = "°C") {
   const n = numero47(valore3);
   if (n === null) return null;
-  return /f$/i.test(pulito58(unita3)) ? (n - 32) * 5 / 9 : n;
+  return /f$/i.test(pulito59(unita3)) ? (n - 32) * 5 / 9 : n;
 }
 function puntoDiRugiada(temperatura, umidita, unita3 = "°C") {
   const gradi9 = inCelsius(temperatura, unita3);
@@ -96840,7 +97001,7 @@ function puntoDiRugiada(temperatura, umidita, unita3 = "°C") {
   const b2 = 243.12;
   const gamma = Math.log(relativa / 100) + a * gradi9 / (b2 + gradi9);
   const rugiada = b2 * gamma / (a - gamma);
-  return /f$/i.test(pulito58(unita3)) ? rugiada * 9 / 5 + 32 : rugiada;
+  return /f$/i.test(pulito59(unita3)) ? rugiada * 9 / 5 + 32 : rugiada;
 }
 var PRESSIONE_STABILE = 1;
 var PRESSIONE_FORTE = 3;
@@ -96867,7 +97028,7 @@ function ordinata(serie2) {
 function istante4(riga3) {
   const grezzo = riga3?.lu ?? riga3?.lc ?? riga3?.last_updated ?? riga3?.last_changed;
   if (typeof grezzo === "number") return grezzo < 1e12 ? grezzo * 1e3 : grezzo;
-  const letto = Date.parse(pulito58(grezzo));
+  const letto = Date.parse(pulito59(grezzo));
   return Number.isFinite(letto) ? letto : NaN;
 }
 function domandaDelleUltimeOre(entita3, adesso, ore = 24) {
@@ -96875,7 +97036,7 @@ function domandaDelleUltimeOre(entita3, adesso, ore = 24) {
     type: "history/history_during_period",
     start_time: new Date(adesso - ore * H5).toISOString(),
     end_time: new Date(adesso).toISOString(),
-    entity_ids: [...new Set((Array.isArray(entita3) ? entita3 : []).map(pulito58).filter(Boolean))],
+    entity_ids: [...new Set((Array.isArray(entita3) ? entita3 : []).map(pulito59).filter(Boolean))],
     include_start_time_state: true,
     significant_changes_only: false,
     minimal_response: true,
@@ -96950,7 +97111,7 @@ function fasciaUV(indice) {
 function spicchioDelVento(direzione) {
   const n = numero47(direzione);
   if (n !== null) return (Math.round(n / 45) % 8 + 8) % 8;
-  const sigla = pulito58(direzione).toUpperCase();
+  const sigla = pulito59(direzione).toUpperCase();
   const sigle2 = [["N"], ["NE"], ["E"], ["SE"], ["S"], ["SW", "SO"], ["W", "O"], ["NW", "NO"]];
   const indice = sigle2.findIndex((voci4) => voci4.includes(sigla));
   return indice < 0 ? null : indice;
@@ -96964,11 +97125,11 @@ function gradiDelVento(direzione) {
 var BAGNATE = /* @__PURE__ */ new Set(["rainy", "pouring", "lightning-rainy", "snowy-rainy", "hail", "snowy"]);
 var PROBABILE = 50;
 function voceDellePrevisioni(previsione, unita3) {
-  const quando4 = Date.parse(pulito58(previsione?.datetime));
+  const quando4 = Date.parse(pulito59(previsione?.datetime));
   if (!Number.isFinite(quando4)) return null;
   return {
     quando: quando4,
-    condizione: pulito58(previsione?.condition),
+    condizione: pulito59(previsione?.condition),
     temperatura: numero47(previsione?.temperature),
     bassa: numero47(previsione?.templow),
     probabilita: numero47(previsione?.precipitation_probability),
@@ -97052,7 +97213,7 @@ function misureDiAdesso({ stazione = {}, meteo: meteo3 = null } = {}) {
     if (valore3 === null) continue;
     fuori[chiave2] = {
       valore: valore3,
-      unita: pulito58(unitaDi3 ? attributi2[unitaDi3] : "") || unitaDiSerie,
+      unita: pulito59(unitaDi3 ? attributi2[unitaDi3] : "") || unitaDiSerie,
       fonte: "meteo"
     };
   }
@@ -97100,9 +97261,9 @@ function vistaDelMeteoDa({
   ore = 24,
   giorni = 7
 } = {}) {
-  if (!pulito58(entita3) && !meteo3) return null;
+  if (!pulito59(entita3) && !meteo3) return null;
   const letture2 = stazione && typeof stazione === "object" ? stazione : {};
-  const unita3 = pulito58(meteo3?.attributes?.precipitation_unit) || "mm";
+  const unita3 = pulito59(meteo3?.attributes?.precipitation_unit) || "mm";
   const misure = misureDiAdesso({ stazione: letture2, meteo: meteo3 });
   const fila2 = prossimeOre(orarie, { adesso, ore, unita: unita3 }).filter(
     (voce3) => Number.isFinite(voce3.temperatura)
@@ -97111,7 +97272,7 @@ function vistaDelMeteoDa({
   const oggi = elencoDeiGiorni.find((voce3) => voce3.oggi);
   return {
     adesso,
-    entita: pulito58(entita3),
+    entita: pulito59(entita3),
     meteo: meteo3,
     stazione: letture2,
     tessere: tessereDellaStazione(letture2),
@@ -97324,12 +97485,12 @@ var OSPITI_RITIRATI = [
 function indirizzoRitirato(modello2) {
   const testo4 = stringa(modello2);
   if (!testo4) return false;
-  const pulito68 = testo4.replaceAll(/\{-?[a-z]\}/gi, "1");
+  const pulito69 = testo4.replaceAll(/\{-?[a-z]\}/gi, "1");
   let ospite3 = "";
   try {
-    ospite3 = new URL(pulito68).hostname;
+    ospite3 = new URL(pulito69).hostname;
   } catch (_errore) {
-    const trovato = /^[a-z]+:\/\/([^/?#]+)/i.exec(pulito68);
+    const trovato = /^[a-z]+:\/\/([^/?#]+)/i.exec(pulito69);
     ospite3 = trovato ? trovato[1] : "";
   }
   if (!ospite3) return false;
@@ -98800,8 +98961,8 @@ function nomiPuliti(elenco15) {
   const fuori = [];
   for (const uno of elenco15) {
     if (typeof uno !== "string") continue;
-    const pulito68 = uno.trim().slice(0, 120);
-    if (pulito68 && !fuori.includes(pulito68)) fuori.push(pulito68);
+    const pulito69 = uno.trim().slice(0, 120);
+    if (pulito69 && !fuori.includes(pulito69)) fuori.push(pulito69);
     if (fuori.length >= AL_MASSIMO2) break;
   }
   return fuori;
@@ -100184,13 +100345,13 @@ function installMeteo() {
 senzaCadere(installMeteo);
 
 // src/core/il-campanello-a-muro.js
-var pulito59 = (valore3) => String(valore3 ?? "").trim();
+var pulito60 = (valore3) => String(valore3 ?? "").trim();
 var SUONI_DEL_CAMPANELLO = Object.freeze(["dindon", "classico", "ding", "nessuno"]);
 var SUONO_DI_SERIE = "dindon";
 var VOLUME_DI_SERIE = 70;
 function opzioniDelCampanello(ingresso = {}) {
   const dentro3 = ingresso && typeof ingresso === "object" ? ingresso : {};
-  const suono = pulito59(dentro3.suono);
+  const suono = pulito60(dentro3.suono);
   const volume = Number(dentro3.volume);
   const vero3 = (valore3, ripiego) => typeof valore3 === "boolean" ? valore3 : ripiego;
   return {
@@ -100203,15 +100364,15 @@ function opzioniDelCampanello(ingresso = {}) {
 }
 function schermoSempreAcceso(muro) {
   return (Array.isArray(muro?.pagine) ? muro.pagine : []).some(
-    (pagina2) => pagina2?.modello === "ingresso" && pulito59(pagina2.ingresso?.campanello) && opzioniDelCampanello(pagina2.ingresso).tieniAcceso
+    (pagina2) => pagina2?.modello === "ingresso" && pulito60(pagina2.ingresso?.campanello) && opzioniDelCampanello(pagina2.ingresso).tieniAcceso
   );
 }
 var CAMPANELLI_A_ORA = Object.freeze(["event", "button", "input_button"]);
 var CAMPANELLI_ACCESI = Object.freeze(["binary_sensor", "input_boolean", "switch"]);
 var DOMINI_DEL_CAMPANELLO = Object.freeze([...CAMPANELLI_A_ORA, ...CAMPANELLI_ACCESI]);
-var dominioDi7 = (id) => pulito59(id).split(".")[0];
+var dominioDi7 = (id) => pulito60(id).split(".")[0];
 var senzaValore = (valore3) => {
-  const v = pulito59(valore3);
+  const v = pulito60(valore3);
   return !v || v === "unknown" || v === "unavailable";
 };
 function tipoDelCampanello(id) {
@@ -100222,8 +100383,8 @@ function tipoDelCampanello(id) {
 }
 function campanelloSuona(id, prima, ora5) {
   if (prima === void 0 || senzaValore(ora5)) return false;
-  const adesso = pulito59(ora5);
-  if (adesso === pulito59(prima)) return false;
+  const adesso = pulito60(ora5);
+  if (adesso === pulito60(prima)) return false;
   const tipo = tipoDelCampanello(id);
   if (tipo === "ora") return true;
   if (tipo === "acceso") return adesso === "on";
@@ -100231,7 +100392,7 @@ function campanelloSuona(id, prima, ora5) {
 }
 function ricordoDelCampanello(prima, ora5) {
   if (senzaValore(ora5)) return prima === void 0 ? "" : prima;
-  return pulito59(ora5);
+  return pulito60(ora5);
 }
 var NOTE_DEI_SUONI = Object.freeze({
   dindon: Object.freeze({
@@ -100258,7 +100419,7 @@ var NOTE_DEI_SUONI = Object.freeze({
   nessuno: Object.freeze({ giro: 0, note: Object.freeze([]) })
 });
 function noteDelSuono(suono) {
-  return NOTE_DEI_SUONI[pulito59(suono)] || NOTE_DEI_SUONI[SUONO_DI_SERIE];
+  return NOTE_DEI_SUONI[pulito60(suono)] || NOTE_DEI_SUONI[SUONO_DI_SERIE];
 }
 var SQUILLO_MS = 3e4;
 function faseDelloSquillo(squillo, adesso) {
@@ -100288,9 +100449,9 @@ function storiaPulita(salvata, massimo = SQUILLI_RICORDATI) {
   const voci4 = Array.isArray(salvata) ? salvata : [];
   return voci4.map((voce3) => ({
     quando: Number(voce3?.quando),
-    entita: pulito59(voce3?.entita),
+    entita: pulito60(voce3?.entita),
     pagina: Number.isInteger(voce3?.pagina) ? voce3.pagina : 0,
-    immagine: pulito59(voce3?.immagine).length <= FOTO_MASSIMA ? pulito59(voce3?.immagine) : ""
+    immagine: pulito60(voce3?.immagine).length <= FOTO_MASSIMA ? pulito60(voce3?.immagine) : ""
   })).filter((voce3) => Number.isFinite(voce3.quando) && voce3.quando > 0).sort((a, b2) => b2.quando - a.quando).slice(0, massimo);
 }
 function conLoSquillo(storia, squillo, massimo = SQUILLI_RICORDATI) {
@@ -100304,7 +100465,7 @@ function conLoSquillo(storia, squillo, massimo = SQUILLI_RICORDATI) {
 }
 function conLaFoto(storia, quando4, immagine2) {
   return storiaPulita(storia).map(
-    (voce3) => voce3.quando === Number(quando4) ? { ...voce3, immagine: pulito59(immagine2) } : voce3
+    (voce3) => voce3.quando === Number(quando4) ? { ...voce3, immagine: pulito60(immagine2) } : voce3
   );
 }
 
@@ -100427,8 +100588,8 @@ var ora3 = (valore3, ripiego) => {
 var scelta = (valore3, ammesse, ripiego) => ammesse.includes(valore3) ? valore3 : ripiego;
 var vero2 = (valore3, ripiego) => typeof valore3 === "boolean" ? valore3 : ripiego;
 var profilo2 = (valore3) => {
-  const pulito68 = testo3(valore3, 64).toLowerCase();
-  return /^[a-z0-9][a-z0-9-]{0,63}$/.test(pulito68) ? pulito68 : PROFILO_DI_ORIGINE;
+  const pulito69 = testo3(valore3, 64).toLowerCase();
+  return /^[a-z0-9][a-z0-9-]{0,63}$/.test(pulito69) ? pulito69 : PROFILO_DI_ORIGINE;
 };
 function pinPulito(valore3) {
   const cifre3 = String(valore3 ?? "").replace(/\D/g, "");
@@ -108381,8 +108542,8 @@ function metti3(via, valore3) {
             entitaOff: prima.entitaOff || "",
             stato: prima.stato || ""
           };
-          const pulito68 = comandoPulito(bozzaDelPosto);
-          if (pulito68) posti[k] = pulito68;
+          const pulito69 = comandoPulito(bozzaDelPosto);
+          if (pulito69) posti[k] = pulito69;
           else {
             inCorso2[chiave2] = bozzaDelPosto;
             posti[k] = { tipo: "vuoto" };
@@ -108396,10 +108557,10 @@ function metti3(via, valore3) {
       }
       if (lista7 === "comandi" && campo5 !== "svuota" && (inCorso2[chiave2] || ora5.tipo === "duetasti")) {
         const scrittoQui = { ...inCorso2[chiave2] || ora5, tipo: "duetasti", [campo5]: valore3 };
-        const pulito68 = comandoPulito(scrittoQui);
-        if (pulito68) {
+        const pulito69 = comandoPulito(scrittoQui);
+        if (pulito69) {
           delete inCorso2[chiave2];
-          posti[k] = pulito68;
+          posti[k] = pulito69;
         } else {
           inCorso2[chiave2] = scrittoQui;
           posti[k] = { tipo: "vuoto" };
@@ -109015,27 +109176,27 @@ function installTestaFissa() {
 senzaCadere(installTestaFissa);
 
 // src/core/ricarica-a-soglie.js
-var pulito60 = (valore3) => String(valore3 ?? "").trim();
+var pulito61 = (valore3) => String(valore3 ?? "").trim();
 var CHIAVE_RICARICA = "cd_batterie_ricarica";
 var DOMINI_SOGLIA = Object.freeze(["number", "input_number"]);
 function eSogliaDiRicarica(valore3) {
-  const testo4 = pulito60(valore3).toLowerCase();
+  const testo4 = pulito61(valore3).toLowerCase();
   const dominio5 = testo4.split(".")[0];
   return /^[a-z0-9_]+\.[a-z0-9_]+$/.test(testo4) && DOMINI_SOGLIA.includes(dominio5);
 }
 function eBatteriaDiRicarica(valore3) {
-  return /^(sensor|number|input_number)\.[a-z0-9_]+$/.test(pulito60(valore3).toLowerCase());
+  return /^(sensor|number|input_number)\.[a-z0-9_]+$/.test(pulito61(valore3).toLowerCase());
 }
 function normalizzata3(voce3, indice) {
-  const battery = pulito60(voce3?.battery || voce3?.batteria || voce3?.entity);
+  const battery = pulito61(voce3?.battery || voce3?.batteria || voce3?.entity);
   return {
-    id: pulito60(voce3?.id) || `ricarica-${indice + 1}`,
+    id: pulito61(voce3?.id) || `ricarica-${indice + 1}`,
     battery,
     /* Le due soglie sono facoltative una per una: c'e' chi ha solo il limite
      * alto — quello che serve davvero a non tenere una batteria al cento per
      * cento tutto il giorno — e nessun limite basso. */
-    bassa: pulito60(voce3?.bassa || voce3?.low),
-    alta: pulito60(voce3?.alta || voce3?.high)
+    bassa: pulito61(voce3?.bassa || voce3?.low),
+    alta: pulito61(voce3?.alta || voce3?.high)
   };
 }
 function normalizzaRicariche(grezzo) {
@@ -109043,10 +109204,10 @@ function normalizzaRicariche(grezzo) {
   return voci4.map((voce3, indice) => normalizzata3(voce3, indice)).filter((riga3) => eBatteriaDiRicarica(riga3.battery)).filter((riga3) => eSogliaDiRicarica(riga3.bassa) || eSogliaDiRicarica(riga3.alta));
 }
 function ricaricaDellaBatteria(entity2, righe3 = []) {
-  const chiave2 = pulito60(entity2).toLowerCase();
+  const chiave2 = pulito61(entity2).toLowerCase();
   if (!chiave2) return null;
   return (Array.isArray(righe3) ? righe3 : []).find(
-    (riga3) => pulito60(riga3?.battery).toLowerCase() === chiave2
+    (riga3) => pulito61(riga3?.battery).toLowerCase() === chiave2
   ) || null;
 }
 var numero50 = (valore3) => {
@@ -109062,20 +109223,20 @@ function letturaDellaSoglia(entity2, stato3) {
   const dichiarato = numero50(attributi2.max);
   const passo = numero50(attributi2.step);
   return Object.freeze({
-    entity: pulito60(entity2),
+    entity: pulito61(entity2),
     valore: valore3,
     min,
     max: dichiarato !== null && dichiarato > min ? dichiarato : Math.max(min + 1, 100),
     passo: passo !== null && passo > 0 ? passo : 1,
-    unita: pulito60(attributi2.unit_of_measurement) || "%"
+    unita: pulito61(attributi2.unit_of_measurement) || "%"
   });
 }
 function comandoDellaSoglia(entity2, valore3) {
   if (!eSogliaDiRicarica(entity2)) return null;
   const n = numero50(valore3);
   if (n === null) return null;
-  const domain = pulito60(entity2).toLowerCase().split(".")[0];
-  return { domain, service: "set_value", data: { entity_id: pulito60(entity2), value: n } };
+  const domain = pulito61(entity2).toLowerCase().split(".")[0];
+  return { domain, service: "set_value", data: { entity_id: pulito61(entity2), value: n } };
 }
 function sogliePronte(riga3, states = {}) {
   if (!riga3) return [];
@@ -109083,7 +109244,7 @@ function sogliePronte(riga3, states = {}) {
     ["bassa", riga3.bassa],
     ["alta", riga3.alta]
   ].map(([quale, entity2]) => {
-    const lettura3 = letturaDellaSoglia(entity2, states?.[pulito60(entity2)]);
+    const lettura3 = letturaDellaSoglia(entity2, states?.[pulito61(entity2)]);
     return lettura3 ? { quale, ...lettura3 } : null;
   }).filter(Boolean);
 }
@@ -112238,7 +112399,7 @@ function bozzaNuova2(tipo = "una", adesso = Date.now()) {
 }
 
 // src/core/automazioni.js
-var pulito61 = (valore3) => String(valore3 ?? "").trim();
+var pulito62 = (valore3) => String(valore3 ?? "").trim();
 var MINUTO7 = 6e4;
 var ORA7 = 60 * MINUTO7;
 var GIORNO3 = 24 * ORA7;
@@ -112368,7 +112529,7 @@ var SERVIZI_CHIUSI = /* @__PURE__ */ new Set([
 ]);
 var SERVIZIO_BUONO = /^([a-z_][a-z0-9_]*)\.([a-z_][a-z0-9_]*)$/;
 function servizioPermesso(scritto3) {
-  const m = SERVIZIO_BUONO.exec(pulito61(scritto3).toLowerCase());
+  const m = SERVIZIO_BUONO.exec(pulito62(scritto3).toLowerCase());
   if (!m) return false;
   if (DOMINI_CHIUSI.has(m[1]) || SERVIZI_CHIUSI.has(`${m[1]}.${m[2]}`)) return false;
   if (m[2] === "reload" || m[2].startsWith("reload_")) return false;
@@ -112376,15 +112537,15 @@ function servizioPermesso(scritto3) {
 }
 var ENTITA_BUONA = /^[a-z_]+\.[a-z0-9_]+$/;
 var ORA_BUONA2 = /^([01]\d|2[0-3]):[0-5]\d$/;
-var dominioDi9 = (id) => pulito61(id).split(".")[0];
+var dominioDi9 = (id) => pulito62(id).split(".")[0];
 function entitaDi4(valore3, domini2 = null) {
-  const id = pulito61(valore3).toLowerCase().slice(0, 255);
+  const id = pulito62(valore3).toLowerCase().slice(0, 255);
   if (!ENTITA_BUONA.test(id)) return "";
   if (domini2 && !domini2.includes(dominioDi9(id))) return "";
   return id;
 }
 function elencoDiEntita3(valore3, domini2, quante3 = ENTITA_AL_MASSIMO) {
-  const elenco15 = Array.isArray(valore3) ? valore3 : pulito61(valore3) ? [valore3] : [];
+  const elenco15 = Array.isArray(valore3) ? valore3 : pulito62(valore3) ? [valore3] : [];
   return [...new Set(elenco15.map((v) => entitaDi4(v, domini2)).filter(Boolean))].slice(0, quante3);
 }
 function numero52(valore3) {
@@ -112398,7 +112559,7 @@ function intero(valore3, min, max, ripiego) {
   return n === null ? ripiego : fra(Math.round(n), min, max);
 }
 function ora4(valore3, ripiego = "") {
-  const testo4 = pulito61(valore3);
+  const testo4 = pulito62(valore3);
   if (ORA_BUONA2.test(testo4)) return testo4;
   const m = /^(\d{1,2})[:.](\d{2})$/.exec(testo4);
   if (m && Number(m[1]) < 24 && Number(m[2]) < 60) return `${m[1].padStart(2, "0")}:${m[2]}`;
@@ -112503,8 +112664,8 @@ function quandoPulito(dato) {
     minuti: intero(d.minuti, 1, 60, 3)
   };
 }
-var testoBreve = (v) => pulito61(v).replace(/[\r\n]+/g, " ").slice(0, 80);
-var nomeDi11 = (v) => pulito61(v).toLowerCase().replace(/[^a-z0-9_.]/g, "").slice(0, 60);
+var testoBreve = (v) => pulito62(v).replace(/[\r\n]+/g, " ").slice(0, 80);
+var nomeDi11 = (v) => pulito62(v).toLowerCase().replace(/[^a-z0-9_.]/g, "").slice(0, 60);
 function filtroPulito(v) {
   const fuori = {};
   const coppie = v && typeof v === "object" && !Array.isArray(v) ? Object.entries(v) : [];
@@ -112571,11 +112732,11 @@ function azionePulita(dato) {
   const tipo = d.tipo;
   if (tipo === "aspetta") return { tipo, minuti: intero(d.minuti, 1, ASPETTA_AL_MASSIMO, 2) };
   if (tipo === "notifica") {
-    const testo4 = pulito61(d.testo).slice(0, 160);
+    const testo4 = pulito62(d.testo).slice(0, 160);
     return testo4 ? { tipo, testo: testo4 } : null;
   }
   if (tipo === "azione") {
-    const nome = pulito61(d.nome).slice(0, 80);
+    const nome = pulito62(d.nome).slice(0, 80);
     return nome ? { tipo, nome } : null;
   }
   if (tipo === "accendi") {
@@ -112622,7 +112783,7 @@ function azionePulita(dato) {
       massimo: intero(d.massimo, 1, ASPETTA_AL_MASSIMO, 10)
     } : null;
   }
-  const servizio2 = pulito61(d.servizio).toLowerCase();
+  const servizio2 = pulito62(d.servizio).toLowerCase();
   if (!servizioPermesso(servizio2)) return null;
   return { tipo, servizio: servizio2, entita: elencoDiEntita3(d.entita), dati: datiPuliti(d.dati) };
 }
@@ -112682,11 +112843,11 @@ var ID_BUONO = /^[a-z0-9_-]{1,64}$/i;
 function automazionePulita(dato) {
   const d = dato && typeof dato === "object" && !Array.isArray(dato) ? dato : null;
   if (!d) return null;
-  const id = ID_BUONO.test(pulito61(d.id)) ? pulito61(d.id) : "";
+  const id = ID_BUONO.test(pulito62(d.id)) ? pulito62(d.id) : "";
   if (!id) return null;
-  const nome = pulito61(d.nome).slice(0, 60);
+  const nome = pulito62(d.nome).slice(0, 60);
   const attiva2 = d.attiva !== false;
-  const data = /^\d{4}-\d{2}-\d{2}$/.test(pulito61(d.scadenza?.data)) ? pulito61(d.scadenza.data) : "";
+  const data = /^\d{4}-\d{2}-\d{2}$/.test(pulito62(d.scadenza?.data)) ? pulito62(d.scadenza.data) : "";
   const scadenza = data ? { data, stato: d.scadenza?.stato === "attiva" ? "attiva" : "spenta" } : null;
   const extra = scadenza ? { scadenza } : {};
   if (d.tipo === "crono")
@@ -112841,7 +113002,7 @@ function prossimiEventi2(automazioni, adesso, statoDi6 = null, quanti2 = 3) {
 }
 
 // src/core/automazioni-ha.js
-var pulito62 = (valore3) => String(valore3 ?? "").trim();
+var pulito63 = (valore3) => String(valore3 ?? "").trim();
 var SEGNO_GDAHOME = "#gdahome";
 var DESCRIZIONE_GDAHOME = `Creata con la plancia GdAHome. ${SEGNO_GDAHOME}`;
 var EVENTO_AVVISA = "gdahome_avvisa";
@@ -112908,7 +113069,7 @@ function secondiDi(v) {
   return v;
 }
 function orarioPieno(v) {
-  const testo4 = pulito62(v);
+  const testo4 = pulito63(v);
   const m = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.exec(testo4);
   if (!m) return v;
   return `${m[1].padStart(2, "0")}:${m[2]}:${m[3] || "00"}`;
@@ -113014,7 +113175,7 @@ var DI_PRIMO_LIVELLO = /* @__PURE__ */ new Set([
 function normalizzata4(config) {
   const c = eOggetto(config) ? config : {};
   return {
-    mode: pulito62(c.mode) || "single",
+    mode: pulito63(c.mode) || "single",
     triggers: lista2(c.triggers ?? c.trigger).map(triggerNormale),
     conditions: lista2(c.conditions ?? c.condition).map(condizioneNormale),
     actions: lista2(c.actions ?? c.action).map(azioneNormale),
@@ -113026,17 +113187,17 @@ var VARIABILE_DEL_CRONO = "gdahome_crono";
 var TEMPLATE_DEL_CRONO = `{% set c = ${VARIABILE_DEL_CRONO} %}{% set m = now().hour * 60 + now().minute %}{% set f = c.festivi if now().weekday() >= 5 else c.feriali %}{% set ns = namespace(si=false) %}{% for x in f %}{% if x[0] <= m < x[1] %}{% set ns.si = true %}{% endif %}{% endfor %}{{ c.inCasa if ns.si else c.fuori }}`;
 
 // src/core/automazioni-proposte.js
-var pulito63 = (v) => String(v ?? "").trim();
+var pulito64 = (v) => String(v ?? "").trim();
 var MINUTO8 = 6e4;
 var GIORNO4 = 24 * 60 * MINUTO8;
 function firmaDelQuando(q) {
   if (!q) return "";
-  const ent = (v) => Array.isArray(v) ? [...v].sort().join(",") : pulito63(v);
+  const ent = (v) => Array.isArray(v) ? [...v].sort().join(",") : pulito64(v);
   if (q.tipo === "orario")
     return q.sole ? `orario:${q.sole}` : `orario:${(q.ore || []).map(minutiDi2).join(",")}`;
   if (q.tipo === "persone") return `persone:${q.verso}`;
-  if (q.tipo === "stato") return `stato:${ent(q.entita)}:${pulito63(q.a)}`;
-  return `${q.tipo}:${ent(q.entita)}:${pulito63(q.verso)}`;
+  if (q.tipo === "stato") return `stato:${ent(q.entita)}:${pulito64(q.a)}`;
+  return `${q.tipo}:${ent(q.entita)}:${pulito64(q.verso)}`;
 }
 var entitaDellAllora = (allora) => new Set(
   (allora || []).flatMap(
@@ -113079,17 +113240,17 @@ function proposteDaMostrare(proposte = [], { automazioni = [], scartate = [] } =
 }
 
 // src/core/parole-dei-servizi.js
-var pulito64 = (x) => x === void 0 || x === null ? "" : String(x).trim();
+var pulito65 = (x) => x === void 0 || x === null ? "" : String(x).trim();
 function eUnIdCrudo(id) {
-  const s = pulito64(id);
+  const s = pulito65(id);
   return /^[0-9a-f]{16,}$/i.test(s) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-/i.test(s);
 }
 function nomeDaId(id) {
   if (eUnIdCrudo(id)) return "";
-  const resto = pulito64(id).split(".").slice(1).join(".") || pulito64(id);
+  const resto = pulito65(id).split(".").slice(1).join(".") || pulito65(id);
   return resto.replace(/[._]+/g, " ").replace(/\s+/g, " ").trim();
 }
-var inParole = (x) => pulito64(x).replace(/[._]+/g, " ").replace(/\s+/g, " ").trim();
+var inParole = (x) => pulito65(x).replace(/[._]+/g, " ").replace(/\s+/g, " ").trim();
 var frase3 = (x) => String(x).replace(/\s+/g, " ").trim();
 var coppia = (it, en) => ({ it: frase3(it), en: frase3(en) });
 var STATI = {
@@ -113132,7 +113293,7 @@ var STATI = {
   unknown: ["sconosciuto", "unknown"]
 };
 function statoInParole3(stato3) {
-  const s = pulito64(stato3);
+  const s = pulito65(stato3);
   const noto = STATI[s.toLowerCase()];
   if (noto) return coppia(noto[0], noto[1]);
   const detto3 = inParole(s);
@@ -113162,7 +113323,7 @@ var DIVENTA = {
   above_horizon: ["sorge", "rises"]
 };
 function diventaInParole(chi, stato3) {
-  const s = pulito64(stato3).toLowerCase();
+  const s = pulito65(stato3).toLowerCase();
   const noto = DIVENTA[s];
   if (noto) return coppia(`${chi} ${noto[0]}`.trim(), `${chi} ${noto[1]}`.trim());
   const a = statoInParole3(stato3);
@@ -113192,9 +113353,9 @@ var ANTIFURTO = {
   alarm_arm_custom_bypass: ["personalizzato", "custom"]
 };
 function servizioInParole(servizio2, { chi = "", dati = {} } = {}) {
-  const dominio5 = pulito64(servizio2).toLowerCase().split(".")[0];
+  const dominio5 = pulito65(servizio2).toLowerCase().split(".")[0];
   const quali = QUALI[dominio5];
-  if (pulito64(chi) || !quali) return servizioCrudo(servizio2, { chi: pulito64(chi), dati });
+  if (pulito65(chi) || !quali) return servizioCrudo(servizio2, { chi: pulito65(chi), dati });
   const detto3 = servizioCrudo(servizio2, { chi: SEGNAPOSTO, dati });
   return coppia(detto3.it.replace(SEGNAPOSTO, quali[0]), detto3.en.replace(SEGNAPOSTO, quali[1]));
 }
@@ -113214,7 +113375,7 @@ var QUALI = {
   input_boolean: ["un interruttore", "a toggle"]
 };
 function servizioCrudo(servizio2, { chi = "", dati = {} } = {}) {
-  const s = pulito64(servizio2).toLowerCase();
+  const s = pulito65(servizio2).toLowerCase();
   const [dominio5, nome = ""] = s.split(".");
   const d = dati && typeof dati === "object" ? dati : {};
   const su = (it, en) => coppia(`${it} ${chi}`.trim(), `${en} ${chi}`.trim());
@@ -113247,7 +113408,7 @@ function servizioCrudo(servizio2, { chi = "", dati = {} } = {}) {
       return gradi9 !== void 0 && numero53(gradi9) ? coppia(`imposta ${chi} a ${numero53(gradi9)}°`, `set ${chi} to ${numeroEn(gradi9)}°`) : su("regola", "adjust");
     }
     if (nome === "set_hvac_mode") {
-      const modo = pulito64(d.hvac_mode).toLowerCase();
+      const modo = pulito65(d.hvac_mode).toLowerCase();
       if (modo === "off") return su("spegni", "turn off");
       const m = MODI_DEL_CLIMA[modo];
       return m ? coppia(`metti ${chi} ${m[0]}`, `set ${chi} ${m[1]}`) : su("cambia modo a", "change the mode of");
@@ -113297,7 +113458,7 @@ function servizioCrudo(servizio2, { chi = "", dati = {} } = {}) {
       );
     if (nome === "volume_mute") return su("silenzia", "mute");
     if (nome === "select_source") {
-      const fonte = pulito64(d.source);
+      const fonte = pulito65(d.source);
       return coppia(`metti ${chi} su «${fonte}»`, `switch ${chi} to «${fonte}»`);
     }
   }
@@ -113313,9 +113474,9 @@ function servizioCrudo(servizio2, { chi = "", dati = {} } = {}) {
       `${chi} at ${numeroEn(d.percentage)}%`.trim()
     );
   if (dominio5 === "input_number" && nome === "set_value")
-    return coppia(`metti ${chi} a ${pulito64(d.value)}`, `set ${chi} to ${pulito64(d.value)}`);
+    return coppia(`metti ${chi} a ${pulito65(d.value)}`, `set ${chi} to ${pulito65(d.value)}`);
   if (dominio5 === "input_select" && nome === "select_option")
-    return coppia(`metti ${chi} su «${pulito64(d.option)}»`, `set ${chi} to «${pulito64(d.option)}»`);
+    return coppia(`metti ${chi} su «${pulito65(d.option)}»`, `set ${chi} to «${pulito65(d.option)}»`);
   if ((dominio5 === "button" || dominio5 === "input_button") && nome === "press")
     return su("premi", "press");
   if (nome === "turn_on") {
@@ -113367,14 +113528,14 @@ var MOVIMENTO_SI = ["motion", "occupied", "present"];
 var MOVIMENTO_NO = ["no_motion", "not_occupied", "not_present"];
 var ePulsante = (tipo) => /press|click|(^|_)(tap|hold|held|release|released|button)(_|$)/.test(tipo);
 function tastoDi(subtype) {
-  const m = /^(?:button_?|b)?(\d{1,2})$/i.exec(pulito64(subtype));
+  const m = /^(?:button_?|b)?(\d{1,2})$/i.exec(pulito65(subtype));
   return m ? m[1] : "";
 }
 var soglia2 = (x) => x === void 0 || x === null || x === "" ? "" : numero53(x);
 var sogliaEn = (x) => x === void 0 || x === null || x === "" ? "" : numeroEn(x);
 function innescoDelDispositivoInParole(innesco, chi = "") {
-  const tipo = pulito64(innesco?.type).toLowerCase();
-  const nome = pulito64(chi);
+  const tipo = pulito65(innesco?.type).toLowerCase();
+  const nome = pulito65(chi);
   const it = nome || "un dispositivo";
   const en = nome || "a device";
   const sopra = soglia2(innesco?.above);
@@ -113432,8 +113593,8 @@ var STATO_DEL_DISPOSITIVO = {
   is_docked: "docked"
 };
 function condizioneDelDispositivoInParole(condizione, chi = "") {
-  const tipo = pulito64(condizione?.type).toLowerCase();
-  const nome = pulito64(chi);
+  const tipo = pulito65(condizione?.type).toLowerCase();
+  const nome = pulito65(chi);
   const it = nome || "un dispositivo";
   const en = nome || "a device";
   const sopra = soglia2(condizione?.above);
@@ -113469,9 +113630,9 @@ var AZIONI_DEL_DISPOSITIVO = {
   dock: () => "return_to_base"
 };
 function azioneDelDispositivoInParole(azione, chi = "") {
-  const tipo = pulito64(azione?.type).toLowerCase();
-  const dominio5 = pulito64(azione?.domain).toLowerCase();
-  const nome = pulito64(chi);
+  const tipo = pulito65(azione?.type).toLowerCase();
+  const dominio5 = pulito65(azione?.domain).toLowerCase();
+  const nome = pulito65(chi);
   if (tipo === "notify" || dominio5 === "mobile_app")
     return nome ? coppia(`manda una notifica a ${nome}`, `sends a notification to ${nome}`) : coppia("manda una notifica", "sends a notification");
   const servizio2 = AZIONI_DEL_DISPOSITIVO[tipo];
@@ -126766,7 +126927,7 @@ function installLeFasceDelDispositivo() {
 senzaCadere(installLeFasceDelDispositivo);
 
 // src/core/la-ventola-dell-inverter.js
-var pulito65 = (valore3) => String(valore3 ?? "").trim();
+var pulito66 = (valore3) => String(valore3 ?? "").trim();
 var RIFERIMENTO_DELLA_VENTOLA = "dm.energy_interruttore_ventola_inverter";
 var DOMINI_DI_SOLA_LETTURA = Object.freeze([
   "sensor",
@@ -126780,7 +126941,7 @@ var DOMINI_DI_SOLA_LETTURA = Object.freeze([
 ]);
 var soloLettura = new Set(DOMINI_DI_SOLA_LETTURA);
 function ilComandoDellaVentola(entita3) {
-  const id = pulito65(entita3);
+  const id = pulito66(entita3);
   if (!id) return { si: false, perche: "non-mappata" };
   if (id.startsWith("dm.")) return { si: false, perche: "non-mappata" };
   const punto2 = id.indexOf(".");
@@ -140185,19 +140346,19 @@ function installMediaInAzioni() {
 }
 
 // src/core/indirizzo-di-casa.js
-var pulito66 = (valore3) => String(valore3 ?? "").trim();
+var pulito67 = (valore3) => String(valore3 ?? "").trim();
 var ASSOLUTO = /^https?:\/\//i;
 function senzaHost(indirizzo) {
-  return /^https?:\/\/(?:\/|$)/i.test(pulito66(indirizzo));
+  return /^https?:\/\/(?:\/|$)/i.test(pulito67(indirizzo));
 }
 function versoLApi(indirizzo) {
-  const valore3 = pulito66(indirizzo);
+  const valore3 = pulito67(indirizzo);
   if (!valore3) return false;
   if (valore3.startsWith("/api/")) return true;
   return /^https?:\/\/[^/]*\/api\//i.test(valore3);
 }
 function percorsoConDomanda(indirizzo) {
-  const valore3 = pulito66(indirizzo);
+  const valore3 = pulito67(indirizzo);
   if (senzaHost(valore3)) {
     const nudo = valore3.replace(ASSOLUTO, "");
     return nudo.startsWith("/") ? nudo : `/${nudo}`;
@@ -140210,13 +140371,13 @@ function percorsoConDomanda(indirizzo) {
   }
 }
 function indirizzoRiparato(indirizzo, base = "", hostDelDocumento2 = "") {
-  const valore3 = pulito66(indirizzo);
+  const valore3 = pulito67(indirizzo);
   if (!valore3 || !versoLApi(valore3)) return null;
   if (!ASSOLUTO.test(valore3)) return null;
   const rotto = senzaHost(valore3);
-  if (!rotto && pulito66(hostDelDocumento2)) return null;
+  if (!rotto && pulito67(hostDelDocumento2)) return null;
   const percorso = percorsoConDomanda(valore3);
-  const fondo = pulito66(base);
+  const fondo = pulito67(base);
   if (!fondo) return rotto ? percorso : null;
   try {
     return new URL(percorso, fondo).href;
@@ -140226,7 +140387,7 @@ function indirizzoRiparato(indirizzo, base = "", hostDelDocumento2 = "") {
 }
 var GETTONE_FINTO = "__dashboardmodern_hosted__";
 function autorizzazioneInutile(valore3) {
-  const scritto3 = pulito66(valore3);
+  const scritto3 = pulito67(valore3);
   if (!scritto3) return false;
   const nudo = scritto3.replace(/^Bearer\b\s*/i, "").trim();
   return !nudo || nudo === GETTONE_FINTO || nudo === "undefined" || nudo === "null";
@@ -140234,7 +140395,7 @@ function autorizzazioneInutile(valore3) {
 var RIFERIMENTO = /([?&]filter_entity_id=)([^&#]*)/i;
 var virtuale = (nome) => /^dm\./i.test(nome);
 function conLEntitaVera(indirizzo, risolvi3) {
-  const valore3 = pulito66(indirizzo);
+  const valore3 = pulito67(indirizzo);
   if (!valore3 || typeof risolvi3 !== "function") return null;
   const trovato = valore3.match(RIFERIMENTO);
   if (!trovato) return null;
@@ -140244,7 +140405,7 @@ function conLEntitaVera(indirizzo, risolvi3) {
     if (!virtuale(nome)) return pezzo2;
     let vero3 = "";
     try {
-      vero3 = pulito66(risolvi3(nome));
+      vero3 = pulito67(risolvi3(nome));
     } catch (_errore) {
       return pezzo2;
     }
@@ -140255,24 +140416,24 @@ function conLEntitaVera(indirizzo, risolvi3) {
 }
 
 // src/core/storico-rest.js
-var pulito67 = (valore3) => String(valore3 ?? "").trim();
+var pulito68 = (valore3) => String(valore3 ?? "").trim();
 var PERCORSO = /\/api\/history\/period\/?([^?#]*)/i;
 function eUnoStoricoRest(indirizzo) {
-  return PERCORSO.test(pulito67(indirizzo));
+  return PERCORSO.test(pulito68(indirizzo));
 }
 function istante5(testo4) {
-  const voce3 = pulito67(testo4);
+  const voce3 = pulito68(testo4);
   if (!voce3) return null;
   const data = new Date(voce3);
   return Number.isFinite(data.getTime()) ? data.toISOString() : null;
 }
 function bandiera(parametri, nome, seManca) {
   if (!parametri.has(nome)) return seManca;
-  const valore3 = pulito67(parametri.get(nome)).toLowerCase();
+  const valore3 = pulito68(parametri.get(nome)).toLowerCase();
   return !(valore3 === "false" || valore3 === "0" || valore3 === "no");
 }
 function domandaDallIndirizzo(indirizzo) {
-  const voce3 = pulito67(indirizzo);
+  const voce3 = pulito68(indirizzo);
   const trovato = PERCORSO.exec(voce3);
   if (!trovato) return null;
   let parametri;
@@ -140281,7 +140442,7 @@ function domandaDallIndirizzo(indirizzo) {
   } catch (_errore) {
     return null;
   }
-  const entita3 = pulito67(parametri.get("filter_entity_id")).split(",").map(pulito67).filter(Boolean);
+  const entita3 = pulito68(parametri.get("filter_entity_id")).split(",").map(pulito68).filter(Boolean);
   if (!entita3.length) return null;
   let inizio = null;
   try {
@@ -140306,15 +140467,15 @@ function domandaDallIndirizzo(indirizzo) {
 }
 var DURATA_PERIODO = Object.freeze({ hour: 36e5, day: 864e5 });
 function intervalloDellaDomanda(domanda, adesso = Date.now()) {
-  const start = Date.parse(pulito67(domanda?.start_time));
-  const end = domanda?.end_time ? Date.parse(pulito67(domanda.end_time)) : adesso;
+  const start = Date.parse(pulito68(domanda?.start_time));
+  const end = domanda?.end_time ? Date.parse(pulito68(domanda.end_time)) : adesso;
   if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return null;
   return { start, end };
 }
 function domandaStatisticheDallaDomanda(domanda, adesso = Date.now()) {
   const intervallo2 = intervalloDellaDomanda(domanda, adesso);
   if (!intervallo2 || !vuoleLeStatistiche(intervallo2)) return null;
-  const entita3 = Array.isArray(domanda?.entity_ids) ? domanda.entity_ids.map(pulito67).filter(Boolean) : [];
+  const entita3 = Array.isArray(domanda?.entity_ids) ? domanda.entity_ids.map(pulito68).filter(Boolean) : [];
   if (!entita3.length) return null;
   const period = periodoDelleStatistiche(intervallo2);
   return {
@@ -140354,18 +140515,18 @@ function rispostaDalleStatistiche(risultato, entityIds = [], period = "hour", ad
   return fuori;
 }
 function entitaSenzaRighe(entityIds = [], righe3 = []) {
-  const presenti = new Set(righe3.map((elenco15) => pulito67(elenco15?.[0]?.entity_id)).filter(Boolean));
-  return entityIds.map(pulito67).filter((id) => id && !presenti.has(id));
+  const presenti = new Set(righe3.map((elenco15) => pulito68(elenco15?.[0]?.entity_id)).filter(Boolean));
+  return entityIds.map(pulito68).filter((id) => id && !presenti.has(id));
 }
 function unisciRisposte(entityIds = [], ...risposte) {
   const perEntita = /* @__PURE__ */ new Map();
   for (const risposta of risposte) {
     for (const elenco15 of Array.isArray(risposta) ? risposta : []) {
-      const id = pulito67(elenco15?.[0]?.entity_id);
+      const id = pulito68(elenco15?.[0]?.entity_id);
       if (id && !perEntita.has(id)) perEntita.set(id, elenco15);
     }
   }
-  return entityIds.map((id) => perEntita.get(pulito67(id))).filter(Boolean);
+  return entityIds.map((id) => perEntita.get(pulito68(id))).filter(Boolean);
 }
 function isoDaSecondi(secondi) {
   const n = Number(secondi);
@@ -140376,8 +140537,8 @@ function rigaComeRest(riga3, entity2) {
   if (!riga3 || typeof riga3 !== "object") return null;
   const stato3 = riga3.s ?? riga3.state;
   if (stato3 === void 0 || stato3 === null) return null;
-  const aggiornata = riga3.lu !== void 0 ? isoDaSecondi(riga3.lu) : pulito67(riga3.last_updated);
-  const cambiata = riga3.lc !== void 0 ? isoDaSecondi(riga3.lc) : pulito67(riga3.last_changed) || aggiornata;
+  const aggiornata = riga3.lu !== void 0 ? isoDaSecondi(riga3.lu) : pulito68(riga3.last_updated);
+  const cambiata = riga3.lc !== void 0 ? isoDaSecondi(riga3.lc) : pulito68(riga3.last_changed) || aggiornata;
   return {
     entity_id: entity2,
     state: String(stato3),
