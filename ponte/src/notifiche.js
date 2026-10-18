@@ -368,6 +368,51 @@ export function personalizzataPulita(detta) {
   };
 }
 
+/* ─── Dove porta il tocco ─────────────────────────────────────────────────
+ *
+ * «Queste cose che escono in basso non mi piacciono proprio.» Toccata, una
+ * notifica porta dove sta la cosa di cui parla: l'antifurto nella pagina
+ * Sicurezza, una porta nei Varchi, il movimento alla sua telecamera. Lo dice
+ * la casa, dentro la busta (`apri: {sezione, entita}`): sul centralino non
+ * passa niente di nuovo che si legga. Le sezioni sono parole dell'app, non
+ * linguette della plancia: e' l'app che sa come ci si arriva
+ * (`app/lib/notifiche/dove_apre.dart`). */
+const SEZIONE_DI = Object.freeze({
+  antifurto: "sicurezza",
+  allarmi: "sicurezza",
+  inserimenti: "sicurezza",
+  uscito: "sicurezza",
+  aperture: "varchi",
+  movimento: "telecamera",
+  campanello: "telecamera",
+  elettrodomestici: "elettrodomestici",
+  frigo: "sensore",
+  personalizzata: "sensore",
+  pioggia: "meteo",
+  arrivi: "persone",
+  suggerimenti: "assistente",
+  riepilogo: "giornata",
+  blackout: "energia",
+  viaggi: "viaggi",
+  ha_notify: "plancia",
+});
+
+/** Dove porta il tocco su questa notifica, per chi la riceve. `camera` e'
+ * quella che a lui si mostra (o `null`): una telecamera che non vede non
+ * entra nemmeno qui. */
+export function doveApre(evento, camera = null) {
+  let sezione = SEZIONE_DI[evento?.tipo];
+  if (!sezione) return null;
+  if (sezione === "telecamera") {
+    if (camera) return { sezione, entita: camera };
+    sezione = "sicurezza";
+  }
+  const entita = String(evento.entita || "");
+  return ENTITA_BUONA.test(entita) && !entita.startsWith("person.")
+    ? { sezione, entita }
+    : { sezione };
+}
+
 export class Notifiche {
   constructor({
     cartella = "/data",
@@ -1268,6 +1313,7 @@ export class Notifiche {
         ? { fonte: String(evento.fonte[lingua] ?? evento.fonte.it ?? "").slice(0, 120) }
         : {}),
       ...(foto ? { foto } : {}),
+      ...(doveApre(evento, camera) ? { apri: doveApre(evento, camera) } : {}),
       azioni: (evento.azioni || []).slice(0, 3).map((una) => ({
         id: una.id,
         etichetta: String(una.parole?.[lingua] ?? una.parole?.it ?? una.id).slice(0, 30),

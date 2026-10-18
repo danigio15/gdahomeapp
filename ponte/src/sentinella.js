@@ -192,11 +192,19 @@ export function paroleDelNome(id, nome = "") {
   );
 }
 
-const nomeDi = (stato, id) =>
-  String(stato?.attributes?.friendly_name || id.split(".")[1]?.replace(/_/g, " ") || id).slice(
-    0,
-    60,
-  );
+/* Il nome di un'entita': quello che le ha dato chi l'ha messa, o — senza —
+ * dall'identificativo, con la prima lettera grande: «casa_al_lago» era
+ * «casa al lago» in testa alla notifica. */
+const nomeDi = (stato, id) => {
+  const scritto = stato?.attributes?.friendly_name;
+  if (scritto) return String(scritto).slice(0, 60);
+  const daLId = String(id || "")
+    .split(".")[1]
+    ?.replace(/_/g, " ")
+    .trim();
+  if (!daLId) return String(id || "").slice(0, 60);
+  return (daLId[0].toUpperCase() + daLId.slice(1)).slice(0, 60);
+};
 
 const dominioDi = (id) => String(id).split(".")[0];
 

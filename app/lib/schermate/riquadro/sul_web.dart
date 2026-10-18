@@ -387,6 +387,14 @@ Future<void> tornaDallaConfig(WebViewController controllore) async =>
 Future<void> apriLeAutomazioni(WebViewController controllore) async =>
     _tira('gdahomeApriLeAutomazioni', 'apri-le-automazioni');
 
+/// Nel browser la plancia sta in un riquadro di un'altra origine, e le sue
+/// linguette da qui non si toccano: la notifica apre la sua pagina. (Nel
+/// browser, poi, le notifiche non arrivano: Firebase c'e' solo sul telefono.)
+Future<bool> apriLaLinguetta(
+  WebViewController controllore,
+  List<String> linguette,
+) async => false;
+
 /// Riporta la plancia dov'era prima delle Automazioni.
 Future<void> tornaDalleAutomazioni(WebViewController controllore) async =>
     _tira('gdahomeTornaDalleAutomazioni', 'torna-dalle-automazioni');

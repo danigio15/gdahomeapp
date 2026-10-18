@@ -1,11 +1,14 @@
 /// Una notifica toccata: cosa c'era dentro, e i suoi tasti.
 ///
-/// Tre forme. Il **campanello** si apre a tutto schermo, come una chiamata:
-/// la foto della porta, «Ignora» e «Apri». «Guarda» su una notifica con la sua
-/// telecamera — il movimento, l'antifurto — apre **la telecamera**
-/// ([SchermataDellaTelecamera]), dal vivo. Ogni altra notifica sale in un
-/// foglio dal basso, col testo intero e i tasti che la casa le ha messo
-/// sotto.
+/// Va dove sta la cosa di cui parla (`notifiche/dove_apre.dart`). Il
+/// **campanello** si apre a tutto schermo, come una chiamata: la foto della
+/// porta, «Ignora» e «Apri». Il movimento, e «Guarda» su una notifica con la
+/// sua telecamera, aprono **la telecamera** ([SchermataDellaTelecamera]),
+/// dal vivo. Il riepilogo apre «La tua giornata». L'antifurto, le porte, gli
+/// elettrodomestici, l'energia, le persone, il meteo vanno alla loro pagina
+/// della plancia ([apriLaNotifica], `vaiA`); un viaggio al navigatore. Dove
+/// un posto non c'e', o la casa non risponde, si apre la pagina della
+/// notifica (`la_notifica.dart`) — non piu' un foglio dal basso.
 ///
 /// **La foto non e' mai passata da Google o da Apple.** Nella notifica c'e'
 /// solo il nome della telecamera — e solo se a chi tiene questo telefono quella
@@ -27,10 +30,12 @@ import 'package:flutter/material.dart';
 import '../casa/collegamento.dart';
 import '../casa/la_finestra.dart';
 import '../notifiche/consegna.dart';
+import '../notifiche/dove_apre.dart';
 import '../notifiche/modello.dart';
 import '../notifiche/postino.dart';
 import '../parole.dart';
 import '../vestito/tema.dart';
+import 'la_notifica.dart';
 import 'la_tua_giornata.dart';
 
 /// Se un tocco su questa notifica apre la telecamera: «Guarda», o il tocco
@@ -43,8 +48,16 @@ bool apreLaTelecamera(ToccoDellaNotifica tocco) {
   final notifica = tocco.notifica;
   if (notifica.camera == null || notifica.chiamata) return false;
   if (tocco.tasto == 'guarda') return true;
-  return tocco.tasto == null && notifica.tipo == 'movimento';
+  return tocco.tasto == null &&
+      doveApre(notifica).posto == PostoDellaNotifica.telecamera;
 }
+
+/// Dove va l'app per una notifica, quando il posto e' una pagina della
+/// plancia o il navigatore: `true` se ci e' arrivata. Lo da' la schermata
+/// che tiene la plancia (`home.dart`); senza, o con `false` — la casa non
+/// risponde, la plancia quella pagina non ce l'ha — si apre la pagina
+/// della notifica.
+typedef VaiAllaNotifica = Future<bool> Function(DoveApre dove);
 
 /// La foto di una telecamera, chiesta alla casa sul filo.
 Future<Uint8List?> laFotoDi(Collegamento collegamento, String camera) async {
@@ -71,6 +84,7 @@ Future<void> apriLaNotifica(
   required ToccoDellaNotifica tocco,
   required Collegamento collegamento,
   Postino? postino,
+  VaiAllaNotifica? vaiA,
 }) async {
   final notifica = tocco.notifica;
   /* «OK»: la notifica e' gia' tolta, e non c'e' altro da fare. */
@@ -93,7 +107,7 @@ Future<void> apriLaNotifica(
   if (tocco.tasto != null) {
     final tasto = notifica.tasti.where((uno) => uno.id == tocco.tasto);
     if (tasto.isNotEmpty && !tasto.first.apre) {
-      await _premi(context, tocco, tasto.first, postino);
+      await premiIlTasto(context, tocco, tasto.first, postino);
       return;
     }
   }
@@ -135,16 +149,36 @@ Future<void> apriLaNotifica(
     );
     return;
   }
-  await showModalBottomSheet<void>(
-    context: context,
-    showDragHandle: true,
-    isScrollControlled: true,
-    builder: (_) =>
-        _IlFoglio(tocco: tocco, collegamento: collegamento, postino: postino),
+  final dove = doveApre(notifica);
+  if (vaiA != null &&
+      (dove.posto == PostoDellaNotifica.plancia ||
+          dove.posto == PostoDellaNotifica.navigatore)) {
+    bool arrivata;
+    try {
+      arrivata = await vaiA(dove);
+    } catch (_) {
+      arrivata = false;
+    }
+    if (arrivata || !context.mounted) return;
+  }
+  if (!context.mounted) return;
+  await Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => SchermataDellaNotifica(
+        tocco: tocco,
+        nomeDellaCasa:
+            collegamento.archivio.quella(tocco.casa)?.nome ??
+            collegamento.casa?.nome ??
+            '',
+        collegamento: collegamento,
+        postino: postino,
+      ),
+    ),
   );
 }
 
-Future<bool> _premi(
+/// Porta alla casa il tasto premuto su una notifica, e dice com'e' andata.
+Future<bool> premiIlTasto(
   BuildContext context,
   ToccoDellaNotifica tocco,
   TastoDellaNotifica tasto,
@@ -165,122 +199,6 @@ Future<bool> _premi(
   } catch (errore) {
     messaggero?.showSnackBar(SnackBar(content: Text('$errore')));
     return false;
-  }
-}
-
-class _IlFoglio extends StatefulWidget {
-  const _IlFoglio({
-    required this.tocco,
-    required this.collegamento,
-    required this.postino,
-  });
-
-  final ToccoDellaNotifica tocco;
-  final Collegamento collegamento;
-  final Postino? postino;
-
-  @override
-  State<_IlFoglio> createState() => _StatoDelFoglio();
-}
-
-class _StatoDelFoglio extends State<_IlFoglio> {
-  Uint8List? _foto;
-  Timer? _ancora;
-
-  @override
-  void initState() {
-    super.initState();
-    final camera = widget.tocco.notifica.camera;
-    if (camera != null) {
-      /* L'app aperta da una notifica ha il filo che si sta ancora aprendo: la
-       * foto chiesta una volta sola, subito, non arrivava mai. Si richiede
-       * ogni due secondi finche' arriva, per mezzo minuto al piu'. */
-      var volte = 0;
-      Future<void> prova() async {
-        volte += 1;
-        final foto = await laFotoDi(widget.collegamento, camera);
-        if (!mounted) return;
-        if (foto != null) {
-          _ancora?.cancel();
-          setState(() => _foto = foto);
-        } else if (volte >= 15) {
-          _ancora?.cancel();
-        }
-      }
-
-      unawaited(prova());
-      _ancora = Timer.periodic(
-        const Duration(seconds: 2),
-        (_) => unawaited(prova()),
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    _ancora?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final notifica = widget.tocco.notifica;
-    final testi = Theme.of(context).textTheme;
-    final vale = notifica.valeAncora(DateTime.now());
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(notifica.titolo, style: testi.titleLarge),
-            const SizedBox(height: 6),
-            Text(notifica.testo, style: testi.bodyLarge),
-            /* Da dove viene: «Automazione di Home Assistant · …». */
-            if (notifica.fonte case final String fonte) ...[
-              const SizedBox(height: 6),
-              Text(
-                fonte,
-                style: testi.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-            if (_foto != null) ...[
-              const SizedBox(height: 14),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.memory(_foto!, fit: BoxFit.cover),
-              ),
-            ],
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                for (final tasto in notifica.tasti)
-                  if (!tasto.apre && !tasto.chiude && vale)
-                    FilledButton.tonal(
-                      onPressed: () async {
-                        final fatto = await _premi(
-                          context,
-                          widget.tocco,
-                          tasto,
-                          widget.postino,
-                        );
-                        if (fatto && context.mounted) {
-                          Navigator.of(context).pop();
-                        }
-                      },
-                      child: Text(tasto.etichetta),
-                    ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
 
@@ -357,7 +275,7 @@ class _StatoDellaTelecamera extends State<SchermataDellaTelecamera> {
   Future<void> _tasto(TastoDellaNotifica tasto) async {
     if (_premuto != null) return;
     setState(() => _premuto = tasto.id);
-    await _premi(context, widget.tocco, tasto, widget.postino);
+    await premiIlTasto(context, widget.tocco, tasto, widget.postino);
     if (mounted) setState(() => _premuto = null);
   }
 
@@ -598,7 +516,12 @@ class _StatoDelCampanello extends State<SchermataDelCampanello> {
         true;
     if (!sbloccato || !mounted) return;
     setState(() => _premuto = true);
-    final fatto = await _premi(context, widget.tocco, tasto, widget.postino);
+    final fatto = await premiIlTasto(
+      context,
+      widget.tocco,
+      tasto,
+      widget.postino,
+    );
     if (!mounted) return;
     if (fatto) {
       Navigator.of(context).maybePop();

@@ -15,6 +15,7 @@ import { randomBytes } from "node:crypto";
 
 import { Dispositivi } from "../src/dispositivi.js";
 import {
+  doveApre,
   impostazioniPulite,
   inSilenzio,
   Notifiche,
@@ -1096,4 +1097,59 @@ test("«Quali» del movimento: si salvano, e passano solo le telecamere scelte",
   } finally {
     banco.spegni();
   }
+});
+
+/* ─── Dove porta il tocco ─────────────────────────────────────────────── */
+
+test("dentro la busta c'e' dove porta il tocco: la sezione, e la cosa", async () => {
+  const banco = unBanco({ chiuse: new Set(["camera.ingresso"]) });
+  try {
+    await banco.registra(banco.a);
+    await banco.registra(banco.b);
+    /* L'antifurto scattato: la Sicurezza, con la sua centrale; la
+     * telecamera solo a chi la vede (B no). */
+    await banco.notifiche.consegna(antifurto({ entita: "alarm_control_panel.casa" }));
+    const di = (chi) =>
+      banco.apri(
+        banco.spinte.find((s) => s.telefono === chi.dispositivo.id),
+        chi,
+      );
+    assert.deepEqual(di(banco.a).apri, {
+      sezione: "sicurezza",
+      entita: "alarm_control_panel.casa",
+    });
+    assert.deepEqual(di(banco.b).apri, {
+      sezione: "sicurezza",
+      entita: "alarm_control_panel.casa",
+    });
+    assert.equal(JSON.stringify(di(banco.b)).includes("camera.ingresso"), false);
+  } finally {
+    banco.spegni();
+  }
+});
+
+test("doveApre: ogni tipo la sua sezione, e niente di chi non deve", () => {
+  assert.deepEqual(doveApre({ tipo: "aperture", entita: "binary_sensor.porta_garage" }), {
+    sezione: "varchi",
+    entita: "binary_sensor.porta_garage",
+  });
+  assert.deepEqual(doveApre({ tipo: "movimento", entita: "binary_sensor.pir" }, "camera.balcone"), {
+    sezione: "telecamera",
+    entita: "camera.balcone",
+  });
+  /* La telecamera che a lui non si mostra non entra nella busta. */
+  assert.deepEqual(
+    doveApre({ tipo: "movimento", entita: "binary_sensor.pir", camera: "camera.x" }),
+    {
+      sezione: "sicurezza",
+      entita: "binary_sensor.pir",
+    },
+  );
+  assert.deepEqual(doveApre({ tipo: "pioggia" }), { sezione: "meteo" });
+  assert.deepEqual(doveApre({ tipo: "arrivi", entita: "person.uno" }), { sezione: "persone" });
+  assert.deepEqual(doveApre({ tipo: "riepilogo" }), { sezione: "giornata" });
+  assert.deepEqual(doveApre({ tipo: "blackout" }), { sezione: "energia" });
+  assert.deepEqual(doveApre({ tipo: "viaggi" }), { sezione: "viaggi" });
+  assert.deepEqual(doveApre({ tipo: "ha_notify" }), { sezione: "plancia" });
+  assert.equal(doveApre({ tipo: "prova" }), null);
 });
