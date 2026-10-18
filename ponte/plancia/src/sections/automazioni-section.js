@@ -3659,30 +3659,6 @@ export function vaiA(vista) {
   if (state.inApp) root.scrollTo?.(0, 0);
 }
 
-/**
- * Apre il config sulle Automazioni — la lista, le proposte, o una aperta —
- * dalla sezione della dashboard, che si guarda e non si modifica. La voce
- * del config arriva quando il config si e' disegnato: la si aspetta un poco.
- */
-export function apriNelConfig({ voce = null, vista = "lista" } = {}) {
-  if (typeof root.apriConfigEntita !== "function") return false;
-  root.apriConfigEntita();
-  let volte = 0;
-  const prova = () => {
-    const voceDelConfig = doc.querySelector(`#editor-modal .ed-tab[data-tab="${AUTOMAZIONI_TAB}"]`);
-    if (!voceDelConfig) {
-      if ((volte += 1) < 40) root.setTimeout?.(prova, 50);
-      return;
-    }
-    root.editorSwitch?.(AUTOMAZIONI_TAB);
-    vaiA(vista);
-    if (voce) apriPerModificare(voce);
-    ridisegna();
-  };
-  prova();
-  return true;
-}
-
 /* ── la pagina a schermo pieno (app) ─────────────────────────────────────── */
 
 function diciAllApp(quale) {

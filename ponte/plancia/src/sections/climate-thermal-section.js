@@ -208,10 +208,6 @@ const copy = () => ({
   radiators: t("Termosifoni", "Radiators"),
   emptyCold: t("Nessun condizionatore configurato", "No air conditioner configured"),
   emptyWarm: t("Nessun termosifone configurato", "No radiator configured"),
-  emptyHint: t(
-    "Aggiungi le unità dalla Configurazione della plancia.",
-    "Add the units from the dashboard configuration.",
-  ),
   timerOff: t("Spegnimento", "Switch-off"),
   timerAria: t("Quanto resta accesa", "How long it stays on"),
   timerVia: t("Togli lo spegnimento", "Remove the switch-off"),
@@ -224,10 +220,7 @@ const copy = () => ({
       `Si vedono: ${periodo}. Se li accendi compaiono comunque.`,
       `They show: ${periodo}. Switched on, they show anyway.`,
     ),
-  seasonHintMixed: t(
-    "Ognuno ha i suoi mesi nella Configurazione della plancia. Se li accendi compaiono comunque.",
-    "Each one has its months in the dashboard configuration. Switched on, they show anyway.",
-  ),
+  seasonHintMixed: t("Se li accendi compaiono comunque.", "Switched on, they show anyway."),
   showAnyway: t("Mostrali lo stesso", "Show them anyway"),
   unitsOne: t("1 unità", "1 unit"),
   units: (value) => t(`${value} unità`, `${value} units`),
@@ -574,7 +567,6 @@ function emptyMarkup(zone, labels) {
   return `<div class="dm-cl-empty">
       <span class="dm-cl-empty-ic" aria-hidden="true">${facciaDellaZona(zone, labels).icona}</span>
       <strong>${esc(vuota)}</strong>
-      <p>${esc(labels.emptyHint)}</p>
     </div>`;
 }
 

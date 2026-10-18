@@ -158,7 +158,7 @@ button.dm-rq{border:0;padding:0;margin:0;font:inherit;cursor:pointer;-webkit-tap
 /* Il testo si fa bianco; i tasti tengono il loro vestito (e il loro stato,
  * acceso o spento), col vetro dietro perche' si stacchino dalla foto. */
 .dm-rq-fondo{color:#fff}
-.dm-rq-fondo :where(div,span,b,strong,small,label,p,h1,h2,h3,h4,em,output):not(button *,button,select *,input,[class*="pill"],[class*="pill"] *,[class*="badge"] *,[class*="chip"] *){color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+.dm-rq-fondo :where(div,span,b,strong,label,p,h1,h2,h3,h4,em,output):not(button *,button,select *,input,[class*="pill"],[class*="pill"] *,[class*="badge"] *,[class*="chip"] *){color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.45)}
 .dm-rq-fondo :where(button){-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 
 /* I Dispositivi della Home: la card del guscio col vestito nuovo. */

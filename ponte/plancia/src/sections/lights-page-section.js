@@ -315,10 +315,7 @@ function roomMarkup(group) {
 export function renderLightsPageMarkup(groups) {
   const views = groupViews(groups);
   if (!views.length) {
-    return `<div class="ed-empty dm-lucip-empty">${t(
-      "Nessuna luce configurata. Aggiungile dalla scheda Luci dell'editor: accetta sia entità light.* sia switch.*.",
-      "No configured lights. Add them from the editor's Lights tab: both light.* and switch.* entities are accepted.",
-    )}</div>`;
+    return `<div class="ed-empty dm-lucip-empty">${t("Nessuna luce configurata.", "No configured lights.")}</div>`;
   }
   return `${renderLightsHeroMarkup(views)}${groups.map((group) => roomMarkup(group)).join("")}`;
 }

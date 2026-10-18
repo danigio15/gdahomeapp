@@ -523,8 +523,8 @@ function nuovoBlocco() {
       )}</span>
       <span class="dm-radar-fondo-muto">${esc(
         t(
-          "La mappa di fondo non risponde. La pioggia c'è: puoi cambiare mappa in ⚙️ → Meteo e radar.",
-          "The base map is not answering. The rain is there: you can change map under ⚙️ → Weather and radar.",
+          "La mappa di fondo non risponde. La pioggia c'è.",
+          "The base map is not answering. The rain is there.",
         ),
       )}</span>
     </div>
@@ -1373,12 +1373,12 @@ function radarGuasto(grezzo = configurazione()) {
   if (!problema) return "";
   return problema === "vuoto"
     ? t(
-        "Hai scelto «Un indirizzo mio» ma non c'è un indirizzo: scrivilo in Configurazione → Meteo, o scegli un servizio dalla tendina.",
-        "You picked «An address of mine» but there is no address: write it under Settings → Weather, or pick a service from the list.",
+        "Hai scelto «Un indirizzo mio» ma non c'è un indirizzo.",
+        "You picked «An address of mine» but there is no address.",
       )
     : t(
-        "L'indirizzo del radar non è un indirizzo di tessere ({z}/{x}/{y}): correggilo in Configurazione → Meteo, o scegli un servizio dalla tendina.",
-        "The radar address is not a tile address ({z}/{x}/{y}): fix it under Settings → Weather, or pick a service from the list.",
+        "L'indirizzo del radar non è un indirizzo di tessere ({z}/{x}/{y}).",
+        "The radar address is not a tile address ({z}/{x}/{y}).",
       );
 }
 

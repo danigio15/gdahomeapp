@@ -725,12 +725,6 @@ function tesseraMarkup(lettura) {
 function vuotoMarkup() {
   return `<div class="dm-allerte-vuoto">
     <strong>${esc(t("Nessuna allerta configurata", "No alert configured"))}</strong>
-    <span>${esc(
-      t(
-        "Aggiungile dalla scheda Allerte della configurazione: terremoti, avvisi della protezione civile, fulmini, pollini, comfort termico e voli sopra casa, ognuno dal sensore della sua integrazione.",
-        "Add them from the Alerts tab in the settings: earthquakes, civil protection warnings, lightning, pollen, thermal comfort and flights overhead, each from the sensor of its integration.",
-      ),
-    )}</span>
   </div>`;
 }
 

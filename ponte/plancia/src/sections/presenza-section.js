@@ -220,8 +220,8 @@ function vuotoMarkup() {
     <strong>${esc(t("Nessun rilevatore trovato", "No detector found"))}</strong>
     <span>${esc(
       t(
-        "Un sensore di movimento o di presenza lo dichiara Home Assistant da sé e compare qui senza configurare niente. Se il tuo non viene trovato, aggiungilo dalla scheda Presenza della configurazione.",
-        "Home Assistant declares a motion or presence sensor itself and it appears here with nothing to configure. If yours is not found, add it from the Presence tab in the settings.",
+        "Un sensore di movimento o di presenza lo dichiara Home Assistant da sé e compare qui senza configurare niente.",
+        "Home Assistant declares a motion or presence sensor itself and it appears here with nothing to configure.",
       ),
     )}</span>
   </div>`;

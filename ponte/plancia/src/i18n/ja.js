@@ -161,8 +161,6 @@ export default Object.freeze({
     "保存できませんでした。目的地・日付・時刻を確認してください。",
   "Up to 8 more: a socket, the heat pump, the car charging, today's kWh":
     "最大8件追加：コンセント、ヒートポンプ、充電中の車、今日のkWh",
-  "No sensor linked: pick one in Settings › Loads or Appliances.":
-    "センサーが未設定です：設定 › 負荷 または 家電 で選んでください。",
   "Reading consumption from Home Assistant…": "Home Assistant から消費量を読み込み中…",
   " — configured": " — 設定済み",
   "${alzate} shutters up": "シャッター${alzate}枚が開",
@@ -243,8 +241,6 @@ export default Object.freeze({
   "Load to watch": "監視する負荷",
   Lock: "施錠",
   "Looking…": "確認中…",
-  "More power is going out than coming in: usually a sensor's direction is reversed, and it is changed in the Energy tab.":
-    "入ってくるより出ていく電力のほうが多くなっています。たいていはセンサーの向きが逆になっているためで、エネルギーのタブで変更できます。",
   Motorcycle: "バイク",
   "My sections": "マイセクション",
   "Name the unit: it is what the card shows.":
@@ -650,8 +646,6 @@ export default Object.freeze({
   "Add entity": "エンティティを追加",
   "Add from an integration": "統合から追加",
   "Add intercom": "インターホンを追加",
-  "Add it from the Energy tab in the settings: with the NUT status alone this page already knows whether there is power.":
-    "設定の「エネルギー」タブから追加してください。NUT の状態だけでこのページは電源の有無が分かります。",
   "Add light": "照明を追加",
   "Add list": "リストを追加",
   "Add load": "負荷を追加",
@@ -675,29 +669,13 @@ export default Object.freeze({
   "Add sensors to the Alerts Panel with a clean name, or create a":
     "分かりやすい名前を付けてセンサーを警告パネルに追加するか、",
   "Add socket": "コンセントを追加",
-  "Add sockets from the Sockets tab in the settings: the living-room TV, the Firestick, the modem.":
-    "設定の「コンセント」タブから追加します。リビングのテレビ、Firestick、モデムなど。",
   "Add solar plant": "ソーラー設備を追加",
   "Add something to do…": "やることを追加…",
   "Add temperature": "温度を追加",
-  "Add the irrigation zones from the editor to see the lawn.":
-    "芝生を表示するには、エディターで散水ゾーンを追加してください。",
-  "Add the materials from the Waste tab in the settings: for each one the sensor or calendar that says when the collection comes.":
-    "設定の「ごみ」タブから分別区分を追加してください。区分ごとに、収集日を知らせるセンサーまたはカレンダーを選びます。",
-  "Add the pool entities from the editor to see the basin.":
-    "プールを表示するには、エディターでプールのエンティティを追加してください。",
-  "Add the printer from the Printers tab in the settings: the entity that says whether it is ready is enough, the cartridges are found on their own.":
-    "設定のプリンタータブからプリンターを追加してください。準備できているかを伝えるエンティティだけで十分で、カートリッジは自動で見つかります。",
-  "Add the units from the dashboard configuration.":
-    "ダッシュボードの設定から機器を追加してください。",
-  "Add them from the Alerts tab in the settings: earthquakes, civil protection warnings, lightning, pollen, thermal comfort and flights overhead, each from the sensor of its integration.":
-    "設定の「アラート」タブから追加してください。地震、防災警報、落雷、花粉、温熱快適性、上空の航空機。それぞれ統合のセンサーから読みます。",
   "Add to ${nomeDellaLista(list)}": "${nomeDellaLista(list)} に追加",
   "Add water heater": "給湯器を追加",
   "Add your appliances (washing machine, dishwasher, oven, microwave…). You can link":
     "家電を追加してください（洗濯機、食洗機、オーブン、電子レンジ…）。それぞれに",
-  "Add your cameras from Configuration: they will show up here with a live preview.":
-    "カメラは「設定」から追加してください。ここにライブ映像付きで並びます。",
   "Added ${trovate.length} lists": "${trovate.length}件のリストを追加しました",
   "Added ${trovati.length} calendars": "${trovati.length} 件のカレンダーを追加しました",
   "Administrator tools ·": "管理者向けツール ·",
@@ -1463,8 +1441,6 @@ export default Object.freeze({
   February: "2 月",
   "Feed a portion": "1回分を出す",
   "Files in /local (config/www)": "/local (config/www) のファイル",
-  "Fill in the car's fields — fuel, range, doors, engine — from the Car tab in the settings.":
-    "設定の「車」タブから、車の項目（燃料、航続距離、ドア、エンジン）を入力してください。",
   "Fill it in and the card shows the window open when the contact says so.":
     "ここを設定すると、接点が知らせたときにカードが窓を開いた状態で表示します。",
   "Filled ${count} fields: ${list}.": "${count} 項目を入力しました: ${list}。",
@@ -1655,12 +1631,6 @@ export default Object.freeze({
   Hob: "コンロ",
   Home: "ホーム",
   "Home (fallback)": "ホーム（代替）",
-  "Home Assistant declares a battery itself — a sensor in percent — and it appears here with nothing to configure. If yours is not found, add it from the Batteries tab in the settings.":
-    "電池は Home Assistant が自分で申告し — パーセント表示のセンサー — 設定なしでここに表示されます。見つからない場合は、設定の「電池」タブから追加してください。",
-  "Home Assistant declares a door or window contact itself and it appears here with nothing to configure. If yours is not found, add it from the Openings tab in the settings.":
-    "ドアや窓の接点は Home Assistant が自分で申告し、何も設定しなくてもここに出ます。見つからない場合は設定の「開口部」タブから追加してください。",
-  "Home Assistant declares a motion or presence sensor itself and it appears here with nothing to configure. If yours is not found, add it from the Presence tab in the settings.":
-    "人感センサーや在室センサーは Home Assistant が自分で申告し、設定しなくてもここに出てきます。見つからない場合は、設定の「在室」タブから追加してください。",
   "Home Assistant declares no machine and no network piece.":
     "Home Assistant はマシンもネットワーク機器も報告していません。",
   "Home Assistant declares the air sensors itself — particulates, CO₂, monoxide, volatile compounds — and the tile appears on its own. Here you correct that: drop a sensor that should not count, add one that is not found, and move the boundaries between good, fair, poor and bad.":
@@ -2107,26 +2077,18 @@ export default Object.freeze({
   "No alerts configured": "警告が設定されていません",
   "No answer within eight seconds.": "八秒待っても応答がありません。",
   "No appliance configured": "家電が設定されていません",
-  "No appliance configured. Use the Settings menu to add one.":
-    "家電が設定されていません。「設定」メニューから追加してください。",
   "No appliance has measurable consumption today.": "今日は計測できる消費のある家電がありません。",
-  "No appliance in this load yet. Add them from the Loads editor.":
-    "この負荷にはまだ家電がありません。負荷エディターから追加してください。",
   "No appliance is running right now.": "現在稼働している家電はありません。",
   "No appliance matches the selected filters.": "選択した条件に合う家電はありません。",
   "No appliance yet.": "家電はまだありません。",
   "No battery found": "電池が見つかりません",
   "No boiler configured": "ボイラーは未設定です",
-  "No boiler configured: add one from the Thermal management tab in settings.":
-    "ボイラーは未設定です。設定の「熱管理」タブから追加してください。",
   "No calendar configured": "カレンダーが設定されていません",
   "No calendar selected": "カレンダーが選ばれていません",
   "No camera configured": "カメラが設定されていません",
   "No car field could be recognised from this device.":
     "このデバイスからは車の項目を認識できませんでした。",
   "No cartridge found": "カートリッジが見つかりません",
-  "No cartridge found: if your printer reports them, write them in the Printers tab.":
-    "カートリッジが見つかりません。プリンターが報告している場合は、プリンタータブに書いてください。",
   "No charger among the integrations with devices: only evcc's are here, and evcc connects from the other button.":
     "デバイスのある統合に充電器がありません。ここには evcc のものだけがあり、evcc はもう一方のボタンから接続します。",
   "No charger field could be recognised from this device.":
@@ -2137,8 +2099,6 @@ export default Object.freeze({
   "No configuration contains this word.": "この言葉を含む設定はありません。",
   "No configured items.": "設定された項目がありません。",
   "No configured lights.": "設定された照明がありません。",
-  "No configured lights. Add them from the editor's Lights tab: both light.* and switch.* entities are accepted.":
-    "設定された照明がありません。エディターの「照明」タブから追加してください。light.* と switch.* のどちらのエンティティも使えます。",
   "No configured loads": "設定された負荷がありません",
   "No contact found": "接点が見つかりません",
   "No custom button": "独自のボタンはありません",
@@ -2162,8 +2122,6 @@ export default Object.freeze({
     "エンティティが追加されていません。入力するか選んで ➕ を押してください",
   "No entity bound: the circle stays empty in every view.":
     "エンティティが結び付いていません。どのビューでも円は空のままです。",
-  "No entity linked yet: open the settings and pick the device.":
-    "まだエンティティがつながっていません。設定を開いて機器を選んでください。",
   "No entries": "項目なし",
   "No extra command: the card carries the player's own buttons and nothing else.":
     "追加の操作はありません。カードにはプレーヤーのボタンだけが出ます。",
@@ -2230,15 +2188,11 @@ export default Object.freeze({
     "このデバイスからはロボットを認識できません。vacuum.* か lawn_mower.* のエンティティが必要です。",
   "No robot configured": "ロボット未設定",
   "No room": "部屋なし",
-  "No room has a humidity probe: add one from the Temperature tab.":
-    "湿度センサーのある部屋がありません。温度タブから追加してください。",
   "No room has a temperature sensor configured yet.":
     "温度センサーが設定された部屋はまだありません。",
   "No room with a sensor — add one in the editor's Temperature tab":
     "センサーのある部屋がありません。エディターの「温度」タブで追加してください",
   "No room. Add one below.": "部屋がありません。下から追加してください。",
-  "No rooms configured yet. Add them from the editor's Rooms tab: every section can then assign its entities to one.":
-    "部屋がまだありません。エディターの「部屋」タブで追加してください。追加すると、各セクションからエンティティを割り当てられます。",
   "No sensor recognized": "センサーが見つかりません",
   "No shutter or curtain configured": "シャッターもカーテンも設定されていません",
   "No signal": "信号なし",
@@ -2250,8 +2204,6 @@ export default Object.freeze({
   "No todo.* list found": "todo.* リストが見つかりません",
   "No warning in force": "発令中の警報なし",
   "No water heater configured": "給湯器が設定されていません",
-  "No water heater configured: add one from the Solar tab in settings.":
-    "給湯器が設定されていません。設定の「太陽熱」タブから追加してください。",
   "No window sits in a room that has a hygrometer: pick the room in the window's row, below.":
     "湿度計のある部屋に窓が一つもありません。下の窓の行で部屋を選んでください。",
   "No zone configured": "ゾーンが設定されていません",
@@ -2278,8 +2230,6 @@ export default Object.freeze({
   "Nothing came in today.": "今日は何も届いていません。",
   "Nothing closed yet.": "まだ閉じたものはありません。",
   "Nothing for a pet": "ペット向けのものなし",
-  "Nothing here yet. Entities are assigned from each section's own tab.":
-    "ここにはまだ何もありません。エンティティは各セクションのタブから割り当てます。",
   "Nothing new": "変わりなし",
   "Nothing of this kind here.": "ここにはこの種類のものがありません。",
   "Nothing playing": "再生していません",
@@ -2712,7 +2662,6 @@ export default Object.freeze({
   "all up": "すべて稼働中",
   Servers: "サーバー",
   connected: "接続中",
-  "Choose what to highlight": "ハイライトを選ぶ",
   "to work on": "対応待ち",
   "In today:": "今日の新着:",
   "Nothing came in today": "今日は新着なし",
@@ -2789,7 +2738,6 @@ export default Object.freeze({
   "Open all": "すべて開く",
   "Open appliances running": "稼働中の家電を開く",
   "Open camera": "カメラを開く",
-  "Open configuration": "設定を開く",
   "Open for": "開から",
   "Open gate": "ゲートを開く",
   "Open in map": "地図で開く",
@@ -2914,8 +2862,6 @@ export default Object.freeze({
     "終了より前の開始を選んでください。未来は選べません。",
   "Pick an image entity": "画像エンティティを選ぶ",
   "Pick from Appliances": "家電から選ぶ",
-  "Pick the calendars from the Widgets tab in the settings: the ones you already have in Home Assistant appear on their own with «Detect».":
-    "設定の「ウィジェット」タブでカレンダーを選んでください。Home Assistant にあるものは「検出」で自動的に出てきます。",
   "Pick the device": "デバイスを選ぶ",
   "Pick the evcc loadpoint: the charge mode, the charge limit, the session and the solar share come along. The charger connects from the other button, and the fields add up.":
     "evcc の loadpoint を選んでください。充電モード、充電上限、セッション、太陽光の割合が入ります。充電器はもう一方のボタンから接続し、項目は足し合わされます。",
@@ -3663,8 +3609,6 @@ export default Object.freeze({
     "アイコンは組み込みのアクションでも変更でき、ホームに表示されます。",
   "The integrations that bring a charger: go-e, Easee, KEBA, Wallbox, openWB, Zaptec, Tesla. Pick the device and the charging fields fill in by themselves — power, energy, voltage, temperature, the cable.":
     "充電器をもたらす統合：go-e、Easee、KEBA、Wallbox、openWB、Zaptec、Tesla。デバイスを選ぶと充電の項目が自動で埋まります — 電力、電力量、電圧、温度、ケーブル。",
-  "The intercom and the mailbox are declared in the Intercom and mail tab of the settings: the button that opens, the doorbell, and the two mailbox sensors.":
-    "インターホンと郵便受けは、設定の「インターホンと郵便」タブで指定します。開けるボタン、ドアベル、そして郵便受けの二つのセンサーです。",
   "The inverted direction": "逆向き",
   "The latest reply": "最新の返信",
   "The lawn shows the first ${MAX_LAWN_ZONES} zones; all ${config.zones.length} are listed below.":
@@ -3730,8 +3674,6 @@ export default Object.freeze({
   "The push comes from Home Assistant, not the dashboard: it runs on the server, so it arrives even when this page is closed. This automation is already written with your entities — paste it under Settings → Automations → ⋮ → Edit in YAML, and change the service to your phone's.":
     "プッシュ通知を送るのはダッシュボードではなく Home Assistant です。サーバー上で動くため、このページを閉じていても届きます。この自動化はすでにあなたのエンティティで書かれています——設定 → 自動化 → ⋮ → YAML で編集 に貼り付け、サービスをお使いのスマートフォンのものに変えてください。",
   "The quick actions": "クイック操作",
-  "The radar address is not a tile address ({z}/{x}/{y}): fix it under Settings → Weather, or pick a service from the list.":
-    "レーダーのアドレスがタイルのアドレス ({z}/{x}/{y}) ではありません。設定 → 天気 で修正するか、一覧からサービスを選んでください。",
   "The radar is not reporting.": "レーダーが応答していません。",
   "The radiators": "ラジエーター",
   "The reading on the cover": "表に出す測定値",
@@ -3785,8 +3727,6 @@ export default Object.freeze({
   "The state": "状態",
   "The station sensor, when the integration exposes one: it gives the name written next to the train.":
     "駅のセンサー（統合が提供している場合）：列車の横に書く名前になります。",
-  "The target is read-only: connect evcc in the Car tab to change it.":
-    "目標は読み取り専用です。変更するには「車」タブで evcc を接続してください。",
   "The temperatures": "温度",
   "The text of the report": "報告の本文",
   "The theme and the bar": "テーマとバー",
@@ -3863,15 +3803,11 @@ export default Object.freeze({
     "ここには state_class が total か total_increasing の積算 kWh メーターを指定してください。月次センサーは使わないでください。この項目は過去の月を再構成するために必要です。",
   "This one wins: day, month, year, history and previous months are all derived from here through Recorder. While it is set, the period fields are not read.":
     "こちらが優先されます。日・月・年・履歴・過去の月はすべて Recorder 経由でここから求めます。設定されているあいだ、期間の項目は読まれません。",
-  "This reading has no entity yet: map it in the configuration to see its history.":
-    "この計測にはまだエンティティがありません。履歴を見るには設定で割り当ててください。",
   "This sensor is also configured in": "このセンサーは次にも設定されています：",
   "This socket is configured as shown but not controllable: this window reports it, it never switches it.":
     "このコンセントは表示のみ・操作不可に設定されています。この画面は状態を伝えるだけで、切り替えは行いません。",
   "This tab holds four of them and they are all taken: remove one to make room.":
     "このタブには四つまで入り、すでに全部埋まっています。ひとつ外して場所を空けてください。",
-  "This target is a read-only sensor: to change it from here connect evcc, or a number/select entity, in the Car tab.":
-    "この目標は読み取り専用のセンサーです。ここから変更するには「車」タブで evcc か number/select エンティティを接続してください。",
   "This week": "今週",
   "Three gestures, no more: ＋ New vehicle opens an empty card, the ✏️ opens a vehicle you already saved, the switch turns it on or off in the EV section. Below you say whether it is a car or a motorcycle, and you fill in name, brand, model, entities and both photos — there is a single save: it says whether it is creating or editing, and the one at the bottom of the section carries the same words. Which vehicle you look at is picked from the section's own tabs, not from here.":
     "操作は三つだけ。＋ 新しい車両で空のカードが開き、✏️ で保存済みの車両が開き、スイッチで EV セクションへの表示を切り替えます。その下で車かバイクかを選び、名前・メーカー・モデル・エンティティ・写真二枚を入力します。保存はひとつだけで、新規か変更かを自分で示し、セクション末尾のボタンも同じ言葉を出します。どの車両を見るかはセクションのタブで選びます。ここではありません。",
@@ -4212,8 +4148,6 @@ export default Object.freeze({
   "You have nothing in progress.": "対応中のものはありません。",
   "You need a": "必要なのは",
   "You need a hand configuring or understanding": "設定や理解に手助けが必要",
-  "You picked «An address of mine» but there is no address: write it under Settings → Weather, or pick a service from the list.":
-    "「自分のアドレス」を選びましたがアドレスがありません。設定 → 天気 で入力するか、一覧からサービスを選んでください。",
   "Your alarm areas": "あなたの警戒エリア",
   "Your name (optional)": "お名前（任意）",
   "Your own entities": "自分のエンティティ",
@@ -4773,8 +4707,6 @@ export default Object.freeze({
   "Home Assistant refused": "Home Assistant が拒否しました",
   "It is only used to say how long is left to charge: from the missing percentage and the charger's power. Left empty it counts 70 kWh, which is what the dashboard has always assumed — with a different battery the time comes out wrong in proportion.":
     "充電の残り時間を出すためだけに使います。不足している割合と充電器の出力から計算します。空のままだと 70 kWh として数えます — ダッシュボードがずっと前提にしてきた値で、バッテリーが違えば時間はその分ずれます。",
-  "No session meter: connect the charger or evcc in the Car tab, or write the entity into “Session energy”.":
-    "セッションの計測器がありません。「クルマ」タブで充電器か evcc を接続するか、「セッションのエネルギー」にエンティティを書いてください。",
   Sunset: "日の入り",
   "TARGET REACHED": "目標に到達",
   "The session meter is not answering.": "セッションの計測器が応答していません。",
@@ -4787,8 +4719,6 @@ export default Object.freeze({
   empty: "空",
   "not responding": "応答なし",
   "nothing on": "オンのものはありません",
-  "The base map is not answering. The rain is there: you can change map under ⚙️ → Weather and radar.":
-    "ベースマップが応答していません。雨は表示されています。⚙️ → 天気とレーダー で地図を変更できます。",
   "ARMED ·": "警戒中 ·",
   "Your own entities in the bar": "帯に置く自分のエンティティ",
   "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit next to what is on, before the measurements, and each one can show up only when it matters — for instance only while holiday mode is on.":
@@ -4912,8 +4842,6 @@ export default Object.freeze({
   "Configure a camera above first: the privacy is its own.":
     "まず上でカメラを設定してください。プライバシーはそのカメラのものです。",
   "Private cameras": "プライベートカメラ",
-  "The soil sensor is right above. Add the irrigation zones from the editor to see the lawn too.":
-    "土壌センサーはすぐ上にあります。芝生も見るには、エディターから散水ゾーンを追加してください。",
   "Contact entity": "接点のエンティティ",
   "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back.":
     "ここに行として一度だけ取り込まれます。そのあとはあなたのものです——名前を変え、絵を選び、削除したものは戻ってきません。",
@@ -5066,8 +4994,6 @@ export default Object.freeze({
   "Save meter": "メーターを保存",
   "Flowing for ${durata}": "${durata} 流れ続けています",
   "Flowing for over a day": "1 日以上流れ続けています",
-  "A meter shows up here once you add it in the Water and gas tab of the settings: the water and gas meters, the water pressure and flow, the softener salt.":
-    "設定の「水道とガス」タブで追加すると、ここにメーターが表示されます。水道とガスのメーター、水圧と流量、軟水器の塩です。",
   "Not flowing": "流れていません",
   "🪴 ${quante} plants added": "🪴 植物を ${quante} 件追加しました",
   "${quante} doing well": "${quante} 件は元気",
@@ -5076,8 +5002,6 @@ export default Object.freeze({
   "1 doing well": "1 件は元気",
   "1 needs water": "1 件が水やり待ち",
   "1 waiting for rain": "1 件が雨待ち",
-  "A plant shows up here once you add its sensor in the Plant care tab of the settings: the soil moisture, and its temperature if there is one.":
-    "設定の「植物」タブでセンサーを追加すると、ここに植物が表示されます。土壌水分と、あれば土の温度です。",
   "Add a plant": "植物を追加",
   "All doing well": "すべて元気です",
   "Below this moisture the soil is dry and the plant joins those that need water.":
@@ -5299,8 +5223,6 @@ export default Object.freeze({
   "Other BMS": "その他のBMS",
   "Pack 1": "パック 1",
   "Pack saved": "パックを保存しました",
-  "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.":
-    "設定の「エネルギー」にある「バッテリー」タブで追加すると、パックがここに表示されます: 充電率、電圧、セル。",
   "Current sign": "電流の符号",
   "Positive when charging (JK, JBD, Daly)": "充電時に正（JK、JBD、Daly）",
   "Negative when charging": "充電時に負",
@@ -5426,8 +5348,6 @@ export default Object.freeze({
   "Lower the power": "火力を下げる",
   Modulating: "出力調整中",
   "No stove configured": "ストーブは未設定です",
-  "No stove configured: add one from the Thermal management tab in settings.":
-    "ストーブは未設定です。設定の「熱管理」タブから追加してください。",
   "On its own it covers nearly everything: on and off, the target, the room temperature and, if it has them, the fan modes.":
     "これだけでほぼすべて揃います：入/切、設定値、室温、あればファンモードも。",
   "Pellet level, second hopper": "ペレット残量（2 つ目のタンク）",
@@ -5459,8 +5379,6 @@ export default Object.freeze({
   "Radiators out of season": "シーズン外のラジエーター",
   "They show: ${periodo}. Switched on, they show anyway.":
     "表示期間: ${periodo}。オンのときは常に表示されます。",
-  "Each one has its months in the dashboard configuration. Switched on, they show anyway.":
-    "それぞれの月はダッシュボードの設定にあります。オンのときは常に表示されます。",
   "Show them anyway": "それでも表示",
   "🐠 The aquarium's entities": "🐠 水槽のエンティティ",
   "🦎 The terrarium's entities": "🦎 テラリウムのエンティティ",
@@ -5481,10 +5399,6 @@ export default Object.freeze({
   "Humidity too low": "湿度が低すぎます",
   "Last cleaning": "最後の掃除",
   Mister: "ミスト装置",
-  "No entity yet: open the settings and add the aquarium's temperature, pH, level, lights and filter.":
-    "まだエンティティがありません。設定を開いて、水槽の水温、pH、水位、照明、フィルターを追加してください。",
-  "No entity yet: open the settings and add the terrarium's temperature, humidity and lamps.":
-    "まだエンティティがありません。設定を開いて、テラリウムの温度、湿度、ランプを追加してください。",
   "Not recorded yet: tap “Done today” on the day you clean it, and from then on the card counts the days.":
     "まだ記録がありません。掃除をした日に「今日やった」をタップすると、その日からカードが日数を数えます。",
   "One row per entity: temperature and pH with their ideal range, the water level, the lights, the filter and the heater. Empty ranges use the defaults: 24–27 °C and pH 6.5–7.5.":
@@ -6053,7 +5967,6 @@ export default Object.freeze({
   "${probabile} chance": "確率 ${probabile}",
   "a camera or image entity you already have": "すでにある camera または image エンティティ",
   "about ${quanta} in the next 24 hours": "今後24時間で約 ${quanta}",
-  "Add its sensors under ⚙️ Config › Weather: your home's readings show up here, with the last 24 hours. Without them, the page uses the weather service only.": "⚙️ Config › 天気 でセンサーを追加してください。ここに自宅の計測値が過去24時間とともに表示されます。センサーがない場合、ページは天気サービスのみを使います。",
   "All optional, one per type. Temperature, humidity, feels-like and wind are the same fields as the Home header; rain and rate are the ones Irrigation already uses. They are chosen once and apply everywhere.": "すべて任意で、種類ごとに1つ。気温・湿度・体感温度・風はホームのヘッダーと同じ項目、雨と降雨強度は灌水がすでに使っているものです。一度選べばどこでも有効です。",
   at: "時刻",
   "at most ${probabile} chance": "最大でも確率 ${probabile}",
@@ -6061,7 +5974,6 @@ export default Object.freeze({
   Cloudy: "くもり",
   "conditions, feels like, low and high": "天気、体感、最低と最高",
   "dew point": "露点",
-  "Do you have a weather station?": "気象ステーションをお持ちですか？",
   E: "東",
   east: "東",
   Exceptional: "異常",
@@ -6097,7 +6009,6 @@ export default Object.freeze({
   "north-west": "北西",
   "Now · My station · Forecast · Radar": "現在 · マイステーション · 予報 · レーダー",
   NW: "北西",
-  "Open Weather in Config": "Config で天気を開く",
   "Outdoor temperature": "外気温",
   "Partly cloudy": "晴れ時々くもり",
   Radar: "レーダー",
@@ -6166,8 +6077,6 @@ export default Object.freeze({
   "Charging stops": "充電のための停車",
   "Charging: ${minuti} in ${n} stops": "充電: ${minuti}、${n}回の停車",
   "Charging: ${minuti} in 1 stop": "充電: ${minuti}、1回の停車",
-  "Connect": "接続",
-  "Connect the car to see battery and stops": "バッテリーと停車を見るには車を接続してください",
   "For the stops, choose 100% at departure.": "停車を計算するには出発時に100%を選んでください。",
   "For the way back you still have ${resta}: no need to charge": "帰りに${resta}残ります: 充電は不要です",
   "from ${da} to ${a} · ${min} min": "${da}→${a} · ${min}分",
@@ -6179,7 +6088,6 @@ export default Object.freeze({
   "Minimum charge on arrival": "到着時の最低充電量",
   "now ${ora}": "現在 ${ora}",
   "on arrival ${fine}": "到着時 ${fine}",
-  "Only you see this, as the home's administrator": "家の管理者であるあなただけに表示されます",
   "Parked · not charging": "駐車中 · 充電していません",
   "Parked at home · not charging": "自宅に駐車中 · 充電していません",
   "range": "航続距離",
@@ -6188,7 +6096,6 @@ export default Object.freeze({
   "Stops picked by GdANav on the way, with free chargers.": "走行中に GdANav が空いている充電スポットで選んだ停車です。",
   "The battery is not answering": "バッテリーが応答しません",
   "The chargers are not in the home yet: stops are by kilometre. On the way GdANav picks the chargers and checks they are free.": "充電スポットはまだ自宅にありません: 停車はキロ単位です。走行中は GdANav が充電スポットを選び、空きを確認します。",
-  "The electric car's battery and range, and the charging stops if it is not enough.": "電気自動車のバッテリーと航続距離、足りない場合は充電のための停車。",
   "The minimum power to stop at": "停車する最低出力",
   "The stops come with the route": "停車はルートと一緒に届きます",
   "the trip": "移動距離",
@@ -6242,11 +6149,9 @@ export default Object.freeze({
   "Charging · until ${fine}": "充電中 · ${fine}まで",
   "Charging · until ${limite}% or ${fine}": "充電中 · ${limite}%または${fine}まで",
   "End of the window": "時間帯の終了",
-  "Enter it to see what you spend": "入力すると費用がわかります",
   "evcc set to ${modo}": "evccを${modo}に設定",
   "Fast": "急速",
   "Finished at ${alle}": "${alle}に終了",
-  "From band ${fascia} in Settings → Energy": "設定 → エネルギーの時間帯 ${fascia} から",
   "Needs the add-on: the home starts it": "アドオンが必要です：開始するのは家です",
   "Night charging": "夜間充電",
   "No days chosen": "曜日が選ばれていません",
@@ -6622,12 +6527,10 @@ export default Object.freeze({
   "Convert": "変換",
   "Create and edit them in three steps": "3 ステップで作成・編集",
   "Create the first one": "最初のものを作成",
-  "Create the first one in the config ›": "設定で最初のものを作成 ›",
   "Delete «${v.nome}»?": "「${v.nome}」を削除しますか?",
   "depending on the sun": "太陽に応じて",
   "depending on what started it": "何が起動したかに応じて",
   "does several things at once": "複数のことを同時に行う",
-  "Edit in the config ›": "設定で編集 ›",
   "fires the ${evento} event": "イベント ${evento} を発行",
   "Home Assistant → Settings → Automations": "Home Assistant → 設定 → オートメーション",
   "Home Assistant did not save it: ${no}": "Home Assistant が保存しませんでした: ${no}",
@@ -6637,7 +6540,6 @@ export default Object.freeze({
   "Home Assistant's automations are read through the GdAHome add-on: it is not here.": "Home Assistant のオートメーションは GdAHome アドオンで読み込みます: ここにはありません。",
   "if something holds:": "何かが成り立つなら:",
   "in HA as": "HA での名前",
-  "in the config ›": "設定で ›",
   "It is removed from Home Assistant too, and it cannot be undone. If you only want to stop it, turn it off with the switch.": "Home Assistant からも削除され、元に戻せません。止めたいだけならスイッチでオフにしてください。",
   "It is saved in": "保存先:",
   "It was not changed: ${no}": "変更されませんでした: ${no}",
@@ -6645,7 +6547,6 @@ export default Object.freeze({
   "It was not deleted: ${no}": "削除されませんでした: ${no}",
   "labelled": "ラベル",
   "Last time:": "前回:",
-  "Manage in the config ›": "設定で管理 ›",
   "never": "なし",
   "No automation matches these words.": "これらの言葉に一致するオートメーションはありません。",
   "No automations yet: start from a ready-made template.": "まだオートメーションがありません: 用意されたテンプレートから始めましょう。",
@@ -6846,4 +6747,46 @@ export default Object.freeze({
   "An intercom event (event.*), or a sensor that turns on when it rings (binary_sensor). A button or a switch work too.": "インターホンのイベント（event.*）、または鳴ったときにオンになるセンサー（binary_sensor）。ボタンやスイッチも使えます。",
   "cannot act as a doorbell: pick an event (event.*) or a sensor that turns on (binary_sensor.*).": "はドアベルとして使えません：イベント（event.*）またはオンになるセンサー（binary_sensor.*）を選んでください。",
   "Now · My station · Forecast": "現在 · マイステーション · 予報",
+  "Brake on": "パーキングブレーキ作動中",
+  "Cabin": "車内",
+  "Consumption, worked out": "消費、計算値",
+  "done ${giorno} at ${ora}": "${giorno} ${ora}に完了",
+  "done tomorrow at ${ora}": "明日 ${ora}に完了",
+  "Driven": "走行距離",
+  "Fully charged": "満充電",
+  "In neutral": "ニュートラル",
+  "Last charge": "前回の充電",
+  "More data": "その他のデータ",
+  "Moving": "走行中",
+  "on fuel": "燃料で",
+  "On the road": "走行",
+  "Parked": "駐車中",
+  "Range at ${pct}%": "${pct}%時の航続距離",
+  "rated": "カタログ値",
+  "Reversing": "後退中",
+  "Standing by": "待機中",
+  "Target reached": "目標に到達",
+  "The rest": "その他",
+  "total": "合計",
+  "Updated at ${detto}": "${detto}に更新",
+  "Updated on ${detto}": "${detto}に更新済み",
+  "From band ${fascia}": "時間帯 ${fascia} から",
+  "Home Assistant declares a battery itself — a sensor in percent — and it appears here with nothing to configure.": "電池は Home Assistant が自分で申告し — パーセント表示のセンサー — 設定なしでここに表示されます。",
+  "Home Assistant declares a door or window contact itself and it appears here with nothing to configure.": "ドアや窓の接点は Home Assistant が自分で申告し、何も設定しなくてもここに出ます。",
+  "Home Assistant declares a motion or presence sensor itself and it appears here with nothing to configure.": "人感センサーや在室センサーは Home Assistant が自分で申告し、設定しなくてもここに出てきます。",
+  "More power is going out than coming in: usually a sensor's direction is reversed.": "入ってくるより出ていく電力のほうが多くなっています。たいていはセンサーの向きが逆になっています。",
+  "No appliance in this load yet.": "この負荷にはまだ家電がありません。",
+  "No room has a humidity probe.": "湿度センサーのある部屋がありません。",
+  "No rooms configured yet.": "部屋がまだありません。",
+  "No sensor linked.": "センサーが未設定です。",
+  "No session meter.": "セッションの計測器がありません。",
+  "Nothing here yet.": "ここにはまだ何もありません。",
+  "Switched on, they show anyway.": "オンのときは常に表示されます。",
+  "The base map is not answering. The rain is there.": "ベースマップが応答していません。雨は表示されています。",
+  "The radar address is not a tile address ({z}/{x}/{y}).": "レーダーのアドレスがタイルのアドレス ({z}/{x}/{y}) ではありません。",
+  "The soil sensor is right above.": "土壌センサーはすぐ上にあります。",
+  "The target is read-only.": "目標は読み取り専用です。",
+  "This reading has no entity yet.": "この計測にはまだエンティティがありません。",
+  "This target is a read-only sensor.": "この目標は読み取り専用のセンサーです。",
+  "You picked «An address of mine» but there is no address.": "「自分のアドレス」を選びましたがアドレスがありません。",
 });

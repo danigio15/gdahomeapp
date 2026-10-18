@@ -358,6 +358,18 @@ class PlanciaVeraState extends State<PlanciaVera> {
     _riquadro.currentState?.apriLeAutomazioni();
   }
 
+  /// Apre una pagina della plancia, per linguetta: dove porta il tocco su una
+  /// notifica. Se la pagina si sta ancora caricando — l'app aperta dalla
+  /// notifica — la si aspetta, otto secondi al piu': una casa che non
+  /// risponde non tiene ferma la notifica. `false` se non ci si e' arrivati.
+  Future<bool> apriLaLinguetta(List<String> linguette) async {
+    for (var volta = 0; volta < 32 && mounted && !_caricata; volta += 1) {
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+    }
+    if (!mounted || !_caricata) return false;
+    return await _riquadro.currentState?.apriLaLinguetta(linguette) ?? false;
+  }
+
   /// Torna dov'era la plancia prima delle Automazioni.
   void tornaDalleAutomazioni() {
     if (!mounted) return;
@@ -1161,6 +1173,14 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
     if (controllore != null) {
       unawaited(riquadro.tornaDalleAutomazioni(controllore));
     }
+  }
+
+  /// Apre una pagina della plancia per linguetta: la maniglia e' la
+  /// linguetta stessa, toccata.
+  Future<bool> apriLaLinguetta(List<String> linguette) async {
+    final controllore = _controllore;
+    if (controllore == null) return false;
+    return riquadro.apriLaLinguetta(controllore, linguette);
   }
 
   /// Consegna alla pagina un dispositivo appena abbinato: il foglietto «Dove

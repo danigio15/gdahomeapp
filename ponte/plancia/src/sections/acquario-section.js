@@ -633,17 +633,7 @@ export function corpoDellaVasca(vista) {
   const { come } = vista;
   const id = vista.voce?.id || "";
   if (!vista.letture.length)
-    return `<p class="dm-animale-nulla">${esc(
-      come.tipo === "terrario"
-        ? t(
-            "Nessuna entità: apri la configurazione e aggiungi la temperatura, l'umidità e le lampade del terrario.",
-            "No entity yet: open the settings and add the terrarium's temperature, humidity and lamps.",
-          )
-        : t(
-            "Nessuna entità: apri la configurazione e aggiungi la temperatura, il pH, il livello, le luci e il filtro dell'acquario.",
-            "No entity yet: open the settings and add the aquarium's temperature, pH, level, lights and filter.",
-          ),
-    )}</p>${cambioMarkup(come, id)}`;
+    return `<p class="dm-animale-nulla">${esc(t("Nessuna entità", "No entity"))}</p>${cambioMarkup(come, id)}`;
   const mattonelle = come.comandi.map(mattonellaMarkup).join("");
   /* Quando va tutto bene la risposta direbbe il nome e i litri della vasca,
    * che la testa della scheda dice già. */

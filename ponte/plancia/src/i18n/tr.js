@@ -161,8 +161,6 @@ export default Object.freeze({
     "Yolculuk kaydedilmedi: hedefi, günü ve saati kontrol et.",
   "Up to 8 more: a socket, the heat pump, the car charging, today's kWh":
     "8 taneye kadar daha: bir priz, ısı pompası, şarj olan araç, bugünün kWh değeri",
-  "No sensor linked: pick one in Settings › Loads or Appliances.":
-    "Bağlı sensör yok: Ayarlar › Yükler veya Ev aletleri bölümünden birini seçin.",
   "Reading consumption from Home Assistant…": "Tüketim Home Assistant'tan okunuyor…",
   " — configured": " — yapılandırıldı",
   "${alzate} shutters up": "${alzate} kepenk açık",
@@ -243,8 +241,6 @@ export default Object.freeze({
   "Load to watch": "İzlenecek yük",
   Lock: "Kilitle",
   "Looking…": "Bakılıyor…",
-  "More power is going out than coming in: usually a sensor's direction is reversed, and it is changed in the Energy tab.":
-    "Giren güçten daha fazlası çıkıyor: genellikle bir sensörün yönü terstir ve Enerji sekmesinden değiştirilir.",
   Motorcycle: "Motosiklet",
   "My sections": "Bölümlerim",
   "Name the unit: it is what the card shows.": "Üniteye bir ad ver: kartta görünen odur.",
@@ -652,8 +648,6 @@ export default Object.freeze({
   "Add entity": "Varlık ekle",
   "Add from an integration": "Bir entegrasyondan ekle",
   "Add intercom": "Diafon ekle",
-  "Add it from the Energy tab in the settings: with the NUT status alone this page already knows whether there is power.":
-    "Ayarlardaki Enerji sekmesinden ekle: yalnızca NUT durumuyla bile bu sayfa elektrik olup olmadığını bilir.",
   "Add light": "Işık ekle",
   "Add list": "Liste ekle",
   "Add load": "Yük ekle",
@@ -677,28 +671,13 @@ export default Object.freeze({
   "Add sensors to the Alerts Panel with a clean name, or create a":
     "Uyarı paneline anlaşılır adlarla algılayıcı ekleyin ya da",
   "Add socket": "Priz ekle",
-  "Add sockets from the Sockets tab in the settings: the living-room TV, the Firestick, the modem.":
-    "Prizleri ayarlardaki Prizler sekmesinden ekleyin: salondaki televizyon, Firestick, modem.",
   "Add solar plant": "Güneş tesisi ekle",
   "Add something to do…": "Yapılacak bir şey ekle…",
   "Add temperature": "Sıcaklık ekle",
-  "Add the irrigation zones from the editor to see the lawn.":
-    "Çimi görmek için sulama bölgelerini düzenleyiciden ekle.",
-  "Add the materials from the Waste tab in the settings: for each one the sensor or calendar that says when the collection comes.":
-    "Ayarlardaki Atık sekmesinden malzemeleri ekleyin: her biri için toplamanın ne zaman geleceğini söyleyen sensör ya da takvim.",
-  "Add the pool entities from the editor to see the basin.":
-    "Havuzu görmek için havuz varlıklarını düzenleyiciden ekle.",
-  "Add the printer from the Printers tab in the settings: the entity that says whether it is ready is enough, the cartridges are found on their own.":
-    "Yazıcıyı ayarlardaki Yazıcılar sekmesinden ekle: hazır olup olmadığını söyleyen varlık yeter, kartuşlar kendiliğinden bulunur.",
-  "Add the units from the dashboard configuration.": "Üniteleri pano yapılandırmasından ekle.",
-  "Add them from the Alerts tab in the settings: earthquakes, civil protection warnings, lightning, pollen, thermal comfort and flights overhead, each from the sensor of its integration.":
-    "Ayarlardaki Uyarılar sekmesinden ekleyin: depremler, sivil savunma uyarıları, yıldırım, polen, ısıl konfor ve tepedeki uçuşlar; her biri kendi entegrasyonunun sensöründen.",
   "Add to ${nomeDellaLista(list)}": "${nomeDellaLista(list)} listesine ekle",
   "Add water heater": "Termosifon ekle",
   "Add your appliances (washing machine, dishwasher, oven, microwave…). You can link":
     "Cihazlarınızı ekleyin (çamaşır makinesi, bulaşık makinesi, fırın, mikrodalga…). Her birine",
-  "Add your cameras from Configuration: they will show up here with a live preview.":
-    "Kameralarını Yapılandırma'dan ekle: burada canlı önizlemeyle görünürler.",
   "Added ${trovate.length} lists": "${trovate.length} liste eklendi",
   "Added ${trovati.length} calendars": "${trovati.length} takvim eklendi",
   "Administrator tools ·": "Yönetici araçları ·",
@@ -1465,8 +1444,6 @@ export default Object.freeze({
   February: "Şubat",
   "Feed a portion": "Bir porsiyon ver",
   "Files in /local (config/www)": "/local (config/www) içindeki dosyalar",
-  "Fill in the car's fields — fuel, range, doors, engine — from the Car tab in the settings.":
-    "Aracın alanlarını — yakıt, menzil, kapılar, motor — ayarlardaki Araç sekmesinden doldurun.",
   "Fill it in and the card shows the window open when the contact says so.":
     "Bunu doldur; manyetik kontak bildirdiğinde kart pencereyi açık gösterir.",
   "Filled ${count} fields: ${list}.": "${count} alan dolduruldu: ${list}.",
@@ -1657,12 +1634,6 @@ export default Object.freeze({
   Hob: "Ocak",
   Home: "Ev",
   "Home (fallback)": "Ev (yedek)",
-  "Home Assistant declares a battery itself — a sensor in percent — and it appears here with nothing to configure. If yours is not found, add it from the Batteries tab in the settings.":
-    "Pili Home Assistant kendisi bildirir — yüzde cinsinden bir sensör — ve hiçbir ayar yapmadan burada görünür. Seninki bulunamadıysa, ayarlardaki Piller sekmesinden ekle.",
-  "Home Assistant declares a door or window contact itself and it appears here with nothing to configure. If yours is not found, add it from the Openings tab in the settings.":
-    "Home Assistant kapı veya pencere kontağını kendisi bildirir ve hiçbir ayar yapmadan burada görünür. Seninki bulunamıyorsa, ayarlardaki Açıklıklar sekmesinden ekle.",
-  "Home Assistant declares a motion or presence sensor itself and it appears here with nothing to configure. If yours is not found, add it from the Presence tab in the settings.":
-    "Bir hareket veya varlık sensörünü Home Assistant kendisi bildirir ve hiçbir şey ayarlamadan burada görünür. Seninki bulunamıyorsa ayarlardaki Varlık sekmesinden ekle.",
   "Home Assistant declares no machine and no network piece.":
     "Home Assistant hiçbir makine ya da ağ parçası bildirmiyor.",
   "Home Assistant declares the air sensors itself — particulates, CO₂, monoxide, volatile compounds — and the tile appears on its own. Here you correct that: drop a sensor that should not count, add one that is not found, and move the boundaries between good, fair, poor and bad.":
@@ -2109,27 +2080,19 @@ export default Object.freeze({
   "No alerts configured": "Hiç uyarı tanımlanmadı",
   "No answer within eight seconds.": "Sekiz saniyede yanıt yok.",
   "No appliance configured": "Hiç cihaz tanımlanmadı",
-  "No appliance configured. Use the Settings menu to add one.":
-    "Yapılandırılmış cihaz yok. Eklemek için Ayarlar menüsünü kullan.",
   "No appliance has measurable consumption today.":
     "Bugün hiçbir cihazın ölçülebilir tüketimi yok.",
-  "No appliance in this load yet. Add them from the Loads editor.":
-    "Bu yükte henüz cihaz yok. Yükler düzenleyicisinden ekle.",
   "No appliance is running right now.": "Şu anda çalışan cihaz yok.",
   "No appliance matches the selected filters.": "Seçilen süzgeçlere uyan cihaz yok.",
   "No appliance yet.": "Henüz cihaz yok.",
   "No battery found": "Pil bulunamadı",
   "No boiler configured": "Kombi tanımlı değil",
-  "No boiler configured: add one from the Thermal management tab in settings.":
-    "Kombi tanımlı değil: ayarlardaki Isı yönetimi sekmesinden ekle.",
   "No calendar configured": "Yapılandırılmış takvim yok",
   "No calendar selected": "Seçili takvim yok",
   "No camera configured": "Yapılandırılmış kamera yok",
   "No car field could be recognised from this device.":
     "Bu cihazdan hiçbir araba alanı tanınamadı.",
   "No cartridge found": "Kartuş bulunamadı",
-  "No cartridge found: if your printer reports them, write them in the Printers tab.":
-    "Kartuş bulunamadı: yazıcın bildiriyorsa Yazıcılar sekmesine yaz.",
   "No charger among the integrations with devices: only evcc's are here, and evcc connects from the other button.":
     "Cihazlı entegrasyonlar arasında şarj cihazı yok: burada yalnızca evcc'ninkiler var, evcc ise öbür düğmeden bağlanır.",
   "No charger field could be recognised from this device.":
@@ -2140,8 +2103,6 @@ export default Object.freeze({
   "No configuration contains this word.": "Bu kelimeyi içeren bir ayar yok.",
   "No configured items.": "Yapılandırılmış öğe yok.",
   "No configured lights.": "Yapılandırılmış ışık yok.",
-  "No configured lights. Add them from the editor's Lights tab: both light.* and switch.* entities are accepted.":
-    "Yapılandırılmış ışık yok. Düzenleyicinin Işıklar sekmesinden ekle: hem light.* hem switch.* varlıkları kabul edilir.",
   "No configured loads": "Yapılandırılmış yük yok",
   "No contact found": "Kontak bulunamadı",
   "No custom button": "Özel düğme yok",
@@ -2165,8 +2126,6 @@ export default Object.freeze({
     "Hiç varlık eklenmedi — yazın ya da seçin ve ➕ düğmesine basın",
   "No entity bound: the circle stays empty in every view.":
     "Bağlı varlık yok: daire her görünümde boş kalır.",
-  "No entity linked yet: open the settings and pick the device.":
-    "Henüz bağlı varlık yok: ayarları aç ve cihazı seç.",
   "No entries": "Öğe yok",
   "No extra command: the card carries the player's own buttons and nothing else.":
     "Fazladan kumanda yok: kart yalnızca oynatıcının tuşlarını taşıyor.",
@@ -2232,15 +2191,11 @@ export default Object.freeze({
     "Bu cihazdan hiçbir robot tanınamadı: bir vacuum.* veya lawn_mower.* varlığı gerekir.",
   "No robot configured": "Yapılandırılmış robot yok",
   "No room": "Oda yok",
-  "No room has a humidity probe: add one from the Temperature tab.":
-    "Hiçbir odada nem sensörü yok: Sıcaklık sekmesinden ekleyin.",
   "No room has a temperature sensor configured yet.":
     "Henüz hiçbir odada sıcaklık sensörü yapılandırılmadı.",
   "No room with a sensor — add one in the editor's Temperature tab":
     "Algılayıcısı olan oda yok — düzenleyicinin Sıcaklık sekmesinden bir tane ekleyin",
   "No room. Add one below.": "Oda yok. Aşağıdan bir tane ekleyin.",
-  "No rooms configured yet. Add them from the editor's Rooms tab: every section can then assign its entities to one.":
-    "Henüz oda yok. Bunları düzenleyicinin Odalar sekmesinden ekle: sonra her bölüm kendi varlıklarını bir odaya atayabilir.",
   "No sensor recognized": "Sensör bulunamadı",
   "No shutter or curtain configured": "Yapılandırılmış panjur ya da perde yok",
   "No signal": "Sinyal yok",
@@ -2252,8 +2207,6 @@ export default Object.freeze({
   "No todo.* list found": "todo.* listesi bulunamadı",
   "No warning in force": "Yürürlükte uyarı yok",
   "No water heater configured": "Termosifon tanımlı değil",
-  "No water heater configured: add one from the Solar tab in settings.":
-    "Termosifon tanımlı değil: ayarlardaki Güneş sekmesinden ekleyin.",
   "No window sits in a room that has a hygrometer: pick the room in the window's row, below.":
     "Higrometresi olan bir odada hiç pencere yok: aşağıda, pencerenin satırında odayı seçin.",
   "No zone configured": "Yapılandırılmış bölge yok",
@@ -2280,8 +2233,6 @@ export default Object.freeze({
   "Nothing came in today.": "Bugün hiçbir şey gelmedi.",
   "Nothing closed yet.": "Henüz kapatılan bir şey yok.",
   "Nothing for a pet": "Evcil hayvan için bir şey yok",
-  "Nothing here yet. Entities are assigned from each section's own tab.":
-    "Burada henüz bir şey yok. Varlıklar her bölümün kendi sekmesinden atanır.",
   "Nothing new": "Yeni bir şey yok",
   "Nothing of this kind here.": "Burada bu türden bir şey yok.",
   "Nothing playing": "Hiçbir şey çalmıyor",
@@ -2714,7 +2665,6 @@ export default Object.freeze({
   "all up": "hepsi çalışıyor",
   Servers: "Sunucular",
   connected: "bağlı",
-  "Choose what to highlight": "Öne çıkanları seç",
   "to work on": "işlenecek",
   "In today:": "Bugün gelen:",
   "Nothing came in today": "Bugün hiçbir şey gelmedi",
@@ -2791,7 +2741,6 @@ export default Object.freeze({
   "Open all": "Tümünü aç",
   "Open appliances running": "Çalışan cihazları aç",
   "Open camera": "Kamerayı aç",
-  "Open configuration": "Yapılandırmayı aç",
   "Open for": "Açık",
   "Open gate": "Bahçe kapısını aç",
   "Open in map": "Haritada aç",
@@ -2917,8 +2866,6 @@ export default Object.freeze({
     "Bitişten önce bir başlangıç seçin, gelecekte olmasın.",
   "Pick an image entity": "Bir görüntü varlığı seç",
   "Pick from Appliances": "Cihazlardan seç",
-  "Pick the calendars from the Widgets tab in the settings: the ones you already have in Home Assistant appear on their own with «Detect».":
-    "Takvimleri ayarlardaki Bileşenler sekmesinden seç: Home Assistant'ta zaten olanlar «Algıla» ile kendiliğinden gelir.",
   "Pick the device": "Cihazı seç",
   "Pick the evcc loadpoint: the charge mode, the charge limit, the session and the solar share come along. The charger connects from the other button, and the fields add up.":
     "evcc loadpoint'ini seç: şarj modu, şarj sınırı, oturum ve güneş payı gelir. Şarj cihazı öbür düğmeden bağlanır ve alanlar toplanır.",
@@ -3663,8 +3610,6 @@ export default Object.freeze({
     "Simge, yerleşik eylemler için de değiştirilebilir ve Ev'de gösterilir.",
   "The integrations that bring a charger: go-e, Easee, KEBA, Wallbox, openWB, Zaptec, Tesla. Pick the device and the charging fields fill in by themselves — power, energy, voltage, temperature, the cable.":
     "Şarj cihazı getiren entegrasyonlar: go-e, Easee, KEBA, Wallbox, openWB, Zaptec, Tesla. Cihazı seç, şarj alanları kendiliğinden dolar — güç, enerji, gerilim, sıcaklık, kablo.",
-  "The intercom and the mailbox are declared in the Intercom and mail tab of the settings: the button that opens, the doorbell, and the two mailbox sensors.":
-    "Diafon ve posta kutusu, ayarlardaki «Diafon ve posta» sekmesinde tanımlanır: açan düğme, kapı zili ve posta kutusunun iki sensörü.",
   "The inverted direction": "Ters yön",
   "The latest reply": "Son yanıt",
   "The lawn shows the first ${MAX_LAWN_ZONES} zones; all ${config.zones.length} are listed below.":
@@ -3730,8 +3675,6 @@ export default Object.freeze({
   "The push comes from Home Assistant, not the dashboard: it runs on the server, so it arrives even when this page is closed. This automation is already written with your entities — paste it under Settings → Automations → ⋮ → Edit in YAML, and change the service to your phone's.":
     "Bildirimi pano değil Home Assistant gönderir: sunucuda çalışır, bu yüzden bu sayfa kapalıyken de ulaşır. Bu otomasyon sizin varlıklarınızla zaten yazılmış — Ayarlar → Otomasyonlar → ⋮ → YAML olarak düzenle altına yapıştırın ve servisi kendi telefonunuzunkiyle değiştirin.",
   "The quick actions": "Hızlı eylemler",
-  "The radar address is not a tile address ({z}/{x}/{y}): fix it under Settings → Weather, or pick a service from the list.":
-    "Radar adresi bir karo adresi değil ({z}/{x}/{y}): Ayarlar → Hava Durumu altında düzelt ya da listeden bir servis seç.",
   "The radar is not reporting.": "Radar yanıt vermiyor.",
   "The radiators": "Radyatörler",
   "The reading on the cover": "Kapaktaki ölçüm",
@@ -3785,8 +3728,6 @@ export default Object.freeze({
   "The state": "Durum",
   "The station sensor, when the integration exposes one: it gives the name written next to the train.":
     "İstasyon sensörü, entegrasyon veriyorsa: trenin yanına yazılan adı verir.",
-  "The target is read-only: connect evcc in the Car tab to change it.":
-    "Hedef salt okunur: değiştirmek için Araç sekmesinde evcc'yi bağla.",
   "The temperatures": "Sıcaklıklar",
   "The text of the report": "Bildirimin metni",
   "The theme and the bar": "Tema ve çubuk",
@@ -3862,15 +3803,11 @@ export default Object.freeze({
     "Bu, state_class değeri total ya da total_increasing olan birikimli bir kWh sayacı olmalı. Burada aylık sensörü kullanma: bu alan önceki ayları yeniden kurmak için gerekli.",
   "This one wins: day, month, year, history and previous months are all derived from here through Recorder. While it is set, the period fields are not read.":
     "Üstün gelen budur: gün, ay, yıl, geçmiş ve önceki ayların hepsi Recorder üzerinden buradan türetilir. Ayarlı olduğu sürece dönem alanları okunmaz.",
-  "This reading has no entity yet: map it in the configuration to see its history.":
-    "Bu ölçümün henüz bir varlığı yok: geçmişini görmek için yapılandırmada eşleştir.",
   "This sensor is also configured in": "Bu sensör şurada da ayarlı:",
   "This socket is configured as shown but not controllable: this window reports it, it never switches it.":
     "Bu priz görünür ama kumanda edilemez olarak ayarlı: bu pencere onu bildirir, asla açıp kapatmaz.",
   "This tab holds four of them and they are all taken: remove one to make room.":
     "Bu sekme dört tane tutar ve hepsi dolu: yer açmak için birini kaldır.",
-  "This target is a read-only sensor: to change it from here connect evcc, or a number/select entity, in the Car tab.":
-    "Bu hedef salt okunur bir sensör: buradan değiştirmek için Araç sekmesinde evcc'yi ya da bir number/select varlığını bağla.",
   "This week": "Bu hafta",
   "Three gestures, no more: ＋ New vehicle opens an empty card, the ✏️ opens a vehicle you already saved, the switch turns it on or off in the EV section. Below you say whether it is a car or a motorcycle, and you fill in name, brand, model, entities and both photos — there is a single save: it says whether it is creating or editing, and the one at the bottom of the section carries the same words. Which vehicle you look at is picked from the section's own tabs, not from here.":
     "Üç hareket, o kadar: ＋ Yeni araç boş bir kart açar, ✏️ kayıtlı bir aracı açar, anahtar onu EV bölümünde gösterir ya da gizler. Altında araba mı motosiklet mi olduğunu söyler; ad, marka, model, varlıklar ve iki fotoğrafı doldurursun — tek bir kaydetme vardır: oluşturuyor mu değiştiriyor mu söyler, bölümün sonundaki de aynı sözleri taşır. Hangi araca baktığın bölümün kendi sekmelerinden seçilir, buradan değil.",
@@ -4210,8 +4147,6 @@ export default Object.freeze({
   "You have nothing in progress.": "Üzerinde çalıştığın bir şey yok.",
   "You need a": "Şuna ihtiyacınız var:",
   "You need a hand configuring or understanding": "Kurmak ya da anlamak için yardım gerekiyor",
-  "You picked «An address of mine» but there is no address: write it under Settings → Weather, or pick a service from the list.":
-    "«Kendi adresim» seçildi ama adres yok: Ayarlar → Hava Durumu altına yaz ya da listeden bir servis seç.",
   "Your alarm areas": "Alarm bölgelerin",
   "Your name (optional)": "Adın (isteğe bağlı)",
   "Your own entities": "Kendi varlıkların",
@@ -4772,8 +4707,6 @@ export default Object.freeze({
   "Home Assistant refused": "Home Assistant reddetti",
   "It is only used to say how long is left to charge: from the missing percentage and the charger's power. Left empty it counts 70 kWh, which is what the dashboard has always assumed — with a different battery the time comes out wrong in proportion.":
     "Yalnızca şarjın bitmesine ne kadar kaldığını söylemek için kullanılır: eksik yüzdeden ve şarj cihazının gücünden. Boş bırakılırsa 70 kWh sayılır, panonun her zaman varsaydığı değer — farklı bir batarya ile süre orantılı olarak yanlış çıkar.",
-  "No session meter: connect the charger or evcc in the Car tab, or write the entity into “Session energy”.":
-    "Oturum sayacı yok: Araba sekmesinde şarj cihazını veya evcc'yi bağla, ya da varlığı «Oturum enerjisi» alanına yaz.",
   Sunset: "Gün batımı",
   "TARGET REACHED": "HEDEFE ULAŞILDI",
   "The session meter is not answering.": "Oturum sayacı yanıt vermiyor.",
@@ -4786,8 +4719,6 @@ export default Object.freeze({
   empty: "boş",
   "not responding": "yanıt vermiyor",
   "nothing on": "hiçbir şey açık değil",
-  "The base map is not answering. The rain is there: you can change map under ⚙️ → Weather and radar.":
-    "Altlık harita yanıt vermiyor. Yağmur görünüyor: haritayı ⚙️ → Hava durumu ve radar altından değiştirebilirsin.",
   "ARMED ·": "KURULU ·",
   "Your own entities in the bar": "Şeritteki kendi varlıkların",
   "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit next to what is on, before the measurements, and each one can show up only when it matters — for instance only while holiday mode is on.":
@@ -4910,8 +4841,6 @@ export default Object.freeze({
   "Configure a camera above first: the privacy is its own.":
     "Önce yukarıda bir kamera yapılandırın: gizlilik ona aittir.",
   "Private cameras": "Özel kameralar",
-  "The soil sensor is right above. Add the irrigation zones from the editor to see the lawn too.":
-    "Toprak sensörü hemen yukarıda. Çimi de görmek için düzenleyiciden sulama bölgelerini ekleyin.",
   "Contact entity": "Kontak varlığı",
   "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back.":
     "Buraya bir kez satır olarak eklenir: o andan sonra sizindir — adlarını değiştirir, çizimlerini verirsiniz, ve sildikleriniz geri gelmez.",
@@ -5062,8 +4991,6 @@ export default Object.freeze({
   "Save meter": "Sayacı kaydet",
   "Flowing for ${durata}": "${durata} süredir akıyor",
   "Flowing for over a day": "Bir günden uzun süredir akıyor",
-  "A meter shows up here once you add it in the Water and gas tab of the settings: the water and gas meters, the water pressure and flow, the softener salt.":
-    "Bir sayaç, ayarlardaki Su ve gaz sekmesinden eklediğinde burada görünür: su ve gaz sayaçları, suyun basıncı ve akışı, yumuşatıcının tuzu.",
   "Not flowing": "Akmıyor",
   "🪴 ${quante} plants added": "🪴 ${quante} bitki eklendi",
   "${quante} doing well": "${quante} bitki iyi durumda",
@@ -5072,8 +4999,6 @@ export default Object.freeze({
   "1 doing well": "1 bitki iyi durumda",
   "1 needs water": "1 bitkinin suya ihtiyacı var",
   "1 waiting for rain": "1 bitki yağmur bekliyor",
-  "A plant shows up here once you add its sensor in the Plant care tab of the settings: the soil moisture, and its temperature if there is one.":
-    "Bir bitki, ayarlardaki Bitkiler sekmesinde sensörünü eklediğinde burada görünür: toprak nemi ve varsa sıcaklığı.",
   "Add a plant": "Bitki ekle",
   "All doing well": "Hepsi iyi durumda",
   "Below this moisture the soil is dry and the plant joins those that need water.":
@@ -5296,8 +5221,6 @@ export default Object.freeze({
   "Other BMS": "Diğer BMS",
   "Pack 1": "Paket 1",
   "Pack saved": "Paket kaydedildi",
-  "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.":
-    "Paketler, ayarlarda Enerji altındaki Bataryalar sekmesine eklediğinizde burada görünür: şarj durumu, gerilimler, hücreler.",
   "Current sign": "Akımın işareti",
   "Positive when charging (JK, JBD, Daly)": "Şarjda pozitif (JK, JBD, Daly)",
   "Negative when charging": "Şarjda negatif",
@@ -5424,8 +5347,6 @@ export default Object.freeze({
   "Lower the power": "Gücü düşür",
   Modulating: "Modülasyon",
   "No stove configured": "Soba tanımlı değil",
-  "No stove configured: add one from the Thermal management tab in settings.":
-    "Soba tanımlı değil: ayarlardaki Isı yönetimi sekmesinden ekle.",
   "On its own it covers nearly everything: on and off, the target, the room temperature and, if it has them, the fan modes.":
     "Tek başına neredeyse her şeyi karşılar: açma kapama, hedef, oda sıcaklığı ve varsa fan modları.",
   "Pellet level, second hopper": "Pelet seviyesi, ikinci depo",
@@ -5456,8 +5377,6 @@ export default Object.freeze({
   "Radiators out of season": "Sezon dışı radyatörler",
   "They show: ${periodo}. Switched on, they show anyway.":
     "Görünür: ${periodo}. Açık olanlar yine de görünür.",
-  "Each one has its months in the dashboard configuration. Switched on, they show anyway.":
-    "Her birinin ayları panel yapılandırmasında. Açık olanlar yine de görünür.",
   "Show them anyway": "Yine de göster",
   "🐠 The aquarium's entities": "🐠 Akvaryumun varlıkları",
   "🦎 The terrarium's entities": "🦎 Teraryumun varlıkları",
@@ -5478,10 +5397,6 @@ export default Object.freeze({
   "Humidity too low": "Nem çok düşük",
   "Last cleaning": "Son temizlik",
   Mister: "Sisleyici",
-  "No entity yet: open the settings and add the aquarium's temperature, pH, level, lights and filter.":
-    "Henüz varlık yok: ayarları aç ve akvaryumun sıcaklığını, pH'ını, seviyesini, ışıklarını ve filtresini ekle.",
-  "No entity yet: open the settings and add the terrarium's temperature, humidity and lamps.":
-    "Henüz varlık yok: ayarları aç ve teraryumun sıcaklığını, nemini ve lambalarını ekle.",
   "Not recorded yet: tap “Done today” on the day you clean it, and from then on the card counts the days.":
     "Henüz kaydedilmedi: temizlediğin gün “Bugün yapıldı”ya dokun, kart o andan itibaren günleri sayar.",
   "One row per entity: temperature and pH with their ideal range, the water level, the lights, the filter and the heater. Empty ranges use the defaults: 24–27 °C and pH 6.5–7.5.":
@@ -6050,7 +5965,6 @@ export default Object.freeze({
   "${probabile} chance": "${probabile} olasılık",
   "a camera or image entity you already have": "zaten sahip olduğun bir camera veya image varlığı",
   "about ${quanta} in the next 24 hours": "önümüzdeki 24 saatte yaklaşık ${quanta}",
-  "Add its sensors under ⚙️ Config › Weather: your home's readings show up here, with the last 24 hours. Without them, the page uses the weather service only.": "Sensörlerini ⚙️ Config › Hava durumu altına ekle: evinin ölçümleri son 24 saatle birlikte burada görünür. Onlar olmadan sayfa yalnızca hava durumu servisini kullanır.",
   "All optional, one per type. Temperature, humidity, feels-like and wind are the same fields as the Home header; rain and rate are the ones Irrigation already uses. They are chosen once and apply everywhere.": "Hepsi isteğe bağlı, her tür için bir tane. Sıcaklık, nem, hissedilen ve rüzgâr Ana sayfa başlığındaki alanlarla aynıdır; yağmur ve yoğunluk Sulama'nın zaten kullandıklarıdır. Bir kez seçilir ve her yerde geçerlidir.",
   at: "saat",
   "at most ${probabile} chance": "en fazla ${probabile} olasılık",
@@ -6058,7 +5972,6 @@ export default Object.freeze({
   Cloudy: "Bulutlu",
   "conditions, feels like, low and high": "durum, hissedilen, en düşük ve en yüksek",
   "dew point": "çiy noktası",
-  "Do you have a weather station?": "Bir hava istasyonun var mı?",
   E: "D",
   east: "doğu",
   Exceptional: "Olağanüstü",
@@ -6094,7 +6007,6 @@ export default Object.freeze({
   "north-west": "kuzeybatı",
   "Now · My station · Forecast · Radar": "Şimdi · İstasyonum · Tahmin · Radar",
   NW: "KB",
-  "Open Weather in Config": "Config'de Hava durumunu aç",
   "Outdoor temperature": "Dış sıcaklık",
   "Partly cloudy": "Parçalı bulutlu",
   Radar: "Radar",
@@ -6163,8 +6075,6 @@ export default Object.freeze({
   "Charging stops": "Şarj molaları",
   "Charging: ${minuti} in ${n} stops": "Şarj: ${minuti}, ${n} molada",
   "Charging: ${minuti} in 1 stop": "Şarj: ${minuti}, 1 molada",
-  "Connect": "Bağla",
-  "Connect the car to see battery and stops": "Batarya ve molaları görmek için aracı bağla",
   "For the stops, choose 100% at departure.": "Molalar için kalkışta %100'ü seç.",
   "For the way back you still have ${resta}: no need to charge": "Dönüş için ${resta} kalıyor: şarja gerek yok",
   "from ${da} to ${a} · ${min} min": "${da} → ${a} · ${min} dk",
@@ -6176,7 +6086,6 @@ export default Object.freeze({
   "Minimum charge on arrival": "Varışta en az şarj",
   "now ${ora}": "şimdi ${ora}",
   "on arrival ${fine}": "varışta ${fine}",
-  "Only you see this, as the home's administrator": "Bunu yalnızca evin yöneticisi olarak sen görürsün",
   "Parked · not charging": "Park halinde · şarj olmuyor",
   "Parked at home · not charging": "Evde park halinde · şarj olmuyor",
   "range": "menzil",
@@ -6185,7 +6094,6 @@ export default Object.freeze({
   "Stops picked by GdANav on the way, with free chargers.": "Molaları GdANav yolda, boş istasyonlarla seçti.",
   "The battery is not answering": "Batarya yanıt vermiyor",
   "The chargers are not in the home yet: stops are by kilometre. On the way GdANav picks the chargers and checks they are free.": "Şarj istasyonları henüz evde değil: molalar kilometreye göre. Yolda GdANav istasyonları seçer ve boş olup olmadıklarına bakar.",
-  "The electric car's battery and range, and the charging stops if it is not enough.": "Elektrikli aracın bataryası ve menzili, yetmezse şarj molaları.",
   "The minimum power to stop at": "Durmak için en düşük güç",
   "The stops come with the route": "Molalar rotayla birlikte gelir",
   "the trip": "yolculuk",
@@ -6239,11 +6147,9 @@ export default Object.freeze({
   "Charging · until ${fine}": "Şarj oluyor · ${fine} saatine kadar",
   "Charging · until ${limite}% or ${fine}": "Şarj oluyor · %${limite} veya ${fine} saatine kadar",
   "End of the window": "Zaman aralığı bitti",
-  "Enter it to see what you spend": "Ne kadar harcadığını görmek için gir",
   "evcc set to ${modo}": "evcc ${modo} moduna alındı",
   "Fast": "Hızlı",
   "Finished at ${alle}": "${alle} itibarıyla bitti",
-  "From band ${fascia} in Settings → Energy": "Ayarlar → Enerji içindeki ${fascia} diliminden",
   "Needs the add-on: the home starts it": "Eklenti gerekir: onu ev başlatır",
   "Night charging": "Gece şarjı",
   "No days chosen": "Gün seçilmedi",
@@ -6619,12 +6525,10 @@ export default Object.freeze({
   "Convert": "Dönüştür",
   "Create and edit them in three steps": "Üç adımda oluşturur ve düzenlersiniz",
   "Create the first one": "İlkini oluştur",
-  "Create the first one in the config ›": "İlkini yapılandırmada oluştur ›",
   "Delete «${v.nome}»?": "«${v.nome}» silinsin mi?",
   "depending on the sun": "güneşe göre",
   "depending on what started it": "onu neyin başlattığına göre",
   "does several things at once": "aynı anda birkaç şey yapar",
-  "Edit in the config ›": "Yapılandırmada düzenle ›",
   "fires the ${evento} event": "${evento} olayını tetikler",
   "Home Assistant → Settings → Automations": "Home Assistant → Ayarlar → Otomasyonlar",
   "Home Assistant did not save it: ${no}": "Home Assistant kaydetmedi: ${no}",
@@ -6634,7 +6538,6 @@ export default Object.freeze({
   "Home Assistant's automations are read through the GdAHome add-on: it is not here.": "Home Assistant'ın otomasyonları GdAHome eklentisiyle okunur: burada yok.",
   "if something holds:": "bir şey doğruysa:",
   "in HA as": "HA'da şu adla",
-  "in the config ›": "yapılandırmada ›",
   "It is removed from Home Assistant too, and it cannot be undone. If you only want to stop it, turn it off with the switch.": "Home Assistant'tan da kaldırılır ve geri alınamaz. Yalnızca durdurmak istiyorsanız anahtarla kapatın.",
   "It is saved in": "Şuraya kaydedilir:",
   "It was not changed: ${no}": "Değiştirilmedi: ${no}",
@@ -6642,7 +6545,6 @@ export default Object.freeze({
   "It was not deleted: ${no}": "Silinmedi: ${no}",
   "labelled": "etiketiyle",
   "Last time:": "Son kez:",
-  "Manage in the config ›": "Yapılandırmada yönet ›",
   "never": "hiç",
   "No automation matches these words.": "Bu kelimelerle eşleşen otomasyon yok.",
   "No automations yet: start from a ready-made template.": "Henüz otomasyon yok: hazır bir şablonla başlayın.",
@@ -6849,4 +6751,46 @@ export default Object.freeze({
   "An intercom event (event.*), or a sensor that turns on when it rings (binary_sensor). A button or a switch work too.": "Diyafonun bir olayı (event.*) ya da çaldığında açılan bir sensör (binary_sensor). Bir düğme veya anahtar da olur.",
   "cannot act as a doorbell: pick an event (event.*) or a sensor that turns on (binary_sensor.*).": "kapı zili olamaz: bir olay (event.*) ya da açılan bir sensör (binary_sensor.*) seçin.",
   "Now · My station · Forecast": "Şimdi · İstasyonum · Tahmin",
+  "Brake on": "El freni çekili",
+  "Cabin": "Kabin",
+  "Consumption, worked out": "Tüketim, hesaplanan",
+  "done ${giorno} at ${ora}": "${giorno} ${ora} itibarıyla biter",
+  "done tomorrow at ${ora}": "yarın ${ora} itibarıyla biter",
+  "Driven": "Gidilen",
+  "Fully charged": "Tam şarjlı",
+  "In neutral": "Boşta",
+  "Last charge": "Son şarj",
+  "More data": "Diğer veriler",
+  "Moving": "Hareket halinde",
+  "on fuel": "yakıtla",
+  "On the road": "Sürüş",
+  "Parked": "Park halinde",
+  "Range at ${pct}%": "%${pct} menzil",
+  "rated": "onaylı",
+  "Reversing": "Geri viteste",
+  "Standing by": "Beklemede",
+  "Target reached": "Hedefe ulaşıldı",
+  "The rest": "Kalan",
+  "total": "toplam",
+  "Updated at ${detto}": "${detto} itibarıyla güncellendi",
+  "Updated on ${detto}": "${detto} tarihinde güncellendi",
+  "From band ${fascia}": "${fascia} diliminden",
+  "Home Assistant declares a battery itself — a sensor in percent — and it appears here with nothing to configure.": "Pili Home Assistant kendisi bildirir — yüzde cinsinden bir sensör — ve hiçbir ayar yapmadan burada görünür.",
+  "Home Assistant declares a door or window contact itself and it appears here with nothing to configure.": "Home Assistant kapı veya pencere kontağını kendisi bildirir ve hiçbir ayar yapmadan burada görünür.",
+  "Home Assistant declares a motion or presence sensor itself and it appears here with nothing to configure.": "Bir hareket veya varlık sensörünü Home Assistant kendisi bildirir ve hiçbir şey ayarlamadan burada görünür.",
+  "More power is going out than coming in: usually a sensor's direction is reversed.": "Giren güçten daha fazlası çıkıyor: genellikle bir sensörün yönü terstir.",
+  "No appliance in this load yet.": "Bu yükte henüz cihaz yok.",
+  "No room has a humidity probe.": "Hiçbir odada nem sensörü yok.",
+  "No rooms configured yet.": "Henüz oda yok.",
+  "No sensor linked.": "Bağlı sensör yok.",
+  "No session meter.": "Oturum sayacı yok.",
+  "Nothing here yet.": "Burada henüz bir şey yok.",
+  "Switched on, they show anyway.": "Açık olanlar yine de görünür.",
+  "The base map is not answering. The rain is there.": "Altlık harita yanıt vermiyor. Yağmur görünüyor.",
+  "The radar address is not a tile address ({z}/{x}/{y}).": "Radar adresi bir karo adresi değil ({z}/{x}/{y}).",
+  "The soil sensor is right above.": "Toprak sensörü hemen yukarıda.",
+  "The target is read-only.": "Hedef salt okunur.",
+  "This reading has no entity yet.": "Bu ölçümün henüz bir varlığı yok.",
+  "This target is a read-only sensor.": "Bu hedef salt okunur bir sensör.",
+  "You picked «An address of mine» but there is no address.": "«Kendi adresim» seçildi ama adres yok.",
 });

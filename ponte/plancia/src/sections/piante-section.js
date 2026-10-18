@@ -511,12 +511,6 @@ function schedaMarkup(pianta) {
 function vuotoMarkup() {
   return `<div class="dm-pian-vuoto">
     <strong>${esc(t("Nessuna pianta configurata", "No plant configured"))}</strong>
-    <span>${esc(
-      t(
-        "Una pianta compare qui quando aggiungi il suo sensore nella scheda Piante della configurazione: l'umidità della terra, e se c'è la sua temperatura.",
-        "A plant shows up here once you add its sensor in the Plant care tab of the settings: the soil moisture, and its temperature if there is one.",
-      ),
-    )}</span>
   </div>`;
 }
 

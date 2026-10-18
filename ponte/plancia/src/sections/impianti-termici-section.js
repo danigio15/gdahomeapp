@@ -212,10 +212,7 @@ function nodoTarghetta(
 function scenaScaldabagno(letture) {
   if (!letture.length)
     return `<div class="dm-it-vuoto">${esc(
-      t(
-        "Nessuno scaldabagno configurato: aggiungilo dalla scheda Solare della configurazione.",
-        "No water heater configured: add one from the Solar tab in settings.",
-      ),
+      t("Nessuno scaldabagno configurato", "No water heater configured"),
     )}</div>`;
   const unita = letture[0];
   /* Il livello dell'acqua calda nel serbatoio: e' la stessa quota della
@@ -557,10 +554,7 @@ function interruttoreMarkup(lettura) {
 function scenaCaldaia(lettura) {
   if (!lettura)
     return `<div class="dm-it-vuoto">${esc(
-      t(
-        "Nessuna caldaia configurata: aggiungila dalla scheda Gestione termica della configurazione.",
-        "No boiler configured: add one from the Thermal management tab in settings.",
-      ),
+      t("Nessuna caldaia configurata", "No boiler configured"),
     )}</div>`;
   const acceso = lettura.acceso === true || lettura.fiamma === true;
   const pressione = verdettoPressione(lettura.pressione);
@@ -961,10 +955,7 @@ function quadroDellaStufa(lettura) {
 function scenaStufa(lettura) {
   if (!lettura)
     return `<div class="dm-it-vuoto">${esc(
-      t(
-        "Nessuna stufa configurata: aggiungila dalla scheda Gestione termica della configurazione.",
-        "No stove configured: add one from the Thermal management tab in settings.",
-      ),
+      t("Nessuna stufa configurata", "No stove configured"),
     )}</div>`;
   const vento = ventoDellaStufa(lettura);
   /* La canna parte da dietro la stufa e sale: il primo tratto e' coperto dal

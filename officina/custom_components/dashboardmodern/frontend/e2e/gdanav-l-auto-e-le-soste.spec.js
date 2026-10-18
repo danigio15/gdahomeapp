@@ -402,15 +402,15 @@ test("un viaggio corto: nessuna sosta, e il ritorno", async ({ page }, testInfo)
   );
 });
 
-test("senza un'auto elettrica: l'invito a collegarla, solo a chi amministra", async ({
+test("senza un'auto elettrica: nessun riquadro, e nessun invito al Config", async ({
   page,
 }, testInfo) => {
   const pagina = await apri(page, testInfo, { auto: false });
   await pagina.locator(".dm-gn-viaggio", { hasText: "Casa – Milano" }).click();
   await expect(pagina.locator(".dm-gn-ora")).toHaveText("9:00");
-  const invito = pagina.locator("[data-gn-invito]");
-  await expect(invito).toContainText("Collega l'auto per vedere batteria e soste");
-  await expect(invito).toContainText("Lo vedi solo tu, che amministri la casa");
+  /* Anche a chi amministra: le sezioni non rimandano al Config. */
+  await expect(pagina.locator("[data-gn-invito], [data-gn-collega]")).toHaveCount(0);
+  await expect(pagina).not.toContainText("Collega l'auto");
   await expect(pagina.locator(".dm-gn-auto")).toHaveCount(0);
   await expect(pagina.locator("[data-gn-soste]")).toHaveCount(0);
   /* Senza auto la casa non riceve niente dell'auto. */
@@ -421,13 +421,5 @@ test("senza un'auto elettrica: l'invito a collegarla, solo a chi amministra", as
     larga ? "desktop-3-senza-auto" : "telefono-3-senza-auto",
     pagina.locator(".dm-gn-dett > div").nth(1),
   );
-  /* «Collega» apre la configurazione, sulla scheda delle auto. */
-  await invito.locator("[data-gn-collega]").click();
-  await expect.poll(() => page.evaluate(() => window.__APERTA__)).toBe("config:sez2");
-  /* Chi non amministra non vede niente. */
-  await page.evaluate(() => {
-    window.dmPuoConfigurare = () => false;
-    window.eval("typeof render === 'function' && render()");
-  });
-  await expect(invito).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => window.__APERTA__ || "")).not.toContain("config");
 });

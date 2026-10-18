@@ -59,12 +59,13 @@ test("un blocco si sposta di un posto, e ai bordi resta dov'e'", () => {
   assert.deepEqual(spostaIlBlocco(BLOCCHI, "radar", 1), [...BLOCCHI]);
 });
 
-test("un blocco senza dati non compare, e senza stazione l'invito e' solo per chi configura", () => {
+test("un blocco senza dati non compare, e senza stazione non c'e' nessun invito al Config", () => {
   const tutto = { adesso: true, stazione: true, ore: true, giorni: true, radar: true };
   assert.deepEqual(blocchiDellaPagina({}, tutto), [...BLOCCHI]);
+  /* Anche chi potrebbe configurare non vede piu' «Hai una stazione meteo?»:
+   * le sezioni non rimandano al Config. */
   assert.deepEqual(blocchiDellaPagina({}, { ...tutto, stazione: false, invito: true }), [
     "adesso",
-    "invito",
     "ore",
     "giorni",
     "radar",

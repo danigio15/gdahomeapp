@@ -162,8 +162,6 @@ export default Object.freeze({
     "Die Fahrt wurde nicht gespeichert: Ziel, Tag und Uhrzeit prüfen.",
   "Up to 8 more: a socket, the heat pump, the car charging, today's kWh":
     "Bis zu 8 weitere: eine Steckdose, die Wärmepumpe, das Auto beim Laden, die kWh von heute",
-  "No sensor linked: pick one in Settings › Loads or Appliances.":
-    "Kein Sensor verknüpft: wähle einen unter Einstellungen › Lasten oder Haushaltsgeräte.",
   "Reading consumption from Home Assistant…": "Lese den Verbrauch aus Home Assistant…",
   " — configured": " — konfiguriert",
   "${alzate} shutters up": "${alzate} Rollläden oben",
@@ -244,8 +242,6 @@ export default Object.freeze({
   "Load to watch": "Zu überwachende Last",
   Lock: "Sperren",
   "Looking…": "Wird gesucht…",
-  "More power is going out than coming in: usually a sensor's direction is reversed, and it is changed in the Energy tab.":
-    "Es geht mehr Leistung hinaus als herein: meist ist die Richtung eines Sensors vertauscht, und sie wird im Reiter Energie geändert.",
   Motorcycle: "Motorrad",
   "My sections": "Meine Bereiche",
   "Name the unit: it is what the card shows.":
@@ -655,8 +651,6 @@ export default Object.freeze({
   "Add entity": "Entität hinzufügen",
   "Add from an integration": "Aus einer Integration hinzufügen",
   "Add intercom": "Gegensprechanlage hinzufügen",
-  "Add it from the Energy tab in the settings: with the NUT status alone this page already knows whether there is power.":
-    "Füge ihn im Reiter Energie der Einstellungen hinzu: Schon mit dem NUT-Status weiß diese Seite, ob Strom da ist.",
   "Add light": "Licht hinzufügen",
   "Add list": "Liste hinzufügen",
   "Add load": "Verbraucher hinzufügen",
@@ -680,29 +674,13 @@ export default Object.freeze({
   "Add sensors to the Alerts Panel with a clean name, or create a":
     "Füge Sensoren mit einem klaren Namen zur Warnungstafel hinzu oder lege eine",
   "Add socket": "Steckdose hinzufügen",
-  "Add sockets from the Sockets tab in the settings: the living-room TV, the Firestick, the modem.":
-    "Steckdosen im Reiter Steckdosen der Einstellungen hinzufügen: der Fernseher im Wohnzimmer, der Firestick, das Modem.",
   "Add solar plant": "Solaranlage hinzufügen",
   "Add something to do…": "Etwas zu erledigen hinzufügen…",
   "Add temperature": "Temperatur hinzufügen",
-  "Add the irrigation zones from the editor to see the lawn.":
-    "Füge die Bewässerungszonen im Editor hinzu, um den Rasen zu sehen.",
-  "Add the materials from the Waste tab in the settings: for each one the sensor or calendar that says when the collection comes.":
-    "Füge die Materialien im Reiter Abfall der Einstellungen hinzu: für jedes den Sensor oder Kalender, der sagt, wann die Abholung kommt.",
-  "Add the pool entities from the editor to see the basin.":
-    "Füge die Pool-Entitäten im Editor hinzu, um das Becken zu sehen.",
-  "Add the printer from the Printers tab in the settings: the entity that says whether it is ready is enough, the cartridges are found on their own.":
-    "Füge den Drucker im Reiter Drucker der Einstellungen hinzu: die Entität, die sagt, ob er bereit ist, genügt — die Patronen werden von selbst gefunden.",
-  "Add the units from the dashboard configuration.":
-    "Füge die Geräte in der Dashboard-Konfiguration hinzu.",
-  "Add them from the Alerts tab in the settings: earthquakes, civil protection warnings, lightning, pollen, thermal comfort and flights overhead, each from the sensor of its integration.":
-    "Füge sie im Reiter Warnungen der Einstellungen hinzu: Erdbeben, Zivilschutzwarnungen, Blitze, Pollen, thermischer Komfort und Flugzeuge über dem Haus, jeweils aus dem Sensor ihrer Integration.",
   "Add to ${nomeDellaLista(list)}": "Zu ${nomeDellaLista(list)} hinzufügen",
   "Add water heater": "Boiler hinzufügen",
   "Add your appliances (washing machine, dishwasher, oven, microwave…). You can link":
     "Füge deine Geräte hinzu (Waschmaschine, Spülmaschine, Backofen, Mikrowelle…). Du kannst",
-  "Add your cameras from Configuration: they will show up here with a live preview.":
-    "Füge deine Kameras unter Konfiguration hinzu: sie erscheinen hier mit einer Live-Vorschau.",
   "Added ${trovate.length} lists": "${trovate.length} Listen hinzugefügt",
   "Added ${trovati.length} calendars": "${trovati.length} Kalender hinzugefügt",
   "Administrator tools ·": "Administratorwerkzeuge ·",
@@ -1476,8 +1454,6 @@ export default Object.freeze({
   February: "Februar",
   "Feed a portion": "Portion ausgeben",
   "Files in /local (config/www)": "Dateien in /local (config/www)",
-  "Fill in the car's fields — fuel, range, doors, engine — from the Car tab in the settings.":
-    "Fülle die Felder des Autos – Kraftstoff, Reichweite, Türen, Motor – im Reiter Auto der Einstellungen aus.",
   "Fill it in and the card shows the window open when the contact says so.":
     "Trage ihn ein und die Karte zeigt das Fenster als offen, sobald der Kontakt das meldet.",
   "Filled ${count} fields: ${list}.": "${count} Felder ausgefüllt: ${list}.",
@@ -1669,12 +1645,6 @@ export default Object.freeze({
   Hob: "Kochfeld",
   Home: "Zuhause",
   "Home (fallback)": "Zuhause (Rückfallwert)",
-  "Home Assistant declares a battery itself — a sensor in percent — and it appears here with nothing to configure. If yours is not found, add it from the Batteries tab in the settings.":
-    "Home Assistant meldet eine Batterie selbst — ein Sensor in Prozent — und sie erscheint hier ohne Einrichtung. Wird deine nicht gefunden, füge sie im Tab Batterien in den Einstellungen hinzu.",
-  "Home Assistant declares a door or window contact itself and it appears here with nothing to configure. If yours is not found, add it from the Openings tab in the settings.":
-    "Einen Tür- oder Fensterkontakt meldet Home Assistant selbst, und er erscheint hier, ohne dass du etwas einrichten musst. Wird deiner nicht gefunden, füge ihn im Reiter Öffnungen der Einstellungen hinzu.",
-  "Home Assistant declares a motion or presence sensor itself and it appears here with nothing to configure. If yours is not found, add it from the Presence tab in the settings.":
-    "Einen Bewegungs- oder Anwesenheitsmelder deklariert Home Assistant selbst, und er erscheint hier, ohne dass etwas eingerichtet werden muss. Wird deiner nicht gefunden, füge ihn im Reiter Anwesenheit der Einstellungen hinzu.",
   "Home Assistant declares no machine and no network piece.":
     "Home Assistant meldet weder Maschinen noch Netzwerkteile.",
   "Home Assistant declares the air sensors itself — particulates, CO₂, monoxide, volatile compounds — and the tile appears on its own. Here you correct that: drop a sensor that should not count, add one that is not found, and move the boundaries between good, fair, poor and bad.":
@@ -2121,27 +2091,19 @@ export default Object.freeze({
   "No alerts configured": "Keine Warnung eingerichtet",
   "No answer within eight seconds.": "Keine Antwort innerhalb von acht Sekunden.",
   "No appliance configured": "Kein Gerät eingerichtet",
-  "No appliance configured. Use the Settings menu to add one.":
-    "Kein Gerät konfiguriert. Füge über das Menü Einstellungen eines hinzu.",
   "No appliance has measurable consumption today.":
     "Heute hat kein Gerät einen messbaren Verbrauch.",
-  "No appliance in this load yet. Add them from the Loads editor.":
-    "Noch kein Gerät in diesem Verbraucher. Füge sie im Verbraucher-Editor hinzu.",
   "No appliance is running right now.": "Gerade läuft kein Gerät.",
   "No appliance matches the selected filters.": "Kein Gerät passt zu den gewählten Filtern.",
   "No appliance yet.": "Noch keine Geräte.",
   "No battery found": "Keine Batterie gefunden",
   "No boiler configured": "Kein Kessel eingerichtet",
-  "No boiler configured: add one from the Thermal management tab in settings.":
-    "Kein Kessel eingerichtet: füge ihn im Reiter Wärmeverwaltung der Einstellungen hinzu.",
   "No calendar configured": "Kein Kalender eingerichtet",
   "No calendar selected": "Kein Kalender ausgewählt",
   "No camera configured": "Keine Kamera konfiguriert",
   "No car field could be recognised from this device.":
     "Aus diesem Gerät konnte kein Auto-Feld erkannt werden.",
   "No cartridge found": "Keine Patrone gefunden",
-  "No cartridge found: if your printer reports them, write them in the Printers tab.":
-    "Keine Patrone gefunden: Wenn dein Drucker sie meldet, trage sie im Reiter Drucker ein.",
   "No charger among the integrations with devices: only evcc's are here, and evcc connects from the other button.":
     "Keine Wallbox unter den Integrationen mit Geräten: hier sind nur die von evcc, und evcc wird über den anderen Knopf verbunden.",
   "No charger field could be recognised from this device.":
@@ -2152,8 +2114,6 @@ export default Object.freeze({
   "No configuration contains this word.": "Keine Einstellung enthält dieses Wort.",
   "No configured items.": "Keine konfigurierten Einträge.",
   "No configured lights.": "Keine Lichter konfiguriert.",
-  "No configured lights. Add them from the editor's Lights tab: both light.* and switch.* entities are accepted.":
-    "Keine Lichter konfiguriert. Füge sie im Editor unter Lichter hinzu: light.*- und switch.*-Entitäten werden akzeptiert.",
   "No configured loads": "Keine konfigurierten Verbraucher",
   "No contact found": "Kein Kontakt gefunden",
   "No custom button": "Keine eigene Taste",
@@ -2177,8 +2137,6 @@ export default Object.freeze({
     "Keine Entität hinzugefügt — eintippen oder auswählen und ➕ drücken",
   "No entity bound: the circle stays empty in every view.":
     "Keine Entität verknüpft: der Kreis bleibt in jeder Ansicht leer.",
-  "No entity linked yet: open the settings and pick the device.":
-    "Noch keine Entität verknüpft: Öffne die Einstellungen und wähle das Gerät.",
   "No entries": "Keine Einträge",
   "No extra command: the card carries the player's own buttons and nothing else.":
     "Kein zusätzliches Bedienelement: Die Kachel zeigt nur die Tasten des Players.",
@@ -2246,15 +2204,11 @@ export default Object.freeze({
     "Aus diesem Gerät lässt sich kein Roboter erkennen: es braucht eine vacuum.*- oder lawn_mower.*-Entität.",
   "No robot configured": "Kein Roboter eingerichtet",
   "No room": "Kein Raum",
-  "No room has a humidity probe: add one from the Temperature tab.":
-    "Kein Raum hat einen Feuchtigkeitsfühler: Füge einen im Reiter Temperatur hinzu.",
   "No room has a temperature sensor configured yet.":
     "Noch hat kein Raum einen Temperatursensor konfiguriert.",
   "No room with a sensor — add one in the editor's Temperature tab":
     "Kein Raum mit Sensor — lege einen im Reiter Temperatur des Editors an",
   "No room. Add one below.": "Kein Raum. Lege unten einen an.",
-  "No rooms configured yet. Add them from the editor's Rooms tab: every section can then assign its entities to one.":
-    "Noch keine Räume. Lege sie im Reiter Räume des Editors an: Danach kann jeder Bereich seine Entitäten einem Raum zuordnen.",
   "No sensor recognized": "Kein Sensor erkannt",
   "No shutter or curtain configured": "Kein Rollladen und kein Vorhang konfiguriert",
   "No signal": "Kein Signal",
@@ -2266,8 +2220,6 @@ export default Object.freeze({
   "No todo.* list found": "Keine todo.*-Liste gefunden",
   "No warning in force": "Keine Warnung aktiv",
   "No water heater configured": "Kein Boiler eingerichtet",
-  "No water heater configured: add one from the Solar tab in settings.":
-    "Kein Boiler eingerichtet: Füge ihn im Reiter Solar der Einstellungen hinzu.",
   "No window sits in a room that has a hygrometer: pick the room in the window's row, below.":
     "Kein Fenster liegt in einem Raum mit Hygrometer: Wählen Sie den Raum unten in der Zeile des Fensters.",
   "No zone configured": "Keine Zone konfiguriert",
@@ -2294,8 +2246,6 @@ export default Object.freeze({
   "Nothing came in today.": "Heute ist nichts eingegangen.",
   "Nothing closed yet.": "Noch nichts geschlossen.",
   "Nothing for a pet": "Nichts für ein Haustier",
-  "Nothing here yet. Entities are assigned from each section's own tab.":
-    "Hier ist noch nichts. Entitäten werden im Reiter des jeweiligen Bereichs zugeordnet.",
   "Nothing new": "Nichts Neues",
   "Nothing of this kind here.": "Hier nichts dieser Art.",
   "Nothing playing": "Nichts läuft",
@@ -2730,7 +2680,6 @@ export default Object.freeze({
   "all up": "alles läuft",
   Servers: "Server",
   connected: "verbunden",
-  "Choose what to highlight": "Hervorgehobenes auswählen",
   "to work on": "zu bearbeiten",
   "In today:": "Heute eingegangen:",
   "Nothing came in today": "Heute kam nichts",
@@ -2807,7 +2756,6 @@ export default Object.freeze({
   "Open all": "Alle öffnen",
   "Open appliances running": "Laufende Geräte öffnen",
   "Open camera": "Kamera öffnen",
-  "Open configuration": "Konfiguration öffnen",
   "Open for": "Offen seit",
   "Open gate": "Tor öffnen",
   "Open in map": "In Karte öffnen",
@@ -2932,8 +2880,6 @@ export default Object.freeze({
     "Wähle einen Anfang vor dem Ende, und nicht in der Zukunft.",
   "Pick an image entity": "Bild-Entität auswählen",
   "Pick from Appliances": "Aus Geräten wählen",
-  "Pick the calendars from the Widgets tab in the settings: the ones you already have in Home Assistant appear on their own with «Detect».":
-    "Wähle die Kalender im Reiter Widgets der Einstellungen: Die, die du in Home Assistant schon hast, erscheinen mit «Erkennen» von selbst.",
   "Pick the device": "Gerät wählen",
   "Pick the evcc loadpoint: the charge mode, the charge limit, the session and the solar share come along. The charger connects from the other button, and the fields add up.":
     "Wähle den evcc-Ladepunkt: Lademodus, Ladelimit, Sitzung und Solaranteil kommen mit. Die Wallbox wird über den anderen Knopf verbunden, und die Felder ergänzen sich.",
@@ -3685,8 +3631,6 @@ export default Object.freeze({
     "Das Symbol lässt sich auch bei den eingebauten Aktionen anpassen und erscheint auf Zuhause.",
   "The integrations that bring a charger: go-e, Easee, KEBA, Wallbox, openWB, Zaptec, Tesla. Pick the device and the charging fields fill in by themselves — power, energy, voltage, temperature, the cable.":
     "Die Integrationen, die eine Wallbox mitbringen: go-e, Easee, KEBA, Wallbox, openWB, Zaptec, Tesla. Wähle das Gerät, und die Ladefelder füllen sich von selbst — Leistung, Energie, Spannung, Temperatur, das Kabel.",
-  "The intercom and the mailbox are declared in the Intercom and mail tab of the settings: the button that opens, the doorbell, and the two mailbox sensors.":
-    "Gegensprechanlage und Briefkasten werden im Reiter «Gegensprechanlage und Post» der Einstellungen angegeben: die Taste, die öffnet, die Türklingel und die beiden Briefkastensensoren.",
   "The inverted direction": "Die umgekehrte Richtung",
   "The latest reply": "Die letzte Antwort",
   "The lawn shows the first ${MAX_LAWN_ZONES} zones; all ${config.zones.length} are listed below.":
@@ -3754,8 +3698,6 @@ export default Object.freeze({
   "The push comes from Home Assistant, not the dashboard: it runs on the server, so it arrives even when this page is closed. This automation is already written with your entities — paste it under Settings → Automations → ⋮ → Edit in YAML, and change the service to your phone's.":
     "Die Push-Nachricht kommt von Home Assistant, nicht vom Dashboard: sie läuft auf dem Server und kommt daher auch an, wenn diese Seite geschlossen ist. Diese Automation ist bereits mit Ihren Entitäten geschrieben — fügen Sie sie unter Einstellungen → Automationen → ⋮ → In YAML bearbeiten ein und ändern Sie den Dienst auf den Ihres Handys.",
   "The quick actions": "Die Schnellaktionen",
-  "The radar address is not a tile address ({z}/{x}/{y}): fix it under Settings → Weather, or pick a service from the list.":
-    "Die Radar-Adresse ist keine Kachel-Adresse ({z}/{x}/{y}): korrigiere sie unter Einstellungen → Wetter, oder wähle einen Dienst aus der Liste.",
   "The radar is not reporting.": "Der Radar meldet sich nicht.",
   "The radiators": "Die Heizkörper",
   "The reading on the cover": "Der Messwert auf der Vorderseite",
@@ -3810,8 +3752,6 @@ export default Object.freeze({
   "The state": "Der Zustand",
   "The station sensor, when the integration exposes one: it gives the name written next to the train.":
     "Der Bahnhofssensor, falls die Integration einen anbietet: Er liefert den Namen neben dem Zug.",
-  "The target is read-only: connect evcc in the Car tab to change it.":
-    "Das Ziel ist schreibgeschützt: verbinde evcc im Reiter Auto, um es zu ändern.",
   "The temperatures": "Die Temperaturen",
   "The text of the report": "Der Text der Meldung",
   "The theme and the bar": "Das Thema und die Leiste",
@@ -3888,15 +3828,11 @@ export default Object.freeze({
     "Das muss ein kumulierter kWh-Zähler mit state_class total oder total_increasing sein. Verwende hier nicht den Monatssensor: dieses Feld wird benötigt, um die Vormonate zu rekonstruieren.",
   "This one wins: day, month, year, history and previous months are all derived from here through Recorder. While it is set, the period fields are not read.":
     "Dieser hat Vorrang: Tag, Monat, Jahr, Verlauf und Vormonate werden alle über Recorder von hier abgeleitet. Solange er gesetzt ist, werden die Zeitraumfelder nicht gelesen.",
-  "This reading has no entity yet: map it in the configuration to see its history.":
-    "Dieser Messwert hat noch keine Entität: ordne sie in der Konfiguration zu, um den Verlauf zu sehen.",
   "This sensor is also configured in": "Dieser Sensor ist auch eingerichtet in",
   "This socket is configured as shown but not controllable: this window reports it, it never switches it.":
     "Diese Steckdose ist als angezeigt, aber nicht schaltbar eingerichtet: dieses Fenster meldet sie, es schaltet sie nie.",
   "This tab holds four of them and they are all taken: remove one to make room.":
     "Dieser Reiter fasst vier davon, und alle sind belegt: entferne einen, um Platz zu schaffen.",
-  "This target is a read-only sensor: to change it from here connect evcc, or a number/select entity, in the Car tab.":
-    "Dieses Ziel ist ein schreibgeschützter Sensor: um es von hier zu ändern, verbinde evcc oder eine number/select-Entität im Reiter Auto.",
   "This week": "Diese Woche",
   "Three gestures, no more: ＋ New vehicle opens an empty card, the ✏️ opens a vehicle you already saved, the switch turns it on or off in the EV section. Below you say whether it is a car or a motorcycle, and you fill in name, brand, model, entities and both photos — there is a single save: it says whether it is creating or editing, and the one at the bottom of the section carries the same words. Which vehicle you look at is picked from the section's own tabs, not from here.":
     "Drei Gesten, mehr nicht: ＋ Neues Fahrzeug öffnet eine leere Karte, der ✏️ öffnet ein bereits gespeichertes Fahrzeug, der Schalter blendet es im EV-Bereich ein oder aus. Darunter sagst du, ob es ein Auto oder ein Motorrad ist, und trägst Name, Marke, Modell, Entitäten und beide Fotos ein — es gibt nur ein Speichern: es sagt, ob es anlegt oder ändert, und der Knopf am Ende des Bereichs trägt dieselben Worte. Welches Fahrzeug du siehst, wählst du in den Reitern des Bereichs, nicht hier.",
@@ -4240,8 +4176,6 @@ export default Object.freeze({
   "You need a": "Du brauchst einen",
   "You need a hand configuring or understanding":
     "Du brauchst Hilfe beim Einrichten oder Verstehen",
-  "You picked «An address of mine» but there is no address: write it under Settings → Weather, or pick a service from the list.":
-    "Du hast «Eine eigene Adresse» gewählt, aber es gibt keine Adresse: schreibe sie unter Einstellungen → Wetter, oder wähle einen Dienst aus der Liste.",
   "Your alarm areas": "Deine Alarmbereiche",
   "Your name (optional)": "Wie du heißt (optional)",
   "Your own entities": "Deine Entitäten",
@@ -4804,8 +4738,6 @@ export default Object.freeze({
   "Home Assistant refused": "Home Assistant hat abgelehnt",
   "It is only used to say how long is left to charge: from the missing percentage and the charger's power. Left empty it counts 70 kWh, which is what the dashboard has always assumed — with a different battery the time comes out wrong in proportion.":
     "Wird nur gebraucht, um zu sagen, wie lange das Laden noch dauert: aus den fehlenden Prozenten und der Leistung der Ladestation. Leer gelassen werden 70 kWh gerechnet, was das Dashboard schon immer angenommen hat — bei einer anderen Batterie kommt die Zeit entsprechend falsch heraus.",
-  "No session meter: connect the charger or evcc in the Car tab, or write the entity into “Session energy”.":
-    "Kein Sitzungszähler: Verbinde die Ladestation oder evcc im Reiter Auto, oder trage die Entität unter „Sitzungsenergie“ ein.",
   Sunset: "Sonnenuntergang",
   "TARGET REACHED": "ZIEL ERREICHT",
   "The session meter is not answering.": "Der Sitzungszähler antwortet nicht.",
@@ -4818,8 +4750,6 @@ export default Object.freeze({
   empty: "leer",
   "not responding": "antwortet nicht",
   "nothing on": "nichts an",
-  "The base map is not answering. The rain is there: you can change map under ⚙️ → Weather and radar.":
-    "Die Hintergrundkarte antwortet nicht. Der Regen ist da: Du kannst die Karte unter ⚙️ → Wetter und Radar wechseln.",
   "ARMED ·": "SCHARF ·",
   "Your own entities in the bar": "Deine eigenen Entitäten in der Leiste",
   "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit next to what is on, before the measurements, and each one can show up only when it matters — for instance only while holiday mode is on.":
@@ -4943,8 +4873,6 @@ export default Object.freeze({
   "Configure a camera above first: the privacy is its own.":
     "Richten Sie zuerst oben eine Kamera ein: Die Privatsphäre gehört ihr.",
   "Private cameras": "Private Kameras",
-  "The soil sensor is right above. Add the irrigation zones from the editor to see the lawn too.":
-    "Der Bodensensor ist direkt darüber. Fügen Sie im Editor die Bewässerungszonen hinzu, um auch den Rasen zu sehen.",
   "Contact entity": "Kontakt-Entität",
   "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back.":
     "Sie kommen einmalig als Zeilen hierher: ab dann gehören sie Ihnen — benennen Sie sie um, geben Sie ihnen ein Bild, und was Sie löschen, kommt nicht wieder.",
@@ -5097,8 +5025,6 @@ export default Object.freeze({
   "Save meter": "Zähler speichern",
   "Flowing for ${durata}": "Fließt seit ${durata}",
   "Flowing for over a day": "Fließt seit über einem Tag",
-  "A meter shows up here once you add it in the Water and gas tab of the settings: the water and gas meters, the water pressure and flow, the softener salt.":
-    "Ein Zähler erscheint hier, sobald du ihn im Tab Wasser und Gas in den Einstellungen hinzufügst: die Wasser- und Gaszähler, Druck und Durchfluss des Wassers, das Salz der Enthärtungsanlage.",
   "Not flowing": "Fließt nicht",
   "🪴 ${quante} plants added": "🪴 ${quante} Pflanzen hinzugefügt",
   "${quante} doing well": "${quante} in Ordnung",
@@ -5107,8 +5033,6 @@ export default Object.freeze({
   "1 doing well": "1 in Ordnung",
   "1 needs water": "1 braucht Wasser",
   "1 waiting for rain": "1 wartet auf Regen",
-  "A plant shows up here once you add its sensor in the Plant care tab of the settings: the soil moisture, and its temperature if there is one.":
-    "Eine Pflanze erscheint hier, sobald du ihren Sensor im Tab Pflanzen der Einstellungen hinzufügst: die Bodenfeuchte und, falls vorhanden, ihre Temperatur.",
   "Add a plant": "Pflanze hinzufügen",
   "All doing well": "Allen geht es gut",
   "Below this moisture the soil is dry and the plant joins those that need water.":
@@ -5331,8 +5255,6 @@ export default Object.freeze({
   "Other BMS": "Anderes BMS",
   "Pack 1": "Akku-Pack 1",
   "Pack saved": "Pack gespeichert",
-  "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.":
-    "Packs erscheinen hier, sobald du sie in den Einstellungen im Tab Batterien unter Energie hinzufügst: Ladezustand, Spannungen, Zellen.",
   "Current sign": "Vorzeichen des Stroms",
   "Positive when charging (JK, JBD, Daly)": "Positiv beim Laden (JK, JBD, Daly)",
   "Negative when charging": "Negativ beim Laden",
@@ -5461,8 +5383,6 @@ export default Object.freeze({
   "Lower the power": "Leistung senken",
   Modulating: "Modulation",
   "No stove configured": "Kein Ofen eingerichtet",
-  "No stove configured: add one from the Thermal management tab in settings.":
-    "Kein Ofen eingerichtet: füge ihn im Reiter Wärmemanagement der Einstellungen hinzu.",
   "On its own it covers nearly everything: on and off, the target, the room temperature and, if it has them, the fan modes.":
     "Allein deckt er fast alles ab: an und aus, den Sollwert, die Raumtemperatur und, falls vorhanden, die Lüftermodi.",
   "Pellet level, second hopper": "Pelletfüllstand, zweiter Behälter",
@@ -5494,8 +5414,6 @@ export default Object.freeze({
   "Radiators out of season": "Heizkörper außerhalb der Saison",
   "They show: ${periodo}. Switched on, they show anyway.":
     "Sichtbar: ${periodo}. Eingeschaltet erscheinen sie trotzdem.",
-  "Each one has its months in the dashboard configuration. Switched on, they show anyway.":
-    "Jedes Gerät hat seine Monate in der Dashboard-Konfiguration. Eingeschaltet erscheinen sie trotzdem.",
   "Show them anyway": "Trotzdem anzeigen",
   "🐠 The aquarium's entities": "🐠 Die Entitäten des Aquariums",
   "🦎 The terrarium's entities": "🦎 Die Entitäten des Terrariums",
@@ -5516,10 +5434,6 @@ export default Object.freeze({
   "Humidity too low": "Luftfeuchtigkeit zu niedrig",
   "Last cleaning": "Letzte Reinigung",
   Mister: "Beregnungsanlage",
-  "No entity yet: open the settings and add the aquarium's temperature, pH, level, lights and filter.":
-    "Noch keine Entität: öffne die Einstellungen und füge Temperatur, pH-Wert, Wasserstand, Licht und Filter des Aquariums hinzu.",
-  "No entity yet: open the settings and add the terrarium's temperature, humidity and lamps.":
-    "Noch keine Entität: öffne die Einstellungen und füge Temperatur, Luftfeuchtigkeit und Lampen des Terrariums hinzu.",
   "Not recorded yet: tap “Done today” on the day you clean it, and from then on the card counts the days.":
     "Noch nicht eingetragen: tippe am Tag der Reinigung auf „Heute erledigt“, und ab dann zählt die Karte die Tage.",
   "One row per entity: temperature and pH with their ideal range, the water level, the lights, the filter and the heater. Empty ranges use the defaults: 24–27 °C and pH 6.5–7.5.":
@@ -6095,7 +6009,6 @@ export default Object.freeze({
   "${probabile} chance": "${probabile} Wahrscheinlichkeit",
   "a camera or image entity you already have": "eine Kamera- oder Bild-Entität, die du schon hast",
   "about ${quanta} in the next 24 hours": "etwa ${quanta} in den nächsten 24 Stunden",
-  "Add its sensors under ⚙️ Config › Weather: your home's readings show up here, with the last 24 hours. Without them, the page uses the weather service only.": "Füge ihre Sensoren unter ⚙️ Config › Wetter hinzu: Hier erscheinen die Messwerte deines Zuhauses mit den letzten 24 Stunden. Ohne sie nutzt die Seite nur den Wetterdienst.",
   "All optional, one per type. Temperature, humidity, feels-like and wind are the same fields as the Home header; rain and rate are the ones Irrigation already uses. They are chosen once and apply everywhere.": "Alle optional, einer pro Typ. Temperatur, Luftfeuchtigkeit, gefühlte Temperatur und Wind sind dieselben Felder wie im Kopf der Startseite; Regen und Regenrate sind die, die die Bewässerung schon nutzt. Sie werden einmal gewählt und gelten überall.",
   at: "um",
   "at most ${probabile} chance": "höchstens ${probabile} Wahrscheinlichkeit",
@@ -6103,7 +6016,6 @@ export default Object.freeze({
   Cloudy: "Bewölkt",
   "conditions, feels like, low and high": "Lage, gefühlte Temperatur, Tief und Hoch",
   "dew point": "Taupunkt",
-  "Do you have a weather station?": "Hast du eine Wetterstation?",
   E: "O",
   east: "Osten",
   Exceptional: "Außergewöhnlich",
@@ -6139,7 +6051,6 @@ export default Object.freeze({
   "north-west": "Nordwesten",
   "Now · My station · Forecast · Radar": "Jetzt · Meine Station · Vorhersage · Radar",
   NW: "NW",
-  "Open Weather in Config": "Wetter im Config öffnen",
   "Outdoor temperature": "Außentemperatur",
   "Partly cloudy": "Teilweise bewölkt",
   Radar: "Radar",
@@ -6208,8 +6119,6 @@ export default Object.freeze({
   "Charging stops": "Ladestopps",
   "Charging: ${minuti} in ${n} stops": "Laden: ${minuti} in ${n} Stopps",
   "Charging: ${minuti} in 1 stop": "Laden: ${minuti} in 1 Stopp",
-  "Connect": "Verbinden",
-  "Connect the car to see battery and stops": "Verbinde das Auto, um Batterie und Stopps zu sehen",
   "For the stops, choose 100% at departure.": "Für die Stopps wähle 100 % bei der Abfahrt.",
   "For the way back you still have ${resta}: no need to charge": "Für die Rückfahrt bleiben dir ${resta}: kein Laden nötig",
   "from ${da} to ${a} · ${min} min": "von ${da} auf ${a} · ${min} Min.",
@@ -6221,7 +6130,6 @@ export default Object.freeze({
   "Minimum charge on arrival": "Mindestladung bei Ankunft",
   "now ${ora}": "jetzt ${ora}",
   "on arrival ${fine}": "bei Ankunft ${fine}",
-  "Only you see this, as the home's administrator": "Nur du siehst das, als Administrator des Zuhauses",
   "Parked · not charging": "Steht · lädt nicht",
   "Parked at home · not charging": "Steht zu Hause · lädt nicht",
   "range": "Reichweite",
@@ -6230,7 +6138,6 @@ export default Object.freeze({
   "Stops picked by GdANav on the way, with free chargers.": "Stopps von GdANav unterwegs gewählt, mit freien Ladesäulen.",
   "The battery is not answering": "Die Batterie antwortet nicht",
   "The chargers are not in the home yet: stops are by kilometre. On the way GdANav picks the chargers and checks they are free.": "Die Ladesäulen sind noch nicht im Zuhause: Stopps nach Kilometer. Unterwegs wählt GdANav die Ladesäulen und prüft, ob sie frei sind.",
-  "The electric car's battery and range, and the charging stops if it is not enough.": "Batterie und Reichweite des Elektroautos und die Ladestopps, falls es nicht reicht.",
   "The minimum power to stop at": "Die Mindestleistung für einen Stopp",
   "The stops come with the route": "Die Stopps kommen mit der Route",
   "the trip": "die Fahrt",
@@ -6284,11 +6191,9 @@ export default Object.freeze({
   "Charging · until ${fine}": "Lädt · bis ${fine}",
   "Charging · until ${limite}% or ${fine}": "Lädt · bis ${limite}% oder ${fine}",
   "End of the window": "Ende des Zeitfensters",
-  "Enter it to see what you spend": "Trag ihn ein, um zu sehen, was du ausgibst",
   "evcc set to ${modo}": "evcc auf ${modo} gestellt",
   "Fast": "Schnell",
   "Finished at ${alle}": "Fertig um ${alle}",
-  "From band ${fascia} in Settings → Energy": "Aus Zeitband ${fascia} in Einstellungen → Energie",
   "Needs the add-on: the home starts it": "Braucht das Add-on: das Zuhause startet sie",
   "Night charging": "Nachtladen",
   "No days chosen": "Keine Tage gewählt",
@@ -6664,12 +6569,10 @@ export default Object.freeze({
   "Convert": "Umwandeln",
   "Create and edit them in three steps": "Erstelle und bearbeite sie in drei Schritten",
   "Create the first one": "Die erste erstellen",
-  "Create the first one in the config ›": "Die erste im Config erstellen ›",
   "Delete «${v.nome}»?": "«${v.nome}» löschen?",
   "depending on the sun": "je nach Sonne",
   "depending on what started it": "je nachdem, was sie gestartet hat",
   "does several things at once": "macht mehrere Dinge gleichzeitig",
-  "Edit in the config ›": "Im Config bearbeiten ›",
   "fires the ${evento} event": "löst das Ereignis ${evento} aus",
   "Home Assistant → Settings → Automations": "Home Assistant → Einstellungen → Automatisierungen",
   "Home Assistant did not save it: ${no}": "Home Assistant hat sie nicht gespeichert: ${no}",
@@ -6679,7 +6582,6 @@ export default Object.freeze({
   "Home Assistant's automations are read through the GdAHome add-on: it is not here.": "Die Automatisierungen von Home Assistant werden über das Add-on GdAHome gelesen: es ist hier nicht vorhanden.",
   "if something holds:": "wenn etwas zutrifft:",
   "in HA as": "in HA als",
-  "in the config ›": "im Config ›",
   "It is removed from Home Assistant too, and it cannot be undone. If you only want to stop it, turn it off with the switch.": "Sie wird auch aus Home Assistant entfernt und kann nicht rückgängig gemacht werden. Wenn du sie nur anhalten willst, schalte sie mit dem Schalter aus.",
   "It is saved in": "Sie wird gespeichert in",
   "It was not changed: ${no}": "Sie wurde nicht geändert: ${no}",
@@ -6687,7 +6589,6 @@ export default Object.freeze({
   "It was not deleted: ${no}": "Sie wurde nicht gelöscht: ${no}",
   "labelled": "mit dem Label",
   "Last time:": "Zuletzt:",
-  "Manage in the config ›": "Im Config verwalten ›",
   "never": "nie",
   "No automation matches these words.": "Keine Automatisierung passt zu diesen Wörtern.",
   "No automations yet: start from a ready-made template.": "Noch keine Automatisierungen: beginne mit einer fertigen Vorlage.",
@@ -6896,4 +6797,46 @@ export default Object.freeze({
   "An intercom event (event.*), or a sensor that turns on when it rings (binary_sensor). A button or a switch work too.": "Ein Ereignis der Gegensprechanlage (event.*) oder ein Sensor, der sich beim Klingeln einschaltet (binary_sensor). Ein Button oder ein Schalter gehen auch.",
   "cannot act as a doorbell: pick an event (event.*) or a sensor that turns on (binary_sensor.*).": "kann nicht als Klingel dienen: Wähle ein Ereignis (event.*) oder einen Sensor, der sich einschaltet (binary_sensor.*).",
   "Now · My station · Forecast": "Jetzt · Meine Station · Vorhersage",
+  "Brake on": "Bremse angezogen",
+  "Cabin": "Innenraum",
+  "Consumption, worked out": "Verbrauch, berechnet",
+  "done ${giorno} at ${ora}": "fertig ${giorno} um ${ora}",
+  "done tomorrow at ${ora}": "fertig morgen um ${ora}",
+  "Driven": "Gefahren",
+  "Fully charged": "Voll geladen",
+  "In neutral": "Im Leerlauf",
+  "Last charge": "Letzte Ladung",
+  "More data": "Weitere Daten",
+  "Moving": "In Fahrt",
+  "on fuel": "mit Kraftstoff",
+  "On the road": "Fahren",
+  "Parked": "Geparkt",
+  "Range at ${pct}%": "Reichweite bei ${pct}%",
+  "rated": "Norm",
+  "Reversing": "Im Rückwärtsgang",
+  "Standing by": "Bereit",
+  "Target reached": "Ziel erreicht",
+  "The rest": "Rest",
+  "total": "gesamt",
+  "Updated at ${detto}": "Aktualisiert um ${detto}",
+  "Updated on ${detto}": "Aktualisiert am ${detto}",
+  "From band ${fascia}": "Aus Zeitband ${fascia}",
+  "Home Assistant declares a battery itself — a sensor in percent — and it appears here with nothing to configure.": "Home Assistant meldet eine Batterie selbst — ein Sensor in Prozent — und sie erscheint hier ohne Einrichtung.",
+  "Home Assistant declares a door or window contact itself and it appears here with nothing to configure.": "Einen Tür- oder Fensterkontakt meldet Home Assistant selbst, und er erscheint hier, ohne dass du etwas einrichten musst.",
+  "Home Assistant declares a motion or presence sensor itself and it appears here with nothing to configure.": "Einen Bewegungs- oder Anwesenheitsmelder deklariert Home Assistant selbst, und er erscheint hier, ohne dass etwas eingerichtet werden muss.",
+  "More power is going out than coming in: usually a sensor's direction is reversed.": "Es geht mehr Leistung hinaus als herein: meist ist die Richtung eines Sensors vertauscht.",
+  "No appliance in this load yet.": "Noch kein Gerät in diesem Verbraucher.",
+  "No room has a humidity probe.": "Kein Raum hat einen Feuchtigkeitsfühler.",
+  "No rooms configured yet.": "Noch keine Räume.",
+  "No sensor linked.": "Kein Sensor verknüpft.",
+  "No session meter.": "Kein Sitzungszähler.",
+  "Nothing here yet.": "Hier ist noch nichts.",
+  "Switched on, they show anyway.": "Eingeschaltet erscheinen sie trotzdem.",
+  "The base map is not answering. The rain is there.": "Die Hintergrundkarte antwortet nicht. Der Regen ist da.",
+  "The radar address is not a tile address ({z}/{x}/{y}).": "Die Radar-Adresse ist keine Kachel-Adresse ({z}/{x}/{y}).",
+  "The soil sensor is right above.": "Der Bodensensor ist direkt darüber.",
+  "The target is read-only.": "Das Ziel ist schreibgeschützt.",
+  "This reading has no entity yet.": "Dieser Messwert hat noch keine Entität.",
+  "This target is a read-only sensor.": "Dieses Ziel ist ein schreibgeschützter Sensor.",
+  "You picked «An address of mine» but there is no address.": "Du hast «Eine eigene Adresse» gewählt, aber es gibt keine Adresse.",
 });

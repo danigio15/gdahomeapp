@@ -7,8 +7,8 @@
  *  - con la stazione ci sono le sue tessere, ognuna con le ultime 24 ore
  *    chieste alla cronologia di Home Assistant, e le previsioni chieste a
  *    `weather.get_forecasts`;
- *  - senza stazione la pagina si arrangia con l'entità weather, e propone di
- *    aggiungerla;
+ *  - senza stazione la pagina si arrangia con l'entità weather, senza
+ *    rimandare al Config;
  *  - la scheda del Config salva i sensori dove li leggono già la testata e
  *    l'irrigazione;
  *  - il radar della finestra delle previsioni si disegna anche nella pagina,
@@ -364,7 +364,7 @@ test("con un'entità weather la voce compare accanto a Temperatura, e la stazion
   expect(chieste.storia[0].length).toBe(10);
 });
 
-test("senza stazione la pagina usa l'entità weather e propone di aggiungerla", async ({
+test("senza stazione la pagina usa l'entità weather e non rimanda al Config", async ({
   page,
 }, testInfo) => {
   await boot(page, testInfo);
@@ -378,17 +378,13 @@ test("senza stazione la pagina usa l'entità weather e propone di aggiungerla", 
   );
   await expect(adesso).toContainText("Umidità");
   await expect(pagina.locator('[data-dm-meteo-blocco="stazione"]')).toHaveCount(0);
-  const invito = pagina.locator('[data-dm-meteo-blocco="invito"]');
-  await expect(invito).toBeVisible();
-  await expect(invito).toContainText("Hai una stazione meteo?");
   await expect(pagina.locator(".dm-meteo-ora")).toHaveCount(24);
+  /* Nessun invito al Config: la pagina di una sezione mostra la casa. */
+  await expect(pagina.locator('[data-dm-meteo-blocco="invito"]')).toHaveCount(0);
+  await expect(pagina.locator("[data-dm-meteo-apri-config]")).toHaveCount(0);
+  await expect(pagina).not.toContainText("Config");
   /* Senza sensori non si chiede nessuna cronologia. */
   expect((await page.evaluate(() => window.__w206)).storia).toEqual([]);
-  /* L'invito porta alla scheda Meteo del Config. */
-  await invito.locator("[data-dm-meteo-apri-config]").click();
-  await expect(page.locator('#editor-modal .ed-tab.active[data-tab="meteo"]')).toHaveCount(1, {
-    timeout: 15_000,
-  });
 });
 
 test("la scheda Meteo trova i sensori della stazione e li salva dove li leggono già gli altri", async ({
