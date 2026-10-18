@@ -36,6 +36,21 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 - **«Apri la giornata»** apre la giornata anche dalla prova del riepilogo.
 - **Quando partire:** il tasto «Apri il garage» della notifica apre davvero
   il garage.
+- **Auto da GdAAuto:** scegliendo l'auto di GdAAuto da «Aggiungi da
+  un'integrazione» si riempiono tutte le caselle, riconosciute dalla chiave e
+  non dal nome: energia residua, capacità e consumo medio, clima, ricarica
+  programmata, ultima ricarica, marcia, auto in sonno e il resto. Le stesse
+  caselle si scelgono a mano nella scheda dell'auto, e si vedono nella
+  pagina Auto e nella finestra dell'auto in Home.
+- **Capacità e consumo veri:** con la capacità vuota vale quella che l'auto
+  dice, e il consumo misurato dall'auto prende il posto della stima nei
+  viaggi e nella giornata.
+- **Auto da altre integrazioni:** l'autonomia di omologazione, a carburante
+  o totale non è più l'autonomia; la batteria da 12 V non è più quella di
+  trazione; potenza, tempo che manca, pulsanti e ricarica programmata non
+  sono più lo stato della ricarica; il consumo dell'ultimo viaggio non è
+  l'ultimo viaggio; la temperatura delle gomme non è la pressione; un limite
+  in ampere non è il traguardo della carica.
 
 ## 1.16.1
 
