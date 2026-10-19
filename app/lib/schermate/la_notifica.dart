@@ -225,161 +225,113 @@ class _StatoDellaNotifica extends State<SchermataDellaNotifica> {
     final casa = widget.nomeDellaCasa;
     final testo = diceSoloLaCasa(_notifica.testo, casa) ? '' : _notifica.testo;
     final immagine = _immagine;
-    /* La foto di una telecamera fa da copertina; una scheda no — e' gia' un
-     * disegno suo, e tagliarla per riempire la rovinerebbe: sta sotto, in
-     * una carta. */
-    final fotoInCopertina =
-        immagine != null &&
-        _notifica.camera != null &&
-        _notifica.scheda == null;
     final etichetta = widget.etichettaDelPosto;
     final vai = widget.vaiAlPosto;
     final (chiaro, scuro) = coloriDellaNotifica(_notifica);
     final larga = MediaQuery.sizeOf(context).width;
+    final sopra = MediaQuery.paddingOf(context).top;
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        /* La freccia sta sopra la copertina: bianca, in un tondo di vetro,
-         * che si veda sopra una foto chiara come sopra una scura. */
-        leading: Padding(
-          padding: const EdgeInsets.all(8),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.black.withValues(alpha: 0.32),
-            ),
-            child: const BackButton(color: Colors.white),
-          ),
-        ),
-      ),
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          /* La copertina: la foto del momento, o il colore della notifica
-           * col suo disegno; sopra, il titolo e quando. */
+          /* La testata: una fascia nel colore della notifica, bassa. A
+           * sinistra la freccia; sotto, il disegno in un riquadro di vetro,
+           * di che cosa parla, il titolo e quando. La foto e la scheda
+           * stanno sotto, nelle loro carte. */
           Container(
             key: const Key('notifica-testa'),
-            height: fotoInCopertina ? (larga * 0.56).clamp(220.0, 360.0) : 200,
-            clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(32),
+                bottom: Radius.circular(26),
               ),
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [chiaro, scuro],
               ),
-            ),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                if (fotoInCopertina)
-                  Image.memory(
-                    immagine,
-                    key: const Key('notifica-immagine'),
-                    fit: BoxFit.cover,
-                    gaplessPlayback: true,
-                  )
-                else
-                  Align(
-                    alignment: const Alignment(0.82, -0.2),
-                    child: Container(
-                      width: 72,
-                      height: 72,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.16),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.28),
-                        ),
-                      ),
-                      child: Oggetto(
-                        comeSiChiama(_notifica.tipo).disegno,
-                        lato: 42,
-                      ),
-                    ),
-                  ),
-                /* Il velo: il titolo si legge anche sopra una foto chiara. */
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      stops: const [0, 0.35, 1],
-                      colors: [
-                        Colors.black.withValues(alpha: 0.35),
-                        Colors.transparent,
-                        Colors.black.withValues(
-                          alpha: fotoInCopertina ? 0.78 : 0.30,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                if (_dalVivo)
-                  Positioned(
-                    right: 16,
-                    top: MediaQuery.paddingOf(context).top + 14,
-                    child: _Bollino(
-                      inLingua(it: 'Adesso, dal vivo', en: 'Now, live'),
-                    ),
-                  ),
-                /* Il titolo nella stessa colonna del resto: su un tablet
-                 * non resta attaccato al bordo. */
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 18,
-                  child: Center(
-                    child: SizedBox(
-                      width: larga < 620 ? larga : 620,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 22),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _Bollino(
-                              cheCosaE(_notifica),
-                              conDisegno: fotoInCopertina
-                                  ? comeSiChiama(_notifica.tipo).disegno
-                                  : null,
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              titoloSenzaEmoji(_notifica.titolo),
-                              key: const Key('notifica-titolo'),
-                              style: testi.headlineSmall?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                                height: 1.15,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              [
-                                quandoDetto(_notifica.quando, adesso),
-                                if (casa.isNotEmpty) casa,
-                              ].join(' · '),
-                              key: const Key('notifica-quando'),
-                              style: testi.bodyMedium?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.85),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+              boxShadow: [
+                BoxShadow(
+                  color: scuro.withValues(alpha: 0.28),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
                 ),
               ],
+            ),
+            padding: EdgeInsets.only(top: sopra + 4, bottom: 18),
+            child: Center(
+              child: SizedBox(
+                width: larga < 620 ? larga : 620,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(left: 6),
+                      child: BackButton(color: Colors.white),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 2, 20, 0),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 52,
+                            height: 52,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              color: Colors.white.withValues(alpha: 0.18),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Oggetto(
+                              comeSiChiama(_notifica.tipo).disegno,
+                              lato: 32,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  cheCosaE(_notifica).toUpperCase(),
+                                  style: testi.labelSmall?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 1.1,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  titoloSenzaEmoji(_notifica.titolo),
+                                  key: const Key('notifica-titolo'),
+                                  style: testi.titleLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                    height: 1.15,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  [
+                                    quandoDetto(_notifica.quando, adesso),
+                                    if (casa.isNotEmpty) casa,
+                                  ].join(' · '),
+                                  key: const Key('notifica-quando'),
+                                  style: testi.bodySmall?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
           Center(
@@ -401,7 +353,7 @@ class _StatoDellaNotifica extends State<SchermataDellaNotifica> {
                           ),
                         ),
                       ),
-                    if (immagine != null && !fotoInCopertina) ...[
+                    if (immagine != null) ...[
                       if (testo.isNotEmpty) const SizedBox(height: 14),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(22),
@@ -614,38 +566,27 @@ class _ParolaDelTasto extends StatelessWidget {
   );
 }
 
-/// Un'etichetta di vetro scuro, sopra la copertina o sopra la foto.
+/// Un'etichetta di vetro scuro, sopra la foto.
 class _Bollino extends StatelessWidget {
-  const _Bollino(this.testo, {this.conDisegno});
+  const _Bollino(this.testo);
 
   final String testo;
-  final String? conDisegno;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(conDisegno == null ? 12 : 6, 5, 12, 5),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.38),
+        color: Colors.black.withValues(alpha: 0.45),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (conDisegno case final String disegno) ...[
-            Oggetto(disegno, lato: 18),
-            const SizedBox(width: 6),
-          ],
-          Text(
-            testo,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
+      child: Text(
+        testo,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12.5,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
