@@ -87,6 +87,9 @@ import { COMPOSITORI, PEZZI_DEL_CICLO } from "./parole-delle-notifiche.js";
 import { NotificheDiHomeAssistant } from "./notifiche-di-home-assistant.js";
 
 const MINUTO = 60 * 1000;
+/* Le larghezze chieste per la foto di un movimento, dalla piu' bella alla
+ * piu' leggera (vedi `_laFoto`). */
+export const LARGHEZZE_DELLA_FOTO = Object.freeze([1280, 640, 320]);
 const ORA = 60 * MINUTO;
 /* Le automazioni a orario si rileggono una volta al giorno. */
 const AUTOMAZIONI_OGNI = 24 * ORA;
@@ -1258,8 +1261,21 @@ export class Notifiche {
 
   /* La foto di quella telecamera per questo evento: una per evento (tutti i
    * telefoni ricevono la stessa, chiusa ognuno con la sua chiave) e — tranne
-   * l'antifurto — al piu' una al minuto per telecamera. Grande al piu' 1280
-   * punti, e se pesa troppo 640: il centralino non tiene oltre 300 KB. */
+   * l'antifurto — al piu' una al minuto per telecamera. Il centralino non
+   * tiene oltre 300 KB.
+   *
+   * Dal campo, con la foto della notifica: «Movimento · Ingresso» col
+   * riquadro dell'ora e niente foto. Si chiedeva la foto larga 1280 e poi
+   * 640, e se pesava troppo si lasciava perdere. Ma Home Assistant non la
+   * porta alla larghezza chiesta: la dimezza finche' resta piu' larga di
+   * quella — da una telecamera 4K «640» e' una foto di 960 punti, che puo'
+   * passare i 300 KB come quella da 1280. E al primo errore — una
+   * telecamera lenta che non risponde in tempo — si smetteva, senza provare
+   * la misura piu' piccola. Nessuna delle due cose lasciava traccia.
+   *
+   * Adesso si scende fino a 320 (da una 4K e' un ottavo: 480 punti, decine
+   * di KB), un errore non ferma i tentativi, e quando la foto non c'e' il
+   * registro dice perche'. */
   _laFoto(evento, camera) {
     if (evento._foto !== undefined) return evento._foto;
     evento._foto = (async () => {
@@ -1268,14 +1284,21 @@ export class Notifiche {
         return null;
       this._fotoDi.set(camera, ora);
       if (typeof this.casa?.immagine !== "function") return null;
-      for (const larghezza of [1280, 640]) {
+      const perche = [];
+      for (const larghezza of LARGHEZZE_DELLA_FOTO) {
         try {
           const byte = await this.casa.immagine(`camera_proxy/${camera}?width=${larghezza}`);
           if (byte?.length && byte.length <= FOTO_MASSIMA) return byte;
-        } catch (_errore) {
-          return null;
+          perche.push(
+            byte?.length
+              ? `a ${larghezza} pesa ${Math.round(byte.length / 1024)} KB`
+              : `a ${larghezza} non e' un'immagine`,
+          );
+        } catch (errore) {
+          perche.push(`a ${larghezza}: ${errore?.message || errore}`);
         }
       }
+      this.registro.attenzione?.(`la foto di ${camera} non parte (${perche.join("; ")})`);
       return null;
     })();
     return evento._foto;
