@@ -67,10 +67,35 @@ void main() {
     await ponte.spegni();
   });
 
-  test('una casa che non risponde ai colpetti non si butta giù', () async {
+  test('una casa viva che non risponde ai colpetti non si butta giù', () async {
     /* Home Assistant a `ping` risponde da sempre, ma una casa che non lo
      * facesse non e' una casa morta: buttare giu' un filo che funziona
-     * sarebbe peggio del guasto che si sta cercando di prevenire. */
+     * sarebbe peggio del guasto che si sta cercando di prevenire. Viva vuol
+     * dire che intanto manda altro. */
+    final ponte = await PonteFinto.alza();
+    ponte.senzaPong = true;
+    final filo = _unFilo(ponte);
+    await filo.apri();
+
+    for (var i = 0; i < 20; i += 1) {
+      ponte.evento(1, {'event_type': 'qualcosa'});
+      await _respira(30);
+    }
+
+    expect(filo.dentro, isTrue, reason: 'il filo doveva restare su');
+    expect(ponte.collegamenti, 1, reason: 'non si doveva ribussare');
+
+    await filo.chiudi();
+    await ponte.spegni();
+  });
+
+  test('il telefono si addormenta prima del primo pong: al risveglio si '
+      'ribussa', () async {
+    /* Dal campo: «rientro dopo qualche ora, sullo schermo funziona tutto ma
+     * in realta' non fa niente». Il filo si apre, il telefono va in tasca
+     * prima che torni il primo pong, e dall'altra parte non arriva piu'
+     * niente: ne' pong ne' altro. Non e' una casa che i colpetti non li
+     * conosce — e' un filo morto, e va ribussato. */
     final ponte = await PonteFinto.alza();
     ponte.muto = true;
     final filo = _unFilo(ponte);
@@ -78,8 +103,11 @@ void main() {
 
     await _respira(400);
 
-    expect(filo.dentro, isTrue, reason: 'il filo doveva restare su');
-    expect(ponte.collegamenti, 1, reason: 'non si doveva ribussare');
+    expect(
+      ponte.collegamenti,
+      greaterThan(1),
+      reason: 'il filo zitto dal primo colpetto doveva essere ribussato',
+    );
 
     await filo.chiudi();
     await ponte.spegni();

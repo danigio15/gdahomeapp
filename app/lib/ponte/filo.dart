@@ -59,6 +59,11 @@ final _segnoInByte = Uint8List.fromList(utf8.encode(segnoDelMucchio));
 /// Il ritorno a capo che divide i messaggi dentro un mucchio.
 const int _aCapo = 0x0a;
 
+/// Quanti colpetti senza pong, con la casa che intanto manda altro, prima di
+/// dire che quella casa ai colpetti non risponde. Quattro battiti: due minuti
+/// di filo vivo, abbastanza da non scambiare un pong in ritardo per un no.
+const colpiPerSapere = 4;
+
 /// Dai byte al JSON in un colpo, senza la stringa in mezzo.
 final _daByteAlJson = const Utf8Decoder().fuse(const JsonDecoder());
 
@@ -269,6 +274,9 @@ class Filo {
   /// indietro: vero al primo che torna, falso quando si e' aspettato
   /// abbastanza da poterlo dire.
   bool? _rispondeAiColpetti;
+
+  /// I colpetti mandati, senza pong, mentre dall'altra parte arrivava altro.
+  int _colpiSenzaRisposta = 0;
   int _prossimoId = 1;
   int _tentativi = 0;
   bool _spentoApposta = false;
@@ -736,6 +744,7 @@ class Filo {
       case 'pong':
         _vistoIl = DateTime.now();
         _rispondeAiColpetti = true;
+        _colpiSenzaRisposta = 0;
         _controlloAlRisveglio?.cancel();
         _controlloAlRisveglio = null;
     }
@@ -999,6 +1008,7 @@ class Filo {
     _smettiDiBattere();
     _vistoIl = DateTime.now();
     _rispondeAiColpetti = null;
+    _colpiSenzaRisposta = 0;
     _colpetti = Timer.periodic(battito, (_) => _colpetto());
   }
 
@@ -1012,13 +1022,31 @@ class Filo {
      * parte i colpetti li rimandano indietro. Home Assistant lo fa da sempre —
      * `ping` e `pong` sono suoi — ma una casa che non lo facesse non e' una
      * casa morta, e buttare giu' un filo che funziona sarebbe peggio del
-     * guasto che si sta cercando di prevenire. */
+     * guasto che si sta cercando di prevenire.
+     *
+     * Ma «non risponde ai colpetti» si dice solo di una casa **viva**: una
+     * che manda altro — eventi, risposte — e ai colpetti no. Una che tace del
+     * tutto e' un filo morto, e va ribussato.
+     *
+     * Dal campo: «esco senza chiudere l'app, rientro dopo qualche ora, accendo
+     * le luci e sullo schermo funziona tutto, ma in realta' non fa niente,
+     * devo chiudere e riaprire». Il telefono si addormentava prima che
+     * tornasse il primo pong; al risveglio il filo era zitto da ore, e qui si
+     * concludeva «questa casa i colpetti non li rimanda». Da li' il battito
+     * non controllava piu' niente, nemmeno al rientro ([sveglia]): il filo
+     * morto restava «dentro», la plancia mandava i comandi nel vuoto, e
+     * nessuno li vedeva cadere. */
     if (_rispondeAiColpetti == null) {
-      if (!zitta) {
-        _colpo();
+      if (zitta) {
+        _caduto('nessuna risposta, nemmeno al primo colpetto');
         return;
       }
-      _rispondeAiColpetti = false;
+      if (_colpiSenzaRisposta >= colpiPerSapere) {
+        _rispondeAiColpetti = false;
+        return;
+      }
+      _colpiSenzaRisposta += 1;
+      _colpo();
       return;
     }
     if (_rispondeAiColpetti == false) return;

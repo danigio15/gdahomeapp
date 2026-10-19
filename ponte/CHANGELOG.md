@@ -10,6 +10,13 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.16.5
+
+- **L'app che torna dopo ore:** se il telefono si addormentava subito dopo
+  essersi collegato, al rientro l'app credeva di essere ancora collegata a
+  casa ma i comandi non arrivavano, finché non la si chiudeva e riapriva.
+  Adesso si accorge del collegamento morto e si ricollega da sola.
+
 ## 1.16.4
 
 - **Barra in basso sul telefono:** ogni nome di sezione si legge intero su
