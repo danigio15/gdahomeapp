@@ -34,7 +34,7 @@ const seed = {
         name: "Matrimoniale",
         icon: "🛏️",
         temp: "sensor.matrimoniale_temperature",
-        temp_name: "Pippo",
+        temp_name: "Sonda",
       },
     ],
   },
@@ -133,6 +133,6 @@ test("the label above each reading never changes on its own", async ({ page }, t
   expect(seen).toEqual({
     "room-cameretta::primary": ["Cameretta"],
     "room-cameretta::temperature-extra-1": ["Seconda sonda"],
-    "room-matrimoniale::primary": ["Pippo"],
+    "room-matrimoniale::primary": ["Sonda"],
   });
 });

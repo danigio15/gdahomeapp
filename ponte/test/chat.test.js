@@ -115,7 +115,7 @@ test("un nome e un segreto presi dal caso, e il segreto non esce da qui", async 
       messages: 0,
     });
 
-    const detto = await chat.scrivi("Buongiorno, una domanda.", { nome: "Giovanni" });
+    const detto = await chat.scrivi("Buongiorno, una domanda.", { nome: "Persona 1" });
     assert.equal(chat.aperta, true);
     /* La risposta alla finestra porta il messaggio e nient'altro: nessuna
      * traccia del segreto, e nessun identificativo di questa casa. */
@@ -137,8 +137,8 @@ test("un nome e un segreto presi dal caso, e il segreto non esce da qui", async 
     /* Chi gira non e' Home Assistant ma il ponte: non si finge una versione
      * che non c'e'. */
     assert.equal(posta.intestazioni["x-ha"], "");
-    assert.equal(posta.intestazioni["x-nome"], "Giovanni");
-    assert.deepEqual(posta.corpo, { testo: "Buongiorno, una domanda.", nome: "Giovanni" });
+    assert.equal(posta.intestazioni["x-nome"], "Persona 1");
+    assert.deepEqual(posta.corpo, { testo: "Buongiorno, una domanda.", nome: "Persona 1" });
   } finally {
     via();
   }
@@ -329,11 +329,11 @@ test("un nome con un emoji non spegne la chat, e arriva nel corpo", async () => 
   const centralino = centralinoFinto();
   const { chat, via } = unaChat(centralino, { giaAperta: true });
   try {
-    await chat.scrivi("Ciao", { nome: "Giovanni 🙂" });
+    await chat.scrivi("Ciao", { nome: "Persona 1 🙂" });
 
     /* Il nome per davvero viaggia nel **corpo**, e li' l'emoji ci sta. */
     const scritta = centralino.chiamate.find((una) => una.metodo === "POST");
-    assert.equal(scritta.corpo.nome, "Giovanni 🙂");
+    assert.equal(scritta.corpo.nome, "Persona 1 🙂");
 
     /* Nelle intestazioni no, e non e' pignoleria: un'intestazione HTTP porta
      * un byte per carattere, e `fetch` su un nome con un emoji non ci prova
@@ -352,7 +352,7 @@ test("un nome con un emoji non spegne la chat, e arriva nel corpo", async () => 
 
     /* E il giro in cui si rompeva — la rilettura, che rimanda le note — passa. */
     const detta = await chat.conversazione();
-    assert.equal(detta.name, "Giovanni 🙂");
+    assert.equal(detta.name, "Persona 1 🙂");
   } finally {
     via();
   }
@@ -450,7 +450,7 @@ test("senza la chiave non c'e' nessuna console, e non si bussa nemmeno", async (
 
 test("con la chiave si apre la coda, e il segreto della casa non c'entra", async () => {
   const centralino = laCoda({
-    conversazioni: [{ id: LINEA, nome: "Giovanni", non_letti: 2, ultimo: "non parte" }],
+    conversazioni: [{ id: LINEA, nome: "Persona 1", non_letti: 2, ultimo: "non parte" }],
   });
   const { chat, via } = unaChat(centralino, { chiave: CHIAVE, giaAperta: true });
   try {
@@ -459,7 +459,7 @@ test("con la chiave si apre la coda, e il segreto della casa non c'entra", async
     /* Le colonne sono quelle del centralino e si passano com'e': il Cruscotto
      * della plancia legge `non_letti` e `ultimo`, e riscriverle qui vorrebbe
      * dire tenerle allineate a mano. */
-    assert.deepEqual(coda, [{ id: LINEA, nome: "Giovanni", non_letti: 2, ultimo: "non parte" }]);
+    assert.deepEqual(coda, [{ id: LINEA, nome: "Persona 1", non_letti: 2, ultimo: "non parte" }]);
 
     const bussata = centralino.chiamate.at(-1);
     assert.equal(bussata.via, "/console/conversazioni");

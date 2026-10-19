@@ -5,7 +5,7 @@
  * finestra:
  *
  *   Soggiorno · Cucina · Bagno         145 su 124   eccede 21   scorre
- *   Tutte cariche · Batteria di Marco  196 su 135   eccede 61   scorre
+ *   Tutte cariche · Batteria di Persona 3  196 su 135   eccede 61   scorre
  *   potenza di casa · Immissione 8,4   175 su 176   eccede -1   ferma
  *   Termostato                          62 su 114              ferma
  *   …

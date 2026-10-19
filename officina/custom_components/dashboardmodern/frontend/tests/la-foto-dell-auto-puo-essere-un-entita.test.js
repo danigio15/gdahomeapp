@@ -33,7 +33,7 @@ test("un'entita' immagine si riconosce, un file no", () => {
 test("una persona non e' una foto di una cosa", () => {
   /* Ha un ritratto, ma scrivendola per sbaglio in una casella dell'auto
    * uscirebbe la sua faccia sull'eroe. */
-  assert.equal(eUnaFotoDaEntita("person.giovanni"), false);
+  assert.equal(eUnaFotoDaEntita("person.persona_1"), false);
   assert.equal(eUnaFotoDaEntita("sensor.batteria_auto"), false);
 });
 

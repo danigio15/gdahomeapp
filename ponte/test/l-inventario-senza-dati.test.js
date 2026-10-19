@@ -44,9 +44,9 @@ const STATI = [
     },
   },
   {
-    entity_id: "person.anna",
+    entity_id: "person.persona_2",
     state: "home",
-    attributes: { friendly_name: "Anna", latitude: 45.1 },
+    attributes: { friendly_name: "Persona 2", latitude: 45.1 },
   },
   { entity_id: "non un id", state: "x", attributes: {} },
 ];
@@ -75,8 +75,8 @@ test("gli stati escono ciechi: l'id e le capacita', mai il valore ne' un indiriz
     max_temp: 30,
     supported_features: 401,
   });
-  const anna = stati.find((uno) => uno.entity_id === "person.anna");
-  assert.deepEqual(anna.attributes, { friendly_name: "Anna" });
+  const persona_2 = stati.find((uno) => uno.entity_id === "person.persona_2");
+  assert.deepEqual(persona_2.attributes, { friendly_name: "Persona 2" });
   const scritto = JSON.stringify(stati);
   for (const segreto of ["on", "streaming", "token=abc", "21.4", "home", "45.1", "last_changed"])
     assert.ok(!scritto.includes(`"${segreto}"`), `«${segreto}» non deve partire`);

@@ -30,8 +30,8 @@ import { Automazioni } from "../src/automazioni.js";
 import { Commissioni } from "../src/commissioni.js";
 
 const STATI = {
-  "person.anna": { state: "home", attributes: {} },
-  "person.bruno": { state: "not_home", attributes: {} },
+  "person.persona_2": { state: "home", attributes: {} },
+  "person.persona_7": { state: "not_home", attributes: {} },
   "binary_sensor.pir": { state: "off", attributes: { device_class: "motion" } },
   "binary_sensor.finestra": { state: "off", attributes: { device_class: "window" } },
   "sensor.lavatrice": {
@@ -127,7 +127,10 @@ test("ogni QUANDO, SOLO SE e ALLORA della plancia va in Home Assistant e torna u
     assert.equal(config.description, DESCRIZIONE_GDAHOME);
   }
   /* Le persone «chiunque» si scrivono per nome. */
-  assert.deepEqual(ritorno(casi[5]).config.triggers[0].entity_id, ["person.anna", "person.bruno"]);
+  assert.deepEqual(ritorno(casi[5]).config.triggers[0].entity_id, [
+    "person.persona_2",
+    "person.persona_7",
+  ]);
 });
 
 test("la configurazione scritta: servizi scelti qui, gli avvisi con l'evento, i giorni e la pausa", () => {

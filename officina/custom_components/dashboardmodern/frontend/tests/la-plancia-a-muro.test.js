@@ -66,7 +66,7 @@ const VALORI = {
     { name: "Rientro", type: "script", entity: "script.rientro" },
     { name: "Luci", type: "builtin", builtin: "luci" },
   ]),
-  cd_people: JSON.stringify([{ entity: "person.anna", name: "Anna" }]),
+  cd_people: JSON.stringify([{ entity: "person.persona_2", name: "Persona 2" }]),
   cd_entity_overrides: JSON.stringify({
     "dm.security_centrale_allarme": "alarm_control_panel.casa",
   }),
@@ -81,7 +81,7 @@ test("dalla plancia principale si leggono stanze, dispositivi, azioni e centrale
   assert.equal(fonte.luci.length, 3, "la luce spenta nel config non si offre");
   assert.equal(fonte.azioni.length, 4);
   assert.deepEqual(fonte.centrali, ["alarm_control_panel.casa"]);
-  assert.deepEqual(fonte.persone, [{ entity: "person.anna", name: "Anna" }]);
+  assert.deepEqual(fonte.persone, [{ entity: "person.persona_2", name: "Persona 2" }]);
 });
 
 test("una fonte rotta non fa cadere il tablet", () => {

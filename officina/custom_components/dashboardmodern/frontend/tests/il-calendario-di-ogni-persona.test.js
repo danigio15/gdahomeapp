@@ -28,8 +28,8 @@ const leggi = (percorso) => readFile(new URL(`../src/${percorso}`, import.meta.u
 
 const CASA = [
   { id: "c1", entity: "calendar.famiglia", name: "Famiglia" },
-  { id: "c2", entity: "calendar.utente1", name: "Mario", persone: ["u-mario"] },
-  { id: "c3", entity: "calendar.utente2", name: "Anna", persone: ["u-anna"] },
+  { id: "c2", entity: "calendar.utente1", name: "Persona 6", persone: ["u-persona-6"] },
+  { id: "c3", entity: "calendar.utente2", name: "Persona 2", persone: ["u-persona-2"] },
 ];
 
 const nomi = (elenco) => elenco.map((voce) => voce.entity);
@@ -37,14 +37,14 @@ const nomi = (elenco) => elenco.map((voce) => voce.entity);
 test("un calendario puo' essere di qualcuno, e vuoto vuol dire di casa", () => {
   const scritti = normalizzaCalendari([
     { entity: "calendar.famiglia" },
-    { entity: "calendar.utente1", persone: ["u-mario", "u-mario", " "] },
+    { entity: "calendar.utente1", persone: ["u-persona-6", "u-persona-6", " "] },
     /* Salvato dalla riga della scheda arriva come una stringa: e' una casella
      * nascosta come le altre, e la riga legge stringhe. */
-    { entity: "calendar.utente2", persone: "u-anna, u-mario" },
+    { entity: "calendar.utente2", persone: "u-persona-2, u-persona-6" },
   ]);
   assert.deepEqual(scritti[0].persone, []);
-  assert.deepEqual(scritti[1].persone, ["u-mario"]);
-  assert.deepEqual(scritti[2].persone, ["u-anna", "u-mario"]);
+  assert.deepEqual(scritti[1].persone, ["u-persona-6"]);
+  assert.deepEqual(scritti[2].persone, ["u-persona-2", "u-persona-6"]);
   /* E chi ha configurato un calendario prima di oggi non ha niente addosso. */
   assert.equal(calendariAssegnati(normalizzaCalendari([{ entity: "calendar.x" }])), false);
   assert.equal(calendariAssegnati(scritti), true);
@@ -55,11 +55,11 @@ test("chi si riconosce vede i suoi e quelli di casa; chi non si riconosce vede q
   /* «Utente 1 visualizza calendar.utente1, Utente 2 visualizza
    * calendar.utente2»: e il calendario di famiglia lo guardano tutti e due —
    * toglierlo a chi ne ha anche uno suo sarebbe peggio che non aver diviso. */
-  assert.deepEqual(nomi(calendariDellUtente(CASA, "u-mario")), [
+  assert.deepEqual(nomi(calendariDellUtente(CASA, "u-persona-6")), [
     "calendar.famiglia",
     "calendar.utente1",
   ]);
-  assert.deepEqual(nomi(calendariDellUtente(CASA, "u-anna")), [
+  assert.deepEqual(nomi(calendariDellUtente(CASA, "u-persona-2")), [
     "calendar.famiglia",
     "calendar.utente2",
   ]);
@@ -82,22 +82,22 @@ test("se ogni calendario ha un padrone, chi non si riconosce non resta a mani vu
   /* Una plancia che non sa chi ha davanti non deve diventare una pagina
    * vuota: questa e' una comodita', non una serratura. */
   const soloPersonali = [
-    { entity: "calendar.utente1", persone: ["u-mario"] },
-    { entity: "calendar.utente2", persone: ["u-anna"] },
+    { entity: "calendar.utente1", persone: ["u-persona-6"] },
+    { entity: "calendar.utente2", persone: ["u-persona-2"] },
   ];
   assert.deepEqual(nomi(calendariDellUtente(soloPersonali, "")), [
     "calendar.utente1",
     "calendar.utente2",
   ]);
-  assert.deepEqual(nomi(calendariDellUtente(soloPersonali, "u-anna")), ["calendar.utente2"]);
+  assert.deepEqual(nomi(calendariDellUtente(soloPersonali, "u-persona-2")), ["calendar.utente2"]);
 });
 
 test("gli utenti di casa escono dalle persone di Home Assistant", () => {
   /* Non c'e' un elenco degli utenti che la plancia possa chiedere: ogni
    * `person.*` pero' porta negli attributi l'`user_id` di chi rappresenta. */
   const stati = {
-    "person.mario": { state: "home", attributes: { friendly_name: "Mario", user_id: "u-mario" } },
-    "person.anna": { state: "not_home", attributes: { friendly_name: "Anna", user_id: "u-anna" } },
+    "person.persona_6": { state: "home", attributes: { friendly_name: "Persona 6", user_id: "u-persona-6" } },
+    "person.persona_2": { state: "not_home", attributes: { friendly_name: "Persona 2", user_id: "u-persona-2" } },
     /* Una persona senza utente non e' un utente: nessuno le assegna niente. */
     "person.nonno": { state: "home", attributes: { friendly_name: "Nonno" } },
     "sensor.qualcosa": { state: "1", attributes: { user_id: "u-falso" } },
@@ -105,8 +105,8 @@ test("gli utenti di casa escono dalle persone di Home Assistant", () => {
   assert.deepEqual(
     utentiDiCasa(stati).map((voce) => [voce.name, voce.utente]),
     [
-      ["Anna", "u-anna"],
-      ["Mario", "u-mario"],
+      ["Persona 2", "u-persona-2"],
+      ["Persona 6", "u-persona-6"],
     ],
   );
   assert.deepEqual(utentiDiCasa({}), []);

@@ -203,7 +203,7 @@
         end: { dateTime: scritto(fraQuanto(0, 22, 30)) },
       },
       {
-        summary: "Partita di Marco",
+        summary: "Partita di Persona 3",
         start: { dateTime: scritto(fraQuanto(2, 15, 30)) },
         end: { dateTime: scritto(fraQuanto(2, 17, 0)) },
       },

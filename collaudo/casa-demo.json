@@ -2542,40 +2542,40 @@
    "last_updated": "2026-09-08T04:39:21.763Z"
   },
   {
-   "entity_id": "person.giovanni",
+   "entity_id": "person.persona_1",
    "state": "home",
    "attributes": {
-    "friendly_name": "Giovanni",
-    "id": "giovanni"
+    "friendly_name": "Persona 1",
+    "id": "persona_1"
    },
    "last_changed": "2026-09-08T04:39:21.763Z",
    "last_updated": "2026-09-08T04:39:21.763Z"
   },
   {
-   "entity_id": "person.laura",
+   "entity_id": "person.persona_4",
    "state": "not_home",
    "attributes": {
-    "friendly_name": "Laura",
-    "id": "laura"
+    "friendly_name": "Persona 4",
+    "id": "persona_4"
    },
    "last_changed": "2026-09-08T04:39:21.763Z",
    "last_updated": "2026-09-08T04:39:21.763Z"
   },
   {
-   "entity_id": "person.marco",
+   "entity_id": "person.persona_3",
    "state": "Ufficio",
    "attributes": {
-    "friendly_name": "Marco",
-    "id": "marco"
+    "friendly_name": "Persona 3",
+    "id": "persona_3"
    },
    "last_changed": "2026-09-08T04:39:21.763Z",
    "last_updated": "2026-09-08T04:39:21.763Z"
   },
   {
-   "entity_id": "sensor.telefono_giovanni_batteria",
+   "entity_id": "sensor.telefono_persona_1_batteria",
    "state": "82",
    "attributes": {
-    "friendly_name": "Batteria telefono Giovanni",
+    "friendly_name": "Batteria telefono Persona 1",
     "unit_of_measurement": "%",
     "device_class": "battery",
     "state_class": "measurement"
@@ -2584,19 +2584,19 @@
    "last_updated": "2026-09-08T04:39:21.763Z"
   },
   {
-   "entity_id": "sensor.telefono_giovanni_stato_batteria",
+   "entity_id": "sensor.telefono_persona_1_stato_batteria",
    "state": "Charging",
    "attributes": {
-    "friendly_name": "Stato batteria Giovanni"
+    "friendly_name": "Stato batteria Persona 1"
    },
    "last_changed": "2026-09-08T04:39:21.763Z",
    "last_updated": "2026-09-08T04:39:21.763Z"
   },
   {
-   "entity_id": "sensor.telefono_laura_batteria",
+   "entity_id": "sensor.telefono_persona_4_batteria",
    "state": "46",
    "attributes": {
-    "friendly_name": "Batteria telefono Laura",
+    "friendly_name": "Batteria telefono Persona 4",
     "unit_of_measurement": "%",
     "device_class": "battery",
     "state_class": "measurement"
@@ -2605,19 +2605,19 @@
    "last_updated": "2026-09-08T04:39:21.763Z"
   },
   {
-   "entity_id": "sensor.telefono_laura_stato_batteria",
+   "entity_id": "sensor.telefono_persona_4_stato_batteria",
    "state": "Not Charging",
    "attributes": {
-    "friendly_name": "Stato batteria Laura"
+    "friendly_name": "Stato batteria Persona 4"
    },
    "last_changed": "2026-09-08T04:39:21.763Z",
    "last_updated": "2026-09-08T04:39:21.763Z"
   },
   {
-   "entity_id": "sensor.laura_distanza",
+   "entity_id": "sensor.persona_4_distanza",
    "state": "8.4",
    "attributes": {
-    "friendly_name": "Distanza Laura",
+    "friendly_name": "Distanza Persona 4",
     "unit_of_measurement": "km",
     "device_class": "distance"
    },
@@ -2625,20 +2625,20 @@
    "last_updated": "2026-09-08T04:39:21.763Z"
   },
   {
-   "entity_id": "sensor.laura_tempo_rientro",
+   "entity_id": "sensor.persona_4_tempo_rientro",
    "state": "14",
    "attributes": {
-    "friendly_name": "Tempo di rientro Laura",
+    "friendly_name": "Tempo di rientro Persona 4",
     "unit_of_measurement": "min"
    },
    "last_changed": "2026-09-08T04:39:21.763Z",
    "last_updated": "2026-09-08T04:39:21.763Z"
   },
   {
-   "entity_id": "sensor.telefono_marco_batteria",
+   "entity_id": "sensor.telefono_persona_3_batteria",
    "state": "9",
    "attributes": {
-    "friendly_name": "Batteria telefono Marco",
+    "friendly_name": "Batteria telefono Persona 3",
     "unit_of_measurement": "%",
     "device_class": "battery",
     "state_class": "measurement"
@@ -2647,10 +2647,10 @@
    "last_updated": "2026-09-08T04:39:21.763Z"
   },
   {
-   "entity_id": "sensor.telefono_marco_stato_batteria",
+   "entity_id": "sensor.telefono_persona_3_stato_batteria",
    "state": "Not Charging",
    "attributes": {
-    "friendly_name": "Stato batteria Marco"
+    "friendly_name": "Stato batteria Persona 3"
    },
    "last_changed": "2026-09-08T04:39:21.763Z",
    "last_updated": "2026-09-08T04:39:21.763Z"
@@ -2859,7 +2859,7 @@
     "cd_costo_kwh": "0.28",
     "cd_prezzo_immissione": "0.09",
     "cd_navbar_mode": "auto",
-    "cd_people": "[{\"id\":\"person-giovanni\",\"name\":\"Giovanni\",\"entity\":\"person.giovanni\",\"battery\":\"sensor.telefono_giovanni_batteria\",\"batteryState\":\"sensor.telefono_giovanni_stato_batteria\",\"avatar\":{\"color\":\"#0ea5e9\",\"face\":{\"persona\":\"uomo\",\"capelli\":\"barba\",\"carnagione\":\"media\",\"vestito\":\"informatico\"}}},{\"id\":\"person-laura\",\"name\":\"Laura\",\"entity\":\"person.laura\",\"battery\":\"sensor.telefono_laura_batteria\",\"batteryState\":\"sensor.telefono_laura_stato_batteria\",\"distance\":\"sensor.laura_distanza\",\"travel\":\"sensor.laura_tempo_rientro\",\"avatar\":{\"color\":\"#ec4899\",\"face\":{\"persona\":\"donna\",\"capelli\":\"ricci\",\"carnagione\":\"chiara2\",\"vestito\":\"medico\"}}},{\"id\":\"person-marco\",\"name\":\"Marco\",\"entity\":\"person.marco\",\"battery\":\"sensor.telefono_marco_batteria\",\"batteryState\":\"sensor.telefono_marco_stato_batteria\",\"avatar\":{\"color\":\"#16a34a\",\"face\":{\"persona\":\"uomo\",\"capelli\":\"lisci\",\"carnagione\":\"ambrata\",\"vestito\":\"ufficio\"}}}]",
+    "cd_people": "[{\"id\":\"person-persona-1\",\"name\":\"Persona 1\",\"entity\":\"person.persona_1\",\"battery\":\"sensor.telefono_persona_1_batteria\",\"batteryState\":\"sensor.telefono_persona_1_stato_batteria\",\"avatar\":{\"color\":\"#0ea5e9\",\"face\":{\"persona\":\"uomo\",\"capelli\":\"barba\",\"carnagione\":\"media\",\"vestito\":\"informatico\"}}},{\"id\":\"person-persona-4\",\"name\":\"Persona 4\",\"entity\":\"person.persona_4\",\"battery\":\"sensor.telefono_persona_4_batteria\",\"batteryState\":\"sensor.telefono_persona_4_stato_batteria\",\"distance\":\"sensor.persona_4_distanza\",\"travel\":\"sensor.persona_4_tempo_rientro\",\"avatar\":{\"color\":\"#ec4899\",\"face\":{\"persona\":\"donna\",\"capelli\":\"ricci\",\"carnagione\":\"chiara2\",\"vestito\":\"medico\"}}},{\"id\":\"person-persona-3\",\"name\":\"Persona 3\",\"entity\":\"person.persona_3\",\"battery\":\"sensor.telefono_persona_3_batteria\",\"batteryState\":\"sensor.telefono_persona_3_stato_batteria\",\"avatar\":{\"color\":\"#16a34a\",\"face\":{\"persona\":\"uomo\",\"capelli\":\"lisci\",\"carnagione\":\"ambrata\",\"vestito\":\"ufficio\"}}}]",
     "cd_todo": "[{\"entity\":\"todo.spesa\",\"name\":\"Spesa\"},{\"entity\":\"todo.casa\",\"name\":\"Cose di casa\"}]",
     "cd_security_doors": "[{\"id\":\"door-portone\",\"name\":\"Portone\",\"entity\":\"lock.portone\",\"icon\":\"🚪\"},{\"id\":\"door-garage\",\"name\":\"Garage\",\"entity\":\"lock.garage\",\"icon\":\"🅿️\"}]",
     "cd_media_player": "[{\"id\":\"media-salone\",\"entity\":\"media_player.salone\",\"nome\":\"Salone\",\"room_id\":\"room-soggiorno\"},{\"id\":\"media-cucina\",\"entity\":\"media_player.cucina\",\"nome\":\"Cucina\",\"room_id\":\"room-cucina\"},{\"id\":\"media-camera\",\"entity\":\"media_player.camera\",\"nome\":\"Camera\",\"room_id\":\"room-camera\"}]",

@@ -18,7 +18,7 @@ void main() {
   const piena =
       '{"quando":1700000000000,'
       '"fotovoltaico":[{"nome":"Casa","valore":"725 W"}],'
-      '"persone":[{"nome":"Gio","inCasa":true}],'
+      '"persone":[{"nome":"Persona 1","inCasa":true}],'
       '"azioni":[{"id":"0|Buonanotte","nome":"Buonanotte","segno":"🌙"}]}';
 
   test('quello che arriva diventa il file, col nome della casa messo qui', () {
@@ -31,7 +31,7 @@ void main() {
       {'nome': 'Casa', 'valore': '725 W'},
     ]);
     expect(foto['persone'], [
-      {'nome': 'Gio', 'inCasa': true},
+      {'nome': 'Persona 1', 'inCasa': true},
     ]);
     expect(foto['azioni'], [
       {
@@ -60,7 +60,8 @@ void main() {
   });
 
   test('un messaggio enorme non si prova nemmeno a leggerlo', () {
-    final lungo = '{"persone":[${'{"nome":"Gio"},' * 8000}{"nome":"Gio"}]}';
+    final lungo =
+        '{"persone":[${'{"nome":"Persona 1"},' * 8000}{"nome":"Persona 1"}]}';
     expect(lungo.length, greaterThan(64 * 1024));
     expect(laFotoDaScrivere(lungo, casa: 'Casa'), isNull);
   });
@@ -72,13 +73,13 @@ void main() {
     const con =
         '{"quando":1700000000000,"indirizzo":"Via Roma 1",'
         '"chiave":"segreta",'
-        '"persone":[{"nome":"Gio","inCasa":true,"batteria":"12%"}]}';
+        '"persone":[{"nome":"Persona 1","inCasa":true,"batteria":"12%"}]}';
     final scritta = laFotoDaScrivere(con, casa: 'Casa')!;
     expect(scritta.contains('Via Roma'), isFalse);
     expect(scritta.contains('segreta'), isFalse);
     expect(scritta.contains('12%'), isFalse);
     expect(_letto(scritta)['persone'], [
-      {'nome': 'Gio', 'inCasa': true},
+      {'nome': 'Persona 1', 'inCasa': true},
     ]);
   });
 
@@ -107,7 +108,7 @@ void main() {
         '{"fotovoltaico":[{"nome":"","valore":"725 W"},'
         '{"nome":"Solare","valore":"485 W"}],'
         '"azioni":[{"id":"","nome":"Muta"},{"id":"1|Vera","nome":"Vera"}],'
-        '"persone":[{"nome":""},{"nome":"Gio"}]}',
+        '"persone":[{"nome":""},{"nome":"Persona 1"}]}',
         casa: 'Casa',
       ),
     );
@@ -120,14 +121,14 @@ void main() {
     /* Chi non dice se e' in casa non e' in casa: in macchina si legge «fuori»,
        che e' la risposta prudente delle due. */
     expect(foto['persone'], [
-      {'nome': 'Gio', 'inCasa': false},
+      {'nome': 'Persona 1', 'inCasa': false},
     ]);
   });
 
   test('un nome lunghissimo si taglia invece di passare intero', () {
     final foto = _letto(
       laFotoDaScrivere(
-        '{"persone":[{"nome":"${'Giovanni ' * 40}","inCasa":true}]}',
+        '{"persone":[{"nome":"${'Persona 1 ' * 40}","inCasa":true}]}',
         casa: 'Casa',
       ),
     );
@@ -140,13 +141,13 @@ void main() {
        in macchina si leggerebbero per sempre i numeri di stamattina. */
     final prima = DateTime.now().millisecondsSinceEpoch;
     final foto = _letto(
-      laFotoDaScrivere('{"persone":[{"nome":"Gio"}]}', casa: 'Casa'),
+      laFotoDaScrivere('{"persone":[{"nome":"Persona 1"}]}', casa: 'Casa'),
     );
     expect(foto['quando'] as int, greaterThanOrEqualTo(prima));
     /* E un momento che non e' un momento vale la stessa cosa. */
     final storto = _letto(
       laFotoDaScrivere(
-        '{"quando":"ieri","persone":[{"nome":"Gio"}]}',
+        '{"quando":"ieri","persone":[{"nome":"Persona 1"}]}',
         casa: 'Casa',
       ),
     );
@@ -219,7 +220,7 @@ void main() {
 
   group('le ricette dei tasti che partono da soli', () {
     const mandata =
-        '{"persone":[{"nome":"Gio"}],'
+        '{"persone":[{"nome":"Persona 1"}],'
         '"azioni":[{"id":"0|Cancello","nome":"Cancello","subito":true}],'
         '"ricette":[{"id":"0|Cancello","dominio":"switch","servizio":"toggle",'
         '"entita":"switch.cancello"}]}';

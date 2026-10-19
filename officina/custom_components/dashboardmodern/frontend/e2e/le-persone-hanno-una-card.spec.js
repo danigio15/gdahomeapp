@@ -29,11 +29,11 @@ const seme = {
 };
 
 const persone = [
-  { id: "person-giovanni", name: "Giovanni Daniello", entity: "person.giovanni" },
+  { id: "person-persona-1", name: "Persona 1", entity: "person.persona_1" },
   {
-    id: "person-anna",
-    name: "Anna",
-    entity: "person.anna",
+    id: "person-persona-2",
+    name: "Persona 2",
+    entity: "person.persona_2",
     avatar: { emoji: "👩", color: "#ec4899" },
   },
 ];
@@ -76,7 +76,7 @@ test("le card compaiono in Home e l'editor le elenca", async ({ page }, testInfo
   await page.locator('.ed-tab[data-tab="people"]').click();
   const righe = page.locator("#ed-body .dm-people-row");
   await expect(righe).toHaveCount(2);
-  await expect(righe.first()).toContainText("Giovanni Daniello");
+  await expect(righe.first()).toContainText("Persona 1");
 
   await page.locator("#ed-body [data-person-add]").click();
   await expect(page.locator("#ed-body .dm-people-row")).toHaveCount(3);

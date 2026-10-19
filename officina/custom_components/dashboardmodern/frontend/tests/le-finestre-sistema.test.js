@@ -209,12 +209,12 @@ test("segnalazioni: il conto da lavorare, chi aspetta, le ferme, niente chiuse",
       nuove: 5,
       inLavorazione: 1,
       chiuse: 9,
-      conversazioni: [{ number: 209, title: "Non trovo la Piscina", messages: 2, autore: "luca-p", stato: "inviato", opened: true }],
+      conversazioni: [{ number: 209, title: "Non trovo la Piscina", messages: 2, autore: "persona-11-p", stato: "inviato", opened: true }],
     },
   });
   assert.match(html, /da lavorare/);
   assert.match(html, /Ti stanno aspettando/);
-  assert.match(html, /#209 · luca-p/);
+  assert.match(html, /#209 · persona-11-p/);
   assert.match(html, /#175/);
   assert.doesNotMatch(html, /Chiuse/);
   assert.doesNotMatch(html, /✦/);

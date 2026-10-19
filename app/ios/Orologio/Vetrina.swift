@@ -32,7 +32,7 @@ enum Vetrina {
       {"id":"a1","nome":"Buonanotte","subito":true},
       {"id":"a2","nome":"Esco di casa","subito":true},
       {"id":"a3","nome":"Irrigazione","subito":false}],
-     "persone":[{"nome":"Anna","inCasa":true},{"nome":"Marco","inCasa":false}],
+     "persone":[{"nome":"Persona 2","inCasa":true},{"nome":"Persona 3","inCasa":false}],
      "misure":[{"nome":"Produzione","valore":"3,2 kW"},{"nome":"Consumo","valore":"1,1 kW"},
       {"nome":"Batteria","valore":"86 %"}],
      "nav":{"attiva":true,"casa":true,"lavoro":true,"tipo":10,"distanza":350,

@@ -66,7 +66,7 @@ test("la casella viaggia con la configurazione della casa", () => {
 test("una riga senza entità non diventa un tasto", () => {
   const modi = normalizzaModiSuMisura([
     { nome: "Vuoto" },
-    { nome: "Sbagliato", entita: "pippo" },
+    { nome: "Sbagliato", entita: "xyz" },
     { nome: "Fuori dominio", entita: "sensor.qualcosa" },
     { nome: "Buono", entita: "script.antifurto" },
   ]);

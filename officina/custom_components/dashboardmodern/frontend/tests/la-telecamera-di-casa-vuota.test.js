@@ -23,7 +23,7 @@ import {
 
 const SORGENTI = fileURLToPath(new URL("../src/", import.meta.url));
 
-const PERSONE = [{ entity: "person.giovanni" }, { entity: "person.marta" }];
+const PERSONE = [{ entity: "person.persona_1" }, { entity: "person.persona_9" }];
 const CAMERE = [
   { entity: "camera.ingresso", name: "Ingresso" },
   { entity: "camera.salotto", name: "Salotto" },
@@ -33,23 +33,23 @@ const RISERVATE = { "camera.salotto": true };
 test("in casa c'è qualcuno solo se qualcuno dice «home»", () => {
   assert.equal(
     cEQualcunoInCasa(PERSONE, {
-      "person.giovanni": { state: "home" },
-      "person.marta": { state: "not_home" },
+      "person.persona_1": { state: "home" },
+      "person.persona_9": { state: "not_home" },
     }),
     true,
   );
   assert.equal(
     cEQualcunoInCasa(PERSONE, {
-      "person.giovanni": { state: "not_home" },
-      "person.marta": { state: "not_home" },
+      "person.persona_1": { state: "not_home" },
+      "person.persona_9": { state: "not_home" },
     }),
     false,
   );
   /* Una zona col nome è fuori: chi è «in palestra» non è in casa. */
   assert.equal(
     cEQualcunoInCasa(PERSONE, {
-      "person.giovanni": { state: "palestra" },
-      "person.marta": { state: "ufficio" },
+      "person.persona_1": { state: "palestra" },
+      "person.persona_9": { state: "ufficio" },
     }),
     false,
   );
@@ -61,16 +61,16 @@ test("e quando non si sa, la risposta è «non si sa» — non «non c'è nessun
   assert.equal(cEQualcunoInCasa(PERSONE, {}), null);
   assert.equal(
     cEQualcunoInCasa(PERSONE, {
-      "person.giovanni": { state: "unknown" },
-      "person.marta": { state: "unavailable" },
+      "person.persona_1": { state: "unknown" },
+      "person.persona_9": { state: "unavailable" },
     }),
     null,
   );
   /* Ma basta UNA che risponde perché si sappia. */
   assert.equal(
     cEQualcunoInCasa(PERSONE, {
-      "person.giovanni": { state: "unknown" },
-      "person.marta": { state: "not_home" },
+      "person.persona_1": { state: "unknown" },
+      "person.persona_9": { state: "not_home" },
     }),
     false,
   );
@@ -78,10 +78,10 @@ test("e quando non si sa, la risposta è «non si sa» — non «non c'è nessun
 
 test("la riservata si vede solo a casa vuota", () => {
   const vuota = {
-    "person.giovanni": { state: "not_home" },
-    "person.marta": { state: "not_home" },
+    "person.persona_1": { state: "not_home" },
+    "person.persona_9": { state: "not_home" },
   };
-  const abitata = { "person.giovanni": { state: "home" } };
+  const abitata = { "person.persona_1": { state: "home" } };
 
   assert.deepEqual(
     telecamereVisibili(CAMERE, { config: RISERVATE, persone: PERSONE, states: vuota }).map(
@@ -104,7 +104,7 @@ test("e davanti a un «non si so» resta nascosta", () => {
    * rimedia con una spunta, il secondo non lo scopri mai. Chi accende questa
    * opzione sta chiedendo quella garanzia, e una garanzia che si arrende
    * quando il dato manca non è una garanzia. */
-  for (const stati of [{}, { "person.giovanni": { state: "unknown" } }])
+  for (const stati of [{}, { "person.persona_1": { state: "unknown" } }])
     assert.deepEqual(
       telecamereVisibili(CAMERE, { config: RISERVATE, persone: PERSONE, states: stati }).map(
         (c) => c.entity,
@@ -157,12 +157,12 @@ test("chi rientra la fa sparire subito, non al prossimo cambio pagina", () => {
   const fuori = telecamereVisibili(CAMERE, {
     config: RISERVATE,
     persone: PERSONE,
-    states: { "person.giovanni": { state: "not_home" } },
+    states: { "person.persona_1": { state: "not_home" } },
   });
   const dentro = telecamereVisibili(CAMERE, {
     config: RISERVATE,
     persone: PERSONE,
-    states: { "person.giovanni": { state: "home" } },
+    states: { "person.persona_1": { state: "home" } },
   });
   assert.deepEqual(
     fuori.map((c) => c.entity),

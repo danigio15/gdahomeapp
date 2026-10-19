@@ -557,7 +557,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-PM4J6Y2Q.js";
+} from "../../chunk-IW2YRDKH.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -8574,7 +8574,7 @@ function emptyLoad(model2 = [], locale3 = "it", plant = "") {
     monthly: "",
     children: [],
     /* Un carico nuovo nasce nell'impianto che si sta guardando, non nel
-     * primo: chi apre «casa Donato» e aggiunge un cerchio lo aggiunge li'. */
+     * primo: chi apre «casa Persona 5» e aggiunge un cerchio lo aggiunge li'. */
     plant: clean2(plant),
     room_id: ""
   };
@@ -123305,7 +123305,7 @@ function installStyles66() {
        corta. */
     #dm-people .dm-people-fila[data-accanto="true"] .dm-people-grid{grid-column:1/-2}
     /* Sul telefono «accanto» esiste, e a due corsie.
-       «La card deve uscire affianco a Giovanni.» Qui la fila cadeva a una
+       «La card deve uscire affianco a Persona 1.» Qui la fila cadeva a una
        colonna sola sotto i 760px, e il compagno finiva sotto la griglia largo
        tutta la pagina — che e' esattamente quello che era stato chiesto di non
        fare. Due corsie ci stanno: le persone ne prendono una e il compagno
@@ -123325,7 +123325,7 @@ function installStyles66() {
     /* Il ritratto e chi e', su una riga: la faccia e il nome vicini. */
     #dm-people .dm-person-testa{display:flex;align-items:center;gap:13px;min-width:0}
     /* La colonna prende quello che resta della riga: senza, la pastiglia della
-       zona si stringe sul nome — «Andrea» corto, e «Atos» diventava «…». */
+       zona si stringe sul nome — «Papà» corto, e «Atos» diventava «…». */
     #dm-people .dm-person-chi{flex:1 1 auto;display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:0;max-width:100%}
     /* L'alone del colore di presenza, morbido dietro al ritratto: e' lui a
      * dire da lontano chi e' a casa e chi no, prima ancora di leggere. */

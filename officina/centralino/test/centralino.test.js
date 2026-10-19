@@ -117,7 +117,7 @@ test("un messaggio vuoto non è un messaggio", async () => {
 
 test("un identificativo che non è un identificativo non arriva al database", async () => {
   const env = ambiente();
-  for (const finto of ["", "casa_", "pippo", `casa_${"z".repeat(32)}`, "'; DROP TABLE linee;--"]) {
+  for (const finto of ["", "casa_", "xyz", `casa_${"z".repeat(32)}`, "'; DROP TABLE linee;--"]) {
     const { stato } = await scrive(env, "ciao", finto);
     assert.equal(stato, 400, `"${finto}" è passato`);
   }
@@ -255,13 +255,13 @@ test("la console vede l'elenco, con i non letti e l'ultima cosa detta", async ()
     "x-versione": "1.4.5-beta.12",
     "x-ha": "2026.8.3",
     "x-lingua": "it",
-    "x-nome": "Giovanni",
+    "x-nome": "Persona 1",
   });
   const { corpo } = await chiama(env, { via: "/console/conversazioni", chiave: CHIAVE_CONSOLE });
   assert.equal(corpo.conversazioni.length, 1);
   const riga = corpo.conversazioni[0];
   assert.equal(riga.id, CASA);
-  assert.equal(riga.nome, "Giovanni");
+  assert.equal(riga.nome, "Persona 1");
   assert.equal(riga.versione, "1.4.5-beta.12");
   assert.equal(riga.ha, "2026.8.3");
   assert.equal(riga.non_letti, 1);

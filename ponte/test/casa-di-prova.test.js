@@ -704,7 +704,7 @@ async function catena({ gestore = true } = {}) {
   /* Chi preme i tasti nella console amministra; «Revisione» no. */
   const utenti = {
     elenco: async () => [
-      { id: CHI_AMMINISTRA, nome: "Giovanni", amministratore: true, attivo: true },
+      { id: CHI_AMMINISTRA, nome: "Persona 1", amministratore: true, attivo: true },
       { id: REVISIONE, nome: "Revisione", amministratore: false, attivo: true },
     ],
     amministratore: async (chi) => chi === CHI_AMMINISTRA,

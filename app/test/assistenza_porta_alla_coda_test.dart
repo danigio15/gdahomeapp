@@ -69,7 +69,7 @@ Future<Collegamento> _apriLAssistenza(
     ponte.unaCasaChiedeAiuto(
       _unaCasa,
       'Le telecamere non partono.',
-      nome: 'Giovanni',
+      nome: 'Persona 1',
     );
     collegamento = await _casaCollegata(ponte);
   });
@@ -100,7 +100,7 @@ void main() {
 
     /* E dentro c'e' la coda vera: la casa che ha scritto, e le sue parole.
      * Senza questo il tasto sarebbe verde in una prova e vuoto in mano. */
-    expect(find.text('Giovanni'), findsOneWidget);
+    expect(find.text('Persona 1'), findsOneWidget);
     expect(find.text('Le telecamere non partono.'), findsOneWidget);
   });
 

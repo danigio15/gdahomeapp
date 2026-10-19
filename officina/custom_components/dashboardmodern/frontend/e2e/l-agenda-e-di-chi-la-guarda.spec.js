@@ -12,7 +12,7 @@
  * questo dispositivo.
  *
  * Qui si guarda quello che uno vede: l'agenda di casa finché nessuno dice chi
- * è, e l'agenda di Mario appena lo dice.
+ * è, e l'agenda di Persona 6 appena lo dice.
  */
 import { expect, test } from "@playwright/test";
 import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
@@ -20,16 +20,21 @@ import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
 const stato = (entity_id, state, attributes = {}) => ({ entity_id, state, attributes });
 
 const STATI = [
-  stato("person.mario", "home", { friendly_name: "Mario", user_id: "u-mario" }),
-  stato("person.anna", "not_home", { friendly_name: "Anna", user_id: "u-anna" }),
+  stato("person.persona_6", "home", { friendly_name: "Persona 6", user_id: "u-persona-6" }),
+  stato("person.persona_2", "not_home", { friendly_name: "Persona 2", user_id: "u-persona-2" }),
   stato("calendar.famiglia", "off", { friendly_name: "Famiglia" }),
-  stato("calendar.mario", "off", { friendly_name: "Mario" }),
+  stato("calendar.persona_6", "off", { friendly_name: "Persona 6" }),
 ];
 
-/* Due calendari: quello di casa, e quello di Mario. */
+/* Due calendari: quello di casa, e quello di Persona 6. */
 const CALENDARI = [
   { id: "cal-casa", entity: "calendar.famiglia", name: "Famiglia" },
-  { id: "cal-mario", entity: "calendar.mario", name: "Mario", persone: ["u-mario"] },
+  {
+    id: "cal-persona-6",
+    entity: "calendar.persona_6",
+    name: "Persona 6",
+    persone: ["u-persona-6"],
+  },
 ];
 
 const SEME = {
@@ -56,7 +61,7 @@ const SEME = {
 function eventiDi(entity) {
   const domani = new Date(Date.now() + 26 * 3600000);
   const fine = new Date(domani.getTime() + 3600000);
-  const titolo = entity === "calendar.mario" ? "Dentista di Mario" : "Cena di famiglia";
+  const titolo = entity === "calendar.persona_6" ? "Dentista di Persona 6" : "Cena di famiglia";
   return {
     response: {
       [entity]: {
@@ -157,19 +162,19 @@ test.describe("l'agenda è di chi la guarda (#344)", () => {
     /* La riga chiede chi guarda, coi nomi di casa e la via di mezzo. */
     const riga = pagina.locator(".dm-calp-chi");
     await expect(riga).toHaveCount(1);
-    await expect(riga.locator('[data-dm-calp-chi="u-mario"]')).toHaveText("Mario");
-    await expect(riga.locator('[data-dm-calp-chi="u-anna"]')).toHaveText("Anna");
+    await expect(riga.locator('[data-dm-calp-chi="u-persona-6"]')).toHaveText("Persona 6");
+    await expect(riga.locator('[data-dm-calp-chi="u-persona-2"]')).toHaveText("Persona 2");
     await expect(riga.locator('[data-dm-calp-chi="tutti"]')).toHaveCount(1);
 
     /* Finché non lo dice nessuno: l'agenda è quella di casa. */
     await expect(pagina).toContainText("Cena di famiglia", { timeout: 15000 });
-    await expect(pagina).not.toContainText("Dentista di Mario");
+    await expect(pagina).not.toContainText("Dentista di Persona 6");
 
     /* «Sono io»: da qui in poi l'agenda è la sua, con la casa dentro. */
-    await riga.locator('[data-dm-calp-chi="u-mario"]').click();
-    await expect(pagina).toContainText("Dentista di Mario", { timeout: 15000 });
+    await riga.locator('[data-dm-calp-chi="u-persona-6"]').click();
+    await expect(pagina).toContainText("Dentista di Persona 6", { timeout: 15000 });
     await expect(pagina).toContainText("Cena di famiglia");
-    await expect(riga.locator('[data-dm-calp-chi="u-mario"]')).toHaveAttribute(
+    await expect(riga.locator('[data-dm-calp-chi="u-persona-6"]')).toHaveAttribute(
       "aria-pressed",
       "true",
     );
@@ -179,7 +184,7 @@ test.describe("l'agenda è di chi la guarda (#344)", () => {
      * agenda, e non la vede nessun altro. */
     await expect
       .poll(() => page.evaluate(() => window.__scritture?.map((m) => [m.key, m.value]) || []))
-      .toEqual([["dashboardmodern_calendario_utente", { utente: "u-mario" }]]);
+      .toEqual([["dashboardmodern_calendario_utente", { utente: "u-persona-6" }]]);
   });
 
   test("da un altro schermo la persona si ritrova la sua agenda, senza ridirlo", async ({
@@ -187,11 +192,11 @@ test.describe("l'agenda è di chi la guarda (#344)", () => {
   }, testInfo) => {
     /* La scelta vive nel profilo di Home Assistant, non in una casella di
      * questo dispositivo: aprendo la plancia altrove è già lì. */
-    await boot(page, testInfo, { dashboardmodern_calendario_utente: { utente: "u-mario" } });
+    await boot(page, testInfo, { dashboardmodern_calendario_utente: { utente: "u-persona-6" } });
     const pagina = page.locator("#page-calendario");
-    await expect(pagina).toContainText("Dentista di Mario", { timeout: 15000 });
+    await expect(pagina).toContainText("Dentista di Persona 6", { timeout: 15000 });
     await expect(pagina).toContainText("Cena di famiglia");
-    await expect(pagina.locator('[data-dm-calp-chi="u-mario"]')).toHaveAttribute(
+    await expect(pagina.locator('[data-dm-calp-chi="u-persona-6"]')).toHaveAttribute(
       "aria-pressed",
       "true",
     );
@@ -211,11 +216,11 @@ test.describe("l'agenda è di chi la guarda (#344)", () => {
     await expect(persone).toHaveCount(1);
     /* I nomi sono quelli delle persone di casa, e nessuno è spuntato: il
      * calendario di famiglia è di tutti. */
-    await expect(persone.locator('[data-cal-persona="u-mario"]')).toHaveAttribute(
+    await expect(persone.locator('[data-cal-persona="u-persona-6"]')).toHaveAttribute(
       "aria-pressed",
       "false",
     );
-    await persone.locator('[data-cal-persona="u-anna"]').click();
+    await persone.locator('[data-cal-persona="u-persona-2"]').click();
     /* Si salva col tasto in fondo alla scheda, che e' quello che si preme:
      * i salvataggi di riga stanno dietro di lui da quando l'editor ha un
      * salvataggio solo per scheda. */
@@ -224,6 +229,6 @@ test.describe("l'agenda è di chi la guarda (#344)", () => {
       .poll(() =>
         page.evaluate(() => JSON.parse(localStorage.getItem("cd_calendari") || "[]")[0]?.persone),
       )
-      .toEqual(["u-anna"]);
+      .toEqual(["u-persona-2"]);
   });
 });

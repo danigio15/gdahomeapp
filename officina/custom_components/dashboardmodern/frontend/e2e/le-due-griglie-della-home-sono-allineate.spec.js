@@ -38,25 +38,25 @@ const seme = {
 };
 
 const persone = [
-  { id: "p1", name: "Andrea", entity: "person.andrea", battery: "sensor.andrea_battery" },
-  { id: "p2", name: "Giulia", entity: "person.giulia" },
+  { id: "p1", name: "Persona 8", entity: "person.persona_8", battery: "sensor.persona_8_battery" },
+  { id: "p2", name: "Persona 10", entity: "person.persona_10" },
 ];
 
 const STATI = {
-  "person.andrea": {
-    entity_id: "person.andrea",
+  "person.persona_8": {
+    entity_id: "person.persona_8",
     state: "Atos",
-    attributes: { friendly_name: "Andrea" },
+    attributes: { friendly_name: "Persona 8" },
   },
-  "sensor.andrea_battery": {
-    entity_id: "sensor.andrea_battery",
+  "sensor.persona_8_battery": {
+    entity_id: "sensor.persona_8_battery",
     state: "55",
     attributes: { device_class: "battery", unit_of_measurement: "%" },
   },
-  "person.giulia": {
-    entity_id: "person.giulia",
+  "person.persona_10": {
+    entity_id: "person.persona_10",
     state: "home",
-    attributes: { friendly_name: "Giulia" },
+    attributes: { friendly_name: "Persona 10" },
   },
   "light.salotto": {
     entity_id: "light.salotto",

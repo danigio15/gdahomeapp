@@ -1,6 +1,6 @@
 /* L'antifurto mostra i tasti che la centrale ha davvero.
  *
- * Il caso e' quello di Andrea: Ring collegato con ring-mqtt. Accetta Casa e
+ * Il caso e' quello di Persona 8: Ring collegato con ring-mqtt. Accetta Casa e
  * Fuori, la modalita' Notte non ce l'ha, un codice non lo pubblica. Sulla
  * plancia c'erano lo stesso tre tasti fissi: Notte chiedeva il PIN e poi non
  * faceva niente, e con la centrale in ARMATO · CASA il tasto acceso era Fuori.

@@ -233,7 +233,7 @@ function tuttiICarichi() {
 
 /* I cerchi sotto Casa sono quelli dell'impianto scelto.
  *
- * Chi ha due contatori — «casa Giovanni» e «casa Donato» — sceglie l'impianto
+ * Chi ha due contatori — «casa Persona 1» e «casa Persona 5» — sceglie l'impianto
  * dalle linguette in cima alla sezione, e da li' in giu' tutto parla di
  * quello: il misuratore, il fotovoltaico, la batteria. I carichi restavano
  * fuori dal patto, ed erano gli unici a comparire in tutti e due i flussi —

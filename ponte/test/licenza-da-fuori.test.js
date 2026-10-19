@@ -237,7 +237,7 @@ test("una casa Base si abbina da fuori lo stesso", async () => {
       codice,
     });
     await telefono.dentro;
-    telefono.conferma({ nome: "iPhone di Anna", sistema: "ios" });
+    telefono.conferma({ nome: "iPhone di Persona 2", sistema: "ios" });
     const ecco = await telefono.aspetta("ecco");
     assert.match(ecco.segno, /^[0-9a-f]{64}$/);
     telefono.chiudi();

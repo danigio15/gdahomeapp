@@ -554,7 +554,7 @@ test("le chiamate e i commenti HTML non passano nella issue", async () => {
   const aperta = await mie.crea({
     tipo: "problema",
     titolo: "Aiuto @manutentore",
-    corpo: "Guardate @tizio e @org/squadra <!-- nascosto --> scrivete a anna@esempio.it",
+    corpo: "Guardate @tizio e @org/squadra <!-- nascosto --> scrivete a persona_2@esempio.it",
     diagnostica: { versione: "@qualcuno <!-- x -->" },
   });
   const issue = chiamate.find((una) => /\/issues$/.test(una.url)).corpo;
@@ -563,7 +563,7 @@ test("le chiamate e i commenti HTML non passano nella issue", async () => {
     assert.doesNotMatch(testo, /<!-- (nascosto|x)/, testo);
   }
   /* Gli indirizzi email restano come sono, e i segni nostri pure. */
-  assert.match(issue.body, /anna@esempio\.it/);
+  assert.match(issue.body, /persona_2@esempio\.it/);
   assert.match(issue.body, /<!-- gdahome:diagnostica -->/);
   assert.equal(innocuo("@tizio").replace("‍", ""), "@tizio");
 

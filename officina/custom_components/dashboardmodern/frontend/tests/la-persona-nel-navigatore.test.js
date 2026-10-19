@@ -10,15 +10,15 @@ import {
   mandaLaPersonaAlNavigatore,
 } from "../src/core/la-persona-nel-navigatore.js";
 
-const view = { entity: "person.giovanni", name: "Giovanni", address: "Via Toledo, Napoli" };
+const view = { entity: "person.persona_1", name: "Persona 1", address: "Via Toledo, Napoli" };
 const states = {
-  "person.giovanni": { state: "not_home", attributes: { latitude: 40.8466, longitude: 14.2497 } },
+  "person.persona_1": { state: "not_home", attributes: { latitude: 40.8466, longitude: 14.2497 } },
 };
 
 test("la persona col suo punto, il nome e l'indirizzo", () => {
   assert.deepEqual(laPersonaPerIlNavigatore(view, states), {
-    id: "person.giovanni",
-    nome: "Giovanni",
+    id: "person.persona_1",
+    nome: "Persona 1",
     lat: 40.8466,
     lon: 14.2497,
     indirizzo: "Via Toledo, Napoli",
@@ -26,9 +26,9 @@ test("la persona col suo punto, il nome e l'indirizzo", () => {
 });
 
 test("senza coordinate non c'è niente da mandare", () => {
-  assert.equal(laPersonaPerIlNavigatore(view, { "person.giovanni": { attributes: {} } }), null);
+  assert.equal(laPersonaPerIlNavigatore(view, { "person.persona_1": { attributes: {} } }), null);
   assert.equal(
-    laPersonaPerIlNavigatore(view, { "person.giovanni": { attributes: { latitude: 99, longitude: 14 } } }),
+    laPersonaPerIlNavigatore(view, { "person.persona_1": { attributes: { latitude: 99, longitude: 14 } } }),
     null,
   );
 });
@@ -37,7 +37,7 @@ test("dentro l'app la manda al canale; fuori dall'app non fa niente", () => {
   const mandati = [];
   const app = { [CANALE_DEL_NAVIGATORE]: { postMessage: (m) => mandati.push(JSON.parse(m)) } };
   assert.equal(mandaLaPersonaAlNavigatore(view, states, app), true);
-  assert.equal(mandati[0].nome, "Giovanni");
+  assert.equal(mandati[0].nome, "Persona 1");
   assert.equal(mandaLaPersonaAlNavigatore(view, states, {}), false, "nel browser il canale non c'è");
   assert.equal(mandaLaPersonaAlNavigatore(view, {}, app), false, "senza punto resta la mappa");
 });

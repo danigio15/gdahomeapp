@@ -272,9 +272,9 @@ test("il codice della console abbina il telefono, e vale una volta sola", async 
      * centralino, e quel campo resta vuoto. */
     assert.equal(invito, `gdahome|1|${codice}||${INDIRIZZO_DI_CASA}:${b.app.split(":").pop()}`);
 
-    const fatto = await abbinaSulFilo(b, codice, { nome: "iPhone di Anna", sistema: "ios" });
+    const fatto = await abbinaSulFilo(b, codice, { nome: "iPhone di Persona 2", sistema: "ios" });
     assert.match(fatto.segno, /^[0-9a-f]{64}$/);
-    assert.equal(fatto.dispositivo.nome, "iPhone di Anna");
+    assert.equal(fatto.dispositivo.nome, "iPhone di Persona 2");
 
     /* Dove tornare. Senza questo, un telefono che si e' abbinato inquadrando
      * un QR code non saprebbe dove ribussare: non ha mai visto un

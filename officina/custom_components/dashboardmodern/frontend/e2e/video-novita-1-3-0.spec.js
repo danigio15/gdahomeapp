@@ -65,7 +65,7 @@ const SEME = {
         icon: "♨️",
         power_entity: "sensor.pompa_w",
         order: 1,
-        plant: "impianto-donato",
+        plant: "impianto-persona-5",
       },
     ],
     /* Nomi lunghi apposta: erano loro a non entrare nelle schede. */
@@ -146,15 +146,15 @@ const SEME = {
     pool: {},
     irrigation: { zones: [] },
     energy: {
-      name: "Casa Giovanni",
+      name: "Casa Persona 1",
       grid: { power: "sensor.rete_w" },
       solar: { power: "sensor.fv_w" },
       house: { power: "sensor.casa_w" },
       battery: { soc: "sensor.batteria_soc" },
       plants: [
         {
-          id: "impianto-donato",
-          name: "Casa Donato",
+          id: "impianto-persona-5",
+          name: "Casa Persona 5",
           grid: { power: "sensor.rete2_w" },
           solar: { power: "sensor.fv2_w" },
           house: { power: "sensor.casa2_w" },
@@ -196,13 +196,13 @@ const STATI = [
   numero("sensor.salone_h", "48", "Salone umidita'", "%", "humidity"),
   numero("sensor.cucina_t", "23.4", "Cucina temperatura", "°C", "temperature"),
   numero("sensor.camera_t", "19.8", "Camera temperatura", "°C", "temperature"),
-  numero("sensor.rete_w", "-1240", "Rete Casa Giovanni", "W", "power"),
-  numero("sensor.fv_w", "3180", "Fotovoltaico Casa Giovanni", "W", "power"),
-  numero("sensor.casa_w", "1940", "Consumo Casa Giovanni", "W", "power"),
+  numero("sensor.rete_w", "-1240", "Rete Casa Persona 1", "W", "power"),
+  numero("sensor.fv_w", "3180", "Fotovoltaico Casa Persona 1", "W", "power"),
+  numero("sensor.casa_w", "1940", "Consumo Casa Persona 1", "W", "power"),
   numero("sensor.batteria_soc", "78", "Batteria", "%", "battery"),
-  numero("sensor.rete2_w", "620", "Rete Casa Donato", "W", "power"),
-  numero("sensor.fv2_w", "480", "Fotovoltaico Casa Donato", "W", "power"),
-  numero("sensor.casa2_w", "1100", "Consumo Casa Donato", "W", "power"),
+  numero("sensor.rete2_w", "620", "Rete Casa Persona 5", "W", "power"),
+  numero("sensor.fv2_w", "480", "Fotovoltaico Casa Persona 5", "W", "power"),
+  numero("sensor.casa2_w", "1100", "Consumo Casa Persona 5", "W", "power"),
   numero("sensor.forno_w", "1850", "Forno", "W", "power"),
   numero("sensor.pompa_w", "740", "Pompa di calore", "W", "power"),
   numero("sensor.lavatrice_w", "1420", "Lavatrice", "W", "power"),
@@ -263,15 +263,19 @@ const STATI = [
     },
   },
   /* La centrale come la pubblica ring-mqtt: casa e fuori, niente Notte e
-     nessun codice da digitare. E' il caso di Andrea, ed e' la scena. */
+     nessun codice da digitare. E' il caso di Persona 8, ed e' la scena. */
   {
     entity_id: "alarm_control_panel.casa",
     state: "armed_home",
     attributes: { friendly_name: "Antifurto", supported_features: 3 },
   },
-  { entity_id: "person.giovanni", state: "home", attributes: { friendly_name: "Giovanni" } },
-  { entity_id: "person.giulia", state: "not_home", attributes: { friendly_name: "Giulia" } },
-  { entity_id: "person.marco", state: "home", attributes: { friendly_name: "Marco" } },
+  { entity_id: "person.persona_1", state: "home", attributes: { friendly_name: "Persona 1" } },
+  {
+    entity_id: "person.persona_10",
+    state: "not_home",
+    attributes: { friendly_name: "Persona 10" },
+  },
+  { entity_id: "person.persona_3", state: "home", attributes: { friendly_name: "Persona 3" } },
 ];
 
 /* La stanza detta su cose che la scheda non chiedeva: una sonda di umidita',
@@ -286,8 +290,8 @@ const STANZE_ENTITA = {
 const PERSONE = [
   {
     id: "p1",
-    name: "Giovanni",
-    entity: "person.giovanni",
+    name: "Persona 1",
+    entity: "person.persona_1",
     avatar: {
       color: "#3a6fb0",
       face: { persona: "uomo", capelli: "barba", carnagione: "media", vestito: "ufficio" },
@@ -295,8 +299,8 @@ const PERSONE = [
   },
   {
     id: "p2",
-    name: "Giulia",
-    entity: "person.giulia",
+    name: "Persona 10",
+    entity: "person.persona_10",
     avatar: {
       color: "#c94a3e",
       face: { persona: "donna", capelli: "rossi", carnagione: "chiara", vestito: "medico" },
@@ -304,8 +308,8 @@ const PERSONE = [
   },
   {
     id: "p3",
-    name: "Marco",
-    entity: "person.marco",
+    name: "Persona 3",
+    entity: "person.persona_3",
     avatar: {
       color: "#2f8f6b",
       face: { persona: "uomo", capelli: "corti", carnagione: "media", vestito: "informatico" },

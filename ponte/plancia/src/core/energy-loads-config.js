@@ -292,7 +292,7 @@ export function emptyLoad(model = [], locale = "it", plant = "") {
     monthly: "",
     children: [],
     /* Un carico nuovo nasce nell'impianto che si sta guardando, non nel
-     * primo: chi apre «casa Donato» e aggiunge un cerchio lo aggiunge li'. */
+     * primo: chi apre «casa Persona 5» e aggiunge un cerchio lo aggiunge li'. */
     plant: clean(plant),
     room_id: "",
   };
@@ -374,8 +374,8 @@ export function loadsConfigToSections(model = [], previous = [], plant = null) {
    *
    * Erano un'unica mappa per id, e gli id di due impianti coincidono: ogni
    * maschera numera i suoi cerchi «carico-1», «carico-2»… per conto suo. Cosi'
-   * il «carico-1» di casa Donato prendeva i campi tenuti del «carico-1» di casa
-   * Giovanni, e al salvataggio quello di casa Giovanni non veniva piu' rimesso
+   * il «carico-1» di casa Persona 5 prendeva i campi tenuti del «carico-1» di casa
+   * Persona 1, e al salvataggio quello di casa Persona 1 non veniva piu' rimesso
    * perche' «c'era gia'» (#292, dal campo: «configurando un carico su uno dei
    * due impianti, dopo il salvataggio cancella quelli sull'altro»). Adesso i
    * campi tenuti si prendono solo dal proprio impianto, e un id che l'altro
@@ -514,8 +514,8 @@ export function loadsConfigToSections(model = [], previous = [], plant = null) {
    * Sono due famiglie. Le voci del report manuale, che non sono cerchi e non
    * sono mai passate di qui. E — da quando gli impianti sono piu' d'uno —
    * tutto quello che appartiene a un ALTRO impianto: la maschera ne mostra
-   * uno per volta, e salvare «casa Giovanni» non puo' cancellare i carichi di
-   * «casa Donato» solo perche' non erano sullo schermo. */
+   * uno per volta, e salvare «casa Persona 1» non puo' cancellare i carichi di
+   * «casa Persona 5» solo perche' non erano sullo schermo. */
   for (const item of altrui) loads.push(item);
   for (const item of array(previous))
     if (

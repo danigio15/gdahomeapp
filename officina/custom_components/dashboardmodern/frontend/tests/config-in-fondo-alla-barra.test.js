@@ -4,7 +4,7 @@
  * ogni scheda che quell'elenco non nomina, e l'elenco di chi aggiorna e' quello
  * salvato prima che la sezione Aspirapolvere esistesse: la scheda nuova finiva
  * dopo Config. Segnalato dal telefono, con la barra che leggeva
- * «… PIPPO · CONFIG · ASPIRAPOLVERE».
+ * «… ROBOT · CONFIG · ASPIRAPOLVERE».
  */
 
 import assert from "node:assert/strict";

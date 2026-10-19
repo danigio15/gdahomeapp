@@ -292,7 +292,7 @@ const soloIlGiorno = (data) =>
 const EVENTI = {
   "calendar.famiglia": [
     {
-      summary: "Dentista — Laura",
+      summary: "Dentista — Persona 4",
       start: scritto(fraQuanto(0, 17, 30)),
       end: scritto(fraQuanto(0, 18, 30)),
       location: "Studio Bianchi",
@@ -303,7 +303,7 @@ const EVENTI = {
       end: scritto(fraQuanto(0, 22, 30)),
     },
     {
-      summary: "Saggio di Marco",
+      summary: "Saggio di Persona 3",
       start: scritto(fraQuanto(1, 16, 0)),
       end: scritto(fraQuanto(1, 18, 0)),
       location: "Teatro comunale",

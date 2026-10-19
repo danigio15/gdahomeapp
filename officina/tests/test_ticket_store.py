@@ -132,10 +132,10 @@ async def test_chi_apre_vede_le_sue_e_l_amministratore_tutte(
 ) -> None:
     """In una casa con quattro utenti, l'assistenza di uno non e' lettura per tre."""
     store = await _store(hass)
-    await _bug(store, opened_by="anna", title="Quella di Anna")
-    await _bug(store, opened_by="bruno", title="Quella di Bruno")
-    mie = [ticket["title"] for ticket in store.list(opened_by="anna")]
-    assert mie == ["Quella di Anna"]
+    await _bug(store, opened_by="persona_2", title="Quella di Persona 2")
+    await _bug(store, opened_by="persona_7", title="Quella di Persona 7")
+    mie = [ticket["title"] for ticket in store.list(opened_by="persona_2")]
+    assert mie == ["Quella di Persona 2"]
     assert len(store.list(every=True)) == 2
 
 
@@ -144,17 +144,17 @@ async def test_nessuno_cancella_la_segnalazione_di_un_altro(
 ) -> None:
     """E il rifiuto non rivela che quella segnalazione esiste."""
     store = await _store(hass)
-    ticket = await _bug(store, opened_by="anna")
-    assert await store.async_delete(ticket["id"], opened_by="bruno") is False
+    ticket = await _bug(store, opened_by="persona_2")
+    assert await store.async_delete(ticket["id"], opened_by="persona_7") is False
     assert len(store.list(every=True)) == 1
-    assert await store.async_delete(ticket["id"], opened_by="anna") is True
+    assert await store.async_delete(ticket["id"], opened_by="persona_2") is True
     assert store.list(every=True) == []
 
 
 async def test_l_amministratore_puo_cancellare(hass: HomeAssistant) -> None:
     """Chi governa la plancia governa anche la sua coda."""
     store = await _store(hass)
-    ticket = await _bug(store, opened_by="anna")
+    ticket = await _bug(store, opened_by="persona_2")
     assert await store.async_delete(ticket["id"], every=True) is True
 
 

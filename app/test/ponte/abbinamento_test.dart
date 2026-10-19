@@ -63,7 +63,7 @@ void main() {
         dove: dove,
         /* Battuto come viene: minuscolo, coi trattini. */
         codice: 'abcd-efgh-jkmn-pqrs',
-        nome: 'iPhone di Anna',
+        nome: 'iPhone di Persona 2',
         sistema: 'ios',
         apri: alPonteFinto,
       );
@@ -88,7 +88,7 @@ void main() {
       expect(ponte.strette.single['abbina'], 2);
       final conferma = ponte.conferme.single;
       expect(conferma['t'], 'conferma');
-      expect(conferma['nome'], 'iPhone di Anna');
+      expect(conferma['nome'], 'iPhone di Persona 2');
       expect(conferma['sistema'], 'ios');
       /* E il codice non ha viaggiato, ne' in chiaro ne' in busta: sta dentro
        * la chiave, e basta. */
@@ -256,7 +256,7 @@ void main() {
       Invito.leggi(
         'gdahome|1|ABCD|wss://centralino.esempio.dev|192.168.1.50:8098',
       ),
-      nome: 'iPhone di Anna',
+      nome: 'iPhone di Persona 2',
       sistema: 'ios',
       bussa: (dove) async {
         bussato = dove;

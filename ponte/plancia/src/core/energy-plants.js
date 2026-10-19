@@ -25,7 +25,7 @@
  *
  * L'id di un impianto quindi: nasce una volta sola, quando l'impianto nasce; non
  * si ricava dal nome e non si ricalcola mai; non si riusa nemmeno quando
- * l'impianto che lo portava viene cancellato. Rinominare «Casa Giovanni» in
+ * l'impianto che lo portava viene cancellato. Rinominare «Casa Persona 1» in
  * «Casa di sopra» non tocca l'id, e tutto quello che a quell'id e' appeso —
  * carichi, tariffa, storico — resta appeso.
  *

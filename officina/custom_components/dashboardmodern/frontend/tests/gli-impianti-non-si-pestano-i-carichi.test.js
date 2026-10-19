@@ -31,42 +31,42 @@ const leggi = (relativo) => readFileSync(join(SRC, relativo), "utf8");
 const primo = {
   id: "carico-1",
   plant: "",
-  name: "Cucina Giovanni",
+  name: "Cucina Casa A",
   power_entity: "sensor.cucina_g",
   control_entity: "switch.cucina_g",
   metadata: { flow_group: "carico-1" },
 };
 
 test("salvare i carichi del secondo impianto non tocca quelli del primo, anche con gli stessi id", () => {
-  const modelloDonato = [{ id: "carico-1", name: "Cucina Donato", power: "sensor.cucina_d", children: [] }];
-  const { loads } = loadsConfigToSections(modelloDonato, [primo], "donato");
-  const giovanni = loads.find((load) => load.name === "Cucina Giovanni");
-  const donato = loads.find((load) => load.name === "Cucina Donato");
-  assert.ok(giovanni, "il carico dell'altro impianto sopravvive");
-  assert.equal(giovanni.id, "carico-1");
-  assert.equal(giovanni.plant, "");
-  assert.ok(donato);
-  assert.equal(donato.plant, "donato");
+  const modelloDonato = [{ id: "carico-1", name: "Cucina Casa B", power: "sensor.cucina_d", children: [] }];
+  const { loads } = loadsConfigToSections(modelloDonato, [primo], "casa_b");
+  const casa_a = loads.find((load) => load.name === "Cucina Casa A");
+  const casa_b = loads.find((load) => load.name === "Cucina Casa B");
+  assert.ok(casa_a, "il carico dell'altro impianto sopravvive");
+  assert.equal(casa_a.id, "carico-1");
+  assert.equal(casa_a.plant, "");
+  assert.ok(casa_b);
+  assert.equal(casa_b.plant, "casa_b");
   /* L'id che l'altro impianto usa gia' si rinomina, cosi' nessuna riga ne
    * copre un'altra. */
-  assert.equal(donato.id, "donato-carico-1");
-  assert.equal(donato.metadata.flow_group, "donato-carico-1");
+  assert.equal(casa_b.id, "casa_b-carico-1");
+  assert.equal(casa_b.metadata.flow_group, "casa_b-carico-1");
   /* E i campi tenuti non si prendono dall'impianto sbagliato. */
-  assert.equal(donato.control_entity ?? "", "");
-  assert.equal(donato.power_entity, "sensor.cucina_d");
+  assert.equal(casa_b.control_entity ?? "", "");
+  assert.equal(casa_b.power_entity, "sensor.cucina_d");
 });
 
 test("salvare il primo impianto lascia al suo posto tutto quello del secondo", () => {
-  const donato = { id: "donato-carico-1", plant: "donato", name: "Cucina Donato", power_entity: "sensor.cucina_d" };
-  const figlio = { id: "lavatrice-d", plant: "donato", name: "Lavatrice", metadata: { beta27_subload_group: "donato-carico-1" } };
-  const modelloGiovanni = [{ id: "carico-1", name: "Cucina Giovanni", power: "sensor.cucina_g", children: [] }];
-  const { loads } = loadsConfigToSections(modelloGiovanni, [primo, donato, figlio], "");
+  const casa_b = { id: "casa_b-carico-1", plant: "casa_b", name: "Cucina Casa B", power_entity: "sensor.cucina_d" };
+  const figlio = { id: "lavatrice-d", plant: "casa_b", name: "Lavatrice", metadata: { beta27_subload_group: "casa_b-carico-1" } };
+  const modelloGiovanni = [{ id: "carico-1", name: "Cucina Casa A", power: "sensor.cucina_g", children: [] }];
+  const { loads } = loadsConfigToSections(modelloGiovanni, [primo, casa_b, figlio], "");
   assert.deepEqual(
     loads.map((load) => [load.id, load.plant]).sort(),
     [
       ["carico-1", ""],
-      ["donato-carico-1", "donato"],
-      ["lavatrice-d", "donato"],
+      ["casa_b-carico-1", "casa_b"],
+      ["lavatrice-d", "casa_b"],
     ],
   );
   /* Con un impianto solo — nessun impianto passato — tutto come sempre. */
@@ -88,13 +88,13 @@ test("tutte le tessere energia seguono l'ordine di «Energia», e ognuna porta a
   magazzino.set("cd_widgets", JSON.stringify({ order: ["luci", "energia", "clima"] }));
   const ordinate = applyWidgetPreferences([
     { key: "clima" },
-    { key: "energia_donato" },
+    { key: "energia_casa_b" },
     { key: "energia" },
     { key: "luci" },
   ]);
   assert.deepEqual(
     ordinate.map((w) => w.key),
-    ["luci", "energia_donato", "energia", "clima"],
+    ["luci", "energia_casa_b", "energia", "clima"],
   );
   magazzino.delete("cd_widgets");
   const home = leggi("sections/home-widgets-section.js");
@@ -124,34 +124,34 @@ test("il modello di un impianto non prende i figli dell'altro, nemmeno con lo st
   const loads = [
     { ...primo },
     {
-      id: "lav-giovanni",
+      id: "lav-casa_a",
       plant: "",
-      name: "Lavatrice Giovanni",
+      name: "Lavatrice Casa A",
       power_entity: "sensor.lav_g",
       metadata: { beta27_subload_group: "carico-1" },
     },
     {
       id: "carico-1",
-      plant: "donato",
-      name: "Cucina Donato",
+      plant: "casa_b",
+      name: "Cucina Casa B",
       power_entity: "sensor.cucina_d",
       control_entity: "switch.cucina_d",
       metadata: { flow_group: "carico-1" },
     },
     {
-      id: "lav-donato",
-      plant: "donato",
-      name: "Lavatrice Donato",
+      id: "lav-casa_b",
+      plant: "casa_b",
+      name: "Lavatrice Casa B",
       power_entity: "sensor.lav_d",
       metadata: { beta27_subload_group: "carico-1" },
     },
   ];
-  const donato = loadsConfigModel({ loads, plant: { id: "donato" }, plantIndex: 1 });
-  assert.deepEqual(donato.map((load) => load.name), ["Cucina Donato"]);
-  assert.deepEqual(donato[0].children.map((child) => child.id), ["lav-donato"]);
-  const giovanni = loadsConfigModel({ loads, plant: { id: PRIMO_IMPIANTO }, plantIndex: 0 });
-  assert.deepEqual(giovanni.map((load) => load.name), ["Cucina Giovanni"]);
-  assert.deepEqual(giovanni[0].children.map((child) => child.id), ["lav-giovanni"]);
+  const casa_b = loadsConfigModel({ loads, plant: { id: "casa_b" }, plantIndex: 1 });
+  assert.deepEqual(casa_b.map((load) => load.name), ["Cucina Casa B"]);
+  assert.deepEqual(casa_b[0].children.map((child) => child.id), ["lav-casa_b"]);
+  const casa_a = loadsConfigModel({ loads, plant: { id: PRIMO_IMPIANTO }, plantIndex: 0 });
+  assert.deepEqual(casa_a.map((load) => load.name), ["Cucina Casa A"]);
+  assert.deepEqual(casa_a[0].children.map((child) => child.id), ["lav-casa_a"]);
   /* E il codice lo dice: i figli si cercano fra i carichi di QUESTO impianto. */
   const core = leggi("core/energy-loads-config.js");
   assert.match(core, /const canonical = suoi\.filter\(subloadOf\(group\)\)/);

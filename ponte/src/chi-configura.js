@@ -36,7 +36,7 @@
  *  - Casella piena: la Config e' di chi ci e' scritto. Si confronta prima
  *    l'identificativo di Home Assistant, poi il nome che Home Assistant
  *    mostra; senza badare a maiuscole e a spazi in testa e in coda, ma **per
- *    intero**: «Ann» non e' «Anna». Prima il confronto era «il nome contiene
+ *    intero**: «Pers» non e' «Persona 2». Prima il confronto era «il nome contiene
  *    quello che c'e' scritto», e una lettera sola apriva la Config a mezza
  *    casa.
  *  - Chi non si sa chi sia, con la casella piena, **non entra**. Un telefono

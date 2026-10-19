@@ -22,16 +22,16 @@ const RADICE = dirname(dirname(fileURLToPath(import.meta.url)));
 const sorgente = (percorso) => readFileSync(join(RADICE, percorso), "utf8");
 
 test("una persona spenta resta configurata", () => {
-  const [anna, bruno] = normalizePeople([
-    { name: "Anna", entity: "person.anna", nascosta: true },
-    { name: "Bruno", entity: "person.bruno" },
+  const [persona_2, persona_7] = normalizePeople([
+    { name: "Persona 2", entity: "person.persona_2", nascosta: true },
+    { name: "Persona 7", entity: "person.persona_7" },
   ]);
-  assert.equal(anna.nascosta, true);
-  assert.equal(anna.name, "Anna");
-  assert.equal(bruno.nascosta, false);
+  assert.equal(persona_2.nascosta, true);
+  assert.equal(persona_2.name, "Persona 2");
+  assert.equal(persona_7.nascosta, false);
   /* Il campo sopravvive a un secondo giro: e' il difetto per cui mezza dozzina
    * di campi sono spariti prima di lui. */
-  assert.equal(normalizePeople([anna])[0].nascosta, true);
+  assert.equal(normalizePeople([persona_2])[0].nascosta, true);
 });
 
 test("la Home mostra le persone accese, la scheda tutte", () => {
@@ -72,10 +72,10 @@ test("le azioni rapide si spostano, e la fila è quella che si vede", () => {
 test("spostare è lo stesso gesto ovunque", () => {
   /* Tre elenchi, una funzione: l'ultimo elemento è il posto dove si sbaglia,
    * e sbagliarlo una volta sola è già abbastanza. */
-  assert.deepEqual(spostaNellElenco(["anna", "bruno", "carla"], 2, -1), [
-    "anna",
-    "carla",
-    "bruno",
+  assert.deepEqual(spostaNellElenco(["persona_2", "persona_7", "persona_12"], 2, -1), [
+    "persona_2",
+    "persona_12",
+    "persona_7",
   ]);
   for (const percorso of [
     "src/sections/people-editor-section.js",

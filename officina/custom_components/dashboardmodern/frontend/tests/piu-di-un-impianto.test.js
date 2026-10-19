@@ -63,11 +63,11 @@ test("una casa sola resta una casa sola, e non migra niente", () => {
 
 test("il secondo impianto sta accanto al primo, non al posto suo", () => {
   const lista = plantList(VECCHIO);
-  const salvato = storedPlants([...lista, nuovoImpianto(lista, "Casa Donato")], VECCHIO);
+  const salvato = storedPlants([...lista, nuovoImpianto(lista, "Casa Persona 5")], VECCHIO);
   // Il primo e' rimasto al primo livello: il runtime lo legge dove lo cercava.
   assert.deepEqual(salvato.house, VECCHIO.house);
   assert.equal(salvato.plants.length, 1);
-  assert.equal(salvato.plants[0].name, "Casa Donato");
+  assert.equal(salvato.plants[0].name, "Casa Persona 5");
   // E rileggendo tornano tutti e due, nell'ordine.
   assert.deepEqual(
     plantList(salvato).map((plant) => plant.id),
@@ -77,12 +77,12 @@ test("il secondo impianto sta accanto al primo, non al posto suo", () => {
 
 test("l'id non si ricava dal nome, e rinominare non cambia identita'", () => {
   const lista = plantList(VECCHIO);
-  const nato = nuovoImpianto(lista, "Casa Donato");
+  const nato = nuovoImpianto(lista, "Casa Persona 5");
   const rinominato = { ...nato, name: "Casa di sotto" };
   assert.equal(rinominato.id, nato.id);
   // E non c'e' niente del nome dentro l'id: e' un numero d'ordine, non uno slug.
   assert.match(nato.id, /^impianto-\d+$/);
-  assert.equal(nato.id.includes("donato"), false);
+  assert.equal(nato.id.includes("persona_5"), false);
 });
 
 test("un id cancellato non torna buono una seconda volta", () => {
@@ -90,7 +90,7 @@ test("un id cancellato non torna buono una seconda volta", () => {
    * stesso id, e con esso i carichi e la tariffa di quello cancellato. Il segno
    * resta scritto anche quando l'impianto che l'ha alzato non c'e' piu'. */
   let stored = VECCHIO;
-  for (const nome of ["Casa Donato", "Box"]) {
+  for (const nome of ["Casa Persona 5", "Box"]) {
     const lista = plantList(stored);
     stored = storedPlants([...lista, nuovoImpianto(lista, nome, stored.metadata)], stored);
   }
@@ -108,7 +108,7 @@ test("il primo impianto tiene le chiavi di runtime che ha sempre avuto", () => {
   /* Lo storico di chi c'era prima non deve ripartire da zero: la tariffa del
    * primo impianto resta `cd_costo_kwh`, e solo gli altri portano il loro id. */
   const [primo, secondo] = plantList(storedPlants(
-    [...plantList(VECCHIO), nuovoImpianto(plantList(VECCHIO), "Casa Donato")],
+    [...plantList(VECCHIO), nuovoImpianto(plantList(VECCHIO), "Casa Persona 5")],
     VECCHIO,
   ));
   assert.equal(plantKey("cd_costo_kwh", primo, 0), "cd_costo_kwh");
@@ -161,7 +161,7 @@ test("un impianto vuoto non e' configurato, ma il primo si disegna lo stesso", (
 test("un impianto senza nome ne ha comunque uno da mostrare", () => {
   assert.equal(plantLabel({}, 0, "Impianto"), "Impianto");
   assert.equal(plantLabel({}, 1, "Impianto"), "Impianto 2");
-  assert.equal(plantLabel({ name: "Casa Donato" }, 1, "Impianto"), "Casa Donato");
+  assert.equal(plantLabel({ name: "Casa Persona 5" }, 1, "Impianto"), "Casa Persona 5");
 });
 
 test("una configurazione gia' scritta come elenco non perde il primo", () => {
@@ -172,10 +172,10 @@ test("una configurazione gia' scritta come elenco non perde il primo", () => {
 
 test("l'impianto scelto, o il primo che c'e'", () => {
   const lista = plantList(storedPlants(
-    [...plantList(VECCHIO), nuovoImpianto(plantList(VECCHIO), "Casa Donato")],
+    [...plantList(VECCHIO), nuovoImpianto(plantList(VECCHIO), "Casa Persona 5")],
     VECCHIO,
   ));
-  assert.equal(pickPlant(lista, "impianto-2").name, "Casa Donato");
+  assert.equal(pickPlant(lista, "impianto-2").name, "Casa Persona 5");
   assert.equal(pickPlant(lista, "impianto-99").id, PRIMO_IMPIANTO);
   assert.equal(pickPlant([], "qualunque"), null);
 });
@@ -288,8 +288,8 @@ test("i carichi sono di un impianto solo: il tetto vale li' dentro", async () =>
     "../src/core/energy-loads-config.js"
   );
   const case_ = [
-    { id: "impianto", name: "Casa Giovanni" },
-    { id: "impianto-2", name: "Casa Donato" },
+    { id: "impianto", name: "Casa Persona 1" },
+    { id: "impianto-2", name: "Casa Persona 5" },
   ];
   const carichi = [
     { id: "forno", name: "Forno", power_entity: "sensor.forno", order: 0 },
@@ -316,7 +316,7 @@ test("salvare una casa non cancella i carichi dell'altra", async () => {
     { id: "forno", name: "Forno", power_entity: "sensor.forno", order: 0 },
     { id: "lavatrice", name: "Lavatrice", power_entity: "sensor.lava", order: 1, plant: "impianto-2" },
   ];
-  /* La maschera mostra «casa Donato» e le si cambia il nome al carico. Sullo
+  /* La maschera mostra «casa Persona 5» e le si cambia il nome al carico. Sullo
    * schermo il forno non c'era: se il salvataggio riscrivesse solo cio' che
    * ha visto, il forno sparirebbe dalla configurazione dell'altra casa. */
   const modello = loadsConfigModel({
@@ -379,7 +379,7 @@ test("le caselle del disegno guardano i sensori dell'impianto aperto", async () 
     grid: { power: "sensor.rete1" },
     solar: { power: "sensor.fv1" },
     plants: [
-      { id: "impianto-2", name: "Casa Donato", grid: { power: "sensor.rete2" }, solar: { power: "sensor.fv2" } },
+      { id: "impianto-2", name: "Casa Persona 5", grid: { power: "sensor.rete2" }, solar: { power: "sensor.fv2" } },
     ],
   };
   const prima = projectEnergySlots(plantModel(salvato, ""), {});

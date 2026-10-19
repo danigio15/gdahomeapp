@@ -109,13 +109,13 @@ async def test_chi_rinomina_la_plancia_lo_vede_nel_menu_delle_dashboard(
     assert await fe._ensure_companion_dashboard(hass, entry.entry_id) is True
     await hass.async_block_till_done()
 
-    entry.title = "Casa di Anna"
+    entry.title = "Casa di Persona 2"
     assert await fe._ensure_companion_dashboard(hass, entry.entry_id) is True
     await hass.async_block_till_done()
 
     collezione, _plance = _lovelace(hass)
     (voce,) = collezione.async_items()
-    assert voce["title"] == "Casa di Anna"
+    assert voce["title"] == "Casa di Persona 2"
     assert voce["show_in_sidebar"] is False
 
 

@@ -69,7 +69,7 @@ def _entry(hass: HomeAssistant, **options: Any) -> MockConfigEntry:
 
 
 async def _collega(
-    hass: HomeAssistant, user_id: str = "anna", *, maintainer: bool = False
+    hass: HomeAssistant, user_id: str = "persona_2", *, maintainer: bool = False
 ) -> None:
     store = await async_get_token_store(hass)
     await store.async_remember(
@@ -89,7 +89,7 @@ def _riga(numero: int, *, commenti: int = 0, quando: str = "") -> dict[str, Any]
         "comments": commenti,
         "updated_at": quando or f"2026-09-0{numero}T10:00:00Z",
         "html_url": f"https://github.com/danigio15/dashboardmodern-v2/issues/{numero}",
-        "user": {"login": "anna-hub"},
+        "user": {"login": "persona-2-hub"},
     }
 
 
@@ -102,7 +102,7 @@ def _ascolta(hass: HomeAssistant) -> list[dict[str, Any]]:
     return suonate
 
 
-async def _mia(hass: HomeAssistant, numero: int, *, opened_by: str = "anna") -> None:
+async def _mia(hass: HomeAssistant, numero: int, *, opened_by: str = "persona_2") -> None:
     """Una segnalazione gia' partita, di questo utente."""
     store = await async_get_ticket_store(hass)
     ticket = await store.async_create(
@@ -221,12 +221,12 @@ async def test_il_messaggio_di_chi_ha_segnalato_non_gli_torna_indietro(
 ) -> None:
     """Vale nei due sensi: chi scrive non si sente suonare la propria riga."""
     _entry(hass)
-    await _collega(hass, "anna")
+    await _collega(hass, "persona_2")
     await _mia(hass, 4)
     github.answer("/issues?", [_riga(4, commenti=1)])
     await tickets.async_watch_messages(hass)
 
-    await tickets.async_reply(hass, user_id="anna", number=4, message="Ho provato.")
+    await tickets.async_reply(hass, user_id="persona_2", number=4, message="Ho provato.")
 
     github.answer("/issues?", [_riga(4, commenti=2, quando="2026-09-09T09:00:00Z")])
     assert await tickets.async_watch_messages(hass) == []
@@ -240,7 +240,7 @@ async def test_chi_usa_la_plancia_sente_solo_le_sue(
 ) -> None:
     """Le altre sono conversazioni fra sconosciuti: sarebbero lo spam di un tracker."""
     _entry(hass)
-    await _collega(hass, "anna")
+    await _collega(hass, "persona_2")
     await _mia(hass, 4)
     github.answer("/issues?", [_riga(4, commenti=1), _riga(9, commenti=1)])
     await tickets.async_watch_messages(hass)
@@ -266,10 +266,10 @@ async def test_una_risposta_su_una_gia_chiusa_arriva_lo_stesso(
     prima e' esattamente il messaggio che non si vuole perdere.
     """
     _entry(hass)
-    await _collega(hass, "anna")
+    await _collega(hass, "persona_2")
     store = await async_get_ticket_store(hass)
     ticket = await store.async_create(
-        ticket_type=TYPE_BUG, title="vecchia", body="x", opened_by="anna"
+        ticket_type=TYPE_BUG, title="vecchia", body="x", opened_by="persona_2"
     )
     await store.async_mark_sent(ticket["id"], "4")
     await store.async_merge_remote([{"remote_id": "4", "state": "risolto"}])
@@ -316,7 +316,7 @@ async def test_chi_non_ha_segnalato_niente_non_chiede_niente(
 ) -> None:
     """Nessuna segnalazione propria: non c'e' niente da sorvegliare."""
     _entry(hass)
-    await _collega(hass, "anna")
+    await _collega(hass, "persona_2")
     assert await tickets.async_watch_messages(hass) == []
     assert github.calls == []
 
@@ -373,18 +373,18 @@ async def test_chi_ha_segnalato_risponde_col_proprio_gettone(
 ) -> None:
     """Il commento parte a nome suo, come la segnalazione. Mai a nome della console."""
     _entry(hass)
-    await _collega(hass, "anna")
+    await _collega(hass, "persona_2")
     await _collega(hass, "dani", maintainer=True)
     await _mia(hass, 12)
 
     assert await tickets.async_reply(
-        hass, user_id="anna", number=12, message="  Ho provato, niente.  "
+        hass, user_id="persona_2", number=12, message="  Ho provato, niente.  "
     ) == {"sent": True}
     # Dopo il commento il campanello chiede il conto — la 12 non la conosceva
     # — quindi l'ultima chiamata e' una lettura: quella che scrive e' la POST.
     scritta = next(c for c in reversed(github.calls) if c["method"] == "POST")
     assert scritta["url"].endswith("/issues/12/comments")
-    assert scritta["token"] == "gho_anna"
+    assert scritta["token"] == "gho_persona_2"
     assert scritta["payload"] == {"body": "Ho provato, niente."}
 
 
@@ -393,10 +393,10 @@ async def test_non_si_scrive_sotto_la_segnalazione_di_un_altro(
 ) -> None:
     """La finestra mostra a ognuno le sue: un tasto che agisce altrove sarebbe cieco."""
     _entry(hass)
-    await _collega(hass, "anna")
-    await _mia(hass, 12, opened_by="marco")
+    await _collega(hass, "persona_2")
+    await _mia(hass, 12, opened_by="persona_3")
     with pytest.raises(GitHubError) as errore:
-        await tickets.async_reply(hass, user_id="anna", number=12, message="ciao")
+        await tickets.async_reply(hass, user_id="persona_2", number=12, message="ciao")
     assert errore.value.code == "not_yours"
     assert github.calls == []
 
@@ -406,10 +406,10 @@ async def test_un_messaggio_vuoto_non_parte(
 ) -> None:
     """Uno spazio non e' un messaggio."""
     _entry(hass)
-    await _collega(hass, "anna")
+    await _collega(hass, "persona_2")
     await _mia(hass, 12)
     with pytest.raises(GitHubError) as errore:
-        await tickets.async_reply(hass, user_id="anna", number=12, message="   ")
+        await tickets.async_reply(hass, user_id="persona_2", number=12, message="   ")
     assert errore.value.code == "empty"
     assert github.calls == []
 
@@ -420,7 +420,7 @@ async def test_senza_collegamento_non_si_risponde(
     """Scrivere chiede una firma, e la firma e' il collegamento a GitHub."""
     _entry(hass)
     with pytest.raises(GitHubError) as errore:
-        await tickets.async_reply(hass, user_id="anna", number=12, message="ciao")
+        await tickets.async_reply(hass, user_id="persona_2", number=12, message="ciao")
     assert errore.value.code == "no_token"
 
 
@@ -458,9 +458,9 @@ async def test_prendere_in_carico_e_della_console(
 ) -> None:
     """Assegnare chiede di poter scrivere sulla repository."""
     _entry(hass)
-    await _collega(hass, "anna")
+    await _collega(hass, "persona_2")
     with pytest.raises(GitHubError) as errore:
-        await tickets.async_take(hass, user_id="anna", number=8)
+        await tickets.async_take(hass, user_id="persona_2", number=8)
     assert errore.value.code == "not_console"
     assert github.calls == []
 
@@ -584,7 +584,7 @@ async def test_la_propria_segnalazione_appena_partita_non_suona(
     segnalazione» — la sua — con tanto di pallino fra le non lette.
     """
     _entry(hass)
-    await _collega(hass, "anna")
+    await _collega(hass, "persona_2")
     await _mia(hass, 1)
     github.answer("/issues?", [_riga(1, commenti=0)])
     await tickets.async_watch_messages(hass)
@@ -594,7 +594,7 @@ async def test_la_propria_segnalazione_appena_partita_non_suona(
     )
     store = await async_get_ticket_store(hass)
     await store.async_create(
-        ticket_type=TYPE_BUG, title="la seconda", body="Non va.", opened_by="anna"
+        ticket_type=TYPE_BUG, title="la seconda", body="Non va.", opened_by="persona_2"
     )
     assert await tickets.async_deliver_pending(hass) == 1
 
@@ -652,7 +652,7 @@ async def test_aprire_il_filo_prende_nota_di_dove_sta(
 
     github.answer(
         "/issues/12/comments",
-        [{"id": 1, "body": "uno", "user": {"login": "anna-hub"}}],
+        [{"id": 1, "body": "uno", "user": {"login": "persona-2-hub"}}],
     )
     github.answer(
         "/issues/12", {"number": 12, "comments": 5, "state": "open", "body": "x"}

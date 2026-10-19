@@ -118,7 +118,7 @@ test("una voce su cui non si puo' fare niente non entra nell'elenco", () => {
     media_content_id: "library://artist/9",
     media_content_type: "artist",
     media_class: "artist",
-    title: "Paolo Conte",
+    title: "Un artista",
     can_expand: true,
     can_play: false,
   });

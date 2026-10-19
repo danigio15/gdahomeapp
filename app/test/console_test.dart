@@ -138,7 +138,7 @@ void main() {
       ponte.unaCasaChiedeAiuto(
         _unaCasa,
         'Le telecamere non partono.',
-        nome: 'Giovanni',
+        nome: 'Persona 1',
       );
       collegamento = await _casaCollegata(ponte);
     });
@@ -153,10 +153,10 @@ void main() {
     /* L'elenco: chi ha scritto, quanto c'e' da leggere, e l'ultima cosa
      * detta. L'insegna scrive in maiuscolo, come sulla plancia. */
     expect(find.text('Conversazioni · 1 da leggere'), findsOneWidget);
-    expect(find.text('Giovanni'), findsOneWidget);
+    expect(find.text('Persona 1'), findsOneWidget);
     expect(find.text('Le telecamere non partono.'), findsOneWidget);
 
-    await tester.tap(find.text('Giovanni'));
+    await tester.tap(find.text('Persona 1'));
     await _lasciaFare(tester);
 
     /* Dentro: il filo, e la strada per tornare indietro. */
@@ -166,7 +166,7 @@ void main() {
      * non e' «chi fa l'app» — quello sono io — ma la casa che ha chiesto
      * aiuto: scambiarli vorrebbe dire leggere le proprie risposte come
      * domande. */
-    expect(find.textContaining('Giovanni ·'), findsOneWidget);
+    expect(find.textContaining('Persona 1 ·'), findsOneWidget);
     expect(find.textContaining('chi fa l\'app'), findsNothing);
 
     await tester.enterText(find.byType(TextField).last, 'Che modello sono?');

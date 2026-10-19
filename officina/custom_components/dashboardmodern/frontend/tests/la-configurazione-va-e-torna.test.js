@@ -18,7 +18,7 @@ import { CONFIG_KEYS, CONFIG_KEYS_REVISION } from "../src/sections/config-persis
 
 test("il giro completo: si raccoglie, si valida, si riscrive — identico", () => {
   const disco = new Map([
-    ["cd_people", '[{"name":"Anna"}]'],
+    ["cd_people", '[{"name":"Persona 2"}]'],
     ["cd_navbar_mode", "auto"],
     ["cd_branding", '{"title":"Casa"}'],
     ["chiave_estranea", "non deve viaggiare"],
@@ -26,7 +26,7 @@ test("il giro completo: si raccoglie, si valida, si riscrive — identico", () =
   const payload = buildBackupPayload((key) => disco.get(key) ?? null, new Date(0));
   assert.equal(payload.format, BACKUP_FORMAT);
   assert.equal(payload.revision, CONFIG_KEYS_REVISION);
-  assert.equal(payload.values.cd_people, '[{"name":"Anna"}]');
+  assert.equal(payload.values.cd_people, '[{"name":"Persona 2"}]');
   /* Il valore non-JSON viaggia com'e': stringhe grezze, niente da perdere. */
   assert.equal(payload.values.cd_navbar_mode, "auto");
   assert.ok(!("chiave_estranea" in payload.values));

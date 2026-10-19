@@ -377,7 +377,7 @@ async def test_chi_rinomina_la_plancia_rinomina_anche_la_dashboard(hass: Any) ->
     la plancia era stata installata, per sempre. Vale lo stesso per «solo
     amministratori»: chiudere la plancia agli altri non chiudeva la dashboard.
     """
-    entry = _voce(hass, title="Casa di Anna", options={"admin_only": True})
+    entry = _voce(hass, title="Casa di Persona 2", options={"admin_only": True})
     url_path = fe._lovelace_url_path(entry)
     voci = [
         {
@@ -395,7 +395,7 @@ async def test_chi_rinomina_la_plancia_rinomina_anche_la_dashboard(hass: Any) ->
     collezione = dati["dashboards_collection"]
     assert collezione.create == []
     assert collezione.aggiornate == [
-        ("vecchia", {"title": "Casa di Anna", "require_admin": True})
+        ("vecchia", {"title": "Casa di Persona 2", "require_admin": True})
     ]
 
 

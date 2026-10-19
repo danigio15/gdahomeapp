@@ -5,7 +5,7 @@
  * 908, e l'unica zona sensibile era la striscia di quattordici pixel che il suo
  * bordo invisibile sporgeva in alto. Da un browser ci si arrivava per un pelo;
  * dall'app di Home Assistant sul Mac, dove il fondo della finestra e'
- * occupato, non ci si arrivava affatto — segnalato da Gio Cor: da web
+ * occupato, non ci si arrivava affatto — segnalato da chi la usava: da web
  * funzionava, da app no, mentre su iPhone e iPad, che non hanno il mouse, la
  * barra e' sempre in vista.
  */

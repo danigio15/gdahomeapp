@@ -202,35 +202,35 @@ async def test_l_elenco_dice_chi_ha_collegato_l_account(
     """La finestra deve sapere se offrire «invia» o «collega GitHub»."""
     _entry(hass)
     scollegato = await _command(
-        hass, StubConnection(hass, user_id="anna"), {"type": TYPE_TICKET_LIST}, 1
+        hass, StubConnection(hass, user_id="persona_2"), {"type": TYPE_TICKET_LIST}, 1
     )
     assert scollegato["account"] == {
         "connected": False,
         "login": "",
         "maintainer": False,
     }
-    await _collega(hass, "anna")
+    await _collega(hass, "persona_2")
     collegato = await _command(
-        hass, StubConnection(hass, user_id="anna"), {"type": TYPE_TICKET_LIST}, 2
+        hass, StubConnection(hass, user_id="persona_2"), {"type": TYPE_TICKET_LIST}, 2
     )
-    assert collegato["account"]["login"] == "anna-hub"
+    assert collegato["account"]["login"] == "persona-2-hub"
 
 
 async def test_ognuno_vede_le_proprie(hass: HomeAssistant) -> None:
     """La richiesta di assistenza di uno non e' lettura per gli altri."""
-    anna = StubConnection(hass, is_admin=False, user_id="anna")
-    bruno = StubConnection(hass, is_admin=False, user_id="bruno")
-    await _command(hass, anna, {**_NUOVA, "ticket_type": TYPE_SUPPORT}, 1)
-    elenco_bruno = await _command(hass, bruno, {"type": TYPE_TICKET_LIST}, 2)
-    assert elenco_bruno["tickets"] == []
-    elenco_anna = await _command(hass, anna, {"type": TYPE_TICKET_LIST}, 3)
-    assert len(elenco_anna["tickets"]) == 1
+    persona_2 = StubConnection(hass, is_admin=False, user_id="persona_2")
+    persona_7 = StubConnection(hass, is_admin=False, user_id="persona_7")
+    await _command(hass, persona_2, {**_NUOVA, "ticket_type": TYPE_SUPPORT}, 1)
+    elenco_persona_7 = await _command(hass, persona_7, {"type": TYPE_TICKET_LIST}, 2)
+    assert elenco_persona_7["tickets"] == []
+    elenco_persona_2 = await _command(hass, persona_2, {"type": TYPE_TICKET_LIST}, 3)
+    assert len(elenco_persona_2["tickets"]) == 1
 
 
 async def test_l_amministratore_le_vede_tutte(hass: HomeAssistant) -> None:
     """Chi governa la plancia governa anche la sua coda."""
     await _command(
-        hass, StubConnection(hass, is_admin=False, user_id="anna"), _NUOVA, 1
+        hass, StubConnection(hass, is_admin=False, user_id="persona_2"), _NUOVA, 1
     )
     elenco = await _command(hass, StubConnection(hass), {"type": TYPE_TICKET_LIST}, 2)
     assert len(elenco["tickets"]) == 1
@@ -261,11 +261,11 @@ async def test_un_titolo_vuoto_torna_col_suo_codice(hass: HomeAssistant) -> None
 
 async def test_si_puo_ripensarci(hass: HomeAssistant) -> None:
     """Una segnalazione e' di chi l'ha scritta."""
-    anna = StubConnection(hass, is_admin=False, user_id="anna")
-    creata = await _command(hass, anna, _NUOVA, 1)
+    persona_2 = StubConnection(hass, is_admin=False, user_id="persona_2")
+    creata = await _command(hass, persona_2, _NUOVA, 1)
     tolta = await _command(
         hass,
-        anna,
+        persona_2,
         {"type": TYPE_TICKET_DELETE, "ticket_id": creata["ticket"]["id"]},
         2,
     )
@@ -274,12 +274,12 @@ async def test_si_puo_ripensarci(hass: HomeAssistant) -> None:
 
 async def test_nessuno_cancella_quella_di_un_altro(hass: HomeAssistant) -> None:
     """E il rifiuto non rivela nemmeno che esiste."""
-    anna = StubConnection(hass, is_admin=False, user_id="anna")
-    bruno = StubConnection(hass, is_admin=False, user_id="bruno")
-    creata = await _command(hass, anna, _NUOVA, 1)
+    persona_2 = StubConnection(hass, is_admin=False, user_id="persona_2")
+    persona_7 = StubConnection(hass, is_admin=False, user_id="persona_7")
+    creata = await _command(hass, persona_2, _NUOVA, 1)
     code, _ = await _refused(
         hass,
-        bruno,
+        persona_7,
         {"type": TYPE_TICKET_DELETE, "ticket_id": creata["ticket"]["id"]},
         2,
     )
@@ -291,10 +291,10 @@ async def test_la_console_chiede_amministratore_e_permessi(
 ) -> None:
     """Due cose insieme: nessuna delle due, da sola, apre la coda di tutti."""
     _entry(hass)
-    await _collega(hass, "anna", maintainer=True)
+    await _collega(hass, "persona_2", maintainer=True)
     code, _ = await _refused(
         hass,
-        StubConnection(hass, is_admin=False, user_id="anna"),
+        StubConnection(hass, is_admin=False, user_id="persona_2"),
         {"type": TYPE_TICKET_QUEUE},
         1,
     )
@@ -329,10 +329,10 @@ async def test_la_console_si_accende_con_i_permessi(hass: HomeAssistant) -> None
     assert elenco["console"] is True
 
     # E per chi non amministra Home Assistant resta spenta, permessi o no.
-    await _collega(hass, "anna", maintainer=True)
+    await _collega(hass, "persona_2", maintainer=True)
     altro = await _command(
         hass,
-        StubConnection(hass, is_admin=False, user_id="anna"),
+        StubConnection(hass, is_admin=False, user_id="persona_2"),
         {"type": TYPE_TICKET_LIST},
         2,
     )
@@ -355,12 +355,12 @@ async def test_scollegare_dimentica_il_proprio_account(
 ) -> None:
     """E ognuno scollega il proprio, non quello di un altro."""
     _entry(hass)
-    await _collega(hass, "anna")
-    anna = StubConnection(hass, is_admin=False, user_id="anna")
-    assert await _command(hass, anna, {"type": TYPE_TICKET_AUTH_FORGET}, 1) == {
+    await _collega(hass, "persona_2")
+    persona_2 = StubConnection(hass, is_admin=False, user_id="persona_2")
+    assert await _command(hass, persona_2, {"type": TYPE_TICKET_AUTH_FORGET}, 1) == {
         "removed": True
     }
-    elenco = await _command(hass, anna, {"type": TYPE_TICKET_LIST}, 2)
+    elenco = await _command(hass, persona_2, {"type": TYPE_TICKET_LIST}, 2)
     assert elenco["account"]["connected"] is False
 
 

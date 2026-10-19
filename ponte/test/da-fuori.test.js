@@ -317,12 +317,12 @@ test("l'abbinamento passa dal centralino, che il codice non lo vede mai", async 
     /* E adesso il giro intero, che e' quello che fara' l'app: dentro il
      * cifrato si dice il codice, e si torna indietro con tutto il necessario
      * per non doverlo rifare mai piu'. */
-    telefono.conferma({ nome: "iPhone di Anna", sistema: "ios" });
+    telefono.conferma({ nome: "iPhone di Persona 2", sistema: "ios" });
     const ecco = await telefono.aspetta("ecco");
 
     assert.match(ecco.segno, /^[0-9a-f]{64}$/);
     assert.match(ecco.chiave, /^[0-9a-f]{64}$/);
-    assert.equal(ecco.dispositivo.nome, "iPhone di Anna");
+    assert.equal(ecco.dispositivo.nome, "iPhone di Persona 2");
 
     /* Il pezzo nuovo, e il motivo per cui l'utente non batte nessun
      * indirizzo: dove ribussare domani glielo dice la casa. */

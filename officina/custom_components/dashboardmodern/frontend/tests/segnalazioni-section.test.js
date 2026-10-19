@@ -198,7 +198,7 @@ function inCoda(overrides = {}) {
     title: "Le tapparelle non si fermano",
     body: "Premo stop e continuano a scendere.",
     state: "inviato",
-    author: "anna-hub",
+    author: "persona-2-hub",
     origin: "plancia",
     issue_url: "https://github.com/danigio15/dashboardmodern-v2/issues/1",
     ...overrides,
@@ -942,13 +942,13 @@ test("chi ha segnalato risponde da qui, col filo aperto", () => {
    * che questa finestra esiste per non far lasciare. */
   const voce = ticket({ remote_id: "9", issue_url: "https://github.com/x/y/issues/9" });
 
-  conIlFilo(9, null, { connected: true, login: "anna" }, () => {
+  conIlFilo(9, null, { connected: true, login: "persona_2" }, () => {
     /* Col filo chiuso no: una casella sotto ognuna delle dodici segnalazioni
      * dell'elenco sarebbe stata dodici caselle vuote. */
     assert.ok(!voceMarkup(voce).includes("data-dm-scrivi"));
   });
 
-  conIlFilo(9, { body: "x", comments: [] }, { connected: true, login: "anna" }, () => {
+  conIlFilo(9, { body: "x", comments: [] }, { connected: true, login: "persona_2" }, () => {
     const markup = voceMarkup(voce);
     assert.ok(markup.includes('data-dm-scrivi="9"'), "manca il tasto per mandare");
     assert.ok(markup.includes('id="dm-tkt-mio-9"'), "manca la casella");
@@ -1033,14 +1033,14 @@ test("il sommario porta le conversazioni, non solo il conto", () => {
       const conto = sommarioConsole();
       assert.equal(conto.nonLetti, 1);
       /* Con chi l'ha aperta e a che punto e': la finestra in Home lo scrive
-       * sotto il titolo («#209 · luca-p · mai aperta»). */
+       * sotto il titolo («#209 · persona-11-p · mai aperta»). */
       assert.deepEqual(conto.conversazioni, [
         {
           number: 1,
           title: "le tapparelle",
           messages: 3,
           opened: false,
-          autore: "anna-hub",
+          autore: "persona-2-hub",
           stato: "inviato",
         },
       ]);

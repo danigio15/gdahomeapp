@@ -3583,7 +3583,7 @@ foglio di un impianto, c'è il capitolo «Le plance»: per ognuna due caselle. I
 home; il **nome all'avvio** compare col suo logo mentre la pagina si apre,
 nell'app e dentro Home Assistant. Arrivano in casa col rapporto dopo. Fino a
 ieri la prima plancia prendeva da sola il nome dell'installatore, e nel menu
-laterale compariva «giovanni» al posto di «Casa»: quello non succede più, e in
+laterale compariva il nome utente al posto di «Casa»: quello non succede più, e in
 quelle case il titolo torna «GdAHome» finché lui non ne sceglie uno. Un titolo
 scritto in casa, dall'app, resta finché l'installatore non sceglie qualcos'altro.
 Per farlo, il rapporto porta anche **profilo e titolo di ogni plancia** — nomi

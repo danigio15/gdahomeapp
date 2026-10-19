@@ -25,9 +25,9 @@ const SEME = {
     pool: {},
     irrigation: { zones: [] },
     energy: {
-      name: "Casa Giovanni",
+      name: "Casa Persona 1",
       grid: { power: "sensor.rete_w" },
-      plants: [{ id: "imp2", name: "Casa Donato", grid: { power: "sensor.rete2_w" } }],
+      plants: [{ id: "imp2", name: "Casa Persona 5", grid: { power: "sensor.rete2_w" } }],
       metadata: { plant_seq: 2 },
     },
     entityOverrides: { "dm.security_centrale_allarme": "alarm_control_panel.casa" },

@@ -132,7 +132,7 @@ test("una chiave cancellata qui resta cancellata anche nella fusione", () => {
 });
 
 test("una chiave che non e' delle nostre non si tocca", () => {
-  const fusi = conLeModificheInSospeso({ cd_prese: PRESE_LORO }, { pippo: "x" }, ["pippo"]);
+  const fusi = conLeModificheInSospeso({ cd_prese: PRESE_LORO }, { chiave_finta: "x" }, ["chiave_finta"]);
   assert.equal(fusi.cd_prese, PRESE_LORO);
-  assert.equal("pippo" in fusi, false);
+  assert.equal("chiave_finta" in fusi, false);
 });

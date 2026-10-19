@@ -35,7 +35,7 @@ const seed = {
         icon: "🛏️",
         temp: "sensor.c_temperature",
         hum: "sensor.c_humidity",
-        temp_name: "Pippo",
+        temp_name: "Sonda",
       },
     ],
   },
