@@ -6793,4 +6793,11 @@ export default Object.freeze({
   "This reading has no entity yet.": "Bu ölçümün henüz bir varlığı yok.",
   "This target is a read-only sensor.": "Bu hedef salt okunur bir sensör.",
   "You picked «An address of mine» but there is no address.": "«Kendi adresim» seçildi ama adres yok.",
+  "Fed": "Yedi",
+  "Feeding time": "Mama zamanı",
+  "it's time": "zamanı geldi",
+  "Meals": "Öğünler",
+  "Meals: every how many hours": "Öğünler: kaç saatte bir",
+  "Not logged yet": "Henüz kaydedilmedi",
+  "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "Kartta «Yedi» düğmesi görünür: zamanı yeniden geldiğinde sayfa ve telefonun hatırlatır. Boş: hatırlatma yok.",
 });

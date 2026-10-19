@@ -52,6 +52,7 @@ import {
   genereDiElettrodomestico,
   paroleDelCampanello,
   paroleDelFrigoCaldo,
+  paroleDellaPappa,
   paroleDellAllarme,
   paroleDellApertura,
   paroleDellArrivo,
@@ -69,6 +70,7 @@ import { paroleDellAvviso, tastiDellAvviso } from "./viaggi.js";
 import { chiudiLaFoto, chiudiLaSpinta, CONTENUTO_MASSIMO, FOTO_MASSIMA } from "./spinta.js";
 import { vedeQualcosa } from "./plance.js";
 import { PROFILO_PRINCIPALE } from "./configurazione.js";
+import { conLaPappa, normalizzaAnimali } from "../plancia/src/core/animali-model.js";
 import { TaccuinoDellEnergia } from "./l-energia-di-casa.js";
 import {
   DiarioDellaCasa,
@@ -390,6 +392,7 @@ const SEZIONE_DI = Object.freeze({
   campanello: "telecamera",
   elettrodomestici: "elettrodomestici",
   frigo: "sensore",
+  animali: "animali",
   personalizzata: "sensore",
   pioggia: "meteo",
   arrivi: "persone",
@@ -1377,6 +1380,7 @@ export class Notifiche {
       else if (Array.isArray(una.resta)) azioni[una.id] = { resta: una.resta.slice(0, 40) };
       else if (Array.isArray(una.vaBene)) azioni[una.id] = { vaBene: una.vaBene.slice(0, 10) };
       else if (typeof una.haAzione === "string") azioni[una.id] = { haAzione: una.haAzione };
+      else if (typeof una.pappa === "string") azioni[una.id] = { pappa: una.pappa.slice(0, 80) };
     }
     if (!Object.keys(azioni).length) return;
     this._tasti.set(id, { telefono, azioni, scade: this.adesso() + VITA_DEI_TASTI });
@@ -1770,6 +1774,47 @@ export class Notifiche {
     return si({ fatto: true });
   }
 
+  /* «Ha mangiato» dalla notifica della pappa: l'animale `id` con la pappa
+   * segnata adesso, scritto come lo scrive la plancia (`animali-section.js`),
+   * e solo se nessuno ha cambiato la configurazione nel frattempo. */
+  _segnaLaPappa(id) {
+    let scatto;
+    try {
+      scatto = this.configurazione?.leggi?.(PROFILO_PRINCIPALE)?.snapshot;
+    } catch (_errore) {
+      return false;
+    }
+    const valori = scatto?.values;
+    if (!valori) return false;
+    let grezzo = valori.cd_animali;
+    const eraTesto = typeof grezzo === "string";
+    try {
+      if (eraTesto) grezzo = JSON.parse(grezzo);
+    } catch (_errore) {
+      return false;
+    }
+    if (!Array.isArray(grezzo)) return false;
+    const animali = normalizzaAnimali(grezzo);
+    const posto = animali.findIndex((voce) => voce.id === id);
+    if (posto < 0) return false;
+    animali[posto] = conLaPappa(animali[posto], new Date(this.adesso()).toISOString());
+    try {
+      const esito = this.configurazione.scrivi(
+        PROFILO_PRINCIPALE,
+        { ...valori, cd_animali: eraTesto ? JSON.stringify(animali) : animali },
+        {
+          keys_revision: scatto.keys_revision,
+          writer_generation: scatto.writer_generation,
+          updated_at: this.adesso(),
+          expected_revision: scatto.revision,
+        },
+      );
+      return esito?.status === "saved" || esito?.status === "unchanged";
+    } catch (_errore) {
+      return false;
+    }
+  }
+
   /* Un tasto premuto sotto una notifica. */
   async _unTasto(detto, { telefono, utente, si, no }) {
     const tasti = this._tasti.get(String(detto.notifica || ""));
@@ -1800,6 +1845,14 @@ export class Notifiche {
     }
     if (!utente || (this.utenti && !(await this.utenti.eVivo(utente).catch(() => false))))
       return no("unauthorized", "l'utente di questo telefono non c'e' piu'");
+    /* «Ha mangiato»: la pappa si segna come dalla scheda dell'animale, nella
+     * configurazione della plancia, e i telefoni e il tablet la vedono. */
+    if (azione.pappa) {
+      if (!this._segnaLaPappa(azione.pappa))
+        return no("not_found", "questo animale non c'e' piu' nella plancia");
+      this.registro.info(`la pappa segnata dalla notifica`);
+      return si({ fatto: true });
+    }
     /* Un tasto di una notifica di Home Assistant: torna a Home Assistant come
      * lo manda la sua app, `mobile_app_notification_action` con l'azione, e
      * le automazioni che lo aspettano vanno avanti. Non comanda niente da se'. */
@@ -2095,6 +2148,15 @@ function unEsempio(tipo, adesso) {
           unita: "°C",
           da: 20 * MINUTO,
         }),
+      };
+    case "animali":
+      return {
+        ...base,
+        parole: paroleDellaPappa({ nome: "", specie: "gatto", da: 12 * ORA }),
+        azioni: soloEtichette([
+          { id: "pappa", parole: { it: "Ha mangiato", en: "Fed" } },
+          { id: "guarda", parole: { it: "Guarda", en: "View" }, apre: true },
+        ]),
       };
     case "pioggia":
       return {

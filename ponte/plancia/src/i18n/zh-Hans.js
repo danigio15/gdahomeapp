@@ -6679,4 +6679,11 @@ export default Object.freeze({
   "This reading has no entity yet.": "该读数还没有实体。",
   "This target is a read-only sensor.": "此目标是只读传感器。",
   "You picked «An address of mine» but there is no address.": "已选择「我的地址」但没有填写地址。",
+  "Fed": "已喂食",
+  "Feeding time": "喂食时间到了",
+  "it's time": "到时间了",
+  "Meals": "喂食",
+  "Meals: every how many hours": "喂食：每隔几小时",
+  "Not logged yet": "尚未记录",
+  "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "卡片上会显示“已喂食”按钮：再次到时间时，页面和手机会提醒你。留空：不提醒。",
 });

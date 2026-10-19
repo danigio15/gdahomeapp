@@ -557,7 +557,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-N264HL34.js";
+} from "../../chunk-VD3DZYNE.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -3647,6 +3647,8 @@ var SOURCE_INDEX = Object.freeze({
   "è notte": "it is night",
   "È notte e ${g.name} è aperto": "It's night and ${g.name} is open",
   "È notte e ${nomi(aperte, l)} non è chiusa a chiave": "It's night and ${nomi(aperte, l)} is unlocked",
+  "è ora": "it's time",
+  "È ora della pappa": "Feeding time",
   "È quello che fa il tasto di QUESTA unità nel popup Clima della Home. Ogni unità ha i suoi passi, modificabili anche dalla matita; temperatura e ventola vuote vuol dire che il tasto non le tocca.": "This is what THIS unit's button does in the Home climate popup. Each unit keeps its own steps, editable from the pencil too; empty temperature and fan mean the button leaves them alone.",
   "è quello che sembra": "it is what it looks like",
   "È QUESTO campo ad accendere WebRTC: il nome del flusso come sta scritto dentro go2rtc/Frigate. Il nome della telecamera non c'entra.": "THIS field is what turns WebRTC on: the stream name as written inside go2rtc/Frigate. The camera name is not the lever.",
@@ -4062,6 +4064,7 @@ var SOURCE_INDEX = Object.freeze({
   "Guardia": "Guard",
   "Guida": "On the road",
   "ha gia' piovuto abbastanza": "enough rain already",
+  "Ha mangiato": "Fed",
   "ha risposto alle": "replied at",
   "ha sete": "is thirsty",
   "Ha suonato alle": "It rang at",
@@ -5095,6 +5098,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nel widget": "In the widget",
   "Nella fascia scelta il riposo spegne anche l'orologio": "In the chosen hours rest turns off the clock too",
   "nella norma": "in range",
+  "Nella scheda compare il tasto «Ha mangiato»: quando torna l'ora, la pagina e il telefono te lo ricordano. Vuoto: niente promemoria.": "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.",
   "Nella scheda Telecamere manca l'entita' di Home Assistant": "The Home Assistant entity is missing in the Cameras tab",
   "Nella stessa unità del sensore: percento o chili. La pagina conta i giorni che restano, al passo degli ultimi giorni.": "In the same unit as the sensor: percent or kilograms. The page counts the days left, at the pace of the last few days.",
   "nelle 24 ore": "over 24 hours",
@@ -5351,6 +5355,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nome, es. Cucina": "Name, e.g. Kitchen",
   "Nome, icona, colore, visibilità, gruppo e potenza diretta sono indipendenti per ogni nodo del flow.": "Name, icon, color, visibility, group and direct power are independent for every flow node.",
   "Non adesso": "Not now",
+  "Non ancora segnata": "Not logged yet",
   "Non arriva. Controlla l'indirizzo, e che il servizio si lasci leggere da qui.": "It does not arrive. Check the address, and that the service lets this page read it.",
   "non avvisa più": "no longer warns",
   "Non avvisarmi più per questo": "Stop warning me about this",
@@ -5502,7 +5507,7 @@ var SOURCE_INDEX = Object.freeze({
   "Oppure": "Or",
   "Oppure scrivi un'emoji qui sotto — o lascia vuoto per le iniziali del nome.": "Or type an emoji below — or leave it empty for the initials of the name.",
   "oppure un'azione": "or an action",
-  "ora": "hour",
+  "ora": "time",
   "ora ${oraLetta}°": "now ${oraLetta}°",
   "ora ${soc}%": "now ${soc}%",
   "Ora e data": "Time and date",
@@ -5540,6 +5545,8 @@ var SOURCE_INDEX = Object.freeze({
   "Pannello Solare": "Solar panel",
   "Pannolini": "Nappies",
   "Panoramica": "Overview",
+  "Pappa": "Meals",
+  "Pappa: ogni quante ore": "Meals: every how many hours",
   "Parcheggiata": "Parked",
   "Parla": "Talk",
   "Parla con il citofono (se lo supporta)": "Talk through the intercom (if supported)",
@@ -5898,11 +5905,11 @@ var SOURCE_INDEX = Object.freeze({
   "Proposte pensate per la tua casa": "Suggestions designed for your home",
   "Proposte per la tua casa": "Suggestions for your home",
   "Proprio tutto": "Everything",
+  "prossima": "next",
   "Prossime 24 ore": "Next 24 hours",
   "Prossimi": "Upcoming",
   "Prossimi giorni": "Next days",
   "prossimità del tablet": "tablet proximity",
-  "prossimo": "next",
   "Prossimo ritiro": "Next collection",
   "protetta": "protected",
   "Protetta da PIN": "PIN protected",
@@ -34955,6 +34962,38 @@ var CAMPI_DELLA_VASCA = Object.freeze([
   "vasca",
   "origine"
 ]);
+var CAMPI_DELLA_PAPPA = Object.freeze(["pappa", "pappa_ogni"]);
+var PAPPA_OGNI_AL_PIU = 168;
+function oreDellaPappa(valore3) {
+  const letto = Number.parseFloat(valore3);
+  if (!Number.isFinite(letto) || letto <= 0) return null;
+  return Math.min(PAPPA_OGNI_AL_PIU, Math.max(0.5, Math.round(letto * 2) / 2));
+}
+function laPappa(animale, adesso) {
+  const ogni = oreDellaPappa(animale?.pappa_ogni);
+  const ultimo = Date.parse(pulito29(animale?.pappa));
+  const segnata = Number.isFinite(ultimo);
+  if (ogni === null && !segnata) return null;
+  const minuti = segnata ? Math.max(0, Math.floor((adesso - ultimo) / 6e4)) : null;
+  const fra2 = segnata && ogni !== null ? Math.round(ogni * 60) - minuti : null;
+  return {
+    ultimo: segnata ? ultimo : null,
+    ogni,
+    minuti,
+    fra: fra2,
+    /* Senza una volta segnata non si sa, e non si dice che e' l'ora. */
+    ora: fra2 !== null && fra2 <= 0,
+    /* In ritardo di mezzo giro: la scheda si fa rossa. */
+    tardi: fra2 !== null && ogni !== null && -fra2 >= ogni * 30
+  };
+}
+function conLaPappa(animale, quando4) {
+  const fuori = { ...animale && typeof animale === "object" ? animale : {} };
+  const scritto3 = pulito29(quando4);
+  if (Number.isFinite(Date.parse(scritto3))) fuori.pappa = scritto3;
+  else delete fuori.pappa;
+  return fuori;
+}
 function normalizzaAnimale(input = {}, indice = 0) {
   const grezzo = input && typeof input === "object" ? input : {};
   const animale = {
@@ -34978,6 +35017,10 @@ function normalizzaAnimale(input = {}, indice = 0) {
   if (vasca || Array.isArray(grezzo.righe))
     animale.righe = righeDichiarate({ righe: grezzo.righe || [] }, CAMPI_IN_PIU2) || [];
   for (const campo5 of CAMPI_DELLA_VASCA) {
+    const scritto3 = pulito29(grezzo[campo5]);
+    if (scritto3) animale[campo5] = scritto3;
+  }
+  for (const campo5 of CAMPI_DELLA_PAPPA) {
     const scritto3 = pulito29(grezzo[campo5]);
     if (scritto3) animale[campo5] = scritto3;
   }
@@ -35262,6 +35305,8 @@ function vistaAnimale(animale = {}, states = {}, adesso = 0) {
     );
   if (sottoSoglia(letture2.collare_batteria, soglie.collare))
     alza("collare_scarico", "attenzione", "collare_batteria");
+  const pappa = laPappa(suo2, adesso);
+  if (pappa?.ora) alza("pappa_da_dare", pappa.tardi ? "urgente" : "attenzione", "pappa");
   const porta = letture2.porta;
   return {
     id: suo2.id,
@@ -35309,6 +35354,7 @@ function vistaAnimale(animale = {}, states = {}, adesso = 0) {
      * collare, che dice solo dove il collare crede di essere. */
     dentro: porta && !porta.muto && porta.dentro !== null ? porta.dentro : letture2.collare_posizione?.dentro ?? null,
     avvisi,
+    pappa,
     /* Il peggio che c'e': la scheda si colora con questo, e le schede si
      * mettono in fila con questo. */
     gravita: avvisi.some((voce3) => voce3.gravita === "urgente") ? "urgente" : avvisi.length ? "attenzione" : "quiete"
@@ -39738,6 +39784,8 @@ function parolaAvviso(chiave2) {
       return t("Lettiera da pulire", "Litter box needs cleaning");
     case "collare_scarico":
       return t("Collare quasi scarico", "Collar battery low");
+    case "pappa_da_dare":
+      return t("È ora della pappa", "Feeding time");
     default:
       return chiave2;
   }
@@ -39883,6 +39931,75 @@ function lettureMarkup(vista2) {
   }).join("");
   return `<div class="dm-animale-gruppi">${fasce}</div>`;
 }
+var ANNULLA_MS2 = 5e3;
+function fraQuanto2(minuti) {
+  if (minuti <= 0) return t("adesso", "now");
+  if (minuti < 60) return `${t("fra", "in")} ${minuti} min`;
+  const ore = Math.round(minuti / 60);
+  return `${t("fra", "in")} ${ore} ${ore === 1 ? t("ora", "hour") : t("ore", "hours")}`;
+}
+function testoDellaPappa(pappa) {
+  if (!pappa) return "";
+  if (pappa.minuti === null) return t("Non ancora segnata", "Not logged yet");
+  const fa = quantoFa(pappa.minuti);
+  if (pappa.fra === null) return fa;
+  if (pappa.ora) return `${fa} · ${t("è ora", "it's time")}`;
+  return `${fa} · ${t("prossima", "next")} ${fraQuanto2(pappa.fra)}`;
+}
+function pappaMarkup(vista2) {
+  const pappa = vista2.pappa;
+  if (!pappa) return "";
+  const annulla2 = state33.annulla?.id === vista2.id;
+  return `<section class="dm-animale-gruppo dm-animale-pappa" data-dm-animale-gruppo="pappa" data-ora="${pappa.ora}">
+    <h4><span aria-hidden="true">🍽️</span>${esc(t("Pappa", "Meals"))}</h4>
+    <div class="dm-animale-lettura" data-dm-animale-lettura="pappa">
+      <span class="dm-animale-lettura-lbl">${esc(t("Ultima pappa", "Last meal"))}</span>
+      <span class="dm-animale-lettura-val">${esc(testoDellaPappa(pappa))}</span>
+    </div>
+    <div class="dm-animale-tasti">
+      <button type="button" class="dm-animale-tasto dm-animale-pappa-tasto" data-dm-animale-pappa="${esc(vista2.id)}"><span aria-hidden="true">✅</span><span>${esc(t("Ha mangiato", "Fed"))}</span></button>
+      ${annulla2 ? `<button type="button" class="dm-animale-tasto" data-dm-animale-pappa-annulla="${esc(vista2.id)}"><span aria-hidden="true">↩️</span><span>${esc(t("Annulla", "Undo"))}</span></button>` : ""}
+    </div>
+  </section>`;
+}
+function cambiaLAnimale(id, cambia) {
+  const animali = normalizzaAnimali(readJson(CHIAVE_ANIMALI, []));
+  const posto = animali.findIndex((voce3) => voce3.id === id);
+  if (posto < 0) return null;
+  const prima = animali[posto];
+  const next = animali.slice();
+  next[posto] = cambia(prima);
+  writeJsonIfChanged(CHIAVE_ANIMALI, normalizzaAnimali(next));
+  return prima;
+}
+function segnaLaPappa(evento) {
+  const tasto2 = evento.target?.closest?.("[data-dm-animale-pappa], [data-dm-animale-pappa-annulla]");
+  if (!tasto2 || !tasto2.closest(`#${ANIMALI_PAGE_ID}`)) return;
+  evento.preventDefault();
+  if (tasto2.dataset.dmAnimalePappaAnnulla) {
+    const id2 = tasto2.dataset.dmAnimalePappaAnnulla;
+    if (state33.annulla?.id !== id2) return;
+    const { quando: quando4 } = state33.annulla;
+    state33.annulla = null;
+    cambiaLAnimale(id2, (voce3) => conLaPappa(voce3, quando4));
+    state33.firma = "";
+    schedule10();
+    return;
+  }
+  const id = tasto2.dataset.dmAnimalePappa;
+  const prima = cambiaLAnimale(id, (voce3) => conLaPappa(voce3, (/* @__PURE__ */ new Date()).toISOString()));
+  if (!prima) return;
+  if (root.navigator?.vibrate) root.navigator.vibrate(5);
+  state33.annulla = { id, quando: prima.pappa ?? "" };
+  state33.firma = "";
+  schedule10();
+  root.setTimeout?.(() => {
+    if (state33.annulla?.id !== id) return;
+    state33.annulla = null;
+    state33.firma = "";
+    schedule10();
+  }, ANNULLA_MS2);
+}
 function pastigliaMarkup(vista2) {
   if (vista2.dentro === null) return "";
   return `<span class="dm-animale-dove" data-dentro="${vista2.dentro}">${esc(vista2.dentro ? t("In casa", "Inside") : t("Fuori", "Outside"))}</span>`;
@@ -39926,6 +40043,7 @@ function schedaMarkup4(vista2) {
       ${pastigliaMarkup(vista2)}
     </div>
     ${avvisiMarkup(vista2)}
+    ${pappaMarkup(vista2)}
     ${lettureMarkup(vista2)}
   </article>`;
 }
@@ -39952,7 +40070,10 @@ function firmaDi(viste2) {
       Object.values(vista2.letture).filter((voce3) => voce3 && !voce3.muto).map((voce3) => voce3.chiave).join("+"),
       /* Un tasto che compare — o che sparisce perche' l'integrazione tace —
        * cambia la forma della scheda, non solo un numero dentro. */
-      (vista2.azioni || []).map((azione) => azione.chiave).join("+")
+      (vista2.azioni || []).map((azione) => azione.chiave).join("+"),
+      /* La fascia della pappa che compare, e il tasto «Annulla». */
+      vista2.pappa ? `pappa:${vista2.pappa.ora}` : "",
+      state33.annulla?.id === vista2.id ? "annulla" : ""
     ].join("~")
   ).join("|");
 }
@@ -39973,12 +40094,15 @@ function sincronizza(card2, vista2) {
     const riga3 = card2.querySelector(`[data-dm-animale-lettura="${CSS.escape(voce3.chiave)}"]`);
     if (!riga3) continue;
     const valore3 = riga3.querySelector(".dm-animale-lettura-val");
-    const testo4 = testoLettura(voce3);
-    if (valore3 && valore3.textContent !== testo4) valore3.textContent = testo4;
+    const testo5 = testoLettura(voce3);
+    if (valore3 && valore3.textContent !== testo5) valore3.textContent = testo5;
     const barra2 = riga3.querySelector(".dm-animale-barra b");
     if (barra2 && voce3.valore !== null && voce3.unita === "%")
       barra2.style.width = `${Math.max(0, Math.min(100, Math.round(voce3.valore)))}%`;
   }
+  const pappa = card2.querySelector('[data-dm-animale-lettura="pappa"] .dm-animale-lettura-val');
+  const testo4 = testoDellaPappa(vista2.pappa);
+  if (pappa && pappa.textContent !== testo4) pappa.textContent = testo4;
 }
 function renderAnimali() {
   const pagina2 = ensureAnimaliPage();
@@ -40081,6 +40205,8 @@ function installStyles14() {
       #page-animali .dm-animale-barra{grid-column:1/-1;position:relative;height:6px;border-radius:999px;background:var(--secondary-background-color,#eef3f8);overflow:hidden}
       #page-animali .dm-animale-barra b{display:block;height:100%;border-radius:999px;background:#10b981;transition:width .4s ease}
       #page-animali .dm-animale-barra[data-male="true"] b{background:#dc2626}
+      #page-animali .dm-animale-pappa[data-ora="true"]{border-color:color-mix(in srgb,#f59e0b 55%,transparent);background:color-mix(in srgb,#f59e0b 8%,transparent)}
+      #page-animali .dm-animale-pappa-tasto{border-color:transparent;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff}
       #page-animali .dm-animale-nulla{margin:0;font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
       #page-animali .dm-animale-vuoto{grid-column:1/-1}
       /* Le pastiglie dei tipi, in cima: una riga che scorre se non ci sta. */
@@ -40129,6 +40255,7 @@ function installAnimaliSection() {
   ensureAnimaliPage();
   doc.addEventListener("click", premiIlTasto);
   doc.addEventListener("click", scegliIlFiltro);
+  doc.addEventListener("click", segnaLaPappa);
   insegnaLaVisibilita();
   ensureAnimaliTab();
   for (const nome of ["render", "cdApplyNavVis"]) wrapFunction(nome, "__dmAnimaliSection", schedule10);
@@ -60867,7 +60994,7 @@ var paroleDelCalendario = () => ({
   daFare: t("Da fare", "To-do"),
   inRitardo: t("In ritardo", "Overdue")
 });
-function fraQuanto2(inizio, adesso) {
+function fraQuanto3(inizio, adesso) {
   const minuti = Math.max(0, Math.round((inizio - adesso) / 6e4));
   if (minuti < 60) return `${t("fra", "in")} ${minuti} min`;
   const ore = Math.floor(minuti / 60);
@@ -60886,7 +61013,7 @@ function eroeDellAgenda(widget, adesso, lingua3, parole4) {
   const quando4 = prossimo.tuttoIlGiorno ? parole4.tuttoIlGiorno : orarioDi(prossimo.inizio, lingua3);
   let fra2 = "";
   if (ora5) fra2 = t("adesso", "now");
-  else if (giorno2 === oggi && !prossimo.tuttoIlGiorno) fra2 = fraQuanto2(prossimo.inizio, adesso);
+  else if (giorno2 === oggi && !prossimo.tuttoIlGiorno) fra2 = fraQuanto3(prossimo.inizio, adesso);
   else fra2 = etichettaDelGiorno(giorno2, adesso, parole4, lingua3);
   const sotto = [
     clean(prossimo.location) ? `📍 ${clean(prossimo.location)}` : "",
@@ -73319,7 +73446,7 @@ function commuta2(entita3, acceso6, states, prima = {}) {
   }
 }
 function spegnereDaFuori(stato3, ridisegna30) {
-  const fraQuanto3 = (quanto) => {
+  const fraQuanto4 = (quanto) => {
     root.clearTimeout?.(stato3.sveglia);
     stato3.sveglia = root.setTimeout?.(() => {
       stato3.sveglia = 0;
@@ -73331,7 +73458,7 @@ function spegnereDaFuori(stato3, ridisegna30) {
       stato3.annulla = null;
       stato3.chiesta = { stanza: stanza2, chiave: chiave2, fino: Date.now() + QUANTO_DURA_LA_DOMANDA };
       root.navigator?.vibrate?.(8);
-      fraQuanto3(QUANTO_DURA_LA_DOMANDA);
+      fraQuanto4(QUANTO_DURA_LA_DOMANDA);
       ridisegna30();
     },
     /* Il no: la domanda se ne va, e non succede niente. */
@@ -73350,7 +73477,7 @@ function spegnereDaFuori(stato3, ridisegna30) {
       root.navigator?.vibrate?.(15);
       stato3.chiesta = null;
       stato3.annulla = { stanza: stanza2, chiave: chiave2, entita: entita3, prima, fino: Date.now() + QUANTO_DURA_L_ANNULLA };
-      fraQuanto3(QUANTO_DURA_L_ANNULLA);
+      fraQuanto4(QUANTO_DURA_L_ANNULLA);
       ridisegna30();
     },
     rimetti() {
@@ -121277,7 +121404,8 @@ function rigaMarkup18(animale, indice, animali = []) {
         <small>${t("Senza foto la scheda mostra il disegno del tipo.", "Without a photo the card shows the drawing of its type.")}</small>
       </div>
       <label class="ed-slot dm-animale-field"><span class="ed-slot-lbl">${t("Stanza", "Room")}</span><span class="ed-form-row"><select id="dm-animale-${indice}-stanza" class="ed-input" data-animale-field="stanza">${roomOptionsMarkup(animale.stanza, t("Nessuna stanza", "No room"))}</select></span></label>
-      ${vasca ? vascaEditorMarkup(animale, indice, { esclusi: entitaDelleAltreVasche(animali, indice) }) : `${dispositiviMarkup(animale)}
+      ${vasca ? vascaEditorMarkup(animale, indice, { esclusi: entitaDelleAltreVasche(animali, indice) }) : `${pappaEditorMarkup(animale, indice)}
+      ${dispositiviMarkup(animale)}
       <button type="button" class="ed-btn-add dm-animale-integ-riga" data-animale-integ-riga>🔗 ${t("Collega un altro dispositivo", "Link another device")}</button>
       ${gruppiMarkup(animale, indice)}
       ${soglieMarkup3(animale, indice)}`}
@@ -121285,6 +121413,14 @@ function rigaMarkup18(animale, indice, animali = []) {
       <button type="button" class="ed-save-btn" data-animale-save>💾 ${vasca ? t("Salva", "Save") : t("Salva animale", "Save pet")}</button>
     </div>
   </article>`;
+}
+function pappaEditorMarkup(animale, indice) {
+  return `<label class="ed-slot dm-animale-field"><span class="ed-slot-lbl">🍽️ ${t("Pappa: ogni quante ore", "Meals: every how many hours")}</span>
+    <span class="ed-form-row"><input id="dm-animale-${indice}-pappa-ogni" class="ed-input" type="number" min="0.5" max="${PAPPA_OGNI_AL_PIU}" step="0.5" inputmode="decimal" data-animale-field="pappa_ogni" value="${esc(animale.pappa_ogni || "")}" placeholder="12"></span>
+    <small>${t(
+    "Nella scheda compare il tasto «Ha mangiato»: quando torna l'ora, la pagina e il telefono te lo ricordano. Vuoto: niente promemoria.",
+    "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder."
+  )}</small></label>`;
 }
 function nomeSpecie(chiave2) {
   if (chiave2 === "gatto") return t("Gatto", "Cat");
@@ -121421,7 +121557,8 @@ function ensureAnimaliEditor() {
         animale.dispositivi.map((voce3) => voce3.id).join("+"),
         /* Una vasca cambia forma quando cambiano le sue righe o i suoi dati. */
         eUnaVasca(animale) ? JSON.stringify([animale.righe, animale.litri, animale.ogni, animale.cambio, animale.pulizia]) : "",
-        [...CAMPI, ...AZIONI].map((campo5) => animale[campo5.chiave]).join(",")
+        [...CAMPI, ...AZIONI].map((campo5) => animale[campo5.chiave]).join(","),
+        animale.pappa_ogni || ""
       ].join("~")
     )
   ].join("|");

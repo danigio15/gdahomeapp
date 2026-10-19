@@ -6856,4 +6856,11 @@ export default Object.freeze({
   "This reading has no entity yet.": "Cette mesure n'a pas encore d'entité.",
   "This target is a read-only sensor.": "Cette cible est un capteur en lecture seule.",
   "You picked «An address of mine» but there is no address.": "Tu as choisi « Une adresse à moi » mais il n'y a pas d'adresse.",
+  "Fed": "A mangé",
+  "Feeding time": "C'est l'heure du repas",
+  "it's time": "c'est l'heure",
+  "Meals": "Repas",
+  "Meals: every how many hours": "Repas : toutes les combien d'heures",
+  "Not logged yet": "Pas encore noté",
+  "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "La carte affiche un bouton « A mangé » : quand c'est de nouveau l'heure, la page et ton téléphone te le rappellent. Vide : aucun rappel.",
 });

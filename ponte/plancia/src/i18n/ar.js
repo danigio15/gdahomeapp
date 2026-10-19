@@ -6754,4 +6754,11 @@ export default Object.freeze({
   "This reading has no entity yet.": "هذه القراءة ليس لها كيان بعد.",
   "This target is a read-only sensor.": "هذا الهدف مستشعر للقراءة فقط.",
   "You picked «An address of mine» but there is no address.": "اخترت «عنوان خاص بي» لكن لا يوجد عنوان.",
+  "Fed": "أكل",
+  "Feeding time": "حان وقت الطعام",
+  "it's time": "حان الوقت",
+  "Meals": "الوجبات",
+  "Meals: every how many hours": "الوجبات: كل كم ساعة",
+  "Not logged yet": "لم تُسجَّل بعد",
+  "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "تعرض البطاقة زر «أكل»: عندما يحين الوقت مجددًا، تذكّرك الصفحة وهاتفك. فارغ: بلا تذكير.",
 });

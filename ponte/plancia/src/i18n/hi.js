@@ -6782,4 +6782,11 @@ export default Object.freeze({
   "This reading has no entity yet.": "इस रीडिंग की अभी कोई एंटिटी नहीं है।",
   "This target is a read-only sensor.": "यह लक्ष्य केवल पढ़ने वाला सेंसर है।",
   "You picked «An address of mine» but there is no address.": "आपने «मेरा पता» चुना पर पता नहीं है।",
+  "Fed": "खा लिया",
+  "Feeding time": "खाने का समय",
+  "it's time": "समय हो गया",
+  "Meals": "भोजन",
+  "Meals: every how many hours": "भोजन: हर कितने घंटे में",
+  "Not logged yet": "अभी दर्ज नहीं",
+  "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "कार्ड पर «खा लिया» बटन दिखता है: जब फिर समय होगा, पेज और आपका फ़ोन याद दिलाएंगे। खाली: कोई अनुस्मारक नहीं।",
 });

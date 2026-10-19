@@ -117,6 +117,10 @@ void main() {
       scrollable: scorre,
     );
     final riepilogo = find.byKey(const Key('voce-riepilogo-bloccata'));
+    /* A meta' schermo: appena entrata in fondo, la voce sta sotto il bordo
+     * e il tocco cade fuori. */
+    await Scrollable.ensureVisible(tester.element(riepilogo), alignment: 0.5);
+    await tester.pumpAndSettle();
     expect(
       find.descendant(of: riepilogo, matching: find.byType(BollinoPremium)),
       findsOneWidget,

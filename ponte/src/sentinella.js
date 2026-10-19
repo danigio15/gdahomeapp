@@ -49,6 +49,7 @@ import {
   elettrodomesticoDellaPlancia,
   tipoDellElettrodomestico,
 } from "./il-tipo-dell-elettrodomestico.js";
+import { laPappa, normalizzaAnimali } from "../plancia/src/core/animali-model.js";
 import {
   paroleDelBlackout,
   paroleDelCiclo,
@@ -68,7 +69,7 @@ export const URGENZE = Object.freeze(["bassa", "normale", "urgente"]);
 export const CATEGORIE = Object.freeze({
   urgenti: ["antifurto", "allarmi", "campanello", "blackout"],
   sicurezza: ["inserimenti", "uscito", "aperture", "movimento"],
-  casa: ["elettrodomestici", "frigo", "pioggia"],
+  casa: ["elettrodomestici", "frigo", "pioggia", "animali"],
   persone: ["arrivi"],
   assistente: ["suggerimenti"],
   manutenzione: ["riepilogo"],
@@ -406,6 +407,20 @@ export function tastiDellApertura(id, { copertura = false, vuota = false } = {})
   ];
 }
 
+/** E' l'ora della pappa: `nome` dell'animale (o la sua specie), `da` in ms
+ * dall'ultima. */
+export function paroleDellaPappa({ nome, specie, da }) {
+  const chi = nome || { gatto: "del gatto", cane: "del cane" }[specie] || "dell'animale";
+  const who = nome || { gatto: "the cat", cane: "the dog" }[specie] || "your pet";
+  return {
+    it: {
+      titolo: `🍽️ È ora della pappa ${nome ? `di ${chi}` : chi}`,
+      testo: `L'ultima ${perQuanto(da)} fa`,
+    },
+    en: { titolo: `🍽️ Feeding time for ${who}`, testo: `Last meal ${perQuanto(da, "en")} ago` },
+  };
+}
+
 /** Il frigo o il congelatore troppo caldi: `valore` com'e' lo stato, `da` in ms. */
 export function paroleDelFrigoCaldo({ nome, valore, unita = "°C", da }) {
   return {
@@ -678,6 +693,7 @@ export class Sentinella {
     try {
       this._durate();
       this._personalizzate();
+      this._laPappa();
     } catch (errore) {
       this.registro?.errore?.(`una regola delle notifiche: ${errore?.message || errore}`);
     }
@@ -688,6 +704,44 @@ export class Sentinella {
       this.capire.pota();
     }
     this.capire.scrivi();
+  }
+
+  /* ─── La pappa degli animali, a ogni battito ───────────────────────── */
+
+  /* «Confermo che e' stato dato da mangiare e mi avvisa quando sara' da
+   * rifare.» La pappa si segna dalla scheda dell'animale nella plancia, e sta
+   * nella sua configurazione (`cd_animali`, vedi `core/animali-model.js`):
+   * quando l'ora arriva lo si dice una volta per ogni pappa segnata. Segnata
+   * la prossima, la chiave cambia, e alla sua ora si torna a dirlo. */
+  _laPappa() {
+    let grezzo = this._valori()?.cd_animali;
+    try {
+      if (typeof grezzo === "string") grezzo = JSON.parse(grezzo);
+    } catch (_errore) {
+      return;
+    }
+    if (!Array.isArray(grezzo) || !grezzo.length) return;
+    const ora = this.adesso();
+    for (const animale of normalizzaAnimali(grezzo)) {
+      const pappa = laPappa(animale, ora);
+      if (!pappa || pappa.ultimo === null || pappa.ogni === null) continue;
+      if (!this._unaVolta(`pappa:${animale.id}:${pappa.ultimo}`, pappa.ora)) continue;
+      this._dici({
+        tipo: "animali",
+        urgenza: "normale",
+        chiave: `pappa:${animale.id}`,
+        pausa: 30 * MINUTO,
+        azioni: [
+          { id: "pappa", parole: duePassi("Ha mangiato", "Fed"), pappa: animale.id },
+          tastoGuarda(),
+        ],
+        parole: paroleDellaPappa({
+          nome: animale.nome,
+          specie: animale.specie,
+          da: ora - pappa.ultimo,
+        }),
+      });
+    }
   }
 
   /* ─── L'energia e gli UPS, a ogni battito ──────────────────────────── */

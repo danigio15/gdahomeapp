@@ -60,6 +60,7 @@ const Map<String, String> sezioneDelTipo = {
   'campanello': 'telecamera',
   'elettrodomestici': 'elettrodomestici',
   'frigo': 'sensore',
+  'animali': 'animali',
   'personalizzata': 'sensore',
   'pioggia': 'meteo',
   'arrivi': 'persone',
@@ -80,6 +81,7 @@ const Map<String, List<String>> linguetteDellaSezione = {
   'energia': ['energy'],
   'persone': ['persone'],
   'meteo': ['meteo', 'home'],
+  'animali': ['animali'],
   'plancia': ['home'],
 };
 
@@ -137,6 +139,7 @@ String? etichettaDelPosto(DoveApre dove) {
         'energy' => ('Energia', 'Energy'),
         'persone' => ('Persone', 'People'),
         'meteo' => ('Meteo', 'Weather'),
+        'animali' => ('Animali', 'Pets'),
         _ => ('la plancia', 'the dashboard'),
       };
       return inLingua(it: 'Apri $it', en: 'Open $en');
