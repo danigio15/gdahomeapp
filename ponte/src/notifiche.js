@@ -100,6 +100,9 @@ const AUTOMAZIONI_OGNI = 24 * ORA;
  * spegne piu' niente: la situazione di due ore fa non e' quella di adesso. */
 const VITA_DEI_TASTI = 2 * ORA;
 const TASTI_TENUTI_AL_PIU = 500;
+/* Per quanto «Va bene così» zittisce una notifica dell'assistente su quel
+ * telefono: mezza giornata, «fino a domani». «Più tardi» e' un'ora. */
+const BASTA_PER = 12 * ORA;
 
 /* Quante notifiche per telefono in un'ora, al massimo, comprese le urgenti.
  * Una casa che ne vuole mandare di piu' ha un sensore impazzito, e trenta
@@ -144,6 +147,12 @@ const SERVIZI_DEI_TASTI = new Set([
   "cover.close_cover",
   "cover.open_cover",
   "lock.unlock",
+  /* L'assistente al telefono (`l-assistente-al-telefono.js`): chiudere a
+   * chiave la serratura rimasta aperta, accendere il clima nella stanza
+   * troppo calda, la ventilazione dove l'aria e' pesante. */
+  "lock.lock",
+  "climate.turn_on",
+  "fan.turn_on",
   "button.press",
   /* L'antifurto scattato: spegnere la sirena, disinserire. E l'inserimento
    * su misura (#413) dalla notifica di movimento: i servizi che un tasto su
@@ -625,8 +634,9 @@ export class Notifiche {
     if (!this.registri) return;
     this._registriIl = this.adesso();
     try {
-      const { di } = await this.registri.leMappe();
+      const { di, nomi } = await this.registri.leMappe();
       this.sentinella.dispositivoDi = di || {};
+      this.sentinella.nomiDeiDispositivi = nomi || {};
     } catch (_errore) {
       /* Senza registri la telecamera si cerca per nome. */
     }
@@ -679,21 +689,28 @@ export class Notifiche {
         (Array.isArray(dispositivi) ? dispositivi : []).map((d) => [d?.id, d]),
       );
       const descrizioni = {};
+      /* L'area di ogni entita' — la sua, o quella del suo dispositivo — per
+       * l'assistente al telefono: la finestra e il clima della stessa stanza.
+       * E quelle che non contano fra i dispositivi muti: nascoste,
+       * disattivate, di diagnostica o di configurazione. */
+      const areaDi = new Map();
+      const daNonContare = new Set();
       for (const voce of Array.isArray(entita) ? entita : []) {
         const id = voce?.entity_id;
-        if (typeof id !== "string" || !/^(light|switch|binary_sensor|cover)\./.test(id)) continue;
+        if (typeof id !== "string") continue;
         const suo = dispositivo.get(voce?.device_id);
-        const pezzi = [
-          nomeDellArea.get(voce?.area_id || suo?.area_id),
-          suo?.manufacturer,
-          suo?.model,
-          suo?.name_by_user || suo?.name,
-        ]
+        const area = String(nomeDellArea.get(voce?.area_id || suo?.area_id) || "").trim();
+        if (area) areaDi.set(id, area.slice(0, 60));
+        if (voce?.hidden_by || voce?.disabled_by || voce?.entity_category) daNonContare.add(id);
+        if (!/^(light|switch|binary_sensor|cover)\./.test(id)) continue;
+        const pezzi = [area, suo?.manufacturer, suo?.model, suo?.name_by_user || suo?.name]
           .map((p) => String(p || "").trim())
           .filter(Boolean);
         if (pezzi.length) descrizioni[id] = pezzi.join(" · ").slice(0, 160);
       }
       this.sentinella.capire.descrivi(descrizioni);
+      this.sentinella.aree = areaDi;
+      this.sentinella.daNonContare = daNonContare;
     } catch (_errore) {
       /* Senza anagrafe l'assistente guarda i nomi, come prima. */
     }
@@ -1377,6 +1394,7 @@ export class Notifiche {
       if (evento.tipo === "prova") azioni[una.id] = { prova: true };
       else if (una.servizio) azioni[una.id] = { servizio: una.servizio };
       else if (una.piuTardi) azioni[una.id] = { piuTardi: true, chiave: evento.chiave };
+      else if (una.basta) azioni[una.id] = { basta: true, chiave: evento.chiave };
       else if (Array.isArray(una.resta)) azioni[una.id] = { resta: una.resta.slice(0, 40) };
       else if (Array.isArray(una.vaBene)) azioni[una.id] = { vaBene: una.vaBene.slice(0, 10) };
       else if (typeof una.haAzione === "string") azioni[una.id] = { haAzione: una.haAzione };
@@ -1828,6 +1846,14 @@ export class Notifiche {
       return no("not_supported", "era una notifica di prova: il tasto non fa niente");
     if (azione.piuTardi) {
       this._rimandati.set(`${telefono}|${azione.chiave}`, this.adesso() + ORA);
+      return si({ fatto: true });
+    }
+    /* «Va bene così» (e «Fatto», «Ok»): come «Più tardi», ma per dodici ore.
+     * Chi l'ha detto ha visto, e fino a domani quella cosa a quel telefono non
+     * si ridice. Non tocca niente in Home Assistant, e gli altri telefoni la
+     * ricevono come prima. */
+    if (azione.basta) {
+      this._rimandati.set(`${telefono}|${azione.chiave}`, this.adesso() + BASTA_PER);
       return si({ fatto: true });
     }
     /* «Restano così» e «Va bene stanotte»: l'assistente lo ricorda per
