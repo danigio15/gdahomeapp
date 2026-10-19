@@ -50,6 +50,7 @@ import 'chiavi_per_l_iphone.dart';
 import 'consegna.dart';
 import 'firebase_qui.dart';
 import 'foto_di_passaggio.dart';
+import 'le_immagini.dart';
 import 'modello.dart';
 import 'notifiche.dart';
 import 'scheda.dart';
@@ -282,6 +283,9 @@ Future<void> mostra(
       : const DisegnoDellaNotifica();
   final grande = disegno.grande;
   final icona = disegno.icona;
+  /* La stessa immagine per la pagina della notifica, quando la si tocca: la
+   * foto il centralino non la da' due volte (`le_immagini.dart`). */
+  if (grande != null) await tieniLImmagine(notifica.id, grande);
   final allegati = await _gliAllegati(quale, disegno);
   final corpo = notifica.testo.isEmpty ? quale.casa.nome : notifica.testo;
   /* Le notifiche di Home Assistant dicono da dove vengono: su Android nella
@@ -773,6 +777,12 @@ class Postino extends ChangeNotifier {
     /* Toccato un tasto (Spegni, Inserisci…) e non la notifica: lo sa
      * `AppDelegate.swift`, e il tasto va alla casa come dall'Android. */
     final tasto = await tastoPremutoSullIphone(messaggio.data['b'] as String?);
+    /* L'immagine che l'estensione le aveva messo, per la pagina della
+     * notifica: quella del momento, non una foto di adesso. */
+    final immagine = await immagineToccataSullIphone(
+      messaggio.data['b'] as String?,
+    );
+    if (immagine != null) await tieniLImmagine(aperta.notifica.id, immagine);
     _tocca(
       ToccoDellaNotifica(
         casa: aperta.casa.id,

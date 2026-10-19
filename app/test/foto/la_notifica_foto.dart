@@ -111,6 +111,25 @@ ToccoDellaNotifica _lavatrice() => ToccoDellaNotifica(
   ),
 );
 
+ToccoDellaNotifica _movimento() => ToccoDellaNotifica(
+  casa: 'casa',
+  notifica: NotificaArrivata(
+    id: 'm',
+    tipo: 'movimento',
+    categoria: 'movimento',
+    urgenza: 'normale',
+    titolo: '📷 Movimento · Ingresso',
+    testo: '18:22 · casa vuota',
+    quando: DateTime(2026, 10, 18, 18, 22),
+    scade: DateTime(2100),
+    camera: 'camera.ingresso',
+    tasti: const [
+      TastoDellaNotifica('guarda', 'Guarda', apre: true),
+      TastoDellaNotifica('inserisci', 'Inserisci antifurto'),
+    ],
+  ),
+);
+
 void main() {
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
@@ -133,6 +152,8 @@ void main() {
               tocco: _antifurto(),
               nomeDellaCasa: 'Casa di prova',
               adesso: _adesso,
+              etichettaDelPosto: 'Apri Sicurezza',
+              vaiAlPosto: (_) async {},
             ),
             scuro: scuro,
           ),
@@ -178,6 +199,44 @@ void main() {
       await expectLater(
         find.byType(MaterialApp),
         matchesGoldenFile('$_cartella/lavatrice-$tinta.png'),
+      );
+    });
+  }
+
+  for (final scuro in const [false, true]) {
+    final tinta = scuro ? 'scuro' : 'chiaro';
+    testWidgets('movimento con la foto del momento, $tinta', (tester) async {
+      tester.view.physicalSize = const Size(390, 844) * 3;
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      final disegno = (await tester.runAsync(
+        () => disegnaLaNotifica(
+          foto: File('test/notifiche/porta-di-prova.jpg').readAsBytesSync(),
+          attesa: const Duration(seconds: 30),
+        ),
+      ))!;
+      await tester.pumpWidget(
+        _app(
+          SchermataDellaNotifica(
+            tocco: _movimento(),
+            nomeDellaCasa: 'Casa di prova',
+            adesso: _adesso,
+            immagineIniziale: disegno.grande,
+            etichettaDelPosto: 'Guarda dal vivo',
+            vaiAlPosto: (_) async {},
+          ),
+          scuro: scuro,
+        ),
+      );
+      await tester.runAsync(() async {
+        for (final una in find.byType(Image).evaluate()) {
+          await precacheImage((una.widget as Image).image, una);
+        }
+      });
+      await tester.pumpAndSettle();
+      await expectLater(
+        find.byType(MaterialApp),
+        matchesGoldenFile('$_cartella/movimento-$tinta.png'),
       );
     });
   }

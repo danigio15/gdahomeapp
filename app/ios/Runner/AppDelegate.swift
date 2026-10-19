@@ -73,6 +73,12 @@ import gdanav_app
         risposta(AppDelegate.tastoPremuto(per: busta))
         return
       }
+      /* L'immagine della notifica toccata (vedi sotto), per la sua pagina. */
+      if chiamata.method == "immagine" {
+        let busta = chiamata.arguments as? String ?? ""
+        risposta(AppDelegate.immagine(per: busta).map { FlutterStandardTypedData(bytes: $0) })
+        return
+      }
       guard chiamata.method == "chiavi" else { return risposta(FlutterMethodNotImplemented) }
       let chiavi = chiamata.arguments as? [String: [String: String]] ?? [:]
       if ChiaviDelleNotifiche.scrivi(chiavi) {
@@ -97,12 +103,43 @@ import gdanav_app
     tasti.removeValue(forKey: busta)
   }
 
+  /* L'immagine della notifica toccata.
+   *
+   * «Quando si clicca sulla notifica venga aperta l'app con la stessa
+   * notifica.» La foto della telecamera la prende l'estensione, e il
+   * centralino la da' una volta sola: l'app non la puo' richiedere. Ma il
+   * sistema, toccata la notifica, passa all'app la notifica coi suoi
+   * allegati, e un allegato si puo' leggere. Lo si tiene qui per quella busta
+   * (al piu' quattro, al piu' quattro mega), e l'app lo chiede quando la apre
+   * (`lib/notifiche/chiavi_per_l_iphone.dart`). */
+  private static var immagini: [String: Data] = [:]
+
+  static func immagine(per busta: String) -> Data? {
+    immagini.removeValue(forKey: busta)
+  }
+
+  private static func tieniLImmagine(di contenuto: UNNotificationContent, busta: String) {
+    guard let allegato = contenuto.attachments.first else { return }
+    let file = allegato.url
+    let aperto = file.startAccessingSecurityScopedResource()
+    defer { if aperto { file.stopAccessingSecurityScopedResource() } }
+    guard let dati = try? Data(contentsOf: file), !dati.isEmpty, dati.count <= 4_000_000 else { return }
+    if immagini.count >= 4 { immagini.removeAll() }
+    immagini[busta] = dati
+  }
+
   override func userNotificationCenter(
     _ center: UNUserNotificationCenter,
     didReceive response: UNNotificationResponse,
     withCompletionHandler completionHandler: @escaping () -> Void
   ) {
     let azione = response.actionIdentifier
+    let contenuto = response.notification.request.content
+    if azione != UNNotificationDismissActionIdentifier,
+      let busta = contenuto.userInfo["b"] as? String
+    {
+      AppDelegate.tieniLImmagine(di: contenuto, busta: busta)
+    }
     if azione != UNNotificationDefaultActionIdentifier,
       azione != UNNotificationDismissActionIdentifier,
       let busta = response.notification.request.content.userInfo["b"] as? String

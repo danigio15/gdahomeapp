@@ -84,3 +84,16 @@ Future<String?> tastoPremutoSullIphone(String? busta) async {
     return null;
   }
 }
+
+/// L'immagine della notifica toccata sull'iPhone: la foto o la scheda che
+/// l'estensione le ha messo, come la passa il sistema all'app toccandola
+/// (`AppDelegate.swift`). Si dice una volta sola, a chi apre quella busta.
+/// `null` fuori dall'iPhone, o se la notifica un'immagine non l'aveva.
+Future<Uint8List?> immagineToccataSullIphone(String? busta) async {
+  if (defaultTargetPlatform != TargetPlatform.iOS || busta == null) return null;
+  try {
+    return await _canale.invokeMethod<Uint8List>('immagine', busta);
+  } catch (_) {
+    return null;
+  }
+}

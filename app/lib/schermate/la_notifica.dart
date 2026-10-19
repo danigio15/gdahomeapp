@@ -1,27 +1,29 @@
 /// La pagina di una notifica.
 ///
-/// «Queste cose che escono in basso non mi piacciono proprio, rivedile.» Una
-/// notifica toccata va dove sta la cosa di cui parla (`notifiche/dove_apre.dart`).
-/// Quando un posto suo non c'e' — il sensore del frigo, un suggerimento
-/// dell'assistente — o la casa adesso non risponde, si apre questa pagina:
-/// a schermo intero, con la freccia per tornare, come le altre pagine
-/// dell'app.
+/// «Quando si clicca sulla notifica venga aperta l'app con la
+/// visualizzazione della stessa notifica, strutturata nello stesso modo.»
+/// Toccata, una notifica apre questa pagina (`campanello.dart`,
+/// [apriLaNotifica]), fatta come la notifica: in cima l'app, la casa e
+/// quando; il titolo com'era, il testo, la foto del momento o la scheda, i
+/// tasti. Sotto, un tasto porta dove sta la cosa di cui parla: «Guarda dal
+/// vivo», «Apri Sicurezza», «Apri la tua giornata».
 ///
-/// Dentro: il disegno della voce, il titolo e il testo; quando e' arrivata e
-/// da quale casa, scritti per bene («Oggi alle 21:59 · Casa di prova»); la
-/// scheda delle elaborate o la foto della telecamera; i tasti, tasti veri.
-///
-/// La foto della telecamera, come altrove, la si chiede alla casa sul filo
-/// cifrato (`laFotoDi`): dal nostro server non passa.
+/// L'immagine e' quella della notifica, tenuta sul telefono quando e'
+/// arrivata (`notifiche/le_immagini.dart`): la foto del movimento e' quella
+/// di quel momento, non una di adesso. Solo se non c'e' — una notifica di
+/// prima, una semplice — si disegna la scheda, o si chiede alla casa sul filo
+/// cifrato la foto di adesso, e la si dice tale («Adesso, dal vivo»).
 library;
 
 import 'dart:async';
+import 'dart:io' show Directory;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
 import '../casa/collegamento.dart';
 import '../notifiche/consegna.dart';
+import '../notifiche/le_immagini.dart';
 import '../notifiche/modello.dart';
 import '../notifiche/postino.dart';
 import '../notifiche/scheda.dart';
@@ -93,6 +95,9 @@ class SchermataDellaNotifica extends StatefulWidget {
     this.postino,
     this.immagineIniziale,
     this.adesso,
+    this.etichettaDelPosto,
+    this.vaiAlPosto,
+    this.cartellaDelleImmagini,
   });
 
   final ToccoDellaNotifica tocco;
@@ -109,12 +114,23 @@ class SchermataDellaNotifica extends StatefulWidget {
   /// L'ora di adesso: per le prove.
   final DateTime? adesso;
 
+  /// Il tasto che porta al posto della notifica («Guarda dal vivo», «Apri
+  /// Sicurezza»), e cosa fa. Senza, il tasto non c'e'.
+  final String? etichettaDelPosto;
+  final Future<void> Function(BuildContext pagina)? vaiAlPosto;
+
+  /// Dove stanno le immagini delle notifiche: per le prove.
+  final Directory? cartellaDelleImmagini;
+
   @override
   State<SchermataDellaNotifica> createState() => _StatoDellaNotifica();
 }
 
 class _StatoDellaNotifica extends State<SchermataDellaNotifica> {
   Uint8List? _immagine;
+
+  /// L'immagine e' una foto di adesso, non quella della notifica.
+  bool _dalVivo = false;
   Timer? _ancora;
   String? _premuto;
 
@@ -124,39 +140,55 @@ class _StatoDellaNotifica extends State<SchermataDellaNotifica> {
   void initState() {
     super.initState();
     _immagine = widget.immagineIniziale;
-    if (_immagine != null) return;
+    if (_immagine == null) unawaited(_cercaLImmagine());
+  }
+
+  /* Prima quella della notifica; poi la scheda disegnata adesso; poi, per
+   * una telecamera, la foto di adesso. */
+  Future<void> _cercaLImmagine() async {
+    final tenuta = await prendiLImmagine(
+      _notifica.id,
+      cartella: widget.cartellaDelleImmagini,
+    );
+    if (!mounted) return;
+    if (tenuta != null) {
+      setState(() => _immagine = tenuta);
+      return;
+    }
+    if (_notifica.scheda != null) {
+      final disegno = await disegnaLaNotifica(scheda: _notifica.scheda);
+      if (!mounted) return;
+      if (disegno.grande != null) {
+        setState(() => _immagine = disegno.grande);
+        return;
+      }
+    }
     final camera = _notifica.camera;
     final collegamento = widget.collegamento;
-    if (camera != null && collegamento != null) {
-      /* L'app aperta dalla notifica ha il filo che si sta aprendo: si
-       * richiede ogni due secondi, per mezzo minuto al piu'. */
-      var volte = 0;
-      Future<void> prova() async {
-        volte += 1;
-        final foto = await laFotoDi(collegamento, camera);
-        if (!mounted) return;
-        if (foto != null) {
-          _ancora?.cancel();
-          setState(() => _immagine = foto);
-        } else if (volte >= 15) {
-          _ancora?.cancel();
-        }
+    if (camera == null || collegamento == null) return;
+    /* L'app aperta dalla notifica ha il filo che si sta aprendo: si richiede
+     * ogni due secondi, per mezzo minuto al piu'. */
+    var volte = 0;
+    Future<void> prova() async {
+      volte += 1;
+      final foto = await laFotoDi(collegamento, camera);
+      if (!mounted) return;
+      if (foto != null) {
+        _ancora?.cancel();
+        setState(() {
+          _immagine = foto;
+          _dalVivo = true;
+        });
+      } else if (volte >= 15) {
+        _ancora?.cancel();
       }
-
-      unawaited(prova());
-      _ancora = Timer.periodic(
-        const Duration(seconds: 2),
-        (_) => unawaited(prova()),
-      );
-    } else if (_notifica.scheda != null) {
-      unawaited(
-        disegnaLaNotifica(scheda: _notifica.scheda).then((disegno) {
-          if (mounted && disegno.grande != null) {
-            setState(() => _immagine = disegno.grande);
-          }
-        }),
-      );
     }
+
+    unawaited(prova());
+    _ancora = Timer.periodic(
+      const Duration(seconds: 2),
+      (_) => unawaited(prova()),
+    );
   }
 
   @override
@@ -192,6 +224,8 @@ class _StatoDellaNotifica extends State<SchermataDellaNotifica> {
     final casa = widget.nomeDellaCasa;
     final testo = diceSoloLaCasa(_notifica.testo, casa) ? '' : _notifica.testo;
     final immagine = _immagine;
+    final etichetta = widget.etichettaDelPosto;
+    final vai = widget.vaiAlPosto;
     return Scaffold(
       appBar: AppBar(
         title: Text(inLingua(it: 'Notifica', en: 'Notification')),
@@ -202,123 +236,210 @@ class _StatoDellaNotifica extends State<SchermataDellaNotifica> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 620),
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
               children: [
+                /* La notifica, come la si era vista. */
                 Scheda(
                   key: const Key('notifica-testa'),
-                  padding: const EdgeInsets.all(18),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Container(
-                        width: 58,
-                        height: 58,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: colori.surfaceContainerHigh,
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        child: Oggetto(
-                          comeSiChiama(_notifica.tipo).disegno,
-                          lato: 36,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                        child: Row(
                           children: [
-                            Text(
-                              titoloSenzaEmoji(_notifica.titolo),
-                              style: testi.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                height: 1.2,
+                            Container(
+                              width: 26,
+                              height: 26,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: colori.surfaceContainerHigh,
+                                borderRadius: BorderRadius.circular(7),
+                              ),
+                              child: Oggetto(
+                                comeSiChiama(_notifica.tipo).disegno,
+                                lato: 18,
                               ),
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(width: 8),
                             Text(
-                              [
-                                quandoDetto(_notifica.quando, adesso),
-                                if (casa.isNotEmpty) casa,
-                              ].join(' · '),
-                              key: const Key('notifica-quando'),
-                              style: testi.bodyMedium?.copyWith(
-                                color: colori.onSurfaceVariant,
+                              'GdAHome',
+                              style: testi.labelLarge?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                [
+                                  quandoDetto(_notifica.quando, adesso),
+                                  if (casa.isNotEmpty) casa,
+                                ].join(' · '),
+                                key: const Key('notifica-quando'),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.right,
+                                style: testi.bodySmall?.copyWith(
+                                  color: colori.onSurfaceVariant,
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                        child: Text(
+                          /* Il disegno della voce sta gia' nell'intestazione,
+                           * come l'icona dell'app nella notifica. */
+                          titoloSenzaEmoji(_notifica.titolo),
+                          key: const Key('notifica-titolo'),
+                          style: testi.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            height: 1.25,
+                          ),
+                        ),
+                      ),
+                      if (testo.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                          child: Text(
+                            testo,
+                            style: testi.bodyMedium?.copyWith(height: 1.4),
+                          ),
+                        ),
+                      if (_notifica.fonte case final String fonte)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                          child: Text(
+                            fonte,
+                            style: testi.bodySmall?.copyWith(
+                              color: colori.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      if (immagine != null)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(14),
+                            child: Stack(
+                              children: [
+                                Image.memory(
+                                  immagine,
+                                  key: const Key('notifica-immagine'),
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                  gaplessPlayback: true,
+                                ),
+                                if (_dalVivo)
+                                  Positioned(
+                                    left: 10,
+                                    top: 10,
+                                    child: _Bollino(
+                                      inLingua(
+                                        it: 'Adesso, dal vivo',
+                                        en: 'Now, live',
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      if (tasti.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Divider(height: 1, color: colori.outlineVariant),
+                        if (!vale)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                            child: Text(
+                              inLingua(
+                                it:
+                                    'È passato troppo tempo: i tasti di questa '
+                                    'notifica non valgono più.',
+                                en:
+                                    'Too much time has passed: this '
+                                    'notification\'s buttons no longer work.',
+                              ),
+                              style: testi.bodySmall?.copyWith(
+                                color: colori.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        /* I tasti come sotto la notifica: in fila, uno
+                         * accanto all'altro. */
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 2,
+                          ),
+                          child: Row(
+                            children: [
+                              for (final tasto in tasti)
+                                Expanded(
+                                  child: TextButton(
+                                    key: Key('notifica-tasto-${tasto.id}'),
+                                    onPressed: vale && _premuto == null
+                                        ? () => _tasto(tasto)
+                                        : null,
+                                    child: Text(
+                                      tasto.etichetta,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ] else
+                        const SizedBox(height: 16),
                     ],
                   ),
                 ),
-                if (testo.isNotEmpty) ...[
-                  const SizedBox(height: 18),
-                  Text(testo, style: testi.bodyLarge?.copyWith(height: 1.45)),
-                ],
-                if (_notifica.fonte case final String fonte) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    fonte,
-                    style: testi.bodySmall?.copyWith(
-                      color: colori.onSurfaceVariant,
-                    ),
+                if (etichetta != null && vai != null) ...[
+                  const SizedBox(height: 16),
+                  FilledButton.icon(
+                    key: const Key('notifica-vai'),
+                    onPressed: () => vai(context),
+                    icon: const Icon(Icons.arrow_forward_rounded),
+                    label: Text(etichetta),
                   ),
-                ],
-                if (immagine != null) ...[
-                  const SizedBox(height: 18),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Image.memory(
-                      immagine,
-                      key: const Key('notifica-immagine'),
-                      fit: BoxFit.cover,
-                      gaplessPlayback: true,
-                    ),
-                  ),
-                ],
-                if (tasti.isNotEmpty) ...[
-                  const SizedBox(height: 24),
-                  if (!vale)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: Text(
-                        inLingua(
-                          it:
-                              'È passato troppo tempo: i tasti di questa '
-                              'notifica non valgono più.',
-                          en:
-                              'Too much time has passed: this '
-                              'notification\'s buttons no longer work.',
-                        ),
-                        style: testi.bodySmall?.copyWith(
-                          color: colori.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  for (final (i, tasto) in tasti.indexed) ...[
-                    if (i > 0) const SizedBox(height: 10),
-                    if (i == 0)
-                      FilledButton(
-                        key: Key('notifica-tasto-${tasto.id}'),
-                        onPressed: vale && _premuto == null
-                            ? () => _tasto(tasto)
-                            : null,
-                        child: Text(tasto.etichetta),
-                      )
-                    else
-                      OutlinedButton(
-                        key: Key('notifica-tasto-${tasto.id}'),
-                        onPressed: vale && _premuto == null
-                            ? () => _tasto(tasto)
-                            : null,
-                        child: Text(tasto.etichetta),
-                      ),
-                  ],
                 ],
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Un'etichetta scura sopra la foto.
+class _Bollino extends StatelessWidget {
+  const _Bollino(this.testo);
+
+  final String testo;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        testo,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
