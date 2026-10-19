@@ -557,7 +557,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-C6MXRAOU.js";
+} from "../../chunk-N264HL34.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -100724,6 +100724,16 @@ function faseDelloSquillo(squillo, adesso) {
   const squilla2 = !squillo.silenziato && trascorsi < SQUILLO_MS;
   return { fase: squilla2 ? "squilla" : "dopo", trascorsi };
 }
+var FINESTRA_SOLA_MS = 5 * 6e4;
+function finestraDaChiudere(finestra6, ultimoTocco, adesso) {
+  if (!finestra6) return false;
+  const dallo = Math.max(
+    Number(ultimoTocco) || 0,
+    Number(finestra6.suonato) || 0,
+    Number(finestra6.aperta) || 0
+  );
+  return Number(adesso) - dallo >= FINESTRA_SOLA_MS;
+}
 function durataScritta2(ms) {
   const secondi = Math.max(0, Math.floor(Number(ms) / 1e3) || 0);
   return `${Math.floor(secondi / 60)}:${String(secondi % 60).padStart(2, "0")}`;
@@ -104871,7 +104881,7 @@ function finestra5() {
   return `<div class="mu-velo" data-mu-fa="fuori"><div class="mu-carta mu-accesa mu-finestra" style="--acc:${accento}">${dentro3}</div></div>`;
 }
 function apriFinestra(f) {
-  state115.finestra = f;
+  state115.finestra = { ...f, aperta: Date.now() };
   disegna6();
 }
 function chiudiFinestra() {
@@ -105626,6 +105636,7 @@ function rinfrescaLeTelecamere() {
 }
 function tocco() {
   state115.toccato = Date.now();
+  state115.toccatoDalDito = state115.toccato;
 }
 function attendi(id, cosa, valore3) {
   state115.inAttesa[id] = { ...state115.inAttesa[id] || {}, [cosa]: valore3 };
@@ -106279,6 +106290,8 @@ function onPointerUp(event) {
 function battito2() {
   const muro = state115.muro;
   if (!muro?.attiva) return;
+  if (state115.finestra && !state115.trascina && finestraDaChiudere(state115.finestra, state115.toccatoDalDito, Date.now()))
+    chiudiFinestra();
   const fermo = Date.now() - state115.toccato;
   const sonno = (muro.riposo.attivo ? muro.riposo.minuti : 0) * 60 * 1e3;
   if (!state115.riposo && !state115.finestra && !state115.trascina && sonno && fermo > sonno) {

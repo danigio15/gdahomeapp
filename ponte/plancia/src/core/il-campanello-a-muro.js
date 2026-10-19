@@ -182,6 +182,33 @@ export function faseDelloSquillo(squillo, adesso) {
   return { fase: squilla ? "squilla" : "dopo", trascorsi };
 }
 
+/* Quanto resta aperta da sola una finestra del pannello: cinque minuti.
+ *
+ * Dal campo: «metterci un timeout di tipo 5 minuti massimi, che la pagina
+ * popup che si apre con il video e i pulsanti "parla", "cancellino" si
+ * chiude da sola. Altrimenti se non la chiudi te rimane aperto quel popup e
+ * non rispetta piu' lo screensaver impostato, e nemmeno il movimento di un
+ * sensore che ritorna sulla home». Il riposo non arriva mai sopra una
+ * finestra aperta — e' giusto, mentre qualcuno la usa — ma una finestra che
+ * nessuno tocca da cinque minuti non la sta usando nessuno. */
+export const FINESTRA_SOLA_MS = 5 * 60_000;
+
+/**
+ * Se la finestra aperta va chiusa: nessuno l'ha toccata da
+ * [FINESTRA_SOLA_MS], contando dall'ultimo tocco vero e — per il citofono —
+ * dallo squillo. Un sensore di presenza non conta: chi passa davanti al
+ * tablet non sta guardando il citofono.
+ */
+export function finestraDaChiudere(finestra, ultimoTocco, adesso) {
+  if (!finestra) return false;
+  const dallo = Math.max(
+    Number(ultimoTocco) || 0,
+    Number(finestra.suonato) || 0,
+    Number(finestra.aperta) || 0,
+  );
+  return Number(adesso) - dallo >= FINESTRA_SOLA_MS;
+}
+
 /** Quanto dura, come lo scrive un telefono in chiamata: «0:08», «1:24». */
 export function durataScritta(ms) {
   const secondi = Math.max(0, Math.floor(Number(ms) / 1000) || 0);
