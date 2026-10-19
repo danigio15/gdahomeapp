@@ -10,6 +10,12 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.16.4
+
+- **Barra in basso sul telefono:** ogni nome di sezione si legge intero su
+  una riga sola, mai a capo e mai coi puntini, e le voci hanno più spazio fra
+  loro. Quelle che non ci stanno si raggiungono scorrendo col dito.
+
 ## 1.16.3
 
 - **Immagini su tutti i riquadri:** foto o disegno su ogni riquadro, sul
