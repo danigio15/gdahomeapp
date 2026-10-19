@@ -586,8 +586,8 @@ test("da uno stesso indirizzo nascono poche linee nuove", async () => {
 /* ─── Il modulo dei contatti ─────────────────────────────────────────────── */
 
 const unaLettera = {
-  nome: "Anna",
-  email: "anna@esempio.it",
+  nome: "Persona 2",
+  email: "persona_2@esempio.it",
   messaggio: "Ciao",
   lingua: "it",
 };

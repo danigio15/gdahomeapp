@@ -16,7 +16,7 @@ test("«home», una zona, delle coordinate: non sono un indirizzo, e non si scri
   assert.equal(indirizzoLeggibile(g("home")), "");
   assert.equal(indirizzoLeggibile(g("not_home")), "");
   assert.equal(indirizzoLeggibile(g("Lavoro", {}, "device_tracker.tel")), "");
-  assert.equal(indirizzoLeggibile(g("home", {}, "person.giovanni")), "");
+  assert.equal(indirizzoLeggibile(g("home", {}, "person.persona_1")), "");
   assert.equal(indirizzoLeggibile(g("40.85, 14.26")), "");
   assert.equal(indirizzoLeggibile(g("unavailable")), "");
 });
@@ -38,8 +38,8 @@ test("un indirizzo vero si accorcia a via, numero e citta'", () => {
 });
 
 test("sulla card arriva l'indirizzo letto, non lo stato grezzo", () => {
-  const persona = { id: "g", name: "Giovanni", entity: "person.giovanni", address: "sensor.tel_geocoded_location" };
-  const stati = { "person.giovanni": { state: "home", attributes: {} } };
+  const persona = { id: "g", name: "Persona 1", entity: "person.persona_1", address: "sensor.tel_geocoded_location" };
+  const stati = { "person.persona_1": { state: "home", attributes: {} } };
   stati["sensor.tel_geocoded_location"] = g("home");
   assert.equal(personViewModel(persona, stati, 0).address, "");
   stati["sensor.tel_geocoded_location"] = g("Via Toledo, 12, 80134 Napoli NA, Italia");

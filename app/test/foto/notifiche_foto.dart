@@ -19,6 +19,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
 import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
+import 'package:gdahome/casa/entita.dart';
 import 'package:gdahome/notifiche/consegna.dart';
 import 'package:gdahome/notifiche/modello.dart';
 import 'package:gdahome/notifiche/postino.dart';
@@ -439,6 +440,126 @@ void main() {
     );
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 61));
+    await tester.runAsync(() async {
+      await collegamento.chiudi();
+      await ponte.spegni();
+    });
+  });
+
+  /* Il movimento davanti alle telecamere: «Quali» dopo aver spuntato due
+   * telecamere e chiuso la finestra toccando fuori, e «Guarda». */
+  for (final scuro in const [false, true]) {
+    final tinta = scuro ? 'scuro' : 'chiaro';
+    testWidgets('«Quali» del movimento con due telecamere, $tinta', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      Entita una(String id, String nome, [String? classe]) => Entita(
+        id: id,
+        stato: 'off',
+        attributi: {'friendly_name': nome, 'device_class': ?classe},
+      );
+      const ingresso = 'camera.ds_2cd2143g2_i11111111_101';
+      const balcone = 'camera.ds_2cd2143g2_i22222222_101';
+      await tester.pumpWidget(
+        _app(
+          Scaffold(
+            body: FoglioDellaVoce(
+              evento: 'movimento',
+              scelta: const SceltaDellaVoce(quando: 'casa-vuota'),
+              stileGenerale: 'semplici',
+              entita: [
+                una(
+                  'binary_sensor.ds_i22222222_motion',
+                  'Balcone Motion',
+                  'motion',
+                ),
+                una(ingresso, 'Ingresso'),
+                una(
+                  'binary_sensor.ds_i11111111_line',
+                  'Ingresso Line Crossing',
+                  'motion',
+                ),
+                una(balcone, 'Balcone'),
+              ],
+              cambia: (_) {},
+            ),
+          ),
+          scuro: scuro,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('voce-quali')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('quali-$ingresso')));
+      await tester.tap(find.byKey(const Key('quali-$balcone')));
+      await tester.pumpAndSettle();
+      await expectLater(
+        find.byType(MaterialApp),
+        matchesGoldenFile('$_cartella/10-quali-scelta-$tinta.png'),
+      );
+      await tester.tapAt(const Offset(200, 30));
+      await tester.pumpAndSettle();
+      await expectLater(
+        find.byType(MaterialApp),
+        matchesGoldenFile('$_cartella/11-quali-dopo-$tinta.png'),
+      );
+    });
+  }
+
+  testWidgets('«Guarda» apre la telecamera', (tester) async {
+    tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    late PonteFinto ponte;
+    late Collegamento collegamento;
+    await tester.runAsync(() async {
+      (ponte, collegamento) = await _unaCasa();
+    });
+    final foto = File('test/notifiche/porta-di-prova.jpg');
+    await tester.pumpWidget(
+      _app(
+        SchermataDellaTelecamera(
+          tocco: ToccoDellaNotifica(
+            casa: collegamento.casa!.id,
+            tasto: 'guarda',
+            notifica: NotificaArrivata(
+              id: 'm',
+              tipo: 'movimento',
+              categoria: 'sicurezza',
+              urgenza: 'normale',
+              titolo: '📷 Movimento · Balcone',
+              testo: '21:59 · casa vuota',
+              quando: DateTime(2026, 10, 17, 21, 59),
+              scade: DateTime(2100),
+              camera: 'camera.ds_2cd2143g2_i22222222_101',
+              tasti: const [
+                TastoDellaNotifica('guarda', 'Guarda', apre: true),
+                TastoDellaNotifica('inserisci', 'Inserisci antifurto'),
+              ],
+            ),
+          ),
+          collegamento: collegamento,
+          fotoIniziale: foto.readAsBytesSync(),
+          adesso: DateTime(2026, 10, 17, 22),
+        ),
+        scuro: true,
+      ),
+    );
+    await tester.runAsync(() async {
+      final immagine = find.byType(Image);
+      for (final una in immagine.evaluate()) {
+        await precacheImage((una.widget as Image).image, una);
+      }
+    });
+    await tester.pump(const Duration(milliseconds: 300));
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('$_cartella/12-guarda-telecamera.png'),
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
     await tester.runAsync(() async {
       await collegamento.chiudi();
       await ponte.spegni();

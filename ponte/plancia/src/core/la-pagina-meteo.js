@@ -114,21 +114,15 @@ export function spostaIlBlocco(ordine, blocco, verso) {
  * I blocchi che la pagina mostra adesso, nell'ordine scelto.
  *
  * `ci` dice quali hanno qualcosa da dire: un blocco senza dati non compare,
- * nemmeno vuoto. La stazione è l'eccezione: senza sensori, a chi può
- * configurare la plancia si mostra l'invito («Hai una stazione meteo?») al
- * suo posto; agli altri niente, perché un invito che non si può raccogliere è
- * solo una scritta in più.
+ * nemmeno vuoto. Nemmeno la stazione: senza sensori il suo posto resta
+ * vuoto, senza inviti a configurarla — la pagina di una sezione mostra la
+ * casa, non rimanda al Config.
  */
 export function blocchiDellaPagina(config, ci = {}) {
   const scelta = normalizzaMeteo(config);
   const fuori = [];
   for (const blocco of scelta.ordine) {
     if (scelta.spenti.includes(blocco)) continue;
-    if (blocco === "stazione") {
-      if (ci.stazione) fuori.push("stazione");
-      else if (ci.invito) fuori.push("invito");
-      continue;
-    }
     if (ci[blocco]) fuori.push(blocco);
   }
   return fuori;
@@ -721,4 +715,100 @@ export function misureDiAdesso({ stazione = {}, meteo = null } = {}) {
     };
   }
   return fuori;
+}
+
+/* ── la vista: quello che le due pagine Meteo disegnano ─────────────────── */
+
+/**
+ * Le letture della stazione adesso: `{ misura: { valore, unita, quando,
+ * entity } }`, solo per i sensori scelti che hanno un numero. `sensori` e'
+ * `{ misura: entità }`, come lo legge la sezione dalla configurazione.
+ */
+export function letturaDellaStazione(sensori = {}, states = {}) {
+  const fuori = {};
+  for (const [chiave, entity] of Object.entries(sensori || {})) {
+    const lettura = letturaDi(states?.[entity]);
+    if (lettura) fuori[chiave] = { ...lettura, entity };
+  }
+  return fuori;
+}
+
+/**
+ * Le tessere di «La mia stazione», nell'ordine in cui si vedono: una per
+ * misura che la stazione legge adesso, nessuna per quelle che mancano. La
+ * pioggia si mostra col totale di oggi o con l'intensità, il sole con la
+ * radiazione o con la luminosità; la raffica, la direzione e la percepita
+ * non hanno una tessera loro (stanno dentro il vento e dentro «Adesso»).
+ */
+export const TESSERE_DELLA_STAZIONE = Object.freeze([
+  "temperatura",
+  "umidita",
+  "pressione",
+  "pioggia",
+  "vento",
+  "uv",
+  "sole",
+]);
+const LETTURE_DELLA_TESSERA = Object.freeze({
+  temperatura: ["temperatura"],
+  umidita: ["umidita"],
+  pressione: ["pressione"],
+  pioggia: ["pioggiaOggi", "intensita"],
+  vento: ["vento"],
+  uv: ["uv"],
+  sole: ["radiazione", "luminosita"],
+});
+export function tessereDellaStazione(stazione = {}) {
+  return TESSERE_DELLA_STAZIONE.filter((tessera) =>
+    LETTURE_DELLA_TESSERA[tessera].some((chiave) => stazione?.[chiave]),
+  );
+}
+
+/**
+ * Tutto quello che una pagina Meteo disegna, letto una volta: la pagina della
+ * plancia e quella del muro partono da qui, perché due pagine meteo che
+ * leggessero diverso direbbero due tempi (il muro diceva i 18° dell'entità
+ * weather mentre la stazione misurava 19,6°).
+ *
+ * - `misure`: com'è adesso, dalla stazione quando c'è, dall'entità weather
+ *   quando no (`misureDiAdesso`);
+ * - `tessere`: le tessere di «La mia stazione», vuote senza stazione;
+ * - `ore`, `giorni`, `oggi`, `frase`: dalle previsioni;
+ * - `sole`: com'è arrivato (`{ alba, tramonto }` già scritti), o `null`.
+ *
+ * `null` senza entità weather.
+ */
+export function vistaDelMeteoDa({
+  entita = "",
+  meteo = null,
+  stazione = {},
+  orarie = [],
+  giornaliere = [],
+  sole = null,
+  adesso = Date.now(),
+  ore = 24,
+  giorni = 7,
+} = {}) {
+  if (!pulito(entita) && !meteo) return null;
+  const letture = stazione && typeof stazione === "object" ? stazione : {};
+  const unita = pulito(meteo?.attributes?.precipitation_unit) || "mm";
+  const misure = misureDiAdesso({ stazione: letture, meteo });
+  const fila = prossimeOre(orarie, { adesso, ore, unita }).filter((voce) =>
+    Number.isFinite(voce.temperatura),
+  );
+  const elencoDeiGiorni = prossimiGiorni(giornaliere, { adesso, giorni, unita });
+  const oggi = elencoDeiGiorni.find((voce) => voce.oggi);
+  return {
+    adesso,
+    entita: pulito(entita),
+    meteo,
+    stazione: letture,
+    tessere: tessereDellaStazione(letture),
+    misure,
+    ore: fila,
+    giorni: elencoDeiGiorni,
+    oggi: oggi ? { alta: oggi.temperatura, bassa: oggi.bassa } : null,
+    frase: fraseDelleProssimeOre(orarie, { adesso, ore: 24, unita }),
+    sole: sole || null,
+  };
 }

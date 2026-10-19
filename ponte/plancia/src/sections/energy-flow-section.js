@@ -233,7 +233,7 @@ function tuttiICarichi() {
 
 /* I cerchi sotto Casa sono quelli dell'impianto scelto.
  *
- * Chi ha due contatori — «casa Giovanni» e «casa Donato» — sceglie l'impianto
+ * Chi ha due contatori — «casa Persona 1» e «casa Persona 5» — sceglie l'impianto
  * dalle linguette in cima alla sezione, e da li' in giu' tutto parla di
  * quello: il misuratore, il fotovoltaico, la batteria. I carichi restavano
  * fuori dal patto, ed erano gli unici a comparire in tutti e due i flussi —
@@ -948,10 +948,7 @@ function ensureBubble(stage, node, period, scale) {
   scriviDatoSeCambia(element, "dmFlowSensore", node.sensore === false ? "false" : "true");
   const suggerimento =
     node.sensore === false
-      ? t(
-          "Nessun sensore collegato: scegline uno in Configurazione › Carichi o Elettrodomestici.",
-          "No sensor linked: pick one in Settings › Loads or Appliances.",
-        )
+      ? t("Nessun sensore collegato.", "No sensor linked.")
       : node.waiting
         ? t("Sto leggendo i consumi da Home Assistant…", "Reading consumption from Home Assistant…")
         : "";
@@ -1252,8 +1249,8 @@ function disegnaLoSbilancio() {
     `⚠️ ${t("I conti non tornano", "The numbers do not add up")} · ${Math.round(
       detto.entra,
     )} W → ${Math.round(detto.esce)} W. ${t(
-      "Esce più corrente di quanta ne entra: di solito è il verso di un sensore al contrario, e si cambia nella scheda Energia.",
-      "More power is going out than coming in: usually a sensor's direction is reversed, and it is changed in the Energy tab.",
+      "Esce più corrente di quanta ne entra: di solito è il verso di un sensore al contrario.",
+      "More power is going out than coming in: usually a sensor's direction is reversed.",
     )}`,
   );
   return true;

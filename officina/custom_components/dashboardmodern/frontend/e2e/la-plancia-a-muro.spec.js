@@ -165,7 +165,7 @@ test.describe("la plancia a muro", () => {
     await page.evaluate(() => window.dmMuro.riposa());
     const blocco = muro(page).locator(".mu-deriva");
     await expect(blocco).toBeVisible();
-    await expect(blocco.locator('[data-mu-riposo="persone"]')).toHaveText(/Anna · Marco/);
+    await expect(blocco.locator('[data-mu-riposo="persone"]')).toHaveText(/Persona 2 · Persona 3/);
     await expect(blocco.locator('[data-mu-riposo="aperte"]')).toHaveText(/1 finestra aperta/);
     const dove = () => blocco.evaluate((n) => n.getAttribute("style"));
     const prima = await dove();
@@ -961,15 +961,15 @@ test.describe("la plancia a muro", () => {
           {
             id: "p4",
             modello: "personale",
-            comandi: [{ tipo: "entita", entita: "person.luca" }],
+            comandi: [{ tipo: "entita", entita: "person.persona_11" }],
           },
         ],
       },
       caselle: {
         cd_people: [
-          { entity: "person.anna", name: "Mamma" },
-          { entity: "person.marco", name: "Papà" },
-          { entity: "person.luca", name: "Zio", nascosta: true },
+          { entity: "person.persona_2", name: "Mamma" },
+          { entity: "person.persona_3", name: "Papà" },
+          { entity: "person.persona_11", name: "Zio", nascosta: true },
         ],
       },
     });
@@ -978,8 +978,10 @@ test.describe("la plancia a muro", () => {
       "Mamma, Papà",
     );
     await muro(page).locator('[data-mu-pagina="3"]').click();
-    await expect(muro(page).locator('[data-mu-entita="person.luca"]')).toContainText("Zio");
-    await expect(muro(page).locator('[data-mu-entita="person.luca"]')).not.toContainText("Luca");
+    await expect(muro(page).locator('[data-mu-entita="person.persona_11"]')).toContainText("Zio");
+    await expect(muro(page).locator('[data-mu-entita="person.persona_11"]')).not.toContainText(
+      "Persona 11",
+    );
     await page.evaluate(() => window.dmMuro.riposa());
     await expect(muro(page).locator('[data-mu-riposo="persone"]')).toHaveText(/Mamma · Papà/);
   });
@@ -992,8 +994,8 @@ test.describe("la plancia a muro", () => {
       muro: MURO_DI_PROVA,
       stati: {
         ...STATI_A_MURO,
-        "person.anna": { state: "not_home", attributes: { friendly_name: "Anna" } },
-        "person.marco": { state: "not_home", attributes: { friendly_name: "Marco" } },
+        "person.persona_2": { state: "not_home", attributes: { friendly_name: "Persona 2" } },
+        "person.persona_3": { state: "not_home", attributes: { friendly_name: "Persona 3" } },
       },
     });
     await page.waitForTimeout(1500);

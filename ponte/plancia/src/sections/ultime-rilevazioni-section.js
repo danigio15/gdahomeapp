@@ -272,8 +272,10 @@ function testaMarkup(dati) {
 /* La riga sotto il numero grande: l'ultima chiusura, l'ultimo movimento. Si
  * scrive dalla storia delle ultime 24 ore anche quando si guarda ieri: dice
  * com'è adesso, e adesso non è ieri. */
-function sottoLAdesso(dati, lettura, vivo, adesso) {
-  const oggi = letta(dati, "24h", adesso);
+function sottoLAdesso(dati, lettura, vivo, adesso, gia = null) {
+  /* Guardando le ultime 24 ore la storia e' gia' stata letta: non la si
+   * riconta una seconda volta a ogni disegno. */
+  const oggi = gia || letta(dati, "24h", adesso);
   const eventi = oggi.analisi?.eventi || [];
   const ultimo = eventi[eventi.length - 1] || null;
   const cambio = Number.isFinite(vivo?.time) ? vivo.time : null;
@@ -318,9 +320,9 @@ function sottoLAdesso(dati, lettura, vivo, adesso) {
     : "";
 }
 
-function adessoMarkup(dati, lettura, vivo, adesso) {
+function adessoMarkup(dati, lettura, vivo, adesso, gia = null) {
   const da = Number.isFinite(vivo?.time) ? durataTesto(adesso - vivo.time) : "";
-  const sotto = sottoLAdesso(dati, lettura, vivo, adesso);
+  const sotto = sottoLAdesso(dati, lettura, vivo, adesso, gia);
   return `<div class="dm-ur-adesso" aria-live="polite">
     <small>${esc(t("Adesso", "Now"))}</small>
     <div class="dm-ur-grande"><b>${esc(parolaDelloStato(dati, lettura))}</b>${
@@ -733,6 +735,9 @@ function contenitore() {
   nodo = doc.createElement("div");
   nodo.id = ULTIME_ID;
   nodo.hidden = true;
+  /* Sta sopra la finestra della tessera da cui spesso lo si apre, e chi ferma
+   * le animazioni «dietro» quella finestra lo deve sapere (#279). */
+  nodo.setAttribute("data-dm-sopra-la-finestra", "");
   nodo.innerHTML = `<div class="dm-ur-velo" data-ur-chiudi></div>
     <section class="dm-ur-foglio" role="dialog" aria-modal="true" aria-labelledby="dm-ur-titolo" tabindex="-1"></section>`;
   doc.body.append(nodo);
@@ -766,7 +771,7 @@ function disegna() {
     ${testaMarkup(dati)}
     <div class="dm-ur-corpo">
       <div class="dm-ur-sx">
-        ${adessoMarkup(dati, lettura, vivo, adesso)}
+        ${adessoMarkup(dati, lettura, vivo, adesso, aperto.modo === "ieri" ? null : storia)}
         ${periodoMarkup(aperto.modo, storia.finestra)}
         ${caselleMarkup(dati, aperto.modo, storia)}
         ${graficiMarkup(dati, aperto.modo, storia)}
@@ -784,7 +789,36 @@ function disegna() {
     )}</p>`;
   foglio.scrollTop = scorso;
   if (chiaveFuoco) foglio.querySelector(chiaveFuoco)?.focus?.({ preventScroll: true });
+  nonRestareFermo(nodo);
   sveglia(vivo, adesso);
+}
+
+/* Un foglio fermo a meta' entrata non si apre mai (#279).
+ *
+ * Il velo e il foglio entrano dall'opacita' zero. Se qualcun altro mette in
+ * pausa le animazioni della pagina — la finestra di una tessera lo fa con
+ * tutto quello che crede le stia dietro — il foglio resta invisibile e steso
+ * sopra tutto, a prendersi ogni tocco: la plancia sembra piantata. Qui ci si
+ * difende da soli, qualunque sia la mano: quello che e' del foglio e sta in
+ * pausa, riparte. */
+export function nonRestareFermo(nodo) {
+  let animazioni = [];
+  try {
+    animazioni = nodo?.getAnimations?.({ subtree: true }) || [];
+  } catch (_errore) {
+    return 0;
+  }
+  let riprese = 0;
+  for (const anim of animazioni) {
+    if (anim?.playState !== "paused") continue;
+    try {
+      anim.play();
+      riprese += 1;
+    } catch (_errore) {
+      /* Una che non riparte non ferma le altre. */
+    }
+  }
+  return riprese;
 }
 
 /* Una sveglia sola, quando il «da 12 min» cambia scritta: a foglio chiuso

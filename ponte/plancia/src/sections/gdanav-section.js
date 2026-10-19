@@ -17,8 +17,8 @@
  * «L'auto»: la batteria, con quanta carica si parte, e le soste di ricarica
  * che la casa calcola sulla strada con l'archivio delle colonnine rapide —
  * in elenco sotto la cartina, coi fulmini sulla cartina, e nell'ora in cui
- * partire. Senza un'auto cosi', chi amministra la casa trova l'invito a
- * collegarla; gli altri niente.
+ * partire. Senza un'auto cosi' il riquadro non c'e', per nessuno: niente
+ * invito a collegarla nel Config.
  */
 
 import {
@@ -637,7 +637,9 @@ function sosteDette(n) {
 /* Il riquadro «L'auto», nella colonna di destra. */
 function riquadroDellAuto(b) {
   const auto = leAuto();
-  if (!auto.length) return invitoACollegare();
+  /* Senza un'auto che si ricarica il riquadro non c'e': niente invito a
+   * collegarla nel Config, le sezioni non rimandano li'. */
+  if (!auto.length) return "";
   const car = lAutoDelViaggio(b);
   const dati = datiDellAuto(car);
   const scelte = opzioniDellAuto(b, dati);
@@ -738,23 +740,6 @@ function riquadroDellAuto(b) {
         ${scelta}</div>
       ${barra}${numeri}${esito}${scelteHtml}
     </div>`;
-}
-
-/* Senza un'auto che si ricarica: a chi amministra la casa si dice dove
- * collegarla; agli altri niente, perche' non potrebbero farlo. */
-function invitoACollegare() {
-  let amministra = false;
-  try {
-    amministra = root.dmPuoConfigurare?.() === true;
-  } catch (_errore) {
-    amministra = false;
-  }
-  if (!amministra) return "";
-  return `<div class="dm-gn-invito" data-gn-invito><span class="dm-gn-invito-ic" aria-hidden="true">🔌</span>
-    <span class="dm-gn-col"><span class="dm-gn-t">${esc(t("Collega l'auto per vedere batteria e soste", "Connect the car to see battery and stops"))}</span>
-    <span class="dm-gn-s">${esc(t("Batteria e autonomia dell'auto elettrica, e le soste di ricarica se non basta.", "The electric car's battery and range, and the charging stops if it is not enough."))}</span>
-    <small>${esc(t("Lo vedi solo tu, che amministri la casa", "Only you see this, as the home's administrator"))}</small></span>
-    <button type="button" class="dm-gn-collega" data-gn-collega>${esc(t("Collega", "Connect"))}</button></div>`;
 }
 
 /* L'elenco delle soste di ricarica, sotto la cartina: la strada in fila, con
@@ -1210,24 +1195,12 @@ async function elimina() {
 
 function alClic(event) {
   const bersaglio = event.target?.closest?.(
-    "#dm-gn [data-gn-nuovo], #dm-gn button[data-gn-apri], #dm-gn [data-gn-tipo], #dm-gn [data-gn-modo], #dm-gn [data-gn-giorno], #dm-gn [data-gn-proposta], #dm-gn [data-gn-togli-tappa], #dm-gn [data-gn-salva], #dm-gn [data-gn-elimina], #dm-gn [data-gn-partenza], #dm-gn [data-gn-collega]",
+    "#dm-gn [data-gn-nuovo], #dm-gn button[data-gn-apri], #dm-gn [data-gn-tipo], #dm-gn [data-gn-modo], #dm-gn [data-gn-giorno], #dm-gn [data-gn-proposta], #dm-gn [data-gn-togli-tappa], #dm-gn [data-gn-salva], #dm-gn [data-gn-elimina], #dm-gn [data-gn-partenza]",
   );
   if (!bersaglio) return;
   const d = bersaglio.dataset;
   if (d.gnPartenza && state.bozza) {
     cambiaLAuto({ partenza: d.gnPartenza === "100" ? 100 : d.gnPartenza });
-    return;
-  }
-  if ("gnCollega" in d) {
-    /* La pagina Auto si configura nel Config, sulla scheda dei veicoli. */
-    try {
-      root.apriConfigEntita?.();
-      root.setTimeout?.(() => {
-        try {
-          root.editorSwitch?.("sez2");
-        } catch (_errore) {}
-      }, 0);
-    } catch (_errore) {}
     return;
   }
   if ("gnNuovo" in d) {
@@ -1448,10 +1421,6 @@ body.dark-mode .dm-gn,html.dark .dm-gn{--gn-mappa:#1e293b;--gn-card:#111827;--gn
 .dm-gn-scelta select{font:inherit;font-size:13px;border:1px solid var(--gn-bordo);border-radius:10px;padding:6px;background:var(--gn-card);color:inherit}
 .dm-gn-seg.mini{margin:0;padding:3px;border-radius:12px;flex:none}
 .dm-gn-seg.mini button{padding:6px 10px;font-size:13px}
-.dm-gn-invito{display:flex;align-items:center;gap:12px;border:1.5px dashed #cbd5e1;border-radius:18px;padding:14px;margin-top:14px;background:var(--gn-fondo)}
-.dm-gn-invito-ic{font-size:26px;flex:none}
-.dm-gn-invito small{font-size:11.5px;color:var(--gn-piano);margin-top:4px}
-.dm-gn-collega{flex:none;border:1px solid #93c5fd;color:#1d4ed8;background:var(--gn-card);border-radius:12px;padding:8px 14px;font-weight:800;cursor:pointer;font-family:inherit}
 .dm-gn-soste{border:1px solid var(--gn-bordo);border-radius:18px;padding:14px;margin:4px 0 8px}
 .dm-gn-soste-capo{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px}
 .dm-gn-soste-capo b{font-size:16px;font-weight:800}

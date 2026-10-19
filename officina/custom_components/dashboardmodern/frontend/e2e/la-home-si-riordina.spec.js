@@ -27,9 +27,9 @@ const SEME = {
 };
 
 const PERSONE = [
-  { id: "person-anna", name: "Anna", entity: "person.anna" },
-  { id: "person-bruno", name: "Bruno", entity: "person.bruno" },
-  { id: "person-carla", name: "Carla", entity: "person.carla" },
+  { id: "person-persona-2", name: "Persona 2", entity: "person.persona_2" },
+  { id: "person-persona-7", name: "Persona 7", entity: "person.persona_7" },
+  { id: "person-persona-12", name: "Persona 12", entity: "person.persona_12" },
 ];
 
 const nomiInHome = (page) =>
@@ -60,7 +60,7 @@ async function avvia(page, testInfo) {
   }, PERSONE);
   await expect
     .poll(() => nomiInHome(page), { timeout: 20_000 })
-    .toEqual(["Anna", "Bruno", "Carla"]);
+    .toEqual(["Persona 2", "Persona 7", "Persona 12"]);
 }
 
 async function apriLaScheda(page) {
@@ -78,18 +78,20 @@ test("una persona si sposta, e la Home la mostra dove è stata messa", async ({
 }, testInfo) => {
   await avvia(page, testInfo);
   await apriLaScheda(page);
-  /* Carla sale di un posto: la freccia della sua riga. */
+  /* Persona 12 sale di un posto: la freccia della sua riga. */
   await page.locator('#ed-body .dm-people-row[data-person-index="2"] [data-person-up]').click();
   await expect
-    .poll(() => page.evaluate(() => (localStorage.getItem("cd_people") || "").indexOf("Carla")))
+    .poll(() =>
+      page.evaluate(() => (localStorage.getItem("cd_people") || "").indexOf("Persona 12")),
+    )
     .toBeLessThan(
-      await page.evaluate(() => (localStorage.getItem("cd_people") || "").indexOf("Bruno")),
+      await page.evaluate(() => (localStorage.getItem("cd_people") || "").indexOf("Persona 7")),
     );
 
   await page.evaluate(() => window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed")));
   await expect
     .poll(() => nomiInHome(page), { timeout: 15_000 })
-    .toEqual(["Anna", "Carla", "Bruno"]);
+    .toEqual(["Persona 2", "Persona 12", "Persona 7"]);
   /* La prima freccia in su è spenta: non porta da nessuna parte. */
   await expect(
     page.locator('#ed-body .dm-people-row[data-person-index="0"] [data-person-up]'),
@@ -101,7 +103,9 @@ test("una persona spenta esce dalla Home e resta nella scheda", async ({ page },
   await apriLaScheda(page);
   await page.locator('#ed-body .dm-people-row[data-person-index="1"] [data-person-shown]').click();
   await page.evaluate(() => window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed")));
-  await expect.poll(() => nomiInHome(page), { timeout: 15_000 }).toEqual(["Anna", "Carla"]);
+  await expect
+    .poll(() => nomiInHome(page), { timeout: 15_000 })
+    .toEqual(["Persona 2", "Persona 12"]);
   /* Spenta, non cancellata: la riga c'è ancora, e lo dice. */
   await expect(page.locator("#ed-body .dm-people-row")).toHaveCount(3);
   await expect(

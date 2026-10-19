@@ -136,11 +136,11 @@ test("an unknown Home Assistant language falls back to English, not to Italian",
  * sia l'utente lo sa solo il documento ospite — `hass.user` vive di la', e la
  * plancia riceve un ponte verso Home Assistant, non chi lo sta usando. */
 test("l'utente collegato arriva nel documento ospitato, e solo il suo identificativo", async () => {
-  const html = await hostedDocument("it", { user: { id: "abc123", name: "Mario", is_admin: true } });
+  const html = await hostedDocument("it", { user: { id: "abc123", name: "Persona 6", is_admin: true } });
   assert.match(html, /window\.__DASHBOARDMODERN_UTENTE__="abc123"/);
   /* Il nome e i permessi restano di la': la plancia non ne ha bisogno e
    * quello che non attraversa non si puo' perdere. */
-  assert.equal(html.includes("Mario"), false);
+  assert.equal(html.includes("Persona 6"), false);
   assert.equal(html.includes("is_admin"), false);
   /* Senza utente — la plancia aperta da sola, senza pannello — resta vuoto,
    * e l'agenda chiede a chi guarda invece di indovinare. */

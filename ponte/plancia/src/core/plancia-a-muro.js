@@ -27,13 +27,7 @@ import {
 } from "./antifurto-su-misura.js";
 import { canonicalClimateType } from "./device-model.js";
 import { ingressiScritti } from "./le-zone-della-centrale.js";
-import {
-  fraseDelleProssimeOre,
-  misureDiAdesso,
-  prossimeOre,
-  prossimiGiorni,
-  spicchioDelVento,
-} from "./la-pagina-meteo.js";
+import { spicchioDelVento, vistaDelMeteoDa } from "./la-pagina-meteo.js";
 import { genereDelComando, partiDelComando } from "./comandi-accanto.js";
 import { immaginePulita } from "./immagine-del-riquadro.js";
 import { lettoriConfigurati } from "./media-player.js";
@@ -614,7 +608,24 @@ export function paginaPulita(input, indice = 0) {
       .map(pulsantePulito)
       .filter(Boolean),
     fermaTutto: fermaTuttoPulito(dentro.fermaTutto),
+    /* Le immagini delle tessere che non sono posti (l'energia, la musica, il
+     * meteo, l'ingresso, i preset): la chiave di casa la sa chi la disegna.
+     * Solo se ce n'e' qualcuna. */
+    ...immaginiDelleTessere(dentro.immagini),
   };
+}
+
+/* Le chiavi delle tessere: una parola, o «lettore:media_player.sala». */
+const CHIAVE_DELLA_TESSERA = /^[a-z0-9_]+(?::[a-z0-9_.-]+)?$/;
+export const TESSERE_CON_IMMAGINE_AL_MASSIMO = 40;
+function immaginiDelleTessere(input) {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return {};
+  const fuori = {};
+  for (const [chiave, valore] of Object.entries(input).slice(0, TESSERE_CON_IMMAGINE_AL_MASSIMO)) {
+    const pulita = CHIAVE_DELLA_TESSERA.test(chiave) ? immaginePulita(valore) : null;
+    if (pulita) fuori[chiave] = pulita;
+  }
+  return Object.keys(fuori).length ? { immagini: fuori } : {};
 }
 
 /* ── la regia: mixer, telecamera, comandi ────────────────────────────────
@@ -760,7 +771,16 @@ export function canalePulito(input) {
     dispositivo: mutoDaComando ? testo(dentro.dispositivo, 64) : "",
     min: conScala ? numeroOVuoto(dentro.min) : null,
     max: conScala ? numeroOVuoto(dentro.max) : null,
+    ...conImmagine(dentro),
   };
+}
+
+/* «Lo devi aggiungere a tutti»: ogni voce che sul tablet e' una card — un
+ * posto, un canale, un comando della regia, la telecamera — puo' portare la
+ * sua immagine. Solo se e' di casa; senza, la chiave non c'e'. */
+function conImmagine(dentro) {
+  const immagine = immaginePulita(dentro?.immagine);
+  return immagine ? { immagine } : {};
 }
 
 /** Il canale vuoto: il volume totale che nessuno ha scelto. */
@@ -834,6 +854,9 @@ function telecameraPulita(input) {
     if (dominioDi(p.entita) === "remote" && !p.comando) p.comando = `preset_${k + 1}`;
   });
   fuori.dispositivo = telecomandiDellaTelecamera(fuori) ? testo(dentro.dispositivo, 64) : "";
+  /* L'immagine della telecamera: il fondo del video quando il video non c'e'
+   * (la telecamera spenta, o non ancora scelta). */
+  Object.assign(fuori, conImmagine(dentro));
   return fuori;
 }
 
@@ -862,6 +885,7 @@ function pulsantePulito(input) {
     dominioDi(fuori.avvio) === "remote" || dominioDi(fuori.stop) === "remote"
       ? testo(input.dispositivo, 64)
       : "";
+  Object.assign(fuori, conImmagine(input));
   return fuori.nome || fuori.avvio || fuori.stop ? fuori : null;
 }
 
@@ -1707,6 +1731,7 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
          * altre sonde della stanza, oltre alla prima. */
         outdoor: stanzaAllAperto(s),
         sonde: unici(temperatureEntries(s).map((e) => entita(e.temp))),
+        ...conImmagine(s),
       })),
     luci: dispositivi("lights"),
     clima: climaColTipo(dispositivi("climate"), altro.climaUnita),
@@ -1985,41 +2010,47 @@ export const ORE_DEL_METEO = 12;
 export const GIORNI_DEL_METEO = 7;
 
 /**
- * Cosa dice la pagina Meteo: le misure di adesso dall'entita' weather, le
- * prossime ore e i prossimi giorni dalle previsioni (`weather.get_forecasts`,
- * le stesse che chiede la pagina Meteo della plancia). Le letture sono quelle
- * di `la-pagina-meteo.js`: due pagine meteo che arrotondassero diverso
- * direbbero due tempi. `null` senza entita'.
+ * Cosa dice la pagina Meteo: com'e' adesso, le prossime ore e i prossimi
+ * giorni (`weather.get_forecasts`, le stesse previsioni che chiede la pagina
+ * Meteo della plancia) e le tessere della stazione. E' la vista della pagina
+ * Meteo della plancia (`vistaDelMeteoDa`): con una stazione nella sua
+ * configurazione le misure di adesso sono le sue, e il tablet non dice i 18°
+ * dell'entita' weather mentre la stazione ne misura 19,6. Senza stazione
+ * (`stazione` vuota) le misure sono quelle dell'entita' weather e le tessere
+ * non ci sono. `null` senza entita'.
  */
 export function meteoDelMuro(
   statoMeteo,
   {
     orarie = [],
     giornaliere = [],
+    stazione = {},
+    sole = null,
     adesso = Date.now(),
     ore = ORE_DEL_METEO,
     giorni = GIORNI_DEL_METEO,
+    entita: id = "",
   } = {},
 ) {
   if (!statoMeteo || typeof statoMeteo !== "object") return null;
-  const attributi = statoMeteo.attributes || {};
-  const unita = testo(attributi.precipitation_unit, 8) || "mm";
-  const misure = misureDiAdesso({ meteo: statoMeteo });
+  const vista = vistaDelMeteoDa({
+    entita: id || testo(statoMeteo.entity_id, 120),
+    meteo: statoMeteo,
+    stazione,
+    orarie,
+    giornaliere,
+    sole,
+    adesso,
+    ore,
+    giorni,
+  });
   const condizione = testo(statoMeteo.state, 32).toLowerCase();
-  const fila = prossimeOre(orarie, { adesso, ore, unita }).filter((voce) =>
-    Number.isFinite(voce.temperatura),
-  );
-  const elencoDeiGiorni = prossimiGiorni(giornaliere, { adesso, giorni, unita });
-  const oggi = elencoDeiGiorni.find((voce) => voce.oggi);
+  const misure = vista.misure;
   return {
+    ...vista,
     condizione,
     disponibile: !["", "unavailable", "unknown"].includes(condizione),
-    misure,
     spicchio: misure.direzione ? spicchioDelVento(misure.direzione.valore) : null,
-    ore: fila,
-    giorni: elencoDeiGiorni,
-    oggi: oggi ? { alta: oggi.temperatura, bassa: oggi.bassa } : null,
-    frase: fraseDelleProssimeOre(orarie, { adesso, ore: 24, unita }),
   };
 }
 
@@ -2047,14 +2078,17 @@ export function comandiDellElenco(modello, fonte = {}, { aCoppia = null } = {}) 
   /* Tutto quello che la plancia chiama luce fa la card della luce, anche una
    * presa o un interruttore (`switch.*`): «nel wall le luci si vedono
    * diverse». Come nelle stanze, dove le luci proposte sono gia' tutte uguali. */
+  /* L'immagine viene con la cosa: quella scelta per la luce, la tapparella o
+   * il clima nella plancia di origine (`immagine` sul dispositivo) si vede
+   * anche qui. */
   if (modello === "luci")
     return elenco(fonte.luci).map((d) => {
-      const comando = comandoPulito({ tipo: "luce", entita: d.entity });
+      const comando = comandoPulito({ tipo: "luce", entita: d.entity, immagine: d.immagine });
       return comando && { ...comando, tipo: "luce" };
     });
   if (modello === "tapparelle")
     return elenco(fonte.tapparelle).map((d) =>
-      comandoPulito({ tipo: "tapparella", entita: d.entity }),
+      comandoPulito({ tipo: "tapparella", entita: d.entity, immagine: d.immagine }),
     );
   /* Il termostato a coppia sta nella sua linguetta e fuori dalle altre due:
    * una card sola, coi due numeri insieme, invece di una in Caldo che muove
@@ -2063,11 +2097,11 @@ export function comandiDellElenco(modello, fonte = {}, { aCoppia = null } = {}) 
   if (modello === "termostato")
     return elenco(fonte.clima)
       .filter(doppio)
-      .map((d) => comandoPulito({ tipo: "clima", entita: d.entity }));
+      .map((d) => comandoPulito({ tipo: "clima", entita: d.entity, immagine: d.immagine }));
   if (modello === "freddo" || modello === "caldo")
     return elenco(fonte.clima)
       .filter((d) => !doppio(d) && zoneDelClima(d.tipo).includes(modello))
-      .map((d) => comandoPulito({ tipo: "clima", entita: d.entity }));
+      .map((d) => comandoPulito({ tipo: "clima", entita: d.entity, immagine: d.immagine }));
   return [];
 }
 
@@ -2109,7 +2143,11 @@ export function ambientiDellaFonte(fonte = {}) {
 
 /** Le telecamere della pagina: tutte quelle della plancia di origine. */
 export function telecamereDellaFonte(fonte = {}) {
-  return elenco(fonte.telecamere).map((d) => ({ entita: d.entity, nome: testo(d.name) }));
+  return elenco(fonte.telecamere).map((d) => ({
+    entita: d.entity,
+    nome: testo(d.name),
+    ...conImmagine(d),
+  }));
 }
 
 export function ingressoProposto(fonte = {}) {

@@ -38,8 +38,8 @@ const SEME = {
     energy: {},
     entityOverrides: {},
     people: [
-      { id: "p1", name: "Giovanni", entity: "person.giovanni" },
-      { id: "p2", name: "Anna", entity: "person.anna" },
+      { id: "p1", name: "Persona 1", entity: "person.persona_1" },
+      { id: "p2", name: "Persona 2", entity: "person.persona_2" },
     ],
   },
   visibility: { home: true },
@@ -47,11 +47,11 @@ const SEME = {
 
 const STATI = [
   {
-    entity_id: "person.giovanni",
+    entity_id: "person.persona_1",
     state: "home",
-    attributes: { friendly_name: "Giovanni" },
+    attributes: { friendly_name: "Persona 1" },
   },
-  { entity_id: "person.anna", state: "not_home", attributes: { friendly_name: "Anna" } },
+  { entity_id: "person.persona_2", state: "not_home", attributes: { friendly_name: "Persona 2" } },
 ];
 
 /* L'ordine dei blocchi come si vede in pagina: si guardano i figli della Home
@@ -131,8 +131,8 @@ async function avvia(page, testInfo) {
     localStorage.setItem(
       "cd_people",
       JSON.stringify([
-        { id: "p1", name: "Giovanni", entity: "person.giovanni" },
-        { id: "p2", name: "Anna", entity: "person.anna" },
+        { id: "p1", name: "Persona 1", entity: "person.persona_1" },
+        { id: "p2", name: "Persona 2", entity: "person.persona_2" },
       ]),
     );
     window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed", { detail: {} }));

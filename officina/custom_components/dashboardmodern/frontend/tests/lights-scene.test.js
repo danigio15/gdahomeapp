@@ -86,10 +86,11 @@ test("rooms keep the legacy grouping and gain their own on/off command", () => {
   assert.match(html, /data-dm-light-all="off">Spegni tutte/);
 });
 
-test("an empty popup says where lights are added and which entities count", () => {
+test("an empty popup says there are no lights, without sending anyone to the editor", () => {
   const html = renderLightsPopupMarkup([]);
   assert.match(html, /Tutte spente/);
-  assert.match(html, /light\.\* sia switch\.\*/);
+  assert.match(html, /Nessuna luce configurata\./);
+  assert.doesNotMatch(html, /editor|Configurazione/);
   assert.doesNotMatch(html, /data-dm-light=/);
 });
 

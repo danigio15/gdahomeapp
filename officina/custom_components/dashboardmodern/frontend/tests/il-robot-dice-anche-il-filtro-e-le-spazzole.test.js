@@ -41,101 +41,101 @@ const stato = (state, attributes = {}) => ({ state, attributes });
 
 /* L'Ecovacs di chi ha segnalato, com'è arrivato nel commento. */
 const CASA = {
-  "vacuum.pippo": stato("docked", { friendly_name: "Pippo", battery_level: 100 }),
-  "binary_sensor.pippo_mop_attached": stato("on", { friendly_name: "Pippo Mop attached" }),
-  "image.pippo_mappa": stato("2026-09-10", {
-    friendly_name: "Pippo Mappa",
-    entity_picture: "/api/image_proxy/image.pippo_mappa?token=a",
+  "vacuum.scopino": stato("docked", { friendly_name: "Scopino", battery_level: 100 }),
+  "binary_sensor.scopino_mop_attached": stato("on", { friendly_name: "Scopino Mop attached" }),
+  "image.scopino_mappa": stato("2026-09-10", {
+    friendly_name: "Scopino Mappa",
+    entity_picture: "/api/image_proxy/image.scopino_mappa?token=a",
   }),
-  "number.pippo_clean_count": stato("2", { friendly_name: "Pippo Clean count" }),
-  "select.pippo_active_map": stato("Piano terra", {
-    friendly_name: "Pippo Active map",
+  "number.scopino_clean_count": stato("2", { friendly_name: "Scopino Clean count" }),
+  "select.scopino_active_map": stato("Piano terra", {
+    friendly_name: "Scopino Active map",
     options: ["Piano terra", "Primo piano"],
   }),
-  "sensor.pippo_area_pulita": stato("23.4", {
-    friendly_name: "Pippo Area pulita",
+  "sensor.scopino_area_pulita": stato("23.4", {
+    friendly_name: "Scopino Area pulita",
     unit_of_measurement: "m²",
   }),
-  "sensor.pippo_batteria": stato("100", {
-    friendly_name: "Pippo Batteria",
+  "sensor.scopino_batteria": stato("100", {
+    friendly_name: "Scopino Batteria",
     unit_of_measurement: "%",
     device_class: "battery",
   }),
-  "sensor.pippo_durata_filtro": stato("8100", {
-    friendly_name: "Pippo Durata filtro",
+  "sensor.scopino_durata_filtro": stato("8100", {
+    friendly_name: "Scopino Durata filtro",
     unit_of_measurement: "min",
   }),
-  "sensor.pippo_durata_pulizia": stato("45", {
-    friendly_name: "Pippo Durata pulizia",
+  "sensor.scopino_durata_pulizia": stato("45", {
+    friendly_name: "Scopino Durata pulizia",
     unit_of_measurement: "min",
   }),
-  "sensor.pippo_durata_spazzola_laterale": stato("6000", {
-    friendly_name: "Pippo Durata spazzola laterale",
+  "sensor.scopino_durata_spazzola_laterale": stato("6000", {
+    friendly_name: "Scopino Durata spazzola laterale",
     unit_of_measurement: "min",
   }),
-  "sensor.pippo_durata_spazzola_principale": stato("9000", {
-    friendly_name: "Pippo Durata spazzola principale",
+  "sensor.scopino_durata_spazzola_principale": stato("9000", {
+    friendly_name: "Scopino Durata spazzola principale",
     unit_of_measurement: "min",
   }),
-  "sensor.pippo_errore": stato("no_error", { friendly_name: "Pippo Errore" }),
-  "sensor.pippo_indirizzo_ip": stato("192.168.1.42", { friendly_name: "Pippo Indirizzo IP" }),
-  "sensor.pippo_ssid_wi_fi": stato("CasaMia", { friendly_name: "Pippo SSID Wi-Fi" }),
-  "sensor.pippo_total_area_cleaned": stato("1240", {
-    friendly_name: "Pippo Total area cleaned",
+  "sensor.scopino_errore": stato("no_error", { friendly_name: "Scopino Errore" }),
+  "sensor.scopino_indirizzo_ip": stato("192.168.1.42", { friendly_name: "Scopino Indirizzo IP" }),
+  "sensor.scopino_ssid_wi_fi": stato("CasaMia", { friendly_name: "Scopino SSID Wi-Fi" }),
+  "sensor.scopino_total_area_cleaned": stato("1240", {
+    friendly_name: "Scopino Total area cleaned",
     unit_of_measurement: "m²",
   }),
-  "sensor.pippo_total_cleaning_duration": stato("5400", {
-    friendly_name: "Pippo Total cleaning duration",
+  "sensor.scopino_total_cleaning_duration": stato("5400", {
+    friendly_name: "Scopino Total cleaning duration",
     unit_of_measurement: "min",
   }),
-  "sensor.pippo_total_cleanings": stato("137", { friendly_name: "Pippo Total cleanings" }),
-  "sensor.pippo_wi_fi_rssi": stato("-52", {
-    friendly_name: "Pippo Wi-Fi RSSI",
+  "sensor.scopino_total_cleanings": stato("137", { friendly_name: "Scopino Total cleanings" }),
+  "sensor.scopino_wi_fi_rssi": stato("-52", {
+    friendly_name: "Scopino Wi-Fi RSSI",
     unit_of_measurement: "dBm",
   }),
 };
 
-const PIPPO = { entity: "vacuum.pippo", battery: "sensor.pippo_batteria", mappe: ["image.pippo_mappa"] };
+const SCOPINO = { entity: "vacuum.scopino", battery: "sensor.scopino_batteria", mappe: ["image.scopino_mappa"] };
 
 test("le letture che tutti hanno si riconoscono da sole, la diagnostica no", () => {
-  const consigliate = lettureRiconosciute(PIPPO, CASA);
+  const consigliate = lettureRiconosciute(SCOPINO, CASA);
   /* Le sei che il robot pubblica e che a chi guarda la scheda servono. */
   for (const attesa of [
-    "sensor.pippo_durata_filtro",
-    "sensor.pippo_durata_spazzola_principale",
-    "sensor.pippo_durata_spazzola_laterale",
-    "sensor.pippo_area_pulita",
-    "sensor.pippo_total_cleanings",
+    "sensor.scopino_durata_filtro",
+    "sensor.scopino_durata_spazzola_principale",
+    "sensor.scopino_durata_spazzola_laterale",
+    "sensor.scopino_area_pulita",
+    "sensor.scopino_total_cleanings",
   ])
     assert.ok(consigliate.includes(attesa), `manca ${attesa}`);
   /* L'indirizzo IP e il wi-fi restano fuori: stanno accanto al robot come
    * tutto il resto, ma non sono cose che si guardano su una scheda. */
   for (const fuori of [
-    "sensor.pippo_indirizzo_ip",
-    "sensor.pippo_ssid_wi_fi",
-    "sensor.pippo_wi_fi_rssi",
+    "sensor.scopino_indirizzo_ip",
+    "sensor.scopino_ssid_wi_fi",
+    "sensor.scopino_wi_fi_rssi",
   ])
     assert.ok(!consigliate.includes(fuori), `${fuori} non doveva entrare da solo`);
   /* Nemmeno la batteria e l'errore: hanno già il loro posto sulla scheda, e
    * scriverli due volte sarebbe la stessa cosa detta due volte. */
-  assert.ok(!consigliate.includes("sensor.pippo_batteria"));
-  assert.ok(!consigliate.includes("sensor.pippo_errore"));
+  assert.ok(!consigliate.includes("sensor.scopino_batteria"));
+  assert.ok(!consigliate.includes("sensor.scopino_errore"));
 });
 
 test("scegliendole a mano c'è tutto, con la diagnostica in fondo", () => {
   /* Le proposte non nascondono niente — chi vuole la potenza del wi-fi se la
    * prende — ma l'ordine dice cosa viene prima. */
-  const proposte = lettureVicine(PIPPO, CASA);
-  assert.ok(proposte.includes("sensor.pippo_indirizzo_ip"));
+  const proposte = lettureVicine(SCOPINO, CASA);
+  assert.ok(proposte.includes("sensor.scopino_indirizzo_ip"));
   assert.ok(
-    proposte.indexOf("sensor.pippo_durata_filtro") < proposte.indexOf("sensor.pippo_indirizzo_ip"),
+    proposte.indexOf("sensor.scopino_durata_filtro") < proposte.indexOf("sensor.scopino_indirizzo_ip"),
     "la diagnostica sta in fondo, non in mezzo",
   );
   /* Un tasto non è una lettura: quello è un comando, e ha già la sua riga. */
-  assert.ok(!proposte.includes("select.pippo_active_map"));
+  assert.ok(!proposte.includes("select.scopino_active_map"));
   /* E niente di quello che la scheda mostra già altrove. */
-  assert.ok(!proposte.includes("sensor.pippo_batteria"));
-  assert.ok(!proposte.includes("image.pippo_mappa"));
+  assert.ok(!proposte.includes("sensor.scopino_batteria"));
+  assert.ok(!proposte.includes("image.scopino_mappa"));
 });
 
 test("un filtro che dura 8100 minuti si legge in ore, 45 minuti restano minuti", () => {
@@ -150,24 +150,24 @@ test("un filtro che dura 8100 minuti si legge in ore, 45 minuti restano minuti",
 });
 
 test("ogni lettura si scrive col suo numero, la sua unità e il suo nome", () => {
-  const robot = { ...PIPPO, letture: lettureRiconosciute(PIPPO, CASA) };
+  const robot = { ...SCOPINO, letture: lettureRiconosciute(SCOPINO, CASA) };
   const lette = Object.fromEntries(
     lettureDelDispositivo(robot, CASA, "it").map((voce) => [voce.entity, voce]),
   );
   /* Il nome è quello dell'entità senza il nome del robot davanti: su una
-   * scheda che porta già «Pippo» in testa, «Pippo Durata filtro» ripete. */
-  assert.equal(lette["sensor.pippo_durata_filtro"].name, "Durata filtro");
-  assert.equal(lette["sensor.pippo_durata_filtro"].testo, "135 h");
-  assert.equal(lette["sensor.pippo_area_pulita"].testo, "23,4 m²");
-  assert.equal(lette["sensor.pippo_total_cleanings"].testo, "137");
+   * scheda che porta già «Scopino» in testa, «Scopino Durata filtro» ripete. */
+  assert.equal(lette["sensor.scopino_durata_filtro"].name, "Durata filtro");
+  assert.equal(lette["sensor.scopino_durata_filtro"].testo, "135 h");
+  assert.equal(lette["sensor.scopino_area_pulita"].testo, "23,4 m²");
+  assert.equal(lette["sensor.scopino_total_cleanings"].testo, "137");
   /* Un binary_sensor dice sì o no: «on» non è una risposta. */
-  assert.equal(lette["binary_sensor.pippo_mop_attached"].testo, "Sì");
+  assert.equal(lette["binary_sensor.scopino_mop_attached"].testo, "Sì");
   /* E ognuna porta il disegno della sua famiglia, dal nostro catalogo. */
-  assert.equal(disegnoDellaLettura("sensor.pippo_durata_filtro", CASA), "wind");
-  assert.equal(disegnoDellaLettura("sensor.pippo_durata_spazzola_principale", CASA), "broom");
-  assert.equal(disegnoDellaLettura("binary_sensor.pippo_mop_attached", CASA), "water");
+  assert.equal(disegnoDellaLettura("sensor.scopino_durata_filtro", CASA), "wind");
+  assert.equal(disegnoDellaLettura("sensor.scopino_durata_spazzola_principale", CASA), "broom");
+  assert.equal(disegnoDellaLettura("binary_sensor.scopino_mop_attached", CASA), "water");
   /* Un sensore che non si riconosce non ne ha uno inventato. */
-  assert.equal(disegnoDellaLettura("sensor.pippo_ssid_wi_fi", CASA), "");
+  assert.equal(disegnoDellaLettura("sensor.scopino_ssid_wi_fi", CASA), "");
 });
 
 test("un sensore che non risponde scrive il trattino, non uno zero", () => {
@@ -186,7 +186,7 @@ test("l'elenco tiene dieci letture, una volta sola, e solo cose che si leggono",
   const troppe = Array.from({ length: 14 }, (_, i) => `sensor.robot_${i}`);
   assert.equal(elencoLetture(troppe).length, LETTURE_MASSIME);
   assert.deepEqual(elencoLetture(["sensor.a", "sensor.a"]), ["sensor.a"]);
-  assert.deepEqual(elencoLetture(["button.premi", "sensor.a", "vacuum.pippo"]), ["sensor.a"]);
+  assert.deepEqual(elencoLetture(["button.premi", "sensor.a", "vacuum.scopino"]), ["sensor.a"]);
   /* Anche scritte tutte in una riga, come le legge l'editor. */
   assert.deepEqual(elencoLetture("sensor.a, sensor.b"), ["sensor.a", "sensor.b"]);
 });
@@ -195,12 +195,12 @@ test("le letture scelte sopravvivono al salvataggio, come i comandi", () => {
   /* Il difetto di sempre: un campo che il modello non nomina sparisce al primo
    * salvataggio. Le letture sono nell'elenco, quindi restano. */
   const robot = normalizeRobot({
-    entity: "vacuum.pippo",
-    letture: ["sensor.pippo_durata_filtro", "sensor.pippo_area_pulita"],
+    entity: "vacuum.scopino",
+    letture: ["sensor.scopino_durata_filtro", "sensor.scopino_area_pulita"],
   });
   assert.deepEqual(normalizeRobot(robot).letture, [
-    "sensor.pippo_durata_filtro",
-    "sensor.pippo_area_pulita",
+    "sensor.scopino_durata_filtro",
+    "sensor.scopino_area_pulita",
   ]);
 });
 
@@ -208,24 +208,24 @@ test("le letture scelte sopravvivono al salvataggio, come i comandi", () => {
 
 test("un robot può avere più mappe, e la prima è quella di sempre", () => {
   const robot = normalizeRobot({
-    entity: "vacuum.pippo",
-    mappe: ["image.pippo_piano_terra", "image.pippo_primo_piano"],
+    entity: "vacuum.scopino",
+    mappe: ["image.scopino_piano_terra", "image.scopino_primo_piano"],
   });
-  assert.deepEqual(robot.mappe, ["image.pippo_piano_terra", "image.pippo_primo_piano"]);
+  assert.deepEqual(robot.mappe, ["image.scopino_piano_terra", "image.scopino_primo_piano"]);
   /* `mapEntity` non è sparito: è la mappa in cima, e chi legge solo quello —
    * il resto della plancia — continua a leggere una mappa vera. */
-  assert.equal(robot.mapEntity, "image.pippo_piano_terra");
+  assert.equal(robot.mapEntity, "image.scopino_piano_terra");
 });
 
 test("una configurazione scritta prima di oggi diventa un elenco di una", () => {
   /* Chi ha una mappa sola l'ha salvata come `mapEntity`, e non deve
    * riscrivere niente perché il campo nuovo esista. */
-  const vecchio = normalizeRobot({ entity: "vacuum.pippo", mapEntity: "camera.pippo_map" });
-  assert.deepEqual(vecchio.mappe, ["camera.pippo_map"]);
-  assert.equal(vecchio.mapEntity, "camera.pippo_map");
+  const vecchio = normalizeRobot({ entity: "vacuum.scopino", mapEntity: "camera.scopino_map" });
+  assert.deepEqual(vecchio.mappe, ["camera.scopino_map"]);
+  assert.equal(vecchio.mapEntity, "camera.scopino_map");
   /* E chi non ne ha nessuna resta senza, senza che compaia una riga vuota. */
-  assert.deepEqual(normalizeRobot({ entity: "vacuum.pippo" }).mappe, []);
-  assert.equal(normalizeRobot({ entity: "vacuum.pippo" }).mapEntity, "");
+  assert.deepEqual(normalizeRobot({ entity: "vacuum.scopino" }).mappe, []);
+  assert.equal(normalizeRobot({ entity: "vacuum.scopino" }).mapEntity, "");
 });
 
 test("l'elenco delle mappe accetta solo telecamere e immagini, fino a quattro", () => {
@@ -240,33 +240,33 @@ test("l'elenco delle mappe accetta solo telecamere e immagini, fino a quattro", 
 test("dall'integrazione entrano tutte le mappe, non solo la prima", () => {
   /* Il caso segnalato: due piani, due immagini, e ne compariva una. */
   const entities = [
-    { entity_id: "vacuum.pippo" },
-    { entity_id: "image.pippo_ultima_pulizia", name: "Ultima pulizia" },
-    { entity_id: "image.pippo_mappa_piano_terra", name: "Mappa piano terra" },
-    { entity_id: "image.pippo_mappa_primo_piano", name: "Mappa primo piano" },
-    { entity_id: "sensor.pippo_durata_filtro", name: "Durata filtro" },
+    { entity_id: "vacuum.scopino" },
+    { entity_id: "image.scopino_ultima_pulizia", name: "Ultima pulizia" },
+    { entity_id: "image.scopino_mappa_piano_terra", name: "Mappa piano terra" },
+    { entity_id: "image.scopino_mappa_primo_piano", name: "Mappa primo piano" },
+    { entity_id: "sensor.scopino_durata_filtro", name: "Durata filtro" },
   ];
-  const nato = bindRobotToDevice({ device: { name: "Pippo" }, entities, states: CASA, index: 0 });
+  const nato = bindRobotToDevice({ device: { name: "Scopino" }, entities, states: CASA, index: 0 });
   assert.equal(nato.mappe.length, 3);
   /* Davanti quelle che dicono di essere una mappa: un robot pubblica anche la
    * fotografia dell'ultima pulizia, e la prima proposta dev'essere la mappa. */
-  assert.equal(nato.mapEntity, "image.pippo_mappa_piano_terra");
-  assert.ok(nato.mappe.includes("image.pippo_mappa_primo_piano"));
+  assert.equal(nato.mapEntity, "image.scopino_mappa_piano_terra");
+  assert.ok(nato.mappe.includes("image.scopino_mappa_primo_piano"));
 });
 
 test("il robot nato dall'integrazione porta già le sue letture", () => {
   const entities = Object.keys(CASA).map((entity_id) => ({ entity_id }));
-  const nato = bindRobotToDevice({ device: { name: "Pippo" }, entities, states: CASA, index: 0 });
-  assert.ok(nato.letture.includes("sensor.pippo_durata_filtro"));
-  assert.ok(nato.letture.includes("sensor.pippo_area_pulita"));
-  assert.ok(!nato.letture.includes("sensor.pippo_indirizzo_ip"));
+  const nato = bindRobotToDevice({ device: { name: "Scopino" }, entities, states: CASA, index: 0 });
+  assert.ok(nato.letture.includes("sensor.scopino_durata_filtro"));
+  assert.ok(nato.letture.includes("sensor.scopino_area_pulita"));
+  assert.ok(!nato.letture.includes("sensor.scopino_indirizzo_ip"));
 });
 
 test("la vista del robot porta le mappe col loro disegno e le letture già scritte", () => {
   const robot = normalizeRobot({
-    ...PIPPO,
-    mappe: ["image.pippo_mappa"],
-    letture: ["sensor.pippo_durata_filtro"],
+    ...SCOPINO,
+    mappe: ["image.scopino_mappa"],
+    letture: ["sensor.scopino_durata_filtro"],
   });
   const view = robotView(robot, CASA);
   assert.equal(view.mappe.length, 1);
@@ -276,14 +276,14 @@ test("la vista del robot porta le mappe col loro disegno e le letture già scrit
   assert.equal(view.mapPicture, view.mappe[0].picture);
   assert.equal(view.letture[0].testo, "135 h");
   /* `mappeDelRobot` legge anche un robot vecchio, con la sola `mapEntity`. */
-  assert.equal(mappeDelRobot({ mapEntity: "image.pippo_mappa" }, CASA)[0].entity, "image.pippo_mappa");
+  assert.equal(mappeDelRobot({ mapEntity: "image.scopino_mappa" }, CASA)[0].entity, "image.scopino_mappa");
 });
 
 test("le mappe accanto al robot si propongono, con quelle vere davanti", () => {
-  const proposte = mappeSuggerite({ entity: "vacuum.pippo" }, CASA);
-  assert.deepEqual(proposte, ["image.pippo_mappa"]);
+  const proposte = mappeSuggerite({ entity: "vacuum.scopino" }, CASA);
+  assert.deepEqual(proposte, ["image.scopino_mappa"]);
   /* Quella già scelta non si ripropone. */
-  assert.deepEqual(mappeSuggerite(PIPPO, CASA), []);
+  assert.deepEqual(mappeSuggerite(SCOPINO, CASA), []);
 });
 
 /* ── quello che si vede sulla scheda ─────────────────────────────────────── */
@@ -338,31 +338,31 @@ test("le letture di un dispositivo sono quelle del dispositivo", () => {
    * fuori una lettura chiamata in un altro modo, e prendeva dentro il sensore
    * di qualcun altro che comincia uguale. */
   const states = {
-    "vacuum.pippo": { state: "docked", attributes: { friendly_name: "Pippo" } },
-    "sensor.pippo_filtro": {
+    "vacuum.scopino": { state: "docked", attributes: { friendly_name: "Scopino" } },
+    "sensor.scopino_filtro": {
       state: "80",
-      attributes: { friendly_name: "Pippo filtro", unit_of_measurement: "%" },
+      attributes: { friendly_name: "Scopino filtro", unit_of_measurement: "%" },
     },
     "sensor.filtro_del_robot": {
       state: "60",
       attributes: { friendly_name: "Filtro del robot", unit_of_measurement: "%" },
     },
-    "sensor.pippo_pluto_filtro": {
+    "sensor.scopino_bis_filtro": {
       state: "10",
-      attributes: { friendly_name: "Pippo Pluto filtro", unit_of_measurement: "%" },
+      attributes: { friendly_name: "Scopino Bis filtro", unit_of_measurement: "%" },
     },
   };
-  const dispositivo = { entity: "vacuum.pippo" };
+  const dispositivo = { entity: "vacuum.scopino" };
 
   /* Dal nome: prende il sensore dell'altro robot che comincia uguale, e lascia
    * fuori quello vero che si chiama in un altro modo. */
   const dalNome = lettureRiconosciute(dispositivo, states);
-  assert.ok(dalNome.includes("sensor.pippo_pluto_filtro"));
+  assert.ok(dalNome.includes("sensor.scopino_bis_filtro"));
   assert.ok(!dalNome.includes("sensor.filtro_del_robot"));
 
   /* Dall'elenco del registro: esattamente le sue. */
   const dalRegistro = lettureRiconosciute(dispositivo, states, [
-    "vacuum.pippo",
+    "vacuum.scopino",
     "sensor.filtro_del_robot",
   ]);
   assert.deepEqual(dalRegistro, ["sensor.filtro_del_robot"]);

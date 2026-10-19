@@ -173,6 +173,7 @@ ${P} .dm-f-leva[data-on="true"] i{left:26px}
 ${P} .dm-f-porta{width:100%;margin-top:4px;padding:14px;border:0;border-radius:18px;font:inherit;font-weight:850;font-size:15px;cursor:pointer;
   color:var(--dm-widget-accent,#0ea5e9);background:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 12%,var(--card-bg,#fff))}
 ${P} .dm-f-porta.dm-f-pieno{color:#fff;background:var(--dm-widget-accent,#0ea5e9)}
+${P} .dm-f-vuota{margin:6px 4px;font-size:14px;font-weight:700;color:var(--text-dim,#64748b);text-align:center}
 `;
 
 const STILE_ELETTRODOMESTICI = `
@@ -670,6 +671,10 @@ function finestraEvidenza(widget, states) {
   const righe = Array.isArray(widget.rows) ? widget.rows : [];
   const comandi = righe.filter((riga) => genereDellaVoce(riga, states) === "comando");
   const letture = righe.filter((riga) => genereDellaVoce(riga, states) !== "comando");
+  /* Niente tasto verso il Config: la finestra mostra le voci, e senza voci
+   * lo dice e basta. */
+  if (!righe.length)
+    return `<div class="dm-f dm-f-evidenza"><p class="dm-f-vuota">${esc(t("Nessuna voce", "No entries"))}</p></div>`;
   return `<div class="dm-f dm-f-evidenza">${comandi
     .map((riga) => cartaDelComando(riga, states, "", adesso))
     .join("")}${
@@ -678,9 +683,7 @@ function finestraEvidenza(widget, states) {
           .map((riga) => cartaDellaLettura(riga, states, "", adesso))
           .join("")}</div>`
       : ""
-  }<button type="button" class="dm-f-porta" data-dm-w-config="sez0">${esc(
-    t("Scegli cosa tenere in evidenza", "Choose what to highlight"),
-  )} <span aria-hidden="true">→</span></button></div>`;
+  }</div>`;
 }
 
 function finestraSezioneMia(widget, states) {

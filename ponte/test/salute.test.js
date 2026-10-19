@@ -156,19 +156,19 @@ test("solo quelli che non rispondono: di chi funziona non esce nemmeno il nome",
   const registri = {
     dispositivi: [
       { id: "d1", name: "Serratura ingresso" },
-      { id: "d2", name: "Telefono di Laura" },
+      { id: "d2", name: "Telefono di Persona 4" },
     ],
     entita: [
       { entity_id: "lock.ingresso", device_id: "d1" },
-      { entity_id: "device_tracker.laura", device_id: "d2" },
+      { entity_id: "device_tracker.persona_4", device_id: "d2" },
     ],
   };
   const conto = leEntita(
-    [stato("lock.ingresso", "unavailable"), stato("device_tracker.laura", "home")],
+    [stato("lock.ingresso", "unavailable"), stato("device_tracker.persona_4", "home")],
     { registri },
   );
   assert.deepEqual(conto.nomi, ["Serratura ingresso"]);
-  assert.ok(!JSON.stringify(conto).includes("Laura"));
+  assert.ok(!JSON.stringify(conto).includes("Persona 4"));
 });
 
 const tanti = (quanti) => ({

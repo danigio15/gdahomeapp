@@ -83,7 +83,7 @@ test("l'elenco si ripulisce: solo identificativi veri, una volta ognuno", () => 
    * non puo' essere un utente. */
   assert.deepEqual(utentiPuliti([IO, IO, LEI]), [IO, LEI]);
   assert.deepEqual(utentiPuliti(["", null, undefined, 7]), []);
-  assert.deepEqual(utentiPuliti(["mario", "tutti", "*"]), []);
+  assert.deepEqual(utentiPuliti(["persona_6", "tutti", "*"]), []);
   /* Maiuscole: Home Assistant li scrive minuscoli, ma un elenco copiato a
    * mano puo' arrivare cosi', e sono lo stesso identificativo. */
   assert.deepEqual(utentiPuliti([IO.toUpperCase()]), [IO.toUpperCase()]);
@@ -238,8 +238,8 @@ function unaCasa(risposta) {
 }
 
 const COME_RISPONDE_HA = [
-  { id: IO, name: "Giovanni", is_owner: true, is_active: true, group_ids: ["system-admin"] },
-  { id: LEI, name: "Marta", is_owner: false, is_active: true, group_ids: ["system-users"] },
+  { id: IO, name: "Persona 1", is_owner: true, is_active: true, group_ids: ["system-admin"] },
+  { id: LEI, name: "Persona 9", is_owner: false, is_active: true, group_ids: ["system-users"] },
   { id: NESSUNO, name: "Supervisor", system_generated: true, group_ids: ["system-admin"] },
 ];
 
@@ -261,15 +261,15 @@ test("chi amministra lo dice Home Assistant, e gli utenti di sistema non contano
   assert.deepEqual(
     elenco.map((uno) => [uno.nome, uno.amministratore]),
     [
-      ["Giovanni", true],
-      ["Marta", false],
+      ["Persona 1", true],
+      ["Persona 9", false],
     ],
   );
 });
 
 test("un amministratore disattivato in Home Assistant non amministra nemmeno qui", async () => {
   const casa = unaCasa([
-    { id: IO, name: "Giovanni", is_owner: false, is_active: false, group_ids: ["system-admin"] },
+    { id: IO, name: "Persona 1", is_owner: false, is_active: false, group_ids: ["system-admin"] },
   ]);
   const utenti = new UtentiDiCasa({ casa, registro: ZITTO });
   assert.equal(await utenti.amministratore(IO), false);
@@ -400,7 +400,7 @@ test("un codice senza padrone resta senza, e un identificativo storto non conta"
   /* Un valore storto diventa «non si sa di chi e'» — cioe' vede tutto, come
    * prima — e non un fantasma che non corrisponde a nessuno e non apre
    * niente. */
-  assert.equal(a.nuovo("mario").utente, "");
+  assert.equal(a.nuovo("persona_6").utente, "");
   assert.equal(a.nuovo("tutti").utente, "");
 });
 
@@ -409,7 +409,7 @@ test("il telefono nasce intestato, e l'elenco lo dice", () => {
   try {
     const suoi = new Dispositivi({ cartella, adesso: () => 1000 });
     const { dispositivo, segno } = suoi.abbina({
-      nome: "Pixel di Marta",
+      nome: "Pixel di Persona 9",
       sistema: "Android",
       utente: LEI,
     });
@@ -454,7 +454,7 @@ test("l'app riceve solo le plance sue, e non sa che le altre esistono", async ()
       registro: ZITTO,
     });
 
-    /* Marta: vede la sua, e la prima che e' di tutti. */
+    /* Persona 9: vede la sua, e la prima che e' di tutti. */
     const sua = await commissioni.rispondi(
       { id: 1, type: "ponte/plance/elenco" },
       { chiChiede: LEI },
@@ -464,7 +464,7 @@ test("l'app riceve solo le plance sue, e non sa che le altre esistono", async ()
       ["primary", mare.profilo],
     );
 
-    /* Giovanni: la «Casa al mare» non e' sua, e **non compare**. Non «compare
+    /* Persona 1: la «Casa al mare» non e' sua, e **non compare**. Non «compare
      * grigia»: non c'e'. */
     const mia = await commissioni.rispondi(
       { id: 2, type: "ponte/plance/elenco" },

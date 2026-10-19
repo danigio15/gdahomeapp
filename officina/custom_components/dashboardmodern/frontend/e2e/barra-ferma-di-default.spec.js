@@ -6,7 +6,7 @@
  * mouse al fondo, ma il comando per tenerla ferma sta nella pagina Config, e a
  * quella pagina ci si arriva dalla barra. Chi non riusciva a chiamarla non
  * poteva dirle di restare, e metterla ferma dal telefono non serviva perche'
- * quella preferenza non viaggiava — segnalato da Edoardo Saccozza: sul telefono
+ * quella preferenza non viaggiava — segnalato da chi la usava: sul telefono
  * la vedeva, sul browser del PC in nessun modo.
  */
 import { expect, test } from "@playwright/test";

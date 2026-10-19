@@ -1076,7 +1076,9 @@ function chatDiProva(cartella, { chiave = "" } = {}) {
         return {
           ok: true,
           status: 200,
-          json: async () => ({ conversazioni: [{ id: "casa_1", nome: "Giovanni", non_letti: 1 }] }),
+          json: async () => ({
+            conversazioni: [{ id: "casa_1", nome: "Persona 1", non_letti: 1 }],
+          }),
         };
       }
       if (opzioni.method === "DELETE") {
@@ -1161,13 +1163,13 @@ test("la finestra dell'assistenza della plancia arriva alla chat, non a un rifiu
       id: 2,
       type: "dashboardmodern/chat/send",
       message: "Buongiorno, una domanda.",
-      name: "Giovanni",
+      name: "Persona 1",
       locale: "it",
     });
     assert.equal(mandato.result.message.testo, "Buongiorno, una domanda.");
     const filo = await con.rispondi({ id: 3, type: "dashboardmodern/chat/thread" });
     assert.equal(filo.result.enabled, true);
-    assert.equal(filo.result.name, "Giovanni");
+    assert.equal(filo.result.name, "Persona 1");
     assert.deepEqual(
       filo.result.messages.map((una) => una.testo),
       ["Buongiorno, una domanda."],
@@ -1669,7 +1671,7 @@ test("la coda di chi risponde passa dal ponte, e solo con la chiave", async () =
       { puoAmministrare: true },
     );
     assert.deepEqual(coda.result, {
-      conversations: [{ id: "casa_1", nome: "Giovanni", non_letti: 1 }],
+      conversations: [{ id: "casa_1", nome: "Persona 1", non_letti: 1 }],
     });
     const filo = await con.rispondi(
       {

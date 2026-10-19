@@ -18,6 +18,12 @@ import {
   nuovaPagina,
   paginaPulita,
 } from "../src/core/plancia-a-muro.js";
+import {
+  TESSERE_DELLA_STAZIONE,
+  letturaDellaStazione,
+  tessereDellaStazione,
+  vistaDelMeteoDa,
+} from "../src/core/la-pagina-meteo.js";
 
 const H = 3_600_000;
 
@@ -134,4 +140,122 @@ test("senza previsioni la pagina ha adesso, e senza meteo non ha niente", () => 
   assert.equal(v.frase, null);
   assert.equal(v.spicchio, null);
   assert.equal(meteoDelMuro(null), null);
+});
+
+/* «Si riesce ad impaginare la plancia a muro come la normale?» Il muro e la
+ * pagina Meteo della plancia leggono la stessa vista: con la stazione le
+ * misure di adesso sono le sue, e le tessere ci sono solo se c'e' lei. */
+const STATO_DEL_SERVIZIO = {
+  entity_id: "weather.forecast_home",
+  state: "clear-night",
+  attributes: {
+    temperature: 18,
+    apparent_temperature: 22.3,
+    humidity: 72,
+    pressure: 1019,
+    pressure_unit: "hPa",
+    wind_speed: 4,
+    wind_speed_unit: "km/h",
+    wind_bearing: 200,
+    temperature_unit: "°C",
+  },
+};
+const fa = (minuti) => new Date(Date.UTC(2026, 9, 18, 21, 40 - minuti)).toISOString();
+const STATI_DELLA_STAZIONE = {
+  "sensor.t": { state: "19.6", attributes: { unit_of_measurement: "°C" }, last_updated: fa(1) },
+  "sensor.u": { state: "65", attributes: { unit_of_measurement: "%" }, last_updated: fa(1) },
+  "sensor.p": { state: "1021", attributes: { unit_of_measurement: "mbar" }, last_updated: fa(1) },
+  "sensor.r": { state: "0", attributes: { unit_of_measurement: "mm/h" }, last_updated: fa(1) },
+  "sensor.v": { state: "0", attributes: { unit_of_measurement: "m/s" }, last_updated: fa(1) },
+  "sensor.d": { state: "135", attributes: { unit_of_measurement: "°" }, last_updated: fa(1) },
+  "sensor.uv": { state: "0", attributes: {}, last_updated: fa(1) },
+  "sensor.lx": { state: "0", attributes: { unit_of_measurement: "lx" }, last_updated: fa(1) },
+  "sensor.spento": { state: "unavailable", attributes: { unit_of_measurement: "°C" } },
+};
+const SENSORI = {
+  temperatura: "sensor.t",
+  umidita: "sensor.u",
+  pressione: "sensor.p",
+  intensita: "sensor.r",
+  vento: "sensor.v",
+  direzione: "sensor.d",
+  uv: "sensor.uv",
+  luminosita: "sensor.lx",
+};
+
+test("le letture della stazione: solo i sensori scelti che hanno un numero", () => {
+  const letture = letturaDellaStazione(
+    { ...SENSORI, percepita: "sensor.spento", raffica: "sensor.manca" },
+    STATI_DELLA_STAZIONE,
+  );
+  assert.deepEqual(Object.keys(letture).sort(), Object.keys(SENSORI).sort());
+  assert.deepEqual(letture.temperatura, {
+    valore: 19.6,
+    unita: "°C",
+    quando: Date.parse(fa(1)),
+    entity: "sensor.t",
+  });
+  assert.deepEqual(letturaDellaStazione({}, STATI_DELLA_STAZIONE), {});
+  assert.deepEqual(letturaDellaStazione(null, null), {});
+});
+
+test("le tessere della stazione: una per misura che c'e', nell'ordine della plancia", () => {
+  const letture = letturaDellaStazione(SENSORI, STATI_DELLA_STAZIONE);
+  assert.deepEqual(tessereDellaStazione(letture), [...TESSERE_DELLA_STAZIONE]);
+  /* La pioggia basta l'intensita', il sole basta la luminosita'. */
+  assert.deepEqual(tessereDellaStazione({ intensita: letture.intensita }), ["pioggia"]);
+  assert.deepEqual(tessereDellaStazione({ luminosita: letture.luminosita }), ["sole"]);
+  /* La percepita, la raffica e la direzione da sole non fanno una tessera. */
+  assert.deepEqual(tessereDellaStazione({ percepita: letture.temperatura }), []);
+  assert.deepEqual(tessereDellaStazione({ direzione: letture.direzione }), []);
+  assert.deepEqual(tessereDellaStazione({}), []);
+});
+
+test("con la stazione le misure di adesso sono le sue, non quelle del servizio meteo", () => {
+  const adesso = Date.UTC(2026, 9, 18, 21, 40);
+  const stazione = letturaDellaStazione(SENSORI, STATI_DELLA_STAZIONE);
+  const vista = vistaDelMeteoDa({
+    entita: "weather.forecast_home",
+    meteo: STATO_DEL_SERVIZIO,
+    stazione,
+    sole: { alba: "07:26", tramonto: "18:23" },
+    adesso,
+  });
+  assert.equal(vista.entita, "weather.forecast_home");
+  assert.deepEqual(vista.misure.temperatura, { valore: 19.6, unita: "°C", fonte: "stazione" });
+  assert.deepEqual(vista.misure.umidita, { valore: 65, unita: "%", fonte: "stazione" });
+  assert.deepEqual(vista.misure.pressione, { valore: 1021, unita: "mbar", fonte: "stazione" });
+  assert.deepEqual(vista.misure.vento, { valore: 0, unita: "m/s", fonte: "stazione" });
+  assert.equal(vista.misure.direzione.valore, 135);
+  /* Quello che la stazione non misura resta del servizio. */
+  assert.deepEqual(vista.misure.percepita, { valore: 22.3, unita: "°C", fonte: "meteo" });
+  assert.deepEqual(vista.tessere, [...TESSERE_DELLA_STAZIONE]);
+  assert.deepEqual(vista.sole, { alba: "07:26", tramonto: "18:23" });
+
+  /* Il muro legge la stessa vista. */
+  const muro = meteoDelMuro(STATO_DEL_SERVIZIO, { stazione, adesso });
+  assert.equal(muro.misure.temperatura.valore, 19.6);
+  assert.equal(muro.misure.temperatura.fonte, "stazione");
+  assert.deepEqual(muro.tessere, [...TESSERE_DELLA_STAZIONE]);
+  /* 135° e' sud-est: il quarto spicchio. */
+  assert.equal(muro.spicchio, 3);
+  assert.equal(muro.condizione, "clear-night");
+  assert.equal(muro.entita, "weather.forecast_home");
+});
+
+test("senza stazione la vista e' quella del servizio meteo, e tessere non ce ne sono", () => {
+  const vista = vistaDelMeteoDa({ entita: "weather.forecast_home", meteo: STATO_DEL_SERVIZIO });
+  assert.deepEqual(vista.misure.temperatura, { valore: 18, unita: "°C", fonte: "meteo" });
+  assert.ok(Object.values(vista.misure).every((misura) => misura.fonte === "meteo"));
+  assert.deepEqual(vista.tessere, []);
+  assert.deepEqual(vista.stazione, {});
+  assert.equal(vista.sole, null);
+  const muro = meteoDelMuro(STATO_DEL_SERVIZIO);
+  assert.equal(muro.misure.temperatura.valore, 18);
+  assert.deepEqual(muro.tessere, []);
+  /* Una stazione scelta ma spenta e' come nessuna stazione. */
+  const spenta = letturaDellaStazione({ temperatura: "sensor.spento" }, STATI_DELLA_STAZIONE);
+  assert.deepEqual(meteoDelMuro(STATO_DEL_SERVIZIO, { stazione: spenta }).tessere, []);
+  /* Senza entita' weather non c'e' vista. */
+  assert.equal(vistaDelMeteoDa({}), null);
 });

@@ -22,38 +22,38 @@ import {
 
 test("normalizePeople scarta il vuoto e inventa id stabili e unici", () => {
   const people = normalizePeople([
-    { name: "Giovanni", entity: "person.giovanni" },
-    { name: "Giovanni" },
+    { name: "Persona 1", entity: "person.persona_1" },
+    { name: "Persona 1" },
     {},
     null,
-    { entity: "person.anna" },
+    { entity: "person.persona_2" },
   ]);
   assert.equal(people.length, 3);
-  assert.equal(people[0].id, "person-giovanni");
-  assert.equal(people[1].id, "person-giovanni-2", "stesso seme, id diverso");
-  assert.equal(people[2].id, "person-anna", "senza nome, il seme viene dall'entità");
+  assert.equal(people[0].id, "person-persona-1");
+  assert.equal(people[1].id, "person-persona-1-2", "stesso seme, id diverso");
+  assert.equal(people[2].id, "person-persona-2", "senza nome, il seme viene dall'entità");
   assert.ok(people.every((person) => AVATAR_COLORS.includes(person.avatar.color)));
 });
 
 test("l'id scritto sopravvive alla normalizzazione", () => {
-  const [person] = normalizePeople([{ id: "person-mio", name: "Mia" }]);
+  const [person] = normalizePeople([{ id: "person-mio", name: "Persona 1" }]);
   assert.equal(person.id, "person-mio");
 });
 
 test("un colore fuori tavolozza torna a uno della tavolozza", () => {
-  const [person] = normalizePeople([{ name: "Mia", avatar: { color: "#000000" } }]);
+  const [person] = normalizePeople([{ name: "Persona 1", avatar: { color: "#000000" } }]);
   assert.ok(AVATAR_COLORS.includes(person.avatar.color));
 });
 
 test("le iniziali sono al massimo due lettere", () => {
-  assert.equal(personInitials("Giovanni Daniello"), "GD");
-  assert.equal(personInitials("anna"), "A");
-  assert.equal(personInitials("Maria Rosa Bianchi"), "MR");
+  assert.equal(personInitials("Persona Uno"), "PU");
+  assert.equal(personInitials("persona_2"), "P");
+  assert.equal(personInitials("Persona Due Tre"), "PD");
   assert.equal(personInitials(""), "?");
 });
 
 test("solo person.* e device_tracker.* raccontano dove sta una persona", () => {
-  assert.ok(isPersonEntity("person.giovanni"));
+  assert.ok(isPersonEntity("person.persona_1"));
   assert.ok(isPersonEntity("device_tracker.telefono"));
   assert.equal(isPersonEntity("sensor.telefono_battery"), false);
 });
@@ -71,11 +71,11 @@ const NOW = Date.parse("2026-08-22T12:00:00Z");
 
 function stati() {
   return {
-    "person.giovanni": {
+    "person.persona_1": {
       state: "home",
       last_changed: "2026-08-21T20:00:00Z",
       attributes: {
-        friendly_name: "Giovanni",
+        friendly_name: "Persona 1",
         entity_picture: "/api/image/serve/abc/512x512",
         source: "device_tracker.iphone",
       },
@@ -86,7 +86,7 @@ function stati() {
 }
 
 test("a casa: zona, anello e «da quanto» vengono dallo stato della persona", () => {
-  const [person] = normalizePeople([{ name: "Giovanni", entity: "person.giovanni" }]);
+  const [person] = normalizePeople([{ name: "Persona 1", entity: "person.persona_1" }]);
   const view = personViewModel(person, stati(), NOW);
   assert.equal(view.presence, "home");
   assert.equal(view.known, true);
@@ -95,8 +95,8 @@ test("a casa: zona, anello e «da quanto» vengono dallo stato della persona", (
 
 test("una zona con un nome è informazione, non un modo di dire fuori", () => {
   const states = stati();
-  states["person.giovanni"].state = "Ufficio";
-  const [person] = normalizePeople([{ name: "Giovanni", entity: "person.giovanni" }]);
+  states["person.persona_1"].state = "Ufficio";
+  const [person] = normalizePeople([{ name: "Persona 1", entity: "person.persona_1" }]);
   const view = personViewModel(person, states, NOW);
   assert.equal(view.presence, "zone");
   assert.equal(view.zone, "Ufficio");
@@ -104,11 +104,11 @@ test("una zona con un nome è informazione, non un modo di dire fuori", () => {
 
 test("not_home e unavailable sono fuori, ma unavailable non è conosciuto", () => {
   const states = stati();
-  states["person.giovanni"].state = "not_home";
-  const [person] = normalizePeople([{ name: "Giovanni", entity: "person.giovanni" }]);
+  states["person.persona_1"].state = "not_home";
+  const [person] = normalizePeople([{ name: "Persona 1", entity: "person.persona_1" }]);
   assert.equal(personViewModel(person, states, NOW).presence, "away");
   assert.equal(personViewModel(person, states, NOW).known, true);
-  states["person.giovanni"].state = "unavailable";
+  states["person.persona_1"].state = "unavailable";
   const ignoto = personViewModel(person, states, NOW);
   assert.equal(ignoto.known, false);
   assert.equal(ignoto.elapsed, null, "di un ignoto non si racconta il tempo");
@@ -117,14 +117,14 @@ test("not_home e unavailable sono fuori, ma unavailable non è conosciuto", () =
 test("la batteria: il sensore dichiarato vince, poi l'entità, poi il telefono che la traccia", () => {
   const states = stati();
   const [dichiarata] = normalizePeople([
-    { name: "G", entity: "person.giovanni", battery: "sensor.iphone_batt" },
+    { name: "G", entity: "person.persona_1", battery: "sensor.iphone_batt" },
   ]);
   assert.equal(personViewModel(dichiarata, states, NOW).battery, 82);
 
-  const [implicita] = normalizePeople([{ name: "G", entity: "person.giovanni" }]);
+  const [implicita] = normalizePeople([{ name: "G", entity: "person.persona_1" }]);
   assert.equal(personViewModel(implicita, states, NOW).battery, 47, "dal device_tracker sorgente");
 
-  states["person.giovanni"].attributes.battery_level = 12;
+  states["person.persona_1"].attributes.battery_level = 12;
   const view = personViewModel(implicita, states, NOW);
   assert.equal(view.battery, 12, "l'attributo dell'entità viene prima della sorgente");
   assert.equal(view.batteryLow, true);
@@ -134,7 +134,7 @@ test("un sensore dichiarato ma muto non fa ripiegare su altro", () => {
   const states = stati();
   delete states["sensor.iphone_batt"];
   const [person] = normalizePeople([
-    { name: "G", entity: "person.giovanni", battery: "sensor.iphone_batt" },
+    { name: "G", entity: "person.persona_1", battery: "sensor.iphone_batt" },
   ]);
   assert.equal(personViewModel(person, states, NOW).battery, null);
 });
@@ -142,10 +142,10 @@ test("un sensore dichiarato ma muto non fa ripiegare su altro", () => {
 test("la foto configurata vince sulla foto del profilo Home Assistant", () => {
   const states = stati();
   const [conFoto] = normalizePeople([
-    { name: "G", entity: "person.giovanni", photo: "/local/giovanni.png" },
+    { name: "G", entity: "person.persona_1", photo: "/local/persona_1.png" },
   ]);
-  assert.equal(personViewModel(conFoto, states, NOW).photo, "/local/giovanni.png");
-  const [senzaFoto] = normalizePeople([{ name: "G", entity: "person.giovanni" }]);
+  assert.equal(personViewModel(conFoto, states, NOW).photo, "/local/persona_1.png");
+  const [senzaFoto] = normalizePeople([{ name: "G", entity: "person.persona_1" }]);
   assert.equal(personViewModel(senzaFoto, states, NOW).photo, "/api/image/serve/abc/512x512");
 });
 
@@ -187,64 +187,64 @@ test("l'attivita' si riduce alle cinque disegnabili", () => {
 
 test("il rilevamento trova i sensori della Companion App dal tracker della persona", () => {
   const states = {
-    "person.anna": {
+    "person.persona_2": {
       state: "home",
-      attributes: { source: "device_tracker.iphone_di_anna" },
+      attributes: { source: "device_tracker.iphone_di_persona_2" },
     },
-    "sensor.iphone_di_anna_battery_level": { state: "80" },
-    "sensor.iphone_di_anna_battery_state": { state: "charging" },
-    "sensor.iphone_di_anna_geocoded_location": { state: "Via Roma 1" },
-    "sensor.iphone_di_anna_activity": { state: "walking" },
-    "sensor.iphone_di_anna_wifi_connection": { state: "CasaNet" },
-    "sensor.waze_iphone_di_anna_travel_time": { state: "12" },
-    "sensor.home_iphone_di_anna_distance": { state: "3200" },
-    "sensor.home_iphone_di_anna_direction_of_travel": { state: "towards" },
-    "sensor.watch_di_anna_battery": { state: "60" },
+    "sensor.iphone_di_persona_2_battery_level": { state: "80" },
+    "sensor.iphone_di_persona_2_battery_state": { state: "charging" },
+    "sensor.iphone_di_persona_2_geocoded_location": { state: "Via Roma 1" },
+    "sensor.iphone_di_persona_2_activity": { state: "walking" },
+    "sensor.iphone_di_persona_2_wifi_connection": { state: "CasaNet" },
+    "sensor.waze_iphone_di_persona_2_travel_time": { state: "12" },
+    "sensor.home_iphone_di_persona_2_distance": { state: "3200" },
+    "sensor.home_iphone_di_persona_2_direction_of_travel": { state: "towards" },
+    "sensor.watch_di_persona_2_battery": { state: "60" },
     "sensor.altro_battery_level": { state: "10" },
   };
-  const found = detectCompanionSensors(states, "person.anna");
-  assert.equal(found.battery, "sensor.iphone_di_anna_battery_level");
-  assert.equal(found.batteryState, "sensor.iphone_di_anna_battery_state");
-  assert.equal(found.address, "sensor.iphone_di_anna_geocoded_location");
-  assert.equal(found.activity, "sensor.iphone_di_anna_activity");
-  assert.equal(found.wifi, "sensor.iphone_di_anna_wifi_connection");
-  assert.equal(found.travel, "sensor.waze_iphone_di_anna_travel_time");
-  assert.equal(found.distance, "sensor.home_iphone_di_anna_distance");
-  assert.equal(found.direction, "sensor.home_iphone_di_anna_direction_of_travel");
+  const found = detectCompanionSensors(states, "person.persona_2");
+  assert.equal(found.battery, "sensor.iphone_di_persona_2_battery_level");
+  assert.equal(found.batteryState, "sensor.iphone_di_persona_2_battery_state");
+  assert.equal(found.address, "sensor.iphone_di_persona_2_geocoded_location");
+  assert.equal(found.activity, "sensor.iphone_di_persona_2_activity");
+  assert.equal(found.wifi, "sensor.iphone_di_persona_2_wifi_connection");
+  assert.equal(found.travel, "sensor.waze_iphone_di_persona_2_travel_time");
+  assert.equal(found.distance, "sensor.home_iphone_di_persona_2_distance");
+  assert.equal(found.direction, "sensor.home_iphone_di_persona_2_direction_of_travel");
 });
 
 test("il rilevamento riconosce anche il tracker che somiglia, non solo quello identico", () => {
-  /* Il tracker si chiama `giovanni_zfold8`, i sensori `zfold8_*`: nessuno dei
+  /* Il tracker si chiama `persona_1_zfold8`, i sensori `zfold8_*`: nessuno dei
    * due e' il prefisso esatto dell'altro, ma parlano dello stesso telefono. */
   const states = {
-    "person.giovanni": {
+    "person.persona_1": {
       state: "home",
-      attributes: { source: "device_tracker.giovanni_zfold8" },
+      attributes: { source: "device_tracker.persona_1_zfold8" },
     },
     "sensor.zfold8_battery_level": { state: "80" },
     "sensor.zfold8_battery_state": { state: "charging" },
   };
-  const found = detectCompanionSensors(states, "person.giovanni");
+  const found = detectCompanionSensors(states, "person.persona_1");
   assert.equal(found.battery, "sensor.zfold8_battery_level");
   assert.equal(found.batteryState, "sensor.zfold8_battery_state");
 });
 
 test("con una persona sola, l'unico sensore della casa e' il suo", () => {
   const states = {
-    "person.giovanni": { state: "home", attributes: {} },
+    "person.persona_1": { state: "home", attributes: {} },
     "sensor.telefono_misterioso_battery_level": { state: "80" },
   };
-  const found = detectCompanionSensors(states, "person.giovanni");
+  const found = detectCompanionSensors(states, "person.persona_1");
   assert.equal(found.battery, "sensor.telefono_misterioso_battery_level");
 });
 
 test("con due persone non si indovina: il candidato unico non basta", () => {
   const states = {
-    "person.giovanni": { state: "home", attributes: {} },
-    "person.anna": { state: "home", attributes: {} },
+    "person.persona_1": { state: "home", attributes: {} },
+    "person.persona_2": { state: "home", attributes: {} },
     "sensor.telefono_misterioso_battery_level": { state: "80" },
   };
-  const found = detectCompanionSensors(states, "person.giovanni");
+  const found = detectCompanionSensors(states, "person.persona_1");
   assert.equal(found.battery, undefined, "quel telefono potrebbe essere dell'altra");
 });
 
@@ -305,14 +305,14 @@ test("il viaggio si racconta solo di chi e' fuori", () => {
 
 test("l'importazione propone solo le person.* non ancora in elenco", () => {
   const states = stati();
-  states["person.anna"] = {
+  states["person.persona_2"] = {
     state: "home",
-    attributes: { friendly_name: "Anna", entity_picture: "/api/image/serve/anna/512x512" },
+    attributes: { friendly_name: "Persona 2", entity_picture: "/api/image/serve/persona_2/512x512" },
   };
-  const existing = normalizePeople([{ name: "Giovanni", entity: "person.giovanni" }]);
+  const existing = normalizePeople([{ name: "Persona 1", entity: "person.persona_1" }]);
   const nuove = suggestPeople(states, existing);
   assert.deepEqual(nuove, [
-    { entity: "person.anna", name: "Anna", photo: "/api/image/serve/anna/512x512" },
+    { entity: "person.persona_2", name: "Persona 2", photo: "/api/image/serve/persona_2/512x512" },
   ]);
 });
 

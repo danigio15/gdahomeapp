@@ -140,6 +140,24 @@ export function legacyLights(value) {
   return lights;
 }
 
+/* «Riquadri con l'immagine»: l'immagine sta addosso alla cosa, nella copia
+ * canonica. Un editor del guscio che riscrive la sua chiave legacy non la
+ * conosce, e la sua riga arriva senza: qui la cosa ritrova la sua — stessa
+ * `id`, o stessa entita' — invece di perderla al primo salvataggio. */
+export function conLeImmaginiDiPrima(nuovo, prima) {
+  if (!Array.isArray(nuovo) || !Array.isArray(prima)) return nuovo;
+  const conImmagine = prima.filter((voce) => voce?.immagine);
+  if (!conImmagine.length) return nuovo;
+  return nuovo.map((voce) => {
+    if (!voce || typeof voce !== "object" || voce.immagine) return voce;
+    const stessa = conImmagine.find(
+      (vecchia) =>
+        (voce.id && vecchia.id === voce.id) || (voce.entity && vecchia.entity === voce.entity),
+    );
+    return stessa ? { ...voce, immagine: stessa.immagine } : voce;
+  });
+}
+
 export class DashboardStore {
   constructor({
     storage = globalThis.localStorage,
@@ -255,9 +273,12 @@ export class DashboardStore {
       try {
         const raw = this.storage.getItem(key);
         if (raw === null || raw === undefined) continue;
-        this.state.sections[section] = normalizeSection(section, JSON.parse(raw), {
-          rooms: this.state.sections.rooms || [],
-        });
+        this.state.sections[section] = conLeImmaginiDiPrima(
+          normalizeSection(section, JSON.parse(raw), {
+            rooms: this.state.sections.rooms || [],
+          }),
+          this.state.sections[section],
+        );
       } catch {
         /* Una chiave illeggibile non insegna niente: resta la copia. */
       }
@@ -308,9 +329,12 @@ export class DashboardStore {
         ([, storageKey]) => storageKey === key,
       )?.[0];
       if (section)
-        this.state.sections[section] = normalizeSection(section, value, {
-          rooms: this.state.sections.rooms || [],
-        });
+        this.state.sections[section] = conLeImmaginiDiPrima(
+          normalizeSection(section, value, {
+            rooms: this.state.sections.rooms || [],
+          }),
+          this.state.sections[section],
+        );
     }
     /* Le sorgenti uniche con segno si risolvono qui, prima della proiezione:
      * da questo punto in giu' i due versi hanno un riferimento ciascuno come

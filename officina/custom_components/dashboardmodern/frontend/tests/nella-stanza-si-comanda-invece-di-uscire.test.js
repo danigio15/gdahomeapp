@@ -75,7 +75,7 @@ function cosaOffre(html) {
 }
 
 test("una riga senza una pagina dove andare non porta piu' in Home", () => {
-  /* Il caso di Marco, alla lettera: un'entita' messa in stanza per leggerne lo
+  /* Il caso di Persona 3, alla lettera: un'entita' messa in stanza per leggerne lo
    * stato. Non c'e' niente da premere, e infatti adesso non c'e' niente da
    * premere: niente `role`, niente `tabindex`, niente chevron. Un tasto che
    * non fa niente e' peggio di nessun tasto — e con la tastiera e' anche una

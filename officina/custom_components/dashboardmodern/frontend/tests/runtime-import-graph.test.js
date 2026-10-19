@@ -1567,8 +1567,14 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // catalogo `core/disegni-da-riquadro.js` dei disegni che riempiono un
   // riquadro, e `sections/riquadri-con-immagine-section.js` — il vestito del
   // riquadro, il blocco «Immagine» degli editor e i Dispositivi della Home.
+  // 471 coi segni degli aggiornamenti: il nucleo puro
+  // `core/loghi-degli-aggiornamenti.js` — quando si chiede un'icona al ponte,
+  // quando si richiede e quale indirizzo diretto vale fuori dal ponte.
+  // 472 con l'elenco delle card che portano un'immagine: il nucleo puro
+  // `core/superfici-con-immagine.js` — quali card della plancia, di chi sono,
+  // e dove sta scritta la loro immagine.
   assert.ok(
-    relative.length <= 470,
+    relative.length <= 472,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
@@ -1765,7 +1771,12 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // di tre pagine (Sicurezza, EV, Irrigazione): sono i suoi orologi e le
   // particelle della ricarica a dover partire e fermarsi quando quelle pagine
   // entrano ed escono dallo schermo.
-  assert.ok(observers.length <= 13, `too many production observers: ${observers.length}`);
+  // Il quattordicesimo e' dei riquadri con l'immagine, e guarda solo le pagine
+  // dove stanno le card che ne portano una (`PAGINE_CON_IMMAGINI`): le luci,
+  // il clima, le tapparelle, le stanze… le disegnano il guscio e le sue
+  // sezioni, ognuna a modo suo e senza un nome comune da avvolgere, e la foto
+  // va rimessa sotto ogni card appena rifatta.
+  assert.ok(observers.length <= 14, `too many production observers: ${observers.length}`);
   for (const [file, source] of observers) {
     assert.doesNotMatch(
       source,

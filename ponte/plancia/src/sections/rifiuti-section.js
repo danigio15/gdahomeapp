@@ -304,12 +304,6 @@ function calendarioMarkup(calendario) {
 function vuotoMarkup() {
   return `<div class="dm-rifiuti-vuoto">
     <strong>${esc(t("Nessun ritiro configurato", "No collection configured"))}</strong>
-    <span>${esc(
-      t(
-        "Aggiungi i materiali dalla scheda Rifiuti della configurazione: per ognuno il sensore o il calendario che dice quando passa il ritiro.",
-        "Add the materials from the Waste tab in the settings: for each one the sensor or calendar that says when the collection comes.",
-      ),
-    )}</span>
   </div>`;
 }
 

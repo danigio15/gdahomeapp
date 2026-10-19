@@ -58,14 +58,14 @@ void main() {
     ponte.unaCasaChiedeAiuto(
       'casa_0123456789abcdef0123456789abcdef',
       'Le telecamere non partono.',
-      nome: 'Giovanni',
+      nome: 'Persona 1',
     );
     final console = LaConsole(filo);
     expect(await console.cE(), isTrue);
 
     final coda = await console.coda();
     expect(coda, hasLength(1));
-    expect(coda.single.comeSiChiama, 'Giovanni');
+    expect(coda.single.comeSiChiama, 'Persona 1');
     expect(coda.single.nonLetti, 1);
     expect(coda.single.ultimo, 'Le telecamere non partono.');
     /* Le tre note arrivano insieme alle parole, e sono la meta' delle domande

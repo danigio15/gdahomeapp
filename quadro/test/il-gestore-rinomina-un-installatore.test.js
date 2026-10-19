@@ -1,7 +1,7 @@
 /* Chi tiene il quadro puo' rinominare un installatore.
  *
- * Un nome sbagliato al momento di iscriverlo — «giovanni» invece di
- * «Elettrotecnica Giovanni» — non e' un dettaglio: e' quello che l'installatore
+ * Un nome sbagliato al momento di iscriverlo — «persona_1» invece di
+ * «Elettrotecnica Persona 1» — non e' un dettaglio: e' quello che l'installatore
  * legge in cima al suo cruscotto, e quello che il quadro dice a ogni rapporto
  * alle sue case, che lo mettono in cima alla plancia. Fino a ieri l'unica via
  * era eliminarlo e rifarlo, cioe' riabbinare ogni impianto.
@@ -58,7 +58,7 @@ async function banco() {
   const uno = await (
     await gestore("/installatori", {
       method: "POST",
-      body: JSON.stringify({ nome: "giovanni", soglia: 0 }),
+      body: JSON.stringify({ nome: "persona_1", soglia: 0 }),
     })
   ).json();
   const retro = (via, opzioni = {}) =>
@@ -101,21 +101,21 @@ test("il nome nuovo arriva nella gestione, nel cruscotto di lui e alle sue case"
      * rapporto dopo deve sentirsi dire il nome nuovo. */
     const codice = (await (await b.retro("/inviti", { method: "POST", body: "{}" })).json()).codice;
     const prima = await (await b.deposita(UNA, codice)).json();
-    assert.equal(prima.di, "giovanni");
+    assert.equal(prima.di, "persona_1");
 
     const risposta = await b.gestore(`/installatore/${b.uno.chi}`, {
       method: "PUT",
-      body: JSON.stringify({ nome: "  Elettrotecnica   Giovanni  " }),
+      body: JSON.stringify({ nome: "  Elettrotecnica   Persona 1  " }),
     });
     assert.equal(risposta.status, 200);
 
     const elenco = (await (await b.gestore("/installatori")).json()).installatori;
-    assert.equal(elenco.find((altro) => altro.chi === b.uno.chi)?.nome, "Elettrotecnica Giovanni");
-    assert.equal((await (await b.retro("/io")).json()).nome, "Elettrotecnica Giovanni");
+    assert.equal(elenco.find((altro) => altro.chi === b.uno.chi)?.nome, "Elettrotecnica Persona 1");
+    assert.equal((await (await b.retro("/io")).json()).nome, "Elettrotecnica Persona 1");
     /* La chiave e' la stessa: rinominare non e' rifare. */
     const dopo = await (await b.deposita(UNA, codice)).json();
     assert.equal(dopo.presa, true);
-    assert.equal(dopo.di, "Elettrotecnica Giovanni");
+    assert.equal(dopo.di, "Elettrotecnica Persona 1");
   } finally {
     await b.chiudi();
   }
@@ -137,7 +137,7 @@ test("un nome vuoto non passa, e cambiare la soglia non tocca il nome", async ()
       body: JSON.stringify({ soglia: 5 }),
     });
     const suo = (await (await b.gestore("/installatori")).json()).installatori[0];
-    assert.equal(suo.nome, "giovanni");
+    assert.equal(suo.nome, "persona_1");
     assert.equal(suo.soglia, 5);
   } finally {
     await b.chiudi();

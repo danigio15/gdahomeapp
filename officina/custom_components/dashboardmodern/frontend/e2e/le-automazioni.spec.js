@@ -880,8 +880,13 @@ test("la sezione della dashboard: la linguetta prima di Config, le tessere, i gr
     await sezione.locator(`[data-aug-apri="${g}"]`).click();
   await expect(sezione.locator("[data-auc-carta]")).toHaveCount(5);
   await expect(espandi).toBeDisabled();
-  /* «＋ Nuova» sta nella barra dei filtri. */
-  await expect(sezione.locator(".ad-filtri [data-auc-nuova]")).toBeVisible();
+  /* Nessun rimando al config dalla sezione: niente «＋ Nuova», niente
+   * «Gestisci nel config». */
+  await expect(sezione.locator("[data-auc-nuova]")).toHaveCount(0);
+  await expect(sezione.locator(".ad-cfg, [data-auc-config], [data-auc-config-nuova]")).toHaveCount(
+    0,
+  );
+  await expect(sezione).not.toContainText("nel config");
   const carta = sezione.locator('[data-auc-carta="automation.a1001"]');
   await expect(carta.locator(".aug-nome")).toHaveText("Tapparelle mattina");
   await expect(carta.locator(".aug-fr")).toContainText("Alle 07:15");
@@ -910,7 +915,7 @@ test("la sezione della dashboard: la linguetta prima di Config, le tessere, i gr
   await sezione.locator('[data-auc-per="stanza"]').click();
   await expect(sezione.locator(".aug-titolo").first()).toHaveText("Corridoio");
   await sezione.locator('[data-aug-apri="stanza:Corridoio"]').click();
-  /* Il foglio: in sola lettura, con «Esegui ora» e «Modifica nel config ›». */
+  /* Il foglio: in sola lettura, con «Esegui ora» e senza «Modifica nel config ›». */
   await sezione.locator('[data-auc-carta="automation.a1002"]').click();
   const foglio = page.locator("#auc-foglio .ad-foglio");
   await expect(foglio.locator("h4")).toHaveText("Luce corridoio di notte");
@@ -924,11 +929,9 @@ test("la sezione della dashboard: la linguetta prima di Config, le tessere, i gr
       service: "trigger",
       data: { entity_id: "automation.a1002", skip_condition: true },
     });
-  await foglio.locator("[data-auc-modifica]").click();
-  await expect(page.locator("#auc-foglio")).toHaveCount(0);
-  await expect(page.locator('#ed-body .au-web [data-au-testo="nome"]')).toHaveValue(
-    "Luce corridoio di notte",
-  );
+  await expect(foglio.locator("[data-auc-modifica]")).toHaveCount(0);
+  await expect(foglio).not.toContainText("config");
+  await expect(page.locator("#editor-modal.show")).toHaveCount(0);
 });
 
 test("la sezione della dashboard senza Premium: velata, e la finestra dello store", async ({

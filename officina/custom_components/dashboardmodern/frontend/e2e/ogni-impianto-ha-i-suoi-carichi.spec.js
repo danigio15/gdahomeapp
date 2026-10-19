@@ -34,14 +34,14 @@ const SEME = {
     pool: {},
     irrigation: { zones: [] },
     energy: {
-      name: "Casa Giovanni",
+      name: "Casa Persona 1",
       grid: { power: "sensor.rete_w" },
       solar: { power: "sensor.fv_w" },
       house: { power: "sensor.casa_w" },
       plants: [
         {
           id: "impianto-2",
-          name: "Casa Donato",
+          name: "Casa Persona 5",
           grid: { power: "sensor.rete2_w" },
           solar: { power: "sensor.fv2_w" },
           house: { power: "sensor.casa2_w" },
@@ -97,11 +97,11 @@ test("ogni impianto ha i suoi cerchi, e cambiare linguetta li cambia", async ({
     .evaluate((b) => b.click());
   await page.waitForTimeout(1500);
 
-  /* Casa Giovanni e' il primo impianto: il forno e' suo, e la lavatrice —
+  /* Casa Persona 1 e' il primo impianto: il forno e' suo, e la lavatrice —
    * scritta sull'altra casa — non la vede. */
   await expect.poll(() => cerchi(page)).toEqual(["Forno"]);
 
-  // Si passa a Casa Donato dalla linguetta, come farebbe un dito.
+  // Si passa a Casa Persona 5 dalla linguetta, come farebbe un dito.
   // Click diretto: la riga delle linguette si ridisegna, e l'attesa di
   // stabilita' non arriverebbe mai.
   await page
@@ -270,7 +270,7 @@ test("con due impianti il nome del cerchio lo dice il carico, non lo specchio", 
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
   await page.evaluate(() => {
     /* Lo specchio come lo lascia chi ha appena salvato il secondo impianto:
-     * la prima casella parla della Lavatrice di casa Donato. */
+     * la prima casella parla della Lavatrice di casa Persona 5. */
     localStorage.setItem(
       "cd_flow_nodes",
       JSON.stringify({

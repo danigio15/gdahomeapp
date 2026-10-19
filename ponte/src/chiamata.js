@@ -99,6 +99,16 @@ const ATTESA_DELLA_PRESENTAZIONE = 20 * SECONDO;
 const BATTITO = 30 * SECONDO;
 const SILENZIO_MASSIMO = 90 * SECONDO;
 
+/* Le notifiche partite mentre il filo col centralino e' giu' — il router di
+ * notte, il centralino che si riavvia, la ribussata che aspetta — non si
+ * buttano: si tengono qui, chiuse com'erano, e partono appena il centralino
+ * ci riconosce. Al piu' cinquanta, e al piu' per dieci minuti: un antifurto di
+ * dieci minuti fa si dice ancora (il telefono lo mostra senza tasti, perche'
+ * scaduto), uno di un'ora no. Le buste restano cifrate per il telefono: qui
+ * non si apre niente, e niente si scrive sul disco. */
+export const SPINTE_IN_ATTESA = 50;
+export const ATTESA_DELLE_SPINTE = 10 * 60 * SECONDO;
+
 export class Chiamata {
   constructor({
     dove,
@@ -109,6 +119,7 @@ export class Chiamata {
     attesaMassima = ATTESA_MASSIMA,
     battito = BATTITO,
     silenzioMassimo = SILENZIO_MASSIMO,
+    attesaDelleSpinte = ATTESA_DELLE_SPINTE,
   }) {
     this.dove = String(dove || "").replace(/\/+$/, "");
     this.identita = identita;
@@ -154,6 +165,9 @@ export class Chiamata {
      * dire «nessuno ha mai detto niente», e allora non si manda niente. */
     this._gettoni = null;
     this._spinte = 0;
+    /* Le notifiche che aspettano il filo: vedi `SPINTE_IN_ATTESA`. */
+    this._spinteInAttesa = [];
+    this.attesaDelleSpinte = attesaDelleSpinte;
     /* Chi sente che un gettone non vale piu': `notifiche.js`. */
     this.alGettoneMorto = null;
   }
@@ -186,18 +200,42 @@ export class Chiamata {
     this._manda({ t: "spinta-elenco", telefoni: this._gettoni });
   }
 
-  /* Una notifica, gia' chiusa. `false` se il filo non c'e': senza centralino
-   * una notifica non ha strada, e chi chiama lo deve sapere. */
-  spingi({ telefono, busta, urgente = false }) {
-    if (!this.dentro) return false;
+  /* Una notifica, gia' chiusa. Col filo giu' aspetta qui che torni
+   * (`SPINTE_IN_ATTESA`), e torna `true` lo stesso: partira'. `false` solo se
+   * una strada non c'e' e non ci sara' — nessun centralino, o un centralino
+   * che ci ha detto di no — oppure se chi chiama non vuole aspettare
+   * (`aspetta: false`, la prova: «non e' partita» e' la risposta giusta). */
+  spingi({ telefono, busta, urgente = false, aspetta = true }) {
+    const spinta = { telefono, busta, urgente: urgente === true };
+    if (this.dentro) return this._spingiOra(spinta);
+    if (!aspetta || !this.accesa || this.rifiutata) return false;
+    this._spinteInAttesa.push({ ...spinta, il: Date.now() });
+    if (this._spinteInAttesa.length > SPINTE_IN_ATTESA) this._spinteInAttesa.shift();
+    return true;
+  }
+
+  _spingiOra({ telefono, busta, urgente }) {
     this._spinte += 1;
-    return this._manda({
-      t: "spinta",
-      n: this._spinte,
-      telefono,
-      busta,
-      urgente: urgente === true,
-    });
+    return this._manda({ t: "spinta", n: this._spinte, telefono, busta, urgente });
+  }
+
+  /* Il filo e' tornato: partono quelle che aspettavano, nell'ordine in cui
+   * erano arrivate, meno quelle ormai troppo vecchie. */
+  _mandaLeSpinteInAttesa() {
+    const limite = Date.now() - this.attesaDelleSpinte;
+    const ancora = this._spinteInAttesa.filter((una) => una.il >= limite);
+    this._spinteInAttesa = [];
+    for (const [quale, una] of ancora.entries()) {
+      if (this.dentro && this._spingiOra(una)) continue;
+      /* Il filo e' ricaduto a meta': il resto aspetta il prossimo giro. */
+      this._spinteInAttesa = ancora.slice(quale);
+      return;
+    }
+  }
+
+  /* Quante notifiche aspettano il filo, per la console e per le prove. */
+  get spinteInAttesa() {
+    return this._spinteInAttesa.length;
   }
 
   /* La foto di una notifica, gia' chiusa per quel telefono (`spinta.js`,
@@ -390,6 +428,9 @@ export class Chiamata {
       /* E i gettoni delle notifiche: un centralino che si riavvia li ha sul
        * disco, ma un telefono staccato mentre il filo era giu' no. */
       this._mandaIGettoni();
+      /* E le notifiche partite mentre il filo era giu', dopo i gettoni:
+       * sono gli indirizzi a cui il centralino le consegna. */
+      this._mandaLeSpinteInAttesa();
       return;
     }
     if (detto.t === "no") {
@@ -399,6 +440,8 @@ export class Chiamata {
       this.registro.errore(`il centralino ci rifiuta: ${this.rifiutata}`);
       this._chiudiLaPresa();
       this._buttaGiuITelefoni();
+      /* Non c'e' piu' strada: quelle che aspettavano non partiranno. */
+      this._spinteInAttesa = [];
       return;
     }
   }
@@ -602,6 +645,7 @@ export class Chiamata {
   spegni() {
     this._spentaApposta = true;
     this.dentro = false;
+    this._spinteInAttesa = [];
     clearTimeout(this._riprova);
     this._riprova = null;
     this._smettiDiBattere();

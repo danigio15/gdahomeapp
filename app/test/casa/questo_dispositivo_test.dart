@@ -13,8 +13,8 @@ void main() {
   group('il nome di un telefono', () {
     test('se il telefono ne dice uno vero, si tiene quello', () {
       expect(
-        nomeDelTelefono(detto: 'iPhone di Giovanni', sistema: 'ios'),
-        'iPhone di Giovanni',
+        nomeDelTelefono(detto: 'iPhone di Persona 1', sistema: 'ios'),
+        'iPhone di Persona 1',
       );
       expect(
         nomeDelTelefono(detto: 'Pixel-di-casa', sistema: 'android'),

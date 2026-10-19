@@ -32,7 +32,7 @@ const SEME = {
 };
 
 const PERSONE = [
-  { id: "person-andrea", name: "Andrea", entity: "person.andrea" },
+  { id: "person-persona-8", name: "Persona 8", entity: "person.persona_8" },
   { id: "person-puma", name: "Puma", entity: "person.puma" },
   { id: "person-raffy", name: "Raffy", entity: "person.raffy" },
 ];
@@ -72,16 +72,16 @@ test("il tasto in fondo salva anche le righe dopo la prima", async ({ page }, te
 
   /* Si riscrive la TERZA, che e' quella che il vecchio giro non raggiungeva
      mai: dopo il salvataggio della prima il suo bottone era gia' staccato. */
-  await riscrivi(page, 2, "person.raffaella");
+  await riscrivi(page, 2, "person.persona_16");
   await page.locator("#ed-body .dm-save-footer-btn").evaluate((nodo) => nodo.click());
 
   const salvate = await page.evaluate(() =>
     JSON.parse(window.localStorage.getItem("cd_people") || "[]"),
   );
   expect(salvate).toHaveLength(3);
-  expect(salvate[2].entity).toBe("person.raffaella");
+  expect(salvate[2].entity).toBe("person.persona_16");
   // E le altre restano quelle che erano: si salva, non si riscrive tutto.
-  expect(salvate[0].entity).toBe("person.andrea");
+  expect(salvate[0].entity).toBe("person.persona_8");
   expect(salvate[1].entity).toBe("person.puma");
 });
 
@@ -95,7 +95,7 @@ test("due righe cambiate insieme si salvano tutte e due", async ({ page }, testI
     JSON.parse(window.localStorage.getItem("cd_people") || "[]"),
   );
   expect(salvate.map((persona) => persona.entity)).toEqual([
-    "person.andrea",
+    "person.persona_8",
     "device_tracker.puma_telefono",
     "device_tracker.raffy_telefono",
   ]);

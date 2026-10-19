@@ -30,7 +30,7 @@ const SEME = {
     pool: {},
     irrigation: { zones: [] },
     energy: {
-      name: "Casa Giovanni",
+      name: "Casa Persona 1",
       grid: { power: "sensor.rete_w" },
       solar: { power: "sensor.fv_w" },
       house: { power: "sensor.casa_w" },
@@ -38,7 +38,7 @@ const SEME = {
       plants: [
         {
           id: "impianto-2",
-          name: "Casa Donato",
+          name: "Casa Persona 5",
           grid: { power: "sensor.rete2_w" },
           house: { power: "sensor.casa2_w" },
         },

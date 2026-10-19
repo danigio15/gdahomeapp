@@ -16,7 +16,7 @@
  * questo dispositivo.
  *
  * Qui si guarda quello che uno vede: l'agenda di casa finché nessuno dice chi
- * è, e l'agenda di Mario appena lo dice.
+ * è, e l'agenda di Persona 6 appena lo dice.
  */
 import { expect, test } from "@playwright/test";
 import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
@@ -24,16 +24,21 @@ import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
 const stato = (entity_id, state, attributes = {}) => ({ entity_id, state, attributes });
 
 const STATI = [
-  stato("person.mario", "home", { friendly_name: "Mario", user_id: "u-mario" }),
-  stato("person.anna", "not_home", { friendly_name: "Anna", user_id: "u-anna" }),
+  stato("person.persona_6", "home", { friendly_name: "Persona 6", user_id: "u-persona-6" }),
+  stato("person.persona_2", "not_home", { friendly_name: "Persona 2", user_id: "u-persona-2" }),
   stato("calendar.famiglia", "off", { friendly_name: "Famiglia" }),
-  stato("calendar.mario", "off", { friendly_name: "Mario" }),
+  stato("calendar.persona_6", "off", { friendly_name: "Persona 6" }),
 ];
 
-/* Due calendari: quello di casa, e quello di Mario. */
+/* Due calendari: quello di casa, e quello di Persona 6. */
 const CALENDARI = [
   { id: "cal-casa", entity: "calendar.famiglia", name: "Famiglia" },
-  { id: "cal-mario", entity: "calendar.mario", name: "Mario", persone: ["u-mario"] },
+  {
+    id: "cal-persona-6",
+    entity: "calendar.persona_6",
+    name: "Persona 6",
+    persone: ["u-persona-6"],
+  },
 ];
 
 const SEME = {
@@ -60,7 +65,7 @@ const SEME = {
 function eventiDi(entity) {
   const domani = new Date(Date.now() + 26 * 3600000);
   const fine = new Date(domani.getTime() + 3600000);
-  const titolo = entity === "calendar.mario" ? "Dentista di Mario" : "Cena di famiglia";
+  const titolo = entity === "calendar.persona_6" ? "Dentista di Persona 6" : "Cena di famiglia";
   return {
     response: {
       [entity]: {

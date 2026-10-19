@@ -110,7 +110,7 @@ test("senza segreto e senza linea valida non si passa", async () => {
   try {
     assert.equal((await b.casa("", { segreto: "" })).status, 401);
     assert.equal((await b.casa("", { segreto: "corto" })).status, 401);
-    assert.equal((await b.casa("", { casa: "pippo" })).status, 400);
+    assert.equal((await b.casa("", { casa: "xyz" })).status, 400);
   } finally {
     await b.spegni();
   }
@@ -166,14 +166,14 @@ test("la console vede l'elenco, risponde, e la casa lo legge", async () => {
     await b.casa("", {
       metodo: "POST",
       corpo: { testo: "La luce non si spegne" },
-      note: { versione: "plancia 1.4.19 ponte 0.18.0", ha: "2026.1.0", nome: "Giovanni" },
+      note: { versione: "plancia 1.4.19 ponte 0.18.0", ha: "2026.1.0", nome: "Persona 1" },
     });
 
     const elenco = await (await b.console()).json();
     assert.equal(elenco.conversazioni.length, 1);
     const riga = elenco.conversazioni[0];
     assert.equal(riga.id, CASA);
-    assert.equal(riga.nome, "Giovanni");
+    assert.equal(riga.nome, "Persona 1");
     assert.equal(riga.versione, "plancia 1.4.19 ponte 0.18.0");
     assert.equal(riga.ultimo, "La luce non si spegne");
     assert.equal(riga.non_letti, 1);
@@ -282,10 +282,10 @@ test("un messaggio vuoto non e' un messaggio", async () => {
 test("il nome lasciato vuoto non cancella quello di ieri", async () => {
   const b = await banco();
   try {
-    await b.casa("", { metodo: "POST", corpo: { testo: "Uno" }, note: { nome: "Giovanni" } });
+    await b.casa("", { metodo: "POST", corpo: { testo: "Uno" }, note: { nome: "Persona 1" } });
     await b.casa("", { metodo: "POST", corpo: { testo: "Due" } });
     const elenco = await (await b.console()).json();
-    assert.equal(elenco.conversazioni[0].nome, "Giovanni");
+    assert.equal(elenco.conversazioni[0].nome, "Persona 1");
   } finally {
     await b.spegni();
   }
@@ -407,9 +407,9 @@ test("nemmeno il nome e l'anteprima spezzano un emoji", async () => {
 test("un nome tutto emoji arriva intero, se ci sta", async () => {
   const b = await banco();
   try {
-    await b.casa("", { metodo: "POST", corpo: { testo: "Ciao", nome: "Giovanni 🙂" } });
+    await b.casa("", { metodo: "POST", corpo: { testo: "Ciao", nome: "Persona 1 🙂" } });
     const { conversazioni } = await (await b.console()).json();
-    assert.equal(conversazioni[0].nome, "Giovanni 🙂");
+    assert.equal(conversazioni[0].nome, "Persona 1 🙂");
   } finally {
     await b.spegni();
   }

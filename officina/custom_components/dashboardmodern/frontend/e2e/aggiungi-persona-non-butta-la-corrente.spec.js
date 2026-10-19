@@ -46,12 +46,12 @@ test("il nome scritto a meta' sopravvive al secondo Aggiungi", async ({ page }, 
   await aggiungi.click();
   const nome = page.locator('#editor-modal [data-person-index="0"] [data-person-field="name"]');
   await expect(nome).toBeVisible({ timeout: 10000 });
-  await nome.fill("Marco");
+  await nome.fill("Persona 3");
 
   /* Seconda persona, SENZA aver salvato la prima: il nome resta. */
   await aggiungi.click();
   await expect(
     page.locator('#editor-modal [data-person-index="0"] [data-person-field="name"]'),
-  ).toHaveValue("Marco", { timeout: 10000 });
+  ).toHaveValue("Persona 3", { timeout: 10000 });
   await expect(page.locator("#editor-modal [data-person-index]")).toHaveCount(2);
 });

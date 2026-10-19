@@ -29,21 +29,17 @@ import {
   blocchiDellaPagina,
   domandaDelleUltimeOre,
   fasciaUV,
-  fraseDelleProssimeOre,
   gradiDelVento,
-  inEttopascal,
-  letturaDi,
+  letturaDellaStazione,
   minimoEMassimo,
-  misureDiAdesso,
   normalizzaMeteo,
   pioggiaOraPerOra,
-  prossimeOre,
-  prossimiGiorni,
   puntoDiRugiada,
   serieAPassoFisso,
   serieDallaStoria,
   spicchioDelVento,
   tendenzaDellaPressione,
+  vistaDelMeteoDa,
 } from "../core/la-pagina-meteo.js";
 import { inMillimetri, stapiovendo } from "../core/pioggia-caduta.js";
 import { quantoTempoInParole } from "../core/da-quanto.js";
@@ -55,7 +51,6 @@ import {
   previsioniDeiGiorniFresche,
 } from "./la-card-del-meteo-section.js";
 import { disegnaRadarIn, radarScelto } from "./radar-meteo-section.js";
-import { puoConfigurare } from "./la-config-e-di-chi-la-amministra-section.js";
 import { registraTitoloDiPagina } from "./page-masthead-section.js";
 import {
   allStates,
@@ -126,16 +121,6 @@ export function sensoriDellaStazione() {
       misura.casella ? caselle[misura.casella] : misura.barra ? barra?.[misura.barra] : pagina[misura.pagina],
     );
     if (entita.includes(".") && entita !== misura.casella) fuori[misura.chiave] = entita;
-  }
-  return fuori;
-}
-
-/** Le letture della stazione adesso: `{ misura: { valore, unita, quando, entity } }`. */
-function letturaDellaStazione(sensori, states) {
-  const fuori = {};
-  for (const [chiave, entity] of Object.entries(sensori)) {
-    const lettura = letturaDi(states?.[entity]);
-    if (lettura) fuori[chiave] = { ...lettura, entity };
   }
   return fuori;
 }
@@ -222,6 +207,13 @@ async function aggiornaLaStoria(entita) {
     s.firma = firma;
     s.chiesta = Date.now();
     s.fallita = 0;
+    const tutti = [...chiAspettaLaStoria];
+    chiAspettaLaStoria.clear();
+    for (const avvisa of tutti) {
+      try {
+        avvisa();
+      } catch (_errore) {}
+    }
   } catch (errore) {
     if (errore?.message !== "socket") s.fallita = Date.now();
     s.firma = firma;
@@ -262,12 +254,26 @@ export function previsioniDelMeteo(entita, quandoArrivano = null) {
     : nessuna;
 }
 
+/* La cronologia della stazione per chi la mostra fuori da questa pagina: la
+ * pagina Meteo della plancia a muro. La stessa domanda di qui, la stessa
+ * cache, gli stessi cinque minuti e lo stesso minuto dopo un errore: chiamata
+ * a ogni ridisegno del tablet, a Home Assistant si chiede solo quando e' ora.
+ * Nessun giro in piu': la chiama il battito che il tablet ha gia'.
+ * `quandoArriva` si chiama una volta, quando la prossima e' arrivata. */
+const chiAspettaLaStoria = new Set();
+export function storiaDellaStazione(sensori, quandoArriva = null) {
+  const elenco = Object.values(sensori || {}).filter((entity) => clean(entity).includes("."));
+  if (!elenco.length) return false;
+  if (typeof quandoArriva === "function") chiAspettaLaStoria.add(quandoArriva);
+  aggiornaLaStoria(elenco).catch(() => {});
+  return Boolean(state.storia.chiesta);
+}
+
 /* La serie di un'entita', con il valore di adesso in fondo: la cronologia e'
  * di cinque minuti fa, lo stato e' di adesso. */
-function serieDi(entity, lettura) {
+function serieDi(entity, lettura, adesso = Date.now()) {
   const serie = Array.isArray(state.storia.serie?.[entity]) ? [...state.storia.serie[entity]] : [];
-  if (lettura && Number.isFinite(lettura.valore))
-    serie.push({ quando: Date.now(), valore: lettura.valore });
+  if (lettura && Number.isFinite(lettura.valore)) serie.push({ quando: adesso, valore: lettura.valore });
   return serie;
 }
 
@@ -344,24 +350,6 @@ function accendiLaVoce(entita) {
   if (!serve && pagina?.classList.contains("active"))
     doc.querySelector('.tab[data-tab="home"]')?.click();
   return serve;
-}
-
-/* Il Config, aperto sulla scheda Meteo: l'invito della stazione porta li'. */
-export function apriMeteoNelConfig() {
-  if (typeof root.apriConfigEntita !== "function") return false;
-  root.apriConfigEntita();
-  let giri = 0;
-  const vai = () => {
-    if (doc?.querySelector?.(`#editor-modal .ed-tab[data-tab="${METEO_TAB}"]`)) {
-      try {
-        root.editorSwitch?.(METEO_TAB);
-      } catch (_errore) {}
-      return;
-    }
-    if (giri++ < 60) (root.requestAnimationFrame || root.setTimeout)?.(vai, 16);
-  };
-  vai();
-  return true;
 }
 
 /* ── le parole ────────────────────────────────────────────────────────── */
@@ -510,7 +498,7 @@ export function fraseInParole(frase) {
 
 const icona = (nome, misura = 26) => disegnoDelCatalogo(nome, misura) || "";
 
-function spark(valori, { colore, alto = 46, secondo = null, id = "s" } = {}) {
+function spark(valori, { colore, alto = 46, secondo = null, id = "s", prefisso = "" } = {}) {
   const tutti = (secondo ? valori.concat(secondo) : valori).filter(Number.isFinite);
   if (valori.length < 2 || !tutti.length) return "";
   const basso = Math.min(...tutti);
@@ -523,9 +511,9 @@ function spark(valori, { colore, alto = 46, secondo = null, id = "s" } = {}) {
     vv.map((v, i) => `${i ? "L" : "M"}${x(i, vv.length).toFixed(1)},${y(v).toFixed(1)}`).join("");
   const area = `${linea(valori)}L${W},${alto}L0,${alto}Z`;
   return `<svg class="dm-meteo-spark" viewBox="0 0 ${W} ${alto}" preserveAspectRatio="none" aria-hidden="true">
-      <defs><linearGradient id="dm-meteo-g-${id}" x1="0" y1="0" x2="0" y2="1">
+      <defs><linearGradient id="dm-meteo-g-${prefisso}${id}" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="${colore}" stop-opacity=".28"/><stop offset="1" stop-color="${colore}" stop-opacity="0"/></linearGradient></defs>
-      <path d="${area}" fill="url(#dm-meteo-g-${id})"/>
+      <path d="${area}" fill="url(#dm-meteo-g-${prefisso}${id})"/>
       ${secondo && secondo.length > 1 ? `<path d="${linea(secondo)}" fill="none" stroke="${colore}" stroke-opacity=".38" stroke-width="1.6" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>` : ""}
       <path d="${linea(valori)}" fill="none" stroke="${colore}" stroke-width="2.2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
       <circle cx="${W}" cy="${y(valori[valori.length - 1]).toFixed(1)}" r="3.2" fill="${colore}"/>
@@ -679,14 +667,17 @@ function adessoMarkup(vista) {
 
 function stazioneMarkup(vista) {
   const { stazione, adesso } = vista;
+  /* Il muro mette la sua pagina accanto a questa: i gradienti delle linee
+   * hanno un nome loro, o il secondo dipingerebbe col primo, nascosto. */
+  const prefisso = clean(vista.prefisso);
   const inizio = adesso - 24 * H;
-  const passo = (lettura) => serieAPassoFisso(serieDi(lettura.entity, lettura), { inizio, fine: adesso });
+  const passo = (lettura) => serieAPassoFisso(serieDi(lettura.entity, lettura, adesso), { inizio, fine: adesso });
   const tessere = [];
   const quando = (punto) => oraDi(punto?.quando);
 
   const temp = stazione.temperatura;
   if (temp) {
-    const estremi = minimoEMassimo(serieDi(temp.entity, temp), { da: inizio });
+    const estremi = minimoEMassimo(serieDi(temp.entity, temp, adesso), { da: inizio });
     tessere.push(
       tessera({
         chiave: "temperatura",
@@ -697,7 +688,7 @@ function stazioneMarkup(vista) {
         sotto: estremi
           ? `${esc(t("min", "min"))} ${b(`${numeroBello(estremi.minimo.valore, 1)}°`)} ${esc(t("alle", "at"))} ${esc(quando(estremi.minimo))} · ${esc(t("max", "max"))} ${b(`${numeroBello(estremi.massimo.valore, 1)}°`)} ${esc(t("alle", "at"))} ${esc(quando(estremi.massimo))}`
           : "",
-        grafico: spark(passo(temp), { colore: "#f97316", id: "temperatura" }),
+        grafico: spark(passo(temp), { colore: "#f97316", id: "temperatura", prefisso }),
         colore: "#f97316",
       }),
     );
@@ -715,7 +706,7 @@ function stazioneMarkup(vista) {
         valore: numeroBello(umidita.valore, 0),
         unita: umidita.unita || "%",
         sotto: rugiada === null ? "" : `${esc(t("punto di rugiada", "dew point"))} ${b(`${numeroBello(rugiada, 1)}°`)}`,
-        grafico: spark(passo(umidita), { colore: "#0ea5e9", id: "umidita" }),
+        grafico: spark(passo(umidita), { colore: "#0ea5e9", id: "umidita", prefisso }),
         colore: "#0ea5e9",
       }),
     );
@@ -723,7 +714,7 @@ function stazioneMarkup(vista) {
 
   const pressione = stazione.pressione;
   if (pressione) {
-    const tendenza = tendenzaDellaPressione(serieDi(pressione.entity, pressione), {
+    const tendenza = tendenzaDellaPressione(serieDi(pressione.entity, pressione, adesso), {
       adesso,
       unita: pressione.unita || "hPa",
     });
@@ -751,7 +742,7 @@ function stazioneMarkup(vista) {
         unita: pressione.unita || "hPa",
         stato,
         sotto: tendenza ? `${b(differenza)} ${esc(t("nelle ultime 3 ore", "in the last 3 hours"))}${esc(giudizio)}` : "",
-        grafico: spark(passo(pressione), { colore: "#8b5cf6", id: "pressione" }),
+        grafico: spark(passo(pressione), { colore: "#8b5cf6", id: "pressione", prefisso }),
         colore: "#8b5cf6",
       }),
     );
@@ -762,7 +753,7 @@ function stazioneMarkup(vista) {
   if (oggi || intensita) {
     const adessoMmH = intensita ? inMillimetri(intensita.valore, intensita.unita) : null;
     const piove = adessoMmH !== null && stapiovendo(adessoMmH);
-    const ore = oggi ? pioggiaOraPerOra(serieDi(oggi.entity, oggi), { adesso, unita: oggi.unita || "mm" }) : [];
+    const ore = oggi ? pioggiaOraPerOra(serieDi(oggi.entity, oggi, adesso), { adesso, unita: oggi.unita || "mm" }) : [];
     const ultima = [...ore].reverse().find((casella) => casella.mm > 0);
     const valore = oggi ? inMillimetri(oggi.valore, oggi.unita) : adessoMmH;
     tessere.push(
@@ -784,7 +775,7 @@ function stazioneMarkup(vista) {
               ore.map((casella) => casella.mm),
               "#0284c7",
             )
-          : spark(passo(intensita), { colore: "#0284c7", id: "pioggia" }),
+          : spark(passo(intensita), { colore: "#0284c7", id: "pioggia", prefisso }),
         colore: "#0284c7",
       }),
     );
@@ -815,6 +806,7 @@ function stazioneMarkup(vista) {
         grafico: spark(passo(vento), {
           colore: "#14b8a6",
           id: "vento",
+          prefisso,
           secondo: raffica ? passo(raffica) : null,
         }),
         colore: "#14b8a6",
@@ -827,7 +819,7 @@ function stazioneMarkup(vista) {
   if (uv) {
     const mezzanotte = new Date(adesso);
     mezzanotte.setHours(0, 0, 0, 0);
-    const estremi = minimoEMassimo(serieDi(uv.entity, uv), { da: mezzanotte.getTime() });
+    const estremi = minimoEMassimo(serieDi(uv.entity, uv, adesso), { da: mezzanotte.getTime() });
     tessere.push(
       tessera({
         chiave: "uv",
@@ -852,7 +844,7 @@ function stazioneMarkup(vista) {
       /^lx$/i.test(lettura.unita) && lettura.valore >= 1000
         ? `${numeroBello(lettura.valore / 1000, 0)} klx`
         : `${numeroBello(lettura.valore, 0)} ${lettura.unita || "lx"}`;
-    const picco = minimoEMassimo(serieDi(principale.entity, principale), { da: inizio })?.massimo;
+    const picco = minimoEMassimo(serieDi(principale.entity, principale, adesso), { da: inizio })?.massimo;
     const valoreLuce = !radiazione && /^lx$/i.test(luce.unita) && luce.valore >= 1000;
     tessere.push(
       tessera({
@@ -869,7 +861,7 @@ function stazioneMarkup(vista) {
         ]
           .filter(Boolean)
           .join(" · "),
-        grafico: spark(passo(principale), { colore: "#f59e0b", id: "sole" }),
+        grafico: spark(passo(principale), { colore: "#f59e0b", id: "sole", prefisso }),
         colore: "#f59e0b",
       }),
     );
@@ -893,24 +885,6 @@ function stazioneMarkup(vista) {
           .join(" · "),
       )}
       <div class="dm-meteo-tessere">${tessere.join("")}</div>
-    </section>`;
-}
-
-function invitoMarkup() {
-  return `<section class="dm-meteo-blocco" data-dm-meteo-blocco="invito">
-      <div class="dm-meteo-invito">
-        <span class="dm-meteo-ic" aria-hidden="true">${icona("thermometer", 30)}</span>
-        <div><strong>${esc(t("Hai una stazione meteo?", "Do you have a weather station?"))}</strong>
-        <span>${esc(
-          t(
-            "Aggiungi i suoi sensori in ⚙️ Config › Meteo: qui compaiono le misure di casa tua, con le ultime 24 ore. Senza, la pagina usa solo il servizio meteo.",
-            "Add its sensors under ⚙️ Config › Weather: your home's readings show up here, with the last 24 hours. Without them, the page uses the weather service only.",
-          ),
-        )}</span></div>
-        <button type="button" class="dm-meteo-invito-tasto" data-dm-meteo-apri-config>${esc(
-          t("Apri Meteo nel Config", "Open Weather in Config"),
-        )}</button>
-      </div>
     </section>`;
 }
 
@@ -1010,62 +984,52 @@ function soleDiOggi(states) {
   return alba || tramonto ? { alba, tramonto } : null;
 }
 
-export function vistaDelMeteo(states = allStates(), adesso = Date.now()) {
-  const entita = entitaDelMeteo(states);
-  if (!entita) return null;
-  const meteo = states?.[entita] || null;
+/**
+ * La vista della pagina: `vistaDelMeteoDa` (nel nucleo) con le cose di qui —
+ * i sensori scelti nella configurazione, le previsioni e il sole. La usa
+ * anche la pagina Meteo della plancia a muro, con la sua entita' weather
+ * (`entita`) e il suo `prefisso` per i nomi dei gradienti: le misure, le
+ * tessere e le parole sono le stesse.
+ */
+export function vistaDelMeteo(states = allStates(), adesso = Date.now(), { entita = "", prefisso = "" } = {}) {
+  const scelta = clean(entita) || entitaDelMeteo(states);
+  if (!scelta) return null;
   const sensori = sensoriDellaStazione();
-  const stazione = letturaDellaStazione(sensori, states);
-  const misure = misureDiAdesso({ stazione, meteo });
-  const unita = clean(meteo?.attributes?.precipitation_unit) || "mm";
-  const p = state.previsioni.entita === entita ? state.previsioni : { orarie: [], giornaliere: [] };
-  const ore = prossimeOre(p.orarie, { adesso, ore: 24, unita }).filter((voce) =>
-    Number.isFinite(voce.temperatura),
-  );
-  const giorni = prossimiGiorni(p.giornaliere, { adesso, giorni: 7, unita });
-  const oggi = giorni.find((voce) => voce.oggi);
-  return {
-    adesso,
-    entita,
-    meteo,
-    sensori,
-    stazione,
-    misure,
-    ore,
-    giorni,
-    oggi: oggi ? { alta: oggi.temperatura, bassa: oggi.bassa } : null,
-    frase: fraseDelleProssimeOre(p.orarie, { adesso, ore: 24, unita }),
+  const p = state.previsioni.entita === scelta ? state.previsioni : { orarie: [], giornaliere: [] };
+  const vista = vistaDelMeteoDa({
+    entita: scelta,
+    meteo: states?.[scelta] || null,
+    stazione: letturaDellaStazione(sensori, states),
+    orarie: p.orarie,
+    giornaliere: p.giornaliere,
     sole: soleDiOggi(states),
-  };
+    adesso,
+  });
+  return vista ? { ...vista, sensori, prefisso: clean(prefisso) } : null;
 }
 
 /** I blocchi che la pagina mostra con questa vista, nell'ordine scelto. */
-export function blocchiDellaVista(vista, { radar = true, invito = puoConfigurareAdesso() } = {}) {
+export function blocchiDellaVista(vista, { radar = true } = {}) {
   if (!vista) return [];
   return blocchiDellaPagina(readJson(CHIAVE_METEO, {}), {
     adesso: true,
     stazione: Object.keys(vista.stazione).length > 0,
-    invito,
     ore: vista.ore.length > 0,
     giorni: vista.giorni.length > 0,
     radar,
   });
 }
 
-function puoConfigurareAdesso() {
-  try {
-    return puoConfigurare() !== false;
-  } catch (_errore) {
-    return true;
-  }
-}
-
 /* ── il disegno ───────────────────────────────────────────────────────── */
+
+/* «Adesso» e «La mia stazione» come li disegna questa pagina, per la pagina
+ * Meteo del muro: le stesse parole, le stesse tessere, le stesse linee. */
+export const adessoDelMeteo = (vista) => adessoMarkup(vista);
+export const stazioneDelMeteo = (vista) => stazioneMarkup(vista);
 
 const DISEGNI = Object.freeze({
   adesso: adessoMarkup,
   stazione: stazioneMarkup,
-  invito: invitoMarkup,
   ore: oreMarkup,
   giorni: giorniMarkup,
 });
@@ -1214,7 +1178,7 @@ function titoloDellaPagina() {
     radar: t("Radar", "Radar"),
   };
   const voci = [];
-  for (const blocco of blocchiDellaVista(vista, { invito: false })) {
+  for (const blocco of blocchiDellaVista(vista)) {
     const nome = nomi[blocco];
     if (nome && !voci.includes(nome)) voci.push(nome);
   }
@@ -1223,11 +1187,13 @@ function titoloDellaPagina() {
 
 /* ── il foglio ────────────────────────────────────────────────────────── */
 
-function installStyles() {
-  const P = `#${METEO_PAGE_ID}`;
-  installStyle(
-    "dm-meteo-section-style",
-    `
+/**
+ * Il foglio della pagina, per un contenitore `P`. Questa pagina lo usa con
+ * `#page-meteo`; il muro con il suo contenitore e senza le misure dello
+ * schermo (`media: false`), che li' decide il tablet.
+ */
+export function foglioDelMeteo(P, { media = true } = {}) {
+  return `
   ${P}{--dm-meteo-gap:16px}
   ${P} .dm-meteo-wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:22px;padding:0 0 40px}
   ${P} .dm-meteo-posto{grid-column:1/-1;min-width:0}
@@ -1307,17 +1273,6 @@ function installStyles() {
   ${P} .dm-meteo-uv-tacche{display:flex;justify-content:space-between;margin-top:6px;font-size:9.5px;font-weight:800;color:var(--text-dim,#94a3b8)}
   ${P} .dm-meteo-uv-tacche em{font-style:normal}
 
-  /* L'invito, senza stazione */
-  ${P} .dm-meteo-invito{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:20px;
-    border:1px dashed var(--card-border,#cbd5e1);background:var(--surface-2,#f8fafc)}
-  ${P} .dm-meteo-invito>div{display:grid;gap:3px;flex:1;min-width:0}
-  ${P} .dm-meteo-invito strong{font-size:14px;font-weight:900;color:var(--text,#0f172a)}
-  ${P} .dm-meteo-invito span{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
-  ${P} .dm-meteo-invito .dm-meteo-ic{--dm-meteo-c:#f97316;width:46px;height:46px}
-  ${P} .dm-meteo-invito .dm-meteo-ic svg{width:30px;height:30px}
-  ${P} .dm-meteo-invito-tasto{flex:0 0 auto;padding:10px 16px;border-radius:999px;border:0;cursor:pointer;
-    font:inherit;font-size:12px;font-weight:900;color:#fff;background:linear-gradient(135deg,#0ea5e9,#0369a1)}
-
   /* Prossime ore */
   ${P} .dm-meteo-ore-scheda{padding:14px 10px 12px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
   ${P} .dm-meteo-ore-scheda::-webkit-scrollbar{display:none}
@@ -1354,7 +1309,11 @@ function installStyles() {
   ${P} .dm-meteo-radar-scheda{padding:14px}
   ${P} .dm-meteo-radar-posto .dm-radar-blocco{margin:0}
   ${P} .dm-meteo-radar-posto .dm-radar-blocco:not([data-dm-modo="guasto"]) .dm-radar-testa{display:none}
+${media ? foglioDelleMisure(P) : ""}`;
+}
 
+function foglioDelleMisure(P) {
+  return `
   @media(max-width:1100px){
     ${P} .dm-meteo-tessere{grid-template-columns:repeat(2,minmax(0,1fr))}
     ${P} .dm-meteo-wrap{grid-template-columns:minmax(0,1fr)}
@@ -1377,17 +1336,13 @@ function installStyles() {
     ${P} .dm-meteo-giorno-ic{font-size:20px}
     ${P} .dm-meteo-giorno-p{font-size:10px}
     ${P} .dm-meteo-giorno-p em{display:none}
-    ${P} .dm-meteo-invito{flex-wrap:wrap}
     ${P} .dm-meteo-wrap{gap:18px}
   }
-    `,
-  );
+    `;
 }
 
-function onClick(evento) {
-  if (!evento.target?.closest?.("[data-dm-meteo-apri-config]")) return;
-  evento.preventDefault();
-  apriMeteoNelConfig();
+function installStyles() {
+  installStyle("dm-meteo-section-style", foglioDelMeteo(`#${METEO_PAGE_ID}`));
 }
 
 export function installMeteo() {
@@ -1397,7 +1352,6 @@ export function installMeteo() {
   ensureMeteoPage();
   ensureMeteoTab();
   registraTitoloDiPagina(METEO_PAGE_ID, titoloDellaPagina);
-  doc.addEventListener?.("click", onClick);
   for (const nome of ["render", "cdApplyNavVis"]) {
     const precedente = root[nome];
     if (typeof precedente !== "function" || precedente.__dmMeteo) continue;

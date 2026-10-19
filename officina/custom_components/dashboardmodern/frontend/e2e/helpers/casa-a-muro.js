@@ -120,9 +120,9 @@ export const STATI_A_MURO = {
   "camera.cancello": { state: "idle", attributes: { friendly_name: "Cancello" } },
   "button.apri_cancello": { state: "unknown", attributes: { friendly_name: "Apri cancello" } },
   "lock.porta": { state: "locked", attributes: { friendly_name: "Apri porta" } },
-  "person.anna": { state: "home", attributes: { friendly_name: "Anna" } },
-  "person.marco": { state: "home", attributes: { friendly_name: "Marco" } },
-  "person.luca": { state: "not_home", attributes: { friendly_name: "Luca" } },
+  "person.persona_2": { state: "home", attributes: { friendly_name: "Persona 2" } },
+  "person.persona_3": { state: "home", attributes: { friendly_name: "Persona 3" } },
+  "person.persona_11": { state: "not_home", attributes: { friendly_name: "Persona 11" } },
   "binary_sensor.finestra_cucina": {
     state: "on",
     attributes: { friendly_name: "Finestra cucina", device_class: "window" },
@@ -160,9 +160,9 @@ export async function apriLaCasaAMuro(
       localStorage.setItem(
         "cd_people",
         JSON.stringify([
-          { entity: "person.anna", name: "Anna" },
-          { entity: "person.marco", name: "Marco" },
-          { entity: "person.luca", name: "Luca" },
+          { entity: "person.persona_2", name: "Persona 2" },
+          { entity: "person.persona_3", name: "Persona 3" },
+          { entity: "person.persona_11", name: "Persona 11" },
         ]),
       );
       if (muro) localStorage.setItem("cd_muro", JSON.stringify(muro));

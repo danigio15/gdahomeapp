@@ -56,6 +56,7 @@ import 'menu.dart';
 import 'campanello.dart';
 import 'notifiche.dart';
 import '../notifiche/consegna.dart';
+import '../notifiche/dove_apre.dart';
 import '../notifiche/postino.dart';
 import 'impostazioni_app.dart';
 import 'navigatore_qui/qui.dart';
@@ -175,9 +176,42 @@ class _HomeState extends State<Home> {
           tocco: tocco,
           collegamento: widget.collegamento,
           postino: Postino.istanza,
+          vaiA: _vaiAllaNotifica,
         ),
       );
     });
+  }
+
+  /* Dove porta il tocco su una notifica (`notifiche/dove_apre.dart`): una
+   * pagina della plancia, per linguetta, o il navigatore. `false` se non ci
+   * si arriva — la plancia quella pagina non ce l'ha, la casa non risponde —
+   * e allora si apre la pagina della notifica. */
+  Future<bool> _vaiAllaNotifica(DoveApre dove) async {
+    if (!mounted) return false;
+    if (dove.posto == PostoDellaNotifica.navigatore) {
+      if (inMacchina.value || _bloccate.contains(Sezione.navigatore)) {
+        return false;
+      }
+      _vai(Sezione.navigatore);
+      return _sezione == Sezione.navigatore;
+    }
+    if (dove.posto != PostoDellaNotifica.plancia || dove.linguette.isEmpty) {
+      return false;
+    }
+    if (_laPagina == 'automazioni') {
+      _laPagina = '';
+      _plancia.currentState?.tornaDalleAutomazioni();
+    } else if (_laPaginaENellaConfig) {
+      _laPaginaENellaConfig = false;
+      _plancia.currentState?.tornaDallaConfig();
+    }
+    if (_sezione != Sezione.plancia) {
+      setState(() => _sezione = Sezione.plancia);
+      await WidgetsBinding.instance.endOfFrame;
+    }
+    final plancia = _plancia.currentState;
+    if (plancia == null) return false;
+    return plancia.apriLaLinguetta(dove.linguette);
   }
 
   /* La prima volta che si e' dentro una casa, una riga sulle notifiche e il

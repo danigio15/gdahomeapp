@@ -31,13 +31,13 @@ const SEME = {
     irrigation: { zones: [] },
     energy: {},
     entityOverrides: { "dm.home_meteo": "weather.casa" },
-    people: [{ id: "p1", name: "Giovanni", entity: "person.giovanni" }],
+    people: [{ id: "p1", name: "Persona 1", entity: "person.persona_1" }],
   },
   visibility: { home: true },
 };
 
 const STATI = [
-  { entity_id: "person.giovanni", state: "home", attributes: { friendly_name: "Giovanni" } },
+  { entity_id: "person.persona_1", state: "home", attributes: { friendly_name: "Persona 1" } },
   {
     entity_id: "weather.casa",
     state: "partlycloudy",
@@ -128,7 +128,7 @@ async function avvia(page, testInfo) {
     });
     localStorage.setItem(
       "cd_people",
-      JSON.stringify([{ id: "p1", name: "Giovanni", entity: "person.giovanni" }]),
+      JSON.stringify([{ id: "p1", name: "Persona 1", entity: "person.persona_1" }]),
     );
     window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed", { detail: {} }));
   }, STATI);

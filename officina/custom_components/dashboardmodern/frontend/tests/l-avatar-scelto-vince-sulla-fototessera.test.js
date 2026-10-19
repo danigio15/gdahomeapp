@@ -12,17 +12,17 @@ import test from "node:test";
 import { personViewModel } from "../src/core/person-model.js";
 
 const STATI = {
-  "person.andrea": {
-    entity_id: "person.andrea",
+  "person.persona_8": {
+    entity_id: "person.persona_8",
     state: "home",
-    attributes: { friendly_name: "Andrea", entity_picture: "/api/image/andrea.jpg" },
+    attributes: { friendly_name: "Persona 8", entity_picture: "/api/image/persona_8.jpg" },
   },
 };
 
 const persona = (extra) => ({
   id: "p1",
-  name: "Andrea",
-  entity: "person.andrea",
+  name: "Persona 8",
+  entity: "person.persona_8",
   photo: "",
   battery: "",
   avatar: { color: "#0ea5e9", emoji: "", face: null },
@@ -31,7 +31,7 @@ const persona = (extra) => ({
 
 test("senza avatar scelto la fototessera dell'entita' resta il ripiego", () => {
   const vista = personViewModel(persona({}), STATI);
-  assert.equal(vista.photo, "/api/image/andrea.jpg");
+  assert.equal(vista.photo, "/api/image/persona_8.jpg");
 });
 
 test("un'emoji scelta vince sulla fototessera", () => {
@@ -49,8 +49,8 @@ test("una faccia costruita vince sulla fototessera", () => {
 
 test("la foto scritta a mano vince su tutto: e' la scelta piu' precisa", () => {
   const vista = personViewModel(
-    persona({ photo: "/local/andrea.png", avatar: { color: "#0ea5e9", emoji: "🧔", face: null } }),
+    persona({ photo: "/local/persona_8.png", avatar: { color: "#0ea5e9", emoji: "🧔", face: null } }),
     STATI,
   );
-  assert.equal(vista.photo, "/local/andrea.png");
+  assert.equal(vista.photo, "/local/persona_8.png");
 });

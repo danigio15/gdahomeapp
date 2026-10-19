@@ -300,12 +300,6 @@ function eventoMarkup(evento, adesso, lingua, calendari, piuCalendari) {
 function vuotoMarkup() {
   return `<div class="dm-calp-vuoto">
     <strong>${esc(t("Nessun calendario scelto", "No calendar selected"))}</strong>
-    <span>${esc(
-      t(
-        "Scegli i calendari dalla scheda Widget della configurazione: quelli che hai già in Home Assistant compaiono da soli con «Rileva».",
-        "Pick the calendars from the Widgets tab in the settings: the ones you already have in Home Assistant appear on their own with «Detect».",
-      ),
-    )}</span>
   </div>`;
 }
 

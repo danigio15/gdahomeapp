@@ -29,7 +29,13 @@ import {
   obiettivoDaMuovere,
 } from "../core/i-due-obiettivi-del-clima.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
-import { immaginePulita, riquadroConImmagineMarkup } from "../core/immagine-del-riquadro.js";
+import {
+  classeDelFondo,
+  fondoMarkup,
+  immaginePulita,
+  riquadroConImmagineMarkup,
+} from "../core/immagine-del-riquadro.js";
+import { DISEGNI_DA_RIQUADRO } from "../core/disegni-da-riquadro.js";
 import {
   ALARM_DISARM,
   ALARM_MODES,
@@ -54,7 +60,16 @@ import {
 } from "../core/le-vesti-della-carta.js";
 import { climaScalda } from "../core/device-model.js";
 import { segnoDelTempo } from "../core/la-card-del-meteo.js";
-import { parolaDellaCondizione, previsioniDelMeteo } from "./meteo-section.js";
+import {
+  adessoDelMeteo,
+  foglioDelMeteo,
+  parolaDellaCondizione,
+  previsioniDelMeteo,
+  sensoriDellaStazione,
+  stazioneDelMeteo,
+  storiaDellaStazione,
+  vistaDelMeteo,
+} from "./meteo-section.js";
 import { oggettoWidget } from "../core/oggetti-widget.js";
 import { IN_VISTA_KEY } from "../core/state-event-gate.js";
 import {
@@ -725,6 +740,14 @@ function titoloLungo(titolo) {
   return lettere > 12 ? " mu-tit-xl" : lettere > 8 ? " mu-tit-l" : "";
 }
 
+/* Il sottotitolo: quello del tipo di pagina, e per il Meteo con la stazione
+ * quello della pagina Meteo della plancia. */
+function sottoDellaPagina(pagina) {
+  if (pagina.modello === "meteo" && Object.keys(sensoriDellaStazione()).length)
+    return t("Adesso · La mia stazione · Previsioni", "Now · My station · Forecast");
+  return SOTTO()[pagina.modello];
+}
+
 function testa(pagina, muro) {
   const o = orologio();
   /* Sulla pagina Meteo il meteo in alto ripeterebbe in piccolo quello che la
@@ -768,7 +791,7 @@ function testa(pagina, muro) {
       : "";
   return `<div class="mu-carta mu-testa${lato ? " mu-testa-lato" : ""}" style="--acc:${accento}">
     ${lato ? "" : tastoDelMenu()}
-    <div class="mu-titolo"><div class="mu-tit${titoloLungo(titoloDi(pagina))}">${esc(titoloDi(pagina))}</div><div class="mu-et mu-sot">${esc(SOTTO()[pagina.modello])}</div></div>
+    <div class="mu-titolo"><div class="mu-tit${titoloLungo(titoloDi(pagina))}">${esc(titoloDi(pagina))}</div><div class="mu-et mu-sot">${esc(sottoDellaPagina(pagina))}</div></div>
     ${linguette}
     <div class="mu-ora" data-mu-orologio>${chipDelMeteo}<div><div class="mu-h">${esc(o.ora)}</div><div class="mu-d">${esc(o.giorno)}</div></div></div>
   </div>`;
@@ -1081,20 +1104,62 @@ const colorabile = (id) =>
  * `data-mu-…`, quindi chi ascolta i tocchi non sa che e' cambiato il vestito.
  * Il clima, la tapparella e i due tasti hanno troppi comandi per un'immagine,
  * e restano come sono. */
-function cardConImmagine(c, i, { nome, stato: parola, acceso: on, accento, destra = "", dati = "", tag = "div" }) {
+function cardConImmagine(
+  c,
+  i,
+  {
+    nome,
+    stato: parola,
+    acceso: on,
+    accento,
+    destra = "",
+    dati = "",
+    tag = "div",
+    classi = "",
+    comandi = "",
+  },
+) {
   if (!immaginePulita(c?.immagine)) return "";
-  return riquadroConImmagineMarkup({
+  return vestito({
     immagine: c.immagine,
     nome,
     stato: parola,
     acceso: on,
     accento,
     destra,
+    comandi,
     tag,
-    classi: "mu-card mu-rq",
+    classi: `mu-card mu-rq ${classi}`.trim(),
     attributi: `data-mu-card="${i}" ${dati}`,
   });
 }
+
+/* Le tessere delle pagine che non hanno posti — l'energia, la musica, il
+ * meteo, l'ingresso, i preset della telecamera — portano la loro immagine
+ * nella pagina stessa (`immagini`, per chiave di tessera: «casa», «adesso»,
+ * «lettore:media_player.sala», «preset:0»). Si posa come fondo: la tessera
+ * resta com'e', coi suoi numeri e i suoi tasti, e il velo li fa leggere. */
+function immagineDellaTessera(chiave) {
+  return immaginePulita(state.muro?.pagine?.[state.pagina]?.immagini?.[chiave]);
+}
+const classeDellaTessera = (chiave) => classeDelFondo(immagineDellaTessera(chiave));
+const fondoDellaTessera = (chiave) => fondoMarkup(immagineDellaTessera(chiave));
+
+/* Tutti i riquadri con l'immagine del muro passano di qui. Quando l'editor
+ * chiede la faccia di un posto (`facciaDelPosto`), qui si ferma quello che il
+ * riquadro direbbe — lo stato, il comando in alto a destra — e l'anteprima
+ * del blocco «Immagine» dice quello che dira' il tablet: «76 %» per la
+ * batteria, ON e OFF per i due tasti, non un «Acceso» per tutti. */
+let facciaPresa = null;
+function vestito(argomenti) {
+  if (facciaPresa) facciaPresa.presa ||= argomenti;
+  return riquadroConImmagineMarkup(argomenti);
+}
+
+/* Un tasto in vetro sopra l'immagine: i due tasti, le frecce della tapparella.
+ * `dati` sono quelli del tocco di sempre, `classi` dicono quale e com'e'. */
+const tastoDiVetro = ({ classi = "", dati = "", scritta, etichetta, extra = "" }) =>
+  `<button type="button" class="dm-rq-dt ${classi}" ${dati} aria-label="${esc(etichetta)}"${extra}>${scritta}</button>`;
 /* L'interruttore in vetro: un tasto vero nella card della luce, un segno
  * dentro le tessere (che sono gia' un tasto, e un tasto dentro un tasto non
  * si fa). */
@@ -1126,6 +1191,10 @@ function cardLuce(c, i) {
     accento: ACCENTI.luce,
     destra: interruttoreDiVetro(id, on, nomeDi(id, c.nome)),
     dati: `data-mu-entita="${esc(id)}"`,
+    /* La luminosita' resta: la barra di sempre, sul velo sotto lo stato. */
+    comandi: dimmer
+      ? `<div class="mu-bar dm-rq-barra" data-mu-cursore="luce" data-mu-entita="${esc(id)}" aria-label="${esc(t("Luminosità", "Brightness"))}"><i style="width:${on ? pct : 0}%"></i>${on ? `<u style="left:${pct}%"></u>` : ""}</div>`
+      : "",
   });
   if (conImmagine) return conImmagine;
   /* La luce nella forma della famiglia (`tessera`): il disco e lo stato in
@@ -1190,10 +1259,12 @@ function cardDueTasti(c, i) {
       : inviato
         ? `✓ ${t("Inviato", "Sent")}`
         : t("Comando", "Command");
-  const tasto = (verso, id, scritta, etichetta) => {
+  /* `forma` e' «mu-tasto» sulla card di sempre, «dm-rq-dt» in vetro sopra
+   * l'immagine: il tocco e' lo stesso, cambia solo il vestito. */
+  const tasto = (verso, id, scritta, etichetta, forma = "mu-tasto") => {
     const classi = [
-      "mu-tasto",
-      `mu-tasto-${verso}`,
+      forma,
+      `${forma}-${verso}`,
       sa && verso === "on" && on ? "si" : "",
       sa && verso === "off" && !on ? "si" : "",
       inviato === verso ? "premuto" : "",
@@ -1202,9 +1273,24 @@ function cardDueTasti(c, i) {
       .join(" ");
     return `<button type="button" class="${classi}" data-mu-fa="duetasti" data-mu-verso="${verso}" data-mu-entita="${esc(id)}" data-mu-stato="${esc(sa ? letto : "")}" data-mu-chiave="${esc(chiaveDeiDueTasti(c))}"${sa ? ` aria-pressed="${verso === "on" ? on : !on}"` : ""} aria-label="${esc(etichetta)}">${scritta}</button>`;
   };
+  const accendi = `${t("Accendi", "Turn on")} ${nome}`;
+  const spegni = `${t("Spegni", "Turn off")} ${nome}`;
+  /* Con l'immagine: ON e OFF in vetro in alto a destra, al posto
+   * dell'interruttore; il nome e lo stato sul velo in fondo. Il tocco fuori
+   * dai tasti non apre niente, come sulla card di sempre: la card non porta
+   * `data-mu-entita`. */
+  const conImmagine = cardConImmagine(c, i, {
+    nome,
+    stato: parola,
+    acceso: on,
+    accento: ACCENTI.luce,
+    destra: `<div class="dm-rq-due">${tasto("on", c.entita, "ON", accendi, "dm-rq-dt")}${tasto("off", c.entitaOff, "OFF", spegni, "dm-rq-dt")}</div>`,
+    classi: "mu-duetasti",
+  });
+  if (conImmagine) return conImmagine;
   return `<div class="mu-carta mu-card mu-fam mu-duetasti ${on ? "mu-accesa" : ""}" style="--acc:${ACCENTI.luce}" data-mu-card="${i}">
     <div class="mu-riga1"><span class="mu-disco ${on ? "on" : ""}">${icona}</span><span class="mu-stato ${on ? "" : "spento"}${inviato ? " mu-inviato" : ""}">${esc(parola)}</span>
-      <div class="mu-due">${tasto("on", c.entita, "ON", `${t("Accendi", "Turn on")} ${nome}`)}${tasto("off", c.entitaOff, "OFF", `${t("Spegni", "Turn off")} ${nome}`)}</div></div>
+      <div class="mu-due">${tasto("on", c.entita, "ON", accendi)}${tasto("off", c.entitaOff, "OFF", spegni)}</div></div>
     <div class="mu-osw mu-fam-nome mu-n">${esc(nome)}</div></div>`;
 }
 
@@ -1358,6 +1444,32 @@ function righeDelTermostato(id) {
     .join("");
 }
 
+/* I comandi del clima in vetro, sopra l'immagine (`cardClima`,
+ * `cardTermostato`): gli stessi `data-mu-fa` della card di sempre. */
+const accensioneDiVetro = (id, on) =>
+  `<button type="button" class="dm-rq-dt dm-rq-acceso ${on ? "si" : ""}" data-mu-fa="clima-acceso" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(t("Acceso", "Power"))}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9M18.4 6.6a9 9 0 1 1-12.8 0"/></svg></button>`;
+const menoGradiPiu = (id, gradi, estremo = "", fermo = () => "") => {
+  const quale = estremo ? ` data-mu-estremo="${estremo}"` : "";
+  return `<span class="dm-rq-gradi"><button type="button" class="dm-rq-dt" data-mu-fa="meno"${quale} data-mu-entita="${esc(id)}" aria-label="−"${fermo(-1)}>−</button><b>${gradi}</b><button type="button" class="dm-rq-dt" data-mu-fa="piu"${quale} data-mu-entita="${esc(id)}" aria-label="+"${fermo(1)}>+</button></span>`;
+};
+function righeDiVetro(id) {
+  const coppia = coppiaDelMuro(id);
+  const a = attributi(id);
+  const passo = numero(a.target_temp_step) || 0.5;
+  const scala = [numero(a.min_temp) ?? 7, numero(a.max_temp) ?? 35];
+  return [
+    ["basso", t("Caldo", "Heating"), "#f97316"],
+    ["alto", t("Freddo", "Cooling"), "#0ea5e9"],
+  ]
+    .map(([estremo, parola, acc]) => {
+      const valore = coppia ? coppia[estremo] : null;
+      const fermo = (verso) =>
+        !coppia || !coppiaSpostata(coppia, estremo, verso, { passo, scala }) ? " disabled" : "";
+      return `<span class="dm-rq-estremo" data-mu-estremo="${estremo}" style="--est:${acc}"><i>${esc(parola)}</i>${menoGradiPiu(id, valore === null ? "—" : `${esc(decimale(valore))}°`, estremo, fermo)}</span>`;
+    })
+    .join("");
+}
+
 /* La card del termostato a coppia, sul muro.
  *
  * In cima il disegno, il nome con la temperatura della stanza, la modalita'
@@ -1374,6 +1486,20 @@ function cardTermostato(c, i) {
   const on =
     typeof atteso === "boolean" ? atteso : Boolean(s && s !== "off" && s !== "unavailable");
   const modo = on ? PAROLE_DEL_CLIMA()[s] || s : t("Spento", "Off");
+  /* Con l'immagine: l'accensione in vetro in alto, e sul velo il nome con la
+   * stanza, il modo, e le due righe — caldo e freddo — ognuna col suo meno e
+   * il suo piu', come sulla card di sempre. */
+  const conImmagine = cardConImmagine(c, i, {
+    nome: nomeDi(id, c.nome),
+    stato: `${t("ora", "now")} ${decimale(a.current_temperature)}°`,
+    acceso: on,
+    accento: ACCENTO_DEL_TERMOSTATO,
+    destra: accensioneDiVetro(id, on),
+    dati: `data-mu-entita="${esc(id)}" data-mu-lato="termostato"`,
+    classi: "mu-clima-rq mu-termostato-rq",
+    comandi: `<button type="button" class="dm-rq-dt dm-rq-modo" data-mu-fa="modo" data-mu-entita="${esc(id)}">${esc(modo)}</button>${righeDiVetro(id)}`,
+  });
+  if (conImmagine) return conImmagine;
   return `<div class="mu-carta mu-card mu-termostato ${on ? "mu-accesa" : ""}" style="--acc:${ACCENTO_DEL_TERMOSTATO}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="termostato">
     <div class="mu-ter-alto"><span class="mu-chip mu-acc" style="--c:40px">${disegno("temperatura", 24, `ter-${i}`)}</span><div class="mu-nome"><div class="mu-n">${esc(nomeDi(id, c.nome))}</div><div class="mu-sotto">${esc(t("ora", "now"))} ${decimale(a.current_temperature)}°</div></div><button type="button" class="mu-pasti mu-modo" data-mu-fa="modo" data-mu-entita="${esc(id)}">${esc(modo)}</button><button type="button" class="mu-tondo mu-ter-acceso ${on ? "pieno" : ""}" data-mu-fa="clima-acceso" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(t("Acceso", "Power"))}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9M18.4 6.6a9 9 0 1 1-12.8 0"/></svg></button></div>
     <div class="mu-ter-righe">${righeDelTermostato(id)}</div>
@@ -1508,6 +1634,23 @@ function cardClima(c, i, zonaDellaLinguetta = "") {
       ? PAROLE_DEL_CLIMA()[s]
       : t("Spento", "Off");
   const gradi = gradiVoluti(id, zona);
+  /* Con l'immagine: l'accensione in vetro in alto a destra, e sul velo il
+   * nome, quello che fa con la temperatura della stanza, e la fila dei
+   * comandi — il modo (che apre la finestra coi modi), il meno, i gradi voluti
+   * grandi, il piu'. Il tocco fuori dai tasti apre la finestra del clima. */
+  const conImmagine = cardConImmagine(c, i, {
+    nome: nomeDi(id, c.nome),
+    stato: [azione, `${t("ora", "now")} ${decimale(a.current_temperature)}°`]
+      .filter(Boolean)
+      .join(" · "),
+    acceso: on,
+    accento: faccia.accento,
+    destra: accensioneDiVetro(id, on),
+    dati: `data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}"`,
+    classi: "mu-clima-rq",
+    comandi: `${on ? `<button type="button" class="dm-rq-dt dm-rq-modo" data-mu-fa="modo" data-mu-entita="${esc(id)}">${esc(PAROLE_DEL_CLIMA()[s] || s)}</button>` : ""}${menoGradiPiu(id, gradi)}`,
+  });
+  if (conImmagine) return conImmagine;
   /* Sul pannello piccolo il meno e il piu' restano sul riquadro: «il clima
    * comodo sul 4 pollici». La temperatura voluta in alto, grande, accanto
    * al disegno; il resto — i modi, l'accensione — nella finestra, col tocco.
@@ -1627,6 +1770,30 @@ function cardTapparella(c, i) {
     ferma: ["■", t("Stop", "Stop")],
     giu: ["▼", t("Giù", "Down")],
   };
+  /* Con l'immagine: gli stessi tasti, in vetro in alto a destra; la parola
+   * dello stato sul velo. Il tocco fuori dai tasti apre la finestra, come
+   * sempre (la card porta `data-mu-entita`). */
+  const conImmagine = cardConImmagine(c, i, {
+    nome: nomeDi(id, c.nome),
+    stato: parola,
+    acceso: Boolean(s && s !== "closed"),
+    accento: ACCENTI.tapparella,
+    destra: tasti.length
+      ? `<div class="dm-rq-due">${tasti
+          .map((k) =>
+            tastoDiVetro({
+              classi: `dm-rq-dt-${k}`,
+              dati: `data-mu-fa="${k}" data-mu-entita="${esc(id)}"`,
+              scritta: TASTI[k][0],
+              etichetta: TASTI[k][1],
+            }),
+          )
+          .join("")}</div>`
+      : "",
+    dati: `data-mu-entita="${esc(id)}"`,
+    classi: "mu-tapparella",
+  });
+  if (conImmagine) return conImmagine;
   return `<div class="mu-carta mu-card mu-fam mu-tapparella ${s && s !== "closed" ? "mu-accesa" : ""}" style="--acc:${ACCENTI.tapparella}" data-mu-card="${i}" data-mu-entita="${esc(id)}">
     <div class="mu-riga1"><span class="mu-chip" style="--c:54px">${disegno("tapparelle", 32, `tapp-${i}`)}</span><span class="mu-stato">${esc(parola)}</span></div>
     <div class="mu-fam-fondo"><div class="mu-osw mu-fam-nome">${esc(nomeDi(id, c.nome))}</div><span class="mu-tap-stato" aria-hidden="true">${esc(s === "open" && pos !== null && pos < 100 ? `${pos}%` : parola)}</span></div>
@@ -1671,7 +1838,7 @@ function tessera({
    * gli stessi dati per il tocco. Lo stato e la riga sotto vanno insieme sul
    * velo, «Spento · ieri 07:10». */
   if (immaginePulita(immagine))
-    return riquadroConImmagineMarkup({
+    return vestito({
       immagine,
       nome: titolo,
       stato: [etichetta, sotto].map(clean).filter(Boolean).join(" · "),
@@ -1804,6 +1971,20 @@ function cardDato(c, i, s) {
   const id = c.entita;
   const unita = clean(s.attributes?.unit_of_measurement);
   const valore = decimale(n, Number.isInteger(n) ? 0 : 1);
+  /* «Qui e' inserita... ma non ci va nel riquadro»: la lettura con
+   * l'immagine. Il numero sul velo, grande e col suo segno («76 %»), al posto
+   * dell'«acceso» che un sensore non ha; l'immagine resta a colori
+   * (`dm-rq-lettura`): spento non vuol dire niente per una batteria. */
+  if (immaginePulita(c.immagine))
+    return vestito({
+      immagine: c.immagine,
+      nome: nomeDi(id, c.nome),
+      stato: [unita ? `${valore} ${unita}` : valore, clean(c.sotto)].filter(Boolean).join(" · "),
+      acceso: false,
+      accento: ACCENTI.azione,
+      classi: "mu-card mu-rq mu-dato-rq dm-rq-lettura",
+      attributi: `data-mu-entita="${esc(id)}" aria-disabled="true"`,
+    });
   return `<div class="mu-carta mu-card mu-dato" style="--acc:${ACCENTI.azione}" data-mu-entita="${esc(id)}" aria-disabled="true">
     <div class="mu-dato-testa">${disegno(clean(c.disegno) || disegnoDellEntita(id), 22, `da-${i}`)}<span class="mu-dato-n">${esc(nomeDi(id, c.nome))}</span></div>
     <div class="mu-dato-v">${esc(valore)}${unita ? `<small>${esc(unita)}</small>` : ""}</div>
@@ -1813,6 +1994,60 @@ function cardDato(c, i, s) {
 
 const vuoto = (i, perche = "") =>
   `<div class="mu-carta mu-card mu-vuoto" data-mu-card="${i}"><span class="mu-et">${esc(perche || t("Posto libero", "Empty slot"))}</span></div>`;
+
+/* La card di un posto, secondo il suo tipo. Le Scene hanno le tessere
+ * grandi (`scena`). */
+function cardDelPosto(c, i, zona = "", { scena = false } = {}) {
+  if (!c || c.tipo === "vuoto") return vuoto(i);
+  if (scena) return c.entita ? cardEntita(c, i, true) : cardAzione(c, i, true);
+  if (c.tipo === "luce") return cardLuce(c, i);
+  if (c.tipo === "clima") return cardClima(c, i, zona);
+  if (c.tipo === "tapparella") return cardTapparella(c, i);
+  if (c.tipo === "entita") return cardEntita(c, i);
+  if (c.tipo === "duetasti") return cardDueTasti(c, i);
+  return cardAzione(c, i);
+}
+
+/**
+ * Quello che il riquadro con l'immagine di questo posto direbbe adesso: lo
+ * stato, l'accento, il comando in alto a destra, la fila sul velo. Serve
+ * all'anteprima del blocco «Immagine» dell'editor, che cosi' mostra lo stesso
+ * riquadro del tablet — anche prima che un'immagine sia scelta (se ne mette
+ * una qualunque del catalogo, solo per far parlare la card). `null` per un
+ * posto vuoto.
+ */
+export function facciaDelPosto(c, { scena = false, fonte = state.fonte } = {}) {
+  if (!c || c.tipo === "vuoto") return null;
+  const prima = { fonte: state.fonte, compatto: state.compatto };
+  const raccoltaPrima = raccolta;
+  raccolta = null;
+  facciaPresa = {};
+  try {
+    state.fonte = fonte || state.fonte || {};
+    state.compatto = false;
+    const immagine = immaginePulita(c.immagine) || {
+      src: `disegno:${DISEGNI_DA_RIQUADRO[0].chiave}`,
+    };
+    cardDelPosto({ ...c, immagine }, 0, "", { scena });
+    const presa = facciaPresa.presa;
+    if (!presa) return null;
+    return {
+      stato: presa.stato || "",
+      acceso: Boolean(presa.acceso),
+      accento: presa.accento || "",
+      destra: presa.destra || "",
+      comandi: presa.comandi || "",
+      classi: String(presa.classi || "")
+        .split(/\s+/)
+        .filter((k) => k.startsWith("dm-rq-"))
+        .join(" "),
+    };
+  } finally {
+    facciaPresa = null;
+    raccolta = raccoltaPrima;
+    Object.assign(state, prima);
+  }
+}
 
 function paginaStanza(pagina) {
   const zona = pagina.modello === "clima" ? zonaDellaPagina(pagina) : "";
@@ -1841,16 +2076,7 @@ function paginaStanza(pagina) {
   const quante = elenco ? Math.max(comandi.length, 1) : posti;
   if (elenco && !comandi.length)
     return `${linguette}<div class="mu-g6" style="${stileDellaGriglia(pagina)}">${vuoto(0, t("Niente da mostrare qui", "Nothing to show here"))}</div>`;
-  const carte = Array.from({ length: quante }, (_, i) => {
-    const c = comandi[i];
-    if (!c || c.tipo === "vuoto") return vuoto(i);
-    if (c.tipo === "luce") return cardLuce(c, i);
-    if (c.tipo === "clima") return cardClima(c, i, zona);
-    if (c.tipo === "tapparella") return cardTapparella(c, i);
-    if (c.tipo === "entita") return cardEntita(c, i);
-    if (c.tipo === "duetasti") return cardDueTasti(c, i);
-    return cardAzione(c, i);
-  });
+  const carte = Array.from({ length: quante }, (_, i) => cardDelPosto(comandi[i], i, zona));
   const riga = pagina.modello === "stanza" ? pillole(pagina) : linguette;
   return `${riga}${griglia(pagina, carte, quante)}`;
 }
@@ -1880,8 +2106,7 @@ function paginaScene(pagina) {
   const scene = pagina.scene.length ? pagina.scene : [];
   const carte = Array.from({ length: postiDellaPagina(pagina) }, (_, i) => {
     const c = scene[i];
-    if (!c || c.tipo === "vuoto") return vuoto(i);
-    return c.entita ? cardEntita(c, i, true) : cardAzione(c, i, true);
+    return cardDelPosto(c, i, "", { scena: true });
   });
   return griglia(pagina, carte);
 }
@@ -1903,6 +2128,27 @@ function paginaAmbienti(pagina) {
      * nome grande e accanto, a destra, la temperatura. Prima la temperatura
      * stava su una riga sua sotto il nome, e sul pannello piccolo restava
      * tagliata a meta' («22.0°» visto per meta'). */
+    /* Con l'immagine della stanza: la temperatura e le luci sul velo. */
+    if (immaginePulita(stanza.immagine))
+      return vestito({
+        immagine: stanza.immagine,
+        nome: stanza.name,
+        stato: [
+          temp === null ? "" : `${decimale(temp)}°`,
+          umid === null ? "" : `${decimale(umid, 0)}%`,
+          luci.length
+            ? accese
+              ? `${accese} ${accese === 1 ? t("luce accesa", "light on") : t("luci accese", "lights on")}`
+              : t("Luci spente", "Lights off")
+            : "",
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        acceso: accese > 0,
+        accento,
+        classi: "mu-card mu-rq mu-ambiente",
+        attributi: `data-mu-card="${i}"`,
+      });
     return `<div class="mu-carta mu-card mu-fam mu-ambiente ${accese ? "mu-accesa" : ""}" style="--acc:${accento}" data-mu-card="${i}">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:46px">${disegno("stanze", 26, `amb-${i}`)}</span>${luci.length ? `<span class="mu-stato ${accese ? "" : "spento"}">${esc(accese ? `${accese} ${accese === 1 ? t("luce accesa", "light on") : t("luci accese", "lights on")}` : t("Luci spente", "Lights off"))}</span>` : ""}</div>
       <div class="mu-fam-fondo"><div class="mu-osw mu-fam-nome">${esc(stanza.name)}</div><div class="mu-target">${
@@ -1924,7 +2170,7 @@ function paginaTelecamere(pagina) {
     ]);
   const carte = telecamere.map(
     (k, i) =>
-      `<button type="button" class="mu-carta mu-card mu-cam" data-mu-fa="finestra-telecamera" data-mu-entita="${esc(k.entita)}" data-mu-card="${i}"><div class="mu-video">${anteprimaInCorso ? "" : `<img data-mu-telecamera="${esc(k.entita)}" alt="">`}<span class="mu-live">${esc(clean(k.nome) || nomeDi(k.entita))}</span></div></button>`,
+      `<button type="button" class="mu-carta mu-card mu-cam" data-mu-fa="finestra-telecamera" data-mu-entita="${esc(k.entita)}" data-mu-card="${i}"><div class="mu-video${classeDelFondo(k.immagine)}">${fondoMarkup(k.immagine)}${anteprimaInCorso ? "" : `<img data-mu-telecamera="${esc(k.entita)}" alt="">`}<span class="mu-live">${esc(clean(k.nome) || nomeDi(k.entita))}</span></div></button>`,
   );
   return griglia(pagina, carte);
 }
@@ -2016,7 +2262,7 @@ function lettoreGrande(l) {
   const sotto = [l.artista, l.album].filter(Boolean).join(" · ");
   const titolo =
     l.titolo || (l.spento ? t("Spento", "Off") : l.applicazione || l.sorgente || l.nome);
-  return `<div class="mu-carta mu-mp ${l.suona ? "mu-accesa" : ""}" style="--acc:#ec4899" data-mu-mp="${esc(l.entity)}">
+  return `<div class="mu-carta mu-mp ${l.suona ? "mu-accesa" : ""}${classeDellaTessera(`lettore:${l.entity}`)}" style="--acc:#ec4899" data-mu-mp="${esc(l.entity)}">${fondoDellaTessera(`lettore:${l.entity}`)}
     ${l.copertina ? `<img class="mu-mp-fondo" data-mu-copertina="${esc(l.copertina)}" src="${esc(l.copertina)}" alt="" aria-hidden="true">` : ""}
     <div class="mu-mp-testa">
       ${l.copertina ? `<img class="mu-mp-arte" data-mu-copertina="${esc(l.copertina)}" src="${esc(l.copertina)}" alt="">` : `<span class="mu-mp-arte mu-mp-arte-vuota">${disegno("media", 64, `mp-${l.entity}`)}</span>`}
@@ -2157,7 +2403,7 @@ function rigaDelLettore(l, scelto) {
     (compagni.length
       ? `${t("In gruppo con", "Grouped with")} ${compagni.map((id) => nomeDi(id)).join(", ")} · `
       : "") + (l.titolo ? [l.titolo, l.artista].filter(Boolean).join(" · ") : parolaDelLettore(l));
-  return `<div class="mu-carta mu-mp-riga${l.entity === scelto ? " si" : ""}${l.suona ? " mu-accesa" : ""}" style="--acc:#ec4899" data-mu-fa="mp-scegli" data-mu-entita="${esc(l.entity)}" role="button" tabindex="0">
+  return `<div class="mu-carta mu-mp-riga${l.entity === scelto ? " si" : ""}${l.suona ? " mu-accesa" : ""}${classeDellaTessera(`lettore:${l.entity}`)}" style="--acc:#ec4899" data-mu-fa="mp-scegli" data-mu-entita="${esc(l.entity)}" role="button" tabindex="0">${fondoDellaTessera(`lettore:${l.entity}`)}
     ${l.copertina ? `<img class="mu-mp-mini" data-mu-copertina="${esc(l.copertina)}" src="${esc(l.copertina)}" alt="">` : `<span class="mu-mp-mini mu-mp-arte-vuota">${disegno("media", 30, `mpr-${l.entity}`)}</span>`}
     <div class="mu-nome"><div class="mu-n">${esc(l.nome)}</div><div class="mu-sotto">${l.suona ? '<i class="mu-mp-onde" aria-hidden="true"><b></b><b></b><b></b></i>' : ""}${esc(riga)}</div></div>
     ${centro ? tastoMusica(l, "centro", centro === "pausa" ? "pausa" : centro === "accendi" ? "accendi" : "suona", { etichetta: l.nome }) : ""}
@@ -2357,7 +2603,7 @@ function paginaEnergia(pagina) {
     ]);
   const carte = tessere.map(
     ([k, d, acc, etichetta, valore, sotto, extra], i) =>
-      `<div class="mu-carta mu-card mu-accesa mu-energia" style="--acc:${acc}" data-mu-card="${i}" data-mu-misura="${k}">
+      `<div class="mu-carta mu-card mu-accesa mu-energia${classeDellaTessera(k)}" style="--acc:${acc}" data-mu-card="${i}" data-mu-misura="${k}">${fondoDellaTessera(k)}
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:54px">${disegno(d, 32, `en-${k}`)}</span><span class="mu-et">${esc(etichetta)}</span></div>
       <div class="mu-grande">${esc(valore)}</div>${extra || ""}<div class="mu-sotto">${esc(sotto)}</div></div>`,
   );
@@ -2477,8 +2723,24 @@ function paginaMeteo(pagina) {
   /* Arrivate le previsioni si ridisegna il tablet, e l'anteprima del config
    * se e' aperta (`EVENTO_PREVISIONI`). */
   const previsioni = previsioniDelMeteo(id, previsioniArrivate);
-  const v = meteoDelMuro(stato(id), { ...previsioni, adesso: Date.now() });
+  /* L'adesso al minuto: le linee delle ultime 24 ore si ricampionano
+   * sull'adesso, e al millisecondo cambierebbero a ogni battito, rifacendo il
+   * tablet intero ogni quindici secondi per un pixel. */
+  const minuto = Math.floor(Date.now() / 60_000) * 60_000;
+  /* La stazione e' quella della pagina Meteo della plancia, con la sua
+   * configurazione: niente da scegliere qui. I suoi sensori non si segnano fra
+   * quelli che ridisegnano subito: un anemometro che scrive ogni pochi
+   * secondi rifarebbe il tablet altrettanto spesso, e il battito dei quindici
+   * secondi li legge comunque. */
+  const vista = vistaDelMeteo(allStates() || {}, minuto, { entita: id, prefisso: "muro-" });
+  const v = meteoDelMuro(stato(id), { ...previsioni, stazione: vista?.stazione, adesso: minuto });
   if (!v) return `<div class="mu-mt mu-mt-solo">${meteoVuoto(acc)}</div>`;
+  if (vista?.tessere?.length) {
+    /* La cronologia la chiede la pagina Meteo della plancia, con la sua cache
+     * e i suoi cinque minuti: qui la si ricorda soltanto a ogni ridisegno. */
+    storiaDellaStazione(vista.sensori, previsioniArrivate);
+    segna("sun.sun");
+  }
   const m = v.misure;
   const gradi = (n) => (Number.isFinite(n) ? `${Math.round(n)}°` : "—");
   const forbice = [
@@ -2523,7 +2785,7 @@ function paginaMeteo(pagina) {
     );
   const frase = fraseDelMuro(v.frase);
   const temperatura = m.temperatura ? decimale(m.temperatura.valore, 0) : "—";
-  const adesso = `<div class="mu-carta mu-accesa mu-mt-adesso" style="--acc:${acc}" data-mu-meteo-blocco="adesso">
+  const adesso = `<div class="mu-carta mu-accesa mu-mt-adesso${classeDellaTessera("adesso")}" style="--acc:${acc}" data-mu-meteo-blocco="adesso">${fondoDellaTessera("adesso")}
     <div class="mu-mt-cielo">
       <span class="mu-mt-segno" aria-hidden="true">${segnoDelTempo(v.condizione)}</span>
       <div class="mu-mt-gradi">
@@ -2578,6 +2840,18 @@ function paginaMeteo(pagina) {
         })
         .join("")}</div>`
     : `<div class="mu-mt-attesa">${esc(inArrivo)}</div>`;
+  const blocchiDelleOre = `<div class="mu-carta mu-mt-scheda mu-mt-prossimi" data-mu-meteo-blocco="giorni">${titoletto(t("Prossimi giorni", "Next days"))}${righe}</div>
+    <div class="mu-carta mu-mt-scheda mu-mt-ore" data-mu-meteo-blocco="ore">${titoletto(t("Ora per ora", "Hour by hour"))}${ore}</div>`;
+  /* Con la stazione la pagina e' quella della plancia: «Adesso» con le sue
+   * pastiglie e la riga della provenienza, «La mia stazione» con le tessere e
+   * le ultime 24 ore, disegnati dalla sezione Meteo stessa; accanto i giorni e
+   * le ore del muro. */
+  if (vista?.tessere?.length)
+    return `<div class="mu-mt mu-mt-stazione" data-mu-meteo="${esc(id)}" data-mu-meteo-tessere="${vista.tessere.length}" style="--acc:${acc}">
+    <div class="mu-mt-pl mu-mt-pl-adesso">${adessoDelMeteo(vista)}</div>
+    <div class="mu-mt-pl mu-mt-pl-stazione">${stazioneDelMeteo(vista)}</div>
+    ${blocchiDelleOre}
+  </div>`;
   return `<div class="mu-mt" data-mu-meteo="${esc(id)}">
     ${adesso}
     <div class="mu-carta mu-mt-scheda mu-mt-prossimi" data-mu-meteo-blocco="giorni">${titoletto(t("Prossimi giorni", "Next days"))}${righe}</div>
@@ -2801,6 +3075,7 @@ function paginaIngressoCompatta(pagina) {
           attiva: true,
           dati: `data-mu-fa="finestra-antifurto"`,
           dove: "c-allarme",
+          immagine: immagineDellaTessera("allarme"),
         })
       : "",
     ing.telecamera
@@ -2812,6 +3087,7 @@ function paginaIngressoCompatta(pagina) {
           sotto: "",
           dati: `data-mu-fa="finestra-citofono"`,
           dove: "c-citofono",
+          immagine: immagineDellaTessera("citofono"),
         })
       : "",
     ing.apri
@@ -2823,6 +3099,7 @@ function paginaIngressoCompatta(pagina) {
           sotto: "",
           dati: `data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}"`,
           dove: "c-apri1",
+          immagine: immagineDellaTessera("apri"),
         })
       : "",
     ing.apri2
@@ -2834,6 +3111,7 @@ function paginaIngressoCompatta(pagina) {
           sotto: "",
           dati: `data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}"`,
           dove: "c-apri2",
+          immagine: immagineDellaTessera("apri2"),
         })
       : "",
     uscita
@@ -2845,6 +3123,7 @@ function paginaIngressoCompatta(pagina) {
           sotto: "",
           dati: `data-mu-fa="azione" data-mu-azione="${esc(uscita.name)}" data-mu-conferma="${pagina.confermaUscita ? 1 : ""}"`,
           dove: "c-uscita",
+          immagine: immagineDellaTessera("uscita"),
         })
       : "",
     ing.persone && persone.tutte
@@ -2855,6 +3134,7 @@ function paginaIngressoCompatta(pagina) {
           titolo: String(persone.inCasa),
           sotto: "",
           dove: "c-persone",
+          immagine: immagineDellaTessera("persone"),
         })
       : "",
     /* Le porte e le finestre scelte fra le «Altre letture»: il loro conto,
@@ -2868,6 +3148,7 @@ function paginaIngressoCompatta(pagina) {
           sotto: "",
           dati: `data-mu-fa="ing-lettura" data-mu-gruppo="1"`,
           dove: "c-letture",
+          immagine: immagineDellaTessera("letture"),
         })
       : "",
   ]
@@ -2891,7 +3172,7 @@ function paginaIngresso(pagina) {
    * tutte insieme in una parola. Una sola: la card di sempre. */
   if (aree.length > 1) {
     const riassunto = riassuntoDelleAree(aree);
-    const carta = `<div class="mu-carta mu-accesa mu-allarme mu-allarme-aree" style="--acc:${accentoDellAllarme(riassunto.valore)}">
+    const carta = `<div class="mu-carta mu-accesa mu-allarme mu-allarme-aree${classeDellaTessera("allarme")}" style="--acc:${accentoDellAllarme(riassunto.valore)}">${fondoDellaTessera("allarme")}
       <div class="mu-riga1"><span class="mu-chip" style="--c:72px">${disegno("sicurezza", 44, "allarme")}</span>
         <div class="mu-allarme-dice"><span class="mu-et">${esc(quanteAree(aree.length))}</span><div class="mu-osw mu-stato-allarme">${esc(riassunto.testo)}${riassunto.suona.length ? ` · ${esc(riassunto.suona.map((a) => nomeDellArea(a, aree.indexOf(a))).join(", "))}` : ""}</div>
         ${avvisoFinestre}</div></div>
@@ -2912,7 +3193,7 @@ function paginaIngresso(pagina) {
   const accento = scattato ? ACCENTI.allarme : spento ? "#10b981" : "#6366f1";
   const modi = tastiDellAntifurto(s);
   const acceso = tastoAcceso(s, modi);
-  const carta = `<div class="mu-carta mu-accesa mu-allarme" style="--acc:${accento}">
+  const carta = `<div class="mu-carta mu-accesa mu-allarme${classeDellaTessera("allarme")}" style="--acc:${accento}">${fondoDellaTessera("allarme")}
       <div class="mu-riga1"><span class="mu-chip" style="--c:96px">${disegno("sicurezza", 60, "allarme")}</span>
         <div><span class="mu-et">${esc(t("Antifurto", "Alarm"))}</span><div class="mu-osw mu-stato-allarme">${esc(suonaSuMisura ? STATI_DELL_ALLARME().triggered : s ? statoDellaCentrale(s) : modi.find((m) => m.mode === acceso)?.label || (modi.length ? t("Disattivo", "Disarmed") : t("Nessuna centrale", "No alarm panel")))}</div>
         ${avvisoFinestre}</div></div>
@@ -2955,7 +3236,7 @@ function restoDellIngresso(pagina, carta, spento) {
   const altro = altroDellIngresso(ing);
   return `<div class="mu-ingresso${altro ? " mu-con-striscia" : ""}">
     ${carta}
-    <div class="mu-carta mu-citofono">
+    <div class="mu-carta mu-citofono${classeDellaTessera("citofono")}">${fondoDellaTessera("citofono")}
       <div class="mu-video">${telecamera ? `<img data-mu-telecamera="${esc(telecamera)}" alt="">` : `<div class="mu-video-vuoto">${disegno("telecamere", 80, "tele-vuota")}</div>`}<span class="mu-live">${esc(telecamera ? nomeDi(telecamera) : t("Nessuna telecamera", "No camera"))}</span></div>
       ${
         ing.apri || ing.apri2
@@ -2963,7 +3244,7 @@ function restoDellIngresso(pagina, carta, spento) {
           : ""
       }
     </div>
-    ${altro ? `<div class="mu-carta mu-ing-striscia">${altro}</div>` : ""}
+    ${altro ? `<div class="mu-carta mu-ing-striscia${classeDellaTessera("letture")}">${fondoDellaTessera("letture")}${altro}</div>` : ""}
     <div class="mu-piede">
       ${
         azioneUscita
@@ -2979,6 +3260,7 @@ function restoDellIngresso(pagina, carta, spento) {
               attiva: false,
               dati: `data-mu-fa="azione" data-mu-azione="${esc(azioneUscita.name)}" data-mu-conferma="${pagina.confermaUscita ? 1 : ""}"`,
               dove: "uscita",
+              immagine: immagineDellaTessera("uscita"),
             })
           : ""
       }
@@ -2991,6 +3273,7 @@ function restoDellIngresso(pagina, carta, spento) {
               titolo: String(persone.inCasa),
               sotto: persone.nomi.join(", ") || t("Nessuno", "Nobody"),
               dove: "persone",
+              immagine: immagineDellaTessera("persone"),
             })
           : ""
       }
@@ -3101,7 +3384,7 @@ const lettoSotto = (l) =>
 
 function canaleDelMixer(canale) {
   const l = canaleOra(canale);
-  return `<div class="mu-canale${l.mutato ? " mu-muto" : ""}${l.disponibile ? "" : " mu-spento"} mu-can-${l.tipo}" data-mu-canale="${esc(canale.entita)}">
+  return `<div class="mu-canale${l.mutato ? " mu-muto" : ""}${l.disponibile ? "" : " mu-spento"} mu-can-${l.tipo}${classeDelFondo(canale.immagine)}" data-mu-canale="${esc(canale.entita)}">${fondoMarkup(canale.immagine)}
     <b class="mu-can-v" data-mu-fader-testo>${esc(testoDelCanale(l))}</b>${lettoSotto(l)}
     ${comandoDelCanale(canale, l)}
     <span class="mu-can-n">${esc(nomeDi(canale.entita, canale.nome))}</span>
@@ -3127,7 +3410,7 @@ function paginaMixer(pagina) {
   let totale = "";
   if (master?.entita) {
     const l = canaleOra(master);
-    totale = `<div class="mu-carta mu-mix-master${l.mutato ? " mu-muto" : ""} mu-can-${l.tipo}" style="--acc:#22c55e" data-mu-canale="${esc(master.entita)}">
+    totale = `<div class="mu-carta mu-mix-master${l.mutato ? " mu-muto" : ""} mu-can-${l.tipo}${classeDelFondo(master.immagine)}" style="--acc:#22c55e" data-mu-canale="${esc(master.entita)}">${fondoMarkup(master.immagine)}
       <span class="mu-mix-tit">${esc(master.nome || t("Volume totale", "Master volume"))}</span>
       ${tastoMuto(master, l, true)}
       ${comandoDelCanale(master, l, { sdraiato: true })}
@@ -3181,14 +3464,16 @@ function paginaTelecamera(pagina) {
   const preset = (tc.preset || [])
     .map(
       (p, k) =>
-        `<button type="button" class="mu-carta mu-ptz-preset-t" data-mu-fa="preset" data-mu-indice="${k}"><span>${esc(p.nome || nomeDi(p.entita))}</span></button>`,
+        `<button type="button" class="mu-carta mu-ptz-preset-t${classeDellaTessera(`preset:${k}`)}" data-mu-fa="preset" data-mu-indice="${k}">${fondoDellaTessera(`preset:${k}`)}<span>${esc(p.nome || nomeDi(p.entita))}</span></button>`,
     )
     .join("");
   return `<div class="mu-ptz${preset ? "" : " senza-preset"}">
-    <div class="mu-carta mu-ptz-video"><div class="mu-video">${
+    <div class="mu-carta mu-ptz-video"><div class="mu-video${classeDelFondo(tc.immagine)}">${fondoMarkup(tc.immagine)}${
       tc.entita && !anteprimaInCorso
         ? `<img data-mu-telecamera="${esc(tc.entita)}" alt="">`
-        : `<div class="mu-video-vuoto">${disegno("telecamere", 80, "ptz-vuota")}</div>`
+        : immaginePulita(tc.immagine)
+          ? ""
+          : `<div class="mu-video-vuoto">${disegno("telecamere", 80, "ptz-vuota")}</div>`
     }<span class="mu-live">${esc(nome)}</span></div></div>
     <div class="mu-carta mu-ptz-comandi${conZoom ? "" : " senza-zoom"}">${zoom}${pad}</div>
     ${preset ? `<div class="mu-ptz-preset">${preset}</div>` : ""}
@@ -3235,6 +3520,18 @@ function paginaComandi(pagina) {
     .filter(({ p }) => !p.stop)
     .map(({ p, k }) => {
       const on = comandoAcceso(p);
+      /* Con l'immagine: lo stesso tasto grande, il nome e lo stato sul velo. */
+      if (immaginePulita(p.immagine))
+        return vestito({
+          immagine: p.immagine,
+          nome: p.nome || nomeDi(p.avvio),
+          stato: diceLoStato(p) ? (on ? t("Acceso", "On") : t("Spento", "Off")) : "",
+          acceso: on,
+          accento: p.colore || "#22c55e",
+          tag: "button",
+          classi: "mu-reg-tasto mu-rq",
+          attributi: `data-mu-fa="pulsante" data-mu-indice="${k}" data-mu-verso="avvio" aria-pressed="${on}"`,
+        });
       return `<button type="button" class="mu-carta mu-reg-tasto${on ? " mu-accesa" : ""}" style="--acc:${p.colore || "#22c55e"}" data-mu-fa="pulsante" data-mu-indice="${k}" data-mu-verso="avvio" aria-pressed="${on}"><span class="mu-reg-icona">${icona(p, k, 56)}</span><span class="mu-osw mu-reg-nome">${esc(p.nome || nomeDi(p.avvio))}</span>${parola(p, on)}</button>`;
     });
   /* Avvio e stop: una colonna per comando, il nome in cima e i due tasti. */
@@ -3242,7 +3539,7 @@ function paginaComandi(pagina) {
     .filter(({ p }) => p.stop)
     .map(({ p, k }) => {
       const on = comandoAcceso(p);
-      return `<div class="mu-carta mu-reg-coppia${on ? " mu-accesa" : ""}" style="--acc:${p.colore || "#22c55e"}"><div class="mu-reg-testa"><span class="mu-reg-icona">${icona(p, k, 34)}</span><span class="mu-reg-nome">${esc(p.nome || nomeDi(p.avvio || p.stop))}</span>${parola(p, on)}</div>
+      return `<div class="mu-carta mu-reg-coppia${on ? " mu-accesa" : ""}${classeDelFondo(p.immagine)}" style="--acc:${p.colore || "#22c55e"}">${fondoMarkup(p.immagine)}<div class="mu-reg-testa"><span class="mu-reg-icona">${icona(p, k, 34)}</span><span class="mu-reg-nome">${esc(p.nome || nomeDi(p.avvio || p.stop))}</span>${parola(p, on)}</div>
         ${p.avvio ? `<button type="button" class="mu-reg-avvio${on ? " si" : ""}" data-mu-fa="pulsante" data-mu-indice="${k}" data-mu-verso="avvio">${segno("avvia", 34)}<span>${esc(t("Avvio", "Start"))}</span></button>` : ""}
         <button type="button" class="mu-reg-stop" data-mu-fa="pulsante" data-mu-indice="${k}" data-mu-verso="stop">${segno("ferma", 30)}<span>${esc(t("Stop", "Stop"))}</span></button></div>`;
     });
@@ -5833,6 +6130,15 @@ ${MURO} button{font:inherit;color:inherit;border:0;background:none;cursor:pointe
 ${MURO} .dm-rq button.dm-rq-int,${MURO} .dm-rq button.dm-rq-tasto{background:rgba(15,23,42,.42);color:#fff}
 ${MURO} .dm-rq button.dm-rq-int.on{background:var(--acc)}
 ${MURO} .dm-rq button.dm-rq-tasto{font-size:clamp(10.5px,5.6cqi,15px);font-weight:800}
+${MURO} .dm-rq button.dm-rq-dt{background:rgba(15,23,42,.46);color:#fff;display:inline-grid;place-items:center;text-align:center;font-weight:900}
+${MURO} .dm-rq button.dm-rq-dt.si,${MURO} .dm-rq button.dm-rq-dt-on.si{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1f2937}
+${MURO} .dm-rq button.dm-rq-dt-off.si{background:rgba(255,255,255,.34);color:#fff}
+${MURO} .dm-rq button.dm-rq-dt.dm-rq-acceso.si{background:var(--acc);color:#fff}
+${MURO} .dm-rq .dm-rq-barra{--acc:#fbbf24}
+${MURO} .dm-rq-fondo>.dm-rq-img,${MURO} .dm-rq-fondo>.dm-rq-velo{position:absolute}
+${MURO} .mu-carta.dm-rq-fondo::before{content:none}
+${MURO} .dm-rq-fondo .mu-et,${MURO} .dm-rq-fondo .mu-can-n,${MURO} .dm-rq-fondo .mu-can-v,${MURO} .dm-rq-fondo .mu-reg-nome{color:#fff}
+${MURO} .dm-rq [data-mu-cursore].mu-bar::before{background:rgba(255,255,255,.28)}
 ${MURO} .mu-tela{position:relative;transform-origin:0 0}
 ${MURO} .mu-pagina{display:grid;grid-template-rows:auto auto 1fr;gap:16px;padding:22px;height:100%}
 ${MURO} .mu-pag-scene,${MURO} .mu-pag-ingresso,${MURO} .mu-pag-personale,${MURO} .mu-pag-luci{grid-template-rows:auto 1fr}
@@ -6079,6 +6385,115 @@ ${MURO}[data-compatto="1"] .mu-mt-vuoto{padding:18px;gap:10px}
 ${MURO}[data-compatto="1"] .mu-mt-vuoto>b{font-size:20px}
 ${MURO}[data-compatto="1"] .mu-mt-vuoto>span:last-child{font-size:13px}
 ${MURO}[data-compatto="1"] .mu-mt-vuoto .mu-chip{--c:64px!important}
+/* La pagina Meteo con la stazione: quella della plancia, adattata al muro.
+   «Adesso» per tutta la larghezza come in plancia; sotto, a sinistra, «La mia
+   stazione» con le tessere su quattro colonne e due file (il vento largo
+   due), a destra i prossimi giorni e le prossime ore. I pezzi della plancia
+   portano il loro foglio (foglioDelMeteo); qui le carte prendono la carta
+   del muro, e il tema del muro (non quello della plancia sotto). */
+${foglioDelMeteo(`${MURO} .mu-mt-stazione`, { media: false })}
+${MURO} .mu-mt.mu-mt-stazione{--card-border:color-mix(in srgb,var(--text) 10%,transparent);--surface-2:color-mix(in srgb,var(--text) 5%,var(--card-bg));--dm-meteo-gap:12px;
+  grid-template-columns:minmax(0,1fr) minmax(0,368px);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"adesso adesso" "stazione giorni" "stazione ore";gap:14px}
+${MURO} .mu-mt-pl{min-width:0;min-height:0;display:flex;flex-direction:column}
+${MURO} .mu-mt-pl-adesso{grid-area:adesso}
+${MURO} .mu-mt-pl-stazione{grid-area:stazione}
+${MURO} .mu-mt-pl>.dm-meteo-blocco{flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
+${MURO} .mu-mt-stazione :is(.dm-meteo-adesso,.dm-meteo-tessera){border:0;border-radius:22px;background:${FONDO_DELLA_CARTA};box-shadow:${OMBRA_DELLA_CARTA}}
+${MURO} .mu-mt-stazione .dm-meteo-adesso{padding:18px 24px;gap:24px;background:radial-gradient(120% 160% at 0% 0%,rgba(14,165,233,.14),transparent 55%),${FONDO_DELLA_CARTA}}
+${MURO} .mu-mt-stazione .dm-meteo-adesso-ic{font-size:84px}
+${MURO} .mu-mt-stazione .dm-meteo-adesso-gradi>b{font-size:72px}
+${MURO} .mu-mt-stazione .dm-meteo-adesso-cond{font-size:14px}
+${MURO} .mu-mt-stazione .dm-meteo-adesso-gradi small{font-size:14px}
+${MURO} .mu-mt-stazione .dm-meteo-adesso-dx{gap:10px}
+${MURO} .mu-mt-stazione .dm-meteo-frase{padding:10px 14px}
+${MURO} .mu-mt-stazione .dm-meteo-frase strong{font-size:16px}
+${MURO} .mu-mt-stazione .dm-meteo-pill{font-size:13px;padding:6px 12px}
+${MURO} .mu-mt-stazione .dm-meteo-fonte{font-size:11.5px}
+${MURO} .mu-mt-stazione .dm-meteo-titolo{margin:0 0 8px 4px;flex:none}
+${MURO} .mu-mt-stazione .dm-meteo-tessere{flex:1 1 auto;min-height:0;grid-template-rows:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(0,1fr)}
+${MURO} .mu-mt-stazione .dm-meteo-tessera{grid-template-rows:auto auto auto minmax(0,1fr);gap:5px;padding:14px 16px 10px;min-height:0}
+${MURO} .mu-mt-stazione .dm-meteo-larga>.dm-meteo-bussola{grid-row:1/span 4}
+/* La testa della tessera: il nome va a capo invece di finire nei puntini, e
+   lo stato («in aumento», «asciutto») scende sotto il nome, che sul muro le
+   tessere sono strette e la pastiglia accanto lascerebbe al nome tre lettere. */
+${MURO} .mu-mt-stazione .dm-meteo-tessera-testa{display:grid;grid-template-columns:auto minmax(0,1fr);grid-auto-rows:auto;align-content:center;column-gap:10px;row-gap:3px;min-height:38px}
+${MURO} .mu-mt-stazione .dm-meteo-tessera-testa>.dm-meteo-ic{grid-row:1/span 2}
+${MURO} .mu-mt-stazione .dm-meteo-nome{grid-column:2;align-self:end;font-size:11px;letter-spacing:.7px;line-height:1.2;white-space:normal;text-overflow:clip;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+${MURO} .mu-mt-stazione .dm-meteo-tessera-testa>.dm-meteo-nome:last-child{grid-row:1/span 2;align-self:center}
+${MURO} .mu-mt-stazione .dm-meteo-stato{grid-column:2;justify-self:start;align-self:start;margin-left:0;padding:2px 8px;font-size:9.5px}
+${MURO} .mu-mt-stazione .dm-meteo-valore{margin-top:2px}
+${MURO} .mu-mt-stazione .dm-meteo-valore b{font-size:38px}
+${MURO} .mu-mt-stazione .dm-meteo-valore i{font-size:14px}
+${MURO} .mu-mt-stazione .dm-meteo-sotto{font-size:12px;min-height:0}
+${MURO} .mu-mt-stazione .dm-meteo-grafico{align-self:end;height:44px;margin-top:12px}
+${MURO} .mu-mt-stazione .dm-meteo-spark{height:44px}
+${MURO} .mu-mt-stazione .dm-meteo-uv{align-self:end}
+${MURO} .mu-mt-stazione .mu-mt-scheda{padding:14px 18px}
+${MURO} .mu-mt-stazione .mu-mt-giorno{grid-template-columns:minmax(60px,1fr) 30px minmax(40px,.7fr) 34px minmax(44px,1.1fr) 34px;gap:8px}
+${MURO} .mu-mt-stazione .mu-mt-giorno-n{font-size:15px}
+${MURO} .mu-mt-stazione .mu-mt-giorno-segno{font-size:23px}
+${MURO} .mu-mt-stazione .mu-mt-min,${MURO} .mu-mt-stazione .mu-mt-max{font-size:20px}
+${MURO} .mu-mt-stazione .mu-mt-giorno-p{font-size:12px}
+${MURO} .mu-mt-stazione .mu-mt-ore .mu-mt-ora:nth-child(n+7){display:none}
+${MURO} .mu-mt-stazione .mu-mt-ora{padding:8px 2px;gap:6px}
+${MURO} .mu-mt-stazione .mu-mt-ora-segno{font-size:26px}
+${MURO} .mu-mt-stazione .mu-mt-ora>b{font-size:22px}
+/* In verticale: in colonna come in plancia, «Adesso» e poi la stazione; in
+   fondo le ore e i giorni affiancati, le stesse due carte della colonna di
+   destra del tablet orizzontale. */
+${MURO}[data-verso="verticale"] .mu-mt.mu-mt-stazione{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"adesso adesso" "stazione stazione" "ore giorni"}
+${MURO}[data-verso="verticale"] .mu-mt-stazione .mu-mt-ore .mu-mt-fila{flex:1;align-items:center}
+/* Il pannello piccolo: «Adesso» in colonna accanto a quattro tessere, le ore
+   sotto. Restano la linea delle 24 ore e il numero; la riga sotto, la
+   bussola e i giorni se ne vanno (i giorni li dice la minima e la massima di
+   oggi, e la frase sulla pioggia). */
+${MURO}[data-compatto="1"] .mu-mt.mu-mt-stazione{gap:8px;--dm-meteo-gap:6px;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"adesso stazione" "ore ore"}
+${MURO}[data-compatto="1"][data-verso="verticale"] .mu-mt.mu-mt-stazione{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"adesso" "stazione" "ore"}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-prossimi{display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso{grid-template-columns:minmax(0,1fr);gap:8px;padding:10px 12px;border-radius:16px;align-content:center}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-sx{gap:10px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-ic{font-size:40px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-gradi{gap:2px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-gradi>b{font-size:40px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-gradi>b i{font-size:24px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-cond{font-size:11px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-gradi small{font-size:10.5px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-adesso-dx{gap:6px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-frase{padding:6px 9px;gap:8px;border-radius:12px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-frase>span{font-size:16px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-frase strong{font-size:11.5px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-frase small{display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-pills{gap:3px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-pill{font-size:9.5px;padding:2px 7px;gap:3px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-fonte{display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-titolo{margin:0 0 4px 2px;font-size:10px;letter-spacing:1px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-titolo svg{width:15px;height:15px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-titolo small{display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-tessere{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-tessera:nth-child(n+5){display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-tessera{grid-template-rows:auto auto minmax(0,1fr);gap:1px;padding:6px 9px 4px;border-radius:14px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-larga{grid-column:auto;grid-template-columns:minmax(0,1fr)}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-larga>*{grid-column:1}
+${MURO}[data-compatto="1"] .mu-mt-stazione :is(.dm-meteo-bussola,.dm-meteo-sotto,.dm-meteo-stato,.dm-meteo-24){display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-ic{width:20px;height:20px;border-radius:7px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-ic svg{width:15px;height:15px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-tessera-testa{column-gap:6px;min-height:20px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-nome{font-size:9px;letter-spacing:.5px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-valore{margin-top:0;gap:4px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-valore b{font-size:22px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-valore i{font-size:10px}
+${MURO}[data-compatto="1"] .mu-mt-stazione :is(.dm-meteo-grafico,.dm-meteo-spark){height:20px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-grafico{margin-top:2px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-uv{padding:4px 0 0}
+${MURO}[data-compatto="1"] .mu-mt-stazione .dm-meteo-uv-tacche{font-size:8px;margin-top:3px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-scheda{padding:8px 10px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-ore .mu-mt-ora:nth-child(n+7){display:flex}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-ore .mu-mt-ora:nth-child(n+9){display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-ora{padding:4px 1px;gap:3px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-ora-segno{font-size:18px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-ora>b{font-size:16px}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-ora>small{display:none}
+${MURO}[data-compatto="1"] .mu-mt-stazione .mu-mt-scheda{gap:4px}
 ${MURO} .mu-anteprima{position:relative;width:1280px;height:800px;border-radius:18px;pointer-events:none;background:radial-gradient(120% 80% at 50% -10%,color-mix(in srgb,var(--card-bg) 70%,transparent),transparent 60%),var(--bg-sculpted)}
 ${MURO}.mu-anteprima[data-verso="verticale"]{width:800px;height:1280px}
 ${MURO}.mu-anteprima .mu-pagina{height:100%}

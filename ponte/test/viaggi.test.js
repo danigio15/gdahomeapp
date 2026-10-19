@@ -137,34 +137,34 @@ test("ogni settimana: il prossimo giorno scelto, anche dopo il fine settimana", 
 
 test("ognuno vede e cambia solo i suoi viaggi", () => {
   const { viaggi } = nuovi();
-  const { viaggio } = viaggi.salva("anna", unViaggio());
+  const { viaggio } = viaggi.salva("persona_2", unViaggio());
   assert.ok(viaggio.id);
-  viaggi.salva("bruno", unViaggio({ nome: "Altro" }));
-  assert.equal(viaggi.elenco("anna").viaggi.length, 1);
-  assert.equal(viaggi.elenco("bruno").viaggi.length, 1);
-  assert.deepEqual(viaggi.salva("bruno", { ...unViaggio(), id: viaggio.id }), {
+  viaggi.salva("persona_7", unViaggio({ nome: "Altro" }));
+  assert.equal(viaggi.elenco("persona_2").viaggi.length, 1);
+  assert.equal(viaggi.elenco("persona_7").viaggi.length, 1);
+  assert.deepEqual(viaggi.salva("persona_7", { ...unViaggio(), id: viaggio.id }), {
     errore: "non-trovato",
   });
-  assert.deepEqual(viaggi.togli("bruno", viaggio.id), { errore: "non-trovato" });
-  assert.deepEqual(viaggi.togli("anna", viaggio.id), { tolto: viaggio.id });
-  assert.equal(viaggi.elenco("anna").viaggi.length, 0);
+  assert.deepEqual(viaggi.togli("persona_7", viaggio.id), { errore: "non-trovato" });
+  assert.deepEqual(viaggi.togli("persona_2", viaggio.id), { tolto: viaggio.id });
+  assert.equal(viaggi.elenco("persona_2").viaggi.length, 0);
 });
 
 test("la stima del navigatore resta; cambiata la meta, si butta", () => {
   const { viaggi } = nuovi();
-  const { viaggio } = viaggi.salva("anna", unViaggio());
-  const conStima = viaggi.stima("anna", viaggio.id, {
+  const { viaggio } = viaggi.salva("persona_2", unViaggio());
+  const conStima = viaggi.stima("persona_2", viaggio.id, {
     durataS: 2880,
     km: 41.3,
     fonte: "traffico",
   }).viaggio;
   assert.equal(conStima.stima.fonte, "traffico");
-  const stessa = viaggi.salva("anna", {
+  const stessa = viaggi.salva("persona_2", {
     ...unViaggio({ nome: "Ufficio" }),
     id: viaggio.id,
   }).viaggio;
   assert.equal(stessa.stima.durataS, 2880);
-  const altra = viaggi.salva("anna", {
+  const altra = viaggi.salva("persona_2", {
     ...unViaggio({ tappe: [{ nome: "Salerno", lat: 40.68, lon: 14.77 }] }),
     id: viaggio.id,
   }).viaggio;
@@ -173,8 +173,8 @@ test("la stima del navigatore resta; cambiata la meta, si butta", () => {
 
 test("l'avviso parte una volta, solo a chi l'ha fatto, e passa il silenzio", async () => {
   const { viaggi, notifiche, vai } = nuovi();
-  const { viaggio } = viaggi.salva("anna", unViaggio());
-  viaggi.stima("anna", viaggio.id, { durataS: 48 * 60, fonte: "traffico" });
+  const { viaggio } = viaggi.salva("persona_2", unViaggio());
+  viaggi.stima("persona_2", viaggio.id, { durataS: 48 * 60, fonte: "traffico" });
   const partenza = new Date(2026, 9, 16, 8, 12).getTime();
   vai(partenza - 11 * MINUTO);
   await viaggi.battito();
@@ -185,7 +185,7 @@ test("l'avviso parte una volta, solo a chi l'ha fatto, e passa il silenzio", asy
   assert.equal(notifiche.consegnate.length, 1, "una volta sola");
   const [avviso] = notifiche.consegnate;
   assert.equal(avviso.tipo, "viaggi");
-  assert.deepEqual(avviso.solo, ["anna"]);
+  assert.deepEqual(avviso.solo, ["persona_2"]);
   assert.equal(avviso.oltreIlSilenzio, true);
   assert.equal(avviso.parole.it.titolo, "Parti fra 10 minuti");
   assert.match(avviso.parole.it.testo, /Caserta: arrivo entro le 09:00/);
@@ -195,7 +195,7 @@ test("l'avviso parte una volta, solo a chi l'ha fatto, e passa il silenzio", asy
 test("il clima si accende prima; il garage e' solo un tasto nell'avviso", async () => {
   const { viaggi, notifiche, casa, vai } = nuovi();
   const { viaggio } = viaggi.salva(
-    "anna",
+    "persona_2",
     unViaggio({
       quando: { modo: "partenza", ora: "08:00", giorno: "2026-10-16" },
       prepara: {
@@ -315,15 +315,15 @@ test("«Apri il garage» dall'avviso vero: premuto, apre il garage", async () =>
 
 test("senza Premium i viaggi restano, ma non si salvano di nuovi e non si avvisa", async () => {
   const { viaggi, notifiche } = nuovi({ sbloccato: false });
-  assert.deepEqual(viaggi.salva("anna", unViaggio()), { errore: "premium-richiesto" });
-  assert.equal(viaggi.elenco("anna").sbloccato, false);
+  assert.deepEqual(viaggi.salva("persona_2", unViaggio()), { errore: "premium-richiesto" });
+  assert.equal(viaggi.elenco("persona_2").sbloccato, false);
   await viaggi.battito();
   assert.equal(notifiche.consegnate.length, 0);
 });
 
 test("i viaggi di una volta passati da un giorno si tolgono da soli", async () => {
   const { viaggi, vai } = nuovi();
-  viaggi.salva("anna", unViaggio());
+  viaggi.salva("persona_2", unViaggio());
   vai(new Date(2026, 9, 18, 9, 0).getTime());
   await viaggi.battito();
   assert.equal(viaggi.archivio.dati.viaggi.length, 0);
@@ -333,20 +333,29 @@ test("sul filo: ognuno coi suoi, e i comandi che non ci sono dicono di no", asyn
   const { viaggi } = nuovi();
   const salvato = await viaggi.rispondi(
     { id: 1, type: "ponte/viaggi/salva", viaggio: unViaggio() },
-    { utente: "anna" },
+    { utente: "persona_2" },
   );
   assert.equal(salvato.success, true);
-  const elenco = await viaggi.rispondi({ id: 2, type: "ponte/viaggi/elenco" }, { utente: "anna" });
+  const elenco = await viaggi.rispondi(
+    { id: 2, type: "ponte/viaggi/elenco" },
+    { utente: "persona_2" },
+  );
   assert.equal(elenco.result.viaggi.length, 1);
-  const altro = await viaggi.rispondi({ id: 3, type: "ponte/viaggi/elenco" }, { utente: "bruno" });
+  const altro = await viaggi.rispondi(
+    { id: 3, type: "ponte/viaggi/elenco" },
+    { utente: "persona_7" },
+  );
   assert.equal(altro.result.viaggi.length, 0);
   const cattivo = await viaggi.rispondi(
     { id: 4, type: "ponte/viaggi/salva", viaggio: { tipo: "una" } },
-    { utente: "anna" },
+    { utente: "persona_2" },
   );
   assert.equal(cattivo.success, false);
   assert.equal(cattivo.error.code, "viaggio-non-valido");
-  const ignoto = await viaggi.rispondi({ id: 5, type: "ponte/viaggi/vola" }, { utente: "anna" });
+  const ignoto = await viaggi.rispondi(
+    { id: 5, type: "ponte/viaggi/vola" },
+    { utente: "persona_2" },
+  );
   assert.equal(ignoto.error.code, "unknown_command");
 });
 
@@ -601,7 +610,7 @@ test("strada con l'auto: le soste alle rapide dell'archivio, con le fonti", asyn
   assert.ok(!chiesti.includes(INDIRIZZO_DELLE_COLONNINE), "e niente archivio");
   const risposta = await viaggi.rispondi(
     { id: 9, type: "ponte/viaggi/strada", da: NAPOLI, tappe: [AVERSA, MILANO], auto: AUTO },
-    { utente: "anna" },
+    { utente: "persona_2" },
   );
   assert.equal(risposta.success, true);
   const { soste, stima } = risposta.result;
@@ -715,7 +724,7 @@ test("le soste del navigatore prendono il posto di quelle della casa, e si parte
     stima: { durataS: 40 * 60, fonte: "strada" },
     soste: { elenco: [{ km: 20, nome: "Casa dice", kw: 150, min: 30, da: 12, a: 80 }], arrivo: 40 },
   });
-  const { viaggio } = viaggi.salva("anna", conAuto);
+  const { viaggio } = viaggi.salva("persona_2", conAuto);
   assert.equal(viaggio.soste.fonte, "casa");
   assert.equal(viaggio.soste.elenco[0].nome, "Casa dice");
   /* Arrivo entro le 9: 40 minuti col margine, piu' 30 di ricarica. */
@@ -743,7 +752,7 @@ test("le soste del navigatore prendono il posto di quelle della casa, e si parte
       ],
       caricaArrivo: 35,
     },
-    { utente: "anna" },
+    { utente: "persona_2" },
   );
   assert.equal(dal.success, true);
   const v = dal.result.viaggio;
@@ -753,14 +762,16 @@ test("le soste del navigatore prendono il posto di quelle della casa, e si parte
   assert.equal(durataDelViaggio(v, ALLE_SETTE), (48 + 18) * MINUTO);
   /* Risalvato dalla pagina con le soste della casa: restano quelle del
    * navigatore, che sanno quali colonnine sono libere. */
-  const risalvato = viaggi.salva("anna", { ...conAuto, id: viaggio.id }).viaggio;
+  const risalvato = viaggi.salva("persona_2", { ...conAuto, id: viaggio.id }).viaggio;
   assert.equal(risalvato.soste.elenco[0].nome, "Libera adesso");
   /* Solo le soste, senza stima: va bene. Soste storte: no, e non si tocca niente. */
-  assert.equal(viaggi.stima("anna", viaggio.id, null, []).viaggio.soste.elenco.length, 0);
-  assert.deepEqual(viaggi.stima("anna", viaggio.id, null, [{ km: "x" }]), {
+  assert.equal(viaggi.stima("persona_2", viaggio.id, null, []).viaggio.soste.elenco.length, 0);
+  assert.deepEqual(viaggi.stima("persona_2", viaggio.id, null, [{ km: "x" }]), {
     errore: "soste-non-valide",
   });
-  assert.deepEqual(viaggi.stima("anna", viaggio.id, null, null), { errore: "stima-non-valida" });
+  assert.deepEqual(viaggi.stima("persona_2", viaggio.id, null, null), {
+    errore: "stima-non-valida",
+  });
   /* Come le manda davvero l'app gdanav: dentro la stima, con `arrivo`. */
   const dallApp = await viaggi.rispondi(
     {
@@ -787,13 +798,13 @@ test("le soste del navigatore prendono il posto di quelle della casa, e si parte
         arrivo: 33,
       },
     },
-    { utente: "anna" },
+    { utente: "persona_2" },
   );
   assert.equal(dallApp.success, true);
   assert.equal(dallApp.result.viaggio.soste.elenco[0].nome, "Dentro la stima");
   assert.equal(dallApp.result.viaggio.soste.arrivo, 33);
   assert.equal(dallApp.result.viaggio.soste.fonte, "gdanav");
   /* Senza auto il viaggio non tiene soste. */
-  const senzaAuto = viaggi.salva("anna", { ...unViaggio(), soste: conAuto.soste }).viaggio;
+  const senzaAuto = viaggi.salva("persona_2", { ...unViaggio(), soste: conAuto.soste }).viaggio;
   assert.equal(senzaAuto.soste, undefined);
 });

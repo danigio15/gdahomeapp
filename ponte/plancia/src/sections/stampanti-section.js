@@ -211,10 +211,7 @@ function cartaMarkup(lettura) {
       lettura.cartucce.length
         ? `<div class="dm-stampante-cartucce">${lettura.cartucce.map(cartucciaMarkup).join("")}</div>`
         : `<div class="dm-stampante-senza">${esc(
-            t(
-              "Nessuna cartuccia trovata: se la tua stampante le dice, scrivile nella scheda Stampanti.",
-              "No cartridge found: if your printer reports them, write them in the Printers tab.",
-            ),
+            t("Nessuna cartuccia trovata", "No cartridge found"),
           )}</div>`
     }
   </article>`;
@@ -223,12 +220,6 @@ function cartaMarkup(lettura) {
 function vuotoMarkup() {
   return `<div class="dm-stampanti-vuoto">
     <strong>${esc(t("Nessuna stampante configurata", "No printer configured"))}</strong>
-    <span>${esc(
-      t(
-        "Aggiungi la stampante dalla scheda Stampanti della configurazione: basta l'entità che dice se è pronta, le cartucce si cercano da sole.",
-        "Add the printer from the Printers tab in the settings: the entity that says whether it is ready is enough, the cartridges are found on their own.",
-      ),
-    )}</span>
   </div>`;
 }
 

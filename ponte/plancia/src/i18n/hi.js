@@ -162,8 +162,6 @@ export default Object.freeze({
     "यात्रा सहेजी नहीं गई: गंतव्य, दिन और समय जाँचें।",
   "Up to 8 more: a socket, the heat pump, the car charging, today's kWh":
     "8 तक और: एक सॉकेट, हीट पंप, चार्ज होती कार, आज के kWh",
-  "No sensor linked: pick one in Settings › Loads or Appliances.":
-    "कोई सेंसर नहीं जुड़ा: सेटिंग्स › लोड या उपकरण में से एक चुनें।",
   "Reading consumption from Home Assistant…": "Home Assistant से खपत पढ़ी जा रही है…",
   " — configured": " — कॉन्फ़िगर किया गया",
   "${alzate} shutters up": "${alzate} शटर ऊपर",
@@ -243,8 +241,6 @@ export default Object.freeze({
   "Load to watch": "निगरानी में रखा जाने वाला भार",
   Lock: "लॉक करें",
   "Looking…": "देख रहे हैं…",
-  "More power is going out than coming in: usually a sensor's direction is reversed, and it is changed in the Energy tab.":
-    "जितनी बिजली आ रही है उससे ज़्यादा जा रही है: आमतौर पर किसी सेंसर की दिशा उलटी होती है, और उसे एनर्जी टैब में बदला जाता है।",
   Motorcycle: "मोटरसाइकिल",
   "My sections": "मेरे अनुभाग",
   "Name the unit: it is what the card shows.": "यूनिट को नाम दें: कार्ड पर यही दिखता है।",
@@ -649,8 +645,6 @@ export default Object.freeze({
   "Add entity": "इकाई जोड़ें",
   "Add from an integration": "इंटीग्रेशन से जोड़ें",
   "Add intercom": "इंटरकॉम जोड़ें",
-  "Add it from the Energy tab in the settings: with the NUT status alone this page already knows whether there is power.":
-    "इसे सेटिंग्स के ऊर्जा टैब से जोड़ें: सिर्फ़ NUT की स्थिति से ही यह पृष्ठ जान लेता है कि बिजली है या नहीं।",
   "Add light": "रोशनी जोड़ें",
   "Add list": "सूची जोड़ें",
   "Add load": "लोड जोड़ें",
@@ -674,28 +668,13 @@ export default Object.freeze({
   "Add sensors to the Alerts Panel with a clean name, or create a":
     "चेतावनी पैनल में साफ़ नाम के साथ सेंसर जोड़ें, या बनाएँ",
   "Add socket": "सॉकेट जोड़ें",
-  "Add sockets from the Sockets tab in the settings: the living-room TV, the Firestick, the modem.":
-    "सेटिंग्स के सॉकेट टैब से सॉकेट जोड़ें: लिविंग रूम का टीवी, फ़ायरस्टिक, मोडेम।",
   "Add solar plant": "सौर संयंत्र जोड़ें",
   "Add something to do…": "करने के लिए कुछ जोड़ें…",
   "Add temperature": "तापमान जोड़ें",
-  "Add the irrigation zones from the editor to see the lawn.":
-    "लॉन देखने के लिए संपादक से सिंचाई क्षेत्र जोड़ें।",
-  "Add the materials from the Waste tab in the settings: for each one the sensor or calendar that says when the collection comes.":
-    "सेटिंग्स के कचरा टैब से सामग्री जोड़ें: हर एक के लिए वह सेंसर या कैलेंडर जो बताता है कि संग्रह कब आता है।",
-  "Add the pool entities from the editor to see the basin.":
-    "पूल देखने के लिए संपादक से पूल की इकाइयाँ जोड़ें।",
-  "Add the printer from the Printers tab in the settings: the entity that says whether it is ready is enough, the cartridges are found on their own.":
-    "सेटिंग्स के प्रिंटर टैब से प्रिंटर जोड़ें: वह एंटिटी काफी है जो बताती है कि वह तैयार है या नहीं, कार्ट्रिज अपने आप मिल जाते हैं।",
-  "Add the units from the dashboard configuration.": "डैशबोर्ड कॉन्फ़िगरेशन से इकाइयाँ जोड़ें।",
-  "Add them from the Alerts tab in the settings: earthquakes, civil protection warnings, lightning, pollen, thermal comfort and flights overhead, each from the sensor of its integration.":
-    "सेटिंग्स के अलर्ट टैब से जोड़ें: भूकंप, नागरिक सुरक्षा चेतावनियाँ, बिजली, पराग, तापीय आराम और ऊपर से गुज़रती उड़ानें, हर एक अपने इंटीग्रेशन के सेंसर से।",
   "Add to ${nomeDellaLista(list)}": "${nomeDellaLista(list)} में जोड़ें",
   "Add water heater": "वॉटर हीटर जोड़ें",
   "Add your appliances (washing machine, dishwasher, oven, microwave…). You can link":
     "अपने उपकरण जोड़ें (वॉशिंग मशीन, डिशवॉशर, ओवन, माइक्रोवेव…)। हर एक से आप जोड़ सकते हैं",
-  "Add your cameras from Configuration: they will show up here with a live preview.":
-    "कॉन्फ़िगरेशन से अपने कैमरे जोड़ें: वे यहाँ लाइव झलक के साथ दिखेंगे।",
   "Added ${trovate.length} lists": "${trovate.length} सूचियाँ जोड़ी गईं",
   "Added ${trovati.length} calendars": "${trovati.length} कैलेंडर जोड़े गए",
   "Administrator tools ·": "प्रशासक उपकरण ·",
@@ -1459,8 +1438,6 @@ export default Object.freeze({
   February: "फ़रवरी",
   "Feed a portion": "एक हिस्सा दें",
   "Files in /local (config/www)": "/local (config/www) की फ़ाइलें",
-  "Fill in the car's fields — fuel, range, doors, engine — from the Car tab in the settings.":
-    "सेटिंग्स के कार टैब से कार के फ़ील्ड — ईंधन, रेंज, दरवाज़े, इंजन — भरें।",
   "Fill it in and the card shows the window open when the contact says so.":
     "इसे भरें और जब संपर्क बताएगा तब कार्ड खिड़की को खुला दिखाएगा।",
   "Filled ${count} fields: ${list}.": "${count} फ़ील्ड भरे गए: ${list}।",
@@ -1650,12 +1627,6 @@ export default Object.freeze({
   Hob: "चूल्हा",
   Home: "घर",
   "Home (fallback)": "घर (विकल्प)",
-  "Home Assistant declares a battery itself — a sensor in percent — and it appears here with nothing to configure. If yours is not found, add it from the Batteries tab in the settings.":
-    "Home Assistant बैटरी खुद घोषित करता है — प्रतिशत वाला सेंसर — और वह बिना कुछ कॉन्फ़िगर किए यहाँ दिखती है। अगर आपकी नहीं मिलती, तो सेटिंग्स के बैटरियाँ टैब से जोड़ें।",
-  "Home Assistant declares a door or window contact itself and it appears here with nothing to configure. If yours is not found, add it from the Openings tab in the settings.":
-    "दरवाज़े या खिड़की का संपर्क Home Assistant खुद बताता है और बिना कुछ सेट किए यहाँ दिखता है। अगर आपका नहीं मिला तो सेटिंग्स के द्वार टैब से जोड़ दीजिए।",
-  "Home Assistant declares a motion or presence sensor itself and it appears here with nothing to configure. If yours is not found, add it from the Presence tab in the settings.":
-    "मोशन या उपस्थिति सेंसर को Home Assistant खुद घोषित करता है और वह कुछ भी सेट किए बिना यहाँ आ जाता है। अगर आपका नहीं मिलता, तो उसे सेटिंग्स के उपस्थिति टैब से जोड़ें।",
   "Home Assistant declares no machine and no network piece.":
     "Home Assistant कोई मशीन या नेटवर्क का हिस्सा घोषित नहीं करता।",
   "Home Assistant declares the air sensors itself — particulates, CO₂, monoxide, volatile compounds — and the tile appears on its own. Here you correct that: drop a sensor that should not count, add one that is not found, and move the boundaries between good, fair, poor and bad.":
@@ -2102,26 +2073,18 @@ export default Object.freeze({
   "No alerts configured": "कोई चेतावनी सेट नहीं है",
   "No answer within eight seconds.": "आठ सेकंड में कोई जवाब नहीं।",
   "No appliance configured": "कोई उपकरण सेट नहीं है",
-  "No appliance configured. Use the Settings menu to add one.":
-    "कोई उपकरण कॉन्फ़िगर नहीं है। जोड़ने के लिए सेटिंग्स मेन्यू का उपयोग करें।",
   "No appliance has measurable consumption today.": "आज किसी उपकरण की मापने योग्य खपत नहीं है।",
-  "No appliance in this load yet. Add them from the Loads editor.":
-    "इस लोड में अभी कोई उपकरण नहीं है। उन्हें लोड संपादक से जोड़ें।",
   "No appliance is running right now.": "अभी कोई उपकरण नहीं चल रहा।",
   "No appliance matches the selected filters.": "चुने गए फ़िल्टर से कोई उपकरण मेल नहीं खाता।",
   "No appliance yet.": "अभी कोई उपकरण नहीं।",
   "No battery found": "कोई बैटरी नहीं मिली",
   "No boiler configured": "कोई बॉयलर सेट नहीं",
-  "No boiler configured: add one from the Thermal management tab in settings.":
-    "कोई बॉयलर सेट नहीं: सेटिंग्स के ऊष्मा प्रबंधन टैब से जोड़ें।",
   "No calendar configured": "कोई कैलेंडर सेट नहीं है",
   "No calendar selected": "कोई कैलेंडर चुना नहीं गया",
   "No camera configured": "कोई कैमरा कॉन्फ़िगर नहीं",
   "No car field could be recognised from this device.":
     "इस डिवाइस से कार का कोई फ़ील्ड पहचाना नहीं जा सका।",
   "No cartridge found": "कोई कार्ट्रिज नहीं मिला",
-  "No cartridge found: if your printer reports them, write them in the Printers tab.":
-    "कोई कार्ट्रिज नहीं मिला: अगर आपका प्रिंटर बताता है, तो उन्हें प्रिंटर टैब में लिखें।",
   "No charger among the integrations with devices: only evcc's are here, and evcc connects from the other button.":
     "उपकरणों वाले इंटीग्रेशन में कोई चार्जर नहीं: यहाँ सिर्फ़ evcc वाले हैं, और evcc दूसरे बटन से जुड़ता है।",
   "No charger field could be recognised from this device.":
@@ -2132,8 +2095,6 @@ export default Object.freeze({
   "No configuration contains this word.": "किसी भी सेटिंग में यह शब्द नहीं है।",
   "No configured items.": "कोई कॉन्फ़िगर किया गया आइटम नहीं।",
   "No configured lights.": "कोई रोशनी कॉन्फ़िगर नहीं है।",
-  "No configured lights. Add them from the editor's Lights tab: both light.* and switch.* entities are accepted.":
-    "कोई रोशनी कॉन्फ़िगर नहीं है। उन्हें संपादक के रोशनी टैब से जोड़ें: light.* और switch.* दोनों इकाइयाँ स्वीकार हैं।",
   "No configured loads": "कोई कॉन्फ़िगर किया गया लोड नहीं",
   "No contact found": "कोई संपर्क नहीं मिला",
   "No custom button": "कोई कस्टम बटन नहीं",
@@ -2156,8 +2117,6 @@ export default Object.freeze({
   "No entity added — type/pick and press ➕": "कोई इकाई नहीं जोड़ी गई — लिखें या चुनें और ➕ दबाएँ",
   "No entity bound: the circle stays empty in every view.":
     "कोई इकाई नहीं जुड़ी: घेरा हर दृश्य में खाली रहेगा।",
-  "No entity linked yet: open the settings and pick the device.":
-    "अभी कोई एंटिटी नहीं जुड़ी: सेटिंग्स खोलें और उपकरण चुनें।",
   "No entries": "कोई प्रविष्टि नहीं",
   "No extra command: the card carries the player's own buttons and nothing else.":
     "कोई अतिरिक्त बटन नहीं: कार्ड पर प्लेयर के अपने बटन ही हैं।",
@@ -2224,15 +2183,11 @@ export default Object.freeze({
     "इस डिवाइस से कोई रोबोट नहीं पहचाना जा सका: vacuum.* या lawn_mower.* एंटिटी चाहिए।",
   "No robot configured": "कोई रोबोट विन्यस्त नहीं",
   "No room": "कोई कमरा नहीं",
-  "No room has a humidity probe: add one from the Temperature tab.":
-    "किसी कमरे में नमी सेंसर नहीं है: तापमान टैब से एक जोड़ें।",
   "No room has a temperature sensor configured yet.":
     "अभी किसी कमरे में तापमान सेंसर कॉन्फ़िगर नहीं है।",
   "No room with a sensor — add one in the editor's Temperature tab":
     "सेंसर वाला कोई कमरा नहीं — संपादक के तापमान टैब में एक जोड़ें",
   "No room. Add one below.": "कोई कमरा नहीं। नीचे एक जोड़ें।",
-  "No rooms configured yet. Add them from the editor's Rooms tab: every section can then assign its entities to one.":
-    "अभी कोई कमरा नहीं है। उन्हें संपादक के कमरे टैब से जोड़ें: फिर हर अनुभाग अपनी इकाइयाँ किसी कमरे को सौंप सकता है।",
   "No sensor recognized": "कोई सेंसर नहीं मिला",
   "No shutter or curtain configured": "कोई शटर या परदा कॉन्फ़िगर नहीं",
   "No signal": "कोई संकेत नहीं",
@@ -2244,8 +2199,6 @@ export default Object.freeze({
   "No todo.* list found": "कोई todo.* सूची नहीं मिली",
   "No warning in force": "कोई चेतावनी लागू नहीं",
   "No water heater configured": "कोई वॉटर हीटर सेट नहीं",
-  "No water heater configured: add one from the Solar tab in settings.":
-    "कोई वॉटर हीटर सेट नहीं: इसे सेटिंग्स के सोलर टैब से जोड़ें।",
   "No window sits in a room that has a hygrometer: pick the room in the window's row, below.":
     "कोई भी खिड़की ऐसे कमरे में नहीं है जिसमें नमी मापक हो: नीचे खिड़की की पंक्ति में कमरा चुनें।",
   "No zone configured": "कोई क्षेत्र कॉन्फ़िगर नहीं",
@@ -2272,8 +2225,6 @@ export default Object.freeze({
   "Nothing came in today.": "आज कुछ नहीं आया।",
   "Nothing closed yet.": "अभी तक कुछ भी बंद नहीं हुआ।",
   "Nothing for a pet": "पालतू के लिए कुछ नहीं",
-  "Nothing here yet. Entities are assigned from each section's own tab.":
-    "यहाँ अभी कुछ नहीं है। इकाइयाँ हर अनुभाग के अपने टैब से सौंपी जाती हैं।",
   "Nothing new": "कुछ नया नहीं",
   "Nothing of this kind here.": "यहाँ इस तरह का कुछ नहीं।",
   "Nothing playing": "कुछ नहीं चल रहा",
@@ -2705,7 +2656,6 @@ export default Object.freeze({
   "all up": "सब चालू",
   Servers: "सर्वर",
   connected: "जुड़े हुए",
-  "Choose what to highlight": "चुनें क्या हाइलाइट करना है",
   "to work on": "काम बाकी",
   "In today:": "आज आए:",
   "Nothing came in today": "आज कुछ नहीं आया",
@@ -2782,7 +2732,6 @@ export default Object.freeze({
   "Open all": "सब खोलें",
   "Open appliances running": "चल रहे उपकरण खोलें",
   "Open camera": "कैमरा खोलें",
-  "Open configuration": "कॉन्फ़िगरेशन खोलें",
   "Open for": "खुला है",
   "Open gate": "गेट खोलें",
   "Open in map": "मानचित्र में खोलें",
@@ -2906,8 +2855,6 @@ export default Object.freeze({
     "अंत से पहले की शुरुआत चुनें, और भविष्य में नहीं।",
   "Pick an image entity": "इमेज एंटिटी चुनें",
   "Pick from Appliances": "उपकरणों से चुनें",
-  "Pick the calendars from the Widgets tab in the settings: the ones you already have in Home Assistant appear on their own with «Detect».":
-    "सेटिंग्स के विजेट टैब से कैलेंडर चुनें: जो पहले से Home Assistant में हैं वे «पहचानें» से खुद आ जाते हैं।",
   "Pick the device": "डिवाइस चुनें",
   "Pick the evcc loadpoint: the charge mode, the charge limit, the session and the solar share come along. The charger connects from the other button, and the fields add up.":
     "evcc का loadpoint चुनें: चार्ज मोड, चार्ज सीमा, सत्र और सौर हिस्सा आ जाते हैं। चार्जर दूसरे बटन से जुड़ता है, और खाने जुड़ जाते हैं।",
@@ -3650,8 +3597,6 @@ export default Object.freeze({
     "आइकन अंतर्निहित क्रियाओं के लिए भी बदला जा सकता है और घर पर दिखता है।",
   "The integrations that bring a charger: go-e, Easee, KEBA, Wallbox, openWB, Zaptec, Tesla. Pick the device and the charging fields fill in by themselves — power, energy, voltage, temperature, the cable.":
     "चार्जर लाने वाले इंटीग्रेशन: go-e, Easee, KEBA, Wallbox, openWB, Zaptec, Tesla। उपकरण चुनें और चार्जिंग के खाने अपने आप भर जाते हैं — पावर, ऊर्जा, वोल्टेज, तापमान, केबल।",
-  "The intercom and the mailbox are declared in the Intercom and mail tab of the settings: the button that opens, the doorbell, and the two mailbox sensors.":
-    "इंटरकॉम और लेटरबॉक्स सेटिंग्स के «इंटरकॉम और डाक» टैब में बताए जाते हैं: खोलने वाला बटन, डोरबेल और लेटरबॉक्स के दोनों सेंसर।",
   "The inverted direction": "उल्टी दिशा",
   "The latest reply": "नवीनतम जवाब",
   "The lawn shows the first ${MAX_LAWN_ZONES} zones; all ${config.zones.length} are listed below.":
@@ -3716,8 +3661,6 @@ export default Object.freeze({
   "The push comes from Home Assistant, not the dashboard: it runs on the server, so it arrives even when this page is closed. This automation is already written with your entities — paste it under Settings → Automations → ⋮ → Edit in YAML, and change the service to your phone's.":
     "पुश डैशबोर्ड नहीं, Home Assistant भेजता है: वह सर्वर पर चलता है, इसलिए यह पेज बंद होने पर भी सूचना आती है। यह ऑटोमेशन आपकी एंटिटी के साथ पहले से लिखा है — इसे सेटिंग्स → ऑटोमेशन → ⋮ → YAML में संपादित करें में चिपकाएँ, और सेवा बदलकर अपने फ़ोन वाली कर दें।",
   "The quick actions": "त्वरित क्रियाएँ",
-  "The radar address is not a tile address ({z}/{x}/{y}): fix it under Settings → Weather, or pick a service from the list.":
-    "रडार का पता टाइल का पता ({z}/{x}/{y}) नहीं है: इसे सेटिंग → मौसम में सुधारें, या सूची से कोई सेवा चुनें।",
   "The radar is not reporting.": "रडार जवाब नहीं दे रहा।",
   "The radiators": "रेडिएटर",
   "The reading on the cover": "मुखपृष्ठ पर दिखने वाला माप",
@@ -3771,8 +3714,6 @@ export default Object.freeze({
   "The state": "स्थिति",
   "The station sensor, when the integration exposes one: it gives the name written next to the train.":
     "स्टेशन का सेंसर, यदि इंटीग्रेशन उसे देता है: ट्रेन के बगल में लिखा नाम वहीं से आता है।",
-  "The target is read-only: connect evcc in the Car tab to change it.":
-    "लक्ष्य केवल पढ़ने के लिए है: बदलने के लिए कार टैब में evcc जोड़ें।",
   "The temperatures": "तापमान",
   "The text of the report": "रिपोर्ट का पाठ",
   "The theme and the bar": "थीम और पट्टी",
@@ -3849,15 +3790,11 @@ export default Object.freeze({
     "यह state_class total या total_increasing वाला संचयी kWh मीटर होना चाहिए। यहाँ मासिक सेंसर न लगाएँ: पिछले महीनों को फिर से बनाने के लिए यह फ़ील्ड ज़रूरी है।",
   "This one wins: day, month, year, history and previous months are all derived from here through Recorder. While it is set, the period fields are not read.":
     "यही मान्य है: दिन, महीना, साल, इतिहास और पिछले महीने सब Recorder के ज़रिए यहीं से निकलते हैं। जब तक यह भरा है, अवधि के फ़ील्ड नहीं पढ़े जाते।",
-  "This reading has no entity yet: map it in the configuration to see its history.":
-    "इस रीडिंग की अभी कोई एंटिटी नहीं है: इतिहास देखने के लिए कॉन्फ़िगरेशन में इसे जोड़ें।",
   "This sensor is also configured in": "यह सेंसर यहाँ भी सेट है:",
   "This socket is configured as shown but not controllable: this window reports it, it never switches it.":
     "यह सॉकेट दिखता है पर नियंत्रित नहीं के रूप में सेट है: यह विंडो केवल स्थिति बताती है, कभी चालू-बंद नहीं करती।",
   "This tab holds four of them and they are all taken: remove one to make room.":
     "इस टैब में चार आते हैं और सब भरे हुए हैं: जगह बनाने के लिए एक हटाएँ।",
-  "This target is a read-only sensor: to change it from here connect evcc, or a number/select entity, in the Car tab.":
-    "यह लक्ष्य केवल पढ़ने वाला सेंसर है: यहाँ से बदलने के लिए कार टैब में evcc, या कोई number/select इकाई जोड़ें।",
   "This week": "इस सप्ताह",
   "Three gestures, no more: ＋ New vehicle opens an empty card, the ✏️ opens a vehicle you already saved, the switch turns it on or off in the EV section. Below you say whether it is a car or a motorcycle, and you fill in name, brand, model, entities and both photos — there is a single save: it says whether it is creating or editing, and the one at the bottom of the section carries the same words. Which vehicle you look at is picked from the section's own tabs, not from here.":
     "बस तीन काम: ＋ नया वाहन एक खाली कार्ड खोलता है, ✏️ पहले से सहेजा गया वाहन खोलता है, और स्विच उसे EV खंड में दिखाता या छिपाता है। नीचे आप बताते हैं कि यह कार है या मोटरसाइकिल, और नाम, ब्रांड, मॉडल, एंटिटी तथा दोनों तस्वीरें भरते हैं — सहेजना एक ही है: वह खुद बताता है कि बना रहा है या बदल रहा है, और खंड के अंत वाला बटन भी वही शब्द रखता है। कौन-सा वाहन देखना है, यह खंड के अपने टैब से चुना जाता है, यहाँ से नहीं।",
@@ -4198,8 +4135,6 @@ export default Object.freeze({
   "You have nothing in progress.": "आपके पास कुछ भी चल रहा नहीं है।",
   "You need a": "आपको चाहिए एक",
   "You need a hand configuring or understanding": "सेट करने या समझने में मदद चाहिए",
-  "You picked «An address of mine» but there is no address: write it under Settings → Weather, or pick a service from the list.":
-    "आपने «मेरा पता» चुना पर पता नहीं है: इसे सेटिंग → मौसम में लिखें, या सूची से कोई सेवा चुनें।",
   "Your alarm areas": "आपके अलार्म क्षेत्र",
   "Your name (optional)": "आपका नाम (वैकल्पिक)",
   "Your own entities": "आपकी एंटिटीज़",
@@ -4760,8 +4695,6 @@ export default Object.freeze({
   "Home Assistant refused": "Home Assistant ने अस्वीकार कर दिया",
   "It is only used to say how long is left to charge: from the missing percentage and the charger's power. Left empty it counts 70 kWh, which is what the dashboard has always assumed — with a different battery the time comes out wrong in proportion.":
     "यह केवल यह बताने के लिए है कि चार्ज पूरा होने में कितना समय बचा है: बची हुई प्रतिशत और चार्जर की शक्ति से। खाली छोड़ने पर 70 kWh गिने जाते हैं, जो डैशबोर्ड हमेशा से मानता आया है — अलग बैटरी होने पर समय उसी अनुपात में ग़लत निकलता है।",
-  "No session meter: connect the charger or evcc in the Car tab, or write the entity into “Session energy”.":
-    "कोई सत्र मीटर नहीं: कार टैब में चार्जर या evcc जोड़ें, या एंटिटी को «सत्र ऊर्जा» में लिखें।",
   Sunset: "सूर्यास्त",
   "TARGET REACHED": "लक्ष्य पूरा",
   "The session meter is not answering.": "सत्र मीटर प्रतिक्रिया नहीं दे रहा।",
@@ -4774,8 +4707,6 @@ export default Object.freeze({
   empty: "खाली",
   "not responding": "प्रतिक्रिया नहीं दे रहा",
   "nothing on": "कुछ भी चालू नहीं",
-  "The base map is not answering. The rain is there: you can change map under ⚙️ → Weather and radar.":
-    "आधार मानचित्र उत्तर नहीं दे रहा। वर्षा दिख रही है: आप ⚙️ → मौसम और रडार में मानचित्र बदल सकते हैं।",
   "ARMED ·": "सक्रिय ·",
   "Your own entities in the bar": "पट्टी में आपकी अपनी इकाइयाँ",
   "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit next to what is on, before the measurements, and each one can show up only when it matters — for instance only while holiday mode is on.":
@@ -4898,8 +4829,6 @@ export default Object.freeze({
   "Configure a camera above first: the privacy is its own.":
     "पहले ऊपर एक कैमरा कॉन्फ़िगर करें: निजता उसी की है।",
   "Private cameras": "निजी कैमरे",
-  "The soil sensor is right above. Add the irrigation zones from the editor to see the lawn too.":
-    "मिट्टी का सेंसर ठीक ऊपर है। लॉन भी देखने के लिए एडिटर से सिंचाई ज़ोन जोड़ें।",
   "Contact entity": "संपर्क सेंसर की एंटिटी",
   "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back.":
     "ये यहाँ एक बार पंक्तियों के रूप में आ जाते हैं: उसके बाद ये आपके हैं — नाम बदलिए, चित्र दीजिए, और जो हटाते हैं वे वापस नहीं आते।",
@@ -5051,8 +4980,6 @@ export default Object.freeze({
   "Save meter": "मीटर सहेजें",
   "Flowing for ${durata}": "${durata} से बह रहा है",
   "Flowing for over a day": "एक दिन से ज़्यादा से बह रहा है",
-  "A meter shows up here once you add it in the Water and gas tab of the settings: the water and gas meters, the water pressure and flow, the softener salt.":
-    "सेटिंग्स के पानी और गैस टैब में जोड़ते ही मीटर यहाँ दिखता है: पानी और गैस के मीटर, पानी का दबाव और प्रवाह, सॉफ़्टनर का नमक।",
   "Not flowing": "नहीं बह रहा",
   "🪴 ${quante} plants added": "🪴 ${quante} पौधे जोड़े गए",
   "${quante} doing well": "${quante} ठीक हैं",
@@ -5061,8 +4988,6 @@ export default Object.freeze({
   "1 doing well": "1 ठीक है",
   "1 needs water": "1 को पानी चाहिए",
   "1 waiting for rain": "1 बारिश का इंतज़ार कर रहा है",
-  "A plant shows up here once you add its sensor in the Plant care tab of the settings: the soil moisture, and its temperature if there is one.":
-    "कोई पौधा यहाँ तब दिखता है जब आप सेटिंग्स के पौधे टैब में उसका सेंसर जोड़ते हैं: मिट्टी की नमी, और अगर हो तो उसका तापमान।",
   "Add a plant": "पौधा जोड़ें",
   "All doing well": "सभी ठीक हैं",
   "Below this moisture the soil is dry and the plant joins those that need water.":
@@ -5285,8 +5210,6 @@ export default Object.freeze({
   "Other BMS": "अन्य BMS",
   "Pack 1": "पैक 1",
   "Pack saved": "पैक सहेजा गया",
-  "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.":
-    "पैक यहाँ तब दिखते हैं जब आप उन्हें सेटिंग्स में ऊर्जा के अंतर्गत बैटरियाँ टैब में जोड़ते हैं: चार्ज की स्थिति, वोल्टेज, सेल।",
   "Current sign": "करंट का चिह्न",
   "Positive when charging (JK, JBD, Daly)": "चार्ज होते समय धनात्मक (JK, JBD, Daly)",
   "Negative when charging": "चार्ज होते समय ऋणात्मक",
@@ -5411,8 +5334,6 @@ export default Object.freeze({
   "Lower the power": "शक्ति घटाएँ",
   Modulating: "मॉड्यूलेशन",
   "No stove configured": "कोई स्टोव सेट नहीं",
-  "No stove configured: add one from the Thermal management tab in settings.":
-    "कोई स्टोव सेट नहीं: सेटिंग्स के ताप प्रबंधन टैब से जोड़ें।",
   "On its own it covers nearly everything: on and off, the target, the room temperature and, if it has them, the fan modes.":
     "अकेले यही लगभग सब कुछ संभाल लेता है: चालू और बंद, लक्ष्य, कमरे का तापमान और, अगर हों, पंखे के मोड।",
   "Pellet level, second hopper": "पेलेट का स्तर, दूसरा टैंक",
@@ -5444,8 +5365,6 @@ export default Object.freeze({
   "Radiators out of season": "मौसम से बाहर रेडिएटर",
   "They show: ${periodo}. Switched on, they show anyway.":
     "दिखते हैं: ${periodo}। चालू होने पर फिर भी दिखते हैं।",
-  "Each one has its months in the dashboard configuration. Switched on, they show anyway.":
-    "हर एक के महीने डैशबोर्ड कॉन्फ़िगरेशन में हैं। चालू होने पर फिर भी दिखते हैं।",
   "Show them anyway": "फिर भी दिखाएँ",
   "🐠 The aquarium's entities": "🐠 एक्वेरियम की एंटिटी",
   "🦎 The terrarium's entities": "🦎 टेरारियम की एंटिटी",
@@ -5466,10 +5385,6 @@ export default Object.freeze({
   "Humidity too low": "नमी बहुत कम",
   "Last cleaning": "पिछली सफ़ाई",
   Mister: "मिस्टर (फुहार यंत्र)",
-  "No entity yet: open the settings and add the aquarium's temperature, pH, level, lights and filter.":
-    "अभी कोई एंटिटी नहीं: सेटिंग्स खोलें और एक्वेरियम का तापमान, pH, स्तर, रोशनी और फ़िल्टर जोड़ें।",
-  "No entity yet: open the settings and add the terrarium's temperature, humidity and lamps.":
-    "अभी कोई एंटिटी नहीं: सेटिंग्स खोलें और टेरारियम का तापमान, नमी और लैंप जोड़ें।",
   "Not recorded yet: tap “Done today” on the day you clean it, and from then on the card counts the days.":
     "अभी दर्ज नहीं है: जिस दिन सफ़ाई करें उस दिन “आज किया” दबाएँ, फिर कार्ड दिन गिनेगा।",
   "One row per entity: temperature and pH with their ideal range, the water level, the lights, the filter and the heater. Empty ranges use the defaults: 24–27 °C and pH 6.5–7.5.":
@@ -6037,7 +5952,6 @@ export default Object.freeze({
   "${probabile} chance": "${probabile} संभावना",
   "a camera or image entity you already have": "एक camera या image एंटिटी जो पहले से है",
   "about ${quanta} in the next 24 hours": "अगले 24 घंटों में लगभग ${quanta}",
-  "Add its sensors under ⚙️ Config › Weather: your home's readings show up here, with the last 24 hours. Without them, the page uses the weather service only.": "इसके सेंसर ⚙️ Config › मौसम में जोड़ें: आपके घर की माप पिछले 24 घंटों के साथ यहाँ दिखती हैं। इनके बिना पेज केवल मौसम सेवा का उपयोग करता है।",
   "All optional, one per type. Temperature, humidity, feels-like and wind are the same fields as the Home header; rain and rate are the ones Irrigation already uses. They are chosen once and apply everywhere.": "सभी वैकल्पिक, हर प्रकार के लिए एक। तापमान, नमी, महसूस होने वाला तापमान और हवा वही फ़ील्ड हैं जो होम हेडर में हैं; बारिश और दर वही हैं जिन्हें सिंचाई पहले से उपयोग करती है। इन्हें एक बार चुना जाता है और ये हर जगह लागू होते हैं।",
   at: "पर",
   "at most ${probabile} chance": "अधिकतम ${probabile} संभावना",
@@ -6045,7 +5959,6 @@ export default Object.freeze({
   Cloudy: "बादल",
   "conditions, feels like, low and high": "स्थिति, महसूस, न्यूनतम और अधिकतम",
   "dew point": "ओस बिंदु",
-  "Do you have a weather station?": "क्या आपके पास मौसम स्टेशन है?",
   E: "पू",
   east: "पूर्व",
   Exceptional: "असाधारण",
@@ -6081,7 +5994,6 @@ export default Object.freeze({
   "north-west": "उत्तर-पश्चिम",
   "Now · My station · Forecast · Radar": "अभी · मेरा स्टेशन · पूर्वानुमान · रडार",
   NW: "उप",
-  "Open Weather in Config": "Config में मौसम खोलें",
   "Outdoor temperature": "बाहरी तापमान",
   "Partly cloudy": "आंशिक बादल",
   Radar: "रडार",
@@ -6150,8 +6062,6 @@ export default Object.freeze({
   "Charging stops": "चार्जिंग पड़ाव",
   "Charging: ${minuti} in ${n} stops": "चार्जिंग: ${minuti}, ${n} पड़ावों में",
   "Charging: ${minuti} in 1 stop": "चार्जिंग: ${minuti}, 1 पड़ाव में",
-  "Connect": "जोड़ें",
-  "Connect the car to see battery and stops": "बैटरी और पड़ाव देखने के लिए कार जोड़ें",
   "For the stops, choose 100% at departure.": "पड़ावों के लिए निकलते समय 100% चुनें।",
   "For the way back you still have ${resta}: no need to charge": "वापसी के लिए आपके पास ${resta} बचा है: चार्ज की ज़रूरत नहीं",
   "from ${da} to ${a} · ${min} min": "${da} से ${a} · ${min} मिनट",
@@ -6163,7 +6073,6 @@ export default Object.freeze({
   "Minimum charge on arrival": "पहुँचने पर न्यूनतम चार्ज",
   "now ${ora}": "अभी ${ora}",
   "on arrival ${fine}": "पहुँचने पर ${fine}",
-  "Only you see this, as the home's administrator": "यह सिर्फ़ आपको दिखता है, घर के व्यवस्थापक के रूप में",
   "Parked · not charging": "खड़ी है · चार्ज नहीं हो रही",
   "Parked at home · not charging": "घर पर खड़ी है · चार्ज नहीं हो रही",
   "range": "रेंज",
@@ -6172,7 +6081,6 @@ export default Object.freeze({
   "Stops picked by GdANav on the way, with free chargers.": "रास्ते में GdANav द्वारा चुने गए पड़ाव, खाली चार्जरों के साथ।",
   "The battery is not answering": "बैटरी जवाब नहीं दे रही",
   "The chargers are not in the home yet: stops are by kilometre. On the way GdANav picks the chargers and checks they are free.": "चार्जर अभी घर में नहीं हैं: पड़ाव किलोमीटर के हिसाब से। रास्ते में GdANav चार्जर चुनता है और देखता है कि वे खाली हैं।",
-  "The electric car's battery and range, and the charging stops if it is not enough.": "इलेक्ट्रिक कार की बैटरी और रेंज, और कम पड़े तो चार्जिंग पड़ाव।",
   "The minimum power to stop at": "रुकने के लिए न्यूनतम पावर",
   "The stops come with the route": "पड़ाव रास्ते के साथ आते हैं",
   "the trip": "यात्रा",
@@ -6226,11 +6134,9 @@ export default Object.freeze({
   "Charging · until ${fine}": "चार्ज हो रही है · ${fine} तक",
   "Charging · until ${limite}% or ${fine}": "चार्ज हो रही है · ${limite}% या ${fine} तक",
   "End of the window": "समय-सीमा समाप्त",
-  "Enter it to see what you spend": "खर्च देखने के लिए इसे दर्ज करें",
   "evcc set to ${modo}": "evcc को ${modo} पर रखा गया",
   "Fast": "तेज़",
   "Finished at ${alle}": "${alle} बजे पूरा",
-  "From band ${fascia} in Settings → Energy": "सेटिंग्स → ऊर्जा में स्लॉट ${fascia} से",
   "Needs the add-on: the home starts it": "ऐड-ऑन चाहिए: इसे घर शुरू करता है",
   "Night charging": "रात की चार्जिंग",
   "No days chosen": "कोई दिन नहीं चुना",
@@ -6606,12 +6512,10 @@ export default Object.freeze({
   "Convert": "बदलें",
   "Create and edit them in three steps": "तीन चरणों में बनाएँ और बदलें",
   "Create the first one": "पहला बनाएँ",
-  "Create the first one in the config ›": "पहला कॉन्फ़िग में बनाएँ ›",
   "Delete «${v.nome}»?": "«${v.nome}» हटाएँ?",
   "depending on the sun": "सूरज के अनुसार",
   "depending on what started it": "जिसने इसे शुरू किया उसके अनुसार",
   "does several things at once": "एक साथ कई काम करता है",
-  "Edit in the config ›": "कॉन्फ़िग में बदलें ›",
   "fires the ${evento} event": "${evento} इवेंट भेजता है",
   "Home Assistant → Settings → Automations": "Home Assistant → सेटिंग्स → ऑटोमेशन",
   "Home Assistant did not save it: ${no}": "Home Assistant ने इसे नहीं सहेजा: ${no}",
@@ -6621,7 +6525,6 @@ export default Object.freeze({
   "Home Assistant's automations are read through the GdAHome add-on: it is not here.": "Home Assistant के ऑटोमेशन GdAHome ऐड-ऑन से पढ़े जाते हैं: यह यहाँ नहीं है।",
   "if something holds:": "अगर कुछ सही हो:",
   "in HA as": "HA में इस नाम से",
-  "in the config ›": "कॉन्फ़िग में ›",
   "It is removed from Home Assistant too, and it cannot be undone. If you only want to stop it, turn it off with the switch.": "यह Home Assistant से भी हट जाएगा और इसे वापस नहीं किया जा सकता। अगर बस रोकना है, तो स्विच से बंद करें।",
   "It is saved in": "यहाँ सहेजा जाता है:",
   "It was not changed: ${no}": "नहीं बदला: ${no}",
@@ -6629,7 +6532,6 @@ export default Object.freeze({
   "It was not deleted: ${no}": "नहीं हटाया गया: ${no}",
   "labelled": "लेबल के साथ",
   "Last time:": "पिछली बार:",
-  "Manage in the config ›": "कॉन्फ़िग में प्रबंधित करें ›",
   "never": "कभी नहीं",
   "No automation matches these words.": "इन शब्दों से कोई ऑटोमेशन मेल नहीं खाता।",
   "No automations yet: start from a ready-made template.": "अभी कोई ऑटोमेशन नहीं: किसी तैयार टेम्पलेट से शुरू करें।",
@@ -6787,6 +6689,8 @@ export default Object.freeze({
   "A Home device can have a photo or a drawing that fills its tile. Name and state stay on the dark veil at the bottom, in white.": "होम पर किसी डिवाइस में एक फ़ोटो या चित्र हो सकता है जो उसकी टाइल भर दे। नाम और स्थिति नीचे के गहरे परदे पर सफ़ेद रहते हैं।",
   "Choose from the drawings": "चित्रों में से चुनें",
   "Device images": "डिवाइस की छवियाँ",
+  "Tile images": "टाइलों की छवियाँ",
+  "Every dashboard card can have a photo or a drawing that fills it: lights, climate, blinds, cameras, rooms, quick actions. The controls stay on top, readable; on the wall the same image shows on the pages that fill themselves.": "डैशबोर्ड का हर कार्ड एक फ़ोटो या चित्र ले सकता है जो उसे भर दे: लाइटें, क्लाइमेट, शटर, कैमरे, कमरे, त्वरित क्रियाएँ। नियंत्रण ऊपर पढ़ने योग्य बने रहते हैं; दीवार पर वही छवि उन पेजों पर दिखती है जो अपने आप भरते हैं।",
   "Drag to move": "खिसकाने के लिए खींचें",
   "Drawing (when there is no image)": "चित्र (जब कोई छवि न हो)",
   "Fills the tile instead of the drawing": "चित्र की जगह टाइल को भरती है",
@@ -6835,4 +6739,47 @@ export default Object.freeze({
   "Windy weather radar": "Windy मौसम रडार",
   "An intercom event (event.*), or a sensor that turns on when it rings (binary_sensor). A button or a switch work too.": "इंटरकॉम का एक इवेंट (event.*), या एक सेंसर जो घंटी बजने पर चालू होता है (binary_sensor)। एक बटन या स्विच भी चलता है।",
   "cannot act as a doorbell: pick an event (event.*) or a sensor that turns on (binary_sensor.*).": "डोरबेल का काम नहीं कर सकता: एक इवेंट (event.*) या चालू होने वाला सेंसर (binary_sensor.*) चुनें।",
+  "Now · My station · Forecast": "अभी · मेरा स्टेशन · पूर्वानुमान",
+  "Brake on": "हैंडब्रेक लगा है",
+  "Cabin": "केबिन",
+  "Consumption, worked out": "खपत, गणना की गई",
+  "done ${giorno} at ${ora}": "${giorno} ${ora} बजे पूरा",
+  "done tomorrow at ${ora}": "कल ${ora} बजे पूरा",
+  "Driven": "तय दूरी",
+  "Fully charged": "पूरी चार्ज",
+  "In neutral": "न्यूट्रल में",
+  "Last charge": "पिछली चार्जिंग",
+  "More data": "और डेटा",
+  "Moving": "चल रही है",
+  "on fuel": "ईंधन पर",
+  "On the road": "ड्राइविंग",
+  "Parked": "पार्क की गई",
+  "Range at ${pct}%": "${pct}% पर रेंज",
+  "rated": "प्रमाणित",
+  "Reversing": "रिवर्स में",
+  "Standing by": "प्रतीक्षा में",
+  "Target reached": "लक्ष्य पूरा",
+  "The rest": "बाकी",
+  "total": "कुल",
+  "Updated at ${detto}": "${detto} बजे अपडेट",
+  "Updated on ${detto}": "${detto} को अपडेट",
+  "From band ${fascia}": "स्लॉट ${fascia} से",
+  "Home Assistant declares a battery itself — a sensor in percent — and it appears here with nothing to configure.": "Home Assistant बैटरी खुद घोषित करता है — प्रतिशत वाला सेंसर — और वह बिना कुछ कॉन्फ़िगर किए यहाँ दिखती है।",
+  "Home Assistant declares a door or window contact itself and it appears here with nothing to configure.": "दरवाज़े या खिड़की का संपर्क Home Assistant खुद बताता है और बिना कुछ सेट किए यहाँ दिखता है।",
+  "Home Assistant declares a motion or presence sensor itself and it appears here with nothing to configure.": "मोशन या उपस्थिति सेंसर को Home Assistant खुद घोषित करता है और वह कुछ भी सेट किए बिना यहाँ आ जाता है।",
+  "More power is going out than coming in: usually a sensor's direction is reversed.": "जितनी बिजली आ रही है उससे ज़्यादा जा रही है: आमतौर पर किसी सेंसर की दिशा उलटी होती है।",
+  "No appliance in this load yet.": "इस लोड में अभी कोई उपकरण नहीं है।",
+  "No room has a humidity probe.": "किसी कमरे में नमी सेंसर नहीं है।",
+  "No rooms configured yet.": "अभी कोई कमरा नहीं है।",
+  "No sensor linked.": "कोई सेंसर नहीं जुड़ा।",
+  "No session meter.": "कोई सत्र मीटर नहीं।",
+  "Nothing here yet.": "यहाँ अभी कुछ नहीं है।",
+  "Switched on, they show anyway.": "चालू होने पर फिर भी दिखते हैं।",
+  "The base map is not answering. The rain is there.": "आधार मानचित्र उत्तर नहीं दे रहा। वर्षा दिख रही है।",
+  "The radar address is not a tile address ({z}/{x}/{y}).": "रडार का पता टाइल का पता ({z}/{x}/{y}) नहीं है।",
+  "The soil sensor is right above.": "मिट्टी का सेंसर ठीक ऊपर है।",
+  "The target is read-only.": "लक्ष्य केवल पढ़ने के लिए है।",
+  "This reading has no entity yet.": "इस रीडिंग की अभी कोई एंटिटी नहीं है।",
+  "This target is a read-only sensor.": "यह लक्ष्य केवल पढ़ने वाला सेंसर है।",
+  "You picked «An address of mine» but there is no address.": "आपने «मेरा पता» चुना पर पता नहीं है।",
 });

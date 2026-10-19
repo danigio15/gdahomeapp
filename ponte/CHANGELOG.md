@@ -10,6 +10,33 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.16.3
+
+- **Immagini su tutti i riquadri:** foto o disegno su ogni riquadro, sul
+  pannello a muro e nella plancia: Camino ON/OFF, sensori col loro valore,
+  serrande, clima, luci, scene, pagine Energia, Musica, Meteo, Ingresso, flusso
+  dell'Energia, irrigazione, piscina, auto, riquadri della Home. I comandi
+  restano sopra l'immagine. Nel Config, «Immagini dei riquadri».
+- **Meteo sul muro con la stazione:** la pagina Meteo del muro è impaginata
+  come quella della plancia, con le misure della tua stazione e i loro grafici
+  delle 24 ore.
+- **Sezione Auto più chiara:** autonomia, stato e ricarica in alto, energia di
+  oggi in una barra, ultimi 7 giorni, temperature, pneumatici sull'auto vista
+  dall'alto, e «Altri dati» per il resto. Il tempo di ricarica si legge in ore
+  e minuti.
+- **Notifiche:**
+  - non si perdono più quando il collegamento con il centralino cade per un
+    momento, né su Android con l'app chiusa;
+  - toccandole si apre la sezione giusta, o una pagina fatta bene al posto del
+    riquadro dal basso;
+  - movimento: «Quali» telecamere si salva, e «Guarda» apre la telecamera.
+- **Barra in basso:** i nomi delle sezioni si leggono tutti, senza puntini.
+- **Icone degli aggiornamenti** anche nell'app su iPhone.
+- **Niente rimandi al Config** nelle sezioni: niente più inviti «Apri … nel
+  Config».
+- **Ultime rilevazioni (#279):** il foglio aperto dalla finestra di Varchi o
+  Presenza non resta più invisibile bloccando la plancia.
+
 ## 1.16.2
 
 - **Meteo sul pannello a muro:** nuova pagina «Meteo» in «Aggiungi una
@@ -3583,7 +3610,7 @@ foglio di un impianto, c'è il capitolo «Le plance»: per ognuna due caselle. I
 home; il **nome all'avvio** compare col suo logo mentre la pagina si apre,
 nell'app e dentro Home Assistant. Arrivano in casa col rapporto dopo. Fino a
 ieri la prima plancia prendeva da sola il nome dell'installatore, e nel menu
-laterale compariva «giovanni» al posto di «Casa»: quello non succede più, e in
+laterale compariva il nome utente al posto di «Casa»: quello non succede più, e in
 quelle case il titolo torna «GdAHome» finché lui non ne sceglie uno. Un titolo
 scritto in casa, dall'app, resta finché l'installatore non sceglie qualcos'altro.
 Per farlo, il rapporto porta anche **profilo e titolo di ogni plancia** — nomi

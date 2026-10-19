@@ -29,6 +29,8 @@
  * esattamente la segnalazione da cui si e' partiti.
  */
 
+import { immaginePulita } from "./immagine-del-riquadro.js";
+
 const pulito = (valore) => String(valore ?? "").trim();
 
 /* I campi in piu' che una sezione puo' tenere per riga.
@@ -55,6 +57,10 @@ export function rigaPulita(voce, inPiu = []) {
   const riga = { entity, name, icon };
   for (const campo of Array.isArray(inPiu) ? inPiu : [])
     if (voce[campo] !== undefined && voce[campo] !== null) riga[campo] = voce[campo];
+  /* «Riquadri con l'immagine»: ogni riga che diventa una card puo' portare la
+   * sua foto o il suo disegno. Solo pulita, per tutti gli elenchi. */
+  const immagine = immaginePulita(voce.immagine);
+  if (immagine) riga.immagine = immagine;
   return riga;
 }
 

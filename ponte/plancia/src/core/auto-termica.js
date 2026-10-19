@@ -740,3 +740,224 @@ export function letturaTermica(mappa = {}, states = {}, resolve = null) {
   fuori.qualcosa = Object.keys(fuori.caselle).length > 0;
   return fuori;
 }
+
+/* ── i dati in blocchi, per la pagina ─────────────────────────────────── */
+
+/* «Nella sezione Auto riesci a fare qualcosa di piu' bello con tutti sti dati,
+ * cosi' non si capisce niente.» La pagina li metteva in fila — una tessera
+ * per ogni dato, tutte uguali — e il consumo stava accanto alla marcia,
+ * l'energia di oggi in tre caselle separate, la temperatura della batteria
+ * fra due tempi di ricarica. Qui i dati si mettono insieme per quello che
+ * dicono: l'energia di oggi e' UNA cosa divisa in tre, la settimana sono tre
+ * numeri che si leggono insieme, le temperature stanno con le temperature.
+ * Quello che non entra in nessun blocco finisce in «Altri dati»: niente di
+ * configurato si perde. */
+
+/* Le tre parti dell'energia di oggi, nell'ordine in cui si disegnano. */
+export const PARTI_DELL_ENERGIA = Object.freeze([
+  Object.freeze({ parte: "guida", campo: "energiaOggiGuida", ref: "dm.ev_energia_oggi_guida" }),
+  Object.freeze({ parte: "clima", campo: "energiaOggiClima", ref: "dm.ev_energia_oggi_clima" }),
+  Object.freeze({ parte: "altro", campo: "energiaOggiAltro", ref: "dm.ev_energia_oggi_altro" }),
+]);
+
+/* Le temperature, nell'ordine in cui si leggono: prima quelle dell'auto. */
+export const TEMPERATURE_DELL_AUTO = Object.freeze([
+  Object.freeze({
+    chi: "batteria",
+    campo: "temperaturaBatteria",
+    ref: "dm.ev_temperatura_batteria",
+  }),
+  Object.freeze({ chi: "abitacolo", campo: "interna", ref: "dm.ev_temperatura_interna" }),
+  Object.freeze({ chi: "esterna", campo: "esterna", ref: "dm.ev_temperatura_esterna" }),
+  Object.freeze({ chi: "olio", campo: "olio", ref: "dm.ev_temperatura_olio" }),
+]);
+
+const valoreDi = (lettura, campo) => {
+  const v = lettura?.caselle?.[campo]?.valore;
+  return v === undefined ? null : v;
+};
+const unitaDi = (lettura, campo) => pulito(lettura?.caselle?.[campo]?.unita);
+
+/* I kilowattora di un sensore d'energia, in qualunque unita'. */
+function inKilowattora(valore, unita) {
+  if (valore === null || valore === undefined) return null;
+  const nome = pulito(unita).toLowerCase();
+  if (nome === "wh") return valore / 1000;
+  if (nome === "mwh") return valore * 1000;
+  return valore;
+}
+
+/**
+ * L'energia di oggi, divisa per cosa l'ha usata.
+ *
+ * Torna `null` se nessuna delle tre parti e' mappata. Le parti mappate ma mute
+ * restano fuori dal totale e dalla barra: un sensore che non risponde non e'
+ * uno zero. `quota` e' la parte del totale, fra 0 e 1, e con il totale a zero
+ * e' zero per tutte — la barra resta vuota invece di dividere per niente.
+ *
+ * @returns {null|{totale:number, parti:Array<{parte:string, ref:string, kwh:number, quota:number}>}}
+ */
+export function energiaDiOggi(lettura = {}) {
+  const parti = [];
+  for (const voce of PARTI_DELL_ENERGIA) {
+    const kwh = inKilowattora(valoreDi(lettura, voce.campo), unitaDi(lettura, voce.campo));
+    if (kwh === null) continue;
+    parti.push({ parte: voce.parte, ref: voce.ref, kwh: Math.max(0, kwh) });
+  }
+  if (!parti.length) return null;
+  const totale = parti.reduce((somma, voce) => somma + voce.kwh, 0);
+  for (const voce of parti) voce.quota = totale > 0 ? voce.kwh / totale : 0;
+  return { totale, parti };
+}
+
+/* Il consumo in kWh/100 km da un sensore che lo dice in un'altra unita':
+ * Wh/km, km/kWh, mi/kWh. `null` se non si capisce. */
+function consumoInKwh100(valore, unita) {
+  if (valore === null || valore === undefined || valore <= 0) return null;
+  const nome = pulito(unita).toLowerCase().replace(/\s+/g, "");
+  if (!nome || nome === "kwh/100km") return valore;
+  if (nome === "wh/km") return valore / 10;
+  if (nome === "km/kwh") return 100 / valore;
+  if (nome === "mi/kwh") return 100 / (valore * 1.609344);
+  if (nome === "kwh/100mi") return valore / 1.609344;
+  return null;
+}
+
+/**
+ * La settimana dell'auto: quanti chilometri, quanta energia, e il consumo.
+ *
+ * Il consumo e' quello che l'auto dichiara; se non lo dichiara ma ci sono i
+ * chilometri e l'energia della settimana, si fa la divisione e si dice che e'
+ * calcolato. `null` se non c'e' nessuno dei tre.
+ */
+export function laSettimana(lettura = {}) {
+  const km = valoreDi(lettura, "km7Giorni");
+  const kwh = inKilowattora(
+    valoreDi(lettura, "energia7Giorni"),
+    unitaDi(lettura, "energia7Giorni"),
+  );
+  const dichiarato = consumoInKwh100(
+    valoreDi(lettura, "consumoMedio"),
+    unitaDi(lettura, "consumoMedio"),
+  );
+  let consumo = dichiarato;
+  let calcolato = false;
+  if (consumo === null && km !== null && km > 0 && kwh !== null && kwh > 0) {
+    consumo = (kwh / km) * 100;
+    calcolato = true;
+  }
+  if (km === null && kwh === null && consumo === null) return null;
+  return { km, kwh, consumo, calcolato };
+}
+
+/** Le temperature mappate, con il loro posto: `[{ chi, ref, gradi }]`. */
+export function temperatureDellAuto(lettura = {}) {
+  const fuori = [];
+  for (const voce of TEMPERATURE_DELL_AUTO) {
+    const gradi = valoreDi(lettura, voce.campo);
+    if (gradi === null || typeof gradi !== "number") continue;
+    fuori.push({ chi: voce.chi, ref: voce.ref, gradi });
+  }
+  return fuori;
+}
+
+/* ── le gomme: com'e' la pressione ────────────────────────────────────── */
+
+/* Quanti bar fa un'unita' di pressione. */
+function inBar(valore, unita) {
+  const nome = pulito(unita).toLowerCase();
+  if (!nome || nome === "bar") return valore;
+  if (nome === "psi") return valore * 0.0689476;
+  if (nome === "kpa") return valore / 100;
+  if (nome === "mbar") return valore / 1000;
+  if (nome === "pa") return valore / 100000;
+  return null;
+}
+
+/* La forcella di una gomma d'auto, in bar. Le pressioni di targa di quasi
+ * tutte le auto stanno fra 2 e 3 bar: sotto 1,9 una gomma e' sgonfia, sopra
+ * 3,6 e' gonfiata male. E una gomma che sta 0,3 bar sotto le altre si sta
+ * sgonfiando, anche se il numero da solo sembrerebbe a posto: e' cosi' che
+ * comincia una foratura lenta. */
+export const FORCELLA_DELLE_GOMME = Object.freeze({ min: 1.9, max: 3.6, scarto: 0.3 });
+
+/**
+ * Come stanno le gomme, una per una e tutte insieme.
+ *
+ * Ogni ruota mappata ha il suo `tono`: «bene», «bassa», «alta», o «avviso»
+ * quando il sensore dice solo che c'e' un problema. Il verdetto generale e'
+ * «bene» se nessuna si lamenta (e nemmeno l'avviso unico dell'auto, se c'e'),
+ * «attento» altrimenti, `""` se di gomme non si sa niente.
+ */
+export function comeStannoLeGomme(lettura = {}, forcella = FORCELLA_DELLE_GOMME) {
+  const ruote = ruoteDellAuto(lettura).map((voce) => {
+    const bar = voce.pressione === null ? null : inBar(voce.pressione, voce.unita);
+    return {
+      ...voce,
+      bar,
+      tono: voce.avviso === true ? "avviso" : voce.avviso === false ? "bene" : "",
+    };
+  });
+  /* Il riferimento e' la gomma piu' gonfia fra quelle nella forcella: una
+   * gonfiata troppo e' gia' un problema suo, e non deve far sembrare basse le
+   * altre. */
+  const nellaForcella = ruote
+    .map((voce) => voce.bar)
+    .filter((bar) => bar !== null && bar >= forcella.min && bar <= forcella.max);
+  const riferimento = nellaForcella.length > 1 ? Math.max(...nellaForcella) : null;
+  for (const voce of ruote) {
+    if (voce.bar === null) continue;
+    if (voce.bar < forcella.min) voce.tono = "bassa";
+    else if (voce.bar > forcella.max) voce.tono = "alta";
+    else if (riferimento !== null && riferimento - voce.bar >= forcella.scarto - 1e-9)
+      voce.tono = "bassa";
+    else voce.tono = "bene";
+  }
+  const riepilogo = lettura?.pneumatici || null;
+  const sapute = ruote.length > 0 || Boolean(riepilogo);
+  const lamentano =
+    riepilogo?.avviso === true || ruote.some((voce) => voce.tono && voce.tono !== "bene");
+  return { ruote, verdetto: !sapute ? "" : lamentano ? "attento" : "bene" };
+}
+
+/* ── l'auto adesso: ferma, in marcia ──────────────────────────────────── */
+
+/**
+ * Cosa sta facendo l'auto, da quello che si sa: «marcia» se la marcia e'
+ * D, R o N o la velocita' e' sopra zero; «ferma» se la marcia e' P o il
+ * freno di stazionamento e' tirato; `""` se non si sa.
+ */
+export function cosaFaLAuto(lettura = {}) {
+  const marcia = valoreDi(lettura, "marcia");
+  const velocita = valoreDi(lettura, "velocita");
+  if ((typeof velocita === "number" && velocita > 0) || ["D", "R", "N"].includes(marcia))
+    return "marcia";
+  if (marcia === "P" || valoreDi(lettura, "frenoStazionamento") === true) return "ferma";
+  return "";
+}
+
+/* I riferimenti che la pagina mette in un blocco suo — la ricarica accanto
+ * all'anello, la settimana, l'energia di oggi, le temperature, le pillole —
+ * e che quindi non vanno ripetuti fra gli altri dati. */
+export const RIFERIMENTI_IN_BLOCCO = Object.freeze(
+  new Set([
+    ...PARTI_DELL_ENERGIA.map((voce) => voce.ref),
+    ...TEMPERATURE_DELL_AUTO.map((voce) => voce.ref),
+    "dm.ev_km_7_giorni",
+    "dm.ev_energia_7_giorni",
+    "dm.ev_consumo_medio",
+    "dm.ev_autonomia_nominale",
+    "dm.ev_autonomia_carburante",
+    "dm.ev_autonomia_totale",
+    "dm.ev_potenza_ricarica",
+    "dm.ev_tempo_ricarica",
+    "dm.ev_marcia",
+    "dm.ev_ultimo_aggiornamento",
+    "dm.ev_ultima_ricarica_energia",
+    "dm.ev_ultima_ricarica_tipo",
+    "dm.ev_ultima_ricarica_inizio",
+    "dm.ev_ultima_ricarica_fine",
+    "dm.ev_ricarica_inizio",
+    "dm.ev_ricarica_fine",
+  ]),
+);

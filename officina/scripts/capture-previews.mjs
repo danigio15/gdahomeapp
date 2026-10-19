@@ -1482,7 +1482,7 @@ async function bootPage(context, cameraStill, vehicleStill, albumStill) {
           body: "Seleziono la vettura nuova, salvo, e un istante dopo ricompare quella vecchia.",
           state: "inviato",
           issue_url: "https://github.com/danigio15/dashboardmodern-v2/issues/197",
-          author: "marco-b",
+          author: "persona-3-b",
           origin: "plancia",
           diagnostics: {
             integration_version: "1.4.5-beta.9",
@@ -1521,7 +1521,7 @@ async function bootPage(context, cameraStill, vehicleStill, albumStill) {
           body: "Premo stop dalla pagina Finestre e continuano a scendere fino in fondo.",
           state: "in-carico",
           issue_url: "https://github.com/danigio15/dashboardmodern-v2/issues/194",
-          author: "anna-g",
+          author: "persona-2-g",
           origin: "plancia",
           diagnostics: {
             integration_version: "1.4.5-beta.7",
@@ -1542,7 +1542,7 @@ async function bootPage(context, cameraStill, vehicleStill, albumStill) {
           body: "Adesso si spostano con le frecce, una posizione per volta.",
           state: "inviato",
           issue_url: "https://github.com/danigio15/dashboardmodern-v2/issues/191",
-          author: "luca-t",
+          author: "persona-11-t",
           origin: "plancia",
           diagnostics: {
             integration_version: "1.4.5-beta.9",
@@ -1560,7 +1560,7 @@ async function bootPage(context, cameraStill, vehicleStill, albumStill) {
           body: "Accanto agli altri carichi, con il suo storico giornaliero.",
           state: "risolto",
           issue_url: "https://github.com/danigio15/dashboardmodern-v2/issues/186",
-          author: "anna-g",
+          author: "persona-2-g",
           origin: "plancia",
           diagnostics: {
             integration_version: "1.4.5-beta.5",
@@ -1616,7 +1616,7 @@ async function bootPage(context, cameraStill, vehicleStill, albumStill) {
       const daManutentore =
         dove === "console" || dove === "filo" || dove === "chiuse" || dove === "difetti";
       const account = collegato
-        ? { connected: true, login: "anna-g", maintainer: daManutentore }
+        ? { connected: true, login: "persona-2-g", maintainer: daManutentore }
         : { connected: false, login: "", maintainer: false };
       const risposte = {
         "dashboardmodern/tickets/list": {
@@ -1635,7 +1635,7 @@ async function bootPage(context, cameraStill, vehicleStill, albumStill) {
           comments: [
             {
               id: "1",
-              author: "marco-b",
+              author: "persona-3-b",
               maintainer: false,
               at: "2026-09-01T08:41:00Z",
               body: "Ecco cosa vedo: nel video si nota che la foto cambia da sola dopo circa un secondo.",
@@ -1685,7 +1685,7 @@ async function bootPage(context, cameraStill, vehicleStill, albumStill) {
             },
             {
               id: "2",
-              author: "anna-g",
+              author: "persona-2-g",
               maintainer: false,
               at: "2026-09-01T07:55:00Z",
               body: "Ho aggiornato il firmware dello Shelly e non e' cambiato niente. Se serve provo a togliere l'altra tapparella dal gruppo.",

@@ -312,12 +312,6 @@ function riassunto(dato, da) {
 function vuotoMarkup() {
   return `<div class="dm-ups-vuoto">
     <strong>${esc(t("Nessun gruppo di continuità configurato", "No UPS configured"))}</strong>
-    <span>${esc(
-      t(
-        "Aggiungilo dalla scheda Energia della configurazione: con il solo stato di NUT la pagina sa già dire se c'è tensione.",
-        "Add it from the Energy tab in the settings: with the NUT status alone this page already knows whether there is power.",
-      ),
-    )}</span>
   </div>`;
 }
 

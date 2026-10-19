@@ -89,22 +89,22 @@ test("una riga senza nome o senza valore non entra", () => {
 
 test("chi è in casa lo dice lo stato, non l'elenco", () => {
   const states = {
-    "person.gio": { state: "home" },
-    "person.ada": { state: "not_home" },
-    "person.leo": { state: "Ufficio" },
-    "device_tracker.nina": { state: "HOME" },
+    "person.persona_1": { state: "home" },
+    "person.persona_13": { state: "not_home" },
+    "person.persona_14": { state: "Ufficio" },
+    "device_tracker.persona_15": { state: "HOME" },
   };
-  assert.equal(eInCasa("person.gio", states), true);
-  assert.equal(eInCasa("person.ada", states), false);
+  assert.equal(eInCasa("person.persona_1", states), true);
+  assert.equal(eInCasa("person.persona_13", states), false);
   /* Il nome di una zona vuol dire «non è qui»: è fuori, in un posto che ha un
    * nome. */
-  assert.equal(eInCasa("person.leo", states), false);
-  assert.equal(eInCasa("device_tracker.nina", states), true);
+  assert.equal(eInCasa("person.persona_14", states), false);
+  assert.equal(eInCasa("device_tracker.persona_15", states), true);
   /* Una persona senza entità, o un'entità che non c'è, non è in casa: e non
    * solleva niente. */
   assert.equal(eInCasa("", states), false);
   assert.equal(eInCasa("person.chi", states), false);
-  assert.equal(eInCasa("person.gio"), false);
+  assert.equal(eInCasa("person.persona_1"), false);
 });
 
 test("chi è nascosto in Home resta nascosto anche in auto", () => {
@@ -112,13 +112,13 @@ test("chi è nascosto in Home resta nascosto anche in auto", () => {
    * due volte, e il giorno che si scostano uno sparisce da una parte sola. */
   const foto = laFotoPerLAuto({
     persone: [
-      { name: "Gio", entity: "person.gio" },
+      { name: "Persona 1", entity: "person.persona_1" },
       { name: "Chi non c'è più", entity: "person.ex", nascosta: true },
       { name: "", entity: "person.senza" },
     ],
-    states: { "person.gio": { state: "home" } },
+    states: { "person.persona_1": { state: "home" } },
   });
-  assert.deepEqual(foto.persone, [{ nome: "Gio", inCasa: true }]);
+  assert.deepEqual(foto.persone, [{ nome: "Persona 1", inCasa: true }]);
 });
 
 test("le azioni sono sei, col posto e il nome nel segno", () => {
@@ -215,8 +215,8 @@ test("quello che esce è la forma che l'auto sa leggere", () => {
   const foto = laFotoPerLAuto({
     casa: "Casa mia",
     energia: ENERGIA,
-    persone: [{ name: "Gio", entity: "person.gio" }],
-    states: { "person.gio": { state: "home" } },
+    persone: [{ name: "Persona 1", entity: "person.persona_1" }],
+    states: { "person.persona_1": { state: "home" } },
     azioni: [{ name: "Buonanotte", icon: "🌙" }],
   });
   for (const campo of ["casa", "quando", "fotovoltaico", "persone", "azioni"])

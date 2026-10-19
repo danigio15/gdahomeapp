@@ -253,7 +253,7 @@ void main() {
         ]);
       final archivio = ArchivioDelleCase(CassaforteInMemoria());
       await archivio.aggiungi(
-        nome: 'Casa di Giovanni',
+        nome: 'Casa di Persona 1',
         segno: segnoBuono,
         identificativo: chiBuono,
         chiave: chiaveBuona,

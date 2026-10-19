@@ -162,8 +162,6 @@ export default Object.freeze({
     "Поездка не сохранена: проверьте пункт назначения, день и время.",
   "Up to 8 more: a socket, the heat pump, the car charging, today's kWh":
     "До 8 дополнительно: розетка, тепловой насос, заряжающийся автомобиль, кВт·ч за сегодня",
-  "No sensor linked: pick one in Settings › Loads or Appliances.":
-    "Датчик не привязан: выберите его в Настройки › Нагрузки или Бытовая техника.",
   "Reading consumption from Home Assistant…": "Читаю потребление из Home Assistant…",
   " — configured": " — настроена",
   "${alzate} shutters up": "Поднято ставен: ${alzate}",
@@ -244,8 +242,6 @@ export default Object.freeze({
   "Load to watch": "Нагрузка под наблюдением",
   Lock: "Заблокировать",
   "Looking…": "Смотрим…",
-  "More power is going out than coming in: usually a sensor's direction is reversed, and it is changed in the Energy tab.":
-    "Энергии уходит больше, чем приходит: обычно у одного из датчиков перепутано направление, и оно меняется на вкладке «Энергия».",
   Motorcycle: "Мотоцикл",
   "My sections": "Мои разделы",
   "Name the unit: it is what the card shows.": "Дайте имя устройству: его показывает карточка.",
@@ -652,8 +648,6 @@ export default Object.freeze({
   "Add entity": "Добавить сущность",
   "Add from an integration": "Добавить из интеграции",
   "Add intercom": "Добавить домофон",
-  "Add it from the Energy tab in the settings: with the NUT status alone this page already knows whether there is power.":
-    "Добавьте его на вкладке «Энергия» в настройках: по одному статусу NUT эта страница уже знает, есть ли питание.",
   "Add light": "Добавить светильник",
   "Add list": "Добавить список",
   "Add load": "Добавить нагрузку",
@@ -677,28 +671,13 @@ export default Object.freeze({
   "Add sensors to the Alerts Panel with a clean name, or create a":
     "Добавьте датчики на Панель оповещений с понятным именем или создайте",
   "Add socket": "Добавить розетку",
-  "Add sockets from the Sockets tab in the settings: the living-room TV, the Firestick, the modem.":
-    "Добавьте розетки на вкладке «Розетки» в настройках: телевизор в гостиной, Firestick, модем.",
   "Add solar plant": "Добавить солнечную установку",
   "Add something to do…": "Добавить дело…",
   "Add temperature": "Добавить температуру",
-  "Add the irrigation zones from the editor to see the lawn.":
-    "Добавьте зоны полива в редакторе, чтобы увидеть газон.",
-  "Add the materials from the Waste tab in the settings: for each one the sensor or calendar that says when the collection comes.":
-    "Добавьте фракции на вкладке «Отходы» в настройках: для каждой — датчик или календарь, который говорит, когда приедет вывоз.",
-  "Add the pool entities from the editor to see the basin.":
-    "Добавьте сущности бассейна в редакторе, чтобы увидеть чашу.",
-  "Add the printer from the Printers tab in the settings: the entity that says whether it is ready is enough, the cartridges are found on their own.":
-    "Добавьте принтер на вкладке «Принтеры» в настройках: достаточно сущности, которая сообщает готовность, — картриджи найдутся сами.",
-  "Add the units from the dashboard configuration.": "Добавьте блоки в настройках панели.",
-  "Add them from the Alerts tab in the settings: earthquakes, civil protection warnings, lightning, pollen, thermal comfort and flights overhead, each from the sensor of its integration.":
-    "Добавьте их на вкладке «Оповещения» в настройках: землетрясения, предупреждения гражданской обороны, молнии, пыльца, тепловой комфорт и самолёты над домом — каждое из датчика своей интеграции.",
   "Add to ${nomeDellaLista(list)}": "Добавить в ${nomeDellaLista(list)}",
   "Add water heater": "Добавить бойлер",
   "Add your appliances (washing machine, dishwasher, oven, microwave…). You can link":
     "Добавьте свои приборы (стиральная машина, посудомоечная машина, духовка, микроволновка…). К каждому можно привязать",
-  "Add your cameras from Configuration: they will show up here with a live preview.":
-    "Добавьте камеры в разделе «Настройки»: они появятся здесь с живым превью.",
   "Added ${trovate.length} lists": "Добавлено списков: ${trovate.length}",
   "Added ${trovati.length} calendars": "Добавлено календарей: ${trovati.length}",
   "Administrator tools ·": "Инструменты администратора ·",
@@ -1469,8 +1448,6 @@ export default Object.freeze({
   February: "Февраль",
   "Feed a portion": "Выдать порцию",
   "Files in /local (config/www)": "Файлы в /local (config/www)",
-  "Fill in the car's fields — fuel, range, doors, engine — from the Car tab in the settings.":
-    "Заполните поля машины — топливо, запас хода, двери, двигатель — на вкладке «Автомобиль» в настройках.",
   "Fill it in and the card shows the window open when the contact says so.":
     "Заполните его, и карточка покажет окно открытым, как только датчик это сообщит.",
   "Filled ${count} fields: ${list}.": "Заполнено полей: ${count} — ${list}.",
@@ -1662,12 +1639,6 @@ export default Object.freeze({
   Hob: "Варочная панель",
   Home: "Дом",
   "Home (fallback)": "Дом (запасной вариант)",
-  "Home Assistant declares a battery itself — a sensor in percent — and it appears here with nothing to configure. If yours is not found, add it from the Batteries tab in the settings.":
-    "Home Assistant объявляет батарейку сам — датчик в процентах — и она появляется здесь без всякой настройки. Если вашу не нашли, добавьте её во вкладке «Батарейки» в настройках.",
-  "Home Assistant declares a door or window contact itself and it appears here with nothing to configure. If yours is not found, add it from the Openings tab in the settings.":
-    "Home Assistant сам объявляет дверной или оконный датчик, и он появляется здесь без всякой настройки. Если ваш не найден, добавьте его на вкладке «Проёмы» в настройках.",
-  "Home Assistant declares a motion or presence sensor itself and it appears here with nothing to configure. If yours is not found, add it from the Presence tab in the settings.":
-    "Датчик движения или присутствия Home Assistant объявляет сам, и он появляется здесь без всякой настройки. Если твой не найден, добавь его на вкладке «Присутствие» в настройках.",
   "Home Assistant declares no machine and no network piece.":
     "Home Assistant не сообщает ни одной машины и ни одного элемента сети.",
   "Home Assistant declares the air sensors itself — particulates, CO₂, monoxide, volatile compounds — and the tile appears on its own. Here you correct that: drop a sensor that should not count, add one that is not found, and move the boundaries between good, fair, poor and bad.":
@@ -2116,27 +2087,19 @@ export default Object.freeze({
   "No alerts configured": "Ни одного оповещения не настроено",
   "No answer within eight seconds.": "Нет ответа за восемь секунд.",
   "No appliance configured": "Ни одного прибора не настроено",
-  "No appliance configured. Use the Settings menu to add one.":
-    "Приборы не настроены. Добавьте прибор в меню «Настройки».",
   "No appliance has measurable consumption today.":
     "Сегодня ни у одного прибора нет измеримого потребления.",
-  "No appliance in this load yet. Add them from the Loads editor.":
-    "В этой нагрузке пока нет приборов. Добавьте их в редакторе нагрузок.",
   "No appliance is running right now.": "Сейчас не работает ни один прибор.",
   "No appliance matches the selected filters.": "Ни один прибор не подходит под выбранные фильтры.",
   "No appliance yet.": "Приборов пока нет.",
   "No battery found": "Батарейки не найдены",
   "No boiler configured": "Котёл не настроен",
-  "No boiler configured: add one from the Thermal management tab in settings.":
-    "Котёл не настроен: добавьте его на вкладке «Управление теплом» в настройках.",
   "No calendar configured": "Календарь не настроен",
   "No calendar selected": "Календарь не выбран",
   "No camera configured": "Камера не настроена",
   "No car field could be recognised from this device.":
     "На этом устройстве не распознано ни одного поля автомобиля.",
   "No cartridge found": "Картриджи не найдены",
-  "No cartridge found: if your printer reports them, write them in the Printers tab.":
-    "Картриджи не найдены: если ваш принтер их сообщает, впишите их на вкладке «Принтеры».",
   "No charger among the integrations with devices: only evcc's are here, and evcc connects from the other button.":
     "Нет зарядной станции среди интеграций с устройствами: здесь только устройства evcc, а evcc подключается другой кнопкой.",
   "No charger field could be recognised from this device.":
@@ -2147,8 +2110,6 @@ export default Object.freeze({
   "No configuration contains this word.": "Ни одна настройка не содержит это слово.",
   "No configured items.": "Нет настроенных элементов.",
   "No configured lights.": "Светильники не настроены.",
-  "No configured lights. Add them from the editor's Lights tab: both light.* and switch.* entities are accepted.":
-    "Светильники не настроены. Добавьте их на вкладке «Свет» в редакторе: принимаются сущности light.* и switch.*.",
   "No configured loads": "Нет настроенных нагрузок",
   "No contact found": "Датчиков не найдено",
   "No custom button": "Своих кнопок нет",
@@ -2172,8 +2133,6 @@ export default Object.freeze({
     "Ни одной сущности не добавлено — впишите или выберите и нажмите ➕",
   "No entity bound: the circle stays empty in every view.":
     "Сущность не привязана: круг останется пустым во всех видах.",
-  "No entity linked yet: open the settings and pick the device.":
-    "Пока не связана ни одна сущность: откройте настройки и выберите устройство.",
   "No entries": "Нет позиций",
   "No extra command: the card carries the player's own buttons and nothing else.":
     "Ни одной дополнительной кнопки: карточка несёт только кнопки проигрывателя.",
@@ -2241,15 +2200,11 @@ export default Object.freeze({
     "С этого устройства не удалось распознать робота: нужна сущность vacuum.* или lawn_mower.*.",
   "No robot configured": "Роботы не настроены",
   "No room": "Без комнаты",
-  "No room has a humidity probe: add one from the Temperature tab.":
-    "Ни в одной комнате нет датчика влажности: добавьте его во вкладке «Температура».",
   "No room has a temperature sensor configured yet.":
     "Ни у одной комнаты ещё не настроен датчик температуры.",
   "No room with a sensor — add one in the editor's Temperature tab":
     "Нет комнаты с датчиком — добавьте её на вкладке Температура в редакторе",
   "No room. Add one below.": "Комнат нет. Добавьте одну ниже.",
-  "No rooms configured yet. Add them from the editor's Rooms tab: every section can then assign its entities to one.":
-    "Комнат пока нет. Добавь их на вкладке «Комнаты» в редакторе: после этого каждый раздел сможет назначить им свои сущности.",
   "No sensor recognized": "Датчики не распознаны",
   "No shutter or curtain configured": "Рольставни и шторы не настроены",
   "No signal": "Нет сигнала",
@@ -2261,8 +2216,6 @@ export default Object.freeze({
   "No todo.* list found": "Списки todo.* не найдены",
   "No warning in force": "Предупреждений нет",
   "No water heater configured": "Бойлер не настроен",
-  "No water heater configured: add one from the Solar tab in settings.":
-    "Бойлер не настроен: добавьте его на вкладке «Солнце» в настройках.",
   "No window sits in a room that has a hygrometer: pick the room in the window's row, below.":
     "Ни одно окно не находится в комнате с гигрометром: выберите комнату в строке окна ниже.",
   "No zone configured": "Зона не настроена",
@@ -2289,8 +2242,6 @@ export default Object.freeze({
   "Nothing came in today.": "Сегодня ничего не пришло.",
   "Nothing closed yet.": "Пока ничего не закрыто.",
   "Nothing for a pet": "Ничего для питомца",
-  "Nothing here yet. Entities are assigned from each section's own tab.":
-    "Здесь пока пусто. Сущности назначаются на вкладке каждого раздела.",
   "Nothing new": "Ничего нового",
   "Nothing of this kind here.": "Здесь ничего такого нет.",
   "Nothing playing": "Ничего не играет",
@@ -2722,7 +2673,6 @@ export default Object.freeze({
   "all up": "всё работает",
   Servers: "Серверы",
   connected: "подключены",
-  "Choose what to highlight": "Выбрать, что выделить",
   "to work on": "в работу",
   "In today:": "Пришло сегодня:",
   "Nothing came in today": "Сегодня ничего не пришло",
@@ -2800,7 +2750,6 @@ export default Object.freeze({
   "Open all": "Открыть все",
   "Open appliances running": "Открыть работающие приборы",
   "Open camera": "Открыть камеру",
-  "Open configuration": "Открыть настройки",
   "Open for": "Открыто",
   "Open gate": "Открыть ворота",
   "Open in map": "Открыть на карте",
@@ -2925,8 +2874,6 @@ export default Object.freeze({
     "Выберите начало раньше конца, и не в будущем.",
   "Pick an image entity": "Выберите сущность изображения",
   "Pick from Appliances": "Выбрать из Приборов",
-  "Pick the calendars from the Widgets tab in the settings: the ones you already have in Home Assistant appear on their own with «Detect».":
-    "Выберите календари на вкладке «Виджеты» в настройках: те, что уже есть в Home Assistant, появятся сами по кнопке «Найти».",
   "Pick the device": "Выбрать устройство",
   "Pick the evcc loadpoint: the charge mode, the charge limit, the session and the solar share come along. The charger connects from the other button, and the fields add up.":
     "Выберите точку зарядки evcc: придут режим зарядки, лимит зарядки, сессия и доля солнца. Станция подключается другой кнопкой, и поля складываются.",
@@ -3676,8 +3623,6 @@ export default Object.freeze({
     "Значок можно менять и у встроенных действий, и он показывается на «Доме».",
   "The integrations that bring a charger: go-e, Easee, KEBA, Wallbox, openWB, Zaptec, Tesla. Pick the device and the charging fields fill in by themselves — power, energy, voltage, temperature, the cable.":
     "Интеграции, которые приносят зарядную станцию: go-e, Easee, KEBA, Wallbox, openWB, Zaptec, Tesla. Выберите устройство, и поля зарядки заполнятся сами — мощность, энергия, напряжение, температура, кабель.",
-  "The intercom and the mailbox are declared in the Intercom and mail tab of the settings: the button that opens, the doorbell, and the two mailbox sensors.":
-    "Домофон и почтовый ящик задаются на вкладке «Домофон и почта» в настройках: кнопка, которая открывает, дверной звонок и два датчика ящика.",
   "The inverted direction": "Обратное направление",
   "The latest reply": "Последний ответ",
   "The lawn shows the first ${MAX_LAWN_ZONES} zones; all ${config.zones.length} are listed below.":
@@ -3743,8 +3688,6 @@ export default Object.freeze({
   "The push comes from Home Assistant, not the dashboard: it runs on the server, so it arrives even when this page is closed. This automation is already written with your entities — paste it under Settings → Automations → ⋮ → Edit in YAML, and change the service to your phone's.":
     "Push отправляет Home Assistant, а не панель: он работает на сервере, поэтому уведомление приходит даже при закрытой странице. Эта автоматизация уже написана с вашими сущностями — вставьте её в Настройки → Автоматизации → ⋮ → Редактировать в YAML и замените службу на службу вашего телефона.",
   "The quick actions": "Быстрые действия",
-  "The radar address is not a tile address ({z}/{x}/{y}): fix it under Settings → Weather, or pick a service from the list.":
-    "Адрес радара — не адрес тайлов ({z}/{x}/{y}): исправьте его в Настройки → Погода или выберите сервис из списка.",
   "The radar is not reporting.": "Радар не отвечает.",
   "The radiators": "Радиаторы",
   "The reading on the cover": "Показание на обложке",
@@ -3798,8 +3741,6 @@ export default Object.freeze({
   "The state": "Состояние",
   "The station sensor, when the integration exposes one: it gives the name written next to the train.":
     "Датчик станции, если интеграция его даёт: он даёт имя рядом с поездом.",
-  "The target is read-only: connect evcc in the Car tab to change it.":
-    "Цель только для чтения: подключите evcc на вкладке Авто, чтобы её менять.",
   "The temperatures": "Температуры",
   "The text of the report": "Текст обращения",
   "The theme and the bar": "Тема и панель",
@@ -3876,15 +3817,11 @@ export default Object.freeze({
     "Это должен быть накопительный счётчик кВт·ч со state_class total или total_increasing. Не используйте здесь месячный датчик: это поле нужно, чтобы восстановить прошлые месяцы.",
   "This one wins: day, month, year, history and previous months are all derived from here through Recorder. While it is set, the period fields are not read.":
     "Побеждает он: день, месяц, год, история и прошлые месяцы выводятся отсюда через Recorder. Пока он задан, поля периода не читаются.",
-  "This reading has no entity yet: map it in the configuration to see its history.":
-    "У этого показания ещё нет сущности: свяжите её в настройках, чтобы увидеть историю.",
   "This sensor is also configured in": "Этот датчик настроен также в",
   "This socket is configured as shown but not controllable: this window reports it, it never switches it.":
     "Эта розетка настроена как показываемая, но не управляемая: это окно её показывает, но никогда не переключает.",
   "This tab holds four of them and they are all taken: remove one to make room.":
     "Эта вкладка вмещает четыре, и все заняты: удалите одну, чтобы освободить место.",
-  "This target is a read-only sensor: to change it from here connect evcc, or a number/select entity, in the Car tab.":
-    "Эта цель — датчик только для чтения: чтобы менять её отсюда, подключите evcc или сущность number/select на вкладке Авто.",
   "This week": "Эта неделя",
   "Three gestures, no more: ＋ New vehicle opens an empty card, the ✏️ opens a vehicle you already saved, the switch turns it on or off in the EV section. Below you say whether it is a car or a motorcycle, and you fill in name, brand, model, entities and both photos — there is a single save: it says whether it is creating or editing, and the one at the bottom of the section carries the same words. Which vehicle you look at is picked from the section's own tabs, not from here.":
     "Три действия, не больше: ＋ Новое транспортное средство открывает пустую карточку, ✏️ открывает уже сохранённое, переключатель показывает или скрывает его в разделе EV. Ниже вы указываете, автомобиль это или мотоцикл, и заполняете имя, марку, модель, сущности и обе фотографии — сохранение одно: оно говорит, создаёт оно или изменяет, и кнопка внизу раздела несёт те же слова. Какое транспортное средство вы смотрите, выбирается во вкладках раздела, а не здесь.",
@@ -4225,8 +4162,6 @@ export default Object.freeze({
   "You have nothing in progress.": "У вас ничего нет в работе.",
   "You need a": "Вам понадобится",
   "You need a hand configuring or understanding": "Нужна помощь с настройкой или пониманием",
-  "You picked «An address of mine» but there is no address: write it under Settings → Weather, or pick a service from the list.":
-    "Выбран «Свой адрес», но адреса нет: впишите его в Настройки → Погода или выберите сервис из списка.",
   "Your alarm areas": "Ваши зоны охраны",
   "Your name (optional)": "Как вас зовут (необязательно)",
   "Your own entities": "Ваши сущности",
@@ -4787,8 +4722,6 @@ export default Object.freeze({
   "Home Assistant refused": "Home Assistant отклонил запрос",
   "It is only used to say how long is left to charge: from the missing percentage and the charger's power. Left empty it counts 70 kWh, which is what the dashboard has always assumed — with a different battery the time comes out wrong in proportion.":
     "Нужна только чтобы сказать, сколько осталось до конца зарядки: по недостающим процентам и мощности зарядной станции. Если оставить пустым, считается 70 кВт·ч — столько панель предполагала всегда; с другой батареей время получится неверным пропорционально.",
-  "No session meter: connect the charger or evcc in the Car tab, or write the entity into “Session energy”.":
-    "Нет счётчика сессии: подключите зарядную станцию или evcc во вкладке «Авто» либо впишите сущность в «Энергия сессии».",
   Sunset: "Закат",
   "TARGET REACHED": "ЦЕЛЬ ДОСТИГНУТА",
   "The session meter is not answering.": "Счётчик сессии не отвечает.",
@@ -4801,8 +4734,6 @@ export default Object.freeze({
   empty: "пустая",
   "not responding": "не отвечает",
   "nothing on": "ничего не включено",
-  "The base map is not answering. The rain is there: you can change map under ⚙️ → Weather and radar.":
-    "Подложка карты не отвечает. Дождь виден: карту можно сменить в ⚙️ → Погода и радар.",
   "ARMED ·": "ПОД ОХРАНОЙ ·",
   "Your own entities in the bar": "Ваши сущности в полосе",
   "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit next to what is on, before the measurements, and each one can show up only when it matters — for instance only while holiday mode is on.":
@@ -4925,8 +4856,6 @@ export default Object.freeze({
   "Configure a camera above first: the privacy is its own.":
     "Сначала настройте камеру выше: приватность принадлежит ей.",
   "Private cameras": "Приватные камеры",
-  "The soil sensor is right above. Add the irrigation zones from the editor to see the lawn too.":
-    "Датчик почвы — прямо выше. Добавьте зоны полива в редакторе, чтобы увидеть и газон.",
   "Contact entity": "Сущность датчика",
   "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back.":
     "Они добавляются сюда строками, один раз: дальше они ваши — переименуйте их, дайте им рисунок, а удалённые не вернутся.",
@@ -5079,8 +5008,6 @@ export default Object.freeze({
   "Save meter": "Сохранить счётчик",
   "Flowing for ${durata}": "Течёт уже ${durata}",
   "Flowing for over a day": "Течёт больше суток",
-  "A meter shows up here once you add it in the Water and gas tab of the settings: the water and gas meters, the water pressure and flow, the softener salt.":
-    "Счётчик появляется здесь, когда вы добавите его во вкладке «Вода и газ» в настройках: счётчики воды и газа, давление и расход воды, соль умягчителя.",
   "Not flowing": "Не течёт",
   "🪴 ${quante} plants added": "🪴 Добавлено растений: ${quante}",
   "${quante} doing well": "В порядке: ${quante}",
@@ -5089,8 +5016,6 @@ export default Object.freeze({
   "1 doing well": "В порядке: 1",
   "1 needs water": "Нужно полить: 1",
   "1 waiting for rain": "Ждёт дождя: 1",
-  "A plant shows up here once you add its sensor in the Plant care tab of the settings: the soil moisture, and its temperature if there is one.":
-    "Растение появится здесь, когда вы добавите его датчик на вкладке «Растения» в настройках: влажность почвы и, если есть, её температуру.",
   "Add a plant": "Добавить растение",
   "All doing well": "Все в порядке",
   "Below this moisture the soil is dry and the plant joins those that need water.":
@@ -5312,8 +5237,6 @@ export default Object.freeze({
   "Other BMS": "Другой BMS",
   "Pack 1": "Блок 1",
   "Pack saved": "Блок сохранён",
-  "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.":
-    "Блоки появятся здесь, когда вы добавите их на вкладке «Батареи» в группе «Энергия» настроек: уровень заряда, напряжения, ячейки.",
   "Current sign": "Знак тока",
   "Positive when charging (JK, JBD, Daly)": "Положительный при зарядке (JK, JBD, Daly)",
   "Negative when charging": "Отрицательный при зарядке",
@@ -5442,8 +5365,6 @@ export default Object.freeze({
   "Lower the power": "Уменьшить мощность",
   Modulating: "Модуляция",
   "No stove configured": "Печь не настроена",
-  "No stove configured: add one from the Thermal management tab in settings.":
-    "Печь не настроена: добавьте её на вкладке «Управление теплом» в настройках.",
   "On its own it covers nearly everything: on and off, the target, the room temperature and, if it has them, the fan modes.":
     "Одного его хватает почти на всё: включение и выключение, уставка, температура в комнате и, если есть, режимы вентилятора.",
   "Pellet level, second hopper": "Уровень пеллет, второй бункер",
@@ -5475,8 +5396,6 @@ export default Object.freeze({
   "Radiators out of season": "Радиаторы вне сезона",
   "They show: ${periodo}. Switched on, they show anyway.":
     "Видны: ${periodo}. Включённые показываются в любом случае.",
-  "Each one has its months in the dashboard configuration. Switched on, they show anyway.":
-    "У каждого свои месяцы в настройках панели. Включённые показываются в любом случае.",
   "Show them anyway": "Всё равно показать",
   "🐠 The aquarium's entities": "🐠 Сущности аквариума",
   "🦎 The terrarium's entities": "🦎 Сущности террариума",
@@ -5497,10 +5416,6 @@ export default Object.freeze({
   "Humidity too low": "Влажность слишком низкая",
   "Last cleaning": "Последняя уборка",
   Mister: "Туманообразователь",
-  "No entity yet: open the settings and add the aquarium's temperature, pH, level, lights and filter.":
-    "Сущностей пока нет: откройте настройки и добавьте температуру, pH, уровень, свет и фильтр аквариума.",
-  "No entity yet: open the settings and add the terrarium's temperature, humidity and lamps.":
-    "Сущностей пока нет: откройте настройки и добавьте температуру, влажность и лампы террариума.",
   "Not recorded yet: tap “Done today” on the day you clean it, and from then on the card counts the days.":
     "Пока не отмечено: нажмите «Сделано сегодня» в день уборки, и с этого момента карточка будет считать дни.",
   "One row per entity: temperature and pH with their ideal range, the water level, the lights, the filter and the heater. Empty ranges use the defaults: 24–27 °C and pH 6.5–7.5.":
@@ -6069,7 +5984,6 @@ export default Object.freeze({
   "${probabile} chance": "вероятность ${probabile}",
   "a camera or image entity you already have": "сущность camera или image, которая у тебя уже есть",
   "about ${quanta} in the next 24 hours": "около ${quanta} в ближайшие 24 часа",
-  "Add its sensors under ⚙️ Config › Weather: your home's readings show up here, with the last 24 hours. Without them, the page uses the weather service only.": "Добавь её датчики в ⚙️ Config › Погода: здесь появятся показания твоего дома за последние 24 часа. Без них страница использует только погодный сервис.",
   "All optional, one per type. Temperature, humidity, feels-like and wind are the same fields as the Home header; rain and rate are the ones Irrigation already uses. They are chosen once and apply everywhere.": "Все необязательны, по одному на тип. Температура, влажность, ощущаемая температура и ветер — те же поля, что в шапке главной; дождь и интенсивность — те, что уже использует Полив. Выбираются один раз и действуют везде.",
   at: "в",
   "at most ${probabile} chance": "не более ${probabile} вероятности",
@@ -6077,7 +5991,6 @@ export default Object.freeze({
   Cloudy: "Облачно",
   "conditions, feels like, low and high": "условия, ощущается как, минимум и максимум",
   "dew point": "точка росы",
-  "Do you have a weather station?": "У тебя есть метеостанция?",
   E: "В",
   east: "востока",
   Exceptional: "Исключительно",
@@ -6113,7 +6026,6 @@ export default Object.freeze({
   "north-west": "северо-запада",
   "Now · My station · Forecast · Radar": "Сейчас · Моя станция · Прогноз · Радар",
   NW: "СЗ",
-  "Open Weather in Config": "Открыть Погоду в Config",
   "Outdoor temperature": "Температура на улице",
   "Partly cloudy": "Переменная облачность",
   Radar: "Радар",
@@ -6182,8 +6094,6 @@ export default Object.freeze({
   "Charging stops": "Остановки на зарядку",
   "Charging: ${minuti} in ${n} stops": "Зарядка: ${minuti}, остановок: ${n}",
   "Charging: ${minuti} in 1 stop": "Зарядка: ${minuti} за 1 остановку",
-  "Connect": "Подключить",
-  "Connect the car to see battery and stops": "Подключите машину, чтобы видеть батарею и остановки",
   "For the stops, choose 100% at departure.": "Для остановок выберите 100% при выезде.",
   "For the way back you still have ${resta}: no need to charge": "На обратный путь остаётся ${resta}: заряжать не нужно",
   "from ${da} to ${a} · ${min} min": "с ${da} до ${a} · ${min} мин",
@@ -6195,7 +6105,6 @@ export default Object.freeze({
   "Minimum charge on arrival": "Минимальный заряд по прибытии",
   "now ${ora}": "сейчас ${ora}",
   "on arrival ${fine}": "по прибытии ${fine}",
-  "Only you see this, as the home's administrator": "Это видите только вы как администратор дома",
   "Parked · not charging": "Стоит · не заряжается",
   "Parked at home · not charging": "Стоит дома · не заряжается",
   "range": "запас хода",
@@ -6204,7 +6113,6 @@ export default Object.freeze({
   "Stops picked by GdANav on the way, with free chargers.": "Остановки выбраны GdANav в пути, со свободными зарядками.",
   "The battery is not answering": "Батарея не отвечает",
   "The chargers are not in the home yet: stops are by kilometre. On the way GdANav picks the chargers and checks they are free.": "Зарядок ещё нет дома: остановки по километрам. В пути GdANav выбирает зарядки и проверяет, свободны ли они.",
-  "The electric car's battery and range, and the charging stops if it is not enough.": "Батарея и запас хода электромобиля и остановки на зарядку, если не хватит.",
   "The minimum power to stop at": "Минимальная мощность для остановки",
   "The stops come with the route": "Остановки придут вместе с маршрутом",
   "the trip": "поездка",
@@ -6258,11 +6166,9 @@ export default Object.freeze({
   "Charging · until ${fine}": "Заряжается · до ${fine}",
   "Charging · until ${limite}% or ${fine}": "Заряжается · до ${limite}% или до ${fine}",
   "End of the window": "Конец интервала",
-  "Enter it to see what you spend": "Укажите её, чтобы видеть расходы",
   "evcc set to ${modo}": "evcc переведён в ${modo}",
   "Fast": "Быстро",
   "Finished at ${alle}": "Завершено в ${alle}",
-  "From band ${fascia} in Settings → Energy": "Из зоны ${fascia} в Настройки → Энергия",
   "Needs the add-on: the home starts it": "Нужно дополнение: запускает дом",
   "Night charging": "Ночная зарядка",
   "No days chosen": "Дни не выбраны",
@@ -6638,12 +6544,10 @@ export default Object.freeze({
   "Convert": "Преобразовать",
   "Create and edit them in three steps": "Создаёте и редактируете их в три шага",
   "Create the first one": "Создать первую",
-  "Create the first one in the config ›": "Создать первую в настройках ›",
   "Delete «${v.nome}»?": "Удалить «${v.nome}»?",
   "depending on the sun": "в зависимости от солнца",
   "depending on what started it": "в зависимости от того, что её запустило",
   "does several things at once": "делает несколько дел сразу",
-  "Edit in the config ›": "Изменить в настройках ›",
   "fires the ${evento} event": "генерирует событие ${evento}",
   "Home Assistant → Settings → Automations": "Home Assistant → Настройки → Автоматизации",
   "Home Assistant did not save it: ${no}": "Home Assistant её не сохранил: ${no}",
@@ -6653,7 +6557,6 @@ export default Object.freeze({
   "Home Assistant's automations are read through the GdAHome add-on: it is not here.": "Автоматизации Home Assistant читаются через дополнение GdAHome: здесь его нет.",
   "if something holds:": "если что-то выполняется:",
   "in HA as": "в HA как",
-  "in the config ›": "в настройках ›",
   "It is removed from Home Assistant too, and it cannot be undone. If you only want to stop it, turn it off with the switch.": "Она будет удалена и из Home Assistant, отменить это нельзя. Если хотите только остановить её, выключите переключателем.",
   "It is saved in": "Сохраняется в",
   "It was not changed: ${no}": "Не изменено: ${no}",
@@ -6661,7 +6564,6 @@ export default Object.freeze({
   "It was not deleted: ${no}": "Не удалено: ${no}",
   "labelled": "с меткой",
   "Last time:": "Последний раз:",
-  "Manage in the config ›": "Управлять в настройках ›",
   "never": "никогда",
   "No automation matches these words.": "Ни одна автоматизация не подходит под эти слова.",
   "No automations yet: start from a ready-made template.": "Пока нет автоматизаций: начните с готового шаблона.",
@@ -6817,6 +6719,8 @@ export default Object.freeze({
   "A Home device can have a photo or a drawing that fills its tile. Name and state stay on the dark veil at the bottom, in white.": "У устройства на главной может быть фото или рисунок на всю плитку. Имя и состояние остаются белыми на тёмной вуали внизу.",
   "Choose from the drawings": "Выбрать из рисунков",
   "Device images": "Изображения устройств",
+  "Tile images": "Изображения плиток",
+  "Every dashboard card can have a photo or a drawing that fills it: lights, climate, blinds, cameras, rooms, quick actions. The controls stay on top, readable; on the wall the same image shows on the pages that fill themselves.": "Каждая карточка панели может иметь фото или рисунок, заполняющий её: свет, климат, жалюзи, камеры, комнаты, быстрые действия. Элементы управления остаются сверху и читаются; на стене то же изображение появляется на страницах, которые заполняются сами.",
   "Drag to move": "Перетащите, чтобы сдвинуть",
   "Drawing (when there is no image)": "Рисунок (когда нет изображения)",
   "Fills the tile instead of the drawing": "Заполняет плитку вместо рисунка",
@@ -6865,4 +6769,47 @@ export default Object.freeze({
   "Windy weather radar": "Метеорадар Windy",
   "An intercom event (event.*), or a sensor that turns on when it rings (binary_sensor). A button or a switch work too.": "Событие домофона (event.*) или датчик, который включается при звонке (binary_sensor). Подойдут также кнопка или выключатель.",
   "cannot act as a doorbell: pick an event (event.*) or a sensor that turns on (binary_sensor.*).": "не может быть звонком: выберите событие (event.*) или датчик, который включается (binary_sensor.*).",
+  "Now · My station · Forecast": "Сейчас · Моя станция · Прогноз",
+  "Brake on": "Ручник затянут",
+  "Cabin": "Салон",
+  "Consumption, worked out": "Расход, вычисленный",
+  "done ${giorno} at ${ora}": "готово ${giorno} в ${ora}",
+  "done tomorrow at ${ora}": "готово завтра в ${ora}",
+  "Driven": "Пройдено",
+  "Fully charged": "Полностью заряжен",
+  "In neutral": "На нейтрали",
+  "Last charge": "Последняя зарядка",
+  "More data": "Другие данные",
+  "Moving": "В движении",
+  "on fuel": "на топливе",
+  "On the road": "Вождение",
+  "Parked": "Припаркован",
+  "Range at ${pct}%": "Запас хода при ${pct}%",
+  "rated": "по WLTP",
+  "Reversing": "Задний ход",
+  "Standing by": "Ожидание",
+  "Target reached": "Цель достигнута",
+  "The rest": "Прочее",
+  "total": "всего",
+  "Updated at ${detto}": "Обновлено в ${detto}",
+  "Updated on ${detto}": "Обновлено ${detto}",
+  "From band ${fascia}": "Из зоны ${fascia}",
+  "Home Assistant declares a battery itself — a sensor in percent — and it appears here with nothing to configure.": "Home Assistant объявляет батарейку сам — датчик в процентах — и она появляется здесь без всякой настройки.",
+  "Home Assistant declares a door or window contact itself and it appears here with nothing to configure.": "Home Assistant сам объявляет дверной или оконный датчик, и он появляется здесь без всякой настройки.",
+  "Home Assistant declares a motion or presence sensor itself and it appears here with nothing to configure.": "Датчик движения или присутствия Home Assistant объявляет сам, и он появляется здесь без всякой настройки.",
+  "More power is going out than coming in: usually a sensor's direction is reversed.": "Энергии уходит больше, чем приходит: обычно у одного из датчиков перепутано направление.",
+  "No appliance in this load yet.": "В этой нагрузке пока нет приборов.",
+  "No room has a humidity probe.": "Ни в одной комнате нет датчика влажности.",
+  "No rooms configured yet.": "Комнат пока нет.",
+  "No sensor linked.": "Датчик не привязан.",
+  "No session meter.": "Нет счётчика сессии.",
+  "Nothing here yet.": "Здесь пока пусто.",
+  "Switched on, they show anyway.": "Включённые показываются в любом случае.",
+  "The base map is not answering. The rain is there.": "Подложка карты не отвечает. Дождь виден.",
+  "The radar address is not a tile address ({z}/{x}/{y}).": "Адрес радара — не адрес тайлов ({z}/{x}/{y}).",
+  "The soil sensor is right above.": "Датчик почвы — прямо выше.",
+  "The target is read-only.": "Цель только для чтения.",
+  "This reading has no entity yet.": "У этого показания ещё нет сущности.",
+  "This target is a read-only sensor.": "Эта цель — датчик только для чтения.",
+  "You picked «An address of mine» but there is no address.": "Выбран «Свой адрес», но адреса нет.",
 });

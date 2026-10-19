@@ -793,12 +793,6 @@ function testaMarkup(testa) {
 function vuotoMarkup() {
   return `<div class="dm-cont-vuoto">
     <strong>${esc(t("Nessun contatore configurato", "No meter configured"))}</strong>
-    <span>${esc(
-      t(
-        "Un contatore compare qui quando lo aggiungi nella scheda Acqua e gas della configurazione: i contatori dell'acqua e del gas, la pressione e la portata dell'acqua, il sale dell'addolcitore.",
-        "A meter shows up here once you add it in the Water and gas tab of the settings: the water and gas meters, the water pressure and flow, the softener salt.",
-      ),
-    )}</span>
   </div>`;
 }
 

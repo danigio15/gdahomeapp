@@ -466,7 +466,7 @@ export class Dispositivi {
    * mentre «non si sa» vuol dire «vede tutto». Cosi' il cancello delle plance
    * riservate non si chiudeva per nessuno: il dato era giusto nell'archivio,
    * la regola era giusta, e il valore si perdeva nel passo in mezzo. Nella
-   * console si vedeva «di Giovanni», perche' l'elenco legge l'archivio; sul
+   * console si vedeva «di Persona 1», perche' l'elenco legge l'archivio; sul
    * filo no. */
   _pulito({ id, nome, sistema, natoIl, vistoIl, utente }) {
     return { id, nome, sistema, natoIl, vistoIl, utente: utentePulito(utente) };

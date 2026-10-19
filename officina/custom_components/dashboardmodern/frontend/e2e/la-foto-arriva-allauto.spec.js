@@ -14,8 +14,8 @@ import { expect, test } from "@playwright/test";
 import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
 
 const PERSONE = [
-  { id: "p-gio", name: "Giovanni", entity: "person.giovanni" },
-  { id: "p-ada", name: "Ada", entity: "person.ada" },
+  { id: "p-gio", name: "Persona 1", entity: "person.persona_1" },
+  { id: "p-persona-13", name: "Persona 13", entity: "person.persona_13" },
   { id: "p-ex", name: "Chi non c'è più", entity: "person.ex", nascosta: true },
 ];
 
@@ -48,15 +48,15 @@ const SEME = {
 };
 
 const STATI = {
-  "person.giovanni": {
-    entity_id: "person.giovanni",
+  "person.persona_1": {
+    entity_id: "person.persona_1",
     state: "home",
-    attributes: { friendly_name: "Giovanni" },
+    attributes: { friendly_name: "Persona 1" },
   },
-  "person.ada": {
-    entity_id: "person.ada",
+  "person.persona_13": {
+    entity_id: "person.persona_13",
     state: "not_home",
-    attributes: { friendly_name: "Ada" },
+    attributes: { friendly_name: "Persona 13" },
   },
   "person.ex": {
     entity_id: "person.ex",
@@ -146,8 +146,8 @@ test("dentro l'app la fotografia parte, e porta quello che si legge guidando", a
 
   /* Chi è nascosto in Home resta nascosto anche in auto. */
   expect(foto.persone).toEqual([
-    { nome: "Giovanni", inCasa: true },
-    { nome: "Ada", inCasa: false },
+    { nome: "Persona 1", inCasa: true },
+    { nome: "Persona 13", inCasa: false },
   ]);
 
   /* E i tasti, col posto e il nome nell'id: fra la fotografia e il tasto
@@ -214,13 +214,14 @@ test("se non cambia niente non si rimanda, e se cambia sì", async ({ page }, te
   /* Qualcuno è tornato a casa: si rimanda. */
   await page.evaluate(() => {
     const raw = window.eval("typeof _RAW_STATES !== 'undefined' ? _RAW_STATES : null");
-    if (raw) raw["person.ada"] = { entity_id: "person.ada", state: "home", attributes: {} };
+    if (raw)
+      raw["person.persona_13"] = { entity_id: "person.persona_13", state: "home", attributes: {} };
   });
   expect(await guardaAdesso(page, 1_120_000)).toBe(true);
   const ultima = await page.evaluate(() => JSON.parse(window.__fotoRicevute.at(-1)));
   expect(ultima.persone).toEqual([
-    { nome: "Giovanni", inCasa: true },
-    { nome: "Ada", inCasa: true },
+    { nome: "Persona 1", inCasa: true },
+    { nome: "Persona 13", inCasa: true },
   ]);
 });
 

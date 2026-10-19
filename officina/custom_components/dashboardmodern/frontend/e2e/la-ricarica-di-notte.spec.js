@@ -7,7 +7,7 @@
  * La notte la fa la casa (`ponte/src/ricarica-di-notte.js`), e le sue regole
  * si provano nel ponte. Qui si guarda la plancia: la carta sotto la console di
  * evcc, che scrive le scelte nella configurazione; il prezzo preso dalle
- * impostazioni — la F3, poi la tariffa unica, poi «Imposta»; il racconto di
+ * impostazioni — la F3, poi la tariffa unica, poi «Prezzo non impostato»; il racconto di
  * quello che la casa dice; e la riga sul widget Auto della Home.
  *
  * La casa qui e' finta, e risponde a `ponte/ricarica-notte/stato` come il
@@ -219,13 +219,16 @@ test("la carta sta sotto la console di evcc, spenta di serie, e scrive le scelte
   );
 });
 
-test("il prezzo: la F3, poi la tariffa unica, poi «Imposta»", async ({ page }, testInfo) => {
+test("il prezzo: la F3, poi la tariffa unica, poi «Prezzo non impostato» senza rimandi", async ({
+  page,
+}, testInfo) => {
   await avvia(page, testInfo, { impostazioni: { attiva: true } });
   const carta = await apriLaPaginaAuto(page);
   const prezzo = carta.locator('[data-rn="prezzo"]');
   await expect(prezzo.locator(".dm-rn-prezzo-box")).toHaveAttribute("data-tono", "ok");
   await expect(prezzo).toContainText("0,13 €/kWh");
-  await expect(prezzo).toContainText("Dalla fascia F3 in Impostazioni → Energia");
+  await expect(prezzo).toContainText("Dalla fascia F3");
+  await expect(prezzo).not.toContainText("Impostazioni");
 
   await page.evaluate(() => {
     localStorage.removeItem("cd_fasce_kwh");
@@ -243,13 +246,9 @@ test("il prezzo: la F3, poi la tariffa unica, poi «Imposta»", async ({ page },
   });
   await expect(prezzo.locator(".dm-rn-prezzo-box")).toHaveAttribute("data-tono", "manca");
   await expect(prezzo).toContainText("Prezzo non impostato");
-  await expect(prezzo.locator('[data-rn="imposta"]')).toHaveText("Imposta");
-  /* «Imposta» apre la configurazione, sull'energia. */
-  await prezzo.locator('[data-rn="imposta"]').click();
-  await expect(page.locator("#editor-modal")).toBeVisible({ timeout: 10_000 });
-  await expect(page.locator('#editor-modal .ed-tab[data-tab="sez1"]')).toHaveClass(/active/, {
-    timeout: 10_000,
-  });
+  /* Nessun «Imposta» che porti al Config: la carta lo dice e basta. */
+  await expect(prezzo.locator('[data-rn="imposta"]')).toHaveCount(0);
+  await expect(prezzo.locator("button")).toHaveCount(0);
 });
 
 test("racconta quello che dice la casa: in carica, finita, stanotte non parte", async ({

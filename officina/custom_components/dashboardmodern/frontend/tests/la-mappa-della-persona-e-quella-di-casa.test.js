@@ -48,11 +48,11 @@ function senzaCornice() {
 
 test("il tocco chiede a Home Assistant la scheda di QUESTA persona", () => {
   const annunci = casaIntorno();
-  assert.equal(apriLaMappaDiCasa("person.giovanni"), true);
+  assert.equal(apriLaMappaDiCasa("person.persona_1"), true);
   assert.equal(annunci.length, 1);
   const annuncio = annunci[0];
   assert.equal(annuncio.type, "hass-more-info");
-  assert.deepEqual(annuncio.detail, { entityId: "person.giovanni" });
+  assert.deepEqual(annuncio.detail, { entityId: "person.persona_1" });
   /* Senza `composed` l'annuncio si ferma al confine dell'ombra del pannello, e
    * chi apre le schede non lo sente mai. */
   assert.equal(annuncio.composed, true);
@@ -64,14 +64,14 @@ test("senza Home Assistant intorno non si annuncia a nessuno", () => {
   /* Un annuncio che non arriva a nessuno, col link annullato, sarebbe un tocco
    * che non fa niente: meglio lasciar fare al link. */
   const annunci = casaIntorno({ ce: false });
-  assert.equal(apriLaMappaDiCasa("person.giovanni"), false);
+  assert.equal(apriLaMappaDiCasa("person.persona_1"), false);
   assert.equal(annunci.length, 0);
   senzaCornice();
 });
 
 test("senza cornice — la plancia aperta per conto suo — resta il link", () => {
   senzaCornice();
-  assert.equal(apriLaMappaDiCasa("person.giovanni"), false);
+  assert.equal(apriLaMappaDiCasa("person.persona_1"), false);
 });
 
 test("senza entità non c'è nessuna scheda da chiedere", () => {
@@ -88,7 +88,7 @@ test("un pannello che non sa ascoltare non fa cadere il tocco", () => {
    * risponde di no, e il link fa il suo mestiere. */
   globalThis.frameElement = { getRootNode: () => ({ host: {} }) };
   globalThis.parent = { document: { querySelector: () => ({}) } };
-  assert.equal(apriLaMappaDiCasa("person.giovanni"), false);
+  assert.equal(apriLaMappaDiCasa("person.persona_1"), false);
   globalThis.frameElement = {
     getRootNode: () => ({
       host: {
@@ -99,6 +99,6 @@ test("un pannello che non sa ascoltare non fa cadere il tocco", () => {
       },
     }),
   };
-  assert.equal(apriLaMappaDiCasa("person.giovanni"), false);
+  assert.equal(apriLaMappaDiCasa("person.persona_1"), false);
   senzaCornice();
 });

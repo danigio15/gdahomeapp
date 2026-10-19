@@ -7,14 +7,15 @@
  * che chi abita ha dato in Home Assistant («Per categoria», con «Senza
  * categoria» in fondo), oppure «Per tipo» o «Per stanza», e si chiudono e si
  * aprono come in Home Assistant (▾ ▸). Qui si guardano, si accendono e si
- * spengono, e si fanno partire; si modificano nel config, dove sta l'editor
- * (`automazioni-section.js`). La linguetta sta subito prima di «Config», col
- * suo orologio viola.
+ * spengono, e si fanno partire. La pagina non rimanda al config: niente
+ * «Gestisci nel config», «Crea la prima nel config» o «Modifica nel config»
+ * — le sezioni mostrano la casa, e il config si apre dalla sua voce. La
+ * linguetta sta subito prima di «Config», col suo orologio viola.
  *
  * La stessa faccia e' la pagina dell'app: nell'app la linguetta in basso non
  * c'e', e le automazioni si aprono dal menu laterale («Automazioni ✨
- * PREMIUM»), a schermo pieno. Li' la pagina e' una sola: senza «Gestisci nel
- * config», con «＋ Nuova» nella barra dei filtri, e il foglio di una riga
+ * PREMIUM»), a schermo pieno. Li' la pagina e' una sola: con «＋ Nuova»
+ * nella barra dei filtri, e il foglio di una riga
  * porta anche «✏️ Modifica», «Duplica», «Stanza e nome» ed «Elimina» —
  * l'editor si apre nella stessa pagina.
  *
@@ -31,7 +32,6 @@ import {
   DOVE_SI_COMPRA,
   alternaInCasa,
   apriLaConferma,
-  apriNelConfig,
   apriPerModificare,
   automazioniDiCasa,
   categorieDiCasa,
@@ -194,26 +194,26 @@ function tessere(elenco) {
   )}</small></div></div>`;
 }
 
+/* Le proposte si aprono nella stessa pagina, e una pagina sola le ha: quella
+ * dell'app. Nella dashboard la striscia portava al config, e non c'e' piu'. */
 function strisciaDelleProposte({ app }) {
   const n = leProposte().length;
-  if (!n || !statoDelleAutomazioni().ponte?.puoScrivere) return "";
+  if (!app || !n || !statoDelleAutomazioni().ponte?.puoScrivere) return "";
   return `<button type="button" class="ad-pro" data-auc-proposte><span class="st" aria-hidden="true">✨</span><div>${esc(
     n === 1
       ? t("1 proposta per la tua casa", "1 suggestion for your home")
       : t(`${n} proposte per la tua casa`, `${n} suggestions for your home`),
   )}<small>${esc(t("Pensate sui tuoi dispositivi e su come li usi", "Based on your devices and how you use them"))}</small></div><em>${esc(
-    app ? t("Vedi ›", "See ›") : t("nel config ›", "in the config ›"),
+    t("Vedi ›", "See ›"),
   )}</em></button>`;
 }
 
-/* «Per categoria · Per tipo · Per stanza», la ricerca, «＋ Nuova» e, nella
- * dashboard, «Gestisci nel config». «＋ Nuova» c'e' solo per chi puo'
- * scrivere: nell'app apre i modelli nella stessa pagina, nella dashboard nel
- * config. */
+/* «Per categoria · Per tipo · Per stanza», la ricerca e «＋ Nuova». «＋
+ * Nuova» c'e' solo nell'app e per chi puo' scrivere: apre i modelli nella
+ * stessa pagina. Nella dashboard non c'e', perche' porterebbe al config. */
 function filtri({ app }) {
-  const config = typeof root.apriConfigEntita === "function";
   const nuova =
-    statoDelleAutomazioni().ponte?.puoScrivere === true && (app || config)
+    app && statoDelleAutomazioni().ponte?.puoScrivere === true
       ? `<button type="button" class="ad-nuova" data-auc-nuova>＋ ${esc(t("Nuova", "Add new"))}</button>`
       : "";
   return `<div class="ad-filtri"><span class="ad-seg-riga">${scelteDelRaggruppa(state.per, "data-auc-per", "ad-seg")}${tastiDeiGruppiHtml(
@@ -221,11 +221,7 @@ function filtri({ app }) {
     { per: state.per, cerca: state.cerca },
   )}</span><span class="ad-cerca-riga"><label class="ad-cerca"><span aria-hidden="true">🔍</span><input type="search" data-auc-cerca value="${esc(
     state.cerca,
-  )}" placeholder="${esc(t("Cerca un'automazione…", "Search an automation…"))}"></label>${nuova}</span>${
-    app || !config
-      ? ""
-      : `<button type="button" class="ad-cfg" data-auc-config>⚙️ ${esc(t("Gestisci nel config ›", "Manage in the config ›"))}</button>`
-  }</div>`;
+  )}" placeholder="${esc(t("Cerca un'automazione…", "Search an automation…"))}"></label>${nuova}</span></div>`;
 }
 
 /* La riga si apre nel foglio; l'interruttore la accende o la spegne. */
@@ -256,13 +252,7 @@ function vuoto({ app }) {
       "Automations turn things on and off and alert you by themselves: at a time, when a door opens, when you leave home. You'll see them all here, Home Assistant's too.",
     ),
   )}</p>${
-    !puo
-      ? ""
-      : app
-        ? `<button type="button" data-auc-nuova>＋ ${esc(t("Crea la prima", "Create the first one"))}</button>`
-        : typeof root.apriConfigEntita === "function"
-          ? `<button type="button" data-auc-config-nuova>${esc(t("Crea la prima nel config ›", "Create the first one in the config ›"))}</button>`
-          : ""
+    puo && app ? `<button type="button" data-auc-nuova>＋ ${esc(t("Crea la prima", "Create the first one"))}</button>` : ""
   }</div>`;
 }
 
@@ -366,13 +356,12 @@ function htmlDelFoglio(v, { app }) {
   const dove = [categoriaHa === nomeCat ? "" : categoriaHa, `${emoji} ${nomeCat}`, clean(v.area)]
     .filter(Boolean)
     .join(" · ");
-  const modifica = !puo
-    ? ""
-    : app
+  /* «✏️ Modifica» solo nell'app, dove l'editor si apre nella stessa pagina:
+   * nella dashboard porterebbe al config. */
+  const modifica =
+    puo && app
       ? `<button type="button" class="modifica" data-auc-modifica>✏️ ${esc(t("Modifica", "Edit"))}</button>`
-      : typeof root.apriConfigEntita === "function"
-        ? `<button type="button" class="modifica" data-auc-modifica>${esc(t("Modifica nel config ›", "Edit in the config ›"))}</button>`
-        : "";
+      : "";
   return `<div class="ad-foglio" role="dialog" aria-modal="true" aria-label="${esc(v.nome)}" style="--c:${colore}"><div class="man"></div>
 <div class="su"><span class="orb">${disegno(oggetto)}</span><div><h4>${esc(v.nome)}</h4><div class="dove">${esc(dove)}</div></div><button type="button" class="led" aria-pressed="${v.attiva}" data-auc-led="${esc(
     v.entity_id,
@@ -502,7 +491,7 @@ function onClick(event) {
     return;
   }
   const tocco = el.closest(
-    "[data-auc-scopri],[data-auc-led],[data-auc-per],[data-aug-apri],[data-aug-tutti],[data-auc-proposte],[data-auc-config],[data-auc-config-nuova],[data-auc-nuova],[data-auc-esegui],[data-auc-modifica],[data-auc-duplica],[data-auc-stanza],[data-auc-elimina],[data-auc-carta]",
+    "[data-auc-scopri],[data-auc-led],[data-auc-per],[data-aug-apri],[data-aug-tutti],[data-auc-proposte],[data-auc-nuova],[data-auc-esegui],[data-auc-modifica],[data-auc-duplica],[data-auc-stanza],[data-auc-elimina],[data-auc-carta]",
   );
   if (!tocco) return;
   const d = tocco.dataset;
@@ -538,22 +527,13 @@ function onClick(event) {
   }
   if (d.aucProposte !== undefined) {
     if (app) vaiA("proposte");
-    else apriNelConfig({ vista: "proposte" });
-    return;
-  }
-  if (d.aucConfig !== undefined) {
-    apriNelConfig({ vista: "lista" });
-    return;
-  }
-  if (d.aucConfigNuova !== undefined) {
-    apriNelConfig({ vista: "modelli" });
     return;
   }
   if (d.aucNuova !== undefined) {
     if (app) {
       vaiA("modelli");
       root.scrollTo?.(0, 0);
-    } else apriNelConfig({ vista: "modelli" });
+    }
     return;
   }
   const v = voceDi(state.foglio);
@@ -569,7 +549,7 @@ function onClick(event) {
       ridisegnaLaPagina();
       aggiornaIlTasto();
       root.scrollTo?.(0, 0);
-    } else apriNelConfig({ voce: v });
+    }
     return;
   }
   if (d.aucDuplica !== undefined) {
@@ -642,7 +622,6 @@ ${S} .ad-seg button.si{background:${VIOLA};color:#fff;box-shadow:0 6px 14px -6px
 ${S} .ad-cerca{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:8px;padding:0 16px;border-radius:999px;border:1px solid var(--divider-color,#dbe4ee);background:var(--card-bg,#fff);font-size:13px;color:var(--secondary-text-color,#94a3b8)}
 ${S} .ad-cerca input{flex:1;min-width:0;border:0;background:none;outline:none;padding:10px 0;font:inherit;font-weight:600;color:var(--text,#0f172a)}
 ${S} .ad-nuova{flex:none;border:0;border-radius:999px;padding:10px 18px;background:${VIOLA};color:#fff;cursor:pointer;font:inherit;font-size:13px;font-weight:900;letter-spacing:.2px;white-space:nowrap;box-shadow:0 10px 22px -12px ${VIOLA}}
-${S} .ad-cfg{margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:9px 15px;border-radius:999px;border:1px solid var(--divider-color,#dbe4ee);background:transparent;cursor:pointer;font:inherit;font-size:11px;font-weight:900;letter-spacing:.7px;text-transform:uppercase;color:var(--secondary-text-color,#64748b)}
 ${S} .ad-nessuna,${S} .ad-avviso{margin:4px 2px;font-size:13px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 ${S} .ad-vuoto{display:grid;justify-items:center;text-align:center;gap:10px;padding:46px 20px 50px;border-radius:26px;border:1px dashed color-mix(in srgb,${VIOLA} 35%,var(--divider-color,#dbe4ee));background:radial-gradient(80% 70% at 50% 0%,color-mix(in srgb,${VIOLA} 9%,transparent),transparent 70%),var(--card-bg,#fff)}
 ${S} .ad-vuoto .ill,${S} .ad-chiusa .ill{position:relative;width:132px;height:132px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 40% 35%,color-mix(in srgb,${VIOLA} 14%,#fff),color-mix(in srgb,${VIOLA} 26%,var(--card-bg,#fff)));box-shadow:0 20px 40px -24px ${VIOLA}}
@@ -681,7 +660,6 @@ ${S} .ad-chiusa .carta small{font-size:11.5px;font-weight:600;color:var(--second
   ${S} .ad-seg-riga .ad-seg button{padding:7px 9px;letter-spacing:.3px}
   ${S} .ad-seg-riga .aug-tutto{width:34px;height:34px}
   ${S} .ad-cerca-riga{max-width:none;flex-basis:100%}
-  ${S} .ad-cfg{display:none}
   ${S} .ad-chiusa .velo{padding-top:40px}
 }
 /* Il foglio di una carta. */

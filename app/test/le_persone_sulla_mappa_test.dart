@@ -14,19 +14,19 @@ void main() {
   test('le persone della plancia, senza quelle nascoste', () {
     final persone = lePersoneDallaPlancia({
       'cd_people':
-          '[{"name":"Giovanni","entity":"person.giovanni","address":"sensor.tel_geocoded_location"},'
-          '{"name":"Anna","entity":"person.anna","nascosta":true},'
+          '[{"name":"Persona 1","entity":"person.persona_1","address":"sensor.tel_geocoded_location"},'
+          '{"name":"Persona 2","entity":"person.persona_2","nascosta":true},'
           '{"name":"Senza entita"}]',
     });
-    expect(persone.map((p) => p.entita), ['person.giovanni']);
+    expect(persone.map((p) => p.entita), ['person.persona_1']);
     expect(persone.single.indirizzo, 'sensor.tel_geocoded_location');
     expect(lePersoneDallaPlancia({'cd_people': 'non json'}), isEmpty);
   });
 
   test('sulla mappa solo chi ha un punto, con l\'indirizzo scritto bene', () {
     final stati = {
-      'person.giovanni': e('person.giovanni', 'not_home', {
-        'friendly_name': 'Giovanni',
+      'person.persona_1': e('person.persona_1', 'not_home', {
+        'friendly_name': 'Persona 1',
         'latitude': 40.86,
         'longitude': 14.28,
       }),
@@ -34,21 +34,21 @@ void main() {
         'sensor.tel_geocoded_location',
         'Via Toledo, 12, 80134 Napoli NA, Italia',
       ),
-      'person.anna': e('person.anna', 'home'),
+      'person.persona_2': e('person.persona_2', 'home'),
     };
-    final giovanni = sullaMappa((
-      entita: 'person.giovanni',
+    final persona_1 = sullaMappa((
+      entita: 'person.persona_1',
       nome: '',
       indirizzo: 'sensor.tel_geocoded_location',
     ), (id) => stati[id]);
-    expect(giovanni?.id, 'person.giovanni');
-    expect(giovanni?.nome, 'Giovanni');
-    expect(giovanni?.posizione.lat, 40.86);
-    expect(giovanni?.dove, 'Via Toledo 12, Napoli');
+    expect(persona_1?.id, 'person.persona_1');
+    expect(persona_1?.nome, 'Persona 1');
+    expect(persona_1?.posizione.lat, 40.86);
+    expect(persona_1?.dove, 'Via Toledo 12, Napoli');
     expect(
       sullaMappa((
-        entita: 'person.anna',
-        nome: 'Anna',
+        entita: 'person.persona_2',
+        nome: 'Persona 2',
         indirizzo: '',
       ), (id) => stati[id]),
       isNull,

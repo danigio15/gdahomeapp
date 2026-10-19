@@ -392,8 +392,8 @@ function vuotoMarkup() {
     <strong>${esc(t("Nessun contatto trovato", "No contact found"))}</strong>
     <span>${esc(
       t(
-        "Un contatto porta-finestra lo dichiara Home Assistant da sé e compare qui senza configurare niente. Se il tuo non viene trovato, aggiungilo dalla scheda Varchi della configurazione.",
-        "Home Assistant declares a door or window contact itself and it appears here with nothing to configure. If yours is not found, add it from the Openings tab in the settings.",
+        "Un contatto porta-finestra lo dichiara Home Assistant da sé e compare qui senza configurare niente.",
+        "Home Assistant declares a door or window contact itself and it appears here with nothing to configure.",
       ),
     )}</span>
   </div>`;

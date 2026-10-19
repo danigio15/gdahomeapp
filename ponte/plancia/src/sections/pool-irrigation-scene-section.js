@@ -134,9 +134,9 @@ export function soilMoisture(config = {}) {
 
 /* ─────────────────────────── shared markup bits ─────────────────────────── */
 
-function emptyState(icon, title, hint) {
+function emptyState(icon, title, hint = "") {
   return `<div class="dm-scene-empty"><span class="dm-scene-empty-icon" aria-hidden="true">${icon}</span>
-    <strong>${esc(title)}</strong><span>${esc(hint)}</span></div>`;
+    <strong>${esc(title)}</strong>${hint ? `<span>${esc(hint)}</span>` : ""}</div>`;
 }
 
 function repeat(count, markup) {
@@ -574,10 +574,6 @@ function renderPool() {
       wrap.innerHTML = emptyState(
         "🏊",
         t("Nessuna piscina configurata", "No pool configured"),
-        t(
-          "Aggiungi le entità della piscina dall'editor per vedere la vasca.",
-          "Add the pool entities from the editor to see the basin.",
-        ),
       );
     }
     return;
@@ -894,14 +890,8 @@ function renderIrrigation() {
           "🌱",
           t("Nessuna zona configurata", "No zone configured"),
           soloTerreno
-            ? t(
-                "Il sensore del terreno lo vedi qui sopra. Aggiungi le zone di irrigazione dall'editor per vedere anche il prato.",
-                "The soil sensor is right above. Add the irrigation zones from the editor to see the lawn too.",
-              )
-            : t(
-                "Aggiungi le zone di irrigazione dall'editor per vedere il prato.",
-                "Add the irrigation zones from the editor to see the lawn.",
-              ),
+            ? t("Il sensore del terreno lo vedi qui sopra.", "The soil sensor is right above.")
+            : "",
         );
       grid.innerHTML = "";
     }

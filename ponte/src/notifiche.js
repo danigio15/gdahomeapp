@@ -368,6 +368,51 @@ export function personalizzataPulita(detta) {
   };
 }
 
+/* ─── Dove porta il tocco ─────────────────────────────────────────────────
+ *
+ * «Queste cose che escono in basso non mi piacciono proprio.» Toccata, una
+ * notifica porta dove sta la cosa di cui parla: l'antifurto nella pagina
+ * Sicurezza, una porta nei Varchi, il movimento alla sua telecamera. Lo dice
+ * la casa, dentro la busta (`apri: {sezione, entita}`): sul centralino non
+ * passa niente di nuovo che si legga. Le sezioni sono parole dell'app, non
+ * linguette della plancia: e' l'app che sa come ci si arriva
+ * (`app/lib/notifiche/dove_apre.dart`). */
+const SEZIONE_DI = Object.freeze({
+  antifurto: "sicurezza",
+  allarmi: "sicurezza",
+  inserimenti: "sicurezza",
+  uscito: "sicurezza",
+  aperture: "varchi",
+  movimento: "telecamera",
+  campanello: "telecamera",
+  elettrodomestici: "elettrodomestici",
+  frigo: "sensore",
+  personalizzata: "sensore",
+  pioggia: "meteo",
+  arrivi: "persone",
+  suggerimenti: "assistente",
+  riepilogo: "giornata",
+  blackout: "energia",
+  viaggi: "viaggi",
+  ha_notify: "plancia",
+});
+
+/** Dove porta il tocco su questa notifica, per chi la riceve. `camera` e'
+ * quella che a lui si mostra (o `null`): una telecamera che non vede non
+ * entra nemmeno qui. */
+export function doveApre(evento, camera = null) {
+  let sezione = SEZIONE_DI[evento?.tipo];
+  if (!sezione) return null;
+  if (sezione === "telecamera") {
+    if (camera) return { sezione, entita: camera };
+    sezione = "sicurezza";
+  }
+  const entita = String(evento.entita || "");
+  return ENTITA_BUONA.test(entita) && !entita.startsWith("person.")
+    ? { sezione, entita }
+    : { sezione };
+}
+
 export class Notifiche {
   constructor({
     cartella = "/data",
@@ -378,7 +423,7 @@ export class Notifiche {
     plance = null,
     registri = null,
     /* Chi porta la busta al centralino: `{spingi({telefono, gettone, busta,
-     * urgente}) → bool, diIGettoni(elenco)}`. Lo mette `index.js` (la
+     * urgente, aspetta}) → bool, diIGettoni(elenco)}`. Lo mette `index.js` (la
      * chiamata); senza, le notifiche si preparano e non partono. */
     postino = null,
     registro = null,
@@ -1173,6 +1218,10 @@ export class Notifiche {
         gettone: voce.gettone,
         busta,
         urgente: evento.urgenza === "urgente",
+        /* Col filo del centralino giu' la notifica aspetta che torni
+         * (`chiamata.js`); la prova no: chi l'ha premuta deve sapere subito
+         * che non e' partita. */
+        aspetta: evento.tipo !== "prova",
       });
       if (!partita) continue;
       this._detto.set(chiave, ora);
@@ -1264,6 +1313,7 @@ export class Notifiche {
         ? { fonte: String(evento.fonte[lingua] ?? evento.fonte.it ?? "").slice(0, 120) }
         : {}),
       ...(foto ? { foto } : {}),
+      ...(doveApre(evento, camera) ? { apri: doveApre(evento, camera) } : {}),
       azioni: (evento.azioni || []).slice(0, 3).map((una) => ({
         id: una.id,
         etichetta: String(una.parole?.[lingua] ?? una.parole?.it ?? una.id).slice(0, 30),

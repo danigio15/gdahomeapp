@@ -29,7 +29,7 @@ def test_panel_config_exposes_user_allow_list_and_companion_dashboard(
         title="Casa",
         data={"name": "Casa", "primary": True},
         options={
-            OPTION_ALLOWED_USERS: ["giovanni", "donato"],
+            OPTION_ALLOWED_USERS: ["persona_1", "persona_5"],
             OPTION_REGISTER_LOVELACE: True,
         },
     )
@@ -37,7 +37,7 @@ def test_panel_config_exposes_user_allow_list_and_companion_dashboard(
 
     config = _panel_config(hass, entry)
 
-    assert config["allowed_user_ids"] == ["giovanni", "donato"]
+    assert config["allowed_user_ids"] == ["persona_1", "persona_5"]
     assert config["register_lovelace_dashboard"] is True
     assert config["lovelace_url_path"] == "dashboardmodern-01234567"
     # Il percorso e' quello stabile con la firma nella domanda: un indirizzo

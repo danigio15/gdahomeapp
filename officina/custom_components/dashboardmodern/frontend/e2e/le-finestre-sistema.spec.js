@@ -196,7 +196,7 @@ const CODA = [
     type: "assistenza",
     title: "Non trovo la pagina Piscina",
     state: "inviato",
-    author: "luca-p",
+    author: "persona-11-p",
     created_at: new Date().toISOString(),
   },
   {
@@ -212,7 +212,7 @@ const CODA = [
     type: "bug",
     title: "Il meteo resta indietro",
     state: "inviato",
-    author: "marco-b",
+    author: "persona-3-b",
     created_at: "2026-09-20T10:00:00Z",
   },
   {
@@ -220,7 +220,7 @@ const CODA = [
     type: "feature",
     title: "Un grafico dell'acqua",
     state: "inviato",
-    author: "luca-p",
+    author: "persona-11-p",
     created_at: "2026-09-25T10:00:00Z",
   },
   {
@@ -228,7 +228,7 @@ const CODA = [
     type: "bug",
     title: "La sveglia non suona",
     state: "inviato",
-    author: "anna-t",
+    author: "persona-2-t",
     created_at: "2026-08-01T10:00:00Z",
   },
   {
@@ -236,7 +236,7 @@ const CODA = [
     type: "feature",
     title: "Le stanze in ordine",
     state: "inviato",
-    author: "anna-t",
+    author: "persona-2-t",
     created_at: "2026-08-03T10:00:00Z",
   },
   {
@@ -244,7 +244,7 @@ const CODA = [
     type: "bug",
     title: "Chiusa da tempo",
     state: "risolto",
-    author: "anna-t",
+    author: "persona-2-t",
     created_at: "2026-07-01T10:00:00Z",
   },
 ];
@@ -297,7 +297,7 @@ async function accendi(page, testInfo) {
               enabled: true,
               console: false,
               opened: true,
-              name: "Daniele",
+              name: "Persona 17",
               unread: 2,
               preview:
                 "Vai in Configurazione → Piscina e scegli Pompa piscina, poi salva. Dovrebbe comparire subito.",

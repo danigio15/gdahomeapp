@@ -105,7 +105,7 @@ def github(monkeypatch: pytest.MonkeyPatch) -> FakeGitHub:
 
 
 async def _collega(
-    hass: HomeAssistant, user_id: str = "anna", *, maintainer: bool = False
+    hass: HomeAssistant, user_id: str = "persona_2", *, maintainer: bool = False
 ) -> None:
     store = await async_get_token_store(hass)
     await store.async_remember(
@@ -123,7 +123,7 @@ async def _bozza(hass: HomeAssistant, **kwargs: Any) -> dict[str, Any]:
         "title": "Le tapparelle non si fermano",
         "body": "Premo stop e continuano a scendere.",
         "diagnostics": {"ha_version": "2026.8.0"},
-        "opened_by": "anna",
+        "opened_by": "persona_2",
     }
     campi.update(kwargs)
     return await store.async_create(**campi)
@@ -159,7 +159,7 @@ async def test_chi_non_ha_ancora_finito_non_e_un_guasto(
     _entry(hass)
     github.answer("oauth/access_token", {"error": "authorization_pending"})
     with pytest.raises(DevicePending) as attesa:
-        await tickets.async_finish_auth(hass, user_id="anna", device_code="dc-1")
+        await tickets.async_finish_auth(hass, user_id="persona_2", device_code="dc-1")
     assert attesa.value.interval >= 1
 
 
@@ -170,7 +170,7 @@ async def test_slow_down_allunga_l_attesa_che_chiede_github(
     _entry(hass)
     github.answer("oauth/access_token", {"error": "slow_down", "interval": 15})
     with pytest.raises(DevicePending) as attesa:
-        await tickets.async_finish_auth(hass, user_id="anna", device_code="dc-1")
+        await tickets.async_finish_auth(hass, user_id="persona_2", device_code="dc-1")
     assert attesa.value.interval == 15
 
 
@@ -181,7 +181,7 @@ async def test_un_codice_scaduto_lo_dice_col_suo_codice(
     _entry(hass)
     github.answer("oauth/access_token", {"error": "expired_token"})
     with pytest.raises(GitHubError) as errore:
-        await tickets.async_finish_auth(hass, user_id="anna", device_code="dc-1")
+        await tickets.async_finish_auth(hass, user_id="persona_2", device_code="dc-1")
     assert errore.value.code == "expired"
 
 
@@ -191,10 +191,10 @@ async def test_collegarsi_ricorda_chi_e_e_cosa_puo_fare(
     """Chi tiene la repository lo dice GitHub, non una lista scritta a mano."""
     _entry(hass)
     github.answer("oauth/access_token", {"access_token": "gho_segreto"})
-    github.answer("/user", {"login": "anna-hub"})
+    github.answer("/user", {"login": "persona-2-hub"})
     github.answer("/repos/", {"permissions": {"push": True}})
-    account = await tickets.async_finish_auth(hass, user_id="anna", device_code="dc-1")
-    assert account == {"connected": True, "login": "anna-hub", "maintainer": True}
+    account = await tickets.async_finish_auth(hass, user_id="persona_2", device_code="dc-1")
+    assert account == {"connected": True, "login": "persona-2-hub", "maintainer": True}
 
 
 async def test_il_proprietario_e_il_manutentore_anche_senza_permissions(
@@ -245,9 +245,9 @@ async def test_chi_non_puo_scrivere_non_e_il_manutentore(
     """Un utente qualunque autorizza e apre segnalazioni, e basta."""
     _entry(hass)
     github.answer("oauth/access_token", {"access_token": "gho_segreto"})
-    github.answer("/user", {"login": "bruno-hub"})
+    github.answer("/user", {"login": "persona-7-hub"})
     github.answer("/repos/", {"permissions": {"push": False}})
-    account = await tickets.async_finish_auth(hass, user_id="bruno", device_code="dc-1")
+    account = await tickets.async_finish_auth(hass, user_id="persona_7", device_code="dc-1")
     assert account["maintainer"] is False
 
 
@@ -256,9 +256,9 @@ async def test_il_gettone_non_esce_mai_dal_deposito(
 ) -> None:
     """Da qui esce chi ha autorizzato. Il gettone lo legge solo chi chiama GitHub."""
     _entry(hass)
-    await _collega(hass, "anna")
+    await _collega(hass, "persona_2")
     store = await async_get_token_store(hass)
-    assert "gho_anna" not in repr(store.describe("anna"))
+    assert "gho_persona_2" not in repr(store.describe("persona_2"))
 
 
 async def test_scollegare_toglie_il_gettone(
@@ -266,10 +266,10 @@ async def test_scollegare_toglie_il_gettone(
 ) -> None:
     """Meta' del gesto: qui sparisce, su GitHub si revoca da GitHub."""
     _entry(hass)
-    await _collega(hass, "anna")
-    assert await tickets.async_forget_auth(hass, "anna") is True
+    await _collega(hass, "persona_2")
+    assert await tickets.async_forget_auth(hass, "persona_2") is True
     store = await async_get_token_store(hass)
-    assert store.describe("anna")["connected"] is False
+    assert store.describe("persona_2")["connected"] is False
 
 
 # ─── La consegna ─────────────────────────────────────────────────────────────
@@ -280,7 +280,7 @@ async def test_una_segnalazione_diventa_una_issue(
 ) -> None:
     """Consegnata: numero e indirizzo restano scritti sul ticket."""
     _entry(hass)
-    await _collega(hass, "anna")
+    await _collega(hass, "persona_2")
     github.answer(
         "/issues",
         {
@@ -302,14 +302,14 @@ async def test_la_issue_nasce_col_gettone_di_chi_ha_scritto(
 ) -> None:
     """A nome suo, non del primo utente della casa che si e' autorizzato."""
     _entry(hass)
-    await _collega(hass, "anna")
-    await _collega(hass, "bruno")
+    await _collega(hass, "persona_2")
+    await _collega(hass, "persona_7")
     github.answer(
         "/issues", {"number": 7, "html_url": "https://github.com/x/y/issues/7"}
     )
-    await _bozza(hass, opened_by="bruno")
+    await _bozza(hass, opened_by="persona_7")
     await tickets.async_deliver_pending(hass)
-    assert github.calls[0]["token"] == "gho_bruno"
+    assert github.calls[0]["token"] == "gho_persona_7"
 
 
 async def test_un_recapito_non_si_chiede_e_non_si_conserva(
@@ -324,12 +324,12 @@ async def test_un_recapito_non_si_chiede_e_non_si_conserva(
     serve a nessuno, e chi lo scrive crede di essere raggiungibile.
     """
     _entry(hass)
-    await _collega(hass, "anna")
+    await _collega(hass, "persona_2")
     github.answer(
         "/issues", {"number": 7, "html_url": "https://github.com/x/y/issues/7"}
     )
     with pytest.raises(TypeError):
-        await _bozza(hass, contact="anna@example.com")
+        await _bozza(hass, contact="persona_2@example.com")
 
     ticket = await _bozza(hass)
     assert "contact" not in ticket
@@ -363,11 +363,11 @@ async def test_i_recapiti_gia_scritti_spariscono_dal_disco(
             "tickets": [
                 {
                     "id": "t1",
-                    "opened_by": "anna",
+                    "opened_by": "persona_2",
                     "type": TYPE_BUG,
                     "title": "vecchia",
                     "body": "x",
-                    "contact": "anna@example.com",
+                    "contact": "persona_2@example.com",
                     "state": STATE_DRAFT,
                     "created_at": 1,
                     "updated_at": 1,
@@ -378,7 +378,7 @@ async def test_i_recapiti_gia_scritti_spariscono_dal_disco(
 
     store = TicketStore(hass)
     await store.async_load()
-    assert "contact" not in store.list(opened_by="anna")[0]
+    assert "contact" not in store.list(opened_by="persona_2")[0]
 
     # E sparisce davvero dal file, non solo da quello che si legge.
     rimasto = await Store(hass, STORAGE_VERSION, STORAGE_KEY).async_load()
@@ -390,7 +390,7 @@ async def test_la_issue_nasce_senza_etichette(
 ) -> None:
     """GitHub le scarterebbe: chi apre la segnalazione non ha i permessi."""
     _entry(hass)
-    await _collega(hass, "anna")
+    await _collega(hass, "persona_2")
     github.answer(
         "/issues", {"number": 7, "html_url": "https://github.com/x/y/issues/7"}
     )
@@ -418,14 +418,14 @@ async def test_ognuno_consegna_le_proprie(
 ) -> None:
     """Il comando di chi scrive non spedisce le bozze di un altro."""
     _entry(hass)
-    await _collega(hass, "anna")
-    await _collega(hass, "bruno")
+    await _collega(hass, "persona_2")
+    await _collega(hass, "persona_7")
     github.answer(
         "/issues", {"number": 7, "html_url": "https://github.com/x/y/issues/7"}
     )
-    await _bozza(hass, opened_by="anna", title="Di Anna")
-    await _bozza(hass, opened_by="bruno", title="Di Bruno")
-    assert await tickets.async_deliver_pending(hass, user_id="anna") == 1
+    await _bozza(hass, opened_by="persona_2", title="Di Persona 2")
+    await _bozza(hass, opened_by="persona_7", title="Di Persona 7")
+    assert await tickets.async_deliver_pending(hass, user_id="persona_2") == 1
     assert len(github.calls) == 1
 
 
@@ -434,7 +434,7 @@ async def test_github_muto_non_perde_la_segnalazione(
 ) -> None:
     """Resta bozza, con scritto perche'; al giro dopo riparte da sola."""
     _entry(hass)
-    await _collega(hass, "anna")
+    await _collega(hass, "persona_2")
     github.raises = GitHubError("unreachable", "GitHub non raggiungibile.")
     await _bozza(hass)
     assert await tickets.async_deliver_pending(hass) == 0
@@ -454,7 +454,7 @@ async def test_spegnendole_non_parte_niente(
 ) -> None:
     """L'interruttore vale davvero, autorizzazione o no."""
     _entry(hass, **{OPTION_TICKETS_ENABLED: False})
-    await _collega(hass, "anna")
+    await _collega(hass, "persona_2")
     await _bozza(hass)
     assert await tickets.async_deliver_pending(hass) == 0
     assert github.calls == []
@@ -464,7 +464,7 @@ async def test_spegnendole_non_parte_niente(
 
 
 async def _consegnata(hass: HomeAssistant, github: FakeGitHub) -> None:
-    await _collega(hass, "anna")
+    await _collega(hass, "persona_2")
     github.answer(
         "/issues", {"number": 42, "html_url": "https://github.com/x/y/issues/42"}
     )
@@ -573,9 +573,9 @@ async def test_la_console_chiede_i_permessi_sulla_repository(
 ) -> None:
     """Non basta amministrare casa propria per tenere la coda di tutti."""
     _entry(hass)
-    await _collega(hass, "anna", maintainer=False)
+    await _collega(hass, "persona_2", maintainer=False)
     with pytest.raises(GitHubError) as errore:
-        await tickets.async_queue(hass, "anna")
+        await tickets.async_queue(hass, "persona_2")
     assert errore.value.code == "not_console"
     assert github.calls == []
 
@@ -595,7 +595,7 @@ async def test_la_coda_mostra_tutto_e_dice_da_dove_viene(
                 "body": f"testo\n{TICKET_MARKER}",
                 "state": "open",
                 "comments": 0,
-                "user": {"login": "anna-hub"},
+                "user": {"login": "persona-2-hub"},
             },
             {
                 "number": 2,
@@ -862,7 +862,7 @@ async def test_il_filo_porta_commenti_e_allegati(
         [
             {
                 "id": 1,
-                "user": {"login": "anna-g"},
+                "user": {"login": "persona-2-g"},
                 "author_association": "NONE",
                 "created_at": "2026-09-01T10:00:00Z",
                 "body": "Ecco la schermata:\n"
@@ -891,7 +891,7 @@ async def test_il_filo_porta_commenti_e_allegati(
     assert filo["body"] == "Il corpo."
     assert len(filo["comments"]) == 2
     primo = filo["comments"][0]
-    assert primo["author"] == "anna-g"
+    assert primo["author"] == "persona-2-g"
     assert primo["maintainer"] is False
     assert primo["attachments"][0]["kind"] == "image"
     # L'indirizzo lungo esce dal testo e va nell'elenco: dentro la frase
@@ -935,12 +935,12 @@ async def test_il_filo_lo_legge_anche_chi_non_tiene_la_coda(
     c'e' niente da proteggere: la issue e' una pagina pubblica.
     """
     _entry(hass)
-    await _collega(hass, "anna", maintainer=False)
+    await _collega(hass, "persona_2", maintainer=False)
     github.answer("/issues/42", {"number": 42, "body": "x", "state": "open"})
-    filo = await tickets.async_thread(hass, "anna", 42)
+    filo = await tickets.async_thread(hass, "persona_2", 42)
     assert filo["number"] == 42
     # Col suo gettone, che serve solo al limite orario: leggere non lo chiede.
-    assert github.calls[0]["token"] == "gho_anna"
+    assert github.calls[0]["token"] == "gho_persona_2"
 
 
 async def test_il_filo_si_legge_anche_senza_aver_collegato_niente(
@@ -971,7 +971,7 @@ async def test_la_coda_dice_quanti_allegati_ci_sono(
                 f"{TICKET_MARKER}",
                 "state": "open",
                 "comments": 3,
-                "user": {"login": "anna-g"},
+                "user": {"login": "persona-2-g"},
             },
             {
                 "number": 2,
@@ -979,7 +979,7 @@ async def test_la_coda_dice_quanti_allegati_ci_sono(
                 "body": f"solo testo {TICKET_MARKER}",
                 "state": "open",
                 "comments": 0,
-                "user": {"login": "luca-t"},
+                "user": {"login": "persona-11-t"},
             },
         ],
     )
@@ -1292,7 +1292,7 @@ async def test_il_filo_legge_gli_ultimi_commenti_non_i_primi(
         {
             "id": numero,
             "body": f"commento {numero}",
-            "user": {"login": "anna-g"},
+            "user": {"login": "persona-2-g"},
             "author_association": "NONE",
             "created_at": "2026-09-01T10:00:00Z",
         }
@@ -1346,7 +1346,7 @@ async def test_la_sincronia_gira_su_tutte_le_segnalazioni(
     nel loop di una macchina piccola.
     """
     _entry(hass)
-    await _collega(hass, "anna")
+    await _collega(hass, "persona_2")
     store = await async_get_ticket_store(hass)
     # Venticinque in fila: il freno sulle segnalazioni troppo frequenti qui
     # non c'entra, e si toglie.

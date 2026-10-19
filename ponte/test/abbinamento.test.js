@@ -287,8 +287,8 @@ test("un telefono abbinato si riconosce, e il suo segno non torna piu'", () => {
   const c = cartellaFinta();
   try {
     const d = new Dispositivi({ cartella: c.dove });
-    const { dispositivo, segno } = d.abbina({ nome: "iPhone di Anna", sistema: "ios" });
-    assert.equal(dispositivo.nome, "iPhone di Anna");
+    const { dispositivo, segno } = d.abbina({ nome: "iPhone di Persona 2", sistema: "ios" });
+    assert.equal(dispositivo.nome, "iPhone di Persona 2");
     assert.equal(d.riconosci(segno).id, dispositivo.id);
     assert.equal(d.riconosci("un segno inventato"), null);
     /* Ne' l'elenco ne' il file dicono il segno. */
@@ -425,8 +425,8 @@ test("rinominare cambia il nome e basta", () => {
   try {
     const d = new Dispositivi({ cartella: c.dove });
     const { dispositivo, segno } = d.abbina({ nome: "uno" });
-    assert.equal(d.rinomina(dispositivo.id, "  Telefono   di  Marco "), true);
-    assert.equal(d.elenco()[0].nome, "Telefono di Marco");
+    assert.equal(d.rinomina(dispositivo.id, "  Telefono   di  Persona 3 "), true);
+    assert.equal(d.elenco()[0].nome, "Telefono di Persona 3");
     assert.equal(d.riconosci(segno).id, dispositivo.id);
     assert.equal(d.rinomina("dm_inesistente", "x"), false);
   } finally {

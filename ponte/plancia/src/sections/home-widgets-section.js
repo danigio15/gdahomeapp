@@ -257,6 +257,7 @@ import {
   relayCoverCommands,
 } from "../core/cover-kind.js";
 import { aggiornamentiDaFare } from "../core/aggiornamenti-da-fare.js";
+import { ATTESA_DEL_LOGO, creaLaMemoriaDeiLoghi } from "../core/loghi-degli-aggiornamenti.js";
 import {
   CHIAVE_SOGLIA_UMIDITA,
   finestreDaArieggiare,
@@ -7861,30 +7862,65 @@ function fumoDetail(widget) {
  * ponte sa gia' prenderli (`ponte/aggiornamenti/logo`, lo usa l'app): qui si
  * chiedono, si tengono come indirizzo `data:` e si mettono nel markup, cosi'
  * il travaso della finestra non li strappa. */
-const LOGHI = new Map();
-
-function logoDellAggiornamento(entita) {
-  const voce = LOGHI.get(entita);
-  if (voce !== undefined) return voce || "";
-  LOGHI.set(entita, null);
+const LOGHI = creaLaMemoriaDeiLoghi({
   /* La domanda al ponte la fa la persistenza della configurazione: importarla
    * da qui la caricherebbe (con i suoi effetti sul salvataggio) anche dove la
-   * Home e' l'unica cosa accesa. La si chiede a runtime, quando c'e'. */
-  const chiedi = root.dmBridgeRequest;
-  if (typeof chiedi !== "function") {
-    LOGHI.delete(entita);
-    return "";
+   * Home e' l'unica cosa accesa. La si chiede a runtime, quando c'e'. Una
+   * lettura: se e' partita prima che la porta fosse aperta, si rimanda. */
+  chiedi: (entita) => {
+    const chiedi = root.dmBridgeRequest;
+    if (typeof chiedi !== "function") return Promise.reject(new Error("bridge not ready"));
+    return chiedi(
+      "ponte/aggiornamenti/logo",
+      { entity_id: entita },
+      { attesa: ATTESA_DEL_LOGO, rimanda: true },
+    );
+  },
+  arrivato: posaIlLogo,
+  riprova: (entita, fra) => {
+    root.setTimeout?.(() => {
+      /* Solo se la riga si vede ancora: a finestra chiusa la si richiede alla
+       * prossima apertura. */
+      if (doc?.querySelector?.(`[data-dm-w-agg="${CSS.escape(entita)}"]`))
+        logoDellAggiornamento(entita);
+    }, fra + 50);
+  },
+  /* Dentro l'app e nella pagina del ponte (`__GDAHOME__`) non c'e' mai un
+   * indirizzo diretto: c'e' il ponte. */
+  colPonte: () => root.__GDAHOME__ === true,
+});
+
+function segnoDellAggiornamento(logo, nome) {
+  return logo
+    ? `<img class="dm-w-agg-img" src="${esc(logo)}" alt="" decoding="async">`
+    : `<span class="dm-w-agg-iniziale">${esc(clean(nome).charAt(0).toUpperCase() || "?")}</span>`;
+}
+
+function logoDellAggiornamento(entita) {
+  const foto = clean(allStates()?.[entita]?.attributes?.entity_picture);
+  return LOGHI.logo(entita, foto);
+}
+
+/* Il segno arrivato si posa dove la riga c'e', in qualunque finestra stia.
+ *
+ * Aspettare il giro della griglia non bastava: il corpo della finestra si
+ * ritravasa solo da li', e solo se la tessera in Home c'e' — aperta per nome,
+ * o con la tessera tolta dalla Home, la lettera restava fino a che non la si
+ * chiudeva e riapriva. Il travaso dopo trova l'`<img>` gia' al suo posto e
+ * l'indirizzo non lo tocca (`ATTRIBUTI_VIVI`). */
+function posaIlLogo(entita, url) {
+  if (!url) return;
+  for (const riga of doc?.querySelectorAll?.(`[data-dm-w-agg="${CSS.escape(entita)}"]`) || []) {
+    const posto = riga.querySelector(".dm-w-agg-logo");
+    if (!posto) continue;
+    const ce = posto.querySelector("img.dm-w-agg-img");
+    if (ce) {
+      if (ce.getAttribute("src") !== url) ce.setAttribute("src", url);
+      continue;
+    }
+    posto.innerHTML = segnoDellAggiornamento(url, "");
   }
-  Promise.resolve(chiedi("ponte/aggiornamenti/logo", { entity_id: entita }))
-    .then((risposta) => {
-      const corpo = clean(risposta?.corpo);
-      if (Number(risposta?.stato) !== 200 || !corpo) return;
-      const tipo = clean(risposta?.tipo) || "image/png";
-      LOGHI.set(entita, `data:${tipo};base64,${corpo}`);
-      senzaCadere(renderHomeWidgets);
-    })
-    .catch(() => {});
-  return "";
+  senzaCadere(renderHomeWidgets);
 }
 
 /* Si installa da qui quando Home Assistant non dice di no.
@@ -7906,10 +7942,7 @@ function aggiornamentiDetail(widget) {
       const nome = clean(voce?.nome) || clean(voce?.entity);
       const note = clean(voce?.note);
       const entity = clean(voce?.entity);
-      const logo = logoDellAggiornamento(entity);
-      const segno = logo
-        ? `<img class="dm-w-agg-img" src="${esc(logo)}" alt="">`
-        : `<span class="dm-w-agg-iniziale">${esc(nome.charAt(0).toUpperCase() || "?")}</span>`;
+      const segno = segnoDellAggiornamento(logoDellAggiornamento(entity), nome);
       const tasto = voce?.inCorso
         ? `<b class="dm-w-agg-corso">${esc(t("In corso", "Installing"))}</b>`
         : siInstallaDaQui(voce)
@@ -9649,13 +9682,33 @@ function ascoltaLaPorta() {
  * loro fotogramma di riposo (vedi `fermaCioCheStaDietro`). */
 export const NON_SI_FERMANO = /^dmTileIn/;
 
+/* Chi sta SOPRA la finestra non sta dietro (#279).
+ *
+ * «Selezionando il sensore si blocca.» Il foglio «Ultime 24 ore» (#269) si
+ * apre toccando una riga di questa finestra, e si apre sopra di lei. Ma il
+ * foglio vive fuori dalla finestra, e qui «fuori» voleva dire «dietro»: al
+ * giro dopo la sua entrata — il velo e il foglio che compaiono dall'opacita'
+ * zero — veniva fermata al fotogramma zero. Il foglio restava invisibile e
+ * steso su tutto lo schermo: ogni tocco finiva su di lui, la finestra sotto
+ * non rispondeva piu', e la plancia sembrava piantata. Lo stesso vale per le
+ * conferme e i tastierini, che stanno sopra questa finestra apposta (#275). */
+export const SOPRA_LA_FINESTRA =
+  "[data-dm-sopra-la-finestra],#confirm-modal,#custom-keypad,#dm-door-keypad";
+
 /** Quali animazioni vanno fermate: quelle vive, con un nome, e fuori. */
 export function animazioniDaFermare(animazioni, dentro) {
   return [...(animazioni || [])].filter((anim) => {
     if (!anim || anim.playState !== "running" || !anim.animationName) return false;
     if (NON_SI_FERMANO.test(anim.animationName)) return false;
     const bersaglio = anim.effect?.target;
-    return Boolean(bersaglio) && !dentro(bersaglio);
+    if (!bersaglio || dentro(bersaglio)) return false;
+    let sopra = false;
+    try {
+      sopra = Boolean(bersaglio.closest?.(SOPRA_LA_FINESTRA));
+    } catch (_errore) {
+      sopra = false;
+    }
+    return !sopra;
   });
 }
 
@@ -10182,22 +10235,6 @@ function onClick(event) {
       root.dispatchEvent?.(new CustomEvent(EVENTO_COTTURA));
     chiudiPopup();
     voce?.click();
-    return;
-  }
-  /* «Scegli cosa tenere in evidenza»: la finestra chiude e si apre il Config
-   * sulla sua scheda, dove quelle voci si scelgono. */
-  const config = event.target?.closest?.("[data-dm-w-config]");
-  if (config) {
-    event.preventDefault();
-    const scheda = clean(config.dataset.dmWConfig);
-    chiudiPopup();
-    if (typeof root.apriConfigEntita !== "function") return;
-    root.apriConfigEntita();
-    root.setTimeout?.(() => {
-      try {
-        if (scheda) root.editorSwitch?.(scheda);
-      } catch (_errore) {}
-    }, 0);
     return;
   }
   const tutte = event.target?.closest?.("[data-dm-w-lights-off]");
@@ -12249,6 +12286,20 @@ export function installHomeWidgetsSection() {
   });
   doc.addEventListener("click", onClick);
   bindEscape();
+  /* Un segno che non si lascia disegnare — l'indirizzo diretto, l'unico che
+   * puo' non arrivare — torna la lettera, invece di un riquadro vuoto. Gli
+   * errori delle immagini non salgono: si ascoltano scendendo. */
+  doc.addEventListener?.(
+    "error",
+    (event) => {
+      const img = event.target;
+      if (!img?.matches?.("img.dm-w-agg-img")) return;
+      const riga = img.closest?.("[data-dm-w-agg]");
+      const nome = clean(riga?.querySelector?.(".dm-w-agg-testo b")?.textContent);
+      img.outerHTML = segnoDellAggiornamento("", nome);
+    },
+    true,
+  );
   doc.addEventListener("change", onChange);
   doc.addEventListener("input", onInput);
   doc.addEventListener("keydown", onKeydown);

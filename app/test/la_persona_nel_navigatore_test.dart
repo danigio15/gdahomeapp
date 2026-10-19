@@ -11,8 +11,8 @@ void main() {
       '',
       'non è json',
       '[]',
-      '{"nome":"Giovanni"}',
-      '{"nome":"Giovanni","lat":"40.8","lon":14.2}',
+      '{"nome":"Persona 1"}',
+      '{"nome":"Persona 1","lat":"40.8","lon":14.2}',
     ]) {
       expect(await portamiDallaPersona(detto), isFalse, reason: detto);
     }

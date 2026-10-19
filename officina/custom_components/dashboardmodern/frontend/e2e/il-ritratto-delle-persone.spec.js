@@ -31,11 +31,11 @@ const seme = {
 
 const persone = [
   /* La faccia salvata prima della v7: `capelli: "barba"` deve tradursi in
-   * lisci + barba corta, senza che Giovanni cambi faccia. */
+   * lisci + barba corta, senza che Persona 1 cambi faccia. */
   {
     id: "p1",
-    name: "Giovanni",
-    entity: "person.giovanni",
+    name: "Persona 1",
+    entity: "person.persona_1",
     avatar: {
       color: "#3a6fb0",
       face: { persona: "uomo", capelli: "barba", carnagione: "media", vestito: "ufficio" },
@@ -44,8 +44,8 @@ const persone = [
   /* Una faccia v7 piena: ricci tinti, occhiali, collana, busto ricolorato. */
   {
     id: "p2",
-    name: "Giulia",
-    entity: "person.giulia",
+    name: "Persona 10",
+    entity: "person.persona_10",
     avatar: {
       color: "#c94a3e",
       face: {
@@ -110,7 +110,7 @@ test("i ritratti arrivano in Home, e il costruttore ha le file della v7", async 
   });
   expect(dipinta).toBeGreaterThan(0.15);
 
-  /* Il costruttore: le file della v7, nell'ordine del design. Giovanni ha la
+  /* Il costruttore: le file della v7, nell'ordine del design. Persona 1 ha la
    * barba (tradotta in corta) e l'ufficio (ricolorabile), quindi si vedono
    * anche «Colore barba» e «Colore vestito». */
   await page.evaluate(() => window.apriConfigEntita());

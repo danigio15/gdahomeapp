@@ -489,19 +489,15 @@ function prezzoMarkup(prezzo) {
   if (prezzo.fonte === "fascia") {
     const fascia = prezzo.fascia;
     return `<div class="dm-rn-prezzo-box" data-tono="ok"><div><b>${esc(formatNumber(prezzo.prezzo, 2))} €/kWh</b><small>${esc(
-      t(
-        `Dalla fascia ${fascia} in Impostazioni → Energia`,
-        `From band ${fascia} in Settings → Energy`,
-      ),
+      t(`Dalla fascia ${fascia}`, `From band ${fascia}`),
     )}</small></div><span aria-hidden="true">✓</span></div>`;
   }
   if (prezzo.fonte === "unica")
     return `<div class="dm-rn-prezzo-box" data-tono="unica"><div><b>${esc(formatNumber(prezzo.prezzo, 2))} €/kWh</b><small>${esc(
       t("Fasce non impostate: uso la tariffa unica", "No time bands set: using the single rate"),
     )}</small></div><span aria-hidden="true">!</span></div>`;
-  return `<div class="dm-rn-prezzo-box" data-tono="manca"><div><b>${esc(t("Prezzo non impostato", "Price not set"))}</b><small>${esc(
-    t("Inseriscilo per vedere quanto spendi", "Enter it to see what you spend"),
-  )}</small></div><button type="button" class="dm-rn-imposta" data-rn="imposta">${esc(t("Imposta", "Set"))}</button></div>`;
+  /* Senza prezzo si dice e basta: la carta non rimanda al Config. */
+  return `<div class="dm-rn-prezzo-box" data-tono="manca"><div><b>${esc(t("Prezzo non impostato", "Price not set"))}</b></div><span aria-hidden="true">!</span></div>`;
 }
 
 function riassunto(imp, prezzo) {
@@ -720,7 +716,6 @@ function alTocco(evento) {
     salva((imp) => ({ giorni: imp.giorni.map((acceso, j) => (j === i ? !acceso : acceso)) }));
     return;
   }
-  if (bersaglio?.closest?.('[data-rn="imposta"]')) apriLeImpostazioniDellEnergia();
 }
 
 function alCambio(evento) {
@@ -739,23 +734,6 @@ function alCursore(evento) {
   if (evento.target?.dataset?.rn !== "sotto") return;
   const carta = doc.getElementById("dm-rn");
   if (carta) pitturaIlCursore(carta, Number(evento.target.value));
-}
-
-/* «Imposta»: la configurazione, sulla scheda dell'energia, alla linguetta
- * delle impostazioni — dove stanno la tariffa unica e le fasce. */
-function apriLeImpostazioniDellEnergia() {
-  try {
-    root.apriConfigEntita?.();
-  } catch (_errore) {}
-  root.setTimeout?.(() => {
-    try {
-      root.editorSwitch?.("sez1");
-    } catch (_errore) {}
-    root.setTimeout?.(
-      () => doc?.querySelector?.('.ed-inner-tab[data-energy-tab="settings"]')?.click?.(),
-      160,
-    );
-  }, 160);
 }
 
 /* ── l'aggancio ──────────────────────────────────────────────────────────── */
@@ -857,7 +835,7 @@ function stile() {
   box-shadow:0 2px 6px rgba(0,0,0,.25);transition:transform .25s cubic-bezier(.34,1.4,.5,1)}
 .dm-rn-int[aria-checked="true"]{background:linear-gradient(90deg,var(--rn-acc),color-mix(in srgb,var(--rn-acc) 70%,#a5b4fc))}
 .dm-rn-int[aria-checked="true"] span{transform:translateX(22px)}
-.dm-rn-int:focus-visible,.dm-rn-seg-btn:focus-visible,.dm-rn-giorno:focus-visible,.dm-rn-imposta:focus-visible{outline:2px solid var(--rn-acc);outline-offset:2px}
+.dm-rn-int:focus-visible,.dm-rn-seg-btn:focus-visible,.dm-rn-giorno:focus-visible{outline:2px solid var(--rn-acc);outline-offset:2px}
 .dm-rn-ore{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin-top:16px}
 .dm-rn-ora{display:grid;gap:4px;padding:11px 14px;border-radius:16px;background:var(--rn-box);
   box-shadow:inset 0 0 0 1px var(--rn-line);min-width:0;cursor:pointer}
@@ -914,8 +892,6 @@ function stile() {
 .dm-rn-prezzo-box b{font-size:14px;font-weight:800}
 .dm-rn-prezzo-box small{font-size:11.5px;font-weight:600;color:var(--rn-dim)}
 .dm-rn-prezzo-box>span{font-weight:900;color:var(--rn-dim)}
-.dm-rn-imposta{flex:0 0 auto;border:0;border-radius:9px;padding:8px 13px;font:800 12.5px/1 inherit;cursor:pointer;
-  background:var(--rn-acc);color:var(--rn-acc-text);min-height:34px}
 .dm-rn-stato{display:flex;align-items:flex-start;gap:12px;margin-top:12px;padding:13px 15px;border-radius:15px;
   background:color-mix(in srgb,var(--rn-tinta,var(--rn-dim)) 10%,var(--rn-box));
   box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--rn-tinta,var(--rn-dim)) 40%,transparent)}

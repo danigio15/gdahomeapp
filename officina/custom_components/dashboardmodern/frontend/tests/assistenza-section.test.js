@@ -149,7 +149,7 @@ test("ogni conversazione della coda si può buttare via", () => {
    * risolte e di righe aperte per sbaglio, finché quella vera non si trova
    * più. Il cestino deve stare su ogni riga, non solo sulla prima. */
   const coda = codaMarkup([
-    { id: `casa_${"a".repeat(32)}`, nome: "Giovanni", ultimo: "test" },
+    { id: `casa_${"a".repeat(32)}`, nome: "Persona 1", ultimo: "test" },
     { id: `casa_${"b".repeat(32)}`, ultimo: "un'altra" },
   ]);
   const cestini = coda.match(/data-dm-chat-butta="casa_/g) || [];

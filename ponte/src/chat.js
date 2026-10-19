@@ -585,7 +585,7 @@ export class Chat {
       /* Il nome nell'intestazione solo se ci sta.
        *
        * Un'intestazione HTTP porta un byte per carattere, e chi si fa chiamare
-       * «Giovanni 🙂» ne ha uno che non ci entra: `fetch` non ci prova nemmeno,
+       * «Persona 1 🙂» ne ha uno che non ci entra: `fetch` non ci prova nemmeno,
        * solleva, e il ponte lo raccontava come «Centralino non
        * raggiungibile». Un emoji nel nome spegneva la chat, tutta, per sempre.
        *

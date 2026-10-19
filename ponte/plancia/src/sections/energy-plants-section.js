@@ -320,8 +320,8 @@ function schedule() {
   state.frame = root.requestAnimationFrame?.(repaint) || root.setTimeout?.(repaint, 0) || 0;
 }
 
-/* La Home chiede un impianto: la tessera di «casa Donato» apre la sezione su
- * casa Donato (#286, dal campo). E' lo stesso gesto della linguetta, fatto da
+/* La Home chiede un impianto: la tessera di «casa Persona 5» apre la sezione su
+ * casa Persona 5 (#286, dal campo). E' lo stesso gesto della linguetta, fatto da
  * fuori: lo si ascolta invece di farsi importare, perche' la Home e' gia'
  * importata da qui e un anello non si chiude. */
 function ascoltaLaHome() {

@@ -162,8 +162,6 @@ export default Object.freeze({
     "De rit is niet opgeslagen: controleer bestemming, dag en tijd.",
   "Up to 8 more: a socket, the heat pump, the car charging, today's kWh":
     "Tot 8 extra: een stopcontact, de warmtepomp, de auto die laadt, de kWh van vandaag",
-  "No sensor linked: pick one in Settings › Loads or Appliances.":
-    "Geen sensor gekoppeld: kies er een in Instellingen › Verbruikers of Apparaten.",
   "Reading consumption from Home Assistant…": "Verbruik wordt gelezen uit Home Assistant…",
   " — configured": " — geconfigureerd",
   "${alzate} shutters up": "${alzate} rolluiken omhoog",
@@ -244,8 +242,6 @@ export default Object.freeze({
   "Load to watch": "Te bewaken belasting",
   Lock: "Vergrendelen",
   "Looking…": "Aan het kijken…",
-  "More power is going out than coming in: usually a sensor's direction is reversed, and it is changed in the Energy tab.":
-    "Er gaat meer vermogen uit dan erin komt: meestal staat de richting van een sensor omgekeerd, en die wijzig je op het tabblad Energie.",
   Motorcycle: "Motorfiets",
   "My sections": "Mijn secties",
   "Name the unit: it is what the card shows.": "Geef de unit een naam: dat staat op de kaart.",
@@ -653,8 +649,6 @@ export default Object.freeze({
   "Add entity": "Entiteit toevoegen",
   "Add from an integration": "Toevoegen vanuit een integratie",
   "Add intercom": "Deurintercom toevoegen",
-  "Add it from the Energy tab in the settings: with the NUT status alone this page already knows whether there is power.":
-    "Voeg hem toe via het tabblad Energie in de instellingen: alleen al met de NUT-status weet deze pagina of er stroom is.",
   "Add light": "Lamp toevoegen",
   "Add list": "Lijst toevoegen",
   "Add load": "Verbruiker toevoegen",
@@ -678,29 +672,13 @@ export default Object.freeze({
   "Add sensors to the Alerts Panel with a clean name, or create a":
     "Voeg sensoren met een duidelijke naam toe aan het meldingenpaneel, of maak een",
   "Add socket": "Stopcontact toevoegen",
-  "Add sockets from the Sockets tab in the settings: the living-room TV, the Firestick, the modem.":
-    "Voeg stopcontacten toe via het tabblad Stopcontacten in de instellingen: de tv in de woonkamer, de Firestick, het modem.",
   "Add solar plant": "Zonne-installatie toevoegen",
   "Add something to do…": "Voeg iets toe om te doen…",
   "Add temperature": "Temperatuur toevoegen",
-  "Add the irrigation zones from the editor to see the lawn.":
-    "Voeg de bewateringszones toe in de editor om het gazon te zien.",
-  "Add the materials from the Waste tab in the settings: for each one the sensor or calendar that says when the collection comes.":
-    "Voeg de materialen toe via het tabblad Afval in de instellingen: voor elk de sensor of kalender die zegt wanneer de ophaling komt.",
-  "Add the pool entities from the editor to see the basin.":
-    "Voeg de zwembadentiteiten toe in de editor om het bad te zien.",
-  "Add the printer from the Printers tab in the settings: the entity that says whether it is ready is enough, the cartridges are found on their own.":
-    "Voeg de printer toe via het tabblad Printers in de instellingen: de entiteit die zegt of hij klaar is volstaat, de cartridges worden vanzelf gevonden.",
-  "Add the units from the dashboard configuration.":
-    "Voeg de units toe via de dashboardinstellingen.",
-  "Add them from the Alerts tab in the settings: earthquakes, civil protection warnings, lightning, pollen, thermal comfort and flights overhead, each from the sensor of its integration.":
-    "Voeg ze toe via het tabblad Waarschuwingen in de instellingen: aardbevingen, waarschuwingen van de civiele bescherming, bliksem, pollen, thermisch comfort en vliegtuigen boven het huis, elk uit de sensor van zijn integratie.",
   "Add to ${nomeDellaLista(list)}": "Toevoegen aan ${nomeDellaLista(list)}",
   "Add water heater": "Boiler toevoegen",
   "Add your appliances (washing machine, dishwasher, oven, microwave…). You can link":
     "Voeg je apparaten toe (wasmachine, vaatwasser, oven, magnetron…). Je kunt",
-  "Add your cameras from Configuration: they will show up here with a live preview.":
-    "Voeg je camera's toe via Configuratie: ze verschijnen hier met een livebeeld.",
   "Added ${trovate.length} lists": "${trovate.length} lijsten toegevoegd",
   "Added ${trovati.length} calendars": "${trovati.length} agenda's toegevoegd",
   "Administrator tools ·": "Beheerdershulpmiddelen ·",
@@ -1472,8 +1450,6 @@ export default Object.freeze({
   February: "Februari",
   "Feed a portion": "Een portie geven",
   "Files in /local (config/www)": "Bestanden in /local (config/www)",
-  "Fill in the car's fields — fuel, range, doors, engine — from the Car tab in the settings.":
-    "Vul de velden van de auto — brandstof, actieradius, deuren, motor — in via het tabblad Auto in de instellingen.",
   "Fill it in and the card shows the window open when the contact says so.":
     "Vul hem in en de kaart toont het raam als open zodra het contact dat meldt.",
   "Filled ${count} fields: ${list}.": "${count} velden ingevuld: ${list}.",
@@ -1664,12 +1640,6 @@ export default Object.freeze({
   Hob: "Kookplaat",
   Home: "Thuis",
   "Home (fallback)": "Thuis (terugval)",
-  "Home Assistant declares a battery itself — a sensor in percent — and it appears here with nothing to configure. If yours is not found, add it from the Batteries tab in the settings.":
-    "Home Assistant meldt een batterij zelf — een sensor in procenten — en die verschijnt hier zonder iets in te stellen. Wordt de jouwe niet gevonden, voeg hem toe via het tabblad Batterijen in de instellingen.",
-  "Home Assistant declares a door or window contact itself and it appears here with nothing to configure. If yours is not found, add it from the Openings tab in the settings.":
-    "Home Assistant meldt een deur- of raamcontact zelf, en het verschijnt hier zonder dat je iets instelt. Wordt het jouwe niet gevonden, voeg het dan toe via het tabblad Openingen in de instellingen.",
-  "Home Assistant declares a motion or presence sensor itself and it appears here with nothing to configure. If yours is not found, add it from the Presence tab in the settings.":
-    "Home Assistant meldt een bewegings- of aanwezigheidssensor zelf aan en die verschijnt hier zonder iets in te stellen. Wordt de jouwe niet gevonden, voeg hem dan toe op het tabblad Aanwezigheid in de instellingen.",
   "Home Assistant declares no machine and no network piece.":
     "Home Assistant meldt geen enkele machine en geen netwerkonderdeel.",
   "Home Assistant declares the air sensors itself — particulates, CO₂, monoxide, volatile compounds — and the tile appears on its own. Here you correct that: drop a sensor that should not count, add one that is not found, and move the boundaries between good, fair, poor and bad.":
@@ -2116,27 +2086,19 @@ export default Object.freeze({
   "No alerts configured": "Geen melding ingesteld",
   "No answer within eight seconds.": "Geen antwoord binnen acht seconden.",
   "No appliance configured": "Geen apparaat ingesteld",
-  "No appliance configured. Use the Settings menu to add one.":
-    "Geen apparaat ingesteld. Voeg er een toe via het menu Instellingen.",
   "No appliance has measurable consumption today.":
     "Vandaag heeft geen enkel apparaat een meetbaar verbruik.",
-  "No appliance in this load yet. Add them from the Loads editor.":
-    "Nog geen apparaat in deze verbruiker. Voeg ze toe in de verbruikerseditor.",
   "No appliance is running right now.": "Er draait nu geen enkel apparaat.",
   "No appliance matches the selected filters.": "Geen apparaat voldoet aan de gekozen filters.",
   "No appliance yet.": "Nog geen apparaten.",
   "No battery found": "Geen batterij gevonden",
   "No boiler configured": "Geen ketel ingesteld",
-  "No boiler configured: add one from the Thermal management tab in settings.":
-    "Geen ketel ingesteld: voeg er een toe via het tabblad Warmtebeheer in de instellingen.",
   "No calendar configured": "Geen agenda ingesteld",
   "No calendar selected": "Geen agenda gekozen",
   "No camera configured": "Geen camera ingesteld",
   "No car field could be recognised from this device.":
     "Op dit apparaat is geen enkel autoveld herkend.",
   "No cartridge found": "Geen cartridge gevonden",
-  "No cartridge found: if your printer reports them, write them in the Printers tab.":
-    "Geen cartridge gevonden: als je printer ze meldt, vul ze dan in op het tabblad Printers.",
   "No charger among the integrations with devices: only evcc's are here, and evcc connects from the other button.":
     "Geen laadpaal tussen de integraties met apparaten: hier staan alleen die van evcc, en evcc koppel je met de andere knop.",
   "No charger field could be recognised from this device.":
@@ -2147,8 +2109,6 @@ export default Object.freeze({
   "No configuration contains this word.": "Geen instelling bevat dit woord.",
   "No configured items.": "Geen ingestelde items.",
   "No configured lights.": "Geen lampen ingesteld.",
-  "No configured lights. Add them from the editor's Lights tab: both light.* and switch.* entities are accepted.":
-    "Geen lampen ingesteld. Voeg ze toe op het tabblad Lampen van de editor: zowel light.*- als switch.*-entiteiten worden geaccepteerd.",
   "No configured loads": "Geen ingestelde verbruikers",
   "No contact found": "Geen contact gevonden",
   "No custom button": "Geen eigen knop",
@@ -2172,8 +2132,6 @@ export default Object.freeze({
     "Geen entiteit toegevoegd — typ of kies er een en druk op ➕",
   "No entity bound: the circle stays empty in every view.":
     "Geen entiteit gekoppeld: de cirkel blijft in elke weergave leeg.",
-  "No entity linked yet: open the settings and pick the device.":
-    "Nog geen entiteit gekoppeld: open de instellingen en kies het apparaat.",
   "No entries": "Geen regels",
   "No extra command: the card carries the player's own buttons and nothing else.":
     "Geen extra bediening: de tegel toont alleen de knoppen van de speler.",
@@ -2241,15 +2199,11 @@ export default Object.freeze({
     "Uit dit apparaat is geen robot te herkennen: er is een vacuum.*- of lawn_mower.*-entiteit nodig.",
   "No robot configured": "Geen robot geconfigureerd",
   "No room": "Geen kamer",
-  "No room has a humidity probe: add one from the Temperature tab.":
-    "Geen enkele kamer heeft een vochtigheidssensor: voeg er een toe via het tabblad Temperatuur.",
   "No room has a temperature sensor configured yet.":
     "Nog geen kamer heeft een temperatuursensor ingesteld.",
   "No room with a sensor — add one in the editor's Temperature tab":
     "Geen kamer met een sensor — voeg er een toe op het tabblad Temperatuur van de editor",
   "No room. Add one below.": "Geen kamers. Voeg er hieronder een toe.",
-  "No rooms configured yet. Add them from the editor's Rooms tab: every section can then assign its entities to one.":
-    "Nog geen kamers. Voeg ze toe op het tabblad Kamers in de editor: daarna kan elke sectie er entiteiten aan toewijzen.",
   "No sensor recognized": "Geen sensor herkend",
   "No shutter or curtain configured": "Geen rolluik of gordijn ingesteld",
   "No signal": "Geen signaal",
@@ -2261,8 +2215,6 @@ export default Object.freeze({
   "No todo.* list found": "Geen todo.*-lijst gevonden",
   "No warning in force": "Geen waarschuwing van kracht",
   "No water heater configured": "Geen boiler ingesteld",
-  "No water heater configured: add one from the Solar tab in settings.":
-    "Geen boiler ingesteld: voeg er een toe op het tabblad Zon in de instellingen.",
   "No window sits in a room that has a hygrometer: pick the room in the window's row, below.":
     "Geen enkel raam staat in een kamer met een hygrometer: kies de kamer hieronder, in de regel van het raam.",
   "No zone configured": "Geen zone ingesteld",
@@ -2289,8 +2241,6 @@ export default Object.freeze({
   "Nothing came in today.": "Vandaag is er niets binnengekomen.",
   "Nothing closed yet.": "Nog niets gesloten.",
   "Nothing for a pet": "Niets voor een huisdier",
-  "Nothing here yet. Entities are assigned from each section's own tab.":
-    "Hier is nog niets. Entiteiten wijs je toe op het tabblad van elke sectie.",
   "Nothing new": "Niets nieuws",
   "Nothing of this kind here.": "Hier niets van dit soort.",
   "Nothing playing": "Niets speelt",
@@ -2724,7 +2674,6 @@ export default Object.freeze({
   "all up": "alles draait",
   Servers: "Servermachines",
   connected: "verbonden",
-  "Choose what to highlight": "Kies wat je uitlicht",
   "to work on": "af te werken",
   "In today:": "Vandaag binnen:",
   "Nothing came in today": "Vandaag kwam er niets binnen",
@@ -2801,7 +2750,6 @@ export default Object.freeze({
   "Open all": "Alles openen",
   "Open appliances running": "Actieve apparaten openen",
   "Open camera": "Camera openen",
-  "Open configuration": "Configuratie openen",
   "Open for": "Open sinds",
   "Open gate": "Hek openen",
   "Open in map": "Open in kaart",
@@ -2927,8 +2875,6 @@ export default Object.freeze({
     "Kies een begin vóór het einde, en niet in de toekomst.",
   "Pick an image entity": "Kies een afbeeldings-entiteit",
   "Pick from Appliances": "Kies uit Apparaten",
-  "Pick the calendars from the Widgets tab in the settings: the ones you already have in Home Assistant appear on their own with «Detect».":
-    "Kies de agenda's op het tabblad Widgets in de instellingen: die je al in Home Assistant hebt verschijnen vanzelf met «Detecteren».",
   "Pick the device": "Kies het apparaat",
   "Pick the evcc loadpoint: the charge mode, the charge limit, the session and the solar share come along. The charger connects from the other button, and the fields add up.":
     "Kies het evcc-loadpoint: de laadmodus, de laadlimiet, de sessie en het zonaandeel komen mee. De laadpaal koppel je met de andere knop, en de velden tellen op.",
@@ -3678,8 +3624,6 @@ export default Object.freeze({
     "Het pictogram is ook voor de ingebouwde acties aanpasbaar en verschijnt op Thuis.",
   "The integrations that bring a charger: go-e, Easee, KEBA, Wallbox, openWB, Zaptec, Tesla. Pick the device and the charging fields fill in by themselves — power, energy, voltage, temperature, the cable.":
     "De integraties die een laadpaal meebrengen: go-e, Easee, KEBA, Wallbox, openWB, Zaptec, Tesla. Kies het apparaat en de laadvelden vullen zichzelf in — vermogen, energie, spanning, temperatuur, de kabel.",
-  "The intercom and the mailbox are declared in the Intercom and mail tab of the settings: the button that opens, the doorbell, and the two mailbox sensors.":
-    "De deurintercom en de brievenbus geef je op in het tabblad «Deurintercom en post» van de instellingen: de knop die opent, de deurbel en de twee brievenbussensoren.",
   "The inverted direction": "De omgekeerde richting",
   "The latest reply": "Het laatste antwoord",
   "The lawn shows the first ${MAX_LAWN_ZONES} zones; all ${config.zones.length} are listed below.":
@@ -3745,8 +3689,6 @@ export default Object.freeze({
   "The push comes from Home Assistant, not the dashboard: it runs on the server, so it arrives even when this page is closed. This automation is already written with your entities — paste it under Settings → Automations → ⋮ → Edit in YAML, and change the service to your phone's.":
     "De pushmelding komt van Home Assistant, niet van het dashboard: die draait op de server, dus hij komt ook aan als deze pagina dicht is. Deze automatisering is al geschreven met jouw entiteiten — plak hem onder Instellingen → Automatiseringen → ⋮ → Bewerken in YAML, en verander de dienst in die van je telefoon.",
   "The quick actions": "De snelle acties",
-  "The radar address is not a tile address ({z}/{x}/{y}): fix it under Settings → Weather, or pick a service from the list.":
-    "Het radaradres is geen tegeladres ({z}/{x}/{y}): corrigeer het onder Instellingen → Weer, of kies een dienst uit de lijst.",
   "The radar is not reporting.": "De radar meldt zich niet.",
   "The radiators": "De radiatoren",
   "The reading on the cover": "De meting op de voorkant",
@@ -3800,8 +3742,6 @@ export default Object.freeze({
   "The state": "De staat",
   "The station sensor, when the integration exposes one: it gives the name written next to the train.":
     "De stationssensor, als de integratie er een aanbiedt: die levert de naam naast de trein.",
-  "The target is read-only: connect evcc in the Car tab to change it.":
-    "Het doel is alleen-lezen: koppel evcc op het tabblad Auto om het te wijzigen.",
   "The temperatures": "De temperaturen",
   "The text of the report": "De tekst van de melding",
   "The theme and the bar": "Het thema en de balk",
@@ -3878,15 +3818,11 @@ export default Object.freeze({
     "Dit moet een cumulatieve kWh-meter zijn met state_class total of total_increasing. Gebruik hier niet de maandsensor: dit veld is nodig om de vorige maanden te reconstrueren.",
   "This one wins: day, month, year, history and previous months are all derived from here through Recorder. While it is set, the period fields are not read.":
     "Deze wint: dag, maand, jaar, geschiedenis en vorige maanden worden hier allemaal via Recorder uit afgeleid. Zolang hij is ingevuld, worden de periodevelden niet gelezen.",
-  "This reading has no entity yet: map it in the configuration to see its history.":
-    "Deze meting heeft nog geen entiteit: koppel die in de configuratie om de geschiedenis te zien.",
   "This sensor is also configured in": "Deze sensor is ook ingesteld in",
   "This socket is configured as shown but not controllable: this window reports it, it never switches it.":
     "Dit stopcontact is ingesteld als zichtbaar maar niet bedienbaar: dit venster meldt het, het schakelt het nooit.",
   "This tab holds four of them and they are all taken: remove one to make room.":
     "Dit tabblad heeft er vier en ze zijn allemaal bezet: haal er een weg om ruimte te maken.",
-  "This target is a read-only sensor: to change it from here connect evcc, or a number/select entity, in the Car tab.":
-    "Dit doel is een alleen-lezen sensor: om het van hieruit te wijzigen koppel je evcc, of een number/select-entiteit, op het tabblad Auto.",
   "This week": "Deze week",
   "Three gestures, no more: ＋ New vehicle opens an empty card, the ✏️ opens a vehicle you already saved, the switch turns it on or off in the EV section. Below you say whether it is a car or a motorcycle, and you fill in name, brand, model, entities and both photos — there is a single save: it says whether it is creating or editing, and the one at the bottom of the section carries the same words. Which vehicle you look at is picked from the section's own tabs, not from here.":
     "Drie handelingen, meer niet: ＋ Nieuw voertuig opent een lege kaart, de ✏️ opent een al opgeslagen voertuig, de schakelaar zet het aan of uit in de EV-sectie. Daaronder zeg je of het een auto of een motorfiets is, en vul je naam, merk, model, entiteiten en beide foto's in — er is één opslaan: het zegt of het aanmaakt of wijzigt, en die onderaan de sectie draagt dezelfde woorden. Welk voertuig je bekijkt kies je in de tabbladen van de sectie, niet hier.",
@@ -4227,8 +4163,6 @@ export default Object.freeze({
   "You have nothing in progress.": "Je hebt niets onderhanden.",
   "You need a": "Je hebt een",
   "You need a hand configuring or understanding": "Je hebt hulp nodig bij instellen of begrijpen",
-  "You picked «An address of mine» but there is no address: write it under Settings → Weather, or pick a service from the list.":
-    "Je koos «Een eigen adres» maar er is geen adres: schrijf het onder Instellingen → Weer, of kies een dienst uit de lijst.",
   "Your alarm areas": "Jouw alarmgebieden",
   "Your name (optional)": "Hoe je heet (optioneel)",
   "Your own entities": "Jouw entiteiten",
@@ -4790,8 +4724,6 @@ export default Object.freeze({
   "Home Assistant refused": "Home Assistant heeft geweigerd",
   "It is only used to say how long is left to charge: from the missing percentage and the charger's power. Left empty it counts 70 kWh, which is what the dashboard has always assumed — with a different battery the time comes out wrong in proportion.":
     "Wordt alleen gebruikt om te zeggen hoe lang het laden nog duurt: uit het ontbrekende percentage en het vermogen van de laadpaal. Leeg gelaten wordt met 70 kWh gerekend, wat het dashboard altijd al aannam — bij een andere accu komt de tijd naar verhouding verkeerd uit.",
-  "No session meter: connect the charger or evcc in the Car tab, or write the entity into “Session energy”.":
-    "Geen sessiemeter: verbind de laadpaal of evcc in het tabblad Auto, of schrijf de entiteit in “Sessie-energie”.",
   Sunset: "Zonsondergang",
   "TARGET REACHED": "DOEL BEREIKT",
   "The session meter is not answering.": "De sessiemeter reageert niet.",
@@ -4804,8 +4736,6 @@ export default Object.freeze({
   empty: "leeg",
   "not responding": "reageert niet",
   "nothing on": "niets aan",
-  "The base map is not answering. The rain is there: you can change map under ⚙️ → Weather and radar.":
-    "De achtergrondkaart antwoordt niet. De regen is er wel: je kunt de kaart wijzigen bij ⚙️ → Weer en radar.",
   "ARMED ·": "INGESCHAKELD ·",
   "Your own entities in the bar": "Je eigen entiteiten in de balk",
   "Besides the ones the house announces by itself, you can add your own: the water in the tank, the days to the next service, how long until a delivery. They sit next to what is on, before the measurements, and each one can show up only when it matters — for instance only while holiday mode is on.":
@@ -4929,8 +4859,6 @@ export default Object.freeze({
   "Configure a camera above first: the privacy is its own.":
     "Stel eerst hierboven een camera in: de privacy hoort bij de camera.",
   "Private cameras": "Privécamera’s",
-  "The soil sensor is right above. Add the irrigation zones from the editor to see the lawn too.":
-    "De bodemsensor staat er vlak boven. Voeg in de editor de besproeiingszones toe om ook het gazon te zien.",
   "Contact entity": "Entiteit van het contact",
   "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back.":
     "Ze komen hier één keer als rijen te staan: daarna zijn ze van jou — hernoem ze, geef ze een tekening, en wat je verwijdert komt niet terug.",
@@ -5082,8 +5010,6 @@ export default Object.freeze({
   "Save meter": "Meter opslaan",
   "Flowing for ${durata}": "Stroomt al ${durata}",
   "Flowing for over a day": "Stroomt al meer dan een dag",
-  "A meter shows up here once you add it in the Water and gas tab of the settings: the water and gas meters, the water pressure and flow, the softener salt.":
-    "Een meter verschijnt hier zodra je hem toevoegt in het tabblad Water en gas van de instellingen: de water- en gasmeters, de druk en doorstroming van het water, het zout van de ontharder.",
   "Not flowing": "Stroomt niet",
   "🪴 ${quante} plants added": "🪴 ${quante} planten toegevoegd",
   "${quante} doing well": "${quante} doen het goed",
@@ -5092,8 +5018,6 @@ export default Object.freeze({
   "1 doing well": "1 doet het goed",
   "1 needs water": "1 heeft water nodig",
   "1 waiting for rain": "1 wacht op regen",
-  "A plant shows up here once you add its sensor in the Plant care tab of the settings: the soil moisture, and its temperature if there is one.":
-    "Een plant verschijnt hier zodra je de sensor toevoegt in het tabblad Planten van de instellingen: de bodemvochtigheid, en de temperatuur als die er is.",
   "Add a plant": "Plant toevoegen",
   "All doing well": "Allemaal in orde",
   "Below this moisture the soil is dry and the plant joins those that need water.":
@@ -5315,8 +5239,6 @@ export default Object.freeze({
   "Other BMS": "Ander BMS",
   "Pack 1": "Pakket 1",
   "Pack saved": "Pakket opgeslagen",
-  "Packs show up here once you add them in the Batteries tab under Energy in the settings: state of charge, voltages, cells.":
-    "Pakketten verschijnen hier zodra je ze toevoegt in het tabblad Batterijen onder Energie in de instellingen: laadtoestand, spanningen, cellen.",
   "Current sign": "Teken van de stroom",
   "Positive when charging (JK, JBD, Daly)": "Positief bij laden (JK, JBD, Daly)",
   "Negative when charging": "Negatief bij laden",
@@ -5445,8 +5367,6 @@ export default Object.freeze({
   "Lower the power": "Vermogen verlagen",
   Modulating: "Modulerend",
   "No stove configured": "Geen kachel ingesteld",
-  "No stove configured: add one from the Thermal management tab in settings.":
-    "Geen kachel ingesteld: voeg er een toe via het tabblad Warmtebeheer in de instellingen.",
   "On its own it covers nearly everything: on and off, the target, the room temperature and, if it has them, the fan modes.":
     "Op zich dekt hij bijna alles: aan en uit, de streefwaarde, de kamertemperatuur en, als hij die heeft, de ventilatorstanden.",
   "Pellet level, second hopper": "Pelletniveau, tweede voorraadbak",
@@ -5478,8 +5398,6 @@ export default Object.freeze({
   "Radiators out of season": "Radiatoren buiten het seizoen",
   "They show: ${periodo}. Switched on, they show anyway.":
     "Zichtbaar: ${periodo}. Aangezet verschijnen ze toch.",
-  "Each one has its months in the dashboard configuration. Switched on, they show anyway.":
-    "Elk apparaat heeft zijn maanden in de dashboardconfiguratie. Aangezet verschijnen ze toch.",
   "Show them anyway": "Toch tonen",
   "🐠 The aquarium's entities": "🐠 De entiteiten van het aquarium",
   "🦎 The terrarium's entities": "🦎 De entiteiten van het terrarium",
@@ -5500,10 +5418,6 @@ export default Object.freeze({
   "Humidity too low": "Luchtvochtigheid te laag",
   "Last cleaning": "Laatste schoonmaak",
   Mister: "Vernevelaar",
-  "No entity yet: open the settings and add the aquarium's temperature, pH, level, lights and filter.":
-    "Nog geen entiteit: open de instellingen en voeg de temperatuur, pH, het niveau, de lampen en het filter van het aquarium toe.",
-  "No entity yet: open the settings and add the terrarium's temperature, humidity and lamps.":
-    "Nog geen entiteit: open de instellingen en voeg de temperatuur, luchtvochtigheid en lampen van het terrarium toe.",
   "Not recorded yet: tap “Done today” on the day you clean it, and from then on the card counts the days.":
     "Nog niet vastgelegd: tik op ‘Vandaag gedaan’ op de dag dat je het schoonmaakt, en vanaf dan telt de kaart de dagen.",
   "One row per entity: temperature and pH with their ideal range, the water level, the lights, the filter and the heater. Empty ranges use the defaults: 24–27 °C and pH 6.5–7.5.":
@@ -6076,7 +5990,6 @@ export default Object.freeze({
   "${probabile} chance": "${probabile} kans",
   "a camera or image entity you already have": "een camera- of image-entiteit die je al hebt",
   "about ${quanta} in the next 24 hours": "ongeveer ${quanta} in de komende 24 uur",
-  "Add its sensors under ⚙️ Config › Weather: your home's readings show up here, with the last 24 hours. Without them, the page uses the weather service only.": "Voeg de sensoren toe onder ⚙️ Config › Weer: hier verschijnen de metingen van je huis, met de laatste 24 uur. Zonder sensoren gebruikt de pagina alleen de weerdienst.",
   "All optional, one per type. Temperature, humidity, feels-like and wind are the same fields as the Home header; rain and rate are the ones Irrigation already uses. They are chosen once and apply everywhere.": "Allemaal optioneel, één per type. Temperatuur, luchtvochtigheid, gevoelstemperatuur en wind zijn dezelfde velden als in de kop van Home; regen en intensiteit zijn die de Beregening al gebruikt. Je kiest ze één keer en ze gelden overal.",
   at: "om",
   "at most ${probabile} chance": "hooguit ${probabile} kans",
@@ -6084,7 +5997,6 @@ export default Object.freeze({
   Cloudy: "Bewolkt",
   "conditions, feels like, low and high": "omstandigheden, gevoelstemperatuur, laagste en hoogste",
   "dew point": "dauwpunt",
-  "Do you have a weather station?": "Heb je een weerstation?",
   E: "O",
   east: "oosten",
   Exceptional: "Uitzonderlijk",
@@ -6120,7 +6032,6 @@ export default Object.freeze({
   "north-west": "noordwesten",
   "Now · My station · Forecast · Radar": "Nu · Mijn station · Voorspelling · Radar",
   NW: "NW",
-  "Open Weather in Config": "Weer openen in Config",
   "Outdoor temperature": "Buitentemperatuur",
   "Partly cloudy": "Half bewolkt",
   Radar: "Radar",
@@ -6189,8 +6100,6 @@ export default Object.freeze({
   "Charging stops": "Laadstops",
   "Charging: ${minuti} in ${n} stops": "Laden: ${minuti} in ${n} stops",
   "Charging: ${minuti} in 1 stop": "Laden: ${minuti} in 1 stop",
-  "Connect": "Koppelen",
-  "Connect the car to see battery and stops": "Koppel de auto om accu en stops te zien",
   "For the stops, choose 100% at departure.": "Kies voor de stops 100% bij vertrek.",
   "For the way back you still have ${resta}: no need to charge": "Voor de terugweg heb je nog ${resta}: laden is niet nodig",
   "from ${da} to ${a} · ${min} min": "van ${da} naar ${a} · ${min} min",
@@ -6202,7 +6111,6 @@ export default Object.freeze({
   "Minimum charge on arrival": "Minimale lading bij aankomst",
   "now ${ora}": "nu ${ora}",
   "on arrival ${fine}": "bij aankomst ${fine}",
-  "Only you see this, as the home's administrator": "Alleen jij ziet dit, als beheerder van het huis",
   "Parked · not charging": "Staat stil · laadt niet",
   "Parked at home · not charging": "Staat thuis · laadt niet",
   "range": "bereik",
@@ -6211,7 +6119,6 @@ export default Object.freeze({
   "Stops picked by GdANav on the way, with free chargers.": "Stops gekozen door GdANav onderweg, met vrije laadpalen.",
   "The battery is not answering": "De accu reageert niet",
   "The chargers are not in the home yet: stops are by kilometre. On the way GdANav picks the chargers and checks they are free.": "De laadpalen zijn nog niet in huis: stops per kilometer. Onderweg kiest GdANav de laadpalen en kijkt of ze vrij zijn.",
-  "The electric car's battery and range, and the charging stops if it is not enough.": "De accu en het bereik van de elektrische auto, en de laadstops als het niet genoeg is.",
   "The minimum power to stop at": "Het minimale vermogen om te stoppen",
   "The stops come with the route": "De stops komen met de route",
   "the trip": "de rit",
@@ -6265,11 +6172,9 @@ export default Object.freeze({
   "Charging · until ${fine}": "Aan het laden · tot ${fine}",
   "Charging · until ${limite}% or ${fine}": "Aan het laden · tot ${limite}% of ${fine}",
   "End of the window": "Einde van het tijdvak",
-  "Enter it to see what you spend": "Vul hem in om te zien wat je uitgeeft",
   "evcc set to ${modo}": "evcc op ${modo} gezet",
   "Fast": "Snel",
   "Finished at ${alle}": "Klaar om ${alle}",
-  "From band ${fascia} in Settings → Energy": "Uit tijdvak ${fascia} in Instellingen → Energie",
   "Needs the add-on: the home starts it": "Heeft de add-on nodig: het huis start hem",
   "Night charging": "'s Nachts laden",
   "No days chosen": "Geen dagen gekozen",
@@ -6645,12 +6550,10 @@ export default Object.freeze({
   "Convert": "Omzetten",
   "Create and edit them in three steps": "Maak en bewerk ze in drie stappen",
   "Create the first one": "Maak de eerste",
-  "Create the first one in the config ›": "Maak de eerste in de config ›",
   "Delete «${v.nome}»?": "«${v.nome}» verwijderen?",
   "depending on the sun": "afhankelijk van de zon",
   "depending on what started it": "afhankelijk van wat hem startte",
   "does several things at once": "doet meerdere dingen tegelijk",
-  "Edit in the config ›": "Bewerken in de config ›",
   "fires the ${evento} event": "vuurt het event ${evento} af",
   "Home Assistant → Settings → Automations": "Home Assistant → Instellingen → Automatiseringen",
   "Home Assistant did not save it: ${no}": "Home Assistant heeft hem niet bewaard: ${no}",
@@ -6660,7 +6563,6 @@ export default Object.freeze({
   "Home Assistant's automations are read through the GdAHome add-on: it is not here.": "De automatiseringen van Home Assistant worden gelezen met de add-on GdAHome: die is hier niet.",
   "if something holds:": "als iets klopt:",
   "in HA as": "in HA als",
-  "in the config ›": "in de config ›",
   "It is removed from Home Assistant too, and it cannot be undone. If you only want to stop it, turn it off with the switch.": "Hij wordt ook uit Home Assistant verwijderd, en dat kan niet ongedaan. Wil je hem alleen stoppen, zet hem dan uit met de schakelaar.",
   "It is saved in": "Hij wordt bewaard in",
   "It was not changed: ${no}": "Niet gewijzigd: ${no}",
@@ -6668,7 +6570,6 @@ export default Object.freeze({
   "It was not deleted: ${no}": "Niet verwijderd: ${no}",
   "labelled": "met het label",
   "Last time:": "Laatste keer:",
-  "Manage in the config ›": "Beheren in de config ›",
   "never": "nooit",
   "No automation matches these words.": "Geen automatisering past bij deze woorden.",
   "No automations yet: start from a ready-made template.": "Nog geen automatiseringen: begin met een kant-en-klaar sjabloon.",
@@ -6826,6 +6727,8 @@ export default Object.freeze({
   "A Home device can have a photo or a drawing that fills its tile. Name and state stay on the dark veil at the bottom, in white.": "Een apparaat op Start kan een foto of tekening hebben die zijn tegel vult. Naam en status blijven wit op de donkere sluier onderaan.",
   "Choose from the drawings": "Kiezen uit de tekeningen",
   "Device images": "Afbeeldingen van apparaten",
+  "Tile images": "Afbeeldingen van tegels",
+  "Every dashboard card can have a photo or a drawing that fills it: lights, climate, blinds, cameras, rooms, quick actions. The controls stay on top, readable; on the wall the same image shows on the pages that fill themselves.": "Elke kaart van het dashboard kan een foto of tekening hebben die hem vult: lampen, klimaat, rolluiken, camera's, kamers, snelle acties. De bediening blijft er leesbaar bovenop; aan de muur verschijnt dezelfde afbeelding op de pagina's die zichzelf vullen.",
   "Drag to move": "Sleep om te verplaatsen",
   "Drawing (when there is no image)": "Tekening (als er geen afbeelding is)",
   "Fills the tile instead of the drawing": "Vult de tegel in plaats van de tekening",
@@ -6874,4 +6777,47 @@ export default Object.freeze({
   "Windy weather radar": "Windy-weerradar",
   "An intercom event (event.*), or a sensor that turns on when it rings (binary_sensor). A button or a switch work too.": "Een gebeurtenis van de intercom (event.*), of een sensor die aangaat als er wordt aangebeld (binary_sensor). Een knop of een schakelaar werken ook.",
   "cannot act as a doorbell: pick an event (event.*) or a sensor that turns on (binary_sensor.*).": "kan geen deurbel zijn: kies een gebeurtenis (event.*) of een sensor die aangaat (binary_sensor.*).",
+  "Now · My station · Forecast": "Nu · Mijn station · Voorspelling",
+  "Brake on": "Handrem aan",
+  "Cabin": "Interieur",
+  "Consumption, worked out": "Verbruik, berekend",
+  "done ${giorno} at ${ora}": "klaar ${giorno} om ${ora}",
+  "done tomorrow at ${ora}": "klaar morgen om ${ora}",
+  "Driven": "Gereden",
+  "Fully charged": "Volledig geladen",
+  "In neutral": "In neutraal",
+  "Last charge": "Laatste laadbeurt",
+  "More data": "Meer gegevens",
+  "Moving": "Rijdend",
+  "on fuel": "op brandstof",
+  "On the road": "Rijden",
+  "Parked": "Geparkeerd",
+  "Range at ${pct}%": "Bereik bij ${pct}%",
+  "rated": "WLTP",
+  "Reversing": "Achteruit",
+  "Standing by": "Paraat",
+  "Target reached": "Doel bereikt",
+  "The rest": "Overig",
+  "total": "totaal",
+  "Updated at ${detto}": "Bijgewerkt om ${detto}",
+  "Updated on ${detto}": "Bijgewerkt op ${detto}",
+  "From band ${fascia}": "Uit tijdvak ${fascia}",
+  "Home Assistant declares a battery itself — a sensor in percent — and it appears here with nothing to configure.": "Home Assistant meldt een batterij zelf — een sensor in procenten — en die verschijnt hier zonder iets in te stellen.",
+  "Home Assistant declares a door or window contact itself and it appears here with nothing to configure.": "Home Assistant meldt een deur- of raamcontact zelf, en het verschijnt hier zonder dat je iets instelt.",
+  "Home Assistant declares a motion or presence sensor itself and it appears here with nothing to configure.": "Home Assistant meldt een bewegings- of aanwezigheidssensor zelf aan en die verschijnt hier zonder iets in te stellen.",
+  "More power is going out than coming in: usually a sensor's direction is reversed.": "Er gaat meer vermogen uit dan erin komt: meestal staat de richting van een sensor omgekeerd.",
+  "No appliance in this load yet.": "Nog geen apparaat in deze verbruiker.",
+  "No room has a humidity probe.": "Geen enkele kamer heeft een vochtigheidssensor.",
+  "No rooms configured yet.": "Nog geen kamers.",
+  "No sensor linked.": "Geen sensor gekoppeld.",
+  "No session meter.": "Geen sessiemeter.",
+  "Nothing here yet.": "Hier is nog niets.",
+  "Switched on, they show anyway.": "Aangezet verschijnen ze toch.",
+  "The base map is not answering. The rain is there.": "De achtergrondkaart antwoordt niet. De regen is er wel.",
+  "The radar address is not a tile address ({z}/{x}/{y}).": "Het radaradres is geen tegeladres ({z}/{x}/{y}).",
+  "The soil sensor is right above.": "De bodemsensor staat er vlak boven.",
+  "The target is read-only.": "Het doel is alleen-lezen.",
+  "This reading has no entity yet.": "Deze meting heeft nog geen entiteit.",
+  "This target is a read-only sensor.": "Dit doel is een alleen-lezen sensor.",
+  "You picked «An address of mine» but there is no address.": "Je koos «Een eigen adres» maar er is geen adres.",
 });

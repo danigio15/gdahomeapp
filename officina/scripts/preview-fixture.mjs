@@ -645,30 +645,30 @@ const appliance = (config) => ({
  * situazioni diverse di proposito — chi e' in casa, chi sta rientrando, chi e'
  * fuori con la batteria agli sgoccioli — perche' la card cambia faccia per
  * ognuna. */
-push("person.giovanni", "home", { friendly_name: "Giovanni", id: "giovanni" });
-push("person.laura", "not_home", { friendly_name: "Laura", id: "laura" });
-push("person.marco", "Ufficio", { friendly_name: "Marco", id: "marco" });
+push("person.persona_1", "home", { friendly_name: "Persona 1", id: "persona_1" });
+push("person.persona_4", "not_home", { friendly_name: "Persona 4", id: "persona_4" });
+push("person.persona_3", "Ufficio", { friendly_name: "Persona 3", id: "persona_3" });
 
-percent("sensor.telefono_giovanni_batteria", 82, "Batteria telefono Giovanni", "battery");
-push("sensor.telefono_giovanni_stato_batteria", "Charging", {
-  friendly_name: "Stato batteria Giovanni",
+percent("sensor.telefono_persona_1_batteria", 82, "Batteria telefono Persona 1", "battery");
+push("sensor.telefono_persona_1_stato_batteria", "Charging", {
+  friendly_name: "Stato batteria Persona 1",
 });
-percent("sensor.telefono_laura_batteria", 46, "Batteria telefono Laura", "battery");
-push("sensor.telefono_laura_stato_batteria", "Not Charging", {
-  friendly_name: "Stato batteria Laura",
+percent("sensor.telefono_persona_4_batteria", 46, "Batteria telefono Persona 4", "battery");
+push("sensor.telefono_persona_4_stato_batteria", "Not Charging", {
+  friendly_name: "Stato batteria Persona 4",
 });
-push("sensor.laura_distanza", 8.4, {
-  friendly_name: "Distanza Laura",
+push("sensor.persona_4_distanza", 8.4, {
+  friendly_name: "Distanza Persona 4",
   unit_of_measurement: "km",
   device_class: "distance",
 });
-push("sensor.laura_tempo_rientro", 14, {
-  friendly_name: "Tempo di rientro Laura",
+push("sensor.persona_4_tempo_rientro", 14, {
+  friendly_name: "Tempo di rientro Persona 4",
   unit_of_measurement: "min",
 });
-percent("sensor.telefono_marco_batteria", 9, "Batteria telefono Marco", "battery");
-push("sensor.telefono_marco_stato_batteria", "Not Charging", {
-  friendly_name: "Stato batteria Marco",
+percent("sensor.telefono_persona_3_batteria", 9, "Batteria telefono Persona 3", "battery");
+push("sensor.telefono_persona_3_stato_batteria", "Not Charging", {
+  friendly_name: "Stato batteria Persona 3",
 });
 
 /* ── Aspirapolvere (1.2+) ─────────────────────────────────────────────────── */
@@ -1205,35 +1205,35 @@ export const extraStorage = {
    * ritratti sono combinazioni dei render 3D vendorizzati. */
   cd_people: [
     {
-      id: "person-giovanni",
-      name: "Giovanni",
-      entity: "person.giovanni",
-      battery: "sensor.telefono_giovanni_batteria",
-      batteryState: "sensor.telefono_giovanni_stato_batteria",
+      id: "person-persona-1",
+      name: "Persona 1",
+      entity: "person.persona_1",
+      battery: "sensor.telefono_persona_1_batteria",
+      batteryState: "sensor.telefono_persona_1_stato_batteria",
       avatar: {
         color: "#0ea5e9",
         face: { persona: "uomo", capelli: "barba", carnagione: "media", vestito: "informatico" },
       },
     },
     {
-      id: "person-laura",
-      name: "Laura",
-      entity: "person.laura",
-      battery: "sensor.telefono_laura_batteria",
-      batteryState: "sensor.telefono_laura_stato_batteria",
-      distance: "sensor.laura_distanza",
-      travel: "sensor.laura_tempo_rientro",
+      id: "person-persona-4",
+      name: "Persona 4",
+      entity: "person.persona_4",
+      battery: "sensor.telefono_persona_4_batteria",
+      batteryState: "sensor.telefono_persona_4_stato_batteria",
+      distance: "sensor.persona_4_distanza",
+      travel: "sensor.persona_4_tempo_rientro",
       avatar: {
         color: "#ec4899",
         face: { persona: "donna", capelli: "ricci", carnagione: "chiara2", vestito: "medico" },
       },
     },
     {
-      id: "person-marco",
-      name: "Marco",
-      entity: "person.marco",
-      battery: "sensor.telefono_marco_batteria",
-      batteryState: "sensor.telefono_marco_stato_batteria",
+      id: "person-persona-3",
+      name: "Persona 3",
+      entity: "person.persona_3",
+      battery: "sensor.telefono_persona_3_batteria",
+      batteryState: "sensor.telefono_persona_3_stato_batteria",
       avatar: {
         color: "#16a34a",
         face: { persona: "uomo", capelli: "lisci", carnagione: "ambrata", vestito: "ufficio" },

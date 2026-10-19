@@ -120,9 +120,10 @@ test("il fondo che non risponde lo dice, invece di lasciare la pioggia sul nulla
     radar,
     /\[data-dm-radar="vivo"\]\[data-dm-fondo="muto"\] \.dm-radar-fondo-muto\{\s*display:block\}/,
   );
-  /* La frase dice anche dove si cambia: senza, resta un errore da segnalare. */
-  assert.match(radar, /La mappa di fondo non risponde\./);
-  assert.match(radar, /Meteo e radar/);
+  /* La frase dice cosa succede, e non rimanda al Config: le sezioni non
+   * mandano nessuno a «⚙️ → Meteo e radar». */
+  assert.match(radar, /La mappa di fondo non risponde\. La pioggia c'è\./);
+  assert.doesNotMatch(radar, /puoi cambiare mappa in/);
 });
 
 test("il verdetto del fondo non sopravvive al passaggio al radar a entità", async () => {

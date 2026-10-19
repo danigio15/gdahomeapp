@@ -29,22 +29,36 @@ import {
   ZOOM_MINIMO,
   chiaveDelDisegno,
   finestraVisibile,
+  fondoMarkup,
   fuocoDallaFinestra,
   immaginePulita,
   riquadroConImmagineMarkup,
   srcDaMostrare,
   stileInLinea,
 } from "../core/immagine-del-riquadro.js";
+import {
+  CHIAVE_DELLE_IMMAGINI,
+  PAGINE_CON_IMMAGINI,
+  SUPERFICI_DA_VESTIRE,
+  conLImmagineSciolta,
+  idDellaCard,
+  immaginiSciolte,
+  nomeDellaVoce,
+  superficieConImmagine,
+  voceDellaCard,
+} from "../core/superfici-con-immagine.js";
 import { storeImage } from "./media-picker-section.js";
 import {
   activeLocale,
   clean,
+  dashboardStore,
   doc,
   esc,
   installStyle,
   onEditorRedraw,
   readJson,
   root,
+  section,
   t,
   tr,
   wrapFunction,
@@ -110,6 +124,49 @@ button.dm-rq{border:0;padding:0;margin:0;font:inherit;cursor:pointer;-webkit-tap
 .dm-rq .dm-rq-foto{flex:none;display:grid;place-items:center;width:clamp(20px,10cqi,26px);height:clamp(20px,10cqi,26px);border-radius:8px;
   background:rgba(15,23,42,.42);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
 .dm-rq:focus-visible{outline:3px solid color-mix(in srgb,var(--acc,#0ea5e9) 70%,#fff);outline-offset:2px}
+/* Piu' tasti in vetro: ON e OFF, ▲ ■ ▼, il meno e il piu' del clima. Alti
+ * almeno quanto un dito anche nel riquadro piu' piccolo. */
+.dm-rq .dm-rq-due{margin:0 0 0 auto;flex:none;display:flex;gap:clamp(4px,2.4cqi,8px)}
+.dm-rq .dm-rq-dt{flex:none;box-sizing:border-box;display:inline-grid;place-items:center;min-width:clamp(34px,17cqi,62px);height:clamp(30px,14cqi,44px);padding:0 clamp(6px,3.4cqi,12px);
+  border:0;border-radius:999px;cursor:pointer;font:inherit;font-size:clamp(11px,5.2cqi,15px);font-weight:900;letter-spacing:.06em;color:#fff;white-space:nowrap;
+  background:rgba(15,23,42,.46);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.32);transition:background .2s ease,transform .1s ease}
+.dm-rq .dm-rq-dt:active{transform:scale(.95)}
+.dm-rq .dm-rq-alto>.dm-rq-acceso{margin-left:auto}
+.dm-rq .dm-rq-dt:disabled{opacity:.4;cursor:default}
+.dm-rq .dm-rq-dt.si,.dm-rq .dm-rq-dt-on.si{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1f2937;box-shadow:0 0 16px -2px #f59e0bcc}
+.dm-rq .dm-rq-dt-off.si{background:rgba(255,255,255,.34);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.6)}
+.dm-rq .dm-rq-dt.dm-rq-acceso.si{background:var(--acc,#0ea5e9);color:#fff;box-shadow:0 0 14px color-mix(in srgb,var(--acc,#0ea5e9) 70%,transparent)}
+.dm-rq .dm-rq-dt.premuto{outline:2px solid #fff;outline-offset:2px}
+/* La fila dei comandi sul velo, sotto lo stato: il modo, il meno, i gradi, il
+ * piu'; la barra della luminosita'. */
+.dm-rq .dm-rq-comandi{margin-top:clamp(5px,3cqi,10px);display:flex;flex-wrap:wrap;align-items:center;gap:clamp(4px,2.4cqi,8px);min-width:0}
+.dm-rq .dm-rq-gradi{margin-left:auto;display:inline-flex;align-items:center;gap:clamp(4px,2.4cqi,8px)}
+.dm-rq .dm-rq-gradi>b{min-width:2.6em;text-align:center;font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:clamp(17px,9cqi,30px);line-height:1;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.dm-rq .dm-rq-estremo{flex:1 1 100%;display:flex;align-items:center;gap:8px;min-width:0}
+.dm-rq .dm-rq-estremo>i{font-style:normal;font-size:clamp(10px,4.6cqi,12px);font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:color-mix(in srgb,var(--est,#fff) 55%,#fff)}
+.dm-rq .dm-rq-modo{min-width:0;letter-spacing:.02em}
+.dm-rq .dm-rq-barra{flex:1 1 100%;min-width:0}
+/* Una lettura (un sensore che dice un numero): il numero grande sul velo,
+ * l'immagine sempre a colori — «spento» non vuol dire niente per una
+ * batteria al 76 %. */
+.dm-rq.dm-rq-lettura:not(.on):not(.is-on)>.dm-rq-img{filter:saturate(1.05)}
+.dm-rq.dm-rq-lettura .dm-rq-stato{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:clamp(17px,10cqi,34px);letter-spacing:.01em;text-transform:none;color:#fff}
+.dm-rq.dm-rq-lettura .dm-rq-stato>i{display:none}
+/* L'immagine di fondo di una card che non e' un riquadro con l'immagine (le
+ * card del guscio, le strisce del mixer): la foto sotto, un velo scuro sopra,
+ * e la card con tutti i suoi comandi al suo posto, in chiaro. */
+.dm-rq-fondo{position:relative;isolation:isolate;overflow:hidden}
+.dm-rq-fondo>.dm-rq-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;margin:0;padding:0;border:0;max-width:none;pointer-events:none;user-select:none;-webkit-user-drag:none}
+.dm-rq-fondo>.dm-rq-velo{position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(to top,rgba(4,9,20,.86) 0%,rgba(4,9,20,.58) 42%,rgba(4,9,20,.3) 100%)}
+/* Il testo si fa bianco; i tasti tengono il loro vestito (e il loro stato,
+ * acceso o spento), col vetro dietro perche' si stacchino dalla foto. */
+.dm-rq-fondo{color:#fff}
+.dm-rq-fondo :where(div,span,b,strong,label,p,h1,h2,h3,h4,em,output):not(button *,button,select *,input,[class*="pill"],[class*="pill"] *,[class*="badge"] *,[class*="chip"] *,[class*="flag"],[class*="tag"]){color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+.dm-rq-fondo :where(button){-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+/* La vasca con la sua foto: il disegno della piscina lascia il posto alla
+ * foto, e restano le scritte dello stato. */
+.dm-pool-stage.dm-rq-fondo>:is(.dm-pool-sky,.dm-pool-sun,.dm-pool-hedge,.dm-pool-plant,.dm-pool-deck,.dm-pool-lounger,.dm-pool-parasol,.dm-pool-basin){visibility:hidden}
 
 /* I Dispositivi della Home: la card del guscio col vestito nuovo. */
 html body .dev-card.dm-rq{padding:0;border:0;aspect-ratio:1;background:#0b1220}
@@ -214,6 +271,7 @@ html[data-theme="dark"] .dev-card.on:not(.dm-rq) .dev-pwr{background:rgba(14,165
 .dm-rq-dispositivi .dm-rq-pollicino img{width:100%;height:100%;object-fit:cover;display:block}
 .dm-rq-dispositivi .dm-rq-apri{flex:none;height:34px;padding:0 12px;border-radius:11px;border:1px solid var(--divider-color,#dbe4ee);background:var(--card-bg,#fff);color:inherit;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer}
 .dm-rq-dispositivi .dm-rq-apri[aria-expanded="true"]{border-color:#0ea5e9;color:#0369a1}
+.dm-rq-card-pannello .dm-rq-sub-titolo{margin:16px 2px 6px;font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim,#64748b)}
 `;
 
 /* ── il blocco «Immagine» ────────────────────────────────────────────────── */
@@ -277,7 +335,18 @@ function grigliaDeiDisegni(chiave, scelta) {
     .join("");
 }
 
-function corpoDelBlocco(chiave, immagine, { nome, accento }) {
+/* Come il riquadro parla nell'anteprima: quello che dira' sul tablet, se chi
+ * ospita il blocco lo sa (`anteprima`), o un «Acceso» con l'interruttore. */
+const ANTEPRIMA_DI_SERIE = () => ({
+  stato: t("Acceso", "On"),
+  acceso: true,
+  destra: `<span class="dm-rq-int on" aria-hidden="true"><i></i></span>`,
+  comandi: "",
+  classi: "",
+});
+
+function corpoDelBlocco(chiave, immagine, { nome, accento, anteprima = null }) {
+  const come = anteprima && typeof anteprima === "object" ? anteprima : ANTEPRIMA_DI_SERIE();
   const s = statoDel(chiave);
   const pulita = immaginePulita(immagine);
   const scelta = chiaveDelDisegno(pulita);
@@ -295,13 +364,15 @@ function corpoDelBlocco(chiave, immagine, { nome, accento }) {
         <div class="dm-rqi-sub">${esc(t("Forma", "Shape"))}</div>
         <div class="dm-rqi-seg" role="group"><button type="button" class="${forma === 1 ? "si" : ""}" data-dm-rqi-forma="1" aria-pressed="${forma === 1}">${esc(t("Home 1:1", "Home 1:1"))}</button><button type="button" class="${forma === 1.5 ? "si" : ""}" data-dm-rqi-forma="1.5" aria-pressed="${forma === 1.5}">${esc(t("Muro 3:2", "Wall 3:2"))}</button></div>
         <label class="dm-rqi-zoom"><span>${esc(t("Zoom", "Zoom"))} <b data-dm-rqi-zoom-letto>${zoom}%</b></span><input type="range" min="${ZOOM_MINIMO * 100}" max="${ZOOM_MASSIMO * 100}" step="5" value="${zoom}" data-dm-rqi-zoom aria-label="${esc(t("Zoom", "Zoom"))}"></label>
-        <div class="dm-rqi-anteprima" data-dm-rqi-anteprima>${riquadroConImmagineMarkup({
+        <div class="dm-rqi-anteprima" data-dm-rqi-anteprima inert>${riquadroConImmagineMarkup({
           immagine: pulita,
           nome: nome || t("Riquadro", "Tile"),
-          stato: t("Acceso", "On"),
-          acceso: true,
-          accento,
-          destra: `<span class="dm-rq-int on" aria-hidden="true"><i></i></span>`,
+          stato: String(come.stato ?? ""),
+          acceso: Boolean(come.acceso),
+          accento: come.accento || accento,
+          destra: String(come.destra || ""),
+          comandi: String(come.comandi || ""),
+          classi: String(come.classi || ""),
           stile: `aspect-ratio:${forma}`,
         })}</div>
         <div class="dm-rqi-mini">${esc(t("Si salva solo dove guardare e lo zoom: la foto resta intera, e ogni forma di riquadro la taglia da lì.", "Only where to look and the zoom are saved: the photo stays whole, and each tile shape crops it from there."))}</div>
@@ -329,9 +400,24 @@ function corpoDelBlocco(chiave, immagine, { nome, accento }) {
  * configura. `chiave` dice di chi e' (una scheda puo' averne piu' d'uno):
  * torna nell'evento `dm-rqi-cambia`, con l'immagine nuova (o `null`).
  */
-export function bloccoImmagineMarkup({ chiave, immagine, nome = "", accento = "#0ea5e9" }) {
+export function bloccoImmagineMarkup({
+  chiave,
+  immagine,
+  nome = "",
+  accento = "#0ea5e9",
+  anteprima = null,
+}) {
   const pulita = immaginePulita(immagine);
-  return `<section class="dm-rqi" data-dm-rqi="${esc(chiave)}" data-dm-rqi-nome="${esc(nome)}" data-dm-rqi-accento="${esc(accento)}" data-dm-rqi-valore="${esc(JSON.stringify(pulita))}">${corpoDelBlocco(chiave, pulita, { nome, accento })}</section>`;
+  const come = anteprima && typeof anteprima === "object" ? anteprima : null;
+  return `<section class="dm-rqi" data-dm-rqi="${esc(chiave)}" data-dm-rqi-nome="${esc(nome)}" data-dm-rqi-accento="${esc(accento)}"${come ? ` data-dm-rqi-come="${esc(JSON.stringify(come))}"` : ""} data-dm-rqi-valore="${esc(JSON.stringify(pulita))}">${corpoDelBlocco(chiave, pulita, { nome, accento, anteprima: come })}</section>`;
+}
+
+function anteprimaDel(blocco) {
+  try {
+    return JSON.parse(blocco?.dataset?.dmRqiCome || "null");
+  } catch (_errore) {
+    return null;
+  }
 }
 
 function valoreDel(blocco) {
@@ -347,6 +433,7 @@ function ridipingi(blocco) {
   blocco.innerHTML = corpoDelBlocco(blocco.dataset.dmRqi, valoreDel(blocco), {
     nome: blocco.dataset.dmRqiNome || "",
     accento: blocco.dataset.dmRqiAccento || "#0ea5e9",
+    anteprima: anteprimaDel(blocco),
   });
 }
 
@@ -820,6 +907,243 @@ function onCambiaDispositivo(evento) {
   if (pannello) pannello.dataset.dmFirma = firmaDelPannello();
 }
 
+/* ── le card del guscio: luci, clima, tapparelle, telecamere, stanze, azioni ──
+ *
+ * «Lo devi aggiungere a tutti.» Le card che il guscio e le sue sezioni
+ * disegnano da se' non si riscrivono: hanno i loro comandi — la levetta, il
+ * cursore della luminosita', ▲ ■ ▼, il meno e il piu' — e i loro
+ * aggiornamenti per `id`. A quelle con un'immagine si mette sotto il fondo
+ * (`fondoMarkup`: la foto e il velo scuro) e la classe `dm-rq-fondo`, che fa
+ * il testo bianco e lascia ogni tasto dov'e' e com'e'. Quali card e di chi
+ * sono lo dice l'elenco del nucleo (`core/superfici-con-immagine.js`): una
+ * card nuova lo prende aggiungendo una riga li'. */
+
+/* Il nome di una card che non e' la voce di un elenco: quello che dice a chi
+ * legge (`aria-label`), o la sua prima scritta. */
+function nomeDellaCard(card, ripiego) {
+  const detto = clean(card.getAttribute?.("aria-label"));
+  if (detto) return detto;
+  const scritta = card.querySelector?.(
+    "[class*='label'],[class*='name'],[class*='nome'],[class*='titolo'],strong,b",
+  );
+  return clean(scritta?.textContent).slice(0, 40) || ripiego;
+}
+
+/* Le voci di una superficie, dove stanno scritte. Quelle «mappa» sono le card
+ * che la pagina ha adesso, ognuna con la sua chiave. */
+function vociDi(superficie) {
+  if (superficie.forma === "mappa") {
+    const mappa = immaginiSciolte(readJson(CHIAVE_DELLE_IMMAGINI, {}));
+    const viste = new Map();
+    for (const card of doc?.querySelectorAll?.(superficie.selettore) || []) {
+      if (card.closest("#dm-muro")) continue;
+      const id = idDellaCard(superficie, card);
+      if (!id || viste.has(id)) continue;
+      viste.set(id, {
+        chiave: id,
+        name: nomeDellaCard(card, id),
+        immagine: mappa[`${superficie.chiave}:${id}`] || null,
+      });
+    }
+    return [...viste.values()];
+  }
+  if (superficie.sezione) {
+    const voci = section(superficie.sezione, []);
+    return Array.isArray(voci) ? voci : [];
+  }
+  if (superficie.chiave === "dispositivi") return dispositivi();
+  if (superficie.forma === "righe") {
+    const righe = readJson(superficie.casella, {})?.righe;
+    return Array.isArray(righe) ? righe : [];
+  }
+  const voci = readJson(superficie.casella, []);
+  return Array.isArray(voci) ? voci : [];
+}
+
+function vestiUnaCard(superficie, card, voce) {
+  const immagine = immaginePulita(voce?.immagine);
+  const dove = (superficie.dentro && card.querySelector(superficie.dentro)) || card;
+  const firma = immagine ? JSON.stringify(immagine) : "";
+  const posata = dove.querySelector(":scope > .dm-rq-img");
+  if ((dove.dataset.dmRqFondo || "") === firma && Boolean(posata) === Boolean(immagine)) return false;
+  dove.querySelectorAll(":scope > .dm-rq-img, :scope > .dm-rq-velo").forEach((n) => n.remove());
+  if (!immagine) {
+    dove.classList.remove("dm-rq-fondo");
+    delete dove.dataset.dmRqFondo;
+    return true;
+  }
+  dove.classList.add("dm-rq-fondo");
+  dove.dataset.dmRqFondo = firma;
+  dove.insertAdjacentHTML("afterbegin", fondoMarkup(immagine));
+  return true;
+}
+
+/** Veste ogni card della pagina che ha un'immagine; toglie il vestito a chi
+ * non l'ha piu'. Restituisce quante card ha toccato. */
+export function vestiLeCardDellaPlancia(radice = doc) {
+  if (!radice?.querySelectorAll) return 0;
+  let toccate = 0;
+  for (const superficie of SUPERFICI_DA_VESTIRE) {
+    const card = [...radice.querySelectorAll(superficie.selettore)];
+    if (!card.length) continue;
+    const voci =
+      superficie.forma === "mappa" ? readJson(CHIAVE_DELLE_IMMAGINI, {}) : vociDi(superficie);
+    card.forEach((c, indice) => {
+      /* Una card del muro o una gia' col vestito proprio non si tocca. */
+      if (c.closest("#dm-muro") || c.classList.contains("dm-rq")) return;
+      if (vestiUnaCard(superficie, c, voceDellaCard(superficie, voci, c, indice))) toccate += 1;
+    });
+  }
+  return toccate;
+}
+
+/* Il guscio rifa' le card quando vuole: si guardano le pagine dove stanno
+ * (`PAGINE_CON_IMMAGINI`, non tutto il documento), e dopo ogni giro di cambi
+ * — uno per fotogramma — si rivestono. I nostri cambi non rimettono in moto
+ * niente: una card gia' vestita come deve resta com'e'. Una pagina che non
+ * c'e' ancora si prende al prossimo giro di installazione. */
+function guardaLaPlancia() {
+  if (!root.MutationObserver || !doc?.getElementById) return;
+  let inAttesa = false;
+  const giro = () => {
+    inAttesa = false;
+    try {
+      vestiLeCardDellaPlancia();
+    } catch (_errore) {}
+  };
+  state.osservatore ||= new root.MutationObserver(() => {
+    if (inAttesa) return;
+    inAttesa = true;
+    (root.requestAnimationFrame || root.setTimeout)(giro);
+  });
+  const guardate = (state.pagineGuardate ||= new Set());
+  for (const id of PAGINE_CON_IMMAGINI) {
+    const pagina = doc.getElementById(id);
+    if (!pagina || guardate.has(pagina)) continue;
+    guardate.add(pagina);
+    state.osservatore.observe(pagina, { childList: true, subtree: true });
+  }
+  giro();
+}
+
+/* ── la scheda «Immagini dei riquadri» nel Config ────────────────────────
+ *
+ * Nella Home del config, sotto i Dispositivi: per ogni superficie le sue
+ * voci, ognuna col suo «🖼️ Immagine» che apre il blocco. L'immagine si scrive
+ * addosso alla voce, dove la voce sta gia'. */
+const chiaveDellaCard = (superficie, k) => `card:${superficie}:${k}`;
+
+function pannelloDelleCard() {
+  const gruppi = SUPERFICI_DA_VESTIRE.map((superficie) => ({ superficie, voci: vociDi(superficie) }))
+    .filter((g) => g.voci.length);
+  if (!gruppi.length) return "";
+  const aperta = state.cardAperta || "";
+  const lingua = activeLocale();
+  return `<div class="ed-sec-title">🖼️ ${esc(t("Immagini dei riquadri", "Tile images"))}</div>
+    <div class="ed-intro">${esc(t("Ogni card della plancia può avere una foto o un disegno che la riempie: le luci, il clima, le tapparelle, le telecamere, le stanze, le azioni rapide. I comandi restano sopra, in chiaro; a muro la stessa immagine si vede nelle pagine che si riempiono da sole.", "Every dashboard card can have a photo or a drawing that fills it: lights, climate, blinds, cameras, rooms, quick actions. The controls stay on top, readable; on the wall the same image shows on the pages that fill themselves."))}</div>
+    ${gruppi
+      .map(
+        ({ superficie, voci }) => `<div class="dm-rq-sub-titolo">${esc(lingua === "it" ? superficie.nome.it : tr(superficie.nome.en))}</div>
+    <div class="ed-list">${voci
+      .map((voce, k) => {
+        const chiave = chiaveDellaCard(superficie.chiave, k);
+        const nome = nomeDellaVoce(voce, `#${k + 1}`);
+        const immagine = immaginePulita(voce?.immagine);
+        return `<div class="ed-row dm-rq-riga" data-dm-rq-card="${esc(chiave)}">
+        <span class="dm-rq-pollicino" aria-hidden="true">${pollicino({ ...voce, icon: voce?.icon || "🖼️" })}</span>
+        <span class="ed-row-main"><strong class="ed-row-new">${esc(nome)}</strong><small class="ed-row-old">${esc(immagine ? (chiaveDelDisegno(immagine) ? t("Disegno", "Drawing") : t("Foto", "Photo")) : t("Senza immagine", "No image"))}</small></span>
+        <button type="button" class="dm-rq-apri" data-dm-rq-apri-card="${esc(chiave)}" aria-expanded="${aperta === chiave}">🖼️ ${esc(t("Immagine", "Image"))}</button>
+      </div>${aperta === chiave ? bloccoImmagineMarkup({ chiave, immagine, nome, accento: ACCENTO_DEI_DISPOSITIVI, anteprima: { stato: "", acceso: false, destra: "", comandi: "", classi: "dm-rq-lettura" } }) : ""}`;
+      })
+      .join("")}</div>`,
+      )
+      .join("")}`;
+}
+
+function firmaDelleCard() {
+  return `${state.cardAperta || ""}|${JSON.stringify(
+    SUPERFICI_DA_VESTIRE.map((s) => vociDi(s).map((v) => [nomeDellaVoce(v), v?.immagine])),
+  )}`;
+}
+
+export function ensurePannelloDelleCard(body = doc?.getElementById?.("ed-body")) {
+  if (!body) return false;
+  let pannello = body.querySelector(":scope > [data-dm-rq-card-pannello]");
+  if (schedaAperta() !== SCHEDA_HOME) {
+    pannello?.remove();
+    return false;
+  }
+  const firma = firmaDelleCard();
+  if (!pannello) {
+    pannello = doc.createElement("div");
+    pannello.className = "dm-rq-dispositivi dm-rq-card-pannello";
+    pannello.dataset.dmRqCardPannello = "true";
+  }
+  if (pannello.dataset.dmFirma !== firma) {
+    pannello.dataset.dmFirma = firma;
+    pannello.innerHTML = pannelloDelleCard();
+  }
+  if (!pannello.innerHTML.trim()) {
+    pannello.remove();
+    return false;
+  }
+  if (body.lastElementChild !== pannello) body.append(pannello);
+  return true;
+}
+
+function onClickDelleCard(evento) {
+  const tasto = evento.target?.closest?.("[data-dm-rq-card-pannello] [data-dm-rq-apri-card]");
+  if (!tasto) return;
+  evento.preventDefault();
+  const chiave = tasto.dataset.dmRqApriCard;
+  state.cardAperta = state.cardAperta === chiave ? "" : chiave;
+  ensurePannelloDelleCard();
+}
+
+/** Scrive l'immagine addosso alla voce, dove la voce sta. */
+export async function mettiLImmagineAllaVoce(chiaveSuperficie, indice, immagine) {
+  const superficie = superficieConImmagine(chiaveSuperficie);
+  if (!superficie || superficie.propria) return false;
+  const voci = vociDi(superficie);
+  const voce = voci[indice];
+  if (!voce) return false;
+  const pulita = immaginePulita(immagine);
+  if (superficie.forma === "mappa") {
+    writeJsonIfChanged(
+      CHIAVE_DELLE_IMMAGINI,
+      conLImmagineSciolta(readJson(CHIAVE_DELLE_IMMAGINI, {}), superficie.chiave, voce.chiave, pulita),
+    );
+  } else if (superficie.sezione) {
+    const store = dashboardStore();
+    if (!store?.updateItem || !voce.id) return false;
+    await store.updateItem(superficie.sezione, voce.id, { immagine: pulita });
+  } else {
+    const nuove = voci.map((v) => ({ ...v }));
+    if (pulita) nuove[indice].immagine = pulita;
+    else delete nuove[indice].immagine;
+    if (superficie.forma === "righe")
+      writeJsonIfChanged(superficie.casella, { ...readJson(superficie.casella, {}), righe: nuove });
+    else writeJsonIfChanged(superficie.casella, nuove);
+    if (superficie.chiave === "azioni") root.buildQuickActions?.();
+  }
+  vestiLeCardDellaPlancia();
+  return true;
+}
+
+function onCambiaCard(evento) {
+  const m = /^card:([a-z]+):(\d+)$/.exec(String(evento.detail?.chiave || ""));
+  if (!m) return;
+  mettiLImmagineAllaVoce(m[1], Number(m[2]), evento.detail?.immagine)
+    .catch(() => false)
+    .finally(() => {
+      const pannello = doc?.querySelector?.("[data-dm-rq-card-pannello]");
+      const riga = doc?.querySelector?.(`[data-dm-rq-card="${m[0]}"] .dm-rq-pollicino`);
+      const voce = vociDi(superficieConImmagine(m[1]))[Number(m[2])];
+      if (riga && voce) riga.innerHTML = pollicino({ ...voce, icon: voce.icon || "🖼️" });
+      if (pannello) pannello.dataset.dmFirma = firmaDelleCard();
+    });
+}
+
 export function installRiquadriConImmagine() {
   if (state.installed || !doc) return false;
   state.installed = true;
@@ -832,6 +1156,8 @@ export function installRiquadriConImmagine() {
   doc.addEventListener("load", ricordaLaMisura, true);
   doc.addEventListener("click", onClickDelPannello);
   doc.addEventListener(EVENTO_IMMAGINE, onCambiaDispositivo);
+  doc.addEventListener("click", onClickDelleCard);
+  doc.addEventListener(EVENTO_IMMAGINE, onCambiaCard);
   /* I Dispositivi: dopo che il guscio ha fatto la griglia, e dopo ogni suo
    * aggiornamento (che rimette la classe `on`, e basta). */
   wrapFunction("buildDeviceCards", "__dmRiquadriConImmagine", vestiIDispositivi);
@@ -841,8 +1167,14 @@ export function installRiquadriConImmagine() {
       wrapFunction("buildDeviceCards", "__dmRiquadriConImmagine", vestiIDispositivi);
       wrapFunction("updateDeviceCards", "__dmRiquadriConImmagine", vestiIDispositivi);
       vestiIDispositivi();
+      guardaLaPlancia();
     });
-  onEditorRedraw("__dmRiquadriConImmagineEditor", () => ensurePannelloDeiDispositivi());
+  onEditorRedraw("__dmRiquadriConImmagineEditor", () => {
+    ensurePannelloDeiDispositivi();
+    ensurePannelloDelleCard();
+  });
   vestiIDispositivi();
+  guardaLaPlancia();
+  doc.addEventListener?.("DOMContentLoaded", guardaLaPlancia, { once: true });
   return true;
 }

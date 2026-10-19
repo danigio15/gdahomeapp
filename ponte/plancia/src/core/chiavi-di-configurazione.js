@@ -336,7 +336,11 @@
  * (`cd_antifurto_scattato`): l'interruttore o il sensore che lo dice, il
  * valore, la sirena e la zona. E' della casa come i tasti su misura accanto a
  * cui sta, e la legge anche la casa per mandare la notifica urgente. */
-export const CONFIG_KEYS_REVISION = 67;
+/* La revisione 68 aggiunge le immagini delle card che non sono voci di un
+ * elenco (`cd_immagini_riquadri`): un nodo del flusso dell'energia, la vasca,
+ * una zona dell'irrigazione, una tessera della Home. Sono scelte della casa
+ * come le card che vestono: messe dal telefono, si vedono anche dal tablet. */
+export const CONFIG_KEYS_REVISION = 68;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -646,4 +650,7 @@ export const CONFIG_KEYS = Object.freeze([
   /* Le automazioni: la ragione per cui sta qui è scritta accanto alla
    * revisione 66. */
   "cd_automazioni",
+  /* Le immagini delle card che non sono voci di un elenco: la ragione per
+   * cui stanno qui è scritta accanto alla revisione 68. */
+  "cd_immagini_riquadri",
 ]);

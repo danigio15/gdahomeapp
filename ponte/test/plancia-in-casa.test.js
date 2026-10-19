@@ -37,7 +37,7 @@ import { alzaIlPonte } from "../src/index.js";
 
 const SEGNO_DEL_SUPERVISOR = "segno-del-supervisor";
 
-/* Chi amministra questa casa finta (Giovanni, qui sotto). La pagina di
+/* Chi amministra questa casa finta (Persona 1, qui sotto). La pagina di
  * gdahome e le sue vie `/api/` sono sue: le prove che le usano bussano come
  * lui, se non dicono altro. */
 const CHI_AMMINISTRA = "a1b2c3d4e5f60718293a4b5c6d7e8f90";
@@ -88,7 +88,7 @@ async function casaFinta() {
               result: [
                 {
                   id: "a1b2c3d4e5f60718293a4b5c6d7e8f90",
-                  name: "Giovanni",
+                  name: "Persona 1",
                   is_owner: true,
                   is_active: true,
                   system_generated: false,
@@ -96,7 +96,7 @@ async function casaFinta() {
                 },
                 {
                   id: "0f9e8d7c6b5a49382716f5e4d3c2b1a0",
-                  name: "Marta",
+                  name: "Persona 9",
                   is_owner: false,
                   is_active: true,
                   system_generated: false,
@@ -436,13 +436,13 @@ test("«solo amministratori»: a chi non amministra la pagina non arriva", async
     assert.equal(messa.status, 200);
     assert.equal((await messa.json()).quale.solo_admin, true);
 
-    /* Giovanni amministra questa casa — lo dice la Home Assistant finta — e la
+    /* Persona 1 amministra questa casa — lo dice la Home Assistant finta — e la
      * pagina gli arriva. */
     const mia = await fetch(`${b.consolle}/plancia/`, { headers: { "x-remote-user-id": IO } });
     assert.equal(mia.status, 200);
     assert.match(await mia.text(), /__DASHBOARDMODERN_HOSTED__/);
 
-    /* Marta no, e non le arriva. Il messaggio dice **quale** delle due cose
+    /* Persona 9 no, e non le arriva. Il messaggio dice **quale** delle due cose
      * l'ha fermata: sapere che una plancia e' «solo degli amministratori» e'
      * un'informazione che puo' usare, «solo di alcuni utenti» la manderebbe a
      * chiedere la cosa sbagliata. */
@@ -480,13 +480,13 @@ test("gli utenti della casa li chiede a Home Assistant, e non conta i suoi", asy
     assert.deepEqual(detto.utenti, [
       {
         id: "a1b2c3d4e5f60718293a4b5c6d7e8f90",
-        nome: "Giovanni",
+        nome: "Persona 1",
         amministratore: true,
         attivo: true,
       },
       {
         id: "0f9e8d7c6b5a49382716f5e4d3c2b1a0",
-        nome: "Marta",
+        nome: "Persona 9",
         amministratore: false,
         attivo: true,
       },

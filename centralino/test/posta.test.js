@@ -158,8 +158,8 @@ const unPostino = (posta, altro = {}) =>
 
 const unaLettera = (altro = {}) =>
   laLettera({
-    nome: "Anna Verdi",
-    email: "anna@esempio.it",
+    nome: "Persona 2",
+    email: "persona_2@esempio.it",
     messaggio: "Seguo dodici impianti in provincia di Bari.\nVorrei un accesso.",
     da: "assistenza@gdahome.org",
     a: "assistenza@gdahome.org",
@@ -175,14 +175,14 @@ test("la lettera ha le intestazioni giuste, e chi ha scritto sta nel Reply-To", 
   const { testo, mittente, destinatario, oggetto } = unaLettera();
   assert.equal(mittente, "assistenza@gdahome.org");
   assert.equal(destinatario, "assistenza@gdahome.org");
-  assert.equal(oggetto, "Dal sito gdahome.org: Anna Verdi");
+  assert.equal(oggetto, "Dal sito gdahome.org: Persona 2");
   assert.match(
     testo,
     /^From: "gdahome\.org, il modulo dei contatti" <assistenza@gdahome\.org>\r\n/,
   );
   assert.match(testo, /\r\nTo: <assistenza@gdahome\.org>\r\n/);
-  assert.match(testo, /\r\nReply-To: "Anna Verdi" <anna@esempio\.it>\r\n/);
-  assert.match(testo, /\r\nSubject: Dal sito gdahome\.org: Anna Verdi\r\n/);
+  assert.match(testo, /\r\nReply-To: "Persona 2" <persona_2@esempio\.it>\r\n/);
+  assert.match(testo, /\r\nSubject: Dal sito gdahome\.org: Persona 2\r\n/);
   assert.match(testo, /\r\nDate: Sun, 20 Sep 2026 15:00:00 \+0000\r\n/);
   assert.match(testo, /\r\nMessage-ID: <abc123@gdahome\.org>\r\n/);
   assert.match(testo, /\r\nContent-Type: text\/plain; charset="utf-8"\r\n/);
@@ -192,33 +192,36 @@ test("la lettera ha le intestazioni giuste, e chi ha scritto sta nel Reply-To", 
   const corpo = Buffer.from(testo.split("\r\n\r\n")[1].replace(/\r\n/g, ""), "base64").toString(
     "utf8",
   );
-  assert.match(corpo, /^Nome: Anna Verdi\nEmail: anna@esempio\.it\nLingua della pagina: it\n/);
+  assert.match(corpo, /^Nome: Persona 2\nEmail: persona_2@esempio\.it\nLingua della pagina: it\n/);
   assert.match(corpo, /Seguo dodici impianti in provincia di Bari\.\nVorrei un accesso\.\n$/);
 });
 
 test("le lettere fuori dall'ASCII si dichiarano, e il corpo non ha righe oltre le 76", () => {
-  assert.equal(parolaCodificata("Anna"), "Anna");
-  assert.equal(parolaCodificata("Niccolò"), "=?UTF-8?B?TmljY29sw7I=?=");
-  const { testo } = unaLettera({ nome: "Niccolò Rè", messaggio: "à".repeat(400) });
-  assert.match(testo, /\r\nReply-To: =\?UTF-8\?B\?[A-Za-z0-9+/=]+\?= <anna@esempio\.it>\r\n/);
+  assert.equal(parolaCodificata("Persona 2"), "Persona 2");
+  assert.equal(parolaCodificata("Persona Ò"), "=?UTF-8?B?UGVyc29uYSDDkg==?=");
+  const { testo } = unaLettera({ nome: "Persona Ò È", messaggio: "à".repeat(400) });
+  assert.match(testo, /\r\nReply-To: =\?UTF-8\?B\?[A-Za-z0-9+/=]+\?= <persona_2@esempio\.it>\r\n/);
   assert.match(testo, /\r\nSubject: =\?UTF-8\?B\?[A-Za-z0-9+/=]+\?=\r\n/);
   for (const riga of testo.split("\r\n")) assert.ok(riga.length <= 78, `riga lunga: ${riga}`);
 });
 
 test("un ritorno a capo nel nome non diventa un'intestazione", () => {
-  const { testo } = unaLettera({ nome: 'Anna\r\nBcc: tutti@esempio.it\r\n"' });
+  const { testo } = unaLettera({ nome: 'Persona 2\r\nBcc: tutti@esempio.it\r\n"' });
   assert.doesNotMatch(testo, /\r\nBcc:/);
-  assert.match(testo, /\r\nReply-To: "Anna Bcc: tutti@esempio\.it \\"" <anna@esempio\.it>\r\n/);
+  assert.match(
+    testo,
+    /\r\nReply-To: "Persona 2 Bcc: tutti@esempio\.it \\"" <persona_2@esempio\.it>\r\n/,
+  );
 });
 
 test("si riconosce un indirizzo, e si rifiuta quello che non lo e'", () => {
-  assert.ok(emailBuona("anna@esempio.it"));
-  assert.ok(emailBuona("  anna.verdi+casa@posta.esempio.co.uk "));
+  assert.ok(emailBuona("persona_2@esempio.it"));
+  assert.ok(emailBuona("  persona_2.verdi+casa@posta.esempio.co.uk "));
   for (const brutto of [
-    "anna",
-    "anna@esempio",
+    "persona_2",
+    "persona_2@esempio",
     "@esempio.it",
-    "anna@esempio.it, altro@x.it",
+    "persona_2@esempio.it, altro@x.it",
     "a <b@c.it>",
     `${"a".repeat(200)}@x.it`,
     "",
@@ -245,7 +248,7 @@ test("il postino consegna con STARTTLS: si presenta cifrato e la lettera arriva 
     assert.ok(posta.ricevuto.comandi.includes("RCPT TO:<assistenza@gdahome.org>"));
     assert.equal(posta.ricevuto.lettere.length, 1);
     assert.match(posta.ricevuto.lettere[0], /^From: "gdahome\.org, il modulo dei contatti"/);
-    assert.match(posta.ricevuto.lettere[0], /\nReply-To: "Anna Verdi" <anna@esempio\.it>\n/);
+    assert.match(posta.ricevuto.lettere[0], /\nReply-To: "Persona 2" <persona_2@esempio\.it>\n/);
   } finally {
     await posta.spegni();
   }
@@ -344,8 +347,8 @@ async function banco({ posta = null, a = "assistenza@gdahome.org", lettereAllOra
 }
 
 const unMessaggio = (altro = {}) => ({
-  nome: "Anna Verdi",
-  email: "anna@esempio.it",
+  nome: "Persona 2",
+  email: "persona_2@esempio.it",
   messaggio: "Vorrei un accesso al cruscotto.",
   lingua: "it",
   ...altro,
@@ -360,7 +363,7 @@ test("dal sito si scrive, e la lettera arriva: /salute lo dice", async () => {
     assert.equal(risposta.status, 200);
     assert.deepEqual(await risposta.json(), { inviato: true });
     assert.equal(posta.ricevuto.lettere.length, 1);
-    assert.match(posta.ricevuto.lettere[0], /\nReply-To: "Anna Verdi" <anna@esempio\.it>\n/);
+    assert.match(posta.ricevuto.lettere[0], /\nReply-To: "Persona 2" <persona_2@esempio\.it>\n/);
   } finally {
     await b.spegni();
     await posta.spegni();
@@ -373,7 +376,7 @@ test("quello che manca o non va si dice, e non parte niente", async () => {
   try {
     const casi = [
       [unMessaggio({ nome: "  " }), "manca_il_nome"],
-      [unMessaggio({ email: "anna" }), "email_sbagliata"],
+      [unMessaggio({ email: "persona_2" }), "email_sbagliata"],
       [unMessaggio({ messaggio: "" }), "manca_il_messaggio"],
       [unMessaggio({ messaggio: "x".repeat(5001) }), "troppo_lungo"],
       [unMessaggio({ nome: "x".repeat(121) }), "troppo_lungo"],
@@ -464,7 +467,7 @@ test("il modulo senza JavaScript e' un modulo: risponde con una pagina, nella su
     const risposta = await fetch(`${b.http}/contatto`, {
       method: "POST",
       headers: { "content-type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams(unMessaggio({ nome: "Anna & Co" })).toString(),
+      body: new URLSearchParams(unMessaggio({ nome: "Persona 2 & Co" })).toString(),
     });
     assert.equal(risposta.status, 200);
     assert.match(risposta.headers.get("content-type"), /^text\/html/);

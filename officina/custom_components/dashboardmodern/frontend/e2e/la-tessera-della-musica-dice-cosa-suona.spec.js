@@ -135,7 +135,7 @@ test("il brano che cambia riscrive la tessera senza rifarla", async ({ page }, t
       attributes: {
         ...stati["media_player.sonos"].attributes,
         media_title: "Blue in Green",
-        media_artist: "Bill Evans",
+        media_artist: "Un artista",
       },
     };
     window.__HASS__ = { states: stati };
@@ -144,6 +144,6 @@ test("il brano che cambia riscrive la tessera senza rifarla", async ({ page }, t
   });
 
   await expect(tessera.locator("[data-dm-tile-caption]")).toHaveText("Blue in Green");
-  await expect(tessera.locator("[data-dm-tile-sotto]")).toHaveText("Bill Evans");
+  await expect(tessera.locator("[data-dm-tile-sotto]")).toHaveText("Un artista");
   await expect(tessera).toHaveAttribute("data-dm-prova", "1");
 });
