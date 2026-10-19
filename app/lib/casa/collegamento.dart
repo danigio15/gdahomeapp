@@ -287,6 +287,8 @@ class Collegamento {
   Future<void> riposa() async {
     if (!_avviato || _filo == null || _aRiposo) return;
     _aRiposo = true;
+    /* Un'apertura ancora in corso non riapre quello che si sta chiudendo. */
+    _aperture += 1;
     await _chiudiIlFilo(tieniLaPlancia: true);
     _vai(ComeVa.inCammino);
   }
@@ -360,7 +362,15 @@ class Collegamento {
         _casa!.id == archivio.attiva?.id) {
       return;
     }
+    /* Due aperture insieme — l'app riaperta da una notifica mentre torna in
+     * primo piano, il dito che tira giu' mentre si ricontrolla la licenza —
+     * facevano due fili, e il secondo prendeva il posto del primo senza
+     * chiuderlo. La pagina poteva restare attaccata a quello orfano, che
+     * nessuno svegliava piu': ferma fino a riaprire l'app. Vince l'ultima:
+     * le altre, al primo `await`, se ne accorgono e lasciano stare. */
+    final mia = ++_aperture;
     await _chiudiIlFilo(tieniLaPlancia: true);
+    if (mia != _aperture) return;
 
     final casa = archivio.attiva;
     /* La plancia si dimentica solo cambiando casa.
@@ -383,6 +393,7 @@ class Collegamento {
      * Premium e' gia' quella della casa giusta, e non un «no» di passaggio. */
     licenza.inUso(casa?.id);
     await licenza.conosci(archivio.tutte);
+    if (mia != _aperture) return;
 
     if (casa == null) {
       _vai(ComeVa.nessunaCasa);
@@ -492,11 +503,13 @@ class Collegamento {
           ? filo.apri()
           : Future.any([filo.apri(), prova.fallita.future]));
     } on SegnoRifiutato catch (errore) {
+      if (_filo != filo) return;
       _prova = null;
       _perche = errore.spiegazione;
       _vai(ComeVa.segnoScaduto);
       return;
     } on ErroreDelPonte catch (errore) {
+      if (_filo != filo) return;
       /* I tentativi vanno avanti da soli: quando il telefono rientra sotto una
        * rete che vede la casa, il filo si apre e lo stato si sistema. */
       _perche = errore.spiegazione;
@@ -544,9 +557,14 @@ class Collegamento {
       return;
     }
 
+    /* Nel frattempo e' partita un'altra apertura: il filo e' suo. */
+    if (_filo != filo) return;
     if (!await _laLicenzaPrimaDiEntrare(filo)) return;
     await _leggiLaCasa(filo);
   }
+
+  /* Quante aperture sono partite: vedi [apri]. */
+  int _aperture = 0;
 
   /* ─── La prova da fuori, per una casa creduta Base ───────────────────── */
 

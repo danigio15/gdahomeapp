@@ -112,4 +112,57 @@ void main() {
     await filo.chiudi();
     await ponte.spegni();
   });
+
+  test('i pong in ritardo non spengono il controllo: se poi tace, si '
+      'ribussa', () async {
+    /* Dal campo: «devo sempre chiudere e riaprire l'app perche' non si
+     * aggiorna». In 4G, dal centralino, il pong arriva tardi (in fila dietro
+     * gli stati e le foto) e il filo concludeva «questa casa i colpetti non
+     * li rimanda», per sempre: da li' il silenzio non si guardava piu', e
+     * quando poi il filo moriva restava «dentro» fino al riavvio. */
+    final ponte = await PonteFinto.alza();
+    ponte.senzaPong = true;
+    final filo = _unFilo(ponte);
+    await filo.apri();
+
+    for (var i = 0; i < 12; i += 1) {
+      ponte.evento(1, {'event_type': 'qualcosa'});
+      await _respira(30);
+    }
+    expect(ponte.collegamenti, 1, reason: 'viva: non si doveva ribussare');
+
+    ponte.muto = true;
+    await _respira(400);
+    expect(
+      ponte.collegamenti,
+      greaterThan(1),
+      reason: 'morta dopo i pong in ritardo: doveva essere ribussata',
+    );
+
+    await filo.chiudi();
+    await ponte.spegni();
+  });
+
+  test('i pong in ritardo non spengono il risveglio', () async {
+    final ponte = await PonteFinto.alza();
+    ponte.senzaPong = true;
+    final filo = _unFilo(ponte);
+    await filo.apri();
+    for (var i = 0; i < 12; i += 1) {
+      ponte.evento(1, {'event_type': 'qualcosa'});
+      await _respira(30);
+    }
+    final prima = ponte.collegamenti;
+    ponte.muto = true;
+    filo.sveglia();
+    await _respira(250);
+    expect(
+      ponte.collegamenti,
+      greaterThan(prima),
+      reason: 'al risveglio, senza niente in arrivo, si doveva ribussare',
+    );
+
+    await filo.chiudi();
+    await ponte.spegni();
+  });
 }
