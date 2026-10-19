@@ -263,7 +263,7 @@ class _StatoDellaNotifica extends State<SchermataDellaNotifica> {
            * col suo disegno; sopra, il titolo e quando. */
           Container(
             key: const Key('notifica-testa'),
-            height: fotoInCopertina ? (larga * 0.78).clamp(300.0, 520.0) : 300,
+            height: fotoInCopertina ? (larga * 0.56).clamp(220.0, 360.0) : 200,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               borderRadius: const BorderRadius.vertical(
@@ -287,10 +287,10 @@ class _StatoDellaNotifica extends State<SchermataDellaNotifica> {
                   )
                 else
                   Align(
-                    alignment: const Alignment(0, -0.25),
+                    alignment: const Alignment(0.82, -0.2),
                     child: Container(
-                      width: 104,
-                      height: 104,
+                      width: 72,
+                      height: 72,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
@@ -301,7 +301,7 @@ class _StatoDellaNotifica extends State<SchermataDellaNotifica> {
                       ),
                       child: Oggetto(
                         comeSiChiama(_notifica.tipo).disegno,
-                        lato: 60,
+                        lato: 42,
                       ),
                     ),
                   ),
@@ -335,7 +335,7 @@ class _StatoDellaNotifica extends State<SchermataDellaNotifica> {
                 Positioned(
                   left: 0,
                   right: 0,
-                  bottom: 22,
+                  bottom: 18,
                   child: Center(
                     child: SizedBox(
                       width: larga < 620 ? larga : 620,
