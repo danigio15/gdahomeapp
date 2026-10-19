@@ -6812,4 +6812,11 @@ export default Object.freeze({
   "This reading has no entity yet.": "У этого показания ещё нет сущности.",
   "This target is a read-only sensor.": "Эта цель — датчик только для чтения.",
   "You picked «An address of mine» but there is no address.": "Выбран «Свой адрес», но адреса нет.",
+  "Fed": "Поел",
+  "Feeding time": "Время кормления",
+  "it's time": "пора",
+  "Meals": "Кормление",
+  "Meals: every how many hours": "Кормление: каждые сколько часов",
+  "Not logged yet": "Ещё не отмечено",
+  "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "На карточке есть кнопка «Поел»: когда снова придёт время, страница и телефон напомнят. Пусто: без напоминания.",
 });

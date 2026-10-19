@@ -151,6 +151,7 @@ import {
   conLoSquillo,
   durataScritta,
   faseDelloSquillo,
+  finestraDaChiudere,
   opzioniDelCampanello,
   quantoFa,
   ricordoDelCampanello,
@@ -3774,7 +3775,7 @@ function finestra() {
 }
 
 function apriFinestra(f) {
-  state.finestra = f;
+  state.finestra = { ...f, aperta: Date.now() };
   disegna();
 }
 function chiudiFinestra() {
@@ -4842,6 +4843,9 @@ function rinfrescaLeTelecamere() {
 
 function tocco() {
   state.toccato = Date.now();
+  /* Il tocco di un dito, e non di un sensore: e' questo che tiene aperta una
+   * finestra (`finestraDaChiudere`). */
+  state.toccatoDalDito = state.toccato;
 }
 
 function attendi(id, cosa, valore) {
@@ -5616,6 +5620,11 @@ function onPointerUp(event) {
 function battito() {
   const muro = state.muro;
   if (!muro?.attiva) return;
+  /* Una finestra che nessuno tocca da cinque minuti si chiude da sola: il
+   * citofono dopo lo squillo, ma anche le altre. Da li' il riposo e il
+   * ritorno alla Home tornano a valere. */
+  if (state.finestra && !state.trascina && finestraDaChiudere(state.finestra, state.toccatoDalDito, Date.now()))
+    chiudiFinestra();
   const fermo = Date.now() - state.toccato;
   const sonno = (muro.riposo.attivo ? muro.riposo.minuti : 0) * 60 * 1000;
   if (!state.riposo && !state.finestra && !state.trascina && sonno && fermo > sonno) {

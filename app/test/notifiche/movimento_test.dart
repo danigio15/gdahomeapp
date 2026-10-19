@@ -126,10 +126,11 @@ void main() {
         ),
         isTrue,
       );
-      /* Il tocco sulla notifica del movimento, anche. */
+      /* Il tocco sulla notifica del movimento no: apre la pagina della
+       * notifica, con la foto del momento e «Guarda dal vivo». */
       expect(
         apreLaTelecamera(ToccoDellaNotifica(casa: 'c', notifica: _movimento())),
-        isTrue,
+        isFalse,
       );
       /* Senza telecamera (non vicina, o non per questa utenza): il foglio. */
       expect(

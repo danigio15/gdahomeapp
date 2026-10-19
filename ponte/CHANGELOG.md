@@ -10,6 +10,29 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.16.6
+
+- **L'assistente sul telefono:** dodici notifiche nuove, ognuna col tasto che
+  fa la cosa: serratura rimasta aperta (chiudi a chiave), finestra aperta col
+  clima acceso (spegni il clima), luci accese di notte dove non c'è nessuno,
+  lavatrice o lavastoviglie quando c'è sole, auto da caricare col sole, rete
+  che tira troppo (metti in pausa), rifiuti da mettere fuori, appuntamento
+  fra mezz'ora, stanza troppo calda o fredda, aria da cambiare, dispositivi
+  che non rispondono, aggiornamenti. «Va bene così» la zittisce per dodici ore.
+- **Animali, la pappa:** per ogni animale si sceglie ogni quante ore mangia.
+  La scheda dice da quanto e fra quanto, col tasto «Ha mangiato»; quando è
+  l'ora arriva la notifica, e «Ha mangiato» si preme anche da lì.
+- **La plancia ferma finché non si riapre l'app:** corretto. In 4G le
+  risposte lente facevano smettere all'app di controllare il collegamento;
+  adesso si accorge sempre di un collegamento morto e si ricollega da sola.
+- **Notifica toccata:** si apre nell'app con una testata più compatta, la
+  foto del momento del movimento e i tasti che non si tagliano più.
+- **Foto del movimento:** arriva anche dalle telecamere 4K.
+- **Auto:** la scheda è un cruscotto, con la percentuale dentro il cerchio.
+- **Muro:** il citofono si chiude da solo dopo cinque minuti.
+- **Navigatore:** nelle rotonde e agli svincoli la freccia segue la strada;
+  in autostrada, con l'uscita lontana, la mappa si allarga.
+
 ## 1.16.5
 
 - **L'app che torna dopo ore:** se il telefono si addormentava subito dopo

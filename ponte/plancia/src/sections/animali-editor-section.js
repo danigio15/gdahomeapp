@@ -27,6 +27,7 @@ import {
   CAMPI,
   CHIAVE_ANIMALI,
   CHIAVI_SOGLIE,
+  PAPPA_OGNI_AL_PIU,
   SOGLIE_DI_SERIE,
   SPECIE,
   collegaAnimaleAlDispositivo,
@@ -391,7 +392,8 @@ function rigaMarkup(animale, indice, animali = []) {
       ${
         vasca
           ? vascaEditorMarkup(animale, indice, { esclusi: entitaDelleAltreVasche(animali, indice) })
-          : `${dispositiviMarkup(animale)}
+          : `${pappaEditorMarkup(animale, indice)}
+      ${dispositiviMarkup(animale)}
       <button type="button" class="ed-btn-add dm-animale-integ-riga" data-animale-integ-riga>🔗 ${t("Collega un altro dispositivo", "Link another device")}</button>
       ${gruppiMarkup(animale, indice)}
       ${soglieMarkup(animale, indice)}`
@@ -400,6 +402,17 @@ function rigaMarkup(animale, indice, animali = []) {
       <button type="button" class="ed-save-btn" data-animale-save>💾 ${vasca ? t("Salva", "Save") : t("Salva animale", "Save pet")}</button>
     </div>
   </article>`;
+}
+
+/* La pappa (vedi `core/animali-model.js`): ogni quante ore. Vuota, la
+ * scheda non ha la fascia della pappa e nessuno ricorda niente. */
+function pappaEditorMarkup(animale, indice) {
+  return `<label class="ed-slot dm-animale-field"><span class="ed-slot-lbl">🍽️ ${t("Pappa: ogni quante ore", "Meals: every how many hours")}</span>
+    <span class="ed-form-row"><input id="dm-animale-${indice}-pappa-ogni" class="ed-input" type="number" min="0.5" max="${PAPPA_OGNI_AL_PIU}" step="0.5" inputmode="decimal" data-animale-field="pappa_ogni" value="${esc(animale.pappa_ogni || "")}" placeholder="12"></span>
+    <small>${t(
+      "Nella scheda compare il tasto «Ha mangiato»: quando torna l'ora, la pagina e il telefono te lo ricordano. Vuoto: niente promemoria.",
+      "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.",
+    )}</small></label>`;
 }
 
 function nomeSpecie(chiave) {
@@ -584,6 +597,7 @@ export function ensureAnimaliEditor() {
           ? JSON.stringify([animale.righe, animale.litri, animale.ogni, animale.cambio, animale.pulizia])
           : "",
         [...CAMPI, ...AZIONI].map((campo) => animale[campo.chiave]).join(","),
+        animale.pappa_ogni || "",
       ].join("~"),
     ),
   ].join("|");

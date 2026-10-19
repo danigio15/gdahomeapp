@@ -131,6 +131,14 @@ part 'notifiche_da_home_assistant.dart';
           en: 'Too warm, or the door left open',
         ),
       ),
+      'animali' => (
+        disegno: 'animali',
+        titolo: inLingua(it: 'La pappa degli animali', en: 'Pet meals'),
+        sotto: inLingua(
+          it: 'Quando è ora di darla di nuovo',
+          en: 'When it\'s time to feed again',
+        ),
+      ),
       'pioggia' => (
         disegno: 'irrigazione',
         titolo: inLingua(

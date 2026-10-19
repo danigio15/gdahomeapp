@@ -1,14 +1,18 @@
 /// Una notifica toccata: cosa c'era dentro, e i suoi tasti.
 ///
-/// Va dove sta la cosa di cui parla (`notifiche/dove_apre.dart`). Il
-/// **campanello** si apre a tutto schermo, come una chiamata: la foto della
-/// porta, «Ignora» e «Apri». Il movimento, e «Guarda» su una notifica con la
-/// sua telecamera, aprono **la telecamera** ([SchermataDellaTelecamera]),
-/// dal vivo. Il riepilogo apre «La tua giornata». L'antifurto, le porte, gli
-/// elettrodomestici, l'energia, le persone, il meteo vanno alla loro pagina
-/// della plancia ([apriLaNotifica], `vaiA`); un viaggio al navigatore. Dove
-/// un posto non c'e', o la casa non risponde, si apre la pagina della
-/// notifica (`la_notifica.dart`) — non piu' un foglio dal basso.
+/// «Quando si clicca sulla notifica venga aperta l'app con la
+/// visualizzazione della stessa notifica.» Toccata, una notifica apre **la
+/// sua pagina** (`la_notifica.dart`): com'era la notifica — il titolo, il
+/// testo, la foto del momento o la scheda, i tasti — e sotto un tasto che
+/// porta dove sta la cosa di cui parla (`notifiche/dove_apre.dart`): la
+/// telecamera dal vivo, la pagina della plancia, «La tua giornata», il
+/// navigatore.
+///
+/// Fanno eccezione il **campanello** che sta suonando, che si apre a tutto
+/// schermo come una chiamata (la foto della porta, «Ignora» e «Apri»), e i
+/// tasti della notifica: «Guarda» apre **la telecamera**
+/// ([SchermataDellaTelecamera]), «Apri la giornata» la giornata, gli altri
+/// vanno alla casa.
 ///
 /// **La foto non e' mai passata da Google o da Apple.** Nella notifica c'e'
 /// solo il nome della telecamera — e solo se a chi tiene questo telefono quella
@@ -47,9 +51,7 @@ import 'la_tua_giornata.dart';
 bool apreLaTelecamera(ToccoDellaNotifica tocco) {
   final notifica = tocco.notifica;
   if (notifica.camera == null || notifica.chiamata) return false;
-  if (tocco.tasto == 'guarda') return true;
-  return tocco.tasto == null &&
-      doveApre(notifica).posto == PostoDellaNotifica.telecamera;
+  return tocco.tasto == 'guarda';
 }
 
 /// Dove va l'app per una notifica, quando il posto e' una pagina della
@@ -93,9 +95,7 @@ Future<void> apriLaNotifica(
    * ponte di prima), o il tocco sulla notifica, aprono la pagina. Il
    * riepilogo semplice di Base, senza quel tasto, si legge nel foglio. */
   if (notifica.apreLaGiornata &&
-      (tocco.tasto == null ||
-          tocco.tasto == tastoDellaGiornata ||
-          tocco.tasto == 'energia')) {
+      (tocco.tasto == tastoDellaGiornata || tocco.tasto == 'energia')) {
     await apriLaTuaGiornata(
       context,
       collegamento: collegamento,
@@ -150,17 +150,50 @@ Future<void> apriLaNotifica(
     return;
   }
   final dove = doveApre(notifica);
-  if (vaiA != null &&
-      (dove.posto == PostoDellaNotifica.plancia ||
-          dove.posto == PostoDellaNotifica.navigatore)) {
-    bool arrivata;
-    try {
-      arrivata = await vaiA(dove);
-    } catch (_) {
-      arrivata = false;
+  /* Il tasto della pagina che porta al posto della notifica. Per la plancia e
+   * il navigatore la pagina si chiude prima: ci si va da sotto. Se non ci si
+   * arriva — la casa non risponde, la plancia quella pagina non ce l'ha — si
+   * resta dove si e'. */
+  Future<void> vai(BuildContext pagina) async {
+    switch (dove.posto) {
+      case PostoDellaNotifica.telecamera:
+        await Navigator.of(pagina).push(
+          MaterialPageRoute<void>(
+            builder: (_) => SchermataDellaTelecamera(
+              tocco: ToccoDellaNotifica(
+                casa: tocco.casa,
+                notifica: notifica,
+                tasto: 'guarda',
+              ),
+              collegamento: collegamento,
+              postino: postino,
+            ),
+          ),
+        );
+      case PostoDellaNotifica.giornata:
+        await apriLaTuaGiornata(
+          pagina,
+          collegamento: collegamento,
+          casa: tocco.casa,
+        );
+      case PostoDellaNotifica.plancia || PostoDellaNotifica.navigatore:
+        if (vaiA == null) return;
+        Navigator.of(pagina).pop();
+        try {
+          await vaiA(dove);
+        } catch (_) {
+          /* Resta dov'e'. */
+        }
+      case PostoDellaNotifica.pagina:
+        return;
     }
-    if (arrivata || !context.mounted) return;
   }
+
+  final etichetta = switch (dove.posto) {
+    PostoDellaNotifica.plancia ||
+    PostoDellaNotifica.navigatore when vaiA == null => null,
+    _ => etichettaDelPosto(dove),
+  };
   if (!context.mounted) return;
   await Navigator.of(context).push(
     MaterialPageRoute<void>(
@@ -172,6 +205,8 @@ Future<void> apriLaNotifica(
             '',
         collegamento: collegamento,
         postino: postino,
+        etichettaDelPosto: etichetta,
+        vaiAlPosto: etichetta == null ? null : vai,
       ),
     ),
   );

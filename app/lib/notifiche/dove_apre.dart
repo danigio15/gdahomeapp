@@ -14,6 +14,7 @@
 /// Niente Flutter qui dentro: e' la parte che si prova.
 library;
 
+import '../parole.dart';
 import 'modello.dart';
 
 /// Un posto dell'app dove una notifica puo' portare.
@@ -59,6 +60,7 @@ const Map<String, String> sezioneDelTipo = {
   'campanello': 'telecamera',
   'elettrodomestici': 'elettrodomestici',
   'frigo': 'sensore',
+  'animali': 'animali',
   'personalizzata': 'sensore',
   'pioggia': 'meteo',
   'arrivi': 'persone',
@@ -79,6 +81,7 @@ const Map<String, List<String>> linguetteDellaSezione = {
   'energia': ['energy'],
   'persone': ['persone'],
   'meteo': ['meteo', 'home'],
+  'animali': ['animali'],
   'plancia': ['home'],
 };
 
@@ -113,4 +116,32 @@ DoveApre doveApre(NotificaArrivata notifica) {
     linguette: linguette,
     entita: entita,
   );
+}
+
+/// Le parole del tasto che dalla pagina della notifica porta al suo posto:
+/// «Guarda dal vivo», «Apri Sicurezza»… `null` dove un posto non c'e'.
+String? etichettaDelPosto(DoveApre dove) {
+  switch (dove.posto) {
+    case PostoDellaNotifica.telecamera:
+      return inLingua(it: 'Guarda dal vivo', en: 'Watch live');
+    case PostoDellaNotifica.giornata:
+      return inLingua(it: 'Apri la tua giornata', en: 'Open your day');
+    case PostoDellaNotifica.navigatore:
+      return inLingua(it: 'Apri i viaggi', en: 'Open trips');
+    case PostoDellaNotifica.pagina:
+      return null;
+    case PostoDellaNotifica.plancia:
+      final prima = dove.linguette.isEmpty ? '' : dove.linguette.first;
+      final (it, en) = switch (prima) {
+        'security' => ('Sicurezza', 'Security'),
+        'varchi' => ('Varchi', 'Openings'),
+        'appliances-main' => ('Elettrodomestici', 'Appliances'),
+        'energy' => ('Energia', 'Energy'),
+        'persone' => ('Persone', 'People'),
+        'meteo' => ('Meteo', 'Weather'),
+        'animali' => ('Animali', 'Pets'),
+        _ => ('la plancia', 'the dashboard'),
+      };
+      return inLingua(it: 'Apri $it', en: 'Open $en');
+  }
 }

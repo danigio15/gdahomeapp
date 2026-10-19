@@ -6789,4 +6789,11 @@ export default Object.freeze({
   "This reading has no entity yet.": "この計測にはまだエンティティがありません。",
   "This target is a read-only sensor.": "この目標は読み取り専用のセンサーです。",
   "You picked «An address of mine» but there is no address.": "「自分のアドレス」を選びましたがアドレスがありません。",
+  "Fed": "食べた",
+  "Feeding time": "ごはんの時間",
+  "it's time": "時間です",
+  "Meals": "ごはん",
+  "Meals: every how many hours": "ごはん：何時間ごと",
+  "Not logged yet": "まだ記録なし",
+  "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "カードに「食べた」ボタンが表示されます。また時間になると、ページとスマートフォンがお知らせします。空欄：お知らせなし。",
 });

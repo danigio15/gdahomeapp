@@ -49,6 +49,8 @@ import {
   elettrodomesticoDellaPlancia,
   tipoDellElettrodomestico,
 } from "./il-tipo-dell-elettrodomestico.js";
+import { laPappa, normalizzaAnimali } from "../plancia/src/core/animali-model.js";
+import { regoleDellAssistente } from "./l-assistente-al-telefono.js";
 import {
   paroleDelBlackout,
   paroleDelCiclo,
@@ -68,7 +70,7 @@ export const URGENZE = Object.freeze(["bassa", "normale", "urgente"]);
 export const CATEGORIE = Object.freeze({
   urgenti: ["antifurto", "allarmi", "campanello", "blackout"],
   sicurezza: ["inserimenti", "uscito", "aperture", "movimento"],
-  casa: ["elettrodomestici", "frigo", "pioggia"],
+  casa: ["elettrodomestici", "frigo", "pioggia", "animali"],
   persone: ["arrivi"],
   assistente: ["suggerimenti"],
   manutenzione: ["riepilogo"],
@@ -195,7 +197,7 @@ export function paroleDelNome(id, nome = "") {
 /* Il nome di un'entita': quello che le ha dato chi l'ha messa, o — senza —
  * dall'identificativo, con la prima lettera grande: «casa_al_lago» era
  * «casa al lago» in testa alla notifica. */
-const nomeDi = (stato, id) => {
+export const nomeDi = (stato, id) => {
   const scritto = stato?.attributes?.friendly_name;
   if (scritto) return String(scritto).slice(0, 60);
   const daLId = String(id || "")
@@ -206,7 +208,7 @@ const nomeDi = (stato, id) => {
   return (daLId[0].toUpperCase() + daLId.slice(1)).slice(0, 60);
 };
 
-const dominioDi = (id) => String(id).split(".")[0];
+export const dominioDi = (id) => String(id).split(".")[0];
 
 const numero = (valore) => {
   const n = Number(String(valore ?? "").replace(",", "."));
@@ -406,6 +408,20 @@ export function tastiDellApertura(id, { copertura = false, vuota = false } = {})
   ];
 }
 
+/** E' l'ora della pappa: `nome` dell'animale (o la sua specie), `da` in ms
+ * dall'ultima. */
+export function paroleDellaPappa({ nome, specie, da }) {
+  const chi = nome || { gatto: "del gatto", cane: "del cane" }[specie] || "dell'animale";
+  const who = nome || { gatto: "the cat", cane: "the dog" }[specie] || "your pet";
+  return {
+    it: {
+      titolo: `🍽️ È ora della pappa ${nome ? `di ${chi}` : chi}`,
+      testo: `L'ultima ${perQuanto(da)} fa`,
+    },
+    en: { titolo: `🍽️ Feeding time for ${who}`, testo: `Last meal ${perQuanto(da, "en")} ago` },
+  };
+}
+
 /** Il frigo o il congelatore troppo caldi: `valore` com'e' lo stato, `da` in ms. */
 export function paroleDelFrigoCaldo({ nome, valore, unita = "°C", da }) {
   return {
@@ -512,6 +528,15 @@ export class Sentinella {
     /** Di quale dispositivo e' ogni entita' (`registri.js`): serve a trovare
      * la telecamera dello stesso campanello. */
     this.dispositivoDi = {};
+    /** L'area di ogni entita', col nome che le ha dato chi abita
+     * (`registri.js`, via `notifiche.js`): «Cucina», «Taverna». Vuota senza
+     * registri, e allora le regole che vogliono «la stessa stanza» tacciono. */
+    this.aree = new Map();
+    /** Le entita' che i registri dicono nascoste, disattivate o di
+     * diagnostica: non contano fra i dispositivi muti. */
+    this.daNonContare = new Set();
+    /** Il nome di ogni dispositivo, per dire quale non risponde. */
+    this.nomiDeiDispositivi = {};
     /** Le notifiche personalizzate, come le tiene `notifiche.js`. */
     this.personalizzate = [];
     /* Quello che una regola deve ricordarsi fra un giro e l'altro: da quando
@@ -534,6 +559,11 @@ export class Sentinella {
     /* Com'era ogni UPS al giro prima. */
     this._ups = new Map();
     this._conSole = false;
+    /* Quello che le regole dell'assistente al telefono si ricordano fra un
+     * giro e l'altro (`l-assistente-al-telefono.js`), e le chiavi che al giro
+     * prima valevano: quelle che smettono di valere si riarmano. */
+    this._memoriaDellAssistente = new Map();
+    this._attiveDellAssistente = new Set();
   }
 
   /* ─── La configurazione della plancia ──────────────────────────────── */
@@ -678,6 +708,8 @@ export class Sentinella {
     try {
       this._durate();
       this._personalizzate();
+      this._laPappa();
+      this._lAssistente();
     } catch (errore) {
       this.registro?.errore?.(`una regola delle notifiche: ${errore?.message || errore}`);
     }
@@ -688,6 +720,44 @@ export class Sentinella {
       this.capire.pota();
     }
     this.capire.scrivi();
+  }
+
+  /* ─── La pappa degli animali, a ogni battito ───────────────────────── */
+
+  /* «Confermo che e' stato dato da mangiare e mi avvisa quando sara' da
+   * rifare.» La pappa si segna dalla scheda dell'animale nella plancia, e sta
+   * nella sua configurazione (`cd_animali`, vedi `core/animali-model.js`):
+   * quando l'ora arriva lo si dice una volta per ogni pappa segnata. Segnata
+   * la prossima, la chiave cambia, e alla sua ora si torna a dirlo. */
+  _laPappa() {
+    let grezzo = this._valori()?.cd_animali;
+    try {
+      if (typeof grezzo === "string") grezzo = JSON.parse(grezzo);
+    } catch (_errore) {
+      return;
+    }
+    if (!Array.isArray(grezzo) || !grezzo.length) return;
+    const ora = this.adesso();
+    for (const animale of normalizzaAnimali(grezzo)) {
+      const pappa = laPappa(animale, ora);
+      if (!pappa || pappa.ultimo === null || pappa.ogni === null) continue;
+      if (!this._unaVolta(`pappa:${animale.id}:${pappa.ultimo}`, pappa.ora)) continue;
+      this._dici({
+        tipo: "animali",
+        urgenza: "normale",
+        chiave: `pappa:${animale.id}`,
+        pausa: 30 * MINUTO,
+        azioni: [
+          { id: "pappa", parole: duePassi("Ha mangiato", "Fed"), pappa: animale.id },
+          tastoGuarda(),
+        ],
+        parole: paroleDellaPappa({
+          nome: animale.nome,
+          specie: animale.specie,
+          da: ora - pappa.ultimo,
+        }),
+      });
+    }
   }
 
   /* ─── L'energia e gli UPS, a ogni battito ──────────────────────────── */
@@ -1458,6 +1528,7 @@ export class Sentinella {
     const vuota = this.casaVuota();
     const notte = eNotte(new Date(ora));
     const dorme = this._casaDorme(ora);
+    this._dormeAdesso = dorme;
     /* Quanto e' passato dal battito di prima, per le abitudini: al piu' un
      * minuto, perche' un ponte fermo per un'ora non ha visto niente. */
     const passati = Math.min(1, Math.max(0, (ora - (this._ultimoBattito ?? ora)) / MINUTO));
@@ -1703,6 +1774,72 @@ export class Sentinella {
         ],
       });
     }
+  }
+
+  /* ─── L'assistente al telefono ─────────────────────────────────────── */
+
+  /* Quello che le regole dell'assistente vedono adesso: la vista di
+   * `l-assistente-al-telefono.js`. */
+  _vista() {
+    const ora = this.adesso();
+    const vuota = this.casaVuota();
+    const vuotaDa = this._vuotaDa(vuota);
+    const valori = this._valori();
+    return {
+      ora,
+      data: new Date(ora),
+      stati: this.stati,
+      vuota,
+      vuotaDa: Number.isFinite(vuotaDa) ? ora - vuotaDa : null,
+      notte: eNotte(new Date(ora)),
+      dorme: this._dormeAdesso ?? this._casaDorme(ora),
+      aree: this.aree,
+      dispositivoDi: this.dispositivoDi || {},
+      nomiDeiDispositivi: this.nomiDeiDispositivi || {},
+      daNonContare: this.daNonContare,
+      valori,
+      risolvi: this._risolutore(valori),
+      letture: this._lettureDellAssistente(valori),
+      statiComeOggetto: () => this.statiComeOggetto(),
+      lasciaStare: (id, nome) => this.capire.lasciaStare(id, nome, { tipo: "luce", ora }),
+      memoria: this._memoriaDellAssistente,
+    };
+  }
+
+  /* Le potenze di adesso: quelle che il taccuino ha appena campionato, o —
+   * senza taccuino — lette qui, con i carichi della plancia e le prese. */
+  _lettureDellAssistente(valori) {
+    if (this.taccuino && this._ultimeLetture) return this._ultimeLetture;
+    const letture = letturaDellEnergia(this._risolutore(valori), (id) => this.stati.get(id));
+    letture.carichi = {};
+    for (const id of this._prese()) letture.carichi[id] = this._watt(this.stati.get(id));
+    for (const { id } of carichiDellaPlancia(valori))
+      if (!(id in letture.carichi)) letture.carichi[id] = this._watt(this.stati.get(id));
+    return letture;
+  }
+
+  /* Le regole dell'assistente, a ogni battito: ognuna torna quello che
+   * varrebbe adesso, e qui lo si dice una volta sola finche' resta vero. La
+   * chiave del «una volta» e' quella dell'evento, o la sua `volta` quando la
+   * regola ne vuole una sua (i rifiuti la sera e la mattina, gli
+   * aggiornamenti che crescono). Quelle che al giro prima valevano e adesso no
+   * si riarmano. */
+  _lAssistente() {
+    const eventi = regoleDellAssistente(this._vista(), {
+      sbaglia: (nome, errore) =>
+        this.registro?.errore?.(
+          `la regola «${nome}» dell'assistente: ${errore?.message || errore}`,
+        ),
+    });
+    const attive = new Set();
+    for (const { volta, ...evento } of eventi) {
+      const chiave = volta || evento.chiave;
+      attive.add(chiave);
+      if (this._unaVolta(chiave, true)) this._dici(evento);
+    }
+    for (const chiave of this._attiveDellAssistente)
+      if (!attive.has(chiave)) this._unaVolta(chiave, false);
+    this._attiveDellAssistente = attive;
   }
 
   /* Da quando la casa e' vuota: l'ultima persona uscita. */

@@ -6771,4 +6771,11 @@ export default Object.freeze({
   "This reading has no entity yet.": "이 값에는 아직 엔티티가 없습니다.",
   "This target is a read-only sensor.": "이 목표는 읽기 전용 센서입니다.",
   "You picked «An address of mine» but there is no address.": "«내 주소»를 골랐지만 주소가 없습니다.",
+  "Fed": "먹었음",
+  "Feeding time": "밥 먹을 시간",
+  "it's time": "시간이에요",
+  "Meals": "식사",
+  "Meals: every how many hours": "식사: 몇 시간마다",
+  "Not logged yet": "아직 기록 없음",
+  "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "카드에 «먹었음» 버튼이 표시됩니다. 다시 시간이 되면 페이지와 휴대폰이 알려 드립니다. 비워 두면 알림 없음.",
 });

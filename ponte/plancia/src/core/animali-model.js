@@ -425,6 +425,66 @@ export const CAMPI_DELLA_VASCA = Object.freeze([
   "origine",
 ]);
 
+/* ── la pappa ──────────────────────────────────────────────────────────
+ *
+ * Dal campo: «sulla sezione animali possiamo inserire, come hai fatto con la
+ * pulizia, il cibo, cosi' confermo che e' stato dato da mangiare e mi avvisa
+ * quando sara' da rifare?». Come il cambio d'acqua di una vasca: nessun
+ * sensore lo misura, e' un momento che si segna dalla scheda («Ha
+ * mangiato»), e un ritmo scritto nella configurazione — ogni quante ore. La
+ * pagina dice da quanto e fra quanto; il ponte, quando l'ora arriva, lo dice
+ * al telefono (`sentinella.js`, la notifica «animali»).
+ *
+ * Le ore e non i giorni: la pappa si da' due o tre volte al giorno, e «oggi»
+ * non basta a dire se e' gia' stata data stasera. */
+
+/** I campi della pappa: l'ultima volta (`pappa`, ISO) e ogni quante ore. */
+export const CAMPI_DELLA_PAPPA = Object.freeze(["pappa", "pappa_ogni"]);
+
+/** Al piu' una settimana fra una pappa e l'altra; al meno mezz'ora. */
+export const PAPPA_OGNI_AL_PIU = 168;
+
+/** Ogni quante ore, come scritto: a mezz'ore, o `null` se non c'e'. */
+export function oreDellaPappa(valore) {
+  const letto = Number.parseFloat(valore);
+  if (!Number.isFinite(letto) || letto <= 0) return null;
+  return Math.min(PAPPA_OGNI_AL_PIU, Math.max(0.5, Math.round(letto * 2) / 2));
+}
+
+/**
+ * La pappa di un animale ad `adesso`: l'ultima volta, ogni quante ore, da
+ * quanti minuti, fra quanti tocca e se e' l'ora. `null` senza ne' ritmo ne'
+ * una volta segnata: la scheda non la disegna.
+ */
+export function laPappa(animale, adesso) {
+  const ogni = oreDellaPappa(animale?.pappa_ogni);
+  const ultimo = Date.parse(pulito(animale?.pappa));
+  const segnata = Number.isFinite(ultimo);
+  if (ogni === null && !segnata) return null;
+  const minuti = segnata ? Math.max(0, Math.floor((adesso - ultimo) / 60_000)) : null;
+  const fra = segnata && ogni !== null ? Math.round(ogni * 60) - minuti : null;
+  return {
+    ultimo: segnata ? ultimo : null,
+    ogni,
+    minuti,
+    fra,
+    /* Senza una volta segnata non si sa, e non si dice che e' l'ora. */
+    ora: fra !== null && fra <= 0,
+    /* In ritardo di mezzo giro: la scheda si fa rossa. */
+    tardi: fra !== null && ogni !== null && -fra >= ogni * 30,
+  };
+}
+
+/** L'animale con la pappa segnata a `quando` (ISO, lo scrive chi ha
+ * l'orologio); senza, se `quando` e' vuoto o non e' una data. */
+export function conLaPappa(animale, quando) {
+  const fuori = { ...(animale && typeof animale === "object" ? animale : {}) };
+  const scritto = pulito(quando);
+  if (Number.isFinite(Date.parse(scritto))) fuori.pappa = scritto;
+  else delete fuori.pappa;
+  return fuori;
+}
+
 export function normalizzaAnimale(input = {}, indice = 0) {
   const grezzo = input && typeof input === "object" ? input : {};
   const animale = {
@@ -459,6 +519,10 @@ export function normalizzaAnimale(input = {}, indice = 0) {
   if (vasca || Array.isArray(grezzo.righe))
     animale.righe = righeDichiarate({ righe: grezzo.righe || [] }, CAMPI_IN_PIU) || [];
   for (const campo of CAMPI_DELLA_VASCA) {
+    const scritto = pulito(grezzo[campo]);
+    if (scritto) animale[campo] = scritto;
+  }
+  for (const campo of CAMPI_DELLA_PAPPA) {
     const scritto = pulito(grezzo[campo]);
     if (scritto) animale[campo] = scritto;
   }
@@ -901,6 +965,9 @@ export function vistaAnimale(animale = {}, states = {}, adesso = 0) {
   if (sottoSoglia(letture.collare_batteria, soglie.collare))
     alza("collare_scarico", "attenzione", "collare_batteria");
 
+  const pappa = laPappa(suo, adesso);
+  if (pappa?.ora) alza("pappa_da_dare", pappa.tardi ? "urgente" : "attenzione", "pappa");
+
   const porta = letture.porta;
   return {
     id: suo.id,
@@ -951,6 +1018,7 @@ export function vistaAnimale(animale = {}, states = {}, adesso = 0) {
         ? porta.dentro
         : (letture.collare_posizione?.dentro ?? null),
     avvisi,
+    pappa,
     /* Il peggio che c'e': la scheda si colora con questo, e le schede si
      * mettono in fila con questo. */
     gravita: avvisi.some((voce) => voce.gravita === "urgente")

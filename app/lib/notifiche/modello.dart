@@ -17,7 +17,7 @@ import '../parole.dart';
 const Map<String, List<String>> categorieDelleNotifiche = {
   'urgenti': ['antifurto', 'allarmi', 'campanello', 'blackout'],
   'sicurezza': ['inserimenti', 'uscito', 'aperture', 'movimento'],
-  'casa': ['elettrodomestici', 'frigo', 'pioggia'],
+  'casa': ['elettrodomestici', 'frigo', 'pioggia', 'animali'],
   'persone': ['arrivi'],
   'assistente': ['suggerimenti'],
   'manutenzione': ['riepilogo'],

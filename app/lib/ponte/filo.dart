@@ -1036,6 +1036,14 @@ class Filo {
      * non controllava piu' niente, nemmeno al rientro ([sveglia]): il filo
      * morto restava «dentro», la plancia mandava i comandi nel vuoto, e
      * nessuno li vedeva cadere. */
+    /* Dal campo, ancora: «devo sempre chiudere e riaprire l'app perche' non
+     * si aggiorna». Dire «questa casa i colpetti non li rimanda» era per
+     * sempre: da li' il battito non guardava piu' nemmeno il silenzio, e un
+     * filo morto restava «dentro» fino al riavvio. Ma un ponte il `pong` lo
+     * rimanda sempre: quando non arriva e' solo in ritardo (in 4G, dal
+     * centralino, in fila dietro gli stati e le foto). Allora il silenzio si
+     * guarda sempre, e i colpetti continuano: un pong che arriva tardi
+     * rimette le cose a posto da solo. */
     if (_rispondeAiColpetti == null) {
       if (zitta) {
         _caduto('nessuna risposta, nemmeno al primo colpetto');
@@ -1043,13 +1051,12 @@ class Filo {
       }
       if (_colpiSenzaRisposta >= colpiPerSapere) {
         _rispondeAiColpetti = false;
-        return;
+      } else {
+        _colpiSenzaRisposta += 1;
       }
-      _colpiSenzaRisposta += 1;
       _colpo();
       return;
     }
-    if (_rispondeAiColpetti == false) return;
 
     if (zitta) {
       /* Sembra aperto e non lo e'. Si chiude di mano nostra: e' la chiusura
@@ -1078,7 +1085,8 @@ class Filo {
   void sveglia() {
     if (_spentoApposta) return;
     if (dentro) {
-      if (_rispondeAiColpetti == false) return;
+      /* Anche se i pong arrivano tardi: qui conta qualunque cosa torni, e
+       * un filo vivo qualcosa rimanda (il pong, o gli eventi). */
       _colpo();
       _controlloAlRisveglio?.cancel();
       final da = DateTime.now();

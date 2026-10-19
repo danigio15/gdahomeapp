@@ -447,6 +447,10 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   /// Quando l'app e' stata lasciata. `null` finche' non se ne va.
   DateTime? _lasciataIl;
 
+  /* Da quando l'app non si guarda piu', per il filo: [_lasciataIl] e' del
+   * lucchetto, e lui la azzera a modo suo. */
+  DateTime? _andataViaIl;
+
   /// L'app e' stata chiusa (`detached`) e il motore e' rimasto acceso: la
   /// versione col navigatore in auto lo tiene acceso apposta, per l'auto.
   /// Riaprirla, per chi guarda, e' un'apertura, e il lucchetto «all'avvio»
@@ -516,7 +520,22 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
       unawaited(loSchermoRimetti());
       _seNonTorna?.cancel();
       _seNonTorna = null;
-      _collegamento.sveglia();
+      /* Via da piu' di quanto si aspetta prima di riposare, ma il conto non
+       * e' scattato: Android congela l'app, e un timer congelato non suona.
+       * Il filo di prima e' quasi sempre morto, e svegliarlo vuol dire
+       * aspettare che lo dica: si rifa' subito, come se avesse riposato. */
+      final via = _andataViaIl;
+      _andataViaIl = null;
+      final daRifare =
+          via != null &&
+          DateTime.now().difference(via) > quantoSiAspettaPrimaDiRiposare &&
+          !navigatore.inMacchina.value &&
+          !_collegamento.aRiposo;
+      if (daRifare) {
+        unawaited(_collegamento.apri(forza: true));
+      } else {
+        _collegamento.sveglia();
+      }
       final riaperta = _chiusa;
       _chiusa = false;
       unawaited(_seSiRichiude(riaperta: riaperta));
@@ -542,6 +561,7 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
      * `paused` arrivano tutt'e due, e riscriverla vorrebbe dire un conto che
      * riparte da zero mentre il telefono e' gia' in tasca. */
     _lasciataIl ??= DateTime.now();
+    _andataViaIl ??= DateTime.now();
     _seNonTorna ??= Timer(quantoSiAspettaPrimaDiRiposare, () {
       _seNonTorna = null;
       /* In macchina no: vedi [_inMacchinaECambiato]. Si guarda adesso e non

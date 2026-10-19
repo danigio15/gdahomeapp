@@ -52,6 +52,7 @@ import {
   genereDiElettrodomestico,
   paroleDelCampanello,
   paroleDelFrigoCaldo,
+  paroleDellaPappa,
   paroleDellAllarme,
   paroleDellApertura,
   paroleDellArrivo,
@@ -69,6 +70,7 @@ import { paroleDellAvviso, tastiDellAvviso } from "./viaggi.js";
 import { chiudiLaFoto, chiudiLaSpinta, CONTENUTO_MASSIMO, FOTO_MASSIMA } from "./spinta.js";
 import { vedeQualcosa } from "./plance.js";
 import { PROFILO_PRINCIPALE } from "./configurazione.js";
+import { conLaPappa, normalizzaAnimali } from "../plancia/src/core/animali-model.js";
 import { TaccuinoDellEnergia } from "./l-energia-di-casa.js";
 import {
   DiarioDellaCasa,
@@ -87,6 +89,9 @@ import { COMPOSITORI, PEZZI_DEL_CICLO } from "./parole-delle-notifiche.js";
 import { NotificheDiHomeAssistant } from "./notifiche-di-home-assistant.js";
 
 const MINUTO = 60 * 1000;
+/* Le larghezze chieste per la foto di un movimento, dalla piu' bella alla
+ * piu' leggera (vedi `_laFoto`). */
+export const LARGHEZZE_DELLA_FOTO = Object.freeze([1280, 640, 320]);
 const ORA = 60 * MINUTO;
 /* Le automazioni a orario si rileggono una volta al giorno. */
 const AUTOMAZIONI_OGNI = 24 * ORA;
@@ -95,6 +100,9 @@ const AUTOMAZIONI_OGNI = 24 * ORA;
  * spegne piu' niente: la situazione di due ore fa non e' quella di adesso. */
 const VITA_DEI_TASTI = 2 * ORA;
 const TASTI_TENUTI_AL_PIU = 500;
+/* Per quanto «Va bene così» zittisce una notifica dell'assistente su quel
+ * telefono: mezza giornata, «fino a domani». «Più tardi» e' un'ora. */
+const BASTA_PER = 12 * ORA;
 
 /* Quante notifiche per telefono in un'ora, al massimo, comprese le urgenti.
  * Una casa che ne vuole mandare di piu' ha un sensore impazzito, e trenta
@@ -139,6 +147,12 @@ const SERVIZI_DEI_TASTI = new Set([
   "cover.close_cover",
   "cover.open_cover",
   "lock.unlock",
+  /* L'assistente al telefono (`l-assistente-al-telefono.js`): chiudere a
+   * chiave la serratura rimasta aperta, accendere il clima nella stanza
+   * troppo calda, la ventilazione dove l'aria e' pesante. */
+  "lock.lock",
+  "climate.turn_on",
+  "fan.turn_on",
   "button.press",
   /* L'antifurto scattato: spegnere la sirena, disinserire. E l'inserimento
    * su misura (#413) dalla notifica di movimento: i servizi che un tasto su
@@ -387,6 +401,7 @@ const SEZIONE_DI = Object.freeze({
   campanello: "telecamera",
   elettrodomestici: "elettrodomestici",
   frigo: "sensore",
+  animali: "animali",
   personalizzata: "sensore",
   pioggia: "meteo",
   arrivi: "persone",
@@ -619,8 +634,9 @@ export class Notifiche {
     if (!this.registri) return;
     this._registriIl = this.adesso();
     try {
-      const { di } = await this.registri.leMappe();
+      const { di, nomi } = await this.registri.leMappe();
       this.sentinella.dispositivoDi = di || {};
+      this.sentinella.nomiDeiDispositivi = nomi || {};
     } catch (_errore) {
       /* Senza registri la telecamera si cerca per nome. */
     }
@@ -673,21 +689,28 @@ export class Notifiche {
         (Array.isArray(dispositivi) ? dispositivi : []).map((d) => [d?.id, d]),
       );
       const descrizioni = {};
+      /* L'area di ogni entita' — la sua, o quella del suo dispositivo — per
+       * l'assistente al telefono: la finestra e il clima della stessa stanza.
+       * E quelle che non contano fra i dispositivi muti: nascoste,
+       * disattivate, di diagnostica o di configurazione. */
+      const areaDi = new Map();
+      const daNonContare = new Set();
       for (const voce of Array.isArray(entita) ? entita : []) {
         const id = voce?.entity_id;
-        if (typeof id !== "string" || !/^(light|switch|binary_sensor|cover)\./.test(id)) continue;
+        if (typeof id !== "string") continue;
         const suo = dispositivo.get(voce?.device_id);
-        const pezzi = [
-          nomeDellArea.get(voce?.area_id || suo?.area_id),
-          suo?.manufacturer,
-          suo?.model,
-          suo?.name_by_user || suo?.name,
-        ]
+        const area = String(nomeDellArea.get(voce?.area_id || suo?.area_id) || "").trim();
+        if (area) areaDi.set(id, area.slice(0, 60));
+        if (voce?.hidden_by || voce?.disabled_by || voce?.entity_category) daNonContare.add(id);
+        if (!/^(light|switch|binary_sensor|cover)\./.test(id)) continue;
+        const pezzi = [area, suo?.manufacturer, suo?.model, suo?.name_by_user || suo?.name]
           .map((p) => String(p || "").trim())
           .filter(Boolean);
         if (pezzi.length) descrizioni[id] = pezzi.join(" · ").slice(0, 160);
       }
       this.sentinella.capire.descrivi(descrizioni);
+      this.sentinella.aree = areaDi;
+      this.sentinella.daNonContare = daNonContare;
     } catch (_errore) {
       /* Senza anagrafe l'assistente guarda i nomi, come prima. */
     }
@@ -1258,8 +1281,21 @@ export class Notifiche {
 
   /* La foto di quella telecamera per questo evento: una per evento (tutti i
    * telefoni ricevono la stessa, chiusa ognuno con la sua chiave) e — tranne
-   * l'antifurto — al piu' una al minuto per telecamera. Grande al piu' 1280
-   * punti, e se pesa troppo 640: il centralino non tiene oltre 300 KB. */
+   * l'antifurto — al piu' una al minuto per telecamera. Il centralino non
+   * tiene oltre 300 KB.
+   *
+   * Dal campo, con la foto della notifica: «Movimento · Ingresso» col
+   * riquadro dell'ora e niente foto. Si chiedeva la foto larga 1280 e poi
+   * 640, e se pesava troppo si lasciava perdere. Ma Home Assistant non la
+   * porta alla larghezza chiesta: la dimezza finche' resta piu' larga di
+   * quella — da una telecamera 4K «640» e' una foto di 960 punti, che puo'
+   * passare i 300 KB come quella da 1280. E al primo errore — una
+   * telecamera lenta che non risponde in tempo — si smetteva, senza provare
+   * la misura piu' piccola. Nessuna delle due cose lasciava traccia.
+   *
+   * Adesso si scende fino a 320 (da una 4K e' un ottavo: 480 punti, decine
+   * di KB), un errore non ferma i tentativi, e quando la foto non c'e' il
+   * registro dice perche'. */
   _laFoto(evento, camera) {
     if (evento._foto !== undefined) return evento._foto;
     evento._foto = (async () => {
@@ -1268,14 +1304,21 @@ export class Notifiche {
         return null;
       this._fotoDi.set(camera, ora);
       if (typeof this.casa?.immagine !== "function") return null;
-      for (const larghezza of [1280, 640]) {
+      const perche = [];
+      for (const larghezza of LARGHEZZE_DELLA_FOTO) {
         try {
           const byte = await this.casa.immagine(`camera_proxy/${camera}?width=${larghezza}`);
           if (byte?.length && byte.length <= FOTO_MASSIMA) return byte;
-        } catch (_errore) {
-          return null;
+          perche.push(
+            byte?.length
+              ? `a ${larghezza} pesa ${Math.round(byte.length / 1024)} KB`
+              : `a ${larghezza} non e' un'immagine`,
+          );
+        } catch (errore) {
+          perche.push(`a ${larghezza}: ${errore?.message || errore}`);
         }
       }
+      this.registro.attenzione?.(`la foto di ${camera} non parte (${perche.join("; ")})`);
       return null;
     })();
     return evento._foto;
@@ -1351,9 +1394,11 @@ export class Notifiche {
       if (evento.tipo === "prova") azioni[una.id] = { prova: true };
       else if (una.servizio) azioni[una.id] = { servizio: una.servizio };
       else if (una.piuTardi) azioni[una.id] = { piuTardi: true, chiave: evento.chiave };
+      else if (una.basta) azioni[una.id] = { basta: true, chiave: evento.chiave };
       else if (Array.isArray(una.resta)) azioni[una.id] = { resta: una.resta.slice(0, 40) };
       else if (Array.isArray(una.vaBene)) azioni[una.id] = { vaBene: una.vaBene.slice(0, 10) };
       else if (typeof una.haAzione === "string") azioni[una.id] = { haAzione: una.haAzione };
+      else if (typeof una.pappa === "string") azioni[una.id] = { pappa: una.pappa.slice(0, 80) };
     }
     if (!Object.keys(azioni).length) return;
     this._tasti.set(id, { telefono, azioni, scade: this.adesso() + VITA_DEI_TASTI });
@@ -1747,6 +1792,47 @@ export class Notifiche {
     return si({ fatto: true });
   }
 
+  /* «Ha mangiato» dalla notifica della pappa: l'animale `id` con la pappa
+   * segnata adesso, scritto come lo scrive la plancia (`animali-section.js`),
+   * e solo se nessuno ha cambiato la configurazione nel frattempo. */
+  _segnaLaPappa(id) {
+    let scatto;
+    try {
+      scatto = this.configurazione?.leggi?.(PROFILO_PRINCIPALE)?.snapshot;
+    } catch (_errore) {
+      return false;
+    }
+    const valori = scatto?.values;
+    if (!valori) return false;
+    let grezzo = valori.cd_animali;
+    const eraTesto = typeof grezzo === "string";
+    try {
+      if (eraTesto) grezzo = JSON.parse(grezzo);
+    } catch (_errore) {
+      return false;
+    }
+    if (!Array.isArray(grezzo)) return false;
+    const animali = normalizzaAnimali(grezzo);
+    const posto = animali.findIndex((voce) => voce.id === id);
+    if (posto < 0) return false;
+    animali[posto] = conLaPappa(animali[posto], new Date(this.adesso()).toISOString());
+    try {
+      const esito = this.configurazione.scrivi(
+        PROFILO_PRINCIPALE,
+        { ...valori, cd_animali: eraTesto ? JSON.stringify(animali) : animali },
+        {
+          keys_revision: scatto.keys_revision,
+          writer_generation: scatto.writer_generation,
+          updated_at: this.adesso(),
+          expected_revision: scatto.revision,
+        },
+      );
+      return esito?.status === "saved" || esito?.status === "unchanged";
+    } catch (_errore) {
+      return false;
+    }
+  }
+
   /* Un tasto premuto sotto una notifica. */
   async _unTasto(detto, { telefono, utente, si, no }) {
     const tasti = this._tasti.get(String(detto.notifica || ""));
@@ -1760,6 +1846,14 @@ export class Notifiche {
       return no("not_supported", "era una notifica di prova: il tasto non fa niente");
     if (azione.piuTardi) {
       this._rimandati.set(`${telefono}|${azione.chiave}`, this.adesso() + ORA);
+      return si({ fatto: true });
+    }
+    /* «Va bene così» (e «Fatto», «Ok»): come «Più tardi», ma per dodici ore.
+     * Chi l'ha detto ha visto, e fino a domani quella cosa a quel telefono non
+     * si ridice. Non tocca niente in Home Assistant, e gli altri telefoni la
+     * ricevono come prima. */
+    if (azione.basta) {
+      this._rimandati.set(`${telefono}|${azione.chiave}`, this.adesso() + BASTA_PER);
       return si({ fatto: true });
     }
     /* «Restano così» e «Va bene stanotte»: l'assistente lo ricorda per
@@ -1777,6 +1871,14 @@ export class Notifiche {
     }
     if (!utente || (this.utenti && !(await this.utenti.eVivo(utente).catch(() => false))))
       return no("unauthorized", "l'utente di questo telefono non c'e' piu'");
+    /* «Ha mangiato»: la pappa si segna come dalla scheda dell'animale, nella
+     * configurazione della plancia, e i telefoni e il tablet la vedono. */
+    if (azione.pappa) {
+      if (!this._segnaLaPappa(azione.pappa))
+        return no("not_found", "questo animale non c'e' piu' nella plancia");
+      this.registro.info(`la pappa segnata dalla notifica`);
+      return si({ fatto: true });
+    }
     /* Un tasto di una notifica di Home Assistant: torna a Home Assistant come
      * lo manda la sua app, `mobile_app_notification_action` con l'azione, e
      * le automazioni che lo aspettano vanno avanti. Non comanda niente da se'. */
@@ -2072,6 +2174,15 @@ function unEsempio(tipo, adesso) {
           unita: "°C",
           da: 20 * MINUTO,
         }),
+      };
+    case "animali":
+      return {
+        ...base,
+        parole: paroleDellaPappa({ nome: "", specie: "gatto", da: 12 * ORA }),
+        azioni: soloEtichette([
+          { id: "pappa", parole: { it: "Ha mangiato", en: "Fed" } },
+          { id: "guarda", parole: { it: "Guarda", en: "View" }, apre: true },
+        ]),
       };
     case "pioggia":
       return {

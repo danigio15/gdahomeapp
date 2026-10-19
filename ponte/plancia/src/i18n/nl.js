@@ -6820,4 +6820,11 @@ export default Object.freeze({
   "This reading has no entity yet.": "Deze meting heeft nog geen entiteit.",
   "This target is a read-only sensor.": "Dit doel is een alleen-lezen sensor.",
   "You picked «An address of mine» but there is no address.": "Je koos «Een eigen adres» maar er is geen adres.",
+  "Fed": "Heeft gegeten",
+  "Feeding time": "Etenstijd",
+  "it's time": "het is tijd",
+  "Meals": "Maaltijden",
+  "Meals: every how many hours": "Maaltijden: om de hoeveel uur",
+  "Not logged yet": "Nog niet genoteerd",
+  "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "De kaart toont een knop «Heeft gegeten»: als het weer tijd is, herinneren de pagina en je telefoon je eraan. Leeg: geen herinnering.",
 });

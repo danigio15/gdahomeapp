@@ -138,7 +138,8 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('l\'antifurto va alla Sicurezza della plancia', (tester) async {
+    testWidgets('l\'antifurto apre la sua pagina, e «Apri Sicurezza» la '
+        'plancia', (tester) async {
       final chieste = <DoveApre>[];
       await tocca(
         tester,
@@ -154,12 +155,20 @@ void main() {
           return true;
         },
       );
+      /* «Quando si clicca sulla notifica venga aperta l'app con la stessa
+       * notifica»: prima la notifica, poi — se si vuole — il suo posto. */
+      expect(find.byType(SchermataDellaNotifica), findsOneWidget);
+      expect(find.text('Antifurto · Inserito notte'), findsOneWidget);
+      expect(chieste, isEmpty);
+      expect(find.text('Apri Sicurezza'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('notifica-vai')));
+      await tester.pumpAndSettle();
       expect(chieste.single.linguette, ['security']);
       expect(find.byType(SchermataDellaNotifica), findsNothing);
       expect(find.byType(BottomSheet), findsNothing);
     });
 
-    testWidgets('se la plancia non ci arriva, la pagina della notifica', (
+    testWidgets('senza la plancia, la pagina della notifica senza il tasto', (
       tester,
     ) async {
       await tocca(
@@ -172,15 +181,14 @@ void main() {
             testo: 'Casa dellorto',
           ),
         ),
-        vaiA: (_) async => false,
       );
       expect(find.byType(SchermataDellaNotifica), findsOneWidget);
       expect(find.byType(BottomSheet), findsNothing);
-      expect(find.text('Antifurto · Inserito notte'), findsOneWidget);
+      expect(find.byKey(const Key('notifica-vai')), findsNothing);
       expect(find.byType(BackButton), findsOneWidget);
     });
 
-    testWidgets('il frigo, che un posto non ce l\'ha: la pagina', (
+    testWidgets('il frigo, che un posto non ce l\'ha: la pagina e basta', (
       tester,
     ) async {
       var chiesto = false;
@@ -199,11 +207,11 @@ void main() {
       expect(chiesto, isFalse);
       expect(find.byType(SchermataDellaNotifica), findsOneWidget);
       expect(find.text('-9 °C da 20 minuti'), findsOneWidget);
+      expect(find.byKey(const Key('notifica-vai')), findsNothing);
     });
 
-    testWidgets('il movimento con la sua telecamera: la telecamera', (
-      tester,
-    ) async {
+    testWidgets('il movimento: la sua pagina, e «Guarda dal vivo» la '
+        'telecamera', (tester) async {
       await tocca(
         tester,
         ToccoDellaNotifica(
@@ -212,6 +220,11 @@ void main() {
         ),
         vaiA: (_) async => fail('la telecamera non passa dalla plancia'),
       );
+      expect(find.byType(SchermataDellaNotifica), findsOneWidget);
+      expect(find.byType(SchermataDellaTelecamera), findsNothing);
+      await tester.tap(find.text('Guarda dal vivo'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
       expect(find.byType(SchermataDellaTelecamera), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
     });

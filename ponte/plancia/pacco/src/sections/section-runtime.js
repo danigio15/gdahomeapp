@@ -557,7 +557,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-RSAHUJS7.js";
+} from "../../chunk-XHEU7YKT.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -3647,6 +3647,8 @@ var SOURCE_INDEX = Object.freeze({
   "è notte": "it is night",
   "È notte e ${g.name} è aperto": "It's night and ${g.name} is open",
   "È notte e ${nomi(aperte, l)} non è chiusa a chiave": "It's night and ${nomi(aperte, l)} is unlocked",
+  "è ora": "it's time",
+  "È ora della pappa": "Feeding time",
   "È quello che fa il tasto di QUESTA unità nel popup Clima della Home. Ogni unità ha i suoi passi, modificabili anche dalla matita; temperatura e ventola vuote vuol dire che il tasto non le tocca.": "This is what THIS unit's button does in the Home climate popup. Each unit keeps its own steps, editable from the pencil too; empty temperature and fan mean the button leaves them alone.",
   "è quello che sembra": "it is what it looks like",
   "È QUESTO campo ad accendere WebRTC: il nome del flusso come sta scritto dentro go2rtc/Frigate. Il nome della telecamera non c'entra.": "THIS field is what turns WebRTC on: the stream name as written inside go2rtc/Frigate. The camera name is not the lever.",
@@ -4062,6 +4064,7 @@ var SOURCE_INDEX = Object.freeze({
   "Guardia": "Guard",
   "Guida": "On the road",
   "ha gia' piovuto abbastanza": "enough rain already",
+  "Ha mangiato": "Fed",
   "ha risposto alle": "replied at",
   "ha sete": "is thirsty",
   "Ha suonato alle": "It rang at",
@@ -5095,6 +5098,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nel widget": "In the widget",
   "Nella fascia scelta il riposo spegne anche l'orologio": "In the chosen hours rest turns off the clock too",
   "nella norma": "in range",
+  "Nella scheda compare il tasto «Ha mangiato»: quando torna l'ora, la pagina e il telefono te lo ricordano. Vuoto: niente promemoria.": "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.",
   "Nella scheda Telecamere manca l'entita' di Home Assistant": "The Home Assistant entity is missing in the Cameras tab",
   "Nella stessa unità del sensore: percento o chili. La pagina conta i giorni che restano, al passo degli ultimi giorni.": "In the same unit as the sensor: percent or kilograms. The page counts the days left, at the pace of the last few days.",
   "nelle 24 ore": "over 24 hours",
@@ -5351,6 +5355,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nome, es. Cucina": "Name, e.g. Kitchen",
   "Nome, icona, colore, visibilità, gruppo e potenza diretta sono indipendenti per ogni nodo del flow.": "Name, icon, color, visibility, group and direct power are independent for every flow node.",
   "Non adesso": "Not now",
+  "Non ancora segnata": "Not logged yet",
   "Non arriva. Controlla l'indirizzo, e che il servizio si lasci leggere da qui.": "It does not arrive. Check the address, and that the service lets this page read it.",
   "non avvisa più": "no longer warns",
   "Non avvisarmi più per questo": "Stop warning me about this",
@@ -5502,7 +5507,7 @@ var SOURCE_INDEX = Object.freeze({
   "Oppure": "Or",
   "Oppure scrivi un'emoji qui sotto — o lascia vuoto per le iniziali del nome.": "Or type an emoji below — or leave it empty for the initials of the name.",
   "oppure un'azione": "or an action",
-  "ora": "hour",
+  "ora": "time",
   "ora ${oraLetta}°": "now ${oraLetta}°",
   "ora ${soc}%": "now ${soc}%",
   "Ora e data": "Time and date",
@@ -5540,6 +5545,8 @@ var SOURCE_INDEX = Object.freeze({
   "Pannello Solare": "Solar panel",
   "Pannolini": "Nappies",
   "Panoramica": "Overview",
+  "Pappa": "Meals",
+  "Pappa: ogni quante ore": "Meals: every how many hours",
   "Parcheggiata": "Parked",
   "Parla": "Talk",
   "Parla con il citofono (se lo supporta)": "Talk through the intercom (if supported)",
@@ -5898,11 +5905,11 @@ var SOURCE_INDEX = Object.freeze({
   "Proposte pensate per la tua casa": "Suggestions designed for your home",
   "Proposte per la tua casa": "Suggestions for your home",
   "Proprio tutto": "Everything",
+  "prossima": "next",
   "Prossime 24 ore": "Next 24 hours",
   "Prossimi": "Upcoming",
   "Prossimi giorni": "Next days",
   "prossimità del tablet": "tablet proximity",
-  "prossimo": "next",
   "Prossimo ritiro": "Next collection",
   "protetta": "protected",
   "Protetta da PIN": "PIN protected",
@@ -28775,6 +28782,42 @@ function testaMarkup2(lettura3, tipo, pilloleDeiDati) {
     ${pillole2.length ? `<div class="dm-termica-pillole">${pillole2.join("")}</div>` : ""}
     ${aggiornata}`;
 }
+function percentualeIntera(testo4) {
+  const n = Number.parseFloat(clean(testo4).replace(",", "."));
+  if (!Number.isFinite(n)) return null;
+  return Math.round(Math.max(0, Math.min(100, n)));
+}
+function percentualeNellAnello(potenza3) {
+  const originale = potenza3.querySelector(".dm-evv-gauge .lm-batt-soc");
+  const testa2 = originale?.parentElement;
+  if (!originale || !testa2) return;
+  let mia = testa2.querySelector(":scope > .dm-auto-soc");
+  if (!mia) {
+    mia = doc.createElement("b");
+    mia.className = "dm-auto-soc";
+    testa2.prepend(mia);
+  }
+  const scrivi5 = () => {
+    const n = percentualeIntera(originale.textContent);
+    const html = n === null ? "—" : `${n}<i>%</i>`;
+    if (mia.innerHTML !== html) mia.innerHTML = html;
+    if (!originale.hasAttribute("data-dm-sostituita"))
+      originale.setAttribute("data-dm-sostituita", "");
+  };
+  scrivi5();
+}
+function contaLeRigheAccanto(potenza3, ricarica2) {
+  let quante3 = 1;
+  for (const riga3 of potenza3.querySelectorAll(".dm-evv-row")) {
+    if (riga3.hidden) continue;
+    if (ricarica2 === "ferma" && (riga3.dataset.dmRiga === "potenza" || riga3.dataset.dmRiga === "tempo")) continue;
+    quante3 += 1;
+  }
+  const accanto = String(quante3);
+  const largo = String(quante3 + 1);
+  if (potenza3.style.getPropertyValue("--dm-accanto") !== accanto) potenza3.style.setProperty("--dm-accanto", accanto);
+  if (potenza3.style.getPropertyValue("--dm-accanto-largo") !== largo) potenza3.style.setProperty("--dm-accanto-largo", largo);
+}
 function segnaLeRighe(potenza3) {
   for (const riga3 of potenza3.querySelectorAll(".dm-evv-row")) {
     if (riga3.dataset.dmRiga) continue;
@@ -28794,6 +28837,7 @@ function parolaDelTarget(potenza3) {
 function accantoAllAnello(page2, testa2) {
   const potenza3 = page2.querySelector(".dm-evv-power");
   if (!potenza3) return;
+  percentualeNellAnello(potenza3);
   segnaLeRighe(potenza3);
   parolaDelTarget(potenza3);
   const riga3 = potenza3.querySelector('.dm-evv-row[data-dm-riga="target"]');
@@ -28815,6 +28859,8 @@ function accantoAllAnello(page2, testa2) {
   let nodo2 = potenza3.querySelector(".dm-auto-testa");
   const righe3 = potenza3.querySelector(".dm-evv-rows");
   righe3?.classList.toggle("dm-auto-con-testa", Boolean(testa2));
+  potenza3.classList.toggle("dm-auto-eroe", Boolean(testa2));
+  contaLeRigheAccanto(potenza3, ricarica2);
   if (!testa2) {
     nodo2?.remove();
     state22.testa = "";
@@ -29127,17 +29173,100 @@ function installStyles7() {
     #page-ev.dm-evv .dm-auto-testa+.dm-evv-row .dm-evv-row-val{color:var(--evv-green-deep,#15803d)}
     [data-theme="dark"] #page-ev.dm-evv .dm-auto-testa+.dm-evv-row .dm-evv-row-val{color:#4ade80}
     #page-ev .dm-evv-power>.dm-evv-gauge{align-self:center}
-    /* Da schermo largo la testa e le righe della ricarica stanno affiancate:
-       a sinistra com'e' l'auto, a destra come sta caricando. */
+    /* La scheda dell'auto come un cruscotto.
+
+       In alto l'anello della batteria e, accanto, l'autonomia in grande con
+       sotto quella al target («Autonomia al 95% 373 km») e — mentre carica —
+       la potenza e il tempo. Sotto, larghi quanto la scheda, gli stati
+       dell'auto in una griglia di caselle tutte uguali; in fondo l'ora.
+
+       Prima le pillole si accodavano come capitava, ognuna larga quanto la
+       sua parola, verdi e grigie alla rinfusa, strette nella colonna accanto
+       all'anello; la riga del target stava in fondo col numero al bordo
+       destro, sotto il pulsante dell'assistente. «Non mi piace.»
+
+       Le scatole di mezzo non fanno piu' da scatola (display:contents): i
+       pezzi stanno tutti nella stessa griglia della scheda. Quante righe
+       stanno accanto all'anello lo conta la sezione (--dm-accanto), perche'
+       cambiano quando l'auto carica. */
+    #page-ev.dm-evv .dm-evv-power.dm-auto-eroe{
+      display:grid!important;grid-template-columns:auto minmax(0,1fr);
+      column-gap:18px;row-gap:8px;align-items:center;padding:18px}
+    #page-ev .dm-auto-eroe>.dm-evv-rows,
+    #page-ev .dm-auto-eroe .dm-auto-testa{display:contents!important}
+    #page-ev .dm-auto-eroe>.dm-evv-gauge{grid-column:1;grid-row:1/span var(--dm-accanto,2);align-self:center}
+    #page-ev .dm-auto-eroe .dm-auto-autonomia,
+    #page-ev .dm-auto-eroe .dm-evv-row{grid-column:2}
+    #page-ev .dm-auto-eroe .dm-auto-autonomia{order:1}
+    #page-ev .dm-auto-eroe .dm-evv-row{order:2}
+    #page-ev .dm-auto-eroe .dm-termica-pillole{order:3}
+    #page-ev .dm-auto-eroe .dm-auto-aggiornata{order:4}
+    #page-ev .dm-auto-eroe .dm-evv-row{justify-content:flex-start;gap:8px;min-width:0}
+    #page-ev .dm-auto-eroe .dm-evv-row .dm-evv-row-val{margin-left:4px;font-size:16px}
+    #page-ev .dm-auto-eroe .dm-auto-autonomia .dm-auto-num{font-size:40px}
+    #page-ev .dm-auto-eroe .dm-termica-pillole,
+    #page-ev .dm-auto-eroe .dm-auto-aggiornata{grid-column:1/-1}
+    #page-ev .dm-auto-eroe .dm-termica-pillole{
+      display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+      margin-top:8px;padding-top:14px;
+      border-top:1px solid color-mix(in srgb,var(--text-dim,#64748b) 16%,transparent)}
+    #page-ev .dm-auto-eroe .dm-termica-pillola{
+      display:flex;align-items:center;gap:9px;min-width:0;min-height:42px;padding:8px 12px;
+      border-radius:14px;font-size:12.5px;font-weight:650;line-height:1.2;white-space:normal;
+      background:var(--surface-2,#f4f6f9);color:var(--text,#0f172a)}
+    #page-ev .dm-auto-eroe .dm-termica-pillola>i{
+      flex:0 0 22px;display:grid;place-items:center;font-size:16px}
+    #page-ev .dm-auto-eroe .dm-termica-pillola .dm-auto-marcia{margin-left:0;flex:0 0 22px;width:22px;height:22px;font-size:12.5px}
+    #page-ev .dm-auto-eroe .dm-termica-pillola[data-tono="bene"],
+    #page-ev .dm-auto-eroe .dm-termica-pillola[data-tono="acceso"]{
+      background:color-mix(in srgb,#22c55e 12%,var(--card-bg,#fff));color:#166534}
+    #page-ev .dm-auto-eroe .dm-termica-pillola[data-tono="attento"]{
+      background:color-mix(in srgb,#f59e0b 16%,var(--card-bg,#fff));color:#92400e}
+    #page-ev .dm-auto-eroe .dm-termica-pillola[data-tono="male"]{
+      background:color-mix(in srgb,#ef4444 14%,var(--card-bg,#fff));color:#b91c1c}
+    #page-ev .dm-auto-eroe .dm-termica-pillola[data-tono="spento"]{color:var(--text-dim,#475569)}
+    [data-theme="dark"] #page-ev .dm-auto-eroe .dm-termica-pillola{background:rgba(148,163,184,.10);color:#e2e8f0}
+    [data-theme="dark"] #page-ev .dm-auto-eroe .dm-termica-pillola[data-tono="bene"],
+    [data-theme="dark"] #page-ev .dm-auto-eroe .dm-termica-pillola[data-tono="acceso"]{background:rgba(34,197,94,.14);color:#86efac}
+    [data-theme="dark"] #page-ev .dm-auto-eroe .dm-termica-pillola[data-tono="attento"]{background:rgba(245,158,11,.16);color:#fcd34d}
+    [data-theme="dark"] #page-ev .dm-auto-eroe .dm-termica-pillola[data-tono="male"]{background:rgba(239,68,68,.16);color:#fca5a5}
+    [data-theme="dark"] #page-ev .dm-auto-eroe .dm-termica-pillola[data-tono="spento"]{color:#94a3b8}
+    #page-ev .dm-auto-eroe .dm-auto-aggiornata{justify-content:flex-end;margin-top:2px}
+    /* Da schermo largo tre colonne: l'anello, l'autonomia con le sue righe e
+       l'ora, e gli stati a destra in tre colonne. */
     @media (min-width:860px){
-      #page-ev .dm-evv-rows.dm-auto-con-testa{
-        grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:28px;align-items:center}
-      #page-ev .dm-auto-con-testa>.dm-auto-testa{
-        grid-column:1;grid-row:1/span 3;align-self:center;padding:0 28px 0 0;border-bottom:0;
-        border-right:1px solid color-mix(in srgb,var(--text-dim,#64748b) 18%,transparent)}
-      #page-ev .dm-auto-con-testa>.dm-evv-row{grid-column:2}
-      #page-ev .dm-evv-power[data-dm-ricarica="ferma"] .dm-auto-con-testa>.dm-evv-row{grid-row:1/span 3;align-self:center}
+      #page-ev.dm-evv .dm-evv-power.dm-auto-eroe{
+        grid-template-columns:auto minmax(230px,auto) minmax(0,1fr);column-gap:28px;padding:22px 24px}
+      #page-ev .dm-auto-eroe>.dm-evv-gauge{grid-row:1/span var(--dm-accanto-largo,3)}
+      #page-ev .dm-auto-eroe .dm-auto-aggiornata{grid-column:2;justify-content:flex-start}
+      #page-ev .dm-auto-eroe .dm-termica-pillole{
+        grid-column:3;grid-row:1/span var(--dm-accanto-largo,3);align-self:center;
+        grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
+        margin:0;padding:0 0 0 28px;border-top:0;
+        border-left:1px solid color-mix(in srgb,var(--text-dim,#64748b) 16%,transparent)}
+      #page-ev.dm-evv .dm-evv-power.dm-auto-eroe>.dm-evv-gauge{width:140px;height:140px;flex:0 0 140px}
+      #page-ev .dm-auto-soc{font-size:38px}
     }
+    @media (max-width:640px){
+      #page-ev.dm-evv .dm-evv-power.dm-auto-eroe{padding:16px;column-gap:14px}
+      #page-ev.dm-evv .dm-evv-power.dm-auto-eroe>.dm-evv-gauge{width:108px;height:108px;flex:0 0 108px}
+    }
+
+    /* La percentuale dentro l'anello, intera e col «%» piccolo.
+       Il guscio scrive «86.6%» in una cifra alta trentaquattro punti: da
+       telefono e da Fold usciva dal cerchio. Qui la si riscrive come si
+       legge un indicatore di carica — «87%» — in una misura che ci sta
+       anche quando e' «100». */
+    #page-ev.dm-evv .dm-evv-power .dm-evv-gauge .lm-batt-header{flex-direction:column!important}
+    #page-ev.dm-evv .dm-evv-gauge .lm-batt-soc[data-dm-sostituita]{display:none!important}
+    #page-ev.dm-evv .dm-evv-power .dm-evv-gauge .lm-batt-lbl{order:2}
+    #page-ev .dm-auto-soc{
+      order:1;font-family:'Oswald',sans-serif;font-size:30px;font-weight:600;line-height:1;
+      letter-spacing:-.01em;color:var(--evv-text,var(--text,#0f172a));font-variant-numeric:tabular-nums}
+    #page-ev .dm-auto-soc i{font-style:normal;font-size:.5em;font-weight:600;margin-left:1px;
+      color:var(--evv-dim,var(--text-dim,#64748b))}
+    @media (max-width:640px){#page-ev .dm-auto-soc{font-size:28px}}
+    [data-theme="dark"] #page-ev .dm-auto-soc{color:#e9f0f7}
 
     /* Il quadro dell'auto a carburante: il serbatoio e le sue misure. */
     #page-ev .dm-termica-testa{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
@@ -34833,6 +34962,38 @@ var CAMPI_DELLA_VASCA = Object.freeze([
   "vasca",
   "origine"
 ]);
+var CAMPI_DELLA_PAPPA = Object.freeze(["pappa", "pappa_ogni"]);
+var PAPPA_OGNI_AL_PIU = 168;
+function oreDellaPappa(valore3) {
+  const letto = Number.parseFloat(valore3);
+  if (!Number.isFinite(letto) || letto <= 0) return null;
+  return Math.min(PAPPA_OGNI_AL_PIU, Math.max(0.5, Math.round(letto * 2) / 2));
+}
+function laPappa(animale, adesso) {
+  const ogni = oreDellaPappa(animale?.pappa_ogni);
+  const ultimo = Date.parse(pulito29(animale?.pappa));
+  const segnata = Number.isFinite(ultimo);
+  if (ogni === null && !segnata) return null;
+  const minuti = segnata ? Math.max(0, Math.floor((adesso - ultimo) / 6e4)) : null;
+  const fra2 = segnata && ogni !== null ? Math.round(ogni * 60) - minuti : null;
+  return {
+    ultimo: segnata ? ultimo : null,
+    ogni,
+    minuti,
+    fra: fra2,
+    /* Senza una volta segnata non si sa, e non si dice che e' l'ora. */
+    ora: fra2 !== null && fra2 <= 0,
+    /* In ritardo di mezzo giro: la scheda si fa rossa. */
+    tardi: fra2 !== null && ogni !== null && -fra2 >= ogni * 30
+  };
+}
+function conLaPappa(animale, quando4) {
+  const fuori = { ...animale && typeof animale === "object" ? animale : {} };
+  const scritto3 = pulito29(quando4);
+  if (Number.isFinite(Date.parse(scritto3))) fuori.pappa = scritto3;
+  else delete fuori.pappa;
+  return fuori;
+}
 function normalizzaAnimale(input = {}, indice = 0) {
   const grezzo = input && typeof input === "object" ? input : {};
   const animale = {
@@ -34856,6 +35017,10 @@ function normalizzaAnimale(input = {}, indice = 0) {
   if (vasca || Array.isArray(grezzo.righe))
     animale.righe = righeDichiarate({ righe: grezzo.righe || [] }, CAMPI_IN_PIU2) || [];
   for (const campo5 of CAMPI_DELLA_VASCA) {
+    const scritto3 = pulito29(grezzo[campo5]);
+    if (scritto3) animale[campo5] = scritto3;
+  }
+  for (const campo5 of CAMPI_DELLA_PAPPA) {
     const scritto3 = pulito29(grezzo[campo5]);
     if (scritto3) animale[campo5] = scritto3;
   }
@@ -35140,6 +35305,8 @@ function vistaAnimale(animale = {}, states = {}, adesso = 0) {
     );
   if (sottoSoglia(letture2.collare_batteria, soglie.collare))
     alza("collare_scarico", "attenzione", "collare_batteria");
+  const pappa = laPappa(suo2, adesso);
+  if (pappa?.ora) alza("pappa_da_dare", pappa.tardi ? "urgente" : "attenzione", "pappa");
   const porta = letture2.porta;
   return {
     id: suo2.id,
@@ -35187,6 +35354,7 @@ function vistaAnimale(animale = {}, states = {}, adesso = 0) {
      * collare, che dice solo dove il collare crede di essere. */
     dentro: porta && !porta.muto && porta.dentro !== null ? porta.dentro : letture2.collare_posizione?.dentro ?? null,
     avvisi,
+    pappa,
     /* Il peggio che c'e': la scheda si colora con questo, e le schede si
      * mettono in fila con questo. */
     gravita: avvisi.some((voce3) => voce3.gravita === "urgente") ? "urgente" : avvisi.length ? "attenzione" : "quiete"
@@ -39616,6 +39784,8 @@ function parolaAvviso(chiave2) {
       return t("Lettiera da pulire", "Litter box needs cleaning");
     case "collare_scarico":
       return t("Collare quasi scarico", "Collar battery low");
+    case "pappa_da_dare":
+      return t("È ora della pappa", "Feeding time");
     default:
       return chiave2;
   }
@@ -39761,6 +39931,75 @@ function lettureMarkup(vista2) {
   }).join("");
   return `<div class="dm-animale-gruppi">${fasce}</div>`;
 }
+var ANNULLA_MS2 = 5e3;
+function fraQuanto2(minuti) {
+  if (minuti <= 0) return t("adesso", "now");
+  if (minuti < 60) return `${t("fra", "in")} ${minuti} min`;
+  const ore = Math.round(minuti / 60);
+  return `${t("fra", "in")} ${ore} ${ore === 1 ? t("ora", "hour") : t("ore", "hours")}`;
+}
+function testoDellaPappa(pappa) {
+  if (!pappa) return "";
+  if (pappa.minuti === null) return t("Non ancora segnata", "Not logged yet");
+  const fa = quantoFa(pappa.minuti);
+  if (pappa.fra === null) return fa;
+  if (pappa.ora) return `${fa} · ${t("è ora", "it's time")}`;
+  return `${fa} · ${t("prossima", "next")} ${fraQuanto2(pappa.fra)}`;
+}
+function pappaMarkup(vista2) {
+  const pappa = vista2.pappa;
+  if (!pappa) return "";
+  const annulla2 = state33.annulla?.id === vista2.id;
+  return `<section class="dm-animale-gruppo dm-animale-pappa" data-dm-animale-gruppo="pappa" data-ora="${pappa.ora}">
+    <h4><span aria-hidden="true">🍽️</span>${esc(t("Pappa", "Meals"))}</h4>
+    <div class="dm-animale-lettura" data-dm-animale-lettura="pappa">
+      <span class="dm-animale-lettura-lbl">${esc(t("Ultima pappa", "Last meal"))}</span>
+      <span class="dm-animale-lettura-val">${esc(testoDellaPappa(pappa))}</span>
+    </div>
+    <div class="dm-animale-tasti">
+      <button type="button" class="dm-animale-tasto dm-animale-pappa-tasto" data-dm-animale-pappa="${esc(vista2.id)}"><span aria-hidden="true">✅</span><span>${esc(t("Ha mangiato", "Fed"))}</span></button>
+      ${annulla2 ? `<button type="button" class="dm-animale-tasto" data-dm-animale-pappa-annulla="${esc(vista2.id)}"><span aria-hidden="true">↩️</span><span>${esc(t("Annulla", "Undo"))}</span></button>` : ""}
+    </div>
+  </section>`;
+}
+function cambiaLAnimale(id, cambia) {
+  const animali = normalizzaAnimali(readJson(CHIAVE_ANIMALI, []));
+  const posto = animali.findIndex((voce3) => voce3.id === id);
+  if (posto < 0) return null;
+  const prima = animali[posto];
+  const next = animali.slice();
+  next[posto] = cambia(prima);
+  writeJsonIfChanged(CHIAVE_ANIMALI, normalizzaAnimali(next));
+  return prima;
+}
+function segnaLaPappa(evento) {
+  const tasto2 = evento.target?.closest?.("[data-dm-animale-pappa], [data-dm-animale-pappa-annulla]");
+  if (!tasto2 || !tasto2.closest(`#${ANIMALI_PAGE_ID}`)) return;
+  evento.preventDefault();
+  if (tasto2.dataset.dmAnimalePappaAnnulla) {
+    const id2 = tasto2.dataset.dmAnimalePappaAnnulla;
+    if (state33.annulla?.id !== id2) return;
+    const { quando: quando4 } = state33.annulla;
+    state33.annulla = null;
+    cambiaLAnimale(id2, (voce3) => conLaPappa(voce3, quando4));
+    state33.firma = "";
+    schedule10();
+    return;
+  }
+  const id = tasto2.dataset.dmAnimalePappa;
+  const prima = cambiaLAnimale(id, (voce3) => conLaPappa(voce3, (/* @__PURE__ */ new Date()).toISOString()));
+  if (!prima) return;
+  if (root.navigator?.vibrate) root.navigator.vibrate(5);
+  state33.annulla = { id, quando: prima.pappa ?? "" };
+  state33.firma = "";
+  schedule10();
+  root.setTimeout?.(() => {
+    if (state33.annulla?.id !== id) return;
+    state33.annulla = null;
+    state33.firma = "";
+    schedule10();
+  }, ANNULLA_MS2);
+}
 function pastigliaMarkup(vista2) {
   if (vista2.dentro === null) return "";
   return `<span class="dm-animale-dove" data-dentro="${vista2.dentro}">${esc(vista2.dentro ? t("In casa", "Inside") : t("Fuori", "Outside"))}</span>`;
@@ -39804,6 +40043,7 @@ function schedaMarkup4(vista2) {
       ${pastigliaMarkup(vista2)}
     </div>
     ${avvisiMarkup(vista2)}
+    ${pappaMarkup(vista2)}
     ${lettureMarkup(vista2)}
   </article>`;
 }
@@ -39830,7 +40070,10 @@ function firmaDi(viste2) {
       Object.values(vista2.letture).filter((voce3) => voce3 && !voce3.muto).map((voce3) => voce3.chiave).join("+"),
       /* Un tasto che compare — o che sparisce perche' l'integrazione tace —
        * cambia la forma della scheda, non solo un numero dentro. */
-      (vista2.azioni || []).map((azione) => azione.chiave).join("+")
+      (vista2.azioni || []).map((azione) => azione.chiave).join("+"),
+      /* La fascia della pappa che compare, e il tasto «Annulla». */
+      vista2.pappa ? `pappa:${vista2.pappa.ora}` : "",
+      state33.annulla?.id === vista2.id ? "annulla" : ""
     ].join("~")
   ).join("|");
 }
@@ -39851,12 +40094,15 @@ function sincronizza(card2, vista2) {
     const riga3 = card2.querySelector(`[data-dm-animale-lettura="${CSS.escape(voce3.chiave)}"]`);
     if (!riga3) continue;
     const valore3 = riga3.querySelector(".dm-animale-lettura-val");
-    const testo4 = testoLettura(voce3);
-    if (valore3 && valore3.textContent !== testo4) valore3.textContent = testo4;
+    const testo5 = testoLettura(voce3);
+    if (valore3 && valore3.textContent !== testo5) valore3.textContent = testo5;
     const barra2 = riga3.querySelector(".dm-animale-barra b");
     if (barra2 && voce3.valore !== null && voce3.unita === "%")
       barra2.style.width = `${Math.max(0, Math.min(100, Math.round(voce3.valore)))}%`;
   }
+  const pappa = card2.querySelector('[data-dm-animale-lettura="pappa"] .dm-animale-lettura-val');
+  const testo4 = testoDellaPappa(vista2.pappa);
+  if (pappa && pappa.textContent !== testo4) pappa.textContent = testo4;
 }
 function renderAnimali() {
   const pagina2 = ensureAnimaliPage();
@@ -39959,6 +40205,8 @@ function installStyles14() {
       #page-animali .dm-animale-barra{grid-column:1/-1;position:relative;height:6px;border-radius:999px;background:var(--secondary-background-color,#eef3f8);overflow:hidden}
       #page-animali .dm-animale-barra b{display:block;height:100%;border-radius:999px;background:#10b981;transition:width .4s ease}
       #page-animali .dm-animale-barra[data-male="true"] b{background:#dc2626}
+      #page-animali .dm-animale-pappa[data-ora="true"]{border-color:color-mix(in srgb,#f59e0b 55%,transparent);background:color-mix(in srgb,#f59e0b 8%,transparent)}
+      #page-animali .dm-animale-pappa-tasto{border-color:transparent;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff}
       #page-animali .dm-animale-nulla{margin:0;font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b)}
       #page-animali .dm-animale-vuoto{grid-column:1/-1}
       /* Le pastiglie dei tipi, in cima: una riga che scorre se non ci sta. */
@@ -40007,6 +40255,7 @@ function installAnimaliSection() {
   ensureAnimaliPage();
   doc.addEventListener("click", premiIlTasto);
   doc.addEventListener("click", scegliIlFiltro);
+  doc.addEventListener("click", segnaLaPappa);
   insegnaLaVisibilita();
   ensureAnimaliTab();
   for (const nome of ["render", "cdApplyNavVis"]) wrapFunction(nome, "__dmAnimaliSection", schedule10);
@@ -60745,7 +60994,7 @@ var paroleDelCalendario = () => ({
   daFare: t("Da fare", "To-do"),
   inRitardo: t("In ritardo", "Overdue")
 });
-function fraQuanto2(inizio, adesso) {
+function fraQuanto3(inizio, adesso) {
   const minuti = Math.max(0, Math.round((inizio - adesso) / 6e4));
   if (minuti < 60) return `${t("fra", "in")} ${minuti} min`;
   const ore = Math.floor(minuti / 60);
@@ -60764,7 +61013,7 @@ function eroeDellAgenda(widget, adesso, lingua3, parole4) {
   const quando4 = prossimo.tuttoIlGiorno ? parole4.tuttoIlGiorno : orarioDi(prossimo.inizio, lingua3);
   let fra2 = "";
   if (ora5) fra2 = t("adesso", "now");
-  else if (giorno2 === oggi && !prossimo.tuttoIlGiorno) fra2 = fraQuanto2(prossimo.inizio, adesso);
+  else if (giorno2 === oggi && !prossimo.tuttoIlGiorno) fra2 = fraQuanto3(prossimo.inizio, adesso);
   else fra2 = etichettaDelGiorno(giorno2, adesso, parole4, lingua3);
   const sotto = [
     clean(prossimo.location) ? `📍 ${clean(prossimo.location)}` : "",
@@ -73197,7 +73446,7 @@ function commuta2(entita3, acceso6, states, prima = {}) {
   }
 }
 function spegnereDaFuori(stato3, ridisegna30) {
-  const fraQuanto3 = (quanto) => {
+  const fraQuanto4 = (quanto) => {
     root.clearTimeout?.(stato3.sveglia);
     stato3.sveglia = root.setTimeout?.(() => {
       stato3.sveglia = 0;
@@ -73209,7 +73458,7 @@ function spegnereDaFuori(stato3, ridisegna30) {
       stato3.annulla = null;
       stato3.chiesta = { stanza: stanza2, chiave: chiave2, fino: Date.now() + QUANTO_DURA_LA_DOMANDA };
       root.navigator?.vibrate?.(8);
-      fraQuanto3(QUANTO_DURA_LA_DOMANDA);
+      fraQuanto4(QUANTO_DURA_LA_DOMANDA);
       ridisegna30();
     },
     /* Il no: la domanda se ne va, e non succede niente. */
@@ -73228,7 +73477,7 @@ function spegnereDaFuori(stato3, ridisegna30) {
       root.navigator?.vibrate?.(15);
       stato3.chiesta = null;
       stato3.annulla = { stanza: stanza2, chiave: chiave2, entita: entita3, prima, fino: Date.now() + QUANTO_DURA_L_ANNULLA };
-      fraQuanto3(QUANTO_DURA_L_ANNULLA);
+      fraQuanto4(QUANTO_DURA_L_ANNULLA);
       ridisegna30();
     },
     rimetti() {
@@ -100602,6 +100851,16 @@ function faseDelloSquillo(squillo, adesso) {
   const squilla2 = !squillo.silenziato && trascorsi < SQUILLO_MS;
   return { fase: squilla2 ? "squilla" : "dopo", trascorsi };
 }
+var FINESTRA_SOLA_MS = 5 * 6e4;
+function finestraDaChiudere(finestra6, ultimoTocco, adesso) {
+  if (!finestra6) return false;
+  const dallo = Math.max(
+    Number(ultimoTocco) || 0,
+    Number(finestra6.suonato) || 0,
+    Number(finestra6.aperta) || 0
+  );
+  return Number(adesso) - dallo >= FINESTRA_SOLA_MS;
+}
 function durataScritta2(ms) {
   const secondi = Math.max(0, Math.floor(Number(ms) / 1e3) || 0);
   return `${Math.floor(secondi / 60)}:${String(secondi % 60).padStart(2, "0")}`;
@@ -104749,7 +105008,7 @@ function finestra5() {
   return `<div class="mu-velo" data-mu-fa="fuori"><div class="mu-carta mu-accesa mu-finestra" style="--acc:${accento}">${dentro3}</div></div>`;
 }
 function apriFinestra(f) {
-  state115.finestra = f;
+  state115.finestra = { ...f, aperta: Date.now() };
   disegna6();
 }
 function chiudiFinestra() {
@@ -105504,6 +105763,7 @@ function rinfrescaLeTelecamere() {
 }
 function tocco() {
   state115.toccato = Date.now();
+  state115.toccatoDalDito = state115.toccato;
 }
 function attendi(id, cosa, valore3) {
   state115.inAttesa[id] = { ...state115.inAttesa[id] || {}, [cosa]: valore3 };
@@ -106157,6 +106417,8 @@ function onPointerUp(event) {
 function battito2() {
   const muro = state115.muro;
   if (!muro?.attiva) return;
+  if (state115.finestra && !state115.trascina && finestraDaChiudere(state115.finestra, state115.toccatoDalDito, Date.now()))
+    chiudiFinestra();
   const fermo = Date.now() - state115.toccato;
   const sonno = (muro.riposo.attivo ? muro.riposo.minuti : 0) * 60 * 1e3;
   if (!state115.riposo && !state115.finestra && !state115.trascina && sonno && fermo > sonno) {
@@ -121142,7 +121404,8 @@ function rigaMarkup18(animale, indice, animali = []) {
         <small>${t("Senza foto la scheda mostra il disegno del tipo.", "Without a photo the card shows the drawing of its type.")}</small>
       </div>
       <label class="ed-slot dm-animale-field"><span class="ed-slot-lbl">${t("Stanza", "Room")}</span><span class="ed-form-row"><select id="dm-animale-${indice}-stanza" class="ed-input" data-animale-field="stanza">${roomOptionsMarkup(animale.stanza, t("Nessuna stanza", "No room"))}</select></span></label>
-      ${vasca ? vascaEditorMarkup(animale, indice, { esclusi: entitaDelleAltreVasche(animali, indice) }) : `${dispositiviMarkup(animale)}
+      ${vasca ? vascaEditorMarkup(animale, indice, { esclusi: entitaDelleAltreVasche(animali, indice) }) : `${pappaEditorMarkup(animale, indice)}
+      ${dispositiviMarkup(animale)}
       <button type="button" class="ed-btn-add dm-animale-integ-riga" data-animale-integ-riga>🔗 ${t("Collega un altro dispositivo", "Link another device")}</button>
       ${gruppiMarkup(animale, indice)}
       ${soglieMarkup3(animale, indice)}`}
@@ -121150,6 +121413,14 @@ function rigaMarkup18(animale, indice, animali = []) {
       <button type="button" class="ed-save-btn" data-animale-save>💾 ${vasca ? t("Salva", "Save") : t("Salva animale", "Save pet")}</button>
     </div>
   </article>`;
+}
+function pappaEditorMarkup(animale, indice) {
+  return `<label class="ed-slot dm-animale-field"><span class="ed-slot-lbl">🍽️ ${t("Pappa: ogni quante ore", "Meals: every how many hours")}</span>
+    <span class="ed-form-row"><input id="dm-animale-${indice}-pappa-ogni" class="ed-input" type="number" min="0.5" max="${PAPPA_OGNI_AL_PIU}" step="0.5" inputmode="decimal" data-animale-field="pappa_ogni" value="${esc(animale.pappa_ogni || "")}" placeholder="12"></span>
+    <small>${t(
+    "Nella scheda compare il tasto «Ha mangiato»: quando torna l'ora, la pagina e il telefono te lo ricordano. Vuoto: niente promemoria.",
+    "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder."
+  )}</small></label>`;
 }
 function nomeSpecie(chiave2) {
   if (chiave2 === "gatto") return t("Gatto", "Cat");
@@ -121286,7 +121557,8 @@ function ensureAnimaliEditor() {
         animale.dispositivi.map((voce3) => voce3.id).join("+"),
         /* Una vasca cambia forma quando cambiano le sue righe o i suoi dati. */
         eUnaVasca(animale) ? JSON.stringify([animale.righe, animale.litri, animale.ogni, animale.cambio, animale.pulizia]) : "",
-        [...CAMPI, ...AZIONI].map((campo5) => animale[campo5.chiave]).join(",")
+        [...CAMPI, ...AZIONI].map((campo5) => animale[campo5.chiave]).join(","),
+        animale.pappa_ogni || ""
       ].join("~")
     )
   ].join("|");
