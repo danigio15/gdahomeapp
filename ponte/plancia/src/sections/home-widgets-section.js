@@ -9682,13 +9682,33 @@ function ascoltaLaPorta() {
  * loro fotogramma di riposo (vedi `fermaCioCheStaDietro`). */
 export const NON_SI_FERMANO = /^dmTileIn/;
 
+/* Chi sta SOPRA la finestra non sta dietro (#279).
+ *
+ * «Selezionando il sensore si blocca.» Il foglio «Ultime 24 ore» (#269) si
+ * apre toccando una riga di questa finestra, e si apre sopra di lei. Ma il
+ * foglio vive fuori dalla finestra, e qui «fuori» voleva dire «dietro»: al
+ * giro dopo la sua entrata — il velo e il foglio che compaiono dall'opacita'
+ * zero — veniva fermata al fotogramma zero. Il foglio restava invisibile e
+ * steso su tutto lo schermo: ogni tocco finiva su di lui, la finestra sotto
+ * non rispondeva piu', e la plancia sembrava piantata. Lo stesso vale per le
+ * conferme e i tastierini, che stanno sopra questa finestra apposta (#275). */
+export const SOPRA_LA_FINESTRA =
+  "[data-dm-sopra-la-finestra],#confirm-modal,#custom-keypad,#dm-door-keypad";
+
 /** Quali animazioni vanno fermate: quelle vive, con un nome, e fuori. */
 export function animazioniDaFermare(animazioni, dentro) {
   return [...(animazioni || [])].filter((anim) => {
     if (!anim || anim.playState !== "running" || !anim.animationName) return false;
     if (NON_SI_FERMANO.test(anim.animationName)) return false;
     const bersaglio = anim.effect?.target;
-    return Boolean(bersaglio) && !dentro(bersaglio);
+    if (!bersaglio || dentro(bersaglio)) return false;
+    let sopra = false;
+    try {
+      sopra = Boolean(bersaglio.closest?.(SOPRA_LA_FINESTRA));
+    } catch (_errore) {
+      sopra = false;
+    }
+    return !sopra;
   });
 }
 

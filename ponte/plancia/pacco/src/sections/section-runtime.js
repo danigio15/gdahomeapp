@@ -557,7 +557,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-IW2YRDKH.js";
+} from "../../chunk-MPNUSAPA.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -57453,8 +57453,8 @@ function testaMarkup9(dati) {
     </button>
   </div>`;
 }
-function sottoLAdesso(dati, lettura3, vivo2, adesso) {
-  const oggi = letta(dati, "24h", adesso);
+function sottoLAdesso(dati, lettura3, vivo2, adesso, gia = null) {
+  const oggi = gia || letta(dati, "24h", adesso);
   const eventi = oggi.analisi?.eventi || [];
   const ultimo = eventi[eventi.length - 1] || null;
   const cambio = Number.isFinite(vivo2?.time) ? vivo2.time : null;
@@ -57491,9 +57491,9 @@ function sottoLAdesso(dati, lettura3, vivo2, adesso) {
     return esc(t("Nessuna apertura nelle ultime 24 ore", "Not opened in the last 24 hours"));
   return cambio ? esc(ultimoCambioTesto(cambio, adesso)) : "";
 }
-function adessoMarkup(dati, lettura3, vivo2, adesso) {
+function adessoMarkup(dati, lettura3, vivo2, adesso, gia = null) {
   const da = Number.isFinite(vivo2?.time) ? durataTesto(adesso - vivo2.time) : "";
-  const sotto = sottoLAdesso(dati, lettura3, vivo2, adesso);
+  const sotto = sottoLAdesso(dati, lettura3, vivo2, adesso, gia);
   return `<div class="dm-ur-adesso" aria-live="polite">
     <small>${esc(t("Adesso", "Now"))}</small>
     <div class="dm-ur-grande"><b>${esc(parolaDelloStato2(dati, lettura3))}</b>${da ? `<span>${esc(t(`da ${da}`, `for ${da}`))}</span>` : ""}</div>
@@ -57804,6 +57804,7 @@ function contenitore() {
   nodo2 = doc.createElement("div");
   nodo2.id = ULTIME_ID;
   nodo2.hidden = true;
+  nodo2.setAttribute("data-dm-sopra-la-finestra", "");
   nodo2.innerHTML = `<div class="dm-ur-velo" data-ur-chiudi></div>
     <section class="dm-ur-foglio" role="dialog" aria-modal="true" aria-labelledby="dm-ur-titolo" tabindex="-1"></section>`;
   doc.body.append(nodo2);
@@ -57831,7 +57832,7 @@ function disegna2() {
     ${testaMarkup9(dati)}
     <div class="dm-ur-corpo">
       <div class="dm-ur-sx">
-        ${adessoMarkup(dati, lettura3, vivo2, adesso)}
+        ${adessoMarkup(dati, lettura3, vivo2, adesso, aperto2.modo === "ieri" ? null : storia)}
         ${periodoMarkup(aperto2.modo, storia.finestra)}
         ${caselleMarkup(dati, aperto2.modo, storia)}
         ${graficiMarkup(dati, aperto2.modo, storia)}
@@ -57849,7 +57850,26 @@ function disegna2() {
   )}</p>`;
   foglio6.scrollTop = scorso;
   if (chiaveFuoco) foglio6.querySelector(chiaveFuoco)?.focus?.({ preventScroll: true });
+  nonRestareFermo(nodo2);
   sveglia(vivo2, adesso);
+}
+function nonRestareFermo(nodo2) {
+  let animazioni = [];
+  try {
+    animazioni = nodo2?.getAnimations?.({ subtree: true }) || [];
+  } catch (_errore) {
+    return 0;
+  }
+  let riprese = 0;
+  for (const anim of animazioni) {
+    if (anim?.playState !== "paused") continue;
+    try {
+      anim.play();
+      riprese += 1;
+    } catch (_errore) {
+    }
+  }
+  return riprese;
 }
 function sveglia(vivo2, adesso) {
   if (state49.sveglia) root.clearTimeout?.(state49.sveglia);
@@ -67761,12 +67781,20 @@ function ascoltaLaPorta() {
   });
 }
 var NON_SI_FERMANO = /^dmTileIn/;
+var SOPRA_LA_FINESTRA = "[data-dm-sopra-la-finestra],#confirm-modal,#custom-keypad,#dm-door-keypad";
 function animazioniDaFermare(animazioni, dentro3) {
   return [...animazioni || []].filter((anim) => {
     if (!anim || anim.playState !== "running" || !anim.animationName) return false;
     if (NON_SI_FERMANO.test(anim.animationName)) return false;
     const bersaglio = anim.effect?.target;
-    return Boolean(bersaglio) && !dentro3(bersaglio);
+    if (!bersaglio || dentro3(bersaglio)) return false;
+    let sopra = false;
+    try {
+      sopra = Boolean(bersaglio.closest?.(SOPRA_LA_FINESTRA));
+    } catch (_errore) {
+      sopra = false;
+    }
+    return !sopra;
   });
 }
 function fermaCioCheStaDietro(host2) {
