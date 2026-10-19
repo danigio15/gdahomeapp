@@ -89,7 +89,10 @@ test("la fascia della pappa: l'ora passata si vede, e «Ha mangiato» la segna",
   await apriGliAnimali(page, testInfo);
   const micio = page.locator('#page-animali [data-dm-animale="a1"]');
   const fido = page.locator('#page-animali [data-dm-animale="a2"]');
-  await expect(micio.locator('[data-dm-animale-gruppo="pappa"]')).toHaveAttribute("data-ora", "true");
+  await expect(micio.locator('[data-dm-animale-gruppo="pappa"]')).toHaveAttribute(
+    "data-ora",
+    "true",
+  );
   await expect(micio.locator('[data-dm-animale-avviso="pappa_da_dare"]')).toHaveCount(1);
   await expect(fido.locator('[data-dm-animale-lettura="pappa"]')).toContainText("3 ore fa");
   await expect(fido.locator('[data-dm-animale-lettura="pappa"]')).toContainText("fra 5 ore");
@@ -100,11 +103,12 @@ test("la fascia della pappa: l'ora passata si vede, e «Ha mangiato» la segna",
     });
 
   await micio.locator("[data-dm-animale-pappa]").click();
-  await expect(page.locator('#page-animali [data-dm-animale="a1"] [data-dm-animale-gruppo="pappa"]')).toHaveAttribute(
-    "data-ora",
-    "false",
-  );
-  await expect(page.locator('#page-animali [data-dm-animale="a1"] [data-dm-animale-avviso="pappa_da_dare"]')).toHaveCount(0);
+  await expect(
+    page.locator('#page-animali [data-dm-animale="a1"] [data-dm-animale-gruppo="pappa"]'),
+  ).toHaveAttribute("data-ora", "false");
+  await expect(
+    page.locator('#page-animali [data-dm-animale="a1"] [data-dm-animale-avviso="pappa_da_dare"]'),
+  ).toHaveCount(0);
   await expect(page.locator("#page-animali [data-dm-animale-pappa-annulla]")).toHaveCount(1);
   const salvata = await page.evaluate(() => JSON.parse(localStorage.getItem("cd_animali"))[0]);
   expect(Date.now() - Date.parse(salvata.pappa)).toBeLessThan(60_000);
@@ -115,8 +119,7 @@ test("la fascia della pappa: l'ora passata si vede, e «Ha mangiato» la segna",
     });
 
   await page.locator("#page-animali [data-dm-animale-pappa-annulla]").click();
-  await expect(page.locator('#page-animali [data-dm-animale="a1"] [data-dm-animale-gruppo="pappa"]')).toHaveAttribute(
-    "data-ora",
-    "true",
-  );
+  await expect(
+    page.locator('#page-animali [data-dm-animale="a1"] [data-dm-animale-gruppo="pappa"]'),
+  ).toHaveAttribute("data-ora", "true");
 });
