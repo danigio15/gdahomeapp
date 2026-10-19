@@ -735,6 +735,65 @@ test("il logo dei marchi si prende fuori, senza il segno di casa", async () => {
   assert.equal(chieste[0].intestazioni.authorization, undefined);
 });
 
+test("un logo che salta d'indirizzo lascia il suo turno una volta sola", async () => {
+  /* Prima il turno di un logo che rimandava altrove si lasciava due volte:
+   * una prima del salto e una nel `finally`. Il conto scendeva sotto zero, e
+   * per un po' partivano piu' scaricamenti insieme di quanti permessi. */
+  const vecchio = "https://brands.home-assistant.io/shelly/icon.png";
+  const nuovo = "https://brands.home-assistant.io/_/shelly/icon.png";
+  const casa = casaFinta({
+    stati: [
+      unAggiornamento("update.una_presa", { title: "Una presa", entity_picture: vecchio }),
+      unAggiornamento("update.altra_presa", { title: "Altra presa", entity_picture: vecchio }),
+      unAggiornamento("update.terza_presa", { title: "Terza presa", entity_picture: vecchio }),
+    ],
+  });
+  casa.indirizzo = "http://dentro:8123";
+  casa.segno = "IL-SEGNO";
+
+  const INSIEME = 1;
+  let attivi = 0;
+  let piuAlto = 0;
+  const conti = [];
+  const commissioni = new Commissioni({
+    casa,
+    registro: ZITTO,
+    insieme: INSIEME,
+    aggiornamenti: new Aggiornamenti({ casa, registro: ZITTO }),
+    scarica: async ({ url }) => {
+      attivi += 1;
+      piuAlto = Math.max(piuAlto, attivi);
+      conti.push(commissioni._inCorso);
+      await new Promise((fatto) => setTimeout(fatto, 5));
+      attivi -= 1;
+      if (url === vecchio) {
+        return {
+          stato: 301,
+          tipo: "text/html",
+          corpo: Buffer.alloc(0),
+          intestazioni: { location: nuovo },
+        };
+      }
+      return { stato: 200, tipo: "image/png", corpo: Buffer.from([9]) };
+    },
+  });
+
+  const presi = await Promise.all(
+    ["update.una_presa", "update.altra_presa", "update.terza_presa"].map((entity_id, i) =>
+      commissioni.rispondi({ id: i + 1, type: "ponte/aggiornamenti/logo", entity_id }),
+    ),
+  );
+  assert.ok(presi.every((preso) => preso.success === true));
+  assert.ok(piuAlto <= INSIEME, `scaricamenti insieme: ${piuAlto}`);
+  assert.ok(
+    conti.every((conto) => conto >= 0 && conto <= INSIEME),
+    `il conto e' uscito dai limiti: ${conti}`,
+  );
+  /* E alla fine i turni sono tutti tornati, ne' uno di piu' ne' uno di meno. */
+  assert.equal(commissioni._inCorso, 0);
+  assert.equal(commissioni._coda.length, 0);
+});
+
 test("il logo di un'entita' che l'elenco non ha non si va a prendere", async () => {
   const casa = casaFinta({
     stati: [

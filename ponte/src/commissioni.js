@@ -1270,6 +1270,16 @@ export class Commissioni {
    * nessuno potesse sapere perche'. */
   async _logoDiFuori(id, entita, dove, salti = 1) {
     await this._ilMioTurno();
+    /* Il turno si lascia **una volta sola**: dopo un salto lo si lascia prima
+     * di chiederne un altro, e il `finally` qui sotto non deve lasciarlo di
+     * nuovo — se no il conto scende sotto zero e partono piu' scaricamenti
+     * insieme di quanti ne sono permessi. */
+    let lasciato = false;
+    const rilascia = () => {
+      if (lasciato) return;
+      lasciato = true;
+      this._finito();
+    };
     try {
       const { stato, tipo, corpo, intestazioni } = await this.scarica({
         url: dove,
@@ -1286,7 +1296,7 @@ export class Commissioni {
           this.registro.attenzione(`il logo di ${entita}: ${dove} manda fuori (${laNuova})`);
           return no(id, "not_found", "quel logo manda da un'altra parte");
         }
-        this._finito();
+        rilascia();
         return this._logoDiFuori(id, entita, laNuova, salti - 1);
       }
       this._diCosaHaDetto(entita, dove, stato);
@@ -1295,7 +1305,7 @@ export class Commissioni {
       this.registro.attenzione(`il logo di ${entita} (${dove}): ${errore?.message || errore}`);
       return no(id, "ponte_http", String(errore?.message || "non ha funzionato"));
     } finally {
-      this._finito();
+      rilascia();
     }
   }
 
