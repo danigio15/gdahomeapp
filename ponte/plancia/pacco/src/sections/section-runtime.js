@@ -557,7 +557,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-RSAHUJS7.js";
+} from "../../chunk-OFJK3SPC.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -28775,6 +28775,30 @@ function testaMarkup2(lettura3, tipo, pilloleDeiDati) {
     ${pillole2.length ? `<div class="dm-termica-pillole">${pillole2.join("")}</div>` : ""}
     ${aggiornata}`;
 }
+function percentualeIntera(testo4) {
+  const n = Number.parseFloat(clean(testo4).replace(",", "."));
+  if (!Number.isFinite(n)) return null;
+  return Math.round(Math.max(0, Math.min(100, n)));
+}
+function percentualeNellAnello(potenza3) {
+  const originale = potenza3.querySelector(".dm-evv-gauge .lm-batt-soc");
+  const testa2 = originale?.parentElement;
+  if (!originale || !testa2) return;
+  let mia = testa2.querySelector(":scope > .dm-auto-soc");
+  if (!mia) {
+    mia = doc.createElement("b");
+    mia.className = "dm-auto-soc";
+    testa2.prepend(mia);
+  }
+  const scrivi5 = () => {
+    const n = percentualeIntera(originale.textContent);
+    const html = n === null ? "—" : `${n}<i>%</i>`;
+    if (mia.innerHTML !== html) mia.innerHTML = html;
+    if (!originale.hasAttribute("data-dm-sostituita"))
+      originale.setAttribute("data-dm-sostituita", "");
+  };
+  scrivi5();
+}
 function segnaLeRighe(potenza3) {
   for (const riga3 of potenza3.querySelectorAll(".dm-evv-row")) {
     if (riga3.dataset.dmRiga) continue;
@@ -28794,6 +28818,7 @@ function parolaDelTarget(potenza3) {
 function accantoAllAnello(page2, testa2) {
   const potenza3 = page2.querySelector(".dm-evv-power");
   if (!potenza3) return;
+  percentualeNellAnello(potenza3);
   segnaLeRighe(potenza3);
   parolaDelTarget(potenza3);
   const riga3 = potenza3.querySelector('.dm-evv-row[data-dm-riga="target"]');
@@ -29127,17 +29152,57 @@ function installStyles7() {
     #page-ev.dm-evv .dm-auto-testa+.dm-evv-row .dm-evv-row-val{color:var(--evv-green-deep,#15803d)}
     [data-theme="dark"] #page-ev.dm-evv .dm-auto-testa+.dm-evv-row .dm-evv-row-val{color:#4ade80}
     #page-ev .dm-evv-power>.dm-evv-gauge{align-self:center}
-    /* Da schermo largo la testa e le righe della ricarica stanno affiancate:
-       a sinistra com'e' l'auto, a destra come sta caricando. */
+    /* Accanto all'anello, in un ordine solo: l'autonomia, subito sotto
+       quella al target («Autonomia al 95% · 373 km») e le righe della
+       ricarica, poi le pillole, poi l'ora.
+
+       Prima le righe della ricarica stavano in fondo, larghe quanto la scheda
+       e col numero spinto al bordo destro: sul telefono finivano sotto il
+       pulsante dell'assistente, e da schermo largo si prendevano mezza scheda
+       per dire una riga sola — «a destra non c'e' niente». La testa non fa
+       piu' da scatola (display:contents): i suoi pezzi e le righe si mettono
+       in fila nella stessa griglia, e la riga del target si legge come una
+       riga dell'autonomia, col numero accanto al suo nome. */
+    #page-ev .dm-evv-rows.dm-auto-con-testa{
+      display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-content:center}
+    #page-ev .dm-auto-con-testa>.dm-auto-testa{display:contents}
+    #page-ev .dm-auto-con-testa .dm-auto-autonomia{order:1}
+    #page-ev .dm-auto-con-testa>.dm-evv-row{order:2;justify-content:flex-start;gap:8px}
+    #page-ev .dm-auto-con-testa>.dm-evv-row .dm-evv-row-val{margin-left:4px;font-size:16px}
+    #page-ev .dm-auto-con-testa .dm-termica-pillole{order:3}
+    #page-ev .dm-auto-con-testa .dm-auto-aggiornata{order:4}
+    /* Da schermo largo le pillole vanno nello spazio a destra, e l'autonomia
+       con le sue righe resta a sinistra. */
     @media (min-width:860px){
       #page-ev .dm-evv-rows.dm-auto-con-testa{
-        grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:28px;align-items:center}
-      #page-ev .dm-auto-con-testa>.dm-auto-testa{
-        grid-column:1;grid-row:1/span 3;align-self:center;padding:0 28px 0 0;border-bottom:0;
-        border-right:1px solid color-mix(in srgb,var(--text-dim,#64748b) 18%,transparent)}
-      #page-ev .dm-auto-con-testa>.dm-evv-row{grid-column:2}
-      #page-ev .dm-evv-power[data-dm-ricarica="ferma"] .dm-auto-con-testa>.dm-evv-row{grid-row:1/span 3;align-self:center}
+        grid-template-columns:minmax(220px,auto) minmax(0,1fr);column-gap:32px;row-gap:8px;
+        grid-auto-flow:row dense}
+      #page-ev .dm-auto-con-testa .dm-auto-autonomia,
+      #page-ev .dm-auto-con-testa>.dm-evv-row,
+      #page-ev .dm-auto-con-testa .dm-auto-aggiornata{grid-column:1}
+      #page-ev .dm-auto-con-testa .dm-termica-pillole{
+        grid-column:2;grid-row:1/span 5;align-self:center;align-content:center;
+        padding-left:32px;border-left:1px solid color-mix(in srgb,var(--text-dim,#64748b) 18%,transparent)}
+      /* E l'anello si fa piu' grande: da qui lo si guarda da piu' lontano. */
+      #page-ev.dm-evv .dm-evv-power>.dm-evv-gauge{width:136px;height:136px;flex:0 0 136px}
+      #page-ev .dm-auto-soc{font-size:36px}
     }
+
+    /* La percentuale dentro l'anello, intera e col «%» piccolo.
+       Il guscio scrive «86.6%» in una cifra alta trentaquattro punti: da
+       telefono e da Fold usciva dal cerchio. Qui la si riscrive come si
+       legge un indicatore di carica — «87%» — in una misura che ci sta
+       anche quando e' «100». */
+    #page-ev.dm-evv .dm-evv-power .dm-evv-gauge .lm-batt-header{flex-direction:column!important}
+    #page-ev.dm-evv .dm-evv-gauge .lm-batt-soc[data-dm-sostituita]{display:none!important}
+    #page-ev.dm-evv .dm-evv-power .dm-evv-gauge .lm-batt-lbl{order:2}
+    #page-ev .dm-auto-soc{
+      order:1;font-family:'Oswald',sans-serif;font-size:30px;font-weight:600;line-height:1;
+      letter-spacing:-.01em;color:var(--evv-text,var(--text,#0f172a));font-variant-numeric:tabular-nums}
+    #page-ev .dm-auto-soc i{font-style:normal;font-size:.5em;font-weight:600;margin-left:1px;
+      color:var(--evv-dim,var(--text-dim,#64748b))}
+    @media (max-width:640px){#page-ev .dm-auto-soc{font-size:26px}}
+    [data-theme="dark"] #page-ev .dm-auto-soc{color:#e9f0f7}
 
     /* Il quadro dell'auto a carburante: il serbatoio e le sue misure. */
     #page-ev .dm-termica-testa{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}

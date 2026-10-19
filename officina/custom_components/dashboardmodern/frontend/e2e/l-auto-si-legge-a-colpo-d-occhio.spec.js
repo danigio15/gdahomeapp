@@ -65,9 +65,11 @@ const s = (entity_id, state, unit = "", extra = {}) => ({
 });
 
 /* L'elettrica, come la manda GdAAuto. */
-function elettrica({ inCarica = true } = {}) {
+function elettrica({ inCarica = true, batteria } = {}) {
   const stati = [
-    s("sensor.auto_batteria", inCarica ? "67.8" : "81", "%", { device_class: "battery" }),
+    s("sensor.auto_batteria", batteria ?? (inCarica ? "67.8" : "81"), "%", {
+      device_class: "battery",
+    }),
     s("sensor.auto_autonomia", inCarica ? "262" : "318", "km", { device_class: "distance" }),
     s("sensor.auto_autonomia_nominale", "294", "km"),
     s("sensor.auto_consumo_medio", "16", "kWh/100 km"),
@@ -358,6 +360,54 @@ test.describe("la pagina Auto in blocchi", () => {
   });
 });
 
+test.describe("l'anello e le righe accanto", () => {
+  for (const [schermo, misure] of [
+    ["telefono", { width: 390, height: 844 }],
+    ["tablet", { width: 1280, height: 800 }],
+  ]) {
+    test(`${schermo}: la percentuale sta nel cerchio, e l'autonomia al target sta sotto l'autonomia`, async ({
+      page,
+    }, testInfo) => {
+      test.skip(testInfo.project.name !== "desktop", "una volta basta");
+      await page.setViewportSize(misure);
+      /* «Riesci a sistemarlo meglio, la percentuale batteria non entra nel
+       * cerchio»: il guscio scriveva «86.6%» in trentaquattro punti. */
+      await avvia(page, testInfo, elettrica({ inCarica: false, batteria: "86.6" }), "light");
+      const anello = page.locator("#page-ev .dm-evv-power");
+      const soc = anello.locator(".dm-evv-gauge .dm-auto-soc");
+      await expect(soc).toHaveText("87%");
+      const dentro = await anello.evaluate((potenza) => {
+        const cerchio = potenza.querySelector(".dm-evv-gauge").getBoundingClientRect();
+        const numero = potenza.querySelector(".dm-auto-soc").getBoundingClientRect();
+        /* Il vuoto dentro l'anello: il cerchio meno il suo spessore. */
+        const spessore = (cerchio.width * 9) / 120;
+        const raggio = cerchio.width / 2 - spessore;
+        const cx = cerchio.left + cerchio.width / 2;
+        const cy = cerchio.top + cerchio.height / 2;
+        return [
+          [numero.left, numero.top],
+          [numero.right, numero.top],
+          [numero.left, numero.bottom],
+          [numero.right, numero.bottom],
+        ].every(([x, y]) => Math.hypot(x - cx, y - cy) <= raggio);
+      });
+      expect(dentro).toBe(true);
+      /* Il target si legge subito sotto l'autonomia, prima delle pillole. */
+      const sopra = await anello.evaluate((potenza) => {
+        const y = (sel) => potenza.querySelector(sel).getBoundingClientRect().top;
+        return {
+          autonomia: y(".dm-auto-autonomia"),
+          target: y('.dm-evv-row[data-dm-riga="target"]'),
+          aggiornata: y(".dm-auto-aggiornata"),
+        };
+      });
+      expect(sopra.target).toBeGreaterThan(sopra.autonomia);
+      expect(sopra.target).toBeLessThan(sopra.aggiornata);
+      await nienteSborda(page);
+    });
+  }
+});
+
 const DIMENSIONI = {
   tablet: { width: 1280, height: 800 },
   fold: { width: 2000, height: 1500 },
@@ -372,6 +422,24 @@ test.describe("le foto della pagina Auto", () => {
     ["ev-carica-390-scuro", () => elettrica(), "telefono", "dark"],
     ["ev-carica-2000-scuro", () => elettrica(), "fold", "dark"],
     ["ev-ferma-1280-scuro", () => elettrica({ inCarica: false }), "tablet", "dark"],
+    [
+      "ev-ferma-390-chiaro",
+      () => elettrica({ inCarica: false, batteria: "86.6" }),
+      "telefono",
+      "light",
+    ],
+    [
+      "ev-ferma-2000-chiaro",
+      () => elettrica({ inCarica: false, batteria: "86.6" }),
+      "fold",
+      "light",
+    ],
+    [
+      "ev-ferma-1280-chiaro",
+      () => elettrica({ inCarica: false, batteria: "86.6" }),
+      "tablet",
+      "light",
+    ],
     ["termica-1280-scuro", () => termica(), "tablet", "dark"],
     ["termica-390-chiaro", () => termica(), "telefono", "light"],
   ])
