@@ -400,49 +400,33 @@ class _StatoDellaNotifica extends State<SchermataDellaNotifica> {
                             ),
                           ),
                         ),
-                      Row(
-                        children: [
-                          for (final (i, tasto) in tasti.indexed) ...[
-                            if (i > 0) const SizedBox(width: 10),
-                            Expanded(
-                              child: SizedBox(
-                                height: 54,
-                                child: i == 0
-                                    ? FilledButton(
-                                        key: Key('notifica-tasto-${tasto.id}'),
-                                        style: FilledButton.styleFrom(
-                                          backgroundColor: scuro,
-                                          foregroundColor: Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              18,
-                                            ),
-                                          ),
-                                        ),
-                                        onPressed: vale && _premuto == null
-                                            ? () => _tasto(tasto)
-                                            : null,
-                                        child: _ParolaDelTasto(tasto),
-                                      )
-                                    : FilledButton.tonal(
-                                        key: Key('notifica-tasto-${tasto.id}'),
-                                        style: FilledButton.styleFrom(
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              18,
-                                            ),
-                                          ),
-                                        ),
-                                        onPressed: vale && _premuto == null
-                                            ? () => _tasto(tasto)
-                                            : null,
-                                        child: _ParolaDelTasto(tasto),
-                                      ),
-                              ),
-                            ),
-                          ],
-                        ],
+                      /* Il primo tasto e' quello che fa la cosa: tutto largo,
+                       * pieno, col colore della notifica. Gli altri sotto,
+                       * divisi a meta': tre in fila si tagliavano a «Speg…». */
+                      _tastoDellaNotifica(
+                        tasti.first,
+                        primo: true,
+                        scuro: scuro,
+                        attivo: vale && _premuto == null,
                       ),
+                      if (tasti.length > 1) ...[
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            for (final (i, tasto) in tasti.skip(1).indexed) ...[
+                              if (i > 0) const SizedBox(width: 10),
+                              Expanded(
+                                child: _tastoDellaNotifica(
+                                  tasto,
+                                  primo: false,
+                                  scuro: scuro,
+                                  attivo: vale && _premuto == null,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
                     ],
                     if (etichetta != null && vai != null) ...[
                       const SizedBox(height: 16),
@@ -507,6 +491,32 @@ class _StatoDellaNotifica extends State<SchermataDellaNotifica> {
       ),
     );
   }
+
+  Widget _tastoDellaNotifica(
+    TastoDellaNotifica tasto, {
+    required bool primo,
+    required Color scuro,
+    required bool attivo,
+  }) {
+    final forma = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(18),
+    );
+    return SizedBox(
+      height: 54,
+      width: double.infinity,
+      child: FilledButton(
+        key: Key('notifica-tasto-${tasto.id}'),
+        style: FilledButton.styleFrom(
+          backgroundColor: primo ? scuro : scuro.withValues(alpha: 0.12),
+          foregroundColor: primo ? Colors.white : scuro,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          shape: forma,
+        ),
+        onPressed: attivo ? () => _tasto(tasto) : null,
+        child: _ParolaDelTasto(tasto),
+      ),
+    );
+  }
 }
 
 /// Di che cosa parla una notifica, in una parola, per l'etichetta sopra il
@@ -523,6 +533,7 @@ String cheCosaE(NotificaArrivata notifica) {
     'persone' => ('Persone', 'People'),
     'giornata' => ('La tua giornata', 'Your day'),
     'assistente' => ('Assistente', 'Assistant'),
+    'animali' => ('Animali', 'Pets'),
     'viaggi' => ('Viaggi', 'Trips'),
     'plancia' => ('Home Assistant', 'Home Assistant'),
     _ => ('GdAHome', 'GdAHome'),
@@ -546,6 +557,7 @@ String cheCosaE(NotificaArrivata notifica) {
     'energia' => (const Color(0xFF8B5CF6), const Color(0xFF4C1D95)),
     'meteo' => (const Color(0xFF38BDF8), const Color(0xFF0369A1)),
     'persone' => (const Color(0xFFEC4899), const Color(0xFF9D174D)),
+    'animali' => (const Color(0xFFF97316), const Color(0xFF9A3412)),
     'giornata' ||
     'assistente' => (const Color(0xFF6366F1), const Color(0xFF312E81)),
     _ => (const Color(0xFF64748B), const Color(0xFF1E293B)),
