@@ -65,7 +65,7 @@ const s = (entity_id, state, unit = "", extra = {}) => ({
 });
 
 /* L'elettrica, come la manda GdAAuto. */
-function elettrica({ inCarica = true, batteria } = {}) {
+function elettrica({ inCarica = true, batteria, tutta = false } = {}) {
   const stati = [
     s("sensor.auto_batteria", batteria ?? (inCarica ? "67.8" : "81"), "%", {
       device_class: "battery",
@@ -99,6 +99,16 @@ function elettrica({ inCarica = true, batteria } = {}) {
     s("number.auto_limite", "100", "%", { min: 50, max: 100, step: 5 }),
     s("lock.auto_serratura", "locked"),
     s("sensor.auto_odometro", "18240", "km"),
+    /* Come l'auto della foto dal campo: otto stati, non tre. */
+    ...(tutta
+      ? [
+          s("binary_sensor.auto_finestrini", "off", "", { device_class: "window" }),
+          s("binary_sensor.auto_bagagliaio", "off", "", { device_class: "opening" }),
+          s("binary_sensor.auto_allarme", "on"),
+          s("device_tracker.auto", "Lavoro"),
+          s("binary_sensor.auto_in_sonno", "on"),
+        ]
+      : []),
   ];
   const mappa = {
     "dm.ev_batteria_auto": "sensor.auto_batteria",
@@ -127,6 +137,15 @@ function elettrica({ inCarica = true, batteria } = {}) {
     "dm.ev_target_soc": "number.auto_limite",
     "dm.ev_portiere": "lock.auto_serratura",
     "dm.ev_odometro": "sensor.auto_odometro",
+    ...(tutta
+      ? {
+          "dm.ev_finestrini": "binary_sensor.auto_finestrini",
+          "dm.ev_bagagliaio": "binary_sensor.auto_bagagliaio",
+          "dm.ev_allarme": "binary_sensor.auto_allarme",
+          "dm.ev_posizione": "device_tracker.auto",
+          "dm.ev_in_sonno": "binary_sensor.auto_in_sonno",
+        }
+      : {}),
   };
   return {
     stati,
@@ -408,10 +427,14 @@ test.describe("l'anello e le righe accanto", () => {
   }
 });
 
+/* L'auto della foto dal campo: ferma, all'86,6%, con tutti i suoi stati. */
+const comeQuellaDelCampo = () => elettrica({ inCarica: false, batteria: "86.6", tutta: true });
+
 const DIMENSIONI = {
   tablet: { width: 1280, height: 800 },
   fold: { width: 2000, height: 1500 },
   telefono: { width: 390, height: 844 },
+  foldAperto: { width: 900, height: 1100 },
 };
 
 test.describe("le foto della pagina Auto", () => {
@@ -422,24 +445,10 @@ test.describe("le foto della pagina Auto", () => {
     ["ev-carica-390-scuro", () => elettrica(), "telefono", "dark"],
     ["ev-carica-2000-scuro", () => elettrica(), "fold", "dark"],
     ["ev-ferma-1280-scuro", () => elettrica({ inCarica: false }), "tablet", "dark"],
-    [
-      "ev-ferma-390-chiaro",
-      () => elettrica({ inCarica: false, batteria: "86.6" }),
-      "telefono",
-      "light",
-    ],
-    [
-      "ev-ferma-2000-chiaro",
-      () => elettrica({ inCarica: false, batteria: "86.6" }),
-      "fold",
-      "light",
-    ],
-    [
-      "ev-ferma-1280-chiaro",
-      () => elettrica({ inCarica: false, batteria: "86.6" }),
-      "tablet",
-      "light",
-    ],
+    ["ev-ferma-390-chiaro", () => comeQuellaDelCampo(), "telefono", "light"],
+    ["ev-ferma-390-scuro", () => comeQuellaDelCampo(), "telefono", "dark"],
+    ["ev-ferma-900-chiaro", () => comeQuellaDelCampo(), "foldAperto", "light"],
+    ["ev-ferma-1280-chiaro", () => comeQuellaDelCampo(), "tablet", "light"],
     ["termica-1280-scuro", () => termica(), "tablet", "dark"],
     ["termica-390-chiaro", () => termica(), "telefono", "light"],
   ])

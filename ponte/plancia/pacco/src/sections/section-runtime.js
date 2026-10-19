@@ -557,7 +557,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-OFJK3SPC.js";
+} from "../../chunk-C6MXRAOU.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -28799,6 +28799,18 @@ function percentualeNellAnello(potenza3) {
   };
   scrivi5();
 }
+function contaLeRigheAccanto(potenza3, ricarica2) {
+  let quante3 = 1;
+  for (const riga3 of potenza3.querySelectorAll(".dm-evv-row")) {
+    if (riga3.hidden) continue;
+    if (ricarica2 === "ferma" && (riga3.dataset.dmRiga === "potenza" || riga3.dataset.dmRiga === "tempo")) continue;
+    quante3 += 1;
+  }
+  const accanto = String(quante3);
+  const largo = String(quante3 + 1);
+  if (potenza3.style.getPropertyValue("--dm-accanto") !== accanto) potenza3.style.setProperty("--dm-accanto", accanto);
+  if (potenza3.style.getPropertyValue("--dm-accanto-largo") !== largo) potenza3.style.setProperty("--dm-accanto-largo", largo);
+}
 function segnaLeRighe(potenza3) {
   for (const riga3 of potenza3.querySelectorAll(".dm-evv-row")) {
     if (riga3.dataset.dmRiga) continue;
@@ -28840,6 +28852,8 @@ function accantoAllAnello(page2, testa2) {
   let nodo2 = potenza3.querySelector(".dm-auto-testa");
   const righe3 = potenza3.querySelector(".dm-evv-rows");
   righe3?.classList.toggle("dm-auto-con-testa", Boolean(testa2));
+  potenza3.classList.toggle("dm-auto-eroe", Boolean(testa2));
+  contaLeRigheAccanto(potenza3, ricarica2);
   if (!testa2) {
     nodo2?.remove();
     state22.testa = "";
@@ -29152,40 +29166,83 @@ function installStyles7() {
     #page-ev.dm-evv .dm-auto-testa+.dm-evv-row .dm-evv-row-val{color:var(--evv-green-deep,#15803d)}
     [data-theme="dark"] #page-ev.dm-evv .dm-auto-testa+.dm-evv-row .dm-evv-row-val{color:#4ade80}
     #page-ev .dm-evv-power>.dm-evv-gauge{align-self:center}
-    /* Accanto all'anello, in un ordine solo: l'autonomia, subito sotto
-       quella al target («Autonomia al 95% · 373 km») e le righe della
-       ricarica, poi le pillole, poi l'ora.
+    /* La scheda dell'auto come un cruscotto.
 
-       Prima le righe della ricarica stavano in fondo, larghe quanto la scheda
-       e col numero spinto al bordo destro: sul telefono finivano sotto il
-       pulsante dell'assistente, e da schermo largo si prendevano mezza scheda
-       per dire una riga sola — «a destra non c'e' niente». La testa non fa
-       piu' da scatola (display:contents): i suoi pezzi e le righe si mettono
-       in fila nella stessa griglia, e la riga del target si legge come una
-       riga dell'autonomia, col numero accanto al suo nome. */
-    #page-ev .dm-evv-rows.dm-auto-con-testa{
-      display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-content:center}
-    #page-ev .dm-auto-con-testa>.dm-auto-testa{display:contents}
-    #page-ev .dm-auto-con-testa .dm-auto-autonomia{order:1}
-    #page-ev .dm-auto-con-testa>.dm-evv-row{order:2;justify-content:flex-start;gap:8px}
-    #page-ev .dm-auto-con-testa>.dm-evv-row .dm-evv-row-val{margin-left:4px;font-size:16px}
-    #page-ev .dm-auto-con-testa .dm-termica-pillole{order:3}
-    #page-ev .dm-auto-con-testa .dm-auto-aggiornata{order:4}
-    /* Da schermo largo le pillole vanno nello spazio a destra, e l'autonomia
-       con le sue righe resta a sinistra. */
+       In alto l'anello della batteria e, accanto, l'autonomia in grande con
+       sotto quella al target («Autonomia al 95% 373 km») e — mentre carica —
+       la potenza e il tempo. Sotto, larghi quanto la scheda, gli stati
+       dell'auto in una griglia di caselle tutte uguali; in fondo l'ora.
+
+       Prima le pillole si accodavano come capitava, ognuna larga quanto la
+       sua parola, verdi e grigie alla rinfusa, strette nella colonna accanto
+       all'anello; la riga del target stava in fondo col numero al bordo
+       destro, sotto il pulsante dell'assistente. «Non mi piace.»
+
+       Le scatole di mezzo non fanno piu' da scatola (display:contents): i
+       pezzi stanno tutti nella stessa griglia della scheda. Quante righe
+       stanno accanto all'anello lo conta la sezione (--dm-accanto), perche'
+       cambiano quando l'auto carica. */
+    #page-ev.dm-evv .dm-evv-power.dm-auto-eroe{
+      display:grid!important;grid-template-columns:auto minmax(0,1fr);
+      column-gap:18px;row-gap:8px;align-items:center;padding:18px}
+    #page-ev .dm-auto-eroe>.dm-evv-rows,
+    #page-ev .dm-auto-eroe .dm-auto-testa{display:contents!important}
+    #page-ev .dm-auto-eroe>.dm-evv-gauge{grid-column:1;grid-row:1/span var(--dm-accanto,2);align-self:center}
+    #page-ev .dm-auto-eroe .dm-auto-autonomia,
+    #page-ev .dm-auto-eroe .dm-evv-row{grid-column:2}
+    #page-ev .dm-auto-eroe .dm-auto-autonomia{order:1}
+    #page-ev .dm-auto-eroe .dm-evv-row{order:2}
+    #page-ev .dm-auto-eroe .dm-termica-pillole{order:3}
+    #page-ev .dm-auto-eroe .dm-auto-aggiornata{order:4}
+    #page-ev .dm-auto-eroe .dm-evv-row{justify-content:flex-start;gap:8px;min-width:0}
+    #page-ev .dm-auto-eroe .dm-evv-row .dm-evv-row-val{margin-left:4px;font-size:16px}
+    #page-ev .dm-auto-eroe .dm-auto-autonomia .dm-auto-num{font-size:40px}
+    #page-ev .dm-auto-eroe .dm-termica-pillole,
+    #page-ev .dm-auto-eroe .dm-auto-aggiornata{grid-column:1/-1}
+    #page-ev .dm-auto-eroe .dm-termica-pillole{
+      display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+      margin-top:8px;padding-top:14px;
+      border-top:1px solid color-mix(in srgb,var(--text-dim,#64748b) 16%,transparent)}
+    #page-ev .dm-auto-eroe .dm-termica-pillola{
+      display:flex;align-items:center;gap:9px;min-width:0;min-height:42px;padding:8px 12px;
+      border-radius:14px;font-size:12.5px;font-weight:650;line-height:1.2;white-space:normal;
+      background:var(--surface-2,#f4f6f9);color:var(--text,#0f172a)}
+    #page-ev .dm-auto-eroe .dm-termica-pillola>i{
+      flex:0 0 22px;display:grid;place-items:center;font-size:16px}
+    #page-ev .dm-auto-eroe .dm-termica-pillola .dm-auto-marcia{margin-left:0;flex:0 0 22px;width:22px;height:22px;font-size:12.5px}
+    #page-ev .dm-auto-eroe .dm-termica-pillola[data-tono="bene"],
+    #page-ev .dm-auto-eroe .dm-termica-pillola[data-tono="acceso"]{
+      background:color-mix(in srgb,#22c55e 12%,var(--card-bg,#fff));color:#166534}
+    #page-ev .dm-auto-eroe .dm-termica-pillola[data-tono="attento"]{
+      background:color-mix(in srgb,#f59e0b 16%,var(--card-bg,#fff));color:#92400e}
+    #page-ev .dm-auto-eroe .dm-termica-pillola[data-tono="male"]{
+      background:color-mix(in srgb,#ef4444 14%,var(--card-bg,#fff));color:#b91c1c}
+    #page-ev .dm-auto-eroe .dm-termica-pillola[data-tono="spento"]{color:var(--text-dim,#475569)}
+    [data-theme="dark"] #page-ev .dm-auto-eroe .dm-termica-pillola{background:rgba(148,163,184,.10);color:#e2e8f0}
+    [data-theme="dark"] #page-ev .dm-auto-eroe .dm-termica-pillola[data-tono="bene"],
+    [data-theme="dark"] #page-ev .dm-auto-eroe .dm-termica-pillola[data-tono="acceso"]{background:rgba(34,197,94,.14);color:#86efac}
+    [data-theme="dark"] #page-ev .dm-auto-eroe .dm-termica-pillola[data-tono="attento"]{background:rgba(245,158,11,.16);color:#fcd34d}
+    [data-theme="dark"] #page-ev .dm-auto-eroe .dm-termica-pillola[data-tono="male"]{background:rgba(239,68,68,.16);color:#fca5a5}
+    [data-theme="dark"] #page-ev .dm-auto-eroe .dm-termica-pillola[data-tono="spento"]{color:#94a3b8}
+    #page-ev .dm-auto-eroe .dm-auto-aggiornata{justify-content:flex-end;margin-top:2px}
+    /* Da schermo largo tre colonne: l'anello, l'autonomia con le sue righe e
+       l'ora, e gli stati a destra in tre colonne. */
     @media (min-width:860px){
-      #page-ev .dm-evv-rows.dm-auto-con-testa{
-        grid-template-columns:minmax(220px,auto) minmax(0,1fr);column-gap:32px;row-gap:8px;
-        grid-auto-flow:row dense}
-      #page-ev .dm-auto-con-testa .dm-auto-autonomia,
-      #page-ev .dm-auto-con-testa>.dm-evv-row,
-      #page-ev .dm-auto-con-testa .dm-auto-aggiornata{grid-column:1}
-      #page-ev .dm-auto-con-testa .dm-termica-pillole{
-        grid-column:2;grid-row:1/span 5;align-self:center;align-content:center;
-        padding-left:32px;border-left:1px solid color-mix(in srgb,var(--text-dim,#64748b) 18%,transparent)}
-      /* E l'anello si fa piu' grande: da qui lo si guarda da piu' lontano. */
-      #page-ev.dm-evv .dm-evv-power>.dm-evv-gauge{width:136px;height:136px;flex:0 0 136px}
-      #page-ev .dm-auto-soc{font-size:36px}
+      #page-ev.dm-evv .dm-evv-power.dm-auto-eroe{
+        grid-template-columns:auto minmax(230px,auto) minmax(0,1fr);column-gap:28px;padding:22px 24px}
+      #page-ev .dm-auto-eroe>.dm-evv-gauge{grid-row:1/span var(--dm-accanto-largo,3)}
+      #page-ev .dm-auto-eroe .dm-auto-aggiornata{grid-column:2;justify-content:flex-start}
+      #page-ev .dm-auto-eroe .dm-termica-pillole{
+        grid-column:3;grid-row:1/span var(--dm-accanto-largo,3);align-self:center;
+        grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
+        margin:0;padding:0 0 0 28px;border-top:0;
+        border-left:1px solid color-mix(in srgb,var(--text-dim,#64748b) 16%,transparent)}
+      #page-ev.dm-evv .dm-evv-power.dm-auto-eroe>.dm-evv-gauge{width:140px;height:140px;flex:0 0 140px}
+      #page-ev .dm-auto-soc{font-size:38px}
+    }
+    @media (max-width:640px){
+      #page-ev.dm-evv .dm-evv-power.dm-auto-eroe{padding:16px;column-gap:14px}
+      #page-ev.dm-evv .dm-evv-power.dm-auto-eroe>.dm-evv-gauge{width:108px;height:108px;flex:0 0 108px}
     }
 
     /* La percentuale dentro l'anello, intera e col «%» piccolo.
@@ -29201,7 +29258,7 @@ function installStyles7() {
       letter-spacing:-.01em;color:var(--evv-text,var(--text,#0f172a));font-variant-numeric:tabular-nums}
     #page-ev .dm-auto-soc i{font-style:normal;font-size:.5em;font-weight:600;margin-left:1px;
       color:var(--evv-dim,var(--text-dim,#64748b))}
-    @media (max-width:640px){#page-ev .dm-auto-soc{font-size:26px}}
+    @media (max-width:640px){#page-ev .dm-auto-soc{font-size:28px}}
     [data-theme="dark"] #page-ev .dm-auto-soc{color:#e9f0f7}
 
     /* Il quadro dell'auto a carburante: il serbatoio e le sue misure. */
