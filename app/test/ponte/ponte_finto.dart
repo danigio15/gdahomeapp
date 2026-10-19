@@ -78,6 +78,10 @@ class PonteFinto {
   /// Quando e' `true`, non risponde ai comandi: e' Home Assistant che tace.
   bool muto = false;
 
+  /// Quando e' `true`, risponde a tutto tranne che ai colpetti: una casa viva
+  /// che il `ping` non lo conosce.
+  bool senzaPong = false;
+
   /// Quando e' `false`, e' un ponte di prima della compressione: nella
   /// stretta di mano non dice di saper aprire il gzip, e non comprime.
   bool conosceIlGzip = true;
@@ -161,6 +165,7 @@ class PonteFinto {
      * Quando la casa e' muta non risponde nemmeno a questo, ed e' proprio
      * quello che serve a provare un filo morto senza chiusura. */
     if (detto['type'] == 'ping') {
+      if (senzaPong) return;
       _manda(presa, {'id': id, 'type': 'pong'});
       return;
     }
