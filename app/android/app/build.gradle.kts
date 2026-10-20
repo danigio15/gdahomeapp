@@ -184,4 +184,9 @@ dependencies {
     /* L'orologio Wear OS: il Data Layer, che porta la fotografia al polso e
      * da li' riporta i tocchi (`orologio/IlTramiteDellOrologio.kt`). */
     implementation("com.google.android.gms:play-services-wearable:19.0.0")
+
+    /* Lo schermo intero di Android 15 anche sui telefoni di prima
+     * (`enableEdgeToEdge` in MainActivity). Arrivava gia' con Flutter, per
+     * via dei frammenti; scritto qui non dipende da loro. */
+    implementation("androidx.activity:activity:1.9.3")
 }

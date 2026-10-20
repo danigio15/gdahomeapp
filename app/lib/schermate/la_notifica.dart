@@ -29,6 +29,7 @@ import '../notifiche/modello.dart';
 import '../notifiche/postino.dart';
 import '../notifiche/scheda.dart';
 import '../parole.dart';
+import '../vestito/foto_a_misura.dart';
 import '../vestito/oggetti.dart';
 import '../vestito/pezzi.dart';
 import 'campanello.dart' show laFotoDi, premiIlTasto;
@@ -359,12 +360,10 @@ class _StatoDellaNotifica extends State<SchermataDellaNotifica> {
                         borderRadius: BorderRadius.circular(22),
                         child: Stack(
                           children: [
-                            Image.memory(
+                            FotoAMisura(
                               immagine,
                               key: const Key('notifica-immagine'),
                               width: double.infinity,
-                              fit: BoxFit.cover,
-                              gaplessPlayback: true,
                             ),
                             if (_dalVivo)
                               Positioned(

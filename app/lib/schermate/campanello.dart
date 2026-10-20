@@ -38,6 +38,7 @@ import '../notifiche/dove_apre.dart';
 import '../notifiche/modello.dart';
 import '../notifiche/postino.dart';
 import '../parole.dart';
+import '../vestito/foto_a_misura.dart';
 import '../vestito/tema.dart';
 import 'la_notifica.dart';
 import 'la_tua_giornata.dart';
@@ -360,12 +361,7 @@ class _StatoDellaTelecamera extends State<SchermataDellaTelecamera> {
                         fit: StackFit.expand,
                         children: [
                           if (foto != null)
-                            Image.memory(
-                              foto,
-                              key: const Key('telecamera-foto'),
-                              fit: BoxFit.cover,
-                              gaplessPlayback: true,
-                            )
+                            FotoAMisura(foto, key: const Key('telecamera-foto'))
                           else
                             Container(
                               color: const Color(0xFF2E2A26),
@@ -615,11 +611,7 @@ class _StatoDelCampanello extends State<SchermataDelCampanello> {
                       fit: StackFit.expand,
                       children: [
                         if (_foto != null)
-                          Image.memory(
-                            _foto!,
-                            fit: BoxFit.cover,
-                            gaplessPlayback: true,
-                          )
+                          FotoAMisura(_foto!)
                         else
                           Container(
                             color: const Color(0xFF4A423B),
