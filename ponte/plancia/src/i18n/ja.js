@@ -3377,6 +3377,7 @@ export default Object.freeze({
   "1 to install · tap Install": "1 件インストール待ち · 「インストール」をタップ",
   "To install": "インストール待ち",
   "to install · tap Install": "件インストール待ち · 「インストール」をタップ",
+  "Next hours": "この先の時間",
   "Still reading the Recorder statistics": "Recorder の統計をまだ読み込んでいます",
   Stop: "停止",
   Stopped: "停止中",

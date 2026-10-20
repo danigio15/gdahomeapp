@@ -3391,6 +3391,7 @@ export default Object.freeze({
   "1 to install · tap Install": "1 por instalar · toque em Instalar",
   "To install": "Por instalar",
   "to install · tap Install": "por instalar · toque em Instalar",
+  "Next hours": "Próximas horas",
   "Still reading the Recorder statistics": "Ainda a ler as estatísticas do Recorder",
   Stop: "Parar",
   Stopped: "Parada",

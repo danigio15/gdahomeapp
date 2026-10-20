@@ -3387,6 +3387,7 @@ export default Object.freeze({
   "1 to install · tap Install": "1 к установке · нажмите «Установить»",
   "To install": "К установке",
   "to install · tap Install": "к установке · нажмите «Установить»",
+  "Next hours": "Ближайшие часы",
   "Still reading the Recorder statistics": "Статистика Recorder ещё читается",
   Stop: "Остановить",
   Stopped: "Остановлена",

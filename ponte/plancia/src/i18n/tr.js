@@ -3378,6 +3378,7 @@ export default Object.freeze({
   "1 to install · tap Install": "1 yüklenecek · Yükle'ye dokunun",
   "To install": "Yüklenecek",
   "to install · tap Install": "yüklenecek · Yükle'ye dokunun",
+  "Next hours": "Sonraki saatler",
   "Still reading the Recorder statistics": "Recorder istatistikleri hâlâ okunuyor",
   Stop: "Durdur",
   Stopped: "Durduruldu",

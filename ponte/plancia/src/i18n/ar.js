@@ -3351,6 +3351,7 @@ export default Object.freeze({
   "1 to install · tap Install": "1 للتثبيت · المس تثبيت",
   "To install": "للتثبيت",
   "to install · tap Install": "للتثبيت · المس تثبيت",
+  "Next hours": "الساعات القادمة",
   "Still reading the Recorder statistics": "لا تزال قراءة إحصاءات المسجّل جارية",
   Stop: "إيقاف",
   Stopped: "متوقفة",

@@ -3183,6 +3183,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "Next channel",
   "Next collection",
   "Next days",
+  "Next hours",
   "next one",
   "next one in ${fra} days",
   "next one tomorrow",

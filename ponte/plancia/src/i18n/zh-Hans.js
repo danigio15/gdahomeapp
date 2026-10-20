@@ -3319,6 +3319,7 @@ export default Object.freeze({
   "1 to install · tap Install": "1 个待安装 · 点按安装",
   "To install": "待安装",
   "to install · tap Install": "个待安装 · 点按安装",
+  "Next hours": "未来几小时",
   "Still reading the Recorder statistics": "仍在读取 Recorder 统计数据",
   Stop: "停止",
   Stopped: "已停止",

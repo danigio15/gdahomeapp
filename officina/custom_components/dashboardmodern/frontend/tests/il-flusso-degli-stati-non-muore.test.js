@@ -72,8 +72,11 @@ test("la sottoscrizione parte prima dell'istantanea, e un'istantanea che non arr
     const broker = new HomeAssistantBroker({ timeout: 20 });
     const { spedite } = presaFinta(broker, { istantanea: "mai" });
     await assert.rejects(broker.startStateFeed(), /timeout/);
+    /* Il «ping» che verifica la presa dopo una domanda scaduta (vedi
+     * `verificaLaPresa`) parte o no a seconda del millisecondo: non e' una
+     * domanda della casa, e qui non si conta. */
     assert.deepEqual(
-      spedite.map((m) => m.type),
+      spedite.map((m) => m.type).filter((tipo) => tipo !== "ping"),
       ["subscribe_events", "get_states"],
     );
     /* La sottoscrizione e' viva: un evento arriva nei registri. */

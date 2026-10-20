@@ -3369,6 +3369,7 @@ export default Object.freeze({
   "1 to install · tap Install": "설치할 항목 1개 · 설치를 누르세요",
   "To install": "설치 대기",
   "to install · tap Install": "개 설치 대기 · 설치를 누르세요",
+  "Next hours": "다음 시간",
   "Still reading the Recorder statistics": "아직 Recorder 통계를 읽는 중",
   Stop: "정지",
   Stopped: "정지됨",

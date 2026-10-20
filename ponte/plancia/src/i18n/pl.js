@@ -3383,6 +3383,7 @@ export default Object.freeze({
   "1 to install · tap Install": "1 do zainstalowania · dotknij Zainstaluj",
   "To install": "Do zainstalowania",
   "to install · tap Install": "do zainstalowania · dotknij Zainstaluj",
+  "Next hours": "Najbliższe godziny",
   "Still reading the Recorder statistics": "Wciąż odczytuję statystyki Recordera",
   Stop: "Zatrzymaj",
   Stopped: "Zatrzymana",

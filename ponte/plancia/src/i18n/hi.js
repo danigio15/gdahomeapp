@@ -3365,6 +3365,7 @@ export default Object.freeze({
   "1 to install · tap Install": "1 इंस्टॉल करना है · इंस्टॉल दबाएँ",
   "To install": "इंस्टॉल करना है",
   "to install · tap Install": "इंस्टॉल करने हैं · इंस्टॉल दबाएँ",
+  "Next hours": "अगले घंटे",
   "Still reading the Recorder statistics": "Recorder के आँकड़े अभी पढ़े जा रहे हैं",
   Stop: "रोकें",
   Stopped: "रुकी हुई",

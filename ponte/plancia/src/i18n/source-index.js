@@ -4303,6 +4303,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Proprio tutto": "Everything",
   "prossima": "next",
   "Prossime 24 ore": "Next 24 hours",
+  "Prossime ore": "Next hours",
   "Prossimi": "Upcoming",
   "Prossimi giorni": "Next days",
   "prossimità del tablet": "tablet proximity",
