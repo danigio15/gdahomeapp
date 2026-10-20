@@ -31,6 +31,16 @@ function presaFinta(broker, { stati = [], istantanea = "subito" } = {}) {
           () => {},
         );
       if (m.type === "subscribe_events") queueMicrotask(() => rispondi(null));
+      /* Una Home Assistant viva al «ping» risponde sempre (vedi
+       * `verificaLaPresa`): e' l'istantanea che manca, non la presa. */
+      if (m.type === "ping")
+        queueMicrotask(() =>
+          broker.handleMessage(
+            JSON.stringify({ type: "pong", id: m.id }),
+            () => {},
+            () => {},
+          ),
+        );
       if (m.type === "get_states") {
         if (istantanea === "mai") return;
         queueMicrotask(() => rispondi(stati));

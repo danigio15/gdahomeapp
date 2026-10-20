@@ -5092,6 +5092,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "The phone notification",
   "the photo exceeds 10 MB",
   "The photo is saved in the GdAHome add-on, with the dashboard's other photos. Before it leaves, the phone shrinks it to 1200 px; it goes through no outside server.",
+  "The photo is saved, but the browser cannot open it. Try uploading it again; if it stays like this, restart Home Assistant.",
   "The PIN is 4-8 digits.",
   "The PIN will be requested to confirm the operation",
   "The planner is part of GdANav Premium",

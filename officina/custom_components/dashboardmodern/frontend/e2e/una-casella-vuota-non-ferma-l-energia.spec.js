@@ -143,7 +143,11 @@ test("un contatore senza statistiche: i numeri arrivano, la riga lo dice, le dom
   /* Il pacchetto arriva lo stesso: e' meta', ed e' quella buona. */
   await expect(giorno).toHaveAttribute("data-dm-energy-bundle", /\d/, { timeout: 40_000 });
   await expect(page.locator("#v-grid-day")).toContainText(/\d+,\d kWh/);
-  /* E sopra i numeri c'e' scritto QUALE sensore manca e cosa gli serve. */
+  /* E sopra i numeri c'e' scritto QUALE sensore manca e cosa gli serve: non
+   * alla prima lettura (vedi `confermaIMancanti`), ma a quella dopo, che
+   * da solo arriva entro un minuto. Qui la si chiede subito. */
+  await expect(giorno).not.toHaveAttribute("data-dm-energy-ragione", new RegExp(MUTO));
+  await page.evaluate(() => window.DashboardModernEnergyService.refreshNow());
   await expect(giorno).toHaveAttribute("data-dm-energy-ragione", new RegExp(MUTO), {
     timeout: 10_000,
   });

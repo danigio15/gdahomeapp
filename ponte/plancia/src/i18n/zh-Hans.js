@@ -3315,6 +3315,7 @@ export default Object.freeze({
   Still: "静止",
   "Still for": "未变化",
   "The connection to Home Assistant dropped: reconnecting on my own.": "与 Home Assistant 的连接已中断：正在自动重新连接。",
+  "The photo is saved, but the browser cannot open it. Try uploading it again; if it stays like this, restart Home Assistant.": "照片已保存，但浏览器无法打开。请重新上传；如果仍然如此，请重启 Home Assistant。",
   "Still reading the Recorder statistics": "仍在读取 Recorder 统计数据",
   Stop: "停止",
   Stopped: "已停止",

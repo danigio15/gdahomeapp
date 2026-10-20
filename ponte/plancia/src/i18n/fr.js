@@ -3402,6 +3402,7 @@ export default Object.freeze({
   Still: "Immobile",
   "Still for": "Inchangé depuis",
   "The connection to Home Assistant dropped: reconnecting on my own.": "La connexion à Home Assistant s'est interrompue : je me reconnecte tout seul.",
+  "The photo is saved, but the browser cannot open it. Try uploading it again; if it stays like this, restart Home Assistant.": "La photo est enregistrée, mais le navigateur ne parvient pas à l'ouvrir. Réessayez de la charger ; si rien ne change, redémarrez Home Assistant.",
   "Still reading the Recorder statistics": "Lecture des statistiques du Recorder en cours",
   Stop: "Arrêter",
   Stopped: "Arrêté",

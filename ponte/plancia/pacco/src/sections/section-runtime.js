@@ -557,7 +557,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-PD3DMEEX.js";
+} from "../../chunk-L2RPJ7MS.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -4604,6 +4604,7 @@ var SOURCE_INDEX = Object.freeze({
   "la fonte si sceglie qui sopra": "the source is chosen above",
   "La forcella in cui l'acqua di casa deve stare: da 2 a 4 bar per quasi tutte. Fuori, la pagina si colora d'ambra.": "The range a home's water should stay in: 2 to 4 bar for almost all of them. Outside it, the page turns amber.",
   "La foto dell'auto": "The car photo",
+  "La foto è salvata, ma il browser non riesce ad aprirla. Riprova a caricarla; se resta così, riavvia Home Assistant.": "The photo is saved, but the browser cannot open it. Try uploading it again; if it stays like this, restart Home Assistant.",
   "La foto si salva nell'add-on GdAHome, con le altre foto della plancia. Prima di partire il telefono la riduce a 1200 px; non passa da nessun server esterno.": "The photo is saved in the GdAHome add-on, with the dashboard's other photos. Before it leaves, the phone shrinks it to 1200 px; it goes through no outside server.",
   "la foto supera i 10 MB": "the photo exceeds 10 MB",
   "La lavatrice ha finito": "The washer is done",
