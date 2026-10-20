@@ -880,9 +880,10 @@ test("la sezione della dashboard: la linguetta prima di Config, le tessere, i gr
     await sezione.locator(`[data-aug-apri="${g}"]`).click();
   await expect(sezione.locator("[data-auc-carta]")).toHaveCount(5);
   await expect(espandi).toBeDisabled();
-  /* Nessun rimando al config dalla sezione: niente «＋ Nuova», niente
-   * «Gestisci nel config». */
-  await expect(sezione.locator("[data-auc-nuova]")).toHaveCount(0);
+  /* Nessun rimando al config dalla sezione: niente «Gestisci nel config».
+   * «＋ Nuova» c'e' anche nel browser (dal campo: «da Google Chrome non c'e'
+   * il pulsante di creare un'automazione, invece da app si»). */
+  await expect(sezione.locator(".ad-filtri [data-auc-nuova]")).toBeVisible();
   await expect(sezione.locator(".ad-cfg, [data-auc-config], [data-auc-config-nuova]")).toHaveCount(
     0,
   );
@@ -929,8 +930,31 @@ test("la sezione della dashboard: la linguetta prima di Config, le tessere, i gr
       service: "trigger",
       data: { entity_id: "automation.a1002", skip_condition: true },
     });
-  await expect(foglio.locator("[data-auc-modifica]")).toHaveCount(0);
   await expect(foglio).not.toContainText("config");
+  /* «✏️ Modifica» anche nel browser: l'editor a schermo pieno, mai il config. */
+  await foglio.locator("[data-auc-modifica]").click();
+  const pagina = page.locator("#page-automazioni");
+  await expect(pagina.locator('.au-app [data-au-testo="nome"]')).toHaveValue(
+    "Luce corridoio di notte",
+  );
+  await expect(page.locator("#editor-modal.show")).toHaveCount(0);
+  /* «＋ Nuova» dalla sezione: i modelli a schermo pieno, e «← Home» torna. */
+  await pagina.locator('.au-indietro[data-au-vai="lista"]').click();
+  await expect(pagina.locator(".ad-filtri [data-auc-nuova]")).toBeVisible();
+  if (process.env.DM_RENDER_DIR)
+    await page.screenshot({
+      path: `${process.env.DM_RENDER_DIR}/automazioni-browser-lista-${testInfo.project.name}.png`,
+    });
+  await pagina.locator(".ad-filtri [data-auc-nuova]").click();
+  await expect(pagina.locator(".au-mod")).toHaveCount(8);
+  if (process.env.DM_RENDER_DIR)
+    await page.screenshot({
+      path: `${process.env.DM_RENDER_DIR}/automazioni-browser-nuova-${testInfo.project.name}.png`,
+    });
+  await pagina.locator('.au-indietro[data-au-vai="lista"]').click();
+  await pagina.locator(".dm-mast-back").click();
+  await expect(page.locator("#page-automazioni")).toHaveCount(0);
+  await expect(page.locator("#page-home")).toHaveClass(/active/);
   await expect(page.locator("#editor-modal.show")).toHaveCount(0);
 });
 

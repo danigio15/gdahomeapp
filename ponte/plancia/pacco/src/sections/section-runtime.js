@@ -557,7 +557,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-GUXW6VUI.js";
+} from "../../chunk-J2S7GICQ.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -126610,17 +126610,17 @@ function tessere(elenco15) {
     prossima?.voce?.nome || t("nessuna a un orario", "none on a schedule")
   )}</small></div></div>`;
 }
-function strisciaDelleProposte({ app }) {
+function strisciaDelleProposte() {
   const n = leProposte().length;
-  if (!app || !n || !statoDelleAutomazioni().ponte?.puoScrivere) return "";
+  if (!n || !statoDelleAutomazioni().ponte?.puoScrivere) return "";
   return `<button type="button" class="ad-pro" data-auc-proposte><span class="st" aria-hidden="true">✨</span><div>${esc(
     n === 1 ? t("1 proposta per la tua casa", "1 suggestion for your home") : t(`${n} proposte per la tua casa`, `${n} suggestions for your home`)
   )}<small>${esc(t("Pensate sui tuoi dispositivi e su come li usi", "Based on your devices and how you use them"))}</small></div><em>${esc(
     t("Vedi ›", "See ›")
   )}</em></button>`;
 }
-function filtri({ app }) {
-  const nuova = app && statoDelleAutomazioni().ponte?.puoScrivere === true ? `<button type="button" class="ad-nuova" data-auc-nuova>＋ ${esc(t("Nuova", "Add new"))}</button>` : "";
+function filtri() {
+  const nuova = statoDelleAutomazioni().ponte?.puoScrivere === true ? `<button type="button" class="ad-nuova" data-auc-nuova>＋ ${esc(t("Nuova", "Add new"))}</button>` : "";
   return `<div class="ad-filtri"><span class="ad-seg-riga">${scelteDelRaggruppa(state144.per, "data-auc-per", "ad-seg")}${tastiDeiGruppiHtml(
     automazioniDiCasa(),
     { per: state144.per, cerca: state144.cerca }
@@ -126642,7 +126642,7 @@ function gruppiHtml2(elenco15) {
   });
   return gruppi2 || `<p class="ad-nessuna">${esc(t("Nessuna automazione con queste parole.", "No automation matches these words."))}</p>`;
 }
-function vuoto4({ app }) {
+function vuoto4() {
   const puo = statoDelleAutomazioni().ponte?.puoScrivere;
   return `<div class="ad-vuoto"><div class="ill">${orologio4("vuoto")}<span aria-hidden="true">✨</span></div><h3>${esc(
     t("Nessuna automazione, per ora", "No automations, for now")
@@ -126651,7 +126651,7 @@ function vuoto4({ app }) {
       "Le automazioni accendono, spengono e avvisano da sole: a un orario, quando si apre una porta, quando esci di casa. Qui le vedrai tutte, anche quelle di Home Assistant.",
       "Automations turn things on and off and alert you by themselves: at a time, when a door opens, when you leave home. You'll see them all here, Home Assistant's too."
     )
-  )}</p>${puo && app ? `<button type="button" data-auc-nuova>＋ ${esc(t("Crea la prima", "Create the first one"))}</button>` : ""}</div>`;
+  )}</p>${puo ? `<button type="button" data-auc-nuova>＋ ${esc(t("Crea la prima", "Create the first one"))}</button>` : ""}</div>`;
 }
 function avviso(testo4) {
   return `<p class="ad-avviso">${esc(testo4)}</p>`;
@@ -126667,8 +126667,8 @@ function corpo3({ app }) {
     );
   if (!st.ponte) return `${tessere([])}${avviso(t("Leggo le automazioni di casa…", "Reading the home's automations…"))}`;
   const elenco15 = automazioniDiCasa();
-  if (!elenco15.length) return vuoto4({ app });
-  return `${tessere(elenco15)}${strisciaDelleProposte({ app })}${filtri({ app })}<div class="ad-gruppi" data-auc-gruppi>${gruppiHtml2(elenco15)}</div>`;
+  if (!elenco15.length) return vuoto4();
+  return `${tessere(elenco15)}${strisciaDelleProposte()}${filtri()}<div class="ad-gruppi" data-auc-gruppi>${gruppiHtml2(elenco15)}</div>`;
 }
 function chiusa({ app }) {
   return `<div class="ad-chiusa"><div class="sotto" aria-hidden="true" inert>${corpo3({ app })}</div><div class="velo"><div class="carta"><div class="ill">${orologio4(
@@ -126727,21 +126727,21 @@ function bloccoDelFoglio(v) {
     )
   )}</div>`;
 }
-function htmlDelFoglio(v, { app }) {
+function htmlDelFoglio(v) {
   const [emoji, nomeCat, oggetto3, colore] = CATEGORIA()[v.categoria] || CATEGORIA().altre;
   const st = statoDelleAutomazioni();
   const puo = st.ponte?.puoScrivere && v.modificabile;
   const fu = ultimaVoltaDi(v);
   const categoriaHa = categorieDiCasa().find((c) => c.id === clean(v.categoriaHa))?.nome || "";
   const dove = [categoriaHa === nomeCat ? "" : categoriaHa, `${emoji} ${nomeCat}`, clean(v.area)].filter(Boolean).join(" · ");
-  const modifica = puo && app ? `<button type="button" class="modifica" data-auc-modifica>✏️ ${esc(t("Modifica", "Edit"))}</button>` : "";
+  const modifica = puo ? `<button type="button" class="modifica" data-auc-modifica>✏️ ${esc(t("Modifica", "Edit"))}</button>` : "";
   return `<div class="ad-foglio" role="dialog" aria-modal="true" aria-label="${esc(v.nome)}" style="--c:${colore}"><div class="man"></div>
 <div class="su"><span class="orb">${disegno4(oggetto3)}</span><div><h4>${esc(v.nome)}</h4><div class="dove">${esc(dove)}</div></div><button type="button" class="led" aria-pressed="${v.attiva}" data-auc-led="${esc(
     v.entity_id
   )}" aria-label="${esc(t("Attiva o spenta", "On or off"))}"></button></div>
 <div class="blk">${bloccoDelFoglio(v)}</div>
 <div class="ult">${esc(t("Ultima volta:", "Last time:"))} <b>${esc(fu)}</b></div>
-<div class="tasti"><button type="button" class="esegui" data-auc-esegui>▶ ${esc(t("Esegui ora", "Run now"))}</button>${modifica}</div>${app && puo ? `<div class="op-mod"><button type="button" data-auc-duplica>${esc(t("Duplica", "Duplicate"))}</button><button type="button" data-auc-stanza>${esc(
+<div class="tasti"><button type="button" class="esegui" data-auc-esegui>▶ ${esc(t("Esegui ora", "Run now"))}</button>${modifica}</div>${puo ? `<div class="op-mod"><button type="button" data-auc-duplica>${esc(t("Duplica", "Duplicate"))}</button><button type="button" data-auc-stanza>${esc(
     t("Stanza e nome", "Room and name")
   )}</button><button type="button" class="r" data-auc-elimina>${esc(t("Elimina", "Delete"))}</button></div>` : ""}</div>`;
 }
@@ -126757,7 +126757,7 @@ function apriIlFoglio(entity2) {
     velo4.className = "ad-velo";
     doc.body.append(velo4);
   }
-  velo4.innerHTML = htmlDelFoglio(v, { app: statoDelleAutomazioni().inApp });
+  velo4.innerHTML = htmlDelFoglio(v);
 }
 function chiudiIlFoglio() {
   state144.foglio = "";
@@ -126827,6 +126827,9 @@ function piuTardi() {
   else root.setTimeout?.(fai2, 0);
 }
 var dentroDiNoi2 = (el) => el?.closest?.(`#${ID_DELLA_SEZIONE}, #${ID_DEL_FOGLIO}, #${ID_DEL_TASTO}, .auc-app`);
+function aSchermoPieno(app) {
+  if (!app) apriLeAutomazioni();
+}
 function onClick41(event) {
   const el = event.target;
   if (!dentroDiNoi2(el)) return;
@@ -126872,14 +126875,14 @@ function onClick41(event) {
     return;
   }
   if (d.aucProposte !== void 0) {
-    if (app) vaiA("proposte");
+    aSchermoPieno(app);
+    vaiA("proposte");
     return;
   }
   if (d.aucNuova !== void 0) {
-    if (app) {
-      vaiA("modelli");
-      root.scrollTo?.(0, 0);
-    }
+    aSchermoPieno(app);
+    vaiA("modelli");
+    root.scrollTo?.(0, 0);
     return;
   }
   const v = voceDi2(state144.foglio);
@@ -126890,12 +126893,11 @@ function onClick41(event) {
   if (d.aucModifica !== void 0 || d.aucStanza !== void 0) {
     chiudiIlFoglio();
     if (!v) return;
-    if (app) {
-      apriPerModificare(v);
-      ridisegna11();
-      aggiornaIlTasto();
-      root.scrollTo?.(0, 0);
-    }
+    aSchermoPieno(app);
+    apriPerModificare(v);
+    ridisegna11();
+    aggiornaIlTasto();
+    root.scrollTo?.(0, 0);
     return;
   }
   if (d.aucDuplica !== void 0) {

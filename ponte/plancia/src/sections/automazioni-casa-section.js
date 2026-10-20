@@ -17,7 +17,9 @@
  * PREMIUM»), a schermo pieno. Li' la pagina e' una sola: con «＋ Nuova»
  * nella barra dei filtri, e il foglio di una riga
  * porta anche «✏️ Modifica», «Duplica», «Stanza e nome» ed «Elimina» —
- * l'editor si apre nella stessa pagina.
+ * l'editor si apre nella stessa pagina. Nel browser la sezione ha gli
+ * stessi tasti: «＋ Nuova» e «✏️ Modifica» aprono quella pagina a schermo
+ * pieno, e «← Home» torna alla plancia.
  *
  * Tutto e' Premium: senza, il contenuto si vede sfocato sotto un velo che
  * dice cosa fa e dove si compra. Niente elenco gratuito, niente interruttori.
@@ -32,6 +34,7 @@ import {
   DOVE_SI_COMPRA,
   alternaInCasa,
   apriLaConferma,
+  apriLeAutomazioni,
   apriPerModificare,
   automazioniDiCasa,
   categorieDiCasa,
@@ -194,11 +197,11 @@ function tessere(elenco) {
   )}</small></div></div>`;
 }
 
-/* Le proposte si aprono nella stessa pagina, e una pagina sola le ha: quella
- * dell'app. Nella dashboard la striscia portava al config, e non c'e' piu'. */
-function strisciaDelleProposte({ app }) {
+/* Le proposte si aprono nella pagina a schermo pieno: nell'app e, dal
+ * browser, aperta da qui ([aSchermoPieno]). Mai nel config. */
+function strisciaDelleProposte() {
   const n = leProposte().length;
-  if (!app || !n || !statoDelleAutomazioni().ponte?.puoScrivere) return "";
+  if (!n || !statoDelleAutomazioni().ponte?.puoScrivere) return "";
   return `<button type="button" class="ad-pro" data-auc-proposte><span class="st" aria-hidden="true">✨</span><div>${esc(
     n === 1
       ? t("1 proposta per la tua casa", "1 suggestion for your home")
@@ -209,11 +212,12 @@ function strisciaDelleProposte({ app }) {
 }
 
 /* «Per categoria · Per tipo · Per stanza», la ricerca e «＋ Nuova». «＋
- * Nuova» c'e' solo nell'app e per chi puo' scrivere: apre i modelli nella
- * stessa pagina. Nella dashboard non c'e', perche' porterebbe al config. */
-function filtri({ app }) {
+ * Nuova» c'e' per chi puo' scrivere, nell'app e nel browser: apre i modelli
+ * nella pagina a schermo pieno, mai il config. Dal campo: «da Google Chrome
+ * non c'e' il pulsante di creare un'automazione, invece da app si». */
+function filtri() {
   const nuova =
-    app && statoDelleAutomazioni().ponte?.puoScrivere === true
+    statoDelleAutomazioni().ponte?.puoScrivere === true
       ? `<button type="button" class="ad-nuova" data-auc-nuova>＋ ${esc(t("Nuova", "Add new"))}</button>`
       : "";
   return `<div class="ad-filtri"><span class="ad-seg-riga">${scelteDelRaggruppa(state.per, "data-auc-per", "ad-seg")}${tastiDeiGruppiHtml(
@@ -242,7 +246,7 @@ function gruppiHtml(elenco) {
   return gruppi || `<p class="ad-nessuna">${esc(t("Nessuna automazione con queste parole.", "No automation matches these words."))}</p>`;
 }
 
-function vuoto({ app }) {
+function vuoto() {
   const puo = statoDelleAutomazioni().ponte?.puoScrivere;
   return `<div class="ad-vuoto"><div class="ill">${orologio("vuoto")}<span aria-hidden="true">✨</span></div><h3>${esc(
     t("Nessuna automazione, per ora", "No automations, for now"),
@@ -252,7 +256,7 @@ function vuoto({ app }) {
       "Automations turn things on and off and alert you by themselves: at a time, when a door opens, when you leave home. You'll see them all here, Home Assistant's too.",
     ),
   )}</p>${
-    puo && app ? `<button type="button" data-auc-nuova>＋ ${esc(t("Crea la prima", "Create the first one"))}</button>` : ""
+    puo ? `<button type="button" data-auc-nuova>＋ ${esc(t("Crea la prima", "Create the first one"))}</button>` : ""
   }</div>`;
 }
 
@@ -271,8 +275,8 @@ function corpo({ app }) {
     );
   if (!st.ponte) return `${tessere([])}${avviso(t("Leggo le automazioni di casa…", "Reading the home's automations…"))}`;
   const elenco = automazioniDiCasa();
-  if (!elenco.length) return vuoto({ app });
-  return `${tessere(elenco)}${strisciaDelleProposte({ app })}${filtri({ app })}<div class="ad-gruppi" data-auc-gruppi>${gruppiHtml(elenco)}</div>`;
+  if (!elenco.length) return vuoto();
+  return `${tessere(elenco)}${strisciaDelleProposte()}${filtri()}<div class="ad-gruppi" data-auc-gruppi>${gruppiHtml(elenco)}</div>`;
 }
 
 /* Senza Premium: il contenuto sfocato, e sopra la carta che dice cosa fa. */
@@ -346,7 +350,7 @@ function bloccoDelFoglio(v) {
   )}</div>`;
 }
 
-function htmlDelFoglio(v, { app }) {
+function htmlDelFoglio(v) {
   const [emoji, nomeCat, oggetto, colore] = CATEGORIA()[v.categoria] || CATEGORIA().altre;
   const st = statoDelleAutomazioni();
   const puo = st.ponte?.puoScrivere && v.modificabile;
@@ -356,10 +360,10 @@ function htmlDelFoglio(v, { app }) {
   const dove = [categoriaHa === nomeCat ? "" : categoriaHa, `${emoji} ${nomeCat}`, clean(v.area)]
     .filter(Boolean)
     .join(" · ");
-  /* «✏️ Modifica» solo nell'app, dove l'editor si apre nella stessa pagina:
-   * nella dashboard porterebbe al config. */
+  /* «✏️ Modifica» apre l'editor nella pagina a schermo pieno, anche dal
+   * browser: mai il config. */
   const modifica =
-    puo && app
+    puo
       ? `<button type="button" class="modifica" data-auc-modifica>✏️ ${esc(t("Modifica", "Edit"))}</button>`
       : "";
   return `<div class="ad-foglio" role="dialog" aria-modal="true" aria-label="${esc(v.nome)}" style="--c:${colore}"><div class="man"></div>
@@ -369,7 +373,7 @@ function htmlDelFoglio(v, { app }) {
 <div class="blk">${bloccoDelFoglio(v)}</div>
 <div class="ult">${esc(t("Ultima volta:", "Last time:"))} <b>${esc(fu)}</b></div>
 <div class="tasti"><button type="button" class="esegui" data-auc-esegui>▶ ${esc(t("Esegui ora", "Run now"))}</button>${modifica}</div>${
-    app && puo
+    puo
       ? `<div class="op-mod"><button type="button" data-auc-duplica>${esc(t("Duplica", "Duplicate"))}</button><button type="button" data-auc-stanza>${esc(
           t("Stanza e nome", "Room and name"),
         )}</button><button type="button" class="r" data-auc-elimina>${esc(t("Elimina", "Delete"))}</button></div>`
@@ -390,7 +394,7 @@ function apriIlFoglio(entity) {
     velo.className = "ad-velo";
     doc.body.append(velo);
   }
-  velo.innerHTML = htmlDelFoglio(v, { app: statoDelleAutomazioni().inApp });
+  velo.innerHTML = htmlDelFoglio(v);
 }
 
 function chiudiIlFoglio() {
@@ -479,6 +483,12 @@ function piuTardi() {
 const dentroDiNoi = (el) =>
   el?.closest?.(`#${ID_DELLA_SEZIONE}, #${ID_DEL_FOGLIO}, #${ID_DEL_TASTO}, .auc-app`);
 
+/* Nel browser la sezione sta fra le linguette: i modelli, le proposte e
+ * l'editor si aprono nella pagina a schermo pieno, la stessa dell'app. */
+function aSchermoPieno(app) {
+  if (!app) apriLeAutomazioni();
+}
+
 function onClick(event) {
   const el = event.target;
   if (!dentroDiNoi(el)) return;
@@ -526,14 +536,14 @@ function onClick(event) {
     return;
   }
   if (d.aucProposte !== undefined) {
-    if (app) vaiA("proposte");
+    aSchermoPieno(app);
+    vaiA("proposte");
     return;
   }
   if (d.aucNuova !== undefined) {
-    if (app) {
-      vaiA("modelli");
-      root.scrollTo?.(0, 0);
-    }
+    aSchermoPieno(app);
+    vaiA("modelli");
+    root.scrollTo?.(0, 0);
     return;
   }
   const v = voceDi(state.foglio);
@@ -544,12 +554,11 @@ function onClick(event) {
   if (d.aucModifica !== undefined || d.aucStanza !== undefined) {
     chiudiIlFoglio();
     if (!v) return;
-    if (app) {
-      apriPerModificare(v);
-      ridisegnaLaPagina();
-      aggiornaIlTasto();
-      root.scrollTo?.(0, 0);
-    }
+    aSchermoPieno(app);
+    apriPerModificare(v);
+    ridisegnaLaPagina();
+    aggiornaIlTasto();
+    root.scrollTo?.(0, 0);
     return;
   }
   if (d.aucDuplica !== undefined) {
