@@ -138,6 +138,7 @@ import {
   canonicalClimateType,
   canonicalReportDevices,
   capacitaDellaBatteria,
+  carBrandVisual,
   caselleSolariDa,
   catalogLabel,
   cavoDalloStato,
@@ -557,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-4EKUB7NR.js";
+} from "../../chunk-GKI3QN25.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -1164,25 +1165,25 @@ function installStateEventGate(broker2, root7 = globalThis, { delay = 500, chiav
     if (!pendingIds.size) return;
     const entityIds = [...pendingIds];
     pendingIds.clear();
-    const state177 = lastState;
+    const state178 = lastState;
     lastState = null;
     root7.dispatchEvent?.(
       makeEvent(root7, {
         entity_id: entityIds.at(-1) || "",
         entity_ids: entityIds,
-        state: state177,
+        state: state178,
         coalesced: true
       })
     );
   };
-  const queue = (state177) => {
-    const id = String(state177?.entity_id || "").trim();
+  const queue = (state178) => {
+    const id = String(state178?.entity_id || "").trim();
     if (!id) return;
     const configured2 = currentInterests();
     const visto = inVista(root7, id);
     if (!visto && configured2.size && !configured2.has(id)) return;
     pendingIds.add(id);
-    lastState = state177 || lastState;
+    lastState = state178 || lastState;
     const attesa = Math.max(0, Number(delay) || 0);
     const subito = visto && attesa > SUBITO_MS;
     if (timer && (timerSubito || !subito)) return;
@@ -1191,18 +1192,18 @@ function installStateEventGate(broker2, root7 = globalThis, { delay = 500, chiav
     timer = root7.setTimeout?.(flush, subito ? SUBITO_MS : attesa) || 0;
     if (!timer) root7.queueMicrotask?.(flush);
   };
-  broker2.ingestState = function gatedIngestState(state177, options) {
+  broker2.ingestState = function gatedIngestState(state178, options) {
     const dispatch = root7.dispatchEvent;
-    if (typeof dispatch !== "function") return original.call(this, state177, options);
+    if (typeof dispatch !== "function") return original.call(this, state178, options);
     root7.dispatchEvent = function gatedDispatch(event) {
       if (event?.type === STATE_EVENT) {
-        queue(state177);
+        queue(state178);
         return true;
       }
       return dispatch.call(root7, event);
     };
     try {
-      return original.call(this, state177, options);
+      return original.call(this, state178, options);
     } finally {
       root7.dispatchEvent = dispatch;
     }
@@ -1577,10 +1578,10 @@ function alCambioDiVisibilita() {
 function osservaLePagine() {
   if (state.osservatori.length || typeof root.MutationObserver !== "function") return;
   for (const id of ["page-security", "page-ev", "page-irrigazione"]) {
-    const pagina2 = doc?.getElementById?.(id);
-    if (!pagina2) continue;
+    const pagina3 = doc?.getElementById?.(id);
+    if (!pagina3) continue;
     const osservatore = new root.MutationObserver(dopoIlCambio);
-    osservatore.observe(pagina2, { attributes: true, attributeFilter: ["class"] });
+    osservatore.observe(pagina3, { attributes: true, attributeFilter: ["class"] });
     state.osservatori.push(osservatore);
   }
 }
@@ -2199,6 +2200,7 @@ var SOURCE_INDEX = Object.freeze({
   "a intervalli regolari": "at regular intervals",
   "A muro": "On the wall",
   "A piedi": "Walking",
+  "a posto": "fine",
   "A posto": "All good",
   "A rete presente la tessera mostra la carica della batteria; quando la corrente cade mostra i minuti che restano e si accende. Nessuna casella è obbligatoria: con il solo stato di NUT la tessera sa già dire se c'è tensione. Se ne hai più di uno, aggiungili qui sotto: ognuno ha la sua scena nella pagina UPS.": "With mains present the tile shows the battery charge; when power drops it shows the minutes left and lights up. No field is required: with the NUT status alone the tile already knows whether there is power. If you have more than one, add them below: each gets its own scene on the UPS page.",
   "a riposo": "at rest",
@@ -2308,6 +2310,8 @@ var SOURCE_INDEX = Object.freeze({
   "Aggiornamento dati Recorder…": "Updating Recorder data…",
   "aggiornamento in attesa": "update pending",
   "Aggiornamento in corso...": "Updating...",
+  "aggiornata": "updated",
+  "Aggiornata": "Updated",
   "Aggiornata alle ${detto}": "Updated at ${detto}",
   "aggiornata da": "updated from",
   "Aggiornata il ${detto}": "Updated on ${detto}",
@@ -2395,13 +2399,14 @@ var SOURCE_INDEX = Object.freeze({
   "Agosto": "August",
   "Aiuto": "Help",
   "al": "at level",
-  "Al": "To",
+  "Al": "At",
   "Al 100% parte sempre. Sopra la soglia stanotte non carica.": "At 100% it always starts. Above the threshold it does not charge tonight.",
   "al lavoro": "working",
   "al lavoro adesso": "working now",
   "al limite di evcc o alle ${fine}": "at the evcc limit or at ${fine}",
   "al massimo": "at most",
   "al massimo ${probabile} di probabilità": "at most ${probabile} chance",
+  "Al massimo, subito": "Full power, now",
   "Al posto del percorso puoi scrivere un'entità immagine (image.auto) o una telecamera (camera.auto): la foto la tiene aggiornata l'integrazione, e la lente 🔍 te la fa cercare.": "Instead of a path you can write an image entity (image.car) or a camera (camera.car): the integration keeps the photo up to date, and the 🔍 lens finds it for you.",
   "Al posto di «Esco» quando l'antifurto è inserito": "Instead of «Leaving» when the alarm is armed",
   "Al riposo torna alla prima pagina": "On rest go back to the first page",
@@ -2506,6 +2511,7 @@ var SOURCE_INDEX = Object.freeze({
   "Analizzo ${index.size} entità…": "Analysing ${index.size} entities…",
   "Anche a schermo spento: si accende al massimo e il citofono prende tutto lo schermo, come una chiamata.": "Even with the screen off: it turns on at full brightness and the intercom takes the whole screen, like a call.",
   "anche alba e tramonto": "sunrise and sunset too",
+  "anche senza sole": "even without sun",
   "Anche un tocco sullo schermo vale come «qualcuno vicino».": "A touch on the screen also counts as “someone nearby”.",
   "ancora aperta": "still open",
   "Ancora nessuna pagina: aggiungine una qui sotto.": "No pages yet: add one below.",
@@ -2541,7 +2547,7 @@ var SOURCE_INDEX = Object.freeze({
   "Antipiega": "Tumbling",
   "Anziana": "Old woman",
   "Anziano": "Old man",
-  "Aperta": "Open",
+  "Aperta": "Unlocked",
   "APERTA": "OPEN",
   "Aperta · per ${quanto}": "Open · ${quanto}",
   "Aperta ${quando}": "Opened ${quando}",
@@ -2678,6 +2684,7 @@ var SOURCE_INDEX = Object.freeze({
   "assorbiti adesso": "drawn right now",
   "Astronauta": "Astronaut",
   "Attendi il caricamento delle entità…": "Wait for entities to load…",
+  "attenzione": "attention",
   "Attenzione": "Warning",
   "attiva": "active",
   "attiva ${chi}": "activate ${chi}",
@@ -2836,6 +2843,7 @@ var SOURCE_INDEX = Object.freeze({
   "Biondo": "Blonde",
   "Blitzortung espone il conteggio e, a parte, la distanza dell'ultimo fulmine in km.": "Blitzortung exposes the count and, separately, the distance of the last strike in km.",
   "Blocca il tablet": "Lock the tablet",
+  "bloccate": "locked",
   "Bloccato": "Locked",
   "Boiler": "Storage boiler",
   "Boiler sanitario, sonda alta": "DHW tank, top probe",
@@ -2932,6 +2940,7 @@ var SOURCE_INDEX = Object.freeze({
   "Carica anche senza sole": "Charge even without sun",
   "Carica completa": "Fully charged",
   "CARICA COMPLETA": "FULLY CHARGED",
+  "Carica fino a": "Charge up to",
   "Carica minima all'arrivo": "Minimum charge on arrival",
   "carica più bassa": "lowest charge",
   "Carica una foto": "Upload a photo",
@@ -3086,13 +3095,13 @@ var SOURCE_INDEX = Object.freeze({
   "Chiudi senza salvare": "Close without saving",
   "Chiudi tutto": "Close all",
   "chiunque": "anyone",
+  "Chiusa": "Locked",
   "CHIUSA": "CLOSED",
   "chiusa alle ${fine}": "closed at ${fine}",
   "Chiusa sotto il (%)": "Closed below (%)",
   "Chiusa sotto il (%), di serie": "Closed below (%), by default",
-  "chiusi": "closed",
+  "chiuso": "closed",
   "Chiuso": "Closed",
-  "Chiuso a chiave": "Locked",
   "Chiuso da": "Closed for",
   "Ci pensa la pioggia": "The rain will see to it",
   "Ci pensa un'automazione": "An automation handles it",
@@ -3145,6 +3154,7 @@ var SOURCE_INDEX = Object.freeze({
   "Col segno che usa il BMS: se in carica la scrive negativa, sceglilo in «Segno della corrente».": "With the sign the BMS uses: if it writes it negative while charging, pick that in “Current sign”.",
   "Col sensore di luce del tablet, solo nell'app GdAHome su Android. Senza, vale il sole di casa": "With the tablet's light sensor, only in the GdAHome app on Android. Without it, the home's sun applies",
   "Col sensore di luce di questo tablet: è notte quando la stanza è buia": "With this tablet's light sensor: it is night when the room is dark",
+  "Col sole e le fasce che costano meno": "With the sun and the cheapest hours",
   "col sole sopra l'orizzonte": "with the sun above the horizon",
   "col sole sotto l'orizzonte": "with the sun below the horizon",
   "Col sole: notte da mezz'ora dopo il tramonto all'alba": "By the sun: night from half an hour after sunset to sunrise",
@@ -3163,6 +3173,7 @@ var SOURCE_INDEX = Object.freeze({
   "Collega un altro dispositivo": "Link another device",
   "Collega un dispositivo all'animale": "Link a device to the pet",
   "Collegamenti alle entità": "Entity links",
+  "collegata": "plugged in",
   "Collegata": "Plugged in",
   "Collegata, in attesa": "Plugged in, waiting",
   "Collegato come": "Connected as",
@@ -3367,6 +3378,7 @@ var SOURCE_INDEX = Object.freeze({
   "costo dell'ultimo ciclo": "last cycle cost",
   "Costo energia": "Energy cost",
   "Costo energia (€/kWh)": "Energy cost (€/kWh)",
+  "Costo finora": "Cost so far",
   "Cotone": "Cotton",
   "Cottura": "Cooking",
   "Cottura — stato, tempi, temperatura e comandi": "Cooking — status, times, temperature and controls",
@@ -3412,6 +3424,7 @@ var SOURCE_INDEX = Object.freeze({
   "Da casa": "From the house",
   "Da come sta si capisce dove va il calore: al riscaldamento o al sanitario.": "Where the heat is going is told by how it sits: to the heating or to the hot water.",
   "da confermare": "to confirm",
+  "da controllare": "check them",
   "Da controllare": "Check it",
   "Da decidere": "To decide",
   "da Elettrodomestici": "from Appliances",
@@ -3480,6 +3493,7 @@ var SOURCE_INDEX = Object.freeze({
   "dal fotovoltaico": "from solar",
   "Dal meteo": "From the weather",
   "Dal Recorder di Home Assistant di casa · niente esce dalla rete": "From the Home Assistant Recorder at home · nothing leaves the network",
+  "dal sole": "from the sun",
   "Dal sole": "From the sun",
   "Dal sole:": "From the sun:",
   "Dal telefono o dal computer · JPG, PNG, HEIC": "From the phone or the computer · JPG, PNG, HEIC",
@@ -3813,6 +3827,7 @@ var SOURCE_INDEX = Object.freeze({
   "Eroga una porzione": "Feed a portion",
   "Errore": "Error",
   "Errore caricamento storico": "History loading error",
+  "Errore della wallbox": "Wallbox error",
   "Errore server WebRTC": "WebRTC server error",
   "es. 20": "e.g. 20",
   "es. 30": "e.g. 30",
@@ -3985,7 +4000,7 @@ var SOURCE_INDEX = Object.freeze({
   "Freddo": "Cool",
   "Freddo / Clima": "Cold / Climate",
   "Freno di stazionamento (tirato/rilasciato)": "Parking brake (on/off)",
-  "Freno tirato": "Brake on",
+  "Freno tirato": "Handbrake on",
   "Fresco": "Cool",
   "Friggitrice ad aria": "Air fryer",
   "Frigorifero": "Fridge",
@@ -4020,6 +4035,7 @@ var SOURCE_INDEX = Object.freeze({
   "giorni": "days",
   "Giorni": "Days",
   "giorni fa": "days ago",
+  "Giorni in auto": "Driving days",
   "giorno": "day",
   "Giorno": "Day",
   "GIORNO": "DAY",
@@ -4218,6 +4234,7 @@ var SOURCE_INDEX = Object.freeze({
   "Il mese scorso ${quanto}": "Last month ${quanto}",
   "Il meteo a tutta pagina: com'è adesso in grande, con percepita, umidità, vento e pressione, poi le prossime ore e i prossimi giorni. Usa lo stesso meteo che il tablet mostra in alto e sul riposo.": "Full-page weather: what it's like now, big, with feels-like, humidity, wind and pressure, then the coming hours and days. It uses the same weather the tablet shows at the top and on the rest screen.",
   "Il meteo e il radar": "The weather and the radar",
+  "Il minimo, più il sole": "The minimum, plus the sun",
   "Il modello selezionato non appartiene al marchio scelto.": "The selected model does not belong to the chosen brand.",
   "Il nome compare nell'intestazione della dashboard.": "The name appears in the dashboard header.",
   "Il nome del flusso vale solo con la plancia aperta fuori da Home Assistant: qui dentro non si raggiunge, e la telecamera passa dalla sua entità.": "The stream name only works with the dashboard opened outside Home Assistant: in here it cannot be reached, and the camera goes through its entity.",
@@ -4225,6 +4242,7 @@ var SOURCE_INDEX = Object.freeze({
   "Il pannello è più caldo dell'acqua, ma la pompa è ferma.": "The panel is warmer than the water, but the pump is idle.",
   "Il pannello è più freddo dell'acqua: la pompa resta ferma finché il sole non lo scalda.": "The panel is colder than the water: the pump stays idle until the sun warms it.",
   "Il percento di carica del pacco: è la riga senza cui il pacco non si vede.": "The pack's charge percentage: without it the pack does not show.",
+  "Il periodo è tagliato a 62 giorni.": "The period is cut to 62 days.",
   "Il periodo selezionato non contiene ancora dati.": "The selected period does not contain data yet.",
   "Il pH e il cloro": "The pH and the chlorine",
   "Il pianificatore è di GdANav Premium": "The planner is part of GdANav Premium",
@@ -4340,7 +4358,6 @@ var SOURCE_INDEX = Object.freeze({
   "In attesa di partire": "Waiting to start",
   "In attesa…": "Waiting…",
   "in aumento": "rising",
-  "In auto": "Driving",
   "in basso": "at the bottom",
   "In bici": "Cycling",
   "In bolletta è il coefficiente di conversione: circa 10,7 per il metano. Serve a confrontare il gas e la corrente nella stessa unità.": "On the bill it is the conversion coefficient: about 10.7 for methane. It lets gas and electricity be compared in the same unit.",
@@ -4376,10 +4393,9 @@ var SOURCE_INDEX = Object.freeze({
   "In Home": "On Home",
   "In Home Assistant": "Open in Home Assistant",
   "in Home Assistant non c'è": "not in Home Assistant",
-  "in lavorazione": "in progress",
   "In lavorazione": "In progress",
   "In linea": "Talking",
-  "In marcia": "Moving",
+  "In marcia": "Driving",
   "in meno di una tariffa unica": "less than a single rate",
   "In orario": "On time",
   "In ordine": "In order",
@@ -4514,6 +4530,7 @@ var SOURCE_INDEX = Object.freeze({
   "irrigazione avviata": "watering started",
   "ISTANTANEO": "INSTANT",
   "Km degli ultimi 7 giorni (km)": "Distance in the last 7 days (km)",
+  "Km percorsi": "Km driven",
   "kW medio": "avg kW",
   "kW picco": "peak kW",
   "kWh ×": "kWh × 0.25€",
@@ -4562,6 +4579,7 @@ var SOURCE_INDEX = Object.freeze({
   "L'indirizzo del radar non è un indirizzo di tessere ({z}/{x}/{y}).": "The radar address is not a tile address ({z}/{x}/{y}).",
   "L'integrazione INGV Terremoti espone un sensore col conteggio degli eventi e le entità geo_location dei singoli terremoti: vanno bene tutti e due.": "The INGV Earthquakes integration exposes a sensor with the event count and the geo_location entities of single quakes: both work.",
   "L'invio non e' configurato su questa plancia: la segnalazione resta qui e partira' da sola quando lo sara'.": "Sending is not configured on this dashboard: the report stays here and will be sent on its own once it is.",
+  "L'obiettivo si legge soltanto: l'entità non accetta comandi.": "The target is read-only: the entity accepts no commands.",
   "L'ora in cui compri di più": "The hour you buy most",
   "L’ordine dei piani è quello che vedi qui: vale per la pagina Stanze, per le scene delle luci e per le tapparelle. Rinominare un piano si porta dietro le sue stanze; eliminarlo le lascia senza piano, e te lo chiede prima.": "The order of the floors is the one you see here: it applies to the Rooms page, to the light scenes and to the shutters. Renaming a floor carries its rooms along; deleting one leaves them with no floor, and asks you first.",
   "l'ultima ora": "the last hour",
@@ -4712,6 +4730,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le altre casse": "The other speakers",
   "Le aperture": "The openers",
   "Le aperture della sezione Sicurezza: portone, porta di casa, cancello. Ogni porta ha la sua card; il tocco chiede conferma e, se imposti un PIN, il codice.": "The openings of the Security section: front door, house door, gate. Each door gets its own card; a tap asks to confirm and, with a PIN set, asks for the code.",
+  "Le auto di casa": "The household cars",
   "Le automazioni accendono, spengono e avvisano da sole: a un orario, quando si apre una porta, quando esci di casa. Qui le vedrai tutte, anche quelle di Home Assistant.": "Automations turn things on and off and alert you by themselves: at a time, when a door opens, when you leave home. You'll see them all here, Home Assistant's too.",
   "Le automazioni di casa": "The home's automations",
   "Le automazioni di Home Assistant si leggono con l'add-on GdAHome: qui non c'è.": "Home Assistant's automations are read through the GdAHome add-on: it is not here.",
@@ -4808,6 +4827,7 @@ var SOURCE_INDEX = Object.freeze({
   "Leggo le entità del dispositivo…": "Reading the device's entities…",
   "Leggo le integrazioni di Home Assistant…": "Reading Home Assistant integrations…",
   "Leggo lo storico dal Recorder…": "Reading the history from the Recorder…",
+  "Leggo lo storico di Home Assistant…": "Reading Home Assistant history…",
   "Leggo…": "Reading…",
   "Lettere": "Letters",
   "Lettiera": "Litter box",
@@ -4860,6 +4880,7 @@ var SOURCE_INDEX = Object.freeze({
   "Lo stato dell'entità": "The entity state",
   "Lo stato viene da": "The state comes from",
   "lo storico dei consumi non è ancora arrivato": "the usage history has not arrived yet",
+  "Lo storico non ha risposto: riprovo fra poco.": "History didn't answer: retrying shortly.",
   "Lo trovi subito in GdANav, sul telefono e in auto.": "You find it right away in GdANav, on the phone and in the car.",
   "Lo vedi in Strumenti per sviluppatori → Eventi.": "You can see it in Developer tools → Events.",
   "Locale tecnico": "Utility room",
@@ -4969,7 +4990,9 @@ var SOURCE_INDEX = Object.freeze({
   "mese": "month",
   "Mese": "Month",
   "MESE": "MONTH",
+  "Mese dopo": "Next month",
   "Mese in corso": "Current month",
+  "Mese prima": "Previous month",
   "Mesi in cui mostrarla": "Months to show it",
   "Messaggi nuovi": "New messages",
   "Messaggio mandato.": "Message sent.",
@@ -5135,6 +5158,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nessun contatore della sessione.": "No session meter.",
   "Nessun contatore energia: Giorno e Mese restano vuoti. Basta il contatore totale, il periodo viene calcolato da lì.": "No energy meter: Day and Month stay empty. A total meter is enough — the period is computed from it.",
   "Nessun contatto trovato": "No contact found",
+  "Nessun dato dell'auto: le caselle si scelgono nella scheda Auto del config.": "No car data: choose the fields in the Car tab of the config.",
   "Nessun dato giornaliero reale disponibile per questo periodo.": "No real daily data is available for this period.",
   "Nessun dato per questo periodo": "No data for this period",
   "Nessun dato registrato": "No recorded data",
@@ -5241,6 +5265,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nessuna piscina configurata": "No pool configured",
   "Nessuna presa": "No socket",
   "Nessuna presa configurata": "No socket configured",
+  "Nessuna ricarica in questo periodo.": "No charging in this period.",
   "Nessuna risponde": "None reporting",
   "nessuna risposta": "no answer",
   "Nessuna risposta in otto secondi.": "No answer within eight seconds.",
@@ -5371,7 +5396,9 @@ var SOURCE_INDEX = Object.freeze({
   "Non c'è nessuno, ma ${nomi(accesi, l)} sta suonando": "Nobody is home, but ${nomi(accesi, l)} is playing",
   "Non c'è nessuno, ma il clima è acceso: ${nomi(accesi, l)}": "Nobody is home, but the climate is on: ${nomi(accesi, l)}",
   "Non c'e' niente da fare.": "Nothing to do.",
+  "Non carica": "Doesn't charge",
   "Non ci riesco": "I cannot manage",
+  "Non collegata": "Not plugged in",
   "Non compare nella sezione EV — tocca per attivarla": "Not in the EV section — tap to add it",
   "Non configurato": "Not configured",
   "NON CONFIGURATO": "NOT CONFIGURED",
@@ -5589,11 +5616,13 @@ var SOURCE_INDEX = Object.freeze({
   "Per esempio: Microfoni": "For example: Microphones",
   "Per esempio: Preset 1": "For example: Preset 1",
   "Per frigo e congelatore: mostra la barra temperatura al posto della potenza.": "For fridge and freezer: shows the temperature strip instead of the power bar.",
+  "Per i km di ogni giorno serve il contachilometri.": "Daily km need the odometer.",
   "Per il ritorno servirà una ricarica": "You will need to charge for the way back",
   "Per il tasto «Spegni sirena» nella notifica e nella Sicurezza.": "For the “Siren off” button in the notification and in Security.",
   "Per le luci che vuoi solo vedere, senza rischiare un tocco: la riga resta dov'è, il tasto smette di rispondere.": "For lights you only want to see, with no accidental taps: the row stays where it is, the button stops responding.",
   "Per le prese che non vanno spente: il frigo, il modem, il congelatore. La riga resta dov'è, il tasto smette di rispondere.": "For sockets that must not be switched off: the fridge, the modem, the freezer. The row stays where it is, the button stops responding.",
   "Per le soste scegli 100% alla partenza.": "For the stops, choose 100% at departure.",
+  "Per lo storico serve l'energia della wallbox: si sceglie nella scheda Auto del config.": "History needs the wallbox energy: choose it in the Car tab of the config.",
   "Per ogni sorgente, Contatore energia totale è il sensore cumulativo Recorder (normalmente state_class: total_increasing). Non è un valore di periodo: giorno, mese e anno sono calcolati come somma Recorder finale meno somma Recorder iniziale, preservando i reset. I sensori di periodo sono override facoltativi del periodo corrente.": "For every source, Total energy meter is the cumulative Recorder source (normally state_class: total_increasing). It is not a period value: day, month and year are calculated as final Recorder sum minus initial Recorder sum, so meter resets are preserved. Period sensors are optional current-period overrides.",
   "Per ogni voce scrivi la": "For each item enter",
   "per ognuno; lo stato (In funzione / Standby / Spento) è ricavato dal": "to each; the status (Running / Standby / Off) is derived from",
@@ -5900,6 +5929,7 @@ var SOURCE_INDEX = Object.freeze({
   "Programmi rapidi del popup": "Quick programs of the popup",
   "pronta": "ready",
   "Pronta": "Ready",
+  "Pronta al": "Ready at",
   "pronta alle": "ready at",
   "Pronta alle ${ora}": "Ready at ${ora}",
   "Pronta fra ${durata}": "Ready in ${durata}",
@@ -6154,6 +6184,8 @@ var SOURCE_INDEX = Object.freeze({
   "Ricarica sempre EVCC / Always charge (select)": "EVCC always charge (select)",
   "Ricarica: ${minuti} in ${n} soste": "Charging: ${minuti} in ${n} stops",
   "Ricarica: ${minuti} in 1 sosta": "Charging: ${minuti} in 1 stop",
+  "Ricariche": "Sessions",
+  "Ricariche a casa": "Charging at home",
   "Ricci": "Curly",
   "Ricircolo": "Recirculation",
   "Ricircolo attivo": "Recirculation running",
@@ -6338,6 +6370,7 @@ var SOURCE_INDEX = Object.freeze({
   "Saturazione": "Saturation",
   "Sauna e idromassaggio": "Sauna and hot tub",
   "Sblocca": "Unlock",
+  "sbloccate": "unlocked",
   "sbloccate · tocca per chiudere a chiave": "unlocked · tap to lock",
   "Sbloccato": "Unlocked",
   "Sbrinamento del parabrezza (acceso/spento)": "Windscreen defrost (on/off)",
@@ -6688,6 +6721,7 @@ var SOURCE_INDEX = Object.freeze({
   "Solare · Scaldabagno · Caldaia · Stufa": "Solar · Water heater · Boiler · Stove",
   "Solare termico": "Solar thermal",
   "Solare Termico": "Solar thermal",
+  "sole": "solar",
   "Sole": "Sun",
   "Sole di casa": "Home's sun",
   "Soleggiato": "Sunny",
@@ -6704,6 +6738,7 @@ var SOURCE_INDEX = Object.freeze({
   "Solo se hai già un helper che misura il periodo. Senza, il periodo viene dal contatore totale.": "Only if you already have a helper measuring the period. Without one, the period comes from the total meter.",
   "Solo sensore di apertura: nessun comando.": "Opening sensor only: nothing to command.",
   "Solo sensore sull'anta · nessun motore": "Window sensor only · no motor",
+  "Solo stavolta": "Just this time",
   "somma di ${children} dispositivi": "sum of ${children} appliances",
   "somma di ${children} dispositivo": "sum of ${children} appliance",
   "Sonda cloro / redox": "Chlorine / redox probe",
@@ -6848,6 +6883,7 @@ var SOURCE_INDEX = Object.freeze({
   "Stato antifurto": "Alarm status",
   "Stato Antifurto": "Alarm status",
   "Stato attuale": "Current status",
+  "Stato auto": "Car status",
   "Stato da (facoltativo)": "State from (optional)",
   "Stato del nodo": "Node status",
   "Stato dell'antifurto": "Alarm state",
@@ -7076,6 +7112,7 @@ var SOURCE_INDEX = Object.freeze({
   "Tiene il minimo quando il fotovoltaico non basta": "Keeps the minimum when solar is not enough",
   "Tieni lo schermo acceso (di notte al minimo)": "Keep the screen on (dimmed at night)",
   "Tieni premuta un'area per sceglierne più d'una": "Press and hold an area to pick more than one",
+  "Tieni sempre un minimo": "Always keep a minimum",
   "Timeout firma path": "Sign path timeout",
   "Timeout WebRTC (10s)": "WebRTC timeout (10s)",
   "Timestamp di avvio fornito dall'integrazione (es. Home Connect).": "Start timestamp provided by the integration (e.g. Home Connect).",
@@ -7221,6 +7258,7 @@ var SOURCE_INDEX = Object.freeze({
   "Tutto regolare": "All normal",
   "Tutto salvato": "All saved",
   "Tutto schermo": "Full screen",
+  "tutto sole": "all solar",
   "tutto spento": "all off",
   "Tutto spento": "Everything off",
   "tutto tranquillo": "all quiet",
@@ -7421,6 +7459,7 @@ var SOURCE_INDEX = Object.freeze({
   "Vacanza": "Vacation",
   "vale": "is",
   "Vale per tutte: sotto questa percentuale la batteria entra nel conto di quelle da cambiare.": "It applies to all of them: below this percentage a battery joins the count of those to replace.",
+  "vale solo in Intelligente": "only applies in Smart",
   "Vale solo in Intelligente: qui non conta": "Only applies in Smart: not here",
   "Vale su ogni tablet che apre questa plancia": "Applies to every tablet that opens this dashboard",
   "valore": "value",
@@ -7442,6 +7481,7 @@ var SOURCE_INDEX = Object.freeze({
   "Vedi la discussione": "See the discussion",
   "Vedi tutte (${n})": "See all (${n})",
   "Vedi tutte le automazioni di casa, le accendi e le spegni, ne crei di nuove in tre passi e ricevi le proposte pensate per la tua casa.": "See all the home's automations, turn them on and off, create new ones in three steps and get suggestions designed for your home.",
+  "Vedi tutte le ricariche": "See all sessions",
   "vedi tutti": "see all",
   "Vedi tutto": "See everything",
   "Veicoli": "Vehicles",
@@ -7482,6 +7522,7 @@ var SOURCE_INDEX = Object.freeze({
   "Vestito": "Outfit",
   "Vetro": "Glass",
   "Via Roma 12": "12 Main Street",
+  "Viaggi": "Trips",
   "Viaggi pianificati": "Planned trips",
   "Vicino allo schermo, pochi centimetri: utile per la mano che si avvicina. Non tutti i tablet lo hanno.": "Close to the screen, a few centimetres: handy for a hand reaching out. Not every tablet has one.",
   "Video dal vivo nella tessera": "Live video on the tile",
@@ -7821,9 +7862,9 @@ function startDomPass(locale3) {
 var KEY3 = "__DASHBOARDMODERN_THEME_FOUNDATION__";
 var STYLE_ID = "dm-theme-foundation-style";
 function installThemeFoundationSection() {
-  const state177 = globalThis[KEY3] ||= { installed: false };
-  if (state177.installed) return false;
-  state177.installed = true;
+  const state178 = globalThis[KEY3] ||= { installed: false };
+  if (state178.installed) return false;
+  state178.installed = true;
   installStyle(STYLE_ID, `
     html[data-theme="dark"]{
       --bg-sculpted:#0b1220;
@@ -9305,29 +9346,29 @@ function quotaSolareDelDispositivo({
   let coperto = 0;
   let scoperto = 0;
   let secchielli2 = 0;
-  for (const [momento, kwh4] of suoi2) {
-    if (kwh4 <= 0) continue;
+  for (const [momento, kwh5] of suoi2) {
+    if (kwh5 <= 0) continue;
     if (!diCasa.has(momento) || !dallaRete.has(momento)) {
-      scoperto += kwh4;
+      scoperto += kwh5;
       continue;
     }
     secchielli2 += 1;
-    coperto += kwh4;
+    coperto += kwh5;
     const share = quotaDiRete(diCasa.get(momento), dallaRete.get(momento));
-    quotaRete += kwh4 * share;
-    quotaSole += kwh4 * (1 - share);
+    quotaRete += kwh5 * share;
+    quotaSole += kwh5 * (1 - share);
   }
   const vuota = { grid: 0, solar: 0, quotaRete: 0, coperto: 0, secchielli: 0, fonte: "" };
   if (!secchielli2) return vuota;
-  const somma2 = quotaRete + quotaSole;
-  if (somma2 <= 0) return vuota;
-  const frazioneDiRete = quotaRete / somma2;
+  const somma3 = quotaRete + quotaSole;
+  if (somma3 <= 0) return vuota;
+  const frazioneDiRete = quotaRete / somma3;
   const grande = numero2(totale);
   const misurabile2 = coperto + scoperto;
   const riferimento = grande != null && grande > 0 ? grande : misurabile2;
   if (riferimento > 0 && coperto / riferimento < COPERTURA_MINIMA)
     return { ...vuota, coperto, secchielli: secchielli2 };
-  const scala2 = grande != null && grande > 0 ? grande / somma2 : 1;
+  const scala2 = grande != null && grande > 0 ? grande / somma3 : 1;
   return {
     grid: quotaRete * scala2,
     solar: quotaSole * scala2,
@@ -9809,13 +9850,13 @@ async function loadAtomicEnergyBundle(period = selectedPeriod(), alPasso = () =>
   ]);
   const letti = {};
   const sources = {};
-  const intero2 = {
+  const intero3 = {
     day: !cadutaLa(letture2.fonteDay),
     month: !cadutaLa(letture2.fonteMonth),
     year: !cadutaLa(letture2.fonteYear)
   };
   for (const kind of ["day", "month", "year"]) {
-    const arrivato = intero2[kind] && (record2[kind].values.size > 0 || !record2[kind].plans.length);
+    const arrivato = intero3[kind] && (record2[kind].values.size > 0 || !record2[kind].plans.length);
     const precedente = state6.bundle?.sources?.[kind];
     letti[kind] = arrivato || Boolean(precedente);
     sources[kind] = arrivato || !precedente ? record2[kind] : precedente;
@@ -11294,15 +11335,15 @@ function beta27SubloadRuntimeConfig() {
     return null;
   }
 }
-function protectBeta27SubloadGroup(groupId, group, state177) {
+function protectBeta27SubloadGroup(groupId, group, state178) {
   if (!group || typeof group !== "object") return false;
   const descriptor = Object.getOwnPropertyDescriptor(group, "items");
   if (descriptor?.get?.__dmBeta27Preserved) return true;
   if (descriptor && !descriptor.configurable) return false;
   const configured2 = configuredSubloadIdentities(groupId);
   const preserved = Array.isArray(group.items) ? group.items.filter((item) => !configured2.has(subloadIdentity(item))) : [];
-  const record2 = state177.groups.get(groupId) || { preserved, current: preserved };
-  if (!state177.groups.has(groupId)) state177.groups.set(groupId, record2);
+  const record2 = state178.groups.get(groupId) || { preserved, current: preserved };
+  if (!state178.groups.has(groupId)) state178.groups.set(groupId, record2);
   function getItems() {
     return record2.current;
   }
@@ -11321,16 +11362,16 @@ function protectBeta27SubloadGroup(groupId, group, state177) {
 function installBeta27SubloadPreservation() {
   const runtime = beta27SubloadRuntimeConfig();
   if (!runtime) return false;
-  const state177 = root4[BETA27_SUBLOAD_KEY] ||= {
+  const state178 = root4[BETA27_SUBLOAD_KEY] ||= {
     installed: false,
     groups: /* @__PURE__ */ new Map()
   };
   let protectedAny = false;
   for (const [groupId, group] of Object.entries(runtime)) {
     if (!group || typeof group !== "object" || !Array.isArray(group.items)) continue;
-    if (protectBeta27SubloadGroup(groupId, group, state177)) protectedAny = true;
+    if (protectBeta27SubloadGroup(groupId, group, state178)) protectedAny = true;
   }
-  state177.installed ||= protectedAny;
+  state178.installed ||= protectedAny;
   return protectedAny;
 }
 function reconcileBeta27EntityPickerContract(scope = doc3) {
@@ -11351,7 +11392,7 @@ function scheduleBeta27EntityPickerContract() {
   root4.queueMicrotask?.(() => reconcileBeta27EntityPickerContract());
 }
 function installBeta27EditorContractBridge() {
-  const state177 = root4[BETA27_PICKER_KEY] ||= { installed: false, wrapped: /* @__PURE__ */ new Set() };
+  const state178 = root4[BETA27_PICKER_KEY] ||= { installed: false, wrapped: /* @__PURE__ */ new Set() };
   for (const name of ["editorSwitch", "apriConfigEntita"]) {
     let beta27PickerContractOwner = function(...args) {
       const result = current.apply(this, args);
@@ -11363,10 +11404,10 @@ function installBeta27EditorContractBridge() {
     beta27PickerContractOwner.__dmBeta27PickerContract = true;
     beta27PickerContractOwner.__dmPrevious = current;
     root4[name] = beta27PickerContractOwner;
-    state177.wrapped.add(name);
+    state178.wrapped.add(name);
   }
-  if (!state177.installed) {
-    state177.installed = true;
+  if (!state178.installed) {
+    state178.installed = true;
     doc3?.addEventListener?.(
       "click",
       (event) => {
@@ -11645,8 +11686,8 @@ function eAcceso(stato3) {
 // src/core/le-stanze-per-piano.js
 var pulito5 = (valore3) => String(valore3 ?? "").trim();
 var conta = (valore3) => {
-  const numero57 = Number(valore3);
-  return Number.isFinite(numero57) && numero57 > 0 ? Math.round(numero57) : 0;
+  const numero58 = Number(valore3);
+  return Number.isFinite(numero58) && numero58 > 0 ? Math.round(numero58) : 0;
 };
 function stanzePerPiano(pagine, { piani = [] } = {}) {
   const elenco15 = Array.isArray(pagine) ? pagine.filter(Boolean) : [];
@@ -15674,10 +15715,10 @@ function suggestPeople(states = {}, existing = []) {
   const taken = new Set(
     (Array.isArray(existing) ? existing : []).map((person) => clean3(person?.entity)).filter(Boolean)
   );
-  return Object.entries(states).filter(([id]) => id.startsWith("person.")).filter(([id]) => !taken.has(id)).map(([id, state177]) => ({
+  return Object.entries(states).filter(([id]) => id.startsWith("person.")).filter(([id]) => !taken.has(id)).map(([id, state178]) => ({
     entity: id,
-    name: clean3(state177?.attributes?.friendly_name) || clean3(id.split(".")[1]).replace(/_/g, " "),
-    photo: clean3(state177?.attributes?.entity_picture)
+    name: clean3(state178?.attributes?.friendly_name) || clean3(id.split(".")[1]).replace(/_/g, " "),
+    photo: clean3(state178?.attributes?.entity_picture)
   }));
 }
 var AWAY_STATES = /* @__PURE__ */ new Set(["not_home", "unknown", "unavailable", "none", ""]);
@@ -15695,8 +15736,8 @@ function batteryFor(person, states) {
   return readNumber(states?.[source]?.attributes?.battery_level);
 }
 var CHARGING_STATES = /* @__PURE__ */ new Set(["charging", "full", "ac", "usb", "wireless", "dock"]);
-function isCharging(state177) {
-  return CHARGING_STATES.has(clean3(state177).toLowerCase().replace(/\s+/g, "_"));
+function isCharging(state178) {
+  return CHARGING_STATES.has(clean3(state178).toLowerCase().replace(/\s+/g, "_"));
 }
 var MISSING_STATES = /* @__PURE__ */ new Set([
   "",
@@ -16093,8 +16134,8 @@ var TESSERE_LARGHE = Object.freeze(["clima", "media"]);
 function tesseraLarga(chiave2) {
   return TESSERE_LARGHE.includes(clean4(chiave2));
 }
-function blocchiDellaTavola(pagina2 = null) {
-  const blocchi = (Array.isArray(pagina2?.blocchi) ? pagina2.blocchi : []).filter(
+function blocchiDellaTavola(pagina3 = null) {
+  const blocchi = (Array.isArray(pagina3?.blocchi) ? pagina3.blocchi : []).filter(
     (blocco3) => Array.isArray(blocco3?.voci) && blocco3.voci.length
   );
   const posto = (blocco3) => {
@@ -16654,16 +16695,16 @@ function letturaValvola({ stato: stato3 = null, attributi: attributi2 = null } =
 var clean5 = (value) => String(value ?? "").trim();
 var CLIMATE_TURN_ON = 256;
 var PREFERITE = Object.freeze(["auto", "heat_cool", "heat", "cool", "dry", "fan_only"]);
-function modalita(state177) {
-  const elenco15 = state177?.attributes?.hvac_modes;
+function modalita(state178) {
+  const elenco15 = state178?.attributes?.hvac_modes;
   return Array.isArray(elenco15) ? elenco15.map(clean5).filter(Boolean) : [];
 }
-function supporta(state177, bit) {
-  const dichiarate = Number(state177?.attributes?.supported_features);
+function supporta(state178, bit) {
+  const dichiarate = Number(state178?.attributes?.supported_features);
   return Number.isFinite(dichiarate) ? (dichiarate & bit) === bit : false;
 }
-function modalitaDiAccensione(state177, precedente = "", richiesta = "", suggerita = "") {
-  const disponibili = modalita(state177);
+function modalitaDiAccensione(state178, precedente = "", richiesta = "", suggerita = "") {
+  const disponibili = modalita(state178);
   const voluta = clean5(richiesta);
   if (voluta && voluta !== "off" && disponibili.includes(voluta)) return voluta;
   const ricordata = clean5(precedente);
@@ -16675,23 +16716,23 @@ function modalitaDiAccensione(state177, precedente = "", richiesta = "", suggeri
   }
   return disponibili.find((voce3) => voce3 !== "off") || "";
 }
-function climatePowerCall(state177, acceso6, precedente = "", richiesta = "", suggerita = "") {
+function climatePowerCall(state178, acceso6, precedente = "", richiesta = "", suggerita = "") {
   if (!acceso6) {
-    if (modalita(state177).includes("off")) {
+    if (modalita(state178).includes("off")) {
       return { service: "set_hvac_mode", data: { hvac_mode: "off" } };
     }
     return { service: "turn_off", data: {} };
   }
-  const scelta3 = modalitaDiAccensione(state177, precedente, richiesta, suggerita);
-  if (scelta3 && (clean5(richiesta) === scelta3 || !supporta(state177, CLIMATE_TURN_ON))) {
+  const scelta3 = modalitaDiAccensione(state178, precedente, richiesta, suggerita);
+  if (scelta3 && (clean5(richiesta) === scelta3 || !supporta(state178, CLIMATE_TURN_ON))) {
     return { service: "set_hvac_mode", data: { hvac_mode: scelta3 } };
   }
-  if (supporta(state177, CLIMATE_TURN_ON)) return { service: "turn_on", data: {} };
+  if (supporta(state178, CLIMATE_TURN_ON)) return { service: "turn_on", data: {} };
   if (scelta3) return { service: "set_hvac_mode", data: { hvac_mode: scelta3 } };
   return { service: "turn_on", data: {} };
 }
-function climateIsOff(state177) {
-  return clean5(state177?.state).toLowerCase() === "off";
+function climateIsOff(state178) {
+  return clean5(state178?.state).toLowerCase() === "off";
 }
 
 // src/core/modo-del-clima.js
@@ -17009,8 +17050,8 @@ function normalizzaIMesi(stored) {
   if (!Array.isArray(stored)) return [];
   const dentro3 = /* @__PURE__ */ new Set();
   for (const voce3 of stored) {
-    const numero57 = Math.trunc(Number(voce3));
-    if (Number.isFinite(numero57) && numero57 >= 1 && numero57 <= 12) dentro3.add(numero57);
+    const numero58 = Math.trunc(Number(voce3));
+    if (Number.isFinite(numero58) && numero58 >= 1 && numero58 <= 12) dentro3.add(numero58);
   }
   if (dentro3.size >= 12) return [];
   return [...dentro3].sort((a, b2) => a - b2);
@@ -17287,9 +17328,9 @@ function installaComandi() {
       try {
         const spento = clean(valore3).toLowerCase() === "off";
         const acceso6 = root.document?.getElementById?.("cp-btn-on");
-        const spegni2 = root.document?.getElementById?.("cp-btn-off");
+        const spegni3 = root.document?.getElementById?.("cp-btn-off");
         if (acceso6) acceso6.style.opacity = spento ? "1" : "0.4";
-        if (spegni2) spegni2.style.opacity = spento ? "0.4" : "1";
+        if (spegni3) spegni3.style.opacity = spento ? "0.4" : "1";
       } catch (_error) {
       }
       return esito2;
@@ -18626,9 +18667,9 @@ function normalizeTodoLists(values) {
 }
 function suggestTodoLists(states = {}, existing = []) {
   const known = new Set(normalizeTodoLists(existing).map((item) => item.entity.toLowerCase()));
-  return Object.entries(states).filter(([entity2]) => isTodoEntity(entity2) && !known.has(entity2.toLowerCase())).map(([entity2, state177]) => ({
+  return Object.entries(states).filter(([entity2]) => isTodoEntity(entity2) && !known.has(entity2.toLowerCase())).map(([entity2, state178]) => ({
     entity: entity2,
-    name: clean6(state177?.attributes?.friendly_name) || entity2.split(".")[1].replaceAll("_", " ")
+    name: clean6(state178?.attributes?.friendly_name) || entity2.split(".")[1].replaceAll("_", " ")
   }));
 }
 function parseTodoItemsResponse(result, entity2) {
@@ -18706,8 +18747,8 @@ function createCycleTracker({
     const endDaily = finiteOrNull2(finalDailyKwh);
     const effectiveDaily = endDaily != null && (lastDaily == null || endDaily >= lastDaily) ? endDaily : lastDaily;
     const dailyDelta = effectiveDaily != null && startDaily != null ? effectiveDaily - startDaily : null;
-    const kwh4 = dailyDelta != null && dailyDelta >= MIN_CYCLE_KWH ? dailyDelta : finiteOrNull2(active.kwhIntegral) >= MIN_CYCLE_KWH ? active.kwhIntegral : null;
-    if (durationMs < MIN_CYCLE_MS && kwh4 == null) return;
+    const kwh5 = dailyDelta != null && dailyDelta >= MIN_CYCLE_KWH ? dailyDelta : finiteOrNull2(active.kwhIntegral) >= MIN_CYCLE_KWH ? active.kwhIntegral : null;
+    if (durationMs < MIN_CYCLE_MS && kwh5 == null) return;
     record2.last = {
       startMs: active.startMs,
       /* Se l'ora dell'avvio era una supposizione se lo ricorda anche da
@@ -18716,7 +18757,7 @@ function createCycleTracker({
       ...active.avvioIncerto ? { avvioIncerto: true } : {},
       endMs: fine,
       durationMinutes: Math.round(durationMs / 6e4),
-      kwh: kwh4 != null ? Math.round(kwh4 * 1e3) / 1e3 : null,
+      kwh: kwh5 != null ? Math.round(kwh5 * 1e3) / 1e3 : null,
       totalSeconds: finiteOrNull2(active.maxRemainingSeconds)
     };
   };
@@ -18856,11 +18897,11 @@ function createCycleTracker({
       rileggi4();
       const active = records[String(id)]?.active;
       if (!active?.avvioIncerto) return false;
-      const istante6 = finiteOrNull2(quando4);
+      const istante7 = finiteOrNull2(quando4);
       const avvio = finiteOrNull2(active.startMs);
-      if (istante6 == null || avvio == null) return false;
-      if (istante6 > avvio || avvio - istante6 > UN_GIORNO_MS) return false;
-      active.startMs = istante6;
+      if (istante7 == null || avvio == null) return false;
+      if (istante7 > avvio || avvio - istante7 > UN_GIORNO_MS) return false;
+      active.startMs = istante7;
       if (certo) delete active.avvioIncerto;
       persist3();
       return true;
@@ -19580,8 +19621,8 @@ var pulito14 = (valore3) => String(valore3 ?? "").trim();
 var minuscolo = (valore3) => pulito14(valore3).toLowerCase();
 var finito = (valore3) => {
   if (valore3 === "" || valore3 == null) return null;
-  const numero57 = Number(String(valore3).replace(",", "."));
-  return Number.isFinite(numero57) ? numero57 : null;
+  const numero58 = Number(String(valore3).replace(",", "."));
+  return Number.isFinite(numero58) ? numero58 : null;
 };
 var senzaSeparatori = (valore3) => minuscolo(valore3).replace(/[\s_\-.]+/g, "");
 var MUTO = /^(unknown|unavailable|none|null|)$/i;
@@ -19808,8 +19849,8 @@ var eUnEntita = (testo4) => /^[a-z][a-z0-9_]*\.[a-z0-9_]+$/.test(testo4);
 function valoreDelParametro(grezzo) {
   const testo4 = pulito14(grezzo);
   if (/^(true|false)$/i.test(testo4)) return testo4.toLowerCase() === "true";
-  const numero57 = finito(testo4);
-  if (numero57 != null && /^-?\d+([.,]\d+)?$/.test(testo4)) return numero57;
+  const numero58 = finito(testo4);
+  if (numero58 != null && /^-?\d+([.,]\d+)?$/.test(testo4)) return numero58;
   return testo4;
 }
 function leggiIlComando(testo4, states = {}) {
@@ -20421,11 +20462,11 @@ function rigaDegliAltri(voce3) {
 function altriMarkup(altri) {
   if (!altri.length) return "";
   const accesi = altri.filter((voce3) => voce3.lettura.fase !== "spenta").length;
-  const pastiglia3 = accesi ? t(`${accesi} in funzione`, `${accesi} on`) : altri.length > 1 ? t("Spenti", "Off") : parolaDellaFase(altri[0].lettura);
+  const pastiglia4 = accesi ? t(`${accesi} in funzione`, `${accesi} on`) : altri.length > 1 ? t("Spenti", "Off") : parolaDellaFase(altri[0].lettura);
   return `<article class="dm-pool-card dm-cot-altri">
     <div class="dm-pool-card-head">
       <span class="dm-pool-card-title"><i aria-hidden="true">🔥</i>${esc(t("Gli altri in cucina", "The rest of the kitchen"))}</span>
-      <span class="dm-pool-badge"${accesi ? ' data-on="true"' : ""}>${esc(pastiglia3)}</span>
+      <span class="dm-pool-badge"${accesi ? ' data-on="true"' : ""}>${esc(pastiglia4)}</span>
     </div>
     ${altri.map(rigaDegliAltri).join("")}
   </article>`;
@@ -21136,12 +21177,12 @@ function aggiornaTenendoIlDisegno(vecchia, nuova) {
   return true;
 }
 function impronta(testo4) {
-  let somma2 = 2166136261;
+  let somma3 = 2166136261;
   for (let i = 0; i < testo4.length; i += 1) {
-    somma2 ^= testo4.charCodeAt(i);
-    somma2 = Math.imul(somma2, 16777619);
+    somma3 ^= testo4.charCodeAt(i);
+    somma3 = Math.imul(somma3, 16777619);
   }
-  return `${(somma2 >>> 0).toString(36)}.${testo4.length.toString(36)}`;
+  return `${(somma3 >>> 0).toString(36)}.${testo4.length.toString(36)}`;
 }
 function firmaDellaScheda(markup7, view) {
   return `${view}|${impronta(markup7)}`;
@@ -22461,8 +22502,8 @@ function alarmModes(stateObj) {
   const inserimenti = maschera === null || maschera === 0 ? ALARM_MODES.filter((voce3) => SENZA_DICHIARAZIONE.includes(voce3.mode)) : ALARM_MODES.filter((voce3) => (maschera & voce3.bit) === voce3.bit);
   return [...inserimenti, ALARM_DISARM];
 }
-function alarmActiveMode(state177, disponibili = null) {
-  const valore3 = String(state177 ?? "").trim().toLowerCase();
+function alarmActiveMode(state178, disponibili = null) {
+  const valore3 = String(state178 ?? "").trim().toLowerCase();
   if (!valore3) return "";
   const elenco15 = Array.isArray(disponibili) && disponibili.length ? disponibili.map(String) : null;
   const disegnato = (mode) => !elenco15 || elenco15.includes(mode);
@@ -22915,9 +22956,9 @@ function modiVisibili(stateObj = alarmStateObject()) {
     readJson(CHIAVE_ANTIFURTO_SU_MISURA, [])
   );
 }
-function modoAcceso(state177, stateObj = alarmStateObject()) {
+function modoAcceso(state178, stateObj = alarmStateObject()) {
   const acceso6 = alarmActiveMode(
-    state177,
+    state178,
     alarmModes(stateObj).map((voce3) => voce3.mode)
   );
   if (!acceso6) {
@@ -23146,10 +23187,10 @@ function striscetteDelloScattato(scattato, states, adesso2 = Date.now()) {
     tasti.push(
       `<button type="button" class="dm-sec-scat-btn is-rosso" data-dm-spegni-sirena>🔇 ${esc(t("Spegni sirena", "Siren off"))}</button>`
     );
-  const spegni2 = modoCheDisinserisce(modiSuMisura());
-  if (spegni2)
+  const spegni3 = modoCheDisinserisce(modiSuMisura());
+  if (spegni3)
     tasti.push(
-      `<button type="button" class="dm-sec-scat-btn" onclick="promptPinAndSet(${jsArg(`${PREFISSO_SU_MISURA}${spegni2.id}`)})">🔓 ${esc(t("Disinserisci", "Disarm"))}</button>`
+      `<button type="button" class="dm-sec-scat-btn" onclick="promptPinAndSet(${jsArg(`${PREFISSO_SU_MISURA}${spegni3.id}`)})">🔓 ${esc(t("Disinserisci", "Disarm"))}</button>`
     );
   return `<div class="dm-sec-scat-pillole">${pillole2.join("")}</div>${tasti.length ? `<div class="dm-sec-scat-tasti">${tasti.join("")}</div>` : ""}`;
 }
@@ -23209,8 +23250,8 @@ function renderSecurity() {
   const siVedono2 = leTelecamereSiVedono(readJson(CHIAVE_TELECAMERE_IN_SICUREZZA, null));
   const cctv = shell.querySelector(".dm-sec-cctv");
   if (cctv) cctv.hidden = !siVedono2;
-  const pastiglia3 = shell.querySelector("[data-dm-cctv-pill]");
-  if (pastiglia3) pastiglia3.hidden = !siVedono2;
+  const pastiglia4 = shell.querySelector("[data-dm-cctv-pill]");
+  if (pastiglia4) pastiglia4.hidden = !siVedono2;
   const meta = shell.querySelector("[data-dm-cam-meta]");
   if (meta) {
     const channels = total === 1 ? labels.channelsOne : labels.channels(total);
@@ -23440,7 +23481,7 @@ function publishAlarmHelpers() {
     }
     return alarmCodeNeeded(alarmStateObject(), service);
   };
-  root.dmAlarmActiveMode = (state177) => modoAcceso(state177);
+  root.dmAlarmActiveMode = (state178) => modoAcceso(state178);
   root.dmAlarmModes = () => modiVisibili().map((voce3) => voce3.mode);
   root.dmAlarmOrbMarkup = (chiave2) => disegnoDelCartellone(chiave2, modiSuMisura());
   root.dmAlarmSuMisuraAcceso = () => {
@@ -24352,7 +24393,7 @@ function medianaPesata(pesate) {
 function ilSolitoAQuestOra(punti, { adesso: adesso2 = Date.now(), larghezzaOre = 1 } = {}) {
   const letture2 = serie(punti);
   if (letture2.length < PUNTI_MINIMI) return null;
-  const oraDi5 = (istante6) => new Date(istante6).getHours();
+  const oraDi5 = (istante7) => new Date(istante7).getHours();
   const bersaglio = oraDi5(adesso2);
   const vicine = letture2.filter((l) => {
     const distanza3 = Math.abs(oraDi5(l.quando) - bersaglio);
@@ -25296,7 +25337,7 @@ function letturaDellaVoce(voce3, states = {}, resolve = (valore3) => valore3, li
   const grezzo = pulito21(stato3?.state).toLowerCase();
   const muto2 = MUTI4.has(grezzo);
   const dominio5 = entity2.split(".")[0] || "";
-  const numero57 = Number(stato3?.state);
+  const numero58 = Number(stato3?.state);
   const presenti = stato3?.attributes && typeof stato3.attributes === "object" ? stato3.attributes : {};
   const attributi2 = [];
   for (const scelto of voce3.attributi || []) {
@@ -25322,7 +25363,7 @@ function letturaDellaVoce(voce3, states = {}, resolve = (valore3) => valore3, li
     acceso: !muto2 && STATI_ACCESI.has(grezzo),
     /* Un numero con la sua unita' si mostra com'e'; il resto e' una parola di
      * stato, e la traduce chi disegna. */
-    numero: Number.isFinite(numero57) && grezzo !== "" && !MUTI4.has(grezzo) ? numero57 : null,
+    numero: Number.isFinite(numero58) && grezzo !== "" && !MUTI4.has(grezzo) ? numero58 : null,
     unita: pulito21(stato3?.attributes?.unit_of_measurement),
     stato: muto2 ? "" : pulito21(stato3?.state),
     comandabile: COMANDABILI.has(dominio5),
@@ -25678,9 +25719,9 @@ function tempoDellaRicarica({
     return { stato: "carica", minuti: Math.max(1, Math.round(dettiDallAuto)) };
   if (codice !== "C" || potenza3 === null || potenza3 <= 0 || adesso2 === null || limite === null)
     return { stato: "attesa", minuti: null };
-  const kwh4 = (limite - adesso2) / 100 * pacco;
-  if (kwh4 <= 0) return { stato: "raggiunto", minuti: null };
-  return { stato: "carica", minuti: Math.max(1, Math.round(kwh4 / potenza3 * 60)) };
+  const kwh5 = (limite - adesso2) / 100 * pacco;
+  if (kwh5 <= 0) return { stato: "raggiunto", minuti: null };
+  return { stato: "carica", minuti: Math.max(1, Math.round(kwh5 / potenza3 * 60)) };
 }
 function oreEMinuti(minuti) {
   const totale = numero11(minuti);
@@ -26358,12 +26399,12 @@ function inKilowattora2(valore3, unita3) {
 function energiaDiOggi(lettura3 = {}) {
   const parti = [];
   for (const voce3 of PARTI_DELL_ENERGIA) {
-    const kwh4 = inKilowattora2(valoreDi(lettura3, voce3.campo), unitaDi2(lettura3, voce3.campo));
-    if (kwh4 === null) continue;
-    parti.push({ parte: voce3.parte, ref: voce3.ref, kwh: Math.max(0, kwh4) });
+    const kwh5 = inKilowattora2(valoreDi(lettura3, voce3.campo), unitaDi2(lettura3, voce3.campo));
+    if (kwh5 === null) continue;
+    parti.push({ parte: voce3.parte, ref: voce3.ref, kwh: Math.max(0, kwh5) });
   }
   if (!parti.length) return null;
-  const totale = parti.reduce((somma2, voce3) => somma2 + voce3.kwh, 0);
+  const totale = parti.reduce((somma3, voce3) => somma3 + voce3.kwh, 0);
   for (const voce3 of parti) voce3.quota = totale > 0 ? voce3.kwh / totale : 0;
   return { totale, parti };
 }
@@ -26379,7 +26420,7 @@ function consumoInKwh100(valore3, unita3) {
 }
 function laSettimana(lettura3 = {}) {
   const km = valoreDi(lettura3, "km7Giorni");
-  const kwh4 = inKilowattora2(
+  const kwh5 = inKilowattora2(
     valoreDi(lettura3, "energia7Giorni"),
     unitaDi2(lettura3, "energia7Giorni")
   );
@@ -26389,12 +26430,12 @@ function laSettimana(lettura3 = {}) {
   );
   let consumo = dichiarato;
   let calcolato = false;
-  if (consumo === null && km !== null && km > 0 && kwh4 !== null && kwh4 > 0) {
-    consumo = kwh4 / km * 100;
+  if (consumo === null && km !== null && km > 0 && kwh5 !== null && kwh5 > 0) {
+    consumo = kwh5 / km * 100;
     calcolato = true;
   }
-  if (km === null && kwh4 === null && consumo === null) return null;
-  return { km, kwh: kwh4, consumo, calcolato };
+  if (km === null && kwh5 === null && consumo === null) return null;
+  return { km, kwh: kwh5, consumo, calcolato };
 }
 function temperatureDellAuto(lettura3 = {}) {
   const fuori = [];
@@ -26486,8 +26527,8 @@ function configured(references, states = {}, resolve = (value) => value) {
       entity2 = reference;
     }
     if (!entity2 || entity2 === reference) continue;
-    const state177 = states?.[entity2]?.state;
-    if (state177 != null && !MUTO2.test(clean9(state177))) return true;
+    const state178 = states?.[entity2]?.state;
+    if (state178 != null && !MUTO2.test(clean9(state178))) return true;
   }
   return false;
 }
@@ -26550,20 +26591,20 @@ function impostazioniPulite(dato2) {
     sotto: Number.isFinite(sotto) ? Math.max(5, Math.min(100, sotto)) : IMPOSTAZIONI_DI_SERIE.sotto
   };
 }
-var giornoDellaSettimana = (istante6) => (new Date(istante6).getDay() + 6) % 7;
-function chiaveDelGiorno(istante6) {
-  const d = new Date(istante6);
+var giornoDellaSettimana = (istante7) => (new Date(istante7).getDay() + 6) % 7;
+function chiaveDelGiorno(istante7) {
+  const d = new Date(istante7);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
-function alleOreDel(istante6, piuGiorni, ora6) {
+function alleOreDel(istante7, piuGiorni, ora6) {
   const [h, m] = ora6.split(":").map(Number);
-  const d = new Date(istante6);
+  const d = new Date(istante7);
   d.setDate(d.getDate() + piuGiorni);
   d.setHours(h, m, 0, 0);
   return d.getTime();
 }
-function fasciaCheComincia(imp, istante6, piuGiorni) {
-  const inizio = alleOreDel(istante6, piuGiorni, imp.da);
+function fasciaCheComincia(imp, istante7, piuGiorni) {
+  const inizio = alleOreDel(istante7, piuGiorni, imp.da);
   const daMin = minutiDellOra(imp.da);
   const aMin = minutiDellOra(imp.a);
   const fine = alleOreDel(inizio, aMin <= daMin ? 1 : 0, imp.a);
@@ -26605,11 +26646,11 @@ function prefissoDiEvcc(modo) {
   const pezzi = /^(?:select|input_select)\.(evcc_[a-z0-9_]*?)(?:charge_)?mode$/.exec(id);
   return pezzi ? pezzi[1] : "";
 }
-function entitaDellaRicarica(risolvi3, { batteria = "" } = {}) {
+function entitaDellaRicarica(risolvi4, { batteria = "" } = {}) {
   const leggi3 = (rif) => {
     let detto3 = "";
     try {
-      detto3 = pulito23(risolvi3?.(rif));
+      detto3 = pulito23(risolvi4?.(rif));
     } catch (_errore) {
       detto3 = "";
     }
@@ -26784,7 +26825,7 @@ function ilPrezzo(imp = leImpostazioni()) {
   }
   return prezzoDellaNotte({ fasce, costo: costoScritto(), stati: allStates(), da: imp.da });
 }
-var ora = (istante6) => new Date(istante6).toLocaleTimeString(locale(), {
+var ora = (istante7) => new Date(istante7).toLocaleTimeString(locale(), {
   hour: "2-digit",
   minute: "2-digit",
   hour12: false
@@ -26851,8 +26892,8 @@ function ilRacconto({ imp, ponte, assente, lettura: lettura3, prezzo, adesso: ad
     if (Number.isFinite(sessione.kwh)) {
       pezzi.push(`${formatNumber(sessione.kwh, 1)} kWh`);
       if (prezzo.prezzo) {
-        const euro2 = formatNumber(sessione.kwh * prezzo.prezzo, 2);
-        pezzi.push(t(`circa ${euro2} €`, `about ${euro2} €`));
+        const euro3 = formatNumber(sessione.kwh * prezzo.prezzo, 2);
+        pezzi.push(t(`circa ${euro3} €`, `about ${euro3} €`));
       }
     }
     return { tono: "carica", titolo: titolo3, sotto: pezzi.join(" · ") };
@@ -26899,11 +26940,11 @@ function ilRacconto({ imp, ponte, assente, lettura: lettura3, prezzo, adesso: ad
       const perche4 = esito2.motivo === "limite" && Number.isFinite(esito2.soc) ? t(`${soc}% raggiunto`, `${soc}% reached`) : esito2.motivo === "staccata" ? t("Auto staccata", "Car unplugged") : esito2.motivo === "spenta" ? t("Spenta da te", "Turned off") : t("Fine della fascia", "End of the window");
       const pezzi = [];
       if (Number.isFinite(esito2.kwh)) {
-        const kwh4 = formatNumber(esito2.kwh, 1);
-        pezzi.push(t(`Caricati ${kwh4} kWh`, `Charged ${kwh4} kWh`));
+        const kwh5 = formatNumber(esito2.kwh, 1);
+        pezzi.push(t(`Caricati ${kwh5} kWh`, `Charged ${kwh5} kWh`));
         if (Number.isFinite(esito2.costo)) {
-          const euro2 = formatNumber(esito2.costo, 2);
-          pezzi.push(t(`circa ${euro2} €`, `about ${euro2} €`));
+          const euro3 = formatNumber(esito2.costo, 2);
+          pezzi.push(t(`circa ${euro3} €`, `about ${euro3} €`));
         }
       }
       if (esito2.poi) {
@@ -27187,8 +27228,8 @@ function renderRicaricaDiNotte(adesso2 = Date.now()) {
   [q("tratto1"), q("tratto2")].forEach((nodo2, i) => {
     if (!nodo2) return;
     const tratto = tratti2[i];
-    const stile6 = tratto ? `left:${pc(tratto[0])};width:${pc(tratto[1] - tratto[0])}` : "display:none";
-    attributo(nodo2, "style", stile6);
+    const stile7 = tratto ? `left:${pc(tratto[0])};width:${pc(tratto[1] - tratto[0])}` : "display:none";
+    attributo(nodo2, "style", stile7);
   });
   const d = new Date(adesso2);
   attributo(q("adesso"), "style", `left:${pc(d.getHours() * 60 + d.getMinutes())}`);
@@ -27747,10 +27788,10 @@ var PAGES = Object.freeze([
 ]);
 var TITOLI_SU_MISURA = /* @__PURE__ */ new Map();
 var PAGINE_A_RUNTIME = /* @__PURE__ */ new Map();
-function registraPaginaARuntime(id, pagina2) {
+function registraPaginaARuntime(id, pagina3) {
   const chiave2 = clean(id);
   if (!chiave2) return false;
-  if (pagina2) PAGINE_A_RUNTIME.set(chiave2, { ...pagina2, id: chiave2 });
+  if (pagina3) PAGINE_A_RUNTIME.set(chiave2, { ...pagina3, id: chiave2 });
   else PAGINE_A_RUNTIME.delete(chiave2);
   return true;
 }
@@ -27759,8 +27800,8 @@ function tuttePagine() {
 }
 function tintaDellaPagina(id) {
   const chiave2 = clean(id);
-  const pagina2 = tuttePagine().find((voce3) => voce3.id === chiave2);
-  const tinta2 = clean(pagina2?.tint?.[0]);
+  const pagina3 = tuttePagine().find((voce3) => voce3.id === chiave2);
+  const tinta2 = clean(pagina3?.tint?.[0]);
   return /^\d{1,3},\d{1,3},\d{1,3}$/.test(tinta2) ? `rgb(${tinta2})` : "";
 }
 function registraTitoloDiPagina(id, produttore) {
@@ -27943,11 +27984,11 @@ function unaSolaPaginaAperta() {
   if (!doc) return false;
   const pagine = [...doc.querySelectorAll?.(".page") || []];
   if (!pagine.length) return false;
-  const attive = pagine.filter((pagina2) => pagina2.classList.contains("active"));
+  const attive = pagine.filter((pagina3) => pagina3.classList.contains("active"));
   if (attive.length === 1) return false;
   const scelta3 = laPaginaGiusta(attive);
   if (!scelta3) return false;
-  for (const pagina2 of pagine) pagina2.classList.toggle("active", pagina2 === scelta3);
+  for (const pagina3 of pagine) pagina3.classList.toggle("active", pagina3 === scelta3);
   const nome = scelta3.id.replace(/^page-/, "");
   const voci4 = [...doc.querySelectorAll?.(".tab") || []];
   const voce3 = voci4.find((nodo2) => clean(nodo2.dataset?.tab) === nome);
@@ -28013,7 +28054,7 @@ function regolaDellaFascia() {
 function paginaAperta() {
   const aperte = [...doc?.querySelectorAll?.(".page.active") || []];
   if (!aperte.length) return "";
-  return aperte.find((pagina2) => pagina2.id !== "page-home")?.id || "page-home";
+  return aperte.find((pagina3) => pagina3.id !== "page-home")?.id || "page-home";
 }
 var guardate = /* @__PURE__ */ new WeakSet();
 var cambiDiPagina = /* @__PURE__ */ new Set();
@@ -28022,10 +28063,10 @@ function segnaLaPagina() {
   if (!corpo4) return "";
   if (typeof root.MutationObserver === "function") {
     state21.osservatore ||= new root.MutationObserver(() => segnaLaPagina());
-    for (const pagina2 of doc.querySelectorAll(".page")) {
-      if (guardate.has(pagina2)) continue;
-      guardate.add(pagina2);
-      state21.osservatore.observe(pagina2, { attributes: true, attributeFilter: ["class"] });
+    for (const pagina3 of doc.querySelectorAll(".page")) {
+      if (guardate.has(pagina3)) continue;
+      guardate.add(pagina3);
+      state21.osservatore.observe(pagina3, { attributes: true, attributeFilter: ["class"] });
     }
   }
   const aperta2 = paginaAperta();
@@ -28435,8 +28476,8 @@ function sincronizzaCapacita(casella6) {
 function scriviLaCapacita(valore3) {
   const { auto, casa } = diChiParlaLaScheda();
   const scritto3 = clean(valore3).replace(",", ".");
-  const numero57 = Number(scritto3);
-  const nuovo = scritto3 === "" ? "" : Number.isFinite(numero57) && numero57 > 0 ? scritto3 : null;
+  const numero58 = Number(scritto3);
+  const nuovo = scritto3 === "" ? "" : Number.isFinite(numero58) && numero58 > 0 ? scritto3 : null;
   if (nuovo === null) return false;
   if (!casa && !auto) {
     state22.capacitaInBozza = nuovo;
@@ -28695,7 +28736,7 @@ function dato(ref, nome, v, unita3, cifre3 = cifreDi(v), segno2 = "") {
   const corpo4 = `<b class="dm-auto-num">${numeroConUnita(v, unita3, cifre3)}${esc(segno2)}</b><span>${esc(nome)}</span>`;
   return ref ? `<button type="button" class="dm-auto-dato" ${storico(ref, nome)}>${corpo4}</button>` : `<div class="dm-auto-dato">${corpo4}</div>`;
 }
-var cifreKwh = (kwh4) => kwh4 === 0 ? 0 : kwh4 >= 100 ? 0 : 1;
+var cifreKwh = (kwh5) => kwh5 === 0 ? 0 : kwh5 >= 100 ? 0 : 1;
 function cartaDellEnergia(lettura3) {
   const energia = energiaDiOggi(lettura3);
   if (!energia) return "";
@@ -29482,8 +29523,8 @@ function vocePerOpzione(opzione) {
   if (!valore3) return null;
   return { valore: valore3, testo: /^\d+(?:[.,]\d+)?$/.test(valore3) ? `${valore3}%` : valore3 };
 }
-function quanteCifre(numero57) {
-  const scritto3 = String(numero57);
+function quanteCifre(numero58) {
+  const scritto3 = String(numero58);
   if (scritto3.includes("e") || scritto3.includes("E") || !scritto3.includes(".")) return 0;
   return scritto3.split(".")[1].length;
 }
@@ -29945,9 +29986,9 @@ function scriviLaSessione() {
   const stato3 = liveState("dm.ev_energia_sessione");
   const grezzo = clean(stato3?.state);
   const muto2 = !grezzo || /^(unknown|unavailable|none)$/i.test(grezzo);
-  const kwh4 = muto2 ? null : inKilowattora(numero14(grezzo), stato3?.attributes?.unit_of_measurement);
-  const testo4 = kwh4 === null ? "—" : lEnergiaInParole(kwh4, { decimali: Math.abs(kwh4) < 10 ? 2 : 1 });
-  const perche4 = kwh4 !== null ? "" : stato3 ? t(
+  const kwh5 = muto2 ? null : inKilowattora(numero14(grezzo), stato3?.attributes?.unit_of_measurement);
+  const testo4 = kwh5 === null ? "—" : lEnergiaInParole(kwh5, { decimali: Math.abs(kwh5) < 10 ? 2 : 1 });
+  const perche4 = kwh5 !== null ? "" : stato3 ? t(
     "Il contatore della sessione non sta rispondendo.",
     "The session meter is not answering."
   ) : t("Nessun contatore della sessione.", "No session meter.");
@@ -30103,8 +30144,8 @@ function isWaterHeaterEntity(value) {
 }
 var ACCESI = /^(on|true|1|heat|heating|eco|performance|high_demand|electric|gas|heat_pump)$/i;
 var SPENTI = /^(off|false|0|standby|idle|none)$/i;
-function accesoDalloStato2(state177) {
-  const valore3 = clean12(state177);
+function accesoDalloStato2(state178) {
+  const valore3 = clean12(state178);
   if (ACCESI.test(valore3)) return true;
   if (SPENTI.test(valore3)) return false;
   return null;
@@ -30217,9 +30258,9 @@ function suggerisciScaldabagni(states = {}, esistenti = []) {
   const noti = new Set(
     normalizeScaldabagni(esistenti).map((item) => item.entity.toLowerCase()).filter(Boolean)
   );
-  return Object.entries(states).filter(([entity2]) => isWaterHeaterEntity(entity2) && !noti.has(entity2.toLowerCase())).map(([entity2, state177]) => ({
+  return Object.entries(states).filter(([entity2]) => isWaterHeaterEntity(entity2) && !noti.has(entity2.toLowerCase())).map(([entity2, state178]) => ({
     entity: entity2,
-    name: clean12(state177?.attributes?.friendly_name) || entity2.split(".")[1].replaceAll("_", " ")
+    name: clean12(state178?.attributes?.friendly_name) || entity2.split(".")[1].replaceAll("_", " ")
   }));
 }
 
@@ -30251,11 +30292,11 @@ var numero17 = (valore3) => {
 var IN_LINEA = /* @__PURE__ */ new Set(["ol", "online", "on_line", "mains", "utility"]);
 var A_BATTERIA = /* @__PURE__ */ new Set(["ob", "onbatt", "onbattery", "on_battery", "battery", "backup"]);
 var SCARICA = /* @__PURE__ */ new Set(["lb", "lowbatt", "low_battery"]);
-function sigle(state177) {
-  return clean13(state177).toLowerCase().split(/[\s,|/]+/).filter(Boolean);
+function sigle(state178) {
+  return clean13(state178).toLowerCase().split(/[\s,|/]+/).filter(Boolean);
 }
-function reteDalloStato(state177) {
-  const pezzi = sigle(state177);
+function reteDalloStato(state178) {
+  const pezzi = sigle(state178);
   if (!pezzi.length) return null;
   if (pezzi.some((pezzo2) => A_BATTERIA.has(pezzo2))) return false;
   if (pezzi.some((pezzo2) => IN_LINEA.has(pezzo2))) return true;
@@ -30263,8 +30304,8 @@ function reteDalloStato(state177) {
   if (pezzi.includes("off") || pezzi.includes("false")) return false;
   return null;
 }
-function batteriaScaricaDalloStato(state177) {
-  return sigle(state177).some((pezzo2) => SCARICA.has(pezzo2));
+function batteriaScaricaDalloStato(state178) {
+  return sigle(state178).some((pezzo2) => SCARICA.has(pezzo2));
 }
 function normalizzaUps(stored, posizione = 0) {
   const dato2 = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
@@ -30294,7 +30335,7 @@ function elencoUps(stored) {
   const presi = /* @__PURE__ */ new Set();
   return grezzi.map((gruppo, posizione) => normalizzaUps(gruppo, posizione)).filter((gruppo) => gruppo.name || entitaDellUps(gruppo).length).map((gruppo) => {
     let uid = gruppo[CAMPO_UID_UPS];
-    for (let numero57 = 2; presi.has(uid); numero57 += 1) uid = `${gruppo[CAMPO_UID_UPS]}-${numero57}`;
+    for (let numero58 = 2; presi.has(uid); numero58 += 1) uid = `${gruppo[CAMPO_UID_UPS]}-${numero58}`;
     presi.add(uid);
     return uid === gruppo[CAMPO_UID_UPS] ? gruppo : { ...gruppo, [CAMPO_UID_UPS]: uid };
   });
@@ -30567,9 +30608,9 @@ function calendariAssegnati(calendari = []) {
 }
 function suggerisciCalendari(states = {}, esistenti = []) {
   const noti = new Set(normalizzaCalendari(esistenti).map((voce3) => voce3.entity.toLowerCase()));
-  return Object.entries(states).filter(([entity2]) => isCalendarEntity(entity2) && !noti.has(entity2.toLowerCase())).map(([entity2, state177]) => ({
+  return Object.entries(states).filter(([entity2]) => isCalendarEntity(entity2) && !noti.has(entity2.toLowerCase())).map(([entity2, state178]) => ({
     entity: entity2,
-    name: clean15(state177?.attributes?.friendly_name) || entity2.split(".")[1].replaceAll("_", " ")
+    name: clean15(state178?.attributes?.friendly_name) || entity2.split(".")[1].replaceAll("_", " ")
   }));
 }
 var SOLO_DATA = /^\d{4}-\d{2}-\d{2}$/;
@@ -30580,11 +30621,11 @@ function istanteDi(valore3) {
     const [anno, mese, giorno3] = testo4.split("-").map(Number);
     return { istante: new Date(anno, mese - 1, giorno3).getTime(), tuttoIlGiorno: true };
   }
-  const istante6 = Date.parse(testo4);
-  return { istante: Number.isFinite(istante6) ? istante6 : null, tuttoIlGiorno: false };
+  const istante7 = Date.parse(testo4);
+  return { istante: Number.isFinite(istante7) ? istante7 : null, tuttoIlGiorno: false };
 }
-function chiaveDelGiorno2(istante6) {
-  const quando4 = new Date(istante6);
+function chiaveDelGiorno2(istante7) {
+  const quando4 = new Date(istante7);
   const mese = String(quando4.getMonth() + 1).padStart(2, "0");
   const giorno3 = String(quando4.getDate()).padStart(2, "0");
   return `${quando4.getFullYear()}-${mese}-${giorno3}`;
@@ -30638,8 +30679,8 @@ function parseCalendarApiEvents(righe3, entity2) {
   }).filter(Boolean);
 }
 var CAPACITA = Object.freeze({ CREA: 1, CANCELLA: 2, MODIFICA: 4 });
-function capacitaDelCalendario(state177) {
-  const bit = Number(state177?.attributes?.supported_features);
+function capacitaDelCalendario(state178) {
+  const bit = Number(state178?.attributes?.supported_features);
   const valore3 = Number.isFinite(bit) ? bit : 0;
   return Object.freeze({
     crea: (valore3 & CAPACITA.CREA) !== 0,
@@ -30653,23 +30694,23 @@ function eventoModificabile(evento, capacita) {
 function eventoCancellabile(evento, capacita) {
   return Boolean(capacita?.cancella && clean15(evento?.uid));
 }
-var due = (numero57) => String(numero57).padStart(2, "0");
-function giornoDiCasella(istante6) {
-  const quando4 = new Date(istante6);
+var due = (numero58) => String(numero58).padStart(2, "0");
+function giornoDiCasella(istante7) {
+  const quando4 = new Date(istante7);
   return `${quando4.getFullYear()}-${due(quando4.getMonth() + 1)}-${due(quando4.getDate())}`;
 }
-function oraDiCasella(istante6) {
-  const quando4 = new Date(istante6);
+function oraDiCasella(istante7) {
+  const quando4 = new Date(istante7);
   return `${due(quando4.getHours())}:${due(quando4.getMinutes())}`;
 }
 function istanteDaCaselle(giorno3, ora6) {
-  const [anno, mese, numero57] = clean15(giorno3).split("-").map(Number);
-  if (!Number.isFinite(anno) || !Number.isFinite(mese) || !Number.isFinite(numero57)) return null;
+  const [anno, mese, numero58] = clean15(giorno3).split("-").map(Number);
+  if (!Number.isFinite(anno) || !Number.isFinite(mese) || !Number.isFinite(numero58)) return null;
   const [ore, minuti] = clean15(ora6).split(":").map(Number);
   return new Date(
     anno,
     mese - 1,
-    numero57,
+    numero58,
     Number.isFinite(ore) ? ore : 0,
     Number.isFinite(minuti) ? minuti : 0,
     0,
@@ -30781,12 +30822,12 @@ function scadenzeDelleListe(blocchi) {
   }
   return ordinaEventi(fuori);
 }
-function giornoPiu(istante6, giorni) {
-  const quando4 = new Date(istante6);
+function giornoPiu(istante7, giorni) {
+  const quando4 = new Date(istante7);
   quando4.setDate(quando4.getDate() + giorni);
   return quando4;
 }
-var ilGiornoDopo = (istante6) => giornoPiu(istante6, 1);
+var ilGiornoDopo = (istante7) => giornoPiu(istante7, 1);
 function contoDellaTessera(eventi, scadenze, adesso2 = Date.now()) {
   const oggi = chiaveDelGiorno2(adesso2);
   const domani2 = chiaveDelGiorno2(ilGiornoDopo(adesso2));
@@ -30853,8 +30894,8 @@ function campiDellaCosa(bozza3, lamenti2 = LAMENTI_CALENDARIO) {
   if (!giorno3) {
     campi.due_date = null;
   } else if (ora6) {
-    const istante6 = istanteDaCaselle(giorno3, ora6);
-    if (istante6 === null) return { errore: dette.quando };
+    const istante7 = istanteDaCaselle(giorno3, ora6);
+    if (istante7 === null) return { errore: dette.quando };
     campi.due_datetime = `${giorno3}T${ora6}:00`;
   } else {
     if (istanteDaCaselle(giorno3, "00:00") === null) return { errore: dette.quando };
@@ -30877,9 +30918,9 @@ function etichettaDelGiorno(giorno3, adesso2 = Date.now(), parole4 = PAROLE_CALE
   if (giorno3 === oggi) return dette.oggi;
   const domani2 = chiaveDelGiorno2(ilGiornoDopo(adesso2));
   if (giorno3 === domani2) return dette.domani;
-  const [anno, mese, numero57] = clean15(giorno3).split("-").map(Number);
+  const [anno, mese, numero58] = clean15(giorno3).split("-").map(Number);
   if (!Number.isFinite(anno)) return clean15(giorno3);
-  const data = new Date(anno, mese - 1, numero57);
+  const data = new Date(anno, mese - 1, numero58);
   try {
     return data.toLocaleDateString(lingua3 || void 0, {
       weekday: "long",
@@ -30890,9 +30931,9 @@ function etichettaDelGiorno(giorno3, adesso2 = Date.now(), parole4 = PAROLE_CALE
     return clean15(giorno3);
   }
 }
-function orarioDi(istante6, lingua3) {
+function orarioDi(istante7, lingua3) {
   try {
-    return new Date(istante6).toLocaleTimeString(lingua3 || void 0, {
+    return new Date(istante7).toLocaleTimeString(lingua3 || void 0, {
       hour: "2-digit",
       minute: "2-digit"
     });
@@ -30926,8 +30967,8 @@ var state25 = root[KEY29] ||= {
    * deve saperlo. */
   ospiti: /* @__PURE__ */ new Set()
 };
-function registraOspiteCalendario(ridisegna30) {
-  if (typeof ridisegna30 === "function") state25.ospiti.add(ridisegna30);
+function registraOspiteCalendario(ridisegna31) {
+  if (typeof ridisegna31 === "function") state25.ospiti.add(ridisegna31);
 }
 function ridisegnaOspiti() {
   for (const ospite3 of state25.ospiti) {
@@ -31918,15 +31959,15 @@ function vociDelDettaglio(attributi2 = {}, salta = RUMORE) {
     if (!valore3) continue;
     const titolo3 = titoloDellaVoce(chiave2);
     if (!titolo3) continue;
-    const istante6 = eUnIstante(valore3);
+    const istante7 = eUnIstante(valore3);
     voci4.push(
       Object.freeze({
         chiave: chiave2,
         titolo: titolo3,
         valore: valore3,
-        istante: istante6,
+        istante: istante7,
         /* Una data non e' mai un paragrafo, per quanto lunga sia scritta. */
-        lungo: !istante6 && valore3.length > TESTO_LUNGO
+        lungo: !istante7 && valore3.length > TESTO_LUNGO
       })
     );
   }
@@ -32089,8 +32130,8 @@ function parolaDeiPollini(parola) {
   if (/none|nessun|assente/.test(voce3)) return t("Assente", "None");
   return clean(parola);
 }
-function oraDi(istante6) {
-  const quando4 = istante6 instanceof Date ? istante6 : new Date(istante6);
+function oraDi(istante7) {
+  const quando4 = istante7 instanceof Date ? istante7 : new Date(istante7);
   if (!Number.isFinite(quando4.getTime())) return "";
   try {
     return quando4.toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" });
@@ -32273,16 +32314,16 @@ function ultimaPagina() {
 }
 function ensureAllertePage() {
   if (!doc) return null;
-  let pagina2 = doc.getElementById(ALLERTE_PAGE_ID);
-  if (pagina2) return pagina2;
+  let pagina3 = doc.getElementById(ALLERTE_PAGE_ID);
+  if (pagina3) return pagina3;
   const sorella = ultimaPagina();
   if (!sorella?.parentElement) return null;
-  pagina2 = doc.createElement("section");
-  pagina2.className = "page";
-  pagina2.id = ALLERTE_PAGE_ID;
-  pagina2.innerHTML = `<div class="dm-allerte-wrap" id="allerte-wrap"></div>`;
-  sorella.after(pagina2);
-  return pagina2;
+  pagina3 = doc.createElement("section");
+  pagina3.className = "page";
+  pagina3.id = ALLERTE_PAGE_ID;
+  pagina3.innerHTML = `<div class="dm-allerte-wrap" id="allerte-wrap"></div>`;
+  sorella.after(pagina3);
+  return pagina3;
 }
 function ensureAllerteTab() {
   if (!doc) return null;
@@ -32323,8 +32364,8 @@ function accendiLaVoce() {
   else voce3.style.setProperty("display", "none", "important");
   const livello = serve ? livelloMassimo(lettureAllerte()) : "quiete";
   if (voce3.dataset.dmLivello !== livello) voce3.dataset.dmLivello = livello;
-  const pagina2 = doc.getElementById(ALLERTE_PAGE_ID);
-  if (!serve && pagina2?.classList.contains("active"))
+  const pagina3 = doc.getElementById(ALLERTE_PAGE_ID);
+  if (!serve && pagina3?.classList.contains("active"))
     doc.querySelector('.tab[data-tab="home"]')?.click();
 }
 function riassuntoMarkup(letture2) {
@@ -32438,8 +32479,8 @@ function vuotoMarkup() {
   </div>`;
 }
 function dipingi2() {
-  const pagina2 = ensureAllertePage();
-  const dove = pagina2?.querySelector?.("#allerte-wrap");
+  const pagina3 = ensureAllertePage();
+  const dove = pagina3?.querySelector?.("#allerte-wrap");
   if (!dove) return;
   if (!paginaVisibile(ALLERTE_PAGE_ID)) return;
   if (!allerteConfigurate()) {
@@ -32747,7 +32788,7 @@ var GIORNI_DEL_TURNO = 14;
 function dataScritta(valore3) {
   const data = leggiData(valore3);
   if (!data) return "";
-  const due3 = (numero57) => String(numero57).padStart(2, "0");
+  const due3 = (numero58) => String(numero58).padStart(2, "0");
   return `${data.getFullYear()}-${due3(data.getMonth() + 1)}-${due3(data.getDate())}`;
 }
 function normalizzaTurno(stored) {
@@ -32966,8 +33007,8 @@ function rifiutiConfigurati(config) {
   const dato2 = normalizzaRifiuti(config);
   return righeConfigurate(dato2).length > 0 || dato2.calendario.includes(".") || turnoConfigurato(dato2.turno);
 }
-function inizioDelGiorno(istante6) {
-  const quando4 = istante6 instanceof Date ? istante6 : new Date(istante6);
+function inizioDelGiorno(istante7) {
+  const quando4 = istante7 instanceof Date ? istante7 : new Date(istante7);
   return new Date(quando4.getFullYear(), quando4.getMonth(), quando4.getDate());
 }
 function giorniFra(da, a) {
@@ -33361,8 +33402,8 @@ function normalizzaIngresso(input = {}) {
 }
 var quando3 = (stato3) => {
   const scritto3 = stato3?.last_changed || stato3?.last_updated;
-  const istante6 = scritto3 ? Date.parse(scritto3) : Number.NaN;
-  return Number.isFinite(istante6) ? istante6 : null;
+  const istante7 = scritto3 ? Date.parse(scritto3) : Number.NaN;
+  return Number.isFinite(istante7) ? istante7 : null;
 };
 var acceso = (stato3) => clean16(stato3?.state).toLowerCase() === "on";
 var muto = (stato3) => {
@@ -33577,16 +33618,16 @@ function ultimaPagina2() {
 }
 function ensureCitofonoPage() {
   if (!doc) return null;
-  let pagina2 = doc.getElementById(CITOFONO_PAGE_ID);
-  if (pagina2) return pagina2;
+  let pagina3 = doc.getElementById(CITOFONO_PAGE_ID);
+  if (pagina3) return pagina3;
   const sorella = ultimaPagina2();
   if (!sorella?.parentElement) return null;
-  pagina2 = doc.createElement("section");
-  pagina2.className = "page";
-  pagina2.id = CITOFONO_PAGE_ID;
-  pagina2.innerHTML = `<div class="dm-citofono-wrap" id="citofono-wrap"></div>`;
-  sorella.after(pagina2);
-  return pagina2;
+  pagina3 = doc.createElement("section");
+  pagina3.className = "page";
+  pagina3.id = CITOFONO_PAGE_ID;
+  pagina3.innerHTML = `<div class="dm-citofono-wrap" id="citofono-wrap"></div>`;
+  sorella.after(pagina3);
+  return pagina3;
 }
 function ensureCitofonoTab() {
   if (!doc) return null;
@@ -33627,8 +33668,8 @@ function accendiLaVoce2(letture2) {
   const serve = segnaContenuto(CITOFONO_TAB, ceQualcosaDaMostrare2(letture2)) && sezioneAccesa3();
   if (serve) voce3.style.removeProperty("display");
   else voce3.style.setProperty("display", "none", "important");
-  const pagina2 = doc.getElementById(CITOFONO_PAGE_ID);
-  if (!serve && pagina2?.classList.contains("active"))
+  const pagina3 = doc.getElementById(CITOFONO_PAGE_ID);
+  if (!serve && pagina3?.classList.contains("active"))
     doc.querySelector('.tab[data-tab="home"]')?.click();
 }
 function daQuandoTesto(quando4, adesso2 = Date.now()) {
@@ -33715,8 +33756,8 @@ function fascia(titolo3, carte) {
 function dipingi3() {
   const letture2 = ingressoInPlancia();
   accendiLaVoce2(letture2);
-  const pagina2 = ensureCitofonoPage();
-  const dove = pagina2?.querySelector?.("#citofono-wrap");
+  const pagina3 = ensureCitofonoPage();
+  const dove = pagina3?.querySelector?.("#citofono-wrap");
   if (!dove) return;
   if (!paginaVisibile(CITOFONO_PAGE_ID)) return;
   if (!ceQualcosaDaMostrare2(letture2)) {
@@ -34009,16 +34050,16 @@ function ultimaPagina3() {
 }
 function ensureRifiutiPage() {
   if (!doc) return null;
-  let pagina2 = doc.getElementById(RIFIUTI_PAGE_ID);
-  if (pagina2) return pagina2;
+  let pagina3 = doc.getElementById(RIFIUTI_PAGE_ID);
+  if (pagina3) return pagina3;
   const sorella = ultimaPagina3();
   if (!sorella?.parentElement) return null;
-  pagina2 = doc.createElement("section");
-  pagina2.className = "page";
-  pagina2.id = RIFIUTI_PAGE_ID;
-  pagina2.innerHTML = `<div class="dm-rifiuti-wrap" id="rifiuti-wrap"></div>`;
-  sorella.after(pagina2);
-  return pagina2;
+  pagina3 = doc.createElement("section");
+  pagina3.className = "page";
+  pagina3.id = RIFIUTI_PAGE_ID;
+  pagina3.innerHTML = `<div class="dm-rifiuti-wrap" id="rifiuti-wrap"></div>`;
+  sorella.after(pagina3);
+  return pagina3;
 }
 function ensureRifiutiTab() {
   if (!doc) return null;
@@ -34057,8 +34098,8 @@ function accendiLaVoce3() {
   const serve = segnaContenuto(RIFIUTI_TAB, rifiutiInPlancia()) && sezioneAccesa4();
   if (serve) voce3.style.removeProperty("display");
   else voce3.style.setProperty("display", "none", "important");
-  const pagina2 = doc.getElementById(RIFIUTI_PAGE_ID);
-  if (!serve && pagina2?.classList.contains("active"))
+  const pagina3 = doc.getElementById(RIFIUTI_PAGE_ID);
+  if (!serve && pagina3?.classList.contains("active"))
     doc.querySelector('.tab[data-tab="home"]')?.click();
 }
 function bidoneMarkup(riga3, grande = false) {
@@ -34132,8 +34173,8 @@ function vuotoMarkup3() {
   </div>`;
 }
 function dipingi4() {
-  const pagina2 = ensureRifiutiPage();
-  const dove = pagina2?.querySelector?.("#rifiuti-wrap");
+  const pagina3 = ensureRifiutiPage();
+  const dove = pagina3?.querySelector?.("#rifiuti-wrap");
   if (!dove) return;
   if (!paginaVisibile(RIFIUTI_PAGE_ID)) return;
   if (!rifiutiInPlancia()) {
@@ -34626,8 +34667,8 @@ function cambioDAcqua(config, adesso2) {
 function conIlCambio(config, quando4) {
   const fuori = { ...config && typeof config === "object" ? config : {} };
   const campo5 = tipoValido(fuori.specie) === "terrario" ? "pulizia" : "cambio";
-  const istante6 = Number.isFinite(quando4) ? quando4 : Date.parse(pulito28(quando4));
-  if (Number.isFinite(istante6)) fuori[campo5] = new Date(istante6).toISOString();
+  const istante7 = Number.isFinite(quando4) ? quando4 : Date.parse(pulito28(quando4));
+  if (Number.isFinite(istante7)) fuori[campo5] = new Date(istante7).toISOString();
   else delete fuori[campo5];
   return fuori;
 }
@@ -35211,8 +35252,8 @@ function minutiDa(stato3, adesso2) {
     if (letto > 1e9) return Math.max(0, Math.round((riferimento - letto * 1e3) / 6e4));
     return Math.max(0, Math.round(letto));
   }
-  const istante6 = Date.parse(valore3);
-  if (Number.isFinite(istante6)) return Math.max(0, Math.round((riferimento - istante6) / 6e4));
+  const istante7 = Date.parse(valore3);
+  if (Number.isFinite(istante7)) return Math.max(0, Math.round((riferimento - istante7) / 6e4));
   return null;
 }
 function lettura(campo5, entita3, states, adesso2) {
@@ -35771,15 +35812,15 @@ var QUANDO_DOPO = Object.freeze(["domani"]);
 function normalizzaOraDelRitiro(valore3) {
   const testo4 = pulito30(valore3);
   if (!testo4) return "";
-  const numero57 = Number(testo4);
-  if (!Number.isInteger(numero57) || numero57 < 0 || numero57 > 23) return "";
-  return String(numero57);
+  const numero58 = Number(testo4);
+  if (!Number.isInteger(numero58) || numero58 < 0 || numero58 > 23) return "";
+  return String(numero58);
 }
 function giorniDelRitiro(oraDelPassaggio, adesso2 = /* @__PURE__ */ new Date()) {
   const ora6 = normalizzaOraDelRitiro(oraDelPassaggio);
   if (!ora6) return QUANDO_VICINO;
-  const istante6 = adesso2 instanceof Date && !Number.isNaN(adesso2.getTime()) ? adesso2 : /* @__PURE__ */ new Date();
-  return istante6.getHours() >= Number(ora6) ? QUANDO_DOPO : QUANDO_VICINO;
+  const istante7 = adesso2 instanceof Date && !Number.isNaN(adesso2.getTime()) ? adesso2 : /* @__PURE__ */ new Date();
+  return istante7.getHours() >= Number(ora6) ? QUANDO_DOPO : QUANDO_VICINO;
 }
 function ritiriVicini(modello2, giorni = QUANDO_VICINO) {
   const righe3 = Array.isArray(modello2?.rows) ? modello2.rows : [];
@@ -35795,9 +35836,9 @@ function lePastiglieMie(config, mie) {
     if (!mia.entity) continue;
     const letta2 = mie?.[mia.entity];
     if (!laMiaSiVede(mia, letta2)) continue;
-    const numero57 = Number(letta2?.valore ?? NaN);
+    const numero58 = Number(letta2?.valore ?? NaN);
     const testo4 = pulito30(letta2?.testo);
-    if (!Number.isFinite(numero57) && !testo4) continue;
+    if (!Number.isFinite(numero58) && !testo4) continue;
     const segno2 = pulito30(mia.icona) || pulito30(letta2?.icona) || SEGNO_MIO;
     const disegnato = /^mdi:/i.test(segno2);
     fuori.push({
@@ -35813,7 +35854,7 @@ function lePastiglieMie(config, mie) {
       icona: disegnato ? "" : segno2,
       mdi: disegnato ? segno2 : "",
       tinta: pulito30(mia.tinta) || TINTA_MIA,
-      valore: Number.isFinite(numero57) ? numero57 : null,
+      valore: Number.isFinite(numero58) ? numero58 : null,
       /* Un numero si scrive come numero, tutto il resto com'e' scritto: la
        * parola gia' tradotta la porta la sezione, che e' quella che ha la
        * tabella delle parole di Home Assistant. */
@@ -35986,7 +36027,7 @@ function pastiglieDellaCasa(modelli2, { barra: barra2, posta, misure, mie, adess
   }
   if (!mieFatte) fuori.push(...lePastiglieMie(config, mie));
   return fuori.map(
-    (pastiglia3) => pastiglia3.id ? pastiglia3 : { ...pastiglia3, id: pastiglia3.chiave }
+    (pastiglia4) => pastiglia4.id ? pastiglia4 : { ...pastiglia4, id: pastiglia4.chiave }
   );
 }
 function passoDellaPosta(memoria, lettura3) {
@@ -36184,10 +36225,10 @@ function letturaDellaMia(entity2, states) {
   if (!stato3) return null;
   const grezzo = clean(stato3.state);
   if (!grezzo || /^(unknown|unavailable)$/i.test(grezzo)) return null;
-  const numero57 = SOLO_UN_NUMERO.test(grezzo) ? Number(grezzo.replace(",", ".")) : NaN;
+  const numero58 = SOLO_UN_NUMERO.test(grezzo) ? Number(grezzo.replace(",", ".")) : NaN;
   return {
-    valore: Number.isFinite(numero57) ? numero57 : null,
-    testo: Number.isFinite(numero57) ? "" : parolaDiStato(grezzo),
+    valore: Number.isFinite(numero58) ? numero58 : null,
+    testo: Number.isFinite(numero58) ? "" : parolaDiStato(grezzo),
     unita: clean(stato3.attributes?.unit_of_measurement),
     nome: clean(stato3.attributes?.friendly_name) || id,
     icona: clean(stato3.attributes?.icon)
@@ -36246,11 +36287,11 @@ function parolaDelConto(chiave2, conto) {
     return uno ? t("aggiornamento in attesa", "update pending") : t("aggiornamenti in attesa", "updates pending");
   return uno ? t("in riproduzione", "playing") : t("in riproduzione", "playing");
 }
-function vociDellaPastiglia(pastiglia3) {
-  return Array.isArray(pastiglia3?.voci) ? pastiglia3.voci : [];
+function vociDellaPastiglia(pastiglia4) {
+  return Array.isArray(pastiglia4?.voci) ? pastiglia4.voci : [];
 }
-function paroleDellaPastiglia(pastiglia3) {
-  if (pastiglia3.chiave === "posta") {
+function paroleDellaPastiglia(pastiglia4) {
+  if (pastiglia4.chiave === "posta") {
     const coda = t("è arrivata", "has arrived");
     return {
       testa: t("Posta", "Mail"),
@@ -36258,81 +36299,81 @@ function paroleDellaPastiglia(pastiglia3) {
       titolo: `${t("È arrivata la posta", "The mail has arrived")} — ${t("tocca per dire che l'hai ritirata", "tap to say you have collected it")}`
     };
   }
-  if (pastiglia3.chiave === "rifiuti") {
-    const quando4 = parolaDelQuando(pastiglia3);
-    const testa3 = pastiglia3.nome || t("Ritiro", "Collection");
+  if (pastiglia4.chiave === "rifiuti") {
+    const quando4 = parolaDelQuando(pastiglia4);
+    const testa3 = pastiglia4.nome || t("Ritiro", "Collection");
     return { testa: testa3, coda: quando4, titolo: `${testa3} · ${quando4}` };
   }
-  if (pastiglia3.chiave === "sicurezza")
+  if (pastiglia4.chiave === "sicurezza")
     return {
-      testa: pastiglia3.valore,
+      testa: pastiglia4.valore,
       coda: t("antifurto", "alarm"),
-      titolo: pastiglia3.valore
+      titolo: pastiglia4.valore
     };
-  if (pastiglia3.chiave === "pioggia" || pastiglia3.chiave === "pioggiaOggi") {
-    const testa3 = `${formatNumber(pastiglia3.valore, 1)}${pastiglia3.unita ? ` ${pastiglia3.unita}` : ""}`;
-    const coda = pastiglia3.chiave === "pioggia" ? t("pioggia", "rain") : t("oggi", "today");
+  if (pastiglia4.chiave === "pioggia" || pastiglia4.chiave === "pioggiaOggi") {
+    const testa3 = `${formatNumber(pastiglia4.valore, 1)}${pastiglia4.unita ? ` ${pastiglia4.unita}` : ""}`;
+    const coda = pastiglia4.chiave === "pioggia" ? t("pioggia", "rain") : t("oggi", "today");
     return {
       testa: testa3,
       coda,
-      titolo: pastiglia3.nome ? `${pastiglia3.nome} · ${testa3}` : `${testa3} ${coda}`
+      titolo: pastiglia4.nome ? `${pastiglia4.nome} · ${testa3}` : `${testa3} ${coda}`
     };
   }
-  if (pastiglia3.chiave === "temperatura" || pastiglia3.chiave === "umidita") {
-    const decimali = pastiglia3.chiave === "temperatura" ? 1 : 0;
-    const testa3 = `${formatNumber(pastiglia3.valore, decimali)}${pastiglia3.unita ? ` ${pastiglia3.unita}` : ""}`;
-    const coda = pastiglia3.chiave === "temperatura" ? t("temperatura", "temperature") : t("umidità", "humidity");
+  if (pastiglia4.chiave === "temperatura" || pastiglia4.chiave === "umidita") {
+    const decimali = pastiglia4.chiave === "temperatura" ? 1 : 0;
+    const testa3 = `${formatNumber(pastiglia4.valore, decimali)}${pastiglia4.unita ? ` ${pastiglia4.unita}` : ""}`;
+    const coda = pastiglia4.chiave === "temperatura" ? t("temperatura", "temperature") : t("umidità", "humidity");
     return {
       testa: testa3,
       coda,
-      titolo: pastiglia3.nome ? `${pastiglia3.nome} · ${testa3}` : `${testa3} ${coda}`
+      titolo: pastiglia4.nome ? `${pastiglia4.nome} · ${testa3}` : `${testa3} ${coda}`
     };
   }
-  if (pastiglia3.chiave === "mia") {
-    const testa3 = Number.isFinite(pastiglia3.valore) ? `${formatNumber(pastiglia3.valore, Number.isInteger(pastiglia3.valore) ? 0 : 1)}${pastiglia3.unita ? ` ${pastiglia3.unita}` : ""}` : pastiglia3.testo;
-    return { testa: testa3, coda: pastiglia3.nome, titolo: `${pastiglia3.nome} · ${testa3}` };
+  if (pastiglia4.chiave === "mia") {
+    const testa3 = Number.isFinite(pastiglia4.valore) ? `${formatNumber(pastiglia4.valore, Number.isInteger(pastiglia4.valore) ? 0 : 1)}${pastiglia4.unita ? ` ${pastiglia4.unita}` : ""}` : pastiglia4.testo;
+    return { testa: testa3, coda: pastiglia4.nome, titolo: `${pastiglia4.nome} · ${testa3}` };
   }
-  const parola = parolaDelConto(pastiglia3.chiave, pastiglia3.conto);
-  const testa2 = String(pastiglia3.conto);
-  const nomi2 = vociDellaPastiglia(pastiglia3).map((voce3) => voce3.name).filter(Boolean).join(" · ");
+  const parola = parolaDelConto(pastiglia4.chiave, pastiglia4.conto);
+  const testa2 = String(pastiglia4.conto);
+  const nomi2 = vociDellaPastiglia(pastiglia4).map((voce3) => voce3.name).filter(Boolean).join(" · ");
   const disteso = `${testa2} ${parola}`;
   return { testa: testa2, coda: parola, titolo: nomi2 ? `${disteso}: ${nomi2}` : disteso };
 }
-function facciaDellaPastiglia(pastiglia3) {
-  const chiave2 = clean(pastiglia3?.chiave);
+function facciaDellaPastiglia(pastiglia4) {
+  const chiave2 = clean(pastiglia4?.chiave);
   if (haOggettoWidget(chiave2)) return oggettoWidget(chiave2, "", `fascia-${chiave2}`);
-  const nome = clean(pastiglia3?.mdi);
+  const nome = clean(pastiglia4?.mdi);
   if (nome) return iconGlyphMarkup("action", nome, { size: 16 });
-  return `<span class="dm-casa-emoji">${esc(String(pastiglia3?.icona ?? ""))}</span>`;
+  return `<span class="dm-casa-emoji">${esc(String(pastiglia4?.icona ?? ""))}</span>`;
 }
-function nuovaPastiglia(pastiglia3) {
+function nuovaPastiglia(pastiglia4) {
   const nodo2 = doc.createElement("button");
   nodo2.type = "button";
   nodo2.className = "dm-casa-pastiglia";
-  nodo2.dataset.dmCasa = pastiglia3.chiave;
-  nodo2.dataset.dmVoce = pastiglia3.id || pastiglia3.chiave;
+  nodo2.dataset.dmCasa = pastiglia4.chiave;
+  nodo2.dataset.dmVoce = pastiglia4.id || pastiglia4.chiave;
   nodo2.innerHTML = `<span class="dm-casa-chip" aria-hidden="true"></span>
     <span class="dm-casa-testo"><b class="dm-casa-testa"></b><small class="dm-casa-coda"></small></span>`;
   return nodo2;
 }
-function vestiLaPastiglia(nodo2, pastiglia3) {
-  const { testa: testa2, coda, titolo: titolo3 } = paroleDellaPastiglia(pastiglia3);
+function vestiLaPastiglia(nodo2, pastiglia4) {
+  const { testa: testa2, coda, titolo: titolo3 } = paroleDellaPastiglia(pastiglia4);
   const scrivi5 = (elemento, campo5, valore3) => {
     if (elemento && elemento[campo5] !== valore3) elemento[campo5] = valore3;
   };
   const attributo3 = (nome, valore3) => {
     if (nodo2.getAttribute(nome) !== valore3) nodo2.setAttribute(nome, valore3);
   };
-  attributo3("data-tessera", pastiglia3.tessera || "");
-  attributo3("data-dm-entita", pastiglia3.entity || "");
-  attributo3("data-avviso", String(Boolean(pastiglia3.avviso)));
+  attributo3("data-tessera", pastiglia4.tessera || "");
+  attributo3("data-dm-entita", pastiglia4.entity || "");
+  attributo3("data-avviso", String(Boolean(pastiglia4.avviso)));
   attributo3("title", titolo3);
   attributo3("aria-label", titolo3);
-  const tinta2 = clean(pastiglia3.tinta);
+  const tinta2 = clean(pastiglia4.tinta);
   if (tinta2 && nodo2.style.getPropertyValue("--dm-casa-tinta") !== tinta2)
     nodo2.style.setProperty("--dm-casa-tinta", tinta2);
   const chip = nodo2.querySelector(".dm-casa-chip");
-  const faccia = facciaDellaPastiglia(pastiglia3);
+  const faccia = facciaDellaPastiglia(pastiglia4);
   if (chip && chip.innerHTML !== faccia) chip.innerHTML = faccia;
   scrivi5(nodo2.querySelector(".dm-casa-testa"), "textContent", testa2);
   scrivi5(nodo2.querySelector(".dm-casa-coda"), "textContent", coda);
@@ -36342,34 +36383,34 @@ function aggiornaLePastiglie(riga3, pastiglie) {
   for (const nodo2 of riga3.querySelectorAll(":scope > [data-dm-voce]"))
     vive.set(nodo2.dataset.dmVoce, nodo2);
   let posto = riga3.firstElementChild;
-  for (const pastiglia3 of pastiglie) {
-    const voce3 = pastiglia3.id || pastiglia3.chiave;
+  for (const pastiglia4 of pastiglie) {
+    const voce3 = pastiglia4.id || pastiglia4.chiave;
     const gia = vive.get(voce3);
     vive.delete(voce3);
-    const nodo2 = gia || nuovaPastiglia(pastiglia3);
-    vestiLaPastiglia(nodo2, pastiglia3);
+    const nodo2 = gia || nuovaPastiglia(pastiglia4);
+    vestiLaPastiglia(nodo2, pastiglia4);
     if (nodo2 === posto) posto = posto.nextElementSibling;
     else riga3.insertBefore(nodo2, posto);
   }
   for (const nodo2 of vive.values()) nodo2.remove();
 }
 function firmaDellaRiga(pastiglie) {
-  return pastiglie.map((pastiglia3) => {
-    const { testa: testa2, coda } = paroleDellaPastiglia(pastiglia3);
-    return `${pastiglia3.id || pastiglia3.chiave}~${pastiglia3.icona}~${pastiglia3.tinta}~${testa2}~${coda}~${Boolean(pastiglia3.avviso)}`;
+  return pastiglie.map((pastiglia4) => {
+    const { testa: testa2, coda } = paroleDellaPastiglia(pastiglia4);
+    return `${pastiglia4.id || pastiglia4.chiave}~${pastiglia4.icona}~${pastiglia4.tinta}~${testa2}~${coda}~${Boolean(pastiglia4.avviso)}`;
   }).join("|");
 }
 function corsiaDegliAvvisi() {
-  const pagina2 = doc?.getElementById?.("page-home");
-  if (!pagina2) return null;
+  const pagina3 = doc?.getElementById?.("page-home");
+  if (!pagina3) return null;
   const gia = doc.getElementById("dm-casa-fascia");
-  if (gia?.parentElement === pagina2) return gia;
+  if (gia?.parentElement === pagina3) return gia;
   const corsia = gia || doc.createElement("div");
   corsia.id = "dm-casa-fascia";
   corsia.className = "dm-casa-fascia";
-  const meteo3 = pagina2.querySelector(":scope > .weather-widget");
+  const meteo3 = pagina3.querySelector(":scope > .weather-widget");
   if (meteo3) meteo3.after(corsia);
-  else pagina2.prepend(corsia);
+  else pagina3.prepend(corsia);
   return corsia;
 }
 function ospite() {
@@ -36389,8 +36430,8 @@ function ospite() {
   return riga3;
 }
 function imbottituraDellaFascia(riga3) {
-  const stile6 = root.getComputedStyle?.(riga3);
-  return (parseFloat(stile6?.paddingLeft) || 0) + (parseFloat(stile6?.paddingRight) || 0);
+  const stile7 = root.getComputedStyle?.(riga3);
+  return (parseFloat(stile7?.paddingLeft) || 0) + (parseFloat(stile7?.paddingRight) || 0);
 }
 function tieniLaFasciaInMovimento(riga3) {
   const nastro = riga3?.querySelector(":scope > .dm-casa-nastro");
@@ -36450,8 +36491,8 @@ function disegnaComeStaLaCasa(modelli2, states) {
   return true;
 }
 var POPUP2 = "dm-casa-popup";
-function haUnElenco(pastiglia3) {
-  return vociDellaPastiglia(pastiglia3).length > 0;
+function haUnElenco(pastiglia4) {
+  return vociDellaPastiglia(pastiglia4).length > 0;
 }
 function pastigliaDiChiave(chiave2) {
   const cercata = clean(chiave2);
@@ -36534,13 +36575,13 @@ function rigaDellElenco(voce3, states, chiave2 = "") {
     parole4[comando.parola] || parole4.spegni
   )}</button>` : "";
   const adesso2 = statoDellaVoce(entita3, states, chiave2);
-  const pastiglia3 = adesso2.parola ? `<span class="dm-casa-stato" data-dm-muta="${adesso2.muta}"><i aria-hidden="true"></i>${esc(
+  const pastiglia4 = adesso2.parola ? `<span class="dm-casa-stato" data-dm-muta="${adesso2.muta}"><i aria-hidden="true"></i>${esc(
     adesso2.parola
   )}</span>` : "";
   return `<div class="detail-row dm-casa-voce">
       <div class="d-info">
         <div class="d-name">${esc(nome)}</div>
-      </div>${pastiglia3}${tasto2}</div>`;
+      </div>${pastiglia4}${tasto2}</div>`;
 }
 function briciolaDellElenco(chiave2, quante3) {
   if (clean(chiave2) === "presenza")
@@ -36560,22 +36601,22 @@ function disegnaLElenco() {
   if (!chiave2) return false;
   const nodo2 = doc?.getElementById?.(POPUP2);
   if (!nodo2 || nodo2.hidden) return false;
-  const pastiglia3 = pastigliaDiChiave(chiave2);
-  const voci4 = vociDellaPastiglia(pastiglia3);
+  const pastiglia4 = pastigliaDiChiave(chiave2);
+  const voci4 = vociDellaPastiglia(pastiglia4);
   const titolo3 = nodo2.querySelector("[data-dm-casa-titolo]");
   const elenco15 = nodo2.querySelector("[data-dm-casa-elenco]");
   const faccia = nodo2.querySelector("[data-dm-casa-faccia]");
   const sotto = nodo2.querySelector("[data-dm-casa-sotto]");
   if (!titolo3 || !elenco15) return false;
-  if (faccia && pastiglia3) {
-    const disegno7 = facciaDellaPastiglia(pastiglia3);
+  if (faccia && pastiglia4) {
+    const disegno7 = facciaDellaPastiglia(pastiglia4);
     if (faccia.innerHTML !== disegno7) faccia.innerHTML = disegno7;
   }
-  const tinta2 = clean(pastiglia3?.tinta) || "#0ea5e9";
+  const tinta2 = clean(pastiglia4?.tinta) || "#0ea5e9";
   const scheda8 = nodo2.querySelector("[data-dm-casa-scheda]");
   if (scheda8 && scheda8.style.getPropertyValue("--dm-widget-accent") !== tinta2)
     scheda8.style.setProperty("--dm-widget-accent", tinta2);
-  const { testa: testa2, coda } = pastiglia3 ? paroleDellaPastiglia(pastiglia3) : { testa: "", coda: t("niente di acceso", "nothing on") };
+  const { testa: testa2, coda } = pastiglia4 ? paroleDellaPastiglia(pastiglia4) : { testa: "", coda: t("niente di acceso", "nothing on") };
   const parole4 = `${testa2} ${coda}`.trim().toUpperCase();
   if (titolo3.textContent !== parole4) titolo3.textContent = parole4;
   const states = allStates() || {};
@@ -36592,8 +36633,8 @@ function disegnaLElenco() {
   return true;
 }
 function apriLElenco(chiave2) {
-  const pastiglia3 = pastigliaDiChiave(chiave2);
-  if (!haUnElenco(pastiglia3)) return false;
+  const pastiglia4 = pastigliaDiChiave(chiave2);
+  if (!haUnElenco(pastiglia4)) return false;
   state29.elenco = clean(chiave2);
   finestra2().hidden = false;
   doc?.documentElement?.classList?.add("dm-widget-popup-open");
@@ -36677,27 +36718,27 @@ function onClickElenco(event) {
   spegni(clean(tasto2.dataset.dmCasaSpegni));
 }
 function onClick3(event) {
-  const pastiglia3 = event.target?.closest?.("#dm-casa-riga [data-dm-casa]");
-  if (!pastiglia3) return;
+  const pastiglia4 = event.target?.closest?.("#dm-casa-riga [data-dm-casa]");
+  if (!pastiglia4) return;
   event.preventDefault();
-  if (clean(pastiglia3.dataset.dmCasa) === "posta") {
+  if (clean(pastiglia4.dataset.dmCasa) === "posta") {
     writeJsonIfChanged(CHIAVE_POSTA, postaRitirata(memoriaDellaPosta(), Date.now()), {
       sync: false
     });
-    pastiglia3.remove();
+    pastiglia4.remove();
     state29.firma = "";
     if (!doc.querySelector("#dm-casa-riga [data-dm-casa]"))
       doc.getElementById("dm-casa-riga")?.remove();
     return;
   }
-  const chiave2 = clean(pastiglia3.dataset.dmCasa);
+  const chiave2 = clean(pastiglia4.dataset.dmCasa);
   if (apriLElenco(chiave2)) return;
-  const tessera3 = clean(pastiglia3.dataset.tessera);
+  const tessera3 = clean(pastiglia4.dataset.tessera);
   if (tessera3) {
     doc.querySelector(`#dm-widgets [data-dm-widget="${CSS.escape(tessera3)}"]`)?.click();
     return;
   }
-  apriLaSchedaDellEntita(pastiglia3.dataset.dmEntita);
+  apriLaSchedaDellEntita(pastiglia4.dataset.dmEntita);
 }
 var SCHEDA_HOME = "sez0";
 function schedaAperta() {
@@ -37930,11 +37971,11 @@ function syncIrrigationValues(host2, grid, config) {
   const running = config.zones.map(
     (zone, index) => index === sequenced || entityActive(zone.entity)
   );
-  const schedule46 = host2.querySelector("[data-dm-irr-schedule]");
-  if (schedule46) {
+  const schedule47 = host2.querySelector("[data-dm-irr-schedule]");
+  if (schedule47) {
     const orari = elencoDegliOrari(orariDelProgramma(config));
-    schedule46.textContent = config.enabled ? `⏰ ${t("ogni giorno alle", "every day at")} ${orari.join(" · ") || ORARIO_PREDEFINITO}` : t("programma spento", "schedule off");
-    schedule46.dataset.on = String(Boolean(config.enabled));
+    schedule47.textContent = config.enabled ? `⏰ ${t("ogni giorno alle", "every day at")} ${orari.join(" · ") || ORARIO_PREDEFINITO}` : t("programma spento", "schedule off");
+    schedule47.dataset.on = String(Boolean(config.enabled));
   }
   const meta = host2.querySelector("[data-dm-irr-meta]");
   if (meta) {
@@ -39108,8 +39149,8 @@ function laTesseraSiVede() {
 }
 function serveLeggere() {
   if (!planciaVisibile()) return false;
-  const pagina2 = doc?.getElementById?.(VASCHE_PAGE_ID);
-  return Boolean(pagina2?.classList.contains("active")) || laTesseraSiVede();
+  const pagina3 = doc?.getElementById?.(VASCHE_PAGE_ID);
+  return Boolean(pagina3?.classList.contains("active")) || laTesseraSiVede();
 }
 async function aggiornaIDati({ forza = false } = {}) {
   const states = allStates();
@@ -39394,9 +39435,9 @@ function misuraMarkup({ lettura: lettura3, verdetto }) {
 }
 function livelloMarkup({ lettura: lettura3, basso, giorni }) {
   const stato3 = lettura3.muto ? "muta" : basso ? "basso" : "bene";
-  const percento6 = !lettura3.binario && lettura3.valore !== null && /%/.test(lettura3.unita) ? Math.max(0, Math.min(100, lettura3.valore)) : null;
+  const percento7 = !lettura3.binario && lettura3.valore !== null && /%/.test(lettura3.unita) ? Math.max(0, Math.min(100, lettura3.valore)) : null;
   const destra = lettura3.muto ? t("Non risponde", "Not answering") : basso ? t("da rabboccare", "to top up") : giorni !== null ? rabboccoInParole(giorni) : lettura3.binario ? t("nella norma", "in range") : valoreInParole(lettura3);
-  const sotto = percento6 !== null ? `<span class="dm-acq-livello-barra"><i style="width:${esc(String(percento6))}%"></i></span>` : !lettura3.binario && !lettura3.muto && giorni !== null ? `<small>${esc(valoreInParole(lettura3))}</small>` : "";
+  const sotto = percento7 !== null ? `<span class="dm-acq-livello-barra"><i style="width:${esc(String(percento7))}%"></i></span>` : !lettura3.binario && !lettura3.muto && giorni !== null ? `<small>${esc(valoreInParole(lettura3))}</small>` : "";
   return `<div class="dm-acq-livello" data-stato="${esc(stato3)}">
     <span class="dm-acq-livello-ic" aria-hidden="true">${disegnoDiCasa(lettura3.icon, { misura: 26, ripiego: "water" })}</span>
     <div class="dm-acq-livello-testo"><strong>${esc(lettura3.name)}</strong>${sotto}</div>
@@ -39720,16 +39761,16 @@ function ultimaPagina4() {
 }
 function ensureAnimaliPage() {
   if (!doc) return null;
-  let pagina2 = doc.getElementById(ANIMALI_PAGE_ID);
-  if (pagina2) return pagina2;
+  let pagina3 = doc.getElementById(ANIMALI_PAGE_ID);
+  if (pagina3) return pagina3;
   const sorella = ultimaPagina4();
   if (!sorella?.parentElement) return null;
-  pagina2 = doc.createElement("section");
-  pagina2.className = "page";
-  pagina2.id = ANIMALI_PAGE_ID;
-  pagina2.innerHTML = `<div class="dm-animali-wrap" id="animali-wrap"></div>`;
-  sorella.after(pagina2);
-  return pagina2;
+  pagina3 = doc.createElement("section");
+  pagina3.className = "page";
+  pagina3.id = ANIMALI_PAGE_ID;
+  pagina3.innerHTML = `<div class="dm-animali-wrap" id="animali-wrap"></div>`;
+  sorella.after(pagina3);
+  return pagina3;
 }
 function ensureAnimaliTab() {
   if (!doc) return null;
@@ -39952,8 +39993,8 @@ function testoLettura(voce3) {
   }
   if (voce3.minuti !== null) return quantoFa(voce3.minuti);
   if (voce3.valore !== null) {
-    const numero57 = Math.round(voce3.valore * 10) / 10;
-    return voce3.unita ? `${numero57} ${voce3.unita}` : String(numero57);
+    const numero58 = Math.round(voce3.valore * 10) / 10;
+    return voce3.unita ? `${numero58} ${voce3.unita}` : String(numero58);
   }
   return voce3.stato;
 }
@@ -40198,10 +40239,10 @@ function sincronizza(card2, vista2) {
   if (pappa && pappa.textContent !== testo4) pappa.textContent = testo4;
 }
 function renderAnimali() {
-  const pagina2 = ensureAnimaliPage();
-  const wrap = pagina2?.querySelector("#animali-wrap");
+  const pagina3 = ensureAnimaliPage();
+  const wrap = pagina3?.querySelector("#animali-wrap");
   if (!wrap) return false;
-  if (!pagina2.classList.contains("active")) return true;
+  if (!pagina3.classList.contains("active")) return true;
   const states = allStates();
   const adesso2 = Date.now();
   const voci4 = animaliConfigurati();
@@ -40244,10 +40285,10 @@ function renderAnimali() {
   return true;
 }
 function scegliIlFiltro(evento) {
-  const pastiglia3 = evento.target?.closest?.("[data-dm-animali-filtro]");
-  if (!pastiglia3 || !pastiglia3.closest(`#${ANIMALI_PAGE_ID}`)) return;
+  const pastiglia4 = evento.target?.closest?.("[data-dm-animali-filtro]");
+  if (!pastiglia4 || !pastiglia4.closest(`#${ANIMALI_PAGE_ID}`)) return;
   evento.preventDefault();
-  state33.filtro = pastiglia3.dataset.dmAnimaliFiltro || "tutti";
+  state33.filtro = pastiglia4.dataset.dmAnimaliFiltro || "tutti";
   renderAnimali();
 }
 function paint2() {
@@ -40900,8 +40941,8 @@ function laTesseraSiVede2() {
 }
 function serveLeggere2() {
   if (!planciaVisibile()) return false;
-  const pagina2 = doc?.getElementById?.(CONTATORI_PAGE_ID);
-  return Boolean(pagina2?.classList.contains("active")) || laTesseraSiVede2();
+  const pagina3 = doc?.getElementById?.(CONTATORI_PAGE_ID);
+  return Boolean(pagina3?.classList.contains("active")) || laTesseraSiVede2();
 }
 function chiedi(domanda) {
   return chiediAHomeAssistant(domanda, ATTESA_MS3);
@@ -41020,16 +41061,16 @@ function ultimaPagina5() {
 }
 function ensureContatoriPage() {
   if (!doc) return null;
-  let pagina2 = doc.getElementById(CONTATORI_PAGE_ID);
-  if (pagina2) return pagina2;
+  let pagina3 = doc.getElementById(CONTATORI_PAGE_ID);
+  if (pagina3) return pagina3;
   const sorella = ultimaPagina5();
   if (!sorella?.parentElement) return null;
-  pagina2 = doc.createElement("section");
-  pagina2.className = "page";
-  pagina2.id = CONTATORI_PAGE_ID;
-  pagina2.innerHTML = `<div class="dm-cont-wrap" id="contatori-wrap"></div>`;
-  sorella.after(pagina2);
-  return pagina2;
+  pagina3 = doc.createElement("section");
+  pagina3.className = "page";
+  pagina3.id = CONTATORI_PAGE_ID;
+  pagina3.innerHTML = `<div class="dm-cont-wrap" id="contatori-wrap"></div>`;
+  sorella.after(pagina3);
+  return pagina3;
 }
 function ensureContatoriTab() {
   if (!doc) return null;
@@ -41068,8 +41109,8 @@ function accendiLaVoce4() {
   const serve = segnaContenuto(CONTATORI_TAB, ciSonoContatori()) && sezioneAccesa5();
   if (serve) voce3.style.removeProperty("display");
   else voce3.style.setProperty("display", "none", "important");
-  const pagina2 = doc.getElementById(CONTATORI_PAGE_ID);
-  if (!serve && pagina2?.classList.contains("active"))
+  const pagina3 = doc.getElementById(CONTATORI_PAGE_ID);
+  if (!serve && pagina3?.classList.contains("active"))
     doc.querySelector('.tab[data-tab="home"]')?.click();
 }
 var SPAZIO2 = " ";
@@ -41503,8 +41544,8 @@ function tesseraDeiContatori(vista2) {
   };
 }
 function dipingi5() {
-  const pagina2 = ensureContatoriPage();
-  const dove = pagina2?.querySelector?.("#contatori-wrap");
+  const pagina3 = ensureContatoriPage();
+  const dove = pagina3?.querySelector?.("#contatori-wrap");
   if (!dove) return;
   if (!paginaVisibile(CONTATORI_PAGE_ID)) return;
   const markup7 = paginaDeiContatori(vistaDeiContatori());
@@ -41807,7 +41848,7 @@ function pioggiaInArrivo(previsioni, { adesso: adesso2, ore = ORE_DI_PIOGGIA, un
   const dentro3 = voci4.filter((voce3) => voce3.quando >= ora6 - H4 && voce3.quando <= ora6 + ore * H4);
   const piovose = dentro3.filter(conta2);
   if (!piovose.length) return null;
-  const mm = piovose.reduce((somma2, voce3) => somma2 + voce3.mm, 0);
+  const mm = piovose.reduce((somma3, voce3) => somma3 + voce3.mm, 0);
   if (mm < 0.1) return null;
   return {
     mm,
@@ -42184,11 +42225,11 @@ function avvolgiLeParole(meteo3) {
     if (gia) continue;
     for (const pezzo2 of [...misura7.childNodes]) {
       if (pezzo2.nodeType !== 3) continue;
-      const intero2 = pezzo2.textContent;
-      if (!/\p{L}/u.test(intero2)) continue;
-      misura7.setAttribute(SORGENTE, intero2.trim());
-      const coda = /\s*$/.exec(intero2)[0];
-      const tradotto = `${translateSource(intero2.trim())}${coda}`;
+      const intero3 = pezzo2.textContent;
+      if (!/\p{L}/u.test(intero3)) continue;
+      misura7.setAttribute(SORGENTE, intero3.trim());
+      const coda = /\s*$/.exec(intero3)[0];
+      const tradotto = `${translateSource(intero3.trim())}${coda}`;
       const parti = tradotto.match(/^([^\p{L}]*)(\p{L}[\s\S]*?)(\s*)$/u);
       if (!parti) continue;
       const gruppo = doc.createDocumentFragment();
@@ -42503,8 +42544,8 @@ function scesoInPagina(riga3) {
 var gradi3 = (valore3) => valore3 == null ? "" : `${Math.round(valore3)}°`;
 function misura2(valore3) {
   if (valore3 == null || valore3 === "") return null;
-  const numero57 = Number(valore3);
-  return Number.isFinite(numero57) ? numero57 : null;
+  const numero58 = Number(valore3);
+  return Number.isFinite(numero58) ? numero58 : null;
 }
 function nomeDelGiorno(quando4) {
   try {
@@ -42593,8 +42634,8 @@ function misureInPiu(riquadro) {
 }
 var CLASSE_DEL_TITOLO = "dm-testata-titolo";
 function titoloDelMeteo(riga3, acceso6) {
-  const pagina2 = riga3.parentElement;
-  let titolo3 = pagina2?.querySelector(`:scope > .${CLASSE_DEL_TITOLO}`) || null;
+  const pagina3 = riga3.parentElement;
+  let titolo3 = pagina3?.querySelector(`:scope > .${CLASSE_DEL_TITOLO}`) || null;
   if (!acceso6) {
     titolo3?.remove();
     return;
@@ -42817,8 +42858,8 @@ function laTesseraSiVede3() {
 }
 function serveLeggere3() {
   if (!planciaVisibile()) return false;
-  const pagina2 = doc?.getElementById?.(PIANTE_PAGE_ID);
-  return Boolean(pagina2?.classList.contains("active")) || laTesseraSiVede3();
+  const pagina3 = doc?.getElementById?.(PIANTE_PAGE_ID);
+  return Boolean(pagina3?.classList.contains("active")) || laTesseraSiVede3();
 }
 function chiedi2(domanda) {
   return chiediAHomeAssistant(domanda, ATTESA_MS4);
@@ -42908,16 +42949,16 @@ function ultimaPagina6() {
 }
 function ensurePiantePage() {
   if (!doc) return null;
-  let pagina2 = doc.getElementById(PIANTE_PAGE_ID);
-  if (pagina2) return pagina2;
+  let pagina3 = doc.getElementById(PIANTE_PAGE_ID);
+  if (pagina3) return pagina3;
   const sorella = ultimaPagina6();
   if (!sorella?.parentElement) return null;
-  pagina2 = doc.createElement("section");
-  pagina2.className = "page";
-  pagina2.id = PIANTE_PAGE_ID;
-  pagina2.innerHTML = `<div class="dm-pian-wrap" id="piante-wrap"></div>`;
-  sorella.after(pagina2);
-  return pagina2;
+  pagina3 = doc.createElement("section");
+  pagina3.className = "page";
+  pagina3.id = PIANTE_PAGE_ID;
+  pagina3.innerHTML = `<div class="dm-pian-wrap" id="piante-wrap"></div>`;
+  sorella.after(pagina3);
+  return pagina3;
 }
 function ensurePianteTab() {
   if (!doc) return null;
@@ -42956,8 +42997,8 @@ function accendiLaVoce5() {
   const serve = segnaContenuto(PIANTE_TAB, ciSonoPiante()) && sezioneAccesa6();
   if (serve) voce3.style.removeProperty("display");
   else voce3.style.setProperty("display", "none", "important");
-  const pagina2 = doc.getElementById(PIANTE_PAGE_ID);
-  if (!serve && pagina2?.classList.contains("active"))
+  const pagina3 = doc.getElementById(PIANTE_PAGE_ID);
+  if (!serve && pagina3?.classList.contains("active"))
     doc.querySelector('.tab[data-tab="home"]')?.click();
 }
 var SPAZIO3 = " ";
@@ -43141,8 +43182,8 @@ function tesseraDellePiante(vista2) {
   };
 }
 function dipingi6() {
-  const pagina2 = ensurePiantePage();
-  const dove = pagina2?.querySelector?.("#piante-wrap");
+  const pagina3 = ensurePiantePage();
+  const dove = pagina3?.querySelector?.("#piante-wrap");
   if (!dove) return;
   if (!paginaVisibile(PIANTE_PAGE_ID)) return;
   const markup7 = paginaDellePiante(vistaDellePiante());
@@ -43590,7 +43631,7 @@ function celleLette(states = {}, celle = []) {
     if (cella.volt < minima.volt) minima = cella;
     if (cella.volt > massima.volt) massima = cella;
   }
-  const media3 = vive.reduce((somma2, cella) => somma2 + cella.volt, 0) / vive.length;
+  const media3 = vive.reduce((somma3, cella) => somma3 + cella.volt, 0) / vive.length;
   return {
     celle: lette,
     minima,
@@ -43700,16 +43741,16 @@ function comeStaLAccumulo(pacchi = [], casa = {}) {
       vivi
     });
   const conCapacita = vivi.every((pacco) => pacco.capacitaKwh !== null && pacco.capacitaKwh > 0);
-  const capacitaKwh = conCapacita ? vivi.reduce((somma2, pacco) => somma2 + pacco.capacitaKwh, 0) : null;
-  const soc = conCapacita ? vivi.reduce((somma2, pacco) => somma2 + pacco.soc * pacco.capacitaKwh, 0) / capacitaKwh : vivi.reduce((somma2, pacco) => somma2 + pacco.soc, 0) / vivi.length;
+  const capacitaKwh = conCapacita ? vivi.reduce((somma3, pacco) => somma3 + pacco.capacitaKwh, 0) : null;
+  const soc = conCapacita ? vivi.reduce((somma3, pacco) => somma3 + pacco.soc * pacco.capacitaKwh, 0) / capacitaKwh : vivi.reduce((somma3, pacco) => somma3 + pacco.soc, 0) / vivi.length;
   const conEnergia = vivi.every((pacco) => pacco.energiaKwh !== null);
-  const energiaKwh = conEnergia ? vivi.reduce((somma2, pacco) => somma2 + pacco.energiaKwh, 0) : capacitaKwh !== null ? soc / 100 * capacitaKwh : null;
+  const energiaKwh = conEnergia ? vivi.reduce((somma3, pacco) => somma3 + pacco.energiaKwh, 0) : capacitaKwh !== null ? soc / 100 * capacitaKwh : null;
   const potenze = vivi.map((pacco) => pacco.potenza).filter((watt5) => watt5 !== null);
-  const potenza3 = potenze.length ? potenze.reduce((somma2, watt5) => somma2 + watt5, 0) : null;
+  const potenza3 = potenze.length ? potenze.reduce((somma3, watt5) => somma3 + watt5, 0) : null;
   const correnti = vivi.map((pacco) => pacco.corrente).filter((ampere) => ampere !== null);
   const verso2 = potenza3 !== null ? versoDelPacco(potenza3, null) : correnti.length ? versoDelPacco(
     null,
-    correnti.reduce((somma2, ampere) => somma2 + ampere, 0)
+    correnti.reduce((somma3, ampere) => somma3 + ampere, 0)
   ) : null;
   return Object.freeze({
     stato: sbilanciati.length ? "sbilanciato" : "bene",
@@ -43801,11 +43842,11 @@ function pacchiInParole(pacchi) {
   const celle = new Set(pacchi.map((pacco) => pacco.celle.length));
   if (tipi.size !== 1 || tipi.has("altro")) return quanti2;
   const [tipo] = tipi;
-  const [numero57] = celle;
-  if (celle.size !== 1 || !numero57) return `${quanti2}${SPAZIO4}${tipoInParole(tipo)}`;
+  const [numero58] = celle;
+  if (celle.size !== 1 || !numero58) return `${quanti2}${SPAZIO4}${tipoInParole(tipo)}`;
   return t(
-    `${quanti2} ${tipoInParole(tipo)} da ${numero57} celle`,
-    `${quanti2} of ${tipoInParole(tipo)}, ${numero57} cells each`
+    `${quanti2} ${tipoInParole(tipo)} da ${numero58} celle`,
+    `${quanti2} of ${tipoInParole(tipo)}, ${numero58} cells each`
   );
 }
 function deltaInParole(delta) {
@@ -44214,7 +44255,7 @@ function imparaLeTv(voci4) {
   const conosciute = piattaformeConosciute();
   const states = allStates();
   const adesso2 = Date.now();
-  const risolvi3 = (valore3) => {
+  const risolvi4 = (valore3) => {
     try {
       return clean(root.resolveEntity?.(valore3) || valore3);
     } catch (_errore) {
@@ -44222,8 +44263,8 @@ function imparaLeTv(voci4) {
     }
   };
   const risolte = voci4.map((voce3) => ({
-    entity: risolvi3(voce3?.entity),
-    telecomando: voce3?.telecomando ? risolvi3(voce3.telecomando) : ""
+    entity: risolvi4(voce3?.entity),
+    telecomando: voce3?.telecomando ? risolvi4(voce3.telecomando) : ""
   }));
   const mancanti = entitaDaRiconoscere(risolte, states).filter(
     (entity2) => states?.[entity2] && !(entity2 in conosciute) && adesso2 - (chieste.get(entity2) || 0) > RICHIEDI_DOPO_MS
@@ -44238,16 +44279,16 @@ function ultimaPagina7() {
 }
 function ensurePagina() {
   if (!doc) return null;
-  let pagina2 = doc.getElementById(PAGINA_MEDIA);
-  if (pagina2) return pagina2;
+  let pagina3 = doc.getElementById(PAGINA_MEDIA);
+  if (pagina3) return pagina3;
   const sorella = ultimaPagina7();
   if (!sorella?.parentElement) return null;
-  pagina2 = doc.createElement("section");
-  pagina2.className = "page";
-  pagina2.id = PAGINA_MEDIA;
-  pagina2.innerHTML = `<div class="dm-mp-wrap"></div>`;
-  sorella.after(pagina2);
-  return pagina2;
+  pagina3 = doc.createElement("section");
+  pagina3.className = "page";
+  pagina3.id = PAGINA_MEDIA;
+  pagina3.innerHTML = `<div class="dm-mp-wrap"></div>`;
+  sorella.after(pagina3);
+  return pagina3;
 }
 function apri2(voce3) {
   for (const nodo2 of doc.querySelectorAll(".tab")) nodo2.classList.remove("active");
@@ -44382,7 +44423,7 @@ function volumeMarkup(riga3) {
   const aPassi = riga3.puo.passiVolume && !riga3.puo.volume && !riga3.spento && !riga3.muto;
   const aTocchi = riga3.puo.volume && !riga3.spento;
   if (!riga3.puo.volume && !riga3.puo.muto && !aPassi) return "";
-  const percento6 = Math.round((riga3.volume ?? 0) * 100);
+  const percento7 = Math.round((riga3.volume ?? 0) * 100);
   return `<div class="dm-mp-volume">
     ${aPassi || aTocchi ? tastoMarkup2(riga3, "abbassa", t("Abbassa il volume", "Volume down"), GLIFI.abbassa) : ""}
     ${riga3.puo.muto ? tastoMarkup2(
@@ -44394,9 +44435,9 @@ function volumeMarkup(riga3) {
   ) : ""}
     ${aPassi ? tastoMarkup2(riga3, "alza", t("Alza il volume", "Volume up"), GLIFI.alza) : ""}
     ${riga3.puo.volume ? `<input type="range" class="dm-mp-slider" min="0" max="100" step="1"
-             value="${percento6}" data-dm-mp-volume="${esc(riga3.entity)}"
+             value="${percento7}" data-dm-mp-volume="${esc(riga3.entity)}"
              aria-label="${esc(t("Volume", "Volume"))}">
-           <span class="dm-mp-percento" data-dm-mp-percento>${percento6}%</span>` : ""}
+           <span class="dm-mp-percento" data-dm-mp-percento>${percento7}%</span>` : ""}
     ${aTocchi ? tastoMarkup2(riga3, "alza", t("Alza il volume", "Volume up"), GLIFI.alza) : ""}
   </div>`;
 }
@@ -44587,8 +44628,8 @@ function renderMediaPlayer() {
   const accesa3 = funzioneAccesa();
   const voce3 = configurati2.length && accesa3 ? ensureVoce() : doc.querySelector(`.tab[data-tab="${MEDIA_TAB}"]`);
   if (voce3) voce3.style.display = configurati2.length && accesa3 ? "" : "none";
-  const pagina2 = configurati2.length ? ensurePagina() : doc.getElementById(PAGINA_MEDIA);
-  if (!pagina2) return false;
+  const pagina3 = configurati2.length ? ensurePagina() : doc.getElementById(PAGINA_MEDIA);
+  if (!pagina3) return false;
   imparaLeTv(configurati2);
   const righe3 = letture();
   registraPaginaARuntime(PAGINA_MEDIA, {
@@ -44599,7 +44640,7 @@ function renderMediaPlayer() {
     it: ["Musica", sottotitolo2(righe3)],
     en: ["Media", sottotitolo2(righe3)]
   });
-  const nodo2 = pagina2.querySelector(".dm-mp-wrap");
+  const nodo2 = pagina3.querySelector(".dm-mp-wrap");
   if (!nodo2) return false;
   const firma2 = [activeLocale(), ...righe3.map(firmaDelLettore)].join("§");
   if (state39.firma !== firma2 || !nodo2.querySelector(".dm-mp-card")) {
@@ -44617,10 +44658,10 @@ var POPUP_ID2 = "dm-mp-popup";
 function letturaDiUnLettore(entity2, states = allStates()) {
   const cercato = clean(entity2);
   if (!cercato) return null;
-  const risolvi3 = root.resolveEntity || ((valore3) => valore3);
+  const risolvi4 = root.resolveEntity || ((valore3) => valore3);
   const scritta = (valore3) => {
     try {
-      return clean(risolvi3(valore3) || valore3);
+      return clean(risolvi4(valore3) || valore3);
     } catch (_errore) {
       return clean(valore3);
     }
@@ -44628,7 +44669,7 @@ function letturaDiUnLettore(entity2, states = allStates()) {
   const voce3 = lettoriConfigurati(configurazione8()).find(
     (riga3) => scritta(riga3.entity) === cercato
   );
-  return letturaDelLettore(voce3 || { entity: cercato }, states, risolvi3, piattaformeConosciute());
+  return letturaDelLettore(voce3 || { entity: cercato }, states, risolvi4, piattaformeConosciute());
 }
 function popupDelLettore() {
   if (!doc?.body) return null;
@@ -45028,12 +45069,12 @@ function toccaIlVolume(entity2, riga3, verso2) {
 function onInput(event) {
   const cursore2 = event.target?.closest?.("[data-dm-mp-volume]");
   if (!cursore2) return;
-  const percento6 = Math.min(100, Math.max(0, Number(cursore2.value) || 0));
+  const percento7 = Math.min(100, Math.max(0, Number(cursore2.value) || 0));
   const scritta = cursore2.parentElement?.querySelector("[data-dm-mp-percento]");
-  if (scritta) scritta.textContent = `${percento6}%`;
+  if (scritta) scritta.textContent = `${percento7}%`;
   chiamaHa("media_player", "volume_set", {
     entity_id: clean(cursore2.dataset.dmMpVolume),
-    volume_level: percento6 / 100
+    volume_level: percento7 / 100
   });
 }
 function onChange3(event) {
@@ -46605,8 +46646,8 @@ function normalizeSecurityDoors(values) {
   }).filter((item) => isDoorEntity(item.entity));
 }
 var LOCK_SUPPORT_OPEN = 1;
-function serraturaSaAprire(state177) {
-  const features = Number(state177?.attributes?.supported_features);
+function serraturaSaAprire(state178) {
+  const features = Number(state178?.attributes?.supported_features);
   return Number.isFinite(features) && (features & LOCK_SUPPORT_OPEN) === LOCK_SUPPORT_OPEN;
 }
 var GESTI_PORTA = Object.freeze(["apri", "sblocca", "entrambi"]);
@@ -46617,17 +46658,17 @@ function gestoDellaPorta(door) {
 var CHIAMATA_SBLOCCA = Object.freeze({ domain: "lock", service: "unlock", data: {} });
 var CHIAMATA_APRI = Object.freeze({ domain: "lock", service: "open", data: {} });
 var CHIAMATA_BLOCCA = Object.freeze({ domain: "lock", service: "lock", data: {} });
-function azioniDellaPorta(door, state177 = null) {
+function azioniDellaPorta(door, state178 = null) {
   const entity2 = clean20(door?.entity);
   if (!isDoorEntity(entity2)) return [];
   const domain = entity2.toLowerCase().split(".")[0];
   const scelto = gestoDellaPorta(door);
   if (domain !== "lock") {
-    const call = doorOpenCall(entity2, state177, scelto);
+    const call = doorOpenCall(entity2, state178, scelto);
     return call ? [{ gesto: "apri", call }] : [];
   }
   const blocca = { gesto: "blocca", call: CHIAMATA_BLOCCA };
-  if (!serraturaSaAprire(state177)) return [{ gesto: "sblocca", call: CHIAMATA_SBLOCCA }, blocca];
+  if (!serraturaSaAprire(state178)) return [{ gesto: "sblocca", call: CHIAMATA_SBLOCCA }, blocca];
   if (scelto === "sblocca") return [{ gesto: "sblocca", call: CHIAMATA_SBLOCCA }, blocca];
   if (scelto === "entrambi")
     return [
@@ -46637,12 +46678,12 @@ function azioniDellaPorta(door, state177 = null) {
     ];
   return [{ gesto: "apri", call: CHIAMATA_APRI }, blocca];
 }
-function doorOpenCall(entity2, state177 = null, gesto = "") {
+function doorOpenCall(entity2, state178 = null, gesto = "") {
   const id = clean20(entity2).toLowerCase();
   const domain = id.split(".")[0];
   if (!isDoorEntity(id)) return null;
   if (domain === "lock") {
-    if (!serraturaSaAprire(state177)) return { domain, service: "unlock", data: {} };
+    if (!serraturaSaAprire(state178)) return { domain, service: "unlock", data: {} };
     const scelto = gestoDellaPorta({ gesto });
     const sblocca2 = scelto === "sblocca" || scelto === "entrambi";
     return { domain, service: sblocca2 ? "unlock" : "open", data: {} };
@@ -46880,9 +46921,9 @@ var NOME_DI_CARTUCCIA = /(inchiostro|cartuccia|toner|ink|cartridge|marker|nero|b
 function percentuale4(stato3) {
   const grezzo = pulito39(stato3?.state);
   if (STATI_MUTI2.has(minuscolo8(grezzo))) return null;
-  const numero57 = Number(grezzo.replace(",", "."));
-  if (!Number.isFinite(numero57)) return null;
-  return Math.min(100, Math.max(0, Math.round(numero57)));
+  const numero58 = Number(grezzo.replace(",", "."));
+  if (!Number.isFinite(numero58)) return null;
+  return Math.min(100, Math.max(0, Math.round(numero58)));
 }
 function nomeLeggibile2(entity2, stato3) {
   const amichevole = pulito39(stato3?.attributes?.friendly_name);
@@ -46997,8 +47038,8 @@ function letturaDellaStampante(voce3, states = {}, resolve = (valore3) => valore
 function percentualeLibera(stato3) {
   const grezzo = pulito39(stato3?.state);
   if (STATI_MUTI2.has(minuscolo8(grezzo))) return null;
-  const numero57 = Number(grezzo.replace(",", "."));
-  return Number.isFinite(numero57) ? numero57 : null;
+  const numero58 = Number(grezzo.replace(",", "."));
+  return Number.isFinite(numero58) ? numero58 : null;
 }
 function lettureDelleStampanti(stored, states = {}, resolve) {
   return normalizzaStampanti(stored).map((voce3) => letturaDellaStampante(voce3, states, resolve));
@@ -47807,11 +47848,11 @@ function readableName(entity2, states) {
   return tail.charAt(0).toUpperCase() + tail.slice(1);
 }
 function readableValue(entity2, states, locale3) {
-  const state177 = states?.[entity2.entity_id];
-  const raw = clean22(state177?.state);
-  if (!state177 || MUTE.test(raw))
+  const state178 = states?.[entity2.entity_id];
+  const raw = clean22(state178?.state);
+  if (!state178 || MUTE.test(raw))
     return { value: "—", numeric: Boolean(clean22(entity2.unit)), on: false };
-  const unit = clean22(state177.attributes?.unit_of_measurement) || clean22(entity2.unit);
+  const unit = clean22(state178.attributes?.unit_of_measurement) || clean22(entity2.unit);
   const number = Number.parseFloat(raw.replace(",", "."));
   if (Number.isFinite(number) && /^-?\d+([.,]\d+)?$/.test(raw))
     return { value: `${raw}${unit ? ` ${unit}` : ""}`, numeric: true, on: false };
@@ -48428,9 +48469,9 @@ function comandiMarkup(riga3) {
   const comandi = riga3.comandi;
   if (!comandi) return "";
   if (comandi.tipo === "switch") {
-    const spegni2 = riga3.stato === "su";
+    const spegni3 = riga3.stato === "su";
     return `<button type="button" class="dm-macchina-tasto" data-dm-macchina-switch="${esc(comandi.entity)}"
-      data-dm-macchina-verso="${spegni2 ? "off" : "on"}">${esc(spegni2 ? t("Ferma", "Stop") : t("Avvia", "Start"))}</button>`;
+      data-dm-macchina-verso="${spegni3 ? "off" : "on"}">${esc(spegni3 ? t("Ferma", "Stop") : t("Avvia", "Start"))}</button>`;
   }
   return `<span class="dm-macchina-tasti">
     <button type="button" class="dm-macchina-tasto" data-dm-macchina-premi="${esc(comandi.avvia)}">${esc(t("Avvia", "Start"))}</button>
@@ -48472,14 +48513,14 @@ function fasciaMarkup(titolo3, righe3) {
   </section>`;
 }
 function ensureFasce() {
-  const pagina2 = doc?.getElementById(SERVER_PAGE_ID);
-  if (!pagina2) return null;
-  let dove = pagina2.querySelector(`#${FASCE_ID}`);
+  const pagina3 = doc?.getElementById(SERVER_PAGE_ID);
+  if (!pagina3) return null;
+  let dove = pagina3.querySelector(`#${FASCE_ID}`);
   if (dove) return dove;
   dove = doc.createElement("div");
   dove.id = FASCE_ID;
   dove.className = "dm-macchine-wrap";
-  pagina2.append(dove);
+  pagina3.append(dove);
   return dove;
 }
 function dipingi7() {
@@ -48732,16 +48773,16 @@ function ultimaPagina8() {
 }
 function ensurePagina2() {
   if (!doc) return null;
-  let pagina2 = doc.getElementById(PAGINA_APERTURE);
-  if (pagina2) return pagina2;
+  let pagina3 = doc.getElementById(PAGINA_APERTURE);
+  if (pagina3) return pagina3;
   const sorella = ultimaPagina8();
   if (!sorella?.parentElement) return null;
-  pagina2 = doc.createElement("section");
-  pagina2.className = "page";
-  pagina2.id = PAGINA_APERTURE;
-  pagina2.innerHTML = `<div class="dm-porte-wrap"></div>`;
-  sorella.after(pagina2);
-  return pagina2;
+  pagina3 = doc.createElement("section");
+  pagina3.className = "page";
+  pagina3.id = PAGINA_APERTURE;
+  pagina3.innerHTML = `<div class="dm-porte-wrap"></div>`;
+  sorella.after(pagina3);
+  return pagina3;
 }
 function apri3(voce3) {
   for (const nodo2 of doc.querySelectorAll(".tab")) nodo2.classList.remove("active");
@@ -48791,8 +48832,8 @@ function renderSecurityDoors() {
   const accesa3 = funzioneAccesa2();
   const voce3 = doors0.length && accesa3 ? ensureVoce2() : doc?.querySelector?.(`.tab[data-tab="${APERTURE_TAB}"]`);
   if (voce3) voce3.style.display = doors0.length && accesa3 ? "" : "none";
-  const pagina2 = doors0.length ? ensurePagina2() : doc?.getElementById?.(PAGINA_APERTURE);
-  if (pagina2) {
+  const pagina3 = doors0.length ? ensurePagina2() : doc?.getElementById?.(PAGINA_APERTURE);
+  if (pagina3) {
     registraPaginaARuntime(PAGINA_APERTURE, {
       /* Le due tinte della fascia, come le porta ogni altra pagina: azzurro e
        * blu, i colori della Sicurezza da cui questa esce. */
@@ -48801,7 +48842,7 @@ function renderSecurityDoors() {
       en: ["Door and gate openers", sottotitolo3(doors0)]
     });
   }
-  const shell = pagina2?.querySelector?.(".dm-porte-wrap") || null;
+  const shell = pagina3?.querySelector?.(".dm-porte-wrap") || null;
   if (!shell) return false;
   const doors = configuredSecurityDoors();
   if (!doors.length) {
@@ -50203,9 +50244,9 @@ var servizio = (dominio5, nome, entita3, dati = {}) => ({
   dati: { entity_id: Array.isArray(entita3) && entita3.length === 1 ? entita3[0] : entita3, ...dati }
 });
 var fatto = (lingua3) => ({ etichetta: pick("Fatto", "Done", lingua3), fatto: true });
-var vedi = (lingua3, pagina2, tessera3 = "") => ({
+var vedi = (lingua3, pagina3, tessera3 = "") => ({
   etichetta: pick("Vedi", "Show", lingua3),
-  vai: { pagina: pagina2, tessera: tessera3 }
+  vai: { pagina: pagina3, tessera: tessera3 }
 });
 function eNotte(c, o) {
   const ora6 = numero36(c.ora) ?? 12;
@@ -50797,14 +50838,14 @@ rilevatore("aria", "comfort", (c, o, l) => {
       entita: [co2.entityCo2 || `co2:${pulito42(co2.name)}`]
     });
   const umida = stanzeDiCasa(c).find((s) => (numero36(s.umidita) || 0) >= 70);
-  const percento6 = umida ? Math.round(umida.umidita) : 0;
+  const percento7 = umida ? Math.round(umida.umidita) : 0;
   if (umida)
     fuori.push({
       urgenza: "idea",
       disegno: "humidity",
       titolo: pick(
-        `${umida.name}: umidità al ${percento6}%`,
-        `${umida.name}: humidity at ${percento6}%`,
+        `${umida.name}: umidità al ${percento7}%`,
+        `${umida.name}: humidity at ${percento7}%`,
         l
       ),
       motivo: pick("Arieggia un po'.", "Let some air in.", l),
@@ -51580,8 +51621,8 @@ function numeriDellaFrase(f) {
   const p = f.parole;
   let gradi10 = null;
   let passo = null;
-  let percento6 = null;
-  let numero57 = null;
+  let percento7 = null;
+  let numero58 = null;
   const valore3 = (parola) => {
     if (/^\d+(\.\d+)?$/.test(parola)) return Number(parola);
     return Object.hasOwn(NUMERI_A_PAROLE, parola) ? NUMERI_A_PAROLE[parola] : null;
@@ -51599,22 +51640,22 @@ function numeriDellaFrase(f) {
       continue;
     }
     if (/^(percento|percent|per)$/.test(dopo)) {
-      percento6 = n;
+      percento7 = n;
       continue;
     }
     if (/^(al|a|to)$/.test(prima) && n <= 100 && /^\d/.test(p[i])) {
-      percento6 ??= n;
-      numero57 ??= n;
+      percento7 ??= n;
+      numero58 ??= n;
       continue;
     }
     if (/^(di|by)$/.test(prima) && n <= 5) {
       passo ??= n;
       continue;
     }
-    numero57 ??= n;
+    numero58 ??= n;
   }
-  if (percento6 === null && /\b(a meta|half way|halfway|meta)\b/.test(f.testo)) percento6 = 50;
-  return { gradi: gradi10, passo, percento: percento6, numero: numero57 };
+  if (percento7 === null && /\b(a meta|half way|halfway|meta)\b/.test(f.testo)) percento7 = 50;
+  return { gradi: gradi10, passo, percento: percento7, numero: numero58 };
 }
 var GIORNI_IT = ["domenica", "lunedi", "martedi", "mercoledi", "giovedi", "venerdi", "sabato"];
 var GIORNI_EN = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
@@ -52045,13 +52086,13 @@ function energiaDiOggi2(entita3, fonti) {
     if (e.dominio !== "sensor" || e.classe !== "energy") continue;
     const testo4 = `${e.entity} ${e.nome}`;
     if (!oggi.test(testo4)) continue;
-    let kwh4 = numero37(e.stato);
-    if (kwh4 === null) continue;
-    if (/^wh$/i.test(pulito45(e.attributi?.unit_of_measurement))) kwh4 /= 1e3;
-    if (/(produz|solar|fotovolt|\bpv\b|yield|produc)/i.test(testo4)) fuori.produzione ??= kwh4;
-    else if (/(immess|export|cedut|vendut|feed)/i.test(testo4)) fuori.immissione ??= kwh4;
-    else if (/(prelev|import|rete|grid)/i.test(testo4)) fuori.prelievo ??= kwh4;
-    else if (/(consum|load|casa|house|home)/i.test(testo4)) fuori.consumo ??= kwh4;
+    let kwh5 = numero37(e.stato);
+    if (kwh5 === null) continue;
+    if (/^wh$/i.test(pulito45(e.attributi?.unit_of_measurement))) kwh5 /= 1e3;
+    if (/(produz|solar|fotovolt|\bpv\b|yield|produc)/i.test(testo4)) fuori.produzione ??= kwh5;
+    else if (/(immess|export|cedut|vendut|feed)/i.test(testo4)) fuori.immissione ??= kwh5;
+    else if (/(prelev|import|rete|grid)/i.test(testo4)) fuori.prelievo ??= kwh5;
+    else if (/(consum|load|casa|house|home)/i.test(testo4)) fuori.consumo ??= kwh5;
   }
   return fuori;
 }
@@ -55338,9 +55379,9 @@ function chiama5(azione) {
   }
 }
 function vai(azione) {
-  const { pagina: pagina2, tessera: tessera3 } = azione?.vai || {};
-  if (pagina2) {
-    const linguetta3 = doc.querySelector(`.tab[data-tab="${CSS.escape(pagina2)}"]`);
+  const { pagina: pagina3, tessera: tessera3 } = azione?.vai || {};
+  if (pagina3) {
+    const linguetta3 = doc.querySelector(`.tab[data-tab="${CSS.escape(pagina3)}"]`);
     if (linguetta3 && !linguetta3.hidden && root.getComputedStyle?.(linguetta3)?.display !== "none") {
       linguetta3.click();
       return;
@@ -55579,12 +55620,12 @@ senzaCadere(installAssistenteDiCasa);
 
 // src/sections/finestre-dei-widget.js
 var FINESTRE = /* @__PURE__ */ new Map();
-function registraFinestra(chiave2, { disegna: disegna10, stile: stile6 = "", sottotitolo: sottotitolo5 = null } = {}) {
+function registraFinestra(chiave2, { disegna: disegna10, stile: stile7 = "", sottotitolo: sottotitolo5 = null } = {}) {
   const quale = String(chiave2 ?? "").trim();
   if (!quale || typeof disegna10 !== "function") return false;
   FINESTRE.set(quale, {
     disegna: disegna10,
-    stile: String(stile6 || ""),
+    stile: String(stile7 || ""),
     sottotitolo: typeof sottotitolo5 === "function" ? sottotitolo5 : null
   });
   return true;
@@ -55721,7 +55762,7 @@ function daDoveArriva({ casa = null, sole = null, batteria = null, rete = null }
     resto -= data;
     return [fonte, data];
   });
-  const totale = quote.reduce((somma2, [, valore3]) => somma2 + valore3, 0);
+  const totale = quote.reduce((somma3, [, valore3]) => somma3 + valore3, 0);
   if (!(totale > 0)) return [];
   return quote.filter(([, valore3]) => valore3 > 0).map(([fonte, valore3]) => ({ fonte, quota: valore3 / totale * 100 }));
 }
@@ -55758,7 +55799,7 @@ function disegnaEnergia(widget) {
       nomeDellaFonte(q.fonte)
     )} ${Math.round(q.quota)}%</span>`
   ).join("")}</div>` : "";
-  const eroe = casa != null ? `<section class="dm-f-energia-eroe">
+  const eroe2 = casa != null ? `<section class="dm-f-energia-eroe">
         <small>${esc(t("La casa adesso", "The house now"))}</small>
         <div class="dm-f-energia-riga">
           <span class="dm-f-num dm-f-energia-casa">${esc(watt3(casa))}</span>
@@ -55824,7 +55865,7 @@ function disegnaEnergia(widget) {
       )} €</span></div>`
     );
   return `<div class="dm-f dm-f-energia">
-    ${eroe}
+    ${eroe2}
     ${fonti.length ? `${titoletto(t("Le fonti, adesso", "The sources, now"))}<div class="dm-f-energia-fonti">${fonti.join("")}</div>` : ""}
     ${delGiorno.length ? `${titoletto(t("Oggi", "Today"))}<div class="dm-f-energia-giorno">${delGiorno.join("")}</div>` : ""}
   </div>`;
@@ -55885,7 +55926,7 @@ function disegnaTemperatura(widget) {
   if (!stanze4.length) return `<p class="dm-w-empty">${esc(t("Nessuna lettura", "No reading"))}</p>`;
   const diCasa = stanze4.filter((riga3) => !riga3.fuori);
   const misurate = diCasa.length ? diCasa : stanze4.slice(0, 1);
-  const media3 = misurate.reduce((somma2, riga3) => somma2 + riga3.temperature, 0) / misurate.length;
+  const media3 = misurate.reduce((somma3, riga3) => somma3 + riga3.temperature, 0) / misurate.length;
   const calda = misurate[0];
   const fredda = misurate[misurate.length - 1];
   const fahrenheit = media3 > 45;
@@ -55896,7 +55937,7 @@ function disegnaTemperatura(widget) {
     gradi6(calda.temperature)
   )} ${esc(calda.name)}</b></span>
         </div>` : "";
-  const eroe = `<section class="dm-f-temperatura-eroe">
+  const eroe2 = `<section class="dm-f-temperatura-eroe">
       <div><small>${esc(misurate.length > 1 ? t("In casa", "At home") : misurate[0].name)}</small>
         <span class="dm-f-num">${esc(gradi6(media3))}</span></div>
       ${scala2}
@@ -55913,7 +55954,7 @@ function disegnaTemperatura(widget) {
       </div>`;
   }).join("");
   return `<div class="dm-f dm-f-temperatura">
-    ${eroe}
+    ${eroe2}
     ${stanze4.length > 1 ? titoletto(t("Dalla più calda", "Warmest first")) : ""}
     <div class="dm-f-temperatura-elenco">${elenco15}</div>
   </div>`;
@@ -56082,7 +56123,7 @@ function disegnaUnAuto(vettura, righe3, conNome) {
     ([disegno6, valore3, cosa]) => `<span>${disegnoDelCatalogo(disegno6, 28)}<span><b class="dm-f-num">${esc(valore3)}</b>${cosa ? `<small>${esc(cosa)}</small>` : ""}</span></span>`
   ).join("")}</div>` : "";
   const barra2 = percentuale5 != null ? `<span class="dm-f-ev-barra" aria-hidden="true"><i style="width:${Math.max(0, Math.min(100, Math.round(percentuale5)))}%"></i>${target != null ? `<u style="left:${Math.max(0, Math.min(100, Math.round(target)))}%"></u>` : ""}</span>` : "";
-  const eroe = foto ? `<section class="dm-f-ev-vetrina">
+  const eroe2 = foto ? `<section class="dm-f-ev-vetrina">
       <div class="dm-f-ev-foto"><img src="${esc(foto)}" alt="" loading="lazy" decoding="async">
         ${vettura.ricarica ? `<span class="dm-f-ev-chip" data-carica="${vettura.inCarica ? "true" : "false"}"><i aria-hidden="true"></i>${esc(vettura.ricarica)}</span>` : ""}${vettura.nome ? `<span class="dm-f-ev-targa">${esc(vettura.nome)}</span>` : ""}</div>
       <div class="dm-f-ev-numeri">
@@ -56152,7 +56193,7 @@ function disegnaUnAuto(vettura, righe3, conNome) {
   });
   const altreMarkup = altre.length ? `${titoletto(t("Le altre letture", "Other readings"))}<div class="dm-f-ev-due">${altre.map((riga3) => casella(nomeSenzaAuto(riga3), esc(valoreDellaRiga(riga3)))).join("")}</div>` : "";
   return `<div class="dm-f-ev-auto"${conNome ? ` data-auto="${esc(vettura.nome)}"` : ""}>
-    ${eroe}
+    ${eroe2}
     ${dove.length ? `${titoletto(t("Dov'è e quanto ha fatto", "Where it is and how far it went"))}<div class="dm-f-ev-due">${dove.join("")}</div>` : ""}
     ${gomme}
     ${altreMarkup}
@@ -56168,10 +56209,10 @@ function disegnaEv(widget) {
   const dellAuto = (nome) => caselle2.filter((riga3) => !riga3.diCasa && (!piu || clean(riga3.vettura) === clean(nome)));
   const auto = vetture2.length ? vetture2.map((vettura) => disegnaUnAuto(vettura, dellAuto(vettura.nome), piu)).join("") : "";
   const evcc = widget?.evcc && Array.isArray(widget.evcc.voci) && widget.evcc.voci.length ? widget.evcc : null;
-  const wallbox = caselle2.filter(
+  const wallbox2 = caselle2.filter(
     (riga3) => riga3.diCasa && clean(riga3.value) && !(evcc && COMANDATE_DA_EVCC.has(clean(riga3.rif)))
   );
-  const wallboxMarkup = wallbox.length ? `${titoletto(t("La wallbox", "The wallbox"))}<div class="dm-f-ev-due">${wallbox.map((riga3) => casella(nomeSenzaAuto(riga3), esc(riga3.value))).join("")}</div>` : "";
+  const wallboxMarkup = wallbox2.length ? `${titoletto(t("La wallbox", "The wallbox"))}<div class="dm-f-ev-due">${wallbox2.map((riga3) => casella(nomeSenzaAuto(riga3), esc(riga3.value))).join("")}</div>` : "";
   const notte = clean(widget?.notte) ? `<div class="dm-f-evcc-notte" data-dm-notte>${esc(widget.notte)}</div>` : "";
   return `<div class="dm-f dm-f-ev">${auto}${evcc ? tastiDiEvcc(evcc) : ""}${notte}${wallboxMarkup}</div>`;
 }
@@ -56572,8 +56613,8 @@ function orario(quando4, adesso2 = Date.now()) {
   } catch (_error) {
     ora6 = `${String(data.getHours()).padStart(2, "0")}:${String(data.getMinutes()).padStart(2, "0")}`;
   }
-  const giorno3 = (istante6) => {
-    const d = new Date(istante6);
+  const giorno3 = (istante7) => {
+    const d = new Date(istante7);
     return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
   };
   const giorni = Math.round((giorno3(adesso2) - giorno3(quando4)) / 864e5);
@@ -56898,7 +56939,7 @@ function eroeMedia(riga3) {
   const sotto = [riga3.artista, riga3.album].filter(Boolean).join(" · ");
   const punto2 = posizioneOra(riga3);
   const centro2 = ilTastoCentrale(riga3);
-  const percento6 = Math.round((riga3.volume ?? 0) * 100);
+  const percento7 = Math.round((riga3.volume ?? 0) * 100);
   return `<div class="dm-f-media-eroe">
     <div class="dm-f-media-testa">
       ${riga3.copertina ? `<img class="dm-f-media-arte" src="${esc(riga3.copertina)}" alt="" aria-hidden="true">` : `<span class="dm-f-media-arte" aria-hidden="true">${riga3.icona ? esc(riga3.icona) : "🎵"}</span>`}
@@ -56916,9 +56957,9 @@ function eroeMedia(riga3) {
       ${riga3.puo?.successivo ? tastoMp(riga3, "successivo", t("Brano successivo", "Next track"), GLIFI_MP.successivo) : ""}
     </div>
     ${riga3.puo?.volume ? `<label class="dm-f-media-volume"><span aria-hidden="true">${GLIFI_MP.voce}</span>
-            <input type="range" min="0" max="100" step="1" value="${percento6}" style="--v:${percento6}%" data-dm-mp-volume="${esc(riga3.entity)}"
+            <input type="range" min="0" max="100" step="1" value="${percento7}" style="--v:${percento7}%" data-dm-mp-volume="${esc(riga3.entity)}"
               aria-label="${esc(t("Volume", "Volume"))}">
-            <b class="dm-f-num" data-dm-mp-percento>${percento6}%</b></label>` : ""}
+            <b class="dm-f-num" data-dm-mp-percento>${percento7}%</b></label>` : ""}
   </div>`;
 }
 function cassaMarkup(riga3) {
@@ -56931,11 +56972,11 @@ function cassaMarkup(riga3) {
 }
 function finestraMedia(widget) {
   const lettori2 = Array.isArray(widget.lettori) ? widget.lettori : [];
-  const eroe = lettori2.find((riga3) => riga3.suona) || null;
-  const altre = lettori2.filter((riga3) => riga3 !== eroe);
+  const eroe2 = lettori2.find((riga3) => riga3.suona) || null;
+  const altre = lettori2.filter((riga3) => riga3 !== eroe2);
   return `<div class="dm-f-media">
-    ${eroe ? eroeMedia(eroe) : ""}
-    ${altre.length ? `${titolo(eroe ? t("Le altre casse", "The other speakers") : t("Le casse", "Speakers"))}${altre.map(cassaMarkup).join("")}` : ""}
+    ${eroe2 ? eroeMedia(eroe2) : ""}
+    ${altre.length ? `${titolo(eroe2 ? t("Le altre casse", "The other speakers") : t("Le casse", "Speakers"))}${altre.map(cassaMarkup).join("")}` : ""}
   </div>`;
 }
 function parolaDellaCassetta2(voce3) {
@@ -57086,11 +57127,11 @@ function robotMarkup(riga3) {
 }
 function finestraRobot(widget) {
   const righe3 = Array.isArray(widget.rows) ? widget.rows : [];
-  const eroe = righe3.find((riga3) => riga3.cleaning || riga3.mowing) || null;
-  const altri = righe3.filter((riga3) => riga3 !== eroe);
+  const eroe2 = righe3.find((riga3) => riga3.cleaning || riga3.mowing) || null;
+  const altri = righe3.filter((riga3) => riga3 !== eroe2);
   return `<div class="dm-f-robot">
-    ${eroe ? eroeRobot(eroe) : ""}
-    ${altri.length ? `${titolo(eroe ? t("Gli altri", "The others") : t("I robot", "The robots"))}${altri.map(robotMarkup).join("")}` : ""}
+    ${eroe2 ? eroeRobot(eroe2) : ""}
+    ${altri.length ? `${titolo(eroe2 ? t("Gli altri", "The others") : t("I robot", "The robots"))}${altri.map(robotMarkup).join("")}` : ""}
   </div>`;
 }
 var A = "var(--dm-widget-accent,#6366f1)";
@@ -57522,7 +57563,7 @@ function contiDelVarco(aperture, { start, end, mezzanotte: mezzanotte3 = start }
   const dopo = elenco15.filter((apertura) => apertura.da >= mezzanotte3 && !apertura.daPrima);
   const prima = elenco15.filter((apertura) => !(apertura.da >= mezzanotte3 && !apertura.daPrima));
   const totale = elenco15.reduce(
-    (somma2, apertura) => somma2 + sovrapposto(apertura, Math.max(start, mezzanotte3), end),
+    (somma3, apertura) => somma3 + sovrapposto(apertura, Math.max(start, mezzanotte3), end),
     0
   );
   let piuLunga = null;
@@ -58657,7 +58698,7 @@ function disegnaSicurezza(widget) {
     attivo?.label ? `${t("Modo", "Mode")} ${attivo.label}` : "",
     widget.dalle ? `${t("dalle", "since")} ${ora2(widget.dalle)}` : ""
   ].filter(Boolean).join(" · ");
-  const eroe = `<div class="dm-f-${k}-eroe" data-tono="${tono}">
+  const eroe2 = `<div class="dm-f-${k}-eroe" data-tono="${tono}">
       <span class="dm-f-${k}-segno" aria-hidden="true">${segno2}</span>
       <div><small class="dm-f-${k}-cosa">${esc(t("Antifurto", "Alarm"))}</small>
         <span class="dm-f-${k}-num dm-f-${k}-stato">${esc(widget.value)}</span>
@@ -58678,7 +58719,7 @@ function disegnaSicurezza(widget) {
         </div>`;
   }).join("");
   const inserimenti = modi.filter((voce3) => voce3.mode !== "disarm");
-  const spegni2 = modi.find((voce3) => voce3.mode === "disarm");
+  const spegni3 = modi.find((voce3) => voce3.mode === "disarm");
   const scheda8 = (voce3) => `<button type="button" class="dm-f-${k}-modo" data-dm-w-alarm="${esc(voce3.service)}"
       data-on="${voce3.on ? "true" : "false"}" aria-pressed="${voce3.on ? "true" : "false"}">
       <span class="dm-f-${k}-ic" aria-hidden="true">${voce3.disegno || ""}</span>
@@ -58688,14 +58729,14 @@ function disegnaSicurezza(widget) {
     </button>`;
   const modiMarkup = inserimenti.length ? `${titolo2(k, t("Cambia modo", "Change mode"))}
       <div class="dm-f-${k}-modi">${inserimenti.map(scheda8).join("")}</div>` : "";
-  const spegniMarkup = spegni2 && (widget.armed || widget.triggered) ? `<button type="button" class="dm-f-${k}-spegni" data-dm-w-alarm="${esc(spegni2.service)}">
-        <span class="dm-f-${k}-ic" aria-hidden="true">${spegni2.disegno || "🔓"}</span>
+  const spegniMarkup = spegni3 && (widget.armed || widget.triggered) ? `<button type="button" class="dm-f-${k}-spegni" data-dm-w-alarm="${esc(spegni3.service)}">
+        <span class="dm-f-${k}-ic" aria-hidden="true">${spegni3.disegno || "🔓"}</span>
         <span class="dm-f-${k}-testo"><b>${esc(t("Disinserisci", "Disarm"))}</b><small>${esc(
-    spegni2.codice ? t("Chiede il codice", "Asks for the code") : t("Senza codice", "No code needed")
+    spegni3.codice ? t("Chiede il codice", "Asks for the code") : t("Senza codice", "No code needed")
   )}</small></span>
       </button>` : "";
   return `<div class="dm-f-${k}">
-      ${eroe}
+      ${eroe2}
       ${avvisi ? `${titolo2(k, t("Da sapere", "Good to know"))}${avvisi}` : ""}
       ${modiMarkup}
       ${spegniMarkup}
@@ -58848,7 +58889,7 @@ function disegnaVarchi(widget) {
     chiusi.length ? `${chiusi.length} ${chiusi.length === 1 ? t("chiuso", "closed") : t("chiusi", "closed")}` : "",
     muti.length ? `${muti.length} ${muti.length === 1 ? t("non risponde", "not answering") : t("non rispondono", "not answering")}` : ""
   ].filter(Boolean).join(" · ");
-  const eroe = `<div class="dm-f-${k}-eroe" data-tono="${aperti.length ? "allarme" : "ok"}">
+  const eroe2 = `<div class="dm-f-${k}-eroe" data-tono="${aperti.length ? "allarme" : "ok"}">
       <span class="dm-f-${k}-num">${aperti.length}</span>
       <div><b>${esc(
     aperti.length ? aperti.length === 1 ? t("aperto adesso", "open now") : t("aperti adesso", "open now") : t("tutto chiuso", "all closed")
@@ -58880,7 +58921,7 @@ function disegnaVarchi(widget) {
     )}</b>${quanto ? `<small>${esc(t("da", "for"))} ${esc(quanto)}</small>` : ""}</div>`;
   };
   return `<div class="dm-f-${k}">
-      ${eroe}
+      ${eroe2}
       ${aperti.length ? `${titolo2(k, t("Aperti", "Open"))}${aperti.map(aperto2).join("")}` : ""}
       ${chiusi.length ? `${titolo2(k, t("Chiusi", "Closed"))}<div class="dm-f-${k}-chiusi">${chiusi.map(chiuso).join("")}</div>` : ""}
       ${muti.length ? `${titolo2(k, muti.length === 1 ? t("Non risponde", "Not answering") : t("Non rispondono", "Not answering"))}${muti.map(muto2).join("")}` : ""}
@@ -58947,7 +58988,7 @@ function disegnaPresenza(widget) {
     occupati.map((posto) => posto.nome).join(" · "),
     ultimo ? `${t("ultimo movimento", "last motion")} ${durata4(ultimo)} ${t("fa", "ago")}` : ""
   ].filter(Boolean).join(" · ");
-  const eroe = `<div class="dm-f-${k}-eroe">
+  const eroe2 = `<div class="dm-f-${k}-eroe">
       <div><small class="dm-f-${k}-cosa">${esc(t("Adesso", "Now"))}</small>
         <div class="dm-f-${k}-riga"><span class="dm-f-${k}-num">${occupati.length}</span><b>${esc(
     occupati.length === 1 ? t("stanza occupata", "room occupied") : occupati.length ? t("stanze occupate", "rooms occupied") : t("casa libera", "nobody around")
@@ -58972,7 +59013,7 @@ function disegnaPresenza(widget) {
   };
   const stanze4 = [...occupati, ...liberi];
   return `<div class="dm-f-${k}">
-      ${eroe}
+      ${eroe2}
       ${stanze4.length ? `${titolo2(k, t("Le stanze", "The rooms"))}<div class="dm-f-${k}-casa">${stanze4.map(piastrella).join("")}</div>` : ""}
       ${muti.length ? `${titolo2(k, muti.length === 1 ? t("Non risponde", "Not answering") : t("Non rispondono", "Not answering"))}${muti.map(muto2).join("")}` : ""}
     </div>`;
@@ -59014,7 +59055,7 @@ function disegnaFumo(widget, states) {
   const suonano = righe3.filter((riga4) => riga4.on);
   const muti = righe3.filter((riga4) => riga4.muto);
   const sotto = muti.length ? `${muti.length} ${muti.length === 1 ? t("non risponde", "not answering") : t("non rispondono", "not answering")}` : `${t("Rispondono tutti", "All answering")} · ${righe3.length}`;
-  const eroe = suonano.length ? `<div class="dm-f-${k}-eroe" data-tono="allarme"><span class="dm-f-${k}-segno" aria-hidden="true">🚨</span>
+  const eroe2 = suonano.length ? `<div class="dm-f-${k}-eroe" data-tono="allarme"><span class="dm-f-${k}-segno" aria-hidden="true">🚨</span>
         <div><b>${esc(t("Allarme", "Alarm"))}: ${esc(suonano.map((riga4) => riga4.name).join(" · "))}</b>
         <span class="dm-f-${k}-sotto">${esc(sotto)}</span></div></div>` : `<div class="dm-f-${k}-eroe" data-tono="${muti.length ? "ambra" : "ok"}"><span class="dm-f-${k}-segno" aria-hidden="true">${muti.length ? "⚠️" : SPUNTA2}</span>
         <div><b>${esc(t("Nessun allarme", "No alarm"))}</b><span class="dm-f-${k}-sotto">${esc(sotto)}</span></div></div>`;
@@ -59033,7 +59074,7 @@ function disegnaFumo(widget, states) {
   const gas = righe3.filter((voce3) => GAS.has(voce3.classe));
   const gruppo = (nome, elenco15) => elenco15.length ? `${titolo2(k, nome, elenco15.length)}${elenco15.map(riga3).join("")}` : "";
   return `<div class="dm-f-${k}">
-      ${eroe}
+      ${eroe2}
       ${gruppo(t("Fumo", "Smoke"), fumo)}
       ${gruppo(t("Gas e monossido", "Gas and carbon monoxide"), gas)}
       <p class="dm-f-${k}-nota">${esc(
@@ -59078,7 +59119,7 @@ function disegnaAllagamenti(widget, states) {
   const bagnate = righe3.filter((riga3) => riga3.on);
   const rispondono = righe3.filter((riga3) => !riga3.muto).length;
   const sotto = `${t("Sonde che rispondono", "Probes answering")}: ${rispondono}/${righe3.length}`;
-  const eroe = `<div class="dm-f-${k}-eroe" data-tono="${bagnate.length ? "allarme" : ""}">
+  const eroe2 = `<div class="dm-f-${k}-eroe" data-tono="${bagnate.length ? "allarme" : ""}">
       <span class="dm-f-${k}-segno" aria-hidden="true">${bagnate.length ? "🚨" : "💧"}</span>
       <div><b>${esc(
     bagnate.length ? `${t("Acqua", "Water")}: ${bagnate.map((riga3) => nomePulitoDellaSonda(riga3.name)).join(" · ")}` : t("Tutto asciutto", "All dry")
@@ -59122,7 +59163,7 @@ function disegnaAllagamenti(widget, states) {
       </div>`;
   };
   return `<div class="dm-f-${k}">
-      ${eroe}
+      ${eroe2}
       ${valvole ? `${titolo2(k, t("Acqua di casa", "House water"))}${valvole}` : ""}
       ${titolo2(k, t("Le sonde", "The probes"))}
       <div class="dm-f-${k}-sonde">${righe3.map(sonda).join("")}</div>
@@ -59275,7 +59316,7 @@ function disegnaNonRisponde(widget, states = {}) {
     ultimo ? righe3.length === 1 ? `${t("Ultimo segnale", "Last signal")} ${ultimo} ${t("fa", "ago")}` : `${t("Il più lungo tace da", "Longest silent for")} ${ultimo}` : "",
     insieme3 ? `${t("Tutti in", "All in")} ${posti[0]}` : righe3.length === 1 && righe3[0].posto ? righe3[0].posto : ""
   ].filter(Boolean).join(" · ");
-  const eroe = `<div class="dm-f-${k}-eroe" data-tono="allarme">
+  const eroe2 = `<div class="dm-f-${k}-eroe" data-tono="allarme">
       <span class="dm-f-${k}-num">${righe3.length}</span>
       <div><b>${esc(righe3.length === 1 ? t("dispositivo muto", "silent device") : t("dispositivi muti", "silent devices"))}</b>${sotto ? `<span class="dm-f-${k}-sotto">${esc(sotto)}</span>` : ""}</div>
     </div>`;
@@ -59306,7 +59347,7 @@ function disegnaNonRisponde(widget, states = {}) {
     }
   ) : "";
   return `<div class="dm-f-${k}">
-      ${eroe}
+      ${eroe2}
       ${titolo2(k, t("Dalla più lunga", "Longest first"))}
       ${righe3.map(riga3).join("")}
       ${consiglio}
@@ -59402,7 +59443,7 @@ function disegnaBatterie(widget, states = {}) {
     ].filter(Boolean).join(" · ")
   ].join(", ");
   const sotto = giu.length && altre ? `${altre} ${t("sopra la soglia", "above the threshold")} · ${t("soglia", "threshold")} ${soglia3}%` : `${t("soglia", "threshold")} ${soglia3}%`;
-  const eroe = `<div class="dm-f-${k}-eroe" data-tono="${tonoEroe}">
+  const eroe2 = `<div class="dm-f-${k}-eroe" data-tono="${tonoEroe}">
       <span class="dm-f-${k}-pile" aria-hidden="true">${righe3.slice(0, PILE_IN_GRANDE).map((riga3) => pilaInPiedi(riga3.livello, riga3.tono)).join("")}</span>
       <div><span class="dm-f-${k}-num">${giu.length || righe3.length}</span><b>${esc(parole4)}</b><span class="dm-f-${k}-sotto">${esc(sotto)}</span></div>
     </div>`;
@@ -59420,7 +59461,7 @@ function disegnaBatterie(widget, states = {}) {
     </div>`;
   };
   return `<div class="dm-f-${k}">
-      ${eroe}
+      ${eroe2}
       ${titolo2(k, t("Dalla più scarica", "Most drained first"))}
       <div class="dm-f-${k}-griglia">${righe3.map(pila2).join("")}</div>
     </div>`;
@@ -59480,9 +59521,9 @@ function watt4(valore3) {
   if (assoluto >= 1e3) return `${formatNumber(assoluto / 1e3, 2)} kW`;
   return `${formatNumber(assoluto, 0)} W`;
 }
-function daQuanto5(istante6) {
-  if (!Number.isFinite(istante6)) return "";
-  return quantoTempoInParole((Date.now() - istante6) / 6e4);
+function daQuanto5(istante7) {
+  if (!Number.isFinite(istante7)) return "";
+  return quantoTempoInParole((Date.now() - istante7) / 6e4);
 }
 function vera(riferimento) {
   const chiave2 = clean(riferimento);
@@ -59509,8 +59550,8 @@ function prezzoDelKwh(states) {
   return resolveRate(sorgente, states || {}, null);
 }
 var euro = (valore3) => `${formatNumber(valore3, 2)} €`;
-function guscio2(chiave2, corpo4, stile6 = "") {
-  return `<div class="dm-f-imp dm-f-${chiave2}"${stile6 ? ` style="${esc(stile6)}"` : ""}>${corpo4}</div>`;
+function guscio2(chiave2, corpo4, stile7 = "") {
+  return `<div class="dm-f-imp dm-f-${chiave2}"${stile7 ? ` style="${esc(stile7)}"` : ""}>${corpo4}</div>`;
 }
 var titoletto2 = (testo4) => `<h4 class="dm-w-titoletto dm-f-imp-tit">${esc(testo4)}</h4>`;
 function leva(entity2, acceso6, nome) {
@@ -59593,7 +59634,7 @@ function unoScaldabagno(lettura3, piuDiUno, states, prezzo) {
       )
     );
   const chip = stato3 === "scalda" ? `${t("Scalda", "Heating")}${potenza3 != null && potenza3 > 0 ? ` · ${watt4(potenza3)}` : ""}` : stato3 === "pronto" ? t("Acqua pronta", "Water ready") : stato3 === "spento" ? t("Spento", "Off") : "";
-  const eroe = `<section class="dm-f-imp-eroe dm-f-scaldabagno-eroe" data-stato="${esc(stato3)}">
+  const eroe2 = `<section class="dm-f-imp-eroe dm-f-scaldabagno-eroe" data-stato="${esc(stato3)}">
     ${serbatoio}
     <div class="dm-f-imp-dx">
       <small class="dm-f-imp-etic">${esc(t("L'acqua adesso", "Water now"))}</small>
@@ -59639,7 +59680,7 @@ function unoScaldabagno(lettura3, piuDiUno, states, prezzo) {
     }),
     potenza3 == null || stato3 === "scalda" ? "" : casella3({ chiave: "potenza", etichetta: t("Adesso", "Now"), valore: watt4(potenza3) })
   ]);
-  return `${nomeSePiuDiUna(lettura3.name, piuDiUno)}${eroe}
+  return `${nomeSePiuDiUna(lettura3.name, piuDiUno)}${eroe2}
     ${comandi.length ? `${titoletto2(t("Comandi", "Controls"))}<div class="dm-f-imp-pila">${comandi.join("")}</div>` : ""}
     ${oggi ? `${titoletto2(t("Oggi", "Today"))}${oggi}` : ""}`;
 }
@@ -59681,7 +59722,7 @@ function unaCaldaia(lettura3, piuDiUna) {
           ${nodo2(t("Ritorno", "Return"), ritorno)}
         </div>`;
   const frase4 = accesa3 && salto != null ? `<p class="dm-f-imp-frase">${esc(fraseDelSalto(salto))}</p>` : "";
-  const eroe = titolo3 || giro ? `<section class="dm-f-imp-eroe dm-f-caldaia-eroe">
+  const eroe2 = titolo3 || giro ? `<section class="dm-f-imp-eroe dm-f-caldaia-eroe">
           ${titolo3 ? `<div class="dm-f-caldaia-testa"><span class="dm-f-caldaia-fiamma" data-on="${accesa3}" aria-hidden="true">🔥</span><div>
               <small class="dm-f-imp-etic">${esc(t("Adesso", "Now"))}</small>
               <b class="dm-f-imp-titolo">${esc(titolo3)}</b>
@@ -59720,7 +59761,7 @@ function unaCaldaia(lettura3, piuDiUna) {
       sotto: acquaCalda >= 40 ? t("pronta per la doccia", "ready for a shower") : ""
     })
   ]);
-  return `${nomeSePiuDiUna(lettura3.name, piuDiUna)}${eroe}
+  return `${nomeSePiuDiUna(lettura3.name, piuDiUna)}${eroe2}
     ${comandi ? `${titoletto2(t("Comandi", "Controls"))}${comandi}` : ""}
     ${occhio ? `${titoletto2(t("Da tenere d'occhio", "Keep an eye on"))}${occhio}` : ""}`;
 }
@@ -59737,7 +59778,7 @@ function unUps({ nome, lettura: lettura3 = {}, da = null }, piuDiUno) {
   const autonomia = num3(lettura3.autonomia);
   const chip = lettura3.rete === true ? t("Corrente presente", "Power on") : aBatteria ? t("Va a batteria", "On battery") : t("Non risponde", "Not answering");
   const tono = lettura3.rete === true ? "bene" : aBatteria ? "male" : "muto";
-  const eroe = `<section class="dm-f-imp-eroe dm-f-ups-eroe" data-tono="${tono}">
+  const eroe2 = `<section class="dm-f-imp-eroe dm-f-ups-eroe" data-tono="${tono}">
     ${batteria == null ? "" : anello(batteria, t("Batteria", "Battery"), aBatteria ? "#dc2626" : "#16a34a")}
     <div class="dm-f-imp-dx">
       <span class="dm-f-imp-chip" data-tono="${tono}"><i></i>${esc(chip)}</span>
@@ -59778,7 +59819,7 @@ function unUps({ nome, lettura: lettura3 = {}, da = null }, piuDiUno) {
       tono: temperatura < 40 ? "bene" : "occhio"
     })
   ]);
-  return `${nomeSePiuDiUna(nome, piuDiUno)}${eroe}${quanto}
+  return `${nomeSePiuDiUna(nome, piuDiUno)}${eroe2}${quanto}
     ${scatola ? `${titoletto2(t("La scatola", "The unit"))}${scatola}` : ""}`;
 }
 function disegnaUps(widget) {
@@ -59858,7 +59899,7 @@ function disegnaAccumulo(widget) {
     fine && (verso2 === "carica" || verso2 === "scarica") ? `${esc(verso2 === "carica" ? t("piena fra", "full in") : t("vuota fra", "empty in"))} <b>${esc(fine)}</b>` : "",
     energia ? esc(energia) : ""
   ].filter(Boolean);
-  const eroe = `<section class="dm-f-imp-eroe dm-f-accumulo-eroe">
+  const eroe2 = `<section class="dm-f-imp-eroe dm-f-accumulo-eroe">
     ${soc == null ? "" : anello(soc, t("Carica", "Charge"), "#16a34a")}
     <div class="dm-f-imp-dx">
       <small class="dm-f-imp-etic">${esc(
@@ -59872,7 +59913,7 @@ function disegnaAccumulo(widget) {
   const tinta2 = clean(widget.tintaDellaSezione);
   return guscio2(
     "accumulo",
-    `${eroe}${avvisi}${titoletto2(t("I pacchi", "The packs"))}<div class="dm-f-imp-pila">${pacchi.map(unPacco).join("")}</div>`,
+    `${eroe2}${avvisi}${titoletto2(t("I pacchi", "The packs"))}<div class="dm-f-imp-pila">${pacchi.map(unPacco).join("")}</div>`,
     /* I colori dell'Energia anche quando la tessera e' rossa: il rosso sta
      * solo nel riquadro dell'avviso. */
     widget.alert && tinta2 ? `--dm-widget-accent:${tinta2}` : ""
@@ -59916,7 +59957,7 @@ function disegnaContatori(widget) {
   const { come: come2 = {}, letture: letture2 = [] } = vista2;
   const { acqua, gas } = come2;
   const contatore2 = (genere) => letture2.find((lettura3) => lettura3.genere === genere && !lettura3.muto) || null;
-  let eroe = "";
+  let eroe2 = "";
   const principale = acqua ? "acqua" : gas ? "gas" : "";
   if (principale) {
     const dati = principale === "acqua" ? acqua : gas;
@@ -59928,7 +59969,7 @@ function disegnaContatori(widget) {
     const media3 = mediaDelMeseScorso(num3(dati.meseScorso));
     if (media3 != null) confronti.push(`${t("media", "average")} ${forma2(media3)}`);
     if (oggi != null || lettura3)
-      eroe = `<section class="dm-f-imp-eroe dm-f-contatori-eroe">
+      eroe2 = `<section class="dm-f-imp-eroe dm-f-contatori-eroe">
         <small class="dm-f-imp-etic">${esc(
         oggi != null ? principale === "acqua" ? t("Acqua oggi", "Water today") : t("Gas oggi", "Gas today") : principale === "acqua" ? t("Contatore acqua", "Water meter") : t("Contatore gas", "Gas meter")
       )}</small>
@@ -59995,7 +60036,7 @@ function disegnaContatori(widget) {
   );
   return guscio2(
     "contatori",
-    `${eroe}${rigaDellaPerdita(come2)}
+    `${eroe2}${rigaDellaPerdita(come2)}
     ${pressioni.length || caselle2.length ? titoletto2(t("Adesso", "Now")) : ""}${pressioni.length ? `<div class="dm-f-contatori-pressioni">${pressioni.join("")}</div>` : ""}${caselle2.length ? griglia(caselle2, "tre") : ""}
     ${contatori.length ? `<div class="dm-f-contatori-letture">${contatori.join("")}</div>` : ""}`
   );
@@ -60008,7 +60049,7 @@ var COMANDI_DELLA_VASCA = Object.freeze({
 function barraChimica({ chiave: chiave2, nome, valore: valore3, minimo, massimo, scalaDa, scalaA, cifre: cifre3 }) {
   const da = Math.min(scalaDa, valore3);
   const a = Math.max(scalaA, valore3);
-  const posto = (numero57) => Math.round((numero57 - da) / (a - da) * 1e3) / 10;
+  const posto = (numero58) => Math.round((numero58 - da) / (a - da) * 1e3) / 10;
   return `<div class="dm-f-piscina-chimica" data-dm-f-chimica="${chiave2}" data-bene="${valore3 >= minimo && valore3 <= massimo}">
     <b>${esc(nome)}<em>${esc(`${formatNumber(minimo, cifre3)}–${formatNumber(massimo, cifre3)}`)}</em></b>
     <span class="dm-f-piscina-fascia"><u style="left:${posto(minimo)}%;right:${100 - posto(massimo)}%"></u><s style="left:${posto(valore3)}%"></s></span>
@@ -60056,7 +60097,7 @@ function unaVasca(vasca, piuDiUna) {
       cifre: 0
     })
   ].filter(Boolean);
-  const eroe = acqua == null && !chimica.length ? "" : `<section class="dm-f-imp-eroe dm-f-piscina-eroe">
+  const eroe2 = acqua == null && !chimica.length ? "" : `<section class="dm-f-imp-eroe dm-f-piscina-eroe">
         ${acqua == null ? giudizio : `<div class="dm-f-piscina-acqua"><div><small class="dm-f-imp-etic">${esc(t("L'acqua", "The water"))}</small><span class="dm-f-imp-num dm-f-imp-grande">${esc(gradi7(acqua))}</span></div>${giudizio}</div>`}
         ${chimica.length ? `<div class="dm-f-piscina-chimiche">${chimica.join("")}</div>` : ""}
       </section>`;
@@ -60068,7 +60109,7 @@ function unaVasca(vasca, piuDiUna) {
     const dentro3 = `<span class="dm-f-imp-tasto-ic" aria-hidden="true">${voce3.icona}</span><b>${esc(voce3.nome())}</b><span>${esc(parola)}</span>`;
     return comando.comando ? `<button type="button" class="dm-f-imp-tasto" data-dm-w-light="${esc(comando.entity)}" data-on="${acceso6}" aria-label="${esc(voce3.nome())}">${dentro3}</button>` : `<div class="dm-f-imp-tasto" data-on="${acceso6}">${dentro3}</div>`;
   });
-  return `${nomeSePiuDiUna(vasca.nome, piuDiUna)}${eroe}
+  return `${nomeSePiuDiUna(vasca.nome, piuDiUna)}${eroe2}
     ${tasti.filter(Boolean).length ? `${titoletto2(t("Comandi", "Controls"))}<div class="dm-f-imp-tasti">${tasti.join("")}</div>` : ""}`;
 }
 function disegnaPiscina(widget) {
@@ -60089,7 +60130,7 @@ function comandoDelFermo(zone) {
 function disegnaIrrigazione(widget) {
   const zone = Array.isArray(widget?.zone) ? widget.zone : [];
   const bagnano = zone.filter((zona) => zona.on === true);
-  let eroe = "";
+  let eroe2 = "";
   if (bagnano.length) {
     const dalla = bagnano.map((zona) => zona.da).filter(Number.isFinite).sort((a, b2) => a - b2)[0];
     const ferma3 = bagnano.every((zona) => zona.comando) ? tastoServizio(comandoDelFermo(bagnano), {
@@ -60097,7 +60138,7 @@ function disegnaIrrigazione(widget) {
       testo: `<span aria-hidden="true">■</span> ${esc(t("Ferma l'irrigazione", "Stop watering"))}`,
       attributi: 'data-dm-f-ferma="irrigazione"'
     }) : "";
-    eroe = `<section class="dm-f-imp-eroe dm-f-irrigazione-eroe" data-on="true">
+    eroe2 = `<section class="dm-f-imp-eroe dm-f-irrigazione-eroe" data-on="true">
       <div class="dm-f-irrigazione-ora"><span class="dm-f-irrigazione-goccia" aria-hidden="true">💦</span><div>
         <small class="dm-f-imp-etic">${esc(t("Sta bagnando", "Watering"))}</small>
         <b class="dm-f-imp-titolo">${esc(bagnano.map((zona) => zona.name).join(", "))}</b>
@@ -60106,7 +60147,7 @@ function disegnaIrrigazione(widget) {
       ${ferma3}
     </section>`;
   } else if (zone.length)
-    eroe = `<section class="dm-f-imp-eroe dm-f-irrigazione-eroe" data-on="false">
+    eroe2 = `<section class="dm-f-imp-eroe dm-f-irrigazione-eroe" data-on="false">
       <div class="dm-f-irrigazione-ora"><span class="dm-f-irrigazione-goccia" aria-hidden="true">🌱</span><div>
         <small class="dm-f-imp-etic">${esc(t("Adesso", "Now"))}</small>
         <b class="dm-f-imp-titolo">${esc(t("Nessuna zona sta bagnando", "No zone is watering"))}</b>
@@ -60131,7 +60172,7 @@ function disegnaIrrigazione(widget) {
         </div>`;
   return guscio2(
     "irrigazione",
-    `${eroe}${schede.length ? `${titoletto2(titoloZone)}<div class="dm-f-imp-tasti" data-dm-f-zone>${schede.join("")}</div>` : ""}${terreno}`
+    `${eroe2}${schede.length ? `${titoletto2(titoloZone)}<div class="dm-f-imp-tasti" data-dm-f-zone>${schede.join("")}</div>` : ""}${terreno}`
   );
 }
 var PAROLE_DELLA_VELOCITA = Object.freeze([
@@ -60254,7 +60295,7 @@ function unaVmc(lettura3, piuDiUna, states) {
           ${cella("esterna", t("Fuori", "Outdoors"), esterna)}<div class="dm-f-vmc-f" aria-hidden="true">→</div>${cella("immissione", t("Entra", "Air in"), immissione, true)}
           ${cella("espulsione", t("Esce", "Air out"), espulsione)}<div class="dm-f-vmc-f" aria-hidden="true">←</div>${cella("ripresa", t("Casa", "Indoors"), ripresa, true)}
         </div>` : "";
-  const eroe = testa2 || flussi ? `<section class="dm-f-imp-eroe dm-f-vmc-eroe">${testa2}${flussi}</section>` : "";
+  const eroe2 = testa2 || flussi ? `<section class="dm-f-imp-eroe dm-f-vmc-eroe">${testa2}${flussi}</section>` : "";
   const pillole2 = [];
   const filtri2 = lettura3.interruttori?.filtri;
   if (filtri2 && !filtri2.muto)
@@ -60285,7 +60326,7 @@ function unaVmc(lettura3, piuDiUna, states) {
       )}</span>`
     );
   }
-  return `${nomeSePiuDiUna(lettura3.nome, piuDiUna)}${eroe}${selettoreDellaVelocita(lettura3.clima, states)}
+  return `${nomeSePiuDiUna(lettura3.nome, piuDiUna)}${eroe2}${selettoreDellaVelocita(lettura3.clima, states)}
     ${pillole2.length ? `${titoletto2(t("Come sta", "How it is doing"))}<div class="dm-f-imp-pillole dm-f-vmc-pillole">${pillole2.join("")}</div>` : ""}`;
 }
 function disegnaVmc(widget, states) {
@@ -60522,17 +60563,17 @@ function barretta(quota, colore = "") {
   return `<span class="dm-f-sv-barra" aria-hidden="true" style="--w:${quanto}%${colore ? `;--c:${esc(colore)}` : ""}"></span>`;
 }
 var titoletto3 = (testo4) => `<h4 class="dm-f-sv-tit">${esc(testo4)}</h4>`;
-function giornoDellaSettimana3(istante6, forma2 = "long") {
+function giornoDellaSettimana3(istante7, forma2 = "long") {
   try {
-    const parola = new Date(istante6).toLocaleDateString(locale() || void 0, { weekday: forma2 });
+    const parola = new Date(istante7).toLocaleDateString(locale() || void 0, { weekday: forma2 });
     return parola.charAt(0).toUpperCase() + parola.slice(1);
   } catch (_errore) {
     return "";
   }
 }
-function giornoEMese(istante6) {
+function giornoEMese(istante7) {
   try {
-    return new Date(istante6).toLocaleDateString(locale() || void 0, {
+    return new Date(istante7).toLocaleDateString(locale() || void 0, {
       weekday: "short",
       day: "numeric"
     });
@@ -60549,8 +60590,8 @@ function fraGiorni(giorni) {
   if (giorni === 1) return t("domani", "tomorrow");
   return `${t("fra", "in")} ${giorni} ${t("giorni", "days")}`;
 }
-function quantoFa3(istante6, adesso2 = Date.now()) {
-  const minuti = Math.max(0, Math.round((adesso2 - istante6) / 6e4));
+function quantoFa3(istante7, adesso2 = Date.now()) {
+  const minuti = Math.max(0, Math.round((adesso2 - istante7) / 6e4));
   if (minuti < 1) return t("adesso", "just now");
   if (minuti < 60) return `${minuti} ${t("min fa", "min ago")}`;
   const ore = Math.round(minuti / 60);
@@ -60653,7 +60694,7 @@ function finestraAria(widget) {
   const dove = stanzaDi2(copertina) || clean(copertina.name);
   const numeroGrande = valoreScritto(copertina, locale());
   const consiglio = consiglioDellAria(widget.peggiore || copertina);
-  const eroe = `<section class="dm-f-sv-eroe dm-f-aria-eroe">
+  const eroe2 = `<section class="dm-f-sv-eroe dm-f-aria-eroe">
       <small>${esc([richiestaDelGrado(widget.grado || copertina.grado), dove].filter(Boolean).join(" · "))}</small>
       <div class="dm-f-aria-su">
         <span class="dm-f-sv-num dm-f-sv-grande">${esc(numeroGrande)}</span>
@@ -60698,7 +60739,7 @@ function finestraAria(widget) {
           ${misure}
         </article>`;
   }).join("");
-  return `<div class="dm-f-sv dm-f-aria">${eroe}${titoletto3(
+  return `<div class="dm-f-sv dm-f-aria">${eroe2}${titoletto3(
     t("Stanza per stanza", "Room by room")
   )}<div class="dm-f-sv-griglia">${stanze4}</div></div>`;
 }
@@ -60739,12 +60780,12 @@ function finestraPiante(widget) {
   if (!come2?.piante?.length) return "";
   const adesso2 = Date.now();
   const glifo2 = (pianta, misura7) => disegnoDiCasa(pianta.lettura.icon, { misura: misura7, ripiego: "plant" });
-  let eroe = "";
+  let eroe2 = "";
   const sete = come2.daInnaffiare || [];
   if (sete.length) {
     const [prima] = sete;
     const acqua = prima.ultimaAcqua ? ` · ${t("ultima acqua", "last watered")} ${quantoFa3(prima.ultimaAcqua, adesso2)}` : "";
-    eroe = `<section class="dm-f-sv-eroe dm-f-piante-eroe">
+    eroe2 = `<section class="dm-f-sv-eroe dm-f-piante-eroe">
         <span class="dm-f-piante-vaso" aria-hidden="true">${glifo2(prima, 48)}</span>
         <div>
           <small>${esc(t("Da innaffiare oggi", "Water today"))}${sete.length > 1 ? ` · +${sete.length - 1}` : ""}</small>
@@ -60762,7 +60803,7 @@ function finestraPiante(widget) {
     )}</p>`;
   } else if (come2.aspettano?.length) {
     const [prima] = come2.aspettano;
-    eroe = `<section class="dm-f-sv-eroe dm-f-piante-eroe">
+    eroe2 = `<section class="dm-f-sv-eroe dm-f-piante-eroe">
         <span class="dm-f-piante-vaso" aria-hidden="true">${glifo2(prima, 48)}</span>
         <div>
           <small>${esc(t("Aspetta la pioggia", "Waiting for the rain"))}</small>
@@ -60772,7 +60813,7 @@ function finestraPiante(widget) {
       </section>`;
   } else if (come2.prossima) {
     const prossima = come2.prossima;
-    eroe = `<section class="dm-f-sv-eroe dm-f-piante-eroe">
+    eroe2 = `<section class="dm-f-sv-eroe dm-f-piante-eroe">
         <span class="dm-f-piante-vaso" aria-hidden="true">${glifo2(prossima, 48)}</span>
         <div>
           <small>${esc(t("Tutte a posto", "All fine"))}</small>
@@ -60808,7 +60849,7 @@ function finestraPiante(widget) {
       <span><b data-t="giusta"></b>${esc(t("giusta", "just right"))}</span>
       <span><b data-t="zuppa"></b>${esc(t("zuppa", "soaked"))}</span>
     </div>`;
-  return `<div class="dm-f-sv dm-f-piante">${eroe}${titoletto3(
+  return `<div class="dm-f-sv dm-f-piante">${eroe2}${titoletto3(
     t("Tutte, dalla più asciutta", "All of them, driest first")
   )}${legenda}<div class="dm-f-sv-elenco">${righe3}</div></div>`;
 }
@@ -60849,7 +60890,7 @@ function vascaMarkup2(vasca, piuVasche) {
   );
   const tonoTesta = come2.stato === "fuori" ? "rosso" : come2.stato === "bene" ? "ok" : come2.stato === "mute" ? "" : "occhio";
   const parolaTesta = come2.stato === "bene" ? t("Tutto regolare", "All normal") : testa2?.grande || "";
-  let eroe = "";
+  let eroe2 = "";
   if (caldo) {
     const { lettura: lettura3 } = caldo;
     const ha = lettura3.minimo !== null && lettura3.massimo !== null;
@@ -60866,7 +60907,7 @@ function vascaMarkup2(vasca, piuVasche) {
           <span>${esc(formatNumber(alto, 0))}°</span>
         </div>`;
     }
-    eroe = `<section class="dm-f-sv-eroe dm-f-acquario-eroe" data-tipo="${esc(tipo)}">
+    eroe2 = `<section class="dm-f-sv-eroe dm-f-acquario-eroe" data-tipo="${esc(tipo)}">
         <small>${esc(
       tipo === "terrario" ? t("Il terrario adesso", "The terrarium now") : t("L'acqua adesso", "The water now")
     )}</small>
@@ -60877,7 +60918,7 @@ function vascaMarkup2(vasca, piuVasche) {
         ${forcella}
       </section>`;
   } else if (parolaTesta) {
-    eroe = `<section class="dm-f-sv-eroe dm-f-acquario-eroe" data-tipo="${esc(tipo)}">
+    eroe2 = `<section class="dm-f-sv-eroe dm-f-acquario-eroe" data-tipo="${esc(tipo)}">
         <small>${esc(tipo === "terrario" ? t("Il terrario adesso", "The terrarium now") : t("L'acqua adesso", "The water now"))}</small>
         <div class="dm-f-acquario-su">${pastiglia(tonoTesta, parolaTesta)}</div>
         ${testa2?.nomi && come2.stato !== "bene" ? `<p>${esc(testa2.nomi)}</p>` : ""}
@@ -60928,7 +60969,7 @@ function vascaMarkup2(vasca, piuVasche) {
   const nome = piuVasche ? `<h5 class="dm-f-acquario-nome">${esc(
     [come2.vasca, come2.litri ? `${formatNumber(come2.litri, 0)} L` : ""].filter(Boolean).join(" · ")
   )}</h5>` : "";
-  return `<section class="dm-f-acquario-vasca">${nome}${eroe}${caselle2 ? `${titoletto3(tipo === "terrario" ? t("Le misure", "Readings") : t("I valori dell'acqua", "Water values"))}<div class="dm-f-acquario-due">${caselle2}</div>` : ""}${tasti ? `${titoletto3(t("Comandi", "Controls"))}<div class="dm-f-sv-tasti">${tasti}</div>` : ""}${manutenzione}</section>`;
+  return `<section class="dm-f-acquario-vasca">${nome}${eroe2}${caselle2 ? `${titoletto3(tipo === "terrario" ? t("Le misure", "Readings") : t("I valori dell'acqua", "Water values"))}<div class="dm-f-acquario-due">${caselle2}</div>` : ""}${tasti ? `${titoletto3(t("Comandi", "Controls"))}<div class="dm-f-sv-tasti">${tasti}</div>` : ""}${manutenzione}</section>`;
 }
 function finestraAcquario(widget) {
   const elenco15 = widget.elenco || [];
@@ -61137,12 +61178,12 @@ function settimanaDellAgenda(eventi, scadenze, adesso2) {
     conto.set(giorno3, (conto.get(giorno3) || 0) + 1);
   }
   const giorni = Array.from({ length: 7 }, (_, indice) => {
-    const istante6 = giornoDaOggi(indice, adesso2);
-    const chiave2 = chiaveDelGiorno2(istante6);
+    const istante7 = giornoDaOggi(indice, adesso2);
+    const chiave2 = chiaveDelGiorno2(istante7);
     const quanti2 = Math.min(3, conto.get(chiave2) || 0);
     return `<div class="dm-f-sv-giorno"${indice === 0 ? ' data-oggi="true"' : ""}>
-        <small>${esc(giornoDellaSettimana3(istante6, "short").replace(/\.$/, "").toUpperCase())}</small>
-        <span class="dm-f-sv-num">${new Date(istante6).getDate()}</span>
+        <small>${esc(giornoDellaSettimana3(istante7, "short").replace(/\.$/, "").toUpperCase())}</small>
+        <span class="dm-f-sv-num">${new Date(istante7).getDate()}</span>
         <i>${"<b></b>".repeat(quanti2)}</i>
       </div>`;
   });
@@ -61229,7 +61270,7 @@ function finestraAgenda(widget) {
     const { ritardo, giorni } = agendaPerGiorno(eventi, scadenze, adesso2);
     const limite = chiaveDelGiorno2(giornoDaOggi(6, adesso2));
     const dentro3 = giorni.filter(({ giorno: giorno3 }) => giorno3 <= limite);
-    const dopo = giorni.filter(({ giorno: giorno3 }) => giorno3 > limite).reduce((somma2, { eventi: elenco15 }) => somma2 + elenco15.length, 0);
+    const dopo = giorni.filter(({ giorno: giorno3 }) => giorno3 > limite).reduce((somma3, { eventi: elenco15 }) => somma3 + elenco15.length, 0);
     const blocchi = [
       ritardo.length ? `<div class="dm-f-agenda-giorno" data-ritardo="true"><h5>⚠️ ${esc(parole4.inRitardo)}</h5><ul>${ritardo.map((riga3) => rigaDellAgenda(riga3, adesso2, lingua3, parole4)).join("")}</ul></div>` : "",
       ...dentro3.map(
@@ -61268,9 +61309,9 @@ function quandoDelRitiro(riga3, adesso2) {
   if (riga3.giorni === null || riga3.giorni === void 0) return [clean(riga3.value), ""];
   if (riga3.giorni === 0) return [t("Oggi", "Today"), giornoEMese(adesso2)];
   if (riga3.giorni === 1) return [t("Domani", "Tomorrow"), giornoEMese(giornoDaOggi(1, adesso2))];
-  const istante6 = giornoDaOggi(riga3.giorni, adesso2);
-  if (riga3.giorni < 7) return [giornoDellaSettimana3(istante6), fraGiorni(riga3.giorni)];
-  return [giornoEMese(istante6), fraGiorni(riga3.giorni)];
+  const istante7 = giornoDaOggi(riga3.giorni, adesso2);
+  if (riga3.giorni < 7) return [giornoDellaSettimana3(istante7), fraGiorni(riga3.giorni)];
+  return [giornoEMese(istante7), fraGiorni(riga3.giorni)];
 }
 function finestraRifiuti(widget) {
   const adesso2 = Date.now();
@@ -61282,14 +61323,14 @@ function finestraRifiuti(widget) {
   if (!righe3.length) return "";
   const future = righe3.filter((riga3) => riga3.giorni !== null && riga3.giorni >= 0);
   const prima = future[0] || null;
-  let eroe = "";
+  let eroe2 = "";
   if (prima) {
     const stessoGiorno6 = future.filter((riga3) => riga3.giorni === prima.giorni && riga3 !== prima);
     const etichetta3 = prima.giorni === 0 ? t("Oggi ritirano", "Collected today") : prima.giorni === 1 ? t("Stasera fuori", "Out tonight") : t("Il prossimo ritiro", "Next collection");
-    const istante6 = giornoDaOggi(prima.giorni, adesso2);
-    const quando4 = prima.giorni === 0 ? t("ritiro oggi", "collection today") : prima.giorni === 1 ? `${t("ritiro domani mattina", "collection tomorrow morning")}, ${giornoEMese(istante6)}` : `${giornoDellaSettimana3(istante6)} · ${fraGiorni(prima.giorni)}`;
+    const istante7 = giornoDaOggi(prima.giorni, adesso2);
+    const quando4 = prima.giorni === 0 ? t("ritiro oggi", "collection today") : prima.giorni === 1 ? `${t("ritiro domani mattina", "collection tomorrow morning")}, ${giornoEMese(istante7)}` : `${giornoDellaSettimana3(istante7)} · ${fraGiorni(prima.giorni)}`;
     const bidone = prima.materiale && !(prima.dalCalendario && prima.materiale === "altro") ? disegnoDelBidone(prima.materiale, prima.colore, 92) : "";
-    eroe = `<section class="dm-f-sv-eroe dm-f-rifiuti-eroe">
+    eroe2 = `<section class="dm-f-sv-eroe dm-f-rifiuti-eroe">
         ${bidone ? `<span class="dm-f-rifiuti-bidone" aria-hidden="true">${bidone}</span>` : ""}
         <div>
           <small>${esc(etichetta3)}</small>
@@ -61300,11 +61341,11 @@ function finestraRifiuti(widget) {
       </section>`;
   }
   const settimana = Array.from({ length: 7 }, (_, indice) => {
-    const istante6 = giornoDaOggi(indice, adesso2);
+    const istante7 = giornoDaOggi(indice, adesso2);
     const quel = righe3.filter((riga3) => riga3.giorni === indice).slice(0, 2);
     return `<div class="dm-f-sv-giorno dm-f-rifiuti-giorno"${indice === 0 ? ' data-oggi="true"' : ""}>
-        <small>${esc(giornoDellaSettimana3(istante6, "short").replace(/\.$/, "").toUpperCase())}</small>
-        <span class="dm-f-sv-num">${new Date(istante6).getDate()}</span>
+        <small>${esc(giornoDellaSettimana3(istante7, "short").replace(/\.$/, "").toUpperCase())}</small>
+        <span class="dm-f-sv-num">${new Date(istante7).getDate()}</span>
         <span class="dm-f-rifiuti-colori">${quel.map(
       (riga3) => `<i style="--c:${esc(riga3.colore || "#94a3b8")}" title="${esc(riga3.name)}"></i>`
     ).join("")}</span>
@@ -61318,7 +61359,7 @@ function finestraRifiuti(widget) {
           <span class="dm-f-sv-val"><span class="dm-f-sv-num">${esc(grande)}</span>${piccolo ? `<em>${esc(piccolo)}</em>` : ""}</span>
         </div>`;
   }).join("");
-  return `<div class="dm-f-sv dm-f-rifiuti">${eroe}${titoletto3(
+  return `<div class="dm-f-sv dm-f-rifiuti">${eroe2}${titoletto3(
     t("I prossimi sette giorni", "The next seven days")
   )}<div class="dm-f-sv-settimana" aria-hidden="true">${settimana}</div>${titoletto3(
     t("In ordine", "In order")
@@ -61338,10 +61379,10 @@ function parolaDellAvviso(livello) {
   if (livello === "attenzione") return t("Allerta arancione", "Orange alert");
   return t("Allerta gialla", "Yellow alert");
 }
-function quandoScritto(istante6, adesso2) {
-  const giorno3 = chiaveDelGiorno2(istante6);
+function quandoScritto(istante7, adesso2) {
+  const giorno3 = chiaveDelGiorno2(istante7);
   const parole4 = paroleDelCalendario();
-  return `${etichettaDelGiorno(giorno3, adesso2, parole4, locale()).toLowerCase()} ${orarioDi(istante6, locale())}`;
+  return `${etichettaDelGiorno(giorno3, adesso2, parole4, locale()).toLowerCase()} ${orarioDi(istante7, locale())}`;
 }
 function avvisoGrande(riga3, adesso2) {
   const lettura3 = riga3.lettura || {};
@@ -61864,13 +61905,13 @@ function finestraElettrodomestici(widget) {
   const righe3 = Array.isArray(widget.rows) ? widget.rows : [];
   const accesi = righe3.filter((riga3) => riga3.mode === "running").sort((a, b2) => (a.restano ?? Infinity) - (b2.restano ?? Infinity));
   const fermi = righe3.filter((riga3) => riga3.mode !== "running");
-  const watt5 = accesi.reduce((somma2, riga3) => somma2 + (Number(riga3.watts) || 0), 0);
+  const watt5 = accesi.reduce((somma3, riga3) => somma3 + (Number(riga3.watts) || 0), 0);
   const primo = accesi.find((riga3) => riga3.restano != null);
   const frasi = [];
   if (watt5 >= 1) frasi.push(`${t("insieme", "together")} ${formatPowerLabel(watt5)}`);
   if (primo)
     frasi.push(`${primo.name} · ${t("finisce fra", "done in")} ${restaCorto(primo.restano)}`);
-  const eroe = `<div class="dm-f-el-eroe">
+  const eroe2 = `<div class="dm-f-el-eroe">
     <span class="dm-f-num">${accesi.length}</span>
     <div><b>${esc(accesi.length ? t("al lavoro adesso", "working now") : t("tutti fermi", "all idle"))}</b>${frasi.map((frase4) => `<span data-dm-no-i18n>${esc(frase4)}</span>`).join("")}</div>
   </div>`;
@@ -61881,7 +61922,7 @@ function finestraElettrodomestici(widget) {
             <b data-dm-no-i18n>${esc(riga3.name)}</b><em>${esc(parolaDelFermo(riga3, adesso2))}</em>
           </div>`
   ).join("")}</div>` : "";
-  return `<div class="dm-f dm-f-elettrodomestici">${eroe}${inFunzione}${fermiMarkup}</div>`;
+  return `<div class="dm-f dm-f-elettrodomestici">${eroe2}${inFunzione}${fermiMarkup}</div>`;
 }
 var STILE_COMUNE = `
 ${P6} .dm-f{display:grid;gap:10px;min-width:0}
@@ -61966,7 +62007,7 @@ function finestraCottura(widget) {
     );
   if (pronta && cucina.finitaAlle)
     righe3.push(`${esc(t("fine alle", "done at"))} ${esc(orologio2(cucina.finitaAlle))}`);
-  const eroe = `<div class="dm-f-cot-eroe">${anello2}
+  const eroe2 = `<div class="dm-f-cot-eroe">${anello2}
     <div class="dm-f-cot-dx"><b data-dm-no-i18n>${esc(cucina.programma || cucina.parola || "")}</b>${righe3.map((riga3) => `<span class="dm-f-cot-q">${riga3}</span>`).join("")}${cassetto}</div>
   </div>`;
   const gradi10 = cucina.gradi ? `<h4 class="dm-f-tit">${esc(t("Temperatura", "Temperature"))}</h4>
@@ -61993,7 +62034,7 @@ function finestraCottura(widget) {
     ].filter(Boolean).join(" · ");
     return `<div><span aria-hidden="true">${esc(altro.glifo)}</span><span><b data-dm-no-i18n>${esc(altro.nome)}</b><em>${esc(sotto)}</em></span></div>`;
   }).join("")}</div>` : "";
-  return `<div class="dm-f dm-f-cottura" data-fase="${esc(cucina.fase || "")}">${eroe}${gradi10}${tasti.length ? `<div class="dm-f-cot-tasti" style="--n:${tasti.length}">${tasti.join("")}</div>` : ""}${altri}</div>`;
+  return `<div class="dm-f dm-f-cottura" data-fase="${esc(cucina.fase || "")}">${eroe2}${gradi10}${tasti.length ? `<div class="dm-f-cot-tasti" style="--n:${tasti.length}">${tasti.join("")}</div>` : ""}${altri}</div>`;
 }
 var STILE_COTTURA = `
 ${P6} .dm-f-cot-eroe{display:flex;gap:16px;align-items:center;padding:18px;border-radius:26px;
@@ -62048,14 +62089,14 @@ function finestraMinipc(widget) {
     temperatura ? `🌡️ ${clean(temperatura.value)}` : "",
     potenza3 ? `⚡ ${clean(potenza3.value)}` : ""
   ].filter(Boolean).join(" · ");
-  const pastiglia3 = internet ? `<span class="dm-f-pc-net" data-on="${Boolean(internet.on)}"><i></i>${esc(
+  const pastiglia4 = internet ? `<span class="dm-f-pc-net" data-on="${Boolean(internet.on)}"><i></i>${esc(
     internet.on ? t("Internet attivo", "Internet up") : t("Internet assente", "Internet down")
   )}</span>` : "";
   const percentuale5 = (riga3) => riga3 && Number.isFinite(Number(riga3.raw)) && /%$/.test(clean(riga3.value));
   const carico = percentuale5(cpu) ? Number(cpu.raw) : null;
-  const eroe = `<div class="dm-f-pc-eroe">${carico != null ? `<div class="dm-f-pc-anello" style="--p:${Math.round(Math.max(0, Math.min(100, carico)))}"><div><span class="dm-f-num">${esc(
+  const eroe2 = `<div class="dm-f-pc-eroe">${carico != null ? `<div class="dm-f-pc-anello" style="--p:${Math.round(Math.max(0, Math.min(100, carico)))}"><div><span class="dm-f-num">${esc(
     clean(cpu.value)
-  )}</span><small>CPU</small></div></div>` : ""}<div class="dm-f-pc-dx">${carico != null ? `<b>${esc(fraseDelCarico(carico))}</b>` : ""}${accanto ? `<span>${esc(accanto)}</span>` : ""}${pastiglia3}</div></div>`;
+  )}</span><small>CPU</small></div></div>` : ""}<div class="dm-f-pc-dx">${carico != null ? `<b>${esc(fraseDelCarico(carico))}</b>` : ""}${accanto ? `<span>${esc(accanto)}</span>` : ""}${pastiglia4}</div></div>`;
   const quote = ["ram", "disco"].map(di).filter(percentuale5).map((riga3) => {
     const pieno = Math.max(0, Math.min(100, Number(riga3.raw)));
     const tono = pieno >= 92 ? "rosso" : pieno >= 80 ? "caldo" : "";
@@ -62064,11 +62105,11 @@ function finestraMinipc(widget) {
     )}</span></div>`;
   });
   const rete = ["scarica", "invia", "ping"].map((chiave2) => [chiave2, di(chiave2)]).filter(([, riga3]) => riga3).map(([chiave2, riga3]) => {
-    const { numero: numero57, unita: unita3 } = numeroEUnita(riga3.value);
+    const { numero: numero58, unita: unita3 } = numeroEUnita(riga3.value);
     const nome = chiave2 === "scarica" ? `⬇ ${t("Scarica", "Download")}` : chiave2 === "invia" ? `⬆ ${t("Invia", "Upload")}` : "Ping";
-    return `<div class="dm-f-pc-cas"><small>${esc(nome)}</small><span class="dm-f-num">${esc(numero57)}</span><em>${esc(unita3)}</em></div>`;
+    return `<div class="dm-f-pc-cas"><small>${esc(nome)}</small><span class="dm-f-num">${esc(numero58)}</span><em>${esc(unita3)}</em></div>`;
   });
-  return `<div class="dm-f dm-f-minipc">${eroe}${quote.length ? `<h4 class="dm-f-tit">${esc(t("Quanto è pieno", "How full"))}</h4>${quote.join("")}` : ""}${rete.length ? `<h4 class="dm-f-tit">${esc(t("La rete", "Network"))}</h4><div class="dm-f-pc-tre">${rete.join("")}</div>` : ""}</div>`;
+  return `<div class="dm-f dm-f-minipc">${eroe2}${quote.length ? `<h4 class="dm-f-tit">${esc(t("Quanto è pieno", "How full"))}</h4>${quote.join("")}` : ""}${rete.length ? `<h4 class="dm-f-tit">${esc(t("La rete", "Network"))}</h4><div class="dm-f-pc-tre">${rete.join("")}</div>` : ""}</div>`;
 }
 var STILE_MINIPC = `
 ${P6} .dm-f-pc-eroe{display:flex;gap:16px;align-items:center;padding:18px;border-radius:26px;
@@ -62119,7 +62160,7 @@ function finestraMacchine(widget) {
   const righe3 = Array.isArray(widget.rows) ? widget.rows : [];
   const giu = righe3.filter((riga3) => riga3.stato !== "su");
   const su = righe3.filter((riga3) => riga3.stato === "su");
-  const eroe = giu.length ? `<div class="dm-f-mac-eroe" data-giu="true">
+  const eroe2 = giu.length ? `<div class="dm-f-mac-eroe" data-giu="true">
         <div class="dm-f-mac-riga"><span class="dm-f-num">${giu.length}</span><div><b>${esc(
     giu.length === 1 ? t("non risponde", "not answering") : t("non rispondono", "not answering")
   )}</b>${su.length ? `<span>${esc(t("in piedi:", "up:"))} ${su.length}</span>` : ""}</div></div>
@@ -62150,7 +62191,7 @@ function finestraMacchine(widget) {
       (riga3) => `<div class="dm-f-mac-r"><i aria-hidden="true"></i><b data-dm-no-i18n>${esc(riga3.name)}</b><span aria-hidden="true">${segnoDellaMacchina(riga3, 18)}</span></div>`
     ).join("")}</div>`;
   }).join("");
-  return `<div class="dm-f dm-f-macchine">${eroe}${elenco15}</div>`;
+  return `<div class="dm-f dm-f-macchine">${eroe2}${elenco15}</div>`;
 }
 var STILE_MACCHINE = `
 ${P6} .dm-f-macchine{--dm-f-indaco:#4f46e5}
@@ -62284,7 +62325,7 @@ function finestraSezioneMia(widget, states) {
   const comandi = generi.filter(([, genere]) => genere === "comando").map(([riga3]) => riga3);
   const letture2 = generi.filter(([riga3, genere]) => genere !== "comando" && riga3 !== livello).map(([riga3]) => riga3);
   const frase4 = comandi.map((riga3) => `${nomePulito(riga3.name, riga3.entity)} ${parolaDelComando(riga3).toLowerCase()}`).join(" · ");
-  const eroe = livello ? `<div class="dm-f-mia-eroe">
+  const eroe2 = livello ? `<div class="dm-f-mia-eroe">
         <div class="dm-f-mia-vasca" aria-hidden="true"><i style="height:${Math.round(Math.max(0, Math.min(100, Number(livello.raw))))}%"></i></div>
         <div><small data-dm-no-i18n>${esc(nomePulito(livello.name, livello.entity))}</small><span class="dm-f-num">${esc(
     clean(livello.value).replace(/\s+%$/, "%")
@@ -62308,7 +62349,7 @@ function finestraSezioneMia(widget, states) {
       nomePulito(riga3.name, riga3.entity)
     )}</b><span class="dm-f-num">${esc(valore3)}</span></div>`;
   }).join("")}` : "";
-  return `<div class="dm-f dm-f-sezionimie">${eroe}${leve}${elenco15}</div>`;
+  return `<div class="dm-f dm-f-sezionimie">${eroe2}${leve}${elenco15}</div>`;
 }
 var STILE_EVIDENZE = `
 ${P6} .dm-f-ev-cmd{display:flex;align-items:center;gap:13px;padding:14px;border-radius:22px;
@@ -62362,7 +62403,7 @@ function finestraSegnalazioni(widget) {
     ["assistenza", "💬", t("Aiuto", "Help"), "#a5b4fc"]
   ].filter(([id]) => Number(conto[id]) > 0);
   const oggi = Number(conto.oggi) || 0;
-  const eroe = `<div class="dm-f-seg-eroe">
+  const eroe2 = `<div class="dm-f-seg-eroe">
     <div class="dm-f-seg-riga"><span class="dm-f-num">${Number(conto.quante) || 0}</span><div><b>${esc(
     t("da lavorare", "to work on")
   )}</b><span>${esc(oggi ? `${t("Oggi arrivate:", "In today:")} ${oggi}` : t("Oggi non è arrivato niente", "Nothing came in today"))}</span></div></div>
@@ -62376,12 +62417,12 @@ function finestraSegnalazioni(widget) {
   const conversazioni = Array.isArray(conto.conversazioni) ? conto.conversazioni : [];
   const MOSTRATE = 3;
   const attesa = conversazioni.length ? `<h4 class="dm-f-tit">${esc(t("Ti stanno aspettando", "Waiting for you"))}</h4>${conversazioni.slice(-MOSTRATE).reverse().map((voce3) => {
-    const numero57 = Number(voce3?.number) || 0;
+    const numero58 = Number(voce3?.number) || 0;
     const stato3 = voce3?.stato === "in-carico" ? t("in lavorazione", "in progress") : voce3?.stato === "inviato" ? t("mai aperta", "never opened") : "";
-    const sotto = [numero57 ? `#${numero57}` : "", clean(voce3?.autore), stato3].filter(Boolean).join(" · ");
+    const sotto = [numero58 ? `#${numero58}` : "", clean(voce3?.autore), stato3].filter(Boolean).join(" · ");
     return `<div class="dm-f-seg-att">
             <span class="dm-f-seg-av" aria-hidden="true">${esc(iniziali(voce3?.autore))}</span>
-            <span class="dm-f-seg-n"><b data-dm-no-i18n>${esc(clean(voce3?.title) || `#${numero57}`)}</b><em>${esc(sotto)}</em></span>
+            <span class="dm-f-seg-n"><b data-dm-no-i18n>${esc(clean(voce3?.title) || `#${numero58}`)}</b><em>${esc(sotto)}</em></span>
             <span class="dm-f-seg-badge" title="${esc(t("Messaggi nuovi", "New messages"))}">${Number(voce3?.messages) || 1}</span>
           </div>`;
   }).join("")}${conversazioni.length > MOSTRATE ? `<p class="dm-f-seg-altre">${esc(t("e altre:", "and more:"))} ${conversazioni.length - MOSTRATE}</p>` : ""}` : "";
@@ -62393,7 +62434,7 @@ function finestraSegnalazioni(widget) {
     <div><small>${esc(t("Mai aperte", "Never opened"))}</small><span class="dm-f-num">${Number(conto.nuove) || 0}</span></div>
     <div><small>${esc(t("In lavorazione", "In progress"))}</small><span class="dm-f-num">${Number(conto.inLavorazione) || 0}</span></div>
   </div>`;
-  return `<div class="dm-f dm-f-segnalazioni">${eroe}${attesa}${ferme}${due3}
+  return `<div class="dm-f dm-f-segnalazioni">${eroe2}${attesa}${ferme}${due3}
     <button type="button" class="dm-f-porta dm-f-pieno" data-dm-apri-cruscotto>${esc(
     t("Apri il cruscotto", "Open the console")
   )} <span aria-hidden="true">→</span></button></div>`;
@@ -62984,7 +63025,7 @@ var bagnata = (voce3) => BAGNATE.has(voce3.condizione) || (voce3.probabilita ?? 
 function fraseDelleProssimeOre(previsioni, { adesso: adesso2 = Date.now(), ore = 24, unita: unita3 = "mm" } = {}) {
   const fila2 = prossimeOre2(previsioni, { adesso: adesso2, ore, unita: unita3 });
   if (!fila2.length) return null;
-  const mm = fila2.reduce((somma2, voce3) => somma2 + (voce3.mm ?? 0), 0);
+  const mm = fila2.reduce((somma3, voce3) => somma3 + (voce3.mm ?? 0), 0);
   const neve = (voce3) => /^snowy$/.test(voce3?.condizione || "");
   if (bagnata(fila2[0])) {
     const asciutta = fila2.find((voce3) => !bagnata(voce3));
@@ -64069,11 +64110,11 @@ function disegnaNelPosto(posto, scelto) {
   if (!nodo2) posto.append(nodo2 = nuovoBlocco());
   return disegnaNelBlocco(nodo2, scelto);
 }
-function disegnaRadarIn(contenitore4) {
-  if (!contenitore4 || !doc) return false;
-  contenitore4.classList?.add?.(POSTO_DEL_RADAR);
-  state50.posti.add(contenitore4);
-  const mostrato = disegnaNelPosto(contenitore4, radarScelto());
+function disegnaRadarIn(contenitore5) {
+  if (!contenitore5 || !doc) return false;
+  contenitore5.classList?.add?.(POSTO_DEL_RADAR);
+  state50.posti.add(contenitore5);
+  const mostrato = disegnaNelPosto(contenitore5, radarScelto());
   if (finestraAperta2()) avvia();
   regolaLAnimazione();
   return mostrato;
@@ -64188,10 +64229,10 @@ function osservaLaFinestra() {
   return true;
 }
 function provaLIndirizzo(modello2, luogo, raggio = RAGGIO_DI_SERIE, tetto = null) {
-  return new Promise((risolvi3) => {
+  return new Promise((risolvi4) => {
     const problema = problemaDellIndirizzo(modello2);
     if (problema) {
-      risolvi3({ ok: false, motivo: problema === "vuoto" ? "senza-indirizzo" : problema });
+      risolvi4({ ok: false, motivo: problema === "vuoto" ? "senza-indirizzo" : problema });
       return;
     }
     const perLaMappa = luogo && finestraDiTessere(luogo.lat, luogo.lon, { raggioKm: raggio });
@@ -64199,14 +64240,14 @@ function provaLIndirizzo(modello2, luogo, raggio = RAGGIO_DI_SERIE, tetto = null
     const tessera3 = finestraTessere?.tessere?.[0];
     const url = tessera3 ? urlDellaTessera(modello2, tessera3, finestraTessere.zoom) : "";
     if (!url) {
-      risolvi3({ ok: false, motivo: "senza-indirizzo" });
+      risolvi4({ ok: false, motivo: "senza-indirizzo" });
       return;
     }
     const prova = new root.Image();
     const fine = (esito2) => {
       prova.onload = null;
       prova.onerror = null;
-      risolvi3(esito2);
+      risolvi4(esito2);
     };
     prova.onload = () => fine({ ok: prova.naturalWidth > 0, motivo: "", url });
     prova.onerror = () => fine({ ok: false, motivo: "non-arriva", url });
@@ -64805,11 +64846,11 @@ function mappature() {
 function sensoriDellaStazione() {
   const caselle2 = mappature();
   const barra2 = readJson("cd_barra_casa", {}) || {};
-  const pagina2 = normalizzaMeteo(readJson(CHIAVE_METEO, {}));
+  const pagina3 = normalizzaMeteo(readJson(CHIAVE_METEO, {}));
   const fuori = {};
   for (const misura7 of MISURE_DELLA_STAZIONE) {
     const entita3 = clean(
-      misura7.casella ? caselle2[misura7.casella] : misura7.barra ? barra2?.[misura7.barra] : pagina2[misura7.pagina]
+      misura7.casella ? caselle2[misura7.casella] : misura7.barra ? barra2?.[misura7.barra] : pagina3[misura7.pagina]
     );
     if (entita3.includes(".") && entita3 !== misura7.casella) fuori[misura7.chiave] = entita3;
   }
@@ -64945,16 +64986,16 @@ function ultimaPagina9() {
 }
 function ensureMeteoPage() {
   if (!doc) return null;
-  let pagina2 = doc.getElementById(METEO_PAGE_ID);
-  if (pagina2) return pagina2;
+  let pagina3 = doc.getElementById(METEO_PAGE_ID);
+  if (pagina3) return pagina3;
   const sorella = ultimaPagina9();
   if (!sorella?.parentElement) return null;
-  pagina2 = doc.createElement("section");
-  pagina2.className = "page";
-  pagina2.id = METEO_PAGE_ID;
-  pagina2.innerHTML = `<div class="dm-meteo-wrap" id="meteo-wrap"></div>`;
-  sorella.after(pagina2);
-  return pagina2;
+  pagina3 = doc.createElement("section");
+  pagina3.className = "page";
+  pagina3.id = METEO_PAGE_ID;
+  pagina3.innerHTML = `<div class="dm-meteo-wrap" id="meteo-wrap"></div>`;
+  sorella.after(pagina3);
+  return pagina3;
 }
 function apriLaPagina(voce3) {
   for (const nodo2 of doc.querySelectorAll(".tab")) nodo2.classList.remove("active");
@@ -64994,8 +65035,8 @@ function accendiLaVoce6(entita3) {
   const serve = segnaContenuto(METEO_TAB, Boolean(entita3)) && sezioneAccesa7();
   if (serve) voce3.style.removeProperty("display");
   else voce3.style.setProperty("display", "none", "important");
-  const pagina2 = doc.getElementById(METEO_PAGE_ID);
-  if (!serve && pagina2?.classList.contains("active"))
+  const pagina3 = doc.getElementById(METEO_PAGE_ID);
+  if (!serve && pagina3?.classList.contains("active"))
     doc.querySelector('.tab[data-tab="home"]')?.click();
   return serve;
 }
@@ -65176,7 +65217,7 @@ function scalaUV(uv) {
   return `<div class="dm-meteo-uv"><span class="dm-meteo-uv-barra"><i style="left:${posto.toFixed(1)}%"></i></span>
       <span class="dm-meteo-uv-tacche"><em>0</em><em>3</em><em>6</em><em>8</em><em>11+</em></span></div>`;
 }
-function tessera({ chiave: chiave2, disegno: disegno6, nome, valore: valore3, unita: unita3, sotto, grafico, stato: stato3, colore, largo, extra = "" }) {
+function tessera({ chiave: chiave2, disegno: disegno6, nome, valore: valore3, unita: unita3, sotto, grafico: grafico2, stato: stato3, colore, largo, extra = "" }) {
   return `<article class="dm-meteo-tessera${largo ? " dm-meteo-larga" : ""}" data-dm-meteo-misura="${chiave2}" style="--dm-meteo-c:${colore}">
       <div class="dm-meteo-tessera-testa">
         <span class="dm-meteo-ic" aria-hidden="true">${icona2(disegno6, 26)}</span>
@@ -65186,7 +65227,7 @@ function tessera({ chiave: chiave2, disegno: disegno6, nome, valore: valore3, un
       ${extra}
       <div class="dm-meteo-valore"><b>${esc(valore3)}</b><i>${esc(unita3)}</i></div>
       <small class="dm-meteo-sotto">${sotto || ""}</small>
-      ${grafico ? `<div class="dm-meteo-grafico">${grafico}<span class="dm-meteo-24">24 h</span></div>` : ""}
+      ${grafico2 ? `<div class="dm-meteo-grafico">${grafico2}<span class="dm-meteo-24">24 h</span></div>` : ""}
     </article>`;
 }
 function titoloMarkup(disegno6, titolo3, sotto = "") {
@@ -65204,14 +65245,14 @@ function adessoMarkup2(vista2) {
     oggi?.alta != null ? `${esc(t("Max", "Max"))} ${b(gradi10(oggi.alta))}` : ""
   ].filter(Boolean).join(" · ");
   const parole4 = fraseInParole(frase4);
-  const pastiglia3 = (segno2, testo4) => `<span class="dm-meteo-pill"><span aria-hidden="true">${segno2}</span><span>${testo4}</span></span>`;
+  const pastiglia4 = (segno2, testo4) => `<span class="dm-meteo-pill"><span aria-hidden="true">${segno2}</span><span>${testo4}</span></span>`;
   const pastiglie = [];
   if (misure.umidita)
-    pastiglie.push(pastiglia3("💧", `${esc(t("Umidità", "Humidity"))} ${b(`${numeroBello(misure.umidita.valore, 0)}%`)}`));
+    pastiglie.push(pastiglia4("💧", `${esc(t("Umidità", "Humidity"))} ${b(`${numeroBello(misure.umidita.valore, 0)}%`)}`));
   if (misure.vento) {
     const spicchio = spicchioDelVento(misure.direzione?.valore);
     pastiglie.push(
-      pastiglia3(
+      pastiglia4(
         "💨",
         `${esc(t("Vento", "Wind"))} ${b(`${numeroBello(misure.vento.valore, 0)} ${misure.vento.unita}`)}${spicchio === null ? "" : ` ${esc(spicchi()[spicchio][0])}`}`
       )
@@ -65219,11 +65260,11 @@ function adessoMarkup2(vista2) {
   }
   if (misure.pressione)
     pastiglie.push(
-      pastiglia3("⏲️", `${esc(t("Pressione", "Pressure"))} ${b(`${numeroBello(misure.pressione.valore, 0)} ${misure.pressione.unita}`)}`)
+      pastiglia4("⏲️", `${esc(t("Pressione", "Pressure"))} ${b(`${numeroBello(misure.pressione.valore, 0)} ${misure.pressione.unita}`)}`)
     );
   if (sole)
     pastiglie.push(
-      pastiglia3(
+      pastiglia4(
         "🌅",
         [
           sole.alba ? `${esc(t("Alba", "Sunrise"))} ${b(sole.alba)}` : "",
@@ -65560,8 +65601,8 @@ function radarDellaPagina(posto, { forza = false } = {}) {
   return disegnaRadarIn(posto);
 }
 function dipingi8() {
-  const pagina2 = ensureMeteoPage();
-  const dove = pagina2?.querySelector?.("#meteo-wrap");
+  const pagina3 = ensureMeteoPage();
+  const dove = pagina3?.querySelector?.("#meteo-wrap");
   if (!dove || !paginaVisibile(METEO_PAGE_ID)) {
     state51.inVista = false;
     return;
@@ -66052,9 +66093,9 @@ function schedaCalendario(entity2) {
   }
   return valore3;
 }
-function orarioPerIlServizio(istante6) {
-  const quando4 = new Date(istante6);
-  const due3 = (numero57) => String(numero57).padStart(2, "0");
+function orarioPerIlServizio(istante7) {
+  const quando4 = new Date(istante7);
+  const due3 = (numero58) => String(numero58).padStart(2, "0");
   return `${quando4.getFullYear()}-${due3(quando4.getMonth() + 1)}-${due3(quando4.getDate())} ${due3(
     quando4.getHours()
   )}:${due3(quando4.getMinutes())}:${due3(quando4.getSeconds())}`;
@@ -66381,7 +66422,7 @@ function rigaClima(states, unit) {
   const raw = clean(current?.state).toLowerCase();
   const attributi2 = current?.attributes || {};
   const elenco15 = (valori) => Array.isArray(valori) ? valori.map(clean).filter(Boolean) : [];
-  const numero57 = (valore3, difetto = null) => Number.isFinite(Number(valore3)) ? Number(valore3) : difetto;
+  const numero58 = (valore3, difetto = null) => Number.isFinite(Number(valore3)) ? Number(valore3) : difetto;
   const scala2 = scalaDellUnita(attributi2);
   const obiettivi = obiettiviDelClima(attributi2, raw);
   return {
@@ -66393,11 +66434,11 @@ function rigaClima(states, unit) {
      * Assistant resta «off», e in Home risultava spento. */
     on: accesoPerIlConsumo(unit, states) ?? (Boolean(current) && raw !== "off" && raw !== "unavailable" && raw !== "unknown"),
     mode: raw,
-    ambient: numero57(attributi2.current_temperature),
+    ambient: numero58(attributi2.current_temperature),
     /* Per chi ne ha due, quello che la modalita' rende vero — il basso in
      * caldo, l'alto in freddo — e `null` in automatico: la coppia la porta
      * `obiettivi`, e chi ha posto per un numero solo la scrive intera. */
-    target: obiettivi.doppio ? obiettivoMostrato(obiettivi) : numero57(attributi2.temperature),
+    target: obiettivi.doppio ? obiettivoMostrato(obiettivi) : numero58(attributi2.temperature),
     obiettivi,
     /* Quello che serve al pannello della rotella: cosa l'unita' accetta, e
      * dove sta adesso. Sono attributi che Home Assistant pubblica gia' —
@@ -66432,7 +66473,7 @@ function rigaClima(states, unit) {
     minima: scala2[0],
     massima: scala2[1],
     passo: passoDellUnita(attributi2, 0.5),
-    umidita: numero57(attributi2.current_humidity),
+    umidita: numero58(attributi2.current_humidity),
     azione: clean(attributi2.hvac_action),
     /* Che macchina e', non solo cosa sta facendo adesso: un termosifone
      * spento resta un termosifone, e il fiocco di neve sopra un
@@ -67365,10 +67406,10 @@ function rigaDaEntita(states, entity2, glifo2 = "•") {
   const grezzo = clean(stato3?.state);
   if (STATI_MUTI3.test(grezzo)) return null;
   const nome = friendlyName(states, chiave2);
-  const numero57 = numOf(states, chiave2);
-  if (numero57 != null) {
+  const numero58 = numOf(states, chiave2);
+  if (numero58 != null) {
     const unita3 = clean(stato3?.attributes?.unit_of_measurement);
-    const cifre3 = Number.isInteger(numero57) || Math.abs(numero57) >= 100 ? 0 : 1;
+    const cifre3 = Number.isInteger(numero58) || Math.abs(numero58) >= 100 ? 0 : 1;
     return {
       glyph: glifo2,
       /* Il nome senza la parola che il numero dice gia': «Temperatura Pannello
@@ -67377,9 +67418,9 @@ function rigaDaEntita(states, entity2, glifo2 = "•") {
        * abita la casa, e quello dell'entita', scritto dall'integrazione. */
       name: nomeDellaLettura(nome, { unita: unita3 }),
       entity: chiave2,
-      raw: numero57,
+      raw: numero58,
       unit: unita3,
-      value: `${formatNumber(numero57, cifre3)}${unita3 ? ` ${unita3}` : ""}`
+      value: `${formatNumber(numero58, cifre3)}${unita3 ? ` ${unita3}` : ""}`
     };
   }
   const daQuando5 = Date.parse(stato3?.last_changed ?? stato3?.last_updated ?? "");
@@ -68008,10 +68049,10 @@ function upsModel(states) {
     (gruppo) => entitaDellUps(gruppo).some((entity2) => widgetIncludes(entity2, fuori))
   );
   if (!visibili.length) return null;
-  const risolvi3 = root.resolveEntity || ((value) => value);
+  const risolvi4 = root.resolveEntity || ((value) => value);
   const letti = visibili.map((config2) => ({
     config: config2,
-    lettura: letturaUps(config2, states, risolvi3)
+    lettura: letturaUps(config2, states, risolvi4)
   }));
   const conIlNome = letti.length > 1;
   const rows = letti.flatMap((voce3) => righeDellUps(voce3.config, voce3.lettura, conIlNome));
@@ -68059,13 +68100,13 @@ function upsModel(states) {
      * dei gruppi: e' il peggiore che comanda. */
     alert: letti.some((voce3) => voce3.lettura.allarme === true),
     lettura: lettura3,
-    da: daQuandoUps(config, states, risolvi3),
+    da: daQuandoUps(config, states, risolvi4),
     /* Ogni gruppo con la sua lettura, per la finestra: col nome quando sono
      * piu' d'uno, il peggiore per primo. */
     gruppi: [capofila, ...letti.filter((voce3) => voce3 !== capofila)].map((voce3) => ({
       nome: clean(normalizzaUps(voce3.config).name),
       lettura: voce3.lettura,
-      da: daQuandoUps(voce3.config, states, risolvi3)
+      da: daQuandoUps(voce3.config, states, risolvi4)
     })),
     rows
   };
@@ -68116,7 +68157,7 @@ function agendaModel(states) {
 }
 function contaDaFare(tessera3) {
   return (tessera3.blocks || []).reduce(
-    (somma2, blocco3) => somma2 + pendingTodoItems(blocco3.items || []).length,
+    (somma3, blocco3) => somma3 + pendingTodoItems(blocco3.items || []).length,
     0
   );
 }
@@ -68256,7 +68297,7 @@ function preseModel(states) {
     on,
     /* I watt di adesso, sommati solo se almeno una presa li misura: «0 W» su
      * una casa senza wattmetri sarebbe un numero inventato. */
-    watt: rows.some((row) => row.watt != null) ? rows.reduce((somma2, row) => somma2 + (row.watt ?? 0), 0) : null
+    watt: rows.some((row) => row.watt != null) ? rows.reduce((somma3, row) => somma3 + (row.watt ?? 0), 0) : null
   };
 }
 function cosaSuona(riga3, conIlPosto) {
@@ -68395,8 +68436,8 @@ function misuraDelMiniPC(casella6, dato2, states) {
   const attesa = clean(casella6.unita);
   const sua = clean(states?.[dato2.entity]?.attributes?.unit_of_measurement);
   const unita3 = sua || attesa;
-  const numero57 = Number(dato2.value);
-  const cifre3 = !sua || sua === attesa ? casella6.cifre : Number.isInteger(numero57) ? 0 : 1;
+  const numero58 = Number(dato2.value);
+  const cifre3 = !sua || sua === attesa ? casella6.cifre : Number.isInteger(numero58) ? 0 : 1;
   const scritto3 = formatNumber(dato2.value, cifre3);
   if (!unita3) return scritto3;
   return unita3 === "%" ? `${scritto3}%` : `${scritto3} ${unita3}`;
@@ -69020,7 +69061,7 @@ function floodModel(states) {
 function avvisoAttivo(avviso2, current) {
   const raw = String(current?.state ?? "");
   const stato3 = raw.toLowerCase();
-  const numero57 = Number.parseFloat(raw);
+  const numero58 = Number.parseFloat(raw);
   const soglia3 = Number.parseFloat(avviso2?.value);
   switch (clean(avviso2?.cond)) {
     case "off":
@@ -69040,9 +69081,9 @@ function avvisoAttivo(avviso2, current) {
     case "neq":
       return stato3 !== String(avviso2?.value ?? "").toLowerCase();
     case "gt":
-      return !Number.isNaN(numero57) && !Number.isNaN(soglia3) && numero57 > soglia3;
+      return !Number.isNaN(numero58) && !Number.isNaN(soglia3) && numero58 > soglia3;
     case "lt":
-      return !Number.isNaN(numero57) && !Number.isNaN(soglia3) && numero57 < soglia3;
+      return !Number.isNaN(numero58) && !Number.isNaN(soglia3) && numero58 < soglia3;
     default:
       return [
         "on",
@@ -69425,7 +69466,7 @@ function daQuandoTace(quando4) {
 }
 function validitaDellAvviso(stato3) {
   const attributi2 = stato3?.attributes || {};
-  const istante6 = (...nomi2) => {
+  const istante7 = (...nomi2) => {
     for (const nome of nomi2) {
       const quando4 = Date.parse(clean(attributi2[nome]));
       if (Number.isFinite(quando4)) return quando4;
@@ -69441,8 +69482,8 @@ function validitaDellAvviso(stato3) {
     return "";
   };
   return {
-    dal: istante6("onset", "effective", "valid_from", "start", "start_time", "inizio"),
-    al: istante6("expires", "ends", "valid_to", "valid_until", "end", "end_time", "fine"),
+    dal: istante7("onset", "effective", "valid_from", "start", "start_time", "inizio"),
+    al: istante7("expires", "ends", "valid_to", "valid_until", "end", "end_time", "fine"),
     /* Il testo intero e la zona, come li scrivono le integrazioni: la tessera
      * li taglia, la finestra li dice tutti. */
     testo: parole4("description", "descrizione", "event_description", "message", "messaggio"),
@@ -69979,7 +70020,7 @@ function firmaDellaFaccia(widget) {
 function tileMarkup(widget, index = 0) {
   const open = state52.expanded === widget.key;
   const giaVista = viste().has(widget.key) ? ' data-dm-seen="true"' : "";
-  const { numero: numero57, unita: unita3 } = dividiValore(widget.value);
+  const { numero: numero58, unita: unita3 } = dividiValore(widget.value);
   return `<button type="button" class="dm-tile" data-dm-widget="${widget.key}" data-open="${open}"${giaVista}
       data-alert="${Boolean(widget.alert)}" data-acceso="${tesseraAccesa(widget)}"
       style="--dm-widget-accent:${widget.accent};--dm-tile-i:${index}" aria-expanded="${open}" aria-label="${esc(widget.label)}">
@@ -69989,7 +70030,7 @@ function tileMarkup(widget, index = 0) {
         <span class="dm-tile-label" data-dm-tile-label>${esc(widget.label)}</span>
         ${widget.menu ? `<span class="dm-tile-menu" aria-hidden="true">⋮</span>` : ""}
       </span>
-      <span class="dm-tile-val"><b class="dm-tile-value" data-dm-tile-value data-dm-len="${misuraValore(widget.value)}">${esc(numero57)}</b><i class="dm-tile-unit" data-dm-tile-unit data-simbolo="${unitaSimbolo(unita3)}">${esc(unita3)}</i></span>
+      <span class="dm-tile-val"><b class="dm-tile-value" data-dm-tile-value data-dm-len="${misuraValore(widget.value)}">${esc(numero58)}</b><i class="dm-tile-unit" data-dm-tile-unit data-simbolo="${unitaSimbolo(unita3)}">${esc(unita3)}</i></span>
       <span class="dm-tile-fondo">
         <span class="dm-tile-testo">
           <small class="dm-tile-caption"><span class="dm-tile-scroll" data-dm-tile-caption>${esc(widget.caption)}</span></small>
@@ -70593,7 +70634,7 @@ function camerasDetail(widget) {
 function summaryChips(widget) {
   const righe3 = Array.isArray(widget.rows) ? widget.rows : [];
   if (righe3.length < 2) return [];
-  const media3 = (valori) => valori.length ? valori.reduce((somma2, valore3) => somma2 + valore3, 0) / valori.length : null;
+  const media3 = (valori) => valori.length ? valori.reduce((somma3, valore3) => somma3 + valore3, 0) / valori.length : null;
   const numeri = (chiave2) => righe3.map((riga3) => Number(riga3?.[chiave2])).filter((valore3) => Number.isFinite(valore3));
   const accesi = righe3.filter((riga3) => riga3?.on).length;
   if (widget.key === "clima") {
@@ -71420,14 +71461,14 @@ function renderHomeWidgets() {
       if (tile.dataset.alert !== avviso2) {
         const siAccende = avviso2 === "true";
         tile.dataset.alert = avviso2;
-        const pastiglia3 = tile.querySelector(".dm-tile-chip");
-        if (pastiglia3) delete pastiglia3.dataset.dmAlertMotion;
-        if (siAccende && pastiglia3) {
+        const pastiglia4 = tile.querySelector(".dm-tile-chip");
+        if (pastiglia4) delete pastiglia4.dataset.dmAlertMotion;
+        if (siAccende && pastiglia4) {
           tile.dataset.dmAccende = "1";
-          pastiglia3.dataset.dmSboccia = "1";
+          pastiglia4.dataset.dmSboccia = "1";
           root.setTimeout?.(() => {
             delete tile.dataset.dmAccende;
-            delete pastiglia3.dataset.dmSboccia;
+            delete pastiglia4.dataset.dmSboccia;
           }, 900);
         }
       }
@@ -71479,10 +71520,10 @@ function popupHost() {
   host2.id = "dm-widget-popup";
   host2.hidden = true;
   host2.addEventListener("click", (event) => {
-    const pastiglia3 = event.target?.closest?.("[data-dm-appl-chip]");
-    if (pastiglia3) {
+    const pastiglia4 = event.target?.closest?.("[data-dm-appl-chip]");
+    if (pastiglia4) {
       event.stopPropagation();
-      const id = clean(pastiglia3.dataset.dmApplChip);
+      const id = clean(pastiglia4.dataset.dmApplChip);
       const apre = apertoInFinestra !== id;
       apertoInFinestra = apre ? id : "";
       schedule19();
@@ -74696,45 +74737,45 @@ function gradiNellaFinestra(entity2) {
   casella6.dataset.dmClDoppio = "entrambi";
   if (finestra6) finestra6.dataset.dmClDoppio = "entrambi";
   const labels = copy3();
-  const numero57 = (estremo) => `<span class="dm-cl-cp-obj" data-dm-cl-obj="${estremo}" aria-label="${esc(
+  const numero58 = (estremo) => `<span class="dm-cl-cp-obj" data-dm-cl-obj="${estremo}" aria-label="${esc(
     `${estremo === "basso" ? labels.warm : labels.cold} ${gradoScritto(coppia2[estremo])}°`
   )}">${gradoScritto(coppia2[estremo])}°</span>`;
   scriviSeCambia(
     casella6,
-    `${numero57("basso")}<span class="dm-cl-cp-tra" aria-hidden="true">–</span>${numero57("alto")}`
+    `${numero58("basso")}<span class="dm-cl-cp-tra" aria-hidden="true">–</span>${numero58("alto")}`
   );
   return true;
 }
 function paintModo(card2, unit) {
-  const pastiglia3 = card2.querySelector("[data-dm-cl-modo]");
-  if (!pastiglia3) return;
+  const pastiglia4 = card2.querySelector("[data-dm-cl-modo]");
+  if (!pastiglia4) return;
   if (!unit.modo) {
-    pastiglia3.hidden = true;
+    pastiglia4.hidden = true;
     return;
   }
   const lettura3 = letturaDelModo(unit.modo, resolvedState(unit.modo, allStates()), activeLocale());
-  pastiglia3.hidden = !lettura3.disponibile;
+  pastiglia4.hidden = !lettura3.disponibile;
   if (!lettura3.disponibile) return;
-  scriviSeCambia(pastiglia3.querySelector("[data-dm-cl-modo-glifo]"), lettura3.glifo);
-  scriviSeCambia(pastiglia3.querySelector("[data-dm-cl-modo-nome]"), lettura3.nome);
-  pastiglia3.dataset.dmClModoFamiglia = lettura3.famiglia || "";
-  pastiglia3.dataset.dmClModoEnt = lettura3.entita;
-  pastiglia3.disabled = !lettura3.cambiabile;
-  pastiglia3.setAttribute("aria-label", lettura3.nome);
-  pastiglia3.title = lettura3.cambiabile ? t("Tocca per cambiare modalità", "Tap to change the mode") : lettura3.nome;
+  scriviSeCambia(pastiglia4.querySelector("[data-dm-cl-modo-glifo]"), lettura3.glifo);
+  scriviSeCambia(pastiglia4.querySelector("[data-dm-cl-modo-nome]"), lettura3.nome);
+  pastiglia4.dataset.dmClModoFamiglia = lettura3.famiglia || "";
+  pastiglia4.dataset.dmClModoEnt = lettura3.entita;
+  pastiglia4.disabled = !lettura3.cambiabile;
+  pastiglia4.setAttribute("aria-label", lettura3.nome);
+  pastiglia4.title = lettura3.cambiabile ? t("Tocca per cambiare modalità", "Tap to change the mode") : lettura3.nome;
 }
 function paintTimer(card2, unit, reading, labels) {
-  const pastiglia3 = card2.querySelector("[data-dm-cl-timer]");
-  if (!pastiglia3) return;
+  const pastiglia4 = card2.querySelector("[data-dm-cl-timer]");
+  if (!pastiglia4) return;
   const scadenza = scadenzaDi(unit.entity);
   const conto = contoAllaRovescia(scadenza, Date.now(), activeLocale());
   const armato = Boolean(conto);
-  pastiglia3.hidden = !armato && !unit.minuti && !reading.on;
-  pastiglia3.dataset.dmClTimerOn = armato ? "true" : "false";
-  pastiglia3.dataset.dmClTimerEnt = unit.entity;
+  pastiglia4.hidden = !armato && !unit.minuti && !reading.on;
+  pastiglia4.dataset.dmClTimerOn = armato ? "true" : "false";
+  pastiglia4.dataset.dmClTimerEnt = unit.entity;
   const testo4 = armato ? conto : labels.timerOff;
-  scriviSeCambia(pastiglia3.querySelector("[data-dm-cl-timer-testo]"), testo4);
-  pastiglia3.setAttribute("aria-label", testo4);
+  scriviSeCambia(pastiglia4.querySelector("[data-dm-cl-timer-testo]"), testo4);
+  pastiglia4.setAttribute("aria-label", testo4);
 }
 function paintValvola(card2, unit, reading) {
   const riga3 = card2.querySelector("[data-dm-cl-valvola]");
@@ -74966,11 +75007,11 @@ function onClick10(event) {
   bulkSwitch(button.dataset.dmClBulk === "on");
 }
 function cambiaModo(event) {
-  const pastiglia3 = event.target?.closest?.("[data-dm-cl-modo]");
-  if (!pastiglia3 || pastiglia3.disabled) return false;
+  const pastiglia4 = event.target?.closest?.("[data-dm-cl-modo]");
+  if (!pastiglia4 || pastiglia4.disabled) return false;
   event.preventDefault();
   event.stopPropagation();
-  const entita3 = clean(pastiglia3.dataset.dmClModoEnt);
+  const entita3 = clean(pastiglia4.dataset.dmClModoEnt);
   const lettura3 = letturaDelModo(entita3, resolvedState(entita3, allStates()), activeLocale());
   if (!lettura3.cambiabile) return true;
   if (lettura3.scelte.length > 2) {
@@ -75062,13 +75103,13 @@ function apriLaFinestraDelTimer(entita3, unita3, armato) {
   });
 }
 function apriIlTimer(event) {
-  const pastiglia3 = event.target?.closest?.("[data-dm-cl-timer]");
-  if (!pastiglia3) return false;
+  const pastiglia4 = event.target?.closest?.("[data-dm-cl-timer]");
+  if (!pastiglia4) return false;
   event.preventDefault();
   event.stopPropagation();
-  const entita3 = clean(pastiglia3.dataset.dmClTimerEnt);
+  const entita3 = clean(pastiglia4.dataset.dmClTimerEnt);
   const unita3 = climateUnits().find((voce3) => voce3.entity === entita3);
-  if (entita3) apriLaFinestraDelTimer(entita3, unita3, pastiglia3.dataset.dmClTimerOn === "true");
+  if (entita3) apriLaFinestraDelTimer(entita3, unita3, pastiglia4.dataset.dmClTimerOn === "true");
   return true;
 }
 function wholeDegreeDelta(shown, delta) {
@@ -75079,9 +75120,9 @@ function wholeDegreeDelta(shown, delta) {
   return next - current;
 }
 function gradoScritto(valore3) {
-  const numero57 = Number(valore3);
-  if (!Number.isFinite(numero57)) return "--";
-  return String(Math.round(numero57 * 10) / 10);
+  const numero58 = Number(valore3);
+  if (!Number.isFinite(numero58)) return "--";
+  return String(Math.round(numero58 * 10) / 10);
 }
 function scalaDellaPresa(presa) {
   const reading = climateReading(presa.entity);
@@ -75095,13 +75136,13 @@ function gradoDalPunto(presa, clientX) {
 }
 function dipingiPresa(presa) {
   const [low, high] = scalaDellaPresa(presa).scala;
-  const percento6 = ((presa.grado - low) / (high - low || 1) * 100).toFixed(1);
+  const percento7 = ((presa.grado - low) / (high - low || 1) * 100).toFixed(1);
   const fill = presa.card.querySelector("[data-dm-cl-fill]");
   const knob = presa.card.querySelector("[data-dm-cl-knob]");
-  if (fill) fill.style.width = `${percento6}%`;
+  if (fill) fill.style.width = `${percento7}%`;
   if (knob) {
     knob.hidden = false;
-    knob.style.left = `${percento6}%`;
+    knob.style.left = `${percento7}%`;
   }
   if (!cartaInvertita()) {
     const target = presa.card.querySelector("[data-dm-cl-target]");
@@ -75446,15 +75487,15 @@ function montaFlagCarta() {
 }
 function osservaLaPagina() {
   if (state53.osservatore || typeof root.MutationObserver !== "function") return false;
-  const pagina2 = doc?.getElementById?.("page-clima");
-  if (!pagina2) return false;
+  const pagina3 = doc?.getElementById?.("page-clima");
+  if (!pagina3) return false;
   let eraInVista = climaInVista();
   state53.osservatore = new root.MutationObserver(() => {
     const inVista3 = climaInVista();
     if (inVista3 && !eraInVista) renderClimate();
     eraInVista = inVista3;
   });
-  state53.osservatore.observe(pagina2, { attributes: true, attributeFilter: ["class"] });
+  state53.osservatore.observe(pagina3, { attributes: true, attributeFilter: ["class"] });
   return true;
 }
 function installClimateThermalSection() {
@@ -76180,8 +76221,8 @@ function ensureRoomsTab() {
 function apriLaStanza(id) {
   if (!doc) return false;
   const voce3 = ensureRoomsTab();
-  const pagina2 = ensureRoomsPage();
-  if (!voce3 || !pagina2) return false;
+  const pagina3 = ensureRoomsPage();
+  if (!voce3 || !pagina3) return false;
   const scelta3 = clean(id);
   if (scelta3) {
     state54.room = scelta3;
@@ -76190,7 +76231,7 @@ function apriLaStanza(id) {
   for (const nodo2 of doc.querySelectorAll(".tab")) nodo2.classList.remove("active");
   for (const nodo2 of doc.querySelectorAll(".page")) nodo2.classList.remove("active");
   voce3.classList.add("active");
-  pagina2.classList.add("active");
+  pagina3.classList.add("active");
   root.navigator?.vibrate?.(8);
   root.scrollTo?.({ top: 0, behavior: "instant" });
   schedule20();
@@ -76208,16 +76249,16 @@ function teachNavVisibility() {
   root.cdNavVisMap = wrapped;
 }
 function pillsMarkup(pagine, scelta3) {
-  return `<nav class="dm-stanze-tabs" aria-label="${esc(t("Stanze", "Rooms"))}">${pagine.map((pagina2) => {
-    const nome = pagina2.senzaStanza ? t("Senza stanza", "No room") : pagina2.name;
-    const icona3 = pagina2.senzaStanza ? "📦" : roomGlyph(pagina2.icon) || "🏠";
-    return `<button type="button" class="sub-tab-btn dm-stanze-tab${pagina2.id === scelta3 ? " active" : ""}" data-dm-stanza="${esc(pagina2.id)}" aria-selected="${pagina2.id === scelta3}">
-        <span class="dm-stanze-tab-icon">${esc(icona3)}</span><span>${esc(nome)}</span><small>${pagina2.count}</small>
+  return `<nav class="dm-stanze-tabs" aria-label="${esc(t("Stanze", "Rooms"))}">${pagine.map((pagina3) => {
+    const nome = pagina3.senzaStanza ? t("Senza stanza", "No room") : pagina3.name;
+    const icona3 = pagina3.senzaStanza ? "📦" : roomGlyph(pagina3.icon) || "🏠";
+    return `<button type="button" class="sub-tab-btn dm-stanze-tab${pagina3.id === scelta3 ? " active" : ""}" data-dm-stanza="${esc(pagina3.id)}" aria-selected="${pagina3.id === scelta3}">
+        <span class="dm-stanze-tab-icon">${esc(icona3)}</span><span>${esc(nome)}</span><small>${pagina3.count}</small>
       </button>`;
   }).join("")}</nav>`;
 }
-function sceneMarkup(pagina2, states) {
-  const { totale, accese } = roomSceneSummary(pagina2, states);
+function sceneMarkup(pagina3, states) {
+  const { totale, accese } = roomSceneSummary(pagina3, states);
   if (!totale) return "";
   const quante3 = totale === 1 ? t("1 luce", "1 light") : t(`${totale} luci`, `${totale} lights`);
   return `<section class="dm-stanze-scena" role="group" aria-label="${esc(t("Scene della stanza", "Room scenes"))}">
@@ -76233,13 +76274,13 @@ function sceneMarkup(pagina2, states) {
     </div>
   </section>`;
 }
-function readingMarkup(pagina2, states, { daLa = 0 } = {}) {
-  const associazioni = temperatureEntries(pagina2).filter((voce3) => voce3.temp || voce3.hum);
+function readingMarkup(pagina3, states, { daLa = 0 } = {}) {
+  const associazioni = temperatureEntries(pagina3).filter((voce3) => voce3.temp || voce3.hum);
   if (associazioni.length <= daLa) return "";
   const leggi3 = (entity2, coda) => letturaScritta(states?.[entity2]?.state, coda);
   const misura7 = (entity2, etichetta3, coda) => entity2 ? `<div><span>${esc(etichetta3)}</span><b data-dm-stanza-lettura="${esc(entity2)}" data-dm-stanza-coda="${esc(coda)}">${esc(leggi3(entity2, coda))}</b></div>` : "";
   return associazioni.slice(daLa).map((voce3) => {
-    const titolo3 = associazioni.length > 1 ? clean(voce3.name) || clean(pagina2.name) : clean(pagina2.name) || clean(voce3.name);
+    const titolo3 = associazioni.length > 1 ? clean(voce3.name) || clean(pagina3.name) : clean(pagina3.name) || clean(voce3.name);
     return `<article class="dm-stanze-card dm-stanze-clima">
     <div class="dm-stanze-card-row">
       <span class="dm-stanze-orb">🌡️</span>
@@ -76406,15 +76447,15 @@ function vistaDellaPagina() {
 function letturaScritta(grezzo, coda) {
   const valore3 = clean(grezzo);
   if (!valore3 || valore3 === "unknown" || valore3 === "unavailable") return "—";
-  const numero57 = Number(valore3);
-  if (!Number.isFinite(numero57)) return `${valore3}${coda}`;
-  return `${formatNumber(numero57, coda === "%" ? 0 : 1)}${coda}`;
+  const numero58 = Number(valore3);
+  if (!Number.isFinite(numero58)) return `${valore3}${coda}`;
+  return `${formatNumber(numero58, coda === "%" ? 0 : 1)}${coda}`;
 }
 function valoreLetto(entity2, coda, states) {
   return letturaScritta(states?.[entity2]?.state, coda);
 }
-function entitaDelClima(pagina2) {
-  return ((pagina2?.blocchi || []).find((blocco3) => blocco3.key === "clima")?.voci || []).map((voce3) => entitaVoce(voce3)).filter(Boolean);
+function entitaDelClima(pagina3) {
+  return ((pagina3?.blocchi || []).find((blocco3) => blocco3.key === "clima")?.voci || []).map((voce3) => entitaVoce(voce3)).filter(Boolean);
 }
 function dentroAlClima(clima) {
   const gradi10 = clima?.obiettivo == null ? "—" : `${clima.obiettivo}°`;
@@ -76432,27 +76473,27 @@ function tastiDellaScena() {
       <button type="button" data-dm-stanza-scena="off"><span class="dm-stanze-scena-ic" aria-hidden="true">🌙</span> ${esc(t("Spegni tutto", "Turn everything off"))}</button>
     </div>`;
 }
-function luciAccese(pagina2, states) {
-  const { totale, accese } = roomSceneSummary(pagina2, states);
+function luciAccese(pagina3, states) {
+  const { totale, accese } = roomSceneSummary(pagina3, states);
   if (!totale) return "";
   if (totale === 1)
     return accese ? t("la luce è accesa", "the light is on") : t("la luce è spenta", "the light is off");
   if (accese === 1) return t(`1 luce accesa su ${totale}`, `1 of ${totale} lights on`);
   return t(`${accese} luci accese su ${totale}`, `${accese} of ${totale} lights on`);
 }
-function testaDellaStanza(pagina2, states = {}) {
-  const nome = pagina2.senzaStanza ? t("Senza stanza", "No room") : pagina2.name;
-  const sotto = [clean(pagina2.floor), luciAccese(pagina2, states)].filter(Boolean).join(" · ");
-  const coppia2 = temperatureEntries(pagina2).find((voce3) => voce3.temp || voce3.hum) || null;
+function testaDellaStanza(pagina3, states = {}) {
+  const nome = pagina3.senzaStanza ? t("Senza stanza", "No room") : pagina3.name;
+  const sotto = [clean(pagina3.floor), luciAccese(pagina3, states)].filter(Boolean).join(" · ");
+  const coppia2 = temperatureEntries(pagina3).find((voce3) => voce3.temp || voce3.hum) || null;
   const misura7 = (entity2, etichetta3, coda) => entity2 ? `<div class="dm-stanze-testa-voce"><span>${esc(etichetta3)}</span><b data-dm-stanza-lettura="${esc(entity2)}" data-dm-stanza-coda="${esc(coda)}">${esc(valoreLetto(entity2, coda, states))}</b></div>` : "";
-  const climi = entitaDelClima(pagina2);
+  const climi = entitaDelClima(pagina3);
   const clima = climi.length ? climaDellaStanza(climi, states) : null;
   const cellaDelClima = climi.length ? `<div class="dm-stanze-testa-voce dm-stanze-testa-clima" data-dm-stanza-clima="${esc(climi.join(" "))}" data-tono="${toniDelClima(clima)}"><span>${esc(t("Clima", "Climate"))}</span><span class="dm-stanze-testa-clima-dentro" data-dm-stanza-clima-dentro>${dentroAlClima(clima)}</span></div>` : "";
   const misure = `${misura7(coppia2?.temp, t("Temperatura", "Temperature"), "°")}${misura7(coppia2?.hum, t("Umidità", "Humidity"), "%")}${cellaDelClima}`;
-  const scena2 = roomSceneSummary(pagina2, states).totale ? `<div class="dm-stanze-scena dm-stanze-testa-scena" role="group" aria-label="${esc(t("Scene della stanza", "Room scenes"))}">${tastiDellaScena()}</div>` : "";
+  const scena2 = roomSceneSummary(pagina3, states).totale ? `<div class="dm-stanze-scena dm-stanze-testa-scena" role="group" aria-label="${esc(t("Scene della stanza", "Room scenes"))}">${tastiDellaScena()}</div>` : "";
   return `<section class="dm-stanze-testa" aria-label="${esc(nome)}">
     <div class="dm-stanze-testa-su">
-      <span class="dm-stanze-orb dm-stanze-testa-orb" aria-hidden="true">${esc(pagina2.senzaStanza ? "📦" : roomGlyph(pagina2.icon) || "🏠")}</span>
+      <span class="dm-stanze-orb dm-stanze-testa-orb" aria-hidden="true">${esc(pagina3.senzaStanza ? "📦" : roomGlyph(pagina3.icon) || "🏠")}</span>
       <span class="dm-stanze-testa-nome"><b>${esc(nome)}</b>${sotto ? `<s>${esc(sotto)}</s>` : ""}</span>
     </div>
     ${misure ? `<div class="dm-stanze-testa-misure">${misure}</div>` : ""}
@@ -76517,9 +76558,9 @@ function tesseraDellaVoce(item, conTab, states, aperture) {
     return laCardDelClima(entitaVoce(item), { stanza: false }) || rowMarkup(item, conTab, states, aperture);
   return rowMarkup(item, conTab, states, aperture, comandiDellaVoce(item, conTab, states));
 }
-function tavolaMarkup(pagina2, states = {}) {
+function tavolaMarkup(pagina3, states = {}) {
   const aperture = aperturePerEntita();
-  const tessere2 = blocchiDellaTavola(pagina2).map((blocco3) => {
+  const tessere2 = blocchiDellaTavola(pagina3).map((blocco3) => {
     const conTab = { ...blocco3, tab: TAB_DI[blocco3.key] ?? "" };
     const larga = tesseraLarga(blocco3.key) ? " data-larga" : "";
     const caselle2 = blocco3.voci.map((item) => {
@@ -76530,9 +76571,9 @@ function tavolaMarkup(pagina2, states = {}) {
     }).join("");
     return `<h2 class="dm-stanze-a-voce">${esc(nomeBlocco(blocco3))}</h2>${caselle2}`;
   }).join("");
-  const altre = readingMarkup(pagina2, states, { daLa: 1 });
+  const altre = readingMarkup(pagina3, states, { daLa: 1 });
   const griglia3 = tessere2 || altre ? `<div class="dm-stanze-grid dm-stanze-tavola" data-dm-stanza-vista="${VISTA_TESSERE}">${tessere2}${altre}</div>` : "";
-  return `${testaDellaStanza(pagina2, states)}${griglia3}`;
+  return `${testaDellaStanza(pagina3, states)}${griglia3}`;
 }
 function aggiornaLaTavola(wrap, states) {
   for (const nodo2 of wrap.querySelectorAll("[data-dm-stanza-clima]")) {
@@ -76555,8 +76596,8 @@ function aggiornaLaTavola(wrap, states) {
   }
   for (const nodo2 of wrap.querySelectorAll("[data-dm-stanza-watt]")) {
     const consumo = consumoDellaPresa({ power: nodo2.getAttribute("data-dm-stanza-watt") }, states);
-    const pastiglia3 = nodo2.querySelector('.dm-lucip-badge[data-kind="consumo"]');
-    if (consumo && pastiglia3) scriviSeCambia(pastiglia3, `⚡ ${esc(consumo)}`);
+    const pastiglia4 = nodo2.querySelector('.dm-lucip-badge[data-kind="consumo"]');
+    if (consumo && pastiglia4) scriviSeCambia(pastiglia4, `⚡ ${esc(consumo)}`);
   }
 }
 var ID_SCELTA_DELLA_VISTA = "dm-stanze-vista";
@@ -76620,8 +76661,8 @@ var statoDi4 = (entity2, states) => clean(states?.[clean(entity2)]?.state);
 var SI_COMANDA_ACCESO = /^(on|playing|cleaning)$/i;
 var CLIMA_ACCESO = /^(heat|cool|auto|dry|fan_only|heat_cool)$/i;
 var climaAcceso = (entity2, stato3, states) => climaAccesoDaiWatt(entity2, states) ?? CLIMA_ACCESO.test(stato3);
-function acceseNelBlocco(pagina2, chiave2, states, prova) {
-  const blocco3 = (pagina2?.blocchi || []).find((voce3) => voce3.key === chiave2);
+function acceseNelBlocco(pagina3, chiave2, states, prova) {
+  const blocco3 = (pagina3?.blocchi || []).find((voce3) => voce3.key === chiave2);
   if (!blocco3) return 0;
   let quante3 = 0;
   for (const voce3 of blocco3.voci) {
@@ -76646,7 +76687,7 @@ function tipiDeiVarchi(states) {
   }
   return tipi;
 }
-function apertiNellaStanza(pagina2, states, girati2, tipi) {
+function apertiNellaStanza(pagina3, states, girati2, tipi) {
   const conti = { finestre: 0, porte: 0 };
   const visti = /* @__PURE__ */ new Set();
   const contatto = (valore3, dellAnta) => {
@@ -76661,7 +76702,7 @@ function apertiNellaStanza(pagina2, states, girati2, tipi) {
     const tipo = suo2 || (dellAnta ? "finestra" : tipoDelVarco({ entity: entity2, classe: clean(stato3?.attributes?.device_class) || "door" }));
     conti[tipo === "finestra" ? "finestre" : "porte"] += 1;
   };
-  for (const blocco3 of pagina2?.blocchi || [])
+  for (const blocco3 of pagina3?.blocchi || [])
     for (const voce3 of blocco3.voci || []) {
       if (blocco3.key !== "coperture") {
         contatto(entitaVoce(voce3), false);
@@ -76673,64 +76714,64 @@ function apertiNellaStanza(pagina2, states, girati2, tipi) {
     }
   return conti;
 }
-function muteNellaStanza(pagina2, states) {
+function muteNellaStanza(pagina3, states) {
   let quante3 = 0;
-  for (const blocco3 of pagina2?.blocchi || [])
+  for (const blocco3 of pagina3?.blocchi || [])
     for (const voce3 of blocco3.voci) {
       const entity2 = entitaVoce(voce3);
       if (entity2 && nonRisponde(statoDi4(entity2, states))) quante3 += 1;
     }
   return quante3;
 }
-function gradiDellaStanza(pagina2, states) {
-  const prima = temperatureEntries(pagina2).find((voce3) => clean(voce3.temp));
+function gradiDellaStanza(pagina3, states) {
+  const prima = temperatureEntries(pagina3).find((voce3) => clean(voce3.temp));
   const valore3 = Number.parseFloat(statoDi4(prima?.temp, states).replace(",", "."));
   return Number.isFinite(valore3) ? valore3 : null;
 }
-function contiDellaStanza(pagina2, states, tipi = tipiDeiVarchi(states)) {
+function contiDellaStanza(pagina3, states, tipi = tipiDeiVarchi(states)) {
   const girati2 = insiemeInvertiti(readJson(CHIAVE_VERSI, []));
-  const aperti = apertiNellaStanza(pagina2, states, girati2, tipi);
+  const aperti = apertiNellaStanza(pagina3, states, girati2, tipi);
   return {
-    luci: roomSceneSummary(pagina2, states).accese,
-    prese: acceseNelBlocco(pagina2, "prese", states, (stato3) => SI_COMANDA_ACCESO.test(stato3)),
-    clima: acceseNelBlocco(pagina2, "clima", states, (stato3, entity2) => climaAcceso(entity2, stato3, states)),
+    luci: roomSceneSummary(pagina3, states).accese,
+    prese: acceseNelBlocco(pagina3, "prese", states, (stato3) => SI_COMANDA_ACCESO.test(stato3)),
+    clima: acceseNelBlocco(pagina3, "clima", states, (stato3, entity2) => climaAcceso(entity2, stato3, states)),
     finestre: aperti.finestre,
     porte: aperti.porte,
-    mute: muteNellaStanza(pagina2, states),
-    gradi: gradiDellaStanza(pagina2, states)
+    mute: muteNellaStanza(pagina3, states),
+    gradi: gradiDellaStanza(pagina3, states)
   };
 }
 function tuttiIConti(pagine, states) {
   const tipi = tipiDeiVarchi(states);
   const conti = {};
-  for (const pagina2 of pagine) conti[pagina2.id] = contiDellaStanza(pagina2, states, tipi);
+  for (const pagina3 of pagine) conti[pagina3.id] = contiDellaStanza(pagina3, states, tipi);
   return conti;
 }
-function paroleDellaPastiglia2(pastiglia3) {
-  const uno = pastiglia3.conto === 1;
-  if (pastiglia3.chiave === "gradi") return t("temperatura", "temperature");
-  if (pastiglia3.chiave === "luci")
+function paroleDellaPastiglia2(pastiglia4) {
+  const uno = pastiglia4.conto === 1;
+  if (pastiglia4.chiave === "gradi") return t("temperatura", "temperature");
+  if (pastiglia4.chiave === "luci")
     return uno ? t("luce accesa", "light on") : t("luci accese", "lights on");
-  if (pastiglia3.chiave === "prese")
+  if (pastiglia4.chiave === "prese")
     return uno ? t("presa accesa", "socket on") : t("prese accese", "sockets on");
-  if (pastiglia3.chiave === "clima")
+  if (pastiglia4.chiave === "clima")
     return uno ? t("unità accesa", "unit on") : t("unità accese", "units on");
-  if (pastiglia3.chiave === "finestre")
+  if (pastiglia4.chiave === "finestre")
     return uno ? t("finestra aperta", "window open") : t("finestre aperte", "windows open");
-  if (pastiglia3.chiave === "porte")
+  if (pastiglia4.chiave === "porte")
     return uno ? t("porta aperta", "door open") : t("porte aperte", "doors open");
   return uno ? t("non risponde", "not answering") : t("non rispondono", "not answering");
 }
-function pastigliaMarkup2(pastiglia3) {
-  const testo4 = pastiglia3.chiave === "gradi" ? `${Math.round(pastiglia3.valore)}°` : String(pastiglia3.conto);
-  const parola = paroleDellaPastiglia2(pastiglia3);
-  const dentro3 = `<i aria-hidden="true">${esc(pastiglia3.icona)}</i><b>${esc(testo4)}</b>
+function pastigliaMarkup2(pastiglia4) {
+  const testo4 = pastiglia4.chiave === "gradi" ? `${Math.round(pastiglia4.valore)}°` : String(pastiglia4.conto);
+  const parola = paroleDellaPastiglia2(pastiglia4);
+  const dentro3 = `<i aria-hidden="true">${esc(pastiglia4.icona)}</i><b>${esc(testo4)}</b>
       <span class="dm-stanze-pill-voce">${esc(parola)}</span>`;
-  const comuni = `class="dm-stanze-pill" data-dm-stanza-pill="${esc(pastiglia3.chiave)}"
-      data-dm-comanda="${esc(pastiglia3.comanda)}"`;
-  if (pastiglia3.comanda !== "spegni")
+  const comuni = `class="dm-stanze-pill" data-dm-stanza-pill="${esc(pastiglia4.chiave)}"
+      data-dm-comanda="${esc(pastiglia4.comanda)}"`;
+  if (pastiglia4.comanda !== "spegni")
     return `<span ${comuni} title="${esc(`${testo4} ${parola}`)}">${dentro3}</span>`;
-  return `<button type="button" ${comuni} data-dm-stanza-spegni="${esc(pastiglia3.chiave)}"
+  return `<button type="button" ${comuni} data-dm-stanza-spegni="${esc(pastiglia4.chiave)}"
       title="${esc(`${testo4} ${parola}`)}" aria-label="${esc(
     `${t("Spegni", "Turn off")} · ${testo4} ${parola}`
   )}">${dentro3}</button>`;
@@ -76748,9 +76789,9 @@ function parolaDelFatto(chiave2, quante3) {
 function vivo(momento) {
   return Boolean(momento) && Number(momento.fino) > Date.now();
 }
-function veloDellaTessera(pagina2, conti) {
+function veloDellaTessera(pagina3, conti) {
   const chiesta = state54.chiesta;
-  if (vivo(chiesta) && chiesta.stanza === pagina2.id) {
+  if (vivo(chiesta) && chiesta.stanza === pagina3.id) {
     const quante3 = Math.max(1, Number(conti?.[chiesta.chiave]) || 0);
     const frase4 = `${t("Spengo", "Turn off")} ${cosaSiSpegneAParole(chiesta.chiave, quante3)}?`;
     return `<div class="dm-stanze-velo" data-dm-stanza-velo="chiesta">
@@ -76761,23 +76802,23 @@ function veloDellaTessera(pagina2, conti) {
       </div>`;
   }
   const annulla2 = state54.annulla;
-  if (vivo(annulla2) && annulla2.stanza === pagina2.id)
+  if (vivo(annulla2) && annulla2.stanza === pagina3.id)
     return `<div class="dm-stanze-velo" data-dm-stanza-velo="annulla">
         <span>${esc(parolaDelFatto(annulla2.chiave, annulla2.entita?.length || 0))}</span>
         <button type="button" data-dm-stanza-annulla>${esc(t("Annulla", "Undo"))}</button>
       </div>`;
   return "";
 }
-function tesseraDellaStanza(pagina2, conti) {
-  const nome = pagina2.senzaStanza ? t("Senza stanza", "No room") : pagina2.name;
-  const icona3 = pagina2.senzaStanza ? "📦" : roomGlyph(pagina2.icon) || "🏠";
+function tesseraDellaStanza(pagina3, conti) {
+  const nome = pagina3.senzaStanza ? t("Senza stanza", "No room") : pagina3.name;
+  const icona3 = pagina3.senzaStanza ? "📦" : roomGlyph(pagina3.icon) || "🏠";
   const pastiglie = pastiglieDellaStanza(conti).map(pastigliaMarkup2).join("");
-  return `<article class="dm-stanze-tessera" data-dm-stanza="${esc(pagina2.id)}" role="button" tabindex="0"
+  return `<article class="dm-stanze-tessera" data-dm-stanza="${esc(pagina3.id)}" role="button" tabindex="0"
       aria-label="${esc(nome)}">
       <span class="dm-stanze-tessera-ic" aria-hidden="true">${esc(icona3)}</span>
       <strong class="dm-stanze-tessera-nome">${esc(nome)}</strong>
       ${pastiglie ? `<span class="dm-stanze-pills">${pastiglie}</span>` : ""}
-      ${veloDellaTessera(pagina2, conti)}
+      ${veloDellaTessera(pagina3, conti)}
     </article>`;
 }
 function gruppoMarkup(gruppo, conti, segni = {}) {
@@ -76786,7 +76827,7 @@ function gruppoMarkup(gruppo, conti, segni = {}) {
   const nome = gruppo.piano || t("Senza piano", "No floor");
   const segno2 = gruppo.piano ? `${segnoDelPiano(segni, gruppo.piano)} ` : "";
   const testa2 = gruppo.intitolare ? `<h2 class="dm-stanze-piano"><span>${esc(segno2)}${esc(nome)}</span><small>${esc(riassunto3)}</small></h2>` : "";
-  return `${testa2}<div class="dm-stanze-indice-griglia">${gruppo.stanze.map((pagina2) => tesseraDellaStanza(pagina2, conti[pagina2.id] || {})).join("")}</div>`;
+  return `${testa2}<div class="dm-stanze-indice-griglia">${gruppo.stanze.map((pagina3) => tesseraDellaStanza(pagina3, conti[pagina3.id] || {})).join("")}</div>`;
 }
 function indiceMarkup(pagine, states = {}) {
   const conti = tuttiIConti(pagine, states);
@@ -76806,17 +76847,17 @@ function roomPageMarkup(pagine, scelta3, states = {}) {
       t("Nessuna stanza configurata.", "No rooms configured yet.")
     )}</div>`;
   if (!clean(scelta3)) return indiceMarkup(pagine, states);
-  const pagina2 = pickRoomPage(pagine, scelta3);
+  const pagina3 = pickRoomPage(pagine, scelta3);
   const aTessere = vistaDellaPagina() === VISTA_TESSERE;
-  const blocchi = aTessere ? pagina2.blocchi.some((blocco3) => blocco3.voci.length) ? tavolaMarkup(pagina2, states) : "" : pagina2.blocchi.map((blocco3) => blockMarkup3(blocco3, states)).join("");
+  const blocchi = aTessere ? pagina3.blocchi.some((blocco3) => blocco3.voci.length) ? tavolaMarkup(pagina3, states) : "" : pagina3.blocchi.map((blocco3) => blockMarkup3(blocco3, states)).join("");
   const vuota = blocchi ? "" : `<div class="dm-stanze-empty">${esc(
     t("Questa stanza non ha ancora niente.", "Nothing here yet.")
   )}</div>`;
   const indietro = `<button type="button" class="dm-stanze-indietro" data-dm-stanze-indice>
       <span aria-hidden="true">←</span> ${esc(t("Le stanze", "The rooms"))}</button>`;
   if (aTessere)
-    return `${indietro}${pillsMarkup(pagine, pagina2.id)}${blocchi || testaDellaStanza(pagina2, states)}${vuota}`;
-  return `${indietro}${pillsMarkup(pagine, pagina2.id)}${sceneMarkup(pagina2, states)}${readingMarkup(pagina2, states)}${blocchi}${vuota}`;
+    return `${indietro}${pillsMarkup(pagine, pagina3.id)}${blocchi || testaDellaStanza(pagina3, states)}${vuota}`;
+  return `${indietro}${pillsMarkup(pagine, pagina3.id)}${sceneMarkup(pagina3, states)}${readingMarkup(pagina3, states)}${blocchi}${vuota}`;
 }
 function signature2(pagine, scelta3, states) {
   return [
@@ -76824,10 +76865,10 @@ function signature2(pagine, scelta3, states) {
     /* La vista scelta nel Config: cambiarla cambia tutta la pagina. */
     vistaDellaPagina(),
     pagine.map(
-      (pagina2) => [
-        pagina2.id,
-        pagina2.name,
-        pagina2.count,
+      (pagina3) => [
+        pagina3.id,
+        pagina3.name,
+        pagina3.count,
         /* Non solo quante cose ci sono: anche QUALI.
          *
          * Contando soltanto si perdevano i cambi che non cambiano il
@@ -76835,7 +76876,7 @@ function signature2(pagine, scelta3, states) {
          * cosa spostata in un'altra stanza mentre un'altra ne prende il
          * posto: la pagina restava con il nome vecchio, e toccandolo si
          * andava sull'entita' vecchia, fino a un ricaricamento. */
-        pagina2.blocchi.map(
+        pagina3.blocchi.map(
           (blocco3) => `${blocco3.key}:${blocco3.voci.map((voce3) => `${clean(voce3?.id || voce3?.entity || voce3?.name)}`).join("+")}`
         ).join(",")
       ].join("~")
@@ -76865,7 +76906,7 @@ function paint4() {
   if (!paginaVisibile(ROOMS_PAGE_ID)) return;
   const pagine = roomPages();
   const states = allStates();
-  if (state54.room && !pagine.some((pagina2) => pagina2.id === state54.room)) state54.room = "";
+  if (state54.room && !pagine.some((pagina3) => pagina3.id === state54.room)) state54.room = "";
   const firma2 = signature2(pagine, state54.room, states);
   if (firma2 !== state54.signature) {
     state54.signature = firma2;
@@ -76902,15 +76943,15 @@ function schedule20() {
   if (state54.frame) return;
   state54.frame = root.requestAnimationFrame?.(repaint) || root.setTimeout?.(repaint, 0) || 0;
 }
-function cosaSiSpegne(pagina2, chiave2, states) {
+function cosaSiSpegne(pagina3, chiave2, states) {
   if (chiave2 === "luci")
-    return roomSceneEntities(pagina2).filter((entity2) => {
+    return roomSceneEntities(pagina3).filter((entity2) => {
       if (!siComanda(entity2)) return false;
       const vista2 = lightView(entity2, { state: states[entity2], comandabile: true });
       return vista2.on && vista2.available;
     });
   const acceso6 = chiave2 === "clima" ? (entity2) => climaAcceso(entity2, statoDi4(entity2, states), states) : (entity2) => SI_COMANDA_ACCESO.test(statoDi4(entity2, states));
-  const blocco3 = (pagina2?.blocchi || []).find((voce3) => voce3.key === chiave2);
+  const blocco3 = (pagina3?.blocchi || []).find((voce3) => voce3.key === chiave2);
   return (blocco3?.voci || []).map((voce3) => entitaVoce(voce3)).filter((entity2) => entity2 && siComanda(entity2) && acceso6(entity2));
 }
 function commuta2(entita3, acceso6, states, prima = {}) {
@@ -76940,12 +76981,12 @@ function commuta2(entita3, acceso6, states, prima = {}) {
     });
   }
 }
-function spegnereDaFuori(stato3, ridisegna30) {
+function spegnereDaFuori(stato3, ridisegna31) {
   const fraQuanto4 = (quanto) => {
     root.clearTimeout?.(stato3.sveglia);
     stato3.sveglia = root.setTimeout?.(() => {
       stato3.sveglia = 0;
-      ridisegna30();
+      ridisegna31();
     }, quanto + 40);
   };
   return {
@@ -76954,26 +76995,26 @@ function spegnereDaFuori(stato3, ridisegna30) {
       stato3.chiesta = { stanza: stanza2, chiave: chiave2, fino: Date.now() + QUANTO_DURA_LA_DOMANDA };
       root.navigator?.vibrate?.(8);
       fraQuanto4(QUANTO_DURA_LA_DOMANDA);
-      ridisegna30();
+      ridisegna31();
     },
     /* Il no: la domanda se ne va, e non succede niente. */
     lascia() {
       stato3.chiesta = null;
       root.clearTimeout?.(stato3.sveglia);
       stato3.sveglia = 0;
-      ridisegna30();
+      ridisegna31();
     },
     spegni(stanza2, chiave2) {
       const states = allStates();
-      const pagina2 = pickRoomPage(roomPages(), stanza2);
-      const entita3 = cosaSiSpegne(pagina2, chiave2, states);
+      const pagina3 = pickRoomPage(roomPages(), stanza2);
+      const entita3 = cosaSiSpegne(pagina3, chiave2, states);
       const prima = Object.fromEntries(entita3.map((entity2) => [entity2, statoDi4(entity2, states)]));
       commuta2(entita3, false, states);
       root.navigator?.vibrate?.(15);
       stato3.chiesta = null;
       stato3.annulla = { stanza: stanza2, chiave: chiave2, entita: entita3, prima, fino: Date.now() + QUANTO_DURA_L_ANNULLA };
       fraQuanto4(QUANTO_DURA_L_ANNULLA);
-      ridisegna30();
+      ridisegna31();
     },
     rimetti() {
       const annulla2 = stato3.annulla;
@@ -76984,7 +77025,7 @@ function spegnereDaFuori(stato3, ridisegna30) {
         commuta2(annulla2.entita, true, allStates(), annulla2.prima);
         root.navigator?.vibrate?.(8);
       }
-      ridisegna30();
+      ridisegna31();
     }
   };
 }
@@ -76994,9 +77035,9 @@ var velo = spegnereDaFuori(state54, () => {
 });
 function runScene(on) {
   const states = allStates();
-  const pagina2 = pickRoomPage(roomPages(), state54.room);
+  const pagina3 = pickRoomPage(roomPages(), state54.room);
   root.navigator?.vibrate?.(15);
-  for (const entity2 of roomSceneEntities(pagina2)) {
+  for (const entity2 of roomSceneEntities(pagina3)) {
     const view = lightView(entity2, { state: states[entity2], comandabile: siComanda(entity2) });
     if (view.on === on || !view.available) continue;
     chiamaServizio(lightCommand(view, { power: on }));
@@ -77064,13 +77105,13 @@ function handleClick(event) {
     schedule20();
     return;
   }
-  const spegni2 = event.target?.closest?.("[data-dm-stanza-spegni]");
-  if (spegni2) {
+  const spegni3 = event.target?.closest?.("[data-dm-stanza-spegni]");
+  if (spegni3) {
     event.preventDefault();
     event.stopPropagation();
     velo.chiedi(
-      clean(spegni2.closest("[data-dm-stanza]")?.dataset.dmStanza),
-      clean(spegni2.dataset.dmStanzaSpegni)
+      clean(spegni3.closest("[data-dm-stanza]")?.dataset.dmStanza),
+      clean(spegni3.dataset.dmStanzaSpegni)
     );
     return;
   }
@@ -77530,12 +77571,12 @@ var OGGETTO_DEL_BLOCCO = Object.freeze({
   irrigazione: "irrigazione",
   altro: "evidenza"
 });
-function riassuntoDellaStanza(pagina2, states = allStates()) {
-  const gradi10 = numero44(pagina2?.temp, states);
-  const umidita = numero44(pagina2?.hum, states);
+function riassuntoDellaStanza(pagina3, states = allStates()) {
+  const gradi10 = numero44(pagina3?.temp, states);
+  const umidita = numero44(pagina3?.hum, states);
   let accese = 0;
   const perTipo = [];
-  for (const blocco3 of pagina2?.blocchi || []) {
+  for (const blocco3 of pagina3?.blocchi || []) {
     const chiave2 = clean(blocco3?.key);
     let quante3 = 0;
     for (const voce3 of blocco3?.voci || []) {
@@ -77546,15 +77587,15 @@ function riassuntoDellaStanza(pagina2, states = allStates()) {
     accese += quante3;
     perTipo.push({ chiave: chiave2, oggetto: OGGETTO_DEL_BLOCCO[chiave2] || "evidenza", quante: quante3 });
   }
-  return { gradi: gradi10, umidita, accese, perTipo, quante: Number(pagina2?.count) || 0 };
+  return { gradi: gradi10, umidita, accese, perTipo, quante: Number(pagina3?.count) || 0 };
 }
 var SI_SPENGONO2 = PASTIGLIE_DELLA_STANZA.filter((voce3) => voce3.comanda === "spegni").map(
   (voce3) => voce3.chiave
 );
-function tastiDellaStanza(pagina2, states = allStates()) {
+function tastiDellaStanza(pagina3, states = allStates()) {
   return SI_SPENGONO2.map((chiave2) => ({
     chiave: chiave2,
-    quante: cosaSiSpegne(pagina2, chiave2, states).length
+    quante: cosaSiSpegne(pagina3, chiave2, states).length
   })).filter((tasto2) => tasto2.quante > 0);
 }
 var NOME_DEL_GENERE = Object.freeze({
@@ -77580,18 +77621,18 @@ function tempoCheResta(momento, durata6) {
   const passato = Math.max(0, Math.min(durata6, durata6 - (Number(momento.fino) - Date.now())));
   return `--dm-dura:${durata6}ms;--dm-gia:-${Math.round(passato)}ms`;
 }
-function tastoMarkup4(pagina2, tasto2) {
+function tastoMarkup4(pagina3, tasto2) {
   const parola = `${t("Spegni", "Turn off")} ${cosaSiSpegneAParole(tasto2.chiave, tasto2.quante)}`;
   return `<button type="button" class="dm-stanza-plancia-tasto" data-dm-stanza-plancia-spegni="${esc(tasto2.chiave)}"
       title="${esc(parola)}" aria-label="${esc(parola)}"><span class="dm-stanza-plancia-tasto-ic" aria-hidden="true">${oggettoWidget(
     OGGETTO_DEL_BLOCCO[tasto2.chiave] || "evidenza",
     "",
-    `stanza-${pagina2.id}-${tasto2.chiave}`
+    `stanza-${pagina3.id}-${tasto2.chiave}`
   )}</span><b>${esc(String(tasto2.quante))}</b></button>`;
 }
-function zonaDeiComandi(pagina2, tasti) {
+function zonaDeiComandi(pagina3, tasti) {
   const chiesta = state55.chiesta;
-  if (vivo(chiesta) && chiesta.stanza === pagina2.id) {
+  if (vivo(chiesta) && chiesta.stanza === pagina3.id) {
     const quante3 = tasti.find((tasto2) => tasto2.chiave === chiesta.chiave)?.quante || 1;
     const domanda = `${t("Spegni", "Turn off")} ${cosaSiSpegneAParole(chiesta.chiave, quante3)}?`;
     return `<span class="dm-stanza-plancia-comandi" data-dm-momento="domanda" style="${tempoCheResta(chiesta, QUANTO_DURA_LA_DOMANDA)}">
@@ -77599,13 +77640,13 @@ function zonaDeiComandi(pagina2, tasti) {
     </span>`;
   }
   const annulla2 = state55.annulla;
-  if (vivo(annulla2) && annulla2.stanza === pagina2.id)
+  if (vivo(annulla2) && annulla2.stanza === pagina3.id)
     return `<span class="dm-stanza-plancia-comandi" data-dm-momento="fatto" style="${tempoCheResta(annulla2, QUANTO_DURA_L_ANNULLA)}">
       <span class="dm-stanza-plancia-fatto">✓ ${esc(parolaDelFatto(annulla2.chiave, annulla2.entita?.length || 0))}</span>
       <button type="button" class="dm-stanza-plancia-rimetti" data-dm-stanza-plancia-rimetti>${esc(t("Annulla", "Undo"))}</button>
     </span>`;
   if (!tasti.length) return "";
-  return `<span class="dm-stanza-plancia-comandi" data-dm-momento="tasti">${tasti.map((tasto2) => tastoMarkup4(pagina2, tasto2)).join("")}</span>`;
+  return `<span class="dm-stanza-plancia-comandi" data-dm-momento="tasti">${tasti.map((tasto2) => tastoMarkup4(pagina3, tasto2)).join("")}</span>`;
 }
 function misureMarkup(gradi10, umidita) {
   if (gradi10 === null && umidita === null) return "";
@@ -77613,21 +77654,21 @@ function misureMarkup(gradi10, umidita) {
   const umido = umidita === null ? "" : `<i class="dm-stanza-plancia-umido">${esc(String(Math.round(umidita)))}%</i>`;
   return `<span class="dm-stanza-plancia-misure">${grado}${umido}</span>`;
 }
-function cardMarkup5(pagina2, states) {
-  const riassunto3 = riassuntoDellaStanza(pagina2, states);
-  const tasti = tastiDellaStanza(pagina2, states);
+function cardMarkup5(pagina3, states) {
+  const riassunto3 = riassuntoDellaStanza(pagina3, states);
+  const tasti = tastiDellaStanza(pagina3, states);
   const luce2 = riassunto3.perTipo.some((voce3) => voce3.chiave === "luci");
   const didascalia = didascaliaDellaStanza(riassunto3.perTipo, tasti);
-  const disegno6 = disegnoDellaStanza4(pagina2.icon);
-  return `<article class="dm-stanza-plancia" role="button" tabindex="0" data-dm-stanza-plancia="${esc(pagina2.id)}"
-      data-accesa="${luce2}" aria-label="${esc(pagina2.name)}">
+  const disegno6 = disegnoDellaStanza4(pagina3.icon);
+  return `<article class="dm-stanza-plancia" role="button" tabindex="0" data-dm-stanza-plancia="${esc(pagina3.id)}"
+      data-accesa="${luce2}" aria-label="${esc(pagina3.name)}">
     <span class="dm-stanza-plancia-cima">
       <span class="dm-stanza-plancia-ic" aria-hidden="true">${disegno6}</span>
-      <span class="dm-stanza-plancia-nome">${esc(pagina2.name)}</span>
+      <span class="dm-stanza-plancia-nome">${esc(pagina3.name)}</span>
     </span>
     ${misureMarkup(riassunto3.gradi, riassunto3.umidita)}
     ${didascalia ? `<small class="dm-stanza-plancia-didascalia">${esc(didascalia)}</small>` : ""}
-    ${zonaDeiComandi(pagina2, tasti)}
+    ${zonaDeiComandi(pagina3, tasti)}
   </article>`;
 }
 function avvisaCheENato() {
@@ -77638,20 +77679,20 @@ function avvisaCheENato() {
   } catch (_errore) {
   }
 }
-function host(pagina2) {
+function host(pagina3) {
   let nodo2 = doc?.getElementById?.(BLOCCO_ID);
   if (nodo2) return nodo2;
-  if (!pagina2) return null;
+  if (!pagina3) return null;
   nodo2 = doc.createElement("section");
   nodo2.id = BLOCCO_ID;
   nodo2.className = "dm-stanze-plancia";
-  pagina2.append(nodo2);
+  pagina3.append(nodo2);
   avvisaCheENato();
   return nodo2;
 }
 function renderStanzeInPlancia() {
-  const pagina2 = doc?.getElementById?.("page-home");
-  if (!pagina2) return false;
+  const pagina3 = doc?.getElementById?.("page-home");
+  if (!pagina3) return false;
   let pagine = [];
   try {
     pagine = stanzeInPlancia(stanzeScelte(), roomPages());
@@ -77687,7 +77728,7 @@ function renderStanzeInPlancia() {
      * della casa: senza di loro nella firma, il tocco non si vedrebbe. */
     [state55.chiesta?.stanza, state55.chiesta?.chiave, state55.annulla?.stanza, state55.annulla?.chiave].map((voce3) => voce3 || "").join("~")
   ].join("§");
-  const casa = host(pagina2);
+  const casa = host(pagina3);
   if (!casa) return false;
   if (state55.firma === firma2 && casa.querySelector("[data-dm-stanza-plancia]")) return true;
   state55.firma = firma2;
@@ -77699,13 +77740,13 @@ function onClick11(evento) {
   const card2 = evento.target?.closest?.("[data-dm-stanza-plancia]");
   if (!card2) return;
   const stanza2 = card2.getAttribute("data-dm-stanza-plancia") || "";
-  const spegni2 = evento.target.closest("[data-dm-stanza-plancia-spegni]");
+  const spegni3 = evento.target.closest("[data-dm-stanza-plancia-spegni]");
   const si = evento.target.closest("[data-dm-stanza-plancia-si]");
   const rimetti2 = evento.target.closest("[data-dm-stanza-plancia-rimetti]");
-  if (spegni2 || si || rimetti2) {
+  if (spegni3 || si || rimetti2) {
     evento.preventDefault();
     evento.stopPropagation();
-    if (spegni2) velo2.chiedi(stanza2, spegni2.getAttribute("data-dm-stanza-plancia-spegni") || "");
+    if (spegni3) velo2.chiedi(stanza2, spegni3.getAttribute("data-dm-stanza-plancia-spegni") || "");
     else if (si) velo2.spegni(stanza2, si.getAttribute("data-dm-stanza-plancia-si") || "");
     else velo2.rimetti();
     return;
@@ -77941,8 +77982,8 @@ var state56 = root[KEY60] ||= { installed: false, inCoda: false };
 function ordineSalvato() {
   return ordineDeiBlocchi(readJson(CHIAVE_ORDINE_BLOCCHI, null));
 }
-function pezziDelBlocco(nome, pagina2) {
-  const dentro3 = (nodo2) => nodo2 && nodo2.parentElement === pagina2 ? nodo2 : null;
+function pezziDelBlocco(nome, pagina3) {
+  const dentro3 = (nodo2) => nodo2 && nodo2.parentElement === pagina3 ? nodo2 : null;
   if (nome === BLOCCO_INTESTAZIONE)
     return [dentro3(titoloDellaTestata()), dentro3(laTestata())].filter(Boolean);
   if (nome === BLOCCO_DEL_METEO)
@@ -77996,39 +78037,39 @@ function rimettiLaTestata() {
   barra2.before(testata5);
   return true;
 }
-function portaLaTestataInPagina(pagina2) {
+function portaLaTestataInPagina(pagina3) {
   const testata5 = laTestata();
-  if (!testata5 || !pagina2) return false;
-  const gia = testata5.parentElement === pagina2;
-  if (!gia) pagina2.prepend(testata5);
+  if (!testata5 || !pagina3) return false;
+  const gia = testata5.parentElement === pagina3;
+  if (!gia) pagina3.prepend(testata5);
   metteIlTitoloDellaTestata(testata5);
   return !gia;
 }
-function sistemaLaTestata(pagina2 = laHomeSiGuarda()) {
-  if (!pagina2 || lIntestazioneStaInCima(readJson(CHIAVE_ORDINE_BLOCCHI, null)))
+function sistemaLaTestata(pagina3 = laHomeSiGuarda()) {
+  if (!pagina3 || lIntestazioneStaInCima(readJson(CHIAVE_ORDINE_BLOCCHI, null)))
     return rimettiLaTestata();
-  return portaLaTestataInPagina(pagina2);
+  return portaLaTestataInPagina(pagina3);
 }
 function laHomeSiGuarda() {
-  const pagina2 = doc?.getElementById?.("page-home");
-  return pagina2?.classList?.contains("active") ? pagina2 : null;
+  const pagina3 = doc?.getElementById?.("page-home");
+  return pagina3?.classList?.contains("active") ? pagina3 : null;
 }
-function applicaLOrdineDeiBlocchi(pagina2 = laHomeSiGuarda()) {
-  if (!pagina2) return false;
+function applicaLOrdineDeiBlocchi(pagina3 = laHomeSiGuarda()) {
+  if (!pagina3) return false;
   const fila2 = ordineSalvato();
-  const gruppi2 = fila2.map((nome) => pezziDelBlocco(nome, pagina2)).filter((pezzi) => pezzi.length);
+  const gruppi2 = fila2.map((nome) => pezziDelBlocco(nome, pagina3)).filter((pezzi) => pezzi.length);
   if (gruppi2.length < 2) return false;
-  const figli = [...pagina2.children];
+  const figli = [...pagina3.children];
   const posizione = (pezzi) => figli.indexOf(pezzi[0]);
   const posizioni = gruppi2.map(posizione);
   if (posizioni.every((dove, indice) => indice === 0 || dove > posizioni[indice - 1])) return false;
   const miei = new Set(gruppi2.flat());
   const pastiglie = doc.getElementById("dashboard-pills-row");
-  let dopo = pastiglie?.parentElement === pagina2 ? pastiglie : figli.filter((nodo2) => !miei.has(nodo2)).pop() || null;
+  let dopo = pastiglie?.parentElement === pagina3 ? pastiglie : figli.filter((nodo2) => !miei.has(nodo2)).pop() || null;
   for (const pezzi of gruppi2)
     for (const nodo2 of pezzi) {
       if (dopo) dopo.after(nodo2);
-      else pagina2.prepend(nodo2);
+      else pagina3.prepend(nodo2);
       dopo = nodo2;
     }
   return true;
@@ -78791,10 +78832,10 @@ function readingFor(load, children, period, states, recorderValues) {
   return { entity: own.entity, value: total, source: "sum", children: children.length };
 }
 var MARGINE_DEL_CONTATORE = 0.95;
-function contatoreSottoIFigli(proprio, somma2) {
-  if (!Number.isFinite(proprio) || !Number.isFinite(somma2)) return false;
-  if (somma2 <= 0) return false;
-  return proprio < somma2 * MARGINE_DEL_CONTATORE;
+function contatoreSottoIFigli(proprio, somma3) {
+  if (!Number.isFinite(proprio) || !Number.isFinite(somma3)) return false;
+  if (somma3 <= 0) return false;
+  return proprio < somma3 * MARGINE_DEL_CONTATORE;
 }
 function savedOverride(flowNodes, slotKey) {
   if (!slotKey || !flowNodes || typeof flowNodes !== "object") return null;
@@ -78819,8 +78860,8 @@ function isWallboxLoad(load = {}, override = null, entities = []) {
   }
   return WALLBOX_NAME.test(clean23(override?.name) || clean23(load.name));
 }
-function clickTarget(load, override, period, name, children = 0, wallbox = null) {
-  if (wallbox && isWallboxLoad(load, override, wallbox.entities)) return { kind: "ev" };
+function clickTarget(load, override, period, name, children = 0, wallbox2 = null) {
+  if (wallbox2 && isWallboxLoad(load, override, wallbox2.entities)) return { kind: "ev" };
   const group = children ? clean23(load?.metadata?.flow_group) || clean23(load.id) : clean23(override?.group ?? load?.group);
   if (group)
     return { kind: "subloads", target: period === "instant" ? group : `${group}_${period}` };
@@ -78838,7 +78879,7 @@ function flowStageModel(options = {}) {
     period = "instant",
     recorderValues = null,
     locale: locale3 = "it-IT",
-    wallbox = null,
+    wallbox: wallbox2 = null,
     /* Le voci (per id, o nome) il cui numero del periodo e' ancora in
      * viaggio: il loro cerchio dice «…», non «—». */
     inAttesa = null,
@@ -78904,7 +78945,7 @@ function flowStageModel(options = {}) {
       intensity: flowIntensity(active ? value : 0, peak),
       desktop: desktop[index],
       mobile: mobile[index],
-      click: clickTarget(load, override, period, name, children, wallbox)
+      click: clickTarget(load, override, period, name, children, wallbox2)
     };
   });
   return {
@@ -79051,8 +79092,8 @@ function cerchiDelleStanze({
   const cerchi = carichi.filter(
     (carico) => !gruppoDi(carico) && carico.category !== "manual-report"
   );
-  const wallbox = cerchi.filter((carico) => eLaWallbox(carico, entitaDellaWallbox));
-  const gruppiDellaWallbox = new Set(wallbox.map(gruppoDelCerchio));
+  const wallbox2 = cerchi.filter((carico) => eLaWallbox(carico, entitaDellaWallbox));
+  const gruppiDellaWallbox = new Set(wallbox2.map(gruppoDelCerchio));
   const gruppiDiCarichi = new Set(cerchi.map(gruppoDelCerchio));
   const pieni = new Set(
     [...carichi, ...apparecchi2].map(gruppoDi).filter((gruppo) => gruppiDiCarichi.has(gruppo))
@@ -79066,7 +79107,7 @@ function cerchiDelleStanze({
       carichiDaSistemare.push(carico);
       continue;
     }
-    if (wallbox.includes(carico)) continue;
+    if (wallbox2.includes(carico)) continue;
     if (pieni.has(gruppoDelCerchio(carico))) continue;
     if (misurabile(carico)) carichiDaSistemare.push(carico);
   }
@@ -79120,7 +79161,7 @@ function cerchiDelleStanze({
     }
     conStanza = fusi;
   }
-  const posti = Math.max(1, CERCHI_AL_MASSIMO - wallbox.length);
+  const posti = Math.max(1, CERCHI_AL_MASSIMO - wallbox2.length);
   const senzaStanza = perStanza.get("") || { stanza: null, carichi: [], apparecchi: [] };
   const serveAltro = senzaStanza.carichi.length + senzaStanza.apparecchi.length > 0;
   const tenute = conStanza.length + (serveAltro ? 1 : 0) > posti ? posti - 1 : conStanza.length;
@@ -79135,7 +79176,7 @@ function cerchiDelleStanze({
   const nuoviCarichi = [];
   const ritaggati = /* @__PURE__ */ new Map();
   let ordine = 0;
-  for (const carico of wallbox) nuoviCarichi.push({ ...carico, order: ordine++ });
+  for (const carico of wallbox2) nuoviCarichi.push({ ...carico, order: ordine++ });
   for (const carico of carichi)
     if (gruppiDellaWallbox.has(gruppoDi(carico))) nuoviCarichi.push(carico);
   const cerchio = (id, nome, icona3, gruppo) => {
@@ -79498,7 +79539,7 @@ function chiediIKwh(periodo, richieste) {
   };
   ricavaIKwh(broker2, periodo, daChiedere, adesso2).then((trovati) => {
     if (memoriaDei(periodo) !== voce3) return;
-    for (const [id, kwh4] of trovati) voce3.valori.set(id, kwh4);
+    for (const [id, kwh5] of trovati) voce3.valori.set(id, kwh5);
   }).catch(() => {
   }).finally(() => {
     chiudi2();
@@ -79521,8 +79562,8 @@ async function ricavaIKwh(broker2, periodo, daChiedere, adesso2) {
         15e3
       );
       for (const { id, entity: entity2 } of potenze) {
-        const kwh4 = kwhDallaPotenza(medie, entity2, unita3(entity2) || "W");
-        if (kwh4 !== null) trovati.set(id, kwh4);
+        const kwh5 = kwhDallaPotenza(medie, entity2, unita3(entity2) || "W");
+        if (kwh5 !== null) trovati.set(id, kwh5);
       }
     } catch (_errore) {
     }
@@ -79544,8 +79585,8 @@ async function ricavaIKwh(broker2, periodo, daChiedere, adesso2) {
   }
   const inizio = inizioDelPeriodo(periodo, adesso2).getTime();
   for (const { id, kind, entity: entity2 } of dallaStoria) {
-    const kwh4 = kind === "potenza" ? kwhDallaStoriaDellaPotenza(storia, entity2, unita3(entity2) || "W", inizio, adesso2) : kwhDallaStoriaDelContatore(storia, entity2, unita3(entity2) || "kWh");
-    if (kwh4 !== null) trovati.set(id, kwh4);
+    const kwh5 = kind === "potenza" ? kwhDallaStoriaDellaPotenza(storia, entity2, unita3(entity2) || "W", inizio, adesso2) : kwhDallaStoriaDelContatore(storia, entity2, unita3(entity2) || "kWh");
+    if (kwh5 !== null) trovati.set(id, kwh5);
   }
   return trovati;
 }
@@ -79826,8 +79867,8 @@ function adattaIlNome(cerchio, nome) {
   if (nome.dataset.dmAdattato === chiave2) return;
   nome.style.removeProperty("font-size");
   delete nome.dataset.dmNomeLungo;
-  const stile6 = doc.defaultView?.getComputedStyle?.(nome);
-  let misura7 = Number.parseFloat(stile6?.fontSize) || 0;
+  const stile7 = doc.defaultView?.getComputedStyle?.(nome);
+  let misura7 = Number.parseFloat(stile7?.fontSize) || 0;
   const troppo = () => nome.scrollWidth > nome.clientWidth + 1 || nome.scrollHeight > misura7 * 1.1 * 2 + 1;
   while (misura7 > NOME_PIU_PICCOLO && troppo()) {
     misura7 -= 0.5;
@@ -80306,8 +80347,8 @@ function riportaInScena(nodo2) {
   delete nodo2.dataset.dmImpiantoNasconde;
 }
 function laScenaSiVede() {
-  const pagina2 = doc?.getElementById?.("page-energy");
-  return !pagina2 || pagina2.classList.contains("active");
+  const pagina3 = doc?.getElementById?.("page-energy");
+  return !pagina3 || pagina3.classList.contains("active");
 }
 function schedule22() {
   if (state58.frame) return;
@@ -82522,15 +82563,15 @@ function glifoDellaLettura(entity2, unit) {
 function nomeDellaLettura2(entity2, nome, unit, tokenElettrodomestico, usate) {
   const token = `${entity2} ${nome} ${unit}`.toLowerCase();
   const unita3 = clean(unit).toLowerCase();
-  const kwh4 = unita3 === "kwh" || unita3 === "wh" || !unita3 && /kwh/.test(token);
+  const kwh5 = unita3 === "kwh" || unita3 === "wh" || !unita3 && /kwh/.test(token);
   let parola = "";
   if (unita3 === "w" || unita3 === "kw") parola = t("Potenza", "Power");
-  else if (kwh4 && /oggi|today|daily|giorn/.test(token)) parola = t("Energia oggi", "Energy today");
-  else if (kwh4 && /mese|month/.test(token)) parola = t("Energia del mese", "Energy this month");
-  else if (kwh4 && /anno|year|annual/.test(token))
+  else if (kwh5 && /oggi|today|daily|giorn/.test(token)) parola = t("Energia oggi", "Energy today");
+  else if (kwh5 && /mese|month/.test(token)) parola = t("Energia del mese", "Energy this month");
+  else if (kwh5 && /anno|year|annual/.test(token))
     parola = t("Energia dell'anno", "Energy this year");
-  else if (kwh4 && /total|lifetime|somma/.test(token)) parola = t("Contatore totale", "Total meter");
-  else if (kwh4) parola = t("Energia", "Energy");
+  else if (kwh5 && /total|lifetime|somma/.test(token)) parola = t("Contatore totale", "Total meter");
+  else if (kwh5) parola = t("Energia", "Energy");
   else if (/temperatur|°/.test(token)) parola = t("Temperatura", "Temperature");
   else if (/umidit|humidity/.test(token)) parola = t("Umidità", "Humidity");
   else if (unita3 === "a") parola = t("Corrente", "Current");
@@ -82584,8 +82625,8 @@ function famiglie(appliance) {
       continue;
     }
     if (STATI_MUTI4.test(grezzo)) continue;
-    const numero57 = Number.parseFloat(grezzo.replace(",", "."));
-    if (Number.isFinite(numero57)) {
+    const numero58 = Number.parseFloat(grezzo.replace(",", "."));
+    if (Number.isFinite(numero58)) {
       const unit = clean(stato3?.attributes?.unit_of_measurement);
       misure.push({
         entity: entity2,
@@ -84064,8 +84105,8 @@ function rifaiLaScheda() {
   } catch (_errore) {
   }
 }
-function quante2(numero57) {
-  return numero57 === 1 ? t("1 stanza", "1 room") : `${numero57} ${t("stanze", "rooms")}`;
+function quante2(numero58) {
+  return numero58 === 1 ? t("1 stanza", "1 room") : `${numero58} ${t("stanze", "rooms")}`;
 }
 function pannelloDeiPiani(piani, senza = [], { chiede = "", rinomina: rinomina3 = "", segnoAperto = "", errore = "" } = {}) {
   const tutte = piani.reduce((totale, piano) => totale + piano.stanze.length, 0) + senza.length;
@@ -84461,26 +84502,26 @@ function kwhPerOra(righe3) {
   const ordinate3 = tutte.filter((riga3) => riga3.somma !== null);
   const fuori = [];
   for (let indice = 1; indice < ordinate3.length; indice += 1) {
-    const kwh4 = ordinate3[indice].somma - ordinate3[indice - 1].somma;
-    if (!(kwh4 > 0)) continue;
-    fuori.push({ quando: ordinate3[indice].quando, kwh: kwh4 });
+    const kwh5 = ordinate3[indice].somma - ordinate3[indice - 1].somma;
+    if (!(kwh5 > 0)) continue;
+    fuori.push({ quando: ordinate3[indice].quando, kwh: kwh5 });
   }
   return fuori;
 }
 function giornoDi2(quando4) {
-  const istante6 = new Date(quando4);
-  if (Number.isNaN(istante6.getTime())) return "";
-  const mese = String(istante6.getMonth() + 1).padStart(2, "0");
-  const giorno3 = String(istante6.getDate()).padStart(2, "0");
-  return `${istante6.getFullYear()}-${mese}-${giorno3}`;
+  const istante7 = new Date(quando4);
+  if (Number.isNaN(istante7.getTime())) return "";
+  const mese = String(istante7.getMonth() + 1).padStart(2, "0");
+  const giorno3 = String(istante7.getDate()).padStart(2, "0");
+  return `${istante7.getFullYear()}-${mese}-${giorno3}`;
 }
 function vuoto2(quante3) {
   return Array.from({ length: quante3 }, () => 0);
 }
-function reportDelleFasce(righe3, fasceSalvate, { prezzoUnico = 0, totale = null } = {}) {
-  const config = normalizzaLeFasce(fasceSalvate);
+function reportDelleFasce(righe3, fasceSalvate2, { prezzoUnico: prezzoUnico2 = 0, totale = null } = {}) {
+  const config = normalizzaLeFasce(fasceSalvate2);
   const quante3 = config.voci.length;
-  const unico = Math.max(0, numero46(prezzoUnico) || 0);
+  const unico = Math.max(0, numero46(prezzoUnico2) || 0);
   if (!quante3 || !leFasceValgono(config)) return null;
   const prezzoDi = (indice) => {
     const suo2 = config.voci[indice]?.prezzo;
@@ -84509,12 +84550,12 @@ function reportDelleFasce(righe3, fasceSalvate, { prezzoUnico = 0, totale = null
   const scoperti = tutti === null ? 0 : Math.max(0, tutti - spiegati);
   const mediaPesata = prezzoMedioDelleFasce(config, unico);
   const euroSpiegati = kwhPerFascia.reduce(
-    (somma2, kwh5, indice) => somma2 + kwh5 * prezzoDi(indice),
+    (somma3, kwh6, indice) => somma3 + kwh6 * prezzoDi(indice),
     0
   );
   const euroScoperti = scoperti * mediaPesata;
-  const kwh4 = spiegati + scoperti;
-  const euro2 = euroSpiegati + euroScoperti;
+  const kwh5 = spiegati + scoperti;
+  const euro3 = euroSpiegati + euroScoperti;
   const giorni = [...perGiorno.entries()].sort((uno, due3) => uno[0] < due3[0] ? -1 : 1).map(([giorno3, per]) => ({ giorno: giorno3, per, kwh: per.reduce((a, b2) => a + b2, 0) }));
   return {
     fasce: config.voci.map((voce3, indice) => ({
@@ -84540,14 +84581,14 @@ function reportDelleFasce(righe3, fasceSalvate, { prezzoUnico = 0, totale = null
       euro: casella6.euro,
       fascia: fasciaDelleOre(config, ora6 * 60)
     })),
-    kwh: kwh4,
-    euro: euro2,
+    kwh: kwh5,
+    euro: euro3,
     /* Il confronto che risponde alla domanda vera: le fasce mi convengono?
      * Si misura sugli stessi kilowattora, col prezzo unico che hai scritto
      * nella stessa scheda. Senza quel prezzo non c'e' confronto da fare —
      * `null`, e chi disegna non scrive la riga. */
-    unico: unico > 0 ? { prezzo: unico, euro: kwh4 * unico } : null,
-    risparmio: unico > 0 ? kwh4 * unico - euro2 : null,
+    unico: unico > 0 ? { prezzo: unico, euro: kwh5 * unico } : null,
+    risparmio: unico > 0 ? kwh5 * unico - euro3 : null,
     /* Quanta parte e' misurata ora per ora e quanta e' stimata. */
     misurato: { kwh: spiegati, euro: euroSpiegati },
     stimato: { kwh: scoperti, euro: euroScoperti, prezzo: mediaPesata },
@@ -85199,9 +85240,9 @@ function misuraDelGrafico(chiave2) {
   return MISURE5.find((misura7) => misura7.chiave === pulito53(chiave2)) || MISURE5[0];
 }
 function scriviIlValore(valore3, misura7 = MISURE5[0], virgola = ",") {
-  const numero57 = Number(valore3);
-  if (!Number.isFinite(numero57)) return "—";
-  return `${numero57.toFixed(misura7.decimali).replace(".", virgola)}${misura7.unita}`;
+  const numero58 = Number(valore3);
+  if (!Number.isFinite(numero58)) return "—";
+  return `${numero58.toFixed(misura7.decimali).replace(".", virgola)}${misura7.unita}`;
 }
 function serieSpente(stored) {
   const elenco15 = Array.isArray(stored?.spente) ? stored.spente : [];
@@ -85403,8 +85444,8 @@ function tacche2(min, max) {
   }
   return valori;
 }
-function valore(numero57, misura7 = misuraDelGrafico(state68.misura)) {
-  return scriviIlValore(numero57, misura7, t(",", "."));
+function valore(numero58, misura7 = misuraDelGrafico(state68.misura)) {
+  return scriviIlValore(numero58, misura7, t(",", "."));
 }
 function rowsFor2(entity2, hours) {
   return serieDi(entity2, hours);
@@ -87786,10 +87827,10 @@ function conLaParolaAccesa(testo4, parola) {
     testo4.slice(dove, dove + parola.length)
   )}</mark>${escSenzaTagliare(testo4.slice(dove + parola.length))}`;
 }
-function disegnaGliEsiti(contenitore4, parola) {
-  contenitore4.textContent = "";
+function disegnaGliEsiti(contenitore5, parola) {
+  contenitore5.textContent = "";
   if (clean(parola).length < 2) {
-    contenitore4.innerHTML = `<p class="${BARRA}-vuoto">${esc(
+    contenitore5.innerHTML = `<p class="${BARRA}-vuoto">${esc(
       t(
         "Scrivi almeno due lettere: si cerca in tutte le schede insieme.",
         "Type at least two letters: it searches every tab at once."
@@ -87805,7 +87846,7 @@ function disegnaGliEsiti(contenitore4, parola) {
     activeLocale()
   ).filter((una) => !dette.has(una.id));
   if (!esiti.length && !caselle2.length) {
-    contenitore4.innerHTML = `<p class="${BARRA}-vuoto">${esc(
+    contenitore5.innerHTML = `<p class="${BARRA}-vuoto">${esc(
       t("Nessuna configurazione contiene questa parola.", "No configuration contains this word.")
     )}</p>`;
     return 0;
@@ -87832,13 +87873,13 @@ function disegnaGliEsiti(contenitore4, parola) {
         } catch (_errore) {
         }
       });
-    contenitore4.append(riga3);
+    contenitore5.append(riga3);
   }
   if (caselle2.length) {
     const titolo3 = doc.createElement("p");
     titolo3.className = `${BARRA}-titolo`;
     titolo3.textContent = t("Dove si configura", "Where it is configured");
-    contenitore4.append(titolo3);
+    contenitore5.append(titolo3);
   }
   for (const una of caselle2.slice(0, 20)) {
     const nome = nomeDellaScheda(una.scheda);
@@ -87853,7 +87894,7 @@ function disegnaGliEsiti(contenitore4, parola) {
       clean(parola)
     )}</span>`;
     riga3.addEventListener("click", () => apriLaCasella(una));
-    contenitore4.append(riga3);
+    contenitore5.append(riga3);
   }
   return esiti.length + caselle2.length;
 }
@@ -87891,16 +87932,16 @@ function ensureBarraDiRicerca() {
   barra2.append(riga3, esiti);
   const famiglie2 = guscio3.querySelector(":scope > #dm-alberatura-famiglie");
   (famiglie2 || strisce).before(barra2);
-  const ridisegna30 = () => {
+  const ridisegna31 = () => {
     state71.parola = clean(campo5.value);
     via.hidden = !state71.parola;
     esiti.hidden = !state71.parola;
     if (state71.parola) disegnaGliEsiti(esiti, state71.parola);
   };
-  campo5.addEventListener("input", ridisegna30);
+  campo5.addEventListener("input", ridisegna31);
   via.addEventListener("click", () => {
     campo5.value = "";
-    ridisegna30();
+    ridisegna31();
     campo5.focus();
   });
   if (state71.parola) disegnaGliEsiti(esiti, state71.parola);
@@ -87968,15 +88009,15 @@ function vestiLaRiga(riga3, states, girati2) {
     return false;
   }
   const parola = come2 === "aperto" ? t("Aperta", "Open") : t("Chiusa", "Closed");
-  const pastiglia3 = vecchia || doc.createElement("span");
+  const pastiglia4 = vecchia || doc.createElement("span");
   if (!vecchia) {
-    pastiglia3.className = PASTIGLIA;
+    pastiglia4.className = PASTIGLIA;
     (riga3.querySelector(".ed-row-new") || riga3.querySelector(".ed-row-main") || riga3).append(
-      pastiglia3
+      pastiglia4
     );
   }
-  if (pastiglia3.dataset.varco !== come2) pastiglia3.dataset.varco = come2;
-  if (pastiglia3.textContent !== parola) pastiglia3.textContent = parola;
+  if (pastiglia4.dataset.varco !== come2) pastiglia4.dataset.varco = come2;
+  if (pastiglia4.textContent !== parola) pastiglia4.textContent = parola;
   return true;
 }
 function vestiIlGruppo(dettaglio, states, girati2) {
@@ -88644,7 +88685,7 @@ function installEnglishRuntimeStrings(root7 = globalThis, doc4 = globalThis.docu
   avvolgi3();
   root7.addEventListener?.("dashboardmodern:legacy-ready", avvolgi3, { once: false });
   const radici = () => {
-    const dentro3 = (pagina2, ...nodi) => paginaVisibile(pagina2, doc4) ? nodi.filter(Boolean) : [];
+    const dentro3 = (pagina3, ...nodi) => paginaVisibile(pagina3, doc4) ? nodi.filter(Boolean) : [];
     return [
       ...dentro3(
         "page-security",
@@ -88953,11 +88994,11 @@ function ensureAlarmModesBlock() {
   return true;
 }
 function onClick13(event) {
-  const pastiglia3 = event.target?.closest?.("[data-dm-alarm-mode]");
-  if (!pastiglia3 || !doc?.getElementById?.(BLOCK_ID)?.contains(pastiglia3)) return;
+  const pastiglia4 = event.target?.closest?.("[data-dm-alarm-mode]");
+  if (!pastiglia4 || !doc?.getElementById?.(BLOCK_ID)?.contains(pastiglia4)) return;
   event.preventDefault();
   event.stopPropagation();
-  const mode = clean(pastiglia3.getAttribute("data-dm-alarm-mode"));
+  const mode = clean(pastiglia4.getAttribute("data-dm-alarm-mode"));
   if (!mode) return;
   const fuori = tolte();
   if (fuori.has(mode)) fuori.delete(mode);
@@ -89964,12 +90005,12 @@ function lePersone(persone4, states) {
 var DIPENDE_DA_ADESSO = /* @__PURE__ */ new Set(["lock", "media_player"]);
 var CHIEDE_UNA_VOCE = /* @__PURE__ */ new Set(["select", "input_select"]);
 var NON_ESCE_DALLA_PLANCIA = /* @__PURE__ */ new Set(["builtin", "luci_group"]);
-function laRicettaDellAzione(azione, risolvi3) {
+function laRicettaDellAzione(azione, risolvi4) {
   if (!azione) return null;
   const tipo = pulito55(azione.type).toLowerCase();
   if (NON_ESCE_DALLA_PLANCIA.has(tipo)) return null;
   if (pulito55(azione.confirm)) return null;
-  const risolta2 = typeof risolvi3 === "function" ? risolvi3(azione) : null;
+  const risolta2 = typeof risolvi4 === "function" ? risolvi4(azione) : null;
   const entita3 = pulito55(risolta2?.entita);
   if (!entita3.includes(".")) return null;
   const dominio5 = tipo === "script" ? "script" : tipo === "scene" ? "scene" : entita3.split(".")[0].toLowerCase();
@@ -89981,17 +90022,17 @@ function laRicettaDellAzione(azione, risolvi3) {
 }
 var NON_SI_COMMUTA_AL_BUIO = /* @__PURE__ */ new Set(["lock", "media_player"]);
 var SI_COMMUTANO = /* @__PURE__ */ new Set(["light", "switch", "input_boolean", "fan", "cover"]);
-function laRicettaDelDispositivo(entita3, risolvi3) {
+function laRicettaDelDispositivo(entita3, risolvi4) {
   const scritta = pulito55(entita3);
   if (!scritta.includes(".")) return null;
-  const risolta2 = typeof risolvi3 === "function" ? risolvi3(scritta) : null;
+  const risolta2 = typeof risolvi4 === "function" ? risolvi4(scritta) : null;
   const vera2 = pulito55(risolta2?.entita) || scritta;
   if (!vera2.includes(".")) return null;
   const dominio5 = vera2.split(".")[0].toLowerCase();
   if (NON_SI_COMMUTA_AL_BUIO.has(dominio5) || !SI_COMMUTANO.has(dominio5)) return null;
   return { dominio: dominio5, servizio: "toggle", entita: vera2, dati: {} };
 }
-function iDispositiviPerLAuto(candidati = [], risolvi3 = null) {
+function iDispositiviPerLAuto(candidati = [], risolvi4 = null) {
   const perGenere = new Map(GENERI_IN_AUTO.map((genere) => [genere, []]));
   const visti = /* @__PURE__ */ new Set();
   for (const grezzo of Array.isArray(candidati) ? candidati : []) {
@@ -90004,7 +90045,7 @@ function iDispositiviPerLAuto(candidati = [], risolvi3 = null) {
     if (grezzo?.comando === false) continue;
     const acceso6 = grezzo?.acceso === true;
     if (!SI_VOGLIONO_TUTTI.has(genere) && !acceso6) continue;
-    const ricetta = laRicettaDelDispositivo(entity2, risolvi3);
+    const ricetta = laRicettaDelDispositivo(entity2, risolvi4);
     if (!ricetta) continue;
     visti.add(entity2);
     posto.push({ id: entity2, nome, genere, acceso: acceso6, stato: pulito55(grezzo?.stato), ricetta });
@@ -90018,7 +90059,7 @@ function iDispositiviPerLAuto(candidati = [], risolvi3 = null) {
   }
   return fuori;
 }
-function iTastiColPosto(azioni2, risolvi3) {
+function iTastiColPosto(azioni2, risolvi4) {
   const fuori = [];
   for (const [posto, azione] of (Array.isArray(azioni2) ? azioni2 : []).entries()) {
     if (fuori.length >= AZIONI_AL_MASSIMO) break;
@@ -90029,13 +90070,13 @@ function iTastiColPosto(azioni2, risolvi3) {
       id: `${posto}|${nome}`,
       nome,
       segno: pulito55(azione?.icon),
-      ricetta: laRicettaDellAzione(azione, risolvi3)
+      ricetta: laRicettaDellAzione(azione, risolvi4)
     });
   }
   return fuori;
 }
-function leAzioni(azioni2, risolvi3) {
-  return iTastiColPosto(azioni2, risolvi3).map(({ id, nome, segno: segno2, ricetta }) => ({
+function leAzioni(azioni2, risolvi4) {
+  return iTastiColPosto(azioni2, risolvi4).map(({ id, nome, segno: segno2, ricetta }) => ({
     id,
     nome,
     segno: segno2,
@@ -90045,11 +90086,11 @@ function leAzioni(azioni2, risolvi3) {
     subito: Boolean(ricetta)
   }));
 }
-function leRicettePerLAuto(azioni2, risolvi3) {
-  return iTastiColPosto(azioni2, risolvi3).filter((tasto2) => tasto2.ricetta).map((tasto2) => ({ id: tasto2.id, ...tasto2.ricetta }));
+function leRicettePerLAuto(azioni2, risolvi4) {
+  return iTastiColPosto(azioni2, risolvi4).filter((tasto2) => tasto2.ricetta).map((tasto2) => ({ id: tasto2.id, ...tasto2.ricetta }));
 }
-function leRicetteDeiDispositivi(candidati = [], risolvi3 = null) {
-  return iDispositiviPerLAuto(candidati, risolvi3).map((uno) => ({ id: uno.id, ...uno.ricetta }));
+function leRicetteDeiDispositivi(candidati = [], risolvi4 = null) {
+  return iDispositiviPerLAuto(candidati, risolvi4).map((uno) => ({ id: uno.id, ...uno.ricetta }));
 }
 function ilTastoDelComando(id, azioni2 = []) {
   const quale = pulito55(id);
@@ -90064,7 +90105,7 @@ function laFotoPerLAuto({
   states = {},
   azioni: azioni2 = [],
   dispositivi = [],
-  risolvi: risolvi3 = null,
+  risolvi: risolvi4 = null,
   risolviEntita = null,
   adesso: adesso2 = Date.now()
 } = {}) {
@@ -90080,7 +90121,7 @@ function laFotoPerLAuto({
     ),
     fotovoltaico: leMisure(energia),
     persone: lePersone(persone4, states),
-    azioni: leAzioni(azioni2, risolvi3)
+    azioni: leAzioni(azioni2, risolvi4)
   };
   if (!foto.dispositivi.length && !foto.fotovoltaico.length && !foto.persone.length && !foto.azioni.length)
     return null;
@@ -90215,7 +90256,7 @@ function laPassata(adesso2) {
   const dispositivi = iDispositiviDiCasa(tessere2, states);
   const azioni2 = lElencoDelleAzioni();
   const risolviEntita = comeSiChiamaDavvero();
-  const risolvi3 = comeSiEsegue(states);
+  const risolvi4 = comeSiEsegue(states);
   return {
     foto: laFotoPerLAuto({
       dispositivi,
@@ -90223,14 +90264,14 @@ function laPassata(adesso2) {
       persone: normalizePeople(readJson("cd_people", [])),
       states,
       azioni: azioni2,
-      risolvi: risolvi3,
+      risolvi: risolvi4,
       risolviEntita,
       adesso: adesso2
     }),
     /* Le ricette dei tasti e quelle dei dispositivi nello stesso elenco: chi
      * le esegue non ha bisogno di sapere cosa c'è dietro. */
     ricette: [
-      ...leRicettePerLAuto(azioni2, risolvi3),
+      ...leRicettePerLAuto(azioni2, risolvi4),
       ...leRicetteDeiDispositivi(dispositivi, risolviEntita)
     ]
   };
@@ -90461,8 +90502,8 @@ function quickClimateFieldsMarkup(entita3 = "", scelta3 = null, zona = "") {
       </label>
     </div>`;
 }
-function salvaQuickClimateDaCampi(contenitore4, entita3) {
-  const campo5 = (quale) => contenitore4?.querySelector?.(`[data-dm-quick-climate="${quale}"]`);
+function salvaQuickClimateDaCampi(contenitore5, entita3) {
+  const campo5 = (quale) => contenitore5?.querySelector?.(`[data-dm-quick-climate="${quale}"]`);
   const grezza = {
     mode: clean(campo5("mode")?.value),
     temperature: clean(campo5("temperature")?.value) === "" ? null : campo5("temperature")?.value,
@@ -93089,15 +93130,15 @@ function creaCarta() {
   });
   return carta;
 }
-function accompagnaMenuAzione(select, contenitore4) {
-  if (!select || !contenitore4) return false;
+function accompagnaMenuAzione(select, contenitore5) {
+  if (!select || !contenitore5) return false;
   if (!select.__dmLavAscolta) {
     select.__dmLavAscolta = true;
-    select.addEventListener("change", () => accompagnaMenuAzione(select, contenitore4));
+    select.addEventListener("change", () => accompagnaMenuAzione(select, contenitore5));
   }
-  const esistente = contenitore4.querySelector("[data-dm-lav-programmi]");
+  const esistente = contenitore5.querySelector("[data-dm-lav-programmi]");
   const vuole = clean(select.value) === "builtin_lavatrice";
-  if (vuole && !esistente) contenitore4.append(creaCarta());
+  if (vuole && !esistente) contenitore5.append(creaCarta());
   if (!vuole && esistente) esistente.remove();
   return vuole;
 }
@@ -93110,11 +93151,11 @@ function montaNelleAzioni() {
       select.__dmLavAscolta = true;
       select.addEventListener("change", () => montaNelleAzioni());
     }
-    const contenitore4 = select.closest(".ed-form") || select.parentElement?.parentElement;
-    if (!contenitore4) continue;
-    const esistente = contenitore4.querySelector("[data-dm-lav-programmi]");
+    const contenitore5 = select.closest(".ed-form") || select.parentElement?.parentElement;
+    if (!contenitore5) continue;
+    const esistente = contenitore5.querySelector("[data-dm-lav-programmi]");
     const vuole = clean(select.value) === "builtin_lavatrice";
-    if (vuole && !esistente) contenitore4.append(creaCarta());
+    if (vuole && !esistente) contenitore5.append(creaCarta());
     if (!vuole && esistente) esistente.remove();
     montata = montata || vuole;
   }
@@ -93153,19 +93194,19 @@ function installPopupLavatrice() {
   if (state96.installed) return false;
   if (!doc?.getElementById) return false;
   installStyle("dm-popup-lavatrice-style", STILE14);
-  const ridisegna30 = () => {
+  const ridisegna31 = () => {
     disegnaProgrammi();
     vesteImmagine();
     montaNelleAzioni();
   };
   disegnaProgrammi();
   vesteImmagine();
-  wrapFunction("apriPopupLavatrice", "__dmPopupLavatrice", ridisegna30);
+  wrapFunction("apriPopupLavatrice", "__dmPopupLavatrice", ridisegna31);
   for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:runtime-ready"]) {
-    root.addEventListener?.(evento, ridisegna30);
+    root.addEventListener?.(evento, ridisegna31);
   }
   root.addEventListener?.("dashboardmodern:state-changed", () => {
-    if (laFinestraSiVede2()) ridisegna30();
+    if (laFinestraSiVede2()) ridisegna31();
   });
   onEditorRedraw("__dmLavProgrammi", () => {
     montaEditor2();
@@ -94016,22 +94057,22 @@ var OGGETTO_DELLA_PAGINA = Object.freeze({
   media: "media",
   config: "impostazioni"
 });
-function disegnoDellaPagina(pagina2) {
-  const scritto3 = OGGETTO_DELLA_PAGINA[pagina2];
+function disegnoDellaPagina(pagina3) {
+  const scritto3 = OGGETTO_DELLA_PAGINA[pagina3];
   if (scritto3) return scritto3;
-  return haOggettoWidget(pagina2) ? pagina2 : "";
+  return haOggettoWidget(pagina3) ? pagina3 : "";
 }
 function disegniNellaBarra(scope = doc) {
   const schede = scope?.querySelectorAll?.("nav.tabs .tab[data-tab]");
   if (!schede?.length) return 0;
   let messi = 0;
   for (const scheda8 of schede) {
-    const pagina2 = clean(scheda8.dataset.tab);
-    const disegno6 = disegnoDellaPagina(pagina2);
+    const pagina3 = clean(scheda8.dataset.tab);
+    const disegno6 = disegnoDellaPagina(pagina3);
     if (!disegno6) continue;
     const casella6 = scheda8.querySelector(":scope > .icon");
     if (!casella6 || disegnoGiaNellaCasella(casella6, disegno6)) continue;
-    const marchio = oggettoWidget(disegno6, "", `nav-${pagina2}`);
+    const marchio = oggettoWidget(disegno6, "", `nav-${pagina3}`);
     if (!marchio) continue;
     casella6.innerHTML = marchio;
     casella6.dataset.dmOggetto = disegno6;
@@ -94607,12 +94648,12 @@ function openClimateEditor(item, index) {
   form.querySelector("[data-pick-modo]")?.addEventListener("click", () => root.wzPickEntity?.(form.elements.modo));
   form.querySelector("[data-pick-consumo]")?.addEventListener("click", () => root.wzPickEntity?.(form.elements.consumo));
   form.addEventListener("click", (event) => {
-    const pastiglia3 = event.target?.closest?.("[data-dm-mese]");
-    if (!pastiglia3) return;
+    const pastiglia4 = event.target?.closest?.("[data-dm-mese]");
+    if (!pastiglia4) return;
     event.preventDefault();
-    pastiglia3.setAttribute(
+    pastiglia4.setAttribute(
       "aria-pressed",
-      pastiglia3.getAttribute("aria-pressed") === "true" ? "false" : "true"
+      pastiglia4.getAttribute("aria-pressed") === "true" ? "false" : "true"
     );
   });
   form.addEventListener("submit", (event) => {
@@ -94635,7 +94676,7 @@ function openClimateEditor(item, index) {
       minuti: normalizzaIMinuti(form.elements.minuti?.value),
       mesi: normalizzaIMesi(
         [...form.querySelectorAll("[data-dm-mese][aria-pressed='true']")].map(
-          (pastiglia3) => Number(pastiglia3.dataset.dmMese)
+          (pastiglia4) => Number(pastiglia4.dataset.dmMese)
         )
       )
     };
@@ -94935,8 +94976,8 @@ function normalizeEntry(raw) {
   const idTokens = tokenize(foldText(object));
   const nameTokens = tokenize(nameFold);
   const areaTokens = areaFold ? tokenize(areaFold) : [];
-  const state177 = String(raw.state ?? "");
-  const penalty = (UNAVAILABLE.has(state177.toLowerCase()) ? -80 : 0) - Math.min(id.length, 80) * 0.25;
+  const state178 = String(raw.state ?? "");
+  const penalty = (UNAVAILABLE.has(state178.toLowerCase()) ? -80 : 0) - Math.min(id.length, 80) * 0.25;
   return {
     id,
     name,
@@ -94946,7 +94987,7 @@ function normalizeEntry(raw) {
     unit: String(raw.unit || attributes.unit_of_measurement || ""),
     sc: String(raw.sc || attributes.state_class || "").toLowerCase(),
     area,
-    state: state177,
+    state: state178,
     penalty,
     idFold,
     objectFold: foldText(object),
@@ -98881,14 +98922,14 @@ function entitaDellAzione(azione) {
   if (SENZA_STATO.has(tipo)) return "";
   return entity2;
 }
-function azioneAccesa(azione, states = {}, risolvi3 = null) {
+function azioneAccesa(azione, states = {}, risolvi4 = null) {
   if (!azione || typeof azione !== "object") return null;
   if (minuscolo11(azione.type) === "luci_group") {
     const luci = Array.isArray(azione.lights) ? azione.lights.map(pulito58).filter(Boolean) : [];
     if (!luci.length) return null;
     let vive = 0;
     for (const luce2 of luci) {
-      const stato4 = minuscolo11(states?.[risolta(luce2, risolvi3)]?.state);
+      const stato4 = minuscolo11(states?.[risolta(luce2, risolvi4)]?.state);
       if (MUTI14.has(stato4)) continue;
       vive += 1;
       if (ACCESI4.has(stato4)) return true;
@@ -98897,16 +98938,16 @@ function azioneAccesa(azione, states = {}, risolvi3 = null) {
   }
   const entity2 = entitaDellAzione(azione);
   if (!entity2) return null;
-  const stato3 = minuscolo11(states?.[risolta(entity2, risolvi3)]?.state);
+  const stato3 = minuscolo11(states?.[risolta(entity2, risolvi4)]?.state);
   if (MUTI14.has(stato3)) return null;
   const voce3 = minuscolo11(azione.option);
   if (voce3 && E_UN_MENU2.test(entity2)) return stato3 === voce3;
   return ACCESI4.has(stato3);
 }
-function risolta(entity2, risolvi3) {
-  if (typeof risolvi3 !== "function") return entity2;
+function risolta(entity2, risolvi4) {
+  if (typeof risolvi4 !== "function") return entity2;
   try {
-    return pulito58(risolvi3(entity2)) || entity2;
+    return pulito58(risolvi4(entity2)) || entity2;
   } catch (_errore) {
     return entity2;
   }
@@ -99470,14 +99511,14 @@ function foglioArrivato() {
   }
   return false;
 }
-function riprova(nodo2, numero57) {
+function riprova(nodo2, numero58) {
   const href = String(nodo2.getAttribute("href") || "");
   if (!href) return false;
   const separatore = href.includes("?") ? "&" : "?";
   const nuovo = root.document.createElement("link");
   nuovo.rel = "stylesheet";
-  nuovo.dataset.dmFoglioRiprovato = String(numero57);
-  nuovo.href = `${href}${separatore}dm-riprova=${numero57}`;
+  nuovo.dataset.dmFoglioRiprovato = String(numero58);
+  nuovo.href = `${href}${separatore}dm-riprova=${numero58}`;
   nodo2.after(nuovo);
   return true;
 }
@@ -99487,10 +99528,10 @@ function controllaFoglio() {
   const nodo2 = collegamento();
   if (!nodo2) return true;
   if (state107.tentativi >= ATTESE.length) return false;
-  const numero57 = state107.tentativi + 1;
+  const numero58 = state107.tentativi + 1;
   const attesa = ATTESE[state107.tentativi];
-  state107.tentativi = numero57;
-  riprova(nodo2, numero57);
+  state107.tentativi = numero58;
+  riprova(nodo2, numero58);
   root.setTimeout?.(controllaFoglio, attesa);
   return false;
 }
@@ -101062,7 +101103,7 @@ function opzioniDelCampanello(ingresso = {}) {
 }
 function schermoSempreAcceso(muro) {
   return (Array.isArray(muro?.pagine) ? muro.pagine : []).some(
-    (pagina2) => pagina2?.modello === "ingresso" && pulito60(pagina2.ingresso?.campanello) && opzioniDelCampanello(pagina2.ingresso).tieniAcceso
+    (pagina3) => pagina3?.modello === "ingresso" && pulito60(pagina3.ingresso?.campanello) && opzioniDelCampanello(pagina3.ingresso).tieniAcceso
   );
 }
 var CAMPANELLI_A_ORA = Object.freeze(["event", "button", "input_button"]);
@@ -101219,12 +101260,12 @@ var GRIGLIE = Object.freeze({
   24: Object.freeze({ colonne: 6, righe: 4 })
 });
 var GRIGLIA_DI_SERIE = Object.freeze({ telecamere: 4, energia: 4, ambienti: 6 });
-function postiDellaPagina(pagina2) {
-  const n = Number(pagina2?.griglia);
+function postiDellaPagina(pagina3) {
+  const n = Number(pagina3?.griglia);
   return GRIGLIE[n] ? n : POSTI;
 }
-function grigliaDellaPagina(pagina2, versoScelto = "orizzontale") {
-  const g = GRIGLIE[postiDellaPagina(pagina2)];
+function grigliaDellaPagina(pagina3, versoScelto = "orizzontale") {
+  const g = GRIGLIE[postiDellaPagina(pagina3)];
   return versoScelto === "verticale" ? { colonne: g.righe, righe: g.colonne } : { colonne: g.colonne, righe: g.righe };
 }
 var COLORI_DELLE_PAGINE = Object.freeze([
@@ -101451,8 +101492,8 @@ function ingressoPulito(input = {}) {
     ).slice(0, COMANDI_DELL_INGRESSO_AL_MASSIMO)
   };
 }
-function areeDellIngresso(pagina2, fonte = {}) {
-  const ing = pagina2?.ingresso || {};
+function areeDellIngresso(pagina3, fonte = {}) {
+  const ing = pagina3?.ingresso || {};
   const nomi2 = new Map(elenco10(fonte.aree).map((a) => [a.entita, testo3(a.nome, 40)]));
   const scelte5 = elenco10(ing.aree).map(entita2).filter(Boolean);
   const vecchia = entita2(ing.centrale);
@@ -101712,11 +101753,11 @@ function fermaTuttoPulito(input) {
     dispositivo: telecomando2 ? testo3(dentro3.dispositivo, 64) : ""
   };
 }
-function pulsantiDellaPagina(pagina2) {
-  return (pagina2?.pulsanti || []).filter((p) => p.avvio || p.stop);
+function pulsantiDellaPagina(pagina3) {
+  return (pagina3?.pulsanti || []).filter((p) => p.avvio || p.stop);
 }
-function gruppiDelMixer(pagina2) {
-  return (pagina2?.mixer?.gruppi || []).map((g, i) => ({ ...g, colore: coloreDelGruppo(g, i) })).filter((g) => g.canali.length);
+function gruppiDelMixer(pagina3) {
+  return (pagina3?.mixer?.gruppi || []).map((g, i) => ({ ...g, colore: coloreDelGruppo(g, i) })).filter((g) => g.canali.length);
 }
 var IGNOTO2 = /* @__PURE__ */ new Set(["", "unavailable", "unknown"]);
 var VOLUME_SET = 4;
@@ -101937,39 +101978,39 @@ function servizioDelPulsante(pulsante, verso2 = "avvio", stati2 = {}) {
   const avvio = pulsante?.avvio || "";
   const stop = pulsante?.stop || "";
   const dispositivo = pulsante?.dispositivo || "";
-  const spegni2 = (id) => ({
+  const spegni3 = (id) => ({
     domain: dominioDi8(id),
     service: "turn_off",
     data: { entity_id: id }
   });
   if (verso2 === "stop") {
     if (dominioDi8(stop) === "remote")
-      return pulsante?.stopComando ? comandoAlTelecomando(stop, pulsante.stopComando, dispositivo) : spegni2(stop);
+      return pulsante?.stopComando ? comandoAlTelecomando(stop, pulsante.stopComando, dispositivo) : spegni3(stop);
     if (stop && stop !== avvio) return servizioDaPremere(stop);
-    if (avvio && siSpegne(avvio, pulsante?.avvioComando)) return spegni2(avvio);
+    if (avvio && siSpegne(avvio, pulsante?.avvioComando)) return spegni3(avvio);
     return null;
   }
   if (!avvio) return null;
   if (!stop && siSpegne(avvio, pulsante?.avvioComando) && pulsanteAcceso({ avvio }, stati2))
-    return spegni2(avvio);
+    return spegni3(avvio);
   return servizioDaPremere(avvio, pulsante?.avvioComando, dispositivo);
 }
-function chiamateDelFermaTutto(pagina2, stati2 = {}) {
-  const ferma3 = pagina2?.fermaTutto;
+function chiamateDelFermaTutto(pagina3, stati2 = {}) {
+  const ferma3 = pagina3?.fermaTutto;
   if (!ferma3?.attivo) return [];
   if (ferma3.entita) {
     if (dominioDi8(ferma3.entita) === "remote" && !ferma3.comando)
       return [{ domain: "remote", service: "turn_off", data: { entity_id: ferma3.entita } }];
     return [servizioDaPremere(ferma3.entita, ferma3.comando, ferma3.dispositivo)];
   }
-  return pulsantiDellaPagina(pagina2).filter((p) => p.stop || siSpegne(p.avvio, p.avvioComando)).map((p) => servizioDelPulsante(p, "stop", stati2)).filter(Boolean);
+  return pulsantiDellaPagina(pagina3).filter((p) => p.stop || siSpegne(p.avvio, p.avvioComando)).map((p) => servizioDelPulsante(p, "stop", stati2)).filter(Boolean);
 }
 function menuDiLato(muro, versoScelto = "orizzontale", compatto = false) {
   return Boolean(muro?.menuDiLato) && versoScelto === "orizzontale" && !compatto;
 }
 var LETTORI_AL_MASSIMO = 8;
-function lettoriDellaPagina(pagina2, fonte = {}) {
-  if (pagina2?.lettori?.length) return pagina2.lettori.map((id) => ({ entita: id, nome: "" }));
+function lettoriDellaPagina(pagina3, fonte = {}) {
+  if (pagina3?.lettori?.length) return pagina3.lettori.map((id) => ({ entita: id, nome: "" }));
   return elenco10(fonte.lettori).slice(0, LETTORI_AL_MASSIMO).map((l) => ({ entita: l.entity, nome: l.nome || "" }));
 }
 var ENERGIA_VUOTA = Object.freeze({
@@ -101993,15 +102034,15 @@ function energiaPulita(input) {
   const versi = Object.fromEntries(VERSI_DELL_ENERGIA.map((k) => [k, dentro3[k] === true]));
   return { ...fisse, ...versi, altre };
 }
-function altreMisureDellaPagina(pagina2) {
-  return Array.isArray(pagina2?.energia?.altre) ? pagina2.energia.altre.filter(Boolean) : [];
+function altreMisureDellaPagina(pagina3) {
+  return Array.isArray(pagina3?.energia?.altre) ? pagina3.energia.altre.filter(Boolean) : [];
 }
 function grigliaPer(quante3) {
   const misure = Object.keys(GRIGLIE).map(Number).sort((a, b2) => a - b2);
   return misure.find((n) => n >= quante3) || misure.at(-1);
 }
-function energiaDellaPagina(pagina2, fonte = {}) {
-  const scelte5 = pagina2?.energia || {};
+function energiaDellaPagina(pagina3, fonte = {}) {
+  const scelte5 = pagina3?.energia || {};
   const sue = fonte?.energia || {};
   const una = (k) => scelte5[k] || sue[k] || "";
   const gruppo = (chiavi2, girataDiLa, inverti2) => {
@@ -102137,10 +102178,10 @@ function muroPulito(input) {
   const minuti = Number(riposo2.minuti);
   const pin = pinPulito(blocco3.pin);
   const visti = /* @__PURE__ */ new Set();
-  const pagine = (Array.isArray(dentro3.pagine) ? dentro3.pagine : []).slice(0, PAGINE_AL_MASSIMO).map((pagina2, i) => paginaPulita(pagina2, i)).map((pagina2, i) => {
-    if (visti.has(pagina2.id)) pagina2 = { ...pagina2, id: `p${i + 1}${nuovoId()}`.slice(0, 24) };
-    visti.add(pagina2.id);
-    return pagina2;
+  const pagine = (Array.isArray(dentro3.pagine) ? dentro3.pagine : []).slice(0, PAGINE_AL_MASSIMO).map((pagina3, i) => paginaPulita(pagina3, i)).map((pagina3, i) => {
+    if (visti.has(pagina3.id)) pagina3 = { ...pagina3, id: `p${i + 1}${nuovoId()}`.slice(0, 24) };
+    visti.add(pagina3.id);
+    return pagina3;
   });
   return {
     attiva: vero2(dentro3.attiva, false),
@@ -102204,15 +102245,15 @@ function muroPulito(input) {
   };
 }
 function nuovaPagina(modello2, fonte = {}, indice = 0) {
-  const pagina2 = paginaPulita({ id: nuovoId().slice(0, 24), modello: modello2 }, indice);
-  if (pagina2.modello === "stanza") pagina2.stanza = fonte.stanze?.[0]?.name || "";
-  if (pagina2.modello === "scene") pagina2.scene = scenePropose(fonte, pagina2.griglia);
-  if (pagina2.modello === "ingresso") pagina2.ingresso = ingressoProposto(fonte);
-  if (pagina2.modello === "personale") pagina2.scelti = true;
-  if (pagina2.modello === "mixer") pagina2.mixer.gruppi = [{ nome: "", colore: "", canali: [] }];
-  if (pagina2.modello === "telecamera")
-    pagina2.telecamera.entita = entitaDi3(elenco10(fonte.telecamere)[0]?.entity, ["camera"]);
-  return pagina2;
+  const pagina3 = paginaPulita({ id: nuovoId().slice(0, 24), modello: modello2 }, indice);
+  if (pagina3.modello === "stanza") pagina3.stanza = fonte.stanze?.[0]?.name || "";
+  if (pagina3.modello === "scene") pagina3.scene = scenePropose(fonte, pagina3.griglia);
+  if (pagina3.modello === "ingresso") pagina3.ingresso = ingressoProposto(fonte);
+  if (pagina3.modello === "personale") pagina3.scelti = true;
+  if (pagina3.modello === "mixer") pagina3.mixer.gruppi = [{ nome: "", colore: "", canali: [] }];
+  if (pagina3.modello === "telecamera")
+    pagina3.telecamera.entita = entitaDi3(elenco10(fonte.telecamere)[0]?.entity, ["camera"]);
+  return pagina3;
 }
 var json = (valore3, ripiego) => {
   if (valore3 && typeof valore3 === "object") return valore3;
@@ -102403,14 +102444,14 @@ function avvisoAcceso(avviso2, stati2 = {}) {
   return avviso2.entita.some((id) => {
     const stato3 = String(stati2[id]?.state ?? "").toLowerCase();
     if (!stato3 || stato3 === "unavailable" || stato3 === "unknown") return false;
-    const numero57 = Number(stato3);
+    const numero58 = Number(stato3);
     const soglia3 = Number(avviso2.value);
     if (avviso2.cond === "on") return ACCESI5.has(stato3);
     if (avviso2.cond === "off") return !ACCESI5.has(stato3);
     if (avviso2.cond === "eq") return stato3 === avviso2.value.toLowerCase();
     if (avviso2.cond === "neq") return stato3 !== avviso2.value.toLowerCase();
-    if (!Number.isFinite(numero57) || !Number.isFinite(soglia3)) return false;
-    return avviso2.cond === "gt" ? numero57 > soglia3 : numero57 < soglia3;
+    if (!Number.isFinite(numero58) || !Number.isFinite(soglia3)) return false;
+    return avviso2.cond === "gt" ? numero58 > soglia3 : numero58 < soglia3;
   });
 }
 function derivaDelRiposo(adesso2 = Date.now()) {
@@ -102502,13 +102543,13 @@ function meteoDelMuro(statoMeteo, {
     spicchio: misure.direzione ? spicchioDelVento(misure.direzione.valore) : null
   };
 }
-function comandiDellaPagina(pagina2, fonte = {}, zona = "", { aCoppia: aCoppia2 = null } = {}) {
-  if (!pagina2) return [];
-  if (pagina2.modello === "personale") return pagina2.comandi;
-  if (pagina2.modello === "clima")
-    return comandiDellElenco(zona || pagina2.zona || "freddo", fonte, { aCoppia: aCoppia2 });
-  if (MODELLI_ELENCO.includes(pagina2.modello)) return comandiDellElenco(pagina2.modello, fonte);
-  return pagina2.scelti ? pagina2.comandi : comandiProposti2(fonte, pagina2.stanza, postiDellaPagina(pagina2));
+function comandiDellaPagina(pagina3, fonte = {}, zona = "", { aCoppia: aCoppia2 = null } = {}) {
+  if (!pagina3) return [];
+  if (pagina3.modello === "personale") return pagina3.comandi;
+  if (pagina3.modello === "clima")
+    return comandiDellElenco(zona || pagina3.zona || "freddo", fonte, { aCoppia: aCoppia2 });
+  if (MODELLI_ELENCO.includes(pagina3.modello)) return comandiDellElenco(pagina3.modello, fonte);
+  return pagina3.scelti ? pagina3.comandi : comandiProposti2(fonte, pagina3.stanza, postiDellaPagina(pagina3));
 }
 function comandiDellElenco(modello2, fonte = {}, { aCoppia: aCoppia2 = null } = {}) {
   if (modello2 === "luci")
@@ -103210,8 +103251,8 @@ var ACCENTO_DEL_MODELLO = {
   telecamera: "#0ea5e9",
   comandi: "#10b981"
 };
-var accentoDi = (pagina2) => clean(pagina2?.colore) || ACCENTO_DEL_MODELLO[pagina2?.modello];
-var titoloDi = (pagina2) => clean(pagina2.titolo) || pagina2.modello === "stanza" && clean(pagina2.stanza) || MODELLI_SCRITTI()[pagina2.modello];
+var accentoDi = (pagina3) => clean(pagina3?.colore) || ACCENTO_DEL_MODELLO[pagina3?.modello];
+var titoloDi = (pagina3) => clean(pagina3.titolo) || pagina3.modello === "stanza" && clean(pagina3.stanza) || MODELLI_SCRITTI()[pagina3.modello];
 function orologio3(adesso2 = /* @__PURE__ */ new Date()) {
   return {
     ora: adesso2.toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" }),
@@ -103255,28 +103296,28 @@ function titoloLungo(titolo3) {
   const lettere = String(titolo3 || "").length;
   return lettere > 12 ? " mu-tit-xl" : lettere > 8 ? " mu-tit-l" : "";
 }
-function sottoDellaPagina(pagina2) {
-  if (pagina2.modello === "meteo" && Object.keys(sensoriDellaStazione()).length)
+function sottoDellaPagina(pagina3) {
+  if (pagina3.modello === "meteo" && Object.keys(sensoriDellaStazione()).length)
     return t("Adesso · La mia stazione · Previsioni", "Now · My station · Forecast");
-  return SOTTO()[pagina2.modello];
+  return SOTTO()[pagina3.modello];
 }
-function testa(pagina2, muro) {
+function testa(pagina3, muro) {
   const o = orologio3();
-  const suMeteo = pagina2.modello === "meteo";
-  const m = pagina2.riga?.meteo !== false ? meteo2() : null;
-  const sensore2 = pagina2.riga?.meteo !== false && muro.temperatura === "casa" ? temperaturaInCasa(muro) : { testo: "", fuori: false };
+  const suMeteo = pagina3.modello === "meteo";
+  const m = pagina3.riga?.meteo !== false ? meteo2() : null;
+  const sensore2 = pagina3.riga?.meteo !== false && muro.temperatura === "casa" ? temperaturaInCasa(muro) : { testo: "", fuori: false };
   const inCasa = sensore2.testo;
   const parolaDelMeteo = m ? PAROLE_DEL_METEO()[m.condizione] || "" : "";
   const chipDelMeteo = inCasa ? `<div class="mu-meteo mu-meteo-casa" data-mu-temperatura="casa"><div class="mu-meteo-su">${m ? disegno("meteo", 44, "testa-meteo") : disegno("temperatura", 40, "testa-temp")}<b>${esc(inCasa)}</b></div><div class="mu-et">${esc([doveDellaTemperatura(sensore2.fuori), parolaDelMeteo].filter(Boolean).join(" · "))}</div></div><span class="mu-sep"></span>` : m && !suMeteo && numero49(m.temperatura) !== null ? `<div class="mu-meteo" data-mu-temperatura="meteo"><div class="mu-meteo-su">${disegno("meteo", 44, "testa-meteo")}<b>${decimale2(m.temperatura, 0)}°</b></div><div class="mu-et">${esc(parolaDelMeteo)}</div></div><span class="mu-sep"></span>` : "";
-  const accento = accentoDi(pagina2);
+  const accento = accentoDi(pagina3);
   const lato = menuDiLato(muro, state115.verso, state115.compatto);
-  const linguette3 = !lato && muro.pagine.length > 1 ? `<div class="mu-pagine" role="tablist">${muro.pagine.map(
+  const linguette4 = !lato && muro.pagine.length > 1 ? `<div class="mu-pagine" role="tablist">${muro.pagine.map(
     (p, i) => `<button type="button" role="tab" class="${i === state115.pagina ? "si" : ""}" style="--acc:${accentoDi(p)}" aria-label="${esc(titoloDi(p))}" data-mu-pagina="${i}" aria-selected="${i === state115.pagina}">${disegno(clean(p.disegno) || DISEGNO_DEL_MODELLO[p.modello], 22, `ling-${p.id}`)}<span>${esc(titoloDi(p))}</span></button>`
   ).join("")}</div>` : "";
   return `<div class="mu-carta mu-testa${lato ? " mu-testa-lato" : ""}" style="--acc:${accento}">
     ${lato ? "" : tastoDelMenu()}
-    <div class="mu-titolo"><div class="mu-tit${titoloLungo(titoloDi(pagina2))}">${esc(titoloDi(pagina2))}</div><div class="mu-et mu-sot">${esc(sottoDellaPagina(pagina2))}</div></div>
-    ${linguette3}
+    <div class="mu-titolo"><div class="mu-tit${titoloLungo(titoloDi(pagina3))}">${esc(titoloDi(pagina3))}</div><div class="mu-et mu-sot">${esc(sottoDellaPagina(pagina3))}</div></div>
+    ${linguette4}
     <div class="mu-ora" data-mu-orologio>${chipDelMeteo}<div><div class="mu-h">${esc(o.ora)}</div><div class="mu-d">${esc(o.giorno)}</div></div></div>
   </div>`;
 }
@@ -103286,9 +103327,9 @@ function menuLaterale(muro) {
     (p, i) => `<button type="button" role="tab" class="mu-lato-tasto${i === state115.pagina ? " si" : ""}" style="--acc:${accentoDi(p)}" aria-label="${esc(titoloDi(p))}" data-mu-pagina="${i}" aria-selected="${i === state115.pagina}">${disegno(clean(p.disegno) || DISEGNO_DEL_MODELLO[p.modello], 46, `lato-${p.id}`)}<span>${esc(titoloDi(p))}</span></button>`
   ).join("")}</nav>`;
 }
-function paginaIntera(pagina2, muro) {
+function paginaIntera(pagina3, muro) {
   const lato = menuDiLato(muro, state115.verso, state115.compatto);
-  return `<div class="mu-pagina mu-pag-${pagina2.modello}${lato ? " mu-con-lato" : ""}">${lato ? menuLaterale(muro) : ""}${testa(pagina2, muro)}${corpoDellaPagina(pagina2)}</div>`;
+  return `<div class="mu-pagina mu-pag-${pagina3.modello}${lato ? " mu-con-lato" : ""}">${lato ? menuLaterale(muro) : ""}${testa(pagina3, muro)}${corpoDellaPagina(pagina3)}</div>`;
 }
 var STATI_DELL_ALLARME = () => ({
   /* «Metterei disattivo»: l'antifurto non si spegne, si disattiva. */
@@ -103343,11 +103384,11 @@ function statoDellaCentrale(s) {
   }
   return STATI_DELL_ALLARME()[valore3] || valore3;
 }
-function areeDellaPagina(pagina2) {
-  return areeDellIngresso(pagina2, state115.fonte || {});
+function areeDellaPagina(pagina3) {
+  return areeDellIngresso(pagina3, state115.fonte || {});
 }
-function centraleDelMuro(pagina2) {
-  return areeDellaPagina(pagina2)[0]?.entita || state115.fonte?.centrali?.[0] || "";
+function centraleDelMuro(pagina3) {
+  return areeDellaPagina(pagina3)[0]?.entita || state115.fonte?.centrali?.[0] || "";
 }
 var nomeDellArea = (area, i = 0) => clean(area?.nome) || clean(stato2(area?.entita)?.attributes?.friendly_name) || `${t("Area", "Area")} ${i + 1}`;
 function accentoDellAllarme(valore3) {
@@ -103421,11 +103462,11 @@ function areeMarkup(aree2) {
   });
   return `<div class="mu-aree" data-quante="${Math.min(aree2.length, 4)}">${aree2.map(rigaDellArea).join("")}${tastiSuMisuraMarkup()}</div>${codice ? `<div class="mu-et mu-nota">${esc(t("Il codice si chiede prima di inserire", "The code is asked before arming"))}</div>` : ""}`;
 }
-function pillole(pagina2) {
-  const riga3 = pagina2.riga || {};
+function pillole(pagina3) {
+  const riga3 = pagina3.riga || {};
   const voci4 = [];
-  const stanza2 = (state115.fonte?.stanze || []).find((s) => s.name === pagina2.stanza);
-  const luci = comandiDellaPagina(pagina2, state115.fonte).filter((c) => c.tipo === "luce");
+  const stanza2 = (state115.fonte?.stanze || []).find((s) => s.name === pagina3.stanza);
+  const luci = comandiDellaPagina(pagina3, state115.fonte).filter((c) => c.tipo === "luce");
   const accese = luci.filter((c) => acceso4(c.entita)).length;
   if (luci.length)
     voci4.push([
@@ -103448,7 +103489,7 @@ function pillole(pagina2) {
       `${decimale2(stato2(stanza2.hum).state, 0)}%`,
       t("umidità", "humidity")
     ]);
-  const centrale = centraleDelMuro(pagina2);
+  const centrale = centraleDelMuro(pagina3);
   if (riga3.antifurto !== false && centrale && stato2(centrale)) {
     const s = String(stato2(centrale).state);
     voci4.push([
@@ -103573,19 +103614,19 @@ function cardDueTasti(c, i) {
     return `<button type="button" class="${classi}" data-mu-fa="duetasti" data-mu-verso="${verso2}" data-mu-entita="${esc(id)}" data-mu-stato="${esc(sa ? letto : "")}" data-mu-chiave="${esc(chiaveDeiDueTasti(c))}"${sa ? ` aria-pressed="${verso2 === "on" ? on : !on}"` : ""} aria-label="${esc(etichetta3)}">${scritta}</button>`;
   };
   const accendi = `${t("Accendi", "Turn on")} ${nome}`;
-  const spegni2 = `${t("Spegni", "Turn off")} ${nome}`;
+  const spegni3 = `${t("Spegni", "Turn off")} ${nome}`;
   const conImmagine2 = cardConImmagine(c, i, {
     nome,
     stato: parola,
     acceso: on,
     accento: ACCENTI.luce,
-    destra: `<div class="dm-rq-due">${tasto2("on", c.entita, "ON", accendi, "dm-rq-dt")}${tasto2("off", c.entitaOff, "OFF", spegni2, "dm-rq-dt")}</div>`,
+    destra: `<div class="dm-rq-due">${tasto2("on", c.entita, "ON", accendi, "dm-rq-dt")}${tasto2("off", c.entitaOff, "OFF", spegni3, "dm-rq-dt")}</div>`,
     classi: "mu-duetasti"
   });
   if (conImmagine2) return conImmagine2;
   return `<div class="mu-carta mu-card mu-fam mu-duetasti ${on ? "mu-accesa" : ""}" style="--acc:${ACCENTI.luce}" data-mu-card="${i}">
     <div class="mu-riga1"><span class="mu-disco ${on ? "on" : ""}">${icona3}</span><span class="mu-stato ${on ? "" : "spento"}${inviato ? " mu-inviato" : ""}">${esc(parola)}</span>
-      <div class="mu-due">${tasto2("on", c.entita, "ON", accendi)}${tasto2("off", c.entitaOff, "OFF", spegni2)}</div></div>
+      <div class="mu-due">${tasto2("on", c.entita, "ON", accendi)}${tasto2("off", c.entitaOff, "OFF", spegni3)}</div></div>
     <div class="mu-osw mu-fam-nome mu-n">${esc(nome)}</div></div>`;
 }
 function premiIlTasto2(bersaglio) {
@@ -103743,10 +103784,10 @@ function scalda(id, zona = "") {
   return climaScalda({ stato: stato2(id)?.state, azione: a.hvac_action, tipo, zona });
 }
 var facciaDelClima = (id, zona) => scalda(id, zona) ? { chiave: "caldo", accento: "#f97316" } : { chiave: "clima", accento: ACCENTI.clima };
-function zonaDellaPagina(pagina2) {
-  const scelta3 = (state115.zone ||= {})[pagina2.id] || pagina2.zona || "freddo";
+function zonaDellaPagina(pagina3) {
+  const scelta3 = (state115.zone ||= {})[pagina3.id] || pagina3.zona || "freddo";
   if (scelta3 === "termostato" && !ciSonoTermostati())
-    return pagina2.zona && pagina2.zona !== "termostato" ? pagina2.zona : "freddo";
+    return pagina3.zona && pagina3.zona !== "termostato" ? pagina3.zona : "freddo";
   return scelta3;
 }
 function ciSonoTermostati() {
@@ -103766,13 +103807,13 @@ function zonaDellUnita(id, adesso2 = /* @__PURE__ */ new Date()) {
   return mese >= 9 || mese <= 3 ? "caldo" : "freddo";
 }
 function zonaDiQui(id = "") {
-  const pagina2 = state115.muro?.pagine?.[state115.pagina];
-  if (pagina2?.modello === "clima") return zonaDellaPagina(pagina2);
+  const pagina3 = state115.muro?.pagine?.[state115.pagina];
+  if (pagina3?.modello === "clima") return zonaDellaPagina(pagina3);
   return id ? zonaDellUnita(id) : "";
 }
 function rapidoDi(id, zona) {
-  const pagina2 = state115.muro?.pagine?.[state115.pagina];
-  if (pagina2?.modello === "clima" && pagina2.accensione === "ultima") return null;
+  const pagina3 = state115.muro?.pagine?.[state115.pagina];
+  if (pagina3?.modello === "clima" && pagina3.accensione === "ultima") return null;
   const r = state115.fonte?.rapido || {};
   const dove = zona || zonaDiQui(id);
   const preset = quickClimatePresetOf(id, dove, r.perUnita || {}, r.globale);
@@ -103932,9 +103973,9 @@ function tessera2({
       attributi: dati
     });
   const parola = destra || conStato ? `<span class="mu-stato ${statoAcceso ? "" : "spento"}">${esc(etichetta3)}</span>` : `<span class="mu-et">${esc(etichetta3)}</span>`;
-  const pastiglia3 = !destra && !conStato && attiva2 ? `<span class="mu-pasti">${esc(t("attiva", "active"))}</span>` : "";
+  const pastiglia4 = !destra && !conStato && attiva2 ? `<span class="mu-pasti">${esc(t("attiva", "active"))}</span>` : "";
   return `<button type="button" class="mu-carta mu-card mu-fam mu-tessera ${classi} ${attiva2 ? "mu-accesa" : ""} ${grande ? "grande" : ""}" style="--acc:${accento}" ${dati}>
-    <div class="mu-riga1"><span class="mu-chip" style="--c:${grande ? 84 : 54}px">${disegno(chiave2, grande ? 50 : 32, dove)}</span>${parola}${pastiglia3}${destra}</div>
+    <div class="mu-riga1"><span class="mu-chip" style="--c:${grande ? 84 : 54}px">${disegno(chiave2, grande ? 50 : 32, dove)}</span>${parola}${pastiglia4}${destra}</div>
     <div class="mu-osw mu-fam-nome">${esc(titolo3)}</div><div class="mu-sotto">${esc(sotto)}</div></button>`;
 }
 function cardAzione(c, i, grande = false) {
@@ -104064,53 +104105,53 @@ function facciaDelPosto(c, { scena: scena2 = false, fonte = state115.fonte } = {
     Object.assign(state115, prima);
   }
 }
-function paginaStanza(pagina2) {
-  const zona = pagina2.modello === "clima" ? zonaDellaPagina(pagina2) : "";
-  const comandi = comandiDellaPagina(pagina2, state115.fonte, zona, { aCoppia });
-  const elenco15 = MODELLI_ELENCO.includes(pagina2.modello);
-  const linguette3 = pagina2.modello === "clima" ? `<div class="mu-zone" role="tablist">${[
+function paginaStanza(pagina3) {
+  const zona = pagina3.modello === "clima" ? zonaDellaPagina(pagina3) : "";
+  const comandi = comandiDellaPagina(pagina3, state115.fonte, zona, { aCoppia });
+  const elenco15 = MODELLI_ELENCO.includes(pagina3.modello);
+  const linguette4 = pagina3.modello === "clima" ? `<div class="mu-zone" role="tablist">${[
     ["freddo", "clima", t("Freddo", "Cooling"), "#0ea5e9"],
     ["caldo", "caldo", t("Caldo", "Heating"), "#f97316"],
     ...ciSonoTermostati() ? [["termostato", "temperatura", t("Termostato", "Thermostat"), ACCENTO_DEL_TERMOSTATO]] : []
   ].map(
     ([z, d, parola, acc]) => `<button type="button" role="tab" class="${z === zona ? "si" : ""}" style="--acc:${acc}" data-mu-zona="${z}" aria-selected="${z === zona}">${disegno(d, 22, `zona-${z}`)}${esc(parola)}</button>`
   ).join("")}</div>` : "";
-  const posti = postiDellaPagina(pagina2);
+  const posti = postiDellaPagina(pagina3);
   const quante3 = elenco15 ? Math.max(comandi.length, 1) : posti;
   if (elenco15 && !comandi.length)
-    return `${linguette3}<div class="mu-g6" style="${stileDellaGriglia(pagina2)}">${vuoto3(0, t("Niente da mostrare qui", "Nothing to show here"))}</div>`;
+    return `${linguette4}<div class="mu-g6" style="${stileDellaGriglia(pagina3)}">${vuoto3(0, t("Niente da mostrare qui", "Nothing to show here"))}</div>`;
   const carte = Array.from({ length: quante3 }, (_, i) => cardDelPosto(comandi[i], i, zona));
-  const riga3 = pagina2.modello === "stanza" ? pillole(pagina2) : linguette3;
-  return `${riga3}${griglia2(pagina2, carte, quante3)}`;
+  const riga3 = pagina3.modello === "stanza" ? pillole(pagina3) : linguette4;
+  return `${riga3}${griglia2(pagina3, carte, quante3)}`;
 }
-function misureDellaGriglia(pagina2) {
-  const g = grigliaDellaPagina(pagina2, state115.verso || "orizzontale");
+function misureDellaGriglia(pagina3) {
+  const g = grigliaDellaPagina(pagina3, state115.verso || "orizzontale");
   return state115.compatto ? { colonne: Math.min(g.colonne, 3), righe: Math.min(g.righe, 3) } : g;
 }
-var stileDellaGriglia = (pagina2) => {
-  const g = misureDellaGriglia(pagina2);
+var stileDellaGriglia = (pagina3) => {
+  const g = misureDellaGriglia(pagina3);
   return `--mu-col:${g.colonne};--mu-righe:${g.righe}`;
 };
 var CARD_STRETTA = 340;
-function griglia2(pagina2, carte, quante3 = carte.length) {
-  const g = misureDellaGriglia(pagina2);
+function griglia2(pagina3, carte, quante3 = carte.length) {
+  const g = misureDellaGriglia(pagina3);
   const scorre = quante3 > g.colonne * g.righe ? " mu-scorre" : "";
   const base = (state115.verso === "verticale" ? 800 : 1280) / g.colonne;
   const fitta = !state115.compatto && base < CARD_STRETTA ? " mu-fitta" : "";
-  return `<div class="mu-g6${scorre}${fitta}" style="${stileDellaGriglia(pagina2)}">${carte.join("")}</div>`;
+  return `<div class="mu-g6${scorre}${fitta}" style="${stileDellaGriglia(pagina3)}">${carte.join("")}</div>`;
 }
-function paginaScene(pagina2) {
-  const scene = pagina2.scene.length ? pagina2.scene : [];
-  const carte = Array.from({ length: postiDellaPagina(pagina2) }, (_, i) => {
+function paginaScene(pagina3) {
+  const scene = pagina3.scene.length ? pagina3.scene : [];
+  const carte = Array.from({ length: postiDellaPagina(pagina3) }, (_, i) => {
     const c = scene[i];
     return cardDelPosto(c, i, "", { scena: true });
   });
-  return griglia2(pagina2, carte);
+  return griglia2(pagina3, carte);
 }
-function paginaAmbienti(pagina2) {
+function paginaAmbienti(pagina3) {
   const ambienti = ambientiDellaFonte(state115.fonte || {});
   if (!ambienti.length)
-    return griglia2(pagina2, [
+    return griglia2(pagina3, [
       vuoto3(0, t("Nessuna stanza con sonde o luci", "No room with sensors or lights"))
     ]);
   const carte = ambienti.map(({ stanza: stanza2, luci }, i) => {
@@ -104136,18 +104177,18 @@ function paginaAmbienti(pagina2) {
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:46px">${disegno("stanze", 26, `amb-${i}`)}</span>${luci.length ? `<span class="mu-stato ${accese ? "" : "spento"}">${esc(accese ? `${accese} ${accese === 1 ? t("luce accesa", "light on") : t("luci accese", "lights on")}` : t("Luci spente", "Lights off"))}</span>` : ""}</div>
       <div class="mu-fam-fondo"><div class="mu-osw mu-fam-nome">${esc(stanza2.name)}</div><div class="mu-target">${stanza2.temp ? `<span class="mu-grande">${temp === null ? "—" : `${decimale2(temp)}°`}</span>` : luci.length ? `<span class="mu-grande">${accese}/${luci.length}</span><span class="mu-et">${esc(t("luci", "lights"))}</span>` : ""}${umid === null ? "" : `<span class="mu-et mu-umido">${decimale2(umid, 0)}% ${esc(t("umidità", "humidity"))}</span>`}</div></div></div>`;
   });
-  return griglia2(pagina2, carte);
+  return griglia2(pagina3, carte);
 }
-function paginaTelecamere(pagina2) {
+function paginaTelecamere(pagina3) {
   const telecamere3 = telecamereDellaFonte(state115.fonte || {});
   if (!telecamere3.length)
-    return griglia2(pagina2, [
+    return griglia2(pagina3, [
       vuoto3(0, t("Nessuna telecamera nella plancia", "No camera in the dashboard"))
     ]);
   const carte = telecamere3.map(
     (k, i) => `<button type="button" class="mu-carta mu-card mu-cam" data-mu-fa="finestra-telecamera" data-mu-entita="${esc(k.entita)}" data-mu-card="${i}"><div class="mu-video${classeDelFondo(k.immagine)}">${fondoMarkup(k.immagine)}${anteprimaInCorso ? "" : `<img data-mu-telecamera="${esc(k.entita)}" alt="">`}<span class="mu-live">${esc(clean(k.nome) || nomeDi8(k.entita))}</span></div></button>`
   );
-  return griglia2(pagina2, carte);
+  return griglia2(pagina3, carte);
 }
 var GLIFI_MUSICA = {
   precedente: '<path d="M6 5v14M19 5 9 12l10 7z"/>',
@@ -104184,8 +104225,8 @@ function lettoreOra(voce3) {
     lettura3.nome = nomeDi8(voce3.entita);
   return lettura3;
 }
-function lettoreScelto(pagina2, letture2) {
-  const scelto = (state115.lettori ||= {})[pagina2.id];
+function lettoreScelto(pagina3, letture2) {
+  const scelto = (state115.lettori ||= {})[pagina3.id];
   return letture2.find((l) => l.entity === scelto) || letture2.find((l) => l.suona) || letture2.find((l) => l.inPausa) || letture2[0];
 }
 var parolaDelLettore = (l) => l.muto ? t("Non disponibile", "Unavailable") : l.suona ? t("In riproduzione", "Playing") : l.inPausa ? t("In pausa", "Paused") : l.spento ? t("Spento", "Off") : t("Acceso", "On");
@@ -104295,10 +104336,10 @@ function rigaDelLettore(l, scelto) {
     ${centro2 ? tastoMusica(l, "centro", centro2 === "pausa" ? "pausa" : centro2 === "accendi" ? "accendi" : "suona", { etichetta: l.nome }) : ""}
   </div>`;
 }
-function paginaMusica(pagina2) {
-  const voci4 = lettoriDellaPagina(pagina2, state115.fonte || {});
+function paginaMusica(pagina3) {
+  const voci4 = lettoriDellaPagina(pagina3, state115.fonte || {});
   if (!voci4.length)
-    return griglia2(pagina2, [
+    return griglia2(pagina3, [
       vuoto3(
         0,
         t(
@@ -104309,7 +104350,7 @@ function paginaMusica(pagina2) {
     ]);
   const letture2 = voci4.map(lettoreOra);
   lettoriDiQui = letture2;
-  const grande = lettoreScelto(pagina2, letture2);
+  const grande = lettoreScelto(pagina3, letture2);
   const altri = letture2.length > 1;
   return `<div class="mu-musica${altri ? "" : " solo"}">${lettoreGrande(grande)}${altri ? `<div class="mu-mp-elenco">${letture2.map((l) => rigaDelLettore(l, grande.entity)).join("")}</div>` : ""}</div>`;
 }
@@ -104352,8 +104393,8 @@ function potenza2(id) {
   };
 }
 var potenzaScritta = (watt5) => Math.abs(watt5) >= 1e3 ? `${decimale2(Math.abs(watt5) / 1e3, 1)} kW` : `${decimale2(Math.abs(watt5), 0)} W`;
-function paginaEnergia(pagina2) {
-  const e = energiaDellaPagina(pagina2, state115.fonte || {});
+function paginaEnergia(pagina3) {
+  const e = energiaDellaPagina(pagina3, state115.fonte || {});
   const tessere2 = [];
   if (e.casa) {
     const p = potenza2(e.casa);
@@ -104430,7 +104471,7 @@ function paginaEnergia(pagina2) {
       flusso !== null && Math.abs(flusso) >= 30 ? `<div class="mu-cosa-fa" style="color:${cosaFa.colore}">${esc(flusso > 0 ? t("In scarica", "Discharging") : t("In carica", "Charging"))}</div>` : ""
     ]);
   }
-  altreMisureDellaPagina(pagina2).forEach((id, n) => {
+  altreMisureDellaPagina(pagina3).forEach((id, n) => {
     const s = stato2(id);
     const unita3 = clean(s?.attributes?.unit_of_measurement);
     const v = numero49(s?.state);
@@ -104438,7 +104479,7 @@ function paginaEnergia(pagina2) {
     tessere2.push([`altra-${n}`, "energia", "#64748b", nomeDi8(id), valore3, "", ""]);
   });
   if (!tessere2.length)
-    return griglia2(pagina2, [
+    return griglia2(pagina3, [
       vuoto3(0, t("Scegli le misure nel config", "Choose the readings in the config"))
     ]);
   const carte = tessere2.map(
@@ -104447,7 +104488,7 @@ function paginaEnergia(pagina2) {
       <div class="mu-grande">${esc(valore3)}</div>${extra || ""}<div class="mu-sotto">${esc(sotto)}</div></div>`
   );
   return griglia2(
-    { ...pagina2, griglia: Math.max(grigliaPer(carte.length), carte.length <= 4 ? 4 : 0) },
+    { ...pagina3, griglia: Math.max(grigliaPer(carte.length), carte.length <= 4 ? 4 : 0) },
     carte
   );
 }
@@ -104529,8 +104570,8 @@ function meteoVuoto(acc) {
   )}</span>
   </div>`;
 }
-function paginaMeteo(pagina2) {
-  const acc = accentoDi(pagina2);
+function paginaMeteo(pagina3) {
+  const acc = accentoDi(pagina3);
   const id = entitaDelMeteo2();
   if (!id) return `<div class="mu-mt mu-mt-solo">${meteoVuoto(acc)}</div>`;
   const previsioni = previsioniDelMeteo(id, previsioniArrivate);
@@ -104743,8 +104784,8 @@ function altroDellIngresso(ing, { conLeLetture = false } = {}) {
   return dentro3 ? `<div class="mu-ing-altro">${dentro3}</div>` : "";
 }
 function finestraDellaLettura(f) {
-  const pagina2 = state115.muro?.pagine?.[f.pagina ?? state115.pagina];
-  const ing = pagina2?.ingresso || {};
+  const pagina3 = state115.muro?.pagine?.[f.pagina ?? state115.pagina];
+  const ing = pagina3?.ingresso || {};
   const { gruppo } = lettureDellIngresso2(ing.letture || [], allStates() || {});
   const ids = f.gruppo ? gruppo?.tutte || [] : [f.entita];
   const titolo3 = f.gruppo ? gruppo?.aperte.length ? `${parolaDelGruppo(gruppo.tipo)}: ${gruppo.aperte.length}` : parolaDelGruppoChiuso(gruppo?.tipo) : nomeDi8(f.entita);
@@ -104764,10 +104805,10 @@ function finestraDellaLettura(f) {
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno(f.gruppo ? "finestra" : disegnoDellEntita(f.entita), 30, "fin-lettura")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(titolo3)}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
       <div class="mu-ing-righe">${righe3 || `<div class="mu-sotto">${esc(t("Niente da mostrare qui", "Nothing to show here"))}</div>`}</div></div>`;
 }
-function paginaIngressoCompatta(pagina2) {
-  const ing = pagina2.ingresso;
-  const aree2 = areeDellaPagina(pagina2);
-  const centrale = centraleDelMuro(pagina2);
+function paginaIngressoCompatta(pagina3) {
+  const ing = pagina3.ingresso;
+  const aree2 = areeDellaPagina(pagina3);
+  const centrale = centraleDelMuro(pagina3);
   const s = aree2.length > 1 ? null : stato2(centrale);
   const riassunto3 = aree2.length > 1 ? riassuntoDelleAree(aree2) : null;
   const valore3 = riassunto3 ? riassunto3.valore : String(s?.state || "");
@@ -104823,7 +104864,7 @@ function paginaIngressoCompatta(pagina2) {
       etichetta: spento ? t("Uscita", "Leaving") : t("Arrivo", "Arriving"),
       titolo: spento ? t("Esco", "Leaving") : t("Rientro", "I'm home"),
       sotto: "",
-      dati: `data-mu-fa="azione" data-mu-azione="${esc(uscita.name)}" data-mu-conferma="${pagina2.confermaUscita ? 1 : ""}"`,
+      dati: `data-mu-fa="azione" data-mu-azione="${esc(uscita.name)}" data-mu-conferma="${pagina3.confermaUscita ? 1 : ""}"`,
       dove: "c-uscita",
       immagine: immagineDellaTessera("uscita")
     }) : "",
@@ -104851,10 +104892,10 @@ function paginaIngressoCompatta(pagina2) {
   ].filter(Boolean).slice(0, 6);
   return `<div class="mu-g6">${tessere2.join("")}</div>`;
 }
-function paginaIngresso(pagina2) {
-  if (state115.compatto) return paginaIngressoCompatta(pagina2);
-  const ing = pagina2.ingresso;
-  const aree2 = areeDellaPagina(pagina2);
+function paginaIngresso(pagina3) {
+  if (state115.compatto) return paginaIngressoCompatta(pagina3);
+  const ing = pagina3.ingresso;
+  const aree2 = areeDellaPagina(pagina3);
   const contoProprio = Boolean(lettureDellIngresso2(ing.letture, allStates() || {}).gruppo);
   const aperte = ing.finestre && !contoProprio ? finestreAperte() : [];
   const avvisoFinestre = aperte.length ? `<div class="mu-sotto mu-avviso-finestre">${disegno("finestra", 22, "fin")}${esc(t("Aperte", "Open"))}: <b>${esc(aperte.slice(0, 3).join(", "))}${aperte.length > 3 ? ` +${aperte.length - 3}` : ""}</b></div>` : "";
@@ -104867,9 +104908,9 @@ function paginaIngresso(pagina2) {
       ${areeMarkup(aree2)}
       ${lettureNellAntifurto(ing)}
     </div>`;
-    return restoDellIngresso(pagina2, carta2, riassunto3.valore === "disarmed");
+    return restoDellIngresso(pagina3, carta2, riassunto3.valore === "disarmed");
   }
-  const centrale = centraleDelMuro(pagina2);
+  const centrale = centraleDelMuro(pagina3);
   const s = stato2(centrale);
   const valore3 = String(s?.state || "");
   const suMisura = state115.fonte?.antifurto?.scattato;
@@ -104891,14 +104932,14 @@ function paginaIngresso(pagina2) {
   )}</div><div class="mu-et mu-nota">${esc(t("Il codice si chiede prima di inserire", "The code is asked before arming"))}</div>` : ""}
       ${lettureNellAntifurto(ing)}
     </div>`;
-  return restoDellIngresso(pagina2, carta, spento);
+  return restoDellIngresso(pagina3, carta, spento);
 }
 function lettureNellAntifurto(ing) {
   const letture2 = lettureDellIngressoMarkup(ing);
   return letture2 ? `<div class="mu-allarme-letture">${letture2}</div>` : "";
 }
-function restoDellIngresso(pagina2, carta, spento) {
-  const ing = pagina2.ingresso;
+function restoDellIngresso(pagina3, carta, spento) {
+  const ing = pagina3.ingresso;
   const persone4 = personeInCasa();
   const uscita = spento ? ing.esco : ing.rientro || ing.esco;
   const azioneUscita = azioneDi(uscita);
@@ -104919,7 +104960,7 @@ function restoDellIngresso(pagina2, carta, spento) {
     titolo: spento ? t("Esco", "Leaving") : t("Rientro", "I'm home"),
     sotto: azioneUscita.name === (spento ? t("Esco", "Leaving") : t("Rientro", "I'm home")) ? "" : azioneUscita.name,
     attiva: false,
-    dati: `data-mu-fa="azione" data-mu-azione="${esc(azioneUscita.name)}" data-mu-conferma="${pagina2.confermaUscita ? 1 : ""}"`,
+    dati: `data-mu-fa="azione" data-mu-azione="${esc(azioneUscita.name)}" data-mu-conferma="${pagina3.confermaUscita ? 1 : ""}"`,
     dove: "uscita",
     immagine: immagineDellaTessera("uscita")
   }) : ""}
@@ -104998,11 +105039,11 @@ function canaleDelMixer(canale) {
     <span class="mu-can-n">${esc(nomeDi8(canale.entita, canale.nome))}</span>
     ${tastoMuto(canale, l)}</div>`;
 }
-function paginaMixer(pagina2) {
-  const gruppi2 = gruppiDelMixer(pagina2);
-  const master = pagina2.mixer?.master;
+function paginaMixer(pagina3) {
+  const gruppi2 = gruppiDelMixer(pagina3);
+  const master = pagina3.mixer?.master;
   if (!gruppi2.length && !master?.entita)
-    return griglia2({ ...pagina2, griglia: 4 }, [
+    return griglia2({ ...pagina3, griglia: 4 }, [
       vuoto3(0, t("Scegli i canali nel config", "Choose the channels in the config"))
     ]);
   const quanti2 = gruppi2.map((g) => `minmax(0,${g.canali.length}fr)`).join(" ");
@@ -105037,8 +105078,8 @@ function tastoPtz(tc, tasto2, dentro3, etichetta3, classe3 = "") {
   const id = tc[tasto2];
   return `<button type="button" class="mu-ptz-t ${classe3}" data-mu-fa="ptz" data-mu-tasto="${tasto2}" aria-label="${esc(etichetta3)}"${id ? "" : " disabled"}>${dentro3}</button>`;
 }
-function paginaTelecamera(pagina2) {
-  const tc = pagina2.telecamera || {};
+function paginaTelecamera(pagina3) {
+  const tc = pagina3.telecamera || {};
   const nome = tc.entita ? nomeDi8(tc.entita) : t("Nessuna telecamera", "No camera");
   const pad = `<div class="mu-ptz-pad">
     <span></span>${tastoPtz(tc, "su", freccia("su"), t("Su", "Up"))}<span></span>
@@ -105075,10 +105116,10 @@ function comandoAcceso(p) {
   return typeof atteso === "boolean" ? atteso : pulsanteAcceso(p, allStates() || {});
 }
 var diceLoStato = pulsanteDiceLoStato;
-function paginaComandi(pagina2) {
-  const tutti = pulsantiDellaPagina(pagina2).map((p, k) => ({ p, k }));
+function paginaComandi(pagina3) {
+  const tutti = pulsantiDellaPagina(pagina3).map((p, k) => ({ p, k }));
   if (!tutti.length)
-    return griglia2({ ...pagina2, griglia: 4 }, [
+    return griglia2({ ...pagina3, griglia: 4 }, [
       vuoto3(0, t("Scegli i comandi nel config", "Choose the commands in the config"))
     ]);
   const parola = (p, on) => diceLoStato(p) ? `<span class="mu-stato ${on ? "" : "spento"}">${esc(on ? t("Acceso", "On") : t("Spento", "Off"))}</span>` : "";
@@ -105105,7 +105146,7 @@ function paginaComandi(pagina2) {
         <button type="button" class="mu-reg-stop" data-mu-fa="pulsante" data-mu-indice="${k}" data-mu-verso="stop">${segno("ferma", 30)}<span>${esc(t("Stop", "Stop"))}</span></button></div>`;
   });
   const colonne = (n) => `grid-template-columns:repeat(${Math.min(n, 4)},minmax(0,1fr))`;
-  const ferma3 = pagina2.fermaTutto?.attivo ? `<button type="button" class="mu-carta mu-reg-ferma" data-mu-fa="ferma-tutto">${segno("ferma", 26)}<span>${esc(t("Ferma tutto", "Stop all"))}</span></button>` : "";
+  const ferma3 = pagina3.fermaTutto?.attivo ? `<button type="button" class="mu-carta mu-reg-ferma" data-mu-fa="ferma-tutto">${segno("ferma", 26)}<span>${esc(t("Ferma tutto", "Stop all"))}</span></button>` : "";
   const righe3 = [
     grandi.length ? "minmax(0,1fr)" : "",
     coppie.length ? "minmax(0,1fr)" : "",
@@ -105116,23 +105157,23 @@ function paginaComandi(pagina2) {
     ${coppie.length ? `<div class="mu-reg-coppie" style="grid-template-columns:repeat(${coppie.length},minmax(0,1fr))">${coppie.join("")}</div>` : ""}
     ${ferma3}</div>`;
 }
-function corpoDellaPagina(pagina2) {
-  if (pagina2.modello === "scene") return paginaScene(pagina2);
-  if (pagina2.modello === "ingresso") return paginaIngresso(pagina2);
-  if (pagina2.modello === "ambienti") return paginaAmbienti(pagina2);
-  if (pagina2.modello === "telecamere") return paginaTelecamere(pagina2);
-  if (pagina2.modello === "energia") return paginaEnergia(pagina2);
-  if (pagina2.modello === "musica") return paginaMusica(pagina2);
-  if (pagina2.modello === "meteo") return paginaMeteo(pagina2);
-  if (pagina2.modello === "mixer") return paginaMixer(pagina2);
-  if (pagina2.modello === "telecamera") return paginaTelecamera(pagina2);
-  if (pagina2.modello === "comandi") return paginaComandi(pagina2);
-  return paginaStanza(pagina2);
+function corpoDellaPagina(pagina3) {
+  if (pagina3.modello === "scene") return paginaScene(pagina3);
+  if (pagina3.modello === "ingresso") return paginaIngresso(pagina3);
+  if (pagina3.modello === "ambienti") return paginaAmbienti(pagina3);
+  if (pagina3.modello === "telecamere") return paginaTelecamere(pagina3);
+  if (pagina3.modello === "energia") return paginaEnergia(pagina3);
+  if (pagina3.modello === "musica") return paginaMusica(pagina3);
+  if (pagina3.modello === "meteo") return paginaMeteo(pagina3);
+  if (pagina3.modello === "mixer") return paginaMixer(pagina3);
+  if (pagina3.modello === "telecamera") return paginaTelecamera(pagina3);
+  if (pagina3.modello === "comandi") return paginaComandi(pagina3);
+  return paginaStanza(pagina3);
 }
 var anteprimaInCorso = false;
 function anteprimaDellaPagina(muro, indice = 0, fonte = state115.fonte) {
-  const pagina2 = muro?.pagine?.[indice];
-  if (!pagina2 || !fonte) return "";
+  const pagina3 = muro?.pagine?.[indice];
+  if (!pagina3 || !fonte) return "";
   const prima = {
     muro: state115.muro,
     fonte: state115.fonte,
@@ -105153,7 +105194,7 @@ function anteprimaDellaPagina(muro, indice = 0, fonte = state115.fonte) {
       compatto: false,
       verso: muro.orientamento === "verticale" ? "verticale" : "orizzontale"
     });
-    return paginaIntera(pagina2, muro);
+    return paginaIntera(pagina3, muro);
   } finally {
     Object.assign(state115, prima);
     raccolta = raccoltaPrima;
@@ -105213,25 +105254,25 @@ function finestra5() {
       (k) => `<button type="button" data-mu-fa="${k}" data-mu-entita="${esc(id)}">${{ su: `▲ ${esc(t("Su", "Up"))}`, ferma: `■ ${esc(t("Stop", "Stop"))}`, giu: `▼ ${esc(t("Giù", "Down"))}` }[k]}</button>`
     ).join("")}</div></div>`;
   } else if (f.tipo === "antifurto" && areeDellaPagina(state115.muro?.pagine?.[state115.pagina]).length > 1) {
-    const pagina2 = state115.muro?.pagine?.[state115.pagina];
-    const aree2 = areeDellaPagina(pagina2);
+    const pagina3 = state115.muro?.pagine?.[state115.pagina];
+    const aree2 = areeDellaPagina(pagina3);
     const riassunto3 = riassuntoDelleAree(aree2);
     dentro3 = `<div class="mu-fin-clima mu-fin-aree" style="--acc:${accentoDellAllarme(riassunto3.valore)}">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("sicurezza", 30, "fin-allarme")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(riassunto3.testo)}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
-      ${areeMarkup(aree2)}${altroDellIngresso(pagina2?.ingresso, { conLeLetture: true })}</div>`;
+      ${areeMarkup(aree2)}${altroDellIngresso(pagina3?.ingresso, { conLeLetture: true })}</div>`;
   } else if (f.tipo === "lettura") {
     dentro3 = finestraDellaLettura(f);
   } else if (f.tipo === "antifurto") {
-    const pagina2 = state115.muro?.pagine?.[state115.pagina];
-    const centrale = centraleDelMuro(pagina2);
+    const pagina3 = state115.muro?.pagine?.[state115.pagina];
+    const centrale = centraleDelMuro(pagina3);
     const s = stato2(centrale);
     const valore3 = String(s?.state || "");
     const modi = tastiDellAntifurto(s);
     const acceso6 = tastoAcceso(s, modi);
-    const aperte = pagina2?.ingresso?.finestre ? finestreAperte() : [];
+    const aperte = pagina3?.ingresso?.finestre ? finestreAperte() : [];
     dentro3 = `<div class="mu-fin-clima" style="--acc:${valore3 === "disarmed" ? "#10b981" : "#6366f1"}">
       <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno("sicurezza", 30, "fin-allarme")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(statoDellaCentrale(s))}</div>${aperte.length ? `<div class="mu-sotto">${esc(t("Aperte", "Open"))}: ${esc(aperte.slice(0, 2).join(", "))}</div>` : ""}</div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
-      <div class="mu-seg mu-seg-alto mu-modi">${modi.map((m) => `<button type="button" class="${m.mode === acceso6 ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`).join("")}</div>${altroDellIngresso(pagina2?.ingresso, { conLeLetture: true })}</div>`;
+      <div class="mu-seg mu-seg-alto mu-modi">${modi.map((m) => `<button type="button" class="${m.mode === acceso6 ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}">${esc(m.label)}</button>`).join("")}</div>${altroDellIngresso(pagina3?.ingresso, { conLeLetture: true })}</div>`;
   } else if (f.tipo === "citofono" && f.suonato) {
     return squilloMarkup(f);
   } else if (f.tipo === "citofono") {
@@ -105242,8 +105283,8 @@ function finestra5() {
       <div class="mu-video mu-video-fin"><img data-mu-telecamera="${esc(ing.telecamera)}" alt=""></div>
       ${ing.apri || ing.apri2 ? `<div class="mu-due">${ing.apri ? `<button type="button" class="mu-btn pieno" data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}">${esc(nomeDi8(ing.apri, ing.nomeApri))}</button>` : ""}${ing.apri2 ? `<button type="button" class="mu-btn" data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}">${esc(nomeDi8(ing.apri2, ing.nomeApri2))}</button>` : ""}</div>` : ""}</div>`;
   } else if (f.tipo === "gruppo") {
-    const pagina2 = state115.muro?.pagine?.[state115.pagina];
-    const tutti = lettoriDellaPagina(pagina2, state115.fonte || {}).map(lettoreOra);
+    const pagina3 = state115.muro?.pagine?.[state115.pagina];
+    const tutti = lettoriDellaPagina(pagina3, state115.fonte || {}).map(lettoreOra);
     const capo = tutti.find((x) => x.entity === f.entita) || lettoreOra({ entita: f.entita });
     const compagni = compagniDelGruppo(capo);
     const altri = tutti.filter((x) => x.entity !== capo.entity && x.puo.gruppo);
@@ -105296,9 +105337,9 @@ function chiudiFinestra() {
 function riposo(muro) {
   const o = orologio3();
   const notte = muro.luce?.attiva ? Boolean(luce.notte && muro.luce.notte === 0) : eNotte2(muro);
-  const pagina2 = muro.pagine[0];
+  const pagina3 = muro.pagine[0];
   if (muro.avvisi) for (const a of state115.fonte?.avvisi || []) a.entita.forEach(segna);
-  const avvisi = muro.avvisi ? avvisiAccesi(state115.fonte || {}, allStates() || {}, centraleDelMuro(pagina2)) : [];
+  const avvisi = muro.avvisi ? avvisiAccesi(state115.fonte || {}, allStates() || {}, centraleDelMuro(pagina3)) : [];
   const chip = avvisi.slice(0, 3).map(
     (a) => `<div class="mu-carta mu-avviso ${a.grave ? "grave" : ""}" style="--acc:${a.grave ? ACCENTI.allarme : "#06b6d4"}"><span class="mu-chip mu-acc" style="--c:40px">${a.grave ? disegno("sicurezza", 24, "av-allarme") : disegno("avvisi", 24, `av-${esc(a.chiave)}`)}</span><b>${esc(a.grave ? t("Antifurto: allarme in corso", "Alarm: triggered") : a.testo)}</b></div>`
   ).join("");
@@ -105307,7 +105348,7 @@ function riposo(muro) {
   if (notte && !schermoSempreAcceso(muro))
     return `<div class="mu-riposo notte" data-mu-fa="sveglia">${chip ? `<div class="mu-deriva" ${deriva}><div class="mu-avvisi">${chip}</div></div>` : ""}</div>`;
   const m = meteo2();
-  const centrale = centraleDelMuro(pagina2);
+  const centrale = centraleDelMuro(pagina3);
   const aree2 = state115.fonte?.aree?.length > 1 ? state115.fonte.aree : null;
   const allarme2 = !aree2 && centrale && stato2(centrale) ? statoDellaCentrale(stato2(centrale)) : "";
   const rigaDelleAree = aree2 ? areeSulRiposo(aree2) : "";
@@ -105961,11 +106002,11 @@ function disegna6() {
   diciAlloSchermo("muro", true);
   regolaLaLuce();
   if (state115.pagina >= muro.pagine.length) state115.pagina = 0;
-  const pagina2 = muro.pagine[state115.pagina];
+  const pagina3 = muro.pagine[state115.pagina];
   raccolta = { ids: /* @__PURE__ */ new Set(), domini: /* @__PURE__ */ new Set() };
   let corpo4 = "";
   try {
-    corpo4 = state115.riposo ? riposo(muro) : `${paginaIntera(pagina2, muro)}${finestra5()}`;
+    corpo4 = state115.riposo ? riposo(muro) : `${paginaIntera(pagina3, muro)}${finestra5()}`;
     corpo4 += avvisoGrande2();
     corpo4 += pillolaDellaLuce(muro);
     segna(centraleDelMuro(muro.pagine[0]));
@@ -106146,9 +106187,9 @@ function cambiaTemperatura(id, verso2, estremo = "") {
   );
 }
 function allarme(modo, codice = "", area = "") {
-  const pagina2 = state115.muro?.pagine?.[state115.pagina];
-  const sue = areeDellaPagina(pagina2).map((a) => a.entita);
-  const centrale = area && sue.includes(area) ? area : centraleDelMuro(pagina2);
+  const pagina3 = state115.muro?.pagine?.[state115.pagina];
+  const sue = areeDellaPagina(pagina3).map((a) => a.entita);
+  const centrale = area && sue.includes(area) ? area : centraleDelMuro(pagina3);
   const s = stato2(centrale);
   const mio = modoSuMisura(modo);
   if (mio) {
@@ -106211,8 +106252,8 @@ function onClick26(event) {
   tocco();
   const linguettaClima = event.target?.closest?.("[data-mu-zona]");
   if (linguettaClima) {
-    const pagina2 = state115.muro?.pagine?.[state115.pagina];
-    if (pagina2) (state115.zone ||= {})[pagina2.id] = linguettaClima.dataset.muZona;
+    const pagina3 = state115.muro?.pagine?.[state115.pagina];
+    if (pagina3) (state115.zone ||= {})[pagina3.id] = linguettaClima.dataset.muZona;
     disegna6();
     return;
   }
@@ -106395,8 +106436,8 @@ function onClick26(event) {
       });
       return;
     case "mp-scegli": {
-      const pagina2 = state115.muro?.pagine?.[state115.pagina];
-      if (pagina2) (state115.lettori ||= {})[pagina2.id] = id;
+      const pagina3 = state115.muro?.pagine?.[state115.pagina];
+      if (pagina3) (state115.lettori ||= {})[pagina3.id] = id;
       disegna6();
       return;
     }
@@ -106501,21 +106542,21 @@ function onClick26(event) {
       return;
     }
     case "ptz": {
-      const pagina2 = state115.muro?.pagine?.[state115.pagina];
-      const servizio2 = servizioDellaTelecamera(pagina2?.telecamera, bersaglio.dataset.muTasto);
+      const pagina3 = state115.muro?.pagine?.[state115.pagina];
+      const servizio2 = servizioDellaTelecamera(pagina3?.telecamera, bersaglio.dataset.muTasto);
       if (servizio2) comanda2(servizio2.domain, servizio2.service, servizio2.data);
       return;
     }
     case "preset": {
-      const pagina2 = state115.muro?.pagine?.[state115.pagina];
-      const voce3 = pagina2?.telecamera?.preset?.[Number(bersaglio.dataset.muIndice)];
-      const servizio2 = voce3 ? servizioDellaTelecamera(voce3, "entita", pagina2.telecamera.dispositivo) : null;
+      const pagina3 = state115.muro?.pagine?.[state115.pagina];
+      const voce3 = pagina3?.telecamera?.preset?.[Number(bersaglio.dataset.muIndice)];
+      const servizio2 = voce3 ? servizioDellaTelecamera(voce3, "entita", pagina3.telecamera.dispositivo) : null;
       if (servizio2) comanda2(servizio2.domain, servizio2.service, servizio2.data);
       return;
     }
     case "pulsante": {
-      const pagina2 = state115.muro?.pagine?.[state115.pagina];
-      const p = pulsantiDellaPagina(pagina2)[Number(bersaglio.dataset.muIndice)];
+      const pagina3 = state115.muro?.pagine?.[state115.pagina];
+      const p = pulsantiDellaPagina(pagina3)[Number(bersaglio.dataset.muIndice)];
       if (!p) return;
       const verso2 = bersaglio.dataset.muVerso === "stop" ? "stop" : "avvio";
       const servizio2 = servizioDelPulsante(p, verso2, allStates() || {});
@@ -106531,10 +106572,10 @@ function onClick26(event) {
       return;
     }
     case "ferma-tutto": {
-      const pagina2 = state115.muro?.pagine?.[state115.pagina];
-      for (const servizio2 of chiamateDelFermaTutto(pagina2, allStates() || {}))
+      const pagina3 = state115.muro?.pagine?.[state115.pagina];
+      for (const servizio2 of chiamateDelFermaTutto(pagina3, allStates() || {}))
         if (servizio2) comanda2(servizio2.domain, servizio2.service, servizio2.data);
-      for (const p of pulsantiDellaPagina(pagina2))
+      for (const p of pulsantiDellaPagina(pagina3))
         if (diceLoStato(p) && (p.stop || p.stato)) attendi(p.stato || p.avvio, "acceso", false);
       disegna6();
       return;
@@ -106711,8 +106752,8 @@ var campanelloSuona2 = campanelloSuona;
 function campanelliDelMuro(muro = state115.muro) {
   const visti = /* @__PURE__ */ new Set();
   const fuori = [];
-  (muro?.pagine || []).forEach((pagina2, indice) => {
-    const id = pagina2.modello === "ingresso" ? clean(pagina2.ingresso?.campanello) : "";
+  (muro?.pagine || []).forEach((pagina3, indice) => {
+    const id = pagina3.modello === "ingresso" ? clean(pagina3.ingresso?.campanello) : "";
     if (!id || visti.has(id)) return;
     visti.add(id);
     fuori.push({ indice, id });
@@ -106807,9 +106848,9 @@ function tempoDelloSquillo(fase, trascorsi) {
   return quantoFaScritto(trascorsi);
 }
 function quantoFaScritto(ms) {
-  const { numero: numero57, unita: unita3 } = quantoFa4(ms);
+  const { numero: numero58, unita: unita3 } = quantoFa4(ms);
   const misura7 = unita3 === "giorni" ? t("giorni", "days") : unita3 === "h" ? t("h", "h") : unita3 === "min" ? t("min", "min") : "s";
-  return `${numero57} ${misura7} ${t("fa", "ago")}`;
+  return `${numero58} ${misura7} ${t("fa", "ago")}`;
 }
 function silenzia() {
   fermaIlCampanello();
@@ -106913,8 +106954,8 @@ var ICONE_DELLO_SQUILLO = Object.freeze({
 });
 function squilloMarkup(f) {
   const indice = f.pagina ?? state115.pagina;
-  const pagina2 = state115.muro?.pagine?.[indice] || {};
-  const ing = pagina2.ingresso || {};
+  const pagina3 = state115.muro?.pagine?.[indice] || {};
+  const ing = pagina3.ingresso || {};
   const opzioni2 = opzioniDelCampanello(ing);
   const { fase, trascorsi } = faseDelloSquillo(
     { quando: f.suonato, silenziato: f.silenziato },
@@ -106922,7 +106963,7 @@ function squilloMarkup(f) {
   );
   state115.faseDelloSquillo = fase;
   const squilla2 = fase === "squilla";
-  const nomePagina = titoloDi(pagina2) || t("Ingresso", "Entrance");
+  const nomePagina = titoloDi(pagina3) || t("Ingresso", "Entrance");
   const ora6 = orologio3(new Date(f.suonato)).ora;
   const accento = squilla2 ? "#16a34a" : "#2563eb";
   const campana = `<span class="mu-chip mu-acc mu-sq-campana">${squilla2 ? `<i class="onda o2"></i><i class="onda o1"></i>` : ""}${disegnoDelCatalogo("bell", 36)}</span>`;
@@ -109763,12 +109804,12 @@ function onImmagine(event) {
   const tessera3 = /^pagine\.(\d+)\.immagini\.(.+)$/.exec(via);
   if (tessera3) {
     const m = structuredClone(bozza());
-    const pagina2 = m.pagine?.[Number(tessera3[1])];
-    if (!pagina2) return;
-    const immagini = { ...pagina2.immagini || {} };
+    const pagina3 = m.pagine?.[Number(tessera3[1])];
+    if (!pagina3) return;
+    const immagini = { ...pagina3.immagini || {} };
     if (event.detail?.immagine) immagini[tessera3[2]] = event.detail.immagine;
     else delete immagini[tessera3[2]];
-    pagina2.immagini = immagini;
+    pagina3.immagini = immagini;
     state116.bozza = muroPulito(m);
     dopoUnaScritta();
     return;
@@ -109802,16 +109843,16 @@ function salva16() {
   return m;
 }
 function ensureMuroEditorTab() {
-  const linguette3 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette3 || linguette3.querySelector(`.ed-tab[data-tab="${MURO_EDITOR_TAB}"]`)) return false;
+  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${MURO_EDITOR_TAB}"]`)) return false;
   const linguetta3 = doc.createElement("button");
   linguetta3.className = "ed-tab";
   linguetta3.dataset.tab = MURO_EDITOR_TAB;
   linguetta3.textContent = `📟 ${t("A muro", "On the wall")}`;
   linguetta3.addEventListener("click", () => root.editorSwitch?.(MURO_EDITOR_TAB));
-  const prima = linguette3.querySelector('.ed-tab[data-tab="runtime"]');
+  const prima = linguette4.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta3);
-  else linguette3.append(linguetta3);
+  else linguette4.append(linguetta3);
   riordinaLeLinguette();
   return true;
 }
@@ -110302,16 +110343,16 @@ function ultimaPagina10() {
 }
 function ensureBatteriePage() {
   if (!doc) return null;
-  let pagina2 = doc.getElementById(BATTERIE_PAGE_ID);
-  if (pagina2) return pagina2;
+  let pagina3 = doc.getElementById(BATTERIE_PAGE_ID);
+  if (pagina3) return pagina3;
   const sorella = ultimaPagina10();
   if (!sorella?.parentElement) return null;
-  pagina2 = doc.createElement("section");
-  pagina2.className = "page";
-  pagina2.id = BATTERIE_PAGE_ID;
-  pagina2.innerHTML = `<div class="dm-batt-wrap" id="batterie-wrap"></div>`;
-  sorella.after(pagina2);
-  return pagina2;
+  pagina3 = doc.createElement("section");
+  pagina3.className = "page";
+  pagina3.id = BATTERIE_PAGE_ID;
+  pagina3.innerHTML = `<div class="dm-batt-wrap" id="batterie-wrap"></div>`;
+  sorella.after(pagina3);
+  return pagina3;
 }
 function ensureBatterieTab() {
   if (!doc) return null;
@@ -110350,8 +110391,8 @@ function accendiLaVoce7() {
   const serve = segnaContenuto(BATTERIE_TAB, ciSonoBatterie()) && sezioneAccesa8();
   if (serve) voce3.style.removeProperty("display");
   else voce3.style.setProperty("display", "none", "important");
-  const pagina2 = doc.getElementById(BATTERIE_PAGE_ID);
-  if (!serve && pagina2?.classList.contains("active"))
+  const pagina3 = doc.getElementById(BATTERIE_PAGE_ID);
+  if (!serve && pagina3?.classList.contains("active"))
     doc.querySelector('.tab[data-tab="home"]')?.click();
 }
 function titoloDelleBatterie(conto) {
@@ -110423,8 +110464,8 @@ function testaMarkup10(conto, soglia3) {
   </div>`;
 }
 function dipingi9() {
-  const pagina2 = ensureBatteriePage();
-  const dove = pagina2?.querySelector?.("#batterie-wrap");
+  const pagina3 = ensureBatteriePage();
+  const dove = pagina3?.querySelector?.("#batterie-wrap");
   if (!dove) return;
   if (!paginaVisibile(BATTERIE_PAGE_ID)) return;
   const righe3 = batterieInPlancia();
@@ -110651,7 +110692,7 @@ function costruisciSchedaDichiarata(scheda8) {
     writeJsonIfChanged(chiave2, prossima);
     scheda8.ridisegnaPagina?.();
   }
-  function ridisegna30() {
+  function ridisegna31() {
     if (scheda8.ancora) doc?.getElementById?.(scheda8.ancora)?.remove();
     else {
       const body = doc?.getElementById("ed-body");
@@ -110764,7 +110805,7 @@ function costruisciSchedaDichiarata(scheda8) {
           inPiu
         )
       );
-      ridisegna30();
+      ridisegna31();
       return;
     }
     const apri7 = event.target.closest("[data-dm-dich-apri]");
@@ -110778,7 +110819,7 @@ function costruisciSchedaDichiarata(scheda8) {
         tieniLaRigaAperta(body);
         stato3.aperto = indice;
       }
-      ridisegna30();
+      ridisegna31();
       return;
     }
     const elimina4 = event.target.closest("[data-dm-dich-elimina]");
@@ -110790,7 +110831,7 @@ function costruisciSchedaDichiarata(scheda8) {
       salva33(senzaLaRiga(configurazione23(), indice, inPiu));
       if (stato3.aperto === indice) stato3.aperto = -1;
       else if (stato3.aperto > indice) stato3.aperto -= 1;
-      ridisegna30();
+      ridisegna31();
       return;
     }
     const salvaRiga = event.target.closest("[data-dm-dich-salva]");
@@ -110800,7 +110841,7 @@ function costruisciSchedaDichiarata(scheda8) {
       if (!Number.isInteger(indice)) return;
       salva33(conLaRiga(configurazione23(), indice, bozza3(body, indice), inPiu));
       stato3.aperto = -1;
-      ridisegna30();
+      ridisegna31();
       root.edToast?.(parole4.salvato);
       return;
     }
@@ -110816,7 +110857,7 @@ function costruisciSchedaDichiarata(scheda8) {
         )
       );
       stato3.aperto = (righe3() || []).length - 1;
-      ridisegna30();
+      ridisegna31();
       return;
     }
     if (event.target.closest("[data-dm-dich-prendi]")) {
@@ -110825,7 +110866,7 @@ function costruisciSchedaDichiarata(scheda8) {
       if (!mancano.length) return;
       tieniLaRigaAperta(body);
       salva33(conLeRighe(configurazione23(), mancano, inPiu));
-      ridisegna30();
+      ridisegna31();
       root.edToast?.(parole4.presi(mancano.length));
     }
   }
@@ -110841,7 +110882,7 @@ function costruisciSchedaDichiarata(scheda8) {
       });
     });
     doc.addEventListener("click", onClick59);
-    scheda8.inPiuAllInstallazione?.(doc, { ridisegna: ridisegna30, configurazione: configurazione23, salva: salva33, bozza: bozza3, inPiu });
+    scheda8.inPiuAllInstallazione?.(doc, { ridisegna: ridisegna31, configurazione: configurazione23, salva: salva33, bozza: bozza3, inPiu });
     for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:editor-rendered"])
       root.addEventListener?.(evento, () => {
         root.queueMicrotask?.(() => {
@@ -110851,7 +110892,7 @@ function costruisciSchedaDichiarata(scheda8) {
       });
     return true;
   }
-  return { installa, disegnaScheda, disegnaLinguetta, ridisegna: ridisegna30, configurazione: configurazione23, righe: righe3, salva: salva33 };
+  return { installa, disegnaScheda, disegnaLinguetta, ridisegna: ridisegna31, configurazione: configurazione23, righe: righe3, salva: salva33 };
 }
 var stileMesso = false;
 function installaStile() {
@@ -111155,7 +111196,7 @@ var scheda = costruisciSchedaDichiarata({
   /* Le due caselle che non stanno nella riga si salvano da se', mentre si
    * scrivono: sono di un altro elenco, e aspettare il 💾 della riga vorrebbe
    * dire un tasto che salva meta' di quello che ha davanti. */
-  inPiuAllInstallazione(documento, { ridisegna: ridisegna30 }) {
+  inPiuAllInstallazione(documento, { ridisegna: ridisegna31 }) {
     documento.addEventListener("change", (evento) => {
       const casella6 = evento.target?.closest?.("[data-dm-batt-ricarica]");
       if (casella6) {
@@ -111169,7 +111210,7 @@ var scheda = costruisciSchedaDichiarata({
       const sogliaDiCasa2 = evento.target?.closest?.("[data-dm-batt-soglia]");
       if (sogliaDiCasa2) {
         salvaSoglia(sogliaDiCasa2.value);
-        ridisegna30();
+        ridisegna31();
       }
     });
   }
@@ -111205,7 +111246,7 @@ function ceUnaFotoFerma(video) {
 async function aspettaCheSiMuova(video, opzioni2 = {}) {
   const attesa = Number(opzioni2.attesa) > 0 ? Number(opzioni2.attesa) : ATTESA_SENZA_DETTO;
   const passo = Number(opzioni2.passo) > 0 ? Number(opzioni2.passo) : PASSO_FOTOGRAMMI;
-  const dormi = opzioni2.dormi || ((ms) => new Promise((risolvi3) => root.setTimeout?.(risolvi3, ms) || risolvi3()));
+  const dormi = opzioni2.dormi || ((ms) => new Promise((risolvi4) => root.setTimeout?.(risolvi4, ms) || risolvi4()));
   if (!video) return true;
   let prima = tempoDi(video);
   for (let speso = 0; speso < attesa; speso += passo) {
@@ -111700,10 +111741,10 @@ function ancoraSottoLaPrincipale(body) {
   const primaria = body?.querySelector?.("#ed-tp-ent");
   const room = body?.querySelector?.("#ed-tp-room");
   if (!primaria || !room) return null;
-  const contenitore4 = (room.closest("label, .ed-slot") || room).parentElement;
-  if (!contenitore4) return null;
+  const contenitore5 = (room.closest("label, .ed-slot") || room).parentElement;
+  if (!contenitore5) return null;
   let nodo2 = primaria;
-  while (nodo2 && nodo2.parentElement !== contenitore4) nodo2 = nodo2.parentElement;
+  while (nodo2 && nodo2.parentElement !== contenitore5) nodo2 = nodo2.parentElement;
   return nodo2 || null;
 }
 function ensureSogliaField(body = doc?.getElementById("ed-body")) {
@@ -113210,7 +113251,7 @@ function sosteDi(bozza3) {
   return Array.isArray(elenco15) ? elenco15.filter((s) => s && Number.isFinite(Number(s.km))) : [];
 }
 function minutiDiRicarica(bozza3) {
-  return sosteDi(bozza3).reduce((somma2, s) => somma2 + (Number(s.min) || 0), 0);
+  return sosteDi(bozza3).reduce((somma3, s) => somma3 + (Number(s.min) || 0), 0);
 }
 function guidaStimata(bozza3) {
   const secondi = Number(bozza3?.stima?.durataS);
@@ -113233,13 +113274,13 @@ var numero51 = (valore3) => {
   const n = Number.parseFloat(String(valore3).replace(",", "."));
   return Number.isFinite(n) ? n : null;
 };
-function consumoStimato({ kwh: kwh4, carica: carica2, autonomia } = {}) {
-  const pacco = numero51(kwh4);
-  const percento6 = numero51(carica2);
+function consumoStimato({ kwh: kwh5, carica: carica2, autonomia } = {}) {
+  const pacco = numero51(kwh5);
+  const percento7 = numero51(carica2);
   const km = numero51(autonomia);
-  if (pacco === null || percento6 === null || km === null || km < 10 || percento6 < 5)
+  if (pacco === null || percento7 === null || km === null || km < 10 || percento7 < 5)
     return CONSUMO_DI_SERIE;
-  const consumo = pacco * percento6 / 100 / km * 100;
+  const consumo = pacco * percento7 / 100 / km * 100;
   return consumo >= 8 && consumo <= 40 ? Math.round(consumo * 10) / 10 : CONSUMO_DI_SERIE;
 }
 function consumoMisurato(stato3) {
@@ -113565,15 +113606,15 @@ function leggiJson2(valore3) {
     return null;
   }
 }
-var giornoDellaSettimana4 = (istante6) => (new Date(istante6).getDay() + 6) % 7;
-function alleOre2(istante6, piuGiorni, minuti) {
-  const d = new Date(istante6);
+var giornoDellaSettimana4 = (istante7) => (new Date(istante7).getDay() + 6) % 7;
+function alleOre2(istante7, piuGiorni, minuti) {
+  const d = new Date(istante7);
   d.setDate(d.getDate() + piuGiorni);
   d.setHours(Math.floor(minuti / 60), minuti % 60, 0, 0);
   return d.getTime();
 }
-var minutiDelGiorno2 = (istante6) => {
-  const d = new Date(istante6);
+var minutiDelGiorno2 = (istante7) => {
+  const d = new Date(istante7);
   return d.getHours() * 60 + d.getMinutes();
 };
 function quandoPulito(dato2) {
@@ -113852,8 +113893,8 @@ function automazionePulita(dato2) {
     pausa: intero(d.pausa, 0, 1440, 0)
   };
 }
-var chiaveDelGiornoDi = (istante6) => {
-  const d = new Date(istante6);
+var chiaveDelGiornoDi = (istante7) => {
+  const d = new Date(istante7);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 function eAttivaAdesso(a, adesso2) {
@@ -113930,20 +113971,20 @@ function soleDelGiorno(statoDi6, giorno3) {
 }
 var RECUPERO_DELL_ORARIO = 5 * MINUTO7;
 var AVVIO_DELL_ELETTRODOMESTICO = 2 * MINUTO7;
-function istantiDelGiorno(quando4, istante6, statoDi6 = null) {
+function istantiDelGiorno(quando4, istante7, statoDi6 = null) {
   if (quando4?.tipo === "ogni") {
     const fuori = [];
-    for (let m = 0; m < 1440; m += quando4.minuti) fuori.push(alleOre2(istante6, 0, m));
+    for (let m = 0; m < 1440; m += quando4.minuti) fuori.push(alleOre2(istante7, 0, m));
     return fuori;
   }
   if (!quando4 || quando4.tipo !== "orario") return [];
-  if (!quando4.giorni[giornoDellaSettimana4(istante6)]) return [];
+  if (!quando4.giorni[giornoDellaSettimana4(istante7)]) return [];
   if (quando4.sole) {
-    const sole = soleDelGiorno(statoDi6, istante6);
+    const sole = soleDelGiorno(statoDi6, istante7);
     if (!sole) return [];
     return [sole[quando4.sole] + quando4.scarto * MINUTO7];
   }
-  return quando4.ore.map((o) => alleOre2(istante6, 0, minutiDi2(o)));
+  return quando4.ore.map((o) => alleOre2(istante7, 0, minutiDi2(o)));
 }
 function prossimoIstante(quando4, adesso2, statoDi6 = null) {
   for (let i = 0; i <= 7; i += 1) {
@@ -113953,7 +113994,7 @@ function prossimoIstante(quando4, adesso2, statoDi6 = null) {
   }
   return null;
 }
-var fasceDelGiorno = (crono2, istante6) => giornoDellaSettimana4(istante6) >= 5 ? crono2.festivi : crono2.feriali;
+var fasceDelGiorno = (crono2, istante7) => giornoDellaSettimana4(istante7) >= 5 ? crono2.festivi : crono2.feriali;
 function cronoProssimo(crono2, adesso2) {
   const c = cronoPulito(crono2);
   for (let i = 0; i <= 7; i += 1) {
@@ -117275,9 +117316,9 @@ function onPointerUp2() {
 }
 var LUCCHETTO = `<span class="au-lucchetto" aria-hidden="true"><svg viewBox="0 0 16 16" width="11" height="11"><rect x="3" y="7" width="10" height="7.5" rx="1.8" fill="#fff"/><path d="M5.2 7V5.2a2.8 2.8 0 0 1 5.6 0V7" stroke="#fff" stroke-width="1.8" fill="none"/></svg></span>`;
 function ensureLaVoce() {
-  const linguette3 = doc?.querySelector?.("#editor-modal .ed-tab")?.parentElement;
-  if (!linguette3) return false;
-  let voce3 = linguette3.querySelector(`.ed-tab[data-tab="${AUTOMAZIONI_TAB}"]`);
+  const linguette4 = doc?.querySelector?.("#editor-modal .ed-tab")?.parentElement;
+  if (!linguette4) return false;
+  let voce3 = linguette4.querySelector(`.ed-tab[data-tab="${AUTOMAZIONI_TAB}"]`);
   if (nellApp()) {
     voce3?.remove();
     return false;
@@ -117296,10 +117337,10 @@ function ensureLaVoce() {
       `config-${AUTOMAZIONI_TAB}`
     )}</span><span data-dm-config-name="true" class="dm-beta4-tab-label">${esc(nome)}</span><span class="au-tab-prem">PREMIUM</span>`;
     voce3.addEventListener("click", () => root.editorSwitch?.(AUTOMAZIONI_TAB));
-    const azioni2 = linguette3.querySelector('.ed-tab[data-tab="sez8"]');
+    const azioni2 = linguette4.querySelector('.ed-tab[data-tab="sez8"]');
     if (azioni2) azioni2.after(voce3);
     else
-      linguette3.querySelector('.ed-tab[data-tab="runtime"]')?.before(voce3) ?? linguette3.append(voce3);
+      linguette4.querySelector('.ed-tab[data-tab="runtime"]')?.before(voce3) ?? linguette4.append(voce3);
     riordinaLeLinguette();
   }
   const chiusa2 = state124.premium === false;
@@ -117356,18 +117397,18 @@ function apriLeAutomazioni() {
   doc.querySelectorAll(".page.active").forEach((p) => p.classList.remove("active"));
   doc.querySelectorAll(".tab.active").forEach((p) => p.classList.remove("active"));
   doc.body.classList.remove("gdahome-in-config");
-  let pagina2 = doc.getElementById(ID_PAGINA);
-  if (!pagina2) {
-    pagina2 = doc.createElement("section");
-    pagina2.id = ID_PAGINA;
-    pagina2.className = "page";
+  let pagina3 = doc.getElementById(ID_PAGINA);
+  if (!pagina3) {
+    pagina3 = doc.createElement("section");
+    pagina3.id = ID_PAGINA;
+    pagina3.className = "page";
     const config = doc.getElementById("page-config");
     const casa = doc.getElementById("page-home");
-    if (config) config.before(pagina2);
-    else if (casa?.parentElement) casa.parentElement.append(pagina2);
-    else doc.body.append(pagina2);
+    if (config) config.before(pagina3);
+    else if (casa?.parentElement) casa.parentElement.append(pagina3);
+    else doc.body.append(pagina3);
   }
-  pagina2.classList.add("active");
+  pagina3.classList.add("active");
   state124.inApp = true;
   state124.vista = "lista";
   state124.bozza = null;
@@ -118135,7 +118176,7 @@ function datiDellAuto(car) {
     inCarica = /^[cd]$|charg|in carica|ricaric/i.test(detto3);
   }
   const capacitaVera = capacitaDellaBatteria(car) ?? (profiles().length ? null : capacitaDiCasa()) ?? kilowattoraDalloStato(statoDi5(entitaDi5(car, CASELLA_DELLA_CAPACITA, inUso)));
-  const kwh4 = capacitaVera ?? CAPACITA_DI_SERIE;
+  const kwh5 = capacitaVera ?? CAPACITA_DI_SERIE;
   const consumoMedio = consumoMisurato(statoDi5(entitaDi5(car, "dm.ev_consumo_medio", inUso)));
   const clima = accesoDi(statoDi5(entitaDi5(car, "dm.ev_clima", inUso))) ?? accesoDi(statoDi5(entitaDi5(car, "dm.ev_comando_clima", inUso)));
   const fine = inCarica && carica2 !== null && obiettivo2 !== null ? tempoDellaRicarica({
@@ -118143,7 +118184,7 @@ function datiDellAuto(car) {
     soc: carica2,
     target: obiettivo2,
     kilowatt: kw,
-    capacita: kwh4
+    capacita: kwh5
   }) : null;
   return {
     uid,
@@ -118155,8 +118196,8 @@ function datiDellAuto(car) {
     inCarica,
     collegata,
     fineAlle: fine?.stato === "carica" ? Date.now() + fine.minuti * 6e4 : null,
-    kwh: kwh4,
-    consumo: consumoMedio ?? consumoStimato({ kwh: kwh4, carica: carica2, autonomia }),
+    kwh: kwh5,
+    consumo: consumoMedio ?? consumoStimato({ kwh: kwh5, carica: carica2, autonomia }),
     /* I dati del consumo per gdanav, coi nomi del contratto delle sorelle
      * (`docs/DATI-AUTO.md` di GdAAuto). Un dato che manca resta `null`, e il
      * conto di la' resta com'era. */
@@ -118412,7 +118453,7 @@ function editor2() {
         ${arrivoDetto}
         ${righe3.map((r) => `<div class="dm-gn-riga">${esc(r)}</div>`).join("")}</div>` : `<div class="dm-gn-parti"><div class="dm-gn-riga">${esc(t("Scegli la meta e l'ora: qui ti dico quando partire.", "Pick the destination and time: I will tell you when to leave."))}</div></div>`;
   const clima = b2.prepara?.clima?.entity || "";
-  const garage = b2.prepara?.garage?.entity || "";
+  const garage2 = b2.prepara?.garage?.entity || "";
   return `
     <div class="dm-gn-dett">
       <div>
@@ -118439,7 +118480,7 @@ function editor2() {
         <label class="dm-gn-int"><span>❄️</span><span class="dm-gn-col"><span class="dm-gn-t">${esc(t("Clima dell'auto", "Car climate"))}</span><span class="dm-gn-s">${esc(t("Acceso 10 minuti prima di partire", "On 10 minutes before leaving"))}</span></span>
           <select data-gn-campo="clima">${opzioniDiEntita(["climate", "switch", "input_boolean", "fan"], clima)}</select></label>
         <label class="dm-gn-int"><span>🚪</span><span class="dm-gn-col"><span class="dm-gn-t">${esc(t("Il garage", "The garage"))}</span><span class="dm-gn-s">${esc(t("Un tasto nell'avviso per aprirlo: mai da solo", "A button in the reminder to open it: never by itself"))}</span></span>
-          <select data-gn-campo="garage">${opzioniDiEntita(["cover"], garage)}</select></label>
+          <select data-gn-campo="garage">${opzioniDiEntita(["cover"], garage2)}</select></label>
         ${state125.errore ? `<div class="dm-gn-errore">${esc(state125.errore)}</div>` : ""}
         <button type="button" class="dm-gn-salva" data-gn-salva${state125.salvando ? " disabled" : ""}>${esc(state125.salvando ? t("Salvo…", "Saving…") : t("Salva il viaggio", "Save trip"))}</button>
         ${b2.id ? `<button type="button" class="dm-gn-elimina" data-gn-elimina>${esc(t("Elimina il viaggio", "Delete trip"))}</button>` : ""}
@@ -118974,8 +119015,8 @@ function tabsMarkup(lista7, scelto, { conAggiunta = false } = {}) {
   return `${pillole2}${aggiunta}`;
 }
 function ensurePageTabs() {
-  const pagina2 = doc?.getElementById?.("page-energy");
-  const barra2 = pagina2?.querySelector?.(".sub-tabs-container");
+  const pagina3 = doc?.getElementById?.("page-energy");
+  const barra2 = pagina3?.querySelector?.(".sub-tabs-container");
   if (!barra2) return;
   const lista7 = impianti();
   let riga3 = doc.getElementById("dm-impianti-tabs");
@@ -119368,16 +119409,16 @@ function ensureStriscia() {
 }
 var ID_ALLERTA = "dm-soglia-allerta";
 function laHome() {
-  const pagina2 = doc?.getElementById?.("page-home");
-  return pagina2?.classList?.contains("active") ? pagina2 : null;
+  const pagina3 = doc?.getElementById?.("page-home");
+  return pagina3?.classList?.contains("active") ? pagina3 : null;
 }
 function disegnoDellaSorgente(sorgente) {
   return disegnoDelCatalogo(sorgente === SORGENTE_RETE ? "potenza" : "casa", 40);
 }
 function ensureAllertaInHome() {
-  const pagina2 = laHome();
+  const pagina3 = laHome();
   const gia = doc?.getElementById?.(ID_ALLERTA);
-  if (!pagina2) {
+  if (!pagina3) {
     gia?.remove();
     return;
   }
@@ -119420,7 +119461,7 @@ function ensureAllertaInHome() {
     allerta.title = t("Tocca per aprire l'Energia", "Tap to open Energy");
   }
   tieniLaParolaInMovimento(allerta.querySelector(".dm-casa-coda"));
-  const corsia = corsiaDegliAvvisi() || pagina2;
+  const corsia = corsiaDegliAvvisi() || pagina3;
   if (allerta.parentElement !== corsia || corsia.firstElementChild !== allerta)
     corsia.prepend(allerta);
 }
@@ -119690,8 +119731,8 @@ function tendina3(entity2, scelta3) {
   select.innerHTML = roomOptionsMarkup(scelta3, t("Nessuna stanza", "No room"));
   return select;
 }
-function attacca(contenitore4, entity2, mappa2, dove) {
-  let select = contenitore4.querySelector(`:scope [${ASSIGN_ATTRIBUTE}]`);
+function attacca(contenitore5, entity2, mappa2, dove) {
+  let select = contenitore5.querySelector(`:scope [${ASSIGN_ATTRIBUTE}]`);
   const scelta3 = clean(mappa2[entity2]);
   if (select) {
     if (select.getAttribute(ASSIGN_ATTRIBUTE) !== entity2) {
@@ -122006,17 +122047,17 @@ function onChange11(event) {
   ridisegna13();
 }
 function ensureAnimaliEditorTab() {
-  const linguette3 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette3 || linguette3.querySelector(`.ed-tab[data-tab="${ANIMALI_EDITOR_TAB}"]`))
+  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${ANIMALI_EDITOR_TAB}"]`))
     return false;
   const linguetta3 = doc.createElement("button");
   linguetta3.className = "ed-tab";
   linguetta3.dataset.tab = ANIMALI_EDITOR_TAB;
   linguetta3.textContent = `🐾 ${t("Animali", "Pets")}`;
   linguetta3.addEventListener("click", () => root.editorSwitch?.(ANIMALI_EDITOR_TAB));
-  const prima = linguette3.querySelector('.ed-tab[data-tab="runtime"]');
+  const prima = linguette4.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta3);
-  else linguette3.append(linguetta3);
+  else linguette4.append(linguetta3);
   return true;
 }
 function installStyles63() {
@@ -122097,7 +122138,7 @@ function ilFiloCE() {
   return Boolean(presa && presa.readyState === 1 && lessicale("pendingWsCallbacks"));
 }
 function chiediAlPonte2(messaggio, attesa = ATTESA2) {
-  return new Promise((risolvi3, rifiuta) => {
+  return new Promise((risolvi4, rifiuta) => {
     const presa = lessicale("ws");
     const appese = lessicale("pendingWsCallbacks");
     if (!presa || presa.readyState !== 1 || !appese) {
@@ -122118,7 +122159,7 @@ function chiediAlPonte2(messaggio, attesa = ATTESA2) {
     appese[id] = (detto3) => {
       root.clearTimeout?.(sveglia2);
       if (detto3?.success === false) rifiuta(new Error(clean(detto3?.error?.code) || "no"));
-      else risolvi3(detto3?.result);
+      else risolvi4(detto3?.result);
       delete appese[id];
     };
     try {
@@ -122333,16 +122374,16 @@ function onTorna(event) {
   root.edToast?.(t("🔔 Torna nell'avviso", "🔔 Back in the warning"));
 }
 function ensureScollegatiTab() {
-  const linguette3 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette3 || linguette3.querySelector(`.ed-tab[data-tab="${SCOLLEGATI_TAB}"]`)) return false;
+  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${SCOLLEGATI_TAB}"]`)) return false;
   const linguetta3 = doc.createElement("button");
   linguetta3.className = "ed-tab";
   linguetta3.dataset.tab = SCOLLEGATI_TAB;
   linguetta3.textContent = `📡 ${t("Dispositivi non connessi", "Disconnected devices")}`;
   linguetta3.addEventListener("click", () => root.editorSwitch?.(SCOLLEGATI_TAB));
-  const prima = linguette3.querySelector('.ed-tab[data-tab="runtime"]');
+  const prima = linguette4.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta3);
-  else linguette3.append(linguetta3);
+  else linguette4.append(linguetta3);
   return true;
 }
 function installStyles64() {
@@ -122497,10 +122538,10 @@ function cartella() {
 function immagine(nome) {
   const avuta = state137.immagini.get(nome);
   if (avuta) return avuta;
-  const attesa = new Promise((risolvi3) => {
+  const attesa = new Promise((risolvi4) => {
     const img = new Image();
-    img.onload = () => risolvi3(img);
-    img.onerror = () => risolvi3(null);
+    img.onload = () => risolvi4(img);
+    img.onerror = () => risolvi4(null);
     img.src = `${cartella()}${nome}.webp`;
   });
   state137.immagini.set(nome, attesa);
@@ -122597,9 +122638,9 @@ function sfumata(maschera, lato) {
     for (let y = 2; y < lato - 2; y += 1)
       for (let x = 2; x < lato - 2; x += 1) {
         const p = y * lato + x;
-        let somma2 = 0;
-        for (let d = -2; d <= 2; d += 1) somma2 += peso[p + d] + peso[p + d * lato];
-        dopo[p] = somma2 / 10;
+        let somma3 = 0;
+        for (let d = -2; d <= 2; d += 1) somma3 += peso[p + d] + peso[p + d * lato];
+        dopo[p] = somma3 / 10;
       }
     peso = dopo;
   }
@@ -122823,7 +122864,7 @@ function percorsoTondo(pennello, x0, y0, x1, y1, raggio) {
   pennello.arcTo(x0, y0, x1, y0, r);
   pennello.closePath();
 }
-function disegnaOcchiali(telaTesta, misura7, stile6, colore = [45, 48, 56]) {
+function disegnaOcchiali(telaTesta, misura7, stile7, colore = [45, 48, 56]) {
   if (!misura7?.occhi || misura7.occhi.length < 2) return;
   const pennello = telaTesta.getContext("2d");
   const [o1, o2] = misura7.occhi;
@@ -122834,7 +122875,7 @@ function disegnaOcchiali(telaTesta, misura7, stile6, colore = [45, 48, 56]) {
   pennello.strokeStyle = pieno;
   pennello.lineWidth = spessore;
   for (const occhio of [o1, o2]) {
-    if (stile6 === "tondi") {
+    if (stile7 === "tondi") {
       pennello.beginPath();
       pennello.ellipse(occhio.cx, occhio.cy, raggio, raggio * 0.92, 0, 0, Math.PI * 2);
       pennello.stroke();
@@ -122845,9 +122886,9 @@ function disegnaOcchiali(telaTesta, misura7, stile6, colore = [45, 48, 56]) {
         occhio.cy - raggio * 0.92,
         occhio.cx + raggio,
         occhio.cy + raggio * 0.92,
-        raggio * (stile6 === "sole" ? 0.45 : 0.35)
+        raggio * (stile7 === "sole" ? 0.45 : 0.35)
       );
-      if (stile6 === "sole") {
+      if (stile7 === "sole") {
         pennello.fillStyle = `rgba(${colore[0]},${colore[1]},${colore[2]},0.84)`;
         pennello.fill();
         pennello.lineWidth = spessore / 2;
@@ -122955,7 +122996,7 @@ function disegnaColletto(telaBusto, op) {
     pennello.fill();
   }
 }
-function disegnaCollana(telaBusto, stile6, ancora2 = null, oro = [212, 168, 83]) {
+function disegnaCollana(telaBusto, stile7, ancora2 = null, oro = [212, 168, 83]) {
   const lato = AVATAR_LATO;
   const pennello = telaBusto.getContext("2d");
   const cx = ancora2?.cx ?? 0.485 * lato;
@@ -122969,7 +123010,7 @@ function disegnaCollana(telaBusto, stile6, ancora2 = null, oro = [212, 168, 83])
   pennello.beginPath();
   pennello.ellipse(cx, cy, aw, ah, 0, 15 * Math.PI / 180, 165 * Math.PI / 180);
   pennello.stroke();
-  if (stile6 === "pendente") {
+  if (stile7 === "pendente") {
     const py = cy + ah;
     const pr = 0.028 * lato;
     pennello.fillStyle = pieno;
@@ -125902,9 +125943,9 @@ function entitiesOfSlot(slot) {
   );
   return ENTITY_RE3.test(value) ? [value] : [];
 }
-function attacca2(contenitore4, entities, fuori, tessera3, dove) {
+function attacca2(contenitore5, entities, fuori, tessera3, dove) {
   const dentro3 = entities.some((entity2) => !fuori.has(entity2));
-  let button = contenitore4.querySelector(`:scope [${CHOICE_ATTRIBUTE}]`);
+  let button = contenitore5.querySelector(`:scope [${CHOICE_ATTRIBUTE}]`);
   if (button) {
     button.setAttribute(CHOICE_ATTRIBUTE, entities.join(","));
     button.setAttribute(TESSERA_ATTRIBUTE, tessera3);
@@ -126787,18 +126828,18 @@ function ultimaPagina11() {
 }
 function ensureLaSezione() {
   if (!doc) return null;
-  let pagina2 = doc.getElementById(ID_DELLA_SEZIONE);
-  if (pagina2) return pagina2;
+  let pagina3 = doc.getElementById(ID_DELLA_SEZIONE);
+  if (pagina3) return pagina3;
   const config = doc.getElementById("page-config");
   const sorella = config || ultimaPagina11();
   if (!sorella?.parentElement) return null;
-  pagina2 = doc.createElement("section");
-  pagina2.className = "page";
-  pagina2.id = ID_DELLA_SEZIONE;
-  pagina2.innerHTML = '<div class="dm-lucip-wrap auc" data-auc-casa></div>';
-  if (config) config.before(pagina2);
-  else sorella.after(pagina2);
-  return pagina2;
+  pagina3 = doc.createElement("section");
+  pagina3.className = "page";
+  pagina3.id = ID_DELLA_SEZIONE;
+  pagina3.innerHTML = '<div class="dm-lucip-wrap auc" data-auc-casa></div>';
+  if (config) config.before(pagina3);
+  else sorella.after(pagina3);
+  return pagina3;
 }
 function apriLaSezione(tab) {
   for (const n of doc.querySelectorAll(".tab")) n.classList.remove("active");
@@ -127047,8 +127088,8 @@ function disegna8() {
     else chiudiIlFoglio();
   }
   if (!laSezioneSiVede()) return false;
-  const pagina2 = ensureLaSezione();
-  const wrap = pagina2?.querySelector("[data-auc-casa]");
+  const pagina3 = ensureLaSezione();
+  const wrap = pagina3?.querySelector("[data-auc-casa]");
   if (!wrap) return false;
   vestiLeCarte();
   const html = htmlDellaCasa({ app: false });
@@ -127525,17 +127566,1436 @@ function installAutoOMoto() {
 }
 senzaCadere(installAutoOMoto);
 
-// src/core/le-fasce-del-dispositivo.js
+// src/core/la-nuova-auto.js
+var ORA8 = 36e5;
+var GIORNO5 = 24 * ORA8;
 var numero54 = (valore3) => {
+  if (valore3 === null || valore3 === void 0 || valore3 === "") return null;
+  const n = Number(String(valore3).replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+};
+var istante5 = (riga3) => {
+  const grezzo = riga3?.start ?? riga3?.inizio;
+  const t2 = typeof grezzo === "number" ? grezzo : new Date(grezzo).getTime();
+  return Number.isFinite(t2) ? t2 : null;
+};
+function inizioDelGiorno3(quando4) {
+  const d = new Date(quando4);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+var VISTE_DELLO_STORICO = Object.freeze(["7", "mese", "periodo"]);
+var GIORNI_MASSIMI_DEL_PERIODO = 62;
+var dataDelGiorno = (testo4) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(testo4 ?? "").trim());
+  if (!m) return null;
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return Number.isNaN(d.getTime()) ? null : d.getTime();
+};
+function giornoScritto(quando4) {
+  const d = new Date(quando4);
+  const due3 = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${due3(d.getMonth() + 1)}-${due3(d.getDate())}`;
+}
+function finestraDelloStorico(vista2, { adesso: adesso2 = Date.now(), mese = null, dal = "", al = "" } = {}) {
+  const domaniData = new Date(inizioDelGiorno3(adesso2));
+  domaniData.setDate(domaniData.getDate() + 1);
+  const domani2 = domaniData.getTime();
+  if (vista2 === "mese") {
+    const oggi = new Date(adesso2);
+    const anno = Number.isInteger(mese?.anno) ? mese.anno : oggi.getFullYear();
+    const quale = Number.isInteger(mese?.mese) ? mese.mese : oggi.getMonth();
+    const inizio2 = new Date(anno, quale, 1).getTime();
+    const dopo = new Date(anno, quale + 1, 1).getTime();
+    return {
+      vista: vista2,
+      inizio: inizio2,
+      fine: Math.max(inizio2, Math.min(dopo, domani2)),
+      giorni: giorniFra2(inizio2, dopo)
+    };
+  }
+  if (vista2 === "periodo") {
+    let da = dataDelGiorno(dal);
+    let a = dataDelGiorno(al);
+    if (da === null && a === null) return finestraDelloStorico("7", { adesso: adesso2 });
+    if (da === null) da = a;
+    if (a === null) a = da;
+    if (a < da) [da, a] = [a, da];
+    if (da >= domani2) da = inizioDelGiorno3(adesso2);
+    const dopoA = new Date(a);
+    dopoA.setDate(dopoA.getDate() + 1);
+    const tetto = new Date(da);
+    tetto.setDate(tetto.getDate() + GIORNI_MASSIMI_DEL_PERIODO);
+    const fine = Math.min(dopoA.getTime(), tetto.getTime(), domani2);
+    return {
+      vista: vista2,
+      inizio: da,
+      fine,
+      giorni: giorniFra2(da, fine),
+      tagliato: tetto.getTime() < Math.min(dopoA.getTime(), domani2)
+    };
+  }
+  const inizio = new Date(inizioDelGiorno3(adesso2));
+  inizio.setDate(inizio.getDate() - 6);
+  return { vista: "7", inizio: inizio.getTime(), fine: domani2, giorni: 7 };
+}
+function giorniFra2(inizio, fine) {
+  return Math.max(0, Math.round((inizioDelGiorno3(fine) - inizioDelGiorno3(inizio)) / GIORNO5));
+}
+function meseAccanto({ anno, mese }, passo) {
+  const d = new Date(anno, mese + passo, 1);
+  return { anno: d.getFullYear(), mese: d.getMonth() };
+}
+function oreDiRicarica(auto = [], rete = null, prezzo = () => null) {
+  const dallaRete = /* @__PURE__ */ new Map();
+  const sappiamoLaRete = Array.isArray(rete) && rete.length > 0;
+  if (sappiamoLaRete)
+    for (const riga3 of rete) {
+      const t2 = istante5(riga3);
+      const n = numero54(riga3?.change);
+      if (t2 !== null && n !== null) dallaRete.set(t2, (dallaRete.get(t2) || 0) + Math.max(0, n));
+    }
+  const ore = [];
+  for (const riga3 of Array.isArray(auto) ? auto : []) {
+    const t2 = istante5(riga3);
+    const kwh5 = numero54(riga3?.change);
+    if (t2 === null || kwh5 === null || kwh5 <= 0) continue;
+    const presa = sappiamoLaRete ? Math.min(kwh5, dallaRete.get(t2) || 0) : null;
+    const pagata = presa === null ? kwh5 : presa;
+    const tariffa = numero54(prezzo(t2));
+    ore.push({
+      inizio: t2,
+      kwh: kwh5,
+      rete: presa,
+      sole: presa === null ? null : kwh5 - presa,
+      costo: tariffa === null ? null : pagata * tariffa
+    });
+  }
+  return ore.sort((a, b2) => a.inizio - b2.inizio);
+}
+var somma2 = (elenco15, campo5) => {
+  let totale = 0;
+  let qualcuno = false;
+  for (const voce3 of elenco15) {
+    const n = voce3[campo5];
+    if (n === null || n === void 0) continue;
+    totale += n;
+    qualcuno = true;
+  }
+  return qualcuno ? totale : null;
+};
+var SOGLIA_DELLA_RICARICA = 0.1;
+function ricaricheDalleOre(ore = [], { soglia: soglia3 = SOGLIA_DELLA_RICARICA, buco = 1 } = {}) {
+  const buone = ore.filter((ora6) => ora6.kwh >= soglia3);
+  const ricariche = [];
+  let corrente2 = null;
+  for (const ora6 of buone) {
+    if (corrente2 && ora6.inizio - corrente2.ultima <= (buco + 1) * ORA8) {
+      corrente2.ore.push(ora6);
+      corrente2.ultima = ora6.inizio;
+      continue;
+    }
+    corrente2 = { ore: [ora6], ultima: ora6.inizio };
+    ricariche.push(corrente2);
+  }
+  return ricariche.map(({ ore: sue, ultima }) => conIConti({ inizio: sue[0].inizio, fine: ultima + ORA8 }, sue)).reverse();
+}
+function conIConti(base, ore) {
+  const kwh5 = somma2(ore, "kwh") || 0;
+  const sole = somma2(ore, "sole");
+  return {
+    ...base,
+    kwh: kwh5,
+    sole,
+    rete: somma2(ore, "rete"),
+    quotaSole: sole === null || kwh5 <= 0 ? null : Math.max(0, Math.min(1, sole / kwh5)),
+    costo: somma2(ore, "costo")
+  };
+}
+function giorniDalleOre(ore = [], inizio, fine) {
+  const perGiorno = /* @__PURE__ */ new Map();
+  for (const ora6 of ore) {
+    const g = inizioDelGiorno3(ora6.inizio);
+    if (!perGiorno.has(g)) perGiorno.set(g, []);
+    perGiorno.get(g).push(ora6);
+  }
+  const giorni = [];
+  for (let d = new Date(inizioDelGiorno3(inizio)); d.getTime() < fine; d.setDate(d.getDate() + 1)) {
+    const g = d.getTime();
+    giorni.push(conIConti({ giorno: g }, perGiorno.get(g) || []));
+  }
+  return giorni;
+}
+function totaliDelloStorico(giorni = [], ricariche = []) {
+  const kwh5 = somma2(giorni, "kwh") || 0;
+  const sole = somma2(giorni, "sole");
+  const costo = somma2(giorni, "costo");
+  const pagati = somma2(giorni, "rete");
+  return {
+    kwh: kwh5,
+    quotaSole: sole === null || kwh5 <= 0 ? null : Math.max(0, Math.min(1, sole / kwh5)),
+    costo,
+    ricariche: ricariche.length,
+    /* Quanto e' costato un kWh messo nell'auto, sole compreso: e' il numero
+     * che si confronta con la colonnina. */
+    alKwh: costo === null || kwh5 <= 0 ? null : costo / kwh5,
+    pagati
+  };
+}
+function kmDeiGiorni(righe3 = [], inizio, fine) {
+  const perGiorno = /* @__PURE__ */ new Map();
+  for (const riga3 of Array.isArray(righe3) ? righe3 : []) {
+    const t2 = istante5(riga3);
+    const n = numero54(riga3?.change);
+    if (t2 === null || n === null || n < 0) continue;
+    if (n > 2e3) continue;
+    const g = inizioDelGiorno3(t2);
+    perGiorno.set(g, (perGiorno.get(g) || 0) + n);
+  }
+  const giorni = [];
+  for (let d = new Date(inizioDelGiorno3(inizio)); d.getTime() < fine; d.setDate(d.getDate() + 1))
+    giorni.push({ giorno: d.getTime(), km: perGiorno.get(d.getTime()) || 0 });
+  return giorni;
+}
+function laPercentuale(stato3, entita3 = "") {
+  if (!stato3) return null;
+  const dominio5 = String(entita3 || stato3.entity_id || "").split(".")[0];
+  const attr = stato3.attributes || {};
+  const valore3 = numero54(stato3.state);
+  const opzioni2 = Array.isArray(attr.options) ? attr.options : [];
+  if (dominio5 === "select" || dominio5 === "input_select" || opzioni2.length) {
+    const voci4 = opzioni2.map((voce3) => ({ id: String(voce3), n: numero54(String(voce3).replace("%", "")) })).filter((voce3) => voce3.n !== null).sort((a, b2) => a.n - b2.n);
+    if (!voci4.length) return null;
+    return {
+      libera: false,
+      scrivibile: true,
+      min: voci4[0].n,
+      max: voci4.at(-1).n,
+      passo: voci4.length > 1 ? voci4[1].n - voci4[0].n : 1,
+      valore: valore3,
+      voci: voci4
+    };
+  }
+  const scrivibile = dominio5 === "number" || dominio5 === "input_number";
+  const min = numero54(attr.min) ?? 0;
+  const max = numero54(attr.max) ?? 100;
+  const passo = numero54(attr.step) || 1;
+  return { libera: scrivibile, scrivibile, min, max: Math.max(min, max), passo, valore: valore3, voci: [] };
+}
+function percentualeConsentita(info, voluto) {
+  if (!info) return null;
+  const n = numero54(voluto);
+  if (n === null) return null;
+  if (info.voci?.length) {
+    let migliore = info.voci[0];
+    for (const voce3 of info.voci)
+      if (Math.abs(voce3.n - n) < Math.abs(migliore.n - n)) migliore = voce3;
+    return migliore.n;
+  }
+  const dentro3 = Math.max(info.min, Math.min(info.max, n));
+  const passi2 = Math.round((dentro3 - info.min) / info.passo);
+  const tondo = info.min + passi2 * info.passo;
+  return Math.round(Math.min(info.max, tondo) * 1e3) / 1e3;
+}
+function unPasso(info, verso2) {
+  if (!info) return null;
+  const adesso2 = info.valore ?? info.max;
+  if (info.voci?.length) {
+    const i = info.voci.findIndex((voce3) => voce3.n >= adesso2 - 1e-9);
+    const qui = i < 0 ? info.voci.length - 1 : i;
+    const dopo = Math.max(0, Math.min(info.voci.length - 1, qui + (verso2 > 0 ? 1 : -1)));
+    return info.voci[dopo].n;
+  }
+  const salto = Math.max(info.passo, Math.ceil(5 / info.passo) * info.passo);
+  return percentualeConsentita(info, adesso2 + (verso2 > 0 ? salto : -salto));
+}
+function leScorciatoie(info, voluti = [70, 80, 90, 100]) {
+  if (!info) return [];
+  if (info.voci?.length) return info.voci.slice(-voluti.length).map((voce3) => voce3.n);
+  const fuori = voluti.filter((n) => n >= info.min && n <= info.max);
+  return [...new Set(fuori.map((n) => percentualeConsentita(info, n)))];
+}
+function kmAllaPercentuale(autonomia, batteria, percentuale5) {
+  const km = numero54(autonomia);
+  const soc = numero54(batteria);
+  const p = numero54(percentuale5);
+  if (km === null || soc === null || p === null || soc <= 0) return null;
+  return Math.round(km / soc * p);
+}
+
+// src/sections/la-nuova-auto-section.js
+var INTERRUTTORE_DI_PROVA = "cd_auto_nuova";
+var CHIAVE_LINGUETTA = "dm_na_linguetta";
+var KEY150 = "__DASHBOARDMODERN_LA_NUOVA_AUTO__";
+var state146 = root[KEY150] ||= {
+  installed: false,
+  frame: 0,
+  firma: "",
+  vista: "7",
+  mese: null,
+  dal: "",
+  al: "",
+  viaggi: "7",
+  tutte: false,
+  storico: { chiave: "", stato: "vuoto", dati: null },
+  km: { chiave: "", stato: "vuoto", dati: null },
+  /* La percentuale scelta adesso: si mostra finche' l'entita' non la conferma. */
+  voluta: null,
+  volutaAlle: 0
+};
+function nuovaAutoAccesa() {
+  try {
+    return root.localStorage?.getItem?.(INTERRUTTORE_DI_PROVA) === "1";
+  } catch (_errore) {
+    return false;
+  }
+}
+function linguettaScelta() {
+  try {
+    return root.localStorage?.getItem?.(CHIAVE_LINGUETTA) || "";
+  } catch (_errore) {
+    return "";
+  }
+}
+function scegliLinguetta(nome) {
+  try {
+    root.localStorage?.setItem?.(CHIAVE_LINGUETTA, nome);
+  } catch (_errore) {
+  }
+}
+function risolvi2(ref) {
+  try {
+    const id = clean(root.resolveEntity?.(ref));
+    return id && id !== ref && !id.startsWith("dm.") ? id : "";
+  } catch (_errore) {
+    return "";
+  }
+}
+function lettoreDi(car, inUso) {
+  const ov = car?.ov || {};
+  const stati2 = allStates();
+  const entita3 = (ref) => clean(ov[ref]) || (inUso ? risolvi2(ref) : "");
+  const stato3 = (ref) => {
+    const id = entita3(ref);
+    return id ? stati2[id] || null : null;
+  };
+  const vivo2 = (ref) => {
+    const s = stato3(ref);
+    const v = clean(s?.state);
+    return s && !/^(unknown|unavailable|none|)$/i.test(v) ? s : null;
+  };
+  const numero58 = (ref) => {
+    const n = Number(String(vivo2(ref)?.state ?? "").replace(",", "."));
+    return Number.isFinite(n) && vivo2(ref) ? n : null;
+  };
+  return { entita: entita3, stato: stato3, vivo: vivo2, numero: numero58, stati: stati2 };
+}
+var PRIMA_CHE_C_E = (lettore, refs) => {
+  for (const ref of refs) {
+    const n = lettore.numero(ref);
+    if (n !== null) return { ref, n, unita: clean(lettore.vivo(ref)?.attributes?.unit_of_measurement) };
+  }
+  return null;
+};
+function letturaDellAuto2(car, inUso) {
+  const l = lettoreDi(car, inUso);
+  const termica = inUso ? motoreInPagina() === "termica" : !siRicarica(car || {});
+  const mappa2 = car?.ov || {};
+  const resolve = inUso ? (ref) => risolvi2(ref) || ref : null;
+  const dati = letturaTermica(mappa2, l.stati, resolve);
+  const batteria = l.numero("dm.ev_batteria_auto");
+  const autonomia = l.numero("dm.ev_autonomia");
+  const potenzaLetta = PRIMA_CHE_C_E(l, ["dm.ev_potenza_wallbox", "dm.ev_charge_power", "dm.ev_potenza_ricarica"]);
+  const kw = potenzaLetta ? inKilowatt(potenzaLetta.n, potenzaLetta.unita) : null;
+  const cavo = cavoDalloStato(clean(l.vivo("dm.ev_cavo_collegato")?.state));
+  const codice = termica ? "" : codiceDellaRicarica({
+    stato: clean(l.vivo("dm.ev_stato_ricarica")?.state),
+    collegata: cavo,
+    potenza: kw === null ? null : kw * 1e3
+  });
+  const target = l.numero("dm.ev_target_soc");
+  const capacita = capacitaDellaBatteria(car || {}, l.stati) || null;
+  const tempo = termica ? null : tempoDellaRicarica({
+    codice,
+    soc: batteria,
+    target,
+    kilowatt: kw,
+    capacita: capacita || void 0,
+    minutiDellAuto: l.numero("dm.ev_tempo_ricarica")
+  });
+  return {
+    car,
+    inUso,
+    termica,
+    lettore: l,
+    dati,
+    batteria,
+    carburante: dati.carburante ?? null,
+    autonomia,
+    kw,
+    codice,
+    target,
+    tempo,
+    sessione: l.numero("dm.ev_energia_sessione"),
+    soleSessione: l.numero("dm.ev_percentuale_solare_sessione")
+  };
+}
+function prezzoUnico() {
+  let costo = null;
+  try {
+    costo = root.cdCfg?.("cd_costo_kwh");
+  } catch (_errore) {
+    costo = null;
+  }
+  if (costo === void 0 || costo === null || costo === "") {
+    try {
+      costo = root.localStorage?.getItem?.("cd_costo_kwh");
+    } catch (_errore) {
+      costo = null;
+    }
+  }
+  return prezzoDellaNotte({ fasce: null, costo, stati: allStates() }).prezzo;
+}
+function fasceSalvate() {
+  try {
+    return normalizzaLeFasce(JSON.parse(root.localStorage?.getItem?.(CHIAVE_FASCE) || "null") || {});
+  } catch (_errore) {
+    return normalizzaLeFasce({});
+  }
+}
+function prezzoDellOra() {
+  const fasce = fasceSalvate();
+  const unico = prezzoUnico();
+  return (istante7) => prezzoDellaFascia(fasce, unico, new Date(istante7)) ?? null;
+}
+var kwh4 = (n, cifre3 = 1) => n === null || n === void 0 ? "—" : formatNumber(n, cifre3);
+var euro2 = (n) => n === null || n === void 0 ? "—" : formatNumber(n, 2);
+var intero2 = (n) => n === null || n === void 0 ? "—" : Math.round(n).toLocaleString(locale());
+var percento6 = (quota) => quota === null || quota === void 0 ? "—" : String(Math.round(quota * 100));
+function nomeDellAuto2(car, indice) {
+  return clean(car?.name) || clean(car?.model) || `${t("Auto", "Car")} ${indice + 1}`;
+}
+function titoloDellAuto(car, indice) {
+  const marca = clean(car?.brand);
+  const modello2 = clean(car?.model);
+  const nome = clean(car?.name);
+  const titolo3 = [marca, modello2].filter(Boolean).join(" ");
+  return { titolo: titolo3 || nome || nomeDellAuto2(car, indice), sotto: titolo3 && nome ? nome : "" };
+}
+function logoDellAuto(car, misura7) {
+  const marca = clean(car?.brand);
+  if (marca) return carBrandVisual(marca, misura7);
+  try {
+    return root.cdIconMarkup?.(clean(car?.icon) || "mdi:car-electric", Math.round(misura7 * 0.8)) || "🚗";
+  } catch (_errore) {
+    return "🚗";
+  }
+}
+function statoDellaRicarica(lettura3) {
+  if (lettura3.termica) return null;
+  const c = lettura3.codice;
+  if (c === "C") {
+    const kw = lettura3.kw === null ? "" : ` · ${formatNumber(lettura3.kw, 2)} kW`;
+    return { tono: "carica", testo: `${t("In carica", "Charging")}${kw}` };
+  }
+  if (c === "B") return { tono: "collegata", testo: t("Collegata", "Plugged in") };
+  if (c === "F") return { tono: "guasto", testo: t("Errore della wallbox", "Wallbox error") };
+  if (c === "A") return { tono: "", testo: t("Non collegata", "Not plugged in") };
+  return null;
+}
+function pastiglieDellAuto(lettura3) {
+  const d = lettura3.dati;
+  const fuori = [];
+  const fa = cosaFaLAuto(d);
+  if (fa === "marcia") fuori.push({ tono: "info", testo: `🚗 ${t("In marcia", "Driving")}` });
+  else if (fa === "ferma") fuori.push({ tono: "", testo: `🅿️ ${t("Parcheggiata", "Parked")}` });
+  if (d.portiere === "bloccate" || d.portiere === "chiuse")
+    fuori.push({ tono: "ok", testo: `🔒 ${t("Chiusa", "Locked")}` });
+  else if (d.portiere === "sbloccate") fuori.push({ tono: "attenzione", testo: `🔓 ${t("Aperta", "Unlocked")}` });
+  else if (d.portiere === "aperte") fuori.push({ tono: "attenzione", testo: `🚪 ${t("Portiere aperte", "Doors open")}` });
+  if (d.frenoStazionamento === true) fuori.push({ tono: "", testo: `✋ ${t("Freno tirato", "Handbrake on")}` });
+  if (d.posizione) {
+    const dove = d.posizione === "casa" ? t("A casa", "At home") : d.posizione === "fuori" ? t("Fuori casa", "Away") : d.posizione;
+    fuori.push({ tono: "", testo: `📍 ${dove}` });
+  }
+  return fuori;
+}
+var pastiglia3 = ({ tono, testo: testo4 }) => `<span class="dm-na-pill" data-tono="${esc(tono)}">${esc(testo4)}</span>`;
+function garage(auto, inUso) {
+  if (auto.length < 2) return "";
+  const voci4 = auto.map((car, i) => {
+    const l = letturaDellAuto2(car, i === inUso);
+    const { titolo: titolo3 } = titoloDellAuto(car, i);
+    const livello = l.termica ? l.carburante : l.batteria;
+    const pezzi = [];
+    if (livello !== null) pezzi.push(`${l.termica ? "⛽" : l.codice === "C" ? "⚡" : "🔋"} ${Math.round(livello)}%`);
+    const stato3 = statoDellaRicarica(l);
+    if (stato3?.tono === "carica") pezzi.push(t("in carica", "charging"));
+    else if (stato3?.tono === "collegata") pezzi.push(t("collegata", "plugged in"));
+    if (l.autonomia !== null) pezzi.push(`${intero2(l.autonomia)} km`);
+    const barra2 = livello === null ? "" : `<i style="width:${Math.max(0, Math.min(100, livello))}%"></i>`;
+    return `<button type="button" class="dm-na-garage-auto" data-na-auto="${i}" aria-pressed="${i === inUso}"
+        data-tipo="${l.termica ? "termica" : "elettrica"}">
+        <span class="dm-na-logo">${logoDellAuto(car, 30)}</span>
+        <span class="dm-na-garage-testo"><b>${esc(titolo3)}</b><small>${esc(pezzi.join(" · "))}</small>
+        <span class="dm-na-minibarra">${barra2}</span></span></button>`;
+  }).join("");
+  return `<nav class="dm-na-garage" aria-label="${esc(t("Le auto di casa", "The household cars"))}">${voci4}</nav>`;
+}
+function eroe(l, indice) {
+  const car = l.car || {};
+  const { titolo: titolo3, sotto } = titoloDellAuto(car, indice);
+  const capacita = capacitaDellaBatteria(car, l.lettore.stati);
+  const sottotitolo5 = [sotto, capacita ? `${formatNumber(capacita, 0)} kWh` : ""].filter(Boolean).join(" · ");
+  const livello = l.termica ? l.carburante : l.batteria;
+  const stato3 = statoDellaRicarica(l);
+  const foto = l.inUso ? activeVehiclePhoto() : vehiclePhoto(car, l.codice === "B" || l.codice === "C");
+  const target = l.target;
+  const kmTarget = l.termica ? null : kmAllaPercentuale(l.autonomia, l.batteria, target);
+  const righe3 = [];
+  if (kmTarget !== null) righe3.push(`${t("Al", "At")} ${Math.round(target)}% <b>${intero2(kmTarget)} km</b>`);
+  const aggiornata = l.dati.ultimoAggiornamento;
+  if (Number.isFinite(aggiornata))
+    righe3.push(`${esc(t("aggiornata", "updated"))} ${esc(istanteDetto(aggiornata, { lingua: locale() }))}`);
+  return `<section class="dm-na-eroe dm-na-carta" data-stato="${esc(stato3?.tono || "")}" data-tipo="${l.termica ? "termica" : "elettrica"}">
+    <div class="dm-na-eroe-testo">
+      <div class="dm-na-eroe-nome"><span class="dm-na-logo dm-na-logo-grande">${logoDellAuto(car, 40)}</span>
+        <span><b>${esc(titolo3)}</b>${sottotitolo5 ? `<small>${esc(sottotitolo5)}</small>` : ""}</span></div>
+      ${stato3 ? `<span class="dm-na-stato" data-tono="${esc(stato3.tono)}"><i></i>${esc(stato3.testo)}</span>` : ""}
+      <div class="dm-na-autonomia" data-dm-storico="${esc(l.lettore.entita("dm.ev_autonomia"))}"
+        ><b>${intero2(l.autonomia)}</b><span>km</span></div>
+      ${livello === null ? "" : `<div class="dm-na-batteria" data-tipo="${l.termica ? "carburante" : "batteria"}">
+        <span class="dm-na-pila"><i style="width:${Math.max(0, Math.min(100, livello))}%"></i></span>
+        <b>${Math.round(livello)}<small>%</small></b></div>`}
+      ${righe3.length ? `<p class="dm-na-eroe-righe">${righe3.join(" · ")}</p>` : ""}
+      <div class="dm-na-pills">${pastiglieDellAuto(l).map(pastiglia3).join("")}</div>
+    </div>
+    <div class="dm-na-eroe-foto">${foto ? `<img src="${esc(foto)}" alt="" loading="lazy" decoding="async">` : `<span class="dm-na-foto-vuota">${logoDellAuto(car, 96)}</span>`}</div>
+  </section>`;
+}
+function linguette3(l, aperta2) {
+  const gomme = comeStannoLeGomme(l.dati);
+  const attenzione = l.dati.attenzione || gomme.verdetto === "attento";
+  const voci4 = [
+    l.termica ? null : {
+      id: "ricarica",
+      icona: "⚡",
+      nome: t("Ricarica", "Charging"),
+      badge: l.codice === "C" ? t("in corso", "in progress") : "",
+      tono: "carica"
+    },
+    { id: "viaggi", icona: "🛣️", nome: t("Viaggi", "Trips"), badge: "", tono: "" },
+    {
+      id: "stato",
+      icona: "🚗",
+      nome: t("Stato auto", "Car status"),
+      badge: attenzione ? t("attenzione", "attention") : l.dati.qualcosa ? t("ok", "ok") : "",
+      tono: attenzione ? "attenzione" : "ok"
+    }
+  ].filter(Boolean);
+  return `<div class="dm-na-linguette" role="tablist">${voci4.map(
+    (v) => `<button type="button" role="tab" class="dm-na-linguetta" data-na-linguetta="${v.id}" aria-selected="${v.id === aperta2}">
+      <span aria-hidden="true">${v.icona}</span><span>${esc(v.nome)}</span>${v.badge ? `<em data-tono="${esc(v.tono)}">${esc(v.badge)}</em>` : ""}</button>`
+  ).join("")}</div>`;
+}
+function cartaAdesso(l) {
+  const info = laPercentuale(l.lettore.vivo("dm.ev_target_soc"), l.lettore.entita("dm.ev_target_soc"));
+  if (info && state146.voluta !== null) {
+    if (info.valore === state146.voluta || Date.now() - state146.volutaAlle > 15e3) state146.voluta = null;
+    else info.valore = state146.voluta;
+  }
+  const obiettivo2 = info?.valore ?? l.target;
+  const tempo = l.tempo;
+  const inCarica = l.codice === "C";
+  let pronta = "";
+  let quando4 = "";
+  if (tempo?.stato === "carica" && tempo.minuti) {
+    const fine = quandoFinisce(tempo.minuti);
+    pronta = fine?.ora || "";
+    const giorno3 = fine?.giorno === "oggi" ? t("oggi", "today") : fine?.giorno === "domani" ? t("domani", "tomorrow") : "";
+    quando4 = [giorno3, `${t("tra", "in")} ${durataInParole2(tempo.minuti)}`].filter(Boolean).join(" · ");
+  } else if (tempo?.stato === "completa" || tempo?.stato === "raggiunto") {
+    pronta = "✓";
+    quando4 = t("Già carica", "Already charged");
+  }
+  const anello2 = inCarica && l.kw !== null ? l.kw : l.batteria;
+  const quota = inCarica ? Math.min(1, (l.kw || 0) / 11) : Math.max(0, Math.min(1, (l.batteria || 0) / 100));
+  const giro = 2 * Math.PI * 52;
+  const kmObiettivo = kmAllaPercentuale(l.autonomia, l.batteria, obiettivo2);
+  const cursore2 = info ? `<div class="dm-na-obiettivo">
+      <div class="dm-na-obiettivo-testa"><span>${esc(t("Carica fino a", "Charge up to"))}</span>
+        <b><output data-na-pct>${Math.round(obiettivo2 ?? 0)}</output><small>%</small></b>
+        <span class="dm-na-obiettivo-km" data-na-km>${kmObiettivo === null ? "" : `· ${intero2(kmObiettivo)} km`}</span></div>
+      <div class="dm-na-cursore" style="--na-adesso:${Math.max(0, Math.min(100, l.batteria ?? 0))}%">
+        <input type="range" data-na-cursore min="${info.min}" max="${info.max}" step="${info.voci.length ? 1 : info.passo}"
+          value="${obiettivo2 ?? info.max}" ${info.scrivibile ? "" : "disabled"}
+          aria-label="${esc(t("Carica fino a", "Charge up to"))}">
+      </div>
+      <div class="dm-na-scala"><span>${info.min}%</span>${l.batteria === null ? "" : `<span class="dm-na-adesso">${Math.round(l.batteria)}% ${esc(t("adesso", "now"))}</span>`}<span>${info.max}%</span></div>
+      ${info.scrivibile ? `<div class="dm-na-passi"><button type="button" data-na-passo="-1" aria-label="−">−</button><button type="button" data-na-passo="1" aria-label="+">+</button>
+        <span class="dm-na-scorciatoie">${leScorciatoie(info).map((n) => `<button type="button" data-na-pct-scelta="${n}" aria-pressed="${Math.round(obiettivo2) === n}">${n}%</button>`).join("")}</span></div>` : `<p class="dm-na-nota">${esc(t("L'obiettivo si legge soltanto: l'entità non accetta comandi.", "The target is read-only: the entity accepts no commands."))}</p>`}
+    </div>` : "";
+  const prezzo = prezzoDellOra()(Date.now());
+  const costoFinora = l.sessione !== null && prezzo !== null ? l.sessione * prezzo * (l.soleSessione === null ? 1 : 1 - l.soleSessione / 100) : null;
+  const tessere2 = [
+    l.sessione === null ? "" : `<div class="dm-na-tessera"><span>${esc(t("Questa ricarica", "This session"))}</span><b>${kwh4(l.sessione)}<small>kWh</small></b></div>`,
+    l.soleSessione === null ? "" : `<div class="dm-na-tessera" data-tono="sole"><span>${esc(t("Dal sole", "From the sun"))}</span><b>${Math.round(l.soleSessione)}<small>%</small></b></div>`,
+    costoFinora === null ? "" : `<div class="dm-na-tessera"><span>${esc(t("Costo finora", "Cost so far"))}</span><b>${euro2(costoFinora)}<small>€</small></b></div>`
+  ].join("");
+  return `<section class="dm-na-carta dm-na-adesso-carta">
+    <h3 class="dm-na-titolo"><span>⚡</span>${esc(t("Adesso", "Now"))}</h3>
+    <div class="dm-na-adesso">
+      <div class="dm-na-anello" data-tono="${inCarica ? "carica" : ""}">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52"/><circle class="pieno" cx="60" cy="60" r="52"
+          stroke-dasharray="${(giro * quota).toFixed(1)} ${giro.toFixed(1)}"/></svg>
+        <div><b>${inCarica && l.kw !== null ? formatNumber(anello2, 2) : anello2 === null ? "—" : Math.round(anello2)}</b><small>${inCarica ? "kW" : "%"}</small></div>
+      </div>
+      <div class="dm-na-pronta">${pronta ? `<span>${esc(obiettivo2 !== null && obiettivo2 !== void 0 ? `${t("Pronta al", "Ready at")} ${Math.round(obiettivo2)}%` : t("Pronta", "Ready"))}</span><b>${esc(pronta)}</b><small>${esc(quando4)}</small>` : `<span>${esc(t("Ricarica", "Charging"))}</span><b class="dm-na-pronta-ferma">${esc(statoDellaRicarica(l)?.testo || t("Ferma", "Idle"))}</b>`}</div>
+    </div>
+    ${cursore2}
+    ${tessere2 ? `<div class="dm-na-tessere">${tessere2}</div>` : ""}
+    ${wallbox(l)}
+  </section>`;
+}
+var NOMI_DEI_MODI = {
+  off: () => t("Spento", "Off"),
+  smart: () => t("Intelligente", "Smart"),
+  pv: () => t("Intelligente", "Smart"),
+  now: () => t("Fast", "Fast"),
+  fast: () => t("Fast", "Fast")
+};
+var NOMI_DEL_SEMPRE = {
+  off: () => t("Mai", "Never"),
+  on: () => t("Sempre", "Always"),
+  once: () => t("Solo stavolta", "Just this time")
+};
+var DESCRIZIONE_DEI_MODI = {
+  off: () => t("Non carica", "Doesn't charge"),
+  smart: () => t("Col sole e le fasce che costano meno", "With the sun and the cheapest hours"),
+  pv: () => t("Col sole e le fasce che costano meno", "With the sun and the cheapest hours"),
+  minpv: () => t("Il minimo, più il sole", "The minimum, plus the sun"),
+  now: () => t("Al massimo, subito", "Full power, now"),
+  fast: () => t("Al massimo, subito", "Full power, now")
+};
+function wallbox(l) {
+  if (!l.inUso) return "";
+  let resolve = (valore3) => valore3;
+  if (typeof root.resolveEntity === "function") resolve = root.resolveEntity;
+  if (!evccPresence(l.lettore.stati, resolve).mode) return "";
+  const statoModo = l.lettore.vivo("dm.ev_modalita_ricarica_evcc");
+  const modi = iModiDiEvcc(statoModo);
+  const acceso6 = ilModoAcceso(statoModo, modi);
+  const statoSempre = l.lettore.vivo("dm.ev_ricarica_sempre_evcc");
+  const valori = iValoriDelSempre(statoSempre);
+  const scelto = ilValoreDelSempreAcceso(statoSempre, valori);
+  const vale = ilSempreEInVigore(acceso6);
+  const sempre = valori.length ? `<div class="dm-na-sempre" data-vigore="${vale}">
+      <div><b>${esc(t("Tieni sempre un minimo", "Always keep a minimum"))}</b><small>${esc(
+    vale ? t("anche senza sole", "even without sun") : t("vale solo in Intelligente", "only applies in Smart")
+  )}</small></div>
+      <div class="dm-na-segmenti">${valori.map((v) => `<button type="button" data-na-sempre="${esc(v.id)}" aria-pressed="${v.id === scelto}">${esc(NOMI_DEL_SEMPRE[v.id.toLowerCase()]?.() || v.id)}</button>`).join("")}</div></div>` : "";
+  return `<div class="dm-na-wallbox">
+    <h4 class="dm-na-sottotitolo">🔌 ${esc(t("Wallbox · evcc", "Wallbox · evcc"))}</h4>
+    <div class="dm-na-modi">${modi.map((m) => {
+    const descrizione = DESCRIZIONE_DEI_MODI[m.id.toLowerCase()]?.() || "";
+    return `<button type="button" class="dm-na-modo" data-na-modo="${esc(m.id)}" aria-pressed="${m.id === acceso6}" style="--na-modo:${esc(m.colore)}">
+          <b><span aria-hidden="true">${esc(m.icona)}</span> ${esc(NOMI_DEI_MODI[m.id.toLowerCase()]?.() || m.it)}</b>${descrizione ? `<small>${esc(descrizione)}</small>` : ""}</button>`;
+  }).join("")}</div>
+    ${sempre}
+  </div>`;
+}
+var nomiDeiMesi = (anno, mese) => new Date(anno, mese, 1).toLocaleDateString(locale(), { month: "long", year: "numeric" });
+function selettoreDelPeriodo(vista2, { mese, dal, al }, gruppo) {
+  const viste2 = [
+    ["7", t("7 giorni", "7 days")],
+    ["mese", t("Mese", "Month")],
+    ...gruppo === "storico" ? [["periodo", t("Periodo", "Period")]] : []
+  ];
+  const oggi = /* @__PURE__ */ new Date();
+  const m = mese || { anno: oggi.getFullYear(), mese: oggi.getMonth() };
+  const ultimo = m.anno === oggi.getFullYear() && m.mese === oggi.getMonth();
+  const naviga = vista2 === "mese" ? `<div class="dm-na-mese"><button type="button" data-na-mese="-1" data-na-gruppo="${gruppo}" aria-label="${esc(t("Mese prima", "Previous month"))}">‹</button>
+      <b>${esc(nomiDeiMesi(m.anno, m.mese))}</b>
+      <button type="button" data-na-mese="1" data-na-gruppo="${gruppo}" ${ultimo ? "disabled" : ""} aria-label="${esc(t("Mese dopo", "Next month"))}">›</button></div>` : vista2 === "periodo" ? `<div class="dm-na-date"><label>${esc(t("Dal", "From"))}<input type="date" data-na-dal value="${esc(dal)}" max="${giornoScritto(Date.now())}"></label>
+        <label>${esc(t("Al", "To"))}<input type="date" data-na-al value="${esc(al)}" max="${giornoScritto(Date.now())}"></label></div>` : "";
+  return `<div class="dm-na-periodo"><div class="dm-na-segmenti">${viste2.map(([id, nome]) => `<button type="button" data-na-vista="${id}" data-na-gruppo="${gruppo}" aria-pressed="${id === vista2}">${esc(nome)}</button>`).join("")}</div>${naviga}</div>`;
+}
+function etichettaDelGiorno2(giorno3, vista2) {
+  const d = new Date(giorno3);
+  if (vista2 === "7") return d.toLocaleDateString(locale(), { weekday: "short" }).replace(".", "");
+  return String(d.getDate());
+}
+function grafico(giorni, vista2, valore3, { pila: pila2 = null, unita: unita3 = "kWh" } = {}) {
+  const massimo = Math.max(1e-4, ...giorni.map(valore3));
+  const oggi = (/* @__PURE__ */ new Date()).setHours(0, 0, 0, 0);
+  const fitta = giorni.length > 16;
+  return `<div class="dm-na-grafico" data-fitta="${fitta}">${giorni.map((g, i) => {
+    const v = valore3(g);
+    const altezza = v > 0 ? Math.max(3, v / massimo * 100) : 0;
+    const sole = pila2 ? pila2(g) : null;
+    const quotaSole = sole !== null && v > 0 ? Math.max(0, Math.min(1, sole / v)) : null;
+    const futuro = g.giorno > oggi;
+    const etichetta3 = !fitta || i % 2 === 0 || i === giorni.length - 1 ? etichettaDelGiorno2(g.giorno, vista2) : "";
+    const titolo3 = `${new Date(g.giorno).toLocaleDateString(locale(), { weekday: "short", day: "numeric", month: "short" })}: ${formatNumber(v, 1)} ${unita3}`;
+    return `<div class="dm-na-colonna" data-futuro="${futuro}" title="${esc(titolo3)}">
+        <div class="dm-na-barra" style="height:${altezza.toFixed(1)}%">${quotaSole === null ? "<i></i>" : `<i class="rete" style="flex:${(1 - quotaSole).toFixed(3)}"></i><i class="sole" style="flex:${quotaSole.toFixed(3)}"></i>`}</div><small>${esc(etichetta3)}</small></div>`;
+  }).join("")}</div>`;
+}
+function rigaDellaRicarica(r) {
+  const d = new Date(r.inizio);
+  const ora6 = (x) => new Date(x).toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit", hour12: false });
+  const sole = r.quotaSole;
+  return `<div class="dm-na-ricarica">
+    <div class="dm-na-ricarica-giorno"><b>${d.getDate()}</b><small>${esc(d.toLocaleDateString(locale(), { weekday: "short" }).replace(".", ""))}</small></div>
+    <div class="dm-na-ricarica-corpo">
+      <div><b>${kwh4(r.kwh)} kWh</b> <span>· ${esc(ora6(r.inizio))}–${esc(ora6(r.fine))}</span></div>
+      <span class="dm-na-quota">${sole === null ? "<i class='rete' style='flex:1'></i>" : `<i class="sole" style="flex:${sole.toFixed(3)}"></i><i class="rete" style="flex:${(1 - sole).toFixed(3)}"></i>`}</span>
+    </div>
+    <div class="dm-na-ricarica-costo"><b>${r.costo === null ? "—" : `${euro2(r.costo)} €`}</b>${sole === null ? "" : `<small>${sole >= 0.995 ? esc(t("tutto sole", "all solar")) : `${percento6(sole)}% ${esc(t("sole", "solar"))}`}</small>`}</div>
+  </div>`;
+}
+function cartaStorico(l) {
+  const finestra6 = finestraDelloStorico(state146.vista, { mese: state146.mese, dal: state146.dal, al: state146.al });
+  const s = state146.storico;
+  let corpo4 = "";
+  if (!l.lettore.entita("dm.ev_energia_wallbox_oggi"))
+    corpo4 = `<p class="dm-na-vuoto">${esc(
+      t(
+        "Per lo storico serve l'energia della wallbox: si sceglie nella scheda Auto del config.",
+        "History needs the wallbox energy: choose it in the Car tab of the config."
+      )
+    )}</p>`;
+  else if (s.stato === "carico" || s.stato === "vuoto")
+    corpo4 = `<p class="dm-na-vuoto">${esc(t("Leggo lo storico di Home Assistant…", "Reading Home Assistant history…"))}</p>`;
+  else if (s.stato === "errore")
+    corpo4 = `<p class="dm-na-vuoto">${esc(t("Lo storico non ha risposto: riprovo fra poco.", "History didn't answer: retrying shortly."))}</p>`;
+  else {
+    const { giorni, ricariche, totali, conRete } = s.dati;
+    const pieni = state146.vista === "mese" ? riempiIlMese(giorni, finestra6) : giorni;
+    const mostrate = state146.tutte ? ricariche : ricariche.slice(0, 4);
+    corpo4 = `<div class="dm-na-totali">
+        <div class="dm-na-tessera"><span>${esc(t("Energia", "Energy"))}</span><b>${kwh4(totali.kwh, totali.kwh >= 100 ? 0 : 1)}<small>kWh</small></b></div>
+        <div class="dm-na-tessera" data-tono="sole"><span>${esc(t("Dal sole", "From the sun"))}</span><b>${percento6(totali.quotaSole)}<small>%</small></b></div>
+        <div class="dm-na-tessera"><span>${esc(t("Spesa", "Spent"))}</span><b>${euro2(totali.costo)}<small>€</small></b></div>
+        <div class="dm-na-tessera"><span>${esc(t("Ricariche", "Sessions"))}</span><b>${totali.ricariche}${totali.alKwh === null ? "" : `<small>· ${euro2(totali.alKwh)} €/kWh</small>`}</b></div>
+      </div>
+      ${grafico(pieni, state146.vista, (g) => g.kwh, { pila: conRete ? (g) => g.sole ?? 0 : null })}
+      ${conRete ? `<div class="dm-na-legenda"><span><i class="sole"></i>${esc(t("dal sole", "from the sun"))}</span><span><i class="rete"></i>${esc(t("dalla rete", "from the grid"))}</span></div>` : ""}
+      ${ricariche.length ? `<div class="dm-na-ricariche">${mostrate.map(rigaDellaRicarica).join("")}</div>${ricariche.length > 4 ? `<button type="button" class="dm-na-tutte" data-na-tutte>${esc(
+      state146.tutte ? t("Mostra meno", "Show less") : `${t("Vedi tutte le ricariche", "See all sessions")} (${ricariche.length})`
+    )}</button>` : ""}` : `<p class="dm-na-vuoto">${esc(t("Nessuna ricarica in questo periodo.", "No charging in this period."))}</p>`}
+      ${finestra6.tagliato ? `<p class="dm-na-nota">${esc(t("Il periodo è tagliato a 62 giorni.", "The period is cut to 62 days."))}</p>` : ""}`;
+  }
+  return `<section class="dm-na-carta dm-na-storico">
+    <div class="dm-na-storico-testa"><h3 class="dm-na-titolo"><span>🏠</span>${esc(t("Ricariche a casa", "Charging at home"))}</h3>
+      ${selettoreDelPeriodo(state146.vista, state146, "storico")}</div>
+    ${corpo4}
+  </section>`;
+}
+function riempiIlMese(giorni, finestra6) {
+  const fuori = [...giorni];
+  const d = new Date(finestra6.inizio);
+  d.setDate(d.getDate() + fuori.length);
+  while (fuori.length < finestra6.giorni) {
+    fuori.push({ giorno: d.getTime(), kwh: 0, sole: null });
+    d.setDate(d.getDate() + 1);
+  }
+  return fuori;
+}
+function cartaNotte() {
+  return `<div class="dm-na-notte" data-na-posto="notte"></div>`;
+}
+function pannelloRicarica(l) {
+  return `<div class="dm-na-griglia">${cartaAdesso(l)}${l.inUso ? cartaNotte() : ""}</div>${cartaStorico(l)}`;
+}
+function pannelloViaggi(l) {
+  const settimana = laSettimana(l.dati);
+  const oggi = energiaDiOggi(l.dati);
+  const s = state146.km;
+  const finestra6 = finestraDelloStorico(state146.viaggi, { mese: state146.meseViaggi });
+  let grafo = "";
+  if (!l.lettore.entita("dm.ev_odometro"))
+    grafo = `<p class="dm-na-vuoto">${esc(t("Per i km di ogni giorno serve il contachilometri.", "Daily km need the odometer."))}</p>`;
+  else if (s.stato === "pronto") {
+    const giorni = state146.viaggi === "mese" ? riempiIlMese(s.dati.giorni, finestra6) : s.dati.giorni;
+    const totale = s.dati.giorni.reduce((a, g) => a + g.km, 0);
+    const conViaggi = s.dati.giorni.filter((g) => g.km > 0.5).length;
+    grafo = `<div class="dm-na-totali dm-na-totali-tre">
+        <div class="dm-na-tessera"><span>${esc(t("Percorsi", "Driven"))}</span><b>${intero2(totale)}<small>km</small></b></div>
+        <div class="dm-na-tessera"><span>${esc(t("Giorni in auto", "Driving days"))}</span><b>${conViaggi}</b></div>
+        <div class="dm-na-tessera"><span>${esc(t("Media al giorno", "Daily average"))}</span><b>${intero2(conViaggi ? totale / conViaggi : 0)}<small>km</small></b></div>
+      </div>${grafico(giorni, state146.viaggi, (g) => g.km, { unita: "km" })}`;
+  } else if (s.stato === "errore")
+    grafo = `<p class="dm-na-vuoto">${esc(t("Lo storico non ha risposto: riprovo fra poco.", "History didn't answer: retrying shortly."))}</p>`;
+  else grafo = `<p class="dm-na-vuoto">${esc(t("Leggo lo storico di Home Assistant…", "Reading Home Assistant history…"))}</p>`;
+  const consumo = settimana ? `<section class="dm-na-carta">
+      <h3 class="dm-na-titolo"><span>📊</span>${esc(t("Ultimi 7 giorni", "Last 7 days"))}</h3>
+      <div class="dm-na-totali dm-na-totali-tre">
+        <div class="dm-na-tessera"><span>${esc(t("Percorsi", "Driven"))}</span><b>${intero2(settimana.km)}<small>km</small></b></div>
+        <div class="dm-na-tessera"><span>${esc(t("Energia", "Energy"))}</span><b>${kwh4(settimana.kwh)}<small>kWh</small></b></div>
+        <div class="dm-na-tessera"><span>${esc(t("Consumo", "Consumption"))}</span><b>${kwh4(settimana.consumo)}<small>kWh/100 km</small></b></div>
+      </div></section>` : "";
+  const energia = oggi ? `<section class="dm-na-carta">
+      <h3 class="dm-na-titolo"><span>🔋</span>${esc(t("Energia di oggi", "Energy today"))}<em>${kwh4(oggi.totale)} kWh</em></h3>
+      <div class="dm-na-parti">${oggi.parti.map((p) => `<i data-parte="${esc(p.parte)}" style="flex:${Math.max(0.02, p.quota).toFixed(3)}"></i>`).join("")}</div>
+      <div class="dm-na-parti-voci">${oggi.parti.map((p) => {
+    const nome = p.parte === "guida" ? t("Guida", "Driving") : p.parte === "clima" ? t("Clima", "Climate") : t("Resto", "Other");
+    return `<span data-parte="${esc(p.parte)}"><i></i>${esc(nome)} <b>${kwh4(p.kwh)} kWh</b></span>`;
+  }).join("")}</div></section>` : "";
+  const ultimo = l.dati.ultimoViaggio;
+  return `<section class="dm-na-carta dm-na-storico">
+      <div class="dm-na-storico-testa"><h3 class="dm-na-titolo"><span>🛣️</span>${esc(t("Km percorsi", "Km driven"))}</h3>
+        ${selettoreDelPeriodo(state146.viaggi, { mese: state146.meseViaggi }, "viaggi")}</div>
+      ${grafo}
+      ${typeof ultimo === "number" ? `<p class="dm-na-nota">${esc(t("Ultimo viaggio", "Last trip"))}: <b>${kwh4(ultimo)} km</b></p>` : ""}
+    </section>
+    <div class="dm-na-griglia">${consumo}${energia}</div>`;
+}
+var NOMI_DELLE_RUOTE = {
+  antSx: () => t("Ant. sx", "Front L"),
+  antDx: () => t("Ant. dx", "Front R"),
+  postSx: () => t("Post. sx", "Rear L"),
+  postDx: () => t("Post. dx", "Rear R")
+};
+function pannelloStato(l) {
+  const d = l.dati;
+  const gomme = comeStannoLeGomme(d);
+  const ruote = gomme.ruote.map(
+    (r) => `<div class="dm-na-ruota" data-tono="${esc(r.tono)}"><span>${esc(NOMI_DELLE_RUOTE[r.ruota]?.() || r.ruota)}</span>
+      <b>${r.bar === null ? r.avviso ? "!" : "✓" : formatNumber(r.bar, 1)}${r.bar === null ? "" : "<small>bar</small>"}</b></div>`
+  ).join("");
+  const cartaGomme = gomme.verdetto ? `<section class="dm-na-carta">
+      <h3 class="dm-na-titolo"><span>🛞</span>${esc(t("Pneumatici", "Tyres"))}<em data-tono="${gomme.verdetto === "bene" ? "ok" : "attenzione"}">${esc(
+    gomme.verdetto === "bene" ? t("a posto", "fine") : t("da controllare", "check them")
+  )}</em></h3>
+      ${ruote ? `<div class="dm-na-ruote">${ruote}</div>` : ""}</section>` : "";
+  const aperture = [
+    ["portiere", "🚪", t("Portiere", "Doors")],
+    ["finestrini", "🪟", t("Finestrini", "Windows")],
+    ["bagagliaio", "🧳", t("Bagagliaio", "Boot")],
+    ["cofano", "🔧", t("Cofano", "Bonnet")],
+    ["allarme", "🚨", t("Allarme", "Alarm")],
+    ["motore", "🔑", t("Motore", "Engine")]
+  ].filter(([campo5]) => d[campo5] !== void 0 && d[campo5] !== null).map(([campo5, icona3, nome]) => {
+    const v = d[campo5];
+    const parola = v === true ? t("acceso", "on") : v === false ? t("spento", "off") : v === "bloccate" ? t("bloccate", "locked") : v === "sbloccate" ? t("sbloccate", "unlocked") : v === "aperte" || v === "aperto" ? t("aperto", "open") : v === "chiuse" || v === "chiuso" ? t("chiuso", "closed") : String(v);
+    const male = v === "aperte" || v === "aperto" || v === "sbloccate" || v === "scattato";
+    return `<div class="dm-na-voce" data-tono="${male ? "attenzione" : "ok"}"><span>${icona3}</span><b>${esc(nome)}</b><em>${esc(parola)}</em></div>`;
+  }).join("");
+  const temperature = temperatureDellAuto(d).map((v) => {
+    const nome = { batteria: t("Batteria", "Battery"), abitacolo: t("Abitacolo", "Cabin"), esterna: t("Fuori", "Outside"), olio: t("Olio", "Oil") }[v.chi] || v.chi;
+    return `<div class="dm-na-tessera"><span>${esc(nome)}</span><b>${Math.round(v.gradi)}<small>°</small></b></div>`;
+  }).join("");
+  const altri = [
+    d.odometro !== null && d.odometro !== void 0 ? [t("Contachilometri", "Odometer"), `${intero2(d.odometro)} km`] : null,
+    typeof d.batteriaServizio === "number" ? [t("Batteria 12 V", "12 V battery"), `${formatNumber(d.batteriaServizio, 1)} ${d.batteriaServizioUnita}`] : null,
+    Number.isFinite(d.ultimoAggiornamento) ? [t("Aggiornata", "Updated"), istanteDetto(d.ultimoAggiornamento, { lingua: locale() })] : null
+  ].filter(Boolean).map(([nome, valore3]) => `<div class="dm-na-riga"><span>${esc(nome)}</span><b>${esc(valore3)}</b></div>`).join("");
+  const vuoto6 = !cartaGomme && !aperture && !temperature && !altri;
+  if (vuoto6)
+    return `<section class="dm-na-carta"><p class="dm-na-vuoto">${esc(
+      t("Nessun dato dell'auto: le caselle si scelgono nella scheda Auto del config.", "No car data: choose the fields in the Car tab of the config.")
+    )}</p></section>`;
+  return `<div class="dm-na-griglia dm-na-griglia-stato">
+    ${cartaGomme}
+    ${aperture ? `<section class="dm-na-carta"><h3 class="dm-na-titolo"><span>🔐</span>${esc(t("Aperture", "Openings"))}</h3><div class="dm-na-voci">${aperture}</div></section>` : ""}
+    ${temperature ? `<section class="dm-na-carta"><h3 class="dm-na-titolo"><span>🌡️</span>${esc(t("Temperature", "Temperatures"))}</h3><div class="dm-na-totali dm-na-totali-due">${temperature}</div></section>` : ""}
+    ${altri ? `<section class="dm-na-carta"><h3 class="dm-na-titolo"><span>🧾</span>${esc(t("L'auto", "The car"))}</h3>${altri}</section>` : ""}
+  </div>`;
+}
+var RIPROVA_MS = 3e4;
+var FRESCO_MS2 = 5 * 6e4;
+async function chiediLeStatistiche(ids, inizio, fine) {
+  const servizio2 = root.DashboardModernEnergyService;
+  if (!servizio2?.statisticsWithGrowth) throw new Error("statistics");
+  return servizio2.statisticsWithGrowth(ids, new Date(inizio), new Date(fine), "hour");
+}
+function caricaLoStorico(l) {
+  const ev = l.lettore.entita("dm.ev_energia_wallbox_oggi");
+  if (!ev) return;
+  const rete = risolvi2("dm.energy_energia_prelevata_oggi");
+  const finestra6 = finestraDelloStorico(state146.vista, { mese: state146.mese, dal: state146.dal, al: state146.al });
+  const chiave2 = `${ev}|${rete}|${finestra6.inizio}|${finestra6.fine}`;
+  const s = state146.storico;
+  if (s.chiave === chiave2 && (s.stato === "carico" || Date.now() - (s.alle || 0) < (s.stato === "errore" ? RIPROVA_MS : FRESCO_MS2))) return;
+  const prima = s.chiave === chiave2 && s.stato === "pronto";
+  state146.storico = { ...s, chiave: chiave2, stato: prima ? "pronto" : "carico", alle: Date.now() };
+  const ids = ["dm.ev_energia_wallbox_oggi", ...rete ? ["dm.energy_energia_prelevata_oggi"] : []];
+  chiediLeStatistiche(ids, finestra6.inizio, finestra6.fine).then((righe3) => {
+    if (state146.storico.chiave !== chiave2) return;
+    const conRete = Boolean(rete) && (righe3["dm.energy_energia_prelevata_oggi"] || []).length > 0;
+    const ore = oreDiRicarica(righe3["dm.ev_energia_wallbox_oggi"] || [], conRete ? righe3["dm.energy_energia_prelevata_oggi"] : null, prezzoDellOra());
+    const giorni = giorniDalleOre(ore, finestra6.inizio, finestra6.fine);
+    const ricariche = ricaricheDalleOre(ore);
+    state146.storico = {
+      chiave: chiave2,
+      stato: "pronto",
+      alle: Date.now(),
+      dati: { giorni, ricariche, totali: totaliDelloStorico(giorni, ricariche), conRete }
+    };
+    ridisegna18();
+  }).catch(() => {
+    if (state146.storico.chiave !== chiave2) return;
+    state146.storico = { chiave: chiave2, stato: prima ? "pronto" : "errore", alle: Date.now(), dati: state146.storico.dati };
+    ridisegna18();
+  });
+}
+function caricaIKm(l) {
+  const odo = l.lettore.entita("dm.ev_odometro");
+  if (!odo) return;
+  const finestra6 = finestraDelloStorico(state146.viaggi, { mese: state146.meseViaggi });
+  const chiave2 = `${odo}|${finestra6.inizio}|${finestra6.fine}`;
+  const s = state146.km;
+  if (s.chiave === chiave2 && (s.stato === "carico" || Date.now() - (s.alle || 0) < (s.stato === "errore" ? RIPROVA_MS : FRESCO_MS2))) return;
+  const prima = s.chiave === chiave2 && s.stato === "pronto";
+  state146.km = { ...s, chiave: chiave2, stato: prima ? "pronto" : "carico", alle: Date.now() };
+  const servizio2 = root.DashboardModernEnergyService;
+  Promise.resolve().then(() => servizio2.statisticsWithGrowth(["dm.ev_odometro"], new Date(finestra6.inizio), new Date(finestra6.fine), "day")).then((righe3) => {
+    if (state146.km.chiave !== chiave2) return;
+    state146.km = { chiave: chiave2, stato: "pronto", alle: Date.now(), dati: { giorni: kmDeiGiorni(righe3["dm.ev_odometro"] || [], finestra6.inizio, finestra6.fine) } };
+    ridisegna18();
+  }).catch(() => {
+    if (state146.km.chiave !== chiave2) return;
+    state146.km = { chiave: chiave2, stato: prima ? "pronto" : "errore", alle: Date.now(), dati: state146.km.dati };
+    ridisegna18();
+  });
+}
+function pagina() {
+  return doc?.getElementById?.("page-ev") || null;
+}
+function contenitore3(page2) {
+  let box = doc.getElementById("dm-na");
+  if (!box) {
+    box = doc.createElement("div");
+    box.id = "dm-na";
+    box.className = "dm-na";
+    box.addEventListener("click", alTocco4);
+    box.addEventListener("input", alCursore2);
+    box.addEventListener("change", alCambio4);
+  }
+  if (box.parentElement !== page2) {
+    const testata5 = page2.querySelector(":scope > .dm-page-mast");
+    if (testata5) testata5.after(box);
+    else page2.prepend(box);
+  }
+  return box;
+}
+function rimettiLaNotte() {
+  const carta = doc?.getElementById?.("dm-rn");
+  if (!carta || !carta.closest("#dm-na")) return;
+  const evcc = pagina()?.querySelector(".lm-evcc-card");
+  if (evcc) evcc.insertAdjacentElement("afterend", carta);
+}
+function spegni2() {
+  const page2 = pagina();
+  if (!page2) return;
+  rimettiLaNotte();
+  page2.removeAttribute("data-dm-nuova");
+  doc.getElementById("dm-na")?.remove();
+  state146.firma = "";
+}
+function renderLaNuovaAuto() {
+  const page2 = pagina();
+  if (!page2) return false;
+  if (!nuovaAutoAccesa()) {
+    if (page2.hasAttribute("data-dm-nuova")) spegni2();
+    return false;
+  }
+  if (!planciaVisibile() || !page2.classList.contains("active")) return false;
+  page2.setAttribute("data-dm-nuova", "1");
+  const box = contenitore3(page2);
+  if (box.contains(doc.activeElement) && doc.activeElement?.matches?.("input")) return true;
+  const auto = profiles();
+  const scelta3 = activeVehicle(auto);
+  const indice = Math.max(0, auto.findIndex((car2) => car2 === scelta3 || car2?.uid && car2.uid === scelta3?.uid));
+  const car = auto[indice] || scelta3 || {};
+  const l = letturaDellAuto2(car, true);
+  let aperta2 = linguettaScelta();
+  if (aperta2 === "ricarica" && l.termica) aperta2 = "viaggi";
+  if (!["ricarica", "viaggi", "stato"].includes(aperta2)) aperta2 = l.termica ? "viaggi" : "ricarica";
+  let pannello = "";
+  if (aperta2 === "ricarica") {
+    caricaLoStorico(l);
+    pannello = pannelloRicarica(l);
+  } else if (aperta2 === "viaggi") {
+    caricaIKm(l);
+    pannello = pannelloViaggi(l);
+  } else pannello = pannelloStato(l);
+  const html = `${garage(auto, indice)}${eroe(l, indice)}${linguette3(l, aperta2)}
+    <div class="dm-na-pannello" role="tabpanel" data-na-pannello="${aperta2}">${pannello}</div>`;
+  const firma2 = `${locale()}|${html}`;
+  if (firma2 !== state146.firma) {
+    const notte = doc.getElementById("dm-rn");
+    if (notte?.closest?.("#dm-na")) notte.remove();
+    box.innerHTML = html;
+    state146.firma = firma2;
+  }
+  const posto = box.querySelector('[data-na-posto="notte"]');
+  if (posto) {
+    renderRicaricaDiNotte();
+    const notte = doc.getElementById("dm-rn");
+    if (notte && notte.parentElement !== posto) posto.append(notte);
+    posto.hidden = !notte || notte.hidden;
+  } else rimettiLaNotte();
+  return true;
+}
+function ridisegna18() {
+  state146.firma = "";
+  schedule33();
+}
+function schedule33() {
+  if (state146.frame) return;
+  const run2 = () => {
+    state146.frame = 0;
+    try {
+      renderLaNuovaAuto();
+    } catch (errore) {
+      root.console?.warn?.("[DashboardModern] nuova pagina Auto", errore);
+    }
+  };
+  state146.frame = root.requestAnimationFrame?.(run2) || root.setTimeout?.(run2, 0) || 0;
+}
+function scriviLaPercentuale(valore3) {
+  const l = letturaDellAuto2(activeVehicle() || {}, true);
+  const info = laPercentuale(l.lettore.vivo("dm.ev_target_soc"), l.lettore.entita("dm.ev_target_soc"));
+  if (!info?.scrivibile) return;
+  const giusto = percentualeConsentita(info, valore3);
+  if (giusto === null) return;
+  state146.voluta = giusto;
+  state146.volutaAlle = Date.now();
+  const voce3 = info.voci.find((v) => v.n === giusto);
+  try {
+    root.changeSelect?.("dm.ev_target_soc", voce3 ? voce3.id : String(giusto));
+  } catch (errore) {
+    root.console?.warn?.("[DashboardModern] obiettivo di carica", errore);
+  }
+  ridisegna18();
+}
+function alTocco4(evento) {
+  const bersaglio = evento.target;
+  const auto = bersaglio?.closest?.("[data-na-auto]");
+  if (auto) {
+    try {
+      root.cdEvApplyCar?.(Number(auto.dataset.naAuto));
+    } catch (_errore) {
+    }
+    state146.storico = { chiave: "", stato: "vuoto", dati: null };
+    state146.km = { chiave: "", stato: "vuoto", dati: null };
+    ridisegna18();
+    return;
+  }
+  const linguetta3 = bersaglio?.closest?.("[data-na-linguetta]");
+  if (linguetta3) {
+    scegliLinguetta(linguetta3.dataset.naLinguetta);
+    ridisegna18();
+    return;
+  }
+  const vista2 = bersaglio?.closest?.("[data-na-vista]");
+  if (vista2) {
+    const id = vista2.dataset.naVista;
+    if (vista2.dataset.naGruppo === "viaggi") state146.viaggi = id;
+    else {
+      state146.vista = id;
+      state146.tutte = false;
+      if (id === "periodo" && !state146.dal) {
+        const f = finestraDelloStorico("mese", {});
+        state146.dal = giornoScritto(f.inizio);
+        state146.al = giornoScritto(Date.now());
+      }
+    }
+    ridisegna18();
+    return;
+  }
+  const mese = bersaglio?.closest?.("[data-na-mese]");
+  if (mese) {
+    const oggi = /* @__PURE__ */ new Date();
+    const chiave2 = mese.dataset.naGruppo === "viaggi" ? "meseViaggi" : "mese";
+    const adesso2 = state146[chiave2] || { anno: oggi.getFullYear(), mese: oggi.getMonth() };
+    state146[chiave2] = meseAccanto(adesso2, Number(mese.dataset.naMese));
+    state146.tutte = false;
+    ridisegna18();
+    return;
+  }
+  if (bersaglio?.closest?.("[data-na-tutte]")) {
+    state146.tutte = !state146.tutte;
+    ridisegna18();
+    return;
+  }
+  const modo = bersaglio?.closest?.("[data-na-modo]");
+  if (modo) {
+    try {
+      root.setEVMode?.(modo.dataset.naModo);
+    } catch (_errore) {
+    }
+    return;
+  }
+  const sempre = bersaglio?.closest?.("[data-na-sempre]");
+  if (sempre) {
+    try {
+      root.setEVSempre?.(sempre.dataset.naSempre);
+    } catch (_errore) {
+    }
+    return;
+  }
+  const passo = bersaglio?.closest?.("[data-na-passo]");
+  if (passo) {
+    const l = letturaDellAuto2(activeVehicle() || {}, true);
+    const info = laPercentuale(l.lettore.vivo("dm.ev_target_soc"), l.lettore.entita("dm.ev_target_soc"));
+    if (info && state146.voluta !== null) info.valore = state146.voluta;
+    const dopo = unPasso(info, Number(passo.dataset.naPasso));
+    if (dopo !== null) scriviLaPercentuale(dopo);
+    return;
+  }
+  const scelta3 = bersaglio?.closest?.("[data-na-pct-scelta]");
+  if (scelta3) {
+    scriviLaPercentuale(Number(scelta3.dataset.naPctScelta));
+    return;
+  }
+  const misura7 = bersaglio?.closest?.("[data-dm-storico]");
+  if (misura7?.dataset.dmStorico) {
+    try {
+      root.apriStorico?.(evento, misura7.dataset.dmStorico, "");
+    } catch (_errore) {
+    }
+  }
+}
+function alCursore2(evento) {
+  const cursore2 = evento.target?.closest?.("[data-na-cursore]");
+  if (!cursore2) return;
+  const box = doc.getElementById("dm-na");
+  const l = letturaDellAuto2(activeVehicle() || {}, true);
+  const info = laPercentuale(l.lettore.vivo("dm.ev_target_soc"), l.lettore.entita("dm.ev_target_soc"));
+  const valore3 = percentualeConsentita(info, cursore2.value) ?? Number(cursore2.value);
+  const uscita = box?.querySelector("[data-na-pct]");
+  if (uscita) uscita.textContent = String(Math.round(valore3));
+  const km = kmAllaPercentuale(l.autonomia, l.batteria, valore3);
+  const riga3 = box?.querySelector("[data-na-km]");
+  if (riga3) riga3.textContent = km === null ? "" : `· ${intero2(km)} km`;
+}
+function alCambio4(evento) {
+  const bersaglio = evento.target;
+  if (bersaglio?.matches?.("[data-na-cursore]")) {
+    bersaglio.blur?.();
+    scriviLaPercentuale(Number(bersaglio.value));
+    return;
+  }
+  if (bersaglio?.matches?.("[data-na-dal],[data-na-al]")) {
+    if (bersaglio.matches("[data-na-dal]")) state146.dal = bersaglio.value;
+    else state146.al = bersaglio.value;
+    state146.tutte = false;
+    bersaglio.blur?.();
+    ridisegna18();
+  }
+}
+function stile6() {
+  const P8 = "#page-ev[data-dm-nuova]";
+  return `
+  ${P8} > :not(.dm-page-mast):not(#dm-na){display:none!important}
+  ${P8} #dm-na{--na-ev:#10b981;--na-sole:#f59e0b;--na-rete:#0ea5e9;--na-notte:#8b5cf6;--na-male:#ef4444;
+    display:grid;gap:18px;padding:4px 0 40px;min-width:0}
+  ${P8} #dm-na *{box-sizing:border-box}
+  ${P8} .dm-na-carta{position:relative;min-width:0;border:1px solid var(--card-border,#e2e8f0);border-radius:22px;
+    background:var(--card-bg,#fff);box-shadow:var(--shadow-sculpted,0 6px 18px rgba(15,23,42,.07));padding:18px 20px}
+  ${P8} .dm-na-titolo{display:flex;align-items:center;gap:9px;margin:0 0 14px;font-size:12px;font-weight:900;
+    letter-spacing:1.6px;text-transform:uppercase;color:var(--text,#0f172a)}
+  ${P8} .dm-na-titolo>span{font-size:15px;letter-spacing:0}
+  ${P8} .dm-na-titolo em{margin-left:auto;font-style:normal;font-size:12px;letter-spacing:.3px;text-transform:none;
+    color:var(--text,#0f172a);font-weight:900}
+  ${P8} .dm-na-titolo em[data-tono="ok"]{color:#16a34a}
+  ${P8} .dm-na-titolo em[data-tono="attenzione"]{color:var(--na-male)}
+  ${P8} .dm-na-sottotitolo{margin:18px 0 10px;font-size:11.5px;font-weight:900;letter-spacing:1.4px;text-transform:uppercase;
+    color:var(--text-dim,#64748b);padding-top:16px;border-top:1px solid var(--card-border,#e2e8f0)}
+
+  /* il garage */
+  ${P8} .dm-na-garage{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:none}
+  ${P8} .dm-na-garage::-webkit-scrollbar{display:none}
+  ${P8} .dm-na-garage-auto{flex:0 0 auto;display:flex;align-items:center;gap:10px;min-width:220px;max-width:290px;padding:10px 14px;
+    border-radius:18px;border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);color:var(--text,#0f172a);
+    font:inherit;text-align:left;cursor:pointer;box-shadow:var(--shadow-sculpted,0 6px 18px rgba(15,23,42,.07))}
+  ${P8} .dm-na-garage-auto[aria-pressed="true"]{border-color:var(--na-ev);
+    background:color-mix(in srgb,var(--na-ev) 9%,var(--card-bg,#fff));box-shadow:0 0 0 2px color-mix(in srgb,var(--na-ev) 30%,transparent)}
+  ${P8} .dm-na-garage-auto[data-tipo="termica"][aria-pressed="true"]{border-color:var(--na-sole);
+    background:color-mix(in srgb,var(--na-sole) 9%,var(--card-bg,#fff));box-shadow:0 0 0 2px color-mix(in srgb,var(--na-sole) 30%,transparent)}
+  ${P8} .dm-na-garage-testo{display:grid;gap:2px;min-width:0;flex:1}
+  ${P8} .dm-na-garage-testo b{font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  ${P8} .dm-na-garage-testo small{font-size:12px;font-weight:700;color:var(--text-dim,#64748b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  ${P8} .dm-na-minibarra{display:block;height:4px;border-radius:9px;background:color-mix(in srgb,var(--text,#0f172a) 10%,transparent);overflow:hidden;margin-top:4px}
+  ${P8} .dm-na-minibarra i{display:block;height:100%;border-radius:inherit;background:var(--na-ev)}
+  ${P8} [data-tipo="termica"] .dm-na-minibarra i{background:var(--na-sole)}
+  ${P8} .dm-na-logo{display:inline-grid;place-items:center;flex:0 0 auto;line-height:0}
+  ${P8} .dm-na-logo svg,${P8} .dm-na-logo img{max-width:100%;height:auto}
+
+  /* l'eroe */
+  ${P8} .dm-na-eroe{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:18px;align-items:center;overflow:hidden;
+    padding:22px 26px;background:radial-gradient(90% 120% at 100% 100%,color-mix(in srgb,var(--na-ev) 14%,transparent),transparent 60%),var(--card-bg,#fff)}
+  ${P8} .dm-na-eroe[data-tipo="termica"]{--na-ev:var(--na-sole)}
+  ${P8} .dm-na-eroe-testo{display:grid;gap:10px;justify-items:start;min-width:0;position:relative;z-index:1}
+  ${P8} .dm-na-eroe-nome{display:flex;align-items:center;gap:12px;min-width:0}
+  ${P8} .dm-na-eroe-nome b{display:block;font-size:20px;font-weight:900;color:var(--text,#0f172a);line-height:1.15}
+  ${P8} .dm-na-eroe-nome small{display:block;font-size:13px;font-weight:700;color:var(--text-dim,#64748b);margin-top:2px}
+  ${P8} .dm-na-stato{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:999px;font-size:12.5px;font-weight:900;
+    color:var(--text-dim,#64748b);background:color-mix(in srgb,var(--text,#0f172a) 6%,transparent)}
+  ${P8} .dm-na-stato i{width:8px;height:8px;border-radius:50%;background:currentColor}
+  ${P8} .dm-na-stato[data-tono="carica"]{color:#059669;background:color-mix(in srgb,var(--na-ev) 16%,transparent)}
+  ${P8} .dm-na-stato[data-tono="carica"] i{box-shadow:0 0 0 0 currentColor;animation:dmNaPulsa 1.8s infinite}
+  ${P8} .dm-na-stato[data-tono="collegata"]{color:#0284c7;background:color-mix(in srgb,var(--na-rete) 14%,transparent)}
+  ${P8} .dm-na-stato[data-tono="guasto"]{color:var(--na-male);background:color-mix(in srgb,var(--na-male) 12%,transparent)}
+  @keyframes dmNaPulsa{0%{box-shadow:0 0 0 0 color-mix(in srgb,currentColor 60%,transparent)}100%{box-shadow:0 0 0 9px transparent}}
+  ${P8} .dm-na-autonomia{display:flex;align-items:baseline;gap:6px;cursor:pointer;line-height:.9;margin-top:4px}
+  ${P8} .dm-na-autonomia b{font-family:'Oswald',system-ui,sans-serif;font-size:84px;font-weight:700;letter-spacing:-2px;color:var(--text,#0f172a)}
+  ${P8} .dm-na-autonomia span{font-size:24px;font-weight:800;color:var(--text-dim,#64748b)}
+  ${P8} .dm-na-batteria{display:flex;align-items:center;gap:12px;width:min(100%,340px)}
+  ${P8} .dm-na-pila{position:relative;flex:1;height:20px;border-radius:7px;border:2px solid color-mix(in srgb,var(--text,#0f172a) 22%,transparent);padding:2px}
+  ${P8} .dm-na-pila::after{content:"";position:absolute;right:-6px;top:5px;width:4px;height:6px;border-radius:0 2px 2px 0;background:color-mix(in srgb,var(--text,#0f172a) 22%,transparent)}
+  ${P8} .dm-na-pila i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#059669,#34d399)}
+  ${P8} .dm-na-batteria[data-tipo="carburante"] .dm-na-pila i{background:linear-gradient(90deg,#d97706,#fbbf24)}
+  ${P8} .dm-na-batteria b{font-family:'Oswald',system-ui,sans-serif;font-size:30px;font-weight:700;color:var(--text,#0f172a)}
+  ${P8} .dm-na-batteria b small{font-size:15px;color:var(--text-dim,#64748b);margin-left:2px}
+  ${P8} .dm-na-eroe-righe{margin:0;font-size:13px;font-weight:700;color:var(--text-dim,#64748b)}
+  ${P8} .dm-na-eroe-righe b{color:var(--text,#0f172a)}
+  ${P8} .dm-na-pills{display:flex;flex-wrap:wrap;gap:7px}
+  ${P8} .dm-na-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:800;
+    color:var(--text,#0f172a);background:var(--surface-2,#f8fafc);border:1px solid var(--card-border,#e8edf3)}
+  ${P8} .dm-na-pill[data-tono="ok"]{color:#15803d;border-color:color-mix(in srgb,#16a34a 30%,transparent);background:color-mix(in srgb,#16a34a 9%,transparent)}
+  ${P8} .dm-na-pill[data-tono="attenzione"]{color:#b91c1c;border-color:color-mix(in srgb,var(--na-male) 35%,transparent);background:color-mix(in srgb,var(--na-male) 9%,transparent)}
+  ${P8} .dm-na-eroe-foto{display:grid;place-items:center;min-height:220px;position:relative}
+  ${P8} .dm-na-eroe-foto::after{content:"";position:absolute;left:10%;right:10%;bottom:12%;height:22px;border-radius:50%;
+    background:radial-gradient(closest-side,color-mix(in srgb,var(--na-ev) 45%,transparent),transparent);filter:blur(6px)}
+  ${P8} .dm-na-eroe-foto img{position:relative;z-index:1;width:100%;max-height:300px;object-fit:contain;filter:drop-shadow(0 18px 22px rgba(2,6,23,.28))}
+  ${P8} .dm-na-foto-vuota{opacity:.35}
+
+  /* le linguette */
+  ${P8} .dm-na-linguette{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;padding:6px;border-radius:20px;
+    border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);box-shadow:var(--shadow-sculpted,0 6px 18px rgba(15,23,42,.07))}
+  ${P8} .dm-na-linguetta{display:flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:8px 10px;border-radius:14px;
+    border:1px solid transparent;background:transparent;color:var(--text-dim,#64748b);font:inherit;font-size:15px;font-weight:900;cursor:pointer}
+  ${P8} .dm-na-linguetta[aria-selected="true"]{color:var(--text,#0f172a);border-color:color-mix(in srgb,var(--na-ev) 45%,transparent);
+    background:color-mix(in srgb,var(--na-ev) 11%,var(--card-bg,#fff))}
+  ${P8} .dm-na-linguetta em{font-style:normal;font-size:11px;font-weight:900;padding:2px 8px;border-radius:999px;color:#047857;
+    background:color-mix(in srgb,var(--na-ev) 18%,transparent)}
+  ${P8} .dm-na-linguetta em[data-tono="attenzione"]{color:#b91c1c;background:color-mix(in srgb,var(--na-male) 14%,transparent)}
+  html[data-theme="dark"] ${P8} .dm-na-linguetta em,body.dark-theme ${P8} .dm-na-linguetta em{color:#6ee7b7}
+  html[data-theme="dark"] ${P8} .dm-na-linguetta em[data-tono="attenzione"],body.dark-theme ${P8} .dm-na-linguetta em[data-tono="attenzione"]{color:#fca5a5}
+  html[data-theme="dark"] ${P8} .dm-na-pill[data-tono="ok"],body.dark-theme ${P8} .dm-na-pill[data-tono="ok"]{color:#86efac}
+  html[data-theme="dark"] ${P8} .dm-na-pill[data-tono="attenzione"],body.dark-theme ${P8} .dm-na-pill[data-tono="attenzione"]{color:#fca5a5}
+  html[data-theme="dark"] ${P8} .dm-na-stato[data-tono="carica"],body.dark-theme ${P8} .dm-na-stato[data-tono="carica"]{color:#6ee7b7}
+  ${P8} .dm-na-pannello{display:grid;gap:18px;min-width:0}
+  ${P8} .dm-na-griglia{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:18px;align-items:start}
+  ${P8} .dm-na-griglia:empty{display:none}
+
+  /* adesso */
+  ${P8} .dm-na-adesso{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+  ${P8} .dm-na-anello{position:relative;width:132px;height:132px;flex:0 0 auto}
+  ${P8} .dm-na-anello svg{width:100%;height:100%;transform:rotate(-90deg)}
+  ${P8} .dm-na-anello circle{fill:none;stroke-width:11;stroke:color-mix(in srgb,var(--text,#0f172a) 9%,transparent)}
+  ${P8} .dm-na-anello circle.pieno{stroke:var(--na-ev);stroke-linecap:round}
+  ${P8} .dm-na-anello>div{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+  ${P8} .dm-na-anello b{font-family:'Oswald',system-ui,sans-serif;font-size:32px;font-weight:700;color:var(--text,#0f172a);line-height:1}
+  ${P8} .dm-na-anello[data-tono="carica"] b{color:#059669}
+  ${P8} .dm-na-anello small{font-size:12px;font-weight:800;color:var(--text-dim,#64748b)}
+  ${P8} .dm-na-pronta{display:grid;gap:2px}
+  ${P8} .dm-na-pronta span{font-size:13px;font-weight:800;color:var(--text-dim,#64748b)}
+  ${P8} .dm-na-pronta b{font-family:'Oswald',system-ui,sans-serif;font-size:52px;font-weight:700;color:var(--text,#0f172a);line-height:1}
+  ${P8} .dm-na-pronta b.dm-na-pronta-ferma{font-family:inherit;font-size:22px;font-weight:900}
+  ${P8} .dm-na-pronta small{font-size:13px;font-weight:700;color:var(--text-dim,#64748b)}
+  ${P8} .dm-na-obiettivo{margin-top:18px}
+  ${P8} .dm-na-obiettivo-testa{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  ${P8} .dm-na-obiettivo-testa>span:first-child{font-size:13px;font-weight:800;color:var(--text-dim,#64748b);margin-right:auto}
+  ${P8} .dm-na-obiettivo-testa b{font-family:'Oswald',system-ui,sans-serif;font-size:34px;font-weight:700;color:var(--text,#0f172a);line-height:1}
+  ${P8} .dm-na-obiettivo-testa b small{font-size:16px;color:var(--text-dim,#64748b)}
+  ${P8} .dm-na-obiettivo-km{font-size:13px;font-weight:800;color:var(--text-dim,#64748b)}
+  ${P8} .dm-na-cursore{position:relative;margin:10px 0 6px}
+  ${P8} .dm-na-cursore::before{content:"";position:absolute;left:0;top:50%;height:10px;margin-top:-5px;width:var(--na-adesso);border-radius:9px;
+    background:linear-gradient(90deg,#059669,#34d399);pointer-events:none;z-index:1}
+  ${P8} .dm-na-cursore input{position:relative;width:100%;margin:0;height:30px;background:transparent;-webkit-appearance:none;appearance:none;cursor:pointer}
+  ${P8} .dm-na-cursore input::-webkit-slider-runnable-track{height:10px;border-radius:9px;background:color-mix(in srgb,var(--text,#0f172a) 10%,transparent)}
+  ${P8} .dm-na-cursore input::-moz-range-track{height:10px;border-radius:9px;background:color-mix(in srgb,var(--text,#0f172a) 10%,transparent)}
+  ${P8} .dm-na-cursore input::-webkit-slider-thumb{-webkit-appearance:none;position:relative;z-index:2;width:28px;height:28px;margin-top:-9px;border-radius:50%;
+    background:#fff;border:6px solid #059669;box-shadow:0 4px 10px rgba(2,6,23,.3)}
+  ${P8} .dm-na-cursore input::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:6px solid #059669}
+  ${P8} .dm-na-cursore input:disabled{cursor:default;opacity:.6}
+  ${P8} .dm-na-scala{display:flex;justify-content:space-between;font-size:11.5px;font-weight:800;color:var(--text-dim,#64748b)}
+  ${P8} .dm-na-adesso{color:#059669}
+  ${P8} .dm-na-scala .dm-na-adesso{color:#059669}
+  ${P8} .dm-na-passi{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+  ${P8} .dm-na-passi>button,${P8} .dm-na-scorciatoie button,${P8} .dm-na-segmenti button,${P8} .dm-na-mese button{
+    min-width:40px;min-height:36px;padding:6px 12px;border-radius:11px;border:1px solid var(--card-border,#e2e8f0);
+    background:var(--surface-2,#f8fafc);color:var(--text,#0f172a);font:inherit;font-size:14px;font-weight:900;cursor:pointer}
+  ${P8} .dm-na-scorciatoie{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+  ${P8} .dm-na-scorciatoie button[aria-pressed="true"],${P8} .dm-na-segmenti button[aria-pressed="true"]{
+    background:var(--text,#0f172a);color:var(--card-bg,#fff);border-color:var(--text,#0f172a)}
+  ${P8} .dm-na-tessere,${P8} .dm-na-totali{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:10px;margin-top:16px}
+  ${P8} .dm-na-totali{grid-template-columns:repeat(4,minmax(0,1fr));margin:0 0 16px}
+  ${P8} .dm-na-totali-tre{grid-template-columns:repeat(3,minmax(0,1fr))}
+  ${P8} .dm-na-totali-due{grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+  ${P8} .dm-na-tessera{display:grid;gap:4px;padding:11px 14px;border-radius:15px;background:var(--surface-2,#f8fafc);
+    border:1px solid var(--card-border,#e8edf3);min-width:0}
+  ${P8} .dm-na-tessera>span{font-size:12px;font-weight:800;color:var(--text-dim,#64748b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  ${P8} .dm-na-tessera>b{font-family:'Oswald',system-ui,sans-serif;font-size:26px;font-weight:700;color:var(--text,#0f172a);line-height:1.05;white-space:nowrap}
+  ${P8} .dm-na-tessera>b small{font-family:inherit;font-size:13px;font-weight:700;color:var(--text-dim,#64748b);margin-left:4px}
+  ${P8} .dm-na-tessera[data-tono="sole"]>b{color:#d97706}
+  ${P8} .dm-na-nota{margin:12px 0 0;font-size:12.5px;font-weight:700;color:var(--text-dim,#64748b)}
+
+  /* la wallbox */
+  ${P8} .dm-na-modi{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px}
+  ${P8} .dm-na-modo{display:grid;gap:3px;text-align:left;padding:12px 14px;border-radius:15px;border:1px solid var(--card-border,#e2e8f0);
+    background:var(--surface-2,#f8fafc);color:var(--text,#0f172a);font:inherit;cursor:pointer}
+  ${P8} .dm-na-modo b{font-size:15px;font-weight:900}
+  ${P8} .dm-na-modo small{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+  ${P8} .dm-na-modo[aria-pressed="true"]{border-color:var(--na-modo);background:color-mix(in srgb,var(--na-modo) 13%,var(--card-bg,#fff));
+    box-shadow:0 0 0 2px color-mix(in srgb,var(--na-modo) 28%,transparent)}
+  ${P8} .dm-na-sempre{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px;padding:12px 14px;border-radius:15px;
+    border:1px dashed color-mix(in srgb,var(--na-sole) 55%,transparent);background:color-mix(in srgb,var(--na-sole) 7%,transparent)}
+  ${P8} .dm-na-sempre>div:first-child{display:grid;gap:2px;margin-right:auto}
+  ${P8} .dm-na-sempre b{font-size:14px;font-weight:900;color:var(--text,#0f172a)}
+  ${P8} .dm-na-sempre small{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+  ${P8} .dm-na-sempre[data-vigore="false"]{opacity:.65}
+  ${P8} .dm-na-sempre .dm-na-segmenti button[aria-pressed="true"]{background:var(--na-sole);border-color:var(--na-sole);color:#1c1917}
+  ${P8} .dm-na-segmenti{display:inline-flex;gap:4px;padding:4px;border-radius:14px;background:color-mix(in srgb,var(--text,#0f172a) 5%,transparent)}
+  ${P8} .dm-na-segmenti button{border-color:transparent;background:transparent;min-height:32px}
+
+  /* la notte */
+  ${P8} .dm-na-notte[hidden]{display:none}
+  ${P8} .dm-na-notte>#dm-rn{margin:0}
+
+  /* lo storico */
+  ${P8} .dm-na-storico-testa{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  ${P8} .dm-na-storico-testa .dm-na-titolo{margin:0;margin-right:auto}
+  ${P8} .dm-na-periodo{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  ${P8} .dm-na-mese{display:flex;align-items:center;gap:8px}
+  ${P8} .dm-na-mese b{font-size:15px;font-weight:900;color:var(--text,#0f172a);text-transform:capitalize;min-width:120px;text-align:center}
+  ${P8} .dm-na-mese button:disabled{opacity:.35;cursor:default}
+  ${P8} .dm-na-date{display:flex;gap:8px;flex-wrap:wrap}
+  ${P8} .dm-na-date label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--text-dim,#64748b)}
+  ${P8} .dm-na-date input{min-height:36px;padding:4px 8px;border-radius:10px;border:1px solid var(--card-border,#e2e8f0);
+    background:var(--surface-2,#f8fafc);color:var(--text,#0f172a);font:inherit;font-weight:800;color-scheme:light dark}
+  ${P8} .dm-na-grafico{display:flex;align-items:stretch;gap:5px;height:150px;padding-bottom:20px;
+    border-bottom:1px solid var(--card-border,#e2e8f0)}
+  ${P8} .dm-na-grafico[data-fitta="true"]{gap:3px}
+  ${P8} .dm-na-colonna{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;position:relative}
+  ${P8} .dm-na-barra{display:flex;flex-direction:column-reverse;align-self:center;width:min(100%,46px);
+    border-radius:6px 6px 2px 2px;overflow:hidden;gap:2px;min-height:0}
+  ${P8} .dm-na-barra i{display:block;flex:1;background:var(--na-ev)}
+  ${P8} .dm-na-barra i.sole{background:var(--na-sole)}
+  ${P8} .dm-na-barra i.rete{background:var(--na-ev)}
+  ${P8} .dm-na-colonna::before{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;border-radius:2px;
+    background:color-mix(in srgb,var(--text,#0f172a) 8%,transparent)}
+  ${P8} .dm-na-colonna[data-futuro="true"]{opacity:.35}
+  ${P8} .dm-na-colonna small{position:absolute;left:-4px;right:-4px;bottom:-20px;text-align:center;font-size:11px;font-weight:800;
+    color:var(--text-dim,#64748b);white-space:nowrap;text-transform:capitalize}
+  ${P8} .dm-na-legenda{display:flex;gap:16px;margin:10px 0 0;font-size:12px;font-weight:800;color:var(--text-dim,#64748b)}
+  ${P8} .dm-na-legenda span{display:inline-flex;align-items:center;gap:6px}
+  ${P8} .dm-na-legenda i{width:11px;height:11px;border-radius:3px;background:var(--na-ev)}
+  ${P8} .dm-na-legenda i.sole{background:var(--na-sole)}
+  ${P8} .dm-na-ricariche{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:10px;margin-top:16px}
+  ${P8} .dm-na-ricarica{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;padding:10px 14px;
+    border-radius:15px;background:var(--surface-2,#f8fafc);border:1px solid var(--card-border,#e8edf3)}
+  ${P8} .dm-na-ricarica-giorno{display:grid;justify-items:center;min-width:34px}
+  ${P8} .dm-na-ricarica-giorno b{font-family:'Oswald',system-ui,sans-serif;font-size:22px;color:var(--text,#0f172a);line-height:1}
+  ${P8} .dm-na-ricarica-giorno small{font-size:10.5px;font-weight:900;text-transform:uppercase;color:var(--text-dim,#64748b)}
+  ${P8} .dm-na-ricarica-corpo{display:grid;gap:7px;min-width:0;font-size:13px;color:var(--text-dim,#64748b);font-weight:700}
+  ${P8} .dm-na-ricarica-corpo b{color:var(--text,#0f172a);font-weight:900}
+  ${P8} .dm-na-quota{display:flex;height:6px;border-radius:9px;overflow:hidden;gap:2px;background:color-mix(in srgb,var(--text,#0f172a) 8%,transparent)}
+  ${P8} .dm-na-quota i{display:block;min-width:0}
+  ${P8} .dm-na-quota i.sole{background:var(--na-sole)}
+  ${P8} .dm-na-quota i.rete{background:var(--na-ev)}
+  ${P8} .dm-na-ricarica-costo{display:grid;justify-items:end;gap:2px}
+  ${P8} .dm-na-ricarica-costo b{font-size:15px;font-weight:900;color:var(--text,#0f172a);white-space:nowrap}
+  ${P8} .dm-na-ricarica-costo small{font-size:11px;font-weight:900;color:#d97706;white-space:nowrap}
+  ${P8} .dm-na-tutte{display:block;width:100%;margin-top:12px;padding:12px;border-radius:14px;border:1px solid var(--card-border,#e2e8f0);
+    background:var(--surface-2,#f8fafc);color:#059669;font:inherit;font-size:14px;font-weight:900;cursor:pointer}
+  ${P8} .dm-na-vuoto{margin:8px 0;padding:18px;border-radius:15px;text-align:center;font-size:13.5px;font-weight:700;
+    color:var(--text-dim,#64748b);background:var(--surface-2,#f8fafc)}
+
+  /* viaggi e stato */
+  ${P8} .dm-na-parti{display:flex;height:12px;border-radius:9px;overflow:hidden;gap:2px}
+  ${P8} .dm-na-parti i{display:block;min-width:0}
+  ${P8} [data-parte="guida"] i,${P8} i[data-parte="guida"]{background:#10b981}
+  ${P8} [data-parte="clima"] i,${P8} i[data-parte="clima"]{background:#0ea5e9}
+  ${P8} [data-parte="altro"] i,${P8} i[data-parte="altro"]{background:#f59e0b}
+  ${P8} .dm-na-parti-voci{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:13px;font-weight:700;color:var(--text-dim,#64748b)}
+  ${P8} .dm-na-parti-voci span{display:inline-flex;align-items:center;gap:6px}
+  ${P8} .dm-na-parti-voci i{width:10px;height:10px;border-radius:3px}
+  ${P8} .dm-na-parti-voci b{color:var(--text,#0f172a)}
+  ${P8} .dm-na-ruote{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  ${P8} .dm-na-ruota{display:grid;gap:3px;padding:12px 14px;border-radius:15px;background:var(--surface-2,#f8fafc);border:1px solid var(--card-border,#e8edf3)}
+  ${P8} .dm-na-ruota span{font-size:12px;font-weight:800;color:var(--text-dim,#64748b)}
+  ${P8} .dm-na-ruota b{font-family:'Oswald',system-ui,sans-serif;font-size:28px;font-weight:700;color:#16a34a;line-height:1}
+  ${P8} .dm-na-ruota b small{font-family:inherit;font-size:12px;color:var(--text-dim,#64748b);margin-left:3px}
+  ${P8} .dm-na-ruota[data-tono="bassa"] b,${P8} .dm-na-ruota[data-tono="alta"] b,${P8} .dm-na-ruota[data-tono="avviso"] b{color:var(--na-male)}
+  ${P8} .dm-na-ruota[data-tono="bassa"],${P8} .dm-na-ruota[data-tono="avviso"]{border-color:color-mix(in srgb,var(--na-male) 40%,transparent)}
+  ${P8} .dm-na-voci{display:grid;gap:8px}
+  ${P8} .dm-na-voce{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:10px;padding:10px 12px;border-radius:13px;
+    background:var(--surface-2,#f8fafc)}
+  ${P8} .dm-na-voce b{font-size:14px;font-weight:800;color:var(--text,#0f172a)}
+  ${P8} .dm-na-voce em{font-style:normal;font-size:13px;font-weight:900;color:#16a34a}
+  ${P8} .dm-na-voce[data-tono="attenzione"] em{color:var(--na-male)}
+  ${P8} .dm-na-riga{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--card-border,#e2e8f0);font-size:14px}
+  ${P8} .dm-na-riga:last-child{border:0}
+  ${P8} .dm-na-riga span{font-weight:700;color:var(--text-dim,#64748b)}
+  ${P8} .dm-na-riga b{font-weight:900;color:var(--text,#0f172a);text-align:right}
+
+  /* il telefono */
+  @media (max-width:760px){
+    ${P8} #dm-na{gap:14px}
+    ${P8} .dm-na-carta{padding:16px;border-radius:20px}
+    ${P8} .dm-na-eroe{grid-template-columns:minmax(0,1fr);padding:18px;gap:6px}
+    ${P8} .dm-na-eroe-foto{order:-1;min-height:0;margin:-6px -8px 0}
+    ${P8} .dm-na-eroe-foto img{max-height:170px}
+    ${P8} .dm-na-autonomia b{font-size:68px}
+    ${P8} .dm-na-linguetta{font-size:13.5px;gap:5px;padding:8px 4px;flex-wrap:wrap}
+    ${P8} .dm-na-linguetta em{display:none}
+    ${P8} .dm-na-totali{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr))}
+    ${P8} .dm-na-tessere .dm-na-tessera{padding:10px 11px}
+    ${P8} .dm-na-tessere .dm-na-tessera>b{font-size:22px}
+    ${P8} .dm-na-tessere .dm-na-tessera>span{white-space:normal;line-height:1.15}
+    ${P8} .dm-na-modo{padding:10px}
+    ${P8} .dm-na-modo b{font-size:13.5px}
+    ${P8} .dm-na-modo small{font-size:11px}
+    ${P8} .dm-na-totali-tre{grid-auto-flow:column;grid-template-columns:none}
+    ${P8} .dm-na-totali-tre .dm-na-tessera{padding:10px 11px}
+    ${P8} .dm-na-totali-tre .dm-na-tessera>b{font-size:21px}
+    ${P8} .dm-na-totali-tre .dm-na-tessera>b small{display:block;margin:2px 0 0;white-space:normal}
+    ${P8} .dm-na-pronta b{font-size:42px}
+    ${P8} .dm-na-anello{width:112px;height:112px}
+    ${P8} .dm-na-storico-testa .dm-na-titolo{width:100%}
+    ${P8} .dm-na-periodo{width:100%;justify-content:space-between}
+    ${P8} .dm-na-scorciatoie{margin-left:0}
+  }`;
+}
+function installLaNuovaAuto() {
+  if (!doc || state146.installed) return false;
+  state146.installed = true;
+  installStyle("dm-la-nuova-auto-style", stile6());
+  for (const evento of [
+    "dashboardmodern:legacy-ready",
+    "dashboardmodern:states-ready",
+    "dashboardmodern:state-changed",
+    "dashboardmodern:persistence-restored",
+    "dashboardmodern:ricarica-notte"
+  ])
+    root.addEventListener?.(evento, schedule33);
+  root.addEventListener?.("storage", (evento) => {
+    if (evento?.key === INTERRUTTORE_DI_PROVA) ridisegna18();
+  });
+  doc.addEventListener?.("visibilitychange", schedule33);
+  quandoSiCambiaPagina(schedule33);
+  schedule33();
+  return true;
+}
+senzaCadere(installLaNuovaAuto);
+
+// src/core/le-fasce-del-dispositivo.js
+var numero55 = (valore3) => {
   const letto = Number(valore3);
   return Number.isFinite(letto) ? letto : null;
 };
 var vuoto5 = (quante3) => Array.from({ length: quante3 }, () => 0);
-function leFasceDelDispositivo({ dispositivo = [], casa = [], rete = [] } = {}, fasceSalvate, { prezzoUnico = 0 } = {}) {
-  const config = normalizzaLeFasce(fasceSalvate);
+function leFasceDelDispositivo({ dispositivo = [], casa = [], rete = [] } = {}, fasceSalvate2, { prezzoUnico: prezzoUnico2 = 0 } = {}) {
+  const config = normalizzaLeFasce(fasceSalvate2);
   const quante3 = config.voci.length;
   if (!quante3 || !leFasceValgono(config)) return null;
-  const unico = Math.max(0, numero54(prezzoUnico) || 0);
+  const unico = Math.max(0, numero55(prezzoUnico2) || 0);
   const prezzoDi = (indice) => {
     const suo2 = config.voci[indice]?.prezzo;
     return suo2 === null || suo2 === void 0 ? unico : suo2;
@@ -127550,24 +129010,24 @@ function leFasceDelDispositivo({ dispositivo = [], casa = [], rete = [] } = {}, 
   let suoiKwh = 0;
   let spartiti = 0;
   let senzaSpartizione = 0;
-  for (const [momento, kwh4] of suoi2) {
-    if (!(kwh4 > 0)) continue;
+  for (const [momento, kwh5] of suoi2) {
+    if (!(kwh5 > 0)) continue;
     const quando4 = new Date(momento);
     const quale = fasciaInVigore(config, quando4);
     if (quale < 0) continue;
-    suoiKwh += kwh4;
-    kwhPerFascia[quale] += kwh4;
+    suoiKwh += kwh5;
+    kwhPerFascia[quale] += kwh5;
     const casella6 = perOra[quando4.getHours()];
-    if (casella6) casella6.kwh += kwh4;
+    if (casella6) casella6.kwh += kwh5;
     if (!diCasa.has(momento) || !dallaRete.has(momento)) {
-      senzaSpartizione += kwh4;
+      senzaSpartizione += kwh5;
       continue;
     }
     const share = quotaDiRete(diCasa.get(momento), dallaRete.get(momento));
-    const dallaPresa = kwh4 * share;
-    spartiti += kwh4;
+    const dallaPresa = kwh5 * share;
+    spartiti += kwh5;
     retePerFascia[quale] += dallaPresa;
-    solePerFascia[quale] += kwh4 - dallaPresa;
+    solePerFascia[quale] += kwh5 - dallaPresa;
     if (casella6) casella6.rete += dallaPresa;
   }
   if (!(suoiKwh > 0)) return null;
@@ -127591,14 +129051,14 @@ function leFasceDelDispositivo({ dispositivo = [], casa = [], rete = [] } = {}, 
   });
   const dallaRete_ = retePerFascia.reduce((a, b2) => a + b2, 0);
   const dalSole = solePerFascia.reduce((a, b2) => a + b2, 0);
-  const euro2 = fasce.reduce((somma2, fascia2) => somma2 + fascia2.euro, 0);
+  const euro3 = fasce.reduce((somma3, fascia2) => somma3 + fascia2.euro, 0);
   const punta = fasce.reduce((alta, fascia2) => fascia2.kwh > alta.kwh ? fascia2 : alta, fasce[0]);
   return {
     fasce,
     kwh: suoiKwh,
     rete: dallaRete_,
     sole: dalSole,
-    euro: euro2,
+    euro: euro3,
     punta,
     /* Le ventiquattro ore, sempre tutte e sempre in ordine. La fascia e'
      * quella FERIALE di quell'ora — una colonna ha un colore solo, e il
@@ -127619,9 +129079,9 @@ function leFasceDelDispositivo({ dispositivo = [], casa = [], rete = [] } = {}, 
      * stimava col prezzo medio delle fasce sulla settimana — con una wallbox
      * che carica di notte quel prezzo e' quasi il doppio di quello vero — e
      * qui invece il prezzo e' quello dell'ora in cui il sole e' entrato. */
-    valoreDelSole: fasce.reduce((somma2, fascia2) => somma2 + fascia2.sole * fascia2.prezzo, 0),
+    valoreDelSole: fasce.reduce((somma3, fascia2) => somma3 + fascia2.sole * fascia2.prezzo, 0),
     unico: unico > 0 ? { prezzo: unico, euro: dallaRete_ * unico } : null,
-    risparmio: unico > 0 ? dallaRete_ * unico - euro2 : null,
+    risparmio: unico > 0 ? dallaRete_ * unico - euro3 : null,
     /* Quanta parte dei suoi kilowattora si e' potuta dividere fra sole e
      * rete. Chi legge deve saperlo: le fasce sono esatte comunque — l'ora in
      * cui ha consumato si sa sempre — ma gli euro riguardano solo la parte
@@ -127632,8 +129092,8 @@ function leFasceDelDispositivo({ dispositivo = [], casa = [], rete = [] } = {}, 
 }
 
 // src/sections/le-fasce-del-dispositivo-section.js
-var KEY150 = "__DASHBOARDMODERN_FASCE_DEL_DISPOSITIVO__";
-var state146 = root[KEY150] ||= {
+var KEY151 = "__DASHBOARDMODERN_FASCE_DEL_DISPOSITIVO__";
+var state147 = root[KEY151] ||= {
   installed: false,
   inCorso: false,
   /* Qualcuno ha chiesto mentre si aspettava: appena torna la risposta si
@@ -127715,8 +129175,8 @@ function ilRiquadro(crea = false) {
 function togliIlRiquadro(scorda = true) {
   doc?.getElementById("dm-fasce-dispositivo")?.remove();
   if (!scorda) return;
-  state146.detto = null;
-  state146.chiave = "";
+  state147.detto = null;
+  state147.chiave = "";
 }
 function laSchedaSiVede() {
   const selettore = doc?.getElementById("ed-dev-selector");
@@ -127766,15 +129226,15 @@ async function aggiornaLeFasceDelDispositivo({ forza = false } = {}) {
   const unico = prezzoUnicoDiAcquisto() || DEFAULT_IMPORT_RATE;
   const nome = nomeDelDispositivo2(selettore);
   const chiave2 = chiaveDelConto2(scelto, periodo, unico);
-  const fresco = chiave2 === state146.chiave && Date.now() - state146.letto < SCADENZA_MS;
-  if (!forza && fresco && state146.detto) return disegna9(state146.detto, config, nome);
-  if (state146.chiave && state146.chiave !== chiave2) togliIlRiquadro();
-  if (state146.inCorso) {
-    state146.dopo = true;
+  const fresco = chiave2 === state147.chiave && Date.now() - state147.letto < SCADENZA_MS;
+  if (!forza && fresco && state147.detto) return disegna9(state147.detto, config, nome);
+  if (state147.chiave && state147.chiave !== chiave2) togliIlRiquadro();
+  if (state147.inCorso) {
+    state147.dopo = true;
     return false;
   }
-  const giro = ++state146.giro;
-  state146.inCorso = true;
+  const giro = ++state147.giro;
+  state147.inCorso = true;
   try {
     const fonti = pianiDelleFonti("month");
     const unita3 = Object.fromEntries(
@@ -127783,7 +129243,7 @@ async function aggiornaLeFasceDelDispositivo({ forza = false } = {}) {
     const arco3 = periodRange("month", new Date(periodo.year, periodo.month - 1, 1), /* @__PURE__ */ new Date());
     const pezzo2 = { ...arco3, kind: "month", period: "hour" };
     const righe3 = await leOreDalRecorder([scelto, casa, rete], pezzo2, unita3);
-    if (giro !== state146.giro) return false;
+    if (giro !== state147.giro) return false;
     const detto3 = leFasceDelDispositivo(
       {
         dispositivo: secchielliNellArco(righe3?.[scelto], pezzo2),
@@ -127793,9 +129253,9 @@ async function aggiornaLeFasceDelDispositivo({ forza = false } = {}) {
       config,
       { prezzoUnico: unico }
     );
-    state146.detto = detto3;
-    state146.chiave = chiave2;
-    state146.letto = Date.now();
+    state147.detto = detto3;
+    state147.chiave = chiave2;
+    state147.letto = Date.now();
     if (clean(doc.getElementById("ed-dev-selector")?.value) !== scelto) return false;
     const fatto2 = disegna9(detto3, config, nome);
     if (detto3)
@@ -127805,16 +129265,16 @@ async function aggiornaLeFasceDelDispositivo({ forza = false } = {}) {
       });
     return fatto2;
   } catch (errore) {
-    if (giro === state146.giro) {
+    if (giro === state147.giro) {
       root.console?.warn?.("[dashboardmodern] ore non lette per le fasce del dispositivo", errore);
       togliIlRiquadro();
     }
     return false;
   } finally {
-    if (giro === state146.giro) {
-      state146.inCorso = false;
-      if (state146.dopo) {
-        state146.dopo = false;
+    if (giro === state147.giro) {
+      state147.inCorso = false;
+      if (state147.dopo) {
+        state147.dopo = false;
         root.setTimeout?.(() => rifai2(true), 0);
       }
     }
@@ -127852,8 +129312,8 @@ function rifai2(forza = false) {
   });
 }
 function installLeFasceDelDispositivo() {
-  if (!doc || state146.installed) return false;
-  state146.installed = true;
+  if (!doc || state147.installed) return false;
+  state147.installed = true;
   foglio5();
   doc.addEventListener("change", (evento) => {
     if (evento.target?.id === "ed-dev-selector") rifai2(true);
@@ -127906,8 +129366,8 @@ function ilComandoDellaVentola(entita3) {
 }
 
 // src/sections/la-ventola-dell-inverter-section.js
-var KEY151 = "__DASHBOARDMODERN_VENTOLA_INVERTER__";
-var state147 = root[KEY151] ||= { installed: false, frame: 0 };
+var KEY152 = "__DASHBOARDMODERN_VENTOLA_INVERTER__";
+var state148 = root[KEY152] ||= { installed: false, frame: 0 };
 function entitaDellaVentola(resolver = root.resolveEntity) {
   try {
     return clean(resolver?.(RIFERIMENTO_DELLA_VENTOLA) || "");
@@ -127992,18 +129452,18 @@ function installaIlPadroneDellaVentola() {
   return true;
 }
 function rimetti() {
-  if (state147.frame) return;
-  state147.frame = root.requestAnimationFrame?.(() => {
-    state147.frame = 0;
+  if (state148.frame) return;
+  state148.frame = root.requestAnimationFrame?.(() => {
+    state148.frame = 0;
     installaIlPadroneDellaVentola();
   }) || root.setTimeout?.(() => {
-    state147.frame = 0;
+    state148.frame = 0;
     installaIlPadroneDellaVentola();
   }, 0);
 }
 function installLaVentolaDellInverter() {
-  if (!doc || state147.installed) return false;
-  state147.installed = true;
+  if (!doc || state148.installed) return false;
+  state148.installed = true;
   installaIlPadroneDellaVentola();
   for (const evento of [
     "dashboardmodern:legacy-ready",
@@ -128019,23 +129479,23 @@ senzaCadere(installLaVentolaDellInverter);
 // src/core/il-solare-in-movimento.js
 var PERIODO = 4;
 var PASSI = 6;
-var numero55 = (valore3) => {
+var numero56 = (valore3) => {
   if (valore3 === null || valore3 === void 0 || String(valore3).trim() === "") return null;
   const n = Number(String(valore3).replace(",", "."));
   return Number.isFinite(n) ? n : null;
 };
 function passiDelFlusso(delta) {
-  const d = numero55(delta);
+  const d = numero56(delta);
   return Math.max(1, Math.min(PASSI, 1 + Math.round(Math.max(0, d ?? 0) / 6)));
 }
 function caloreDelPannello(gradi10) {
-  const g = numero55(gradi10);
+  const g = numero56(gradi10);
   if (g === null) return 0;
   return Math.max(0, Math.min(1, (g - 30) / 60));
 }
 function ilMotoDelSolare({ delta, pannello, potenza: potenza3 } = {}) {
   const n = passiDelFlusso(delta);
-  const w = numero55(potenza3);
+  const w = numero56(potenza3);
   return {
     ciclo: `${(PERIODO / n).toFixed(4)}s`,
     rotore: `${(PERIODO / (n * 2)).toFixed(4)}s`,
@@ -128048,17 +129508,17 @@ var RIFERIMENTI_DEL_MOTO = Object.freeze({
   pannello: "dm.boiler_sonda_temperatura_1",
   potenza: "dm.boiler_potenza_resistenza_boiler"
 });
-function lettureDelMoto(states = {}, risolvi3 = (rif) => rif) {
+function lettureDelMoto(states = {}, risolvi4 = (rif) => rif) {
   const fuori = {};
   for (const [chiave2, rif] of Object.entries(RIFERIMENTI_DEL_MOTO)) {
     let entita3 = "";
     try {
-      entita3 = String(risolvi3(rif) || "");
+      entita3 = String(risolvi4(rif) || "");
     } catch (_errore) {
       entita3 = "";
     }
     const stato3 = entita3 && entita3 !== rif ? states?.[entita3] : null;
-    let valore3 = numero55(stato3?.state);
+    let valore3 = numero56(stato3?.state);
     const unita3 = String(stato3?.attributes?.unit_of_measurement || "").toLowerCase();
     if (valore3 !== null && chiave2 === "potenza" && unita3 === "kw") valore3 *= 1e3;
     fuori[chiave2] = valore3;
@@ -128067,11 +129527,11 @@ function lettureDelMoto(states = {}, risolvi3 = (rif) => rif) {
 }
 
 // src/sections/solar-thermal-design-section.js
-var KEY152 = "__DASHBOARDMODERN_SOLAR_THERMAL_DESIGN__";
+var KEY153 = "__DASHBOARDMODERN_SOLAR_THERMAL_DESIGN__";
 var STYLE_ID29 = "dm-solar-thermal-design";
 var SVG_NS2 = "http://www.w3.org/2000/svg";
 var PORTRAIT_QUERY = "(max-width: 600px)";
-var state148 = root[KEY152] ||= { installed: false, frame: 0, query: null };
+var state149 = root[KEY153] ||= { installed: false, frame: 0, query: null };
 var RUNS = Object.freeze({
   "flow-sol-hot": "hot",
   "flow-sol-cold": "cold",
@@ -129427,7 +130887,7 @@ function mirrorRuntimeVisibility() {
   if (readout && reading) readout.style.display = hidden(reading) ? "none" : "";
 }
 function currentLayout() {
-  return state148.query?.matches ? PORTRAIT : LANDSCAPE;
+  return state149.query?.matches ? PORTRAIT : LANDSCAPE;
 }
 function decorate() {
   if (!doc?.getElementById("page-boiler")) return false;
@@ -129444,33 +130904,33 @@ function decorate() {
   setMotion();
   return true;
 }
-function schedule33() {
-  if (state148.frame) return;
-  state148.frame = root.requestAnimationFrame?.(() => {
-    state148.frame = 0;
+function schedule34() {
+  if (state149.frame) return;
+  state149.frame = root.requestAnimationFrame?.(() => {
+    state149.frame = 0;
     decorate();
   }) || 0;
-  if (!state148.frame) decorate();
+  if (!state149.frame) decorate();
 }
 function installSolarThermalDesignSection() {
   installStyle(STYLE_ID29, stylesheet());
   restyleOnLocaleChange(STYLE_ID29, () => {
-    schedule33();
+    schedule34();
     return stylesheet();
   });
-  state148.query ||= root.matchMedia?.(PORTRAIT_QUERY) || null;
+  state149.query ||= root.matchMedia?.(PORTRAIT_QUERY) || null;
   decorate();
-  if (state148.installed) return true;
-  state148.installed = true;
-  state148.query?.addEventListener?.("change", schedule33);
-  wrapFunction("render", "__dmSolarThermalDesign_render", schedule33);
+  if (state149.installed) return true;
+  state149.installed = true;
+  state149.query?.addEventListener?.("change", schedule34);
+  wrapFunction("render", "__dmSolarThermalDesign_render", schedule34);
   return true;
 }
 
 // src/sections/impianti-termici-section.js
-var KEY153 = "__DASHBOARDMODERN_IMPIANTI_TERMICI__";
+var KEY154 = "__DASHBOARDMODERN_IMPIANTI_TERMICI__";
 var STYLE_ID30 = "dm-impianti-termici-style";
-var state149 = root[KEY153] ||= {
+var state150 = root[KEY154] ||= {
   installed: false,
   frame: 0,
   tab: "",
@@ -129591,7 +131051,7 @@ function scenaScaldabagno(letture2) {
 }
 function macchinaScelta(tipo, righe3) {
   if (!righe3.length) return "";
-  const salvata = clean(state149.quale?.[tipo]);
+  const salvata = clean(state150.quale?.[tipo]);
   return righe3.some((riga3) => riga3.id === salvata) ? salvata : righe3[0].id;
 }
 function impiantiSolariDiCasa() {
@@ -130080,10 +131540,10 @@ function conLeRichieste(lettura3) {
   const fuori = { ...lettura3 };
   const richiesta = (campo5, reale, applica3) => {
     const chiave2 = `${lettura3.id}|${campo5}`;
-    const voce3 = state149.richieste?.[chiave2];
+    const voce3 = state150.richieste?.[chiave2];
     if (!voce3) return;
     if (voce3.valore === reale || Date.now() > voce3.fino) {
-      delete state149.richieste[chiave2];
+      delete state150.richieste[chiave2];
       return;
     }
     applica3(voce3.valore);
@@ -130129,31 +131589,31 @@ function comandaLaStufa(tasto2) {
   if (!comando || valore3 === null) return;
   root.navigator?.vibrate?.(8);
   chiamaServizio(comando);
-  state149.richieste = { ...state149.richieste || {} };
-  state149.richieste[`${id}|${campo5}`] = { valore: valore3, fino: Date.now() + ATTESA_RICHIESTA };
-  state149.firma = "";
+  state150.richieste = { ...state150.richieste || {} };
+  state150.richieste[`${id}|${campo5}`] = { valore: valore3, fino: Date.now() + ATTESA_RICHIESTA };
+  state150.firma = "";
   renderImpiantiTermici();
   root.setTimeout?.(() => {
-    state149.firma = "";
+    state150.firma = "";
     renderImpiantiTermici();
   }, ATTESA_RICHIESTA + 200);
 }
-function pagina() {
+function pagina2() {
   return doc?.getElementById(PAGINA) || null;
 }
-function contenitore3(page2) {
+function contenitore4(page2) {
   return page2.querySelector(".boiler-dashboard") || page2;
 }
 function scenaLegacy(page2) {
   return page2.querySelector(".synoptic-stage");
 }
 function renderImpiantiTermici() {
-  const page2 = pagina();
+  const page2 = pagina2();
   if (!page2) return false;
   const scelti = impiantiDiCasa();
-  const attiva2 = tabAttiva(scelti, state149.tab);
-  state149.tab = attiva2;
-  const box = contenitore3(page2);
+  const attiva2 = tabAttiva(scelti, state150.tab);
+  state150.tab = attiva2;
+  const box = contenitore4(page2);
   const states = allStates();
   const resolve = root.resolveEntity || ((value) => value);
   const letture2 = attiva2 === "scaldabagno" ? lettureScaldabagni(readJson(SCALDABAGNI_KEY, []), states, resolve) : [];
@@ -130163,8 +131623,8 @@ function renderImpiantiTermici() {
   const scelta3 = macchinaScelta(attiva2, quali);
   const solari2 = attiva2 === "solare" ? impiantiSolariDiCasa() : [];
   const firma2 = JSON.stringify([scelti, attiva2, letture2, caldaie2, stufe2, scelta3, solari2]);
-  if (firma2 === state149.firma) return true;
-  state149.firma = firma2;
+  if (firma2 === state150.firma) return true;
+  state150.firma = firma2;
   const testata5 = page2.querySelector(".boiler-header") || box;
   let strip = box.querySelector(":scope > .dm-it-strip");
   if (servonoLinguette(scelti)) {
@@ -130253,10 +131713,10 @@ function rinominaLaSezione() {
   }
   return fatto2;
 }
-function schedule34() {
-  if (state149.frame) return;
-  state149.frame = root.requestAnimationFrame?.(() => {
-    state149.frame = 0;
+function schedule35() {
+  if (state150.frame) return;
+  state150.frame = root.requestAnimationFrame?.(() => {
+    state150.frame = 0;
     try {
       renderImpiantiTermici();
       rinominaLaSezione();
@@ -130291,7 +131751,7 @@ function onClick43(event) {
   if (solare) {
     event.preventDefault();
     if (passaAlSolare(clean(solare.dataset.dmItSolare))) {
-      state149.firma = "";
+      state150.firma = "";
       renderImpiantiTermici();
     }
     return;
@@ -130299,10 +131759,10 @@ function onClick43(event) {
   const quale = event.target?.closest?.("[data-dm-it-quale]");
   if (quale) {
     event.preventDefault();
-    const tipo = tabAttiva(impiantiDiCasa(), state149.tab);
+    const tipo = tabAttiva(impiantiDiCasa(), state150.tab);
     if (tipo) {
-      state149.quale = { ...state149.quale || {}, [tipo]: clean(quale.dataset.dmItQuale) };
-      state149.firma = "";
+      state150.quale = { ...state150.quale || {}, [tipo]: clean(quale.dataset.dmItQuale) };
+      state150.firma = "";
       renderImpiantiTermici();
     }
     return;
@@ -130310,8 +131770,8 @@ function onClick43(event) {
   const tab = event.target?.closest?.("[data-dm-it-tab]");
   if (tab) {
     event.preventDefault();
-    state149.tab = clean(tab.dataset.dmItTab);
-    state149.firma = "";
+    state150.tab = clean(tab.dataset.dmItTab);
+    state150.firma = "";
     renderImpiantiTermici();
     try {
       renderPageMastheads();
@@ -130328,7 +131788,7 @@ function onClick43(event) {
       root.toggle?.(entity2) ?? root.cdToggleEntity?.(entity2);
     } catch (_error) {
     }
-    state149.firma = "";
+    state150.firma = "";
     root.setTimeout?.(() => renderImpiantiTermici(), 400);
   }
 }
@@ -130978,12 +132438,12 @@ function installStyles71() {
   );
 }
 function installImpiantiTermiciSection() {
-  if (!doc || state149.installed) return false;
-  state149.installed = true;
+  if (!doc || state150.installed) return false;
+  state150.installed = true;
   installStyles71();
   registraTitoloDiPagina(PAGINA, () => {
     const scelti = impiantiDiCasa();
-    const attiva2 = tabAttiva(scelti, state149.tab);
+    const attiva2 = tabAttiva(scelti, state150.tab);
     if (servonoLinguette(scelti))
       return { title: t(...NOME_SEZIONE), subtitle: t(...BRICIOLA_SEZIONE) };
     if (!attiva2) return { title: t(...NOME_SEZIONE), subtitle: t(...BRICIOLA_SEZIONE) };
@@ -131003,23 +132463,23 @@ function installImpiantiTermiciSection() {
     "dashboardmodern:persistence-restored",
     "pageshow"
   ]) {
-    root.addEventListener?.(evento, schedule34);
+    root.addEventListener?.(evento, schedule35);
   }
   doc.addEventListener(
     "click",
     (event) => {
-      if (event.target?.closest?.("[data-tab],[data-page],.tab")) root.setTimeout?.(schedule34, 0);
+      if (event.target?.closest?.("[data-tab],[data-page],.tab")) root.setTimeout?.(schedule35, 0);
     },
     true
   );
-  schedule34();
+  schedule35();
   return true;
 }
 senzaCadere(installImpiantiTermiciSection);
 
 // src/sections/impianti-termici-editor-section.js
-var KEY154 = "__DASHBOARDMODERN_IMPIANTI_TERMICI_EDITOR__";
-var state150 = root[KEY154] ||= {
+var KEY155 = "__DASHBOARDMODERN_IMPIANTI_TERMICI_EDITOR__";
+var state151 = root[KEY155] ||= {
   installed: false,
   aperto: -1,
   calAperto: -1,
@@ -131273,7 +132733,7 @@ function caselleSolare(index, voce3) {
   ).join("");
 }
 function rigaSolareMarkup(voce3, index) {
-  const aperto2 = state150.solAperto === index;
+  const aperto2 = state151.solAperto === index;
   const quante3 = Object.keys(voce3?.caselle || {}).length;
   return `<article class="ed-row dm-todo-ed-row dm-solare-row" data-solare-index="${index}" data-open="${aperto2}">
     <div class="dm-todo-ed-head">
@@ -131354,7 +132814,7 @@ function caselleCaldaia(index, voce3) {
   }).join("");
 }
 function rigaCaldaiaMarkup(voce3, index) {
-  const aperto2 = state150.calAperto === index;
+  const aperto2 = state151.calAperto === index;
   const nome = clean(voce3?.name) || `${t("Caldaia", "Boiler")} ${index + 1}`;
   const sotto = clean(voce3?.stato) || clean(voce3?.fiamma) || clean(voce3?.mandata) || t("nessuna entità", "no entity");
   return `<article class="ed-row dm-todo-ed-row dm-caldaia-row" data-caldaia-index="${index}" data-open="${aperto2}">
@@ -131482,7 +132942,7 @@ function caselleStufa(index, voce3) {
   }).join("");
 }
 function rigaStufaMarkup(voce3, index) {
-  const aperta2 = state150.stufaAperta === index;
+  const aperta2 = state151.stufaAperta === index;
   const nome = clean(voce3?.name) || `${t("Stufa", "Stove")} ${index + 1}`;
   const sotto = clean(voce3?.clima) || clean(voce3?.interruttore) || clean(voce3?.stato) || t("nessuna entità", "no entity");
   return `<article class="ed-row dm-todo-ed-row dm-stufa-row" data-stufa-index="${index}" data-open="${aperta2}">
@@ -131574,7 +133034,7 @@ function caselleScaldabagno(index, voce3) {
   }).join("");
 }
 function rigaScaldabagnoMarkup(voce3, index) {
-  const aperto2 = state150.aperto === index;
+  const aperto2 = state151.aperto === index;
   const nome = clean(voce3?.name) || clean(voce3?.entity) || `${t("Scaldabagno", "Water heater")} ${index + 1}`;
   const sotto = clean(voce3?.entity) || clean(voce3?.interruttore) || t("nessuna entità", "no entity");
   return `<article class="ed-row dm-todo-ed-row dm-scald-row" data-scald-index="${index}" data-open="${aperto2}">
@@ -131611,7 +133071,7 @@ var ICONE_LINGUETTA = Object.freeze({
 });
 function linguettaAttiva(scelti) {
   if (!scelti.length) return "";
-  const scelta3 = clean(state150.linguetta);
+  const scelta3 = clean(state151.linguetta);
   return scelti.includes(scelta3) ? scelta3 : scelti[0];
 }
 function linguetteMarkup2(scelti, attiva2) {
@@ -131653,10 +133113,10 @@ function ensureImpiantiTermiciEditor() {
   const firma2 = JSON.stringify([
     scelti,
     attiva2,
-    state150.aperto,
-    state150.calAperto,
-    state150.solAperto,
-    state150.stufaAperta,
+    state151.aperto,
+    state151.calAperto,
+    state151.solAperto,
+    state151.stufaAperta,
     scaldabagni(),
     caldaie(),
     stufe(),
@@ -131664,11 +133124,11 @@ function ensureImpiantiTermiciEditor() {
   ]);
   let blocco3 = body.querySelector(":scope > .dm-it-ed");
   const caselle2 = caselleDelSolare(body);
-  if (blocco3 && firma2 === state150.firma && (attiva2 !== "solare" || caselle2?.closest(".dm-it-ed"))) {
+  if (blocco3 && firma2 === state151.firma && (attiva2 !== "solare" || caselle2?.closest(".dm-it-ed"))) {
     sistemaLeCaselleDelSolare(body, attiva2);
     return true;
   }
-  state150.firma = firma2;
+  state151.firma = firma2;
   if (caselle2 && caselle2.parentElement !== body) body.append(caselle2);
   const guscio3 = doc.createElement("div");
   guscio3.innerHTML = corpoMarkup10();
@@ -131748,8 +133208,8 @@ function ordinaLeCaselleDelSolare(caselle2) {
   }
   return true;
 }
-function ridisegna18() {
-  state150.firma = "";
+function ridisegna19() {
+  state151.firma = "";
   ensureImpiantiTermiciEditor();
 }
 function leggiCaldaia(riga3, voce3) {
@@ -131776,8 +133236,8 @@ function onClick44(event) {
   const linguetta3 = event.target.closest("[data-dm-it-ed-tab]");
   if (linguetta3) {
     event.preventDefault();
-    state150.linguetta = clean(linguetta3.dataset.dmItEdTab);
-    ridisegna18();
+    state151.linguetta = clean(linguetta3.dataset.dmItEdTab);
+    ridisegna19();
     return;
   }
   const leva3 = event.target.closest("[data-dm-it-scelta]");
@@ -131785,15 +133245,15 @@ function onClick44(event) {
     event.preventDefault();
     const tipo = clean(leva3.dataset.dmItScelta);
     salvaScelta(tipo, leva3.dataset.on !== "true");
-    ridisegna18();
+    ridisegna19();
     return;
   }
   const vociCaldaia = caldaie();
   if (event.target.closest("[data-caldaia-add]")) {
     event.preventDefault();
-    state150.calAperto = vociCaldaia.length;
+    state151.calAperto = vociCaldaia.length;
     salvaCaldaie([...vociCaldaia, { id: `caldaia-${Date.now().toString(36)}`, name: "" }]);
-    ridisegna18();
+    ridisegna19();
     return;
   }
   const pickCaldaia = event.target.closest("[data-caldaia-pick]");
@@ -131814,12 +133274,12 @@ function onClick44(event) {
       }
     ];
     const nuovo = { id: `${PRIMO_SOLARE}-${Date.now().toString(36)}`, nome: "", caselle: {} };
-    state150.solAperto = prima.length;
+    state151.solAperto = prima.length;
     salvaSolari(
       [...prima, nuovo],
       clean(root.localStorage?.getItem?.(CHIAVE_SOLARE_SCELTO)) || prima[0].id
     );
-    ridisegna18();
+    ridisegna19();
     return;
   }
   const pickSolare = event.target.closest("[data-solare-pick]");
@@ -131840,8 +133300,8 @@ function onClick44(event) {
         righeDelDocumento(body, "data-solare-index", lista7, leggiSolare),
         solareAcceso(lista7)
       );
-      state150.solAperto = state150.solAperto === indice ? -1 : indice;
-      ridisegna18();
+      state151.solAperto = state151.solAperto === indice ? -1 : indice;
+      ridisegna19();
       return;
     }
     if (event.target.closest("[data-solare-mostra]")) {
@@ -131850,7 +133310,7 @@ function onClick44(event) {
         righeDelDocumento(body, "data-solare-index", lista7, leggiSolare),
         lista7[indice].id
       );
-      ridisegna18();
+      ridisegna19();
       root.edToast?.(t("🌞 Impianto in pagina", "🌞 Plant on the page"));
       return;
     }
@@ -131859,7 +133319,7 @@ function onClick44(event) {
       const nome = nomeDelSolare(lista7[indice], indice, [t("Solare termico", "Solar thermal"), ""]);
       if (root.confirm && !root.confirm(t(`Tolgo "${nome}"?`, `Remove "${nome}"?`))) return;
       const restano = lista7.filter((_voce, posto) => posto !== indice);
-      state150.solAperto = -1;
+      state151.solAperto = -1;
       if (restano.length <= 1) {
         const solo = restano[0] || lista7[indice === 0 ? 1 : 0];
         salvaSolari(solo ? [solo] : [], solo?.id);
@@ -131867,16 +133327,16 @@ function onClick44(event) {
       } else {
         salvaSolari(restano, lista7[indice].corrente ? restano[0].id : solareAcceso(lista7));
       }
-      ridisegna18();
+      ridisegna19();
       return;
     }
     if (event.target.closest("[data-solare-save]")) {
       event.preventDefault();
       const prossimi = righeDelDocumento(body, "data-solare-index", lista7, leggiSolare);
       prossimi[indice] = leggiSolare(rigaSolare, lista7[indice]);
-      state150.solAperto = -1;
+      state151.solAperto = -1;
       salvaSolari(prossimi, solareAcceso(lista7));
-      ridisegna18();
+      ridisegna19();
       root.edToast?.(t("💾 Impianto salvato", "💾 Plant saved"));
     }
     return;
@@ -131887,17 +133347,17 @@ function onClick44(event) {
     if (!Number.isFinite(indice) || !vociCaldaia[indice]) return;
     if (event.target.closest("[data-caldaia-edit]")) {
       event.preventDefault();
-      state150.calAperto = state150.calAperto === indice ? -1 : indice;
-      ridisegna18();
+      state151.calAperto = state151.calAperto === indice ? -1 : indice;
+      ridisegna19();
       return;
     }
     if (event.target.closest("[data-caldaia-del]")) {
       event.preventDefault();
       const nome = clean(vociCaldaia[indice]?.name) || `${t("Caldaia", "Boiler")} ${indice + 1}`;
       if (root.confirm && !root.confirm(t(`Tolgo "${nome}"?`, `Remove "${nome}"?`))) return;
-      state150.calAperto = -1;
+      state151.calAperto = -1;
       salvaCaldaie(vociCaldaia.filter((_voce, posto) => posto !== indice));
-      ridisegna18();
+      ridisegna19();
       return;
     }
     if (event.target.closest("[data-caldaia-save]")) {
@@ -131905,9 +133365,9 @@ function onClick44(event) {
       const prossime = righeDelDocumento(body, "data-caldaia-index", vociCaldaia, leggiCaldaia);
       const letta2 = leggiCaldaia(rigaCaldaia, vociCaldaia[indice]);
       prossime[indice] = letta2;
-      state150.calAperto = -1;
+      state151.calAperto = -1;
       salvaCaldaie(prossime);
-      ridisegna18();
+      ridisegna19();
       root.edToast?.(t("💾 Caldaia salvata", "💾 Boiler saved"));
     }
     return;
@@ -131915,9 +133375,9 @@ function onClick44(event) {
   const vociStufa = stufe();
   if (event.target.closest("[data-stufa-add]")) {
     event.preventDefault();
-    state150.stufaAperta = vociStufa.length;
+    state151.stufaAperta = vociStufa.length;
     salvaStufe([...vociStufa, { id: `stufa-${Date.now().toString(36)}`, name: "" }]);
-    ridisegna18();
+    ridisegna19();
     return;
   }
   const pickStufa = event.target.closest("[data-stufa-pick]");
@@ -131933,26 +133393,26 @@ function onClick44(event) {
     if (!Number.isFinite(indice) || !vociStufa[indice]) return;
     if (event.target.closest("[data-stufa-edit]")) {
       event.preventDefault();
-      state150.stufaAperta = state150.stufaAperta === indice ? -1 : indice;
-      ridisegna18();
+      state151.stufaAperta = state151.stufaAperta === indice ? -1 : indice;
+      ridisegna19();
       return;
     }
     if (event.target.closest("[data-stufa-del]")) {
       event.preventDefault();
       const nome = clean(vociStufa[indice]?.name) || `${t("Stufa", "Stove")} ${indice + 1}`;
       if (root.confirm && !root.confirm(t(`Tolgo "${nome}"?`, `Remove "${nome}"?`))) return;
-      state150.stufaAperta = -1;
+      state151.stufaAperta = -1;
       salvaStufe(vociStufa.filter((_voce, posto) => posto !== indice));
-      ridisegna18();
+      ridisegna19();
       return;
     }
     if (event.target.closest("[data-stufa-save]")) {
       event.preventDefault();
       const prossime = righeDelDocumento(body, "data-stufa-index", vociStufa, leggiStufa);
       prossime[indice] = leggiStufa(rigaStufa, vociStufa[indice]);
-      state150.stufaAperta = -1;
+      state151.stufaAperta = -1;
       salvaStufe(prossime);
-      ridisegna18();
+      ridisegna19();
       root.edToast?.(t("💾 Stufa salvata", "💾 Stove saved"));
     }
     return;
@@ -131960,9 +133420,9 @@ function onClick44(event) {
   if (event.target.closest("[data-scald-add]")) {
     event.preventDefault();
     const voci4 = scaldabagni();
-    state150.aperto = voci4.length;
+    state151.aperto = voci4.length;
     salvaScaldabagni([...voci4, { name: "", entity: "" }]);
-    ridisegna18();
+    ridisegna19();
     return;
   }
   if (event.target.closest("[data-scald-detect]")) {
@@ -131977,7 +133437,7 @@ function onClick44(event) {
       ...voci4,
       ...trovati.map((trovato) => ({ name: trovato.name, entity: trovato.entity }))
     ]);
-    ridisegna18();
+    ridisegna19();
     root.edToast?.(t("🪄 Scaldabagni aggiunti", "🪄 Water heaters added"));
     return;
   }
@@ -131995,8 +133455,8 @@ function onClick44(event) {
     if (!Number.isFinite(index) || !voci4[index]) return;
     if (event.target.closest("[data-scald-edit]")) {
       event.preventDefault();
-      state150.aperto = state150.aperto === index ? -1 : index;
-      ridisegna18();
+      state151.aperto = state151.aperto === index ? -1 : index;
+      ridisegna19();
       return;
     }
     if (event.target.closest("[data-scald-del]")) {
@@ -132004,9 +133464,9 @@ function onClick44(event) {
       const nome = clean(voci4[index]?.name) || clean(voci4[index]?.entity) || `${index + 1}`;
       const domanda = t(`Tolgo "${nome}"?`, `Remove "${nome}"?`);
       if (root.confirm && !root.confirm(domanda)) return;
-      state150.aperto = -1;
+      state151.aperto = -1;
       salvaScaldabagni(voci4.filter((_voce, position) => position !== index));
-      ridisegna18();
+      ridisegna19();
       return;
     }
     if (event.target.closest("[data-scald-save]")) {
@@ -132030,9 +133490,9 @@ function onClick44(event) {
       }
       if (errore) errore.textContent = "";
       next[index] = letta2;
-      state150.aperto = -1;
+      state151.aperto = -1;
       salvaScaldabagni(next);
-      ridisegna18();
+      ridisegna19();
       root.edToast?.(t("💾 Scaldabagno salvato", "💾 Water heater saved"));
     }
     return;
@@ -132128,8 +133588,8 @@ function installStyles72() {
   );
 }
 function installImpiantiTermiciEditor() {
-  if (!doc || state150.installed) return false;
-  state150.installed = true;
+  if (!doc || state151.installed) return false;
+  state151.installed = true;
   installStyles72();
   doc.addEventListener("click", onClick44);
   wrapFunction(
@@ -132150,8 +133610,8 @@ function installImpiantiTermiciEditor() {
 senzaCadere(installImpiantiTermiciEditor);
 
 // src/sections/ups-section.js
-var KEY155 = "__DASHBOARDMODERN_UPS_SECTION__";
-var state151 = root[KEY155] ||= { installed: false, frame: 0, firma: "" };
+var KEY156 = "__DASHBOARDMODERN_UPS_SECTION__";
+var state152 = root[KEY156] ||= { installed: false, frame: 0, firma: "" };
 var UPS_PAGE_ID = "page-ups";
 var UPS_TAB = "ups";
 function gruppi() {
@@ -132160,9 +133620,9 @@ function gruppi() {
 function upsConfigurato() {
   return gruppi().some((gruppo) => entitaDellUps(gruppo).length > 0);
 }
-var risolvi2 = () => root.resolveEntity || ((value) => value);
+var risolvi3 = () => root.resolveEntity || ((value) => value);
 function letturaDi4(gruppo) {
-  return letturaUps(gruppo, allStates(), risolvi2());
+  return letturaUps(gruppo, allStates(), risolvi3());
 }
 function ultimaPagina12() {
   const pagine = doc?.querySelectorAll?.(".page");
@@ -132170,16 +133630,16 @@ function ultimaPagina12() {
 }
 function ensureUpsPage() {
   if (!doc) return null;
-  let pagina2 = doc.getElementById(UPS_PAGE_ID);
-  if (pagina2) return pagina2;
+  let pagina3 = doc.getElementById(UPS_PAGE_ID);
+  if (pagina3) return pagina3;
   const sorella = ultimaPagina12();
   if (!sorella?.parentElement) return null;
-  pagina2 = doc.createElement("section");
-  pagina2.className = "page";
-  pagina2.id = UPS_PAGE_ID;
-  pagina2.innerHTML = `<div class="dm-ups-wrap" id="ups-wrap"></div>`;
-  sorella.after(pagina2);
-  return pagina2;
+  pagina3 = doc.createElement("section");
+  pagina3.className = "page";
+  pagina3.id = UPS_PAGE_ID;
+  pagina3.innerHTML = `<div class="dm-ups-wrap" id="ups-wrap"></div>`;
+  sorella.after(pagina3);
+  return pagina3;
 }
 function ensureUpsTab() {
   if (!doc) return null;
@@ -132202,7 +133662,7 @@ function ensureUpsTab() {
     if (testata5) testata5.style.display = "none";
     root.scrollTo?.({ top: 0, behavior: "instant" });
     if (root.navigator?.vibrate) root.navigator.vibrate(5);
-    schedule35();
+    schedule36();
   });
   if (dopo) dopo.after(voce3);
   else barra2.append(voce3);
@@ -132218,8 +133678,8 @@ function accendiLaVoce8() {
   const serve = segnaContenuto(UPS_TAB, upsConfigurato()) && sezioneAccesa9();
   if (serve) voce3.style.removeProperty("display");
   else voce3.style.setProperty("display", "none", "important");
-  const pagina2 = doc.getElementById(UPS_PAGE_ID);
-  if (!serve && pagina2?.classList.contains("active"))
+  const pagina3 = doc.getElementById(UPS_PAGE_ID);
+  if (!serve && pagina3?.classList.contains("active"))
     doc.querySelector('.tab[data-tab="home"]')?.click();
 }
 var NUMERO2 = (valore3, cifre3 = 1) => formatNumber(valore3, cifre3);
@@ -132238,12 +133698,12 @@ var POSTI2 = Object.freeze({
 function targhetta2(posto, etichetta3, valore3, unita3, colore, cifre3 = 1) {
   if (valore3 == null) return "";
   const salita = laMisuraDallUnita(valore3, unita3, { decimali: cifre3 });
-  const numero57 = salita ? salita.numero : NUMERO2(valore3, cifre3);
+  const numero58 = salita ? salita.numero : NUMERO2(valore3, cifre3);
   const sigla = salita ? ` ${salita.unita}` : unita3;
   return `<div class="dm-ups-nodo dm-ups-nodo-plate" data-dm-ups-posto="${esc(posto)}" style="${POSTI2[posto]}">
     <div class="dm-ups-plate">
       <span class="dm-ups-plate-lbl">${esc(etichetta3)}</span>
-      <b class="dm-ups-plate-val" style="color:${colore}">${esc(numero57)}<i>${esc(sigla)}</i></b>
+      <b class="dm-ups-plate-val" style="color:${colore}">${esc(numero58)}<i>${esc(sigla)}</i></b>
     </div>
   </div>`;
 }
@@ -132345,12 +133805,12 @@ function vuotoMarkup9() {
   </div>`;
 }
 function dipingi11() {
-  const pagina2 = ensureUpsPage();
-  const dove = pagina2?.querySelector?.("#ups-wrap");
+  const pagina3 = ensureUpsPage();
+  const dove = pagina3?.querySelector?.("#ups-wrap");
   if (!dove) return;
   if (!upsConfigurato()) {
-    if (state151.firma !== "vuoto") {
-      state151.firma = "vuoto";
+    if (state152.firma !== "vuoto") {
+      state152.firma = "vuoto";
       dove.innerHTML = vuotoMarkup9();
     }
     return;
@@ -132359,19 +133819,19 @@ function dipingi11() {
   const scene = elenco15.map((gruppo, posizione) => ({
     nome: clean(gruppo.name) || `${t("UPS", "UPS")} ${posizione + 1}`,
     dato: letturaDi4(gruppo),
-    da: daQuandoUps(gruppo, allStates(), risolvi2())
+    da: daQuandoUps(gruppo, allStates(), risolvi3())
   }));
   const firma2 = JSON.stringify(scene);
-  if (state151.firma === firma2 && dove.firstElementChild) return;
-  state151.firma = firma2;
+  if (state152.firma === firma2 && dove.firstElementChild) return;
+  state152.firma = firma2;
   dove.innerHTML = scene.map(
     (voce3) => `${elenco15.length > 1 ? `<h3 class="dm-ups-titolo">${esc(voce3.nome)}</h3>` : ""}<div class="dm-ups-stage">${scena(voce3.dato, voce3.da)}</div>`
   ).join("");
 }
-function schedule35() {
-  if (state151.frame) return;
+function schedule36() {
+  if (state152.frame) return;
   const giro = () => {
-    state151.frame = 0;
+    state152.frame = 0;
     try {
       accendiLaVoce8();
       dipingi11();
@@ -132379,8 +133839,8 @@ function schedule35() {
       root.console?.warn?.("[DashboardModern] ups", error);
     }
   };
-  state151.frame = root.requestAnimationFrame?.(giro) || 0;
-  if (!state151.frame) giro();
+  state152.frame = root.requestAnimationFrame?.(giro) || 0;
+  if (!state152.frame) giro();
 }
 function installStyles73() {
   const P8 = `#${UPS_PAGE_ID}`;
@@ -132654,8 +134114,8 @@ function installStyles73() {
   );
 }
 function installUpsSection() {
-  if (!doc || state151.installed) return false;
-  state151.installed = true;
+  if (!doc || state152.installed) return false;
+  state152.installed = true;
   installStyles73();
   ensureUpsPage();
   ensureUpsTab();
@@ -132664,7 +134124,7 @@ function installUpsSection() {
     if (typeof precedente !== "function" || precedente.__dmUpsSection) continue;
     const avvolta = function(...args) {
       const esito2 = precedente.apply(this, args);
-      schedule35();
+      schedule36();
       return esito2;
     };
     avvolta.__dmUpsSection = true;
@@ -132677,15 +134137,15 @@ function installUpsSection() {
     "dashboardmodern:state-changed",
     "dashboardmodern:persistence-restored"
   ])
-    root.addEventListener?.(evento, schedule35);
-  schedule35();
+    root.addEventListener?.(evento, schedule36);
+  schedule36();
   return true;
 }
 senzaCadere(installUpsSection);
 
 // src/sections/calendario-section.js
-var KEY156 = "__DASHBOARDMODERN_CALENDARIO_SECTION__";
-var state152 = root[KEY156] ||= { installed: false, frame: 0, firma: "", giorno: "" };
+var KEY157 = "__DASHBOARDMODERN_CALENDARIO_SECTION__";
+var state153 = root[KEY157] ||= { installed: false, frame: 0, firma: "", giorno: "" };
 var CALENDARIO_PAGE_ID = "page-calendario";
 var CALENDARIO_TAB = "calendario";
 var GIORNI_IN_AGENDA = 30;
@@ -132706,16 +134166,16 @@ function ultimaPagina13() {
 }
 function ensureCalendarioPage() {
   if (!doc) return null;
-  let pagina2 = doc.getElementById(CALENDARIO_PAGE_ID);
-  if (pagina2) return pagina2;
+  let pagina3 = doc.getElementById(CALENDARIO_PAGE_ID);
+  if (pagina3) return pagina3;
   const sorella = ultimaPagina13();
   if (!sorella?.parentElement) return null;
-  pagina2 = doc.createElement("section");
-  pagina2.className = "page";
-  pagina2.id = CALENDARIO_PAGE_ID;
-  pagina2.innerHTML = `<div class="dm-calp-wrap" id="calendario-wrap"></div>`;
-  sorella.after(pagina2);
-  return pagina2;
+  pagina3 = doc.createElement("section");
+  pagina3.className = "page";
+  pagina3.id = CALENDARIO_PAGE_ID;
+  pagina3.innerHTML = `<div class="dm-calp-wrap" id="calendario-wrap"></div>`;
+  sorella.after(pagina3);
+  return pagina3;
 }
 function ensureCalendarioTab() {
   if (!doc) return null;
@@ -132739,7 +134199,7 @@ function ensureCalendarioTab() {
     root.scrollTo?.({ top: 0, behavior: "instant" });
     if (root.navigator?.vibrate) root.navigator.vibrate(5);
     aggiornaCalendari({ force: true });
-    schedule36();
+    schedule37();
   });
   if (dopo) dopo.after(voce3);
   else barra2.append(voce3);
@@ -132755,8 +134215,8 @@ function accendiLaVoce9() {
   const serve = segnaContenuto(CALENDARIO_TAB, calendarioConfigurato()) && sezioneAccesa10();
   if (serve) voce3.style.removeProperty("display");
   else voce3.style.setProperty("display", "none", "important");
-  const pagina2 = doc.getElementById(CALENDARIO_PAGE_ID);
-  if (!serve && pagina2?.classList.contains("active"))
+  const pagina3 = doc.getElementById(CALENDARIO_PAGE_ID);
+  if (!serve && pagina3?.classList.contains("active"))
     doc.querySelector('.tab[data-tab="home"]')?.click();
 }
 function paroleDelCalendario3() {
@@ -132793,7 +134253,7 @@ function fasciaMarkup4(giorni, adesso2, lingua3, calendari) {
     const pallini2 = eventi.length > 3 ? `<b class="dm-calp-tanti">${eventi.length}</b>` : eventi.map((evento) => `<i style="background:${esc(tintaDi(evento, calendari))}"></i>`).join("");
     celle.push(`<button type="button" class="dm-calp-cella" data-dm-calp-giorno="${esc(chiave2)}"
       data-oggi="${passo === 0}" data-vuoto="${eventi.length === 0}"
-      data-scelto="${state152.giorno === chiave2}">
+      data-scelto="${state153.giorno === chiave2}">
       <span class="dm-calp-sett">${esc(settimana)}</span>
       <b class="dm-calp-numero">${esc(String(data.getDate()))}</b>
       <span class="dm-calp-punti">${pallini2}</span>
@@ -132854,16 +134314,16 @@ function chiGuardaMarkup() {
   </div>`;
 }
 function dipingi12() {
-  const pagina2 = ensureCalendarioPage();
-  const dove = pagina2?.querySelector?.("#calendario-wrap");
+  const pagina3 = ensureCalendarioPage();
+  const dove = pagina3?.querySelector?.("#calendario-wrap");
   if (!dove) return;
   const chiGuarda2 = chiGuardaMarkup();
   const calendari = calendariConTinta();
   if (!calendari.length) {
     const soleCose = bloccoDaFareMarkup();
     const firmaVuota = `${chiGuarda2}${soleCose ? `cose:${soleCose}` : "vuoto"}`;
-    if (state152.firma === firmaVuota && dove.firstElementChild) return;
-    state152.firma = firmaVuota;
+    if (state153.firma === firmaVuota && dove.firstElementChild) return;
+    state153.firma = firmaVuota;
     dove.innerHTML = chiGuarda2 + (soleCose ? `<section class="dm-calp-cose">
           <h3 class="dm-calp-titolo">✅ ${esc(t("Da fare", "To-do"))}</h3>
           ${soleCose}
@@ -132879,14 +134339,14 @@ function dipingi12() {
   const giorni = insieme3.giorni.slice(0, GIORNI_IN_AGENDA);
   const lingua3 = locale();
   const piuCalendari = calendari.length > 1;
-  const mostrati = state152.giorno ? giorni.filter((voce3) => voce3.giorno === state152.giorno) : giorni;
+  const mostrati = state153.giorno ? giorni.filter((voce3) => voce3.giorno === state153.giorno) : giorni;
   const daFare = bloccoDaFareMarkup();
   const cose = daFare ? `<section class="dm-calp-cose">
         <h3 class="dm-calp-titolo">✅ ${esc(t("Da fare", "To-do"))}</h3>
         ${daFare}
       </section>` : "";
   const firma2 = JSON.stringify([
-    state152.giorno,
+    state153.giorno,
     inArrivo2,
     daFare,
     /* Chi guarda (#344): cambiando persona cambia l'agenda, e la riga in cima
@@ -132900,9 +134360,9 @@ function dipingi12() {
     scadenze.map((voce3) => [voce3.uid, voce3.inizio, voce3.summary]),
     chiaveDelGiorno2(adesso2)
   ]);
-  if (state152.firma === firma2 && dove.firstElementChild) return;
-  state152.firma = firma2;
-  const ritardoMarkup = arretrati.length && !state152.giorno ? `<section class="dm-calp-giorno" data-dm-ritardo="true">
+  if (state153.firma === firma2 && dove.firstElementChild) return;
+  state153.firma = firma2;
+  const ritardoMarkup = arretrati.length && !state153.giorno ? `<section class="dm-calp-giorno" data-dm-ritardo="true">
           <h3 class="dm-calp-titolo">⚠️ ${esc(paroleDelCalendario3().inRitardo)}</h3>
           <ul class="dm-calp-lista">${arretrati.map((evento) => eventoMarkup(evento, adesso2, lingua3, calendari, piuCalendari)).join("")}</ul>
         </section>` : "";
@@ -132912,7 +134372,7 @@ function dipingi12() {
         <ul class="dm-calp-lista">${dentro3.map((evento) => eventoMarkup(evento, adesso2, lingua3, calendari, piuCalendari)).join("")}</ul>
       </section>`
   ).join("") : `<p class="dm-calp-niente">${esc(
-    inArrivo2 ? t("Caricamento…", "Loading…") : state152.giorno ? t("Niente in programma questo giorno", "Nothing scheduled that day") : t("✨ Niente in programma", "✨ Nothing scheduled")
+    inArrivo2 ? t("Caricamento…", "Loading…") : state153.giorno ? t("Niente in programma questo giorno", "Nothing scheduled that day") : t("✨ Niente in programma", "✨ Nothing scheduled")
   )}</p>`;
   const vociLegenda = [
     ...piuCalendari ? calendari.map((voce3) => [voce3.tinta, nomeDellEntita(voce3.entity, voce3.name)]) : [],
@@ -132923,9 +134383,9 @@ function dipingi12() {
   ).join("")}</div>` : "";
   dichiaraCalendari(calendari);
   const modulo = moduloMarkup(calendari, listeConNome());
-  const nuovo = bozzaAperta2() ? "" : tastoNuovoMarkup(calendari, state152.giorno);
+  const nuovo = bozzaAperta2() ? "" : tastoNuovoMarkup(calendari, state153.giorno);
   dove.innerHTML = `${chiGuarda2}${fasciaMarkup4(giorni, adesso2, lingua3, calendari)}${legenda}
-    ${state152.giorno ? `<button type="button" class="dm-calp-tutto" data-dm-calp-tutto>↩ ${esc(
+    ${state153.giorno ? `<button type="button" class="dm-calp-tutto" data-dm-calp-tutto>↩ ${esc(
     t("Tutti i giorni", "All days")
   )}</button>` : ""}
     ${nuovo ? `<div class="dm-calp-nuovo-riga">${nuovo}</div>` : ""}
@@ -132933,10 +134393,10 @@ function dipingi12() {
     <div class="dm-calp-agenda">${ritardoMarkup}${agenda}</div>
     ${cose}`;
 }
-function schedule36() {
-  if (state152.frame) return;
+function schedule37() {
+  if (state153.frame) return;
   const giro = () => {
-    state152.frame = 0;
+    state153.frame = 0;
     try {
       accendiLaVoce9();
       dipingi12();
@@ -132944,27 +134404,27 @@ function schedule36() {
       root.console?.warn?.("[DashboardModern] calendario", error);
     }
   };
-  state152.frame = root.requestAnimationFrame?.(giro) || 0;
-  if (!state152.frame) giro();
+  state153.frame = root.requestAnimationFrame?.(giro) || 0;
+  if (!state153.frame) giro();
 }
 function renderCalendarioSection() {
-  state152.firma = "";
-  schedule36();
+  state153.firma = "";
+  schedule37();
 }
 function onClick45(event) {
   const cella = event.target?.closest?.("[data-dm-calp-giorno]");
   if (cella) {
     event.preventDefault();
     const chiave2 = clean(cella.dataset.dmCalpGiorno);
-    state152.giorno = state152.giorno === chiave2 ? "" : chiave2;
-    state152.firma = "";
+    state153.giorno = state153.giorno === chiave2 ? "" : chiave2;
+    state153.firma = "";
     dipingi12();
     return;
   }
   if (event.target?.closest?.("[data-dm-calp-tutto]")) {
     event.preventDefault();
-    state152.giorno = "";
-    state152.firma = "";
+    state153.giorno = "";
+    state153.firma = "";
     dipingi12();
     return;
   }
@@ -133107,8 +134567,8 @@ function installStyles74() {
   );
 }
 function installCalendarioSection() {
-  if (!doc || state152.installed) return false;
-  state152.installed = true;
+  if (!doc || state153.installed) return false;
+  state153.installed = true;
   installStyles74();
   registraOspiteCalendario(() => renderCalendarioSection());
   ensureCalendarioPage();
@@ -133119,7 +134579,7 @@ function installCalendarioSection() {
     if (typeof precedente !== "function" || precedente.__dmCalendarioSection) continue;
     const avvolta = function(...args) {
       const esito2 = precedente.apply(this, args);
-      schedule36();
+      schedule37();
       return esito2;
     };
     avvolta.__dmCalendarioSection = true;
@@ -133136,16 +134596,16 @@ function installCalendarioSection() {
      * muova qualcosa in casa. */
     "dashboardmodern:agenda-aggiornata"
   ])
-    root.addEventListener?.(evento, schedule36);
+    root.addEventListener?.(evento, schedule37);
   root.addEventListener?.("dashboardmodern:calendario-utente", () => renderCalendarioSection());
-  schedule36();
+  schedule37();
   return true;
 }
 senzaCadere(installCalendarioSection);
 
 // src/sections/ups-editor-section.js
-var KEY157 = "__DASHBOARDMODERN_UPS_EDITOR__";
-var state153 = root[KEY157] ||= { installed: false, firma: "" };
+var KEY158 = "__DASHBOARDMODERN_UPS_EDITOR__";
+var state154 = root[KEY158] ||= { installed: false, firma: "" };
 var UPS_EDITOR_TAB = "ups";
 var CHIAVE_SEZIONE = "ups";
 function schedaAttiva11() {
@@ -133273,7 +134733,7 @@ function ensureUpsEditor() {
   body.dataset.renderer = "ups";
   return true;
 }
-function ridisegna19() {
+function ridisegna20() {
   const body = doc?.getElementById("ed-body");
   if (body) delete body.dataset.dmUpsEditor;
   ensureUpsEditor();
@@ -133292,7 +134752,7 @@ function onClick46(event) {
   if (togli3) {
     event.preventDefault();
     salva24(togliUps(schedeAperte(body), clean(togli3.dataset.dmUpsTogli)));
-    ridisegna19();
+    ridisegna20();
     root.edToast?.(t("🗑️ UPS tolto", "🗑️ UPS removed"));
     return;
   }
@@ -133311,7 +134771,7 @@ function onClick46(event) {
   if (event.target.closest("[data-dm-ups-save]")) {
     event.preventDefault();
     salva24(schedeAperte(body));
-    ridisegna19();
+    ridisegna20();
     root.edToast?.(t("💾 UPS salvato", "💾 UPS saved"));
   }
 }
@@ -133329,16 +134789,16 @@ function schedeAperte(body) {
   });
 }
 function ensureUpsEditorTab() {
-  const linguette3 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette3 || linguette3.querySelector(`.ed-tab[data-tab="${UPS_EDITOR_TAB}"]`)) return false;
+  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${UPS_EDITOR_TAB}"]`)) return false;
   const linguetta3 = doc.createElement("button");
   linguetta3.className = "ed-tab";
   linguetta3.dataset.tab = UPS_EDITOR_TAB;
   linguetta3.textContent = `🔌 ${t("UPS", "UPS")}`;
   linguetta3.addEventListener("click", () => root.editorSwitch?.(UPS_EDITOR_TAB));
-  const prima = linguette3.querySelector('.ed-tab[data-tab="runtime"]');
+  const prima = linguette4.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta3);
-  else linguette3.append(linguetta3);
+  else linguette4.append(linguetta3);
   return true;
 }
 function installStyles75() {
@@ -133359,8 +134819,8 @@ function installStyles75() {
   );
 }
 function installUpsEditor() {
-  if (!doc || state153.installed) return false;
-  state153.installed = true;
+  if (!doc || state154.installed) return false;
+  state154.installed = true;
   installStyles75();
   doc.addEventListener("click", onClick46);
   wrapFunction("apriConfigEntita", "__dmUpsEditor", () => {
@@ -133387,8 +134847,8 @@ function installUpsEditor() {
 senzaCadere(installUpsEditor);
 
 // src/sections/allerte-editor-section.js
-var KEY158 = "__DASHBOARDMODERN_ALLERTE_EDITOR__";
-var state154 = root[KEY158] ||= { installed: false };
+var KEY159 = "__DASHBOARDMODERN_ALLERTE_EDITOR__";
+var state155 = root[KEY159] ||= { installed: false };
 var ALLERTE_EDITOR_TAB = "allerte";
 var CHIAVE_SEZIONE2 = "allerte";
 function schedaAttiva12() {
@@ -133691,7 +135151,7 @@ function ensureAllerteEditor() {
   body.dataset.renderer = "allerte";
   return true;
 }
-function ridisegna20() {
+function ridisegna21() {
   const body = doc?.getElementById("ed-body");
   if (body) delete body.dataset.dmAllerteEditor;
   ensureAllerteEditor();
@@ -133710,7 +135170,7 @@ function salvaAria(prossima, body) {
   const tutto = versaLeCaselle(configurazione14(), body);
   tutto[CHIAVE_ARIA] = prossima;
   salva25(tutto);
-  ridisegna20();
+  ridisegna21();
 }
 function ariaClick(event, body) {
   const config = configurazione14();
@@ -133809,22 +135269,22 @@ function onClick47(event) {
   if (event.target.closest("[data-dm-allerte-save]")) {
     event.preventDefault();
     salva25(versaLeCaselle(configurazione14(), body));
-    ridisegna20();
+    ridisegna21();
     root.edToast?.(t("💾 Allerte salvate", "💾 Alerts saved"));
   }
 }
 function ensureAllerteEditorTab() {
-  const linguette3 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette3 || linguette3.querySelector(`.ed-tab[data-tab="${ALLERTE_EDITOR_TAB}"]`))
+  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${ALLERTE_EDITOR_TAB}"]`))
     return false;
   const linguetta3 = doc.createElement("button");
   linguetta3.className = "ed-tab";
   linguetta3.dataset.tab = ALLERTE_EDITOR_TAB;
   linguetta3.textContent = `⚠️ ${t("Allerte", "Alerts")}`;
   linguetta3.addEventListener("click", () => root.editorSwitch?.(ALLERTE_EDITOR_TAB));
-  const prima = linguette3.querySelector('.ed-tab[data-tab="runtime"]');
+  const prima = linguette4.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta3);
-  else linguette3.append(linguetta3);
+  else linguette4.append(linguetta3);
   return true;
 }
 function installStyles76() {
@@ -133867,8 +135327,8 @@ function installStyles76() {
   );
 }
 function installAllerteEditor() {
-  if (!doc || state154.installed) return false;
-  state154.installed = true;
+  if (!doc || state155.installed) return false;
+  state155.installed = true;
   installStyles76();
   doc.addEventListener("click", onClick47);
   doc.addEventListener("change", ariaCambio);
@@ -133896,8 +135356,8 @@ function installAllerteEditor() {
 senzaCadere(installAllerteEditor);
 
 // src/sections/rifiuti-editor-section.js
-var KEY159 = "__DASHBOARDMODERN_RIFIUTI_EDITOR__";
-var state155 = root[KEY159] ||= { installed: false, bozza: null, contatore: 0 };
+var KEY160 = "__DASHBOARDMODERN_RIFIUTI_EDITOR__";
+var state156 = root[KEY160] ||= { installed: false, bozza: null, contatore: 0 };
 var RIFIUTI_EDITOR_TAB = "rifiuti";
 var CHIAVE_SEZIONE3 = "rifiuti";
 function schedaAttiva13() {
@@ -133920,13 +135380,13 @@ function salva26(config) {
   return pulita;
 }
 function bozza2() {
-  if (!state155.bozza) state155.bozza = configurazione15();
-  return state155.bozza;
+  if (!state156.bozza) state156.bozza = configurazione15();
+  return state156.bozza;
 }
 function nuovaRiga(materiale = "plastica") {
-  state155.contatore += 1;
+  state156.contatore += 1;
   const voce3 = materialeDiSerie(materiale);
-  return { id: `nuova-${Date.now()}-${state155.contatore}`, materiale: voce3.chiave, nome: "", entity: "" };
+  return { id: `nuova-${Date.now()}-${state156.contatore}`, materiale: voce3.chiave, nome: "", entity: "" };
 }
 function rigaMarkup20(riga3, indice) {
   const voce3 = materialeDiSerie(riga3.materiale);
@@ -133962,7 +135422,7 @@ function lunediDiOggi() {
   const oggi = /* @__PURE__ */ new Date();
   const indietro = (oggi.getDay() + 6) % 7;
   const lunedi = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate() - indietro);
-  const due3 = (numero57) => String(numero57).padStart(2, "0");
+  const due3 = (numero58) => String(numero58).padStart(2, "0");
   return `${lunedi.getFullYear()}-${due3(lunedi.getMonth() + 1)}-${due3(lunedi.getDate())}`;
 }
 function nomeDelGiorno3(inizio, indice) {
@@ -134076,9 +135536,9 @@ function apriLaTendinaDelGiorno(indice) {
     const giorni = turno.giorni.map(
       (giorno3, dove) => dove === indice ? [...scelti] : giorno3.slice()
     );
-    state155.bozza = { ...bozza2(), turno: { inizio: inizioScritto() || turno.inizio, giorni } };
+    state156.bozza = { ...bozza2(), turno: { inizio: inizioScritto() || turno.inizio, giorni } };
     chiudiIlFoglioDiScelta();
-    ridisegna21();
+    ridisegna22();
   });
   corpo4.append(fatto2);
 }
@@ -134130,7 +135590,7 @@ function corpoMarkup13() {
 function ensureRifiutiEditor() {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva13() !== RIFIUTI_EDITOR_TAB) {
-    if (schedaAttiva13() !== RIFIUTI_EDITOR_TAB) state155.bozza = null;
+    if (schedaAttiva13() !== RIFIUTI_EDITOR_TAB) state156.bozza = null;
     return false;
   }
   const firma2 = `${JSON.stringify(bozza2())}|${sezioneNascosta3()}`;
@@ -134140,7 +135600,7 @@ function ensureRifiutiEditor() {
   body.dataset.renderer = "rifiuti";
   return true;
 }
-function ridisegna21() {
+function ridisegna22() {
   const body = doc?.getElementById("ed-body");
   if (body) delete body.dataset.dmRifiutiEditor;
   ensureRifiutiEditor();
@@ -134170,7 +135630,7 @@ function onClick48(event) {
   const giorno3 = event.target.closest("[data-dm-turno-giorno]");
   if (giorno3) {
     event.preventDefault();
-    state155.bozza = raccogli9(body);
+    state156.bozza = raccogli9(body);
     apriLaTendinaDelGiorno(Number(giorno3.dataset.dmTurnoGiorno) || 0);
     return;
   }
@@ -134193,8 +135653,8 @@ function onClick48(event) {
     if (adesso2.righe.length >= MASSIMO_RIGHE) return;
     const presi = new Set(adesso2.righe.map((riga3) => riga3.materiale));
     const libero = MATERIALI.find((voce3) => !presi.has(voce3.chiave)) || MATERIALI[0];
-    state155.bozza = { ...adesso2, righe: [...adesso2.righe, nuovaRiga(libero.chiave)] };
-    ridisegna21();
+    state156.bozza = { ...adesso2, righe: [...adesso2.righe, nuovaRiga(libero.chiave)] };
+    ridisegna22();
     return;
   }
   const togli3 = event.target.closest("[data-dm-rifiuti-togli]");
@@ -134202,14 +135662,14 @@ function onClick48(event) {
     event.preventDefault();
     const adesso2 = raccogli9(body);
     const id = clean(togli3.dataset.dmRifiutiTogli);
-    state155.bozza = { ...adesso2, righe: adesso2.righe.filter((riga3) => riga3.id !== id) };
-    ridisegna21();
+    state156.bozza = { ...adesso2, righe: adesso2.righe.filter((riga3) => riga3.id !== id) };
+    ridisegna22();
     return;
   }
   if (event.target.closest("[data-dm-rifiuti-save]")) {
     event.preventDefault();
-    state155.bozza = salva26(raccogli9(body));
-    ridisegna21();
+    state156.bozza = salva26(raccogli9(body));
+    ridisegna22();
     root.edToast?.(t("💾 Rifiuti salvati", "💾 Waste saved"));
   }
 }
@@ -134217,23 +135677,23 @@ function onChange15(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva13() !== RIFIUTI_EDITOR_TAB || !body.contains(event.target)) return;
   if (event.target.closest("[data-dm-turno-inizio]")) {
-    state155.bozza = raccogli9(body);
-    ridisegna21();
+    state156.bozza = raccogli9(body);
+    ridisegna22();
     return;
   }
 }
 function ensureRifiutiEditorTab() {
-  const linguette3 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette3 || linguette3.querySelector(`.ed-tab[data-tab="${RIFIUTI_EDITOR_TAB}"]`))
+  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${RIFIUTI_EDITOR_TAB}"]`))
     return false;
   const linguetta3 = doc.createElement("button");
   linguetta3.className = "ed-tab";
   linguetta3.dataset.tab = RIFIUTI_EDITOR_TAB;
   linguetta3.textContent = `♻️ ${t("Rifiuti", "Waste")}`;
   linguetta3.addEventListener("click", () => root.editorSwitch?.(RIFIUTI_EDITOR_TAB));
-  const prima = linguette3.querySelector('.ed-tab[data-tab="runtime"]');
+  const prima = linguette4.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta3);
-  else linguette3.append(linguetta3);
+  else linguette4.append(linguetta3);
   return true;
 }
 function installStyles77() {
@@ -134278,8 +135738,8 @@ function installStyles77() {
   );
 }
 function installRifiutiEditor() {
-  if (!doc || state155.installed) return false;
-  state155.installed = true;
+  if (!doc || state156.installed) return false;
+  state156.installed = true;
   installStyles77();
   doc.addEventListener("click", onClick48);
   doc.addEventListener("change", onChange15);
@@ -134307,8 +135767,8 @@ function installRifiutiEditor() {
 senzaCadere(installRifiutiEditor);
 
 // src/sections/varchi-section.js
-var KEY160 = "__DASHBOARDMODERN_VARCHI__";
-var state156 = root[KEY160] ||= {
+var KEY161 = "__DASHBOARDMODERN_VARCHI__";
+var state157 = root[KEY161] ||= {
   installed: false,
   frame: 0,
   firma: "",
@@ -134356,16 +135816,16 @@ function ultimaPagina14() {
 }
 function ensureVarchiPage() {
   if (!doc) return null;
-  let pagina2 = doc.getElementById(VARCHI_PAGE_ID);
-  if (pagina2) return pagina2;
+  let pagina3 = doc.getElementById(VARCHI_PAGE_ID);
+  if (pagina3) return pagina3;
   const sorella = ultimaPagina14();
   if (!sorella?.parentElement) return null;
-  pagina2 = doc.createElement("section");
-  pagina2.className = "page";
-  pagina2.id = VARCHI_PAGE_ID;
-  pagina2.innerHTML = `<div class="dm-varchi-wrap" id="varchi-wrap"></div>`;
-  sorella.after(pagina2);
-  return pagina2;
+  pagina3 = doc.createElement("section");
+  pagina3.className = "page";
+  pagina3.id = VARCHI_PAGE_ID;
+  pagina3.innerHTML = `<div class="dm-varchi-wrap" id="varchi-wrap"></div>`;
+  sorella.after(pagina3);
+  return pagina3;
 }
 function ensureVarchiTab() {
   if (!doc) return null;
@@ -134390,7 +135850,7 @@ function ensureVarchiTab() {
     if (doc.documentElement) doc.documentElement.scrollTop = 0;
     if (doc.body) doc.body.scrollTop = 0;
     if (root.navigator?.vibrate) root.navigator.vibrate(5);
-    schedule37();
+    schedule38();
   });
   if (dopo) dopo.after(voce3);
   else barra2.append(voce3);
@@ -134406,8 +135866,8 @@ function accendiLaVoce10() {
   const serve = segnaContenuto(VARCHI_TAB, ciSonoVarchi()) && sezioneAccesa11();
   if (serve) voce3.style.removeProperty("display");
   else voce3.style.setProperty("display", "none", "important");
-  const pagina2 = doc.getElementById(VARCHI_PAGE_ID);
-  if (!serve && pagina2?.classList.contains("active"))
+  const pagina3 = doc.getElementById(VARCHI_PAGE_ID);
+  if (!serve && pagina3?.classList.contains("active"))
     doc.querySelector('.tab[data-tab="home"]')?.click();
 }
 function parolaDelVarco(riga3) {
@@ -134458,12 +135918,12 @@ function esclusaMarkup(riga3) {
   )}</span></span>`;
 }
 function veloMarkup(riga3) {
-  if (vivoPer(state156.chiesta, riga3.entity))
+  if (vivoPer(state157.chiesta, riga3.entity))
     return `<div class="dm-varco-velo" data-dm-varco-velo="chiesta">
       <span>⚠️<span>${esc(t("Escludere dall'allarme?", "Bypass from the alarm?"))}</span></span>
       <button type="button" data-dm-varco-conferma="${esc(riga3.entity)}">${esc(t("Escludi", "Bypass"))}</button>
     </div>`;
-  if (vivoPer(state156.annulla, riga3.entity))
+  if (vivoPer(state157.annulla, riga3.entity))
     return `<div class="dm-varco-velo" data-dm-varco-velo="annulla">
       <span>🔓<span>${esc(t("Esclusa dall'allarme", "Bypassed from the alarm"))}</span></span>
       <button type="button" data-dm-varco-annulla="${esc(riga3.entity)}">${esc(t("Annulla", "Undo"))}</button>
@@ -134471,8 +135931,8 @@ function veloMarkup(riga3) {
   return "";
 }
 function erroreMarkup(riga3) {
-  if (!vivoPer(state156.errore, riga3.entity)) return "";
-  const perche4 = clean(state156.errore.testo);
+  if (!vivoPer(state157.errore, riga3.entity)) return "";
+  const perche4 = clean(state157.errore.testo);
   return `<small class="dm-varco-errore" role="alert">⚠️<span>${esc(
     t("La centrale non ha accettato", "The alarm panel refused")
   )}${perche4 ? `: ${esc(perche4)}` : ""}</span></small>`;
@@ -134530,14 +135990,14 @@ function testaMarkup11(conto, esclusioni) {
   </div>`;
 }
 function dipingi13() {
-  const pagina2 = ensureVarchiPage();
-  const dove = pagina2?.querySelector?.("#varchi-wrap");
+  const pagina3 = ensureVarchiPage();
+  const dove = pagina3?.querySelector?.("#varchi-wrap");
   if (!dove) return;
   if (!paginaVisibile(VARCHI_PAGE_ID)) return;
   const righe3 = varchiInPlancia();
   if (!righe3.length) {
-    if (state156.firma !== "vuoto") {
-      state156.firma = "vuoto";
+    if (state157.firma !== "vuoto") {
+      state157.firma = "vuoto";
       dove.innerHTML = vuotoMarkup11();
     }
     return;
@@ -134546,7 +136006,7 @@ function dipingi13() {
   const esclusioni = contoDelleEsclusioni(righe3);
   const states = allStates();
   const bloccati = righe3.map((riga3) => laMossaDelloScudo(riga3, states, siComanda).mossa);
-  const veli = [state156.chiesta, state156.annulla, state156.errore].map(
+  const veli = [state157.chiesta, state157.annulla, state157.errore].map(
     (momento) => momento && Number(momento.fino) > Date.now() ? [momento.entity, momento.testo || ""] : null
   );
   const firma2 = JSON.stringify([
@@ -134556,32 +136016,32 @@ function dipingi13() {
     veli,
     t("Aperto", "Open")
   ]);
-  if (state156.firma !== firma2 || !dove.firstElementChild) {
-    state156.firma = firma2;
+  if (state157.firma !== firma2 || !dove.firstElementChild) {
+    state157.firma = firma2;
     dove.innerHTML = `${testaMarkup11(conto, esclusioni)}
       <div class="dm-varchi-elenco">${righe3.map((riga3) => rigaMarkup21(riga3, states)).join("")}</div>`;
   }
   svegliamiQuandoCambia(righe3);
 }
 function svegliamiQuandoCambia(righe3) {
-  if (state156.sveglia) {
-    root.clearTimeout?.(state156.sveglia);
-    state156.sveglia = 0;
+  if (state157.sveglia) {
+    root.clearTimeout?.(state157.sveglia);
+    state157.sveglia = 0;
   }
   const fra2 = prossimoCambioDelDaQuando(righe3, Date.now());
   if (fra2 == null) return;
-  state156.sveglia = root.setTimeout?.(
+  state157.sveglia = root.setTimeout?.(
     () => {
-      state156.sveglia = 0;
-      schedule37();
+      state157.sveglia = 0;
+      schedule38();
     },
     Math.max(1e3, fra2)
   ) || 0;
 }
 function fraQuantoRidisegno(quanto) {
-  root.clearTimeout?.(state156.svegliaDelloScudo);
-  state156.svegliaDelloScudo = root.setTimeout?.(() => {
-    state156.svegliaDelloScudo = 0;
+  root.clearTimeout?.(state157.svegliaDelloScudo);
+  state157.svegliaDelloScudo = root.setTimeout?.(() => {
+    state157.svegliaDelloScudo = 0;
     renderVarchi();
   }, quanto + 40) || 0;
 }
@@ -134602,9 +136062,9 @@ function mandaLoScudo(comando, entity2) {
   }
   Promise.resolve(esito2).catch((errore) => {
     root.console?.warn?.("[DashboardModern] esclusione del varco", errore);
-    state156.annulla = null;
-    state156.chiesta = null;
-    state156.errore = {
+    state157.annulla = null;
+    state157.chiesta = null;
+    state157.errore = {
       entity: entity2,
       testo: clean(errore?.message || errore),
       fino: Date.now() + DURA_L_ERRORE_DELLO_SCUDO
@@ -134619,30 +136079,30 @@ function premiLoScudo(entity2) {
   const riga3 = rigaAdesso(entity2);
   if (!riga3) return;
   const { mossa, comando } = laMossaDelloScudo(riga3, allStates(), siComanda);
-  state156.errore = null;
+  state157.errore = null;
   if (mossa === "chiedi") {
-    state156.annulla = null;
-    state156.chiesta = { entity: riga3.entity, fino: Date.now() + DURA_LA_DOMANDA_DELLO_SCUDO };
+    state157.annulla = null;
+    state157.chiesta = { entity: riga3.entity, fino: Date.now() + DURA_LA_DOMANDA_DELLO_SCUDO };
     if (root.navigator?.vibrate) root.navigator.vibrate(8);
     ridisegnaLoScudo(DURA_LA_DOMANDA_DELLO_SCUDO);
     return;
   }
   if (mossa !== "manda") return;
-  state156.chiesta = null;
-  state156.annulla = null;
+  state157.chiesta = null;
+  state157.annulla = null;
   mandaLoScudo(comando, riga3.entity);
   if (root.navigator?.vibrate) root.navigator.vibrate(8);
   renderVarchi();
 }
 function confermaLoScudo(entity2) {
   const riga3 = rigaAdesso(entity2);
-  state156.chiesta = null;
+  state157.chiesta = null;
   const { mossa, comando } = riga3 ? laMossaDelloScudo(riga3, allStates(), siComanda) : { mossa: "niente" };
   if (mossa !== "chiedi") {
     renderVarchi();
     return;
   }
-  state156.annulla = {
+  state157.annulla = {
     entity: riga3.entity,
     interruttore: riga3.esclusione,
     fino: Date.now() + DURA_L_ANNULLA_DELLO_SCUDO
@@ -134652,10 +136112,10 @@ function confermaLoScudo(entity2) {
   ridisegnaLoScudo(DURA_L_ANNULLA_DELLO_SCUDO);
 }
 function annullaLoScudo(entity2) {
-  const annulla2 = state156.annulla;
-  state156.annulla = null;
-  root.clearTimeout?.(state156.svegliaDelloScudo);
-  state156.svegliaDelloScudo = 0;
+  const annulla2 = state157.annulla;
+  state157.annulla = null;
+  root.clearTimeout?.(state157.svegliaDelloScudo);
+  state157.svegliaDelloScudo = 0;
   if (annulla2?.entity === clean(entity2) && clean(annulla2.interruttore)) {
     const id = clean(annulla2.interruttore);
     mandaLoScudo(
@@ -134667,14 +136127,14 @@ function annullaLoScudo(entity2) {
   renderVarchi();
 }
 function lasciaLoScudo() {
-  state156.chiesta = null;
+  state157.chiesta = null;
   renderVarchi();
 }
 function ascoltaLoScudo() {
-  const pagina2 = ensureVarchiPage();
-  if (!pagina2 || pagina2.dataset.dmVarchiScudo === "si") return;
-  pagina2.dataset.dmVarchiScudo = "si";
-  pagina2.addEventListener("click", (evento) => {
+  const pagina3 = ensureVarchiPage();
+  if (!pagina3 || pagina3.dataset.dmVarchiScudo === "si") return;
+  pagina3.dataset.dmVarchiScudo = "si";
+  pagina3.addEventListener("click", (evento) => {
     const bersaglio = evento.target;
     const conferma = bersaglio?.closest?.("[data-dm-varco-conferma]");
     if (conferma) {
@@ -134699,10 +136159,10 @@ function ascoltaLoScudo() {
     premiLoScudo(scudo.dataset.dmVarcoScudo);
   });
 }
-function schedule37() {
-  if (state156.frame) return;
+function schedule38() {
+  if (state157.frame) return;
   const giro = () => {
-    state156.frame = 0;
+    state157.frame = 0;
     try {
       accendiLaVoce10();
       ascoltaLoScudo();
@@ -134711,12 +136171,12 @@ function schedule37() {
       root.console?.warn?.("[DashboardModern] varchi", error);
     }
   };
-  state156.frame = root.requestAnimationFrame?.(giro) || 0;
-  if (!state156.frame) giro();
+  state157.frame = root.requestAnimationFrame?.(giro) || 0;
+  if (!state157.frame) giro();
 }
 function renderVarchi() {
-  state156.firma = "";
-  schedule37();
+  state157.firma = "";
+  schedule38();
 }
 function installStyles78() {
   const P8 = `#${VARCHI_PAGE_ID}`;
@@ -134821,8 +136281,8 @@ function installStyles78() {
   );
 }
 function installVarchi() {
-  if (!doc || state156.installed) return false;
-  state156.installed = true;
+  if (!doc || state157.installed) return false;
+  state157.installed = true;
   installStyles78();
   ensureVarchiPage();
   ensureVarchiTab();
@@ -134831,7 +136291,7 @@ function installVarchi() {
     if (typeof precedente !== "function" || precedente.__dmVarchi) continue;
     const avvolta = function(...args) {
       const esito2 = precedente.apply(this, args);
-      schedule37();
+      schedule38();
       return esito2;
     };
     avvolta.__dmVarchi = true;
@@ -134844,9 +136304,9 @@ function installVarchi() {
     "dashboardmodern:state-changed",
     "dashboardmodern:persistence-restored"
   ])
-    root.addEventListener?.(evento, schedule37);
-  quandoSiCambiaPagina(schedule37);
-  schedule37();
+    root.addEventListener?.(evento, schedule38);
+  quandoSiCambiaPagina(schedule38);
+  schedule38();
   return true;
 }
 senzaCadere(installVarchi);
@@ -135019,8 +136479,8 @@ function installVarchiEditor() {
 senzaCadere(installVarchiEditor);
 
 // src/sections/presenza-section.js
-var KEY161 = "__DASHBOARDMODERN_PRESENZA__";
-var state157 = root[KEY161] ||= { installed: false, frame: 0, firma: "", sveglia: 0 };
+var KEY162 = "__DASHBOARDMODERN_PRESENZA__";
+var state158 = root[KEY162] ||= { installed: false, frame: 0, firma: "", sveglia: 0 };
 var PRESENZA_PAGE_ID = "page-presenza";
 var PRESENZA_TAB = "presenza";
 function configurazione17() {
@@ -135044,16 +136504,16 @@ function ultimaPagina15() {
 }
 function ensurePresenzaPage() {
   if (!doc) return null;
-  let pagina2 = doc.getElementById(PRESENZA_PAGE_ID);
-  if (pagina2) return pagina2;
+  let pagina3 = doc.getElementById(PRESENZA_PAGE_ID);
+  if (pagina3) return pagina3;
   const sorella = ultimaPagina15();
   if (!sorella?.parentElement) return null;
-  pagina2 = doc.createElement("section");
-  pagina2.className = "page";
-  pagina2.id = PRESENZA_PAGE_ID;
-  pagina2.innerHTML = `<div class="dm-presenza-wrap" id="presenza-wrap"></div>`;
-  sorella.after(pagina2);
-  return pagina2;
+  pagina3 = doc.createElement("section");
+  pagina3.className = "page";
+  pagina3.id = PRESENZA_PAGE_ID;
+  pagina3.innerHTML = `<div class="dm-presenza-wrap" id="presenza-wrap"></div>`;
+  sorella.after(pagina3);
+  return pagina3;
 }
 function ensurePresenzaTab() {
   if (!doc) return null;
@@ -135076,7 +136536,7 @@ function ensurePresenzaTab() {
     if (testata5) testata5.style.display = "none";
     root.scrollTo?.({ top: 0, behavior: "instant" });
     if (root.navigator?.vibrate) root.navigator.vibrate(5);
-    schedule38();
+    schedule39();
   });
   if (dopo) dopo.after(voce3);
   else barra2.append(voce3);
@@ -135092,8 +136552,8 @@ function accendiLaVoce11() {
   const serve = segnaContenuto(PRESENZA_TAB, ciSonoRilevatori()) && sezioneAccesa12();
   if (serve) voce3.style.removeProperty("display");
   else voce3.style.setProperty("display", "none", "important");
-  const pagina2 = doc.getElementById(PRESENZA_PAGE_ID);
-  if (!serve && pagina2?.classList.contains("active"))
+  const pagina3 = doc.getElementById(PRESENZA_PAGE_ID);
+  if (!serve && pagina3?.classList.contains("active"))
     doc.querySelector('.tab[data-tab="home"]')?.click();
 }
 function parolaDelRilevatore(riga3) {
@@ -135162,14 +136622,14 @@ function testaMarkup12(conto, righe3) {
   </div>`;
 }
 function dipingi14() {
-  const pagina2 = ensurePresenzaPage();
-  const dove = pagina2?.querySelector?.("#presenza-wrap");
+  const pagina3 = ensurePresenzaPage();
+  const dove = pagina3?.querySelector?.("#presenza-wrap");
   if (!dove) return;
   if (!paginaVisibile(PRESENZA_PAGE_ID)) return;
   const righe3 = presenzaInPlancia();
   if (!righe3.length) {
-    if (state157.firma !== "vuoto") {
-      state157.firma = "vuoto";
+    if (state158.firma !== "vuoto") {
+      state158.firma = "vuoto";
       dove.innerHTML = vuotoMarkup12();
     }
     return;
@@ -135181,32 +136641,32 @@ function dipingi14() {
     ultimoMovimentoTesto(righe3),
     t("Occupato", "Occupied")
   ]);
-  if (state157.firma !== firma2 || !dove.firstElementChild) {
-    state157.firma = firma2;
+  if (state158.firma !== firma2 || !dove.firstElementChild) {
+    state158.firma = firma2;
     dove.innerHTML = `${testaMarkup12(conto, righe3)}
       <div class="dm-presenza-elenco">${righe3.map(rigaMarkup22).join("")}</div>`;
   }
   svegliamiQuandoCambia2(righe3);
 }
 function svegliamiQuandoCambia2(righe3) {
-  if (state157.sveglia) {
-    root.clearTimeout?.(state157.sveglia);
-    state157.sveglia = 0;
+  if (state158.sveglia) {
+    root.clearTimeout?.(state158.sveglia);
+    state158.sveglia = 0;
   }
   const fra2 = prossimoCambioDelDaQuando(righe3, Date.now());
   if (fra2 == null) return;
-  state157.sveglia = root.setTimeout?.(
+  state158.sveglia = root.setTimeout?.(
     () => {
-      state157.sveglia = 0;
-      schedule38();
+      state158.sveglia = 0;
+      schedule39();
     },
     Math.max(1e3, fra2)
   ) || 0;
 }
-function schedule38() {
-  if (state157.frame) return;
+function schedule39() {
+  if (state158.frame) return;
   const giro = () => {
-    state157.frame = 0;
+    state158.frame = 0;
     try {
       accendiLaVoce11();
       dipingi14();
@@ -135214,12 +136674,12 @@ function schedule38() {
       root.console?.warn?.("[DashboardModern] presenza", error);
     }
   };
-  state157.frame = root.requestAnimationFrame?.(giro) || 0;
-  if (!state157.frame) giro();
+  state158.frame = root.requestAnimationFrame?.(giro) || 0;
+  if (!state158.frame) giro();
 }
 function renderPresenza() {
-  state157.firma = "";
-  schedule38();
+  state158.firma = "";
+  schedule39();
 }
 function installStyles79() {
   const P8 = `#${PRESENZA_PAGE_ID}`;
@@ -135280,8 +136740,8 @@ function installStyles79() {
   );
 }
 function installPresenza() {
-  if (!doc || state157.installed) return false;
-  state157.installed = true;
+  if (!doc || state158.installed) return false;
+  state158.installed = true;
   installStyles79();
   ensurePresenzaPage();
   ensurePresenzaTab();
@@ -135290,7 +136750,7 @@ function installPresenza() {
     if (typeof precedente !== "function" || precedente.__dmPresenza) continue;
     const avvolta = function(...args) {
       const esito2 = precedente.apply(this, args);
-      schedule38();
+      schedule39();
       return esito2;
     };
     avvolta.__dmPresenza = true;
@@ -135303,9 +136763,9 @@ function installPresenza() {
     "dashboardmodern:state-changed",
     "dashboardmodern:persistence-restored"
   ])
-    root.addEventListener?.(evento, schedule38);
-  quandoSiCambiaPagina(schedule38);
-  schedule38();
+    root.addEventListener?.(evento, schedule39);
+  quandoSiCambiaPagina(schedule39);
+  schedule39();
   return true;
 }
 senzaCadere(installPresenza);
@@ -135394,8 +136854,8 @@ function installPresenzaEditor() {
 senzaCadere(installPresenzaEditor);
 
 // src/sections/citofono-editor-section.js
-var KEY162 = "__DASHBOARDMODERN_CITOFONO_EDITOR__";
-var state158 = root[KEY162] ||= { installed: false, aperto: { citofoni: -1, cassette: -1 } };
+var KEY163 = "__DASHBOARDMODERN_CITOFONO_EDITOR__";
+var state159 = root[KEY163] ||= { installed: false, aperto: { citofoni: -1, cassette: -1 } };
 var CITOFONO_EDITOR_TAB = CITOFONO_TAB;
 var LISTE2 = () => ({
   citofoni: {
@@ -135452,7 +136912,7 @@ function salva27(prossima) {
 function activeTab9() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 }
-function ridisegna22() {
+function ridisegna23() {
   const body = doc?.getElementById("ed-body");
   if (body) delete body.dataset.dmCitofonoEditor;
   ensureCitofonoEditor();
@@ -135472,7 +136932,7 @@ function sogliaMarkup(voce3) {
 }
 function rigaMarkup23(lista7, voce3, indice) {
   const regole = LISTE2()[lista7];
-  const aperto2 = state158.aperto[lista7] === indice;
+  const aperto2 = state159.aperto[lista7] === indice;
   const quante3 = regole.campi.filter((campo5) => clean(voce3?.[campo5])).length;
   return `<article class="ed-row dm-cit-ed-riga" data-dm-cit-lista="${esc(lista7)}" data-dm-cit-indice="${indice}" data-open="${aperto2}">
     <div class="dm-cit-ed-head">
@@ -135592,9 +137052,9 @@ function creaDaDispositivo4(lista7, { device, entities, integration }) {
     );
     return;
   }
-  state158.aperto[lista7] = righe3.length;
+  state159.aperto[lista7] = righe3.length;
   salva27({ ...tutte, [lista7]: [...righe3, nato] });
-  ridisegna22();
+  ridisegna23();
   const daChi = clean(integration?.name) || t("un'integrazione", "an integration");
   root.edToast?.(`${nato.nome || device.name} — ${t("aggiunto da", "added from")} ${daChi}`);
 }
@@ -135623,13 +137083,13 @@ function onClick49(event) {
     const lista8 = clean(piu.dataset.dmCitAggiungi);
     const righe4 = tutte[lista8];
     if (righe4.length >= LISTE2()[lista8].tetto) return;
-    state158.aperto[lista8] = righe4.length;
+    state159.aperto[lista8] = righe4.length;
     const seme = lista8 === "citofoni" ? "citofono" : "cassetta";
     salva27({
       ...tutte,
       [lista8]: [...righe4, { id: `${seme}-${Date.now().toString(36)}`, nome: "" }]
     });
-    ridisegna22();
+    ridisegna23();
     return;
   }
   const lente = event.target.closest("[data-dm-cit-pick]");
@@ -135649,16 +137109,16 @@ function onClick49(event) {
     event.preventDefault();
     const prossime = righe3.slice();
     prossime[indice] = leggiLaRiga(riga3, righe3[indice]);
-    state158.aperto[lista7] = state158.aperto[lista7] === indice ? -1 : indice;
+    state159.aperto[lista7] = state159.aperto[lista7] === indice ? -1 : indice;
     salva27({ ...tutte, [lista7]: prossime });
-    ridisegna22();
+    ridisegna23();
     return;
   }
   if (event.target.closest("[data-dm-cit-togli]")) {
     event.preventDefault();
-    state158.aperto[lista7] = -1;
+    state159.aperto[lista7] = -1;
     salva27({ ...tutte, [lista7]: righe3.filter((_voce, posizione) => posizione !== indice) });
-    ridisegna22();
+    ridisegna23();
     return;
   }
   if (event.target.closest("[data-dm-cit-salva]")) {
@@ -135666,7 +137126,7 @@ function onClick49(event) {
     const prossime = righe3.slice();
     prossime[indice] = leggiLaRiga(riga3, righe3[indice]);
     salva27({ ...tutte, [lista7]: prossime });
-    ridisegna22();
+    ridisegna23();
     root.edToast?.(t("💾 Salvato", "💾 Saved"));
   }
 }
@@ -135711,8 +137171,8 @@ function installStyles80() {
   );
 }
 function installCitofonoEditor() {
-  if (!doc || state158.installed) return false;
-  state158.installed = true;
+  if (!doc || state159.installed) return false;
+  state159.installed = true;
   installStyles80();
   ensureCitofonoEditorTab();
   onEditorRedraw("__dmCitofonoEditor", () => {
@@ -135736,8 +137196,8 @@ function installCitofonoEditor() {
 senzaCadere(installCitofonoEditor);
 
 // src/sections/stampanti-section.js
-var KEY163 = "__DASHBOARDMODERN_STAMPANTI__";
-var state159 = root[KEY163] ||= { installed: false, frame: 0, firma: "" };
+var KEY164 = "__DASHBOARDMODERN_STAMPANTI__";
+var state160 = root[KEY164] ||= { installed: false, frame: 0, firma: "" };
 var STAMPANTI_PAGE_ID = "page-stampanti";
 var STAMPANTI_TAB = "stampanti";
 function configurazione19() {
@@ -135755,16 +137215,16 @@ function ultimaPagina16() {
 }
 function ensureStampantiPage() {
   if (!doc) return null;
-  let pagina2 = doc.getElementById(STAMPANTI_PAGE_ID);
-  if (pagina2) return pagina2;
+  let pagina3 = doc.getElementById(STAMPANTI_PAGE_ID);
+  if (pagina3) return pagina3;
   const sorella = ultimaPagina16();
   if (!sorella?.parentElement) return null;
-  pagina2 = doc.createElement("section");
-  pagina2.className = "page";
-  pagina2.id = STAMPANTI_PAGE_ID;
-  pagina2.innerHTML = `<div class="dm-stampanti-wrap" id="stampanti-wrap"></div>`;
-  sorella.after(pagina2);
-  return pagina2;
+  pagina3 = doc.createElement("section");
+  pagina3.className = "page";
+  pagina3.id = STAMPANTI_PAGE_ID;
+  pagina3.innerHTML = `<div class="dm-stampanti-wrap" id="stampanti-wrap"></div>`;
+  sorella.after(pagina3);
+  return pagina3;
 }
 function ensureStampantiTab() {
   if (!doc) return null;
@@ -135789,7 +137249,7 @@ function ensureStampantiTab() {
     if (testata5) testata5.style.display = "none";
     root.scrollTo?.({ top: 0, behavior: "instant" });
     if (root.navigator?.vibrate) root.navigator.vibrate(5);
-    schedule39();
+    schedule40();
   });
   if (dopo) dopo.after(voce3);
   else barra2.append(voce3);
@@ -135805,8 +137265,8 @@ function accendiLaVoce12() {
   const serve = segnaContenuto(STAMPANTI_TAB, ciSonoStampanti()) && sezioneAccesa13();
   if (serve) voce3.style.removeProperty("display");
   else voce3.style.setProperty("display", "none", "important");
-  const pagina2 = doc.getElementById(STAMPANTI_PAGE_ID);
-  if (!serve && pagina2?.classList.contains("active"))
+  const pagina3 = doc.getElementById(STAMPANTI_PAGE_ID);
+  if (!serve && pagina3?.classList.contains("active"))
     doc.querySelector('.tab[data-tab="home"]')?.click();
 }
 function parolaDellaStampante(lettura3) {
@@ -135885,30 +137345,30 @@ function testaMarkup13(riassunto3) {
   </div>`;
 }
 function dipingi15() {
-  const pagina2 = ensureStampantiPage();
-  const dove = pagina2?.querySelector?.("#stampanti-wrap");
+  const pagina3 = ensureStampantiPage();
+  const dove = pagina3?.querySelector?.("#stampanti-wrap");
   if (!dove) return;
   if (!paginaVisibile(STAMPANTI_PAGE_ID)) return;
   const letture2 = stampantiInPlancia();
   if (!letture2.length) {
-    if (state159.firma !== "vuoto") {
-      state159.firma = "vuoto";
+    if (state160.firma !== "vuoto") {
+      state160.firma = "vuoto";
       dove.innerHTML = vuotoMarkup13();
     }
     return;
   }
   const riassunto3 = riassuntoDelleStampanti(letture2);
   const firma2 = JSON.stringify([letture2, t("Pronta", "Ready")]);
-  if (state159.firma !== firma2 || !dove.firstElementChild) {
-    state159.firma = firma2;
+  if (state160.firma !== firma2 || !dove.firstElementChild) {
+    state160.firma = firma2;
     dove.innerHTML = `${testaMarkup13(riassunto3)}
       <div class="dm-stampanti-elenco">${letture2.map(cartaMarkup).join("")}</div>`;
   }
 }
-function schedule39() {
-  if (state159.frame) return;
+function schedule40() {
+  if (state160.frame) return;
   const giro = () => {
-    state159.frame = 0;
+    state160.frame = 0;
     try {
       accendiLaVoce12();
       dipingi15();
@@ -135916,12 +137376,12 @@ function schedule39() {
       root.console?.warn?.("[DashboardModern] stampanti", error);
     }
   };
-  state159.frame = root.requestAnimationFrame?.(giro) || 0;
-  if (!state159.frame) giro();
+  state160.frame = root.requestAnimationFrame?.(giro) || 0;
+  if (!state160.frame) giro();
 }
 function renderStampanti() {
-  state159.firma = "";
-  schedule39();
+  state160.firma = "";
+  schedule40();
 }
 function installStyles81() {
   const P8 = `#${STAMPANTI_PAGE_ID}`;
@@ -136000,8 +137460,8 @@ function installStyles81() {
   );
 }
 function installStampanti() {
-  if (!doc || state159.installed) return false;
-  state159.installed = true;
+  if (!doc || state160.installed) return false;
+  state160.installed = true;
   installStyles81();
   ensureStampantiPage();
   ensureStampantiTab();
@@ -136010,7 +137470,7 @@ function installStampanti() {
     if (typeof precedente !== "function" || precedente.__dmStampanti) continue;
     const avvolta = function(...args) {
       const esito2 = precedente.apply(this, args);
-      schedule39();
+      schedule40();
       return esito2;
     };
     avvolta.__dmStampanti = true;
@@ -136023,16 +137483,16 @@ function installStampanti() {
     "dashboardmodern:state-changed",
     "dashboardmodern:persistence-restored"
   ])
-    root.addEventListener?.(evento, schedule39);
-  quandoSiCambiaPagina(schedule39);
-  schedule39();
+    root.addEventListener?.(evento, schedule40);
+  quandoSiCambiaPagina(schedule40);
+  schedule40();
   return true;
 }
 senzaCadere(installStampanti);
 
 // src/sections/stampanti-editor-section.js
-var KEY164 = "__DASHBOARDMODERN_STAMPANTI_EDITOR__";
-var state160 = root[KEY164] ||= { installed: false, contatore: 0 };
+var KEY165 = "__DASHBOARDMODERN_STAMPANTI_EDITOR__";
+var state161 = root[KEY165] ||= { installed: false, contatore: 0 };
 var STAMPANTI_EDITOR_TAB = STAMPANTI_TAB;
 function configurazione20() {
   return bozzaDelleStampanti(readJson(CHIAVE_STAMPANTI, []));
@@ -136040,12 +137500,12 @@ function configurazione20() {
 function salva28(righe3) {
   writeJsonIfChanged(CHIAVE_STAMPANTI, righe3);
   renderStampanti();
-  ridisegna23();
+  ridisegna24();
 }
 function activeTab10() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 }
-function ridisegna23() {
+function ridisegna24() {
   const body = doc?.getElementById("ed-body");
   if (body) delete body.dataset.dmStampantiEditor;
   ensureStampantiEditor();
@@ -136171,8 +137631,8 @@ function onClick50(event) {
     event.preventDefault();
     const righe3 = raccogli10(body);
     if (righe3.length >= MASSIMO_STAMPANTI) return;
-    state160.contatore += 1;
-    salva28([...righe3, { id: `stampante-nuova-${state160.contatore}`, nome: "", entity: "" }]);
+    state161.contatore += 1;
+    salva28([...righe3, { id: `stampante-nuova-${state161.contatore}`, nome: "", entity: "" }]);
     return;
   }
   const togli3 = event.target.closest("[data-dm-stampante-togli]");
@@ -136215,8 +137675,8 @@ function installStyles82() {
   );
 }
 function installStampantiEditor() {
-  if (!doc || state160.installed) return false;
-  state160.installed = true;
+  if (!doc || state161.installed) return false;
+  state161.installed = true;
   installStyles82();
   ensureStampantiEditorTab();
   onEditorRedraw("__dmStampantiEditor", () => {
@@ -136438,7 +137898,7 @@ var scheda4 = costruisciSchedaDichiarata({
    * pressione, la forcella non c'è per il gas. Si salva quello che c'è
    * scritto e si ridisegna, come quando si tocca un disegno. E il disegno di
    * serie segue il genere, se era quello di serie del genere di prima. */
-  inPiuAllInstallazione(documento, { ridisegna: ridisegna30, configurazione: configurazione23, salva: salva33 }) {
+  inPiuAllInstallazione(documento, { ridisegna: ridisegna31, configurazione: configurazione23, salva: salva33 }) {
     documento.addEventListener("change", (evento) => {
       const tendina4 = evento.target?.closest?.("[data-dm-cont-genere]");
       if (!tendina4) return;
@@ -136458,7 +137918,7 @@ var scheda4 = costruisciSchedaDichiarata({
       if (!bozza3.icon || bozza3.icon === disegnoDelGenere2(genereDellaRiga2(prima)))
         riga3.icon = disegnoDelGenere2(riga3.genere);
       salva33(conLaRiga(configurazione23(), indice, riga3, CAMPI_IN_PIU3));
-      ridisegna30();
+      ridisegna31();
     });
   }
 });
@@ -136614,8 +138074,8 @@ function installPianteEditor() {
 senzaCadere(installPianteEditor);
 
 // src/sections/meteo-editor-section.js
-var KEY165 = "__DASHBOARDMODERN_METEO_EDITOR__";
-var state161 = root[KEY165] ||= { installed: false };
+var KEY166 = "__DASHBOARDMODERN_METEO_EDITOR__";
+var state162 = root[KEY166] ||= { installed: false };
 var METEO_EDITOR_TAB = METEO_TAB;
 var CASELLA_DEL_METEO = "dm.home_meteo";
 var CHIAVE_BARRA2 = "cd_barra_casa";
@@ -136672,16 +138132,16 @@ function mappature2() {
 function configurazioneDelMeteo() {
   const caselle2 = mappature2();
   const barra2 = readJson(CHIAVE_BARRA2, {}) || {};
-  const pagina2 = normalizzaMeteo(readJson(CHIAVE_METEO, {}));
+  const pagina3 = normalizzaMeteo(readJson(CHIAVE_METEO, {}));
   const misure = {};
   for (const misura7 of MISURE_DELLA_STAZIONE) {
     const scritta = clean(
-      misura7.casella ? caselle2[misura7.casella] : misura7.barra ? barra2?.[misura7.barra] : pagina2[misura7.pagina]
+      misura7.casella ? caselle2[misura7.casella] : misura7.barra ? barra2?.[misura7.barra] : pagina3[misura7.pagina]
     );
     misure[misura7.chiave] = scritta === misura7.casella ? "" : scritta;
   }
   const meteo3 = clean(caselle2[CASELLA_DEL_METEO]);
-  return { meteo: meteo3 === CASELLA_DEL_METEO ? "" : meteo3, misure, pagina: pagina2 };
+  return { meteo: meteo3 === CASELLA_DEL_METEO ? "" : meteo3, misure, pagina: pagina3 };
 }
 function scriviLeCaselle(voci4) {
   const dati = { ...readJson("cd_entity_overrides", {}) || {} };
@@ -136706,16 +138166,16 @@ function scriviLeCaselle(voci4) {
 function salvaIlMeteo(config) {
   const caselle2 = { [CASELLA_DEL_METEO]: config.meteo };
   const barra2 = { ...readJson(CHIAVE_BARRA2, {}) || {} };
-  const pagina2 = { ...normalizzaMeteo(readJson(CHIAVE_METEO, {})), ...config.pagina || {} };
+  const pagina3 = { ...normalizzaMeteo(readJson(CHIAVE_METEO, {})), ...config.pagina || {} };
   for (const misura7 of MISURE_DELLA_STAZIONE) {
     const entita3 = clean(config.misure?.[misura7.chiave]);
     if (misura7.casella) caselle2[misura7.casella] = entita3;
     else if (misura7.barra) barra2[misura7.barra] = entita3;
-    else pagina2[misura7.pagina] = entita3;
+    else pagina3[misura7.pagina] = entita3;
   }
   scriviLeCaselle(caselle2);
   writeJsonIfChanged(CHIAVE_BARRA2, barra2);
-  writeJsonIfChanged(CHIAVE_METEO, normalizzaMeteo(pagina2));
+  writeJsonIfChanged(CHIAVE_METEO, normalizzaMeteo(pagina3));
   try {
     root.render?.();
   } catch (_errore) {
@@ -136858,7 +138318,7 @@ function ensureMeteoEditor() {
   preparaLEditorDelRadar(body.querySelector("[data-dm-radar-ed]"));
   return true;
 }
-function ridisegna24() {
+function ridisegna25() {
   const body = doc?.getElementById("ed-body");
   if (body) delete body.dataset.dmMeteoEditor;
   ensureMeteoEditor();
@@ -136880,7 +138340,7 @@ function onClick51(event) {
     const quante3 = Object.keys(trovate).length;
     for (const [chiave2, entita3] of Object.entries(trovate)) config.misure[chiave2] = entita3;
     if (quante3) salvaIlMeteo(config);
-    ridisegna24();
+    ridisegna25();
     root.edToast?.(
       quante3 ? t(`🪄 ${quante3} sensori trovati`, `🪄 ${quante3} sensors found`) : t("🪄 Nessun sensore nuovo trovato", "🪄 No new sensor found")
     );
@@ -136892,35 +138352,35 @@ function onClick51(event) {
   if (su || giu || interruttore3) {
     event.preventDefault();
     const config = raccogli11(body);
-    const pagina2 = { ...config.pagina };
-    if (su) pagina2.ordine = spostaIlBlocco(pagina2.ordine, clean(su.dataset.dmMeteoSu), -1);
-    if (giu) pagina2.ordine = spostaIlBlocco(pagina2.ordine, clean(giu.dataset.dmMeteoGiu), 1);
+    const pagina3 = { ...config.pagina };
+    if (su) pagina3.ordine = spostaIlBlocco(pagina3.ordine, clean(su.dataset.dmMeteoSu), -1);
+    if (giu) pagina3.ordine = spostaIlBlocco(pagina3.ordine, clean(giu.dataset.dmMeteoGiu), 1);
     if (interruttore3) {
       const blocco3 = clean(interruttore3.dataset.dmMeteoInt);
-      pagina2.spenti = pagina2.spenti.includes(blocco3) ? pagina2.spenti.filter((voce3) => voce3 !== blocco3) : [...pagina2.spenti, blocco3].filter((voce3) => BLOCCHI.includes(voce3));
+      pagina3.spenti = pagina3.spenti.includes(blocco3) ? pagina3.spenti.filter((voce3) => voce3 !== blocco3) : [...pagina3.spenti, blocco3].filter((voce3) => BLOCCHI.includes(voce3));
     }
-    salvaIlMeteo({ ...config, pagina: pagina2 });
-    ridisegna24();
+    salvaIlMeteo({ ...config, pagina: pagina3 });
+    ridisegna25();
     return;
   }
   if (event.target.closest("[data-dm-meteo-save]")) {
     event.preventDefault();
     salvaIlMeteo(raccogli11(body));
-    ridisegna24();
+    ridisegna25();
     root.edToast?.(t("💾 Meteo salvato", "💾 Weather saved"));
   }
 }
 function ensureMeteoEditorTab() {
-  const linguette3 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette3 || linguette3.querySelector(`.ed-tab[data-tab="${METEO_EDITOR_TAB}"]`)) return false;
+  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${METEO_EDITOR_TAB}"]`)) return false;
   const linguetta3 = doc.createElement("button");
   linguetta3.className = "ed-tab";
   linguetta3.dataset.tab = METEO_EDITOR_TAB;
   linguetta3.textContent = `🌦️ ${t("Meteo", "Weather")}`;
   linguetta3.addEventListener("click", () => root.editorSwitch?.(METEO_EDITOR_TAB));
-  const prima = linguette3.querySelector('.ed-tab[data-tab="runtime"]');
+  const prima = linguette4.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta3);
-  else linguette3.append(linguetta3);
+  else linguette4.append(linguetta3);
   return true;
 }
 function installStyles83() {
@@ -136950,8 +138410,8 @@ function installStyles83() {
   );
 }
 function installMeteoEditor() {
-  if (!doc || state161.installed) return false;
-  state161.installed = true;
+  if (!doc || state162.installed) return false;
+  state162.installed = true;
   installStyles83();
   doc.addEventListener("click", onClick51);
   wrapFunction("apriConfigEntita", "__dmMeteoEditor", () => {
@@ -136978,8 +138438,8 @@ function installMeteoEditor() {
 senzaCadere(installMeteoEditor);
 
 // src/sections/accumulo-in-energia-section.js
-var KEY166 = "__DASHBOARDMODERN_ACCUMULO__";
-var state162 = root[KEY166] ||= {
+var KEY167 = "__DASHBOARDMODERN_ACCUMULO__";
+var state163 = root[KEY167] ||= {
   installed: false,
   frame: 0,
   firma: "",
@@ -137001,8 +138461,8 @@ function laVista() {
 function ensureVista() {
   let vista2 = laVista();
   if (vista2) return vista2;
-  const pagina2 = paginaEnergia2();
-  const sorelle = pagina2?.querySelectorAll?.(".flow-view");
+  const pagina3 = paginaEnergia2();
+  const sorelle = pagina3?.querySelectorAll?.(".flow-view");
   if (!sorelle?.length) return null;
   vista2 = doc.createElement("div");
   vista2.id = ACCUMULO_VIEW_ID;
@@ -137021,7 +138481,7 @@ function apriLAccumulo() {
   linguetta3.classList.add("active");
   vista2.classList.add("active");
   linguetta3.scrollIntoView?.({ inline: "center", block: "nearest", behavior: "instant" });
-  state162.firma = "";
+  state163.firma = "";
   dipingi16();
   return true;
 }
@@ -137084,18 +138544,18 @@ function dipingi16() {
   const dove = laVista()?.querySelector?.("#accumulo-wrap");
   if (!dove || !siVede2()) return;
   const markup7 = paginaDellAccumulo(vistaDiAdesso());
-  if (state162.firma === markup7 && dove.firstElementChild) return;
-  state162.firma = markup7;
+  if (state163.firma === markup7 && dove.firstElementChild) return;
+  state163.firma = markup7;
   dove.innerHTML = markup7;
 }
-function schedule40() {
-  if (state162.frame) return;
+function schedule41() {
+  if (state163.frame) return;
   const giro = () => {
-    state162.frame = 0;
+    state163.frame = 0;
     try {
       accendiLaLinguetta();
-      if (state162.richiesto && paginaEnergia2()?.classList.contains("active")) {
-        state162.richiesto = false;
+      if (state163.richiesto && paginaEnergia2()?.classList.contains("active")) {
+        state163.richiesto = false;
         if (ciSonoPacchi()) apriLAccumulo();
       }
       dipingi16();
@@ -137103,12 +138563,12 @@ function schedule40() {
       root.console?.warn?.("[DashboardModern] accumulo", errore);
     }
   };
-  state162.frame = root.requestAnimationFrame?.(giro) || 0;
-  if (!state162.frame) giro();
+  state163.frame = root.requestAnimationFrame?.(giro) || 0;
+  if (!state163.frame) giro();
 }
 function renderAccumulo() {
-  state162.firma = "";
-  schedule40();
+  state163.firma = "";
+  schedule41();
 }
 function installStyles84() {
   const V = `#${ACCUMULO_VIEW_ID}`;
@@ -137186,8 +138646,8 @@ function installStyles84() {
   );
 }
 function installAccumuloInEnergia() {
-  if (!doc || state162.installed) return false;
-  state162.installed = true;
+  if (!doc || state163.installed) return false;
+  state163.installed = true;
   installStyles84();
   ensureVista();
   ensureLinguetta();
@@ -137196,7 +138656,7 @@ function installAccumuloInEnergia() {
     if (typeof precedente !== "function" || precedente.__dmAccumulo) continue;
     const avvolta = function(...args) {
       const esito2 = precedente.apply(this, args);
-      schedule40();
+      schedule41();
       return esito2;
     };
     avvolta.__dmAccumulo = true;
@@ -137204,8 +138664,8 @@ function installAccumuloInEnergia() {
     root[nome] = avvolta;
   }
   root.addEventListener?.(EVENTO_APRI_ACCUMULO, () => {
-    state162.richiesto = true;
-    schedule40();
+    state163.richiesto = true;
+    schedule41();
   });
   for (const evento of [
     "dashboardmodern:legacy-ready",
@@ -137213,10 +138673,10 @@ function installAccumuloInEnergia() {
     "dashboardmodern:state-changed",
     "dashboardmodern:persistence-restored"
   ])
-    root.addEventListener?.(evento, schedule40);
-  doc.addEventListener?.("visibilitychange", schedule40);
-  quandoSiCambiaPagina(schedule40);
-  schedule40();
+    root.addEventListener?.(evento, schedule41);
+  doc.addEventListener?.("visibilitychange", schedule41);
+  quandoSiCambiaPagina(schedule41);
+  schedule41();
   return true;
 }
 senzaCadere(installAccumuloInEnergia);
@@ -137467,8 +138927,8 @@ function installAccumuloEditor() {
 senzaCadere(installAccumuloEditor);
 
 // src/sections/macchine-editor-section.js
-var KEY167 = "__DASHBOARDMODERN_MACCHINE_EDITOR__";
-var state163 = root[KEY167] ||= { catalogoChiesto: false };
+var KEY168 = "__DASHBOARDMODERN_MACCHINE_EDITOR__";
+var state164 = root[KEY168] ||= { catalogoChiesto: false };
 var ANCORA3 = "dm-macchine-ed";
 var DISEGNI_DELLA_MACCHINA = Object.freeze([
   "server",
@@ -137694,8 +139154,8 @@ var scheda7 = costruisciSchedaDichiarata({
   primaDiDisegnare() {
     const candidate = candidateDaChiedere(allStates());
     if (candidate.length) scopriLePiattaforme(candidate);
-    if (state163.catalogoChiesto) return;
-    state163.catalogoChiesto = true;
+    if (state164.catalogoChiesto) return;
+    state164.catalogoChiesto = true;
     caricaCatalogo().catch(() => {
     });
   },
@@ -137784,7 +139244,7 @@ var scheda7 = costruisciSchedaDichiarata({
   /* Le spunte delle integrazioni si salvano da sé: sono la configurazione di
    * COSA PROPORRE, non di una riga, e aspettare il 💾 di una riga vorrebbe
    * dire un tasto che salva una cosa che non ha davanti. */
-  inPiuAllInstallazione(documento, { ridisegna: ridisegna30, configurazione: config, salva: salva33, bozza: bozza3, inPiu }) {
+  inPiuAllInstallazione(documento, { ridisegna: ridisegna31, configurazione: config, salva: salva33, bozza: bozza3, inPiu }) {
     const cambiaLeLetture = (casella6, indice, cambia) => {
       const body = doc.getElementById(ANCORA3);
       if (!body || !Number.isInteger(indice)) return false;
@@ -137796,7 +139256,7 @@ var scheda7 = costruisciSchedaDichiarata({
         return false;
       }
       salva33(conLaRiga(config(), indice, { ...prima, letture: esito2.elenco }, inPiu));
-      ridisegna30();
+      ridisegna31();
       return true;
     };
     const aggiungi5 = (casella6, indice, nuova) => cambiaLeLetture(casella6, indice, (elenco15) => conLaVoce(elenco15, nuova, "letture"));
@@ -137808,7 +139268,7 @@ var scheda7 = costruisciSchedaDichiarata({
       salva33(
         conLaRiga(config(), indice, { ...prima, stato: regolaScritta(regola) || void 0 }, inPiu)
       );
-      ridisegna30();
+      ridisegna31();
       return true;
     };
     const aggiungiLaParola = (indice) => {
@@ -137922,10 +139382,10 @@ var scheda7 = costruisciSchedaDichiarata({
       if (spunta.checked) prese.add(dominio5);
       else prese.delete(dominio5);
       writeJsonIfChanged(CHIAVE_MACCHINE, { ...configurazione21(), integrazioni: [...prese] });
-      ridisegna30();
+      ridisegna31();
     });
     for (const evento of [EVENTO_PIATTAFORME, EVENTO_CATALOGO])
-      root.addEventListener?.(evento, () => root.queueMicrotask?.(ridisegna30));
+      root.addEventListener?.(evento, () => root.queueMicrotask?.(ridisegna31));
   }
 });
 function installMacchineEditor() {
@@ -137935,7 +139395,7 @@ senzaCadere(installMacchineEditor);
 
 // src/core/nodi-del-cluster.js
 var clean28 = (valore3) => String(valore3 ?? "").trim();
-var numero56 = (valore3) => {
+var numero57 = (valore3) => {
   const n = Number.parseFloat(String(valore3 ?? "").replace(",", "."));
   return Number.isFinite(n) ? n : null;
 };
@@ -137947,7 +139407,7 @@ var SOGLIE2 = Object.freeze({
   temperatura: Object.freeze({ alto: 70, critico: 85 })
 });
 function livelloDella(valore3, soglie = SOGLIE2.carico) {
-  const n = numero56(valore3);
+  const n = numero57(valore3);
   if (n === null) return "";
   if (n >= soglie.critico) return "critico";
   if (n >= soglie.alto) return "alto";
@@ -138004,7 +139464,7 @@ function misura6(entity2, states, soglie) {
   if (!id) return null;
   const stato3 = states?.[id];
   if (!stato3) return null;
-  const valore3 = numero56(stato3.state);
+  const valore3 = numero57(stato3.state);
   if (valore3 === null) return null;
   const unita3 = clean28(stato3.attributes?.unit_of_measurement);
   return {
@@ -138092,8 +139552,8 @@ function bindNodoToDevice({
 }
 
 // src/sections/nodi-section.js
-var KEY168 = "__DASHBOARDMODERN_NODI__";
-var state164 = root[KEY168] ||= { installed: false, frame: 0, firma: "" };
+var KEY169 = "__DASHBOARDMODERN_NODI__";
+var state165 = root[KEY169] ||= { installed: false, frame: 0, firma: "" };
 var FASCIA_ID = "dm-nodi-fascia";
 var STYLE_ID31 = "dm-nodi-style";
 function nodiConfigurati() {
@@ -138150,51 +139610,51 @@ function fasciaMarkup9(letture2) {
   </section>`;
 }
 function ospite2() {
-  const pagina2 = doc?.getElementById?.(SERVER_PAGE_ID);
-  if (!pagina2) return null;
-  const gia = pagina2.querySelector(`#${FASCIA_ID}`);
+  const pagina3 = doc?.getElementById?.(SERVER_PAGE_ID);
+  if (!pagina3) return null;
+  const gia = pagina3.querySelector(`#${FASCIA_ID}`);
   if (gia) return gia;
   const dove = doc.createElement("div");
   dove.id = FASCIA_ID;
   dove.className = "dm-nodi-wrap";
-  const macchine = pagina2.querySelector("#dm-macchine-fasce");
-  if (macchine) pagina2.insertBefore(dove, macchine);
-  else pagina2.append(dove);
+  const macchine = pagina3.querySelector("#dm-macchine-fasce");
+  if (macchine) pagina3.insertBefore(dove, macchine);
+  else pagina3.append(dove);
   return dove;
 }
 function dipingi17() {
   const letture2 = lettureDeiNodiOra();
-  const pagina2 = doc?.getElementById?.(SERVER_PAGE_ID);
-  if (!pagina2) return;
+  const pagina3 = doc?.getElementById?.(SERVER_PAGE_ID);
+  if (!pagina3) return;
   if (!letture2.length) {
-    pagina2.querySelector(`#${FASCIA_ID}`)?.remove();
-    state164.firma = "";
+    pagina3.querySelector(`#${FASCIA_ID}`)?.remove();
+    state165.firma = "";
     return;
   }
-  if (!pagina2.classList.contains("active")) return;
+  if (!pagina3.classList.contains("active")) return;
   const dove = ospite2();
   if (!dove) return;
   const firma2 = JSON.stringify([letture2, t("Altri nodi", "Other nodes")]);
-  if (state164.firma === firma2) return;
-  state164.firma = firma2;
+  if (state165.firma === firma2) return;
+  state165.firma = firma2;
   dove.innerHTML = fasciaMarkup9(letture2);
 }
-function schedule41() {
-  if (state164.frame) return;
+function schedule42() {
+  if (state165.frame) return;
   const giro = () => {
-    state164.frame = 0;
+    state165.frame = 0;
     try {
       dipingi17();
     } catch (errore) {
       root.console?.warn?.("[DashboardModern] nodi", errore);
     }
   };
-  state164.frame = root.requestAnimationFrame?.(giro) || 0;
-  if (!state164.frame) giro();
+  state165.frame = root.requestAnimationFrame?.(giro) || 0;
+  if (!state165.frame) giro();
 }
 function renderNodi() {
-  state164.firma = "";
-  schedule41();
+  state165.firma = "";
+  schedule42();
 }
 function installaStile2() {
   installStyle(
@@ -138237,8 +139697,8 @@ function installaStile2() {
   );
 }
 function installNodiSection() {
-  if (!doc || state164.installed) return;
-  state164.installed = true;
+  if (!doc || state165.installed) return;
+  state165.installed = true;
   installaStile2();
   for (const evento of [
     "dashboardmodern:legacy-ready",
@@ -138250,13 +139710,13 @@ function installNodiSection() {
      * pagina era stata aperta. */
     "dashboardmodern:state-changed"
   ])
-    root.addEventListener?.(evento, schedule41);
-  schedule41();
+    root.addEventListener?.(evento, schedule42);
+  schedule42();
 }
 
 // src/sections/nodi-editor-section.js
-var KEY169 = "__DASHBOARDMODERN_NODI_EDITOR__";
-var state165 = root[KEY169] ||= { installed: false, aperto: -1 };
+var KEY170 = "__DASHBOARDMODERN_NODI_EDITOR__";
+var state166 = root[KEY170] ||= { installed: false, aperto: -1 };
 var ANCORA4 = "dm-nodi-editor";
 function elenco14() {
   const salvato2 = readJson(CHIAVE_NODI, []);
@@ -138274,7 +139734,7 @@ function salva29(lista7) {
 function nellaSchedaServer() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab) === "sez6";
 }
-function ridisegna25() {
+function ridisegna26() {
   doc?.getElementById?.(ANCORA4)?.remove();
   ensureNodiEditor();
 }
@@ -138292,7 +139752,7 @@ function campoMarkup8(indice, campo5, valore3) {
     <span class="ed-form-row"><input id="${esc(id)}" class="ed-input mono" data-dm-nodo-campo="${esc(campo5)}" value="${esc(valore3)}" placeholder="${esc(esempio3)}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-nodo-pick="${esc(id)}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span></label>`;
 }
 function rigaMarkup25(nodo2, indice) {
-  const aperto2 = state165.aperto === indice;
+  const aperto2 = state166.aperto === indice;
   const quante3 = CAMPI_DEL_NODO.filter((campo5) => clean(nodo2?.[campo5])).length;
   return `<article class="ed-row dm-nodo-ed-riga" data-dm-nodo-indice="${indice}" data-open="${aperto2}">
     <div class="dm-nodo-ed-head">
@@ -138389,9 +139849,9 @@ function creaDaDispositivo5({ device, entities, integration }) {
     );
     return;
   }
-  state165.aperto = lista7.length;
+  state166.aperto = lista7.length;
   salva29([...lista7, nato]);
-  ridisegna25();
+  ridisegna26();
   const daChi = clean(integration?.name) || t("un'integrazione", "an integration");
   root.edToast?.(`${nato.nome || device.name} — ${t("aggiunto da", "added from")} ${daChi}`);
 }
@@ -138415,9 +139875,9 @@ function onClick52(event) {
   if (event.target.closest("[data-dm-nodo-aggiungi]")) {
     event.preventDefault();
     if (lista7.length >= NODI_MASSIMI) return;
-    state165.aperto = lista7.length;
+    state166.aperto = lista7.length;
     salva29([...lista7, { id: `nodo-${Date.now().toString(36)}`, nome: "" }]);
-    ridisegna25();
+    ridisegna26();
     return;
   }
   const lente = event.target.closest("[data-dm-nodo-pick]");
@@ -138435,16 +139895,16 @@ function onClick52(event) {
     event.preventDefault();
     const prossima = lista7.slice();
     prossima[indice] = leggiLaRiga2(riga3, lista7[indice]);
-    state165.aperto = state165.aperto === indice ? -1 : indice;
+    state166.aperto = state166.aperto === indice ? -1 : indice;
     salva29(prossima);
-    ridisegna25();
+    ridisegna26();
     return;
   }
   if (event.target.closest("[data-dm-nodo-togli]")) {
     event.preventDefault();
-    state165.aperto = -1;
+    state166.aperto = -1;
     salva29(lista7.filter((_nodo, posizione) => posizione !== indice));
-    ridisegna25();
+    ridisegna26();
     return;
   }
   if (event.target.closest("[data-dm-nodo-salva]")) {
@@ -138452,7 +139912,7 @@ function onClick52(event) {
     const prossima = lista7.slice();
     prossima[indice] = leggiLaRiga2(riga3, lista7[indice]);
     salva29(prossima);
-    ridisegna25();
+    ridisegna26();
     root.edToast?.(t("💾 Nodo salvato", "💾 Node saved"));
   }
 }
@@ -138481,8 +139941,8 @@ function installaStile3() {
   );
 }
 function installNodiEditor() {
-  if (!doc || state165.installed) return;
-  state165.installed = true;
+  if (!doc || state166.installed) return;
+  state166.installed = true;
   installaStile3();
   doc.addEventListener("click", onClick52);
   onEditorRedraw("__dmNodiEditor", () => root.queueMicrotask?.(ensureNodiEditor));
@@ -138492,8 +139952,8 @@ function installNodiEditor() {
 }
 
 // src/sections/agenda-editor-section.js
-var KEY170 = "__DASHBOARDMODERN_AGENDA_EDITOR__";
-var state166 = root[KEY170] ||= { installed: false, calAperto: -1, todoAperto: -1 };
+var KEY171 = "__DASHBOARDMODERN_AGENDA_EDITOR__";
+var state167 = root[KEY171] ||= { installed: false, calAperto: -1, todoAperto: -1 };
 var AGENDA_EDITOR_TAB = "agenda";
 var CHIAVE_SEZIONE4 = "calendario";
 var CONFIG_TODO = "cd_todo";
@@ -138566,7 +140026,7 @@ function personeMarkup(voce3, index) {
   </div>`;
 }
 function rigaCalendarioMarkup(voce3, index) {
-  const aperto2 = state166.calAperto === index;
+  const aperto2 = state167.calAperto === index;
   const colore = clean(voce3?.colore);
   return `<article class="ed-row dm-todo-ed-row dm-cal-ed-row" data-cal-index="${index}" data-open="${aperto2}">
     <div class="dm-todo-ed-head">
@@ -138601,7 +140061,7 @@ function calendariMarkup() {
   <button type="button" class="ed-btn-add" data-cal-detect>🪄 ${t("Rileva da Home Assistant", "Detect from Home Assistant")}</button>`;
 }
 function rigaListaMarkup(list, index) {
-  const aperto2 = state166.todoAperto === index;
+  const aperto2 = state167.todoAperto === index;
   return `<article class="ed-row dm-todo-ed-row" data-todo-index="${index}" data-open="${aperto2}">
     <div class="dm-todo-ed-head">
       <span class="dm-todo-ed-icon" aria-hidden="true">✅</span>
@@ -138645,8 +140105,8 @@ function ensureAgendaEditor() {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva15() !== AGENDA_EDITOR_TAB) return false;
   const firma2 = [
-    state166.calAperto,
-    state166.todoAperto,
+    state167.calAperto,
+    state167.todoAperto,
     sezioneNascosta5(),
     ...calendariGrezzi().map(
       (voce3) => `📅${voce3?.name}~${voce3?.entity}~${voce3?.colore}~${persone(voce3).join("+")}`
@@ -138659,7 +140119,7 @@ function ensureAgendaEditor() {
   body.dataset.renderer = "agenda";
   return true;
 }
-function ridisegna26() {
+function ridisegna27() {
   const body = doc?.getElementById("ed-body");
   if (body) delete body.dataset.dmAgendaEditor;
   ensureAgendaEditor();
@@ -138670,9 +140130,9 @@ function onClick53(event) {
   const calendari = calendariGrezzi();
   if (event.target.closest("[data-cal-add]")) {
     event.preventDefault();
-    state166.calAperto = calendari.length;
+    state167.calAperto = calendari.length;
     salvaCalendari([...calendari, { id: `cal-${Date.now().toString(36)}`, name: "", entity: "" }]);
-    ridisegna26();
+    ridisegna27();
     return;
   }
   if (event.target.closest("[data-cal-detect]")) {
@@ -138682,7 +140142,7 @@ function onClick53(event) {
       root.edToast?.(t("Nessun calendario nuovo", "No new calendar"));
       return;
     }
-    state166.calAperto = -1;
+    state167.calAperto = -1;
     salvaCalendari([
       ...calendari,
       ...trovati.map((voce3, indice2) => ({
@@ -138691,7 +140151,7 @@ function onClick53(event) {
         entity: voce3.entity
       }))
     ]);
-    ridisegna26();
+    ridisegna27();
     root.edToast?.(t(`Aggiunti ${trovati.length} calendari`, `Added ${trovati.length} calendars`));
     return;
   }
@@ -138708,17 +140168,17 @@ function onClick53(event) {
     if (!Number.isFinite(indice2) || !calendari[indice2]) return;
     if (event.target.closest("[data-cal-edit]")) {
       event.preventDefault();
-      state166.calAperto = state166.calAperto === indice2 ? -1 : indice2;
-      ridisegna26();
+      state167.calAperto = state167.calAperto === indice2 ? -1 : indice2;
+      ridisegna27();
       return;
     }
     if (event.target.closest("[data-cal-del]")) {
       event.preventDefault();
       const nome = nomeDelCalendario(calendari[indice2], indice2);
       if (root.confirm && !root.confirm(t(`Tolgo "${nome}"?`, `Remove "${nome}"?`))) return;
-      state166.calAperto = -1;
+      state167.calAperto = -1;
       salvaCalendari(calendari.filter((_voce, posto) => posto !== indice2));
-      ridisegna26();
+      ridisegna27();
       return;
     }
     const persona = event.target.closest("[data-cal-persona]");
@@ -138739,7 +140199,7 @@ function onClick53(event) {
       const prossimi = calendari.slice();
       prossimi[indice2] = { ...calendari[indice2], colore: "" };
       salvaCalendari(prossimi);
-      ridisegna26();
+      ridisegna27();
       return;
     }
     if (event.target.closest("[data-cal-save]")) {
@@ -138760,9 +140220,9 @@ function onClick53(event) {
       }
       if (errore) errore.textContent = "";
       prossimi[indice2] = letta2;
-      state166.calAperto = -1;
+      state167.calAperto = -1;
       salvaCalendari(prossimi);
-      ridisegna26();
+      ridisegna27();
       root.edToast?.(t("💾 Calendario salvato", "💾 Calendar saved"));
     }
     return;
@@ -138770,9 +140230,9 @@ function onClick53(event) {
   const liste2 = listeGrezze();
   if (event.target.closest("[data-todo-add]")) {
     event.preventDefault();
-    state166.todoAperto = liste2.length;
+    state167.todoAperto = liste2.length;
     salvaListe([...liste2, { id: `todo-${Date.now().toString(36)}`, name: "", entity: "" }]);
-    ridisegna26();
+    ridisegna27();
     return;
   }
   if (event.target.closest("[data-todo-detect]")) {
@@ -138782,7 +140242,7 @@ function onClick53(event) {
       root.edToast?.(t("Nessuna lista todo.* trovata", "No todo.* list found"));
       return;
     }
-    state166.todoAperto = -1;
+    state167.todoAperto = -1;
     salvaListe([
       ...liste2,
       ...trovate.map((voce3, indice2) => ({
@@ -138791,7 +140251,7 @@ function onClick53(event) {
         entity: voce3.entity
       }))
     ]);
-    ridisegna26();
+    ridisegna27();
     root.edToast?.(t(`Aggiunte ${trovate.length} liste`, `Added ${trovate.length} lists`));
     return;
   }
@@ -138808,17 +140268,17 @@ function onClick53(event) {
   if (!Number.isFinite(indice) || !liste2[indice]) return;
   if (event.target.closest("[data-todo-edit]")) {
     event.preventDefault();
-    state166.todoAperto = state166.todoAperto === indice ? -1 : indice;
-    ridisegna26();
+    state167.todoAperto = state167.todoAperto === indice ? -1 : indice;
+    ridisegna27();
     return;
   }
   if (event.target.closest("[data-todo-del]")) {
     event.preventDefault();
     const nome = nomeDellaLista3(liste2[indice], indice);
     if (root.confirm && !root.confirm(t(`Elimino "${nome}"?`, `Remove "${nome}"?`))) return;
-    state166.todoAperto = -1;
+    state167.todoAperto = -1;
     salvaListe(liste2.filter((_voce, posto) => posto !== indice));
-    ridisegna26();
+    ridisegna27();
     return;
   }
   if (event.target.closest("[data-todo-save]")) {
@@ -138835,9 +140295,9 @@ function onClick53(event) {
     }
     if (errore) errore.textContent = "";
     prossime[indice] = letta2;
-    state166.todoAperto = -1;
+    state167.todoAperto = -1;
     salvaListe(prossime);
-    ridisegna26();
+    ridisegna27();
     root.edToast?.(t("💾 Lista salvata", "💾 List saved"));
   }
 }
@@ -138886,8 +140346,8 @@ function installStyles85() {
   );
 }
 function installAgendaEditorSection() {
-  if (!doc || state166.installed) return false;
-  state166.installed = true;
+  if (!doc || state167.installed) return false;
+  state167.installed = true;
   installStyles85();
   wrapFunction("apriConfigEntita", "__dmAgendaEditorTab", () => {
     ensureAgendaEditorTab();
@@ -138914,8 +140374,8 @@ function installAgendaEditorSection() {
 senzaCadere(installAgendaEditorSection);
 
 // src/sections/lingua-section.js
-var KEY171 = "__DASHBOARDMODERN_LINGUA__";
-var state167 = root[KEY171] ||= { installed: false };
+var KEY172 = "__DASHBOARDMODERN_LINGUA__";
+var state168 = root[KEY172] ||= { installed: false };
 var SCHEDA8 = "visib";
 var AUTO = "auto";
 function schedaAttiva16() {
@@ -139017,8 +140477,8 @@ function onChange17(evento) {
   });
 }
 function installLinguaSection() {
-  if (!doc || state167.installed) return false;
-  state167.installed = true;
+  if (!doc || state168.installed) return false;
+  state168.installed = true;
   doc.addEventListener("change", onChange17);
   wrapFunction("apriConfigEntita", "__dmLingua", () => ensureLingua());
   onEditorRedraw("__dmLingua", () => {
@@ -139078,8 +140538,8 @@ function siApreLaConfig({ amministratori = [], utente = null, dalPonte = null } 
 }
 
 // src/sections/la-config-e-di-chi-la-amministra-section.js
-var KEY172 = "__DASHBOARDMODERN_CHI_CONFIGURA__";
-var state168 = root[KEY172] ||= {
+var KEY173 = "__DASHBOARDMODERN_CHI_CONFIGURA__";
+var state169 = root[KEY173] ||= {
   installed: false,
   /* La risposta di chi ospita la pagina: `{id, name, is_admin,
    * gdahome_config?}`. `null` finche' non e' arrivata. */
@@ -139116,7 +140576,7 @@ function cdCfgSicuro(chiave2) {
   }
 }
 function utenteCheGuarda2() {
-  const detto3 = state168.chiSono;
+  const detto3 = state169.chiSono;
   if (detto3 && (clean(detto3.id) || clean(detto3.name)))
     return { id: clean(detto3.id), name: clean(detto3.name) };
   const id = clean(root.__DASHBOARDMODERN_UTENTE__);
@@ -139129,7 +140589,7 @@ function utenteCheGuarda2() {
   return id || name ? { id, name } : null;
 }
 function puoConfigurare() {
-  const dalPonte = state168.chiSono?.gdahome_config;
+  const dalPonte = state169.chiSono?.gdahome_config;
   return siApreLaConfig({
     amministratori: amministratoriDiQuestaPlancia(),
     utente: utenteCheGuarda2(),
@@ -139137,14 +140597,14 @@ function puoConfigurare() {
   });
 }
 function chiediChiSono({ ancora: ancora2 = false } = {}) {
-  if (!root.__DASHBOARDMODERN_HOSTED__ || state168.inVolo) return;
-  if (state168.chiSono && !ancora2) return;
-  if (state168.tentativi >= DOMANDE_AL_MASSIMO && !ancora2) return;
-  state168.tentativi += 1;
-  state168.inVolo = true;
+  if (!root.__DASHBOARDMODERN_HOSTED__ || state169.inVolo) return;
+  if (state169.chiSono && !ancora2) return;
+  if (state169.tentativi >= DOMANDE_AL_MASSIMO && !ancora2) return;
+  state169.tentativi += 1;
+  state169.inVolo = true;
   chiediAHomeAssistant({ type: "auth/current_user", profile: profilo2() }).then((risposta) => {
     if (risposta && typeof risposta === "object") {
-      state168.chiSono = {
+      state169.chiSono = {
         id: clean(risposta.id),
         name: clean(risposta.name),
         is_admin: risposta.is_admin === true,
@@ -139154,22 +140614,22 @@ function chiediChiSono({ ancora: ancora2 = false } = {}) {
   }).catch((errore) => {
     if (/socket|msgId|timeout/.test(String(errore?.message || ""))) riprovaFraPoco();
   }).finally(() => {
-    state168.inVolo = false;
-    if (state168.ripristinata) travasa();
+    state169.inVolo = false;
+    if (state169.ripristinata) travasa();
     applica2();
   });
 }
 function riprovaFraPoco() {
-  if (state168.riprova || state168.tentativi >= DOMANDE_AL_MASSIMO) return;
-  state168.riprova = root.setTimeout?.(() => {
-    state168.riprova = 0;
+  if (state169.riprova || state169.tentativi >= DOMANDE_AL_MASSIMO) return;
+  state169.riprova = root.setTimeout?.(() => {
+    state169.riprova = 0;
     chiediChiSono();
   }, 1500);
 }
 function avvisa3() {
   const adesso2 = Date.now();
-  if (adesso2 - state168.avvisatoIl < 4e3) return;
-  state168.avvisatoIl = adesso2;
+  if (adesso2 - state169.avvisatoIl < 4e3) return;
+  state169.avvisatoIl = adesso2;
   if (!doc?.body) return;
   let cartello = doc.getElementById("dm-config-riservata-avviso");
   if (!cartello) {
@@ -139183,8 +140643,8 @@ function avvisa3() {
     "This dashboard's configuration is reserved for its administrator."
   );
   cartello.classList.add("dm-si-vede");
-  root.clearTimeout?.(state168.cartello);
-  state168.cartello = root.setTimeout?.(() => cartello.classList.remove("dm-si-vede"), 3200);
+  root.clearTimeout?.(state169.cartello);
+  state169.cartello = root.setTimeout?.(() => cartello.classList.remove("dm-si-vede"), 3200);
 }
 function sulTocco(evento) {
   const voce3 = evento.target?.closest?.('.tab[data-tab="config"]');
@@ -139232,19 +140692,19 @@ function applica2() {
   }
 }
 function travasa() {
-  if (state168.travasato) return;
+  if (state169.travasato) return;
   const branding = readJson("cd_branding", null);
   if (nomiPuliti(branding?.admin_users).length) {
-    state168.travasato = true;
+    state169.travasato = true;
     return;
   }
   const vecchi = nomiPuliti(readJson("cd_connection", null)?.admin_users);
   if (!vecchi.length) {
-    state168.travasato = true;
+    state169.travasato = true;
     return;
   }
   if (!puoConfigurare()) return;
-  state168.travasato = true;
+  state169.travasato = true;
   const fuori = branding && typeof branding === "object" ? { ...branding } : {};
   fuori.admin_users = vecchi.slice(0, 1);
   writeJsonIfChanged("cd_branding", fuori);
@@ -139272,8 +140732,8 @@ function installaLoStile5() {
   );
 }
 function installLaConfigEDiChiLaAmministra() {
-  if (!doc || state168.installed) return false;
-  state168.installed = true;
+  if (!doc || state169.installed) return false;
+  state169.installed = true;
   root.dmPuoConfigurare = puoConfigurare;
   installaLoStile5();
   doc.addEventListener("click", sulTocco, true);
@@ -139286,7 +140746,7 @@ function installLaConfigEDiChiLaAmministra() {
   for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:states-ready", "pageshow"])
     root.addEventListener?.(evento, ancora2);
   const configurazioneArrivata = () => {
-    state168.ripristinata = true;
+    state169.ripristinata = true;
     chiudiLePorte();
     travasa();
     chiediChiSono({ ancora: true });
@@ -139301,8 +140761,8 @@ function installLaConfigEDiChiLaAmministra() {
 senzaCadere(installLaConfigEDiChiLaAmministra);
 
 // src/sections/sezioni-mie-section.js
-var KEY173 = "__DASHBOARDMODERN_SEZIONI_MIE__";
-var state169 = root[KEY173] ||= { installed: false, frame: 0, firme: /* @__PURE__ */ new Map() };
+var KEY174 = "__DASHBOARDMODERN_SEZIONI_MIE__";
+var state170 = root[KEY174] ||= { installed: false, frame: 0, firme: /* @__PURE__ */ new Map() };
 var SEZIONI_MIE_TAB = "mie";
 var PAGINA2 = (id) => `page-${chiaveDellaSezione(id)}`;
 var TINTE2 = Object.freeze([
@@ -139328,16 +140788,16 @@ function ultimaPagina17() {
 function ensurePagina3(sezione2) {
   if (!doc) return null;
   const id = PAGINA2(sezione2.id);
-  let pagina2 = doc.getElementById(id);
-  if (pagina2) return pagina2;
+  let pagina3 = doc.getElementById(id);
+  if (pagina3) return pagina3;
   const sorella = ultimaPagina17();
   if (!sorella?.parentElement) return null;
-  pagina2 = doc.createElement("section");
-  pagina2.className = "page";
-  pagina2.id = id;
-  pagina2.innerHTML = `<div class="dm-mia-wrap"></div>`;
-  sorella.after(pagina2);
-  return pagina2;
+  pagina3 = doc.createElement("section");
+  pagina3.className = "page";
+  pagina3.id = id;
+  pagina3.innerHTML = `<div class="dm-mia-wrap"></div>`;
+  sorella.after(pagina3);
+  return pagina3;
 }
 function apri6(sezione2, voce3) {
   for (const nodo2 of doc.querySelectorAll(".tab")) nodo2.classList.remove("active");
@@ -139348,7 +140808,7 @@ function apri6(sezione2, voce3) {
   if (testata5) testata5.style.display = "none";
   root.scrollTo?.({ top: 0, behavior: "instant" });
   if (root.navigator?.vibrate) root.navigator.vibrate(5);
-  schedule42();
+  schedule43();
 }
 function ensureVoce3(sezione2) {
   if (!doc) return null;
@@ -139382,10 +140842,10 @@ function toglieteLeVecchie(vive) {
     if (voce3.classList.contains("active")) doc.querySelector('.tab[data-tab="home"]')?.click();
     voce3.remove();
   }
-  for (const pagina2 of doc.querySelectorAll(".page[data-dm-mia]")) {
-    if (vive.has(clean(pagina2.dataset.dmMia))) continue;
-    registraPaginaARuntime(pagina2.id, null);
-    pagina2.remove();
+  for (const pagina3 of doc.querySelectorAll(".page[data-dm-mia]")) {
+    if (vive.has(clean(pagina3.dataset.dmMia))) continue;
+    registraPaginaARuntime(pagina3.id, null);
+    pagina3.remove();
   }
 }
 function valoreMarkup(riga3) {
@@ -139466,22 +140926,22 @@ function dipingi18() {
   const sezioni2 = accesa3 ? sezioniMie() : [];
   const vive = new Set(sezioni2.map((sezione2) => sezione2.id));
   toglieteLeVecchie(vive);
-  for (const [id] of state169.firme) if (!vive.has(id)) state169.firme.delete(id);
+  for (const [id] of state170.firme) if (!vive.has(id)) state170.firme.delete(id);
   const states = allStates();
   const resolve = root.resolveEntity || ((valore3) => valore3);
   for (const [indice, sezione2] of sezioni2.entries()) {
     const voce3 = ensureVoce3(sezione2);
     if (voce3) scriviLaVoce2(voce3, sezione2);
-    const pagina2 = ensurePagina3(sezione2);
-    if (!pagina2) continue;
-    pagina2.dataset.dmMia = sezione2.id;
-    const dove = pagina2.querySelector(".dm-mia-wrap");
+    const pagina3 = ensurePagina3(sezione2);
+    if (!pagina3) continue;
+    pagina3.dataset.dmMia = sezione2.id;
+    const dove = pagina3.querySelector(".dm-mia-wrap");
     if (!dove) continue;
     const letture2 = lettureDellaSezione2(sezione2, states, resolve);
     annunciaLaPagina(sezione2, indice, letture2);
     const firma2 = JSON.stringify([sezione2.titolo, sezione2.icona, sezione2.formato, letture2]);
-    if (state169.firme.get(sezione2.id) === firma2) continue;
-    state169.firme.set(sezione2.id, firma2);
+    if (state170.firme.get(sezione2.id) === firma2) continue;
+    state170.firme.set(sezione2.id, firma2);
     dove.innerHTML = paginaMarkup3(letture2, sezione2.formato);
   }
 }
@@ -139531,10 +140991,10 @@ function onClick54(event) {
   };
   chiamaHa2(comando.domain, comando.service, comando.data);
 }
-function schedule42() {
-  if (state169.frame) return;
-  state169.frame = root.requestAnimationFrame?.(() => {
-    state169.frame = 0;
+function schedule43() {
+  if (state170.frame) return;
+  state170.frame = root.requestAnimationFrame?.(() => {
+    state170.frame = 0;
     try {
       dipingi18();
     } catch (errore) {
@@ -139543,8 +141003,8 @@ function schedule42() {
   }) || 0;
 }
 function ridisegnaSezioniMie() {
-  state169.firme.clear();
-  schedule42();
+  state170.firme.clear();
+  schedule43();
 }
 function installStyles86() {
   installStyle(
@@ -139704,8 +141164,8 @@ function installStyles86() {
   );
 }
 function installSezioniMie() {
-  if (!doc || state169.installed) return false;
-  state169.installed = true;
+  if (!doc || state170.installed) return false;
+  state170.installed = true;
   installStyles86();
   doc.addEventListener("click", onClick54);
   for (const nome of ["render", "cdApplyNavVis"]) {
@@ -139713,7 +141173,7 @@ function installSezioniMie() {
     if (typeof precedente !== "function" || precedente.__dmSezioniMie) continue;
     const avvolta = function(...args) {
       const esito2 = precedente.apply(this, args);
-      schedule42();
+      schedule43();
       return esito2;
     };
     Object.assign(avvolta, precedente);
@@ -139727,15 +141187,15 @@ function installSezioniMie() {
     "dashboardmodern:persistence-restored",
     "dashboardmodern:legacy-ready"
   ])
-    root.addEventListener?.(evento, schedule42);
-  schedule42();
+    root.addEventListener?.(evento, schedule43);
+  schedule43();
   return true;
 }
 
 // src/sections/sezioni-mie-editor-section.js
-var KEY174 = "__DASHBOARDMODERN_SEZIONI_MIE_EDITOR__";
-var state170 = root[KEY174] ||= { installed: false, aperta: 0 };
-state170.attributiAperti ||= /* @__PURE__ */ new Set();
+var KEY175 = "__DASHBOARDMODERN_SEZIONI_MIE_EDITOR__";
+var state171 = root[KEY175] ||= { installed: false, aperta: 0 };
+state171.attributiAperti ||= /* @__PURE__ */ new Set();
 var SEZIONI_MIE_EDITOR_TAB = "mie";
 var CHIAVE_SEZIONE5 = SEZIONI_MIE_TAB;
 function schedaAttiva17() {
@@ -139840,7 +141300,7 @@ function corpoAttributiMarkup(righe3) {
 function attributiMarkup2(voce3, chiaveBlocco) {
   const scelti = normalizzaAttributi(voce3?.attributi);
   const righe3 = righeDegliAttributi(voce3?.entity, scelti);
-  const aperto2 = state170.attributiAperti.has(chiaveBlocco);
+  const aperto2 = state171.attributiAperti.has(chiaveBlocco);
   return `<div class="dm-mia-ed-attr" data-mia-attr-blocco="${esc(chiaveBlocco)}" data-open="${aperto2}"
     data-mia-attr-entita="${esc(clean(voce3?.entity))}">
     <button type="button" class="dm-mia-ed-attr-testa" data-mia-attr-apri aria-expanded="${aperto2}">
@@ -139921,7 +141381,7 @@ function rigaVoceMarkup(voce3, sezione2, riga3) {
   </div>`;
 }
 function rigaSezioneMarkup(sezione2, indice) {
-  const aperta2 = state170.aperta === indice;
+  const aperta2 = state171.aperta === indice;
   const voci4 = vociDi(sezione2);
   const titolo3 = clean(sezione2?.titolo) || `${t("Sezione", "Section")} ${indice + 1}`;
   return `<article class="ed-row dm-todo-ed-row dm-mia-ed-riga" data-mia-sezione="${indice}" data-open="${aperta2}">
@@ -139987,14 +141447,14 @@ function ensureSezioniMieEditor() {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva17() !== SEZIONI_MIE_EDITOR_TAB) return false;
   const quali = sezioni().flatMap((sezione2) => vociDi(sezione2)).map((voce3) => Object.keys(statoDellEntita(clean(voce3?.entity))?.attributes || {}).join(","));
-  const firma2 = `${JSON.stringify(sezioni())}|${state170.aperta}|${sezioneNascosta6()}|${quali.join(";")}`;
+  const firma2 = `${JSON.stringify(sezioni())}|${state171.aperta}|${sezioneNascosta6()}|${quali.join(";")}`;
   if (body.dataset.dmMieEditor === firma2 && body.querySelector(".dm-mia-ed")) return true;
   body.dataset.dmMieEditor = firma2;
   body.innerHTML = corpoMarkup15();
   body.dataset.renderer = "mie";
   return true;
 }
-function ridisegna27() {
+function ridisegna28() {
   const body = doc?.getElementById("ed-body");
   if (body) delete body.dataset.dmMieEditor;
   ensureSezioniMieEditor();
@@ -140041,9 +141501,9 @@ function onClick55(event) {
       formato: FORMATI_SEZIONE[0],
       voci: [{}]
     });
-    state170.aperta = lista7.length - 1;
+    state171.aperta = lista7.length - 1;
     salva30(lista7);
-    ridisegna27();
+    ridisegna28();
     return;
   }
   const riga3 = event.target.closest("[data-mia-sezione]");
@@ -140061,9 +141521,9 @@ function onClick55(event) {
     event.preventDefault();
     const blocco3 = apriAttributi.closest("[data-mia-attr-blocco]");
     const chiave2 = clean(blocco3?.dataset?.miaAttrBlocco);
-    const aperto2 = !state170.attributiAperti.has(chiave2);
-    if (aperto2) state170.attributiAperti.add(chiave2);
-    else state170.attributiAperti.delete(chiave2);
+    const aperto2 = !state171.attributiAperti.has(chiave2);
+    if (aperto2) state171.attributiAperti.add(chiave2);
+    else state171.attributiAperti.delete(chiave2);
     blocco3.dataset.open = String(aperto2);
     apriAttributi.setAttribute("aria-expanded", String(aperto2));
     const corpo4 = blocco3.querySelector(".dm-mia-ed-attr-corpo");
@@ -140076,22 +141536,22 @@ function onClick55(event) {
     const letto = leggiLaRiga3(riga3);
     letto.formato = formatoDellaSezione(formato.dataset.miaFormato);
     sostituisci(indice, letto);
-    ridisegna27();
+    ridisegna28();
     return;
   }
   if (event.target.closest("[data-mia-edit]")) {
     event.preventDefault();
-    state170.aperta = state170.aperta === indice ? -1 : indice;
-    ridisegna27();
+    state171.aperta = state171.aperta === indice ? -1 : indice;
+    ridisegna28();
     return;
   }
   if (event.target.closest("[data-mia-del]")) {
     event.preventDefault();
     const lista7 = sezioni().slice();
     lista7.splice(indice, 1);
-    state170.aperta = -1;
+    state171.aperta = -1;
     salva30(lista7);
-    ridisegna27();
+    ridisegna28();
     return;
   }
   if (event.target.closest("[data-mia-voce-add]")) {
@@ -140099,7 +141559,7 @@ function onClick55(event) {
     const letto = leggiLaRiga3(riga3);
     letto.voci = [...letto.voci || [], {}];
     sostituisci(indice, letto);
-    ridisegna27();
+    ridisegna28();
     return;
   }
   const via = event.target.closest("[data-mia-voce-del]");
@@ -140109,7 +141569,7 @@ function onClick55(event) {
     const quale = Number(via.closest("[data-mia-voce]")?.dataset?.miaVoce);
     if (Number.isInteger(quale)) letto.voci = (letto.voci || []).filter((_, i) => i !== quale);
     sostituisci(indice, letto);
-    ridisegna27();
+    ridisegna28();
     return;
   }
   if (event.target.closest("[data-mia-save]")) {
@@ -140117,22 +141577,22 @@ function onClick55(event) {
     const lista7 = sezioniDalDocumento(body);
     lista7[indice] = leggiLaRiga3(riga3);
     salva30(lista7);
-    ridisegna27();
+    ridisegna28();
     root.edToast?.(t("💾 Sezione salvata", "💾 Section saved"));
   }
 }
 function ensureSezioniMieTab() {
-  const linguette3 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette3 || linguette3.querySelector(`.ed-tab[data-tab="${SEZIONI_MIE_EDITOR_TAB}"]`))
+  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${SEZIONI_MIE_EDITOR_TAB}"]`))
     return false;
   const linguetta3 = doc.createElement("button");
   linguetta3.className = "ed-tab";
   linguetta3.dataset.tab = SEZIONI_MIE_EDITOR_TAB;
   linguetta3.textContent = `⭐ ${t("Le tue sezioni", "Your sections")}`;
   linguetta3.addEventListener("click", () => root.editorSwitch?.(SEZIONI_MIE_EDITOR_TAB));
-  const prima = linguette3.querySelector('.ed-tab[data-tab="runtime"]');
+  const prima = linguette4.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta3);
-  else linguette3.append(linguetta3);
+  else linguette4.append(linguetta3);
   return true;
 }
 function installStyles87() {
@@ -140229,8 +141689,8 @@ function installStyles87() {
   );
 }
 function installSezioniMieEditor() {
-  if (!doc || state170.installed) return false;
-  state170.installed = true;
+  if (!doc || state171.installed) return false;
+  state171.installed = true;
   installStyles87();
   doc.addEventListener("click", onClick55);
   doc.addEventListener("change", onChange18);
@@ -140257,9 +141717,9 @@ function installSezioniMieEditor() {
 }
 
 // src/sections/entita-mie-section.js
-var KEY175 = "__DASHBOARDMODERN_ENTITA_MIE__";
+var KEY176 = "__DASHBOARDMODERN_ENTITA_MIE__";
 var STYLE_ID32 = "dm-entita-mie-style";
-var state171 = root[KEY175] ||= { installed: false, frame: 0, firme: /* @__PURE__ */ new Map() };
+var state172 = root[KEY176] ||= { installed: false, frame: 0, firme: /* @__PURE__ */ new Map() };
 var voci2 = () => readJson(CHIAVE_ENTITA_MIE, []);
 function valoreMarkup2(riga3) {
   if (riga3.muto) return `<b class="dm-mie-muta">${esc(t("Non risponde", "Not reporting"))}</b>`;
@@ -140291,13 +141751,13 @@ function rigaMarkup28(riga3) {
     ${codaMarkup2(riga3)}
   </article>`;
 }
-function casaDelContenuto(pagina2) {
-  const fascia2 = pagina2.querySelector(".dm-page-mast");
+function casaDelContenuto(pagina3) {
+  const fascia2 = pagina3.querySelector(".dm-page-mast");
   const casa = fascia2?.parentElement;
-  return casa && pagina2.contains(casa) ? casa : pagina2;
+  return casa && pagina3.contains(casa) ? casa : pagina3;
 }
-function blocco2(pagina2) {
-  const casa = casaDelContenuto(pagina2);
+function blocco2(pagina3) {
+  const casa = casaDelContenuto(pagina3);
   let nodo2 = casa.querySelector(":scope > .dm-mie-ent");
   if (nodo2) return nodo2;
   nodo2 = doc.createElement("section");
@@ -140314,26 +141774,26 @@ function renderEntitaMie() {
   const stored = voci2();
   const conVoci = new Set(sezioniConEntita(stored));
   for (const nodo2 of doc.querySelectorAll(".dm-mie-ent")) {
-    const pagina2 = nodo2.closest(".page");
-    const quale = clean(pagina2?.id).replace(/^page-/, "");
+    const pagina3 = nodo2.closest(".page");
+    const quale = clean(pagina3?.id).replace(/^page-/, "");
     if (!conVoci.has(quale)) {
       nodo2.remove();
-      state171.firme.delete(quale);
+      state172.firme.delete(quale);
     }
   }
   const states = allStates();
   const resolve = root.resolveEntity || ((valore3) => valore3);
   for (const sezione2 of conVoci) {
-    const pagina2 = doc.getElementById(`page-${sezione2}`);
-    if (!pagina2) continue;
+    const pagina3 = doc.getElementById(`page-${sezione2}`);
+    if (!pagina3) continue;
     const letture2 = lettureDellaSezione(stored, sezione2, states, resolve);
     if (!letture2.length) continue;
-    const nodo2 = blocco2(pagina2);
+    const nodo2 = blocco2(pagina3);
     const casa = nodo2.parentElement;
     if (casa && casa.lastElementChild !== nodo2) casa.append(nodo2);
     const firma2 = JSON.stringify(letture2);
-    if (state171.firme.get(sezione2) === firma2) continue;
-    state171.firme.set(sezione2, firma2);
+    if (state172.firme.get(sezione2) === firma2) continue;
+    state172.firme.set(sezione2, firma2);
     const lista7 = nodo2.querySelector(".dm-mie-lista");
     if (lista7) lista7.innerHTML = letture2.map(rigaMarkup28).join("");
   }
@@ -140377,10 +141837,10 @@ function onClick56(event) {
   };
   chiamaHa3(comando.domain, comando.service, comando.data);
 }
-function schedule43() {
-  if (state171.frame) return;
-  state171.frame = root.requestAnimationFrame?.(() => {
-    state171.frame = 0;
+function schedule44() {
+  if (state172.frame) return;
+  state172.frame = root.requestAnimationFrame?.(() => {
+    state172.frame = 0;
     try {
       renderEntitaMie();
     } catch (errore) {
@@ -140389,8 +141849,8 @@ function schedule43() {
   }) || 0;
 }
 function ridisegnaEntitaMie() {
-  state171.firme.clear();
-  schedule43();
+  state172.firme.clear();
+  schedule44();
 }
 function installStyles88() {
   installStyle(
@@ -140441,11 +141901,11 @@ function installStyles88() {
   );
 }
 function installEntitaMie() {
-  if (!doc || state171.installed) return false;
-  state171.installed = true;
+  if (!doc || state172.installed) return false;
+  state172.installed = true;
   installStyles88();
   doc.addEventListener("click", onClick56);
-  for (const nome of ["render", "cdApplyNavVis"]) wrapFunction(nome, "__dmEntitaMie", schedule43);
+  for (const nome of ["render", "cdApplyNavVis"]) wrapFunction(nome, "__dmEntitaMie", schedule44);
   for (const evento of [
     "dashboardmodern:legacy-ready",
     "dashboardmodern:runtime-ready",
@@ -140453,14 +141913,14 @@ function installEntitaMie() {
     "dashboardmodern:state-changed",
     "dashboardmodern:persistence-restored"
   ])
-    root.addEventListener?.(evento, schedule43);
-  schedule43();
+    root.addEventListener?.(evento, schedule44);
+  schedule44();
   return true;
 }
 
 // src/sections/entita-mie-editor-section.js
-var KEY176 = "__DASHBOARDMODERN_ENTITA_MIE_EDITOR__";
-var state172 = root[KEY176] ||= { installed: false, aperta: -1 };
+var KEY177 = "__DASHBOARDMODERN_ENTITA_MIE_EDITOR__";
+var state173 = root[KEY177] ||= { installed: false, aperta: -1 };
 var ENTITA_MIE_EDITOR_TAB = "entita";
 function schedaAttiva18() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
@@ -140505,7 +141965,7 @@ function nomeDellaSezione3(tab, sezioni2) {
   return sezioni2.find((sezione2) => sezione2.tab === quale)?.nome || quale;
 }
 function rigaMarkup29(voce3, indice, sezioni2, troppe) {
-  const aperta2 = state172.aperta === indice;
+  const aperta2 = state173.aperta === indice;
   const id = `dm-mia-ent-${indice}`;
   const nome = clean(voce3?.nome) || clean(voce3?.entity) || t("Entità nuova", "New entity");
   return `<article class="ed-row dm-todo-ed-row dm-mia-ent-riga" data-mia-ent="${indice}" data-open="${aperta2}">
@@ -140594,14 +142054,14 @@ function corpoMarkup16() {
 function ensureEntitaMieEditor() {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva18() !== ENTITA_MIE_EDITOR_TAB) return false;
-  const firma2 = `${JSON.stringify(voci3())}|${state172.aperta}|${sezioniDisponibili().map((sezione2) => sezione2.tab).join(",")}`;
+  const firma2 = `${JSON.stringify(voci3())}|${state173.aperta}|${sezioniDisponibili().map((sezione2) => sezione2.tab).join(",")}`;
   if (body.dataset.dmEntitaMie === firma2 && body.querySelector(".dm-mia-ent-ed")) return true;
   body.dataset.dmEntitaMie = firma2;
   body.innerHTML = corpoMarkup16();
   body.dataset.renderer = ENTITA_MIE_EDITOR_TAB;
   return true;
 }
-function ridisegna28() {
+function ridisegna29() {
   const body = doc?.getElementById("ed-body");
   if (body) delete body.dataset.dmEntitaMie;
   ensureEntitaMieEditor();
@@ -140631,9 +142091,9 @@ function onClick57(event) {
       sezione: dove && dove !== "config" ? dove : "",
       room_id: ""
     });
-    state172.aperta = lista7.length - 1;
+    state173.aperta = lista7.length - 1;
     salva31(lista7);
-    ridisegna28();
+    ridisegna29();
     return;
   }
   const riga3 = event.target.closest("[data-mia-ent]");
@@ -140648,17 +142108,17 @@ function onClick57(event) {
   }
   if (event.target.closest("[data-mia-ent-edit]")) {
     event.preventDefault();
-    state172.aperta = state172.aperta === indice ? -1 : indice;
-    ridisegna28();
+    state173.aperta = state173.aperta === indice ? -1 : indice;
+    ridisegna29();
     return;
   }
   if (event.target.closest("[data-mia-ent-del]")) {
     event.preventDefault();
     const lista7 = voci3().slice();
     lista7.splice(indice, 1);
-    state172.aperta = -1;
+    state173.aperta = -1;
     salva31(lista7);
-    ridisegna28();
+    ridisegna29();
     return;
   }
   if (event.target.closest("[data-mia-ent-save]")) {
@@ -140666,22 +142126,22 @@ function onClick57(event) {
     const lista7 = righeDalDocumento(body);
     lista7[indice] = leggiLaRiga4(riga3);
     salva31(lista7);
-    ridisegna28();
+    ridisegna29();
     root.edToast?.(t("💾 Entità salvata", "💾 Entity saved"));
   }
 }
 function ensureEntitaMieTab() {
-  const linguette3 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette3 || linguette3.querySelector(`.ed-tab[data-tab="${ENTITA_MIE_EDITOR_TAB}"]`))
+  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${ENTITA_MIE_EDITOR_TAB}"]`))
     return false;
   const linguetta3 = doc.createElement("button");
   linguetta3.className = "ed-tab";
   linguetta3.dataset.tab = ENTITA_MIE_EDITOR_TAB;
   linguetta3.textContent = `⭐ ${t("Le tue entità", "Your own entities")}`;
   linguetta3.addEventListener("click", () => root.editorSwitch?.(ENTITA_MIE_EDITOR_TAB));
-  const vicina = linguette3.querySelector('.ed-tab[data-tab="mie"]')?.nextSibling || linguette3.querySelector('.ed-tab[data-tab="runtime"]');
-  if (vicina) linguette3.insertBefore(linguetta3, vicina);
-  else linguette3.append(linguetta3);
+  const vicina = linguette4.querySelector('.ed-tab[data-tab="mie"]')?.nextSibling || linguette4.querySelector('.ed-tab[data-tab="runtime"]');
+  if (vicina) linguette4.insertBefore(linguetta3, vicina);
+  else linguette4.append(linguetta3);
   return true;
 }
 function installStyles89() {
@@ -140706,8 +142166,8 @@ function installStyles89() {
   );
 }
 function installEntitaMieEditor() {
-  if (!doc || state172.installed) return false;
-  state172.installed = true;
+  if (!doc || state173.installed) return false;
+  state173.installed = true;
   installStyles89();
   doc.addEventListener("click", onClick57);
   wrapFunction("apriConfigEntita", "__dmEntitaMieEditor", () => {
@@ -140733,8 +142193,8 @@ function installEntitaMieEditor() {
 }
 
 // src/sections/media-player-editor-section.js
-var KEY177 = "__DASHBOARDMODERN_MEDIA_EDITOR__";
-var state173 = root[KEY177] ||= { installed: false, aperta: -1 };
+var KEY178 = "__DASHBOARDMODERN_MEDIA_EDITOR__";
+var state174 = root[KEY178] ||= { installed: false, aperta: -1 };
 var MEDIA_EDITOR_TAB = "media";
 function schedaAttiva19() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
@@ -140909,7 +142369,7 @@ function sezioneNascosta7() {
   }
 }
 function rigaMarkup30(voce3, indice) {
-  const aperta2 = state173.aperta === indice;
+  const aperta2 = state174.aperta === indice;
   const id = `dm-mp-ed-${indice}`;
   const nome = clean(voce3?.nome) || clean(voce3?.entity) || t("Lettore nuovo", "New player");
   return `<article class="ed-row dm-todo-ed-row dm-mp-ed-riga" data-mp-voce="${indice}" data-open="${aperta2}">
@@ -140988,15 +142448,15 @@ function corpoMarkup17() {
 function ensureMediaEditor() {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva19() !== MEDIA_EDITOR_TAB) return false;
-  if (state173.aperta >= 0) imparaLaRiga(lettori()[state173.aperta]);
-  const firma2 = `${JSON.stringify(lettori())}|${state173.aperta}|${sezioneNascosta7()}`;
+  if (state174.aperta >= 0) imparaLaRiga(lettori()[state174.aperta]);
+  const firma2 = `${JSON.stringify(lettori())}|${state174.aperta}|${sezioneNascosta7()}`;
   if (body.dataset.dmMediaEditor === firma2 && body.querySelector(".dm-mp-ed")) return true;
   body.dataset.dmMediaEditor = firma2;
   body.innerHTML = corpoMarkup17();
   body.dataset.renderer = MEDIA_EDITOR_TAB;
   return true;
 }
-function ridisegna29() {
+function ridisegna30() {
   const body = doc?.getElementById("ed-body");
   if (body) delete body.dataset.dmMediaEditor;
   ensureMediaEditor();
@@ -141049,9 +142509,9 @@ function creaDaDispositivo6({ device, entities, integration }) {
     (voce3) => clean(voce3?.name).toLowerCase() === area.toLowerCase()
   );
   if (stanza2) nato.room_id = clean(stanza2.id) || clean(stanza2.name);
-  state173.aperta = lista7.length;
+  state174.aperta = lista7.length;
   salva32([...lista7, nato]);
-  ridisegna29();
+  ridisegna30();
   const daChi = clean(integration?.name) || t("un'integrazione", "an integration");
   root.edToast?.(`${nato.nome || device.name} — ${t("aggiunto da", "added from")} ${daChi}`);
 }
@@ -141075,9 +142535,9 @@ function onClick58(event) {
     event.preventDefault();
     const lista7 = lettori().slice();
     lista7.push({ id: `lettore-${Date.now().toString(36)}`, entity: "", nome: "", icona: "" });
-    state173.aperta = lista7.length - 1;
+    state174.aperta = lista7.length - 1;
     salva32(lista7);
-    ridisegna29();
+    ridisegna30();
     return;
   }
   const riga3 = event.target.closest("[data-mp-voce]");
@@ -141092,8 +142552,8 @@ function onClick58(event) {
   }
   if (event.target.closest("[data-mp-edit]")) {
     event.preventDefault();
-    state173.aperta = state173.aperta === indice ? -1 : indice;
-    ridisegna29();
+    state174.aperta = state174.aperta === indice ? -1 : indice;
+    ridisegna30();
     return;
   }
   const telecomando2 = event.target.closest("[data-mp-tele-sug]");
@@ -141102,7 +142562,7 @@ function onClick58(event) {
     const lista7 = righeDalDocumento2(body);
     lista7[indice] = { ...leggiLaRiga5(riga3), telecomando: clean(telecomando2.dataset.mpTeleSug) };
     salva32(lista7);
-    ridisegna29();
+    ridisegna30();
     return;
   }
   const proposta = event.target.closest("[data-mp-chip-sug]");
@@ -141132,16 +142592,16 @@ function onClick58(event) {
     const lista7 = righeDalDocumento2(body);
     lista7[indice] = { ...letta2, [tipo]: elenco15 };
     salva32(lista7);
-    ridisegna29();
+    ridisegna30();
     return;
   }
   if (event.target.closest("[data-mp-del]")) {
     event.preventDefault();
     const lista7 = lettori().slice();
     lista7.splice(indice, 1);
-    state173.aperta = -1;
+    state174.aperta = -1;
     salva32(lista7);
-    ridisegna29();
+    ridisegna30();
     return;
   }
   if (event.target.closest("[data-mp-save]")) {
@@ -141149,7 +142609,7 @@ function onClick58(event) {
     const lista7 = righeDalDocumento2(body);
     lista7[indice] = leggiLaRiga5(riga3);
     salva32(lista7);
-    ridisegna29();
+    ridisegna30();
     root.edToast?.(t("💾 Lettore salvato", "💾 Player saved"));
   }
 }
@@ -141164,17 +142624,17 @@ function onChange19(event) {
   aggiornaLEsito(riga3);
 }
 function ensureMediaTab() {
-  const linguette3 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette3 || linguette3.querySelector(`.ed-tab[data-tab="${MEDIA_EDITOR_TAB}"]`))
+  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${MEDIA_EDITOR_TAB}"]`))
     return false;
   const linguetta3 = doc.createElement("button");
   linguetta3.className = "ed-tab";
   linguetta3.dataset.tab = MEDIA_EDITOR_TAB;
   linguetta3.textContent = `🔊 ${t("Musica", "Media")}`;
   linguetta3.addEventListener("click", () => root.editorSwitch?.(MEDIA_EDITOR_TAB));
-  const prima = linguette3.querySelector('.ed-tab[data-tab="luci"]')?.nextSibling || linguette3.querySelector('.ed-tab[data-tab="runtime"]');
-  if (prima) linguette3.insertBefore(linguetta3, prima);
-  else linguette3.append(linguetta3);
+  const prima = linguette4.querySelector('.ed-tab[data-tab="luci"]')?.nextSibling || linguette4.querySelector('.ed-tab[data-tab="runtime"]');
+  if (prima) linguette4.insertBefore(linguetta3, prima);
+  else linguette4.append(linguetta3);
   return true;
 }
 function installStyles90() {
@@ -141222,8 +142682,8 @@ function installStyles90() {
   );
 }
 function installMediaEditor() {
-  if (!doc || state173.installed) return false;
-  state173.installed = true;
+  if (!doc || state174.installed) return false;
+  state174.installed = true;
   installStyles90();
   doc.addEventListener("click", onClick58);
   doc.addEventListener("change", onChange19);
@@ -141251,9 +142711,9 @@ function installMediaEditor() {
 }
 
 // src/sections/media-in-azioni-section.js
-var KEY178 = "__DASHBOARDMODERN_MEDIA_AZIONI__";
+var KEY179 = "__DASHBOARDMODERN_MEDIA_AZIONI__";
 var STYLE_ID33 = "dm-media-azioni-style";
-var state174 = root[KEY178] ||= { installed: false, frame: 0 };
+var state175 = root[KEY179] ||= { installed: false, frame: 0 };
 var TIPO_MEDIA = "media";
 function azioni() {
   try {
@@ -141400,10 +142860,10 @@ function insegnaLaCasella() {
   root.edQaTypeChanged = nostra;
   return true;
 }
-function schedule44() {
-  if (state174.frame) return;
-  state174.frame = root.requestAnimationFrame?.(() => {
-    state174.frame = 0;
+function schedule45() {
+  if (state175.frame) return;
+  state175.frame = root.requestAnimationFrame?.(() => {
+    state175.frame = 0;
     try {
       vestiLeAzioni();
       ensureVoceNellaTendina();
@@ -141510,13 +142970,13 @@ function installStyles91() {
   );
 }
 function installMediaInAzioni() {
-  if (!doc || state174.installed) return false;
-  state174.installed = true;
+  if (!doc || state175.installed) return false;
+  state175.installed = true;
   installStyles91();
   const aggancia5 = () => {
     avvolgiLaCostruzione();
     insegnaLaCasella();
-    schedule44();
+    schedule45();
   };
   for (const evento of [
     "dashboardmodern:legacy-ready",
@@ -141580,9 +143040,9 @@ function autorizzazioneInutile(valore3) {
 }
 var RIFERIMENTO = /([?&]filter_entity_id=)([^&#]*)/i;
 var virtuale = (nome) => /^dm\./i.test(nome);
-function conLEntitaVera(indirizzo, risolvi3) {
+function conLEntitaVera(indirizzo, risolvi4) {
   const valore3 = pulito67(indirizzo);
-  if (!valore3 || typeof risolvi3 !== "function") return null;
+  if (!valore3 || typeof risolvi4 !== "function") return null;
   const trovato = valore3.match(RIFERIMENTO);
   if (!trovato) return null;
   const prima = trovato[2].split(",");
@@ -141591,7 +143051,7 @@ function conLEntitaVera(indirizzo, risolvi3) {
     if (!virtuale(nome)) return pezzo2;
     let vero3 = "";
     try {
-      vero3 = pulito67(risolvi3(nome));
+      vero3 = pulito67(risolvi4(nome));
     } catch (_errore) {
       return pezzo2;
     }
@@ -141607,7 +143067,7 @@ var PERCORSO = /\/api\/history\/period\/?([^?#]*)/i;
 function eUnoStoricoRest(indirizzo) {
   return PERCORSO.test(pulito68(indirizzo));
 }
-function istante5(testo4) {
+function istante6(testo4) {
   const voce3 = pulito68(testo4);
   if (!voce3) return null;
   const data = new Date(voce3);
@@ -141632,9 +143092,9 @@ function domandaDallIndirizzo(indirizzo) {
   if (!entita3.length) return null;
   let inizio = null;
   try {
-    inizio = istante5(decodeURIComponent(trovato[1]));
+    inizio = istante6(decodeURIComponent(trovato[1]));
   } catch (_errore) {
-    inizio = istante5(trovato[1]);
+    inizio = istante6(trovato[1]);
   }
   const start_time = inizio || new Date(Date.now() - 864e5).toISOString();
   const domanda = {
@@ -141647,7 +143107,7 @@ function domandaDallIndirizzo(indirizzo) {
     no_attributes: bandiera(parametri, "no_attributes", false),
     significant_changes_only: bandiera(parametri, "significant_changes_only", true)
   };
-  const fine = istante5(parametri.get("end_time"));
+  const fine = istante6(parametri.get("end_time"));
   if (fine) domanda.end_time = fine;
   return domanda;
 }
@@ -141746,8 +143206,8 @@ function rispostaComeRest(risultato, entityIds = []) {
 }
 
 // src/sections/indirizzo-di-casa-section.js
-var KEY179 = "__DASHBOARDMODERN_INDIRIZZO_DI_CASA__";
-var state175 = root[KEY179] ||= { installed: false };
+var KEY180 = "__DASHBOARDMODERN_INDIRIZZO_DI_CASA__";
+var state176 = root[KEY180] ||= { installed: false };
 var DA_RETE = /^https?:\/\//i;
 function baseDelDocumento() {
   const base = String(doc?.baseURI ?? "").trim();
@@ -141843,10 +143303,10 @@ function bussaSenzaCredenziali(indirizzo) {
   return !haUnaCredenzialeNellIndirizzo(indirizzo);
 }
 function installIndirizzoDiCasa() {
-  if (state175.installed) return false;
+  if (state176.installed) return false;
   const originale = root.fetch;
   if (typeof originale !== "function" || originale.__dmIndirizzoDiCasa) return false;
-  state175.installed = true;
+  state176.installed = true;
   const nostra = function fetch(risorsa, init) {
     if (typeof risorsa !== "string" || !versoLApi(risorsa))
       return originale.call(this, risorsa, init);
@@ -141870,8 +143330,8 @@ function installIndirizzoDiCasa() {
 }
 
 // src/sections/stanze-per-nome-section.js
-var KEY180 = "__DASHBOARDMODERN_STANZE_PER_NOME__";
-var state176 = root[KEY180] ||= { installed: false, frame: 0 };
+var KEY181 = "__DASHBOARDMODERN_STANZE_PER_NOME__";
+var state177 = root[KEY181] ||= { installed: false, frame: 0 };
 var ID_STANZA = /\broom_[a-z0-9]{4,}\b/gi;
 function testoConINomi(testo4, nome = roomLabel) {
   return String(testo4 ?? "").replace(ID_STANZA, (id) => {
@@ -141899,7 +143359,7 @@ function raddrizza(radice3) {
 function raddrizzaLeStanze() {
   if (!doc) return 0;
   let cambiati = raddrizza(doc.getElementById("ed-body"));
-  for (const pagina2 of doc.querySelectorAll(".page.active")) cambiati += raddrizza(pagina2);
+  for (const pagina3 of doc.querySelectorAll(".page.active")) cambiati += raddrizza(pagina3);
   return cambiati;
 }
 function leStanze2() {
@@ -141926,10 +143386,10 @@ function insegnaIlPiano() {
   root.cdRoomFloorOf = nostra;
   return true;
 }
-function schedule45() {
-  if (state176.frame) return;
-  state176.frame = root.requestAnimationFrame?.(() => {
-    state176.frame = 0;
+function schedule46() {
+  if (state177.frame) return;
+  state177.frame = root.requestAnimationFrame?.(() => {
+    state177.frame = 0;
     try {
       raddrizzaLeStanze();
     } catch (errore) {
@@ -141938,8 +143398,8 @@ function schedule45() {
   }) || 0;
 }
 function installStanzePerNome() {
-  if (!doc || state176.installed) return false;
-  state176.installed = true;
+  if (!doc || state177.installed) return false;
+  state177.installed = true;
   insegnaIlPiano();
   for (const evento of [
     "dashboardmodern:legacy-ready",
@@ -141950,12 +143410,12 @@ function installStanzePerNome() {
   ])
     root.addEventListener?.(evento, () => {
       insegnaIlPiano();
-      schedule45();
+      schedule46();
     });
-  onEditorRedraw("__dmStanzePerNome", () => root.queueMicrotask?.(schedule45));
+  onEditorRedraw("__dmStanzePerNome", () => root.queueMicrotask?.(schedule46));
   for (const nome of ["render", "cdApplyNavVis"])
-    wrapFunction(nome, "__dmStanzePerNome", schedule45);
-  schedule45();
+    wrapFunction(nome, "__dmStanzePerNome", schedule46);
+  schedule46();
   return true;
 }
 
@@ -142020,7 +143480,7 @@ function callFirst(names, args = []) {
   return void 0;
 }
 function createAdapter(definition) {
-  const { key, pageId, renderers, refreshers, state: state177 } = definition;
+  const { key, pageId, renderers, refreshers, state: state178 } = definition;
   return Object.freeze({
     key,
     pageId,
@@ -142035,7 +143495,7 @@ function createAdapter(definition) {
       return callFirst(refreshers.length ? refreshers : renderers, args);
     },
     snapshot() {
-      return Object.fromEntries(state177.map((name) => [name, root5[name]]));
+      return Object.fromEntries(state178.map((name) => [name, root5[name]]));
     }
   });
 }
@@ -142430,8 +143890,8 @@ function syncApplianceKpis() {
     const popup = doc4.getElementById(`dm-appliance-${kind}-popup`);
     return popup && !popup.hidden;
   });
-  const pagina2 = grid.closest?.(".page");
-  const inScena = pagina2 ? pagina2.classList.contains("active") : Boolean(grid.offsetParent);
+  const pagina3 = grid.closest?.(".page");
+  const inScena = pagina3 ? pagina3.classList.contains("active") : Boolean(grid.offsetParent);
   if (!inScena && !popupAperto) return false;
   const models = applianceKpiModels();
   const running = models.filter((model2) => model2.mode === "running");
@@ -142499,22 +143959,22 @@ function installApplianceKpiPopupStyle() {
 function installApplianceKpiPopups() {
   const doc4 = root6.document;
   if (!doc4) return;
-  const state177 = root6[APPLIANCE_KPI_STATE_KEY] ||= { installed: false, frame: 0 };
-  if (state177.installed) return;
-  state177.installed = true;
+  const state178 = root6[APPLIANCE_KPI_STATE_KEY] ||= { installed: false, frame: 0 };
+  if (state178.installed) return;
+  state178.installed = true;
   installApplianceKpiPopupStyle();
   ensureApplianceKpiPopup("running");
   ensureApplianceKpiPopup("power");
-  const schedule46 = () => {
-    if (state177.frame) return;
+  const schedule47 = () => {
+    if (state178.frame) return;
     const run2 = () => {
-      state177.frame = 0;
+      state178.frame = 0;
       syncApplianceKpis();
     };
-    state177.frame = root6.requestAnimationFrame?.(run2) || root6.setTimeout?.(run2, 0);
+    state178.frame = root6.requestAnimationFrame?.(run2) || root6.setTimeout?.(run2, 0);
   };
   for (const name of ["renderAppliances", "renderApplianceSection", "render"]) {
-    wrapFunction(name, "__dmApplianceKpiPopups", schedule46);
+    wrapFunction(name, "__dmApplianceKpiPopups", schedule47);
   }
   doc4.addEventListener(
     "click",
@@ -142535,7 +143995,7 @@ function installApplianceKpiPopups() {
       if (event.target?.closest?.(
         "[data-tab='appliances-main'],[data-tab='appliances'],.tab[data-tab='appliances-main']"
       )) {
-        root6.queueMicrotask?.(schedule46);
+        root6.queueMicrotask?.(schedule47);
       }
     },
     true
@@ -142555,16 +144015,16 @@ function installApplianceKpiPopups() {
       popup.classList.add("show");
     }
   });
-  root6.addEventListener?.("dashboardmodern:state-changed", schedule46);
-  root6.addEventListener?.("dashboardmodern:legacy-ready", schedule46);
+  root6.addEventListener?.("dashboardmodern:state-changed", schedule47);
+  root6.addEventListener?.("dashboardmodern:legacy-ready", schedule47);
   doc4?.addEventListener?.(
     "click",
     (evento) => {
-      if (evento.target?.closest?.(".tab,[data-tab]")) schedule46();
+      if (evento.target?.closest?.(".tab,[data-tab]")) schedule47();
     },
     true
   );
-  root6.queueMicrotask?.(schedule46);
+  root6.queueMicrotask?.(schedule47);
 }
 var DIPINTA_KEY = "__DASHBOARDMODERN_PLANCIA_DIPINTA__";
 function dichiaraDipinta() {
@@ -142749,6 +144209,7 @@ function installSectionRuntime() {
     senzaCadere(installAutomazioniCasaSection);
     senzaCadere(installAutoTermica);
     senzaCadere(installAutoOMoto);
+    senzaCadere(installLaNuovaAuto);
     senzaCadere(installLeFasceDelDispositivo);
     senzaCadere(installLaVentolaDellInverter);
     senzaCadere(installSolarThermalDesignSection);
