@@ -762,6 +762,15 @@ export function statoDellaVoce(entity, states, chiave = "") {
   const grezzo = clean(stato?.state);
   if (!grezzo || /^(unknown|unavailable)$/i.test(grezzo))
     return { parola: t("non risponde", "not responding"), muta: true };
+  /* Un aggiornamento non e' «acceso»: e' da installare, o si sta
+   * installando. */
+  if (clean(chiave) === "aggiornamenti" && grezzo.toLowerCase() === "on")
+    return {
+      parola: stato?.attributes?.in_progress
+        ? t("In corso", "Installing")
+        : t("Da installare", "To install"),
+      muta: false,
+    };
   if (SI_APRONO.has(clean(chiave))) {
     /* Un contatto dice `on` quando e' aperto: e' la stessa cosa detta nella
      * lingua dei sensori. */
@@ -772,9 +781,44 @@ export function statoDellaVoce(entity, states, chiave = "") {
   return { parola: parolaDiStato(grezzo), muta: false };
 }
 
+/* Un aggiornamento si installa di qui, se Home Assistant dice che si puo'
+ * (`supported_features`, il bit dell'installazione) o non lo dice affatto.
+ * Dal campo: «da browser non ti dà più il tasto aggiorna» — la finestra lo
+ * trattava come una luce, «acceso · tocca per spegnere», senza tasto. */
+function tastoDellAggiornamento(entita, stato) {
+  if (!entita.startsWith("update.") || clean(stato?.state).toLowerCase() !== "on") return "";
+  const bit = stato?.attributes?.supported_features;
+  if (Number.isFinite(Number(bit)) && bit !== null && (Number(bit) & 1) === 0) return "";
+  const inCorso = Boolean(stato?.attributes?.in_progress);
+  return `<button type="button" class="dm-casa-spegni" data-dm-casa-installa="${esc(entita)}"${
+    inCorso ? " disabled" : ""
+  }>${esc(inCorso ? t("In corso", "Installing") : t("Installa", "Install"))}</button>`;
+}
+
 function rigaDellElenco(voce, states, chiave = "") {
   const entita = clean(voce?.entity);
   const nome = clean(voce?.name) || entita;
+  if (clean(chiave) === "aggiornamenti") {
+    const adesso = statoDellaVoce(entita, states, chiave);
+    const tasto = siComanda(entita) ? tastoDellAggiornamento(entita, states?.[entita]) : "";
+    const versioni = [
+      clean(states?.[entita]?.attributes?.installed_version),
+      clean(states?.[entita]?.attributes?.latest_version),
+    ];
+    const da = versioni[0] && versioni[1] ? `${versioni[0]} → ${versioni[1]}` : "";
+    return `<div class="detail-row dm-casa-voce">
+      <div class="d-info">
+        <div class="d-name">${esc(nome)}</div>${da ? `<div class="d-sub">${esc(da)}</div>` : ""}
+      </div>${
+        /* Col tasto, la parola la dice il tasto: sul telefono la pastiglia
+         * accanto schiacciava il nome. */
+        tasto
+          ? ""
+          : `<span class="dm-casa-stato" data-dm-muta="${adesso.muta}"><i aria-hidden="true"></i>${esc(
+              adesso.parola,
+            )}</span>`
+      }${tasto}</div>`;
+  }
   const comando = comandoPerSpegnere(entita, states?.[entita]);
   const parole = {
     spegni: t("Spegni", "Turn off"),
@@ -839,6 +883,10 @@ export function briciolaDellElenco(chiave, quante) {
     return quante === 1
       ? t("1 aperta · tocca per chiudere", "1 open · tap to close")
       : `${quante} ${t("aperte · tocca per chiudere", "open · tap to close")}`;
+  if (clean(chiave) === "aggiornamenti")
+    return quante === 1
+      ? t("1 da installare · tocca Installa", "1 to install · tap Install")
+      : `${quante} ${t("da installare · tocca Installa", "to install · tap Install")}`;
   if (clean(chiave) === "porte")
     return quante === 1
       ? t("1 sbloccata · tocca per chiudere a chiave", "1 unlocked · tap to lock")
@@ -947,6 +995,31 @@ function spegni(entita) {
   return true;
 }
 
+/* Installare dall'elenco: `update.install`, come dalla tessera degli
+ * Aggiornamenti. Il tasto si spegne e dice «In corso»; se Home Assistant
+ * rifiuta torna com'era, e lo si dice. */
+function installaLAggiornamento(tasto) {
+  const entita = clean(tasto.dataset.dmCasaInstalla);
+  if (!entita || !siComanda(entita) || typeof root.dmCallHaService !== "function") return false;
+  const parola = tasto.textContent;
+  tasto.disabled = true;
+  tasto.textContent = t("In corso", "Installing");
+  Promise.resolve(root.dmCallHaService("update", "install", { entity_id: entita })).catch(
+    (errore) => {
+      tasto.disabled = false;
+      tasto.textContent = parola;
+      try {
+        root.edToast?.(
+          `${t("Home Assistant ha rifiutato", "Home Assistant refused")}: ${clean(
+            errore?.message || errore,
+          )}`,
+        );
+      } catch (_ignora) {}
+    },
+  );
+  return true;
+}
+
 function onClickElenco(event) {
   const nodo = doc?.getElementById?.(POPUP);
   if (!nodo || nodo.hidden) return;
@@ -955,6 +1028,12 @@ function onClickElenco(event) {
   if (event.target.closest("[data-dm-casa-chiudi]") || event.target === nodo) {
     event.preventDefault();
     chiudiLElenco();
+    return;
+  }
+  const installa = event.target.closest("[data-dm-casa-installa]");
+  if (installa) {
+    event.preventDefault();
+    installaLAggiornamento(installa);
     return;
   }
   const tasto = event.target.closest("[data-dm-casa-spegni]");
@@ -1638,6 +1717,11 @@ function stile() {
     #dm-casa-popup .dm-casa-spegni:active{transform:scale(.96)}
     html[data-theme="dark"] #dm-casa-popup .dm-casa-spegni{
       background:rgba(248,113,113,.18);color:#fca5a5}
+    /* «Installa» non e' «Spegni»: verde, il colore di una cosa da fare. */
+    #dm-casa-popup .dm-casa-spegni[data-dm-casa-installa]{background:#16a34a;color:#fff}
+    #dm-casa-popup .dm-casa-spegni[data-dm-casa-installa]:disabled{opacity:.6;cursor:default}
+    html[data-theme="dark"] #dm-casa-popup .dm-casa-spegni[data-dm-casa-installa]{background:#22c55e;color:#052e16}
+    #dm-casa-popup .dm-casa-voce .d-sub{margin-top:2px;font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
     #ed-body .dm-casa-ed{display:block;margin-top:18px}
     #ed-body .dm-casa-ed-list{display:grid;gap:6px;margin-bottom:12px}
     #ed-body .dm-casa-ed-riga{display:flex!important;align-items:center;gap:10px;padding:8px 12px!important;cursor:pointer}

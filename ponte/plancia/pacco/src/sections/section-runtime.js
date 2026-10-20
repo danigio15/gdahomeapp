@@ -557,7 +557,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-L2RPJ7MS.js";
+} from "../../chunk-LXRNQSKR.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2141,6 +2141,7 @@ var SOURCE_INDEX = Object.freeze({
   "1 cosa da fare": "1 thing to do",
   "1 da cambiare": "1 to replace",
   "1 da innaffiare": "1 needs water",
+  "1 da installare · tocca Installa": "1 to install · tap Install",
   "1 dispositivo": "1 appliance",
   "1 entità": "1 entity",
   "1 entità è disabilitata in Home Assistant: abilitala da lì per vederla anche qui.": "1 entity is disabled in Home Assistant: enable it there to see it here too.",
@@ -3422,6 +3423,8 @@ var SOURCE_INDEX = Object.freeze({
   "da guardare": "to check",
   "da innaffiare": "needs water",
   "Da innaffiare sotto il (%)": "Needs water below (%)",
+  "Da installare": "To install",
+  "da installare · tocca Installa": "to install · tap Install",
   "Da inviare": "To send",
   "da lavorare": "to work on",
   "Da lavorare": "To work on",
@@ -36480,6 +36483,11 @@ function statoDellaVoce(entity2, states, chiave2 = "") {
   const grezzo = clean(stato3?.state);
   if (!grezzo || /^(unknown|unavailable)$/i.test(grezzo))
     return { parola: t("non risponde", "not responding"), muta: true };
+  if (clean(chiave2) === "aggiornamenti" && grezzo.toLowerCase() === "on")
+    return {
+      parola: stato3?.attributes?.in_progress ? t("In corso", "Installing") : t("Da installare", "To install"),
+      muta: false
+    };
   if (SI_APRONO.has(clean(chiave2))) {
     const comeSiApre = { on: "open", off: "closed" }[grezzo.toLowerCase()] || grezzo;
     const detta = parolaDellaPorta(comeSiApre);
@@ -36487,9 +36495,33 @@ function statoDellaVoce(entity2, states, chiave2 = "") {
   }
   return { parola: parolaDiStato(grezzo), muta: false };
 }
+function tastoDellAggiornamento(entita3, stato3) {
+  if (!entita3.startsWith("update.") || clean(stato3?.state).toLowerCase() !== "on") return "";
+  const bit = stato3?.attributes?.supported_features;
+  if (Number.isFinite(Number(bit)) && bit !== null && (Number(bit) & 1) === 0) return "";
+  const inCorso2 = Boolean(stato3?.attributes?.in_progress);
+  return `<button type="button" class="dm-casa-spegni" data-dm-casa-installa="${esc(entita3)}"${inCorso2 ? " disabled" : ""}>${esc(inCorso2 ? t("In corso", "Installing") : t("Installa", "Install"))}</button>`;
+}
 function rigaDellElenco(voce3, states, chiave2 = "") {
   const entita3 = clean(voce3?.entity);
   const nome = clean(voce3?.name) || entita3;
+  if (clean(chiave2) === "aggiornamenti") {
+    const adesso2 = statoDellaVoce(entita3, states, chiave2);
+    const tasto3 = siComanda(entita3) ? tastoDellAggiornamento(entita3, states?.[entita3]) : "";
+    const versioni = [
+      clean(states?.[entita3]?.attributes?.installed_version),
+      clean(states?.[entita3]?.attributes?.latest_version)
+    ];
+    const da = versioni[0] && versioni[1] ? `${versioni[0]} → ${versioni[1]}` : "";
+    return `<div class="detail-row dm-casa-voce">
+      <div class="d-info">
+        <div class="d-name">${esc(nome)}</div>${da ? `<div class="d-sub">${esc(da)}</div>` : ""}
+      </div>${/* Col tasto, la parola la dice il tasto: sul telefono la pastiglia
+     * accanto schiacciava il nome. */
+    tasto3 ? "" : `<span class="dm-casa-stato" data-dm-muta="${adesso2.muta}"><i aria-hidden="true"></i>${esc(
+      adesso2.parola
+    )}</span>`}${tasto3}</div>`;
+  }
   const comando = comandoPerSpegnere(entita3, states?.[entita3]);
   const parole4 = {
     spegni: t("Spegni", "Turn off"),
@@ -36516,6 +36548,8 @@ function briciolaDellElenco(chiave2, quante3) {
     return quante3 === 1 ? t("1 aperta adesso · si chiude a mano", "1 open now · closed by hand") : `${quante3} ${t("aperte adesso · si chiudono a mano", "open now · closed by hand")}`;
   if (clean(chiave2) === "tapparelle")
     return quante3 === 1 ? t("1 aperta · tocca per chiudere", "1 open · tap to close") : `${quante3} ${t("aperte · tocca per chiudere", "open · tap to close")}`;
+  if (clean(chiave2) === "aggiornamenti")
+    return quante3 === 1 ? t("1 da installare · tocca Installa", "1 to install · tap Install") : `${quante3} ${t("da installare · tocca Installa", "to install · tap Install")}`;
   if (clean(chiave2) === "porte")
     return quante3 === 1 ? t("1 sbloccata · tocca per chiudere a chiave", "1 unlocked · tap to lock") : `${quante3} ${t("sbloccate · tocca per chiudere a chiave", "unlocked · tap to lock")}`;
   return quante3 === 1 ? t("1 acceso · tocca per spegnere", "1 on · tap to turn off") : `${quante3} ${t("accesi · tocca per spegnere", "on · tap to turn off")}`;
@@ -36598,6 +36632,28 @@ function spegni(entita3) {
   });
   return true;
 }
+function installaLAggiornamento(tasto2) {
+  const entita3 = clean(tasto2.dataset.dmCasaInstalla);
+  if (!entita3 || !siComanda(entita3) || typeof root.dmCallHaService !== "function") return false;
+  const parola = tasto2.textContent;
+  tasto2.disabled = true;
+  tasto2.textContent = t("In corso", "Installing");
+  Promise.resolve(root.dmCallHaService("update", "install", { entity_id: entita3 })).catch(
+    (errore) => {
+      tasto2.disabled = false;
+      tasto2.textContent = parola;
+      try {
+        root.edToast?.(
+          `${t("Home Assistant ha rifiutato", "Home Assistant refused")}: ${clean(
+            errore?.message || errore
+          )}`
+        );
+      } catch (_ignora) {
+      }
+    }
+  );
+  return true;
+}
 function onClickElenco(event) {
   const nodo2 = doc?.getElementById?.(POPUP2);
   if (!nodo2 || nodo2.hidden) return;
@@ -36606,6 +36662,12 @@ function onClickElenco(event) {
   if (event.target.closest("[data-dm-casa-chiudi]") || event.target === nodo2) {
     event.preventDefault();
     chiudiLElenco();
+    return;
+  }
+  const installa = event.target.closest("[data-dm-casa-installa]");
+  if (installa) {
+    event.preventDefault();
+    installaLAggiornamento(installa);
     return;
   }
   const tasto2 = event.target.closest("[data-dm-casa-spegni]");
@@ -37176,6 +37238,11 @@ function stile2() {
     #dm-casa-popup .dm-casa-spegni:active{transform:scale(.96)}
     html[data-theme="dark"] #dm-casa-popup .dm-casa-spegni{
       background:rgba(248,113,113,.18);color:#fca5a5}
+    /* «Installa» non e' «Spegni»: verde, il colore di una cosa da fare. */
+    #dm-casa-popup .dm-casa-spegni[data-dm-casa-installa]{background:#16a34a;color:#fff}
+    #dm-casa-popup .dm-casa-spegni[data-dm-casa-installa]:disabled{opacity:.6;cursor:default}
+    html[data-theme="dark"] #dm-casa-popup .dm-casa-spegni[data-dm-casa-installa]{background:#22c55e;color:#052e16}
+    #dm-casa-popup .dm-casa-voce .d-sub{margin-top:2px;font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
     #ed-body .dm-casa-ed{display:block;margin-top:18px}
     #ed-body .dm-casa-ed-list{display:grid;gap:6px;margin-bottom:12px}
     #ed-body .dm-casa-ed-riga{display:flex!important;align-items:center;gap:10px;padding:8px 12px!important;cursor:pointer}

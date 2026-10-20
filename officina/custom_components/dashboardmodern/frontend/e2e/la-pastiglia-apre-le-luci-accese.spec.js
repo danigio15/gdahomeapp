@@ -73,7 +73,8 @@ test("la pastiglia apre l'elenco delle sole accese", async ({ page }, testInfo) 
      aprirsi. Prima era una classe `show` sua, di nessun altro. */
   await expect(elenco).toBeVisible();
   await expect(elenco.locator(".dm-casa-voce")).toHaveCount(2);
-  const testo = (await elenco.locator(".dm-casa-voce").allTextContents()).join(" | ");
+  /* I nomi sono quelli della configurazione («Cucina»), non l'id. */
+  const testo = (await elenco.locator(".dm-casa-voce").allTextContents()).join(" | ").toLowerCase();
   expect(testo).toContain("cucina");
   expect(testo).toContain("salone");
   /* La terza e' spenta: in un elenco di cose accese non ci sta. */
