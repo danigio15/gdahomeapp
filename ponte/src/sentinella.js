@@ -337,6 +337,22 @@ function apriDalCitofono(id) {
   return null;
 }
 
+/**
+ * Se un clima sta lavorando davvero, non solo se e' in un modo diverso da
+ * «off». Dal campo: «mi arriva sempre la notifica del clima acceso, ma e'
+ * tutto spento». Un termostato col programma resta in «heat» o «auto» tutto
+ * il giorno, e la plancia lo mostra spento quando `hvac_action` dice che e'
+ * fermo («idle», «off»): conta quello. Senza `hvac_action`, il modo.
+ */
+export function climaCheLavora(stato) {
+  const modo = String(stato?.state ?? "").toLowerCase();
+  if (["off", "unavailable", "unknown", ""].includes(modo)) return false;
+  const azione = String(stato?.attributes?.hvac_action ?? "").toLowerCase();
+  if (azione)
+    return ["heating", "preheating", "cooling", "drying", "fan", "defrosting"].includes(azione);
+  return true;
+}
+
 /** I tasti del campanello: «Apri cancello» se c'e' un cancello, e «Ignora». */
 export function tastiDelCampanello(cancello) {
   return [
@@ -1747,11 +1763,7 @@ export class Sentinella {
           luciDa = Math.min(luciDa, stato.dal);
         }
       }
-      if (
-        vuota === true &&
-        dominio === "climate" &&
-        !["off", "unavailable", "unknown"].includes(stato.state)
-      ) {
+      if (vuota === true && dominio === "climate" && climaCheLavora(stato)) {
         climiAccesi.push(id);
         climaDa = Math.min(climaDa, stato.dal);
       }

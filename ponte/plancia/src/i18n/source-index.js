@@ -2983,6 +2983,7 @@ export const SOURCE_INDEX = Object.freeze({
   "La comanda il pannello, solo nell'app GdAHome sul tablet": "The panel sets it, only in the GdAHome app on the tablet",
   "La configurazione di questa plancia è riservata al suo amministratore.": "This dashboard's configuration is reserved for its administrator.",
   "La configurazione è salvata": "Configuration is saved",
+  "La connessione con Home Assistant si è interrotta: mi ricollego da solo.": "The connection to Home Assistant dropped: reconnecting on my own.",
   "La cottura compare quando fra gli elettrodomestici c'è una friggitrice, un forno, un microonde, un piano cottura o una cappa.": "Cooking shows up once the appliances include an air fryer, an oven, a microwave, a cooktop or a hood.",
   "La data non è valida.": "That date is not valid.",
   "La differenza fra mandata e ritorno dice se l'impianto sta davvero cedendo calore; la pressione è l'unica cosa che ogni tanto va rabboccata a mano. Nessuna casella è obbligatoria: col solo stato la scheda mostra la caldaia accesa o spenta, senza numeri che non ha. Se ne hai più d'una — una per zona — aggiungile qui e in pagina compare la fila per passare dall'una all'altra.": "The gap between flow and return says whether the circuit is really giving off heat; pressure is the one thing that occasionally needs topping up by hand. No field is required: with just the state the card shows the boiler on or off, without numbers it does not have. With more than one — one per zone — add them here and the page grows a row to switch between them.",

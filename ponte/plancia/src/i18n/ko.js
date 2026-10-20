@@ -3364,6 +3364,7 @@ export default Object.freeze({
   Steam: "스팀",
   Still: "정지",
   "Still for": "그대로",
+  "The connection to Home Assistant dropped: reconnecting on my own.": "Home Assistant와의 연결이 끊겼습니다: 자동으로 다시 연결합니다.",
   "Still reading the Recorder statistics": "아직 Recorder 통계를 읽는 중",
   Stop: "정지",
   Stopped: "정지됨",

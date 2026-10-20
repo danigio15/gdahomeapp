@@ -3373,6 +3373,7 @@ export default Object.freeze({
   Steam: "Buhar",
   Still: "Hareketsiz",
   "Still for": "Değişmedi",
+  "The connection to Home Assistant dropped: reconnecting on my own.": "Home Assistant bağlantısı koptu: kendiliğinden yeniden bağlanıyorum.",
   "Still reading the Recorder statistics": "Recorder istatistikleri hâlâ okunuyor",
   Stop: "Durdur",
   Stopped: "Durduruldu",

@@ -557,7 +557,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-J2S7GICQ.js";
+} from "../../chunk-PD3DMEEX.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -4592,6 +4592,7 @@ var SOURCE_INDEX = Object.freeze({
   "La comanda il pannello, solo nell'app GdAHome sul tablet": "The panel sets it, only in the GdAHome app on the tablet",
   "La configurazione di questa plancia è riservata al suo amministratore.": "This dashboard's configuration is reserved for its administrator.",
   "La configurazione è salvata": "Configuration is saved",
+  "La connessione con Home Assistant si è interrotta: mi ricollego da solo.": "The connection to Home Assistant dropped: reconnecting on my own.",
   "La cottura compare quando fra gli elettrodomestici c'è una friggitrice, un forno, un microonde, un piano cottura o una cappa.": "Cooking shows up once the appliances include an air fryer, an oven, a microwave, a cooktop or a hood.",
   "La data non è valida.": "That date is not valid.",
   "La differenza fra mandata e ritorno dice se l'impianto sta davvero cedendo calore; la pressione è l'unica cosa che ogni tanto va rabboccata a mano. Nessuna casella è obbligatoria: col solo stato la scheda mostra la caldaia accesa o spenta, senza numeri che non ha. Se ne hai più d'una — una per zona — aggiungile qui e in pagina compare la fila per passare dall'una all'altra.": "The gap between flow and return says whether the circuit is really giving off heat; pressure is the one thing that occasionally needs topping up by hand. No field is required: with just the state the card shows the boiler on or off, without numbers it does not have. With more than one — one per zone — add them here and the page grows a row to switch between them.",
@@ -10499,6 +10500,11 @@ function spiegazioneDellErrore(testo4, states = allStates()) {
       "Instant values are shown meanwhile."
     )}`;
   }
+  if (/connection (lost|timeout|unavailable)/i.test(grezzo))
+    return t(
+      "La connessione con Home Assistant si è interrotta: mi ricollego da solo.",
+      "The connection to Home Assistant dropped: reconnecting on my own."
+    );
   if (/timeout/i.test(grezzo))
     return t(
       "Il Recorder di Home Assistant ci ha messo troppo a rispondere. Succede quando lo storico è grande o il server è piccolo: si riprova da solo, e se capita spesso conviene ridurre i giorni tenuti dal Recorder (purge_keep_days) o escludere le entità che non servono.",
@@ -10572,7 +10578,10 @@ async function eseguiIlRefresh(period, carico) {
       error
     );
     segnaLaRagione(state6.lastError);
-    if (!state6.bundle && state6.retryCount < 40) {
+    const presaCaduta = /connection (lost|timeout|unavailable)/i.test(state6.lastError);
+    if (state6.bundle || state6.retryCount >= 40) {
+      scheduleEnergyRefresh(true, presaCaduta ? RIPRESA_DOPO_LA_PRESA_MS : riposoDeiPeriodi());
+    } else {
       state6.retryCount += 1;
       const inAffanno = Boolean(broker?.recorderInAffanno?.());
       scheduleEnergyRefresh(
@@ -10593,6 +10602,7 @@ function scheduleProjection() {
 }
 var RIPOSO_ENERGIA_MS = 6e4;
 var RIPOSO_ENERGIA_DI_SPALLE_MS = 5 * 6e4;
+var RIPRESA_DOPO_LA_PRESA_MS = 3e3;
 function riposoDeiPeriodi(documento = doc, inAffanno = broker?.recorderInAffanno?.()) {
   if (documento?.visibilityState === "hidden") return RIPOSO_ENERGIA_DI_SPALLE_MS;
   if (inAffanno) return RIPOSO_ENERGIA_DI_SPALLE_MS;
@@ -10974,6 +10984,9 @@ function bindEvents() {
     installObserver();
     if (state6.bundle) scheduleProjection();
     else scheduleEnergyRefresh(true);
+  });
+  doc.addEventListener?.("visibilitychange", () => {
+    if (doc.visibilityState !== "hidden" && hasConfiguredEnergy()) refreshEnergyIfStale();
   });
 }
 function risvegliaReportDelGuscio() {

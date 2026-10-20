@@ -3386,6 +3386,7 @@ export default Object.freeze({
   Steam: "Vapor",
   Still: "Parado",
   "Still for": "Sem mudanças há",
+  "The connection to Home Assistant dropped: reconnecting on my own.": "A ligação ao Home Assistant foi interrompida: volto a ligar-me sozinho.",
   "Still reading the Recorder statistics": "Ainda a ler as estatísticas do Recorder",
   Stop: "Parar",
   Stopped: "Parada",

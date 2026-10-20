@@ -4926,6 +4926,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "The colours and the brightness",
   "The Companion App, Waze or Proximity sensors: fill the ones you have, or let the button find them. The journey — distance, time home, heading — only shows on the card when the person is away; the address is always readable, at home too.",
   "The config/www folder does not exist yet: create it and put the photos in there.",
+  "The connection to Home Assistant dropped: reconnecting on my own.",
   "The consumption",
   "The control entity still reads the state, but the card hides the switch: the fridge cannot be turned off by mistake.",
   "The controls show up when cooking starts",
