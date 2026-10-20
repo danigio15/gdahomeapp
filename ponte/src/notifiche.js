@@ -123,6 +123,8 @@ export const TASTI_DEL_RIEPILOGO = Object.freeze([
 
 /** La pagina «La tua giornata» dell'app: la chiede un telefono con un utente. */
 export const LA_GIORNATA = "ponte/energia/giornata";
+/* L'ultima ricarica a casa delle auto, per il costo dei viaggi di GdANav. */
+export const LE_RICARICHE_DI_CASA = "ponte/auto/ricariche-di-casa";
 
 /* Quante notifiche personalizzate per casa. */
 export const PERSONALIZZATE_AL_PIU = 40;
@@ -1425,7 +1427,8 @@ export class Notifiche {
 
   riconosce(tipo) {
     return (
-      typeof tipo === "string" && (tipo.startsWith("ponte/notifiche/") || tipo === LA_GIORNATA)
+      typeof tipo === "string" &&
+      (tipo.startsWith("ponte/notifiche/") || tipo === LA_GIORNATA || tipo === LE_RICARICHE_DI_CASA)
     );
   }
 
@@ -1591,6 +1594,13 @@ export class Notifiche {
           si,
           no,
         });
+      /* L'ultima ricarica a casa (kWh, quanti col sole, gli euro di rete,
+       * fino a che percentuale): per il costo del viaggio in GdANav. Solo a
+       * chi ha un utente, come la giornata; niente entita'. */
+      if (detto.type === LE_RICARICHE_DI_CASA) {
+        if (!utente) return no("unauthorized", "le ricariche di casa si vedono da un utente");
+        return si({ ricariche: this.diario?.ricaricheDiCasa?.() ?? [] });
+      }
       if (detto.type === LA_GIORNATA) {
         if (!utente) return no("unauthorized", "la giornata della casa si vede da un utente");
         if (!this.premium)

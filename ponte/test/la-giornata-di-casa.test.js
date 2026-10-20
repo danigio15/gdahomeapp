@@ -33,7 +33,7 @@ import {
   senzaNomiDiPersone,
 } from "../src/la-giornata-di-casa.js";
 import { TaccuinoDellEnergia } from "../src/l-energia-di-casa.js";
-import { cieloDiDomani, LA_GIORNATA, Notifiche } from "../src/notifiche.js";
+import { cieloDiDomani, LA_GIORNATA, LE_RICARICHE_DI_CASA, Notifiche } from "../src/notifiche.js";
 import { apriLaSpinta } from "../src/spinta.js";
 
 const MINUTO = 60 * 1000;
@@ -1026,6 +1026,54 @@ test("`ponte/energia/giornata`: euroCeduti, prezzi delle fasce, batteria e doman
     const senza = (await banco.chiedi({ type: LA_GIORNATA })).result;
     assert.equal(senza.giornata.euroCeduti, null);
     assert.equal(senza.fasce.prezzi, null);
+  } finally {
+    banco.spegni();
+  }
+});
+
+test("l'ultima ricarica a casa resta, per il costo dei viaggi di GdANav", async () => {
+  /* «Considera se si parte da casa al 100%, e verifica l'ultima ricarica a
+   * casa: come e' stata caricata.» */
+  const stati = unaCasa();
+  const { diario, passa, energia } = unDiario(stati, { adesso: alle(11) });
+  stati.set("sensor.auto_batteria", st(60, { unit_of_measurement: "%" }));
+  passa(1);
+  /* Mezzogiorno: 7 kW in wallbox, 3 dal sole e 4 dalla rete. */
+  energia.sole = 3000;
+  energia.casa = 7300;
+  energia.rete = 4300;
+  stati.set("sensor.wallbox_w", st(7000, { unit_of_measurement: "W" }));
+  passa(60, () => {
+    const soc = Number(stati.get("sensor.auto_batteria").state);
+    if (soc < 100) stati.set("sensor.auto_batteria", st(soc + 1, { unit_of_measurement: "%" }));
+  });
+  stati.set("sensor.wallbox_w", st(0, { unit_of_measurement: "W" }));
+  energia.casa = 300;
+  passa(10);
+  const [r] = diario.ricaricheDiCasa();
+  assert.ok(r, "la ricarica doveva restare");
+  assert.equal(r.nome, "Auto elettrica");
+  assert.equal(r.socA, 100);
+  assert.ok(r.kwh > 6.5 && r.kwh < 7.5, `kWh ${r.kwh}`);
+  assert.ok(r.kwhSole > 2.5 && r.kwhSole < 3.5, `col sole ${r.kwhSole}`);
+  assert.ok(r.euroRete > 0.7 && r.euroRete < 0.9, `euro di rete ${r.euroRete}`);
+  assert.match(r.finitaIl, /^2026-10-18T/);
+  /* Resta anche il giorno dopo, quando la giornata e' nuova. */
+  passa(24 * 60);
+  assert.equal(diario.ricaricheDiCasa().length, 1);
+});
+
+test("le ricariche di casa: solo a un utente, e senza entita'", async () => {
+  const banco = unBanco();
+  try {
+    const detto = await banco.chiedi({ type: LE_RICARICHE_DI_CASA });
+    assert.equal(detto.success, true);
+    assert.deepEqual(detto.result, { ricariche: [] });
+    const senza = await banco.notifiche.rispondi(
+      { id: 2, type: LE_RICARICHE_DI_CASA },
+      { dispositivo: { id: "b".repeat(32) } },
+    );
+    assert.equal(senza.error.code, "unauthorized");
   } finally {
     banco.spegni();
   }
