@@ -4,7 +4,10 @@ FROM ${BUILD_FROM}
 # Node e basta. Il ponte non ha dipendenze npm — la presa WebSocket e' scritta
 # qui dentro — quindi non c'e' nessun `npm install` da fare, e niente che possa
 # cambiare sotto ai piedi fra una versione e l'altra.
-RUN apk add --no-cache nodejs
+# E i due programmi del JPEG (`djpeg`, `cjpeg`): rimpicciolire in casa la
+# foto di una telecamera 4K per la notifica, quando Home Assistant la manda
+# intera (`src/rimpicciolisci.js`). Pochi centinaia di KB, niente npm.
+RUN apk add --no-cache nodejs libjpeg-turbo-utils
 
 WORKDIR /app
 COPY src/ /app/src/

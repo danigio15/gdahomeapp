@@ -150,6 +150,11 @@ export const ETICHETTA_DELLA_FOTO = "gdahome/foto/v1";
 /* Quanto puo' pesare una foto: il centralino non ne tiene di piu'. */
 export const FOTO_MASSIMA = 300 * 1024;
 
+/* E prima di chiuderla: la busta aggiunge ventinove byte (versione, nonce,
+ * marchio), e il tetto del centralino e dei telefoni vale per la busta. Una
+ * foto di 300 KB esatti passava di qui e veniva rifiutata la'. */
+export const FOTO_CHIARA_MASSIMA = FOTO_MASSIMA - (1 + 12 + 16);
+
 const datiAutenticatiDellaFoto = (telefono) =>
   Buffer.from(`${ETICHETTA_DELLA_FOTO}|${String(telefono)}`, "utf8");
 
@@ -157,7 +162,7 @@ const datiAutenticatiDellaFoto = (telefono) =>
 export function chiudiLaFoto({ chiaveDelFilo, telefono, byte }) {
   const dati = Buffer.isBuffer(byte) ? byte : Buffer.from(byte || []);
   if (!dati.length) throw new Error("una foto vuota non si manda");
-  if (dati.length > FOTO_MASSIMA) throw new SpintaTroppoGrande(dati.length);
+  if (dati.length > FOTO_CHIARA_MASSIMA) throw new SpintaTroppoGrande(dati.length);
   const nonce = randomBytes(12);
   const cifratore = createCipheriv(
     "aes-256-gcm",

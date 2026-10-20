@@ -67,7 +67,8 @@ import {
   tastoGuarda,
 } from "./sentinella.js";
 import { paroleDellAvviso, tastiDellAvviso } from "./viaggi.js";
-import { chiudiLaFoto, chiudiLaSpinta, CONTENUTO_MASSIMO, FOTO_MASSIMA } from "./spinta.js";
+import { chiudiLaFoto, chiudiLaSpinta, CONTENUTO_MASSIMO, FOTO_CHIARA_MASSIMA } from "./spinta.js";
+import { rimpicciolisci as rimpicciolisciDiCasa } from "./rimpicciolisci.js";
 import { vedeQualcosa } from "./plance.js";
 import { PROFILO_PRINCIPALE } from "./configurazione.js";
 import { conLaPappa, normalizzaAnimali } from "../plancia/src/core/animali-model.js";
@@ -450,8 +451,12 @@ export class Notifiche {
      * sera e «La tua giornata» sono di gdahome Premium. Senza — nelle prove
      * — vale come con le licenze spente: tutto acceso. */
     licenze = null,
+    /* Chi rimpicciolisce una foto troppo grande (`rimpicciolisci.js`): nelle
+     * prove se ne mette una finta. */
+    rimpicciolisci = rimpicciolisciDiCasa,
     adesso = () => Date.now(),
   } = {}) {
+    this.rimpicciolisci = rimpicciolisci;
     this.configurazione = configurazione;
     this.licenze = licenze;
     this.dispositivi = dispositivi;
@@ -1295,7 +1300,13 @@ export class Notifiche {
    *
    * Adesso si scende fino a 320 (da una 4K e' un ottavo: 480 punti, decine
    * di KB), un errore non ferma i tentativi, e quando la foto non c'e' il
-   * registro dice perche'. */
+   * registro dice perche'.
+   *
+   * E non bastava: tante integrazioni la larghezza la ignorano proprio, e da
+   * una 4K arrivano uno o due mega a ogni misura chiesta («le immagini nelle
+   * notifiche continuano a non uscire, su iPhone e su Android»). Una foto
+   * troppo grande adesso la si rimpicciolisce qui (`rimpicciolisci.js`),
+   * prima di chiederne un'altra. */
   _laFoto(evento, camera) {
     if (evento._foto !== undefined) return evento._foto;
     evento._foto = (async () => {
@@ -1308,7 +1319,11 @@ export class Notifiche {
       for (const larghezza of LARGHEZZE_DELLA_FOTO) {
         try {
           const byte = await this.casa.immagine(`camera_proxy/${camera}?width=${larghezza}`);
-          if (byte?.length && byte.length <= FOTO_MASSIMA) return byte;
+          if (byte?.length && byte.length <= FOTO_CHIARA_MASSIMA) return byte;
+          if (byte?.length) {
+            const piccola = await this.rimpicciolisci?.(byte, { massimo: FOTO_CHIARA_MASSIMA });
+            if (piccola?.length && piccola.length <= FOTO_CHIARA_MASSIMA) return piccola;
+          }
           perche.push(
             byte?.length
               ? `a ${larghezza} pesa ${Math.round(byte.length / 1024)} KB`
