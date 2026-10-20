@@ -557,7 +557,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-NFSO5L4L.js";
+} from "../../chunk-GUXW6VUI.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -39779,7 +39779,10 @@ function parolaAvviso(chiave2) {
     case "deodorante_finito":
       return t("Deodorante da sostituire", "Deodorizer needs replacing");
     case "cestino_pieno":
-      return t("Il cestino della lettiera vuole attenzione", "The litter waste bin needs attention");
+      return t(
+        "Il cestino della lettiera vuole attenzione",
+        "The litter waste bin needs attention"
+      );
     case "lettiera_da_pulire":
       return t("Lettiera da pulire", "Litter box needs cleaning");
     case "collare_scarico":
@@ -39973,7 +39976,9 @@ function cambiaLAnimale(id, cambia) {
   return prima;
 }
 function segnaLaPappa(evento) {
-  const tasto2 = evento.target?.closest?.("[data-dm-animale-pappa], [data-dm-animale-pappa-annulla]");
+  const tasto2 = evento.target?.closest?.(
+    "[data-dm-animale-pappa], [data-dm-animale-pappa-annulla]"
+  );
   if (!tasto2 || !tasto2.closest(`#${ANIMALI_PAGE_ID}`)) return;
   evento.preventDefault();
   if (tasto2.dataset.dmAnimalePappaAnnulla) {
@@ -40026,6 +40031,7 @@ function vascaMarkup(vista2) {
         <small>${esc(sottoDellaVasca(vista2))}</small>
       </span>
     </div>
+    ${pappaMarkup(vista2)}
     <div class="dm-vasca-corpo">${corpo4}</div>
   </article>`;
 }
@@ -40058,7 +40064,9 @@ function firmaDi(viste2) {
       vista2.tipo,
       vista2.voce.foto ? "foto" : "",
       roomLabel(vista2.voce.stanza),
-      vista2.come.litri ?? ""
+      vista2.come.litri ?? "",
+      vista2.pappa ? `pappa:${vista2.pappa.ora}` : "",
+      state33.annulla?.id === vista2.id ? "annulla" : ""
     ].join("~") : [
       vista2.id,
       vista2.nome,
@@ -40086,6 +40094,9 @@ function sincronizza(card2, vista2) {
       state33.corpi.set(vista2.voce.id, markup7);
       corpo4.innerHTML = markup7;
     }
+    const pappa2 = card2.querySelector('[data-dm-animale-lettura="pappa"] .dm-animale-lettura-val');
+    const testo5 = vista2.pappa ? testoDellaPappa(vista2.pappa) : "";
+    if (pappa2 && pappa2.textContent !== testo5) pappa2.textContent = testo5;
     return;
   }
   card2.dataset.gravita = vista2.gravita;
@@ -40113,7 +40124,13 @@ function renderAnimali() {
   const adesso = Date.now();
   const voci4 = animaliConfigurati();
   const viste2 = voci4.map(
-    (animale) => eUnaVasca(animale) ? { ...vistaDellaVasca(animale, states, { adesso }), vasca: true } : vistaAnimale(animale, states, adesso)
+    (animale) => eUnaVasca(animale) ? {
+      ...vistaDellaVasca(animale, states, { adesso }),
+      vasca: true,
+      /* La pappa di chi ci vive dentro: il geco, il pitone, i pesci. */
+      id: animale.id,
+      pappa: laPappa(animale, adesso)
+    } : vistaAnimale(animale, states, adesso)
   );
   if (!viste2.length) {
     if (state33.firma !== "vuoto") {
@@ -40258,7 +40275,8 @@ function installAnimaliSection() {
   doc.addEventListener("click", segnaLaPappa);
   insegnaLaVisibilita();
   ensureAnimaliTab();
-  for (const nome of ["render", "cdApplyNavVis"]) wrapFunction(nome, "__dmAnimaliSection", schedule10);
+  for (const nome of ["render", "cdApplyNavVis"])
+    wrapFunction(nome, "__dmAnimaliSection", schedule10);
   for (const evento of [
     "dashboardmodern:legacy-ready",
     "dashboardmodern:states-ready",
@@ -121408,7 +121426,12 @@ function rigaMarkup18(animale, indice, animali = []) {
         <small>${t("Senza foto la scheda mostra il disegno del tipo.", "Without a photo the card shows the drawing of its type.")}</small>
       </div>
       <label class="ed-slot dm-animale-field"><span class="ed-slot-lbl">${t("Stanza", "Room")}</span><span class="ed-form-row"><select id="dm-animale-${indice}-stanza" class="ed-input" data-animale-field="stanza">${roomOptionsMarkup(animale.stanza, t("Nessuna stanza", "No room"))}</select></span></label>
-      ${vasca ? vascaEditorMarkup(animale, indice, { esclusi: entitaDelleAltreVasche(animali, indice) }) : `${pappaEditorMarkup(animale, indice)}
+      ${vasca ? (
+    /* La pappa anche per chi vive nella vasca: «non c'e' una funzione
+     * pasti per i terrari, la vedo solo per cane, gatto…». */
+    `${pappaEditorMarkup(animale, indice)}
+      ${vascaEditorMarkup(animale, indice, { esclusi: entitaDelleAltreVasche(animali, indice) })}`
+  ) : `${pappaEditorMarkup(animale, indice)}
       ${dispositiviMarkup(animale)}
       <button type="button" class="ed-btn-add dm-animale-integ-riga" data-animale-integ-riga>🔗 ${t("Collega un altro dispositivo", "Link another device")}</button>
       ${gruppiMarkup(animale, indice)}
@@ -121478,10 +121501,7 @@ function anteprimaAnimale({ device, entities }) {
   const riga3 = (etichetta3, valore3) => `<div class="dm-integ-casella"><span>${esc(etichetta3)}</span><b class="mono">${esc(valore3) || "—"}</b></div>`;
   return {
     etichetta: chiavi2.length ? t("Cose dell'animale", "Pet things") : t("Niente per un animale", "Nothing for a pet"),
-    corpo: `<div class="dm-integ-caselle">${chiavi2.length ? chiavi2.map((chiave2) => riga3(etichettaCampo(chiave2), proposta[chiave2])).join("") : riga3(
-      t("Caselle riconosciute", "Recognised fields"),
-      t("nessuna", "none")
-    )}</div>
+    corpo: `<div class="dm-integ-caselle">${chiavi2.length ? chiavi2.map((chiave2) => riga3(etichettaCampo(chiave2), proposta[chiave2])).join("") : riga3(t("Caselle riconosciute", "Recognised fields"), t("nessuna", "none"))}</div>
     <p class="dm-animale-anteprima-nota">${esc(clean(device?.name))}</p>`
   };
 }
@@ -121533,7 +121553,10 @@ function aggiungiDispositivo(indice) {
       salva22(next);
       ridisegna13();
       root.edToast?.(
-        riempite.length ? `${riempite.length} ${t("caselle compilate", "fields filled in")}` : t("Niente da aggiungere: le caselle erano già piene.", "Nothing to add: the fields were already filled.")
+        riempite.length ? `${riempite.length} ${t("caselle compilate", "fields filled in")}` : t(
+          "Niente da aggiungere: le caselle erano già piene.",
+          "Nothing to add: the fields were already filled."
+        )
       );
     }
   });
@@ -121560,7 +121583,13 @@ function ensureAnimaliEditor() {
         animale.foto ? "foto" : "",
         animale.dispositivi.map((voce3) => voce3.id).join("+"),
         /* Una vasca cambia forma quando cambiano le sue righe o i suoi dati. */
-        eUnaVasca(animale) ? JSON.stringify([animale.righe, animale.litri, animale.ogni, animale.cambio, animale.pulizia]) : "",
+        eUnaVasca(animale) ? JSON.stringify([
+          animale.righe,
+          animale.litri,
+          animale.ogni,
+          animale.cambio,
+          animale.pulizia
+        ]) : "",
         [...CAMPI, ...AZIONI].map((campo5) => animale[campo5.chiave]).join(","),
         animale.pappa_ogni || ""
       ].join("~")
@@ -121706,7 +121735,9 @@ async function onClick35(event) {
 function onChange11(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || activeTab4() !== ANIMALI_EDITOR_TAB || !body.contains(event.target)) return;
-  const campo5 = event.target?.closest?.('[data-animale-field="specie"],[data-vasca-campo="genere"]');
+  const campo5 = event.target?.closest?.(
+    '[data-animale-field="specie"],[data-vasca-campo="genere"]'
+  );
   if (!campo5) return;
   const riga3 = campo5.closest("[data-animale-index]");
   const indice = Number(riga3?.dataset.animaleIndex);

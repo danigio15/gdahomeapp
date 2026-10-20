@@ -504,7 +504,22 @@ class Postino extends ChangeNotifier {
     : cassaforte = cassaforte ?? const CassaforteDelSistema();
 
   /// Quello acceso, se c'e'. Nel browser e nelle prove non c'e'.
-  static Postino? istanza;
+  static Postino? get istanza => pronto.value;
+  static set istanza(Postino? quale) => pronto.value = quale;
+
+  /// Lo stesso, da ascoltare: chi aspetta i tocchi (la home) si mette in
+  /// ascolto appena il postino c'e'.
+  ///
+  /// Dal campo, sull'iPhone: «Guarda» dalla notifica apriva l'app sulla home
+  /// e basta. Con l'app chiusa la home nasce prima che Firebase sia pronto:
+  /// guardava il postino, non c'era, e non tornava a guardare. Il tocco
+  /// restava da parte ([prendiInSospeso]) finché la home non si ridisegnava
+  /// per altro — cioè, di solito, mai.
+  static final pronto = ValueNotifier<Postino?>(null);
+
+  /// Quanti tocchi aspettano qualcuno che li prenda: cambia quando ne arriva
+  /// uno senza nessuno in ascolto.
+  final inSospeso = ValueNotifier<int>(0);
 
   final Collegamento collegamento;
   final Cassaforte cassaforte;
@@ -543,14 +558,20 @@ class Postino extends ChangeNotifier {
   List<ToccoDellaNotifica> prendiInSospeso() {
     final tutti = List.of(_inSospeso);
     _inSospeso.clear();
+    inSospeso.value = 0;
     return tutti;
   }
+
+  /// Per le prove: un tocco come se arrivasse dal sistema.
+  @visibleForTesting
+  void toccaPerProva(ToccoDellaNotifica tocco) => _tocca(tocco);
 
   void _tocca(ToccoDellaNotifica tocco) {
     if (_tocchi.hasListener) {
       _tocchi.add(tocco);
     } else {
       _inSospeso.add(tocco);
+      inSospeso.value = _inSospeso.length;
     }
   }
 
@@ -820,6 +841,7 @@ class Postino extends ChangeNotifier {
   void dispose() {
     _ascolto?.cancel();
     _tocchi.close();
+    inSospeso.dispose();
     if (istanza == this) istanza = null;
     super.dispose();
   }

@@ -34,6 +34,7 @@ import {
   animaliDisegnabili,
   conLaPappa,
   eUnaVasca,
+  laPappa,
   normalizzaAnimali,
   pressioneDellAzione,
   vistaAnimale,
@@ -275,7 +276,10 @@ export function parolaAvviso(chiave) {
     case "deodorante_finito":
       return t("Deodorante da sostituire", "Deodorizer needs replacing");
     case "cestino_pieno":
-      return t("Il cestino della lettiera vuole attenzione", "The litter waste bin needs attention");
+      return t(
+        "Il cestino della lettiera vuole attenzione",
+        "The litter waste bin needs attention",
+      );
     case "lettiera_da_pulire":
       return t("Lettiera da pulire", "Litter box needs cleaning");
     case "collare_scarico":
@@ -534,7 +538,9 @@ function cambiaLAnimale(id, cambia) {
 }
 
 function segnaLaPappa(evento) {
-  const tasto = evento.target?.closest?.("[data-dm-animale-pappa], [data-dm-animale-pappa-annulla]");
+  const tasto = evento.target?.closest?.(
+    "[data-dm-animale-pappa], [data-dm-animale-pappa-annulla]",
+  );
   if (!tasto || !tasto.closest(`#${ANIMALI_PAGE_ID}`)) return;
   evento.preventDefault();
   if (tasto.dataset.dmAnimalePappaAnnulla) {
@@ -593,6 +599,7 @@ function vascaMarkup(vista) {
         <small>${esc(sottoDellaVasca(vista))}</small>
       </span>
     </div>
+    ${pappaMarkup(vista)}
     <div class="dm-vasca-corpo">${corpo}</div>
   </article>`;
 }
@@ -634,26 +641,28 @@ function firmaDi(viste) {
             vista.voce.foto ? "foto" : "",
             roomLabel(vista.voce.stanza),
             vista.come.litri ?? "",
+            vista.pappa ? `pappa:${vista.pappa.ora}` : "",
+            state.annulla?.id === vista.id ? "annulla" : "",
           ].join("~")
         : [
-        vista.id,
-        vista.nome,
-        vista.specie,
-        vista.foto ? "foto" : "",
-        roomLabel(vista.stanza),
-        vista.dentro === null ? "" : String(vista.dentro),
-        vista.avvisi.map((avviso) => `${avviso.chiave}:${avviso.gravita}`).join("+"),
-        Object.values(vista.letture)
-          .filter((voce) => voce && !voce.muto)
-          .map((voce) => voce.chiave)
-          .join("+"),
-        /* Un tasto che compare — o che sparisce perche' l'integrazione tace —
-         * cambia la forma della scheda, non solo un numero dentro. */
-        (vista.azioni || []).map((azione) => azione.chiave).join("+"),
-        /* La fascia della pappa che compare, e il tasto «Annulla». */
-        vista.pappa ? `pappa:${vista.pappa.ora}` : "",
-        state.annulla?.id === vista.id ? "annulla" : "",
-      ].join("~"),
+            vista.id,
+            vista.nome,
+            vista.specie,
+            vista.foto ? "foto" : "",
+            roomLabel(vista.stanza),
+            vista.dentro === null ? "" : String(vista.dentro),
+            vista.avvisi.map((avviso) => `${avviso.chiave}:${avviso.gravita}`).join("+"),
+            Object.values(vista.letture)
+              .filter((voce) => voce && !voce.muto)
+              .map((voce) => voce.chiave)
+              .join("+"),
+            /* Un tasto che compare — o che sparisce perche' l'integrazione tace —
+             * cambia la forma della scheda, non solo un numero dentro. */
+            (vista.azioni || []).map((azione) => azione.chiave).join("+"),
+            /* La fascia della pappa che compare, e il tasto «Annulla». */
+            vista.pappa ? `pappa:${vista.pappa.ora}` : "",
+            state.annulla?.id === vista.id ? "annulla" : "",
+          ].join("~"),
     )
     .join("|");
 }
@@ -667,6 +676,9 @@ function sincronizza(card, vista) {
       state.corpi.set(vista.voce.id, markup);
       corpo.innerHTML = markup;
     }
+    const pappa = card.querySelector('[data-dm-animale-lettura="pappa"] .dm-animale-lettura-val');
+    const testo = vista.pappa ? testoDellaPappa(vista.pappa) : "";
+    if (pappa && pappa.textContent !== testo) pappa.textContent = testo;
     return;
   }
   card.dataset.gravita = vista.gravita;
@@ -699,7 +711,13 @@ export function renderAnimali() {
   const voci = animaliConfigurati();
   const viste = voci.map((animale) =>
     eUnaVasca(animale)
-      ? { ...vistaDellaVasca(animale, states, { adesso }), vasca: true }
+      ? {
+          ...vistaDellaVasca(animale, states, { adesso }),
+          vasca: true,
+          /* La pappa di chi ci vive dentro: il geco, il pitone, i pesci. */
+          id: animale.id,
+          pappa: laPappa(animale, adesso),
+        }
       : vistaAnimale(animale, states, adesso),
   );
 
@@ -871,7 +889,8 @@ export function installAnimaliSection() {
   doc.addEventListener("click", segnaLaPappa);
   insegnaLaVisibilita();
   ensureAnimaliTab();
-  for (const nome of ["render", "cdApplyNavVis"]) wrapFunction(nome, "__dmAnimaliSection", schedule);
+  for (const nome of ["render", "cdApplyNavVis"])
+    wrapFunction(nome, "__dmAnimaliSection", schedule);
   for (const evento of [
     "dashboardmodern:legacy-ready",
     "dashboardmodern:states-ready",
