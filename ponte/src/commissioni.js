@@ -242,6 +242,9 @@ const FOTO_CARICA = "dashboardmodern/www/upload";
 const AGGIORNAMENTI_ELENCO = "ponte/aggiornamenti/elenco";
 const AGGIORNAMENTI_INSTALLA = "ponte/aggiornamenti/installa";
 const AGGIORNAMENTI_RIAVVIA = "ponte/aggiornamenti/riavvia";
+/* Se Home Assistant aspetta un riavvio per finire un aggiornamento: una
+ * lettura, come l'elenco. */
+const AGGIORNAMENTI_RIAVVIO = "ponte/aggiornamenti/riavvio";
 /* Il segno di chi si aggiorna. Si chiede per **entita'**, e non per
  * indirizzo: dove andarlo a prendere lo decide il ponte, guardando quello che
  * Home Assistant ha dichiarato. */
@@ -921,6 +924,7 @@ export class Commissioni {
       tipo === AGGIORNAMENTI_ELENCO ||
       tipo === AGGIORNAMENTI_INSTALLA ||
       tipo === AGGIORNAMENTI_RIAVVIA ||
+      tipo === AGGIORNAMENTI_RIAVVIO ||
       tipo === AGGIORNAMENTI_LOGO ||
       tipo === AGGIORNAMENTI_NOTE
     )
@@ -1162,6 +1166,7 @@ export class Commissioni {
     try {
       if (detto.type === AGGIORNAMENTI_ELENCO)
         return si(id, { aggiornamenti: await quali.elenco({ forza: detto?.forza === true }) });
+      if (detto.type === AGGIORNAMENTI_RIAVVIO) return si(id, await quali.serveIlRiavvio());
       if (detto.type === AGGIORNAMENTI_RIAVVIA) {
         this.registro.info("riavvio di Home Assistant chiesto dall'app");
         return si(id, await quali.riavvia());

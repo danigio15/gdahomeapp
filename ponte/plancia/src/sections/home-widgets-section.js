@@ -1731,10 +1731,64 @@ export function porteAperte(doors = [], states = {}) {
  * Non e' rossa: un aggiornamento non e' un guasto, e il rosso in questa Home
  * vuol dire «vai a vedere adesso». E' ambra, come le cose da fare con calma.
  */
+/* «Quando fai gli aggiornamenti tipo di Alexa Media Player HA ti richiede il
+ * riavvio dopo, e su GdAHome non viene proposto.» Home Assistant lo scrive
+ * fra le sue riparazioni, e il ponte le legge (`ponte/aggiornamenti/riavvio`):
+ * qui si chiede al piu' una volta al minuto, e subito dopo un'installazione. */
+const riavvio = { serve: false, chi: [], alle: 0, inVolo: false };
+
+function guardaIlRiavvio(forza = false) {
+  const ora = Date.now();
+  if (riavvio.inVolo || (!forza && ora - riavvio.alle < 60_000)) return;
+  riavvio.inVolo = true;
+  riavvio.alle = ora;
+  chiediAHomeAssistant({ type: "ponte/aggiornamenti/riavvio" }, 10_000)
+    .then((detto) => {
+      const serve = detto?.serve === true;
+      const chi = (Array.isArray(detto?.chi) ? detto.chi : []).map(clean).filter(Boolean);
+      const cambia = serve !== riavvio.serve || chi.join("|") !== riavvio.chi.join("|");
+      riavvio.serve = serve;
+      riavvio.chi = chi;
+      if (cambia) schedule();
+    })
+    .catch((errore) => {
+      /* Il filo non c'era ancora (l'avvio): si riprova al giro dopo, non fra
+       * un minuto. Un no del ponte invece aspetta il suo minuto. */
+      if (/socket/i.test(String(errore?.message || errore))) riavvio.alle = 0;
+    })
+    .finally(() => {
+      riavvio.inVolo = false;
+    });
+}
+
+/* Dopo un'installazione la riparazione arriva quando l'integrazione nuova e'
+ * scaricata: si guarda tre volte, a dieci secondi, a mezzo minuto e a un
+ * minuto e mezzo. */
+function guardaIlRiavvioDopoLInstallazione() {
+  for (const dopo of [10_000, 30_000, 90_000]) setTimeout(() => guardaIlRiavvio(true), dopo);
+}
+/* Anche la pastiglia in alto installa: dopo, guarda allo stesso modo. */
+root.dmGuardaIlRiavvio = guardaIlRiavvioDopoLInstallazione;
+
 function aggiornamentiModel(states) {
   const fuori = widgetExcludedEntities("aggiornamenti");
   const fila = aggiornamentiDaFare(states).filter((voce) => widgetIncludes(voce.entity, fuori));
-  if (!fila.length) return null;
+  guardaIlRiavvio();
+  if (!fila.length && !riavvio.serve) return null;
+  if (!fila.length)
+    return {
+      key: "aggiornamenti",
+      accent: "#d97706",
+      icon: "🔄",
+      attiva: true,
+      label: t("Riavvio richiesto", "Restart required"),
+      value: "↻",
+      caption: riavvio.chi.length
+        ? `${t("Per finire", "To finish")}: ${riavvio.chi.join(", ")}`
+        : t("Per finire l'aggiornamento", "To finish the update"),
+      aggiornamenti: [],
+      riavvio: { ...riavvio },
+    };
   const primo = fila[0];
   return {
     key: "aggiornamenti",
@@ -1760,6 +1814,7 @@ function aggiornamentiModel(states) {
         ? `${primo.nome}${primo.a ? ` → ${primo.a}` : ""}`
         : `${primo.nome} · +${fila.length - 1}`,
     aggiornamenti: fila,
+    riavvio: { ...riavvio },
   };
 }
 
@@ -7996,8 +8051,32 @@ function siInstallaDaQui(voce) {
   return voce?.installabile === true || voce?.installabile === undefined;
 }
 
+/* Il riavvio che Home Assistant aspetta, in cima alla finestra: chi lo
+ * aspetta e il tasto per farlo. */
+function riavvioMarkup(widget) {
+  if (!widget.riavvio?.serve) return "";
+  const chi = widget.riavvio.chi || [];
+  return `<div class="dm-w-agg dm-w-agg-riavvio" data-dm-w-riavvio>
+      <span class="dm-w-agg-logo" aria-hidden="true">🔄</span>
+      <span class="dm-w-agg-testo">
+        <b>${esc(t("Home Assistant va riavviato", "Home Assistant needs a restart"))}</b>
+        <small>${esc(
+          chi.length
+            ? `${t("Per finire l'aggiornamento di", "To finish updating")} ${chi.join(", ")}`
+            : t("Per finire l'aggiornamento", "To finish the update"),
+        )}</small>
+      </span>
+      <button type="button" class="dm-w-agg-via" data-dm-w-riavvia
+        title="${esc(t("Riavvia Home Assistant", "Restart Home Assistant"))}">${esc(
+          t("Riavvia", "Restart"),
+        )}</button>
+    </div>`;
+}
+
 function aggiornamentiDetail(widget) {
   const fila = widget.aggiornamenti || [];
+  const inCima = riavvioMarkup(widget);
+  if (!fila.length) return `<div class="dm-w-aggs">${inCima}</div>`;
   const schede = fila
     .map((voce) => {
       const da = clean(voce?.da);
@@ -8035,7 +8114,7 @@ function aggiornamentiDetail(widget) {
         t(fila.length === 1 ? "da installare" : "da installare", "to install"),
       )}</span>
     </div>
-    <div class="dm-w-aggs">${schede}</div>`;
+    <div class="dm-w-aggs">${inCima}${schede}</div>`;
 }
 
 /* Anche gli avvisi personalizzati sono caselle: nome e stato, in carta. */
@@ -10547,10 +10626,48 @@ function onClick(event) {
     aggiornamento.disabled = true;
     aggiornamento.textContent = t("In corso", "Installing");
     callHa("update", "install", { entity_id: quale }).then((esito) => {
-      if (esito !== undefined) return;
+      if (esito !== undefined) {
+        guardaIlRiavvioDopoLInstallazione();
+        return;
+      }
       aggiornamento.disabled = false;
       aggiornamento.textContent = parola;
     });
+    return;
+  }
+  const riavvia = event.target?.closest?.("[data-dm-w-riavvia]");
+  if (riavvia) {
+    event.preventDefault();
+    /* Un riavvio spegne la casa per un minuto: si chiede prima. Lo fa il
+     * ponte, e solo per chi amministra — come in Home Assistant. */
+    const sicuro = root.confirm?.(
+      t(
+        "Riavviare Home Assistant adesso? La casa resta ferma per circa un minuto.",
+        "Restart Home Assistant now? The house stops for about a minute.",
+      ),
+    );
+    if (!sicuro) return;
+    const parola = riavvia.textContent;
+    riavvia.disabled = true;
+    riavvia.textContent = t("Riavvio…", "Restarting…");
+    chiediAHomeAssistant({ type: "ponte/aggiornamenti/riavvia" }, 15_000)
+      .then(() => {
+        riavvio.serve = false;
+        riavvio.chi = [];
+        riavvio.alle = Date.now();
+      })
+      .catch((errore) => {
+        /* Il filo che cade e' il riavvio che parte; un no detto e' un no. */
+        if (/socket|timeout|time out/i.test(String(errore?.message || errore))) return;
+        riavvia.disabled = false;
+        riavvia.textContent = parola;
+        root.alert?.(
+          t(
+            "Home Assistant non si e' riavviato: serve un utente amministratore.",
+            "Home Assistant did not restart: an administrator is needed.",
+          ),
+        );
+      });
     return;
   }
   if (event.target?.closest?.("[data-dm-widget-close]")) {

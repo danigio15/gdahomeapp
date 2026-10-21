@@ -178,6 +178,11 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
   "ponte/automazioni/duplica",
   "ponte/automazioni/proposte",
   "ponte/automazioni/proposte/scarta",
+  // Il riavvio che Home Assistant aspetta dopo un aggiornamento: se serve
+  // (una lettura delle riparazioni) e il riavvio, che il ponte fa solo per
+  // chi amministra (ponte/src/aggiornamenti.js).
+  "ponte/aggiornamenti/riavvio",
+  "ponte/aggiornamenti/riavvia",
   "auth/sign_path",
 ]);
 

@@ -734,13 +734,19 @@ export function pastiglieDellaCasa(modelli, { barra, posta, misure, mie, adesso 
        * non e' successo niente. */
       const righe = Array.isArray(modello.aggiornamenti) ? modello.aggiornamenti : [];
       const conto = righe.length || Number(modello.value) || 0;
-      if (conto < 1) continue;
+      /* E il riavvio che Home Assistant aspetta per finire un aggiornamento
+       * gia' installato: anche senza niente da installare la pastiglia resta,
+       * e dice quello. */
+      const riavvio = modello.riavvio?.serve === true;
+      if (conto < 1 && !riavvio) continue;
       fuori.push({
         chiave: "aggiornamenti",
         tessera: voce.tessera,
         icona: pulito(modello.icon),
         tinta: pulito(modello.accent),
-        conto,
+        conto: conto || 1,
+        riavvio,
+        chi: riavvio ? (modello.riavvio.chi || []).map(pulito).filter(Boolean) : [],
         /* I nomi di cosa aspetta: finiscono nel titolo e nell'elenco che si
          * apre toccandola, come per le luci accese. */
         voci: righe

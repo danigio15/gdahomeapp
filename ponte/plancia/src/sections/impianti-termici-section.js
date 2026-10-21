@@ -722,6 +722,13 @@ function altezzaDelFuoco(lettura) {
 function ventoDellaStufa(lettura) {
   const ventola = lettura.ventilatore;
   if (!ventola) return { gira: lettura.brucia === true, durata: 1.4 };
+  /* #293: «anche se la stufa a pellet e' spenta l'icona della ventola gira
+   * sempre». Un livello (number, select) o i modi del termostato restano
+   * scritti anche a stufa spenta: se la stufa non brucia — e non si sta
+   * raffreddando — l'aria non esce, a meno che il ventilatore stesso dica di
+   * essere acceso. */
+  const stufaFerma = lettura.brucia !== true && lettura.fase !== "spegnimento";
+  if (stufaFerma && ventola.acceso !== true) return { gira: false, durata: 1.4 };
   const fermo =
     ventola.acceso === false ||
     ventola.valore === 0 ||
@@ -1500,7 +1507,7 @@ function installStyles() {
       background:linear-gradient(160deg,#1e293b,#0b1220);
       box-shadow:0 14px 30px -14px rgba(15,23,42,.8),inset 0 1px 0 rgba(255,255,255,.09)}
     #${PAGINA} .dm-it-plate-lbl{
-      font-size:9.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#94a3b8}
+      font-size:10.5px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:#cbd5e1}
     #${PAGINA} .dm-it-plate-val{
       font-family:'Oswald',sans-serif;font-size:27px;font-weight:500;line-height:1;
       font-variant-numeric:tabular-nums}
@@ -1894,7 +1901,12 @@ function installStyles() {
     html[data-theme="dark"] #${PAGINA} .dm-it-stufa-riga{background:#0f172a}
     html[data-theme="dark"] #${PAGINA} .dm-it-stufa-passo{background:#1b2439;border-color:#2c3a55;color:#e2e8f0}
     html[data-theme="dark"] #${PAGINA} .dm-it-stufa-val{color:#e2e8f0}
-    html[data-theme="dark"] #${PAGINA} .dm-it-stufa-lbl{color:#93a5c0}
+    html[data-theme="dark"] #${PAGINA} .dm-it-stufa-lbl{color:#c3d0e2}
+    /* #294: «i dati sono troppo scuri e non si capiscono». Nel tema scuro le
+       targhette scure sparivano sul fondo scuro: un filo chiaro le stacca. */
+    html[data-theme="dark"] #${PAGINA} .dm-it-plate{
+      background:linear-gradient(160deg,#26344d,#111a2c);
+      box-shadow:0 14px 30px -14px rgba(0,0,0,.9),inset 0 0 0 1px rgba(148,163,184,.28)}
     html[data-theme="dark"] #${PAGINA} .dm-it-stufa-punti i{background:#334155}
     html[data-theme="dark"] #${PAGINA} .dm-it-stufa-punti i[data-on="true"]{
       background:linear-gradient(135deg,#fb923c,#ea580c)}

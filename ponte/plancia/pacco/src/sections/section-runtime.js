@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-563Y44AU.js";
+} from "../../chunk-DYMZLATI.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -4114,9 +4114,11 @@ var SOURCE_INDEX = Object.freeze({
   "Home Assistant non ha sun.sun: vale l'orario di «Di notte schermo nero»": "Home Assistant has no sun.sun: the hours of “Black screen at night” apply",
   "Home Assistant non l'ha salvata: ${no}": "Home Assistant did not save it: ${no}",
   "Home Assistant non risponde": "Home Assistant is not answering",
+  "Home Assistant non si e' riavviato: serve un utente amministratore.": "Home Assistant did not restart: an administrator is needed.",
   "Home Assistant non ti autorizza a comandare questa entità: serve un utente con il permesso, oppure l'entità è esposta in sola lettura.": "Home Assistant does not allow you to command this entity: it needs a user with permission, or the entity is exposed read-only.",
   "Home Assistant si avvia": "Home Assistant starts",
   "Home Assistant si spegne": "Home Assistant shuts down",
+  "Home Assistant va riavviato": "Home Assistant needs a restart",
   "hOn, Home Connect, Miele, LG ThinQ, SmartThings, una presa Shelly… scegli il dispositivo e l'apparecchio arriva con tutte le sue entità già al posto giusto. Oppure, qui sotto, una entità alla volta.": "hOn, Home Connect, Miele, LG ThinQ, SmartThings, a Shelly plug… pick the device and the appliance arrives with all its entities in the right place. Or, below, one entity at a time.",
   "hOn, Home Connect, Miele, LG ThinQ, una presa Shelly…: scegli il dispositivo e le caselle vuote si compilano da sole. Quelle scritte a mano restano.": "hOn, Home Connect, Miele, LG ThinQ, a Shelly plug…: pick the device and the empty fields fill themselves in. The ones written by hand stay.",
   "Humidex (facoltativo)": "Humidex (optional)",
@@ -5614,6 +5616,9 @@ var SOURCE_INDEX = Object.freeze({
   "Per esempio: Avvio": "For example: Start",
   "Per esempio: Microfoni": "For example: Microphones",
   "Per esempio: Preset 1": "For example: Preset 1",
+  "Per finire": "To finish",
+  "Per finire l'aggiornamento": "To finish the update",
+  "Per finire l'aggiornamento di": "To finish updating",
   "Per frigo e congelatore: mostra la barra temperatura al posto della potenza.": "For fridge and freezer: shows the temperature strip instead of the power bar.",
   "Per i km di ogni giorno serve il contachilometri.": "Daily km need the odometer.",
   "Per il ritorno servirà una ricarica": "You will need to charge for the way back",
@@ -6177,6 +6182,11 @@ var SOURCE_INDEX = Object.freeze({
   "Riapri il Setup Wizard (connessione · nome · sezioni · luci)": "Reopen the Setup Wizard (connection · name · sections · lights)",
   "Riattiva l'audio": "Unmute",
   "Riavvia": "Restart",
+  "Riavvia Home Assistant": "Restart Home Assistant",
+  "Riavviare Home Assistant adesso? La casa resta ferma per circa un minuto.": "Restart Home Assistant now? The house stops for about a minute.",
+  "Riavvio": "Restart",
+  "Riavvio richiesto": "Restart required",
+  "Riavvio…": "Restarting…",
   "Ricarica notturna": "Night charging",
   "Ricarica programmata (acceso/spento)": "Scheduled charging (on/off)",
   "Ricarica rapida (acceso/spento)": "Fast charging (on/off)",
@@ -6186,6 +6196,7 @@ var SOURCE_INDEX = Object.freeze({
   "Ricariche": "Sessions",
   "Ricariche a casa": "Charging at home",
   "Ricci": "Curly",
+  "richiesto": "required",
   "Ricircolo": "Recirculation",
   "Ricircolo attivo": "Recirculation running",
   "ricomincia da capo": "start over",
@@ -35979,13 +35990,16 @@ function pastiglieDellaCasa(modelli2, { barra: barra2, posta, misure, mie, adess
     if (voce3.chiave === "aggiornamenti") {
       const righe4 = Array.isArray(modello2.aggiornamenti) ? modello2.aggiornamenti : [];
       const conto2 = righe4.length || Number(modello2.value) || 0;
-      if (conto2 < 1) continue;
+      const riavvio2 = modello2.riavvio?.serve === true;
+      if (conto2 < 1 && !riavvio2) continue;
       fuori.push({
         chiave: "aggiornamenti",
         tessera: voce3.tessera,
         icona: pulito30(modello2.icon),
         tinta: pulito30(modello2.accent),
-        conto: conto2,
+        conto: conto2 || 1,
+        riavvio: riavvio2,
+        chi: riavvio2 ? (modello2.riavvio.chi || []).map(pulito30).filter(Boolean) : [],
         /* I nomi di cosa aspetta: finiscono nel titolo e nell'elenco che si
          * apre toccandola, come per le luci accese. */
         voci: righe4.map((riga3) => ({ entity: pulito30(riga3?.entity), name: pulito30(riga3?.nome) })).filter((una) => una.name || una.entity)
@@ -36290,6 +36304,11 @@ function vociDellaPastiglia(pastiglia4) {
   return Array.isArray(pastiglia4?.voci) ? pastiglia4.voci : [];
 }
 function paroleDellaPastiglia(pastiglia4) {
+  if (pastiglia4.chiave === "aggiornamenti" && pastiglia4.riavvio && !pastiglia4.voci?.length) {
+    const testa3 = t("Riavvio", "Restart");
+    const coda = t("richiesto", "required");
+    return { testa: testa3, coda, titolo: `${testa3} ${coda}` };
+  }
   if (pastiglia4.chiave === "posta") {
     const coda = t("è arrivata", "has arrived");
     return {
@@ -36491,7 +36510,49 @@ function disegnaComeStaLaCasa(modelli2, states) {
 }
 var POPUP2 = "dm-casa-popup";
 function haUnElenco(pastiglia4) {
-  return vociDellaPastiglia(pastiglia4).length > 0;
+  return vociDellaPastiglia(pastiglia4).length > 0 || chiedeIlRiavvio(pastiglia4);
+}
+function chiedeIlRiavvio(pastiglia4) {
+  return pastiglia4?.chiave === "aggiornamenti" && pastiglia4.riavvio === true;
+}
+function rigaDelRiavvio(pastiglia4) {
+  const chi = pastiglia4.chi || [];
+  return `<div class="dm-casa-voce" data-dm-casa-riavvio>
+      <span class="dm-casa-testo">
+        <b>${esc(t("Home Assistant va riavviato", "Home Assistant needs a restart"))}</b>
+        <small class="d-sub">${esc(
+    chi.length ? `${t("Per finire l'aggiornamento di", "To finish updating")} ${chi.join(", ")}` : t("Per finire l'aggiornamento", "To finish the update")
+  )}</small>
+      </span>
+      <button type="button" class="dm-casa-spegni" data-dm-casa-riavvia>${esc(t("Riavvia", "Restart"))}</button>
+    </div>`;
+}
+function riavviaLaCasa(tasto2) {
+  const sicuro = root.confirm?.(
+    t(
+      "Riavviare Home Assistant adesso? La casa resta ferma per circa un minuto.",
+      "Restart Home Assistant now? The house stops for about a minute."
+    )
+  );
+  if (!sicuro) return false;
+  const parola = tasto2.textContent;
+  tasto2.disabled = true;
+  tasto2.textContent = t("Riavvio…", "Restarting…");
+  chiediAHomeAssistant({ type: "ponte/aggiornamenti/riavvia" }, 15e3).catch((errore) => {
+    if (/socket|timeout|time out/i.test(String(errore?.message || errore))) return;
+    tasto2.disabled = false;
+    tasto2.textContent = parola;
+    try {
+      root.edToast?.(
+        t(
+          "Home Assistant non si e' riavviato: serve un utente amministratore.",
+          "Home Assistant did not restart: an administrator is needed."
+        )
+      );
+    } catch (_ignora) {
+    }
+  });
+  return true;
 }
 function pastigliaDiChiave(chiave2) {
   const cercata = clean(chiave2);
@@ -36619,15 +36680,16 @@ function disegnaLElenco() {
   const parole4 = `${testa2} ${coda}`.trim().toUpperCase();
   if (titolo3.textContent !== parole4) titolo3.textContent = parole4;
   const states = allStates() || {};
-  if (!voci4.length) {
+  const riavvio2 = chiedeIlRiavvio(pastiglia4);
+  if (!voci4.length && !riavvio2) {
     chiudiLElenco();
     return false;
   }
   if (sotto) {
-    const briciola = briciolaDellElenco(chiave2, voci4.length);
+    const briciola = voci4.length ? briciolaDellElenco(chiave2, voci4.length) : "";
     if (sotto.textContent !== briciola) sotto.textContent = briciola;
   }
-  const disegno6 = voci4.map((voce3) => rigaDellElenco(voce3, states, chiave2)).join("");
+  const disegno6 = (riavvio2 ? rigaDelRiavvio(pastiglia4) : "") + voci4.map((voce3) => rigaDellElenco(voce3, states, chiave2)).join("");
   if (elenco15.innerHTML !== disegno6) elenco15.innerHTML = disegno6;
   return true;
 }
@@ -36679,7 +36741,7 @@ function installaLAggiornamento(tasto2) {
   const parola = tasto2.textContent;
   tasto2.disabled = true;
   tasto2.textContent = t("In corso", "Installing");
-  Promise.resolve(root.dmCallHaService("update", "install", { entity_id: entita3 })).catch(
+  Promise.resolve(root.dmCallHaService("update", "install", { entity_id: entita3 })).then(() => root.dmGuardaIlRiavvio?.()).catch(
     (errore) => {
       tasto2.disabled = false;
       tasto2.textContent = parola;
@@ -36709,6 +36771,12 @@ function onClickElenco(event) {
   if (installa) {
     event.preventDefault();
     installaLAggiornamento(installa);
+    return;
+  }
+  const riavvia = event.target.closest("[data-dm-casa-riavvia]");
+  if (riavvia) {
+    event.preventDefault();
+    riavviaLaCasa(riavvia);
     return;
   }
   const tasto2 = event.target.closest("[data-dm-casa-spegni]");
@@ -66749,10 +66817,46 @@ function porteAperte(doors = [], states = {}) {
     return PORTA_APERTA.test(clean(stateOf(states, door.entity)?.state).toLowerCase());
   });
 }
+var riavvio = { serve: false, chi: [], alle: 0, inVolo: false };
+function guardaIlRiavvio(forza = false) {
+  const ora6 = Date.now();
+  if (riavvio.inVolo || !forza && ora6 - riavvio.alle < 6e4) return;
+  riavvio.inVolo = true;
+  riavvio.alle = ora6;
+  chiediAHomeAssistant({ type: "ponte/aggiornamenti/riavvio" }, 1e4).then((detto3) => {
+    const serve = detto3?.serve === true;
+    const chi = (Array.isArray(detto3?.chi) ? detto3.chi : []).map(clean).filter(Boolean);
+    const cambia = serve !== riavvio.serve || chi.join("|") !== riavvio.chi.join("|");
+    riavvio.serve = serve;
+    riavvio.chi = chi;
+    if (cambia) schedule19();
+  }).catch((errore) => {
+    if (/socket/i.test(String(errore?.message || errore))) riavvio.alle = 0;
+  }).finally(() => {
+    riavvio.inVolo = false;
+  });
+}
+function guardaIlRiavvioDopoLInstallazione() {
+  for (const dopo of [1e4, 3e4, 9e4]) setTimeout(() => guardaIlRiavvio(true), dopo);
+}
+root.dmGuardaIlRiavvio = guardaIlRiavvioDopoLInstallazione;
 function aggiornamentiModel(states) {
   const fuori = widgetExcludedEntities("aggiornamenti");
   const fila2 = aggiornamentiDaFare(states).filter((voce3) => widgetIncludes(voce3.entity, fuori));
-  if (!fila2.length) return null;
+  guardaIlRiavvio();
+  if (!fila2.length && !riavvio.serve) return null;
+  if (!fila2.length)
+    return {
+      key: "aggiornamenti",
+      accent: "#d97706",
+      icon: "🔄",
+      attiva: true,
+      label: t("Riavvio richiesto", "Restart required"),
+      value: "↻",
+      caption: riavvio.chi.length ? `${t("Per finire", "To finish")}: ${riavvio.chi.join(", ")}` : t("Per finire l'aggiornamento", "To finish the update"),
+      aggiornamenti: [],
+      riavvio: { ...riavvio }
+    };
   const primo = fila2[0];
   return {
     key: "aggiornamenti",
@@ -66774,7 +66878,8 @@ function aggiornamentiModel(states) {
      * questa tessera e' stata chiesta — e si dice a che versione va. Gli altri
      * si contano: i nomi di sei add-on in una didascalia non si leggono. */
     caption: fila2.length === 1 ? `${primo.nome}${primo.a ? ` → ${primo.a}` : ""}` : `${primo.nome} · +${fila2.length - 1}`,
-    aggiornamenti: fila2
+    aggiornamenti: fila2,
+    riavvio: { ...riavvio }
   };
 }
 function porteModel(states) {
@@ -70588,8 +70693,27 @@ function posaIlLogo(entita3, url) {
 function siInstallaDaQui(voce3) {
   return voce3?.installabile === true || voce3?.installabile === void 0;
 }
+function riavvioMarkup(widget) {
+  if (!widget.riavvio?.serve) return "";
+  const chi = widget.riavvio.chi || [];
+  return `<div class="dm-w-agg dm-w-agg-riavvio" data-dm-w-riavvio>
+      <span class="dm-w-agg-logo" aria-hidden="true">🔄</span>
+      <span class="dm-w-agg-testo">
+        <b>${esc(t("Home Assistant va riavviato", "Home Assistant needs a restart"))}</b>
+        <small>${esc(
+    chi.length ? `${t("Per finire l'aggiornamento di", "To finish updating")} ${chi.join(", ")}` : t("Per finire l'aggiornamento", "To finish the update")
+  )}</small>
+      </span>
+      <button type="button" class="dm-w-agg-via" data-dm-w-riavvia
+        title="${esc(t("Riavvia Home Assistant", "Restart Home Assistant"))}">${esc(
+    t("Riavvia", "Restart")
+  )}</button>
+    </div>`;
+}
 function aggiornamentiDetail(widget) {
   const fila2 = widget.aggiornamenti || [];
+  const inCima2 = riavvioMarkup(widget);
+  if (!fila2.length) return `<div class="dm-w-aggs">${inCima2}</div>`;
   const schede = fila2.map((voce3) => {
     const da = clean(voce3?.da);
     const a = clean(voce3?.a);
@@ -70617,7 +70741,7 @@ function aggiornamentiDetail(widget) {
     t(fila2.length === 1 ? "da installare" : "da installare", "to install")
   )}</span>
     </div>
-    <div class="dm-w-aggs">${schede}</div>`;
+    <div class="dm-w-aggs">${inCima2}${schede}</div>`;
 }
 function customDetail() {
   return "";
@@ -72119,9 +72243,42 @@ function onClick9(event) {
     aggiornamento.disabled = true;
     aggiornamento.textContent = t("In corso", "Installing");
     callHa("update", "install", { entity_id: quale }).then((esito2) => {
-      if (esito2 !== void 0) return;
+      if (esito2 !== void 0) {
+        guardaIlRiavvioDopoLInstallazione();
+        return;
+      }
       aggiornamento.disabled = false;
       aggiornamento.textContent = parola;
+    });
+    return;
+  }
+  const riavvia = event.target?.closest?.("[data-dm-w-riavvia]");
+  if (riavvia) {
+    event.preventDefault();
+    const sicuro = root.confirm?.(
+      t(
+        "Riavviare Home Assistant adesso? La casa resta ferma per circa un minuto.",
+        "Restart Home Assistant now? The house stops for about a minute."
+      )
+    );
+    if (!sicuro) return;
+    const parola = riavvia.textContent;
+    riavvia.disabled = true;
+    riavvia.textContent = t("Riavvio…", "Restarting…");
+    chiediAHomeAssistant({ type: "ponte/aggiornamenti/riavvia" }, 15e3).then(() => {
+      riavvio.serve = false;
+      riavvio.chi = [];
+      riavvio.alle = Date.now();
+    }).catch((errore) => {
+      if (/socket|timeout|time out/i.test(String(errore?.message || errore))) return;
+      riavvia.disabled = false;
+      riavvia.textContent = parola;
+      root.alert?.(
+        t(
+          "Home Assistant non si e' riavviato: serve un utente amministratore.",
+          "Home Assistant did not restart: an administrator is needed."
+        )
+      );
     });
     return;
   }
@@ -131476,6 +131633,8 @@ function altezzaDelFuoco(lettura3) {
 function ventoDellaStufa(lettura3) {
   const ventola2 = lettura3.ventilatore;
   if (!ventola2) return { gira: lettura3.brucia === true, durata: 1.4 };
+  const stufaFerma = lettura3.brucia !== true && lettura3.fase !== "spegnimento";
+  if (stufaFerma && ventola2.acceso !== true) return { gira: false, durata: 1.4 };
   const fermo = ventola2.acceso === false || ventola2.valore === 0 || ventola2.modo === "interruttore" && ventola2.acceso !== true;
   if (fermo) return { gira: false, durata: 1.4 };
   const quota = ventola2.livello != null && ventola2.quanti ? Math.min(1, ventola2.livello / ventola2.quanti) : 0.5;
@@ -132085,7 +132244,7 @@ function installStyles71() {
       background:linear-gradient(160deg,#1e293b,#0b1220);
       box-shadow:0 14px 30px -14px rgba(15,23,42,.8),inset 0 1px 0 rgba(255,255,255,.09)}
     #${PAGINA} .dm-it-plate-lbl{
-      font-size:9.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#94a3b8}
+      font-size:10.5px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:#cbd5e1}
     #${PAGINA} .dm-it-plate-val{
       font-family:'Oswald',sans-serif;font-size:27px;font-weight:500;line-height:1;
       font-variant-numeric:tabular-nums}
@@ -132479,7 +132638,12 @@ function installStyles71() {
     html[data-theme="dark"] #${PAGINA} .dm-it-stufa-riga{background:#0f172a}
     html[data-theme="dark"] #${PAGINA} .dm-it-stufa-passo{background:#1b2439;border-color:#2c3a55;color:#e2e8f0}
     html[data-theme="dark"] #${PAGINA} .dm-it-stufa-val{color:#e2e8f0}
-    html[data-theme="dark"] #${PAGINA} .dm-it-stufa-lbl{color:#93a5c0}
+    html[data-theme="dark"] #${PAGINA} .dm-it-stufa-lbl{color:#c3d0e2}
+    /* #294: «i dati sono troppo scuri e non si capiscono». Nel tema scuro le
+       targhette scure sparivano sul fondo scuro: un filo chiaro le stacca. */
+    html[data-theme="dark"] #${PAGINA} .dm-it-plate{
+      background:linear-gradient(160deg,#26344d,#111a2c);
+      box-shadow:0 14px 30px -14px rgba(0,0,0,.9),inset 0 0 0 1px rgba(148,163,184,.28)}
     html[data-theme="dark"] #${PAGINA} .dm-it-stufa-punti i{background:#334155}
     html[data-theme="dark"] #${PAGINA} .dm-it-stufa-punti i[data-on="true"]{
       background:linear-gradient(135deg,#fb923c,#ea580c)}

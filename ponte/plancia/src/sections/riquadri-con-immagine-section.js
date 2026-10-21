@@ -173,6 +173,13 @@ button.dm-rq{border:0;padding:0;margin:0;font:inherit;cursor:pointer;-webkit-tap
 #dm-widgets .dm-tile.dm-rq-fondo :where(.dm-tile-label,.dm-tile-value,.dm-tile-value *,.dm-tile-val,.dm-tile-unit,.dm-tile-misura,.dm-tile-testo,.dm-tile-caption,.dm-tile-caption *,.dm-tile-sotto,.dm-tile-sotto *,.dm-tile-scroll,.dm-tile-scroll *){color:#fff!important;-webkit-text-fill-color:#fff;opacity:1!important;text-shadow:0 1px 3px rgba(0,0,0,.7),0 0 1px rgba(0,0,0,.6)}
 #dm-widgets .dm-tile.dm-rq-fondo :is(.dm-tile-scroll,.dm-tile-caption,.dm-tile-sotto){font-size:max(13px,1em);font-weight:700}
 #dm-widgets .dm-tile.dm-rq-fondo>.dm-rq-velo{background:linear-gradient(to bottom,rgba(4,9,20,.62) 0%,rgba(4,9,20,.42) 45%,rgba(4,9,20,.82) 100%)}
+/* Lo stesso guaio sulle card della Temperatura con la foto della stanza
+ * (#294: «i dati che mostra sono troppo scuri e non si capiscono»): il foglio
+ * della Temperatura scrive nome, gradi e umidita' coi colori della card chiara
+ * e con un selettore piu' forte di quello qui sopra. Qui vincono: bianchi. */
+#temp-grid .temp-card.dm-rq-fondo :where(.cp-name,.cp-temp-current,.cp-temp-current-lbl,.cp-temp-target .lbl,.cp-temp-target .val,.dm-temp-fuori-nota){color:#fff!important;-webkit-text-fill-color:#fff;opacity:1!important;text-shadow:0 1px 3px rgba(0,0,0,.7),0 0 1px rgba(0,0,0,.6)}
+#temp-grid .temp-card.dm-rq-fondo .cp-temp-current::after{color:rgba(255,255,255,.8)!important}
+#temp-grid .temp-card.dm-rq-fondo>.dm-rq-velo{background:linear-gradient(to bottom,rgba(4,9,20,.62) 0%,rgba(4,9,20,.48) 45%,rgba(4,9,20,.84) 100%)}
 
 /* La vasca con la sua foto: il disegno della piscina lascia il posto alla
  * foto, e restano le scritte dello stato. */
