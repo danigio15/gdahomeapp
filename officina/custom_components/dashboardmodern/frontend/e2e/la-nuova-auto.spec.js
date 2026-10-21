@@ -82,6 +82,8 @@ const STATI = [
   s("binary_sensor.byd_bagagliaio", "off", "", { device_class: "opening" }),
   s("device_tracker.byd", "home"),
   s("sensor.byd_odometro", "18240", "km", { state_class: "total_increasing" }),
+  s("sensor.byd_energia_residua", "40.8", "kWh"),
+  s("binary_sensor.byd_in_sonno", "on"),
   s("number.byd_limite", "80", "%", { min: 20, max: 100, step: 1 }),
   /* la wallbox e evcc */
   s("sensor.wallbox_potenza", "3700", "W", { device_class: "power" }),
@@ -131,6 +133,8 @@ const BYD = {
   "dm.ev_bagagliaio": "binary_sensor.byd_bagagliaio",
   "dm.ev_posizione": "device_tracker.byd",
   "dm.ev_odometro": "sensor.byd_odometro",
+  "dm.ev_energia_residua": "sensor.byd_energia_residua",
+  "dm.ev_in_sonno": "binary_sensor.byd_in_sonno",
   "dm.ev_target_soc": "number.byd_limite",
   "dm.ev_potenza_wallbox": "sensor.wallbox_potenza",
   "dm.ev_stato_ricarica": "sensor.wallbox_stato",
@@ -325,7 +329,9 @@ async function avvia(page, testInfo, { tema = "dark", nuova = true, attiva = "0"
         }),
       );
       localStorage.setItem("dm_rn_aperta", "1");
-      if (nuova) localStorage.setItem("cd_auto_nuova", "1");
+      /* Senza scritto niente la pagina e' la nuova; «0» torna alla classica. */
+      if (nuova) localStorage.removeItem("cd_auto_nuova");
+      else localStorage.setItem("cd_auto_nuova", "0");
       window.cdEvApplyCar(Number(attiva));
       window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
     },
@@ -483,6 +489,11 @@ test("viaggi e stato dell'auto", async ({ page }, testInfo) => {
   /* La posteriore destra sta 0,3 bar sotto le altre: da controllare. */
   await expect(pagina.locator('.dm-na-ruota[data-tono="bassa"]')).toHaveCount(1);
   await expect(pagina.locator('[data-na-linguetta="stato"] em')).toHaveText("attenzione");
+  /* Quello che la pagina classica diceva in piu' c'e' ancora: l'auto che dorme
+   * e, fra gli altri dati, l'energia che resta. */
+  await expect(pagina.locator(".dm-na-extra .dm-termica-pillola").first()).toBeVisible();
+  await pagina.locator(".dm-na-extra .dm-auto-altri > summary").click();
+  await expect(pagina.locator(".dm-na-extra .dm-auto-altri")).toContainText("40,8");
   await nienteSborda(page);
   await foto(page, `stato-dark-${testInfo.project.name}`);
 });
@@ -498,7 +509,7 @@ test("l'auto a benzina non ha la ricarica", async ({ page }, testInfo) => {
   await foto(page, `panda-light-${testInfo.project.name}`);
 });
 
-test("senza l'interruttore la pagina e' quella di oggi", async ({ page }, testInfo) => {
+test("con la riserva accesa torna la pagina classica", async ({ page }, testInfo) => {
   await avvia(page, testInfo, { nuova: false });
   await expect(page.locator("#dm-na")).toHaveCount(0);
   await expect(page.locator("#page-ev .dm-evv-power")).toBeVisible();

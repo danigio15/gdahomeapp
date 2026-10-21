@@ -1,15 +1,15 @@
-/* La nuova pagina Auto, accesa solo per prova.
+/* La nuova pagina Auto.
  *
  * «La sezione Auto continua a non piacermi la vuoi rivedere completamente.»
  * Dalle proposte e' stata scelta la divisione in tre linguette — Ricarica,
  * Viaggi, Stato auto — con sopra il garage, se le auto sono piu' d'una, e
  * l'auto in uso col suo logo, il modello e l'autonomia in grande.
  *
- * Finche' non e' approvata la pagina di oggi resta quella di tutti: questa si
- * disegna soltanto con l'interruttore di prova acceso (`cd_auto_nuova` = "1"
- * nel deposito del browser), e allora prende il posto del contenuto vecchio
- * sotto la testata. Spento l'interruttore, la pagina torna com'era e la carta
- * della notte torna al suo posto.
+ * Approvata: e' la pagina Auto di tutti, e prende il posto del contenuto
+ * classico sotto la testata. La pagina classica resta come riserva — la si
+ * rivede solo scrivendo `cd_auto_nuova` = "0" nel deposito del browser — e
+ * allora la carta della notte torna al suo posto. Il codice classico non se ne
+ * va: lo usano ancora la scheda dell'auto nel config, le foto e il widget.
  *
  * Non rifa' niente che la plancia sappia gia' fare: i comandi sono quelli del
  * guscio (`setEVMode`, `setEVSempre`, `changeSelect`, `cdEvApplyCar`), la
@@ -56,7 +56,7 @@ import { prezzoDellaNotte } from "../core/ricarica-di-notte.js";
 import { codiceDellaRicarica, cavoDalloStato } from "../core/stato-della-ricarica.js";
 import { capacitaDellaBatteria, siRicarica, vehiclePhoto } from "../core/vehicle-model.js";
 import { activeVehicle, activeVehiclePhoto, profiles } from "./ev-section.js";
-import { motoreInPagina } from "./auto-termica-section.js";
+import { datiMarkup, motoreInPagina } from "./auto-termica-section.js";
 import { renderRicaricaDiNotte } from "./ricarica-di-notte-section.js";
 import {
   allStates,
@@ -73,7 +73,7 @@ import {
   t,
 } from "./shared.js";
 
-/** L'interruttore di prova: finche' non vale "1" la pagina e' quella di oggi. */
+/** La riserva: con "0" si torna alla pagina classica. */
 export const INTERRUTTORE_DI_PROVA = "cd_auto_nuova";
 /** La linguetta aperta: una comodita' di chi guarda, per dispositivo. */
 const CHIAVE_LINGUETTA = "dm_na_linguetta";
@@ -94,15 +94,16 @@ const state = (root[KEY] ||= {
   /* La percentuale scelta adesso: si mostra finche' l'entita' non la conferma. */
   voluta: null,
   volutaAlle: 0,
+  altriAperti: false,
 });
 
 /* ── l'interruttore ──────────────────────────────────────────────────────── */
 
 export function nuovaAutoAccesa() {
   try {
-    return root.localStorage?.getItem?.(INTERRUTTORE_DI_PROVA) === "1";
+    return root.localStorage?.getItem?.(INTERRUTTORE_DI_PROVA) !== "0";
   } catch (_errore) {
-    return false;
+    return true;
   }
 }
 
@@ -787,7 +788,14 @@ function pannelloStato(l) {
     .filter(Boolean)
     .map(([nome, valore]) => `<div class="dm-na-riga"><span>${esc(nome)}</span><b>${esc(valore)}</b></div>`)
     .join("");
-  const vuoto = !cartaGomme && !aperture && !temperature && !altri;
+  /* Quello che la pagina classica diceva in piu' — l'auto che dorme, il clima
+   * acceso, la ricarica programmata, e in fondo tutti gli altri dati mappati —
+   * si legge con le sue stesse parole: nessun dato configurato si perde. */
+  const extra = datiMarkup(d, { tipo: l.termica ? "termica" : "", aperti: state.altriAperti === true });
+  const accesi = extra.pillole.length
+    ? `<section class="dm-na-carta dm-na-extra"><h3 class="dm-na-titolo"><span>🔔</span>${esc(t("In questo momento", "Right now"))}</h3><div class="dm-na-pills">${extra.pillole.join("")}</div></section>`
+    : "";
+  const vuoto = !cartaGomme && !aperture && !temperature && !altri && !accesi && !extra.altri;
   if (vuoto)
     return `<section class="dm-na-carta"><p class="dm-na-vuoto">${esc(
       t("Nessun dato dell'auto: le caselle si scelgono nella scheda Auto del config.", "No car data: choose the fields in the Car tab of the config."),
@@ -797,7 +805,8 @@ function pannelloStato(l) {
     ${aperture ? `<section class="dm-na-carta"><h3 class="dm-na-titolo"><span>🔐</span>${esc(t("Aperture", "Openings"))}</h3><div class="dm-na-voci">${aperture}</div></section>` : ""}
     ${temperature ? `<section class="dm-na-carta"><h3 class="dm-na-titolo"><span>🌡️</span>${esc(t("Temperature", "Temperatures"))}</h3><div class="dm-na-totali dm-na-totali-due">${temperature}</div></section>` : ""}
     ${altri ? `<section class="dm-na-carta"><h3 class="dm-na-titolo"><span>🧾</span>${esc(t("L'auto", "The car"))}</h3>${altri}</section>` : ""}
-  </div>`;
+    ${accesi}
+  </div>${extra.altri ? `<div class="dm-na-extra">${extra.altri}</div>` : ""}`;
 }
 
 /* ── lo storico, chiesto a Home Assistant ───────────────────────────────── */
@@ -883,6 +892,14 @@ function contenitore(page) {
     box.addEventListener("click", alTocco);
     box.addEventListener("input", alCursore);
     box.addEventListener("change", alCambio);
+    /* «Altri dati» aperto resta aperto: il disegno si rifa' a ogni stato. */
+    box.addEventListener(
+      "toggle",
+      (evento) => {
+        if (evento.target?.classList?.contains?.("dm-auto-altri")) state.altriAperti = Boolean(evento.target.open);
+      },
+      true,
+    );
   }
   if (box.parentElement !== page) {
     const testata = page.querySelector(":scope > .dm-page-mast");
@@ -1360,6 +1377,10 @@ function stile() {
   ${P} .dm-na-riga:last-child{border:0}
   ${P} .dm-na-riga span{font-weight:700;color:var(--text-dim,#64748b)}
   ${P} .dm-na-riga b{font-weight:900;color:var(--text,#0f172a);text-align:right}
+
+  /* gli altri dati, con le vesti della pagina classica */
+  ${P} .dm-na-extra details.dm-auto-altri{border-radius:22px}
+  ${P} .dm-na-extra .dm-termica-pillola{font-size:12px}
 
   /* il telefono */
   @media (max-width:760px){

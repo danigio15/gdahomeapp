@@ -26,6 +26,10 @@ export async function bootNamespacedDashboard(page, variant, testInfo, seed) {
       };
 
       setIfMissing("dm_dashboard_state", JSON.stringify(dashboardSeed));
+      /* La pagina Auto classica: dalla nuova pagina (approvata) e' la riserva,
+       * e le prove scritte per lei la guardano ancora. La nuova ha le sue
+       * prove (`la-nuova-auto.spec.js`), che l'accendono da se'. */
+      setIfMissing("cd_auto_nuova", "0");
       setIfMissing(
         "cd_connection",
         JSON.stringify({

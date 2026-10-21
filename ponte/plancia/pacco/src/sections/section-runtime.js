@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-GKI3QN25.js";
+} from "../../chunk-2I5SMO34.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -127841,13 +127841,14 @@ var state146 = root[KEY150] ||= {
   km: { chiave: "", stato: "vuoto", dati: null },
   /* La percentuale scelta adesso: si mostra finche' l'entita' non la conferma. */
   voluta: null,
-  volutaAlle: 0
+  volutaAlle: 0,
+  altriAperti: false
 };
 function nuovaAutoAccesa() {
   try {
-    return root.localStorage?.getItem?.(INTERRUTTORE_DI_PROVA) === "1";
+    return root.localStorage?.getItem?.(INTERRUTTORE_DI_PROVA) !== "0";
   } catch (_errore) {
-    return false;
+    return true;
   }
 }
 function linguettaScelta() {
@@ -128391,7 +128392,9 @@ function pannelloStato(l) {
     typeof d.batteriaServizio === "number" ? [t("Batteria 12 V", "12 V battery"), `${formatNumber(d.batteriaServizio, 1)} ${d.batteriaServizioUnita}`] : null,
     Number.isFinite(d.ultimoAggiornamento) ? [t("Aggiornata", "Updated"), istanteDetto(d.ultimoAggiornamento, { lingua: locale() })] : null
   ].filter(Boolean).map(([nome, valore3]) => `<div class="dm-na-riga"><span>${esc(nome)}</span><b>${esc(valore3)}</b></div>`).join("");
-  const vuoto6 = !cartaGomme && !aperture && !temperature && !altri;
+  const extra = datiMarkup(d, { tipo: l.termica ? "termica" : "", aperti: state146.altriAperti === true });
+  const accesi = extra.pillole.length ? `<section class="dm-na-carta dm-na-extra"><h3 class="dm-na-titolo"><span>🔔</span>${esc(t("In questo momento", "Right now"))}</h3><div class="dm-na-pills">${extra.pillole.join("")}</div></section>` : "";
+  const vuoto6 = !cartaGomme && !aperture && !temperature && !altri && !accesi && !extra.altri;
   if (vuoto6)
     return `<section class="dm-na-carta"><p class="dm-na-vuoto">${esc(
       t("Nessun dato dell'auto: le caselle si scelgono nella scheda Auto del config.", "No car data: choose the fields in the Car tab of the config.")
@@ -128401,7 +128404,8 @@ function pannelloStato(l) {
     ${aperture ? `<section class="dm-na-carta"><h3 class="dm-na-titolo"><span>🔐</span>${esc(t("Aperture", "Openings"))}</h3><div class="dm-na-voci">${aperture}</div></section>` : ""}
     ${temperature ? `<section class="dm-na-carta"><h3 class="dm-na-titolo"><span>🌡️</span>${esc(t("Temperature", "Temperatures"))}</h3><div class="dm-na-totali dm-na-totali-due">${temperature}</div></section>` : ""}
     ${altri ? `<section class="dm-na-carta"><h3 class="dm-na-titolo"><span>🧾</span>${esc(t("L'auto", "The car"))}</h3>${altri}</section>` : ""}
-  </div>`;
+    ${accesi}
+  </div>${extra.altri ? `<div class="dm-na-extra">${extra.altri}</div>` : ""}`;
 }
 var RIPROVA_MS = 3e4;
 var FRESCO_MS2 = 5 * 6e4;
@@ -128472,6 +128476,13 @@ function contenitore3(page2) {
     box.addEventListener("click", alTocco4);
     box.addEventListener("input", alCursore2);
     box.addEventListener("change", alCambio4);
+    box.addEventListener(
+      "toggle",
+      (evento) => {
+        if (evento.target?.classList?.contains?.("dm-auto-altri")) state146.altriAperti = Boolean(evento.target.open);
+      },
+      true
+    );
   }
   if (box.parentElement !== page2) {
     const testata5 = page2.querySelector(":scope > .dm-page-mast");
@@ -128934,6 +128945,10 @@ function stile6() {
   ${P8} .dm-na-riga:last-child{border:0}
   ${P8} .dm-na-riga span{font-weight:700;color:var(--text-dim,#64748b)}
   ${P8} .dm-na-riga b{font-weight:900;color:var(--text,#0f172a);text-align:right}
+
+  /* gli altri dati, con le vesti della pagina classica */
+  ${P8} .dm-na-extra details.dm-auto-altri{border-radius:22px}
+  ${P8} .dm-na-extra .dm-termica-pillola{font-size:12px}
 
   /* il telefono */
   @media (max-width:760px){
