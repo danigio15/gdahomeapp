@@ -1589,19 +1589,65 @@ export function stringiIlNumero(nodo, misuraDelCarattere) {
    * nuovo. */
   if (!spazio) return false;
   nodo[FIRMA_DELLA_STRETTA] = testo;
+  /* La misura sua — quella che gli servirebbe da solo — si ricorda: le bolle
+   * dei carichi poi si mettono tutte d'accordo sulla piu' piccola
+   * (`stessaMisuraPerIcarichi`). */
+  nodo[MISURA_SUA] = 0;
   if (!testo.trim()) return false;
+  const base = Number(misuraDelCarattere?.(nodo)) || 0;
   /* Un punto di tolleranza: i mezzi pixel di un'arrotondatura non sono un
    * testo che non ci sta. */
-  if (!largo || largo <= spazio + 1) return false;
-  const base = Number(misuraDelCarattere?.(nodo)) || 0;
+  nodo[MISURA_DEL_FOGLIO] = base;
+  if (!largo || largo <= spazio + 1) {
+    nodo[MISURA_SUA] = base;
+    return false;
+  }
   if (!base) return false;
   const quanto = Math.max(spazio / largo, QUANTO_AL_PIU_SI_STRINGE);
   /* «important», e non e' un vezzo: il foglio la misura del carattere delle
    * bolle la scrive cosi' («#view-ist .node span { font-size: 15px !important
    * }», per non far esplodere il cerchio), e una riga in linea senza la stessa
    * forza perderebbe. Misurato: la stretta si scriveva e non si vedeva. */
-  nodo.style.setProperty("font-size", `${Math.floor(base * quanto * 10) / 10}px`, "important");
+  const misura = Math.floor(base * quanto * 10) / 10;
+  nodo.style.setProperty("font-size", `${misura}px`, "important");
+  nodo[MISURA_SUA] = misura;
   return true;
+}
+
+const MISURA_SUA = "__dmMisuraSua";
+const MISURA_DEL_FOGLIO = "__dmMisuraDelFoglio";
+
+/* «Secondo quale logica un cerchio solitario e' diverso come dimensione
+ * testo.» Ognuno si stringeva per conto suo: «4,7 kWh» e' corto e restava
+ * grande, «206,6 kWh» accanto si stringeva, e la fila sembrava scritta con
+ * due caratteri. Le bolle dei carichi della stessa vista si mettono
+ * d'accordo: tutte alla misura della piu' stretta. */
+export function stessaMisuraPerIcarichi(nodi) {
+  const gruppi = new Map();
+  for (const nodo of nodi) {
+    const bolla = nodo?.closest?.(".n-load");
+    const misura = Number(nodo?.[MISURA_SUA]) || 0;
+    if (!bolla || !misura) continue;
+    /* Solo i numeri (e il trattino di chi non ne ha): le icone no. */
+    if (!/[\d—–]/.test(String(nodo.textContent ?? ""))) continue;
+    const vista = bolla.closest?.("[id^='view-']") || bolla.parentElement;
+    if (!gruppi.has(vista)) gruppi.set(vista, []);
+    gruppi.get(vista).push({ nodo, misura });
+  }
+  let tocchi = 0;
+  for (const voci of gruppi.values()) {
+    const minima = Math.min(...voci.map((voce) => voce.misura));
+    for (const { nodo } of voci) {
+      /* Alla misura del foglio non serve scriverla: si toglie. */
+      const voluta = minima >= (Number(nodo[MISURA_DEL_FOGLIO]) || 0) ? "" : `${minima}px`;
+      const adesso = nodo.style?.getPropertyValue?.("font-size") || "";
+      if (voluta === adesso) continue;
+      if (voluta) nodo.style.setProperty("font-size", voluta, "important");
+      else nodo.style.removeProperty("font-size");
+      tocchi += 1;
+    }
+  }
+  return tocchi;
 }
 
 /* Quanto e' largo il cerchio all'altezza del numero.
@@ -1639,6 +1685,7 @@ export function adattaINumeriDelleBolle(targetDocument = doc) {
   if (!nodi) return 0;
   let tocchi = 0;
   for (const nodo of nodi) if (stringiIlNumero(nodo, misuraDalFoglio)) tocchi += 1;
+  tocchi += stessaMisuraPerIcarichi(nodi);
   return tocchi;
 }
 

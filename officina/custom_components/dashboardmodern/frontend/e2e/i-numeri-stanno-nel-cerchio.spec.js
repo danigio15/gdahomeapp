@@ -162,6 +162,17 @@ test("i kWh delle stanze stanno dentro il cerchio", async ({ page }, testInfo) =
   console.log(JSON.stringify(misure));
   expect(misure.length).toBeGreaterThan(0);
   expect(misure.filter((m) => m.fuori > 0)).toEqual([]);
+  /* E tutti della stessa misura: «secondo quale logica un cerchio solitario e'
+   * diverso come dimensione testo». «23,4 kWh» e' piu' corto di «206,6 kWh»,
+   * ma si scrive uguale. */
+  const misureDelCarattere = await page.evaluate(() => [
+    ...new Set(
+      [...document.querySelectorAll("#view-day .n-load span:not(.node-label):not(.node-icon)")]
+        .filter((n) => /kWh/.test(n.textContent) && n.getClientRects().length)
+        .map((n) => getComputedStyle(n).fontSize),
+    ),
+  ]);
+  expect(misureDelCarattere).toHaveLength(1);
   if (process.env.DM_FOTO)
     await page
       .locator("#view-day .flow-stage")

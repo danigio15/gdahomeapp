@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-2PMCBWCK.js";
+} from "../../chunk-YFQNZAES.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -80296,13 +80296,47 @@ function stringiIlNumero(nodo2, misuraDelCarattere) {
   const spazio = Math.min(Number(nodo2.clientWidth) || 0, cordaDelCerchio(nodo2) ?? Infinity);
   if (!spazio) return false;
   nodo2[FIRMA_DELLA_STRETTA] = testo4;
+  nodo2[MISURA_SUA] = 0;
   if (!testo4.trim()) return false;
-  if (!largo || largo <= spazio + 1) return false;
   const base = Number(misuraDelCarattere?.(nodo2)) || 0;
+  nodo2[MISURA_DEL_FOGLIO] = base;
+  if (!largo || largo <= spazio + 1) {
+    nodo2[MISURA_SUA] = base;
+    return false;
+  }
   if (!base) return false;
   const quanto = Math.max(spazio / largo, QUANTO_AL_PIU_SI_STRINGE);
-  nodo2.style.setProperty("font-size", `${Math.floor(base * quanto * 10) / 10}px`, "important");
+  const misura7 = Math.floor(base * quanto * 10) / 10;
+  nodo2.style.setProperty("font-size", `${misura7}px`, "important");
+  nodo2[MISURA_SUA] = misura7;
   return true;
+}
+var MISURA_SUA = "__dmMisuraSua";
+var MISURA_DEL_FOGLIO = "__dmMisuraDelFoglio";
+function stessaMisuraPerIcarichi(nodi) {
+  const gruppi2 = /* @__PURE__ */ new Map();
+  for (const nodo2 of nodi) {
+    const bolla = nodo2?.closest?.(".n-load");
+    const misura7 = Number(nodo2?.[MISURA_SUA]) || 0;
+    if (!bolla || !misura7) continue;
+    if (!/[\d—–]/.test(String(nodo2.textContent ?? ""))) continue;
+    const vista2 = bolla.closest?.("[id^='view-']") || bolla.parentElement;
+    if (!gruppi2.has(vista2)) gruppi2.set(vista2, []);
+    gruppi2.get(vista2).push({ nodo: nodo2, misura: misura7 });
+  }
+  let tocchi = 0;
+  for (const voci4 of gruppi2.values()) {
+    const minima = Math.min(...voci4.map((voce3) => voce3.misura));
+    for (const { nodo: nodo2 } of voci4) {
+      const voluta = minima >= (Number(nodo2[MISURA_DEL_FOGLIO]) || 0) ? "" : `${minima}px`;
+      const adesso2 = nodo2.style?.getPropertyValue?.("font-size") || "";
+      if (voluta === adesso2) continue;
+      if (voluta) nodo2.style.setProperty("font-size", voluta, "important");
+      else nodo2.style.removeProperty("font-size");
+      tocchi += 1;
+    }
+  }
+  return tocchi;
 }
 var BORDO_E_ARIA = 9;
 function cordaDelCerchio(nodo2) {
@@ -80326,6 +80360,7 @@ function adattaINumeriDelleBolle(targetDocument = doc) {
   if (!nodi) return 0;
   let tocchi = 0;
   for (const nodo2 of nodi) if (stringiIlNumero(nodo2, misuraDalFoglio)) tocchi += 1;
+  tocchi += stessaMisuraPerIcarichi(nodi);
   return tocchi;
 }
 function mostraBolleDellImpianto(impianto) {
