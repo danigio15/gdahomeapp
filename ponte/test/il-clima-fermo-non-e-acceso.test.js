@@ -88,3 +88,71 @@ test("finestra aperta: un termostato in «heat» ma fermo non e' un clima acceso
   stati.set("climate.sala", { state: "heat", dal: 0, attributes: { hvac_action: "heating" } });
   assert.equal(finestraClima(vista).length, 1);
 });
+
+/* «Sul clima devi vedere il discorso termostato, e' questo il problema
+ * reale.» Una valvola o un cronotermostato stanno in «heat» tutto l'inverno:
+ * non e' un clima lasciato acceso. */
+import { Sentinella, eUnTermostato, termostatoCheScalda } from "../src/sentinella.js";
+
+const VALVOLA = { hvac_modes: ["off", "heat"], current_temperature: 21, temperature: 21 };
+
+test("la valvola del termosifone e' un termostato; il condizionatore no", () => {
+  assert.equal(eUnTermostato(clima("heat", VALVOLA)), true);
+  assert.equal(eUnTermostato(clima("cool", { hvac_modes: ["off", "cool", "heat", "dry"] })), false);
+  assert.equal(
+    eUnTermostato(clima("heat", { hvac_modes: ["off", "heat", "cool"] }), { type: "termo" }),
+    true,
+  );
+});
+
+test("un termostato scalda solo se lo dice, o se la stanza e' sotto l'obiettivo", () => {
+  assert.equal(termostatoCheScalda(clima("heat", VALVOLA)), false);
+  assert.equal(termostatoCheScalda(clima("heat", { ...VALVOLA, current_temperature: 19 })), true);
+  assert.equal(termostatoCheScalda(clima("heat", { ...VALVOLA, hvac_action: "heating" })), true);
+  assert.equal(
+    termostatoCheScalda(
+      clima("heat", { ...VALVOLA, hvac_action: "idle", current_temperature: 18 }),
+    ),
+    false,
+  );
+  /* Per la regola generale una valvola in «heat» senza hvac_action era accesa. */
+  assert.equal(climaAcceso("climate.valvola", clima("heat", VALVOLA)), false);
+});
+
+test("con la casa vuota la valvola che scalda non e' «clima acceso»", () => {
+  const dette = [];
+  const zero = Date.parse("2026-10-21T08:00:00Z");
+  let ora = zero;
+  const sentinella = new Sentinella({ adesso: () => ora, quando: (e) => dette.push(e) });
+  sentinella.carica([
+    {
+      entity_id: "climate.valvola_bagno",
+      state: "heat",
+      attributes: { ...VALVOLA, hvac_action: "heating" },
+    },
+    { entity_id: "person.persona_1", state: "not_home", attributes: {} },
+  ]);
+  sentinella.casaVuota = () => true;
+  ora = zero + 3 * 60 * 60 * 1000;
+  sentinella._durate();
+  assert.equal(dette.filter((e) => /clima/i.test(JSON.stringify(e))).length, 0);
+});
+
+test("il condizionatore lasciato acceso a casa vuota invece si dice", () => {
+  const dette = [];
+  const zero = Date.parse("2026-10-21T08:00:00Z");
+  let ora = zero;
+  const sentinella = new Sentinella({ adesso: () => ora, quando: (e) => dette.push(e) });
+  sentinella.carica([
+    {
+      entity_id: "climate.sala",
+      state: "cool",
+      attributes: { hvac_modes: ["off", "cool", "heat"], hvac_action: "cooling" },
+    },
+    { entity_id: "person.persona_1", state: "not_home", attributes: {} },
+  ]);
+  sentinella.casaVuota = () => true;
+  ora = zero + 3 * 60 * 60 * 1000;
+  sentinella._durate();
+  assert.ok(dette.some((e) => /clima/i.test(JSON.stringify(e))));
+});

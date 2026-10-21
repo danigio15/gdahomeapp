@@ -52,6 +52,8 @@ import {
 import { laPappa, normalizzaAnimali } from "../plancia/src/core/animali-model.js";
 import { CHIAVE_CITOFONO, normalizzaIngresso } from "../plancia/src/core/citofono-e-posta.js";
 import { accesoPerIlConsumo } from "../plancia/src/core/consumo-del-clima.js";
+import { canonicalClimateType } from "../plancia/src/core/device-model.js";
+import { eUnTermostatoACoppia } from "../plancia/src/core/i-due-obiettivi-del-clima.js";
 import { righeDichiarate } from "../plancia/src/core/elenco-dichiarato.js";
 import {
   CAMPI_IN_PIU,
@@ -381,7 +383,49 @@ export function climaAcceso(id, stato, unita = [], statoDi = () => undefined) {
     const daiWatt = accesoPerIlConsumo(sua, { [presa]: statoDi(presa) });
     if (daiWatt !== null) return daiWatt;
   }
+  if (eUnTermostato(stato, sua)) return termostatoCheScalda(stato);
   return climaCheLavora(stato);
+}
+
+/* Le modalita' di chi raffresca: chi ne ha una e' un condizionatore o una
+ * pompa di calore, non un termostato del riscaldamento. */
+const MODI_DEL_FREDDO = new Set(["cool", "dry", "fan_only", "heat_cool"]);
+
+/**
+ * Un termostato: la valvola del termosifone, il cronotermostato della
+ * caldaia, il termostato a coppia.
+ *
+ * «Sul clima devi vedere il discorso termostato, e' questo il problema
+ * reale.» Un termostato sta in «heat» tutto l'inverno, giorno e notte, e
+ * questo e' il suo mestiere: non e' un clima lasciato acceso. Si riconosce dal
+ * tipo scritto nella plancia (`termo` nel Clima), dalle modalita' (scalda e
+ * basta: nessuna del freddo) o dai due obiettivi del termostato a coppia.
+ */
+export function eUnTermostato(stato, unita = null) {
+  if (unita && canonicalClimateType(unita.type) === "termo") return true;
+  const attributi = stato?.attributes || {};
+  if (eUnTermostatoACoppia(attributi)) return true;
+  const modi = Array.isArray(attributi.hvac_modes)
+    ? attributi.hvac_modes.map((m) => String(m).toLowerCase())
+    : [];
+  return modi.includes("heat") && !modi.some((m) => MODI_DEL_FREDDO.has(m));
+}
+
+/**
+ * Se un termostato sta scaldando adesso — non se e' in «heat». Lo dice
+ * `hvac_action`; chi non lo pubblica (tante valvole) scalda solo se la stanza
+ * e' sotto l'obiettivo di almeno mezzo grado, come nel riepilogo della sera.
+ */
+export function termostatoCheScalda(stato) {
+  const modo = String(stato?.state ?? "").toLowerCase();
+  if (["off", "unavailable", "unknown", ""].includes(modo)) return false;
+  const attributi = stato?.attributes || {};
+  const azione = String(attributi.hvac_action ?? "").toLowerCase();
+  if (azione) return ["heating", "preheating", "cooling"].includes(azione);
+  const adesso = Number(attributi.current_temperature);
+  const obiettivo = Number(attributi.temperature);
+  if (!Number.isFinite(adesso) || !Number.isFinite(obiettivo)) return false;
+  return adesso < obiettivo - 0.5;
 }
 
 /* Le unita' del clima della plancia, scritte come lista o come testo JSON. */
@@ -1846,7 +1890,15 @@ export class Sentinella {
           luciDa = Math.min(luciDa, stato.dal);
         }
       }
-      if (vuota === true && dominio === "climate" && this._climaAcceso(id, stato)) {
+      /* Con la casa vuota si dice il clima lasciato acceso, non il
+       * riscaldamento che tiene la temperatura col suo programma: un
+       * termostato che scalda a casa vuota fa il suo mestiere. */
+      if (
+        vuota === true &&
+        dominio === "climate" &&
+        !this._eUnTermostato(id, stato) &&
+        this._climaAcceso(id, stato)
+      ) {
         climiAccesi.push(id);
         climaDa = Math.min(climaDa, stato.dal);
       }
@@ -1949,6 +2001,12 @@ export class Sentinella {
 
   /* Quello che le regole dell'assistente vedono adesso: la vista di
    * `l-assistente-al-telefono.js`. */
+  /* Un termostato, col tipo scritto nella plancia quando c'e'. */
+  _eUnTermostato(id, stato) {
+    const sua = unitaDelClima(this._valori()).find((u) => String(u?.entity ?? "").trim() === id);
+    return eUnTermostato(stato, sua);
+  }
+
   /* Il clima acceso, coi watt della presa quando la plancia ne ha una. */
   _climaAcceso(id, stato) {
     return climaAcceso(id, stato, unitaDelClima(this._valori()), (presa) => this.stati.get(presa));
