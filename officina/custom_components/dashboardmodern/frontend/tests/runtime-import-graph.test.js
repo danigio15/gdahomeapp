@@ -1583,8 +1583,10 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 477 con le bollette (#295): `core/le-bollette.js`, quali sensori del
   // fornitore sono l'ultima bolletta, il da pagare e lo stato del pagamento,
   // e `sections/la-bolletta-section.js`, la linguetta Bollette in Energia.
+  // 478 coi fornitori di energia: `sections/i-fornitori-di-energia-section.js`,
+  // la scheda che collega E.ON ed ENGIE dentro l'integrazione GdAHome.
   assert.ok(
-    relative.length <= 477,
+    relative.length <= 478,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

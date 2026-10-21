@@ -181,6 +181,7 @@ import { installMeteoEditor } from "./meteo-editor-section.js";
 import { installAcquario } from "./acquario-section.js";
 import { installAccumuloInEnergia } from "./accumulo-in-energia-section.js";
 import { installLaBolletta } from "./la-bolletta-section.js";
+import { installIFornitoriDiEnergia } from "./i-fornitori-di-energia-section.js";
 import { installAccumuloEditor } from "./accumulo-editor-section.js";
 import { installMacchine } from "./macchine-e-rete-section.js";
 import { installMacchineEditor } from "./macchine-editor-section.js";
@@ -1247,6 +1248,7 @@ export function installSectionRuntime() {
      * scheda, nello stesso ordine. */
     senzaCadere(installAccumuloInEnergia);
     senzaCadere(installLaBolletta);
+    senzaCadere(installIFornitoriDiEnergia);
     senzaCadere(installAccumuloEditor);
     senzaCadere(installMacchine);
     senzaCadere(installMacchineEditor);
@@ -1384,6 +1386,7 @@ export function installSectionRuntime() {
         "accumulo",
         "accumulo-editor",
         "bollette",
+        "fornitori",
         "macchine-e-rete",
         "macchine-editor",
       ]),
