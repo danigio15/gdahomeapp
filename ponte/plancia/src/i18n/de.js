@@ -3438,7 +3438,6 @@ export default Object.freeze({
   "This session": "Dieser Ladevorgang",
   "Trips": "Fahrten",
   "unlocked": "entriegelt",
-  "updated": "aktualisiert",
   "Updated": "Aktualisiert",
   "Wallbox · evcc": "Wallbox · evcc",
   "Wallbox error": "Wallbox-Fehler",

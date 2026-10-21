@@ -3419,7 +3419,6 @@ export default Object.freeze({
   "This session": "今回の充電",
   "Trips": "走行",
   "unlocked": "ロック解除",
-  "updated": "更新",
   "Updated": "更新",
   "Wallbox · evcc": "Wallbox · evcc",
   "Wallbox error": "ウォールボックスのエラー",

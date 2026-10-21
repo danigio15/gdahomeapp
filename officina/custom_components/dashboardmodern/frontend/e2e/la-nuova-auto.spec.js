@@ -8,16 +8,20 @@
  *
  * Senza l'interruttore la pagina e' quella di sempre: anche questo si prova.
  */
+import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
 
 test.use({ timezoneId: "Europe/Rome", locale: "it-IT" });
 
 /* Un SUV di profilo, disegnato: nessuna foto vera, nessuna targa. */
-const FOTO =
-  "data:image/svg+xml;base64," +
-  Buffer.from(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560">
+/* Per le foto da far vedere si puo' passare una fotografia vera
+ * (DM_FOTO_AUTO=percorso di un .jpg); le prove usano il disegno. */
+const FOTO = process.env.DM_FOTO_AUTO
+  ? `data:image/jpeg;base64,${readFileSync(process.env.DM_FOTO_AUTO).toString("base64")}`
+  : "data:image/svg+xml;base64," +
+    Buffer.from(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560">
       <defs><linearGradient id="c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8edf3"/><stop offset="1" stop-color="#9aa7b8"/></linearGradient>
       <linearGradient id="v" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f2a3a"/><stop offset="1" stop-color="#3b4a60"/></linearGradient></defs>
       <path d="M140 400 C140 330 170 300 250 290 L380 210 C420 186 470 178 540 178 L760 178 C830 178 880 196 930 236 L1000 290 C1060 300 1080 330 1080 400 L1080 420 L140 420 Z" fill="url(#c)"/>
@@ -27,7 +31,7 @@ const FOTO =
       <circle cx="320" cy="420" r="70" fill="#1d232c"/><circle cx="320" cy="420" r="40" fill="#8d97a5"/>
       <circle cx="900" cy="420" r="70" fill="#1d232c"/><circle cx="900" cy="420" r="40" fill="#8d97a5"/>
     </svg>`,
-  ).toString("base64");
+    ).toString("base64");
 
 const SEME = {
   schema_version: 4,
@@ -151,7 +155,8 @@ const AUTO = [
     uid: "auto-1",
     name: "SUV di casa",
     brand: "BYD",
-    model: "Atto 3",
+    /* Il modello scelto dall'elenco porta gia' la marca: si scrive una volta. */
+    model: "BYD Atto 3",
     tipo: "",
     kwh: "60",
     img: FOTO,
@@ -409,7 +414,7 @@ for (const tema of ["dark", "light"])
     );
     await expect(pagina.locator(".dm-na-garage-auto").nth(2)).toContainText("40%");
     /* L'eroe: logo, modello, autonomia, batteria, in carica. */
-    await expect(pagina.locator(".dm-na-eroe-nome")).toContainText("BYD Atto 3");
+    await expect(pagina.locator(".dm-na-eroe-nome b")).toHaveText("BYD Atto 3");
     await expect(pagina.locator(".dm-na-eroe-nome")).toContainText("SUV di casa");
     await expect(pagina.locator(".dm-na-autonomia")).toContainText("262");
     await expect(pagina.locator(".dm-na-stato")).toContainText("In carica · 3,70 kW");
@@ -504,7 +509,7 @@ test("l'auto a benzina non ha la ricarica", async ({ page }, testInfo) => {
   await pagina.locator('[data-na-auto="2"]').click();
   await expect(pagina.locator(".dm-na-eroe-nome")).toContainText("Fiat Panda");
   await expect(pagina.locator('[data-na-linguetta="ricarica"]')).toHaveCount(0);
-  await expect(pagina.locator(".dm-na-batteria[data-tipo='carburante']")).toContainText("40");
+  await expect(pagina.locator(".dm-na-dato[data-tipo='carburante']")).toContainText("40");
   await nienteSborda(page);
   await foto(page, `panda-light-${testInfo.project.name}`);
 });

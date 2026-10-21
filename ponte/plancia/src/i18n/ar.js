@@ -3393,7 +3393,6 @@ export default Object.freeze({
   "This session": "هذه الشحنة",
   "Trips": "الرحلات",
   "unlocked": "غير مقفلة",
-  "updated": "حُدّثت",
   "Updated": "حُدّثت",
   "Wallbox · evcc": "Wallbox · evcc",
   "Wallbox error": "خطأ في شاحن الحائط",

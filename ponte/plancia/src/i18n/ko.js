@@ -3411,7 +3411,6 @@ export default Object.freeze({
   "This session": "이번 충전",
   "Trips": "주행",
   "unlocked": "잠금 해제",
-  "updated": "업데이트",
   "Updated": "업데이트됨",
   "Wallbox · evcc": "Wallbox · evcc",
   "Wallbox error": "월박스 오류",

@@ -3448,7 +3448,6 @@ export default Object.freeze({
   "This session": "Cette recharge",
   "Trips": "Trajets",
   "unlocked": "déverrouillées",
-  "updated": "mise à jour",
   "Updated": "Mise à jour",
   "Wallbox · evcc": "Wallbox · evcc",
   "Wallbox error": "Erreur de la wallbox",

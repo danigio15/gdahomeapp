@@ -1578,7 +1578,7 @@ export function stringiIlNumero(nodo, misuraDelCarattere) {
    * deve tornare grande, o la bolla resterebbe rimpicciolita per sempre. */
   nodo.style?.removeProperty?.("font-size");
   const largo = Number(nodo.scrollWidth) || 0;
-  const spazio = Number(nodo.clientWidth) || 0;
+  const spazio = Math.min(Number(nodo.clientWidth) || 0, cordaDelCerchio(nodo) ?? Infinity);
   /* La firma si mette solo dopo aver misurato davvero.
    *
    * Una pagina che non e' in vista non ha larghezze: tutto zero. Il primo giro
@@ -1602,6 +1602,29 @@ export function stringiIlNumero(nodo, misuraDelCarattere) {
    * forza perderebbe. Misurato: la stretta si scriveva e non si vedeva. */
   nodo.style.setProperty("font-size", `${Math.floor(base * quanto * 10) / 10}px`, "important");
   return true;
+}
+
+/* Quanto e' largo il cerchio all'altezza del numero.
+ *
+ * «I valori ora toccano i cerchi.» La misura di sopra guardava la scatola del
+ * numero, che e' larga quanto il quadrato della bolla; ma la bolla e' tonda, e
+ * il numero sta sotto il centro, dove la corda e' piu' corta del lato:
+ * «206,6 kWh» ci stava nel quadrato e toccava il bordo. Qui si prende la riga
+ * del numero piu' lontana dal centro e si misura la corda li', tolto il bordo
+ * e un filo d'aria. `null` quando non c'e' una bolla da misurare: allora vale
+ * la scatola, come prima. */
+const BORDO_E_ARIA = 9;
+function cordaDelCerchio(nodo) {
+  const bolla = nodo?.closest?.(".node");
+  if (!bolla?.getBoundingClientRect || !nodo.getBoundingClientRect) return null;
+  const b = bolla.getBoundingClientRect();
+  const t = nodo.getBoundingClientRect();
+  if (!b.width || !t.height) return null;
+  const r = b.width / 2 - BORDO_E_ARIA;
+  const cy = b.top + b.height / 2;
+  const dy = Math.max(Math.abs(t.top - cy), Math.abs(t.bottom - cy));
+  if (r <= 0) return null;
+  return dy >= r ? 0 : 2 * Math.sqrt(r * r - dy * dy);
 }
 
 /* La misura del carattere che il foglio ha dato a questo nodo. */

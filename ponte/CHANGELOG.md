@@ -10,6 +10,21 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.16.8
+
+- **Auto, la card in alto:** la foto in copertina, pulita; marchio e modello
+  in una riga loro sotto la foto (sul computer accanto), il modello scritto
+  una volta sola anche quando contiene già la marca; sotto, in fila,
+  autonomia, batteria e km all'obiettivo.
+- **Energia:** i numeri dentro i cerchi non toccano più il bordo.
+- **Notifica di prova del movimento:** usa la telecamera scelta, l'ora di
+  adesso e porta la sua foto.
+- **Navigatore:** segnaposto arancio e più grande; la freccia allo svincolo
+  resta dentro la linea; in autostrada niente «Calcolo il percorso» e lo zoom
+  segue la strada; all'arrivo «Sei arrivato» col riepilogo del viaggio e la
+  bandiera a scacchi; il costo vero del viaggio in elettrico, con la ricarica
+  di casa e le soste pagate per strada.
+
 ## 1.16.7
 
 - **Auto, la pagina nuova:** in alto il garage con tutte le auto di casa, col

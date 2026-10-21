@@ -3420,7 +3420,6 @@ export default Object.freeze({
   "This session": "Bu şarj",
   "Trips": "Yolculuklar",
   "unlocked": "kilidi açık",
-  "updated": "güncellendi",
   "Updated": "Güncellendi",
   "Wallbox · evcc": "Wallbox · evcc",
   "Wallbox error": "Wallbox hatası",
