@@ -38,6 +38,48 @@ const SEME = {
 async function conEvcc(page, testInfo, { stato, options, sempre }) {
   test.setTimeout(150_000);
   await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
+  /* Una presa finta che resta aperta dall'avvio. Senza, il guscio provava la
+   * presa vera, che non risponde, e cinque secondi dopo si ricollegava da
+   * solo: la presa finta messa a mano qui sotto veniva sostituita a meta'
+   * prova, e il comando premuto in quel momento non arrivava mai. */
+  await page.addInitScript(() => {
+    class PresaFinta extends EventTarget {
+      static OPEN = 1;
+      readyState = 1;
+      onopen = null;
+      onmessage = null;
+      onclose = null;
+      constructor() {
+        super();
+        queueMicrotask(() => {
+          this.onopen?.({});
+          this.onmessage?.({ data: JSON.stringify({ type: "auth_ok" }) });
+        });
+      }
+      send(grezzo) {
+        const messaggio = JSON.parse(grezzo);
+        if (messaggio.type === "auth") return;
+        (window.__MANDATO__ ||= []).push(messaggio);
+        let risultato = null;
+        if (messaggio.type === "get_states") risultato = [];
+        else if (messaggio.type === "frontend/get_user_data") risultato = { value: null };
+        else if (messaggio.type === "call_service") risultato = {};
+        queueMicrotask(() =>
+          this.onmessage?.({
+            data: JSON.stringify({
+              id: messaggio.id,
+              type: "result",
+              success: true,
+              result: risultato,
+            }),
+          }),
+        );
+      }
+      close() {}
+    }
+    window.__DASHBOARDMODERN_BRIDGE_WS__ = PresaFinta;
+    window.WebSocket = PresaFinta;
+  });
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
   await page.evaluate(
@@ -79,6 +121,12 @@ async function conEvcc(page, testInfo, { stato, options, sempre }) {
   );
   return page.locator(".lm-evcc-grid");
 }
+
+/* L'ultimo comando partito, non l'ultimo messaggio: dopo il tasto la plancia
+ * manda anche le sue cose — il salvataggio della configurazione, i registri
+ * del ponte — e guardare solo l'ultimo messaggio faceva cadere la prova a
+ * caso, con il comando giusto gia' partito. */
+const ultimoComando = () => window.__MANDATO__.filter((m) => m.type === "call_service").at(-1);
 
 const nomi = (griglia) => griglia.locator(".lm-evcc-btn .ev-lbl").allTextContents();
 
@@ -124,7 +172,7 @@ test("premendo un tasto parte il nome che evcc ha dichiarato", async ({ page }, 
   });
   await griglia.locator("#m-btn-smart").click();
   await expect
-    .poll(() => page.evaluate(() => window.__MANDATO__.at(-1)), { timeout: 10_000 })
+    .poll(() => page.evaluate(ultimoComando), { timeout: 10_000 })
     .toMatchObject({
       type: "call_service",
       domain: "select",
@@ -195,12 +243,12 @@ test("in «Fast» c'è lo stesso, e si comanda: dice solo che non fa effetto", a
   await expect(fila(page).first()).toBeVisible();
   await expect(fila(page).first()).toHaveAttribute("data-vigore", "false");
   await expect(fila(page).first().locator(".dm-evcc-sempre-cap small")).toHaveText(
-    "Vale quando carichi in Intelligente",
+    "Vale solo in Intelligente: qui non conta",
   );
   /* E si preme davvero: la scelta fatta adesso vale per quando si torna. */
   await fila(page).first().locator(".dm-evcc-sempre-btn", { hasText: "Mai" }).click();
   await expect
-    .poll(() => page.evaluate(() => window.__MANDATO__.at(-1)), { timeout: 10_000 })
+    .poll(() => page.evaluate(ultimoComando), { timeout: 10_000 })
     .toMatchObject({ type: "call_service", service: "select_option" });
 });
 
@@ -230,7 +278,7 @@ test("premendo «Stavolta» parte il valore che l'entità ha dichiarato", async 
   });
   await fila(page).first().locator(".dm-evcc-sempre-btn", { hasText: "Solo stavolta" }).click();
   await expect
-    .poll(() => page.evaluate(() => window.__MANDATO__.at(-1)), { timeout: 10_000 })
+    .poll(() => page.evaluate(ultimoComando), { timeout: 10_000 })
     .toMatchObject({
       type: "call_service",
       domain: "select",
