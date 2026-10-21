@@ -1286,6 +1286,38 @@ export class Notifiche {
     return { titolo: parole.titolo, testo: parole.testo, scheda: null };
   }
 
+  /* Il movimento di prova, con la casa vera.
+   *
+   * La telecamera e' la prima di quelle scelte in «Quali» che la casa
+   * conosce; se e' un sensore di movimento, la telecamera e' quella vicina,
+   * come per il movimento vero. Senza scelte, la prima telecamera di casa.
+   * L'ora e' quella di adesso. Senza telecamere resta l'esempio di sempre. */
+  _ilMovimentoDiProva(quali = []) {
+    const stati = this.sentinella?.stati;
+    if (!stati?.get) return null;
+    const scelti = (Array.isArray(quali) ? quali : []).filter((id) => stati.has(id));
+    const telecamere = [...stati.keys()].filter((id) => id.startsWith("camera.")).sort();
+    const chi = scelti[0] || telecamere[0];
+    if (!chi) return null;
+    const camera = chi.startsWith("camera.")
+      ? chi
+      : this.sentinella.telecameraPer?.(chi, { soloVicina: true }) || null;
+    const nome = (id) =>
+      String(stati.get(id)?.attributes?.friendly_name || id.split(".")[1] || id).trim();
+    const adesso = new Date(this.adesso());
+    const due = (n) => String(n).padStart(2, "0");
+    const ora = `${due(adesso.getHours())}:${due(adesso.getMinutes())}`;
+    return {
+      camera,
+      dati: {
+        nome: nome(chi),
+        cam: camera ? nome(camera) : "",
+        ora,
+        secondi: `${ora}:${due(adesso.getSeconds())}`,
+      },
+    };
+  }
+
   /* La foto di quella telecamera per questo evento: una per evento (tutti i
    * telefoni ricevono la stessa, chiusa ognuno con la sua chiave) e — tranne
    * l'antifurto — al piu' una al minuto per telecamera. Il centralino non
@@ -1313,8 +1345,10 @@ export class Notifiche {
     if (evento._foto !== undefined) return evento._foto;
     evento._foto = (async () => {
       const ora = this.adesso();
-      if (evento.tipo !== "antifurto" && ora - (this._fotoDi.get(camera) || 0) < MINUTO)
-        return null;
+      /* Una prova la foto la porta sempre: chi la preme due volte di fila
+       * vuole vederla anche la seconda. */
+      const sempre = evento.tipo === "antifurto" || evento.tipo === "prova";
+      if (!sempre && ora - (this._fotoDi.get(camera) || 0) < MINUTO) return null;
       this._fotoDi.set(camera, ora);
       if (typeof this.casa?.immagine !== "function") return null;
       const perche = [];
@@ -1665,7 +1699,20 @@ export class Notifiche {
           /* «Prova: mandamela adesso» dal foglio di una voce: com'e' fatta
            * quella notifica, nello stile scelto, con numeri d'esempio. */
           const tipo = detto.tipo ?? detto.evento;
-          const esempio = !regola && tipo ? esempioDi(tipo, this.adesso()) : null;
+          /* Il movimento di prova e' quello di una telecamera di casa — una di
+           * quelle scelte in «Quali» — con la sua foto, non l'«Ingresso»
+           * d'esempio: «perche' mi dice movimento ingresso se il nome delle
+           * telecamere sono altre», e la foto non arrivava mai. */
+          const vero =
+            !regola && tipo === "movimento"
+              ? this._ilMovimentoDiProva(suDi(this.impostazioniDi(telefono), tipo).quali)
+              : null;
+          const esempio =
+            !regola && tipo
+              ? esempioDi(tipo, this.adesso(), vero ? { movimento: vero.dati } : {})
+              : null;
+          if (esempio && vero?.camera)
+            Object.assign(esempio, { camera: vero.camera, conFoto: true });
           if (tipo && !regola && !esempio)
             return no("invalid_format", "di questa notifica non c'e' un esempio");
           /* Il riepilogo della sera, in Base, non c'e' nemmeno di prova. */
@@ -2010,8 +2057,8 @@ export function cieloDiDomani(previsione, adesso) {
  * «Prova: mandamela adesso» e per le prove. `null` per un tipo che non
  * racconta niente.
  */
-export function esempioDi(tipo, adesso = Date.now()) {
-  const esempio = unEsempio(tipo, adesso);
+export function esempioDi(tipo, adesso = Date.now(), opzioni = {}) {
+  const esempio = unEsempio(tipo, adesso, opzioni);
   /* La categoria di quella vera: sul telefono sceglie il canale. */
   return esempio ? { ...esempio, categoria: categoriaDi(tipo) } : null;
 }
@@ -2021,7 +2068,7 @@ export function esempioDi(tipo, adesso = Date.now()) {
 const soloEtichette = (azioni) =>
   azioni.map((una) => ({ id: una.id, parole: una.parole, ...(una.apre ? { apre: true } : {}) }));
 
-function unEsempio(tipo, adesso) {
+function unEsempio(tipo, adesso, opzioni = {}) {
   const curva = [
     30, 1900, 2050, 1980, 400, 180, 160, 170, 150, 160, 170, 600, 620, 180, 170, 160, 600, 650, 700,
     300, 120, 110, 400, 450, 380, 60, 40, 20, 10,
@@ -2131,6 +2178,9 @@ function unEsempio(tipo, adesso) {
         secondi: "18:22:07",
         vuota: true,
         notte: false,
+        /* Con la casa vera, quando c'e': la telecamera scelta e l'ora di
+         * adesso (vedi `_ilMovimentoDiProva`). */
+        ...(opzioni.movimento || {}),
       });
     case "antifurto":
       return conParole({ ...base, urgenza: "urgente" }, COMPOSITORI.antifurto, {
