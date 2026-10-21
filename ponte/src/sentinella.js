@@ -51,6 +51,19 @@ import {
 } from "./il-tipo-dell-elettrodomestico.js";
 import { laPappa, normalizzaAnimali } from "../plancia/src/core/animali-model.js";
 import { CHIAVE_CITOFONO, normalizzaIngresso } from "../plancia/src/core/citofono-e-posta.js";
+import { accesoPerIlConsumo } from "../plancia/src/core/consumo-del-clima.js";
+import { canonicalClimateType } from "../plancia/src/core/device-model.js";
+import { eUnTermostatoACoppia } from "../plancia/src/core/i-due-obiettivi-del-clima.js";
+import { righeDichiarate } from "../plancia/src/core/elenco-dichiarato.js";
+import {
+  CAMPI_IN_PIU,
+  CHIAVE_VARCHI,
+  contattiDichiaratiNelleFinestre,
+  eUnContatto,
+  varchiConLeFinestre,
+  varchiDiCasa,
+} from "../plancia/src/core/varchi-di-casa.js";
+import { CHIAVE_VERSI, insiemeInvertiti } from "../plancia/src/core/verso-aperture.js";
 import { regoleDellAssistente } from "./l-assistente-al-telefono.js";
 import {
   paroleDelBlackout,
@@ -351,6 +364,83 @@ export function climaCheLavora(stato) {
   if (azione)
     return ["heating", "preheating", "cooling", "drying", "fan", "defrosting"].includes(azione);
   return true;
+}
+
+/**
+ * Il clima acceso come lo dice la plancia: chi ha messo una presa con la
+ * soglia (`cd_clima_units`, `consumo` e `soglia_consumo`) lo legge dai watt —
+ * un condizionatore spento col telecomando resta in «cool» per Home
+ * Assistant, e la presa dice la verita'. Senza presa, `climaCheLavora`.
+ * «Per il clima pero' lo da' ancora acceso»: le notifiche non guardavano i
+ * watt, e la plancia si'.
+ */
+export function climaAcceso(id, stato, unita = [], statoDi = () => undefined) {
+  const sua = (Array.isArray(unita) ? unita : []).find(
+    (u) => String(u?.entity ?? "").trim() === id,
+  );
+  const presa = String(sua?.consumo ?? "").trim();
+  if (sua && presa) {
+    const daiWatt = accesoPerIlConsumo(sua, { [presa]: statoDi(presa) });
+    if (daiWatt !== null) return daiWatt;
+  }
+  if (eUnTermostato(stato, sua)) return termostatoCheScalda(stato);
+  return climaCheLavora(stato);
+}
+
+/* Le modalita' di chi raffresca: chi ne ha una e' un condizionatore o una
+ * pompa di calore, non un termostato del riscaldamento. */
+const MODI_DEL_FREDDO = new Set(["cool", "dry", "fan_only", "heat_cool"]);
+
+/**
+ * Un termostato: la valvola del termosifone, il cronotermostato della
+ * caldaia, il termostato a coppia.
+ *
+ * «Sul clima devi vedere il discorso termostato, e' questo il problema
+ * reale.» Un termostato sta in «heat» tutto l'inverno, giorno e notte, e
+ * questo e' il suo mestiere: non e' un clima lasciato acceso. Si riconosce dal
+ * tipo scritto nella plancia (`termo` nel Clima), dalle modalita' (scalda e
+ * basta: nessuna del freddo) o dai due obiettivi del termostato a coppia.
+ */
+export function eUnTermostato(stato, unita = null) {
+  if (unita && canonicalClimateType(unita.type) === "termo") return true;
+  const attributi = stato?.attributes || {};
+  if (eUnTermostatoACoppia(attributi)) return true;
+  const modi = Array.isArray(attributi.hvac_modes)
+    ? attributi.hvac_modes.map((m) => String(m).toLowerCase())
+    : [];
+  return modi.includes("heat") && !modi.some((m) => MODI_DEL_FREDDO.has(m));
+}
+
+/**
+ * Se un termostato sta scaldando adesso — non se e' in «heat». Lo dice
+ * `hvac_action`; chi non lo pubblica (tante valvole) scalda solo se la stanza
+ * e' sotto l'obiettivo di almeno mezzo grado, come nel riepilogo della sera.
+ */
+export function termostatoCheScalda(stato) {
+  const modo = String(stato?.state ?? "").toLowerCase();
+  if (["off", "unavailable", "unknown", ""].includes(modo)) return false;
+  const attributi = stato?.attributes || {};
+  const azione = String(attributi.hvac_action ?? "").toLowerCase();
+  if (azione) return ["heating", "preheating", "cooling"].includes(azione);
+  const adesso = Number(attributi.current_temperature);
+  const obiettivo = Number(attributi.temperature);
+  if (!Number.isFinite(adesso) || !Number.isFinite(obiettivo)) return false;
+  return adesso < obiettivo - 0.5;
+}
+
+/* Le unita' del clima della plancia, scritte come lista o come testo JSON. */
+export function unitaDelClima(valori = {}) {
+  const grezze = valori?.cd_clima_units;
+  if (Array.isArray(grezze)) return grezze;
+  if (typeof grezze === "string") {
+    try {
+      const lette = JSON.parse(grezze);
+      return Array.isArray(lette) ? lette : [];
+    } catch (_errore) {
+      return [];
+    }
+  }
+  return [];
 }
 
 /** I tasti del campanello: «Apri cancello» se c'e' un cancello, e «Ignora». */
@@ -1507,16 +1597,53 @@ export class Sentinella {
     });
   }
 
+  /* Le finestre aperte, quelle della plancia.
+   *
+   * «Deve vedere quelle reali impostate come finestre»: la pioggia diceva
+   * «Finestre aperte: Termosifone Bagno Stato finestra» — il rilevamento della
+   * finestra aperta di una valvola termostatica, che Home Assistant chiama
+   * `window` ma non e' un'anta. Qui si guardano i varchi come li vede la
+   * plancia (`varchi-di-casa.js`): le righe scritte nella scheda dei Varchi e
+   * i contatti messi nelle Finestre, col verso girato di chi l'ha girato, e
+   * solo quelli che sono finestre. Senza righe scritte vale il rilevamento,
+   * ma un sensore «finestra» che sta sullo stesso apparecchio di un
+   * termostato e' il termostato che stima, non un contatto sull'anta. */
   _finestreAperte() {
-    const aperte = [];
-    for (const [id, stato] of this.stati) {
-      const classe = stato.attributes?.device_class;
-      if (dominioDi(id) === "binary_sensor" && classe === "window" && stato.state === "on")
-        aperte.push(nomeDi(stato, id));
-      if (dominioDi(id) === "cover" && classe === "window" && stato.state === "open")
-        aperte.push(nomeDi(stato, id));
-    }
-    return aperte;
+    const valori = this._valori();
+    const leggi = (chiave, vuoto) => {
+      const v = valori?.[chiave];
+      if (typeof v !== "string") return v ?? vuoto;
+      try {
+        return JSON.parse(v);
+      } catch (_errore) {
+        return vuoto;
+      }
+    };
+    const righeDelleFinestre = leggi("cd_tapparelle", []);
+    const config = varchiConLeFinestre(leggi(CHIAVE_VARCHI, {}), righeDelleFinestre);
+    const dichiaratiFinestre = new Set(contattiDichiaratiNelleFinestre(righeDelleFinestre));
+    const scritte = Boolean(righeDichiarate(config, CAMPI_IN_PIU));
+    const stati = this.statiComeOggetto();
+    const diUnTermostato = (id) => {
+      const suo = this.dispositivoDi?.[id];
+      if (!suo) return false;
+      return Object.keys(stati).some(
+        (altro) => dominioDi(altro) === "climate" && this.dispositivoDi?.[altro] === suo,
+      );
+    };
+    return varchiDiCasa(
+      stati,
+      config,
+      insiemeInvertiti(leggi(CHIAVE_VERSI, {})),
+      (id) => nomeDi(this.stati.get(id), id),
+      dichiaratiFinestre,
+    )
+      .filter((riga) => riga.tipo === "finestra" && riga.stato === "aperto")
+      .filter((riga) => eUnContatto(riga.entity))
+      .filter(
+        (riga) => scritte || dichiaratiFinestre.has(riga.entity) || !diUnTermostato(riga.entity),
+      )
+      .map((riga) => riga.name);
   }
 
   /* Piove, o sta per piovere: si dice solo se c'e' una finestra aperta. */
@@ -1763,7 +1890,15 @@ export class Sentinella {
           luciDa = Math.min(luciDa, stato.dal);
         }
       }
-      if (vuota === true && dominio === "climate" && climaCheLavora(stato)) {
+      /* Con la casa vuota si dice il clima lasciato acceso, non il
+       * riscaldamento che tiene la temperatura col suo programma: un
+       * termostato che scalda a casa vuota fa il suo mestiere. */
+      if (
+        vuota === true &&
+        dominio === "climate" &&
+        !this._eUnTermostato(id, stato) &&
+        this._climaAcceso(id, stato)
+      ) {
         climiAccesi.push(id);
         climaDa = Math.min(climaDa, stato.dal);
       }
@@ -1866,6 +2001,17 @@ export class Sentinella {
 
   /* Quello che le regole dell'assistente vedono adesso: la vista di
    * `l-assistente-al-telefono.js`. */
+  /* Un termostato, col tipo scritto nella plancia quando c'e'. */
+  _eUnTermostato(id, stato) {
+    const sua = unitaDelClima(this._valori()).find((u) => String(u?.entity ?? "").trim() === id);
+    return eUnTermostato(stato, sua);
+  }
+
+  /* Il clima acceso, coi watt della presa quando la plancia ne ha una. */
+  _climaAcceso(id, stato) {
+    return climaAcceso(id, stato, unitaDelClima(this._valori()), (presa) => this.stati.get(presa));
+  }
+
   _vista() {
     const ora = this.adesso();
     const vuota = this.casaVuota();
@@ -1888,6 +2034,8 @@ export class Sentinella {
       letture: this._lettureDellAssistente(valori),
       statiComeOggetto: () => this.statiComeOggetto(),
       lasciaStare: (id, nome) => this.capire.lasciaStare(id, nome, { tipo: "luce", ora }),
+      climaAcceso: (id, stato) =>
+        climaAcceso(id, stato, unitaDelClima(valori), (presa) => this.stati.get(presa)),
       memoria: this._memoriaDellAssistente,
     };
   }

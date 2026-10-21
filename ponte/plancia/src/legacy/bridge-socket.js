@@ -178,6 +178,22 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
   "ponte/automazioni/duplica",
   "ponte/automazioni/proposte",
   "ponte/automazioni/proposte/scarta",
+  // Il riavvio che Home Assistant aspetta dopo un aggiornamento: se serve
+  // (una lettura delle riparazioni) e il riavvio, che il ponte fa solo per
+  // chi amministra (ponte/src/aggiornamenti.js).
+  "ponte/aggiornamenti/riavvio",
+  "ponte/aggiornamenti/riavvia",
+  // I fornitori di energia, che li tiene il ponte di GdAHome
+  // (`ponte/src/fornitori.js`): vederli, collegarli, rileggerli e
+  // scollegarli — tutto solo per chi amministra la casa.
+  "dashboardmodern/fornitori/stato",
+  "dashboardmodern/fornitori/inizia",
+  "dashboardmodern/fornitori/collega",
+  "dashboardmodern/fornitori/codice",
+  "dashboardmodern/fornitori/incolla",
+  "dashboardmodern/fornitori/annulla",
+  "dashboardmodern/fornitori/aggiorna",
+  "dashboardmodern/fornitori/scollega",
   "auth/sign_path",
 ]);
 

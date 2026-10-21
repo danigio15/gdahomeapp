@@ -56,6 +56,18 @@
  * telefono. Sono parole corte ripulite (`chiE` in `dispositivi.js`), servono
  * al nome della riga fra i «Telefoni abbinati» se nessuno l'ha rinominata a
  * mano, e nel ponte non si vede nulla: nessun registro le scrive.
+ *
+ * E i fornitori di energia, `dashboardmodern/fornitori/*` (`fornitori.js`):
+ * collegare E.ON o ENGIE perche' le bollette diventino sensori di Home
+ * Assistant. Li usa solo un utente entrato — un telefono col suo segno, o la
+ * plancia aperta dentro Home Assistant — e solo se amministra la casa
+ * (`SOLO_CHI_AMMINISTRA`); l'accesso a meta' (il codice SMS, l'indirizzo da
+ * incollare) e' di chi l'ha cominciato e vale dieci minuti. La password di
+ * E.ON passa una volta verso E.ON e non si scrive da nessuna parte, quella di
+ * ENGIE non passa nemmeno; restano i gettoni del fornitore, in
+ * `/data/fornitori.json` che legge solo il ponte. Nel ponte non si vede
+ * nulla: nessuna pagina, nessuna console, e il registro dice solo il nome
+ * del fornitore e il tipo di un errore.
  */
 
 import { QUADRO_DI_DIFETTO } from "./rapporto.js";
@@ -242,6 +254,9 @@ const FOTO_CARICA = "dashboardmodern/www/upload";
 const AGGIORNAMENTI_ELENCO = "ponte/aggiornamenti/elenco";
 const AGGIORNAMENTI_INSTALLA = "ponte/aggiornamenti/installa";
 const AGGIORNAMENTI_RIAVVIA = "ponte/aggiornamenti/riavvia";
+/* Se Home Assistant aspetta un riavvio per finire un aggiornamento: una
+ * lettura, come l'elenco. */
+const AGGIORNAMENTI_RIAVVIO = "ponte/aggiornamenti/riavvio";
 /* Il segno di chi si aggiorna. Si chiede per **entita'**, e non per
  * indirizzo: dove andarlo a prendere lo decide il ponte, guardando quello che
  * Home Assistant ha dichiarato. */
@@ -378,6 +393,16 @@ const SOLO_CHI_AMMINISTRA = new Set([
   "ponte/console/apri",
   "ponte/console/rispondi",
   "ponte/console/butta",
+  /* I fornitori di energia (`fornitori.js`): vedere chi e' collegato e
+   * collegare sono gia' le chiavi dell'area clienti della casa. */
+  "dashboardmodern/fornitori/stato",
+  "dashboardmodern/fornitori/inizia",
+  "dashboardmodern/fornitori/collega",
+  "dashboardmodern/fornitori/codice",
+  "dashboardmodern/fornitori/incolla",
+  "dashboardmodern/fornitori/annulla",
+  "dashboardmodern/fornitori/aggiorna",
+  "dashboardmodern/fornitori/scollega",
 ]);
 
 /* Un file della plancia sta sotto il megabyte; una risposta di Home Assistant
@@ -532,6 +557,8 @@ export class Commissioni {
     /* I viaggi pianificati di gdanav (`viaggi.js`). Si mettono anche dopo:
      * hanno bisogno delle notifiche, che nascono dopo le commissioni. */
     viaggi = null,
+    /* I fornitori di energia (`fornitori.js`). */
+    fornitori = null,
     /* La ricarica di notte (`ricarica-di-notte.js`): nasce dopo, come i
      * viaggi, perche' legge la casa dallo specchio delle notifiche. */
     ricaricaDiNotte = null,
@@ -601,6 +628,7 @@ export class Commissioni {
      * Assistant e qui sta nel ponte. */
     this.spegnimento = spegnimento;
     this.viaggi = viaggi;
+    this.fornitori = fornitori;
     /* E la ricarica di notte, che nasce dopo per la stessa ragione. */
     this.ricaricaDiNotte = ricaricaDiNotte;
     this.automazioni = automazioni;
@@ -633,6 +661,7 @@ export class Commissioni {
     if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE)
       return Boolean(this.configurazione);
     if (tipo === CATALOGO) return Boolean(this.catalogo);
+    if (this.fornitori?.riconosce(tipo)) return true;
     if (tipo === FOTO_ELENCO || tipo === FOTO_CARICA) return Boolean(this.foto);
     if (tipo === CHAT_STATO || tipo === CHAT_FILO || tipo === CHAT_MANDA || tipo === CHAT_DIMENTICA)
       return Boolean(this.chat);
@@ -851,6 +880,10 @@ export class Commissioni {
         amministra: puoAmministrare === true,
       });
     }
+    /* I fornitori di energia: solo chi amministra (lo ha gia' chiesto
+     * `SOLO_CHI_AMMINISTRA`, qui sopra), e gli accessi a meta' sono di chi li
+     * ha cominciati. */
+    if (this.fornitori?.riconosce(tipo)) return this.fornitori.rispondi(detto, { chiChiede });
     /* I viaggi di gdanav: dalla plancia e dal telefono, ognuno coi suoi. */
     if (typeof tipo === "string" && tipo.startsWith("ponte/viaggi/")) {
       if (!this.viaggi) return no(id, "unknown_command", `non conosco ${tipo}`);
@@ -921,6 +954,7 @@ export class Commissioni {
       tipo === AGGIORNAMENTI_ELENCO ||
       tipo === AGGIORNAMENTI_INSTALLA ||
       tipo === AGGIORNAMENTI_RIAVVIA ||
+      tipo === AGGIORNAMENTI_RIAVVIO ||
       tipo === AGGIORNAMENTI_LOGO ||
       tipo === AGGIORNAMENTI_NOTE
     )
@@ -1162,6 +1196,7 @@ export class Commissioni {
     try {
       if (detto.type === AGGIORNAMENTI_ELENCO)
         return si(id, { aggiornamenti: await quali.elenco({ forza: detto?.forza === true }) });
+      if (detto.type === AGGIORNAMENTI_RIAVVIO) return si(id, await quali.serveIlRiavvio());
       if (detto.type === AGGIORNAMENTI_RIAVVIA) {
         this.registro.info("riavvio di Home Assistant chiesto dall'app");
         return si(id, await quali.riavvia());

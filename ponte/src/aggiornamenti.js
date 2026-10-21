@@ -344,6 +344,23 @@ export function aggiornamentiDaFare(stati) {
 }
 
 /** Quando l'entita' che si chiede di installare non c'e', o non si installa. */
+/**
+ * Dalle riparazioni di Home Assistant, quelle che chiedono un riavvio: non
+ * ignorate, non gia' chiuse, e col riavvio nel nome. Il nome di chi aspetta e'
+ * quello che la riparazione scrive (`name`), o il suo dominio.
+ */
+export function chiAspettaIlRiavvio(riparazioni = []) {
+  const chi = [];
+  for (const una of Array.isArray(riparazioni) ? riparazioni : []) {
+    if (!una || una.ignored || una.dismissed_version) continue;
+    const dice = `${una.issue_id ?? ""} ${una.translation_key ?? ""}`;
+    if (!/restart/i.test(dice)) continue;
+    const nome = pulito(una.translation_placeholders?.name) || pulito(una.domain);
+    if (nome && !chi.includes(nome)) chi.push(nome);
+  }
+  return { serve: chi.length > 0, chi };
+}
+
 export class QuestoNoNo extends Error {
   constructor(message) {
     super(message);
@@ -648,6 +665,26 @@ export class Aggiornamenti {
     );
     this.dimentica();
     return { avviato: true, gia: false, stacca: voce.stacca };
+  }
+
+  /**
+   * Se Home Assistant aspetta un riavvio per finire un aggiornamento.
+   *
+   * «Quando fai gli aggiornamenti tipo di Alexa Media Player, HA ti richiede
+   * il riavvio dopo, e su GdAHome non viene proposto.» Home Assistant lo dice
+   * fra le sue riparazioni: HACS ne apre una «riavvio richiesto» per ogni
+   * integrazione aggiornata, e lo stesso fanno altre integrazioni. Qui si
+   * guardano quelle: chi ha bisogno del riavvio, per nome. Se le riparazioni
+   * non si possono leggere non si inventa niente: `sappiamo` resta falso.
+   */
+  async serveIlRiavvio() {
+    let dette;
+    try {
+      dette = await this.casa.chiedi({ type: "repairs/list_issues" }, { entro: ATTESA_CORTA });
+    } catch (_errore) {
+      return { serve: false, chi: [], sappiamo: false };
+    }
+    return { ...chiAspettaIlRiavvio(dette?.issues), sappiamo: true };
   }
 
   /**

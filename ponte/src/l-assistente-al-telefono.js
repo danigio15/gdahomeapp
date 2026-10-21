@@ -33,6 +33,7 @@
  */
 
 import {
+  climaCheLavora,
   dominioDi,
   eNotte,
   nomeDellElettrodomestico,
@@ -327,7 +328,11 @@ export function finestraClima(vista) {
   if (!finestre.length) return [];
   const fuori = [];
   for (const [id, stato] of gliStati(vista, "climate")) {
-    if (["off", "unavailable", "unknown"].includes(stato.state)) continue;
+    /* Acceso davvero: la presa, se c'e', o `hvac_action`. Un termostato in
+     * «heat» che e' fermo, o un condizionatore spento col telecomando, non e'
+     * un clima acceso con la finestra aperta. */
+    const acceso = vista.climaAcceso ? vista.climaAcceso(id, stato) : climaCheLavora(stato);
+    if (!acceso) continue;
     const area = areaDi(vista, id);
     if (!area || !finestre.some((f) => stessaArea(f.area, area))) continue;
     const caldo = stato.state === "heat" || stato.attributes?.hvac_action === "heating";

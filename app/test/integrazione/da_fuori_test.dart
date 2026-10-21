@@ -15,7 +15,7 @@
 @Timeout(Duration(seconds: 120))
 library;
 
-import 'dart:io' show Platform;
+import 'dart:io' show Platform, SocketException;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
@@ -327,9 +327,17 @@ Future<void> _finoA(
   String perche = 'l\'attesa è scaduta',
 }) async {
   final fine = DateTime.now().add(entro);
+  Object? ultimo;
   while (DateTime.now().isBefore(fine)) {
-    if (await condizione()) return;
+    /* La porta dell'app risponde prima della console: un «connessione
+     * rifiutata» sulla console, appena acceso il ponte, vuol dire «non
+     * ancora», non «no». */
+    try {
+      if (await condizione()) return;
+    } on SocketException catch (errore) {
+      ultimo = errore;
+    }
     await Future<void>.delayed(const Duration(milliseconds: 50));
   }
-  throw StateError(perche);
+  throw StateError(ultimo == null ? perche : '$perche\n$ultimo');
 }

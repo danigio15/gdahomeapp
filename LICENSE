@@ -170,6 +170,12 @@ dal 16 ottobre 2026.
    licenze restano come sono, e questa non dà su quei componenti nessun
    diritto oltre a quelli che danno loro.
 
+   I collegamenti ai fornitori di energia in `ponte/src/fornitori/eon.js` e
+   `ponte/src/fornitori/engie.js` sono porti di due integrazioni di Home
+   Assistant con licenza MIT, «E.ON Energia Italia» (© 2025 Federico Zivolo)
+   ed «ENGIE Italia» (© 2026 Gabriele Pennacchia): per quelle parti vale anche
+   la licenza MIT, il cui testo è in `ponte/src/fornitori/LICENZE.md`.
+
 9. NESSUNA GARANZIA
 
    Nei limiti consentiti dalla legge, il Software è fornito «così com'è»,
@@ -375,6 +381,12 @@ replaces the GdAHome License 1.0 from 16 October 2026.
    `ponte/plancia/brands/LICENSE.txt` and `ponte/app/assets/NOTICES`). Those
    licenses remain as they are, and this one grants no right in those
    components beyond what they grant.
+
+   The energy-supplier connections in `ponte/src/fornitori/eon.js` and
+   `ponte/src/fornitori/engie.js` are ports of two MIT-licensed Home Assistant
+   integrations, "E.ON Energia Italia" (© 2025 Federico Zivolo) and "ENGIE
+   Italia" (© 2026 Gabriele Pennacchia): for those parts the MIT license also
+   applies, and its text is in `ponte/src/fornitori/LICENZE.md`.
 
 9. NO WARRANTY
 

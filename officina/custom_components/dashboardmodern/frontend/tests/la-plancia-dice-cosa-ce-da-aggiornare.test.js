@@ -90,7 +90,9 @@ test("la tessera compare solo quando c'è qualcosa da fare, e non è rossa", () 
   /* Una tessera «Aggiornamenti: 0» occupa un posto per dire che non è successo
    * niente, e in una Home dove ogni posto è una cosa che si guarda quello è un
    * posto sprecato. */
-  assert.match(modello, /if \(!fila\.length\) return null;/);
+  /* Resta solo per il riavvio che Home Assistant aspetta dopo un
+   * aggiornamento: anche quella e' una cosa da fare. */
+  assert.match(modello, /if \(!fila\.length && !riavvio\.serve\) return null;/);
   /* Ambra, non rossa: un aggiornamento non è un guasto, e il rosso in questa
    * Home vuol dire «vai a vedere adesso». */
   assert.match(modello, /accent: "#d97706"/);
@@ -220,7 +222,10 @@ test("se il servizio rifiuta, il tasto Installa torna com'era", () => {
     sorgente,
     /callHa\("update", "install", \{ entity_id: quale \}\)\.then\(\(esito\) => \{/,
   );
-  assert.match(sorgente, /if \(esito !== undefined\) return;/);
+  assert.match(
+    sorgente,
+    /if \(esito !== undefined\) \{\s*guardaIlRiavvioDopoLInstallazione\(\);\s*return;/,
+  );
   assert.match(sorgente, /aggiornamento\.disabled = false;/);
   assert.match(sorgente, /aggiornamento\.textContent = parola;/);
 });

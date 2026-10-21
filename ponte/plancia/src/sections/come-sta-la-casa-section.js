@@ -52,6 +52,7 @@ import { CHIAVE_VERSI, apertaSecondoVerso, insiemeInvertiti } from "../core/vers
 import { parolaDelQuando, rifiutiInPlancia } from "./rifiuti-section.js";
 import {
   allStates,
+  chiediAHomeAssistant,
   clean,
   doc,
   esc,
@@ -327,6 +328,11 @@ function vociDellaPastiglia(pastiglia) {
  * invece di sei etichette diverse messe in fila.
  */
 function paroleDellaPastiglia(pastiglia) {
+  if (pastiglia.chiave === "aggiornamenti" && pastiglia.riavvio && !pastiglia.voci?.length) {
+    const testa = t("Riavvio", "Restart");
+    const coda = t("richiesto", "required");
+    return { testa, coda, titolo: `${testa} ${coda}` };
+  }
   if (pastiglia.chiave === "posta") {
     const coda = t("è arrivata", "has arrived");
     return {
@@ -690,7 +696,57 @@ const POPUP = "dm-casa-popup";
  * antifurto, le misure — raccontano una cosa sola e continuano ad aprire la
  * loro tessera, che e' dove quella cosa si guarda per esteso. */
 function haUnElenco(pastiglia) {
-  return vociDellaPastiglia(pastiglia).length > 0;
+  return vociDellaPastiglia(pastiglia).length > 0 || chiedeIlRiavvio(pastiglia);
+}
+
+/* «Quando fai gli aggiornamenti tipo di Alexa Media Player HA ti richiede il
+ * riavvio dopo, e su GdAHome non viene proposto»: la riga del riavvio, in cima
+ * all'elenco degli aggiornamenti. */
+function chiedeIlRiavvio(pastiglia) {
+  return pastiglia?.chiave === "aggiornamenti" && pastiglia.riavvio === true;
+}
+
+function rigaDelRiavvio(pastiglia) {
+  const chi = pastiglia.chi || [];
+  return `<div class="dm-casa-voce" data-dm-casa-riavvio>
+      <span class="dm-casa-testo">
+        <b>${esc(t("Home Assistant va riavviato", "Home Assistant needs a restart"))}</b>
+        <small class="d-sub">${esc(
+          chi.length
+            ? `${t("Per finire l'aggiornamento di", "To finish updating")} ${chi.join(", ")}`
+            : t("Per finire l'aggiornamento", "To finish the update"),
+        )}</small>
+      </span>
+      <button type="button" class="dm-casa-spegni" data-dm-casa-riavvia>${esc(t("Riavvia", "Restart"))}</button>
+    </div>`;
+}
+
+function riavviaLaCasa(tasto) {
+  const sicuro = root.confirm?.(
+    t(
+      "Riavviare Home Assistant adesso? La casa resta ferma per circa un minuto.",
+      "Restart Home Assistant now? The house stops for about a minute.",
+    ),
+  );
+  if (!sicuro) return false;
+  const parola = tasto.textContent;
+  tasto.disabled = true;
+  tasto.textContent = t("Riavvio…", "Restarting…");
+  chiediAHomeAssistant({ type: "ponte/aggiornamenti/riavvia" }, 15_000).catch((errore) => {
+    /* Il filo che cade e' il riavvio che parte; un no detto e' un no. */
+    if (/socket|timeout|time out/i.test(String(errore?.message || errore))) return;
+    tasto.disabled = false;
+    tasto.textContent = parola;
+    try {
+      root.edToast?.(
+        t(
+          "Home Assistant non si e' riavviato: serve un utente amministratore.",
+          "Home Assistant did not restart: an administrator is needed.",
+        ),
+      );
+    } catch (_ignora) {}
+  });
+  return true;
 }
 
 function pastigliaDiChiave(chiave) {
@@ -931,15 +987,18 @@ export function disegnaLElenco() {
   const states = allStates() || {};
   /* Quando l'ultima si spegne l'elenco non resta aperto a dire il vuoto: la
    * domanda «cosa e' rimasto acceso» ha avuto la sua risposta. */
-  if (!voci.length) {
+  const riavvio = chiedeIlRiavvio(pastiglia);
+  if (!voci.length && !riavvio) {
     chiudiLElenco();
     return false;
   }
   if (sotto) {
-    const briciola = briciolaDellElenco(chiave, voci.length);
+    const briciola = voci.length ? briciolaDellElenco(chiave, voci.length) : "";
     if (sotto.textContent !== briciola) sotto.textContent = briciola;
   }
-  const disegno = voci.map((voce) => rigaDellElenco(voce, states, chiave)).join("");
+  const disegno =
+    (riavvio ? rigaDelRiavvio(pastiglia) : "") +
+    voci.map((voce) => rigaDellElenco(voce, states, chiave)).join("");
   if (elenco.innerHTML !== disegno) elenco.innerHTML = disegno;
   return true;
 }
@@ -1004,7 +1063,9 @@ function installaLAggiornamento(tasto) {
   const parola = tasto.textContent;
   tasto.disabled = true;
   tasto.textContent = t("In corso", "Installing");
-  Promise.resolve(root.dmCallHaService("update", "install", { entity_id: entita })).catch(
+  Promise.resolve(root.dmCallHaService("update", "install", { entity_id: entita }))
+    .then(() => root.dmGuardaIlRiavvio?.())
+    .catch(
     (errore) => {
       tasto.disabled = false;
       tasto.textContent = parola;
@@ -1034,6 +1095,12 @@ function onClickElenco(event) {
   if (installa) {
     event.preventDefault();
     installaLAggiornamento(installa);
+    return;
+  }
+  const riavvia = event.target.closest("[data-dm-casa-riavvia]");
+  if (riavvia) {
+    event.preventDefault();
+    riavviaLaCasa(riavvia);
     return;
   }
   const tasto = event.target.closest("[data-dm-casa-spegni]");
