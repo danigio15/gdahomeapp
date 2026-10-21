@@ -10,6 +10,12 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.16.9
+
+- **Energia:** i numeri nei cerchi dei carichi (Wallbox, stanze, Locale
+  tecnico) hanno tutti la stessa misura, quella del più lungo; le icone
+  restano come sono. Solo l'add-on: l'app resta la 1.16.8.
+
 ## 1.16.8
 
 - **Auto, la card in alto:** la foto in copertina, pulita; marchio e modello
