@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-FFPCFVMP.js";
+} from "../../chunk-2PZWDAZW.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2285,7 +2285,6 @@ var SOURCE_INDEX = Object.freeze({
   "Acquari e terrari": "Aquariums and terrariums",
   "Acquario": "Aquarium",
   "Acquistata dalla rete · Mese": "Bought from the grid · Month",
-  "Addebito sul conto": "Direct debit",
   "Addolcitore": "Water softener",
   "adesso": "now",
   "Adesso": "Now",
@@ -2850,10 +2849,7 @@ var SOURCE_INDEX = Object.freeze({
   "Boiler sanitario, sonda alta": "DHW tank, top probe",
   "Boiler sanitario, sonda bassa": "DHW tank, bottom probe",
   "Boiler solare": "Solar water heater",
-  "bolletta": "bill",
-  "bollette": "bills",
   "Bollette": "Bills",
-  "Bollette dalla posta": "Bills from email",
   "Bollette salvate": "Bills saved",
   "Bollitore": "Kettle",
   "Bosco": "Forest",
@@ -3170,7 +3166,6 @@ var SOURCE_INDEX = Object.freeze({
   "Collana": "Necklace",
   "Collare": "Collar",
   "Collare quasi scarico": "Collar battery low",
-  "Collega": "Connect",
   "Collega a un'integrazione": "Link to an integration",
   "Collega evcc": "Connect evcc",
   "Collega GitHub": "Connect GitHub",
@@ -3988,7 +3983,6 @@ var SOURCE_INDEX = Object.freeze({
   "fonte": "source",
   "fonti": "sources",
   "Forma": "Shape",
-  "Fornitori": "Suppliers",
   "Forno": "Oven",
   "Forza (ignora pioggia)": "Force (ignore rain)",
   "Foto": "Photo",
@@ -4069,8 +4063,6 @@ var SOURCE_INDEX = Object.freeze({
   "Gli impegni e le cose da fare, nella stessa pagina: qui si dice quali calendari e quali liste guardare. Se la tessera in Home si vede o no si sceglie nella scheda Widget.": "Appointments and to-do items, on the same page: here you choose which calendars and which lists to watch. Whether the Home tile shows is chosen in the Widgets tab.",
   "Gli ingressi dichiarati nella sezione Sicurezza": "The entries declared in the Security section",
   "Gli ultimi movimenti": "The latest movements",
-  "Gmail ha rifiutato l'accesso: controlla l'indirizzo e la password per app.": "Gmail refused the login: check the address and the app password.",
-  "Gmail non ha risposto. Riprova.": "Gmail did not answer. Try again.",
   "Gradi": "Degrees",
   "Grafico non disponibile: Chart.js non è caricato.": "Chart unavailable: Chart.js is not loaded.",
   "Grafite": "Graphite",
@@ -4265,7 +4257,6 @@ var SOURCE_INDEX = Object.freeze({
   "Il PIN è di 4-8 cifre.": "The PIN is 4-8 digits.",
   "Il più lungo tace da": "Longest silent for",
   "il più vicino": "the closest",
-  "Il ponte legge solo le mail dei fornitori scelti, in sola lettura, ogni sei ore. Serve una password per app di Google: Account Google → Sicurezza → Verifica in due passaggi → Password per le app. La password resta cifrata in casa e non si vede più.": "The bridge reads only the chosen suppliers' emails, read-only, every six hours. It needs a Google app password: Google Account → Security → 2-Step Verification → App passwords. The password stays encrypted at home and is never shown again.",
   "Il prato mostra le prime ${MAX_LAWN_ZONES} zone; sotto trovi tutte le ${config.zones.length}.": "The lawn shows the first ${MAX_LAWN_ZONES} zones; all ${config.zones.length} are listed below.",
   "Il primo": "The first",
   "Il primo orario è quello qui sopra. Ogni riga in più è una corsa a sé: i minuti valgono per tutte le zone di quella corsa, e la % la fa partire solo col terreno più asciutto di così.": "The first time is the one above. Each extra row is a run of its own: the minutes apply to every zone of that run, and the % lets it start only with the soil drier than that.",
@@ -4459,7 +4450,6 @@ var SOURCE_INDEX = Object.freeze({
   "Indice UV": "UV index",
   "Indietro": "Back",
   "Indifferenziato": "General waste",
-  "Indirizzo Gmail": "Gmail address",
   "indirizzo non valido": "invalid address",
   "Indirizzo RTSP della telecamera": "Camera RTSP address",
   "Inferriata": "Grate",
@@ -4595,7 +4585,6 @@ var SOURCE_INDEX = Object.freeze({
   "L'impianto sta prendendo calore: il salto è quello giusto.": "The system is taking the heat: the drop is right.",
   "L'indirizzo del flusso della telecamera, se ce l'hai. Serve a ritrovarlo e a compilare il campo qui sopra.": "The camera's stream address, if you have one. It is here to keep it and to fill in the field above.",
   "L'indirizzo del radar non è un indirizzo di tessere ({z}/{x}/{y}).": "The radar address is not a tile address ({z}/{x}/{y}).",
-  "L'indirizzo non è valido.": "The address is not valid.",
   "L'integrazione INGV Terremoti espone un sensore col conteggio degli eventi e le entità geo_location dei singoli terremoti: vanno bene tutti e due.": "The INGV Earthquakes integration exposes a sensor with the event count and the geo_location entities of single quakes: both work.",
   "L'invio non e' configurato su questa plancia: la segnalazione resta qui e partira' da sola quando lo sara'.": "Sending is not configured on this dashboard: the report stays here and will be sent on its own once it is.",
   "L'obiettivo si legge soltanto: l'entità non accetta comandi.": "The target is read-only: the entity accepts no commands.",
@@ -4620,7 +4609,6 @@ var SOURCE_INDEX = Object.freeze({
   "La casa non ha risposto.": "The house did not answer.",
   "La casa non risponde: riprova fra poco.": "The home is not answering: try again shortly.",
   "La casa prende ${kw} kW dalla rete": "The house is drawing ${kw} kW from the grid",
-  "La casella è collegata, ma non c'e' ancora nessuna bolletta: arrivano con la prossima mail del fornitore.": "The mailbox is connected, but there is no bill yet: they arrive with the supplier's next email.",
   "La centrale non ha accettato": "The alarm panel refused",
   "La centralina esterna detta il verdetto di tutta la casa: da qui si toglie di mezzo senza spegnere la tessera.": "The outdoor station dictates the verdict for the whole house: this drops it without turning the tile off.",
   "la chiudi a mano quasi ogni sera, poco dopo il tramonto.": "you close it by hand almost every evening, just after sunset.",
@@ -4671,7 +4659,6 @@ var SOURCE_INDEX = Object.freeze({
   "La pagina tiene otto nodi, e ci sono tutti: togline uno per farci stare questo.": "The page holds eight nodes and they are all taken: remove one to make room.",
   "La parola che la stufa scrive sul display: accensione, lavoro, pulizia braciere, spegnimento… Se la pagina non la conosce, la scrive com'è.": "The word the stove shows on its display: ignition, working, brazier cleaning, shutdown… If the page does not know it, it shows it as it is.",
   "La parte in alto — hamburger, nome della casa, meteo — resta ferma e il resto della plancia le scorre sotto. Vale solo su questo apparecchio.": "The top strip — hamburger, house name, weather — stays put while the rest of the dashboard scrolls under it. This device only.",
-  "La password per app ha 16 lettere: copiala da Google.": "The app password has 16 letters: copy it from Google.",
   "la più bassa": "lowest",
   "la più calda": "warmest",
   "la più fredda": "coldest",
@@ -4681,7 +4668,6 @@ var SOURCE_INDEX = Object.freeze({
   "La plancia a tutto schermo, sopra la barra laterale di Home Assistant. Vale solo per questa plancia e solo su questo apparecchio: sul telefono si accende da sola.": "The dashboard full screen, over the Home Assistant sidebar. It applies to this dashboard only and on this device only: on a phone it turns itself on.",
   "La pompa gira anche se il pannello è più freddo dell'acqua.": "The pump is running even though the panel is colder than the water.",
   "La pompa gira: il calore del pannello sta andando nel boiler.": "The pump is running: the panel's heat is going into the boiler.",
-  "La posta non si raggiunge. Riprova.": "The mailbox can't be reached. Try again.",
   "La potenza minima per fermarsi": "The minimum power to stop at",
   "La prima casella vuole un water_heater.*; le sonde vanno nelle caselle sotto.": "The first field wants a water_heater.*; put probes in the fields below.",
   "La prima settimana comincia il": "The first week starts on",
@@ -4759,7 +4745,6 @@ var SOURCE_INDEX = Object.freeze({
   "Le automazioni le crea e le modifica chi amministra Home Assistant: qui si accendono e si spengono.": "Automations are created and edited by whoever administers Home Assistant: here you turn them on and off.",
   "Le azioni rapide": "The quick actions",
   "Le batterie che vuoi tenere d'occhio. Ogni riga è una batteria — l'entità in percentuale, il nome che vuoi tu, il disegno — e la pagina Batterie le mostra dalla più scarica alla più piena, con in cima quante sono da cambiare.": "The batteries you want to keep an eye on. Each row is a battery — the entity in percent, the name you want, the drawing — and the Batteries page shows them from the flattest to the fullest, with how many need replacing on top.",
-  "Le bollette arrivate": "Bills received",
   "Le caselle di una caldaia a pellet o a legna: la combustione, il serbatoio e l'obiettivo della centralina. Lasciale vuote se la tua caldaia va a gas: quello che non mappi non compare in pagina.": "The fields of a pellet or wood boiler: the combustion, the hopper and the controller's own target. Leave them empty if your boiler runs on gas: what you do not map does not appear on the page.",
   "Le casse": "Speakers",
   "Le centrali pubblicano accanto a ogni contatto un interruttore che dice alla centrale di non guardarlo: è quello che serve per inserire l'antifurto con una finestra aperta apposta. Se sta sullo stesso dispositivo del contatto, o si chiama come lui con «bypass» in fondo, la plancia lo trova da sola; altrimenti scrivilo qui. Nella pagina Varchi compare il tasto per escludere o includere questo varco. Acceso vuol dire escluso. Scrivi - per non mostrare il tasto.": "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. If it sits on the same device as the contact, or is named like it with «bypass» at the end, the dashboard finds it by itself; otherwise write it here. The button to bypass or re-include this opening shows up on the Openings page. On means bypassed. Write - to hide the button.",
@@ -4842,7 +4827,6 @@ var SOURCE_INDEX = Object.freeze({
   "Leggermente caldo": "Slightly warm",
   "Leggermente fresco": "Slightly cool",
   "Leggero disagio": "Slight discomfort",
-  "Leggi adesso": "Read now",
   "Leggi la risposta ad alta voce": "Read the answer out loud",
   "Leggo aree ed entità da Home Assistant…": "Reading areas and entities from Home Assistant…",
   "Leggo la plancia di origine…": "Reading the source dashboard…",
@@ -4853,8 +4837,6 @@ var SOURCE_INDEX = Object.freeze({
   "Leggo lo storico dal Recorder…": "Reading the history from the Recorder…",
   "Leggo lo storico di Home Assistant…": "Reading Home Assistant history…",
   "Leggo…": "Reading…",
-  "letta": "read",
-  "Lette dalle mail del fornitore nella casella collegata, in sola lettura.": "Read from the supplier's emails in the connected mailbox, read-only.",
   "Lettere": "Letters",
   "Lettiera": "Litter box",
   "Lettiera da pulire": "Litter box needs cleaning",
@@ -5045,7 +5027,6 @@ var SOURCE_INDEX = Object.freeze({
   "Minore di…": "Less than…",
   "minuti": "minutes",
   "Minuti di questa corsa": "Minutes for this run",
-  "minuti fa": "minutes ago",
   "misura": "reading",
   "misura l'umidità": "it measures humidity",
   "misura la temperatura": "it measures temperature",
@@ -5625,7 +5606,6 @@ var SOURCE_INDEX = Object.freeze({
   "Parto alle": "Leave at",
   "Parziale": "Partial",
   "Passato": "Past",
-  "Password per app": "App password",
   "Pastiglia senza nome": "Unnamed pill",
   "Pastiglie di stato": "Status pills",
   "pausa": "pause",
@@ -6496,7 +6476,6 @@ var SOURCE_INDEX = Object.freeze({
   "Sciopero": "Strike",
   "Sciopero oggi": "Strike today",
   "Scollega": "Disconnect",
-  "Scollegare la casella? Il ponte dimentica indirizzo, password e bollette lette.": "Disconnect the mailbox? The bridge forgets the address, the password and the bills it read.",
   "Scollegata": "Unplugged",
   "Scollegato da qui. Per revocare del tutto l'accesso, toglilo anche dalle applicazioni autorizzate su github.com.": "Disconnected here. To revoke access entirely, remove it from your authorized apps on github.com too.",
   "Scollegato: le caselle restano come sono, e si salva col tasto in fondo.": "Unlinked: the fields stay as they are, and the button at the bottom saves.",
@@ -6647,7 +6626,6 @@ var SOURCE_INDEX = Object.freeze({
   "Serve un": "You need a",
   "Serve un contatore totale kWh": "A total kWh meter is required",
   "Serve un titolo.": "A title is required.",
-  "Serve un utente amministratore.": "An administrator is needed.",
   "Serve un'entità alarm_control_panel.* valida.": "A valid alarm_control_panel.* entity is required.",
   "Serve un'entità button.*, select.* o switch.* — oppure input_button, input_select, input_boolean, script, scene.": "A button.*, select.* or switch.* entity is required — or input_button, input_select, input_boolean, script, scene.",
   "Serve un'entità button.*, select.*, switch.* o remote.* (anche remote.nome:comando) — oppure input_button, input_select, input_boolean, script, scene.": "A button.*, select.*, switch.* or remote.* entity is required (also remote.name:command) — or input_button, input_select, input_boolean, script, scene.",
@@ -26986,7 +26964,7 @@ function ilRacconto({ imp, ponte, assente, lettura: lettura3, prezzo, adesso: ad
       };
     }
     if (esito2.tipo === "finita") {
-      const perche5 = esito2.motivo === "limite" && Number.isFinite(esito2.soc) ? t(`${soc}% raggiunto`, `${soc}% reached`) : esito2.motivo === "staccata" ? t("Auto staccata", "Car unplugged") : esito2.motivo === "spenta" ? t("Spenta da te", "Turned off") : t("Fine della fascia", "End of the window");
+      const perche4 = esito2.motivo === "limite" && Number.isFinite(esito2.soc) ? t(`${soc}% raggiunto`, `${soc}% reached`) : esito2.motivo === "staccata" ? t("Auto staccata", "Car unplugged") : esito2.motivo === "spenta" ? t("Spenta da te", "Turned off") : t("Fine della fascia", "End of the window");
       const pezzi = [];
       if (Number.isFinite(esito2.kwh)) {
         const kwh5 = formatNumber(esito2.kwh, 1);
@@ -27002,7 +26980,7 @@ function ilRacconto({ imp, ponte, assente, lettura: lettura3, prezzo, adesso: ad
       }
       return {
         tono: "finita",
-        titolo: `${t(`Finita alle ${alle}`, `Finished at ${alle}`)} · ${perche5}`,
+        titolo: `${t(`Finita alle ${alle}`, `Finished at ${alle}`)} · ${perche4}`,
         sotto: pezzi.join(" · ")
       };
     }
@@ -30037,14 +30015,14 @@ function scriviLaSessione() {
   const muto2 = !grezzo || /^(unknown|unavailable|none)$/i.test(grezzo);
   const kwh5 = muto2 ? null : inKilowattora(numero14(grezzo), stato3?.attributes?.unit_of_measurement);
   const testo4 = kwh5 === null ? "—" : lEnergiaInParole(kwh5, { decimali: Math.abs(kwh5) < 10 ? 2 : 1 });
-  const perche5 = kwh5 !== null ? "" : stato3 ? t(
+  const perche4 = kwh5 !== null ? "" : stato3 ? t(
     "Il contatore della sessione non sta rispondendo.",
     "The session meter is not answering."
   ) : t("Nessun contatore della sessione.", "No session meter.");
   for (const casella7 of caselle2) {
     if (casella7.textContent !== testo4) casella7.textContent = testo4;
     const riga3 = casella7.closest(".lm-kpi-card,.lm-sess-kpi,.ev-popup-session-row") || casella7;
-    if (riga3.title !== perche5) riga3.title = perche5;
+    if (riga3.title !== perche4) riga3.title = perche4;
   }
 }
 function umanizzaCaselle() {
@@ -46555,7 +46533,7 @@ function fraQuantoSiRiprova(tentativi) {
   return Math.min(12e4, 3e3 * 2 ** Math.min(quanti2 - 1, 6));
 }
 function creaLaMemoriaDeiLoghi({
-  chiedi: chiedi8 = null,
+  chiedi: chiedi7 = null,
   arrivato = () => {
   },
   riprova: riprova2 = () => {
@@ -46584,7 +46562,7 @@ function creaLaMemoriaDeiLoghi({
     while (inCorso2 < insieme3 && coda.length) {
       const { entita: entita3, foto } = coda.shift();
       inCorso2 += 1;
-      Promise.resolve().then(() => chiedi8(entita3)).then(
+      Promise.resolve().then(() => chiedi7(entita3)).then(
         (risposta) => {
           if (risposta === null || risposta === void 0) {
             segna2(entita3, { esito: "niente", url: diretto(foto), tentativi: 0, dopo: 0 });
@@ -46615,7 +46593,7 @@ function creaLaMemoriaDeiLoghi({
     if (voce3?.esito === "preso" || voce3?.esito === "niente" || voce3?.esito === "attesa")
       return voce3.url || "";
     if (voce3?.esito === "caduto" && adesso2() < voce3.dopo) return voce3.url || "";
-    if (typeof chiedi8 !== "function") {
+    if (typeof chiedi7 !== "function") {
       const url = diretto(foto);
       memoria.set(chi, { esito: "niente", url, tentativi: 0, dopo: 0 });
       return url;
@@ -49349,9 +49327,9 @@ function ensureFloodEditorRows() {
 }
 function seNonEUnaSonda(id, states) {
   const suo2 = states?.[id];
-  const perche5 = !suo2 ? t("in Home Assistant non c'è", "not in Home Assistant") : isFloodSensor(id, suo2) ? "" : t("non è un sensore di allagamento", "not a flood sensor");
-  if (!perche5) return "";
-  return `<div class="ed-hint" data-dm-flood-dubbia="true">⚠️ ${esc(perche5)}</div>`;
+  const perche4 = !suo2 ? t("in Home Assistant non c'è", "not in Home Assistant") : isFloodSensor(id, suo2) ? "" : t("non è un sensore di allagamento", "not a flood sensor");
+  if (!perche4) return "";
+  return `<div class="ed-hint" data-dm-flood-dubbia="true">⚠️ ${esc(perche4)}</div>`;
 }
 function installFloodDeleteHandler() {
   if (state45.deleteBound) return false;
@@ -70689,9 +70667,9 @@ var LOGHI = creaLaMemoriaDeiLoghi({
    * Home e' l'unica cosa accesa. La si chiede a runtime, quando c'e'. Una
    * lettura: se e' partita prima che la porta fosse aperta, si rimanda. */
   chiedi: (entita3) => {
-    const chiedi8 = root.dmBridgeRequest;
-    if (typeof chiedi8 !== "function") return Promise.reject(new Error("bridge not ready"));
-    return chiedi8(
+    const chiedi7 = root.dmBridgeRequest;
+    if (typeof chiedi7 !== "function") return Promise.reject(new Error("bridge not ready"));
+    return chiedi7(
       "ponte/aggiornamenti/logo",
       { entity_id: entita3 },
       { attesa: ATTESA_DEL_LOGO, rimanda: true }
@@ -81817,10 +81795,10 @@ function riquadroDegliImpianti(panel2, plant, impianti2) {
       const riga3 = element("div", "dm-imp-riga");
       const testo4 = element("div", "dm-imp-riga-testo");
       testo4.append(element("b", "", clean(voce3.device.name)));
-      const perche5 = voce3.da === DA_CARICO ? t("suggerito: la stessa potenza è già un carico di", "suggested: the same power is already a load of") : voce3.da === DA_PIANO ? t("suggerito: il suo piano è coperto da", "suggested: its floor is covered by") : t("nessun impianto", "no plant");
+      const perche4 = voce3.da === DA_CARICO ? t("suggerito: la stessa potenza è già un carico di", "suggested: the same power is already a load of") : voce3.da === DA_PIANO ? t("suggerito: il suo piano è coperto da", "suggested: its floor is covered by") : t("nessun impianto", "no plant");
       const suggerito = impianti2.find((impianto) => clean(impianto.id) === voce3.id);
       testo4.append(
-        element("small", "", suggerito ? `${perche5} ${nome(suggerito)}` : perche5)
+        element("small", "", suggerito ? `${perche4} ${nome(suggerito)}` : perche4)
       );
       riga3.append(testo4);
       const scelte5 = element("div", "dm-imp-scelte");
@@ -94332,10 +94310,10 @@ function sorvegliaLaBarra() {
   state97.barraSorvegliata = barra2;
   state97.sorvegliante = new Sorvegliante(() => {
     if (state97.disegnoInCoda) return;
-    const chiedi8 = root.requestAnimationFrame || root.setTimeout;
-    if (typeof chiedi8 !== "function") return;
+    const chiedi7 = root.requestAnimationFrame || root.setTimeout;
+    if (typeof chiedi7 !== "function") return;
     state97.disegnoInCoda = true;
-    chiedi8.call(root, () => {
+    chiedi7.call(root, () => {
       state97.disegnoInCoda = false;
       disegniNellaBarra();
     });
@@ -94380,14 +94358,14 @@ var RIPROVE_MASSIME_DELLA_BARRA = 90;
 function scopriQuandoHaFinito() {
   if (state97.barraScoperta || state97.scopertaInCoda) return;
   applicaLaVisibilita();
-  const chiedi8 = root.requestAnimationFrame || root.setTimeout;
-  if (typeof chiedi8 !== "function") {
+  const chiedi7 = root.requestAnimationFrame || root.setTimeout;
+  if (typeof chiedi7 !== "function") {
     scopriLaBarra();
     return;
   }
   const prima = firmaDellaBarra();
   state97.scopertaInCoda = true;
-  chiedi8.call(root, () => {
+  chiedi7.call(root, () => {
     state97.scopertaInCoda = false;
     if (state97.barraScoperta) return;
     applicaLaVisibilita();
@@ -94441,10 +94419,10 @@ function accodaDopo(nome) {
 }
 function filtraNelFotogramma() {
   if (state97.filtroInCoda) return;
-  const chiedi8 = root.requestAnimationFrame || root.setTimeout;
-  if (typeof chiedi8 !== "function") return;
+  const chiedi7 = root.requestAnimationFrame || root.setTimeout;
+  if (typeof chiedi7 !== "function") return;
   state97.filtroInCoda = true;
-  chiedi8.call(root, () => {
+  chiedi7.call(root, () => {
     state97.filtroInCoda = false;
     applicaLaVisibilita();
     disegniNellaBarra();
@@ -104308,7 +104286,7 @@ function cardDato(c, i, s) {
     ${clean(c.sotto) ? `<div class="mu-dato-s">${esc(clean(c.sotto))}</div>` : ""}
   </div>`;
 }
-var vuoto3 = (i, perche5 = "") => `<div class="mu-carta mu-card mu-vuoto" data-mu-card="${i}"><span class="mu-et">${esc(perche5 || t("Posto libero", "Empty slot"))}</span></div>`;
+var vuoto3 = (i, perche4 = "") => `<div class="mu-carta mu-card mu-vuoto" data-mu-card="${i}"><span class="mu-et">${esc(perche4 || t("Posto libero", "Empty slot"))}</span></div>`;
 function cardDelPosto(c, i, zona = "", { scena: scena2 = false } = {}) {
   if (!c || c.tipo === "vuoto") return vuoto3(i);
   if (scena2) return c.entita ? cardEntita(c, i, true) : cardAzione(c, i, true);
@@ -105628,10 +105606,10 @@ function consiglioSulRiposo() {
 var pilaChiesta = false;
 function ascoltaLaBatteria() {
   if (pilaChiesta) return;
-  const chiedi8 = root.navigator?.getBattery;
-  if (typeof chiedi8 !== "function") return;
+  const chiedi7 = root.navigator?.getBattery;
+  if (typeof chiedi7 !== "function") return;
   pilaChiesta = true;
-  Promise.resolve().then(() => chiedi8.call(root.navigator)).then((manager) => {
+  Promise.resolve().then(() => chiedi7.call(root.navigator)).then((manager) => {
     const leggi3 = () => {
       state115.batteria = batteriaDalBrowser(manager);
       if (state115.riposo && state115.muro?.batteria?.attiva) disegna6();
@@ -116086,7 +116064,7 @@ function paroleDi2(p) {
   const accende = d.verso === "accende";
   const quando4 = d.festivi ? t(`Alle ${ora6} nel fine settimana`, `At ${ora6} at the weekend`) : t(`Alle ${ora6} nei giorni feriali`, `At ${ora6} on weekdays`);
   const allora = tapparella ? accende ? t(`apri ${nome}`, `open ${nome}`) : t(`chiudi ${nome}`, `close ${nome}`) : accende ? t(`accendi ${nome}`, `turn on ${nome}`) : t(`spegni ${nome}`, `turn off ${nome}`);
-  const perche5 = tapparella ? accende ? t(
+  const perche4 = tapparella ? accende ? t(
     `l'hai aperta quasi ogni giorno fra ${da} e ${fino}, nelle ultime ${settimane} settimane.`,
     `you opened it almost every day between ${da} and ${fino}, over the last ${settimane} weeks.`
   ) : t(
@@ -116099,7 +116077,7 @@ function paroleDi2(p) {
     `l'hai spenta quasi ogni giorno fra ${da} e ${fino}, nelle ultime ${settimane} settimane.`,
     `you turned it off almost every day between ${da} and ${fino}, over the last ${settimane} weeks.`
   );
-  return { quando: quando4, allora, perche: perche5, nome: `${nome} · ${ora6}` };
+  return { quando: quando4, allora, perche: perche4, nome: `${nome} · ${ora6}` };
 }
 var disegnoDellaProposta = (p) => p.chiave === "abitudineOrario" ? "automazioni" : clean(p.disegno) || "automazioni";
 var perche2 = (testo4) => `<div class="pro-perche"><b>${esc(t("Perché:", "Why:"))}</b> ${esc(testo4)}</div>`;
@@ -116841,7 +116819,7 @@ function complessa({ app }) {
     t("Solo se", "Only if"),
     r.soloSe
   )}${blocco3("a", "#16a34a", t("Allora", "Then do"), r.allora)}` : "";
-  const perche5 = !v?.modificabile ? t(
+  const perche4 = !v?.modificabile ? t(
     "Questa automazione sta in un file di Home Assistant: qui la accendi, la spegni e la esegui, e si cambia lì.",
     "This automation lives in a Home Assistant file: here you turn it on, off and run it, and it is changed there."
   ) : t(
@@ -116849,7 +116827,7 @@ function complessa({ app }) {
     "This automation uses advanced features (a choice between cases, a template, a blueprint…): here you can turn it on and off, run it, rename it and change its room. For the rest:"
   );
   const link = v?.id && !nellApp() ? `<a class="ha-apri" href="${esc(indirizzoInHA(v.id))}" target="_top" rel="noopener">${esc(t("Apri in Home Assistant ↗", "Open in Home Assistant ↗"))}</a>` : "";
-  return `${indietroDellaScheda(app)}${v ? testaDellaScheda(v) : ""}${corpo4}<div class="ha-av"><span class="i" aria-hidden="true">ℹ️</span><div>${esc(perche5)}${link ? `<br>${link}` : ""}</div></div>${state124.errore ? `<div class="au-errore" role="alert">${esc(state124.errore)}</div>` : ""}`;
+  return `${indietroDellaScheda(app)}${v ? testaDellaScheda(v) : ""}${corpo4}<div class="ha-av"><span class="i" aria-hidden="true">ℹ️</span><div>${esc(perche4)}${link ? `<br>${link}` : ""}</div></div>${state124.errore ? `<div class="au-errore" role="alert">${esc(state124.errore)}</div>` : ""}`;
 }
 var ID_DELLA_CONFERMA = "au-conferma";
 function apriLaConferma(v) {
@@ -118915,8 +118893,8 @@ async function salva19() {
     if (risposta?.viaggio) state125.bozza.id = risposta.viaggio.id;
     await carica();
   } catch (errore) {
-    const perche5 = clean(errore?.message);
-    state125.errore = perche5 === "premium-richiesto" ? t("Serve GdANav Premium.", "GdANav Premium is needed.") : perche5 === "troppi-viaggi" ? t("Hai già 50 viaggi: togline qualcuno.", "You already have 50 trips: remove some.") : t(
+    const perche4 = clean(errore?.message);
+    state125.errore = perche4 === "premium-richiesto" ? t("Serve GdANav Premium.", "GdANav Premium is needed.") : perche4 === "troppi-viaggi" ? t("Hai già 50 viaggi: togline qualcuno.", "You already have 50 trips: remove some.") : t(
       "Il viaggio non si è salvato: controlla la meta, il giorno e l'ora.",
       "The trip was not saved: check destination, day and time."
     );
@@ -124560,9 +124538,9 @@ function cosaCeInCasaMarkup() {
         "Can't read it: the GdAHome add-on must be running, and you must be an administrator."
       )
     )}</small></div>`;
-  const perche5 = PERCHE();
+  const perche4 = PERCHE();
   const righe3 = (casa.cose || []).map((c) => {
-    const motivo = perche5[c.perche] || perche5[c.genere] || (c.tipo === "porta" ? t("Porta", "Door") : t("Luce", "Light"));
+    const motivo = perche4[c.perche] || perche4[c.genere] || (c.tipo === "porta" ? t("Porta", "Door") : t("Luce", "Light"));
     return `<div class="dm-people-casa-riga" data-person-casa="${esc(c.entita)}">
         <div class="dm-people-casa-nome"><b>${esc(c.nome || c.entita)}</b><small>${esc(motivo)}</small></div>
         <div class="dm-face-modes" role="radiogroup">${SCELTE2().map(
@@ -136290,10 +136268,10 @@ function veloMarkup(riga3) {
 }
 function erroreMarkup(riga3) {
   if (!vivoPer(state157.errore, riga3.entity)) return "";
-  const perche5 = clean(state157.errore.testo);
+  const perche4 = clean(state157.errore.testo);
   return `<small class="dm-varco-errore" role="alert">⚠️<span>${esc(
     t("La centrale non ha accettato", "The alarm panel refused")
-  )}${perche5 ? `: ${esc(perche5)}` : ""}</span></small>`;
+  )}${perche4 ? `: ${esc(perche4)}` : ""}</span></small>`;
 }
 function rigaMarkup21(riga3, states = {}) {
   return `<article class="dm-varco" data-varco="${esc(riga3.stato || "muto")}"
@@ -139168,17 +139146,7 @@ function mesiAllaScadenza(data, adesso2 = Date.now()) {
 
 // src/sections/la-bolletta-section.js
 var KEY168 = "__DASHBOARDMODERN_BOLLETTE__";
-var state164 = root[KEY168] ||= {
-  installed: false,
-  frame: 0,
-  firma: "",
-  /* Le bollette lette dalla posta, come le dice il ponte
-   * (`ponte/bollette/stato`), e quando le si e' chieste. */
-  posta: null,
-  postaAlle: 0,
-  postaInVolo: false,
-  firmaPosta: ""
-};
+var state164 = root[KEY168] ||= { installed: false, frame: 0, firma: "" };
 var BOLLETTE_VIEW_ID = "view-bollette";
 var LINGUETTA = "bollette";
 function nomeDellaVoce(chiave2) {
@@ -139245,7 +139213,7 @@ function accendiLaLinguetta2(bolletta) {
   if (!linguetta3 || !vista2) return;
   if (linguetta3.parentElement?.lastElementChild !== linguetta3)
     linguetta3.parentElement.append(linguetta3);
-  const serve = Boolean(bolletta) || Boolean(state164.posta?.collegata);
+  const serve = Boolean(bolletta);
   linguetta3.hidden = !serve;
   if (serve) linguetta3.style.removeProperty("display");
   else linguetta3.style.setProperty("display", "none", "important");
@@ -139279,64 +139247,8 @@ function casella6(chiave2, valore3, sotto = "", attenzione = false) {
       ${sotto ? `<small>${esc(sotto)}</small>` : ""}
     </div>`;
 }
-var meseScritto = (quando4) => new Date(quando4).toLocaleDateString(locale(), { month: "long", year: "numeric" });
-var giornoCorto = (quando4) => new Date(quando4).toLocaleDateString(locale(), { day: "numeric", month: "short" });
-function testaDallaPosta(ultima, adesso2) {
-  const scaduta = ultima.scadenza && ultima.scadenza < adesso2 && ultima.pagata !== true;
-  const pastiglia4 = ultima.pagata === true ? `<span class="dm-bol-stato" data-pagata="true">✓ ${esc(t("Addebito sul conto", "Direct debit"))}</span>` : "";
-  const sotto = [
-    ultima.nomeFornitore,
-    ultima.scadenza ? `${t("Scadenza", "Due")} ${dataScritta3(ultima.scadenza)}` : ""
-  ].filter(Boolean).join(" · ");
-  return `<section class="dm-bol-testa" data-pagata="${ultima.pagata === true ? "true" : scaduta ? "false" : ""}">
-      <div class="dm-bol-riga">
-        <div class="dm-bol-cifra"><small>${esc(t("Ultima bolletta", "Latest bill"))}</small><strong>${esc(euro3(ultima.importo))}</strong></div>
-        ${pastiglia4}
-      </div>
-      ${sotto ? `<span class="dm-bol-sotto">${esc(sotto)}</span>` : ""}
-    </section>`;
-}
-function storicoDallaPosta(bollette) {
-  const elenco15 = bollette.slice(0, 12);
-  const massimo = Math.max(...elenco15.map((b2) => b2.importo || 0), 1);
-  const righe3 = elenco15.map((b2) => {
-    const quando4 = b2.emessa || b2.data;
-    const dettagli = [
-      b2.periodo?.dal && b2.periodo?.al ? `${giornoCorto(b2.periodo.dal)} – ${giornoCorto(b2.periodo.al)}` : "",
-      b2.consumo?.valore != null ? `${formatNumber(b2.consumo.valore, 0)} ${b2.consumo.unita === "kwh" ? "kWh" : b2.consumo.unita}` : ""
-    ].filter(Boolean).join(" · ");
-    return `<li class="dm-bol-voce">
-          <span class="dm-bol-quando"><b>${esc(quando4 ? meseScritto(quando4) : "—")}</b>${dettagli ? `<small>${esc(dettagli)}</small>` : ""}</span>
-          <span class="dm-bol-barra" aria-hidden="true"><i style="--quota:${Math.round((b2.importo || 0) / massimo * 100)}"></i></span>
-          <em>${esc(euro3(b2.importo))}</em>
-        </li>`;
-  }).join("");
-  return `<section class="dm-bol-storico">
-      <h3>${esc(t("Le bollette arrivate", "Bills received"))}</h3>
-      <ul>${righe3}</ul>
-    </section>`;
-}
-function paginaDelleBollette(bolletta, adesso2 = Date.now(), posta = null) {
-  const dallaPosta = Array.isArray(posta?.bollette) ? posta.bollette : [];
-  if (!bolletta && !dallaPosta.length) {
-    if (!posta?.collegata) return "";
-    return `<section class="dm-bol-testa"><div class="dm-bol-cifra"><small>${esc(
-      t("Bollette dalla posta", "Bills from email")
-    )}</small></div><span class="dm-bol-sotto">${esc(
-      t(
-        "La casella è collegata, ma non c'e' ancora nessuna bolletta: arrivano con la prossima mail del fornitore.",
-        "The mailbox is connected, but there is no bill yet: they arrive with the supplier's next email."
-      )
-    )}</span></section>`;
-  }
-  if (!bolletta)
-    return `${testaDallaPosta(dallaPosta[0], adesso2)}${storicoDallaPosta(dallaPosta)}
-      <p class="dm-bol-nota">${esc(
-      t(
-        "Lette dalle mail del fornitore nella casella collegata, in sola lettura.",
-        "Read from the supplier's emails in the connected mailbox, read-only."
-      )
-    )}</p>`;
+function paginaDelleBollette(bolletta, adesso2 = Date.now()) {
+  if (!bolletta) return "";
   const { voci: voci4, daPagare, pagata } = bolletta;
   const pastiglia4 = pagata === true ? `<span class="dm-bol-stato" data-pagata="true">✓ ${esc(t("Pagata", "Paid"))}</span>` : pagata === false ? `<span class="dm-bol-stato" data-pagata="false">${esc(t("Non pagata", "Unpaid"))}</span>` : "";
   const grande = daPagare !== null ? `<small>${esc(t("Da pagare", "To pay"))}</small><strong>${esc(euro3(daPagare))}</strong>` : `<small>${esc(t("Ultima bolletta", "Latest bill"))}</small><strong>${esc(euro3(voci4.ultima?.valore))}</strong>`;
@@ -139376,7 +139288,6 @@ function paginaDelleBollette(bolletta, adesso2 = Date.now(), posta = null) {
       ${sottoGrande}
     </section>
     ${caselle2.length ? `<div class="dm-bol-dati">${caselle2.join("")}</div>` : ""}
-    ${dallaPosta.length ? storicoDallaPosta(dallaPosta) : ""}
     <p class="dm-bol-nota">${esc(
     t(
       "I dati arrivano dall'integrazione del fornitore. I sensori si scelgono in Config → Energia → Impostazioni.",
@@ -139392,7 +139303,7 @@ function siVede3() {
 function dipingi17(bolletta = laBolletta(allStates() || {}, salvate())) {
   const dove = laVista2()?.querySelector?.("#bollette-wrap");
   if (!dove || !siVede3()) return;
-  const markup7 = paginaDelleBollette(bolletta, Date.now(), state164.posta);
+  const markup7 = paginaDelleBollette(bolletta);
   if (state164.firma === markup7 && dove.firstElementChild) return;
   state164.firma = markup7;
   dove.innerHTML = markup7;
@@ -139452,169 +139363,15 @@ function ensureScheda2() {
   });
   impostazioni.append(scheda8);
 }
-function chiediLaPosta(forza = false) {
-  const ora6 = Date.now();
-  if (state164.postaInVolo || !forza && ora6 - state164.postaAlle < 5 * 6e4) return;
-  state164.postaInVolo = true;
-  state164.postaAlle = ora6;
-  chiediAHomeAssistant({ type: "ponte/bollette/stato" }, 1e4).then((detto3) => {
-    state164.posta = detto3 && typeof detto3 === "object" ? detto3 : null;
-    state164.firma = "";
-    schedule42();
-  }).catch((errore) => {
-    if (/socket/i.test(String(errore?.message || errore))) state164.postaAlle = 0;
-  }).finally(() => {
-    state164.postaInVolo = false;
-  });
-}
-function perche4(codice) {
-  if (codice === "accesso-rifiutato")
-    return t(
-      "Gmail ha rifiutato l'accesso: controlla l'indirizzo e la password per app.",
-      "Gmail refused the login: check the address and the app password."
-    );
-  if (codice === "email-non-valida")
-    return t("L'indirizzo non è valido.", "The address is not valid.");
-  if (codice === "password-non-valida")
-    return t(
-      "La password per app ha 16 lettere: copiala da Google.",
-      "The app password has 16 letters: copy it from Google."
-    );
-  if (codice === "nessuna-risposta")
-    return t("Gmail non ha risposto. Riprova.", "Gmail did not answer. Try again.");
-  if (/admin|amministra|forbidden|unauthorized/i.test(codice))
-    return t("Serve un utente amministratore.", "An administrator is needed.");
-  return t("La posta non si raggiunge. Riprova.", "The mailbox can't be reached. Try again.");
-}
-function quandoLetta(alle) {
-  if (!alle) return "";
-  const minuti = Math.round((Date.now() - alle) / 6e4);
-  if (minuti < 2) return t("adesso", "just now");
-  if (minuti < 90) return `${minuti} ${t("minuti fa", "minutes ago")}`;
-  return `${Math.round(minuti / 60)} ${t("ore fa", "hours ago")}`;
-}
-function schedaPostaMarkup(posta) {
-  const noti = Array.isArray(posta?.fornitoriNoti) ? posta.fornitoriNoti : [];
-  if (posta?.collegata) {
-    const quante3 = posta.bollette?.length || 0;
-    return `<div class="ed-sec-title">📧 ${esc(t("Bollette dalla posta", "Bills from email"))}</div>
-      <div class="dm-bol-collegata">
-        <b>${esc(t("Collegata", "Connected"))}: ${esc(posta.indirizzo || "")}</b>
-        <small>${esc(
-      [
-        `${quante3} ${quante3 === 1 ? t("bolletta", "bill") : t("bollette", "bills")}`,
-        posta.lettoIl ? `${t("letta", "read")} ${quandoLetta(posta.lettoIl)}` : ""
-      ].filter(Boolean).join(" · ")
-    )}</small>
-        ${posta.errore ? `<small class="dm-bol-errore">${esc(perche4(posta.errore))}</small>` : ""}
-      </div>
-      <div class="dm-bol-tasti">
-        <button type="button" class="ed-save-btn" data-dm-posta-aggiorna>🔄 ${esc(t("Leggi adesso", "Read now"))}</button>
-        <button type="button" class="ed-save-btn dm-bol-scollega" data-dm-posta-scollega>${esc(t("Scollega", "Disconnect"))}</button>
-      </div>`;
-  }
-  const scelte5 = noti.map(
-    (f) => `<label class="dm-bol-forn"><input type="checkbox" value="${esc(f.id)}"${f.id === "enel" ? " checked" : ""}> ${esc(f.nome)}</label>`
-  ).join("");
-  return `<div class="ed-sec-title">📧 ${esc(t("Bollette dalla posta", "Bills from email"))}</div>
-    <div class="ed-hint">${esc(
-    t(
-      "Il ponte legge solo le mail dei fornitori scelti, in sola lettura, ogni sei ore. Serve una password per app di Google: Account Google → Sicurezza → Verifica in due passaggi → Password per le app. La password resta cifrata in casa e non si vede più.",
-      "The bridge reads only the chosen suppliers' emails, read-only, every six hours. It needs a Google app password: Google Account → Security → 2-Step Verification → App passwords. The password stays encrypted at home and is never shown again."
-    )
-  )}</div>
-    <label class="dm-bol-campo"><span>${esc(t("Indirizzo Gmail", "Gmail address"))}</span>
-      <input class="ed-input" type="email" autocomplete="off" spellcheck="false" data-dm-posta-email placeholder="nome@gmail.com"></label>
-    <label class="dm-bol-campo"><span>${esc(t("Password per app", "App password"))}</span>
-      <input class="ed-input" type="password" autocomplete="new-password" spellcheck="false" data-dm-posta-password placeholder="xxxx xxxx xxxx xxxx"></label>
-    <div class="dm-bol-campo"><span>${esc(t("Fornitori", "Suppliers"))}</span><div class="dm-bol-fornitori">${scelte5}</div></div>
-    <small class="dm-bol-errore" data-dm-posta-errore hidden></small>
-    <button type="button" class="ed-save-btn" data-dm-posta-collega>🔗 ${esc(t("Collega", "Connect"))}</button>`;
-}
-function ensureSchedaPosta() {
-  const editor3 = doc?.querySelector?.(
-    '#ed-body[data-editor="energy"],#editor-modal [data-editor="energy"]'
-  );
-  const impostazioni = editor3?.querySelector?.('[data-energy-panel="settings"]');
-  if (!impostazioni || !state164.posta) return;
-  let scheda8 = impostazioni.querySelector("#dm-energia-posta");
-  if (!scheda8) {
-    scheda8 = doc.createElement("div");
-    scheda8.id = "dm-energia-posta";
-    scheda8.className = "ed-form dm-bol-scheda";
-    impostazioni.append(scheda8);
-    scheda8.addEventListener("click", clicNellaSchedaPosta);
-  }
-  const markup7 = schedaPostaMarkup(state164.posta);
-  if (state164.firmaPosta === markup7 && scheda8.firstElementChild) return;
-  state164.firmaPosta = markup7;
-  scheda8.innerHTML = markup7;
-}
-function chiedi7(tipo, dati, tasto2) {
-  const parola = tasto2.textContent;
-  tasto2.disabled = true;
-  tasto2.textContent = t("Un momento…", "One moment…");
-  const errore = doc.querySelector("[data-dm-posta-errore]");
-  if (errore) errore.hidden = true;
-  return chiediAHomeAssistant({ type: tipo, ...dati }, 6e4).then((detto3) => {
-    state164.posta = detto3;
-    state164.firma = "";
-    state164.firmaPosta = "";
-    schedule42();
-  }).catch((no) => {
-    tasto2.disabled = false;
-    tasto2.textContent = parola;
-    const codice = String(no?.code || no?.message || no || "");
-    if (errore) {
-      errore.textContent = perche4(codice);
-      errore.hidden = false;
-    } else root.edToast?.(perche4(codice));
-  });
-}
-function clicNellaSchedaPosta(event) {
-  const collega = event.target.closest?.("[data-dm-posta-collega]");
-  if (collega) {
-    event.preventDefault();
-    const scheda8 = collega.closest("#dm-energia-posta");
-    const email = clean(scheda8.querySelector("[data-dm-posta-email]")?.value);
-    const campo5 = scheda8.querySelector("[data-dm-posta-password]");
-    const password = clean(campo5?.value);
-    const fornitori = [...scheda8.querySelectorAll(".dm-bol-forn input:checked")].map(
-      (i) => i.value
-    );
-    if (campo5) campo5.value = "";
-    chiedi7("ponte/bollette/collega", { email, password, fornitori }, collega);
-    return;
-  }
-  const aggiorna2 = event.target.closest?.("[data-dm-posta-aggiorna]");
-  if (aggiorna2) {
-    event.preventDefault();
-    chiedi7("ponte/bollette/aggiorna", {}, aggiorna2);
-    return;
-  }
-  const scollega = event.target.closest?.("[data-dm-posta-scollega]");
-  if (scollega) {
-    event.preventDefault();
-    const sicuro = root.confirm?.(
-      t(
-        "Scollegare la casella? Il ponte dimentica indirizzo, password e bollette lette.",
-        "Disconnect the mailbox? The bridge forgets the address, the password and the bills it read."
-      )
-    );
-    if (sicuro) chiedi7("ponte/bollette/scollega", {}, scollega);
-  }
-}
 function schedule42() {
   if (state164.frame) return;
   const giro = () => {
     state164.frame = 0;
     try {
-      chiediLaPosta();
       const bolletta = laBolletta(allStates() || {}, salvate());
       accendiLaLinguetta2(bolletta);
       dipingi17(bolletta);
       ensureScheda2();
-      ensureSchedaPosta();
     } catch (errore) {
       root.console?.warn?.("[DashboardModern] bollette", errore);
     }
@@ -139653,36 +139410,10 @@ function installStyles85() {
     html[data-theme="dark"] ${V} .dm-bol-testa[data-pagata="false"] .dm-bol-cifra strong{color:#fdba74}
     html[data-theme="dark"] ${V} .dm-bol-stato{background:rgba(245,158,11,.2);color:#fcd34d}
     html[data-theme="dark"] ${V} .dm-bol-stato[data-pagata="true"]{background:rgba(34,197,94,.18);color:#86efac}
-    ${V} .dm-bol-storico{display:grid;gap:10px;padding:18px 20px;border-radius:22px;
-      border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff)}
-    ${V} .dm-bol-storico h3{margin:0;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim,#64748b)}
-    ${V} .dm-bol-storico ul{list-style:none;margin:0;padding:0;display:grid;gap:2px}
-    ${V} .dm-bol-voce{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(60px,1fr) auto;align-items:center;gap:14px;
-      padding:10px 0;border-top:1px solid var(--card-border,#eef2f7)}
-    ${V} .dm-bol-voce:first-child{border-top:0}
-    ${V} .dm-bol-quando{display:grid;gap:2px;min-width:0}
-    ${V} .dm-bol-quando b{font-size:14px;font-weight:850;color:var(--text,#0f172a);text-transform:capitalize}
-    ${V} .dm-bol-quando small{font-size:12px;font-weight:700;color:var(--text-dim,#64748b);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${V} .dm-bol-barra{display:block;height:8px;border-radius:4px;background:var(--surface-2,#f1f5f9);overflow:hidden}
-    ${V} .dm-bol-barra i{display:block;height:100%;width:calc(var(--quota) * 1%);border-radius:4px;background:#0ea5e9}
-    ${V} .dm-bol-voce em{font-style:normal;font-family:Oswald,Inter,sans-serif;font-size:18px;font-weight:600;color:var(--text,#0f172a);white-space:nowrap}
-    .dm-bol-collegata{display:grid;gap:3px;margin:6px 0 10px}
-    .dm-bol-collegata b{font-size:14px;font-weight:850}
-    .dm-bol-collegata small,.dm-bol-errore{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
-    .dm-bol-errore{color:#b45309}
-    .dm-bol-tasti{display:flex;flex-wrap:wrap;gap:8px}
-    .dm-bol-scollega{background:transparent!important;color:var(--text-dim,#64748b)!important;border:1px solid var(--card-border,#e2e8f0)!important}
-    .dm-bol-fornitori{display:flex;flex-wrap:wrap;gap:6px 14px}
-    .dm-bol-forn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700}
     .dm-bol-campi{display:grid;gap:10px;margin:8px 0 12px}
     .dm-bol-campo{display:grid;gap:4px}
     .dm-bol-campo>span{font-size:12px;font-weight:800;color:var(--text-dim,#64748b)}
-    @media(max-width:520px){
-      ${V} .dm-bol-cifra strong{font-size:36px}
-      ${V} .dm-bol-voce{grid-template-columns:minmax(0,1fr) auto;gap:4px 12px}
-      ${V} .dm-bol-quando small{white-space:normal}
-      ${V} .dm-bol-barra{grid-column:1 / -1;grid-row:2;height:6px}
-    }
+    @media(max-width:520px){${V} .dm-bol-cifra strong{font-size:36px}}
     `
   );
 }

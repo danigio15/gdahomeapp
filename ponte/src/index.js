@@ -48,7 +48,6 @@ import { costruisciLaConsole, costruisciLaPortaDellApp, PROXY_DELL_INGRESS } fro
 import { Registri } from "./registri.js";
 import { Notifiche } from "./notifiche.js";
 import { Viaggi } from "./viaggi.js";
-import { Bollette } from "./bollette.js";
 import { RicaricaDiNotte } from "./ricarica-di-notte.js";
 import { Automazioni } from "./automazioni.js";
 
@@ -466,10 +465,6 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registro,
   });
   commissioni.viaggi = viaggi;
-  /* Le bollette dalla posta: la casella scelta da chi amministra, letta in
-   * sola lettura ogni sei ore. */
-  const bollette = new Bollette({ cartella: opzioni.cartella, registro });
-  commissioni.bollette = bollette;
   /* La ricarica di notte dell'auto elettrica con evcc: la fascia che costa
    * meno, e la modalita' di evcc giusta a quell'ora anche a plancia chiusa.
    * Legge le impostazioni dalla plancia principale e gli stati dallo specchio
@@ -653,7 +648,6 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   chiamata.avvia();
   void notifiche.parti();
   viaggi.parti();
-  bollette.parti();
   ricaricaDiNotte.parti();
   automazioni.parti();
   postino.parti();
@@ -739,7 +733,6 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     chiamata.spegni();
     notifiche.ferma();
     viaggi.ferma();
-    bollette.ferma();
     ricaricaDiNotte.ferma();
     automazioni.ferma();
     postino.ferma();

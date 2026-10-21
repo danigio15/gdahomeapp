@@ -367,10 +367,6 @@ const SOLO_CHI_AMMINISTRA = new Set([
   "ponte/plance/togli",
   "ponte/aggiornamenti/installa",
   "ponte/aggiornamenti/riavvia",
-  /* La casella delle bollette: la password per app entra di qui e basta. */
-  "ponte/bollette/collega",
-  "ponte/bollette/aggiorna",
-  "ponte/bollette/scollega",
   "ponte/zigbee/apri",
   "ponte/zigbee/chiudi",
   "ponte/zigbee/rinomina",
@@ -539,8 +535,6 @@ export class Commissioni {
     /* I viaggi pianificati di gdanav (`viaggi.js`). Si mettono anche dopo:
      * hanno bisogno delle notifiche, che nascono dopo le commissioni. */
     viaggi = null,
-    /* Le bollette dalla posta (`bollette.js`). */
-    bollette = null,
     /* La ricarica di notte (`ricarica-di-notte.js`): nasce dopo, come i
      * viaggi, perche' legge la casa dallo specchio delle notifiche. */
     ricaricaDiNotte = null,
@@ -610,7 +604,6 @@ export class Commissioni {
      * Assistant e qui sta nel ponte. */
     this.spegnimento = spegnimento;
     this.viaggi = viaggi;
-    this.bollette = bollette;
     /* E la ricarica di notte, che nasce dopo per la stessa ragione. */
     this.ricaricaDiNotte = ricaricaDiNotte;
     this.automazioni = automazioni;
@@ -860,16 +853,6 @@ export class Commissioni {
         utente: chiChiede,
         amministra: puoAmministrare === true,
       });
-    }
-    /* Le bollette dalla posta (`bollette.js`). Come tutte le commissioni le
-     * usa solo chi e' entrato in casa — il filo arriva qui gia' riconosciuto;
-     * collegare, aggiornare e scollegare la casella sono in
-     * `SOLO_CHI_AMMINISTRA`. Nel ponte non si vede niente: la password per
-     * app sta cifrata in `/data` e non torna mai indietro, e nei registri
-     * finiscono solo i conti, mai la password ne' il testo delle mail. */
-    if (typeof tipo === "string" && tipo.startsWith("ponte/bollette/")) {
-      if (!this.bollette) return no(id, "unknown_command", `non conosco ${tipo}`);
-      return this.bollette.rispondi(detto);
     }
     /* I viaggi di gdanav: dalla plancia e dal telefono, ognuno coi suoi. */
     if (typeof tipo === "string" && tipo.startsWith("ponte/viaggi/")) {
