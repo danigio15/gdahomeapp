@@ -10,6 +10,38 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.16.7
+
+- **Auto, la pagina nuova:** in alto il garage con tutte le auto di casa, col
+  loro logo e modello; sotto l'auto scelta, con l'autonomia in grande. Tre
+  linguette: **Ricarica** (potenza, ora in cui è pronta, percentuale scelta
+  libera col cursore, i tre modi di evcc — Spento, Intelligente, Fast — col
+  «tieni sempre un minimo» a parte, e la ricarica di notte), **Viaggi** (km di
+  ogni giorno, consumo, energia di oggi) e **Stato auto** (gomme, aperture,
+  temperature e tutti gli altri dati). Tema chiaro e scuro.
+- **Storico delle ricariche a casa:** 7 giorni, un mese qualunque o un periodo
+  scelto, letti dallo storico di Home Assistant: energia, quanta dal sole,
+  spesa con le fasce, e ogni ricarica con orari e costo.
+- **Widget Meteo nella Home:** com'è adesso, le prossime ore e i prossimi
+  giorni, senza aprire il radar.
+- **Energia che si riprende da sola:** dopo che il telefono ha dormito,
+  l'errore del Recorder non resta più sullo schermo; la plancia si ricollega.
+- **Clima:** non arriva più la notifica «clima acceso» per un termostato
+  acceso ma fermo.
+- **Aggiornamenti:** il tasto «Installa» anche dal browser, nella finestra
+  della pastiglia.
+- **Automazioni:** «＋ Nuova» e «Modifica» anche dal browser.
+- **Tessere col disegno:** scritte leggibili; le foto dei riquadri si vedono
+  anche dopo il primo caricamento.
+- **Animali:** la pappa anche per terrari e acquari.
+- **Campanello:** quello scelto nel Citofono fa suonare il telefono, con la
+  sua telecamera; il tocco su una notifica non si perde più.
+- **Foto delle notifiche dalle telecamere 4K:** le rimpicciolisce la casa,
+  così arrivano su iPhone e Android.
+- **GdANav:** la casa ricorda l'ultima ricarica di ogni auto, per il costo
+  dei viaggi.
+- **Android 15:** schermo intero anche sui telefoni meno recenti.
+
 ## 1.16.6
 
 - **L'assistente sul telefono:** dodici notifiche nuove, ognuna col tasto che
