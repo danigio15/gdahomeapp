@@ -1036,6 +1036,10 @@ export const PASSO_DELLE_STATISTICHE_MS = 5 * 60_000;
  * nuovo da leggere comunque. */
 export const AFFANNO_DEL_RECORDER_MS = PASSO_DELLE_STATISTICHE_MS;
 
+/* Quanto si aspetta il «pong» tornando davanti: una presa viva risponde in
+ * un attimo. */
+export const VERIFICA_DELLA_PRESA_MS = 5000;
+
 /* Quante risposte del Recorder si tengono da parte.
  *
  * La cache non buttava mai via niente: su una plancia accesa giorno e notte —
@@ -1145,6 +1149,9 @@ export class HomeAssistantBroker {
     this.inFilaAlRecorder = [];
     this.inCorsoAlRecorder = 0;
     this.recorderLentoDa = 0;
+    /* L'ultima volta che la presa ha detto qualcosa (vedi `spedisci`). */
+    this.ultimoSegno = 0;
+    this.verificaInCorso = null;
     this.socket = null;
     this.connection = null;
     this.authenticated = false;
@@ -1167,7 +1174,47 @@ export class HomeAssistantBroker {
   keepStateFeedAlive({ snapshot = true, onReady = () => {}, onError = () => {} } = {}) {
     this.flussoVoluto = { snapshot, onReady, onError };
     this.tentativiDelFlusso = 0;
+    this.ascoltaIlRisveglio();
     return this.riprendiIlFlusso();
+  }
+
+  /* La presa dopo che il telefono ha dormito.
+   *
+   * Dal campo: «Il Recorder di Home Assistant ci ha messo troppo a
+   * rispondere… poi non si aggiorna, devo chiudere e riaprire l'app». Con
+   * l'app in tasca il sistema congela la pagina, e la rete cambia (5G,
+   * Wi-Fi): la presa resta «aperta» per il browser, ma dall'altra parte non
+   * c'e' piu' nessuno. Ogni domanda scadeva, la colpa andava al Recorder, e
+   * gli eventi che muovono le tessere non arrivavano piu'. Tornando davanti
+   * si chiede un «ping» con poco tempo: se non torna, la presa si butta e se
+   * ne apre una nuova, col flusso degli stati. */
+  ascoltaIlRisveglio() {
+    if (this.risveglioInAscolto) return;
+    this.risveglioInAscolto = true;
+    const doc = globalThis.document;
+    const sveglia = () => {
+      if (doc?.visibilityState === "hidden") return;
+      void this.verificaLaPresa();
+    };
+    doc?.addEventListener?.("visibilitychange", sveglia);
+    globalThis.addEventListener?.("pageshow", sveglia);
+    globalThis.addEventListener?.("online", sveglia);
+  }
+
+  /** Se la presa aperta risponde ancora; se no si rifa'. */
+  verificaLaPresa(attesa = VERIFICA_DELLA_PRESA_MS) {
+    if (this.verificaInCorso) return this.verificaInCorso;
+    if (!this.socket || !this.authenticated) {
+      if (this.flussoVoluto) void this.riprendiIlFlusso();
+      return Promise.resolve(false);
+    }
+    this.verificaInCorso = this.spedisci({ type: "ping" }, attesa)
+      .then(() => true)
+      .catch(() => false)
+      .finally(() => {
+        this.verificaInCorso = null;
+      });
+    return this.verificaInCorso;
   }
 
   async riprendiIlFlusso() {
@@ -1279,6 +1326,7 @@ export class HomeAssistantBroker {
     } catch (_error) {
       return;
     }
+    this.ultimoSegno = Date.now();
 
     if (message.type === "auth_required") {
       const token = this.token();
@@ -1302,7 +1350,7 @@ export class HomeAssistantBroker {
       this.ingestState(message.event?.data?.new_state);
       return;
     }
-    if (message.type !== "result" || message.id == null) return;
+    if ((message.type !== "result" && message.type !== "pong") || message.id == null) return;
     const pending = this.pending.get(message.id);
     if (!pending) return;
     this.pending.delete(message.id);
@@ -1416,10 +1464,25 @@ export class HomeAssistantBroker {
     if (perIlRecorder) runtimeMetrics.increment("recorderRequests");
     const attesa =
       Number.isFinite(Number(timeout)) && Number(timeout) > 0 ? Number(timeout) : this.timeout;
+    const partita = Date.now();
     return new Promise((resolve, reject) => {
       const timer = globalThis.setTimeout?.(() => {
         this.pending.delete(id);
-        if (perIlRecorder) this.recorderLentoDa = Date.now();
+        /* Una presa viva parla di continuo — gli eventi degli stati, le
+         * altre risposte. Se da quando la domanda e' partita non ha detto
+         * niente, puo' non essere il Recorder lento ma la presa morta (il
+         * telefono che ha dormito): lo si chiede con un «ping», e se tace
+         * anche quello la presa si butta e la prossima domanda ne apre una
+         * nuova. */
+        const zitta = socket === this.socket && this.ultimoSegno < partita;
+        if (zitta && payload?.type === "ping") {
+          const persa = new Error("Home Assistant connection lost");
+          reject(persa);
+          this.reset(persa);
+          return;
+        }
+        if (zitta) void this.verificaLaPresa(Math.min(VERIFICA_DELLA_PRESA_MS, this.timeout));
+        else if (perIlRecorder) this.recorderLentoDa = Date.now();
         reject(new Error("Home Assistant response timeout"));
       }, attesa);
       this.pending.set(id, { resolve, reject, timer });

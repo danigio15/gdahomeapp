@@ -734,6 +734,14 @@ export class Commissioni {
      * misura) sono comandi preparati dal ponte per quella notifica e quel
      * telefono, come gli altri tasti: il telefono dice solo quale tasto.
      *
+     * `ponte/auto/ricariche-di-casa` (il costo dei viaggi di GdANav dentro
+     * GdAHome) passa per la stessa porta e con le stesse regole: **solo da
+     * un telefono abbinato con un utente** di Home Assistant — senza,
+     * `unauthorized` — in sola lettura, e nel ponte non si vede nulla. Dice,
+     * per ogni auto della plancia, l'ultima ricarica finita a casa: quando,
+     * da che percentuale a quale, i kWh, quanti col sole e gli euro di rete.
+     * Niente entita', niente altro.
+     *
      * `ponte/energia/giornata` (la pagina «La tua giornata» dell'app) passa
      * per la stessa porta: solo da un telefono abbinato **con un utente** di
      * Home Assistant — senza, `unauthorized` — e risponde in sola lettura coi

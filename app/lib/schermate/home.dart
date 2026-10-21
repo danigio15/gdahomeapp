@@ -160,8 +160,11 @@ class _HomeState extends State<Home> {
 
   void _ascoltaLeNotifiche() {
     final postino = Postino.istanza;
-    if (postino == null || _tocchi != null) return;
-    _tocchi = postino.tocchi.listen(_unTocco);
+    if (postino == null) return;
+    if (_tocchi == null) {
+      _tocchi = postino.tocchi.listen(_unTocco);
+      postino.inSospeso.addListener(_ascoltaLeNotifiche);
+    }
     for (final tocco in postino.prendiInSospeso()) {
       _unTocco(tocco);
     }
@@ -230,6 +233,9 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     inMacchina.addListener(_inMacchinaECambiato);
+    /* Il postino puo' arrivare dopo la home (l'app aperta da una notifica):
+     * appena c'e', ci si mette in ascolto e si prendono i tocchi in attesa. */
+    Postino.pronto.addListener(_ascoltaLeNotifiche);
     _ascoltaLeNotifiche();
     _forseChiediLeNotifiche();
     _seRisponde();
@@ -242,6 +248,8 @@ class _HomeState extends State<Home> {
 
   @override
   void dispose() {
+    Postino.pronto.removeListener(_ascoltaLeNotifiche);
+    Postino.istanza?.inSospeso.removeListener(_ascoltaLeNotifiche);
     _tocchi?.cancel();
     _giroDegliAggiornamenti?.cancel();
     inMacchina.removeListener(_inMacchinaECambiato);

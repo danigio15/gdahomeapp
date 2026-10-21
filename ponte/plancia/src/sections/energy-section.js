@@ -1982,6 +1982,13 @@ export function spiegazioneDellErrore(testo, states = allStates()) {
    * li' per non lasciare la frase a meta'. Chi legge vuole sapere cosa fare, e
    * la cosa da fare e' una sola — il Recorder ci mette troppo a rileggere lo
    * storico, e lo si alleggerisce. */
+  /* La presa morta dopo che il telefono ha dormito non e' colpa del
+   * Recorder: la plancia se ne apre un'altra da sola. */
+  if (/connection (lost|timeout|unavailable)/i.test(grezzo))
+    return t(
+      "La connessione con Home Assistant si è interrotta: mi ricollego da solo.",
+      "The connection to Home Assistant dropped: reconnecting on my own.",
+    );
   if (/timeout/i.test(grezzo))
     return t(
       "Il Recorder di Home Assistant ci ha messo troppo a rispondere. Succede quando lo storico è grande o il server è piccolo: si riprova da solo, e se capita spesso conviene ridurre i giorni tenuti dal Recorder (purge_keep_days) o escludere le entità che non servono.",
@@ -2098,7 +2105,16 @@ async function eseguiIlRefresh(period, carico) {
       error,
     );
     segnaLaRagione(state.lastError);
-    if (!state.bundle && state.retryCount < 40) {
+    /* Dal campo: «poi non si aggiorna, devo chiudere e riaprire l'app». Con
+     * dei numeri in mano non si riprovava affatto — si aspettava un evento
+     * di stato, che da una presa morta non arriva — e senza, dopo quaranta
+     * tentativi ci si fermava per sempre. Adesso si riprova sempre: subito
+     * se la presa e' caduta (la prossima domanda ne apre una nuova), al
+     * passo di sempre negli altri casi. */
+    const presaCaduta = /connection (lost|timeout|unavailable)/i.test(state.lastError);
+    if (state.bundle || state.retryCount >= 40) {
+      scheduleEnergyRefresh(true, presaCaduta ? RIPRESA_DOPO_LA_PRESA_MS : riposoDeiPeriodi());
+    } else {
       state.retryCount += 1;
       /* Dopo i primi tentativi si rallenta: un Recorder che non risponde non
        * risponde meglio se lo si chiama quattro volte al secondo, e ogni giro
@@ -2164,6 +2180,10 @@ export const RIPOSO_ENERGIA_MS = 60_000;
  * resta viva comunque. E chi apre l'Energia non aspetta il suo turno: il
  * tocco sulla linguetta chiede subito (vedi `bindEvents`). */
 export const RIPOSO_ENERGIA_DI_SPALLE_MS = 5 * 60_000;
+
+/* Dopo una presa caduta si richiede presto: il Recorder non c'entra, e la
+ * nuova presa si apre in un attimo. */
+export const RIPRESA_DOPO_LA_PRESA_MS = 3000;
 
 /* E dopo un timeout si riposa comunque a lungo.
  *
@@ -2677,6 +2697,11 @@ function bindEvents() {
     installObserver();
     if (state.bundle) scheduleProjection();
     else scheduleEnergyRefresh(true);
+  });
+  /* Tornando nell'app dopo che il telefono ha dormito: i totali vecchi si
+   * rileggono, e la riga d'errore rimasta da prima si toglie appena arrivano. */
+  doc.addEventListener?.("visibilitychange", () => {
+    if (doc.visibilityState !== "hidden" && hasConfiguredEnergy()) refreshEnergyIfStale();
   });
 }
 

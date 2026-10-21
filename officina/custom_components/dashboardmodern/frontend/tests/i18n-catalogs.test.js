@@ -132,6 +132,8 @@ test("no translation is left as its English source", async () => {
 /* Strings that legitimately read the same in every language we ship. */
 const SHARED_ACROSS_LANGUAGES = new Set([
   ".",
+  /* La console di evcc nella pagina Auto: due nomi propri. */
+  "Wallbox · evcc",
   /* Il suono «Ding» del campanello a muro: e' il suono, non una parola. */
   "Ding",
   "24 h",

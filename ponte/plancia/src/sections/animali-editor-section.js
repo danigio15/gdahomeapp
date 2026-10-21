@@ -391,7 +391,10 @@ function rigaMarkup(animale, indice, animali = []) {
       <label class="ed-slot dm-animale-field"><span class="ed-slot-lbl">${t("Stanza", "Room")}</span><span class="ed-form-row"><select id="dm-animale-${indice}-stanza" class="ed-input" data-animale-field="stanza">${roomOptionsMarkup(animale.stanza, t("Nessuna stanza", "No room"))}</select></span></label>
       ${
         vasca
-          ? vascaEditorMarkup(animale, indice, { esclusi: entitaDelleAltreVasche(animali, indice) })
+          ? /* La pappa anche per chi vive nella vasca: «non c'e' una funzione
+             * pasti per i terrari, la vedo solo per cane, gatto…». */
+            `${pappaEditorMarkup(animale, indice)}
+      ${vascaEditorMarkup(animale, indice, { esclusi: entitaDelleAltreVasche(animali, indice) })}`
           : `${pappaEditorMarkup(animale, indice)}
       ${dispositiviMarkup(animale)}
       <button type="button" class="ed-btn-add dm-animale-integ-riga" data-animale-integ-riga>🔗 ${t("Collega un altro dispositivo", "Link another device")}</button>
@@ -487,10 +490,7 @@ function anteprimaAnimale({ device, entities }) {
     corpo: `<div class="dm-integ-caselle">${
       chiavi.length
         ? chiavi.map((chiave) => riga(etichettaCampo(chiave), proposta[chiave])).join("")
-        : riga(
-            t("Caselle riconosciute", "Recognised fields"),
-            t("nessuna", "none"),
-          )
+        : riga(t("Caselle riconosciute", "Recognised fields"), t("nessuna", "none"))
     }</div>
     <p class="dm-animale-anteprima-nota">${esc(clean(device?.name))}</p>`,
   };
@@ -562,7 +562,10 @@ function aggiungiDispositivo(indice) {
       root.edToast?.(
         riempite.length
           ? `${riempite.length} ${t("caselle compilate", "fields filled in")}`
-          : t("Niente da aggiungere: le caselle erano già piene.", "Nothing to add: the fields were already filled."),
+          : t(
+              "Niente da aggiungere: le caselle erano già piene.",
+              "Nothing to add: the fields were already filled.",
+            ),
       );
     },
   });
@@ -594,7 +597,13 @@ export function ensureAnimaliEditor() {
         animale.dispositivi.map((voce) => voce.id).join("+"),
         /* Una vasca cambia forma quando cambiano le sue righe o i suoi dati. */
         eUnaVasca(animale)
-          ? JSON.stringify([animale.righe, animale.litri, animale.ogni, animale.cambio, animale.pulizia])
+          ? JSON.stringify([
+              animale.righe,
+              animale.litri,
+              animale.ogni,
+              animale.cambio,
+              animale.pulizia,
+            ])
           : "",
         [...CAMPI, ...AZIONI].map((campo) => animale[campo.chiave]).join(","),
         animale.pappa_ogni || "",
@@ -756,7 +765,9 @@ async function onClick(event) {
     salva(next);
     ridisegna();
     root.edToast?.(
-      eUnaVasca(next[indice]) ? t("💾 Salvato", "💾 Saved") : t("💾 Animale salvato", "💾 Pet saved"),
+      eUnaVasca(next[indice])
+        ? t("💾 Salvato", "💾 Saved")
+        : t("💾 Animale salvato", "💾 Pet saved"),
     );
   }
 }
@@ -767,7 +778,9 @@ async function onClick(event) {
 function onChange(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || activeTab() !== ANIMALI_EDITOR_TAB || !body.contains(event.target)) return;
-  const campo = event.target?.closest?.('[data-animale-field="specie"],[data-vasca-campo="genere"]');
+  const campo = event.target?.closest?.(
+    '[data-animale-field="specie"],[data-vasca-campo="genere"]',
+  );
   if (!campo) return;
   const riga = campo.closest("[data-animale-index]");
   const indice = Number(riga?.dataset.animaleIndex);

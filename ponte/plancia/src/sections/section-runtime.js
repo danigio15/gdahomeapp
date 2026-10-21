@@ -148,6 +148,7 @@ import { installAutomazioniCasaSection } from "./automazioni-casa-section.js";
 import { installEvStatoETargetSection } from "./ev-stato-e-target-section.js";
 import { installAutoTermica } from "./auto-termica-section.js";
 import { installAutoOMoto } from "./auto-o-moto-section.js";
+import { installLaNuovaAuto } from "./la-nuova-auto-section.js";
 import { installLeFasceDelDispositivo } from "./le-fasce-del-dispositivo-section.js";
 import { installLaVentolaDellInverter } from "./la-ventola-dell-inverter-section.js";
 import { installEditorSlotsSection } from "./editor-slots-section.js";
@@ -1185,6 +1186,9 @@ export function installSectionRuntime() {
      * posto di quello della ricarica quando il motore non e' elettrico. */
     senzaCadere(installAutoTermica);
     senzaCadere(installAutoOMoto);
+    /* La nuova pagina Auto, accesa solo dall'interruttore di prova: dopo la
+     * pagina di oggi e la carta della notte, che le presta. */
+    senzaCadere(installLaNuovaAuto);
     senzaCadere(installLeFasceDelDispositivo);
     senzaCadere(installLaVentolaDellInverter);
     senzaCadere(installSolarThermalDesignSection);

@@ -651,18 +651,21 @@ class IlFiloDellaVettura {
   }
 
   /// Un comando di gdanav per la casa (i viaggi pianificati,
-  /// `ponte/viaggi/…`), sul filo di adesso. La casa sa chi chiede: ognuno
+  /// `ponte/viaggi/…`, e `ponte/auto/ricariche-di-casa`), sul filo di adesso. La casa sa chi chiede: ognuno
   /// legge e scrive solo i suoi viaggi. Senza filo, un errore che gdanav
   /// dice in parole.
   Future<Object?> comandoAllaCasa(Map<String, Object?> comando) async {
     final filo = collegamento.filo;
     final tipo = comando['type'];
-    // Solo i viaggi: gdanav non manda altro alla casa da qui.
-    if (tipo is! String || !tipo.startsWith('ponte/viaggi/')) {
+    // Solo i viaggi, e l'ultima ricarica a casa dell'auto (il costo vero del
+    // viaggio in elettrico): gdanav non manda altro alla casa da qui.
+    if (tipo is! String ||
+        !(tipo.startsWith('ponte/viaggi/') ||
+            tipo == 'ponte/auto/ricariche-di-casa')) {
       throw ArgumentError.value(
         tipo,
         'type',
-        'gdanav chiede alla casa solo i viaggi',
+        'gdanav chiede alla casa solo i viaggi e le ricariche di casa',
       );
     }
     if (filo == null || !collegamento.dentro || _spento) {

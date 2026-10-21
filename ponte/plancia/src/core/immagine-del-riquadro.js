@@ -108,6 +108,19 @@ export function stessaImmagine(a, b) {
   );
 }
 
+/* Una foto caricata nel ponte (`/dashboardmodern_static/www/…`) si chiede
+ * dove sta la plancia, non alla radice del sito. Dal campo (#285): «non
+ * carica le foto, da errore» — dentro Home Assistant la plancia dell'add-on
+ * vive sotto il percorso dell'ingresso, e l'indirizzo scritto dalla radice
+ * finiva a Home Assistant, che quella foto non ce l'ha. In configurazione
+ * resta scritto com'e': cambia solo dove lo si chiede. */
+function conLaBaseDellaPlancia(src) {
+  if (!src.startsWith("/dashboardmodern_static/")) return src;
+  const qui = import.meta.url;
+  const taglio = qui.indexOf("/dashboardmodern_static/");
+  return taglio < 0 ? src : `${qui.slice(0, taglio)}${src}`;
+}
+
 /* Un disegno si mostra come una foto: un'immagine con l'SVG dentro. Cosi' il
  * taglio, il fuoco e lo zoom sono gli stessi della foto, e gli `id` delle sue
  * sfumature restano dentro l'immagine invece di incontrare quelli di un altro
@@ -115,7 +128,7 @@ export function stessaImmagine(a, b) {
 const datiDelDisegno = new Map();
 export function srcDaMostrare(immagine) {
   const chiave = chiaveDelDisegno(immagine);
-  if (!chiave) return String(immagine?.src ?? "");
+  if (!chiave) return conLaBaseDellaPlancia(String(immagine?.src ?? ""));
   if (datiDelDisegno.has(chiave)) return datiDelDisegno.get(chiave);
   const disegno = disegnoDaRiquadro(chiave);
   const dati = disegno

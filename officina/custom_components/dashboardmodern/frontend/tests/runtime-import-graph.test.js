@@ -1573,8 +1573,15 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 472 con l'elenco delle card che portano un'immagine: il nucleo puro
   // `core/superfici-con-immagine.js` — quali card della plancia, di chi sono,
   // e dove sta scritta la loro immagine.
+  // 473 col widget Meteo nella Home: `sections/finestre/meteo.js`, la sua
+  // finestra — com'e' adesso, le prossime ore e i prossimi giorni, coi dati
+  // che la sezione Meteo chiede gia'.
+  // 475 con la nuova pagina Auto, accesa dall'interruttore di prova:
+  // `core/la-nuova-auto.js`, i conti dello storico delle ricariche e
+  // dell'obiettivo di carica, e `sections/la-nuova-auto-section.js`, che li
+  // disegna con le linguette Ricarica, Viaggi e Stato auto.
   assert.ok(
-    relative.length <= 472,
+    relative.length <= 475,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

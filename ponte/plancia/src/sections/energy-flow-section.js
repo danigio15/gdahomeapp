@@ -1880,14 +1880,18 @@ function installStyles() {
      * la fila di sotto. */
     #page-energy .n-home{width:145px!important;height:145px!important}
     #page-energy .n-load .node-label{font-size:11.5px!important;letter-spacing:0!important}
-    #page-energy #view-ist .n-load span{font-size:20px!important}
+    /* Anche nel giorno e nel mese: «i valori dei carichi sotto casa si
+     * leggono per la parte istantanea, ma sono piu' piccoli per giornaliera
+     * e mensile». La misura c'era solo per l'istantanea; «206,6 kWh» ci sta
+     * lo stesso, e se non ci sta lo stringe \`stringiIlNumero\`. */
+    #page-energy :is(#view-ist,#view-day,#view-month) .n-load span:not(.dual-val){font-size:20px!important}
     #page-energy .n-load .node-icon{font-size:26px!important}
     @media(max-width:768px){
       #page-energy .flow-stage{height:800px!important}
       #page-energy .n-home{width:110px!important;height:110px!important}
       #page-energy .n-load{width:104px!important;height:104px!important}
       #page-energy .n-load .node-label{font-size:10.5px!important;letter-spacing:0!important}
-      #page-energy #view-ist .n-load span{font-size:18px!important}
+      #page-energy :is(#view-ist,#view-day,#view-month) .n-load span:not(.dual-val){font-size:18px!important}
       #page-energy .n-load .node-icon{font-size:23px!important}
     }
     @media(max-width:480px){

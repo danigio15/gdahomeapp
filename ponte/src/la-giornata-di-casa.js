@@ -335,6 +335,9 @@ export class DiarioDellaCasa {
     this.archivio = new Archivio(cartella ? join(cartella, "giornata-di-casa.json") : "", {
       oggi: null,
       ieri: null,
+      /* L'ultima ricarica finita a casa, per auto: resta da un giorno
+       * all'altro (la giornata no), per il costo dei viaggi di GdANav. */
+      ricaricheDiCasa: {},
     });
     this.adesso = adesso;
     this.registro = registro;
@@ -709,6 +712,7 @@ export class DiarioDellaCasa {
         }
       }
     } else if (a.carica && ora - a.carica.a >= RICARICA_FINITA_DOPO) {
+      this._ricordaLaRicarica(una, a.carica, capacita);
       a.ricariche.push(a.carica);
       a.ricariche = a.ricariche.slice(-RICARICHE_AL_PIU);
       a.carica = null;
@@ -1038,6 +1042,41 @@ export class DiarioDellaCasa {
       socStasera: ultimo ? ultimo[1] : null,
       soc: a.punti.slice(),
     };
+  }
+
+  /* ─── L'ultima ricarica a casa ───────────────────────────────────────── */
+
+  /* Dal campo, per il costo di un viaggio in elettrico: «considera se si
+   * parte da casa al 100%, e verifica l'ultima ricarica a casa: come e' stata
+   * caricata». Quanta energia, quanta col sole e quanto e' costata la rete:
+   * da li' GdANav sa quanto vale un kWh della batteria con cui si parte. */
+  _ricordaLaRicarica(una, r, capacita) {
+    const kwh =
+      r.wh > 0 ? r.wh / 1000 : Math.max(0, ((r.socA ?? 0) - (r.socDa ?? 0)) / 100) * capacita;
+    if (!(kwh > 0.2)) return;
+    const tutte = (this.archivio.dati.ricaricheDiCasa ??= {});
+    tutte[una.chiave] = {
+      nome: una.nome,
+      finitaIl: r.a,
+      socDa: r.socDa !== null && r.socDa !== undefined ? Math.round(r.socDa) : null,
+      socA: r.socA !== null && r.socA !== undefined ? Math.round(r.socA) : null,
+      kwh: arrotonda(kwh),
+      kwhSole: r.wh > 0 ? arrotonda(Math.min(r.sole, r.wh) / 1000) : null,
+      euroRete: r.conPrezzo ? arrotonda(r.eur, 2) : null,
+    };
+    this.scrivi();
+  }
+
+  /**
+   * L'ultima ricarica a casa di ogni auto della plancia, per GdANav:
+   * `[{nome, finitaIl (ISO), socDa, socA, kwh, kwhSole, euroRete}]`. Solo
+   * numeri e il nome che l'auto ha nella plancia.
+   */
+  ricaricheDiCasa() {
+    return Object.values(this.archivio.dati.ricaricheDiCasa || {}).map((r) => ({
+      ...r,
+      finitaIl: new Date(r.finitaIl).toISOString(),
+    }));
   }
 
   scrivi() {

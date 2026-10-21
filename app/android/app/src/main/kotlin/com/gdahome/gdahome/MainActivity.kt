@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.os.PowerManager
 import android.os.SystemClock
 import android.view.WindowManager
+import androidx.activity.enableEdgeToEdge
 import com.gdahome.gdahome.auto.IlNavigatoreInAuto
 import com.gdahome.gdahome.orologio.IlTramiteDellOrologio
 import io.flutter.embedding.android.FlutterFragmentActivity
@@ -47,10 +48,21 @@ class MainActivity : FlutterFragmentActivity() {
      * Si accende **prima** di `super.onCreate`: quando Android ricrea
      * l'activity dopo aver chiuso il processo, il frammento torna da solo col
      * nome del motore scritto dentro, e lo cerca subito.
+     *
+     * Dopo, lo schermo intero come lo vuole Android 15 (`enableEdgeToEdge`):
+     * la plancia sotto l'orologio e sotto i gesti, con le barre trasparenti,
+     * anche sui telefoni piu' vecchi. Lo chiedeva Google Play («la
+     * visualizzazione edge-to-edge potrebbe non essere disponibile per tutti
+     * gli utenti»): FlutterFragmentActivity, da sola, sotto Android 15 mette
+     * ancora la barra in alto grigia col vecchio `setStatusBarColor`. Va
+     * dopo `super.onCreate`, che quella barra la colora: cosi' l'ultima
+     * parola e' questa. Dove non scrivere lo sa gia' la plancia (SafeArea e
+     * `Servitore.margini`), come su Android 15.
      */
     override fun onCreate(savedInstanceState: Bundle?) {
         if (IlNavigatoreInAuto.acceso(this)) IlNavigatoreInAuto.motore(this)
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
     }
 
     override fun getCachedEngineId(): String? =

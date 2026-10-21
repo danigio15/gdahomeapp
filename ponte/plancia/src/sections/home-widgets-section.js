@@ -395,6 +395,16 @@ import "./finestre/sicurezza.js";
 import "./finestre/impianti.js";
 import "./finestre/servizi.js";
 import "./finestre/sistema.js";
+import "./finestre/meteo.js";
+import {
+  METEO_TAB,
+  fraseInParole,
+  parolaDellaCondizione,
+  previsioniDelMeteo,
+  vistaDelMeteo,
+} from "./meteo-section.js";
+import { entitaDelMeteo } from "./la-card-del-meteo-section.js";
+import { segnoDelTempo } from "../core/la-card-del-meteo.js";
 
 const KEY = "__DASHBOARDMODERN_HOME_WIDGETS__";
 const STYLE_ID = "dm-widgets-style";
@@ -2494,6 +2504,58 @@ export function temperatureModel(states) {
         : `${t("Umidità", "Humidity")} ${humidity}%`,
     ring: null,
     rows,
+  };
+}
+
+/* Il meteo: com'e' adesso e cosa arriva, senza aprire il radar.
+ *
+ * Dal campo: «sarebbe bello mettere anche un widget delle previsioni del
+ * meteo, senza aprire il radar». I dati sono quelli della sezione Meteo — la
+ * stessa entita', le stesse previsioni chieste una volta ogni mezz'ora
+ * (`previsioniDelMeteo`), le stesse misure della stazione quando c'e' — e
+ * qui non se ne chiede nessuna in piu'. La tessera dice i gradi e il cielo;
+ * la finestra le prossime ore e i prossimi giorni. Il radar resta nella
+ * pagina Meteo, a un tocco da «Apri sezione». */
+/* Quante ore e quanti giorni porta la finestra: mezza giornata da scorrere,
+ * e la settimana lavorativa. Il resto e' nella pagina Meteo. */
+const ORE_DEL_METEO = 12;
+const GIORNI_DEL_METEO = 5;
+
+function meteoModel(states) {
+  const entita = entitaDelMeteo(states);
+  if (!entita || !states?.[entita]) return null;
+  /* Arrivate le previsioni, la Home si ridisegna: prima si mostra quello che
+   * c'e' (i gradi di adesso), poi i giorni. */
+  previsioniDelMeteo(entita, schedule);
+  const minuto = Math.floor(Date.now() / 60_000) * 60_000;
+  const vista = vistaDelMeteo(states, minuto, { entita });
+  if (!vista) return null;
+  const condizione = clean(states[entita].state).toLowerCase();
+  if (!condizione || condizione === "unavailable" || condizione === "unknown") return null;
+  const m = vista.misure || {};
+  const gradi = Number.isFinite(m.temperatura?.valore) ? m.temperatura.valore : null;
+  const cielo = parolaDellaCondizione(condizione);
+  const forbice =
+    vista.oggi && Number.isFinite(vista.oggi.alta) && Number.isFinite(vista.oggi.bassa)
+      ? `${Math.round(vista.oggi.alta)}° / ${Math.round(vista.oggi.bassa)}°`
+      : "";
+  return {
+    key: "meteo",
+    accent: "#0284c7",
+    icon: segnoDelTempo(condizione),
+    label: t("Meteo", "Weather"),
+    value: gradi == null ? "—" : `${formatNumber(gradi, 1)}°`,
+    caption: [cielo, forbice].filter(Boolean).join(" · "),
+    ring: null,
+    entita,
+    condizione,
+    cielo,
+    misure: m,
+    oggi: vista.oggi,
+    ore: (vista.ore || []).slice(0, ORE_DEL_METEO),
+    giorni: (vista.giorni || []).filter((giorno) => !giorno.oggi).slice(0, GIORNI_DEL_METEO),
+    frase: fraseInParole(vista.frase),
+    stazione: Object.keys(vista.stazione || {}).length > 0,
   };
 }
 
@@ -6540,6 +6602,7 @@ export function modelliDelleTessere(states) {
       appliancesModel(states),
       cotturaModel(states),
       temperatureModel(states),
+      meteoModel(states),
       evModel(states),
       robotsModel(states),
       solarThermalModel(states),
@@ -8950,6 +9013,8 @@ const SEZIONE_DEL_WIDGET = Object.freeze({
   /* La cottura (#71) vive dentro gli Elettrodomestici, sulla sua voce. */
   cottura: "appliances-main",
   temperatura: "temp",
+  /* Il meteo: la pagina Meteo, col radar e la stazione. */
+  meteo: METEO_TAB,
   ev: "ev",
   solare: "boiler",
   scaldabagno: "boiler",

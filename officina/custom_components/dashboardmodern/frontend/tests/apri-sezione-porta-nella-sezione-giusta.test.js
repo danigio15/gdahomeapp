@@ -27,6 +27,7 @@ import { PIANTE_TAB } from "../src/sections/piante-section.js";
 import { ANIMALI_TAB } from "../src/sections/animali-section.js";
 import { LIGHTS_TAB } from "../src/sections/lights-page-section.js";
 import { MEDIA_TAB } from "../src/sections/media-player-section.js";
+import { METEO_TAB } from "../src/sections/meteo-section.js";
 import { PRESE_TAB } from "../src/sections/prese-section.js";
 import { PRESENZA_TAB } from "../src/sections/presenza-section.js";
 import { RIFIUTI_TAB } from "../src/sections/rifiuti-section.js";
@@ -51,6 +52,7 @@ const COSTANTI = Object.freeze({
   CITOFONO_TAB,
   LIGHTS_TAB,
   MEDIA_TAB,
+  METEO_TAB,
   PRESE_TAB,
   PRESENZA_TAB,
   RIFIUTI_TAB,
@@ -143,7 +145,10 @@ test("chi non ha una pagina non ha una riga, e il tasto non compare", () => {
   ])
     assert.equal(tavola[senzaPagina], undefined, `«${senzaPagina}» non ha una pagina dove andare`);
   /* E chi disegna il tasto lo chiede alla tavola: senza voce, niente piede. */
-  assert.match(SORGENTE, /function piedeDellaSezione\(widget\) \{\n  if \(!voceDellaSezione\(widget\.key\)\) return "";/);
+  assert.match(
+    SORGENTE,
+    /function piedeDellaSezione\(widget\) \{\n  if \(!voceDellaSezione\(widget\.key\)\) return "";/,
+  );
   assert.match(SORGENTE, /const vaiAllaSezione = piedeDellaSezione\(widget\);/);
 });
 

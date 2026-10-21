@@ -408,6 +408,40 @@ def _salva_foto(
     return save_www_upload(root, filename, payload, cartella)
 
 
+def _local_pubblicato(hass: HomeAssistant) -> bool:
+    """Se Home Assistant serve gia' ``/local``.
+
+    Lo pubblica all'avvio, e solo se ``config/www`` c'era gia' allora.
+    """
+    try:
+        risorse = hass.http.app.router.resources()
+    except AttributeError:
+        return True
+    return any(getattr(r, "canonical", "") == "/local" for r in risorse)
+
+
+async def _assicura_local(hass: HomeAssistant) -> None:
+    """``/local`` servito anche se ``www`` e' nata dopo l'avvio.
+
+    Dal campo (#285): «non carica le foto, da errore». La foto si salvava,
+    ma in una casa senza ``config/www`` all'avvio di Home Assistant
+    ``/local`` non esiste: la cartella la crea il primo caricamento, e
+    l'indirizzo restava un 404 fino al riavvio. Lo si pubblica qui, come lo
+    pubblicherebbe Home Assistant, sulla stessa cartella e senza cache.
+    """
+    if hass.http is None or _local_pubblicato(hass):
+        return
+    from homeassistant.components.http import StaticPathConfig
+
+    try:
+        await hass.http.async_register_static_paths(
+            [StaticPathConfig("/local", hass.config.path("www"), False)]
+        )
+    except (RuntimeError, ValueError):
+        # Un altro l'ha pubblicato nel frattempo: va bene lo stesso.
+        return
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): TYPE_WWW_UPLOAD,
@@ -469,6 +503,7 @@ async def async_upload_www(
             "Il file non e' un'immagine, o e' piu' grande di 10 MB.",
         )
         return
+    await _assicura_local(hass)
     connection.send_result(msg["id"], result)
 
 

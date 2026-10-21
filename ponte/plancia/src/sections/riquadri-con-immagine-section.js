@@ -164,6 +164,16 @@ button.dm-rq{border:0;padding:0;margin:0;font:inherit;cursor:pointer;-webkit-tap
 .dm-rq-fondo{color:#fff}
 .dm-rq-fondo :where(div,span,b,strong,label,p,h1,h2,h3,h4,em,output):not(button *,button,select *,input,[class*="pill"],[class*="pill"] *,[class*="badge"] *,[class*="chip"] *,[class*="flag"],[class*="tag"]){color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.45)}
 .dm-rq-fondo :where(button){-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+/* Le tessere della Home sono un <button>, e la regola qui sopra lascia
+ * stare quello che sta dentro i bottoni: il nome e il numero restavano nei
+ * colori della tessera chiara, quasi neri sul disegno (#287: «c'è poco
+ * contrasto, e sui dispositivi sono troppo piccole»). Qui: bianchi, con
+ * un'ombra che li stacca, un velo scuro anche in alto dove sta il nome, e la
+ * riga sotto un poco piu' grande e piena. */
+#dm-widgets .dm-tile.dm-rq-fondo :where(.dm-tile-label,.dm-tile-value,.dm-tile-value *,.dm-tile-val,.dm-tile-unit,.dm-tile-misura,.dm-tile-testo,.dm-tile-caption,.dm-tile-caption *,.dm-tile-sotto,.dm-tile-sotto *,.dm-tile-scroll,.dm-tile-scroll *){color:#fff!important;-webkit-text-fill-color:#fff;opacity:1!important;text-shadow:0 1px 3px rgba(0,0,0,.7),0 0 1px rgba(0,0,0,.6)}
+#dm-widgets .dm-tile.dm-rq-fondo :is(.dm-tile-scroll,.dm-tile-caption,.dm-tile-sotto){font-size:max(13px,1em);font-weight:700}
+#dm-widgets .dm-tile.dm-rq-fondo>.dm-rq-velo{background:linear-gradient(to bottom,rgba(4,9,20,.62) 0%,rgba(4,9,20,.42) 45%,rgba(4,9,20,.82) 100%)}
+
 /* La vasca con la sua foto: il disegno della piscina lascia il posto alla
  * foto, e restano le scritte dello stato. */
 .dm-pool-stage.dm-rq-fondo>:is(.dm-pool-sky,.dm-pool-sun,.dm-pool-hedge,.dm-pool-plant,.dm-pool-deck,.dm-pool-lounger,.dm-pool-parasol,.dm-pool-basin){visibility:hidden}
@@ -744,6 +754,25 @@ function ricordaLaMisura(evento) {
   ridipingi(img.closest("[data-dm-rqi]"));
 }
 
+/* La foto salvata che il browser non riesce a mostrare: lo si dice, invece
+ * di lasciare il «?» di Safari in mezzo alla cornice (#285). */
+function fotoCheNonSiVede(evento) {
+  const img = evento.target;
+  if (!img?.matches?.("img[data-dm-rqi-misura]")) return;
+  const src = img.dataset.dmRqiMisura;
+  if (!src || chiaveDelDisegno({ src })) return;
+  const blocco = img.closest("[data-dm-rqi]");
+  if (!blocco) return;
+  diciNelBlocco(
+    blocco,
+    t(
+      "La foto è salvata, ma il browser non riesce ad aprirla. Riprova a caricarla; se resta così, riavvia Home Assistant.",
+      "The photo is saved, but the browser cannot open it. Try uploading it again; if it stays like this, restart Home Assistant.",
+    ),
+    "errore",
+  );
+}
+
 /* ── i Dispositivi della Home ────────────────────────────────────────────── */
 
 /* Il colore della sezione Dispositivi: l'azzurro che la card accesa ha
@@ -1154,6 +1183,7 @@ export function installRiquadriConImmagine() {
   doc.addEventListener("pointerdown", onPointerDown, true);
   doc.addEventListener("keydown", onKeyDown, true);
   doc.addEventListener("load", ricordaLaMisura, true);
+  doc.addEventListener("error", fotoCheNonSiVede, true);
   doc.addEventListener("click", onClickDelPannello);
   doc.addEventListener(EVENTO_IMMAGINE, onCambiaDispositivo);
   doc.addEventListener("click", onClickDelleCard);

@@ -50,6 +50,7 @@ import {
   tipoDellElettrodomestico,
 } from "./il-tipo-dell-elettrodomestico.js";
 import { laPappa, normalizzaAnimali } from "../plancia/src/core/animali-model.js";
+import { CHIAVE_CITOFONO, normalizzaIngresso } from "../plancia/src/core/citofono-e-posta.js";
 import { regoleDellAssistente } from "./l-assistente-al-telefono.js";
 import {
   paroleDelBlackout,
@@ -115,7 +116,10 @@ const APERTURE = new Set(["door", "garage_door", "opening"]);
 const COPERTURE_APERTE = new Set(["garage", "gate", "door"]);
 const MOVIMENTO = new Set(["motion", "occupancy", "presence"]);
 
-const NOME_DEL_CAMPANELLO = /campanell|doorbell|citofon|ding/i;
+/* Anche «visitor» (Reolink) e «chime»: i citofoni non dicono tutti
+ * «doorbell». Chi ha un nome diverso ancora lo sceglie nel Citofono della
+ * plancia ([Sentinella._campanelliDellaPlancia]). */
+const NOME_DEL_CAMPANELLO = /campanell|doorbell|citofon|ding|visitor|chime|suoneria/i;
 /* Per gli eventi la parola intera: «ding» dentro «building» non e' un campanello. */
 const EVENTO_DEL_CAMPANELLO = /campanell|doorbell|citofon|intercom|(^|[._])ding([._]|$)/i;
 const NOME_DEL_CANCELLO = /cancell|gate|portone|cancel/i;
@@ -300,6 +304,53 @@ export function paroleDelCampanello(nome) {
     it: { titolo: "🔔 Suona il campanello", testo: `${nome} · adesso` },
     en: { titolo: "🔔 Someone's at the door", testo: `${nome} · now` },
   };
+}
+
+/**
+ * Se il campanello scelto nel Citofono ha suonato, da com'era a com'e': un
+ * evento o un pulsante che cambia (l'ora dell'ultima pressione), un sensore
+ * che si accende, o che dice «ring». Mai da o verso «unavailable».
+ */
+export function suonaIlCitofono(dominio, era, adesso) {
+  if (era === adesso || !adesso) return false;
+  if (
+    ["unavailable", "unknown"].includes(adesso) ||
+    ["unavailable", "unknown", undefined].includes(era)
+  )
+    return false;
+  if (["event", "button", "input_button"].includes(dominio)) return true;
+  if (["binary_sensor", "switch", "input_boolean"].includes(dominio))
+    return adesso === "on" && era === "off";
+  if (dominio === "sensor")
+    return (
+      /^(on|ring|ringing|ding|pressed|true|1)$/i.test(adesso) || !Number.isNaN(Date.parse(adesso))
+    );
+  return adesso === "on";
+}
+
+/** Cosa apre il Citofono: una serratura, un cancello, un pulsante. */
+function apriDalCitofono(id) {
+  const dominio = dominioDi(String(id || ""));
+  if (dominio === "lock") return { dominio: "lock", servizio: "unlock", entita: [id] };
+  if (dominio === "cover") return { dominio: "cover", servizio: "open_cover", entita: [id] };
+  if (dominio === "button") return { dominio: "button", servizio: "press", entita: [id] };
+  return null;
+}
+
+/**
+ * Se un clima sta lavorando davvero, non solo se e' in un modo diverso da
+ * «off». Dal campo: «mi arriva sempre la notifica del clima acceso, ma e'
+ * tutto spento». Un termostato col programma resta in «heat» o «auto» tutto
+ * il giorno, e la plancia lo mostra spento quando `hvac_action` dice che e'
+ * fermo («idle», «off»): conta quello. Senza `hvac_action`, il modo.
+ */
+export function climaCheLavora(stato) {
+  const modo = String(stato?.state ?? "").toLowerCase();
+  if (["off", "unavailable", "unknown", ""].includes(modo)) return false;
+  const azione = String(stato?.attributes?.hvac_action ?? "").toLowerCase();
+  if (azione)
+    return ["heating", "preheating", "cooling", "drying", "fan", "defrosting"].includes(azione);
+  return true;
 }
 
 /** I tasti del campanello: «Apri cancello» se c'e' un cancello, e «Ignora». */
@@ -951,6 +1002,26 @@ export class Sentinella {
     return telecamere.length === 1 ? telecamere[0] : null;
   }
 
+  /* I campanelli scelti nel Citofono della plancia (`cd_citofono`), per
+   * entita': il nome, la telecamera e cosa apre. Riletti al piu' ogni mezzo
+   * minuto: `cambia` arriva molte volte al secondo. */
+  _campanelliDellaPlancia() {
+    const ora = this.adesso();
+    if (this._citofoni && ora - this._citofoniLetti < 30 * 1000) return this._citofoni;
+    const trovati = new Map();
+    try {
+      let grezzo = this._valori()?.[CHIAVE_CITOFONO];
+      if (typeof grezzo === "string") grezzo = JSON.parse(grezzo);
+      for (const voce of normalizzaIngresso(grezzo || {}).citofoni)
+        if (voce.campanello) trovati.set(voce.campanello, voce);
+    } catch (_errore) {
+      /* Una configurazione guasta: si va coi nomi, come prima. */
+    }
+    this._citofoni = trovati;
+    this._citofoniLetti = ora;
+    return trovati;
+  }
+
   /* Il cancello da aprire dal campanello: una serratura, una copertura o un
    * tasto che si chiama cancello. */
   cancello() {
@@ -1212,6 +1283,25 @@ export class Sentinella {
      * cos'e' («…_ding», `event_type: ding`). Il movimento no: e' un'altra
      * notifica, e ha la sua classe. */
     const tipoDiEvento = String(dopo.attributes?.event_type ?? "").toLowerCase();
+    /* Il campanello scelto nel Citofono della plancia: suona quando la sua
+     * entita' cambia, qualunque nome abbia. Dal campo: «non riesco a far
+     * suonare il telefono con il campanello» — l'entita' era scelta nella
+     * plancia, ma il ponte la riconosceva solo dal nome. */
+    const dalCitofono = prima ? this._campanelliDellaPlancia().get(id) : null;
+    if (dalCitofono && suonaIlCitofono(dominio, era, dopo.state)) {
+      this._dici({
+        tipo: "campanello",
+        urgenza: "urgente",
+        chiave: `campanello:${id}`,
+        pausa: 30 * 1000,
+        entita: id,
+        camera: dalCitofono.telecamera || this.telecameraPer(id),
+        chiamata: true,
+        parole: paroleDelCampanello(dalCitofono.nome || nome),
+        azioni: tastiDelCampanello(apriDalCitofono(dalCitofono.apri) || this.cancello()),
+      });
+      return;
+    }
     const eUnCampanello =
       classe === "doorbell" ||
       (classe !== "motion" &&
@@ -1673,11 +1763,7 @@ export class Sentinella {
           luciDa = Math.min(luciDa, stato.dal);
         }
       }
-      if (
-        vuota === true &&
-        dominio === "climate" &&
-        !["off", "unavailable", "unknown"].includes(stato.state)
-      ) {
+      if (vuota === true && dominio === "climate" && climaCheLavora(stato)) {
         climiAccesi.push(id);
         climaDa = Math.min(climaDa, stato.dal);
       }

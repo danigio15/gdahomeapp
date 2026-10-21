@@ -31,6 +31,15 @@ const ANIMALI = [
     pappa_ogni: "8",
     pappa: new Date(Date.now() - 3 * ORA).toISOString(),
   },
+  /* «Non c'e' una funzione pasti per i terrari»: adesso c'e'. */
+  {
+    id: "t1",
+    nome: "Geco",
+    specie: "terrario",
+    pappa_ogni: "48",
+    pappa: new Date(Date.now() - 50 * ORA).toISOString(),
+    righe: [],
+  },
 ];
 
 const STATI = [
@@ -122,4 +131,26 @@ test("la fascia della pappa: l'ora passata si vede, e «Ha mangiato» la segna",
   await expect(
     page.locator('#page-animali [data-dm-animale="a1"] [data-dm-animale-gruppo="pappa"]'),
   ).toHaveAttribute("data-ora", "true");
+});
+
+test("la pappa anche nel terrario", async ({ page }, testInfo) => {
+  await apriGliAnimali(page, testInfo);
+  const geco = page.locator('#page-animali [data-dm-animale="t1"]');
+  await expect(geco.locator('[data-dm-animale-gruppo="pappa"]')).toHaveAttribute(
+    "data-ora",
+    "true",
+  );
+  await expect(geco.locator('[data-dm-animale-lettura="pappa"]')).toContainText("è ora");
+  if (process.env.DM_RENDER_DIR)
+    await geco.screenshot({
+      path: `${process.env.DM_RENDER_DIR}/pappa-terrario-${testInfo.project.name}.png`,
+    });
+  await geco.locator("[data-dm-animale-pappa]").click();
+  await expect(
+    page.locator('#page-animali [data-dm-animale="t1"] [data-dm-animale-gruppo="pappa"]'),
+  ).toHaveAttribute("data-ora", "false");
+  const salvata = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("cd_animali")).find((voce) => voce.id === "t1"),
+  );
+  expect(Date.now() - Date.parse(salvata.pappa)).toBeLessThan(60_000);
 });
