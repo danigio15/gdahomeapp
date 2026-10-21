@@ -48,6 +48,7 @@ import { costruisciLaConsole, costruisciLaPortaDellApp, PROXY_DELL_INGRESS } fro
 import { Registri } from "./registri.js";
 import { Notifiche } from "./notifiche.js";
 import { Viaggi } from "./viaggi.js";
+import { Fornitori } from "./fornitori.js";
 import { RicaricaDiNotte } from "./ricarica-di-notte.js";
 import { Automazioni } from "./automazioni.js";
 
@@ -224,8 +225,14 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * volte. Il perche' sta in cima a `registri.js`. */
   const registri = new Registri({ casa, registro });
 
+  /* I fornitori di energia: E.ON ed ENGIE collegati dalla scheda della
+   * plancia, le loro bollette scritte come sensori di Home Assistant. Il
+   * perche' di ogni regola sta in cima a `fornitori.js`. */
+  const fornitori = new Fornitori({ cartella: opzioni.cartella, casa, registro });
+  fornitori.avvia();
   const commissioni = new Commissioni({
     casa,
+    fornitori,
     registro,
     registri,
     plancia,
@@ -733,6 +740,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     chiamata.spegni();
     notifiche.ferma();
     viaggi.ferma();
+    fornitori.ferma();
     ricaricaDiNotte.ferma();
     automazioni.ferma();
     postino.ferma();

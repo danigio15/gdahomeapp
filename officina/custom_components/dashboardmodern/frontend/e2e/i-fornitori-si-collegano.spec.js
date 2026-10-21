@@ -2,7 +2,7 @@
  * Home Assistant tramite HACS, inglobandole nella nostra». La scheda in
  * Config → Energia → Impostazioni li collega: E.ON con email, password e il
  * codice SMS; ENGIE con l'accesso dal browser e l'indirizzo incollato. Qui
- * l'integrazione e' finta e risponde come quella vera. */
+ * il ponte e' finto e risponde come quello vero. */
 import { expect, test } from "@playwright/test";
 import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
 
@@ -26,8 +26,8 @@ const SEME = {
 };
 
 const DISPONIBILI = [
-  { id: "eon", nome: "E.ON Energia", modo: "password", cosa: "Luce · bollette e consumi" },
-  { id: "engie", nome: "ENGIE", modo: "link", cosa: "Luce e gas · bollette e consumi" },
+  { id: "eon", nome: "E.ON Energia", modo: "password", cosa: "luce" },
+  { id: "engie", nome: "ENGIE", modo: "link", cosa: "luce-gas" },
   { id: "enel", nome: "Enel Energia", pronto: false, perche: "nessuna-integrazione" },
   { id: "octopus", nome: "Octopus Energy", pronto: false },
 ];
@@ -39,7 +39,7 @@ const COLLEGATO = {
       id: "eon-IT001E12345678",
       fornitore: "eon",
       nome: "E.ON Energia",
-      pod: "IT001E12345678",
+      pod: "IT001E••••5678",
       stato: "ok",
       aggiornato: Date.now() - 2 * 3600_000,
     },
@@ -47,7 +47,7 @@ const COLLEGATO = {
       id: "engie-1",
       fornitore: "engie",
       nome: "ENGIE",
-      pod: "IT012E98765432",
+      pod: "IT012E••••5432",
       stato: "da-ricollegare",
       aggiornato: Date.now() - 50 * 3600_000,
     },
@@ -132,7 +132,7 @@ test("E.ON: si sceglie, email e password, codice SMS, collegato", async ({ page 
   await foto(scheda, "eon-codice", testInfo);
   await scheda.locator("[data-dm-forn-conferma]").click();
   await expect(scheda.locator(".dm-forn-riga")).toHaveCount(2);
-  await expect(scheda).toContainText("POD IT001E12345678");
+  await expect(scheda).toContainText("POD IT001E••••5678");
   await expect(scheda).toContainText("da ricollegare");
   await foto(scheda, "collegati", testInfo);
   const chieste = await page.evaluate(() => window.__CHIESTE__.map((m) => m.type.split("/").pop()));
@@ -154,4 +154,66 @@ test("ENGIE: accesso dal browser e indirizzo incollato", async ({ page }, testIn
   await scheda.locator("[data-dm-forn-incolla-ok]").click();
   await expect(scheda.locator(".dm-forn-riga")).toHaveCount(2);
   await foto(scheda, "collegati-scuro", testInfo);
+});
+
+test("E.ON col controllo «non sei un robot»: si passa dal browser", async ({ page }, testInfo) => {
+  const scheda = await apri(page, testInfo, "light", {
+    stato: VUOTO,
+    collega: {
+      serve: "incolla",
+      link: "https://auth.eon-energia.com/authorize?client_id=…",
+      perche: "captcha",
+    },
+  });
+  await scheda.locator('[data-dm-forn-scegli="eon"]').click();
+  await scheda.locator("[data-dm-forn-email]").fill("casa@example.it");
+  await scheda.locator("[data-dm-forn-password]").fill("una-password");
+  await scheda.locator("[data-dm-forn-entra]").click();
+  await expect(scheda.locator(".dm-forn-link")).toHaveAttribute("href", /auth\.eon-energia\.com/);
+  await expect(scheda).toContainText("F12");
+  await expect(scheda).toContainText("non essere un robot");
+  await foto(scheda, "eon-incolla", testInfo);
+});
+
+test("chi non amministra non vede la scheda", async ({ page }, testInfo) => {
+  test.setTimeout(150_000);
+  await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
+  await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
+  await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true, null, {
+    timeout: 60000,
+  });
+  await page.evaluate(() => {
+    const vero = window.eval("ws");
+    window.__FINTO__ = {
+      readyState: 1,
+      send(grezzo) {
+        const m = JSON.parse(grezzo);
+        if (!String(m.type).startsWith("dashboardmodern/fornitori/")) return vero?.send?.(grezzo);
+        setTimeout(() => {
+          const attese = window.eval("pendingWsCallbacks");
+          const torna = attese[m.id];
+          delete attese[m.id];
+          torna?.({
+            id: m.id,
+            type: "result",
+            success: false,
+            error: { code: "unauthorized", message: "questo lo fa solo chi amministra la casa" },
+          });
+        }, 15);
+      },
+    };
+    window.eval("ws = window.__FINTO__");
+  });
+  await page.evaluate(() => window.apriConfigEntita?.());
+  await page.waitForSelector("#editor-modal", { timeout: 20_000 });
+  await page.evaluate(() => window.editorSwitch?.("energy"));
+  await page.waitForTimeout(800);
+  await page.evaluate(() => {
+    const pannello = document.querySelector('[data-energy-panel="settings"]');
+    if (pannello) pannello.hidden = false;
+    window.dispatchEvent(new CustomEvent("dashboardmodern:editor-rendered"));
+  });
+  await page.waitForTimeout(1200);
+  await expect(page.locator("#dm-energia-fornitori")).toHaveCount(0);
 });

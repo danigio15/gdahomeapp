@@ -7,11 +7,11 @@
  * collega, nelle impostazioni dell'Energia. I sensori che nascono sono quelli
  * che la linguetta Bollette sa gia' leggere.
  *
- * Il dialogo e' con l'integrazione, non col ponte: `dashboardmodern/
- * fornitori/stato` per vedere, `…/collega`, `…/codice`, `…/incolla`,
- * `…/aggiorna`, `…/scollega` per fare — e quelli li puo' fare solo chi
- * amministra. Le password non restano nella plancia: partono, e il campo si
- * svuota.
+ * Il dialogo e' col ponte di GdAHome (`ponte/src/fornitori.js`):
+ * `dashboardmodern/fornitori/stato` per vedere, `…/collega`, `…/codice`,
+ * `…/incolla`, `…/aggiorna`, `…/scollega` per fare — tutti solo per chi
+ * amministra la casa. Le password non restano nella plancia: partono, e il
+ * campo si svuota.
  */
 import {
   chiediAHomeAssistant,
@@ -87,7 +87,12 @@ function perche(codice) {
       "L'indirizzo incollato non è quello giusto: copia quello della pagina dopo l'accesso.",
       "The pasted address is not the right one: copy the one of the page after signing in.",
     );
-  if (/admin|forbidden|unauthorized/i.test(codice))
+  if (codice === "scaduto")
+    return t(
+      "È passato troppo tempo: ricomincia da capo.",
+      "Too much time has passed: start over.",
+    );
+  if (/admin|amministra|forbidden|unauthorized/i.test(codice))
     return t("Serve un utente amministratore.", "An administrator is needed.");
   return t(
     "Il fornitore non risponde. Riprova fra poco.",
@@ -131,6 +136,14 @@ function rigaCollegato(c) {
     </div>`;
 }
 
+/* Cosa porta il fornitore: una parola del ponte, tradotta qui. */
+function cosaPorta(cosa) {
+  if (cosa === "luce") return t("Luce · bollette e consumi", "Electricity · bills and consumption");
+  if (cosa === "luce-gas")
+    return t("Luce e gas · bollette e consumi", "Electricity and gas · bills and consumption");
+  return "";
+}
+
 function sceltaFornitori(disponibili) {
   return `<div class="dm-forn-scelta">${disponibili
     .map((f) => {
@@ -139,7 +152,7 @@ function sceltaFornitori(disponibili) {
           ${segno(f.id)}
           <span><b>${esc(f.nome)}</b><small>${esc(
             pronto
-              ? f.cosa || ""
+              ? cosaPorta(f.cosa)
               : f.perche === "nessuna-integrazione"
                 ? t("Nessuna integrazione esistente", "No integration exists yet")
                 : t("Presto", "Soon"),
@@ -154,8 +167,8 @@ function passoCredenziali(f, errore) {
       <div class="dm-forn-testa">${segno(f.id)}<b>${esc(f.nome)}</b></div>
       <p class="ed-hint">${esc(
         t(
-          "Le credenziali dell'area clienti. Restano in casa, nell'integrazione GdAHome: la password non si salva, si tengono solo i gettoni d'accesso del fornitore.",
-          "Your customer-area credentials. They stay at home, in the GdAHome integration: the password is not saved, only the supplier's access tokens are kept.",
+          "Le credenziali dell'area clienti. Passano da GdAHome, in casa, solo per entrare: la password non si salva, si tengono solo i gettoni d'accesso del fornitore.",
+          "Your customer-area credentials. They go through GdAHome, at home, only to sign in: the password is not saved, only the supplier's access tokens are kept.",
         ),
       )}</p>
       <label class="dm-forn-campo"><span>Email</span><input class="ed-input" type="email" autocomplete="off" data-dm-forn-email></label>
@@ -195,8 +208,12 @@ function passoIncolla(f, link, errore) {
       <ol class="dm-forn-istruzioni">
         <li>${esc(t("Apri l'accesso del fornitore ed entra con le tue credenziali.", "Open the supplier's sign-in and log in with your credentials."))}
           <a class="dm-forn-link" href="${esc(link || "#")}" target="_blank" rel="noopener noreferrer">${esc(t("Apri l'accesso", "Open sign-in"))} ↗</a></li>
-        <li>${esc(t("Dopo l'accesso la pagina resta bianca o dà errore: è normale.", "After signing in the page stays blank or shows an error: that is normal."))}</li>
-        <li>${esc(t("Copia l'indirizzo dalla barra del browser e incollalo qui.", "Copy the address from the browser bar and paste it here."))}</li>
+        ${
+          f.id === "eon"
+            ? `<li>${esc(t("Dopo l'accesso il browser prova ad aprire l'app di E.ON e non ci riesce: apri gli strumenti per sviluppatori (F12), scheda Console, e copia la riga che contiene «code=».", "After signing in the browser tries to open the E.ON app and fails: open the developer tools (F12), Console tab, and copy the line that contains “code=”."))}</li>`
+            : `<li>${esc(t("Dopo l'accesso la pagina resta bianca o dà errore: è normale.", "After signing in the page stays blank or shows an error: that is normal."))}</li>
+        <li>${esc(t("Copia l'indirizzo dalla barra del browser e incollalo qui.", "Copy the address from the browser bar and paste it here."))}</li>`
+        }
       </ol>
       <p class="ed-hint">${esc(t("Meglio dal computer: sul telefono potrebbe aprirsi l'app del fornitore.", "Better from a computer: on a phone the supplier's app may open."))}</p>
       <label class="dm-forn-campo"><span>${esc(t("Indirizzo della pagina", "Page address"))}</span><input class="ed-input" type="password" autocomplete="off" spellcheck="false" placeholder="https://…" data-dm-forn-incolla></label>

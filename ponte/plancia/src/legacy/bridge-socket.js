@@ -183,9 +183,9 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
   // chi amministra (ponte/src/aggiornamenti.js).
   "ponte/aggiornamenti/riavvio",
   "ponte/aggiornamenti/riavvia",
-  // I fornitori di energia dentro l'integrazione GdAHome (custom_components/
-  // dashboardmodern/fornitori): vederli, e — solo per chi amministra —
-  // collegarli, rileggerli e scollegarli.
+  // I fornitori di energia, che li tiene il ponte di GdAHome
+  // (`ponte/src/fornitori.js`): vederli, collegarli, rileggerli e
+  // scollegarli — tutto solo per chi amministra la casa.
   "dashboardmodern/fornitori/stato",
   "dashboardmodern/fornitori/inizia",
   "dashboardmodern/fornitori/collega",
