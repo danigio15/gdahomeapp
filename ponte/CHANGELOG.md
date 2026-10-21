@@ -10,6 +10,29 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.16.11
+
+- **Energia, fornitori di energia:** nelle impostazioni dell'Energia si
+  collegano E.ON Energia (email e password, poi il codice SMS) ed ENGIE
+  (accesso dal sito di ENGIE, nel browser). Lo fa GdAHome in casa, solo chi
+  amministra: la password non si salva, restano i gettoni d'accesso del
+  fornitore. Bollette da pagare, ultima bolletta, totale dell'anno, potenza
+  impegnata, scadenza dell'offerta (e per E.ON il consumo del giorno)
+  diventano sensori di Home Assistant.
+- **Energia, linguetta Bollette:** i dati veri del fornitore — quanto resta
+  da pagare, l'ultima bolletta, lo stato del pagamento, la scadenza
+  dell'offerta — letti dai sensori, anche da quelli delle integrazioni
+  installate a parte.
+- **Notifiche del clima:** un termostato in «riscaldamento» che non sta
+  scaldando non conta più come clima acceso: niente più «finestra aperta col
+  clima acceso» per una valvola ferma.
+- **Pioggia:** l'avviso guarda solo le finestre vere, non i sensori che
+  stanno sullo stesso dispositivo di un termostato.
+- **Stufa:** spenta, la ventola non gira più nel disegno.
+- **Temperatura:** le card con la foto di sfondo si leggono.
+- **Aggiornamenti:** quando un aggiornamento chiede di riavviare Home
+  Assistant, la plancia lo propone.
+
 ## 1.16.10
 
 - **GdANav in marcia:** i dati dell'auto (batteria e autonomia) non restano
