@@ -47,6 +47,21 @@ test("senza la rete il sole non si inventa e si paga tutto", () => {
   assert.equal(totaliDelloStorico(giorni, []).quotaSole, null);
 });
 
+test("senza la rete ma col sole e la casa, il sole e' l'eccedenza", () => {
+  const auto = [riga(18, 12, 3), riga(18, 20, 4)];
+  /* A mezzogiorno 4 kWh di sole, la casa 4 con l'auto dentro: 1 per il resto,
+   * 3 per l'auto. La sera niente sole: tutto pagato. */
+  const sole = [riga(18, 12, 4), riga(18, 20, 0)];
+  const casa = [riga(18, 12, 4), riga(18, 20, 4.5)];
+  const ore = oreDiRicarica(auto, [], () => 0.2, { sole, casa });
+  assert.equal(ore[0].sole, 3);
+  assert.equal(ore[0].costo, 0);
+  assert.equal(ore[1].sole, 0);
+  assert.ok(Math.abs(ore[1].costo - 0.8) < 1e-9);
+  /* Col sole ma senza la casa non si inventa niente. */
+  assert.equal(oreDiRicarica(auto, null, () => 0.2, { sole })[0].sole, null);
+});
+
 test("le ore di fila sono una ricarica, anche con un'ora ferma in mezzo", () => {
   const auto = [
     riga(15, 23, 7),
