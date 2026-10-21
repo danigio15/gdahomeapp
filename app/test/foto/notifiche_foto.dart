@@ -21,6 +21,7 @@ import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/casa/entita.dart';
 import 'package:gdahome/notifiche/consegna.dart';
+import 'package:gdahome/notifiche/le_immagini.dart';
 import 'package:gdahome/notifiche/modello.dart';
 import 'package:gdahome/notifiche/postino.dart';
 import 'package:gdahome/ponte/sonda.dart';
@@ -558,6 +559,72 @@ void main() {
     await expectLater(
       find.byType(MaterialApp),
       matchesGoldenFile('$_cartella/12-guarda-telecamera.png'),
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.runAsync(() async {
+      await collegamento.chiudi();
+      await ponte.spegni();
+    });
+  });
+
+  testWidgets("«Guarda» parte dalla foto del momento", (tester) async {
+    tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    late PonteFinto ponte;
+    late Collegamento collegamento;
+    late Directory cartella;
+    final foto = File('test/notifiche/porta-di-prova.jpg').readAsBytesSync();
+    await tester.runAsync(() async {
+      (ponte, collegamento) = await _unaCasa();
+      cartella = Directory.systemTemp.createTempSync('momento-');
+      await tieniLImmagine('movimento-21', foto, cartella: cartella);
+    });
+    await tester.pumpWidget(
+      _app(
+        SchermataDellaTelecamera(
+          tocco: ToccoDellaNotifica(
+            casa: collegamento.casa!.id,
+            tasto: 'guarda',
+            notifica: NotificaArrivata(
+              id: 'movimento-21',
+              tipo: 'movimento',
+              categoria: 'sicurezza',
+              urgenza: 'normale',
+              titolo: '📷 Movimento · Balcone',
+              testo: '19:00 · casa vuota',
+              quando: DateTime(2026, 10, 21, 19),
+              scade: DateTime(2100),
+              camera: 'camera.ds_2cd2143g2_i22222222_101',
+              tasti: const [
+                TastoDellaNotifica('guarda', 'Guarda', apre: true),
+                TastoDellaNotifica('inserisci', 'Inserisci antifurto'),
+              ],
+            ),
+          ),
+          collegamento: collegamento,
+          cartellaDelleImmagini: cartella,
+          adesso: DateTime(2026, 10, 21, 19, 17),
+        ),
+        scuro: true,
+      ),
+    );
+    for (var giro = 0; giro < 20; giro += 1) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await tester.pump();
+      if (find.byKey(const Key('telecamera-foto')).evaluate().isNotEmpty) break;
+    }
+    await tester.runAsync(() async {
+      for (final una in find.byType(Image).evaluate()) {
+        await precacheImage((una.widget as Image).image, una);
+      }
+    });
+    await tester.pump(const Duration(milliseconds: 300));
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('$_cartella/13-guarda-foto-del-momento.png'),
     );
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.runAsync(() async {

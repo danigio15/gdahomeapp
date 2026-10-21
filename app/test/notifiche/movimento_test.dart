@@ -7,6 +7,7 @@ import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/casa/entita.dart';
 import 'package:gdahome/notifiche/consegna.dart';
+import 'package:gdahome/notifiche/le_immagini.dart';
 import 'package:gdahome/notifiche/modello.dart';
 import 'package:gdahome/ponte/sonda.dart';
 import 'package:gdahome/schermate/campanello.dart';
@@ -40,21 +41,22 @@ final _entita = [
   _una('switch.lavatrice', 'Lavatrice'),
 ];
 
-NotificaArrivata _movimento({String? camera = _balcone}) => NotificaArrivata(
-  id: 'm1',
-  tipo: 'movimento',
-  categoria: 'sicurezza',
-  urgenza: 'normale',
-  titolo: '📷 Movimento · Balcone',
-  testo: '21:59 · casa vuota',
-  quando: DateTime(2026, 10, 17, 21, 59),
-  scade: DateTime(2100),
-  camera: camera,
-  tasti: const [
-    TastoDellaNotifica('guarda', 'Guarda', apre: true),
-    TastoDellaNotifica('inserisci', 'Inserisci antifurto'),
-  ],
-);
+NotificaArrivata _movimento({String? camera = _balcone, String id = 'm1'}) =>
+    NotificaArrivata(
+      id: id,
+      tipo: 'movimento',
+      categoria: 'sicurezza',
+      urgenza: 'normale',
+      titolo: '📷 Movimento · Balcone',
+      testo: '21:59 · casa vuota',
+      quando: DateTime(2026, 10, 17, 21, 59),
+      scade: DateTime(2100),
+      camera: camera,
+      tasti: const [
+        TastoDellaNotifica('guarda', 'Guarda', apre: true),
+        TastoDellaNotifica('inserisci', 'Inserisci antifurto'),
+      ],
+    );
 
 void main() {
   group('«Quali» del movimento', () {
@@ -156,6 +158,105 @@ void main() {
       );
     });
 
+    testWidgets(
+      "«Guarda» mostra la foto del momento, e il dal vivo e' un tasto",
+      (tester) async {
+        /* «Ti fa vedere il live e non la foto», su iPhone: toccando «Guarda»
+         * sul movimento delle 19:00 si apriva la telecamera di adesso. La foto
+         * del momento il telefono la tiene gia' (quella della notifica): viene
+         * prima, e alla casa non si chiede niente finche' non si vuole il dal
+         * vivo. */
+        late PonteFinto ponte;
+        late Collegamento collegamento;
+        late Directory cartella;
+        final foto = File('test/notifiche/porta-di-prova.jpg')
+            .readAsBytesSync();
+        await tester.runAsync(() async {
+          ponte = await PonteFinto.alza();
+          ponte.file['/api/camera_proxy/$_balcone'] = ('image/jpeg', foto);
+          final archivio = ArchivioDelleCase(CassaforteInMemoria());
+          await archivio.apri();
+          await archivio.aggiungi(
+            nome: 'Casa',
+            segno: segnoBuono,
+            identificativo: chiBuono,
+            chiave: chiaveBuona,
+            inCasa: ponte.indirizzo,
+          );
+          collegamento = Collegamento(
+            archivio: archivio,
+            sonda: Sonda(bussa: (dove) async => dove == ponte.indirizzo.salute),
+          );
+          await collegamento.apri();
+          cartella = Directory.systemTemp.createTempSync('momento-');
+          await tieniLImmagine(
+            _movimento(id: 'movimento-19').id,
+            foto,
+            cartella: cartella,
+          );
+        });
+        await tester.pumpWidget(
+          MaterialApp(
+            home: SchermataDellaTelecamera(
+              tocco: ToccoDellaNotifica(
+                casa: collegamento.casa!.id,
+                notifica: _movimento(id: 'movimento-19'),
+                tasto: 'guarda',
+              ),
+              collegamento: collegamento,
+              cartellaDelleImmagini: cartella,
+            ),
+          ),
+        );
+        for (var giro = 0; giro < 20; giro += 1) {
+          await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 50)),
+          );
+          await tester.pump();
+          if (find.byKey(const Key('telecamera-foto')).evaluate().isNotEmpty) {
+            break;
+          }
+        }
+        expect(find.byKey(const Key('telecamera-foto')), findsOneWidget);
+        expect(find.text('DAL VIVO'), findsNothing);
+        expect(find.textContaining('ALLE '), findsOneWidget);
+        expect(find.text('Guarda dal vivo'), findsOneWidget);
+        expect(
+          ponte.commissioni.any(
+            (una) => una['percorso'] == '/api/camera_proxy/$_balcone',
+          ),
+          isFalse,
+          reason: 'con la foto del momento non si chiede il dal vivo',
+        );
+
+        await tester.tap(find.byKey(const Key('telecamera-cambia')));
+        for (var giro = 0; giro < 20; giro += 1) {
+          await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 50)),
+          );
+          await tester.pump();
+          if (ponte.commissioni.any(
+            (una) => una['percorso'] == '/api/camera_proxy/$_balcone',
+          )) {
+            break;
+          }
+        }
+        expect(find.text('DAL VIVO'), findsOneWidget);
+        expect(find.textContaining('Torna alla foto delle'), findsOneWidget);
+        expect(
+          ponte.commissioni.any(
+            (una) => una['percorso'] == '/api/camera_proxy/$_balcone',
+          ),
+          isTrue,
+        );
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.runAsync(() async {
+          await collegamento.chiudi();
+          await ponte.spegni();
+        });
+      },
+    );
+
     testWidgets('la telecamera chiede la foto alla casa, e la mostra', (
       tester,
     ) async {
@@ -189,6 +290,10 @@ void main() {
               tasto: 'guarda',
             ),
             collegamento: collegamento,
+            /* Una cartella vuota: nessuna foto del momento, si va dal vivo. */
+            cartellaDelleImmagini: Directory.systemTemp.createTempSync(
+              'vuota-',
+            ),
           ),
         ),
       );

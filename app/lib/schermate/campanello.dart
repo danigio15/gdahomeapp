@@ -27,6 +27,7 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show Directory;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -35,6 +36,7 @@ import '../casa/collegamento.dart';
 import '../casa/la_finestra.dart';
 import '../notifiche/consegna.dart';
 import '../notifiche/dove_apre.dart';
+import '../notifiche/le_immagini.dart';
 import '../notifiche/modello.dart';
 import '../notifiche/postino.dart';
 import '../parole.dart';
@@ -255,6 +257,7 @@ class SchermataDellaTelecamera extends StatefulWidget {
     this.postino,
     this.fotoIniziale,
     this.adesso,
+    this.cartellaDelleImmagini,
   });
 
   final ToccoDellaNotifica tocco;
@@ -267,6 +270,9 @@ class SchermataDellaTelecamera extends StatefulWidget {
   /// L'ora per decidere se i tasti valgono ancora: per le prove.
   final DateTime? adesso;
 
+  /// Dove stanno le immagini delle notifiche: per le prove.
+  final Directory? cartellaDelleImmagini;
+
   @override
   State<SchermataDellaTelecamera> createState() => _StatoDellaTelecamera();
 }
@@ -277,20 +283,46 @@ class _StatoDellaTelecamera extends State<SchermataDellaTelecamera> {
   bool _chiesta = false;
   String? _premuto;
 
+  /// La foto del momento della notifica, quando il telefono la tiene.
+  Uint8List? _delMomento;
+
+  /// Se si sta guardando dal vivo, invece della foto del momento.
+  bool _dalVivo = false;
+
   NotificaArrivata get _notifica => widget.tocco.notifica;
 
   @override
   void initState() {
     super.initState();
     _foto = widget.fotoIniziale;
-    final camera = _notifica.camera;
-    if (camera != null && widget.fotoIniziale == null) {
-      unawaited(_unaFoto(camera));
-      _giro = Timer.periodic(
-        const Duration(seconds: 2),
-        (_) => _unaFoto(camera),
-      );
+    if (widget.fotoIniziale == null) unawaited(_comincia());
+  }
+
+  /* «Ti fa vedere il live e non la foto.» Toccando «Guarda» su un
+   * movimento, quello che si vuole vedere per primo e' chi c'era alle 19:00,
+   * non il balcone vuoto di adesso. La foto del momento il telefono ce l'ha
+   * gia' — e' quella della notifica (`le_immagini.dart`) — e viene prima; il
+   * dal vivo e' un tasto. Senza foto del momento, si parte dal vivo come
+   * prima. */
+  Future<void> _comincia() async {
+    final tenuta = await prendiLImmagine(
+      _notifica.id,
+      cartella: widget.cartellaDelleImmagini,
+    );
+    if (!mounted) return;
+    if (tenuta != null) {
+      setState(() => _delMomento = tenuta);
+      return;
     }
+    _guardaDalVivo();
+  }
+
+  void _guardaDalVivo() {
+    final camera = _notifica.camera;
+    if (camera == null || _giro != null) return;
+    setState(() => _dalVivo = true);
+    unawaited(_unaFoto(camera));
+    _giro = Timer.periodic(const Duration(seconds: 2), (_) => _unaFoto(camera));
   }
 
   Future<void> _unaFoto(String camera) async {
@@ -324,7 +356,9 @@ class _StatoDellaTelecamera extends State<SchermataDellaTelecamera> {
       for (final tasto in _notifica.tasti)
         if (!tasto.apre && !tasto.chiude && vale) tasto,
     ];
-    final foto = _foto;
+    final momento = _dalVivo ? null : _delMomento;
+    final foto = momento ?? _foto;
+    final alle = '${due(ora.hour)}:${due(ora.minute)}';
     return Scaffold(
       backgroundColor: const Color(0xFF14110F),
       appBar: AppBar(
@@ -408,14 +442,24 @@ class _StatoDellaTelecamera extends State<SchermataDellaTelecamera> {
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(
-                                    Icons.circle,
-                                    size: 10,
-                                    color: Color(0xFFEF4444),
+                                  Icon(
+                                    momento == null
+                                        ? Icons.circle
+                                        : Icons.photo_camera_rounded,
+                                    size: momento == null ? 10 : 14,
+                                    color: momento == null
+                                        ? const Color(0xFFEF4444)
+                                        : Colors.white,
                                   ),
                                   const SizedBox(width: 7),
                                   Text(
-                                    inLingua(it: 'DAL VIVO', en: 'LIVE'),
+                                    momento == null
+                                        ? inLingua(it: 'DAL VIVO', en: 'LIVE')
+                                        : inLingua(
+                                            it: 'ALLE $alle',
+                                            en: 'AT $alle',
+                                          ),
+                                    key: const Key('telecamera-quando'),
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.w700,
@@ -441,6 +485,42 @@ class _StatoDellaTelecamera extends State<SchermataDellaTelecamera> {
                     : '${due(ora.hour)}:${due(ora.minute)}',
                 style: const TextStyle(color: Colors.white70, fontSize: 17),
               ),
+              /* Dalla foto del momento al dal vivo, e ritorno. */
+              if (_delMomento != null && _notifica.camera != null) ...[
+                const SizedBox(height: 14),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: OutlinedButton.icon(
+                    key: const Key('telecamera-cambia'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Colors.white38),
+                    ),
+                    onPressed: () {
+                      if (_dalVivo) {
+                        setState(() => _dalVivo = false);
+                      } else if (_giro != null) {
+                        setState(() => _dalVivo = true);
+                      } else {
+                        _guardaDalVivo();
+                      }
+                    },
+                    icon: Icon(
+                      _dalVivo
+                          ? Icons.photo_camera_rounded
+                          : Icons.videocam_rounded,
+                    ),
+                    label: Text(
+                      _dalVivo
+                          ? inLingua(
+                              it: 'Torna alla foto delle $alle',
+                              en: 'Back to the $alle picture',
+                            )
+                          : inLingua(it: 'Guarda dal vivo', en: 'Watch live'),
+                    ),
+                  ),
+                ),
+              ],
               const Spacer(),
               Wrap(
                 spacing: 10,
