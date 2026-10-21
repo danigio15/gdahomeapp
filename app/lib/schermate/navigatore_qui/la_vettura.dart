@@ -904,7 +904,17 @@ class IlFiloDellaVettura {
         'entity_ids': ids,
       });
       if (_spento) return;
-      _abbonamento = flusso.listen(_cambiate, onError: (Object _) {});
+      /* Se l'abbonamento muore, al prossimo giro (`rileggi`, ogni minuto) si
+       * rifa': prima l'errore si ingoiava e restavano i valori di prima. */
+      void rifaiAlProssimoGiro([Object? _]) {
+        if (identical(_filoAbbonato, filo)) _filoAbbonato = null;
+      }
+
+      _abbonamento = flusso.listen(
+        _cambiate,
+        onError: rifaiAlProssimoGiro,
+        onDone: rifaiAlProssimoGiro,
+      );
     } on ComandoRifiutato {
       _comePrima = true;
       await collegamento.serveLaCasa();

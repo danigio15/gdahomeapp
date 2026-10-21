@@ -316,6 +316,48 @@ void main() {
     await filo.chiudi();
   });
 
+  /* «Perché ora non si aggiornano i dati su gdanav»: uscendo di casa il filo
+   * cade, si rialza, e ricade prima che Home Assistant risponda al nuovo
+   * abbonamento. Prima l'abbonamento finiva li', e gdanav restava con la
+   * batteria di quando si era partiti. */
+  test('se il filo ricade mentre rifa\' la sottoscrizione, la rifa\' alla volta dopo', () async {
+    final filo = filoCon();
+    await filo.apri();
+
+    final eventi = await filo.sottoscrivi({'type': 'subscribe_events'});
+    final visti = <Map<String, dynamic>>[];
+    final errori = <Object>[];
+    eventi.listen(visti.add, onError: errori.add);
+
+    /* Prima caduta: la casa e' muta, la sottoscrizione rifatta resta appesa. */
+    ponte.muto = true;
+    ponte.arrivati.clear();
+    await ponte.buttaGiu();
+    await _finoA(
+      () => ponte.arrivati.any((uno) => uno['type'] == 'subscribe_events'),
+      entro: const Duration(seconds: 4),
+    );
+    /* Seconda caduta, prima della risposta. Poi la casa torna a parlare. */
+    ponte.arrivati.clear();
+    ponte.muto = false;
+    await ponte.buttaGiu();
+    await _finoA(
+      () => ponte.arrivati.any((uno) => uno['type'] == 'subscribe_events'),
+      entro: const Duration(seconds: 4),
+    );
+
+    final nuovoId =
+        ponte.arrivati.lastWhere(
+              (uno) => uno['type'] == 'subscribe_events',
+            )['id']
+            as int;
+    ponte.evento(nuovoId, {'event_type': 'state_changed'});
+    await _finoA(() => visti.isNotEmpty, entro: const Duration(seconds: 4));
+    expect(visti.single['event_type'], 'state_changed');
+    expect(errori, isEmpty);
+    await filo.chiudi();
+  });
+
   test('chiudere apposta non fa ripartire niente', () async {
     final filo = filoCon();
     await filo.apri();
