@@ -10,6 +10,15 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.16.12
+
+- **Clima, termostati:** un termostato in «auto» o «heat» che non sta
+  scaldando (per esempio un Netatmo in antigelo) non conta più come «unità
+  accesa»: niente pastiglia, e nella tessera Clima è «In pausa».
+- **Clima, spegnere un Netatmo:** chi non ha lo spento si spegne in antigelo
+  e si riaccende sul programma, come fa la sua app. Prima Netatmo rispondeva
+  «Bad request».
+
 ## 1.16.11
 
 - **Energia, fornitori di energia:** nelle impostazioni dell'Energia si

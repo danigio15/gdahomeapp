@@ -1041,7 +1041,10 @@ function spegni(entita) {
     root.navigator?.vibrate?.(10);
   } catch (_errore) {}
   Promise.resolve(
-    root.dmCallHaService(comando.dominio, comando.servizio, { entity_id: entita }),
+    root.dmCallHaService(comando.dominio, comando.servizio, {
+      ...(comando.dati || {}),
+      entity_id: entita,
+    }),
   ).catch((errore) => {
     try {
       root.edToast?.(
@@ -1065,8 +1068,7 @@ function installaLAggiornamento(tasto) {
   tasto.textContent = t("In corso", "Installing");
   Promise.resolve(root.dmCallHaService("update", "install", { entity_id: entita }))
     .then(() => root.dmGuardaIlRiavvio?.())
-    .catch(
-    (errore) => {
+    .catch((errore) => {
       tasto.disabled = false;
       tasto.textContent = parola;
       try {
@@ -1076,8 +1078,7 @@ function installaLAggiornamento(tasto) {
           )}`,
         );
       } catch (_ignora) {}
-    },
-  );
+    });
   return true;
 }
 

@@ -91,3 +91,38 @@ test("la Home, la pastiglia e la pagina Clima contano con la stessa regola", () 
   assert.match(pagina, /filter\(\(reading\) => reading\.inFunzione\)/);
   assert.match(ponte, /core\/il-termostato\.js/);
 });
+
+/* «Home Assistant ha rifiutato: 400 - Bad request - therm_setpoint_mode
+ * should be equal to one of the allowed values»: il Netatmo non ha «off», e
+ * il suo cloud lo rifiuta. Si spegne in antigelo e si riaccende sul programma. */
+test("il Netatmo si spegne in antigelo e si riaccende sul programma", async () => {
+  const { climatePowerCall, climateIsOff } = await import("../src/core/climate-power.js");
+  const { comandoPerSpegnere } = await import("../src/core/come-si-spegne.js");
+  const scalda = {
+    ...NETATMO,
+    attributes: { ...NETATMO.attributes, preset_mode: "schedule", hvac_action: "heating" },
+  };
+  assert.deepEqual(climatePowerCall(scalda, false), {
+    service: "set_preset_mode",
+    data: { preset_mode: "frost_guard" },
+  });
+  assert.deepEqual(comandoPerSpegnere("climate.casa", scalda), {
+    dominio: "climate",
+    servizio: "set_preset_mode",
+    dati: { preset_mode: "frost_guard" },
+    parola: "spegni",
+  });
+  assert.equal(climateIsOff(NETATMO), true);
+  assert.equal(climateIsOff(scalda), false);
+  assert.deepEqual(climatePowerCall(NETATMO, true), {
+    service: "set_preset_mode",
+    data: { preset_mode: "schedule" },
+  });
+  /* Chi ha «off» si spegne come sempre. */
+  const condizionatore = { state: "cool", attributes: { hvac_modes: ["off", "cool"] } };
+  assert.deepEqual(climatePowerCall(condizionatore, false), {
+    service: "set_hvac_mode",
+    data: { hvac_mode: "off" },
+  });
+  assert.deepEqual(comandoPerSpegnere("climate.x", condizionatore).servizio, "turn_off");
+});

@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-PMQVOJRG.js";
+} from "../../chunk-R6RCL64O.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -16780,7 +16780,13 @@ function climatePowerCall(state180, acceso6, precedente = "", richiesta = "", su
     if (modalita(state180).includes("off")) {
       return { service: "set_hvac_mode", data: { hvac_mode: "off" } };
     }
+    const antigelo = presetDiRiposo(state180);
+    if (antigelo) return { service: "set_preset_mode", data: { preset_mode: antigelo } };
     return { service: "turn_off", data: {} };
+  }
+  if (inAntigelo(state180)) {
+    const programma2 = preset(state180).find((m) => m.toLowerCase() === "schedule");
+    if (programma2) return { service: "set_preset_mode", data: { preset_mode: programma2 } };
   }
   const scelta3 = modalitaDiAccensione(state180, precedente, richiesta, suggerita);
   if (scelta3 && (clean5(richiesta) === scelta3 || !supporta(state180, CLIMATE_TURN_ON))) {
@@ -16791,7 +16797,20 @@ function climatePowerCall(state180, acceso6, precedente = "", richiesta = "", su
   return { service: "turn_on", data: {} };
 }
 function climateIsOff(state180) {
-  return clean5(state180?.state).toLowerCase() === "off";
+  return clean5(state180?.state).toLowerCase() === "off" || inAntigelo(state180);
+}
+function preset(state180) {
+  const elenco15 = state180?.attributes?.preset_modes;
+  return Array.isArray(elenco15) ? elenco15.map(clean5).filter(Boolean) : [];
+}
+function presetDiRiposo(state180) {
+  if (!modalita(state180).length || modalita(state180).includes("off")) return "";
+  const tutti = preset(state180);
+  return tutti.find((m) => m.toLowerCase() === "frost_guard") || tutti.find((m) => m.toLowerCase() === "away") || "";
+}
+function inAntigelo(state180) {
+  const riposo2 = presetDiRiposo(state180);
+  return Boolean(riposo2) && clean5(state180?.attributes?.preset_mode).toLowerCase() === riposo2.toLowerCase();
 }
 
 // src/core/modo-del-clima.js
@@ -36184,12 +36203,26 @@ function comandoDelLettore2(stato3) {
   if (sa(SA.SPEGNI)) return { dominio: "media_player", servizio: "turn_off", parola: "spegni" };
   return null;
 }
+function comandoDelTermostato(stato3) {
+  const antigelo = presetDiRiposo(stato3);
+  if (!antigelo) return null;
+  return {
+    dominio: "climate",
+    servizio: "set_preset_mode",
+    dati: { preset_mode: antigelo },
+    parola: "spegni"
+  };
+}
 function comandoPerSpegnere(entity2, stato3 = null) {
   const dominio5 = dominioDi5(entity2);
   if (!dominio5) return null;
   if (dominio5 === "cover") return { dominio: "cover", servizio: "close_cover", parola: "chiudi" };
   if (dominio5 === "media_player") return comandoDelLettore2(stato3);
   if (dominio5 === "lock") return { dominio: "lock", servizio: "lock", parola: "chiudi" };
+  if (dominio5 === "climate") {
+    const antigelo = comandoDelTermostato(stato3);
+    if (antigelo) return antigelo;
+  }
   if (SI_SPENGONO.has(dominio5))
     return { dominio: "homeassistant", servizio: "turn_off", parola: "spegni" };
   return null;
@@ -36800,7 +36833,10 @@ function spegni(entita3) {
   } catch (_errore) {
   }
   Promise.resolve(
-    root.dmCallHaService(comando.dominio, comando.servizio, { entity_id: entita3 })
+    root.dmCallHaService(comando.dominio, comando.servizio, {
+      ...comando.dati || {},
+      entity_id: entita3
+    })
   ).catch((errore) => {
     try {
       root.edToast?.(
@@ -36819,20 +36855,18 @@ function installaLAggiornamento(tasto2) {
   const parola = tasto2.textContent;
   tasto2.disabled = true;
   tasto2.textContent = t("In corso", "Installing");
-  Promise.resolve(root.dmCallHaService("update", "install", { entity_id: entita3 })).then(() => root.dmGuardaIlRiavvio?.()).catch(
-    (errore) => {
-      tasto2.disabled = false;
-      tasto2.textContent = parola;
-      try {
-        root.edToast?.(
-          `${t("Home Assistant ha rifiutato", "Home Assistant refused")}: ${clean(
-            errore?.message || errore
-          )}`
-        );
-      } catch (_ignora) {
-      }
+  Promise.resolve(root.dmCallHaService("update", "install", { entity_id: entita3 })).then(() => root.dmGuardaIlRiavvio?.()).catch((errore) => {
+    tasto2.disabled = false;
+    tasto2.textContent = parola;
+    try {
+      root.edToast?.(
+        `${t("Home Assistant ha rifiutato", "Home Assistant refused")}: ${clean(
+          errore?.message || errore
+        )}`
+      );
+    } catch (_ignora) {
     }
-  );
+  });
   return true;
 }
 function onClickElenco(event) {
@@ -45660,8 +45694,8 @@ function intervalloDa(scelta3, adesso2 = Date.now()) {
     if (scelta3.ore !== void 0) return intervalloDaOre(scelta3.ore, adesso2);
     return null;
   }
-  const preset = PERIODI.find((periodo) => periodo.chiave === pulito35(scelta3));
-  if (preset) return intervalloDaOre(preset.ore, adesso2);
+  const preset2 = PERIODI.find((periodo) => periodo.chiave === pulito35(scelta3));
+  if (preset2) return intervalloDaOre(preset2.ore, adesso2);
   return intervalloDaOre(scelta3, adesso2);
 }
 function chiaveDellIntervallo(intervallo2) {
@@ -45699,8 +45733,8 @@ function etichettaDelTempo(ms, grana = "ore", lingua3 = "it") {
 }
 function nomeDelPeriodo(intervallo2, lingua3 = "it") {
   if (!intervallo2) return "";
-  const preset = intervallo2.personalizzato ? null : periodoDaOre(intervallo2.ore);
-  if (preset) return lingua3.toLowerCase().startsWith("it") ? preset.it : preset.en;
+  const preset2 = intervallo2.personalizzato ? null : periodoDaOre(intervallo2.ore);
+  if (preset2) return lingua3.toLowerCase().startsWith("it") ? preset2.it : preset2.en;
   const scrivi5 = (ms) => {
     try {
       return new Date(ms).toLocaleString(lingua3, {
@@ -63650,9 +63684,9 @@ var FONDO_DI_SERIE = "esri";
 var NIENTE = Object.freeze(["nessuno", "nessuna", "none"]);
 function fondoDelRadar(config = {}) {
   const niente = { modello: "", attribuzione: "" };
-  const voce3 = (preset) => ({
-    modello: preset.modello,
-    attribuzione: stringa(preset.attribuzione)
+  const voce3 = (preset2) => ({
+    modello: preset2.modello,
+    attribuzione: stringa(preset2.attribuzione)
   });
   const dellaSerie = FONDI_MAPPA[FONDO_DI_SERIE];
   let fondo = stringa(config?.fondo);
@@ -90649,14 +90683,14 @@ function quickClimateForUnit(entity2, perUnita, globale) {
   const dato2 = perUnita && typeof perUnita === "object" && !Array.isArray(perUnita) ? perUnita[chiave2] : null;
   return normalizeQuickClimate(dato2 && typeof dato2 === "object" ? dato2 : globale);
 }
-function quickClimatePresetForZone(preset, zona) {
-  const scelta3 = normalizeQuickClimate(preset);
+function quickClimatePresetForZone(preset2, zona) {
+  const scelta3 = normalizeQuickClimate(preset2);
   if (pulito56(zona).toLowerCase() !== "caldo") return scelta3;
   if (scelta3.mode === "cool" || scelta3.mode === "dry") return { ...scelta3, mode: "heat" };
   return scelta3;
 }
-function quickClimateSteps(preset, attributi2 = null, { zona = "" } = {}) {
-  const scelta3 = normalizeQuickClimate(preset);
+function quickClimateSteps(preset2, attributi2 = null, { zona = "" } = {}) {
+  const scelta3 = normalizeQuickClimate(preset2);
   const passi2 = [{ service: "set_hvac_mode", data: { hvac_mode: scelta3.mode } }];
   if (scelta3.temperature != null) {
     const temperatura = temperaturaDelPreset(scelta3, attributi2, zona);
@@ -90690,8 +90724,8 @@ function quickClimatePresetOf(entity2, zona, perUnita, globale) {
   const ripiego = caldo ? QUICK_CLIMATE_HEAT_DEFAULT : normalizeQuickClimate(globale);
   return quickClimatePresetForZone(quickClimateForUnit(entity2, perUnita, ripiego), zona);
 }
-function quickClimateHint(preset, parole4) {
-  const scelta3 = normalizeQuickClimate(preset);
+function quickClimateHint(preset2, parole4) {
+  const scelta3 = normalizeQuickClimate(preset2);
   const pezzi = [parole4.modes?.[scelta3.mode] || scelta3.mode];
   if (scelta3.temperature != null) pezzi.push(`${scelta3.temperature}°C`);
   if (scelta3.fan) pezzi.push(`${parole4.fan} ${scelta3.fan}`);
@@ -90759,18 +90793,18 @@ function accettate2(entita3 = "") {
   };
 }
 function quickClimateFieldsMarkup(entita3 = "", scelta3 = null, zona = "") {
-  const preset = scelta3 ? normalizeQuickClimate(scelta3) : presetDi(entita3, zona);
+  const preset2 = scelta3 ? normalizeQuickClimate(scelta3) : presetDi(entita3, zona);
   const { modi, ventole } = accettate2(entita3);
-  if (preset.mode && !modi.includes(preset.mode)) modi.unshift(preset.mode);
+  if (preset2.mode && !modi.includes(preset2.mode)) modi.unshift(preset2.mode);
   const nomi2 = NOMI3();
   const nomiVentola = NOMI_VENTOLA();
   const opzioniModo = modi.map(
-    (voce3) => `<option value="${esc(voce3)}"${voce3 === preset.mode ? " selected" : ""}>${esc(nomi2[voce3] || voce3)}</option>`
+    (voce3) => `<option value="${esc(voce3)}"${voce3 === preset2.mode ? " selected" : ""}>${esc(nomi2[voce3] || voce3)}</option>`
   ).join("");
   const opzioniVentola = [
-    `<option value=""${preset.fan ? "" : " selected"}>— ${esc(t("Non toccare", "Leave alone"))} —</option>`,
+    `<option value=""${preset2.fan ? "" : " selected"}>— ${esc(t("Non toccare", "Leave alone"))} —</option>`,
     ...ventole.map(
-      (voce3) => `<option value="${esc(voce3)}"${voce3 === preset.fan ? " selected" : ""}>${esc(nomiVentola[voce3.toLowerCase()] || voce3)}</option>`
+      (voce3) => `<option value="${esc(voce3)}"${voce3 === preset2.fan ? " selected" : ""}>${esc(nomiVentola[voce3.toLowerCase()] || voce3)}</option>`
     )
   ].join("");
   return `<div class="dm-quick-climate-row">
@@ -90783,7 +90817,7 @@ function quickClimateFieldsMarkup(entita3 = "", scelta3 = null, zona = "") {
         <input class="ed-input" type="number" min="5" max="35" step="0.5"
           inputmode="decimal" data-dm-quick-climate="temperature"
           placeholder="${esc(t("Non toccare", "Leave alone"))}"
-          value="${preset.temperature == null ? "" : esc(String(preset.temperature))}">
+          value="${preset2.temperature == null ? "" : esc(String(preset2.temperature))}">
       </label>
       <label>
         <span>${esc(t("Ventola", "Fan"))}</span>
@@ -95043,9 +95077,9 @@ function openShutterEditor(item, index) {
       // qui vorrebbe dire cambiare il disegno a chi aveva gia' scelto, senza
       // che abbia toccato niente.
     };
-    const preset = coverPresetPosition({ preset: form.elements.preset?.value });
-    if (preset == null) delete list[index].preset;
-    else list[index].preset = preset;
+    const preset2 = coverPresetPosition({ preset: form.elements.preset?.value });
+    if (preset2 == null) delete list[index].preset;
+    else list[index].preset = preset2;
     if (!list[index].inferriata) delete list[index].inferriata;
     const testoSoglia = String(form.elements.soglia?.value ?? "").trim();
     if (testoSoglia && Number.isFinite(Number(testoSoglia)))
@@ -97715,9 +97749,9 @@ function installAddWrappers() {
         tenda: clean(doc.getElementById("ed-tp-tenda")?.value),
         tendaSole: clean(doc.getElementById("ed-tp-tendasole")?.value)
       };
-      const preset = coverPresetPosition({ preset: doc.getElementById("ed-tp-preset")?.value });
-      if (preset == null) delete list[index].preset;
-      else list[index].preset = preset;
+      const preset2 = coverPresetPosition({ preset: doc.getElementById("ed-tp-preset")?.value });
+      if (preset2 == null) delete list[index].preset;
+      else list[index].preset = preset2;
       const soglia3 = sogliaScritta3(doc.getElementById("ed-tp-soglia-riga")?.value);
       if (soglia3 == null) delete list[index].soglia;
       else list[index].soglia = soglia3;
@@ -100495,8 +100529,8 @@ function installListeners2() {
   doc.addEventListener("change", (event) => {
     const range = event.target?.closest?.("[data-dm-position]");
     if (range) commitPosition(range);
-    const preset = event.target?.closest?.("[data-dm-preset]");
-    if (preset) applyPreset(preset);
+    const preset2 = event.target?.closest?.("[data-dm-preset]");
+    if (preset2) applyPreset(preset2);
   });
   doc.addEventListener("click", (event) => {
     if (event.target?.closest?.("[data-dm-preset]")) return;
@@ -104105,17 +104139,17 @@ function rapidoDi(id, zona) {
   if (pagina3?.modello === "clima" && pagina3.accensione === "ultima") return null;
   const r = state115.fonte?.rapido || {};
   const dove = zona || zonaDiQui(id);
-  const preset = quickClimatePresetOf(id, dove, r.perUnita || {}, r.globale);
+  const preset2 = quickClimatePresetOf(id, dove, r.perUnita || {}, r.globale);
   const modi = (attributi(id).hvac_modes || []).filter((m) => m && m !== "off");
-  if (!preset?.mode || !modi.length || modi.includes(preset.mode)) return preset;
+  if (!preset2?.mode || !modi.length || modi.includes(preset2.mode)) return preset2;
   const voluto = dove === "caldo" ? "heat" : "cool";
-  return { ...preset, mode: modi.includes(voluto) ? voluto : modi[0] };
+  return { ...preset2, mode: modi.includes(voluto) ? voluto : modi[0] };
 }
-function pastigliaRapida(id, preset, on) {
-  const ventola2 = PAROLE_DELLA_VENTOLA()[clean(preset.fan).toLowerCase()] || clean(preset.fan);
+function pastigliaRapida(id, preset2, on) {
+  const ventola2 = PAROLE_DELLA_VENTOLA()[clean(preset2.fan).toLowerCase()] || clean(preset2.fan);
   const pezzi = [
-    `<span class="mu-rap-val">${disegnoDelCatalogo(preset.mode === "heat" ? "flame" : "wind", 18)}${esc(
-      preset.temperature == null ? PAROLE_DEL_CLIMA()[preset.mode] || preset.mode : `${decimale2(preset.temperature)}°`
+    `<span class="mu-rap-val">${disegnoDelCatalogo(preset2.mode === "heat" ? "flame" : "wind", 18)}${esc(
+      preset2.temperature == null ? PAROLE_DEL_CLIMA()[preset2.mode] || preset2.mode : `${decimale2(preset2.temperature)}°`
     )}</span>`,
     ventola2 ? `<span class="mu-rap-val">${disegnoDelCatalogo("spiral", 18)}${esc(ventola2)}</span>` : ""
   ].filter(Boolean);
@@ -105383,13 +105417,13 @@ function paginaTelecamera(pagina3) {
       ${l ? fader({ entita: tc.zoom, nome: t("Zoom", "Zoom") }, l) : '<span class="mu-spazio"></span>'}
       ${tc.zoomMeno ? tastoPtz(tc, "zoomMeno", "−", t("Zoom indietro", "Zoom out"), "mu-ptz-pm") : ""}</div>`;
   }
-  const preset = (tc.preset || []).map(
+  const preset2 = (tc.preset || []).map(
     (p, k) => `<button type="button" class="mu-carta mu-ptz-preset-t${classeDellaTessera(`preset:${k}`)}" data-mu-fa="preset" data-mu-indice="${k}">${fondoDellaTessera(`preset:${k}`)}<span>${esc(p.nome || nomeDi8(p.entita))}</span></button>`
   ).join("");
-  return `<div class="mu-ptz${preset ? "" : " senza-preset"}">
+  return `<div class="mu-ptz${preset2 ? "" : " senza-preset"}">
     <div class="mu-carta mu-ptz-video"><div class="mu-video${classeDelFondo(tc.immagine)}">${fondoMarkup(tc.immagine)}${tc.entita && !anteprimaInCorso ? `<img data-mu-telecamera="${esc(tc.entita)}" alt="">` : immaginePulita(tc.immagine) ? "" : `<div class="mu-video-vuoto">${disegno("telecamere", 80, "ptz-vuota")}</div>`}<span class="mu-live">${esc(nome)}</span></div></div>
     <div class="mu-carta mu-ptz-comandi${conZoom ? "" : " senza-zoom"}">${zoom}${pad}</div>
-    ${preset ? `<div class="mu-ptz-preset">${preset}</div>` : ""}
+    ${preset2 ? `<div class="mu-ptz-preset">${preset2}</div>` : ""}
   </div>`;
 }
 var SEGNI_DEI_COMANDI = Object.freeze({
@@ -109371,7 +109405,7 @@ function telecameraMarkup(p, i) {
     "",
     `${cerca2(`${via}.${chiave2}`, tc[chiave2], { domini: domini2 })}${telecomando(tc[chiave2]) ? campoComando(`${via}.${chiave2}Comando`, tc[`${chiave2}Comando`] || "") : ""}`
   );
-  const preset = Array.from(
+  const preset2 = Array.from(
     { length: Math.min(tc.preset.length + 1, PRESET_AL_MASSIMO) },
     (_, k) => {
       const v = tc.preset[k];
@@ -109401,7 +109435,7 @@ function telecameraMarkup(p, i) {
   ${tasto2("zoomMeno", t("Zoom indietro", "Zoom out"))}
   ${conTelecomando ? riga2(t("Dispositivo del telecomando", "Remote device"), t("Facoltativo: il «device» di remote.send_command", "Optional: the «device» of remote.send_command"), campo3(`${via}.dispositivo`, tc.dispositivo || "", "")) : ""}
   <div class="mu-ed-sotto-titolo">${esc(t("Preset", "Presets"))}</div>
-  <div class="mu-ed-posti">${preset}</div>`;
+  <div class="mu-ed-posti">${preset2}</div>`;
 }
 function comandiMarkup2(p, i) {
   const via = `pagine.${i}`;
