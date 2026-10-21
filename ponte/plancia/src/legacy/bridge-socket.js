@@ -183,6 +183,12 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
   // chi amministra (ponte/src/aggiornamenti.js).
   "ponte/aggiornamenti/riavvio",
   "ponte/aggiornamenti/riavvia",
+  // Le bollette dalla posta (ponte/src/bollette.js): vederle, e — solo per
+  // chi amministra — collegare, rileggere e scollegare la casella Gmail.
+  "ponte/bollette/stato",
+  "ponte/bollette/collega",
+  "ponte/bollette/aggiorna",
+  "ponte/bollette/scollega",
   "auth/sign_path",
 ]);
 
