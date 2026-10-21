@@ -57,6 +57,7 @@ import { codiceDellaRicarica, cavoDalloStato } from "../core/stato-della-ricaric
 import { capacitaDellaBatteria, siRicarica, vehiclePhoto } from "../core/vehicle-model.js";
 import { activeVehicle, activeVehiclePhoto, profiles } from "./ev-section.js";
 import { datiMarkup, motoreInPagina } from "./auto-termica-section.js";
+import { weeklySourcePlans } from "./energy-analysis-section.js";
 import { renderRicaricaDiNotte } from "./ricarica-di-notte-section.js";
 import {
   allStates,
@@ -69,6 +70,7 @@ import {
   planciaVisibile,
   quandoSiCambiaPagina,
   root,
+  section,
   senzaCadere,
   t,
 } from "./shared.js";
@@ -381,7 +383,7 @@ function eroe(l, indice) {
   ].join("");
   return `<section class="dm-na-eroe dm-na-carta" data-stato="${esc(stato?.tono || "")}" data-tipo="${l.termica ? "termica" : "elettrica"}" data-foto="${foto ? "si" : "no"}">
     <div class="dm-na-copertina">
-      ${foto ? `<img src="${esc(foto)}" alt="" loading="lazy" decoding="async">` : `<span class="dm-na-foto-vuota">${logoDellAuto(car, 120)}</span>`}
+      ${foto ? `<img class="dm-na-sfondo" src="${esc(foto)}" alt="" aria-hidden="true" loading="lazy" decoding="async"><img class="dm-na-auto" src="${esc(foto)}" alt="" loading="lazy" decoding="async">` : `<span class="dm-na-foto-vuota">${logoDellAuto(car, 120)}</span>`}
       <div class="dm-na-copertina-sopra">
         ${stato ? `<span class="dm-na-stato" data-tono="${esc(stato.tono)}"><i></i>${esc(stato.testo)}</span>` : "<span></span>"}
         ${quando ? `<span class="dm-na-quando">🕒 ${esc(quando)}</span>` : ""}
@@ -843,22 +845,43 @@ async function chiediLeStatistiche(ids, inizio, fine) {
   return servizio.statisticsWithGrowth(ids, new Date(inizio), new Date(fine), "hour");
 }
 
+/* I contatori della casa da cui si capisce il sole: gli stessi che legge
+ * l'Energia per le settimane — prima il contatore totale, poi quello del
+ * periodo se e' cumulativo. Chi ha configurato solo il totale della rete non
+ * ha il «prelevata oggi», e il sole dell'auto restava vuoto. */
+function fontiDellaCasa() {
+  let piani = [];
+  try {
+    const energia = section("energy", {});
+    piani = weeklySourcePlans(energia && typeof energia === "object" ? energia : {}, allStates(), root.resolveEntity || ((v) => v));
+  } catch (_errore) {
+    piani = [];
+  }
+  const di = (chiave) => piani.find((p) => p.key === chiave)?.entity || "";
+  return {
+    rete: di("gridImport") || risolvi("dm.energy_energia_prelevata_oggi"),
+    sole: di("solar") || risolvi("dm.energy_produzione_solare_oggi"),
+    casa: di("house") || risolvi("dm.energy_consumo_casa_oggi"),
+  };
+}
+
 function caricaLoStorico(l) {
   const ev = l.lettore.entita("dm.ev_energia_wallbox_oggi");
   if (!ev) return;
-  const rete = risolvi("dm.energy_energia_prelevata_oggi");
+  const fonti = fontiDellaCasa();
   const finestra = finestraDelloStorico(state.vista, { mese: state.mese, dal: state.dal, al: state.al });
-  const chiave = `${ev}|${rete}|${finestra.inizio}|${finestra.fine}`;
+  const chiave = `${ev}|${fonti.rete}|${fonti.sole}|${fonti.casa}|${finestra.inizio}|${finestra.fine}`;
   const s = state.storico;
   if (s.chiave === chiave && (s.stato === "carico" || Date.now() - (s.alle || 0) < (s.stato === "errore" ? RIPROVA_MS : FRESCO_MS))) return;
   const prima = s.chiave === chiave && s.stato === "pronto";
   state.storico = { ...s, chiave, stato: prima ? "pronto" : "carico", alle: Date.now() };
-  const ids = ["dm.ev_energia_wallbox_oggi", ...(rete ? ["dm.energy_energia_prelevata_oggi"] : [])];
+  const ids = [...new Set(["dm.ev_energia_wallbox_oggi", fonti.rete, fonti.sole, fonti.casa].filter(Boolean))];
   chiediLeStatistiche(ids, finestra.inizio, finestra.fine)
     .then((righe) => {
       if (state.storico.chiave !== chiave) return;
-      const conRete = Boolean(rete) && (righe["dm.energy_energia_prelevata_oggi"] || []).length > 0;
-      const ore = oreDiRicarica(righe["dm.ev_energia_wallbox_oggi"] || [], conRete ? righe["dm.energy_energia_prelevata_oggi"] : null, prezzoDellOra());
+      const di = (id) => (id ? righe[id] || [] : []);
+      const ore = oreDiRicarica(di("dm.ev_energia_wallbox_oggi"), di(fonti.rete), prezzoDellOra(), { sole: di(fonti.sole), casa: di(fonti.casa) });
+      const conRete = ore.some((ora) => ora.sole !== null);
       const giorni = giorniDalleOre(ore, finestra.inizio, finestra.fine);
       const ricariche = ricaricheDalleOre(ore);
       state.storico = {
@@ -1196,7 +1219,12 @@ function stile() {
   ${P} .dm-na-eroe[data-tipo="termica"]{--na-ev:var(--na-sole)}
   ${P} .dm-na-copertina{position:relative;height:300px;overflow:hidden;border-radius:22px 22px 0 0;
     background:radial-gradient(80% 90% at 50% 60%,color-mix(in srgb,var(--na-ev) 22%,var(--card-bg,#fff)),var(--card-bg,#fff))}
-  ${P} .dm-na-copertina img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 60%}
+  /* «Quando uso zfold 8 aperto la foto della macchina non entra tutta»: la
+   * foto si vede intera su qualunque schermo (contain), e lo spazio che avanza
+   * lo riempie la stessa foto sfocata, cosi' non restano bande vuote. */
+  ${P} .dm-na-copertina img{position:absolute;inset:0;width:100%;height:100%}
+  ${P} .dm-na-copertina img.dm-na-auto{object-fit:contain;object-position:center}
+  ${P} .dm-na-copertina img.dm-na-sfondo{object-fit:cover;filter:blur(22px) saturate(1.15) brightness(.85);transform:scale(1.2)}
   ${P} .dm-na-copertina::after{content:"";position:absolute;inset:0;pointer-events:none;
     background:linear-gradient(180deg,rgba(2,6,23,.4) 0%,rgba(2,6,23,0) 28%)}
   ${P} .dm-na-foto-vuota{position:absolute;inset:0;display:grid;place-items:center;opacity:.5}
@@ -1242,7 +1270,7 @@ function stile() {
    * pagina una foto del telefono si sgrana, e l'auto resta tagliata. */
   @media (min-width:761px){
     ${P} .dm-na-eroe{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:stretch}
-    ${P} .dm-na-copertina{height:100%;min-height:340px;border-radius:22px 0 0 22px}
+    ${P} .dm-na-copertina{height:100%;min-height:300px;border-radius:22px 0 0 22px}
     ${P} .dm-na-eroe-nome{padding:22px 24px 16px}
     ${P} .dm-na-eroe-dati{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr));padding:14px 14px 0}
     ${P} .dm-na-dato-km{grid-column:1 / -1}
@@ -1250,6 +1278,17 @@ function stile() {
     ${P} .dm-na-dato:nth-child(3){border-left:1px solid var(--card-border,#e2e8f0)}
     ${P} .dm-na-autonomia b{font-size:88px}
     ${P} .dm-na-eroe-pills{align-self:end}
+  }
+  /* Uno schermo largo ma basso — il Fold aperto, un tablet in orizzontale — la
+   * card deve stare tutta nello schermo: i numeri si fanno piu' piccoli. */
+  @media (min-width:761px) and (max-height:900px){
+    ${P} .dm-na-copertina{min-height:240px}
+    ${P} .dm-na-eroe-nome{padding:16px 20px 12px}
+    ${P} .dm-na-eroe-dati{padding:6px 10px 0}
+    ${P} .dm-na-dato{padding:10px 12px 8px}
+    ${P} .dm-na-autonomia b{font-size:clamp(52px,8vh,76px)}
+    ${P} .dm-na-livello b{font-size:clamp(30px,5vh,38px)}
+    ${P} .dm-na-eroe-pills{padding:4px 20px 14px}
   }
   ${P} .dm-na-eroe-pills:empty{display:none}
   ${P} .dm-na-pills{display:flex;flex-wrap:wrap;gap:7px}
@@ -1438,7 +1477,7 @@ function stile() {
     ${P} #dm-na{gap:14px}
     ${P} .dm-na-carta{padding:16px;border-radius:20px}
     ${P} .dm-na-eroe{padding:0}
-    ${P} .dm-na-copertina{height:210px;border-radius:20px 20px 0 0}
+    ${P} .dm-na-copertina{height:auto;aspect-ratio:16/10;max-height:42vh;min-height:180px;border-radius:20px 20px 0 0}
     ${P} .dm-na-eroe-nome{padding:14px 16px 12px;gap:12px}
     ${P} .dm-na-eroe-nome b{font-size:19px}
     ${P} .dm-na-logo-grande{width:58px;height:48px;padding:5px}

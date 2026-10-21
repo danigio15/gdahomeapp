@@ -222,6 +222,15 @@ class Filo {
   final _inAttesa = <int, Completer<Map<String, dynamic>>>{};
   final _sottoscrizioni = <int, _Sottoscrizione>{};
 
+  /// Le sottoscrizioni che dopo una riconnessione non si sono potute rifare
+  /// perche' il filo e' ricaduto, o Home Assistant non ha risposto in tempo.
+  /// Non si perdono: si rifanno alla prossima entrata, o fra poco se il filo
+  /// e' gia' dentro. Prima finivano in un errore che nessuno raccoglieva, e
+  /// chi ascoltava restava abbonato a niente: in marcia gdanav mostrava la
+  /// batteria di quando si era partiti.
+  final _daRifare = <_Sottoscrizione>{};
+  Timer? _riprovaLeSottoscrizioni;
+
   /// I messaggi mandati per conto di qualcun altro — la plancia vera, che
   /// parla Home Assistant da dentro il WebView — e chi ne aspetta le risposte.
   final _instradati = <int, void Function(Instradato)>{};
@@ -928,14 +937,25 @@ class Filo {
     _sottoscrizioni[id] = sottoscritta;
     sottoscritta.uscita.onCancel = () async {
       if (sottoscritta.uscita.hasListener) return;
-      _sottoscrizioni.remove(id);
+      _daRifare.remove(sottoscritta);
+      /* Il numero e' quello di adesso: dopo una riconnessione non e' piu'
+       * quello della prima volta. */
+      final adesso = [
+        for (final MapEntry(:key, :value) in _sottoscrizioni.entries)
+          if (identical(value, sottoscritta)) key,
+      ];
+      for (final numero in adesso) {
+        _sottoscrizioni.remove(numero);
+      }
       if (dentro) {
         /* Un `unsubscribe_events` su un filo caduto non serve a niente, e la
          * sua risposta non arriverebbe mai. */
-        unawaited(
-          chiedi({'type': 'unsubscribe_events', 'subscription': id})
-              .catchError((_) => <String, dynamic>{}),
-        );
+        for (final numero in adesso) {
+          unawaited(
+            chiedi({'type': 'unsubscribe_events', 'subscription': numero})
+                .catchError((_) => <String, dynamic>{}),
+          );
+        }
       }
       await sottoscritta.uscita.close();
     };
@@ -945,15 +965,38 @@ class Filo {
   /// Dopo una riconnessione Home Assistant non si ricorda di niente: le
   /// sottoscrizioni si rifanno, e prendono un numero nuovo.
   void _rifaiLeSottoscrizioni() {
-    if (_sottoscrizioni.isEmpty) return;
-    final vecchie = Map<int, _Sottoscrizione>.from(_sottoscrizioni);
+    final vecchie = {..._sottoscrizioni.values, ..._daRifare};
     _sottoscrizioni.clear();
-    for (final sottoscritta in vecchie.values) {
+    _rifai(vecchie);
+  }
+
+  /// Rifa' quelle rimaste indietro, e solo quelle: le altre sono gia' vive.
+  void _rifaiQuelleRimaste() => _rifai({..._daRifare});
+
+  void _rifai(Set<_Sottoscrizione> quali) {
+    _riprovaLeSottoscrizioni?.cancel();
+    _riprovaLeSottoscrizioni = null;
+    _daRifare.removeAll(quali);
+    for (final sottoscritta in quali) {
+      if (sottoscritta.uscita.isClosed) continue;
       chiedi(sottoscritta.comando).then(
-        (risposta) => _sottoscrizioni[risposta['id'] as int] = sottoscritta,
+        (risposta) {
+          if (sottoscritta.uscita.isClosed) return;
+          _sottoscrizioni[risposta['id'] as int] = sottoscritta;
+        },
         onError: (Object errore) {
-          if (!sottoscritta.uscita.isClosed) {
+          if (sottoscritta.uscita.isClosed) return;
+          if (errore is ComandoRifiutato) {
+            /* Home Assistant ha detto di no: riprovare non cambia niente. */
             sottoscritta.uscita.addError(errore);
+            return;
+          }
+          _daRifare.add(sottoscritta);
+          if (dentro) {
+            _riprovaLeSottoscrizioni ??= Timer(const Duration(seconds: 5), () {
+              _riprovaLeSottoscrizioni = null;
+              if (dentro) _rifaiQuelleRimaste();
+            });
           }
         },
       );
@@ -1314,8 +1357,11 @@ class Filo {
     /* Prima si prende la lista e si svuota la mappa, poi si chiude.
      * Chiudere una sottoscrizione fa scattare il suo `onCancel`, che si toglie
      * dalla mappa: farlo mentre la si sta scorrendo la rompe a meta'. */
-    final aperte = List.of(_sottoscrizioni.values);
+    _riprovaLeSottoscrizioni?.cancel();
+    _riprovaLeSottoscrizioni = null;
+    final aperte = {..._sottoscrizioni.values, ..._daRifare};
     _sottoscrizioni.clear();
+    _daRifare.clear();
     for (final sottoscritta in aperte) {
       if (!sottoscritta.uscita.isClosed) await sottoscritta.uscita.close();
     }

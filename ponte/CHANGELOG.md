@@ -10,6 +10,20 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.16.10
+
+- **GdANav in marcia:** i dati dell'auto (batteria e autonomia) non restano
+  più fermi a quelli della partenza. Uscendo di casa il collegamento cade e
+  si rialza più volte: se ricadeva mentre si riabbonava ai sensori dell'auto,
+  l'abbonamento si perdeva. Ora si rifà da solo. In Android Auto la batteria
+  detta dall'auto porta l'ora in cui l'ha detta, e non sembra più fresca per
+  sempre.
+- **Auto, ricariche a casa:** «Dal sole» si legge anche da chi ha
+  configurato il contatore totale della rete, come fa l'Energia; senza rete
+  si conta dall'eccedenza del fotovoltaico. La spesa toglie la parte di sole.
+- **Auto, Z Fold aperto e tablet:** la foto dell'auto si vede intera e la
+  card sta nello schermo.
+
 ## 1.16.9
 
 - **Energia:** i numeri nei cerchi dei carichi (Wallbox, stanze, Locale

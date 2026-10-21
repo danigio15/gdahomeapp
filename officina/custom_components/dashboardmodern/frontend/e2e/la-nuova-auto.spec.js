@@ -431,6 +431,37 @@ for (const tema of ["dark", "light"])
     await foto(page, `ricarica-7-${tema}-${testInfo.project.name}`);
   });
 
+/* «Quando uso zfold 8 aperto la foto della macchina non entra tutta devi
+ * adattare tutto alle dimensioni schermo.» */
+for (const [schermo, misura] of [
+  ["fold-aperto", { width: 884, height: 720 }],
+  ["fold-aperto-verticale", { width: 720, height: 884 }],
+  ["tablet-orizzontale", { width: 1180, height: 760 }],
+])
+  test(`la card dell'auto sta nello schermo: ${schermo}`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "una misura sola basta");
+    await page.setViewportSize(misura);
+    await avvia(page, testInfo);
+    const eroe = na(page).locator(".dm-na-eroe");
+    await expect(eroe).toBeVisible();
+    const conti = await eroe.evaluate((nodo) => {
+      const img = nodo.querySelector("img.dm-na-auto");
+      return {
+        alta: nodo.getBoundingClientRect().height,
+        adatta: img ? getComputedStyle(img).objectFit : "",
+      };
+    });
+    /* La foto si vede intera, e la card non e' piu' alta dello schermo. */
+    expect(conti.adatta).toBe("contain");
+    expect(conti.alta).toBeLessThanOrEqual(misura.height);
+    await nienteSborda(page);
+    if (process.env.DM_FOTO) {
+      await eroe.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(400);
+      await page.screenshot({ path: `${process.env.DM_FOTO}/card-${schermo}.png` });
+    }
+  });
+
 test("la percentuale si sceglie libera e va all'entita'", async ({ page }, testInfo) => {
   await avvia(page, testInfo);
   const pagina = na(page);

@@ -135,25 +135,41 @@ export function meseAccanto({ anno, mese }, passo) {
  * quanti dal sole e il costo.
  *
  * `auto` e `rete` sono righe del Recorder gia' trasformate in crescite
- * (`{start, change}`). Senza la rete non si sa niente del sole: `sole` resta
- * `null` e il costo si conta su tutto. `prezzo(istante)` dice il prezzo di
- * quell'ora, o `null`.
+ * (`{start, change}`). `prezzo(istante)` dice il prezzo di quell'ora, o `null`.
+ *
+ * La regola e' quella del ponte (`l-energia-di-casa.js`): con la rete, il sole
+ * e' quello che la rete non ha dato. Senza la rete ma con il sole e la casa
+ * (`altre.sole`, `altre.casa`, stesse righe), il sole dell'auto e' l'eccedenza:
+ * la produzione meno il resto della casa, che contiene l'auto. Senza niente
+ * di questo `sole` resta `null` e il costo si conta su tutto.
  */
-export function oreDiRicarica(auto = [], rete = null, prezzo = () => null) {
-  const dallaRete = new Map();
-  const sappiamoLaRete = Array.isArray(rete) && rete.length > 0;
-  if (sappiamoLaRete)
-    for (const riga of rete) {
+export function oreDiRicarica(auto = [], rete = null, prezzo = () => null, altre = {}) {
+  const perOra = (righe) => {
+    const mappa = new Map();
+    for (const riga of righe) {
       const t = istante(riga);
       const n = numero(riga?.change);
-      if (t !== null && n !== null) dallaRete.set(t, (dallaRete.get(t) || 0) + Math.max(0, n));
+      if (t !== null && n !== null) mappa.set(t, (mappa.get(t) || 0) + Math.max(0, n));
     }
+    return mappa;
+  };
+  const piene = (righe) => Array.isArray(righe) && righe.length > 0;
+  const sappiamoLaRete = piene(rete);
+  const dallaRete = sappiamoLaRete ? perOra(rete) : null;
+  const sappiamoLEccedenza = !sappiamoLaRete && piene(altre?.sole) && piene(altre?.casa);
+  const prodotto = sappiamoLEccedenza ? perOra(altre.sole) : null;
+  const consumato = sappiamoLEccedenza ? perOra(altre.casa) : null;
   const ore = [];
   for (const riga of Array.isArray(auto) ? auto : []) {
     const t = istante(riga);
     const kwh = numero(riga?.change);
     if (t === null || kwh === null || kwh <= 0) continue;
-    const presa = sappiamoLaRete ? Math.min(kwh, dallaRete.get(t) || 0) : null;
+    let presa = null;
+    if (sappiamoLaRete) presa = Math.min(kwh, dallaRete.get(t) || 0);
+    else if (sappiamoLEccedenza) {
+      const eccedenza = (prodotto.get(t) || 0) - Math.max(0, (consumato.get(t) || 0) - kwh);
+      presa = kwh - Math.min(kwh, Math.max(0, eccedenza));
+    }
     const pagata = presa === null ? kwh : presa;
     const tariffa = numero(prezzo(t));
     ore.push({
