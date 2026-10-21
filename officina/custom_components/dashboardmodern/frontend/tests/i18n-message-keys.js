@@ -5618,7 +5618,6 @@ export const MESSAGE_KEYS = Object.freeze([
   "up:",
   "Upcoming",
   "update pending",
-  "updated",
   "Updated",
   "updated ${daQuanto} ago",
   "Updated at ${detto}",

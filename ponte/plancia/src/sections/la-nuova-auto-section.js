@@ -258,12 +258,21 @@ function nomeDellAuto(car, indice) {
   return clean(car?.name) || clean(car?.model) || `${t("Auto", "Car")} ${indice + 1}`;
 }
 
+/* Il nome dell'auto, senza dire due volte la marca.
+ *
+ * «Esce due volte marchio auto leapmotor leapmotor»: la marca e' «Leapmotor» e
+ * il modello scelto dall'elenco e' gia' «Leapmotor B10». Se il modello
+ * comincia con la marca, il titolo e' il modello; e il nome dato all'auto va
+ * sotto solo quando dice qualcosa in piu'. */
+const stesso = (a, b) => clean(a).toLowerCase() === clean(b).toLowerCase();
 function titoloDellAuto(car, indice) {
   const marca = clean(car?.brand);
   const modello = clean(car?.model);
   const nome = clean(car?.name);
-  const titolo = [marca, modello].filter(Boolean).join(" ");
-  return { titolo: titolo || nome || nomeDellAuto(car, indice), sotto: titolo && nome ? nome : "" };
+  const giaConLaMarca = marca && modello.toLowerCase().startsWith(`${marca.toLowerCase()} `);
+  const titolo = giaConLaMarca || stesso(marca, modello) ? modello : [marca, modello].filter(Boolean).join(" ");
+  const sotto = titolo && nome && !stesso(nome, titolo) && !stesso(nome, modello) ? nome : "";
+  return { titolo: titolo || nome || nomeDellAuto(car, indice), sotto };
 }
 
 function logoDellAuto(car, misura) {
@@ -337,6 +346,9 @@ function garage(auto, inUso) {
   return `<nav class="dm-na-garage" aria-label="${esc(t("Le auto di casa", "The household cars"))}">${voci}</nav>`;
 }
 
+/* La card in alto: la foto in copertina col nome sopra, e sotto in fila
+ * quello che si guarda di un'auto — quanta strada fa, quanta carica ha, dove
+ * arriva all'obiettivo — con le pastiglie di com'e' messa. */
 function eroe(l, indice) {
   const car = l.car || {};
   const { titolo, sotto } = titoloDellAuto(car, indice);
@@ -347,29 +359,37 @@ function eroe(l, indice) {
   const foto = l.inUso ? activeVehiclePhoto() : vehiclePhoto(car, l.codice === "B" || l.codice === "C");
   const target = l.target;
   const kmTarget = l.termica ? null : kmAllaPercentuale(l.autonomia, l.batteria, target);
-  const righe = [];
-  if (kmTarget !== null) righe.push(`${t("Al", "At")} ${Math.round(target)}% <b>${intero(kmTarget)} km</b>`);
   const aggiornata = l.dati.ultimoAggiornamento;
-  if (Number.isFinite(aggiornata))
-    righe.push(`${esc(t("aggiornata", "updated"))} ${esc(istanteDetto(aggiornata, { lingua: locale() }))}`);
-  return `<section class="dm-na-eroe dm-na-carta" data-stato="${esc(stato?.tono || "")}" data-tipo="${l.termica ? "termica" : "elettrica"}">
-    <div class="dm-na-eroe-testo">
-      <div class="dm-na-eroe-nome"><span class="dm-na-logo dm-na-logo-grande">${logoDellAuto(car, 40)}</span>
+  const quando = Number.isFinite(aggiornata) ? istanteDetto(aggiornata, { lingua: locale() }) : "";
+  const pila = livello === null ? "" : Math.max(0, Math.min(100, livello));
+  const dati = [
+    `<div class="dm-na-dato dm-na-dato-km" data-dm-storico="${esc(l.lettore.entita("dm.ev_autonomia"))}">
+      <span>${esc(t("Autonomia", "Range"))}</span>
+      <div class="dm-na-autonomia"><b>${intero(l.autonomia)}</b><small>km</small></div></div>`,
+    livello === null
+      ? ""
+      : `<div class="dm-na-dato" data-tipo="${l.termica ? "carburante" : "batteria"}">
+      <span>${esc(l.termica ? t("Carburante", "Fuel") : t("Batteria", "Battery"))}</span>
+      <div class="dm-na-livello"><b>${Math.round(livello)}<small>%</small></b>
+        <span class="dm-na-pila"><i style="width:${pila}%"></i></span></div></div>`,
+    kmTarget === null
+      ? ""
+      : `<div class="dm-na-dato">
+      <span>${esc(t("Al", "At"))} ${Math.round(target)}%</span>
+      <div class="dm-na-livello"><b>${intero(kmTarget)}<small>km</small></b></div></div>`,
+  ].join("");
+  return `<section class="dm-na-eroe dm-na-carta" data-stato="${esc(stato?.tono || "")}" data-tipo="${l.termica ? "termica" : "elettrica"}" data-foto="${foto ? "si" : "no"}">
+    <div class="dm-na-copertina">
+      ${foto ? `<img src="${esc(foto)}" alt="" loading="lazy" decoding="async">` : `<span class="dm-na-foto-vuota">${logoDellAuto(car, 120)}</span>`}
+      <div class="dm-na-copertina-sopra">
+        ${stato ? `<span class="dm-na-stato" data-tono="${esc(stato.tono)}"><i></i>${esc(stato.testo)}</span>` : "<span></span>"}
+        ${quando ? `<span class="dm-na-quando">🕒 ${esc(quando)}</span>` : ""}
+      </div>
+      <div class="dm-na-eroe-nome"><span class="dm-na-logo dm-na-logo-grande">${logoDellAuto(car, 34)}</span>
         <span><b>${esc(titolo)}</b>${sottotitolo ? `<small>${esc(sottotitolo)}</small>` : ""}</span></div>
-      ${stato ? `<span class="dm-na-stato" data-tono="${esc(stato.tono)}"><i></i>${esc(stato.testo)}</span>` : ""}
-      <div class="dm-na-autonomia" data-dm-storico="${esc(l.lettore.entita("dm.ev_autonomia"))}"
-        ><b>${intero(l.autonomia)}</b><span>km</span></div>
-      ${
-        livello === null
-          ? ""
-          : `<div class="dm-na-batteria" data-tipo="${l.termica ? "carburante" : "batteria"}">
-        <span class="dm-na-pila"><i style="width:${Math.max(0, Math.min(100, livello))}%"></i></span>
-        <b>${Math.round(livello)}<small>%</small></b></div>`
-      }
-      ${righe.length ? `<p class="dm-na-eroe-righe">${righe.join(" · ")}</p>` : ""}
-      <div class="dm-na-pills">${pastiglieDellAuto(l).map(pastiglia).join("")}</div>
     </div>
-    <div class="dm-na-eroe-foto">${foto ? `<img src="${esc(foto)}" alt="" loading="lazy" decoding="async">` : `<span class="dm-na-foto-vuota">${logoDellAuto(car, 96)}</span>`}</div>
+    <div class="dm-na-eroe-dati">${dati}</div>
+    <div class="dm-na-pills dm-na-eroe-pills">${pastiglieDellAuto(l).map(pastiglia).join("")}</div>
   </section>`;
 }
 
@@ -1169,43 +1189,66 @@ function stile() {
   ${P} .dm-na-logo svg,${P} .dm-na-logo img{max-width:100%;height:auto}
 
   /* l'eroe */
-  ${P} .dm-na-eroe{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:18px;align-items:center;overflow:hidden;
-    padding:22px 26px;background:radial-gradient(90% 120% at 100% 100%,color-mix(in srgb,var(--na-ev) 14%,transparent),transparent 60%),var(--card-bg,#fff)}
+  ${P} .dm-na-eroe{display:grid;gap:0;padding:0;overflow:hidden}
   ${P} .dm-na-eroe[data-tipo="termica"]{--na-ev:var(--na-sole)}
-  ${P} .dm-na-eroe-testo{display:grid;gap:10px;justify-items:start;min-width:0;position:relative;z-index:1}
-  ${P} .dm-na-eroe-nome{display:flex;align-items:center;gap:12px;min-width:0}
-  ${P} .dm-na-eroe-nome b{display:block;font-size:20px;font-weight:900;color:var(--text,#0f172a);line-height:1.15}
-  ${P} .dm-na-eroe-nome small{display:block;font-size:13px;font-weight:700;color:var(--text-dim,#64748b);margin-top:2px}
-  ${P} .dm-na-stato{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:999px;font-size:12.5px;font-weight:900;
-    color:var(--text-dim,#64748b);background:color-mix(in srgb,var(--text,#0f172a) 6%,transparent)}
+  ${P} .dm-na-copertina{position:relative;height:300px;overflow:hidden;border-radius:22px 22px 0 0;
+    background:radial-gradient(80% 90% at 50% 60%,color-mix(in srgb,var(--na-ev) 22%,var(--card-bg,#fff)),var(--card-bg,#fff))}
+  ${P} .dm-na-copertina img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 60%}
+  ${P} .dm-na-copertina::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(180deg,rgba(2,6,23,.45) 0%,rgba(2,6,23,0) 30%,rgba(2,6,23,0) 50%,rgba(2,6,23,.78) 100%)}
+  ${P} .dm-na-foto-vuota{position:absolute;inset:0;display:grid;place-items:center;opacity:.5}
+  ${P} .dm-na-copertina-sopra{position:absolute;z-index:1;top:16px;left:18px;right:18px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  ${P} .dm-na-quando{padding:5px 11px;border-radius:999px;font-size:12px;font-weight:800;color:#e2e8f0;
+    background:rgba(2,6,23,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  ${P} .dm-na-eroe-nome{position:absolute;z-index:1;left:18px;right:18px;bottom:16px;display:flex;align-items:center;gap:12px;min-width:0}
+  ${P} .dm-na-logo-grande{width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,.92);
+    box-shadow:0 6px 18px rgba(2,6,23,.35);overflow:hidden;padding:6px}
+  ${P} .dm-na-eroe-nome>span:last-child{min-width:0}
+  ${P} .dm-na-eroe-nome b{display:block;font-size:24px;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-.3px;
+    text-shadow:0 2px 10px rgba(2,6,23,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  ${P} .dm-na-eroe-nome small{display:block;font-size:13px;font-weight:700;color:rgba(226,232,240,.9);margin-top:3px;text-shadow:0 1px 6px rgba(2,6,23,.6)}
+  ${P} .dm-na-stato{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;font-size:12.5px;font-weight:900;
+    color:#e2e8f0;background:rgba(2,6,23,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
   ${P} .dm-na-stato i{width:8px;height:8px;border-radius:50%;background:currentColor}
-  ${P} .dm-na-stato[data-tono="carica"]{color:#059669;background:color-mix(in srgb,var(--na-ev) 16%,transparent)}
+  ${P} .dm-na-stato[data-tono="carica"]{color:#6ee7b7;background:rgba(6,78,59,.7)}
   ${P} .dm-na-stato[data-tono="carica"] i{box-shadow:0 0 0 0 currentColor;animation:dmNaPulsa 1.8s infinite}
-  ${P} .dm-na-stato[data-tono="collegata"]{color:#0284c7;background:color-mix(in srgb,var(--na-rete) 14%,transparent)}
-  ${P} .dm-na-stato[data-tono="guasto"]{color:var(--na-male);background:color-mix(in srgb,var(--na-male) 12%,transparent)}
+  ${P} .dm-na-stato[data-tono="collegata"]{color:#7dd3fc;background:rgba(7,89,133,.65)}
+  ${P} .dm-na-stato[data-tono="guasto"]{color:#fecaca;background:rgba(127,29,29,.7)}
   @keyframes dmNaPulsa{0%{box-shadow:0 0 0 0 color-mix(in srgb,currentColor 60%,transparent)}100%{box-shadow:0 0 0 9px transparent}}
-  ${P} .dm-na-autonomia{display:flex;align-items:baseline;gap:6px;cursor:pointer;line-height:.9;margin-top:4px}
-  ${P} .dm-na-autonomia b{font-family:'Oswald',system-ui,sans-serif;font-size:84px;font-weight:700;letter-spacing:-2px;color:var(--text,#0f172a)}
-  ${P} .dm-na-autonomia span{font-size:24px;font-weight:800;color:var(--text-dim,#64748b)}
-  ${P} .dm-na-batteria{display:flex;align-items:center;gap:12px;width:min(100%,340px)}
-  ${P} .dm-na-pila{position:relative;flex:1;height:20px;border-radius:7px;border:2px solid color-mix(in srgb,var(--text,#0f172a) 22%,transparent);padding:2px}
-  ${P} .dm-na-pila::after{content:"";position:absolute;right:-6px;top:5px;width:4px;height:6px;border-radius:0 2px 2px 0;background:color-mix(in srgb,var(--text,#0f172a) 22%,transparent)}
-  ${P} .dm-na-pila i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#059669,#34d399)}
-  ${P} .dm-na-batteria[data-tipo="carburante"] .dm-na-pila i{background:linear-gradient(90deg,#d97706,#fbbf24)}
-  ${P} .dm-na-batteria b{font-family:'Oswald',system-ui,sans-serif;font-size:30px;font-weight:700;color:var(--text,#0f172a)}
-  ${P} .dm-na-batteria b small{font-size:15px;color:var(--text-dim,#64748b);margin-left:2px}
-  ${P} .dm-na-eroe-righe{margin:0;font-size:13px;font-weight:700;color:var(--text-dim,#64748b)}
-  ${P} .dm-na-eroe-righe b{color:var(--text,#0f172a)}
+  ${P} .dm-na-eroe-dati{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:0;padding:4px 8px 0}
+  ${P} .dm-na-dato{display:grid;align-content:start;gap:4px;padding:16px 14px 12px;min-width:0}
+  ${P} .dm-na-dato+.dm-na-dato{border-left:1px solid var(--card-border,#e2e8f0)}
+  ${P} .dm-na-dato>span{font-size:11px;font-weight:900;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-dim,#64748b)}
+  ${P} .dm-na-dato-km{cursor:pointer}
+  ${P} .dm-na-autonomia{display:flex;align-items:baseline;gap:5px;line-height:.9}
+  ${P} .dm-na-autonomia b{font-family:'Oswald',system-ui,sans-serif;font-size:64px;font-weight:700;letter-spacing:-1.5px;color:var(--text,#0f172a)}
+  ${P} .dm-na-autonomia small{font-size:20px;font-weight:800;color:var(--text-dim,#64748b)}
+  ${P} .dm-na-livello{display:grid;gap:8px}
+  ${P} .dm-na-livello b{font-family:'Oswald',system-ui,sans-serif;font-size:40px;font-weight:700;color:var(--text,#0f172a);line-height:1}
+  ${P} .dm-na-livello b small{font-family:inherit;font-size:16px;color:var(--text-dim,#64748b);margin-left:3px}
+  ${P} .dm-na-pila{position:relative;display:block;height:14px;border-radius:6px;border:2px solid color-mix(in srgb,var(--text,#0f172a) 20%,transparent);padding:2px;margin-right:6px}
+  ${P} .dm-na-pila::after{content:"";position:absolute;right:-6px;top:3px;width:4px;height:4px;border-radius:0 2px 2px 0;background:color-mix(in srgb,var(--text,#0f172a) 20%,transparent)}
+  ${P} .dm-na-pila i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,#059669,#34d399)}
+  ${P} [data-tipo="carburante"] .dm-na-pila i{background:linear-gradient(90deg,#d97706,#fbbf24)}
+  ${P} .dm-na-eroe-pills{padding:4px 22px 20px}
+  /* Sul computer la foto sta a sinistra, nella sua forma: allargata a tutta la
+   * pagina una foto del telefono si sgrana, e l'auto resta tagliata. */
+  @media (min-width:761px){
+    ${P} .dm-na-eroe{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);grid-template-rows:auto 1fr;align-items:start}
+    ${P} .dm-na-copertina{grid-row:1 / span 2;height:100%;min-height:320px;border-radius:22px 0 0 22px}
+    ${P} .dm-na-eroe-dati{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr));padding:14px 14px 0}
+    ${P} .dm-na-dato-km{grid-column:1 / -1}
+    ${P} .dm-na-dato+.dm-na-dato{border-left:0}
+    ${P} .dm-na-dato:nth-child(3){border-left:1px solid var(--card-border,#e2e8f0)}
+    ${P} .dm-na-autonomia b{font-size:88px}
+    ${P} .dm-na-eroe-pills{align-self:end}
+  }
+  ${P} .dm-na-eroe-pills:empty{display:none}
   ${P} .dm-na-pills{display:flex;flex-wrap:wrap;gap:7px}
   ${P} .dm-na-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:800;
     color:var(--text,#0f172a);background:var(--surface-2,#f8fafc);border:1px solid var(--card-border,#e8edf3)}
   ${P} .dm-na-pill[data-tono="ok"]{color:#15803d;border-color:color-mix(in srgb,#16a34a 30%,transparent);background:color-mix(in srgb,#16a34a 9%,transparent)}
   ${P} .dm-na-pill[data-tono="attenzione"]{color:#b91c1c;border-color:color-mix(in srgb,var(--na-male) 35%,transparent);background:color-mix(in srgb,var(--na-male) 9%,transparent)}
-  ${P} .dm-na-eroe-foto{display:grid;place-items:center;min-height:220px;position:relative}
-  ${P} .dm-na-eroe-foto::after{content:"";position:absolute;left:10%;right:10%;bottom:12%;height:22px;border-radius:50%;
-    background:radial-gradient(closest-side,color-mix(in srgb,var(--na-ev) 45%,transparent),transparent);filter:blur(6px)}
-  ${P} .dm-na-eroe-foto img{position:relative;z-index:1;width:100%;max-height:300px;object-fit:contain;filter:drop-shadow(0 18px 22px rgba(2,6,23,.28))}
-  ${P} .dm-na-foto-vuota{opacity:.35}
 
   /* le linguette */
   ${P} .dm-na-linguette{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;padding:6px;border-radius:20px;
@@ -1386,10 +1429,17 @@ function stile() {
   @media (max-width:760px){
     ${P} #dm-na{gap:14px}
     ${P} .dm-na-carta{padding:16px;border-radius:20px}
-    ${P} .dm-na-eroe{grid-template-columns:minmax(0,1fr);padding:18px;gap:6px}
-    ${P} .dm-na-eroe-foto{order:-1;min-height:0;margin:-6px -8px 0}
-    ${P} .dm-na-eroe-foto img{max-height:170px}
-    ${P} .dm-na-autonomia b{font-size:68px}
+    ${P} .dm-na-eroe{padding:0}
+    ${P} .dm-na-copertina{height:210px;border-radius:20px 20px 0 0}
+    ${P} .dm-na-eroe-nome b{font-size:20px}
+    ${P} .dm-na-logo-grande{width:44px;height:44px;border-radius:13px}
+    ${P} .dm-na-eroe-dati{padding:0 2px}
+    ${P} .dm-na-dato{padding:14px 10px 10px}
+    ${P} .dm-na-dato>span{font-size:10px;letter-spacing:.8px}
+    ${P} .dm-na-autonomia b{font-size:44px}
+    ${P} .dm-na-autonomia small{font-size:15px}
+    ${P} .dm-na-livello b{font-size:28px}
+    ${P} .dm-na-eroe-pills{padding:2px 14px 16px}
     ${P} .dm-na-linguetta{font-size:13.5px;gap:5px;padding:8px 4px;flex-wrap:wrap}
     ${P} .dm-na-linguetta em{display:none}
     ${P} .dm-na-totali{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr))}

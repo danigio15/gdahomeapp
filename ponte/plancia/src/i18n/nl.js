@@ -3430,7 +3430,6 @@ export default Object.freeze({
   "This session": "Deze laadbeurt",
   "Trips": "Ritten",
   "unlocked": "ontgrendeld",
-  "updated": "bijgewerkt",
   "Updated": "Bijgewerkt",
   "Wallbox · evcc": "Wallbox · evcc",
   "Wallbox error": "Wallboxfout",

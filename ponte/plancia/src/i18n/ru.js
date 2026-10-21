@@ -3429,7 +3429,6 @@ export default Object.freeze({
   "This session": "Эта зарядка",
   "Trips": "Поездки",
   "unlocked": "открыты",
-  "updated": "обновлено",
   "Updated": "Обновлено",
   "Wallbox · evcc": "Wallbox · evcc",
   "Wallbox error": "Ошибка wallbox",

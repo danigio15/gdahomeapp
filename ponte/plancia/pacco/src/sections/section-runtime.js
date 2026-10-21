@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-ZQZPQA54.js";
+} from "../../chunk-7VERXGH3.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2310,7 +2310,6 @@ var SOURCE_INDEX = Object.freeze({
   "Aggiornamento dati Recorder…": "Updating Recorder data…",
   "aggiornamento in attesa": "update pending",
   "Aggiornamento in corso...": "Updating...",
-  "aggiornata": "updated",
   "Aggiornata": "Updated",
   "Aggiornata alle ${detto}": "Updated at ${detto}",
   "aggiornata da": "updated from",
@@ -44155,8 +44154,8 @@ function ilFiloDopo(filo, voce3) {
   const passi2 = Array.isArray(filo) ? filo : [];
   const passo = { id: pulito34(voce3?.id), tipo: pulito34(voce3?.tipo), titolo: pulito34(voce3?.titolo) };
   if (!passo.id && !passo.tipo) return passi2.length ? passi2 : ilFiloDallaRadice();
-  const stesso = (riga3) => !riga3?.cerca && (passo.id ? pulito34(riga3?.id) === passo.id : !pulito34(riga3?.id) && pulito34(riga3?.tipo) === passo.tipo);
-  const gia = passi2.findIndex(stesso);
+  const stesso2 = (riga3) => !riga3?.cerca && (passo.id ? pulito34(riga3?.id) === passo.id : !pulito34(riga3?.id) && pulito34(riga3?.tipo) === passo.tipo);
+  const gia = passi2.findIndex(stesso2);
   if (gia >= 0) return passi2.slice(0, gia + 1);
   return [...passi2, passo];
 }
@@ -80294,7 +80293,7 @@ function stringiIlNumero(nodo2, misuraDelCarattere) {
   if (nodo2[FIRMA_DELLA_STRETTA] === testo4) return false;
   nodo2.style?.removeProperty?.("font-size");
   const largo = Number(nodo2.scrollWidth) || 0;
-  const spazio = Number(nodo2.clientWidth) || 0;
+  const spazio = Math.min(Number(nodo2.clientWidth) || 0, cordaDelCerchio(nodo2) ?? Infinity);
   if (!spazio) return false;
   nodo2[FIRMA_DELLA_STRETTA] = testo4;
   if (!testo4.trim()) return false;
@@ -80304,6 +80303,19 @@ function stringiIlNumero(nodo2, misuraDelCarattere) {
   const quanto = Math.max(spazio / largo, QUANTO_AL_PIU_SI_STRINGE);
   nodo2.style.setProperty("font-size", `${Math.floor(base * quanto * 10) / 10}px`, "important");
   return true;
+}
+var BORDO_E_ARIA = 9;
+function cordaDelCerchio(nodo2) {
+  const bolla = nodo2?.closest?.(".node");
+  if (!bolla?.getBoundingClientRect || !nodo2.getBoundingClientRect) return null;
+  const b2 = bolla.getBoundingClientRect();
+  const t2 = nodo2.getBoundingClientRect();
+  if (!b2.width || !t2.height) return null;
+  const r = b2.width / 2 - BORDO_E_ARIA;
+  const cy = b2.top + b2.height / 2;
+  const dy = Math.max(Math.abs(t2.top - cy), Math.abs(t2.bottom - cy));
+  if (r <= 0) return null;
+  return dy >= r ? 0 : 2 * Math.sqrt(r * r - dy * dy);
 }
 function misuraDalFoglio(nodo2) {
   const vista2 = root.getComputedStyle?.(nodo2);
@@ -127976,12 +127988,15 @@ var percento6 = (quota) => quota === null || quota === void 0 ? "—" : String(M
 function nomeDellAuto2(car, indice) {
   return clean(car?.name) || clean(car?.model) || `${t("Auto", "Car")} ${indice + 1}`;
 }
+var stesso = (a, b2) => clean(a).toLowerCase() === clean(b2).toLowerCase();
 function titoloDellAuto(car, indice) {
   const marca = clean(car?.brand);
   const modello2 = clean(car?.model);
   const nome = clean(car?.name);
-  const titolo3 = [marca, modello2].filter(Boolean).join(" ");
-  return { titolo: titolo3 || nome || nomeDellAuto2(car, indice), sotto: titolo3 && nome ? nome : "" };
+  const giaConLaMarca = marca && modello2.toLowerCase().startsWith(`${marca.toLowerCase()} `);
+  const titolo3 = giaConLaMarca || stesso(marca, modello2) ? modello2 : [marca, modello2].filter(Boolean).join(" ");
+  const sotto = titolo3 && nome && !stesso(nome, titolo3) && !stesso(nome, modello2) ? nome : "";
+  return { titolo: titolo3 || nome || nomeDellAuto2(car, indice), sotto };
 }
 function logoDellAuto(car, misura7) {
   const marca = clean(car?.brand);
@@ -128053,25 +128068,33 @@ function eroe(l, indice) {
   const foto = l.inUso ? activeVehiclePhoto() : vehiclePhoto(car, l.codice === "B" || l.codice === "C");
   const target = l.target;
   const kmTarget = l.termica ? null : kmAllaPercentuale(l.autonomia, l.batteria, target);
-  const righe3 = [];
-  if (kmTarget !== null) righe3.push(`${t("Al", "At")} ${Math.round(target)}% <b>${intero2(kmTarget)} km</b>`);
   const aggiornata = l.dati.ultimoAggiornamento;
-  if (Number.isFinite(aggiornata))
-    righe3.push(`${esc(t("aggiornata", "updated"))} ${esc(istanteDetto(aggiornata, { lingua: locale() }))}`);
-  return `<section class="dm-na-eroe dm-na-carta" data-stato="${esc(stato3?.tono || "")}" data-tipo="${l.termica ? "termica" : "elettrica"}">
-    <div class="dm-na-eroe-testo">
-      <div class="dm-na-eroe-nome"><span class="dm-na-logo dm-na-logo-grande">${logoDellAuto(car, 40)}</span>
+  const quando4 = Number.isFinite(aggiornata) ? istanteDetto(aggiornata, { lingua: locale() }) : "";
+  const pila2 = livello === null ? "" : Math.max(0, Math.min(100, livello));
+  const dati = [
+    `<div class="dm-na-dato dm-na-dato-km" data-dm-storico="${esc(l.lettore.entita("dm.ev_autonomia"))}">
+      <span>${esc(t("Autonomia", "Range"))}</span>
+      <div class="dm-na-autonomia"><b>${intero2(l.autonomia)}</b><small>km</small></div></div>`,
+    livello === null ? "" : `<div class="dm-na-dato" data-tipo="${l.termica ? "carburante" : "batteria"}">
+      <span>${esc(l.termica ? t("Carburante", "Fuel") : t("Batteria", "Battery"))}</span>
+      <div class="dm-na-livello"><b>${Math.round(livello)}<small>%</small></b>
+        <span class="dm-na-pila"><i style="width:${pila2}%"></i></span></div></div>`,
+    kmTarget === null ? "" : `<div class="dm-na-dato">
+      <span>${esc(t("Al", "At"))} ${Math.round(target)}%</span>
+      <div class="dm-na-livello"><b>${intero2(kmTarget)}<small>km</small></b></div></div>`
+  ].join("");
+  return `<section class="dm-na-eroe dm-na-carta" data-stato="${esc(stato3?.tono || "")}" data-tipo="${l.termica ? "termica" : "elettrica"}" data-foto="${foto ? "si" : "no"}">
+    <div class="dm-na-copertina">
+      ${foto ? `<img src="${esc(foto)}" alt="" loading="lazy" decoding="async">` : `<span class="dm-na-foto-vuota">${logoDellAuto(car, 120)}</span>`}
+      <div class="dm-na-copertina-sopra">
+        ${stato3 ? `<span class="dm-na-stato" data-tono="${esc(stato3.tono)}"><i></i>${esc(stato3.testo)}</span>` : "<span></span>"}
+        ${quando4 ? `<span class="dm-na-quando">🕒 ${esc(quando4)}</span>` : ""}
+      </div>
+      <div class="dm-na-eroe-nome"><span class="dm-na-logo dm-na-logo-grande">${logoDellAuto(car, 34)}</span>
         <span><b>${esc(titolo3)}</b>${sottotitolo5 ? `<small>${esc(sottotitolo5)}</small>` : ""}</span></div>
-      ${stato3 ? `<span class="dm-na-stato" data-tono="${esc(stato3.tono)}"><i></i>${esc(stato3.testo)}</span>` : ""}
-      <div class="dm-na-autonomia" data-dm-storico="${esc(l.lettore.entita("dm.ev_autonomia"))}"
-        ><b>${intero2(l.autonomia)}</b><span>km</span></div>
-      ${livello === null ? "" : `<div class="dm-na-batteria" data-tipo="${l.termica ? "carburante" : "batteria"}">
-        <span class="dm-na-pila"><i style="width:${Math.max(0, Math.min(100, livello))}%"></i></span>
-        <b>${Math.round(livello)}<small>%</small></b></div>`}
-      ${righe3.length ? `<p class="dm-na-eroe-righe">${righe3.join(" · ")}</p>` : ""}
-      <div class="dm-na-pills">${pastiglieDellAuto(l).map(pastiglia3).join("")}</div>
     </div>
-    <div class="dm-na-eroe-foto">${foto ? `<img src="${esc(foto)}" alt="" loading="lazy" decoding="async">` : `<span class="dm-na-foto-vuota">${logoDellAuto(car, 96)}</span>`}</div>
+    <div class="dm-na-eroe-dati">${dati}</div>
+    <div class="dm-na-pills dm-na-eroe-pills">${pastiglieDellAuto(l).map(pastiglia3).join("")}</div>
   </section>`;
 }
 function linguette3(l, aperta2) {
@@ -128737,43 +128760,66 @@ function stile6() {
   ${P8} .dm-na-logo svg,${P8} .dm-na-logo img{max-width:100%;height:auto}
 
   /* l'eroe */
-  ${P8} .dm-na-eroe{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:18px;align-items:center;overflow:hidden;
-    padding:22px 26px;background:radial-gradient(90% 120% at 100% 100%,color-mix(in srgb,var(--na-ev) 14%,transparent),transparent 60%),var(--card-bg,#fff)}
+  ${P8} .dm-na-eroe{display:grid;gap:0;padding:0;overflow:hidden}
   ${P8} .dm-na-eroe[data-tipo="termica"]{--na-ev:var(--na-sole)}
-  ${P8} .dm-na-eroe-testo{display:grid;gap:10px;justify-items:start;min-width:0;position:relative;z-index:1}
-  ${P8} .dm-na-eroe-nome{display:flex;align-items:center;gap:12px;min-width:0}
-  ${P8} .dm-na-eroe-nome b{display:block;font-size:20px;font-weight:900;color:var(--text,#0f172a);line-height:1.15}
-  ${P8} .dm-na-eroe-nome small{display:block;font-size:13px;font-weight:700;color:var(--text-dim,#64748b);margin-top:2px}
-  ${P8} .dm-na-stato{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:999px;font-size:12.5px;font-weight:900;
-    color:var(--text-dim,#64748b);background:color-mix(in srgb,var(--text,#0f172a) 6%,transparent)}
+  ${P8} .dm-na-copertina{position:relative;height:300px;overflow:hidden;border-radius:22px 22px 0 0;
+    background:radial-gradient(80% 90% at 50% 60%,color-mix(in srgb,var(--na-ev) 22%,var(--card-bg,#fff)),var(--card-bg,#fff))}
+  ${P8} .dm-na-copertina img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 60%}
+  ${P8} .dm-na-copertina::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(180deg,rgba(2,6,23,.45) 0%,rgba(2,6,23,0) 30%,rgba(2,6,23,0) 50%,rgba(2,6,23,.78) 100%)}
+  ${P8} .dm-na-foto-vuota{position:absolute;inset:0;display:grid;place-items:center;opacity:.5}
+  ${P8} .dm-na-copertina-sopra{position:absolute;z-index:1;top:16px;left:18px;right:18px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  ${P8} .dm-na-quando{padding:5px 11px;border-radius:999px;font-size:12px;font-weight:800;color:#e2e8f0;
+    background:rgba(2,6,23,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  ${P8} .dm-na-eroe-nome{position:absolute;z-index:1;left:18px;right:18px;bottom:16px;display:flex;align-items:center;gap:12px;min-width:0}
+  ${P8} .dm-na-logo-grande{width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,.92);
+    box-shadow:0 6px 18px rgba(2,6,23,.35);overflow:hidden;padding:6px}
+  ${P8} .dm-na-eroe-nome>span:last-child{min-width:0}
+  ${P8} .dm-na-eroe-nome b{display:block;font-size:24px;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-.3px;
+    text-shadow:0 2px 10px rgba(2,6,23,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  ${P8} .dm-na-eroe-nome small{display:block;font-size:13px;font-weight:700;color:rgba(226,232,240,.9);margin-top:3px;text-shadow:0 1px 6px rgba(2,6,23,.6)}
+  ${P8} .dm-na-stato{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;font-size:12.5px;font-weight:900;
+    color:#e2e8f0;background:rgba(2,6,23,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
   ${P8} .dm-na-stato i{width:8px;height:8px;border-radius:50%;background:currentColor}
-  ${P8} .dm-na-stato[data-tono="carica"]{color:#059669;background:color-mix(in srgb,var(--na-ev) 16%,transparent)}
+  ${P8} .dm-na-stato[data-tono="carica"]{color:#6ee7b7;background:rgba(6,78,59,.7)}
   ${P8} .dm-na-stato[data-tono="carica"] i{box-shadow:0 0 0 0 currentColor;animation:dmNaPulsa 1.8s infinite}
-  ${P8} .dm-na-stato[data-tono="collegata"]{color:#0284c7;background:color-mix(in srgb,var(--na-rete) 14%,transparent)}
-  ${P8} .dm-na-stato[data-tono="guasto"]{color:var(--na-male);background:color-mix(in srgb,var(--na-male) 12%,transparent)}
+  ${P8} .dm-na-stato[data-tono="collegata"]{color:#7dd3fc;background:rgba(7,89,133,.65)}
+  ${P8} .dm-na-stato[data-tono="guasto"]{color:#fecaca;background:rgba(127,29,29,.7)}
   @keyframes dmNaPulsa{0%{box-shadow:0 0 0 0 color-mix(in srgb,currentColor 60%,transparent)}100%{box-shadow:0 0 0 9px transparent}}
-  ${P8} .dm-na-autonomia{display:flex;align-items:baseline;gap:6px;cursor:pointer;line-height:.9;margin-top:4px}
-  ${P8} .dm-na-autonomia b{font-family:'Oswald',system-ui,sans-serif;font-size:84px;font-weight:700;letter-spacing:-2px;color:var(--text,#0f172a)}
-  ${P8} .dm-na-autonomia span{font-size:24px;font-weight:800;color:var(--text-dim,#64748b)}
-  ${P8} .dm-na-batteria{display:flex;align-items:center;gap:12px;width:min(100%,340px)}
-  ${P8} .dm-na-pila{position:relative;flex:1;height:20px;border-radius:7px;border:2px solid color-mix(in srgb,var(--text,#0f172a) 22%,transparent);padding:2px}
-  ${P8} .dm-na-pila::after{content:"";position:absolute;right:-6px;top:5px;width:4px;height:6px;border-radius:0 2px 2px 0;background:color-mix(in srgb,var(--text,#0f172a) 22%,transparent)}
-  ${P8} .dm-na-pila i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#059669,#34d399)}
-  ${P8} .dm-na-batteria[data-tipo="carburante"] .dm-na-pila i{background:linear-gradient(90deg,#d97706,#fbbf24)}
-  ${P8} .dm-na-batteria b{font-family:'Oswald',system-ui,sans-serif;font-size:30px;font-weight:700;color:var(--text,#0f172a)}
-  ${P8} .dm-na-batteria b small{font-size:15px;color:var(--text-dim,#64748b);margin-left:2px}
-  ${P8} .dm-na-eroe-righe{margin:0;font-size:13px;font-weight:700;color:var(--text-dim,#64748b)}
-  ${P8} .dm-na-eroe-righe b{color:var(--text,#0f172a)}
+  ${P8} .dm-na-eroe-dati{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:0;padding:4px 8px 0}
+  ${P8} .dm-na-dato{display:grid;align-content:start;gap:4px;padding:16px 14px 12px;min-width:0}
+  ${P8} .dm-na-dato+.dm-na-dato{border-left:1px solid var(--card-border,#e2e8f0)}
+  ${P8} .dm-na-dato>span{font-size:11px;font-weight:900;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-dim,#64748b)}
+  ${P8} .dm-na-dato-km{cursor:pointer}
+  ${P8} .dm-na-autonomia{display:flex;align-items:baseline;gap:5px;line-height:.9}
+  ${P8} .dm-na-autonomia b{font-family:'Oswald',system-ui,sans-serif;font-size:64px;font-weight:700;letter-spacing:-1.5px;color:var(--text,#0f172a)}
+  ${P8} .dm-na-autonomia small{font-size:20px;font-weight:800;color:var(--text-dim,#64748b)}
+  ${P8} .dm-na-livello{display:grid;gap:8px}
+  ${P8} .dm-na-livello b{font-family:'Oswald',system-ui,sans-serif;font-size:40px;font-weight:700;color:var(--text,#0f172a);line-height:1}
+  ${P8} .dm-na-livello b small{font-family:inherit;font-size:16px;color:var(--text-dim,#64748b);margin-left:3px}
+  ${P8} .dm-na-pila{position:relative;display:block;height:14px;border-radius:6px;border:2px solid color-mix(in srgb,var(--text,#0f172a) 20%,transparent);padding:2px;margin-right:6px}
+  ${P8} .dm-na-pila::after{content:"";position:absolute;right:-6px;top:3px;width:4px;height:4px;border-radius:0 2px 2px 0;background:color-mix(in srgb,var(--text,#0f172a) 20%,transparent)}
+  ${P8} .dm-na-pila i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,#059669,#34d399)}
+  ${P8} [data-tipo="carburante"] .dm-na-pila i{background:linear-gradient(90deg,#d97706,#fbbf24)}
+  ${P8} .dm-na-eroe-pills{padding:4px 22px 20px}
+  /* Sul computer la foto sta a sinistra, nella sua forma: allargata a tutta la
+   * pagina una foto del telefono si sgrana, e l'auto resta tagliata. */
+  @media (min-width:761px){
+    ${P8} .dm-na-eroe{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);grid-template-rows:auto 1fr;align-items:start}
+    ${P8} .dm-na-copertina{grid-row:1 / span 2;height:100%;min-height:320px;border-radius:22px 0 0 22px}
+    ${P8} .dm-na-eroe-dati{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr));padding:14px 14px 0}
+    ${P8} .dm-na-dato-km{grid-column:1 / -1}
+    ${P8} .dm-na-dato+.dm-na-dato{border-left:0}
+    ${P8} .dm-na-dato:nth-child(3){border-left:1px solid var(--card-border,#e2e8f0)}
+    ${P8} .dm-na-autonomia b{font-size:88px}
+    ${P8} .dm-na-eroe-pills{align-self:end}
+  }
+  ${P8} .dm-na-eroe-pills:empty{display:none}
   ${P8} .dm-na-pills{display:flex;flex-wrap:wrap;gap:7px}
   ${P8} .dm-na-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:800;
     color:var(--text,#0f172a);background:var(--surface-2,#f8fafc);border:1px solid var(--card-border,#e8edf3)}
   ${P8} .dm-na-pill[data-tono="ok"]{color:#15803d;border-color:color-mix(in srgb,#16a34a 30%,transparent);background:color-mix(in srgb,#16a34a 9%,transparent)}
   ${P8} .dm-na-pill[data-tono="attenzione"]{color:#b91c1c;border-color:color-mix(in srgb,var(--na-male) 35%,transparent);background:color-mix(in srgb,var(--na-male) 9%,transparent)}
-  ${P8} .dm-na-eroe-foto{display:grid;place-items:center;min-height:220px;position:relative}
-  ${P8} .dm-na-eroe-foto::after{content:"";position:absolute;left:10%;right:10%;bottom:12%;height:22px;border-radius:50%;
-    background:radial-gradient(closest-side,color-mix(in srgb,var(--na-ev) 45%,transparent),transparent);filter:blur(6px)}
-  ${P8} .dm-na-eroe-foto img{position:relative;z-index:1;width:100%;max-height:300px;object-fit:contain;filter:drop-shadow(0 18px 22px rgba(2,6,23,.28))}
-  ${P8} .dm-na-foto-vuota{opacity:.35}
 
   /* le linguette */
   ${P8} .dm-na-linguette{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;padding:6px;border-radius:20px;
@@ -128954,10 +129000,17 @@ function stile6() {
   @media (max-width:760px){
     ${P8} #dm-na{gap:14px}
     ${P8} .dm-na-carta{padding:16px;border-radius:20px}
-    ${P8} .dm-na-eroe{grid-template-columns:minmax(0,1fr);padding:18px;gap:6px}
-    ${P8} .dm-na-eroe-foto{order:-1;min-height:0;margin:-6px -8px 0}
-    ${P8} .dm-na-eroe-foto img{max-height:170px}
-    ${P8} .dm-na-autonomia b{font-size:68px}
+    ${P8} .dm-na-eroe{padding:0}
+    ${P8} .dm-na-copertina{height:210px;border-radius:20px 20px 0 0}
+    ${P8} .dm-na-eroe-nome b{font-size:20px}
+    ${P8} .dm-na-logo-grande{width:44px;height:44px;border-radius:13px}
+    ${P8} .dm-na-eroe-dati{padding:0 2px}
+    ${P8} .dm-na-dato{padding:14px 10px 10px}
+    ${P8} .dm-na-dato>span{font-size:10px;letter-spacing:.8px}
+    ${P8} .dm-na-autonomia b{font-size:44px}
+    ${P8} .dm-na-autonomia small{font-size:15px}
+    ${P8} .dm-na-livello b{font-size:28px}
+    ${P8} .dm-na-eroe-pills{padding:2px 14px 16px}
     ${P8} .dm-na-linguetta{font-size:13.5px;gap:5px;padding:8px 4px;flex-wrap:wrap}
     ${P8} .dm-na-linguetta em{display:none}
     ${P8} .dm-na-totali{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr))}

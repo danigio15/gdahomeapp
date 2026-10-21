@@ -700,7 +700,6 @@ export const SOURCE_INDEX = Object.freeze({
   "Aggiornamento dati Recorder…": "Updating Recorder data…",
   "aggiornamento in attesa": "update pending",
   "Aggiornamento in corso...": "Updating...",
-  "aggiornata": "updated",
   "Aggiornata": "Updated",
   "Aggiornata alle ${detto}": "Updated at ${detto}",
   "aggiornata da": "updated from",

@@ -3407,7 +3407,6 @@ export default Object.freeze({
   "This session": "यह चार्जिंग",
   "Trips": "यात्राएँ",
   "unlocked": "अनलॉक",
-  "updated": "अपडेट",
   "Updated": "अपडेट किया गया",
   "Wallbox · evcc": "Wallbox · evcc",
   "Wallbox error": "वॉलबॉक्स त्रुटि",

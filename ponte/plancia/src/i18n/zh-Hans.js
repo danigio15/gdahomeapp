@@ -3361,7 +3361,6 @@ export default Object.freeze({
   "This session": "本次充电",
   "Trips": "行程",
   "unlocked": "未锁",
-  "updated": "已更新",
   "Updated": "更新时间",
   "Wallbox · evcc": "Wallbox · evcc",
   "Wallbox error": "充电桩错误",
