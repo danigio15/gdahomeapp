@@ -1580,8 +1580,11 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // `core/la-nuova-auto.js`, i conti dello storico delle ricariche e
   // dell'obiettivo di carica, e `sections/la-nuova-auto-section.js`, che li
   // disegna con le linguette Ricarica, Viaggi e Stato auto.
+  // 477 con le bollette (#295): `core/le-bollette.js`, quali sensori del
+  // fornitore sono l'ultima bolletta, il da pagare e lo stato del pagamento,
+  // e `sections/la-bolletta-section.js`, la linguetta Bollette in Energia.
   assert.ok(
-    relative.length <= 475,
+    relative.length <= 477,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

@@ -180,6 +180,7 @@ import { installMeteo } from "./meteo-section.js";
 import { installMeteoEditor } from "./meteo-editor-section.js";
 import { installAcquario } from "./acquario-section.js";
 import { installAccumuloInEnergia } from "./accumulo-in-energia-section.js";
+import { installLaBolletta } from "./la-bolletta-section.js";
 import { installAccumuloEditor } from "./accumulo-editor-section.js";
 import { installMacchine } from "./macchine-e-rete-section.js";
 import { installMacchineEditor } from "./macchine-editor-section.js";
@@ -1245,6 +1246,7 @@ export function installSectionRuntime() {
     /* Le batterie di accumulo (#117): la linguetta dentro Energia e la sua
      * scheda, nello stesso ordine. */
     senzaCadere(installAccumuloInEnergia);
+    senzaCadere(installLaBolletta);
     senzaCadere(installAccumuloEditor);
     senzaCadere(installMacchine);
     senzaCadere(installMacchineEditor);
@@ -1381,6 +1383,7 @@ export function installSectionRuntime() {
         "acquario",
         "accumulo",
         "accumulo-editor",
+        "bollette",
         "macchine-e-rete",
         "macchine-editor",
       ]),

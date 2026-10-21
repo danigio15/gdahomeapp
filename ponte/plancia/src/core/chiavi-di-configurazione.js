@@ -340,7 +340,10 @@
  * elenco (`cd_immagini_riquadri`): un nodo del flusso dell'energia, la vasca,
  * una zona dell'irrigazione, una tessera della Home. Sono scelte della casa
  * come le card che vestono: messe dal telefono, si vedono anche dal tablet. */
-export const CONFIG_KEYS_REVISION = 68;
+/* La revisione 69 aggiunge le bollette (`cd_bollette`, #295): quali sensori
+ * dell'integrazione del fornitore sono l'ultima bolletta, il da pagare, lo
+ * stato del pagamento. Sono della casa, e viaggiano coi dispositivi. */
+export const CONFIG_KEYS_REVISION = 69;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -447,6 +450,7 @@ export const CONFIG_KEYS = Object.freeze([
    * che si vuole tenere d'occhio: vale per la casa, non per il tablet da cui
    * lo si e' scritto. */
   "cd_energia_soglia",
+  "cd_bollette",
   // Se il tocco su un'apertura chiede conferma (#275).
   "cd_porte_conferma",
   "cd_ups",
