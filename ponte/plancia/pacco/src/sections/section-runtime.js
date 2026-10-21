@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-YTZR2QRU.js";
+} from "../../chunk-PMQVOJRG.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -18745,6 +18745,35 @@ function pendingTodoItems(items) {
   return (Array.isArray(items) ? items : []).filter((item) => item?.status !== "completed");
 }
 
+// src/core/il-termostato.js
+var SPENTO2 = /* @__PURE__ */ new Set(["off", "unavailable", "unknown", "none", ""]);
+var MODI_DEL_FREDDO = /* @__PURE__ */ new Set(["cool", "dry", "fan_only", "heat_cool"]);
+function eUnTermostato(stato3, unita3 = null) {
+  if (unita3 && canonicalClimateType(unita3.type) === "termo") return true;
+  const attributi2 = stato3?.attributes || {};
+  if (eUnTermostatoACoppia(attributi2)) return true;
+  const modi = Array.isArray(attributi2.hvac_modes) ? attributi2.hvac_modes.map((m) => String(m).toLowerCase()) : [];
+  return modi.includes("heat") && !modi.some((m) => MODI_DEL_FREDDO.has(m));
+}
+function termostatoCheScalda(stato3) {
+  const modo = String(stato3?.state ?? "").toLowerCase();
+  if (SPENTO2.has(modo)) return false;
+  const attributi2 = stato3?.attributes || {};
+  const azione = String(attributi2.hvac_action ?? "").toLowerCase();
+  if (azione) return ["heating", "preheating", "cooling"].includes(azione);
+  const adesso2 = Number(attributi2.current_temperature);
+  const obiettivo2 = Number(attributi2.temperature);
+  if (!Number.isFinite(adesso2) || !Number.isFinite(obiettivo2)) return false;
+  return adesso2 < obiettivo2 - 0.5;
+}
+function climaInFunzione(stato3, unita3 = null) {
+  if (!stato3) return false;
+  const modo = String(stato3.state ?? "").toLowerCase();
+  if (SPENTO2.has(modo)) return false;
+  if (eUnTermostato(stato3, unita3)) return termostatoCheScalda(stato3);
+  return true;
+}
+
 // src/core/appliance-cycle-tracker.js
 var STORAGE_KEY = "dm_appliance_cycles";
 var MAX_SAMPLE_GAP_MS = 5 * 60 * 1e3;
@@ -26239,12 +26268,12 @@ function luogoDalloStato(grezzo) {
   return voce3;
 }
 var ACCESO2 = /^(on|true|1|running|started|acceso|acceso[_ ]?motore|in[_ ]moto|on_running)$/;
-var SPENTO2 = /^(off|false|0|stopped|spento|fermo|idle|parked)$/;
+var SPENTO3 = /^(off|false|0|stopped|spento|fermo|idle|parked)$/;
 function accesoDalloStato(stato3) {
   const voce3 = minuscolo3(stato3);
   if (!voce3) return null;
   if (ACCESO2.test(voce3)) return true;
-  if (SPENTO2.test(voce3)) return false;
+  if (SPENTO3.test(voce3)) return false;
   return null;
 }
 function serraturaDalloStato(stato3) {
@@ -26756,7 +26785,7 @@ function kilowattora(stato3) {
   return n;
 }
 var ACCESO3 = /^(on|true|1|home|connected|plugged|collegat[ao]|attaccat[ao]|yes)$/i;
-var SPENTO3 = /^(off|false|0|not_home|disconnected|unplugged|scollegat[ao]|staccat[ao]|no)$/i;
+var SPENTO4 = /^(off|false|0|not_home|disconnected|unplugged|scollegat[ao]|staccat[ao]|no)$/i;
 function letturaDellAuto(entita3, stati2) {
   const di = (id) => {
     try {
@@ -26778,7 +26807,7 @@ function letturaDellAuto(entita3, stati2) {
   let collegata = primo(entita3?.cavo, (stato3) => {
     const s = pulito23(stato3?.state);
     if (ACCESO3.test(s)) return true;
-    if (SPENTO3.test(s)) return false;
+    if (SPENTO4.test(s)) return false;
     return null;
   });
   if (collegata === null)
@@ -57255,13 +57284,13 @@ var tinta = (quanto) => `color-mix(in srgb,${A} ${quanto}%,var(--card-bg,#fff))`
 var bordo = (quanto) => `color-mix(in srgb,${A} ${quanto}%,var(--card-border,#e2e8f0))`;
 var FONDO = "var(--card-bg,#fff)";
 var TESTO = "var(--text,#0f172a)";
-var SPENTO4 = "var(--text-dim,#64748b)";
+var SPENTO5 = "var(--text-dim,#64748b)";
 var LINEA = "var(--card-border,#e8edf3)";
 var STILE7 = `
 ${P2} .dm-f-num{font-family:'Oswald',sans-serif;font-weight:600;font-variant-numeric:tabular-nums}
-${P2} .dm-f-tit{margin:18px 2px 9px;font-size:10.5px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:${SPENTO4}}
+${P2} .dm-f-tit{margin:18px 2px 9px;font-size:10.5px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:${SPENTO5}}
 ${P2} .dm-f-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
-${P2} .dm-f-nota{margin:12px 2px 0;font-size:12px;font-weight:700;line-height:1.4;color:${SPENTO4};text-align:center}
+${P2} .dm-f-nota{margin:12px 2px 0;font-size:12px;font-weight:700;line-height:1.4;color:${SPENTO5};text-align:center}
 ${P2} .dm-f-tasto{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 12px;border-radius:16px;
   font:inherit;font-size:14px;font-weight:850;cursor:pointer;background:${FONDO};border:1px solid ${bordo(40)};color:${A}}
 ${P2} .dm-f-tasto.dm-f-pieno{background:${A};border-color:${A};color:#fff}
@@ -57269,7 +57298,7 @@ ${P2} .dm-f-tasto svg{flex:0 0 auto;width:18px;height:18px}
 ${P2} .dm-f-storia{border-radius:18px;background:${tinta(4)};border:1px solid ${LINEA};padding:2px 14px}
 ${P2} .dm-f-storia>div{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:10px 0;font-size:13px;font-weight:750;color:${TESTO};border-bottom:1px solid ${LINEA}}
 ${P2} .dm-f-storia>div:last-child{border-bottom:0}
-${P2} .dm-f-storia .dm-f-num{color:${SPENTO4};font-size:14px;white-space:nowrap}
+${P2} .dm-f-storia .dm-f-num{color:${SPENTO5};font-size:14px;white-space:nowrap}
 
 /* Finestre e tapparelle */
 ${P2} .dm-f-tapparelle-eroi{display:grid;grid-template-columns:1fr 1fr;gap:9px}
@@ -57277,17 +57306,17 @@ ${P2} .dm-f-tapparelle-eroi[data-quanti="1"]{grid-template-columns:1fr}
 ${P2} .dm-f-tapparelle-eroe{min-width:0;border-radius:22px;padding:14px 15px;background:linear-gradient(155deg,${tinta(6)},${tinta(13)});border:1px solid ${bordo(32)}}
 ${P2} .dm-f-tapparelle-eroe small{display:block;font-size:10.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:${A}}
 ${P2} .dm-f-tapparelle-eroe .dm-f-num{display:block;font-size:44px;line-height:1;margin:6px 0 4px;color:${TESTO}}
-${P2} .dm-f-tapparelle-eroe em{display:block;font-style:normal;font-size:12.5px;font-weight:750;line-height:1.35;color:${SPENTO4};overflow-wrap:anywhere}
+${P2} .dm-f-tapparelle-eroe em{display:block;font-style:normal;font-size:12.5px;font-weight:750;line-height:1.35;color:${SPENTO5};overflow-wrap:anywhere}
 ${P2} .dm-f-tapparelle-eroe-ic{display:flex;align-items:center;gap:14px;grid-column:1/-1}
 ${P2} .dm-f-tapparelle-vetro{position:relative;flex:0 0 auto;width:74px;height:74px;border-radius:22px;display:grid;place-items:center;background:${FONDO};box-shadow:0 10px 22px -12px ${bordo(60)}}
 ${P2} .dm-f-tapparelle-vetro b{position:absolute;right:-7px;top:-7px;min-width:28px;padding:1px 8px;border-radius:999px;background:${A};color:#fff;border:3px solid ${FONDO};font-family:'Oswald',sans-serif;font-size:15px;text-align:center}
 ${P2} .dm-f-tapparelle-eroe-testo{flex:1;min-width:0}
-${P2} .dm-f-tapparelle-eroe .dm-f-num span{font-size:20px;margin-left:8px;color:${SPENTO4}}
+${P2} .dm-f-tapparelle-eroe .dm-f-num span{font-size:20px;margin-left:8px;color:${SPENTO5}}
 ${P2} .dm-f-tapparelle-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
 ${P2} .dm-f-tapparelle-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px 3px 4px;border-radius:999px;background:${FONDO};border:1px solid ${bordo(30)};font-size:12px;font-weight:850;color:${TESTO}}
 ${P2} .dm-f-tapparelle-chip>*:first-child{flex:0 0 22px;width:22px!important;height:22px!important;min-width:0!important;padding:0!important;margin:0!important;border:0!important;background:none!important;box-shadow:none!important;display:grid;place-items:center;overflow:hidden}
 ${P2} .dm-f-tapparelle-eroi:has(.dm-f-tapparelle-eroe-ic){grid-template-columns:1fr}
-${P2} .dm-f-tapparelle-ic{position:relative;flex:0 0 auto;width:50px;height:50px;border-radius:16px;display:grid;place-items:center;background:color-mix(in srgb,${SPENTO4} 9%,${FONDO})}
+${P2} .dm-f-tapparelle-ic{position:relative;flex:0 0 auto;width:50px;height:50px;border-radius:16px;display:grid;place-items:center;background:color-mix(in srgb,${SPENTO5} 9%,${FONDO})}
 ${P2} .dm-f-tapparelle-ic[data-viva="true"]{background:${tinta(9)}}
 ${P2} .dm-f-tapparelle-ic>i{position:absolute;right:-6px;bottom:-6px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:${FONDO};box-shadow:0 2px 6px rgba(15,23,42,.18)}
 ${P2} .dm-f-tapparelle-nome small{display:inline-flex;align-items:center;gap:5px}
@@ -57296,45 +57325,45 @@ ${P2} .dm-f-tapparelle-stanza{padding:12px 12px 12px 14px;border-radius:20px;bac
 ${P2} .dm-f-tapparelle-stanza[data-viva="true"]{border-color:${bordo(32)};background:linear-gradient(180deg,${tinta(3)},${FONDO})}
 ${P2} .dm-f-tapparelle-riga{display:flex;align-items:center;gap:10px}
 ${P2} .dm-f-tapparelle-piccola{margin-top:8px;justify-content:space-between}
-${P2} .dm-f-tapparelle-piccola small,${P2} .dm-f-tapparelle-tipo{font-size:12px;font-weight:750;color:${SPENTO4}}
+${P2} .dm-f-tapparelle-piccola small,${P2} .dm-f-tapparelle-tipo{font-size:12px;font-weight:750;color:${SPENTO5}}
 ${P2} .dm-f-tapparelle-motore .dm-f-tapparelle-riga{justify-content:space-between;margin-top:10px}
 ${P2} .dm-f-tapparelle-nome{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px}
 ${P2} .dm-f-tapparelle-nome b{font-size:15px;font-weight:850;color:${TESTO};overflow-wrap:anywhere}
-${P2} .dm-f-tapparelle-nome small{font-size:12px;font-weight:750;color:${SPENTO4}}
+${P2} .dm-f-tapparelle-nome small{font-size:12px;font-weight:750;color:${SPENTO5}}
 ${P2} .dm-f-tapparelle-ante{display:flex;flex-wrap:wrap;gap:4px}
-${P2} .dm-f-tapparelle-anta{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:850;background:color-mix(in srgb,${SPENTO4} 12%,transparent);color:${SPENTO4}}
+${P2} .dm-f-tapparelle-anta{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:850;background:color-mix(in srgb,${SPENTO5} 12%,transparent);color:${SPENTO5}}
 ${P2} .dm-f-tapparelle-anta[data-aperta="true"]{background:${tinta(14)};color:${A}}
 ${P2} .dm-f-tapparelle-anta i{width:8px;height:8px;border-radius:50%;background:currentColor}
 ${P2} .dm-f-tapparelle-frecce{display:flex;gap:6px;flex:0 0 auto}
 ${P2} .dm-f-tapparelle-freccia{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;padding:0;cursor:pointer;
   background:${tinta(6)};border:1px solid ${bordo(25)};color:${A}}
-${P2} .dm-f-tapparelle-barra{display:block;height:6px;border-radius:999px;background:color-mix(in srgb,${SPENTO4} 14%,transparent);margin-top:10px;overflow:hidden}
+${P2} .dm-f-tapparelle-barra{display:block;height:6px;border-radius:999px;background:color-mix(in srgb,${SPENTO5} 14%,transparent);margin-top:10px;overflow:hidden}
 ${P2} .dm-f-tapparelle-barra i{display:block;height:100%;border-radius:999px;background:${A}}
-${P2} .dm-f-tapparelle-sotto{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:5px;font-size:11.5px;font-weight:750;color:${SPENTO4}}
+${P2} .dm-f-tapparelle-sotto{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:5px;font-size:11.5px;font-weight:750;color:${SPENTO5}}
 ${P2} .dm-f-tapparelle-sotto>span{flex:1}
 ${P2} .dm-f-tapparelle-sotto b{font-family:'Oswald',sans-serif;font-weight:600;font-size:14px;color:${TESTO}}
 ${P2} .dm-f-tapparelle-pos{height:26px;border-radius:9px;border:1px solid ${bordo(25)};background:${FONDO};color:${A};font:inherit;font-size:12px;font-weight:800;padding:0 4px}
 
 /* Prese */
 ${P2} .dm-f-eroe{display:flex;align-items:center;gap:16px;border-radius:24px;padding:16px 18px;background:linear-gradient(155deg,${tinta(3)},${tinta(11)});border:1px solid ${bordo(30)}}
-${P2} .dm-f-prese-eroe small{display:block;font-size:10.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:${SPENTO4}}
+${P2} .dm-f-prese-eroe small{display:block;font-size:10.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:${SPENTO5}}
 ${P2} .dm-f-prese-conto .dm-f-num{font-size:46px;line-height:1;color:${TESTO}}
-${P2} .dm-f-prese-eroe em{font-style:normal;font-size:22px;color:${SPENTO4}}
+${P2} .dm-f-prese-eroe em{font-style:normal;font-size:22px;color:${SPENTO5}}
 ${P2} .dm-f-prese-watt{margin-left:auto;text-align:right}
 ${P2} .dm-f-prese-watt .dm-f-num{display:block;font-size:26px;color:${TESTO}}
 ${P2} .dm-f-prese-watt small{letter-spacing:0;text-transform:none;font-size:12px;font-weight:750}
 ${P2} .dm-f-prese-presa{position:relative;display:flex;flex-direction:column;min-height:112px;padding:13px;border-radius:20px;background:${FONDO};border:1px solid ${LINEA};box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
 ${P2} .dm-f-prese-presa[data-on="true"]{background:linear-gradient(160deg,${tinta(3)},${tinta(9)});border-color:${bordo(45)}}
 ${P2} .dm-f-prese-presa[data-muta="true"]{opacity:.6;border-style:dashed;box-shadow:none}
-${P2} .dm-f-prese-ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:19px;background:color-mix(in srgb,${SPENTO4} 10%,transparent);color:${SPENTO4}}
+${P2} .dm-f-prese-ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:19px;background:color-mix(in srgb,${SPENTO5} 10%,transparent);color:${SPENTO5}}
 ${P2} .dm-f-prese-presa[data-on="true"] .dm-f-prese-ic{background:${A};color:#fff}
 ${P2} .dm-f-prese-presa b{margin-top:auto;padding-top:10px;font-size:14.5px;font-weight:850;line-height:1.2;color:${TESTO};overflow-wrap:anywhere}
-${P2} .dm-f-prese-presa small{margin-top:2px;font-size:12px;font-weight:750;color:${SPENTO4}}
-${P2} .dm-f-prese-int{position:absolute;top:13px;right:13px;width:46px;height:28px;padding:0;border:0;border-radius:999px;cursor:pointer;background:color-mix(in srgb,${SPENTO4} 25%,transparent)}
+${P2} .dm-f-prese-presa small{margin-top:2px;font-size:12px;font-weight:750;color:${SPENTO5}}
+${P2} .dm-f-prese-int{position:absolute;top:13px;right:13px;width:46px;height:28px;padding:0;border:0;border-radius:999px;cursor:pointer;background:color-mix(in srgb,${SPENTO5} 25%,transparent)}
 ${P2} .dm-f-prese-int i{position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .18s}
 ${P2} .dm-f-prese-int[data-on="true"]{background:${A}}
 ${P2} .dm-f-prese-int[data-on="true"] i{left:22px}
-${P2} .dm-f-prese-lucchetto{position:absolute;top:15px;right:13px;font-size:11px;font-weight:850;color:${SPENTO4}}
+${P2} .dm-f-prese-lucchetto{position:absolute;top:15px;right:13px;font-size:11px;font-weight:850;color:${SPENTO5}}
 
 /* Apri porte */
 ${P2} .dm-f-porte-avviso{display:flex;align-items:center;gap:13px;margin-bottom:8px;border-radius:22px;padding:14px 16px;border:1px solid #fecaca;background:linear-gradient(155deg,color-mix(in srgb,#dc2626 5%,${FONDO}),color-mix(in srgb,#dc2626 13%,${FONDO}))}
@@ -57348,7 +57377,7 @@ ${P2} .dm-f-porte-porta{display:flex;flex-direction:column;min-height:168px;padd
 ${P2} .dm-f-porte-porta[data-tono="ko"]{border-color:#fecaca}
 ${P2} .dm-f-porte-ic{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font-size:21px;background:color-mix(in srgb,var(--dm-f-porte-tasto) 11%,${FONDO})}
 ${P2} .dm-f-porte-porta>b{margin-top:12px;font-size:15px;font-weight:850;color:${TESTO};overflow-wrap:anywhere}
-${P2} .dm-f-porte-porta>small{margin-top:2px;font-size:12px;font-weight:750;color:${SPENTO4}}
+${P2} .dm-f-porte-porta>small{margin-top:2px;font-size:12px;font-weight:750;color:${SPENTO5}}
 ${P2} .dm-f-porte-porta>small[data-tono="ok"]{color:#15803d}
 ${P2} .dm-f-porte-porta>small[data-tono="ko"]{color:#b91c1c}
 ${P2} .dm-f-porte-tasti{display:grid;gap:6px;margin-top:auto;padding-top:12px}
@@ -57389,9 +57418,9 @@ ${P2} .dm-f-media-ic{flex:0 0 44px;width:44px;height:44px;border-radius:13px;dis
 ${P2} .dm-f-media-ic img{width:100%;height:100%;object-fit:cover}
 ${P2} .dm-f-media-nome{flex:1;min-width:0}
 ${P2} .dm-f-media-nome b{display:block;font-size:14.5px;font-weight:850;color:${TESTO}}
-${P2} .dm-f-media-nome small{display:block;font-size:12px;font-weight:750;color:${SPENTO4};white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${P2} .dm-f-media-nome small{display:block;font-size:12px;font-weight:750;color:${SPENTO5};white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 ${P2} .dm-f-media-uno{width:44px;height:44px;background:${A};color:#fff}
-${P2} .dm-f-media-uno[data-centro="accendi"]{background:color-mix(in srgb,${SPENTO4} 12%,transparent);color:${SPENTO4}}
+${P2} .dm-f-media-uno[data-centro="accendi"]{background:color-mix(in srgb,${SPENTO5} 12%,transparent);color:${SPENTO5}}
 ${P2} .dm-f-media-uno svg{width:17px;height:17px}
 
 /* Citofono e posta */
@@ -57413,8 +57442,8 @@ ${P2} .dm-f-citofono-cosa{display:flex;align-items:center;gap:12px;margin-bottom
 ${P2} .dm-f-citofono-cosa>span:first-child{font-size:20px}
 ${P2} .dm-f-citofono-cosa>span:nth-child(2){flex:1;min-width:0;display:flex;flex-direction:column}
 ${P2} .dm-f-citofono-cosa>span b{font-size:14.5px;font-weight:850;color:${TESTO}}
-${P2} .dm-f-citofono-cosa small{font-size:12px;font-weight:750;color:${SPENTO4}}
-${P2} .dm-f-citofono-cosa>.dm-f-num{font-size:15px;color:${SPENTO4};white-space:nowrap}
+${P2} .dm-f-citofono-cosa small{font-size:12px;font-weight:750;color:${SPENTO5}}
+${P2} .dm-f-citofono-cosa>.dm-f-num{font-size:15px;color:${SPENTO5};white-space:nowrap}
 
 /* Robot */
 ${P2} .dm-f-robot-eroe{border-radius:26px;padding:16px;background:linear-gradient(160deg,${tinta(4)},${tinta(14)});border:1px solid ${bordo(35)}}
@@ -57427,20 +57456,20 @@ ${P2} .dm-f-robot-anello[data-vuoto="true"]{background:${tinta(14)}}
 ${P2} .dm-f-robot-anello>*{position:relative;z-index:1}
 ${P2} .dm-f-robot-anello>span{display:flex;flex-direction:column;align-items:center}
 ${P2} .dm-f-robot-anello .dm-f-num{font-size:26px;line-height:1;color:${TESTO}}
-${P2} .dm-f-robot-anello small{font-size:9.5px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:${SPENTO4}}
+${P2} .dm-f-robot-anello small{font-size:9.5px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:${SPENTO5}}
 ${P2} .dm-f-robot-chi{min-width:0;display:flex;flex-direction:column;align-items:flex-start}
 ${P2} .dm-f-robot-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:11.5px;font-weight:850;background:${FONDO};color:${A}}
 ${P2} .dm-f-robot-chip i{width:8px;height:8px;border-radius:50%;background:${A};box-shadow:0 0 0 4px ${tinta(25)}}
 ${P2} .dm-f-robot-chi b{margin-top:7px;font-size:18px;font-weight:850;line-height:1.2;color:${TESTO};overflow-wrap:anywhere}
-${P2} .dm-f-robot-chi small{margin-top:3px;font-size:12.5px;font-weight:750;color:${SPENTO4}}
+${P2} .dm-f-robot-chi small{margin-top:3px;font-size:12.5px;font-weight:750;color:${SPENTO5}}
 ${P2} .dm-f-robot-tasti{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
 ${P2} .dm-f-robot-tasti[data-quanti="1"]{grid-template-columns:1fr}
 ${P2} .dm-f-robot-robot{display:flex;align-items:center;gap:12px;margin-bottom:8px;padding:12px;border-radius:20px;background:${FONDO};border:1px solid ${LINEA};box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
 ${P2} .dm-f-robot-ic{flex:0 0 46px;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:${tinta(10)};color:${A}}
 ${P2} .dm-f-robot-nome{flex:1;min-width:0;display:flex;flex-direction:column}
 ${P2} .dm-f-robot-nome b{font-size:14.5px;font-weight:850;color:${TESTO};overflow-wrap:anywhere}
-${P2} .dm-f-robot-nome small{margin-top:2px;font-size:12px;font-weight:750;color:${SPENTO4}}
-${P2} .dm-f-robot-bat{display:block;width:56px;height:6px;margin-top:6px;border-radius:999px;overflow:hidden;background:color-mix(in srgb,${SPENTO4} 18%,transparent)}
+${P2} .dm-f-robot-nome small{margin-top:2px;font-size:12px;font-weight:750;color:${SPENTO5}}
+${P2} .dm-f-robot-bat{display:block;width:56px;height:6px;margin-top:6px;border-radius:999px;overflow:hidden;background:color-mix(in srgb,${SPENTO5} 18%,transparent)}
 ${P2} .dm-f-robot-bat i{display:block;height:100%;background:${A}}
 ${P2} .dm-f-robot-bat[data-scarica="true"] i{background:#dc2626}
 ${P2} .dm-f-robot-avvia{display:flex;align-items:center;gap:6px;flex:0 0 auto;padding:12px 15px;border:0;border-radius:14px;cursor:pointer;font:inherit;font-size:13.5px;font-weight:850;background:${tinta(12)};color:${A}}
@@ -66548,7 +66577,10 @@ function rigaClima(states, unit) {
     /* Con la presa e la soglia l'acceso lo dicono i watt, come sulla pagina
      * Clima (#490): un climatizzatore acceso dal telecomando per Home
      * Assistant resta «off», e in Home risultava spento. */
-    on: accesoPerIlConsumo(unit, states) ?? (Boolean(current) && raw !== "off" && raw !== "unavailable" && raw !== "unknown"),
+    on: accesoPerIlConsumo(unit, states) ?? climaInFunzione(current, unit),
+    /* Acceso per Home Assistant, anche se non lavora: un termostato in
+     * «auto» fermo e' «in pausa», non spento — e il tasto lo spegne davvero. */
+    acceso: Boolean(current) && raw !== "off" && raw !== "unavailable" && raw !== "unknown",
     mode: raw,
     ambient: numero59(attributi2.current_temperature),
     /* Per chi ne ha due, quello che la modalita' rende vero — il basso in
@@ -70523,7 +70555,7 @@ function climateDetail(widget) {
   const righe3 = [...widget.rows].sort((a, b2) => Number(b2.on) - Number(a.on));
   const accese = righe3.filter((row) => row.on).length;
   const verso2 = (row) => {
-    if (!row.on) return "spento";
+    if (!row.on) return row.acceso ? "pausa" : "spento";
     const modo = clean(row.mode);
     const azione = clean(row.azione);
     if (azione === "heating" || modo === "heat") return "caldo";
@@ -70536,6 +70568,7 @@ function climateDetail(widget) {
     freddo: t("Raffresca", "Cooling"),
     secco: t("Deumidifica", "Drying"),
     acceso: t("Acceso", "On"),
+    pausa: t("In pausa", "Idle"),
     spento: t("Spento", "Off")
   })[verso2(row)];
   const schede = righe3.map((row) => {
@@ -74345,6 +74378,9 @@ function climateReading(entity2, states = allStates(), unita3 = unitaDellEntita(
   return {
     known: Boolean(entry),
     on: daiWatt2 === null ? Boolean(entry) && !OFF_STATES.has(raw) : daiWatt2,
+    /* Se conta fra le accese: un termostato fermo in «auto» la card lo
+     * mostra «In pausa», ma non e' un'unita' accesa. */
+    inFunzione: daiWatt2 === null ? climaInFunzione(entry, unita3) : daiWatt2,
     /* I watt che si stanno leggendo, quando c'e' una presa: la card li scrive,
      * cosi' chi ha messo la soglia vede il numero su cui l'ha messa. */
     watt: wattDellUnita(unita3, states),
@@ -75033,7 +75069,7 @@ function paintSummary(shell, units, states, labels) {
   }
   const inZone = units.filter((unit) => unit.zone === zone);
   const readings = inZone.map((unit) => climateReading(unit.entity, states));
-  const running = readings.filter((reading) => reading.on).length;
+  const running = readings.filter((reading) => reading.inFunzione).length;
   const ambient = readings.map((reading) => reading.ambient).filter((value) => value !== null);
   const runningEl = shell.querySelector("[data-dm-cl-running]");
   if (runningEl) runningEl.innerHTML = `${running}<small> / ${inZone.length}</small>`;
@@ -114311,7 +114347,7 @@ var ACCESO5 = Object.freeze({
   climate: ["auto", "cool", "dry", "fan_only", "heat", "heat_cool"],
   alarm_control_panel: ARMATI
 });
-var SPENTO5 = Object.freeze({
+var SPENTO6 = Object.freeze({
   cover: "closed",
   person: "not_home",
   device_tracker: "not_home",
