@@ -1,0 +1,3722 @@
+{
+  "schema_version": 2,
+  "offers": {
+    "E3PL0#00001": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2023_11/PO_Offerte_G_MLIBERO_20231103.xml",
+        "source_sha256": "0b012bca3e0071a3b34ad52bc684456c61090ceeeae5fce5df079c4b63142d3d",
+        "offered_from": "2023-10-25",
+        "offered_until": "2024-01-31",
+        "duration_months": 12,
+        "unit_price": "0.67500",
+        "annual_fee": "67.320000",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ECAL0#00001": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2023_11/PO_Offerte_G_MLIBERO_20231103.xml",
+        "source_sha256": "e8b188f27a406310b4b1c7f41e28e231e0bcf8e6ab6caa13a3d1f2f5f87569e2",
+        "offered_from": "2023-10-25",
+        "offered_until": "2024-01-31",
+        "duration_months": 12,
+        "unit_price": "0.74000",
+        "annual_fee": "120.000000",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPF0#00001": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2023_11/PO_Offerte_G_MLIBERO_20231103.xml",
+        "source_sha256": "ab0a3b2fc59d5a79af8a9ae32aa64eb0d6b4b6ec353589f3ee7ad8d9c02df634",
+        "offered_from": "2023-10-25",
+        "offered_until": "2024-01-31",
+        "duration_months": 12,
+        "unit_price": "0.68",
+        "annual_fee": "67.32",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00005": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2023_10/PO_Offerte_G_MLIBERO_20231013.xml",
+        "source_sha256": "3d8b07322fc1ce8506a40fea0e1a58da93813a6adc5c8fab92cf2d9e580673dc",
+        "offered_from": "2023-10-04",
+        "offered_until": "2023-10-17",
+        "duration_months": 12,
+        "unit_price": "0.68",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00006": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2023_10/PO_Offerte_G_MLIBERO_20231027.xml",
+        "source_sha256": "0341ce0c0b0e56cd5adb91f2770b64d9bd0b858015767df2cea881dbef6b475c",
+        "offered_from": "2023-10-18",
+        "offered_until": "2023-10-31",
+        "duration_months": 12,
+        "unit_price": "0.78",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00007": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2023_11/PO_Offerte_G_MLIBERO_20231110.xml",
+        "source_sha256": "54211b05e487e157f22098ef5b2df35fbf6b23297a921aa9aba2152813394c3f",
+        "offered_from": "2023-11-01",
+        "offered_until": "2023-11-14",
+        "duration_months": 12,
+        "unit_price": "0.69",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00008": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2023_12/PO_Offerte_G_MLIBERO_20231208.xml",
+        "source_sha256": "08ef1f797b5daf05df4cc44cfbfbe4432960042e2613fb4b30f71b6082720f79",
+        "offered_from": "2023-11-15",
+        "offered_until": "2023-12-12",
+        "duration_months": 12,
+        "unit_price": "0.665",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00009": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2023_12/PO_Offerte_G_MLIBERO_20231215.xml",
+        "source_sha256": "0e93f9e52de65641036ff57d9921f2a7300c9c8ad89e0b37b91726c87bc30c25",
+        "offered_from": "2023-12-13",
+        "offered_until": "2023-12-19",
+        "duration_months": 12,
+        "unit_price": "0.665",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00010": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_1/PO_Offerte_G_MLIBERO_20240112.xml",
+        "source_sha256": "272eb21bb9d3ee335ec254605aa1a485564a17722ab9f23d7139314165829f33",
+        "offered_from": "2023-12-20",
+        "offered_until": "2024-01-16",
+        "duration_months": 12,
+        "unit_price": "0.5950",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00011": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_1/PO_Offerte_G_MLIBERO_20240119.xml",
+        "source_sha256": "6bd0a26bcedc002004b692e746b97c159002a376620e0c2039bfebdf41fb9dc4",
+        "offered_from": "2024-01-17",
+        "offered_until": "2024-01-23",
+        "duration_months": 12,
+        "unit_price": "0.5650",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00012": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_2/PO_Offerte_G_MLIBERO_20240209.xml",
+        "source_sha256": "2e166b81cb095062c47ac17cd68391021c915302e7c0e1d79fdd2da023c314e7",
+        "offered_from": "2024-01-24",
+        "offered_until": "2024-02-13",
+        "duration_months": 12,
+        "unit_price": "0.5650",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00013": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_2/PO_Offerte_G_MLIBERO_20240216.xml",
+        "source_sha256": "611071fe843c0c6dd496d2d5a6204827be0895a8819b0923b15f25dfccc661f8",
+        "offered_from": "2024-02-14",
+        "offered_until": "2024-02-20",
+        "duration_months": 12,
+        "unit_price": "0.5050",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00014": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_2/PO_Offerte_G_MLIBERO_20240223.xml",
+        "source_sha256": "4f425a411f5ab9d879eb24acee2422d75df30e1d8b9ecc1684ebb77929edf134",
+        "offered_from": "2024-02-21",
+        "offered_until": "2024-02-27",
+        "duration_months": 12,
+        "unit_price": "0.4725",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00017": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_4/PO_Offerte_G_MLIBERO_20240426.xml",
+        "source_sha256": "e03d435cc8362ce918d49f644e247de63b8ee9fa36ce7373f1b8931f4d6f1cca",
+        "offered_from": "2024-04-24",
+        "offered_until": "2024-05-02",
+        "duration_months": 12,
+        "unit_price": "0.4500",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00019": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_5/PO_Offerte_G_MLIBERO_20240517.xml",
+        "source_sha256": "a0a10db84d4711ba5f7dee8b701855e6a63e49789742401157c31a4886031e0d",
+        "offered_from": "2024-05-15",
+        "offered_until": "2024-05-21",
+        "duration_months": 12,
+        "unit_price": "0.4500",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00020": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_5/PO_Offerte_G_MLIBERO_20240524.xml",
+        "source_sha256": "e18b3383b75ca720a38cc8bf450610442e5bfb69de04e415e2a15bf7c84392fc",
+        "offered_from": "2024-05-22",
+        "offered_until": "2024-05-28",
+        "duration_months": 12,
+        "unit_price": "0.46500",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00022": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_6/PO_Offerte_G_MLIBERO_20240614.xml",
+        "source_sha256": "61308bc50a245df282ad274d1adb514837a8b560d57b004df4df972e55f4a385",
+        "offered_from": "2024-06-12",
+        "offered_until": "2024-06-18",
+        "duration_months": 12,
+        "unit_price": "0.49000",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00023": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_6/PO_Offerte_G_MLIBERO_20240621.xml",
+        "source_sha256": "318f567357bdc4104b25c4889169cd0d68e27c741af6099284c5a6e5427b99a6",
+        "offered_from": "2024-06-19",
+        "offered_until": "2024-06-25",
+        "duration_months": 12,
+        "unit_price": "0.50500",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00024": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_6/PO_Offerte_G_MLIBERO_20240628.xml",
+        "source_sha256": "913474dd44e2493c19a944a15b1b4071f7d1e96e2baa6e4afd9f15b6cd589b39",
+        "offered_from": "2024-06-26",
+        "offered_until": "2024-07-02",
+        "duration_months": 12,
+        "unit_price": "0.50500",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00025": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_7/PO_Offerte_G_MLIBERO_20240705.xml",
+        "source_sha256": "5f70cbf6423f4edcb6a0eb66b2b5fc46d8bfbf089c623574188509464830aff1",
+        "offered_from": "2024-07-03",
+        "offered_until": "2024-07-09",
+        "duration_months": 12,
+        "unit_price": "0.50500",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00026": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_7/PO_Offerte_G_MLIBERO_20240712.xml",
+        "source_sha256": "183a02726f1c285d3f8f5bf147bbbe227b015174ce260e0c8e120f369538456a",
+        "offered_from": "2024-07-10",
+        "offered_until": "2024-07-16",
+        "duration_months": 12,
+        "unit_price": "0.50500",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00027": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_7/PO_Offerte_G_MLIBERO_20240719.xml",
+        "source_sha256": "0eb0cf911f35bc7d35988cf63ba067e8e18f1a216f089f2fa7876420d47ac466",
+        "offered_from": "2024-07-17",
+        "offered_until": "2024-07-23",
+        "duration_months": 12,
+        "unit_price": "0.48000",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00030": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_9/PO_Offerte_G_MLIBERO_20240906.xml",
+        "source_sha256": "8c80deff11774fa8f94fb53e84dd3e5980c0986eef45a5fe433ba93eb4849779",
+        "offered_from": "2024-09-04",
+        "offered_until": "2024-09-10",
+        "duration_months": 12,
+        "unit_price": "0.53000",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00031": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_9/PO_Offerte_G_MLIBERO_20240913.xml",
+        "source_sha256": "a867a276d587004cd9e2a158270a83364aca5e8d55629a9bd160b33584224112",
+        "offered_from": "2024-09-11",
+        "offered_until": "2024-09-17",
+        "duration_months": 12,
+        "unit_price": "0.48500",
+        "annual_fee": "90.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00032": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_9/PO_Offerte_G_MLIBERO_20240920.xml",
+        "source_sha256": "97a508084c52b17aca1f793ca9eab233677e177d2114f1c2d481ff940fe7bc6d",
+        "offered_from": "2024-09-18",
+        "offered_until": "2024-09-24",
+        "duration_months": 12,
+        "unit_price": "0.48000",
+        "annual_fee": "90.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00033": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_9/PO_Offerte_G_MLIBERO_20240927.xml",
+        "source_sha256": "3dda68266c7f73b0c982b42eb673e59002282509f71c01f877483b79276ce1a6",
+        "offered_from": "2024-09-25",
+        "offered_until": "2024-10-01",
+        "duration_months": 12,
+        "unit_price": "0.47000",
+        "annual_fee": "90.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00034": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_10/PO_Offerte_G_MLIBERO_20241004.xml",
+        "source_sha256": "fbc311fafe4733f09890443663520a94be087bc6c8a0de8fa183975e50e8f41e",
+        "offered_from": "2024-10-02",
+        "offered_until": "2024-10-08",
+        "duration_months": 12,
+        "unit_price": "0.48500",
+        "annual_fee": "90.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00035": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_10/PO_Offerte_G_MLIBERO_20241011.xml",
+        "source_sha256": "2ab6d0c70642b8cc1457cc4ef1ed2d2ac8ac1d910175d12304cc7d68aa5dc2f0",
+        "offered_from": "2024-10-09",
+        "offered_until": "2024-10-15",
+        "duration_months": 12,
+        "unit_price": "0.5055",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00036": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_10/PO_Offerte_G_MLIBERO_20241018.xml",
+        "source_sha256": "0c33a62c0ab1279afc671b47ecd84d2cd7bf97047cd3c67a7186b6052485a197",
+        "offered_from": "2024-10-16",
+        "offered_until": "2024-10-22",
+        "duration_months": 12,
+        "unit_price": "0.5055",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00037": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_10/PO_Offerte_G_MLIBERO_20241025.xml",
+        "source_sha256": "3e856c5d9fc54a7e6121bcb46a2a452cb6f58d61cae74760219c167861d87c8c",
+        "offered_from": "2024-10-23",
+        "offered_until": "2024-10-29",
+        "duration_months": 12,
+        "unit_price": "0.49000",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00038": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_11/PO_Offerte_G_MLIBERO_20241101.xml",
+        "source_sha256": "11a51b233b7c069593f4307fb380ae614143ea8ecc2624ab5337e77c02413070",
+        "offered_from": "2024-10-30",
+        "offered_until": "2024-11-05",
+        "duration_months": 12,
+        "unit_price": "0.52500",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00039": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_11/PO_Offerte_G_MLIBERO_20241108.xml",
+        "source_sha256": "50a937ed91614c8c3ba9e9649d47095e9b349390018119c0c7aea45b17718bd0",
+        "offered_from": "2024-11-06",
+        "offered_until": "2024-11-12",
+        "duration_months": 12,
+        "unit_price": "0.4900",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00040": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_11/PO_Offerte_G_MLIBERO_20241115.xml",
+        "source_sha256": "28a2ef04b42da12f3bd8e17c42e3e29756964badc06ab7c55c027a286e272872",
+        "offered_from": "2024-11-13",
+        "offered_until": "2024-11-19",
+        "duration_months": 12,
+        "unit_price": "0.5075",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00041": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_11/PO_Offerte_G_MLIBERO_20241122.xml",
+        "source_sha256": "ff50b642234755892905cfb92aa1360235eca0fc490a5b093784031aa13f535e",
+        "offered_from": "2024-11-20",
+        "offered_until": "2024-11-26",
+        "duration_months": 12,
+        "unit_price": "0.4800",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00042": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_11/PO_Offerte_G_MLIBERO_20241129.xml",
+        "source_sha256": "9f26a88428ce712aa44805b2d3446d2e8e13dea7e5a64a236d1353eb8ea0c9f1",
+        "offered_from": "2024-11-27",
+        "offered_until": "2024-12-03",
+        "duration_months": 12,
+        "unit_price": "0.5550",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00043": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_12/PO_Offerte_G_MLIBERO_20241206.xml",
+        "source_sha256": "7f10bf36822996a87018b2bd713ab2b4b9a097dcc434f8a6f2349cc08fad462f",
+        "offered_from": "2024-12-04",
+        "offered_until": "2024-12-10",
+        "duration_months": 12,
+        "unit_price": "0.5400",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00044": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_12/PO_Offerte_G_MLIBERO_20241213.xml",
+        "source_sha256": "be050272c8165e32a33235897b30a19157c1fedeacadd8bbfd63c0633455af3f",
+        "offered_from": "2024-12-11",
+        "offered_until": "2024-12-17",
+        "duration_months": 12,
+        "unit_price": "0.5400",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00045": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_1/PO_Offerte_G_MLIBERO_20250103.xml",
+        "source_sha256": "4762b2cdd0f5ebde34fad21a179a6c1f81c5cd45917906913664ad02a8306f09",
+        "offered_from": "2024-12-18",
+        "offered_until": "2025-01-08",
+        "duration_months": 12,
+        "unit_price": "0.5050",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00047": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_1/PO_Offerte_G_MLIBERO_20250117.xml",
+        "source_sha256": "cc0eac099224dd50021ad4ae7403a5436394dc1e17d04ecce25822ea827fc5f1",
+        "offered_from": "2025-01-15",
+        "offered_until": "2025-01-21",
+        "duration_months": 12,
+        "unit_price": "0.5500",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00048": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_1/PO_Offerte_G_MLIBERO_20250124.xml",
+        "source_sha256": "bc7cacd3fe75af156db93de92ee227128fb9a0cdafcaf7490fb29317e4a9b154",
+        "offered_from": "2025-01-22",
+        "offered_until": "2025-01-28",
+        "duration_months": 12,
+        "unit_price": "0.5000",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00049": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_1/PO_Offerte_G_MLIBERO_20250131.xml",
+        "source_sha256": "6d12309d239fd26ae299ab6801aec6e3034574eb889afdb3f2916ad12c57fa2c",
+        "offered_from": "2025-01-29",
+        "offered_until": "2025-02-04",
+        "duration_months": 12,
+        "unit_price": "0.5875",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00050": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_2/PO_Offerte_G_MLIBERO_20250207.xml",
+        "source_sha256": "d4bac9c113c2ae7781bb654fb89d77ba220f94adb968a2a42510fc56cc23c8b4",
+        "offered_from": "2025-02-05",
+        "offered_until": "2025-02-11",
+        "duration_months": 12,
+        "unit_price": "0.5875",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00051": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_2/PO_Offerte_G_MLIBERO_20250214.xml",
+        "source_sha256": "7bfa419d144872d0db7e44c9185f0a2aa545f1084ebb19bd9d7bb7512eb0b54b",
+        "offered_from": "2025-02-12",
+        "offered_until": "2025-02-18",
+        "duration_months": 12,
+        "unit_price": "0.6250",
+        "annual_fee": "108.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00052": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_2/PO_Offerte_G_MLIBERO_20250221.xml",
+        "source_sha256": "03a156c2c92755ac56046d25d6b47764a8599d512c2a688efc6678882186a9b2",
+        "offered_from": "2025-02-19",
+        "offered_until": "2025-02-25",
+        "duration_months": 12,
+        "unit_price": "0.5400",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00053": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_2/PO_Offerte_G_MLIBERO_20250228.xml",
+        "source_sha256": "ba8026fc1cfe1186140f8f71fedeccd149cad2ab1249d3ff38f99a7193825827",
+        "offered_from": "2025-02-27",
+        "offered_until": "2025-03-04",
+        "duration_months": 12,
+        "unit_price": "0.5300",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00054": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_3/PO_Offerte_G_MLIBERO_20250307.xml",
+        "source_sha256": "04c589dd65b1491db4a5ebe463829949b83cc4621f17a78454db0a69b1c7966b",
+        "offered_from": "2025-03-05",
+        "offered_until": "2025-03-11",
+        "duration_months": 12,
+        "unit_price": "0.5575",
+        "annual_fee": "108.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00057": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_4/PO_Offerte_G_MLIBERO_20250411.xml",
+        "source_sha256": "68cec5f81be9289c04a12c2d3a29abbaa72b7bde592819fbaedd7b6c47f829b0",
+        "offered_from": "2025-04-10",
+        "offered_until": "2025-04-16",
+        "duration_months": 12,
+        "unit_price": "0.48750",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00059": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_5/PO_Offerte_G_MLIBERO_20250509.xml",
+        "source_sha256": "a56aee850f00c0b8545d944e88e5a297648318f813192b9b3fdd5f01942b1e3a",
+        "offered_from": "2025-05-08",
+        "offered_until": "2025-05-14",
+        "duration_months": 12,
+        "unit_price": "0.4650",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00060": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_5/PO_Offerte_G_MLIBERO_20250516.xml",
+        "source_sha256": "edb2d67e62f5ebf161f0121b50345f99164d1a2939faf583ee7d696fd0de70bc",
+        "offered_from": "2025-05-15",
+        "offered_until": "2025-05-21",
+        "duration_months": 12,
+        "unit_price": "0.4850",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00061": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_5/PO_Offerte_G_MLIBERO_20250523.xml",
+        "source_sha256": "8350c869da10cfaec0cfa29c3675bc22de2a15ebf0170a1d8fef35931606029e",
+        "offered_from": "2025-05-22",
+        "offered_until": "2025-05-28",
+        "duration_months": 12,
+        "unit_price": "0.4750",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00062": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_5/PO_Offerte_G_MLIBERO_20250530.xml",
+        "source_sha256": "de848f19ec82ff54b7ae290ac689f4118b00e5a1ab14a7c094f2f252e63ff1ab",
+        "offered_from": "2025-05-29",
+        "offered_until": "2025-06-04",
+        "duration_months": 12,
+        "unit_price": "0.4750",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00063": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_6/PO_Offerte_G_MLIBERO_20250606.xml",
+        "source_sha256": "ecd4595de28835d3add9781abf77ad7b6ef0e491852be980c7767160c96011b9",
+        "offered_from": "2025-06-05",
+        "offered_until": "2025-06-11",
+        "duration_months": 12,
+        "unit_price": "0.4625",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00064": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_6/PO_Offerte_G_MLIBERO_20250613.xml",
+        "source_sha256": "5ce28b4287e8ec56d4cf829684bad4814d72cbce00d20b3e5a78ea1d83d09165",
+        "offered_from": "2025-06-12",
+        "offered_until": "2025-06-18",
+        "duration_months": 24,
+        "unit_price": "0.4600",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00065": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_6/PO_Offerte_G_MLIBERO_20250620.xml",
+        "source_sha256": "79c6e494b5f743f2ada20e10afeb37180431c17a71ca8064dc5620a8616f1d38",
+        "offered_from": "2025-06-19",
+        "offered_until": "2025-06-25",
+        "duration_months": 24,
+        "unit_price": "0.4850",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00067": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_7/PO_Offerte_G_MLIBERO_20250711.xml",
+        "source_sha256": "8187f6b2344ed430a3fe6fd4e182b9ad59eaf3bec102e343f3088b66757938e2",
+        "offered_from": "2025-07-10",
+        "offered_until": "2025-07-16",
+        "duration_months": 24,
+        "unit_price": "0.44750",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00072": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_9/PO_Offerte_G_MLIBERO_20250905.xml",
+        "source_sha256": "4723a96b8901371de14713bbac1ea2640638a2b18169f78983d149cb5c160b48",
+        "offered_from": "2025-09-04",
+        "offered_until": "2025-09-10",
+        "duration_months": 24,
+        "unit_price": "0.4300",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00073": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_9/PO_Offerte_G_MLIBERO_20250912.xml",
+        "source_sha256": "586428227f2ff10169dd8fec4752d95c2a57d32ca624614614af6fff362fd962",
+        "offered_from": "2025-09-11",
+        "offered_until": "2025-09-17",
+        "duration_months": 24,
+        "unit_price": "0.4150",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00074": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_9/PO_Offerte_G_MLIBERO_20250919.xml",
+        "source_sha256": "011563ec4c0229f843f7acbe95bd928d79b6c06d91966b5c2e8b91806e853fef",
+        "offered_from": "2025-09-18",
+        "offered_until": "2025-09-24",
+        "duration_months": 24,
+        "unit_price": "0.4150",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00075": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_9/PO_Offerte_G_MLIBERO_20250926.xml",
+        "source_sha256": "76dea1cbd4d8b9f6356c6803b38f2a7028e5716642fddb81551055c6faab8fc9",
+        "offered_from": "2025-09-25",
+        "offered_until": "2025-10-01",
+        "duration_months": 24,
+        "unit_price": "0.4140",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00076": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_10/PO_Offerte_G_MLIBERO_20251003.xml",
+        "source_sha256": "4feada5abc83e89beb09b3390e2232e02d4d801ae930bc544935b36d526a3987",
+        "offered_from": "2025-10-02",
+        "offered_until": "2025-10-08",
+        "duration_months": 24,
+        "unit_price": "0.4140",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00077": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_10/PO_Offerte_G_MLIBERO_20251010.xml",
+        "source_sha256": "2f3ed71f8b7a5d01d9b12b7d7b2977005e0469d416c049f6c3b8f8a478689faf",
+        "offered_from": "2025-10-09",
+        "offered_until": "2025-10-16",
+        "duration_months": 24,
+        "unit_price": "0.4300",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00078": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_10/PO_Offerte_G_MLIBERO_20251017.xml",
+        "source_sha256": "c4aca84410a51cc65e0e73ddc574ac1075add4d919fbb473c008a5828cc976a2",
+        "offered_from": "2025-10-17",
+        "offered_until": "2025-10-23",
+        "duration_months": 24,
+        "unit_price": "0.4040",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPFS#00079": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_10/PO_Offerte_G_MLIBERO_20251024.xml",
+        "source_sha256": "a6b36580dac8c942e5cd4f4bffcca8c8ced45e583bf4e40985e657727a8a8486",
+        "offered_from": "2025-10-24",
+        "offered_until": "2025-10-30",
+        "duration_months": 24,
+        "unit_price": "0.39640",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00005": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2023_10/PO_Offerte_E_MLIBERO_20231013.xml",
+        "source_sha256": "9f933ee302d4fb570f44097d30217863a3e3491850f0d102125c7f689d51a235",
+        "offered_from": "2023-10-04",
+        "offered_until": "2023-10-17",
+        "duration_months": 12,
+        "unit_price": "0.174700",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2023_10/PO_Offerte_G_MLIBERO_20231013.xml",
+        "source_sha256": "bd2acfa862131084ff64401ca943f25994aa62bdf608599d02f0eec882970881",
+        "offered_from": "2023-10-04",
+        "offered_until": "2023-10-17",
+        "duration_months": 12,
+        "unit_price": "0.68",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00006": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2023_10/PO_Offerte_E_MLIBERO_20231027.xml",
+        "source_sha256": "5215ddea94c722b5ad217b4bdf510dd49fa00538cb5ce2c9d194da6a3d6b0881",
+        "offered_from": "2023-10-18",
+        "offered_until": "2023-10-31",
+        "duration_months": 12,
+        "unit_price": "0.191200",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2023_10/PO_Offerte_G_MLIBERO_20231027.xml",
+        "source_sha256": "e6ec86a1607f02de26cdf4be393e3d076d78116320308d21d30ed588705f69a9",
+        "offered_from": "2023-10-18",
+        "offered_until": "2023-10-31",
+        "duration_months": 12,
+        "unit_price": "0.78",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00007": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2023_11/PO_Offerte_E_MLIBERO_20231110.xml",
+        "source_sha256": "f02da3f0a6d50bd5d7fa280ee0a5bb7d45cb22cc0b0ac99ab0aa4de7bb3c0891",
+        "offered_from": "2023-11-02",
+        "offered_until": "2023-11-14",
+        "duration_months": 12,
+        "unit_price": "0.186800",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2023_11/PO_Offerte_G_MLIBERO_20231110.xml",
+        "source_sha256": "3a2e496bfe6120762e885158d375b3db2d430d00088e404a3c94cec9126c8d76",
+        "offered_from": "2023-11-01",
+        "offered_until": "2023-11-14",
+        "duration_months": 12,
+        "unit_price": "0.69",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00008": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2023_12/PO_Offerte_E_MLIBERO_20231208.xml",
+        "source_sha256": "750eac6054c496167654f0305dd8e6e70b3b5f0f87b80341c6d101cac7b48b4e",
+        "offered_from": "2023-11-15",
+        "offered_until": "2023-12-12",
+        "duration_months": 12,
+        "unit_price": "0.174200",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2023_12/PO_Offerte_G_MLIBERO_20231208.xml",
+        "source_sha256": "b73ff10d7a59cafd1ae9ae8cb0e734af42443cc40b6ca12578b3bec0923a0b2f",
+        "offered_from": "2023-11-15",
+        "offered_until": "2023-12-12",
+        "duration_months": 12,
+        "unit_price": "0.665",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00009": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2023_12/PO_Offerte_E_MLIBERO_20231215.xml",
+        "source_sha256": "548a63594bdebbf56f908a5ef5d34ad75f6a7203036c801657e8815bc644661d",
+        "offered_from": "2023-12-13",
+        "offered_until": "2023-12-19",
+        "duration_months": 12,
+        "unit_price": "0.174200",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2023_12/PO_Offerte_G_MLIBERO_20231215.xml",
+        "source_sha256": "3a30c4ee4c67dc499b8ad8d0ffc5af720e072bcca62e9c06d81808f7f36aa8ac",
+        "offered_from": "2023-12-13",
+        "offered_until": "2023-12-19",
+        "duration_months": 12,
+        "unit_price": "0.665",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00010": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_1/PO_Offerte_E_MLIBERO_20240112.xml",
+        "source_sha256": "9f47ef30d718fb202608cf92bbc238d23d53d968261bb3dbc7f24ec6209baa99",
+        "offered_from": "2023-12-20",
+        "offered_until": "2024-01-16",
+        "duration_months": 12,
+        "unit_price": "0.156000",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_1/PO_Offerte_G_MLIBERO_20240112.xml",
+        "source_sha256": "dbc040948800e87979614310198841a243bf2966299d47383f7fe4c9b3bcf0fa",
+        "offered_from": "2023-12-20",
+        "offered_until": "2024-01-16",
+        "duration_months": 12,
+        "unit_price": "0.5950",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00011": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_1/PO_Offerte_E_MLIBERO_20240119.xml",
+        "source_sha256": "420ec7fa9b641ce83f291b716a8e0811786b936f50231d5f2049d0058830bf0a",
+        "offered_from": "2024-01-17",
+        "offered_until": "2024-01-23",
+        "duration_months": 12,
+        "unit_price": "0.145000",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_1/PO_Offerte_G_MLIBERO_20240119.xml",
+        "source_sha256": "ca0ba744e500c5194bb4d6f7d291845c5d498298d0502f9c84b623ecd30a8e1f",
+        "offered_from": "2024-01-17",
+        "offered_until": "2024-01-23",
+        "duration_months": 12,
+        "unit_price": "0.5650",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00012": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_2/PO_Offerte_E_MLIBERO_20240209.xml",
+        "source_sha256": "9cc07c2d3e913ad929f5f367b2c1529fb2891ebcc7134e6bbee08720038c62ff",
+        "offered_from": "2024-01-24",
+        "offered_until": "2024-02-13",
+        "duration_months": 12,
+        "unit_price": "0.137300",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_2/PO_Offerte_G_MLIBERO_20240209.xml",
+        "source_sha256": "3fc2673d78617b2c431a6b1e7255f4deec1468c69ccd8d5e5d4b7decf1763f35",
+        "offered_from": "2024-01-24",
+        "offered_until": "2024-02-13",
+        "duration_months": 12,
+        "unit_price": "0.5650",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00013": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_2/PO_Offerte_E_MLIBERO_20240216.xml",
+        "source_sha256": "3492196af00fadba8895b6f68e1d9aa3c3b776d545f3aea7a8e88386b3ca01eb",
+        "offered_from": "2024-02-14",
+        "offered_until": "2024-02-20",
+        "duration_months": 12,
+        "unit_price": "0.124100",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_2/PO_Offerte_G_MLIBERO_20240216.xml",
+        "source_sha256": "d1b33aab17799675a24122aea71e5b2f161d96b705ce7abb0d0a489e81f47a4b",
+        "offered_from": "2024-02-14",
+        "offered_until": "2024-02-20",
+        "duration_months": 12,
+        "unit_price": "0.5050",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00014": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_2/PO_Offerte_E_MLIBERO_20240223.xml",
+        "source_sha256": "0ba7e2acf6a5329f0543e55642a1185c460522718e415f0a3e61398d4c751c0e",
+        "offered_from": "2024-02-21",
+        "offered_until": "2024-02-27",
+        "duration_months": 12,
+        "unit_price": "0.124100",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_2/PO_Offerte_G_MLIBERO_20240223.xml",
+        "source_sha256": "9a5bc0cc1069c8a90578387f4ceea8f5e95a2b400d68d7814c21063ea6838faf",
+        "offered_from": "2024-02-21",
+        "offered_until": "2024-02-27",
+        "duration_months": 12,
+        "unit_price": "0.4725",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00017": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_4/PO_Offerte_E_MLIBERO_20240426.xml",
+        "source_sha256": "3e5ac9e429626375fb1d988fe009095c420da8046c68a3fbd6acb7fb4751a530",
+        "offered_from": "2024-04-24",
+        "offered_until": "2024-05-02",
+        "duration_months": 12,
+        "unit_price": "0.136200",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_4/PO_Offerte_G_MLIBERO_20240426.xml",
+        "source_sha256": "f735ce7924836ddc2c109326d94cb002042047f7f0ee388bdba07819b4dc9e8d",
+        "offered_from": "2024-04-24",
+        "offered_until": "2024-05-02",
+        "duration_months": 12,
+        "unit_price": "0.4500",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00019": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_5/PO_Offerte_E_MLIBERO_20240517.xml",
+        "source_sha256": "2d52fcc5fccb1a460af2e68e4ea1366c0f9f46cb04375dd81c0acc4837a832e7",
+        "offered_from": "2024-05-15",
+        "offered_until": "2024-05-21",
+        "duration_months": 12,
+        "unit_price": "0.128500",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_5/PO_Offerte_G_MLIBERO_20240517.xml",
+        "source_sha256": "ba1f6fb179d435d384f18ea26a19e75fc0ba70c7c40ea2ad6d3c542e26147745",
+        "offered_from": "2024-05-15",
+        "offered_until": "2024-05-21",
+        "duration_months": 12,
+        "unit_price": "0.4500",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00020": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_5/PO_Offerte_E_MLIBERO_20240524.xml",
+        "source_sha256": "529123ccb08735620a17c7e66c7d38f1cde7d5370d51138dab8dae528e8f9519",
+        "offered_from": "2024-05-22",
+        "offered_until": "2024-05-28",
+        "duration_months": 12,
+        "unit_price": "0.128500",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_5/PO_Offerte_G_MLIBERO_20240524.xml",
+        "source_sha256": "9266c496e71d2620cdaee016064aac6e139eba1081e028ee3c2777f954dc3f35",
+        "offered_from": "2024-05-22",
+        "offered_until": "2024-05-28",
+        "duration_months": 12,
+        "unit_price": "0.4650",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00022": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_6/PO_Offerte_E_MLIBERO_20240614.xml",
+        "source_sha256": "a6891f9c3bf5d99eaef5a4e0887af3539b372ada6cf6653e502afd5787e19f64",
+        "offered_from": "2024-06-12",
+        "offered_until": "2024-06-18",
+        "duration_months": 12,
+        "unit_price": "0.134000",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_6/PO_Offerte_G_MLIBERO_20240614.xml",
+        "source_sha256": "236f300d8cc6b622c23f2dcca6b009e4280ec5126bee4af6fd791eb5a7cb8d92",
+        "offered_from": "2024-06-12",
+        "offered_until": "2024-06-18",
+        "duration_months": 12,
+        "unit_price": "0.49000",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00023": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_6/PO_Offerte_E_MLIBERO_20240621.xml",
+        "source_sha256": "56158cc4539b1c40b2de001a48e7aa556f7ac22bb23438c66ad9209c9468983a",
+        "offered_from": "2024-06-19",
+        "offered_until": "2024-06-25",
+        "duration_months": 12,
+        "unit_price": "0.134000",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_6/PO_Offerte_G_MLIBERO_20240621.xml",
+        "source_sha256": "55cef74b2a0769ab3dde6658c80e65ea2b3490d1623d50b5ee979358b0e28ab5",
+        "offered_from": "2024-06-19",
+        "offered_until": "2024-06-25",
+        "duration_months": 12,
+        "unit_price": "0.50500",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00024": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_6/PO_Offerte_E_MLIBERO_20240628.xml",
+        "source_sha256": "0bb9fdbb1f90776d655f4e89b322e805066a970d76f34eb65ac4681719dd9479",
+        "offered_from": "2024-06-26",
+        "offered_until": "2024-07-02",
+        "duration_months": 12,
+        "unit_price": "0.136450",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_6/PO_Offerte_G_MLIBERO_20240628.xml",
+        "source_sha256": "bf8a381a88cf84c333abc32c5e5e23972e995b2dadd88240255241aa99ba5266",
+        "offered_from": "2024-06-26",
+        "offered_until": "2024-07-02",
+        "duration_months": 12,
+        "unit_price": "0.50500",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00025": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_7/PO_Offerte_E_MLIBERO_20240705.xml",
+        "source_sha256": "814fa7ec99d8d54fdd4143538c08223fda27767352e5317167238a4b4cc2803d",
+        "offered_from": "2024-07-03",
+        "offered_until": "2024-07-09",
+        "duration_months": 12,
+        "unit_price": "0.140600",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_7/PO_Offerte_G_MLIBERO_20240705.xml",
+        "source_sha256": "ddfd0c4c7bad2ebe3dd74e0c23a6b41976c07b193e01885e42f32e3cb1add893",
+        "offered_from": "2024-07-03",
+        "offered_until": "2024-07-09",
+        "duration_months": 12,
+        "unit_price": "0.50500",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00026": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_7/PO_Offerte_E_MLIBERO_20240712.xml",
+        "source_sha256": "7e4452fe93f87722f24d2ff8a000c4d8df548ec4f102bbb6dcb491fc1a62db20",
+        "offered_from": "2024-07-10",
+        "offered_until": "2024-07-16",
+        "duration_months": 12,
+        "unit_price": "0.143000",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_7/PO_Offerte_G_MLIBERO_20240712.xml",
+        "source_sha256": "49df65feef077fbff41009797d0b772907736035d81ef9a0f6ca9b7138f4e78d",
+        "offered_from": "2024-07-10",
+        "offered_until": "2024-07-16",
+        "duration_months": 12,
+        "unit_price": "0.50500",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00028": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_7/PO_Offerte_E_MLIBERO_20240719.xml",
+        "source_sha256": "3571cbf0edcc6cbab36a35ec933ab1955505715e989815f6e0c97d127129f310",
+        "offered_from": "2024-07-17",
+        "offered_until": "2024-07-23",
+        "duration_months": 12,
+        "unit_price": "0.137000",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_7/PO_Offerte_G_MLIBERO_20240719.xml",
+        "source_sha256": "99c2f08be28dbcd9df2bb8b9dc2bf2b068c56a23eaa2e6ff63cc226e0b210778",
+        "offered_from": "2024-07-17",
+        "offered_until": "2024-07-23",
+        "duration_months": 12,
+        "unit_price": "0.48000",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00030": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_9/PO_Offerte_E_MLIBERO_20240906.xml",
+        "source_sha256": "f7ee406fbd74c2ff20b86561a4cc82ad275c7b1a03ac54162e459719eaf9f2a2",
+        "offered_from": "2024-09-04",
+        "offered_until": "2024-09-10",
+        "duration_months": 12,
+        "unit_price": "0.154000",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_9/PO_Offerte_G_MLIBERO_20240906.xml",
+        "source_sha256": "f372ae478cc99bc24de0fe72caeb453daf7f870b7d65781336fb92e60526c72d",
+        "offered_from": "2024-09-04",
+        "offered_until": "2024-09-10",
+        "duration_months": 12,
+        "unit_price": "0.53000",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00031": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_9/PO_Offerte_E_MLIBERO_20240913.xml",
+        "source_sha256": "6b6041011c443bcce31a58b3deef17719dd4da89c69d2b8fb3d8cc87433fa870",
+        "offered_from": "2024-09-11",
+        "offered_until": "2024-09-17",
+        "duration_months": 12,
+        "unit_price": "0.139500",
+        "annual_fee": "90",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_9/PO_Offerte_G_MLIBERO_20240913.xml",
+        "source_sha256": "0f9dfb6c7effbe6711b35eefa93836116f97dae3d17bd9e875930c06e5a77eb3",
+        "offered_from": "2024-09-11",
+        "offered_until": "2024-09-17",
+        "duration_months": 12,
+        "unit_price": "0.48500",
+        "annual_fee": "90",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00032": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_9/PO_Offerte_E_MLIBERO_20240920.xml",
+        "source_sha256": "e63e6a5341eba7d63f30f1a81270d75eeda94e9a09c9a9a8690a75f194b9f332",
+        "offered_from": "2024-09-18",
+        "offered_until": "2024-09-24",
+        "duration_months": 12,
+        "unit_price": "0.136750",
+        "annual_fee": "90",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_9/PO_Offerte_G_MLIBERO_20240920.xml",
+        "source_sha256": "ea349fae7c82cc416ada6c37fb4d834d07b2143ddaf9aab1ad4cd1cf36bb13c0",
+        "offered_from": "2024-09-18",
+        "offered_until": "2024-09-24",
+        "duration_months": 12,
+        "unit_price": "0.48000",
+        "annual_fee": "90",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00033": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_9/PO_Offerte_E_MLIBERO_20240927.xml",
+        "source_sha256": "dc60447d7d9025681bf2eb581176b887d7bd5244f508d0893295a7b5edeee8d1",
+        "offered_from": "2024-09-25",
+        "offered_until": "2024-10-01",
+        "duration_months": 12,
+        "unit_price": "0.131250",
+        "annual_fee": "90",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_9/PO_Offerte_G_MLIBERO_20240927.xml",
+        "source_sha256": "894310a1e5c27624850823ea833d94cca79b4c629600426024199fbc96d8a8e1",
+        "offered_from": "2024-09-25",
+        "offered_until": "2024-10-01",
+        "duration_months": 12,
+        "unit_price": "0.47000",
+        "annual_fee": "90",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00034": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_10/PO_Offerte_E_MLIBERO_20241004.xml",
+        "source_sha256": "c2f48ffd2a74c1141dea25286be2cb860f8543e1039b797a41b47bad01feef36",
+        "offered_from": "2024-10-02",
+        "offered_until": "2024-10-08",
+        "duration_months": 12,
+        "unit_price": "0.138070",
+        "annual_fee": "90",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_10/PO_Offerte_G_MLIBERO_20241004.xml",
+        "source_sha256": "eeebf0a1662b2950ceecda495605fe34f2c2603ea652f265b015deceaf84de50",
+        "offered_from": "2024-10-02",
+        "offered_until": "2024-10-08",
+        "duration_months": 12,
+        "unit_price": "0.48500",
+        "annual_fee": "90",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00035": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_10/PO_Offerte_E_MLIBERO_20241011.xml",
+        "source_sha256": "4749c3968406f2b5986f9626933f7d12130c25253caf8e6bd753dc1bae7bd0a9",
+        "offered_from": "2024-10-09",
+        "offered_until": "2024-10-15",
+        "duration_months": 12,
+        "unit_price": "0.141700",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_10/PO_Offerte_G_MLIBERO_20241011.xml",
+        "source_sha256": "355920ee4f68f94625f3680e6b4223a7ee62d35f79fec91327bd830a30c2d551",
+        "offered_from": "2024-10-09",
+        "offered_until": "2024-10-15",
+        "duration_months": 12,
+        "unit_price": "0.50550",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00036": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_10/PO_Offerte_E_MLIBERO_20241018.xml",
+        "source_sha256": "b9eb21cca7c8879a2b12558bb27f5a379f1322c97c3d9e364c533fda4f1957df",
+        "offered_from": "2024-10-16",
+        "offered_until": "2024-10-22",
+        "duration_months": 12,
+        "unit_price": "0.141700",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_10/PO_Offerte_G_MLIBERO_20241018.xml",
+        "source_sha256": "c604c53af153093d775de3a0a8c6371040d7dc497dc62b4d223bafed9e0a4488",
+        "offered_from": "2024-10-16",
+        "offered_until": "2024-10-22",
+        "duration_months": 12,
+        "unit_price": "0.50550",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00037": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_10/PO_Offerte_E_MLIBERO_20241025.xml",
+        "source_sha256": "170e1961e1838cb4ea72bcc8aeb50400b0e0eb679398cccf955bebaf6b108b66",
+        "offered_from": "2024-10-23",
+        "offered_until": "2024-10-29",
+        "duration_months": 12,
+        "unit_price": "0.136750",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_10/PO_Offerte_G_MLIBERO_20241025.xml",
+        "source_sha256": "563031a26b5b361c86a88153f1af0d564b5f661c1c9bb254a4b4d92a0a2cffa3",
+        "offered_from": "2024-10-23",
+        "offered_until": "2024-10-29",
+        "duration_months": 12,
+        "unit_price": "0.49000",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00038": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_11/PO_Offerte_E_MLIBERO_20241101.xml",
+        "source_sha256": "506b028befc919061b005355e7310f417f0ff763e11441bdcb0471929ff9793f",
+        "offered_from": "2024-10-30",
+        "offered_until": "2024-11-05",
+        "duration_months": 12,
+        "unit_price": "0.147750",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_11/PO_Offerte_G_MLIBERO_20241101.xml",
+        "source_sha256": "2dc9b3725c4daec36036ab3ad1fdada09af53c5cd9c6fd5eec63e32b7352d7a9",
+        "offered_from": "2024-10-30",
+        "offered_until": "2024-11-05",
+        "duration_months": 12,
+        "unit_price": "0.52500",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00039": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_11/PO_Offerte_E_MLIBERO_20241108.xml",
+        "source_sha256": "ee8d2c81cbc57a407c89120b5b8d22fbf39bb633983eed3ad088afde22c13f8d",
+        "offered_from": "2024-11-06",
+        "offered_until": "2024-11-12",
+        "duration_months": 12,
+        "unit_price": "0.136750",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_11/PO_Offerte_G_MLIBERO_20241108.xml",
+        "source_sha256": "77e89227ad8b815bcdd34dff99e07ae2d41f3c41d2986a7d6dcff4609e3fb087",
+        "offered_from": "2024-11-06",
+        "offered_until": "2024-11-12",
+        "duration_months": 12,
+        "unit_price": "0.49000",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00040": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_11/PO_Offerte_E_MLIBERO_20241115.xml",
+        "source_sha256": "eb088439c55926bb3304836ce18d08cfb4c46b46d55b027a6b375319307874bf",
+        "offered_from": "2024-11-13",
+        "offered_until": "2024-11-19",
+        "duration_months": 12,
+        "unit_price": "0.138400",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_11/PO_Offerte_G_MLIBERO_20241115.xml",
+        "source_sha256": "ae372ba3fc7519b377f675ab7fe8ecce285261fc87e6c6bbe9bbbeed98b9927c",
+        "offered_from": "2024-11-13",
+        "offered_until": "2024-11-19",
+        "duration_months": 12,
+        "unit_price": "0.5075",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00041": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_11/PO_Offerte_E_MLIBERO_20241122.xml",
+        "source_sha256": "ca04235831a2093eb1eca9e09710e288de9c73295ecb25d55115233198789495",
+        "offered_from": "2024-11-20",
+        "offered_until": "2024-11-26",
+        "duration_months": 12,
+        "unit_price": "0.124500",
+        "annual_fee": "72",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_11/PO_Offerte_G_MLIBERO_20241122.xml",
+        "source_sha256": "8376fb851094e2c645553d9c649ce1dc266a7507cd50713218a436af3f8e53a9",
+        "offered_from": "2024-11-20",
+        "offered_until": "2024-11-26",
+        "duration_months": 12,
+        "unit_price": "0.4800",
+        "annual_fee": "72",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00042": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_11/PO_Offerte_E_MLIBERO_20241129.xml",
+        "source_sha256": "d1d56bc29d80299b2838cf2fae289a33808e89bfb5a2d9c787a45a688c901a6d",
+        "offered_from": "2024-11-27",
+        "offered_until": "2024-12-03",
+        "duration_months": 12,
+        "unit_price": "0.156000",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_11/PO_Offerte_G_MLIBERO_20241129.xml",
+        "source_sha256": "746c8c5f0bd8c313df0af558f942b40830c98bfa1688f7c0007ecfcb0d09073e",
+        "offered_from": "2024-11-27",
+        "offered_until": "2024-12-03",
+        "duration_months": 12,
+        "unit_price": "0.5550",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00043": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_12/PO_Offerte_E_MLIBERO_20241206.xml",
+        "source_sha256": "ad08cdb1bde355d6a661fcab76f8906003352198ca2a5e40c2dc08ff043b8cb0",
+        "offered_from": "2024-12-04",
+        "offered_until": "2024-12-10",
+        "duration_months": 12,
+        "unit_price": "0.151100",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_12/PO_Offerte_G_MLIBERO_20241206.xml",
+        "source_sha256": "b5cb2c4a9318613a15b270bc5e1e660871081610e84f26bb710db2162b2b49b6",
+        "offered_from": "2024-12-04",
+        "offered_until": "2024-12-10",
+        "duration_months": 12,
+        "unit_price": "0.5400",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00044": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_12/PO_Offerte_E_MLIBERO_20241213.xml",
+        "source_sha256": "19c8f65000dcb97a5cb6eced7750b8614ae1f612fbbda9ad2e6198972b8e9162",
+        "offered_from": "2024-12-11",
+        "offered_until": "2024-12-17",
+        "duration_months": 12,
+        "unit_price": "0.151100",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2024_12/PO_Offerte_G_MLIBERO_20241213.xml",
+        "source_sha256": "61c9799a4a753e081770561bacdcb50951894a30dcad60f96b96841e0db7c184",
+        "offered_from": "2024-12-11",
+        "offered_until": "2024-12-17",
+        "duration_months": 12,
+        "unit_price": "0.5400",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00045": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_1/PO_Offerte_E_MLIBERO_20250103.xml",
+        "source_sha256": "4c369e4dfe02a260a13b1df594390a2529ea1bba301577a546ec98e11ff97c09",
+        "offered_from": "2024-12-18",
+        "offered_until": "2025-01-08",
+        "duration_months": 12,
+        "unit_price": "0.143000",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_1/PO_Offerte_G_MLIBERO_20250103.xml",
+        "source_sha256": "4e2505a13d61710dfa3b80b63ce8e82b1d248a49c28feac9fc02e5ca6f0732cb",
+        "offered_from": "2024-12-18",
+        "offered_until": "2025-01-08",
+        "duration_months": 12,
+        "unit_price": "0.5050",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00047": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_1/PO_Offerte_E_MLIBERO_20250117.xml",
+        "source_sha256": "ffd340e28b65b7e8005a2ae75d58c0b0276eda3cdf9772d55b0d466627fc2732",
+        "offered_from": "2025-01-15",
+        "offered_until": "2025-01-21",
+        "duration_months": 12,
+        "unit_price": "0.156000",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_1/PO_Offerte_G_MLIBERO_20250117.xml",
+        "source_sha256": "949b436feacece1e42a102634f26b4e08ffbab543e4a5ac1c6ba8bcf64c92425",
+        "offered_from": "2025-01-15",
+        "offered_until": "2025-01-21",
+        "duration_months": 12,
+        "unit_price": "0.5500",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00048": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_1/PO_Offerte_E_MLIBERO_20250124.xml",
+        "source_sha256": "cece7f7aef4ed7388a3f57a0af7fb40fb2a23329c550bb4999aabfd4abe698aa",
+        "offered_from": "2025-01-22",
+        "offered_until": "2025-01-28",
+        "duration_months": 12,
+        "unit_price": "0.131000",
+        "annual_fee": "72",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_1/PO_Offerte_G_MLIBERO_20250124.xml",
+        "source_sha256": "aab5f4c3f5210ba67e218082a3f4ffe5cc965d42fbb43d789df9a7e6ce41eb43",
+        "offered_from": "2025-01-22",
+        "offered_until": "2025-01-28",
+        "duration_months": 12,
+        "unit_price": "0.5000",
+        "annual_fee": "72",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00049": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_1/PO_Offerte_E_MLIBERO_20250131.xml",
+        "source_sha256": "5a78fdf65d6142a0fe9ee113f1325d3119553e70624c5480b1d2c6f7c6e55f41",
+        "offered_from": "2025-01-29",
+        "offered_until": "2025-02-04",
+        "duration_months": 12,
+        "unit_price": "0.164250",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_1/PO_Offerte_G_MLIBERO_20250131.xml",
+        "source_sha256": "dec317c3af6d56b72bebd213b16510f445cbaa6fca2b0d899069bb84a998ff3d",
+        "offered_from": "2025-01-29",
+        "offered_until": "2025-02-04",
+        "duration_months": 12,
+        "unit_price": "0.5875",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00050": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_2/PO_Offerte_E_MLIBERO_20250207.xml",
+        "source_sha256": "de7f6d0a576c51d89254a1f41608db7688d364c874d1eac757a79a36daaeac02",
+        "offered_from": "2025-02-05",
+        "offered_until": "2025-02-11",
+        "duration_months": 12,
+        "unit_price": "0.169750",
+        "annual_fee": "96",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_2/PO_Offerte_G_MLIBERO_20250207.xml",
+        "source_sha256": "5b6316bbc41fd012cadca0f09299fc8f6e490f5c95baee15f664ee96bcd0ba43",
+        "offered_from": "2025-02-05",
+        "offered_until": "2025-02-11",
+        "duration_months": 12,
+        "unit_price": "0.5875",
+        "annual_fee": "96",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00051": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_2/PO_Offerte_E_MLIBERO_20250214.xml",
+        "source_sha256": "667cf8dbc2351c76e8d968021b0344c0a331e837848f059cd706693e2afd657b",
+        "offered_from": "2025-02-12",
+        "offered_until": "2025-02-18",
+        "duration_months": 12,
+        "unit_price": "0.172500",
+        "annual_fee": "108",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_2/PO_Offerte_G_MLIBERO_20250214.xml",
+        "source_sha256": "dde1a2b3e55ad37a9aefe928a5d0405d2f95b013b18155f29c32625fa32410a4",
+        "offered_from": "2025-02-12",
+        "offered_until": "2025-02-18",
+        "duration_months": 12,
+        "unit_price": "0.6250",
+        "annual_fee": "108",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00052": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_2/PO_Offerte_E_MLIBERO_20250221.xml",
+        "source_sha256": "f6d2aa9963ba847ba9cfc7ac0d383ab06d2b94138614f501ac6c443d9de1f0c8",
+        "offered_from": "2025-02-19",
+        "offered_until": "2025-02-25",
+        "duration_months": 12,
+        "unit_price": "0.139500",
+        "annual_fee": "84.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_2/PO_Offerte_G_MLIBERO_20250221.xml",
+        "source_sha256": "8e3bf1ca5fd2b3581e30f8aa16b58c9959d2352013c1cf67a8fac0dc9c45bcf4",
+        "offered_from": "2025-02-19",
+        "offered_until": "2025-02-25",
+        "duration_months": 12,
+        "unit_price": "0.5400",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00053": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_2/PO_Offerte_E_MLIBERO_20250228.xml",
+        "source_sha256": "8dd5ab6b180177e21d599d74476207a10114ff57c5e650f1199a0b7d61ea970f",
+        "offered_from": "2025-02-27",
+        "offered_until": "2025-03-04",
+        "duration_months": 12,
+        "unit_price": "0.135250",
+        "annual_fee": "84.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_2/PO_Offerte_G_MLIBERO_20250228.xml",
+        "source_sha256": "f81262eefcb319b0dc04f7b6634a778c8047d3ee71ba056335a9c54e0e2944d8",
+        "offered_from": "2025-02-27",
+        "offered_until": "2025-03-04",
+        "duration_months": 12,
+        "unit_price": "0.5300",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00054": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_3/PO_Offerte_E_MLIBERO_20250307.xml",
+        "source_sha256": "764d9c6c53a94e4bf4dc117d1e82a21177e8b75c6a8f681819ef6cd80cecebf1",
+        "offered_from": "2025-03-05",
+        "offered_until": "2025-03-11",
+        "duration_months": 12,
+        "unit_price": "0.148000",
+        "annual_fee": "108.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_3/PO_Offerte_G_MLIBERO_20250307.xml",
+        "source_sha256": "1c823eefb7dbb3cd036501673f82a9e37cf52e6001ce235a719a0fcd06f80567",
+        "offered_from": "2025-03-05",
+        "offered_until": "2025-03-11",
+        "duration_months": 12,
+        "unit_price": "0.5575",
+        "annual_fee": "108.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00057": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_4/PO_Offerte_E_MLIBERO_20250411.xml",
+        "source_sha256": "d67b9bb891ff17c1f0cbf331c067b5c3d9d27a82dd1af58c09da8c8c191beb96",
+        "offered_from": "2025-04-10",
+        "offered_until": "2025-04-16",
+        "duration_months": 12,
+        "unit_price": "0.124650",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_4/PO_Offerte_G_MLIBERO_20250411.xml",
+        "source_sha256": "07b3c1bface934738f0c0fd1df2bb322989c32cac67d1086621a445f672ebcc5",
+        "offered_from": "2025-04-10",
+        "offered_until": "2025-04-16",
+        "duration_months": 12,
+        "unit_price": "0.4875",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00059": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_5/PO_Offerte_E_MLIBERO_20250509.xml",
+        "source_sha256": "646f56ec3896d26a9889304b5f4b92a1d6417cccbf038184179182aaa61ac7c6",
+        "offered_from": "2025-05-08",
+        "offered_until": "2025-05-14",
+        "duration_months": 12,
+        "unit_price": "0.121900",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_5/PO_Offerte_G_MLIBERO_20250509.xml",
+        "source_sha256": "8e29359afe4ecbe0b70f5a509554aa897ba9c162d261fe90ba4a8421504bc9f3",
+        "offered_from": "2025-05-08",
+        "offered_until": "2025-05-14",
+        "duration_months": 12,
+        "unit_price": "0.4650",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00060": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_5/PO_Offerte_E_MLIBERO_20250516.xml",
+        "source_sha256": "427666ef4cbbadf0eab1b78d702273eef076cdb0e248488a4dc5bdc66c17f657",
+        "offered_from": "2025-05-15",
+        "offered_until": "2025-05-21",
+        "duration_months": 12,
+        "unit_price": "0.131800",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_5/PO_Offerte_G_MLIBERO_20250516.xml",
+        "source_sha256": "e131e25f49309869fe930f0b89888c2137b7cc59643916cbd2fff1dda1c55ecb",
+        "offered_from": "2025-05-15",
+        "offered_until": "2025-05-21",
+        "duration_months": 12,
+        "unit_price": "0.4850",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00061": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_5/PO_Offerte_E_MLIBERO_20250523.xml",
+        "source_sha256": "898ed4eaf918b1c7e016bd767a7583deaa478546b15dc89a2fefa52ea7c41f6f",
+        "offered_from": "2025-05-22",
+        "offered_until": "2025-05-28",
+        "duration_months": 12,
+        "unit_price": "0.127400",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_5/PO_Offerte_G_MLIBERO_20250523.xml",
+        "source_sha256": "2a7ef05768077f7429eae0651574de1ed0b43bd2cbf2d6a5e1917ec17b55146b",
+        "offered_from": "2025-05-22",
+        "offered_until": "2025-05-28",
+        "duration_months": 12,
+        "unit_price": "0.4750",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00062": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_5/PO_Offerte_E_MLIBERO_20250530.xml",
+        "source_sha256": "313e47422f360634c3e50bc2ac0be529038ac7f399d4ea3b196e6cc28de58dad",
+        "offered_from": "2025-05-29",
+        "offered_until": "2025-06-04",
+        "duration_months": 12,
+        "unit_price": "0.129600",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_5/PO_Offerte_G_MLIBERO_20250530.xml",
+        "source_sha256": "52d0feb051fd7c7ddc9c2bfbb70ae8cf83e139f2f8a3ef8011c9ec3883f35e82",
+        "offered_from": "2025-05-29",
+        "offered_until": "2025-06-04",
+        "duration_months": 12,
+        "unit_price": "0.4750",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00063": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_6/PO_Offerte_E_MLIBERO_20250606.xml",
+        "source_sha256": "24a0a7ed4263c957b616c2d5a71cd8c479cc4a5a4159c95e7b61afa8a4b4a83b",
+        "offered_from": "2025-06-05",
+        "offered_until": "2025-06-11",
+        "duration_months": 12,
+        "unit_price": "0.126300",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_6/PO_Offerte_G_MLIBERO_20250606.xml",
+        "source_sha256": "61cfade523f3c8e761123103e96c34ae7a3fc74c7743be1da14037942ef6bbd3",
+        "offered_from": "2025-06-05",
+        "offered_until": "2025-06-11",
+        "duration_months": 12,
+        "unit_price": "0.4625",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00064": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_6/PO_Offerte_E_MLIBERO_20250613.xml",
+        "source_sha256": "85b9b6e4c69cca7008d1dcb7934741fb7ee7d14feffab3088519b3d96d09d992",
+        "offered_from": "2025-06-12",
+        "offered_until": "2025-06-18",
+        "duration_months": 24,
+        "unit_price": "0.126300",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_6/PO_Offerte_G_MLIBERO_20250613.xml",
+        "source_sha256": "973d151e2c204423a345d567cd4e0d0eeb08f58241a0308f606f4a07d8f9a22d",
+        "offered_from": "2025-06-12",
+        "offered_until": "2025-06-18",
+        "duration_months": 24,
+        "unit_price": "0.4600",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00065": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_6/PO_Offerte_E_MLIBERO_20250620.xml",
+        "source_sha256": "bbcf266d962adf65b32cf8b2244c7becf2afb4ce9d5513c752831066d4e608b5",
+        "offered_from": "2025-06-19",
+        "offered_until": "2025-06-25",
+        "duration_months": 24,
+        "unit_price": "0.132900",
+        "annual_fee": "84.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_6/PO_Offerte_G_MLIBERO_20250620.xml",
+        "source_sha256": "d0661244623ba4e0e4eef52684142788bf4369c9cbc5737ed9184af5023e1ef6",
+        "offered_from": "2025-06-19",
+        "offered_until": "2025-06-25",
+        "duration_months": 24,
+        "unit_price": "0.4850",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00067": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_7/PO_Offerte_E_MLIBERO_20250711.xml",
+        "source_sha256": "e61a197e2b07a37cc33a9302a33e8a9e78ea2a132f927cf47e11e7d14ce945f5",
+        "offered_from": "2025-07-10",
+        "offered_until": "2025-07-16",
+        "duration_months": 24,
+        "unit_price": "0.124950",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_7/PO_Offerte_G_MLIBERO_20250711.xml",
+        "source_sha256": "3aeb413aa890258b7d83df8885235a5de960a794d2d4fde253f92cbb31f5bd89",
+        "offered_from": "2025-07-10",
+        "offered_until": "2025-07-16",
+        "duration_months": 24,
+        "unit_price": "0.44750",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00072": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_9/PO_Offerte_E_MLIBERO_20250905.xml",
+        "source_sha256": "5a913f2a51e322d316c95112e4421b9b8b506e24b263c9b69fd1fad14d799368",
+        "offered_from": "2025-09-04",
+        "offered_until": "2025-09-10",
+        "duration_months": 24,
+        "unit_price": "0.111730",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_9/PO_Offerte_G_MLIBERO_20250905.xml",
+        "source_sha256": "e786369cde270b4ed136d08bedb30d7c705e133a1940b505b6057bb656e6a62a",
+        "offered_from": "2025-09-04",
+        "offered_until": "2025-09-10",
+        "duration_months": 24,
+        "unit_price": "0.4300",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00073": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_9/PO_Offerte_E_MLIBERO_20250912.xml",
+        "source_sha256": "efdca0ee7d8a821fb42df1fcbf24358512f61383e830bafb6b84cf36da31b4e2",
+        "offered_from": "2025-09-11",
+        "offered_until": "2025-09-17",
+        "duration_months": 24,
+        "unit_price": "0.111730",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_9/PO_Offerte_G_MLIBERO_20250912.xml",
+        "source_sha256": "b848938a27cb36fa7f32ad7870fc3054c6aef79f7793a99689ead61d0d67addd",
+        "offered_from": "2025-09-11",
+        "offered_until": "2025-09-17",
+        "duration_months": 24,
+        "unit_price": "0.4150",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00074": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_9/PO_Offerte_E_MLIBERO_20250919.xml",
+        "source_sha256": "2e65fb959c1d834691d133feed48755a555fec1f1691cd61b4bb60d9d40c1052",
+        "offered_from": "2025-09-18",
+        "offered_until": "2025-09-24",
+        "duration_months": 24,
+        "unit_price": "0.111700",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_9/PO_Offerte_G_MLIBERO_20250919.xml",
+        "source_sha256": "6ccd47643898d4db26432fdb02d95e4c739ecf0c5a6665fbe4007c73fc3faf5e",
+        "offered_from": "2025-09-18",
+        "offered_until": "2025-09-24",
+        "duration_months": 24,
+        "unit_price": "0.4150",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00075": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_9/PO_Offerte_E_MLIBERO_20250926.xml",
+        "source_sha256": "b2c3f595e8ec86c3091739b6435c2de2e4b2401279cd9215c8fbda48683ec7f3",
+        "offered_from": "2025-09-25",
+        "offered_until": "2025-10-01",
+        "duration_months": 24,
+        "unit_price": "0.113200",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_9/PO_Offerte_G_MLIBERO_20250926.xml",
+        "source_sha256": "4ba373b76fdf0b5b76289c598e04a8a24dd70b0bf7dd1dfb6c956136d6518da1",
+        "offered_from": "2025-09-25",
+        "offered_until": "2025-10-01",
+        "duration_months": 24,
+        "unit_price": "0.4140",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00076": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_10/PO_Offerte_E_MLIBERO_20251003.xml",
+        "source_sha256": "fcf98aa1b5e2eded4cee6f44ad5fd1e9d7fd3d6f87626cb0b3cb9bea600308a5",
+        "offered_from": "2025-10-02",
+        "offered_until": "2025-10-08",
+        "duration_months": 24,
+        "unit_price": "0.113200",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_10/PO_Offerte_G_MLIBERO_20251003.xml",
+        "source_sha256": "fddeb09d33d7a614dfe1eac6bf43fa191083ee05af715afc244545296c0c6f7e",
+        "offered_from": "2025-10-02",
+        "offered_until": "2025-10-08",
+        "duration_months": 24,
+        "unit_price": "0.4140",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00077": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_10/PO_Offerte_E_MLIBERO_20251010.xml",
+        "source_sha256": "ed447161a322d6671a930e6335da9c3e2083d64941c29a22ce5fabdacc10a9c7",
+        "offered_from": "2025-10-09",
+        "offered_until": "2025-10-16",
+        "duration_months": 24,
+        "unit_price": "0.113000",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_10/PO_Offerte_G_MLIBERO_20251010.xml",
+        "source_sha256": "ed0eafbd34f9d9238edfa6b5b922f5cfc672ba0f40390b78860ab194c38ff81c",
+        "offered_from": "2025-10-09",
+        "offered_until": "2025-10-16",
+        "duration_months": 24,
+        "unit_price": "0.4300",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00078": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_10/PO_Offerte_E_MLIBERO_20251017.xml",
+        "source_sha256": "2328add80a84892ebeff587313ffdd449fbb0e729884c4ebc153bc963e6b0f66",
+        "offered_from": "2025-10-17",
+        "offered_until": "2025-10-23",
+        "duration_months": 24,
+        "unit_price": "0.109330",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_10/PO_Offerte_G_MLIBERO_20251017.xml",
+        "source_sha256": "cc07b4af673d8e73ef1e07030ac1b859e2cd68834136eff299b9f77f36fbd30b",
+        "offered_from": "2025-10-17",
+        "offered_until": "2025-10-23",
+        "duration_months": 24,
+        "unit_price": "0.4040",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "ENPMS#00079": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_10/PO_Offerte_E_MLIBERO_20251024.xml",
+        "source_sha256": "f5b06a163e682b131ef968eb1405387fed4afeb151d5843f5bd1f8a5e16293ea",
+        "offered_from": "2025-10-24",
+        "offered_until": "2025-10-30",
+        "duration_months": 24,
+        "unit_price": "0.107000",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_10/PO_Offerte_G_MLIBERO_20251024.xml",
+        "source_sha256": "e60f697043404a142ff13d934033629b330e35b30588bdb9bc3742e06242f6b6",
+        "offered_from": "2025-10-24",
+        "offered_until": "2025-10-30",
+        "duration_months": 24,
+        "unit_price": "0.3964",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFD#00001": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_12/PO_Offerte_G_MLIBERO_20251205.xml",
+        "source_sha256": "b722974312b00f9e3a178eca2eb9a410ea4e8bfe304e05937e89607f8fbc6c2e",
+        "offered_from": "2025-12-05",
+        "offered_until": "2025-12-11",
+        "duration_months": 12,
+        "unit_price": "0.3770",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFF#00020": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_10/PO_Offerte_G_MLIBERO_20251031.xml",
+        "source_sha256": "e4cb217c9b93d0fcd37061606107037bae8927650cc701c3ee9191971935c3eb",
+        "offered_from": "2025-10-31",
+        "offered_until": "2025-11-06",
+        "duration_months": 24,
+        "unit_price": "0.39640",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFF#00021": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_11/PO_Offerte_G_MLIBERO_20251107.xml",
+        "source_sha256": "4154add7883d9dec3b14eda3c1ac011f1389c40bce96af4ea1e1261497428a8d",
+        "offered_from": "2025-11-07",
+        "offered_until": "2025-11-13",
+        "duration_months": 24,
+        "unit_price": "0.39380",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFF#00022": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_11/PO_Offerte_G_MLIBERO_20251114.xml",
+        "source_sha256": "c097fca1c3ca320a5ae896c6538c601d7155f68bf0fcf45270c80a3836669f91",
+        "offered_from": "2025-11-14",
+        "offered_until": "2025-11-20",
+        "duration_months": 24,
+        "unit_price": "0.3870",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFF#00023": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_11/PO_Offerte_G_MLIBERO_20251128.xml",
+        "source_sha256": "cfcd8aefc8641f074f50f7d354a10b1958b4424c2d4f4af662c2fc4f99ef2a2e",
+        "offered_from": "2025-11-28",
+        "offered_until": "2025-12-04",
+        "duration_months": 24,
+        "unit_price": "0.3835",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFF#00025": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_12/PO_Offerte_G_MLIBERO_20251212.xml",
+        "source_sha256": "f7195b402ccb8e18184dcecf3a477a464672276fd742af4273e46cc7ecd46b3c",
+        "offered_from": "2025-12-12",
+        "offered_until": "2025-12-18",
+        "duration_months": 24,
+        "unit_price": "0.3680",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFF#00026": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_1/PO_Offerte_G_MLIBERO_20260102.xml",
+        "source_sha256": "fc8b7548131df3584d368ab01fb42f1e52e7c3f23fc3976192ef0bb2d4a36da4",
+        "offered_from": "2025-12-19",
+        "offered_until": "2026-01-08",
+        "duration_months": 24,
+        "unit_price": "0.3495",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFF#00027": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_1/PO_Offerte_G_MLIBERO_20260123.xml",
+        "source_sha256": "2c433e9e6d9b1a33d894fc3f766b9eb14161a33aea7e6637aabacebe8ce76f8f",
+        "offered_from": "2026-01-23",
+        "offered_until": "2026-01-29",
+        "duration_months": 24,
+        "unit_price": "0.3458",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFF#00028": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_1/PO_Offerte_G_MLIBERO_20260130.xml",
+        "source_sha256": "373be23763904d6a8284aa105560ec00587d17b9211f47770a494e552f5faeba",
+        "offered_from": "2026-01-30",
+        "offered_until": "2026-02-05",
+        "duration_months": 24,
+        "unit_price": "0.3458",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFF#00029": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_2/PO_Offerte_G_MLIBERO_20260206.xml",
+        "source_sha256": "43682b037d44edbdeb5c9512486c17e36aae59dcdaf33dcdcb1aec733f91b48c",
+        "offered_from": "2026-02-06",
+        "offered_until": "2026-02-12",
+        "duration_months": 24,
+        "unit_price": "0.3550",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFF#00030": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_2/PO_Offerte_G_MLIBERO_20260213.xml",
+        "source_sha256": "d175c8b5eda63522da9e006100f482a23e25d001c063049f25dd8af3918bfb1b",
+        "offered_from": "2026-02-13",
+        "offered_until": "2026-02-19",
+        "duration_months": 24,
+        "unit_price": "0.3715",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFF#00031": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_2/PO_Offerte_G_MLIBERO_20260220.xml",
+        "source_sha256": "22caf4db53645a17d019add24652b611d2cd414979b756b175437e09cd6c0ecd",
+        "offered_from": "2026-02-20",
+        "offered_until": "2026-02-26",
+        "duration_months": 24,
+        "unit_price": "0.3665",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFF#00032": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_2/PO_Offerte_G_MLIBERO_20260227.xml",
+        "source_sha256": "f6ee5b319d44c99c671e2daa6602f8ff549aac4ac3380edd2c88885e47dd1118",
+        "offered_from": "2026-02-27",
+        "offered_until": "2026-03-05",
+        "duration_months": 24,
+        "unit_price": "0.3740",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFM#00020": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_10/PO_Offerte_E_MLIBERO_20251031.xml",
+        "source_sha256": "907088bd8e22e5b19fef8f4ecc3f73a2f5b6ce0c4338081b749d20b4f400ead7",
+        "offered_from": "2025-10-31",
+        "offered_until": "2025-11-06",
+        "duration_months": 24,
+        "unit_price": "0.107000",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_10/PO_Offerte_G_MLIBERO_20251031.xml",
+        "source_sha256": "c9dbeaffce750914a2d8646e3f7c53b6c073b49c71df71890a36a6dff63af1ff",
+        "offered_from": "2025-10-31",
+        "offered_until": "2025-11-06",
+        "duration_months": 24,
+        "unit_price": "0.3964",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFM#00021": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_11/PO_Offerte_E_MLIBERO_20251107.xml",
+        "source_sha256": "7222e629b23945a2b21507564cdfb7756bf3953d096927f1c480bc691648f184",
+        "offered_from": "2025-11-07",
+        "offered_until": "2025-11-13",
+        "duration_months": 24,
+        "unit_price": "0.107000",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_11/PO_Offerte_G_MLIBERO_20251107.xml",
+        "source_sha256": "f1fa696d5b1840c9c1e8fa3dfa4025eb3b145d293c1bfdfb7f8eba3cf6b00ea8",
+        "offered_from": "2025-11-07",
+        "offered_until": "2025-11-13",
+        "duration_months": 24,
+        "unit_price": "0.3938",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFM#00022": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_11/PO_Offerte_E_MLIBERO_20251114.xml",
+        "source_sha256": "19f0b7bc6c27ff24af1a0a4c537bd0b186e49684eec3cf4cb58fbb3dd96120bb",
+        "offered_from": "2025-11-14",
+        "offered_until": "2025-11-20",
+        "duration_months": 24,
+        "unit_price": "0.103450",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_11/PO_Offerte_G_MLIBERO_20251114.xml",
+        "source_sha256": "52e5196c0341ef8fbbec020f5c79d0337fc005505fd005fb42e379914ceb7d69",
+        "offered_from": "2025-11-14",
+        "offered_until": "2025-11-20",
+        "duration_months": 24,
+        "unit_price": "0.3870",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFM#00023": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_11/PO_Offerte_E_MLIBERO_20251128.xml",
+        "source_sha256": "0822d4920c91b075ed20baf310dc7d771be4d59cd55496baeec2b959a05975f8",
+        "offered_from": "2025-11-28",
+        "offered_until": "2025-12-04",
+        "duration_months": 24,
+        "unit_price": "0.103000",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_11/PO_Offerte_G_MLIBERO_20251128.xml",
+        "source_sha256": "08d26f0b03de90e23d4f3b47457bbbd93d91dedbcf43ba595c79915824078fc5",
+        "offered_from": "2025-11-28",
+        "offered_until": "2025-12-04",
+        "duration_months": 24,
+        "unit_price": "0.38350",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFM#00025": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_12/PO_Offerte_E_MLIBERO_20251212.xml",
+        "source_sha256": "289f53b0ed18ac96a840efa2cd11fdb76aab786f68ba6d3cf13515382fc57ab7",
+        "offered_from": "2025-12-12",
+        "offered_until": "2025-12-18",
+        "duration_months": 24,
+        "unit_price": "0.098600",
+        "annual_fee": "84.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_12/PO_Offerte_G_MLIBERO_20251212.xml",
+        "source_sha256": "0106f15c1fa220c5efe7f229f166c31512f224bf49ab42bc41ed4bcb19fd3096",
+        "offered_from": "2025-12-12",
+        "offered_until": "2025-12-18",
+        "duration_months": 24,
+        "unit_price": "0.3680",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFM#00026": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_1/PO_Offerte_E_MLIBERO_20260102.xml",
+        "source_sha256": "c29c9f7a256bf48bf7bfb83b91ea0e0cd7845cbceeba9e961f643677b58a6a3d",
+        "offered_from": "2025-12-19",
+        "offered_until": "2026-01-08",
+        "duration_months": 24,
+        "unit_price": "0.093600",
+        "annual_fee": "84.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_1/PO_Offerte_G_MLIBERO_20260102.xml",
+        "source_sha256": "29570f4959bada4e455b2ce69a59be32e182f8509fd5902ecc9e810b7a118b38",
+        "offered_from": "2025-12-19",
+        "offered_until": "2026-01-08",
+        "duration_months": 24,
+        "unit_price": "0.34950",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFM#00027": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_1/PO_Offerte_E_MLIBERO_20260123.xml",
+        "source_sha256": "0d526f2bb327e5f0e69d60436094c074a2ee702af43d592e2aae16691fe5fe8c",
+        "offered_from": "2026-01-23",
+        "offered_until": "2026-01-29",
+        "duration_months": 24,
+        "unit_price": "0.097850",
+        "annual_fee": "84.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_1/PO_Offerte_G_MLIBERO_20260123.xml",
+        "source_sha256": "67eabc42fac2c706e1828a04c8984ccc84d86ee52af887ccdcfa856dc7aef971",
+        "offered_from": "2026-01-23",
+        "offered_until": "2026-01-29",
+        "duration_months": 24,
+        "unit_price": "0.3458",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFM#00028": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_1/PO_Offerte_E_MLIBERO_20260130.xml",
+        "source_sha256": "d4df40fbbd51eb3e4e05eb0333ffe6010187cf8a3b3e8b7e5208a2013a6a4e86",
+        "offered_from": "2026-01-30",
+        "offered_until": "2026-02-05",
+        "duration_months": 24,
+        "unit_price": "0.104200",
+        "annual_fee": "84.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_1/PO_Offerte_G_MLIBERO_20260130.xml",
+        "source_sha256": "014d9be2c783177595acdbba07ca823a3c9b5c2035f6f554a8c088a1c5293a06",
+        "offered_from": "2026-01-30",
+        "offered_until": "2026-02-05",
+        "duration_months": 24,
+        "unit_price": "0.3458",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFM#00029": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_2/PO_Offerte_E_MLIBERO_20260206.xml",
+        "source_sha256": "47e21c0f818686dfe0c2d667751ed78030b5bfed6205635c00270867a74d726d",
+        "offered_from": "2026-02-06",
+        "offered_until": "2026-02-12",
+        "duration_months": 24,
+        "unit_price": "0.098000",
+        "annual_fee": "84.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_2/PO_Offerte_G_MLIBERO_20260206.xml",
+        "source_sha256": "8aaeedc38ae4f62de7bb5ea4a8f58449aef6a94f1d06044d54ad359702d944e0",
+        "offered_from": "2026-02-06",
+        "offered_until": "2026-02-12",
+        "duration_months": 24,
+        "unit_price": "0.3550",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFM#00030": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_2/PO_Offerte_E_MLIBERO_20260213.xml",
+        "source_sha256": "44aef290bd63df9c9ed8b8c6edb3d7def19624e84590ca8515cf2fea71b9ebc9",
+        "offered_from": "2026-02-13",
+        "offered_until": "2026-02-19",
+        "duration_months": 24,
+        "unit_price": "0.099400",
+        "annual_fee": "84.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_2/PO_Offerte_G_MLIBERO_20260213.xml",
+        "source_sha256": "3917baabd21c3deebab93e669c5e121bba2950c8583931695a6636bfaf0dca85",
+        "offered_from": "2026-02-13",
+        "offered_until": "2026-02-19",
+        "duration_months": 24,
+        "unit_price": "0.3715",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFM#00031": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_2/PO_Offerte_E_MLIBERO_20260220.xml",
+        "source_sha256": "ffc35280050bd55f1ecbe3ff143959ff7b660ba5ebe9d0918d6a820d65977244",
+        "offered_from": "2026-02-20",
+        "offered_until": "2026-02-26",
+        "duration_months": 24,
+        "unit_price": "0.099400",
+        "annual_fee": "84.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_2/PO_Offerte_G_MLIBERO_20260220.xml",
+        "source_sha256": "2697434864e2b5094033b8c9bd5db9dcca540c9a1750c529093fea9c4ca2f2ca",
+        "offered_from": "2026-02-20",
+        "offered_until": "2026-02-26",
+        "duration_months": 24,
+        "unit_price": "0.3665",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPFM#00032": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_2/PO_Offerte_E_MLIBERO_20260227.xml",
+        "source_sha256": "b12dd63365e7d53f0531d61d70d0d52b617671804541d2281822518ab120dc29",
+        "offered_from": "2026-02-27",
+        "offered_until": "2026-03-05",
+        "duration_months": 24,
+        "unit_price": "0.107000",
+        "annual_fee": "84.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_2/PO_Offerte_G_MLIBERO_20260227.xml",
+        "source_sha256": "40c1f08450b7c35a445c9e10d04da111af79e7da651cdf41a2e0f1b0e7b04faa",
+        "offered_from": "2026-02-27",
+        "offered_until": "2026-03-05",
+        "duration_months": 24,
+        "unit_price": "0.3740",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "EPMD#00001": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_12/PO_Offerte_E_MLIBERO_20251205.xml",
+        "source_sha256": "cf4122146f4ac85b584e46480097d88abaee6f77ac93e3f14c0d1c1d76ad9059",
+        "offered_from": "2025-12-05",
+        "offered_until": "2025-12-11",
+        "duration_months": 12,
+        "unit_price": "0.103300",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2025_12/PO_Offerte_G_MLIBERO_20251205.xml",
+        "source_sha256": "42158e642d772e69f70ea3535793f882ceb675f4889687a3feee777e4c3ce343",
+        "offered_from": "2025-12-05",
+        "offered_until": "2025-12-11",
+        "duration_months": 12,
+        "unit_price": "0.3770",
+        "annual_fee": "72.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "OMBR0#00001": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2023_11/PO_Offerte_G_MLIBERO_20231103.xml",
+        "source_sha256": "d320c5af268703c6a8d3c7c903fc0f88a9e2dd98691511bf71a56fa6dcbb25cf",
+        "offered_from": "2023-10-25",
+        "offered_until": "2024-01-31",
+        "duration_months": 12,
+        "unit_price": "0.68000",
+        "annual_fee": "120.000000",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00003": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_4/PO_Offerte_G_MLIBERO_20260403.xml",
+        "source_sha256": "55ab4f7325a68a6c99cf0534ac57345a84c39945a27e8b89ce365dc486fa09d9",
+        "offered_from": "2026-04-01",
+        "offered_until": "2026-04-08",
+        "duration_months": 12,
+        "unit_price": "0.5500",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00004": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_4/PO_Offerte_G_MLIBERO_20260410.xml",
+        "source_sha256": "45ed41a2783432e7a1e3b2c52a1d41d9a64c823a16b7cf460fde934b698b5588",
+        "offered_from": "2026-04-09",
+        "offered_until": "2026-04-15",
+        "duration_months": 12,
+        "unit_price": "0.5500",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00005": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_4/PO_Offerte_G_MLIBERO_20260417.xml",
+        "source_sha256": "7aca4804ae73b8dd8c02b77ced792eb92be129deba36df8823715afb27982544",
+        "offered_from": "2026-04-16",
+        "offered_until": "2026-04-22",
+        "duration_months": 12,
+        "unit_price": "0.5500",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00006": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_4/PO_Offerte_G_MLIBERO_20260424.xml",
+        "source_sha256": "23cad1a684d1a43e9a9390edd068b088a8d70a8e29c2d824ecfcdbef1a25734d",
+        "offered_from": "2026-04-23",
+        "offered_until": "2026-04-29",
+        "duration_months": 12,
+        "unit_price": "0.4900",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00007": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_5/PO_Offerte_G_MLIBERO_20260501.xml",
+        "source_sha256": "9f1a21193a06f5317dc951b033ac531d9c374767cfdc10acb26075a20a0219d3",
+        "offered_from": "2026-04-30",
+        "offered_until": "2026-05-06",
+        "duration_months": 12,
+        "unit_price": "0.4850",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00008": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_5/PO_Offerte_G_MLIBERO_20260508.xml",
+        "source_sha256": "b6c28f368cb9f499f96b62e0b32d243e4ce4ba2934fb9abe70ec9c1c78f2f88b",
+        "offered_from": "2026-05-07",
+        "offered_until": "2026-05-13",
+        "duration_months": 12,
+        "unit_price": "0.4840",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00009": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_5/PO_Offerte_G_MLIBERO_20260515.xml",
+        "source_sha256": "d445439fe46841438326687495491ef51b6f231689b6e80f0e34acd94ffce4ba",
+        "offered_from": "2026-05-14",
+        "offered_until": "2026-05-20",
+        "duration_months": 12,
+        "unit_price": "0.4760",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00010": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_5/PO_Offerte_G_MLIBERO_20260522.xml",
+        "source_sha256": "c0d7fe28608504ab36c9a92c86e03d7267bd832b4146363791892c2a4fc86b0b",
+        "offered_from": "2026-05-21",
+        "offered_until": "2026-05-27",
+        "duration_months": 12,
+        "unit_price": "0.4830",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00011": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_5/PO_Offerte_G_MLIBERO_20260529.xml",
+        "source_sha256": "51a11d08aefd43ace2ad3d29d29772bb8ac47b3d071347703ad17d6179a0084c",
+        "offered_from": "2026-05-28",
+        "offered_until": "2026-06-04",
+        "duration_months": 12,
+        "unit_price": "0.4830",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00012": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_6/PO_Offerte_G_MLIBERO_20260605.xml",
+        "source_sha256": "20a74a49ea450a229c97a8d497f79b37ba334e6e0e5fc481a1e0c8cc9d59bccf",
+        "offered_from": "2026-06-05",
+        "offered_until": "2026-06-10",
+        "duration_months": 12,
+        "unit_price": "0.4830",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00013": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_6/PO_Offerte_G_MLIBERO_20260612.xml",
+        "source_sha256": "59573916f9b7c1836ac2a87679761433e1e29ef291a2bb3dd97ee317ea0134e2",
+        "offered_from": "2026-06-11",
+        "offered_until": "2026-06-17",
+        "duration_months": 12,
+        "unit_price": "0.4830",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00014": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_6/PO_Offerte_G_MLIBERO_20260619.xml",
+        "source_sha256": "24dca667fccb003a05eec5a1d5b1564c036afa700f2f3cc4b6716a7819a40003",
+        "offered_from": "2026-06-18",
+        "offered_until": "2026-06-24",
+        "duration_months": 12,
+        "unit_price": "0.4830",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00015": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_6/PO_Offerte_G_MLIBERO_20260626.xml",
+        "source_sha256": "b0b47293468b31d4d203d878486df5f820ddf7b97d4265a62ac1e5f477d3c8b5",
+        "offered_from": "2026-06-25",
+        "offered_until": "2026-07-01",
+        "duration_months": 12,
+        "unit_price": "0.4830",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00016": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_7/PO_Offerte_G_MLIBERO_20260703.xml",
+        "source_sha256": "f31e0ff94e4c75514b47e0279f5b00bc65613b9461e2e43e47fd1360aa02cfd9",
+        "offered_from": "2026-07-02",
+        "offered_until": "2026-07-08",
+        "duration_months": 12,
+        "unit_price": "0.4645",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00017": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_7/PO_Offerte_G_MLIBERO_20260710.xml",
+        "source_sha256": "635713e3eb0101a65d4aa34d928c936209b22417c81b7b251907247bd909912d",
+        "offered_from": "2026-07-09",
+        "offered_until": "2026-07-15",
+        "duration_months": 12,
+        "unit_price": "0.4545",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00018": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_7/PO_Offerte_G_MLIBERO_20260717.xml",
+        "source_sha256": "3ace6981bc50ac23b7fe1e5f855eb6449fbc3a0d686ecb8eb504248cde7038e3",
+        "offered_from": "2026-07-16",
+        "offered_until": "2026-07-22",
+        "duration_months": 12,
+        "unit_price": "0.455",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00019": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_7/PO_Offerte_G_MLIBERO_20260724.xml",
+        "source_sha256": "cb661806626a5969998e7897068aa46a3cf0314705880201a6b68fef95b25377",
+        "offered_from": "2026-07-23",
+        "offered_until": "2026-07-29",
+        "duration_months": 12,
+        "unit_price": "0.5390",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00020": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_7/PO_Offerte_G_MLIBERO_20260731.xml",
+        "source_sha256": "c1a34e13fb48dfa96db1ec60532b50fe8b2c8ba3858a9556c8a7c7c8ee3e5fab",
+        "offered_from": "2026-07-30",
+        "offered_until": "2026-08-05",
+        "duration_months": 12,
+        "unit_price": "0.5630",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00021": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_8/PO_Offerte_G_MLIBERO_20260814.xml",
+        "source_sha256": "b72e6fdf437f6b16f3a88433e1f1c270c8c5a706378cba10de4a49d73f3844d9",
+        "offered_from": "2026-08-06",
+        "offered_until": "2026-08-19",
+        "duration_months": 12,
+        "unit_price": "0.5545",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00022": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_8/PO_Offerte_G_MLIBERO_20260821.xml",
+        "source_sha256": "18c2de0a0a8b9e51efa26e161557704c70380baef77df17085ef3f3d41e9c2c0",
+        "offered_from": "2026-08-20",
+        "offered_until": "2026-08-26",
+        "duration_months": 12,
+        "unit_price": "0.5545",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00023": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_8/PO_Offerte_G_MLIBERO_20260828.xml",
+        "source_sha256": "27e4647cd518e4a1ae612ca61a977431624638f501603d261b8b962206d6315e",
+        "offered_from": "2026-08-27",
+        "offered_until": "2026-09-02",
+        "duration_months": 12,
+        "unit_price": "0.5990",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00024": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_9/PO_Offerte_G_MLIBERO_20260904.xml",
+        "source_sha256": "b2cf3e2c32913ca3b14f7604e3d807033968a826fbf94cbdd5de434340d641bb",
+        "offered_from": "2026-09-03",
+        "offered_until": "2026-09-09",
+        "duration_months": 12,
+        "unit_price": "0.6900",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00025": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_9/PO_Offerte_G_MLIBERO_20260911.xml",
+        "source_sha256": "a6b722fdba7f54d8a3740ca79486c355771c70f6814e0bbbbc71fe162d0205ea",
+        "offered_from": "2026-09-10",
+        "offered_until": "2026-09-16",
+        "duration_months": 12,
+        "unit_price": "0.7500",
+        "annual_fee": "120.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00026": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_9/PO_Offerte_G_MLIBERO_20260918.xml",
+        "source_sha256": "3348b5ec2bc5c4d4c7a1f8c59779c15bce55f0e6df44c83234851c850a5327af",
+        "offered_from": "2026-09-17",
+        "offered_until": "2026-09-23",
+        "duration_months": 12,
+        "unit_price": "0.8900",
+        "annual_fee": "120.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00027": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_10/PO_Offerte_G_MLIBERO_20261002.xml",
+        "source_sha256": "331ce28a41338e37cc054454650032fd92b6231728f9199c1e226c827cc1ffb7",
+        "offered_from": "2026-10-01",
+        "offered_until": "2026-10-07",
+        "duration_months": 12,
+        "unit_price": "0.9200",
+        "annual_fee": "108.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFD#00028": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_10/PO_Offerte_G_MLIBERO_20261009.xml",
+        "source_sha256": "b59f1f8a6c09dab66aac3ebd5ea1622e4888afada67c6b5cb4edd749059f0082",
+        "offered_from": "2026-10-08",
+        "offered_until": "2026-10-14",
+        "duration_months": 12,
+        "unit_price": "0.9200",
+        "annual_fee": "108.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFG#00001": {
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_9/PO_Offerte_G_MLIBERO_20260925.xml",
+        "source_sha256": "3d4484ab58b53acd5a49919fcf01ef56b6db755dc98d76375ba22f34d58f2ef1",
+        "offered_from": "2026-09-24",
+        "offered_until": "2026-09-30",
+        "duration_months": 12,
+        "unit_price": "0.7900",
+        "annual_fee": "90.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUFM#00001": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_9/PO_Offerte_E_MLIBERO_20260925.xml",
+        "source_sha256": "ace9f9b40ab228071d5655b4f9d7fa910822b771f7e7629b5ef50aca6a6be88d",
+        "offered_from": "2026-09-24",
+        "offered_until": "2026-09-30",
+        "duration_months": 24,
+        "unit_price": "0.15650",
+        "annual_fee": "78.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      }
+    },
+    "PUMD#00003": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_4/PO_Offerte_E_MLIBERO_20260403.xml",
+        "source_sha256": "9c5416f30c746134b0cbfcde5a3256120496b65c62a002fa6dfbe196e9d39c93",
+        "offered_from": "2026-04-01",
+        "offered_until": "2026-04-08",
+        "duration_months": 12,
+        "unit_price": "0.13770",
+        "annual_fee": "96.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_4/PO_Offerte_G_MLIBERO_20260403.xml",
+        "source_sha256": "bcdc8bf0d98d6ac69461ac89e35eab3f31189df74caf08bbd8a332b07a5aeb89",
+        "offered_from": "2026-04-01",
+        "offered_until": "2026-04-08",
+        "duration_months": 12,
+        "unit_price": "0.5500",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUMD#00004": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_4/PO_Offerte_E_MLIBERO_20260410.xml",
+        "source_sha256": "560769048cdd44450bb37bbedf10283730b90817cdea9d2f5bfe1e909a594791",
+        "offered_from": "2026-04-09",
+        "offered_until": "2026-04-15",
+        "duration_months": 12,
+        "unit_price": "0.12530",
+        "annual_fee": "84.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_4/PO_Offerte_G_MLIBERO_20260410.xml",
+        "source_sha256": "d4b5a14c2ecec4d75a6a815a2de0d50cc6a91842dedc4a662e4217b7f80fea5a",
+        "offered_from": "2026-04-09",
+        "offered_until": "2026-04-15",
+        "duration_months": 12,
+        "unit_price": "0.5500",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUMD#00005": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_4/PO_Offerte_E_MLIBERO_20260417.xml",
+        "source_sha256": "a140f132be7a003d4fde5f43acd6247ee6f4b5ddfe8681430ef0097ab9b1e906",
+        "offered_from": "2026-04-16",
+        "offered_until": "2026-04-22",
+        "duration_months": 12,
+        "unit_price": "0.11620",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_4/PO_Offerte_G_MLIBERO_20260417.xml",
+        "source_sha256": "651890706abb79eb8a4e963c7a1b8d54fbb1ba31f9c91b7d9fb8e521cc44fccd",
+        "offered_from": "2026-04-16",
+        "offered_until": "2026-04-22",
+        "duration_months": 12,
+        "unit_price": "0.5500",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUMD#00006": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_4/PO_Offerte_E_MLIBERO_20260424.xml",
+        "source_sha256": "907128ae3bcbb50671cb08141b18d74468c749bcab75b73fe5fff55bb3273009",
+        "offered_from": "2026-04-23",
+        "offered_until": "2026-04-29",
+        "duration_months": 12,
+        "unit_price": "0.11620",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_4/PO_Offerte_G_MLIBERO_20260424.xml",
+        "source_sha256": "0f7b348fdfbfc6674782de76bcebfb4e5876ecfe8529c0288843afea7b7b641b",
+        "offered_from": "2026-04-23",
+        "offered_until": "2026-04-29",
+        "duration_months": 12,
+        "unit_price": "0.4900",
+        "annual_fee": "96.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUMD#00007": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_5/PO_Offerte_E_MLIBERO_20260501.xml",
+        "source_sha256": "867cfd537fe5d62b45f949ea9f4efca12a395fb8e2285028e04f38e9d00fb058",
+        "offered_from": "2026-04-30",
+        "offered_until": "2026-05-06",
+        "duration_months": 12,
+        "unit_price": "0.11620",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_5/PO_Offerte_G_MLIBERO_20260501.xml",
+        "source_sha256": "24da97f46fc3fb00d8e0d411489101e764bc60f8b4f0c24b991f442d4d0e6507",
+        "offered_from": "2026-04-30",
+        "offered_until": "2026-05-06",
+        "duration_months": 12,
+        "unit_price": "0.4850",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUMD#00008": {
+      "electricity": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00008",
+        "source_sha256": "b897d5d682a7797fb27a6ad717dcdc5f73555c1b31c7960783325e57951851ec",
+        "offered_from": "2026-05-07",
+        "offered_until": "2026-05-13",
+        "duration_months": 12,
+        "unit_price": "0.11620",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": true
+      },
+      "gas": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00008",
+        "source_sha256": "b897d5d682a7797fb27a6ad717dcdc5f73555c1b31c7960783325e57951851ec",
+        "offered_from": "2026-05-07",
+        "offered_until": "2026-05-13",
+        "duration_months": 12,
+        "unit_price": "0.48400",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": "0.03852"
+      }
+    },
+    "PUMD#00009": {
+      "electricity": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00009",
+        "source_sha256": "812d3f563df69361fedada0e5b2779653438dc2008682be97b56eabc566f152d",
+        "offered_from": "2026-05-14",
+        "offered_until": "2026-05-20",
+        "duration_months": 12,
+        "unit_price": "0.11620",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": true
+      },
+      "gas": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00009",
+        "source_sha256": "812d3f563df69361fedada0e5b2779653438dc2008682be97b56eabc566f152d",
+        "offered_from": "2026-05-14",
+        "offered_until": "2026-05-20",
+        "duration_months": 12,
+        "unit_price": "0.47600",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": "0.03852"
+      }
+    },
+    "PUMD#00010": {
+      "electricity": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00010",
+        "source_sha256": "6c080299b38b0600bec24296bb630d740fc19a29a29c7a87f3c44cc068d1951b",
+        "offered_from": "2026-05-21",
+        "offered_until": "2026-05-27",
+        "duration_months": 12,
+        "unit_price": "0.11675",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": true
+      },
+      "gas": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00010",
+        "source_sha256": "6c080299b38b0600bec24296bb630d740fc19a29a29c7a87f3c44cc068d1951b",
+        "offered_from": "2026-05-21",
+        "offered_until": "2026-05-27",
+        "duration_months": 12,
+        "unit_price": "0.48300",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": "0.03852"
+      }
+    },
+    "PUMD#00011": {
+      "electricity": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00011",
+        "source_sha256": "7e4d65e774e8b381543478b376b323764515a910a888fdb92cf102748408be46",
+        "offered_from": "2026-05-28",
+        "offered_until": "2026-06-10",
+        "duration_months": 12,
+        "unit_price": "0.12290",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": true
+      },
+      "gas": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00011",
+        "source_sha256": "7e4d65e774e8b381543478b376b323764515a910a888fdb92cf102748408be46",
+        "offered_from": "2026-05-28",
+        "offered_until": "2026-06-10",
+        "duration_months": 12,
+        "unit_price": "0.48300",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": "0.03852"
+      }
+    },
+    "PUMD#00012": {
+      "electricity": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00012",
+        "source_sha256": "6302f1974c755a311f7da87c32039f9440663da1fee298da7613ce15771ee606",
+        "offered_from": "2026-06-11",
+        "offered_until": "2026-06-17",
+        "duration_months": 12,
+        "unit_price": "0.12290",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": true
+      },
+      "gas": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00012",
+        "source_sha256": "6302f1974c755a311f7da87c32039f9440663da1fee298da7613ce15771ee606",
+        "offered_from": "2026-06-11",
+        "offered_until": "2026-06-17",
+        "duration_months": 12,
+        "unit_price": "0.48300",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": "0.03852"
+      }
+    },
+    "PUMD#00013": {
+      "electricity": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00013",
+        "source_sha256": "900f074fb8296e05ab0dbcafe1122b636edcf18ffc239eba2cb42414233ebdd8",
+        "offered_from": "2026-06-18",
+        "offered_until": "2026-06-24",
+        "duration_months": 12,
+        "unit_price": "0.11860",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": true
+      },
+      "gas": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00013",
+        "source_sha256": "900f074fb8296e05ab0dbcafe1122b636edcf18ffc239eba2cb42414233ebdd8",
+        "offered_from": "2026-06-18",
+        "offered_until": "2026-06-24",
+        "duration_months": 12,
+        "unit_price": "0.48300",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": "0.03852"
+      }
+    },
+    "PUMD#00014": {
+      "electricity": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00014",
+        "source_sha256": "cc4550698514f0c8a96f3987c8b72d8a5575fd3d318138c1c9b14542714bc0a5",
+        "offered_from": "2026-06-25",
+        "offered_until": "2026-07-01",
+        "duration_months": 12,
+        "unit_price": "0.11860",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": true
+      },
+      "gas": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00014",
+        "source_sha256": "cc4550698514f0c8a96f3987c8b72d8a5575fd3d318138c1c9b14542714bc0a5",
+        "offered_from": "2026-06-25",
+        "offered_until": "2026-07-01",
+        "duration_months": 12,
+        "unit_price": "0.48300",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": "0.03852"
+      }
+    },
+    "PUMD#00015": {
+      "electricity": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00015",
+        "source_sha256": "ec8c021db45cd756ab32de26221e595af23f6195777cfd1ec5e07aa471c46344",
+        "offered_from": "2026-07-02",
+        "offered_until": "2026-07-08",
+        "duration_months": 12,
+        "unit_price": "0.11860",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": true
+      },
+      "gas": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00015",
+        "source_sha256": "ec8c021db45cd756ab32de26221e595af23f6195777cfd1ec5e07aa471c46344",
+        "offered_from": "2026-07-02",
+        "offered_until": "2026-07-08",
+        "duration_months": 12,
+        "unit_price": "0.46450",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": "0.03852"
+      }
+    },
+    "PUMD#00016": {
+      "electricity": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00016",
+        "source_sha256": "d9342c1e1c7a6813294cef34017928c47442e005b1ef6131443144f4dcc843e5",
+        "offered_from": "2026-07-09",
+        "offered_until": "2026-07-15",
+        "duration_months": 12,
+        "unit_price": "0.11670",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": true
+      },
+      "gas": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00016",
+        "source_sha256": "d9342c1e1c7a6813294cef34017928c47442e005b1ef6131443144f4dcc843e5",
+        "offered_from": "2026-07-09",
+        "offered_until": "2026-07-15",
+        "duration_months": 12,
+        "unit_price": "0.45450",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": "0.03852"
+      }
+    },
+    "PUMD#00017": {
+      "electricity": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00017",
+        "source_sha256": "12e2bdbd95e65f9ef666ae582c0a416c427e56d9a9c4ea483ae7a04ca368df2a",
+        "offered_from": "2026-07-16",
+        "offered_until": "2026-07-22",
+        "duration_months": 12,
+        "unit_price": "0.11340",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": true
+      },
+      "gas": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00017",
+        "source_sha256": "12e2bdbd95e65f9ef666ae582c0a416c427e56d9a9c4ea483ae7a04ca368df2a",
+        "offered_from": "2026-07-16",
+        "offered_until": "2026-07-22",
+        "duration_months": 12,
+        "unit_price": "0.45450",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": "0.03852"
+      }
+    },
+    "PUMD#00018": {
+      "electricity": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00018",
+        "source_sha256": "9693c4bcf55700455f8100dfd5d759c5490e6baf98047befa5b0f87196abc36d",
+        "offered_from": "2026-07-23",
+        "offered_until": "2026-07-29",
+        "duration_months": 12,
+        "unit_price": "0.12051",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": true
+      },
+      "gas": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00018",
+        "source_sha256": "9693c4bcf55700455f8100dfd5d759c5490e6baf98047befa5b0f87196abc36d",
+        "offered_from": "2026-07-23",
+        "offered_until": "2026-07-29",
+        "duration_months": 12,
+        "unit_price": "0.53900",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": "0.03852"
+      }
+    },
+    "PUMD#00019": {
+      "electricity": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_7/PO_Offerte_E_MLIBERO_20260731.xml",
+        "source_sha256": "cd7d8df831a674e29e8fc7c8134fffb3b623ec0b3bab7ad7eb364f651a7fb1b2",
+        "offered_from": "2026-07-30",
+        "offered_until": "2026-08-05",
+        "duration_months": 12,
+        "unit_price": "0.13900",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": null
+      },
+      "gas": {
+        "source_url": "https://www.ilportaleofferte.it/portaleOfferte/resources/opendata/csv/offerteML/2026_7/PO_Offerte_G_MLIBERO_20260731.xml",
+        "source_sha256": "408acea5e19aff3fbf1ce4550f33ba2a0e6d89ed1b5319f80ef3d43d09bdca1b",
+        "offered_from": "2026-07-30",
+        "offered_until": "2026-08-05",
+        "duration_months": 12,
+        "unit_price": "0.5630",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": null
+      }
+    },
+    "PUMD#00020": {
+      "electricity": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00020",
+        "source_sha256": "e479ea6ae30189c3ed0fcf64edbe3adeb6a1c3cf8012adfb27ec5fca8476a0f9",
+        "offered_from": "2026-08-06",
+        "offered_until": "2026-08-19",
+        "duration_months": 12,
+        "unit_price": "0.12865",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": true
+      },
+      "gas": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00020",
+        "source_sha256": "e479ea6ae30189c3ed0fcf64edbe3adeb6a1c3cf8012adfb27ec5fca8476a0f9",
+        "offered_from": "2026-08-06",
+        "offered_until": "2026-08-19",
+        "duration_months": 12,
+        "unit_price": "0.55450",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": "0.03852"
+      }
+    },
+    "PUMD#00021": {
+      "electricity": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00021",
+        "source_sha256": "67f54b1a1ae2b607930205ae6355834851c540b0f6557d54279c6af3aff15997",
+        "offered_from": "2026-08-20",
+        "offered_until": "2026-08-26",
+        "duration_months": 12,
+        "unit_price": "0.13500",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": true
+      },
+      "gas": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00021",
+        "source_sha256": "67f54b1a1ae2b607930205ae6355834851c540b0f6557d54279c6af3aff15997",
+        "offered_from": "2026-08-20",
+        "offered_until": "2026-08-26",
+        "duration_months": 12,
+        "unit_price": "0.55450",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": "0.03852"
+      }
+    },
+    "PUMD#00022": {
+      "electricity": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00022",
+        "source_sha256": "c5817d1f6f5fb1bc1e7d44e015aa4196fd691d4cdb06afa2220dbaad5b657088",
+        "offered_from": "2026-08-27",
+        "offered_until": "2026-09-02",
+        "duration_months": 12,
+        "unit_price": "0.14090",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": true
+      },
+      "gas": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00022",
+        "source_sha256": "c5817d1f6f5fb1bc1e7d44e015aa4196fd691d4cdb06afa2220dbaad5b657088",
+        "offered_from": "2026-08-27",
+        "offered_until": "2026-09-02",
+        "duration_months": 12,
+        "unit_price": "0.59900",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": "0.03852"
+      }
+    },
+    "PUMD#00023": {
+      "electricity": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00023",
+        "source_sha256": "ae69c0941d7f2696347efd60e020fc3b5976672e30761320199b309684ef659d",
+        "offered_from": "2026-09-03",
+        "offered_until": "2026-09-09",
+        "duration_months": 12,
+        "unit_price": "0.14090",
+        "annual_fee": "72.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": true
+      },
+      "gas": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00023",
+        "source_sha256": "ae69c0941d7f2696347efd60e020fc3b5976672e30761320199b309684ef659d",
+        "offered_from": "2026-09-03",
+        "offered_until": "2026-09-09",
+        "duration_months": 12,
+        "unit_price": "0.69000",
+        "annual_fee": "84.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": "0.03852"
+      }
+    },
+    "PUMD#00024": {
+      "electricity": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00024",
+        "source_sha256": "892bd27e3e0b0c208dc683d6d1078f8cc66374283827c8781e16954efac3721c",
+        "offered_from": "2026-09-10",
+        "offered_until": "2026-09-16",
+        "duration_months": 12,
+        "unit_price": "0.18400",
+        "annual_fee": "120.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": true
+      },
+      "gas": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00024",
+        "source_sha256": "892bd27e3e0b0c208dc683d6d1078f8cc66374283827c8781e16954efac3721c",
+        "offered_from": "2026-09-10",
+        "offered_until": "2026-09-16",
+        "duration_months": 12,
+        "unit_price": "0.75000",
+        "annual_fee": "120.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": "0.03852"
+      }
+    },
+    "PUMD#00025": {
+      "electricity": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00025",
+        "source_sha256": "c42be2cebd557f26a2821ec04cc621a38787f7b4b343d95c01d244bb044dc724",
+        "offered_from": "2026-09-17",
+        "offered_until": "2026-09-23",
+        "duration_months": 12,
+        "unit_price": "0.19900",
+        "annual_fee": "120.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": true
+      },
+      "gas": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00025",
+        "source_sha256": "c42be2cebd557f26a2821ec04cc621a38787f7b4b343d95c01d244bb044dc724",
+        "offered_from": "2026-09-17",
+        "offered_until": "2026-09-23",
+        "duration_months": 12,
+        "unit_price": "0.89000",
+        "annual_fee": "120.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": "0.03852"
+      }
+    },
+    "PUMD#00026": {
+      "electricity": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00026",
+        "source_sha256": "4b20adc453000934748af0889ea567ad635c62e3f98a16f4a0bc3a8731e325bf",
+        "offered_from": "2026-10-01",
+        "offered_until": "2026-10-07",
+        "duration_months": 12,
+        "unit_price": "0.19900",
+        "annual_fee": "108.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": true
+      },
+      "gas": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00026",
+        "source_sha256": "4b20adc453000934748af0889ea567ad635c62e3f98a16f4a0bc3a8731e325bf",
+        "offered_from": "2026-10-01",
+        "offered_until": "2026-10-07",
+        "duration_months": 12,
+        "unit_price": "0.92000",
+        "annual_fee": "108.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": "0.03852"
+      }
+    },
+    "PUMD#00027": {
+      "electricity": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00027",
+        "source_sha256": "ae5b7a8affd29dce4fdf6e27951cefe1c9d99a5a118dcee667f6e90fc0785934",
+        "offered_from": "2026-10-08",
+        "offered_until": "2026-10-14",
+        "duration_months": 12,
+        "unit_price": "0.19900",
+        "annual_fee": "108.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": true
+      },
+      "gas": {
+        "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00027",
+        "source_sha256": "ae5b7a8affd29dce4fdf6e27951cefe1c9d99a5a118dcee667f6e90fc0785934",
+        "offered_from": "2026-10-08",
+        "offered_until": "2026-10-14",
+        "duration_months": 12,
+        "unit_price": "0.92000",
+        "annual_fee": "108.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": "0.03852"
+      }
+    }
+  }
+}

@@ -64,6 +64,33 @@
       "presenza_simulata": {
         "name": "在家模拟"
       }
+    },
+    "sensor": {
+      "unpaid_invoices": {
+        "name": "未付账单"
+      },
+      "payment_status": {
+        "name": "付款状态",
+        "state": {
+          "paid": "已付",
+          "unpaid": "未付"
+        }
+      },
+      "latest_invoice": {
+        "name": "最新账单"
+      },
+      "total_invoiced": {
+        "name": "账单总额(12 个月)"
+      },
+      "contracted_power": {
+        "name": "合同功率"
+      },
+      "offer_end": {
+        "name": "优惠结束"
+      },
+      "daily_consumption": {
+        "name": "每日用电量"
+      }
     }
   }
 }

@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-CCC54JNQ.js";
+} from "../../chunk-5QOWPSHV.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -139756,7 +139756,7 @@ function clic(event) {
     event.preventDefault();
     comanda3(
       "dashboardmodern/fornitori/aggiorna",
-      { id: aggiorna2.dataset.dmFornAggiorna },
+      { collegamento: aggiorna2.dataset.dmFornAggiorna },
       aggiorna2,
       (detto3) => {
         if (detto3.stato) state165.stato = detto3.stato;
@@ -139777,7 +139777,7 @@ function clic(event) {
     if (!sicuro) return;
     comanda3(
       "dashboardmodern/fornitori/scollega",
-      { id: scollega.dataset.dmFornScollega },
+      { collegamento: scollega.dataset.dmFornScollega },
       scollega,
       (detto3) => {
         if (detto3.stato) state165.stato = detto3.stato;

@@ -64,6 +64,33 @@
       "presenza_simulata": {
         "name": "Symulacja obecności"
       }
+    },
+    "sensor": {
+      "unpaid_invoices": {
+        "name": "Niezapłacone faktury"
+      },
+      "payment_status": {
+        "name": "Status płatności",
+        "state": {
+          "paid": "Zapłacona",
+          "unpaid": "Do zapłaty"
+        }
+      },
+      "latest_invoice": {
+        "name": "Ostatnia faktura"
+      },
+      "total_invoiced": {
+        "name": "Suma faktur (12 miesięcy)"
+      },
+      "contracted_power": {
+        "name": "Moc umowna"
+      },
+      "offer_end": {
+        "name": "Koniec oferty"
+      },
+      "daily_consumption": {
+        "name": "Zużycie dzienne"
+      }
     }
   }
 }

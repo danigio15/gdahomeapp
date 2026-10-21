@@ -213,7 +213,7 @@ async def test_l_elenco_dice_chi_ha_collegato_l_account(
     collegato = await _command(
         hass, StubConnection(hass, user_id="persona_2"), {"type": TYPE_TICKET_LIST}, 2
     )
-    assert collegato["account"]["login"] == "persona-2-hub"
+    assert collegato["account"]["login"] == "persona_2-hub"
 
 
 async def test_ognuno_vede_le_proprie(hass: HomeAssistant) -> None:

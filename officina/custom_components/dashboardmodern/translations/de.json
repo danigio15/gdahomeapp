@@ -64,6 +64,33 @@
       "presenza_simulata": {
         "name": "Anwesenheitssimulation"
       }
+    },
+    "sensor": {
+      "unpaid_invoices": {
+        "name": "Offene Rechnungen"
+      },
+      "payment_status": {
+        "name": "Zahlungsstatus",
+        "state": {
+          "paid": "Bezahlt",
+          "unpaid": "Offen"
+        }
+      },
+      "latest_invoice": {
+        "name": "Letzte Rechnung"
+      },
+      "total_invoiced": {
+        "name": "Rechnungssumme (12 Monate)"
+      },
+      "contracted_power": {
+        "name": "Vertragsleistung"
+      },
+      "offer_end": {
+        "name": "Angebotsende"
+      },
+      "daily_consumption": {
+        "name": "Tagesverbrauch"
+      }
     }
   }
 }

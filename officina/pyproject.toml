@@ -1,6 +1,12 @@
 [tool.ruff]
 target-version = "py313"
 line-length = 88
+# Il codice dei fornitori copiato com'e' dalle integrazioni originali (MIT):
+# resta nel loro stile, cosi' chi lo aggiorna lo ricopia senza ritoccarlo.
+extend-exclude = [
+  "custom_components/dashboardmodern/fornitori/eon/pyeonenergia",
+  "custom_components/dashboardmodern/fornitori/engie/api",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "ASYNC", "ANN"]

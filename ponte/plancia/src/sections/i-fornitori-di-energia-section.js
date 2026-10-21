@@ -349,7 +349,7 @@ function clic(event) {
     event.preventDefault();
     comanda(
       "dashboardmodern/fornitori/aggiorna",
-      { id: aggiorna.dataset.dmFornAggiorna },
+      { collegamento: aggiorna.dataset.dmFornAggiorna },
       aggiorna,
       (detto) => {
         if (detto.stato) state.stato = detto.stato;
@@ -370,7 +370,7 @@ function clic(event) {
     if (!sicuro) return;
     comanda(
       "dashboardmodern/fornitori/scollega",
-      { id: scollega.dataset.dmFornScollega },
+      { collegamento: scollega.dataset.dmFornScollega },
       scollega,
       (detto) => {
         if (detto.stato) state.stato = detto.stato;

@@ -64,6 +64,33 @@
       "presenza_simulata": {
         "name": "محاكاة الحضور"
       }
+    },
+    "sensor": {
+      "unpaid_invoices": {
+        "name": "الفواتير غير المدفوعة"
+      },
+      "payment_status": {
+        "name": "حالة الدفع",
+        "state": {
+          "paid": "مدفوعة",
+          "unpaid": "غير مدفوعة"
+        }
+      },
+      "latest_invoice": {
+        "name": "آخر فاتورة"
+      },
+      "total_invoiced": {
+        "name": "إجمالي الفواتير (12 شهرًا)"
+      },
+      "contracted_power": {
+        "name": "القدرة المتعاقد عليها"
+      },
+      "offer_end": {
+        "name": "نهاية العرض"
+      },
+      "daily_consumption": {
+        "name": "الاستهلاك اليومي"
+      }
     }
   }
 }

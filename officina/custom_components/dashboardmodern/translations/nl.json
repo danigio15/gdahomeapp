@@ -64,6 +64,33 @@
       "presenza_simulata": {
         "name": "Aanwezigheidssimulatie"
       }
+    },
+    "sensor": {
+      "unpaid_invoices": {
+        "name": "Openstaande facturen"
+      },
+      "payment_status": {
+        "name": "Betaalstatus",
+        "state": {
+          "paid": "Betaald",
+          "unpaid": "Open"
+        }
+      },
+      "latest_invoice": {
+        "name": "Laatste factuur"
+      },
+      "total_invoiced": {
+        "name": "Totaal gefactureerd (12 maanden)"
+      },
+      "contracted_power": {
+        "name": "Gecontracteerd vermogen"
+      },
+      "offer_end": {
+        "name": "Einde aanbieding"
+      },
+      "daily_consumption": {
+        "name": "Dagverbruik"
+      }
     }
   }
 }

@@ -48,6 +48,7 @@ from .config_store import (
 )
 from .const import CHAT_MAX_TESTO, DOMAIN
 from .device_catalog import MAX_DEVICE_IDS, MAX_ENTITY_IDS, async_build_catalog
+from .fornitori.comandi import COMANDI as FORNITORI_COMANDI
 from .github_client import DevicePending, GitHubError
 from .github_tokens import async_get_token_store
 from .ticket_store import (
@@ -1396,6 +1397,7 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
         async_ticket_auth_start,
         async_ticket_auth_poll,
         async_ticket_auth_forget,
+        *FORNITORI_COMANDI,
     ):
         websocket_api.async_register_command(hass, command)
     domain_data[DATA_WEBSOCKET_REGISTERED] = True

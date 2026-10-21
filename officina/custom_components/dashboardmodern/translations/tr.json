@@ -64,6 +64,33 @@
       "presenza_simulata": {
         "name": "Varlık simülasyonu"
       }
+    },
+    "sensor": {
+      "unpaid_invoices": {
+        "name": "Ödenmemiş faturalar"
+      },
+      "payment_status": {
+        "name": "Ödeme durumu",
+        "state": {
+          "paid": "Ödendi",
+          "unpaid": "Ödenecek"
+        }
+      },
+      "latest_invoice": {
+        "name": "Son fatura"
+      },
+      "total_invoiced": {
+        "name": "Toplam faturalanan (12 ay)"
+      },
+      "contracted_power": {
+        "name": "Sözleşme gücü"
+      },
+      "offer_end": {
+        "name": "Teklif bitişi"
+      },
+      "daily_consumption": {
+        "name": "Günlük tüketim"
+      }
     }
   }
 }

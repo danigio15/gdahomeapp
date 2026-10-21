@@ -64,6 +64,33 @@
       "presenza_simulata": {
         "name": "Presença simulada"
       }
+    },
+    "sensor": {
+      "unpaid_invoices": {
+        "name": "Faturas por pagar"
+      },
+      "payment_status": {
+        "name": "Estado do pagamento",
+        "state": {
+          "paid": "Paga",
+          "unpaid": "Por pagar"
+        }
+      },
+      "latest_invoice": {
+        "name": "Última fatura"
+      },
+      "total_invoiced": {
+        "name": "Total faturado (12 meses)"
+      },
+      "contracted_power": {
+        "name": "Potência contratada"
+      },
+      "offer_end": {
+        "name": "Fim da oferta"
+      },
+      "daily_consumption": {
+        "name": "Consumo diário"
+      }
     }
   }
 }
