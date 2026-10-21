@@ -16,6 +16,7 @@
  * `null`, che vuol dire «questa si guarda soltanto».
  */
 
+import { presetDiRiposo } from "./climate-power.js";
 import { SA } from "./media-player.js";
 
 const clean = (value) => String(value ?? "").trim();
@@ -66,10 +67,28 @@ function comandoDelLettore(stato) {
   return null;
 }
 
+/* Un termostato senza lo spento si mette in antigelo.
+ *
+ * «Home Assistant ha rifiutato: 400 - Bad request - therm_setpoint_mode should
+ * be equal to one of the allowed values»: un Netatmo dichiara solo «auto» e
+ * «heat», e lo spento il suo cloud non lo accetta. Chi non ha «off» fra le
+ * modalita' ma ha l'antigelo (`frost_guard`, o «away» come ripiego) si
+ * «spegne» li', che e' quello che fa il suo tasto nell'app del termostato. */
+function comandoDelTermostato(stato) {
+  const antigelo = presetDiRiposo(stato);
+  if (!antigelo) return null;
+  return {
+    dominio: "climate",
+    servizio: "set_preset_mode",
+    dati: { preset_mode: antigelo },
+    parola: "spegni",
+  };
+}
+
 /**
  * Come si spegne questa entita'.
  *
- * Torna `{ dominio, servizio, parola }` — `parola` e' la chiave da tradurre
+ * Torna `{ dominio, servizio, parola }` (e `dati`, quando il servizio ne vuole) — `parola` e' la chiave da tradurre
  * dove si disegna, non una frase gia' scritta: qui non si sa in che lingua
  * sta guardando chi guarda. `null` quando non c'e' niente da comandare.
  *
@@ -88,6 +107,10 @@ export function comandoPerSpegnere(entity, stato = null) {
   if (dominio === "media_player") return comandoDelLettore(stato);
   /* Una serratura si chiude a chiave. */
   if (dominio === "lock") return { dominio: "lock", servizio: "lock", parola: "chiudi" };
+  if (dominio === "climate") {
+    const antigelo = comandoDelTermostato(stato);
+    if (antigelo) return antigelo;
+  }
   if (SI_SPENGONO.has(dominio))
     return { dominio: "homeassistant", servizio: "turn_off", parola: "spegni" };
   /* Un contatto, un sensore: si guarda. */

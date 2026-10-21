@@ -38,6 +38,7 @@ import {
 } from "../core/le-vesti-della-carta.js";
 import { createApplianceViewModel, onRunHoldExpiry } from "../core/appliance-view-model.js";
 import { applianceVisualKey, canonicalClimateType, climaScalda } from "../core/device-model.js";
+import { climaInFunzione } from "../core/il-termostato.js";
 import { applianceArtwork, applianceGlyph } from "../core/appliance-artwork.js";
 import { applianceCardModel } from "../core/appliance-card-view-model.js";
 import { applianceModelById, buildCardMarkup, cardLabels } from "./appliance-showcase-section.js";
@@ -1183,9 +1184,11 @@ function rigaClima(states, unit) {
     /* Con la presa e la soglia l'acceso lo dicono i watt, come sulla pagina
      * Clima (#490): un climatizzatore acceso dal telecomando per Home
      * Assistant resta «off», e in Home risultava spento. */
-    on:
-      accesoPerIlConsumo(unit, states) ??
-      (Boolean(current) && raw !== "off" && raw !== "unavailable" && raw !== "unknown"),
+    on: accesoPerIlConsumo(unit, states) ?? climaInFunzione(current, unit),
+    /* Acceso per Home Assistant, anche se non lavora: un termostato in
+     * «auto» fermo e' «in pausa», non spento — e il tasto lo spegne davvero. */
+    acceso:
+      Boolean(current) && raw !== "off" && raw !== "unavailable" && raw !== "unknown",
     mode: raw,
     ambient: numero(attributi.current_temperature),
     /* Per chi ne ha due, quello che la modalita' rende vero — il basso in
@@ -7624,7 +7627,7 @@ function climateDetail(widget) {
   const righe = [...widget.rows].sort((a, b) => Number(b.on) - Number(a.on));
   const accese = righe.filter((row) => row.on).length;
   const verso = (row) => {
-    if (!row.on) return "spento";
+    if (!row.on) return row.acceso ? "pausa" : "spento";
     const modo = clean(row.mode);
     const azione = clean(row.azione);
     if (azione === "heating" || modo === "heat") return "caldo";
@@ -7638,6 +7641,7 @@ function climateDetail(widget) {
       freddo: t("Raffresca", "Cooling"),
       secco: t("Deumidifica", "Drying"),
       acceso: t("Acceso", "On"),
+      pausa: t("In pausa", "Idle"),
       spento: t("Spento", "Off"),
     })[verso(row)];
   const schede = righe

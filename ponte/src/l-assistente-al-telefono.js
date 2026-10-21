@@ -59,6 +59,7 @@ import {
   stessoModo,
 } from "../plancia/src/core/ricarica-di-notte.js";
 import { codiceDellaRicarica } from "../plancia/src/core/stato-della-ricarica.js";
+import { presetDiRiposo } from "../plancia/src/core/climate-power.js";
 
 /* Attenzione all'anello: `sentinella.js` importa questo modulo, e questo
  * importa da lei i suoi aiutanti. Va bene finche' qui, fuori dalle funzioni,
@@ -364,7 +365,16 @@ export function finestraClima(vista) {
         {
           id: "spegni",
           parole: duePassi("Spegni il clima", "Turn it off"),
-          servizio: { dominio: "climate", servizio: "turn_off", entita: [id] },
+          /* Un termostato senza «off» (Netatmo) si spegne in antigelo: il
+           * suo cloud l'«off» lo rifiuta (`presetDiRiposo`). */
+          servizio: presetDiRiposo(stato)
+            ? {
+                dominio: "climate",
+                servizio: "set_preset_mode",
+                entita: [id],
+                dati: { preset_mode: presetDiRiposo(stato) },
+              }
+            : { dominio: "climate", servizio: "turn_off", entita: [id] },
         },
         tastoBasta(),
       ],

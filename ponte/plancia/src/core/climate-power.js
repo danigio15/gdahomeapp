@@ -73,7 +73,16 @@ export function climatePowerCall(state, acceso, precedente = "", richiesta = "",
     if (modalita(state).includes("off")) {
       return { service: "set_hvac_mode", data: { hvac_mode: "off" } };
     }
+    /* Senza lo spento — un Netatmo dichiara solo «auto» e «heat», e il suo
+     * cloud rifiuta l'«off» — si spegne in antigelo, come fa la sua app. */
+    const antigelo = presetDiRiposo(state);
+    if (antigelo) return { service: "set_preset_mode", data: { preset_mode: antigelo } };
     return { service: "turn_off", data: {} };
+  }
+  /* E si riaccende tornando al programma, da dove l'antigelo l'aveva tolto. */
+  if (inAntigelo(state)) {
+    const programma = preset(state).find((m) => m.toLowerCase() === "schedule");
+    if (programma) return { service: "set_preset_mode", data: { preset_mode: programma } };
   }
   const scelta = modalitaDiAccensione(state, precedente, richiesta, suggerita);
   // Una modalita' chiesta esplicitamente dal contesto va impostata anche quando
@@ -87,7 +96,31 @@ export function climatePowerCall(state, acceso, precedente = "", richiesta = "",
   return { service: "turn_on", data: {} };
 }
 
-/** E' spenta? Lo stato di un termostato spento e' la modalita' "off". */
+/** E' spenta? Lo stato di un termostato spento e' la modalita' "off" — o,
+ * per chi lo spento non ce l'ha, l'antigelo. */
 export function climateIsOff(state) {
-  return clean(state?.state).toLowerCase() === "off";
+  return clean(state?.state).toLowerCase() === "off" || inAntigelo(state);
+}
+
+function preset(state) {
+  const elenco = state?.attributes?.preset_modes;
+  return Array.isArray(elenco) ? elenco.map(clean).filter(Boolean) : [];
+}
+
+/* Il preset in cui «spegnere» un termostato che non ha «off». */
+export function presetDiRiposo(state) {
+  if (!modalita(state).length || modalita(state).includes("off")) return "";
+  const tutti = preset(state);
+  return (
+    tutti.find((m) => m.toLowerCase() === "frost_guard") ||
+    tutti.find((m) => m.toLowerCase() === "away") ||
+    ""
+  );
+}
+
+function inAntigelo(state) {
+  const riposo = presetDiRiposo(state);
+  return (
+    Boolean(riposo) && clean(state?.attributes?.preset_mode).toLowerCase() === riposo.toLowerCase()
+  );
 }

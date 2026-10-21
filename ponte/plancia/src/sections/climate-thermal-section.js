@@ -112,6 +112,7 @@ import {
   wrapFunction,
 } from "./shared.js";
 import { lEnergiaInParole, laPotenzaInParole } from "../core/le-unita-della-corrente.js";
+import { climaInFunzione } from "../core/il-termostato.js";
 
 const KEY = "__DASHBOARDMODERN_CLIMATE_THERMAL__";
 const STYLE_ID = "dm-climate-thermal-style";
@@ -385,6 +386,9 @@ export function climateReading(entity, states = allStates(), unita = unitaDellEn
   return {
     known: Boolean(entry),
     on: daiWatt === null ? Boolean(entry) && !OFF_STATES.has(raw) : daiWatt,
+    /* Se conta fra le accese: un termostato fermo in «auto» la card lo
+     * mostra «In pausa», ma non e' un'unita' accesa. */
+    inFunzione: daiWatt === null ? climaInFunzione(entry, unita) : daiWatt,
     /* I watt che si stanno leggendo, quando c'e' una presa: la card li scrive,
      * cosi' chi ha messo la soglia vede il numero su cui l'ha messa. */
     watt: wattDellUnita(unita, states),
@@ -1388,7 +1392,7 @@ function paintSummary(shell, units, states, labels) {
   }
   const inZone = units.filter((unit) => unit.zone === zone);
   const readings = inZone.map((unit) => climateReading(unit.entity, states));
-  const running = readings.filter((reading) => reading.on).length;
+  const running = readings.filter((reading) => reading.inFunzione).length;
   const ambient = readings.map((reading) => reading.ambient).filter((value) => value !== null);
 
   const runningEl = shell.querySelector("[data-dm-cl-running]");
