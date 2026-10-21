@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-QBVX6JV2.js";
+} from "../../chunk-I7K2BWFE.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -91635,6 +91635,46 @@ function ensureTasto() {
 function segnaCheGalleggia(acceso6) {
   doc?.body?.classList?.toggle("dm-assist-galleggia", Boolean(acceso6));
 }
+var tastoNellaBarra = (radice3 = "html") => `
+  ${radice3} body.dm-assist-galleggia .dm-assist-tasto.dm-assist-tasto{
+    right:10px;width:48px;height:48px;font-size:21px;z-index:9950;
+    bottom:calc(var(--dm-fondo-di-sistema,0px) + (var(--dm-barra-alta,67px) - var(--dm-fondo-di-sistema,0px) - 48px) / 2);
+    box-shadow:0 0 0 6px var(--dm-colore-barra,transparent),16px 0 0 6px var(--dm-colore-barra,transparent),0 8px 20px -8px rgba(2,132,199,.7)}
+  ${radice3}:root body.dm-assist-galleggia nav.tabs.bottom-nav-bar.bottom-nav-bar{padding-right:68px!important}
+`;
+function seguiLaBarra() {
+  const radice3 = doc?.documentElement;
+  if (!radice3) return;
+  let osservata = null;
+  const misura7 = () => {
+    const barra2 = doc.querySelector("nav.tabs.bottom-nav-bar");
+    if (!barra2) return;
+    if (barra2 !== osservata && root.ResizeObserver) {
+      osservata = barra2;
+      new root.ResizeObserver(misura7).observe(barra2);
+    }
+    const scrivi5 = (nome, valore3) => {
+      if (valore3 && radice3.style.getPropertyValue(nome) !== valore3)
+        radice3.style.setProperty(nome, valore3);
+    };
+    const alta = Math.round(barra2.getBoundingClientRect().height);
+    if (alta > 0) scrivi5("--dm-barra-alta", `${alta}px`);
+    scrivi5("--dm-colore-barra", root.getComputedStyle?.(barra2)?.backgroundColor);
+  };
+  misura7();
+  const poi = () => root.setTimeout?.(misura7, 60);
+  doc.addEventListener?.("click", poi, { passive: true });
+  try {
+    root.matchMedia?.("(prefers-color-scheme: dark)")?.addEventListener?.("change", poi);
+  } catch (_errore) {
+  }
+  for (const evento of [
+    "dashboardmodern:runtime-ready",
+    "dashboardmodern:persistence-restored",
+    "resize"
+  ])
+    root.addEventListener?.(evento, misura7);
+}
 function installStyles37() {
   installStyle(
     "dm-assist-style",
@@ -91646,6 +91686,25 @@ function installStyles37() {
     body.dm-assist-galleggia.cd-nav-fixed{
       padding-bottom:calc(160px + var(--dm-fondo-di-sistema,0px))!important;
       scroll-padding-bottom:calc(160px + var(--dm-fondo-di-sistema,0px))!important}
+    /* Sul telefono il tasto sta DENTRO la barra, in fondo a destra.
+     *
+     * Galleggiando a novantasei pixel dal fondo stava sopra le card, e
+     * fermandosi a meta' pagina ci finiva sotto sempre qualcosa: l'accensione
+     * di un termostato, «vedi tutto» dell'assistente di casa. Una riserva in
+     * fondo alla pagina salva solo l'ultima card; un tasto che sta sopra la
+     * pagina ne copre sempre una. Nella barra invece non copre niente: la
+     * barra gli lascia il suo posto a destra, e il tasto e' centrato
+     * sull'altezza dei nomi — quella che la barra dice di avere, senza la
+     * fascia dei tasti del telefono che le sta sotto.
+     *
+     * Le tre condizioni sono quelle in cui la barra sta attaccata al fondo e
+     * larga quanto lo schermo (navigation-section). Il cerchio ha un anello
+     * del colore della barra, e un secondo spostato verso destra fino al
+     * bordo: le voci che scorrono di lato gli passano dietro senza toccarlo, e
+     * nella fessura fra il tasto e il bordo non ne spunta un pezzo. */
+    @media (max-width:820px){${tastoNellaBarra()}}
+    ${tastoNellaBarra("html.dm-touch-navigation")}
+    @media (hover:none) and (pointer:coarse){${tastoNellaBarra()}}
     .dm-assist-tasto:hover{transform:translateY(-1px)}
     .dm-assist-tasto:focus-visible{outline:3px solid color-mix(in srgb,var(--primary-color,#0ea5e9) 40%,transparent);outline-offset:3px}
     .dm-assist-pannello{max-width:520px;width:min(520px,100%);display:flex;flex-direction:column;max-height:min(78vh,720px)}
@@ -91688,6 +91747,7 @@ function installAssistSection() {
     "dashboardmodern:config-changed"
   ])
     root.addEventListener?.(evento, senti);
+  seguiLaBarra();
   root.DashboardModernAssist = { apri: apriAssist, chiudi: chiudiAssist, chiedi: chiedi5 };
   return true;
 }

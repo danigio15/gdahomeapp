@@ -4,7 +4,8 @@
  * li ha gia' lasciati fuori chi ospita la plancia. In Home Assistant la
  * pagina si sentiva dire lo stesso 48 da `env(safe-area-inset-bottom)` e se
  * li aggiungeva sotto la barra: una striscia vuota sotto i nomi. E scorrendo,
- * in Home Assistant come nell'app, le card passavano sotto l'orologio.
+ * in Home Assistant come nell'app, le card passavano sotto l'orologio. E il
+ * tasto dell'assistente, che galleggiava sopra le card, ne copriva sempre una.
  */
 import { expect, test } from "@playwright/test";
 import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
@@ -37,7 +38,7 @@ const SEME = {
 test.use({ viewport: { width: 393, height: 832 } });
 
 for (const dove of ["home-assistant", "app"])
-  test(`${dove}: la barra senza vuoto sotto, e niente sotto l'orologio`, async ({
+  test(`${dove}: la barra senza vuoto sotto, l'assistente dentro, niente sotto l'orologio`, async ({
     page,
     browserName,
   }, testInfo) => {
@@ -108,6 +109,23 @@ for (const dove of ["home-assistant", "app"])
       return chi?.id || "";
     });
     expect(sopra).toBe("dm-fascia-dell-orologio");
+    /* Il tasto dell'assistente sta dentro la barra, non sopra le card: sopra
+     * copriva l'accensione di un termostato. E l'ultima voce, scorsa la barra
+     * fino in fondo, gli si ferma accanto e non sotto. */
+    const posti = await page.evaluate(() => {
+      const barra = document.querySelector("nav.tabs.bottom-nav-bar");
+      barra.scrollLeft = barra.scrollWidth;
+      const tasto = document.getElementById("dm-assist-tasto")?.getBoundingClientRect();
+      const voci = [...barra.querySelectorAll(".tab")].filter((v) => v.offsetParent);
+      return {
+        barra: barra.getBoundingClientRect().toJSON(),
+        tasto: tasto?.toJSON(),
+        ultima: voci.at(-1)?.getBoundingClientRect().right,
+      };
+    });
+    expect(posti.tasto.top).toBeGreaterThanOrEqual(posti.barra.top);
+    expect(posti.tasto.bottom).toBeLessThanOrEqual(posti.barra.bottom);
+    expect(posti.ultima).toBeLessThanOrEqual(posti.tasto.left);
     if (process.env.DM_FOTO)
       await page.screenshot({ path: `${process.env.DM_FOTO}/navbar-orologio-${dove}.png` });
   });

@@ -354,6 +354,58 @@ function segnaCheGalleggia(acceso) {
   doc?.body?.classList?.toggle("dm-assist-galleggia", Boolean(acceso));
 }
 
+/* Le regole del tasto dentro la barra, dette una volta e scritte nei tre
+ * casi in cui la barra e' attaccata al fondo. */
+const tastoNellaBarra = (radice = "html") => `
+  ${radice} body.dm-assist-galleggia .dm-assist-tasto.dm-assist-tasto{
+    right:10px;width:48px;height:48px;font-size:21px;z-index:9950;
+    bottom:calc(var(--dm-fondo-di-sistema,0px) + (var(--dm-barra-alta,67px) - var(--dm-fondo-di-sistema,0px) - 48px) / 2);
+    box-shadow:0 0 0 6px var(--dm-colore-barra,transparent),16px 0 0 6px var(--dm-colore-barra,transparent),0 8px 20px -8px rgba(2,132,199,.7)}
+  ${radice}:root body.dm-assist-galleggia nav.tabs.bottom-nav-bar.bottom-nav-bar{padding-right:68px!important}
+`;
+
+/* Quanto e' alta la barra e di che colore e': li scrive qui, sulla radice,
+ * per il tasto che ci sta dentro. Si riguarda quando la barra cambia misura
+ * e quando cambia il tema o la tavolozza, che ne cambiano il fondo. Si
+ * scrive solo se e' cambiato. */
+function seguiLaBarra() {
+  const radice = doc?.documentElement;
+  if (!radice) return;
+  let osservata = null;
+  const misura = () => {
+    const barra = doc.querySelector("nav.tabs.bottom-nav-bar");
+    if (!barra) return;
+    if (barra !== osservata && root.ResizeObserver) {
+      osservata = barra;
+      new root.ResizeObserver(misura).observe(barra);
+    }
+    const scrivi = (nome, valore) => {
+      if (valore && radice.style.getPropertyValue(nome) !== valore)
+        radice.style.setProperty(nome, valore);
+    };
+    const alta = Math.round(barra.getBoundingClientRect().height);
+    if (alta > 0) scrivi("--dm-barra-alta", `${alta}px`);
+    scrivi("--dm-colore-barra", root.getComputedStyle?.(barra)?.backgroundColor);
+  };
+  misura();
+  /* Il tema e la tavolozza si cambiano con un tocco, e il telefono passa al
+   * buio da solo: si rimisura dopo l'uno e l'altro, invece di tenere un
+   * osservatore sulla radice. */
+  const poi = () => root.setTimeout?.(misura, 60);
+  doc.addEventListener?.("click", poi, { passive: true });
+  try {
+    root.matchMedia?.("(prefers-color-scheme: dark)")?.addEventListener?.("change", poi);
+  } catch (_errore) {
+    /* Senza, resta la misura al tocco. */
+  }
+  for (const evento of [
+    "dashboardmodern:runtime-ready",
+    "dashboardmodern:persistence-restored",
+    "resize",
+  ])
+    root.addEventListener?.(evento, misura);
+}
+
 function installStyles() {
   installStyle(
     "dm-assist-style",
@@ -365,6 +417,25 @@ function installStyles() {
     body.dm-assist-galleggia.cd-nav-fixed{
       padding-bottom:calc(160px + var(--dm-fondo-di-sistema,0px))!important;
       scroll-padding-bottom:calc(160px + var(--dm-fondo-di-sistema,0px))!important}
+    /* Sul telefono il tasto sta DENTRO la barra, in fondo a destra.
+     *
+     * Galleggiando a novantasei pixel dal fondo stava sopra le card, e
+     * fermandosi a meta' pagina ci finiva sotto sempre qualcosa: l'accensione
+     * di un termostato, «vedi tutto» dell'assistente di casa. Una riserva in
+     * fondo alla pagina salva solo l'ultima card; un tasto che sta sopra la
+     * pagina ne copre sempre una. Nella barra invece non copre niente: la
+     * barra gli lascia il suo posto a destra, e il tasto e' centrato
+     * sull'altezza dei nomi — quella che la barra dice di avere, senza la
+     * fascia dei tasti del telefono che le sta sotto.
+     *
+     * Le tre condizioni sono quelle in cui la barra sta attaccata al fondo e
+     * larga quanto lo schermo (navigation-section). Il cerchio ha un anello
+     * del colore della barra, e un secondo spostato verso destra fino al
+     * bordo: le voci che scorrono di lato gli passano dietro senza toccarlo, e
+     * nella fessura fra il tasto e il bordo non ne spunta un pezzo. */
+    @media (max-width:820px){${tastoNellaBarra()}}
+    ${tastoNellaBarra("html.dm-touch-navigation")}
+    @media (hover:none) and (pointer:coarse){${tastoNellaBarra()}}
     .dm-assist-tasto:hover{transform:translateY(-1px)}
     .dm-assist-tasto:focus-visible{outline:3px solid color-mix(in srgb,var(--primary-color,#0ea5e9) 40%,transparent);outline-offset:3px}
     .dm-assist-pannello{max-width:520px;width:min(520px,100%);display:flex;flex-direction:column;max-height:min(78vh,720px)}
@@ -418,6 +489,7 @@ export function installAssistSection() {
     "dashboardmodern:config-changed",
   ])
     root.addEventListener?.(evento, senti);
+  seguiLaBarra();
   root.DashboardModernAssist = { apri: apriAssist, chiudi: chiudiAssist, chiedi };
   return true;
 }
