@@ -1,6 +1,7 @@
 import {
   cimaDiSistema,
   fondoDiSistema,
+  fuoriDallaFinestra,
   inPixel,
   laCorniceNellaCima,
 } from "../core/fondo-di-sistema.js";
@@ -1376,16 +1377,25 @@ export function misuraIlFondoDiSistema() {
   const proprio = insetDi(doc);
   let ospite = 0;
   let lasciato = 0;
+  let finestra = root;
   try {
     const cima = root.top && root.top !== root ? root.top.document : null;
     if (cima) {
       ospite = insetDi(cima);
       lasciato = giaLasciatoSotto(cima);
+      finestra = root.top;
     }
   } catch (_error) {
     /* Cornice di un'altra origine: non c'è niente da chiedere. */
   }
-  const valore = fondoDiSistema(proprio, ospite, lasciato);
+  /* Lo schermo lo si confronta con la finestra in cima: e' lei che l'app
+   * accorcia, non la nostra cornice. */
+  const valore = fondoDiSistema(
+    proprio,
+    ospite,
+    lasciato,
+    fuoriDallaFinestra(root.screen, finestra),
+  );
   doc.documentElement.style.setProperty("--dm-fondo-di-sistema", inPixel(valore));
   return valore;
 }
@@ -1524,8 +1534,32 @@ function installaLaCima() {
       }
       /* Le finestre delle tessere di Home la leggono nel loro foglio, in
          home-widgets-section: il margine e' suo e un padrone basta. */
+
+      /* La fascia dell'orologio e' della plancia, non di chi scorre.
+       *
+       * Il margine in cima tiene la testata sotto l'orologio solo finche' la
+       * pagina e' ferma in cima: appena si scorre, le card salivano dietro
+       * l'ora e la batteria e ci passavano attraverso — «Accendi tutto» scritto
+       * sopra l'orologio, in Home Assistant come nell'app. Qui la fascia si
+       * copre col fondo della plancia, ferma, alta quanto la fascia e non un
+       * pixel di piu': dove la fascia non c'e' — un computer, Home Assistant
+       * con la sua barra in cima — e' alta zero e non esiste. Sotto alle
+       * finestre, che la scansano gia' da sole, e sotto al muro. */
+      #dm-fascia-dell-orologio{
+        position:fixed;left:0;right:0;top:0;height:var(--dm-cima-libera,0px);
+        background:var(--bg-sculpted,#f0f4f8);z-index:8800;pointer-events:none
+      }
     `,
   );
+  const metti = () => {
+    if (!doc.body || doc.getElementById("dm-fascia-dell-orologio")) return;
+    const fascia = doc.createElement("div");
+    fascia.id = "dm-fascia-dell-orologio";
+    fascia.setAttribute("aria-hidden", "true");
+    doc.body.append(fascia);
+  };
+  if (doc.body) metti();
+  else doc.addEventListener?.("DOMContentLoaded", metti, { once: true });
 }
 
 export function installNavigationSection() {

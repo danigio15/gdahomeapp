@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-R6RCL64O.js";
+} from "../../chunk-QBVX6JV2.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -93550,10 +93550,22 @@ var numero47 = (valore3) => {
   const n = Number(valore3);
   return Number.isFinite(n) && n > 0 ? n : 0;
 };
-function fondoDiSistema(proprio, ospite3, giaLasciato = 0) {
+function fondoDiSistema(proprio, ospite3, giaLasciato = 0, sottoLaFinestra = 0) {
   const mio = numero47(proprio);
   const suo2 = Math.max(0, numero47(ospite3) - numero47(giaLasciato));
-  return Math.min(FONDO_MASSIMO, Math.max(mio, suo2));
+  const valore3 = Math.min(FONDO_MASSIMO, Math.max(mio, suo2));
+  if (valore3 > 0 && Math.abs(numero47(sottoLaFinestra) - valore3) <= 2) return 0;
+  return valore3;
+}
+function fuoriDallaFinestra(schermo, finestra6) {
+  const largo = numero47(schermo?.width);
+  const alto = numero47(schermo?.height);
+  const w = numero47(finestra6?.innerWidth);
+  const h = numero47(finestra6?.innerHeight);
+  if (!alto || !h) return 0;
+  const coricata = w > h;
+  const altezza = coricata === largo > alto ? alto : largo;
+  return Math.max(0, altezza - h);
 }
 function inPixel(valore3) {
   return `${Math.round(numero47(valore3))}px`;
@@ -94573,15 +94585,22 @@ function misuraIlFondoDiSistema() {
   const proprio = insetDi(doc);
   let ospite3 = 0;
   let lasciato = 0;
+  let finestra6 = root;
   try {
     const cima = root.top && root.top !== root ? root.top.document : null;
     if (cima) {
       ospite3 = insetDi(cima);
       lasciato = giaLasciatoSotto(cima);
+      finestra6 = root.top;
     }
   } catch (_error) {
   }
-  const valore3 = fondoDiSistema(proprio, ospite3, lasciato);
+  const valore3 = fondoDiSistema(
+    proprio,
+    ospite3,
+    lasciato,
+    fuoriDallaFinestra(root.screen, finestra6)
+  );
   doc.documentElement.style.setProperty("--dm-fondo-di-sistema", inPixel(valore3));
   return valore3;
 }
@@ -94667,8 +94686,32 @@ function installaLaCima() {
       }
       /* Le finestre delle tessere di Home la leggono nel loro foglio, in
          home-widgets-section: il margine e' suo e un padrone basta. */
+
+      /* La fascia dell'orologio e' della plancia, non di chi scorre.
+       *
+       * Il margine in cima tiene la testata sotto l'orologio solo finche' la
+       * pagina e' ferma in cima: appena si scorre, le card salivano dietro
+       * l'ora e la batteria e ci passavano attraverso — «Accendi tutto» scritto
+       * sopra l'orologio, in Home Assistant come nell'app. Qui la fascia si
+       * copre col fondo della plancia, ferma, alta quanto la fascia e non un
+       * pixel di piu': dove la fascia non c'e' — un computer, Home Assistant
+       * con la sua barra in cima — e' alta zero e non esiste. Sotto alle
+       * finestre, che la scansano gia' da sole, e sotto al muro. */
+      #dm-fascia-dell-orologio{
+        position:fixed;left:0;right:0;top:0;height:var(--dm-cima-libera,0px);
+        background:var(--bg-sculpted,#f0f4f8);z-index:8800;pointer-events:none
+      }
     `
   );
+  const metti5 = () => {
+    if (!doc.body || doc.getElementById("dm-fascia-dell-orologio")) return;
+    const fascia2 = doc.createElement("div");
+    fascia2.id = "dm-fascia-dell-orologio";
+    fascia2.setAttribute("aria-hidden", "true");
+    doc.body.append(fascia2);
+  };
+  if (doc.body) metti5();
+  else doc.addEventListener?.("DOMContentLoaded", metti5, { once: true });
 }
 function installNavigationSection() {
   if (!doc || state97.installed) return;
