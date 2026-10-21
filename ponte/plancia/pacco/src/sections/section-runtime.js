@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-7VERXGH3.js";
+} from "../../chunk-K6LQZKSX.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -128090,11 +128090,13 @@ function eroe(l, indice) {
         ${stato3 ? `<span class="dm-na-stato" data-tono="${esc(stato3.tono)}"><i></i>${esc(stato3.testo)}</span>` : "<span></span>"}
         ${quando4 ? `<span class="dm-na-quando">🕒 ${esc(quando4)}</span>` : ""}
       </div>
-      <div class="dm-na-eroe-nome"><span class="dm-na-logo dm-na-logo-grande">${logoDellAuto(car, 34)}</span>
-        <span><b>${esc(titolo3)}</b>${sottotitolo5 ? `<small>${esc(sottotitolo5)}</small>` : ""}</span></div>
     </div>
+    <div class="dm-na-eroe-lato">
+    <div class="dm-na-eroe-nome"><span class="dm-na-logo dm-na-logo-grande">${logoDellAuto(car, 26)}</span>
+      <span><b>${esc(titolo3)}</b>${sottotitolo5 ? `<small>${esc(sottotitolo5)}</small>` : ""}</span></div>
     <div class="dm-na-eroe-dati">${dati}</div>
     <div class="dm-na-pills dm-na-eroe-pills">${pastiglieDellAuto(l).map(pastiglia3).join("")}</div>
+    </div>
   </section>`;
 }
 function linguette3(l, aperta2) {
@@ -128766,18 +128768,22 @@ function stile6() {
     background:radial-gradient(80% 90% at 50% 60%,color-mix(in srgb,var(--na-ev) 22%,var(--card-bg,#fff)),var(--card-bg,#fff))}
   ${P8} .dm-na-copertina img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 60%}
   ${P8} .dm-na-copertina::after{content:"";position:absolute;inset:0;pointer-events:none;
-    background:linear-gradient(180deg,rgba(2,6,23,.45) 0%,rgba(2,6,23,0) 30%,rgba(2,6,23,0) 50%,rgba(2,6,23,.78) 100%)}
+    background:linear-gradient(180deg,rgba(2,6,23,.4) 0%,rgba(2,6,23,0) 28%)}
   ${P8} .dm-na-foto-vuota{position:absolute;inset:0;display:grid;place-items:center;opacity:.5}
   ${P8} .dm-na-copertina-sopra{position:absolute;z-index:1;top:16px;left:18px;right:18px;display:flex;align-items:center;justify-content:space-between;gap:10px}
   ${P8} .dm-na-quando{padding:5px 11px;border-radius:999px;font-size:12px;font-weight:800;color:#e2e8f0;
     background:rgba(2,6,23,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-  ${P8} .dm-na-eroe-nome{position:absolute;z-index:1;left:18px;right:18px;bottom:16px;display:flex;align-items:center;gap:12px;min-width:0}
-  ${P8} .dm-na-logo-grande{width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,.92);
-    box-shadow:0 6px 18px rgba(2,6,23,.35);overflow:hidden;padding:6px}
+  /* Il marchio e il modello: una riga sua sotto la foto, non sopra. */
+  ${P8} .dm-na-eroe-lato{display:grid;align-content:start;min-width:0}
+  ${P8} .dm-na-eroe-nome{display:flex;align-items:center;gap:14px;min-width:0;padding:18px 22px 14px;
+    border-bottom:1px solid var(--card-border,#e2e8f0)}
+  ${P8} .dm-na-logo-grande{width:64px;height:54px;flex:0 0 auto;display:grid;place-items:center;border-radius:16px;
+    background:var(--surface-2,#f8fafc);border:1px solid var(--card-border,#e2e8f0);padding:6px}
+  ${P8} .dm-na-logo-grande>*{max-width:100%;max-height:100%}
   ${P8} .dm-na-eroe-nome>span:last-child{min-width:0}
-  ${P8} .dm-na-eroe-nome b{display:block;font-size:24px;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-.3px;
-    text-shadow:0 2px 10px rgba(2,6,23,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  ${P8} .dm-na-eroe-nome small{display:block;font-size:13px;font-weight:700;color:rgba(226,232,240,.9);margin-top:3px;text-shadow:0 1px 6px rgba(2,6,23,.6)}
+  ${P8} .dm-na-eroe-nome b{display:block;font-size:22px;font-weight:900;color:var(--text,#0f172a);line-height:1.15;letter-spacing:-.3px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  ${P8} .dm-na-eroe-nome small{display:block;font-size:13px;font-weight:700;color:var(--text-dim,#64748b);margin-top:3px}
   ${P8} .dm-na-stato{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;font-size:12.5px;font-weight:900;
     color:#e2e8f0;background:rgba(2,6,23,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
   ${P8} .dm-na-stato i{width:8px;height:8px;border-radius:50%;background:currentColor}
@@ -128805,8 +128811,9 @@ function stile6() {
   /* Sul computer la foto sta a sinistra, nella sua forma: allargata a tutta la
    * pagina una foto del telefono si sgrana, e l'auto resta tagliata. */
   @media (min-width:761px){
-    ${P8} .dm-na-eroe{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);grid-template-rows:auto 1fr;align-items:start}
-    ${P8} .dm-na-copertina{grid-row:1 / span 2;height:100%;min-height:320px;border-radius:22px 0 0 22px}
+    ${P8} .dm-na-eroe{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:stretch}
+    ${P8} .dm-na-copertina{height:100%;min-height:340px;border-radius:22px 0 0 22px}
+    ${P8} .dm-na-eroe-nome{padding:22px 24px 16px}
     ${P8} .dm-na-eroe-dati{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr));padding:14px 14px 0}
     ${P8} .dm-na-dato-km{grid-column:1 / -1}
     ${P8} .dm-na-dato+.dm-na-dato{border-left:0}
@@ -129002,8 +129009,9 @@ function stile6() {
     ${P8} .dm-na-carta{padding:16px;border-radius:20px}
     ${P8} .dm-na-eroe{padding:0}
     ${P8} .dm-na-copertina{height:210px;border-radius:20px 20px 0 0}
-    ${P8} .dm-na-eroe-nome b{font-size:20px}
-    ${P8} .dm-na-logo-grande{width:44px;height:44px;border-radius:13px}
+    ${P8} .dm-na-eroe-nome{padding:14px 16px 12px;gap:12px}
+    ${P8} .dm-na-eroe-nome b{font-size:19px}
+    ${P8} .dm-na-logo-grande{width:58px;height:48px;padding:5px}
     ${P8} .dm-na-eroe-dati{padding:0 2px}
     ${P8} .dm-na-dato{padding:14px 10px 10px}
     ${P8} .dm-na-dato>span{font-size:10px;letter-spacing:.8px}
