@@ -193,9 +193,7 @@ async def test_collegarsi_ricorda_chi_e_e_cosa_puo_fare(
     github.answer("oauth/access_token", {"access_token": "gho_segreto"})
     github.answer("/user", {"login": "persona-2-hub"})
     github.answer("/repos/", {"permissions": {"push": True}})
-    account = await tickets.async_finish_auth(
-        hass, user_id="persona_2", device_code="dc-1"
-    )
+    account = await tickets.async_finish_auth(hass, user_id="persona_2", device_code="dc-1")
     assert account == {"connected": True, "login": "persona-2-hub", "maintainer": True}
 
 
@@ -249,9 +247,7 @@ async def test_chi_non_puo_scrivere_non_e_il_manutentore(
     github.answer("oauth/access_token", {"access_token": "gho_segreto"})
     github.answer("/user", {"login": "persona-7-hub"})
     github.answer("/repos/", {"permissions": {"push": False}})
-    account = await tickets.async_finish_auth(
-        hass, user_id="persona_7", device_code="dc-1"
-    )
+    account = await tickets.async_finish_auth(hass, user_id="persona_7", device_code="dc-1")
     assert account["maintainer"] is False
 
 

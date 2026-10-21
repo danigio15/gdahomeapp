@@ -64,33 +64,6 @@
       "presenza_simulata": {
         "name": "재실 시뮬레이션"
       }
-    },
-    "sensor": {
-      "unpaid_invoices": {
-        "name": "미납 청구서"
-      },
-      "payment_status": {
-        "name": "결제 상태",
-        "state": {
-          "paid": "납부 완료",
-          "unpaid": "미납"
-        }
-      },
-      "latest_invoice": {
-        "name": "최근 청구서"
-      },
-      "total_invoiced": {
-        "name": "총 청구액(12개월)"
-      },
-      "contracted_power": {
-        "name": "계약 전력"
-      },
-      "offer_end": {
-        "name": "요금제 종료일"
-      },
-      "daily_consumption": {
-        "name": "일일 사용량"
-      }
     }
   }
 }

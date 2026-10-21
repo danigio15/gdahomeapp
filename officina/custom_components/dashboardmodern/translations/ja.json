@@ -64,33 +64,6 @@
       "presenza_simulata": {
         "name": "在宅シミュレーション"
       }
-    },
-    "sensor": {
-      "unpaid_invoices": {
-        "name": "未払いの請求"
-      },
-      "payment_status": {
-        "name": "支払い状況",
-        "state": {
-          "paid": "支払い済み",
-          "unpaid": "未払い"
-        }
-      },
-      "latest_invoice": {
-        "name": "最新の請求"
-      },
-      "total_invoiced": {
-        "name": "請求総額(12か月)"
-      },
-      "contracted_power": {
-        "name": "契約電力"
-      },
-      "offer_end": {
-        "name": "プラン終了日"
-      },
-      "daily_consumption": {
-        "name": "1日の使用量"
-      }
     }
   }
 }

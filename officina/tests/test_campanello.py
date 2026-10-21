@@ -102,9 +102,7 @@ def _ascolta(hass: HomeAssistant) -> list[dict[str, Any]]:
     return suonate
 
 
-async def _mia(
-    hass: HomeAssistant, numero: int, *, opened_by: str = "persona_2"
-) -> None:
+async def _mia(hass: HomeAssistant, numero: int, *, opened_by: str = "persona_2") -> None:
     """Una segnalazione gia' partita, di questo utente."""
     store = await async_get_ticket_store(hass)
     ticket = await store.async_create(
@@ -228,9 +226,7 @@ async def test_il_messaggio_di_chi_ha_segnalato_non_gli_torna_indietro(
     github.answer("/issues?", [_riga(4, commenti=1)])
     await tickets.async_watch_messages(hass)
 
-    await tickets.async_reply(
-        hass, user_id="persona_2", number=4, message="Ho provato."
-    )
+    await tickets.async_reply(hass, user_id="persona_2", number=4, message="Ho provato.")
 
     github.answer("/issues?", [_riga(4, commenti=2, quando="2026-09-09T09:00:00Z")])
     assert await tickets.async_watch_messages(hass) == []

@@ -64,33 +64,6 @@
       "presenza_simulata": {
         "name": "Имитация присутствия"
       }
-    },
-    "sensor": {
-      "unpaid_invoices": {
-        "name": "Неоплаченные счета"
-      },
-      "payment_status": {
-        "name": "Статус оплаты",
-        "state": {
-          "paid": "Оплачен",
-          "unpaid": "К оплате"
-        }
-      },
-      "latest_invoice": {
-        "name": "Последний счёт"
-      },
-      "total_invoiced": {
-        "name": "Всего выставлено (12 месяцев)"
-      },
-      "contracted_power": {
-        "name": "Договорная мощность"
-      },
-      "offer_end": {
-        "name": "Окончание предложения"
-      },
-      "daily_consumption": {
-        "name": "Суточное потребление"
-      }
     }
   }
 }

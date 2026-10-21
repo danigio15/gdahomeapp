@@ -19,10 +19,9 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
-# Le piattaforme le porta una plancia sola: chi ne ha due non deve ritrovarsi
-# due voci per la stessa versione, ne' due volte le stesse bollette. I sensori
-# sono quelli dei fornitori di energia collegati (`fornitori/`).
-PLATFORMS: list[str] = ["sensor", "switch", "update"]
+# L'unica piattaforma e' l'avviso di aggiornamento, e la porta una plancia
+# sola: chi ne ha due non deve ritrovarsi due voci per la stessa versione.
+PLATFORMS: list[str] = ["switch", "update"]
 
 # Quale plancia ha montato la piattaforma. Si scarica solo da quella: chiederlo
 # a una voce che non l'ha mai montata fa sollevare a Home Assistant un
@@ -130,11 +129,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # diverse — una issue pubblica e una conversazione privata — e chi
         # spegne l'una puo' voler tenere accesa l'altra.
         await async_setup_chat(hass, entry)
-        # I fornitori di energia prima delle piattaforme: i sensori delle
-        # bollette nascono dai collegamenti che questo legge dal disco.
-        from .fornitori import async_setup_fornitori
-
-        await async_setup_fornitori(hass, entry)
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
         hass.data.setdefault(DOMAIN, {})[DATA_UPDATE_ENTRY] = entry.entry_id
         # Le piattaforme si sono montate: l'avviso di aggiornamento e'
@@ -195,10 +189,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if domain_data.get(DATA_UPDATE_ENTRY) == entry.entry_id:
         scaricata = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
         if scaricata:
-            from .fornitori import async_unload_fornitori
-
             domain_data.pop(DATA_UPDATE_ENTRY, None)
-            await async_unload_fornitori(hass)
     await async_unregister_frontend_entry(hass, entry.entry_id)
     # Il negozio condiviso scrive il file con un ritardo, per compattare le
     # raffiche di salvataggi. Chi scarica una plancia — o toglie

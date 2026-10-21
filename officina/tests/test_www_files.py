@@ -165,29 +165,16 @@ def test_upload_le_foto_dei_riquadri_vanno_in_riquadri(tmp_path: Path) -> None:
 
     esito = save_www_upload(str(tmp_path), "Terrazza.png", PNG, "riquadri")
     assert esito == {"path": "/local/dashboardmodern/riquadri/terrazza.png"}
-    assert (
-        tmp_path / "dashboardmodern" / "riquadri" / "terrazza.png"
-    ).read_bytes() == PNG
+    assert (tmp_path / "dashboardmodern" / "riquadri" / "terrazza.png").read_bytes() == PNG
     seconda = save_www_upload(str(tmp_path), "terrazza.png", PNG, "riquadri")
     assert seconda == {"path": "/local/dashboardmodern/riquadri/terrazza-2.png"}
 
 
 @pytest.mark.parametrize(
     "cartella",
-    [
-        "..",
-        "../..",
-        "../fuori",
-        "riquadri/..",
-        "/etc",
-        "riquadri/sotto",
-        "Riquadri",
-        "x",
-    ],
+    ["..", "../..", "../fuori", "riquadri/..", "/etc", "riquadri/sotto", "Riquadri", "x"],
 )
-def test_upload_una_cartella_fuori_elenco_non_si_scrive(
-    tmp_path: Path, cartella: str
-) -> None:
+def test_upload_una_cartella_fuori_elenco_non_si_scrive(tmp_path: Path, cartella: str) -> None:
     from custom_components.dashboardmodern.www_files import save_www_upload
 
     assert save_www_upload(str(tmp_path), "x.png", PNG, cartella) is None

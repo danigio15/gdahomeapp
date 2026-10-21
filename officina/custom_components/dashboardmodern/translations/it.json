@@ -64,33 +64,6 @@
       "presenza_simulata": {
         "name": "Presenza simulata"
       }
-    },
-    "sensor": {
-      "unpaid_invoices": {
-        "name": "Bollette da pagare"
-      },
-      "payment_status": {
-        "name": "Stato del pagamento",
-        "state": {
-          "paid": "Pagata",
-          "unpaid": "Da pagare"
-        }
-      },
-      "latest_invoice": {
-        "name": "Ultima bolletta"
-      },
-      "total_invoiced": {
-        "name": "Totale fatturato (12 mesi)"
-      },
-      "contracted_power": {
-        "name": "Potenza impegnata"
-      },
-      "offer_end": {
-        "name": "Scadenza dell'offerta"
-      },
-      "daily_consumption": {
-        "name": "Consumo giornaliero"
-      }
     }
   }
 }

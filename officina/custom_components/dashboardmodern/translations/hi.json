@@ -64,33 +64,6 @@
       "presenza_simulata": {
         "name": "उपस्थिति अनुकरण"
       }
-    },
-    "sensor": {
-      "unpaid_invoices": {
-        "name": "अदत्त बिल"
-      },
-      "payment_status": {
-        "name": "भुगतान की स्थिति",
-        "state": {
-          "paid": "भुगतान किया",
-          "unpaid": "भुगतान बाकी"
-        }
-      },
-      "latest_invoice": {
-        "name": "नवीनतम बिल"
-      },
-      "total_invoiced": {
-        "name": "कुल बिल राशि (12 महीने)"
-      },
-      "contracted_power": {
-        "name": "अनुबंधित क्षमता"
-      },
-      "offer_end": {
-        "name": "ऑफ़र की समाप्ति"
-      },
-      "daily_consumption": {
-        "name": "दैनिक खपत"
-      }
     }
   }
 }
