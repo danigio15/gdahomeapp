@@ -21,6 +21,7 @@ import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/casa/entita.dart';
 import 'package:gdahome/notifiche/consegna.dart';
+import 'package:gdahome/notifiche/il_filmato.dart';
 import 'package:gdahome/notifiche/le_immagini.dart';
 import 'package:gdahome/notifiche/modello.dart';
 import 'package:gdahome/notifiche/postino.dart';
@@ -625,6 +626,163 @@ void main() {
     await expectLater(
       find.byType(MaterialApp),
       matchesGoldenFile('$_cartella/13-guarda-foto-del-momento.png'),
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.runAsync(() async {
+      await collegamento.chiudi();
+      await ponte.spegni();
+    });
+  });
+
+  /* Il mini video del movimento: l'opzione nella voce, «Guarda» che parte
+   * dal video, e il video che la casa non ha piu'. */
+  for (final scuro in const [false, true]) {
+    final tinta = scuro ? 'scuro' : 'chiaro';
+    testWidgets('l\'opzione del mini video, $tinta', (tester) async {
+      tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        _app(
+          Scaffold(
+            body: FoglioDellaVoce(
+              evento: 'movimento',
+              scelta: const SceltaDellaVoce(quando: 'casa-vuota', video: true),
+              stileGenerale: 'elaborate',
+              entita: const [],
+              cambia: (_) {},
+            ),
+          ),
+          scuro: scuro,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView), const Offset(0, -120));
+      await tester.pumpAndSettle();
+      await expectLater(
+        find.byType(MaterialApp),
+        matchesGoldenFile('$_cartella/20-video-opzione-$tinta.png'),
+      );
+    });
+  }
+
+  NotificaArrivata movimentoColVideo() => NotificaArrivata(
+    id: 'movimento-video',
+    tipo: 'movimento',
+    categoria: 'sicurezza',
+    urgenza: 'normale',
+    titolo: '📷 Movimento · Balcone',
+    testo: '19:00 · casa vuota',
+    quando: DateTime(2026, 10, 21, 19),
+    scade: DateTime(2100),
+    camera: 'camera.ds_2cd2143g2_i22222222_101',
+    film: (id: '1792609200000-a1b2c3d4e5f6', chiave: 'A' * 43),
+    tasti: const [
+      TastoDellaNotifica('guarda', 'Guarda', apre: true),
+      TastoDellaNotifica('inserisci', 'Inserisci antifurto'),
+    ],
+  );
+
+  testWidgets('«Guarda» parte dal mini video', (tester) async {
+    tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    late PonteFinto ponte;
+    late Collegamento collegamento;
+    final foto = File('test/notifiche/porta-di-prova.jpg').readAsBytesSync();
+    await tester.runAsync(() async {
+      (ponte, collegamento) = await _unaCasa();
+    });
+    final filmato = FilmatoDelMovimento(
+      camera: 'camera.ds_2cd2143g2_i22222222_101',
+      quando: DateTime(2026, 10, 21, 19),
+      fotogrammi: [for (var t = -5000; t <= 5000; t += 500) (t: t, jpeg: foto)],
+    );
+    await tester.pumpWidget(
+      _app(
+        SchermataDellaTelecamera(
+          tocco: ToccoDellaNotifica(
+            casa: collegamento.casa!.id,
+            tasto: 'guarda',
+            notifica: movimentoColVideo(),
+          ),
+          collegamento: collegamento,
+          filmatoIniziale: filmato,
+          adesso: DateTime(2026, 10, 21, 19, 17),
+        ),
+        scuro: true,
+      ),
+    );
+    await tester.runAsync(() async {
+      for (final una in find.byType(Image).evaluate()) {
+        await precacheImage((una.widget as Image).image, una);
+      }
+    });
+    /* Due secondi dopo il movimento: la barra a meta', col segno rosso. */
+    for (var i = 0; i < 14; i += 1) {
+      await tester.pump(const Duration(milliseconds: 500));
+    }
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('$_cartella/21-guarda-mini-video.png'),
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.runAsync(() async {
+      await collegamento.chiudi();
+      await ponte.spegni();
+    });
+  });
+
+  testWidgets('«Guarda» quando il video non c\'e\' piu\'', (tester) async {
+    tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    late PonteFinto ponte;
+    late Collegamento collegamento;
+    late Directory cartella;
+    final foto = File('test/notifiche/porta-di-prova.jpg').readAsBytesSync();
+    await tester.runAsync(() async {
+      (ponte, collegamento) = await _unaCasa();
+      cartella = Directory.systemTemp.createTempSync('momento-');
+      await tieniLImmagine('movimento-video', foto, cartella: cartella);
+    });
+    await tester.pumpWidget(
+      _app(
+        SchermataDellaTelecamera(
+          tocco: ToccoDellaNotifica(
+            casa: collegamento.casa!.id,
+            tasto: 'guarda',
+            notifica: movimentoColVideo(),
+          ),
+          collegamento: collegamento,
+          cartellaDelleImmagini: cartella,
+          adesso: DateTime(2026, 10, 21, 19, 17),
+        ),
+        scuro: true,
+      ),
+    );
+    for (var giro = 0; giro < 40; giro += 1) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await tester.pump();
+      if (find
+              .byKey(const Key('telecamera-senza-video'))
+              .evaluate()
+              .isNotEmpty &&
+          find.byKey(const Key('telecamera-foto')).evaluate().isNotEmpty) {
+        break;
+      }
+    }
+    await tester.runAsync(() async {
+      for (final una in find.byType(Image).evaluate()) {
+        await precacheImage((una.widget as Image).image, una);
+      }
+    });
+    await tester.pump(const Duration(milliseconds: 300));
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('$_cartella/22-guarda-video-scaduto.png'),
     );
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.runAsync(() async {

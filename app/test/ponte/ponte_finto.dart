@@ -540,9 +540,20 @@ class PonteFinto {
   /// Assistant che mandano notifiche. `null` e' un ponte di prima.
   Map<String, dynamic>? daHomeAssistant;
 
+  /// I mini video del movimento, per numero: `ponte/notifiche/filmato`
+  /// risponde quello del numero, se la chiave e' quella giusta.
+  final Map<String, ({String chiave, Map<String, dynamic> video})> filmati = {};
+
   Object? _notifiche(String tipo, Map<String, dynamic> detto) {
     final ha = daHomeAssistant;
     switch (tipo) {
+      case 'ponte/notifiche/filmato':
+        final film = detto['film'];
+        final uno = film is Map ? filmati[film['id']] : null;
+        if (uno == null || uno.chiave != (film as Map)['chiave']) {
+          return {'nonCe': true};
+        }
+        return uno.video;
       case 'ponte/notifiche/ha/elenco':
         return ha ?? {'fatto': true};
       case 'ponte/notifiche/ha/imposta':
