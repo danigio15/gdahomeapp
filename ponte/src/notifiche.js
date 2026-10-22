@@ -88,6 +88,7 @@ import {
 } from "./la-giornata-di-casa.js";
 import { COMPOSITORI, PEZZI_DEL_CICLO } from "./parole-delle-notifiche.js";
 import { NotificheDiHomeAssistant } from "./notifiche-di-home-assistant.js";
+import { chiaveBuona, Filmati, idBuono } from "./i-filmati.js";
 
 const MINUTO = 60 * 1000;
 /* Le larghezze chieste per la foto di un movimento, dalla piu' bella alla
@@ -217,6 +218,8 @@ export function suDi(impostazioni, tipo) {
     come: COME.includes(suo.come) ? suo.come : "subito",
     dentro: Array.isArray(suo.dentro) ? suo.dentro : [...PEZZI_DEL_CICLO],
     quando: QUANDO_IL_MOVIMENTO.includes(suo.quando) ? suo.quando : "casa-vuota-o-notte",
+    /* Il mini video del movimento (`i-filmati.js`): spento di serie. */
+    video: suo.video === true,
   };
 }
 
@@ -256,6 +259,7 @@ function unaVocePulita(detta, prima = {}) {
   if (Array.isArray(detta.dentro))
     fuori.dentro = PEZZI_DEL_CICLO.filter((pezzo) => detta.dentro.includes(pezzo));
   if (QUANDO_IL_MOVIMENTO.includes(detta.quando)) fuori.quando = detta.quando;
+  if (typeof detta.video === "boolean") fuori.video = detta.video;
   return fuori;
 }
 
@@ -456,9 +460,14 @@ export class Notifiche {
     /* Chi rimpicciolisce una foto troppo grande (`rimpicciolisci.js`): nelle
      * prove se ne mette una finta. */
     rimpicciolisci = rimpicciolisciDiCasa,
+    /* I mini video del movimento (`i-filmati.js`): nelle prove se ne mette
+     * uno finto. */
+    filmati = null,
     adesso = () => Date.now(),
   } = {}) {
     this.rimpicciolisci = rimpicciolisci;
+    this.filmati =
+      filmati ?? new Filmati({ cartella: cartella || "/data", casa, registro, adesso });
     this.configurazione = configurazione;
     this.licenze = licenze;
     this.dispositivi = dispositivi;
@@ -770,6 +779,7 @@ export class Notifiche {
 
   ferma() {
     this.daHomeAssistant?.ferma();
+    this.filmati?.ferma?.();
     this.diario?.scrivi?.();
     clearInterval(this._giro);
     this._giro = null;
@@ -783,6 +793,7 @@ export class Notifiche {
     this.sentinella.movimentoSempre = Object.values(this.archivio.dati.telefoni).some(
       (voce) => suDi(impostazioniPulite(voce?.impostazioni), "movimento").quando === "sempre",
     );
+    void this._leTelecamereDaTenere();
     this.sentinella.battito();
     this._campionaIlDiario();
     await this._leAttese();
@@ -791,6 +802,36 @@ export class Notifiche {
     if (this.adesso() - this._previsioneIl >= PREVISIONE_OGNI) await this._previsione();
     if (this.adesso() - this._registriIl >= REGISTRI_OGNI) void this._iRegistri();
     this._pulisci();
+  }
+
+  /* Le telecamere da tenere in memoria per il mini video: quelle di chi ha
+   * acceso l'opzione nella notifica del movimento, fra quelle che il suo
+   * utente puo' vedere — le scelte, o tutte se non ne ha scelta nessuna. Con
+   * l'opzione spenta da tutti, o senza Premium, nessuna. */
+  async _leTelecamereDaTenere() {
+    if (!this.filmati?.sorveglia) return;
+    const volute = new Set();
+    if (this.premium) {
+      const tutte = [...(this.sentinella?.stati?.keys?.() || [])].filter((id) =>
+        id.startsWith("camera."),
+      );
+      let chiCe = null;
+      for (const dispositivo of this.dispositivi?.elenco?.() || []) {
+        const voce = this.archivio.dati.telefoni[dispositivo.id];
+        if (!voce?.gettone || !dispositivo.utente) continue;
+        const imp = impostazioniPulite(voce.impostazioni);
+        const su = suDi(imp, "movimento");
+        if (!imp.acceso || imp.eventi?.movimento === false || !su.video) continue;
+        chiCe ??= (await this._chiCe()) || [];
+        const chi = chiCe.find((uno) => uno.id === dispositivo.utente);
+        if (!chi || chi.attivo === false) continue;
+        const amministra = chi.amministratore === true;
+        const scelte = su.quali.filter((id) => id.startsWith("camera."));
+        for (const camera of scelte.length ? scelte : tutte)
+          if (this._vedeLaTelecamera(dispositivo.utente, amministra, camera)) volute.add(camera);
+      }
+    }
+    this.filmati.sorveglia(volute);
   }
 
   /* La previsione oraria, per «tra mezz'ora piove». Solo se c'e' una finestra
@@ -1230,11 +1271,24 @@ export class Notifiche {
           }
         }
       }
+      /* Il mini video: a chi l'ha acceso, con Premium, della telecamera che
+       * gli si mostra. Uno solo per movimento, anche per piu' telefoni. */
+      let film = null;
+      if (
+        premium &&
+        camera &&
+        (evento.tipo === "movimento" || evento.tipo === "prova") &&
+        suDi(imp, "movimento").video
+      ) {
+        evento._film ??= this.filmati?.registra?.(camera, evento.quando ?? ora) ?? null;
+        film = evento._film;
+      }
       const contenuto = this._contenuto(evento, imp.lingua, {
         camera,
         stile,
         su: evento.suDellaVoce || su,
         foto,
+        film,
       });
       let busta;
       try {
@@ -1377,7 +1431,7 @@ export class Notifiche {
 
   /* Quello che va dentro la busta. Le parole nella lingua del telefono; i
    * tasti col loro nome, e senza il comando — quello resta qui. */
-  _contenuto(evento, lingua, { camera, stile = "semplice", su = null, foto = null }) {
+  _contenuto(evento, lingua, { camera, stile = "semplice", su = null, foto = null, film = null }) {
     const { titolo, testo, scheda } = this._parole(evento, lingua, { stile, su });
     const contenuto = {
       v: 1,
@@ -1407,6 +1461,7 @@ export class Notifiche {
         ? { fonte: String(evento.fonte[lingua] ?? evento.fonte.it ?? "").slice(0, 120) }
         : {}),
       ...(foto ? { foto } : {}),
+      ...(film ? { film } : {}),
       ...(doveApre(evento, camera) ? { apri: doveApre(evento, camera) } : {}),
       azioni: (evento.azioni || []).slice(0, 3).map((una) => ({
         id: una.id,
@@ -1739,6 +1794,30 @@ export class Notifiche {
           return this._togliUnaPersonalizzata(detto.regola, { utente, amministra, si, no });
         case "ponte/notifiche/azione":
           return this._unTasto(detto, { telefono, utente, si, no });
+        /* Il mini video di un movimento (`i-filmati.js`): solo a chi e'
+         * entrato con un utente che Home Assistant conosce ed e' attivo
+         * adesso, col numero e la chiave che arrivano solo nella notifica
+         * cifrata, e solo di una telecamera che quell'utente puo' vedere. Le
+         * stesse promesse delle telecamere in `commissioni.js`. */
+        case "ponte/notifiche/filmato": {
+          if (!utente) return no("unauthorized", "i video si vedono da un utente");
+          const chi = ((await this._chiCe()) || []).find((uno) => uno?.id === utente);
+          if (!chi || chi.attivo === false)
+            return no("unauthorized", "i video si vedono da un utente attivo");
+          if (!this.premium) return no("premium-richiesto", "i mini video sono di Premium");
+          const film = detto.film || {};
+          if (!idBuono(film.id) || !chiaveBuona(film.chiave))
+            return no("invalid_format", "video non valido");
+          const video = await this.filmati?.leggi?.(film.id, film.chiave);
+          const amministraDavvero = amministra === true || chi.amministratore === true;
+          if (!video || !this._vedeLaTelecamera(utente, amministraDavvero, video.camera))
+            return no("not_found", "questo video non c'e' piu'");
+          return si({
+            camera: video.camera,
+            quando: video.quando,
+            fotogrammi: video.fotogrammi,
+          });
+        }
         default:
           return no("unknown_command", "questo ponte non conosce questa domanda");
       }

@@ -2514,6 +2514,12 @@ export class Commissioni {
      *    non finiscono nei registri, nel rapporto, nella console o nel
      *    cruscotto. Nemmeno l'indirizzo intero: dentro c'e' il gettone della
      *    telecamera, e nei registri va solo la via (`viaDaScrivere`).
+     *    L'unica cosa che resta e' il mini video del movimento, e solo per chi
+     *    l'ha acceso nell'app (`i-filmati.js`): sul disco ci va chiuso con una
+     *    chiave che il ponte dimentica subito e che ha solo la notifica, cifrata
+     *    per il telefono. Il ponte da solo non lo sa aprire; lo apre il telefono
+     *    di un utente entrato e attivo, e solo se quella telecamera la vede
+     *    (`ponte/notifiche/filmato`, `notifiche.js`).
      *
      * 3. **Le plance riservate restano riservate.** Una telecamera (o la sua
      *    immagine `image.*`) che sta solo in una plancia che chi chiede non
