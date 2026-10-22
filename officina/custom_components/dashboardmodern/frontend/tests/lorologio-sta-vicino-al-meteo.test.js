@@ -23,6 +23,7 @@ test("ora e data si leggono nella lingua della plancia", () => {
   const italiano = lettureOrologio(quando, "it-IT");
   assert.equal(italiano.ora, "14:05");
   assert.match(italiano.data, /set/i);
+  assert.match(italiano.giorno, /^giovedì 3 settembre$/i);
   const inglese = lettureOrologio(quando, "en-US");
   assert.match(inglese.ora, /2:05/, "in inglese l'ora è su dodici");
   assert.match(inglese.data, /Sep/i);
@@ -89,8 +90,11 @@ test("sta nello stesso riquadro del meteo, sotto il titolo", () => {
    * nome della casa non c'è più: a centododici pixel il vento finiva fuori dal
    * riquadro e veniva tagliato via. */
   assert.match(meteo, /max-width:none;padding:0\}/);
-  /* Sul telefono resta il numero e la data se ne va. */
-  assert.match(sorgente, /@media \(max-width:560px\)[\s\S]{0,240}dm-orologio-data\{display:none\}/);
+  /* Sul telefono la data resta, piccola sotto l'ora: «nell'app manca la
+   * data». E sullo schermo largo l'ora e' grande con la data per esteso
+   * accanto, invece di un'ora a diciannove pixel in mezzo al vuoto. */
+  assert.doesNotMatch(sorgente, /@media \(max-width:560px\)[\s\S]{0,240}dm-orologio-data\{display:none\}/);
+  assert.match(sorgente, /@media \(min-width:769px\)[\s\S]{0,900}dm-orologio-ora\{font-size:32px/);
   /* E si può spegnere: chi ha l'ora in cima allo schermo può non volerla due
    * volte. Di serie acceso — era la richiesta. */
   assert.equal(OROLOGIO_KEY, "cd_orologio");

@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-KLHURTAV.js";
+} from "../../chunk-TAFOKZXK.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -42277,6 +42277,30 @@ body .dm-testata-riga .w-right{
 body .dm-testata-riga .w-detail{
   padding:3px 8px;font-size:10.5px;gap:4px;box-shadow:none;
   background:var(--card-bg,#fff);border-color:var(--card-border,#e8edf3)}
+/* Sullo schermo largo la striscia si legge da lontano.
+ *
+ * «La barra del meteo e' un po' bruttina con tutto quel buco senza niente.»
+ * Le misure qui sopra sono quelle di una fascia da telefono: sul computer e
+ * sul tablet la striscia e' larga quanto la plancia, e un'icona da ventidue
+ * pixel con la temperatura a diciannove ne occupavano un quinto. Il meteo
+ * cresce come l'ora che gli sta di fronte (orologio-section), e fra i due il
+ * vuoto si riduce a quello che separa due cose diverse. */
+@media(min-width:769px){
+  body .dm-testata-riga:not([data-dm-meteo="card"]){padding:10px 22px}
+  body .dm-testata-riga .w-icon{width:36px;height:36px;font-size:30px}
+  body .dm-testata-riga .w-temp{font-size:28px}
+  body .dm-testata-riga .w-state{font-size:12.5px}
+  /* «La barra intestazione e meteo non e' intera pagina come i widget.» La
+     striscia era larga quanto la fila dei widget, ma dentro aveva tutto a
+     sinistra e l'ora in fondo a destra: i widget riempiono la riga, lei no.
+     Il meteo prende tutta la larghezza che l'ora gli lascia, e umidita' e
+     vento stanno al centro della striscia: sempre vicini fra loro — erano
+     stati chiesti cosi' — ma nel mezzo invece che subito dopo la
+     temperatura. */
+  body .dm-testata-riga .weather-widget{flex:1 1 auto;justify-content:space-between}
+  body .dm-testata-riga .w-right{flex:1 1 auto;justify-content:center;gap:10px}
+  body .dm-testata-riga .w-detail{padding:6px 14px;font-size:13.5px}
+}
 /* La percepita non si nasconde mai.
  *
  * Qui c'era una regola che la toglieva di mezzo sotto i millecento pixel,
@@ -93012,7 +93036,9 @@ function lettureOrologio(adesso2 = /* @__PURE__ */ new Date(), lingua3 = locale(
   };
   return {
     ora: prova({ hour: "2-digit", minute: "2-digit" }) || "",
-    data: prova({ weekday: "short", day: "numeric", month: "short" }) || ""
+    data: prova({ weekday: "short", day: "numeric", month: "short" }) || "",
+    /* Per esteso, per lo schermo largo: «giovedì 22 ottobre». */
+    giorno: prova({ weekday: "long", day: "numeric", month: "long" }) || ""
   };
 }
 function fraQuantoIlMinuto(adesso2 = /* @__PURE__ */ new Date()) {
@@ -93027,12 +93053,14 @@ function nodo() {
   if (!header2) return null;
   const casa = rigaDellaTestata() || header2;
   let quadrante = casa.querySelector(":scope > .dm-orologio") || header2.querySelector(".dm-orologio");
+  if (quadrante && !quadrante.querySelector(".dm-orologio-giorno"))
+    quadrante.insertAdjacentHTML("afterbegin", '<span class="dm-orologio-giorno"></span>');
   if (!quadrante) {
     quadrante = doc.createElement("div");
     quadrante.className = "dm-orologio";
     quadrante.setAttribute("role", "group");
     quadrante.setAttribute("aria-label", t("Ora e data", "Time and date"));
-    quadrante.innerHTML = `<b class="dm-orologio-ora"></b><small class="dm-orologio-data"></small>`;
+    quadrante.innerHTML = `<span class="dm-orologio-giorno"></span><b class="dm-orologio-ora"></b><small class="dm-orologio-data"></small>`;
   }
   if (quadrante.parentElement !== casa || quadrante.nextElementSibling) casa.append(quadrante);
   return quadrante;
@@ -93043,14 +93071,16 @@ function disegnaOrologio() {
   const acceso6 = orologioAcceso();
   quadrante.hidden = !acceso6;
   if (!acceso6) return true;
-  const { ora: ora6, data } = lettureOrologio();
-  const firma2 = `${ora6}|${data}`;
+  const { ora: ora6, data, giorno: giorno3 } = lettureOrologio();
+  const firma2 = `${ora6}|${data}|${giorno3}`;
   if (state93.firma === firma2) return true;
   state93.firma = firma2;
   const dove = quadrante.querySelector(".dm-orologio-ora");
   const quando5 = quadrante.querySelector(".dm-orologio-data");
   if (dove) dove.textContent = ora6;
   if (quando5) quando5.textContent = data;
+  const esteso = quadrante.querySelector(".dm-orologio-giorno");
+  if (esteso) esteso.textContent = giorno3;
   return true;
 }
 function alProssimoMinuto() {
@@ -93083,12 +93113,30 @@ function installStyles41() {
       header .dm-orologio-data{
         font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
         color:var(--text-dim,#64748b);white-space:nowrap}
-      /* Sul telefono l'ora ce l'ha già il sistema in cima allo schermo: qui
-         resta il numero e la data se ne va, invece di stringere tutto. */
+      header .dm-orologio-giorno{display:none}
+      /* Sullo schermo largo l'ora e' grande e la data e' per esteso, accanto.
+       *
+       * «La barra del meteo e' un po' bruttina con tutto quel buco senza
+       * niente: se si mette l'orario e la data piu' grandi?» Sul computer e
+       * sul tablet il riquadro e' largo quanto la plancia, e fra il meteo e
+       * un'ora a diciannove pixel restava mezzo metro di niente. L'ora sale
+       * alla misura di un titolo, e la data si scrive intera alla sua
+       * sinistra — «giovedi' 22 ottobre» — invece che in sigla sotto. */
+      @media (min-width:769px){
+        header .dm-orologio{display:flex;align-items:center;gap:16px;padding-left:18px}
+        header .dm-orologio-giorno{
+          display:block;font-size:15px;font-weight:700;letter-spacing:.01em;
+          color:var(--text-dim,#64748b);white-space:nowrap}
+        header .dm-orologio-giorno::first-letter{text-transform:uppercase}
+        header .dm-orologio-ora{font-size:32px;line-height:1}
+        header .dm-orologio-data{display:none}
+      }
+      /* Sul telefono l'ora resta piccola, ma la data c'e': «nell'app manca la
+         data». Il sistema in cima allo schermo dice l'ora, non il giorno. */
       @media (max-width:560px){
         header .dm-orologio{padding:0 0 0 8px}
         header .dm-orologio-ora{font-size:16px}
-        header .dm-orologio-data{display:none}
+        header .dm-orologio-data{font-size:9px;letter-spacing:.03em}
       }
     `
   );

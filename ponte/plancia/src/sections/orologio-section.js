@@ -53,6 +53,8 @@ export function lettureOrologio(adesso = new Date(), lingua = locale()) {
   return {
     ora: prova({ hour: "2-digit", minute: "2-digit" }) || "",
     data: prova({ weekday: "short", day: "numeric", month: "short" }) || "",
+    /* Per esteso, per lo schermo largo: «giovedì 22 ottobre». */
+    giorno: prova({ weekday: "long", day: "numeric", month: "long" }) || "",
   };
 }
 
@@ -77,12 +79,15 @@ function nodo() {
   const casa = rigaDellaTestata() || header;
   let quadrante =
     casa.querySelector(":scope > .dm-orologio") || header.querySelector(".dm-orologio");
+  /* Un quadrante di prima, senza il giorno per esteso: glielo si aggiunge. */
+  if (quadrante && !quadrante.querySelector(".dm-orologio-giorno"))
+    quadrante.insertAdjacentHTML("afterbegin", '<span class="dm-orologio-giorno"></span>');
   if (!quadrante) {
     quadrante = doc.createElement("div");
     quadrante.className = "dm-orologio";
     quadrante.setAttribute("role", "group");
     quadrante.setAttribute("aria-label", t("Ora e data", "Time and date"));
-    quadrante.innerHTML = `<b class="dm-orologio-ora"></b><small class="dm-orologio-data"></small>`;
+    quadrante.innerHTML = `<span class="dm-orologio-giorno"></span><b class="dm-orologio-ora"></b><small class="dm-orologio-data"></small>`;
   }
   /* Ultimo nel riquadro: il meteo prima, l'ora dopo. */
   if (quadrante.parentElement !== casa || quadrante.nextElementSibling) casa.append(quadrante);
@@ -95,14 +100,16 @@ export function disegnaOrologio() {
   const acceso = orologioAcceso();
   quadrante.hidden = !acceso;
   if (!acceso) return true;
-  const { ora, data } = lettureOrologio();
-  const firma = `${ora}|${data}`;
+  const { ora, data, giorno } = lettureOrologio();
+  const firma = `${ora}|${data}|${giorno}`;
   if (state.firma === firma) return true;
   state.firma = firma;
   const dove = quadrante.querySelector(".dm-orologio-ora");
   const quando = quadrante.querySelector(".dm-orologio-data");
   if (dove) dove.textContent = ora;
   if (quando) quando.textContent = data;
+  const esteso = quadrante.querySelector(".dm-orologio-giorno");
+  if (esteso) esteso.textContent = giorno;
   return true;
 }
 
@@ -140,12 +147,30 @@ function installStyles() {
       header .dm-orologio-data{
         font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
         color:var(--text-dim,#64748b);white-space:nowrap}
-      /* Sul telefono l'ora ce l'ha già il sistema in cima allo schermo: qui
-         resta il numero e la data se ne va, invece di stringere tutto. */
+      header .dm-orologio-giorno{display:none}
+      /* Sullo schermo largo l'ora e' grande e la data e' per esteso, accanto.
+       *
+       * «La barra del meteo e' un po' bruttina con tutto quel buco senza
+       * niente: se si mette l'orario e la data piu' grandi?» Sul computer e
+       * sul tablet il riquadro e' largo quanto la plancia, e fra il meteo e
+       * un'ora a diciannove pixel restava mezzo metro di niente. L'ora sale
+       * alla misura di un titolo, e la data si scrive intera alla sua
+       * sinistra — «giovedi' 22 ottobre» — invece che in sigla sotto. */
+      @media (min-width:769px){
+        header .dm-orologio{display:flex;align-items:center;gap:16px;padding-left:18px}
+        header .dm-orologio-giorno{
+          display:block;font-size:15px;font-weight:700;letter-spacing:.01em;
+          color:var(--text-dim,#64748b);white-space:nowrap}
+        header .dm-orologio-giorno::first-letter{text-transform:uppercase}
+        header .dm-orologio-ora{font-size:32px;line-height:1}
+        header .dm-orologio-data{display:none}
+      }
+      /* Sul telefono l'ora resta piccola, ma la data c'e': «nell'app manca la
+         data». Il sistema in cima allo schermo dice l'ora, non il giorno. */
       @media (max-width:560px){
         header .dm-orologio{padding:0 0 0 8px}
         header .dm-orologio-ora{font-size:16px}
-        header .dm-orologio-data{display:none}
+        header .dm-orologio-data{font-size:9px;letter-spacing:.03em}
       }
     `,
   );

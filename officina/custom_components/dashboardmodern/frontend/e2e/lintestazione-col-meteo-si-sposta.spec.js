@@ -146,7 +146,10 @@ test("il riquadro col meteo scende in pagina, e resta piccolo", async ({ page },
     });
   const prima = await dovEIlRiquadro(page);
   expect(prima.gradiente).toBe(false);
-  expect(prima.altezzaIcona).toBeLessThanOrEqual(30);
+  /* Rimpicciolito rispetto alla card intera (settanta): sullo schermo largo
+   * la striscia lo vuole a trentasei, per non lasciare «tutto quel buco
+   * senza niente» accanto all'ora grande. */
+  expect(prima.altezzaIcona).toBeLessThanOrEqual(40);
   const altezzaPrima = prima.altezzaMeteo;
   const temperaturaPrima = prima.temperatura;
 

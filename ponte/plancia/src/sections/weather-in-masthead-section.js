@@ -123,6 +123,30 @@ body .dm-testata-riga .w-right{
 body .dm-testata-riga .w-detail{
   padding:3px 8px;font-size:10.5px;gap:4px;box-shadow:none;
   background:var(--card-bg,#fff);border-color:var(--card-border,#e8edf3)}
+/* Sullo schermo largo la striscia si legge da lontano.
+ *
+ * «La barra del meteo e' un po' bruttina con tutto quel buco senza niente.»
+ * Le misure qui sopra sono quelle di una fascia da telefono: sul computer e
+ * sul tablet la striscia e' larga quanto la plancia, e un'icona da ventidue
+ * pixel con la temperatura a diciannove ne occupavano un quinto. Il meteo
+ * cresce come l'ora che gli sta di fronte (orologio-section), e fra i due il
+ * vuoto si riduce a quello che separa due cose diverse. */
+@media(min-width:769px){
+  body .dm-testata-riga:not([data-dm-meteo="card"]){padding:10px 22px}
+  body .dm-testata-riga .w-icon{width:36px;height:36px;font-size:30px}
+  body .dm-testata-riga .w-temp{font-size:28px}
+  body .dm-testata-riga .w-state{font-size:12.5px}
+  /* «La barra intestazione e meteo non e' intera pagina come i widget.» La
+     striscia era larga quanto la fila dei widget, ma dentro aveva tutto a
+     sinistra e l'ora in fondo a destra: i widget riempiono la riga, lei no.
+     Il meteo prende tutta la larghezza che l'ora gli lascia, e umidita' e
+     vento stanno al centro della striscia: sempre vicini fra loro — erano
+     stati chiesti cosi' — ma nel mezzo invece che subito dopo la
+     temperatura. */
+  body .dm-testata-riga .weather-widget{flex:1 1 auto;justify-content:space-between}
+  body .dm-testata-riga .w-right{flex:1 1 auto;justify-content:center;gap:10px}
+  body .dm-testata-riga .w-detail{padding:6px 14px;font-size:13.5px}
+}
 /* La percepita non si nasconde mai.
  *
  * Qui c'era una regola che la toglieva di mezzo sotto i millecento pixel,
