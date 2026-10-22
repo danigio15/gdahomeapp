@@ -142,6 +142,20 @@ export const TIPO_PLANCIA = "ponte/plancia";
  * Assistant, e si fanno anche dall'app. Non e' una svista: un telefono
  * abbinato riscrive gia' la configurazione di una plancia intera con
  * `config/set`, e tenerlo fuori da qui non proteggerebbe niente. */
+/* Le telecamere chiuse quando non si riesce a sapere quali lo sono: tutte.
+ * E' un insieme che dice di si' a ogni telecamera, cosi' chi lo usa
+ * (`dogana.js`, `notifiche.js`) chiude senza saperlo. */
+class TutteLeTelecamere extends Set {
+  has() {
+    return true;
+  }
+
+  get size() {
+    return Number.POSITIVE_INFINITY;
+  }
+}
+export const TUTTE_CHIUSE = Object.freeze(new TutteLeTelecamere());
+
 const PLANCE = new Map([
   ["ponte/plance/elenco", "elenco"],
   ["ponte/plance/aggiungi", "aggiungi"],
@@ -191,8 +205,8 @@ const LICENZA = new Map([
  * adesso le esegue Home Assistant, e la plancia invita a convertirle in
  * automazioni sue (`ponte/automazioni/salva`). Finche' restano qui non
  * partono, ma sono ancora comandi alla casa scritti da qualcuno. Chi salva la configurazione senza un nome — un telefono abbinato
- * prima che i telefoni si intestassero a qualcuno, che il ponte lascia ancora
- * amministrare «com'era ieri» — salva tutto il resto, ma le automazioni
+ * prima che i telefoni si intestassero a qualcuno — salva tutto il resto (se
+ * la plancia glielo lascia, `chi-configura.js`), ma le automazioni
  * restano quelle che erano: quelle salvate, o nessuna. Torna i valori da
  * salvare. */
 export function conservaLeAutomazioni(nuovi, salvati, chiChiede = "") {
@@ -1101,7 +1115,13 @@ export class Commissioni {
      * ponte da': si guarda quella. Non apre niente di nuovo — e' lo stesso
      * filo che i comandi riservati li passa gia' — e dentro Home Assistant non
      * cambia nulla, perche' li' «non si sa chi guarda» vale no
-     * (`cucitura.js`) e `puoAmministrare` arriva falso. */
+     * (`cucitura.js`) e `puoAmministrare` arriva falso.
+     *
+     * Dopo l'audit di sicurezza un telefono senza utente addosso non
+     * amministra piu' (`_amministra` in `ponte.js`): le due risposte restano
+     * d'accordo, e tutte e due dicono no. Il codice arriva ai telefoni
+     * intestati a chi amministra; un telefono di prima lo riceve dopo essersi
+     * riabbinato con un codice fatto da chi amministra. */
     let suo = amministra;
     if (suo !== true && puoAmministrare === true) suo = true;
     if (suo === null && this.utenti?.amministratore) {
@@ -1391,7 +1411,7 @@ export class Commissioni {
      * un'altra plancia: e' dirlo. L'app scrive che in questa casa non ci sono
      * plance per la sua utenza, e chi legge sa cosa chiedere a chi amministra
      * la casa. */
-    if (chiChiede && sue.length === 0) {
+    if (this.plance && sue.length === 0) {
       return no(id, NIENTE_PER_TE, "in questa casa non ci sono plance per la tua utenza");
     }
     /* Chiedere una plancia che non e' sua non e' un errore da spiegare: e'
@@ -1436,10 +1456,13 @@ export class Commissioni {
    * Assistant. */
   /* Se questo telefono vede almeno una plancia.
    *
-   * Chi non si sa chi e' vede tutto: e' come sono i telefoni abbinati prima
-   * di oggi, e un aggiornamento non deve spegnere niente a nessuno. */
+   * Chi non si sa chi e' — un telefono abbinato prima che i telefoni si
+   * intestassero a un utente — passa dalla stessa regola di tutti (`laVede`):
+   * vede le plance aperte a tutti, e nessuna di quelle riservate a qualcuno o
+   * agli amministratori. «Non si sa» non e' un si'. Una casa senza plance
+   * riservate, per lui, resta com'era. */
   _vedeQualchePlancia(chiChiede = "", amministra = null) {
-    if (!chiChiede) return true;
+    if (!this.plance) return true;
     return this._lePlanceSue(chiChiede, amministra).length > 0;
   }
 
@@ -1449,38 +1472,52 @@ export class Commissioni {
    * quelle che vede. Una telecamera che non sta in nessuna configurazione —
    * la plancia le trova anche da se' — resta aperta com'era: chiuderla
    * vorrebbe dire spegnere a qualcuno una cosa che non e' riservata a
-   * nessuno. Chi non si sa chi e', o vede tutte le plance, non ha niente di
-   * chiuso.
+   * nessuno. Chi vede tutte le plance non ha niente di chiuso; chi non si sa
+   * chi e' ha chiuse quelle delle plance riservate, come chiunque non le veda
+   * (e le telecamere, senza un utente, non le vede comunque: `_vedeLeTelecamere`).
    *
    * Si rifa' solo quando cambia qualcosa — le plance, le loro
    * configurazioni, chi chiede — perche' lo si chiede a ogni messaggio che
    * apre una telecamera. */
   telecamereChiuse(chiChiede = "", amministra = null) {
     const nessuna = new Set();
-    if (!chiChiede || !this.plance || !this.configurazione) return nessuna;
+    if (!this.plance || !this.configurazione) return nessuna;
     let tutte;
     try {
       tutte = this.plance.elenco();
     } catch (_errore) {
-      return nessuna;
+      /* Non si sa quali plance ci sono, e allora non si sa quali telecamere
+       * sono riservate: «non lo so» non e' «nessuna», e si chiudono tutte
+       * finche' l'elenco non torna leggibile. */
+      return TUTTE_CHIUSE;
     }
     const nascoste = tutte.filter((una) => !laVede(una, chiChiede, amministra));
     if (!nascoste.length) return nessuna;
     const viste = tutte.filter((una) => laVede(una, chiChiede, amministra));
-    const firma = [
-      chiChiede,
-      amministra,
-      ...tutte.map((una) => `${una.profilo}:${this.configurazione.revisione(una.profilo)}`),
-      ...nascoste.map((una) => una.profilo),
-    ].join("|");
+    let firma;
+    try {
+      firma = [
+        chiChiede,
+        amministra,
+        ...tutte.map((una) => `${una.profilo}:${this.configurazione.revisione(una.profilo)}`),
+        ...nascoste.map((una) => una.profilo),
+      ].join("|");
+    } catch (_errore) {
+      return TUTTE_CHIUSE;
+    }
     if (this._chiuseDi?.firma === firma) return this._chiuseDi.chiuse;
-    const nominate = (plance) => {
+    let illeggibile = false;
+    const nominate = (plance, perChiudere) => {
       const trovate = new Set();
       for (const una of plance) {
         let valori;
         try {
           valori = this.configurazione.leggi(una.profilo)?.snapshot?.values;
         } catch (_errore) {
+          /* La configurazione di una plancia nascosta che non si legge
+           * potrebbe nominare qualunque telecamera: si chiudono tutte. Quella
+           * di una plancia vista che non si legge apre solo di meno. */
+          if (perChiudere) illeggibile = true;
           continue;
         }
         const testo = valori ? JSON.stringify(valori) : "";
@@ -1491,8 +1528,11 @@ export class Commissioni {
       }
       return trovate;
     };
-    const aperte = nominate(viste);
-    const chiuse = new Set([...nominate(nascoste)].filter((una) => !aperte.has(una)));
+    const aperte = nominate(viste, false);
+    const daChiudere = nominate(nascoste, true);
+    /* Un errore di lettura non si ricorda: al prossimo messaggio si riprova. */
+    if (illeggibile) return TUTTE_CHIUSE;
+    const chiuse = new Set([...daChiudere].filter((una) => !aperte.has(una)));
     this._chiuseDi = { firma, chiuse };
     return chiuse;
   }
@@ -1500,9 +1540,10 @@ export class Commissioni {
   /* Se il profilo e' quello di una plancia che chi chiede non vede. Un
    * profilo che non e' di nessuna plancia — la cassetta ne ha anche per chi
    * non ha ancora fatto la sua — resta com'era: non c'e' niente da riservare.
-   * Chi non si sa chi e' vede tutto, come altrove. */
+   * Chi non si sa chi e' passa dalla stessa regola: le riservate gli restano
+   * nascoste. */
   _profiloNascosto(profilo, chiChiede = "", amministra = null) {
-    if (!chiChiede || !this.plance) return false;
+    if (!this.plance) return false;
     const quale = this.plance.quale?.(String(profilo || PROFILO_PRINCIPALE));
     if (!quale) return false;
     return !laVede(quale, chiChiede, amministra);
@@ -1514,7 +1555,8 @@ export class Commissioni {
      * basta: le altre restano sul disco, intatte, e tornano il giorno che la
      * casa e' Premium. */
     const tutte = soloLaPrima ? elenco.filter((una) => una.profilo === PROFILO_PRINCIPALE) : elenco;
-    if (!chiChiede) return tutte;
+    /* Anche senza identita': `laVede` lascia le plance aperte a tutti e
+     * chiude le riservate. */
     return tutte.filter((una) => laVede(una, chiChiede, amministra));
   }
 
@@ -1536,7 +1578,7 @@ export class Commissioni {
      * plancia poteva comunque rinominarla o toglierla passandone il profilo,
      * che e' peggio che vederla. */
     const nonESua = (quello) => {
-      if (!chiChiede || !quello) return false;
+      if (!quello) return false;
       const mie = this._lePlanceSue(chiChiede, amministra, soloLaPrima);
       return !mie.some((una) => una.profilo === quello);
     };
