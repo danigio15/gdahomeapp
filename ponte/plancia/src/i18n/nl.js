@@ -6940,4 +6940,5 @@ export default Object.freeze({
   "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "De kaart toont een knop «Heeft gegeten»: als het weer tijd is, herinneren de pagina en je telefoon je eraan. Leeg: geen herinnering.",
   "No options to choose": "Geen opties om te kiezen",
   Suppliers: "Leveranciers",
+  "Electricity · balance, price and consumption": "Stroom · saldo, prijs en verbruik",
 });

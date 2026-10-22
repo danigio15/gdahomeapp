@@ -6959,4 +6959,5 @@ export default Object.freeze({
   "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "Die Karte zeigt eine Taste «Hat gefressen»: Wenn es wieder Zeit ist, erinnern dich die Seite und dein Telefon. Leer: keine Erinnerung.",
   "No options to choose": "Keine Optionen zur Auswahl",
   Suppliers: "Anbieter",
+  "Electricity · balance, price and consumption": "Strom · Kontostand, Preis und Verbrauch",
 });

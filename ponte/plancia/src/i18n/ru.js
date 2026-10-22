@@ -6932,4 +6932,5 @@ export default Object.freeze({
   "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "На карточке есть кнопка «Поел»: когда снова придёт время, страница и телефон напомнят. Пусто: без напоминания.",
   "No options to choose": "Нет вариантов для выбора",
   Suppliers: "Поставщики",
+  "Electricity · balance, price and consumption": "Электричество · баланс, цена и потребление",
 });

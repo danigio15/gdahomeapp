@@ -1,17 +1,18 @@
 /* I fornitori di energia, collegati dal ponte.
  *
  * «Userei le integrazioni in essere su Home Assistant tramite HACS,
- * inglobandole nella nostra.» Quelle di E.ON Energia Italia e di ENGIE Italia
- * sono MIT, e il loro modo di parlare col fornitore sta qui accanto, portato in
- * JavaScript (`fornitori/eon.js`, `fornitori/engie.js`, licenze in
+ * inglobandole nella nostra.» Quelle di E.ON Energia Italia, di ENGIE Italia e
+ * di Octopus Energy Italia sono MIT, e il loro modo di parlare col fornitore
+ * sta qui accanto, portato in JavaScript (`fornitori/eon.js`,
+ * `fornitori/engie.js`, `fornitori/octopus.js`, licenze in
  * `fornitori/LICENZE.md`). Quello che c'e' in questo file e' nostro: chi e'
  * collegato, dove stanno i gettoni, e come una bolletta diventa un sensore di
  * Home Assistant che la linguetta Bollette della plancia sa leggere.
  *
  * **Le regole, e stanno tutte su questo confine.**
  *
- *   - La password di E.ON serve una volta, per entrare, e non si scrive da
- *     nessuna parte: restano i gettoni del fornitore, in
+ *   - La password di E.ON e di Octopus serve una volta, per entrare, e non si
+ *     scrive da nessuna parte: restano i gettoni del fornitore, in
  *     `/data/fornitori.json`, leggibile solo dal ponte (0600). Quella di ENGIE
  *     non passa nemmeno di qui: si entra dal sito di ENGIE, nel browser.
  *   - Gli otto comandi `dashboardmodern/fornitori/*` li fa solo chi
@@ -38,6 +39,7 @@ import { join } from "node:path";
 import { Archivio } from "./archivio.js";
 import * as eon from "./fornitori/eon.js";
 import * as engie from "./fornitori/engie.js";
+import * as octopus from "./fornitori/octopus.js";
 
 export const PREFISSO = "dashboardmodern/fornitori/";
 const UN_GIORNO = 86_400_000;
@@ -59,7 +61,7 @@ export const CATALOGO = Object.freeze([
     pronto: false,
     perche: "nessuna-integrazione",
   },
-  { id: "octopus", nome: "Octopus Energy", modo: "password", pronto: false, perche: "presto" },
+  { id: "octopus", nome: "Octopus Energy", modo: "password", cosa: "luce-saldo", pronto: true },
 ]);
 const NOMI = Object.fromEntries(CATALOGO.map((f) => [f.id, f.nome]));
 const PRONTI = new Set(CATALOGO.filter((f) => f.pronto).map((f) => f.id));
@@ -104,10 +106,46 @@ export const VOCI = Object.freeze({
     classe: "energy",
     icona: "mdi:lightning-bolt",
   },
+  /* Octopus non da' le bollette una per una: da' il saldo del conto, che e'
+   * da dove si legge se c'e' qualcosa da pagare, e il prezzo dell'energia. */
+  account_balance: {
+    nome: "Saldo del conto",
+    unita: "EUR",
+    classe: "monetary",
+    icona: "mdi:scale-balance",
+  },
+  energy_price: {
+    nome: "Prezzo dell'energia",
+    unita: "EUR/kWh",
+    icona: "mdi:currency-eur",
+  },
 });
 const VOCI_DI = {
-  eon: Object.keys(VOCI),
-  engie: Object.keys(VOCI).filter((v) => v !== "daily_consumption"),
+  eon: [
+    "unpaid_invoices",
+    "payment_status",
+    "latest_invoice",
+    "total_invoiced",
+    "contracted_power",
+    "offer_end",
+    "daily_consumption",
+  ],
+  engie: [
+    "unpaid_invoices",
+    "payment_status",
+    "latest_invoice",
+    "total_invoiced",
+    "contracted_power",
+    "offer_end",
+  ],
+  octopus: [
+    "unpaid_invoices",
+    "payment_status",
+    "account_balance",
+    "energy_price",
+    "offer_end",
+    "daily_consumption",
+  ],
 };
 
 /* Una parola sola, che la plancia traduce: `credenziali`, `codice`,
@@ -201,6 +239,26 @@ export function bolletteEngie(fatture, adesso) {
   return voci;
 }
 
+/* Octopus dal saldo: un saldo sotto zero e' quello che resta da pagare, uno
+ * sopra zero e' un credito, e allora non c'e' niente in sospeso. */
+export function bolletteOctopus({ saldo = null, fornitura = null, consumo = null } = {}) {
+  const voci = {};
+  if (saldo !== null && Number.isFinite(saldo)) {
+    voci.account_balance = { stato: due(saldo) };
+    voci.unpaid_invoices = {
+      stato: due(Math.max(0, -saldo)),
+      attributi: { dal: "saldo del conto" },
+    };
+    voci.payment_status = { stato: saldo < 0 ? "unpaid" : "paid" };
+  }
+  if (fornitura?.prezzo !== null && fornitura?.prezzo !== undefined)
+    voci.energy_price = { stato: fornitura.prezzo };
+  if (fornitura?.fineOfferta) voci.offer_end = { stato: fornitura.fineOfferta };
+  if (consumo)
+    voci.daily_consumption = { stato: consumo.totale, attributi: { giorno: consumo.giorno } };
+  return voci;
+}
+
 /* ─── i collegamenti ─────────────────────────────────────────────────────── */
 
 export class Fornitori {
@@ -284,12 +342,32 @@ export class Fornitori {
         configurazione: this.configurazioneEon,
         adesso: this.adesso,
       });
+    if (voce.fornitore === "octopus")
+      return new octopus.ClientOctopus({
+        gettoni: voce.segreti?.gettoni,
+        rinnovati,
+        prendi: this.prendi,
+        adesso: this.adesso,
+      });
     return new engie.ClientEngie({
       gettoni: voce.segreti?.gettoni,
       rinnovati,
       prendi: this.prendi,
       adesso: this.adesso,
     });
+  }
+
+  async _leggiOctopus(client, voce) {
+    const { saldo, fornitura } = await client.conto(voce.conto);
+    /* Le letture del contatore sono un di piu', come i consumi di E.ON. */
+    let consumo = null;
+    try {
+      if (fornitura?.casa)
+        consumo = octopus.lUltimoConsumo(await client.letture(fornitura.casa, fornitura.pod));
+    } catch (errore) {
+      if (errore instanceof octopus.AccessoNegato) throw errore;
+    }
+    return bolletteOctopus({ saldo, fornitura, consumo });
   }
 
   async _leggiEon(client, voce) {
@@ -338,9 +416,15 @@ export class Fornitori {
       voci =
         voce.fornitore === "eon"
           ? await this._leggiEon(client, voce)
-          : await this._leggiEngie(client, voce);
+          : voce.fornitore === "octopus"
+            ? await this._leggiOctopus(client, voce)
+            : await this._leggiEngie(client, voce);
     } catch (errore) {
-      if (errore instanceof eon.AccessoNegato || errore instanceof engie.AccessoNegato) {
+      if (
+        errore instanceof eon.AccessoNegato ||
+        errore instanceof engie.AccessoNegato ||
+        errore instanceof octopus.AccessoNegato
+      ) {
         voce.stato = "da-ricollegare";
         this._salva();
         this.registro.attenzione(`fornitori: ${NOMI[voce.fornitore]} chiede di ricollegarsi`);
@@ -490,7 +574,38 @@ export class Fornitori {
     });
   }
 
+  /* Octopus: email e password una volta, poi il conto e la sua fornitura. */
+  async _octopus(email, password) {
+    let gettoni;
+    try {
+      gettoni = await octopus.entra(email, password, { prendi: this.prendi, adesso: this.adesso });
+    } catch (errore) {
+      if (errore instanceof octopus.AccessoNegato) throw new ErroreDelFornitore("credenziali");
+      throw new ErroreDelFornitore("fornitore");
+    }
+    const client = new octopus.ClientOctopus({
+      gettoni,
+      prendi: this.prendi,
+      adesso: this.adesso,
+      rinnovati: async (nuovi) => {
+        gettoni = nuovi;
+      },
+    });
+    let conto;
+    let fornitura;
+    try {
+      const conti = await client.conti();
+      conto = conti[0]?.numero;
+      if (!conto) throw new ErroreDelFornitore("fornitore");
+      ({ fornitura } = await client.conto(conto));
+    } catch (_errore) {
+      throw new ErroreDelFornitore("fornitore");
+    }
+    return this._nuovo("octopus", fornitura?.pod || "", gettoni, conto);
+  }
+
   async collega(utente, fornitore, email, password) {
+    if (fornitore === "octopus") return this._octopus(email, password);
     if (fornitore !== "eon") throw new ErroreDelFornitore("fornitore");
     let gettoni;
     try {

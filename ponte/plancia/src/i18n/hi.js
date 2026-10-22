@@ -6902,4 +6902,5 @@ export default Object.freeze({
   "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "कार्ड पर «खा लिया» बटन दिखता है: जब फिर समय होगा, पेज और आपका फ़ोन याद दिलाएंगे। खाली: कोई अनुस्मारक नहीं।",
   "No options to choose": "चुनने के लिए कोई विकल्प नहीं",
   Suppliers: "आपूर्तिकर्ता",
+  "Electricity · balance, price and consumption": "बिजली · शेष राशि, कीमत और खपत",
 });

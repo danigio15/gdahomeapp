@@ -6909,4 +6909,5 @@ export default Object.freeze({
   "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "カードに「食べた」ボタンが表示されます。また時間になると、ページとスマートフォンがお知らせします。空欄：お知らせなし。",
   "No options to choose": "選べる項目がありません",
   Suppliers: "供給会社",
+  "Electricity · balance, price and consumption": "電気 · 残高、料金、使用量",
 });

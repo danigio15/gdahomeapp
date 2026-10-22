@@ -3308,6 +3308,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Longitudine": "Longitude",
   "luce": "light",
   "Luce · bollette e consumi": "Electricity · bills and consumption",
+  "Luce · saldo, prezzo e consumi": "Electricity · balance, price and consumption",
   "luce accesa": "light on",
   "Luce accesa": "Light on",
   "Luce aggiunta": "Light added",

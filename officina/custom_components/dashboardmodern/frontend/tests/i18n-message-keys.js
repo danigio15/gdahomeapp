@@ -1892,6 +1892,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "Electric and hybrid",
   "Electric car",
   "Electric water heater",
+  "Electricity · balance, price and consumption",
   "Electricity · bills and consumption",
   "Electricity and gas · bills and consumption",
   "Element off",

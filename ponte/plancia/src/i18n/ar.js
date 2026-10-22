@@ -6874,4 +6874,5 @@ export default Object.freeze({
   "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "تعرض البطاقة زر «أكل»: عندما يحين الوقت مجددًا، تذكّرك الصفحة وهاتفك. فارغ: بلا تذكير.",
   "No options to choose": "لا توجد خيارات للاختيار",
   Suppliers: "الموردون",
+  "Electricity · balance, price and consumption": "الكهرباء · الرصيد والسعر والاستهلاك",
 });

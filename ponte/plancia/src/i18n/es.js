@@ -6953,4 +6953,5 @@ export default Object.freeze({
   "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "La tarjeta muestra el botón «Ha comido»: cuando vuelva a ser la hora, la página y tu teléfono te lo recuerdan. Vacío: sin recordatorio.",
   "No options to choose": "No hay opciones para elegir",
   Suppliers: "Proveedores",
+  "Electricity · balance, price and consumption": "Luz · saldo, precio y consumo",
 });

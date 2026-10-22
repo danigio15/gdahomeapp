@@ -139,6 +139,8 @@ function rigaCollegato(c) {
 /* Cosa porta il fornitore: una parola del ponte, tradotta qui. */
 function cosaPorta(cosa) {
   if (cosa === "luce") return t("Luce · bollette e consumi", "Electricity · bills and consumption");
+  if (cosa === "luce-saldo")
+    return t("Luce · saldo, prezzo e consumi", "Electricity · balance, price and consumption");
   if (cosa === "luce-gas")
     return t("Luce e gas · bollette e consumi", "Electricity and gas · bills and consumption");
   return "";

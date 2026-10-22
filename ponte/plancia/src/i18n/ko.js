@@ -6891,4 +6891,5 @@ export default Object.freeze({
   "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "카드에 «먹었음» 버튼이 표시됩니다. 다시 시간이 되면 페이지와 휴대폰이 알려 드립니다. 비워 두면 알림 없음.",
   "No options to choose": "선택할 항목이 없습니다",
   Suppliers: "공급업체",
+  "Electricity · balance, price and consumption": "전기 · 잔액, 요금, 사용량",
 });

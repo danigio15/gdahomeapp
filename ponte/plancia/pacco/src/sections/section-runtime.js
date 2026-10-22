@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-NRWEZD2A.js";
+} from "../../chunk-RVBYWCPX.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -4918,6 +4918,7 @@ var SOURCE_INDEX = Object.freeze({
   "Longitudine": "Longitude",
   "luce": "light",
   "Luce · bollette e consumi": "Electricity · bills and consumption",
+  "Luce · saldo, prezzo e consumi": "Electricity · balance, price and consumption",
   "luce accesa": "light on",
   "Luce accesa": "Light on",
   "Luce aggiunta": "Light added",
@@ -139796,6 +139797,8 @@ function rigaCollegato(c) {
 }
 function cosaPorta(cosa) {
   if (cosa === "luce") return t("Luce · bollette e consumi", "Electricity · bills and consumption");
+  if (cosa === "luce-saldo")
+    return t("Luce · saldo, prezzo e consumi", "Electricity · balance, price and consumption");
   if (cosa === "luce-gas")
     return t("Luce e gas · bollette e consumi", "Electricity and gas · bills and consumption");
   return "";
