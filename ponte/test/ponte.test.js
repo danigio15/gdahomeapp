@@ -811,9 +811,9 @@ test("chi amministra non mette programmi in Home Assistant, e non la spegne", as
    * dashboard, un pacchetto di HACS, un backup intero, e lo spegnimento di
    * Home Assistant. Accanto, quello che l'app e la plancia mandano davvero da
    * chi amministra, che deve continuare ad arrivare. Vale per un telefono
-   * intestato a chi amministra e per uno di prima, senza nessuno addosso,
-   * che conta uguale. */
-  for (const chi of [AMMINISTRA, ""]) {
+   * intestato a chi amministra; uno di prima, senza nessuno addosso, non
+   * amministra piu' (la prova dell'audit, qui sotto). */
+  for (const chi of [AMMINISTRA]) {
     const b = await banco({}, { utenti: utentiFinti });
     try {
       const t = await dentroCome(b, chi);
@@ -857,14 +857,55 @@ test("chi amministra non mette programmi in Home Assistant, e non la spegne", as
   }
 });
 
-test("un telefono di prima, senza nessuno addosso, vale come chi amministra", async () => {
-  const b = await banco({}, { utenti: utentiFinti });
+test("un telefono di prima, senza nessuno addosso, non amministra e non vede telecamere", async () => {
+  /* Dall'audit di sicurezza: un telefono abbinato prima che i telefoni si
+   * intestassero a un utente passava per uno che amministra, e alla dogana
+   * passava tutto — anche le telecamere. Adesso usa la casa come chi non
+   * amministra, e le telecamere non le vede proprio: «non si sa» non e' un
+   * si'. */
+  const b = await banco({}, { utenti: utentiFinti, conLePlance: true });
   try {
+    b.plance.chiLaVede("primary", [AMMINISTRA]);
     const t = await dentroCome(b, "");
     t.manda({ id: 1, type: "config/entity_registry/update", entity_id: "light.x" });
     t.manda({ id: 2, type: "config/auth/list" });
-    assert.equal((await laRisposta(t, 1)).success, true);
+    t.manda({ id: 3, type: "camera/stream", entity_id: "camera.cancello" });
+    t.manda({ id: 4, type: "auth/sign_path", path: "/api/camera_proxy/camera.cancello" });
+    t.manda({ id: 5, type: "call_service", domain: "camera", service: "snapshot" });
+    t.manda({ id: 6, type: "ponte/plance/elenco" });
+    t.manda({ id: 7, type: "ponte/plancia" });
+    /* Quello che chi non amministra usa per guardare la casa passa ancora. */
+    t.manda({ id: 8, type: "get_states" });
+    assert.equal((await laRisposta(t, 1)).error.code, "unauthorized");
     assert.equal((await laRisposta(t, 2)).error.code, "unauthorized");
+    for (const id of [3, 4]) {
+      const detta = await laRisposta(t, id);
+      assert.equal(detta.success, false, `il ${id} doveva essere rifiutato`);
+      assert.match(detta.error.message, /telecamer/);
+    }
+    assert.equal((await laRisposta(t, 5)).success, false);
+    assert.deepEqual((await laRisposta(t, 6)).result.plance, []);
+    assert.equal((await laRisposta(t, 7)).error.code, NIENTE_PER_TE);
+    assert.equal((await laRisposta(t, 8)).success, true);
+    assert.deepEqual(
+      b.ha.arrivati.map((detto) => detto.type),
+      ["get_states"],
+      "a Home Assistant arriva solo la lettura degli stati",
+    );
+    t.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("chi amministra davvero, intestato, passa ancora come prima", async () => {
+  const b = await banco({}, { utenti: utentiFinti });
+  try {
+    const t = await dentroCome(b, AMMINISTRA);
+    t.manda({ id: 1, type: "config/entity_registry/update", entity_id: "light.x" });
+    t.manda({ id: 2, type: "camera/stream", entity_id: "camera.cancello" });
+    assert.equal((await laRisposta(t, 1)).success, true);
+    assert.equal((await laRisposta(t, 2)).success, true);
     t.chiudi();
   } finally {
     await b.spegni();
@@ -1097,7 +1138,7 @@ test("dal telefono la firma di una telecamera non la fa Home Assistant: torna il
    * sarebbe un lasciapassare che vale anche senza il ponte. */
   const b = await banco();
   try {
-    const { segno } = b.dispositivi.abbina({ nome: "telefono di prova" });
+    const { segno } = b.dispositivi.abbina({ nome: "telefono di prova", utente: "a".repeat(32) });
     const t = telefono(b.indirizzo);
     await t.aperta;
     await t.aspetta("auth_required");

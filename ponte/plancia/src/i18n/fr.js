@@ -6974,4 +6974,11 @@ export default Object.freeze({
   "Meals: every how many hours": "Repas : toutes les combien d'heures",
   "Not logged yet": "Pas encore noté",
   "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "La carte affiche un bouton « A mangé » : quand c'est de nouveau l'heure, la page et ton téléphone te le rappellent. Vide : aucun rappel.",
+  "No options to choose": "Aucune option à choisir",
+  Suppliers: "Fournisseurs",
+  "Electricity · balance, price and consumption": "Électricité · solde, prix et consommation",
+  "Climate card": "Carte du climat",
+  "Like the wall": "Comme le mur",
+  "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard":
+    "Comme le mur : compacte, la température voulue en grand. Comme le tableau de bord : la température de la pièce en grand et la ligne avec la voulue, comme dans le tableau de bord principal",
 });

@@ -54,7 +54,18 @@ test("chi e' un termostato a coppia: i due numeri, il bit, o heat_cool senza sin
   assert.equal(eUnTermostatoACoppia({ supported_features: CLIMA_CON_DUE_OBIETTIVI }), true);
   assert.equal(eUnTermostatoACoppia({ supported_features: 1 | 128 }), false);
   // `heat_cool` senza un obiettivo solo: e' l'intervallo di Home Assistant.
-  assert.equal(eUnTermostatoACoppia({ hvac_modes: ["off", "heat_cool"], temperature: null }), true);
+  assert.equal(eUnTermostatoACoppia({ hvac_modes: ["off", "heat_cool"] }), true);
+  /* «Mi compare il termostato ma non lo tengo configurato»: il condizionatore
+   * spento ha `temperature` vuoto, non assente. Resta in Freddo e in Caldo. */
+  assert.equal(
+    eUnTermostatoACoppia({
+      hvac_modes: ["off", "cool", "heat", "dry", "fan_only", "heat_cool"],
+      temperature: null,
+      current_temperature: null,
+      supported_features: 1 | 8 | 32 | 128 | 256,
+    }),
+    false,
+  );
   /* Il condizionatore che chiama `heat_cool` il suo automatico ma ha un
    * numero solo resta in Freddo e in Caldo, com'era. */
   assert.equal(

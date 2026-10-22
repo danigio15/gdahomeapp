@@ -10,6 +10,30 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.17.0
+
+- **Telecamere, mini video del movimento:** 5 secondi prima e 5 dopo, per
+  tutte le telecamere. Si accende nell'app, nella notifica «Movimento» (riga
+  «Video», spenta di serie, Premium); toccando «Guarda» parte il video. Il
+  video resta nella casa, chiuso con una chiave che ha solo la notifica, e
+  si cancella dopo tre giorni.
+- **Sicurezza:** un telefono abbinato prima che i telefoni si intestassero
+  a un utente non amministra più, non vede telecamere né plance riservate.
+  Per tornare come prima basta riabbinarlo con un codice fatto da chi
+  amministra. Le telecamere riservate restano chiuse anche se le plance non
+  si leggono.
+- **Clima:** un condizionatore spento non compare più nella linguetta
+  «Termostato».
+- **Navbar e testata:** su Android dentro Home Assistant niente striscia
+  vuota sotto la barra, niente sotto l'orologio; il tasto dell'assistente sta
+  nella barra e non copre le card; ora e data più grandi, meteo largo come i
+  widget.
+- **A muro:** le select si aprono con la loro tendina, le azioni partono; la
+  card del clima a scelta, «come il muro» o «come la plancia».
+- **Fornitori:** si torna indietro dopo averne scelto uno; c'è Octopus Energy.
+- **App, iPhone:** «Guarda» sulla notifica del movimento mostra prima la foto
+  del momento.
+
 ## 1.16.12
 
 - **Clima, termostati:** un termostato in «auto» o «heat» che non sta

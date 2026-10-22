@@ -880,14 +880,22 @@ test("col ponte in mezzo: la configurazione non arriva in Home Assistant, le alt
   const ha = await casaFinta();
   const casa = new Casa({ indirizzo: ha.indirizzo, segno: SEGNO_DEL_SUPERVISOR });
   const dispositivi = new Dispositivi({ cartella });
-  const { segno } = dispositivi.abbina({ nome: "Prova" });
+  /* Un telefono intestato a chi amministra: `dashboardmodern/www/list` e'
+   * suo. Uno senza utente addosso non amministra piu' (audit di sicurezza). */
+  const { segno } = dispositivi.abbina({ nome: "Prova", utente: "c".repeat(32) });
   const commissioni = new Commissioni({
     casa,
     registro: ZITTO,
     plancia: new Plancia(),
     configurazione: new Configurazione({ cartella }),
   });
-  const ponte = new Ponte({ casa, dispositivi, registro: ZITTO, commissioni });
+  const ponte = new Ponte({
+    casa,
+    dispositivi,
+    registro: ZITTO,
+    commissioni,
+    utenti: { amministratoreSubito: () => true, amministratore: async () => true },
+  });
 
   const server = createServer((_r, risposta) => risposta.end());
   server.on("upgrade", (richiesta, socket) => {

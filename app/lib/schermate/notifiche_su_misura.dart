@@ -707,6 +707,45 @@ class _StatoDelFoglio extends State<FoglioDellaVoce> {
                   cambia: (quando) => _cambia(_scelta.con(quando: quando)),
                 ),
               ),
+            /* Il mini video: cinque secondi prima del movimento e cinque
+             * dopo, da guardare toccando la notifica. Spento di serie; e' di
+             * Premium, come la foto. */
+            if (_evento == 'movimento')
+              _RigaDelFoglio(
+                etichetta: inLingua(it: 'Video', en: 'Video'),
+                child: SwitchListTile(
+                  key: const Key('voce-video'),
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                  secondary: widget.premium
+                      ? null
+                      : const Icon(Icons.lock_rounded, size: 18),
+                  title: Text(
+                    inLingua(
+                      it: 'Mini video del movimento',
+                      en: 'Short motion clip',
+                    ),
+                  ),
+                  subtitle: Text(
+                    inLingua(
+                      it:
+                          '5 secondi prima e 5 dopo, da guardare toccando '
+                          'la notifica',
+                      en:
+                          '5 seconds before and 5 after, to watch by '
+                          'tapping the notification',
+                    ),
+                  ),
+                  value: widget.premium && _scelta.video,
+                  onChanged: (si) {
+                    if (!widget.premium) {
+                      widget.spiegaIlPremium?.call();
+                      return;
+                    }
+                    _cambia(_scelta.con(video: si));
+                  },
+                ),
+              ),
             if (conSoglia)
               _RigaDelFoglio(
                 etichetta: inLingua(it: 'Solo se', en: 'Only if'),

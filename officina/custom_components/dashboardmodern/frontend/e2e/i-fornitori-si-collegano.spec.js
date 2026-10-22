@@ -29,7 +29,7 @@ const DISPONIBILI = [
   { id: "eon", nome: "E.ON Energia", modo: "password", cosa: "luce" },
   { id: "engie", nome: "ENGIE", modo: "link", cosa: "luce-gas" },
   { id: "enel", nome: "Enel Energia", pronto: false, perche: "nessuna-integrazione" },
-  { id: "octopus", nome: "Octopus Energy", pronto: false },
+  { id: "octopus", nome: "Octopus Energy", modo: "password", cosa: "luce-saldo" },
 ];
 const VUOTO = { collegati: [], disponibili: DISPONIBILI };
 const COLLEGATO = {
@@ -118,8 +118,8 @@ test("E.ON: si sceglie, email e password, codice SMS, collegato", async ({ page 
     collega: { serve: "codice" },
     codice: { stato: COLLEGATO },
   });
-  await expect(scheda.locator("[data-dm-forn-scegli]")).toHaveCount(2);
-  await expect(scheda.locator(".dm-forn-scheda:disabled")).toHaveCount(2);
+  await expect(scheda.locator("[data-dm-forn-scegli]")).toHaveCount(3);
+  await expect(scheda.locator(".dm-forn-scheda:disabled")).toHaveCount(1);
   await foto(scheda, "scelta", testInfo);
   await scheda.locator('[data-dm-forn-scegli="eon"]').click();
   await expect(scheda.locator("[data-dm-forn-password]")).toHaveAttribute("type", "password");
@@ -137,6 +137,55 @@ test("E.ON: si sceglie, email e password, codice SMS, collegato", async ({ page 
   await foto(scheda, "collegati", testInfo);
   const chieste = await page.evaluate(() => window.__CHIESTE__.map((m) => m.type.split("/").pop()));
   expect(chieste).toEqual(expect.arrayContaining(["stato", "collega", "codice"]));
+});
+
+test("scelto un fornitore si torna all'elenco, dall'alto o da Annulla", async ({
+  page,
+}, testInfo) => {
+  /* «Dopo aver cliccato su un fornitore non mi fa tornare indietro.» */
+  const scheda = await apri(page, testInfo, "light", { stato: VUOTO, annulla: {} });
+  await scheda.locator('[data-dm-forn-scegli="eon"]').click();
+  const indietro = scheda.locator(".dm-forn-indietro");
+  await expect(indietro).toBeVisible();
+  await expect(scheda.locator("[data-dm-forn-entra]")).toBeVisible();
+  await indietro.click();
+  await expect(scheda.locator("[data-dm-forn-scegli]")).toHaveCount(3);
+  await scheda.locator('[data-dm-forn-scegli="eon"]').click();
+  await scheda.locator(".dm-forn-tasti [data-dm-forn-annulla]").click();
+  await expect(scheda.locator("[data-dm-forn-scegli]")).toHaveCount(3);
+});
+
+test("Octopus: email e password, collegato", async ({ page }, testInfo) => {
+  const scheda = await apri(page, testInfo, "light", {
+    stato: VUOTO,
+    collega: {
+      stato: {
+        disponibili: DISPONIBILI,
+        collegati: [
+          {
+            id: "0123456789ab",
+            fornitore: "octopus",
+            nome: "Octopus Energy",
+            pod: "IT001E••••4444",
+            stato: "ok",
+            aggiornato: Date.now() - 60_000,
+          },
+        ],
+      },
+    },
+  });
+  await expect(scheda.locator('[data-dm-forn-scegli="octopus"]')).toContainText("saldo");
+  await scheda.locator('[data-dm-forn-scegli="octopus"]').click();
+  await scheda.locator("[data-dm-forn-email]").fill("casa@example.it");
+  await scheda.locator("[data-dm-forn-password]").fill("una-password");
+  await foto(scheda, "octopus-credenziali", testInfo);
+  await scheda.locator("[data-dm-forn-entra]").click();
+  await expect(scheda.locator(".dm-forn-riga")).toHaveCount(1);
+  await expect(scheda).toContainText("Octopus Energy");
+  const chieste = await page.evaluate(() =>
+    window.__CHIESTE__.map((m) => [m.type.split("/").pop(), m.fornitore]),
+  );
+  expect(chieste).toContainEqual(["collega", "octopus"]);
 });
 
 test("ENGIE: accesso dal browser e indirizzo incollato", async ({ page }, testInfo) => {

@@ -488,13 +488,16 @@ test("l'app riceve solo le plance sue, e non sa che le altre esistono", async ()
       ["primary"],
     );
 
-    /* Un telefono che non si sa di chi sia vede tutto: i telefoni abbinati
-     * prima di oggi non si spengono a tradimento. */
+    /* Un telefono che non si sa di chi sia vede quelle aperte a tutti, e
+     * non la riservata: «non si sa» non e' un si'. */
     const vecchio = await commissioni.rispondi(
       { id: 4, type: "ponte/plance/elenco" },
       { chiChiede: "" },
     );
-    assert.equal(vecchio.result.plance.length, 2);
+    assert.deepEqual(
+      vecchio.result.plance.map((una) => una.profilo),
+      ["primary"],
+    );
   } finally {
     via();
   }
@@ -580,22 +583,53 @@ test("e non si puo' nemmeno rinominare o togliere quella di un altro", async () 
   }
 });
 
-test("ma un telefono di prima, che non dice di chi e', vede tutto", async () => {
-  /* La regola del passaggio, sempre la stessa: chi non si sa chi e' vede
-   * tutto. Un aggiornamento non spegne la casa a nessuno. */
+test("un telefono di prima, che non dice di chi e', vede solo le plance aperte a tutti", async () => {
+  /* Dall'audit di sicurezza: un telefono abbinato prima che i telefoni si
+   * intestassero vedeva anche le plance riservate. Adesso passa dalla stessa
+   * regola di tutti (`laVede`): le aperte si', le riservate e quelle «solo
+   * amministratori» no. Una casa senza plance riservate resta com'era. */
   const { cartella, via } = unPosto();
   try {
     const plance = new Plance({ cartella, registro: ZITTO });
-    plance.chiLaVede("primary", [LEI]);
     const commissioni = new Commissioni({
       plance,
       plancia: { cE: true, descrizione: () => ({ base: "/x" }) },
       registro: ZITTO,
     });
-    const elenco = await commissioni.rispondi({ id: 1, type: "ponte/plance/elenco" }, {});
+    /* Nessuna riservata: per lui non cambia niente. */
+    let elenco = await commissioni.rispondi({ id: 1, type: "ponte/plance/elenco" }, {});
     assert.equal(elenco.result.plance.length, 1);
-    const aprire = await commissioni.rispondi({ id: 2, type: "ponte/plancia" }, {});
-    assert.equal(aprire.success, true);
+    assert.equal((await commissioni.rispondi({ id: 2, type: "ponte/plancia" }, {})).success, true);
+
+    /* La sola plancia e' riservata: non la vede, e i file non gli si danno. */
+    plance.chiLaVede("primary", [LEI]);
+    elenco = await commissioni.rispondi({ id: 3, type: "ponte/plance/elenco" }, {});
+    assert.deepEqual(elenco.result.plance, []);
+    const aprire = await commissioni.rispondi({ id: 4, type: "ponte/plancia" }, {});
+    assert.equal(aprire.success, false);
+    const file = await commissioni.rispondi(
+      { id: 5, type: "ponte/http", metodo: "GET", percorso: "/dashboardmodern_static/x.js" },
+      {},
+    );
+    assert.equal(file.success, false);
+
+    /* «Solo amministratori»: senza identita' non si e' amministratori. */
+    const altra = plance.aggiungi("Tecnica");
+    elenco = await commissioni.rispondi({ id: 6, type: "ponte/plance/elenco" }, {});
+    assert.equal(
+      elenco.result.plance.some((una) => una.profilo === altra.profilo),
+      true,
+    );
+    plance.soloChiAmministra(altra.profilo, true);
+    elenco = await commissioni.rispondi({ id: 8, type: "ponte/plance/elenco" }, {});
+    assert.deepEqual(elenco.result.plance, []);
+    /* E quello che non vede non lo rinomina ne' lo toglie. */
+    const togli = await commissioni.rispondi(
+      { id: 7, type: "ponte/plance/togli", profilo: "primary" },
+      {},
+    );
+    assert.equal(togli.success, false);
+    assert.ok(plance.quale("primary"));
   } finally {
     via();
   }

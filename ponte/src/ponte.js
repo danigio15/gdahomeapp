@@ -254,14 +254,18 @@ class Collegamento {
   /* Se chi sta su questo filo amministra la casa.
    *
    * Un telefono senza nessun utente addosso e' stato abbinato prima che i
-   * telefoni si intestassero a qualcuno — e un codice, allora, lo fabbricava
-   * solo chi amministra: resta com'era. Per gli altri si guarda la risposta
-   * fresca di `utenti.js`, se c'e', e se no quella avuta alla stretta di mano.
-   * «Non si sa» non e' un si'. */
+   * telefoni si intestassero a qualcuno. Fino a qui passava per uno che
+   * amministra («allora il codice lo fabbricava solo chi amministra»), ma
+   * quel si' non e' legato a nessuna persona di adesso: un utente tolto o
+   * spento in Home Assistant non lo spegneva. Dall'audit di sicurezza: non
+   * amministra. Usa la casa come chi non amministra; per amministrare si
+   * riabbina con un codice fatto da chi amministra, e il telefono si intesta
+   * a lui. Per gli altri si guarda la risposta fresca di `utenti.js`, se
+   * c'e', e se no quella avuta alla stretta di mano. «Non si sa» non e' un
+   * si'. */
   _amministra() {
     const utente = this.dispositivo?.utente || "";
-    if (!this.dispositivo) return false;
-    if (!utente) return true;
+    if (!this.dispositivo || !utente) return false;
     const subito = this.ponte.utenti?.amministratoreSubito?.(utente);
     if (subito === true || subito === false) return subito;
     return this._amministraAllaStretta === true;
@@ -315,6 +319,8 @@ class Collegamento {
         amministra,
         telecamereChiuse,
         firmaIlPonte: true,
+        /* Senza un utente addosso, nessuna telecamera (`dogana.js`). */
+        senzaTelecamere: !this.dispositivo.utente,
       });
       for (const no of rifiuti) this.presa.manda(JSON.stringify(no));
       for (const detta of risposte) this.presa.manda(JSON.stringify(detta));
@@ -407,8 +413,9 @@ class Collegamento {
     /* Chi chiede: il telefono che ha aperto questo filo, cioe' l'utente di
      * Home Assistant a cui e' intestato. Serve alle plance riservate — senza,
      * un telefono chiederebbe l'elenco e se lo prenderebbe tutto. Un telefono
-     * abbinato prima di oggi non ha nessun utente addosso, e quello vede
-     * tutto: com'era ieri. */
+     * abbinato prima che i telefoni si intestassero non ha nessun utente
+     * addosso: vede le plance aperte a tutti e nessuna riservata, e niente
+     * telecamere ne' notifiche (`commissioni.js`, `notifiche.js`). */
     const chiChiede = this.dispositivo?.utente || "";
     const risposta = commissioni
       ? commissioni.rispondi(detto, {

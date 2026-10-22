@@ -143,7 +143,14 @@ export const STATI_A_MURO = {
 export async function apriLaCasaAMuro(
   page,
   testInfo,
-  { premium = true, muro = null, stati = STATI_A_MURO, seme = SEME_A_MURO, caselle = {} } = {},
+  {
+    premium = true,
+    muro = null,
+    stati = STATI_A_MURO,
+    seme = SEME_A_MURO,
+    caselle = {},
+    azioni = AZIONI_A_MURO,
+  } = {},
 ) {
   await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
   await page.addInitScript((p) => {
@@ -174,7 +181,7 @@ export async function apriLaCasaAMuro(
       window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
       window.dispatchEvent(new CustomEvent("dashboardmodern:muro"));
     },
-    { letture: stati, azioni: AZIONI_A_MURO, muro, caselle },
+    { letture: stati, azioni, muro, caselle },
   );
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
 }

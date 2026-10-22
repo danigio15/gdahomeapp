@@ -187,7 +187,10 @@ test("una telecamera messa solo in una plancia riservata non si apre a chi non l
     /* A lui resta chiusa solo quella che sta soltanto nella plancia di lei. */
     assert.deepEqual([...con.telecamereChiuse(LUI, false)], ["camera.camera_da_letto"]);
     assert.equal(con.telecamereChiuse(LEI, false).size, 0);
-    assert.equal(con.telecamereChiuse("", null).size, 0, "chi non si sa chi e' resta com'era");
+    /* Chi non si sa chi e' non vede la plancia riservata: le sue telecamere
+     * gli restano chiuse come a lui (e senza utente non ne vede comunque
+     * nessuna, `_vedeLeTelecamere`). */
+    assert.deepEqual([...con.telecamereChiuse("", null)], ["camera.camera_da_letto"]);
 
     const chiuse = con.telecamereChiuse(LUI, false);
     const flusso = (entity_id) => ({ id: 1, type: "camera/stream", entity_id });
@@ -232,6 +235,60 @@ test("una telecamera messa solo in una plancia riservata non si apre a chi non l
     assert.equal(vietata.success, false);
     assert.equal(vietata.error.code, "unauthorized");
     assert.deepEqual(scaricate, [], "a Home Assistant non si e' chiesto niente");
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("se non si sa quali telecamere sono riservate, si chiudono tutte", () => {
+  /* Dall'audit di sicurezza: un errore nel leggere le plance tornava «nessuna
+   * chiusa», cioe' un permesso. Adesso «non lo so» chiude: l'elenco delle
+   * plance che non si legge, o la configurazione di una plancia nascosta che
+   * non si legge, chiudono tutte le telecamere a chi non amministra. */
+  const cartella = mkdtempSync(join(tmpdir(), "telecamere-guaste-"));
+  try {
+    const plance = new Plance({ cartella, registro: ZITTO });
+    const sua = plance.aggiungi("Di lei");
+    plance.chiLaVede(sua.profilo, [LEI]);
+    const configurazione = new Configurazione({ cartella });
+    configurazione.scrivi(sua.profilo, { cd_telecamere: '["camera.camera_da_letto"]' });
+    configurazione.scrivi("primary", { cd_telecamere: '["camera.ingresso"]' });
+    const con = new Commissioni({ registro: ZITTO, plance, configurazione });
+    const flusso = (entity_id) => ({ id: 1, type: "camera/stream", entity_id });
+
+    /* L'elenco delle plance non si legge. */
+    const elenco = plance.elenco.bind(plance);
+    plance.elenco = () => {
+      throw new Error("disco guasto");
+    };
+    const tutte = con.telecamereChiuse(LUI, false);
+    assert.equal(tutte.has("camera.ingresso"), true);
+    assert.equal(tutte.has("camera.qualunque"), true);
+    assert.notEqual(perche(flusso("camera.ingresso"), { telecamereChiuse: tutte }), null);
+    assert.notEqual(
+      perLaVia({ percorso: "/api/camera_proxy/camera.ingresso", telecamereChiuse: tutte }),
+      null,
+    );
+    plance.elenco = elenco;
+    assert.deepEqual([...con.telecamereChiuse(LUI, false)], ["camera.camera_da_letto"]);
+
+    /* La configurazione della plancia nascosta non si legge. */
+    const leggi = configurazione.leggi.bind(configurazione);
+    configurazione.leggi = (profilo) => {
+      if (profilo === sua.profilo) throw new Error("file rovinato");
+      return leggi(profilo);
+    };
+    /* Quello gia' calcolato con i dati buoni resta buono: qui si prova il
+     * primo calcolo dopo il guasto. */
+    con._chiuseDi = null;
+    assert.equal(con.telecamereChiuse(LUI, false).has("camera.ingresso"), true);
+    /* Lei la plancia la vede: per lei e' una plancia vista che non si legge,
+     * e apre solo di meno. */
+    con._chiuseDi = null;
+    assert.equal(con.telecamereChiuse(LEI, false).has("camera.ingresso"), false);
+    /* E l'errore non resta in memoria: tornata leggibile, si torna alla regola. */
+    configurazione.leggi = leggi;
+    assert.deepEqual([...con.telecamereChiuse(LUI, false)], ["camera.camera_da_letto"]);
   } finally {
     rmSync(cartella, { recursive: true, force: true });
   }

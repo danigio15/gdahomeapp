@@ -27,6 +27,7 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show Directory;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -35,6 +36,8 @@ import '../casa/collegamento.dart';
 import '../casa/la_finestra.dart';
 import '../notifiche/consegna.dart';
 import '../notifiche/dove_apre.dart';
+import '../notifiche/il_filmato.dart';
+import '../notifiche/le_immagini.dart';
 import '../notifiche/modello.dart';
 import '../notifiche/postino.dart';
 import '../parole.dart';
@@ -254,7 +257,9 @@ class SchermataDellaTelecamera extends StatefulWidget {
     required this.collegamento,
     this.postino,
     this.fotoIniziale,
+    this.filmatoIniziale,
     this.adesso,
+    this.cartellaDelleImmagini,
   });
 
   final ToccoDellaNotifica tocco;
@@ -264,8 +269,14 @@ class SchermataDellaTelecamera extends StatefulWidget {
   /// La foto da mostrare senza chiederla: per le prove e i disegni.
   final Uint8List? fotoIniziale;
 
+  /// Il mini video da mostrare senza chiederlo: per le prove e i disegni.
+  final FilmatoDelMovimento? filmatoIniziale;
+
   /// L'ora per decidere se i tasti valgono ancora: per le prove.
   final DateTime? adesso;
+
+  /// Dove stanno le immagini delle notifiche: per le prove.
+  final Directory? cartellaDelleImmagini;
 
   @override
   State<SchermataDellaTelecamera> createState() => _StatoDellaTelecamera();
@@ -277,20 +288,106 @@ class _StatoDellaTelecamera extends State<SchermataDellaTelecamera> {
   bool _chiesta = false;
   String? _premuto;
 
+  /// La foto del momento della notifica, quando il telefono la tiene.
+  Uint8List? _delMomento;
+
+  /// Se si sta guardando dal vivo, invece della foto del momento.
+  bool _dalVivo = false;
+
+  /// Il mini video del movimento, quando la notifica lo porta: cinque
+  /// secondi prima e cinque dopo (`il_filmato.dart`).
+  FilmatoDelMovimento? _filmato;
+
+  /// Se si sta guardando il video (o lo si sta aspettando dalla casa).
+  bool _inVideo = false;
+
+  /// Se il video la casa non l'ha dato: scaduto, o non si mostra.
+  bool _senzaVideo = false;
+
+  /// Si chiude quando si sa se il telefono ha la foto del momento.
+  final Completer<void> _momentoCercato = Completer<void>();
+
+  /// Se il video lo si sta gia' chiedendo alla casa.
+  bool _videoInArrivo = false;
+
   NotificaArrivata get _notifica => widget.tocco.notifica;
 
   @override
   void initState() {
     super.initState();
     _foto = widget.fotoIniziale;
-    final camera = _notifica.camera;
-    if (camera != null && widget.fotoIniziale == null) {
-      unawaited(_unaFoto(camera));
-      _giro = Timer.periodic(
-        const Duration(seconds: 2),
-        (_) => _unaFoto(camera),
-      );
+    _filmato = widget.filmatoIniziale;
+    _inVideo = _filmato != null;
+    if (widget.fotoIniziale == null && widget.filmatoIniziale == null) {
+      unawaited(_comincia());
+    } else {
+      _momentoCercato.complete();
     }
+  }
+
+  /* «Ti fa vedere il live e non la foto.» Toccando «Guarda» su un
+   * movimento, quello che si vuole vedere per primo e' chi c'era alle 19:00,
+   * non il balcone vuoto di adesso. La foto del momento il telefono ce l'ha
+   * gia' — e' quella della notifica (`le_immagini.dart`) — e viene prima; il
+   * dal vivo e' un tasto. Senza foto del momento, si parte dal vivo come
+   * prima. */
+  /* Col mini video acceso, si parte dal video: e' quello che il tester
+   * chiedeva — chi c'era prima, e cosa ha fatto dopo. Mentre la casa lo
+   * prepara (fino a cinque secondi, se il movimento e' di adesso) c'e' gia'
+   * la foto del momento sotto mano; se il video non arriva, si resta li'. */
+  Future<void> _comincia() async {
+    final film = _notifica.film;
+    if (film != null) {
+      setState(() => _inVideo = true);
+      unawaited(_caricaIlVideo(film));
+    }
+    final tenuta = await prendiLImmagine(
+      _notifica.id,
+      cartella: widget.cartellaDelleImmagini,
+    );
+    _momentoCercato.complete();
+    if (!mounted) return;
+    if (tenuta != null) {
+      setState(() => _delMomento = tenuta);
+      return;
+    }
+    if (film == null) _guardaDalVivo();
+  }
+
+  Future<void> _caricaIlVideo(({String id, String chiave}) film) async {
+    if (_videoInArrivo) return;
+    _videoInArrivo = true;
+    final filmato = await ilFilmatoDi(widget.collegamento, film);
+    _videoInArrivo = false;
+    if (!mounted) return;
+    if (filmato != null) {
+      setState(() => _filmato = filmato);
+      return;
+    }
+    /* Il «no» della casa puo' arrivare prima che il telefono abbia trovato
+     * la foto del momento: prima la si aspetta, poi si sceglie. */
+    await _momentoCercato.future;
+    if (!mounted) return;
+    setState(() {
+      _senzaVideo = true;
+      _inVideo = false;
+    });
+    if (_delMomento == null) _guardaDalVivo();
+  }
+
+  void _vaiAlVideo() {
+    final film = _notifica.film;
+    if (film == null || _senzaVideo) return;
+    setState(() => _inVideo = true);
+    if (_filmato == null) unawaited(_caricaIlVideo(film));
+  }
+
+  void _guardaDalVivo() {
+    final camera = _notifica.camera;
+    if (camera == null || _giro != null) return;
+    setState(() => _dalVivo = true);
+    unawaited(_unaFoto(camera));
+    _giro = Timer.periodic(const Duration(seconds: 2), (_) => _unaFoto(camera));
   }
 
   Future<void> _unaFoto(String camera) async {
@@ -324,7 +421,10 @@ class _StatoDellaTelecamera extends State<SchermataDellaTelecamera> {
       for (final tasto in _notifica.tasti)
         if (!tasto.apre && !tasto.chiude && vale) tasto,
     ];
-    final foto = _foto;
+    final momento = _dalVivo || _inVideo ? null : _delMomento;
+    final foto = momento ?? _foto;
+    final video = _inVideo ? _filmato : null;
+    final alle = '${due(ora.hour)}:${due(ora.minute)}';
     return Scaffold(
       backgroundColor: const Color(0xFF14110F),
       appBar: AppBar(
@@ -360,7 +460,41 @@ class _StatoDellaTelecamera extends State<SchermataDellaTelecamera> {
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
-                          if (foto != null)
+                          if (video != null)
+                            LettoreDelFilmato(
+                              video,
+                              key: const Key('telecamera-video'),
+                            )
+                          else if (_inVideo)
+                            Container(
+                              color: const Color(0xFF2E2A26),
+                              alignment: Alignment.center,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const SizedBox(
+                                    width: 34,
+                                    height: 34,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 3,
+                                      color: Colors.white54,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 14),
+                                  Text(
+                                    inLingua(
+                                      it: 'Si prepara il video del movimento…',
+                                      en: 'Getting the motion clip ready…',
+                                    ),
+                                    key: const Key('telecamera-video-attesa'),
+                                    style: const TextStyle(
+                                      color: Colors.white54,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          else if (foto != null)
                             FotoAMisura(foto, key: const Key('telecamera-foto'))
                           else
                             Container(
@@ -408,14 +542,33 @@ class _StatoDellaTelecamera extends State<SchermataDellaTelecamera> {
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(
-                                    Icons.circle,
-                                    size: 10,
-                                    color: Color(0xFFEF4444),
+                                  Icon(
+                                    _inVideo
+                                        ? Icons.movie_rounded
+                                        : momento == null
+                                        ? Icons.circle
+                                        : Icons.photo_camera_rounded,
+                                    size: momento == null && !_inVideo
+                                        ? 10
+                                        : 14,
+                                    color: momento == null && !_inVideo
+                                        ? const Color(0xFFEF4444)
+                                        : Colors.white,
                                   ),
                                   const SizedBox(width: 7),
                                   Text(
-                                    inLingua(it: 'DAL VIVO', en: 'LIVE'),
+                                    _inVideo
+                                        ? inLingua(
+                                            it: 'VIDEO DELLE $alle',
+                                            en: '$alle CLIP',
+                                          )
+                                        : momento == null
+                                        ? inLingua(it: 'DAL VIVO', en: 'LIVE')
+                                        : inLingua(
+                                            it: 'ALLE $alle',
+                                            en: 'AT $alle',
+                                          ),
+                                    key: const Key('telecamera-quando'),
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.w700,
@@ -441,6 +594,95 @@ class _StatoDellaTelecamera extends State<SchermataDellaTelecamera> {
                     : '${due(ora.hour)}:${due(ora.minute)}',
                 style: const TextStyle(color: Colors.white70, fontSize: 17),
               ),
+              /* Fra il video, la foto del momento e il dal vivo. */
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  if (_inVideo) ...[
+                    if (_delMomento != null)
+                      _TastoDellaVista(
+                        chiave: const Key('telecamera-alla-foto'),
+                        icona: Icons.photo_camera_rounded,
+                        testo: inLingua(
+                          it: 'Foto delle $alle',
+                          en: '$alle picture',
+                        ),
+                        tocca: () => setState(() {
+                          _inVideo = false;
+                          _dalVivo = false;
+                        }),
+                      ),
+                    if (_notifica.camera != null)
+                      _TastoDellaVista(
+                        chiave: const Key('telecamera-al-vivo'),
+                        icona: Icons.videocam_rounded,
+                        testo: inLingua(
+                          it: 'Guarda dal vivo',
+                          en: 'Watch live',
+                        ),
+                        tocca: () {
+                          setState(() => _inVideo = false);
+                          if (_giro != null) {
+                            setState(() => _dalVivo = true);
+                          } else {
+                            _guardaDalVivo();
+                          }
+                        },
+                      ),
+                  ] else ...[
+                    if (_notifica.film != null && !_senzaVideo)
+                      _TastoDellaVista(
+                        chiave: const Key('telecamera-al-video'),
+                        icona: Icons.movie_rounded,
+                        testo: inLingua(
+                          it: 'Rivedi il video',
+                          en: 'Replay the clip',
+                        ),
+                        tocca: _vaiAlVideo,
+                      ),
+                    /* Dalla foto del momento al dal vivo, e ritorno. */
+                    if (_delMomento != null && _notifica.camera != null)
+                      _TastoDellaVista(
+                        chiave: const Key('telecamera-cambia'),
+                        icona: _dalVivo
+                            ? Icons.photo_camera_rounded
+                            : Icons.videocam_rounded,
+                        testo: _dalVivo
+                            ? inLingua(
+                                it: 'Torna alla foto delle $alle',
+                                en: 'Back to the $alle picture',
+                              )
+                            : inLingua(it: 'Guarda dal vivo', en: 'Watch live'),
+                        tocca: () {
+                          if (_dalVivo) {
+                            setState(() => _dalVivo = false);
+                          } else if (_giro != null) {
+                            setState(() => _dalVivo = true);
+                          } else {
+                            _guardaDalVivo();
+                          }
+                        },
+                      ),
+                  ],
+                ],
+              ),
+              if (_senzaVideo) ...[
+                const SizedBox(height: 8),
+                Text(
+                  inLingua(
+                    it:
+                        'Il video di questo movimento non c\'è più: la casa '
+                        'li tiene tre giorni.',
+                    en:
+                        'This motion clip is no longer there: the home keeps '
+                        'them for three days.',
+                  ),
+                  key: const Key('telecamera-senza-video'),
+                  style: const TextStyle(color: Colors.white54, fontSize: 13),
+                ),
+              ],
               const Spacer(),
               Wrap(
                 spacing: 10,
@@ -754,5 +996,32 @@ class _Tondo extends StatelessWidget {
         ),
       ),
     ],
+  );
+}
+
+/// Un tasto per cambiare quello che si guarda: il video, la foto, il vivo.
+class _TastoDellaVista extends StatelessWidget {
+  const _TastoDellaVista({
+    required this.chiave,
+    required this.icona,
+    required this.testo,
+    required this.tocca,
+  });
+
+  final Key chiave;
+  final IconData icona;
+  final String testo;
+  final VoidCallback tocca;
+
+  @override
+  Widget build(BuildContext context) => OutlinedButton.icon(
+    key: chiave,
+    style: OutlinedButton.styleFrom(
+      foregroundColor: Colors.white,
+      side: const BorderSide(color: Colors.white38),
+    ),
+    onPressed: tocca,
+    icon: Icon(icona),
+    label: Text(testo),
   );
 }

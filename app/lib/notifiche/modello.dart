@@ -61,6 +61,7 @@ class SceltaDellaVoce {
     this.come = 'subito',
     this.dentro = pezziDellElettrodomestico,
     this.quando = 'casa-vuota-o-notte',
+    this.video = false,
   });
 
   /// `come-tutte`, `semplice` o `elaborata`.
@@ -89,6 +90,10 @@ class SceltaDellaVoce {
   /// `casa-vuota-o-notte`.
   final String quando;
 
+  /// Per il movimento: il mini video, cinque secondi prima e cinque dopo
+  /// (`ponte/src/i-filmati.js`). Spento di serie.
+  final bool video;
+
   bool get haGliOrari => dalle != null && alle != null;
 
   SceltaDellaVoce con({
@@ -103,6 +108,7 @@ class SceltaDellaVoce {
     String? come,
     List<String>? dentro,
     String? quando,
+    bool? video,
   }) => SceltaDellaVoce(
     stile: stile ?? this.stile,
     quali: quali ?? this.quali,
@@ -113,6 +119,7 @@ class SceltaDellaVoce {
     come: come ?? this.come,
     dentro: dentro ?? this.dentro,
     quando: quando ?? this.quando,
+    video: video ?? this.video,
   );
 
   Map<String, Object?> inJson() => {
@@ -124,6 +131,7 @@ class SceltaDellaVoce {
     'come': come,
     'dentro': dentro,
     'quando': quando,
+    'video': video,
   };
 
   static SceltaDellaVoce leggi(Object? grezzo) {
@@ -171,6 +179,7 @@ class SceltaDellaVoce {
         'notte' => 'notte',
         _ => 'casa-vuota-o-notte',
       },
+      video: grezzo['video'] == true,
     );
   }
 
@@ -185,7 +194,8 @@ class SceltaDellaVoce {
       other.alle == alle &&
       other.come == come &&
       _stessi(other.dentro, dentro) &&
-      other.quando == quando;
+      other.quando == quando &&
+      other.video == video;
 
   @override
   int get hashCode => Object.hash(
@@ -198,6 +208,7 @@ class SceltaDellaVoce {
     come,
     Object.hashAll(dentro),
     quando,
+    video,
   );
 }
 
@@ -701,6 +712,7 @@ class NotificaArrivata {
     this.tasti = const [],
     this.scheda,
     this.foto,
+    this.film,
     this.fonte,
     this.apri,
   });
@@ -731,6 +743,12 @@ class NotificaArrivata {
   /// cifrata con la chiave di questo telefono, per dieci minuti
   /// (`foto_di_passaggio.dart`). L'identificativo e basta.
   final String? foto;
+
+  /// Il mini video del movimento (`ponte/src/i-filmati.js`): il numero e la
+  /// chiave per aprirlo. Il video sta nella casa, chiuso: lo apre solo chi
+  /// ha questa notifica, e la casa lo da' solo a un utente che vede quella
+  /// telecamera. `null` se l'opzione e' spenta.
+  final ({String id, String chiave})? film;
 
   /// Da dove viene, sotto il testo: «Automazione di Home Assistant ·
   /// Lavatrice finita». Solo le notifiche di Home Assistant ce l'hanno.
@@ -811,6 +829,12 @@ class NotificaArrivata {
               RegExp(r'^[0-9a-f]{32}$').hasMatch(idDellaFoto)
           ? idDellaFoto
           : null,
+      film: switch (grezzo['film']) {
+        {'id': final String id, 'chiave': final String chiave}
+            when _idDelFilm.hasMatch(id) && _chiaveDelFilm.hasMatch(chiave) =>
+          (id: id, chiave: chiave),
+        _ => null,
+      },
       fonte: grezzo['fonte'] is String && (grezzo['fonte'] as String).isNotEmpty
           ? grezzo['fonte'] as String
           : null,
@@ -829,6 +853,8 @@ class NotificaArrivata {
 }
 
 final RegExp _parola = RegExp(r'^[a-z]{2,20}$');
+final RegExp _idDelFilm = RegExp(r'^\d{10,16}-[a-z0-9]{4,24}$');
+final RegExp _chiaveDelFilm = RegExp(r'^[A-Za-z0-9_-]{43}$');
 final RegExp _entita = RegExp(r'^[a-z_]+\.[a-z0-9_]+$');
 
 /// Un telefono di GdAHome della casa, per «Chi la riceve»: col nome che chi

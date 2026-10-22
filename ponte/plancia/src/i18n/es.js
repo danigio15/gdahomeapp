@@ -6951,4 +6951,11 @@ export default Object.freeze({
   "Meals: every how many hours": "Comidas: cada cuántas horas",
   "Not logged yet": "Aún no registrada",
   "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "La tarjeta muestra el botón «Ha comido»: cuando vuelva a ser la hora, la página y tu teléfono te lo recuerdan. Vacío: sin recordatorio.",
+  "No options to choose": "No hay opciones para elegir",
+  Suppliers: "Proveedores",
+  "Electricity · balance, price and consumption": "Luz · saldo, precio y consumo",
+  "Climate card": "Tarjeta del clima",
+  "Like the wall": "Como la pared",
+  "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard":
+    "Como la pared: compacta, la temperatura deseada grande. Como el panel: la temperatura de la habitación grande y la línea con la deseada, como en el panel principal",
 });

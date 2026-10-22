@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-R6RCL64O.js";
+} from "../../chunk-GDX3K375.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2939,6 +2939,7 @@ var SOURCE_INDEX = Object.freeze({
   "Carburante · Autonomia · Portiere": "Fuel · Range · Doors",
   "Carburante consumato in totale (L)": "Total fuel used (L)",
   "Card avanzata — immagine, durata, temperatura, porta, costi": "Advanced card — image, duration, temperature, door, costs",
+  "Card del clima": "Climate card",
   "carica": "charge",
   "Carica": "Charge",
   "Carica · Autonomia · Wallbox": "Charge · Range · Wallbox",
@@ -3222,6 +3223,8 @@ var SOURCE_INDEX = Object.freeze({
   "come": "as",
   "Come carica": "How it charges",
   "come i giorni feriali": "same as weekdays",
+  "Come il muro": "Like the wall",
+  "Come il muro: raccolta, la temperatura voluta grande. Come la plancia: la temperatura della stanza grande e la riga con la voluta, come nella plancia principale": "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard",
   "Come il tipo di pagina": "Like the page type",
   "come la casa": "as the house",
   "Come la chiami": "What you call it",
@@ -3997,6 +4000,7 @@ var SOURCE_INDEX = Object.freeze({
   "fonti": "sources",
   "Forma": "Shape",
   "Fornitore collegato": "Supplier connected",
+  "Fornitori": "Suppliers",
   "Fornitori di energia": "Energy suppliers",
   "Forno": "Oven",
   "Forza (ignora pioggia)": "Force (ignore rain)",
@@ -4917,6 +4921,7 @@ var SOURCE_INDEX = Object.freeze({
   "Longitudine": "Longitude",
   "luce": "light",
   "Luce · bollette e consumi": "Electricity · bills and consumption",
+  "Luce · saldo, prezzo e consumi": "Electricity · balance, price and consumption",
   "luce accesa": "light on",
   "Luce accesa": "Light on",
   "Luce aggiunta": "Light added",
@@ -5329,6 +5334,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nessuna telecamera nella plancia": "No camera in the dashboard",
   "Nessuna temperatura configurata.": "No temperature configured.",
   "Nessuna voce": "No entries",
+  "Nessuna voce da scegliere": "No options to choose",
   "Nessuna zona configurata": "No zone configured",
   "Nessuna zona sta bagnando": "No zone is watering",
   "nessuno": "nobody",
@@ -16106,7 +16112,7 @@ function eUnTermostatoACoppia(attributi2) {
   if (Number.isFinite(dichiarate) && (dichiarate & CLIMA_CON_DUE_OBIETTIVI) === CLIMA_CON_DUE_OBIETTIVI)
     return true;
   const modi = Array.isArray(attributi2.hvac_modes) ? attributi2.hvac_modes.map(pulito7) : [];
-  return modi.includes("heat_cool") && numero3(attributi2.temperature) === null;
+  return modi.includes("heat_cool") && !("temperature" in attributi2);
 }
 function coppiaDelTermostato(attributi2) {
   const basso = numero3(attributi2?.target_temp_low);
@@ -42271,6 +42277,30 @@ body .dm-testata-riga .w-right{
 body .dm-testata-riga .w-detail{
   padding:3px 8px;font-size:10.5px;gap:4px;box-shadow:none;
   background:var(--card-bg,#fff);border-color:var(--card-border,#e8edf3)}
+/* Sullo schermo largo la striscia si legge da lontano.
+ *
+ * «La barra del meteo e' un po' bruttina con tutto quel buco senza niente.»
+ * Le misure qui sopra sono quelle di una fascia da telefono: sul computer e
+ * sul tablet la striscia e' larga quanto la plancia, e un'icona da ventidue
+ * pixel con la temperatura a diciannove ne occupavano un quinto. Il meteo
+ * cresce come l'ora che gli sta di fronte (orologio-section), e fra i due il
+ * vuoto si riduce a quello che separa due cose diverse. */
+@media(min-width:769px){
+  body .dm-testata-riga:not([data-dm-meteo="card"]){padding:10px 22px}
+  body .dm-testata-riga .w-icon{width:36px;height:36px;font-size:30px}
+  body .dm-testata-riga .w-temp{font-size:28px}
+  body .dm-testata-riga .w-state{font-size:12.5px}
+  /* «La barra intestazione e meteo non e' intera pagina come i widget.» La
+     striscia era larga quanto la fila dei widget, ma dentro aveva tutto a
+     sinistra e l'ora in fondo a destra: i widget riempiono la riga, lei no.
+     Il meteo prende tutta la larghezza che l'ora gli lascia, e umidita' e
+     vento stanno al centro della striscia: sempre vicini fra loro — erano
+     stati chiesti cosi' — ma nel mezzo invece che subito dopo la
+     temperatura. */
+  body .dm-testata-riga .weather-widget{flex:1 1 auto;justify-content:space-between}
+  body .dm-testata-riga .w-right{flex:1 1 auto;justify-content:center;gap:10px}
+  body .dm-testata-riga .w-detail{padding:6px 14px;font-size:13.5px}
+}
 /* La percepita non si nasconde mai.
  *
  * Qui c'era una regola che la toglieva di mezzo sotto i millecento pixel,
@@ -91635,6 +91665,46 @@ function ensureTasto() {
 function segnaCheGalleggia(acceso6) {
   doc?.body?.classList?.toggle("dm-assist-galleggia", Boolean(acceso6));
 }
+var tastoNellaBarra = (radice3 = "html") => `
+  ${radice3} body.dm-assist-galleggia .dm-assist-tasto.dm-assist-tasto{
+    right:10px;width:48px;height:48px;font-size:21px;z-index:9950;
+    bottom:calc(var(--dm-fondo-di-sistema,0px) + (var(--dm-barra-alta,67px) - var(--dm-fondo-di-sistema,0px) - 48px) / 2);
+    box-shadow:0 0 0 6px var(--dm-colore-barra,transparent),16px 0 0 6px var(--dm-colore-barra,transparent),0 8px 20px -8px rgba(2,132,199,.7)}
+  ${radice3}:root body.dm-assist-galleggia nav.tabs.bottom-nav-bar.bottom-nav-bar{padding-right:68px!important}
+`;
+function seguiLaBarra() {
+  const radice3 = doc?.documentElement;
+  if (!radice3) return;
+  let osservata = null;
+  const misura7 = () => {
+    const barra2 = doc.querySelector("nav.tabs.bottom-nav-bar");
+    if (!barra2) return;
+    if (barra2 !== osservata && root.ResizeObserver) {
+      osservata = barra2;
+      new root.ResizeObserver(misura7).observe(barra2);
+    }
+    const scrivi5 = (nome, valore3) => {
+      if (valore3 && radice3.style.getPropertyValue(nome) !== valore3)
+        radice3.style.setProperty(nome, valore3);
+    };
+    const alta = Math.round(barra2.getBoundingClientRect().height);
+    if (alta > 0) scrivi5("--dm-barra-alta", `${alta}px`);
+    scrivi5("--dm-colore-barra", root.getComputedStyle?.(barra2)?.backgroundColor);
+  };
+  misura7();
+  const poi = () => root.setTimeout?.(misura7, 60);
+  doc.addEventListener?.("click", poi, { passive: true });
+  try {
+    root.matchMedia?.("(prefers-color-scheme: dark)")?.addEventListener?.("change", poi);
+  } catch (_errore) {
+  }
+  for (const evento of [
+    "dashboardmodern:runtime-ready",
+    "dashboardmodern:persistence-restored",
+    "resize"
+  ])
+    root.addEventListener?.(evento, misura7);
+}
 function installStyles37() {
   installStyle(
     "dm-assist-style",
@@ -91646,6 +91716,25 @@ function installStyles37() {
     body.dm-assist-galleggia.cd-nav-fixed{
       padding-bottom:calc(160px + var(--dm-fondo-di-sistema,0px))!important;
       scroll-padding-bottom:calc(160px + var(--dm-fondo-di-sistema,0px))!important}
+    /* Sul telefono il tasto sta DENTRO la barra, in fondo a destra.
+     *
+     * Galleggiando a novantasei pixel dal fondo stava sopra le card, e
+     * fermandosi a meta' pagina ci finiva sotto sempre qualcosa: l'accensione
+     * di un termostato, «vedi tutto» dell'assistente di casa. Una riserva in
+     * fondo alla pagina salva solo l'ultima card; un tasto che sta sopra la
+     * pagina ne copre sempre una. Nella barra invece non copre niente: la
+     * barra gli lascia il suo posto a destra, e il tasto e' centrato
+     * sull'altezza dei nomi — quella che la barra dice di avere, senza la
+     * fascia dei tasti del telefono che le sta sotto.
+     *
+     * Le tre condizioni sono quelle in cui la barra sta attaccata al fondo e
+     * larga quanto lo schermo (navigation-section). Il cerchio ha un anello
+     * del colore della barra, e un secondo spostato verso destra fino al
+     * bordo: le voci che scorrono di lato gli passano dietro senza toccarlo, e
+     * nella fessura fra il tasto e il bordo non ne spunta un pezzo. */
+    @media (max-width:820px){${tastoNellaBarra()}}
+    ${tastoNellaBarra("html.dm-touch-navigation")}
+    @media (hover:none) and (pointer:coarse){${tastoNellaBarra()}}
     .dm-assist-tasto:hover{transform:translateY(-1px)}
     .dm-assist-tasto:focus-visible{outline:3px solid color-mix(in srgb,var(--primary-color,#0ea5e9) 40%,transparent);outline-offset:3px}
     .dm-assist-pannello{max-width:520px;width:min(520px,100%);display:flex;flex-direction:column;max-height:min(78vh,720px)}
@@ -91688,6 +91777,7 @@ function installAssistSection() {
     "dashboardmodern:config-changed"
   ])
     root.addEventListener?.(evento, senti);
+  seguiLaBarra();
   root.DashboardModernAssist = { apri: apriAssist, chiudi: chiudiAssist, chiedi: chiedi5 };
   return true;
 }
@@ -92946,7 +93036,9 @@ function lettureOrologio(adesso2 = /* @__PURE__ */ new Date(), lingua3 = locale(
   };
   return {
     ora: prova({ hour: "2-digit", minute: "2-digit" }) || "",
-    data: prova({ weekday: "short", day: "numeric", month: "short" }) || ""
+    data: prova({ weekday: "short", day: "numeric", month: "short" }) || "",
+    /* Per esteso, per lo schermo largo: «giovedì 22 ottobre». */
+    giorno: prova({ weekday: "long", day: "numeric", month: "long" }) || ""
   };
 }
 function fraQuantoIlMinuto(adesso2 = /* @__PURE__ */ new Date()) {
@@ -92961,12 +93053,14 @@ function nodo() {
   if (!header2) return null;
   const casa = rigaDellaTestata() || header2;
   let quadrante = casa.querySelector(":scope > .dm-orologio") || header2.querySelector(".dm-orologio");
+  if (quadrante && !quadrante.querySelector(".dm-orologio-giorno"))
+    quadrante.insertAdjacentHTML("afterbegin", '<span class="dm-orologio-giorno"></span>');
   if (!quadrante) {
     quadrante = doc.createElement("div");
     quadrante.className = "dm-orologio";
     quadrante.setAttribute("role", "group");
     quadrante.setAttribute("aria-label", t("Ora e data", "Time and date"));
-    quadrante.innerHTML = `<b class="dm-orologio-ora"></b><small class="dm-orologio-data"></small>`;
+    quadrante.innerHTML = `<span class="dm-orologio-giorno"></span><b class="dm-orologio-ora"></b><small class="dm-orologio-data"></small>`;
   }
   if (quadrante.parentElement !== casa || quadrante.nextElementSibling) casa.append(quadrante);
   return quadrante;
@@ -92977,14 +93071,16 @@ function disegnaOrologio() {
   const acceso6 = orologioAcceso();
   quadrante.hidden = !acceso6;
   if (!acceso6) return true;
-  const { ora: ora6, data } = lettureOrologio();
-  const firma2 = `${ora6}|${data}`;
+  const { ora: ora6, data, giorno: giorno3 } = lettureOrologio();
+  const firma2 = `${ora6}|${data}|${giorno3}`;
   if (state93.firma === firma2) return true;
   state93.firma = firma2;
   const dove = quadrante.querySelector(".dm-orologio-ora");
   const quando5 = quadrante.querySelector(".dm-orologio-data");
   if (dove) dove.textContent = ora6;
   if (quando5) quando5.textContent = data;
+  const esteso = quadrante.querySelector(".dm-orologio-giorno");
+  if (esteso) esteso.textContent = giorno3;
   return true;
 }
 function alProssimoMinuto() {
@@ -93017,12 +93113,30 @@ function installStyles41() {
       header .dm-orologio-data{
         font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
         color:var(--text-dim,#64748b);white-space:nowrap}
-      /* Sul telefono l'ora ce l'ha già il sistema in cima allo schermo: qui
-         resta il numero e la data se ne va, invece di stringere tutto. */
+      header .dm-orologio-giorno{display:none}
+      /* Sullo schermo largo l'ora e' grande e la data e' per esteso, accanto.
+       *
+       * «La barra del meteo e' un po' bruttina con tutto quel buco senza
+       * niente: se si mette l'orario e la data piu' grandi?» Sul computer e
+       * sul tablet il riquadro e' largo quanto la plancia, e fra il meteo e
+       * un'ora a diciannove pixel restava mezzo metro di niente. L'ora sale
+       * alla misura di un titolo, e la data si scrive intera alla sua
+       * sinistra — «giovedi' 22 ottobre» — invece che in sigla sotto. */
+      @media (min-width:769px){
+        header .dm-orologio{display:flex;align-items:center;gap:16px;padding-left:18px}
+        header .dm-orologio-giorno{
+          display:block;font-size:15px;font-weight:700;letter-spacing:.01em;
+          color:var(--text-dim,#64748b);white-space:nowrap}
+        header .dm-orologio-giorno::first-letter{text-transform:uppercase}
+        header .dm-orologio-ora{font-size:32px;line-height:1}
+        header .dm-orologio-data{display:none}
+      }
+      /* Sul telefono l'ora resta piccola, ma la data c'e': «nell'app manca la
+         data». Il sistema in cima allo schermo dice l'ora, non il giorno. */
       @media (max-width:560px){
         header .dm-orologio{padding:0 0 0 8px}
         header .dm-orologio-ora{font-size:16px}
-        header .dm-orologio-data{display:none}
+        header .dm-orologio-data{font-size:9px;letter-spacing:.03em}
       }
     `
   );
@@ -93550,10 +93664,22 @@ var numero47 = (valore3) => {
   const n = Number(valore3);
   return Number.isFinite(n) && n > 0 ? n : 0;
 };
-function fondoDiSistema(proprio, ospite3, giaLasciato = 0) {
+function fondoDiSistema(proprio, ospite3, giaLasciato = 0, sottoLaFinestra = 0) {
   const mio = numero47(proprio);
   const suo2 = Math.max(0, numero47(ospite3) - numero47(giaLasciato));
-  return Math.min(FONDO_MASSIMO, Math.max(mio, suo2));
+  const valore3 = Math.min(FONDO_MASSIMO, Math.max(mio, suo2));
+  if (valore3 > 0 && Math.abs(numero47(sottoLaFinestra) - valore3) <= 2) return 0;
+  return valore3;
+}
+function fuoriDallaFinestra(schermo, finestra6) {
+  const largo = numero47(schermo?.width);
+  const alto = numero47(schermo?.height);
+  const w = numero47(finestra6?.innerWidth);
+  const h = numero47(finestra6?.innerHeight);
+  if (!alto || !h) return 0;
+  const coricata = w > h;
+  const altezza = coricata === largo > alto ? alto : largo;
+  return Math.max(0, altezza - h);
 }
 function inPixel(valore3) {
   return `${Math.round(numero47(valore3))}px`;
@@ -94573,15 +94699,22 @@ function misuraIlFondoDiSistema() {
   const proprio = insetDi(doc);
   let ospite3 = 0;
   let lasciato = 0;
+  let finestra6 = root;
   try {
     const cima = root.top && root.top !== root ? root.top.document : null;
     if (cima) {
       ospite3 = insetDi(cima);
       lasciato = giaLasciatoSotto(cima);
+      finestra6 = root.top;
     }
   } catch (_error) {
   }
-  const valore3 = fondoDiSistema(proprio, ospite3, lasciato);
+  const valore3 = fondoDiSistema(
+    proprio,
+    ospite3,
+    lasciato,
+    fuoriDallaFinestra(root.screen, finestra6)
+  );
   doc.documentElement.style.setProperty("--dm-fondo-di-sistema", inPixel(valore3));
   return valore3;
 }
@@ -94667,8 +94800,32 @@ function installaLaCima() {
       }
       /* Le finestre delle tessere di Home la leggono nel loro foglio, in
          home-widgets-section: il margine e' suo e un padrone basta. */
+
+      /* La fascia dell'orologio e' della plancia, non di chi scorre.
+       *
+       * Il margine in cima tiene la testata sotto l'orologio solo finche' la
+       * pagina e' ferma in cima: appena si scorre, le card salivano dietro
+       * l'ora e la batteria e ci passavano attraverso — «Accendi tutto» scritto
+       * sopra l'orologio, in Home Assistant come nell'app. Qui la fascia si
+       * copre col fondo della plancia, ferma, alta quanto la fascia e non un
+       * pixel di piu': dove la fascia non c'e' — un computer, Home Assistant
+       * con la sua barra in cima — e' alta zero e non esiste. Sotto alle
+       * finestre, che la scansano gia' da sole, e sotto al muro. */
+      #dm-fascia-dell-orologio{
+        position:fixed;left:0;right:0;top:0;height:var(--dm-cima-libera,0px);
+        background:var(--bg-sculpted,#f0f4f8);z-index:8800;pointer-events:none
+      }
     `
   );
+  const metti5 = () => {
+    if (!doc.body || doc.getElementById("dm-fascia-dell-orologio")) return;
+    const fascia2 = doc.createElement("div");
+    fascia2.id = "dm-fascia-dell-orologio";
+    fascia2.setAttribute("aria-hidden", "true");
+    doc.body.append(fascia2);
+  };
+  if (doc.body) metti5();
+  else doc.addEventListener?.("DOMContentLoaded", metti5, { once: true });
 }
 function installNavigationSection() {
   if (!doc || state97.installed) return;
@@ -101641,6 +101798,7 @@ function senzaVuotiInCoda(posti) {
   return fuori;
 }
 var ORIENTAMENTI = Object.freeze(["auto", "orizzontale", "verticale"]);
+var CARTE_DEL_CLIMA = Object.freeze(["muro", "plancia"]);
 var TEMI = Object.freeze(["plancia", "scuro", "chiaro", "orario"]);
 var MINUTI_DI_RIPOSO = Object.freeze([1, 2, 5, 10, 30]);
 var PROFILO_DI_ORIGINE = "primary";
@@ -102521,6 +102679,10 @@ function muroPulito(input) {
      * solo in orizzontale sul tablet vero (`menuDiLato()`): in verticale e sul
      * pannello piccolo restano le linguette. */
     menuDiLato: vero2(dentro3.menuDiLato, false),
+    /* «Perche' nel clima del muro non vedo la stessa cosa? La linea della
+     * temperatura e i numeri in quel modo.» Di serie quella del muro, che e'
+     * quella che chi ha gia' il tablet conosce. */
+    cartaClima: scelta(dentro3.cartaClima, CARTE_DEL_CLIMA, "muro"),
     riposo: {
       attivo: vero2(riposo2.attivo, true),
       minuti: MINUTI_DI_RIPOSO.includes(minuti) ? minuti : 2,
@@ -103375,16 +103537,22 @@ function comanda2(domain, service, data) {
   }
   if (root.navigator?.vibrate) root.navigator.vibrate(8);
 }
+var MENU = /* @__PURE__ */ new Set(["select", "input_select"]);
 function servizioDellAzione(azione) {
   if (!azione || !eUnaScena(azione)) return null;
-  const id = clean(azione.entity);
+  let id = clean(azione.entity);
+  try {
+    id = clean(root.resolveEntity?.(id) || id);
+  } catch (_errore) {
+  }
   const d = dominio2(id);
+  if (MENU.has(d) && !clean(azione.option)) return { scegli: id };
   if (d === "scene" || d === "script")
     return { domain: d, service: "turn_on", data: { entity_id: id } };
   if (d === "button" || d === "input_button")
     return { domain: d, service: "press", data: { entity_id: id } };
-  if ((d === "select" || d === "input_select") && azione.option)
-    return { domain: d, service: "select_option", data: { entity_id: id, option: azione.option } };
+  if (MENU.has(d))
+    return { domain: d, service: "select_option", data: { entity_id: id, option: clean(azione.option) } };
   if (d === "lock") return { domain: d, service: "unlock", data: { entity_id: id } };
   return { domain: "homeassistant", service: "toggle", data: { entity_id: id } };
 }
@@ -103392,6 +103560,10 @@ function eseguiAzione(nome, { conferma = false } = {}) {
   const azione = azioneDi(nome);
   const servizio2 = servizioDellAzione(azione);
   if (!servizio2) return;
+  if (servizio2.scegli) {
+    apriFinestra({ tipo: "scelte", entita: servizio2.scegli, azione: nome });
+    return;
+  }
   if ((conferma || azione.confirm) && state115.finestra?.tipo !== "conferma") {
     apriFinestra({ tipo: "conferma", azione: nome });
     return;
@@ -104179,6 +104351,8 @@ function cardClima(c, i, zonaDellaLinguetta = "") {
     comandi: `${on ? `<button type="button" class="dm-rq-dt dm-rq-modo" data-mu-fa="modo" data-mu-entita="${esc(id)}">${esc(PAROLE_DEL_CLIMA()[s] || s)}</button>` : ""}${menoGradiPiu(id, gradi10)}`
   });
   if (conImmagine2) return conImmagine2;
+  if (state115.muro?.cartaClima === "plancia")
+    return cardClimaComeLaPlancia({ c, i, id, a, s, on, azione, faccia, zona, rapido: rapidoDi(id, zona) });
   if (state115.compatto)
     return `<div class="mu-carta mu-card mu-clima-mini ${on ? "mu-accesa" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
     <div class="mu-mini-alto"><span class="mu-chip mu-acc" style="--c:40px">${disegno(faccia.chiave, 24, `clima-${i}`)}</span><div class="mu-nome"><div class="mu-n">${esc(nomeDi8(id, c.nome))}</div><div class="mu-sotto">${esc(t("ora", "now"))} ${decimale2(a.current_temperature)}°</div></div><span class="mu-mini-t">${gradi10}</span></div>
@@ -104191,6 +104365,43 @@ function cardClima(c, i, zonaDellaLinguetta = "") {
     <div class="mu-target"><span class="mu-grande">${gradi10}</span><span class="mu-et">Target</span></div>
     <div class="mu-comandi">
       ${on ? `<button type="button" class="mu-pasti mu-modo" data-mu-fa="modo" data-mu-entita="${esc(id)}">${esc(PAROLE_DEL_CLIMA()[s] || s)}</button>` : ""}
+      <span class="mu-spazio"></span>
+      <button type="button" class="mu-tondo" data-mu-fa="meno" data-mu-entita="${esc(id)}" aria-label="−">−</button>
+      <button type="button" class="mu-tondo" data-mu-fa="piu" data-mu-entita="${esc(id)}" aria-label="+">+</button>
+      ${rapido ? pastigliaRapida(id, rapido, on) : `<button type="button" class="mu-tondo ${on ? "pieno" : ""}" data-mu-fa="clima-acceso" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(t("Acceso", "Power"))}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9M18.4 6.6a9 9 0 1 1-12.8 0"/></svg></button>`}
+    </div></div>`;
+}
+function cardClimaComeLaPlancia({ c, i, id, a, s, on, azione, faccia, zona, rapido }) {
+  const voluta = obiettivo(id, zona);
+  const stanza2 = numero49(a.current_temperature);
+  const basso = numero49(a.min_temp) ?? 7;
+  const alto = Math.max(basso + 1, numero49(a.max_temp) ?? 35);
+  const dove = (v) => Math.max(0, Math.min(100, (v - basso) / (alto - basso) * 100));
+  const pallino = voluta === null ? null : dove(voluta);
+  const segno3 = stanza2 === null ? null : dove(stanza2);
+  const stato3 = on ? azione || PAROLE_DEL_CLIMA()[s] || s : t("Spento", "Off");
+  const numeroGrande = stanza2 === null ? "—" : esc(decimale2(stanza2));
+  const scala2 = `<div class="mu-cp-scala" aria-hidden="true">
+      <span class="mu-cp-riga"><i style="width:${pallino ?? 0}%"></i></span>
+      ${segno3 === null ? "" : `<span class="mu-cp-segno" style="left:${segno3}%"></span>`}
+      ${pallino === null ? "" : `<span class="mu-cp-pallino" style="left:${pallino}%"></span>`}
+    </div>`;
+  const target = `<span class="mu-cp-target">Target <b>${voluta === null ? "—" : `${esc(decimale2(voluta))}°`}</b></span>`;
+  if (state115.compatto)
+    return `<div class="mu-carta mu-card mu-cp mu-cp-mini ${on ? "mu-accesa" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
+    <div class="mu-cp-testa"><span class="mu-cp-nome">${esc(nomeDi8(id, c.nome))}</span><span class="mu-cp-stato">${esc(stato3)}</span></div>
+    <div class="mu-cp-ora"><span class="mu-cp-n">${numeroGrande}<sup>°</sup></span><span class="mu-spazio"></span><button type="button" class="mu-tondo" data-mu-fa="meno" data-mu-entita="${esc(id)}" aria-label="−">−</button><button type="button" class="mu-tondo" data-mu-fa="piu" data-mu-entita="${esc(id)}" aria-label="+">+</button></div>
+    ${scala2}
+    <div class="mu-cp-sotto">${target}</div></div>`;
+  return `<div class="mu-carta mu-card mu-cp ${on ? "mu-accesa" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
+    <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:46px">${disegno(faccia.chiave, 26, `clima-${i}`)}</span>
+      <div class="mu-nome"><div class="mu-n mu-cp-nome">${esc(nomeDi8(id, c.nome))}</div></div>
+      <span class="mu-pasti mu-cp-stato">${esc(stato3)}</span></div>
+    <div class="mu-cp-ora"><span class="mu-cp-n">${numeroGrande}<sup>°</sup></span><span class="mu-et">${esc(t("Ambiente", "Room"))}</span></div>
+    ${scala2}
+    <div class="mu-cp-sotto"><span>${esc(decimale2(basso, 0))}°</span>${target}<span>${esc(decimale2(alto, 0))}°</span></div>
+    <div class="mu-comandi">
+      <button type="button" class="mu-pasti mu-modo mu-cp-modo" data-mu-fa="modo" data-mu-entita="${esc(id)}">${esc(t("Modalità", "Mode"))}</button>
       <span class="mu-spazio"></span>
       <button type="button" class="mu-tondo" data-mu-fa="meno" data-mu-entita="${esc(id)}" aria-label="−">−</button>
       <button type="button" class="mu-tondo" data-mu-fa="piu" data-mu-entita="${esc(id)}" aria-label="+">+</button>
@@ -104321,6 +104532,21 @@ var INTERRUTTORI2 = Object.freeze(["switch", "input_boolean", "fan", "siren", "h
 function cardEntita(c, i, grande = false) {
   const id = c.entita;
   const s = stato2(id);
+  if (MENU.has(dominio2(id)))
+    return tessera2({
+      chiave: clean(c.disegno) || disegnoDellEntita(id),
+      accento: ACCENTI.azione,
+      etichetta: grande ? "" : statoInParole2(id),
+      titolo: nomeDi8(id, c.nome),
+      sotto: clean(c.sotto) || (grande ? statoInParole2(id) : ""),
+      grande,
+      classi: grande ? "" : "mu-comando",
+      destra: grande ? "" : `<span class="mu-verbo" aria-hidden="true">${esc(t("Scegli", "Choose"))}</span>`,
+      dati: `data-mu-fa="scelte" data-mu-entita="${esc(id)}"`,
+      dove: `en-${i}-${grande ? "g" : "p"}`,
+      immagine: c.immagine,
+      vetro: grande ? void 0 : { tipo: "tasto", testo: t("Scegli", "Choose") }
+    });
   const servizio2 = servizioDellEntita(id, String(s?.state || ""));
   if (!servizio2 && !grande) {
     const dato2 = cardDato(c, i, s);
@@ -105625,6 +105851,15 @@ function finestra5() {
     dentro3 = `<div class="mu-fin-clima">
       <div class="mu-riga1"><div class="mu-nome"><div class="mu-n" style="font-size:22px">${esc(nomeDi8(f.entita))}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
       <div class="mu-video mu-video-fin"><img data-mu-telecamera="${esc(f.entita)}" alt=""></div></div>`;
+  } else if (f.tipo === "scelte") {
+    const id = f.entita;
+    const adesso2 = String(stato2(id)?.state || "");
+    const voci4 = (attributi(id).options || []).map((v) => String(v)).filter(Boolean);
+    dentro3 = `<div class="mu-fin-clima mu-fin-scelte">
+      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno(disegnoDellEntita(id), 30, "fin-scelte")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(f.azione || nomeDi8(id))}</div><div class="mu-stato">${esc(adesso2)}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+      <div class="mu-seg mu-seg-alto mu-voci">${voci4.length ? voci4.map(
+      (v) => `<button type="button" class="${v === adesso2 ? "si" : ""}" data-mu-fa="voce" data-mu-entita="${esc(id)}" data-mu-voce="${esc(v)}">${esc(v)}</button>`
+    ).join("") : `<span class="mu-sotto">${esc(t("Nessuna voce da scegliere", "No options to choose"))}</span>`}</div></div>`;
   } else if (f.tipo === "conferma") {
     dentro3 = `<div class="mu-fin-conferma"><div class="mu-osw" style="font-size:40px">${esc(f.azione)}</div><div class="mu-sotto">${esc(t("Confermi?", "Confirm?"))}</div>
       <div class="mu-due"><button type="button" class="mu-btn" data-mu-fa="chiudi">${esc(t("Annulla", "Cancel"))}</button><button type="button" class="mu-btn pieno" data-mu-fa="azione" data-mu-azione="${esc(f.azione)}" data-mu-confermata="1">${esc(t("Sì, vai", "Yes, go"))}</button></div></div>`;
@@ -105643,7 +105878,8 @@ function finestra5() {
     lettura: "#f59e0b",
     citofono: "#2563eb",
     telecamera: "#2563eb",
-    gruppo: "#ec4899"
+    gruppo: "#ec4899",
+    scelte: ACCENTI.azione
   }[f.tipo] || ACCENTI.luce;
   return `<div class="mu-velo" data-mu-fa="fuori"><div class="mu-carta mu-accesa mu-finestra" style="--acc:${accento}">${dentro3}</div></div>`;
 }
@@ -106779,12 +107015,25 @@ function onClick26(event) {
     case "giu":
       comanda2("cover", "close_cover", { entity_id: id });
       return;
+    case "scelte":
+      apriFinestra({ tipo: "scelte", entita: id });
+      return;
+    case "voce": {
+      const voce3 = bersaglio.dataset.muVoce || "";
+      const chi = state115.finestra?.azione ? azioneDi(state115.finestra.azione) : null;
+      chiudiFinestra();
+      if (!voce3 || !MENU.has(dominio2(id))) return;
+      comanda2(dominio2(id), "select_option", { entity_id: id, option: voce3 });
+      if (chi) state115.attiva = chi.name;
+      disegna6();
+      return;
+    }
     case "azione":
       if (bersaglio.dataset.muConfermata) {
         const nome = bersaglio.dataset.muAzione;
         const servizio2 = servizioDellAzione(azioneDi(nome));
         chiudiFinestra();
-        if (servizio2) comanda2(servizio2.domain, servizio2.service, servizio2.data);
+        if (servizio2?.domain) comanda2(servizio2.domain, servizio2.service, servizio2.data);
         state115.attiva = nome;
         disegna6();
       } else
@@ -108083,6 +108332,43 @@ ${MURO} .mu-colori{display:flex;gap:14px;margin-top:12px;flex-wrap:wrap}
 ${MURO} .mu-colori button{width:58px;height:58px;border-radius:50%;box-shadow:inset 0 0 0 1px #0002}
 ${MURO} .mu-fin-clima,${MURO} .mu-fin-codice,${MURO} .mu-fin-conferma{display:flex;flex-direction:column;gap:24px}
 ${MURO} .mu-fin-clima .mu-seg{margin-top:0}
+${MURO} .mu-voci{flex-wrap:wrap}
+${MURO} .mu-cp{display:flex;flex-direction:column;gap:10px}
+${MURO} .mu-cp-nome{text-transform:uppercase;letter-spacing:.02em}
+${MURO} .mu-cp-stato{margin-left:auto}
+${MURO} .mu-cp-ora{display:flex;align-items:baseline;gap:14px;margin-top:4px}
+${MURO} .mu-cp-n{font-size:clamp(44px,5.4vw,72px);font-weight:800;line-height:1;letter-spacing:-.03em;color:color-mix(in srgb,var(--text) 70%,var(--acc))}
+${MURO} .mu-accesa .mu-cp-n{color:var(--acc)}
+${MURO} .mu-cp-n sup{font-size:.45em;vertical-align:top;margin-left:2px}
+${MURO} .mu-cp-ora .mu-et{font-size:13px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim,#64748b)}
+${MURO} .mu-cp-scala{position:relative;height:28px;margin:4px 12px 0}
+${MURO} .mu-cp-riga{position:absolute;left:0;right:0;top:50%;height:10px;margin-top:-5px;border-radius:99px;background:color-mix(in srgb,var(--text) 10%,transparent);overflow:hidden}
+${MURO} .mu-cp-riga i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,color-mix(in srgb,var(--acc) 30%,transparent),var(--acc))}
+${MURO} :not(.mu-accesa).mu-cp .mu-cp-riga i{background:linear-gradient(90deg,color-mix(in srgb,var(--text) 18%,transparent),color-mix(in srgb,var(--text) 45%,transparent))}
+${MURO} .mu-cp-segno{position:absolute;top:2px;bottom:2px;width:4px;margin-left:-2px;border-radius:2px;background:var(--text)}
+${MURO} .mu-cp-pallino{position:absolute;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:var(--card-bg,#fff);border:4px solid color-mix(in srgb,var(--text) 45%,transparent);box-shadow:0 2px 8px rgba(0,0,0,.18)}
+${MURO} .mu-accesa .mu-cp-pallino{border-color:var(--acc)}
+${MURO} .mu-cp-sotto{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;font-weight:800;color:var(--text-dim,#64748b)}
+${MURO} .mu-cp-target{font-size:17px;font-weight:700}
+${MURO} .mu-cp-target b{color:var(--text);font-weight:900}
+${MURO} .mu-cp .mu-comandi{margin-top:auto}
+${MURO} .mu-cp-modo{text-transform:uppercase;letter-spacing:.04em}
+${MURO} .mu-card.mu-cp .mu-rapido{flex:0 0 auto;width:auto;padding:0 4px;gap:0}
+${MURO} .mu-cp .mu-rap-val,${MURO} .mu-cp .mu-rap-lampo,${MURO} .mu-cp .mu-rapido>i{display:none}
+${MURO} .mu-cp-mini{gap:4px;padding:10px 12px}
+${MURO} .mu-cp-testa{display:flex;align-items:center;gap:6px;min-width:0}
+${MURO} .mu-cp-mini .mu-cp-nome{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:900}
+${MURO} .mu-cp-mini .mu-cp-stato{flex:0 0 auto;font-size:10px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--acc)}
+${MURO} :not(.mu-accesa).mu-cp-mini .mu-cp-stato{color:var(--text-dim,#64748b)}
+${MURO} .mu-cp-mini .mu-cp-ora{margin:0;gap:6px;align-items:center}
+${MURO} .mu-cp-mini .mu-cp-n{font-size:30px}
+${MURO} .mu-card.mu-cp-mini .mu-cp-ora .mu-tondo{flex:0 0 auto;width:34px;height:34px;min-width:0;min-height:0;font-size:18px}
+${MURO} .mu-cp-mini .mu-cp-scala{height:20px;margin:0 9px}
+${MURO} .mu-cp-mini .mu-cp-riga{height:7px;margin-top:-3.5px}
+${MURO} .mu-cp-mini .mu-cp-pallino{width:18px;height:18px;margin:-9px 0 0 -9px;border-width:3px}
+${MURO} .mu-cp-mini .mu-cp-sotto{justify-content:center}
+${MURO} .mu-cp-mini .mu-cp-target{font-size:13px}
+${MURO} .mu-voci>button{flex:1 1 140px}
 ${MURO} .mu-fin-temp{display:flex;align-items:center;justify-content:center;gap:40px}
 ${MURO} .mu-fin-conferma{text-align:center;align-items:center}
 ${MURO} .mu-fin-conferma .mu-due{width:100%}
@@ -108867,7 +109153,7 @@ var DISEGNI3 = () => [
     k.charAt(0).toUpperCase() + k.slice(1)
   ])
 ];
-var DOMINI_DEI_POSTI = "light,switch,climate,cover,fan,lock,scene,script,button,input_button,input_boolean,media_player,vacuum,sensor,binary_sensor";
+var DOMINI_DEI_POSTI = "light,switch,climate,cover,fan,lock,scene,script,button,input_button,input_boolean,select,input_select,media_player,vacuum,sensor,binary_sensor";
 var DOMINI_DEI_DUE_TASTI = "button,input_button,switch,input_boolean,light,script,scene,automation,remote,fan";
 var DOMINI_DELLO_STATO = "binary_sensor,switch,input_boolean,light,sensor,fan,remote,media_player,device_tracker";
 var TIPI_DEL_POSTO = () => [
@@ -109654,6 +109940,17 @@ function corpoMarkup7() {
       "The pages in a column of big buttons on the left, like on control-room panels. Landscape only: in portrait and on small screens the tabs at the top stay"
     ),
     interruttore("menuDiLato", m.menuDiLato, "menu-di-lato")
+  )}
+    ${riga2(
+    t("Card del clima", "Climate card"),
+    t(
+      "Come il muro: raccolta, la temperatura voluta grande. Come la plancia: la temperatura della stanza grande e la riga con la voluta, come nella plancia principale",
+      "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard"
+    ),
+    scelte4("cartaClima", m.cartaClima, [
+      ["muro", t("Come il muro", "Like the wall")],
+      ["plancia", t("Come la plancia", "Like the dashboard")]
+    ])
   )}
     ${riga2(
     t("Tema", "Theme"),
@@ -139641,6 +139938,8 @@ function rigaCollegato(c) {
 }
 function cosaPorta(cosa) {
   if (cosa === "luce") return t("Luce · bollette e consumi", "Electricity · bills and consumption");
+  if (cosa === "luce-saldo")
+    return t("Luce · saldo, prezzo e consumi", "Electricity · balance, price and consumption");
   if (cosa === "luce-gas")
     return t("Luce e gas · bollette e consumi", "Electricity and gas · bills and consumption");
   return "";
@@ -139656,9 +139955,13 @@ function sceltaFornitori(disponibili) {
         </button>`;
   }).join("")}</div>`;
 }
+function testaDelPasso(f) {
+  return `<button type="button" class="dm-forn-indietro" data-dm-forn-annulla>← ${esc(t("Fornitori", "Suppliers"))}</button>
+      <div class="dm-forn-testa">${segno2(f.id)}<b>${esc(f.nome)}</b></div>`;
+}
 function passoCredenziali(f, errore) {
   return `<div class="dm-forn-passo">
-      <div class="dm-forn-testa">${segno2(f.id)}<b>${esc(f.nome)}</b></div>
+      ${testaDelPasso(f)}
       <p class="ed-hint">${esc(
     t(
       "Le credenziali dell'area clienti. Passano da GdAHome, in casa, solo per entrare: la password non si salva, si tengono solo i gettoni d'accesso del fornitore.",
@@ -139669,14 +139972,14 @@ function passoCredenziali(f, errore) {
       <label class="dm-forn-campo"><span>Password</span><input class="ed-input" type="password" autocomplete="new-password" data-dm-forn-password></label>
       ${errore ? `<small class="dm-forn-errore">${esc(perche4(errore))}</small>` : ""}
       <div class="dm-forn-tasti">
-        <button type="button" class="ed-save-btn" data-dm-forn-entra>${esc(t("Collega", "Connect"))}</button>
+        <button type="button" class="dm-forn-tasto dm-forn-pieno" data-dm-forn-entra>${esc(t("Collega", "Connect"))}</button>
         <button type="button" class="dm-forn-tasto dm-forn-tenue" data-dm-forn-annulla>${esc(t("Annulla", "Cancel"))}</button>
       </div>
     </div>`;
 }
 function passoCodice(f, errore) {
   return `<div class="dm-forn-passo">
-      <div class="dm-forn-testa">${segno2(f.id)}<b>${esc(f.nome)}</b></div>
+      ${testaDelPasso(f)}
       <p class="ed-hint">${esc(
     t(
       "Il fornitore ha mandato un codice per SMS al tuo telefono. Scrivilo qui.",
@@ -139686,14 +139989,14 @@ function passoCodice(f, errore) {
       <label class="dm-forn-campo"><span>${esc(t("Codice SMS", "SMS code"))}</span><input class="ed-input dm-forn-codice" inputmode="numeric" autocomplete="one-time-code" maxlength="8" data-dm-forn-codice></label>
       ${errore ? `<small class="dm-forn-errore">${esc(perche4(errore))}</small>` : ""}
       <div class="dm-forn-tasti">
-        <button type="button" class="ed-save-btn" data-dm-forn-conferma>${esc(t("Conferma", "Confirm"))}</button>
+        <button type="button" class="dm-forn-tasto dm-forn-pieno" data-dm-forn-conferma>${esc(t("Conferma", "Confirm"))}</button>
         <button type="button" class="dm-forn-tasto dm-forn-tenue" data-dm-forn-annulla>${esc(t("Annulla", "Cancel"))}</button>
       </div>
     </div>`;
 }
 function passoIncolla(f, link, errore) {
   return `<div class="dm-forn-passo">
-      <div class="dm-forn-testa">${segno2(f.id)}<b>${esc(f.nome)}</b></div>
+      ${testaDelPasso(f)}
       <ol class="dm-forn-istruzioni">
         <li>${esc(t("Apri l'accesso del fornitore ed entra con le tue credenziali.", "Open the supplier's sign-in and log in with your credentials."))}
           <a class="dm-forn-link" href="${esc(link || "#")}" target="_blank" rel="noopener noreferrer">${esc(t("Apri l'accesso", "Open sign-in"))} ↗</a></li>
@@ -139704,7 +140007,7 @@ function passoIncolla(f, link, errore) {
       <label class="dm-forn-campo"><span>${esc(t("Indirizzo della pagina", "Page address"))}</span><input class="ed-input" type="password" autocomplete="off" spellcheck="false" placeholder="https://…" data-dm-forn-incolla></label>
       ${errore ? `<small class="dm-forn-errore">${esc(perche4(errore))}</small>` : ""}
       <div class="dm-forn-tasti">
-        <button type="button" class="ed-save-btn" data-dm-forn-incolla-ok>${esc(t("Collega", "Connect"))}</button>
+        <button type="button" class="dm-forn-tasto dm-forn-pieno" data-dm-forn-incolla-ok>${esc(t("Collega", "Connect"))}</button>
         <button type="button" class="dm-forn-tasto dm-forn-tenue" data-dm-forn-annulla>${esc(t("Annulla", "Cancel"))}</button>
       </div>
     </div>`;
@@ -139923,6 +140226,13 @@ function installStyles86() {
     .dm-forn-tasto{flex:0 0 auto;padding:8px 12px;border-radius:12px;border:1px solid var(--card-border,#e2e8f0);
       background:var(--card-bg,#fff);color:var(--text,#0f172a);font:inherit;font-size:12.5px;font-weight:800;cursor:pointer}
     .dm-forn-tenue{color:var(--text-dim,#64748b)}
+    /* Il tasto che manda: pieno e nostro, non quello dei «Salva» dell'editor,
+       che e' scritto per stare in fondo a un modulo e altri fogli lo
+       ritoccano. */
+    .dm-forn-pieno{border:0;background:linear-gradient(135deg,#10b981,#059669);color:#fff;padding:10px 18px;font-size:13.5px}
+    .dm-forn-pieno:disabled{opacity:.6;cursor:default}
+    .dm-forn-indietro{justify-self:start;padding:4px 2px;border:0;background:none;color:var(--accent,#0284c7);
+      font:inherit;font-size:13px;font-weight:850;cursor:pointer}
     .dm-forn-sotto{margin-top:4px;font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim,#64748b)}
     .dm-forn-scelta{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
     .dm-forn-scheda{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;text-align:left;cursor:pointer;

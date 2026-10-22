@@ -47,9 +47,10 @@
  *        avvio; e un'integrazione nuova o riconfigurata
  *        (`/api/config/config_entries/…/flow`) e' un pezzo di casa che si
  *        mette su senza che nessuno lo veda.
- *  2. **Chi amministra** — o un telefono abbinato prima che i telefoni si
- *     intestassero a qualcuno, che fino a oggi era trattato cosi' — passa con
- *     tutto il resto, com'era.
+ *  2. **Chi amministra** passa con tutto il resto, com'era. Un telefono
+ *     abbinato prima che i telefoni si intestassero a qualcuno non amministra
+ *     piu' (`_amministra` in `ponte.js`), e non vede telecamere
+ *     (`senzaTelecamere`).
  *  3. **Chi non amministra** passa solo con quello che l'app e la plancia
  *     usano davvero per guardare e usare la casa: gli stati, i servizi, lo
  *     storico, le telecamere, i registri in lettura. E' un elenco e non un
@@ -501,7 +502,10 @@ function apreUnaChiusa(nominate, chiuse) {
 
 const LA_TELECAMERA_E_CHIUSA = "quella telecamera sta in una plancia che non e' tua";
 
-export function perche(detto, { amministra = false, telecamereChiuse = null } = {}) {
+export function perche(
+  detto,
+  { amministra = false, telecamereChiuse = null, senzaTelecamere = false } = {},
+) {
   const admin = amministra === true;
   if (!detto || typeof detto !== "object" || Array.isArray(detto)) return "messaggio non valido";
   const tipo = typeof detto.type === "string" ? detto.type.trim() : "";
@@ -523,6 +527,13 @@ export function perche(detto, { amministra = false, telecamereChiuse = null } = 
     if (!percorsoSenzaTrucchi(via) || !FIRMABILI.some((uno) => via.startsWith(uno)))
       return "questo indirizzo non si firma";
   }
+
+  /* Un telefono che non si sa di chi sia — abbinato prima che i telefoni si
+   * intestassero a un utente — non vede nessuna telecamera: «non si sa» non
+   * e' un si' (la promessa 1 delle telecamere, `commissioni.js`). Vale prima
+   * di «chi amministra», perche' quel telefono passa per uno che amministra. */
+  if (senzaTelecamere && telecamereNominate(detto).size > 0)
+    return "le telecamere si mostrano solo a chi e' entrato con un utente";
 
   if (admin) return null;
 
@@ -570,7 +581,12 @@ export function unNo(id, messaggio) {
  */
 export function passaLaDogana(
   testo,
-  { amministra = false, telecamereChiuse = null, firmaIlPonte = false } = {},
+  {
+    amministra = false,
+    telecamereChiuse = null,
+    firmaIlPonte = false,
+    senzaTelecamere = false,
+  } = {},
 ) {
   let letto;
   try {
@@ -591,7 +607,7 @@ export function passaLaDogana(
     const no =
       Array.isArray(letto) && (tipo.startsWith(DELLA_PLANCIA) || tipo.startsWith("ponte/"))
         ? `${tipo} non passa dentro un elenco`
-        : perche(uno, { amministra, telecamereChiuse });
+        : perche(uno, { amministra, telecamereChiuse, senzaTelecamere });
     if (no) {
       const id = uno && typeof uno === "object" ? (uno.id ?? null) : null;
       rifiuti.push(unNo(id, no));

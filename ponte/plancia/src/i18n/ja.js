@@ -6907,4 +6907,11 @@ export default Object.freeze({
   "Meals: every how many hours": "ごはん：何時間ごと",
   "Not logged yet": "まだ記録なし",
   "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "カードに「食べた」ボタンが表示されます。また時間になると、ページとスマートフォンがお知らせします。空欄：お知らせなし。",
+  "No options to choose": "選べる項目がありません",
+  Suppliers: "供給会社",
+  "Electricity · balance, price and consumption": "電気 · 残高、料金、使用量",
+  "Climate card": "空調カード",
+  "Like the wall": "壁と同じ",
+  "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard":
+    "壁と同じ：コンパクトで設定温度を大きく。ダッシュボードと同じ：室温を大きく、設定温度のラインつき（メインのダッシュボードと同様）",
 });

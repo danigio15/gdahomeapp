@@ -139,6 +139,8 @@ function rigaCollegato(c) {
 /* Cosa porta il fornitore: una parola del ponte, tradotta qui. */
 function cosaPorta(cosa) {
   if (cosa === "luce") return t("Luce · bollette e consumi", "Electricity · bills and consumption");
+  if (cosa === "luce-saldo")
+    return t("Luce · saldo, prezzo e consumi", "Electricity · balance, price and consumption");
   if (cosa === "luce-gas")
     return t("Luce e gas · bollette e consumi", "Electricity and gas · bills and consumption");
   return "";
@@ -162,9 +164,20 @@ function sceltaFornitori(disponibili) {
     .join("")}</div>`;
 }
 
+/* La testa di ogni passo: da dove si torna, e di chi si parla.
+ *
+ * «Dopo aver cliccato su un fornitore non mi fa tornare indietro.» Scelto
+ * E.ON, la scheda diventava il modulo e basta: l'unica strada per l'elenco
+ * era «Annulla», in fondo, sotto la tastiera. Il ritorno sta anche in cima,
+ * dove lo si cerca, e fa la stessa cosa. */
+function testaDelPasso(f) {
+  return `<button type="button" class="dm-forn-indietro" data-dm-forn-annulla>← ${esc(t("Fornitori", "Suppliers"))}</button>
+      <div class="dm-forn-testa">${segno(f.id)}<b>${esc(f.nome)}</b></div>`;
+}
+
 function passoCredenziali(f, errore) {
   return `<div class="dm-forn-passo">
-      <div class="dm-forn-testa">${segno(f.id)}<b>${esc(f.nome)}</b></div>
+      ${testaDelPasso(f)}
       <p class="ed-hint">${esc(
         t(
           "Le credenziali dell'area clienti. Passano da GdAHome, in casa, solo per entrare: la password non si salva, si tengono solo i gettoni d'accesso del fornitore.",
@@ -175,7 +188,7 @@ function passoCredenziali(f, errore) {
       <label class="dm-forn-campo"><span>Password</span><input class="ed-input" type="password" autocomplete="new-password" data-dm-forn-password></label>
       ${errore ? `<small class="dm-forn-errore">${esc(perche(errore))}</small>` : ""}
       <div class="dm-forn-tasti">
-        <button type="button" class="ed-save-btn" data-dm-forn-entra>${esc(t("Collega", "Connect"))}</button>
+        <button type="button" class="dm-forn-tasto dm-forn-pieno" data-dm-forn-entra>${esc(t("Collega", "Connect"))}</button>
         <button type="button" class="dm-forn-tasto dm-forn-tenue" data-dm-forn-annulla>${esc(t("Annulla", "Cancel"))}</button>
       </div>
     </div>`;
@@ -183,7 +196,7 @@ function passoCredenziali(f, errore) {
 
 function passoCodice(f, errore) {
   return `<div class="dm-forn-passo">
-      <div class="dm-forn-testa">${segno(f.id)}<b>${esc(f.nome)}</b></div>
+      ${testaDelPasso(f)}
       <p class="ed-hint">${esc(
         t(
           "Il fornitore ha mandato un codice per SMS al tuo telefono. Scrivilo qui.",
@@ -193,7 +206,7 @@ function passoCodice(f, errore) {
       <label class="dm-forn-campo"><span>${esc(t("Codice SMS", "SMS code"))}</span><input class="ed-input dm-forn-codice" inputmode="numeric" autocomplete="one-time-code" maxlength="8" data-dm-forn-codice></label>
       ${errore ? `<small class="dm-forn-errore">${esc(perche(errore))}</small>` : ""}
       <div class="dm-forn-tasti">
-        <button type="button" class="ed-save-btn" data-dm-forn-conferma>${esc(t("Conferma", "Confirm"))}</button>
+        <button type="button" class="dm-forn-tasto dm-forn-pieno" data-dm-forn-conferma>${esc(t("Conferma", "Confirm"))}</button>
         <button type="button" class="dm-forn-tasto dm-forn-tenue" data-dm-forn-annulla>${esc(t("Annulla", "Cancel"))}</button>
       </div>
     </div>`;
@@ -204,7 +217,7 @@ function passoCodice(f, errore) {
  * quando chiede di dimostrare di non essere un robot. */
 function passoIncolla(f, link, errore) {
   return `<div class="dm-forn-passo">
-      <div class="dm-forn-testa">${segno(f.id)}<b>${esc(f.nome)}</b></div>
+      ${testaDelPasso(f)}
       <ol class="dm-forn-istruzioni">
         <li>${esc(t("Apri l'accesso del fornitore ed entra con le tue credenziali.", "Open the supplier's sign-in and log in with your credentials."))}
           <a class="dm-forn-link" href="${esc(link || "#")}" target="_blank" rel="noopener noreferrer">${esc(t("Apri l'accesso", "Open sign-in"))} ↗</a></li>
@@ -219,7 +232,7 @@ function passoIncolla(f, link, errore) {
       <label class="dm-forn-campo"><span>${esc(t("Indirizzo della pagina", "Page address"))}</span><input class="ed-input" type="password" autocomplete="off" spellcheck="false" placeholder="https://…" data-dm-forn-incolla></label>
       ${errore ? `<small class="dm-forn-errore">${esc(perche(errore))}</small>` : ""}
       <div class="dm-forn-tasti">
-        <button type="button" class="ed-save-btn" data-dm-forn-incolla-ok>${esc(t("Collega", "Connect"))}</button>
+        <button type="button" class="dm-forn-tasto dm-forn-pieno" data-dm-forn-incolla-ok>${esc(t("Collega", "Connect"))}</button>
         <button type="button" class="dm-forn-tasto dm-forn-tenue" data-dm-forn-annulla>${esc(t("Annulla", "Cancel"))}</button>
       </div>
     </div>`;
@@ -454,6 +467,13 @@ function installStyles() {
     .dm-forn-tasto{flex:0 0 auto;padding:8px 12px;border-radius:12px;border:1px solid var(--card-border,#e2e8f0);
       background:var(--card-bg,#fff);color:var(--text,#0f172a);font:inherit;font-size:12.5px;font-weight:800;cursor:pointer}
     .dm-forn-tenue{color:var(--text-dim,#64748b)}
+    /* Il tasto che manda: pieno e nostro, non quello dei «Salva» dell'editor,
+       che e' scritto per stare in fondo a un modulo e altri fogli lo
+       ritoccano. */
+    .dm-forn-pieno{border:0;background:linear-gradient(135deg,#10b981,#059669);color:#fff;padding:10px 18px;font-size:13.5px}
+    .dm-forn-pieno:disabled{opacity:.6;cursor:default}
+    .dm-forn-indietro{justify-self:start;padding:4px 2px;border:0;background:none;color:var(--accent,#0284c7);
+      font:inherit;font-size:13px;font-weight:850;cursor:pointer}
     .dm-forn-sotto{margin-top:4px;font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim,#64748b)}
     .dm-forn-scelta{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
     .dm-forn-scheda{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;text-align:left;cursor:pointer;

@@ -44,10 +44,43 @@ const numero = (valore) => {
  * in cima. `giaLasciato` è lo spazio che l'ospite lascia già libero sotto la
  * cornice: quello che scansa lui non lo dobbiamo scansare noi.
  */
-export function fondoDiSistema(proprio, ospite, giaLasciato = 0) {
+export function fondoDiSistema(proprio, ospite, giaLasciato = 0, sottoLaFinestra = 0) {
   const mio = numero(proprio);
   const suo = Math.max(0, numero(ospite) - numero(giaLasciato));
-  return Math.min(FONDO_MASSIMO, Math.max(mio, suo));
+  const valore = Math.min(FONDO_MASSIMO, Math.max(mio, suo));
+  /* La fascia c'e', ma la finestra non ci arriva.
+   *
+   * «Guarda la navbar ora e vedi se secondo te e' corretta»: dentro Home
+   * Assistant su Android, coi tre tasti, sotto i nomi della barra restava
+   * una striscia vuota alta quanto i tasti. L'app di Home Assistant ormai la
+   * finestra la accorcia da se' — finisce dove cominciano i tasti — ma la
+   * pagina si sente dire lo stesso `env(safe-area-inset-bottom)` = 48: lo
+   * spazio dei tasti contato due volte, una dall'app e una da noi.
+   *
+   * Chi lo ha gia' lasciato si vede dallo schermo: se fra il fondo della
+   * finestra e il fondo del vetro manca esattamente la fascia, la fascia e'
+   * fuori dalla finestra, e qui non c'e' niente da scansare. Solo se torna
+   * pari: una finestra piu' corta per altre ragioni — la barra degli
+   * indirizzi di un browser in cima, la tastiera — non dice niente su chi sta
+   * in fondo, e la fascia resta com'era. */
+  if (valore > 0 && Math.abs(numero(sottoLaFinestra) - valore) <= 2) return 0;
+  return valore;
+}
+
+/**
+ * Quanto del vetro sta fuori dalla finestra, in altezza: lo schermo meno la
+ * finestra, girati tutti e due nello stesso verso (su qualche Android lo
+ * schermo resta detto in verticale anche col telefono coricato).
+ */
+export function fuoriDallaFinestra(schermo, finestra) {
+  const largo = numero(schermo?.width);
+  const alto = numero(schermo?.height);
+  const w = numero(finestra?.innerWidth);
+  const h = numero(finestra?.innerHeight);
+  if (!alto || !h) return 0;
+  const coricata = w > h;
+  const altezza = coricata === largo > alto ? alto : largo;
+  return Math.max(0, altezza - h);
 }
 
 /** Il valore come lo scrive un foglio di stile. */

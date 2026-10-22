@@ -6930,4 +6930,11 @@ export default Object.freeze({
   "Meals: every how many hours": "Кормление: каждые сколько часов",
   "Not logged yet": "Ещё не отмечено",
   "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "На карточке есть кнопка «Поел»: когда снова придёт время, страница и телефон напомнят. Пусто: без напоминания.",
+  "No options to choose": "Нет вариантов для выбора",
+  Suppliers: "Поставщики",
+  "Electricity · balance, price and consumption": "Электричество · баланс, цена и потребление",
+  "Climate card": "Карточка климата",
+  "Like the wall": "Как на стене",
+  "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard":
+    "Как на стене: компактно, заданная температура крупно. Как на панели: температура в комнате крупно и шкала с заданной, как на главной панели",
 });

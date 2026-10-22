@@ -292,7 +292,7 @@ const DISEGNI = () => [
 /* I domini che un posto propone per primi nella ricerca: tutto quello che il
  * tablet sa comandare o mostrare. La ricerca trova lo stesso anche il resto. */
 const DOMINI_DEI_POSTI =
-  "light,switch,climate,cover,fan,lock,scene,script,button,input_button,input_boolean,media_player,vacuum,sensor,binary_sensor";
+  "light,switch,climate,cover,fan,lock,scene,script,button,input_button,input_boolean,select,input_select,media_player,vacuum,sensor,binary_sensor";
 
 /**
  * Un posto: cosa c'e' dentro — un'entita' qualunque o un'azione della plancia
@@ -1370,6 +1370,17 @@ function corpoMarkup() {
         "The pages in a column of big buttons on the left, like on control-room panels. Landscape only: in portrait and on small screens the tabs at the top stay",
       ),
       interruttore("menuDiLato", m.menuDiLato, "menu-di-lato"),
+    )}
+    ${riga(
+      t("Card del clima", "Climate card"),
+      t(
+        "Come il muro: raccolta, la temperatura voluta grande. Come la plancia: la temperatura della stanza grande e la riga con la voluta, come nella plancia principale",
+        "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard",
+      ),
+      scelte("cartaClima", m.cartaClima, [
+        ["muro", t("Come il muro", "Like the wall")],
+        ["plancia", t("Come la plancia", "Like the dashboard")],
+      ]),
     )}
     ${riga(
       t("Tema", "Theme"),

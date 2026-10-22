@@ -6889,4 +6889,11 @@ export default Object.freeze({
   "Meals: every how many hours": "식사: 몇 시간마다",
   "Not logged yet": "아직 기록 없음",
   "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "카드에 «먹었음» 버튼이 표시됩니다. 다시 시간이 되면 페이지와 휴대폰이 알려 드립니다. 비워 두면 알림 없음.",
+  "No options to choose": "선택할 항목이 없습니다",
+  Suppliers: "공급업체",
+  "Electricity · balance, price and consumption": "전기 · 잔액, 요금, 사용량",
+  "Climate card": "냉난방 카드",
+  "Like the wall": "벽처럼",
+  "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard":
+    "벽처럼: 간결하게, 설정 온도를 크게. 대시보드처럼: 실내 온도를 크게, 설정 온도 막대와 함께 (메인 대시보드와 같음)",
 });

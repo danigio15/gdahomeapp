@@ -20,6 +20,7 @@ import { join } from "node:path";
 import { Commissioni } from "../src/commissioni.js";
 import { Fornitori, copri } from "../src/fornitori.js";
 import { RITORNO as RITORNO_EON } from "../src/fornitori/eon.js";
+import { API as API_OCTOPUS, lUltimoConsumo } from "../src/fornitori/octopus.js";
 
 const ZITTO = { info() {}, attenzione() {}, errore() {} };
 const EMAIL = "persona-1@example.invalid";
@@ -357,7 +358,7 @@ test("i comandi dei fornitori sono del ponte, e solo per chi amministra", async 
       eon: true,
       engie: true,
       enel: false,
-      octopus: false,
+      octopus: true,
     });
   } finally {
     p.via();
@@ -675,4 +676,196 @@ test("la fornitura si copre a meta'", () => {
   assert.equal(copri("IT001E12345678"), "IT001E••••5678");
   assert.equal(copri("1234"), "1234");
   assert.equal(copri(""), "");
+});
+
+/* ─── Octopus ─────────────────────────────────────────────────────────────── */
+
+const POD_OCTOPUS = "IT001E55554444";
+
+/* Kraken finto: GraphQL, gli errori dentro una risposta 200. Il gettone
+ * d'accesso e quello di rinnovo cambiano a ogni rinnovo. */
+function octopusFinto({ saldo = -4250, rifiutaIlRinnovo = false } = {}) {
+  const visti = [];
+  const stato = { rinnovi: 0, rifiutaIlRinnovo, saldo };
+  const errore = (codice) =>
+    risposta({ errors: [{ message: "no", extensions: { errorCode: codice } }] });
+  const prendi = async (indirizzo, opzioni = {}) => {
+    assert.equal(String(indirizzo), API_OCTOPUS);
+    const corpo = JSON.parse(String(opzioni.body || "{}"));
+    const chi = opzioni.headers?.authorization || "";
+    visti.push({ query: corpo.query, variabili: corpo.variables, chi });
+    if (corpo.query.includes("obtainKrakenToken")) {
+      const input = corpo.variables?.input || {};
+      if (input.refreshToken) {
+        if (stato.rifiutaIlRinnovo) return errore("KT-CT-1135");
+        stato.rinnovi += 1;
+      } else if (input.email !== EMAIL || input.password !== PASSWORD) return errore("KT-CT-1138");
+      return risposta({
+        data: {
+          obtainKrakenToken: {
+            token: `accesso-${stato.rinnovi}`,
+            payload: { exp: ADESSO / 1000 + 3600 },
+            refreshToken: `rinnovo-${stato.rinnovi}`,
+            refreshExpiresIn: ADESSO / 1000 + 7 * 86400,
+          },
+        },
+      });
+    }
+    if (!chi.startsWith("accesso-")) return errore("KT-CT-1111");
+    if (corpo.query.includes("viewer"))
+      return risposta({ data: { viewer: { accounts: [{ number: "A-1234ABCD", ledgers: [] }] } } });
+    if (corpo.query.includes("account(")) {
+      assert.equal(corpo.variables.accountNumber, "A-1234ABCD");
+      return risposta({
+        data: {
+          account: {
+            ledgers: [{ ledgerType: "ELECTRICITY_LEDGER", balance: stato.saldo }],
+            properties: [
+              {
+                id: "casa-1",
+                electricitySupplyPoints: [
+                  {
+                    pod: POD_OCTOPUS,
+                    status: "ON_SUPPLY",
+                    product: {
+                      __typename: "ElectricityProductType",
+                      displayName: "Octopus Fissa",
+                      validTo: null,
+                      prices: { consumptionCharge: "0.1180", consumptionChargeUnits: "EUR/kWh" },
+                    },
+                    agreements: {
+                      edges: [
+                        {
+                          node: {
+                            validFrom: "2025-12-01",
+                            validTo: "2026-11-30T23:00:00+00:00",
+                            isActive: true,
+                          },
+                        },
+                      ],
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      });
+    }
+    if (corpo.query.includes("property(")) {
+      assert.equal(corpo.variables.pod, POD_OCTOPUS);
+      return risposta({
+        data: {
+          property: {
+            measurements: {
+              edges: [
+                { node: { value: "10234.5", unit: "kWh", readAt: "2026-10-19T00:00:00+02:00" } },
+                { node: { value: "10243.25", unit: "kWh", readAt: "2026-10-20T00:00:00+02:00" } },
+              ],
+            },
+          },
+        },
+      });
+    }
+    return errore("KT-CT-0000");
+  };
+  return { prendi, visti, stato };
+}
+
+test("Octopus: email e password una volta, poi solo il gettone di rinnovo", async () => {
+  const octo = octopusFinto();
+  const p = preparati(octo.prendi);
+  try {
+    const sbagliata = await p.chiedi({
+      type: `${T}collega`,
+      fornitore: "octopus",
+      email: EMAIL,
+      password: "no",
+    });
+    assert.equal(sbagliata.success, false);
+    assert.equal(sbagliata.error.message, "credenziali");
+
+    const fatto = await p.chiedi({
+      type: `${T}collega`,
+      fornitore: "octopus",
+      email: EMAIL,
+      password: PASSWORD,
+    });
+    assert.equal(fatto.success, true, JSON.stringify(fatto.error));
+    const [collegato] = fatto.result.stato.collegati;
+    assert.equal(collegato.fornitore, "octopus");
+    assert.equal(collegato.nome, "Octopus Energy");
+    assert.equal(collegato.pod, "IT001E••••4444");
+    assert.equal(collegato.stato, "ok");
+
+    /* La password e' andata solo nella domanda che entra. */
+    const conLaPassword = octo.visti.filter((v) => JSON.stringify(v.variabili).includes(PASSWORD));
+    assert.equal(conLaPassword.length, 1);
+    assert.ok(conLaPassword.every((v) => v.query.includes("obtainKrakenToken")));
+    assert.doesNotMatch(p.file(), new RegExp(PASSWORD));
+    assert.doesNotMatch(p.file(), new RegExp(EMAIL));
+    assert.match(p.file(), /rinnovo-0/);
+    assert.doesNotMatch(JSON.stringify(fatto), /rinnovo-|accesso-/);
+
+    const stato = (nome) => p.casa.stati.get(`sensor.octopus_${nome}`);
+    assert.equal(stato("account_balance").state, "-42.5");
+    assert.equal(stato("unpaid_invoices").state, "42.5");
+    assert.equal(stato("payment_status").state, "unpaid");
+    assert.equal(stato("energy_price").state, "0.118");
+    assert.equal(stato("energy_price").attributes.unit_of_measurement, "EUR/kWh");
+    assert.equal(stato("offer_end").state, "2026-11-30");
+    assert.equal(stato("daily_consumption").state, "8.75");
+    assert.equal(stato("daily_consumption").attributes.giorno, "2026-10-20");
+    assert.equal(p.casa.stati.has("sensor.octopus_latest_invoice"), false);
+  } finally {
+    p.via();
+  }
+});
+
+test("Octopus: col saldo in credito non c'e' niente da pagare, e un rinnovo rifiutato fa ricollegare", async () => {
+  const octo = octopusFinto({ saldo: 1200 });
+  const p = preparati(octo.prendi);
+  try {
+    const fatto = await p.chiedi({
+      type: `${T}collega`,
+      fornitore: "octopus",
+      email: EMAIL,
+      password: PASSWORD,
+    });
+    const chiave = fatto.result.stato.collegati[0].id;
+    assert.equal(p.casa.stati.get("sensor.octopus_unpaid_invoices").state, "0");
+    assert.equal(p.casa.stati.get("sensor.octopus_payment_status").state, "paid");
+
+    /* Il gettone scade: si rinnova, e il rinnovo nuovo si scrive subito. */
+    p.fornitori.collegati[chiave].segreti.gettoni.scade = ADESSO - 1;
+    await p.chiedi({ type: `${T}aggiorna`, collegamento: chiave });
+    assert.equal(octo.stato.rinnovi, 1);
+    assert.match(p.file(), /rinnovo-1/);
+
+    p.fornitori.collegati[chiave].segreti.gettoni.scade = ADESSO - 1;
+    octo.stato.rifiutaIlRinnovo = true;
+    const dopo = await p.chiedi({ type: `${T}aggiorna`, collegamento: chiave });
+    assert.equal(dopo.result.stato.collegati[0].stato, "da-ricollegare");
+    assert.equal(p.casa.stati.get("sensor.octopus_account_balance").state, "12");
+  } finally {
+    p.via();
+  }
+});
+
+test("il consumo di Octopus viene da due letture, e una lettura che torna indietro non vale", () => {
+  assert.equal(lUltimoConsumo([]), null);
+  assert.deepEqual(
+    lUltimoConsumo([
+      { value: "5", readAt: "2026-10-02T00:00:00Z" },
+      { value: "2", readAt: "2026-10-01T00:00:00Z" },
+    ]),
+    { totale: 3, giorno: "2026-10-02" },
+  );
+  assert.equal(
+    lUltimoConsumo([
+      { value: "5", readAt: "2026-10-01T00:00:00Z" },
+      { value: "2", readAt: "2026-10-02T00:00:00Z" },
+    ]),
+    null,
+  );
 });
