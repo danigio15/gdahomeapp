@@ -48,7 +48,8 @@ const MURO = {
 };
 
 async function apri(page, testInfo) {
-  await page.setViewportSize({ width: 1280, height: 800 });
+  /* Sul telefono il muro piccolo, sul resto il tablet. */
+  if (testInfo.project.name !== "mobile") await page.setViewportSize({ width: 1280, height: 800 });
   await apriLaCasaAMuro(page, testInfo, { muro: MURO, stati: STATI, azioni: AZIONI });
   await expect(muro(page)).toBeVisible();
 }
@@ -87,6 +88,10 @@ test("un'azione su un menu: senza voce le apre, con la voce la mette", async ({
   await muro(page).locator('[data-mu-azione="Ventilazione"]').click();
   const finestra = muro(page).locator(".mu-fin-scelte");
   await expect(finestra.locator("[data-mu-voce]")).toHaveText(["Auto", "Bassa", "Alta"]);
+  if (process.env.DM_FOTO)
+    await page.screenshot({
+      path: `${process.env.DM_FOTO}/muro-voci-azione-${testInfo.project.name}.png`,
+    });
   await finestra.locator('[data-mu-voce="Alta"]').click();
   await muro(page).locator('[data-mu-azione="Notte"]').click();
   expect(await servizi(page)).toEqual([
