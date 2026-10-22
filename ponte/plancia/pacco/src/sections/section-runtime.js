@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-I7K2BWFE.js";
+} from "../../chunk-NRWEZD2A.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -3997,6 +3997,7 @@ var SOURCE_INDEX = Object.freeze({
   "fonti": "sources",
   "Forma": "Shape",
   "Fornitore collegato": "Supplier connected",
+  "Fornitori": "Suppliers",
   "Fornitori di energia": "Energy suppliers",
   "Forno": "Oven",
   "Forza (ignora pioggia)": "Force (ignore rain)",
@@ -5329,6 +5330,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nessuna telecamera nella plancia": "No camera in the dashboard",
   "Nessuna temperatura configurata.": "No temperature configured.",
   "Nessuna voce": "No entries",
+  "Nessuna voce da scegliere": "No options to choose",
   "Nessuna zona configurata": "No zone configured",
   "Nessuna zona sta bagnando": "No zone is watering",
   "nessuno": "nobody",
@@ -103478,16 +103480,22 @@ function comanda2(domain, service, data) {
   }
   if (root.navigator?.vibrate) root.navigator.vibrate(8);
 }
+var MENU = /* @__PURE__ */ new Set(["select", "input_select"]);
 function servizioDellAzione(azione) {
   if (!azione || !eUnaScena(azione)) return null;
-  const id = clean(azione.entity);
+  let id = clean(azione.entity);
+  try {
+    id = clean(root.resolveEntity?.(id) || id);
+  } catch (_errore) {
+  }
   const d = dominio2(id);
+  if (MENU.has(d) && !clean(azione.option)) return { scegli: id };
   if (d === "scene" || d === "script")
     return { domain: d, service: "turn_on", data: { entity_id: id } };
   if (d === "button" || d === "input_button")
     return { domain: d, service: "press", data: { entity_id: id } };
-  if ((d === "select" || d === "input_select") && azione.option)
-    return { domain: d, service: "select_option", data: { entity_id: id, option: azione.option } };
+  if (MENU.has(d))
+    return { domain: d, service: "select_option", data: { entity_id: id, option: clean(azione.option) } };
   if (d === "lock") return { domain: d, service: "unlock", data: { entity_id: id } };
   return { domain: "homeassistant", service: "toggle", data: { entity_id: id } };
 }
@@ -103495,6 +103503,10 @@ function eseguiAzione(nome, { conferma = false } = {}) {
   const azione = azioneDi(nome);
   const servizio2 = servizioDellAzione(azione);
   if (!servizio2) return;
+  if (servizio2.scegli) {
+    apriFinestra({ tipo: "scelte", entita: servizio2.scegli, azione: nome });
+    return;
+  }
   if ((conferma || azione.confirm) && state115.finestra?.tipo !== "conferma") {
     apriFinestra({ tipo: "conferma", azione: nome });
     return;
@@ -104424,6 +104436,21 @@ var INTERRUTTORI2 = Object.freeze(["switch", "input_boolean", "fan", "siren", "h
 function cardEntita(c, i, grande = false) {
   const id = c.entita;
   const s = stato2(id);
+  if (MENU.has(dominio2(id)))
+    return tessera2({
+      chiave: clean(c.disegno) || disegnoDellEntita(id),
+      accento: ACCENTI.azione,
+      etichetta: grande ? "" : statoInParole2(id),
+      titolo: nomeDi8(id, c.nome),
+      sotto: clean(c.sotto) || (grande ? statoInParole2(id) : ""),
+      grande,
+      classi: grande ? "" : "mu-comando",
+      destra: grande ? "" : `<span class="mu-verbo" aria-hidden="true">${esc(t("Scegli", "Choose"))}</span>`,
+      dati: `data-mu-fa="scelte" data-mu-entita="${esc(id)}"`,
+      dove: `en-${i}-${grande ? "g" : "p"}`,
+      immagine: c.immagine,
+      vetro: grande ? void 0 : { tipo: "tasto", testo: t("Scegli", "Choose") }
+    });
   const servizio2 = servizioDellEntita(id, String(s?.state || ""));
   if (!servizio2 && !grande) {
     const dato2 = cardDato(c, i, s);
@@ -105728,6 +105755,15 @@ function finestra5() {
     dentro3 = `<div class="mu-fin-clima">
       <div class="mu-riga1"><div class="mu-nome"><div class="mu-n" style="font-size:22px">${esc(nomeDi8(f.entita))}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
       <div class="mu-video mu-video-fin"><img data-mu-telecamera="${esc(f.entita)}" alt=""></div></div>`;
+  } else if (f.tipo === "scelte") {
+    const id = f.entita;
+    const adesso2 = String(stato2(id)?.state || "");
+    const voci4 = (attributi(id).options || []).map((v) => String(v)).filter(Boolean);
+    dentro3 = `<div class="mu-fin-clima mu-fin-scelte">
+      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno(disegnoDellEntita(id), 30, "fin-scelte")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(f.azione || nomeDi8(id))}</div><div class="mu-stato">${esc(adesso2)}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+      <div class="mu-seg mu-seg-alto mu-voci">${voci4.length ? voci4.map(
+      (v) => `<button type="button" class="${v === adesso2 ? "si" : ""}" data-mu-fa="voce" data-mu-entita="${esc(id)}" data-mu-voce="${esc(v)}">${esc(v)}</button>`
+    ).join("") : `<span class="mu-sotto">${esc(t("Nessuna voce da scegliere", "No options to choose"))}</span>`}</div></div>`;
   } else if (f.tipo === "conferma") {
     dentro3 = `<div class="mu-fin-conferma"><div class="mu-osw" style="font-size:40px">${esc(f.azione)}</div><div class="mu-sotto">${esc(t("Confermi?", "Confirm?"))}</div>
       <div class="mu-due"><button type="button" class="mu-btn" data-mu-fa="chiudi">${esc(t("Annulla", "Cancel"))}</button><button type="button" class="mu-btn pieno" data-mu-fa="azione" data-mu-azione="${esc(f.azione)}" data-mu-confermata="1">${esc(t("Sì, vai", "Yes, go"))}</button></div></div>`;
@@ -105746,7 +105782,8 @@ function finestra5() {
     lettura: "#f59e0b",
     citofono: "#2563eb",
     telecamera: "#2563eb",
-    gruppo: "#ec4899"
+    gruppo: "#ec4899",
+    scelte: ACCENTI.azione
   }[f.tipo] || ACCENTI.luce;
   return `<div class="mu-velo" data-mu-fa="fuori"><div class="mu-carta mu-accesa mu-finestra" style="--acc:${accento}">${dentro3}</div></div>`;
 }
@@ -106882,12 +106919,25 @@ function onClick26(event) {
     case "giu":
       comanda2("cover", "close_cover", { entity_id: id });
       return;
+    case "scelte":
+      apriFinestra({ tipo: "scelte", entita: id });
+      return;
+    case "voce": {
+      const voce3 = bersaglio.dataset.muVoce || "";
+      const chi = state115.finestra?.azione ? azioneDi(state115.finestra.azione) : null;
+      chiudiFinestra();
+      if (!voce3 || !MENU.has(dominio2(id))) return;
+      comanda2(dominio2(id), "select_option", { entity_id: id, option: voce3 });
+      if (chi) state115.attiva = chi.name;
+      disegna6();
+      return;
+    }
     case "azione":
       if (bersaglio.dataset.muConfermata) {
         const nome = bersaglio.dataset.muAzione;
         const servizio2 = servizioDellAzione(azioneDi(nome));
         chiudiFinestra();
-        if (servizio2) comanda2(servizio2.domain, servizio2.service, servizio2.data);
+        if (servizio2?.domain) comanda2(servizio2.domain, servizio2.service, servizio2.data);
         state115.attiva = nome;
         disegna6();
       } else
@@ -108186,6 +108236,8 @@ ${MURO} .mu-colori{display:flex;gap:14px;margin-top:12px;flex-wrap:wrap}
 ${MURO} .mu-colori button{width:58px;height:58px;border-radius:50%;box-shadow:inset 0 0 0 1px #0002}
 ${MURO} .mu-fin-clima,${MURO} .mu-fin-codice,${MURO} .mu-fin-conferma{display:flex;flex-direction:column;gap:24px}
 ${MURO} .mu-fin-clima .mu-seg{margin-top:0}
+${MURO} .mu-voci{flex-wrap:wrap}
+${MURO} .mu-voci>button{flex:1 1 140px}
 ${MURO} .mu-fin-temp{display:flex;align-items:center;justify-content:center;gap:40px}
 ${MURO} .mu-fin-conferma{text-align:center;align-items:center}
 ${MURO} .mu-fin-conferma .mu-due{width:100%}
@@ -108970,7 +109022,7 @@ var DISEGNI3 = () => [
     k.charAt(0).toUpperCase() + k.slice(1)
   ])
 ];
-var DOMINI_DEI_POSTI = "light,switch,climate,cover,fan,lock,scene,script,button,input_button,input_boolean,media_player,vacuum,sensor,binary_sensor";
+var DOMINI_DEI_POSTI = "light,switch,climate,cover,fan,lock,scene,script,button,input_button,input_boolean,select,input_select,media_player,vacuum,sensor,binary_sensor";
 var DOMINI_DEI_DUE_TASTI = "button,input_button,switch,input_boolean,light,script,scene,automation,remote,fan";
 var DOMINI_DELLO_STATO = "binary_sensor,switch,input_boolean,light,sensor,fan,remote,media_player,device_tracker";
 var TIPI_DEL_POSTO = () => [
@@ -139759,9 +139811,13 @@ function sceltaFornitori(disponibili) {
         </button>`;
   }).join("")}</div>`;
 }
+function testaDelPasso(f) {
+  return `<button type="button" class="dm-forn-indietro" data-dm-forn-annulla>← ${esc(t("Fornitori", "Suppliers"))}</button>
+      <div class="dm-forn-testa">${segno2(f.id)}<b>${esc(f.nome)}</b></div>`;
+}
 function passoCredenziali(f, errore) {
   return `<div class="dm-forn-passo">
-      <div class="dm-forn-testa">${segno2(f.id)}<b>${esc(f.nome)}</b></div>
+      ${testaDelPasso(f)}
       <p class="ed-hint">${esc(
     t(
       "Le credenziali dell'area clienti. Passano da GdAHome, in casa, solo per entrare: la password non si salva, si tengono solo i gettoni d'accesso del fornitore.",
@@ -139772,14 +139828,14 @@ function passoCredenziali(f, errore) {
       <label class="dm-forn-campo"><span>Password</span><input class="ed-input" type="password" autocomplete="new-password" data-dm-forn-password></label>
       ${errore ? `<small class="dm-forn-errore">${esc(perche4(errore))}</small>` : ""}
       <div class="dm-forn-tasti">
-        <button type="button" class="ed-save-btn" data-dm-forn-entra>${esc(t("Collega", "Connect"))}</button>
+        <button type="button" class="dm-forn-tasto dm-forn-pieno" data-dm-forn-entra>${esc(t("Collega", "Connect"))}</button>
         <button type="button" class="dm-forn-tasto dm-forn-tenue" data-dm-forn-annulla>${esc(t("Annulla", "Cancel"))}</button>
       </div>
     </div>`;
 }
 function passoCodice(f, errore) {
   return `<div class="dm-forn-passo">
-      <div class="dm-forn-testa">${segno2(f.id)}<b>${esc(f.nome)}</b></div>
+      ${testaDelPasso(f)}
       <p class="ed-hint">${esc(
     t(
       "Il fornitore ha mandato un codice per SMS al tuo telefono. Scrivilo qui.",
@@ -139789,14 +139845,14 @@ function passoCodice(f, errore) {
       <label class="dm-forn-campo"><span>${esc(t("Codice SMS", "SMS code"))}</span><input class="ed-input dm-forn-codice" inputmode="numeric" autocomplete="one-time-code" maxlength="8" data-dm-forn-codice></label>
       ${errore ? `<small class="dm-forn-errore">${esc(perche4(errore))}</small>` : ""}
       <div class="dm-forn-tasti">
-        <button type="button" class="ed-save-btn" data-dm-forn-conferma>${esc(t("Conferma", "Confirm"))}</button>
+        <button type="button" class="dm-forn-tasto dm-forn-pieno" data-dm-forn-conferma>${esc(t("Conferma", "Confirm"))}</button>
         <button type="button" class="dm-forn-tasto dm-forn-tenue" data-dm-forn-annulla>${esc(t("Annulla", "Cancel"))}</button>
       </div>
     </div>`;
 }
 function passoIncolla(f, link, errore) {
   return `<div class="dm-forn-passo">
-      <div class="dm-forn-testa">${segno2(f.id)}<b>${esc(f.nome)}</b></div>
+      ${testaDelPasso(f)}
       <ol class="dm-forn-istruzioni">
         <li>${esc(t("Apri l'accesso del fornitore ed entra con le tue credenziali.", "Open the supplier's sign-in and log in with your credentials."))}
           <a class="dm-forn-link" href="${esc(link || "#")}" target="_blank" rel="noopener noreferrer">${esc(t("Apri l'accesso", "Open sign-in"))} ↗</a></li>
@@ -139807,7 +139863,7 @@ function passoIncolla(f, link, errore) {
       <label class="dm-forn-campo"><span>${esc(t("Indirizzo della pagina", "Page address"))}</span><input class="ed-input" type="password" autocomplete="off" spellcheck="false" placeholder="https://…" data-dm-forn-incolla></label>
       ${errore ? `<small class="dm-forn-errore">${esc(perche4(errore))}</small>` : ""}
       <div class="dm-forn-tasti">
-        <button type="button" class="ed-save-btn" data-dm-forn-incolla-ok>${esc(t("Collega", "Connect"))}</button>
+        <button type="button" class="dm-forn-tasto dm-forn-pieno" data-dm-forn-incolla-ok>${esc(t("Collega", "Connect"))}</button>
         <button type="button" class="dm-forn-tasto dm-forn-tenue" data-dm-forn-annulla>${esc(t("Annulla", "Cancel"))}</button>
       </div>
     </div>`;
@@ -140026,6 +140082,13 @@ function installStyles86() {
     .dm-forn-tasto{flex:0 0 auto;padding:8px 12px;border-radius:12px;border:1px solid var(--card-border,#e2e8f0);
       background:var(--card-bg,#fff);color:var(--text,#0f172a);font:inherit;font-size:12.5px;font-weight:800;cursor:pointer}
     .dm-forn-tenue{color:var(--text-dim,#64748b)}
+    /* Il tasto che manda: pieno e nostro, non quello dei «Salva» dell'editor,
+       che e' scritto per stare in fondo a un modulo e altri fogli lo
+       ritoccano. */
+    .dm-forn-pieno{border:0;background:linear-gradient(135deg,#10b981,#059669);color:#fff;padding:10px 18px;font-size:13.5px}
+    .dm-forn-pieno:disabled{opacity:.6;cursor:default}
+    .dm-forn-indietro{justify-self:start;padding:4px 2px;border:0;background:none;color:var(--accent,#0284c7);
+      font:inherit;font-size:13px;font-weight:850;cursor:pointer}
     .dm-forn-sotto{margin-top:4px;font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim,#64748b)}
     .dm-forn-scelta{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
     .dm-forn-scheda{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;text-align:left;cursor:pointer;

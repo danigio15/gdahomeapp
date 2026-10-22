@@ -6900,4 +6900,6 @@ export default Object.freeze({
   "Meals: every how many hours": "भोजन: हर कितने घंटे में",
   "Not logged yet": "अभी दर्ज नहीं",
   "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "कार्ड पर «खा लिया» बटन दिखता है: जब फिर समय होगा, पेज और आपका फ़ोन याद दिलाएंगे। खाली: कोई अनुस्मारक नहीं।",
+  "No options to choose": "चुनने के लिए कोई विकल्प नहीं",
+  Suppliers: "आपूर्तिकर्ता",
 });

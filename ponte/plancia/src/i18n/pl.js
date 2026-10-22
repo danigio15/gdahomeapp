@@ -6934,4 +6934,6 @@ export default Object.freeze({
   "Meals: every how many hours": "Posiłki: co ile godzin",
   "Not logged yet": "Jeszcze nie zapisano",
   "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "Karta pokazuje przycisk «Zjadł»: gdy znów nadejdzie pora, strona i telefon ci przypomną. Puste: bez przypomnienia.",
+  "No options to choose": "Brak opcji do wyboru",
+  Suppliers: "Dostawcy",
 });

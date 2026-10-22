@@ -292,7 +292,7 @@ const DISEGNI = () => [
 /* I domini che un posto propone per primi nella ricerca: tutto quello che il
  * tablet sa comandare o mostrare. La ricerca trova lo stesso anche il resto. */
 const DOMINI_DEI_POSTI =
-  "light,switch,climate,cover,fan,lock,scene,script,button,input_button,input_boolean,media_player,vacuum,sensor,binary_sensor";
+  "light,switch,climate,cover,fan,lock,scene,script,button,input_button,input_boolean,select,input_select,media_player,vacuum,sensor,binary_sensor";
 
 /**
  * Un posto: cosa c'e' dentro — un'entita' qualunque o un'azione della plancia

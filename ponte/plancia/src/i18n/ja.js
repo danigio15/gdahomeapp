@@ -6907,4 +6907,6 @@ export default Object.freeze({
   "Meals: every how many hours": "ごはん：何時間ごと",
   "Not logged yet": "まだ記録なし",
   "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "カードに「食べた」ボタンが表示されます。また時間になると、ページとスマートフォンがお知らせします。空欄：お知らせなし。",
+  "No options to choose": "選べる項目がありません",
+  Suppliers: "供給会社",
 });

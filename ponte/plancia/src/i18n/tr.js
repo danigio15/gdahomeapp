@@ -6911,4 +6911,6 @@ export default Object.freeze({
   "Meals: every how many hours": "Öğünler: kaç saatte bir",
   "Not logged yet": "Henüz kaydedilmedi",
   "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "Kartta «Yedi» düğmesi görünür: zamanı yeniden geldiğinde sayfa ve telefonun hatırlatır. Boş: hatırlatma yok.",
+  "No options to choose": "Seçilecek seçenek yok",
+  Suppliers: "Tedarikçiler",
 });

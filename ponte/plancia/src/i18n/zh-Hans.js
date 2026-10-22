@@ -6797,4 +6797,6 @@ export default Object.freeze({
   "Meals: every how many hours": "喂食：每隔几小时",
   "Not logged yet": "尚未记录",
   "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.": "卡片上会显示“已喂食”按钮：再次到时间时，页面和手机会提醒你。留空：不提醒。",
+  "No options to choose": "没有可选的选项",
+  Suppliers: "供应商",
 });

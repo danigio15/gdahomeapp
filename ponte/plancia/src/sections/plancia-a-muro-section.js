@@ -450,18 +450,32 @@ function comanda(domain, service, data) {
   if (root.navigator?.vibrate) root.navigator.vibrate(8);
 }
 
+/* I menu a tendina: non si accendono, hanno delle voci. */
+const MENU = new Set(["select", "input_select"]);
+
 /* Far partire un'azione della plancia di origine: lo stesso servizio che
  * sceglierebbe la plancia per quell'entita'. */
 export function servizioDellAzione(azione) {
   if (!azione || !eUnaScena(azione)) return null;
-  const id = clean(azione.entity);
+  /* L'entita' di un'azione puo' essere scritta col suo nome breve: la
+   * plancia la risolve prima di chiamare (`resolveEntity`), e qui si fa lo
+   * stesso, se no il dominio non si legge e parte un «accendi/spegni» che
+   * Home Assistant accetta e non esegue. */
+  let id = clean(azione.entity);
+  try {
+    id = clean(root.resolveEntity?.(id) || id);
+  } catch (_errore) {}
   const d = dominio(id);
+  /* Un menu a tendina senza una voce fissata nell'azione: la voce si sceglie
+   * adesso, come sul telefono. Prima partiva un «toggle», e il tasto non
+   * faceva niente. */
+  if (MENU.has(d) && !clean(azione.option)) return { scegli: id };
   if (d === "scene" || d === "script")
     return { domain: d, service: "turn_on", data: { entity_id: id } };
   if (d === "button" || d === "input_button")
     return { domain: d, service: "press", data: { entity_id: id } };
-  if ((d === "select" || d === "input_select") && azione.option)
-    return { domain: d, service: "select_option", data: { entity_id: id, option: azione.option } };
+  if (MENU.has(d))
+    return { domain: d, service: "select_option", data: { entity_id: id, option: clean(azione.option) } };
   if (d === "lock") return { domain: d, service: "unlock", data: { entity_id: id } };
   return { domain: "homeassistant", service: "toggle", data: { entity_id: id } };
 }
@@ -470,6 +484,10 @@ function eseguiAzione(nome, { conferma = false } = {}) {
   const azione = azioneDi(nome);
   const servizio = servizioDellAzione(azione);
   if (!servizio) return;
+  if (servizio.scegli) {
+    apriFinestra({ tipo: "scelte", entita: servizio.scegli, azione: nome });
+    return;
+  }
   if ((conferma || azione.confirm) && state.finestra?.tipo !== "conferma") {
     apriFinestra({ tipo: "conferma", azione: nome });
     return;
@@ -1891,6 +1909,24 @@ const INTERRUTTORI = Object.freeze(["switch", "input_boolean", "fan", "siren", "
 function cardEntita(c, i, grande = false) {
   const id = c.entita;
   const s = stato(id);
+  /* «Se inserisco un select mi apre la tendina delle scelte disponibili?
+   * Come lo fa su telefono.» Il riquadro dice la voce di adesso, e il tocco
+   * apre le voci. */
+  if (MENU.has(dominio(id)))
+    return tessera({
+      chiave: clean(c.disegno) || disegnoDellEntita(id),
+      accento: ACCENTI.azione,
+      etichetta: grande ? "" : statoInParole(id),
+      titolo: nomeDi(id, c.nome),
+      sotto: clean(c.sotto) || (grande ? statoInParole(id) : ""),
+      grande,
+      classi: grande ? "" : "mu-comando",
+      destra: grande ? "" : `<span class="mu-verbo" aria-hidden="true">${esc(t("Scegli", "Choose"))}</span>`,
+      dati: `data-mu-fa="scelte" data-mu-entita="${esc(id)}"`,
+      dove: `en-${i}-${grande ? "g" : "p"}`,
+      immagine: c.immagine,
+      vetro: grande ? undefined : { tipo: "tasto", testo: t("Scegli", "Choose") },
+    });
   const servizio = servizioDellEntita(id, String(s?.state || ""));
   if (!servizio && !grande) {
     const dato = cardDato(c, i, s);
@@ -3744,6 +3780,24 @@ function finestra() {
     dentro = `<div class="mu-fin-clima">
       <div class="mu-riga1"><div class="mu-nome"><div class="mu-n" style="font-size:22px">${esc(nomeDi(f.entita))}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
       <div class="mu-video mu-video-fin"><img data-mu-telecamera="${esc(f.entita)}" alt=""></div></div>`;
+  } else if (f.tipo === "scelte") {
+    /* Le voci di un menu a tendina: quella di adesso segnata, il tocco la
+     * mette. */
+    const id = f.entita;
+    const adesso = String(stato(id)?.state || "");
+    const voci = (attributi(id).options || []).map((v) => String(v)).filter(Boolean);
+    dentro = `<div class="mu-fin-clima mu-fin-scelte">
+      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px">${disegno(disegnoDellEntita(id), 30, "fin-scelte")}</span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(f.azione || nomeDi(id))}</div><div class="mu-stato">${esc(adesso)}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+      <div class="mu-seg mu-seg-alto mu-voci">${
+        voci.length
+          ? voci
+              .map(
+                (v) =>
+                  `<button type="button" class="${v === adesso ? "si" : ""}" data-mu-fa="voce" data-mu-entita="${esc(id)}" data-mu-voce="${esc(v)}">${esc(v)}</button>`,
+              )
+              .join("")
+          : `<span class="mu-sotto">${esc(t("Nessuna voce da scegliere", "No options to choose"))}</span>`
+      }</div></div>`;
   } else if (f.tipo === "conferma") {
     dentro = `<div class="mu-fin-conferma"><div class="mu-osw" style="font-size:40px">${esc(f.azione)}</div><div class="mu-sotto">${esc(t("Confermi?", "Confirm?"))}</div>
       <div class="mu-due"><button type="button" class="mu-btn" data-mu-fa="chiudi">${esc(t("Annulla", "Cancel"))}</button><button type="button" class="mu-btn pieno" data-mu-fa="azione" data-mu-azione="${esc(f.azione)}" data-mu-confermata="1">${esc(t("Sì, vai", "Yes, go"))}</button></div></div>`;
@@ -3770,6 +3824,7 @@ function finestra() {
       citofono: "#2563eb",
       telecamera: "#2563eb",
       gruppo: "#ec4899",
+      scelte: ACCENTI.azione,
     }[f.tipo] || ACCENTI.luce;
   return `<div class="mu-velo" data-mu-fa="fuori"><div class="mu-carta mu-accesa mu-finestra" style="--acc:${accento}">${dentro}</div></div>`;
 }
@@ -5278,12 +5333,27 @@ function onClick(event) {
     case "giu":
       comanda("cover", "close_cover", { entity_id: id });
       return;
+    case "scelte":
+      apriFinestra({ tipo: "scelte", entita: id });
+      return;
+    case "voce": {
+      const voce = bersaglio.dataset.muVoce || "";
+      const chi = state.finestra?.azione ? azioneDi(state.finestra.azione) : null;
+      chiudiFinestra();
+      if (!voce || !MENU.has(dominio(id))) return;
+      /* Scegliere la voce e' gia' la conferma: e' un tocco voluto, su una
+       * finestra aperta apposta. */
+      comanda(dominio(id), "select_option", { entity_id: id, option: voce });
+      if (chi) state.attiva = chi.name;
+      disegna();
+      return;
+    }
     case "azione":
       if (bersaglio.dataset.muConfermata) {
         const nome = bersaglio.dataset.muAzione;
         const servizio = servizioDellAzione(azioneDi(nome));
         chiudiFinestra();
-        if (servizio) comanda(servizio.domain, servizio.service, servizio.data);
+        if (servizio?.domain) comanda(servizio.domain, servizio.service, servizio.data);
         state.attiva = nome;
         disegna();
       } else
@@ -6803,6 +6873,8 @@ ${MURO} .mu-colori{display:flex;gap:14px;margin-top:12px;flex-wrap:wrap}
 ${MURO} .mu-colori button{width:58px;height:58px;border-radius:50%;box-shadow:inset 0 0 0 1px #0002}
 ${MURO} .mu-fin-clima,${MURO} .mu-fin-codice,${MURO} .mu-fin-conferma{display:flex;flex-direction:column;gap:24px}
 ${MURO} .mu-fin-clima .mu-seg{margin-top:0}
+${MURO} .mu-voci{flex-wrap:wrap}
+${MURO} .mu-voci>button{flex:1 1 140px}
 ${MURO} .mu-fin-temp{display:flex;align-items:center;justify-content:center;gap:40px}
 ${MURO} .mu-fin-conferma{text-align:center;align-items:center}
 ${MURO} .mu-fin-conferma .mu-due{width:100%}

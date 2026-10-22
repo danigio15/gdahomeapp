@@ -139,6 +139,22 @@ test("E.ON: si sceglie, email e password, codice SMS, collegato", async ({ page 
   expect(chieste).toEqual(expect.arrayContaining(["stato", "collega", "codice"]));
 });
 
+test("scelto un fornitore si torna all'elenco, dall'alto o da Annulla", async ({
+  page,
+}, testInfo) => {
+  /* «Dopo aver cliccato su un fornitore non mi fa tornare indietro.» */
+  const scheda = await apri(page, testInfo, "light", { stato: VUOTO, annulla: {} });
+  await scheda.locator('[data-dm-forn-scegli="eon"]').click();
+  const indietro = scheda.locator(".dm-forn-indietro");
+  await expect(indietro).toBeVisible();
+  await expect(scheda.locator("[data-dm-forn-entra]")).toBeVisible();
+  await indietro.click();
+  await expect(scheda.locator("[data-dm-forn-scegli]")).toHaveCount(2);
+  await scheda.locator('[data-dm-forn-scegli="eon"]').click();
+  await scheda.locator(".dm-forn-tasti [data-dm-forn-annulla]").click();
+  await expect(scheda.locator("[data-dm-forn-scegli]")).toHaveCount(2);
+});
+
 test("ENGIE: accesso dal browser e indirizzo incollato", async ({ page }, testInfo) => {
   const scheda = await apri(page, testInfo, "dark", {
     stato: VUOTO,
