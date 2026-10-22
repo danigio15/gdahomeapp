@@ -112,12 +112,15 @@ export function obiettiviDelClima(attributi, modo = "") {
  * - fra le modalita' ha `heat_cool`, che per Home Assistant vuol dire proprio
  *   «scalda e raffresca dentro un intervallo».
  *
- * L'ultima ha un'eccezione, ed e' voluta: parecchi condizionatori elencano
+ * L'ultima ha due eccezioni, ed e' voluta: parecchi condizionatori elencano
  * `heat_cool` come il loro «automatico» e hanno un obiettivo solo, in
  * `temperature`. Quelli restano in Freddo e in Caldo come sono sempre stati —
  * spostarli in una linguetta coi due numeri vorrebbe dire due meno e due piu'
  * che non comandano niente. Chi ha il numero solo e nessun altro segno della
- * coppia e' a obiettivo singolo, `heat_cool` o no.
+ * coppia e' a obiettivo singolo, `heat_cool` o no. E il numero solo vuoto
+ * (`temperature: null`) e' un condizionatore spento, non una coppia: Home
+ * Assistant `temperature` lo scrive per chi ha l'obiettivo singolo, anche
+ * vuoto, e non lo scrive per chi ha solo l'intervallo.
  */
 export function eUnTermostatoACoppia(attributi) {
   if (!attributi || typeof attributi !== "object") return false;
@@ -130,7 +133,12 @@ export function eUnTermostatoACoppia(attributi) {
   )
     return true;
   const modi = Array.isArray(attributi.hvac_modes) ? attributi.hvac_modes.map(pulito) : [];
-  return modi.includes("heat_cool") && numero(attributi.temperature) === null;
+  /* `temperature` che c'e' ma e' vuoto non e' «nessun obiettivo singolo»: e'
+   * il condizionatore spento, che il numero non lo pubblica finche' non si
+   * accende. «Mi compare il termostato ma non lo tengo configurato»: un
+   * condizionatore spento con `heat_cool` fra le modalita' finiva nella
+   * linguetta Termostato. Conta solo chi `temperature` non ce l'ha proprio. */
+  return modi.includes("heat_cool") && !("temperature" in attributi);
 }
 
 /**

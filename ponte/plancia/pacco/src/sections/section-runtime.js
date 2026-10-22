@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-TAFOKZXK.js";
+} from "../../chunk-RXXHQO5F.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -16112,7 +16112,7 @@ function eUnTermostatoACoppia(attributi2) {
   if (Number.isFinite(dichiarate) && (dichiarate & CLIMA_CON_DUE_OBIETTIVI) === CLIMA_CON_DUE_OBIETTIVI)
     return true;
   const modi = Array.isArray(attributi2.hvac_modes) ? attributi2.hvac_modes.map(pulito7) : [];
-  return modi.includes("heat_cool") && numero3(attributi2.temperature) === null;
+  return modi.includes("heat_cool") && !("temperature" in attributi2);
 }
 function coppiaDelTermostato(attributi2) {
   const basso = numero3(attributi2?.target_temp_low);
