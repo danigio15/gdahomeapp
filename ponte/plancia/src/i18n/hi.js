@@ -6903,4 +6903,8 @@ export default Object.freeze({
   "No options to choose": "चुनने के लिए कोई विकल्प नहीं",
   Suppliers: "आपूर्तिकर्ता",
   "Electricity · balance, price and consumption": "बिजली · शेष राशि, कीमत और खपत",
+  "Climate card": "जलवायु कार्ड",
+  "Like the wall": "दीवार जैसा",
+  "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard":
+    "दीवार जैसा: छोटा, चाहा गया तापमान बड़ा। डैशबोर्ड जैसा: कमरे का तापमान बड़ा और चाहे गए तापमान वाली रेखा, मुख्य डैशबोर्ड की तरह",
 });

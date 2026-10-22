@@ -1676,6 +1676,8 @@ function cardClima(c, i, zonaDellaLinguetta = "") {
    * Due righe sole: il disegno, il nome e i gradi voluti sulla prima, il meno
    * e il piu' sotto. Con il nome su una riga sua in mezzo, nella griglia tre
    * per tre sotto le linguette il meno e il piu' finivano fuori dal riquadro. */
+  if (state.muro?.cartaClima === "plancia")
+    return cardClimaComeLaPlancia({ c, i, id, a, s, on, azione, faccia, zona, rapido: rapidoDi(id, zona) });
   if (state.compatto)
     return `<div class="mu-carta mu-card mu-clima-mini ${on ? "mu-accesa" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
     <div class="mu-mini-alto"><span class="mu-chip mu-acc" style="--c:40px">${disegno(faccia.chiave, 24, `clima-${i}`)}</span><div class="mu-nome"><div class="mu-n">${esc(nomeDi(id, c.nome))}</div><div class="mu-sotto">${esc(t("ora", "now"))} ${decimale(a.current_temperature)}°</div></div><span class="mu-mini-t">${gradi}</span></div>
@@ -1688,6 +1690,63 @@ function cardClima(c, i, zonaDellaLinguetta = "") {
     <div class="mu-target"><span class="mu-grande">${gradi}</span><span class="mu-et">Target</span></div>
     <div class="mu-comandi">
       ${on ? `<button type="button" class="mu-pasti mu-modo" data-mu-fa="modo" data-mu-entita="${esc(id)}">${esc(PAROLE_DEL_CLIMA()[s] || s)}</button>` : ""}
+      <span class="mu-spazio"></span>
+      <button type="button" class="mu-tondo" data-mu-fa="meno" data-mu-entita="${esc(id)}" aria-label="−">−</button>
+      <button type="button" class="mu-tondo" data-mu-fa="piu" data-mu-entita="${esc(id)}" aria-label="+">+</button>
+      ${
+        rapido
+          ? pastigliaRapida(id, rapido, on)
+          : `<button type="button" class="mu-tondo ${on ? "pieno" : ""}" data-mu-fa="clima-acceso" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(t("Acceso", "Power"))}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9M18.4 6.6a9 9 0 1 1-12.8 0"/></svg></button>`
+      }
+    </div></div>`;
+}
+
+/* La card del clima come nella plancia principale.
+ *
+ * «Perche' nel clima del muro non vedo la stessa cosa? Intendo la linea della
+ * temperatura e i numeri in quel modo: non e' piu' bello?» Si sceglie in
+ * «Altre impostazioni › Card del clima». In alto il nome e lo stato; grande
+ * la temperatura della stanza, «Ambiente»; sotto la riga della scala del
+ * clima, col segno dove sta la stanza e il pallino dove sta la voluta, i
+ * due estremi ai lati e «Target» in mezzo; in fondo il modo, il meno, il piu'
+ * e l'accensione. La riga si legge e basta: la voluta si cambia col meno e
+ * col piu', che su un tablet appeso sono piu' sicuri di un dito che trascina.
+ */
+function cardClimaComeLaPlancia({ c, i, id, a, s, on, azione, faccia, zona, rapido }) {
+  const voluta = obiettivo(id, zona);
+  const stanza = numero(a.current_temperature);
+  const basso = numero(a.min_temp) ?? 7;
+  const alto = Math.max(basso + 1, numero(a.max_temp) ?? 35);
+  const dove = (v) => Math.max(0, Math.min(100, ((v - basso) / (alto - basso)) * 100));
+  const pallino = voluta === null ? null : dove(voluta);
+  const segno = stanza === null ? null : dove(stanza);
+  const stato = on ? azione || PAROLE_DEL_CLIMA()[s] || s : t("Spento", "Off");
+  const numeroGrande = stanza === null ? "—" : esc(decimale(stanza));
+  const scala = `<div class="mu-cp-scala" aria-hidden="true">
+      <span class="mu-cp-riga"><i style="width:${pallino ?? 0}%"></i></span>
+      ${segno === null ? "" : `<span class="mu-cp-segno" style="left:${segno}%"></span>`}
+      ${pallino === null ? "" : `<span class="mu-cp-pallino" style="left:${pallino}%"></span>`}
+    </div>`;
+  const target = `<span class="mu-cp-target">Target <b>${voluta === null ? "—" : `${esc(decimale(voluta))}°`}</b></span>`;
+  /* Sul pannello piccolo lo stesso disegno, stretto: il nome e lo stato, il
+   * numero della stanza col meno e il piu' accanto, la riga e la voluta. Il
+   * modo e l'accensione stanno nella finestra, col tocco, come nella card
+   * piccola di sempre. */
+  if (state.compatto)
+    return `<div class="mu-carta mu-card mu-cp mu-cp-mini ${on ? "mu-accesa" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
+    <div class="mu-cp-testa"><span class="mu-cp-nome">${esc(nomeDi(id, c.nome))}</span><span class="mu-cp-stato">${esc(stato)}</span></div>
+    <div class="mu-cp-ora"><span class="mu-cp-n">${numeroGrande}<sup>°</sup></span><span class="mu-spazio"></span><button type="button" class="mu-tondo" data-mu-fa="meno" data-mu-entita="${esc(id)}" aria-label="−">−</button><button type="button" class="mu-tondo" data-mu-fa="piu" data-mu-entita="${esc(id)}" aria-label="+">+</button></div>
+    ${scala}
+    <div class="mu-cp-sotto">${target}</div></div>`;
+  return `<div class="mu-carta mu-card mu-cp ${on ? "mu-accesa" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
+    <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:46px">${disegno(faccia.chiave, 26, `clima-${i}`)}</span>
+      <div class="mu-nome"><div class="mu-n mu-cp-nome">${esc(nomeDi(id, c.nome))}</div></div>
+      <span class="mu-pasti mu-cp-stato">${esc(stato)}</span></div>
+    <div class="mu-cp-ora"><span class="mu-cp-n">${numeroGrande}<sup>°</sup></span><span class="mu-et">${esc(t("Ambiente", "Room"))}</span></div>
+    ${scala}
+    <div class="mu-cp-sotto"><span>${esc(decimale(basso, 0))}°</span>${target}<span>${esc(decimale(alto, 0))}°</span></div>
+    <div class="mu-comandi">
+      <button type="button" class="mu-pasti mu-modo mu-cp-modo" data-mu-fa="modo" data-mu-entita="${esc(id)}">${esc(t("Modalità", "Mode"))}</button>
       <span class="mu-spazio"></span>
       <button type="button" class="mu-tondo" data-mu-fa="meno" data-mu-entita="${esc(id)}" aria-label="−">−</button>
       <button type="button" class="mu-tondo" data-mu-fa="piu" data-mu-entita="${esc(id)}" aria-label="+">+</button>
@@ -6874,6 +6933,41 @@ ${MURO} .mu-colori button{width:58px;height:58px;border-radius:50%;box-shadow:in
 ${MURO} .mu-fin-clima,${MURO} .mu-fin-codice,${MURO} .mu-fin-conferma{display:flex;flex-direction:column;gap:24px}
 ${MURO} .mu-fin-clima .mu-seg{margin-top:0}
 ${MURO} .mu-voci{flex-wrap:wrap}
+${MURO} .mu-cp{display:flex;flex-direction:column;gap:10px}
+${MURO} .mu-cp-nome{text-transform:uppercase;letter-spacing:.02em}
+${MURO} .mu-cp-stato{margin-left:auto}
+${MURO} .mu-cp-ora{display:flex;align-items:baseline;gap:14px;margin-top:4px}
+${MURO} .mu-cp-n{font-size:clamp(44px,5.4vw,72px);font-weight:800;line-height:1;letter-spacing:-.03em;color:color-mix(in srgb,var(--text) 70%,var(--acc))}
+${MURO} .mu-accesa .mu-cp-n{color:var(--acc)}
+${MURO} .mu-cp-n sup{font-size:.45em;vertical-align:top;margin-left:2px}
+${MURO} .mu-cp-ora .mu-et{font-size:13px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim,#64748b)}
+${MURO} .mu-cp-scala{position:relative;height:28px;margin:4px 12px 0}
+${MURO} .mu-cp-riga{position:absolute;left:0;right:0;top:50%;height:10px;margin-top:-5px;border-radius:99px;background:color-mix(in srgb,var(--text) 10%,transparent);overflow:hidden}
+${MURO} .mu-cp-riga i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,color-mix(in srgb,var(--acc) 30%,transparent),var(--acc))}
+${MURO} :not(.mu-accesa).mu-cp .mu-cp-riga i{background:linear-gradient(90deg,color-mix(in srgb,var(--text) 18%,transparent),color-mix(in srgb,var(--text) 45%,transparent))}
+${MURO} .mu-cp-segno{position:absolute;top:2px;bottom:2px;width:4px;margin-left:-2px;border-radius:2px;background:var(--text)}
+${MURO} .mu-cp-pallino{position:absolute;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:var(--card-bg,#fff);border:4px solid color-mix(in srgb,var(--text) 45%,transparent);box-shadow:0 2px 8px rgba(0,0,0,.18)}
+${MURO} .mu-accesa .mu-cp-pallino{border-color:var(--acc)}
+${MURO} .mu-cp-sotto{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;font-weight:800;color:var(--text-dim,#64748b)}
+${MURO} .mu-cp-target{font-size:17px;font-weight:700}
+${MURO} .mu-cp-target b{color:var(--text);font-weight:900}
+${MURO} .mu-cp .mu-comandi{margin-top:auto}
+${MURO} .mu-cp-modo{text-transform:uppercase;letter-spacing:.04em}
+${MURO} .mu-card.mu-cp .mu-rapido{flex:0 0 auto;width:auto;padding:0 4px;gap:0}
+${MURO} .mu-cp .mu-rap-val,${MURO} .mu-cp .mu-rap-lampo,${MURO} .mu-cp .mu-rapido>i{display:none}
+${MURO} .mu-cp-mini{gap:4px;padding:10px 12px}
+${MURO} .mu-cp-testa{display:flex;align-items:center;gap:6px;min-width:0}
+${MURO} .mu-cp-mini .mu-cp-nome{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:900}
+${MURO} .mu-cp-mini .mu-cp-stato{flex:0 0 auto;font-size:10px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--acc)}
+${MURO} :not(.mu-accesa).mu-cp-mini .mu-cp-stato{color:var(--text-dim,#64748b)}
+${MURO} .mu-cp-mini .mu-cp-ora{margin:0;gap:6px;align-items:center}
+${MURO} .mu-cp-mini .mu-cp-n{font-size:30px}
+${MURO} .mu-card.mu-cp-mini .mu-cp-ora .mu-tondo{flex:0 0 auto;width:34px;height:34px;min-width:0;min-height:0;font-size:18px}
+${MURO} .mu-cp-mini .mu-cp-scala{height:20px;margin:0 9px}
+${MURO} .mu-cp-mini .mu-cp-riga{height:7px;margin-top:-3.5px}
+${MURO} .mu-cp-mini .mu-cp-pallino{width:18px;height:18px;margin:-9px 0 0 -9px;border-width:3px}
+${MURO} .mu-cp-mini .mu-cp-sotto{justify-content:center}
+${MURO} .mu-cp-mini .mu-cp-target{font-size:13px}
 ${MURO} .mu-voci>button{flex:1 1 140px}
 ${MURO} .mu-fin-temp{display:flex;align-items:center;justify-content:center;gap:40px}
 ${MURO} .mu-fin-conferma{text-align:center;align-items:center}

@@ -1372,6 +1372,17 @@ function corpoMarkup() {
       interruttore("menuDiLato", m.menuDiLato, "menu-di-lato"),
     )}
     ${riga(
+      t("Card del clima", "Climate card"),
+      t(
+        "Come il muro: raccolta, la temperatura voluta grande. Come la plancia: la temperatura della stanza grande e la riga con la voluta, come nella plancia principale",
+        "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard",
+      ),
+      scelte("cartaClima", m.cartaClima, [
+        ["muro", t("Come il muro", "Like the wall")],
+        ["plancia", t("Come la plancia", "Like the dashboard")],
+      ]),
+    )}
+    ${riga(
       t("Tema", "Theme"),
       t(
         "Con l'orario: chiaro di giorno, scuro la sera",

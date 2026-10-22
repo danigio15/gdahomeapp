@@ -222,6 +222,10 @@ function senzaVuotiInCoda(posti) {
   return fuori;
 }
 export const ORIENTAMENTI = Object.freeze(["auto", "orizzontale", "verticale"]);
+/* Come si disegna la card del clima: quella del muro, raccolta, o quella
+ * della plancia principale, col numero della stanza grande e la riga della
+ * temperatura. */
+export const CARTE_DEL_CLIMA = Object.freeze(["muro", "plancia"]);
 export const TEMI = Object.freeze(["plancia", "scuro", "chiaro", "orario"]);
 export const MINUTI_DI_RIPOSO = Object.freeze([1, 2, 5, 10, 30]);
 export const PROFILO_DI_ORIGINE = "primary";
@@ -1507,6 +1511,10 @@ export function muroPulito(input) {
      * solo in orizzontale sul tablet vero (`menuDiLato()`): in verticale e sul
      * pannello piccolo restano le linguette. */
     menuDiLato: vero(dentro.menuDiLato, false),
+    /* «Perche' nel clima del muro non vedo la stessa cosa? La linea della
+     * temperatura e i numeri in quel modo.» Di serie quella del muro, che e'
+     * quella che chi ha gia' il tablet conosce. */
+    cartaClima: scelta(dentro.cartaClima, CARTE_DEL_CLIMA, "muro"),
     riposo: {
       attivo: vero(riposo.attivo, true),
       minuti: MINUTI_DI_RIPOSO.includes(minuti) ? minuti : 2,

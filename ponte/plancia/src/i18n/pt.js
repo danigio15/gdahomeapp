@@ -6940,4 +6940,8 @@ export default Object.freeze({
   "No options to choose": "Não há opções para escolher",
   Suppliers: "Fornecedores",
   "Electricity · balance, price and consumption": "Eletricidade · saldo, preço e consumo",
+  "Climate card": "Cartão do clima",
+  "Like the wall": "Como a parede",
+  "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard":
+    "Como a parede: compacto, a temperatura desejada grande. Como o painel: a temperatura do cômodo grande e a linha com a desejada, como no painel principal",
 });

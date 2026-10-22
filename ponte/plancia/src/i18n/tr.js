@@ -6914,4 +6914,8 @@ export default Object.freeze({
   "No options to choose": "Seçilecek seçenek yok",
   Suppliers: "Tedarikçiler",
   "Electricity · balance, price and consumption": "Elektrik · bakiye, fiyat ve tüketim",
+  "Climate card": "İklim kartı",
+  "Like the wall": "Duvardaki gibi",
+  "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard":
+    "Duvardaki gibi: kompakt, istenen sıcaklık büyük. Panodaki gibi: oda sıcaklığı büyük ve istenen sıcaklık çizgisiyle, ana panodaki gibi",
 });

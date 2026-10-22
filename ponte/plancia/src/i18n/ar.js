@@ -6875,4 +6875,8 @@ export default Object.freeze({
   "No options to choose": "لا توجد خيارات للاختيار",
   Suppliers: "الموردون",
   "Electricity · balance, price and consumption": "الكهرباء · الرصيد والسعر والاستهلاك",
+  "Climate card": "بطاقة المناخ",
+  "Like the wall": "مثل الجدار",
+  "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard":
+    "مثل الجدار: مدمجة، ودرجة الحرارة المطلوبة كبيرة. مثل اللوحة: درجة حرارة الغرفة كبيرة والخط مع المطلوبة، كما في اللوحة الرئيسية",
 });

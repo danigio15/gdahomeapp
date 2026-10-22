@@ -6800,4 +6800,8 @@ export default Object.freeze({
   "No options to choose": "没有可选的选项",
   Suppliers: "供应商",
   "Electricity · balance, price and consumption": "电力 · 余额、价格和用量",
+  "Climate card": "空调卡片",
+  "Like the wall": "与墙板相同",
+  "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard":
+    "与墙板相同：紧凑，设定温度大字显示。与仪表板相同：室温大字显示并带有设定温度刻度线，与主仪表板一致",
 });

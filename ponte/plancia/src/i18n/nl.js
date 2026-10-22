@@ -6941,4 +6941,8 @@ export default Object.freeze({
   "No options to choose": "Geen opties om te kiezen",
   Suppliers: "Leveranciers",
   "Electricity · balance, price and consumption": "Stroom · saldo, prijs en verbruik",
+  "Climate card": "Klimaatkaart",
+  "Like the wall": "Zoals de wand",
+  "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard":
+    "Zoals de wand: compact, de gewenste temperatuur groot. Zoals het dashboard: de kamertemperatuur groot en de lijn met de gewenste, zoals in het hoofddashboard",
 });
