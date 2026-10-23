@@ -52,6 +52,8 @@ import { Viaggi } from "./viaggi.js";
 import { Fornitori } from "./fornitori.js";
 import { RicaricaDiNotte } from "./ricarica-di-notte.js";
 import { Automazioni } from "./automazioni.js";
+import { Integrazioni } from "./integrazioni.js";
+import { Aiutanti } from "./aiutanti.js";
 
 /* Ogni quanto si guarda se qualche telefono e' sparito da troppo tempo. */
 const POTATURA = 6 * 60 * 60 * 1000;
@@ -506,6 +508,12 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registro,
   });
   commissioni.automazioni = automazioni;
+  /* Le integrazioni, i dispositivi e gli aiutanti di Home Assistant, per
+   * l'app: solo chi amministra, solo Premium (`integrazioni.js`,
+   * `aiutanti.js`). */
+  const integrazioni = new Integrazioni({ casa, licenze, registro });
+  commissioni.integrazioni = integrazioni;
+  commissioni.aiutanti = new Aiutanti({ casa, licenze, integrazioni, registro });
   /* «Cosa c'e' in casa» nel config: lo sa l'assistente delle notifiche. */
   commissioni.notifiche = notifiche;
   /* Una casa di prova fatta prima di un riavvio vale ancora: al centralino

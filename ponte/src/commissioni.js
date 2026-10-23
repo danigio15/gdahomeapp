@@ -108,6 +108,8 @@ import {
 } from "./chi-configura.js";
 import { CHIAVE_AUTOMAZIONI } from "../plancia/src/core/automazioni.js";
 import { COMANDI_DELLE_AUTOMAZIONI } from "./automazioni.js";
+import { COMANDI_DELLE_INTEGRAZIONI } from "./integrazioni.js";
+import { COMANDI_DEGLI_AIUTANTI } from "./aiutanti.js";
 
 /* Quando chi chiede non ha nessuna plancia. Non e' un guasto ed e' l'app a
  * scriverlo, percio' il codice e' uno suo e non uno di Home Assistant. */
@@ -897,6 +899,31 @@ export class Commissioni {
       return this.automazioni.rispondi(detto, {
         utente: chiChiede,
         amministra: puoAmministrare === true,
+      });
+    }
+    /* Le integrazioni, i dispositivi e gli aiutanti di Home Assistant
+     * (`integrazioni.js`, `aiutanti.js`): la sezione Dispositivi e la voce
+     * Aiutanti dell'app. **Solo dall'app** (`dalTelefono`: un telefono, o
+     * gdahome nel browser — la plancia dentro Home Assistant queste pagine le
+     * ha gia' in Home Assistant), **solo da chi amministra Home Assistant**
+     * (`puoAmministrare`: e' la regola di Home Assistant per la sua pagina
+     * Dispositivi e servizi, e il segno dell'add-on non deve diventare la
+     * porta di servizio di chi li' non entra) e **solo con GdAHome Premium**.
+     * Il resto si sente dire `unauthorized` o `premium-richiesto`.
+     *
+     * Nel ponte non si vede niente: nessuna pagina, nessuna console. Niente
+     * esce di casa — si parla solo con Home Assistant — e quello che si
+     * scrive in una procedura guidata (un indirizzo, una password del
+     * dispositivo) passa a Home Assistant e basta: non si tiene e non va nei
+     * registri. Ricaricare, disattivare ed eliminare una voce sono le stesse
+     * porte della pagina di Home Assistant; eliminare vuole la conferma. */
+    if (COMANDI_DELLE_INTEGRAZIONI.includes(tipo) || COMANDI_DEGLI_AIUTANTI.includes(tipo)) {
+      const chi = COMANDI_DEGLI_AIUTANTI.includes(tipo) ? this.aiutanti : this.integrazioni;
+      if (!chi) return no(id, "unknown_command", `non conosco ${tipo}`);
+      return chi.rispondi(detto, {
+        utente: chiChiede,
+        amministra: puoAmministrare === true,
+        dalTelefono: dalTelefono === true,
       });
     }
     /* I fornitori di energia: solo chi amministra (lo ha gia' chiesto
