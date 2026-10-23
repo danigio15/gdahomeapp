@@ -292,8 +292,6 @@ export default Object.freeze({
     "L'encadré des caméras n'est plus là. L'alarme et les ouvertures restent où elles sont, et les caméras configurées n'ont pas été touchées.",
   "The car service refused the integration's credentials: try again, and if it keeps happening reconnect the integration in Settings → Devices & services.":
     "Le service de la voiture a refusé les identifiants de l'intégration : réessaie, et si cela continue, reconnecte l'intégration dans Paramètres → Appareils et services.",
-  "The devices Home Assistant has but cannot reach: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them, and when they go quiet that is configuration to fix. The dashboard fills this list by itself: there is nothing to add. The bin removes a device from the warning, and the bell below puts it back.":
-    "Les appareils que Home Assistant possède et n'arrive pas à joindre : un appareil arrive ici quand toutes ses entités se taisent. Les assistants, les automatisations et les scripts n'y sont pas : il n'y a pas d'appareil derrière eux, et s'ils se taisent, c'est une configuration à corriger. Cette liste, le tableau de bord la remplit tout seul : il n'y a rien à ajouter. La corbeille retire un appareil de l'alerte, et la cloche en dessous l'y remet.",
   "The door and window contacts this panel watches: switch on the ones you want among the entry points. They show on the Security page under “Entry points”, with the same name and the same state they have under Openings.":
     "Les contacts de portes et de fenêtres que surveille cette centrale : active ceux que tu veux parmi les accès. Ils apparaissent sur la page Sécurité sous « Accès », avec le même nom et le même état que dans Ouvertures.",
   "The library cannot be read.": "Impossible de lire la bibliothèque.",
@@ -6981,4 +6979,12 @@ export default Object.freeze({
   "Like the wall": "Comme le mur",
   "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard":
     "Comme le mur : compacte, la température voulue en grand. Comme le tableau de bord : la température de la pièce en grand et la ligne avec la voulue, comme dans le tableau de bord principal",
+  "Every Home Assistant device that cannot be reached, including those the dashboard does not show: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them. The bin removes a device from the warning; the bell, among the removed ones, puts it back.":
+    "Tous les appareils de Home Assistant injoignables, y compris ceux que le tableau de bord n'affiche pas : un appareil arrive ici quand toutes ses entités se taisent. Les assistants, automatisations et scripts n'y sont pas : ils n'ont pas d'appareil derrière eux. La corbeille retire un appareil de l'alerte ; la cloche, parmi ceux retirés, l'y remet.",
+  "Search by name, type, brand or entity…":
+    "Rechercher par nom, type, marque ou entité…",
+  "Search disconnected devices":
+    "Rechercher parmi les appareils déconnectés",
+  "No device matches the search.":
+    "Aucun appareil ne correspond à la recherche.",
 });

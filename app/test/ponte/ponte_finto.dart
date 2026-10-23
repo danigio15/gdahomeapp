@@ -245,11 +245,22 @@ class PonteFinto {
     if (detto['type'] case final String t
         when t.startsWith('ponte/notifiche/')) {
       chieste.add(detto);
+      final risposta = _notifiche(t, detto);
+      /* Un «no» della casa, col suo codice: `{'errore': 'not_found'}`. */
+      if (risposta case {'errore': final String codice}) {
+        _manda(presa, {
+          'id': id,
+          'type': 'result',
+          'success': false,
+          'error': {'code': codice, 'message': 'no'},
+        });
+        return;
+      }
       _manda(presa, {
         'id': id,
         'type': 'result',
         'success': true,
-        'result': _notifiche(t, detto),
+        'result': risposta,
       });
       return;
     }
@@ -551,7 +562,7 @@ class PonteFinto {
         final film = detto['film'];
         final uno = film is Map ? filmati[film['id']] : null;
         if (uno == null || uno.chiave != (film as Map)['chiave']) {
-          return {'nonCe': true};
+          return {'errore': 'not_found'};
         }
         return uno.video;
       case 'ponte/notifiche/ha/elenco':

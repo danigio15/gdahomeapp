@@ -288,8 +288,6 @@ export default Object.freeze({
     "지금은 카메라 칸이 없습니다. 경보와 개구부는 그대로이고, 설정한 카메라도 건드리지 않았습니다.",
   "The car service refused the integration's credentials: try again, and if it keeps happening reconnect the integration in Settings → Devices & services.":
     "차량 서비스가 통합의 인증 정보를 거부했습니다. 다시 시도하고, 계속 발생하면 설정 → 기기 및 서비스에서 통합을 다시 연결하세요.",
-  "The devices Home Assistant has but cannot reach: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them, and when they go quiet that is configuration to fix. The dashboard fills this list by itself: there is nothing to add. The bin removes a device from the warning, and the bell below puts it back.":
-    "Home Assistant이 가지고 있지만 연결하지 못하는 기기입니다. 어떤 기기는 그 엔티티가 모두 침묵할 때 여기에 들어옵니다. 도우미, 자동화, 스크립트는 여기에 없습니다. 뒤에 기기가 없고, 조용하다면 그것은 고쳐야 할 설정입니다. 이 목록은 대시보드가 스스로 채웁니다. 추가할 것은 없습니다. 휴지통은 기기를 경고에서 빼고, 그 아래 종이 다시 넣습니다.",
   "The door and window contacts this panel watches: switch on the ones you want among the entry points. They show on the Security page under “Entry points”, with the same name and the same state they have under Openings.":
     "이 패널이 감시하는 문과 창문 접점입니다. 출입구로 보고 싶은 것을 켜세요. 보안 페이지의 “출입구”에 개구부와 같은 이름, 같은 상태로 표시됩니다.",
   "The library cannot be read.": "라이브러리를 읽을 수 없습니다.",
@@ -6896,4 +6894,12 @@ export default Object.freeze({
   "Like the wall": "벽처럼",
   "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard":
     "벽처럼: 간결하게, 설정 온도를 크게. 대시보드처럼: 실내 온도를 크게, 설정 온도 막대와 함께 (메인 대시보드와 같음)",
+  "Every Home Assistant device that cannot be reached, including those the dashboard does not show: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them. The bin removes a device from the warning; the bell, among the removed ones, puts it back.":
+    "연결할 수 없는 모든 Home Assistant 기기(대시보드에 표시되지 않는 기기 포함): 모든 엔티티가 응답하지 않으면 기기가 여기에 나타납니다. 도우미, 자동화, 스크립트는 없습니다: 뒤에 기기가 없기 때문입니다. 휴지통은 기기를 경고에서 빼고, 뺀 기기 중의 종은 다시 넣습니다.",
+  "Search by name, type, brand or entity…":
+    "이름, 유형, 브랜드 또는 엔티티로 검색…",
+  "Search disconnected devices":
+    "연결되지 않은 기기 검색",
+  "No device matches the search.":
+    "검색과 일치하는 기기가 없습니다.",
 });

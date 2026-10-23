@@ -186,6 +186,7 @@ void main() {
       WidgetTester tester, {
       bool colVideo = true,
       bool colMomento = false,
+      bool filoChiuso = false,
     }) async {
       final cartella = Directory.systemTemp.createTempSync('momento-');
       await tester.runAsync(() async {
@@ -211,6 +212,9 @@ void main() {
           sonda: Sonda(bussa: (dove) async => dove == ponte.indirizzo.salute),
         );
         await collegamento.apri();
+        /* L'app aperta toccando la notifica sulla schermata bloccata: il filo
+         * con la casa non c'e' ancora. */
+        if (filoChiuso) await collegamento.chiudi();
       });
       await tester.pumpWidget(
         MaterialApp(
@@ -270,6 +274,35 @@ void main() {
       await giu(tester);
     });
 
+    testWidgets(
+      '«Non c\'è il video»: col filo che si apre dopo, il video arriva',
+      (tester) async {
+        /* Il tester: notifica toccata dalla schermata bloccata, app che parte
+       * da zero, e la pagina diceva «non c'è più» di un video che c'era. */
+        await alza(tester, filoChiuso: true);
+        expect(
+          find.byKey(const Key('telecamera-video-attesa')),
+          findsOneWidget,
+        );
+        await tester.runAsync(() async {
+          await Future<void>.delayed(const Duration(milliseconds: 1500));
+          await collegamento.apri();
+        });
+        for (var giro = 0; giro < 80; giro += 1) {
+          await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 100)),
+          );
+          await tester.pump(const Duration(milliseconds: 100));
+          if (find.byKey(const Key('telecamera-video')).evaluate().isNotEmpty) {
+            break;
+          }
+        }
+        expect(find.byKey(const Key('telecamera-video')), findsOneWidget);
+        expect(find.byKey(const Key('telecamera-senza-video')), findsNothing);
+        await giu(tester);
+      },
+    );
+
     testWidgets('se la casa il video non lo da\', si guarda dal vivo', (
       tester,
     ) async {
@@ -323,5 +356,27 @@ void main() {
     );
     expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  group('quando la casa non risponde', () {
+    test(
+      'non si dice «non c\'è»: si dice che la casa non ha risposto',
+      () async {
+        final archivio = ArchivioDelleCase(CassaforteInMemoria());
+        await archivio.apri();
+        final collegamento = Collegamento(
+          archivio: archivio,
+          sonda: Sonda(bussa: (_) async => false),
+        );
+        final risposta = await ilFilmatoDi(
+          collegamento,
+          (id: _id, chiave: _chiave),
+          attesa: const Duration(milliseconds: 300),
+          fraUnaProvaELAltra: const Duration(milliseconds: 50),
+        );
+        expect(risposta.esito, EsitoDelFilmato.nonRisponde);
+        expect(risposta.filmato, isNull);
+      },
+    );
   });
 }

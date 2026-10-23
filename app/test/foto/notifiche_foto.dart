@@ -790,4 +790,63 @@ void main() {
       await ponte.spegni();
     });
   });
+
+  testWidgets('«Guarda» quando la casa non risponde al video', (tester) async {
+    tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    late PonteFinto ponte;
+    late Collegamento collegamento;
+    late Directory cartella;
+    final foto = File('test/notifiche/porta-di-prova.jpg').readAsBytesSync();
+    await tester.runAsync(() async {
+      (ponte, collegamento) = await _unaCasa();
+      /* Il filo non c'e': la casa non risponde. */
+      await collegamento.chiudi();
+      cartella = Directory.systemTemp.createTempSync('momento-');
+      await tieniLImmagine('movimento-video', foto, cartella: cartella);
+    });
+    await tester.pumpWidget(
+      _app(
+        SchermataDellaTelecamera(
+          tocco: ToccoDellaNotifica(
+            casa: collegamento.casa!.id,
+            tasto: 'guarda',
+            notifica: movimentoColVideo(),
+          ),
+          collegamento: collegamento,
+          cartellaDelleImmagini: cartella,
+          adesso: DateTime(2026, 10, 21, 19, 17),
+        ),
+        scuro: true,
+      ),
+    );
+    for (var giro = 0; giro < 80; giro += 1) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await tester.pump(const Duration(seconds: 1));
+      if (find
+              .byKey(const Key('telecamera-video-non-arriva'))
+              .evaluate()
+              .isNotEmpty &&
+          find.byKey(const Key('telecamera-foto')).evaluate().isNotEmpty) {
+        break;
+      }
+    }
+    await tester.runAsync(() async {
+      for (final una in find.byType(Image).evaluate()) {
+        await precacheImage((una.widget as Image).image, una);
+      }
+    });
+    await tester.pump(const Duration(milliseconds: 300));
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('$_cartella/23-guarda-casa-non-risponde.png'),
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.runAsync(() async {
+      await ponte.spegni();
+    });
+  });
 }

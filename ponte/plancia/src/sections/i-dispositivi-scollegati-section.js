@@ -13,9 +13,12 @@
  *
  * ── Cosa si può fare qui, e cosa no ─────────────────────────────────────
  *
- * Solo togliere. Non c'è un tasto per aggiungere e non ce ne sarà uno: le
- * righe le mette la plancia, quando un dispositivo smette di rispondere, e una
- * riga scritta a mano sarebbe un avviso che uno si dà da solo.
+ * Le righe le mette la plancia, quando un dispositivo smette di rispondere:
+ * tutti i dispositivi di Home Assistant, non solo quelli che la plancia mostra
+ * («i dispositivi non connessi non escono tutti»). Di ognuno si dice che cos'è
+ * — il disegno e la parola del tipo, marca e modello — e una casella cerca fra
+ * tutte le righe, anche quelle tolte dall'avviso: si rimettono da lì
+ * («non c'è possibilità di inserimento e di ricerca»).
  *
  * Il cestino non toglie una riga di oggi: toglie quel dispositivo da questa
  * tessera per sempre. Lo si chiede prima di farlo, perché non si torna
@@ -36,6 +39,8 @@ import {
   TESSERA_SCOLLEGATI,
 } from "../core/i-dispositivi-scollegati.js";
 import { iDispositiviRicordati } from "../core/i-dispositivi-di-home-assistant.js";
+import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
+import { parolaDelSensore } from "./finestre/sicurezza.js";
 import { entitaConfigurate } from "../core/entita-configurate.js";
 import { CONFIG_KEYS } from "./config-persistence-section.js";
 import {
@@ -83,7 +88,7 @@ export function elenco() {
   /* Le due mappe dei registri: di chi e' un'entita', e come si chiama quel
    * qualcuno. Chi disegna i registri non li ha — li lascia qui chi ce li ha.
    * Senza, l'elenco torna riga per riga come prima. */
-  const { di, nomi } = iDispositiviRicordati();
+  const { di, nomi, modelli } = iDispositiviRicordati();
   return iDispositiviScollegati({
     configurate,
     states,
@@ -91,6 +96,7 @@ export function elenco() {
     nomeDi: (entity) => nomeDi(states, entity),
     di,
     nomi,
+    modelli,
   });
 }
 
@@ -120,15 +126,36 @@ function sottoLaRiga(una) {
   return quante === 1 ? t("1 entità", "1 entity") : t(`${quante} entità`, `${quante} entities`);
 }
 
+/* Che cos'è: «Clima · Daikin FTXM25R». Il tipo dalle classi delle sue
+ * entità, marca e modello dal registro dei dispositivi. */
+function cheCosE(una) {
+  return [parolaDelSensore(una.tipo?.tipo), clean(una.modello)].filter(Boolean).join(" · ");
+}
+
+/* Il disegno del tipo, dal catalogo di casa; senza, l'antenna di prima. */
+function segno(una, riserva) {
+  const disegno = disegnoDelCatalogo(una.tipo?.disegno, 26);
+  return disegno || riserva;
+}
+
+/* Quello che la ricerca guarda: nome, tipo, marca e modello, entità. */
+function doveCercare(una) {
+  return [una.nome, cheCosE(una), ...(Array.isArray(una.entita) ? una.entita : [una.entity])]
+    .join(" ")
+    .toLowerCase();
+}
+
 function rigaViva(una) {
   /* Il cestino porta con se' tutte le entita' mute di quella riga: mettere da
    * parte un dispositivo e lasciarne fuori una vorrebbe dire ritrovarselo al
    * giro dopo, con dentro quella. */
   const quali = (Array.isArray(una.entita) ? una.entita : [una.entity]).join(" ");
-  return `<div class="ed-row ${BLOCCO}-riga">
-    <div class="${BLOCCO}-segno" aria-hidden="true">📡</div>
+  const cosa = cheCosE(una);
+  return `<div class="ed-row ${BLOCCO}-riga" data-dm-scollegati-cerca="${esc(doveCercare(una))}">
+    <div class="${BLOCCO}-segno" aria-hidden="true">${segno(una, "📡")}</div>
     <div class="ed-row-main ${BLOCCO}-testo">
       <div class="ed-row-new">${esc(una.nome)}</div>
+      ${cosa ? `<div class="${BLOCCO}-cosa">${esc(cosa)}</div>` : ""}
       <div class="ed-row-old mono">${esc(sottoLaRiga(una))} · ${esc(daQuandoTace(una.da))}</div>
     </div>
     <button type="button" class="ed-del ${BLOCCO}-via" data-dm-scollegati-via="${esc(quali)}"
@@ -146,10 +173,12 @@ function rigaMessaDaParte(una) {
   /* Il tasto riporta indietro tutte le entità di quella riga, come il cestino
    * le aveva portate via tutte insieme. */
   const quali = (Array.isArray(una.entita) ? una.entita : [una.entity]).join(" ");
-  return `<div class="ed-row ${BLOCCO}-riga ${BLOCCO}-fuori">
-    <div class="${BLOCCO}-segno" aria-hidden="true">🔕</div>
+  const cosa = cheCosE(una);
+  return `<div class="ed-row ${BLOCCO}-riga ${BLOCCO}-fuori" data-dm-scollegati-cerca="${esc(doveCercare(una))}">
+    <div class="${BLOCCO}-segno" aria-hidden="true">${segno(una, "🔕")}</div>
     <div class="ed-row-main ${BLOCCO}-testo">
       <div class="ed-row-new">${esc(una.nome)}</div>
+      ${cosa ? `<div class="${BLOCCO}-cosa">${esc(cosa)}</div>` : ""}
       <div class="ed-row-old mono">${esc(sottoLaRiga(una))} · ${esc(nota)}</div>
     </div>
     <button type="button" class="ed-del ${BLOCCO}-torna" data-dm-scollegati-torna="${esc(quali)}"
@@ -160,8 +189,8 @@ function rigaMessaDaParte(una) {
 function corpo({ adesso, messiDaParte }) {
   const intro = `<div class="ed-intro">${esc(
     t(
-      "I dispositivi che Home Assistant ha in casa e non riesce a raggiungere: un apparecchio ci finisce quando tacciono tutte le sue entità. Aiutanti, automazioni e script non ci sono: non hanno un apparecchio dietro, e se tacciono è configurazione da correggere. Questo elenco lo riempie la plancia da sé: non c'è niente da aggiungere. Il cestino toglie un dispositivo dall'avviso, e il campanello lì sotto ce lo rimette.",
-      "The devices Home Assistant has but cannot reach: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them, and when they go quiet that is configuration to fix. The dashboard fills this list by itself: there is nothing to add. The bin removes a device from the warning, and the bell below puts it back.",
+      "Tutti i dispositivi di Home Assistant che non si riescono a raggiungere, anche quelli che la plancia non mostra: un apparecchio ci finisce quando tacciono tutte le sue entità. Aiutanti, automazioni e script non ci sono: non hanno un apparecchio dietro. Il cestino toglie un dispositivo dall'avviso; il campanello, fra quelli tolti, ce lo rimette.",
+      "Every Home Assistant device that cannot be reached, including those the dashboard does not show: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them. The bin removes a device from the warning; the bell, among the removed ones, puts it back.",
     ),
   )}</div>`;
   const vive = adesso.length
@@ -184,7 +213,38 @@ function corpo({ adesso, messiDaParte }) {
       )}</div>
       <div class="ed-list ${BLOCCO}-list">${messiDaParte.map(rigaMessaDaParte).join("")}</div>`
     : "";
-  return `${intro}${vive}${fuori}`;
+  /* La ricerca: filtra le righe qui sotto mentre si scrive, senza
+   * ridisegnare. Il testo resta fra un ridisegno e l'altro. */
+  const cerca = `<div class="${BLOCCO}-cerca">
+    <input type="search" class="ed-input" data-dm-scollegati-filtro
+      value="${esc(state.filtro || "")}"
+      placeholder="${esc(t("Cerca per nome, tipo, marca o entità…", "Search by name, type, brand or entity…"))}"
+      aria-label="${esc(t("Cerca fra i dispositivi non connessi", "Search disconnected devices"))}">
+    <div class="${BLOCCO}-nessuno" hidden>${esc(t("Nessun dispositivo corrisponde alla ricerca.", "No device matches the search."))}</div>
+  </div>`;
+  return `${intro}${cerca}${vive}${fuori}`;
+}
+
+/* Nasconde le righe che non contengono quello che si è scritto. */
+function filtra(body) {
+  const testo = clean(state.filtro).toLowerCase();
+  let viste = 0;
+  for (const riga of body?.querySelectorAll?.("[data-dm-scollegati-cerca]") || []) {
+    const si = !testo || clean(riga.dataset.dmScollegatiCerca).includes(testo);
+    riga.hidden = !si;
+    if (si) viste += 1;
+  }
+  for (const lista of body?.querySelectorAll?.(`.${BLOCCO}-list`) || [])
+    lista.hidden = Boolean(testo) && !lista.querySelector("[data-dm-scollegati-cerca]:not([hidden])");
+  const nessuno = body?.querySelector?.(`.${BLOCCO}-nessuno`);
+  if (nessuno) nessuno.hidden = !testo || viste > 0;
+}
+
+function onCerca(event) {
+  const casella = event.target?.closest?.("[data-dm-scollegati-filtro]");
+  if (!casella || activeTab() !== SCOLLEGATI_TAB) return;
+  state.filtro = casella.value || "";
+  filtra(doc?.getElementById("ed-body"));
 }
 
 /* La firma di quello che si vede: si ridisegna solo quando cambia davvero.
@@ -193,8 +253,8 @@ function corpo({ adesso, messiDaParte }) {
  * scappa da sotto il dito. */
 function firmaDi({ adesso, messiDaParte }) {
   return [
-    adesso.map((una) => `${una.entity}@${una.da || 0}`).join("~"),
-    messiDaParte.map((una) => `${una.entity}:${una.cE ? 1 : 0}`).join("~"),
+    adesso.map((una) => `${una.entity}@${una.da || 0}@${una.modello || ""}`).join("~"),
+    messiDaParte.map((una) => `${una.entity}:${una.cE ? 1 : 0}:${una.modello || ""}`).join("~"),
   ].join("|");
 }
 
@@ -206,8 +266,16 @@ export function ensureScollegatiEditor() {
   if (body.dataset.dmScollegati === firma && body.querySelector(`.${BLOCCO}-list, .${BLOCCO}-vuoto`))
     return true;
   body.dataset.dmScollegati = firma;
+  /* Chi sta scrivendo nella ricerca non perde la casella sotto le dita. */
+  const scriveva = doc.activeElement?.matches?.("[data-dm-scollegati-filtro]");
   body.innerHTML = corpo(dati);
   body.dataset.renderer = "scollegati";
+  filtra(body);
+  if (scriveva) {
+    const casella = body.querySelector("[data-dm-scollegati-filtro]");
+    casella?.focus?.();
+    casella?.setSelectionRange?.(casella.value.length, casella.value.length);
+  }
   return true;
 }
 
@@ -289,7 +357,13 @@ function installStyles() {
     `
       #ed-body .${BLOCCO}-list{display:grid;gap:8px;margin-bottom:10px}
       #ed-body .${BLOCCO}-riga{display:flex;align-items:center;gap:10px}
-      #ed-body .${BLOCCO}-segno{flex:0 0 auto;font-size:17px;line-height:1}
+      #ed-body .${BLOCCO}-segno{flex:0 0 auto;font-size:17px;line-height:1;width:30px;display:flex;align-items:center;justify-content:center}
+      #ed-body .${BLOCCO}-segno svg{width:26px;height:26px}
+      #ed-body .${BLOCCO}-cosa{font-size:12px;font-weight:650;color:var(--text-dim,#64748b);margin-top:1px}
+      #ed-body .${BLOCCO}-cerca{margin:4px 0 12px}
+      #ed-body .${BLOCCO}-cerca input{width:100%;box-sizing:border-box}
+      #ed-body .${BLOCCO}-nessuno{margin-top:10px;font-size:12.5px;font-weight:600;color:var(--text-dim,#64748b)}
+      #ed-body [data-dm-scollegati-cerca][hidden],#ed-body .${BLOCCO}-list[hidden]{display:none}
       #ed-body .${BLOCCO}-testo{min-width:0}
       /* L'identificativo va a capo invece di finire in «…»: e' quello che
          serve per riconoscere una presa fra dieci che si chiamano uguale, e
@@ -312,6 +386,7 @@ export function installScollegatiSection() {
   ensureScollegatiTab();
   doc.addEventListener("click", onClick);
   doc.addEventListener("click", onTorna);
+  doc.addEventListener("input", onCerca);
   onEditorRedraw("__dmScollegati", () => {
     root.queueMicrotask?.(() => {
       ensureScollegatiTab();

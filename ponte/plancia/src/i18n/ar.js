@@ -285,8 +285,6 @@ export default Object.freeze({
     "لوحة الكاميرات غير موجودة الآن. الإنذار والفتحات في مكانها، والكاميرات المضبوطة لم تُمَس.",
   "The car service refused the integration's credentials: try again, and if it keeps happening reconnect the integration in Settings → Devices & services.":
     "رفضت خدمة السيارة بيانات اعتماد التكامل: أعد المحاولة، وإن تكرّر الأمر فأعد ربط التكامل من الإعدادات → الأجهزة والخدمات.",
-  "The devices Home Assistant has but cannot reach: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them, and when they go quiet that is configuration to fix. The dashboard fills this list by itself: there is nothing to add. The bin removes a device from the warning, and the bell below puts it back.":
-    "الأجهزة التي لدى Home Assistant ولا يستطيع الوصول إليها: يصل الجهاز إلى هنا عندما تصمت كل كياناته. المساعدات والأتمتة والنصوص البرمجية ليست هنا: لا يوجد جهاز خلفها، وإذا صمتت فذلك إعداد يحتاج إلى تصحيح. هذه القائمة تملؤها اللوحة بنفسها: لا شيء لإضافته. تزيل سلة المهملات جهازًا من التنبيه، ويعيده الجرس أسفلها.",
   "The door and window contacts this panel watches: switch on the ones you want among the entry points. They show on the Security page under “Entry points”, with the same name and the same state they have under Openings.":
     "ملامسات الأبواب والنوافذ التي تراقبها هذه اللوحة: شغّل ما تريده منها بين المداخل. تظهر في صفحة الأمان تحت «المداخل»، بالاسم نفسه والحالة نفسها كما في الفتحات.",
   "The library cannot be read.": "تعذّرت قراءة المكتبة.",
@@ -6879,4 +6877,12 @@ export default Object.freeze({
   "Like the wall": "مثل الجدار",
   "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard":
     "مثل الجدار: مدمجة، ودرجة الحرارة المطلوبة كبيرة. مثل اللوحة: درجة حرارة الغرفة كبيرة والخط مع المطلوبة، كما في اللوحة الرئيسية",
+  "Every Home Assistant device that cannot be reached, including those the dashboard does not show: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them. The bin removes a device from the warning; the bell, among the removed ones, puts it back.":
+    "كل أجهزة Home Assistant التي يتعذّر الوصول إليها، بما فيها التي لا تعرضها اللوحة: يظهر الجهاز هنا عندما تصمت كل كياناته. المساعدات والأتمتة والسكربتات ليست هنا: لا يوجد جهاز خلفها. سلة المهملات تُخرج الجهاز من التنبيه، والجرس بين المُخرَجة يعيده.",
+  "Search by name, type, brand or entity…":
+    "ابحث بالاسم أو النوع أو العلامة أو الكيان…",
+  "Search disconnected devices":
+    "ابحث بين الأجهزة غير المتصلة",
+  "No device matches the search.":
+    "لا يوجد جهاز يطابق البحث.",
 });

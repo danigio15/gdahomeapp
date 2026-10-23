@@ -25,6 +25,8 @@ import {
   istanteDetto,
   laSettimana,
   letturaTermica,
+  linkDellaMappa,
+  posizioneScritta,
   temperatureDellAuto,
 } from "../core/auto-termica.js";
 import { evccPresence } from "../core/ev-console.js";
@@ -56,7 +58,7 @@ import { prezzoDellaNotte } from "../core/ricarica-di-notte.js";
 import { codiceDellaRicarica, cavoDalloStato } from "../core/stato-della-ricarica.js";
 import { capacitaDellaBatteria, siRicarica, vehiclePhoto } from "../core/vehicle-model.js";
 import { activeVehicle, activeVehiclePhoto, profiles } from "./ev-section.js";
-import { datiMarkup, motoreInPagina } from "./auto-termica-section.js";
+import { datiMarkup, laViaDellAuto, motoreInPagina } from "./auto-termica-section.js";
 import { weeklySourcePlans } from "./energy-analysis-section.js";
 import { renderRicaricaDiNotte } from "./ricarica-di-notte-section.js";
 import {
@@ -313,14 +315,23 @@ function pastiglieDellAuto(lettura) {
   else if (d.portiere === "sbloccate") fuori.push({ tono: "attenzione", testo: `🔓 ${t("Aperta", "Unlocked")}` });
   else if (d.portiere === "aperte") fuori.push({ tono: "attenzione", testo: `🚪 ${t("Portiere aperte", "Doors open")}` });
   if (d.frenoStazionamento === true) fuori.push({ tono: "", testo: `✋ ${t("Freno tirato", "Handbrake on")}` });
-  if (d.posizione) {
-    const dove = d.posizione === "casa" ? t("A casa", "At home") : d.posizione === "fuori" ? t("Fuori casa", "Away") : d.posizione;
-    fuori.push({ tono: "", testo: `📍 ${dove}` });
+  if (d.posizione || d.coordinate) {
+    /* A casa resta «A casa»; fuori si dice dove, esatto: l'indirizzo o le
+     * coordinate, e il tocco apre la mappa. */
+    const via = d.posizione === "casa" ? "" : posizioneScritta(d.coordinate, laViaDellAuto(d.coordinate));
+    const dove =
+      d.posizione === "casa"
+        ? t("A casa", "At home")
+        : via || (d.posizione === "fuori" || !d.posizione ? t("Fuori casa", "Away") : d.posizione);
+    fuori.push({ tono: "", testo: `📍 ${dove}`, link: d.posizione === "casa" ? "" : linkDellaMappa(d.coordinate) });
   }
   return fuori;
 }
 
-const pastiglia = ({ tono, testo }) => `<span class="dm-na-pill" data-tono="${esc(tono)}">${esc(testo)}</span>`;
+const pastiglia = ({ tono, testo, link }) =>
+  link
+    ? `<a class="dm-na-pill dm-na-pill-mappa" data-tono="${esc(tono)}" href="${esc(link)}" target="_blank" rel="noopener noreferrer" title="© OpenStreetMap contributors">${esc(testo)}</a>`
+    : `<span class="dm-na-pill" data-tono="${esc(tono)}">${esc(testo)}</span>`;
 
 /* ── il disegno ──────────────────────────────────────────────────────────── */
 
@@ -1294,6 +1305,8 @@ function stile() {
   ${P} .dm-na-pills{display:flex;flex-wrap:wrap;gap:7px}
   ${P} .dm-na-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:800;
     color:var(--text,#0f172a);background:var(--surface-2,#f8fafc);border:1px solid var(--card-border,#e8edf3)}
+  ${P} a.dm-na-pill-mappa{color:#0ea5e9;text-decoration:none;cursor:pointer;overflow-wrap:anywhere}
+  ${P} a.dm-na-pill-mappa::after{content:"↗";margin-left:2px;font-weight:900}
   ${P} .dm-na-pill[data-tono="ok"]{color:#15803d;border-color:color-mix(in srgb,#16a34a 30%,transparent);background:color-mix(in srgb,#16a34a 9%,transparent)}
   ${P} .dm-na-pill[data-tono="attenzione"]{color:#b91c1c;border-color:color-mix(in srgb,var(--na-male) 35%,transparent);background:color-mix(in srgb,var(--na-male) 9%,transparent)}
 

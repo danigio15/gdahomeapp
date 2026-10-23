@@ -28,6 +28,7 @@ import { PlanceInCasa } from "./plance-in-casa.js";
 import { IL_CRUSCOTTO, LA_GESTIONE, VoceNellaBarra } from "./voci-nella-barra.js";
 import { UtentiDiCasa } from "./utenti.js";
 import { Identita } from "./identita.js";
+import { Indirizzi } from "./indirizzi.js";
 import { Licenze } from "./licenze.js";
 import { laRicevutaDaFuori } from "./ricevuta-da-fuori.js";
 import { VersioneMinima } from "./versione-minima.js";
@@ -235,6 +236,8 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     fornitori,
     registro,
     registri,
+    /* La via dell'auto fuori casa, chiesta a OpenStreetMap da qui. */
+    indirizzi: new Indirizzi({ versione: opzioni.versione }),
     plancia,
     plance,
     configurazione,

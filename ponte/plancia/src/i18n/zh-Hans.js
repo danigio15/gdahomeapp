@@ -282,8 +282,6 @@ export default Object.freeze({
     "现在没有摄像头那一块。警报和门窗都在原处，已配置的摄像头也没有被动过。",
   "The car service refused the integration's credentials: try again, and if it keeps happening reconnect the integration in Settings → Devices & services.":
     "车辆服务拒绝了集成的凭据：请重试；若一直如此，请在“设置 → 设备与服务”中重新连接该集成。",
-  "The devices Home Assistant has but cannot reach: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them, and when they go quiet that is configuration to fix. The dashboard fills this list by itself: there is nothing to add. The bin removes a device from the warning, and the bell below puts it back.":
-    "Home Assistant 有但联系不上的设备：当一台设备的所有实体都不出声时，它就会出现在这里。助手、自动化和脚本不在这里：它们背后没有设备，如果不出声，那是需要修正的配置。这份清单由面板自己填写：没有什么要添加的。垃圾桶把某台设备移出提醒，下面的铃铛再把它放回去。",
   "The door and window contacts this panel watches: switch on the ones you want among the entry points. They show on the Security page under “Entry points”, with the same name and the same state they have under Openings.":
     "这台主机看守的门窗触点：把你想放进出入口的打开即可。它们会出现在安防页面的“出入口”下，名称和状态与“开口”中的相同。",
   "The library cannot be read.": "无法读取媒体库。",
@@ -6804,4 +6802,12 @@ export default Object.freeze({
   "Like the wall": "与墙板相同",
   "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard":
     "与墙板相同：紧凑，设定温度大字显示。与仪表板相同：室温大字显示并带有设定温度刻度线，与主仪表板一致",
+  "Every Home Assistant device that cannot be reached, including those the dashboard does not show: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them. The bin removes a device from the warning; the bell, among the removed ones, puts it back.":
+    "所有无法连接的 Home Assistant 设备,包括仪表板未显示的:当设备的所有实体都没有响应时,它就会出现在这里。助手、自动化和脚本不在其中:它们背后没有设备。垃圾桶将设备移出警告;已移出设备中的铃铛可将其放回。",
+  "Search by name, type, brand or entity…":
+    "按名称、类型、品牌或实体搜索…",
+  "Search disconnected devices":
+    "搜索未连接的设备",
+  "No device matches the search.":
+    "没有符合搜索的设备。",
 });

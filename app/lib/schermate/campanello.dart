@@ -304,6 +304,12 @@ class _StatoDellaTelecamera extends State<SchermataDellaTelecamera> {
   /// Se il video la casa non l'ha dato: scaduto, o non si mostra.
   bool _senzaVideo = false;
 
+  /// Perche' la casa ha detto di no (`not_found`, `unauthorized`…).
+  String? _perche;
+
+  /// Se la casa non ha risposto in tempo: il video puo' esserci, si riprova.
+  bool _videoNonArriva = false;
+
   /// Si chiude quando si sa se il telefono ha la foto del momento.
   final Completer<void> _momentoCercato = Completer<void>();
 
@@ -357,11 +363,14 @@ class _StatoDellaTelecamera extends State<SchermataDellaTelecamera> {
   Future<void> _caricaIlVideo(({String id, String chiave}) film) async {
     if (_videoInArrivo) return;
     _videoInArrivo = true;
-    final filmato = await ilFilmatoDi(widget.collegamento, film);
+    final risposta = await ilFilmatoDi(widget.collegamento, film);
     _videoInArrivo = false;
     if (!mounted) return;
-    if (filmato != null) {
-      setState(() => _filmato = filmato);
+    if (risposta.filmato != null) {
+      setState(() {
+        _filmato = risposta.filmato;
+        _videoNonArriva = false;
+      });
       return;
     }
     /* Il «no» della casa puo' arrivare prima che il telefono abbia trovato
@@ -369,7 +378,14 @@ class _StatoDellaTelecamera extends State<SchermataDellaTelecamera> {
     await _momentoCercato.future;
     if (!mounted) return;
     setState(() {
-      _senzaVideo = true;
+      /* «Non c'è» lo dice solo la casa. Se non ha risposto il video può
+       * esserci: si dice, e c'è «Riprova». */
+      if (risposta.esito == EsitoDelFilmato.nonRisponde) {
+        _videoNonArriva = true;
+      } else {
+        _senzaVideo = true;
+        _perche = risposta.codice;
+      }
       _inVideo = false;
     });
     if (_delMomento == null) _guardaDalVivo();
@@ -378,7 +394,10 @@ class _StatoDellaTelecamera extends State<SchermataDellaTelecamera> {
   void _vaiAlVideo() {
     final film = _notifica.film;
     if (film == null || _senzaVideo) return;
-    setState(() => _inVideo = true);
+    setState(() {
+      _inVideo = true;
+      _videoNonArriva = false;
+    });
     if (_filmato == null) unawaited(_caricaIlVideo(film));
   }
 
@@ -636,10 +655,15 @@ class _StatoDellaTelecamera extends State<SchermataDellaTelecamera> {
                       _TastoDellaVista(
                         chiave: const Key('telecamera-al-video'),
                         icona: Icons.movie_rounded,
-                        testo: inLingua(
-                          it: 'Rivedi il video',
-                          en: 'Replay the clip',
-                        ),
+                        testo: _videoNonArriva
+                            ? inLingua(
+                                it: 'Riprova il video',
+                                en: 'Retry the clip',
+                              )
+                            : inLingua(
+                                it: 'Rivedi il video',
+                                en: 'Replay the clip',
+                              ),
                         tocca: _vaiAlVideo,
                       ),
                     /* Dalla foto del momento al dal vivo, e ritorno. */
@@ -671,15 +695,50 @@ class _StatoDellaTelecamera extends State<SchermataDellaTelecamera> {
               if (_senzaVideo) ...[
                 const SizedBox(height: 8),
                 Text(
+                  switch (_perche) {
+                    'unauthorized' => inLingua(
+                      it:
+                          'Il video di questa telecamera non si mostra al '
+                          'tuo utente.',
+                      en: "This camera's clip isn't shown to your user.",
+                    ),
+                    'premium-richiesto' => inLingua(
+                      it: 'I mini video sono di GdAHome Premium.',
+                      en: 'Short clips are part of GdAHome Premium.',
+                    ),
+                    'unknown_command' => inLingua(
+                      it:
+                          'La casa non sa ancora fare i mini video: aggiorna '
+                          'l\'add-on GdAHome.',
+                      en:
+                          "The home can't make clips yet: update the GdAHome "
+                          'add-on.',
+                    ),
+                    _ => inLingua(
+                      it:
+                          'Il video di questo movimento non c\'è più: la casa '
+                          'li tiene tre giorni.',
+                      en:
+                          'This motion clip is no longer there: the home '
+                          'keeps them for three days.',
+                    ),
+                  },
+                  key: const Key('telecamera-senza-video'),
+                  style: const TextStyle(color: Colors.white54, fontSize: 13),
+                ),
+              ],
+              if (_videoNonArriva) ...[
+                const SizedBox(height: 8),
+                Text(
                   inLingua(
                     it:
-                        'Il video di questo movimento non c\'è più: la casa '
-                        'li tiene tre giorni.',
+                        'La casa non ha risposto in tempo: il video non è '
+                        'arrivato. Riprova fra poco.',
                     en:
-                        'This motion clip is no longer there: the home keeps '
-                        'them for three days.',
+                        "The home didn't answer in time: the clip didn't "
+                        'arrive. Try again shortly.',
                   ),
-                  key: const Key('telecamera-senza-video'),
+                  key: const Key('telecamera-video-non-arriva'),
                   style: const TextStyle(color: Colors.white54, fontSize: 13),
                 ),
               ],

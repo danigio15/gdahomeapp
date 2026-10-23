@@ -94,7 +94,7 @@ export function ilFiloCE() {
  * un'altra per una domanda vorrebbe dire una seconda autenticazione e un
  * secondo motivo per fallire. E' lo stesso giro che fa il selettore delle
  * foto, scritto uguale. */
-function chiediAlPonte(messaggio, attesa = ATTESA) {
+export function chiediAlPonte(messaggio, attesa = ATTESA) {
   return new Promise((risolvi, rifiuta) => {
     const presa = lessicale("ws");
     const appese = lessicale("pendingWsCallbacks");
@@ -153,6 +153,7 @@ export async function chiediIDispositiviAlPonte() {
     return ricordaIDispositivi({
       di: detto.di && typeof detto.di === "object" ? detto.di : {},
       nomi: detto.nomi && typeof detto.nomi === "object" ? detto.nomi : {},
+      modelli: detto.modelli && typeof detto.modelli === "object" ? detto.modelli : {},
     });
   } catch (_errore) {
     /* Un ponte vecchio, il filo caduto, Home Assistant che non risponde:

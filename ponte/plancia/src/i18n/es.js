@@ -288,8 +288,6 @@ export default Object.freeze({
     "Ahora el recuadro de las cámaras no está. La alarma y las aberturas siguen donde estaban, y las cámaras configuradas no se han tocado.",
   "The car service refused the integration's credentials: try again, and if it keeps happening reconnect the integration in Settings → Devices & services.":
     "El servicio del coche ha rechazado las credenciales de la integración: vuelve a intentarlo y, si sigue pasando, reconecta la integración en Ajustes → Dispositivos y servicios.",
-  "The devices Home Assistant has but cannot reach: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them, and when they go quiet that is configuration to fix. The dashboard fills this list by itself: there is nothing to add. The bin removes a device from the warning, and the bell below puts it back.":
-    "Los dispositivos que Home Assistant tiene y no consigue alcanzar: un aparato acaba aquí cuando todas sus entidades callan. Los ayudantes, las automatizaciones y los scripts no están aquí: no tienen un aparato detrás, y si callan es configuración que hay que corregir. Esta lista la rellena el panel solo: no hay nada que añadir. La papelera quita un dispositivo del aviso, y la campana de abajo lo vuelve a poner.",
   "The door and window contacts this panel watches: switch on the ones you want among the entry points. They show on the Security page under “Entry points”, with the same name and the same state they have under Openings.":
     "Los contactos de puertas y ventanas que vigila esta central: enciende los que quieras entre los accesos. Aparecen en la página Seguridad bajo «Accesos», con el mismo nombre y el mismo estado que tienen en Aperturas.",
   "The library cannot be read.": "No se puede leer la biblioteca.",
@@ -6958,4 +6956,12 @@ export default Object.freeze({
   "Like the wall": "Como la pared",
   "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard":
     "Como la pared: compacta, la temperatura deseada grande. Como el panel: la temperatura de la habitación grande y la línea con la deseada, como en el panel principal",
+  "Every Home Assistant device that cannot be reached, including those the dashboard does not show: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them. The bin removes a device from the warning; the bell, among the removed ones, puts it back.":
+    "Todos los dispositivos de Home Assistant que no se pueden alcanzar, también los que el panel no muestra: un aparato aparece aquí cuando todas sus entidades callan. Ayudantes, automatizaciones y scripts no están: no tienen un aparato detrás. La papelera quita un dispositivo del aviso; la campana, entre los quitados, lo vuelve a poner.",
+  "Search by name, type, brand or entity…":
+    "Buscar por nombre, tipo, marca o entidad…",
+  "Search disconnected devices":
+    "Buscar entre los dispositivos desconectados",
+  "No device matches the search.":
+    "Ningún dispositivo coincide con la búsqueda.",
 });

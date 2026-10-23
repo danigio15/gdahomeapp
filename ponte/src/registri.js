@@ -67,11 +67,14 @@ function elenco(valore) {
  */
 export function leDueMappe({ dispositivi, entita } = {}) {
   const nomi = {};
+  const modelli = {};
   for (const dispositivo of elenco(dispositivi)) {
     const id = pulito(dispositivo?.id) || pulito(dispositivo?.device_id);
     if (!id) continue;
     const nome = pulito(dispositivo?.name_by_user) || pulito(dispositivo?.name);
     if (nome) nomi[id] = nome;
+    const modello = marcaEModello(dispositivo);
+    if (modello) modelli[id] = modello;
   }
   const di = {};
   for (const voce of elenco(entita)) {
@@ -79,7 +82,18 @@ export function leDueMappe({ dispositivi, entita } = {}) {
     const suo = pulito(voce?.device_id);
     if (id && suo) di[id] = suo;
   }
-  return { di, nomi };
+  return { di, nomi, modelli };
+}
+
+/* «Mi devi mettere che dispositivo è»: marca e modello, come li scrive Home
+ * Assistant nella pagina del dispositivo. La marca non si ripete quando il
+ * modello la dice gia' («Shelly» e «Shelly Plug S»). */
+export function marcaEModello(dispositivo) {
+  const marca = pulito(dispositivo?.manufacturer);
+  const modello = pulito(dispositivo?.model);
+  if (!modello) return marca;
+  if (!marca || modello.toLowerCase().startsWith(marca.toLowerCase())) return modello;
+  return `${marca} ${modello}`;
 }
 
 /**

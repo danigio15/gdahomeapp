@@ -321,9 +321,11 @@ test("chi non risponde e le batterie", async ({ page }, testInfo) => {
   await avvia(page, testInfo);
 
   let finestra = await apri(page, "nonrisponde");
-  await expect(finestra.locator(".dm-f-nonrisponde-eroe .dm-f-nonrisponde-num")).toHaveText("2");
-  /* Dalla piu' lunga: la pompa tace da piu' di due ore. */
-  await expect(finestra.locator(".dm-f-nonrisponde-dev").first()).toContainText("Pompa piscina");
+  /* Le due prese e la porta della cantina: non connessi sono tutti i
+   * dispositivi che non rispondono, non solo le prese. */
+  await expect(finestra.locator(".dm-f-nonrisponde-eroe .dm-f-nonrisponde-num")).toHaveText("3");
+  /* Dalla piu' lunga: la porta della cantina tace da tre ore. */
+  await expect(finestra.locator(".dm-f-nonrisponde-dev").first()).toContainText("Porta cantina");
   await expect(finestra.locator(".dm-f-nonrisponde-dev").first()).toHaveAttribute(
     "data-lungo",
     "true",
@@ -342,4 +344,54 @@ test("chi non risponde e le batterie", async ({ page }, testInfo) => {
   await expect(finestra.locator(".dm-f-batterie-pila:not([data-giu])")).toHaveCount(4);
   await expect(finestra.locator(".dm-f-batterie-inpiedi")).toHaveCount(5);
   await fotografa(page, "batterie", testInfo);
+});
+
+/* «La maschera si muove cliccando al suo interno e tenendo il dito» (#303).
+ *
+ * Con i tasti su misura sotto il nome c'era l'identificativo dello script —
+ * una parola sola, lunghissima — e la scheda si allargava oltre la finestra:
+ * il contenuto si trascinava di lato col dito. Adesso sotto il nome non c'e'
+ * l'identificativo, e niente dentro la finestra e' piu' largo di lei. */
+test("i tasti su misura non allargano la finestra dell'antifurto", async ({ page }, testInfo) => {
+  await avvia(page, testInfo);
+  await page.evaluate(() => {
+    localStorage.setItem(
+      "cd_antifurto_su_misura",
+      JSON.stringify([
+        {
+          id: "grate",
+          nome: "Grate",
+          entita: "script.allarme_attiva_grate_e_perimetrali_piano_terra",
+        },
+        {
+          id: "zone1",
+          nome: "Zona 1",
+          entita: "script.attiva_zone_1_soggiorno_cucina_e_corridoio",
+        },
+        { id: "notte", nome: "Notte con le finestre del primo piano", entita: "script.notte" },
+      ]),
+    );
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
+  });
+  const finestra = await apri(page, "sicurezza");
+  await expect(finestra.locator(".dm-f-sicurezza-modo", { hasText: "Grate" })).toBeVisible();
+  await expect(finestra).not.toContainText("script.");
+
+  const misure = await finestra.locator(".dm-f-sicurezza").evaluate((nodo) => {
+    const corpo = nodo.closest(".dm-w-body") || nodo.parentElement;
+    const largo = corpo.getBoundingClientRect().right;
+    const fuori = [...nodo.querySelectorAll("*")].filter(
+      (figlio) => figlio.getBoundingClientRect().right > largo + 1,
+    ).length;
+    return { scorre: corpo.scrollWidth - corpo.clientWidth, fuori };
+  });
+  expect(misure.scorre).toBeLessThanOrEqual(0);
+  expect(misure.fuori).toBe(0);
+
+  const cartella = process.env.DM_FOTO;
+  if (cartella)
+    await page.locator("#dm-widget-popup .dm-widget-detail").screenshot({
+      path: `${cartella}/sicurezza-su-misura-${testInfo.project.name}.png`,
+      animations: "disabled",
+    });
 });

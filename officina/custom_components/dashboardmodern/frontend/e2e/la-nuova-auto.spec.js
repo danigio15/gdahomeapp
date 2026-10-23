@@ -262,7 +262,10 @@ async function avvia(page, testInfo, { tema = "dark", nuova = true, attiva = "0"
           let risultato = null;
           if (messaggio.type === "get_states") risultato = elenco;
           else if (messaggio.type === "frontend/get_user_data") risultato = { value: null };
-          else if (messaggio.type === "call_service") {
+          else if (messaggio.type === "ponte/indirizzo") {
+            window.__indirizziChiesti = [...(window.__indirizziChiesti || []), messaggio];
+            risultato = { indirizzo: "Via Roma 12, Milano" };
+          } else if (messaggio.type === "call_service") {
             window.__chiamate = [...(window.__chiamate || []), messaggio];
             risultato = {};
           } else if (messaggio.type === "recorder/statistics_during_period") {
@@ -549,4 +552,53 @@ test("con la riserva accesa torna la pagina classica", async ({ page }, testInfo
   await avvia(page, testInfo, { nuova: false });
   await expect(page.locator("#dm-na")).toHaveCount(0);
   await expect(page.locator("#page-ev .dm-evv-power")).toBeVisible();
+});
+
+/* «Mi recuperi la posizione attuale del veicolo e non fuori casa: voglio la
+ * posizione esatta.» Il tracker fuori casa porta le sue coordinate: la
+ * pastiglia le dice, e il tocco apre la mappa. */
+test("fuori casa si vede l'indirizzo, mai le coordinate, e si apre la mappa", async ({
+  page,
+}, testInfo) => {
+  await avvia(page, testInfo);
+  await page.evaluate(() => {
+    /* La plancia servita dal ponte: e' lui che sa chiedere la via. */
+    window.__DASHBOARDMODERN_HOSTED__ = true;
+    Object.assign(eval("_RAW_STATES"), {
+      "device_tracker.byd": {
+        entity_id: "device_tracker.byd",
+        state: "not_home",
+        attributes: {
+          latitude: 45.464211,
+          longitude: 9.190123,
+          gps_accuracy: 8,
+          source_type: "gps",
+        },
+        last_changed: new Date().toISOString(),
+      },
+    });
+    window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed"));
+  });
+  const pagina = na(page);
+  const mappa = pagina.locator("a.dm-na-pill-mappa");
+  await expect(mappa).toHaveCount(1, { timeout: 10_000 });
+  await expect(mappa).toContainText("Via Roma 12, Milano");
+  await expect(pagina).not.toContainText("45.46");
+  /* Al ponte e' arrivato solo il punto. */
+  const chiesti = await page.evaluate(() => window.__indirizziChiesti || []);
+  expect(chiesti.length).toBe(1);
+  expect(Object.keys(chiesti[0]).sort()).toEqual(["id", "lat", "lon", "type"]);
+  await expect(mappa).toHaveAttribute(
+    "href",
+    "https://www.google.com/maps/search/?api=1&query=45.464211,9.190123",
+  );
+  await expect(pagina).not.toContainText("Fuori casa");
+  await nienteSborda(page);
+  if (process.env.DM_FOTO) {
+    await pagina.locator(".dm-na-eroe").scrollIntoViewIfNeeded();
+    await page.waitForTimeout(400);
+    await pagina
+      .locator(".dm-na-eroe")
+      .screenshot({ path: `${process.env.DM_FOTO}/posizione-esatta-${testInfo.project.name}.png` });
+  }
 });

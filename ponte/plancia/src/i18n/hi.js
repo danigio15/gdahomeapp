@@ -287,8 +287,6 @@ export default Object.freeze({
     "कैमरों का खाना अभी नहीं है। अलार्म और द्वार अपनी जगह हैं, और सेट किए कैमरों को छुआ नहीं गया।",
   "The car service refused the integration's credentials: try again, and if it keeps happening reconnect the integration in Settings → Devices & services.":
     "गाड़ी की सेवा ने इंटीग्रेशन के क्रेडेंशियल अस्वीकार कर दिए: फिर कोशिश करें, और बार-बार हो तो सेटिंग्स → डिवाइस और सेवाएँ में इंटीग्रेशन फिर से जोड़ें।",
-  "The devices Home Assistant has but cannot reach: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them, and when they go quiet that is configuration to fix. The dashboard fills this list by itself: there is nothing to add. The bin removes a device from the warning, and the bell below puts it back.":
-    "वे उपकरण जो Home Assistant के पास हैं पर जिन तक वह पहुँच नहीं पाता: कोई उपकरण यहाँ तब आता है जब उसकी सारी एंटिटी चुप हो जाती हैं। हेल्पर, ऑटोमेशन और स्क्रिप्ट यहाँ नहीं होते: उनके पीछे कोई उपकरण नहीं होता, और वे चुप हों तो वह ठीक करने वाला कॉन्फ़िगरेशन है। यह सूची डैशबोर्ड खुद भरता है: जोड़ने को कुछ नहीं है। कूड़ेदान किसी उपकरण को चेतावनी से हटाता है, और नीचे की घंटी उसे वापस रख देती है।",
   "The door and window contacts this panel watches: switch on the ones you want among the entry points. They show on the Security page under “Entry points”, with the same name and the same state they have under Openings.":
     "इस पैनल द्वारा देखे जाने वाले दरवाज़े और खिड़की के संपर्क: प्रवेश बिंदुओं में जिन्हें चाहते हैं उन्हें चालू करें। वे सुरक्षा पृष्ठ पर “प्रवेश बिंदु” के नीचे दिखते हैं, उसी नाम और उसी स्थिति के साथ जो उनके पास खुलने वाले हिस्सों में है।",
   "The library cannot be read.": "लाइब्रेरी पढ़ी नहीं जा सकी।",
@@ -6907,4 +6905,12 @@ export default Object.freeze({
   "Like the wall": "दीवार जैसा",
   "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard":
     "दीवार जैसा: छोटा, चाहा गया तापमान बड़ा। डैशबोर्ड जैसा: कमरे का तापमान बड़ा और चाहे गए तापमान वाली रेखा, मुख्य डैशबोर्ड की तरह",
+  "Every Home Assistant device that cannot be reached, including those the dashboard does not show: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them. The bin removes a device from the warning; the bell, among the removed ones, puts it back.":
+    "Home Assistant के वे सभी डिवाइस जिन तक पहुँचा नहीं जा सकता, उनमें वे भी जो डैशबोर्ड नहीं दिखाता: कोई डिवाइस यहाँ तब आता है जब उसकी सभी एंटिटी चुप हो जाती हैं। हेल्पर, ऑटोमेशन और स्क्रिप्ट यहाँ नहीं हैं: उनके पीछे कोई डिवाइस नहीं है। कूड़ेदान डिवाइस को चेतावनी से हटाता है; हटाए गए डिवाइसों में घंटी उसे वापस लाती है।",
+  "Search by name, type, brand or entity…":
+    "नाम, प्रकार, ब्रांड या एंटिटी से खोजें…",
+  "Search disconnected devices":
+    "डिस्कनेक्ट डिवाइसों में खोजें",
+  "No device matches the search.":
+    "कोई डिवाइस खोज से मेल नहीं खाता।",
 });

@@ -61,6 +61,7 @@
  * esce cosa mostrare.
  */
 import { chiNonRispondePerDispositivo } from "./chi-non-risponde.js";
+import { tipoFraLeEntita } from "./il-tipo-del-sensore.js";
 import {
   escluseDellaTessera,
   leggiLaVoce,
@@ -93,17 +94,26 @@ export function iDispositiviScollegati({
   nomeDi = null,
   di = null,
   nomi = null,
+  modelli = null,
 } = {}) {
   const fuori = escluseDellaTessera(escluse, TESSERA_SCOLLEGATI);
+  /* «I dispositivi non connessi non escono tutti»: si guardavano solo le
+   * entita' scritte nella configurazione della plancia, e un dispositivo che
+   * la plancia non mostra — la presa in cantina, il ripetitore — non c'era.
+   * Adesso si guarda tutta la casa: le configurate, piu' tutte quelle che Home
+   * Assistant ha. La regola dei dispositivi (`chi-non-risponde.js`) tiene fuori
+   * aiutanti, automazioni e script come prima. */
+  const dellaCasa = Object.keys(states && typeof states === "object" ? states : {});
   /* `entitaConfigurate` torna un insieme, non un elenco: si srotola. Ma un
    * `null` non si srotola affatto, e da quassu' arriva anche quello — la
    * scheda lo passa quando la lettura della configurazione e' andata storta,
    * che e' il momento in cui l'ultima cosa da fare e' cadere. */
-  const tutte = Array.isArray(configurate)
+  const scritte = Array.isArray(configurate)
     ? configurate
     : configurate && typeof configurate[Symbol.iterator] === "function"
       ? [...configurate]
       : [];
+  const tutte = [...new Set([...scritte, ...dellaCasa])];
   /* Per dispositivo, non per entita': un'asciugatrice che risponde non e' un
    * dispositivo non connesso solo perche' tace la sua serratura bambini. La
    * regola sta in `chi-non-risponde.js` ed e' la stessa del ponte, cioe' la
@@ -113,7 +123,7 @@ export function iDispositiviScollegati({
     tutte.filter((entity) => !fuori.has(pulito(entity))),
     states,
     { nomeDi, di, nomi },
-  );
+  ).map((una) => vestita(una, { states, di, modelli }));
   /* Solo le voci firmate da questa tessera. Una voce nuda tiene un'entità
    * fuori da TUTTE le tessere, e l'ha scritta un altro interruttore: dirla
    * qui, in una sezione che parla di questa tessera, direbbe che l'ha messa da
@@ -144,10 +154,35 @@ export function iDispositiviScollegati({
   }
   return {
     adesso,
-    messiDaParte: perDispositivo(sciolte, di, nomi).sort((una, altra) =>
-      una.nome.localeCompare(altra.nome),
-    ),
+    messiDaParte: perDispositivo(sciolte, di, nomi)
+      .map((una) => vestita(una, { states, di, modelli }))
+      .sort((una, altra) => una.nome.localeCompare(altra.nome)),
   };
+}
+
+/* «Mi devi mettere che dispositivo è.» Di ogni riga: il tipo, dalle classi di
+ * tutte le entita' del dispositivo (fra il contatto, la pila e il chip vince il
+ * contatto: e' una finestra), e marca e modello dal registro dei dispositivi.
+ * Le sorelle servono perche' un dispositivo muto ha spesso perso gli
+ * attributi: quelle che rispondono ancora — o che li hanno tenuti — dicono di
+ * che cosa si tratta. */
+function vestita(una, { states, di, modelli }) {
+  const diChiE = di && typeof di === "object" ? di : {};
+  const proprie = Array.isArray(una.entita) && una.entita.length ? una.entita : [una.entity];
+  const sorelle = una.dispositivo
+    ? Object.entries(diChiE)
+        .filter(([, suo]) => pulito(suo) === una.dispositivo)
+        .map(([id]) => id)
+    : [];
+  const tipo = tipoFraLeEntita(
+    [...new Set([...proprie, ...sorelle])].filter((id) => id.includes(".")),
+    {
+      states,
+      nome: una.nome,
+    },
+  );
+  const modello = una.dispositivo ? pulito(modelli?.[una.dispositivo]) : "";
+  return { ...una, tipo, modello };
 }
 
 /* Anche qui per dispositivo, e per la stessa ragione delle righe vive: quello

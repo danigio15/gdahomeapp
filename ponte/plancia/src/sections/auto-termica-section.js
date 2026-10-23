@@ -40,9 +40,12 @@ import {
   istanteDetto,
   laSettimana,
   letturaTermica,
+  linkDellaMappa,
+  posizioneScritta,
   senzaParentesi,
   temperatureDellAuto,
 } from "../core/auto-termica.js";
+import { chiediAlPonte, ilPonteCE } from "./i-dispositivi-dal-ponte-section.js";
 import {
   CAPACITA_DI_CASA_KEY,
   MEZZO_DI_CASA_KEY,
@@ -603,6 +606,45 @@ function arco(percentuale) {
   return `${pieno.toFixed(1)} ${(ARC_LENGTH - pieno).toFixed(1)}`;
 }
 
+/* ── La via dell'auto ─────────────────────────────────────────────────────
+ *
+ * «Non mi devi mostrare coordinate ma voglio vedere indirizzo.» Quando il
+ * tracker non porta l'indirizzo, la via la chiede il ponte a OpenStreetMap
+ * (`ponte/src/indirizzi.js`): esce solo il punto, arrotondato. Qui si tiene
+ * la risposta per punto, si chiede una volta sola, e quando arriva si
+ * ridisegna. Finche' non c'e' — o se non arriva — la pastiglia dice «Fuori
+ * casa»: mai i numeri. */
+const vieTrovate = new Map();
+const vieChieste = new Set();
+
+const chiaveDelPunto = (c) => `${c.lat.toFixed(4)},${c.lon.toFixed(4)}`;
+
+export function laViaDellAuto(coordinate) {
+  if (!coordinate) return "";
+  if (coordinate.indirizzo) return coordinate.indirizzo;
+  const chiave = chiaveDelPunto(coordinate);
+  if (vieTrovate.has(chiave)) return vieTrovate.get(chiave);
+  if (!vieChieste.has(chiave) && ilPonteCE()) {
+    vieChieste.add(chiave);
+    const prova = (resta) =>
+      chiediAlPonte({ type: "ponte/indirizzo", lat: coordinate.lat, lon: coordinate.lon }, 15000)
+        .then((detto) => {
+          const via = clean(detto?.indirizzo);
+          if (!via) return;
+          vieTrovate.set(chiave, via);
+          root.dispatchEvent?.(new CustomEvent("dashboardmodern:state-changed"));
+        })
+        .catch((errore) => {
+          /* Il filo non ancora aperto si riprova; un «non si sa» no. */
+          if (resta > 0 && /filo|risponde/.test(String(errore?.message || "")))
+            root.setTimeout?.(() => prova(resta - 1), 3000);
+          else vieChieste.delete(chiave);
+        });
+    void prova(3);
+  }
+  return "";
+}
+
 function pillola(glifo, testo, tono) {
   return `<span class="dm-termica-pillola" data-tono="${esc(tono)}"><i aria-hidden="true">${glifo}</i>${esc(testo)}</span>`;
 }
@@ -792,20 +834,24 @@ function pilloleDellAuto(lettura, tipo) {
     pillole.push(
       pillola("🚨", parolaDellAllarme(lettura.allarme), lettura.allarme === "scattato" ? "male" : lettura.allarme === "inserito" ? "bene" : "spento"),
     );
-  /* Dove sta (#326): una parola, quella che dice il device_tracker. Il tono
-   * e' neutro — un'auto fuori casa non e' un problema, e' un fatto. */
-  if (lettura.posizione)
+  /* Dove sta (#326). Il tono e' neutro — un'auto fuori casa non e' un
+   * problema, e' un fatto. Fuori casa si dice dove, esatto: l'indirizzo se
+   * l'integrazione lo da', se no le coordinate del tracker; e il tocco apre
+   * la mappa («voglio la posizione esatta», non «fuori casa»). */
+  if (lettura.posizione || lettura.coordinate) {
+    const aCasa = lettura.posizione === "casa";
+    const via = aCasa ? "" : posizioneScritta(lettura.coordinate, laViaDellAuto(lettura.coordinate));
+    const testo = aCasa
+      ? t("A casa", "At home")
+      : via ||
+        (lettura.posizione === "fuori" || !lettura.posizione ? t("Fuori casa", "Away") : lettura.posizione);
+    const link = aCasa ? "" : linkDellaMappa(lettura.coordinate);
     pillole.push(
-      pillola(
-        "📍",
-        lettura.posizione === "casa"
-          ? t("A casa", "At home")
-          : lettura.posizione === "fuori"
-            ? t("Fuori casa", "Away")
-            : lettura.posizione,
-        lettura.posizione === "casa" ? "bene" : "spento",
-      ),
+      link
+        ? `<a class="dm-termica-pillola dm-termica-mappa" data-tono="spento" href="${esc(link)}" target="_blank" rel="noopener noreferrer" title="© OpenStreetMap contributors"><i aria-hidden="true">📍</i>${esc(testo)}</a>`
+        : pillola("📍", testo, aCasa ? "bene" : "spento"),
     );
+  }
   return pillole;
 }
 
@@ -1552,6 +1598,9 @@ function installStyles() {
     #page-ev .dm-termica-pillola[data-tono="attento"]{background:#fef3c7;color:#b45309}
     #page-ev .dm-termica-pillola[data-tono="male"]{background:#fee2e2;color:#b91c1c}
     #page-ev .dm-termica-pillola[data-tono="spento"]{color:var(--text-dim,#64748b)}
+    /* La posizione esatta: si tocca e apre la mappa. */
+    #page-ev a.dm-termica-mappa{color:#0ea5e9;text-decoration:none;cursor:pointer;overflow-wrap:anywhere}
+    #page-ev a.dm-termica-mappa::after{content:"↗";margin-left:2px;font-weight:800}
     /* La lettera della marcia in un tondino, come sul cruscotto. */
     #page-ev .dm-auto-marcia{
       display:inline-grid;place-items:center;width:18px;height:18px;margin-left:-5px;border-radius:50%;

@@ -144,7 +144,7 @@ test("da quella porta non esce nessuno stato", async () => {
   /* Due chiavi e basta. Che cosa stia facendo adesso quella presa non è roba
    * di questa porta, e non lo deve diventare: è la stessa riga che il
    * rapporto tiene da sempre. */
-  assert.deepEqual(Object.keys(detta.result).sort(), ["di", "nomi"]);
+  assert.deepEqual(Object.keys(detta.result).sort(), ["di", "modelli", "nomi"]);
   const scritto = JSON.stringify(detta.result);
   for (const proibito of ["state", '"on"', '"off"', "unavailable", "last_changed"])
     assert.ok(!scritto.includes(proibito), `${proibito} non deve uscire di qui`);
