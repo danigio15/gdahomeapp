@@ -69,10 +69,10 @@ function statoMarkup(lettura) {
 
 function nodoMarkup(lettura) {
   return `<article class="dm-nodo" data-dm-nodo="${esc(lettura.id)}">
-    <header class="dm-nodo-testa">
+    <div class="dm-nodo-testa">
       <span class="dm-nodo-nome">${esc(lettura.nome)}</span>
       ${statoMarkup(lettura)}
-    </header>
+    </div>
     ${barraMarkup(t("Processore", "CPU"), lettura.cpu)}
     ${barraMarkup(t("Memoria", "Memory"), lettura.ram)}
     ${barraMarkup(t("Disco", "Disk"), lettura.disco)}
@@ -80,6 +80,10 @@ function nodoMarkup(lettura) {
   </article>`;
 }
 
+/* Le teste sono <div> e non <header> (#302): il foglio della plancia legacy ha
+ * una regola globale `header{}` — quella della testata in cima, con 30 px di
+ * margine, 18×30 di imbottitura, angoli da 28 e l'ombra — che prendeva anche
+ * queste, e il nome del nodo diventava una pastiglia gonfia fuori dalla scheda. */
 function fasciaMarkup(letture) {
   const riassunto = riassuntoDeiNodi(letture);
   /* Il sottotitolo dice come sta il cluster in tre parole: quanti nodi ci
@@ -93,10 +97,10 @@ function fasciaMarkup(letture) {
     .filter(Boolean)
     .join(" · ");
   return `<section class="dm-nodi-sezione">
-    <header class="dm-nodi-testa">
+    <div class="dm-nodi-testa">
       <strong>${esc(t("Altri nodi", "Other nodes"))}</strong>
       <span>${esc(sotto)}</span>
-    </header>
+    </div>
     <div class="dm-nodi-griglia">${letture.map(nodoMarkup).join("")}</div>
   </section>`;
 }
@@ -169,11 +173,11 @@ function installaStile() {
       #${FASCIA_ID} .dm-nodi-griglia{
         display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(min(100%,232px),1fr))}
       #${FASCIA_ID} .dm-nodo{
-        display:grid;gap:7px;padding:12px 13px;border-radius:16px;
+        display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:7px;min-width:0;padding:12px 13px;border-radius:16px;
         border:1px solid var(--card-border,#e8edf3);background:var(--card-bg,#fff)}
-      #${FASCIA_ID} .dm-nodo-testa{display:flex;align-items:center;gap:8px;justify-content:space-between}
+      #${FASCIA_ID} .dm-nodo-testa{display:flex;align-items:center;gap:8px;justify-content:space-between;min-width:0}
       #${FASCIA_ID} .dm-nodo-nome{
-        min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+        flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
         font-size:13px;font-weight:900;color:var(--text,#0f172a)}
       #${FASCIA_ID} .dm-nodo-stato{
         flex:0 0 auto;padding:3px 9px;border-radius:999px;font-size:10px;font-weight:900;

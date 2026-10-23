@@ -226,9 +226,11 @@ function disegnaSicurezza(widget) {
   ) => `<button type="button" class="dm-f-${k}-modo" data-dm-w-alarm="${esc(voce.service)}"
       data-on="${voce.on ? "true" : "false"}" aria-pressed="${voce.on ? "true" : "false"}">
       <span class="dm-f-${k}-ic" aria-hidden="true">${voce.disegno || ""}</span>
-      <span class="dm-f-${k}-testo"><b>${esc(voce.label)}</b><small>${esc(
-        voce.on ? t("Attivo", "Active") : voce.hint,
-      )}</small></span>
+      <span class="dm-f-${k}-testo"><b>${esc(voce.label)}</b>${
+        voce.on || voce.hint
+          ? `<small>${esc(voce.on ? t("Attivo", "Active") : voce.hint)}</small>`
+          : ""
+      }</span>
     </button>`;
   const modiMarkup = inserimenti.length
     ? `${titolo(k, t("Cambia modo", "Change mode"))}
@@ -268,7 +270,13 @@ ${P} .dm-f-sicurezza-avviso > div{flex:1;min-width:0}
 ${P} .dm-f-sicurezza-avviso b{display:block;font-size:13.5px;font-weight:850;color:color-mix(in srgb,var(--tono) 70%,var(--text,#0f172a));overflow-wrap:anywhere}
 ${P} .dm-f-sicurezza-avviso span{display:block;font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
 ${P} .dm-f-sicurezza-avviso i{flex:none;font-style:normal;font-size:12px;font-weight:900;color:var(--tono);white-space:nowrap}
-${P} .dm-f-sicurezza-modi{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
+/* «La maschera si muove cliccando al suo interno e tenendo il dito» (#303).
+   Un nome lungo senza spazi — script.allarme_attiva_grate — teneva una scheda
+   piu' larga della sua colonna, la griglia usciva dalla finestra e tutto il
+   contenuto si poteva trascinare di lato. Le colonne non scendono mai sotto
+   la larghezza della finestra, e niente dentro le allarga. */
+${P} .dm-f-sicurezza{min-width:0;max-width:100%;overflow-x:clip}
+${P} .dm-f-sicurezza-modi{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(150px,100%),1fr));gap:9px;min-width:0}
 ${P} .dm-f-sicurezza-modo,${P} .dm-f-sicurezza-spegni{font:inherit;color:inherit;text-align:left;cursor:pointer;
   display:flex;align-items:center;gap:11px;min-height:66px;min-width:0;padding:12px 13px;border-radius:20px;
   background:var(--card-bg,#fff);border:1px solid var(--card-border,#e8edf3);box-shadow:0 10px 22px -22px rgba(15,23,42,.6);
@@ -276,9 +284,10 @@ ${P} .dm-f-sicurezza-modo,${P} .dm-f-sicurezza-spegni{font:inherit;color:inherit
 ${P} .dm-f-sicurezza-modo:active,${P} .dm-f-sicurezza-spegni:active{transform:scale(.98)}
 ${P} .dm-f-sicurezza-modo .dm-f-sicurezza-ic,${P} .dm-f-sicurezza-spegni .dm-f-sicurezza-ic{flex:none;width:40px;height:40px;border-radius:13px;
   display:grid;place-items:center;font-size:19px;background:color-mix(in srgb,var(--text-dim,#64748b) 9%,var(--card-bg,#fff))}
-${P} .dm-f-sicurezza-testo{min-width:0}
-${P} .dm-f-sicurezza-testo b{display:block;font-size:14.5px;font-weight:850;line-height:1.2}
-${P} .dm-f-sicurezza-testo small{display:block;margin-top:1px;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b)}
+${P} .dm-f-sicurezza-testo{flex:1;min-width:0}
+${P} .dm-f-sicurezza-testo b{display:block;font-size:14.5px;font-weight:850;line-height:1.2;overflow-wrap:anywhere}
+${P} .dm-f-sicurezza-testo small{display:block;margin-top:1px;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b);
+  overflow-wrap:anywhere}
 ${P} .dm-f-sicurezza-modo[data-on="true"]{border-color:color-mix(in srgb,${VERDE} 55%,transparent);
   background:color-mix(in srgb,${VERDE} 9%,var(--card-bg,#fff));box-shadow:inset 0 0 0 2px color-mix(in srgb,${VERDE} 75%,transparent)}
 ${P} .dm-f-sicurezza-modo[data-on="true"] .dm-f-sicurezza-ic{background:color-mix(in srgb,${VERDE} 18%,var(--card-bg,#fff));color:${VERDE}}

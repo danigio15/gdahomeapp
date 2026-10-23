@@ -10,6 +10,27 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.17.1
+
+- **Auto, dove sta:** fuori casa la pagina Auto dice l'indirizzo («Via Roma
+  12, Milano»), non «Fuori casa» e non le coordinate; toccandolo si apre la
+  mappa. La via la chiede il ponte a OpenStreetMap: esce solo il punto
+  arrotondato, e le risposte restano in casa per una settimana.
+- **Mini video del movimento:** aprendo la notifica dalla schermata bloccata
+  il video arriva (prima diceva «non c'è più» perché l'app non aspettava la
+  casa). «Non c'è» lo dice solo la casa, col motivo; se la casa non risponde
+  c'è «Riprova il video».
+- **Dispositivi non connessi:** ci sono tutti i dispositivi di Home
+  Assistant, non solo quelli della plancia; ogni riga dice il tipo, la marca
+  e il modello; una casella cerca fra tutti, anche fra quelli tolti
+  dall'avviso.
+- **Server, altri nodi (#302):** nel browser il nome del nodo e «Acceso»
+  uscivano dalla scheda come una pastiglia gonfia; adesso sono una riga
+  dentro la scheda, e un nome lungo si accorcia invece di uscire.
+- **Finestra Sicurezza (#303):** con i tasti su misura la finestra si
+  trascinava di lato col dito; sotto il nome del tasto non c'è più il nome
+  dello script, e niente esce dalla finestra.
+
 ## 1.17.0
 
 - **Telecamere, mini video del movimento:** 5 secondi prima e 5 dopo, per

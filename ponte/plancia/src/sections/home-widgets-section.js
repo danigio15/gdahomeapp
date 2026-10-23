@@ -1670,7 +1670,9 @@ function modiDellaFinestra(centrale) {
       mode: voce.mode,
       service: voce.service,
       label: clean(voce.label),
-      hint: clean(voce.hint),
+      /* Sotto il nome del modo una spiegazione, non l'identificativo dello
+       * script che lo fa partire («script.attiva_zone_1»: #303). */
+      hint: /^[a-z_]+\.[a-z0-9_]+$/.test(clean(voce.hint)) ? "" : clean(voce.hint),
       disegno: disegnoDelTastoAntifurto(voce, 20),
       on: voce.mode === acceso,
       codice: alarmCodeNeeded(centrale, voce.service),

@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-NQLIOJGD.js";
+} from "../../chunk-E42GX6Y4.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -59099,9 +59099,7 @@ function disegnaSicurezza(widget) {
   const scheda8 = (voce3) => `<button type="button" class="dm-f-${k}-modo" data-dm-w-alarm="${esc(voce3.service)}"
       data-on="${voce3.on ? "true" : "false"}" aria-pressed="${voce3.on ? "true" : "false"}">
       <span class="dm-f-${k}-ic" aria-hidden="true">${voce3.disegno || ""}</span>
-      <span class="dm-f-${k}-testo"><b>${esc(voce3.label)}</b><small>${esc(
-    voce3.on ? t("Attivo", "Active") : voce3.hint
-  )}</small></span>
+      <span class="dm-f-${k}-testo"><b>${esc(voce3.label)}</b>${voce3.on || voce3.hint ? `<small>${esc(voce3.on ? t("Attivo", "Active") : voce3.hint)}</small>` : ""}</span>
     </button>`;
   const modiMarkup = inserimenti.length ? `${titolo2(k, t("Cambia modo", "Change mode"))}
       <div class="dm-f-${k}-modi">${inserimenti.map(scheda8).join("")}</div>` : "";
@@ -59132,7 +59130,13 @@ ${P3} .dm-f-sicurezza-avviso > div{flex:1;min-width:0}
 ${P3} .dm-f-sicurezza-avviso b{display:block;font-size:13.5px;font-weight:850;color:color-mix(in srgb,var(--tono) 70%,var(--text,#0f172a));overflow-wrap:anywhere}
 ${P3} .dm-f-sicurezza-avviso span{display:block;font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
 ${P3} .dm-f-sicurezza-avviso i{flex:none;font-style:normal;font-size:12px;font-weight:900;color:var(--tono);white-space:nowrap}
-${P3} .dm-f-sicurezza-modi{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
+/* «La maschera si muove cliccando al suo interno e tenendo il dito» (#303).
+   Un nome lungo senza spazi — script.allarme_attiva_grate — teneva una scheda
+   piu' larga della sua colonna, la griglia usciva dalla finestra e tutto il
+   contenuto si poteva trascinare di lato. Le colonne non scendono mai sotto
+   la larghezza della finestra, e niente dentro le allarga. */
+${P3} .dm-f-sicurezza{min-width:0;max-width:100%;overflow-x:clip}
+${P3} .dm-f-sicurezza-modi{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(150px,100%),1fr));gap:9px;min-width:0}
 ${P3} .dm-f-sicurezza-modo,${P3} .dm-f-sicurezza-spegni{font:inherit;color:inherit;text-align:left;cursor:pointer;
   display:flex;align-items:center;gap:11px;min-height:66px;min-width:0;padding:12px 13px;border-radius:20px;
   background:var(--card-bg,#fff);border:1px solid var(--card-border,#e8edf3);box-shadow:0 10px 22px -22px rgba(15,23,42,.6);
@@ -59140,9 +59144,10 @@ ${P3} .dm-f-sicurezza-modo,${P3} .dm-f-sicurezza-spegni{font:inherit;color:inher
 ${P3} .dm-f-sicurezza-modo:active,${P3} .dm-f-sicurezza-spegni:active{transform:scale(.98)}
 ${P3} .dm-f-sicurezza-modo .dm-f-sicurezza-ic,${P3} .dm-f-sicurezza-spegni .dm-f-sicurezza-ic{flex:none;width:40px;height:40px;border-radius:13px;
   display:grid;place-items:center;font-size:19px;background:color-mix(in srgb,var(--text-dim,#64748b) 9%,var(--card-bg,#fff))}
-${P3} .dm-f-sicurezza-testo{min-width:0}
-${P3} .dm-f-sicurezza-testo b{display:block;font-size:14.5px;font-weight:850;line-height:1.2}
-${P3} .dm-f-sicurezza-testo small{display:block;margin-top:1px;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b)}
+${P3} .dm-f-sicurezza-testo{flex:1;min-width:0}
+${P3} .dm-f-sicurezza-testo b{display:block;font-size:14.5px;font-weight:850;line-height:1.2;overflow-wrap:anywhere}
+${P3} .dm-f-sicurezza-testo small{display:block;margin-top:1px;font-size:11.5px;font-weight:750;color:var(--text-dim,#64748b);
+  overflow-wrap:anywhere}
 ${P3} .dm-f-sicurezza-modo[data-on="true"]{border-color:color-mix(in srgb,${VERDE} 55%,transparent);
   background:color-mix(in srgb,${VERDE} 9%,var(--card-bg,#fff));box-shadow:inset 0 0 0 2px color-mix(in srgb,${VERDE} 75%,transparent)}
 ${P3} .dm-f-sicurezza-modo[data-on="true"] .dm-f-sicurezza-ic{background:color-mix(in srgb,${VERDE} 18%,var(--card-bg,#fff));color:${VERDE}}
@@ -67109,7 +67114,9 @@ function modiDellaFinestra(centrale) {
       mode: voce3.mode,
       service: voce3.service,
       label: clean(voce3.label),
-      hint: clean(voce3.hint),
+      /* Sotto il nome del modo una spiegazione, non l'identificativo dello
+       * script che lo fa partire («script.attiva_zone_1»: #303). */
+      hint: /^[a-z_]+\.[a-z0-9_]+$/.test(clean(voce3.hint)) ? "" : clean(voce3.hint),
       disegno: disegnoDelTastoAntifurto(voce3, 20),
       on: voce3.mode === acceso6,
       codice: alarmCodeNeeded(centrale, voce3.service)
@@ -141297,10 +141304,10 @@ function statoMarkup(lettura3) {
 }
 function nodoMarkup(lettura3) {
   return `<article class="dm-nodo" data-dm-nodo="${esc(lettura3.id)}">
-    <header class="dm-nodo-testa">
+    <div class="dm-nodo-testa">
       <span class="dm-nodo-nome">${esc(lettura3.nome)}</span>
       ${statoMarkup(lettura3)}
-    </header>
+    </div>
     ${barraMarkup4(t("Processore", "CPU"), lettura3.cpu)}
     ${barraMarkup4(t("Memoria", "Memory"), lettura3.ram)}
     ${barraMarkup4(t("Disco", "Disk"), lettura3.disco)}
@@ -141315,10 +141322,10 @@ function fasciaMarkup9(letture2) {
     riassunto3.muti ? `${riassunto3.muti} ${t("senza risposta", "not answering")}` : ""
   ].filter(Boolean).join(" · ");
   return `<section class="dm-nodi-sezione">
-    <header class="dm-nodi-testa">
+    <div class="dm-nodi-testa">
       <strong>${esc(t("Altri nodi", "Other nodes"))}</strong>
       <span>${esc(sotto)}</span>
-    </header>
+    </div>
     <div class="dm-nodi-griglia">${letture2.map(nodoMarkup).join("")}</div>
   </section>`;
 }
@@ -141382,11 +141389,11 @@ function installaStile2() {
       #${FASCIA_ID} .dm-nodi-griglia{
         display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(min(100%,232px),1fr))}
       #${FASCIA_ID} .dm-nodo{
-        display:grid;gap:7px;padding:12px 13px;border-radius:16px;
+        display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:7px;min-width:0;padding:12px 13px;border-radius:16px;
         border:1px solid var(--card-border,#e8edf3);background:var(--card-bg,#fff)}
-      #${FASCIA_ID} .dm-nodo-testa{display:flex;align-items:center;gap:8px;justify-content:space-between}
+      #${FASCIA_ID} .dm-nodo-testa{display:flex;align-items:center;gap:8px;justify-content:space-between;min-width:0}
       #${FASCIA_ID} .dm-nodo-nome{
-        min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+        flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
         font-size:13px;font-weight:900;color:var(--text,#0f172a)}
       #${FASCIA_ID} .dm-nodo-stato{
         flex:0 0 auto;padding:3px 9px;border-radius:999px;font-size:10px;font-weight:900;
