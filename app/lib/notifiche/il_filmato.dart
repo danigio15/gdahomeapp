@@ -15,6 +15,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../casa/collegamento.dart';
+import '../ponte/errori.dart';
 import '../parole.dart';
 
 /// Un fotogramma: `t` sono i millisecondi dal movimento (meno prima, piu'
@@ -72,25 +73,80 @@ class FilmatoDelMovimento {
   }
 }
 
+/// Come e' andata la domanda del video.
+enum EsitoDelFilmato {
+  /// Il video c'e'.
+  arrivato,
+
+  /// La casa ha risposto, e il video non c'e': scaduto (tre giorni), o la
+  /// telecamera a questo utente non si mostra, o la casa non e' Premium.
+  nonCe,
+
+  /// La casa non ha risposto: il filo non si e' aperto in tempo, o e' caduto.
+  /// Non vuol dire che il video non ci sia — si riprova.
+  nonRisponde,
+}
+
+/// I codici con cui la casa dice davvero «quel video non c'e' per te».
+/// Tutto il resto — il filo che cade, una risposta che non arriva — e'
+/// «non risponde», e si riprova.
+const Set<String> _codiciDelNo = {
+  'not_found',
+  'invalid_format',
+  'unauthorized',
+  'premium-richiesto',
+  'unknown_command',
+};
+
 /// Chiede il video alla casa. La casa aspetta i cinque secondi dopo, se il
 /// video si sta ancora facendo: per questo si aspetta piu' del solito.
-/// `null` se non arriva — la casa non c'e', il video e' scaduto (tre
-/// giorni), o la telecamera a questo utente non si mostra.
-Future<FilmatoDelMovimento?> ilFilmatoDi(
+///
+/// «Non c'è il video»: toccando la notifica dalla schermata bloccata l'app
+/// parte da zero, e il filo con la casa si sta ancora aprendo. Prima la
+/// domanda partiva in quel momento, trovava il filo chiuso e si arrendeva
+/// subito — e la pagina diceva «il video non c'è più» di un video che c'era.
+/// Adesso si aspetta il filo, e si riprova finche' c'e' tempo ([attesa]):
+/// «non c'e'» lo dice solo la casa.
+Future<({EsitoDelFilmato esito, FilmatoDelMovimento? filmato, String? codice})>
+ilFilmatoDi(
   Collegamento collegamento,
-  ({String id, String chiave}) film,
-) async {
-  final filo = collegamento.filo;
-  if (filo == null || !filo.dentro) return null;
-  try {
-    final testo = await filo.testoDi({
-      'type': 'ponte/notifiche/filmato',
-      'film': {'id': film.id, 'chiave': film.chiave},
-    }, entro: const Duration(seconds: 40));
-    /* Un paio di megabyte di base64: si aprono fuori dal filo che disegna. */
-    return await compute(FilmatoDelMovimento.daTesto, testo);
-  } catch (_) {
-    return null;
+  ({String id, String chiave}) film, {
+  Duration attesa = const Duration(seconds: 30),
+  Duration fraUnaProvaELAltra = const Duration(seconds: 1),
+}) async {
+  /* Le prove, contate: una al secondo per [attesa]. */
+  final prove = (attesa.inMilliseconds ~/ fraUnaProvaELAltra.inMilliseconds)
+      .clamp(1, 1000);
+  for (var prova = 0; ; prova += 1) {
+    final filo = collegamento.filo;
+    if (filo != null && filo.dentro) {
+      try {
+        final testo = await filo.testoDi({
+          'type': 'ponte/notifiche/filmato',
+          'film': {'id': film.id, 'chiave': film.chiave},
+        }, entro: const Duration(seconds: 40));
+        /* Un paio di megabyte di base64: si aprono fuori dal filo che
+         * disegna. */
+        final filmato = await compute(FilmatoDelMovimento.daTesto, testo);
+        return filmato == null
+            ? (esito: EsitoDelFilmato.nonCe, filmato: null, codice: null)
+            : (esito: EsitoDelFilmato.arrivato, filmato: filmato, codice: null);
+      } on ComandoRifiutato catch (errore) {
+        if (_codiciDelNo.contains(errore.codice)) {
+          return (
+            esito: EsitoDelFilmato.nonCe,
+            filmato: null,
+            codice: errore.codice,
+          );
+        }
+      } catch (_) {
+        /* Il filo caduto a meta', una risposta in ritardo: si riprova. */
+      }
+    }
+    if (prova >= prove) {
+      return (esito: EsitoDelFilmato.nonRisponde, filmato: null, codice: null);
+    }
+    await Future<void>.delayed(fraUnaProvaELAltra);
   }
 }
 
