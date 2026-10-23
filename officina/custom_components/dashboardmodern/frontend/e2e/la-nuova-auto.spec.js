@@ -550,3 +550,43 @@ test("con la riserva accesa torna la pagina classica", async ({ page }, testInfo
   await expect(page.locator("#dm-na")).toHaveCount(0);
   await expect(page.locator("#page-ev .dm-evv-power")).toBeVisible();
 });
+
+/* «Mi recuperi la posizione attuale del veicolo e non fuori casa: voglio la
+ * posizione esatta.» Il tracker fuori casa porta le sue coordinate: la
+ * pastiglia le dice, e il tocco apre la mappa. */
+test("fuori casa si vede la posizione esatta, e si apre la mappa", async ({ page }, testInfo) => {
+  await avvia(page, testInfo);
+  await page.evaluate(() => {
+    Object.assign(eval("_RAW_STATES"), {
+      "device_tracker.byd": {
+        entity_id: "device_tracker.byd",
+        state: "not_home",
+        attributes: {
+          latitude: 45.464211,
+          longitude: 9.190123,
+          gps_accuracy: 8,
+          source_type: "gps",
+        },
+        last_changed: new Date().toISOString(),
+      },
+    });
+    window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed"));
+  });
+  const pagina = na(page);
+  const mappa = pagina.locator("a.dm-na-pill-mappa");
+  await expect(mappa).toHaveCount(1, { timeout: 10_000 });
+  await expect(mappa).toContainText("45.46421, 9.19012");
+  await expect(mappa).toHaveAttribute(
+    "href",
+    "https://www.google.com/maps/search/?api=1&query=45.464211,9.190123",
+  );
+  await expect(pagina).not.toContainText("Fuori casa");
+  await nienteSborda(page);
+  if (process.env.DM_FOTO) {
+    await pagina.locator(".dm-na-eroe").scrollIntoViewIfNeeded();
+    await page.waitForTimeout(400);
+    await pagina
+      .locator(".dm-na-eroe")
+      .screenshot({ path: `${process.env.DM_FOTO}/posizione-esatta-${testInfo.project.name}.png` });
+  }
+});

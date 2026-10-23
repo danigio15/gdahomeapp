@@ -40,6 +40,8 @@ import {
   istanteDetto,
   laSettimana,
   letturaTermica,
+  linkDellaMappa,
+  posizioneScritta,
   senzaParentesi,
   temperatureDellAuto,
 } from "../core/auto-termica.js";
@@ -792,20 +794,26 @@ function pilloleDellAuto(lettura, tipo) {
     pillole.push(
       pillola("🚨", parolaDellAllarme(lettura.allarme), lettura.allarme === "scattato" ? "male" : lettura.allarme === "inserito" ? "bene" : "spento"),
     );
-  /* Dove sta (#326): una parola, quella che dice il device_tracker. Il tono
-   * e' neutro — un'auto fuori casa non e' un problema, e' un fatto. */
-  if (lettura.posizione)
+  /* Dove sta (#326). Il tono e' neutro — un'auto fuori casa non e' un
+   * problema, e' un fatto. Fuori casa si dice dove, esatto: l'indirizzo se
+   * l'integrazione lo da', se no le coordinate del tracker; e il tocco apre
+   * la mappa («voglio la posizione esatta», non «fuori casa»). */
+  if (lettura.posizione || lettura.coordinate) {
+    const aCasa = lettura.posizione === "casa";
+    const testo = aCasa
+      ? t("A casa", "At home")
+      : lettura.coordinate
+        ? posizioneScritta(lettura.coordinate)
+        : lettura.posizione === "fuori"
+          ? t("Fuori casa", "Away")
+          : lettura.posizione;
+    const link = aCasa ? "" : linkDellaMappa(lettura.coordinate);
     pillole.push(
-      pillola(
-        "📍",
-        lettura.posizione === "casa"
-          ? t("A casa", "At home")
-          : lettura.posizione === "fuori"
-            ? t("Fuori casa", "Away")
-            : lettura.posizione,
-        lettura.posizione === "casa" ? "bene" : "spento",
-      ),
+      link
+        ? `<a class="dm-termica-pillola dm-termica-mappa" data-tono="spento" href="${esc(link)}" target="_blank" rel="noopener noreferrer"><i aria-hidden="true">📍</i>${esc(testo)}</a>`
+        : pillola("📍", testo, aCasa ? "bene" : "spento"),
     );
+  }
   return pillole;
 }
 
@@ -1552,6 +1560,9 @@ function installStyles() {
     #page-ev .dm-termica-pillola[data-tono="attento"]{background:#fef3c7;color:#b45309}
     #page-ev .dm-termica-pillola[data-tono="male"]{background:#fee2e2;color:#b91c1c}
     #page-ev .dm-termica-pillola[data-tono="spento"]{color:var(--text-dim,#64748b)}
+    /* La posizione esatta: si tocca e apre la mappa. */
+    #page-ev a.dm-termica-mappa{color:#0ea5e9;text-decoration:none;cursor:pointer;overflow-wrap:anywhere}
+    #page-ev a.dm-termica-mappa::after{content:"↗";margin-left:2px;font-weight:800}
     /* La lettera della marcia in un tondino, come sul cruscotto. */
     #page-ev .dm-auto-marcia{
       display:inline-grid;place-items:center;width:18px;height:18px;margin-left:-5px;border-radius:50%;

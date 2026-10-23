@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-Z7XEIJUV.js";
+} from "../../chunk-4OMEJOPO.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -26424,6 +26424,28 @@ function casellaDellAuto(ref) {
 function senzaParentesi(etichetta3) {
   return pulito23(etichetta3).replace(/\s*[(（][^()（）]*[)）]$/, "");
 }
+function coordinateDelLuogo(attributi2) {
+  const a = attributi2 && typeof attributi2 === "object" ? attributi2 : {};
+  const lat = numero12(a.latitude ?? a.lat);
+  const lon = numero12(a.longitude ?? a.lon ?? a.lng);
+  if (lat === null || lon === null) return null;
+  if (Math.abs(lat) > 90 || Math.abs(lon) > 180 || lat === 0 && lon === 0) return null;
+  const testo4 = (valore3) => typeof valore3 === "string" ? valore3.trim() : "";
+  const via = [testo4(a.street), testo4(a.house_number)].filter(Boolean).join(" ");
+  const indirizzo = testo4(a.address) || testo4(a.formatted_address) || testo4(a.indirizzo) || [via, testo4(a.city) || testo4(a.town)].filter(Boolean).join(", ");
+  const precisione = numero12(a.gps_accuracy);
+  return { lat, lon, precisione: precisione === null ? null : Math.max(0, precisione), indirizzo };
+}
+function linkDellaMappa(coordinate) {
+  if (!coordinate) return "";
+  const punto2 = `${coordinate.lat.toFixed(6)},${coordinate.lon.toFixed(6)}`;
+  return `https://www.google.com/maps/search/?api=1&query=${punto2}`;
+}
+function posizioneScritta(coordinate) {
+  if (!coordinate) return "";
+  if (coordinate.indirizzo) return coordinate.indirizzo;
+  return `${coordinate.lat.toFixed(5)}, ${coordinate.lon.toFixed(5)}`;
+}
 function luogoDalloStato(grezzo) {
   const voce3 = String(grezzo ?? "").trim();
   if (!voce3) return "";
@@ -26598,6 +26620,7 @@ function letturaTermica(mappa2 = {}, states = {}, resolve = null) {
         default:
           valore3 = grezzo;
       }
+    if (voce3.tipo === "luogo") fuori.coordinate = coordinateDelLuogo(stato3?.attributes);
     fuori.caselle[voce3.campo] = {
       ref: voce3.ref,
       entity: entity2,
@@ -28883,14 +28906,14 @@ function pilloleDellAuto(lettura3, tipo) {
     pillole2.push(
       pillola("🚨", parolaDellAllarme(lettura3.allarme), lettura3.allarme === "scattato" ? "male" : lettura3.allarme === "inserito" ? "bene" : "spento")
     );
-  if (lettura3.posizione)
+  if (lettura3.posizione || lettura3.coordinate) {
+    const aCasa = lettura3.posizione === "casa";
+    const testo4 = aCasa ? t("A casa", "At home") : lettura3.coordinate ? posizioneScritta(lettura3.coordinate) : lettura3.posizione === "fuori" ? t("Fuori casa", "Away") : lettura3.posizione;
+    const link = aCasa ? "" : linkDellaMappa(lettura3.coordinate);
     pillole2.push(
-      pillola(
-        "📍",
-        lettura3.posizione === "casa" ? t("A casa", "At home") : lettura3.posizione === "fuori" ? t("Fuori casa", "Away") : lettura3.posizione,
-        lettura3.posizione === "casa" ? "bene" : "spento"
-      )
+      link ? `<a class="dm-termica-pillola dm-termica-mappa" data-tono="spento" href="${esc(link)}" target="_blank" rel="noopener noreferrer"><i aria-hidden="true">📍</i>${esc(testo4)}</a>` : pillola("📍", testo4, aCasa ? "bene" : "spento")
     );
+  }
   return pillole2;
 }
 var MOMENTANEE = /* @__PURE__ */ new Set([
@@ -29457,6 +29480,9 @@ function installStyles7() {
     #page-ev .dm-termica-pillola[data-tono="attento"]{background:#fef3c7;color:#b45309}
     #page-ev .dm-termica-pillola[data-tono="male"]{background:#fee2e2;color:#b91c1c}
     #page-ev .dm-termica-pillola[data-tono="spento"]{color:var(--text-dim,#64748b)}
+    /* La posizione esatta: si tocca e apre la mappa. */
+    #page-ev a.dm-termica-mappa{color:#0ea5e9;text-decoration:none;cursor:pointer;overflow-wrap:anywhere}
+    #page-ev a.dm-termica-mappa::after{content:"↗";margin-left:2px;font-weight:800}
     /* La lettera della marcia in un tondino, come sul cruscotto. */
     #page-ev .dm-auto-marcia{
       display:inline-grid;place-items:center;width:18px;height:18px;margin-left:-5px;border-radius:50%;
@@ -128724,13 +128750,13 @@ function pastiglieDellAuto(lettura3) {
   else if (d.portiere === "sbloccate") fuori.push({ tono: "attenzione", testo: `🔓 ${t("Aperta", "Unlocked")}` });
   else if (d.portiere === "aperte") fuori.push({ tono: "attenzione", testo: `🚪 ${t("Portiere aperte", "Doors open")}` });
   if (d.frenoStazionamento === true) fuori.push({ tono: "", testo: `✋ ${t("Freno tirato", "Handbrake on")}` });
-  if (d.posizione) {
-    const dove = d.posizione === "casa" ? t("A casa", "At home") : d.posizione === "fuori" ? t("Fuori casa", "Away") : d.posizione;
-    fuori.push({ tono: "", testo: `📍 ${dove}` });
+  if (d.posizione || d.coordinate) {
+    const dove = d.posizione === "casa" ? t("A casa", "At home") : d.coordinate ? posizioneScritta(d.coordinate) : d.posizione === "fuori" ? t("Fuori casa", "Away") : d.posizione;
+    fuori.push({ tono: "", testo: `📍 ${dove}`, link: d.posizione === "casa" ? "" : linkDellaMappa(d.coordinate) });
   }
   return fuori;
 }
-var pastiglia3 = ({ tono, testo: testo4 }) => `<span class="dm-na-pill" data-tono="${esc(tono)}">${esc(testo4)}</span>`;
+var pastiglia3 = ({ tono, testo: testo4, link }) => link ? `<a class="dm-na-pill dm-na-pill-mappa" data-tono="${esc(tono)}" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${esc(testo4)}</a>` : `<span class="dm-na-pill" data-tono="${esc(tono)}">${esc(testo4)}</span>`;
 function garage(auto, inUso) {
   if (auto.length < 2) return "";
   const voci4 = auto.map((car, i) => {
@@ -129551,6 +129577,8 @@ function stile6() {
   ${P8} .dm-na-pills{display:flex;flex-wrap:wrap;gap:7px}
   ${P8} .dm-na-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:800;
     color:var(--text,#0f172a);background:var(--surface-2,#f8fafc);border:1px solid var(--card-border,#e8edf3)}
+  ${P8} a.dm-na-pill-mappa{color:#0ea5e9;text-decoration:none;cursor:pointer;overflow-wrap:anywhere}
+  ${P8} a.dm-na-pill-mappa::after{content:"↗";margin-left:2px;font-weight:900}
   ${P8} .dm-na-pill[data-tono="ok"]{color:#15803d;border-color:color-mix(in srgb,#16a34a 30%,transparent);background:color-mix(in srgb,#16a34a 9%,transparent)}
   ${P8} .dm-na-pill[data-tono="attenzione"]{color:#b91c1c;border-color:color-mix(in srgb,var(--na-male) 35%,transparent);background:color-mix(in srgb,var(--na-male) 9%,transparent)}
 

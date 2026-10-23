@@ -472,6 +472,47 @@ export function senzaParentesi(etichetta) {
  * Uno stato che non dice niente — vuoto, sconosciuto, non disponibile — non
  * diventa la parola «sconosciuto» sulla card: diventa niente, e la pillola
  * non si disegna. */
+/**
+ * La posizione esatta dell'auto, dagli attributi del suo `device_tracker`.
+ *
+ * «Mi recuperi la posizione attuale del veicolo e non fuori casa: voglio la
+ * posizione esatta.» Lo stato del tracker dice solo `home`, `not_home` o il
+ * nome di una zona; il punto vero sta negli attributi — `latitude`,
+ * `longitude`, `gps_accuracy` — e alcune integrazioni ci mettono anche
+ * l'indirizzo. Qui si leggono, e basta: niente va a un servizio di fuori per
+ * trasformare le coordinate in una via. `null` se il tracker non le ha.
+ */
+export function coordinateDelLuogo(attributi) {
+  const a = attributi && typeof attributi === "object" ? attributi : {};
+  const lat = numero(a.latitude ?? a.lat);
+  const lon = numero(a.longitude ?? a.lon ?? a.lng);
+  if (lat === null || lon === null) return null;
+  if (Math.abs(lat) > 90 || Math.abs(lon) > 180 || (lat === 0 && lon === 0)) return null;
+  const testo = (valore) => (typeof valore === "string" ? valore.trim() : "");
+  const via = [testo(a.street), testo(a.house_number)].filter(Boolean).join(" ");
+  const indirizzo =
+    testo(a.address) ||
+    testo(a.formatted_address) ||
+    testo(a.indirizzo) ||
+    [via, testo(a.city) || testo(a.town)].filter(Boolean).join(", ");
+  const precisione = numero(a.gps_accuracy);
+  return { lat, lon, precisione: precisione === null ? null : Math.max(0, precisione), indirizzo };
+}
+
+/** Il link per aprire quel punto nelle mappe del telefono o del computer. */
+export function linkDellaMappa(coordinate) {
+  if (!coordinate) return "";
+  const punto = `${coordinate.lat.toFixed(6)},${coordinate.lon.toFixed(6)}`;
+  return `https://www.google.com/maps/search/?api=1&query=${punto}`;
+}
+
+/** Come si scrive la posizione: l'indirizzo, se c'e', se no le coordinate. */
+export function posizioneScritta(coordinate) {
+  if (!coordinate) return "";
+  if (coordinate.indirizzo) return coordinate.indirizzo;
+  return `${coordinate.lat.toFixed(5)}, ${coordinate.lon.toFixed(5)}`;
+}
+
 export function luogoDalloStato(grezzo) {
   const voce = String(grezzo ?? "").trim();
   if (!voce) return "";
@@ -705,6 +746,8 @@ export function letturaTermica(mappa = {}, states = {}, resolve = null) {
         default:
           valore = grezzo;
       }
+    /* Del tracker si tiene anche il punto esatto: lo stato dice solo «fuori». */
+    if (voce.tipo === "luogo") fuori.coordinate = coordinateDelLuogo(stato?.attributes);
     fuori.caselle[voce.campo] = {
       ref: voce.ref,
       entity,
