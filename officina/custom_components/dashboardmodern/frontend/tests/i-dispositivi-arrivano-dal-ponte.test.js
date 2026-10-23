@@ -143,14 +143,17 @@ test("il comando è del ponte, e a Home Assistant non si chiede il registro", as
     assert.ok(!sezione.includes(proibito), `${proibito} non deve stare in questo file`);
 });
 
-test("il ponte risponde con le stesse due chiavi che la plancia legge", async () => {
+test("il ponte risponde con le stesse chiavi che la plancia legge", async () => {
   /* Le due metà si parlano con una forma sola. Il giorno che una delle due la
    * cambia senza l'altra, la risposta arriva e non serve a niente — e non se
    * ne accorge nessuno, perché non è un errore: è una mappa vuota. */
-  const ilPonte = await readFile(new URL("../../../../../ponte/src/registri.js", import.meta.url), "utf8");
-  assert.match(ilPonte, /return \{ di, nomi \};/);
+  const ilPonte = await readFile(
+    new URL("../../../../../ponte/src/registri.js", import.meta.url),
+    "utf8",
+  );
+  assert.match(ilPonte, /return \{ di, nomi, modelli \};/);
   const laPlancia = await read("src/core/i-dispositivi-di-home-assistant.js");
-  assert.match(laPlancia, /return \{ di, nomi \};/);
+  assert.match(laPlancia, /return \{ di, nomi, modelli \};/);
 });
 
 test("la sezione la installa il guscio, come tutte le altre", async () => {

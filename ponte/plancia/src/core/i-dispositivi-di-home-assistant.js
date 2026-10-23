@@ -54,6 +54,8 @@ export function nonSiSaNiente(mappe) {
  * meteo. */
 export function dispositiviDaiRegistri({ dispositivi, entita } = {}) {
   const nomi = {};
+  /* Marca e modello: «mi devi mettere che dispositivo è». */
+  const modelli = {};
   for (const dispositivo of elenco(dispositivi)) {
     const id = pulito(dispositivo?.id) || pulito(dispositivo?.device_id);
     if (!id) continue;
@@ -61,6 +63,8 @@ export function dispositiviDaiRegistri({ dispositivi, entita } = {}) {
      * stessa regola di Home Assistant, ed e' il nome che uno riconosce. */
     const nome = pulito(dispositivo?.name_by_user) || pulito(dispositivo?.name);
     if (nome) nomi[id] = nome;
+    const modello = marcaEModello(dispositivo);
+    if (modello) modelli[id] = modello;
   }
   const di = {};
   for (const voce of elenco(entita)) {
@@ -68,7 +72,18 @@ export function dispositiviDaiRegistri({ dispositivi, entita } = {}) {
     const suo = pulito(voce?.device_id);
     if (id && suo) di[id] = suo;
   }
-  return { di, nomi };
+  return { di, nomi, modelli };
+}
+
+/* Marca e modello come li scrive Home Assistant nella pagina del dispositivo.
+ * La marca non si ripete quando il modello la dice gia' («Shelly» e «Shelly
+ * Plug S»). E' la stessa regola del ponte (`ponte/src/registri.js`). */
+export function marcaEModello(dispositivo) {
+  const marca = pulito(dispositivo?.manufacturer);
+  const modello = pulito(dispositivo?.model);
+  if (!modello) return marca;
+  if (!marca || modello.toLowerCase().startsWith(marca.toLowerCase())) return modello;
+  return `${marca} ${modello}`;
 }
 
 /* E dalla forma compatta del guscio storico, che i registri se li tiene in
@@ -113,9 +128,13 @@ function adesso() {
  * qualcosa e' davvero cambiato. */
 export function ricordaIDispositivi(mappe, storage = globalThis.localStorage) {
   if (nonSiSaNiente(mappe)) return false;
+  /* Chi i modelli non li sa — il guscio storico, un ponte di prima — non
+   * deve cancellare quelli che un altro ha gia' lasciato. */
+  let modelli = mappe.modelli && typeof mappe.modelli === "object" ? mappe.modelli : {};
+  if (!Object.keys(modelli).length) modelli = iDispositiviRicordati(storage).modelli || {};
   let scritta = "";
   try {
-    scritta = JSON.stringify({ di: mappe.di, nomi: mappe.nomi || {} });
+    scritta = JSON.stringify({ di: mappe.di, nomi: mappe.nomi || {}, modelli });
   } catch (_errore) {
     return false;
   }
@@ -127,7 +146,7 @@ export function ricordaIDispositivi(mappe, storage = globalThis.localStorage) {
      * come faceva prima che questo file esistesse. */
     return false;
   }
-  tenute = { di: mappe.di, nomi: mappe.nomi || {} };
+  tenute = { di: mappe.di, nomi: mappe.nomi || {}, modelli };
   letteA = adesso();
   return true;
 }
@@ -135,7 +154,7 @@ export function ricordaIDispositivi(mappe, storage = globalThis.localStorage) {
 /** Le mappe ricordate, rilette di rado. */
 export function iDispositiviRicordati(storage = globalThis.localStorage) {
   if (tenute && adesso() - letteA < FRESCHEZZA) return tenute;
-  let lette = { di: {}, nomi: {} };
+  let lette = { di: {}, nomi: {}, modelli: {} };
   try {
     const scritta = storage?.getItem?.(CHIAVE_DEI_DISPOSITIVI);
     const uscita = scritta ? JSON.parse(scritta) : null;
@@ -143,9 +162,10 @@ export function iDispositiviRicordati(storage = globalThis.localStorage) {
       lette = {
         di: uscita.di && typeof uscita.di === "object" ? uscita.di : {},
         nomi: uscita.nomi && typeof uscita.nomi === "object" ? uscita.nomi : {},
+        modelli: uscita.modelli && typeof uscita.modelli === "object" ? uscita.modelli : {},
       };
   } catch (_errore) {
-    lette = { di: {}, nomi: {} };
+    lette = { di: {}, nomi: {}, modelli: {} };
   }
   tenute = lette;
   letteA = adesso();

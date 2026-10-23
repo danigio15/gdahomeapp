@@ -288,8 +288,6 @@ export default Object.freeze({
     "いまカメラの枠はありません。警報と開口部はそのままで、設定したカメラにも手は触れていません。",
   "The car service refused the integration's credentials: try again, and if it keeps happening reconnect the integration in Settings → Devices & services.":
     "クルマのサービスが連携の認証情報を拒否しました。もう一度お試しください。繰り返す場合は「設定 → デバイスとサービス」で連携を再接続してください。",
-  "The devices Home Assistant has but cannot reach: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them, and when they go quiet that is configuration to fix. The dashboard fills this list by itself: there is nothing to add. The bin removes a device from the warning, and the bell below puts it back.":
-    "Home Assistant にはあるのに届かない機器です。ある機器は、そのエンティティがすべて黙ったときにここへ入ります。ヘルパー、オートメーション、スクリプトはここには出ません。背後に機器がなく、黙っているならそれは直すべき設定です。この一覧はダッシュボードが自分で埋めます。追加するものはありません。ごみ箱は機器を警告から外し、その下のベルが戻します。",
   "The door and window contacts this panel watches: switch on the ones you want among the entry points. They show on the Security page under “Entry points”, with the same name and the same state they have under Openings.":
     "このパネルが見張っているドアと窓のコンタクトです。出入口として見たいものをオンにしてください。セキュリティのページの「出入口」に、開口部と同じ名前・同じ状態で並びます。",
   "The library cannot be read.": "ライブラリを読み取れません。",
@@ -6914,4 +6912,12 @@ export default Object.freeze({
   "Like the wall": "壁と同じ",
   "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard":
     "壁と同じ：コンパクトで設定温度を大きく。ダッシュボードと同じ：室温を大きく、設定温度のラインつき（メインのダッシュボードと同様）",
+  "Every Home Assistant device that cannot be reached, including those the dashboard does not show: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them. The bin removes a device from the warning; the bell, among the removed ones, puts it back.":
+    "接続できないすべての Home Assistant デバイス(ダッシュボードに表示されていないものも含む):すべてのエンティティが応答しなくなったデバイスがここに表示されます。ヘルパー、オートメーション、スクリプトは含まれません:背後にデバイスがないためです。ゴミ箱で警告から外し、外したものの中のベルで元に戻します。",
+  "Search by name, type, brand or entity…":
+    "名前、種類、メーカー、エンティティで検索…",
+  "Search disconnected devices":
+    "未接続のデバイスを検索",
+  "No device matches the search.":
+    "検索に一致するデバイスはありません。",
 });

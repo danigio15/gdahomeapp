@@ -288,8 +288,6 @@ export default Object.freeze({
     "Panelu kamer teraz nie ma. Alarm i otwory zostają na miejscu, a skonfigurowane kamery nie zostały ruszone.",
   "The car service refused the integration's credentials: try again, and if it keeps happening reconnect the integration in Settings → Devices & services.":
     "Serwis samochodu odrzucił dane uwierzytelniające integracji: spróbuj ponownie, a jeśli to się powtarza, połącz integrację od nowa w Ustawieniach → Urządzenia i usługi.",
-  "The devices Home Assistant has but cannot reach: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them, and when they go quiet that is configuration to fix. The dashboard fills this list by itself: there is nothing to add. The bin removes a device from the warning, and the bell below puts it back.":
-    "Urządzenia, które Home Assistant ma, a nie potrafi się z nimi połączyć: urządzenie trafia tutaj, gdy milkną wszystkie jego encje. Pomocników, automatyzacji i skryptów tu nie ma: nie stoi za nimi żadne urządzenie, a gdy milkną, to konfiguracja do poprawienia. Tę listę panel wypełnia sam: nie ma nic do dodania. Kosz usuwa urządzenie z ostrzeżenia, a dzwonek poniżej przywraca je z powrotem.",
   "The door and window contacts this panel watches: switch on the ones you want among the entry points. They show on the Security page under “Entry points”, with the same name and the same state they have under Openings.":
     "Czujniki drzwi i okien, które pilnuje ta centrala: włącz te, które chcesz mieć wśród wejść. Pojawią się na stronie Bezpieczeństwo w sekcji „Wejścia”, z tą samą nazwą i tym samym stanem, co w Otwarciach.",
   "The library cannot be read.": "Nie można odczytać biblioteki.",
@@ -6941,4 +6939,12 @@ export default Object.freeze({
   "Like the wall": "Jak na ścianie",
   "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard":
     "Jak na ścianie: zwarta, zadana temperatura duża. Jak panel: temperatura w pokoju duża i pasek z zadaną, jak w głównym panelu",
+  "Every Home Assistant device that cannot be reached, including those the dashboard does not show: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them. The bin removes a device from the warning; the bell, among the removed ones, puts it back.":
+    "Wszystkie urządzenia Home Assistant, z którymi nie ma połączenia, także te, których panel nie pokazuje: urządzenie trafia tutaj, gdy milkną wszystkie jego encje. Pomocników, automatyzacji i skryptów tu nie ma: nie stoi za nimi żadne urządzenie. Kosz usuwa urządzenie z ostrzeżenia; dzwonek przy usuniętych przywraca je.",
+  "Search by name, type, brand or entity…":
+    "Szukaj po nazwie, typie, marce lub encji…",
+  "Search disconnected devices":
+    "Szukaj wśród niepołączonych urządzeń",
+  "No device matches the search.":
+    "Żadne urządzenie nie pasuje do wyszukiwania.",
 });

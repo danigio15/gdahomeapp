@@ -153,6 +153,7 @@ export async function chiediIDispositiviAlPonte() {
     return ricordaIDispositivi({
       di: detto.di && typeof detto.di === "object" ? detto.di : {},
       nomi: detto.nomi && typeof detto.nomi === "object" ? detto.nomi : {},
+      modelli: detto.modelli && typeof detto.modelli === "object" ? detto.modelli : {},
     });
   } catch (_errore) {
     /* Un ponte vecchio, il filo caduto, Home Assistant che non risponde:

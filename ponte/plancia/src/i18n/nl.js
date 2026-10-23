@@ -288,8 +288,6 @@ export default Object.freeze({
     "Het camerablok is er nu niet. Het alarm en de openingen blijven waar ze zijn, en de ingestelde camera's zijn niet aangeraakt.",
   "The car service refused the integration's credentials: try again, and if it keeps happening reconnect the integration in Settings → Devices & services.":
     "De dienst van de auto heeft de inloggegevens van de integratie geweigerd: probeer het opnieuw, en als het blijft gebeuren verbind de integratie opnieuw via Instellingen → Apparaten en diensten.",
-  "The devices Home Assistant has but cannot reach: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them, and when they go quiet that is configuration to fix. The dashboard fills this list by itself: there is nothing to add. The bin removes a device from the warning, and the bell below puts it back.":
-    "De apparaten die Home Assistant heeft en niet kan bereiken: een apparaat komt hier terecht wanneer al zijn entiteiten zwijgen. Helpers, automatiseringen en scripts staan hier niet: er zit geen apparaat achter, en als ze zwijgen is dat configuratie die je moet rechtzetten. Deze lijst vult het dashboard zelf: er valt niets toe te voegen. De prullenbak haalt een apparaat uit de waarschuwing, en de bel eronder zet het er weer in.",
   "The door and window contacts this panel watches: switch on the ones you want among the entry points. They show on the Security page under “Entry points”, with the same name and the same state they have under Openings.":
     "De deur- en raamcontacten die deze centrale in de gaten houdt: zet degene aan die je bij de toegangen wilt. Ze verschijnen op de pagina Beveiliging onder “Toegangen”, met dezelfde naam en dezelfde staat als bij Openingen.",
   "The library cannot be read.": "De bibliotheek kan niet gelezen worden.",
@@ -6945,4 +6943,12 @@ export default Object.freeze({
   "Like the wall": "Zoals de wand",
   "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard":
     "Zoals de wand: compact, de gewenste temperatuur groot. Zoals het dashboard: de kamertemperatuur groot en de lijn met de gewenste, zoals in het hoofddashboard",
+  "Every Home Assistant device that cannot be reached, including those the dashboard does not show: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them. The bin removes a device from the warning; the bell, among the removed ones, puts it back.":
+    "Alle apparaten van Home Assistant die niet bereikbaar zijn, ook die het dashboard niet toont: een apparaat komt hier als al zijn entiteiten zwijgen. Helpers, automatiseringen en scripts staan er niet bij: er zit geen apparaat achter. De prullenbak haalt een apparaat uit de melding; de bel, bij de verwijderde, zet het terug.",
+  "Search by name, type, brand or entity…":
+    "Zoeken op naam, type, merk of entiteit…",
+  "Search disconnected devices":
+    "Zoeken in niet-verbonden apparaten",
+  "No device matches the search.":
+    "Geen apparaat komt overeen met de zoekopdracht.",
 });

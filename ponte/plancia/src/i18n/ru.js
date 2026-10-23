@@ -289,8 +289,6 @@ export default Object.freeze({
     "Блока камер сейчас нет. Сигнализация и проёмы остаются на месте, а настроенные камеры никто не трогал.",
   "The car service refused the integration's credentials: try again, and if it keeps happening reconnect the integration in Settings → Devices & services.":
     "Сервис автомобиля отклонил учётные данные интеграции: попробуйте снова, а если это повторяется — переподключите интеграцию в «Настройки → Устройства и службы».",
-  "The devices Home Assistant has but cannot reach: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them, and when they go quiet that is configuration to fix. The dashboard fills this list by itself: there is nothing to add. The bin removes a device from the warning, and the bell below puts it back.":
-    "Устройства, которые есть у Home Assistant, но до которых он не может достучаться: устройство попадает сюда, когда молчат все его сущности. Помощников, автоматизаций и скриптов здесь нет: за ними не стоит устройство, и если они молчат — это конфигурация, которую надо исправить. Этот список панель заполняет сама: добавлять нечего. Корзина убирает устройство из предупреждения, а колокольчик ниже возвращает его обратно.",
   "The door and window contacts this panel watches: switch on the ones you want among the entry points. They show on the Security page under “Entry points”, with the same name and the same state they have under Openings.":
     "Датчики дверей и окон, за которыми следит эта централь: включите те, что нужны среди входов. Они появятся на странице «Безопасность» в разделе «Входы» — с тем же именем и тем же состоянием, что и в «Проёмах».",
   "The library cannot be read.": "Не удаётся прочитать библиотеку.",
@@ -6937,4 +6935,12 @@ export default Object.freeze({
   "Like the wall": "Как на стене",
   "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard":
     "Как на стене: компактно, заданная температура крупно. Как на панели: температура в комнате крупно и шкала с заданной, как на главной панели",
+  "Every Home Assistant device that cannot be reached, including those the dashboard does not show: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them. The bin removes a device from the warning; the bell, among the removed ones, puts it back.":
+    "Все устройства Home Assistant, до которых не удаётся достучаться, включая те, что панель не показывает: устройство попадает сюда, когда замолкают все его сущности. Помощников, автоматизаций и скриптов здесь нет: за ними не стоит устройство. Корзина убирает устройство из предупреждения; колокольчик среди убранных возвращает его.",
+  "Search by name, type, brand or entity…":
+    "Искать по имени, типу, марке или сущности…",
+  "Search disconnected devices":
+    "Поиск среди отключённых устройств",
+  "No device matches the search.":
+    "Ни одно устройство не соответствует поиску.",
 });

@@ -287,8 +287,6 @@ export default Object.freeze({
     "Kamera bölümü şu anda yok. Alarm ve açıklıklar yerinde, yapılandırılmış kameralara dokunulmadı.",
   "The car service refused the integration's credentials: try again, and if it keeps happening reconnect the integration in Settings → Devices & services.":
     "Aracın servisi entegrasyonun kimlik bilgilerini reddetti: yeniden dene, sürerse entegrasyonu Ayarlar → Cihazlar ve servisler bölümünden yeniden bağla.",
-  "The devices Home Assistant has but cannot reach: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them, and when they go quiet that is configuration to fix. The dashboard fills this list by itself: there is nothing to add. The bin removes a device from the warning, and the bell below puts it back.":
-    "Home Assistant'ın evde bulunduğu ama ulaşamadığı cihazlar: bir cihaz, bütün varlıkları sustuğunda buraya düşer. Yardımcılar, otomasyonlar ve betikler burada değildir: arkalarında bir cihaz yoktur ve sustuklarında bu düzeltilecek bir yapılandırmadır. Bu listeyi panel kendi kendine doldurur: eklenecek bir şey yoktur. Çöp kutusu bir cihazı uyarıdan çıkarır, altındaki zil ise geri koyar.",
   "The door and window contacts this panel watches: switch on the ones you want among the entry points. They show on the Security page under “Entry points”, with the same name and the same state they have under Openings.":
     "Bu panelin izlediği kapı ve pencere kontakları: girişler arasında görmek istediklerini aç. Güvenlik sayfasında “Girişler” altında, Açıklıklar bölümündeki adlarıyla ve durumlarıyla görünürler.",
   "The library cannot be read.": "Kitaplık okunamıyor.",
@@ -6918,4 +6916,12 @@ export default Object.freeze({
   "Like the wall": "Duvardaki gibi",
   "Like the wall: compact, the set temperature big. Like the dashboard: the room temperature big and the line with the set one, as in the main dashboard":
     "Duvardaki gibi: kompakt, istenen sıcaklık büyük. Panodaki gibi: oda sıcaklığı büyük ve istenen sıcaklık çizgisiyle, ana panodaki gibi",
+  "Every Home Assistant device that cannot be reached, including those the dashboard does not show: a device lands here when every one of its entities goes silent. Helpers, automations and scripts are not here: they have no device behind them. The bin removes a device from the warning; the bell, among the removed ones, puts it back.":
+    "Ulaşılamayan tüm Home Assistant cihazları, panonun göstermedikleri de dahil: bir cihaz, tüm varlıkları sustuğunda buraya düşer. Yardımcılar, otomasyonlar ve betikler burada yok: arkalarında bir cihaz yok. Çöp kutusu bir cihazı uyarıdan çıkarır; çıkarılanlar arasındaki zil onu geri koyar.",
+  "Search by name, type, brand or entity…":
+    "Ada, türe, markaya veya varlığa göre ara…",
+  "Search disconnected devices":
+    "Bağlı olmayan cihazlarda ara",
+  "No device matches the search.":
+    "Aramayla eşleşen cihaz yok.",
 });
