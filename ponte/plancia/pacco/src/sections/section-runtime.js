@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-E42GX6Y4.js";
+} from "../../chunk-XRLHFAUM.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2894,6 +2894,7 @@ var SOURCE_INDEX = Object.freeze({
   "Calendario o sensore unico (facoltativo)": "Single calendar or sensor (optional)",
   "Calore recuperato": "Heat recovered",
   "Calvo": "Bald",
+  "Cambia": "Change",
   "Cambia dispositivo": "Change device",
   "Cambia icona": "Change icon",
   "Cambia il disegno all'altro capo del tubo: chi ha una caldaia che serve solo l'accumulo ci vedeva un termosifone che non ha.": "It changes the drawing at the other end of the pipe: whoever has a boiler serving only the tank was shown a radiator they do not have.",
@@ -3443,6 +3444,7 @@ var SOURCE_INDEX = Object.freeze({
   "da controllare": "check them",
   "Da controllare": "Check it",
   "Da decidere": "To decide",
+  "Da dove parti? Scrivi un indirizzo…": "Where do you start? Type an address…",
   "da Elettrodomestici": "from Appliances",
   "da fare": "to do",
   "Da fare": "To do",
@@ -3638,6 +3640,7 @@ var SOURCE_INDEX = Object.freeze({
   "Dove si legge se è inserito": "Where to read if it is armed",
   "Dove si legge se è scattato": "Where to read if it is triggered",
   "Dove siamo": "Where we are",
+  "Dove sta l'auto": "Where the car is",
   "Dove vai?": "Where to?",
   "Due fasce": "Two bands",
   "Due scatti della stessa auto: la plancia mostra quello con il cavo attaccato mentre è in ricarica e l'altro nel resto del tempo. Basta la prima: senza la seconda resta sempre quella.": "Two shots of the same car: the dashboard shows the plugged-in one while it charges and the other one the rest of the time. The first is enough — without the second it simply stays.",
@@ -118654,6 +118657,8 @@ var state126 = root[KEY130] ||= {
   scelto: "",
   proposte: [],
   cercando: "",
+  /* Cosa sta cercando la casella: la meta (o una tappa), o la partenza. */
+  cercaPer: "meta",
   /* Com'e' andata l'ultima ricerca: "" niente da dire, "cerco", "vuota"
    * (nessun posto con quel nome), "guasto" (il servizio non risponde). */
   ricerca: "",
@@ -119008,6 +119013,55 @@ function datiDellAuto(car) {
     }
   };
 }
+function posizioneDellAuto(b2) {
+  const car = lAutoDelViaggio(b2);
+  if (!car) return null;
+  const uid = car[VEHICLE_KEY_FIELD] || "";
+  const inUso = !profiles().length || uid === (activeVehicle()?.[VEHICLE_KEY_FIELD] || "");
+  const entita3 = entitaDi5(car, "dm.ev_posizione", inUso);
+  return entita3 ? coordinateDelLuogo(statoDi5(entita3)?.attributes) : null;
+}
+var vieDeiPunti = /* @__PURE__ */ new Map();
+var vieChieste2 = /* @__PURE__ */ new Set();
+var chiaveDelPunto2 = (p) => `${Number(p.lat).toFixed(4)},${Number(p.lon).toFixed(4)}`;
+function viaDelPunto(punto2) {
+  const chiave2 = chiaveDelPunto2(punto2);
+  if (vieDeiPunti.has(chiave2)) return vieDeiPunti.get(chiave2);
+  if (!vieChieste2.has(chiave2)) {
+    vieChieste2.add(chiave2);
+    chiediAHomeAssistant({ type: "ponte/indirizzo", lat: punto2.lat, lon: punto2.lon }, 15e3).then((detto3) => {
+      const via = clean(detto3?.indirizzo);
+      if (!via) return;
+      vieDeiPunti.set(chiave2, via);
+      const b2 = state126.bozza;
+      if (b2?.daAuto && b2.da && chiaveDelPunto2(b2.da) === chiave2) b2.da.nome = via;
+      disegna7();
+    }).catch(() => {
+    });
+  }
+  return "";
+}
+function partenzaDallAuto(b2) {
+  const qui = posizioneDellAuto(b2);
+  if (!qui) return null;
+  const nome = qui.indirizzo || viaDelPunto(qui) || t("Dove sta l'auto", "Where the car is");
+  return { nome, lat: qui.lat, lon: qui.lon };
+}
+function partiDallAuto(b2) {
+  const da = partenzaDallAuto(b2);
+  b2.da = da;
+  b2.daAuto = Boolean(da);
+}
+function rigaDellaPartenza(b2) {
+  const nome = b2.da ? `${b2.daAuto ? "🚗" : "🟢"} ${b2.da.nome}` : `🏠 ${clean(state126.casa?.nome) || t("Casa", "Home")}`;
+  const cambio = state126.cercaPer === "da" ? `<div class="dm-gn-scelte-da">
+          ${posizioneDellAuto(b2) ? `<button type="button" data-gn-da="auto">🚗 ${esc(t("Dove sta l'auto", "Where the car is"))}</button>` : ""}
+          <button type="button" data-gn-da="casa">🏠 ${esc(t("Casa", "Home"))}</button>
+          <button type="button" data-gn-da="chiudi">${esc(t("Annulla", "Cancel"))}</button>
+        </div>` : "";
+  return `<div class="dm-gn-tappa dm-gn-da"><span><small>${esc(t("Partenza", "Start"))}</small> ${esc(nome)}</span>
+    <button type="button" class="dm-gn-cambia" data-gn-da="cambia">${esc(t("Cambia", "Change"))}</button></div>${cambio}`;
+}
 function lAutoDelViaggio(b2) {
   const auto = leAuto();
   if (!auto.length) return null;
@@ -119246,6 +119300,9 @@ function editor2() {
   const quandoPartire = tempi?.partenza != null ? `<div class="dm-gn-parti"><div class="dm-gn-parti-t">${esc(t("Parti alle", "Leave at"))}</div><div class="dm-gn-ora">${esc(oraDi4(tempi.partenza))}</div>
         ${arrivoDetto}
         ${righe3.map((r) => `<div class="dm-gn-riga">${esc(r)}</div>`).join("")}</div>` : `<div class="dm-gn-parti"><div class="dm-gn-riga">${esc(t("Scegli la meta e l'ora: qui ti dico quando partire.", "Pick the destination and time: I will tell you when to leave."))}</div></div>`;
+  const ricercaHtml = `<div class="dm-gn-cerca">🔎 <input type="search" autocomplete="off" placeholder="${esc(state126.cercaPer === "da" ? t("Da dove parti? Scrivi un indirizzo…", "Where do you start? Type an address…") : b2.tipo === "tappe" ? t("Aggiungi una tappa…", "Add a stop…") : b2.tappe.length ? t("Cambia la meta…", "Change destination…") : t("Dove vai?", "Where to?"))}" data-gn-cerca value="${esc(state126.cercando)}"></div>
+        ${parolaDellaRicerca()}
+        ${state126.proposte.length ? `<div class="dm-gn-proposte">${state126.proposte.map((p, i) => `<button type="button" data-gn-proposta="${i}">📍 ${esc(p.nome)}</button>`).join("")}</div>` : ""}`;
   const clima = b2.prepara?.clima?.entity || "";
   const garage2 = b2.prepara?.garage?.entity || "";
   return `
@@ -119253,10 +119310,10 @@ function editor2() {
       <div>
         <div class="dm-gn-seg">${tipi.map(([v, n]) => `<button type="button" class="${b2.tipo === v ? "on" : ""}" data-gn-tipo="${v}">${esc(n)}</button>`).join("")}</div>
         <label class="dm-gn-nomecampo"><input type="text" maxlength="80" placeholder="${esc(t("Nome (facoltativo): «Giro clienti»", "Name (optional): “Client round”"))}" data-gn-campo="nome" value="${esc(b2.nome || "")}"></label>
+        ${rigaDellaPartenza(b2)}
+        ${state126.cercaPer === "da" ? ricercaHtml : ""}
         ${tappe}
-        <div class="dm-gn-cerca">🔎 <input type="search" autocomplete="off" placeholder="${esc(b2.tipo === "tappe" ? t("Aggiungi una tappa…", "Add a stop…") : b2.tappe.length ? t("Cambia la meta…", "Change destination…") : t("Dove vai?", "Where to?"))}" data-gn-cerca value="${esc(state126.cercando)}"></div>
-        ${parolaDellaRicerca()}
-        ${state126.proposte.length ? `<div class="dm-gn-proposte">${state126.proposte.map((p, i) => `<button type="button" data-gn-proposta="${i}">📍 ${esc(p.nome)}</button>`).join("")}</div>` : ""}
+        ${state126.cercaPer === "da" ? "" : ricercaHtml}
         ${mappa(b2)}
         ${soste.length ? elencoDelleSoste(b2, tempi?.partenza) : ""}
         ${giorno3}
@@ -119403,6 +119460,13 @@ async function stimaLaStrada() {
   if (mia === quanteStrade) state126.calcolo = false;
   disegna7();
 }
+function ripartiDaQui(b2) {
+  b2.stima = null;
+  b2.soste = null;
+  state126.tappeKm = [];
+  state126.linea = [];
+  void stimaLaStrada();
+}
 function cambiaLAuto(cambio) {
   const b2 = state126.bozza;
   if (!b2) return;
@@ -119455,6 +119519,7 @@ async function salva19() {
   const viaggio = { ...b2 };
   delete viaggio.auto;
   delete viaggio.soste;
+  delete viaggio.daAuto;
   if (car) {
     viaggio.auto = opzioniDellAuto(b2, datiDellAuto(car));
     if (b2.soste?.fonte === "casa" && Array.isArray(b2.soste.elenco))
@@ -119491,16 +119556,37 @@ async function elimina2() {
 }
 function alClic2(event) {
   const bersaglio = event.target?.closest?.(
-    "#dm-gn [data-gn-nuovo], #dm-gn button[data-gn-apri], #dm-gn [data-gn-tipo], #dm-gn [data-gn-modo], #dm-gn [data-gn-giorno], #dm-gn [data-gn-proposta], #dm-gn [data-gn-togli-tappa], #dm-gn [data-gn-salva], #dm-gn [data-gn-elimina], #dm-gn [data-gn-partenza]"
+    "#dm-gn [data-gn-nuovo], #dm-gn button[data-gn-apri], #dm-gn [data-gn-tipo], #dm-gn [data-gn-modo], #dm-gn [data-gn-giorno], #dm-gn [data-gn-proposta], #dm-gn [data-gn-togli-tappa], #dm-gn [data-gn-salva], #dm-gn [data-gn-elimina], #dm-gn [data-gn-partenza], #dm-gn [data-gn-da]"
   );
   if (!bersaglio) return;
   const d = bersaglio.dataset;
+  if (d.gnDa && state126.bozza) {
+    const b2 = state126.bozza;
+    const prima = b2.da ? chiaveDelPunto2(b2.da) : "";
+    if (d.gnDa === "cambia") state126.cercaPer = state126.cercaPer === "da" ? "meta" : "da";
+    else {
+      if (d.gnDa === "auto") partiDallAuto(b2);
+      else if (d.gnDa === "casa") {
+        b2.da = null;
+        b2.daAuto = false;
+      }
+      state126.cercaPer = "meta";
+    }
+    state126.proposte = [];
+    state126.cercando = "";
+    state126.ricerca = "";
+    if ((b2.da ? chiaveDelPunto2(b2.da) : "") !== prima) ripartiDaQui(b2);
+    disegna7();
+    return;
+  }
   if (d.gnPartenza && state126.bozza) {
     cambiaLAuto({ partenza: d.gnPartenza === "100" ? 100 : d.gnPartenza });
     return;
   }
   if ("gnNuovo" in d) {
     state126.bozza = bozzaNuova2("una");
+    partiDallAuto(state126.bozza);
+    state126.cercaPer = "meta";
     state126.scelto = "";
     state126.linea = [];
     state126.tappeKm = [];
@@ -119526,6 +119612,16 @@ function alClic2(event) {
     if (giorni.has(n)) giorni.delete(n);
     else giorni.add(n);
     state126.bozza.quando.giorni = [...giorni].sort();
+  } else if (d.gnProposta && state126.bozza && state126.cercaPer === "da") {
+    const posto = state126.proposte[Number(d.gnProposta)];
+    if (posto) {
+      state126.bozza.da = posto;
+      state126.bozza.daAuto = false;
+      state126.cercaPer = "meta";
+      state126.proposte = [];
+      state126.cercando = "";
+      ripartiDaQui(state126.bozza);
+    }
   } else if (d.gnProposta && state126.bozza) {
     const posto = state126.proposte[Number(d.gnProposta)];
     if (posto) {
@@ -119592,6 +119688,11 @@ function alCambio3(event) {
       b2.auto = { ...b2.auto || {}, uid: campo5.value, partenza: null };
       b2.auto = opzioniDellAuto(b2, datiDellAuto(lAutoDelViaggio(b2)));
       b2.soste = null;
+      if (b2.daAuto) {
+        partiDallAuto(b2);
+        b2.stima = null;
+        state126.linea = [];
+      }
       disegna7();
       void stimaLaStrada();
       return;
@@ -119650,6 +119751,10 @@ body.dark-mode .dm-gn,html.dark .dm-gn{--gn-mappa:#1e293b;--gn-card:#111827;--gn
 .dm-gn-tappe{margin-bottom:8px}
 .dm-gn-tappa{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:var(--gn-fondo);margin-bottom:6px;font-size:14px}
 .dm-gn-tappa>span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dm-gn-da small{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--gn-piano);margin-right:4px}
+.dm-gn-cambia{border:1px solid var(--gn-bordo);background:var(--gn-card);color:#2563eb;font:inherit;font-size:12.5px;font-weight:800;border-radius:999px;padding:4px 11px;cursor:pointer}
+.dm-gn-scelte-da{display:flex;flex-wrap:wrap;gap:6px;margin:-2px 0 8px}
+.dm-gn-scelte-da button{border:1px solid var(--gn-bordo);background:var(--gn-card);color:var(--gn-testo);font:inherit;font-size:13px;font-weight:700;border-radius:999px;padding:6px 12px;cursor:pointer}
 .dm-gn-sosta{font-size:12.5px;color:var(--gn-piano)}
 .dm-gn-sosta input{width:56px}
 .dm-gn-x{border:0;background:none;color:var(--gn-piano);cursor:pointer;font-size:14px}
