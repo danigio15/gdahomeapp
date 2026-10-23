@@ -85,6 +85,36 @@ Future<String?> tastoPremutoSullIphone(String? busta) async {
   }
 }
 
+/// L'ultima notifica toccata sull'iPhone, come la tiene `AppDelegate.swift`:
+/// `{g, d, b}`, i campi della spinta che servono ad aprirla. Serve all'app
+/// che parte da chiusa, quando Firebase non la passa. Si dice una volta
+/// sola; `null` se non ce n'e', o fuori dall'iPhone.
+Future<Map<String, dynamic>?> notificaToccataSullIphone() async {
+  if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) return null;
+  try {
+    final detta = await _canale.invokeMethod<Map<Object?, Object?>>('toccata');
+    return detta == null ? null : _soloTesti(detta);
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Le notifiche toccate sull'iPhone mentre l'app c'e' gia': le dice
+/// `AppDelegate.swift` appena succede.
+void ascoltaLeToccateSullIphone(void Function(Map<String, dynamic>) toccata) {
+  if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) return;
+  _canale.setMethodCallHandler((chiamata) async {
+    if (chiamata.method == 'toccata' && chiamata.arguments is Map) {
+      toccata(_soloTesti(chiamata.arguments as Map<Object?, Object?>));
+    }
+  });
+}
+
+Map<String, dynamic> _soloTesti(Map<Object?, Object?> grezza) => {
+  for (final MapEntry(:key, :value) in grezza.entries)
+    if (key is String && value is String) key: value,
+};
+
 /// L'immagine della notifica toccata sull'iPhone: la foto o la scheda che
 /// l'estensione le ha messo, come la passa il sistema all'app toccandola
 /// (`AppDelegate.swift`). Si dice una volta sola, a chi apre quella busta.

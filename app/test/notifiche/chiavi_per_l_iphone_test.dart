@@ -1,9 +1,12 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/casa_conosciuta.dart';
 import 'package:gdahome/notifiche/busta.dart';
 import 'package:gdahome/notifiche/chiavi_per_l_iphone.dart';
 
 void main() {
+  group('la notifica toccata', laNotificaToccata);
   test(
     "all'estensione va solo la chiave delle notifiche, mai quella del filo",
     () async {
@@ -37,4 +40,43 @@ void main() {
       );
     },
   );
+}
+
+/* «Faccio guarda e mi apre la home di GdA»: partendo da chiusa, sull'iPhone
+ * Firebase la notifica toccata non la passa sempre. La tiene da parte
+ * `AppDelegate.swift`, e l'app la chiede. */
+void laNotificaToccata() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  const canale = MethodChannel('gdahome/notifiche-iphone');
+
+  tearDown(() {
+    debugDefaultTargetPlatformOverride = null;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(canale, null);
+  });
+
+  test(
+    "sull'iPhone la notifica toccata si chiede, coi soli campi di testo",
+    () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      final chieste = <String>[];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(canale, (chiamata) async {
+            chieste.add(chiamata.method);
+            return {'g': '1', 'd': 'tel', 'b': 'busta', 'x': 3};
+          });
+      final toccata = await notificaToccataSullIphone();
+      expect(chieste, ['toccata']);
+      expect(toccata, {'g': '1', 'd': 'tel', 'b': 'busta'});
+    },
+  );
+
+  test('senza notifica toccata, o fuori dall\'iPhone, niente', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(canale, (_) async => null);
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    expect(await notificaToccataSullIphone(), isNull);
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    expect(await notificaToccataSullIphone(), isNull);
+  });
 }

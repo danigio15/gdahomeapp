@@ -611,9 +611,17 @@ class Postino extends ChangeNotifier {
       );
     }
     FirebaseMessaging.onMessage.listen(_arrivataAdAppAperta);
-    FirebaseMessaging.onMessageOpenedApp.listen(_toccataSullIphone);
+    FirebaseMessaging.onMessageOpenedApp.listen(
+      (messaggio) => _toccataSullIphone(messaggio.data),
+    );
+    /* Firebase la toccata la passa (onMessageOpenedApp, getInitialMessage), ma
+     * non sempre: partendo da chiusa, con le scene, getInitialMessage resta
+     * vuoto. La dice anche `AppDelegate.swift`; si apre una volta sola. */
+    ascoltaLeToccateSullIphone((dati) => unawaited(_toccataSullIphone(dati)));
     final iniziale = await messaggi.getInitialMessage();
-    if (iniziale != null) unawaited(_toccataSullIphone(iniziale));
+    if (iniziale != null) unawaited(_toccataSullIphone(iniziale.data));
+    final daSola = await notificaToccataSullIphone();
+    if (daSola != null) unawaited(_toccataSullIphone(daSola));
     final lancio = await _locali.getNotificationAppLaunchDetails();
     final risposta = lancio?.notificationResponse;
     if (lancio?.didNotificationLaunchApp == true && risposta != null) {
@@ -789,20 +797,30 @@ class Postino extends ChangeNotifier {
     }
   }
 
+  /* Le buste appena aperte da un tocco: la stessa toccata arriva da Firebase
+   * e da `AppDelegate.swift`, e si apre una volta sola. */
+  final Map<String, DateTime> _busteToccate = {};
+
   /// Sull'iPhone si tocca la frase di riserva: la busta si apre adesso.
-  Future<void> _toccataSullIphone(RemoteMessage messaggio) async {
+  Future<void> _toccataSullIphone(Map<String, dynamic> dati) async {
+    final busta = dati['b'];
+    if (busta is! String) return;
+    final adesso = DateTime.now();
+    _busteToccate.removeWhere(
+      (_, quando) => adesso.difference(quando) > const Duration(seconds: 15),
+    );
+    if (_busteToccate.containsKey(busta)) return;
+    _busteToccate[busta] = adesso;
     final archivio = ArchivioDelleCase(cassaforte);
     await archivio.apri();
-    final aperta = await apriQuellaArrivata(messaggio.data, archivio.tutte);
+    final aperta = await apriQuellaArrivata(dati, archivio.tutte);
     if (aperta == null) return;
     /* Toccato un tasto (Spegni, Inserisci…) e non la notifica: lo sa
      * `AppDelegate.swift`, e il tasto va alla casa come dall'Android. */
-    final tasto = await tastoPremutoSullIphone(messaggio.data['b'] as String?);
+    final tasto = await tastoPremutoSullIphone(busta);
     /* L'immagine che l'estensione le aveva messo, per la pagina della
      * notifica: quella del momento, non una foto di adesso. */
-    final immagine = await immagineToccataSullIphone(
-      messaggio.data['b'] as String?,
-    );
+    final immagine = await immagineToccataSullIphone(busta);
     if (immagine != null) await tieniLImmagine(aperta.notifica.id, immagine);
     _tocca(
       ToccoDellaNotifica(
