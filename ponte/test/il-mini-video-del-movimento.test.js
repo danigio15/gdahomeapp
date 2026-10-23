@@ -22,7 +22,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { chiaveBuona, DOPO, Filmati, idBuono, OGNI, PRIMA } from "../src/i-filmati.js";
+import { chiaveBuona, DOPO, Filmati, idBuono, OGNI, PRIMA, TENUTA } from "../src/i-filmati.js";
 import { esempioDi, Notifiche } from "../src/notifiche.js";
 import { CONTENUTO_MASSIMO } from "../src/spinta.js";
 
@@ -122,13 +122,39 @@ test("una telecamera tenuta in memoria da' il prima e il dopo", async () => {
   }
 });
 
+/* Un video cominciato in ritardo — la foto, piu' telefoni, piu' movimenti
+ * insieme — trova ancora i fotogrammi del suo momento. */
+test("un video cominciato otto secondi dopo il movimento ha ancora il prima e il dopo", async () => {
+  const { orologio, filmati, via } = unBanco();
+  try {
+    filmati.sorveglia(["camera.ingresso"]);
+    await orologio.avanza(12_000);
+    const quando = orologio.adesso() - 8000;
+    const { id, chiave } = filmati.registra("camera.ingresso", quando);
+    const letto = filmati.leggi(id, chiave);
+    await orologio.avanza(1000);
+    const video = await letto;
+    assert.ok(video, "il video c'e'");
+    assert.ok(
+      video.fotogrammi.some((f) => f.t < -3000),
+      "c'e' il prima",
+    );
+    assert.ok(
+      video.fotogrammi.some((f) => f.t > 3000),
+      "c'e' il dopo",
+    );
+  } finally {
+    via();
+  }
+});
+
 test("in memoria resta solo il prima che serve", async () => {
   const { orologio, filmati, via } = unBanco();
   try {
     filmati.sorveglia(["camera.ingresso"]);
     await orologio.avanza(60_000);
     const memoria = filmati._memorie.get("camera.ingresso");
-    assert.ok(memoria.fotogrammi.length <= (PRIMA + OGNI) / OGNI + 2);
+    assert.ok(memoria.fotogrammi.length <= (TENUTA + OGNI) / OGNI + 2);
   } finally {
     via();
   }

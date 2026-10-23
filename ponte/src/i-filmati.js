@@ -43,6 +43,13 @@ import { rimpicciolisci as rimpicciolisciDiCasa } from "./rimpicciolisci.js";
 export const PRIMA = 5000;
 export const DOPO = 5000;
 export const OGNI = 500;
+/* Quanto si tiene in memoria, finche' nessuno registra: il «prima» e un
+ * margine. «Forse quando rileva più movimenti insieme non ce la fa»: il video
+ * di un movimento puo' cominciare qualche secondo dopo il movimento — la foto
+ * della notifica, piu' telefoni, piu' movimenti insieme — e con solo cinque
+ * secondi in memoria i fotogrammi di quel momento erano gia' stati buttati.
+ * Quindici secondi: due istantanee al secondo, al piu' qualche megabyte. */
+export const TENUTA = PRIMA + 10_000;
 /* La larghezza chiesta: abbastanza per un telefono, leggera per il filo. */
 export const LARGHEZZA = 640;
 /* Un fotogramma piu' pesante di cosi' e' una telecamera che non rimpicciolisce.
@@ -195,7 +202,7 @@ export class Filmati {
       }
       /* Si tiene solo il «prima» che serve, finche' nessuno registra. */
       if (!memoria.registrazioni) {
-        const da = this.adesso() - PRIMA - OGNI;
+        const da = this.adesso() - TENUTA - OGNI;
         while (memoria.fotogrammi.length && memoria.fotogrammi[0].t < da)
           memoria.fotogrammi.shift();
       }
