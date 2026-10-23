@@ -6918,4 +6918,7 @@ export default Object.freeze({
   Cancel: "取消",
   "Where do you start? Type an address…": "从哪里出发？输入一个地址…",
   Home: "家",
+  "Show “Boiler on” on Home": "在主页显示“锅炉已开启”",
+  "The pill under the weather while a boiler is running. Off, the boiler shows only in Climate.":
+    "锅炉运行时显示在天气下方的标签。关闭后，锅炉只在空调页中显示。",
 });

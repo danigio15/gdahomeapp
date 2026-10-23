@@ -7031,4 +7031,7 @@ export default Object.freeze({
   Cancel: "रद्द करें",
   "Where do you start? Type an address…": "कहाँ से निकल रहे हो? पता लिखो…",
   Home: "घर",
+  "Show “Boiler on” on Home": "होम पर “बॉयलर चालू” दिखाएँ",
+  "The pill under the weather while a boiler is running. Off, the boiler shows only in Climate.":
+    "बॉयलर चलते समय मौसम के नीचे दिखने वाला निशान। बंद करने पर बॉयलर सिर्फ़ क्लाइमेट में दिखेगा।",
 });

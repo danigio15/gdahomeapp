@@ -7070,4 +7070,7 @@ export default Object.freeze({
   Cancel: "Anuluj",
   "Where do you start? Type an address…": "Skąd ruszasz? Wpisz adres…",
   Home: "Dom",
+  "Show “Boiler on” on Home": "Pokazuj „Kocioł włączony” na stronie głównej",
+  "The pill under the weather while a boiler is running. Off, the boiler shows only in Climate.":
+    "Plakietka pod pogodą, gdy kocioł pracuje. Wyłączona: kocioł widać tylko w Klimacie.",
 });

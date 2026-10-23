@@ -7022,4 +7022,7 @@ export default Object.freeze({
   Cancel: "취소",
   "Where do you start? Type an address…": "어디서 출발하나요? 주소를 입력하세요…",
   Home: "집",
+  "Show “Boiler on” on Home": "홈에 '보일러 켜짐' 표시",
+  "The pill under the weather while a boiler is running. Off, the boiler shows only in Climate.":
+    "보일러가 작동하는 동안 날씨 아래에 나오는 표시입니다. 끄면 보일러는 냉난방에만 표시됩니다.",
 });

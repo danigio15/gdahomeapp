@@ -7078,4 +7078,7 @@ export default Object.freeze({
   Cancel: "Cancelar",
   "Where do you start? Type an address…": "De onde partes? Escreve uma morada…",
   Home: "Casa",
+  "Show “Boiler on” on Home": "Mostrar «Caldeira ligada» no Início",
+  "The pill under the weather while a boiler is running. Off, the boiler shows only in Climate.":
+    "A etiqueta por baixo da meteorologia enquanto uma caldeira trabalha. Desligada, a caldeira só aparece em Clima.",
 });

@@ -7047,4 +7047,7 @@ export default Object.freeze({
   Cancel: "İptal",
   "Where do you start? Type an address…": "Nereden çıkıyorsun? Bir adres yaz…",
   Home: "Ev",
+  "Show “Boiler on” on Home": "Ana sayfada “Kombi açık” göster",
+  "The pill under the weather while a boiler is running. Off, the boiler shows only in Climate.":
+    "Bir kombi çalışırken hava durumunun altındaki etiket. Kapalıyken kombi yalnızca İklim'de görünür.",
 });

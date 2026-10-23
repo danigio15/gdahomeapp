@@ -7082,4 +7082,7 @@ export default Object.freeze({
   Cancel: "Annuleren",
   "Where do you start? Type an address…": "Waar vertrek je? Typ een adres…",
   Home: "Thuis",
+  "Show “Boiler on” on Home": "„Ketel aan” tonen op Home",
+  "The pill under the weather while a boiler is running. Off, the boiler shows only in Climate.":
+    "Het label onder het weer zolang een ketel draait. Uit: de ketel staat alleen in Klimaat.",
 });

@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-XRLHFAUM.js";
+} from "../../chunk-FNPKTSK6.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -4688,6 +4688,7 @@ var SOURCE_INDEX = Object.freeze({
   "La pagina tiene otto nodi, e ci sono tutti: togline uno per farci stare questo.": "The page holds eight nodes and they are all taken: remove one to make room.",
   "La parola che la stufa scrive sul display: accensione, lavoro, pulizia braciere, spegnimento… Se la pagina non la conosce, la scrive com'è.": "The word the stove shows on its display: ignition, working, brazier cleaning, shutdown… If the page does not know it, it shows it as it is.",
   "La parte in alto — hamburger, nome della casa, meteo — resta ferma e il resto della plancia le scorre sotto. Vale solo su questo apparecchio.": "The top strip — hamburger, house name, weather — stays put while the rest of the dashboard scrolls under it. This device only.",
+  "La pillola sotto il meteo quando una caldaia lavora. Spenta, la caldaia si vede solo nel Clima.": "The pill under the weather while a boiler is running. Off, the boiler shows only in Climate.",
   "la più bassa": "lowest",
   "la più calda": "warmest",
   "la più fredda": "coldest",
@@ -5121,6 +5122,7 @@ var SOURCE_INDEX = Object.freeze({
   "Monitoraggio inverter, batteria e ventola": "Inverter, battery and fan monitoring",
   "Monitoraggio server": "Server monitoring",
   "Mostra": "Show",
+  "Mostra «Caldaia accesa» nella Home": "Show “Boiler on” on Home",
   "Mostra dispositivi ed entità che hanno consumato": "Show devices and energy sources",
   "Mostra il cerchio quando configurato": "Show node when configured",
   "Mostra in pagina": "Show on the page",
@@ -18415,6 +18417,23 @@ var KEY19 = "__DASHBOARDMODERN_TERMICO_CALDO__";
 var STYLE_ID3 = "dm-termico-caldo-style";
 var state15 = root[KEY19] ||= { installed: false };
 var CHIAVE2 = "cd_termico_caldo";
+var CHIAVE_IN_HOME = "cd_caldaia_in_home";
+function caldaiaInHome() {
+  try {
+    return root.localStorage?.getItem?.(CHIAVE_IN_HOME) !== "false";
+  } catch (_errore) {
+    return true;
+  }
+}
+function scriviCaldaiaInHome(si) {
+  try {
+    root.localStorage?.setItem?.(CHIAVE_IN_HOME, si ? "true" : "false");
+    root.cdMarkDirty?.();
+    root.cdSyncPush?.();
+  } catch (_errore) {
+  }
+  pillolaDellaCaldaia();
+}
 var REGEX_CALDAIA = /calda|boiler|chaudi|kessel|calder|furnace|ketel|kotel/i;
 var STORICHE = Object.freeze([
   { name: "Caldaia", entity: "switch.caldaia", icon: "🔥", diretta: true },
@@ -18541,7 +18560,7 @@ function pillolaDellaCaldaia() {
   if (!banner) return false;
   const caldaie2 = statiDelleCaldaie();
   const accese = caldaie2.filter((caldaia) => caldaia.acceso);
-  banner.classList.toggle("show", accese.length > 0);
+  banner.classList.toggle("show", accese.length > 0 && caldaiaInHome());
   const testo4 = banner.querySelector(".caldaia-banner-text");
   if (testo4 && accese.length) {
     const prima = accese[0];
@@ -18640,10 +18659,17 @@ function montaEditor() {
   carta.innerHTML = `<div class="ed-sec-title">🔥 ${t("Stato termico (Caldo)", "Thermal status (Heat)")}</div><div class="ed-hint">${t(
     "Le entità della parte termica di cui vuoi sapere se sono accese o spente: caldaia, pompe, aspiratori — quello che ti serve. Ogni voce dice acceso o spento nel popup Caldo, sotto le stanze. Senza voci il pannello non compare.",
     "The entities on the heating side you want to know are on or off: boiler, pumps, fans — whatever you need. Every row says on or off in the Heat popup, under the rooms. With no rows the panel does not appear."
-  )}</div><div class="dm-termico-righe"></div><button type="button" class="ed-btn-add dm-termico-aggiungi">＋ ${t("Aggiungi voce", "Add row")}</button>`;
+  )}</div><div class="dm-termico-righe"></div><button type="button" class="ed-btn-add dm-termico-aggiungi">＋ ${t("Aggiungi voce", "Add row")}</button><label class="dm-termico-in-home"><span><b>${t("Mostra «Caldaia accesa» nella Home", "Show “Boiler on” on Home")}</b><small>${t("La pillola sotto il meteo quando una caldaia lavora. Spenta, la caldaia si vede solo nel Clima.", "The pill under the weather while a boiler is running. Off, the boiler shows only in Climate.")}</small></span><input type="checkbox" data-dm-caldaia-in-home${caldaiaInHome() ? " checked" : ""}></label>`;
   const righe3 = carta.querySelector(".dm-termico-righe");
   voci4.forEach((voce3, indice) => righe3.append(rigaEditor(voce3, indice)));
-  const salva33 = () => scriviConfig(raccogli(carta));
+  const salva33 = (evento) => {
+    const casella7 = evento?.target;
+    if (casella7?.matches?.("[data-dm-caldaia-in-home]")) {
+      scriviCaldaiaInHome(casella7.checked);
+      return;
+    }
+    scriviConfig(raccogli(carta));
+  };
   carta.addEventListener("change", salva33);
   carta.addEventListener("click", (evento) => {
     const via = evento.target?.closest?.(".dm-termico-via");
@@ -18680,6 +18706,11 @@ var STILE2 = `
    casella che spiega. */
 .dm-termico-aiuto{margin:2px 0 8px;font-size:12px;line-height:1.4;color:var(--secondary-text-color,#64748b)}
 .dm-termico-righe{display:grid;gap:8px;margin:10px 0}
+.dm-termico-in-home{display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;border-radius:14px;border:1px solid var(--divider-color,#e2e8f0);cursor:pointer}
+.dm-termico-in-home>span{flex:1;min-width:0;display:grid;gap:2px}
+.dm-termico-in-home b{font-size:14px}
+.dm-termico-in-home small{font-size:12px;line-height:1.35;color:var(--secondary-text-color,#64748b)}
+.dm-termico-in-home input{flex:none;width:20px;height:20px}
 /* La prima colonna tiene la casella dell'icona E il tasto del catalogo: a
    52 px il tasto ne prende 42 e alla casella ne restano dieci, cioe' l'icona
    scelta non si vedeva — restava solo il tasto blu, e sembrava che l'icona

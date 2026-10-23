@@ -7094,4 +7094,7 @@ export default Object.freeze({
   Cancel: "Cancelar",
   "Where do you start? Type an address…": "¿Desde dónde sales? Escribe una dirección…",
   Home: "Casa",
+  "Show “Boiler on” on Home": "Mostrar «Caldera encendida» en Inicio",
+  "The pill under the weather while a boiler is running. Off, the boiler shows only in Climate.":
+    "La píldora bajo el tiempo mientras una caldera funciona. Desactivada, la caldera solo aparece en Clima.",
 });

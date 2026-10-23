@@ -7065,4 +7065,7 @@ export default Object.freeze({
   Cancel: "Отмена",
   "Where do you start? Type an address…": "Откуда выезжаешь? Введи адрес…",
   Home: "Дом",
+  "Show “Boiler on” on Home": "Показывать «Котёл включён» на главной",
+  "The pill under the weather while a boiler is running. Off, the boiler shows only in Climate.":
+    "Плашка под погодой, пока котёл работает. Если выключить, котёл виден только в Климате.",
 });

@@ -7049,4 +7049,7 @@ export default Object.freeze({
   Cancel: "キャンセル",
   "Where do you start? Type an address…": "どこから出発しますか？住所を入力…",
   Home: "自宅",
+  "Show “Boiler on” on Home": "ホームに「ボイラー稼働中」を表示",
+  "The pill under the weather while a boiler is running. Off, the boiler shows only in Climate.":
+    "ボイラーが動いている間、天気の下に出る表示です。オフにすると、ボイラーは空調にだけ表示されます。",
 });

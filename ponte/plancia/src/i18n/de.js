@@ -7108,4 +7108,7 @@ export default Object.freeze({
   Cancel: "Abbrechen",
   "Where do you start? Type an address…": "Wo startest du? Gib eine Adresse ein…",
   Home: "Zuhause",
+  "Show “Boiler on” on Home": "„Heizung an“ auf der Startseite zeigen",
+  "The pill under the weather while a boiler is running. Off, the boiler shows only in Climate.":
+    "Die Pille unter dem Wetter, solange eine Heizung läuft. Aus: die Heizung erscheint nur im Klima.",
 });

@@ -6996,4 +6996,7 @@ export default Object.freeze({
   Cancel: "إلغاء",
   "Where do you start? Type an address…": "من أين تنطلق؟ اكتب عنوانًا…",
   Home: "المنزل",
+  "Show “Boiler on” on Home": "إظهار «المرجل يعمل» في الرئيسية",
+  "The pill under the weather while a boiler is running. Off, the boiler shows only in Climate.":
+    "الشارة تحت الطقس أثناء عمل المرجل. عند إيقافها يظهر المرجل في المناخ فقط.",
 });
