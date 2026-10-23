@@ -122,6 +122,13 @@ export class Filmati {
     this._memorie = new Map();
     /** id → Promise che si chiude quando il video e' scritto. */
     this._inCorso = new Map();
+    /** id → { camera, perche, il }: i video rimasti senza fotogrammi.
+     *
+     * «Il video di questo movimento non c'è più», sei minuti dopo il
+     * movimento: il video non c'era mai stato, perche' la telecamera non
+     * aveva dato immagini. Adesso lo si sa, e lo si dice — al telefono, e nel
+     * registro coi numeri — invece di una frase sbagliata. */
+    this._vuoti = new Map();
   }
 
   /** Le telecamere da tenere in memoria. Quelle che escono si fermano. */
@@ -150,7 +157,14 @@ export class Filmati {
   }
 
   _accendi(camera, fissa) {
-    const memoria = { fotogrammi: [], viva: true, fissa, registrazioni: 0 };
+    const memoria = {
+      fotogrammi: [],
+      viva: true,
+      fissa,
+      registrazioni: 0,
+      /* Come vanno le istantanee: per il registro, se un video resta vuoto. */
+      conti: { chieste: 0, prese: 0, pesanti: 0, perse: 0 },
+    };
     this._memorie.set(camera, memoria);
     void this._giro(camera, memoria);
     return memoria;
@@ -163,16 +177,21 @@ export class Filmati {
       const inizio = this.adesso();
       try {
         const quando = this.adesso();
+        memoria.conti.chieste += 1;
         let byte = await this.casa?.immagine?.(`camera_proxy/${camera}?width=${LARGHEZZA}`);
         if (byte?.length > FOTOGRAMMA_MASSIMO)
           byte = await this.rimpicciolisci?.(byte, {
             massimo: FOTOGRAMMA_MASSIMO,
             larghezze: LARGHEZZE_DEL_VIDEO,
           });
-        if (byte?.length && byte.length <= FOTOGRAMMA_MASSIMO)
+        if (byte?.length && byte.length <= FOTOGRAMMA_MASSIMO) {
           memoria.fotogrammi.push({ t: quando, byte });
+          memoria.conti.prese += 1;
+        } else if (byte?.length) memoria.conti.pesanti += 1;
+        else memoria.conti.perse += 1;
       } catch (_errore) {
         /* Una istantanea persa e' un fotogramma in meno. */
+        memoria.conti.perse += 1;
       }
       /* Si tiene solo il «prima» che serve, finche' nessuno registra. */
       if (!memoria.registrazioni) {
@@ -216,7 +235,22 @@ export class Filmati {
         const peso = (elenco) => elenco.reduce((somma, f) => somma + f.byte.length, 0);
         while (fotogrammi.length > 1 && peso(fotogrammi) > PESO_MASSIMO)
           fotogrammi = fotogrammi.filter((_f, i) => i % 2 === 0);
-        if (!fotogrammi.length) return false;
+        if (!fotogrammi.length) {
+          const { chieste, prese, pesanti, perse } = memoria.conti;
+          this._vuoti.set(id, {
+            camera,
+            perche: pesanti > 0 ? "troppo-pesanti" : "nessuna-immagine",
+            il: this.adesso(),
+          });
+          for (const [vecchio, uno] of this._vuoti)
+            if (this._vuoti.size > AL_PIU || this.adesso() - uno.il > VITA)
+              this._vuoti.delete(vecchio);
+          this.registro.attenzione(
+            `mini video vuoto (${camera}), dall'accensione: ${prese} istantanee buone su ${chieste}, ` +
+              `${pesanti} troppo pesanti, ${perse} non arrivate`,
+          );
+          return false;
+        }
         this._scrivi(id, chiave, {
           v: 1,
           camera,
@@ -262,6 +296,14 @@ export class Filmati {
     } catch (_errore) {
       return null;
     }
+  }
+
+  /** Perche' quel video non c'e', se e' rimasto vuoto: `{camera, perche}`,
+   * o `null`. Il resto (scaduto, mai esistito) non lo si sa. */
+  vuoto(id) {
+    if (!idBuono(id)) return null;
+    const uno = this._vuoti.get(id);
+    return uno ? { camera: uno.camera, perche: uno.perche } : null;
   }
 
   /** Via quelli piu' vecchi di tre giorni, e oltre i duecento i piu' vecchi. */

@@ -713,6 +713,16 @@ class _StatoDellaTelecamera extends State<SchermataDellaTelecamera> {
                       it: 'I mini video sono di GdAHome Premium.',
                       en: 'Short clips are part of GdAHome Premium.',
                     ),
+                    'filmato-vuoto' => inLingua(
+                      it:
+                          'In quei secondi la telecamera non ha mandato '
+                          'immagini alla casa: il video non si è potuto fare. '
+                          'La foto del momento c\'è.',
+                      en:
+                          "In those seconds the camera sent the home no "
+                          "pictures: the clip couldn't be made. The picture "
+                          "of the moment is there.",
+                    ),
                     'unknown_command' => inLingua(
                       it:
                           'La casa non sa ancora fare i mini video: aggiorna '

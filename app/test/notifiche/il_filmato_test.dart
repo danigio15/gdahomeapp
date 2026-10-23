@@ -187,6 +187,7 @@ void main() {
       bool colVideo = true,
       bool colMomento = false,
       bool filoChiuso = false,
+      bool vuoto = false,
     }) async {
       final cartella = Directory.systemTemp.createTempSync('momento-');
       await tester.runAsync(() async {
@@ -198,6 +199,7 @@ void main() {
         if (colVideo) {
           ponte.filmati[_id] = (chiave: _chiave, video: _video(foto));
         }
+        if (vuoto) ponte.filmatiVuoti.add(_id);
         final archivio = ArchivioDelleCase(CassaforteInMemoria());
         await archivio.apri();
         await archivio.aggiungi(
@@ -312,6 +314,18 @@ void main() {
       expect(find.byKey(const Key('telecamera-al-video')), findsNothing);
       await aspetta(tester, find.byKey(const Key('telecamera-foto')));
       expect(find.text('DAL VIVO'), findsOneWidget);
+      await giu(tester);
+    });
+
+    /* «Il video di questo movimento non c'è più», sei minuti dopo: il video
+     * non c'era mai stato. La casa adesso lo dice, e la pagina pure. */
+    testWidgets('un video rimasto vuoto si dice per quello che e\'', (
+      tester,
+    ) async {
+      await alza(tester, colVideo: false, colMomento: true, vuoto: true);
+      await aspetta(tester, find.byKey(const Key('telecamera-senza-video')));
+      expect(find.textContaining('non ha mandato immagini'), findsOneWidget);
+      expect(find.textContaining('tre giorni'), findsNothing);
       await giu(tester);
     });
 

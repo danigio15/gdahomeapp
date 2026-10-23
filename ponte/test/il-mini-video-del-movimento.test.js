@@ -264,6 +264,7 @@ const ID = "1761121500000-abcdef";
 const CHIAVE = Buffer.alloc(32, 3).toString("base64url");
 const FILM = { id: ID, chiave: CHIAVE };
 const U1 = { id: "tel1", utente: "u1" };
+const VUOTO = "1761121500000-fedcba";
 
 function unaCasaColVideo({ premium = true, chiuse = [], utenti = null } = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "mini-video-ponte-"));
@@ -282,6 +283,8 @@ function unaCasaColVideo({ premium = true, chiuse = [], utenti = null } = {}) {
     commissioni: { telecamereChiuse: () => new Set(chiuse) },
     filmati: {
       leggi: async (id, chiave) => (id === ID && chiave === CHIAVE ? video : null),
+      vuoto: (id) =>
+        id === VUOTO ? { camera: "camera.ingresso", perche: "troppo-pesanti" } : null,
       sorveglia() {},
       ferma() {},
     },
@@ -425,5 +428,54 @@ test("la notifica del movimento porta numero e chiave del video, e ci sta ancora
     assert.equal("film" in senza, false);
   } finally {
     via();
+  }
+});
+
+/* «Il video di questo movimento non c'è più», sei minuti dopo: il video non
+ * c'era mai stato, la telecamera non aveva dato immagini. Lo si dice per
+ * quello che e', e nel registro coi numeri. */
+test("un video rimasto senza fotogrammi si dice vuoto, col perche', e finisce nel registro", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "mini-video-"));
+  const orologio = unOrologio();
+  const detto = [];
+  const filmati = new Filmati({
+    cartella,
+    casa: { immagine: async () => null },
+    registro: { info() {}, debug() {}, errore() {}, attenzione: (r) => detto.push(r) },
+    adesso: orologio.adesso,
+    aspetta: orologio.aspetta,
+    acaso: () => "abcdef123456",
+  });
+  try {
+    const quando = orologio.adesso();
+    const { id, chiave } = filmati.registra("camera.ingresso", quando);
+    const letto = filmati.leggi(id, chiave);
+    await orologio.avanza(DOPO + 1000);
+    assert.equal(await letto, null);
+    assert.deepEqual(filmati.vuoto(id), { camera: "camera.ingresso", perche: "nessuna-immagine" });
+    assert.equal(filmati.vuoto("1761121500000-zzzzzz"), null);
+    assert.match(detto.at(-1), /mini video vuoto \(camera\.ingresso\).*0 istantanee buone su \d+/);
+  } finally {
+    filmati.ferma();
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("al telefono il video vuoto arriva come «filmato-vuoto», solo a chi vede la telecamera", async () => {
+  const { notifiche, via } = unaCasaColVideo();
+  try {
+    const detto = await chiedi(notifiche, { id: VUOTO, chiave: CHIAVE }, U1);
+    assert.equal(detto.success, false);
+    assert.equal(detto.error.code, "filmato-vuoto");
+    assert.equal(detto.error.message, "troppo-pesanti");
+  } finally {
+    via();
+  }
+  const chiusa = unaCasaColVideo({ chiuse: ["camera.ingresso"] });
+  try {
+    const detto = await chiedi(chiusa.notifiche, { id: VUOTO, chiave: CHIAVE }, U1);
+    assert.equal(detto.error.code, "not_found");
+  } finally {
+    chiusa.via();
   }
 });

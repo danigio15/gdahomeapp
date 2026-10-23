@@ -96,6 +96,9 @@ const Set<String> _codiciDelNo = {
   'unauthorized',
   'premium-richiesto',
   'unknown_command',
+  /* Il video e' rimasto senza fotogrammi: la telecamera in quei secondi non
+   * ha dato immagini. Riprovare non lo fa venire. */
+  'filmato-vuoto',
 };
 
 /// Chiede il video alla casa. La casa aspetta i cinque secondi dopo, se il

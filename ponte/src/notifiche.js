@@ -1811,7 +1811,15 @@ export class Notifiche {
             return no("invalid_format", "video non valido");
           const video = await this.filmati?.leggi?.(film.id, film.chiave);
           const amministraDavvero = amministra === true || chi.amministratore === true;
-          if (!video || !this._vedeLaTelecamera(utente, amministraDavvero, video.camera))
+          if (!video) {
+            /* Un video rimasto senza fotogrammi lo si dice per quello che e',
+             * a chi quella telecamera la vede: non «non c'e' piu'». */
+            const vuoto = this.filmati?.vuoto?.(film.id);
+            if (vuoto && this._vedeLaTelecamera(utente, amministraDavvero, vuoto.camera))
+              return no("filmato-vuoto", vuoto.perche);
+            return no("not_found", "questo video non c'e' piu'");
+          }
+          if (!this._vedeLaTelecamera(utente, amministraDavvero, video.camera))
             return no("not_found", "questo video non c'e' piu'");
           return si({
             camera: video.camera,
