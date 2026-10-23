@@ -37,6 +37,7 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { rimpicciolisci as rimpicciolisciDiCasa } from "./rimpicciolisci.js";
 
 /** Quanto prima del movimento, quanto dopo, e ogni quanto un fotogramma. */
 export const PRIMA = 5000;
@@ -44,9 +45,16 @@ export const DOPO = 5000;
 export const OGNI = 500;
 /* La larghezza chiesta: abbastanza per un telefono, leggera per il filo. */
 export const LARGHEZZA = 640;
-/* Un fotogramma piu' pesante di cosi' e' una telecamera che non rimpicciolisce:
- * si salta, invece di riempire la memoria. */
+/* Un fotogramma piu' pesante di cosi' e' una telecamera che non rimpicciolisce.
+ *
+ * «Sì ma con una telecamera l'altra no.» La larghezza chiesta a Home Assistant
+ * molte integrazioni la ignorano, e una telecamera 4K manda l'istantanea
+ * intera, uno o due megabyte, a ogni richiesta: prima quei fotogrammi si
+ * saltavano tutti, il video di quella telecamera restava vuoto e non si
+ * scriveva — «non c'è». Adesso si rimpiccioliscono qui in casa, come la foto
+ * della notifica (`rimpicciolisci.js`); solo se non si riesce si saltano. */
 const FOTOGRAMMA_MASSIMO = 400 * 1024;
+const LARGHEZZE_DEL_VIDEO = Object.freeze([LARGHEZZA, 480]);
 /* Un video intero, in byte prima del base64: sotto i 4 MB del filo. */
 const PESO_MASSIMO = 2 * 1024 * 1024;
 const VITA = 3 * 24 * 3600 * 1000;
@@ -101,7 +109,9 @@ export class Filmati {
     adesso = () => Date.now(),
     aspetta = dorme,
     acaso = () => randomBytes(6).toString("hex"),
+    rimpicciolisci = rimpicciolisciDiCasa,
   } = {}) {
+    this.rimpicciolisci = rimpicciolisci;
     this.dove = join(cartella, "filmati");
     this.casa = casa;
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {}, debug() {} };
@@ -152,9 +162,15 @@ export class Filmati {
     while (memoria.viva) {
       const inizio = this.adesso();
       try {
-        const byte = await this.casa?.immagine?.(`camera_proxy/${camera}?width=${LARGHEZZA}`);
+        const quando = this.adesso();
+        let byte = await this.casa?.immagine?.(`camera_proxy/${camera}?width=${LARGHEZZA}`);
+        if (byte?.length > FOTOGRAMMA_MASSIMO)
+          byte = await this.rimpicciolisci?.(byte, {
+            massimo: FOTOGRAMMA_MASSIMO,
+            larghezze: LARGHEZZE_DEL_VIDEO,
+          });
         if (byte?.length && byte.length <= FOTOGRAMMA_MASSIMO)
-          memoria.fotogrammi.push({ t: this.adesso(), byte });
+          memoria.fotogrammi.push({ t: quando, byte });
       } catch (_errore) {
         /* Una istantanea persa e' un fotogramma in meno. */
       }

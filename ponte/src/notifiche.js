@@ -467,7 +467,8 @@ export class Notifiche {
   } = {}) {
     this.rimpicciolisci = rimpicciolisci;
     this.filmati =
-      filmati ?? new Filmati({ cartella: cartella || "/data", casa, registro, adesso });
+      filmati ??
+      new Filmati({ cartella: cartella || "/data", casa, registro, adesso, rimpicciolisci });
     this.configurazione = configurazione;
     this.licenze = licenze;
     this.dispositivi = dispositivi;

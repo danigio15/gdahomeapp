@@ -51,10 +51,17 @@ import 'la_tua_giornata.dart';
 /// ponte la mette solo se a chi tiene il telefono quella telecamera si
 /// mostra — e vale in Base come in Premium: la foto la da' la casa sul filo,
 /// e dal nostro server non passa.
+///
+/// «Niente, su Android continua a non andare, e anche su iPhone»: toccando
+/// la notifica — non il tasto — si apriva la pagina della notifica, che il
+/// video non lo sa mostrare: c'era la foto, e basta. E sulla schermata
+/// bloccata il tocco sulla notifica e' quello che si fa. Adesso una notifica
+/// che porta il mini video, toccata, apre il video come «Guarda».
 @visibleForTesting
 bool apreLaTelecamera(ToccoDellaNotifica tocco) {
   final notifica = tocco.notifica;
   if (notifica.camera == null || notifica.chiamata) return false;
+  if (tocco.tasto == null && notifica.film != null) return true;
   return tocco.tasto == 'guarda';
 }
 

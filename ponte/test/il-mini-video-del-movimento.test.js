@@ -152,6 +152,68 @@ test("una telecamera non tenuta in memoria registra solo il dopo, poi si ferma",
   }
 });
 
+/* «Sì ma con una telecamera l'altra no.» Una telecamera 4K manda
+ * l'istantanea intera, a qualunque larghezza la si chieda: prima ogni
+ * fotogramma si saltava, e il video di quella telecamera non c'era mai. */
+test("una telecamera che manda istantanee enormi da' il video lo stesso, rimpicciolito", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "mini-video-"));
+  const orologio = unOrologio();
+  const rimpiccioliti = [];
+  const filmati = new Filmati({
+    cartella,
+    casa: { immagine: async () => Buffer.alloc(1_500_000, 7) },
+    adesso: orologio.adesso,
+    aspetta: orologio.aspetta,
+    acaso: () => "abcdef123456",
+    rimpicciolisci: async (byte, opzioni) => {
+      rimpiccioliti.push({ peso: byte.length, ...opzioni });
+      return Buffer.from("piccolo");
+    },
+  });
+  try {
+    filmati.sorveglia(["camera.balconi"]);
+    await orologio.avanza(6000);
+    const quando = orologio.adesso();
+    const { id, chiave } = filmati.registra("camera.balconi", quando);
+    const letto = filmati.leggi(id, chiave);
+    await orologio.avanza(DOPO + 1000);
+    const video = await letto;
+    assert.ok(video, "il video c'e'");
+    assert.ok(video.fotogrammi.length > 10);
+    assert.ok(
+      video.fotogrammi.some((f) => f.t < 0),
+      "c'e' anche il prima",
+    );
+    assert.equal(Buffer.from(video.fotogrammi[0].jpeg, "base64").toString(), "piccolo");
+    assert.equal(rimpiccioliti[0].peso, 1_500_000);
+    assert.deepEqual(rimpiccioliti[0].larghezze, [640, 480]);
+    assert.ok(rimpiccioliti[0].massimo <= 400 * 1024);
+  } finally {
+    filmati.ferma();
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("se non si riesce a rimpicciolire, il fotogramma enorme si salta come prima", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "mini-video-"));
+  const orologio = unOrologio();
+  const filmati = new Filmati({
+    cartella,
+    casa: { immagine: async () => Buffer.alloc(1_500_000, 7) },
+    adesso: orologio.adesso,
+    aspetta: orologio.aspetta,
+    rimpicciolisci: async () => null,
+  });
+  try {
+    filmati.sorveglia(["camera.balconi"]);
+    await orologio.avanza(3000);
+    assert.equal(filmati._memorie.get("camera.balconi").fotogrammi.length, 0);
+  } finally {
+    filmati.ferma();
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
 test("togliere una telecamera dalla sorveglianza la ferma", async () => {
   const { orologio, chieste, filmati, via } = unBanco();
   try {

@@ -109,11 +109,12 @@ function riduci(byte, { ottavi, qualita, avvia = spawn }) {
 
 /* La foto sotto i [massimo] byte, larga al piu' 1280 punti: la piu' grande
  * che ci sta. `null` se non e' un JPEG, se non ci sta nemmeno piccola, o se i
- * programmi non ci sono. */
-export async function rimpicciolisci(byte, { massimo, avvia = spawn } = {}) {
+ * programmi non ci sono. Il mini video (`i-filmati.js`) chiede [larghezze]
+ * piu' piccole: i suoi fotogrammi sono venti, non uno. */
+export async function rimpicciolisci(byte, { massimo, avvia = spawn, larghezze = LARGHEZZE } = {}) {
   const misure = misureDelJpeg(byte);
   if (!misure) return null;
-  for (const larghezza of LARGHEZZE) {
+  for (const larghezza of larghezze) {
     /* djpeg riduce di ottavi: il piu' grande che non supera la larghezza. */
     const ottavi = Math.max(1, Math.min(8, Math.floor((8 * larghezza) / misure.larga)));
     for (const qualita of QUALITA) {
