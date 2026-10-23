@@ -45,6 +45,7 @@ import {
   senzaParentesi,
   temperatureDellAuto,
 } from "../core/auto-termica.js";
+import { chiediAlPonte, ilPonteCE } from "./i-dispositivi-dal-ponte-section.js";
 import {
   CAPACITA_DI_CASA_KEY,
   MEZZO_DI_CASA_KEY,
@@ -605,6 +606,45 @@ function arco(percentuale) {
   return `${pieno.toFixed(1)} ${(ARC_LENGTH - pieno).toFixed(1)}`;
 }
 
+/* ── La via dell'auto ─────────────────────────────────────────────────────
+ *
+ * «Non mi devi mostrare coordinate ma voglio vedere indirizzo.» Quando il
+ * tracker non porta l'indirizzo, la via la chiede il ponte a OpenStreetMap
+ * (`ponte/src/indirizzi.js`): esce solo il punto, arrotondato. Qui si tiene
+ * la risposta per punto, si chiede una volta sola, e quando arriva si
+ * ridisegna. Finche' non c'e' — o se non arriva — la pastiglia dice «Fuori
+ * casa»: mai i numeri. */
+const vieTrovate = new Map();
+const vieChieste = new Set();
+
+const chiaveDelPunto = (c) => `${c.lat.toFixed(4)},${c.lon.toFixed(4)}`;
+
+export function laViaDellAuto(coordinate) {
+  if (!coordinate) return "";
+  if (coordinate.indirizzo) return coordinate.indirizzo;
+  const chiave = chiaveDelPunto(coordinate);
+  if (vieTrovate.has(chiave)) return vieTrovate.get(chiave);
+  if (!vieChieste.has(chiave) && ilPonteCE()) {
+    vieChieste.add(chiave);
+    const prova = (resta) =>
+      chiediAlPonte({ type: "ponte/indirizzo", lat: coordinate.lat, lon: coordinate.lon }, 15000)
+        .then((detto) => {
+          const via = clean(detto?.indirizzo);
+          if (!via) return;
+          vieTrovate.set(chiave, via);
+          root.dispatchEvent?.(new CustomEvent("dashboardmodern:state-changed"));
+        })
+        .catch((errore) => {
+          /* Il filo non ancora aperto si riprova; un «non si sa» no. */
+          if (resta > 0 && /filo|risponde/.test(String(errore?.message || "")))
+            root.setTimeout?.(() => prova(resta - 1), 3000);
+          else vieChieste.delete(chiave);
+        });
+    void prova(3);
+  }
+  return "";
+}
+
 function pillola(glifo, testo, tono) {
   return `<span class="dm-termica-pillola" data-tono="${esc(tono)}"><i aria-hidden="true">${glifo}</i>${esc(testo)}</span>`;
 }
@@ -800,17 +840,15 @@ function pilloleDellAuto(lettura, tipo) {
    * la mappa («voglio la posizione esatta», non «fuori casa»). */
   if (lettura.posizione || lettura.coordinate) {
     const aCasa = lettura.posizione === "casa";
+    const via = aCasa ? "" : posizioneScritta(lettura.coordinate, laViaDellAuto(lettura.coordinate));
     const testo = aCasa
       ? t("A casa", "At home")
-      : lettura.coordinate
-        ? posizioneScritta(lettura.coordinate)
-        : lettura.posizione === "fuori"
-          ? t("Fuori casa", "Away")
-          : lettura.posizione;
+      : via ||
+        (lettura.posizione === "fuori" || !lettura.posizione ? t("Fuori casa", "Away") : lettura.posizione);
     const link = aCasa ? "" : linkDellaMappa(lettura.coordinate);
     pillole.push(
       link
-        ? `<a class="dm-termica-pillola dm-termica-mappa" data-tono="spento" href="${esc(link)}" target="_blank" rel="noopener noreferrer"><i aria-hidden="true">📍</i>${esc(testo)}</a>`
+        ? `<a class="dm-termica-pillola dm-termica-mappa" data-tono="spento" href="${esc(link)}" target="_blank" rel="noopener noreferrer" title="© OpenStreetMap contributors"><i aria-hidden="true">📍</i>${esc(testo)}</a>`
         : pillola("📍", testo, aCasa ? "bene" : "spento"),
     );
   }

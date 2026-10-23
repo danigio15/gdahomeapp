@@ -94,7 +94,7 @@ export function ilFiloCE() {
  * un'altra per una domanda vorrebbe dire una seconda autenticazione e un
  * secondo motivo per fallire. E' lo stesso giro che fa il selettore delle
  * foto, scritto uguale. */
-function chiediAlPonte(messaggio, attesa = ATTESA) {
+export function chiediAlPonte(messaggio, attesa = ATTESA) {
   return new Promise((risolvi, rifiuta) => {
     const presa = lessicale("ws");
     const appese = lessicale("pendingWsCallbacks");

@@ -113,6 +113,8 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
   // giorno che parte davvero muore con «Message type not permitted through
   // the bridge» e nessuno capisce perche'.
   "ponte/registri",
+  /* La via dell'auto fuori casa, chiesta dal ponte a OpenStreetMap. */
+  "ponte/indirizzo",
   // Le segnalazioni. Stessa ragione dell'upload, e una in piu': la chiave del
   // manutentore sta nelle opzioni del config entry e la chiamata verso il
   // relay la fa il backend, quindi qui passa la domanda e non il segreto.

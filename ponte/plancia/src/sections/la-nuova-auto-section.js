@@ -58,7 +58,7 @@ import { prezzoDellaNotte } from "../core/ricarica-di-notte.js";
 import { codiceDellaRicarica, cavoDalloStato } from "../core/stato-della-ricarica.js";
 import { capacitaDellaBatteria, siRicarica, vehiclePhoto } from "../core/vehicle-model.js";
 import { activeVehicle, activeVehiclePhoto, profiles } from "./ev-section.js";
-import { datiMarkup, motoreInPagina } from "./auto-termica-section.js";
+import { datiMarkup, laViaDellAuto, motoreInPagina } from "./auto-termica-section.js";
 import { weeklySourcePlans } from "./energy-analysis-section.js";
 import { renderRicaricaDiNotte } from "./ricarica-di-notte-section.js";
 import {
@@ -318,14 +318,11 @@ function pastiglieDellAuto(lettura) {
   if (d.posizione || d.coordinate) {
     /* A casa resta «A casa»; fuori si dice dove, esatto: l'indirizzo o le
      * coordinate, e il tocco apre la mappa. */
+    const via = d.posizione === "casa" ? "" : posizioneScritta(d.coordinate, laViaDellAuto(d.coordinate));
     const dove =
       d.posizione === "casa"
         ? t("A casa", "At home")
-        : d.coordinate
-          ? posizioneScritta(d.coordinate)
-          : d.posizione === "fuori"
-            ? t("Fuori casa", "Away")
-            : d.posizione;
+        : via || (d.posizione === "fuori" || !d.posizione ? t("Fuori casa", "Away") : d.posizione);
     fuori.push({ tono: "", testo: `📍 ${dove}`, link: d.posizione === "casa" ? "" : linkDellaMappa(d.coordinate) });
   }
   return fuori;
@@ -333,7 +330,7 @@ function pastiglieDellAuto(lettura) {
 
 const pastiglia = ({ tono, testo, link }) =>
   link
-    ? `<a class="dm-na-pill dm-na-pill-mappa" data-tono="${esc(tono)}" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${esc(testo)}</a>`
+    ? `<a class="dm-na-pill dm-na-pill-mappa" data-tono="${esc(tono)}" href="${esc(link)}" target="_blank" rel="noopener noreferrer" title="© OpenStreetMap contributors">${esc(testo)}</a>`
     : `<span class="dm-na-pill" data-tono="${esc(tono)}">${esc(testo)}</span>`;
 
 /* ── il disegno ──────────────────────────────────────────────────────────── */

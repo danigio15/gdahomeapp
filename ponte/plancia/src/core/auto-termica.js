@@ -506,11 +506,13 @@ export function linkDellaMappa(coordinate) {
   return `https://www.google.com/maps/search/?api=1&query=${punto}`;
 }
 
-/** Come si scrive la posizione: l'indirizzo, se c'e', se no le coordinate. */
-export function posizioneScritta(coordinate) {
+/** Come si scrive la posizione: l'indirizzo, o niente. Le coordinate non si
+ * mostrano — «non mi devi mostrare coordinate ma voglio vedere indirizzo»:
+ * quando l'integrazione l'indirizzo non lo da', lo chiede il ponte
+ * (`ponte/indirizzo`, `auto-termica-section.js`). */
+export function posizioneScritta(coordinate, trovato = "") {
   if (!coordinate) return "";
-  if (coordinate.indirizzo) return coordinate.indirizzo;
-  return `${coordinate.lat.toFixed(5)}, ${coordinate.lon.toFixed(5)}`;
+  return coordinate.indirizzo || String(trovato || "").trim();
 }
 
 export function luogoDalloStato(grezzo) {

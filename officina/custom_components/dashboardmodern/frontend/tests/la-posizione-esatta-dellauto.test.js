@@ -14,10 +14,12 @@ import {
   posizioneScritta,
 } from "../src/core/auto-termica.js";
 
-test("le coordinate vengono dagli attributi del tracker", () => {
+test("le coordinate vengono dagli attributi del tracker, ma non si mostrano", () => {
   const c = coordinateDelLuogo({ latitude: 45.464211, longitude: 9.190123, gps_accuracy: 12 });
   assert.deepEqual(c, { lat: 45.464211, lon: 9.190123, precisione: 12, indirizzo: "" });
-  assert.equal(posizioneScritta(c), "45.46421, 9.19012");
+  /* «Non mi devi mostrare coordinate ma voglio vedere indirizzo.» */
+  assert.equal(posizioneScritta(c), "");
+  assert.equal(posizioneScritta(c, "Via Roma 12, Milano"), "Via Roma 12, Milano");
   assert.equal(
     linkDellaMappa(c),
     "https://www.google.com/maps/search/?api=1&query=45.464211,9.190123",

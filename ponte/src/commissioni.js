@@ -339,6 +339,8 @@ const NIENTE_BOZZE =
  * Escono due mappe e nient'altro: di chi e' ogni entita', e come si chiama
  * quel qualcuno. **Nessuno stato.** */
 const REGISTRI = "ponte/registri";
+/* L'indirizzo di un punto, per la posizione dell'auto (`indirizzi.js`). */
+const INDIRIZZO = "ponte/indirizzo";
 const DIMMI_IL_DISPOSITIVO = "ponte/zigbee/dimmi";
 
 /* La chat di assistenza della dashboard: quattro comandi sono di chi chiede, e
@@ -591,6 +593,8 @@ export class Commissioni {
      * qualcuno. E' la stessa che legge il rapporto, e la tiene `registri.js`:
      * una sola, per non leggere due volte la stessa cosa pesante. */
     registri = null,
+    /* L'indirizzo dei punti (`indirizzi.js`): la via dell'auto fuori casa. */
+    indirizzi = null,
     ritorno = null,
     /* Le licenze di questa casa (`licenze.js`). Senza — un ponte sul banco, o
      * le prove di ieri — nessun limite, e `ponte/licenza/stato` dice che le
@@ -617,6 +621,7 @@ export class Commissioni {
     this.gestore = Boolean(gestore);
     this.chiaveDelCruscotto = String(chiaveDelCruscotto || "");
     this.chiaveDellaGestione = String(chiaveDellaGestione || "");
+    this.indirizzi = indirizzi;
     this.utenti = utenti;
     this.configurazione = configurazione;
     /* Il catalogo delle integrazioni e le foto: le altre due cose che la
@@ -910,6 +915,7 @@ export class Commissioni {
     if (tipo === DIMMI_IL_DISPOSITIVO) return this._dimmiIlDispositivo(detto);
     if (typeof tipo === "string" && tipo.startsWith("ponte/zigbee/")) return this._zigbee(detto);
     if (tipo === REGISTRI) return this._registri(detto);
+    if (tipo === INDIRIZZO) return this._lIndirizzo(detto);
     if (tipo === CONFIG_REVISIONI)
       return this._revisioni(detto, soloLaPrima, chiChiede, amministra);
     if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE) {
@@ -989,6 +995,17 @@ export class Commissioni {
    * contare le entita' come faceva prima che questa porta esistesse. Un avviso
    * un po' piu' grossolano e' meglio di una plancia che non si apre.
    */
+  /* La via di un punto: solo due numeri entrano, solo una via esce. Chi chiede
+   * e' gia' entrato (il filo del telefono o la plancia dentro Home
+   * Assistant); il punto e' quello che la sua plancia gia' vede. */
+  async _lIndirizzo(detto) {
+    const id = detto?.id ?? null;
+    if (!this.indirizzi) return no(id, "unknown_command", `non conosco ${detto?.type}`);
+    const indirizzo = await this.indirizzi.indirizzoDi(detto?.lat, detto?.lon);
+    if (!indirizzo) return no(id, "not_found", "di quel punto non si sa l'indirizzo");
+    return si(id, { indirizzo });
+  }
+
   async _registri(detto) {
     const id = detto?.id ?? null;
     if (!this.registri) return no(id, "unknown_command", `non conosco ${detto?.type}`);
