@@ -267,6 +267,11 @@ export class Filmati {
             jpeg: f.byte.toString("base64"),
           })),
         });
+        /* Nel registro i numeri, mai le immagini ne' la chiave. */
+        this.registro.info(
+          `mini video scritto (${camera}): ${fotogrammi.length} fotogrammi, ` +
+            `${Math.round(peso(fotogrammi) / 1024)} KB`,
+        );
         return true;
       } catch (errore) {
         this.registro.attenzione(`un mini video non si scrive (${errore?.code || "errore"})`);
@@ -296,11 +301,27 @@ export class Filmati {
     if (!idBuono(id) || !chiaveBuona(chiave)) return null;
     const inCorso = this._inCorso.get(id);
     if (inCorso) await Promise.race([inCorso, this.aspetta(ASPETTA_AL_PIU)]);
+    /* «Se la apri subito va, se aspetti anche poco no»: quando un video
+     * chiesto non si trova, il registro dice perche' e da quanto era il
+     * movimento — senza numero ne' chiave. */
+    const minuti = Math.round((this.adesso() - Number(id.split("-")[0])) / 60000);
+    let byte;
     try {
-      const byte = readFileSync(join(this.dove, `${id}.gdaf`));
+      byte = readFileSync(join(this.dove, `${id}.gdaf`));
+    } catch (errore) {
+      if (!this._vuoti.has(id))
+        this.registro.attenzione(
+          `mini video chiesto e non trovato sul disco (${errore?.code || "errore"}), movimento di ${minuti} min fa`,
+        );
+      return null;
+    }
+    try {
       const video = apri(id, Buffer.from(chiave, "base64url"), byte);
       return video && CAMERA_BUONA.test(String(video.camera)) ? video : null;
     } catch (_errore) {
+      this.registro.attenzione(
+        `mini video chiesto: la chiave della notifica non lo apre, movimento di ${minuti} min fa`,
+      );
       return null;
     }
   }
