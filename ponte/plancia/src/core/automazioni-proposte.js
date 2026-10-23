@@ -487,6 +487,8 @@ export function giaCe(proposta, automazioni = []) {
         a.crono.finestre.some((f) => sua.quando.entita?.includes(f))
       );
     }
+    /* Le routine e i calendari del Pianificatore non hanno un «quando». */
+    if (!a?.quando) return false;
     if (firmaDelQuando(a.quando) !== firma) return false;
     const loro = entitaDellAllora(a.allora);
     if (!cose.size) return true;

@@ -45,14 +45,6 @@ Future<void> _finoAllaPlancia(Collegamento collegamento) async {
   }
 }
 
-/// Aspetta, nel tempo vero, che una condizione si avveri.
-Future<void> _finoA(bool Function() condizione) async {
-  final fine = DateTime.now().add(const Duration(seconds: 5));
-  while (!condizione() && DateTime.now().isBefore(fine)) {
-    await Future<void>.delayed(const Duration(milliseconds: 10));
-  }
-}
-
 /// La plancia vera, nelle prove: un servitore che non serve niente e un
 /// riquadro che e' una scritta. Un WebView qui non c'e', e quello che si
 /// prova e' **dove si finisce**: che la home sia la plancia, e a quale
@@ -703,20 +695,28 @@ void main() {
       );
       await apriLaBarra(tester);
 
-      /* Da li' ai dispositivi: la barra si richiude, la sezione cambia, e le
-       * entita' compaiono adesso — non prima. */
+      /* Da li' ai Dispositivi: e' una pagina della plancia, a schermo pieno
+       * come le Automazioni (`dispositivi-app-section.js`). Il menu si segna
+       * li', e sotto resta la plancia; quando la pagina dice di essere
+       * altrove, il menu la segue. */
       await toccaNellaBarra(tester, 'Dispositivi');
-      await tester.pump();
-      /* Le entita' si chiedono adesso, alla casa finta, con prese vere: il
-       * tempo finto non le fa arrivare, si aspetta quello vero. */
-      await tester.runAsync(
-        () => _finoA(() => (collegamento.stato?.quante ?? 0) > 0),
-      );
       await tester.pumpAndSettle();
-      expect(find.text('Dispositivi'), findsOneWidget, reason: 'il titolo');
-      expect(find.text('Luci'), findsOneWidget);
-      expect(find.text('Cucina'), findsOneWidget);
-      expect(find.text('Salotto'), findsOneWidget);
+      expect(
+        tester.widget<BarraDelleSezioni>(find.byType(BarraDelleSezioni)).aperta,
+        Sezione.dispositivi,
+      );
+      plancia.cambioPagina?.call('dispositivi');
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<BarraDelleSezioni>(find.byType(BarraDelleSezioni)).aperta,
+        Sezione.dispositivi,
+      );
+      plancia.cambioPagina?.call('home');
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<BarraDelleSezioni>(find.byType(BarraDelleSezioni)).aperta,
+        Sezione.plancia,
+      );
 
       await tester.runAsync(() async {
         await collegamento.chiudi();
@@ -932,15 +932,7 @@ void main() {
       expect(uscita, 1, reason: 'al primo indietro non si esce');
 
       /* E il ☰, sulle sezioni che una barra del titolo ce l'hanno. */
-      await toccaNellaBarra(tester, 'Dispositivi');
-      await tester.pump();
-      /* Le entita' si chiedono adesso, alla casa finta, con prese vere: il
-       * tempo finto non le fa arrivare, si aspetta quello vero. Finche' non
-       * arrivano c'e' una rotella che gira, e una rotella che gira non lascia
-       * fermare niente. */
-      await tester.runAsync(
-        () => _finoA(() => (collegamento.stato?.quante ?? 0) > 0),
-      );
+      await toccaNellaBarra(tester, 'Aggiornamenti');
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 9));
       await tester.pumpAndSettle();

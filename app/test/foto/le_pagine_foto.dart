@@ -57,7 +57,6 @@ import 'package:gdahome/ponte/sonda.dart';
 import 'package:gdahome/schermate/aggiungi_casa.dart';
 import 'package:gdahome/schermate/assistenza.dart';
 import 'package:gdahome/schermate/diagnostica.dart';
-import 'package:gdahome/schermate/dispositivi.dart';
 import 'package:gdahome/schermate/impostazioni_app.dart';
 import 'package:gdahome/schermate/le_case.dart';
 import 'package:gdahome/schermate/segnalazioni.dart';
@@ -336,7 +335,6 @@ void main() {
       impostazioni: impostazioni,
       guardia: _GuardiaFinta(),
     ),
-    'dispositivi': () => Dispositivi(collegamento: collegamento),
     'diagnostica': () => SchermataDellaDiagnostica(
       collegamento: collegamento,
       impostazioni: impostazioni,

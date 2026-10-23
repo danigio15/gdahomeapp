@@ -169,6 +169,7 @@ void main() {
     required String dove,
     required bool conIlCruscotto,
     required bool scuro,
+    String? finoA,
   }) async {
     quantoGrande(tester, scuro: scuro);
 
@@ -188,6 +189,13 @@ void main() {
     for (var i = 0; i < 40; i += 1) {
       await tester.pump(const Duration(milliseconds: 50));
     }
+    /* Le voci piu' giu', fatte scorrere fin dove si vedono. */
+    if (finoA != null) {
+      await tester.ensureVisible(find.text(finoA).last);
+      for (var i = 0; i < 10; i += 1) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+    }
     await expectLater(
       find.byType(MaterialApp),
       matchesGoldenFile('../../../collaudo/foto/menu/$dove.png'),
@@ -200,6 +208,17 @@ void main() {
       dove: 'senza-cruscotto',
       conIlCruscotto: false,
       scuro: false,
+    );
+  });
+
+  /* Le Avanzate: Automazioni, Aiutanti e Zigbee col bollino PREMIUM. */
+  testWidgets('il menu in casa di un cliente, le Avanzate', (tester) async {
+    await scatta(
+      tester,
+      dove: 'senza-cruscotto-avanzate',
+      conIlCruscotto: false,
+      scuro: false,
+      finoA: 'Aiutanti',
     );
   });
 

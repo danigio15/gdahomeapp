@@ -28,6 +28,7 @@
  * ponte (`ponte/automazioni/stato`) — e acceso o spento lo dice lo stato vivo
  * di Home Assistant.
  */
+import { nelPeriodo } from "../core/automazioni.js";
 import { oggettoWidget } from "../core/oggetti-widget.js";
 import {
   CATEGORIA,
@@ -45,10 +46,15 @@ import {
   fraseDellAllora,
   fraseDellaCondizione,
   fraseDellaVoce,
+  iniziali,
   gruppiCompattiHtml,
   leProposte,
   nellApp,
+  passiDetti,
   prestaLaListaDellApp,
+  quandoDelleFasce,
+  quandoDellaRoutine,
+  cosaFannoLeFasce,
   prossimaDiCasa,
   quandoCambiaLaCasa,
   RAGGRUPPA,
@@ -75,6 +81,9 @@ const state = (root[KEY] ||= {
   cerca: "",
   /* La carta aperta nel foglio: l'entita'. */
   foglio: "",
+  /* «Automazioni» o «Pianificatore»: le routine a orari e i calendari a
+   * fasce stanno nella loro linguetta. */
+  linguetta: "automazioni",
   frame: 0,
 });
 
@@ -168,6 +177,12 @@ function insegnaLaVisibilita() {
 
 /* ── il disegno ──────────────────────────────────────────────────────────── */
 
+const DEL_PIANIFICATORE = new Set(["routine", "fasce"]);
+const delPianificatore = (v) => DEL_PIANIFICATORE.has(v?.modello?.tipo);
+/** Quelle della linguetta Automazioni: tutte, meno il Pianificatore. */
+const leAutomazioni = () => automazioniDiCasa().filter((v) => !delPianificatore(v));
+const ilPianificatore = () => automazioniDiCasa().filter(delPianificatore);
+
 const orologio = (dove) => oggettoWidget("automazioni", "", `auc-${dove}`);
 let disegni = 0;
 const disegno = (chiave) => oggettoWidget(chiave, "", `auc-${chiave}-${disegni++ % 96}`);
@@ -215,13 +230,143 @@ function strisciaDelleProposte() {
  * Nuova» c'e' per chi puo' scrivere, nell'app e nel browser: apre i modelli
  * nella pagina a schermo pieno, mai il config. Dal campo: «da Google Chrome
  * non c'e' il pulsante di creare un'automazione, invece da app si». */
+function linguetteHtml() {
+  return `<div class="ad-seg au-linguette" role="tablist">${[
+    ["automazioni", t("Automazioni", "Automations")],
+    ["pianificatore", t("Pianificatore", "Planner")],
+  ]
+    .map(
+      ([k, n]) =>
+        `<button type="button" role="tab" aria-selected="${state.linguetta === k}" data-auc-linguetta="${k}"${state.linguetta === k ? ' class="si"' : ""}>${esc(n)}</button>`,
+    )
+    .join("")}</div>`;
+}
+
+/* ── il Pianificatore ────────────────────────────────────────────────────── */
+
+const MINUTI_DEL_GIORNO = 1440;
+/* Le fasce di un calendario, a giorni uguali raggruppati: «L–V», «S–D». */
+function barreDelleFasce(f) {
+  const nomi = iniziali();
+  const gruppi = [];
+  f.giorni.forEach((fasce, i) => {
+    const firma = JSON.stringify(fasce);
+    const ultimo = gruppi.at(-1);
+    if (ultimo && ultimo.firma === firma && ultimo.fine === i - 1) ultimo.fine = i;
+    else gruppi.push({ firma, inizio: i, fine: i, fasce });
+  });
+  return `<div class="auc-fasce">${gruppi
+    .map((g) => {
+      const nome =
+        g.inizio === g.fine
+          ? nomi[g.inizio].breve
+          : `${nomi[g.inizio].breve}–${nomi[g.fine].breve}`;
+      return `<div class="auc-fascia"><b>${esc(nome)}</b><span>${g.fasce
+        .map(
+          ([da, a]) =>
+            `<i style="left:${(da / MINUTI_DEL_GIORNO) * 100}%;width:${((a - da) / MINUTI_DEL_GIORNO) * 100}%"></i>`,
+        )
+        .join("")}</span></div>`;
+    })
+    .join(
+      "",
+    )}<div class="auc-scala"><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div></div>`;
+}
+
+function rigaDelPianificatore(v) {
+  const m = v.modello;
+  const routine = m.tipo === "routine";
+  const periodo = routine ? m.routine.periodo : m.fasce.periodo;
+  const fuori = !nelPeriodo(periodo, Date.now());
+  const colore = routine ? VIOLA : "#f97316";
+  const sopra = routine ? quandoDellaRoutine(m.routine) : quandoDelleFasce(m.fasce);
+  const sotto = routine ? passiDetti(m.routine) : cosaFannoLeFasce(m.fasce);
+  return `<div class="aug-riga auc-pian${v.attiva ? "" : " spenta"}" style="--c:${colore};--c-acceso:#0ea5e9"${attributiDellaRiga(v)}><span class="aug-orb">${disegno(
+    routine ? "automazioni" : "agenda",
+  )}</span><span class="aug-testo"><b class="aug-nome"><span>${esc(v.nome)}</span></b><small class="aug-fr">${esc(sopra)}</small><small class="aug-fr auc-passi">${esc(sotto)}${
+    fuori ? ` · <em>${esc(t("fuori periodo", "out of period"))}</em>` : ""
+  }</small>${routine ? "" : barreDelleFasce(m.fasce)}</span>${interruttoreDellaRiga(v)}</div>`;
+}
+
+function gruppoDelPianificatore(chiave, titolo, disegnoG, colore, voci) {
+  const accese = voci.filter((v) => v.attiva).length;
+  return `<section class="aug" style="--c:${colore}" data-aug="${chiave}"><div class="aug-testa"><span class="aug-ico">${oggettoWidget(
+    disegnoG,
+    "",
+    `auc-pg-${chiave}`,
+  )}</span><span class="aug-titolo">${esc(titolo)}</span><span class="aug-conta" data-on="${accese > 0}">${accese}/${voci.length}</span></div><div class="aug-righe">${voci
+    .map(rigaDelPianificatore)
+    .join("")}</div></section>`;
+}
+
+function pianificatoreHtml() {
+  const tutte = ilPianificatore();
+  const puo = statoDelleAutomazioni().ponte?.puoScrivere === true;
+  const parole = clean(state.cerca).toLowerCase();
+  const viste = tutte.filter((v) => !parole || clean(v.nome).toLowerCase().includes(parole));
+  const routine = viste.filter((v) => v.modello.tipo === "routine");
+  const fasce = viste.filter((v) => v.modello.tipo === "fasce");
+  const tutteR = tutte.filter((v) => v.modello.tipo === "routine");
+  const prossima = prossimaDiCasa(tutte);
+  const kpi = `<div class="ad-kpi"><div class="dm-lucip-kpi on"><span>${esc(t("Routine", "Routines"))}</span><b>${tutteR.length}</b><small>${esc(
+    (() => {
+      const n = tutteR.filter((v) => v.attiva).length;
+      return n === 1 ? t("1 attiva", "1 active") : t(`${n} attive`, `${n} active`);
+    })(),
+  )}</small></div><div class="dm-lucip-kpi"><span>${esc(t("Calendari", "Calendars"))}</span><b>${tutte.length - tutteR.length}</b><small>${esc(
+    t("a fasce", "time slots"),
+  )}</small></div><div class="dm-lucip-kpi pross"><span>${esc(t("Prossima", "Next"))}</span><b>${esc(prossima?.ora || "—")}</b><small>${esc(
+    prossima?.voce?.nome || t("niente in programma", "nothing planned"),
+  )}</small></div></div>`;
+  const nuova = puo
+    ? `<button type="button" class="ad-nuova" data-auc-pianifica>＋ ${esc(t("Nuova", "Add new"))}</button>`
+    : "";
+  const filtri = `<div class="ad-filtri"><span class="ad-cerca-riga"><label class="ad-cerca"><span aria-hidden="true">🔍</span><input type="search" data-auc-cerca value="${esc(
+    state.cerca,
+  )}" placeholder="${esc(t("Cerca una routine…", "Search a routine…"))}"></label>${nuova}</span></div>`;
+  if (!tutte.length)
+    return `${kpi}<div class="ad-vuoto"><div class="ill">${orologio("pian")}<span aria-hidden="true">✨</span></div><h3>${esc(
+      t("Il Pianificatore è vuoto", "The Planner is empty"),
+    )}</h3><p>${esc(
+      t(
+        "Le routine fanno delle cose a degli orari, nei giorni e nel periodo che scegli: «alle 6:30 caldaia, alle 7 tapparelle su». I calendari a fasce tengono accesa una cosa nelle fasce che disegni.",
+        "Routines do things at set times, on the days and in the period you choose: «boiler at 6:30, shutters up at 7». Time-slot calendars keep something on in the slots you draw.",
+      ),
+    )}</p>${puo ? `<button type="button" data-auc-pianifica>＋ ${esc(t("Crea la prima", "Create the first one"))}</button>` : ""}</div>`;
+  const gruppi = [
+    routine.length
+      ? gruppoDelPianificatore(
+          "routine",
+          t("Routine a orari", "Timed routines"),
+          "automazioni",
+          VIOLA,
+          routine,
+        )
+      : "",
+    fasce.length
+      ? gruppoDelPianificatore(
+          "fasce",
+          t("Calendari a fasce", "Time-slot calendars"),
+          "agenda",
+          "#f97316",
+          fasce,
+        )
+      : "",
+  ].join("");
+  return `${kpi}${filtri}<div class="ad-gruppi" data-auc-gruppi>${
+    gruppi
+      ? `<div class="aug-griglia">${gruppi}</div>`
+      : `<p class="ad-nessuna">${esc(t("Nessuna routine con queste parole.", "No routine matches these words."))}</p>`
+  }</div>`;
+}
+
 function filtri() {
   const nuova =
     statoDelleAutomazioni().ponte?.puoScrivere === true
       ? `<button type="button" class="ad-nuova" data-auc-nuova>＋ ${esc(t("Nuova", "Add new"))}</button>`
       : "";
   return `<div class="ad-filtri"><span class="ad-seg-riga">${scelteDelRaggruppa(state.per, "data-auc-per", "ad-seg")}${tastiDeiGruppiHtml(
-    automazioniDiCasa(),
+    leAutomazioni(),
     { per: state.per, cerca: state.cerca },
   )}</span><span class="ad-cerca-riga"><label class="ad-cerca"><span aria-hidden="true">🔍</span><input type="search" data-auc-cerca value="${esc(
     state.cerca,
@@ -229,7 +374,8 @@ function filtri() {
 }
 
 /* La riga si apre nel foglio; l'interruttore la accende o la spegne. */
-const attributiDellaRiga = (v) => ` data-auc-carta="${esc(v.entity_id)}" role="button" tabindex="0"`;
+const attributiDellaRiga = (v) =>
+  ` data-auc-carta="${esc(v.entity_id)}" role="button" tabindex="0"`;
 const interruttoreDellaRiga = (v) =>
   `<button type="button" class="aug-int" role="switch" aria-checked="${v.attiva}" data-auc-led="${esc(v.entity_id)}" aria-label="${esc(
     t(`Accendi o spegni ${v.nome}`, `Turn ${v.nome} on or off`),
@@ -243,7 +389,10 @@ function gruppiHtml(elenco) {
     attributi: attributiDellaRiga,
     interruttore: interruttoreDellaRiga,
   });
-  return gruppi || `<p class="ad-nessuna">${esc(t("Nessuna automazione con queste parole.", "No automation matches these words."))}</p>`;
+  return (
+    gruppi ||
+    `<p class="ad-nessuna">${esc(t("Nessuna automazione con queste parole.", "No automation matches these words."))}</p>`
+  );
 }
 
 function vuoto() {
@@ -256,7 +405,9 @@ function vuoto() {
       "Automations turn things on and off and alert you by themselves: at a time, when a door opens, when you leave home. You'll see them all here, Home Assistant's too.",
     ),
   )}</p>${
-    puo ? `<button type="button" data-auc-nuova>＋ ${esc(t("Crea la prima", "Create the first one"))}</button>` : ""
+    puo
+      ? `<button type="button" data-auc-nuova>＋ ${esc(t("Crea la prima", "Create the first one"))}</button>`
+      : ""
   }</div>`;
 }
 
@@ -273,10 +424,12 @@ function corpo({ app }) {
         "Home Assistant's automations are read through the GdAHome add-on: it is not here.",
       ),
     );
-  if (!st.ponte) return `${tessere([])}${avviso(t("Leggo le automazioni di casa…", "Reading the home's automations…"))}`;
-  const elenco = automazioniDiCasa();
-  if (!elenco.length) return vuoto();
-  return `${tessere(elenco)}${strisciaDelleProposte()}${filtri()}<div class="ad-gruppi" data-auc-gruppi>${gruppiHtml(elenco)}</div>`;
+  if (!st.ponte)
+    return `${tessere([])}${avviso(t("Leggo le automazioni di casa…", "Reading the home's automations…"))}`;
+  if (state.linguetta === "pianificatore") return `${linguetteHtml()}${pianificatoreHtml()}`;
+  const elenco = leAutomazioni();
+  if (!elenco.length) return `${linguetteHtml()}${vuoto()}`;
+  return `${linguetteHtml()}${tessere(elenco)}${strisciaDelleProposte()}${filtri()}<div class="ad-gruppi" data-auc-gruppi>${gruppiHtml(elenco)}</div>`;
 }
 
 /* Senza Premium: il contenuto sfocato, e sopra la carta che dice cosa fa. */
@@ -314,12 +467,14 @@ function htmlDellApp() {
 /* ── il foglio di una carta ──────────────────────────────────────────────── */
 
 function righe(etichetta, classe, testo) {
-  return testo ? `<div class="riga ${classe}"><span>${esc(etichetta)}</span><div>${testo}</div></div>` : "";
+  return testo
+    ? `<div class="riga ${classe}"><span>${esc(etichetta)}</span><div>${testo}</div></div>`
+    : "";
 }
 
 function bloccoDelFoglio(v) {
   const m = v.modello;
-  if (m && m.tipo !== "crono") {
+  if (m && m.tipo === "regola") {
     const se = m.tutte
       ? m.soloSe.map(fraseDellaCondizione).join(", ")
       : m.soloSe.map(fraseDellaCondizione).join(` ${t("o", "or")} `);
@@ -330,7 +485,8 @@ function bloccoDelFoglio(v) {
     )}`;
   }
   const f = fraseDellaVoce(v);
-  if (f) return `${righe(t("Quando", "When"), "q", esc(f.quando))}${righe(t("Allora", "Then"), "a", esc(f.allora))}`;
+  if (f)
+    return `${righe(t("Quando", "When"), "q", esc(f.quando))}${righe(t("Allora", "Then"), "a", esc(f.allora))}`;
   if (v.config) {
     const r = riassuntoDi(v.config);
     const lista = (x) => x.map((riga) => esc(riga.testo)).join("<br>");
@@ -362,10 +518,9 @@ function htmlDelFoglio(v) {
     .join(" · ");
   /* «✏️ Modifica» apre l'editor nella pagina a schermo pieno, anche dal
    * browser: mai il config. */
-  const modifica =
-    puo
-      ? `<button type="button" class="modifica" data-auc-modifica>✏️ ${esc(t("Modifica", "Edit"))}</button>`
-      : "";
+  const modifica = puo
+    ? `<button type="button" class="modifica" data-auc-modifica>✏️ ${esc(t("Modifica", "Edit"))}</button>`
+    : "";
   return `<div class="ad-foglio" role="dialog" aria-modal="true" aria-label="${esc(v.nome)}" style="--c:${colore}"><div class="man"></div>
 <div class="su"><span class="orb">${disegno(oggetto)}</span><div><h4>${esc(v.nome)}</h4><div class="dove">${esc(dove)}</div></div><button type="button" class="led" aria-pressed="${v.attiva}" data-auc-led="${esc(
     v.entity_id,
@@ -404,7 +559,8 @@ function chiudiIlFoglio() {
 
 /* ── disegnare ───────────────────────────────────────────────────────────── */
 
-const laSezioneSiVede = () => doc?.getElementById?.(ID_DELLA_SEZIONE)?.classList?.contains("active");
+const laSezioneSiVede = () =>
+  doc?.getElementById?.(ID_DELLA_SEZIONE)?.classList?.contains("active");
 
 /* Il campo della ricerca resta sotto le dita: dopo un ridisegno si torna li'. */
 function conIlCampo(dove, scrivi) {
@@ -454,14 +610,16 @@ function aggiornaIlTasto() {
 }
 
 /* Lo stile delle carte di Luci, prestato a questa pagina: e' lo stesso
- * foglio, con le pagine di qui al posto delle sue. Si copia appena c'e'. */
-function vestiLeCarte() {
+ * foglio, con le pagine di qui al posto delle sue. Si copia appena c'e'.
+ * Lo prendono anche le pagine Dispositivi e Aiutanti dell'app, che hanno la
+ * stessa faccia. */
+export function vestiLeCarte() {
   if (doc.getElementById("dm-automazioni-casa-luci")) return;
   const luci = doc.getElementById("dm-lights-page-style")?.textContent;
   if (!luci) return;
   installStyle(
     "dm-automazioni-casa-luci",
-    luci.split(":is(#page-luci,#page-stanze,#page-prese)").join(`:is(#${ID_DELLA_SEZIONE},#page-automazioni)`),
+    luci.split(":is(#page-luci,#page-stanze,#page-prese)").join(SEZIONI),
   );
 }
 
@@ -501,7 +659,7 @@ function onClick(event) {
     return;
   }
   const tocco = el.closest(
-    "[data-auc-scopri],[data-auc-led],[data-auc-per],[data-aug-apri],[data-aug-tutti],[data-auc-proposte],[data-auc-nuova],[data-auc-esegui],[data-auc-modifica],[data-auc-duplica],[data-auc-stanza],[data-auc-elimina],[data-auc-carta]",
+    "[data-auc-scopri],[data-auc-linguetta],[data-auc-pianifica],[data-auc-led],[data-auc-per],[data-aug-apri],[data-aug-tutti],[data-auc-proposte],[data-auc-nuova],[data-auc-esegui],[data-auc-modifica],[data-auc-duplica],[data-auc-stanza],[data-auc-elimina],[data-auc-carta]",
   );
   if (!tocco) return;
   const d = tocco.dataset;
@@ -520,6 +678,18 @@ function onClick(event) {
     piuTardi();
     return;
   }
+  if (d.aucLinguetta) {
+    state.linguetta = d.aucLinguetta === "pianificatore" ? "pianificatore" : "automazioni";
+    state.cerca = "";
+    piuTardi();
+    return;
+  }
+  if (d.aucPianifica !== undefined) {
+    aSchermoPieno(app);
+    vaiA("pianifica");
+    root.scrollTo?.(0, 0);
+    return;
+  }
   if (d.aucPer) {
     state.per = RAGGRUPPA.includes(d.aucPer) ? d.aucPer : "categoria";
     piuTardi();
@@ -531,7 +701,7 @@ function onClick(event) {
     return;
   }
   if (d.augTutti) {
-    tuttiIGruppi(automazioniDiCasa(), { per: state.per, apri: d.augTutti === "apri" });
+    tuttiIGruppi(leAutomazioni(), { per: state.per, apri: d.augTutti === "apri" });
     piuTardi();
     return;
   }
@@ -578,9 +748,14 @@ function onInput(event) {
   const campo = event.target;
   if (!campo?.matches?.("[data-auc-cerca]") || !dentroDiNoi(campo)) return;
   state.cerca = campo.value;
+  if (state.linguetta === "pianificatore") {
+    disegna();
+    if (statoDelleAutomazioni().inApp) ridisegnaLaPagina();
+    return;
+  }
   const gruppi = campo.closest("[data-auc-casa]")?.querySelector("[data-auc-gruppi]");
-  if (gruppi) gruppi.innerHTML = gruppiHtml(automazioniDiCasa());
-  rifaiITastiDeiGruppi(campo.closest("[data-auc-casa]"), automazioniDiCasa(), {
+  if (gruppi) gruppi.innerHTML = gruppiHtml(leAutomazioni());
+  rifaiITastiDeiGruppi(campo.closest("[data-auc-casa]"), leAutomazioni(), {
     per: state.per,
     cerca: state.cerca,
   });
@@ -600,7 +775,9 @@ function onKey(event) {
 
 /* ── lo stile ────────────────────────────────────────────────────────────── */
 
-const SEZIONI = `:is(#${ID_DELLA_SEZIONE},#page-automazioni)`;
+/* Le pagine con questa faccia: la sezione, la pagina dell'app, e le pagine
+ * Dispositivi e Aiutanti dell'app. */
+const SEZIONI = `:is(#${ID_DELLA_SEZIONE},#page-automazioni,#page-dispositivi,#page-aiutanti)`;
 
 function stili() {
   const S = SEZIONI;
@@ -631,6 +808,17 @@ ${S} .ad-seg button.si{background:${VIOLA};color:#fff;box-shadow:0 6px 14px -6px
 ${S} .ad-cerca{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:8px;padding:0 16px;border-radius:999px;border:1px solid var(--divider-color,#dbe4ee);background:var(--card-bg,#fff);font-size:13px;color:var(--secondary-text-color,#94a3b8)}
 ${S} .ad-cerca input{flex:1;min-width:0;border:0;background:none;outline:none;padding:10px 0;font:inherit;font-weight:600;color:var(--text,#0f172a)}
 ${S} .ad-nuova{flex:none;border:0;border-radius:999px;padding:10px 18px;background:${VIOLA};color:#fff;cursor:pointer;font:inherit;font-size:13px;font-weight:900;letter-spacing:.2px;white-space:nowrap;box-shadow:0 10px 22px -12px ${VIOLA}}
+${S} .au-linguette{display:flex;width:100%;box-sizing:border-box}
+${S} .au-linguette button{flex:1;padding:10px 12px;font-size:12px}
+${S} .auc-pian .aug-testo{gap:2px}
+${S} .auc-pian .auc-passi{color:var(--text,#0f172a);opacity:.8}
+${S} .auc-pian .auc-passi em{font-style:normal;color:#c2410c;font-weight:800}
+${S} .auc-fasce{margin-top:6px;display:grid;gap:4px}
+${S} .auc-fascia{display:flex;align-items:center;gap:8px}
+${S} .auc-fascia b{flex:0 0 34px;font-size:11px;font-weight:800;color:var(--secondary-text-color,#64748b)}
+${S} .auc-fascia span{position:relative;flex:1;height:14px;border-radius:6px;background:color-mix(in srgb,var(--text,#0f172a) 6%,transparent);overflow:hidden}
+${S} .auc-fascia i{position:absolute;top:0;bottom:0;border-radius:5px;background:linear-gradient(90deg,#fb923c,#f97316)}
+${S} .auc-scala{display:flex;justify-content:space-between;margin-left:42px;font-size:9.5px;font-weight:800;color:#94a3b8}
 ${S} .ad-nessuna,${S} .ad-avviso{margin:4px 2px;font-size:13px;font-weight:700;color:var(--secondary-text-color,#64748b)}
 ${S} .ad-vuoto{display:grid;justify-items:center;text-align:center;gap:10px;padding:46px 20px 50px;border-radius:26px;border:1px dashed color-mix(in srgb,${VIOLA} 35%,var(--divider-color,#dbe4ee));background:radial-gradient(80% 70% at 50% 0%,color-mix(in srgb,${VIOLA} 9%,transparent),transparent 70%),var(--card-bg,#fff)}
 ${S} .ad-vuoto .ill,${S} .ad-chiusa .ill{position:relative;width:132px;height:132px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 40% 35%,color-mix(in srgb,${VIOLA} 14%,#fff),color-mix(in srgb,${VIOLA} 26%,var(--card-bg,#fff)));box-shadow:0 20px 40px -24px ${VIOLA}}

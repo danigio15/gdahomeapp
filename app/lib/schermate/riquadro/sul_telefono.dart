@@ -25,6 +25,7 @@ import '../../plancia/premesse.dart' show ilMenuDalTelefono, laPlanciaSiVede;
 import '../../parole.dart';
 import 'biglietto.dart';
 import 'gli_errori.dart';
+import 'pagine.dart';
 
 /// Un controllore pronto a caricare la plancia.
 ///
@@ -577,7 +578,18 @@ Future<void> tornaDallaConfig(WebViewController controllore) async {
 /// riprova qualche volta, come fa la maniglia della Config da se'. Una plancia
 /// vecchia che la maniglia non ce l'ha non fa niente: la voce non apre
 /// niente, e non rompe niente.
-Future<void> apriLeAutomazioni(WebViewController controllore) async {
+Future<void> apriLeAutomazioni(WebViewController controllore) =>
+    apriAPienoSchermo(controllore, PaginaDellaPlancia.automazioni);
+
+/// Apre una pagina della plancia a schermo pieno — le Automazioni, i
+/// Dispositivi, gli Aiutanti — tirando la sua maniglia (`pagine.dart`). Come
+/// per le Automazioni, una pagina appena nata la maniglia non ce l'ha ancora:
+/// si riprova qualche volta.
+Future<void> apriAPienoSchermo(
+  WebViewController controllore,
+  PaginaDellaPlancia pagina,
+) async {
+  final maniglia = pagina.apri;
   for (final fra in const [
     Duration.zero,
     Duration(milliseconds: 400),
@@ -587,7 +599,7 @@ Future<void> apriLeAutomazioni(WebViewController controllore) async {
     if (fra > Duration.zero) await Future<void>.delayed(fra);
     try {
       final fatto = await controllore.runJavaScriptReturningResult(
-        '!!(window.gdahomeApriLeAutomazioni&&window.gdahomeApriLeAutomazioni())',
+        '!!(window.$maniglia&&window.$maniglia())',
       );
       if (fatto == true || fatto.toString() == 'true') return;
     } catch (_) {
@@ -633,11 +645,17 @@ Future<bool> apriLaLinguetta(
 }
 
 /// Riporta la plancia dov'era prima delle Automazioni.
-Future<void> tornaDalleAutomazioni(WebViewController controllore) async {
+Future<void> tornaDalleAutomazioni(WebViewController controllore) =>
+    tornaDaPienoSchermo(controllore, PaginaDellaPlancia.automazioni);
+
+/// Riporta la plancia dov'era prima di una sua pagina a schermo pieno.
+Future<void> tornaDaPienoSchermo(
+  WebViewController controllore,
+  PaginaDellaPlancia pagina,
+) async {
+  final maniglia = pagina.torna;
   try {
-    await controllore.runJavaScript(
-      'window.gdahomeTornaDalleAutomazioni&&window.gdahomeTornaDalleAutomazioni()',
-    );
+    await controllore.runJavaScript('window.$maniglia&&window.$maniglia()');
   } catch (_) {
     /* La pagina non c'e' ancora: non c'e' nemmeno da dove tornare. */
   }

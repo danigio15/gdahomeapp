@@ -145,6 +145,9 @@ import { installEvShowcaseSection } from "./ev-showcase-section.js";
 import { installRicaricaDiNotteSection } from "./ricarica-di-notte-section.js";
 import { installAutomazioniSection } from "./automazioni-section.js";
 import { installAutomazioniCasaSection } from "./automazioni-casa-section.js";
+import { installProceduraGuidataSection } from "./procedura-guidata-section.js";
+import { installDispositiviAppSection } from "./dispositivi-app-section.js";
+import { installAiutantiAppSection } from "./aiutanti-app-section.js";
 import { installEvStatoETargetSection } from "./ev-stato-e-target-section.js";
 import { installAutoTermica } from "./auto-termica-section.js";
 import { installAutoOMoto } from "./auto-o-moto-section.js";
@@ -1183,6 +1186,12 @@ export function installSectionRuntime() {
     /* E la loro sezione della dashboard, con la linguetta prima di Config:
      * dopo la pagina del config, perche' le presta la lista dell'app. */
     senzaCadere(installAutomazioniCasaSection);
+    /* Le pagine Dispositivi (con le integrazioni) e Aiutanti dell'app: a
+     * schermo pieno come le Automazioni, di cui prendono la faccia, e la
+     * procedura guidata di Home Assistant che usano per aggiungere. */
+    senzaCadere(installProceduraGuidataSection);
+    senzaCadere(installDispositiviAppSection);
+    senzaCadere(installAiutantiAppSection);
     /* L'auto a benzina (#208) si appoggia alla pagina EV gia' vestita: le
      * sue caselle entrano nella stessa scheda, e il suo quadro prende il
      * posto di quello della ricarica quando il motore non e' elettrico. */

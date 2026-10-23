@@ -39,7 +39,9 @@ import {
   ASPETTA_AL_MASSIMO,
   DOMINI,
   automazionePulita,
+  calendarioPulito,
   cronoPulito,
+  routinePulita,
   dominioDi,
   serviziDellAzione,
 } from "./automazioni.js";
@@ -611,6 +613,98 @@ function cronoInHA(c) {
   };
 }
 
+/* Il Pianificatore. Come il cronotermostato, il modello viaggia in
+ * `variables` (`gdahome_routine`, `gdahome_fasce`), dove lo rilegge l'editor.
+ *
+ * La routine e' un'automazione sola: un orario per passo, ognuno col suo
+ * `id`, e un `choose` che fa le azioni di quel passo. I giorni sono una
+ * condizione, il periodo un'altra: fuori periodo resta accesa e non fa
+ * niente. */
+export const VARIABILE_DELLA_ROUTINE = "gdahome_routine";
+export const VARIABILE_DELLE_FASCE = "gdahome_fasce";
+
+const OGGI_MM_GG = "now().strftime('%m-%d')";
+function templateDelPeriodo(p) {
+  return p.da <= p.a
+    ? `{{ '${p.da}' <= ${OGGI_MM_GG} <= '${p.a}' }}`
+    : `{{ ${OGGI_MM_GG} >= '${p.da}' or ${OGGI_MM_GG} <= '${p.a}' }}`;
+}
+
+function routineInHA(a, contesto) {
+  const r = a.routine;
+  const passi = r.passi.filter((p) => p.allora.some((x) => x.tipo !== "aspetta"));
+  if (!passi.length) return null;
+  const conditions = [];
+  if (!r.giorni.every(Boolean))
+    conditions.push({ condition: "time", weekday: giorniInHA(r.giorni) });
+  if (r.periodo)
+    conditions.push({ condition: "template", value_template: templateDelPeriodo(r.periodo) });
+  const soloSe = a.soloSe.map(condizioneInHA);
+  if (soloSe.length > 1 && a.tutte === false)
+    conditions.push({ condition: "or", conditions: soloSe });
+  else conditions.push(...soloSe);
+  return {
+    /* Ogni passo per conto suo: un «aspetta 45 minuti» delle 6:30 non
+     * ferma il passo delle 7:00. */
+    mode: "parallel",
+    variables: { [VARIABILE_DELLA_ROUTINE]: { ...r } },
+    triggers: passi.map((p, i) => ({ trigger: "time", at: `${p.ora}:00`, id: `passo_${i}` })),
+    conditions,
+    actions: [
+      {
+        choose: passi.map((p, i) => ({
+          conditions: [{ condition: "trigger", id: `passo_${i}` }],
+          sequence: azioniInHA(p.allora, contesto),
+        })),
+      },
+    ],
+  };
+}
+
+/* Il calendario a fasce: parte a ogni inizio e fine fascia e quando Home
+ * Assistant si riaccende, e in quel momento guarda la fascia di oggi —
+ * cosi' una casa riavviata nel mezzo di una fascia rimette lo stato giusto. */
+const TEMPLATE_DELLE_FASCE =
+  `{% set f = ${VARIABILE_DELLE_FASCE}.giorni[now().weekday()] %}{% set m = now().hour * 60 + now().minute %}` +
+  "{% set ns = namespace(si=false) %}{% for x in f %}{% if x[0] <= m < x[1] %}{% set ns.si = true %}{% endif %}{% endfor %}" +
+  "{{ ns.si }}";
+
+function fasceInHA(c) {
+  if (!c.entita.length) return null;
+  const ore = new Set();
+  for (const giorno of c.giorni)
+    for (const [da, a] of giorno) {
+      ore.add(da % 1440);
+      ore.add(a % 1440);
+    }
+  const at = [...ore].sort((x, y) => x - y).map((m) => secondiInOra(m * 60));
+  const cose = bersaglio(c.entita);
+  return {
+    mode: "restart",
+    variables: { [VARIABILE_DELLE_FASCE]: { ...c } },
+    triggers: [
+      ...(at.length ? [{ trigger: "time", at }] : []),
+      { trigger: "homeassistant", event: "start" },
+    ],
+    conditions: c.periodo
+      ? [{ condition: "template", value_template: templateDelPeriodo(c.periodo) }]
+      : [],
+    actions: [
+      {
+        choose: [
+          {
+            conditions: [{ condition: "template", value_template: TEMPLATE_DELLE_FASCE }],
+            sequence: [{ action: "homeassistant.turn_on", target: cose }],
+          },
+        ],
+        ...(c.fuori === "spegni"
+          ? { default: [{ action: "homeassistant.turn_off", target: cose }] }
+          : {}),
+      },
+    ],
+  };
+}
+
 /**
  * La configurazione di Home Assistant di un'automazione della plancia.
  * `null` se non sta in piedi (manca cosa la fa partire, o non fa niente).
@@ -630,6 +724,14 @@ export function inHomeAssistant(dato, { azioni = [], stati = {}, descrizione = n
   if (a.tipo === "crono") {
     if (!a.crono.termostati.length) return null;
     return { ...testa, ...cronoInHA(a.crono) };
+  }
+  if (a.tipo === "routine") {
+    const r = routineInHA(a, { azioni, stati });
+    return r ? { ...testa, ...r } : null;
+  }
+  if (a.tipo === "fasce") {
+    const f = fasceInHA(a.fasce);
+    return f ? { ...testa, ...f } : null;
   }
   const triggers = triggerDelQuando(a.quando, stati);
   if (!triggers.length) return null;
@@ -1022,8 +1124,27 @@ export function dallaHomeAssistant(config, { statoDi = null, azioni = [], stati 
   const nome = pulito(config.alias).slice(0, 60);
   let modello = null;
   const crono = n.variables?.[VARIABILE_DEL_CRONO];
+  const routine = n.variables?.[VARIABILE_DELLA_ROUTINE];
+  const fasce = n.variables?.[VARIABILE_DELLE_FASCE];
   if (crono) {
     modello = { id, nome, attiva: true, tipo: "crono", crono: cronoPulito(crono) };
+  } else if (fasce) {
+    modello = { id, nome, attiva: true, tipo: "fasce", fasce: calendarioPulito(fasce) };
+  } else if (routine) {
+    /* I «solo se» della routine stanno dopo i giorni e il periodo. */
+    const r = routinePulita(routine);
+    const davanti = (r.giorni.every(Boolean) ? 0 : 1) + (r.periodo ? 1 : 0);
+    const opzioni = opzioniDi(n.conditions.slice(davanti), { tipo: "routine" });
+    if (!opzioni) return null;
+    modello = {
+      id,
+      nome,
+      attiva: true,
+      tipo: "routine",
+      routine: r,
+      soloSe: opzioni.soloSe,
+      tutte: opzioni.tutte,
+    };
   } else {
     if (n.variables) return null;
     const quando = quandoDi(n.triggers, statoDi);

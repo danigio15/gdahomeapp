@@ -6,4 +6,5 @@
 /// sceglie quando si costruisce, e chi disegna la schermata non lo sa.
 library;
 
+export 'pagine.dart';
 export 'sul_web.dart' if (dart.library.io) 'sul_telefono.dart';

@@ -180,6 +180,25 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
   "ponte/automazioni/duplica",
   "ponte/automazioni/proposte",
   "ponte/automazioni/proposte/scarta",
+  // Le pagine Dispositivi e Aiutanti dell'app (Premium): i dispositivi, le
+  // integrazioni, le procedure guidate e gli aiutanti di Home Assistant
+  // (ponte/src/integrazioni.js, ponte/src/aiutanti.js). Il ponte li fa solo
+  // dall'app e solo per chi amministra Home Assistant.
+  "ponte/dispositivi/elenco",
+  "ponte/integrazioni/elenco",
+  "ponte/integrazioni/ricarica",
+  "ponte/integrazioni/disattiva",
+  "ponte/integrazioni/elimina",
+  "ponte/integrazioni/catalogo",
+  "ponte/integrazioni/dispositivi",
+  "ponte/flussi/avvia",
+  "ponte/flussi/passo",
+  "ponte/flussi/leggi",
+  "ponte/flussi/annulla",
+  "ponte/aiutanti/elenco",
+  "ponte/aiutanti/crea",
+  "ponte/aiutanti/modifica",
+  "ponte/aiutanti/elimina",
   // Il riavvio che Home Assistant aspetta dopo un aggiornamento: se serve
   // (una lettura delle riparazioni) e il riavvio, che il ponte fa solo per
   // chi amministra (ponte/src/aggiornamenti.js).

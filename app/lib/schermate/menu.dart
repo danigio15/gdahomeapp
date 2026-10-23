@@ -137,7 +137,10 @@ enum Sezione {
    * stando in piedi davanti al dispositivo, col telefono in una mano — e una
    * copia nel browser sarebbe una porta che si apre su meta' di quello che
    * promette. Una porta che non si apre e' peggio di una porta che non c'e'. */
-  aiutanti('mie', soloNellApp: true),
+  /* Gli aiutanti di Home Assistant (Premium): la pagina della plancia
+   * `aiutanti-app-section.js`, a schermo pieno. Solo nell'app, e solo per
+   * chi amministra Home Assistant: lo decide il ponte. */
+  aiutanti('mie', pronta: true, soloNellApp: true),
   /* Un dispositivo nuovo, abbinato dal telefono (#54).
    *
    * Come la Console e il Cruscotto non e' una voce come le altre: compare
@@ -262,8 +265,12 @@ enum Sezione {
   ///
   /// «Hai messo il tag premium su automazioni, mettilo anche sulle altre
   /// cose presenti nell'app, tipo zigbee, aiutanti eccetera.»
+  ///
+  /// «Tutta la sezione» Dispositivi: i dispositivi stanza per stanza e le
+  /// integrazioni stanno nella stessa pagina, e sono Premium insieme.
   bool get diPremium => switch (this) {
     Sezione.configurazione ||
+    Sezione.dispositivi ||
     Sezione.automazioni ||
     Sezione.zigbee ||
     Sezione.aiutanti => true,

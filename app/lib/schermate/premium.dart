@@ -92,6 +92,26 @@ abstract final class PerchePremium {
         'themselves — are part of GdAHome Premium.',
   );
 
+  static String get dispositivi => inLingua(
+    it:
+        'I dispositivi della casa stanza per stanza e le integrazioni di Home '
+        'Assistant — aggiungerle, ricaricarle, ripararle — sono di GdAHome '
+        'Premium.',
+    en:
+        'The home\'s devices room by room and Home Assistant\'s integrations '
+        '— adding, reloading and repairing them — are part of GdAHome '
+        'Premium.',
+  );
+
+  static String get aiutanti => inLingua(
+    it:
+        'Gli aiutanti — interruttori, numeri, elenchi, timer e sensori '
+        'calcolati per le automazioni — sono di GdAHome Premium.',
+    en:
+        'Helpers — toggles, numbers, dropdowns, timers and computed sensors '
+        'for automations — are part of GdAHome Premium.',
+  );
+
   static String get fuoriCasa => inLingua(
     it:
         'Fuori casa serve GdAHome Premium. Sotto il Wi-Fi di casa si entra '

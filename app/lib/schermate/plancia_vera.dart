@@ -342,21 +342,27 @@ class PlanciaVeraState extends State<PlanciaVera> {
     _riquadro.currentState?.tornaDallaConfig();
   }
 
-  /* Le Automazioni chieste prima che la pagina fosse pronta: come la Config,
-   * si aprono appena arriva. */
-  bool _leAutomazioniAppenaSiPuo = false;
+  /* Una pagina a schermo pieno (le Automazioni, i Dispositivi, gli Aiutanti)
+   * chiesta prima che la plancia fosse pronta: come la Config, si apre
+   * appena arriva. */
+  riquadro.PaginaDellaPlancia? _laPaginaAppenaSiPuo;
 
-  /// Apre la pagina Automazioni della plancia, a schermo pieno: la voce
-  /// «Automazioni» del menu. La pagina e' della plancia
-  /// (`automazioni-section.js`), come la Config.
-  void apriLeAutomazioni() {
+  /// Apre una pagina della plancia a schermo pieno: le voci «Automazioni»,
+  /// «Dispositivi» e «Aiutanti» del menu. Le pagine sono della plancia
+  /// (`automazioni-section.js`, `dispositivi-app-section.js`,
+  /// `aiutanti-app-section.js`), come la Config.
+  void apriAPienoSchermo(riquadro.PaginaDellaPlancia pagina) {
     if (!mounted) return;
     if (!_caricata) {
-      _leAutomazioniAppenaSiPuo = true;
+      _laPaginaAppenaSiPuo = pagina;
       return;
     }
-    _riquadro.currentState?.apriLeAutomazioni();
+    _riquadro.currentState?.apriAPienoSchermo(pagina);
   }
+
+  /// Apre la pagina Automazioni della plancia, a schermo pieno.
+  void apriLeAutomazioni() =>
+      apriAPienoSchermo(riquadro.PaginaDellaPlancia.automazioni);
 
   /// Apre una pagina della plancia, per linguetta: dove porta il tocco su una
   /// notifica. Se la pagina si sta ancora caricando — l'app aperta dalla
@@ -370,12 +376,16 @@ class PlanciaVeraState extends State<PlanciaVera> {
     return await _riquadro.currentState?.apriLaLinguetta(linguette) ?? false;
   }
 
-  /// Torna dov'era la plancia prima delle Automazioni.
-  void tornaDalleAutomazioni() {
+  /// Torna dov'era la plancia prima di una sua pagina a schermo pieno.
+  void tornaDaPienoSchermo(riquadro.PaginaDellaPlancia pagina) {
     if (!mounted) return;
-    _leAutomazioniAppenaSiPuo = false;
-    _riquadro.currentState?.tornaDalleAutomazioni();
+    _laPaginaAppenaSiPuo = null;
+    _riquadro.currentState?.tornaDaPienoSchermo(pagina);
   }
+
+  /// Torna dov'era la plancia prima delle Automazioni.
+  void tornaDalleAutomazioni() =>
+      tornaDaPienoSchermo(riquadro.PaginaDellaPlancia.automazioni);
 
   /// Passa alla plancia un dispositivo appena abbinato (#54, passo 4).
   ///
@@ -771,9 +781,10 @@ class PlanciaVeraState extends State<PlanciaVera> {
                   _laConfigAppenaSiPuo = false;
                   _riquadro.currentState?.apriLaConfig();
                 }
-                if (_leAutomazioniAppenaSiPuo) {
-                  _leAutomazioniAppenaSiPuo = false;
-                  _riquadro.currentState?.apriLeAutomazioni();
+                final pagina = _laPaginaAppenaSiPuo;
+                if (pagina != null) {
+                  _laPaginaAppenaSiPuo = null;
+                  _riquadro.currentState?.apriAPienoSchermo(pagina);
                 }
               },
               quandoFallisce: (perche) {
@@ -1160,18 +1171,19 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
     }
   }
 
-  /// Apre la pagina Automazioni della plancia: la maniglia sta nella pagina.
-  void apriLeAutomazioni() {
+  /// Apre una pagina della plancia a schermo pieno: la maniglia sta nella
+  /// pagina.
+  void apriAPienoSchermo(riquadro.PaginaDellaPlancia pagina) {
     final controllore = _controllore;
     if (controllore != null) {
-      unawaited(riquadro.apriLeAutomazioni(controllore));
+      unawaited(riquadro.apriAPienoSchermo(controllore, pagina));
     }
   }
 
-  void tornaDalleAutomazioni() {
+  void tornaDaPienoSchermo(riquadro.PaginaDellaPlancia pagina) {
     final controllore = _controllore;
     if (controllore != null) {
-      unawaited(riquadro.tornaDalleAutomazioni(controllore));
+      unawaited(riquadro.tornaDaPienoSchermo(controllore, pagina));
     }
   }
 

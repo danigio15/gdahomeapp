@@ -570,3 +570,43 @@ test("gli avvisi di Home Assistant arrivano ai telefoni, con Premium e senza pio
     false,
   );
 });
+
+test("il Pianificatore: una routine e un calendario a fasce si salvano come automazioni vere, e si rileggono", async () => {
+  const c = unaCasa();
+  const routine = await c.ponte.salva({
+    automazione: {
+      nome: "Mattina feriale",
+      tipo: "routine",
+      routine: {
+        giorni: [true, true, true, true, true, false, false],
+        periodo: { da: "10-01", a: "03-31" },
+        passi: [
+          { ora: "06:30", allora: [{ tipo: "accendi", entita: ["switch.caldaia"] }] },
+          { ora: "07:00", allora: [{ tipo: "tapparella", entita: ["cover.sala"], modo: "apri" }] },
+        ],
+      },
+    },
+  });
+  const scritta = c.salvate[routine.id];
+  assert.equal(scritta.alias, "Mattina feriale");
+  assert.equal(scritta.mode, "parallel");
+  assert.deepEqual(
+    scritta.triggers.map((x) => x.at),
+    ["06:30:00", "07:00:00"],
+  );
+  assert.ok(scritta.variables.gdahome_routine);
+  const fasce = await c.ponte.salva({
+    automazione: {
+      nome: "Caldaia",
+      tipo: "fasce",
+      fasce: { entita: ["switch.caldaia"], giorni: [[[360, 480]], [], [], [], [], [], []] },
+    },
+  });
+  assert.deepEqual(c.salvate[fasce.id].triggers, [
+    { trigger: "time", at: ["06:00:00", "08:00:00"] },
+    { trigger: "homeassistant", event: "start" },
+  ]);
+  /* Rilette da Home Assistant, sono di nuovo una routine e un calendario. */
+  assert.equal(dallaHomeAssistant(scritta).tipo, "routine");
+  assert.equal(dallaHomeAssistant(c.salvate[fasce.id]).tipo, "fasce");
+});
