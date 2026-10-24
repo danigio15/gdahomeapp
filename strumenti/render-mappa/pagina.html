@@ -15,6 +15,17 @@
     height: 720px;
     overflow: hidden;
   }
+  [hidden] {
+    display: none !important;
+  }
+  .auto {
+    width: 0;
+    height: 0;
+    border-left: 22px solid transparent;
+    border-right: 22px solid transparent;
+    border-bottom: 52px solid #2563eb;
+    filter: drop-shadow(0 0 0 #fff) drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5));
+  }
   #mappa {
     position: absolute;
     inset: 0;
@@ -173,7 +184,16 @@
       qui = punti[i - 1];
       if (fatti >= 110) break;
     }
-    const verso = direzione(qui, dove);
+    /* Il verso: dove va la strada nei 40 m dopo la telecamera, come
+     * l'auto che la percorre. */
+    let avanti = dove;
+    let fatto = 0;
+    for (let i = punti.indexOf(qui); i >= 0 && i < punti.length - 1; i += 1) {
+      fatto += metri(punti[i], punti[i + 1]);
+      avanti = punti[i + 1];
+      if (fatto >= 40) break;
+    }
+    const verso = direzione(qui, avanti);
     const mappa = new maplibregl.Map({
       container: "mappa",
       style: stile,
@@ -186,12 +206,29 @@
       interactive: false,
       preserveDrawingBuffer: true,
       fadeDuration: 0,
+      /* L'auto in basso, la strada davanti: come nel navigatore. */
+      padding: { top: 380, bottom: 0, left: 0, right: 0 },
     });
     mappa.on("styleimagemissing", (e) => {
       const vuota = { width: 1, height: 1, data: new Uint8Array(4) };
       if (!mappa.hasImage(e.id)) mappa.addImage(e.id, vuota);
     });
     mappa.on("load", () => {
+      /* Inclinata, come in auto: gli edifici in 3D li accende l'app quando
+       * la vista e' inclinata (`RendererMappa.kt`, `MappaCarPlay.swift`). */
+      if (mappa.getLayer("edifici-3d"))
+        mappa.setLayoutProperty("edifici-3d", "visibility", "visible");
+      const auto = document.createElement("div");
+      auto.className = "auto";
+      new maplibregl.Marker({
+        element: auto,
+        rotation: 0,
+        rotationAlignment: "map",
+        pitchAlignment: "map",
+      })
+        .setLngLat(qui)
+        .setRotation(verso)
+        .addTo(mappa);
       const sorgente = mappa.getSource("gdanav-percorso");
       sorgente?.setData({
         type: "FeatureCollection",
