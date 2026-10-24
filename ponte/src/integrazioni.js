@@ -68,6 +68,7 @@ export const COMANDI_DELLE_INTEGRAZIONI = Object.freeze([
   "ponte/integrazioni/elimina",
   "ponte/integrazioni/catalogo",
   "ponte/integrazioni/dispositivi",
+  "ponte/integrazioni/logo",
   "ponte/dispositivi/elenco",
   "ponte/flussi/avvia",
   "ponte/flussi/passo",
@@ -443,7 +444,9 @@ export class Integrazioni {
     return { fatto: true };
   }
 
-  async rispondi(detto, { utente = "", amministra = false, dalTelefono = false } = {}) {
+  /** Il no di chi non puo': `null` se puo'. Lo usa anche il logo, che lo
+   * scarica `commissioni.js` dai marchi di Home Assistant. */
+  vietato(detto, { utente = "", amministra = false, dalTelefono = false } = {}) {
     const id = detto?.id ?? null;
     const tipo = detto?.type;
     if (!this.riconosce(tipo)) return no(id, "unknown_command", `non conosco ${tipo}`);
@@ -454,6 +457,14 @@ export class Integrazioni {
       return no(id, "unauthorized", "le integrazioni le gestisce chi amministra Home Assistant");
     if (!this.sbloccato)
       return no(id, "premium-richiesto", "le integrazioni sono di GdAHome Premium");
+    return null;
+  }
+
+  async rispondi(detto, chi = {}) {
+    const id = detto?.id ?? null;
+    const tipo = detto?.type;
+    const vietato = this.vietato(detto, chi);
+    if (vietato) return vietato;
     const lingua = /^[a-z]{2}(-[A-Za-z]{2,4})?$/.test(pulito(detto.lingua))
       ? pulito(detto.lingua)
       : "it";

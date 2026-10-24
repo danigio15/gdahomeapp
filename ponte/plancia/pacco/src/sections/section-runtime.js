@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-WVHGBR54.js";
+} from "../../chunk-NIS7EHFL.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2086,6 +2086,7 @@ var SOURCE_INDEX = Object.freeze({
   "${quante} valori fuori norma": "${quante} readings out of range",
   "${quanti} ${tipoInParole(tipo)} da ${numero} celle": "${quanti} of ${tipoInParole(tipo)}, ${numero} cells each",
   "${quanti} cose da fare": "${quanti} things to do",
+  "${quanti} dispositivi": "${quanti} devices",
   "${quanti} litri oggi": "${quanti} litres today",
   "${quanti} m³ di gas": "${quanti} m³ of gas",
   "${quanti} m³ oggi": "${quanti} m³ today",
@@ -2113,6 +2114,7 @@ var SOURCE_INDEX = Object.freeze({
   "${scelti} di ${tutti}": "${scelti} of ${tutti}",
   "${soc}% raggiunto": "${soc}% reached",
   "${spente} entità sono disabilitate in Home Assistant: abilitale da lì per vederle anche qui.": "${spente} entities are disabled in Home Assistant: enable them there to see them here too.",
+  "${sue.length} voci": "${sue.length} entries",
   "${tapparella} al tramonto": "${tapparella} at sunset",
   "${totale} luci": "${totale} lights",
   "${trovate.length} cartucce trovate": "${trovate.length} cartridges found",
@@ -2132,7 +2134,10 @@ var SOURCE_INDEX = Object.freeze({
   "${value} unità": "${value} units",
   "${valvola.aperta}% aperta": "${valvola.aperta}% open",
   "${valvola.chiusa}% chiusa": "${valvola.chiusa}% closed",
+  "${voci.length} voci": "${voci.length} entries",
   "${volte} volte": "${volte} times",
+  "${x.sue.length} voci": "${x.sue.length} entries",
+  "${x.sue.length} voci · Gestisci": "${x.sue.length} entries · Manage",
   "0% = schermo nero, come «Di notte schermo nero»": "0% = black screen, like “Black screen at night”",
   "1 · Di che si tratta": "1 · What is it about",
   "1 accesa": "1 on",
@@ -2188,6 +2193,8 @@ var SOURCE_INDEX = Object.freeze({
   "1 stanza · c'è qualcuno adesso": "1 room · someone is there now",
   "1 tapparella alzata": "1 shutter up",
   "1 unità": "1 unit",
+  "1 voce": "1 entry",
+  "1 voce · Gestisci": "1 entry · Manage",
   "1 volo in zona": "1 flight in the area",
   "1 volta": "1 time",
   "1. Apri HA → click sul tuo": "1. Open HA → click your",
@@ -2399,6 +2406,7 @@ var SOURCE_INDEX = Object.freeze({
   "Aggiungi un sensore che non viene trovato": "Add a sensor that is not found",
   "Aggiungi un tasto": "Add a button",
   "Aggiungi un UPS": "Add a UPS",
+  "Aggiungi un'altra": "Add another",
   "Aggiungi un'auto da un'integrazione": "Add a car from an integration",
   "Aggiungi un'azione": "Add an action",
   "Aggiungi un'entità": "Add an entity",
@@ -3643,7 +3651,6 @@ var SOURCE_INDEX = Object.freeze({
   "Disattiva": "Disable",
   "disattivata": "disabled",
   "Disattivata: ${v.titolo}": "Disabled: ${v.titolo}",
-  "Disattivate": "Disabled",
   "Disco": "Disk",
   "Discreta": "Fair",
   "Disegno": "Drawing",
@@ -6373,11 +6380,13 @@ var SOURCE_INDEX = Object.freeze({
   "Riavvio…": "Restarting…",
   "Ricarica": "Reload",
   "Ricarica ${v.titolo}": "Reload ${v.titolo}",
+  "Ricarica ${x.nome}": "Reload ${x.nome}",
   "Ricarica l'integrazione": "Reload the integration",
   "Ricarica notturna": "Night charging",
   "Ricarica programmata (acceso/spento)": "Scheduled charging (on/off)",
   "Ricarica rapida (acceso/spento)": "Fast charging (on/off)",
   "Ricarica sempre EVCC / Always charge (select)": "EVCC always charge (select)",
+  "Ricarica tutte": "Reload all",
   "Ricarica: ${minuti} in ${n} soste": "Charging: ${minuti} in ${n} stops",
   "Ricarica: ${minuti} in 1 sosta": "Charging: ${minuti} in 1 stop",
   "Ricaricata: ${v.titolo} ✓": "Reloaded: ${v.titolo} ✓",
@@ -129623,6 +129632,9 @@ var state146 = root[KEY150] ||= {
   cerca: "",
   cercaCat: "",
   chiusi: [],
+  /* Le integrazioni aperte: partono chiuse, come le schede di Home
+   * Assistant, e si apre quella che interessa. */
+  aperte: [],
   foglio: null,
   avviso: "",
   inCorso: {}
@@ -129845,15 +129857,21 @@ function nomeDellEntita2(e, d) {
   return nome || clean(d?.nome) || e.id;
 }
 var cerca4 = (testo4, parole4) => !clean(parole4) || clean(testo4).toLowerCase().includes(clean(parole4).toLowerCase());
-function gruppoHtml({ chiave: chiave2, titolo: titolo3, disegno: disegno8, colore, righe: righe3, conta: conta2 }) {
-  const chiuso = state146.chiusi.includes(chiave2);
-  return `<section class="aug${chiuso ? " chiuso" : ""}" style="--c:${colore}" data-aug="${esc(chiave2)}"><button type="button" class="aug-testa" data-dv-gruppo="${esc(
+function gruppoHtml({
+  chiave: chiave2,
+  titolo: titolo3,
+  disegno: disegno8,
+  colore,
+  righe: righe3,
+  conta: conta2,
+  chiuso = null,
+  segno: segno4 = "",
+  sotto = ""
+}) {
+  const eChiuso = chiuso ?? state146.chiusi.includes(chiave2);
+  return `<section class="aug${eChiuso ? " chiuso" : ""}${segno4 ? " dv-int" : ""}" style="--c:${colore}" data-aug="${esc(chiave2)}"><button type="button" class="aug-testa" data-dv-gruppo="${esc(
     chiave2
-  )}" aria-expanded="${!chiuso}"><span class="aug-freccia" aria-hidden="true">${chiuso ? "▸" : "▾"}</span><span class="aug-ico">${oggettoWidget(
-    disegno8,
-    "",
-    `dv-g-${chiave2}`
-  )}</span><span class="aug-titolo">${esc(titolo3)}</span><span class="aug-conta" data-on="true">${conta2}</span></button><div class="aug-righe">${righe3.join("")}</div></section>`;
+  )}" aria-expanded="${!eChiuso}"><span class="aug-freccia" aria-hidden="true">${eChiuso ? "▸" : "▾"}</span>${segno4 || `<span class="aug-ico">${oggettoWidget(disegno8, "", `dv-g-${chiave2}`)}</span>`}<span class="aug-titolo">${esc(titolo3)}${sotto ? `<small>${esc(sotto)}</small>` : ""}</span><span class="aug-conta" data-on="true">${conta2}</span></button><div class="aug-righe">${righe3.join("")}</div></section>`;
 }
 var disegni3 = 0;
 var disegno5 = (chiave2) => oggettoWidget(chiave2, "", `dv-${chiave2}-${disegni3++ % 200}`);
@@ -129943,9 +129961,18 @@ var COLORI5 = [
   "#ea580c",
   "#64748b"
 ];
+var LOGHI2 = creaLaMemoriaDeiLoghi({
+  chiedi: (dominio7) => chiediAHomeAssistant({ type: "ponte/integrazioni/logo", dominio: dominio7 }, ASPETTA2),
+  arrivato: () => piuTardi2(),
+  riprova: (_dominio, fra2) => root.setTimeout?.(() => piuTardi2(), fra2 + 50),
+  colPonte: () => true
+});
 function logo2(nome, dominioV) {
   let h = 0;
   for (const c of clean(dominioV || nome)) h = h * 31 + c.charCodeAt(0) >>> 0;
+  const url = /^[a-z0-9_]+$/.test(clean(dominioV)) ? LOGHI2.logo(clean(dominioV)) : "";
+  if (url)
+    return `<span class="dv-logo img" aria-hidden="true"><img src="${esc(url)}" alt="" decoding="async"></span>`;
   const lettera = clean(nome).replace(/[^\p{L}\p{N}]/gu, "")[0] || "?";
   return `<span class="dv-logo" style="--l:${COLORI5[h % COLORI5.length]}" aria-hidden="true">${esc(lettera.toUpperCase())}</span>`;
 }
@@ -129998,8 +130025,9 @@ function integrazioniHtml() {
     daSistemare ? t(`${daSistemare} da sistemare`, `${daSistemare} to fix`) : "",
     trovate.length === 1 ? t("1 nuova", "1 new") : trovate.length ? t(`${trovate.length} nuove`, `${trovate.length} new`) : ""
   ].filter(Boolean).join(" · ");
-  const kpi = `<div class="ad-kpi"><div class="dm-lucip-kpi on"><span>${esc(t("Installate", "Installed"))}</span><b>${voci4.length}</b><small>${esc(
-    t("in casa", "at home")
+  const quanteIntegrazioni = new Set(voci4.map((v) => v.dominio)).size;
+  const kpi = `<div class="ad-kpi"><div class="dm-lucip-kpi on"><span>${esc(t("Installate", "Installed"))}</span><b>${quanteIntegrazioni}</b><small>${esc(
+    voci4.length === 1 ? t("1 voce", "1 entry") : t(`${voci4.length} voci`, `${voci4.length} entries`)
   )}</small></div><div class="dm-lucip-kpi"><span>${esc(t("Dispositivi", "Devices"))}</span><b>${dispositivi}</b><small>${esc(
     t(`${entita3} entità`, `${entita3} entities`)
   )}</small></div><div class="dm-lucip-kpi${daGuardare ? " rosso" : ""}"><span>${esc(t("Da guardare", "To check"))}</span><b>${daGuardare}</b><small>${esc(
@@ -130039,30 +130067,54 @@ function integrazioniHtml() {
         righe: guardare
       })
     );
-  const ok = visti.filter((v) => v.stato === "ok");
-  if (ok.length)
+  const perDominio = /* @__PURE__ */ new Map();
+  for (const v of voci4) {
+    if (!perDominio.has(v.dominio)) perDominio.set(v.dominio, []);
+    perDominio.get(v.dominio).push(v);
+  }
+  const casa = state146.casa?.dispositivi || [];
+  const schede = [...perDominio.entries()].map(([dominio7, sue]) => {
+    const nome = sue[0].integrazione || dominio7;
+    const ids = new Set(sue.map((v) => v.id));
+    const suoi2 = casa.filter((d) => ids.has(d.voce));
+    const trovata2 = cerca4(
+      [nome, dominio7, ...sue.map((v) => v.titolo), ...suoi2.map((d) => d.nome)].join(" "),
+      state146.cerca
+    );
+    return { dominio: dominio7, nome, sue, suoi: suoi2, trovata: trovata2 };
+  }).filter((x) => x.trovata).sort((a, b2) => a.nome.localeCompare(b2.nome));
+  for (const x of schede) {
+    const chiave2 = `int:${x.dominio}`;
+    const senza = x.sue.filter((v) => !x.suoi.some((d) => d.voce === v.id));
+    const righe3 = [
+      ...x.suoi.map(rigaDelDispositivo),
+      ...senza.map((v) => rigaDellIntegrazione(v)),
+      `<div class="dv-gestisci-riga"><button type="button" class="dv-gestisci" data-dv-dominio="${esc(x.dominio)}"><span>${esc(
+        x.sue.length === 1 ? t("1 voce · Gestisci", "1 entry · Manage") : t(`${x.sue.length} voci · Gestisci`, `${x.sue.length} entries · Manage`)
+      )}</span><i aria-hidden="true">›</i></button>${x.sue.some((v) => v.ricaricabile && !v.disattivata) ? `<button type="button" class="dv-ric${x.sue.some((v) => state146.inCorso[v.id]) ? " gira" : ""}" data-dv-ricarica-tutte="${esc(x.dominio)}" aria-label="${esc(
+        t(`Ricarica ${x.nome}`, `Reload ${x.nome}`)
+      )}" title="${esc(t("Ricarica", "Reload"))}">↻</button>` : ""}</div>`
+    ];
+    const guasta = x.sue.some((v) => v.stato === "errore" || v.stato === "in-avvio");
+    const spenta = x.sue.every((v) => v.disattivata);
+    const quanti2 = x.suoi.length;
     gruppi2.push(
       gruppoHtml({
-        chiave: "i-ok",
-        titolo: t("Installate", "Installed"),
-        disegno: "prese",
-        colore: VIOLA3,
-        conta: ok.length,
-        righe: ok.map((v) => rigaDellIntegrazione(v))
+        chiave: chiave2,
+        titolo: x.nome,
+        sotto: [
+          quanti2 === 1 ? t("1 dispositivo", "1 device") : quanti2 ? t(`${quanti2} dispositivi`, `${quanti2} devices`) : "",
+          x.sue.length > 1 ? t(`${x.sue.length} voci`, `${x.sue.length} entries`) : "",
+          guasta ? t("da guardare", "to check") : spenta ? t("disattivata", "disabled") : ""
+        ].filter(Boolean).join(" · "),
+        colore: guasta ? "#dc2626" : VIOLA3,
+        conta: quanti2 || x.sue.length,
+        righe: righe3,
+        chiuso: !clean(state146.cerca) && !state146.aperte.includes(chiave2),
+        segno: logo2(x.nome, x.dominio)
       })
     );
-  const spente = visti.filter((v) => v.stato === "disattivata");
-  if (spente.length)
-    gruppi2.push(
-      gruppoHtml({
-        chiave: "i-spente",
-        titolo: t("Disattivate", "Disabled"),
-        disegno: "nonrisponde",
-        colore: "#64748b",
-        conta: spente.length,
-        righe: spente.map((v) => rigaDellIntegrazione(v))
-      })
-    );
+  }
   const corpo5 = gruppi2.length ? `<div class="aug-griglia">${gruppi2.join("")}</div>` : `<p class="ad-nessuna">${esc(voci4.length ? t("Nessuna integrazione con queste parole.", "No integration matches these words.") : t("Nessuna integrazione in Home Assistant.", "No integrations in Home Assistant."))}</p>`;
   return `${kpi}${filtri2}${strisce}<div data-dv-gruppi>${corpo5}</div>`;
 }
@@ -130246,6 +130298,19 @@ ${ricarica3 || opzioni2 ? `<div class="tasti">${ricarica3}${opzioni2}</div>` : "
     v.disattivata ? t("Riattiva", "Enable") : t("Disattiva", "Disable")
   )}</button><button type="button" class="r" data-dv-elimina>${esc(t("Elimina", "Delete"))}</button></div></div>`;
 }
+function foglioDelDominio(dominio7) {
+  const sue = (state146.integr?.voci || []).filter((v) => v.dominio === dominio7);
+  if (!sue.length) return "";
+  const nome = sue[0].integrazione || dominio7;
+  return `<div class="ad-foglio dv-f" role="dialog" aria-modal="true" aria-label="${esc(nome)}" style="--c:${VIOLA3}"><div class="man"></div>
+<div class="su">${logo2(nome, dominio7).replace("dv-logo", "dv-logo grande")}<div><h4>${esc(nome)}</h4><div class="dove">${esc(
+    sue.length === 1 ? t("1 voce", "1 entry") : t(`${sue.length} voci`, `${sue.length} entries`)
+  )}</div></div></div>
+<div class="dv-lista dv-voci">${sue.map((v) => rigaDellIntegrazione(v)).join("")}</div>
+<div class="tasti"><button type="button" class="esegui" data-dv-ricarica-tutte="${esc(dominio7)}">↻ ${esc(t("Ricarica tutte", "Reload all"))}</button><button type="button" class="modifica" data-dv-nuova="${esc(
+    dominio7
+  )}">＋ ${esc(t("Aggiungi un'altra", "Add another"))}</button></div></div>`;
+}
 function foglioDellaConferma(v) {
   return `<div class="ad-foglio dv-f" role="dialog" aria-modal="true" style="--c:#dc2626"><div class="man"></div>
 <div class="su">${logo2(v.titolo, v.dominio).replace("dv-logo", "dv-logo grande")}<div><h4>${esc(t(`Eliminare «${v.titolo}»?`, `Delete «${v.titolo}»?`))}</h4><div class="dove">${esc(v.integrazione)}</div></div></div>
@@ -130289,6 +130354,7 @@ function htmlDelFoglio3() {
     return d ? foglioDelDispositivo(d) : "";
   }
   if (f.tipo === "aggiungi") return foglioDellAggiungi();
+  if (f.tipo === "dominio") return foglioDelDominio(f.id);
   const v = voceDi3(f.id);
   if (!v) return "";
   return f.tipo === "elimina" ? foglioDellaConferma(v) : foglioDellIntegrazione(v);
@@ -130411,7 +130477,7 @@ function onClick43(event) {
     return;
   }
   const tocco2 = el.closest(
-    "[data-dv-scopri],[data-dv-linguetta],[data-dv-per],[data-dv-gruppo],[data-dv-int],[data-dv-ricarica],[data-dv-ripara],[data-dv-trovata],[data-dv-aggiungi],[data-dv-nuova],[data-dv-opzioni],[data-dv-disattiva],[data-dv-elimina],[data-dv-elimina-si],[data-dv-chiudi],[data-dv-disp],[data-dv-int-voce]"
+    "[data-dv-scopri],[data-dv-dominio],[data-dv-ricarica-tutte],[data-dv-linguetta],[data-dv-per],[data-dv-gruppo],[data-dv-int],[data-dv-ricarica],[data-dv-ripara],[data-dv-trovata],[data-dv-aggiungi],[data-dv-nuova],[data-dv-opzioni],[data-dv-disattiva],[data-dv-elimina],[data-dv-elimina-si],[data-dv-chiudi],[data-dv-disp],[data-dv-int-voce]"
   );
   if (!tocco2) return;
   const d = tocco2.dataset;
@@ -130431,6 +130497,22 @@ function onClick43(event) {
   if (d.dvPer) {
     state146.per = d.dvPer === "integrazione" ? "integrazione" : "stanza";
     ridisegna18();
+    return;
+  }
+  if (d.dvGruppo?.startsWith("int:")) {
+    state146.aperte = state146.aperte.includes(d.dvGruppo) ? state146.aperte.filter((k) => k !== d.dvGruppo) : [...state146.aperte, d.dvGruppo];
+    ridisegna18();
+    return;
+  }
+  if (d.dvDominio) {
+    apriIlFoglio2({ tipo: "dominio", id: d.dvDominio });
+    return;
+  }
+  if (d.dvRicaricaTutte) {
+    for (const v2 of (state146.integr?.voci || []).filter(
+      (x) => x.dominio === d.dvRicaricaTutte && x.ricaricabile && !x.disattivata
+    ))
+      void ricarica2(v2.id);
     return;
   }
   if (d.dvGruppo) {
@@ -130462,7 +130544,8 @@ function onClick43(event) {
   }
   if (d.dvNuova) {
     const i = (state146.catalogo?.integrazioni || []).find((x) => x.dominio === d.dvNuova);
-    procedura({ handler: d.dvNuova, nome: i?.nome || d.dvNuova });
+    const v2 = (state146.integr?.voci || []).find((x) => x.dominio === d.dvNuova);
+    procedura({ handler: d.dvNuova, nome: i?.nome || v2?.integrazione || d.dvNuova });
     return;
   }
   if (d.dvChiudi !== void 0) {
@@ -130529,9 +130612,23 @@ ${S} .dv-val.muto,.ad-foglio .dv-val.muto{color:#dc2626;font-size:11.5px}
 ${S} .dv-pill,.ad-foglio .dv-pill{flex:none;font-style:normal;font-size:10.5px;font-weight:900;letter-spacing:.3px;padding:2px 8px;border-radius:999px;background:#f1f5f9;color:#334155}
 .dv-pill.v{background:#dcfce7;color:#047857}.dv-pill.r{background:#fee2e2;color:#b91c1c}.dv-pill.a{background:#fef3c7;color:#92400e}.dv-pill.g{background:#e2e8f0;color:#475569}
 .dv-logo{flex:none;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:var(--l);color:#fff;font-weight:900;font-size:14px;font-family:Inter,sans-serif}
+.dv-logo.img{background:#fff;box-shadow:inset 0 0 0 1px var(--divider-color,#e2e8f0);overflow:hidden}
+.dv-logo.img img{width:78%;height:78%;object-fit:contain}
+html[data-theme="dark"] .dv-logo.img{background:#f8fafc}
+.aug.dv-int .aug-testa{padding:12px 14px}
+.aug.dv-int .aug-testa>.dv-logo{width:40px;height:40px;border-radius:12px}
+.aug.dv-int .aug-titolo{display:grid;white-space:normal}
+.aug.dv-int .aug-titolo small{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dv-gestisci-riga{display:flex;align-items:center;gap:8px;padding-right:12px;border-top:1px solid var(--divider-color,#e2e8f0);background:color-mix(in srgb,#7c3aed 5%,transparent)}
+.dv-gestisci{flex:1;display:flex;align-items:center;gap:8px;padding:11px 14px;border:0;background:none;color:#6d28d9;font:inherit;font-size:13px;font-weight:800;text-align:left;cursor:pointer}
+html[data-theme="dark"] .dv-gestisci{color:#c4b5fd}
+.dv-gestisci span{flex:1}
+.dv-gestisci i{font-style:normal;font-size:18px}
+.ad-foglio.dv-f .dv-voci .aug-riga{border-top:1px solid var(--divider-color,#e2e8f0)}
+.ad-foglio.dv-f .dv-voci .aug-riga:first-child{border-top:0}
 .dv-logo.grande{width:54px;height:54px;border-radius:16px;font-size:22px;box-shadow:0 8px 20px -10px var(--l)}
-${S} .dv-ric{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--divider-color,#dbe4ee);background:var(--card-bg,#fff);color:${VIOLA3};font-size:17px;font-weight:900;line-height:1;cursor:pointer}
-${S} .dv-ric.gira{animation:pg-giro .9s linear infinite}
+.dv-gestisci-riga .dv-ric,.ad-foglio .dv-ric,${S} .dv-ric{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--divider-color,#dbe4ee);background:var(--card-bg,#fff);color:${VIOLA3};font-size:17px;font-weight:900;line-height:1;cursor:pointer}
+${S} .dv-ric.gira,.ad-foglio .dv-ric.gira{animation:pg-giro .9s linear infinite}
 ${S} .dv-tasto{flex:none;border-radius:999px;padding:7px 14px;font:inherit;font-size:12px;font-weight:900;cursor:pointer;border:0}
 ${S} .dv-tasto.pieno{background:${VIOLA3};color:#fff;box-shadow:0 8px 18px -10px ${VIOLA3}}
 ${S} .dv-trovata{border-color:color-mix(in srgb,#0ea5e9 35%,var(--divider-color,#dbe4ee));background:linear-gradient(120deg,color-mix(in srgb,#0ea5e9 12%,var(--card-bg,#fff)),var(--card-bg,#fff) 70%)}

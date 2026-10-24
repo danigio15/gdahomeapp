@@ -10,6 +10,16 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.1
+
+- **Integrazioni, più chiare:** ogni integrazione ha la sua scheda col
+  logo, il nome e quanti dispositivi ha; aprendola si vedono i suoi
+  dispositivi. «Gestisci» elenca le voci (Shelly ne ha una per apparecchio):
+  si ricaricano tutte insieme o una per una, e se ne aggiunge un'altra.
+- **I loghi delle integrazioni** li prende il ponte dai marchi di Home
+  Assistant, solo per chi amministra, dall'app e con Premium: il telefono
+  non va a chiederli in giro.
+
 ## 1.18.0
 
 - **Dispositivi, rifatti (Premium):** dal menu dell'app si apre una pagina

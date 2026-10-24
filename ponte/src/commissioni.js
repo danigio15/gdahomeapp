@@ -86,7 +86,7 @@ import { DISPOSITIVI_MASSIMI, ENTITA_MASSIME } from "./catalogo.js";
 import { BASE_DELLE_FOTO, BASE_DI_CASA, CARTELLE_DEI_CARICAMENTI, FOTO_MASSIMA } from "./foto.js";
 import { BASE as BASE_DELLA_PLANCIA } from "./plancia.js";
 import { ChatHaDettoNo } from "./chat.js";
-import { I_MARCHI, QuestoNoNo } from "./aggiornamenti.js";
+import { I_MARCHI, QuestoNoNo, ilMarchioDi } from "./aggiornamenti.js";
 import { CentralinoHaDettoNo, SenzaCentralino } from "./segnalazioni.js";
 import { SegnalazioniDellaPlancia } from "./segnalazioni-della-plancia.js";
 import {
@@ -920,11 +920,23 @@ export class Commissioni {
     if (COMANDI_DELLE_INTEGRAZIONI.includes(tipo) || COMANDI_DEGLI_AIUTANTI.includes(tipo)) {
       const chi = COMANDI_DEGLI_AIUTANTI.includes(tipo) ? this.aiutanti : this.integrazioni;
       if (!chi) return no(id, "unknown_command", `non conosco ${tipo}`);
-      return chi.rispondi(detto, {
+      const quale = {
         utente: chiChiede,
         amministra: puoAmministrare === true,
         dalTelefono: dalTelefono === true,
-      });
+      };
+      /* Il logo di un'integrazione: lo scarica il ponte dai marchi di Home
+       * Assistant, come quello degli aggiornamenti, perche' il telefono non
+       * vada a dire in giro cosa c'e' in casa. Un nome di dominio e basta. */
+      if (tipo === "ponte/integrazioni/logo") {
+        const vietato = this.integrazioni.vietato(detto, quale);
+        if (vietato) return vietato;
+        const dominio = typeof detto.dominio === "string" ? detto.dominio.trim() : "";
+        const dove = ilMarchioDi(dominio);
+        if (!dove) return no(id, "invalid_format", "quale integrazione?");
+        return this._logoDiFuori(id, `l'integrazione ${dominio}`, dove);
+      }
+      return chi.rispondi(detto, quale);
     }
     /* I fornitori di energia: solo chi amministra (lo ha gia' chiesto
      * `SOLO_CHI_AMMINISTRA`, qui sopra), e gli accessi a meta' sono di chi li
