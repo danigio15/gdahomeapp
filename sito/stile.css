@@ -1329,6 +1329,139 @@ figure figcaption span {
   margin-top: 28px;
 }
 
+/* Tutto quello che fa GdAHome, Base e Premium: una tabella vera, perche'
+   si legge per righe e per colonne. La colonna Premium ha il blu del suo
+   piano; il segno e' un disegno, e per chi non vede c'e' la parola. */
+.confronto {
+  max-width: 980px;
+  margin: 28px auto 0;
+  border: 1.5px solid var(--filo);
+  border-radius: var(--raggio);
+  background: var(--carta);
+  overflow: hidden;
+}
+
+.confronto table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.confronto th,
+.confronto td {
+  padding: 12px clamp(10px, 2vw, 20px);
+  border-bottom: 1px solid var(--filo-tenue);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.confronto thead th {
+  padding-block: 16px;
+  font-size: 1rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.confronto thead th:first-child {
+  width: 56%;
+}
+
+.confronto thead th.col-premium {
+  background: var(--blu);
+  color: #fff;
+}
+
+.confronto tbody th {
+  font-weight: 500;
+}
+
+.confronto tr.gruppo th {
+  padding-top: 22px;
+  background: var(--campo);
+  color: var(--blu-scuro);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.confronto td {
+  text-align: center;
+}
+
+.confronto td.col-premium {
+  background: rgba(29, 78, 216, 0.05);
+}
+
+.confronto td.detto {
+  color: var(--inchiostro-lieve);
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.confronto td.col-premium.detto {
+  color: var(--blu-scuro);
+  font-weight: 600;
+}
+
+.confronto td.si::before,
+.confronto td.no::before {
+  content: "";
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+.confronto td.si::before {
+  background: var(--blu-chiaro)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5.5 10.4l2.9 2.8 6-6.4' fill='none' stroke='%231d4ed8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / 22px no-repeat;
+}
+
+.confronto td.no::before {
+  width: 14px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--inchiostro-tenue);
+  opacity: 0.5;
+}
+
+.confronto tbody:last-child tr:last-child > * {
+  border-bottom: 0;
+}
+
+.nascosto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 560px) {
+  .confronto th,
+  .confronto td {
+    padding: 10px 8px;
+  }
+
+  .confronto tbody th {
+    font-size: 0.9rem;
+  }
+
+  .confronto td.detto {
+    font-size: 0.8rem;
+  }
+
+  .confronto thead th:first-child {
+    width: 50%;
+  }
+}
+
 .piani-piccoli .prezzo {
   font-size: clamp(2.3rem, 4vw, 2.9rem);
 }
