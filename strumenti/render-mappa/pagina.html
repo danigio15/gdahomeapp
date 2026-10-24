@@ -119,14 +119,14 @@
       a: [9.2085, 45.4812],
       zoom: 17.2,
       inclinazione: 62,
-      zoomImmersiva: 18.2,
+      zoomImmersiva: 18.9,
     },
     incrocio: {
       da: [9.188, 45.47],
       a: [9.1955, 45.4655],
       zoom: 17.4,
       inclinazione: 62,
-      zoomImmersiva: 18.2,
+      zoomImmersiva: 18.9,
     },
     tangenziale: { da: [9.1004, 45.52], a: [9.071, 45.5262], zoom: 15.6, inclinazione: 60 },
     /* Dove le corsie ci sono: viale Forlanini verso Linate, la Tangenziale
@@ -226,8 +226,8 @@
       center: qui,
       /* Immersiva: vicina abbastanza da leggere le corsie (una corsia e'
        * larga una trentina di pixel), inclinata ma con l'orizzonte in alto. */
-      zoom: immersiva ? (scena.zoomImmersiva ?? 18.6) : scena.zoom,
-      pitch: immersiva ? 70 : scena.inclinazione,
+      zoom: immersiva ? (scena.zoomImmersiva ?? 18.8) : scena.zoom,
+      pitch: immersiva ? 65 : scena.inclinazione,
       bearing: verso,
       maxPitch: 85,
       attributionControl: false,
