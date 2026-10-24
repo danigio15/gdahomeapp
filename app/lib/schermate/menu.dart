@@ -129,18 +129,20 @@ enum Sezione {
    * dentro sono le persone. Nella barra di Home Assistant la voce ha
    * `mdi:account-key`, che e' la stessa cosa detta con quello che li' c'e'. */
   gestione('persone', pronta: true),
+  /* Gli aiutanti di Home Assistant (Premium): la pagina della plancia
+   * `aiutanti-app-section.js`, a schermo pieno. Come le Automazioni c'e'
+   * anche nella webapp — «Manca aiutanti» — perche' e' una pagina della
+   * plancia, e la plancia nel browser c'e'. Solo per chi amministra Home
+   * Assistant: lo decide il ponte. */
+  aiutanti('mie', pronta: true),
   /* ─── Quelle che ci sono solo nell'app ────────────────────────────────
    *
-   * Due voci vivono **solo su Android e iOS**, e non nella webapp — tre col
+   * Una voce vive **solo su Android e iOS**, e non nella webapp — con lei il
    * Navigatore, che sta piu' su vicino ai Dispositivi. Non e' una
    * dimenticanza: sono cose che vogliono il telefono — la rete Zigbee si apre
    * stando in piedi davanti al dispositivo, col telefono in una mano — e una
    * copia nel browser sarebbe una porta che si apre su meta' di quello che
    * promette. Una porta che non si apre e' peggio di una porta che non c'e'. */
-  /* Gli aiutanti di Home Assistant (Premium): la pagina della plancia
-   * `aiutanti-app-section.js`, a schermo pieno. Solo nell'app, e solo per
-   * chi amministra Home Assistant: lo decide il ponte. */
-  aiutanti('mie', pronta: true, soloNellApp: true),
   /* Un dispositivo nuovo, abbinato dal telefono (#54).
    *
    * Come la Console e il Cruscotto non e' una voce come le altre: compare
