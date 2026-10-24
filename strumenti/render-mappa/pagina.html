@@ -196,7 +196,7 @@
     for (let i = indice; i > 0; i -= 1) {
       fatti += metri(punti[i], punti[i - 1]);
       qui = punti[i - 1];
-      if (fatti >= (immersiva ? 140 : 110)) break;
+      if (fatti >= (immersiva ? 75 : 110)) break;
     }
     /* Il verso: dove va la strada nei 40 m dopo la telecamera, come
      * l'auto che la percorre. */
@@ -212,8 +212,10 @@
       container: "mappa",
       style: stile,
       center: qui,
-      zoom: immersiva ? scena.zoom + 0.9 : scena.zoom,
-      pitch: immersiva ? 74 : scena.inclinazione,
+      /* Immersiva: vicina abbastanza da leggere le corsie (una corsia e'
+       * larga una trentina di pixel), inclinata ma con l'orizzonte in alto. */
+      zoom: immersiva ? 19.2 : scena.zoom,
+      pitch: immersiva ? 66 : scena.inclinazione,
       bearing: verso,
       maxPitch: 85,
       attributionControl: false,
@@ -221,7 +223,7 @@
       preserveDrawingBuffer: true,
       fadeDuration: 0,
       /* L'auto in basso, la strada davanti: come nel navigatore. */
-      padding: { top: immersiva ? 440 : 380, bottom: 0, left: 0, right: 0 },
+      padding: { top: immersiva ? 470 : 380, bottom: 0, left: 0, right: 0 },
     });
     mappa.on("styleimagemissing", (e) => {
       const vuota = { width: 1, height: 1, data: new Uint8Array(4) };
@@ -230,6 +232,15 @@
     mappa.on("load", () => {
       /* Inclinata, come in auto: gli edifici in 3D li accende l'app quando
        * la vista e' inclinata (`RendererMappa.kt`, `MappaCarPlay.swift`). */
+      if (immersiva)
+        mappa.setSky?.({
+          "sky-color": scuro ? "#0b1220" : "#bfdbfe",
+          "horizon-color": scuro ? "#1e293b" : "#e0f2fe",
+          "sky-horizon-blend": 0.6,
+          "horizon-fog-blend": 0.6,
+          "fog-color": scuro ? "#111827" : "#f1f5f9",
+          "fog-ground-blend": 0.2,
+        });
       if (mappa.getLayer("edifici-3d"))
         mappa.setLayoutProperty("edifici-3d", "visibility", "visible");
       const auto = document.createElement("div");
@@ -290,12 +301,12 @@
      * l'altra. Il percorso corre nel mezzo, come la strada. */
     function disegnaLeCorsie(corsie) {
       const da = punti.indexOf(qui);
-      const tratto = punti.slice(Math.max(0, da - 2), indice + 1);
+      const tratto = punti.slice(Math.max(0, da - 3), indice + 1);
       if (tratto.length < 2) return;
       const zoom = mappa.getZoom();
       const lat = (qui[1] * Math.PI) / 180;
       const metriPerPixel = (40075016.686 * Math.cos(lat)) / (512 * 2 ** zoom);
-      const larga = 3.3 / metriPerPixel;
+      const larga = 3.5 / metriPerPixel;
       const n = corsie.length;
       mappa.addSource("corsie", {
         type: "geojson",
