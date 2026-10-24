@@ -173,6 +173,40 @@ const giornata = (extra = {}) => ({
   ...extra,
 });
 
+test("il riepilogo senza un prezzo non scrive «costo 0»", () => {
+  /* «Nelle notifiche dell'app vedo sempre costo 0.» Senza un prezzo il costo
+   * non si dice; con il prezzo si'. */
+  const dati = (extra) => ({
+    giornata: giornata(extra),
+    conSole: false,
+    ieri: null,
+    piu: [],
+    batteria: null,
+    domani: { met: [], soleFino: null, pioggia: false },
+    fasce: { nomi: {}, piuBassa: null },
+    daSistemare: { batterie: 0, spenti: 0, aggiornamenti: 0 },
+  });
+  for (const stile of ["semplice", "elaborata"]) {
+    const senza = paroleDelRiepilogo(dati({ euroRete: null, risparmio: null }), "it", { stile });
+    assert.doesNotMatch(senza.testo, /0,00 €|Costo/, stile);
+    assert.equal(senza.scheda?.re ?? null, null);
+    const con = paroleDelRiepilogo(dati(), "it", { stile });
+    assert.match(con.testo, /1,84 €/, stile);
+  }
+});
+
+test("la sentinella prende il prezzo dall'entita' della sezione Energia", () => {
+  const sentinella = new Sentinella({});
+  sentinella.valori = () => ({
+    cd_costo_kwh: "",
+    dm_dashboard_state: JSON.stringify({
+      sections: { energy: { rates: { import_entity: "sensor.prezzo_online" } } },
+    }),
+  });
+  sentinella.carica([{ entity_id: "sensor.prezzo_online", state: "0.31", attributes: {} }]);
+  assert.equal(sentinella.prezzo(Date.now()).prezzo, 0.31);
+});
+
 test("il riepilogo: «chi ha consumato di piu'» nella semplice, il piu' grosso nell'elaborata", () => {
   const dati = {
     giornata: giornata(),

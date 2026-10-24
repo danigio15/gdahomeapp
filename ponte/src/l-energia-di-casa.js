@@ -118,7 +118,7 @@ export function giornoDi(istante) {
  * un'entita'). `{prezzo: null}` quando non c'e' niente: allora il costo non
  * si dice, invece di inventarlo.
  */
-export function prezzoAllOra({ fasce, costo, stato = () => null }, istante) {
+export function prezzoAllOra({ fasce, costo, entita = "", stato = () => null }, istante) {
   let config = fasce;
   if (typeof config === "string") {
     try {
@@ -132,13 +132,29 @@ export function prezzoAllOra({ fasce, costo, stato = () => null }, istante) {
   const suo = quale >= 0 ? normali.voci[quale]?.prezzo : null;
   if (suo) return { prezzo: suo, fascia: nomeDellaFascia(quale), indice: quale };
   let unica = null;
-  const scritto = typeof costo === "string" ? costo.trim() : costo;
+  /* L'entita' del prezzo scelta nella sezione Energia (`rates.import_entity`)
+   * vale prima del numero scritto: e' quella che la plancia usa per i costi
+   * («nella plancia vedo i costi, ho l'entita' che ricava il prezzo dei kWh
+   * online, ma nelle notifiche vedo sempre costo 0»). */
+  const scritto = entita ? entita : typeof costo === "string" ? costo.trim() : costo;
   if (typeof scritto === "number") unica = scritto > 0 ? scritto : null;
   else if (typeof scritto === "string" && /^[a-z_]+\.[a-z0-9_]+$/.test(scritto))
-    unica = numero(stato(scritto)?.state);
+    unica = prezzoDellEntita(stato(scritto));
   else if (typeof scritto === "string") unica = numero(scritto.replace(/^"|"$/g, ""));
   if (unica !== null && unica > 0 && unica < 10) return { prezzo: unica, fascia: "", indice: -1 };
   return { prezzo: null, fascia: "", indice: -1 };
+}
+
+/* Il prezzo di un'entita' in euro al kWh: chi lo da' in €/MWh (il PUN, i
+ * prezzi della borsa) o in centesimi si riporta al kWh, come lo scrive la
+ * plancia. */
+function prezzoDellEntita(st) {
+  const valore = numero(st?.state);
+  if (valore === null) return null;
+  const unita = String(st?.attributes?.unit_of_measurement ?? "").toLowerCase();
+  if (/mwh/.test(unita)) return valore / 1000;
+  if (/cent|c€|ct|¢/.test(unita)) return valore / 100;
+  return valore;
 }
 
 /**
@@ -234,6 +250,9 @@ function giornataNuova(giorno) {
     usato: 0,
     /* Euro integrati: la rete pagata, e il sole usato a prezzo di rete. */
     euroRete: 0,
+    /* Diventa `true` al primo minuto con un prezzo. Una giornata salvata
+     * prima di questo campo non lo ha, e vale come prima. */
+    conPrezzo: false,
     risparmio: 0,
     /* Wh per ora del giorno. */
     p: Array(24).fill(0),
@@ -345,6 +364,9 @@ export class TaccuinoDellEnergia {
     this._ultimo = ora;
     const { prezzo: euro, indice } = prezzo(ora) || {};
     const conPrezzo = euro !== null && euro !== undefined;
+    /* Se oggi un prezzo c'e' mai stato: senza, il costo non si dice, invece
+     * di scrivere «0,00 €». */
+    if (conPrezzo) g.conPrezzo = true;
     const ore = dt / ORA;
 
     const sole = letture.sole ?? null;
@@ -564,8 +586,8 @@ export class TaccuinoDellEnergia {
       ceduti: arrotonda(ceduti, 1),
       usato: usato !== null ? arrotonda(usato, 1) : null,
       quotaInCasa: sole && usato !== null ? arrotonda(Math.min(1, usato / sole), 2) : null,
-      euroRete: arrotonda(scala(g.euroRete, g.presi, presi), 2),
-      risparmio: arrotonda(scala(g.risparmio, g.usato, usato), 2),
+      euroRete: g.conPrezzo === false ? null : arrotonda(scala(g.euroRete, g.presi, presi), 2),
+      risparmio: g.conPrezzo === false ? null : arrotonda(scala(g.risparmio, g.usato, usato), 2),
       picco: g.picco > 0 ? arrotonda(g.picco / 1000, 1) : null,
       piccoIl: g.piccoIl ? oraDi(g.piccoIl) : null,
       p: g.p.map((wh) => Math.round(wh / 100)),
