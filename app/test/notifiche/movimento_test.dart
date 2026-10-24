@@ -41,22 +41,26 @@ final _entita = [
   _una('switch.lavatrice', 'Lavatrice'),
 ];
 
-NotificaArrivata _movimento({String? camera = _balcone, String id = 'm1'}) =>
-    NotificaArrivata(
-      id: id,
-      tipo: 'movimento',
-      categoria: 'sicurezza',
-      urgenza: 'normale',
-      titolo: '📷 Movimento · Balcone',
-      testo: '21:59 · casa vuota',
-      quando: DateTime(2026, 10, 17, 21, 59),
-      scade: DateTime(2100),
-      camera: camera,
-      tasti: const [
-        TastoDellaNotifica('guarda', 'Guarda', apre: true),
-        TastoDellaNotifica('inserisci', 'Inserisci antifurto'),
-      ],
-    );
+NotificaArrivata _movimento({
+  String? camera = _balcone,
+  String id = 'm1',
+  ({String id, String chiave})? film,
+}) => NotificaArrivata(
+  id: id,
+  tipo: 'movimento',
+  categoria: 'sicurezza',
+  urgenza: 'normale',
+  titolo: '📷 Movimento · Balcone',
+  testo: '21:59 · casa vuota',
+  quando: DateTime(2026, 10, 17, 21, 59),
+  scade: DateTime(2100),
+  camera: camera,
+  film: film,
+  tasti: const [
+    TastoDellaNotifica('guarda', 'Guarda', apre: true),
+    TastoDellaNotifica('inserisci', 'Inserisci antifurto'),
+  ],
+);
 
 void main() {
   group('«Quali» del movimento', () {
@@ -133,6 +137,20 @@ void main() {
       expect(
         apreLaTelecamera(ToccoDellaNotifica(casa: 'c', notifica: _movimento())),
         isFalse,
+      );
+      /* Col mini video, il tocco sulla notifica apre il video: «Niente, su
+       * Android continua a non andare, e anche su iPhone» — si apriva la
+       * pagina della notifica, che il video non lo mostra. */
+      expect(
+        apreLaTelecamera(
+          ToccoDellaNotifica(
+            casa: 'c',
+            notifica: _movimento(
+              film: (id: '1761121500000-abcdef123456', chiave: 'k' * 43),
+            ),
+          ),
+        ),
+        isTrue,
       );
       /* Senza telecamera (non vicina, o non per questa utenza): il foglio. */
       expect(

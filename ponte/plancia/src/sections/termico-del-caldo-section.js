@@ -33,6 +33,29 @@ const state = (root[KEY] ||= { installed: false });
 
 const CHIAVE = "cd_termico_caldo";
 
+/* «Metti la possibilità di poter disattivare questi avvisi della caldaia
+ * accesa nella Home.» La pillola sotto il meteo si spegne da qui; di serie
+ * c'e', e chi non tocca niente non vede cambiare niente. */
+const CHIAVE_IN_HOME = "cd_caldaia_in_home";
+
+/** Se la pillola «Caldaia accesa» si mostra nella Home. */
+export function caldaiaInHome() {
+  try {
+    return root.localStorage?.getItem?.(CHIAVE_IN_HOME) !== "false";
+  } catch (_errore) {
+    return true;
+  }
+}
+
+function scriviCaldaiaInHome(si) {
+  try {
+    root.localStorage?.setItem?.(CHIAVE_IN_HOME, si ? "true" : "false");
+    root.cdMarkDirty?.();
+    root.cdSyncPush?.();
+  } catch (_errore) {}
+  pillolaDellaCaldaia();
+}
+
 /* La voce caldaia si riconosce dal nome, in piu' lingue: caldaia/scaldabagno
  * (calda…), boiler, chaudiere, Kessel, caldera, furnace, ketel, kotel. Un
  * ruolo esplicito sulla riga sarebbe piu' pulito, ma cambierebbe la forma di
@@ -233,7 +256,7 @@ export function pillolaDellaCaldaia() {
   if (!banner) return false;
   const caldaie = statiDelleCaldaie();
   const accese = caldaie.filter((caldaia) => caldaia.acceso);
-  banner.classList.toggle("show", accese.length > 0);
+  banner.classList.toggle("show", accese.length > 0 && caldaiaInHome());
   const testo = banner.querySelector(".caldaia-banner-text");
   if (testo && accese.length) {
     /* Con una caldaia sola la pillola resta la frase di sempre: dire il nome
@@ -402,11 +425,21 @@ function montaEditor() {
       "The entities on the heating side you want to know are on or off: boiler, pumps, fans — whatever you need. Every row says on or off in the Heat popup, under the rooms. With no rows the panel does not appear.",
     )}</div>` +
     `<div class="dm-termico-righe"></div>` +
-    `<button type="button" class="ed-btn-add dm-termico-aggiungi">＋ ${t("Aggiungi voce", "Add row")}</button>`;
+    `<button type="button" class="ed-btn-add dm-termico-aggiungi">＋ ${t("Aggiungi voce", "Add row")}</button>` +
+    `<label class="dm-termico-in-home"><span><b>${t("Mostra «Caldaia accesa» nella Home", "Show “Boiler on” on Home")}</b>` +
+    `<small>${t("La pillola sotto il meteo quando una caldaia lavora. Spenta, la caldaia si vede solo nel Clima.", "The pill under the weather while a boiler is running. Off, the boiler shows only in Climate.")}</small></span>` +
+    `<input type="checkbox" data-dm-caldaia-in-home${caldaiaInHome() ? " checked" : ""}></label>`;
   const righe = carta.querySelector(".dm-termico-righe");
   voci.forEach((voce, indice) => righe.append(rigaEditor(voce, indice)));
 
-  const salva = () => scriviConfig(raccogli(carta));
+  const salva = (evento) => {
+    const casella = evento?.target;
+    if (casella?.matches?.("[data-dm-caldaia-in-home]")) {
+      scriviCaldaiaInHome(casella.checked);
+      return;
+    }
+    scriviConfig(raccogli(carta));
+  };
   carta.addEventListener("change", salva);
   carta.addEventListener("click", (evento) => {
     const via = evento.target?.closest?.(".dm-termico-via");
@@ -446,6 +479,11 @@ const STILE = `
    casella che spiega. */
 .dm-termico-aiuto{margin:2px 0 8px;font-size:12px;line-height:1.4;color:var(--secondary-text-color,#64748b)}
 .dm-termico-righe{display:grid;gap:8px;margin:10px 0}
+.dm-termico-in-home{display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;border-radius:14px;border:1px solid var(--divider-color,#e2e8f0);cursor:pointer}
+.dm-termico-in-home>span{flex:1;min-width:0;display:grid;gap:2px}
+.dm-termico-in-home b{font-size:14px}
+.dm-termico-in-home small{font-size:12px;line-height:1.35;color:var(--secondary-text-color,#64748b)}
+.dm-termico-in-home input{flex:none;width:20px;height:20px}
 /* La prima colonna tiene la casella dell'icona E il tasto del catalogo: a
    52 px il tasto ne prende 42 e alla casella ne restano dieci, cioe' l'icona
    scelta non si vedeva — restava solo il tasto blu, e sembrava che l'icona

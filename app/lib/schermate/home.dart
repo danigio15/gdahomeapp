@@ -40,9 +40,7 @@ import '../casa/la_guardia.dart';
 import '../casa/zigbee.dart';
 import '../misure/lavori.dart';
 import '../plancia/il_fondo.dart';
-import '../parole.dart';
 import '../vestito/marchio.dart';
-import '../vestito/pezzi.dart';
 import '../vestito/quanto_e_largo.dart';
 import 'aggiornamenti.dart';
 import 'assistenza.dart';
@@ -50,7 +48,6 @@ import 'barra.dart';
 import 'console.dart';
 import 'cruscotto.dart';
 import 'diagnostica.dart';
-import 'dispositivi.dart';
 import 'firma.dart';
 import 'menu.dart';
 import 'campanello.dart';
@@ -63,6 +60,7 @@ import 'navigatore_qui/qui.dart';
 import 'zigbee.dart';
 import 'misure.dart';
 import 'plancia_vera.dart';
+import 'riquadro/pagine.dart';
 import 'premium.dart';
 import 'segnalazioni.dart';
 
@@ -201,9 +199,10 @@ class _HomeState extends State<Home> {
     if (dove.posto != PostoDellaNotifica.plancia || dove.linguette.isEmpty) {
       return false;
     }
-    if (_laPagina == 'automazioni') {
+    final aperta = PaginaDellaPlancia.daDove(_laPagina);
+    if (aperta != null) {
       _laPagina = '';
-      _plancia.currentState?.tornaDalleAutomazioni();
+      _plancia.currentState?.tornaDaPienoSchermo(aperta);
     } else if (_laPaginaENellaConfig) {
       _laPaginaENellaConfig = false;
       _plancia.currentState?.tornaDallaConfig();
@@ -440,6 +439,8 @@ class _HomeState extends State<Home> {
             Sezione.configurazione => PerchePremium.configurazione,
             Sezione.zigbee => PerchePremium.zigbee,
             Sezione.automazioni => PerchePremium.automazioni,
+            Sezione.dispositivi => PerchePremium.dispositivi,
+            Sezione.aiutanti => PerchePremium.aiutanti,
             _ => null,
           },
         ),
@@ -457,11 +458,15 @@ class _HomeState extends State<Home> {
      * riquadro: e' li' che si e', e il menu deve dirlo. */
     /* Le Automazioni sono come la Configurazione: una pagina della plancia,
      * aperta a schermo pieno dentro il riquadro con la sua maniglia
-     * (`automazioni-section.js`). */
-    if (dove == Sezione.automazioni) {
+     * (`automazioni-section.js`). Cosi' anche i Dispositivi, con le
+     * integrazioni, e gli Aiutanti: «graficamente deve essere sempre come la
+     * plancia», e allora sono pagine della plancia
+     * (`dispositivi-app-section.js`, `aiutanti-app-section.js`). */
+    final pagina = _paginaDi(dove);
+    if (pagina != null) {
       if (_sezione != dove) setState(() => _sezione = dove);
-      _laPagina = 'automazioni';
-      _plancia.currentState?.apriLeAutomazioni();
+      _laPagina = pagina.name;
+      _plancia.currentState?.apriAPienoSchermo(pagina);
       return;
     }
     if (dove == Sezione.configurazione) {
@@ -488,9 +493,10 @@ class _HomeState extends State<Home> {
      * Chiedere al menu, allora, voleva dire ricaricare la plancia per
      * ritrovarsi la Configurazione. Chiedere alla pagina vuol dire uscirne. */
     if (dove == Sezione.plancia) {
-      if (_laPagina == 'automazioni') {
+      final aperta = PaginaDellaPlancia.daDove(_laPagina);
+      if (aperta != null) {
         _laPagina = '';
-        _plancia.currentState?.tornaDalleAutomazioni();
+        _plancia.currentState?.tornaDaPienoSchermo(aperta);
       } else if (_laPaginaENellaConfig) {
         _laPaginaENellaConfig = false;
         _plancia.currentState?.tornaDallaConfig();
@@ -568,6 +574,15 @@ class _HomeState extends State<Home> {
   /// «Plancia».
   String _laPagina = '';
 
+  /// La pagina della plancia che una voce del menu apre a schermo pieno, se
+  /// e' una di quelle.
+  static PaginaDellaPlancia? _paginaDi(Sezione sezione) => switch (sezione) {
+    Sezione.automazioni => PaginaDellaPlancia.automazioni,
+    Sezione.dispositivi => PaginaDellaPlancia.dispositivi,
+    Sezione.aiutanti => PaginaDellaPlancia.aiutanti,
+    _ => null,
+  };
+
   void _laPlanciaEAltrove(String pagina) {
     if (!mounted) return;
     /* «Scopri Premium» dentro la pagina delle Automazioni: la pagina Premium
@@ -586,9 +601,10 @@ class _HomeState extends State<Home> {
      * sa. */
     _laPagina = pagina;
     _laPaginaENellaConfig = pagina == 'config';
+    final sua = _paginaDi(_sezione);
     final fuoriDallaSua =
         (_sezione == Sezione.configurazione && pagina != 'config') ||
-        (_sezione == Sezione.automazioni && pagina != 'automazioni');
+        (sua != null && pagina != sua.name);
     if (!fuoriDallaSua) return;
     setState(() => _sezione = Sezione.plancia);
   }
@@ -602,11 +618,11 @@ class _HomeState extends State<Home> {
     final sullaPlancia =
         _sezione == Sezione.plancia ||
         _sezione == Sezione.configurazione ||
-        _sezione == Sezione.automazioni;
+        _paginaDi(_sezione) != null;
     /* La sezione che si vede davvero: la Configurazione e' una pagina della
      * plancia, e si guarda dentro il suo riquadro. */
     final mostrata =
-        _sezione == Sezione.configurazione || _sezione == Sezione.automazioni
+        _sezione == Sezione.configurazione || _paginaDi(_sezione) != null
         ? Sezione.plancia
         : _sezione;
     /* Anche il navigatore ha tutto lo schermo, come la plancia: la mappa ha i
@@ -807,10 +823,10 @@ class _HomeState extends State<Home> {
                                     unawaited(portamiDallaPersona(detto));
                                   },
                                 ),
-                                Sezione.dispositivi => Dispositivi(
-                                  collegamento: collegamento,
-                                  visibile: _sezione == Sezione.dispositivi,
-                                ),
+                                /* I Dispositivi e gli Aiutanti sono pagine
+                                 * della plancia, come le Automazioni. */
+                                Sezione.dispositivi => const SizedBox.shrink(),
+                                Sezione.aiutanti => const SizedBox.shrink(),
                                 /* gdanav: si accende la prima volta che ci si
                            * entra, e poi resta acceso come le altre. */
                                 Sezione.navigatore => IlNavigatore(
@@ -913,7 +929,6 @@ class _HomeState extends State<Home> {
                                   quandoVaMessoNellaPlancia:
                                       _loMettiNellaPlancia,
                                 ),
-                                _ => _InArrivo(sezione),
                               },
                             ),
                       ),
@@ -979,23 +994,4 @@ class _HomeState extends State<Home> {
       ),
     );
   }
-}
-
-/// Una sezione che non c'e' ancora.
-class _InArrivo extends StatelessWidget {
-  const _InArrivo(this.sezione);
-  final Sezione sezione;
-
-  @override
-  Widget build(BuildContext context) => StatoVuoto(
-    icona: Icons.construction_rounded,
-    titolo: inLingua(
-      it: '${sezione.titolo}: in arrivo',
-      en: '${sezione.titolo}: coming soon',
-    ),
-    sotto: inLingua(
-      it: 'Questa parte dell\'app non è ancora scritta.',
-      en: 'This part of the app isn\'t written yet.',
-    ),
-  );
 }

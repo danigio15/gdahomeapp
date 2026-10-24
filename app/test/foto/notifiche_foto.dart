@@ -791,6 +791,65 @@ void main() {
     });
   });
 
+  testWidgets('«Guarda» quando il video e\' rimasto vuoto', (tester) async {
+    tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    late PonteFinto ponte;
+    late Collegamento collegamento;
+    late Directory cartella;
+    final foto = File('test/notifiche/porta-di-prova.jpg').readAsBytesSync();
+    await tester.runAsync(() async {
+      (ponte, collegamento) = await _unaCasa();
+      ponte.filmatiVuoti.add(movimentoColVideo().film!.id);
+      cartella = Directory.systemTemp.createTempSync('momento-');
+      await tieniLImmagine('movimento-video', foto, cartella: cartella);
+    });
+    await tester.pumpWidget(
+      _app(
+        SchermataDellaTelecamera(
+          tocco: ToccoDellaNotifica(
+            casa: collegamento.casa!.id,
+            tasto: 'guarda',
+            notifica: movimentoColVideo(),
+          ),
+          collegamento: collegamento,
+          cartellaDelleImmagini: cartella,
+          adesso: DateTime(2026, 10, 21, 19, 17),
+        ),
+        scuro: true,
+      ),
+    );
+    for (var giro = 0; giro < 40; giro += 1) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await tester.pump();
+      if (find
+              .byKey(const Key('telecamera-senza-video'))
+              .evaluate()
+              .isNotEmpty &&
+          find.byKey(const Key('telecamera-foto')).evaluate().isNotEmpty) {
+        break;
+      }
+    }
+    await tester.runAsync(() async {
+      for (final una in find.byType(Image).evaluate()) {
+        await precacheImage((una.widget as Image).image, una);
+      }
+    });
+    await tester.pump(const Duration(milliseconds: 300));
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('$_cartella/22b-guarda-video-vuoto.png'),
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.runAsync(() async {
+      await collegamento.chiudi();
+      await ponte.spegni();
+    });
+  });
+
   testWidgets('«Guarda» quando la casa non risponde al video', (tester) async {
     tester.view.physicalSize = const Size(390 * 3, 844 * 3);
     tester.view.devicePixelRatio = 3;

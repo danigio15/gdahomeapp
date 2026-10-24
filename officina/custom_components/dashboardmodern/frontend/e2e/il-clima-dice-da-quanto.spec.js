@@ -139,3 +139,58 @@ test("la pillola Caldaia segue la voce configurata, col suo orologio", async ({
   });
   await expect(pillola).not.toHaveClass(/show/, { timeout: 10000 });
 });
+
+/* «Metti la possibilità di poter disattivare questi avvisi della caldaia
+ * accesa nella Home.» */
+test("la pillola Caldaie accese si spegne dal config, e resta spenta", async ({
+  page,
+}, testInfo) => {
+  test.setTimeout(150_000);
+  await avvia(page, testInfo);
+  const pillola = page.locator("#caldaia-banner");
+  await page.evaluate(() => {
+    const grezzi = window.eval("_RAW_STATES");
+    grezzi["switch.caldaia_gas"] = {
+      entity_id: "switch.caldaia_gas",
+      state: "on",
+      attributes: { friendly_name: "Caldaia gas" },
+    };
+    window.localStorage.setItem(
+      "cd_termico_caldo",
+      JSON.stringify([
+        { name: "Caldaia pellet", entity: "switch.caldaia_pellet", icon: "🔥" },
+        { name: "Caldaia gas", entity: "switch.caldaia_gas", icon: "🔥" },
+      ]),
+    );
+    window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed"));
+  });
+  await expect(pillola).toHaveClass(/show/, { timeout: 10000 });
+  await expect(pillola).toContainText("Caldaie accese 2");
+
+  await page.evaluate(() => window.apriConfigEntita());
+  await page.evaluate(() => {
+    const clima = [...document.querySelectorAll(".ed-tab")].find((tab) =>
+      /clima/i.test(tab.textContent || ""),
+    );
+    clima?.click();
+  });
+  const interruttore = page.locator("#editor-modal [data-dm-caldaia-in-home]");
+  await expect(interruttore).toBeAttached({ timeout: 20000 });
+  await expect(interruttore).toBeChecked();
+  await interruttore.scrollIntoViewIfNeeded();
+  await interruttore.uncheck();
+  expect(await page.evaluate(() => localStorage.getItem("cd_caldaia_in_home"))).toBe("false");
+  const cartella = process.env.DM_FOTO;
+  if (cartella)
+    await page.locator("#editor-modal [data-dm-termico-caldo]").screenshot({
+      path: `${cartella}/caldaia-in-home-${testInfo.project.name}.png`,
+      animations: "disabled",
+    });
+  await page.evaluate(() => document.getElementById("editor-modal")?.remove());
+
+  /* Spenta: le caldaie restano accese, la pillola no. */
+  await expect(pillola).not.toHaveClass(/show/);
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed")));
+  await page.waitForTimeout(300);
+  await expect(pillola).not.toHaveClass(/show/);
+});

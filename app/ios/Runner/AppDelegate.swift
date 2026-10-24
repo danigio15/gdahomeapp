@@ -65,7 +65,15 @@ import gdanav_app
    * (`lib/notifiche/chiavi_per_l_iphone.dart`, `ios/NotificheService`). */
   private func collegaLeChiaviDelleNotifiche() {
     let canale = FlutterMethodChannel(name: "gdahome/notifiche-iphone", binaryMessenger: motore.binaryMessenger)
+    canaleDelleNotifiche = canale
     canale.setMethodCallHandler { chiamata, risposta in
+      /* L'ultima notifica toccata (vedi sotto): si dice una volta sola. */
+      if chiamata.method == "toccata" {
+        let tocco = AppDelegate.toccata
+        AppDelegate.toccata = nil
+        risposta(tocco)
+        return
+      }
       /* Il tasto premuto sulla notifica del sistema (vedi sotto): si dice una
        * volta sola, a chi apre quella busta. */
       if chiamata.method == "tasto" {
@@ -98,6 +106,18 @@ import gdanav_app
    * parte per quella busta, e l'app lo chiede quando la apre
    * (`lib/notifiche/postino.dart`). */
   private static var tasti: [String: String] = [:]
+
+  /* La notifica toccata, per l'app che parte da chiusa.
+   *
+   * «Faccio guarda e mi apre la home di GdA.» Con le scene, l'app aperta da
+   * una notifica partendo da chiusa non riceve da Firebase la notifica
+   * toccata (`getInitialMessage` resta vuoto): si apriva la Home, e il
+   * video non arrivava mai. Ad app gia' aperta in sottofondo andava: per
+   * questo «va e non va». Qui la si tiene da parte — solo quello che serve
+   * ad aprirla, la busta resta chiusa — e la si dice all'app appena c'e'
+   * (`lib/notifiche/postino.dart`), che non la apre due volte. */
+  private static var toccata: [String: String]?
+  private var canaleDelleNotifiche: FlutterMethodChannel?
 
   static func tastoPremuto(per busta: String) -> String? {
     tasti.removeValue(forKey: busta)
@@ -145,6 +165,14 @@ import gdanav_app
       let busta = response.notification.request.content.userInfo["b"] as? String
     {
       AppDelegate.tasti[busta] = azione
+    }
+    let dati = contenuto.userInfo
+    if azione != UNNotificationDismissActionIdentifier,
+      let g = dati["g"] as? String, let d = dati["d"] as? String, let b = dati["b"] as? String
+    {
+      let tocco = ["g": g, "d": d, "b": b]
+      AppDelegate.toccata = tocco
+      canaleDelleNotifiche?.invokeMethod("toccata", arguments: tocco)
     }
     super.userNotificationCenter(center, didReceive: response, withCompletionHandler: completionHandler)
   }

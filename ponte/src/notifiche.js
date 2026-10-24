@@ -467,7 +467,8 @@ export class Notifiche {
   } = {}) {
     this.rimpicciolisci = rimpicciolisci;
     this.filmati =
-      filmati ?? new Filmati({ cartella: cartella || "/data", casa, registro, adesso });
+      filmati ??
+      new Filmati({ cartella: cartella || "/data", casa, registro, adesso, rimpicciolisci });
     this.configurazione = configurazione;
     this.licenze = licenze;
     this.dispositivi = dispositivi;
@@ -802,6 +803,16 @@ export class Notifiche {
     if (this.adesso() - this._previsioneIl >= PREVISIONE_OGNI) await this._previsione();
     if (this.adesso() - this._registriIl >= REGISTRI_OGNI) void this._iRegistri();
     this._pulisci();
+  }
+
+  /* Se almeno un telefono ha acceso il mini video del movimento. */
+  _qualcunoVuoleIlVideo() {
+    return (this.dispositivi?.elenco?.() || []).some((dispositivo) => {
+      const voce = this.archivio.dati.telefoni[dispositivo.id];
+      if (!voce?.gettone) return false;
+      const imp = impostazioniPulite(voce.impostazioni);
+      return imp.acceso && imp.eventi?.movimento !== false && suDi(imp, "movimento").video;
+    });
   }
 
   /* Le telecamere da tenere in memoria per il mini video: quelle di chi ha
@@ -1168,6 +1179,18 @@ export class Notifiche {
    * avuto. `soloA`: un telefono solo (il riepilogo, la prova). */
   async consegna(evento, { soloA = null } = {}) {
     const premium = this.premium;
+    /* Il mini video comincia adesso, prima di ogni telefono e di ogni foto:
+     * cominciato dopo — la foto rimpicciolita e caricata, piu' telefoni,
+     * piu' movimenti insieme — i fotogrammi del momento non c'erano piu'. A
+     * chi va lo decide il giro qui sotto, come prima. */
+    if (
+      premium &&
+      evento?.camera &&
+      (evento.tipo === "movimento" || evento.tipo === "prova") &&
+      this._qualcunoVuoleIlVideo()
+    )
+      evento._film ??=
+        this.filmati?.registra?.(evento.camera, evento.quando ?? this.adesso()) ?? null;
     /* Il riepilogo della sera in Base non esiste. */
     if (evento?.tipo === "riepilogo" && !evento.sempre && !premium) return 0;
     const elenco = this.dispositivi.elenco();
@@ -1810,7 +1833,15 @@ export class Notifiche {
             return no("invalid_format", "video non valido");
           const video = await this.filmati?.leggi?.(film.id, film.chiave);
           const amministraDavvero = amministra === true || chi.amministratore === true;
-          if (!video || !this._vedeLaTelecamera(utente, amministraDavvero, video.camera))
+          if (!video) {
+            /* Un video rimasto senza fotogrammi lo si dice per quello che e',
+             * a chi quella telecamera la vede: non «non c'e' piu'». */
+            const vuoto = this.filmati?.vuoto?.(film.id);
+            if (vuoto && this._vedeLaTelecamera(utente, amministraDavvero, vuoto.camera))
+              return no("filmato-vuoto", vuoto.perche);
+            return no("not_found", "questo video non c'e' piu'");
+          }
+          if (!this._vedeLaTelecamera(utente, amministraDavvero, video.camera))
             return no("not_found", "questo video non c'e' piu'");
           return si({
             camera: video.camera,

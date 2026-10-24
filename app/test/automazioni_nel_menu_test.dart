@@ -15,6 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/schermate/barra.dart';
 import 'package:gdahome/schermate/da_parte.dart';
 import 'package:gdahome/schermate/menu.dart';
+import 'package:gdahome/schermate/riquadro/pagine.dart';
 import 'package:gdahome/vestito/oggetti.dart';
 
 class _DaParteFinta extends LaPlanciaDaParte {
@@ -68,8 +69,9 @@ void main() {
     expect(File('assets/oggetti/automazioni.svg').existsSync(), isTrue);
   });
 
-  test('le voci Premium: configurazione, automazioni, zigbee, aiutanti', () {
+  test('le voci Premium: dispositivi, configurazione, automazioni, zigbee, aiutanti', () {
     expect(Sezione.values.where((s) => s.diPremium).toSet(), {
+      Sezione.dispositivi,
       Sezione.configurazione,
       Sezione.automazioni,
       Sezione.zigbee,
@@ -82,14 +84,32 @@ void main() {
   });
 
   test('apre la pagina della plancia con la sua maniglia, sul telefono e nel browser', () {
+    /* Le maniglie e i messaggi stanno in `pagine.dart`, per le tre pagine
+     * della plancia a schermo pieno; sul telefono si tirano, nel browser si
+     * tirano o si bussa. */
+    expect(PaginaDellaPlancia.automazioni.apri, 'gdahomeApriLeAutomazioni');
+    expect(
+      PaginaDellaPlancia.automazioni.torna,
+      'gdahomeTornaDalleAutomazioni',
+    );
+    expect(
+      PaginaDellaPlancia.automazioni.bussaPerAprire,
+      'apri-le-automazioni',
+    );
+    expect(
+      PaginaDellaPlancia.automazioni.bussaPerTornare,
+      'torna-dalle-automazioni',
+    );
+    expect(PaginaDellaPlancia.dispositivi.apri, 'gdahomeApriIDispositivi');
+    expect(PaginaDellaPlancia.aiutanti.apri, 'gdahomeApriGliAiutanti');
     final telefono = File('lib/schermate/riquadro/sul_telefono.dart')
         .readAsStringSync();
-    expect(telefono, contains('window.gdahomeApriLeAutomazioni'));
-    expect(telefono, contains('window.gdahomeTornaDalleAutomazioni'));
+    expect(telefono, contains(r"'!!(window.$maniglia&&window.$maniglia())'"));
+    expect(telefono, contains(r"'window.$maniglia&&window.$maniglia()'"));
     final browser = File('lib/schermate/riquadro/sul_web.dart')
         .readAsStringSync();
-    expect(browser, contains("'apri-le-automazioni'"));
-    expect(browser, contains("'torna-dalle-automazioni'"));
+    expect(browser, contains('_tira(pagina.apri, pagina.bussaPerAprire)'));
+    expect(browser, contains('_tira(pagina.torna, pagina.bussaPerTornare)'));
   });
 
   testWidgets('col Premium porta il bollino, senza il lucchetto', (
@@ -102,9 +122,9 @@ void main() {
     await prova.pumpWidget(_conLaBarra(chiave));
     chiave.currentState!.apri();
     await prova.pumpAndSettle();
-    /* Configurazione, Automazioni e Aiutanti: Zigbee c'e' solo dove c'e' la
-     * rete. */
-    expect(find.byKey(const Key('bollino-premium')), findsNWidgets(3));
+    /* Dispositivi, Configurazione, Automazioni e Aiutanti: Zigbee c'e' solo
+     * dove c'e' la rete. */
+    expect(find.byKey(const Key('bollino-premium')), findsNWidgets(4));
 
     final chiusa = GlobalKey<BarraDelleSezioniState>();
     await prova.pumpWidget(
@@ -119,6 +139,6 @@ void main() {
     chiusa.currentState!.apri();
     await prova.pumpAndSettle();
     expect(find.byKey(const Key('bollino-premium')), findsNothing);
-    expect(find.byIcon(Icons.lock_rounded), findsNWidgets(3));
+    expect(find.byIcon(Icons.lock_rounded), findsNWidgets(4));
   });
 }

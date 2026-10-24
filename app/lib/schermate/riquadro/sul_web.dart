@@ -14,6 +14,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../casa/fuori.dart';
 import '../../plancia/premesse.dart' show ilMenuDalRiquadro;
+import 'pagine.dart';
 
 /// Un controllore pronto a caricare una pagina. Sul web sa fare solo quello:
 /// non dice quando la pagina e' arrivata ne' se e' arrivata, quindi la si da'
@@ -385,7 +386,20 @@ Future<void> tornaDallaConfig(WebViewController controllore) async =>
 /// stessa (`automazioni-section.js`), e da fuori del riquadro si bussa col
 /// messaggio `apri-le-automazioni`.
 Future<void> apriLeAutomazioni(WebViewController controllore) async =>
-    _tira('gdahomeApriLeAutomazioni', 'apri-le-automazioni');
+    apriAPienoSchermo(controllore, PaginaDellaPlancia.automazioni);
+
+/// Apre una pagina della plancia a schermo pieno: le Automazioni, i
+/// Dispositivi, gli Aiutanti. Si tira la sua maniglia, o si bussa.
+Future<void> apriAPienoSchermo(
+  WebViewController controllore,
+  PaginaDellaPlancia pagina,
+) async => _tira(pagina.apri, pagina.bussaPerAprire);
+
+/// Riporta la plancia dov'era prima di quella pagina.
+Future<void> tornaDaPienoSchermo(
+  WebViewController controllore,
+  PaginaDellaPlancia pagina,
+) async => _tira(pagina.torna, pagina.bussaPerTornare);
 
 /// Nel browser la plancia sta in un riquadro di un'altra origine, e le sue
 /// linguette da qui non si toccano: la notifica apre la sua pagina. (Nel
@@ -397,7 +411,7 @@ Future<bool> apriLaLinguetta(
 
 /// Riporta la plancia dov'era prima delle Automazioni.
 Future<void> tornaDalleAutomazioni(WebViewController controllore) async =>
-    _tira('gdahomeTornaDalleAutomazioni', 'torna-dalle-automazioni');
+    tornaDaPienoSchermo(controllore, PaginaDellaPlancia.automazioni);
 
 /// Passa alla plancia un dispositivo appena abbinato (#54, passo 4).
 ///

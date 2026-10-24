@@ -1024,3 +1024,55 @@ test("il tasto di un menu porta la sua voce, e solo quella", async () => {
     banco.spegni();
   }
 });
+
+/* «Forse quando rileva più movimenti insieme non ce la fa»: il mini video
+ * cominciava dopo la foto della notifica — presa, rimpicciolita, chiusa e
+ * caricata — e con piu' movimenti e piu' telefoni i fotogrammi del momento
+ * non c'erano piu'. Adesso comincia prima di tutto, una volta sola. */
+test("il mini video comincia prima della foto, una volta sola per movimento", async () => {
+  const banco = unBanco();
+  try {
+    await banco.registra();
+    await banco.imposta({ stile: "elaborate", su: { movimento: { video: true } } });
+    const ordine = [];
+    banco.notifiche.filmati = {
+      registra: (camera, quando) => {
+        ordine.push(`video ${camera}`);
+        return { id: `${quando}-abcdef123456`, chiave: "k".repeat(43) };
+      },
+      sorveglia() {},
+      ferma() {},
+    };
+    const manda = banco.notifiche.postino.mandaLaFoto;
+    banco.notifiche.postino.mandaLaFoto = async (una) => {
+      ordine.push("foto");
+      return manda(una);
+    };
+    assert.equal(await banco.notifiche.consegna(movimento()), 1);
+    assert.deepEqual(ordine, ["video camera.ingresso", "foto"]);
+    const contenuto = banco.apri(banco.spinte.at(-1));
+    assert.match(contenuto.film.id, /-abcdef123456$/);
+  } finally {
+    banco.spegni();
+  }
+});
+
+test("senza nessuno col mini video acceso, il video non comincia", async () => {
+  const banco = unBanco();
+  try {
+    await banco.registra();
+    let chiesti = 0;
+    banco.notifiche.filmati = {
+      registra: () => {
+        chiesti += 1;
+        return null;
+      },
+      sorveglia() {},
+      ferma() {},
+    };
+    assert.equal(await banco.notifiche.consegna(movimento()), 1);
+    assert.equal(chiesti, 0);
+  } finally {
+    banco.spegni();
+  }
+});

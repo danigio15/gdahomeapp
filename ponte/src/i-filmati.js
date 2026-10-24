@@ -37,16 +37,31 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { rimpicciolisci as rimpicciolisciDiCasa } from "./rimpicciolisci.js";
 
 /** Quanto prima del movimento, quanto dopo, e ogni quanto un fotogramma. */
 export const PRIMA = 5000;
 export const DOPO = 5000;
 export const OGNI = 500;
+/* Quanto si tiene in memoria, finche' nessuno registra: il «prima» e un
+ * margine. «Forse quando rileva più movimenti insieme non ce la fa»: il video
+ * di un movimento puo' cominciare qualche secondo dopo il movimento — la foto
+ * della notifica, piu' telefoni, piu' movimenti insieme — e con solo cinque
+ * secondi in memoria i fotogrammi di quel momento erano gia' stati buttati.
+ * Quindici secondi: due istantanee al secondo, al piu' qualche megabyte. */
+export const TENUTA = PRIMA + 10_000;
 /* La larghezza chiesta: abbastanza per un telefono, leggera per il filo. */
 export const LARGHEZZA = 640;
-/* Un fotogramma piu' pesante di cosi' e' una telecamera che non rimpicciolisce:
- * si salta, invece di riempire la memoria. */
+/* Un fotogramma piu' pesante di cosi' e' una telecamera che non rimpicciolisce.
+ *
+ * «Sì ma con una telecamera l'altra no.» La larghezza chiesta a Home Assistant
+ * molte integrazioni la ignorano, e una telecamera 4K manda l'istantanea
+ * intera, uno o due megabyte, a ogni richiesta: prima quei fotogrammi si
+ * saltavano tutti, il video di quella telecamera restava vuoto e non si
+ * scriveva — «non c'è». Adesso si rimpiccioliscono qui in casa, come la foto
+ * della notifica (`rimpicciolisci.js`); solo se non si riesce si saltano. */
 const FOTOGRAMMA_MASSIMO = 400 * 1024;
+const LARGHEZZE_DEL_VIDEO = Object.freeze([LARGHEZZA, 480]);
 /* Un video intero, in byte prima del base64: sotto i 4 MB del filo. */
 const PESO_MASSIMO = 2 * 1024 * 1024;
 const VITA = 3 * 24 * 3600 * 1000;
@@ -101,7 +116,9 @@ export class Filmati {
     adesso = () => Date.now(),
     aspetta = dorme,
     acaso = () => randomBytes(6).toString("hex"),
+    rimpicciolisci = rimpicciolisciDiCasa,
   } = {}) {
+    this.rimpicciolisci = rimpicciolisci;
     this.dove = join(cartella, "filmati");
     this.casa = casa;
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {}, debug() {} };
@@ -112,6 +129,13 @@ export class Filmati {
     this._memorie = new Map();
     /** id → Promise che si chiude quando il video e' scritto. */
     this._inCorso = new Map();
+    /** id → { camera, perche, il }: i video rimasti senza fotogrammi.
+     *
+     * «Il video di questo movimento non c'è più», sei minuti dopo il
+     * movimento: il video non c'era mai stato, perche' la telecamera non
+     * aveva dato immagini. Adesso lo si sa, e lo si dice — al telefono, e nel
+     * registro coi numeri — invece di una frase sbagliata. */
+    this._vuoti = new Map();
   }
 
   /** Le telecamere da tenere in memoria. Quelle che escono si fermano. */
@@ -140,7 +164,14 @@ export class Filmati {
   }
 
   _accendi(camera, fissa) {
-    const memoria = { fotogrammi: [], viva: true, fissa, registrazioni: 0 };
+    const memoria = {
+      fotogrammi: [],
+      viva: true,
+      fissa,
+      registrazioni: 0,
+      /* Come vanno le istantanee: per il registro, se un video resta vuoto. */
+      conti: { chieste: 0, prese: 0, pesanti: 0, perse: 0 },
+    };
     this._memorie.set(camera, memoria);
     void this._giro(camera, memoria);
     return memoria;
@@ -152,15 +183,26 @@ export class Filmati {
     while (memoria.viva) {
       const inizio = this.adesso();
       try {
-        const byte = await this.casa?.immagine?.(`camera_proxy/${camera}?width=${LARGHEZZA}`);
-        if (byte?.length && byte.length <= FOTOGRAMMA_MASSIMO)
-          memoria.fotogrammi.push({ t: this.adesso(), byte });
+        const quando = this.adesso();
+        memoria.conti.chieste += 1;
+        let byte = await this.casa?.immagine?.(`camera_proxy/${camera}?width=${LARGHEZZA}`);
+        if (byte?.length > FOTOGRAMMA_MASSIMO)
+          byte = await this.rimpicciolisci?.(byte, {
+            massimo: FOTOGRAMMA_MASSIMO,
+            larghezze: LARGHEZZE_DEL_VIDEO,
+          });
+        if (byte?.length && byte.length <= FOTOGRAMMA_MASSIMO) {
+          memoria.fotogrammi.push({ t: quando, byte });
+          memoria.conti.prese += 1;
+        } else if (byte?.length) memoria.conti.pesanti += 1;
+        else memoria.conti.perse += 1;
       } catch (_errore) {
         /* Una istantanea persa e' un fotogramma in meno. */
+        memoria.conti.perse += 1;
       }
       /* Si tiene solo il «prima» che serve, finche' nessuno registra. */
       if (!memoria.registrazioni) {
-        const da = this.adesso() - PRIMA - OGNI;
+        const da = this.adesso() - TENUTA - OGNI;
         while (memoria.fotogrammi.length && memoria.fotogrammi[0].t < da)
           memoria.fotogrammi.shift();
       }
@@ -200,7 +242,22 @@ export class Filmati {
         const peso = (elenco) => elenco.reduce((somma, f) => somma + f.byte.length, 0);
         while (fotogrammi.length > 1 && peso(fotogrammi) > PESO_MASSIMO)
           fotogrammi = fotogrammi.filter((_f, i) => i % 2 === 0);
-        if (!fotogrammi.length) return false;
+        if (!fotogrammi.length) {
+          const { chieste, prese, pesanti, perse } = memoria.conti;
+          this._vuoti.set(id, {
+            camera,
+            perche: pesanti > 0 ? "troppo-pesanti" : "nessuna-immagine",
+            il: this.adesso(),
+          });
+          for (const [vecchio, uno] of this._vuoti)
+            if (this._vuoti.size > AL_PIU || this.adesso() - uno.il > VITA)
+              this._vuoti.delete(vecchio);
+          this.registro.attenzione(
+            `mini video vuoto (${camera}), dall'accensione: ${prese} istantanee buone su ${chieste}, ` +
+              `${pesanti} troppo pesanti, ${perse} non arrivate`,
+          );
+          return false;
+        }
         this._scrivi(id, chiave, {
           v: 1,
           camera,
@@ -210,6 +267,11 @@ export class Filmati {
             jpeg: f.byte.toString("base64"),
           })),
         });
+        /* Nel registro i numeri, mai le immagini ne' la chiave. */
+        this.registro.info(
+          `mini video scritto (${camera}): ${fotogrammi.length} fotogrammi, ` +
+            `${Math.round(peso(fotogrammi) / 1024)} KB`,
+        );
         return true;
       } catch (errore) {
         this.registro.attenzione(`un mini video non si scrive (${errore?.code || "errore"})`);
@@ -239,13 +301,37 @@ export class Filmati {
     if (!idBuono(id) || !chiaveBuona(chiave)) return null;
     const inCorso = this._inCorso.get(id);
     if (inCorso) await Promise.race([inCorso, this.aspetta(ASPETTA_AL_PIU)]);
+    /* «Se la apri subito va, se aspetti anche poco no»: quando un video
+     * chiesto non si trova, il registro dice perche' e da quanto era il
+     * movimento — senza numero ne' chiave. */
+    const minuti = Math.round((this.adesso() - Number(id.split("-")[0])) / 60000);
+    let byte;
     try {
-      const byte = readFileSync(join(this.dove, `${id}.gdaf`));
+      byte = readFileSync(join(this.dove, `${id}.gdaf`));
+    } catch (errore) {
+      if (!this._vuoti.has(id))
+        this.registro.attenzione(
+          `mini video chiesto e non trovato sul disco (${errore?.code || "errore"}), movimento di ${minuti} min fa`,
+        );
+      return null;
+    }
+    try {
       const video = apri(id, Buffer.from(chiave, "base64url"), byte);
       return video && CAMERA_BUONA.test(String(video.camera)) ? video : null;
     } catch (_errore) {
+      this.registro.attenzione(
+        `mini video chiesto: la chiave della notifica non lo apre, movimento di ${minuti} min fa`,
+      );
       return null;
     }
+  }
+
+  /** Perche' quel video non c'e', se e' rimasto vuoto: `{camera, perche}`,
+   * o `null`. Il resto (scaduto, mai esistito) non lo si sa. */
+  vuoto(id) {
+    if (!idBuono(id)) return null;
+    const uno = this._vuoti.get(id);
+    return uno ? { camera: uno.camera, perche: uno.perche } : null;
   }
 
   /** Via quelli piu' vecchi di tre giorni, e oltre i duecento i piu' vecchi. */

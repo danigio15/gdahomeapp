@@ -532,7 +532,7 @@ test("dai modelli all'editor: si crea e si salva in Home Assistant", async ({ pa
   await apriLaVoce(page);
   const pagina = page.locator("#ed-body .au-web");
   await pagina.locator('[data-au-vai="modelli"]').first().click();
-  await expect(pagina.locator(".au-mod")).toHaveCount(8);
+  await expect(pagina.locator(".au-mod")).toHaveCount(10);
   await pagina.locator('[data-au-modello="luce"]').click();
   await expect(pagina.locator('select[data-au-campo="quando.entita.0"]')).toHaveValue(
     "binary_sensor.pir_corridoio",
@@ -664,9 +664,9 @@ test("il cronotermostato: due temperature e le fasce trascinate, in Home Assista
   const pagina = page.locator("#ed-body .au-web");
   await pagina.locator('[data-au-vai="modelli"]').first().click();
   await pagina.locator('[data-au-modello="crono"]').click();
-  await expect(pagina.locator('[data-au-barra="feriali"] i')).toHaveCount(48);
+  await expect(pagina.locator('[data-au-barra="crono.feriali"] i')).toHaveCount(48);
   await pagina.locator('[data-au-gradi="inCasa"][data-au-passo="0.5"]').click();
-  const barra = pagina.locator('[data-au-barra="festivi"]');
+  const barra = pagina.locator('[data-au-barra="crono.festivi"]');
   const box = await barra.boundingBox();
   await page.mouse.click(box.x + 3, box.y + box.height / 2);
   await pagina.locator("[data-au-salva]").click();
@@ -689,7 +689,7 @@ test("il cronotermostato: due temperature e le fasce trascinate, in Home Assista
   expect(scritta.variables.gdahome_crono.inCasa).toBe(21.5);
   /* E riletta e' di nuovo un cronotermostato, che si apre con le sue barre. */
   await pagina.locator('[data-au-apri="automation.a2000"]').click();
-  await expect(pagina.locator('[data-au-barra="festivi"]')).toBeVisible();
+  await expect(pagina.locator('[data-au-barra="crono.festivi"]')).toBeVisible();
 });
 
 test("tutta Home Assistant: un evento, un servizio e le Avanzate", async ({ page }, testInfo) => {
@@ -946,7 +946,7 @@ test("la sezione della dashboard: la linguetta prima di Config, le tessere, i gr
       path: `${process.env.DM_RENDER_DIR}/automazioni-browser-lista-${testInfo.project.name}.png`,
     });
   await pagina.locator(".ad-filtri [data-auc-nuova]").click();
-  await expect(pagina.locator(".au-mod")).toHaveCount(8);
+  await expect(pagina.locator(".au-mod")).toHaveCount(10);
   if (process.env.DM_RENDER_DIR)
     await page.screenshot({
       path: `${process.env.DM_RENDER_DIR}/automazioni-browser-nuova-${testInfo.project.name}.png`,
@@ -1026,7 +1026,209 @@ test("nell'app: niente linguetta e niente voce, la pagina del menu con «＋ Nuo
   await expect(nuova).toBeVisible();
   /* «＋ Nuova»: i modelli, nella stessa pagina. */
   await nuova.click();
-  await expect(pagina.locator(".au-mod")).toHaveCount(8);
+  await expect(pagina.locator(".au-mod")).toHaveCount(10);
   await page.evaluate(() => window.gdahomeTornaDalleAutomazioni());
   await expect(page.locator("#page-automazioni")).toHaveCount(0);
+});
+
+/* ── il Pianificatore ────────────────────────────────────────────────────── */
+
+/* Una routine e un calendario a fasce gia' in casa, scritti come li scrive
+ * la plancia (`core/automazioni-ha.js`). */
+const ROUTINE = {
+  id: "4001",
+  nome: "Mattina feriale",
+  tipo: "routine",
+  soloSe: [],
+  routine: {
+    giorni: [true, true, true, true, true, false, false],
+    periodo: { da: "10-01", a: "03-31" },
+    passi: [
+      { ora: "06:30", allora: [{ tipo: "accendi", entita: ["switch.caldaia"] }] },
+      { ora: "07:00", allora: [{ tipo: "tapparella", entita: ["cover.soggiorno"], modo: "apri" }] },
+      {
+        ora: "07:40",
+        allora: [
+          { tipo: "accendi", entita: ["light.corridoio"], livello: 50 },
+          { tipo: "aspetta", minuti: 45 },
+          { tipo: "spegni", entita: ["light.corridoio"] },
+        ],
+      },
+    ],
+  },
+};
+const FASCE = {
+  id: "4002",
+  nome: "Caldaia",
+  tipo: "fasce",
+  fasce: {
+    entita: ["switch.caldaia"],
+    periodo: { da: "10-15", a: "04-15" },
+    fuori: "spegni",
+    giorni: [
+      [
+        [390, 510],
+        [1050, 1350],
+      ],
+      [
+        [390, 510],
+        [1050, 1350],
+      ],
+      [
+        [390, 510],
+        [1050, 1350],
+      ],
+      [
+        [390, 510],
+        [1050, 1350],
+      ],
+      [
+        [390, 510],
+        [1050, 1380],
+      ],
+      [[480, 1380]],
+      [[480, 1380]],
+    ],
+  },
+};
+
+async function conIlPianificatore(page, testInfo) {
+  const { inHomeAssistant } = await import("../src/core/automazioni-ha.js");
+  const configurazioni = {
+    ...HA,
+    4001: inHomeAssistant(ROUTINE),
+    4002: inHomeAssistant(FASCE),
+  };
+  await avvia(page, testInfo, { app: true, aperti: [], configurazioni });
+  await page.evaluate(() => {
+    const grezzi = window.eval("_RAW_STATES");
+    grezzi["switch.caldaia"] = {
+      entity_id: "switch.caldaia",
+      state: "off",
+      attributes: { friendly_name: "Caldaia" },
+    };
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
+  });
+  await page.evaluate(() => window.gdahomeApriLeAutomazioni());
+  return page.locator("#page-automazioni");
+}
+
+async function fotoDelPianificatore(page, testInfo, nome, intera = false) {
+  if (!process.env.DM_FOTO) return;
+  const prima = page.viewportSize();
+  if (intera) {
+    const alta = await page.evaluate(
+      () => document.querySelector(".page.active")?.scrollHeight || 1600,
+    );
+    await page.setViewportSize({ width: prima.width, height: Math.min(4000, alta + 220) });
+  }
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: `${process.env.DM_FOTO}/${nome}-${testInfo.project.name}.png` });
+  if (intera) await page.setViewportSize(prima);
+}
+
+test("il Pianificatore: la sua linguetta, le routine e i calendari a fasce", async ({
+  page,
+}, testInfo) => {
+  const pagina = await conIlPianificatore(page, testInfo);
+  await expect(pagina.locator("[data-auc-linguetta]")).toHaveText(["Automazioni", "Pianificatore"]);
+  /* Nella linguetta Automazioni non ci sono. */
+  await pagina.locator('.ad-filtri [data-aug-tutti="apri"]').click();
+  await expect(pagina.locator('[data-auc-carta="automation.a4001"]')).toHaveCount(0);
+  await pagina.locator('[data-auc-linguetta="pianificatore"]').click();
+  await expect(pagina.locator(".auc-pian")).toHaveCount(2);
+  await expect(pagina.locator(".aug-titolo")).toHaveText(["Routine a orari", "Calendari a fasce"]);
+  const routine = pagina.locator('[data-auc-carta="automation.a4001"]');
+  await expect(routine).toContainText("Mattina feriale");
+  await expect(routine).toContainText("06:30 accendi Caldaia");
+  await expect(pagina.locator('[data-auc-carta="automation.a4002"] .auc-fascia b')).toHaveText([
+    "L–G",
+    "V",
+    "S–D",
+  ]);
+  await fotoDelPianificatore(page, testInfo, "pianificatore-elenco", true);
+  /* Il foglio, e «Modifica»: l'editor della routine. */
+  await routine.click();
+  const foglio = page.locator("#auc-foglio .ad-foglio");
+  await expect(foglio.locator(".riga.q")).toContainText("1 ott → 31 mar");
+  await fotoDelPianificatore(page, testInfo, "pianificatore-foglio");
+  await foglio.locator("[data-auc-modifica]").click();
+  await expect(pagina.locator(".au-passo")).toHaveCount(3);
+  await expect(pagina.locator('[data-au-campo="routine.passi.1.ora"]')).toHaveValue("07:00");
+});
+
+test("una routine nuova: periodo, giorni, orari e azioni, salvata in Home Assistant", async ({
+  page,
+}, testInfo) => {
+  const pagina = await conIlPianificatore(page, testInfo);
+  await pagina.locator('[data-auc-linguetta="pianificatore"]').click();
+  await pagina.locator(".ad-filtri [data-auc-pianifica]").click();
+  await expect(pagina.locator(".au-mod")).toHaveCount(2);
+  await pagina.locator('[data-au-modello="routine"]').click();
+  await pagina.locator('[data-au-testo="nome"]').fill("Buonanotte");
+  await pagina.locator('[data-au-periodo="routine"][data-au-si="si"]').click();
+  await pagina.locator('[data-au-campo="routine.periodo.da.g"]').selectOption("8");
+  await pagina.locator('[data-au-campo="routine.periodo.da.m"]').selectOption("12");
+  await pagina.locator('[data-au-campo="routine.periodo.a.g"]').selectOption("6");
+  await pagina.locator('[data-au-campo="routine.periodo.a.m"]').selectOption("1");
+  await pagina.locator('[data-au-giorno="routine.giorni.5"]').click();
+  await pagina.locator('[data-au-giorno="routine.giorni.6"]').click();
+  await pagina.locator('[data-au-campo="routine.passi.0.ora"]').fill("23:30");
+  await pagina.locator('[data-au-campo="routine.passi.0.allora.0.tipo"]').selectOption("spegni");
+  await pagina.locator('[data-au-aggiungi="routine.passi"]').click();
+  await expect(pagina.locator(".au-passo")).toHaveCount(2);
+  await pagina.locator('[data-au-aggiungi="routine.passi.1.allora"]').click();
+  await expect(pagina.locator(".au-passo").nth(1).locator(".au-num")).toHaveCount(2);
+  await expect(pagina.locator("[data-au-leggi]")).toContainText("8 dic → 6 gen");
+  await fotoDelPianificatore(page, testInfo, "routine-editor", true);
+  await pagina.locator("[data-au-salva]").click();
+  await expect.poll(async () => (await comandi(page, "ponte/automazioni/salva")).length).toBe(1);
+  const [salvata] = await comandi(page, "ponte/automazioni/salva");
+  expect(salvata.automazione).toMatchObject({
+    tipo: "routine",
+    nome: "Buonanotte",
+    routine: {
+      giorni: [true, true, true, true, true, true, true],
+      periodo: { da: "12-08", a: "01-06" },
+    },
+  });
+  expect(salvata.automazione.routine.passi.map((p) => p.ora)).toEqual(["00:30", "23:30"]);
+  /* In Home Assistant: un orario per passo, e il periodo a cavallo di
+   * capodanno. */
+  const id = Object.keys(await page.evaluate(() => window.__CASA__.config)).find((k) =>
+    k.startsWith("20"),
+  );
+  const config = await configDi(page, id);
+  expect(config.variables.gdahome_routine.periodo).toEqual({ da: "12-08", a: "01-06" });
+  expect(config.triggers.map((x) => x.at)).toEqual(["00:30:00", "23:30:00"]);
+  expect(config.conditions[0].value_template).toContain("or");
+});
+
+test("un calendario a fasce: cosa accende, le fasce trascinate, spento fuori", async ({
+  page,
+}, testInfo) => {
+  const pagina = await conIlPianificatore(page, testInfo);
+  await pagina.locator('[data-auc-linguetta="pianificatore"]').click();
+  await pagina.locator(".ad-filtri [data-auc-pianifica]").click();
+  await pagina.locator('[data-au-modello="fasce"]').click();
+  await pagina.locator('[data-au-testo="nome"]').fill("Ricircolo acqua calda");
+  await expect(pagina.locator('[data-au-barra^="fasce.giorni."]')).toHaveCount(7);
+  /* Il lunedi' si svuota e si ridisegna col dito: 6:00–7:00. */
+  await pagina.locator("[data-au-svuota]").click();
+  const lunedi = pagina.locator('[data-au-barra="fasce.giorni.0"]');
+  await lunedi.scrollIntoViewIfNeeded();
+  for (const mezzora of [12, 13]) {
+    const box = await lunedi.boundingBox();
+    await page.mouse.click(box.x + ((mezzora + 0.5) / 48) * box.width, box.y + box.height / 2);
+  }
+  await pagina.locator('[data-au-copia="feriali"]').click();
+  await pagina.locator('[data-au-fuori="lascia"]').click();
+  await fotoDelPianificatore(page, testInfo, "fasce-editor", true);
+  await pagina.locator("[data-au-salva]").click();
+  await expect.poll(async () => (await comandi(page, "ponte/automazioni/salva")).length).toBe(1);
+  const [salvata] = await comandi(page, "ponte/automazioni/salva");
+  expect(salvata.automazione.tipo).toBe("fasce");
+  expect(salvata.automazione.fasce.giorni.slice(0, 5)).toEqual(Array(5).fill([[360, 420]]));
+  expect(salvata.automazione.fasce.giorni.slice(5)).toEqual([[], []]);
+  expect(salvata.automazione.fasce.fuori).toBe("lascia");
 });

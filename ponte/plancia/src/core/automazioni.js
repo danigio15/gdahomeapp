@@ -23,6 +23,17 @@
  *
  *   { id, nome, attiva, tipo: "crono", crono: {…} }
  *
+ * e le due del Pianificatore: la **routine a orari** — a quell'ora fai
+ * quelle cose, quei giorni, in quel periodo dell'anno —
+ *
+ *   { id, nome, attiva, tipo: "routine", routine: {giorni, periodo, passi},
+ *     soloSe, tutte }
+ *
+ * e il **calendario a fasce** — quelle cose accese nelle fasce di ogni
+ * giorno, spente fuori —
+ *
+ *   { id, nome, attiva, tipo: "fasce", fasce: {entita, giorni, periodo, fuori} }
+ *
  * «Ultima volta» non sta qui: la sa Home Assistant (`last_triggered`), e il
  * ponte la dice alla plancia con l'elenco (`ponte/automazioni/stato`).
  *
@@ -598,6 +609,81 @@ export function cronoPulito(dato) {
   };
 }
 
+/* ── il Pianificatore ─────────────────────────────────────────────────────
+ *
+ * «Creare delle routine su orari e periodi», e i calendari a fasce acceso
+ * e spento. Il periodo e' fra due giorni dell'anno («dal 15 ottobre al 15
+ * aprile»), e si ripete ogni anno, anche a cavallo di capodanno. */
+export const PASSI_AL_MASSIMO = 8;
+export const AZIONI_PER_PASSO = 6;
+const GIORNO_DELL_ANNO = /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+
+export function periodoPulito(valore) {
+  const da = pulito(valore?.da);
+  const a = pulito(valore?.a);
+  return GIORNO_DELL_ANNO.test(da) && GIORNO_DELL_ANNO.test(a) && da !== a ? { da, a } : null;
+}
+
+/** Se `adesso` sta nel periodo (`null`: tutto l'anno). */
+export function nelPeriodo(periodo, adesso) {
+  if (!periodo) return true;
+  const d = new Date(adesso);
+  const oggi = `${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return periodo.da <= periodo.a
+    ? oggi >= periodo.da && oggi <= periodo.a
+    : oggi >= periodo.da || oggi <= periodo.a;
+}
+
+export function routinePulita(dato) {
+  const d = dato && typeof dato === "object" ? dato : {};
+  const viste = new Set();
+  const passi = [];
+  for (const p of Array.isArray(d.passi) ? d.passi : []) {
+    const ora = pulito(p?.ora);
+    if (!ORA_BUONA.test(ora) || viste.has(ora)) continue;
+    viste.add(ora);
+    passi.push({
+      ora,
+      allora: (Array.isArray(p.allora) ? p.allora : [])
+        .map(azionePulita)
+        .filter(Boolean)
+        .slice(0, AZIONI_PER_PASSO),
+    });
+  }
+  passi.sort((x, y) => x.ora.localeCompare(y.ora));
+  return {
+    giorni: giorniDi(d.giorni),
+    periodo: periodoPulito(d.periodo),
+    passi: passi.slice(0, PASSI_AL_MASSIMO),
+  };
+}
+
+export const CALENDARIO_DI_SERIE = Object.freeze({
+  feriale: Object.freeze([Object.freeze([390, 510]), Object.freeze([1050, 1350])]),
+  festivo: Object.freeze([Object.freeze([480, 1380])]),
+});
+
+export function calendarioPulito(dato) {
+  const d = dato && typeof dato === "object" ? dato : {};
+  const giorni = [];
+  for (let i = 0; i < 7; i += 1)
+    giorni.push(
+      fascePulite(
+        Array.isArray(d.giorni) && Array.isArray(d.giorni[i])
+          ? d.giorni[i]
+          : i < 5
+            ? CALENDARIO_DI_SERIE.feriale
+            : CALENDARIO_DI_SERIE.festivo,
+      ),
+    );
+  return {
+    entita: elencoDiEntita(d.entita, DOMINI.accendi),
+    giorni,
+    periodo: periodoPulito(d.periodo),
+    fuori: d.fuori === "lascia" ? "lascia" : "spegni",
+  };
+}
+
 /* Gli id di Home Assistant: quelli che scrive la sua pagina sono cifre, ma
  * chi le scrive a mano ci mette quello che vuole. */
 const ID_BUONO = /^[a-z0-9_-]{1,64}$/i;
@@ -618,10 +704,23 @@ export function automazionePulita(dato) {
   const extra = scadenza ? { scadenza } : {};
   if (d.tipo === "crono")
     return { id, nome, attiva, ...extra, tipo: "crono", crono: cronoPulito(d.crono) };
+  if (d.tipo === "fasce")
+    return { id, nome, attiva, ...extra, tipo: "fasce", fasce: calendarioPulito(d.fasce) };
   const soloSe = (Array.isArray(d.soloSe) ? d.soloSe : [])
     .map(condizionePulita)
     .filter(Boolean)
     .slice(0, CONDIZIONI_AL_MASSIMO);
+  if (d.tipo === "routine")
+    return {
+      id,
+      nome,
+      attiva,
+      ...extra,
+      tipo: "routine",
+      routine: routinePulita(d.routine),
+      soloSe,
+      tutte: d.tutte !== false,
+    };
   const allora = (Array.isArray(d.allora) ? d.allora : [])
     .map(azionePulita)
     .filter(Boolean)
@@ -687,6 +786,9 @@ export function nuovoId(adesso = Date.now(), caso = Math.random()) {
 export function eCompleta(a) {
   if (!a) return false;
   if (a.tipo === "crono") return a.crono.termostati.length > 0;
+  if (a.tipo === "fasce") return a.fasce.entita.length > 0;
+  if (a.tipo === "routine")
+    return a.routine.passi.some((p) => p.allora.some((x) => x.tipo !== "aspetta"));
   const q = a.quando;
   const serveEntita = ["apertura", "movimento", "stato"].includes(q.tipo)
     ? q.entita.length > 0
@@ -1420,9 +1522,56 @@ export function prossimiEventi(automazioni, adesso, statoDi = null, quanti = 3) 
       if (p) fuori.push({ id: a.id, alle: p.alle, crono: p.voluto });
       continue;
     }
+    if (a.tipo === "routine" || a.tipo === "fasce") {
+      const p = prossimoDelPianificatore(a, adesso);
+      if (p !== null) fuori.push({ id: a.id, alle: p });
+      continue;
+    }
     if (a.quando?.tipo !== "orario" && a.quando?.tipo !== "ogni") continue;
     const alle = prossimoIstante(a.quando, adesso, statoDi);
     if (alle !== null) fuori.push({ id: a.id, alle });
   }
   return fuori.sort((x, y) => x.alle - y.alle).slice(0, quanti);
+}
+
+/**
+ * Il prossimo momento in cui una routine o un calendario fanno qualcosa,
+ * dopo `adesso`: un orario della routine, o un cambio di fascia, in un
+ * giorno giusto e nel periodo. Si guarda una settimana e un giorno avanti,
+ * poi fino a un anno per un periodo che deve ancora cominciare. `null` se
+ * non c'e'.
+ */
+export function prossimoDelPianificatore(a, adesso) {
+  const minuti = [];
+  let periodo = null;
+  let giornoBuono = () => true;
+  if (a?.tipo === "routine") {
+    periodo = a.routine.periodo;
+    giornoBuono = (g) => a.routine.giorni[g];
+    for (const p of a.routine.passi) {
+      const [h, m] = p.ora.split(":").map(Number);
+      minuti.push({ m: h * 60 + m });
+    }
+  } else if (a?.tipo === "fasce") {
+    if (!a.fasce.entita.length) return null;
+    periodo = a.fasce.periodo;
+  } else return null;
+  const base = new Date(adesso);
+  base.setHours(0, 0, 0, 0);
+  for (let giorno = 0; giorno < 370; giorno += 1) {
+    const inizio = new Date(base);
+    inizio.setDate(base.getDate() + giorno);
+    if (!nelPeriodo(periodo, inizio.getTime())) continue;
+    const g = (inizio.getDay() + 6) % 7;
+    if (!giornoBuono(g)) continue;
+    const oggi =
+      a.tipo === "fasce"
+        ? a.fasce.giorni[g].flatMap(([da, fine]) => [da, fine]).filter((m) => m < 1440)
+        : minuti.map((x) => x.m);
+    for (const m of [...oggi].sort((x, y) => x - y)) {
+      const alle = inizio.getTime() + m * MINUTO;
+      if (alle > adesso) return alle;
+    }
+  }
+  return null;
 }

@@ -419,6 +419,8 @@ export const CONFIG_KEYS = Object.freeze([
   "cd_posta_arrivata",
   // Le voci della parte Caldo del Clima (caldaia, pompe): lista libera.
   "cd_termico_caldo",
+  // Se la pillola «Caldaia accesa» si mostra nella Home: di serie si'.
+  "cd_caldaia_in_home",
   // I programmi rapidi della lavatrice: nome, entita', icona.
   "cd_lavatrice_programmi",
   // La card del Clima girata: grande l'ambiente, piccola la target.

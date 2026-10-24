@@ -22,7 +22,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { chiaveBuona, DOPO, Filmati, idBuono, OGNI, PRIMA } from "../src/i-filmati.js";
+import { chiaveBuona, DOPO, Filmati, idBuono, OGNI, PRIMA, TENUTA } from "../src/i-filmati.js";
 import { esempioDi, Notifiche } from "../src/notifiche.js";
 import { CONTENUTO_MASSIMO } from "../src/spinta.js";
 
@@ -122,13 +122,39 @@ test("una telecamera tenuta in memoria da' il prima e il dopo", async () => {
   }
 });
 
+/* Un video cominciato in ritardo — la foto, piu' telefoni, piu' movimenti
+ * insieme — trova ancora i fotogrammi del suo momento. */
+test("un video cominciato otto secondi dopo il movimento ha ancora il prima e il dopo", async () => {
+  const { orologio, filmati, via } = unBanco();
+  try {
+    filmati.sorveglia(["camera.ingresso"]);
+    await orologio.avanza(12_000);
+    const quando = orologio.adesso() - 8000;
+    const { id, chiave } = filmati.registra("camera.ingresso", quando);
+    const letto = filmati.leggi(id, chiave);
+    await orologio.avanza(1000);
+    const video = await letto;
+    assert.ok(video, "il video c'e'");
+    assert.ok(
+      video.fotogrammi.some((f) => f.t < -3000),
+      "c'e' il prima",
+    );
+    assert.ok(
+      video.fotogrammi.some((f) => f.t > 3000),
+      "c'e' il dopo",
+    );
+  } finally {
+    via();
+  }
+});
+
 test("in memoria resta solo il prima che serve", async () => {
   const { orologio, filmati, via } = unBanco();
   try {
     filmati.sorveglia(["camera.ingresso"]);
     await orologio.avanza(60_000);
     const memoria = filmati._memorie.get("camera.ingresso");
-    assert.ok(memoria.fotogrammi.length <= (PRIMA + OGNI) / OGNI + 2);
+    assert.ok(memoria.fotogrammi.length <= (TENUTA + OGNI) / OGNI + 2);
   } finally {
     via();
   }
@@ -149,6 +175,68 @@ test("una telecamera non tenuta in memoria registra solo il dopo, poi si ferma",
     assert.equal(filmati._memorie.has("camera.giardino"), false);
   } finally {
     via();
+  }
+});
+
+/* «Sì ma con una telecamera l'altra no.» Una telecamera 4K manda
+ * l'istantanea intera, a qualunque larghezza la si chieda: prima ogni
+ * fotogramma si saltava, e il video di quella telecamera non c'era mai. */
+test("una telecamera che manda istantanee enormi da' il video lo stesso, rimpicciolito", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "mini-video-"));
+  const orologio = unOrologio();
+  const rimpiccioliti = [];
+  const filmati = new Filmati({
+    cartella,
+    casa: { immagine: async () => Buffer.alloc(1_500_000, 7) },
+    adesso: orologio.adesso,
+    aspetta: orologio.aspetta,
+    acaso: () => "abcdef123456",
+    rimpicciolisci: async (byte, opzioni) => {
+      rimpiccioliti.push({ peso: byte.length, ...opzioni });
+      return Buffer.from("piccolo");
+    },
+  });
+  try {
+    filmati.sorveglia(["camera.balconi"]);
+    await orologio.avanza(6000);
+    const quando = orologio.adesso();
+    const { id, chiave } = filmati.registra("camera.balconi", quando);
+    const letto = filmati.leggi(id, chiave);
+    await orologio.avanza(DOPO + 1000);
+    const video = await letto;
+    assert.ok(video, "il video c'e'");
+    assert.ok(video.fotogrammi.length > 10);
+    assert.ok(
+      video.fotogrammi.some((f) => f.t < 0),
+      "c'e' anche il prima",
+    );
+    assert.equal(Buffer.from(video.fotogrammi[0].jpeg, "base64").toString(), "piccolo");
+    assert.equal(rimpiccioliti[0].peso, 1_500_000);
+    assert.deepEqual(rimpiccioliti[0].larghezze, [640, 480]);
+    assert.ok(rimpiccioliti[0].massimo <= 400 * 1024);
+  } finally {
+    filmati.ferma();
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("se non si riesce a rimpicciolire, il fotogramma enorme si salta come prima", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "mini-video-"));
+  const orologio = unOrologio();
+  const filmati = new Filmati({
+    cartella,
+    casa: { immagine: async () => Buffer.alloc(1_500_000, 7) },
+    adesso: orologio.adesso,
+    aspetta: orologio.aspetta,
+    rimpicciolisci: async () => null,
+  });
+  try {
+    filmati.sorveglia(["camera.balconi"]);
+    await orologio.avanza(3000);
+    assert.equal(filmati._memorie.get("camera.balconi").fotogrammi.length, 0);
+  } finally {
+    filmati.ferma();
+    rmSync(cartella, { recursive: true, force: true });
   }
 });
 
@@ -202,6 +290,7 @@ const ID = "1761121500000-abcdef";
 const CHIAVE = Buffer.alloc(32, 3).toString("base64url");
 const FILM = { id: ID, chiave: CHIAVE };
 const U1 = { id: "tel1", utente: "u1" };
+const VUOTO = "1761121500000-fedcba";
 
 function unaCasaColVideo({ premium = true, chiuse = [], utenti = null } = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "mini-video-ponte-"));
@@ -220,6 +309,8 @@ function unaCasaColVideo({ premium = true, chiuse = [], utenti = null } = {}) {
     commissioni: { telecamereChiuse: () => new Set(chiuse) },
     filmati: {
       leggi: async (id, chiave) => (id === ID && chiave === CHIAVE ? video : null),
+      vuoto: (id) =>
+        id === VUOTO ? { camera: "camera.ingresso", perche: "troppo-pesanti" } : null,
       sorveglia() {},
       ferma() {},
     },
@@ -363,5 +454,54 @@ test("la notifica del movimento porta numero e chiave del video, e ci sta ancora
     assert.equal("film" in senza, false);
   } finally {
     via();
+  }
+});
+
+/* «Il video di questo movimento non c'è più», sei minuti dopo: il video non
+ * c'era mai stato, la telecamera non aveva dato immagini. Lo si dice per
+ * quello che e', e nel registro coi numeri. */
+test("un video rimasto senza fotogrammi si dice vuoto, col perche', e finisce nel registro", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "mini-video-"));
+  const orologio = unOrologio();
+  const detto = [];
+  const filmati = new Filmati({
+    cartella,
+    casa: { immagine: async () => null },
+    registro: { info() {}, debug() {}, errore() {}, attenzione: (r) => detto.push(r) },
+    adesso: orologio.adesso,
+    aspetta: orologio.aspetta,
+    acaso: () => "abcdef123456",
+  });
+  try {
+    const quando = orologio.adesso();
+    const { id, chiave } = filmati.registra("camera.ingresso", quando);
+    const letto = filmati.leggi(id, chiave);
+    await orologio.avanza(DOPO + 1000);
+    assert.equal(await letto, null);
+    assert.deepEqual(filmati.vuoto(id), { camera: "camera.ingresso", perche: "nessuna-immagine" });
+    assert.equal(filmati.vuoto("1761121500000-zzzzzz"), null);
+    assert.match(detto.at(-1), /mini video vuoto \(camera\.ingresso\).*0 istantanee buone su \d+/);
+  } finally {
+    filmati.ferma();
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("al telefono il video vuoto arriva come «filmato-vuoto», solo a chi vede la telecamera", async () => {
+  const { notifiche, via } = unaCasaColVideo();
+  try {
+    const detto = await chiedi(notifiche, { id: VUOTO, chiave: CHIAVE }, U1);
+    assert.equal(detto.success, false);
+    assert.equal(detto.error.code, "filmato-vuoto");
+    assert.equal(detto.error.message, "troppo-pesanti");
+  } finally {
+    via();
+  }
+  const chiusa = unaCasaColVideo({ chiuse: ["camera.ingresso"] });
+  try {
+    const detto = await chiedi(chiusa.notifiche, { id: VUOTO, chiave: CHIAVE }, U1);
+    assert.equal(detto.error.code, "not_found");
+  } finally {
+    chiusa.via();
   }
 });

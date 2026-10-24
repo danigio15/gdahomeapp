@@ -51,14 +51,18 @@ import {
   ENTITA_AL_MASSIMO,
   ORARI_AL_MASSIMO,
   TERMOSTATI_AL_MASSIMO,
+  AZIONI_PER_PASSO,
+  PASSI_AL_MASSIMO,
   automazionePulita,
   automazioniPulite,
+  calendarioPulito,
   cronoPulito,
   eCompleta,
   fasceDalleMezzore,
   mezzoreDelleFasce,
   nuovoId,
   prossimiEventi,
+  routinePulita,
   servizioPermesso,
 } from "../core/automazioni.js";
 import { CATEGORIE, EVENTO_AVVISA, normalizzata } from "../core/automazioni-ha.js";
@@ -276,7 +280,8 @@ export function automazioniDiCasa() {
     let attiva = s ? clean(s.state) === "on" : v.attiva === true;
     const toccata = state.toccate[v.entity_id];
     if (toccata) {
-      if (ora - toccata.il > TOCCATA_VALE || toccata.attiva === attiva) delete state.toccate[v.entity_id];
+      if (ora - toccata.il > TOCCATA_VALE || toccata.attiva === attiva)
+        delete state.toccate[v.entity_id];
       else attiva = toccata.attiva;
     }
     const ultima = Date.parse(s?.attributes?.last_triggered || "");
@@ -411,7 +416,7 @@ function quandoFu(ms) {
   return t(`${giorni} giorni fa`, `${giorni} days ago`);
 }
 
-function iniziali() {
+export function iniziali() {
   const lunedi = new Date(2026, 9, 12);
   return Array.from({ length: 7 }, (_v, i) => {
     const d = new Date(lunedi);
@@ -512,7 +517,10 @@ export function fraseDelQuando(q) {
     const dopo = a ? detto(statoInParole(a)) : "";
     let frase = t(`Quando ${chi} cambia stato`, `When ${chi} changes state`);
     if (da && a)
-      frase = t(`Quando ${chi} passa da ${prima} a ${dopo}`, `When ${chi} goes from ${prima} to ${dopo}`);
+      frase = t(
+        `Quando ${chi} passa da ${prima} a ${dopo}`,
+        `When ${chi} goes from ${prima} to ${dopo}`,
+      );
     else if (a) frase = `${t("Quando", "When")} ${detto(diventaInParole(chi, a))}`;
     else if (da) frase = t(`Quando ${chi} non è più ${prima}`, `When ${chi} is no longer ${prima}`);
     const per = q.per;
@@ -639,7 +647,9 @@ export function fraseDellAzione(a) {
   /* Un servizio col suo verbo: «imposta Termostato soggiorno a 21°», mai
    * «chiama climate.set_temperature». */
   if (a.tipo === "servizio")
-    return detto(servizioInParole(a.servizio, { chi: (a.entita || []).length ? chi : "", dati: a.dati }));
+    return detto(
+      servizioInParole(a.servizio, { chi: (a.entita || []).length ? chi : "", dati: a.dati }),
+    );
   if (a.modo === "spegni") return t(`spegni ${chi}`, `turn off ${chi}`);
   return t(`${chi} a ${a.gradi}°`, `${chi} to ${a.gradi}°`);
 }
@@ -653,9 +663,72 @@ function fraseDelCrono(c) {
   );
 }
 
+/* ── il Pianificatore, in parole ─────────────────────────────────────────── */
+
+/** «15 ott», un giorno dell'anno «MM-GG». */
+export function giornoDellAnno(mmgg) {
+  const [m, g] = clean(mmgg).split("-").map(Number);
+  if (!m || !g) return "";
+  return new Date(2026, m - 1, g).toLocaleDateString(locale(), { day: "numeric", month: "short" });
+}
+
+/** «1 ott → 31 mar», o «tutto l'anno». */
+export const periodoDetto = (p) =>
+  p ? `${giornoDellAnno(p.da)} → ${giornoDellAnno(p.a)}` : t("tutto l'anno", "all year");
+
+const oraDetta = (minuti) =>
+  `${String(Math.floor(minuti / 60) % 24).padStart(2, "0")}:${String(minuti % 60).padStart(2, "0")}`;
+
+/** «Lun–Ven · 1 ott → 31 mar». */
+export function quandoDellaRoutine(r) {
+  return [giorniDetti(r.giorni) || t("Tutti i giorni", "Every day"), periodoDetto(r.periodo)].join(
+    " · ",
+  );
+}
+
+/** «06:30 accendi Caldaia · 07:00 apri Tapparelle». */
+export function passiDetti(r) {
+  return r.passi
+    .filter((p) => p.allora.length)
+    .map((p) => `${p.ora} ${fraseDellAllora(p.allora)}`)
+    .join(" · ");
+}
+
+export function quandoDelleFasce(f) {
+  return [nomiDi(f.entita) || "—", periodoDetto(f.periodo)].join(" · ");
+}
+
+export function cosaFannoLeFasce(f) {
+  const fuori =
+    f.fuori === "spegni"
+      ? t("spento fuori", "off outside")
+      : t("fuori come prima", "unchanged outside");
+  return `${t("Acceso nelle fasce", "On in the slots")} · ${fuori}`;
+}
+
+function fraseDelPianificatore(a) {
+  if (a.tipo === "routine") {
+    const r = a.routine;
+    const condizioni = eDetti(a.soloSe.map(fraseDellaCondizione));
+    const se = a.soloSe.length ? t(`, solo se ${condizioni}`, `, only if ${condizioni}`) : "";
+    const passi = r.passi.filter((p) => p.allora.length);
+    return `<b>${esc(quandoDellaRoutine(r))}</b>${esc(se)}: ${
+      passi.length
+        ? passi.map((p) => `<b>${esc(p.ora)}</b> ${esc(fraseDellAllora(p.allora))}`).join("; ")
+        : "…"
+    }.`;
+  }
+  const f = a.fasce;
+  const oggi = f.giorni[0].map(([da, fine]) => `${oraDetta(da)}–${oraDetta(fine)}`).join(", ");
+  return `<b>${esc(quandoDelleFasce(f))}</b>: ${esc(cosaFannoLeFasce(f))}${
+    oggi ? ` <small>(${esc(iniziali()[0].corto)} ${esc(oggi)})</small>` : ""
+  }.`;
+}
+
 /** «Si legge così: …», dalla bozza ripulita. */
 export function siLeggeCosi(a) {
   if (!a) return "";
+  if (a.tipo === "routine" || a.tipo === "fasce") return fraseDelPianificatore(a);
   if (a.tipo === "crono")
     return `${a.nome || t("Cronotermostato", "Thermostat schedule")}: ${fraseDelCrono(a.crono)}`;
   const quando = fraseDelQuando(a.quando);
@@ -687,7 +760,12 @@ const categoriaDi = (v) => (CATEGORIE.includes(v?.categoria) ? v.categoria : "al
 export function fraseDellaVoce(v) {
   const m = v?.modello;
   if (!m) return null;
-  if (m.tipo === "crono") return { quando: t("Cronotermostato", "Thermostat schedule"), allora: fraseDelCrono(m.crono) };
+  if (m.tipo === "crono")
+    return { quando: t("Cronotermostato", "Thermostat schedule"), allora: fraseDelCrono(m.crono) };
+  if (m.tipo === "routine")
+    return { quando: quandoDellaRoutine(m.routine), allora: passiDetti(m.routine) || "…" };
+  if (m.tipo === "fasce")
+    return { quando: quandoDelleFasce(m.fasce), allora: cosaFannoLeFasce(m.fasce) };
   const se = m.soloSe?.length ? `, ${fraseDellaCondizione(m.soloSe[0])}` : "";
   return { quando: `${fraseDelQuando(m.quando)}${se}`, allora: fraseDellAllora(m.allora) || "…" };
 }
@@ -711,13 +789,18 @@ export function rigaDellaVoce(v) {
     const detto = clean(activeLocale() === "it" ? r.it : r.en) || clean(r.it);
     if (detto) return detto;
   }
-  return t("Avanzata: usa template, scelte o blueprint", "Advanced: uses templates, choices or blueprints");
+  return t(
+    "Avanzata: usa template, scelte o blueprint",
+    "Advanced: uses templates, choices or blueprints",
+  );
 }
 
 /** Le categorie salvate in Home Assistant, nell'ordine in cui le manda il ponte: per nome. */
 export function categorieDiCasa() {
   const elenco = Array.isArray(state.ponte?.categorie) ? state.ponte.categorie : [];
-  return elenco.filter((c) => clean(c?.id)).map((c) => ({ id: clean(c.id), nome: clean(c.nome) || clean(c.id) }));
+  return elenco
+    .filter((c) => clean(c?.id))
+    .map((c) => ({ id: clean(c.id), nome: clean(c.nome) || clean(c.id) }));
 }
 
 /* La ricerca guarda il nome, la stanza, la categoria e la riga. */
@@ -763,7 +846,8 @@ function tipoDelGruppo(voci) {
 export function gruppiDelleAutomazioni(elenco, { per = "", perStanza = false, cerca = "" } = {}) {
   const modo = raggruppaDavvero(per || (perStanza ? "stanza" : "categoria"));
   const categorie = categorieDiCasa();
-  const nomeDellaCategoria = (v) => categorie.find((c) => c.id === clean(v?.categoriaHa))?.nome || "";
+  const nomeDellaCategoria = (v) =>
+    categorie.find((c) => c.id === clean(v?.categoriaHa))?.nome || "";
   const trovate = elenco.filter((v) => trovata(v, cerca, nomeDellaCategoria));
   const nomi = CATEGORIA();
   const vestito = (g) => {
@@ -935,7 +1019,15 @@ export function scelteDelRaggruppa(per, attributo, classe = "") {
  */
 export function gruppiCompattiHtml(
   elenco,
-  { per = "categoria", cerca = "", prefisso = "aug", attributi = () => "", interruttore = () => "", etichetta = () => "", classeRiga = "" } = {},
+  {
+    per = "categoria",
+    cerca = "",
+    prefisso = "aug",
+    attributi = () => "",
+    interruttore = () => "",
+    etichetta = () => "",
+    classeRiga = "",
+  } = {},
 ) {
   const gruppi = gruppiDelleAutomazioni(elenco, { per, cerca });
   if (!gruppi.length) return "";
@@ -994,7 +1086,8 @@ export function prossimaDiCasa(elenco = automazioniDiCasa()) {
  * ogni pezzo, coi nomi delle cose di casa al posto degli id, e il codice
  * scritto a mano mostrato com'e', piccolo, per chi lo sa leggere. */
 
-const nomiDentro = (v) => nomiDi((Array.isArray(v) ? v : v ? [v] : []).filter((x) => clean(x).includes(".")));
+const nomiDentro = (v) =>
+  nomiDi((Array.isArray(v) ? v : v ? [v] : []).filter((x) => clean(x).includes(".")));
 const comeCodice = (testo) => clean(testo).slice(0, 120);
 
 /* Il nome di cio' di cui parla un pezzo «device»: l'entita', se e' scritta
@@ -1002,7 +1095,10 @@ const comeCodice = (testo) => clean(testo).slice(0, 120);
  * registro (trentadue cifre) la plancia non la sa risolvere, e non la
  * mostra: meglio «un dispositivo» che delle cifre. */
 function nomeDelDispositivo(x) {
-  const entita = [].concat(x?.entity_id || []).map(clean).find((e) => e.includes(".") && !eUnIdCrudo(e));
+  const entita = []
+    .concat(x?.entity_id || [])
+    .map(clean)
+    .find((e) => e.includes(".") && !eUnIdCrudo(e));
   if (entita) return nomeDi(entita);
   let nomi = {};
   try {
@@ -1015,7 +1111,11 @@ function nomeDelDispositivo(x) {
 
 const scritto = (v) => (v !== undefined && v !== null && typeof v !== "object" ? String(v) : "");
 const testiDi = (azioni) =>
-  [].concat(azioni || []).flatMap((y) => righeDellAzione(y)).map((r) => r.testo).join(", ");
+  []
+    .concat(azioni || [])
+    .flatMap((y) => righeDellAzione(y))
+    .map((r) => r.testo)
+    .join(", ");
 
 function rigaDelTrigger(x) {
   const tipo = clean(x?.trigger);
@@ -1029,7 +1129,9 @@ function rigaDelTrigger(x) {
     return { testo: t(`alle ${ore}`, `at ${ore}`) };
   }
   if (tipo === "sun")
-    return { testo: x.event === "sunrise" ? t("all'alba", "at sunrise") : t("al tramonto", "at sunset") };
+    return {
+      testo: x.event === "sunrise" ? t("all'alba", "at sunrise") : t("al tramonto", "at sunset"),
+    };
   if (tipo === "state") {
     const a = typeof x.to === "string" ? x.to : "";
     return {
@@ -1151,7 +1253,14 @@ function righeDellAzione(x, sub = false) {
   if (typeof x.action === "string") return [{ testo: rigaDelServizio(x), sub }];
   if (x.delay !== undefined) {
     const min = typeof x.delay === "number" ? Math.max(1, Math.round(x.delay / 60)) : 0;
-    return [{ testo: min ? t(`aspetta ${min} min`, `wait ${min} min`) : t("aspetta un po'", "waits a while"), sub }];
+    return [
+      {
+        testo: min
+          ? t(`aspetta ${min} min`, `wait ${min} min`)
+          : t("aspetta un po'", "waits a while"),
+        sub,
+      },
+    ];
   }
   if (x.event === EVENTO_AVVISA) return [{ testo: `📱 «${clean(x.event_data?.testo)}»`, sub }];
   if (x.event) {
@@ -1315,7 +1424,10 @@ function boxDellaCasa(elenco) {
     .slice(0, 3);
   const ult = ultime.length
     ? `<div class="au-ult">${ultime
-        .map((v) => `<div><em>${esc(oraBreve(v.ultima))}</em><span>${esc(v.nome)}</span><i>✓</i></div>`)
+        .map(
+          (v) =>
+            `<div><em>${esc(oraBreve(v.ultima))}</em><span>${esc(v.nome)}</span><i>✓</i></div>`,
+        )
         .join("")}</div>`
     : `<div class="au-vuoto">${esc(t("Ancora nessuna.", "None yet."))}</div>`;
   return `<div class="au-due">
@@ -1340,7 +1452,9 @@ const interruttoreDellaRiga = (v) =>
 
 /* Si apre (l'editor, o la scheda di una complessa) solo se la si puo' scrivere. */
 const attributiDellaRiga = (v) =>
-  puoScrivere() && v.modificabile ? ` data-au-apri="${esc(v.entity_id)}" role="button" tabindex="0"` : "";
+  puoScrivere() && v.modificabile
+    ? ` data-au-apri="${esc(v.entity_id)}" role="button" tabindex="0"`
+    : "";
 
 function gruppiHtml(elenco) {
   const gruppi = gruppiCompattiHtml(elenco, {
@@ -1356,7 +1470,10 @@ function gruppiHtml(elenco) {
   return `<div class="au-lista au-lista-vuota"><p>${esc(
     elenco.length
       ? t("Nessuna automazione con queste parole.", "No automation matches these words.")
-      : t("Nessuna automazione, per ora: comincia da un modello pronto.", "No automations yet: start from a ready-made template."),
+      : t(
+          "Nessuna automazione, per ora: comincia da un modello pronto.",
+          "No automations yet: start from a ready-made template.",
+        ),
   )}</p></div>`;
 }
 
@@ -1365,10 +1482,13 @@ function barraDellaLista(elenco, { chiuso = false } = {}) {
   const n = elenco.length;
   return `<div class="ha-barra au-testa"><h3>${esc(t("Le automazioni di casa", "The home's automations"))} <small>· ${esc(
     t(`${n}, da Home Assistant`, `${n}, from Home Assistant`),
-  )}</small></h3>${scelteDelRaggruppa(state.per, "data-au-per", "ha-seg")}${tastiDeiGruppiHtml(elenco, {
-    per: state.per,
-    cerca: state.cerca,
-  })}<label class="ha-cerca"><span aria-hidden="true">🔍</span><input type="search" data-au-cerca value="${esc(
+  )}</small></h3>${scelteDelRaggruppa(state.per, "data-au-per", "ha-seg")}${tastiDeiGruppiHtml(
+    elenco,
+    {
+      per: state.per,
+      cerca: state.cerca,
+    },
+  )}<label class="ha-cerca"><span aria-hidden="true">🔍</span><input type="search" data-au-cerca value="${esc(
     state.cerca,
   )}" placeholder="${esc(t("Cerca un'automazione…", "Search an automation…"))}"></label>${
     chiuso
@@ -1408,8 +1528,14 @@ function inviteAConvertire() {
   const n = rimaste.length;
   return `<div class="ha-converti"><span aria-hidden="true">🔁</span><div><b>${esc(
     n === 1
-      ? t("Un'automazione della versione di prova è ferma", "One automation from the trial version is idle")
-      : t(`${n} automazioni della versione di prova sono ferme`, `${n} automations from the trial version are idle`),
+      ? t(
+          "Un'automazione della versione di prova è ferma",
+          "One automation from the trial version is idle",
+        )
+      : t(
+          `${n} automazioni della versione di prova sono ferme`,
+          `${n} automations from the trial version are idle`,
+        ),
   )}</b><small>${esc(
     t(
       "Adesso le automazioni le esegue Home Assistant: convertile e ripartono, con l'etichetta GdAHome.",
@@ -1912,7 +2038,45 @@ const MODELLI = () => [
     t("Cronotermostato", "Thermostat schedule"),
     t("Due temperature e due giornate tipo", "Two temperatures and two typical days"),
   ],
+  ...MODELLI_DEL_PIANIFICATORE(),
 ];
+
+/* Il Pianificatore: «creare delle routine su orari e periodi», e i
+ * calendari a fasce acceso/spento. */
+const MODELLI_DEL_PIANIFICATORE = () => [
+  [
+    "routine",
+    "automazioni",
+    t("Routine a orari", "Timed routine"),
+    t(
+      "A ogni orario le sue azioni, nei giorni e nel periodo che scegli",
+      "Each time with its actions, on the days and in the period you choose",
+    ),
+  ],
+  [
+    "fasce",
+    "agenda",
+    t("Calendario a fasce", "Time-slot calendar"),
+    t(
+      "Acceso nelle fasce di ogni giorno, spento fuori",
+      "On in each day's time slots, off outside them",
+    ),
+  ],
+];
+
+function modelliDelPianificatore() {
+  return `<p class="au-intro">${esc(
+    t(
+      "Le routine fanno delle cose a degli orari; i calendari tengono accesa una cosa nelle fasce che disegni. Le esegue Home Assistant.",
+      "Routines do things at set times; calendars keep something on in the slots you draw. Home Assistant runs them.",
+    ),
+  )}</p><div class="au-modelli">${MODELLI_DEL_PIANIFICATORE()
+    .map(
+      ([k, d, b, sotto]) =>
+        `<button type="button" class="au-mod" data-au-modello="${k}"><span class="au-ico">${disegno(d, `mod-${k}`)}</span><b>${esc(b)}</b><small>${esc(sotto)}</small></button>`,
+    )
+    .join("")}</div>`;
+}
 
 function modelli() {
   return `<p class="au-intro">${esc(t("Parti da un modello pronto e cambia quello che vuoi, oppure da zero.", "Start from a ready-made template and change what you like, or from scratch."))}</p>
@@ -1934,6 +2098,37 @@ function bozzaDelModello(chiave) {
   const id = nuovoId();
   const luce = primaDi("luce");
   const clima = primaDi("clima");
+  if (chiave === "routine")
+    return {
+      id,
+      nome: "",
+      attiva: true,
+      tipo: "routine",
+      soloSe: [],
+      tutte: true,
+      routine: {
+        giorni: [true, true, true, true, true, false, false],
+        periodo: null,
+        passi: [
+          { ora: "07:00", allora: [nuovaAzione(primaDi("tapparella") ? "tapparella" : "accendi")] },
+        ],
+      },
+    };
+  if (chiave === "fasce")
+    return {
+      id,
+      nome: "",
+      attiva: true,
+      tipo: "fasce",
+      /* Un calendario tiene accesa una presa, una caldaia, una pompa: la
+       * prima presa di casa, o la prima luce. */
+      fasce: {
+        ...calendarioPulito({}),
+        entita: [
+          Object.keys(stati()).find((id) => dominio(id) === "switch") || primaDi("luce"),
+        ].filter(Boolean),
+      },
+    };
   if (chiave === "crono")
     return {
       id,
@@ -2425,8 +2620,8 @@ function tendinaDellAzione(via, tipo) {
   )}">${TIPI_ALTRI().map(voce).join("")}</optgroup></select>`;
 }
 
-function campiDellAzione(a, i) {
-  const via = `allora.${i}`;
+function campiDellAzione(a, i, base = "allora") {
+  const via = `${base}.${i}`;
   if (a.tipo === "aspetta")
     return sel(
       `${via}.minuti`,
@@ -2648,8 +2843,13 @@ function testaDellaScheda(v, { nome = null } = {}) {
   }<select class="ha-chip" data-au-area aria-label="${esc(t("Stanza", "Room"))}"><option value="">🏠 ${esc(
     t("Nessuna stanza", "No room"),
   )}</option>${aree
-    .map((a) => `<option value="${esc(a.id)}"${a.id === v.areaId ? " selected" : ""}>🏠 ${esc(a.nome)}</option>`)
-    .join("")}</select><span class="ha-dove">${etichettaDiOrigine(v)}${esc(t("in HA come", "in HA as"))} <code>${esc(
+    .map(
+      (a) =>
+        `<option value="${esc(a.id)}"${a.id === v.areaId ? " selected" : ""}>🏠 ${esc(a.nome)}</option>`,
+    )
+    .join(
+      "",
+    )}</select><span class="ha-dove">${etichettaDiOrigine(v)}${esc(t("in HA come", "in HA as"))} <code>${esc(
     v.entity_id,
   )}</code></span></div></div>`;
 }
@@ -2659,7 +2859,9 @@ function piedeDelSalva(pulita) {
   const nome = clean(pulita?.nome) || t("la nuova automazione", "the new automation");
   return `${state.errore ? `<div class="au-errore" role="alert">${esc(state.errore)}</div>` : ""}
 <button type="button" class="au-salva" data-au-salva${state.salvando ? " disabled" : ""}>💾 ${esc(
-    state.salvando ? t("SALVO…", "SAVING…") : t("SALVA IN HOME ASSISTANT", "SAVE IN HOME ASSISTANT"),
+    state.salvando
+      ? t("SALVO…", "SAVING…")
+      : t("SALVA IN HOME ASSISTANT", "SAVE IN HOME ASSISTANT"),
   )}</button>
 <div class="ha-salva-dove"><span aria-hidden="true">🏠</span><span>${esc(t("Si salva in", "It is saved in"))} <b>${esc(
     t("Home Assistant → Impostazioni → Automazioni", "Home Assistant → Settings → Automations"),
@@ -2706,9 +2908,10 @@ function complessa({ app }) {
         "Questa automazione usa funzioni avanzate (una scelta fra casi, un template, un blueprint…): qui puoi accenderla, spegnerla, eseguirla, rinominarla e cambiarle stanza. Per il resto:",
         "This automation uses advanced features (a choice between cases, a template, a blueprint…): here you can turn it on and off, run it, rename it and change its room. For the rest:",
       );
-  const link = v?.id && !nellApp()
-    ? `<a class="ha-apri" href="${esc(indirizzoInHA(v.id))}" target="_top" rel="noopener">${esc(t("Apri in Home Assistant ↗", "Open in Home Assistant ↗"))}</a>`
-    : "";
+  const link =
+    v?.id && !nellApp()
+      ? `<a class="ha-apri" href="${esc(indirizzoInHA(v.id))}" target="_top" rel="noopener">${esc(t("Apri in Home Assistant ↗", "Open in Home Assistant ↗"))}</a>`
+      : "";
   return `${indietroDellaScheda(app)}${v ? testaDellaScheda(v) : ""}${corpo}<div class="ha-av"><span class="i" aria-hidden="true">ℹ️</span><div>${esc(perche)}${
     link ? `<br>${link}` : ""
   }</div></div>${state.errore ? `<div class="au-errore" role="alert">${esc(state.errore)}</div>` : ""}`;
@@ -2785,15 +2988,154 @@ ${avanzate(b)}
 ${piedeDelSalva(pulita)}`;
 }
 
+/* ── il Pianificatore ────────────────────────────────────────────────────── */
+
+const MESI = () =>
+  Array.from({ length: 12 }, (_v, i) => [
+    i + 1,
+    new Date(2026, i, 1).toLocaleDateString(locale(), { month: "short" }),
+  ]);
+
+function giornoDellAnnoIn(via, mmgg) {
+  const [m, g] = clean(mmgg).split("-").map(Number);
+  const giorni = Array.from({ length: new Date(2026, m, 0).getDate() }, (_v, i) => [i + 1, i + 1]);
+  return `${sel(`${via}.g`, g, giorni)} ${sel(`${via}.m`, m, MESI())}`;
+}
+
+function periodoHtml(via, periodo) {
+  return `<div class="au-blocco au-s"><div class="au-et">${esc(t("Quando vale", "When it applies"))}</div>
+<div class="au-seg2"><button type="button" data-au-periodo="${via}" data-au-si="no"${periodo ? "" : ' class="si"'}>${esc(
+    t("Tutto l'anno", "All year"),
+  )}</button><button type="button" data-au-periodo="${via}" data-au-si="si"${periodo ? ' class="si"' : ""}>${esc(t("Dal… al…", "From… to…"))}</button></div>${
+    periodo
+      ? `<div class="au-rf"><span class="au-o">${esc(t("dal", "from"))}</span> ${giornoDellAnnoIn(`${via}.periodo.da`, periodo.da)} <span class="au-o">${esc(
+          t("al", "to"),
+        )}</span> ${giornoDellAnnoIn(`${via}.periodo.a`, periodo.a)}</div><small class="au-nota-in">${esc(
+          t(
+            "Si ripete ogni anno, anche a cavallo di capodanno. Fuori periodo resta accesa e non fa niente.",
+            "It repeats every year, across New Year too. Outside the period it stays on and does nothing.",
+          ),
+        )}</small>`
+      : ""
+  }</div>`;
+}
+
+function soloSeHtml(b) {
+  return `<div class="au-blocco au-s"><div class="au-et">${esc(t("Solo se", "Only if"))} <small>· ${esc(
+    b.soloSe.length > 1
+      ? b.tutte === false
+        ? t("basta una", "any one is enough")
+        : t("tutte insieme", "all together")
+      : t("facoltativo", "optional"),
+  )}</small></div>
+${b.soloSe
+  .map(
+    (c, i) =>
+      `<div class="au-rf">${sel(`soloSe.${i}.tipo`, c.tipo, TIPI_DELLE_CONDIZIONI())} ${campiDellaCondizione(c, i)}${togli(`soloSe.${i}`)}</div>`,
+  )
+  .join("")}${
+    b.soloSe.length < CONDIZIONI_AL_MASSIMO
+      ? `<button type="button" class="au-agg" data-au-aggiungi="soloSe">＋ ${esc(
+          b.soloSe.length
+            ? t("Un'altra condizione", "Another condition")
+            : t("Una condizione", "A condition"),
+        )}</button>`
+      : ""
+  }</div>`;
+}
+
+function nomeOScheda(b, segnaposto) {
+  return state.scheda
+    ? testaDellaScheda(state.scheda, { nome: b.nome })
+    : `<label class="au-nome">${esc(t("Nome", "Name"))} <input type="text" maxlength="60" data-au-testo="nome" value="${esc(b.nome || "")}" placeholder="${esc(segnaposto)}"></label>`;
+}
+
+function routineHtml({ app }) {
+  const b = state.bozza;
+  const r = b.routine;
+  const pulita = pulitaDallaBozza(b);
+  const passi = r.passi
+    .map((p, pi) => {
+      const base = `routine.passi.${pi}.allora`;
+      return `<div class="au-passo"><div class="au-passo-testa">${oraIn(`routine.passi.${pi}.ora`, p.ora)}${
+        r.passi.length > 1 ? togli(`routine.passi.${pi}`) : ""
+      }</div>${p.allora
+        .map(
+          (a, i) =>
+            `<div class="au-rf"><span class="au-num">${i + 1}</span>${tendinaDellAzione(`${base}.${i}.tipo`, a.tipo)} ${campiDellAzione(a, i, base)}${togli(`${base}.${i}`)}</div>`,
+        )
+        .join("")}${
+        p.allora.length < AZIONI_PER_PASSO
+          ? `<button type="button" class="au-agg" data-au-aggiungi="${base}">＋ ${esc(t("Aggiungi un'azione", "Add an action"))}</button>`
+          : ""
+      }</div>`;
+    })
+    .join("");
+  return `${indietroDellaScheda(app)}${nomeOScheda(b, t("Mattina feriale", "Weekday morning"))}
+${periodoHtml("routine", r.periodo)}
+<div class="au-blocco au-q"><div class="au-et">${esc(t("Giorni", "Days"))}</div><div class="au-rf">${chipGiorni("routine.giorni", r.giorni)}</div></div>
+<div class="au-blocco au-a"><div class="au-et">${esc(t("Orari", "Times"))} <small>· ${esc(t("a ogni orario le sue azioni", "each time with its actions"))}</small></div>${passi}${
+    r.passi.length < PASSI_AL_MASSIMO
+      ? `<button type="button" class="au-agg" data-au-aggiungi="routine.passi">＋ ${esc(t("Aggiungi un orario", "Add a time"))}</button>`
+      : ""
+  }</div>
+${soloSeHtml(b)}
+<div class="au-leggi" data-au-leggi>${esc(t("Si legge così:", "It reads:"))} ${siLeggeCosi(pulita)}</div>
+${piedeDelSalva(pulita)}`;
+}
+
+function fasceHtml({ app }) {
+  const b = state.bozza;
+  const c = b.fasce;
+  const pulita = pulitaDallaBozza(b);
+  const giorni = iniziali();
+  const [lun, mar, , , ven, sab, dom] = giorni.map((g) => g.corto);
+  return `${indietroDellaScheda(app)}${nomeOScheda(b, t("Caldaia", "Boiler"))}
+<div class="au-blocco au-q"><div class="au-et">${esc(t("Cosa accende", "What it turns on"))}</div><div class="au-rf"><span class="au-ico au-ico-p">${disegno("agenda", "fasce")}</span>${entitaMolte(
+    "fasce.entita",
+    c.entita,
+    "accendi",
+  )}</div></div>
+${periodoHtml("fasce", c.periodo)}
+<div class="au-blocco au-a"><div class="au-et">${esc(t("Le fasce", "The slots"))} <small>· ${esc(t("trascina sulle barre", "drag on the bars"))}</small></div>
+${c.giorni
+  .map(
+    (f, i) =>
+      `<div class="au-giorno"><small>${esc(giorni[i].corto)}</small>${barra(
+        `fasce.giorni.${i}`,
+        f,
+        {
+          scala: i === 6,
+          dice: t("Trascina per dire quando è acceso", "Drag to say when it's on"),
+        },
+      )}</div>`,
+  )
+  .join("")}
+<div class="au-rapidi"><button type="button" data-au-copia="feriali">${esc(t(`Copia ${lun} su ${mar}–${ven}`, `Copy ${lun} to ${mar}–${ven}`))}</button><button type="button" data-au-copia="festivi">${esc(
+    t(`Copia ${sab} su ${dom}`, `Copy ${sab} to ${dom}`),
+  )}</button><button type="button" data-au-svuota>${esc(t("Svuota", "Clear"))}</button></div></div>
+<div class="au-blocco au-s"><div class="au-et">${esc(t("Fuori dalle fasce", "Outside the slots"))}</div>
+<div class="au-seg2"><button type="button" data-au-fuori="spegni"${c.fuori === "spegni" ? ' class="si"' : ""}>${esc(t("Spegni", "Turn off"))}</button><button type="button" data-au-fuori="lascia"${c.fuori === "lascia" ? ' class="si"' : ""}>${esc(
+    t("Lascia com'è", "Leave as is"),
+  )}</button></div><small class="au-nota-in">${esc(
+    t(
+      "Quando una fascia comincia accende, quando finisce spegne. Se la casa si riavvia nel mezzo di una fascia, rimette lo stato giusto.",
+      "When a slot starts it turns on, when it ends it turns off. If the home restarts in the middle of a slot, it puts back the right state.",
+    ),
+  )}</small></div>
+<div class="au-leggi" data-au-leggi>${esc(t("Si legge così:", "It reads:"))} ${siLeggeCosi(pulita)}</div>
+${piedeDelSalva(pulita)}`;
+}
+
 /* ── il cronotermostato ──────────────────────────────────────────────────── */
 
-function barra(via, fasce) {
+function barra(via, fasce, { scala = true, dice = "" } = {}) {
   const mezzore = mezzoreDelleFasce(fasce);
-  return `<div class="au-barra" data-au-barra="${via}" role="group" aria-label="${esc(t("Trascina per dire quando serve il caldo", "Drag to say when heating is needed"))}">${mezzore
+  return `<div class="au-barra" data-au-barra="${esc(via)}" role="group" aria-label="${esc(dice || t("Trascina per dire quando serve il caldo", "Drag to say when heating is needed"))}">${mezzore
     .map((si, i) => `<i class="${si ? "si" : ""}" data-au-mezzora="${i}"></i>`)
     .join(
       "",
-    )}</div><div class="au-tac"><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div>`;
+    )}</div>${scala ? '<div class="au-tac"><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div>' : ""}`;
 }
 
 function crono({ app }) {
@@ -2830,8 +3172,8 @@ function crono({ app }) {
 <div class="c"><div><small>${esc(t("IN CASA", "AT HOME"))}</small><b>${esc(String(c.inCasa).replace(".", ","))}°</b></div><span class="pm"><button type="button" data-au-gradi="inCasa" data-au-passo="-0.5" aria-label="−">−</button><button type="button" data-au-gradi="inCasa" data-au-passo="0.5" aria-label="+">+</button></span></div>
 <div class="e"><div><small>${esc(t("NOTTE / FUORI", "NIGHT / AWAY"))}</small><b>${esc(String(c.fuori).replace(".", ","))}°</b></div><span class="pm"><button type="button" data-au-gradi="fuori" data-au-passo="-0.5" aria-label="−">−</button><button type="button" data-au-gradi="fuori" data-au-passo="0.5" aria-label="+">+</button></span></div></div></div>
 <div class="au-blocco au-a"><div class="au-et">${esc(t("Quando serve il caldo", "When heating is needed"))} <small>· ${esc(t("trascina sulle barre", "drag on the bars"))}</small></div>
-<div class="au-giorno"><small>${esc(`${giorni[0].corto} – ${giorni[4].corto}`)}</small>${barra("feriali", c.feriali)}</div>
-<div class="au-giorno"><small>${esc(`${giorni[5].corto} – ${giorni[6].corto}`)}</small>${barra("festivi", c.festivi)}</div>
+<div class="au-giorno"><small>${esc(`${giorni[0].corto} – ${giorni[4].corto}`)}</small>${barra("crono.feriali", c.feriali)}</div>
+<div class="au-giorno"><small>${esc(`${giorni[5].corto} – ${giorni[6].corto}`)}</small>${barra("crono.festivi", c.festivi)}</div>
 <div class="au-rf">${sel("crono.finestre.0", finestra, opzioni("finestra"), { vuota: t("🪟 nessuna finestra", "🪟 no window"), cerca: true })} <span class="au-o">→ ${esc(
     t("si spegne, riparte quando la chiudi", "turns off, restarts when you close it"),
   )}</span><button type="button" class="au-int au-int-dx" role="switch" aria-checked="${c.finestraSpegne}" data-au-finestra aria-label="${esc(t("Finestra aperta, si spegne", "Window open, turns off"))}"><i></i></button></div></div>
@@ -2848,8 +3190,17 @@ function titoloDellaVista() {
       ? t("Proposte", "Suggestions")
       : t("Proposte per la tua casa", "Suggestions for your home");
   if (state.vista === "complessa") return state.scheda?.nome || t("Automazione", "Automation");
+  if (state.vista === "pianifica") return t("Nuova nel Pianificatore", "New in the Planner");
+  if (state.vista === "routine" || state.vista === "fasce") {
+    if (state.scheda)
+      return state.bozza?.nome || state.scheda.nome || t("Automazione", "Automation");
+    return state.vista === "routine"
+      ? t("Nuova routine", "New routine")
+      : t("Calendario a fasce", "Time-slot calendar");
+  }
   if (state.vista === "editor" || state.vista === "crono") {
-    if (state.scheda) return state.bozza?.nome || state.scheda.nome || t("Automazione", "Automation");
+    if (state.scheda)
+      return state.bozza?.nome || state.scheda.nome || t("Automazione", "Automation");
     return state.vista === "crono"
       ? t("Cronotermostato", "Thermostat schedule")
       : t("Nuova automazione", "New automation");
@@ -2867,12 +3218,14 @@ function sottoIlVelo() {
 }
 
 export function paginaHtml({ app = false } = {}) {
-  if (!state.bozza && (state.vista === "editor" || state.vista === "crono")) state.vista = "lista";
+  if (!state.bozza && ["editor", "crono", "routine", "fasce"].includes(state.vista))
+    state.vista = "lista";
   if (!state.scheda && state.vista === "complessa") state.vista = "lista";
   const premium = state.premium !== false;
   /* Nell'app la lista e il velo li disegna la sezione della dashboard: la
    * pagina dell'app e' la stessa faccia, con «＋ Nuova» in piu'. */
-  if (app && (state.vista === "lista" || !premium) && state.listaDellApp) return state.listaDellApp();
+  if (app && (state.vista === "lista" || !premium) && state.listaDellApp)
+    return state.listaDellApp();
   let dentro;
   if (!premium) dentro = velo(sottoIlVelo());
   else if (state.vista === "proposte") dentro = pagineDelleProposte({ app });
@@ -2880,6 +3233,10 @@ export function paginaHtml({ app = false } = {}) {
     dentro = `${app ? "" : `<button type="button" class="au-indietro" data-au-vai="lista">‹ ${esc(t("Automazioni", "Automations"))}</button>`}${modelli()}`;
   else if (state.vista === "editor") dentro = editor({ app });
   else if (state.vista === "crono") dentro = crono({ app });
+  else if (state.vista === "routine") dentro = routineHtml({ app });
+  else if (state.vista === "fasce") dentro = fasceHtml({ app });
+  else if (state.vista === "pianifica")
+    dentro = `${app ? "" : `<button type="button" class="au-indietro" data-au-vai="lista">‹ ${esc(t("Automazioni", "Automations"))}</button>`}${modelliDelPianificatore()}`;
   else if (state.vista === "complessa") dentro = complessa({ app });
   else dentro = lista();
   if (!app)
@@ -3022,7 +3379,8 @@ function nuovoQuando(tipo) {
  * sulle cose con un'entita' sola come stringa (le automazioni di prima). */
 function pulitaDallaBozza(b) {
   if (!b) return null;
-  if (b.tipo === "crono") return automazionePulita(b);
+  if (b.tipo === "crono" || b.tipo === "fasce") return automazionePulita(b);
+  if (b.tipo === "routine") return automazionePulita({ ...b, scadenza: null });
   const quando = { ...(b.quando || {}) };
   if (Array.isArray(quando.filtroRighe))
     quando.filtro = Object.fromEntries(quando.filtroRighe.filter(([k]) => clean(k)));
@@ -3056,6 +3414,19 @@ function metti(via, valore) {
     state.bozza = b;
     return;
   }
+  /* Il giorno o il mese di un periodo: «routine.periodo.da.m». */
+  const giornoAnno = /^(.*\.periodo)\.(da|a)\.(g|m)$/.exec(via);
+  if (giornoAnno) {
+    const periodo = giornoAnno[1].split(".").reduce((x, p) => x?.[p], b);
+    if (!periodo) return;
+    let [m, g] = periodo[giornoAnno[2]].split("-").map(Number);
+    if (giornoAnno[3] === "m") m = Number(valore);
+    else g = Number(valore);
+    g = Math.min(g, new Date(2026, m, 0).getDate());
+    periodo[giornoAnno[2]] = `${String(m).padStart(2, "0")}-${String(g).padStart(2, "0")}`;
+    state.bozza = b;
+    return;
+  }
   let dove = b;
   for (const p of pezzi) {
     dove = dove?.[Number.isInteger(+p) ? +p : p];
@@ -3067,8 +3438,10 @@ function metti(via, valore) {
     if (valore && Array.isArray(dove) && !dove.includes(valore)) dove.push(valore);
   } else if (ultimo === "tipo" && pezzi[0] === "soloSe") {
     b.soloSe[+pezzi[1]] = nuovaCondizione(valore);
-  } else if (ultimo === "tipo" && pezzi[0] === "allora") {
-    b.allora[+pezzi[1]] = nuovaAzione(valore);
+  } else if (ultimo === "tipo" && pezzi.at(-2) === "allora") {
+    /* Un'azione che cambia tipo: anche quelle dei passi di una routine. */
+    const elenco = pezzi.slice(0, -1).reduce((x, p) => x?.[Number.isInteger(+p) ? +p : p], b);
+    if (Array.isArray(elenco)) elenco[+pezzi.at(-1)] = nuovaAzione(valore);
   } else {
     const chiave = Number.isInteger(+ultimo) ? +ultimo : ultimo;
     let v = valore;
@@ -3106,6 +3479,19 @@ function aggiungiA(via) {
     );
   } else if (via === "allora" && b.allora.length < AZIONI_AL_MASSIMO) {
     b.allora.push(nuovaAzione(b.allora.length ? "aspetta" : "accendi"));
+  } else if (via === "routine.passi" && b.routine.passi.length < PASSI_AL_MASSIMO) {
+    /* Un'ora dopo l'ultimo orario, oltre la mezzanotte se serve, e mai uno
+     * che c'e' gia'. */
+    const presi = new Set(b.routine.passi.map((p) => p.ora));
+    const [h, m] = (b.routine.passi.at(-1)?.ora || "06:00").split(":").map(Number);
+    let minuti = (h * 60 + m + 60) % 1440;
+    const detta = (x) =>
+      `${String(Math.floor(x / 60)).padStart(2, "0")}:${String(x % 60).padStart(2, "0")}`;
+    while (presi.has(detta(minuti))) minuti = (minuti + 30) % 1440;
+    b.routine.passi.push({ ora: detta(minuti), allora: [nuovaAzione("accendi")] });
+  } else if (/^routine\.passi\.\d+\.allora$/.test(via)) {
+    const passo = b.routine.passi[+via.split(".")[2]];
+    if (passo && passo.allora.length < AZIONI_PER_PASSO) passo.allora.push(nuovaAzione("accendi"));
   } else if (via === "quando.ore" && b.quando.ore.length < ORARI_AL_MASSIMO) {
     b.quando.ore.push("21:30");
   } else if (via === "quando.filtroRighe" && (b.quando.filtroRighe || []).length < 6) {
@@ -3124,7 +3510,22 @@ function apriBozza(bozza, { daModelli = false, scheda = null } = {}) {
   /* Una regola che arriva dal salvato ha gia' la forma pulita; i campi che le
    * mancano per l'editor — `ore`, `chi`, le righe del filtro — li rimette
    * qui, e le azioni sulle cose con un'entita' sola tornano un elenco. */
-  if (state.bozza.tipo !== "crono") {
+  const sulleCose = (a) =>
+    SULLE_COSE.includes(a.tipo) && !Array.isArray(a.entita)
+      ? { ...a, entita: unaLista(a.entita) }
+      : a.tipo === "servizio" && a.dati && typeof a.dati === "object"
+        ? { ...a, dati: Object.keys(a.dati).length ? JSON.stringify(a.dati) : "" }
+        : a;
+  if (state.bozza.tipo === "routine") {
+    state.bozza.routine = routinePulita(state.bozza.routine);
+    state.bozza.routine.passi = state.bozza.routine.passi.map((p) => ({
+      ...p,
+      allora: p.allora.map(sulleCose),
+    }));
+    state.bozza.soloSe ||= [];
+  } else if (state.bozza.tipo === "fasce") {
+    state.bozza.fasce = calendarioPulito(state.bozza.fasce);
+  } else if (state.bozza.tipo !== "crono") {
     const q = { ...nuovoQuando(state.bozza.quando?.tipo), ...(state.bozza.quando || {}) };
     if (q.tipo === "evento") q.filtroRighe = Object.entries(q.filtro || {});
     state.bozza.quando = q;
@@ -3137,7 +3538,9 @@ function apriBozza(bozza, { daModelli = false, scheda = null } = {}) {
           : a,
     );
   } else state.bozza.crono = cronoPulito(state.bozza.crono);
-  state.vista = state.bozza.tipo === "crono" ? "crono" : "editor";
+  state.vista = ["crono", "routine", "fasce"].includes(state.bozza.tipo)
+    ? state.bozza.tipo
+    : "editor";
   state.daModelli = daModelli;
   state.tendina = false;
   state.tendinaAltro = false;
@@ -3187,10 +3590,17 @@ async function salva() {
         )
       : pulita?.tipo === "crono"
         ? t("Scegli almeno un termostato.", "Choose at least one thermostat.")
-        : t(
-            "Manca qualcosa: scegli cosa la fa partire e almeno un'azione.",
-            "Something is missing: choose what starts it and at least one action.",
-          );
+        : pulita?.tipo === "fasce"
+          ? t("Scegli almeno una cosa da accendere.", "Choose at least one thing to turn on.")
+          : pulita?.tipo === "routine"
+            ? t(
+                "Serve almeno un orario con un'azione.",
+                "At least one time with an action is needed.",
+              )
+            : t(
+                "Manca qualcosa: scegli cosa la fa partire e almeno un'azione.",
+                "Something is missing: choose what starts it and at least one action.",
+              );
     ridisegna();
     return false;
   }
@@ -3198,7 +3608,12 @@ async function salva() {
     pulita.nome =
       pulita.tipo === "crono"
         ? t("Cronotermostato", "Thermostat schedule")
-        : fraseDelQuando(pulita.quando).slice(0, 60);
+        : pulita.tipo === "routine"
+          ? t("Routine", "Routine")
+          : pulita.tipo === "fasce"
+            ? `${nomiDi(pulita.fasce.entita)}`.slice(0, 60) ||
+              t("Calendario a fasce", "Time-slot calendar")
+            : fraseDelQuando(pulita.quando).slice(0, 60);
   state.salvando = true;
   state.errore = "";
   ridisegna();
@@ -3210,7 +3625,8 @@ async function salva() {
     });
     /* Una proposta salvata non si ripropone: lo dira' anche la casa, appena
      * rilegge l'elenco. */
-    if (state.proposta?.id) state.scartateQui = [...new Set([...state.scartateQui, state.proposta.id])];
+    if (state.proposta?.id)
+      state.scartateQui = [...new Set([...state.scartateQui, state.proposta.id])];
     state.salvata = { nome: clean(fatto?.alias) || pulita.nome, id: clean(fatto?.id) };
     state.bozza = null;
     state.scheda = null;
@@ -3310,7 +3726,10 @@ async function converti() {
   const no = restano.length;
   root.edToast?.(
     restano.length
-      ? t(`🔁 ${fatte} convertite, ${no} no: riprova`, `🔁 ${fatte} converted, ${no} not: try again`)
+      ? t(
+          `🔁 ${fatte} convertite, ${no} no: riprova`,
+          `🔁 ${fatte} converted, ${no} not: try again`,
+        )
       : t(`🔁 ${fatte} convertite in Home Assistant`, `🔁 ${fatte} converted into Home Assistant`),
   );
   rileggiPresto();
@@ -3360,7 +3779,7 @@ function onClick(event) {
     return;
   }
   const el = event.target.closest(
-    "[data-au-vai],[data-au-modello],[data-au-attiva],[data-au-apri],[data-au-tendina],[data-au-quando],[data-au-togli],[data-au-aggiungi],[data-au-giorno],[data-au-salva],[data-au-elimina],[data-au-gradi],[data-au-finestra],[data-au-scopri],[data-au-tendina-altro],[data-au-avanzate],[data-au-crea],[data-au-scarta],[data-au-per],[data-aug-apri],[data-aug-tutti],[data-au-esegui],[data-au-duplica],[data-au-converti]",
+    "[data-au-vai],[data-au-modello],[data-au-attiva],[data-au-apri],[data-au-tendina],[data-au-quando],[data-au-togli],[data-au-aggiungi],[data-au-giorno],[data-au-salva],[data-au-elimina],[data-au-gradi],[data-au-finestra],[data-au-periodo],[data-au-fuori],[data-au-copia],[data-au-svuota],[data-au-scopri],[data-au-tendina-altro],[data-au-avanzate],[data-au-crea],[data-au-scarta],[data-au-per],[data-aug-apri],[data-aug-tutti],[data-au-esegui],[data-au-duplica],[data-au-converti]",
   );
   if (!el) {
     if (state.tendina) {
@@ -3382,7 +3801,8 @@ function onClick(event) {
     const v = voceDi(d.auAttiva);
     if (v) {
       alternaInCasa(v);
-      if (state.scheda?.entity_id === v.entity_id) state.scheda = { ...state.scheda, attiva: !v.attiva };
+      if (state.scheda?.entity_id === v.entity_id)
+        state.scheda = { ...state.scheda, attiva: !v.attiva };
       ridisegna();
     }
     return;
@@ -3446,7 +3866,23 @@ function onClick(event) {
       5,
       Math.min(30, Math.round((Number(c[d.auGradi]) + Number(d.auPasso)) * 2) / 2),
     );
-  } else if (d.auFinestra !== undefined)
+  } else if (d.auPeriodo) {
+    const dove = d.auPeriodo.split(".").reduce((x, p) => x?.[p], state.bozza);
+    if (dove)
+      dove.periodo =
+        d.auSi === "si"
+          ? dove.periodo || {
+              da: dove === state.bozza.fasce ? "10-15" : "10-01",
+              a: dove === state.bozza.fasce ? "04-15" : "03-31",
+            }
+          : null;
+  } else if (d.auFuori) state.bozza.fasce.fuori = d.auFuori === "lascia" ? "lascia" : "spegni";
+  else if (d.auCopia) {
+    const g = state.bozza.fasce.giorni;
+    if (d.auCopia === "feriali") for (let i = 1; i < 5; i += 1) g[i] = structuredClone(g[0]);
+    else g[6] = structuredClone(g[5]);
+  } else if (d.auSvuota !== undefined) state.bozza.fasce.giorni = [[], [], [], [], [], [], []];
+  else if (d.auFinestra !== undefined)
     state.bozza.crono.finestraSpegne = !state.bozza.crono.finestraSpegne;
   else if (d.auSalva !== undefined) {
     void salva();
@@ -3500,7 +3936,10 @@ function onInput(event) {
     state.cerca = event.target.value;
     const tutte = contenitore()?.querySelector?.(".ha-tutte");
     if (tutte) tutte.innerHTML = gruppiHtml(automazioniDiCasa());
-    rifaiITastiDeiGruppi(contenitore(), automazioniDiCasa(), { per: state.per, cerca: state.cerca });
+    rifaiITastiDeiGruppi(contenitore(), automazioniDiCasa(), {
+      per: state.per,
+      cerca: state.cerca,
+    });
     return;
   }
   const via = event.target?.dataset?.auTesto;
@@ -3547,22 +3986,33 @@ function mezzoraSotto(event) {
   };
 }
 
+/* La barra dice dove scrive: «crono.feriali», «fasce.giorni.3». */
+function fasceDellaBarra(via) {
+  const pezzi = via.split(".");
+  const ultimo = pezzi.pop();
+  const dove = pezzi.reduce((x, p) => x?.[Number.isInteger(+p) ? +p : p], state.bozza);
+  const chiave = Number.isInteger(+ultimo) ? +ultimo : ultimo;
+  return dove && Array.isArray(dove[chiave]) ? { dove, chiave } : null;
+}
+
 function dipingi(via, i, si, barraEl) {
-  const c = state.bozza?.crono;
-  if (!c) return;
-  const mezzore = mezzoreDelleFasce(c[via]);
+  const dove = fasceDellaBarra(via);
+  if (!dove) return;
+  const mezzore = mezzoreDelleFasce(dove.dove[dove.chiave]);
   if (mezzore[i] === si) return;
   mezzore[i] = si;
-  c[via] = fasceDalleMezzore(mezzore);
+  dove.dove[dove.chiave] = fasceDalleMezzore(mezzore);
   barraEl.children[i]?.classList?.toggle("si", si);
 }
 
 function onPointerDown(event) {
-  if (!dentroDiNoi(event) || !state.bozza?.crono) return;
+  if (!dentroDiNoi(event) || !state.bozza) return;
   const sotto = mezzoraSotto(event);
   if (!sotto) return;
+  const dove = fasceDellaBarra(sotto.via);
+  if (!dove) return;
   event.preventDefault();
-  const si = !mezzoreDelleFasce(state.bozza.crono[sotto.via])[sotto.i];
+  const si = !mezzoreDelleFasce(dove.dove[dove.chiave])[sotto.i];
   state.trascina = { via: sotto.via, si, barraEl: sotto.barraEl };
   try {
     sotto.barraEl.setPointerCapture?.(event.pointerId);
@@ -3904,6 +4354,15 @@ html[data-theme="dark"] .au .au-temp .c{color:#fdba74}html[data-theme="dark"] .a
 .au .au-barra i{display:block;height:100%}
 .au .au-barra i.si{background:#fb923c}
 .au .au-barra i.si+i.si{box-shadow:none}
+.au .au-seg2{display:flex;gap:2px;padding:4px;border-radius:999px;border:1px solid var(--divider-color,#dbe4ee);background:var(--card-bg,#fff);margin:4px 0 8px}
+.au .au-seg2 button{flex:1;border:0;background:none;padding:9px 10px;border-radius:999px;font:inherit;font-size:11.5px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:var(--secondary-text-color,#64748b);cursor:pointer}
+.au .au-seg2 button.si{background:#7c3aed;color:#fff;box-shadow:0 6px 14px -6px #7c3aed}
+.au .au-passo{border:1px solid color-mix(in srgb,#7c3aed 25%,var(--divider-color,#dbe4ee));background:color-mix(in srgb,#7c3aed 4%,var(--card-bg,#fff));border-radius:18px;padding:10px 12px;margin:8px 0}
+.au .au-passo-testa{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.au .au-passo-testa .au-ora-in{font-family:Oswald,sans-serif;font-size:22px;font-weight:700;color:#7c3aed;padding:4px 8px}
+.au .au-rapidi{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.au .au-rapidi button{border:0;border-radius:999px;padding:7px 12px;background:color-mix(in srgb,var(--text,#0f172a) 6%,transparent);color:var(--text,#0f172a);font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+.au .au-rapidi button:first-child{background:color-mix(in srgb,#7c3aed 12%,transparent);color:#6d28d9}
 .au .au-tac{display:flex;justify-content:space-between;font-size:10.5px;font-weight:800;color:var(--au-dim);margin-top:4px}
 #${ID_PAGINA}{padding:0}
 .au-app{padding:8px 14px 130px}

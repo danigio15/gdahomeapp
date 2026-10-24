@@ -40,6 +40,11 @@ const INDIRECT_CALL = /(?<![\w.$])t\(\s*(?!["'`])[A-Za-z_$]/g;
  *   fra i cataloghi importati.
  */
 const REACHED_OTHERWISE = new Set([
+  /* Gli Aiutanti e la procedura guidata dell'app traducono le righe
+   * `{ it, en }` delle tabelle del nucleo (`core/aiutanti-di-home-assistant.js`,
+   * `core/flussi-di-home-assistant.js`): esportate, e quindi gia' nel corpus. */
+  "aiutanti-app-section.js",
+  "procedura-guidata-section.js",
   "shared.js",
   "beta11-real-device-polish-section.js",
   "robot-section.js",

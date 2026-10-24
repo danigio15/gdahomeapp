@@ -555,11 +555,18 @@ class PonteFinto {
   /// risponde quello del numero, se la chiave e' quella giusta.
   final Map<String, ({String chiave, Map<String, dynamic> video})> filmati = {};
 
+  /// I numeri dei video rimasti senza fotogrammi: la casa risponde
+  /// `filmato-vuoto`.
+  final Set<String> filmatiVuoti = {};
+
   Object? _notifiche(String tipo, Map<String, dynamic> detto) {
     final ha = daHomeAssistant;
     switch (tipo) {
       case 'ponte/notifiche/filmato':
         final film = detto['film'];
+        if (film is Map && filmatiVuoti.contains(film['id'])) {
+          return {'errore': 'filmato-vuoto'};
+        }
         final uno = film is Map ? filmati[film['id']] : null;
         if (uno == null || uno.chiave != (film as Map)['chiave']) {
           return {'errore': 'not_found'};

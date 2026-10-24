@@ -10,6 +10,33 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.0
+
+- **Dispositivi, rifatti (Premium):** dal menu dell'app si apre una pagina
+  con due linguette. «Dispositivi» mostra quelli veri di Home Assistant,
+  stanza per stanza o per integrazione, con l'interruttore o il valore e il
+  foglio con tutte le entità. «Integrazioni» le elenca con lo stato: si
+  ricaricano dall'elenco o dal foglio, si aprono le opzioni, si disattivano
+  e si eliminano (con la conferma); in cima quelle trovate in rete e quelle
+  da riparare, e «＋ Aggiungi» cerca fra tutte e apre la procedura guidata
+  di Home Assistant.
+- **Aiutanti (Premium):** tutti quelli di Home Assistant, col valore di
+  adesso che si cambia con un tocco. Si creano, si modificano e si
+  eliminano; i calcolati (gruppo, soglia, template, contatore di consumi…)
+  con la procedura guidata.
+- **Pianificatore nelle Automazioni (Premium):** routine a orari — giorni,
+  periodo «dal… al…» anche a cavallo di capodanno, e a ogni orario le sue
+  azioni — e calendari a fasce acceso/spento disegnati sulle barre. Sono
+  automazioni vere di Home Assistant.
+- Dispositivi, integrazioni e aiutanti li gestisce solo chi amministra Home
+  Assistant, e solo dall'app.
+- **Mini video del movimento:** comincia subito, si tengono quindici
+  secondi, si apre toccando la notifica anche con l'app chiusa e anche per
+  le telecamere 4K; quando un video non c'è, il registro dice perché.
+- **GdANav, pianificatore:** si parte da dove sta l'auto, e la partenza si
+  può cambiare.
+- **Home:** la pillola «Caldaia accesa» si può spegnere.
+
 ## 1.17.1
 
 - **Auto, dove sta:** fuori casa la pagina Auto dice l'indirizzo («Via Roma

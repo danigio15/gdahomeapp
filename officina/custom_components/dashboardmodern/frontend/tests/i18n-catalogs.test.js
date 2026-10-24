@@ -229,6 +229,9 @@ const SHARED_ACROSS_LANGUAGES = new Set([
  */
 const LOCALE_IDENTITIES = {
   es: new Set([
+    /* Le pagine Dispositivi, Aiutanti e il Pianificatore: parole che in
+     * questa lingua sono le stesse, e sono quelle di Home Assistant. */
+    "error",
     /* La regia a muro: «audio» e «zoom» sono la stessa parola, e sopra un
      * cursore o accanto a una telecamera nessuno ne usa un'altra. */
     "Audio",
@@ -256,6 +259,17 @@ const LOCALE_IDENTITIES = {
     "Animal",
   ]),
   fr: new Set([
+    /* Le pagine Dispositivi, Aiutanti e il Pianificatore: parole che in
+     * questa lingua sono le stesse, e sono quelle di Home Assistant. */
+    "cloud",
+    "Diagnostic",
+    "Options",
+    "Types",
+    "1 active",
+    "Routine",
+    "Routines",
+    /* Il foglio di un dispositivo: «Version» e' la parola del firmware. */
+    "Version",
     /* La regia a muro: «audio» e «zoom» sono la stessa parola, e sopra un
      * cursore o accanto a una telecamera nessuno ne usa un'altra. */
     "Audio",
@@ -341,6 +355,12 @@ const LOCALE_IDENTITIES = {
   de: new Set([
     /* «Ingresso · live» sopra il video del citofono: la parola e' quella. */
     "live",
+    /* Il foglio di un dispositivo: «Integration» e «Version» sono le parole
+     * di Home Assistant in tedesco. */
+    "Integration",
+    "Version",
+    /* «Routine» del Pianificatore: in tedesco e' la stessa parola. */
+    "Routine",
     /* La regia a muro: «audio» e «zoom» sono la stessa parola, e sopra un
      * cursore o accanto a una telecamera nessuno ne usa un'altra. */
     "Audio",
@@ -435,6 +455,14 @@ const LOCALE_IDENTITIES = {
     "Volume",
   ]),
   nl: new Set([
+    /* Le pagine Dispositivi, Aiutanti e il Pianificatore: parole che in
+     * questa lingua sono le stesse, e sono quelle di Home Assistant. */
+    "cloud",
+    "Helpers",
+    "Types",
+    "Planner",
+    "Routine",
+    "Routines",
     /* «Ingresso · live» sopra il video del citofono: la parola e' quella. */
     "live",
     /* La regia a muro: «audio» e «zoom» sono la stessa parola, e sopra un

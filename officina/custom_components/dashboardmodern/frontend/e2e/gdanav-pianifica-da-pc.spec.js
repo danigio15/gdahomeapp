@@ -38,18 +38,23 @@ const DOMANI = (() => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 })();
 
-async function apri(page, testInfo, { sbloccato = true, larga = 1440 } = {}) {
+async function apri(
+  page,
+  testInfo,
+  { sbloccato = true, larga = 1440, seme = SEME, piu = {} } = {},
+) {
   test.setTimeout(150_000);
   await page.setViewportSize({ width: larga, height: 1000 });
   await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
-  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, seme);
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
   await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true, null, {
     timeout: 60000,
   });
   await page.evaluate(
-    ({ sbloccato, domani }) => {
+    ({ sbloccato, domani, piu }) => {
       const stati = window.eval("_RAW_STATES");
+      Object.assign(stati, piu);
       stati["climate.auto"] = {
         entity_id: "climate.auto",
         state: "off",
@@ -95,7 +100,6 @@ async function apri(page, testInfo, { sbloccato = true, larga = 1440 } = {}) {
         readyState: 1,
         send(grezzo) {
           const m = JSON.parse(grezzo);
-          if (!String(m.type).startsWith("ponte/viaggi/")) return vero?.send?.(grezzo);
           const rispondi = (success, result, error) =>
             setTimeout(() => {
               const attese = window.eval("pendingWsCallbacks");
@@ -103,6 +107,13 @@ async function apri(page, testInfo, { sbloccato = true, larga = 1440 } = {}) {
               delete attese[m.id];
               torna?.({ id: m.id, type: "result", success, result, error });
             }, 15);
+          if (m.type === "ponte/indirizzo") {
+            window.__INDIRIZZI__ = [...(window.__INDIRIZZI__ || []), [m.lat, m.lon]];
+            return rispondi(true, { indirizzo: "Via Sandro Pertini 82, Aversa" });
+          }
+          if (!String(m.type).startsWith("ponte/viaggi/")) return vero?.send?.(grezzo);
+          if (m.type === "ponte/viaggi/strada")
+            window.__STRADE__ = [...(window.__STRADE__ || []), m];
           if (m.type === "ponte/viaggi/elenco")
             return rispondi(true, { sbloccato, viaggi: window.__VIAGGI__ });
           if (!sbloccato)
@@ -144,7 +155,7 @@ async function apri(page, testInfo, { sbloccato = true, larga = 1440 } = {}) {
       window.__FINTO__ = finto;
       window.eval("ws = window.__FINTO__");
     },
-    { sbloccato, domani: DOMANI },
+    { sbloccato, domani: DOMANI, piu },
   );
   const voce = page.locator('nav.tabs .tab[data-tab="gdanav"]');
   await expect(voce).toBeVisible();
@@ -319,4 +330,90 @@ test("nell'app la voce gdanav non c'e', nel browser si'", async ({ page }, testI
   const voce = browser.locator('nav.tabs .tab[data-tab="gdanav"]');
   await expect(voce).toHaveCount(1);
   await expect(voce.locator(".text")).toHaveText("GdANav");
+});
+
+/* «Il pianificatore non deve prendere per default la partenza da casa, ma
+ * l'indirizzo dove si trova l'auto … gia' selezionato, con la possibilita'
+ * di modificarlo.» */
+test("un viaggio nuovo parte da dove sta l'auto, con l'indirizzo, e la partenza si cambia", async ({
+  page,
+}, testInfo) => {
+  const seme = structuredClone(SEME);
+  seme.sections.entityOverrides = {
+    "dm.ev_batteria_auto": "sensor.auto_batteria",
+    "dm.ev_posizione": "device_tracker.auto",
+  };
+  const pagina = await apri(page, testInfo, {
+    seme,
+    piu: {
+      "sensor.auto_batteria": {
+        entity_id: "sensor.auto_batteria",
+        state: "64",
+        attributes: { unit_of_measurement: "%", device_class: "battery" },
+      },
+      "device_tracker.auto": {
+        entity_id: "device_tracker.auto",
+        state: "not_home",
+        attributes: { latitude: 40.97321, longitude: 14.20765, source_type: "gps" },
+      },
+    },
+  });
+  await pagina.locator("[data-gn-nuovo]").click();
+  const partenza = pagina.locator(".dm-gn-da");
+  /* L'indirizzo, mai i numeri. */
+  await expect(partenza).toContainText("Via Sandro Pertini 82, Aversa");
+  await expect(partenza).not.toContainText("40.97");
+  await pagina.locator("[data-gn-cerca]").fill("lungomare salerno");
+  await pagina.locator("[data-gn-proposta]").first().click();
+  await expect(pagina.locator(".dm-gn-ora")).toBeVisible();
+  /* La strada si chiede da dove sta l'auto, non da casa. */
+  const strada = await page.evaluate(() => window.__STRADE__.at(-1));
+  expect(strada.da).toMatchObject({ lat: 40.97321, lon: 14.20765 });
+  if (process.env.DM_FOTO)
+    await pagina.screenshot({
+      path: `${process.env.DM_FOTO}/gdanav-partenza-auto-${testInfo.project.name}.png`,
+    });
+
+  /* Si cambia: un altro indirizzo. */
+  await partenza.locator("[data-gn-da='cambia']").click();
+  await expect(pagina.locator("[data-gn-da='casa']")).toBeVisible();
+  await expect(pagina.locator("[data-gn-da='auto']")).toBeVisible();
+  if (process.env.DM_FOTO)
+    await pagina.screenshot({
+      path: `${process.env.DM_FOTO}/gdanav-partenza-cambia-${testInfo.project.name}.png`,
+    });
+  await pagina.locator("[data-gn-cerca]").fill("stazione salerno");
+  await pagina.locator("[data-gn-proposta]").nth(1).click();
+  await expect(partenza).toContainText("Salerno · Stazione");
+  await expect(pagina.locator(".dm-gn-tappa").last()).toContainText("Lungomare Trieste");
+  expect(await page.evaluate(() => window.__STRADE__.at(-1).da)).toMatchObject({ lat: 40.675 });
+
+  /* O casa. */
+  await partenza.locator("[data-gn-da='cambia']").click();
+  await pagina.locator("[data-gn-da='casa']").click();
+  await expect(partenza).toContainText("Casa");
+  await partenza.locator("[data-gn-da='cambia']").click();
+  await pagina.locator("[data-gn-da='auto']").click();
+  await expect(partenza).toContainText("Via Sandro Pertini 82, Aversa");
+
+  await pagina.locator("[data-gn-salva]").click();
+  await expect.poll(() => page.evaluate(() => window.__SALVATI__.length)).toBe(1);
+  const salvato = await page.evaluate(() => window.__SALVATI__[0]);
+  expect(salvato.da).toMatchObject({
+    nome: "Via Sandro Pertini 82, Aversa",
+    lat: 40.97321,
+    lon: 14.20765,
+  });
+  expect(salvato).not.toHaveProperty("daAuto");
+});
+
+test("senza la posizione dell'auto, il viaggio nuovo parte da casa come prima", async ({
+  page,
+}, testInfo) => {
+  const pagina = await apri(page, testInfo);
+  await pagina.locator("[data-gn-nuovo]").click();
+  await expect(pagina.locator(".dm-gn-da")).toContainText("Casa");
+  await pagina.locator(".dm-gn-da [data-gn-da='cambia']").click();
+  await expect(pagina.locator("[data-gn-da='auto']")).toHaveCount(0);
+  await expect(pagina.locator("[data-gn-da='casa']")).toBeVisible();
 });

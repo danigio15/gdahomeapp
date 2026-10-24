@@ -1587,8 +1587,15 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // la scheda che collega E.ON ed ENGIE dal ponte di GdAHome.
   // 479 col termostato: `core/il-termostato.js`, la regola sola per cui un
   // termostato fermo in «auto» non e' un'unita' accesa.
+  // 484 con le pagine Dispositivi e Aiutanti dell'app: `core/flussi-di-home-
+  // assistant.js` (i moduli delle procedure guidate di Home Assistant),
+  // `core/aiutanti-di-home-assistant.js` (i campi di ogni tipo di aiutante),
+  // `sections/procedura-guidata-section.js` (il foglio della procedura),
+  // `sections/dispositivi-app-section.js` (Dispositivi e Integrazioni) e
+  // `sections/aiutanti-app-section.js`. Il Pianificatore sta dentro le
+  // Automazioni, e non aggiunge moduli.
   assert.ok(
-    relative.length <= 479,
+    relative.length <= 484,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

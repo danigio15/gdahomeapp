@@ -45,6 +45,7 @@ import {
   inKilowatt,
   tempoDellaRicarica,
 } from "../core/il-tempo-della-ricarica.js";
+import { coordinateDelLuogo } from "../core/auto-termica.js";
 import { FONDI_MAPPA } from "../core/radar-mappa.js";
 import {
   CASELLA_DELLA_CAPACITA,
@@ -84,6 +85,8 @@ const state = (root[KEY] ||= {
   scelto: "",
   proposte: [],
   cercando: "",
+  /* Cosa sta cercando la casella: la meta (o una tappa), o la partenza. */
+  cercaPer: "meta",
   /* Com'e' andata l'ultima ricerca: "" niente da dire, "cerco", "vuota"
    * (nessun posto con quel nome), "guasto" (il servizio non risponde). */
   ricerca: "",
@@ -556,6 +559,86 @@ function datiDellAuto(car) {
   };
 }
 
+/* ── da dove si parte ──────────────────────────────────────────────────────
+ *
+ * «Il pianificatore non deve prendere per default la partenza da casa, ma
+ * l'indirizzo dove si trova l'auto, o va scelto l'indirizzo di partenza e di
+ * arrivo: metterei gia' selezionato l'indirizzo dell'auto, con la
+ * possibilita' di modificarlo.» Un viaggio nuovo parte da dove sta l'auto
+ * (il suo device_tracker, `dm.ev_posizione`); si cambia cercando un
+ * indirizzo, o scegliendo «Casa». Si scrive sempre l'indirizzo, mai le
+ * coordinate: la via la chiede il ponte (`ponte/indirizzo`), come nella
+ * pagina Auto. */
+
+/** Dove sta l'auto del viaggio adesso: `{lat, lon, indirizzo}` o `null`. */
+function posizioneDellAuto(b) {
+  const car = lAutoDelViaggio(b);
+  if (!car) return null;
+  const uid = car[VEHICLE_KEY_FIELD] || "";
+  const inUso = !profiles().length || uid === (activeVehicle()?.[VEHICLE_KEY_FIELD] || "");
+  const entita = entitaDi(car, "dm.ev_posizione", inUso);
+  return entita ? coordinateDelLuogo(statoDi(entita)?.attributes) : null;
+}
+
+const vieDeiPunti = new Map();
+const vieChieste = new Set();
+const chiaveDelPunto = (p) => `${Number(p.lat).toFixed(4)},${Number(p.lon).toFixed(4)}`;
+
+/** L'indirizzo di un punto, se il ponte l'ha gia' detto; se no lo chiede, e
+ * quando arriva ridisegna. */
+function viaDelPunto(punto) {
+  const chiave = chiaveDelPunto(punto);
+  if (vieDeiPunti.has(chiave)) return vieDeiPunti.get(chiave);
+  if (!vieChieste.has(chiave)) {
+    vieChieste.add(chiave);
+    chiediAHomeAssistant({ type: "ponte/indirizzo", lat: punto.lat, lon: punto.lon }, 15000)
+      .then((detto) => {
+        const via = clean(detto?.indirizzo);
+        if (!via) return;
+        vieDeiPunti.set(chiave, via);
+        const b = state.bozza;
+        if (b?.daAuto && b.da && chiaveDelPunto(b.da) === chiave) b.da.nome = via;
+        disegna();
+      })
+      .catch(() => {
+        /* Senza via resta «Dove sta l'auto»: mai i numeri. */
+      });
+  }
+  return "";
+}
+
+/** La partenza da dove sta l'auto, o `null` se non si sa dov'e'. */
+function partenzaDallAuto(b) {
+  const qui = posizioneDellAuto(b);
+  if (!qui) return null;
+  const nome = qui.indirizzo || viaDelPunto(qui) || t("Dove sta l'auto", "Where the car is");
+  return { nome, lat: qui.lat, lon: qui.lon };
+}
+
+/** Mette la partenza dall'auto; senza posizione, resta casa. */
+function partiDallAuto(b) {
+  const da = partenzaDallAuto(b);
+  b.da = da;
+  b.daAuto = Boolean(da);
+}
+
+/** La riga della partenza, sopra la meta. */
+function rigaDellaPartenza(b) {
+  const nome = b.da
+    ? `${b.daAuto ? "🚗" : "🟢"} ${b.da.nome}`
+    : `🏠 ${clean(state.casa?.nome) || t("Casa", "Home")}`;
+  const cambio =
+    state.cercaPer === "da"
+      ? `<div class="dm-gn-scelte-da">
+          ${posizioneDellAuto(b) ? `<button type="button" data-gn-da="auto">🚗 ${esc(t("Dove sta l'auto", "Where the car is"))}</button>` : ""}
+          <button type="button" data-gn-da="casa">🏠 ${esc(t("Casa", "Home"))}</button>
+          <button type="button" data-gn-da="chiudi">${esc(t("Annulla", "Cancel"))}</button>
+        </div>`
+      : "";
+  return `<div class="dm-gn-tappa dm-gn-da"><span><small>${esc(t("Partenza", "Start"))}</small> ${esc(nome)}</span>
+    <button type="button" class="dm-gn-cambia" data-gn-da="cambia">${esc(t("Cambia", "Change"))}</button></div>${cambio}`;
+}
+
 /** L'auto del viaggio: quella scelta, o quella in uso, o la prima. */
 function lAutoDelViaggio(b) {
   const auto = leAuto();
@@ -909,6 +992,10 @@ function editor() {
         ${arrivoDetto}
         ${righe.map((r) => `<div class="dm-gn-riga">${esc(r)}</div>`).join("")}</div>`
       : `<div class="dm-gn-parti"><div class="dm-gn-riga">${esc(t("Scegli la meta e l'ora: qui ti dico quando partire.", "Pick the destination and time: I will tell you when to leave."))}</div></div>`;
+  /* La casella cerca dove si sta scegliendo: sotto la partenza, o sotto la meta. */
+  const ricercaHtml = `<div class="dm-gn-cerca">🔎 <input type="search" autocomplete="off" placeholder="${esc(state.cercaPer === "da" ? t("Da dove parti? Scrivi un indirizzo…", "Where do you start? Type an address…") : b.tipo === "tappe" ? t("Aggiungi una tappa…", "Add a stop…") : b.tappe.length ? t("Cambia la meta…", "Change destination…") : t("Dove vai?", "Where to?"))}" data-gn-cerca value="${esc(state.cercando)}"></div>
+        ${parolaDellaRicerca()}
+        ${state.proposte.length ? `<div class="dm-gn-proposte">${state.proposte.map((p, i) => `<button type="button" data-gn-proposta="${i}">📍 ${esc(p.nome)}</button>`).join("")}</div>` : ""}`;
   const clima = b.prepara?.clima?.entity || "";
   const garage = b.prepara?.garage?.entity || "";
   return `
@@ -916,10 +1003,10 @@ function editor() {
       <div>
         <div class="dm-gn-seg">${tipi.map(([v, n]) => `<button type="button" class="${b.tipo === v ? "on" : ""}" data-gn-tipo="${v}">${esc(n)}</button>`).join("")}</div>
         <label class="dm-gn-nomecampo"><input type="text" maxlength="80" placeholder="${esc(t("Nome (facoltativo): «Giro clienti»", "Name (optional): “Client round”"))}" data-gn-campo="nome" value="${esc(b.nome || "")}"></label>
+        ${rigaDellaPartenza(b)}
+        ${state.cercaPer === "da" ? ricercaHtml : ""}
         ${tappe}
-        <div class="dm-gn-cerca">🔎 <input type="search" autocomplete="off" placeholder="${esc(b.tipo === "tappe" ? t("Aggiungi una tappa…", "Add a stop…") : b.tappe.length ? t("Cambia la meta…", "Change destination…") : t("Dove vai?", "Where to?"))}" data-gn-cerca value="${esc(state.cercando)}"></div>
-        ${parolaDellaRicerca()}
-        ${state.proposte.length ? `<div class="dm-gn-proposte">${state.proposte.map((p, i) => `<button type="button" data-gn-proposta="${i}">📍 ${esc(p.nome)}</button>`).join("")}</div>` : ""}
+        ${state.cercaPer === "da" ? "" : ricercaHtml}
         ${mappa(b)}
         ${soste.length ? elencoDelleSoste(b, tempi?.partenza) : ""}
         ${giorno}
@@ -1094,6 +1181,15 @@ async function stimaLaStrada() {
   disegna();
 }
 
+/* Un'altra partenza: un'altra strada, altre soste. */
+function ripartiDaQui(b) {
+  b.stima = null;
+  b.soste = null;
+  state.tappeKm = [];
+  state.linea = [];
+  void stimaLaStrada();
+}
+
 /* Una scelta dell'auto cambiata: le soste di prima — anche quelle del
  * navigatore — non valgono piu', e si richiede la strada. */
 function cambiaLAuto(cambio) {
@@ -1152,6 +1248,7 @@ async function salva() {
   const viaggio = { ...b };
   delete viaggio.auto;
   delete viaggio.soste;
+  delete viaggio.daAuto;
   if (car) {
     viaggio.auto = opzioniDellAuto(b, datiDellAuto(car));
     if (b.soste?.fonte === "casa" && Array.isArray(b.soste.elenco))
@@ -1195,16 +1292,38 @@ async function elimina() {
 
 function alClic(event) {
   const bersaglio = event.target?.closest?.(
-    "#dm-gn [data-gn-nuovo], #dm-gn button[data-gn-apri], #dm-gn [data-gn-tipo], #dm-gn [data-gn-modo], #dm-gn [data-gn-giorno], #dm-gn [data-gn-proposta], #dm-gn [data-gn-togli-tappa], #dm-gn [data-gn-salva], #dm-gn [data-gn-elimina], #dm-gn [data-gn-partenza]",
+    "#dm-gn [data-gn-nuovo], #dm-gn button[data-gn-apri], #dm-gn [data-gn-tipo], #dm-gn [data-gn-modo], #dm-gn [data-gn-giorno], #dm-gn [data-gn-proposta], #dm-gn [data-gn-togli-tappa], #dm-gn [data-gn-salva], #dm-gn [data-gn-elimina], #dm-gn [data-gn-partenza], #dm-gn [data-gn-da]",
   );
   if (!bersaglio) return;
   const d = bersaglio.dataset;
+  if (d.gnDa && state.bozza) {
+    const b = state.bozza;
+    const prima = b.da ? chiaveDelPunto(b.da) : "";
+    if (d.gnDa === "cambia") state.cercaPer = state.cercaPer === "da" ? "meta" : "da";
+    else {
+      if (d.gnDa === "auto") partiDallAuto(b);
+      else if (d.gnDa === "casa") {
+        b.da = null;
+        b.daAuto = false;
+      }
+      state.cercaPer = "meta";
+    }
+    state.proposte = [];
+    state.cercando = "";
+    state.ricerca = "";
+    if ((b.da ? chiaveDelPunto(b.da) : "") !== prima) ripartiDaQui(b);
+    disegna();
+    return;
+  }
   if (d.gnPartenza && state.bozza) {
     cambiaLAuto({ partenza: d.gnPartenza === "100" ? 100 : d.gnPartenza });
     return;
   }
   if ("gnNuovo" in d) {
     state.bozza = bozzaNuova("una");
+    /* Si parte da dove sta l'auto, gia' scelto: si cambia con «Cambia». */
+    partiDallAuto(state.bozza);
+    state.cercaPer = "meta";
     state.scelto = "";
     state.linea = [];
     state.tappeKm = [];
@@ -1230,6 +1349,16 @@ function alClic(event) {
     if (giorni.has(n)) giorni.delete(n);
     else giorni.add(n);
     state.bozza.quando.giorni = [...giorni].sort();
+  } else if (d.gnProposta && state.bozza && state.cercaPer === "da") {
+    const posto = state.proposte[Number(d.gnProposta)];
+    if (posto) {
+      state.bozza.da = posto;
+      state.bozza.daAuto = false;
+      state.cercaPer = "meta";
+      state.proposte = [];
+      state.cercando = "";
+      ripartiDaQui(state.bozza);
+    }
   } else if (d.gnProposta && state.bozza) {
     const posto = state.proposte[Number(d.gnProposta)];
     if (posto) {
@@ -1299,6 +1428,12 @@ function alCambio(event) {
       b.auto = { ...(b.auto || {}), uid: campo.value, partenza: null };
       b.auto = opzioniDellAuto(b, datiDellAuto(lAutoDelViaggio(b)));
       b.soste = null;
+      /* Si partiva da dove stava l'auto: adesso da dove sta quest'altra. */
+      if (b.daAuto) {
+        partiDallAuto(b);
+        b.stima = null;
+        state.linea = [];
+      }
       disegna();
       void stimaLaStrada();
       return;
@@ -1361,6 +1496,10 @@ body.dark-mode .dm-gn,html.dark .dm-gn{--gn-mappa:#1e293b;--gn-card:#111827;--gn
 .dm-gn-tappe{margin-bottom:8px}
 .dm-gn-tappa{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:var(--gn-fondo);margin-bottom:6px;font-size:14px}
 .dm-gn-tappa>span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dm-gn-da small{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--gn-piano);margin-right:4px}
+.dm-gn-cambia{border:1px solid var(--gn-bordo);background:var(--gn-card);color:#2563eb;font:inherit;font-size:12.5px;font-weight:800;border-radius:999px;padding:4px 11px;cursor:pointer}
+.dm-gn-scelte-da{display:flex;flex-wrap:wrap;gap:6px;margin:-2px 0 8px}
+.dm-gn-scelte-da button{border:1px solid var(--gn-bordo);background:var(--gn-card);color:var(--gn-testo);font:inherit;font-size:13px;font-weight:700;border-radius:999px;padding:6px 12px;cursor:pointer}
 .dm-gn-sosta{font-size:12.5px;color:var(--gn-piano)}
 .dm-gn-sosta input{width:56px}
 .dm-gn-x{border:0;background:none;color:var(--gn-piano);cursor:pointer;font-size:14px}
