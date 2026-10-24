@@ -99,13 +99,20 @@ const GENERI = Object.freeze({
 
 const numeroBuono = (v) => NUMERO_BUONO.test(pulito(v));
 
-/** Lo stato di una voce in tre parole: ok, errore, disattivata (piu' «in
- * avvio», che non e' ancora un errore). */
+/** Lo stato di una voce in poche parole, dette come stanno.
+ *
+ * «in avvio» si diceva anche di `setup_retry`, ed era sbagliato: li'
+ * l'integrazione **non trova il suo apparecchio** (un televisore spento, una
+ * presa fuori rete) e Home Assistant riprova da sola ogni tanto. Si chiama
+ * «non risponde». `not_loaded` e' una voce che non e' partita: «non
+ * caricata». «in avvio» resta solo per quella che sta partendo adesso. */
 export function statoDellaVoce(voce) {
   if (voce?.disabled_by) return "disattivata";
   const stato = pulito(voce?.state);
   if (stato === "loaded") return "ok";
-  if (stato === "setup_retry" || stato === "not_loaded") return "in-avvio";
+  if (stato === "setup_retry") return "non-risponde";
+  if (stato === "not_loaded") return "non-caricata";
+  if (stato === "setup_in_progress") return "in-avvio";
   return "errore";
 }
 

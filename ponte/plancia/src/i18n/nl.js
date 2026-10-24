@@ -7288,4 +7288,9 @@ export default Object.freeze({
   "Add another": "Nog een toevoegen",
   "Reload ${x.nome}": "${x.nome} herladen",
   "Reload all": "Alles herladen",
+  unreachable: "onbereikbaar",
+  "not loaded": "niet geladen",
+  "Off or offline: Home Assistant keeps retrying":
+    "Uit of offline: Home Assistant blijft het proberen",
+  "Didn't start: try reloading it": "Niet gestart: probeer opnieuw te laden",
 });

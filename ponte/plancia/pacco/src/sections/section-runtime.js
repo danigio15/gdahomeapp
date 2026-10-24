@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-NIS7EHFL.js";
+} from "../../chunk-GDYWS25Z.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -5561,6 +5561,7 @@ var SOURCE_INDEX = Object.freeze({
   "Non c'è nessuno, ma il clima è acceso: ${nomi(accesi, l)}": "Nobody is home, but the climate is on: ${nomi(accesi, l)}",
   "Non c'e' niente da fare.": "Nothing to do.",
   "Non carica": "Doesn't charge",
+  "non caricata": "not loaded",
   "Non ci riesco": "I cannot manage",
   "Non collegata": "Not plugged in",
   "Non compare nella sezione EV — tocca per attivarla": "Not in the EV section — tap to add it",
@@ -5576,6 +5577,7 @@ var SOURCE_INDEX = Object.freeze({
   "non è": "is not",
   "Non è ancora segnata: tocca «Fatto oggi» il giorno che lo pulisci, e da lì la scheda conta i giorni.": "Not recorded yet: tap “Done today” on the day you clean it, and from then on the card counts the days.",
   "Non è ancora segnato: tocca «Fatto oggi» il giorno che lo fai, e da lì la pagina conta i giorni.": "Not recorded yet: tap “Done today” on the day you do it, and from then on the page counts the days.",
+  "Non è partita: prova a ricaricarla": "Didn't start: try reloading it",
   "non è più in questa casa": "no longer in this house",
   "non è un sensore di allagamento": "not a flood sensor",
   "non è un'entità di Home Assistant. Si scrive dominio.nome, per esempio switch.ventola_inverter.": "this isn't a Home Assistant entity. It's written domain.name, for example switch.ventola_inverter.",
@@ -5598,7 +5600,7 @@ var SOURCE_INDEX = Object.freeze({
   "Non riesco a leggere le entità da Home Assistant. Controlla la connessione e riprova.": "I cannot read the entities from Home Assistant. Check the connection and try again.",
   "Non riesco a leggere le entità: ": "Cannot read the entities: ",
   "Non riesco a leggere le integrazioni: ": "Cannot read the integrations: ",
-  "non risponde": "not responding",
+  "non risponde": "unreachable",
   "Non risponde": "Not reporting",
   "Non risponde da": "Not answering for",
   "Non rispondeva (${quando})": "Not answering (${quando})",
@@ -7044,6 +7046,7 @@ var SOURCE_INDEX = Object.freeze({
   "SPENTO": "OFF",
   "spento da": "off for",
   "spento fuori": "off outside",
+  "Spento o fuori rete: Home Assistant riprova da solo": "Off or offline: Home Assistant keeps retrying",
   "Spento, il tablet resta sulla pagina dov'era": "Off, the tablet stays on the page it was on",
   "Spesa": "Shopping",
   "Spesa stimata": "Estimated cost",
@@ -129976,10 +129979,20 @@ function logo2(nome, dominioV) {
   const lettera = clean(nome).replace(/[^\p{L}\p{N}]/gu, "")[0] || "?";
   return `<span class="dv-logo" style="--l:${COLORI5[h % COLORI5.length]}" aria-hidden="true">${esc(lettera.toUpperCase())}</span>`;
 }
+var DA_GUARDARE = /* @__PURE__ */ new Set(["errore", "non-risponde", "non-caricata"]);
+var SPIEGA = () => ({
+  "non-risponde": t(
+    "Spento o fuori rete: Home Assistant riprova da solo",
+    "Off or offline: Home Assistant keeps retrying"
+  ),
+  "non-caricata": t("Non è partita: prova a ricaricarla", "Didn't start: try reloading it")
+});
 var STATI2 = () => ({
   ok: [t("ok", "ok"), "v"],
   errore: [t("errore", "error"), "r"],
   "in-avvio": [t("in avvio", "starting"), "a"],
+  "non-risponde": [t("non risponde", "unreachable"), "a"],
+  "non-caricata": [t("non caricata", "not loaded"), "a"],
   disattivata: [t("disattivata", "disabled"), "g"]
 });
 function contoDi(v) {
@@ -130014,7 +130027,7 @@ function integrazioniHtml() {
   const visti = voci4.filter(
     (v) => cerca4([v.titolo, v.integrazione, v.dominio].join(" "), state146.cerca)
   );
-  const errori = voci4.filter((v) => v.stato === "errore" || v.stato === "in-avvio");
+  const errori = voci4.filter((v) => DA_GUARDARE.has(v.stato));
   const riparazioni = (integr.riparazioni || []).filter((r) => voci4.some((v) => v.id === r.voce));
   const trovate = integr.trovate || [];
   const daSistemare = riparazioni.length + errori.filter((v) => !riparazioni.some((r) => r.voce === v.id)).length;
@@ -130095,15 +130108,16 @@ function integrazioniHtml() {
         t(`Ricarica ${x.nome}`, `Reload ${x.nome}`)
       )}" title="${esc(t("Ricarica", "Reload"))}">↻</button>` : ""}</div>`
     ];
-    const guasta = x.sue.some((v) => v.stato === "errore" || v.stato === "in-avvio");
+    const guasta = x.sue.some((v) => DA_GUARDARE.has(v.stato));
     const spenta = x.sue.every((v) => v.disattivata);
     const quanti2 = x.suoi.length;
+    const entita4 = x.sue.reduce((n, v) => n + (v.entita || 0), 0);
     gruppi2.push(
       gruppoHtml({
         chiave: chiave2,
         titolo: x.nome,
         sotto: [
-          quanti2 === 1 ? t("1 dispositivo", "1 device") : quanti2 ? t(`${quanti2} dispositivi`, `${quanti2} devices`) : "",
+          quanti2 === 1 ? t("1 dispositivo", "1 device") : quanti2 ? t(`${quanti2} dispositivi`, `${quanti2} devices`) : entita4 === 1 ? t("1 entità", "1 entity") : entita4 ? t(`${entita4} entità`, `${entita4} entities`) : t("nessun dispositivo", "no devices"),
           x.sue.length > 1 ? t(`${x.sue.length} voci`, `${x.sue.length} entries`) : "",
           guasta ? t("da guardare", "to check") : spenta ? t("disattivata", "disabled") : ""
         ].filter(Boolean).join(" · "),
@@ -130285,6 +130299,7 @@ ${d.voce ? `<div class="tasti"><button type="button" class="esegui" data-dv-rica
 }
 function foglioDellIntegrazione(v) {
   const [parola, tono] = STATI2()[v.stato] || STATI2().errore;
+  const perche5 = v.perche || SPIEGA()[v.stato] || "";
   const suoi2 = (state146.casa?.dispositivi || []).filter((d) => d.voce === v.id);
   const nomi2 = suoi2.slice(0, 6).map((d) => d.nome);
   const resto = suoi2.length - nomi2.length;
@@ -130293,7 +130308,7 @@ function foglioDellIntegrazione(v) {
   const ricarica3 = v.ricaricabile && !v.disattivata ? `<button type="button" class="esegui" data-dv-ricarica="${esc(v.id)}"${inCorso2 ? " disabled" : ""}>↻ ${esc(inCorso2 ? t("Ricarico…", "Reloading…") : t("Ricarica", "Reload"))}</button>` : "";
   return `<div class="ad-foglio dv-f" role="dialog" aria-modal="true" aria-label="${esc(v.titolo)}" style="--c:${VIOLA3}"><div class="man"></div>
 <div class="su">${logo2(v.titolo, v.dominio).replace("dv-logo", "dv-logo grande")}<div><h4>${esc(v.titolo)}</h4><div class="dove">${esc(v.integrazione)}</div></div><em class="dv-pill ${tono}">${esc(parola)}</em></div>
-<div class="blk">${v.perche ? `<div class="riga s"><span>${esc(t("Perché", "Why"))}</span><div>${esc(v.perche)}</div></div>` : ""}<div class="riga q"><span>${esc(t("Porta", "Brings"))}</span><div>${esc(contoDi({ ...v, integrazione: "" }))}</div></div>${nomi2.length ? `<div class="riga a"><span>${esc(t("Dispositivi", "Devices"))}</span><div>${esc(nomi2.join(", "))}${resto > 0 ? esc(t(` e altri ${resto}`, ` and ${resto} more`)) : ""}</div></div>` : ""}</div>
+<div class="blk">${perche5 ? `<div class="riga s"><span>${esc(t("Perché", "Why"))}</span><div>${esc(perche5)}</div></div>` : ""}<div class="riga q"><span>${esc(t("Porta", "Brings"))}</span><div>${esc(contoDi({ ...v, integrazione: "" }))}</div></div>${nomi2.length ? `<div class="riga a"><span>${esc(t("Dispositivi", "Devices"))}</span><div>${esc(nomi2.join(", "))}${resto > 0 ? esc(t(` e altri ${resto}`, ` and ${resto} more`)) : ""}</div></div>` : ""}</div>
 ${ricarica3 || opzioni2 ? `<div class="tasti">${ricarica3}${opzioni2}</div>` : ""}<div class="op-mod"><button type="button" data-dv-disattiva>${esc(
     v.disattivata ? t("Riattiva", "Enable") : t("Disattiva", "Disable")
   )}</button><button type="button" class="r" data-dv-elimina>${esc(t("Elimina", "Delete"))}</button></div></div>`;

@@ -7228,4 +7228,9 @@ export default Object.freeze({
   "Add another": "하나 더 추가",
   "Reload ${x.nome}": "${x.nome} 다시 불러오기",
   "Reload all": "모두 다시 불러오기",
+  unreachable: "응답 없음",
+  "not loaded": "로드되지 않음",
+  "Off or offline: Home Assistant keeps retrying":
+    "꺼져 있거나 오프라인: Home Assistant가 계속 다시 시도합니다",
+  "Didn't start: try reloading it": "시작되지 않음: 다시 불러오기를 해 보세요",
 });

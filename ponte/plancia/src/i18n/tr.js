@@ -7254,4 +7254,9 @@ export default Object.freeze({
   "Add another": "Bir tane daha ekle",
   "Reload ${x.nome}": "${x.nome} yeniden yükle",
   "Reload all": "Tümünü yeniden yükle",
+  unreachable: "yanıt vermiyor",
+  "not loaded": "yüklenmedi",
+  "Off or offline: Home Assistant keeps retrying":
+    "Kapalı veya çevrimdışı: Home Assistant kendisi tekrar deniyor",
+  "Didn't start: try reloading it": "Başlamadı: yeniden yüklemeyi deneyin",
 });

@@ -7285,4 +7285,9 @@ export default Object.freeze({
   "Add another": "Adicionar outra",
   "Reload ${x.nome}": "Recarregar ${x.nome}",
   "Reload all": "Recarregar todas",
+  unreachable: "não responde",
+  "not loaded": "não carregada",
+  "Off or offline: Home Assistant keeps retrying":
+    "Desligado ou fora da rede: o Home Assistant tenta de novo sozinho",
+  "Didn't start: try reloading it": "Não arrancou: experimente recarregá-la",
 });

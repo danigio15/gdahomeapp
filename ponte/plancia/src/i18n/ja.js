@@ -7255,4 +7255,9 @@ export default Object.freeze({
   "Add another": "もう1つ追加",
   "Reload ${x.nome}": "${x.nome} を再読み込み",
   "Reload all": "すべて再読み込み",
+  unreachable: "応答なし",
+  "not loaded": "未読み込み",
+  "Off or offline: Home Assistant keeps retrying":
+    "電源オフまたはオフライン：Home Assistant が自動で再試行します",
+  "Didn't start: try reloading it": "起動しませんでした：再読み込みしてください",
 });

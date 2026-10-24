@@ -480,10 +480,25 @@ function logo(nome, dominioV) {
   return `<span class="dv-logo" style="--l:${COLORI[h % COLORI.length]}" aria-hidden="true">${esc(lettera.toUpperCase())}</span>`;
 }
 
+/* Le voci da guardare: in errore, che non rispondono, o non caricate. Quella
+ * che sta partendo adesso no: fra un attimo e' a posto. */
+const DA_GUARDARE = new Set(["errore", "non-risponde", "non-caricata"]);
+
+/* Cosa vuol dire, nel foglio della voce, quando Home Assistant un perche' non lo da'. */
+const SPIEGA = () => ({
+  "non-risponde": t(
+    "Spento o fuori rete: Home Assistant riprova da solo",
+    "Off or offline: Home Assistant keeps retrying",
+  ),
+  "non-caricata": t("Non è partita: prova a ricaricarla", "Didn't start: try reloading it"),
+});
+
 const STATI = () => ({
   ok: [t("ok", "ok"), "v"],
   errore: [t("errore", "error"), "r"],
   "in-avvio": [t("in avvio", "starting"), "a"],
+  "non-risponde": [t("non risponde", "unreachable"), "a"],
+  "non-caricata": [t("non caricata", "not loaded"), "a"],
   disattivata: [t("disattivata", "disabled"), "g"],
 });
 
@@ -529,7 +544,7 @@ function integrazioniHtml() {
   const visti = voci.filter((v) =>
     cerca([v.titolo, v.integrazione, v.dominio].join(" "), state.cerca),
   );
-  const errori = voci.filter((v) => v.stato === "errore" || v.stato === "in-avvio");
+  const errori = voci.filter((v) => DA_GUARDARE.has(v.stato));
   const riparazioni = (integr.riparazioni || []).filter((r) => voci.some((v) => v.id === r.voce));
   const trovate = integr.trovate || [];
   /* Una voce in errore che ha gia' la sua riparazione si conta una volta. */
@@ -635,9 +650,12 @@ function integrazioniHtml() {
           : ""
       }</div>`,
     ];
-    const guasta = x.sue.some((v) => v.stato === "errore" || v.stato === "in-avvio");
+    const guasta = x.sue.some((v) => DA_GUARDARE.has(v.stato));
     const spenta = x.sue.every((v) => v.disattivata);
     const quanti = x.suoi.length;
+    /* Senza dispositivi (un servizio come Forecast.Solar) si dice cosa porta:
+     * le sue entita'. Una scheda col solo nome sembrava rotta. */
+    const entita = x.sue.reduce((n, v) => n + (v.entita || 0), 0);
     gruppi.push(
       gruppoHtml({
         chiave,
@@ -647,7 +665,11 @@ function integrazioniHtml() {
             ? t("1 dispositivo", "1 device")
             : quanti
               ? t(`${quanti} dispositivi`, `${quanti} devices`)
-              : "",
+              : entita === 1
+                ? t("1 entità", "1 entity")
+                : entita
+                  ? t(`${entita} entità`, `${entita} entities`)
+                  : t("nessun dispositivo", "no devices"),
           x.sue.length > 1 ? t(`${x.sue.length} voci`, `${x.sue.length} entries`) : "",
           guasta ? t("da guardare", "to check") : spenta ? t("disattivata", "disabled") : "",
         ]
@@ -863,6 +885,7 @@ ${d.voce ? `<div class="tasti"><button type="button" class="esegui" data-dv-rica
 
 function foglioDellIntegrazione(v) {
   const [parola, tono] = STATI()[v.stato] || STATI().errore;
+  const perche = v.perche || SPIEGA()[v.stato] || "";
   const suoi = (state.casa?.dispositivi || []).filter((d) => d.voce === v.id);
   const nomi = suoi.slice(0, 6).map((d) => d.nome);
   const resto = suoi.length - nomi.length;
@@ -877,7 +900,7 @@ function foglioDellIntegrazione(v) {
       : "";
   return `<div class="ad-foglio dv-f" role="dialog" aria-modal="true" aria-label="${esc(v.titolo)}" style="--c:${VIOLA}"><div class="man"></div>
 <div class="su">${logo(v.titolo, v.dominio).replace("dv-logo", "dv-logo grande")}<div><h4>${esc(v.titolo)}</h4><div class="dove">${esc(v.integrazione)}</div></div><em class="dv-pill ${tono}">${esc(parola)}</em></div>
-<div class="blk">${v.perche ? `<div class="riga s"><span>${esc(t("Perché", "Why"))}</span><div>${esc(v.perche)}</div></div>` : ""}<div class="riga q"><span>${esc(t("Porta", "Brings"))}</span><div>${esc(contoDi({ ...v, integrazione: "" }))}</div></div>${
+<div class="blk">${perche ? `<div class="riga s"><span>${esc(t("Perché", "Why"))}</span><div>${esc(perche)}</div></div>` : ""}<div class="riga q"><span>${esc(t("Porta", "Brings"))}</span><div>${esc(contoDi({ ...v, integrazione: "" }))}</div></div>${
     nomi.length
       ? `<div class="riga a"><span>${esc(t("Dispositivi", "Devices"))}</span><div>${esc(nomi.join(", "))}${resto > 0 ? esc(t(` e altri ${resto}`, ` and ${resto} more`)) : ""}</div></div>`
       : ""
