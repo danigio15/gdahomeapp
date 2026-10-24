@@ -718,6 +718,11 @@ class PonteFinto {
    * Il codice il ponte vero lo manda **solo a chi amministra**: qui si decide
    * riga per riga, che e' quello che serve alle prove. */
   bool lInstallatore = false;
+
+  /// Se chi guarda amministra Home Assistant: di solito si', come chi
+  /// prova l'app. Con `false` il menu perde Dispositivi, Aiutanti e
+  /// Automazioni.
+  bool amministra = true;
   String ilCodiceDelCruscotto = '';
 
   /* ─── La rete Zigbee (#54) ────────────────────────────────────────────── */
@@ -1078,6 +1083,7 @@ class PonteFinto {
           if (ilCodiceDelCruscotto.isNotEmpty) 'chiave': ilCodiceDelCruscotto,
           'gestore': false,
           'doveGestione': '',
+          'amministra': amministra,
         });
       case 'ponte/chat/stato':
         return si({

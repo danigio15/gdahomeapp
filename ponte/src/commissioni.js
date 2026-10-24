@@ -1222,6 +1222,14 @@ export class Commissioni {
       ...(puo && this.gestore && this.chiaveDellaGestione
         ? { chiaveGestione: this.chiaveDellaGestione }
         : {}),
+      /* Se chi guarda amministra Home Assistant: l'app mostra Dispositivi
+       * (con le Integrazioni), Aiutanti e Automazioni (col Pianificatore)
+       * **solo a lui**. «Devono essere visibili e configurabili solo da
+       * admin.» E' la stessa regola che il ponte usa per rispondere a quelle
+       * pagine (`puoAmministrare`): il menu non promette una porta che poi
+       * non si apre, e la porta resta chiusa anche per chi la cercasse a
+       * mano. */
+      amministra: puoAmministrare === true,
     });
   }
 

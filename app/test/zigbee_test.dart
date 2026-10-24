@@ -81,7 +81,11 @@ void main() {
    * gli Aiutanti invece restano: aprono una pagina della plancia, e la
    * plancia nel browser c'è. */
   test('nella webapp Navigatore, Zigbee e Impostazioni app non ci sono', () {
-    final nelBrowser = vociDellaBarra(conZigbee: true, nellApp: false);
+    final nelBrowser = vociDellaBarra(
+      chiAmministra: true,
+      conZigbee: true,
+      nellApp: false,
+    );
     expect(nelBrowser, isNot(contains(Sezione.zigbee)));
     expect(nelBrowser, contains(Sezione.aiutanti));
     expect(nelBrowser, contains(Sezione.automazioni));
@@ -99,7 +103,8 @@ void main() {
     expect(nelBrowser, contains(Sezione.dispositivi));
     expect(nelBrowser, contains(Sezione.configurazione));
     expect(
-      vociDellaBarra(conZigbee: true).length - nelBrowser.length,
+      vociDellaBarra(chiAmministra: true, conZigbee: true).length -
+          nelBrowser.length,
       4,
       reason: 'nella webapp mancano esattamente quelle quattro',
     );

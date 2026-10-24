@@ -1408,10 +1408,16 @@ class _IlLucchetto extends StatelessWidget {
 /// browser sarebbero porte che si aprono su meta' di quello che promettono.
 /// Lo dichiara la sezione stessa (`soloNellApp`), cosi' aggiungerne una
 /// domani vuol dire una parola nel suo elenco e non una riga qui.
+///
+/// E **Dispositivi, Aiutanti e Automazioni** li vede solo chi amministra Home
+/// Assistant (`soloPerChiAmministra`): «tutte queste cose devono essere
+/// visibili e configurabili solo da admin». Lo dice il ponte, che con la
+/// stessa regola risponde a quelle pagine; finche' non l'ha detto non ci sono.
 /// (Nella barra laterale di Home Assistant la stessa voce si chiama «Cruscotto
 /// installatore»: li' sta in mezzo ai pannelli di chiunque, e il nome deve
 /// dire di chi e'. Qui no, perche' qui ci si e' gia' dentro.)
 List<Sezione> vociDellaBarra({
+  bool chiAmministra = false,
   bool conLaConsole = false,
   bool conIlCruscotto = false,
   bool conLaGestione = false,
@@ -1425,6 +1431,7 @@ List<Sezione> vociDellaBarra({
         (una != Sezione.cruscotto || conIlCruscotto) &&
         (una != Sezione.gestione || conLaGestione) &&
         (una != Sezione.zigbee || conZigbee) &&
+        (chiAmministra || !una.soloPerChiAmministra) &&
         (nellApp || !una.soloNellApp))
       una,
 ];

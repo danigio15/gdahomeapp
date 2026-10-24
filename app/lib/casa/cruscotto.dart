@@ -68,6 +68,10 @@ class IlCruscotto {
         chiaveGestione: gestione.isEmpty
             ? ''
             : _unaChiave(detto['chiaveGestione']),
+        /* Se chi guarda amministra Home Assistant: Dispositivi, Aiutanti e
+         * Automazioni nel menu sono solo sue. Un ponte che non lo dice dice
+         * no: una voce in meno, mai una in piu'. */
+        amministra: detto['amministra'] == true,
       );
     } catch (_) {
       return _niente;
@@ -81,9 +85,16 @@ typedef QuadroDiQuestaCasa = ({
   String gestione,
   String chiave,
   String chiaveGestione,
+  bool amministra,
 });
 
-const _niente = (cruscotto: '', gestione: '', chiave: '', chiaveGestione: '');
+const _niente = (
+  cruscotto: '',
+  gestione: '',
+  chiave: '',
+  chiaveGestione: '',
+  amministra: false,
+);
 
 /// Un codice, se e' un codice.
 ///

@@ -587,6 +587,16 @@ void main() {
       expect(find.textContaining('Spegni'), findsNothing);
       expect(find.text('Dispositivi'), findsNothing);
 
+      /* Il ponte dice chi guarda — qui chi amministra — e con la risposta
+       * arrivano Dispositivi, Aiutanti e Automazioni nel menu: si lascia
+       * passare il giro sul filo vero. */
+      for (var giro = 0; giro < 10; giro++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 100)),
+        );
+        await tester.pump();
+      }
+
       /* La barra. In cima c'e' la casa in cui si e', e da dove ci si passa;
        * sotto, i nomi per intero e **come si scrivono** — `Configurazione`,
        * non `CONFIGURAZIONE`: in maiuscolo erano, e i piu' lunghi venivano
