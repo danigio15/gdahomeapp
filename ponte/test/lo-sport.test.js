@@ -160,6 +160,11 @@ test("MotoGP: la sprint di oggi quando la gara non c'e' ancora, il prossimo GP, 
   assert.equal(moto.ultima.risultati[0].numero, "93");
   /* L'evento in corso e' ancora «il prossimo»: la gara e' domani. */
   assert.equal(moto.prossima.paese, "Australia");
+  assert.deepEqual(
+    moto.prossima.sessioni.map((x) => x.sigla),
+    ["Q", "S", "G"],
+  );
+  assert.equal(moto.ultima.quando, "2026-10-24T15:00:00+00:00");
   assert.ok(moto.piloti.length > 10);
   assert.equal(moto.piloti[0].posizione, 1);
 });
@@ -240,7 +245,9 @@ test("il logo di una squadra: i byte da ESPN, solo per numero", async () => {
   const logo = await sport.logo("110");
   assert.equal(logo.tipo, "image/png");
   assert.equal(Buffer.from(logo.base64, "base64")[1], 80);
-  assert.deepEqual(chiamate, ["https://a.espncdn.com/i/teamlogos/soccer/500/110.png"]);
+  assert.deepEqual(chiamate, [
+    "https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/110.png&h=128&w=128",
+  ]);
 });
 
 test("una partita finita ai rigori: vince chi ne ha segnati di piu'", () => {

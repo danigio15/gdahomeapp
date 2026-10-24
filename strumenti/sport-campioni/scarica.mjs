@@ -95,3 +95,29 @@ if (stagione) {
     }
   }
 }
+
+/* Gli stemmi delle squadre, piccoli come li chiede il ponte (128 px): quelli
+ * della Serie A e delle avversarie dell'Inter. Servono alle foto della pagina. */
+await mkdir(`${qui}loghi`, { recursive: true });
+const ids = new Set();
+const squadre = (await scarica(`${ESPN}/soccer/ita.1/teams`)).json;
+for (const t of squadre?.sports?.[0]?.leagues?.[0]?.teams || []) ids.add(String(t.team.id));
+for (const nome of ["calcio-inter-tutte", "calcio-inter-tutte-prossime"]) {
+  const j = (
+    await scarica(
+      DA_SCARICARE[nome] ||
+        `${ESPN}/soccer/all/teams/110/schedule${nome.endsWith("prossime") ? "?fixture=true" : ""}`,
+    )
+  ).json;
+  for (const e of j?.events || [])
+    for (const c of e.competitions?.[0]?.competitors || []) ids.add(String(c.team?.id));
+}
+for (const id of ids) {
+  if (!/^\d+$/.test(id)) continue;
+  const r = await fetch(
+    `https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/${id}.png&h=128&w=128`,
+  );
+  if (!r.ok) continue;
+  await writeFile(`${qui}loghi/${id}.png`, Buffer.from(await r.arrayBuffer()));
+}
+console.log("loghi", ids.size);

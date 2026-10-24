@@ -26,7 +26,10 @@
 
 const ESPN = "https://site.api.espn.com/apis/site/v2/sports/soccer";
 const ESPN_CLASSIFICHE = "https://site.web.api.espn.com/apis/v2/sports/soccer";
-const ESPN_LOGHI = "https://a.espncdn.com/i/teamlogos/soccer/500";
+/* Gli stemmi piccoli (128 px): bastano per ogni posto della plancia, e sul
+ * filo del telefono pesano un decimo di quelli grandi. */
+const stemmaDi = (id) =>
+  `https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/${id}.png&h=128&w=128`;
 const F1 = "https://api.jolpi.ca/ergast/f1";
 const MOTO = "https://api.motogp.pulselive.com/motogp/v1";
 
@@ -347,6 +350,17 @@ function classificaMoto(json) {
   }));
 }
 
+/* Le sessioni che contano di un fine settimana di MotoGP: le qualifiche, la
+ * sprint e la gara, con le sigle della F1 (Q, S, G) cosi' la plancia le dice
+ * allo stesso modo. */
+const SESSIONI_DI_MOTO = { Q: "Q", SPR: "S", RAC: "G" };
+function sessioniDiMoto(sessioni) {
+  return (sessioni || [])
+    .filter((s) => SESSIONI_DI_MOTO[s.type] && (s.type !== "Q" || Number(s.number) === 2))
+    .map((s) => ({ sigla: SESSIONI_DI_MOTO[s.type], quando: testo(s.date) }))
+    .sort((a, b) => Date.parse(a.quando) - Date.parse(b.quando));
+}
+
 /** `sessioni` sono quelle dell'evento dell'ultima gara, `gara` la classifica
  * della sessione scelta (`tipo`: RAC la gara, SPR la sprint). */
 export function motoDaPulselive({
@@ -355,6 +369,8 @@ export function motoDaPulselive({
   tipo,
   gara,
   campionato,
+  quando = "",
+  sessioniProssime = [],
   adesso = Date.now(),
 }) {
   const veri = (eventi || []).filter((e) => !e.test);
@@ -367,8 +383,13 @@ export function motoDaPulselive({
     tipo: "motogp",
     stagione: numero(new Date(adesso).getUTCFullYear()),
     gare: veri.length,
-    ultima: eventoGara && risultati.length ? { ...eventoMoto(eventoGara), tipo, risultati } : null,
-    prossima: eventoMoto(prossimo),
+    ultima:
+      eventoGara && risultati.length
+        ? { ...eventoMoto(eventoGara), tipo, quando: testo(quando), risultati }
+        : null,
+    prossima: prossimo
+      ? { ...eventoMoto(prossimo), sessioni: sessioniDiMoto(sessioniProssime) }
+      : null,
     piloti: classificaMoto(campionato).map(({ tempo, distacco, stato, ...r }) => r),
   };
 }
@@ -472,6 +493,7 @@ export function creaSport({ scarica = (u, o) => fetch(u, o), orologio = () => Da
     let tipo = "";
     let gara = null;
     let categoria = null;
+    let quando = "";
     for (const e of iniziati.slice(0, 3)) {
       const categorie = await json(
         `${MOTO}/results/categories?eventUuid=${encodeURIComponent(e.id)}`,
@@ -493,6 +515,7 @@ export function creaSport({ scarica = (u, o) => fetch(u, o), orologio = () => Da
       eventoGara = e;
       tipo = scelta.type;
       gara = classifica;
+      quando = testo(scelta.date);
       break;
     }
     const campionato = categoria
@@ -500,13 +523,35 @@ export function creaSport({ scarica = (u, o) => fetch(u, o), orologio = () => Da
           `${MOTO}/results/standings?seasonUuid=${encodeURIComponent(stagione.id)}&categoryUuid=${encodeURIComponent(categoria.id)}`,
         ).catch(() => null)
       : null;
-    return motoDaPulselive({ eventi, eventoGara, tipo, gara, campionato, adesso: orologio() });
+    /* Gli orari del prossimo fine settimana: qualifiche, sprint e gara. */
+    const oggi = new Date(orologio()).toISOString().slice(0, 10);
+    const prossimo = (eventi || [])
+      .filter((e) => !e.test && testo(e.date_end) >= oggi)
+      .sort((a, b) => testo(a.date_start).localeCompare(testo(b.date_start)))[0];
+    let sessioniProssime = [];
+    if (prossimo && categoria) {
+      sessioniProssime =
+        (await json(
+          `${MOTO}/results/sessions?eventUuid=${encodeURIComponent(prossimo.id)}&categoryUuid=${encodeURIComponent(categoria.id)}`,
+          PER_POCO * 5,
+        ).catch(() => [])) || [];
+    }
+    return motoDaPulselive({
+      eventi,
+      eventoGara,
+      tipo,
+      gara,
+      campionato,
+      quando,
+      sessioniProssime,
+      adesso: orologio(),
+    });
   }
 
   /** Il logo di una squadra: i byte e il tipo. Solo numeri, solo ESPN. */
   async function logo(id) {
     if (!squadraValida(id)) throw new Error("sport: logo");
-    const indirizzo = `${ESPN_LOGHI}/${id}.png`;
+    const indirizzo = stemmaDi(id);
     const tenuta = memoria.get(indirizzo);
     if (tenuta && tenuta.fino > orologio()) return tenuta.valore;
     const r = await scarica(indirizzo, { signal: AbortSignal.timeout(ATTESA) });

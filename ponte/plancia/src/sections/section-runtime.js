@@ -181,6 +181,8 @@ import { installPiante } from "./piante-section.js";
 import { installPianteEditor } from "./piante-editor-section.js";
 import { installMeteo } from "./meteo-section.js";
 import { installMeteoEditor } from "./meteo-editor-section.js";
+import { installSport } from "./sport-section.js";
+import { installSportEditor } from "./sport-editor-section.js";
 import { installAcquario } from "./acquario-section.js";
 import { installAccumuloInEnergia } from "./accumulo-in-energia-section.js";
 import { installLaBolletta } from "./la-bolletta-section.js";
@@ -1249,6 +1251,9 @@ export function installSectionRuntime() {
      * installa piu' giu' e la trova gia' pronta. */
     senzaCadere(installMeteo);
     senzaCadere(installMeteoEditor);
+    /* Lo sport: la pagina e la sua scheda. I risultati li porta il ponte. */
+    senzaCadere(installSport);
+    senzaCadere(installSportEditor);
     /* Le vasche (#127): la storia del livello, i comandi, il cambio d'acqua e
      * il travaso di `cd_acquario` negli Animali. La pagina e la scheda sono
      * quelle degli Animali. */
@@ -1391,6 +1396,8 @@ export function installSectionRuntime() {
         "piante-editor",
         "meteo",
         "meteo-editor",
+        "sport",
+        "sport-editor",
         "acquario",
         "accumulo",
         "accumulo-editor",

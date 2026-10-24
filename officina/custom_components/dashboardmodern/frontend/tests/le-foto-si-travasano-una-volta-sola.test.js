@@ -272,7 +272,10 @@ test("togliere una chiave non alza la revisione", async () => {
    * (`cd_immagini_riquadri`): messe dal telefono, si vedono dal tablet. */
   /* E la 69 con le bollette (`cd_bollette`, #295): quali sensori del
    * fornitore sono l'ultima bolletta, il da pagare, lo stato del pagamento. */
-  assert.equal(CONFIG_KEYS_REVISION, 69);
+  /* E la 70 con lo sport (`cd_sport`): la squadra, la F1 e la MotoGP che
+   * la casa segue, uguali dal telefono e dal tablet. */
+  assert.equal(CONFIG_KEYS_REVISION, 70);
+  assert.ok(CONFIG_KEYS.includes("cd_sport"));
   assert.ok(CONFIG_KEYS.includes("cd_bollette"));
   assert.ok(
     CONFIG_KEYS.includes("cd_antifurto_scattato"),

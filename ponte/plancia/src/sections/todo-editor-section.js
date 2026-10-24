@@ -95,6 +95,8 @@ function catalogoTessere() {
     /* Il meteo: compare da solo con un'entità meteo, e da qui si sposta o si
      * spegne come gli altri. */
     ["meteo", "🌤️", t("Meteo", "Weather")],
+    /* Lo sport: compare da solo quando si segue qualcosa (Casa › Sport). */
+    ["sport", "⚽", t("Sport", "Sports")],
     /* Il MiniPC mancava del tutto: aveva la sua pagina e le sue caselle, e in
      * Home non c'era modo ne' di vederlo ne' di dire che non lo si vuole. */
     ["minipc", "🖥️", t("MiniPC", "MiniPC")],

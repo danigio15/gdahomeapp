@@ -1141,6 +1141,69 @@ const OGGETTI = Object.freeze({
     <path d="M13.4 26.2a5.6 5.6 0 0 1-.6-11.1 7.4 7.4 0 0 1 14 1.7 4.7 4.7 0 0 1-.8 9.4Z" fill="url(#dmoMeteoN)"/>
     <path d="M14.4 16.2a6 6 0 0 1 5.4-3.5" stroke="#fff" stroke-opacity=".85" stroke-width="1.7"
       fill="none" stroke-linecap="round"/>`,
+
+  /* Lo sport: il pallone, cuoio bianco e pentagoni neri. E' la voce della
+   * pagina Sport e della sua tessera, e la squadra di calcio quando non c'e'
+   * ancora il suo stemma. */
+  sport: `<defs>
+      <radialGradient id="dmoSportB" cx=".36" cy=".3" r=".85">
+        <stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#e2e8f0"/>
+        <stop offset="1" stop-color="#94a3b8"/></radialGradient>
+      <linearGradient id="dmoSportP" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#334155"/><stop offset="1" stop-color="#0f172a"/></linearGradient>
+      <clipPath id="dmoSportC"><circle cx="16" cy="15" r="12"/></clipPath></defs>
+    ${OMBRA(16, 29.2, 8.5)}
+    <circle cx="16" cy="15" r="12" fill="url(#dmoSportB)"/>
+    <g clip-path="url(#dmoSportC)" fill="url(#dmoSportP)">
+      <path d="M16 10.6l4.2 3-1.6 4.9h-5.2l-1.6-4.9z"/>
+      <path d="M16 1.2l3.4 2.6L18 6.6h-4L12.6 3.8z"/>
+      <path d="M27.8 9.6l1.6 4.4-2.8 2.4-2.9-2 .8-4.3z"/>
+      <path d="M24.4 24.8l-3.6 1.8-1.6-3 2.4-3.4 3.6.8z"/>
+      <path d="M7.6 24.8l3.6 1.8 1.6-3-2.4-3.4-3.6.8z"/>
+      <path d="M4.2 9.6L2.6 14l2.8 2.4 2.9-2-.8-4.3z"/></g>
+    <g stroke="#64748b" stroke-width=".9" stroke-linecap="round" fill="none" opacity=".75">
+      <path d="M16 10.6V6.6M20.2 13.6l3.3-1.3M18.6 18.5l2.4 2.9M13.4 18.5L11 21.4M11.8 13.6l-3.3-1.3"/></g>
+    <circle cx="16" cy="15" r="12" fill="none" stroke="#64748b" stroke-opacity=".5" stroke-width=".8"/>
+    <path d="M8.4 8.6a10 10 0 0 1 6.2-3.4" stroke="#fff" stroke-opacity=".9" stroke-width="1.6"
+      fill="none" stroke-linecap="round"/>`,
+
+  /* La Formula 1: la bandiera a scacchi che sventola. */
+  f1: `<defs>
+      <linearGradient id="dmoF1A" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#cbd5e1"/><stop offset=".5" stop-color="#f8fafc"/>
+        <stop offset="1" stop-color="#94a3b8"/></linearGradient>
+      <linearGradient id="dmoF1L" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#ffffff" stop-opacity=".35"/><stop offset="1" stop-color="#000" stop-opacity=".25"/></linearGradient>
+      <clipPath id="dmoF1C"><path d="M9 5.5c4-2 8 2 12 0s5-1.4 7-.6v12c-2-.8-3-1.2-7 .6s-8-2-12 0z"/></clipPath></defs>
+    ${OMBRA(9, 29.4, 5)}
+    <rect x="6.6" y="3.2" width="2.4" height="26" rx="1.2" fill="url(#dmoF1A)"/>
+    <circle cx="7.8" cy="3.4" r="1.9" fill="#e11d48"/>
+    <g clip-path="url(#dmoF1C)">
+      <rect x="9" y="2" width="20" height="17" fill="#f8fafc"/>
+      <g fill="#0f172a">
+        <rect x="9" y="2" width="4" height="4"/><rect x="17" y="2" width="4" height="4"/><rect x="25" y="2" width="4" height="4"/>
+        <rect x="13" y="6" width="4" height="4"/><rect x="21" y="6" width="4" height="4"/>
+        <rect x="9" y="10" width="4" height="4"/><rect x="17" y="10" width="4" height="4"/><rect x="25" y="10" width="4" height="4"/>
+        <rect x="13" y="14" width="4" height="4"/><rect x="21" y="14" width="4" height="4"/></g>
+      <rect x="9" y="2" width="20" height="17" fill="url(#dmoF1L)"/></g>
+    <path d="M9 5.5c4-2 8 2 12 0s5-1.4 7-.6v12c-2-.8-3-1.2-7 .6s-8-2-12 0z" fill="none"
+      stroke="#334155" stroke-opacity=".55" stroke-width=".8"/>`,
+
+  /* La MotoGP: il casco da pista, con la visiera scura e la riga di gara. */
+  motogp: `<defs>
+      <linearGradient id="dmoMotoH" x1="0" y1="0" x2=".4" y2="1">
+        <stop offset="0" stop-color="#fb7185"/><stop offset=".55" stop-color="#e11d48"/>
+        <stop offset="1" stop-color="#9f1239"/></linearGradient>
+      <linearGradient id="dmoMotoV" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#475569"/><stop offset="1" stop-color="#020617"/></linearGradient></defs>
+    ${OMBRA(16, 29.2, 10)}
+    <path d="M4.5 19.5C4.5 10.6 10.4 5 18 5c6 0 10 4.4 10 10.4v6.2c0 2.7-2 4.9-4.7 4.9H9.6c-2.8 0-5.1-2.3-5.1-5.1z"
+      fill="url(#dmoMotoH)"/>
+    <path d="M13.6 11.6h13.9c.4 1.1.5 2.3.5 3.6v3.6H16.4c-2.4 0-3.9-2.1-3.3-4.3z" fill="url(#dmoMotoV)"/>
+    <path d="M15.2 12.8h10.6" stroke="#fff" stroke-opacity=".45" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M5.6 22.4h22.2" stroke="#f8fafc" stroke-width="2.2"/>
+    <path d="M8 10.2a10.6 10.6 0 0 1 7-4" stroke="#fff" stroke-opacity=".8" stroke-width="1.6"
+      fill="none" stroke-linecap="round"/>`,
 });
 
 /** Come si riconosce un disegno di casa, dovunque sia finito. */

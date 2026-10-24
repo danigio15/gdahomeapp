@@ -73,6 +73,8 @@ export const SEZIONI = Object.freeze(
     /* Il meteo (#206): com'e' adesso, la stazione di casa, le previsioni e il
      * radar. */
     { scheda: "meteo", chiave: "meteo", glifo: "🌦️", it: "Meteo", en: "Weather" },
+    /* Lo sport: la squadra di calcio, la Formula 1, la MotoGP. */
+    { scheda: "sport", chiave: "sport", glifo: "⚽", it: "Sport", en: "Sports" },
     { scheda: "sez9", chiave: "clima", glifo: "❄️", it: "Clima", en: "Climate" },
     { scheda: "tapp", chiave: "tapparelle", glifo: "🪟", it: "Finestre", en: "Windows" },
     { scheda: "pool", chiave: "piscina", glifo: "🏊", it: "Piscina", en: "Pool" },

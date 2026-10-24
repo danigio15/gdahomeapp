@@ -397,6 +397,8 @@ import "./finestre/impianti.js";
 import "./finestre/servizi.js";
 import "./finestre/sistema.js";
 import "./finestre/meteo.js";
+import "./finestre/sport.js";
+import { SPORT_TAB, risultatiDelloSport, tesseraDelloSport } from "./sport-section.js";
 import {
   METEO_TAB,
   fraseInParole,
@@ -2616,6 +2618,38 @@ function meteoModel(states) {
     giorni: (vista.giorni || []).filter((giorno) => !giorno.oggi).slice(0, GIORNI_DEL_METEO),
     frase: fraseInParole(vista.frase),
     stazione: Object.keys(vista.stazione || {}).length > 0,
+  };
+}
+
+/* Lo sport: la squadra, la Formula 1, la MotoGP.
+ *
+ * Dal campo: «una card di sport dove scegli lo sport da seguire e vedi i
+ * risultati». I risultati sono quelli della pagina Sport — chiesti al ponte,
+ * ogni minuto con una partita in corso, ogni quarto d'ora se no — e qui non
+ * se ne chiede nessuno in piu'. La tessera dice la cosa che conta adesso: il
+ * risultato della partita in corso, l'ora di quella di oggi, l'ultimo podio;
+ * la finestra un riquadro per ogni cosa seguita. Compare da sola quando si
+ * segue qualcosa (Config › Casa › Sport). */
+function sportModel() {
+  const vista = risultatiDelloSport(schedule);
+  if (!vista.config.seguiti.length) return null;
+  const minuto = Math.floor(Date.now() / 60_000) * 60_000;
+  const tessera = tesseraDelloSport(vista, minuto);
+  return {
+    key: "sport",
+    accent: "#16a34a",
+    icon: "⚽",
+    /* Il disegno dice di cosa parla la tessera adesso: il pallone, la bandiera
+     * a scacchi della F1, il casco della MotoGP. */
+    faccia: oggettoWidget(tessera.oggetto, "", `tessera-sport-${tessera.oggetto}`),
+    facciaFirma: `sport-${tessera.oggetto}`,
+    label: t("Sport", "Sports"),
+    value: tessera.valore || "—",
+    caption: tessera.riga,
+    ring: null,
+    dalVivo: tessera.dalVivo,
+    vista,
+    minuto,
   };
 }
 
@@ -6663,6 +6697,7 @@ export function modelliDelleTessere(states) {
       cotturaModel(states),
       temperatureModel(states),
       meteoModel(states),
+      sportModel(),
       evModel(states),
       robotsModel(states),
       solarThermalModel(states),
@@ -9100,6 +9135,8 @@ const SEZIONE_DEL_WIDGET = Object.freeze({
   temperatura: "temp",
   /* Il meteo: la pagina Meteo, col radar e la stazione. */
   meteo: METEO_TAB,
+  /* Lo sport: la pagina Sport, con le classifiche intere. */
+  sport: SPORT_TAB,
   ev: "ev",
   solare: "boiler",
   scaldabagno: "boiler",

@@ -118,6 +118,7 @@ const SCHEDA_DELLA_CASELLA = Object.freeze({
    * (#206), insieme a quello che della pagina e' solo suo. */
   cd_radar_meteo: "meteo",
   cd_meteo: "meteo",
+  cd_sport: "sport",
   cd_sections: "visib",
   cd_section_names: "visib",
   cd_branding: "visib",
