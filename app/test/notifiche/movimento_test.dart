@@ -343,25 +343,22 @@ void main() {
       expect(find.text('DAL VIVO'), findsOneWidget);
       expect(find.text('Inserisci antifurto'), findsOneWidget);
       expect(find.text('Guarda'), findsNothing);
-      /* «Se apri la notifica non c'e' modo di tornare indietro»: la freccia
-       * c'era, ma scura sul fondo scuro. Ora e' bianca, e porta indietro. */
-      final indietro = find.byKey(const Key('telecamera-indietro'));
+      /* «Se apri la notifica non c'e' modo di tornare indietro»; «l'intestazione
+       * deve essere come le altre notifiche». La testata e' quella delle
+       * notifiche: la fascia, la freccia bianca, il titolo bianco. */
+      final testa = find.byKey(const Key('notifica-testa'));
+      expect(testa, findsOneWidget);
+      final indietro = find.descendant(
+        of: testa,
+        matching: find.byType(BackButton),
+      );
       expect(indietro, findsOneWidget);
-      final freccia = tester.widget<Icon>(
-        find.descendant(of: indietro, matching: find.byType(Icon)),
-      );
+      expect(tester.widget<BackButton>(indietro).color, Colors.white);
       expect(
-        IconTheme.of(tester.element(find.byIcon(freccia.icon!))).color ??
-            freccia.color,
-        Colors.white,
-      );
-      final titolo = tester.widget<Text>(
-        find.descendant(of: find.byType(AppBar), matching: find.byType(Text)),
-      );
-      expect(
-        DefaultTextStyle.of(tester.element(find.text(titolo.data!)))
+        tester
+            .widget<Text>(find.byKey(const Key('notifica-titolo')))
             .style
-            .color,
+            ?.color,
         Colors.white,
       );
       expect(
