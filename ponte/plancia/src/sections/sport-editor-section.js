@@ -143,9 +143,9 @@ function aggiungiMarkup(config) {
   const ce = (tipo) => config.seguiti.some((s) => s.tipo === tipo);
   const nuova = state.nuova;
   const tasti = `<div class="dm-sport-ed-tasti">
-      <button type="button" class="ed-add-btn" data-dm-sport-nuova ${pieno ? "disabled" : ""}>⚽ ${esc(t("Squadra di calcio", "Football team"))}</button>
-      <button type="button" class="ed-add-btn" data-dm-sport-aggiungi="f1" ${pieno || ce("f1") ? "disabled" : ""}>🏁 Formula 1</button>
-      <button type="button" class="ed-add-btn" data-dm-sport-aggiungi="motogp" ${pieno || ce("motogp") ? "disabled" : ""}>🏍️ MotoGP</button>
+      <button type="button" class="ed-btn-add" data-dm-sport-nuova ${pieno ? "disabled" : ""}>⚽ ${esc(t("Squadra di calcio", "Football team"))}</button>
+      <button type="button" class="ed-btn-add" data-dm-sport-aggiungi="f1" ${pieno || ce("f1") ? "disabled" : ""}>🏁 Formula 1</button>
+      <button type="button" class="ed-btn-add" data-dm-sport-aggiungi="motogp" ${pieno || ce("motogp") ? "disabled" : ""}>🏍️ MotoGP</button>
     </div>`;
   if (!nuova.aperta || pieno) return tasti;
   const campionati = Object.entries(CAMPIONATI)
@@ -208,7 +208,7 @@ function corpoMarkup() {
           : `<p class="dm-sport-ed-nota">${esc(t("Ancora niente: aggiungi una squadra o un campionato qui sotto.", "Nothing yet: add a team or a championship below."))}</p>`,
         `<span class="dm-sport-ed-conto">${config.seguiti.length}/${QUANTI_AL_MASSIMO}</span>`,
       )}
-      ${gruppoMarkup("aggiungi", "f1", t("Aggiungi", "Add"), aggiungiMarkup(config))}
+      ${gruppoMarkup("aggiungi", "sport", t("Aggiungi", "Add"), aggiungiMarkup(config))}
     </div></div>`;
 }
 
@@ -348,8 +348,8 @@ function installStyles() {
       #ed-body .dm-sport-ed-frecce{display:flex;gap:4px}
       #ed-body .dm-sport-ed-frecce .ed-del[disabled]{opacity:.25;cursor:default}
       #ed-body .dm-sport-ed-tasti{display:flex;flex-wrap:wrap;gap:8px}
-      #ed-body .dm-sport-ed-tasti .ed-add-btn{flex:1 1 160px}
-      #ed-body .dm-sport-ed-tasti .ed-add-btn[disabled]{opacity:.4;cursor:default}
+      #ed-body .dm-sport-ed-tasti .ed-btn-add{flex:1 1 160px}
+      #ed-body .dm-sport-ed-tasti .ed-btn-add[disabled]{opacity:.4;cursor:default}
       #ed-body .dm-sport-ed-nuova{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;padding:12px;
         border-radius:14px;background:var(--surface-2,#f8fafc);border:1px dashed var(--card-border,#e2e8f0)}
       #ed-body .dm-sport-ed-nuova .dm-sport-ed-nota{grid-column:1/-1}

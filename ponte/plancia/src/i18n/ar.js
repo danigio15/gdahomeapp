@@ -7269,4 +7269,6 @@ export default Object.freeze({
   "Won": "فوز",
   "Your team": "فريقك",
   "Your team · Formula 1 · MotoGP": "فريقك · الفورمولا 1 · موتو جي بي",
+  "home": "على أرضه",
+  "away": "خارج أرضه",
 });

@@ -7304,4 +7304,6 @@ export default Object.freeze({
   "Won": "जीता",
   "Your team": "आपकी टीम",
   "Your team · Formula 1 · MotoGP": "आपकी टीम · फ़ॉर्मूला 1 · MotoGP",
+  "home": "घरेलू",
+  "away": "बाहर",
 });

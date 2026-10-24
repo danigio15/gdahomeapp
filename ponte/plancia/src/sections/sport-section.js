@@ -297,11 +297,13 @@ function stemma(squadra, misura = 40) {
   return `<span class="dm-sport-stemma dm-sport-sigla" style="--m:${misura}px;--c:${esc(colore)}" aria-hidden="true">${esc(sigla)}</span>`;
 }
 
-function titoloDelBlocco(chiave, titolo, sotto = "") {
+/* `dove` fa unici i disegni: la stessa icona nella pagina e nella finestra
+ * della Home, con le stesse sfumature, si pesterebbe i piedi e verrebbe nera. */
+function titoloDelBlocco(chiave, titolo, sotto = "", dove = "pagina") {
   return `<h3 class="dm-sport-titolo"><span class="dm-sport-titolo-ic" aria-hidden="true">${oggettoWidget(
     chiave,
     "",
-    `sport-t-${chiave}`,
+    `sport-t-${dove}-${chiave}`,
   )}</span><span>${esc(titolo)}</span>${sotto ? `<small>${sotto}</small>` : ""}</h3>`;
 }
 
@@ -387,7 +389,9 @@ function ultimeMarkup(r) {
       return `<li class="dm-sport-riga">
         <span class="dm-sport-quando">${esc(dataBreve(p.quando))}<small>${esc(p.competizione)}</small></span>
         ${stemma(lati.loro, 24)}
-        <span class="dm-sport-avversaria">${esc(lati.inCasa ? "" : "@ ")}${esc(lati.loro.breve || lati.loro.nome)}</span>
+        <span class="dm-sport-avversaria">${esc(lati.loro.breve || lati.loro.nome)}<small>${esc(
+          lati.inCasa ? t("in casa", "home") : t("fuori", "away"),
+        )}</small></span>
         <b class="dm-sport-ris">${mia}–${loro}</b>
         <span class="dm-sport-pallino" data-esito="${esc(p.esito || "")}" title="${esc(esiti[p.esito]?.nome || "")}">${esc(
           esiti[p.esito]?.lettera || "·",
@@ -405,7 +409,9 @@ function ultimeMarkup(r) {
 }
 
 function classificaMarkup(r) {
-  const righe = righeAttorno(r.classifica, r.squadra.id);
+  /* Le prime cinque, e la squadra con chi le sta accanto: anche chi e' primo
+   * vede chi lo insegue. */
+  const righe = righeAttorno(r.classifica, r.squadra.id, { primi: 5, accanto: 1 });
   if (!righe.length) return "";
   const corpo = righe
     .map((x) =>
@@ -492,6 +498,13 @@ function prossimoGpMarkup(r, adesso) {
   );
 }
 
+/* Il cognome di un pilota: tutto quello che viene dopo il nome, cosi'
+ * «Fabio Di Giannantonio» resta «Di Giannantonio». */
+function cognomeDi(nome) {
+  const parti = clean(nome).split(/\s+/);
+  return parti.length > 1 ? parti.slice(1).join(" ") : parti[0] || "";
+}
+
 function coloreDi(r, x) {
   return r.tipo === "f1" ? COLORI_F1[x.scuderiaId] || "#64748b" : coloreDellaMoto(x.moto);
 }
@@ -514,8 +527,8 @@ function ultimaGaraMarkup(r, seguito) {
   const podioMarkup = ordine
     .map(
       (x) => `<div class="dm-sport-gradino" data-pos="${x.posizione}" style="--c:${coloreDi(r, x)}">
-        <span class="dm-sport-pilota-num">${esc(x.numero || "")}</span>
-        <strong${x.id === preferito ? ' class="mio"' : ""}>${esc(r.tipo === "f1" ? x.cognome || x.nome : x.nome.split(" ").slice(-1)[0])}</strong>
+        <span class="dm-sport-pilota-num">${x.numero ? `#${esc(x.numero)}` : ""}</span>
+        <strong${x.id === preferito ? ' class="mio"' : ""}>${esc(r.tipo === "f1" ? x.cognome || x.nome : cognomeDi(x.nome))}</strong>
         <small>${esc(r.tipo === "f1" ? x.scuderia : x.moto)}</small>
         <span class="dm-sport-scalino">${x.posizione}</span>
       </div>`,
@@ -604,7 +617,7 @@ function corseMarkup(r, seguito, adesso) {
     .join(" · ");
   return `<section class="dm-sport-blocco" data-dm-sport-blocco="${esc(r.tipo)}">
       <div class="dm-sport-testa">${titoloDelBlocco(r.tipo, nomeDelTipo(r.tipo), sotto)}</div>
-      <div class="dm-sport-griglia dm-sport-corse">
+      <div class="dm-sport-griglia dm-sport-corse" data-quante="${r.tipo === "f1" ? 4 : 3}">
         ${prossimoGpMarkup(r, adesso)}
         ${ultimaGaraMarkup(r, seguito)}
         ${classificaPilotiMarkup(r, seguito)}
@@ -695,7 +708,7 @@ export function tesseraDelloSport(vista, adesso = Date.now()) {
   const sprint = ev.gara?.tipo === "SPR" || (ev.tipo === "f1" && ev.gara === ev.risultato?.sprint);
   return {
     valore: primo
-      ? clean(ev.tipo === "f1" ? primo.cognome || primo.nome : primo.nome.split(" ").slice(-1)[0])
+      ? clean(ev.tipo === "f1" ? primo.cognome || primo.nome : cognomeDi(primo.nome))
       : gp,
     riga: `${nomeDelTipo(ev.tipo)} · ${sprint ? t("Sprint", "Sprint") : t("Gara", "Race")} ${nomeBreveDelGp(ev.gara?.nome)}`,
     oggetto: ev.tipo,
@@ -735,10 +748,10 @@ export function finestraDelloSportMarkup(vista, adesso = Date.now()) {
         .slice(0, 3)
         .map(
           (x) =>
-            `<span style="--c:${coloreDi(r, x)}"><b>${x.posizione}</b>${esc(r.tipo === "f1" ? x.cognome || x.nome : x.nome.split(" ").slice(-1)[0])}</span>`,
+            `<span style="--c:${coloreDi(r, x)}"><b>${x.posizione}</b>${esc(r.tipo === "f1" ? x.cognome || x.nome : cognomeDi(x.nome))}</span>`,
         )
         .join("");
-      return `<section class="dm-sport-blocco"><div class="dm-sport-testa">${titoloDelBlocco(r.tipo, nomeDelTipo(r.tipo))}</div>${prossimoGpMarkup(
+      return `<section class="dm-sport-blocco"><div class="dm-sport-testa">${titoloDelBlocco(r.tipo, nomeDelTipo(r.tipo), "", "finestra")}</div>${prossimoGpMarkup(
         r,
         adesso,
       )}${
@@ -921,6 +934,9 @@ export function foglioDelloSport(P) {
   ${P} .dm-sport-griglia{display:grid;gap:16px;min-width:0}
   ${P} .dm-sport-calcio{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr)}
   ${P} .dm-sport-corse{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.9fr)}
+  @media(min-width:1201px){
+    ${P} .dm-sport-corse[data-quante="3"]{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr)}
+  }
   ${P} .dm-sport-scheda{box-sizing:border-box;min-width:0;padding:16px 16px 14px;border:1px solid var(--card-border,#e2e8f0);
     border-radius:22px;background:var(--card-bg,#fff);box-shadow:var(--shadow-sculpted,0 6px 18px rgba(15,23,42,.07))}
   ${P} .dm-sport-sotto-titolo{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:11px;font-weight:900;
@@ -928,7 +944,7 @@ export function foglioDelloSport(P) {
   ${P} .dm-sport-sotto-titolo>:last-child{margin-left:auto}
 
   /* La partita in grande e il prossimo gran premio */
-  ${P} .dm-sport-partita{--squadra:#16a34a;display:grid;gap:12px;align-content:space-between;position:relative;overflow:hidden;
+  ${P} .dm-sport-partita{--squadra:#16a34a;display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden;
     background:radial-gradient(130% 120% at 0% 0%,color-mix(in srgb,var(--squadra) 16%,transparent),transparent 60%),var(--card-bg,#fff)}
   ${P} .dm-sport-partita::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:var(--squadra)}
   ${P} .dm-sport-partita-testa{display:flex;justify-content:space-between;gap:8px;font-size:11px;font-weight:900;
@@ -943,7 +959,7 @@ export function foglioDelloSport(P) {
   ${P} .dm-sport-ora{font-size:34px}
   ${P} .dm-sport-gol i{font-style:normal;margin:0 6px;color:var(--text-dim,#94a3b8)}
   ${P} .dm-sport-centro small,${P} .dm-sport-rigori{font-size:11.5px;font-weight:800;color:var(--text-dim,#64748b);white-space:nowrap}
-  ${P} .dm-sport-partita-piede{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px 10px}
+  ${P} .dm-sport-partita-piede{margin-top:auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px 10px}
   ${P} .dm-sport-partita-piede small{font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
   ${P} .dm-sport-manca,${P} .dm-sport-esito,${P} .dm-sport-live{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:999px;
     font-size:12px;font-weight:900;color:var(--text,#0f172a);background:color-mix(in srgb,var(--squadra) 14%,transparent)}
@@ -981,7 +997,8 @@ export function foglioDelloSport(P) {
   ${P} .dm-sport-riga:last-child{border-bottom:0}
   ${P} .dm-sport-quando{display:grid;font-size:12px;font-weight:900;color:var(--text,#0f172a);line-height:1.15}
   ${P} .dm-sport-quando small{font-size:9.5px;font-weight:700;color:var(--text-dim,#94a3b8);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  ${P} .dm-sport-avversaria{font-size:13px;font-weight:800;color:var(--text,#0f172a);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  ${P} .dm-sport-avversaria{display:grid;font-size:13px;font-weight:800;color:var(--text,#0f172a);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  ${P} .dm-sport-avversaria small{font-size:9.5px;font-weight:700;color:var(--text-dim,#94a3b8);text-transform:uppercase;letter-spacing:.6px}
   ${P} .dm-sport-ris{font-family:'Oswald',system-ui,sans-serif;font-size:17px;font-weight:700;color:var(--text,#0f172a)}
   ${P} .dm-sport-pallino{display:grid;place-items:center;width:22px;height:22px;border-radius:7px;font-size:11px;font-weight:900;
     color:#fff;background:#94a3b8}

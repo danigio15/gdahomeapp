@@ -6819,6 +6819,9 @@ function misuraValore(valore) {
  * c'e' una cifra, e' una parola: resta intera e non si spezza in due. */
 export function dividiValore(valore) {
   const testo = String(valore ?? "").trim();
+  /* Un'ora («21:00») e un risultato («2–1») sono un numero solo: spezzati,
+   * diventerebbero «21» con l'unita' «:00». */
+  if (/^\d{1,2}:\d{2}$/.test(testo) || /^\d+\s*[–-]\s*\d+$/.test(testo)) return { numero: testo, unita: "" };
   const pezzi = testo.match(/^([-+]?\d[\d.,\s]*)\s*(.*)$/);
   if (!pezzi) return { numero: testo, unita: "" };
   return { numero: pezzi[1].trim(), unita: pezzi[2].trim() };

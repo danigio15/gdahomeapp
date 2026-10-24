@@ -7295,4 +7295,6 @@ export default Object.freeze({
   "Won": "승리",
   "Your team": "내 팀",
   "Your team · Formula 1 · MotoGP": "내 팀 · F1 · MotoGP",
+  "home": "홈",
+  "away": "원정",
 });

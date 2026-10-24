@@ -70,6 +70,15 @@ export function squadraValida(id) {
 
 /* ---------------------------------------------------------------- calcio */
 
+/* Il nome breve come si dice qui: ESPN scrive «Inter Milan», «AC Milan»,
+ * «AS Roma»; in casa si dice Inter, Milan, Roma. */
+function nomeBreve(nome) {
+  return testo(nome)
+    .replace(/^Inter Milan$/i, "Inter")
+    .replace(/^(AC|AS|SS|SSC|US|ACF|FC|AFC|SC)\s+/, "")
+    .trim();
+}
+
 function squadraDi(t = {}) {
   const team = t.team || t;
   const logo =
@@ -77,7 +86,7 @@ function squadraDi(t = {}) {
   return {
     id: testo(team.id),
     nome: testo(team.displayName || team.name || team.location),
-    breve: testo(team.shortDisplayName || team.displayName || team.name),
+    breve: nomeBreve(team.shortDisplayName || team.displayName || team.name),
     sigla: testo(team.abbreviation),
     colore: /^[0-9a-f]{6}$/i.test(team.color || "") ? `#${team.color}` : null,
     logo: Boolean(logo?.href || team.logo),
@@ -191,7 +200,12 @@ export function calcioDaEspn({ id, campionato, giocate, prossime, classifica, sq
   return {
     tipo: "calcio",
     campionato: { id: campionato, nome: CAMPIONATI[campionato] || "" },
-    squadra: { ...io, id: String(id), nome: io.nome || riga?.nome || "" },
+    squadra: {
+      ...io,
+      id: String(id),
+      nome: io.nome || riga?.nome || "",
+      breve: riga?.breve || io.breve,
+    },
     dalVivo: inOrdine.find((p) => p.fase === "in") || null,
     ultime: inOrdine
       .filter((p) => p.fase === "fine")

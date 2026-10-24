@@ -73,6 +73,10 @@ test("calcio: la squadra seguita, le ultime con l'esito, le prossime e il posto 
   assert.equal(inter.tipo, "calcio");
   assert.equal(inter.squadra.id, "110");
   assert.equal(inter.squadra.nome, "Internazionale");
+  /* I nomi brevi come si dicono qui: Inter, Milan, Roma. */
+  assert.equal(inter.squadra.breve, "Inter");
+  assert.ok(inter.classifica.some((r) => r.breve === "Milan"));
+  assert.ok(inter.classifica.some((r) => r.breve === "Roma"));
   assert.equal(inter.campionato.nome, "Serie A");
   /* L'ultima giocata e' la Champions col Shakhtar del 21; prima Bologna-Inter 1-3. */
   assert.equal(inter.ultime[0].competizione, "Champions League");

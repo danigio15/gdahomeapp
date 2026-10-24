@@ -7355,4 +7355,6 @@ export default Object.freeze({
   "Won": "Gewonnen",
   "Your team": "Je team",
   "Your team · Formula 1 · MotoGP": "Je team · Formule 1 · MotoGP",
+  "home": "thuis",
+  "away": "uit",
 });

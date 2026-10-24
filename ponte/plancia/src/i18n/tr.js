@@ -7321,4 +7321,6 @@ export default Object.freeze({
   "Won": "Kazanıldı",
   "Your team": "Takımın",
   "Your team · Formula 1 · MotoGP": "Takımın · Formula 1 · MotoGP",
+  "home": "iç saha",
+  "away": "deplasman",
 });
