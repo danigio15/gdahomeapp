@@ -7337,4 +7337,7 @@ export default Object.freeze({
   "Off or offline: Home Assistant keeps retrying":
     "Éteint ou hors ligne : Home Assistant réessaie tout seul",
   "Didn't start: try reloading it": "Pas démarrée : essayez de la recharger",
+  "1 unreachable": "1 ne répond pas",
+  "${ferme.length} unreachable": "${ferme.length} ne répondent pas",
+  "${offline.length} unreachable": "${offline.length} ne répondent pas",
 });

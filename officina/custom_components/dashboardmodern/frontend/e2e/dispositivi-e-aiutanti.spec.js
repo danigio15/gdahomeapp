@@ -806,13 +806,20 @@ test("Integrazioni: una scheda per integrazione col logo, i dispositivi sotto, r
   await expect(pagina.locator('[data-aug="int:forecast_solar"] .aug-titolo')).toContainText(
     "6 entità",
   );
-  /* Una TV spenta «non risponde» (era «in avvio», e non voleva dire niente). */
-  await expect(pagina.locator('[data-dv-int-voce="e_tv00000001"]').first()).toContainText(
-    "non risponde",
-  );
+  /* Una TV spenta «non risponde» (era «in avvio», e non voleva dire niente):
+   * resta nella scheda della sua integrazione, con l'allerta sul logo, e non
+   * nel gruppo «Da guardare». */
+  await expect(
+    pagina.locator('[data-aug="i-guardare"] [data-dv-int-voce="e_tv00000001"]'),
+  ).toHaveCount(0);
+  const tv = pagina.locator('[data-aug="int:dlna_dmr"]');
+  await expect(tv.locator(".dv-allerta")).toHaveCount(1);
+  await expect(tv.locator(".aug-titolo small")).toContainText("1 non risponde");
+  await expect(tv.locator('[data-dv-int-voce="e_tv00000001"]')).toContainText("non risponde");
+  await pagina.locator('[data-dv-gruppo="int:dlna_dmr"]').click();
   /* Il logo arriva dal ponte. */
   await expect(pagina.locator('[data-aug="int:shelly"] .dv-logo.img img')).toHaveCount(1);
-  await expect(pagina.locator(".ad-kpi .dm-lucip-kpi b")).toHaveText(["8", "64", "3"]);
+  await expect(pagina.locator(".ad-kpi .dm-lucip-kpi b")).toHaveText(["8", "64", "2"]);
   /* Aperta: i dispositivi dell'integrazione, sotto. */
   await pagina.locator('[data-dv-gruppo="int:zha"]').click();
   await expect(pagina.locator('[data-aug="int:zha"] [data-dv-disp]')).toHaveCount(2);
