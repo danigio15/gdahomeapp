@@ -25,6 +25,12 @@ const DA_SCARICARE = {
   "f1-costruttori": `${F1}/current/constructorStandings.json`,
   "f1-sprint": `${F1}/current/last/sprint.json`,
   "moto-stagioni": `${MOTO}/results/seasons`,
+  "calcio-inter-tutte": `${ESPN}/soccer/all/teams/110/schedule`,
+  "calcio-inter-tutte-prossime": `${ESPN}/soccer/all/teams/110/schedule?fixture=true`,
+  "calcio-inter-champions": `${ESPN}/soccer/uefa.champions/teams/110/schedule`,
+  "calcio-inter-italiano": `${ESPN}/soccer/ita.1/teams/110/schedule?lang=it&region=it`,
+  "calcio-serie-a-partite-italiano": `${ESPN}/soccer/ita.1/scoreboard?lang=it&region=it`,
+  "calcio-serie-a-giorno": `${ESPN}/soccer/ita.1/scoreboard?dates=20261025`,
 };
 
 async function scarica(url) {
