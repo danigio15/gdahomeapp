@@ -294,6 +294,34 @@ const INTEGRAZIONI = {
       entita: 18,
     },
     {
+      id: "e_tv00000001",
+      dominio: "dlna_dmr",
+      integrazione: "DLNA Digital Media Renderer",
+      titolo: "[TV] Samsung Q7 Series (55)",
+      stato: "non-risponde",
+      perche: "",
+      fonte: "ssdp",
+      opzioni: false,
+      ricaricabile: true,
+      disattivata: false,
+      dispositivi: 0,
+      entita: 0,
+    },
+    {
+      id: "e_sole000001",
+      dominio: "forecast_solar",
+      integrazione: "Forecast.Solar",
+      titolo: "Tetto sud",
+      stato: "ok",
+      perche: "",
+      fonte: "user",
+      opzioni: true,
+      ricaricabile: true,
+      disattivata: false,
+      dispositivi: 0,
+      entita: 6,
+    },
+    {
       id: "e_meteo0001",
       dominio: "met",
       integrazione: "Meteorologisk institutt (Met.no)",
@@ -768,15 +796,30 @@ test("Integrazioni: una scheda per integrazione col logo, i dispositivi sotto, r
   await expect(pagina.locator(".dv-trovata")).toContainText("Trovata in rete: Shelly Plus 1PM");
   /* Le schede: una per integrazione, in ordine di nome, chiuse. */
   const schede = pagina.locator(".aug.dv-int");
-  await expect(schede).toHaveCount(6);
-  await expect(schede.first()).toContainText("FRITZ!Box Tools");
+  await expect(schede).toHaveCount(8);
+  await expect(schede.first()).toContainText("DLNA Digital Media Renderer");
   await expect(pagina.locator('[data-aug="int:shelly"] .aug-titolo')).toContainText(
     "2 dispositivi",
   );
-  await expect(pagina.locator(".aug.dv-int.chiuso")).toHaveCount(6);
+  await expect(pagina.locator(".aug.dv-int.chiuso")).toHaveCount(8);
+  /* Un servizio senza dispositivi dice cosa porta, non solo il nome. */
+  await expect(pagina.locator('[data-aug="int:forecast_solar"] .aug-titolo')).toContainText(
+    "6 entità",
+  );
+  /* Una TV spenta «non risponde» (era «in avvio», e non voleva dire niente):
+   * resta nella scheda della sua integrazione, con l'allerta sul logo, e non
+   * nel gruppo «Da guardare». */
+  await expect(
+    pagina.locator('[data-aug="i-guardare"] [data-dv-int-voce="e_tv00000001"]'),
+  ).toHaveCount(0);
+  const tv = pagina.locator('[data-aug="int:dlna_dmr"]');
+  await expect(tv.locator(".dv-allerta")).toHaveCount(1);
+  await expect(tv.locator(".aug-titolo small")).toContainText("1 non risponde");
+  await expect(tv.locator('[data-dv-int-voce="e_tv00000001"]')).toContainText("non risponde");
+  await pagina.locator('[data-dv-gruppo="int:dlna_dmr"]').click();
   /* Il logo arriva dal ponte. */
   await expect(pagina.locator('[data-aug="int:shelly"] .dv-logo.img img')).toHaveCount(1);
-  await expect(pagina.locator(".ad-kpi .dm-lucip-kpi b")).toHaveText(["6", "64", "2"]);
+  await expect(pagina.locator(".ad-kpi .dm-lucip-kpi b")).toHaveText(["8", "64", "2"]);
   /* Aperta: i dispositivi dell'integrazione, sotto. */
   await pagina.locator('[data-dv-gruppo="int:zha"]').click();
   await expect(pagina.locator('[data-aug="int:zha"] [data-dv-disp]')).toHaveCount(2);

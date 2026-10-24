@@ -766,6 +766,8 @@ function binario(node, color, active) {
     madre.insertBefore(sotto, node);
     node.__dmBinario = sotto;
   }
+  /* E il binario sa di chi e': `togliIBinariSenzaLinea` lo chiede a lui. */
+  sotto.__dmLinea = node;
   /* La scia di luce si misura in centesimi del percorso, qualunque sia la sua
    * lunghezza: una linea corta e una lunga hanno la stessa cometa. */
   if (node.getAttribute("pathLength") !== "100") node.setAttribute("pathLength", "100");
@@ -979,8 +981,39 @@ function ensureArc(svg, node, variant) {
 function pruneStale(stage, keep) {
   stage.querySelectorAll("[data-dm-flow-node],[data-dm-flow-arc]").forEach((node) => {
     const id = node.dataset.dmFlowNode || node.dataset.dmFlowArc;
-    if (!keep.has(id)) node.remove();
+    if (keep.has(id)) return;
+    /* Il binario se ne va con la sua linea: e' un nodo a parte, fratello, e
+     * togliendo solo la linea restava li', acceso, con la strada di prima. */
+    node.__dmBinario?.remove?.();
+    node.remove();
   });
+  togliIBinariSenzaLinea(stage);
+}
+
+/* I binari rimasti senza la loro linea.
+ *
+ * «La grafica dei flussi ha sempre due flussi presenti anche se non portano a
+ * nulla.» Erano binari: la strada tenue che sta sotto ogni linea accesa, un
+ * nodo a se' messo subito prima di lei. Quando un cerchio se ne andava — i
+ * carichi scritti a mano che lasciano il posto ai cerchi delle stanze, un
+ * carico tolto, un cambio di configurazione — la linea si toglieva e il suo
+ * binario no: restava acceso, con la forma di una strada che non portava piu'
+ * a nessun cerchio. Sul telefono, dove i cerchi stanno in un altro posto,
+ * si vedeva una linea arancione verso il bordo e una azzurra ferma nel vuoto.
+ *
+ * Un binario vale solo se la sua linea c'e' ancora, accanto a lui, e lo
+ * riconosce come suo: altrimenti se ne va. Si guarda tutta la scena, cosi'
+ * anche quelli lasciati da una versione di prima — che non sapevano di chi
+ * fossero — spariscono al primo giro, e la linea viva se ne rifa' uno. */
+export function togliIBinariSenzaLinea(radice) {
+  let tolti = 0;
+  for (const sotto of radice?.querySelectorAll?.(".dm-flow-binario") || []) {
+    const linea = sotto.__dmLinea;
+    if (linea && linea.__dmBinario === sotto && linea.parentNode === sotto.parentNode) continue;
+    sotto.remove();
+    tolti += 1;
+  }
+  return tolti;
 }
 
 /* Quanto si puo' stringere per starci davvero, oltre a quanto dice il modello.

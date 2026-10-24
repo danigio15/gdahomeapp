@@ -80,6 +80,19 @@ test("il prezzo e' quello della fascia in vigore, poi la tariffa unica, poi ness
     0.21,
   );
   assert.equal(prezzoAllOra({}, giorno).prezzo, null);
+  /* L'entita' scelta nella sezione Energia vince sul numero scritto, e un
+   * prezzo in €/MWh o in centesimi torna al kWh. */
+  const stati = {
+    "sensor.pun": { state: "112", attributes: { unit_of_measurement: "€/MWh" } },
+    "sensor.cent": { state: "23", attributes: { unit_of_measurement: "c€/kWh" } },
+    "sensor.kwh": { state: "0.27", attributes: { unit_of_measurement: "EUR/kWh" } },
+  };
+  const conEntita = (entita) =>
+    prezzoAllOra({ costo: 0.18, entita, stato: (id) => stati[id] ?? null }, giorno).prezzo;
+  assert.equal(conEntita("sensor.kwh"), 0.27);
+  assert.equal(conEntita("sensor.pun"), 0.112);
+  assert.equal(conEntita("sensor.cent"), 0.23);
+  assert.equal(conEntita(""), 0.18);
 });
 
 test("la quota di sole: prima la rete, poi il sole, poi la batteria", () => {

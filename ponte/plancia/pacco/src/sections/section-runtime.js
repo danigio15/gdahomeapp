@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-NIS7EHFL.js";
+} from "../../chunk-4GXT6GV6.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2011,6 +2011,7 @@ var SOURCE_INDEX = Object.freeze({
   "${f.name} è aperto": "${f.name} is open",
   "${f.name} ha finito": "${f.name} is done",
   "${f.name} ha finito ${durata(da, l)} fa.": "${f.name} finished ${durata(da, l)} ago.",
+  "${ferme.length} non rispondono": "${ferme.length} unreachable",
   "${finestra.name} è aperta: spengo ${unita.name} finché non la chiudi?": "${finestra.name} is open: turn off ${unita.name} until you close it?",
   "${folder.skipped} elementi che non sono foto non sono elencati.": "${folder.skipped} entries that are not photos are not listed.",
   "${formatNumber(lettura.ritardo, 0)} minuti di ritardo": "${formatNumber(lettura.ritardo, 0)} minutes late",
@@ -2056,6 +2057,7 @@ var SOURCE_INDEX = Object.freeze({
   "${nomi} spenti": "${nomi} off",
   "${nuove.length} persone importate": "${nuove.length} people imported",
   "${obiettivo} = l'obiettivo di stanotte": "${obiettivo} = tonight's target",
+  "${offline.length} non rispondono": "${offline.length} unreachable",
   "${on.length} accese": "${on.length} on",
   "${open} aperte": "${open} open",
   "${pacco.name}: celle da bilanciare (${deltaInParole(pacco.delta)})": "${pacco.name}: cells need balancing (${deltaInParole(pacco.delta)})",
@@ -2175,7 +2177,7 @@ var SOURCE_INDEX = Object.freeze({
   "1 luce": "1 light",
   "1 luce accesa su ${totale}": "1 of ${totale} lights on",
   "1 mese": "1 month",
-  "1 non risponde": "1 not answering",
+  "1 non risponde": "1 unreachable",
   "1 nuova": "1 new",
   "1 ora": "1 hour",
   "1 Ora": "1 hour",
@@ -5561,6 +5563,7 @@ var SOURCE_INDEX = Object.freeze({
   "Non c'è nessuno, ma il clima è acceso: ${nomi(accesi, l)}": "Nobody is home, but the climate is on: ${nomi(accesi, l)}",
   "Non c'e' niente da fare.": "Nothing to do.",
   "Non carica": "Doesn't charge",
+  "non caricata": "not loaded",
   "Non ci riesco": "I cannot manage",
   "Non collegata": "Not plugged in",
   "Non compare nella sezione EV — tocca per attivarla": "Not in the EV section — tap to add it",
@@ -5576,6 +5579,7 @@ var SOURCE_INDEX = Object.freeze({
   "non è": "is not",
   "Non è ancora segnata: tocca «Fatto oggi» il giorno che lo pulisci, e da lì la scheda conta i giorni.": "Not recorded yet: tap “Done today” on the day you clean it, and from then on the card counts the days.",
   "Non è ancora segnato: tocca «Fatto oggi» il giorno che lo fai, e da lì la pagina conta i giorni.": "Not recorded yet: tap “Done today” on the day you do it, and from then on the page counts the days.",
+  "Non è partita: prova a ricaricarla": "Didn't start: try reloading it",
   "non è più in questa casa": "no longer in this house",
   "non è un sensore di allagamento": "not a flood sensor",
   "non è un'entità di Home Assistant. Si scrive dominio.nome, per esempio switch.ventola_inverter.": "this isn't a Home Assistant entity. It's written domain.name, for example switch.ventola_inverter.",
@@ -5598,7 +5602,7 @@ var SOURCE_INDEX = Object.freeze({
   "Non riesco a leggere le entità da Home Assistant. Controlla la connessione e riprova.": "I cannot read the entities from Home Assistant. Check the connection and try again.",
   "Non riesco a leggere le entità: ": "Cannot read the entities: ",
   "Non riesco a leggere le integrazioni: ": "Cannot read the integrations: ",
-  "non risponde": "not responding",
+  "non risponde": "unreachable",
   "Non risponde": "Not reporting",
   "Non risponde da": "Not answering for",
   "Non rispondeva (${quando})": "Not answering (${quando})",
@@ -7044,6 +7048,7 @@ var SOURCE_INDEX = Object.freeze({
   "SPENTO": "OFF",
   "spento da": "off for",
   "spento fuori": "off outside",
+  "Spento o fuori rete: Home Assistant riprova da solo": "Off or offline: Home Assistant keeps retrying",
   "Spento, il tablet resta sulla pagina dov'era": "Off, the tablet stays on the page it was on",
   "Spesa": "Shopping",
   "Spesa stimata": "Estimated cost",
@@ -80477,6 +80482,7 @@ function binario(node, color, active) {
     madre.insertBefore(sotto, node);
     node.__dmBinario = sotto;
   }
+  sotto.__dmLinea = node;
   if (node.getAttribute("pathLength") !== "100") node.setAttribute("pathLength", "100");
   for (const nome of FORME2) {
     const valore3 = node.getAttribute(nome);
@@ -80632,8 +80638,21 @@ function ensureArc(svg2, node, variant) {
 function pruneStale(stage, keep) {
   stage.querySelectorAll("[data-dm-flow-node],[data-dm-flow-arc]").forEach((node) => {
     const id = node.dataset.dmFlowNode || node.dataset.dmFlowArc;
-    if (!keep.has(id)) node.remove();
+    if (keep.has(id)) return;
+    node.__dmBinario?.remove?.();
+    node.remove();
   });
+  togliIBinariSenzaLinea(stage);
+}
+function togliIBinariSenzaLinea(radice3) {
+  let tolti = 0;
+  for (const sotto of radice3?.querySelectorAll?.(".dm-flow-binario") || []) {
+    const linea = sotto.__dmLinea;
+    if (linea && linea.__dmBinario === sotto && linea.parentNode === sotto.parentNode) continue;
+    sotto.remove();
+    tolti += 1;
+  }
+  return tolti;
 }
 var ARIA_FRA_BOLLE = 16;
 var QUANTO_STRETTE_AL_MASSIMO = 0.55;
@@ -129866,10 +129885,11 @@ function gruppoHtml({
   conta: conta2,
   chiuso = null,
   segno: segno4 = "",
-  sotto = ""
+  sotto = "",
+  classe: classe3 = ""
 }) {
   const eChiuso = chiuso ?? state146.chiusi.includes(chiave2);
-  return `<section class="aug${eChiuso ? " chiuso" : ""}${segno4 ? " dv-int" : ""}" style="--c:${colore}" data-aug="${esc(chiave2)}"><button type="button" class="aug-testa" data-dv-gruppo="${esc(
+  return `<section class="aug${eChiuso ? " chiuso" : ""}${segno4 ? " dv-int" : ""}${classe3 ? ` ${classe3}` : ""}" style="--c:${colore}" data-aug="${esc(chiave2)}"><button type="button" class="aug-testa" data-dv-gruppo="${esc(
     chiave2
   )}" aria-expanded="${!eChiuso}"><span class="aug-freccia" aria-hidden="true">${eChiuso ? "▸" : "▾"}</span>${segno4 || `<span class="aug-ico">${oggettoWidget(disegno8, "", `dv-g-${chiave2}`)}</span>`}<span class="aug-titolo">${esc(titolo3)}${sotto ? `<small>${esc(sotto)}</small>` : ""}</span><span class="aug-conta" data-on="true">${conta2}</span></button><div class="aug-righe">${righe3.join("")}</div></section>`;
 }
@@ -129976,10 +129996,21 @@ function logo2(nome, dominioV) {
   const lettera = clean(nome).replace(/[^\p{L}\p{N}]/gu, "")[0] || "?";
   return `<span class="dv-logo" style="--l:${COLORI5[h % COLORI5.length]}" aria-hidden="true">${esc(lettera.toUpperCase())}</span>`;
 }
+var DA_GUARDARE = /* @__PURE__ */ new Set(["errore", "non-risponde", "non-caricata"]);
+var OFFLINE = /* @__PURE__ */ new Set(["non-risponde", "non-caricata"]);
+var SPIEGA = () => ({
+  "non-risponde": t(
+    "Spento o fuori rete: Home Assistant riprova da solo",
+    "Off or offline: Home Assistant keeps retrying"
+  ),
+  "non-caricata": t("Non è partita: prova a ricaricarla", "Didn't start: try reloading it")
+});
 var STATI2 = () => ({
   ok: [t("ok", "ok"), "v"],
   errore: [t("errore", "error"), "r"],
   "in-avvio": [t("in avvio", "starting"), "a"],
+  "non-risponde": [t("non risponde", "unreachable"), "a"],
+  "non-caricata": [t("non caricata", "not loaded"), "a"],
   disattivata: [t("disattivata", "disabled"), "g"]
 });
 function contoDi(v) {
@@ -130006,7 +130037,7 @@ function rigaDellIntegrazione(v, riparazione = null) {
   return `<div class="aug-riga${v.disattivata ? " spenta" : ""}" style="--c:${VIOLA3}" data-dv-int-voce="${esc(v.id)}" role="button" tabindex="0">${logo2(
     v.titolo,
     v.dominio
-  )}<span class="aug-testo"><b class="aug-nome"><span>${esc(v.titolo)}</span>${v.stato === "ok" ? "" : `<em class="dv-pill ${tono}">${esc(parola)}</em>`}</b><small class="aug-fr">${esc(riparazione ? t("L'accesso va rifatto", "Sign-in needs to be redone") : perche5 || contoDi(v))}</small></span>${destra}</div>`;
+  )}<span class="aug-testo"><b class="aug-nome"><span>${esc(v.titolo)}</span>${v.stato === "ok" ? "" : `<em class="dv-pill ${tono}">${DA_GUARDARE.has(v.stato) ? "⚠ " : ""}${esc(parola)}</em>`}</b><small class="aug-fr">${esc(riparazione ? t("L'accesso va rifatto", "Sign-in needs to be redone") : perche5 || contoDi(v))}</small></span>${destra}</div>`;
 }
 function integrazioniHtml() {
   const integr = state146.integr || { voci: [], trovate: [], riparazioni: [] };
@@ -130014,7 +130045,8 @@ function integrazioniHtml() {
   const visti = voci4.filter(
     (v) => cerca4([v.titolo, v.integrazione, v.dominio].join(" "), state146.cerca)
   );
-  const errori = voci4.filter((v) => v.stato === "errore" || v.stato === "in-avvio");
+  const errori = voci4.filter((v) => v.stato === "errore");
+  const offline = voci4.filter((v) => OFFLINE.has(v.stato));
   const riparazioni = (integr.riparazioni || []).filter((r) => voci4.some((v) => v.id === r.voce));
   const trovate = integr.trovate || [];
   const daSistemare = riparazioni.length + errori.filter((v) => !riparazioni.some((r) => r.voce === v.id)).length;
@@ -130023,6 +130055,7 @@ function integrazioniHtml() {
   const entita3 = voci4.reduce((n, v) => n + (v.entita || 0), 0);
   const sotto = [
     daSistemare ? t(`${daSistemare} da sistemare`, `${daSistemare} to fix`) : "",
+    offline.length === 1 ? t("1 non risponde", "1 unreachable") : offline.length ? t(`${offline.length} non rispondono`, `${offline.length} unreachable`) : "",
     trovate.length === 1 ? t("1 nuova", "1 new") : trovate.length ? t(`${trovate.length} nuove`, `${trovate.length} new`) : ""
   ].filter(Boolean).join(" · ");
   const quanteIntegrazioni = new Set(voci4.map((v) => v.dominio)).size;
@@ -130085,8 +130118,12 @@ function integrazioniHtml() {
   }).filter((x) => x.trovata).sort((a, b2) => a.nome.localeCompare(b2.nome));
   for (const x of schede) {
     const chiave2 = `int:${x.dominio}`;
-    const senza = x.sue.filter((v) => !x.suoi.some((d) => d.voce === v.id));
+    const ferme = x.sue.filter((v) => OFFLINE.has(v.stato));
+    const senza = x.sue.filter(
+      (v) => !OFFLINE.has(v.stato) && !x.suoi.some((d) => d.voce === v.id)
+    );
     const righe3 = [
+      ...ferme.map((v) => rigaDellIntegrazione(v)),
       ...x.suoi.map(rigaDelDispositivo),
       ...senza.map((v) => rigaDellIntegrazione(v)),
       `<div class="dv-gestisci-riga"><button type="button" class="dv-gestisci" data-dv-dominio="${esc(x.dominio)}"><span>${esc(
@@ -130095,23 +130132,27 @@ function integrazioniHtml() {
         t(`Ricarica ${x.nome}`, `Reload ${x.nome}`)
       )}" title="${esc(t("Ricarica", "Reload"))}">↻</button>` : ""}</div>`
     ];
-    const guasta = x.sue.some((v) => v.stato === "errore" || v.stato === "in-avvio");
+    const guasta = x.sue.some((v) => v.stato === "errore");
     const spenta = x.sue.every((v) => v.disattivata);
     const quanti2 = x.suoi.length;
+    const entita4 = x.sue.reduce((n, v) => n + (v.entita || 0), 0);
     gruppi2.push(
       gruppoHtml({
         chiave: chiave2,
         titolo: x.nome,
         sotto: [
-          quanti2 === 1 ? t("1 dispositivo", "1 device") : quanti2 ? t(`${quanti2} dispositivi`, `${quanti2} devices`) : "",
+          quanti2 === 1 ? t("1 dispositivo", "1 device") : quanti2 ? t(`${quanti2} dispositivi`, `${quanti2} devices`) : entita4 === 1 ? t("1 entità", "1 entity") : entita4 ? t(`${entita4} entità`, `${entita4} entities`) : t("nessun dispositivo", "no devices"),
           x.sue.length > 1 ? t(`${x.sue.length} voci`, `${x.sue.length} entries`) : "",
-          guasta ? t("da guardare", "to check") : spenta ? t("disattivata", "disabled") : ""
+          guasta ? t("da guardare", "to check") : ferme.length === 1 ? t("1 non risponde", "1 unreachable") : ferme.length ? t(`${ferme.length} non rispondono`, `${ferme.length} unreachable`) : spenta ? t("disattivata", "disabled") : ""
         ].filter(Boolean).join(" · "),
-        colore: guasta ? "#dc2626" : VIOLA3,
+        colore: guasta ? "#dc2626" : ferme.length ? "#d97706" : VIOLA3,
+        classe: guasta ? "dv-guasta" : ferme.length ? "dv-ferma" : "",
         conta: quanti2 || x.sue.length,
         righe: righe3,
         chiuso: !clean(state146.cerca) && !state146.aperte.includes(chiave2),
-        segno: logo2(x.nome, x.dominio)
+        segno: guasta || ferme.length ? `<span class="dv-logo-box">${logo2(x.nome, x.dominio)}<i class="dv-allerta${guasta ? " r" : ""}" title="${esc(
+          guasta ? t("Da guardare", "To check") : t("Non risponde", "Unreachable")
+        )}">!</i></span>` : logo2(x.nome, x.dominio)
       })
     );
   }
@@ -130285,6 +130326,7 @@ ${d.voce ? `<div class="tasti"><button type="button" class="esegui" data-dv-rica
 }
 function foglioDellIntegrazione(v) {
   const [parola, tono] = STATI2()[v.stato] || STATI2().errore;
+  const perche5 = v.perche || SPIEGA()[v.stato] || "";
   const suoi2 = (state146.casa?.dispositivi || []).filter((d) => d.voce === v.id);
   const nomi2 = suoi2.slice(0, 6).map((d) => d.nome);
   const resto = suoi2.length - nomi2.length;
@@ -130293,7 +130335,7 @@ function foglioDellIntegrazione(v) {
   const ricarica3 = v.ricaricabile && !v.disattivata ? `<button type="button" class="esegui" data-dv-ricarica="${esc(v.id)}"${inCorso2 ? " disabled" : ""}>↻ ${esc(inCorso2 ? t("Ricarico…", "Reloading…") : t("Ricarica", "Reload"))}</button>` : "";
   return `<div class="ad-foglio dv-f" role="dialog" aria-modal="true" aria-label="${esc(v.titolo)}" style="--c:${VIOLA3}"><div class="man"></div>
 <div class="su">${logo2(v.titolo, v.dominio).replace("dv-logo", "dv-logo grande")}<div><h4>${esc(v.titolo)}</h4><div class="dove">${esc(v.integrazione)}</div></div><em class="dv-pill ${tono}">${esc(parola)}</em></div>
-<div class="blk">${v.perche ? `<div class="riga s"><span>${esc(t("Perché", "Why"))}</span><div>${esc(v.perche)}</div></div>` : ""}<div class="riga q"><span>${esc(t("Porta", "Brings"))}</span><div>${esc(contoDi({ ...v, integrazione: "" }))}</div></div>${nomi2.length ? `<div class="riga a"><span>${esc(t("Dispositivi", "Devices"))}</span><div>${esc(nomi2.join(", "))}${resto > 0 ? esc(t(` e altri ${resto}`, ` and ${resto} more`)) : ""}</div></div>` : ""}</div>
+<div class="blk">${perche5 ? `<div class="riga s"><span>${esc(t("Perché", "Why"))}</span><div>${esc(perche5)}</div></div>` : ""}<div class="riga q"><span>${esc(t("Porta", "Brings"))}</span><div>${esc(contoDi({ ...v, integrazione: "" }))}</div></div>${nomi2.length ? `<div class="riga a"><span>${esc(t("Dispositivi", "Devices"))}</span><div>${esc(nomi2.join(", "))}${resto > 0 ? esc(t(` e altri ${resto}`, ` and ${resto} more`)) : ""}</div></div>` : ""}</div>
 ${ricarica3 || opzioni2 ? `<div class="tasti">${ricarica3}${opzioni2}</div>` : ""}<div class="op-mod"><button type="button" data-dv-disattiva>${esc(
     v.disattivata ? t("Riattiva", "Enable") : t("Disattiva", "Disable")
   )}</button><button type="button" class="r" data-dv-elimina>${esc(t("Elimina", "Delete"))}</button></div></div>`;
@@ -130616,7 +130658,12 @@ ${S} .dv-pill,.ad-foglio .dv-pill{flex:none;font-style:normal;font-size:10.5px;f
 .dv-logo.img img{width:78%;height:78%;object-fit:contain}
 html[data-theme="dark"] .dv-logo.img{background:#f8fafc}
 .aug.dv-int .aug-testa{padding:12px 14px}
-.aug.dv-int .aug-testa>.dv-logo{width:40px;height:40px;border-radius:12px}
+.aug.dv-int .aug-testa>.dv-logo,.aug.dv-int .dv-logo-box>.dv-logo{width:40px;height:40px;border-radius:12px}
+.dv-logo-box{position:relative;flex:none;display:inline-flex}
+.dv-allerta{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:#f59e0b;color:#fff;font-style:normal;font-size:12px;font-weight:900;line-height:1;border:2px solid var(--card-bg,#fff);box-shadow:0 2px 6px -2px rgba(0,0,0,.35)}
+.dv-allerta.r{background:#dc2626}
+.aug.dv-ferma .aug-titolo small{color:#b45309}
+.aug.dv-guasta .aug-titolo small{color:#b91c1c}
 .aug.dv-int .aug-titolo{display:grid;white-space:normal}
 .aug.dv-int .aug-titolo small{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dv-gestisci-riga{display:flex;align-items:center;gap:8px;padding-right:12px;border-top:1px solid var(--divider-color,#e2e8f0);background:color-mix(in srgb,#7c3aed 5%,transparent)}

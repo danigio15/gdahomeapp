@@ -165,6 +165,13 @@ export function nomeDellElettrodomestico(nome) {
   return pulito.charAt(0).toUpperCase() + pulito.slice(1);
 }
 const NOME_DEL_FRIGO = /frigo|fridge|refrigerat/i;
+/* Un frigorifero che misura anche **la stanza** dove sta («temperatura
+ * ambiente», `ambient_temperature`): quella e' alta per forza, e non e' il
+ * frigo che si scalda. «Il mio ha anche la temperatura ambiente, che
+ * ovviamente e' alta, e mi manda un avviso.» Lo stesso per il condensatore,
+ * il compressore, l'esterno. */
+const NON_E_DENTRO =
+  /ambient|ambiente|room|stanza|outdoor|outside|external|esterna|esterno|condens|compress|evaporat/i;
 
 const PIOVE = new Set(["rainy", "pouring", "lightning-rainy", "hail", "snowy-rainy"]);
 const FINITO =
@@ -728,9 +735,33 @@ export class Sentinella {
   /* Il prezzo della corrente in quell'istante, dalle fasce della plancia. */
   prezzo(istante, valori = this._valori()) {
     return prezzoAllOra(
-      { fasce: valori.cd_fasce_kwh, costo: valori.cd_costo_kwh, stato: (id) => this.stati.get(id) },
+      {
+        fasce: valori.cd_fasce_kwh,
+        costo: valori.cd_costo_kwh,
+        entita: this._entitaDelPrezzo(valori),
+        stato: (id) => this.stati.get(id),
+      },
       istante,
     );
+  }
+
+  /* L'entita' del prezzo di acquisto scelta nella sezione Energia della
+   * plancia (`rates.import_entity`), con la casella `dm.` gia' risolta. */
+  _entitaDelPrezzo(valori = this._valori()) {
+    let sezioni = null;
+    try {
+      const statoDellaPlancia =
+        typeof valori.dm_dashboard_state === "string"
+          ? JSON.parse(valori.dm_dashboard_state)
+          : valori.dm_dashboard_state;
+      sezioni = statoDellaPlancia?.sections ?? null;
+    } catch (_errore) {
+      return "";
+    }
+    const scelta = String(sezioni?.energy?.rates?.import_entity ?? "").trim();
+    if (!scelta) return "";
+    if (!scelta.startsWith("dm.")) return scelta;
+    return this._risolutore(valori)(scelta) || "";
   }
 
   /* L'antifurto su misura: quando e' scattato, e i suoi tasti. */
@@ -1771,11 +1802,14 @@ export class Sentinella {
       /* Freezer e frigo troppo caldi, o con la porta aperta. */
       if (dominio === "sensor" && classe === "temperature") {
         const gradi = numero(stato.state);
-        const soglia = NOME_DEL_FREEZER.test(id)
-          ? SOGLIA_DEL_FREEZER
-          : NOME_DEL_FRIGO.test(id)
-            ? SOGLIA_DEL_FRIGO
-            : null;
+        const fuori = NON_E_DENTRO.test(`${id} ${stato.attributes?.friendly_name ?? ""}`);
+        const soglia = fuori
+          ? null
+          : NOME_DEL_FREEZER.test(id)
+            ? SOGLIA_DEL_FREEZER
+            : NOME_DEL_FRIGO.test(id)
+              ? SOGLIA_DEL_FRIGO
+              : null;
         if (soglia !== null) {
           const memoria = `caldo:${id}`;
           const sopra = gradi !== null && gradi > soglia;

@@ -32,7 +32,7 @@ Widget _conLaBarra(
       children: [
         BarraDelleSezioni(
           key: chiave,
-          sezioni: vociDellaBarra(),
+          sezioni: vociDellaBarra(chiAmministra: true),
           aperta: Sezione.plancia,
           vai: (_) {},
           vaiAlleCase: () {},
@@ -50,6 +50,7 @@ void main() {
     expect(Sezione.automazioni.gruppo, GruppoDellaBarra.avanzate);
     expect(Sezione.automazioni.pronta, isTrue);
     final avanzate = vociDellaBarra(
+      chiAmministra: true,
       conLaConsole: true,
       conIlCruscotto: true,
       conLaGestione: true,
@@ -60,7 +61,29 @@ void main() {
 
   test('c\'e\' anche nella webapp: la pagina e\' della plancia', () {
     expect(Sezione.automazioni.soloNellApp, isFalse);
-    expect(vociDellaBarra(nellApp: false), contains(Sezione.automazioni));
+    expect(
+      vociDellaBarra(chiAmministra: true, nellApp: false),
+      contains(Sezione.automazioni),
+    );
+  });
+
+  test('Dispositivi, Aiutanti e Automazioni: solo per chi amministra', () {
+    /* «Tutte queste cose devono essere visibili e configurabili solo da
+     * admin.» Agli altri la voce non c'e' proprio. */
+    const sue = [Sezione.dispositivi, Sezione.aiutanti, Sezione.automazioni];
+    for (final nellApp in [true, false]) {
+      final altri = vociDellaBarra(nellApp: nellApp);
+      final suoi = vociDellaBarra(chiAmministra: true, nellApp: nellApp);
+      for (final una in sue) {
+        expect(
+          altri,
+          isNot(contains(una)),
+          reason: '$una a chi non amministra',
+        );
+        expect(suoi, contains(una), reason: '$una a chi amministra');
+      }
+      expect(suoi.length - altri.length, sue.length);
+    }
   });
 
   test('ha il suo disegno, la sveglia con le stelline', () {

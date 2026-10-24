@@ -270,6 +270,15 @@ enum Sezione {
   ///
   /// «Tutta la sezione» Dispositivi: i dispositivi stanza per stanza e le
   /// integrazioni stanno nella stessa pagina, e sono Premium insieme.
+  /// Le voci di chi amministra Home Assistant: Dispositivi (con le
+  /// Integrazioni), Aiutanti e Automazioni (col Pianificatore). Agli altri non
+  /// si mostrano proprio — vedi `vociDellaBarra` — e il ponte a quelle pagine
+  /// risponde solo a chi amministra.
+  bool get soloPerChiAmministra => switch (this) {
+    Sezione.dispositivi || Sezione.automazioni || Sezione.aiutanti => true,
+    _ => false,
+  };
+
   bool get diPremium => switch (this) {
     Sezione.configurazione ||
     Sezione.dispositivi ||

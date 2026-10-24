@@ -7122,4 +7122,11 @@ export default Object.freeze({
   "Add another": "再添加一个",
   "Reload ${x.nome}": "重新加载 ${x.nome}",
   "Reload all": "全部重新加载",
+  unreachable: "无响应",
+  "not loaded": "未加载",
+  "Off or offline: Home Assistant keeps retrying": "已关闭或离线：Home Assistant 会自动重试",
+  "Didn't start: try reloading it": "未启动：请尝试重新加载",
+  "1 unreachable": "1 个无响应",
+  "${ferme.length} unreachable": "${ferme.length} 个无响应",
+  "${offline.length} unreachable": "${offline.length} 个无响应",
 });

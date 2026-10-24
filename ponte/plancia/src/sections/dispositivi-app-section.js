@@ -336,9 +336,10 @@ function gruppoHtml({
   chiuso = null,
   segno = "",
   sotto = "",
+  classe = "",
 }) {
   const eChiuso = chiuso ?? state.chiusi.includes(chiave);
-  return `<section class="aug${eChiuso ? " chiuso" : ""}${segno ? " dv-int" : ""}" style="--c:${colore}" data-aug="${esc(chiave)}"><button type="button" class="aug-testa" data-dv-gruppo="${esc(
+  return `<section class="aug${eChiuso ? " chiuso" : ""}${segno ? " dv-int" : ""}${classe ? ` ${classe}` : ""}" style="--c:${colore}" data-aug="${esc(chiave)}"><button type="button" class="aug-testa" data-dv-gruppo="${esc(
     chiave,
   )}" aria-expanded="${!eChiuso}"><span class="aug-freccia" aria-hidden="true">${eChiuso ? "▸" : "▾"}</span>${
     segno || `<span class="aug-ico">${oggettoWidget(disegno, "", `dv-g-${chiave}`)}</span>`
@@ -480,10 +481,29 @@ function logo(nome, dominioV) {
   return `<span class="dv-logo" style="--l:${COLORI[h % COLORI.length]}" aria-hidden="true">${esc(lettera.toUpperCase())}</span>`;
 }
 
+/* Le voci da guardare: in errore, che non rispondono, o non caricate. Quella
+ * che sta partendo adesso no: fra un attimo e' a posto. */
+const DA_GUARDARE = new Set(["errore", "non-risponde", "non-caricata"]);
+/* Quelle che non rispondono (un televisore spento) non sono un guasto da
+ * sistemare: restano nella scheda della loro integrazione, con l'allerta
+ * sul logo, e non nel gruppo «Da guardare». */
+const OFFLINE = new Set(["non-risponde", "non-caricata"]);
+
+/* Cosa vuol dire, nel foglio della voce, quando Home Assistant un perche' non lo da'. */
+const SPIEGA = () => ({
+  "non-risponde": t(
+    "Spento o fuori rete: Home Assistant riprova da solo",
+    "Off or offline: Home Assistant keeps retrying",
+  ),
+  "non-caricata": t("Non è partita: prova a ricaricarla", "Didn't start: try reloading it"),
+});
+
 const STATI = () => ({
   ok: [t("ok", "ok"), "v"],
   errore: [t("errore", "error"), "r"],
   "in-avvio": [t("in avvio", "starting"), "a"],
+  "non-risponde": [t("non risponde", "unreachable"), "a"],
+  "non-caricata": [t("non caricata", "not loaded"), "a"],
   disattivata: [t("disattivata", "disabled"), "g"],
 });
 
@@ -519,7 +539,9 @@ function rigaDellIntegrazione(v, riparazione = null) {
     v.titolo,
     v.dominio,
   )}<span class="aug-testo"><b class="aug-nome"><span>${esc(v.titolo)}</span>${
-    v.stato === "ok" ? "" : `<em class="dv-pill ${tono}">${esc(parola)}</em>`
+    v.stato === "ok"
+      ? ""
+      : `<em class="dv-pill ${tono}">${DA_GUARDARE.has(v.stato) ? "⚠ " : ""}${esc(parola)}</em>`
   }</b><small class="aug-fr">${esc(riparazione ? t("L'accesso va rifatto", "Sign-in needs to be redone") : perche || contoDi(v))}</small></span>${destra}</div>`;
 }
 
@@ -529,7 +551,8 @@ function integrazioniHtml() {
   const visti = voci.filter((v) =>
     cerca([v.titolo, v.integrazione, v.dominio].join(" "), state.cerca),
   );
-  const errori = voci.filter((v) => v.stato === "errore" || v.stato === "in-avvio");
+  const errori = voci.filter((v) => v.stato === "errore");
+  const offline = voci.filter((v) => OFFLINE.has(v.stato));
   const riparazioni = (integr.riparazioni || []).filter((r) => voci.some((v) => v.id === r.voce));
   const trovate = integr.trovate || [];
   /* Una voce in errore che ha gia' la sua riparazione si conta una volta. */
@@ -540,6 +563,11 @@ function integrazioniHtml() {
   const entita = voci.reduce((n, v) => n + (v.entita || 0), 0);
   const sotto = [
     daSistemare ? t(`${daSistemare} da sistemare`, `${daSistemare} to fix`) : "",
+    offline.length === 1
+      ? t("1 non risponde", "1 unreachable")
+      : offline.length
+        ? t(`${offline.length} non rispondono`, `${offline.length} unreachable`)
+        : "",
     trovate.length === 1
       ? t("1 nuova", "1 new")
       : trovate.length
@@ -619,8 +647,13 @@ function integrazioniHtml() {
     .sort((a, b) => a.nome.localeCompare(b.nome));
   for (const x of schede) {
     const chiave = `int:${x.dominio}`;
-    const senza = x.sue.filter((v) => !x.suoi.some((d) => d.voce === v.id));
+    const ferme = x.sue.filter((v) => OFFLINE.has(v.stato));
+    const senza = x.sue.filter(
+      (v) => !OFFLINE.has(v.stato) && !x.suoi.some((d) => d.voce === v.id),
+    );
+    /* Prima quelle che non rispondono, con l'allerta; poi i dispositivi. */
     const righe = [
+      ...ferme.map((v) => rigaDellIntegrazione(v)),
       ...x.suoi.map(rigaDelDispositivo),
       ...senza.map((v) => rigaDellIntegrazione(v)),
       `<div class="dv-gestisci-riga"><button type="button" class="dv-gestisci" data-dv-dominio="${esc(x.dominio)}"><span>${esc(
@@ -635,9 +668,12 @@ function integrazioniHtml() {
           : ""
       }</div>`,
     ];
-    const guasta = x.sue.some((v) => v.stato === "errore" || v.stato === "in-avvio");
+    const guasta = x.sue.some((v) => v.stato === "errore");
     const spenta = x.sue.every((v) => v.disattivata);
     const quanti = x.suoi.length;
+    /* Senza dispositivi (un servizio come Forecast.Solar) si dice cosa porta:
+     * le sue entita'. Una scheda col solo nome sembrava rotta. */
+    const entita = x.sue.reduce((n, v) => n + (v.entita || 0), 0);
     gruppi.push(
       gruppoHtml({
         chiave,
@@ -647,17 +683,35 @@ function integrazioniHtml() {
             ? t("1 dispositivo", "1 device")
             : quanti
               ? t(`${quanti} dispositivi`, `${quanti} devices`)
-              : "",
+              : entita === 1
+                ? t("1 entità", "1 entity")
+                : entita
+                  ? t(`${entita} entità`, `${entita} entities`)
+                  : t("nessun dispositivo", "no devices"),
           x.sue.length > 1 ? t(`${x.sue.length} voci`, `${x.sue.length} entries`) : "",
-          guasta ? t("da guardare", "to check") : spenta ? t("disattivata", "disabled") : "",
+          guasta
+            ? t("da guardare", "to check")
+            : ferme.length === 1
+              ? t("1 non risponde", "1 unreachable")
+              : ferme.length
+                ? t(`${ferme.length} non rispondono`, `${ferme.length} unreachable`)
+                : spenta
+                  ? t("disattivata", "disabled")
+                  : "",
         ]
           .filter(Boolean)
           .join(" · "),
-        colore: guasta ? "#dc2626" : VIOLA,
+        colore: guasta ? "#dc2626" : ferme.length ? "#d97706" : VIOLA,
+        classe: guasta ? "dv-guasta" : ferme.length ? "dv-ferma" : "",
         conta: quanti || x.sue.length,
         righe,
         chiuso: !clean(state.cerca) && !state.aperte.includes(chiave),
-        segno: logo(x.nome, x.dominio),
+        segno:
+          guasta || ferme.length
+            ? `<span class="dv-logo-box">${logo(x.nome, x.dominio)}<i class="dv-allerta${guasta ? " r" : ""}" title="${esc(
+                guasta ? t("Da guardare", "To check") : t("Non risponde", "Unreachable"),
+              )}">!</i></span>`
+            : logo(x.nome, x.dominio),
       }),
     );
   }
@@ -863,6 +917,7 @@ ${d.voce ? `<div class="tasti"><button type="button" class="esegui" data-dv-rica
 
 function foglioDellIntegrazione(v) {
   const [parola, tono] = STATI()[v.stato] || STATI().errore;
+  const perche = v.perche || SPIEGA()[v.stato] || "";
   const suoi = (state.casa?.dispositivi || []).filter((d) => d.voce === v.id);
   const nomi = suoi.slice(0, 6).map((d) => d.nome);
   const resto = suoi.length - nomi.length;
@@ -877,7 +932,7 @@ function foglioDellIntegrazione(v) {
       : "";
   return `<div class="ad-foglio dv-f" role="dialog" aria-modal="true" aria-label="${esc(v.titolo)}" style="--c:${VIOLA}"><div class="man"></div>
 <div class="su">${logo(v.titolo, v.dominio).replace("dv-logo", "dv-logo grande")}<div><h4>${esc(v.titolo)}</h4><div class="dove">${esc(v.integrazione)}</div></div><em class="dv-pill ${tono}">${esc(parola)}</em></div>
-<div class="blk">${v.perche ? `<div class="riga s"><span>${esc(t("Perché", "Why"))}</span><div>${esc(v.perche)}</div></div>` : ""}<div class="riga q"><span>${esc(t("Porta", "Brings"))}</span><div>${esc(contoDi({ ...v, integrazione: "" }))}</div></div>${
+<div class="blk">${perche ? `<div class="riga s"><span>${esc(t("Perché", "Why"))}</span><div>${esc(perche)}</div></div>` : ""}<div class="riga q"><span>${esc(t("Porta", "Brings"))}</span><div>${esc(contoDi({ ...v, integrazione: "" }))}</div></div>${
     nomi.length
       ? `<div class="riga a"><span>${esc(t("Dispositivi", "Devices"))}</span><div>${esc(nomi.join(", "))}${resto > 0 ? esc(t(` e altri ${resto}`, ` and ${resto} more`)) : ""}</div></div>`
       : ""
@@ -1253,7 +1308,12 @@ ${S} .dv-pill,.ad-foglio .dv-pill{flex:none;font-style:normal;font-size:10.5px;f
 .dv-logo.img img{width:78%;height:78%;object-fit:contain}
 html[data-theme="dark"] .dv-logo.img{background:#f8fafc}
 .aug.dv-int .aug-testa{padding:12px 14px}
-.aug.dv-int .aug-testa>.dv-logo{width:40px;height:40px;border-radius:12px}
+.aug.dv-int .aug-testa>.dv-logo,.aug.dv-int .dv-logo-box>.dv-logo{width:40px;height:40px;border-radius:12px}
+.dv-logo-box{position:relative;flex:none;display:inline-flex}
+.dv-allerta{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:#f59e0b;color:#fff;font-style:normal;font-size:12px;font-weight:900;line-height:1;border:2px solid var(--card-bg,#fff);box-shadow:0 2px 6px -2px rgba(0,0,0,.35)}
+.dv-allerta.r{background:#dc2626}
+.aug.dv-ferma .aug-titolo small{color:#b45309}
+.aug.dv-guasta .aug-titolo small{color:#b91c1c}
 .aug.dv-int .aug-titolo{display:grid;white-space:normal}
 .aug.dv-int .aug-titolo small{font-size:12px;font-weight:700;color:var(--secondary-text-color,#64748b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dv-gestisci-riga{display:flex;align-items:center;gap:8px;padding-right:12px;border-top:1px solid var(--divider-color,#e2e8f0);background:color-mix(in srgb,#7c3aed 5%,transparent)}

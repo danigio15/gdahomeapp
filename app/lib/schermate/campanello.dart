@@ -28,9 +28,9 @@ library;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Directory;
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../casa/collegamento.dart';
 import '../casa/la_finestra.dart';
@@ -453,327 +453,379 @@ class _StatoDellaTelecamera extends State<SchermataDellaTelecamera> {
     final alle = '${due(ora.hour)}:${due(ora.minute)}';
     return Scaffold(
       backgroundColor: const Color(0xFF14110F),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        title: Text(
-          _notifica.titolo,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
-      body: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              /* Al piu' meta' dello schermo: su un telefono di traverso, o su
+      /* La testata e' quella di tutte le notifiche (`TestataDellaNotifica`):
+       * la fascia nel colore della notifica, la freccia, il disegno, di che
+       * cosa parla, il titolo e quando. «L'intestazione deve essere come le
+       * altre notifiche.» Prima qui c'era una barra trasparente, con la
+       * freccia e il titolo scuri sul fondo scuro: non si vedevano, e
+       * sembrava di non poter tornare indietro. */
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TestataDellaNotifica(
+            notifica: _notifica,
+            nomeDellaCasa:
+                widget.collegamento.archivio.quella(widget.tocco.casa)?.nome ??
+                '',
+          ),
+          /* Sotto la testata la pagina scorre se non ci sta (un telefono
+           * piccolo, di traverso), e quando ci sta i tasti restano in fondo:
+           * e' quello che fa `SliverFillRemaining` con lo `Spacer` dentro. */
+          Expanded(
+            child: CustomScrollView(
+              slivers: [
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: SafeArea(
+                    top: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 18, 16, 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          /* Al piu' meta' dello schermo: su un telefono di traverso, o su
                * un tablet, la foto si fa piu' piccola invece di spingere fuori
                * i tasti. */
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.sizeOf(context).height * 0.5,
-                ),
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  heightFactor: 1,
-                  child: AspectRatio(
-                    aspectRatio: 16 / 10,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(22),
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          if (video != null)
-                            LettoreDelFilmato(
-                              video,
-                              key: const Key('telecamera-video'),
-                            )
-                          else if (_inVideo)
-                            Container(
-                              color: const Color(0xFF2E2A26),
-                              alignment: Alignment.center,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const SizedBox(
-                                    width: 34,
-                                    height: 34,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 3,
-                                      color: Colors.white54,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 14),
-                                  Text(
-                                    inLingua(
-                                      it: 'Si prepara il video del movimento…',
-                                      en: 'Getting the motion clip ready…',
-                                    ),
-                                    key: const Key('telecamera-video-attesa'),
-                                    style: const TextStyle(
-                                      color: Colors.white54,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          else if (foto != null)
-                            FotoAMisura(foto, key: const Key('telecamera-foto'))
-                          else
-                            Container(
-                              color: const Color(0xFF2E2A26),
-                              alignment: Alignment.center,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(
-                                    Icons.videocam_rounded,
-                                    size: 52,
-                                    color: Colors.white38,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    _chiesta
-                                        ? inLingua(
-                                            it: 'La casa non manda ancora la foto…',
-                                            en:
-                                                'The home isn\'t sending the '
-                                                'picture yet…',
-                                          )
-                                        : inLingua(
-                                            it: 'Si chiede la foto alla casa…',
-                                            en: 'Asking the home for the picture…',
+                          ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxHeight:
+                                  MediaQuery.sizeOf(context).height * 0.5,
+                            ),
+                            child: Align(
+                              alignment: Alignment.topCenter,
+                              heightFactor: 1,
+                              child: AspectRatio(
+                                aspectRatio: 16 / 10,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(22),
+                                  child: Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      if (video != null)
+                                        LettoreDelFilmato(
+                                          video,
+                                          key: const Key('telecamera-video'),
+                                        )
+                                      else if (_inVideo)
+                                        Container(
+                                          color: const Color(0xFF2E2A26),
+                                          alignment: Alignment.center,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const SizedBox(
+                                                width: 34,
+                                                height: 34,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      strokeWidth: 3,
+                                                      color: Colors.white54,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 14),
+                                              Text(
+                                                inLingua(
+                                                  it: 'Si prepara il video del movimento…',
+                                                  en: 'Getting the motion clip ready…',
+                                                ),
+                                                key: const Key(
+                                                  'telecamera-video-attesa',
+                                                ),
+                                                style: const TextStyle(
+                                                  color: Colors.white54,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                    style: const TextStyle(
-                                      color: Colors.white54,
-                                    ),
+                                        )
+                                      else if (foto != null)
+                                        FotoAMisura(
+                                          foto,
+                                          key: const Key('telecamera-foto'),
+                                        )
+                                      else
+                                        Container(
+                                          color: const Color(0xFF2E2A26),
+                                          alignment: Alignment.center,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(
+                                                Icons.videocam_rounded,
+                                                size: 52,
+                                                color: Colors.white38,
+                                              ),
+                                              const SizedBox(height: 10),
+                                              Text(
+                                                _chiesta
+                                                    ? inLingua(
+                                                        it: 'La casa non manda ancora la foto…',
+                                                        en:
+                                                            'The home isn\'t sending the '
+                                                            'picture yet…',
+                                                      )
+                                                    : inLingua(
+                                                        it: 'Si chiede la foto alla casa…',
+                                                        en: 'Asking the home for the picture…',
+                                                      ),
+                                                style: const TextStyle(
+                                                  color: Colors.white54,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      Positioned(
+                                        left: 12,
+                                        top: 12,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.black54,
+                                            borderRadius: BorderRadius.circular(
+                                              999,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                _inVideo
+                                                    ? Icons.movie_rounded
+                                                    : momento == null
+                                                    ? Icons.circle
+                                                    : Icons
+                                                          .photo_camera_rounded,
+                                                size:
+                                                    momento == null && !_inVideo
+                                                    ? 10
+                                                    : 14,
+                                                color:
+                                                    momento == null && !_inVideo
+                                                    ? const Color(0xFFEF4444)
+                                                    : Colors.white,
+                                              ),
+                                              const SizedBox(width: 7),
+                                              Text(
+                                                _inVideo
+                                                    ? inLingua(
+                                                        it: 'VIDEO DELLE $alle',
+                                                        en: '$alle CLIP',
+                                                      )
+                                                    : momento == null
+                                                    ? inLingua(
+                                                        it: 'DAL VIVO',
+                                                        en: 'LIVE',
+                                                      )
+                                                    : inLingua(
+                                                        it: 'ALLE $alle',
+                                                        en: 'AT $alle',
+                                                      ),
+                                                key: const Key(
+                                                  'telecamera-quando',
+                                                ),
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.w700,
+                                                  letterSpacing: 0.5,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
                             ),
-                          Positioned(
-                            left: 12,
-                            top: 12,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.black54,
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    _inVideo
-                                        ? Icons.movie_rounded
-                                        : momento == null
-                                        ? Icons.circle
-                                        : Icons.photo_camera_rounded,
-                                    size: momento == null && !_inVideo
-                                        ? 10
-                                        : 14,
-                                    color: momento == null && !_inVideo
-                                        ? const Color(0xFFEF4444)
-                                        : Colors.white,
-                                  ),
-                                  const SizedBox(width: 7),
-                                  Text(
-                                    _inVideo
-                                        ? inLingua(
-                                            it: 'VIDEO DELLE $alle',
-                                            en: '$alle CLIP',
-                                          )
-                                        : momento == null
-                                        ? inLingua(it: 'DAL VIVO', en: 'LIVE')
-                                        : inLingua(
-                                            it: 'ALLE $alle',
-                                            en: 'AT $alle',
-                                          ),
-                                    key: const Key('telecamera-quando'),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 0.5,
+                          ),
+                          const SizedBox(height: 18),
+                          Text(
+                            /* Il testo del movimento porta gia' l'ora («21:59 · casa
+                 * vuota»); senza testo, l'ora. */
+                            _notifica.testo.isNotEmpty
+                                ? _notifica.testo
+                                : '${due(ora.hour)}:${due(ora.minute)}',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 17,
+                            ),
+                          ),
+                          /* Fra il video, la foto del momento e il dal vivo. */
+                          const SizedBox(height: 14),
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 10,
+                            children: [
+                              if (_inVideo) ...[
+                                if (_delMomento != null)
+                                  _TastoDellaVista(
+                                    chiave: const Key('telecamera-alla-foto'),
+                                    icona: Icons.photo_camera_rounded,
+                                    testo: inLingua(
+                                      it: 'Foto delle $alle',
+                                      en: '$alle picture',
                                     ),
+                                    tocca: () => setState(() {
+                                      _inVideo = false;
+                                      _dalVivo = false;
+                                    }),
                                   ),
-                                ],
+                                if (_notifica.camera != null)
+                                  _TastoDellaVista(
+                                    chiave: const Key('telecamera-al-vivo'),
+                                    icona: Icons.videocam_rounded,
+                                    testo: inLingua(
+                                      it: 'Guarda dal vivo',
+                                      en: 'Watch live',
+                                    ),
+                                    tocca: () {
+                                      setState(() => _inVideo = false);
+                                      if (_giro != null) {
+                                        setState(() => _dalVivo = true);
+                                      } else {
+                                        _guardaDalVivo();
+                                      }
+                                    },
+                                  ),
+                              ] else ...[
+                                if (_notifica.film != null && !_senzaVideo)
+                                  _TastoDellaVista(
+                                    chiave: const Key('telecamera-al-video'),
+                                    icona: Icons.movie_rounded,
+                                    testo: _videoNonArriva
+                                        ? inLingua(
+                                            it: 'Riprova il video',
+                                            en: 'Retry the clip',
+                                          )
+                                        : inLingua(
+                                            it: 'Rivedi il video',
+                                            en: 'Replay the clip',
+                                          ),
+                                    tocca: _vaiAlVideo,
+                                  ),
+                                /* Dalla foto del momento al dal vivo, e ritorno. */
+                                if (_delMomento != null &&
+                                    _notifica.camera != null)
+                                  _TastoDellaVista(
+                                    chiave: const Key('telecamera-cambia'),
+                                    icona: _dalVivo
+                                        ? Icons.photo_camera_rounded
+                                        : Icons.videocam_rounded,
+                                    testo: _dalVivo
+                                        ? inLingua(
+                                            it: 'Torna alla foto delle $alle',
+                                            en: 'Back to the $alle picture',
+                                          )
+                                        : inLingua(
+                                            it: 'Guarda dal vivo',
+                                            en: 'Watch live',
+                                          ),
+                                    tocca: () {
+                                      if (_dalVivo) {
+                                        setState(() => _dalVivo = false);
+                                      } else if (_giro != null) {
+                                        setState(() => _dalVivo = true);
+                                      } else {
+                                        _guardaDalVivo();
+                                      }
+                                    },
+                                  ),
+                              ],
+                            ],
+                          ),
+                          if (_senzaVideo) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              switch (_perche) {
+                                'unauthorized' => inLingua(
+                                  it:
+                                      'Il video di questa telecamera non si mostra al '
+                                      'tuo utente.',
+                                  en: "This camera's clip isn't shown to your user.",
+                                ),
+                                'premium-richiesto' => inLingua(
+                                  it: 'I mini video sono di GdAHome Premium.',
+                                  en: 'Short clips are part of GdAHome Premium.',
+                                ),
+                                'filmato-vuoto' => inLingua(
+                                  it:
+                                      'In quei secondi la telecamera non ha mandato '
+                                      'immagini alla casa: il video non si è potuto fare. '
+                                      'La foto del momento c\'è.',
+                                  en:
+                                      "In those seconds the camera sent the home no "
+                                      "pictures: the clip couldn't be made. The picture "
+                                      "of the moment is there.",
+                                ),
+                                'unknown_command' => inLingua(
+                                  it:
+                                      'La casa non sa ancora fare i mini video: aggiorna '
+                                      'l\'add-on GdAHome.',
+                                  en:
+                                      "The home can't make clips yet: update the GdAHome "
+                                      'add-on.',
+                                ),
+                                _ => inLingua(
+                                  it:
+                                      'Il video di questo movimento non c\'è più: la casa '
+                                      'li tiene tre giorni.',
+                                  en:
+                                      'This motion clip is no longer there: the home '
+                                      'keeps them for three days.',
+                                ),
+                              },
+                              key: const Key('telecamera-senza-video'),
+                              style: const TextStyle(
+                                color: Colors.white54,
+                                fontSize: 13,
                               ),
                             ),
+                          ],
+                          if (_videoNonArriva) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              inLingua(
+                                it:
+                                    'La casa non ha risposto in tempo: il video non è '
+                                    'arrivato. Riprova fra poco.',
+                                en:
+                                    "The home didn't answer in time: the clip didn't "
+                                    'arrive. Try again shortly.',
+                              ),
+                              key: const Key('telecamera-video-non-arriva'),
+                              style: const TextStyle(
+                                color: Colors.white54,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                          const Spacer(),
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 10,
+                            children: [
+                              for (final tasto in tasti)
+                                FilledButton.tonal(
+                                  onPressed: _premuto == null
+                                      ? () => _tasto(tasto)
+                                      : null,
+                                  child: Text(tasto.etichetta),
+                                ),
+                            ],
                           ),
                         ],
                       ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 18),
-              Text(
-                /* Il testo del movimento porta gia' l'ora («21:59 · casa
-                 * vuota»); senza testo, l'ora. */
-                _notifica.testo.isNotEmpty
-                    ? _notifica.testo
-                    : '${due(ora.hour)}:${due(ora.minute)}',
-                style: const TextStyle(color: Colors.white70, fontSize: 17),
-              ),
-              /* Fra il video, la foto del momento e il dal vivo. */
-              const SizedBox(height: 14),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  if (_inVideo) ...[
-                    if (_delMomento != null)
-                      _TastoDellaVista(
-                        chiave: const Key('telecamera-alla-foto'),
-                        icona: Icons.photo_camera_rounded,
-                        testo: inLingua(
-                          it: 'Foto delle $alle',
-                          en: '$alle picture',
-                        ),
-                        tocca: () => setState(() {
-                          _inVideo = false;
-                          _dalVivo = false;
-                        }),
-                      ),
-                    if (_notifica.camera != null)
-                      _TastoDellaVista(
-                        chiave: const Key('telecamera-al-vivo'),
-                        icona: Icons.videocam_rounded,
-                        testo: inLingua(
-                          it: 'Guarda dal vivo',
-                          en: 'Watch live',
-                        ),
-                        tocca: () {
-                          setState(() => _inVideo = false);
-                          if (_giro != null) {
-                            setState(() => _dalVivo = true);
-                          } else {
-                            _guardaDalVivo();
-                          }
-                        },
-                      ),
-                  ] else ...[
-                    if (_notifica.film != null && !_senzaVideo)
-                      _TastoDellaVista(
-                        chiave: const Key('telecamera-al-video'),
-                        icona: Icons.movie_rounded,
-                        testo: _videoNonArriva
-                            ? inLingua(
-                                it: 'Riprova il video',
-                                en: 'Retry the clip',
-                              )
-                            : inLingua(
-                                it: 'Rivedi il video',
-                                en: 'Replay the clip',
-                              ),
-                        tocca: _vaiAlVideo,
-                      ),
-                    /* Dalla foto del momento al dal vivo, e ritorno. */
-                    if (_delMomento != null && _notifica.camera != null)
-                      _TastoDellaVista(
-                        chiave: const Key('telecamera-cambia'),
-                        icona: _dalVivo
-                            ? Icons.photo_camera_rounded
-                            : Icons.videocam_rounded,
-                        testo: _dalVivo
-                            ? inLingua(
-                                it: 'Torna alla foto delle $alle',
-                                en: 'Back to the $alle picture',
-                              )
-                            : inLingua(it: 'Guarda dal vivo', en: 'Watch live'),
-                        tocca: () {
-                          if (_dalVivo) {
-                            setState(() => _dalVivo = false);
-                          } else if (_giro != null) {
-                            setState(() => _dalVivo = true);
-                          } else {
-                            _guardaDalVivo();
-                          }
-                        },
-                      ),
-                  ],
-                ],
-              ),
-              if (_senzaVideo) ...[
-                const SizedBox(height: 8),
-                Text(
-                  switch (_perche) {
-                    'unauthorized' => inLingua(
-                      it:
-                          'Il video di questa telecamera non si mostra al '
-                          'tuo utente.',
-                      en: "This camera's clip isn't shown to your user.",
-                    ),
-                    'premium-richiesto' => inLingua(
-                      it: 'I mini video sono di GdAHome Premium.',
-                      en: 'Short clips are part of GdAHome Premium.',
-                    ),
-                    'filmato-vuoto' => inLingua(
-                      it:
-                          'In quei secondi la telecamera non ha mandato '
-                          'immagini alla casa: il video non si è potuto fare. '
-                          'La foto del momento c\'è.',
-                      en:
-                          "In those seconds the camera sent the home no "
-                          "pictures: the clip couldn't be made. The picture "
-                          "of the moment is there.",
-                    ),
-                    'unknown_command' => inLingua(
-                      it:
-                          'La casa non sa ancora fare i mini video: aggiorna '
-                          'l\'add-on GdAHome.',
-                      en:
-                          "The home can't make clips yet: update the GdAHome "
-                          'add-on.',
-                    ),
-                    _ => inLingua(
-                      it:
-                          'Il video di questo movimento non c\'è più: la casa '
-                          'li tiene tre giorni.',
-                      en:
-                          'This motion clip is no longer there: the home '
-                          'keeps them for three days.',
-                    ),
-                  },
-                  key: const Key('telecamera-senza-video'),
-                  style: const TextStyle(color: Colors.white54, fontSize: 13),
-                ),
               ],
-              if (_videoNonArriva) ...[
-                const SizedBox(height: 8),
-                Text(
-                  inLingua(
-                    it:
-                        'La casa non ha risposto in tempo: il video non è '
-                        'arrivato. Riprova fra poco.',
-                    en:
-                        "The home didn't answer in time: the clip didn't "
-                        'arrive. Try again shortly.',
-                  ),
-                  key: const Key('telecamera-video-non-arriva'),
-                  style: const TextStyle(color: Colors.white54, fontSize: 13),
-                ),
-              ],
-              const Spacer(),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  for (final tasto in tasti)
-                    FilledButton.tonal(
-                      onPressed: _premuto == null ? () => _tasto(tasto) : null,
-                      child: Text(tasto.etichetta),
-                    ),
-                ],
-              ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

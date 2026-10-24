@@ -10,7 +10,11 @@ class ClassList {
     this.node = node;
   }
   #set() {
-    return new Set(String(this.node.className || "").split(/\s+/).filter(Boolean));
+    return new Set(
+      String(this.node.className || "")
+        .split(/\s+/)
+        .filter(Boolean),
+    );
   }
   add(...names) {
     const set = this.#set();
@@ -109,8 +113,7 @@ function matchesSimple(node, selector) {
   return true;
 }
 
-const matches = (node, selector) =>
-  selector.split(",").some((part) => matchesSimple(node, part));
+const matches = (node, selector) => selector.split(",").some((part) => matchesSimple(node, part));
 
 class Element {
   constructor(tag) {
@@ -238,7 +241,8 @@ function configure({ loads = [], states = {}, flowNodes = null, bundle = null } 
   globalThis.DashboardModernModules = { store: { getSection: (name) => ({ loads })[name] } };
   globalThis.localStorage = memoryStorage(flowNodes ? { cd_flow_nodes: flowNodes } : {});
   globalThis.__HASS__ = { states };
-  if (bundle) globalThis.dispatchEvent(new CustomEvent("dashboardmodern:period-bundle", { detail: bundle }));
+  if (bundle)
+    globalThis.dispatchEvent(new CustomEvent("dashboardmodern:period-bundle", { detail: bundle }));
   section.refreshEnergyFlows();
 }
 
@@ -380,7 +384,10 @@ test("a connector with nothing flowing is not drawn at all", () => {
   assert.doesNotMatch(css, /\.dm-energy-flow-idle\{opacity:\.30!important/);
   // The shell also draws its own load lines, which the stage never colours:
   // there the switch is the plain "active" class it has always used.
-  assert.match(css, /\.flow-line:not\(\.active\):not\(\.dm-energy-flow-active\)\{opacity:0!important\}/);
+  assert.match(
+    css,
+    /\.flow-line:not\(\.active\):not\(\.dm-energy-flow-active\)\{opacity:0!important\}/,
+  );
 });
 
 test("an emoji icon still goes straight into the bubble", () => {
@@ -460,7 +467,10 @@ test("a bubble opens its own appliances, or the history of its entity", () => {
 
 test("saved flow-node customization renames and recolours the bubble it owns", () => {
   configure({
-    loads: [load("pump", 0, { name: "Pompa di calore" }), load("dryer", 1, { name: "Asciugatrice" })],
+    loads: [
+      load("pump", 0, { name: "Pompa di calore" }),
+      load("dryer", 1, { name: "Asciugatrice" }),
+    ],
     flowNodes: { boiler: { name: "Boiler cantina", icon: "♨️", color: "#123456" } },
   });
   const [first, second] = bubbles(views.instant);
@@ -562,4 +572,22 @@ test("due elenchi diversi non si rubano i kilowattora", async () => {
   } finally {
     globalThis.DashboardModernEnergyService = vecchioServizio;
   }
+});
+
+test("un binario senza la sua linea se ne va, quello di una linea viva resta", () => {
+  /* «Due flussi presenti anche se non portano a nulla»: i binari delle linee
+   * tolte restavano nel disegno. */
+  const svg = element("svg");
+  const viva = element("path", { className: "flow-line" });
+  const suo = element("path", { className: "dm-flow-binario" });
+  const orfano = element("path", { className: "dm-flow-binario" });
+  const vecchio = element("path", { className: "dm-flow-binario" });
+  svg.append(suo, viva, orfano, vecchio);
+  for (const nodo of [viva, suo, orfano, vecchio]) nodo.parentNode = svg;
+  viva.__dmBinario = suo;
+  suo.__dmLinea = viva;
+  /* La linea dell'orfano e' stata tolta; il vecchio non sa di chi e'. */
+  orfano.__dmLinea = element("path");
+  assert.equal(section.togliIBinariSenzaLinea(svg), 2);
+  assert.deepEqual(svg.children, [suo, viva]);
 });

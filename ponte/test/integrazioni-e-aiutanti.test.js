@@ -173,7 +173,9 @@ const premium = { attive: true, premium: true };
 test("lo stato di una voce in tre parole", () => {
   assert.equal(statoDellaVoce({ state: "loaded" }), "ok");
   assert.equal(statoDellaVoce({ state: "setup_error" }), "errore");
-  assert.equal(statoDellaVoce({ state: "setup_retry" }), "in-avvio");
+  assert.equal(statoDellaVoce({ state: "setup_retry" }), "non-risponde");
+  assert.equal(statoDellaVoce({ state: "not_loaded" }), "non-caricata");
+  assert.equal(statoDellaVoce({ state: "setup_in_progress" }), "in-avvio");
   assert.equal(statoDellaVoce({ state: "loaded", disabled_by: "user" }), "disattivata");
 });
 
@@ -452,17 +454,25 @@ test("creare, cambiare e togliere un aiutante semplice", async () => {
 
 test("il logo di un'integrazione: lo prende il ponte, solo per chi puo', solo un nome", async () => {
   const chieste = [];
+  /* Una casa del 2026.3 serve i loghi, anche quelli delle integrazioni
+   * personali; una piu' vecchia risponde 404 e si va al catalogo. */
+  let casaLiServe = true;
+  const casa = unaCasa();
+  casa.indirizzo = "http://dentro:8123";
+  casa.segno = "IL-SEGNO";
   const commissioni = new Commissioni({
-    casa: unaCasa(),
+    casa,
     registro: { info() {}, attenzione() {}, errore() {} },
     scarica: async (quale) => {
       chieste.push(quale);
+      if (quale.url.startsWith("http://dentro:8123/") && !casaLiServe)
+        return { stato: 404, tipo: "text/plain", corpo: Buffer.from("no") };
       return { stato: 200, tipo: "image/png", corpo: Buffer.from([1, 2]) };
     },
   });
-  commissioni.integrazioni = new Integrazioni({ casa: unaCasa(), licenze: premium });
+  commissioni.integrazioni = new Integrazioni({ casa, licenze: premium });
   const chi = { chiChiede: "u1", puoAmministrare: true, dalTelefono: true };
-  const logo = { id: 1, type: "ponte/integrazioni/logo", dominio: "shelly" };
+  const logo = { id: 1, type: "ponte/integrazioni/logo", dominio: "gdanav" };
   assert.equal(commissioni.riconosce(logo), true);
 
   /* Dalla plancia in Home Assistant, da chi non amministra, senza Premium: no,
@@ -474,26 +484,40 @@ test("il logo di un'integrazione: lo prende il ponte, solo per chi puo', solo un
   ])
     assert.equal((await commissioni.rispondi(logo, fuori)).error.code, "unauthorized");
   commissioni.integrazioni = new Integrazioni({
-    casa: unaCasa(),
+    casa,
     licenze: { attive: true, premium: false },
   });
   assert.equal((await commissioni.rispondi(logo, chi)).error.code, "premium-richiesto");
   assert.equal(chieste.length, 0);
 
-  commissioni.integrazioni = new Integrazioni({ casa: unaCasa(), licenze: premium });
+  commissioni.integrazioni = new Integrazioni({ casa, licenze: premium });
   const preso = await commissioni.rispondi(logo, chi);
   assert.equal(preso.success, true);
   assert.equal(preso.result.tipo, "image/png");
   assert.equal(chieste.length, 1);
-  assert.equal(chieste[0].url, "https://brands.home-assistant.io/shelly/icon.png");
-  /* Fuori di casa il segno di casa non va. */
-  assert.equal(chieste[0].intestazioni?.authorization, undefined);
+  assert.equal(chieste[0].url, "http://dentro:8123/api/brands/integration/gdanav/icon.png");
+  assert.equal(chieste[0].intestazioni.authorization, "Bearer IL-SEGNO");
+
+  /* Una casa vecchia: il catalogo dei marchi, senza il segno di casa. */
+  casaLiServe = false;
+  chieste.length = 0;
+  const dalCatalogo = await commissioni.rispondi({ ...logo, dominio: "shelly" }, chi);
+  assert.equal(dalCatalogo.result.stato, 200);
+  assert.deepEqual(
+    chieste.map((c) => c.url),
+    [
+      "http://dentro:8123/api/brands/integration/shelly/icon.png",
+      "https://brands.home-assistant.io/shelly/icon.png",
+    ],
+  );
+  assert.equal(chieste[1].intestazioni?.authorization, undefined);
 
   /* Un nome con barre o punti porterebbe altrove: no. */
+  chieste.length = 0;
   for (const dominio of ["../x", "a.b", "", 7])
     assert.equal(
       (await commissioni.rispondi({ ...logo, dominio }, chi)).error.code,
       "invalid_format",
     );
-  assert.equal(chieste.length, 1);
+  assert.equal(chieste.length, 0);
 });

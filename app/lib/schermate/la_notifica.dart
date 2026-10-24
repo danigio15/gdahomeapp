@@ -229,111 +229,14 @@ class _StatoDellaNotifica extends State<SchermataDellaNotifica> {
     final etichetta = widget.etichettaDelPosto;
     final vai = widget.vaiAlPosto;
     final (chiaro, scuro) = coloriDellaNotifica(_notifica);
-    final larga = MediaQuery.sizeOf(context).width;
-    final sopra = MediaQuery.paddingOf(context).top;
     return Scaffold(
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          /* La testata: una fascia nel colore della notifica, bassa. A
-           * sinistra la freccia; sotto, il disegno in un riquadro di vetro,
-           * di che cosa parla, il titolo e quando. La foto e la scheda
-           * stanno sotto, nelle loro carte. */
-          Container(
-            key: const Key('notifica-testa'),
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(26),
-              ),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [chiaro, scuro],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: scuro.withValues(alpha: 0.28),
-                  blurRadius: 18,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            padding: EdgeInsets.only(top: sopra + 4, bottom: 18),
-            child: Center(
-              child: SizedBox(
-                width: larga < 620 ? larga : 620,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.only(left: 6),
-                      child: BackButton(color: Colors.white),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 2, 20, 0),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 52,
-                            height: 52,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              color: Colors.white.withValues(alpha: 0.18),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.3),
-                              ),
-                            ),
-                            child: Oggetto(
-                              comeSiChiama(_notifica.tipo).disegno,
-                              lato: 32,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  cheCosaE(_notifica).toUpperCase(),
-                                  style: testi.labelSmall?.copyWith(
-                                    color: Colors.white.withValues(alpha: 0.8),
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 1.1,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  titoloSenzaEmoji(_notifica.titolo),
-                                  key: const Key('notifica-titolo'),
-                                  style: testi.titleLarge?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w800,
-                                    height: 1.15,
-                                  ),
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  [
-                                    quandoDetto(_notifica.quando, adesso),
-                                    if (casa.isNotEmpty) casa,
-                                  ].join(' · '),
-                                  key: const Key('notifica-quando'),
-                                  style: testi.bodySmall?.copyWith(
-                                    color: Colors.white.withValues(alpha: 0.85),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          TestataDellaNotifica(
+            notifica: _notifica,
+            nomeDellaCasa: casa,
+            adesso: adesso,
           ),
           Center(
             child: ConstrainedBox(
@@ -597,6 +500,132 @@ class _Bollino extends StatelessWidget {
           color: Colors.white,
           fontSize: 12.5,
           fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+/// La testata di una notifica: una fascia nel colore della notifica, la
+/// freccia per tornare, il disegno in un riquadro di vetro, di che cosa
+/// parla, il titolo e quando.
+///
+/// La usano la pagina della notifica e quella della telecamera: «l'intestazione
+/// deve essere come le altre notifiche», e allora e' la stessa, non una copia.
+class TestataDellaNotifica extends StatelessWidget {
+  const TestataDellaNotifica({
+    super.key,
+    required this.notifica,
+    this.nomeDellaCasa = '',
+    this.adesso,
+  });
+
+  final NotificaArrivata notifica;
+  final String nomeDellaCasa;
+  final DateTime? adesso;
+
+  @override
+  Widget build(BuildContext context) {
+    final testi = Theme.of(context).textTheme;
+    final (chiaro, scuro) = coloriDellaNotifica(notifica);
+    final larga = MediaQuery.sizeOf(context).width;
+    final sopra = MediaQuery.paddingOf(context).top;
+    final casa = nomeDellaCasa;
+    final quando = adesso ?? DateTime.now();
+    return /* La testata: una fascia nel colore della notifica, bassa. A
+     * sinistra la freccia; sotto, il disegno in un riquadro di vetro,
+     * di che cosa parla, il titolo e quando. La foto e la scheda
+     * stanno sotto, nelle loro carte. */ Container(
+      key: const Key('notifica-testa'),
+      decoration: BoxDecoration(
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(26)),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [chiaro, scuro],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: scuro.withValues(alpha: 0.28),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      padding: EdgeInsets.only(top: sopra + 4, bottom: 18),
+      child: Center(
+        child: SizedBox(
+          width: larga < 620 ? larga : 620,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(left: 6),
+                child: BackButton(color: Colors.white),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 2, 20, 0),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        color: Colors.white.withValues(alpha: 0.18),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Oggetto(
+                        comeSiChiama(notifica.tipo).disegno,
+                        lato: 32,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            cheCosaE(notifica).toUpperCase(),
+                            style: testi.labelSmall?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.8),
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            titoloSenzaEmoji(notifica.titolo),
+                            key: const Key('notifica-titolo'),
+                            style: testi.titleLarge?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              height: 1.15,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            [
+                              quandoDetto(notifica.quando, quando),
+                              if (casa.isNotEmpty) casa,
+                            ].join(' · '),
+                            key: const Key('notifica-quando'),
+                            style: testi.bodySmall?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.85),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

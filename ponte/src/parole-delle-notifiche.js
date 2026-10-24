@@ -259,6 +259,8 @@ export function paroleDelRiepilogo(dati, lingua = "it", { stile = "semplice" } =
   const coda = (dati.inCoda || []).slice(0, 6);
   const conSole = Boolean(dati.conSole && g?.sole);
   const conCasa = Boolean(g && (g.casa || g.presi));
+  /* Senza un prezzo il costo non si scrive: «costo 0» era falso. */
+  const conPrezzo = g?.euroRete !== null && g?.euroRete !== undefined;
   if (!conSole && !conCasa) {
     if (!sistemare && !coda.length) return null;
     return {
@@ -288,14 +290,31 @@ export function paroleDelRiepilogo(dati, lingua = "it", { stile = "semplice" } =
       : `${emoji} La tua giornata · ${decimale(g.sole, 1, lingua)} kWh dal sole`;
     if (g.quotaInCasa !== null)
       righe.push(
-        en
-          ? `${percento(g.quotaInCasa)} used at home · ${euro(g.risparmio, lingua)} saved`
-          : `Usati in casa il ${percento(g.quotaInCasa)} · risparmiati ${euro(g.risparmio, lingua)}`,
+        [
+          en
+            ? `${percento(g.quotaInCasa)} used at home`
+            : `Usati in casa il ${percento(g.quotaInCasa)}`,
+          conPrezzo
+            ? en
+              ? `${euro(g.risparmio, lingua)} saved`
+              : `risparmiati ${euro(g.risparmio, lingua)}`
+            : "",
+        ]
+          .filter(Boolean)
+          .join(" · "),
       );
     righe.push(
-      en
-        ? `Grid ${decimale(g.presi, 1, lingua)} kWh · ${euro(g.euroRete, lingua)} · exported ${decimale(g.ceduti, 1, lingua)} kWh`
-        : `Rete ${decimale(g.presi, 1, lingua)} kWh · ${euro(g.euroRete, lingua)} · ceduti ${decimale(g.ceduti, 1, lingua)} kWh`,
+      [
+        en
+          ? `Grid ${decimale(g.presi, 1, lingua)} kWh`
+          : `Rete ${decimale(g.presi, 1, lingua)} kWh`,
+        conPrezzo ? euro(g.euroRete, lingua) : "",
+        en
+          ? `exported ${decimale(g.ceduti, 1, lingua)} kWh`
+          : `ceduti ${decimale(g.ceduti, 1, lingua)} kWh`,
+      ]
+        .filter(Boolean)
+        .join(" · "),
     );
     const picco = g.picco
       ? en
@@ -334,12 +353,15 @@ export function paroleDelRiepilogo(dati, lingua = "it", { stile = "semplice" } =
         ([i, v]) =>
           `${decimale(v, 1, lingua)} kWh ${en ? "in" : "in"} ${dati.fasce?.nomi?.[i] || `F${Number(i) + 1}`}`,
       );
-    righe.push(
-      [
-        en ? `Cost ${euro(g.euroRete, lingua)}` : `Costo ${euro(g.euroRete, lingua)}`,
-        ...perFascia,
-      ].join(" · "),
-    );
+    const costo = [
+      conPrezzo
+        ? en
+          ? `Cost ${euro(g.euroRete, lingua)}`
+          : `Costo ${euro(g.euroRete, lingua)}`
+        : "",
+      ...perFascia,
+    ].filter(Boolean);
+    if (costo.length) righe.push(costo.join(" · "));
     const quanto = confronto(kwh, dati.ieri);
     if (quanto) righe.push(quanto);
     if (dati.piuAcceso && !piu.length)
@@ -383,15 +405,16 @@ export function paroleDelRiepilogo(dati, lingua = "it", { stile = "semplice" } =
           ? `⚡ Used the most: ${ilPiu.nome}, ${decimale(ilPiu.kwh, 1, lingua)} kWh`
           : `⚡ Ha consumato di più: ${ilPiu.nome}, ${decimale(ilPiu.kwh, 1, lingua)} kWh`,
       );
-    corta.push(
-      conSole
-        ? en
-          ? `💶 Grid ${euro(g.euroRete, lingua)} · saved ${euro(g.risparmio, lingua)}`
-          : `💶 Rete ${euro(g.euroRete, lingua)} · risparmiati ${euro(g.risparmio, lingua)}`
-        : en
-          ? `💶 Grid ${euro(g.euroRete, lingua)}`
-          : `💶 Rete ${euro(g.euroRete, lingua)}`,
-    );
+    if (conPrezzo)
+      corta.push(
+        conSole
+          ? en
+            ? `💶 Grid ${euro(g.euroRete, lingua)} · saved ${euro(g.risparmio, lingua)}`
+            : `💶 Rete ${euro(g.euroRete, lingua)} · risparmiati ${euro(g.risparmio, lingua)}`
+          : en
+            ? `💶 Grid ${euro(g.euroRete, lingua)}`
+            : `💶 Rete ${euro(g.euroRete, lingua)}`,
+      );
     if (sistemare) corta.push(`⚠️ ${sistemare}`);
     return {
       titolo,

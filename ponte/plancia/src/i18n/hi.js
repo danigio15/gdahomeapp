@@ -7237,4 +7237,12 @@ export default Object.freeze({
   "Add another": "एक और जोड़ें",
   "Reload ${x.nome}": "${x.nome} फिर से लोड करें",
   "Reload all": "सभी फिर से लोड करें",
+  unreachable: "जवाब नहीं दे रहा",
+  "not loaded": "लोड नहीं हुआ",
+  "Off or offline: Home Assistant keeps retrying":
+    "बंद या ऑफ़लाइन: Home Assistant खुद फिर कोशिश करता है",
+  "Didn't start: try reloading it": "शुरू नहीं हुआ: फिर से लोड करके देखें",
+  "1 unreachable": "1 जवाब नहीं दे रहा",
+  "${ferme.length} unreachable": "${ferme.length} जवाब नहीं दे रहे",
+  "${offline.length} unreachable": "${offline.length} जवाब नहीं दे रहे",
 });

@@ -10,6 +10,27 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.2
+
+- **Solo per chi amministra:** Dispositivi (con le Integrazioni), Aiutanti e
+  Automazioni (col Pianificatore) nel menu dell'app li vede solo chi
+  amministra Home Assistant. Agli altri le voci non compaiono.
+- **Integrazioni, chi non risponde:** una TV spenta o una presa fuori rete
+  si legge «non risponde» (non più «in avvio») e resta nella scheda della
+  sua integrazione, con un'allerta sul logo. In «Da guardare» restano gli
+  errori veri e le riparazioni.
+- **I loghi delle integrazioni personali** (GdAAuto, GdANav…) li dà Home
+  Assistant stessa, dalla 2026.3; per le altre si va al catalogo dei marchi.
+  Un servizio senza dispositivi (Forecast.Solar…) mostra le sue entità.
+- **Frigorifero:** la temperatura ambiente che alcuni frigoriferi misurano
+  non fa più partire l'avviso «frigo caldo».
+- **Riepilogo dei consumi:** il costo usa il prezzo del kWh scelto nella
+  sezione Energia (anche un'entità che lo legge online, anche in €/MWh o in
+  centesimi). Senza un prezzo il costo non si scrive, invece di «0,00 €».
+- **Flusso Energia:** niente più linee che non arrivano a nessun cerchio.
+- **Telecamera aperta dalla notifica:** la stessa intestazione delle altre
+  notifiche, con la freccia bianca per tornare indietro.
+
 ## 1.18.1
 
 - **Integrazioni, più chiare:** ogni integrazione ha la sua scheda col

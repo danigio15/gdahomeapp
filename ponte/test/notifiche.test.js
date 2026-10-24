@@ -357,6 +357,35 @@ test("il freezer troppo caldo per un quarto d'ora", () => {
   assert.equal(dette[0].tipo, "frigo");
 });
 
+test("il frigo che misura anche la stanza: la temperatura ambiente non avvisa", () => {
+  /* «Il mio frigorifero ha anche la temperatura ambiente, che ovviamente e'
+   * alta, e mi manda un avviso.» Quella dentro avvisa ancora. */
+  const t = { device_class: "temperature", unit_of_measurement: "°C" };
+  const { sentinella, dette, orologio } = unaSentinella([
+    stato("sensor.frigorifero_ambient_temperature", "22", t),
+    stato("sensor.frigo_cucina_temperatura", "4", {
+      ...t,
+      friendly_name: "Frigo cucina temperatura",
+    }),
+    stato("sensor.frigo_t2", "24", { ...t, friendly_name: "Frigo temperatura ambiente" }),
+  ]);
+  sentinella.battito();
+  orologio.ora += 16 * MINUTO;
+  sentinella.battito();
+  assert.equal(dette.length, 0, "la stanza non e' il frigo");
+  sentinella.cambia(
+    "sensor.frigo_cucina_temperatura",
+    stato("sensor.frigo_cucina_temperatura", "11", t),
+  );
+  sentinella.battito();
+  orologio.ora += 16 * MINUTO;
+  sentinella.battito();
+  assert.deepEqual(
+    dette.map((d) => d.entita),
+    ["sensor.frigo_cucina_temperatura"],
+  );
+});
+
 test("la lavatrice che ha finito: la potenza scende e resta giu'", () => {
   const { sentinella, dette, orologio } = unaSentinella([
     stato("sensor.lavatrice_potenza", "0", { unit_of_measurement: "W" }),

@@ -925,15 +925,32 @@ export class Commissioni {
         amministra: puoAmministrare === true,
         dalTelefono: dalTelefono === true,
       };
-      /* Il logo di un'integrazione: lo scarica il ponte dai marchi di Home
-       * Assistant, come quello degli aggiornamenti, perche' il telefono non
-       * vada a dire in giro cosa c'e' in casa. Un nome di dominio e basta. */
+      /* Il logo di un'integrazione: lo scarica il ponte, perche' il telefono
+       * non vada a dire in giro cosa c'e' in casa. Un nome di dominio e basta.
+       *
+       * Prima **a Home Assistant**: da HA 2026.3 `/api/brands/integration/
+       * <dominio>/icon.png` serve il logo che un'integrazione personale porta
+       * nella sua cartella `brand/` (GdAAuto, GdANav…), e per le altre lo
+       * prende lui dal catalogo. Una casa piu' vecchia risponde di no, e
+       * allora si va al catalogo dei marchi come per gli aggiornamenti. */
       if (tipo === "ponte/integrazioni/logo") {
         const vietato = this.integrazioni.vietato(detto, quale);
         if (vietato) return vietato;
         const dominio = typeof detto.dominio === "string" ? detto.dominio.trim() : "";
         const dove = ilMarchioDi(dominio);
         if (!dove) return no(id, "invalid_format", "quale integrazione?");
+        const daCasa = await this._http(
+          {
+            id,
+            metodo: "GET",
+            percorso: `/api/brands/integration/${dominio.toLowerCase()}/icon.png`,
+            senzaGzip: true,
+          },
+          chiChiede,
+          amministra,
+          puoAmministrare,
+        );
+        if (daCasa?.success && daCasa.result?.stato === 200) return daCasa;
         return this._logoDiFuori(id, `l'integrazione ${dominio}`, dove);
       }
       return chi.rispondi(detto, quale);
@@ -1205,6 +1222,14 @@ export class Commissioni {
       ...(puo && this.gestore && this.chiaveDellaGestione
         ? { chiaveGestione: this.chiaveDellaGestione }
         : {}),
+      /* Se chi guarda amministra Home Assistant: l'app mostra Dispositivi
+       * (con le Integrazioni), Aiutanti e Automazioni (col Pianificatore)
+       * **solo a lui**. «Devono essere visibili e configurabili solo da
+       * admin.» E' la stessa regola che il ponte usa per rispondere a quelle
+       * pagine (`puoAmministrare`): il menu non promette una porta che poi
+       * non si apre, e la porta resta chiusa anche per chi la cercasse a
+       * mano. */
+      amministra: puoAmministrare === true,
     });
   }
 

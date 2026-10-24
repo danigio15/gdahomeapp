@@ -42,7 +42,7 @@ void main() {
             children: [
               BarraDelleSezioni(
                 key: chiave,
-                sezioni: vociDellaBarra(),
+                sezioni: vociDellaBarra(chiAmministra: true),
                 aperta: Sezione.plancia,
                 vai: (_) {},
                 vaiAlleCase: () {},
@@ -92,7 +92,7 @@ void main() {
           home: Scaffold(
             body: BarraDelleSezioni(
               key: chiave,
-              sezioni: vociDellaBarra(),
+              sezioni: vociDellaBarra(chiAmministra: true),
               aperta: Sezione.plancia,
               vai: (_) {},
               vaiAlleCase: () {},

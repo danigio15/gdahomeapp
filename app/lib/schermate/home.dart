@@ -113,6 +113,9 @@ class _HomeState extends State<Home> {
    * risponde, cosi' una casa che non ce l'ha non vede mai comparire e sparire
    * una voce di menu. */
   bool _zigbee = false;
+
+  /// Se chi guarda amministra Home Assistant, come dice il ponte.
+  bool _amministra = false;
   /* E i due codici, per chi amministra questa casa: senza, la pagina dentro
    * il riquadro li fa ribattere anche se stanno gia' nella scheda
    * dell'add-on. */
@@ -331,7 +334,8 @@ class _HomeState extends State<Home> {
         quadro.cruscotto != _cruscotto ||
         quadro.gestione != _gestione ||
         quadro.chiave != _chiave ||
-        quadro.chiaveGestione != _chiaveGestione) {
+        quadro.chiaveGestione != _chiaveGestione ||
+        quadro.amministra != _amministra) {
       setState(() {
         _console = risponde;
         _zigbee = rete.rete.siApre;
@@ -339,6 +343,7 @@ class _HomeState extends State<Home> {
         _gestione = quadro.gestione;
         _chiave = quadro.chiave;
         _chiaveGestione = quadro.chiaveGestione;
+        _amministra = quadro.amministra;
       });
     }
   }
@@ -943,6 +948,7 @@ class _HomeState extends State<Home> {
                 conIlCruscotto: _cruscotto.isNotEmpty,
                 conLaGestione: _gestione.isNotEmpty,
                 conZigbee: _zigbee,
+                chiAmministra: _amministra,
                 /* Navigatore, Zigbee e Aiutanti nella webapp non ci sono:
                  * vogliono il telefono, e nel browser sarebbero porte che si
                  * aprono su meta' di quello che promettono. */

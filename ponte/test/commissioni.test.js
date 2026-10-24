@@ -2073,6 +2073,20 @@ test("il telefono chiede sul filo se questa casa ha il cruscotto, la gestione, o
   assert.notEqual(due.result.dove, due.result.doveGestione);
 });
 
+test("il quadro dice se chi guarda amministra: le pagine da amministratore nel menu", async () => {
+  /* «Tutte queste cose devono essere visibili e configurabili solo da
+   * admin»: Dispositivi, Integrazioni, Aiutanti, Automazioni. L'app le mette
+   * nel menu solo con `amministra: true`, che e' la stessa regola con cui il
+   * ponte risponde a quelle pagine. */
+  const c = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
+  const si = await c.rispondi({ id: 1, type: "ponte/quadro/stato" }, { puoAmministrare: true });
+  assert.equal(si.result.amministra, true);
+  for (const chi of [{}, { puoAmministrare: false }, { amministra: true }]) {
+    const no = await c.rispondi({ id: 2, type: "ponte/quadro/stato" }, chi);
+    assert.equal(no.result.amministra, false, JSON.stringify(chi));
+  }
+});
+
 test("il codice del cruscotto lo riceve chi amministra, e nessun altro", async () => {
   /* Il codice sta gia' nella scheda dell'add-on — e' quello che fa esistere la
    * voce — e dentro Home Assistant la pagina non lo richiede: la tessera glielo
