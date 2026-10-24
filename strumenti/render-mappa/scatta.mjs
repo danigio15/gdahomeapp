@@ -40,18 +40,22 @@ const browser = await chromium.launch({
 });
 const pagina = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 pagina.on("console", (m) => console.log(`[pagina] ${m.text()}`));
-for (const scena of ["citta", "incrocio", "tangenziale"]) {
-  for (const stile of ["chiaro", "scuro"]) {
-    await pagina.goto(`http://127.0.0.1:${porta}/pagina.html?scena=${scena}&stile=${stile}`);
-    try {
-      await pagina.waitForSelector("body[data-pronta=si]", { timeout: 90000 });
-    } catch {
-      console.log(`${scena}/${stile}: la mappa non ha finito in tempo, foto lo stesso`);
+for (const scena of ["citta", "incrocio", "forlanini", "est", "ovest"]) {
+  for (const modo of ["oggi", "immersiva"]) {
+    for (const stile of ["chiaro", "scuro"]) {
+      await pagina.goto(
+        `http://127.0.0.1:${porta}/pagina.html?scena=${scena}&stile=${stile}&modo=${modo}`,
+      );
+      try {
+        await pagina.waitForSelector("body[data-pronta=si]", { timeout: 90000 });
+      } catch {
+        console.log(`${scena}/${modo}/${stile}: la mappa non ha finito in tempo, foto lo stesso`);
+      }
+      await pagina
+        .locator("#schermo")
+        .screenshot({ path: join(qui, "foto", `${scena}-${modo}-${stile}.png`) });
+      console.log(`${scena}/${modo}/${stile}: fatta`);
     }
-    await pagina
-      .locator("#schermo")
-      .screenshot({ path: join(qui, "foto", `${scena}-${stile}.png`) });
-    console.log(`${scena}/${stile}: fatta`);
   }
 }
 await browser.close();

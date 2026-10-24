@@ -117,7 +117,16 @@
     citta: { da: [9.216, 45.4868], a: [9.2085, 45.4812], zoom: 17.2, inclinazione: 62 },
     incrocio: { da: [9.188, 45.47], a: [9.1955, 45.4655], zoom: 17.4, inclinazione: 62 },
     tangenziale: { da: [9.1004, 45.52], a: [9.071, 45.5262], zoom: 15.6, inclinazione: 60 },
+    /* Dove le corsie ci sono: viale Forlanini verso Linate, la Tangenziale
+     * Est verso l'A4, la Tangenziale Ovest verso l'A7. */
+    forlanini: { da: [9.2245, 45.461], a: [9.277, 45.45], zoom: 16.6, inclinazione: 62 },
+    est: { da: [9.258, 45.483], a: [9.287, 45.526], zoom: 16.2, inclinazione: 62 },
+    ovest: { da: [9.129, 45.442], a: [9.164, 45.401], zoom: 16.2, inclinazione: 62 },
   };
+  /* «oggi»: la mappa di GdANav com'e'. «immersiva»: la proposta — le corsie
+   * disegnate sulla strada, la giusta colorata, e la vista piu' bassa e piu'
+   * vicina prima della manovra. */
+  const immersiva = q.get("modo") === "immersiva";
   const scena = SCENE[q.get("scena")] || SCENE.citta;
   const scuro = q.get("stile") === "scuro";
 
@@ -163,9 +172,14 @@
       rotta = await percorso();
     } catch (_e) {}
     const punti = rotta ? rotta.geometry.coordinates : [scena.da, scena.a];
-    /* La prima manovra vera dopo la partenza. */
+    /* La manovra: la prima che ha le corsie (cosi' si vedono), se no la
+     * prima vera dopo la partenza. */
     const passi = rotta ? rotta.legs[0].steps : [];
-    const manovra = passi.find((p, i) => i > 0 && p.maneuver.type !== "arrive") || passi[0];
+    const conCorsie = (p) => (p.intersections?.[0]?.lanes || []).length >= 2;
+    const manovra =
+      passi.find((p, i) => i > 0 && p.maneuver.type !== "arrive" && conCorsie(p)) ||
+      passi.find((p, i) => i > 0 && p.maneuver.type !== "arrive") ||
+      passi[0];
     const dove = manovra ? manovra.maneuver.location : punti[Math.floor(punti.length / 2)];
     /* La telecamera: il punto del percorso 110 m prima della manovra. */
     let indice = 0;
@@ -182,7 +196,7 @@
     for (let i = indice; i > 0; i -= 1) {
       fatti += metri(punti[i], punti[i - 1]);
       qui = punti[i - 1];
-      if (fatti >= 110) break;
+      if (fatti >= (immersiva ? 140 : 110)) break;
     }
     /* Il verso: dove va la strada nei 40 m dopo la telecamera, come
      * l'auto che la percorre. */
@@ -198,8 +212,8 @@
       container: "mappa",
       style: stile,
       center: qui,
-      zoom: scena.zoom,
-      pitch: scena.inclinazione,
+      zoom: immersiva ? scena.zoom + 0.9 : scena.zoom,
+      pitch: immersiva ? 74 : scena.inclinazione,
       bearing: verso,
       maxPitch: 85,
       attributionControl: false,
@@ -207,7 +221,7 @@
       preserveDrawingBuffer: true,
       fadeDuration: 0,
       /* L'auto in basso, la strada davanti: come nel navigatore. */
-      padding: { top: 380, bottom: 0, left: 0, right: 0 },
+      padding: { top: immersiva ? 440 : 380, bottom: 0, left: 0, right: 0 },
     });
     mappa.on("styleimagemissing", (e) => {
       const vuota = { width: 1, height: 1, data: new Uint8Array(4) };
@@ -229,6 +243,8 @@
         .setLngLat(qui)
         .setRotation(verso)
         .addTo(mappa);
+      const corsieDellaManovra = (manovra?.intersections?.[0]?.lanes || []).filter(Boolean);
+      if (immersiva && corsieDellaManovra.length >= 2) disegnaLeCorsie(corsieDellaManovra);
       const sorgente = mappa.getSource("gdanav-percorso");
       sorgente?.setData({
         type: "FeatureCollection",
@@ -268,6 +284,63 @@
         barra.innerHTML = `<span><b>${min} min</b></span><span><b>${(rotta.distance / 1000).toFixed(1).replace(".", ",")} km</b></span>`;
       }
     });
+    /* Le corsie sulla strada, dalla telecamera alla manovra: tante strisce
+     * quante sono le corsie (dal percorso vero, OSRM), larghe 3,3 m, quelle
+     * giuste in blu e le altre in grigio, con le righe bianche fra l'una e
+     * l'altra. Il percorso corre nel mezzo, come la strada. */
+    function disegnaLeCorsie(corsie) {
+      const da = punti.indexOf(qui);
+      const tratto = punti.slice(Math.max(0, da - 2), indice + 1);
+      if (tratto.length < 2) return;
+      const zoom = mappa.getZoom();
+      const lat = (qui[1] * Math.PI) / 180;
+      const metriPerPixel = (40075016.686 * Math.cos(lat)) / (512 * 2 ** zoom);
+      const larga = 3.3 / metriPerPixel;
+      const n = corsie.length;
+      mappa.addSource("corsie", {
+        type: "geojson",
+        data: {
+          type: "Feature",
+          properties: {},
+          geometry: { type: "LineString", coordinates: tratto },
+        },
+      });
+      const prima = mappa.getLayer("percorso-alone") ? "percorso-alone" : undefined;
+      corsie.forEach((c, i) => {
+        const spostata = (i - (n - 1) / 2) * larga;
+        mappa.addLayer(
+          {
+            id: `corsia-${i}`,
+            type: "line",
+            source: "corsie",
+            paint: {
+              "line-color": c.valid ? "#2563eb" : scuro ? "#64748b" : "#94a3b8",
+              "line-opacity": c.valid ? 0.55 : 0.28,
+              "line-width": larga * 0.94,
+              "line-offset": spostata,
+            },
+          },
+          prima,
+        );
+      });
+      for (let i = 1; i < n; i += 1) {
+        mappa.addLayer(
+          {
+            id: `riga-${i}`,
+            type: "line",
+            source: "corsie",
+            paint: {
+              "line-color": "#ffffff",
+              "line-opacity": 0.85,
+              "line-width": Math.max(1.5, larga * 0.06),
+              "line-dasharray": [3, 3],
+              "line-offset": (i - n / 2) * larga,
+            },
+          },
+          prima,
+        );
+      }
+    }
     mappa.once("idle", () => {
       setTimeout(() => {
         document.body.dataset.pronta = "si";
