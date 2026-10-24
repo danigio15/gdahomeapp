@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-B2ZJRJHD.js";
+} from "../../chunk-IOQT57OC.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -80482,6 +80482,7 @@ function binario(node, color, active) {
     madre.insertBefore(sotto, node);
     node.__dmBinario = sotto;
   }
+  sotto.__dmLinea = node;
   if (node.getAttribute("pathLength") !== "100") node.setAttribute("pathLength", "100");
   for (const nome of FORME2) {
     const valore3 = node.getAttribute(nome);
@@ -80637,8 +80638,21 @@ function ensureArc(svg2, node, variant) {
 function pruneStale(stage, keep) {
   stage.querySelectorAll("[data-dm-flow-node],[data-dm-flow-arc]").forEach((node) => {
     const id = node.dataset.dmFlowNode || node.dataset.dmFlowArc;
-    if (!keep.has(id)) node.remove();
+    if (keep.has(id)) return;
+    node.__dmBinario?.remove?.();
+    node.remove();
   });
+  togliIBinariSenzaLinea(stage);
+}
+function togliIBinariSenzaLinea(radice3) {
+  let tolti = 0;
+  for (const sotto of radice3?.querySelectorAll?.(".dm-flow-binario") || []) {
+    const linea = sotto.__dmLinea;
+    if (linea && linea.__dmBinario === sotto && linea.parentNode === sotto.parentNode) continue;
+    sotto.remove();
+    tolti += 1;
+  }
+  return tolti;
 }
 var ARIA_FRA_BOLLE = 16;
 var QUANTO_STRETTE_AL_MASSIMO = 0.55;
