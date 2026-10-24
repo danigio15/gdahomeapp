@@ -7,6 +7,9 @@
 name: Le foto della mappa
 on:
   push:
+    # Solo sui branch di lavoro: su main non deve mai scrivere.
+    branches:
+      - "claude/**"
     paths:
       - "strumenti/render-mappa/**"
       - "!strumenti/render-mappa/foto/**"
