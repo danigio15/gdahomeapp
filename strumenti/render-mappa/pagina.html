@@ -246,6 +246,35 @@
         center: qui,
         padding: { top: immersiva ? 440 : 380, bottom: 0, left: 0, right: 0 },
       });
+      /* Immersiva: le strade larghe quanto sono davvero, in metri e non in
+       * pixel, cosi' le corsie (3,5 m l'una) ci stanno dentro. Una carreggiata
+       * di autostrada o tangenziale ha tre o quattro corsie: 14 m. */
+      if (immersiva) {
+        const LARGHE = {
+          autostrade: 14,
+          "autostrade-bordo": 15.5,
+          principali: 10,
+          "principali-bordo": 11.5,
+          strade: 7,
+          "strade-bordo": 8.2,
+          servizio: 4,
+          "servizio-bordo": 5,
+        };
+        const coseno = Math.cos((qui[1] * Math.PI) / 180);
+        const pixel = (m, z) => (m * 512 * 2 ** z) / (40075016.686 * coseno);
+        for (const [id, m] of Object.entries(LARGHE)) {
+          if (!mappa.getLayer(id)) continue;
+          mappa.setPaintProperty(id, "line-width", [
+            "interpolate",
+            ["exponential", 2],
+            ["zoom"],
+            14,
+            pixel(m, 14),
+            22,
+            pixel(m, 22),
+          ]);
+        }
+      }
       /* Immersiva: gli edifici davanti al percorso, un po' trasparenti, cosi'
        * il percorso passa fra le case e non sopra i tetti. */
       if (immersiva && mappa.getLayer("edifici-3d")) {
@@ -357,8 +386,10 @@
       const zoom = mappa.getZoom();
       const lat = (qui[1] * Math.PI) / 180;
       const metriPerPixel = (40075016.686 * Math.cos(lat)) / (512 * 2 ** zoom);
-      const larga = 3.5 / metriPerPixel;
       const n = corsie.length;
+      /* Le corsie riempiono la carreggiata, larga quanto la strada disegnata
+       * (14 m in autostrada): ne' piu' larghe, ne' spostate di lato. */
+      const larga = 14 / n / metriPerPixel;
       mappa.addSource("corsie", {
         type: "geojson",
         data: {
@@ -383,7 +414,7 @@
                 : scuro
                   ? "#475569"
                   : "#cbd5e1",
-              "line-opacity": c.valid ? 0.95 : 0.6,
+              "line-opacity": c.valid ? 0.95 : 0.35,
               "line-width": larga * 0.94,
               "line-offset": spostata,
             },
@@ -391,7 +422,10 @@
           prima,
         );
       });
-      for (let i = 1; i < n; i += 1) {
+      /* Le righe: continue ai bordi della carreggiata, tratteggiate fra una
+       * corsia e l'altra. */
+      for (let i = 0; i <= n; i += 1) {
+        const bordo = i === 0 || i === n;
         mappa.addLayer(
           {
             id: `riga-${i}`,
@@ -401,7 +435,7 @@
               "line-color": "#ffffff",
               "line-opacity": 0.85,
               "line-width": Math.max(1.5, larga * 0.06),
-              "line-dasharray": [3, 3],
+              ...(bordo ? {} : { "line-dasharray": [3, 3] }),
               "line-offset": (i - n / 2) * larga,
             },
           },
