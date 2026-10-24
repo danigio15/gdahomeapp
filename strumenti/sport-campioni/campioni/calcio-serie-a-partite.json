@@ -2669,8 +2669,8 @@
       "timeValid": true,
       "recent": true,
       "status": {
-       "clock": 4800,
-       "displayClock": "80'",
+       "clock": 4860,
+       "displayClock": "81'",
        "period": 2,
        "type": {
         "id": "26",
@@ -2678,8 +2678,8 @@
         "state": "in",
         "completed": false,
         "description": "Second Half",
-        "detail": "80'",
-        "shortDetail": "80'"
+        "detail": "81'",
+        "shortDetail": "81'"
        }
       },
       "venue": {
@@ -2870,7 +2870,7 @@
          {
           "name": "possessionPct",
           "abbreviation": "PP",
-          "displayValue": "69.1"
+          "displayValue": "69.2"
          },
          {
           "name": "shotAssists",
@@ -3040,7 +3040,7 @@
          {
           "name": "possessionPct",
           "abbreviation": "PP",
-          "displayValue": "30.9"
+          "displayValue": "30.8"
          },
          {
           "name": "shotAssists",
@@ -3313,7 +3313,7 @@
           },
           "current": {
            "line": "o2.5",
-           "odds": "+109",
+           "odds": "+127",
            "link": {
             "rel": [
              "over",
@@ -3345,7 +3345,7 @@
           },
           "current": {
            "line": "u2.5",
-           "odds": "-136",
+           "odds": "-158",
            "link": {
             "rel": [
              "under",
@@ -3381,7 +3381,7 @@
           },
           "current": {
            "line": "-2.5",
-           "odds": "+200",
+           "odds": "+230",
            "link": {
             "rel": [
              "homeSpread",
@@ -3413,7 +3413,7 @@
           },
           "current": {
            "line": "+2.5",
-           "odds": "-310",
+           "odds": "-370",
            "link": {
             "rel": [
              "awaySpread",
@@ -3473,7 +3473,7 @@
            "odds": "+650"
           },
           "current": {
-           "odds": "+5000",
+           "odds": "+17000",
            "link": {
             "rel": [
              "away",
@@ -3501,7 +3501,7 @@
            "odds": "+330"
           },
           "current": {
-           "odds": "+2500",
+           "odds": "+4000",
            "link": {
             "rel": [
              "draw",
@@ -3531,8 +3531,8 @@
      }
     ],
     "status": {
-     "clock": 4800,
-     "displayClock": "80'",
+     "clock": 4860,
+     "displayClock": "81'",
      "period": 2,
      "type": {
       "id": "26",
@@ -3540,8 +3540,8 @@
       "state": "in",
       "completed": false,
       "description": "Second Half",
-      "detail": "80'",
-      "shortDetail": "80'"
+      "detail": "81'",
+      "shortDetail": "81'"
      }
     },
     "venue": {
