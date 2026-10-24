@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 
 import { Integrazioni, passoDelFlusso, statoDellaVoce } from "../src/integrazioni.js";
 import { Aiutanti, campiPuliti } from "../src/aiutanti.js";
+import { Commissioni } from "../src/commissioni.js";
 
 const VOCE_SHELLY = "01JAB3C4D5E6F7G8H9J0K1M2N3";
 const VOCE_NETATMO = "0f1e2d3c4b5a69788796a5b4c3d2e1f0";
@@ -447,4 +448,52 @@ test("creare, cambiare e togliere un aiutante semplice", async () => {
     CHI,
   );
   assert.equal(ignoto.error.code, "invalid_format");
+});
+
+test("il logo di un'integrazione: lo prende il ponte, solo per chi puo', solo un nome", async () => {
+  const chieste = [];
+  const commissioni = new Commissioni({
+    casa: unaCasa(),
+    registro: { info() {}, attenzione() {}, errore() {} },
+    scarica: async (quale) => {
+      chieste.push(quale);
+      return { stato: 200, tipo: "image/png", corpo: Buffer.from([1, 2]) };
+    },
+  });
+  commissioni.integrazioni = new Integrazioni({ casa: unaCasa(), licenze: premium });
+  const chi = { chiChiede: "u1", puoAmministrare: true, dalTelefono: true };
+  const logo = { id: 1, type: "ponte/integrazioni/logo", dominio: "shelly" };
+  assert.equal(commissioni.riconosce(logo), true);
+
+  /* Dalla plancia in Home Assistant, da chi non amministra, senza Premium: no,
+   * e non si scarica niente. */
+  for (const fuori of [
+    { ...chi, dalTelefono: false },
+    { ...chi, puoAmministrare: false },
+    { ...chi, chiChiede: "" },
+  ])
+    assert.equal((await commissioni.rispondi(logo, fuori)).error.code, "unauthorized");
+  commissioni.integrazioni = new Integrazioni({
+    casa: unaCasa(),
+    licenze: { attive: true, premium: false },
+  });
+  assert.equal((await commissioni.rispondi(logo, chi)).error.code, "premium-richiesto");
+  assert.equal(chieste.length, 0);
+
+  commissioni.integrazioni = new Integrazioni({ casa: unaCasa(), licenze: premium });
+  const preso = await commissioni.rispondi(logo, chi);
+  assert.equal(preso.success, true);
+  assert.equal(preso.result.tipo, "image/png");
+  assert.equal(chieste.length, 1);
+  assert.equal(chieste[0].url, "https://brands.home-assistant.io/shelly/icon.png");
+  /* Fuori di casa il segno di casa non va. */
+  assert.equal(chieste[0].intestazioni?.authorization, undefined);
+
+  /* Un nome con barre o punti porterebbe altrove: no. */
+  for (const dominio of ["../x", "a.b", "", 7])
+    assert.equal(
+      (await commissioni.rispondi({ ...logo, dominio }, chi)).error.code,
+      "invalid_format",
+    );
+  assert.equal(chieste.length, 1);
 });

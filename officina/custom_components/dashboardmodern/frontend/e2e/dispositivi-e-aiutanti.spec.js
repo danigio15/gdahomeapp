@@ -538,6 +538,22 @@ async function avvia(page, testInfo, { no = "" } = {}) {
         if (m.type === "ponte/dispositivi/elenco") return dispositivi;
         if (m.type === "ponte/integrazioni/elenco") return casa.integrazioni;
         if (m.type === "ponte/integrazioni/catalogo") return catalogo;
+        /* I loghi: nelle prove un disegno di ripiego per integrazione (i
+         * marchi veri li scarica il ponte, e qui internet non c'e'). */
+        if (m.type === "ponte/integrazioni/logo") {
+          const colori = {
+            shelly: "#4596d6",
+            zha: "#e2593b",
+            hue: "#111827",
+            fritz: "#e3001b",
+            netatmo: "#ff8a00",
+            met: "#0b6aa2",
+          };
+          const colore = colori[m.dominio];
+          if (!colore) return { stato: 404, tipo: "text/plain", corpo: "" };
+          const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="${colore}"/><path d="M20 34l8 8 16-18" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+          return { stato: 200, tipo: "image/svg+xml", corpo: btoa(svg) };
+        }
         if (m.type === "ponte/integrazioni/ricarica") return { riavvio: false };
         if (m.type === "ponte/integrazioni/disattiva") {
           const v = casa.integrazioni.voci.find((x) => x.id === m.voce);
@@ -742,7 +758,7 @@ test("Dispositivi: per stanza, il foglio con le entità comandabili, per integra
   await expect(page.locator("#page-dispositivi")).toHaveCount(0);
 });
 
-test("Integrazioni: ricarica dall'elenco, il foglio, disattiva, elimina con conferma, ripara", async ({
+test("Integrazioni: una scheda per integrazione col logo, i dispositivi sotto, ricarica, disattiva, elimina, ripara", async ({
   page,
 }, testInfo) => {
   await avvia(page, testInfo);
@@ -750,20 +766,43 @@ test("Integrazioni: ricarica dall'elenco, il foglio, disattiva, elimina con conf
   const pagina = page.locator("#page-dispositivi");
   await expect(pagina.locator('[data-dv-linguetta="integrazioni"]')).toHaveClass(/si/);
   await expect(pagina.locator(".dv-trovata")).toContainText("Trovata in rete: Shelly Plus 1PM");
-  await expect(pagina.locator(".aug-titolo")).toHaveText([
-    "Da guardare",
-    "Installate",
-    "Disattivate",
-  ]);
+  /* Le schede: una per integrazione, in ordine di nome, chiuse. */
+  const schede = pagina.locator(".aug.dv-int");
+  await expect(schede).toHaveCount(6);
+  await expect(schede.first()).toContainText("FRITZ!Box Tools");
+  await expect(pagina.locator('[data-aug="int:shelly"] .aug-titolo')).toContainText(
+    "2 dispositivi",
+  );
+  await expect(pagina.locator(".aug.dv-int.chiuso")).toHaveCount(6);
+  /* Il logo arriva dal ponte. */
+  await expect(pagina.locator('[data-aug="int:shelly"] .dv-logo.img img')).toHaveCount(1);
   await expect(pagina.locator(".ad-kpi .dm-lucip-kpi b")).toHaveText(["6", "64", "2"]);
+  /* Aperta: i dispositivi dell'integrazione, sotto. */
+  await pagina.locator('[data-dv-gruppo="int:zha"]').click();
+  await expect(pagina.locator('[data-aug="int:zha"] [data-dv-disp]')).toHaveCount(2);
+  await pagina.locator('[data-dv-gruppo="int:shelly"]').click();
+  await expect(pagina.locator('[data-aug="int:shelly"] [data-dv-disp]')).toHaveText([
+    /Presa forno/,
+    /Tapparella camera/,
+  ]);
   await foto(page, testInfo, "integrazioni-elenco", { intera: true });
-  await pagina.locator('[data-dv-ricarica="e_zha000001"]').click();
+  /* ↻ dalla scheda ricarica l'integrazione. */
+  await pagina.locator('[data-dv-ricarica-tutte="zha"]').click();
   await expect
     .poll(() => comandi(page, "ponte/integrazioni/ricarica"))
     .toEqual([expect.objectContaining({ voce: "e_zha000001" })]);
   await expect(pagina.locator(".dv-avviso")).toContainText("Ricaricata: Zigbee Home Automation");
-  await pagina.locator('[data-dv-int-voce="e_fritz0001"]').click();
+  /* «Gestisci»: le voci, e da li' il foglio di una voce. */
+  await pagina.locator('[data-dv-gruppo="int:fritz"]').click();
+  await pagina.locator('[data-dv-dominio="fritz"]').click();
   const foglio = page.locator("#dv-foglio .ad-foglio");
+  await expect(foglio.locator("h4")).toHaveText("FRITZ!Box Tools");
+  await expect(foglio.locator(".tasti button")).toHaveText([
+    "↻ Ricarica tutte",
+    "＋ Aggiungi un'altra",
+  ]);
+  await foto(page, testInfo, "integrazioni-gestisci");
+  await foglio.locator('[data-dv-int-voce="e_fritz0001"]').click();
   await expect(foglio.locator("h4")).toHaveText("FRITZ!Box 7590");
   await expect(foglio.locator(".tasti button")).toHaveText(["↻ Ricarica", "⚙️ Opzioni"]);
   await expect(foglio.locator(".op-mod button")).toHaveText(["Disattiva", "Elimina"]);
@@ -772,9 +811,11 @@ test("Integrazioni: ricarica dall'elenco, il foglio, disattiva, elimina con conf
   await expect
     .poll(() => comandi(page, "ponte/integrazioni/disattiva"))
     .toEqual([expect.objectContaining({ voce: "e_fritz0001", disattiva: true })]);
-  await expect(pagina.locator('[data-aug="i-spente"] [data-dv-int-voce]')).toHaveCount(2);
+  await expect(pagina.locator('[data-aug="int:fritz"] .aug-titolo')).toContainText("disattivata");
   /* Elimina: due tocchi, e il secondo dice cosa si perde. */
-  await pagina.locator('[data-dv-int-voce="e_hue000001"]').click();
+  await pagina.locator('[data-dv-gruppo="int:hue"]').click();
+  await pagina.locator('[data-dv-dominio="hue"]').click();
+  await foglio.locator('[data-dv-int-voce="e_hue000001"]').click();
   await foglio.locator("[data-dv-elimina]").click();
   await expect(foglio.locator("h4")).toHaveText("Eliminare «Hue Bridge»?");
   await expect(foglio).toContainText("9 dispositivi e 31 entità");
@@ -784,7 +825,7 @@ test("Integrazioni: ricarica dall'elenco, il foglio, disattiva, elimina con conf
   await expect
     .poll(() => comandi(page, "ponte/integrazioni/elimina"))
     .toEqual([expect.objectContaining({ voce: "e_hue000001", conferma: true })]);
-  await expect(pagina.locator('[data-dv-int-voce="e_hue000001"]')).toHaveCount(0);
+  await expect(pagina.locator('[data-aug="int:hue"]')).toHaveCount(0);
   /* Ripara apre la procedura che Home Assistant ha già cominciato. */
   await pagina.locator('[data-dv-ripara="f_ripara001"]').click();
   await expect(page.locator("#pg-foglio .ad-foglio")).toBeVisible();

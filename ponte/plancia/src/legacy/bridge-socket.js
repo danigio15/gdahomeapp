@@ -191,6 +191,7 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
   "ponte/integrazioni/elimina",
   "ponte/integrazioni/catalogo",
   "ponte/integrazioni/dispositivi",
+  "ponte/integrazioni/logo",
   "ponte/flussi/avvia",
   "ponte/flussi/passo",
   "ponte/flussi/leggi",
