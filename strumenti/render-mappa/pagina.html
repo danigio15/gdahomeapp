@@ -1,0 +1,240 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Mappa di GdANav</title>
+<link rel="stylesheet" href="/node_modules/maplibre-gl/dist/maplibre-gl.css" />
+<style>
+  html,
+  body {
+    margin: 0;
+    background: #0b1220;
+    font-family: Roboto, Inter, Arial, sans-serif;
+  }
+  #schermo {
+    position: relative;
+    width: 1280px;
+    height: 720px;
+    overflow: hidden;
+  }
+  #mappa {
+    position: absolute;
+    inset: 0;
+  }
+  /* Il cartello della manovra e la barra in basso: su Android Auto li
+   * disegna l'auto (NavigationTemplate), qui sono rifatti uguali sopra la
+   * mappa vera per vedere l'insieme. */
+  .cartello {
+    position: absolute;
+    left: 24px;
+    top: 24px;
+    width: 430px;
+    background: #0f5132;
+    color: #fff;
+    border-radius: 22px;
+    padding: 18px 22px;
+    box-shadow: 0 10px 30px -10px #000;
+  }
+  .cartello .riga {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .cartello .freccia {
+    font-size: 60px;
+    line-height: 1;
+  }
+  .cartello b {
+    font-size: 42px;
+  }
+  .cartello .via {
+    font-size: 25px;
+    opacity: 0.92;
+  }
+  .corsie {
+    margin-top: 12px;
+    background: #0a3d26;
+    border-radius: 14px;
+    padding: 8px 14px;
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    font-size: 38px;
+  }
+  .corsie span {
+    opacity: 0.35;
+  }
+  .corsie span.si {
+    opacity: 1;
+  }
+  .barra {
+    position: absolute;
+    left: 24px;
+    bottom: 24px;
+    background: #111827;
+    color: #e5e7eb;
+    border-radius: 18px;
+    padding: 14px 22px;
+    font-size: 25px;
+    display: flex;
+    gap: 26px;
+  }
+  .barra b {
+    color: #fff;
+  }
+</style>
+<div id="schermo">
+  <div id="mappa"></div>
+  <div class="cartello" id="cartello" hidden>
+    <div class="riga">
+      <div class="freccia" id="freccia">↱</div>
+      <div>
+        <b id="distanza"></b>
+        <div class="via" id="via"></div>
+      </div>
+    </div>
+    <div class="corsie" id="corsie" hidden></div>
+  </div>
+  <div class="barra" id="barra" hidden></div>
+</div>
+<script src="/node_modules/maplibre-gl/dist/maplibre-gl.js"></script>
+<script>
+  /* Una scena: una strada vera, un percorso vero (OSRM), lo stile vero di
+   * GdANav (`stile-chiaro.json` / `stile-scuro.json`, estratti da
+   * `lib/mappa/stile.dart`). La telecamera sta poco prima della manovra,
+   * guarda nel verso del percorso, inclinata come in auto. */
+  const q = new URLSearchParams(location.search);
+  const SCENE = {
+    citta: { da: [9.216, 45.4868], a: [9.2085, 45.4812], zoom: 17.2, inclinazione: 62 },
+    incrocio: { da: [9.188, 45.47], a: [9.1955, 45.4655], zoom: 17.4, inclinazione: 62 },
+    tangenziale: { da: [9.1004, 45.52], a: [9.071, 45.5262], zoom: 15.6, inclinazione: 60 },
+  };
+  const scena = SCENE[q.get("scena")] || SCENE.citta;
+  const scuro = q.get("stile") === "scuro";
+
+  const metri = (a, b) => {
+    const r = 6371000;
+    const f1 = (a[1] * Math.PI) / 180;
+    const f2 = (b[1] * Math.PI) / 180;
+    const df = f2 - f1;
+    const dl = ((b[0] - a[0]) * Math.PI) / 180;
+    const h = Math.sin(df / 2) ** 2 + Math.cos(f1) * Math.cos(f2) * Math.sin(dl / 2) ** 2;
+    return 2 * r * Math.asin(Math.sqrt(h));
+  };
+  const direzione = (a, b) => {
+    const f1 = (a[1] * Math.PI) / 180;
+    const f2 = (b[1] * Math.PI) / 180;
+    const dl = ((b[0] - a[0]) * Math.PI) / 180;
+    const y = Math.sin(dl) * Math.cos(f2);
+    const x = Math.cos(f1) * Math.sin(f2) - Math.sin(f1) * Math.cos(f2) * Math.cos(dl);
+    return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+  };
+  const FRECCE = {
+    "sharp right": "↱",
+    right: "↱",
+    "slight right": "↗",
+    straight: "↑",
+    "slight left": "↖",
+    left: "↰",
+    "sharp left": "↰",
+    uturn: "↶",
+  };
+
+  async function percorso() {
+    const url = `https://router.project-osrm.org/route/v1/driving/${scena.da.join(",")};${scena.a.join(",")}?overview=full&geometries=geojson&steps=true`;
+    const r = await fetch(url);
+    const j = await r.json();
+    return j.routes[0];
+  }
+
+  (async () => {
+    const stile = await (await fetch(`stile-${scuro ? "scuro" : "chiaro"}.json`)).json();
+    let rotta = null;
+    try {
+      rotta = await percorso();
+    } catch (_e) {}
+    const punti = rotta ? rotta.geometry.coordinates : [scena.da, scena.a];
+    /* La prima manovra vera dopo la partenza. */
+    const passi = rotta ? rotta.legs[0].steps : [];
+    const manovra = passi.find((p, i) => i > 0 && p.maneuver.type !== "arrive") || passi[0];
+    const dove = manovra ? manovra.maneuver.location : punti[Math.floor(punti.length / 2)];
+    /* La telecamera: il punto del percorso 110 m prima della manovra. */
+    let indice = 0;
+    let migliore = Infinity;
+    punti.forEach((p, i) => {
+      const d = metri(p, dove);
+      if (d < migliore) {
+        migliore = d;
+        indice = i;
+      }
+    });
+    let qui = punti[0];
+    let fatti = 0;
+    for (let i = indice; i > 0; i -= 1) {
+      fatti += metri(punti[i], punti[i - 1]);
+      qui = punti[i - 1];
+      if (fatti >= 110) break;
+    }
+    const verso = direzione(qui, dove);
+    const mappa = new maplibregl.Map({
+      container: "mappa",
+      style: stile,
+      center: qui,
+      zoom: scena.zoom,
+      pitch: scena.inclinazione,
+      bearing: verso,
+      maxPitch: 85,
+      attributionControl: false,
+      interactive: false,
+      preserveDrawingBuffer: true,
+      fadeDuration: 0,
+    });
+    mappa.on("styleimagemissing", (e) => {
+      const vuota = { width: 1, height: 1, data: new Uint8Array(4) };
+      if (!mappa.hasImage(e.id)) mappa.addImage(e.id, vuota);
+    });
+    mappa.on("load", () => {
+      const sorgente = mappa.getSource("gdanav-percorso");
+      sorgente?.setData({
+        type: "FeatureCollection",
+        features: [
+          { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: punti } },
+        ],
+      });
+      /* L'auto: un punto dove sta la telecamera, come nell'app. */
+      mappa.getSource("gdanav-io")?.setData({
+        type: "FeatureCollection",
+        features: [
+          { type: "Feature", properties: { verso }, geometry: { type: "Point", coordinates: qui } },
+        ],
+      });
+      if (manovra) {
+        const m = manovra.maneuver;
+        document.getElementById("cartello").hidden = false;
+        document.getElementById("freccia").textContent = FRECCE[m.modifier] || "↑";
+        document.getElementById("distanza").textContent = `${Math.round(fatti / 10) * 10} m`;
+        document.getElementById("via").textContent = manovra.name || manovra.ref || "";
+        const corsie = (manovra.intersections?.[0]?.lanes || []).filter(Boolean);
+        if (corsie.length) {
+          const box = document.getElementById("corsie");
+          box.hidden = false;
+          box.innerHTML = corsie
+            .map(
+              (c) =>
+                `<span class="${c.valid ? "si" : ""}">${FRECCE[(c.indications || ["straight"])[0]] || "↑"}</span>`,
+            )
+            .join("");
+        }
+      }
+      if (rotta) {
+        const barra = document.getElementById("barra");
+        barra.hidden = false;
+        const min = Math.max(1, Math.round(rotta.duration / 60));
+        barra.innerHTML = `<span><b>${min} min</b></span><span><b>${(rotta.distance / 1000).toFixed(1).replace(".", ",")} km</b></span>`;
+      }
+    });
+    mappa.once("idle", () => {
+      setTimeout(() => {
+        document.body.dataset.pronta = "si";
+      }, 1500);
+    });
+  })();
+</script>

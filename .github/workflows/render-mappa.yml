@@ -1,0 +1,39 @@
+# Le foto della mappa vera di GdANav, per decidere guardando.
+#
+# Da qui la sessione di lavoro non raggiunge i server delle mappe; GitHub si'.
+# Gira solo quando cambia `strumenti/render-mappa/`, fa le foto con lo stile
+# vero di GdANav e il motore vero (MapLibre), e le rimette nel branch. Non
+# costruisce app e non pubblica niente.
+name: Le foto della mappa
+on:
+  push:
+    paths:
+      - "strumenti/render-mappa/**"
+      - "!strumenti/render-mappa/foto/**"
+permissions:
+  contents: write
+jobs:
+  foto:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: MapLibre e Chromium
+        working-directory: strumenti/render-mappa
+        run: |
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund maplibre-gl@5.6.0 playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Le foto
+        working-directory: strumenti/render-mappa
+        run: node scatta.mjs
+      - name: Nel branch
+        run: |
+          git config user.name "gdahome-foto"
+          git config user.email "gdahome-foto@users.noreply.github.com"
+          git add strumenti/render-mappa/foto
+          git commit -m "Foto della mappa di GdANav" || exit 0
+          git push
