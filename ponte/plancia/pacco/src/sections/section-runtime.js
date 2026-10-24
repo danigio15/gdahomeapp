@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-4GXT6GV6.js";
+} from "../../chunk-7HT4AR2W.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -129634,6 +129634,51 @@ function installProceduraGuidataSection() {
   return true;
 }
 
+// src/core/scrivi-tenendo-il-campo.js
+function scriviTenendoIlCampo(contenitore5, html, campo5) {
+  if (!contenitore5 || !campo5 || !contenitore5.contains?.(campo5)) return false;
+  const doc4 = contenitore5.ownerDocument;
+  const modello2 = doc4.createElement("template");
+  modello2.innerHTML = html;
+  const nuovo = modello2.content;
+  if (!stessaForma(contenitore5, nuovo, campo5)) return false;
+  allinea(contenitore5, nuovo, campo5);
+  return true;
+}
+function stessaForma(vecchio, nuovo, campo5) {
+  if (vecchio === campo5) return nuovo.nodeName === campo5.nodeName;
+  const prima = vecchio.childNodes;
+  const dopo = nuovo.childNodes;
+  if (prima.length !== dopo.length) return false;
+  for (let i = 0; i < prima.length; i += 1) {
+    if (!prima[i].contains?.(campo5)) continue;
+    if (prima[i].nodeName !== dopo[i].nodeName) return false;
+    return stessaForma(prima[i], dopo[i], campo5);
+  }
+  return false;
+}
+function allinea(vecchio, nuovo, campo5) {
+  if (vecchio === campo5) return;
+  if (vecchio.nodeType === 1 && nuovo.nodeType === 1) copiaGliAttributi(vecchio, nuovo);
+  const prima = [...vecchio.childNodes];
+  const dopo = [...nuovo.childNodes];
+  for (let i = 0; i < prima.length; i += 1) {
+    if (prima[i].contains?.(campo5)) {
+      allinea(prima[i], dopo[i], campo5);
+    } else if (!prima[i].isEqualNode(dopo[i])) {
+      prima[i].replaceWith(dopo[i]);
+    }
+  }
+}
+function copiaGliAttributi(vecchio, nuovo) {
+  for (const { name } of [...vecchio.attributes]) {
+    if (!nuovo.hasAttribute(name)) vecchio.removeAttribute(name);
+  }
+  for (const { name, value } of [...nuovo.attributes]) {
+    if (vecchio.getAttribute(name) !== value) vecchio.setAttribute(name, value);
+  }
+}
+
 // src/sections/dispositivi-app-section.js
 var KEY150 = "__DASHBOARDMODERN_DISPOSITIVI_APP__";
 var state146 = root[KEY150] ||= {
@@ -130268,9 +130313,10 @@ function ridisegna18() {
     const attivo = doc.activeElement;
     const cercava = attivo?.matches?.("[data-dv-cerca]");
     const cursore2 = cercava ? attivo.selectionStart : null;
-    wrap.innerHTML = html;
+    const tenuto = cercava && scriviTenendoIlCampo(wrap, html, attivo);
+    if (!tenuto) wrap.innerHTML = html;
     wrap.dataset.dvScritto = html;
-    if (cercava) {
+    if (cercava && !tenuto) {
       const campo5 = wrap.querySelector("[data-dv-cerca]");
       campo5?.focus?.();
       try {
@@ -130415,10 +130461,22 @@ function disegnaIlFoglio2() {
     doc.body.append(velo4);
   }
   if (velo4.dataset.dvScritto === html) return;
-  const cercava = doc.activeElement?.matches?.("[data-dv-cercacat]");
-  velo4.innerHTML = html;
+  const attivo = doc.activeElement;
+  const scrive = attivo?.matches?.("input,textarea") && velo4.contains(attivo);
+  if (!(scrive && scriviTenendoIlCampo(velo4, html, attivo))) {
+    const cursore2 = scrive ? attivo.selectionStart : null;
+    const quale = scrive ? attivo.getAttribute("data-dv-cercacat") !== null : false;
+    velo4.innerHTML = html;
+    if (quale) {
+      const campo5 = velo4.querySelector("[data-dv-cercacat]");
+      campo5?.focus?.();
+      try {
+        campo5?.setSelectionRange?.(cursore2, cursore2);
+      } catch (_errore) {
+      }
+    }
+  }
   velo4.dataset.dvScritto = html;
-  if (cercava) velo4.querySelector("[data-dv-cercacat]")?.focus?.();
 }
 function apriIlFoglio2(foglio6) {
   state146.foglio = foglio6;
@@ -131277,9 +131335,10 @@ function ridisegna19() {
     const attivo = doc.activeElement;
     const cercava = attivo?.matches?.("[data-ai-cerca]");
     const cursore2 = cercava ? attivo.selectionStart : null;
-    wrap.innerHTML = html;
+    const tenuto = cercava && scriviTenendoIlCampo(wrap, html, attivo);
+    if (!tenuto) wrap.innerHTML = html;
     wrap.dataset.aiScritto = html;
-    if (cercava) {
+    if (cercava && !tenuto) {
       const campo5 = wrap.querySelector("[data-ai-cerca]");
       campo5?.focus?.();
       try {

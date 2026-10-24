@@ -886,9 +886,19 @@ test("Aggiungi un'integrazione: il catalogo, la procedura guidata, l'errore, la 
   await pagina.locator("[data-dv-aggiungi]").click();
   const foglio = page.locator("#dv-foglio .ad-foglio");
   await expect(foglio.locator("[data-dv-nuova]")).toHaveCount(4);
-  await foglio.locator("[data-dv-cercacat]").fill("shel");
+  /* Scritta a mano, una lettera per volta: «io scrivo ma lo mette al
+   * contrario, e continua a lampeggiare». Il campo resta lo stesso (il segno
+   * messo prima di scrivere c'e' ancora), e le lettere sono in ordine. */
+  const campo = foglio.locator("[data-dv-cercacat]");
+  await campo.click();
+  await campo.evaluate((el) => {
+    el.dataset.prova = "stesso";
+  });
+  await campo.pressSequentially("shel", { delay: 40 });
+  await expect(campo).toHaveValue("shel");
+  await expect(foglio.locator('[data-dv-cercacat][data-prova="stesso"]')).toHaveCount(1);
   await expect(foglio.locator("[data-dv-nuova]")).toHaveCount(1);
-  await expect(foglio.locator("[data-dv-cercacat]")).toBeFocused();
+  await expect(campo).toBeFocused();
   await foto(page, testInfo, "integrazioni-aggiungi");
   await foglio.locator('[data-dv-nuova="shelly"]').click();
   const pg = page.locator("#pg-foglio .ad-foglio");

@@ -27,6 +27,7 @@
  * Automazioni. I valori e i comandi delle entita' sono quelli che la plancia
  * ha gia' (gli stati e i servizi di Home Assistant).
  */
+import { scriviTenendoIlCampo } from "../core/scrivi-tenendo-il-campo.js";
 import { creaLaMemoriaDeiLoghi } from "../core/loghi-degli-aggiornamenti.js";
 import { oggettoWidget } from "../core/oggetti-widget.js";
 import { DOVE_SI_COMPRA, scopriPremium, statoDelleAutomazioni } from "./automazioni-section.js";
@@ -841,9 +842,12 @@ function ridisegna() {
     const attivo = doc.activeElement;
     const cercava = attivo?.matches?.("[data-dv-cerca]");
     const cursore = cercava ? attivo.selectionStart : null;
-    wrap.innerHTML = html;
+    /* Mentre si scrive nella ricerca il campo non si riscrive: si cambia
+     * solo il resto (`scrivi-tenendo-il-campo.js`). */
+    const tenuto = cercava && scriviTenendoIlCampo(wrap, html, attivo);
+    if (!tenuto) wrap.innerHTML = html;
     wrap.dataset.dvScritto = html;
-    if (cercava) {
+    if (cercava && !tenuto) {
       const campo = wrap.querySelector("[data-dv-cerca]");
       campo?.focus?.();
       try {
@@ -1036,10 +1040,24 @@ function disegnaIlFoglio() {
     doc.body.append(velo);
   }
   if (velo.dataset.dvScritto === html) return;
-  const cercava = doc.activeElement?.matches?.("[data-dv-cercacat]");
-  velo.innerHTML = html;
+  /* Il campo dove si sta scrivendo non si riscrive: prima qui tornava il
+   * fuoco ma non il cursore, che ripartiva da capo, e ogni lettera nuova
+   * finiva in testa. Il foglio si ridisegna anche quando arriva un logo. */
+  const attivo = doc.activeElement;
+  const scrive = attivo?.matches?.("input,textarea") && velo.contains(attivo);
+  if (!(scrive && scriviTenendoIlCampo(velo, html, attivo))) {
+    const cursore = scrive ? attivo.selectionStart : null;
+    const quale = scrive ? attivo.getAttribute("data-dv-cercacat") !== null : false;
+    velo.innerHTML = html;
+    if (quale) {
+      const campo = velo.querySelector("[data-dv-cercacat]");
+      campo?.focus?.();
+      try {
+        campo?.setSelectionRange?.(cursore, cursore);
+      } catch (_errore) {}
+    }
+  }
   velo.dataset.dvScritto = html;
-  if (cercava) velo.querySelector("[data-dv-cercacat]")?.focus?.();
 }
 
 function apriIlFoglio(foglio) {
