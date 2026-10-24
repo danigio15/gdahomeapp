@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -299,22 +300,36 @@ void main() {
         );
         await collegamento.apri();
       });
+      /* Col tema vero dell'app, e aperta sopra la casa come quando si tocca
+       * la notifica: la freccia deve vedersi e riportare indietro. */
+      final navigatore = GlobalKey<NavigatorState>();
       await tester.pumpWidget(
         MaterialApp(
-          home: SchermataDellaTelecamera(
-            tocco: ToccoDellaNotifica(
-              casa: collegamento.casa!.id,
-              notifica: _movimento(),
-              tasto: 'guarda',
-            ),
-            collegamento: collegamento,
-            /* Una cartella vuota: nessuna foto del momento, si va dal vivo. */
-            cartellaDelleImmagini: Directory.systemTemp.createTempSync(
-              'vuota-',
+          navigatorKey: navigatore,
+          theme: temaChiaro(),
+          home: const Scaffold(body: Text('LA CASA')),
+        ),
+      );
+      unawaited(
+        navigatore.currentState!.push(
+          MaterialPageRoute<void>(
+            builder: (_) => SchermataDellaTelecamera(
+              tocco: ToccoDellaNotifica(
+                casa: collegamento.casa!.id,
+                notifica: _movimento(),
+                tasto: 'guarda',
+              ),
+              collegamento: collegamento,
+              /* Una cartella vuota: nessuna foto del momento, si va dal vivo. */
+              cartellaDelleImmagini: Directory.systemTemp.createTempSync(
+                'vuota-',
+              ),
             ),
           ),
         ),
       );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
       for (var giro = 0; giro < 20; giro += 1) {
         await tester.runAsync(
           () => Future<void>.delayed(const Duration(milliseconds: 50)),
@@ -328,12 +343,39 @@ void main() {
       expect(find.text('DAL VIVO'), findsOneWidget);
       expect(find.text('Inserisci antifurto'), findsOneWidget);
       expect(find.text('Guarda'), findsNothing);
+      /* «Se apri la notifica non c'e' modo di tornare indietro»: la freccia
+       * c'era, ma scura sul fondo scuro. Ora e' bianca, e porta indietro. */
+      final indietro = find.byKey(const Key('telecamera-indietro'));
+      expect(indietro, findsOneWidget);
+      final freccia = tester.widget<Icon>(
+        find.descendant(of: indietro, matching: find.byType(Icon)),
+      );
+      expect(
+        IconTheme.of(tester.element(find.byIcon(freccia.icon!))).color ??
+            freccia.color,
+        Colors.white,
+      );
+      final titolo = tester.widget<Text>(
+        find.descendant(of: find.byType(AppBar), matching: find.byType(Text)),
+      );
+      expect(
+        DefaultTextStyle.of(tester.element(find.text(titolo.data!)))
+            .style
+            .color,
+        Colors.white,
+      );
       expect(
         ponte.commissioni.any(
           (una) => una['percorso'] == '/api/camera_proxy/$_balcone',
         ),
         isTrue,
       );
+      await tester.tap(indietro);
+      for (var giro = 0; giro < 10; giro += 1) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(find.text('LA CASA'), findsOneWidget);
+      expect(find.byType(SchermataDellaTelecamera), findsNothing);
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.runAsync(() async {
         await collegamento.chiudi();

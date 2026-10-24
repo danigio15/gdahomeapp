@@ -28,9 +28,9 @@ library;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Directory;
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../casa/collegamento.dart';
 import '../casa/la_finestra.dart';
@@ -453,9 +453,36 @@ class _StatoDellaTelecamera extends State<SchermataDellaTelecamera> {
     final alle = '${due(ora.hour)}:${due(ora.minute)}';
     return Scaffold(
       backgroundColor: const Color(0xFF14110F),
+      /* La testata in bianco, scritta per esteso.
+       *
+       * «Se apri la notifica non c'e' modo di tornare indietro se non
+       * chiudere l'app»; «su iPhone non c'e' nemmeno la testata». C'erano,
+       * tutt'e due: ma il tema dell'app da' alle barre le icone e il titolo
+       * nel colore del testo — scuro — e quello vince su `foregroundColor`.
+       * Su questo fondo quasi nero la freccia e il titolo erano scuri su
+       * scuro. Qui si dicono i colori uno per uno, e la freccia e' un tasto
+       * vero, con un tondo dietro, che torna a casa. */
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        actionsIconTheme: const IconThemeData(color: Colors.white),
+        systemOverlayStyle: SystemUiOverlayStyle.light,
+        titleTextStyle: Theme.of(context).textTheme.titleLarge
+            ?.copyWith(color: Colors.white, fontWeight: FontWeight.w800),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: IconButton(
+            key: const Key('telecamera-indietro'),
+            tooltip: inLingua(it: 'Indietro', en: 'Back'),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white.withValues(alpha: 0.14),
+              foregroundColor: Colors.white,
+            ),
+            icon: const Icon(Icons.arrow_back_rounded),
+            onPressed: () => Navigator.of(context).maybePop(),
+          ),
+        ),
         title: Text(
           _notifica.titolo,
           maxLines: 1,
