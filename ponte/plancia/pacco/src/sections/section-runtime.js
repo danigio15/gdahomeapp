@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-Y3SOZNJN.js";
+} from "../../chunk-TN66R4OK.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -144342,7 +144342,7 @@ function gruppoMarkup4(chiave2, disegno8, titolo3, corpo5, accanto = "") {
     </article>`;
 }
 function pilotiPer(tipo) {
-  const vista2 = risultatiDelloSport();
+  const vista2 = risultatiDelloSport(() => ridisegna28());
   const r = vista2.risultati.find((x) => x?.tipo === tipo && !x.errore);
   return r?.piloti || [];
 }
