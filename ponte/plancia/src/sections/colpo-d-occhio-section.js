@@ -1011,7 +1011,7 @@ function installaLoStile() {
     ${P} .oc-modo:active{transform:scale(.98)}
     ${P} .oc-modo-ic{display:grid;place-items:center;flex:0 0 auto;width:76px;height:76px;border-radius:24px;background:var(--oc-morbido)}
     ${P} .oc-modo-ic svg{width:40px;height:40px}
-    ${P} .oc-modo strong{flex:1;font-family:'Oswald',system-ui,sans-serif;font-size:32px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;line-height:1}
+    ${P} .oc-modo strong{flex:1;min-width:0;overflow-wrap:anywhere;text-align:left;font-family:'Oswald',system-ui,sans-serif;font-size:32px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;line-height:1}
     ${P} .oc-modo-stato{display:flex;align-items:center;gap:8px;flex:0 0 auto;padding:14px 22px;border-radius:999px;font-size:14px;font-weight:800;
       letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;color:#94a3b8;background:var(--oc-morbido);border:2px solid var(--oc-bordo)}
     ${P} .oc-modo-stato::before{content:"";width:10px;height:10px;border-radius:50%;background:#94a3b8}
@@ -1070,11 +1070,12 @@ function installaLoStile() {
       ${P} .oc-n[data-nodo="batteria"]{left:79%}
       ${P} .oc-linguette-flusso button{padding:9px 14px;font-size:12px}
       ${P} .oc-modi{gap:12px}
-      ${P} .oc-modo{padding:22px 18px;border-radius:22px;gap:16px;min-height:110px}
-      ${P} .oc-modo-ic{width:60px;height:60px;border-radius:18px}
-      ${P} .oc-modo-ic svg{width:32px;height:32px}
-      ${P} .oc-modo strong{font-size:22px;letter-spacing:1px}
-      ${P} .oc-modo-stato{padding:10px 14px;font-size:11px;letter-spacing:1px;gap:6px}
+      ${P} .oc-modo{padding:20px 16px;border-radius:22px;gap:12px;min-height:100px}
+      ${P} .oc-modo-ic{width:52px;height:52px;border-radius:16px}
+      ${P} .oc-modo-ic svg{width:28px;height:28px}
+      ${P} .oc-modo strong{font-size:20px;letter-spacing:.5px}
+      /* Il nome si stringe, la pastiglia dello stato resta intera dentro la scheda. */
+      ${P} .oc-modo-stato{padding:9px 12px;font-size:10px;letter-spacing:.5px;gap:6px}
     }
     `,
   );

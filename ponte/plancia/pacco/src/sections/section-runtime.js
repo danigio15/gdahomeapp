@@ -559,7 +559,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-LZTGPEAK.js";
+} from "../../chunk-7Y2KCUMO.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -148537,7 +148537,7 @@ function installaLoStile7() {
     ${P9} .oc-modo:active{transform:scale(.98)}
     ${P9} .oc-modo-ic{display:grid;place-items:center;flex:0 0 auto;width:76px;height:76px;border-radius:24px;background:var(--oc-morbido)}
     ${P9} .oc-modo-ic svg{width:40px;height:40px}
-    ${P9} .oc-modo strong{flex:1;font-family:'Oswald',system-ui,sans-serif;font-size:32px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;line-height:1}
+    ${P9} .oc-modo strong{flex:1;min-width:0;overflow-wrap:anywhere;text-align:left;font-family:'Oswald',system-ui,sans-serif;font-size:32px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;line-height:1}
     ${P9} .oc-modo-stato{display:flex;align-items:center;gap:8px;flex:0 0 auto;padding:14px 22px;border-radius:999px;font-size:14px;font-weight:800;
       letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;color:#94a3b8;background:var(--oc-morbido);border:2px solid var(--oc-bordo)}
     ${P9} .oc-modo-stato::before{content:"";width:10px;height:10px;border-radius:50%;background:#94a3b8}
@@ -148596,11 +148596,12 @@ function installaLoStile7() {
       ${P9} .oc-n[data-nodo="batteria"]{left:79%}
       ${P9} .oc-linguette-flusso button{padding:9px 14px;font-size:12px}
       ${P9} .oc-modi{gap:12px}
-      ${P9} .oc-modo{padding:22px 18px;border-radius:22px;gap:16px;min-height:110px}
-      ${P9} .oc-modo-ic{width:60px;height:60px;border-radius:18px}
-      ${P9} .oc-modo-ic svg{width:32px;height:32px}
-      ${P9} .oc-modo strong{font-size:22px;letter-spacing:1px}
-      ${P9} .oc-modo-stato{padding:10px 14px;font-size:11px;letter-spacing:1px;gap:6px}
+      ${P9} .oc-modo{padding:20px 16px;border-radius:22px;gap:12px;min-height:100px}
+      ${P9} .oc-modo-ic{width:52px;height:52px;border-radius:16px}
+      ${P9} .oc-modo-ic svg{width:28px;height:28px}
+      ${P9} .oc-modo strong{font-size:20px;letter-spacing:.5px}
+      /* Il nome si stringe, la pastiglia dello stato resta intera dentro la scheda. */
+      ${P9} .oc-modo-stato{padding:9px 12px;font-size:10px;letter-spacing:.5px;gap:6px}
     }
     `
   );
