@@ -13,8 +13,7 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 ## 1.18.5
 
 - **Navigatore, ricerca:** trova anche le aziende che non hanno un negozio,
-  come «Romeo Gestioni Napoli», grazie alla ricerca di HERE accanto a TomTom e
-  OpenStreetMap. OpenStreetMap torna a rispondere (da tempo restava muto), i
+  grazie alla ricerca di HERE accanto a TomTom e OpenStreetMap. OpenStreetMap torna a rispondere (da tempo restava muto), i
   risultati della città scritta vengono prima e quelli dall'altra parte del
   mondo non compaiono più. Le categorie sono in italiano.
 - **Automazioni, con tante automazioni:** l'elenco si apre in pochi istanti
