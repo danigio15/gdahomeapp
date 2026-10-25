@@ -58,5 +58,30 @@ for (const scena of ["citta", "incrocio", "forlanini", "est", "ovest"]) {
     }
   }
 }
+/* Il telefono, in guida, nelle tre viste che si scelgono col tasto della
+ * mappa: 2D, 3D e immersiva. */
+const telefono = await browser.newPage({
+  viewport: { width: 390, height: 844 },
+  deviceScaleFactor: 2,
+});
+telefono.on("console", (m) => console.log(`[telefono] ${m.text()}`));
+for (const scena of ["est", "incrocio", "forlanini"]) {
+  for (const vista of ["piatta", "inclinata", "immersiva"]) {
+    for (const stile of vista === "immersiva" ? ["chiaro", "scuro"] : ["chiaro"]) {
+      await telefono.goto(
+        `http://127.0.0.1:${porta}/telefono.html?scena=${scena}&stile=${stile}&vista=${vista}`,
+      );
+      try {
+        await telefono.waitForSelector("body[data-pronta=si]", { timeout: 90000 });
+      } catch {
+        console.log(`telefono ${scena}/${vista}/${stile}: non ha finito in tempo, foto lo stesso`);
+      }
+      await telefono
+        .locator("#schermo")
+        .screenshot({ path: join(qui, "foto", `telefono-${scena}-${vista}-${stile}.png`) });
+      console.log(`telefono ${scena}/${vista}/${stile}: fatta`);
+    }
+  }
+}
 await browser.close();
 server.close();

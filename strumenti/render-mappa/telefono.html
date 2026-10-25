@@ -1,0 +1,219 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>GdANav sul telefono</title>
+<link rel="stylesheet" href="/node_modules/maplibre-gl/dist/maplibre-gl.css" />
+<style>
+  html,
+  body {
+    margin: 0;
+    background: #0b1220;
+  }
+  #schermo {
+    position: relative;
+    width: 390px;
+    height: 844px;
+    overflow: hidden;
+  }
+  #mappa {
+    position: absolute;
+    inset: 0;
+  }
+  .auto {
+    width: 0;
+    height: 0;
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-bottom: 34px solid #2563eb;
+    filter: drop-shadow(0 0 0 #fff) drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5));
+  }
+</style>
+<div id="schermo"><div id="mappa"></div></div>
+<script src="/node_modules/maplibre-gl/dist/maplibre-gl.js"></script>
+<script>
+  /* La mappa di GdANav sul telefono, in guida, nelle tre viste: 2D, 3D e
+   * immersiva. Lo stile e' quello vero dell'app (`stile-telefono-*.json`,
+   * scritti da `stileMappa` di `lib/mappa/stile.dart`), e le scelte della
+   * telecamera sono quelle di `mappa_viaggio.dart`: inclinazione 0, 58 o 64
+   * gradi, zoom 16, 17 o 18 vicino alle manovre, l'auto in basso. Le corsie
+   * sulla strada sono quelle di `datiCorsie`, rifatte qui uguali. Il
+   * cartello della manovra non c'e': resta quello dell'app, uguale a oggi. */
+  const q = new URLSearchParams(location.search);
+  const SCENE = {
+    incrocio: { da: [9.188, 45.47], a: [9.1955, 45.4655] },
+    citta: { da: [9.216, 45.4868], a: [9.2085, 45.4812] },
+    forlanini: { da: [9.2245, 45.461], a: [9.277, 45.45] },
+    est: { da: [9.258, 45.483], a: [9.287, 45.526] },
+    ovest: { da: [9.129, 45.442], a: [9.164, 45.401] },
+  };
+  const scena = SCENE[q.get("scena")] || SCENE.est;
+  const vista = ["piatta", "inclinata", "immersiva"].includes(q.get("vista"))
+    ? q.get("vista")
+    : "inclinata";
+  const scuro = q.get("stile") === "scuro";
+  const INCLINAZIONE = { piatta: 0, inclinata: 58, immersiva: 64 };
+  const ZOOM = { piatta: 16, inclinata: 17, immersiva: 18 };
+  const LARGHEZZA_CORSIA = 3.5;
+
+  const metri = (a, b) => {
+    const r = 6371000;
+    const f1 = (a[1] * Math.PI) / 180;
+    const f2 = (b[1] * Math.PI) / 180;
+    const df = f2 - f1;
+    const dl = ((b[0] - a[0]) * Math.PI) / 180;
+    const h = Math.sin(df / 2) ** 2 + Math.cos(f1) * Math.cos(f2) * Math.sin(dl / 2) ** 2;
+    return 2 * r * Math.asin(Math.sqrt(h));
+  };
+  const direzione = (a, b) => {
+    const f1 = (a[1] * Math.PI) / 180;
+    const f2 = (b[1] * Math.PI) / 180;
+    const dl = ((b[0] - a[0]) * Math.PI) / 180;
+    const y = Math.sin(dl) * Math.cos(f2);
+    const x = Math.cos(f1) * Math.sin(f2) - Math.sin(f1) * Math.cos(f2) * Math.cos(dl);
+    return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+  };
+  const cumulate = (punti) => {
+    const c = [0];
+    for (let i = 1; i < punti.length; i += 1) c.push(c[i - 1] + metri(punti[i - 1], punti[i]));
+    return c;
+  };
+  const aMetri = (punti, c, m) => {
+    for (let i = 1; i < punti.length; i += 1) {
+      if (c[i] >= m) {
+        const t = c[i] - c[i - 1];
+        const f = t === 0 ? 0 : (m - c[i - 1]) / t;
+        const a = punti[i - 1];
+        const b = punti[i];
+        return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
+      }
+    }
+    return punti[punti.length - 1];
+  };
+  const tratto = (punti, c, da, a) => [
+    aMetri(punti, c, da),
+    ...punti.filter((_p, i) => c[i] > da && c[i] < a),
+    aMetri(punti, c, a),
+  ];
+  const collezione = (features) => ({ type: "FeatureCollection", features });
+  const linea = (coordinates, properties = {}) => ({
+    type: "Feature",
+    properties,
+    geometry: { type: "LineString", coordinates },
+  });
+
+  (async () => {
+    const stile = await (
+      await fetch(
+        `stile-telefono-${scuro ? "scuro" : "chiaro"}${vista === "immersiva" ? "-immersiva" : ""}.json`,
+      )
+    ).json();
+    const r = await (
+      await fetch(
+        `https://router.project-osrm.org/route/v1/driving/${scena.da.join(",")};${scena.a.join(",")}?overview=full&geometries=geojson&steps=true`,
+      )
+    ).json();
+    const rotta = r.routes[0];
+    const punti = rotta.geometry.coordinates;
+    const c = cumulate(punti);
+    const passi = rotta.legs[0].steps;
+    const conCorsie = (p) => (p.intersections?.[0]?.lanes || []).length >= 2;
+    const manovra =
+      passi.find((p, i) => i > 0 && p.maneuver.type !== "arrive" && conCorsie(p)) ||
+      passi.find((p, i) => i > 0 && p.maneuver.type !== "arrive");
+    let indice = 0;
+    let migliore = Infinity;
+    punti.forEach((p, i) => {
+      const d = metri(p, manovra.maneuver.location);
+      if (d < migliore) {
+        migliore = d;
+        indice = i;
+      }
+    });
+    const centro = c[indice];
+    /* L'auto: 120 m prima della manovra, girata come va la strada. */
+    const qui = aMetri(punti, c, Math.max(0, centro - 120));
+    const verso = direzione(qui, aMetri(punti, c, Math.max(0, centro - 80)));
+
+    const mappa = new maplibregl.Map({
+      container: "mappa",
+      style: stile,
+      center: qui,
+      zoom: ZOOM[vista],
+      pitch: INCLINAZIONE[vista],
+      bearing: verso,
+      maxPitch: 85,
+      attributionControl: false,
+      interactive: false,
+      preserveDrawingBuffer: true,
+      fadeDuration: 0,
+    });
+    mappa.on("styleimagemissing", (e) => {
+      if (!mappa.hasImage(e.id))
+        mappa.addImage(e.id, { width: 1, height: 1, data: new Uint8Array(4) });
+    });
+    mappa.on("load", () => {
+      /* In guida l'auto sta in basso: il resto dello schermo e' la strada. */
+      mappa.jumpTo({ center: qui, padding: { top: 420, bottom: 0, left: 0, right: 0 } });
+      /* Gli edifici come li accende l'app: in 2D quelli piatti, in 3D quelli
+       * in rilievo, nell'immersiva quelli sopra il percorso (gia' accesi). */
+      if (mappa.getLayer("edifici"))
+        mappa.setLayoutProperty("edifici", "visibility", vista === "piatta" ? "visible" : "none");
+      if (mappa.getLayer("edifici-3d"))
+        mappa.setLayoutProperty(
+          "edifici-3d",
+          "visibility",
+          vista === "inclinata" ? "visible" : "none",
+        );
+      const daQui = punti.slice(c.findIndex((x) => x >= Math.max(0, centro - 120)));
+      mappa.getSource("gdanav-percorso")?.setData(collezione([linea([qui, ...daQui])]));
+      mappa
+        .getSource("gdanav-io")
+        ?.setData(
+          collezione([
+            {
+              type: "Feature",
+              properties: { rotta: verso },
+              geometry: { type: "Point", coordinates: qui },
+            },
+          ]),
+        );
+      /* La freccia della manovra: 60 m prima, 45 dopo (`datiManovra`). */
+      mappa
+        .getSource("gdanav-manovra")
+        ?.setData(collezione([linea(tratto(punti, c, centro - 60, centro + 45))]));
+      /* Le corsie (`datiCorsie`): gli ultimi 160 m prima della manovra. */
+      const corsie = (manovra.intersections?.[0]?.lanes || []).filter(Boolean);
+      const utili =
+        corsie.length > 1 && corsie.some((l) => l.valid) && corsie.some((l) => !l.valid);
+      if (vista === "immersiva" && utili) {
+        const pezzo = tratto(punti, c, Math.max(0, centro - 160), centro);
+        const n = corsie.length;
+        mappa
+          .getSource("gdanav-corsie")
+          ?.setData(
+            collezione([
+              ...corsie.map((l, i) =>
+                linea(pezzo, {
+                  tipo: "corsia",
+                  giusta: Boolean(l.valid),
+                  spostamento: (i - (n - 1) / 2) * LARGHEZZA_CORSIA,
+                }),
+              ),
+              ...Array.from({ length: n + 1 }, (_x, i) =>
+                linea(pezzo, {
+                  tipo: i === 0 || i === n ? "bordo" : "riga",
+                  spostamento: (i - n / 2) * LARGHEZZA_CORSIA,
+                }),
+              ),
+            ]),
+          );
+      }
+      const auto = document.createElement("div");
+      auto.className = "auto";
+      new maplibregl.Marker({ element: auto, rotationAlignment: "map", pitchAlignment: "map" })
+        .setLngLat(qui)
+        .setRotation(verso)
+        .addTo(mappa);
+    });
+    mappa.once("idle", () => setTimeout(() => (document.body.dataset.pronta = "si"), 1500));
+  })();
+</script>
