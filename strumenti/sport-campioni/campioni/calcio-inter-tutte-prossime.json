@@ -2,7 +2,7 @@
  "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams/110/schedule?fixture=true",
  "stato": 200,
  "json": {
-  "timestamp": "2026-10-25T13:52:14Z",
+  "timestamp": "2026-10-25T21:06:27Z",
   "status": "success",
   "season": {
    "year": 2026,
@@ -904,8 +904,8 @@
           "shortDisplayName": "Inter Milan"
          },
          "odds": {
-          "summary": "OFF",
-          "value": 0,
+          "summary": "5/4",
+          "value": 2.25,
           "handicap": 0
          }
         },
@@ -918,14 +918,14 @@
           "shortDisplayName": "Milan"
          },
          "odds": {
-          "summary": "OFF",
-          "value": 0,
+          "summary": "19/10",
+          "value": 2.9,
           "handicap": 0
          }
         },
         "drawOdds": {
-         "summary": "OFF",
-         "value": 0,
+         "summary": "13/5",
+         "value": 3.6,
          "handicap": 0
         },
         "links": [
@@ -937,7 +937,7 @@
            "bets",
            "bet-365"
           ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746292~OFF",
+          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746292~19/10",
           "text": "Home Bet",
           "shortText": "Home Bet",
           "isExternal": true,
@@ -951,7 +951,7 @@
            "bets",
            "bet-365"
           ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746306~OFF",
+          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746306~5/4",
           "text": "Away Bet",
           "shortText": "Away Bet",
           "isExternal": true,
@@ -965,7 +965,7 @@
            "bets",
            "bet-365"
           ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746302~OFF",
+          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746302~13/5",
           "text": "Draw Bet",
           "shortText": "Draw Bet",
           "isExternal": true,
