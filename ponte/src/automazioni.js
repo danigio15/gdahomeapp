@@ -131,6 +131,22 @@ const SCARTATE_AL_MASSIMO = 300;
  * non deve fare cento domande ogni volta. Si leggono sei per volta. */
 const CONFIG_DURA = 30_000;
 const INSIEME = 6;
+/* «Gli aiutanti li legge in 4 secondi, le automazioni no: sono rimasto
+ * aperto 5-6 minuti, ne ho un centinaio.» La configurazione di ognuna si
+ * chiedeva alla porta REST, e Home Assistant per ogni domanda rilegge e
+ * ricompone tutto `automations.yaml`: cento automazioni, cento letture del
+ * file intero, oltre i 25 secondi che la plancia aspetta. E siccome la
+ * plancia riprova dopo un minuto e qui si teneva tutto mezzo minuto, ogni
+ * volta si ricominciava da capo: l'elenco non arrivava mai.
+ *
+ * Per l'elenco ora si chiede sul filo (`automation/config`), che Home
+ * Assistant risponde dalla memoria, senza toccare il file: venti per volta.
+ * La porta REST resta quella di chi scrive (salva, rinomina, duplica), e
+ * per sapere se un'automazione si modifica dalla plancia — sta in
+ * `automations.yaml`, non in un pacchetto — una domanda sola per
+ * automazione, ricordata a lungo e fatta dopo aver risposto. */
+const INSIEME_SUL_FILO = 20;
+const SI_MODIFICA_DURA = 30 * MINUTO;
 
 /* Gli avvisi da Home Assistant ai telefoni: al piu' trenta ogni dieci
  * minuti. Un'automazione scritta male che avvisa a ogni lettura di un
@@ -253,6 +269,9 @@ export class Automazioni {
     this._aree = null;
     this._storiaInCorso = null;
     this._configurazioni = new Map();
+    this._dalFilo = new Map();
+    this._siModifica = new Map();
+    this._controllando = null;
     this._avvisiDetti = [];
     this._ascolto = null;
     this._disdici = null;
@@ -405,6 +424,53 @@ export class Automazioni {
     return buona;
   }
 
+  /* La configurazione di un'automazione per l'elenco, dal filo: Home
+   * Assistant la tiene in memoria. `undefined` se il filo non la sa dare
+   * (allora si chiede alla porta REST, come prima). */
+  async _configDalFilo(entity, id) {
+    const ora = this.adesso();
+    const tenuta = this._dalFilo.get(id);
+    if (tenuta && ora - tenuta.il < CONFIG_DURA) return tenuta.config;
+    if (typeof this.casa?.chiedi !== "function") return undefined;
+    let risposta;
+    try {
+      risposta = await this.casa.chiedi({ type: "automation/config", entity_id: entity });
+    } catch (_errore) {
+      return undefined;
+    }
+    const config = risposta?.config;
+    if (!config || typeof config !== "object" || Array.isArray(config)) return undefined;
+    this._dalFilo.set(id, { il: ora, config });
+    return config;
+  }
+
+  /* Se si modifica dalla plancia: lo sa solo la porta REST (un'automazione
+   * di un pacchetto YAML li' non c'e'). `undefined` finche' non si sa. */
+  _siModificaGia(id) {
+    const tenuta = this._siModifica.get(id);
+    return tenuta && this.adesso() - tenuta.il < SI_MODIFICA_DURA ? tenuta.si : undefined;
+  }
+
+  /* Le domande alla porta REST per quelle che non si sanno, una alla volta
+   * e dopo aver gia' risposto all'elenco: chi apre non le aspetta. */
+  _controllaChiSiModifica(ids) {
+    const daSapere = ids.filter((id) => this._siModificaGia(id) === undefined);
+    if (!daSapere.length || this._controllando) return this._controllando;
+    this._controllando = (async () => {
+      for (const id of daSapere) {
+        try {
+          const config = await this._configDi(id);
+          this._siModifica.set(id, { il: this.adesso(), si: Boolean(config) });
+        } catch (_errore) {
+          break;
+        }
+      }
+    })().finally(() => {
+      this._controllando = null;
+    });
+    return this._controllando;
+  }
+
   /* Le stanze, per nome: `{area_id: nome}`. */
   async _nomiDelleAree() {
     const ora = this.adesso();
@@ -467,20 +533,42 @@ export class Automazioni {
     const stati = comeOggetto(mappa);
     const statoDi = (id) => mappa.get(id) ?? null;
     const voci = [...mappa.entries()].filter(([id]) => String(id).startsWith("automation."));
-    const ids = voci.map(([, s]) => String(s?.attributes?.id ?? "").trim()).filter(idBuono);
+    const conId = voci
+      .map(([entity, s]) => [entity, String(s?.attributes?.id ?? "").trim()])
+      .filter(([, id]) => idBuono(id));
+    const ids = conId.map(([, id]) => id);
     const configurazioni = new Map();
-    for (let i = 0; i < ids.length; i += INSIEME) {
-      const giro = ids.slice(i, i + INSIEME);
+    /* Prima dal filo, dalla memoria di Home Assistant... */
+    for (let i = 0; i < conId.length; i += INSIEME_SUL_FILO) {
+      const giro = conId.slice(i, i + INSIEME_SUL_FILO);
+      const lette = await Promise.all(giro.map(([entity, id]) => this._configDalFilo(entity, id)));
+      giro.forEach(([, id], j) => {
+        if (lette[j] !== undefined) configurazioni.set(id, lette[j]);
+      });
+    }
+    /* ...e solo quelle che il filo non da' (un Home Assistant vecchio) dalla
+     * porta REST, che legge il file. */
+    const restanti = ids.filter((id) => !configurazioni.has(id));
+    for (let i = 0; i < restanti.length; i += INSIEME) {
+      const giro = restanti.slice(i, i + INSIEME);
       const lette = await Promise.all(
         giro.map((id) =>
-          this._configDi(id).catch((errore) => {
-            this.registro.debug?.(`l'automazione ${id} non si legge: ${errore?.message || errore}`);
-            return null;
-          }),
+          this._configDi(id)
+            .then((config) => {
+              this._siModifica.set(id, { il: this.adesso(), si: Boolean(config) });
+              return config;
+            })
+            .catch((errore) => {
+              this.registro.debug?.(
+                `l'automazione ${id} non si legge: ${errore?.message || errore}`,
+              );
+              return null;
+            }),
         ),
       );
       giro.forEach((id, j) => configurazioni.set(id, lette[j]));
     }
+    this._controllaChiSiModifica(ids)?.catch(() => {});
     const registri = await this._registri();
     const nomiDelleAree = await this._nomiDelleAree();
     const categorieHa = await this._categorieHa();
@@ -551,7 +639,9 @@ export class Automazioni {
         modello: modello ? { ...modello, attiva } : null,
         /* Si modifica dalla plancia solo se Home Assistant ne da' la
          * configurazione: una scritta in un pacchetto YAML si guarda e basta. */
-        modificabile: Boolean(config),
+        /* Finche' la porta REST non l'ha detto, vale quello che si sa: c'e'
+         * la configurazione, quindi si', e il salvataggio ricontrolla. */
+        modificabile: Boolean(config) && this._siModificaGia(id) !== false,
         config: conConfig ? config : null,
       });
     }
@@ -592,6 +682,8 @@ export class Automazioni {
 
   _dimentica(id) {
     this._configurazioni.delete(id);
+    this._dalFilo.delete(id);
+    this._siModifica.delete(id);
   }
 
   _entitaDi(id) {
@@ -615,6 +707,13 @@ export class Automazioni {
     let descrizione = null;
     if (esistente) {
       const prima = await this._configDi(esistente, { forza: true });
+      /* Un'automazione che c'e' ma la porta REST non la da' sta in un
+       * pacchetto YAML: scriverla in `automations.yaml` ne farebbe due. */
+      if (!prima && this._entitaDi(esistente))
+        return {
+          errore: "complessa",
+          perche: "questa automazione si modifica in Home Assistant",
+        };
       if (prima) {
         /* Una complessa non si sovrascrive con l'editor della plancia: ne
          * perderebbe un pezzo senza dirlo. */
