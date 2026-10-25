@@ -934,6 +934,8 @@ test("a Zigbee2MQTT il nome si dice sulla sua cassetta, a ZHA non serve", () => 
   assert.deepEqual(JSON.parse(ordine.service_data.payload), {
     from: "0x0cae5ffffec141a9",
     to: "Presenza salone",
+    /* Anche gli identificativi delle entita' prendono il nome nuovo. */
+    homeassistant_rename: true,
   });
   /* Su ZHA il nome della rete È il nome del dispositivo di Home Assistant:
    * scriverlo due volte vorrebbe dire inventarsi una cassetta che non c'è. */
@@ -973,6 +975,8 @@ test("rinominando, il nome arriva anche dentro Zigbee2MQTT", async () => {
   assert.deepEqual(JSON.parse(ordine.service_data.payload), {
     from: "0x0cae5ffffec141a9",
     to: "Presenza salone",
+    /* Anche gli identificativi delle entita' prendono il nome nuovo. */
+    homeassistant_rename: true,
   });
   /* E adesso la rete lo chiama così davvero: è la conferma, e non il «sì»
    * della risposta — quello dice solo che la domanda è arrivata. */

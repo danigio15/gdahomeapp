@@ -10,6 +10,7 @@ import { pathToFileURL } from "node:url";
 import { join } from "node:path";
 
 import { Abbinamento } from "./abbinamento.js";
+import { Archivio } from "./archivio.js";
 import { fabbricaIlRapporto, Postino, QUADRO_DI_DIFETTO } from "./rapporto.js";
 import { Segni } from "./segni.js";
 import { Casa } from "./casa.js";
@@ -186,7 +187,15 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   /* La rete Zigbee di questa casa (#54): l'app non chiede «che rete hai», lo
    * guarda il ponte. Si costruisce sempre — costa niente finche' nessuno
    * chiede — e la voce nell'app compare solo dove una rete c'e' davvero. */
-  const zigbee = new Zigbee({ casa, registro });
+  const zigbee = new Zigbee({
+    casa,
+    registro,
+    /* Gli indirizzi chiusi fuori da un'uscita forzata, da rimettere in lista
+     * quando si riapre la rete: sul disco, perche' passano riavvii e mesi. */
+    archivio: opzioni.cartella
+      ? new Archivio(join(opzioni.cartella, "zigbee.json"), { bloccati: [] })
+      : null,
+  });
   /* La chat di assistenza della plancia: quella della dashboard, che non passa
    * da GitHub. Nell'integrazione la fa `chat.py`; qui la fa il ponte, e la
    * finestra dell'assistenza resta la sua senza saperlo. */
