@@ -38,26 +38,6 @@ const browser = await chromium.launch({
     "--ignore-gpu-blocklist",
   ],
 });
-const pagina = await browser.newPage({ viewport: { width: 1280, height: 720 } });
-pagina.on("console", (m) => console.log(`[pagina] ${m.text()}`));
-for (const scena of ["citta", "incrocio", "forlanini", "est", "ovest"]) {
-  for (const modo of ["oggi", "immersiva"]) {
-    for (const stile of ["chiaro", "scuro"]) {
-      await pagina.goto(
-        `http://127.0.0.1:${porta}/pagina.html?scena=${scena}&stile=${stile}&modo=${modo}`,
-      );
-      try {
-        await pagina.waitForSelector("body[data-pronta=si]", { timeout: 90000 });
-      } catch {
-        console.log(`${scena}/${modo}/${stile}: la mappa non ha finito in tempo, foto lo stesso`);
-      }
-      await pagina
-        .locator("#schermo")
-        .screenshot({ path: join(qui, "foto", `${scena}-${modo}-${stile}.png`) });
-      console.log(`${scena}/${modo}/${stile}: fatta`);
-    }
-  }
-}
 /* Il telefono, in guida, nelle tre viste che si scelgono col tasto della
  * mappa: 2D, 3D e immersiva. */
 const telefono = await browser.newPage({
@@ -81,6 +61,24 @@ for (const scena of ["est", "incrocio", "forlanini"]) {
         .screenshot({ path: join(qui, "foto", `telefono-${scena}-${vista}-${stile}.png`) });
       console.log(`telefono ${scena}/${vista}/${stile}: fatta`);
     }
+  }
+}
+/* Lo schermo di Android Auto, nelle stesse tre viste. */
+const schermoAuto = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+for (const scena of ["est", "incrocio"]) {
+  for (const vista of ["piatta", "inclinata", "immersiva"]) {
+    await schermoAuto.goto(
+      `http://127.0.0.1:${porta}/telefono.html?schermo=auto&scena=${scena}&stile=chiaro&vista=${vista}`,
+    );
+    try {
+      await schermoAuto.waitForSelector("body[data-pronta=si]", { timeout: 90000 });
+    } catch {
+      console.log(`auto ${scena}/${vista}: non ha finito in tempo, foto lo stesso`);
+    }
+    await schermoAuto
+      .locator("#schermo")
+      .screenshot({ path: join(qui, "foto", `auto-${scena}-${vista}-chiaro.png`) });
+    console.log(`auto ${scena}/${vista}: fatta`);
   }
 }
 await browser.close();

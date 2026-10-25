@@ -50,8 +50,22 @@
     ? q.get("vista")
     : "inclinata";
   const scuro = q.get("stile") === "scuro";
-  const INCLINAZIONE = { piatta: 0, inclinata: 58, immersiva: 60 };
-  const ZOOM = { piatta: 16, inclinata: 17, immersiva: 18 };
+  /* «auto»: lo schermo di Android Auto (`RendererMappa.kt`): lo stile per
+   * l'auto, 55° in 3D e 60° nell'immersiva, lo zoom di guida 16,5 (+1
+   * nell'immersiva), l'auto al 30% dall'alto dell'area libera. */
+  const auto = q.get("schermo") === "auto";
+  if (auto) {
+    const schermo = document.getElementById("schermo");
+    schermo.style.width = "1280px";
+    schermo.style.height = "720px";
+  }
+  const INCLINAZIONE = auto
+    ? { piatta: 0, inclinata: 55, immersiva: 60 }
+    : { piatta: 0, inclinata: 58, immersiva: 60 };
+  const ZOOM = auto
+    ? { piatta: 16.5, inclinata: 16.5, immersiva: 17.5 }
+    : { piatta: 16, inclinata: 17, immersiva: 18 };
+  const SOPRA = auto ? 216 : 420;
   const LARGHEZZA_CORSIA = 3.5;
 
   const metri = (a, b) => {
@@ -103,7 +117,7 @@
   (async () => {
     const stile = await (
       await fetch(
-        `stile-telefono-${scuro ? "scuro" : "chiaro"}${vista === "immersiva" ? "-immersiva" : ""}.json`,
+        `stile-${auto ? "" : "telefono-"}${scuro ? "scuro" : "chiaro"}${vista === "immersiva" ? "-immersiva" : ""}.json`,
       )
     ).json();
     const r = await (
@@ -152,7 +166,7 @@
     });
     mappa.on("load", () => {
       /* In guida l'auto sta in basso: il resto dello schermo e' la strada. */
-      mappa.jumpTo({ center: qui, padding: { top: 420, bottom: 0, left: 0, right: 0 } });
+      mappa.jumpTo({ center: qui, padding: { top: SOPRA, bottom: 0, left: 0, right: 0 } });
       /* Gli edifici come li accende l'app: in 2D quelli piatti, in 3D quelli
        * in rilievo, nell'immersiva quelli sopra il percorso (gia' accesi). */
       if (mappa.getLayer("edifici"))
