@@ -31,6 +31,11 @@ const DA_SCARICARE = {
   "calcio-inter-italiano": `${ESPN}/soccer/ita.1/teams/110/schedule?lang=it&region=it`,
   "calcio-serie-a-partite-italiano": `${ESPN}/soccer/ita.1/scoreboard?lang=it&region=it`,
   "calcio-serie-a-giorno": `${ESPN}/soccer/ita.1/scoreboard?dates=20261025`,
+  "calcio-champions-classifica": `${ESPN_CLASSIFICHE}/soccer/uefa.champions/standings`,
+  "calcio-europa-classifica": `${ESPN_CLASSIFICHE}/soccer/uefa.europa/standings`,
+  "calcio-conference-classifica": `${ESPN_CLASSIFICHE}/soccer/uefa.europa.conf/standings`,
+  "calcio-roma-tutte": `${ESPN}/soccer/all/teams/104/schedule`,
+  "calcio-roma-tutte-prossime": `${ESPN}/soccer/all/teams/104/schedule?fixture=true`,
 };
 
 async function scarica(url) {
