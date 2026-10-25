@@ -472,6 +472,14 @@ test("la percentuale si sceglie libera e va all'entita'", async ({ page }, testI
   await expect(pagina.locator("[data-na-pct]")).toHaveText("85");
   await pagina.locator('[data-na-pct-scelta="90"]').click();
   await expect(pagina.locator("[data-na-pct]")).toHaveText("90");
+  /* «Faceva scorrere per errore»: niente cursore da trascinare. La barra dice
+   * solo fin dove si carica, e si cambia coi tasti. */
+  await expect(pagina.locator('.dm-na-obiettivo input[type="range"]')).toHaveCount(0);
+  await expect(pagina.locator(".dm-na-cursore")).toHaveAttribute("style", /--na-fino:\s*90%/);
+  if (process.env.DM_FOTO)
+    await pagina
+      .locator(".dm-na-adesso-carta")
+      .screenshot({ path: `${process.env.DM_FOTO}/auto-barra-${testInfo.project.name}.png` });
   const chiamate = await page.evaluate(() =>
     (window.__chiamate || [])
       .filter((c) => c.service_data?.entity_id === "number.byd_limite")

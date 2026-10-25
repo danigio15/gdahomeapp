@@ -10,6 +10,23 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.4
+
+- **Auto, carica fino a:** la barra dice soltanto fin dove si carica e non si
+  trascina più: scorrendo la pagina col dito l'obiettivo cambiava per sbaglio.
+  Si cambia con −, + e i tasti delle percentuali.
+- **Finestre, sensore di apertura:** «Mettilo nella plancia» mette un sensore
+  di apertura nella casella del contatto, non in quella della tapparella. Una
+  riga già scritta così si vede come finestra senza comandi (aperta o chiusa),
+  non più «Sconosciuta» con Apri, Stop e Chiudi.
+- **Zigbee, togliere un dispositivo:** «Toglilo d'imperio» lo blocca fuori
+  dalla rete, così al risveglio non rientra da solo. Quando riapri la rete per
+  abbinare, il blocco si toglie da sé. Per i dispositivi a batteria l'app dice
+  di svegliarli col loro tasto prima di toglierli.
+- **Zigbee, rinominare:** il nome nuovo va anche negli identificativi delle
+  entità in Home Assistant (con Zigbee2MQTT). Se il dispositivo è già nella
+  plancia, aggiorna la sua riga con l'entità nuova.
+
 ## 1.18.3
 
 - **Sport, sezione nuova:** le squadre di calcio che segui (Serie A, coppe

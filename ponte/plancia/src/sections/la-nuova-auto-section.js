@@ -473,10 +473,9 @@ function cartaAdesso(l) {
       <div class="dm-na-obiettivo-testa"><span>${esc(t("Carica fino a", "Charge up to"))}</span>
         <b><output data-na-pct>${Math.round(obiettivo ?? 0)}</output><small>%</small></b>
         <span class="dm-na-obiettivo-km" data-na-km>${kmObiettivo === null ? "" : `· ${intero(kmObiettivo)} km`}</span></div>
-      <div class="dm-na-cursore" style="--na-adesso:${Math.max(0, Math.min(100, l.batteria ?? 0))}%">
-        <input type="range" data-na-cursore min="${info.min}" max="${info.max}" step="${info.voci.length ? 1 : info.passo}"
-          value="${obiettivo ?? info.max}" ${info.scrivibile ? "" : "disabled"}
-          aria-label="${esc(t("Carica fino a", "Charge up to"))}">
+      <div class="dm-na-cursore" role="img" aria-label="${esc(`${t("Carica fino a", "Charge up to")} ${Math.round(obiettivo ?? info.max)}%`)}"
+        style="--na-fino:${Math.max(0, Math.min(100, obiettivo ?? info.max))}%">
+        <i class="dm-na-fino"></i>
       </div>
       <div class="dm-na-scala"><span>${info.min}%</span>${
         l.batteria === null ? "" : `<span class="dm-na-adesso">${Math.round(l.batteria)}% ${esc(t("adesso", "now"))}</span>`
@@ -1350,16 +1349,13 @@ function stile() {
   ${P} .dm-na-obiettivo-testa b{font-family:'Oswald',system-ui,sans-serif;font-size:34px;font-weight:700;color:var(--text,#0f172a);line-height:1}
   ${P} .dm-na-obiettivo-testa b small{font-size:16px;color:var(--text-dim,#64748b)}
   ${P} .dm-na-obiettivo-km{font-size:13px;font-weight:800;color:var(--text-dim,#64748b)}
-  ${P} .dm-na-cursore{position:relative;margin:10px 0 6px}
-  ${P} .dm-na-cursore::before{content:"";position:absolute;left:0;top:50%;height:10px;margin-top:-5px;width:var(--na-adesso);border-radius:9px;
-    background:linear-gradient(90deg,#059669,#34d399);pointer-events:none;z-index:1}
-  ${P} .dm-na-cursore input{position:relative;width:100%;margin:0;height:30px;background:transparent;-webkit-appearance:none;appearance:none;cursor:pointer}
-  ${P} .dm-na-cursore input::-webkit-slider-runnable-track{height:10px;border-radius:9px;background:color-mix(in srgb,var(--text,#0f172a) 10%,transparent)}
-  ${P} .dm-na-cursore input::-moz-range-track{height:10px;border-radius:9px;background:color-mix(in srgb,var(--text,#0f172a) 10%,transparent)}
-  ${P} .dm-na-cursore input::-webkit-slider-thumb{-webkit-appearance:none;position:relative;z-index:2;width:28px;height:28px;margin-top:-9px;border-radius:50%;
-    background:#fff;border:6px solid #059669;box-shadow:0 4px 10px rgba(2,6,23,.3)}
-  ${P} .dm-na-cursore input::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:6px solid #059669}
-  ${P} .dm-na-cursore input:disabled{cursor:default;opacity:.6}
+  /* La barra dice soltanto fin dove si carichera'. Non si trascina: col
+   * cursore, scorrendo la pagina col dito, l'obiettivo cambiava per sbaglio.
+   * Si cambia coi tasti qui sotto. */
+  ${P} .dm-na-cursore{position:relative;height:10px;margin:18px 0 12px;border-radius:9px;
+    background:color-mix(in srgb,var(--text,#0f172a) 10%,transparent);overflow:hidden}
+  ${P} .dm-na-cursore .dm-na-fino{position:absolute;left:0;top:0;bottom:0;width:var(--na-fino);border-radius:9px;
+    background:linear-gradient(90deg,#059669,#34d399)}
   ${P} .dm-na-scala{display:flex;justify-content:space-between;font-size:11.5px;font-weight:800;color:var(--text-dim,#64748b)}
   ${P} .dm-na-adesso{color:#059669}
   ${P} .dm-na-scala .dm-na-adesso{color:#059669}
