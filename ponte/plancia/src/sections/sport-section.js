@@ -106,9 +106,21 @@ async function chiediIRisultati(firma, seguiti) {
   try {
     const risposta = await chiediAHomeAssistant({ type: "ponte/sport/risultati", seguiti }, ATTESA);
     if (dati.firma !== firma) return;
-    dati.risultati = Array.isArray(risposta?.risultati) ? risposta.risultati : [];
+    const nuovi = Array.isArray(risposta?.risultati) ? risposta.risultati : [];
+    /* Una cosa seguita che questa volta non e' arrivata (la fonte non
+     * rispondeva) non cancella quella di prima: si tiene, e si riprova fra
+     * un minuto invece che fra un quarto d'ora. Le risposte sono nello stesso
+     * ordine delle cose seguite, e la firma e' la stessa. */
+    const prima = dati.risultati;
+    let mancanti = false;
+    dati.risultati = nuovi.map((r, i) => {
+      if (!r?.errore) return r;
+      mancanti = true;
+      return prima[i] && !prima[i].errore ? prima[i] : r;
+    });
     dati.arrivati = Date.now();
     dati.guasto = "";
+    if (mancanti) dati.chiesti = Date.now() - fraQuantoSiRichiede(dati.risultati) + DOPO_UN_ERRORE;
   } catch (errore) {
     if (dati.firma !== firma) return;
     const codice = clean(errore?.code || errore?.error?.code || errore?.message);

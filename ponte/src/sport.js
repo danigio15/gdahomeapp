@@ -721,10 +721,20 @@ export function creaSport({ scarica = (u, o) => fetch(u, o), orologio = () => Da
   async function json(indirizzo, quanto = PER_UN_PO) {
     const tenuta = memoria.get(indirizzo);
     if (tenuta && tenuta.fino > orologio()) return tenuta.valore;
-    const r = await scarica(indirizzo, {
-      headers: { accept: "application/json" },
-      signal: AbortSignal.timeout(ATTESA),
-    });
+    let r;
+    try {
+      r = await scarica(indirizzo, {
+        headers: { accept: "application/json" },
+        signal: AbortSignal.timeout(ATTESA),
+      });
+    } catch (errore) {
+      /* «I dati non si aggiornavano»: una fonte che non si raggiunge per un
+       * momento (la rete, un tempo scaduto) faceva sparire tutto quello che si
+       * sapeva, e la plancia restava col «non risponde». Si tiene l'ultima
+       * risposta buona, come quando la fonte risponde male. */
+      if (tenuta) return tenuta.valore;
+      throw errore;
+    }
     if (!r.ok) {
       /* Una fonte che non risponde non cancella quello che si sapeva. */
       if (tenuta) return tenuta.valore;

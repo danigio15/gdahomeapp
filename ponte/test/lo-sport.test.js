@@ -207,6 +207,26 @@ test("una fonte che non risponde: le altre arrivano lo stesso, e quello che si s
   assert.equal(calcio.squadra.id, "110");
 });
 
+test("una fonte che non si raggiunge (rete giu', tempo scaduto) non cancella quello che si sapeva", async () => {
+  let giu = false;
+  let ora = SABATO;
+  const buona = fonteFinta();
+  const sport = creaSport({
+    scarica: async (u, o) => {
+      if (giu && u.includes("jolpi")) throw new TypeError("fetch failed");
+      return buona(u, o);
+    },
+    orologio: () => ora,
+  });
+  const [prima] = await sport.risultati([{ tipo: "f1" }]);
+  assert.equal(prima.ultima.nome, "Singapore Grand Prix");
+  giu = true;
+  ora += 60 * 60_000;
+  const [dopo] = await sport.risultati([{ tipo: "f1" }]);
+  assert.equal(dopo.errore, undefined);
+  assert.equal(dopo.ultima.nome, "Singapore Grand Prix");
+});
+
 test("la stessa domanda due volte in pochi minuti va fuori una volta sola", async () => {
   const chiamate = [];
   const sport = creaSport({ scarica: fonteFinta({ chiamate }), orologio: () => SABATO });
