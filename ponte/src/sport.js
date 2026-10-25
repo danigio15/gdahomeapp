@@ -148,6 +148,30 @@ export function partitaDaEspn(evento, mia) {
   return p;
 }
 
+/* Le coppe europee: se la squadra seguita le gioca, ognuna ha il suo blocco
+ * con la classifica della fase a girone unico e le sue partite. */
+export const COPPE_EUROPEE = Object.freeze(["uefa.champions", "uefa.europa", "uefa.europa.conf"]);
+
+/* Le zone della classifica (chi passa, chi va agli spareggi, chi esce, chi
+ * va in Europa, chi retrocede), come le scrive ESPN: qui diventano una
+ * parola che la plancia traduce, e un colore. */
+const ZONE = [
+  [/round of 16/i, "ottavi"],
+  [/playoff/i, "spareggi"],
+  [/eliminat/i, "fuori"],
+  [/relegat/i, "retrocede"],
+  [/^champions/i, "champions"],
+  [/^europa/i, "europa"],
+  [/conference/i, "conference"],
+];
+function zonaDi(nota) {
+  const descrizione = testo(nota?.description);
+  const chiave = ZONE.find(([re]) => re.test(descrizione))?.[1];
+  if (!chiave) return null;
+  const colore = testo(nota?.color);
+  return { chiave, colore: /^#[0-9a-f]{6}$/i.test(colore) ? colore : "" };
+}
+
 /** La classifica di un campionato da ESPN: una riga per squadra. */
 export function classificaDaEspn(json) {
   const gruppi = json?.children?.length ? json.children : [json];
@@ -167,6 +191,7 @@ export function classificaDaEspn(json) {
         perse: s.losses ?? 0,
         fatti: s.pointsFor ?? 0,
         subiti: s.pointsAgainst ?? 0,
+        zona: zonaDi(e.note),
       });
     }
   }
@@ -182,10 +207,27 @@ export function squadreDaEspn(json) {
     .sort((a, b) => a.nome.localeCompare(b.nome, "it"));
 }
 
+/** Le coppe europee che la squadra gioca quest'anno, dal suo calendario. */
+export function coppeDelCalendario(giocate, prossime) {
+  const leghe = new Set(
+    [...(giocate?.events || []), ...(prossime?.events || [])].map((e) => e?.league?.slug),
+  );
+  return COPPE_EUROPEE.filter((l) => leghe.has(l));
+}
+
 /** Tutto della squadra seguita: le ultime, le prossime, quella in corso, il
  * posto in classifica. `giocate` e `prossime` sono i calendari di ESPN di
- * tutte le competizioni; `classifica` quella del suo campionato. */
-export function calcioDaEspn({ id, campionato, giocate, prossime, classifica, squadra }) {
+ * tutte le competizioni; `classifica` quella del suo campionato;
+ * `classificheDelleCoppe` quelle delle coppe europee che gioca, per lega. */
+export function calcioDaEspn({
+  id,
+  campionato,
+  giocate,
+  prossime,
+  classifica,
+  squadra,
+  classificheDelleCoppe = {},
+}) {
   const tutte = new Map();
   for (const e of [...(giocate?.events || []), ...(prossime?.events || [])]) {
     const p = partitaDaEspn(e, id);
@@ -214,6 +256,22 @@ export function calcioDaEspn({ id, campionato, giocate, prossime, classifica, sq
     prossime: inOrdine.filter((p) => p.fase === "prima" && !p.rinviata).slice(0, 5),
     posizione: riga,
     classifica: tabella,
+    coppe: coppeDelCalendario(giocate, prossime).map((lega) => {
+      const sue = inOrdine.filter((p) => p.lega === lega);
+      const tab = classificaDaEspn(classificheDelleCoppe?.[lega]);
+      return {
+        lega,
+        nome: COMPETIZIONI[lega],
+        dalVivo: sue.find((p) => p.fase === "in") || null,
+        ultime: sue
+          .filter((p) => p.fase === "fine")
+          .slice(-4)
+          .reverse(),
+        prossime: sue.filter((p) => p.fase === "prima" && !p.rinviata).slice(0, 3),
+        posizione: tab.find((r) => r.id === String(id)) || null,
+        classifica: tab,
+      };
+    }),
   };
 }
 
@@ -662,7 +720,22 @@ export function creaSport({ scarica = (u, o) => fetch(u, o), orologio = () => Da
       json(`${ESPN}/all/teams/${id}/schedule?fixture=true`),
       json(`${ESPN_CLASSIFICHE}/${campionato}/standings`).catch(() => null),
     ]);
-    let r = calcioDaEspn({ id: String(id), campionato, giocate, prossime, classifica });
+    const classificheDelleCoppe = Object.fromEntries(
+      await Promise.all(
+        coppeDelCalendario(giocate, prossime).map(async (lega) => [
+          lega,
+          await json(`${ESPN_CLASSIFICHE}/${lega}/standings`).catch(() => null),
+        ]),
+      ),
+    );
+    let r = calcioDaEspn({
+      id: String(id),
+      campionato,
+      giocate,
+      prossime,
+      classifica,
+      classificheDelleCoppe,
+    });
     /* Una partita oggi, in corso o a momenti: il risultato si chiede alla
      * giornata del campionato, che si aggiorna ogni minuto. */
     const adesso = orologio();
@@ -689,6 +762,7 @@ export function creaSport({ scarica = (u, o) => fetch(u, o), orologio = () => Da
             events: (prossime?.events || []).filter((e) => String(e.id) !== vicina.id),
           },
           classifica,
+          classificheDelleCoppe,
         });
       }
     }

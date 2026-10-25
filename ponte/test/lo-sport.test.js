@@ -30,6 +30,7 @@ const RISPOSTE = [
   [/soccer\/all\/teams\/110\/schedule\?fixture=true$/, "calcio-inter-tutte-prossime"],
   [/soccer\/all\/teams\/110\/schedule$/, "calcio-inter-tutte"],
   [/soccer\/ita\.1\/standings$/, "calcio-serie-a-classifica"],
+  [/soccer\/uefa\.champions\/standings$/, "calcio-champions-classifica"],
   [/soccer\/ita\.1\/teams$/, "calcio-serie-a-squadre"],
   [/soccer\/ita\.1\/scoreboard\?dates=20261025$/, "calcio-serie-a-giorno"],
   [/f1\/current\/last\/results\.json$/, "f1-ultima-gara"],
@@ -394,4 +395,42 @@ test("MotoGP: le sessioni del fine settimana si possono toccare, coi loro identi
   const sigle = m.ultima.tutte.map((s) => s.sigla);
   assert.deepEqual(sigle, ["FP1", "PR", "FP2", "Q1", "Q2", "S", "G"]);
   assert.ok(m.ultima.tutte.every((s) => /^[0-9a-f-]{36}$/.test(s.id)));
+});
+
+test("calcio: la squadra che gioca la Champions ha il suo blocco, con la classifica e le partite di coppa", async () => {
+  const chiamate = [];
+  const sport = creaSport({ scarica: fonteFinta({ chiamate }), orologio: () => SABATO });
+  const [inter] = await sport.risultati([{ tipo: "calcio", campionato: "ita.1", squadra: "110" }]);
+  assert.equal(inter.coppe.length, 1);
+  const [coppa] = inter.coppe;
+  assert.equal(coppa.lega, "uefa.champions");
+  assert.equal(coppa.nome, "Champions League");
+  assert.equal(coppa.classifica.length, 36);
+  assert.equal(coppa.posizione.id, "110");
+  assert.ok(coppa.posizione.posizione >= 1 && coppa.posizione.posizione <= 36);
+  /* Le zone: chi passa agli ottavi, chi va agli spareggi, chi esce. */
+  assert.equal(coppa.classifica[0].zona.chiave, "ottavi");
+  assert.equal(coppa.classifica[12].zona.chiave, "spareggi");
+  assert.equal(coppa.classifica[35].zona.chiave, "fuori");
+  assert.match(coppa.classifica[0].zona.colore, /^#[0-9a-f]{6}$/i);
+  /* Solo partite di coppa, la piu' recente prima. */
+  assert.ok(coppa.ultime.length >= 1);
+  assert.ok([...coppa.ultime, ...coppa.prossime].every((p) => p.lega === "uefa.champions"));
+  assert.ok(Date.parse(coppa.ultime[0].quando) >= Date.parse(coppa.ultime.at(-1).quando));
+  /* Le coppe che non gioca non si chiedono nemmeno. */
+  assert.ok(chiamate.some((u) => u.endsWith("/uefa.champions/standings")));
+  assert.ok(!chiamate.some((u) => u.includes("uefa.europa")));
+  /* Anche la classifica del campionato ha le sue zone. */
+  assert.equal(inter.classifica[0].zona.chiave, "champions");
+});
+
+test("calcio: senza la classifica della coppa il blocco c'e' lo stesso, con le partite", async () => {
+  const sport = creaSport({
+    scarica: fonteFinta({ manca: (u) => u.includes("uefa.champions/standings") }),
+    orologio: () => SABATO,
+  });
+  const [inter] = await sport.risultati([{ tipo: "calcio", campionato: "ita.1", squadra: "110" }]);
+  assert.equal(inter.coppe[0].classifica.length, 0);
+  assert.equal(inter.coppe[0].posizione, null);
+  assert.ok(inter.coppe[0].ultime.length >= 1);
 });
