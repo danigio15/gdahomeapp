@@ -86,6 +86,12 @@ if (stagione) {
           "moto-sprint",
           await scarica(`${MOTO}/results/session/${spr.id}/classification?test=false`),
         );
+      /* Le qualifiche (Q1 e Q2): toccando la sessione la plancia le mostra. */
+      for (const q of (sessioni.json || []).filter((s) => s.type === "Q"))
+        await salva(
+          `moto-q${q.number}`,
+          await scarica(`${MOTO}/results/session/${q.id}/classification?test=false`),
+        );
       await salva(
         "moto-classifica",
         await scarica(
@@ -95,6 +101,29 @@ if (stagione) {
     }
   }
 }
+
+/* Il dettaglio di una partita finita: marcatori, cartellini, formazioni,
+ * statistiche. L'ultima partita giocata dall'Inter in campionato, in inglese
+ * e in italiano. */
+const giocate = (
+  (await scarica(`${ESPN}/soccer/ita.1/teams/110/schedule`)).json?.events || []
+).filter((e) => e.competitions?.[0]?.status?.type?.completed);
+const ultima = giocate.at(-1);
+if (ultima) {
+  await salva("calcio-partita", await scarica(`${ESPN}/soccer/ita.1/summary?event=${ultima.id}`));
+  await salva(
+    "calcio-partita-italiano",
+    await scarica(`${ESPN}/soccer/ita.1/summary?event=${ultima.id}&lang=it&region=it`),
+  );
+}
+/* E una partita in corso o di oggi, se c'e', per vedere il dettaglio dal vivo. */
+const oggi = (await scarica(`${ESPN}/soccer/ita.1/scoreboard`)).json?.events || [];
+const viva = oggi.find((e) => e.status?.type?.state === "in") || oggi[0];
+if (viva)
+  await salva(
+    "calcio-partita-oggi",
+    await scarica(`${ESPN}/soccer/ita.1/summary?event=${viva.id}`),
+  );
 
 /* Gli stemmi delle squadre, piccoli come li chiede il ponte (128 px): quelli
  * della Serie A e delle avversarie dell'Inter. Servono alle foto della pagina. */
