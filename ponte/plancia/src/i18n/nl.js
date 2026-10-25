@@ -7357,4 +7357,6 @@ export default Object.freeze({
   "Your team · Formula 1 · MotoGP": "Je team · Formule 1 · MotoGP",
   "home": "thuis",
   "away": "uit",
+  "Other silent entities": "Andere stille entiteiten",
+  "They are silent, but it is not known whether a stopped device is behind them: that is why they are not in the warning. The bin keeps them out for good, later too.": "Ze zwijgen, maar het is niet bekend of er een uitgevallen apparaat achter zit: daarom staan ze niet in de waarschuwing. De prullenbak houdt ze voorgoed buiten, ook later.",
 });

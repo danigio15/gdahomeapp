@@ -60,7 +60,11 @@
  * È puro: entrano le entità configurate, gli stati e l'elenco delle escluse;
  * esce cosa mostrare.
  */
-import { chiNonRispondePerDispositivo } from "./chi-non-risponde.js";
+import {
+  chiNonRisponde,
+  chiNonRispondePerDispositivo,
+  senzaDispositivo,
+} from "./chi-non-risponde.js";
 import { tipoFraLeEntita } from "./il-tipo-del-sensore.js";
 import {
   escluseDellaTessera,
@@ -113,7 +117,15 @@ export function iDispositiviScollegati({
     : configurate && typeof configurate[Symbol.iterator] === "function"
       ? [...configurate]
       : [];
-  const tutte = [...new Set([...scritte, ...dellaCasa])];
+  /* «I dispositivi risultano non raggiungibili, in realta' funzionano»
+   * (#307). Tutta la casa si guarda solo quando si sa di chi e' ogni entita':
+   * senza le mappe dei registri ogni entita' muta diventa una riga, e basta
+   * un sensore secondario fermo — quello che un'integrazione lascia
+   * `unavailable` per sempre — per far passare da scollegato un dispositivo
+   * che va benissimo. Senza mappe l'avviso torna alle entita' della plancia,
+   * com'era prima: quelle le ha scelte chi la usa. */
+  const conIRegistri = Boolean(di && typeof di === "object" && Object.keys(di).length);
+  const tutte = conIRegistri ? [...new Set([...scritte, ...dellaCasa])] : [...new Set(scritte)];
   /* Per dispositivo, non per entita': un'asciugatrice che risponde non e' un
    * dispositivo non connesso solo perche' tace la sua serratura bambini. La
    * regola sta in `chi-non-risponde.js` ed e' la stessa del ponte, cioe' la
@@ -124,6 +136,22 @@ export function iDispositiviScollegati({
     states,
     { nomeDi, di, nomi },
   ).map((una) => vestita(una, { states, di, modelli }));
+  /* Tutto il resto che tace, fuori dall'avviso: le entita' mute che nessuna
+   * riga qui sopra ha preso. Non suonano — non si sa se dietro ci sia un
+   * dispositivo fermo — ma si devono poter cercare e togliere lo stesso,
+   * sempre: chi cerca una presa la trova, con le mappe o senza. */
+  const prese = new Set(
+    adesso.flatMap((una) => (Array.isArray(una.entita) ? una.entita : [una.entity])),
+  );
+  const altre = chiNonRisponde(
+    [...new Set([...scritte, ...dellaCasa])].filter(
+      (entity) => !fuori.has(pulito(entity)) && !prese.has(pulito(entity)),
+    ),
+    states,
+    { nomeDi },
+  )
+    .filter((una) => !senzaDispositivo(una.entity))
+    .map((una) => vestita({ ...una, entita: [una.entity] }, { states, di: null, modelli }));
   /* Solo le voci firmate da questa tessera. Una voce nuda tiene un'entità
    * fuori da TUTTE le tessere, e l'ha scritta un altro interruttore: dirla
    * qui, in una sezione che parla di questa tessera, direbbe che l'ha messa da
@@ -154,6 +182,7 @@ export function iDispositiviScollegati({
   }
   return {
     adesso,
+    altre,
     messiDaParte: perDispositivo(sciolte, di, nomi)
       .map((una) => vestita(una, { states, di, modelli }))
       .sort((una, altra) => una.nome.localeCompare(altra.nome)),

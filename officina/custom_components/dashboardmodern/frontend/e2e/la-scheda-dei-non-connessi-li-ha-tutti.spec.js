@@ -81,12 +81,13 @@ const REGISTRI = {
   },
 };
 
-async function apri(page, testInfo) {
+async function apri(page, testInfo, { stati = STATI, registri = REGISTRI } = {}) {
   test.setTimeout(120_000);
   await page.route("https://**", (r) => r.fulfill({ status: 200, body: "" }));
   await page.addInitScript((registri) => {
-    localStorage.setItem("dm_dispositivi_di_home_assistant", JSON.stringify(registri));
-  }, REGISTRI);
+    if (registri)
+      localStorage.setItem("dm_dispositivi_di_home_assistant", JSON.stringify(registri));
+  }, registri);
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
   await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true);
   await page.evaluate(
@@ -95,14 +96,15 @@ async function apri(page, testInfo) {
       localStorage.setItem("cd_prese", JSON.stringify(prese));
       window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
     },
-    { s: STATI, prese: PRESE },
+    { s: stati, prese: PRESE },
   );
   await page.locator("#setup-wizard").evaluateAll((n) => n.forEach((x) => x.remove()));
   /* L'anagrafe dei dispositivi la lascia chi ha i registri (il pannello, il
    * ponte): qui la si scrive dopo l'avvio, e la plancia la rilegge da sola. */
   await page.evaluate((registri) => {
-    localStorage.setItem("dm_dispositivi_di_home_assistant", JSON.stringify(registri));
-  }, REGISTRI);
+    if (registri)
+      localStorage.setItem("dm_dispositivi_di_home_assistant", JSON.stringify(registri));
+  }, registri);
   await page.waitForTimeout(1800);
   await page.evaluate(() => {
     if (!document.getElementById("editor-modal")?.classList.contains("show")) apriConfigEntita();
@@ -111,7 +113,9 @@ async function apri(page, testInfo) {
     timeout: 15_000,
   });
   await page.evaluate(() => window.editorSwitch?.("scollegati"));
-  await expect(page.locator("#ed-body .dm-scollegati-list")).toHaveCount(1, { timeout: 15_000 });
+  await expect(page.locator("#ed-body .dm-scollegati-list").first()).toBeVisible({
+    timeout: 15_000,
+  });
 }
 
 const righe = (page) => page.locator("#ed-body .dm-scollegati-riga:visible");
@@ -175,4 +179,53 @@ test("ci sono tutti, con il tipo e marca e modello, e la ricerca li filtra", asy
     });
   await righe(page).locator("[data-dm-scollegati-torna]").click();
   await expect(corpo.locator(".dm-scollegati-fuori")).toHaveCount(0);
+});
+
+/* «I dispositivi risultano non raggiungibili, in realtà funzionano» (#307).
+ * Senza l'anagrafe dei dispositivi l'avviso guarda solo la plancia; il resto
+ * che tace sta sotto, «Altre entità ferme», e si cerca e si toglie lo stesso. */
+test("senza anagrafe: l'avviso è della plancia, il resto si cerca e si toglie", async ({
+  page,
+}, testInfo) => {
+  await apri(page, testInfo, {
+    registri: null,
+    stati: {
+      "switch.pompa": muto("Pompa piscina"),
+      "light.salotto": { state: "on", attributes: { friendly_name: "Salotto" } },
+      /* Il sensore secondario fermo di una luce che va benissimo. */
+      "sensor.salotto_firmware": muto("Salotto firmware"),
+      "sensor.presa_cantina_potenza": muto("Presa cantina potenza", { device_class: "power" }),
+      "input_boolean.vacanze": muto("Vacanze"),
+    },
+  });
+  const corpo = page.locator("#ed-body");
+  const avviso = corpo.locator(".dm-scollegati-list").first();
+  await expect(avviso.locator(".dm-scollegati-riga")).toHaveCount(1);
+  await expect(avviso).toContainText("Pompa piscina");
+  await expect(corpo).toContainText("Altre entità ferme");
+  await expect(corpo).toContainText("Salotto firmware");
+  await expect(corpo).toContainText("Presa cantina potenza");
+  await expect(corpo).not.toContainText("Vacanze");
+  if (process.env.DM_FOTO)
+    await page.screenshot({
+      path: `${process.env.DM_FOTO}/non-connessi-307-01-altre-${testInfo.project.name}.png`,
+    });
+
+  const cerca = corpo.locator("[data-dm-scollegati-filtro]");
+  await cerca.fill("firmware");
+  await expect(righe(page)).toHaveCount(1);
+  if (process.env.DM_FOTO)
+    await page.screenshot({
+      path: `${process.env.DM_FOTO}/non-connessi-307-02-cerca-${testInfo.project.name}.png`,
+    });
+  page.once("dialog", (d) => d.accept());
+  await righe(page).locator("[data-dm-scollegati-via]").click();
+  await expect(corpo.locator(".dm-scollegati-fuori", { hasText: "Salotto firmware" })).toHaveCount(
+    1,
+  );
+  await cerca.fill("");
+  if (process.env.DM_FOTO)
+    await page.screenshot({
+      path: `${process.env.DM_FOTO}/non-connessi-307-03-tolta-${testInfo.project.name}.png`,
+    });
 });

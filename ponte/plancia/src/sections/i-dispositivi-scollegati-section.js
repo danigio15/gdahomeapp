@@ -186,7 +186,7 @@ function rigaMessaDaParte(una) {
   </div>`;
 }
 
-function corpo({ adesso, messiDaParte }) {
+function corpo({ adesso, altre = [], messiDaParte }) {
   const intro = `<div class="ed-intro">${esc(
     t(
       "Tutti i dispositivi di Home Assistant che non si riescono a raggiungere, anche quelli che la plancia non mostra: un apparecchio ci finisce quando tacciono tutte le sue entità. Aiutanti, automazioni e script non ci sono: non hanno un apparecchio dietro. Il cestino toglie un dispositivo dall'avviso; il campanello, fra quelli tolti, ce lo rimette.",
@@ -201,11 +201,25 @@ function corpo({ adesso, messiDaParte }) {
           "Everything is answering right now. If something stops, it shows up here, and its card shows up on Home.",
         ),
       )}</div>`;
+  /* Le altre entità ferme della casa (#307): non suonano nell'avviso, ma si
+   * cercano e si tolgono da qui come le righe di sopra. */
+  const ferme = altre.length
+    ? `<div class="ed-sec-title ${BLOCCO}-titolo">${esc(
+        t("Altre entità ferme", "Other silent entities"),
+      )}</div>
+      <div class="ed-hint ${BLOCCO}-nota">${esc(
+        t(
+          "Tacciono, ma non si sa se dietro ci sia un dispositivo fermo: per questo non sono nell'avviso. Col cestino non compaiono mai, nemmeno più avanti.",
+          "They are silent, but it is not known whether a stopped device is behind them: that is why they are not in the warning. The bin keeps them out for good, later too.",
+        ),
+      )}</div>
+      <div class="ed-list ${BLOCCO}-list">${altre.map(rigaViva).join("")}</div>`
+    : "";
   const fuori = messiDaParte.length
     ? `<div class="ed-sec-title ${BLOCCO}-titolo">${esc(
         t("Tolti dall'avviso", "Removed from the warning"),
       )}</div>
-      <div class="ed-hint">${esc(
+      <div class="ed-hint ${BLOCCO}-nota">${esc(
         t(
           "Restano scritti qui perché si sappia che ci sono. Col campanello tornano nell'avviso, se sono ancora muti.",
           "They stay written here so you know they exist. The bell puts them back in the warning, if they are still silent.",
@@ -222,7 +236,7 @@ function corpo({ adesso, messiDaParte }) {
       aria-label="${esc(t("Cerca fra i dispositivi non connessi", "Search disconnected devices"))}">
     <div class="${BLOCCO}-nessuno" hidden>${esc(t("Nessun dispositivo corrisponde alla ricerca.", "No device matches the search."))}</div>
   </div>`;
-  return `${intro}${cerca}${vive}${fuori}`;
+  return `${intro}${cerca}${vive}${ferme}${fuori}`;
 }
 
 /* Nasconde le righe che non contengono quello che si è scritto. */
@@ -251,9 +265,10 @@ function onCerca(event) {
  * Gli stati arrivano a mazzetti più volte al secondo, e questa scheda è in una
  * finestra aperta — ridisegnarla a ogni mazzetto vorrebbe dire un cestino che
  * scappa da sotto il dito. */
-function firmaDi({ adesso, messiDaParte }) {
+function firmaDi({ adesso, altre = [], messiDaParte }) {
   return [
     adesso.map((una) => `${una.entity}@${una.da || 0}@${una.modello || ""}`).join("~"),
+    altre.map((una) => `${una.entity}@${una.da || 0}`).join("~"),
     messiDaParte.map((una) => `${una.entity}:${una.cE ? 1 : 0}:${una.modello || ""}`).join("~"),
   ].join("|");
 }
@@ -373,7 +388,9 @@ function installStyles() {
       /* Le righe tolte si vedono che sono spente: sono un promemoria, non
          una cosa su cui si agisce. */
       #ed-body .${BLOCCO}-fuori{opacity:.6}
-      #ed-body .${BLOCCO}-titolo{margin-top:14px}
+      /* I titoli delle parti sotto l'avviso, come quelli del resto del config. */
+      #ed-body .${BLOCCO}-titolo{margin:18px 0 4px;font-size:12px;line-height:1.3;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim,#64748b)}
+      #ed-body .${BLOCCO}-nota{margin:0 0 10px;font-size:12.5px;line-height:1.5;font-weight:400;color:var(--text-dim,#64748b)}
       #ed-body .${BLOCCO}-vuoto{padding:14px;border-radius:14px;border:1px dashed var(--divider-color,#dbe4ee);font-size:12.5px;line-height:1.5;font-weight:600;color:var(--text-dim,#64748b)}
     `,
   );

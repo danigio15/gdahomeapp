@@ -7323,4 +7323,6 @@ export default Object.freeze({
   "Your team · Formula 1 · MotoGP": "Takımın · Formula 1 · MotoGP",
   "home": "iç saha",
   "away": "deplasman",
+  "Other silent entities": "Diğer sessiz varlıklar",
+  "They are silent, but it is not known whether a stopped device is behind them: that is why they are not in the warning. The bin keeps them out for good, later too.": "Sessizler, ancak arkalarında durmuş bir cihaz olup olmadığı bilinmiyor: bu yüzden uyarıda değiller. Çöp kutusu onları kalıcı olarak, sonrasında da dışarıda tutar.",
 });

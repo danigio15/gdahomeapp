@@ -7324,4 +7324,6 @@ export default Object.freeze({
   "Your team · Formula 1 · MotoGP": "あなたのチーム · F1 · MotoGP",
   "home": "ホーム",
   "away": "アウェイ",
+  "Other silent entities": "その他の応答のないエンティティ",
+  "They are silent, but it is not known whether a stopped device is behind them: that is why they are not in the warning. The bin keeps them out for good, later too.": "応答がありませんが、背後に停止したデバイスがあるかは分かりません。そのため警告には含まれません。ゴミ箱に入れると、今後もずっと除外されます。",
 });

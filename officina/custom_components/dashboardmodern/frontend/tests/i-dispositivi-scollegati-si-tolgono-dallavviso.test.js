@@ -61,7 +61,10 @@ test("l'elenco è chi non risponde adesso, e nient'altro", () => {
   /* `unknown` non è un guasto: è un'entità che c'è e non ha ancora un valore,
    * ed è normalissima dopo un riavvio. Contarla vorrebbe dire una riga rossa
    * a ogni riavvio, cioè un avviso che si impara a ignorare. */
-  assert.equal(adesso.some((una) => una.entity === "sensor.appena_acceso"), false);
+  assert.equal(
+    adesso.some((una) => una.entity === "sensor.appena_acceso"),
+    false,
+  );
 });
 
 test("il cestino toglie dall'elenco, e la riga passa fra quelle tolte", () => {
@@ -132,9 +135,10 @@ test("una voce nuda non si spaccia per una tolta da qui", () => {
 });
 
 test("un magazzino vuoto o storto non fa cadere niente", () => {
-  assert.deepEqual(iDispositiviScollegati(), { adesso: [], messiDaParte: [] });
+  assert.deepEqual(iDispositiviScollegati(), { adesso: [], altre: [], messiDaParte: [] });
   assert.deepEqual(iDispositiviScollegati({ configurate: null, states: null, escluse: null }), {
     adesso: [],
+    altre: [],
     messiDaParte: [],
   });
 });
@@ -144,7 +148,10 @@ test("la tessera della Home legge la stessa funzione, non una sua copia", () => 
    * farsi il suo elenco, il cestino toglierebbe dalla scheda una cosa che lei
    * continua a dire. */
   const tessera = sorgente("src", "sections", "home-widgets-section.js");
-  assert.match(tessera, /import \{ iDispositiviScollegati \} from "\.\.\/core\/i-dispositivi-scollegati\.js"/);
+  assert.match(
+    tessera,
+    /import \{ iDispositiviScollegati \} from "\.\.\/core\/i-dispositivi-scollegati\.js"/,
+  );
   assert.match(tessera, /const \{ adesso: mute \} = iDispositiviScollegati\(/);
   assert.equal(/chiNonRisponde\(/.test(tessera), false, "la tessera si è rifatta l'elenco");
 });

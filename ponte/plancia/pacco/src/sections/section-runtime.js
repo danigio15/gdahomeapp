@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-63VOM2GG.js";
+} from "../../chunk-JHWLSSDE.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2510,6 +2510,7 @@ var SOURCE_INDEX = Object.freeze({
   "Altra misura": "Other reading",
   "Altre": "Other",
   "Altre caselle riconosciute": "Other fields recognised",
+  "Altre entità ferme": "Other silent entities",
   "Altre impostazioni": "More settings",
   "Altre letture": "Other readings",
   "Altre misure": "More readings",
@@ -7255,6 +7256,7 @@ var SOURCE_INDEX = Object.freeze({
   "Svuota i campi di periodo": "Clear the period fields",
   "Svuota il posto": "Clear the slot",
   "Switch, light, fan o input_boolean usato dal pulsante Accendi/Spegni.": "Switch, light, fan or input_boolean used by the On/Off button.",
+  "Tacciono, ma non si sa se dietro ci sia un dispositivo fermo: per questo non sono nell'avviso. Col cestino non compaiono mai, nemmeno più avanti.": "They are silent, but it is not known whether a stopped device is behind them: that is why they are not in the warning. The bin keeps them out for good, later too.",
   "Tagliaerba": "Lawn mower",
   "tapparella": "shutter",
   "Tapparella": "Roller shutter",
@@ -24725,12 +24727,23 @@ function iDispositiviScollegati({
   const fuori = escluseDellaTessera(escluse, TESSERA_SCOLLEGATI);
   const dellaCasa = Object.keys(states && typeof states === "object" ? states : {});
   const scritte = Array.isArray(configurate2) ? configurate2 : configurate2 && typeof configurate2[Symbol.iterator] === "function" ? [...configurate2] : [];
-  const tutte = [.../* @__PURE__ */ new Set([...scritte, ...dellaCasa])];
+  const conIRegistri = Boolean(di && typeof di === "object" && Object.keys(di).length);
+  const tutte = conIRegistri ? [.../* @__PURE__ */ new Set([...scritte, ...dellaCasa])] : [...new Set(scritte)];
   const adesso2 = chiNonRispondePerDispositivo(
     tutte.filter((entity2) => !fuori.has(pulito20(entity2))),
     states,
     { nomeDi: nomeDi17, di, nomi: nomi2 }
   ).map((una) => vestita(una, { states, di, modelli: modelli2 }));
+  const prese = new Set(
+    adesso2.flatMap((una) => Array.isArray(una.entita) ? una.entita : [una.entity])
+  );
+  const altre = chiNonRisponde(
+    [.../* @__PURE__ */ new Set([...scritte, ...dellaCasa])].filter(
+      (entity2) => !fuori.has(pulito20(entity2)) && !prese.has(pulito20(entity2))
+    ),
+    states,
+    { nomeDi: nomeDi17 }
+  ).filter((una) => !senzaDispositivo(una.entity)).map((una) => vestita({ ...una, entita: [una.entity] }, { states, di: null, modelli: modelli2 }));
   const viste2 = /* @__PURE__ */ new Set();
   const sciolte = [];
   for (const voce3 of Array.isArray(escluse) ? escluse : []) {
@@ -24757,6 +24770,7 @@ function iDispositiviScollegati({
   }
   return {
     adesso: adesso2,
+    altre,
     messiDaParte: perDispositivo(sciolte, di, nomi2).map((una) => vestita(una, { states, di, modelli: modelli2 })).sort((una, altra) => una.nome.localeCompare(altra.nome))
   };
 }
@@ -124906,7 +124920,7 @@ function rigaMessaDaParte(una) {
       aria-label="${esc(t("Avvisami di nuovo per questo", "Warn me about this again"))}">🔔</button>
   </div>`;
 }
-function corpo2({ adesso: adesso2, messiDaParte }) {
+function corpo2({ adesso: adesso2, altre = [], messiDaParte }) {
   const intro = `<div class="ed-intro">${esc(
     t(
       "Tutti i dispositivi di Home Assistant che non si riescono a raggiungere, anche quelli che la plancia non mostra: un apparecchio ci finisce quando tacciono tutte le sue entità. Aiutanti, automazioni e script non ci sono: non hanno un apparecchio dietro. Il cestino toglie un dispositivo dall'avviso; il campanello, fra quelli tolti, ce lo rimette.",
@@ -124919,10 +124933,20 @@ function corpo2({ adesso: adesso2, messiDaParte }) {
       "Everything is answering right now. If something stops, it shows up here, and its card shows up on Home."
     )
   )}</div>`;
+  const ferme = altre.length ? `<div class="ed-sec-title ${BLOCCO6}-titolo">${esc(
+    t("Altre entità ferme", "Other silent entities")
+  )}</div>
+      <div class="ed-hint ${BLOCCO6}-nota">${esc(
+    t(
+      "Tacciono, ma non si sa se dietro ci sia un dispositivo fermo: per questo non sono nell'avviso. Col cestino non compaiono mai, nemmeno più avanti.",
+      "They are silent, but it is not known whether a stopped device is behind them: that is why they are not in the warning. The bin keeps them out for good, later too."
+    )
+  )}</div>
+      <div class="ed-list ${BLOCCO6}-list">${altre.map(rigaViva).join("")}</div>` : "";
   const fuori = messiDaParte.length ? `<div class="ed-sec-title ${BLOCCO6}-titolo">${esc(
     t("Tolti dall'avviso", "Removed from the warning")
   )}</div>
-      <div class="ed-hint">${esc(
+      <div class="ed-hint ${BLOCCO6}-nota">${esc(
     t(
       "Restano scritti qui perché si sappia che ci sono. Col campanello tornano nell'avviso, se sono ancora muti.",
       "They stay written here so you know they exist. The bell puts them back in the warning, if they are still silent."
@@ -124936,7 +124960,7 @@ function corpo2({ adesso: adesso2, messiDaParte }) {
       aria-label="${esc(t("Cerca fra i dispositivi non connessi", "Search disconnected devices"))}">
     <div class="${BLOCCO6}-nessuno" hidden>${esc(t("Nessun dispositivo corrisponde alla ricerca.", "No device matches the search."))}</div>
   </div>`;
-  return `${intro}${cerca6}${vive}${fuori}`;
+  return `${intro}${cerca6}${vive}${ferme}${fuori}`;
 }
 function filtra(body) {
   const testo4 = clean(state136.filtro).toLowerCase();
@@ -124957,9 +124981,10 @@ function onCerca(event) {
   state136.filtro = casella7.value || "";
   filtra(doc?.getElementById("ed-body"));
 }
-function firmaDi2({ adesso: adesso2, messiDaParte }) {
+function firmaDi2({ adesso: adesso2, altre = [], messiDaParte }) {
   return [
     adesso2.map((una) => `${una.entity}@${una.da || 0}@${una.modello || ""}`).join("~"),
+    altre.map((una) => `${una.entity}@${una.da || 0}`).join("~"),
     messiDaParte.map((una) => `${una.entity}:${una.cE ? 1 : 0}:${una.modello || ""}`).join("~")
   ].join("|");
 }
@@ -125058,7 +125083,9 @@ function installStyles65() {
       /* Le righe tolte si vedono che sono spente: sono un promemoria, non
          una cosa su cui si agisce. */
       #ed-body .${BLOCCO6}-fuori{opacity:.6}
-      #ed-body .${BLOCCO6}-titolo{margin-top:14px}
+      /* I titoli delle parti sotto l'avviso, come quelli del resto del config. */
+      #ed-body .${BLOCCO6}-titolo{margin:18px 0 4px;font-size:12px;line-height:1.3;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim,#64748b)}
+      #ed-body .${BLOCCO6}-nota{margin:0 0 10px;font-size:12.5px;line-height:1.5;font-weight:400;color:var(--text-dim,#64748b)}
       #ed-body .${BLOCCO6}-vuoto{padding:14px;border-radius:14px;border:1px dashed var(--divider-color,#dbe4ee);font-size:12.5px;line-height:1.5;font-weight:600;color:var(--text-dim,#64748b)}
     `
   );

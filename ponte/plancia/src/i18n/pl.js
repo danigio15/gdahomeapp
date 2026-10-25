@@ -7345,4 +7345,6 @@ export default Object.freeze({
   "Your team · Formula 1 · MotoGP": "Twoja drużyna · Formuła 1 · MotoGP",
   "home": "u siebie",
   "away": "wyjazd",
+  "Other silent entities": "Inne milczące encje",
+  "They are silent, but it is not known whether a stopped device is behind them: that is why they are not in the warning. The bin keeps them out for good, later too.": "Milczą, ale nie wiadomo, czy stoi za nimi wyłączone urządzenie: dlatego nie ma ich w ostrzeżeniu. Kosz wyklucza je na stałe, także później.",
 });
