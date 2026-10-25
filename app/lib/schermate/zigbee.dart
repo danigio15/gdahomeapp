@@ -1320,6 +1320,23 @@ class _SchedaDelDispositivoZigbeeState
                       'back means pairing it again from here, with the device '
                       'in your hand.',
                 )
+              : widget.suo.vaABatteria
+              /* Un sensore a batteria dorme, e l'ordine di uscire lo sente solo
+               * da sveglio: chi non lo sa preme, non succede niente, forza — e
+               * se lo ritrova in rete al primo risveglio. */
+              ? inLingua(
+                  it:
+                      'Va a batteria e quasi sempre dorme: prima premi il suo '
+                      'tasto (o aprilo e chiudilo) per svegliarlo, poi tocca '
+                      'Toglilo. Sparisce dalla rete e da Home Assistant; per '
+                      'rimetterlo bisogna riabbinarlo da qui.',
+                  en:
+                      'It runs on battery and is nearly always asleep: first '
+                      'press its button (or open and close it) to wake it, then '
+                      'tap Remove it. It goes from the network and from Home '
+                      'Assistant; putting it back means pairing it again from '
+                      'here.',
+                )
               : inLingua(
                   it:
                       'Sparisce dalla rete e da Home Assistant. Per rimetterlo '
@@ -1390,15 +1407,17 @@ class _SchedaDelDispositivoZigbeeState
             it:
                 '$comEAndata\n\nSi può togliere d\'imperio: la riga sparisce '
                 'da Zigbee2MQTT e dall\'elenco anche se il dispositivo non '
-                'risponde. Ma lui non lo saprà: resta acceso a cercare una '
-                'rete che non gli risponde più, e per rimetterlo bisogna '
-                'resettarlo col dito prima di riabbinarlo.',
+                'risponde. Lui però non lo saprà, e per non farlo rientrare da '
+                'solo al primo risveglio resta bloccato fuori dalla rete. Se un '
+                'giorno lo riabbini, quando apri la rete il blocco si toglie '
+                'da sé.',
             en:
                 '$comEAndata\n\nIt can be removed by force: the row goes from '
                 'Zigbee2MQTT and from the list even if the device does not '
-                'answer. But it will not know: it stays on looking for a '
-                'network that no longer answers it, and putting it back means '
-                'resetting it by hand before pairing it again.',
+                'answer. It will not know, though, so to stop it rejoining by '
+                'itself when it next wakes it stays blocked out of the network. '
+                'If you pair it again one day, opening the network lifts the '
+                'block by itself.',
           ),
         ),
         actions: [

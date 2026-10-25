@@ -13,6 +13,11 @@
  */
 import { CONFIG_KEYS_REVISION } from "../plancia/src/core/chiavi-di-configurazione.js";
 import {
+  CHIAVE_OCCHIO,
+  occhioDiPartenza,
+  occhioPulito,
+} from "../plancia/src/core/colpo-d-occhio.js";
+import {
   CHIAVE_MURO,
   PROFILO_DI_ORIGINE,
   fonteDaiValori,
@@ -20,7 +25,14 @@ import {
   muroPulito,
 } from "../plancia/src/core/plancia-a-muro.js";
 
-export const MODELLI_DI_PLANCIA = Object.freeze(["classica", "muro"]);
+/* «Colpo d'occhio» (`occhio`): una pagina sola coi riquadri grandi, e ognuno
+ * apre il suo popup — vedi `plancia/src/core/colpo-d-occhio.js`. */
+export const MODELLI_DI_PLANCIA = Object.freeze(["classica", "muro", "occhio"]);
+
+/* Da dove parte una plancia nuova a muro o a colpo d'occhio: dalla
+ * principale, con quello che lei sa, o da zero, coi riquadri da riempire. */
+export const PARTENZE = Object.freeze(["principale", "zero"]);
+export const partenzaPulita = (partenza) => (partenza === "zero" ? "zero" : "principale");
 
 /** Il modello chiesto, o la classica: e' quella che c'era prima di oggi. */
 export function modelloPulito(modello) {
@@ -39,15 +51,47 @@ export function eAMuro(configurazione, profilo) {
   }
 }
 
-/* Il config a muro di partenza, letto dalla plancia principale. */
-function muroDallaPrincipale(configurazione) {
+/** Se la configurazione di questa plancia la fa partire a colpo d'occhio. */
+export function eAColpoDOcchio(configurazione, profilo) {
+  if (!configurazione) return false;
+  try {
+    const valori = configurazione.leggi(profilo)?.snapshot?.values || {};
+    return valori[CHIAVE_OCCHIO] ? occhioPulito(valori[CHIAVE_OCCHIO]).attiva === true : false;
+  } catch (_errore) {
+    return false;
+  }
+}
+
+/* Le cose della plancia principale, come le legge il tablet a muro. */
+function fonteDellaPrincipale(configurazione) {
   let valori = {};
   try {
     valori = configurazione?.leggi(PROFILO_DI_ORIGINE)?.snapshot?.values || {};
   } catch (_errore) {
     valori = {};
   }
-  return muroDiPartenza(fonteDaiValori(valori));
+  return fonteDaiValori(valori);
+}
+
+/* Il config a muro di partenza, letto dalla plancia principale. */
+function muroDallaPrincipale(configurazione) {
+  return muroDiPartenza(fonteDellaPrincipale(configurazione));
+}
+
+/* Il primo config di una plancia nuova, secondo il modello e la partenza:
+ * `null` per la classica, che parte dal cassetto vuoto come sempre. */
+function configDiPartenza(configurazione, modello, partenza) {
+  if (modello === "muro")
+    return { [CHIAVE_MURO]: JSON.stringify(muroDallaPrincipale(configurazione)) };
+  if (modello === "occhio")
+    return {
+      [CHIAVE_OCCHIO]: JSON.stringify(
+        occhioDiPartenza(
+          partenzaPulita(partenza) === "zero" ? null : fonteDellaPrincipale(configurazione),
+        ),
+      ),
+    };
+  return null;
 }
 
 /**
@@ -60,7 +104,7 @@ function muroDallaPrincipale(configurazione) {
  */
 export function aggiungiUnaPlancia(
   { plance, configurazione = null, registro = null, adesso = () => Date.now() },
-  { titolo = "", modello = "classica", utenti = null } = {},
+  { titolo = "", modello = "classica", utenti = null, partenza = "principale" } = {},
 ) {
   let quale = plance.aggiungi(titolo);
   /* Una plancia nuova nasce col cassetto vuoto, sempre. Il profilo si ricava
@@ -79,27 +123,35 @@ export function aggiungiUnaPlancia(
     );
   }
   if (Array.isArray(utenti) && utenti.length) quale = plance.chiLaVede(quale.profilo, utenti);
-  if (modelloPulito(modello) === "muro" && configurazione) {
+  const primo = configurazione
+    ? configDiPartenza(configurazione, modelloPulito(modello), partenza)
+    : null;
+  if (primo) {
+    const come = modelloPulito(modello) === "muro" ? "a muro" : "a colpo d'occhio";
     try {
-      configurazione.scrivi(
-        quale.profilo,
-        { [CHIAVE_MURO]: JSON.stringify(muroDallaPrincipale(configurazione)) },
-        { keys_revision: CONFIG_KEYS_REVISION, updated_at: adesso() },
-      );
-      registro?.info?.(`la plancia «${quale.titolo}» parte a muro`);
+      configurazione.scrivi(quale.profilo, primo, {
+        keys_revision: CONFIG_KEYS_REVISION,
+        updated_at: adesso(),
+      });
+      registro?.info?.(`la plancia «${quale.titolo}» parte ${come}`);
     } catch (errore) {
       registro?.errore?.(
-        `la plancia «${quale.titolo}» non e' partita a muro: ${errore?.message || errore}`,
+        `la plancia «${quale.titolo}» non e' partita ${come}: ${errore?.message || errore}`,
       );
     }
   }
-  return { ...quale, a_muro: eAMuro(configurazione, quale.profilo) };
+  return {
+    ...quale,
+    a_muro: eAMuro(configurazione, quale.profilo),
+    a_occhio: eAColpoDOcchio(configurazione, quale.profilo),
+  };
 }
 
-/** L'elenco delle plance, ognuna con il suo «a muro». */
+/** L'elenco delle plance, ognuna con il suo modello. */
 export function conIlModello(elenco, configurazione) {
   return (Array.isArray(elenco) ? elenco : []).map((una) => ({
     ...una,
     a_muro: eAMuro(configurazione, una.profilo),
+    a_occhio: eAColpoDOcchio(configurazione, una.profilo),
   }));
 }

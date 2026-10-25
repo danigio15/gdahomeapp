@@ -274,7 +274,10 @@ test("togliere una chiave non alza la revisione", async () => {
    * fornitore sono l'ultima bolletta, il da pagare, lo stato del pagamento. */
   /* E la 70 con lo sport (`cd_sport`): la squadra, la F1 e la MotoGP che
    * la casa segue, uguali dal telefono e dal tablet. */
-  assert.equal(CONFIG_KEYS_REVISION, 70);
+  /* E la 71 col «Colpo d'occhio» (`cd_occhio`): la pagina sola coi popup,
+   * configurata dal computer, deve aprirsi uguale sul tablet. */
+  assert.equal(CONFIG_KEYS_REVISION, 71);
+  assert.ok(CONFIG_KEYS.includes("cd_occhio"));
   assert.ok(CONFIG_KEYS.includes("cd_sport"));
   assert.ok(CONFIG_KEYS.includes("cd_bollette"));
   assert.ok(

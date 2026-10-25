@@ -529,10 +529,50 @@ export function comeSiElimina({ quale, cassetta = "" }, chi, { forza = false } =
          * risponde piu'. Si forza quando il garbato ha gia' fallito, e allora
          * lo si chiede per iscritto — non di nascosto, al primo tocco: e'
          * `forza`, e lo mette solo chi ha letto cosa comporta. */
-        payload: JSON.stringify({ id, force: Boolean(forza) }),
+        payload: JSON.stringify(forza ? { id, force: true, block: true } : { id, force: false }),
       },
     };
   return null;
+}
+
+/* «Ho premuto Toglilo d'imperio ed e' ricomparso da solo.»
+ *
+ * Forzando, Zigbee2MQTT cancella la riga ma l'apparecchio non lo sa: tiene le
+ * chiavi della rete, e al primo risveglio — un sensore a batteria si sveglia
+ * a ogni apertura — si ripresenta e rientra da solo. Per questo il forzato
+ * chiede anche `block`: l'indirizzo finisce nella lista di quelli che non
+ * entrano. E per questo, quando si riapre la rete per abbinare qualcosa, il
+ * ponte toglie da quella lista gli indirizzi che ci aveva messo lui: chi
+ * riabbina lo stesso sensore non deve trovarsi la porta chiusa da un tocco di
+ * mesi prima. Quelli che ci ha messo qualcun altro, a mano, restano. */
+
+/** La lista dei bloccati di Zigbee2MQTT, da `bridge/info`. */
+export function iBloccatiDellaRete(info) {
+  const lista = info?.config?.blocklist ?? info?.config?.ban;
+  return Array.isArray(lista) ? lista.map((una) => pulito(una)).filter(Boolean) : [];
+}
+
+/**
+ * Come si tolgono dalla lista dei bloccati quelli messi dal ponte.
+ *
+ * `null` quando non c'e' niente da togliere: un ordine che riscrive la stessa
+ * lista e' un riavvio di configurazione per niente.
+ */
+export function comeSiSblocca({ quale, cassetta = "" }, bloccati = [], daSbloccare = []) {
+  if (quale !== Z2M || !cassetta) return null;
+  const via = new Set((daSbloccare || []).map((una) => pulito(una).toLowerCase()).filter(Boolean));
+  if (!via.size) return null;
+  const restano = (bloccati || []).filter((una) => !via.has(pulito(una).toLowerCase()));
+  if (restano.length === (bloccati || []).length) return null;
+  return {
+    type: "call_service",
+    domain: "mqtt",
+    service: "publish",
+    service_data: {
+      topic: `${cassetta}/bridge/request/options`,
+      payload: JSON.stringify({ options: { blocklist: restano } }),
+    },
+  };
 }
 
 /**
@@ -573,7 +613,12 @@ export function comeSiRinomina({ quale, cassetta = "" } = {}, chi, come) {
        * cambia mai, il nome e' proprio la cosa che si sta cambiando — e se
        * quello che abbiamo in mano fosse vecchio di un minuto, il rinomina
        * andrebbe a vuoto senza dirlo. */
-      payload: JSON.stringify({ from: id, to: nome }),
+      /* `homeassistant_rename`: anche gli identificativi delle entita' in
+       * Home Assistant prendono il nome nuovo. Senza, il dispositivo si
+       * chiamava «Finestra Cucinino» e la sua entita' restava
+       * `binary_sensor.0xd44867fffe464b8b_contact` — «il nome dell'entita' non
+       * si e' aggiornato con il nome dato». */
+      payload: JSON.stringify({ from: id, to: nome, homeassistant_rename: true }),
     },
   };
 }
@@ -895,8 +940,18 @@ export function perCheNonEUscitoNemmenoAForza() {
 }
 
 export class Zigbee {
-  constructor({ casa, registro = null, adesso = () => Date.now(), aspetta = ASPETTA } = {}) {
+  constructor({
+    casa,
+    registro = null,
+    adesso = () => Date.now(),
+    aspetta = ASPETTA,
+    archivio = null,
+  } = {}) {
     this.casa = casa;
+    /* Dove si ricordano gli indirizzi bloccati dal ponte (vedi
+     * `comeSiSblocca`): sul disco, perche' fra il forzato e il riabbinamento
+     * possono passare un riavvio e dei mesi. */
+    this.archivio = archivio;
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
     this.adesso = adesso;
     this.aspetta = aspetta;
@@ -1117,6 +1172,7 @@ export class Zigbee {
     const comando = comeSiApre(rete, secondi);
     if (!comando) return { fatto: false, perche: "questa casa non ha una rete Zigbee" };
     this._entrati = [];
+    await this._sbloccaIMiei(rete);
     await this._ascolta();
     await this._ordina(leStradePerAprire(rete, secondi));
     const quanto = perQuanto(secondi);
@@ -1173,6 +1229,84 @@ export class Zigbee {
       }
     }
     throw new ZigbeeNonAccettato(strade, ultimo);
+  }
+
+  /** Gli indirizzi che il ponte ha bloccato forzando un'uscita. */
+  _iMieiBloccati() {
+    const lista = this.archivio?.dati?.bloccati;
+    return Array.isArray(lista)
+      ? lista.map((una) => pulito(una).toLowerCase()).filter(Boolean)
+      : [];
+  }
+
+  _ricordaIMieiBloccati(lista) {
+    if (!this.archivio) return;
+    this.archivio.dati = { ...(this.archivio.dati || {}), bloccati: [...new Set(lista)] };
+    try {
+      this.archivio.salva();
+    } catch (errore) {
+      this.registro.attenzione(`zigbee: non riesco a ricordare i bloccati (${ilPerche(errore)})`);
+    }
+  }
+
+  /* Prima di aprire, si rimettono in lista quelli che il ponte aveva chiuso
+   * fuori. Un inciampo qui non deve impedire di aprire: si dice nel registro e
+   * si va avanti, e quello bloccato resta tale come prima. */
+  async _sbloccaIMiei(rete) {
+    const miei = this._iMieiBloccati();
+    if (!miei.length || rete.quale !== Z2M) return;
+    try {
+      const info = await this._ritenuto(`${rete.cassetta}/bridge/info`);
+      const comando = comeSiSblocca(rete, iBloccatiDellaRete(info), miei);
+      if (comando) {
+        await this.casa.chiedi(comando);
+        this.registro.info(`zigbee: rimessi in rete ${miei.length} bloccati dal ponte`);
+      }
+      this._ricordaIMieiBloccati([]);
+    } catch (errore) {
+      this.registro.attenzione(`zigbee: non riesco a sbloccare (${ilPerche(errore)})`);
+    }
+  }
+
+  /* Un messaggio ritenuto, letto una volta: chi si affaccia lo riceve subito. */
+  async _ritenuto(topic) {
+    let smetti = null;
+    try {
+      return await new Promise((risolvi, rifiuta) => {
+        const scadenza = setTimeout(
+          () => rifiuta(new Error(`la cassetta ${topic} non risponde`)),
+          ATTESA_DELLA_CASSETTA,
+        );
+        this.casa
+          .ascoltaIl({ type: "mqtt/subscribe", topic }, (evento) => {
+            clearTimeout(scadenza);
+            let detto = evento?.payload;
+            if (typeof detto === "string") {
+              try {
+                detto = JSON.parse(detto);
+              } catch (_errore) {
+                detto = {};
+              }
+            }
+            risolvi(detto);
+          })
+          .then(
+            (disdici) => {
+              smetti = disdici;
+            },
+            (errore) => {
+              clearTimeout(scadenza);
+              rifiuta(errore);
+            },
+          );
+      });
+    } finally {
+      try {
+        await smetti?.();
+      } catch (_errore) {
+        /* L'abbonamento e' gia' morto col filo. */
+      }
+    }
   }
 
   _scaduta() {
@@ -1441,6 +1575,9 @@ export class Zigbee {
         siPuoForzare: !perForza && Boolean(comeSiElimina(rete, id, { forza: true })),
         righe: dopo.righe,
       };
+    /* Forzato e uscito: l'indirizzo e' nella lista dei bloccati, e lo si
+     * ricorda per toglierlo da li' quando si riaprira' la rete. */
+    if (perForza && rete.quale === Z2M) this._ricordaIMieiBloccati([...this._iMieiBloccati(), id]);
     return { fatto: true, righe: dopo.righe };
   }
 

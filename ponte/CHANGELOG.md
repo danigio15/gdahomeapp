@@ -10,6 +10,36 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.4
+
+- **Colpo d'occhio, plancia nuova (Premium):** una pagina sola col meteo e i
+  riquadri grandi, e ogni riquadro apre i suoi dati in un popup: il flusso del
+  fotovoltaico (adesso, oggi, il mese), le telecamere dal vivo, i tasti grandi
+  dell'antifurto, e il cancello che si apre con un tocco. Si crea dalla scheda
+  «Le tue plance» dell'add-on, partendo da quello che sa già la plancia
+  principale o da zero, e si configura dal tasto 🔧 della pagina.
+- **MiniPC, server Proxmox:** il nodo con CPU, memoria, dischi e gli
+  aggiornamenti da fare, e sotto le sue macchine virtuali e i container.
+- **Sport:** le coppe europee della squadra che segui, e toccando una partita
+  o una sessione se ne vedono i dettagli. La pagina è stata ridisegnata.
+- **Navigatore:** la ricerca trova anche le aziende, e cercando «pub», «bar»,
+  «farmacia» o altre categorie mostra tutti quelli dei dintorni, dal più
+  vicino.
+- **Auto, carica fino a:** la barra dice soltanto fin dove si carica e non si
+  trascina più: scorrendo la pagina col dito l'obiettivo cambiava per sbaglio.
+  Si sceglie coi tasti dal 60% al 100%, e sotto il 60% dal menu «Meno…».
+- **Finestre, sensore di apertura:** «Mettilo nella plancia» mette un sensore
+  di apertura nella casella del contatto, non in quella della tapparella. Una
+  riga già scritta così si vede come finestra senza comandi (aperta o chiusa),
+  non più «Sconosciuta» con Apri, Stop e Chiudi.
+- **Zigbee, togliere un dispositivo:** «Toglilo d'imperio» lo blocca fuori
+  dalla rete, così al risveglio non rientra da solo. Quando riapri la rete per
+  abbinare, il blocco si toglie da sé. Per i dispositivi a batteria l'app dice
+  di svegliarli col loro tasto prima di toglierli.
+- **Zigbee, rinominare:** il nome nuovo va anche negli identificativi delle
+  entità in Home Assistant (con Zigbee2MQTT). Se il dispositivo è già nella
+  plancia, aggiorna la sua riga con l'entità nuova.
+
 ## 1.18.3
 
 - **Sport, sezione nuova:** le squadre di calcio che segui (Serie A, coppe

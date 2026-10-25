@@ -468,16 +468,38 @@ for (const [schermo, misura] of [
 test("la percentuale si sceglie libera e va all'entita'", async ({ page }, testInfo) => {
   await avvia(page, testInfo);
   const pagina = na(page);
-  await pagina.locator('[data-na-passo="1"]').click();
-  await expect(pagina.locator("[data-na-pct]")).toHaveText("85");
+  /* Niente − e +: dal 60% in su i tasti, sotto la tendina. */
+  await expect(pagina.locator("[data-na-passo]")).toHaveCount(0);
+  await expect(pagina.locator("[data-na-pct-scelta]")).toHaveText([
+    "60%",
+    "70%",
+    "80%",
+    "90%",
+    "100%",
+  ]);
+  await pagina.locator("[data-na-pct-bassa]").selectOption("50");
+  await expect(pagina.locator("[data-na-pct]")).toHaveText("50");
+  await expect(pagina.locator("[data-na-pct-bassa]")).toHaveAttribute("data-scelta", "1");
+  if (process.env.DM_FOTO)
+    await pagina
+      .locator(".dm-na-adesso-carta")
+      .screenshot({ path: `${process.env.DM_FOTO}/auto-tendina-${testInfo.project.name}.png` });
   await pagina.locator('[data-na-pct-scelta="90"]').click();
   await expect(pagina.locator("[data-na-pct]")).toHaveText("90");
+  /* «Faceva scorrere per errore»: niente cursore da trascinare. La barra dice
+   * solo fin dove si carica, e si cambia coi tasti. */
+  await expect(pagina.locator('.dm-na-obiettivo input[type="range"]')).toHaveCount(0);
+  await expect(pagina.locator(".dm-na-cursore")).toHaveAttribute("style", /--na-fino:\s*90%/);
+  if (process.env.DM_FOTO)
+    await pagina
+      .locator(".dm-na-adesso-carta")
+      .screenshot({ path: `${process.env.DM_FOTO}/auto-barra-${testInfo.project.name}.png` });
   const chiamate = await page.evaluate(() =>
     (window.__chiamate || [])
       .filter((c) => c.service_data?.entity_id === "number.byd_limite")
       .map((c) => c.service_data.value),
   );
-  expect(chiamate).toEqual([85, 90]);
+  expect(chiamate).toEqual([50, 90]);
   /* E il modo di evcc va alla sua entita'. */
   await pagina.locator('[data-na-modo="now"]').click();
   await expect

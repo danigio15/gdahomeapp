@@ -256,6 +256,14 @@ function trattieniIlVelo() {
 }
 const lasciaIlVelo = () => decidi?.();
 
+/** Quello che questo dispositivo ha saputo l'ultima volta della licenza:
+ * `true`, `false`, o `undefined` se non l'ha mai chiesto. Serve a chi si
+ * disegna prima che il ponte risponda (il «Colpo d'occhio»). */
+export function premiumRicordato() {
+  if (typeof root.__GDAHOME_PREMIUM__ === "boolean") return root.__GDAHOME_PREMIUM__;
+  return ricordo().premium;
+}
+
 export async function premiumDellaCasa({ forza = false } = {}) {
   /* Le prove e chi incolla la plancia fuori dal ponte lo dicono da se'. */
   if (typeof root.__GDAHOME_PREMIUM__ === "boolean") {

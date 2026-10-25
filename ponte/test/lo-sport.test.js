@@ -30,6 +30,7 @@ const RISPOSTE = [
   [/soccer\/all\/teams\/110\/schedule\?fixture=true$/, "calcio-inter-tutte-prossime"],
   [/soccer\/all\/teams\/110\/schedule$/, "calcio-inter-tutte"],
   [/soccer\/ita\.1\/standings$/, "calcio-serie-a-classifica"],
+  [/soccer\/uefa\.champions\/standings$/, "calcio-champions-classifica"],
   [/soccer\/ita\.1\/teams$/, "calcio-serie-a-squadre"],
   [/soccer\/ita\.1\/scoreboard\?dates=20261025$/, "calcio-serie-a-giorno"],
   [/f1\/current\/last\/results\.json$/, "f1-ultima-gara"],
@@ -43,11 +44,14 @@ const RISPOSTE = [
   [/results\/sessions\?eventUuid=/, "moto-sessioni"],
   [
     /results\/session\/[^/]+\/classification/,
-    (u) => (u.includes(SPRINT) ? "moto-sprint" : "moto-gara"),
+    (u) => (u.includes(SPRINT) ? "moto-sprint" : u.includes(Q2) ? "moto-q2" : "moto-gara"),
   ],
   [/results\/standings\?/, "moto-classifica"],
+  [/soccer\/ita\.1\/summary\?event=\d+$/, "calcio-partita"],
+  [/f1\/current\/17\/qualifying\.json$/, "f1-ultime-qualifiche"],
 ];
 const SPRINT = campione("moto-sessioni").find((s) => s.type === "SPR").id;
+const Q2 = campione("moto-sessioni").find((s) => s.type === "Q" && s.number === 2).id;
 
 function fonteFinta({ chiamate = [], manca = () => false } = {}) {
   return async (indirizzo) => {
@@ -315,4 +319,118 @@ test("dal ponte: lo sport risponde solo a chi e' entrato", async () => {
   assert.equal(storta.success, false);
   const senzaSport = await new Commissioni({}).rispondi(domanda, { chiChiede: "utente-1" });
   assert.equal(senzaSport.error.code, "unknown_command");
+});
+
+/* «Se clicco sulla sessione di qualifica trascorsa voglio vedere i risultati;
+ * idem sulle ultime partite: chi ha segnato, eccetera.» */
+test("il dettaglio di una partita: marcatori, cartellini, cambi, formazioni, statistiche", async () => {
+  const sport = creaSport({ scarica: fonteFinta(), orologio: () => SABATO });
+  const p = await sport.dettaglio({ tipo: "calcio", lega: "ita.1", id: "740000" });
+  assert.equal(p.casa.breve, "Inter");
+  assert.equal(`${p.casa.gol}-${p.ospite.gol}`, "4-1");
+  assert.equal(p.fase, "finita");
+  assert.equal(p.stadio, "San Siro");
+  const gol = p.eventi.filter((e) => e.tipo === "gol");
+  assert.equal(gol.length, 5);
+  assert.deepEqual(gol[0], {
+    minuto: "6'",
+    tipo: "gol",
+    lato: "casa",
+    chi: "Hakan Çalhanoglu",
+    assist: "Andy Diouf",
+  });
+  assert.equal(gol[1].lato, "ospite");
+  assert.ok(p.eventi.some((e) => e.tipo === "giallo"));
+  assert.ok(p.eventi.some((e) => e.tipo === "cambio" && e.entra && e.esce));
+  assert.equal(p.formazioni.casa.modulo, "3-5-2");
+  assert.equal(p.formazioni.casa.titolari.length, 11);
+  assert.equal(p.formazioni.casa.titolari[0].ruolo, "G");
+  assert.deepEqual(p.statistiche[0], { chiave: "possesso", casa: "70.5", ospite: "29.5" });
+});
+
+test("il dettaglio di una sessione: qualifiche di F1 coi tre turni, Q2 di MotoGP coi distacchi", async () => {
+  const sport = creaSport({ scarica: fonteFinta(), orologio: () => SABATO });
+  const q = await sport.dettaglio({ tipo: "f1", giro: 17, sessione: "Q" });
+  assert.equal(q.nome, "Singapore Grand Prix");
+  assert.equal(q.risultati[0].cognome, "Verstappen");
+  assert.equal(q.risultati[0].q3, "1:31.373");
+  assert.equal(q.risultati[0].tempo, "1:31.373");
+  const m = await sport.dettaglio({ tipo: "motogp", sessione: Q2 });
+  assert.equal(m.risultati[0].nome, "Marc Marquez");
+  assert.equal(m.risultati[1].distacco, "+1.494");
+});
+
+test("il dettaglio: dalla plancia passano solo leghe, numeri, giri e identificativi di sessione", async () => {
+  const chiamate = [];
+  const sport = creaSport({ scarica: fonteFinta({ chiamate }), orologio: () => SABATO });
+  for (const storto of [
+    { tipo: "calcio", lega: "../x", id: "1" },
+    { tipo: "calcio", lega: "ita.1", id: "1&x=2" },
+    { tipo: "f1", giro: 99, sessione: "Q" },
+    { tipo: "f1", giro: 17, sessione: "FP1" },
+    { tipo: "motogp", sessione: "../../x" },
+    { tipo: "altro" },
+  ])
+    await assert.rejects(sport.dettaglio(storto));
+  assert.equal(chiamate.length, 0);
+});
+
+test("dal ponte: il dettaglio lo vede solo chi e' entrato", async () => {
+  const sport = creaSport({ scarica: fonteFinta(), orologio: () => SABATO });
+  const commissioni = new Commissioni({ sport });
+  const domanda = {
+    id: 11,
+    type: "ponte/sport/dettaglio",
+    cosa: { tipo: "f1", giro: 17, sessione: "Q" },
+  };
+  const anonimo = await commissioni.rispondi(domanda, { chiChiede: "" });
+  assert.equal(anonimo.error.code, "unauthorized");
+  const entrato = await commissioni.rispondi(domanda, { chiChiede: "utente-1" });
+  assert.equal(entrato.result.dettaglio.risultati[0].cognome, "Verstappen");
+});
+
+test("MotoGP: le sessioni del fine settimana si possono toccare, coi loro identificativi", async () => {
+  const sport = creaSport({ scarica: fonteFinta(), orologio: () => SABATO });
+  const m = await sport.motogp();
+  const sigle = m.ultima.tutte.map((s) => s.sigla);
+  assert.deepEqual(sigle, ["FP1", "PR", "FP2", "Q1", "Q2", "S", "G"]);
+  assert.ok(m.ultima.tutte.every((s) => /^[0-9a-f-]{36}$/.test(s.id)));
+});
+
+test("calcio: la squadra che gioca la Champions ha il suo blocco, con la classifica e le partite di coppa", async () => {
+  const chiamate = [];
+  const sport = creaSport({ scarica: fonteFinta({ chiamate }), orologio: () => SABATO });
+  const [inter] = await sport.risultati([{ tipo: "calcio", campionato: "ita.1", squadra: "110" }]);
+  assert.equal(inter.coppe.length, 1);
+  const [coppa] = inter.coppe;
+  assert.equal(coppa.lega, "uefa.champions");
+  assert.equal(coppa.nome, "Champions League");
+  assert.equal(coppa.classifica.length, 36);
+  assert.equal(coppa.posizione.id, "110");
+  assert.ok(coppa.posizione.posizione >= 1 && coppa.posizione.posizione <= 36);
+  /* Le zone: chi passa agli ottavi, chi va agli spareggi, chi esce. */
+  assert.equal(coppa.classifica[0].zona.chiave, "ottavi");
+  assert.equal(coppa.classifica[12].zona.chiave, "spareggi");
+  assert.equal(coppa.classifica[35].zona.chiave, "fuori");
+  assert.match(coppa.classifica[0].zona.colore, /^#[0-9a-f]{6}$/i);
+  /* Solo partite di coppa, la piu' recente prima. */
+  assert.ok(coppa.ultime.length >= 1);
+  assert.ok([...coppa.ultime, ...coppa.prossime].every((p) => p.lega === "uefa.champions"));
+  assert.ok(Date.parse(coppa.ultime[0].quando) >= Date.parse(coppa.ultime.at(-1).quando));
+  /* Le coppe che non gioca non si chiedono nemmeno. */
+  assert.ok(chiamate.some((u) => u.endsWith("/uefa.champions/standings")));
+  assert.ok(!chiamate.some((u) => u.includes("uefa.europa")));
+  /* Anche la classifica del campionato ha le sue zone. */
+  assert.equal(inter.classifica[0].zona.chiave, "champions");
+});
+
+test("calcio: senza la classifica della coppa il blocco c'e' lo stesso, con le partite", async () => {
+  const sport = creaSport({
+    scarica: fonteFinta({ manca: (u) => u.includes("uefa.champions/standings") }),
+    orologio: () => SABATO,
+  });
+  const [inter] = await sport.risultati([{ tipo: "calcio", campionato: "ita.1", squadra: "110" }]);
+  assert.equal(inter.coppe[0].classifica.length, 0);
+  assert.equal(inter.coppe[0].posizione, null);
+  assert.ok(inter.coppe[0].ultime.length >= 1);
 });

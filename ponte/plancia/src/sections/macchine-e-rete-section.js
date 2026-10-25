@@ -59,6 +59,7 @@ import {
 } from "./shared.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import { nomeDaHomeAssistant } from "./editor-slots-section.js";
+import { eDelProxmox, proxmoxInPlancia } from "./proxmox-section.js";
 
 const KEY = "__DASHBOARDMODERN_MACCHINE__";
 const state = (root[KEY] ||= { installed: false, frame: 0, firma: "" });
@@ -112,17 +113,29 @@ export function dispositiviDeiServerDichiarati() {
   });
 }
 
-/** I due elenchi, letti adesso. */
+/** I due elenchi, letti adesso.
+ *
+ * Quello che il pannello di Proxmox racconta gia' — il nodo, le VM, i
+ * container — qui non si ripete: un container compariva due volte, una con
+ * tutti i suoi numeri e una col solo «acceso». E le righe di Proxmox rimaste
+ * senza dispositivo, quelle di un'installazione di prima che dicono «non
+ * risponde» da mesi, se ne vanno con lui. */
 export function macchineInPlancia() {
   const states = allStates();
   const config = configurazione();
-  return macchineERete(
+  const elenchi = macchineERete(
     states,
     config,
     (entity) => nomeDaHomeAssistant(entity, states),
     piattaformeConosciute(),
     serverPerDispositivo(states, config),
   );
+  const server = proxmoxInPlancia(states);
+  if (!server.nodi.length) return elenchi;
+  return {
+    ...elenchi,
+    macchine: elenchi.macchine.filter((riga) => !eDelProxmox(riga.entity, server)),
+  };
 }
 
 /** Se c'è qualcosa da mostrare. */
@@ -208,7 +221,9 @@ function lettureMarkup(riga) {
   if (!valori.length) return "";
   return `<dl class="dm-macchina-letture">${valori
     .map(
-      (voce) => `<div class="dm-macchina-lettura" data-muta="${voce.available === false}" title="${esc(`${voce.name} · ${voce.testo}`)}">
+      (
+        voce,
+      ) => `<div class="dm-macchina-lettura" data-muta="${voce.available === false}" title="${esc(`${voce.name} · ${voce.testo}`)}">
         <dt>${esc(voce.name)}</dt><dd>${esc(voce.testo)}</dd></div>`,
     )
     .join("")}</dl>`;

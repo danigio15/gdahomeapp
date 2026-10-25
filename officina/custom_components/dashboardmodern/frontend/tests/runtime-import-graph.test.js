@@ -1599,8 +1599,14 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 489 con lo sport: `core/lo-sport.js` (le regole), `sections/sport-
   // section.js` (la pagina), `sections/sport-editor-section.js` (la scheda del
   // Config) e `sections/finestre/sport.js` (la finestra della tessera).
+  // 491 col server Proxmox nella pagina MiniPC: `core/proxmox.js` (il nodo,
+  // le VM, i container, i dischi dal registro) e `sections/proxmox-section.js`.
+  // 494 col «Colpo d'occhio», la plancia di una pagina sola coi popup:
+  // `core/colpo-d-occhio.js` (le regole), `sections/colpo-d-occhio-section.js`
+  // (la pagina) e `sections/colpo-d-occhio-editor-section.js` (la scheda del
+  // Config).
   assert.ok(
-    relative.length <= 489,
+    relative.length <= 494,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
@@ -1732,6 +1738,14 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
    * in sola lettura, solo se la plancia si vede e la notte e' accesa; e la
    * carta si ridisegna solo se si vede.
    *
+   * Il diciottesimo e' il «Colpo d'occhio»: l'ora in cima e gli orologi
+   * delle telecamere vanno ogni secondo, e le telecamere della griglia hanno
+   * bisogno del loro passo (un fotogramma ogni quattro secondi, come la
+   * Sicurezza): nessun evento di Home Assistant lo dice. Un battito solo, che
+   * c'e' solo se la plancia e' a colpo d'occhio, sta fermo con la scheda del
+   * browser dietro o col Config aperto, e si spegne da solo quando la pagina
+   * se ne va.
+   *
    * These are the intervals production is allowed, and they are named here so
    * another one cannot arrive unnoticed. */
   const intervals = [...graph.entries()].filter(([, source]) =>
@@ -1742,6 +1756,7 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
     [
       "src/sections/assistente-di-casa-section.js",
       "src/sections/assistenza-section.js",
+      "src/sections/colpo-d-occhio-section.js",
       "src/sections/cottura-section.js",
       "src/sections/english-runtime-strings-section.js",
       "src/sections/home-widgets-section.js",

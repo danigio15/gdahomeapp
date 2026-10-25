@@ -148,6 +148,30 @@ export function partitaDaEspn(evento, mia) {
   return p;
 }
 
+/* Le coppe europee: se la squadra seguita le gioca, ognuna ha il suo blocco
+ * con la classifica della fase a girone unico e le sue partite. */
+export const COPPE_EUROPEE = Object.freeze(["uefa.champions", "uefa.europa", "uefa.europa.conf"]);
+
+/* Le zone della classifica (chi passa, chi va agli spareggi, chi esce, chi
+ * va in Europa, chi retrocede), come le scrive ESPN: qui diventano una
+ * parola che la plancia traduce, e un colore. */
+const ZONE = [
+  [/round of 16/i, "ottavi"],
+  [/playoff/i, "spareggi"],
+  [/eliminat/i, "fuori"],
+  [/relegat/i, "retrocede"],
+  [/^champions/i, "champions"],
+  [/^europa/i, "europa"],
+  [/conference/i, "conference"],
+];
+function zonaDi(nota) {
+  const descrizione = testo(nota?.description);
+  const chiave = ZONE.find(([re]) => re.test(descrizione))?.[1];
+  if (!chiave) return null;
+  const colore = testo(nota?.color);
+  return { chiave, colore: /^#[0-9a-f]{6}$/i.test(colore) ? colore : "" };
+}
+
 /** La classifica di un campionato da ESPN: una riga per squadra. */
 export function classificaDaEspn(json) {
   const gruppi = json?.children?.length ? json.children : [json];
@@ -167,6 +191,7 @@ export function classificaDaEspn(json) {
         perse: s.losses ?? 0,
         fatti: s.pointsFor ?? 0,
         subiti: s.pointsAgainst ?? 0,
+        zona: zonaDi(e.note),
       });
     }
   }
@@ -182,10 +207,27 @@ export function squadreDaEspn(json) {
     .sort((a, b) => a.nome.localeCompare(b.nome, "it"));
 }
 
+/** Le coppe europee che la squadra gioca quest'anno, dal suo calendario. */
+export function coppeDelCalendario(giocate, prossime) {
+  const leghe = new Set(
+    [...(giocate?.events || []), ...(prossime?.events || [])].map((e) => e?.league?.slug),
+  );
+  return COPPE_EUROPEE.filter((l) => leghe.has(l));
+}
+
 /** Tutto della squadra seguita: le ultime, le prossime, quella in corso, il
  * posto in classifica. `giocate` e `prossime` sono i calendari di ESPN di
- * tutte le competizioni; `classifica` quella del suo campionato. */
-export function calcioDaEspn({ id, campionato, giocate, prossime, classifica, squadra }) {
+ * tutte le competizioni; `classifica` quella del suo campionato;
+ * `classificheDelleCoppe` quelle delle coppe europee che gioca, per lega. */
+export function calcioDaEspn({
+  id,
+  campionato,
+  giocate,
+  prossime,
+  classifica,
+  squadra,
+  classificheDelleCoppe = {},
+}) {
   const tutte = new Map();
   for (const e of [...(giocate?.events || []), ...(prossime?.events || [])]) {
     const p = partitaDaEspn(e, id);
@@ -214,6 +256,22 @@ export function calcioDaEspn({ id, campionato, giocate, prossime, classifica, sq
     prossime: inOrdine.filter((p) => p.fase === "prima" && !p.rinviata).slice(0, 5),
     posizione: riga,
     classifica: tabella,
+    coppe: coppeDelCalendario(giocate, prossime).map((lega) => {
+      const sue = inOrdine.filter((p) => p.lega === lega);
+      const tab = classificaDaEspn(classificheDelleCoppe?.[lega]);
+      return {
+        lega,
+        nome: COMPETIZIONI[lega],
+        dalVivo: sue.find((p) => p.fase === "in") || null,
+        ultime: sue
+          .filter((p) => p.fase === "fine")
+          .slice(-4)
+          .reverse(),
+        prossime: sue.filter((p) => p.fase === "prima" && !p.rinviata).slice(0, 3),
+        posizione: tab.find((r) => r.id === String(id)) || null,
+        classifica: tab,
+      };
+    }),
   };
 }
 
@@ -371,9 +429,48 @@ const SESSIONI_DI_MOTO = { Q: "Q", SPR: "S", RAC: "G" };
 function sessioniDiMoto(sessioni) {
   return (sessioni || [])
     .filter((s) => SESSIONI_DI_MOTO[s.type] && (s.type !== "Q" || Number(s.number) === 2))
-    .map((s) => ({ sigla: SESSIONI_DI_MOTO[s.type], quando: testo(s.date) }))
+    .map((s) => ({
+      sigla: SESSIONI_DI_MOTO[s.type],
+      quando: testo(s.date),
+      ...sessioneToccabile(s),
+    }))
     .sort((a, b) => Date.parse(a.quando) - Date.parse(b.quando));
 }
+
+/* Tutte le sessioni di un fine settimana, per toccarle e vederne la
+ * classifica: libere, prove, Q1 e Q2, sprint e gara. Il riscaldamento no:
+ * dieci minuti di giri che non dicono niente. */
+const TUTTE_LE_SESSIONI_DI_MOTO = {
+  FP: (n) => `FP${n || ""}`,
+  PR: () => "PR",
+  Q: (n) => `Q${n || ""}`,
+  SPR: () => "S",
+  RAC: () => "G",
+};
+export function tutteLeSessioniDiMoto(sessioni) {
+  return (sessioni || [])
+    .filter((s) => TUTTE_LE_SESSIONI_DI_MOTO[s.type])
+    .map((s) => ({
+      sigla: TUTTE_LE_SESSIONI_DI_MOTO[s.type](numero(s.number)),
+      quando: testo(s.date),
+      ...sessioneToccabile(s),
+    }))
+    .sort((a, b) => Date.parse(a.quando) - Date.parse(b.quando));
+}
+
+/* L'identificativo che serve a chiederne la classifica, e se c'e' gia'. */
+function sessioneToccabile(s) {
+  const id = testo(s?.id);
+  return {
+    id: sessioneMotoValida(id) ? id : "",
+    finita: testo(s?.status) === "FINISHED",
+    annullata: testo(s?.status) === "CANCELLED",
+  };
+}
+
+export const sessioneMotoValida = (id) =>
+  typeof id === "string" &&
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
 /** `sessioni` sono quelle dell'evento dell'ultima gara, `gara` la classifica
  * della sessione scelta (`tipo`: RAC la gara, SPR la sprint). */
@@ -385,6 +482,7 @@ export function motoDaPulselive({
   campionato,
   quando = "",
   sessioniProssime = [],
+  sessioniGara = [],
   adesso = Date.now(),
 }) {
   const veri = (eventi || []).filter((e) => !e.test);
@@ -399,12 +497,187 @@ export function motoDaPulselive({
     gare: veri.length,
     ultima:
       eventoGara && risultati.length
-        ? { ...eventoMoto(eventoGara), tipo, quando: testo(quando), risultati }
+        ? {
+            ...eventoMoto(eventoGara),
+            tipo,
+            quando: testo(quando),
+            risultati,
+            tutte: tutteLeSessioniDiMoto(sessioniGara),
+          }
         : null,
     prossima: prossimo
-      ? { ...eventoMoto(prossimo), sessioni: sessioniDiMoto(sessioniProssime) }
+      ? {
+          ...eventoMoto(prossimo),
+          sessioni: sessioniDiMoto(sessioniProssime),
+          tutte: tutteLeSessioniDiMoto(sessioniProssime),
+        }
       : null,
     piloti: classificaMoto(campionato).map(({ tempo, distacco, stato, ...r }) => r),
+  };
+}
+
+/* ------------------------------------------------------------ i dettagli */
+
+/* Quello che si apre toccando una partita o una sessione: chi ha segnato, i
+ * cartellini, le formazioni; la classifica di una qualifica o di una sprint.
+ * Si chiede solo quando lo si tocca, e solo chi e' entrato (`_loSport`). */
+
+/* Gli eventi di una partita che contano, coi nomi della plancia. I ritardi,
+ * il fischio d'inizio e la fine dei tempi restano fuori: sono rumore. */
+function tipoDellEvento(e) {
+  const t = testo(e?.type?.type).toLowerCase();
+  const scritto = testo(e?.text).toLowerCase();
+  if (t === "goal" || t.startsWith("goal") || e?.scoringPlay) {
+    if (/own goal|autogol/.test(scritto) || t.includes("own")) return "autogol";
+    if (/penalty|rigore/.test(scritto) || t.includes("penalty")) return "rigore";
+    return "gol";
+  }
+  if (t === "yellow-card") return "giallo";
+  if (t === "red-card" || t === "yellow-red-card" || t.includes("red")) return "rosso";
+  if (t === "substitution") return "cambio";
+  if (t === "penalty---missed" || /missed penalty|rigore sbagliato/.test(scritto))
+    return "rigore-sbagliato";
+  return "";
+}
+
+const STATISTICHE_DI_CALCIO = [
+  ["possessionPct", "possesso"],
+  ["totalShots", "tiri"],
+  ["shotsOnTarget", "tiriInPorta"],
+  ["wonCorners", "angoli"],
+  ["foulsCommitted", "falli"],
+  ["yellowCards", "gialli"],
+  ["redCards", "rossi"],
+  ["offsides", "fuorigioco"],
+  ["saves", "parate"],
+  ["accuratePasses", "passaggiRiusciti"],
+  ["totalPasses", "passaggi"],
+];
+
+/** Il dettaglio di una partita di ESPN (`summary`). */
+export function partitaDettaglioDaEspn(json) {
+  const gara = json?.header?.competitions?.[0];
+  if (!gara) return null;
+  const lati = {};
+  for (const c of gara.competitors || []) {
+    const lato = c.homeAway === "away" ? "ospite" : "casa";
+    lati[lato] = { ...squadraDi(c), gol: numero(c.score), id: testo(c.team?.id || c.id) };
+  }
+  const latoDi = (idSquadra) =>
+    testo(idSquadra) && testo(idSquadra) === lati.ospite?.id ? "ospite" : "casa";
+  const stato = gara.status?.type || {};
+  const eventi = (json.keyEvents || [])
+    .map((e) => {
+      const tipo = tipoDellEvento(e);
+      if (!tipo) return null;
+      const chi = (e.participants || []).map((p) => testo(p?.athlete?.displayName));
+      const riga = { minuto: testo(e.clock?.displayValue), tipo, lato: latoDi(e.team?.id) };
+      if (tipo === "cambio") return { ...riga, entra: chi[0] || "", esce: chi[1] || "" };
+      return { ...riga, chi: chi[0] || "", assist: tipo === "gol" ? chi[1] || "" : "" };
+    })
+    .filter(Boolean);
+  const formazione = (r) => {
+    const giocatori = (r?.roster || []).map((g) => ({
+      numero: testo(g.jersey),
+      nome: testo(g.athlete?.displayName),
+      ruolo: testo(g.position?.abbreviation),
+      titolare: Boolean(g.starter),
+      entrato: Boolean(g.subbedIn),
+      uscito: Boolean(g.subbedOut),
+      posto: numero(g.formationPlace),
+    }));
+    return {
+      modulo: testo(r?.formation),
+      titolari: giocatori
+        .filter((g) => g.titolare)
+        .sort((a, b) => (a.posto ?? 99) - (b.posto ?? 99)),
+      panchina: giocatori.filter((g) => !g.titolare),
+    };
+  };
+  const formazioni = {};
+  for (const r of json.rosters || []) formazioni[latoDi(r.team?.id)] = formazione(r);
+  const valoriDi = (idSquadra) => {
+    const t = (json.boxscore?.teams || []).find((x) => testo(x.team?.id) === idSquadra);
+    return Object.fromEntries(
+      (t?.statistics || []).map((x) => [testo(x.name), testo(x.displayValue)]),
+    );
+  };
+  const casaV = valoriDi(lati.casa?.id);
+  const ospiteV = valoriDi(lati.ospite?.id);
+  const statistiche = STATISTICHE_DI_CALCIO.filter(([k]) => casaV[k] !== undefined).map(
+    ([k, chiave]) => ({ chiave, casa: casaV[k], ospite: ospiteV[k] ?? "" }),
+  );
+  const info = json.gameInfo || {};
+  const arbitro = (info.officials || []).find((o) => /referee/i.test(o?.position?.name || ""));
+  return {
+    tipo: "calcio",
+    id: testo(json.header?.id),
+    quando: testo(gara.date),
+    fase: stato.state === "in" ? "in" : stato.completed ? "finita" : "prima",
+    minuto: testo(gara.status?.displayClock || ""),
+    casa: lati.casa || null,
+    ospite: lati.ospite || null,
+    stadio: testo(info.venue?.fullName),
+    citta: testo(info.venue?.address?.city),
+    arbitro: testo(arbitro?.displayName),
+    eventi,
+    formazioni,
+    statistiche,
+  };
+}
+
+/* Il tempo che conta di una qualifica: l'ultimo turno a cui si e' arrivati. */
+function tempoDiQualifica(x) {
+  return testo(x.Q3 || x.Q2 || x.Q1 || "");
+}
+
+/** Una sessione di F1 di Jolpica: `Q` le qualifiche, `S` la sprint, `G` la gara. */
+export function sessioneF1DaJolpica(json, sessione) {
+  const gara = json?.MRData?.RaceTable?.Races?.[0];
+  if (!gara) return null;
+  const chiave =
+    sessione === "Q" ? "QualifyingResults" : sessione === "S" ? "SprintResults" : "Results";
+  return {
+    tipo: "f1",
+    sessione,
+    giro: numero(gara.round),
+    nome: testo(gara.raceName),
+    risultati: (gara[chiave] || []).map((x) => ({
+      posizione: numero(x.position),
+      ...pilotaF1(x.Driver),
+      scuderia: testo(x.Constructor?.name),
+      scuderiaId: testo(x.Constructor?.constructorId),
+      ...(sessione === "Q"
+        ? { q1: testo(x.Q1), q2: testo(x.Q2), q3: testo(x.Q3), tempo: tempoDiQualifica(x) }
+        : {
+            tempo: testo(x.Time?.time || ""),
+            stato: testo(x.status || ""),
+            punti: numero(x.points) ?? 0,
+            griglia: numero(x.grid),
+            giroVeloce: x.FastestLap?.rank === "1",
+          }),
+    })),
+  };
+}
+
+/** Una sessione di MotoGP: la classifica col giro migliore. */
+export function sessioneMotoDaPulselive(json) {
+  if (!json?.classification) return null;
+  return {
+    tipo: "motogp",
+    risultati: json.classification.map((x) => ({
+      posizione: numero(x.position),
+      id: testo(x.rider?.id),
+      nome: testo(x.rider?.full_name),
+      numero: testo(x.rider?.number),
+      squadra: testo(x.team?.name),
+      moto: testo(x.constructor?.name),
+      punti: numero(x.points) ?? 0,
+      tempo: testo(x.time || x.best_lap?.time || ""),
+      giro: testo(x.best_lap?.time || ""),
+      distacco: testo(x.gap?.first && x.gap.first !== "0.000" ? `+${x.gap.first}` : ""),
+      stato: testo(x.status || ""),
+    })),
   };
 }
 
@@ -447,7 +720,22 @@ export function creaSport({ scarica = (u, o) => fetch(u, o), orologio = () => Da
       json(`${ESPN}/all/teams/${id}/schedule?fixture=true`),
       json(`${ESPN_CLASSIFICHE}/${campionato}/standings`).catch(() => null),
     ]);
-    let r = calcioDaEspn({ id: String(id), campionato, giocate, prossime, classifica });
+    const classificheDelleCoppe = Object.fromEntries(
+      await Promise.all(
+        coppeDelCalendario(giocate, prossime).map(async (lega) => [
+          lega,
+          await json(`${ESPN_CLASSIFICHE}/${lega}/standings`).catch(() => null),
+        ]),
+      ),
+    );
+    let r = calcioDaEspn({
+      id: String(id),
+      campionato,
+      giocate,
+      prossime,
+      classifica,
+      classificheDelleCoppe,
+    });
     /* Una partita oggi, in corso o a momenti: il risultato si chiede alla
      * giornata del campionato, che si aggiorna ogni minuto. */
     const adesso = orologio();
@@ -474,6 +762,7 @@ export function creaSport({ scarica = (u, o) => fetch(u, o), orologio = () => Da
             events: (prossime?.events || []).filter((e) => String(e.id) !== vicina.id),
           },
           classifica,
+          classificheDelleCoppe,
         });
       }
     }
@@ -508,6 +797,7 @@ export function creaSport({ scarica = (u, o) => fetch(u, o), orologio = () => Da
     let gara = null;
     let categoria = null;
     let quando = "";
+    let sessioniGara = [];
     for (const e of iniziati.slice(0, 3)) {
       const categorie = await json(
         `${MOTO}/results/categories?eventUuid=${encodeURIComponent(e.id)}`,
@@ -527,6 +817,7 @@ export function creaSport({ scarica = (u, o) => fetch(u, o), orologio = () => Da
       );
       if (!classifica?.classification?.length) continue;
       eventoGara = e;
+      sessioniGara = sessioni || [];
       tipo = scelta.type;
       gara = classifica;
       quando = testo(scelta.date);
@@ -558,8 +849,50 @@ export function creaSport({ scarica = (u, o) => fetch(u, o), orologio = () => Da
       campionato,
       quando,
       sessioniProssime,
+      sessioniGara,
       adesso: orologio(),
     });
+  }
+
+  /**
+   * Il dettaglio di una cosa toccata. Ogni campo si controlla prima di
+   * metterlo in un indirizzo: una lega, un numero, un giro, un identificativo
+   * di sessione — niente altro passa.
+   */
+  async function dettaglio(chiesto = {}) {
+    if (chiesto?.tipo === "calcio") {
+      const lega = testo(chiesto.lega);
+      const id = testo(chiesto.id);
+      if (!legaValida(lega) || !/^\d{1,9}$/.test(id)) throw new Error("sport: partita");
+      const fuori = partitaDettaglioDaEspn(
+        await json(`${ESPN}/${lega}/summary?event=${id}`, PER_POCO),
+      );
+      if (!fuori) throw new Error("sport: partita");
+      return fuori;
+    }
+    if (chiesto?.tipo === "f1") {
+      const giro = Number(chiesto.giro);
+      const sessione = testo(chiesto.sessione);
+      if (!Number.isInteger(giro) || giro < 1 || giro > 30 || !["Q", "S", "G"].includes(sessione))
+        throw new Error("sport: sessione");
+      const pezzo = sessione === "Q" ? "qualifying" : sessione === "S" ? "sprint" : "results";
+      const fuori = sessioneF1DaJolpica(
+        await json(`${F1}/current/${giro}/${pezzo}.json`, PER_POCO * 5),
+        sessione,
+      );
+      if (!fuori?.risultati?.length) throw new Error("sport: sessione");
+      return fuori;
+    }
+    if (chiesto?.tipo === "motogp") {
+      const id = testo(chiesto.sessione);
+      if (!sessioneMotoValida(id)) throw new Error("sport: sessione");
+      const fuori = sessioneMotoDaPulselive(
+        await json(`${MOTO}/results/session/${id}/classification?test=false`, PER_POCO * 5),
+      );
+      if (!fuori?.risultati?.length) throw new Error("sport: sessione");
+      return fuori;
+    }
+    throw new Error("sport: dettaglio");
   }
 
   /** Il logo di una squadra: i byte e il tipo. Solo numeri, solo ESPN. */
@@ -595,5 +928,5 @@ export function creaSport({ scarica = (u, o) => fetch(u, o), orologio = () => Da
     );
   }
 
-  return { squadre, risultati, logo, calcio, f1, motogp };
+  return { squadre, risultati, dettaglio, logo, calcio, f1, motogp };
 }

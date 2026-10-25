@@ -2,7 +2,7 @@
  "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/ita.1/teams/110/schedule?lang=it&region=it",
  "stato": 200,
  "json": {
-  "timestamp": "2026-10-24T20:25:08Z",
+  "timestamp": "2026-10-25T09:27:10Z",
   "status": "success",
   "season": {
    "year": 2026,
@@ -22,7 +22,7 @@
    "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/110.png",
    "recordSummary": "6-1-0",
    "seasonSummary": "2026-27",
-   "standingSummary": "1st in Italian Serie A",
+   "standingSummary": "2nd in Italian Serie A",
    "isNational": false,
    "groups": {
     "id": "1"

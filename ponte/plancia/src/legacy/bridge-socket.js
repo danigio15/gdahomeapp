@@ -118,6 +118,7 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
   /* Lo sport seguito in casa (calcio, F1, MotoGP), chiesto dal ponte. */
   "ponte/sport/risultati",
   "ponte/sport/squadre",
+  "ponte/sport/dettaglio",
   "ponte/sport/logo",
   // Le segnalazioni. Stessa ragione dell'upload, e una in piu': la chiave del
   // manutentore sta nelle opzioni del config entry e la chiamata verso il

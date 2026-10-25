@@ -12,7 +12,14 @@
 import { expect, test } from "@playwright/test";
 import { existsSync, readFileSync } from "node:fs";
 import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
-import { calcioDaEspn, f1DaJolpica, motoDaPulselive } from "../../../../../ponte/src/sport.js";
+import {
+  calcioDaEspn,
+  f1DaJolpica,
+  motoDaPulselive,
+  partitaDettaglioDaEspn,
+  sessioneF1DaJolpica,
+  sessioneMotoDaPulselive,
+} from "../../../../../ponte/src/sport.js";
 
 const SEME = {
   schema_version: 4,
@@ -71,6 +78,7 @@ function risultati(adesso) {
     giocate,
     prossime,
     classifica: campione("calcio-serie-a-classifica"),
+    classificheDelleCoppe: { "uefa.champions": campione("calcio-champions-classifica") },
   });
   const f1 = f1DaJolpica({
     gara: campione("f1-ultima-gara"),
@@ -89,9 +97,21 @@ function risultati(adesso) {
     campionato: campione("moto-classifica"),
     quando: "2026-10-24T05:00:00+00:00",
     sessioniProssime: campione("moto-sessioni"),
+    sessioniGara: campione("moto-sessioni"),
     adesso,
   });
   return [inter, f1, moto];
+}
+
+/* I dettagli che il ponte manderebbe toccando una partita o una sessione. */
+function dettagli() {
+  return {
+    calcio: partitaDettaglioDaEspn(campione("calcio-partita")),
+    Q: sessioneF1DaJolpica(campione("f1-ultime-qualifiche"), "Q"),
+    S: sessioneF1DaJolpica(campione("f1-sprint"), "S"),
+    G: sessioneF1DaJolpica(campione("f1-ultima-gara"), "G"),
+    motogp: sessioneMotoDaPulselive(campione("moto-q2")),
+  };
 }
 
 /* Gli stemmi veri, se GitHub li ha scaricati (`strumenti/sport-campioni`). */
@@ -102,6 +122,8 @@ function stemmi() {
     if (r.tipo !== "calcio") continue;
     const ids = new Set([
       ...r.classifica.map((x) => x.id),
+      ...r.coppe.flatMap((c) => c.classifica.map((x) => x.id)),
+      ...Object.values(dettagli().calcio).flatMap((x) => (x?.id ? [x.id] : [])),
       ...[...r.ultime, ...r.prossime].flatMap((p) => [p.casa.id, p.fuori.id]),
     ]);
     for (const id of ids) {
@@ -116,8 +138,8 @@ async function boot(page, testInfo, { adesso, tema = "light" }) {
   test.setTimeout(testInfo.project.name === "webkit-ipad" ? 150_000 : 100_000);
   await page.clock.install({ time: adesso });
   await page.addInitScript(
-    ({ risposte, loghi }) => {
-      window.__sport = { chieste: [] };
+    ({ risposte, loghi, dettagli }) => {
+      window.__sport = { chieste: [], dettagli: [] };
       class MockSocket extends EventTarget {
         static OPEN = 1;
         readyState = 1;
@@ -151,6 +173,17 @@ async function boot(page, testInfo, { adesso, tema = "light" }) {
                 colore,
               })),
             };
+          } else if (message.type === "ponte/sport/dettaglio") {
+            const cosa = message.cosa || {};
+            window.__sport.dettagli.push(cosa);
+            result = {
+              dettaglio:
+                cosa.tipo === "calcio"
+                  ? dettagli.calcio
+                  : cosa.tipo === "f1"
+                    ? dettagli[cosa.sessione]
+                    : dettagli.motogp,
+            };
           } else if (message.type === "ponte/sport/logo") {
             const corpo = loghi[String(message.squadra)];
             if (corpo) result = { stato: 200, tipo: "image/png", corpo };
@@ -179,7 +212,7 @@ async function boot(page, testInfo, { adesso, tema = "light" }) {
       window.__DASHBOARDMODERN_BRIDGE_WS__ = MockSocket;
       window.WebSocket = MockSocket;
     },
-    { risposte: risultati(adesso), loghi: stemmi() },
+    { risposte: risultati(adesso), loghi: stemmi(), dettagli: dettagli() },
   );
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
@@ -263,7 +296,9 @@ test("sabato sera: la prossima partita col conto alla rovescia, la tessera e la 
   await boot(page, testInfo, { adesso: SABATO });
   await apriLoSport(page);
   const pagina = page.locator("#page-sport");
-  await expect(pagina.locator('[data-dm-sport-partita="prossima"]')).toContainText("Fiorentina");
+  await expect(pagina.locator('[data-dm-sport-partita="prossima"]').first()).toContainText(
+    "Fiorentina",
+  );
   await expect(pagina.locator(".dm-sport-manca").first()).toContainText("tra");
   await fotoDellaPagina(page, foto(testInfo, "sport-pagina-sabato"));
   /* In Home: alle 22 di sabato la cosa che conta sono le qualifiche di Austin,
@@ -313,4 +348,99 @@ test("la scheda Sport del Config: cosa si segue, il pilota del cuore, aggiungere
     campionato: "ita.1",
     nome: "AC Milan",
   });
+});
+
+/* Il foglio del dettaglio, da solo: la sua scheda. */
+async function fotoDelFoglio(page, dove) {
+  if (!dove) return;
+  await page.waitForTimeout(300);
+  const box = await page.locator("#dm-sport-dettaglio .dm-foglio-scelta-scheda").boundingBox();
+  await page.screenshot({ path: dove, clip: box, animations: "disabled" });
+}
+
+/* Un pezzo della pagina: lo schermo si allunga quanto la pagina, come per la
+ * foto intera, e si ritaglia il pezzo. */
+async function fotoDiUnPezzo(page, pezzo, dove) {
+  if (!dove) return;
+  const prima = page.viewportSize();
+  const alta = await page.evaluate(() => {
+    const pagina = document.getElementById("page-sport");
+    const sopra = pagina.getBoundingClientRect().top + window.scrollY;
+    return Math.ceil(sopra + pagina.scrollHeight + 140);
+  });
+  await page.setViewportSize({ width: prima.width, height: Math.max(prima.height, alta) });
+  await page.waitForTimeout(400);
+  const box = await pezzo.boundingBox();
+  await page.screenshot({ path: dove, clip: box, animations: "disabled" });
+  await page.setViewportSize(prima);
+}
+
+for (const tema of ["light", "dark"]) {
+  test(`toccando: chi ha segnato, le formazioni, le statistiche, la qualifica (${tema})`, async ({
+    page,
+  }, testInfo) => {
+    await boot(page, testInfo, { adesso: DOMENICA, tema });
+    await apriLoSport(page);
+    const pagina = page.locator("#page-sport");
+    /* Un'ultima partita: si apre il foglio con la cronaca. */
+    await pagina
+      .locator(".dm-sport-calcio > .dm-sport-scheda .dm-sport-riga.dm-sport-tocca")
+      .first()
+      .click();
+    const foglio = page.locator("#dm-sport-dettaglio");
+    await expect(foglio.locator(".dm-sport-cronaca li").first()).toBeVisible({ timeout: 10_000 });
+    const chiesto = await page.evaluate(() => window.__sport.dettagli.at(-1));
+    expect(chiesto.tipo).toBe("calcio");
+    expect(chiesto.lega).toMatch(/^[a-z]/);
+    expect(chiesto.id).toMatch(/^\d+$/);
+    await fotoDelFoglio(page, foto(testInfo, `sport-partita-cronaca-${tema}`));
+    await foglio.locator('[data-dm-sport-linguetta="statistiche"]').click();
+    await expect(foglio.locator('[data-dm-sport-parte="statistiche"]')).toBeVisible();
+    await expect(foglio.locator('[data-dm-sport-parte="cronaca"]')).toBeHidden();
+    await fotoDelFoglio(page, foto(testInfo, `sport-partita-statistiche-${tema}`));
+    await foglio.locator('[data-dm-sport-linguetta="formazioni"]').click();
+    await expect(foglio.locator(".dm-sport-formazione")).toHaveCount(2);
+    await fotoDelFoglio(page, foto(testInfo, `sport-partita-formazioni-${tema}`));
+    await page.keyboard.press("Escape");
+    await expect(foglio).toHaveCount(0);
+    /* Le qualifiche di Austin, gia' corse: i tre turni. */
+    const f1 = pagina.locator('[data-dm-sport-blocco="f1"]');
+    await f1.locator(".dm-sport-sessioni li.dm-sport-tocca", { hasText: "Qualifiche" }).click();
+    await expect(foglio.locator(".dm-sport-tabella .dm-sport-pos")).toHaveCount(22, {
+      timeout: 10_000,
+    });
+    expect(await page.evaluate(() => window.__sport.dettagli.at(-1))).toMatchObject({
+      tipo: "f1",
+      sessione: "Q",
+    });
+    await fotoDelFoglio(page, foto(testInfo, `sport-qualifiche-${tema}`));
+    await page.keyboard.press("Escape");
+    /* La MotoGP: la Q2 dell'ultimo fine settimana. */
+    const moto = pagina.locator('[data-dm-sport-blocco="motogp"]');
+    await moto.locator(".dm-sport-scheda-tasto", { hasText: "Qualifica 2" }).click();
+    await expect(foglio.locator(".dm-sport-tabella .dm-sport-pos").first()).toBeVisible({
+      timeout: 10_000,
+    });
+    await fotoDelFoglio(page, foto(testInfo, `sport-motogp-q2-${tema}`));
+    await page.keyboard.press("Escape");
+  });
+}
+
+test("la Champions: il suo blocco, la classifica della fase campionato, la classifica intera", async ({
+  page,
+}, testInfo) => {
+  await boot(page, testInfo, { adesso: SABATO });
+  await apriLoSport(page);
+  const coppa = page.locator('#page-sport [data-dm-sport-coppa="uefa.champions"]');
+  await expect(coppa).toBeVisible({ timeout: 20_000 });
+  await expect(coppa).toContainText("Champions League");
+  await expect(coppa.locator(".dm-sport-pos.mia")).toHaveCount(1);
+  const dove = foto(testInfo, "sport-champions");
+  await fotoDiUnPezzo(page, coppa, dove);
+  /* La classifica intera, con le zone. */
+  await coppa.locator(".dm-sport-scheda.dm-sport-tocca", { hasText: "Fase campionato" }).click();
+  const foglio = page.locator("#dm-sport-dettaglio");
+  await expect(foglio.locator(".dm-sport-pos")).toHaveCount(36);
+  await expect(foglio.locator(".dm-sport-legenda")).toContainText("Ottavi");
+  await fotoDelFoglio(page, foto(testInfo, "sport-champions-classifica"));
 });

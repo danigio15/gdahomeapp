@@ -104,3 +104,17 @@ test("il contatto sopravvive alla normalizzazione della tapparella", async () =>
   assert.equal(appliance.contact, "binary_sensor.x");
   assert.equal(contactEntity(normalizeDevice({ id: "c3", entity: "cover.c3" }, "covers")), "");
 });
+
+/* Una riga con il contatto finito nella casella della tapparella: e' una
+ * finestra senza motori, non una tapparella «Sconosciuta» con Apri e Chiudi. */
+test("un binary_sensor nella casella della tapparella e' il contatto", async () => {
+  const { isWindowOnly } = await import("../src/core/shutter-window.js");
+  const { coverEntries } = await import("../src/core/cover-kind.js");
+  const riga = { entity: "binary_sensor.finestra_cucinino_contact", name: "Finestra Cucinino" };
+  assert.equal(contactEntity(riga), "binary_sensor.finestra_cucinino_contact");
+  assert.deepEqual(coverEntries(riga), []);
+  assert.equal(isWindowOnly(riga), true);
+  /* Con una tapparella vera non cambia niente. */
+  assert.equal(contactEntity({ entity: "cover.cucina" }), "");
+  assert.equal(coverEntries({ entity: "cover.cucina" }).length, 1);
+});

@@ -91,8 +91,12 @@ function gruppoMarkup(chiave, disegno, titolo, corpo, accanto = "") {
     </article>`;
 }
 
+/* I piloti arrivano coi risultati, che si chiedono al ponte. La scheda si
+ * disegnava prima che arrivassero e non si ridisegnava piu': il menu del
+ * pilota del cuore restava con il solo «Nessuno». Adesso, quando arrivano, si
+ * ridisegna. */
 function pilotiPer(tipo) {
-  const vista = risultatiDelloSport();
+  const vista = risultatiDelloSport(() => ridisegna());
   const r = vista.risultati.find((x) => x?.tipo === tipo && !x.errore);
   return r?.piloti || [];
 }

@@ -346,7 +346,9 @@
 /* La revisione 70 aggiunge lo sport (`cd_sport`): la squadra di calcio, la
  * Formula 1 e la MotoGP che la casa segue. E' una scelta della casa come le
  * altre pagine, e si vede uguale dal telefono e dal tablet. */
-export const CONFIG_KEYS_REVISION = 70;
+/* La revisione 71 aggiunge la plancia «Colpo d'occhio» (`cd_occhio`): una
+ * pagina sola coi riquadri grandi, e ognuno apre i suoi dati in un popup. */
+export const CONFIG_KEYS_REVISION = 71;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -561,6 +563,7 @@ export const CONFIG_KEYS = Object.freeze([
   "cd_entity_overrides",
   "cd_quick_actions",
   "cd_muro",
+  "cd_occhio",
   "cd_navbar_order",
   // La barra a scomparsa o ferma e' una scelta della plancia, non del
   // dispositivo che l'ha fatta: chi la mette ferma sul telefono se la ritrova

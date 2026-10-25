@@ -345,6 +345,7 @@ const REGISTRI = "ponte/registri";
 const INDIRIZZO = "ponte/indirizzo";
 const DIMMI_IL_DISPOSITIVO = "ponte/zigbee/dimmi";
 /* Lo sport (`sport.js`): `ponte/sport/risultati`, `ponte/sport/squadre`,
+ * `ponte/sport/dettaglio`,
  * `ponte/sport/logo`. Solo per chi e' entrato: vedi `_loSport`. */
 const LO_SPORT = "ponte/sport/";
 
@@ -1094,6 +1095,13 @@ export class Commissioni {
       if (tipo === `${LO_SPORT}squadre`) {
         return si(id, { squadre: await this.sport.squadre(detto?.campionato) });
       }
+      if (tipo === `${LO_SPORT}dettaglio`) {
+        /* Il dettaglio di una partita o di una sessione toccata nella
+         * plancia: si passa solo cosa si e' toccato, e il ponte controlla ogni
+         * campo prima di chiederlo fuori. */
+        const chiesto = detto?.cosa && typeof detto.cosa === "object" ? detto.cosa : {};
+        return si(id, { dettaglio: await this.sport.dettaglio(chiesto) });
+      }
       if (tipo === `${LO_SPORT}logo`) {
         const logo = await this.sport.logo(String(detto?.squadra ?? ""));
         return si(id, { stato: 200, tipo: logo.tipo, corpo: logo.base64 });
@@ -1717,6 +1725,7 @@ export class Commissioni {
             {
               titolo,
               modello: detto.modello,
+              partenza: detto.partenza,
               utenti: Array.isArray(detto.utenti) ? detto.utenti : null,
             },
           );

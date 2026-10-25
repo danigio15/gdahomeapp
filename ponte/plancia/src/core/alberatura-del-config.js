@@ -133,6 +133,9 @@ export const SCHEDE = Object.freeze({
   /* La plancia a muro: come diventa questa plancia su un tablet fisso. E'
    * una scelta della plancia, non una cosa di casa, e sta con le altre. */
   muro: { famiglia: "plancia", posizione: 37 }, // 📟 A muro
+  /* Il Colpo d'occhio: l'altra forma che questa plancia puo' prendere, una
+   * pagina sola coi popup. Sta accanto ad «A muro». */
+  occhio: { famiglia: "plancia", posizione: 38 }, // 👁️ Colpo d'occhio
   entita: { famiglia: "plancia", posizione: 40 }, // ⭐ Le tue entità
   mie: { famiglia: "plancia", posizione: 50 }, // ⭐ Le tue sezioni
   backup: { famiglia: "plancia", posizione: 60 }, // 💾 Backup e ripristino

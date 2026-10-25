@@ -189,6 +189,9 @@ export function coverEntries(item = {}) {
   for (const { campo, kind, giu } of COVER_SLOTS) {
     const entity = clean(item?.[campo]);
     if (!entity || viste.has(entity)) continue;
+    /* Un sensore di apertura non e' un motore, anche se e' finito nella
+     * casella della tapparella: lo legge `contactEntity` come contatto. */
+    if (entity.toLowerCase().startsWith("binary_sensor.")) continue;
     viste.add(entity);
     /* La prima casella non impone un tipo: se la riga vecchia ne dichiarava
      * uno vale quello, altrimenti decide Home Assistant. */

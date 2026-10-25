@@ -31,7 +31,12 @@ import {
 } from "../core/auto-termica.js";
 import { evccPresence } from "../core/ev-console.js";
 import { CHIAVE_FASCE, normalizzaLeFasce, prezzoDellaFascia } from "../core/fasce-della-tariffa.js";
-import { durataInParole, inKilowatt, quandoFinisce, tempoDellaRicarica } from "../core/il-tempo-della-ricarica.js";
+import {
+  durataInParole,
+  inKilowatt,
+  quandoFinisce,
+  tempoDellaRicarica,
+} from "../core/il-tempo-della-ricarica.js";
 import {
   finestraDelloStorico,
   giornoScritto,
@@ -40,6 +45,7 @@ import {
   kmDeiGiorni,
   laPercentuale,
   leScorciatoie,
+  lePercentualiBasse,
   meseAccanto,
   oreDiRicarica,
   percentualeConsentita,
@@ -161,7 +167,8 @@ function lettoreDi(car, inUso) {
 const PRIMA_CHE_C_E = (lettore, refs) => {
   for (const ref of refs) {
     const n = lettore.numero(ref);
-    if (n !== null) return { ref, n, unita: clean(lettore.vivo(ref)?.attributes?.unit_of_measurement) };
+    if (n !== null)
+      return { ref, n, unita: clean(lettore.vivo(ref)?.attributes?.unit_of_measurement) };
   }
   return null;
 };
@@ -177,7 +184,11 @@ function letturaDellAuto(car, inUso) {
   const dati = letturaTermica(mappa, l.stati, resolve);
   const batteria = l.numero("dm.ev_batteria_auto");
   const autonomia = l.numero("dm.ev_autonomia");
-  const potenzaLetta = PRIMA_CHE_C_E(l, ["dm.ev_potenza_wallbox", "dm.ev_charge_power", "dm.ev_potenza_ricarica"]);
+  const potenzaLetta = PRIMA_CHE_C_E(l, [
+    "dm.ev_potenza_wallbox",
+    "dm.ev_charge_power",
+    "dm.ev_potenza_ricarica",
+  ]);
   const kw = potenzaLetta ? inKilowatt(potenzaLetta.n, potenzaLetta.unita) : null;
   const cavo = cavoDalloStato(clean(l.vivo("dm.ev_cavo_collegato")?.state));
   const codice = termica
@@ -238,7 +249,9 @@ function prezzoUnico() {
 
 function fasceSalvate() {
   try {
-    return normalizzaLeFasce(JSON.parse(root.localStorage?.getItem?.(CHIAVE_FASCE) || "null") || {});
+    return normalizzaLeFasce(
+      JSON.parse(root.localStorage?.getItem?.(CHIAVE_FASCE) || "null") || {},
+    );
   } catch (_errore) {
     return normalizzaLeFasce({});
   }
@@ -255,8 +268,10 @@ function prezzoDellOra() {
 
 const kwh = (n, cifre = 1) => (n === null || n === undefined ? "—" : formatNumber(n, cifre));
 const euro = (n) => (n === null || n === undefined ? "—" : formatNumber(n, 2));
-const intero = (n) => (n === null || n === undefined ? "—" : Math.round(n).toLocaleString(locale()));
-const percento = (quota) => (quota === null || quota === undefined ? "—" : String(Math.round(quota * 100)));
+const intero = (n) =>
+  n === null || n === undefined ? "—" : Math.round(n).toLocaleString(locale());
+const percento = (quota) =>
+  quota === null || quota === undefined ? "—" : String(Math.round(quota * 100));
 
 function nomeDellAuto(car, indice) {
   return clean(car?.name) || clean(car?.model) || `${t("Auto", "Car")} ${indice + 1}`;
@@ -274,7 +289,8 @@ function titoloDellAuto(car, indice) {
   const modello = clean(car?.model);
   const nome = clean(car?.name);
   const giaConLaMarca = marca && modello.toLowerCase().startsWith(`${marca.toLowerCase()} `);
-  const titolo = giaConLaMarca || stesso(marca, modello) ? modello : [marca, modello].filter(Boolean).join(" ");
+  const titolo =
+    giaConLaMarca || stesso(marca, modello) ? modello : [marca, modello].filter(Boolean).join(" ");
   const sotto = titolo && nome && !stesso(nome, titolo) && !stesso(nome, modello) ? nome : "";
   return { titolo: titolo || nome || nomeDellAuto(car, indice), sotto };
 }
@@ -283,7 +299,9 @@ function logoDellAuto(car, misura) {
   const marca = clean(car?.brand);
   if (marca) return carBrandVisual(marca, misura);
   try {
-    return root.cdIconMarkup?.(clean(car?.icon) || "mdi:car-electric", Math.round(misura * 0.8)) || "🚗";
+    return (
+      root.cdIconMarkup?.(clean(car?.icon) || "mdi:car-electric", Math.round(misura * 0.8)) || "🚗"
+    );
   } catch (_errore) {
     return "🚗";
   }
@@ -312,18 +330,26 @@ function pastiglieDellAuto(lettura) {
   else if (fa === "ferma") fuori.push({ tono: "", testo: `🅿️ ${t("Parcheggiata", "Parked")}` });
   if (d.portiere === "bloccate" || d.portiere === "chiuse")
     fuori.push({ tono: "ok", testo: `🔒 ${t("Chiusa", "Locked")}` });
-  else if (d.portiere === "sbloccate") fuori.push({ tono: "attenzione", testo: `🔓 ${t("Aperta", "Unlocked")}` });
-  else if (d.portiere === "aperte") fuori.push({ tono: "attenzione", testo: `🚪 ${t("Portiere aperte", "Doors open")}` });
-  if (d.frenoStazionamento === true) fuori.push({ tono: "", testo: `✋ ${t("Freno tirato", "Handbrake on")}` });
+  else if (d.portiere === "sbloccate")
+    fuori.push({ tono: "attenzione", testo: `🔓 ${t("Aperta", "Unlocked")}` });
+  else if (d.portiere === "aperte")
+    fuori.push({ tono: "attenzione", testo: `🚪 ${t("Portiere aperte", "Doors open")}` });
+  if (d.frenoStazionamento === true)
+    fuori.push({ tono: "", testo: `✋ ${t("Freno tirato", "Handbrake on")}` });
   if (d.posizione || d.coordinate) {
     /* A casa resta «A casa»; fuori si dice dove, esatto: l'indirizzo o le
      * coordinate, e il tocco apre la mappa. */
-    const via = d.posizione === "casa" ? "" : posizioneScritta(d.coordinate, laViaDellAuto(d.coordinate));
+    const via =
+      d.posizione === "casa" ? "" : posizioneScritta(d.coordinate, laViaDellAuto(d.coordinate));
     const dove =
       d.posizione === "casa"
         ? t("A casa", "At home")
         : via || (d.posizione === "fuori" || !d.posizione ? t("Fuori casa", "Away") : d.posizione);
-    fuori.push({ tono: "", testo: `📍 ${dove}`, link: d.posizione === "casa" ? "" : linkDellaMappa(d.coordinate) });
+    fuori.push({
+      tono: "",
+      testo: `📍 ${dove}`,
+      link: d.posizione === "casa" ? "" : linkDellaMappa(d.coordinate),
+    });
   }
   return fuori;
 }
@@ -343,12 +369,14 @@ function garage(auto, inUso) {
       const { titolo } = titoloDellAuto(car, i);
       const livello = l.termica ? l.carburante : l.batteria;
       const pezzi = [];
-      if (livello !== null) pezzi.push(`${l.termica ? "⛽" : l.codice === "C" ? "⚡" : "🔋"} ${Math.round(livello)}%`);
+      if (livello !== null)
+        pezzi.push(`${l.termica ? "⛽" : l.codice === "C" ? "⚡" : "🔋"} ${Math.round(livello)}%`);
       const stato = statoDellaRicarica(l);
       if (stato?.tono === "carica") pezzi.push(t("in carica", "charging"));
       else if (stato?.tono === "collegata") pezzi.push(t("collegata", "plugged in"));
       if (l.autonomia !== null) pezzi.push(`${intero(l.autonomia)} km`);
-      const barra = livello === null ? "" : `<i style="width:${Math.max(0, Math.min(100, livello))}%"></i>`;
+      const barra =
+        livello === null ? "" : `<i style="width:${Math.max(0, Math.min(100, livello))}%"></i>`;
       return `<button type="button" class="dm-na-garage-auto" data-na-auto="${i}" aria-pressed="${i === inUso}"
         data-tipo="${l.termica ? "termica" : "elettrica"}">
         <span class="dm-na-logo">${logoDellAuto(car, 30)}</span>
@@ -367,10 +395,14 @@ function eroe(l, indice) {
   const car = l.car || {};
   const { titolo, sotto } = titoloDellAuto(car, indice);
   const capacita = capacitaDellaBatteria(car, l.lettore.stati);
-  const sottotitolo = [sotto, capacita ? `${formatNumber(capacita, 0)} kWh` : ""].filter(Boolean).join(" · ");
+  const sottotitolo = [sotto, capacita ? `${formatNumber(capacita, 0)} kWh` : ""]
+    .filter(Boolean)
+    .join(" · ");
   const livello = l.termica ? l.carburante : l.batteria;
   const stato = statoDellaRicarica(l);
-  const foto = l.inUso ? activeVehiclePhoto() : vehiclePhoto(car, l.codice === "B" || l.codice === "C");
+  const foto = l.inUso
+    ? activeVehiclePhoto()
+    : vehiclePhoto(car, l.codice === "B" || l.codice === "C");
   const target = l.target;
   const kmTarget = l.termica ? null : kmAllaPercentuale(l.autonomia, l.batteria, target);
   const aggiornata = l.dati.ultimoAggiornamento;
@@ -433,7 +465,9 @@ function linguette(l, aperta) {
   ].filter(Boolean);
   return `<div class="dm-na-linguette" role="tablist">${voci
     .map(
-      (v) => `<button type="button" role="tab" class="dm-na-linguetta" data-na-linguetta="${v.id}" aria-selected="${v.id === aperta}">
+      (
+        v,
+      ) => `<button type="button" role="tab" class="dm-na-linguetta" data-na-linguetta="${v.id}" aria-selected="${v.id === aperta}">
       <span aria-hidden="true">${v.icona}</span><span>${esc(v.nome)}</span>${
         v.badge ? `<em data-tono="${esc(v.tono)}">${esc(v.badge)}</em>` : ""
       }</button>`,
@@ -444,7 +478,10 @@ function linguette(l, aperta) {
 /* ── Ricarica ── */
 
 function cartaAdesso(l) {
-  const info = laPercentuale(l.lettore.vivo("dm.ev_target_soc"), l.lettore.entita("dm.ev_target_soc"));
+  const info = laPercentuale(
+    l.lettore.vivo("dm.ev_target_soc"),
+    l.lettore.entita("dm.ev_target_soc"),
+  );
   /* La percentuale appena scelta vale finche' l'entita' non risponde. */
   if (info && state.voluta !== null) {
     if (info.valore === state.voluta || Date.now() - state.volutaAlle > 15_000) state.voluta = null;
@@ -458,14 +495,23 @@ function cartaAdesso(l) {
   if (tempo?.stato === "carica" && tempo.minuti) {
     const fine = quandoFinisce(tempo.minuti);
     pronta = fine?.ora || "";
-    const giorno = fine?.giorno === "oggi" ? t("oggi", "today") : fine?.giorno === "domani" ? t("domani", "tomorrow") : "";
-    quando = [giorno, `${t("tra", "in")} ${durataInParole(tempo.minuti)}`].filter(Boolean).join(" · ");
+    const giorno =
+      fine?.giorno === "oggi"
+        ? t("oggi", "today")
+        : fine?.giorno === "domani"
+          ? t("domani", "tomorrow")
+          : "";
+    quando = [giorno, `${t("tra", "in")} ${durataInParole(tempo.minuti)}`]
+      .filter(Boolean)
+      .join(" · ");
   } else if (tempo?.stato === "completa" || tempo?.stato === "raggiunto") {
     pronta = "✓";
     quando = t("Già carica", "Already charged");
   }
   const anello = inCarica && l.kw !== null ? l.kw : l.batteria;
-  const quota = inCarica ? Math.min(1, (l.kw || 0) / 11) : Math.max(0, Math.min(1, (l.batteria || 0) / 100));
+  const quota = inCarica
+    ? Math.min(1, (l.kw || 0) / 11)
+    : Math.max(0, Math.min(1, (l.batteria || 0) / 100));
   const giro = 2 * Math.PI * 52;
   const kmObiettivo = kmAllaPercentuale(l.autonomia, l.batteria, obiettivo);
   const cursore = info
@@ -473,30 +519,44 @@ function cartaAdesso(l) {
       <div class="dm-na-obiettivo-testa"><span>${esc(t("Carica fino a", "Charge up to"))}</span>
         <b><output data-na-pct>${Math.round(obiettivo ?? 0)}</output><small>%</small></b>
         <span class="dm-na-obiettivo-km" data-na-km>${kmObiettivo === null ? "" : `· ${intero(kmObiettivo)} km`}</span></div>
-      <div class="dm-na-cursore" style="--na-adesso:${Math.max(0, Math.min(100, l.batteria ?? 0))}%">
-        <input type="range" data-na-cursore min="${info.min}" max="${info.max}" step="${info.voci.length ? 1 : info.passo}"
-          value="${obiettivo ?? info.max}" ${info.scrivibile ? "" : "disabled"}
-          aria-label="${esc(t("Carica fino a", "Charge up to"))}">
+      <div class="dm-na-cursore" role="img" aria-label="${esc(`${t("Carica fino a", "Charge up to")} ${Math.round(obiettivo ?? info.max)}%`)}"
+        style="--na-fino:${Math.max(0, Math.min(100, obiettivo ?? info.max))}%">
+        <i class="dm-na-fino"></i>
       </div>
       <div class="dm-na-scala"><span>${info.min}%</span>${
-        l.batteria === null ? "" : `<span class="dm-na-adesso">${Math.round(l.batteria)}% ${esc(t("adesso", "now"))}</span>`
+        l.batteria === null
+          ? ""
+          : `<span class="dm-na-adesso">${Math.round(l.batteria)}% ${esc(t("adesso", "now"))}</span>`
       }<span>${info.max}%</span></div>
       ${
         info.scrivibile
-          ? `<div class="dm-na-passi"><button type="button" data-na-passo="-1" aria-label="−">−</button><button type="button" data-na-passo="1" aria-label="+">+</button>
-        <span class="dm-na-scorciatoie">${leScorciatoie(info)
-          .map((n) => `<button type="button" data-na-pct-scelta="${n}" aria-pressed="${Math.round(obiettivo) === n}">${n}%</button>`)
-          .join("")}</span></div>`
+          ? `<div class="dm-na-passi">${tendinaBassa(info, obiettivo)}<span class="dm-na-scorciatoie">${leScorciatoie(
+              info,
+            )
+              .map(
+                (n) =>
+                  `<button type="button" data-na-pct-scelta="${n}" aria-pressed="${Math.round(obiettivo) === n}">${n}%</button>`,
+              )
+              .join("")}</span></div>`
           : `<p class="dm-na-nota">${esc(t("L'obiettivo si legge soltanto: l'entità non accetta comandi.", "The target is read-only: the entity accepts no commands."))}</p>`
       }
     </div>`
     : "";
   const prezzo = prezzoDellOra()(Date.now());
-  const costoFinora = l.sessione !== null && prezzo !== null ? l.sessione * prezzo * (l.soleSessione === null ? 1 : 1 - l.soleSessione / 100) : null;
+  const costoFinora =
+    l.sessione !== null && prezzo !== null
+      ? l.sessione * prezzo * (l.soleSessione === null ? 1 : 1 - l.soleSessione / 100)
+      : null;
   const tessere = [
-    l.sessione === null ? "" : `<div class="dm-na-tessera"><span>${esc(t("Questa ricarica", "This session"))}</span><b>${kwh(l.sessione)}<small>kWh</small></b></div>`,
-    l.soleSessione === null ? "" : `<div class="dm-na-tessera" data-tono="sole"><span>${esc(t("Dal sole", "From the sun"))}</span><b>${Math.round(l.soleSessione)}<small>%</small></b></div>`,
-    costoFinora === null ? "" : `<div class="dm-na-tessera"><span>${esc(t("Costo finora", "Cost so far"))}</span><b>${euro(costoFinora)}<small>€</small></b></div>`,
+    l.sessione === null
+      ? ""
+      : `<div class="dm-na-tessera"><span>${esc(t("Questa ricarica", "This session"))}</span><b>${kwh(l.sessione)}<small>kWh</small></b></div>`,
+    l.soleSessione === null
+      ? ""
+      : `<div class="dm-na-tessera" data-tono="sole"><span>${esc(t("Dal sole", "From the sun"))}</span><b>${Math.round(l.soleSessione)}<small>%</small></b></div>`,
+    costoFinora === null
+      ? ""
+      : `<div class="dm-na-tessera"><span>${esc(t("Costo finora", "Cost so far"))}</span><b>${euro(costoFinora)}<small>€</small></b></div>`,
   ].join("");
   return `<section class="dm-na-carta dm-na-adesso-carta">
     <h3 class="dm-na-titolo"><span>⚡</span>${esc(t("Adesso", "Now"))}</h3>
@@ -557,10 +617,15 @@ function wallbox(l) {
   const sempre = valori.length
     ? `<div class="dm-na-sempre" data-vigore="${vale}">
       <div><b>${esc(t("Tieni sempre un minimo", "Always keep a minimum"))}</b><small>${esc(
-        vale ? t("anche senza sole", "even without sun") : t("vale solo in Intelligente", "only applies in Smart"),
+        vale
+          ? t("anche senza sole", "even without sun")
+          : t("vale solo in Intelligente", "only applies in Smart"),
       )}</small></div>
       <div class="dm-na-segmenti">${valori
-        .map((v) => `<button type="button" data-na-sempre="${esc(v.id)}" aria-pressed="${v.id === scelto}">${esc(NOMI_DEL_SEMPRE[v.id.toLowerCase()]?.() || v.id)}</button>`)
+        .map(
+          (v) =>
+            `<button type="button" data-na-sempre="${esc(v.id)}" aria-pressed="${v.id === scelto}">${esc(NOMI_DEL_SEMPRE[v.id.toLowerCase()]?.() || v.id)}</button>`,
+        )
         .join("")}</div></div>`
     : "";
   return `<div class="dm-na-wallbox">
@@ -598,7 +663,10 @@ function selettoreDelPeriodo(vista, { mese, dal, al }, gruppo) {
         <label>${esc(t("Al", "To"))}<input type="date" data-na-al value="${esc(al)}" max="${giornoScritto(Date.now())}"></label></div>`
         : "";
   return `<div class="dm-na-periodo"><div class="dm-na-segmenti">${viste
-    .map(([id, nome]) => `<button type="button" data-na-vista="${id}" data-na-gruppo="${gruppo}" aria-pressed="${id === vista}">${esc(nome)}</button>`)
+    .map(
+      ([id, nome]) =>
+        `<button type="button" data-na-vista="${id}" data-na-gruppo="${gruppo}" aria-pressed="${id === vista}">${esc(nome)}</button>`,
+    )
     .join("")}</div>${naviga}</div>`;
 }
 
@@ -619,11 +687,14 @@ function grafico(giorni, vista, valore, { pila = null, unita = "kWh" } = {}) {
       const sole = pila ? pila(g) : null;
       const quotaSole = sole !== null && v > 0 ? Math.max(0, Math.min(1, sole / v)) : null;
       const futuro = g.giorno > oggi;
-      const etichetta = !fitta || i % 2 === 0 || i === giorni.length - 1 ? etichettaDelGiorno(g.giorno, vista) : "";
+      const etichetta =
+        !fitta || i % 2 === 0 || i === giorni.length - 1 ? etichettaDelGiorno(g.giorno, vista) : "";
       const titolo = `${new Date(g.giorno).toLocaleDateString(locale(), { weekday: "short", day: "numeric", month: "short" })}: ${formatNumber(v, 1)} ${unita}`;
       return `<div class="dm-na-colonna" data-futuro="${futuro}" title="${esc(titolo)}">
         <div class="dm-na-barra" style="height:${altezza.toFixed(1)}%">${
-          quotaSole === null ? "<i></i>" : `<i class="rete" style="flex:${(1 - quotaSole).toFixed(3)}"></i><i class="sole" style="flex:${quotaSole.toFixed(3)}"></i>`
+          quotaSole === null
+            ? "<i></i>"
+            : `<i class="rete" style="flex:${(1 - quotaSole).toFixed(3)}"></i><i class="sole" style="flex:${quotaSole.toFixed(3)}"></i>`
         }</div><small>${esc(etichetta)}</small></div>`;
     })
     .join("")}</div>`;
@@ -631,7 +702,8 @@ function grafico(giorni, vista, valore, { pila = null, unita = "kWh" } = {}) {
 
 function rigaDellaRicarica(r) {
   const d = new Date(r.inizio);
-  const ora = (x) => new Date(x).toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit", hour12: false });
+  const ora = (x) =>
+    new Date(x).toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit", hour12: false });
   const sole = r.quotaSole;
   return `<div class="dm-na-ricarica">
     <div class="dm-na-ricarica-giorno"><b>${d.getDate()}</b><small>${esc(d.toLocaleDateString(locale(), { weekday: "short" }).replace(".", ""))}</small></div>
@@ -640,13 +712,19 @@ function rigaDellaRicarica(r) {
       <span class="dm-na-quota">${sole === null ? "<i class='rete' style='flex:1'></i>" : `<i class="sole" style="flex:${sole.toFixed(3)}"></i><i class="rete" style="flex:${(1 - sole).toFixed(3)}"></i>`}</span>
     </div>
     <div class="dm-na-ricarica-costo"><b>${r.costo === null ? "—" : `${euro(r.costo)} €`}</b>${
-      sole === null ? "" : `<small>${sole >= 0.995 ? esc(t("tutto sole", "all solar")) : `${percento(sole)}% ${esc(t("sole", "solar"))}`}</small>`
+      sole === null
+        ? ""
+        : `<small>${sole >= 0.995 ? esc(t("tutto sole", "all solar")) : `${percento(sole)}% ${esc(t("sole", "solar"))}`}</small>`
     }</div>
   </div>`;
 }
 
 function cartaStorico(l) {
-  const finestra = finestraDelloStorico(state.vista, { mese: state.mese, dal: state.dal, al: state.al });
+  const finestra = finestraDelloStorico(state.vista, {
+    mese: state.mese,
+    dal: state.dal,
+    al: state.al,
+  });
   const s = state.storico;
   let corpo = "";
   if (!l.lettore.entita("dm.ev_energia_wallbox_oggi"))
@@ -679,7 +757,9 @@ function cartaStorico(l) {
           ? `<div class="dm-na-ricariche">${mostrate.map(rigaDellaRicarica).join("")}</div>${
               ricariche.length > 4
                 ? `<button type="button" class="dm-na-tutte" data-na-tutte>${esc(
-                    state.tutte ? t("Mostra meno", "Show less") : `${t("Vedi tutte le ricariche", "See all sessions")} (${ricariche.length})`,
+                    state.tutte
+                      ? t("Mostra meno", "Show less")
+                      : `${t("Vedi tutte le ricariche", "See all sessions")} (${ricariche.length})`,
                   )}</button>`
                 : ""
             }`
@@ -737,7 +817,8 @@ function pannelloViaggi(l) {
       </div>${grafico(giorni, state.viaggi, (g) => g.km, { unita: "km" })}`;
   } else if (s.stato === "errore")
     grafo = `<p class="dm-na-vuoto">${esc(t("Lo storico non ha risposto: riprovo fra poco.", "History didn't answer: retrying shortly."))}</p>`;
-  else grafo = `<p class="dm-na-vuoto">${esc(t("Leggo lo storico di Home Assistant…", "Reading Home Assistant history…"))}</p>`;
+  else
+    grafo = `<p class="dm-na-vuoto">${esc(t("Leggo lo storico di Home Assistant…", "Reading Home Assistant history…"))}</p>`;
   const consumo = settimana
     ? `<section class="dm-na-carta">
       <h3 class="dm-na-titolo"><span>📊</span>${esc(t("Ultimi 7 giorni", "Last 7 days"))}</h3>
@@ -753,7 +834,12 @@ function pannelloViaggi(l) {
       <div class="dm-na-parti">${oggi.parti.map((p) => `<i data-parte="${esc(p.parte)}" style="flex:${Math.max(0.02, p.quota).toFixed(3)}"></i>`).join("")}</div>
       <div class="dm-na-parti-voci">${oggi.parti
         .map((p) => {
-          const nome = p.parte === "guida" ? t("Guida", "Driving") : p.parte === "clima" ? t("Clima", "Climate") : t("Resto", "Other");
+          const nome =
+            p.parte === "guida"
+              ? t("Guida", "Driving")
+              : p.parte === "clima"
+                ? t("Clima", "Climate")
+                : t("Resto", "Other");
           return `<span data-parte="${esc(p.parte)}"><i></i>${esc(nome)} <b>${kwh(p.kwh)} kWh</b></span>`;
         })
         .join("")}</div></section>`
@@ -782,7 +868,9 @@ function pannelloStato(l) {
   const gomme = comeStannoLeGomme(d);
   const ruote = gomme.ruote
     .map(
-      (r) => `<div class="dm-na-ruota" data-tono="${esc(r.tono)}"><span>${esc(NOMI_DELLE_RUOTE[r.ruota]?.() || r.ruota)}</span>
+      (
+        r,
+      ) => `<div class="dm-na-ruota" data-tono="${esc(r.tono)}"><span>${esc(NOMI_DELLE_RUOTE[r.ruota]?.() || r.ruota)}</span>
       <b>${r.bar === null ? (r.avviso ? "!" : "✓") : formatNumber(r.bar, 1)}${r.bar === null ? "" : "<small>bar</small>"}</b></div>`,
     )
     .join("");
@@ -805,36 +893,72 @@ function pannelloStato(l) {
     .map(([campo, icona, nome]) => {
       const v = d[campo];
       const parola =
-        v === true ? t("acceso", "on") : v === false ? t("spento", "off") : v === "bloccate" ? t("bloccate", "locked") : v === "sbloccate" ? t("sbloccate", "unlocked") : v === "aperte" || v === "aperto" ? t("aperto", "open") : v === "chiuse" || v === "chiuso" ? t("chiuso", "closed") : String(v);
+        v === true
+          ? t("acceso", "on")
+          : v === false
+            ? t("spento", "off")
+            : v === "bloccate"
+              ? t("bloccate", "locked")
+              : v === "sbloccate"
+                ? t("sbloccate", "unlocked")
+                : v === "aperte" || v === "aperto"
+                  ? t("aperto", "open")
+                  : v === "chiuse" || v === "chiuso"
+                    ? t("chiuso", "closed")
+                    : String(v);
       const male = v === "aperte" || v === "aperto" || v === "sbloccate" || v === "scattato";
       return `<div class="dm-na-voce" data-tono="${male ? "attenzione" : "ok"}"><span>${icona}</span><b>${esc(nome)}</b><em>${esc(parola)}</em></div>`;
     })
     .join("");
   const temperature = temperatureDellAuto(d)
     .map((v) => {
-      const nome = { batteria: t("Batteria", "Battery"), abitacolo: t("Abitacolo", "Cabin"), esterna: t("Fuori", "Outside"), olio: t("Olio", "Oil") }[v.chi] || v.chi;
+      const nome =
+        {
+          batteria: t("Batteria", "Battery"),
+          abitacolo: t("Abitacolo", "Cabin"),
+          esterna: t("Fuori", "Outside"),
+          olio: t("Olio", "Oil"),
+        }[v.chi] || v.chi;
       return `<div class="dm-na-tessera"><span>${esc(nome)}</span><b>${Math.round(v.gradi)}<small>°</small></b></div>`;
     })
     .join("");
   const altri = [
-    d.odometro !== null && d.odometro !== undefined ? [t("Contachilometri", "Odometer"), `${intero(d.odometro)} km`] : null,
-    typeof d.batteriaServizio === "number" ? [t("Batteria 12 V", "12 V battery"), `${formatNumber(d.batteriaServizio, 1)} ${d.batteriaServizioUnita}`] : null,
-    Number.isFinite(d.ultimoAggiornamento) ? [t("Aggiornata", "Updated"), istanteDetto(d.ultimoAggiornamento, { lingua: locale() })] : null,
+    d.odometro !== null && d.odometro !== undefined
+      ? [t("Contachilometri", "Odometer"), `${intero(d.odometro)} km`]
+      : null,
+    typeof d.batteriaServizio === "number"
+      ? [
+          t("Batteria 12 V", "12 V battery"),
+          `${formatNumber(d.batteriaServizio, 1)} ${d.batteriaServizioUnita}`,
+        ]
+      : null,
+    Number.isFinite(d.ultimoAggiornamento)
+      ? [t("Aggiornata", "Updated"), istanteDetto(d.ultimoAggiornamento, { lingua: locale() })]
+      : null,
   ]
     .filter(Boolean)
-    .map(([nome, valore]) => `<div class="dm-na-riga"><span>${esc(nome)}</span><b>${esc(valore)}</b></div>`)
+    .map(
+      ([nome, valore]) =>
+        `<div class="dm-na-riga"><span>${esc(nome)}</span><b>${esc(valore)}</b></div>`,
+    )
     .join("");
   /* Quello che la pagina classica diceva in piu' — l'auto che dorme, il clima
    * acceso, la ricarica programmata, e in fondo tutti gli altri dati mappati —
    * si legge con le sue stesse parole: nessun dato configurato si perde. */
-  const extra = datiMarkup(d, { tipo: l.termica ? "termica" : "", aperti: state.altriAperti === true });
+  const extra = datiMarkup(d, {
+    tipo: l.termica ? "termica" : "",
+    aperti: state.altriAperti === true,
+  });
   const accesi = extra.pillole.length
     ? `<section class="dm-na-carta dm-na-extra"><h3 class="dm-na-titolo"><span>🔔</span>${esc(t("In questo momento", "Right now"))}</h3><div class="dm-na-pills">${extra.pillole.join("")}</div></section>`
     : "";
   const vuoto = !cartaGomme && !aperture && !temperature && !altri && !accesi && !extra.altri;
   if (vuoto)
     return `<section class="dm-na-carta"><p class="dm-na-vuoto">${esc(
-      t("Nessun dato dell'auto: le caselle si scelgono nella scheda Auto del config.", "No car data: choose the fields in the Car tab of the config."),
+      t(
+        "Nessun dato dell'auto: le caselle si scelgono nella scheda Auto del config.",
+        "No car data: choose the fields in the Car tab of the config.",
+      ),
     )}</p></section>`;
   return `<div class="dm-na-griglia dm-na-griglia-stato">
     ${cartaGomme}
@@ -864,7 +988,11 @@ function fontiDellaCasa() {
   let piani = [];
   try {
     const energia = section("energy", {});
-    piani = weeklySourcePlans(energia && typeof energia === "object" ? energia : {}, allStates(), root.resolveEntity || ((v) => v));
+    piani = weeklySourcePlans(
+      energia && typeof energia === "object" ? energia : {},
+      allStates(),
+      root.resolveEntity || ((v) => v),
+    );
   } catch (_errore) {
     piani = [];
   }
@@ -880,18 +1008,32 @@ function caricaLoStorico(l) {
   const ev = l.lettore.entita("dm.ev_energia_wallbox_oggi");
   if (!ev) return;
   const fonti = fontiDellaCasa();
-  const finestra = finestraDelloStorico(state.vista, { mese: state.mese, dal: state.dal, al: state.al });
+  const finestra = finestraDelloStorico(state.vista, {
+    mese: state.mese,
+    dal: state.dal,
+    al: state.al,
+  });
   const chiave = `${ev}|${fonti.rete}|${fonti.sole}|${fonti.casa}|${finestra.inizio}|${finestra.fine}`;
   const s = state.storico;
-  if (s.chiave === chiave && (s.stato === "carico" || Date.now() - (s.alle || 0) < (s.stato === "errore" ? RIPROVA_MS : FRESCO_MS))) return;
+  if (
+    s.chiave === chiave &&
+    (s.stato === "carico" ||
+      Date.now() - (s.alle || 0) < (s.stato === "errore" ? RIPROVA_MS : FRESCO_MS))
+  )
+    return;
   const prima = s.chiave === chiave && s.stato === "pronto";
   state.storico = { ...s, chiave, stato: prima ? "pronto" : "carico", alle: Date.now() };
-  const ids = [...new Set(["dm.ev_energia_wallbox_oggi", fonti.rete, fonti.sole, fonti.casa].filter(Boolean))];
+  const ids = [
+    ...new Set(["dm.ev_energia_wallbox_oggi", fonti.rete, fonti.sole, fonti.casa].filter(Boolean)),
+  ];
   chiediLeStatistiche(ids, finestra.inizio, finestra.fine)
     .then((righe) => {
       if (state.storico.chiave !== chiave) return;
       const di = (id) => (id ? righe[id] || [] : []);
-      const ore = oreDiRicarica(di("dm.ev_energia_wallbox_oggi"), di(fonti.rete), prezzoDellOra(), { sole: di(fonti.sole), casa: di(fonti.casa) });
+      const ore = oreDiRicarica(di("dm.ev_energia_wallbox_oggi"), di(fonti.rete), prezzoDellOra(), {
+        sole: di(fonti.sole),
+        casa: di(fonti.casa),
+      });
       const conRete = ore.some((ora) => ora.sole !== null);
       const giorni = giorniDalleOre(ore, finestra.inizio, finestra.fine);
       const ricariche = ricaricheDalleOre(ore);
@@ -905,7 +1047,12 @@ function caricaLoStorico(l) {
     })
     .catch(() => {
       if (state.storico.chiave !== chiave) return;
-      state.storico = { chiave, stato: prima ? "pronto" : "errore", alle: Date.now(), dati: state.storico.dati };
+      state.storico = {
+        chiave,
+        stato: prima ? "pronto" : "errore",
+        alle: Date.now(),
+        dati: state.storico.dati,
+      };
       ridisegna();
     });
 }
@@ -916,20 +1063,44 @@ function caricaIKm(l) {
   const finestra = finestraDelloStorico(state.viaggi, { mese: state.meseViaggi });
   const chiave = `${odo}|${finestra.inizio}|${finestra.fine}`;
   const s = state.km;
-  if (s.chiave === chiave && (s.stato === "carico" || Date.now() - (s.alle || 0) < (s.stato === "errore" ? RIPROVA_MS : FRESCO_MS))) return;
+  if (
+    s.chiave === chiave &&
+    (s.stato === "carico" ||
+      Date.now() - (s.alle || 0) < (s.stato === "errore" ? RIPROVA_MS : FRESCO_MS))
+  )
+    return;
   const prima = s.chiave === chiave && s.stato === "pronto";
   state.km = { ...s, chiave, stato: prima ? "pronto" : "carico", alle: Date.now() };
   const servizio = root.DashboardModernEnergyService;
   Promise.resolve()
-    .then(() => servizio.statisticsWithGrowth(["dm.ev_odometro"], new Date(finestra.inizio), new Date(finestra.fine), "day"))
+    .then(() =>
+      servizio.statisticsWithGrowth(
+        ["dm.ev_odometro"],
+        new Date(finestra.inizio),
+        new Date(finestra.fine),
+        "day",
+      ),
+    )
     .then((righe) => {
       if (state.km.chiave !== chiave) return;
-      state.km = { chiave, stato: "pronto", alle: Date.now(), dati: { giorni: kmDeiGiorni(righe["dm.ev_odometro"] || [], finestra.inizio, finestra.fine) } };
+      state.km = {
+        chiave,
+        stato: "pronto",
+        alle: Date.now(),
+        dati: {
+          giorni: kmDeiGiorni(righe["dm.ev_odometro"] || [], finestra.inizio, finestra.fine),
+        },
+      };
       ridisegna();
     })
     .catch(() => {
       if (state.km.chiave !== chiave) return;
-      state.km = { chiave, stato: prima ? "pronto" : "errore", alle: Date.now(), dati: state.km.dati };
+      state.km = {
+        chiave,
+        stato: prima ? "pronto" : "errore",
+        alle: Date.now(),
+        dati: state.km.dati,
+      };
       ridisegna();
     });
 }
@@ -953,7 +1124,8 @@ function contenitore(page) {
     box.addEventListener(
       "toggle",
       (evento) => {
-        if (evento.target?.classList?.contains?.("dm-auto-altri")) state.altriAperti = Boolean(evento.target.open);
+        if (evento.target?.classList?.contains?.("dm-auto-altri"))
+          state.altriAperti = Boolean(evento.target.open);
       },
       true,
     );
@@ -998,7 +1170,10 @@ export function renderLaNuovaAuto() {
   if (box.contains(doc.activeElement) && doc.activeElement?.matches?.("input")) return true;
   const auto = profiles();
   const scelta = activeVehicle(auto);
-  const indice = Math.max(0, auto.findIndex((car) => car === scelta || (car?.uid && car.uid === scelta?.uid)));
+  const indice = Math.max(
+    0,
+    auto.findIndex((car) => car === scelta || (car?.uid && car.uid === scelta?.uid)),
+  );
   const car = auto[indice] || scelta || {};
   const l = letturaDellAuto(car, true);
   let aperta = linguettaScelta();
@@ -1054,7 +1229,10 @@ export function schedule() {
 
 function scriviLaPercentuale(valore) {
   const l = letturaDellAuto(activeVehicle() || {}, true);
-  const info = laPercentuale(l.lettore.vivo("dm.ev_target_soc"), l.lettore.entita("dm.ev_target_soc"));
+  const info = laPercentuale(
+    l.lettore.vivo("dm.ev_target_soc"),
+    l.lettore.entita("dm.ev_target_soc"),
+  );
   if (!info?.scrivibile) return;
   const giusto = percentualeConsentita(info, valore);
   if (giusto === null) return;
@@ -1135,7 +1313,10 @@ function alTocco(evento) {
   const passo = bersaglio?.closest?.("[data-na-passo]");
   if (passo) {
     const l = letturaDellAuto(activeVehicle() || {}, true);
-    const info = laPercentuale(l.lettore.vivo("dm.ev_target_soc"), l.lettore.entita("dm.ev_target_soc"));
+    const info = laPercentuale(
+      l.lettore.vivo("dm.ev_target_soc"),
+      l.lettore.entita("dm.ev_target_soc"),
+    );
     if (info && state.voluta !== null) info.valore = state.voluta;
     const dopo = unPasso(info, Number(passo.dataset.naPasso));
     if (dopo !== null) scriviLaPercentuale(dopo);
@@ -1160,7 +1341,10 @@ function alCursore(evento) {
   if (!cursore) return;
   const box = doc.getElementById("dm-na");
   const l = letturaDellAuto(activeVehicle() || {}, true);
-  const info = laPercentuale(l.lettore.vivo("dm.ev_target_soc"), l.lettore.entita("dm.ev_target_soc"));
+  const info = laPercentuale(
+    l.lettore.vivo("dm.ev_target_soc"),
+    l.lettore.entita("dm.ev_target_soc"),
+  );
   const valore = percentualeConsentita(info, cursore.value) ?? Number(cursore.value);
   const uscita = box?.querySelector("[data-na-pct]");
   if (uscita) uscita.textContent = String(Math.round(valore));
@@ -1171,6 +1355,12 @@ function alCursore(evento) {
 
 function alCambio(evento) {
   const bersaglio = evento.target;
+  if (bersaglio?.matches?.("[data-na-pct-bassa]")) {
+    bersaglio.blur?.();
+    const n = Number(bersaglio.value);
+    if (bersaglio.value && Number.isFinite(n)) scriviLaPercentuale(n);
+    return;
+  }
   if (bersaglio?.matches?.("[data-na-cursore]")) {
     bersaglio.blur?.();
     scriviLaPercentuale(Number(bersaglio.value));
@@ -1183,6 +1373,21 @@ function alCambio(evento) {
     bersaglio.blur?.();
     ridisegna();
   }
+}
+
+/* Le percentuali sotto il 60%, in una tendina prima dei tasti. Quando
+ * l'obiettivo e' una di queste, la tendina la mostra scelta e si accende come
+ * un tasto premuto. */
+function tendinaBassa(info, obiettivo) {
+  const basse = lePercentualiBasse(info);
+  if (!basse.length) return "";
+  const scelta = basse.find((n) => Math.round(obiettivo ?? -1) === n);
+  return `<select class="dm-na-bassa" data-na-pct-bassa aria-label="${esc(t("Meno del 60%", "Below 60%"))}"${
+    scelta === undefined ? "" : ' data-scelta="1"'
+  }>
+      <option value=""${scelta === undefined ? " selected" : ""}>${esc(t("Meno…", "Less…"))}</option>
+      ${basse.map((n) => `<option value="${n}"${n === scelta ? " selected" : ""}>${n}%</option>`).join("")}
+    </select>`;
 }
 
 /* ── lo stile ────────────────────────────────────────────────────────────── */
@@ -1350,16 +1555,13 @@ function stile() {
   ${P} .dm-na-obiettivo-testa b{font-family:'Oswald',system-ui,sans-serif;font-size:34px;font-weight:700;color:var(--text,#0f172a);line-height:1}
   ${P} .dm-na-obiettivo-testa b small{font-size:16px;color:var(--text-dim,#64748b)}
   ${P} .dm-na-obiettivo-km{font-size:13px;font-weight:800;color:var(--text-dim,#64748b)}
-  ${P} .dm-na-cursore{position:relative;margin:10px 0 6px}
-  ${P} .dm-na-cursore::before{content:"";position:absolute;left:0;top:50%;height:10px;margin-top:-5px;width:var(--na-adesso);border-radius:9px;
-    background:linear-gradient(90deg,#059669,#34d399);pointer-events:none;z-index:1}
-  ${P} .dm-na-cursore input{position:relative;width:100%;margin:0;height:30px;background:transparent;-webkit-appearance:none;appearance:none;cursor:pointer}
-  ${P} .dm-na-cursore input::-webkit-slider-runnable-track{height:10px;border-radius:9px;background:color-mix(in srgb,var(--text,#0f172a) 10%,transparent)}
-  ${P} .dm-na-cursore input::-moz-range-track{height:10px;border-radius:9px;background:color-mix(in srgb,var(--text,#0f172a) 10%,transparent)}
-  ${P} .dm-na-cursore input::-webkit-slider-thumb{-webkit-appearance:none;position:relative;z-index:2;width:28px;height:28px;margin-top:-9px;border-radius:50%;
-    background:#fff;border:6px solid #059669;box-shadow:0 4px 10px rgba(2,6,23,.3)}
-  ${P} .dm-na-cursore input::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:6px solid #059669}
-  ${P} .dm-na-cursore input:disabled{cursor:default;opacity:.6}
+  /* La barra dice soltanto fin dove si carichera'. Non si trascina: col
+   * cursore, scorrendo la pagina col dito, l'obiettivo cambiava per sbaglio.
+   * Si cambia coi tasti qui sotto. */
+  ${P} .dm-na-cursore{position:relative;height:10px;margin:18px 0 12px;border-radius:9px;
+    background:color-mix(in srgb,var(--text,#0f172a) 10%,transparent);overflow:hidden}
+  ${P} .dm-na-cursore .dm-na-fino{position:absolute;left:0;top:0;bottom:0;width:var(--na-fino);border-radius:9px;
+    background:linear-gradient(90deg,#059669,#34d399)}
   ${P} .dm-na-scala{display:flex;justify-content:space-between;font-size:11.5px;font-weight:800;color:var(--text-dim,#64748b)}
   ${P} .dm-na-adesso{color:#059669}
   ${P} .dm-na-scala .dm-na-adesso{color:#059669}
@@ -1367,7 +1569,13 @@ function stile() {
   ${P} .dm-na-passi>button,${P} .dm-na-scorciatoie button,${P} .dm-na-segmenti button,${P} .dm-na-mese button{
     min-width:40px;min-height:36px;padding:6px 12px;border-radius:11px;border:1px solid var(--card-border,#e2e8f0);
     background:var(--surface-2,#f8fafc);color:var(--text,#0f172a);font:inherit;font-size:14px;font-weight:900;cursor:pointer}
-  ${P} .dm-na-scorciatoie{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+  ${P} .dm-na-scorciatoie{display:flex;gap:6px;flex-wrap:wrap}
+  /* La tendina delle percentuali basse: vestita come i tasti accanto, e
+   * accesa come un tasto premuto quando l'obiettivo e' una delle sue. */
+  ${P} .dm-na-bassa{min-height:36px;padding:6px 30px 6px 12px;border-radius:11px;border:1px solid var(--card-border,#e2e8f0);
+    background:var(--surface-2,#f8fafc) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2364748b'/%3E%3C/svg%3E") no-repeat right 11px center;
+    color:var(--text,#0f172a);font:inherit;font-size:14px;font-weight:900;cursor:pointer;-webkit-appearance:none;appearance:none}
+  ${P} .dm-na-bassa[data-scelta]{background-color:var(--text,#0f172a);color:var(--card-bg,#fff);border-color:var(--text,#0f172a)}
   ${P} .dm-na-scorciatoie button[aria-pressed="true"],${P} .dm-na-segmenti button[aria-pressed="true"]{
     background:var(--text,#0f172a);color:var(--card-bg,#fff);border-color:var(--text,#0f172a)}
   ${P} .dm-na-tessere,${P} .dm-na-totali{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:10px;margin-top:16px}
@@ -1519,6 +1727,11 @@ function stile() {
     ${P} .dm-na-storico-testa .dm-na-titolo{width:100%}
     ${P} .dm-na-periodo{width:100%;justify-content:space-between}
     ${P} .dm-na-scorciatoie{margin-left:0}
+    /* Sul telefono la tendina e i cinque tasti in due file da tre, tutte
+     * larghe uguali: la tendina non resta da sola su una riga. */
+    ${P} .dm-na-passi{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+    ${P} .dm-na-passi .dm-na-scorciatoie{display:contents}
+    ${P} .dm-na-passi button,${P} .dm-na-bassa{width:100%}
   }`;
 }
 

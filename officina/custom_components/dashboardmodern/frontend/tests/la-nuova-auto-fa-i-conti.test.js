@@ -15,6 +15,7 @@ import {
   kmDeiGiorni,
   laPercentuale,
   leScorciatoie,
+  lePercentualiBasse,
   meseAccanto,
   oreDiRicarica,
   percentualeConsentita,
@@ -105,7 +106,10 @@ test("le finestre: sette giorni, un mese, un periodo", () => {
   assert.equal(mese.inizio, new Date(2026, 9, 1).getTime());
   assert.equal(mese.fine, new Date(2026, 9, 21).getTime());
   assert.equal(mese.giorni, 31);
-  const settembre = finestraDelloStorico("mese", { adesso, mese: meseAccanto({ anno: 2026, mese: 9 }, -1) });
+  const settembre = finestraDelloStorico("mese", {
+    adesso,
+    mese: meseAccanto({ anno: 2026, mese: 9 }, -1),
+  });
   assert.equal(settembre.fine, new Date(2026, 9, 1).getTime());
   assert.equal(settembre.giorni, 30);
   /* Scritto al contrario si gira; il futuro si taglia. */
@@ -132,15 +136,29 @@ test("i km del giorno dal contachilometri, senza il primo salto", () => {
 });
 
 test("la percentuale libera di un number, col suo passo", () => {
-  const info = laPercentuale(
-    { entity_id: "number.auto_limite", state: "80", attributes: { min: 50, max: 100, step: 5 } },
-  );
+  const info = laPercentuale({
+    entity_id: "number.auto_limite",
+    state: "80",
+    attributes: { min: 50, max: 100, step: 5 },
+  });
   assert.equal(info.libera, true);
   assert.equal(percentualeConsentita(info, 83), 85);
   assert.equal(percentualeConsentita(info, 20), 50);
   assert.equal(unPasso(info, +1), 85);
   assert.equal(unPasso(info, -1), 75);
-  assert.deepEqual(leScorciatoie(info), [70, 80, 90, 100]);
+  assert.deepEqual(leScorciatoie(info), [60, 70, 80, 90, 100]);
+  /* Sotto il 60% la tendina, dal minimo che l'entita' accetta. */
+  assert.deepEqual(lePercentualiBasse(info), [55, 50]);
+});
+
+test("la tendina scende fino al minimo, di 5 in 5", () => {
+  const info = laPercentuale({
+    entity_id: "number.byd_limite",
+    state: "80",
+    attributes: { min: 20, max: 100, step: 1 },
+  });
+  assert.deepEqual(lePercentualiBasse(info), [55, 50, 45, 40, 35, 30, 25, 20]);
+  assert.deepEqual(leScorciatoie(info), [60, 70, 80, 90, 100]);
 });
 
 test("un select si sceglie solo fra le sue voci", () => {
@@ -154,6 +172,7 @@ test("un select si sceglie solo fra le sue voci", () => {
   assert.equal(unPasso(info, +1), 100);
   assert.equal(unPasso(info, -1), 60);
   assert.deepEqual(leScorciatoie(info), [60, 80, 100]);
+  assert.deepEqual(lePercentualiBasse(info), []);
 });
 
 test("un sensore si legge e non si scrive", () => {

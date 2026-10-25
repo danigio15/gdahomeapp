@@ -1199,12 +1199,14 @@
         chi.join(" · ");
       /* Una plancia a muro lo dice accanto al nome: chi la apre sul telefono
        * e trova un pannello invece della plancia deve poterlo leggere qui. */
-      if (una.a_muro) {
+      if (una.a_muro || una.a_occhio) {
         var rigaDelTitolo = vediPagina.createElement("div");
         rigaDelTitolo.className = "riga-del-nome";
         var aMuro = vediPagina.createElement("span");
         aMuro.className = "etichetta-muro";
-        aMuro.textContent = due("📟 a muro", "📟 on the wall");
+        aMuro.textContent = una.a_muro
+          ? due("📟 a muro", "📟 on the wall")
+          : due("👁️ colpo d'occhio", "👁️ at a glance");
         rigaDelTitolo.appendChild(forte);
         rigaDelTitolo.appendChild(aMuro);
         nome.appendChild(rigaDelTitolo);
@@ -2294,6 +2296,7 @@
       body: JSON.stringify({
         titolo: casella.value,
         modello: ilModelloScelto(),
+        partenza: laPartenzaScelta(),
         utenti: gliUtentiScelti(),
       }),
     })
@@ -2302,7 +2305,10 @@
         /* Si riparte dalla scelta di sempre: a muro, e la vedono tutti. */
         var caselle = trova("nuova-plancia").querySelectorAll("input");
         for (var i = 0; i < caselle.length; i += 1)
-          caselle[i].checked = caselle[i].type === "radio" && caselle[i].value === "muro";
+          caselle[i].checked =
+            caselle[i].type === "radio" &&
+            (caselle[i].value === "muro" || caselle[i].value === "principale");
+        mostraLaPartenza();
         return aggiornaTutto();
       })
       .catch(function (errore) {
@@ -2311,7 +2317,21 @@
       });
   }
 
-  /* Il modello della plancia nuova: a muro o classica. */
+  /* Da dove parte una plancia a colpo d'occhio: dalla principale o da zero.
+   * La domanda si vede solo per lei: le altre partono come sempre. */
+  function laPartenzaScelta() {
+    var scelta = trova("nuova-plancia").querySelector('input[name="partenza-plancia"]:checked');
+    return scelta ? scelta.value : "principale";
+  }
+  function mostraLaPartenza() {
+    var dove = trova("partenza-plancia");
+    if (dove) dove.hidden = ilModelloScelto() !== "occhio";
+  }
+  vediPagina.addEventListener("change", function (evento) {
+    if (evento.target && evento.target.name === "modello-plancia") mostraLaPartenza();
+  });
+
+  /* Il modello della plancia nuova: a muro, a colpo d'occhio o classica. */
   function ilModelloScelto() {
     var scelto = trova("nuova-plancia").querySelector('input[name="modello-plancia"]:checked');
     return scelto ? scelto.value : "classica";

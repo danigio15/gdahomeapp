@@ -704,12 +704,12 @@
          "awayTeamOdds": {
           "current": {
            "moneyLine": {
-            "alternateDisplayValue": "+600",
-            "american": "+600",
-            "decimal": 7,
-            "displayValue": "6/1",
-            "fraction": "6/1",
-            "value": 7
+            "alternateDisplayValue": "+650",
+            "american": "+650",
+            "decimal": 7.5,
+            "displayValue": "13/2",
+            "fraction": "13/2",
+            "value": 7.5
            },
            "pointSpread": {
             "alternateDisplayValue": "+1.5",
@@ -725,7 +725,7 @@
            }
           },
           "favorite": false,
-          "moneyLine": 600,
+          "moneyLine": 650,
           "open": {
            "favorite": false,
            "moneyLine": {
@@ -927,8 +927,8 @@
          "awayTeamOdds": {
           "odds": {
            "handicap": 0,
-           "summary": "7/1",
-           "value": 8
+           "summary": "6/1",
+           "value": 7
           },
           "team": {
            "abbreviation": "FIO",
@@ -964,7 +964,7 @@
            "text": "Home Bet"
           },
           {
-           "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=201585789-39211190~7/1",
+           "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=201585789-39211190~6/1",
            "isExternal": true,
            "isPremium": false,
            "language": "en-US",
@@ -1282,7 +1282,7 @@
        },
        {
         "name": "rank",
-        "value": 1
+        "value": 2
        },
        {
         "name": "homePointsFor",
@@ -1336,7 +1336,7 @@
    },
    "shortDisplayName": "Inter Milan",
    "slug": "ita.inter_milan",
-   "standingSummary": "1st in Italian Serie A",
+   "standingSummary": "2nd in Italian Serie A",
    "uid": "s:600~t:110"
   }
  }

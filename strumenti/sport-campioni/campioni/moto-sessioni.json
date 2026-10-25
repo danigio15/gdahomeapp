@@ -636,11 +636,11 @@
      "menu_position": 2
     },
     "grid": {
-     "url": "",
+     "url": "https://resources.motogp.com/files/results/2026/AUS/MotoGP/WUP/Grid.pdf",
      "menu_position": 2
     },
     "session": {
-     "url": "",
+     "url": "https://resources.motogp.com/files/results/2026/AUS/MotoGP/WUP/Session.pdf",
      "menu_position": 2
     },
     "world_standing": {
@@ -692,7 +692,7 @@
      "region_iso": ""
     }
    },
-   "status": "NOT-STARTED"
+   "status": "CANCELLED"
   },
   {
    "date": "2026-10-25T14:00:00+00:00",
@@ -791,7 +791,7 @@
      "region_iso": ""
     }
    },
-   "status": "NOT-STARTED"
+   "status": "CANCELLED"
   }
  ]
 }

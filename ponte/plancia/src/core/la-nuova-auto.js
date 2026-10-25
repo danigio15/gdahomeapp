@@ -357,13 +357,35 @@ export function unPasso(info, verso) {
   return percentualeConsentita(info, adesso + (verso > 0 ? salto : -salto));
 }
 
-/** Le scorciatoie sotto il cursore: quelle che l'entita' accetta. */
-export function leScorciatoie(info, voluti = [70, 80, 90, 100]) {
+/* Dove finiscono i tasti e comincia la tendina: dal 60% in su si sceglie con
+ * un tasto, sotto da un menu. Le cariche basse si scelgono di rado, e cinque
+ * tasti in fila stanno anche sul telefono. */
+export const SOGLIA_DEI_TASTI = 60;
+
+/** I tasti delle percentuali, dal 60% in su: quelli che l'entita' accetta. */
+export function leScorciatoie(info, voluti = [60, 70, 80, 90, 100]) {
   if (!info) return [];
-  /* Un select le sue voci le ha gia': si mostrano le ultime, le piu' usate. */
-  if (info.voci?.length) return info.voci.slice(-voluti.length).map((voce) => voce.n);
+  /* Un select le sue voci le ha gia': si mostrano quelle dal 60% in su. */
+  if (info.voci?.length)
+    return info.voci.filter((voce) => voce.n >= SOGLIA_DEI_TASTI).map((voce) => voce.n);
   const fuori = voluti.filter((n) => n >= info.min && n <= info.max);
   return [...new Set(fuori.map((n) => percentualeConsentita(info, n)))];
+}
+
+/**
+ * Le percentuali sotto il 60%, per la tendina: di 5 in 5 dal minimo che
+ * l'entita' accetta (o le voci di un select), dalla piu' alta alla piu' bassa.
+ */
+export function lePercentualiBasse(info, sotto = SOGLIA_DEI_TASTI) {
+  if (!info) return [];
+  if (info.voci?.length)
+    return info.voci
+      .filter((voce) => voce.n < sotto)
+      .map((voce) => voce.n)
+      .reverse();
+  const basse = [];
+  for (let n = sotto - 5; n >= info.min; n -= 5) basse.push(percentualeConsentita(info, n));
+  return [...new Set(basse)].filter((n) => n !== null && n < sotto);
 }
 
 /** I km che si avranno all'obiettivo, in proporzione all'autonomia di adesso. */

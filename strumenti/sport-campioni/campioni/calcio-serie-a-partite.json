@@ -141,15 +141,15 @@
    "year": 2026
   },
   "day": {
-   "date": "2026-10-24"
+   "date": "2026-10-25"
   },
   "events": [
    {
-    "id": "401874958",
-    "uid": "s:600~l:730~e:401874958",
-    "date": "2026-10-24T13:00Z",
-    "name": "Bologna at Cagliari",
-    "shortName": "BOL @ CAG",
+    "id": "401875036",
+    "uid": "s:600~l:730~e:401875036",
+    "date": "2026-10-25T11:30Z",
+    "name": "Fiorentina at Internazionale",
+    "shortName": "FIO @ INT",
     "season": {
      "year": 2026,
      "type": 14240,
@@ -157,32 +157,31 @@
     },
     "competitions": [
      {
-      "id": "401874958",
-      "uid": "s:600~l:730~e:401874958~c:401874958",
-      "date": "2026-10-24T13:00Z",
-      "startDate": "2026-10-24T13:00Z",
+      "id": "401875036",
+      "uid": "s:600~l:730~e:401875036~c:401875036",
+      "date": "2026-10-25T11:30Z",
+      "startDate": "2026-10-25T11:30Z",
       "attendance": 0,
       "timeValid": true,
-      "recent": true,
+      "recent": false,
       "status": {
-       "clock": 5400,
-       "displayClock": "90'+3'",
-       "period": 2,
+       "clock": 0,
+       "displayClock": "0'",
        "type": {
-        "id": "28",
-        "name": "STATUS_FULL_TIME",
-        "state": "post",
-        "completed": true,
-        "description": "Full Time",
-        "detail": "FT",
-        "shortDetail": "FT"
+        "id": "1",
+        "name": "STATUS_SCHEDULED",
+        "state": "pre",
+        "completed": false,
+        "description": "Scheduled",
+        "detail": "Sun, October 25th at 7:30 AM EDT",
+        "shortDetail": "Scheduled"
        }
       },
       "venue": {
-       "id": "7400",
-       "fullName": "Unipol Domus",
+       "id": "26",
+       "fullName": "San Siro",
        "address": {
-        "city": "Cagliari",
+        "city": "Milano",
         "country": "Italy"
        }
       },
@@ -194,6 +193,21 @@
       "altGameNote": "Serie A",
       "notes": [],
       "geoBroadcasts": [
+       {
+        "type": {
+         "id": "1",
+         "shortName": "TV"
+        },
+        "market": {
+         "id": "1",
+         "type": "National"
+        },
+        "media": {
+         "shortName": "CBSSN"
+        },
+        "lang": "en",
+        "region": "us"
+       },
        {
         "type": {
          "id": "4",
@@ -214,6 +228,7 @@
        {
         "market": "national",
         "names": [
+         "CBSSN",
          "Paramount+"
         ]
        }
@@ -221,2518 +236,14 @@
       "broadcast": "",
       "competitors": [
        {
-        "id": "2925",
-        "uid": "s:600~t:2925",
+        "id": "110",
+        "uid": "s:600~t:110",
         "type": "team",
         "order": 0,
         "homeAway": "home",
         "winner": false,
-        "form": "DLDWW",
+        "form": "DWLWD",
         "score": "0",
-        "records": [
-         {
-          "name": "All Splits",
-          "type": "total",
-          "summary": "4-1-3",
-          "abbreviation": "Total"
-         }
-        ],
-        "team": {
-         "id": "2925",
-         "uid": "s:600~t:2925",
-         "abbreviation": "CAG",
-         "displayName": "Cagliari",
-         "shortDisplayName": "Cagliari",
-         "name": "Cagliari",
-         "location": "Cagliari",
-         "color": "282846",
-         "alternateColor": "ffffff",
-         "isActive": true,
-         "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/2925.png",
-         "links": [
-          {
-           "rel": [
-            "clubhouse",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/club/_/id/2925/cagliari",
-           "text": "Clubhouse",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "stats",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/stats/_/id/2925/cagliari",
-           "text": "Stats",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "stats",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:2925&section=stats",
-           "text": "Stats",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "schedule",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/fixtures/_/id/2925/cagliari",
-           "text": "Fixtures",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "schedule",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:2925&section=scores",
-           "text": "Fixtures",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "squad",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/squad/_/id/2925/cagliari",
-           "text": "Squad",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "squad",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:2925&section=squad",
-           "text": "Squad",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          }
-         ],
-         "venue": {
-          "id": "7400"
-         }
-        },
-        "statistics": [
-         {
-          "name": "appearances",
-          "abbreviation": "APP",
-          "displayValue": "0"
-         },
-         {
-          "name": "foulsCommitted",
-          "abbreviation": "FC",
-          "displayValue": "25"
-         },
-         {
-          "name": "wonCorners",
-          "abbreviation": "CW",
-          "displayValue": "1"
-         },
-         {
-          "name": "goalAssists",
-          "abbreviation": "A",
-          "displayValue": "0"
-         },
-         {
-          "name": "possessionPct",
-          "abbreviation": "PP",
-          "displayValue": "57.1"
-         },
-         {
-          "name": "shotAssists",
-          "abbreviation": "SHAST",
-          "displayValue": "3"
-         },
-         {
-          "name": "shotsOnTarget",
-          "abbreviation": "SOG",
-          "displayValue": "1"
-         },
-         {
-          "name": "totalGoals",
-          "abbreviation": "G",
-          "displayValue": "0"
-         },
-         {
-          "name": "totalShots",
-          "abbreviation": "SHOT",
-          "displayValue": "4"
-         }
-        ]
-       },
-       {
-        "id": "107",
-        "uid": "s:600~t:107",
-        "type": "team",
-        "order": 1,
-        "homeAway": "away",
-        "winner": true,
-        "form": "DLWDL",
-        "score": "2",
-        "records": [
-         {
-          "name": "All Splits",
-          "type": "total",
-          "summary": "2-2-4",
-          "abbreviation": "Total"
-         }
-        ],
-        "team": {
-         "id": "107",
-         "uid": "s:600~t:107",
-         "abbreviation": "BOL",
-         "displayName": "Bologna",
-         "shortDisplayName": "Bologna",
-         "name": "Bologna",
-         "location": "Bologna",
-         "color": "04043d",
-         "alternateColor": "ffffff",
-         "isActive": true,
-         "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/107.png",
-         "links": [
-          {
-           "rel": [
-            "clubhouse",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/club/_/id/107/bologna",
-           "text": "Clubhouse",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "stats",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/stats/_/id/107/bologna",
-           "text": "Stats",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "stats",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:107&section=stats",
-           "text": "Stats",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "schedule",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/fixtures/_/id/107/bologna",
-           "text": "Fixtures",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "schedule",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:107&section=scores",
-           "text": "Fixtures",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "squad",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/squad/_/id/107/bologna",
-           "text": "Squad",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "squad",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:107&section=squad",
-           "text": "Squad",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          }
-         ],
-         "venue": {
-          "id": "10719"
-         }
-        },
-        "statistics": [
-         {
-          "name": "appearances",
-          "abbreviation": "APP",
-          "displayValue": "0"
-         },
-         {
-          "name": "foulsCommitted",
-          "abbreviation": "FC",
-          "displayValue": "13"
-         },
-         {
-          "name": "wonCorners",
-          "abbreviation": "CW",
-          "displayValue": "6"
-         },
-         {
-          "name": "goalAssists",
-          "abbreviation": "A",
-          "displayValue": "1"
-         },
-         {
-          "name": "possessionPct",
-          "abbreviation": "PP",
-          "displayValue": "42.9"
-         },
-         {
-          "name": "shotAssists",
-          "abbreviation": "SHAST",
-          "displayValue": "6"
-         },
-         {
-          "name": "shotsOnTarget",
-          "abbreviation": "SOG",
-          "displayValue": "5"
-         },
-         {
-          "name": "totalGoals",
-          "abbreviation": "G",
-          "displayValue": "2"
-         },
-         {
-          "name": "totalShots",
-          "abbreviation": "SHOT",
-          "displayValue": "10"
-         }
-        ]
-       }
-      ],
-      "details": [
-       {
-        "type": {
-         "id": "94",
-         "text": "Yellow Card"
-        },
-        "clock": {
-         "value": 1866,
-         "displayValue": "32'"
-        },
-        "team": {
-         "id": "107"
-        },
-        "scoreValue": 0,
-        "scoringPlay": false,
-        "redCard": false,
-        "yellowCard": true,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "180956",
-          "displayName": "Federico Bernardeschi",
-          "shortName": "F. Bernardeschi",
-          "fullName": "Federico Bernardeschi",
-          "jersey": "10",
-          "team": {
-           "id": "107"
-          },
-          "headshot": "https://a.espncdn.com/i/headshots/soccer/players/full/180956.png",
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/180956/federico-bernardeschi",
-            "isHidden": false
-           }
-          ],
-          "position": "CF-R"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "94",
-         "text": "Yellow Card"
-        },
-        "clock": {
-         "value": 2275,
-         "displayValue": "38'"
-        },
-        "team": {
-         "id": "2925"
-        },
-        "scoreValue": 0,
-        "scoringPlay": false,
-        "redCard": false,
-        "yellowCard": true,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "332684",
-          "displayName": "Zé Pedro",
-          "shortName": "Zé Pedro",
-          "fullName": "Zé Pedro",
-          "jersey": "2",
-          "team": {
-           "id": "2925"
-          },
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/332684/ze-pedro",
-            "isHidden": false
-           }
-          ],
-          "position": "RB"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "94",
-         "text": "Yellow Card"
-        },
-        "clock": {
-         "value": 3252,
-         "displayValue": "55'"
-        },
-        "team": {
-         "id": "2925"
-        },
-        "scoreValue": 0,
-        "scoringPlay": false,
-        "redCard": false,
-        "yellowCard": true,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "193977",
-          "displayName": "Roberto Gagliardini",
-          "shortName": "R. Gagliardini",
-          "fullName": "Roberto Gagliardini",
-          "jersey": "21",
-          "team": {
-           "id": "2925"
-          },
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/193977/roberto-gagliardini",
-            "isHidden": false
-           }
-          ],
-          "position": "SUB"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "137",
-         "text": "Goal - Header"
-        },
-        "clock": {
-         "value": 3412,
-         "displayValue": "57'"
-        },
-        "team": {
-         "id": "107"
-        },
-        "scoreValue": 1,
-        "scoringPlay": true,
-        "redCard": false,
-        "yellowCard": false,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "250707",
-          "displayName": "Nicoló",
-          "shortName": "Nicoló",
-          "fullName": "Nicoló",
-          "jersey": "16",
-          "team": {
-           "id": "107"
-          },
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/250707/nicolo",
-            "isHidden": false
-           }
-          ],
-          "position": "CD"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "94",
-         "text": "Yellow Card"
-        },
-        "clock": {
-         "value": 4590,
-         "displayValue": "77'"
-        },
-        "team": {
-         "id": "2925"
-        },
-        "scoreValue": 0,
-        "scoringPlay": false,
-        "redCard": false,
-        "yellowCard": true,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "186437",
-          "displayName": "Alessandro Deiola",
-          "shortName": "A. Deiola",
-          "fullName": "Alessandro Deiola",
-          "jersey": "14",
-          "team": {
-           "id": "2925"
-          },
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/186437/alessandro-deiola",
-            "isHidden": false
-           }
-          ],
-          "position": "CD-R"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "98",
-         "text": "Penalty - Scored"
-        },
-        "clock": {
-         "value": 4750,
-         "displayValue": "80'"
-        },
-        "team": {
-         "id": "107"
-        },
-        "scoreValue": 1,
-        "scoringPlay": true,
-        "redCard": false,
-        "yellowCard": false,
-        "penaltyKick": true,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "180956",
-          "displayName": "Federico Bernardeschi",
-          "shortName": "F. Bernardeschi",
-          "fullName": "Federico Bernardeschi",
-          "jersey": "10",
-          "team": {
-           "id": "107"
-          },
-          "headshot": "https://a.espncdn.com/i/headshots/soccer/players/full/180956.png",
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/180956/federico-bernardeschi",
-            "isHidden": false
-           }
-          ],
-          "position": "CF-R"
-         }
-        ]
-       }
-      ],
-      "odds": [
-       null
-      ],
-      "wasSuspended": false,
-      "playByPlayAvailable": true,
-      "playByPlayAthletes": true
-     }
-    ],
-    "status": {
-     "clock": 5400,
-     "displayClock": "90'+3'",
-     "period": 2,
-     "type": {
-      "id": "28",
-      "name": "STATUS_FULL_TIME",
-      "state": "post",
-      "completed": true,
-      "description": "Full Time",
-      "detail": "FT",
-      "shortDetail": "FT"
-     }
-    },
-    "venue": {
-     "displayName": "Unipol Domus"
-    },
-    "links": [
-     {
-      "language": "en-US",
-      "rel": [
-       "summary",
-       "desktop",
-       "event"
-      ],
-      "href": "https://www.espn.com/soccer/match/_/gameId/401874958/bologna-cagliari",
-      "text": "Summary",
-      "shortText": "Summary",
-      "isExternal": false,
-      "isPremium": false,
-      "isHidden": false
-     },
-     {
-      "language": "en-US",
-      "rel": [
-       "team-stats",
-       "desktop",
-       "event"
-      ],
-      "href": "https://www.espn.com/soccer/team-stats/_/gameId/401874958/league/ita.1",
-      "text": "Team Stats",
-      "shortText": "Team Stats",
-      "isExternal": false,
-      "isPremium": false,
-      "isHidden": false
-     },
-     {
-      "language": "en-US",
-      "rel": [
-       "player-stats",
-       "desktop",
-       "event"
-      ],
-      "href": "https://www.espn.com/soccer/player-stats/_/gameId/401874958/league/ita.1",
-      "text": "Player Stats",
-      "shortText": "Player Stats",
-      "isExternal": false,
-      "isPremium": false,
-      "isHidden": false
-     }
-    ]
-   },
-   {
-    "id": "401874961",
-    "uid": "s:600~l:730~e:401874961",
-    "date": "2026-10-24T13:00Z",
-    "name": "Sassuolo at Como",
-    "shortName": "SAS @ COMO",
-    "season": {
-     "year": 2026,
-     "type": 14240,
-     "slug": "2026-27-italian-serie-a"
-    },
-    "competitions": [
-     {
-      "id": "401874961",
-      "uid": "s:600~l:730~e:401874961~c:401874961",
-      "date": "2026-10-24T13:00Z",
-      "startDate": "2026-10-24T13:00Z",
-      "attendance": 0,
-      "timeValid": true,
-      "recent": true,
-      "status": {
-       "clock": 5400,
-       "displayClock": "90'+4'",
-       "period": 2,
-       "type": {
-        "id": "28",
-        "name": "STATUS_FULL_TIME",
-        "state": "post",
-        "completed": true,
-        "description": "Full Time",
-        "detail": "FT",
-        "shortDetail": "FT"
-       }
-      },
-      "venue": {
-       "id": "5934",
-       "fullName": "Giuseppe Sinigaglia",
-       "address": {
-        "city": "Como",
-        "country": "Italy"
-       }
-      },
-      "format": {
-       "regulation": {
-        "periods": 2
-       }
-      },
-      "altGameNote": "Serie A",
-      "notes": [],
-      "geoBroadcasts": [
-       {
-        "type": {
-         "id": "4",
-         "shortName": "STREAMING"
-        },
-        "market": {
-         "id": "1",
-         "type": "National"
-        },
-        "media": {
-         "shortName": "Paramount+"
-        },
-        "lang": "en",
-        "region": "us"
-       }
-      ],
-      "broadcasts": [
-       {
-        "market": "national",
-        "names": [
-         "Paramount+"
-        ]
-       }
-      ],
-      "broadcast": "",
-      "competitors": [
-       {
-        "id": "2572",
-        "uid": "s:600~t:2572",
-        "type": "team",
-        "order": 0,
-        "homeAway": "home",
-        "winner": true,
-        "form": "DWWLD",
-        "score": "2",
-        "records": [
-         {
-          "name": "All Splits",
-          "type": "total",
-          "summary": "5-2-1",
-          "abbreviation": "Total"
-         }
-        ],
-        "team": {
-         "id": "2572",
-         "uid": "s:600~t:2572",
-         "abbreviation": "COMO",
-         "displayName": "Como",
-         "shortDisplayName": "Como",
-         "name": "Como",
-         "location": "Como",
-         "color": "4169E1",
-         "alternateColor": "FFFFFF",
-         "isActive": true,
-         "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/2572.png",
-         "links": [
-          {
-           "rel": [
-            "clubhouse",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/club/_/id/2572/como",
-           "text": "Clubhouse",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "stats",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/stats/_/id/2572/como",
-           "text": "Stats",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "stats",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:2572&section=stats",
-           "text": "Stats",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "schedule",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/fixtures/_/id/2572/como",
-           "text": "Fixtures",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "schedule",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:2572&section=scores",
-           "text": "Fixtures",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "squad",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/squad/_/id/2572/como",
-           "text": "Squad",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "squad",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:2572&section=squad",
-           "text": "Squad",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          }
-         ],
-         "venue": {
-          "id": "5934"
-         }
-        },
-        "statistics": [
-         {
-          "name": "appearances",
-          "abbreviation": "APP",
-          "displayValue": "0"
-         },
-         {
-          "name": "foulsCommitted",
-          "abbreviation": "FC",
-          "displayValue": "14"
-         },
-         {
-          "name": "wonCorners",
-          "abbreviation": "CW",
-          "displayValue": "6"
-         },
-         {
-          "name": "goalAssists",
-          "abbreviation": "A",
-          "displayValue": "2"
-         },
-         {
-          "name": "possessionPct",
-          "abbreviation": "PP",
-          "displayValue": "55.6"
-         },
-         {
-          "name": "shotAssists",
-          "abbreviation": "SHAST",
-          "displayValue": "10"
-         },
-         {
-          "name": "shotsOnTarget",
-          "abbreviation": "SOG",
-          "displayValue": "6"
-         },
-         {
-          "name": "totalGoals",
-          "abbreviation": "G",
-          "displayValue": "2"
-         },
-         {
-          "name": "totalShots",
-          "abbreviation": "SHOT",
-          "displayValue": "14"
-         }
-        ]
-       },
-       {
-        "id": "3997",
-        "uid": "s:600~t:3997",
-        "type": "team",
-        "order": 1,
-        "homeAway": "away",
-        "winner": false,
-        "form": "DLDLW",
-        "score": "0",
-        "records": [
-         {
-          "name": "All Splits",
-          "type": "total",
-          "summary": "2-2-4",
-          "abbreviation": "Total"
-         }
-        ],
-        "team": {
-         "id": "3997",
-         "uid": "s:600~t:3997",
-         "abbreviation": "SAS",
-         "displayName": "Sassuolo",
-         "shortDisplayName": "Sassuolo",
-         "name": "Sassuolo",
-         "location": "Sassuolo",
-         "color": "0fa653",
-         "alternateColor": "ADAEB0",
-         "isActive": true,
-         "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/3997.png",
-         "links": [
-          {
-           "rel": [
-            "clubhouse",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/club/_/id/3997/sassuolo",
-           "text": "Clubhouse",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "stats",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/stats/_/id/3997/sassuolo",
-           "text": "Stats",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "stats",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:3997&section=stats",
-           "text": "Stats",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "schedule",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/fixtures/_/id/3997/sassuolo",
-           "text": "Fixtures",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "schedule",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:3997&section=scores",
-           "text": "Fixtures",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "squad",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/squad/_/id/3997/sassuolo",
-           "text": "Squad",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "squad",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:3997&section=squad",
-           "text": "Squad",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          }
-         ],
-         "venue": {
-          "id": "5275"
-         }
-        },
-        "statistics": [
-         {
-          "name": "appearances",
-          "abbreviation": "APP",
-          "displayValue": "0"
-         },
-         {
-          "name": "foulsCommitted",
-          "abbreviation": "FC",
-          "displayValue": "10"
-         },
-         {
-          "name": "wonCorners",
-          "abbreviation": "CW",
-          "displayValue": "4"
-         },
-         {
-          "name": "goalAssists",
-          "abbreviation": "A",
-          "displayValue": "0"
-         },
-         {
-          "name": "possessionPct",
-          "abbreviation": "PP",
-          "displayValue": "44.4"
-         },
-         {
-          "name": "shotAssists",
-          "abbreviation": "SHAST",
-          "displayValue": "6"
-         },
-         {
-          "name": "shotsOnTarget",
-          "abbreviation": "SOG",
-          "displayValue": "0"
-         },
-         {
-          "name": "totalGoals",
-          "abbreviation": "G",
-          "displayValue": "0"
-         },
-         {
-          "name": "totalShots",
-          "abbreviation": "SHOT",
-          "displayValue": "7"
-         }
-        ]
-       }
-      ],
-      "details": [
-       {
-        "type": {
-         "id": "70",
-         "text": "Goal"
-        },
-        "clock": {
-         "value": 2890,
-         "displayValue": "49'"
-        },
-        "team": {
-         "id": "2572"
-        },
-        "scoreValue": 1,
-        "scoringPlay": true,
-        "redCard": false,
-        "yellowCard": false,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "262071",
-          "displayName": "Anastasios Douvikas",
-          "shortName": "A. Douvikas",
-          "fullName": "Anastasios Douvikas",
-          "jersey": "9",
-          "team": {
-           "id": "2572"
-          },
-          "headshot": "https://a.espncdn.com/i/headshots/soccer/players/full/262071.png",
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/262071/anastasios-douvikas",
-            "isHidden": false
-           }
-          ],
-          "position": "F"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "70",
-         "text": "Goal"
-        },
-        "clock": {
-         "value": 3587,
-         "displayValue": "60'"
-        },
-        "team": {
-         "id": "2572"
-        },
-        "scoreValue": 1,
-        "scoringPlay": true,
-        "redCard": false,
-        "yellowCard": false,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "262071",
-          "displayName": "Anastasios Douvikas",
-          "shortName": "A. Douvikas",
-          "fullName": "Anastasios Douvikas",
-          "jersey": "9",
-          "team": {
-           "id": "2572"
-          },
-          "headshot": "https://a.espncdn.com/i/headshots/soccer/players/full/262071.png",
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/262071/anastasios-douvikas",
-            "isHidden": false
-           }
-          ],
-          "position": "F"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "94",
-         "text": "Yellow Card"
-        },
-        "clock": {
-         "value": 3738,
-         "displayValue": "63'"
-        },
-        "team": {
-         "id": "3997"
-        },
-        "scoreValue": 0,
-        "scoringPlay": false,
-        "redCard": false,
-        "yellowCard": true,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "173817",
-          "displayName": "Domenico Berardi",
-          "shortName": "D. Berardi",
-          "fullName": "Domenico Berardi",
-          "jersey": "10",
-          "team": {
-           "id": "3997"
-          },
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/173817/domenico-berardi",
-            "isHidden": false
-           }
-          ],
-          "position": "AM-R"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "94",
-         "text": "Yellow Card"
-        },
-        "clock": {
-         "value": 3883,
-         "displayValue": "65'"
-        },
-        "team": {
-         "id": "2572"
-        },
-        "scoreValue": 0,
-        "scoringPlay": false,
-        "redCard": false,
-        "yellowCard": true,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "297084",
-          "displayName": "Yan Couto",
-          "shortName": "Y. Couto",
-          "fullName": "Yan Couto",
-          "jersey": "27",
-          "team": {
-           "id": "2572"
-          },
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/297084/yan-couto",
-            "isHidden": false
-           }
-          ],
-          "position": "RB"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "94",
-         "text": "Yellow Card"
-        },
-        "clock": {
-         "value": 5173,
-         "displayValue": "87'"
-        },
-        "team": {
-         "id": "3997"
-        },
-        "scoreValue": 0,
-        "scoringPlay": false,
-        "redCard": false,
-        "yellowCard": true,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "292199",
-          "displayName": "Ignace van der Brempt",
-          "shortName": "I. van der Brempt",
-          "fullName": "Ignace van der Brempt",
-          "jersey": "20",
-          "team": {
-           "id": "3997"
-          },
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/292199/ignace-van-der-brempt",
-            "isHidden": false
-           }
-          ],
-          "position": "RB"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "94",
-         "text": "Yellow Card"
-        },
-        "clock": {
-         "value": 5400,
-         "displayValue": "90'+1'"
-        },
-        "team": {
-         "id": "2572"
-        },
-        "scoreValue": 0,
-        "scoringPlay": false,
-        "redCard": false,
-        "yellowCard": true,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "264211",
-          "displayName": "Luis Milla",
-          "shortName": "L. Milla",
-          "fullName": "Luis Milla",
-          "jersey": "6",
-          "team": {
-           "id": "2572"
-          },
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/264211/luis-milla",
-            "isHidden": false
-           }
-          ],
-          "position": "SUB"
-         }
-        ]
-       }
-      ],
-      "odds": [
-       null
-      ],
-      "wasSuspended": false,
-      "playByPlayAvailable": true,
-      "playByPlayAthletes": true
-     }
-    ],
-    "status": {
-     "clock": 5400,
-     "displayClock": "90'+4'",
-     "period": 2,
-     "type": {
-      "id": "28",
-      "name": "STATUS_FULL_TIME",
-      "state": "post",
-      "completed": true,
-      "description": "Full Time",
-      "detail": "FT",
-      "shortDetail": "FT"
-     }
-    },
-    "venue": {
-     "displayName": "Giuseppe Sinigaglia"
-    },
-    "links": [
-     {
-      "language": "en-US",
-      "rel": [
-       "summary",
-       "desktop",
-       "event"
-      ],
-      "href": "https://www.espn.com/soccer/match/_/gameId/401874961/sassuolo-como",
-      "text": "Summary",
-      "shortText": "Summary",
-      "isExternal": false,
-      "isPremium": false,
-      "isHidden": false
-     },
-     {
-      "language": "en-US",
-      "rel": [
-       "team-stats",
-       "desktop",
-       "event"
-      ],
-      "href": "https://www.espn.com/soccer/team-stats/_/gameId/401874961/league/ita.1",
-      "text": "Team Stats",
-      "shortText": "Team Stats",
-      "isExternal": false,
-      "isPremium": false,
-      "isHidden": false
-     },
-     {
-      "language": "en-US",
-      "rel": [
-       "player-stats",
-       "desktop",
-       "event"
-      ],
-      "href": "https://www.espn.com/soccer/player-stats/_/gameId/401874961/league/ita.1",
-      "text": "Player Stats",
-      "shortText": "Player Stats",
-      "isExternal": false,
-      "isPremium": false,
-      "isHidden": false
-     }
-    ]
-   },
-   {
-    "id": "401874948",
-    "uid": "s:600~l:730~e:401874948",
-    "date": "2026-10-24T16:00Z",
-    "name": "AS Roma at Napoli",
-    "shortName": "ROMA @ NAP",
-    "season": {
-     "year": 2026,
-     "type": 14240,
-     "slug": "2026-27-italian-serie-a"
-    },
-    "competitions": [
-     {
-      "id": "401874948",
-      "uid": "s:600~l:730~e:401874948~c:401874948",
-      "date": "2026-10-24T16:00Z",
-      "startDate": "2026-10-24T16:00Z",
-      "attendance": 0,
-      "timeValid": true,
-      "recent": true,
-      "status": {
-       "clock": 5400,
-       "displayClock": "90'+6'",
-       "period": 2,
-       "type": {
-        "id": "28",
-        "name": "STATUS_FULL_TIME",
-        "state": "post",
-        "completed": true,
-        "description": "Full Time",
-        "detail": "FT",
-        "shortDetail": "FT"
-       }
-      },
-      "venue": {
-       "id": "10717",
-       "fullName": "Stadio Diego Armando Maradona",
-       "address": {
-        "city": "Napoli",
-        "country": "Italy"
-       }
-      },
-      "format": {
-       "regulation": {
-        "periods": 2
-       }
-      },
-      "altGameNote": "Serie A",
-      "notes": [],
-      "geoBroadcasts": [
-       {
-        "type": {
-         "id": "4",
-         "shortName": "STREAMING"
-        },
-        "market": {
-         "id": "1",
-         "type": "National"
-        },
-        "media": {
-         "shortName": "Paramount+"
-        },
-        "lang": "en",
-        "region": "us"
-       }
-      ],
-      "broadcasts": [
-       {
-        "market": "national",
-        "names": [
-         "Paramount+"
-        ]
-       }
-      ],
-      "broadcast": "",
-      "competitors": [
-       {
-        "id": "114",
-        "uid": "s:600~t:114",
-        "type": "team",
-        "order": 0,
-        "homeAway": "home",
-        "winner": false,
-        "form": "DWLLW",
-        "score": "3",
-        "records": [
-         {
-          "name": "All Splits",
-          "type": "total",
-          "summary": "3-2-3",
-          "abbreviation": "Total"
-         }
-        ],
-        "team": {
-         "id": "114",
-         "uid": "s:600~t:114",
-         "abbreviation": "NAP",
-         "displayName": "Napoli",
-         "shortDisplayName": "Napoli",
-         "name": "Napoli",
-         "location": "Napoli",
-         "color": "0677d2",
-         "alternateColor": "ffffff",
-         "isActive": true,
-         "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/114.png",
-         "links": [
-          {
-           "rel": [
-            "clubhouse",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/club/_/id/114/napoli",
-           "text": "Clubhouse",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "stats",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/stats/_/id/114/napoli",
-           "text": "Stats",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "stats",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:114&section=stats",
-           "text": "Stats",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "schedule",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/fixtures/_/id/114/napoli",
-           "text": "Fixtures",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "schedule",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:114&section=scores",
-           "text": "Fixtures",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "squad",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/squad/_/id/114/napoli",
-           "text": "Squad",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "squad",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:114&section=squad",
-           "text": "Squad",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          }
-         ],
-         "venue": {
-          "id": "10717"
-         }
-        },
-        "statistics": [
-         {
-          "name": "appearances",
-          "abbreviation": "APP",
-          "displayValue": "0"
-         },
-         {
-          "name": "foulsCommitted",
-          "abbreviation": "FC",
-          "displayValue": "6"
-         },
-         {
-          "name": "wonCorners",
-          "abbreviation": "CW",
-          "displayValue": "2"
-         },
-         {
-          "name": "goalAssists",
-          "abbreviation": "A",
-          "displayValue": "2"
-         },
-         {
-          "name": "possessionPct",
-          "abbreviation": "PP",
-          "displayValue": "39.4"
-         },
-         {
-          "name": "shotAssists",
-          "abbreviation": "SHAST",
-          "displayValue": "10"
-         },
-         {
-          "name": "shotsOnTarget",
-          "abbreviation": "SOG",
-          "displayValue": "9"
-         },
-         {
-          "name": "totalGoals",
-          "abbreviation": "G",
-          "displayValue": "3"
-         },
-         {
-          "name": "totalShots",
-          "abbreviation": "SHOT",
-          "displayValue": "15"
-         }
-        ]
-       },
-       {
-        "id": "104",
-        "uid": "s:600~t:104",
-        "type": "team",
-        "order": 1,
-        "homeAway": "away",
-        "winner": false,
-        "form": "DWWLD",
-        "score": "3",
-        "records": [
-         {
-          "name": "All Splits",
-          "type": "total",
-          "summary": "5-3-0",
-          "abbreviation": "Total"
-         }
-        ],
-        "team": {
-         "id": "104",
-         "uid": "s:600~t:104",
-         "abbreviation": "ROMA",
-         "displayName": "AS Roma",
-         "shortDisplayName": "AS Roma",
-         "name": "AS Roma",
-         "location": "AS Roma",
-         "color": "990a2c",
-         "alternateColor": "F5F3E5",
-         "isActive": true,
-         "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/104.png",
-         "links": [
-          {
-           "rel": [
-            "clubhouse",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/club/_/id/104/as-roma",
-           "text": "Clubhouse",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "stats",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/stats/_/id/104/as-roma",
-           "text": "Stats",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "stats",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:104&section=stats",
-           "text": "Stats",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "schedule",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/fixtures/_/id/104/as-roma",
-           "text": "Fixtures",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "schedule",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:104&section=scores",
-           "text": "Fixtures",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "squad",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/squad/_/id/104/as-roma",
-           "text": "Squad",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          },
-          {
-           "rel": [
-            "squad",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:104&section=squad",
-           "text": "Squad",
-           "isExternal": false,
-           "isPremium": false,
-           "isHidden": false
-          }
-         ],
-         "venue": {
-          "id": "10409"
-         }
-        },
-        "statistics": [
-         {
-          "name": "appearances",
-          "abbreviation": "APP",
-          "displayValue": "0"
-         },
-         {
-          "name": "foulsCommitted",
-          "abbreviation": "FC",
-          "displayValue": "11"
-         },
-         {
-          "name": "wonCorners",
-          "abbreviation": "CW",
-          "displayValue": "11"
-         },
-         {
-          "name": "goalAssists",
-          "abbreviation": "A",
-          "displayValue": "3"
-         },
-         {
-          "name": "possessionPct",
-          "abbreviation": "PP",
-          "displayValue": "60.6"
-         },
-         {
-          "name": "shotAssists",
-          "abbreviation": "SHAST",
-          "displayValue": "21"
-         },
-         {
-          "name": "shotsOnTarget",
-          "abbreviation": "SOG",
-          "displayValue": "4"
-         },
-         {
-          "name": "totalGoals",
-          "abbreviation": "G",
-          "displayValue": "3"
-         },
-         {
-          "name": "totalShots",
-          "abbreviation": "SHOT",
-          "displayValue": "24"
-         }
-        ]
-       }
-      ],
-      "details": [
-       {
-        "type": {
-         "id": "94",
-         "text": "Yellow Card"
-        },
-        "clock": {
-         "value": 205,
-         "displayValue": "4'"
-        },
-        "team": {
-         "id": "114"
-        },
-        "scoreValue": 0,
-        "scoringPlay": false,
-        "redCard": false,
-        "yellowCard": true,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "297360",
-          "displayName": "Rafa Marín",
-          "shortName": "R. Marín",
-          "fullName": "Rafa Marín",
-          "jersey": "16",
-          "team": {
-           "id": "114"
-          },
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/297360/rafa-marin",
-            "isHidden": false
-           }
-          ],
-          "position": "CD-R"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "70",
-         "text": "Goal"
-        },
-        "clock": {
-         "value": 1629,
-         "displayValue": "28'"
-        },
-        "team": {
-         "id": "114"
-        },
-        "scoreValue": 1,
-        "scoringPlay": true,
-        "redCard": false,
-        "yellowCard": false,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "215721",
-          "displayName": "Frank Anguissa",
-          "shortName": "F. Anguissa",
-          "fullName": "Frank Anguissa",
-          "jersey": "99",
-          "team": {
-           "id": "114"
-          },
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/215721/frank-anguissa",
-            "isHidden": false
-           }
-          ],
-          "position": "RM"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "94",
-         "text": "Yellow Card"
-        },
-        "clock": {
-         "value": 1752,
-         "displayValue": "30'"
-        },
-        "team": {
-         "id": "104"
-        },
-        "scoreValue": 0,
-        "scoringPlay": false,
-        "redCard": false,
-        "yellowCard": true,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "169213",
-          "displayName": "Bryan Cristante",
-          "shortName": "B. Cristante",
-          "fullName": "Bryan Cristante",
-          "jersey": "4",
-          "team": {
-           "id": "104"
-          },
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/169213/bryan-cristante",
-            "isHidden": false
-           }
-          ],
-          "position": "AM"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "94",
-         "text": "Yellow Card"
-        },
-        "clock": {
-         "value": 2684,
-         "displayValue": "45'"
-        },
-        "team": {
-         "id": "104"
-        },
-        "scoreValue": 0,
-        "scoringPlay": false,
-        "redCard": false,
-        "yellowCard": true,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "297300",
-          "displayName": "Devyne Rensch",
-          "shortName": "D. Rensch",
-          "fullName": "Devyne Rensch",
-          "jersey": "2",
-          "team": {
-           "id": "104"
-          },
-          "headshot": "https://a.espncdn.com/i/headshots/soccer/players/full/297300.png",
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/297300/devyne-rensch",
-            "isHidden": false
-           }
-          ],
-          "position": "RM"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "137",
-         "text": "Goal - Header"
-        },
-        "clock": {
-         "value": 2853,
-         "displayValue": "48'"
-        },
-        "team": {
-         "id": "114"
-        },
-        "scoreValue": 1,
-        "scoringPlay": true,
-        "redCard": false,
-        "yellowCard": false,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "255850",
-          "displayName": "Scott McTominay",
-          "shortName": "S. McTominay",
-          "fullName": "Scott McTominay",
-          "jersey": "8",
-          "team": {
-           "id": "114"
-          },
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/255850/scott-mctominay",
-            "isHidden": false
-           }
-          ],
-          "position": "LM"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "94",
-         "text": "Yellow Card"
-        },
-        "clock": {
-         "value": 3658,
-         "displayValue": "61'"
-        },
-        "team": {
-         "id": "104"
-        },
-        "scoreValue": 0,
-        "scoringPlay": false,
-        "redCard": false,
-        "yellowCard": true,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "271555",
-          "displayName": "Leonardo Balerdi",
-          "shortName": "L. Balerdi",
-          "fullName": "Leonardo Balerdi",
-          "jersey": "26",
-          "team": {
-           "id": "104"
-          },
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/271555/leonardo-balerdi",
-            "isHidden": false
-           }
-          ],
-          "position": "SUB"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "70",
-         "text": "Goal"
-        },
-        "clock": {
-         "value": 4138,
-         "displayValue": "69'"
-        },
-        "team": {
-         "id": "104"
-        },
-        "scoreValue": 1,
-        "scoringPlay": true,
-        "redCard": false,
-        "yellowCard": false,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "323974",
-          "displayName": "Matìas Soulè",
-          "shortName": "M. Soulè",
-          "fullName": "Matìas Soulè",
-          "jersey": "18",
-          "team": {
-           "id": "104"
-          },
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/323974/matias-soule",
-            "isHidden": false
-           }
-          ],
-          "position": "CF-R"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "70",
-         "text": "Goal"
-        },
-        "clock": {
-         "value": 4421,
-         "displayValue": "74'"
-        },
-        "team": {
-         "id": "104"
-        },
-        "scoreValue": 1,
-        "scoringPlay": true,
-        "redCard": false,
-        "yellowCard": false,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "271555",
-          "displayName": "Leonardo Balerdi",
-          "shortName": "L. Balerdi",
-          "fullName": "Leonardo Balerdi",
-          "jersey": "26",
-          "team": {
-           "id": "104"
-          },
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/271555/leonardo-balerdi",
-            "isHidden": false
-           }
-          ],
-          "position": "SUB"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "70",
-         "text": "Goal"
-        },
-        "clock": {
-         "value": 4925,
-         "displayValue": "83'"
-        },
-        "team": {
-         "id": "114"
-        },
-        "scoreValue": 1,
-        "scoringPlay": true,
-        "redCard": false,
-        "yellowCard": false,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "255850",
-          "displayName": "Scott McTominay",
-          "shortName": "S. McTominay",
-          "fullName": "Scott McTominay",
-          "jersey": "8",
-          "team": {
-           "id": "114"
-          },
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/255850/scott-mctominay",
-            "isHidden": false
-           }
-          ],
-          "position": "LM"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "94",
-         "text": "Yellow Card"
-        },
-        "clock": {
-         "value": 5117,
-         "displayValue": "86'"
-        },
-        "team": {
-         "id": "104"
-        },
-        "scoreValue": 0,
-        "scoringPlay": false,
-        "redCard": false,
-        "yellowCard": true,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "146335",
-          "displayName": "Marten de Roon",
-          "shortName": "M. de Roon",
-          "fullName": "Marten de Roon",
-          "jersey": "15",
-          "team": {
-           "id": "104"
-          },
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/146335/marten-de-roon",
-            "isHidden": false
-           }
-          ],
-          "position": "CM-R"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "137",
-         "text": "Goal - Header"
-        },
-        "clock": {
-         "value": 5294,
-         "displayValue": "89'"
-        },
-        "team": {
-         "id": "104"
-        },
-        "scoreValue": 1,
-        "scoringPlay": true,
-        "redCard": false,
-        "yellowCard": false,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "271555",
-          "displayName": "Leonardo Balerdi",
-          "shortName": "L. Balerdi",
-          "fullName": "Leonardo Balerdi",
-          "jersey": "26",
-          "team": {
-           "id": "104"
-          },
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/271555/leonardo-balerdi",
-            "isHidden": false
-           }
-          ],
-          "position": "SUB"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "93",
-         "text": "Red Card"
-        },
-        "clock": {
-         "value": 5395,
-         "displayValue": "90'"
-        },
-        "team": {
-         "id": "114"
-        },
-        "scoreValue": 0,
-        "scoringPlay": false,
-        "redCard": true,
-        "yellowCard": false,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false
-       }
-      ],
-      "odds": [
-       null
-      ],
-      "wasSuspended": false,
-      "playByPlayAvailable": true,
-      "playByPlayAthletes": true
-     }
-    ],
-    "status": {
-     "clock": 5400,
-     "displayClock": "90'+6'",
-     "period": 2,
-     "type": {
-      "id": "28",
-      "name": "STATUS_FULL_TIME",
-      "state": "post",
-      "completed": true,
-      "description": "Full Time",
-      "detail": "FT",
-      "shortDetail": "FT"
-     }
-    },
-    "venue": {
-     "displayName": "Stadio Diego Armando Maradona"
-    },
-    "links": [
-     {
-      "language": "en-US",
-      "rel": [
-       "summary",
-       "desktop",
-       "event"
-      ],
-      "href": "https://www.espn.com/soccer/match/_/gameId/401874948/as-roma-napoli",
-      "text": "Summary",
-      "shortText": "Summary",
-      "isExternal": false,
-      "isPremium": false,
-      "isHidden": false
-     },
-     {
-      "language": "en-US",
-      "rel": [
-       "team-stats",
-       "desktop",
-       "event"
-      ],
-      "href": "https://www.espn.com/soccer/team-stats/_/gameId/401874948/league/ita.1",
-      "text": "Team Stats",
-      "shortText": "Team Stats",
-      "isExternal": false,
-      "isPremium": false,
-      "isHidden": false
-     },
-     {
-      "language": "en-US",
-      "rel": [
-       "player-stats",
-       "desktop",
-       "event"
-      ],
-      "href": "https://www.espn.com/soccer/player-stats/_/gameId/401874948/league/ita.1",
-      "text": "Player Stats",
-      "shortText": "Player Stats",
-      "isExternal": false,
-      "isPremium": false,
-      "isHidden": false
-     }
-    ]
-   },
-   {
-    "id": "401874955",
-    "uid": "s:600~l:730~e:401874955",
-    "date": "2026-10-24T18:45Z",
-    "name": "Parma at Lazio",
-    "shortName": "PAR @ LAZ",
-    "season": {
-     "year": 2026,
-     "type": 14240,
-     "slug": "2026-27-italian-serie-a"
-    },
-    "competitions": [
-     {
-      "id": "401874955",
-      "uid": "s:600~l:730~e:401874955~c:401874955",
-      "date": "2026-10-24T18:45Z",
-      "startDate": "2026-10-24T18:45Z",
-      "attendance": 0,
-      "timeValid": true,
-      "recent": true,
-      "status": {
-       "clock": 5400,
-       "displayClock": "90'+8'",
-       "period": 2,
-       "type": {
-        "id": "28",
-        "name": "STATUS_FULL_TIME",
-        "state": "post",
-        "completed": true,
-        "description": "Full Time",
-        "detail": "FT",
-        "shortDetail": "FT"
-       }
-      },
-      "venue": {
-       "id": "10409",
-       "fullName": "Olimpico",
-       "address": {
-        "city": "Roma",
-        "country": "Italy"
-       }
-      },
-      "format": {
-       "regulation": {
-        "periods": 2
-       }
-      },
-      "altGameNote": "Serie A",
-      "notes": [],
-      "geoBroadcasts": [
-       {
-        "type": {
-         "id": "4",
-         "shortName": "STREAMING"
-        },
-        "market": {
-         "id": "1",
-         "type": "National"
-        },
-        "media": {
-         "shortName": "Paramount+"
-        },
-        "lang": "en",
-        "region": "us"
-       }
-      ],
-      "broadcasts": [
-       {
-        "market": "national",
-        "names": [
-         "Paramount+"
-        ]
-       }
-      ],
-      "broadcast": "",
-      "competitors": [
-       {
-        "id": "112",
-        "uid": "s:600~t:112",
-        "type": "team",
-        "order": 0,
-        "homeAway": "home",
-        "winner": true,
-        "form": "DWWWD",
-        "score": "2",
         "records": [
          {
           "name": "All Splits",
@@ -2742,17 +253,17 @@
          }
         ],
         "team": {
-         "id": "112",
-         "uid": "s:600~t:112",
-         "abbreviation": "LAZ",
-         "displayName": "Lazio",
-         "shortDisplayName": "Lazio",
-         "name": "Lazio",
-         "location": "Lazio",
-         "color": "74bde7",
-         "alternateColor": "FFFFFF",
+         "id": "110",
+         "uid": "s:600~t:110",
+         "abbreviation": "INT",
+         "displayName": "Internazionale",
+         "shortDisplayName": "Inter Milan",
+         "name": "Internazionale",
+         "location": "Internazionale",
+         "color": "00239c",
+         "alternateColor": "ffffff",
          "isActive": true,
-         "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/112.png",
+         "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/110.png",
          "links": [
           {
            "rel": [
@@ -2760,7 +271,7 @@
             "desktop",
             "team"
            ],
-           "href": "https://www.espn.com/soccer/club/_/id/112/lazio",
+           "href": "https://www.espn.com/soccer/club/_/id/110/internazionale",
            "text": "Clubhouse",
            "isExternal": false,
            "isPremium": false,
@@ -2772,7 +283,7 @@
             "desktop",
             "team"
            ],
-           "href": "https://www.espn.com/soccer/team/stats/_/id/112/lazio",
+           "href": "https://www.espn.com/soccer/team/stats/_/id/110/internazionale",
            "text": "Stats",
            "isExternal": false,
            "isPremium": false,
@@ -2785,7 +296,7 @@
             "app",
             "team"
            ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:112&section=stats",
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:110&section=stats",
            "text": "Stats",
            "isExternal": false,
            "isPremium": false,
@@ -2797,7 +308,7 @@
             "desktop",
             "team"
            ],
-           "href": "https://www.espn.com/soccer/team/fixtures/_/id/112/lazio",
+           "href": "https://www.espn.com/soccer/team/fixtures/_/id/110/internazionale",
            "text": "Fixtures",
            "isExternal": false,
            "isPremium": false,
@@ -2810,7 +321,7 @@
             "app",
             "team"
            ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:112&section=scores",
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:110&section=scores",
            "text": "Fixtures",
            "isExternal": false,
            "isPremium": false,
@@ -2822,7 +333,7 @@
             "desktop",
             "team"
            ],
-           "href": "https://www.espn.com/soccer/team/squad/_/id/112/lazio",
+           "href": "https://www.espn.com/soccer/team/squad/_/id/110/internazionale",
            "text": "Squad",
            "isExternal": false,
            "isPremium": false,
@@ -2835,7 +346,7 @@
             "app",
             "team"
            ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:112&section=squad",
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:110&section=squad",
            "text": "Squad",
            "isExternal": false,
            "isPremium": false,
@@ -2843,66 +354,102 @@
           }
          ],
          "venue": {
-          "id": "10409"
+          "id": "26"
          }
         },
-        "statistics": [
+        "statistics": [],
+        "leaders": [
          {
-          "name": "appearances",
-          "abbreviation": "APP",
-          "displayValue": "0"
-         },
-         {
-          "name": "foulsCommitted",
-          "abbreviation": "FC",
-          "displayValue": "5"
-         },
-         {
-          "name": "wonCorners",
-          "abbreviation": "CW",
-          "displayValue": "8"
-         },
-         {
-          "name": "goalAssists",
-          "abbreviation": "A",
-          "displayValue": "0"
-         },
-         {
-          "name": "possessionPct",
-          "abbreviation": "PP",
-          "displayValue": "68.4"
-         },
-         {
-          "name": "shotAssists",
-          "abbreviation": "SHAST",
-          "displayValue": "17"
-         },
-         {
-          "name": "shotsOnTarget",
-          "abbreviation": "SOG",
-          "displayValue": "4"
-         },
-         {
-          "name": "totalGoals",
+          "name": "goals",
+          "displayName": "Goals",
+          "shortDisplayName": "Goals",
           "abbreviation": "G",
-          "displayValue": "2"
+          "leaders": [
+           {
+            "displayValue": "4",
+            "value": 4,
+            "athlete": {
+             "id": "217331",
+             "displayName": "Marcus Thuram",
+             "shortName": "M. Thuram",
+             "fullName": "Marcus Thuram",
+             "jersey": "9",
+             "active": true,
+             "team": {
+              "id": "110"
+             },
+             "links": [
+              {
+               "rel": [
+                "playercard",
+                "desktop",
+                "athlete"
+               ],
+               "href": "https://www.espn.com/soccer/player/_/id/217331/marcus-thuram",
+               "isHidden": false
+              }
+             ],
+             "position": {
+              "abbreviation": "F"
+             }
+            },
+            "team": {
+             "id": "110"
+            }
+           }
+          ]
          },
          {
-          "name": "totalShots",
-          "abbreviation": "SHOT",
-          "displayValue": "21"
+          "name": "goalsLeaders",
+          "displayName": "Goals",
+          "shortDisplayName": "Goals",
+          "abbreviation": "G",
+          "leaders": [
+           {
+            "displayValue": "4",
+            "value": 4,
+            "athlete": {
+             "id": "217331",
+             "displayName": "Marcus Thuram",
+             "shortName": "M. Thuram",
+             "fullName": "Marcus Thuram",
+             "jersey": "9",
+             "active": true,
+             "team": {
+              "id": "110"
+             },
+             "links": [
+              {
+               "rel": [
+                "playercard",
+                "desktop",
+                "athlete"
+               ],
+               "href": "https://www.espn.com/soccer/player/_/id/217331/marcus-thuram",
+               "isHidden": false
+              }
+             ],
+             "position": {
+              "abbreviation": "F"
+             }
+            },
+            "team": {
+             "id": "110"
+            }
+           }
+          ]
          }
         ]
        },
        {
-        "id": "115",
-        "uid": "s:600~t:115",
+        "id": "109",
+        "uid": "s:600~t:109",
         "type": "team",
         "order": 1,
         "homeAway": "away",
         "winner": false,
-        "form": "DLLWL",
-        "score": "1",
+        "form": "DLDWW",
+        "score": "0",
         "records": [
          {
           "name": "All Splits",
@@ -2912,17 +459,17 @@
          }
         ],
         "team": {
-         "id": "115",
-         "uid": "s:600~t:115",
-         "abbreviation": "PAR",
-         "displayName": "Parma",
-         "shortDisplayName": "Parma",
-         "name": "Parma",
-         "location": "Parma",
-         "color": "19161D",
-         "alternateColor": "ffdd30",
+         "id": "109",
+         "uid": "s:600~t:109",
+         "abbreviation": "FIO",
+         "displayName": "Fiorentina",
+         "shortDisplayName": "Fiorentina",
+         "name": "Fiorentina",
+         "location": "Fiorentina",
+         "color": "4c1d84",
+         "alternateColor": "ffffff",
          "isActive": true,
-         "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/115.png",
+         "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/109.png",
          "links": [
           {
            "rel": [
@@ -2930,7 +477,7 @@
             "desktop",
             "team"
            ],
-           "href": "https://www.espn.com/soccer/club/_/id/115/parma",
+           "href": "https://www.espn.com/soccer/club/_/id/109/fiorentina",
            "text": "Clubhouse",
            "isExternal": false,
            "isPremium": false,
@@ -2942,7 +489,7 @@
             "desktop",
             "team"
            ],
-           "href": "https://www.espn.com/soccer/team/stats/_/id/115/parma",
+           "href": "https://www.espn.com/soccer/team/stats/_/id/109/fiorentina",
            "text": "Stats",
            "isExternal": false,
            "isPremium": false,
@@ -2955,7 +502,7 @@
             "app",
             "team"
            ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:115&section=stats",
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:109&section=stats",
            "text": "Stats",
            "isExternal": false,
            "isPremium": false,
@@ -2967,7 +514,7 @@
             "desktop",
             "team"
            ],
-           "href": "https://www.espn.com/soccer/team/fixtures/_/id/115/parma",
+           "href": "https://www.espn.com/soccer/team/fixtures/_/id/109/fiorentina",
            "text": "Fixtures",
            "isExternal": false,
            "isPremium": false,
@@ -2980,7 +527,7 @@
             "app",
             "team"
            ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:115&section=scores",
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:109&section=scores",
            "text": "Fixtures",
            "isExternal": false,
            "isPremium": false,
@@ -2992,7 +539,7 @@
             "desktop",
             "team"
            ],
-           "href": "https://www.espn.com/soccer/team/squad/_/id/115/parma",
+           "href": "https://www.espn.com/soccer/team/squad/_/id/109/fiorentina",
            "text": "Squad",
            "isExternal": false,
            "isPremium": false,
@@ -3005,7 +552,7 @@
             "app",
             "team"
            ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:115&section=squad",
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:109&section=squad",
            "text": "Squad",
            "isExternal": false,
            "isPremium": false,
@@ -3013,283 +560,351 @@
           }
          ],
          "venue": {
-          "id": "10548"
+          "id": "10720"
          }
         },
-        "statistics": [
+        "statistics": [],
+        "leaders": [
          {
-          "name": "appearances",
-          "abbreviation": "APP",
-          "displayValue": "0"
-         },
-         {
-          "name": "foulsCommitted",
-          "abbreviation": "FC",
-          "displayValue": "12"
-         },
-         {
-          "name": "wonCorners",
-          "abbreviation": "CW",
-          "displayValue": "3"
-         },
-         {
-          "name": "goalAssists",
-          "abbreviation": "A",
-          "displayValue": "1"
-         },
-         {
-          "name": "possessionPct",
-          "abbreviation": "PP",
-          "displayValue": "31.6"
-         },
-         {
-          "name": "shotAssists",
-          "abbreviation": "SHAST",
-          "displayValue": "9"
-         },
-         {
-          "name": "shotsOnTarget",
-          "abbreviation": "SOG",
-          "displayValue": "5"
-         },
-         {
-          "name": "totalGoals",
+          "name": "goals",
+          "displayName": "Goals",
+          "shortDisplayName": "Goals",
           "abbreviation": "G",
-          "displayValue": "1"
+          "leaders": [
+           {
+            "displayValue": "3",
+            "value": 3,
+            "athlete": {
+             "id": "376473",
+             "displayName": "Franco Mastantuono",
+             "shortName": "F. Mastantuono",
+             "fullName": "Franco Mastantuono",
+             "jersey": "30",
+             "active": true,
+             "team": {
+              "id": "109"
+             },
+             "links": [
+              {
+               "rel": [
+                "playercard",
+                "desktop",
+                "athlete"
+               ],
+               "href": "https://www.espn.com/soccer/player/_/id/376473/franco-mastantuono",
+               "isHidden": false
+              }
+             ],
+             "position": {
+              "abbreviation": "F"
+             }
+            },
+            "team": {
+             "id": "109"
+            }
+           }
+          ]
          },
          {
-          "name": "totalShots",
-          "abbreviation": "SHOT",
-          "displayValue": "11"
+          "name": "goalsLeaders",
+          "displayName": "Goals",
+          "shortDisplayName": "Goals",
+          "abbreviation": "G",
+          "leaders": [
+           {
+            "displayValue": "3",
+            "value": 3,
+            "athlete": {
+             "id": "376473",
+             "displayName": "Franco Mastantuono",
+             "shortName": "F. Mastantuono",
+             "fullName": "Franco Mastantuono",
+             "jersey": "30",
+             "active": true,
+             "team": {
+              "id": "109"
+             },
+             "links": [
+              {
+               "rel": [
+                "playercard",
+                "desktop",
+                "athlete"
+               ],
+               "href": "https://www.espn.com/soccer/player/_/id/376473/franco-mastantuono",
+               "isHidden": false
+              }
+             ],
+             "position": {
+              "abbreviation": "F"
+             }
+            },
+            "team": {
+             "id": "109"
+            }
+           }
+          ]
          }
         ]
        }
       ],
-      "details": [
-       {
-        "type": {
-         "id": "94",
-         "text": "Yellow Card"
-        },
-        "clock": {
-         "value": 1800,
-         "displayValue": "30'"
-        },
-        "team": {
-         "id": "112"
-        },
-        "scoreValue": 0,
-        "scoringPlay": false,
-        "redCard": false,
-        "yellowCard": true,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "333311",
-          "displayName": "Oliver Provstgaard",
-          "shortName": "O. Provstgaard",
-          "fullName": "Oliver Provstgaard",
-          "jersey": "25",
-          "team": {
-           "id": "112"
-          },
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/333311/oliver-provstgaard",
-            "isHidden": false
-           }
-          ],
-          "position": "CD-L"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "94",
-         "text": "Yellow Card"
-        },
-        "clock": {
-         "value": 2244,
-         "displayValue": "38'"
-        },
-        "team": {
-         "id": "115"
-        },
-        "scoreValue": 0,
-        "scoringPlay": false,
-        "redCard": false,
-        "yellowCard": true,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "218857",
-          "displayName": "Vincent Sierro",
-          "shortName": "V. Sierro",
-          "fullName": "Vincent Sierro",
-          "jersey": "4",
-          "team": {
-           "id": "115"
-          },
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/218857/vincent-sierro",
-            "isHidden": false
-           }
-          ],
-          "position": "CM"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "70",
-         "text": "Goal"
-        },
-        "clock": {
-         "value": 2972,
-         "displayValue": "50'"
-        },
-        "team": {
-         "id": "112"
-        },
-        "scoreValue": 1,
-        "scoringPlay": true,
-        "redCard": false,
-        "yellowCard": false,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "282228",
-          "displayName": "Kenneth Taylor",
-          "shortName": "K. Taylor",
-          "fullName": "Kenneth Taylor",
-          "jersey": "24",
-          "team": {
-           "id": "112"
-          },
-          "headshot": "https://a.espncdn.com/i/headshots/soccer/players/full/282228.png",
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/282228/kenneth-taylor",
-            "isHidden": false
-           }
-          ],
-          "position": "LM"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "97",
-         "text": "Own Goal"
-        },
-        "clock": {
-         "value": 3461,
-         "displayValue": "58'"
-        },
-        "team": {
-         "id": "112"
-        },
-        "scoreValue": 1,
-        "scoringPlay": true,
-        "redCard": false,
-        "yellowCard": false,
-        "penaltyKick": false,
-        "ownGoal": true,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "196860",
-          "displayName": "Diego Carlos",
-          "shortName": "D. Carlos",
-          "fullName": "Diego Carlos",
-          "jersey": "34",
-          "team": {
-           "id": "115"
-          },
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/196860/diego-carlos",
-            "isHidden": false
-           }
-          ],
-          "position": "CD-R"
-         }
-        ]
-       },
-       {
-        "type": {
-         "id": "70",
-         "text": "Goal"
-        },
-        "clock": {
-         "value": 5400,
-         "displayValue": "90'+5'"
-        },
-        "team": {
-         "id": "115"
-        },
-        "scoreValue": 1,
-        "scoringPlay": true,
-        "redCard": false,
-        "yellowCard": false,
-        "penaltyKick": false,
-        "ownGoal": false,
-        "shootout": false,
-        "athletesInvolved": [
-         {
-          "id": "413818",
-          "displayName": "Simone Lontani",
-          "shortName": "S. Lontani",
-          "fullName": "Simone Lontani",
-          "jersey": "76",
-          "team": {
-           "id": "115"
-          },
-          "links": [
-           {
-            "rel": [
-             "playercard",
-             "desktop",
-             "athlete"
-            ],
-            "href": "https://www.espn.com/soccer/player/_/id/413818/simone-lontani",
-            "isHidden": false
-           }
-          ],
-          "position": "SUB"
-         }
-        ]
-       }
-      ],
+      "details": [],
       "odds": [
-       null
+       {
+        "overUnder": 3.5,
+        "link": {
+         "language": "en-US",
+         "rel": [
+          "game",
+          "desktop",
+          "bets"
+         ],
+         "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828729",
+         "text": "Game",
+         "shortText": "Game",
+         "isExternal": true,
+         "isPremium": false,
+         "isHidden": false
+        },
+        "provider": {
+         "id": "100",
+         "name": "DraftKings",
+         "priority": 1,
+         "displayName": "DraftKings",
+         "logos": [
+          {
+           "href": "https://a.espncdn.com/i/betting/Draftkings_Light.svg",
+           "rel": [
+            "light"
+           ]
+          },
+          {
+           "href": "https://a.espncdn.com/i/betting/Draftkings_Dark.svg",
+           "rel": [
+            "dark"
+           ]
+          }
+         ]
+        },
+        "drawOdds": {
+         "moneyLine": 425,
+         "link": {
+          "language": "en-US",
+          "rel": [
+           "draw",
+           "desktop",
+           "bets",
+           "draftkings"
+          ],
+          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828729%3Foutcomes%3D0ML86735913_2",
+          "text": "Draw Bet",
+          "shortText": "Draw Bet",
+          "isExternal": true,
+          "isPremium": false,
+          "isHidden": false
+         }
+        },
+        "total": {
+         "displayName": "Total",
+         "shortDisplayName": "Total",
+         "over": {
+          "open": {
+           "line": "o3.5",
+           "odds": "+105"
+          },
+          "close": {
+           "line": "o3.5",
+           "odds": "+100",
+           "link": {
+            "rel": [
+             "over",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828729%3Foutcomes%3D0OU86736439O350_1",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401875036,
+              "betSide": "over",
+              "betType": "straight",
+              "betDetails": "Over:3.5"
+             }
+            }
+           }
+          }
+         },
+         "under": {
+          "open": {
+           "line": "u3.5",
+           "odds": "-145"
+          },
+          "close": {
+           "line": "u3.5",
+           "odds": "-125",
+           "link": {
+            "rel": [
+             "under",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828729%3Foutcomes%3D0OU86736439U350_3",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401875036,
+              "betSide": "under",
+              "betType": "straight",
+              "betDetails": "Under:3.5"
+             }
+            }
+           }
+          }
+         }
+        },
+        "pointSpread": {
+         "displayName": "Spread",
+         "shortDisplayName": "Spread",
+         "home": {
+          "open": {
+           "line": "-1.5",
+           "odds": "-110"
+          },
+          "close": {
+           "line": "-1.5",
+           "odds": "-115",
+           "link": {
+            "rel": [
+             "homeSpread",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828729%3Foutcomes%3D0HC86736444N150_1",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401875036,
+              "betSide": "home",
+              "betType": "straight",
+              "betDetails": "Spread:INT-1.5"
+             }
+            }
+           }
+          }
+         },
+         "away": {
+          "open": {
+           "line": "+1.5",
+           "odds": "-135"
+          },
+          "close": {
+           "line": "+1.5",
+           "odds": "-120",
+           "link": {
+            "rel": [
+             "awaySpread",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828729%3Foutcomes%3D0HC86736444P150_3",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401875036,
+              "betSide": "away",
+              "betType": "straight",
+              "betDetails": "Spread:FIO+1.5"
+             }
+            }
+           }
+          }
+         }
+        },
+        "moneyline": {
+         "displayName": "Moneyline",
+         "shortDisplayName": "ML",
+         "home": {
+          "open": {
+           "odds": "-295"
+          },
+          "close": {
+           "odds": "-310",
+           "link": {
+            "rel": [
+             "home",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828729%3Foutcomes%3D0ML86735913_1",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401875036,
+              "betSide": "home",
+              "betType": "straight"
+             }
+            }
+           }
+          }
+         },
+         "away": {
+          "open": {
+           "odds": "+550"
+          },
+          "close": {
+           "odds": "+650",
+           "link": {
+            "rel": [
+             "away",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828729%3Foutcomes%3D0ML86735913_3",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401875036,
+              "betSide": "away",
+              "betType": "straight"
+             }
+            }
+           }
+          }
+         },
+         "draw": {
+          "open": {
+           "odds": "+390"
+          },
+          "close": {
+           "odds": "+425",
+           "link": {
+            "rel": [
+             "draw",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828729%3Foutcomes%3D0ML86735913_2",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401875036,
+              "betSide": "draw",
+              "betType": "straight"
+             }
+            }
+           }
+          }
+         }
+        },
+        "details": "INT -310"
+       }
       ],
       "wasSuspended": false,
       "playByPlayAvailable": true,
@@ -3297,21 +912,20 @@
      }
     ],
     "status": {
-     "clock": 5400,
-     "displayClock": "90'+8'",
-     "period": 2,
+     "clock": 0,
+     "displayClock": "0'",
      "type": {
-      "id": "28",
-      "name": "STATUS_FULL_TIME",
-      "state": "post",
-      "completed": true,
-      "description": "Full Time",
-      "detail": "FT",
-      "shortDetail": "FT"
+      "id": "1",
+      "name": "STATUS_SCHEDULED",
+      "state": "pre",
+      "completed": false,
+      "description": "Scheduled",
+      "detail": "Sun, October 25th at 7:30 AM EDT",
+      "shortDetail": "Scheduled"
      }
     },
     "venue": {
-     "displayName": "Olimpico"
+     "displayName": "San Siro"
     },
     "links": [
      {
@@ -3321,37 +935,3087 @@
        "desktop",
        "event"
       ],
-      "href": "https://www.espn.com/soccer/match/_/gameId/401874955/parma-lazio",
+      "href": "https://www.espn.com/soccer/match/_/gameId/401875036/fiorentina-internazionale",
       "text": "Summary",
       "shortText": "Summary",
       "isExternal": false,
       "isPremium": false,
       "isHidden": false
-     },
+     }
+    ]
+   },
+   {
+    "id": "401874972",
+    "uid": "s:600~l:730~e:401874972",
+    "date": "2026-10-25T14:00Z",
+    "name": "Frosinone at Atalanta",
+    "shortName": "FRO @ ATA",
+    "season": {
+     "year": 2026,
+     "type": 14240,
+     "slug": "2026-27-italian-serie-a"
+    },
+    "competitions": [
+     {
+      "id": "401874972",
+      "uid": "s:600~l:730~e:401874972~c:401874972",
+      "date": "2026-10-25T14:00Z",
+      "startDate": "2026-10-25T14:00Z",
+      "attendance": 0,
+      "timeValid": true,
+      "recent": false,
+      "status": {
+       "clock": 0,
+       "displayClock": "0'",
+       "type": {
+        "id": "1",
+        "name": "STATUS_SCHEDULED",
+        "state": "pre",
+        "completed": false,
+        "description": "Scheduled",
+        "detail": "Sun, October 25th at 10:00 AM EDT",
+        "shortDetail": "Scheduled"
+       }
+      },
+      "venue": {
+       "id": "4253",
+       "fullName": "New Balance Arena",
+       "address": {
+        "city": "Bergamo",
+        "country": "Italy"
+       }
+      },
+      "format": {
+       "regulation": {
+        "periods": 2
+       }
+      },
+      "altGameNote": "Serie A",
+      "notes": [],
+      "geoBroadcasts": [
+       {
+        "type": {
+         "id": "4",
+         "shortName": "STREAMING"
+        },
+        "market": {
+         "id": "1",
+         "type": "National"
+        },
+        "media": {
+         "shortName": "Paramount+"
+        },
+        "lang": "en",
+        "region": "us"
+       }
+      ],
+      "broadcasts": [
+       {
+        "market": "national",
+        "names": [
+         "Paramount+"
+        ]
+       }
+      ],
+      "broadcast": "",
+      "competitors": [
+       {
+        "id": "105",
+        "uid": "s:600~t:105",
+        "type": "team",
+        "order": 0,
+        "homeAway": "home",
+        "winner": false,
+        "form": "DLWWL",
+        "score": "0",
+        "records": [
+         {
+          "name": "All Splits",
+          "type": "total",
+          "summary": "3-0-4",
+          "abbreviation": "Total"
+         }
+        ],
+        "team": {
+         "id": "105",
+         "uid": "s:600~t:105",
+         "abbreviation": "ATA",
+         "displayName": "Atalanta",
+         "shortDisplayName": "Atalanta",
+         "name": "Atalanta",
+         "location": "Atalanta",
+         "color": "1157bf",
+         "alternateColor": "ffffff",
+         "isActive": true,
+         "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/105.png",
+         "links": [
+          {
+           "rel": [
+            "clubhouse",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/club/_/id/105/atalanta",
+           "text": "Clubhouse",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "stats",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/stats/_/id/105/atalanta",
+           "text": "Stats",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "stats",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:105&section=stats",
+           "text": "Stats",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "schedule",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/fixtures/_/id/105/atalanta",
+           "text": "Fixtures",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "schedule",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:105&section=scores",
+           "text": "Fixtures",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "squad",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/squad/_/id/105/atalanta",
+           "text": "Squad",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "squad",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:105&section=squad",
+           "text": "Squad",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          }
+         ],
+         "venue": {
+          "id": "4253"
+         }
+        },
+        "statistics": [],
+        "leaders": [
+         {
+          "name": "goals",
+          "displayName": "Goals",
+          "shortDisplayName": "Goals",
+          "abbreviation": "G",
+          "leaders": [
+           {
+            "displayValue": "4",
+            "value": 4,
+            "athlete": {
+             "id": "258158",
+             "displayName": "Nikola Krstovic",
+             "shortName": "N. Krstovic",
+             "fullName": "Nikola Krstovic",
+             "jersey": "90",
+             "active": true,
+             "team": {
+              "id": "105"
+             },
+             "links": [
+              {
+               "rel": [
+                "playercard",
+                "desktop",
+                "athlete"
+               ],
+               "href": "https://www.espn.com/soccer/player/_/id/258158/nikola-krstovic",
+               "isHidden": false
+              }
+             ],
+             "position": {
+              "abbreviation": "F"
+             }
+            },
+            "team": {
+             "id": "105"
+            }
+           }
+          ]
+         },
+         {
+          "name": "goalsLeaders",
+          "displayName": "Goals",
+          "shortDisplayName": "Goals",
+          "abbreviation": "G",
+          "leaders": [
+           {
+            "displayValue": "4",
+            "value": 4,
+            "athlete": {
+             "id": "258158",
+             "displayName": "Nikola Krstovic",
+             "shortName": "N. Krstovic",
+             "fullName": "Nikola Krstovic",
+             "jersey": "90",
+             "active": true,
+             "team": {
+              "id": "105"
+             },
+             "links": [
+              {
+               "rel": [
+                "playercard",
+                "desktop",
+                "athlete"
+               ],
+               "href": "https://www.espn.com/soccer/player/_/id/258158/nikola-krstovic",
+               "isHidden": false
+              }
+             ],
+             "position": {
+              "abbreviation": "F"
+             }
+            },
+            "team": {
+             "id": "105"
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "id": "4057",
+        "uid": "s:600~t:4057",
+        "type": "team",
+        "order": 1,
+        "homeAway": "away",
+        "winner": false,
+        "form": "DLWDW",
+        "score": "0",
+        "records": [
+         {
+          "name": "All Splits",
+          "type": "total",
+          "summary": "4-1-2",
+          "abbreviation": "Total"
+         }
+        ],
+        "team": {
+         "id": "4057",
+         "uid": "s:600~t:4057",
+         "abbreviation": "FRO",
+         "displayName": "Frosinone",
+         "shortDisplayName": "Frosinone",
+         "name": "Frosinone",
+         "location": "Frosinone",
+         "color": "FACF08",
+         "alternateColor": "ffffff",
+         "isActive": true,
+         "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/4057.png",
+         "links": [
+          {
+           "rel": [
+            "clubhouse",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/club/_/id/4057/frosinone",
+           "text": "Clubhouse",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "stats",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/stats/_/id/4057/frosinone",
+           "text": "Stats",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "stats",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:4057&section=stats",
+           "text": "Stats",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "schedule",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/fixtures/_/id/4057/frosinone",
+           "text": "Fixtures",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "schedule",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:4057&section=scores",
+           "text": "Fixtures",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "squad",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/squad/_/id/4057/frosinone",
+           "text": "Squad",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "squad",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:4057&section=squad",
+           "text": "Squad",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          }
+         ],
+         "venue": {
+          "id": "10439"
+         }
+        },
+        "statistics": [],
+        "leaders": [
+         {
+          "name": "goals",
+          "displayName": "Goals",
+          "shortDisplayName": "Goals",
+          "abbreviation": "G",
+          "leaders": [
+           {
+            "displayValue": "7",
+            "value": 7,
+            "athlete": {
+             "id": "319265",
+             "displayName": "Antonio Raimondo",
+             "shortName": "A. Raimondo",
+             "fullName": "Antonio Raimondo",
+             "jersey": "9",
+             "active": true,
+             "team": {
+              "id": "4057"
+             },
+             "links": [
+              {
+               "rel": [
+                "playercard",
+                "desktop",
+                "athlete"
+               ],
+               "href": "https://www.espn.com/soccer/player/_/id/319265/antonio-raimondo",
+               "isHidden": false
+              }
+             ],
+             "position": {
+              "abbreviation": "F"
+             }
+            },
+            "team": {
+             "id": "4057"
+            }
+           }
+          ]
+         },
+         {
+          "name": "goalsLeaders",
+          "displayName": "Goals",
+          "shortDisplayName": "Goals",
+          "abbreviation": "G",
+          "leaders": [
+           {
+            "displayValue": "7",
+            "value": 7,
+            "athlete": {
+             "id": "319265",
+             "displayName": "Antonio Raimondo",
+             "shortName": "A. Raimondo",
+             "fullName": "Antonio Raimondo",
+             "jersey": "9",
+             "active": true,
+             "team": {
+              "id": "4057"
+             },
+             "links": [
+              {
+               "rel": [
+                "playercard",
+                "desktop",
+                "athlete"
+               ],
+               "href": "https://www.espn.com/soccer/player/_/id/319265/antonio-raimondo",
+               "isHidden": false
+              }
+             ],
+             "position": {
+              "abbreviation": "F"
+             }
+            },
+            "team": {
+             "id": "4057"
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "details": [],
+      "odds": [
+       {
+        "overUnder": 3.5,
+        "link": {
+         "language": "en-US",
+         "rel": [
+          "game",
+          "desktop",
+          "bets"
+         ],
+         "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828728",
+         "text": "Game",
+         "shortText": "Game",
+         "isExternal": true,
+         "isPremium": false,
+         "isHidden": false
+        },
+        "provider": {
+         "id": "100",
+         "name": "DraftKings",
+         "priority": 1
+        },
+        "drawOdds": {
+         "moneyLine": 295,
+         "link": {
+          "language": "en-US",
+          "rel": [
+           "draw",
+           "desktop",
+           "bets",
+           "draftkings"
+          ],
+          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828728%3Foutcomes%3D0ML86735912_2",
+          "text": "Draw Bet",
+          "shortText": "Draw Bet",
+          "isExternal": true,
+          "isPremium": false,
+          "isHidden": false
+         }
+        },
+        "total": {
+         "displayName": "Total",
+         "shortDisplayName": "Total",
+         "over": {
+          "open": {
+           "line": "o3.5",
+           "odds": "+110"
+          },
+          "close": {
+           "line": "o3.5",
+           "odds": "-120",
+           "link": {
+            "rel": [
+             "over",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828728%3Foutcomes%3D0OU86736405O350_1",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874972,
+              "betSide": "over",
+              "betType": "straight",
+              "betDetails": "Over:3.5"
+             }
+            }
+           }
+          }
+         },
+         "under": {
+          "open": {
+           "line": "u3.5",
+           "odds": "-150"
+          },
+          "close": {
+           "line": "u3.5",
+           "odds": "-105",
+           "link": {
+            "rel": [
+             "under",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828728%3Foutcomes%3D0OU86736405U350_3",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874972,
+              "betSide": "under",
+              "betType": "straight",
+              "betDetails": "Under:3.5"
+             }
+            }
+           }
+          }
+         }
+        },
+        "pointSpread": {
+         "displayName": "Spread",
+         "shortDisplayName": "Spread",
+         "home": {
+          "open": {
+           "line": "-0.5",
+           "odds": "-180"
+          },
+          "close": {
+           "line": "-0.5",
+           "odds": "-125",
+           "link": {
+            "rel": [
+             "homeSpread",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828728%3Foutcomes%3D0HC86736410N50_1",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874972,
+              "betSide": "home",
+              "betType": "straight",
+              "betDetails": "Spread:ATA-0.5"
+             }
+            }
+           }
+          }
+         },
+         "away": {
+          "open": {
+           "line": "+0.5",
+           "odds": "+115"
+          },
+          "close": {
+           "line": "+0.5",
+           "odds": "-115",
+           "link": {
+            "rel": [
+             "awaySpread",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828728%3Foutcomes%3D0HC86736410P50_3",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874972,
+              "betSide": "away",
+              "betType": "straight",
+              "betDetails": "Spread:FRO+0.5"
+             }
+            }
+           }
+          }
+         }
+        },
+        "moneyline": {
+         "displayName": "Moneyline",
+         "shortDisplayName": "ML",
+         "home": {
+          "open": {
+           "odds": "-170"
+          },
+          "close": {
+           "odds": "-120",
+           "link": {
+            "rel": [
+             "home",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828728%3Foutcomes%3D0ML86735912_1",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874972,
+              "betSide": "home",
+              "betType": "straight"
+             }
+            }
+           }
+          }
+         },
+         "away": {
+          "open": {
+           "odds": "+350"
+          },
+          "close": {
+           "odds": "+250",
+           "link": {
+            "rel": [
+             "away",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828728%3Foutcomes%3D0ML86735912_3",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874972,
+              "betSide": "away",
+              "betType": "straight"
+             }
+            }
+           }
+          }
+         },
+         "draw": {
+          "open": {
+           "odds": "+300"
+          },
+          "close": {
+           "odds": "+295",
+           "link": {
+            "rel": [
+             "draw",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828728%3Foutcomes%3D0ML86735912_2",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874972,
+              "betSide": "draw",
+              "betType": "straight"
+             }
+            }
+           }
+          }
+         }
+        },
+        "details": "ATA -120"
+       }
+      ],
+      "wasSuspended": false,
+      "playByPlayAvailable": true,
+      "playByPlayAthletes": true
+     }
+    ],
+    "status": {
+     "clock": 0,
+     "displayClock": "0'",
+     "type": {
+      "id": "1",
+      "name": "STATUS_SCHEDULED",
+      "state": "pre",
+      "completed": false,
+      "description": "Scheduled",
+      "detail": "Sun, October 25th at 10:00 AM EDT",
+      "shortDetail": "Scheduled"
+     }
+    },
+    "venue": {
+     "displayName": "New Balance Arena"
+    },
+    "links": [
      {
       "language": "en-US",
       "rel": [
-       "team-stats",
+       "summary",
        "desktop",
        "event"
       ],
-      "href": "https://www.espn.com/soccer/team-stats/_/gameId/401874955/league/ita.1",
-      "text": "Team Stats",
-      "shortText": "Team Stats",
+      "href": "https://www.espn.com/soccer/match/_/gameId/401874972/frosinone-atalanta",
+      "text": "Summary",
+      "shortText": "Summary",
       "isExternal": false,
       "isPremium": false,
       "isHidden": false
-     },
+     }
+    ]
+   },
+   {
+    "id": "401874952",
+    "uid": "s:600~l:730~e:401874952",
+    "date": "2026-10-25T14:00Z",
+    "name": "Venezia at Genoa",
+    "shortName": "VEN @ GEN",
+    "season": {
+     "year": 2026,
+     "type": 14240,
+     "slug": "2026-27-italian-serie-a"
+    },
+    "competitions": [
+     {
+      "id": "401874952",
+      "uid": "s:600~l:730~e:401874952~c:401874952",
+      "date": "2026-10-25T14:00Z",
+      "startDate": "2026-10-25T14:00Z",
+      "attendance": 0,
+      "timeValid": true,
+      "recent": false,
+      "status": {
+       "clock": 0,
+       "displayClock": "0'",
+       "type": {
+        "id": "1",
+        "name": "STATUS_SCHEDULED",
+        "state": "pre",
+        "completed": false,
+        "description": "Scheduled",
+        "detail": "Sun, October 25th at 10:00 AM EDT",
+        "shortDetail": "Scheduled"
+       }
+      },
+      "venue": {
+       "id": "10689",
+       "fullName": "Stadio Luigi Ferraris",
+       "address": {
+        "city": "Genova",
+        "country": "Italy"
+       }
+      },
+      "format": {
+       "regulation": {
+        "periods": 2
+       }
+      },
+      "altGameNote": "Serie A",
+      "notes": [],
+      "geoBroadcasts": [
+       {
+        "type": {
+         "id": "4",
+         "shortName": "STREAMING"
+        },
+        "market": {
+         "id": "1",
+         "type": "National"
+        },
+        "media": {
+         "shortName": "Paramount+"
+        },
+        "lang": "en",
+        "region": "us"
+       }
+      ],
+      "broadcasts": [
+       {
+        "market": "national",
+        "names": [
+         "Paramount+"
+        ]
+       }
+      ],
+      "broadcast": "",
+      "competitors": [
+       {
+        "id": "3263",
+        "uid": "s:600~t:3263",
+        "type": "team",
+        "order": 0,
+        "homeAway": "home",
+        "winner": false,
+        "form": "DWLWD",
+        "score": "0",
+        "records": [
+         {
+          "name": "All Splits",
+          "type": "total",
+          "summary": "1-1-5",
+          "abbreviation": "Total"
+         }
+        ],
+        "team": {
+         "id": "3263",
+         "uid": "s:600~t:3263",
+         "abbreviation": "GEN",
+         "displayName": "Genoa",
+         "shortDisplayName": "Genoa",
+         "name": "Genoa",
+         "location": "Genoa",
+         "color": "08305d",
+         "alternateColor": "ffffff",
+         "isActive": true,
+         "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/3263.png",
+         "links": [
+          {
+           "rel": [
+            "clubhouse",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/club/_/id/3263/genoa",
+           "text": "Clubhouse",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "stats",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/stats/_/id/3263/genoa",
+           "text": "Stats",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "stats",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:3263&section=stats",
+           "text": "Stats",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "schedule",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/fixtures/_/id/3263/genoa",
+           "text": "Fixtures",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "schedule",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:3263&section=scores",
+           "text": "Fixtures",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "squad",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/squad/_/id/3263/genoa",
+           "text": "Squad",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "squad",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:3263&section=squad",
+           "text": "Squad",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          }
+         ],
+         "venue": {
+          "id": "10689"
+         }
+        },
+        "statistics": [],
+        "leaders": [
+         {
+          "name": "goals",
+          "displayName": "Goals",
+          "shortDisplayName": "Goals",
+          "abbreviation": "G",
+          "leaders": [
+           {
+            "displayValue": "3",
+            "value": 3,
+            "athlete": {
+             "id": "275444",
+             "displayName": "Milutin Osmajic",
+             "shortName": "M. Osmajic",
+             "fullName": "Milutin Osmajic",
+             "jersey": "18",
+             "active": true,
+             "team": {
+              "id": "3263"
+             },
+             "links": [
+              {
+               "rel": [
+                "playercard",
+                "desktop",
+                "athlete"
+               ],
+               "href": "https://www.espn.com/soccer/player/_/id/275444/milutin-osmajic",
+               "isHidden": false
+              }
+             ],
+             "position": {
+              "abbreviation": "F"
+             }
+            },
+            "team": {
+             "id": "3263"
+            }
+           }
+          ]
+         },
+         {
+          "name": "goalsLeaders",
+          "displayName": "Goals",
+          "shortDisplayName": "Goals",
+          "abbreviation": "G",
+          "leaders": [
+           {
+            "displayValue": "3",
+            "value": 3,
+            "athlete": {
+             "id": "275444",
+             "displayName": "Milutin Osmajic",
+             "shortName": "M. Osmajic",
+             "fullName": "Milutin Osmajic",
+             "jersey": "18",
+             "active": true,
+             "team": {
+              "id": "3263"
+             },
+             "links": [
+              {
+               "rel": [
+                "playercard",
+                "desktop",
+                "athlete"
+               ],
+               "href": "https://www.espn.com/soccer/player/_/id/275444/milutin-osmajic",
+               "isHidden": false
+              }
+             ],
+             "position": {
+              "abbreviation": "F"
+             }
+            },
+            "team": {
+             "id": "3263"
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "id": "17530",
+        "uid": "s:600~t:17530",
+        "type": "team",
+        "order": 1,
+        "homeAway": "away",
+        "winner": false,
+        "form": "DLLLL",
+        "score": "0",
+        "records": [
+         {
+          "name": "All Splits",
+          "type": "total",
+          "summary": "1-0-6",
+          "abbreviation": "Total"
+         }
+        ],
+        "team": {
+         "id": "17530",
+         "uid": "s:600~t:17530",
+         "abbreviation": "VEN",
+         "displayName": "Venezia",
+         "shortDisplayName": "Venezia",
+         "name": "Venezia",
+         "location": "Venezia",
+         "color": "000000",
+         "alternateColor": "ffffff",
+         "isActive": true,
+         "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/17530.png",
+         "links": [
+          {
+           "rel": [
+            "clubhouse",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/club/_/id/17530/venezia",
+           "text": "Clubhouse",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "stats",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/stats/_/id/17530/venezia",
+           "text": "Stats",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "stats",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:17530&section=stats",
+           "text": "Stats",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "schedule",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/fixtures/_/id/17530/venezia",
+           "text": "Fixtures",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "schedule",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:17530&section=scores",
+           "text": "Fixtures",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "squad",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/squad/_/id/17530/venezia",
+           "text": "Squad",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "squad",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:17530&section=squad",
+           "text": "Squad",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          }
+         ],
+         "venue": {
+          "id": "10688"
+         }
+        },
+        "statistics": [],
+        "leaders": [
+         {
+          "name": "goals",
+          "displayName": "Goals",
+          "shortDisplayName": "Goals",
+          "abbreviation": "G",
+          "leaders": [
+           {
+            "displayValue": "2",
+            "value": 2,
+            "athlete": {
+             "id": "346916",
+             "displayName": "Antoine Hainaut",
+             "shortName": "A. Hainaut",
+             "fullName": "Antoine Hainaut",
+             "jersey": "18",
+             "active": true,
+             "team": {
+              "id": "17530"
+             },
+             "links": [
+              {
+               "rel": [
+                "playercard",
+                "desktop",
+                "athlete"
+               ],
+               "href": "https://www.espn.com/soccer/player/_/id/346916/antoine-hainaut",
+               "isHidden": false
+              }
+             ],
+             "position": {
+              "abbreviation": "D"
+             }
+            },
+            "team": {
+             "id": "17530"
+            }
+           }
+          ]
+         },
+         {
+          "name": "goalsLeaders",
+          "displayName": "Goals",
+          "shortDisplayName": "Goals",
+          "abbreviation": "G",
+          "leaders": [
+           {
+            "displayValue": "2",
+            "value": 2,
+            "athlete": {
+             "id": "346916",
+             "displayName": "Antoine Hainaut",
+             "shortName": "A. Hainaut",
+             "fullName": "Antoine Hainaut",
+             "jersey": "18",
+             "active": true,
+             "team": {
+              "id": "17530"
+             },
+             "links": [
+              {
+               "rel": [
+                "playercard",
+                "desktop",
+                "athlete"
+               ],
+               "href": "https://www.espn.com/soccer/player/_/id/346916/antoine-hainaut",
+               "isHidden": false
+              }
+             ],
+             "position": {
+              "abbreviation": "D"
+             }
+            },
+            "team": {
+             "id": "17530"
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "details": [],
+      "odds": [
+       {
+        "overUnder": 2.5,
+        "link": {
+         "language": "en-US",
+         "rel": [
+          "game",
+          "desktop",
+          "bets"
+         ],
+         "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828730",
+         "text": "Game",
+         "shortText": "Game",
+         "isExternal": true,
+         "isPremium": false,
+         "isHidden": false
+        },
+        "provider": {
+         "id": "100",
+         "name": "DraftKings",
+         "priority": 1
+        },
+        "drawOdds": {
+         "moneyLine": 215,
+         "link": {
+          "language": "en-US",
+          "rel": [
+           "draw",
+           "desktop",
+           "bets",
+           "draftkings"
+          ],
+          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828730%3Foutcomes%3D0ML86735914_2",
+          "text": "Draw Bet",
+          "shortText": "Draw Bet",
+          "isExternal": true,
+          "isPremium": false,
+          "isHidden": false
+         }
+        },
+        "total": {
+         "displayName": "Total",
+         "shortDisplayName": "Total",
+         "over": {
+          "open": {
+           "line": "o2.5",
+           "odds": "-115"
+          },
+          "close": {
+           "line": "o2.5",
+           "odds": "+100",
+           "link": {
+            "rel": [
+             "over",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828730%3Foutcomes%3D0OU86736473O250_1",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874952,
+              "betSide": "over",
+              "betType": "straight",
+              "betDetails": "Over:2.5"
+             }
+            }
+           }
+          }
+         },
+         "under": {
+          "open": {
+           "line": "u2.5",
+           "odds": "-120"
+          },
+          "close": {
+           "line": "u2.5",
+           "odds": "-125",
+           "link": {
+            "rel": [
+             "under",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828730%3Foutcomes%3D0OU86736473U250_3",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874952,
+              "betSide": "under",
+              "betType": "straight",
+              "betDetails": "Under:2.5"
+             }
+            }
+           }
+          }
+         }
+        },
+        "pointSpread": {
+         "displayName": "Spread",
+         "shortDisplayName": "Spread",
+         "home": {
+          "open": {
+           "line": "-0.5",
+           "odds": "+100"
+          },
+          "close": {
+           "line": "-0.5",
+           "odds": "+105",
+           "link": {
+            "rel": [
+             "homeSpread",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828730%3Foutcomes%3D0HC86736478N50_1",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874952,
+              "betSide": "home",
+              "betType": "straight",
+              "betDetails": "Spread:GEN-0.5"
+             }
+            }
+           }
+          }
+         },
+         "away": {
+          "open": {
+           "line": "+0.5",
+           "odds": "-150"
+          },
+          "close": {
+           "line": "+0.5",
+           "odds": "-150",
+           "link": {
+            "rel": [
+             "awaySpread",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828730%3Foutcomes%3D0HC86736478P50_3",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874952,
+              "betSide": "away",
+              "betType": "straight",
+              "betDetails": "Spread:VEN+0.5"
+             }
+            }
+           }
+          }
+         }
+        },
+        "moneyline": {
+         "displayName": "Moneyline",
+         "shortDisplayName": "ML",
+         "home": {
+          "open": {
+           "odds": "+105"
+          },
+          "close": {
+           "odds": "+110",
+           "link": {
+            "rel": [
+             "home",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828730%3Foutcomes%3D0ML86735914_1",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874952,
+              "betSide": "home",
+              "betType": "straight"
+             }
+            }
+           }
+          }
+         },
+         "away": {
+          "open": {
+           "odds": "+240"
+          },
+          "close": {
+           "odds": "+245",
+           "link": {
+            "rel": [
+             "away",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828730%3Foutcomes%3D0ML86735914_3",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874952,
+              "betSide": "away",
+              "betType": "straight"
+             }
+            }
+           }
+          }
+         },
+         "draw": {
+          "open": {
+           "odds": "+210"
+          },
+          "close": {
+           "odds": "+215",
+           "link": {
+            "rel": [
+             "draw",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828730%3Foutcomes%3D0ML86735914_2",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874952,
+              "betSide": "draw",
+              "betType": "straight"
+             }
+            }
+           }
+          }
+         }
+        },
+        "details": "GEN +110"
+       }
+      ],
+      "wasSuspended": false,
+      "playByPlayAvailable": true,
+      "playByPlayAthletes": true
+     }
+    ],
+    "status": {
+     "clock": 0,
+     "displayClock": "0'",
+     "type": {
+      "id": "1",
+      "name": "STATUS_SCHEDULED",
+      "state": "pre",
+      "completed": false,
+      "description": "Scheduled",
+      "detail": "Sun, October 25th at 10:00 AM EDT",
+      "shortDetail": "Scheduled"
+     }
+    },
+    "venue": {
+     "displayName": "Stadio Luigi Ferraris"
+    },
+    "links": [
      {
       "language": "en-US",
       "rel": [
-       "player-stats",
+       "summary",
        "desktop",
        "event"
       ],
-      "href": "https://www.espn.com/soccer/player-stats/_/gameId/401874955/league/ita.1",
-      "text": "Player Stats",
-      "shortText": "Player Stats",
+      "href": "https://www.espn.com/soccer/match/_/gameId/401874952/venezia-genoa",
+      "text": "Summary",
+      "shortText": "Summary",
+      "isExternal": false,
+      "isPremium": false,
+      "isHidden": false
+     }
+    ]
+   },
+   {
+    "id": "401874772",
+    "uid": "s:600~l:730~e:401874772",
+    "date": "2026-10-25T17:00Z",
+    "name": "Juventus at Lecce",
+    "shortName": "JUV @ LEC",
+    "season": {
+     "year": 2026,
+     "type": 14240,
+     "slug": "2026-27-italian-serie-a"
+    },
+    "competitions": [
+     {
+      "id": "401874772",
+      "uid": "s:600~l:730~e:401874772~c:401874772",
+      "date": "2026-10-25T17:00Z",
+      "startDate": "2026-10-25T17:00Z",
+      "attendance": 0,
+      "timeValid": true,
+      "recent": false,
+      "status": {
+       "clock": 0,
+       "displayClock": "0'",
+       "type": {
+        "id": "1",
+        "name": "STATUS_SCHEDULED",
+        "state": "pre",
+        "completed": false,
+        "description": "Scheduled",
+        "detail": "Sun, October 25th at 1:00 PM EDT",
+        "shortDetail": "Scheduled"
+       }
+      },
+      "venue": {
+       "id": "10721",
+       "fullName": "Via Del Mare",
+       "address": {
+        "city": "Lecce",
+        "country": "Italy"
+       }
+      },
+      "format": {
+       "regulation": {
+        "periods": 2
+       }
+      },
+      "altGameNote": "Serie A",
+      "notes": [],
+      "geoBroadcasts": [
+       {
+        "type": {
+         "id": "4",
+         "shortName": "STREAMING"
+        },
+        "market": {
+         "id": "1",
+         "type": "National"
+        },
+        "media": {
+         "shortName": "Paramount+"
+        },
+        "lang": "en",
+        "region": "us"
+       }
+      ],
+      "broadcasts": [
+       {
+        "market": "national",
+        "names": [
+         "Paramount+"
+        ]
+       }
+      ],
+      "broadcast": "",
+      "competitors": [
+       {
+        "id": "113",
+        "uid": "s:600~t:113",
+        "type": "team",
+        "order": 0,
+        "homeAway": "home",
+        "winner": false,
+        "form": "DLLWL",
+        "score": "0",
+        "records": [
+         {
+          "name": "All Splits",
+          "type": "total",
+          "summary": "3-0-4",
+          "abbreviation": "Total"
+         }
+        ],
+        "team": {
+         "id": "113",
+         "uid": "s:600~t:113",
+         "abbreviation": "LEC",
+         "displayName": "Lecce",
+         "shortDisplayName": "Lecce",
+         "name": "Lecce",
+         "location": "Lecce",
+         "color": "FCED0B",
+         "alternateColor": "08305d",
+         "isActive": true,
+         "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/113.png",
+         "links": [
+          {
+           "rel": [
+            "clubhouse",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/club/_/id/113/lecce",
+           "text": "Clubhouse",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "stats",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/stats/_/id/113/lecce",
+           "text": "Stats",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "stats",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:113&section=stats",
+           "text": "Stats",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "schedule",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/fixtures/_/id/113/lecce",
+           "text": "Fixtures",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "schedule",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:113&section=scores",
+           "text": "Fixtures",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "squad",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/squad/_/id/113/lecce",
+           "text": "Squad",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "squad",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:113&section=squad",
+           "text": "Squad",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          }
+         ],
+         "venue": {
+          "id": "10721"
+         }
+        },
+        "statistics": [],
+        "leaders": [
+         {
+          "name": "goals",
+          "displayName": "Goals",
+          "shortDisplayName": "Goals",
+          "abbreviation": "G",
+          "leaders": [
+           {
+            "displayValue": "2",
+            "value": 2,
+            "athlete": {
+             "id": "223947",
+             "displayName": "Lassana Coulibaly",
+             "shortName": "L. Coulibaly",
+             "fullName": "Lassana Coulibaly",
+             "jersey": "29",
+             "active": true,
+             "team": {
+              "id": "113"
+             },
+             "links": [
+              {
+               "rel": [
+                "playercard",
+                "desktop",
+                "athlete"
+               ],
+               "href": "https://www.espn.com/soccer/player/_/id/223947/lassana-coulibaly",
+               "isHidden": false
+              }
+             ],
+             "position": {
+              "abbreviation": "M"
+             }
+            },
+            "team": {
+             "id": "113"
+            }
+           }
+          ]
+         },
+         {
+          "name": "goalsLeaders",
+          "displayName": "Goals",
+          "shortDisplayName": "Goals",
+          "abbreviation": "G",
+          "leaders": [
+           {
+            "displayValue": "2",
+            "value": 2,
+            "athlete": {
+             "id": "223947",
+             "displayName": "Lassana Coulibaly",
+             "shortName": "L. Coulibaly",
+             "fullName": "Lassana Coulibaly",
+             "jersey": "29",
+             "active": true,
+             "team": {
+              "id": "113"
+             },
+             "links": [
+              {
+               "rel": [
+                "playercard",
+                "desktop",
+                "athlete"
+               ],
+               "href": "https://www.espn.com/soccer/player/_/id/223947/lassana-coulibaly",
+               "isHidden": false
+              }
+             ],
+             "position": {
+              "abbreviation": "M"
+             }
+            },
+            "team": {
+             "id": "113"
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "id": "111",
+        "uid": "s:600~t:111",
+        "type": "team",
+        "order": 1,
+        "homeAway": "away",
+        "winner": false,
+        "form": "DLWDW",
+        "score": "0",
+        "records": [
+         {
+          "name": "All Splits",
+          "type": "total",
+          "summary": "3-2-2",
+          "abbreviation": "Total"
+         }
+        ],
+        "team": {
+         "id": "111",
+         "uid": "s:600~t:111",
+         "abbreviation": "JUV",
+         "displayName": "Juventus",
+         "shortDisplayName": "Juventus",
+         "name": "Juventus",
+         "location": "Juventus",
+         "color": "000000",
+         "alternateColor": "E8A2B0",
+         "isActive": true,
+         "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/111.png",
+         "links": [
+          {
+           "rel": [
+            "clubhouse",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/club/_/id/111/juventus",
+           "text": "Clubhouse",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "stats",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/stats/_/id/111/juventus",
+           "text": "Stats",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "stats",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:111&section=stats",
+           "text": "Stats",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "schedule",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/fixtures/_/id/111/juventus",
+           "text": "Fixtures",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "schedule",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:111&section=scores",
+           "text": "Fixtures",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "squad",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/squad/_/id/111/juventus",
+           "text": "Squad",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "squad",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:111&section=squad",
+           "text": "Squad",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          }
+         ],
+         "venue": {
+          "id": "4600"
+         }
+        },
+        "statistics": [],
+        "leaders": [
+         {
+          "name": "goals",
+          "displayName": "Goals",
+          "shortDisplayName": "Goals",
+          "abbreviation": "G",
+          "leaders": [
+           {
+            "displayValue": "2",
+            "value": 2,
+            "athlete": {
+             "id": "258307",
+             "displayName": "Bremer",
+             "shortName": "Bremer",
+             "fullName": "Bremer",
+             "jersey": "3",
+             "active": true,
+             "team": {
+              "id": "111"
+             },
+             "links": [
+              {
+               "rel": [
+                "playercard",
+                "desktop",
+                "athlete"
+               ],
+               "href": "https://www.espn.com/soccer/player/_/id/258307/bremer",
+               "isHidden": false
+              }
+             ],
+             "position": {
+              "abbreviation": "D"
+             }
+            },
+            "team": {
+             "id": "111"
+            }
+           }
+          ]
+         },
+         {
+          "name": "goalsLeaders",
+          "displayName": "Goals",
+          "shortDisplayName": "Goals",
+          "abbreviation": "G",
+          "leaders": [
+           {
+            "displayValue": "2",
+            "value": 2,
+            "athlete": {
+             "id": "258307",
+             "displayName": "Bremer",
+             "shortName": "Bremer",
+             "fullName": "Bremer",
+             "jersey": "3",
+             "active": true,
+             "team": {
+              "id": "111"
+             },
+             "links": [
+              {
+               "rel": [
+                "playercard",
+                "desktop",
+                "athlete"
+               ],
+               "href": "https://www.espn.com/soccer/player/_/id/258307/bremer",
+               "isHidden": false
+              }
+             ],
+             "position": {
+              "abbreviation": "D"
+             }
+            },
+            "team": {
+             "id": "111"
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "details": [],
+      "odds": [
+       {
+        "overUnder": 2.5,
+        "link": {
+         "language": "en-US",
+         "rel": [
+          "game",
+          "desktop",
+          "bets"
+         ],
+         "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828731",
+         "text": "Game",
+         "shortText": "Game",
+         "isExternal": true,
+         "isPremium": false,
+         "isHidden": false
+        },
+        "provider": {
+         "id": "100",
+         "name": "DraftKings",
+         "priority": 1
+        },
+        "drawOdds": {
+         "moneyLine": 300,
+         "link": {
+          "language": "en-US",
+          "rel": [
+           "draw",
+           "desktop",
+           "bets",
+           "draftkings"
+          ],
+          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828731%3Foutcomes%3D0ML86735915_2",
+          "text": "Draw Bet",
+          "shortText": "Draw Bet",
+          "isExternal": true,
+          "isPremium": false,
+          "isHidden": false
+         }
+        },
+        "total": {
+         "displayName": "Total",
+         "shortDisplayName": "Total",
+         "over": {
+          "open": {
+           "line": "o2.5",
+           "odds": "-125"
+          },
+          "close": {
+           "line": "o2.5",
+           "odds": "-130",
+           "link": {
+            "rel": [
+             "over",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828731%3Foutcomes%3D0OU86736507O250_1",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874772,
+              "betSide": "over",
+              "betType": "straight",
+              "betDetails": "Over:2.5"
+             }
+            }
+           }
+          }
+         },
+         "under": {
+          "open": {
+           "line": "u2.5",
+           "odds": "-110"
+          },
+          "close": {
+           "line": "u2.5",
+           "odds": "+100",
+           "link": {
+            "rel": [
+             "under",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828731%3Foutcomes%3D0OU86736507U250_3",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874772,
+              "betSide": "under",
+              "betType": "straight",
+              "betDetails": "Under:2.5"
+             }
+            }
+           }
+          }
+         }
+        },
+        "pointSpread": {
+         "displayName": "Spread",
+         "shortDisplayName": "Spread",
+         "home": {
+          "open": {
+           "line": "+1.5",
+           "odds": "-170"
+          },
+          "close": {
+           "line": "+1.5",
+           "odds": "-200",
+           "link": {
+            "rel": [
+             "homeSpread",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828731%3Foutcomes%3D0HC86736512P150_1",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874772,
+              "betSide": "home",
+              "betType": "straight",
+              "betDetails": "Spread:LEC+1.5"
+             }
+            }
+           }
+          }
+         },
+         "away": {
+          "open": {
+           "line": "-1.5",
+           "odds": "+110"
+          },
+          "close": {
+           "line": "-1.5",
+           "odds": "+140",
+           "link": {
+            "rel": [
+             "awaySpread",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828731%3Foutcomes%3D0HC86736512N150_3",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874772,
+              "betSide": "away",
+              "betType": "straight",
+              "betDetails": "Spread:JUV-1.5"
+             }
+            }
+           }
+          }
+         }
+        },
+        "moneyline": {
+         "displayName": "Moneyline",
+         "shortDisplayName": "ML",
+         "home": {
+          "open": {
+           "odds": "+600"
+          },
+          "close": {
+           "odds": "+500",
+           "link": {
+            "rel": [
+             "home",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828731%3Foutcomes%3D0ML86735915_1",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874772,
+              "betSide": "home",
+              "betType": "straight"
+             }
+            }
+           }
+          }
+         },
+         "away": {
+          "open": {
+           "odds": "-245"
+          },
+          "close": {
+           "odds": "-195",
+           "link": {
+            "rel": [
+             "away",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828731%3Foutcomes%3D0ML86735915_3",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874772,
+              "betSide": "away",
+              "betType": "straight"
+             }
+            }
+           }
+          }
+         },
+         "draw": {
+          "open": {
+           "odds": "+300"
+          },
+          "close": {
+           "odds": "+300",
+           "link": {
+            "rel": [
+             "draw",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828731%3Foutcomes%3D0ML86735915_2",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874772,
+              "betSide": "draw",
+              "betType": "straight"
+             }
+            }
+           }
+          }
+         }
+        },
+        "details": "JUV -195"
+       }
+      ],
+      "wasSuspended": false,
+      "playByPlayAvailable": true,
+      "playByPlayAthletes": true
+     }
+    ],
+    "status": {
+     "clock": 0,
+     "displayClock": "0'",
+     "type": {
+      "id": "1",
+      "name": "STATUS_SCHEDULED",
+      "state": "pre",
+      "completed": false,
+      "description": "Scheduled",
+      "detail": "Sun, October 25th at 1:00 PM EDT",
+      "shortDetail": "Scheduled"
+     }
+    },
+    "venue": {
+     "displayName": "Via Del Mare"
+    },
+    "links": [
+     {
+      "language": "en-US",
+      "rel": [
+       "summary",
+       "desktop",
+       "event"
+      ],
+      "href": "https://www.espn.com/soccer/match/_/gameId/401874772/juventus-lecce",
+      "text": "Summary",
+      "shortText": "Summary",
+      "isExternal": false,
+      "isPremium": false,
+      "isHidden": false
+     }
+    ]
+   },
+   {
+    "id": "401874779",
+    "uid": "s:600~l:730~e:401874779",
+    "date": "2026-10-25T19:45Z",
+    "name": "AC Milan at Udinese",
+    "shortName": "MIL @ UDI",
+    "season": {
+     "year": 2026,
+     "type": 14240,
+     "slug": "2026-27-italian-serie-a"
+    },
+    "competitions": [
+     {
+      "id": "401874779",
+      "uid": "s:600~l:730~e:401874779~c:401874779",
+      "date": "2026-10-25T19:45Z",
+      "startDate": "2026-10-25T19:45Z",
+      "attendance": 0,
+      "timeValid": true,
+      "recent": false,
+      "status": {
+       "clock": 0,
+       "displayClock": "0'",
+       "type": {
+        "id": "1",
+        "name": "STATUS_SCHEDULED",
+        "state": "pre",
+        "completed": false,
+        "description": "Scheduled",
+        "detail": "Sun, October 25th at 3:45 PM EDT",
+        "shortDetail": "Scheduled"
+       }
+      },
+      "venue": {
+       "id": "7411",
+       "fullName": "Stadio Friuli",
+       "address": {
+        "city": "Udine",
+        "country": "Italy"
+       }
+      },
+      "format": {
+       "regulation": {
+        "periods": 2
+       }
+      },
+      "altGameNote": "Serie A",
+      "notes": [],
+      "geoBroadcasts": [
+       {
+        "type": {
+         "id": "4",
+         "shortName": "STREAMING"
+        },
+        "market": {
+         "id": "1",
+         "type": "National"
+        },
+        "media": {
+         "shortName": "Paramount+"
+        },
+        "lang": "en",
+        "region": "us"
+       }
+      ],
+      "broadcasts": [
+       {
+        "market": "national",
+        "names": [
+         "Paramount+"
+        ]
+       }
+      ],
+      "broadcast": "",
+      "competitors": [
+       {
+        "id": "118",
+        "uid": "s:600~t:118",
+        "type": "team",
+        "order": 0,
+        "homeAway": "home",
+        "winner": false,
+        "form": "DLLLL",
+        "score": "0",
+        "records": [
+         {
+          "name": "All Splits",
+          "type": "total",
+          "summary": "1-1-5",
+          "abbreviation": "Total"
+         }
+        ],
+        "team": {
+         "id": "118",
+         "uid": "s:600~t:118",
+         "abbreviation": "UDI",
+         "displayName": "Udinese",
+         "shortDisplayName": "Udinese",
+         "name": "Udinese",
+         "location": "Udinese",
+         "color": "19161D",
+         "alternateColor": "0F1C3F",
+         "isActive": true,
+         "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/118.png",
+         "links": [
+          {
+           "rel": [
+            "clubhouse",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/club/_/id/118/udinese",
+           "text": "Clubhouse",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "stats",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/stats/_/id/118/udinese",
+           "text": "Stats",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "stats",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:118&section=stats",
+           "text": "Stats",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "schedule",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/fixtures/_/id/118/udinese",
+           "text": "Fixtures",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "schedule",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:118&section=scores",
+           "text": "Fixtures",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "squad",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/squad/_/id/118/udinese",
+           "text": "Squad",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "squad",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:118&section=squad",
+           "text": "Squad",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          }
+         ],
+         "venue": {
+          "id": "7411"
+         }
+        },
+        "statistics": [],
+        "leaders": [
+         {
+          "name": "goals",
+          "displayName": "Goals",
+          "shortDisplayName": "Goals",
+          "abbreviation": "G",
+          "leaders": [
+           {
+            "displayValue": "3",
+            "value": 3,
+            "athlete": {
+             "id": "270817",
+             "displayName": "Jurgen Ekkelenkamp",
+             "shortName": "J. Ekkelenkamp",
+             "fullName": "Jurgen Ekkelenkamp",
+             "jersey": "32",
+             "active": true,
+             "team": {
+              "id": "118"
+             },
+             "headshot": "https://a.espncdn.com/i/headshots/soccer/players/full/270817.png",
+             "links": [
+              {
+               "rel": [
+                "playercard",
+                "desktop",
+                "athlete"
+               ],
+               "href": "https://www.espn.com/soccer/player/_/id/270817/jurgen-ekkelenkamp",
+               "isHidden": false
+              }
+             ],
+             "position": {
+              "abbreviation": "M"
+             }
+            },
+            "team": {
+             "id": "118"
+            }
+           }
+          ]
+         },
+         {
+          "name": "goalsLeaders",
+          "displayName": "Goals",
+          "shortDisplayName": "Goals",
+          "abbreviation": "G",
+          "leaders": [
+           {
+            "displayValue": "3",
+            "value": 3,
+            "athlete": {
+             "id": "270817",
+             "displayName": "Jurgen Ekkelenkamp",
+             "shortName": "J. Ekkelenkamp",
+             "fullName": "Jurgen Ekkelenkamp",
+             "jersey": "32",
+             "active": true,
+             "team": {
+              "id": "118"
+             },
+             "headshot": "https://a.espncdn.com/i/headshots/soccer/players/full/270817.png",
+             "links": [
+              {
+               "rel": [
+                "playercard",
+                "desktop",
+                "athlete"
+               ],
+               "href": "https://www.espn.com/soccer/player/_/id/270817/jurgen-ekkelenkamp",
+               "isHidden": false
+              }
+             ],
+             "position": {
+              "abbreviation": "M"
+             }
+            },
+            "team": {
+             "id": "118"
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "id": "103",
+        "uid": "s:600~t:103",
+        "type": "team",
+        "order": 1,
+        "homeAway": "away",
+        "winner": false,
+        "form": "DWWDW",
+        "score": "0",
+        "records": [
+         {
+          "name": "All Splits",
+          "type": "total",
+          "summary": "4-3-0",
+          "abbreviation": "Total"
+         }
+        ],
+        "team": {
+         "id": "103",
+         "uid": "s:600~t:103",
+         "abbreviation": "MIL",
+         "displayName": "AC Milan",
+         "shortDisplayName": "Milan",
+         "name": "AC Milan",
+         "location": "AC Milan",
+         "color": "e4002b",
+         "alternateColor": "ffffff",
+         "isActive": true,
+         "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/103.png",
+         "links": [
+          {
+           "rel": [
+            "clubhouse",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan",
+           "text": "Clubhouse",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "stats",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/stats/_/id/103/ac-milan",
+           "text": "Stats",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "stats",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:103&section=stats",
+           "text": "Stats",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "schedule",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/fixtures/_/id/103/ac-milan",
+           "text": "Fixtures",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "schedule",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:103&section=scores",
+           "text": "Fixtures",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "squad",
+            "desktop",
+            "team"
+           ],
+           "href": "https://www.espn.com/soccer/team/squad/_/id/103/ac-milan",
+           "text": "Squad",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          },
+          {
+           "rel": [
+            "squad",
+            "sportscenter",
+            "app",
+            "team"
+           ],
+           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:103&section=squad",
+           "text": "Squad",
+           "isExternal": false,
+           "isPremium": false,
+           "isHidden": false
+          }
+         ],
+         "venue": {
+          "id": "26"
+         }
+        },
+        "statistics": [],
+        "leaders": [
+         {
+          "name": "goals",
+          "displayName": "Goals",
+          "shortDisplayName": "Goals",
+          "abbreviation": "G",
+          "leaders": [
+           {
+            "displayValue": "4",
+            "value": 4,
+            "athlete": {
+             "id": "176203",
+             "displayName": "Adrien Rabiot",
+             "shortName": "A. Rabiot",
+             "fullName": "Adrien Rabiot",
+             "jersey": "12",
+             "active": true,
+             "team": {
+              "id": "103"
+             },
+             "links": [
+              {
+               "rel": [
+                "playercard",
+                "desktop",
+                "athlete"
+               ],
+               "href": "https://www.espn.com/soccer/player/_/id/176203/adrien-rabiot",
+               "isHidden": false
+              }
+             ],
+             "position": {
+              "abbreviation": "M"
+             }
+            },
+            "team": {
+             "id": "103"
+            }
+           }
+          ]
+         },
+         {
+          "name": "goalsLeaders",
+          "displayName": "Goals",
+          "shortDisplayName": "Goals",
+          "abbreviation": "G",
+          "leaders": [
+           {
+            "displayValue": "4",
+            "value": 4,
+            "athlete": {
+             "id": "176203",
+             "displayName": "Adrien Rabiot",
+             "shortName": "A. Rabiot",
+             "fullName": "Adrien Rabiot",
+             "jersey": "12",
+             "active": true,
+             "team": {
+              "id": "103"
+             },
+             "links": [
+              {
+               "rel": [
+                "playercard",
+                "desktop",
+                "athlete"
+               ],
+               "href": "https://www.espn.com/soccer/player/_/id/176203/adrien-rabiot",
+               "isHidden": false
+              }
+             ],
+             "position": {
+              "abbreviation": "M"
+             }
+            },
+            "team": {
+             "id": "103"
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "details": [],
+      "odds": [
+       {
+        "overUnder": 2.5,
+        "link": {
+         "language": "en-US",
+         "rel": [
+          "game",
+          "desktop",
+          "bets"
+         ],
+         "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828733",
+         "text": "Game",
+         "shortText": "Game",
+         "isExternal": true,
+         "isPremium": false,
+         "isHidden": false
+        },
+        "provider": {
+         "id": "100",
+         "name": "DraftKings",
+         "priority": 1
+        },
+        "drawOdds": {
+         "moneyLine": 250,
+         "link": {
+          "language": "en-US",
+          "rel": [
+           "draw",
+           "desktop",
+           "bets",
+           "draftkings"
+          ],
+          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828733%3Foutcomes%3D0ML86735918_2",
+          "text": "Draw Bet",
+          "shortText": "Draw Bet",
+          "isExternal": true,
+          "isPremium": false,
+          "isHidden": false
+         }
+        },
+        "total": {
+         "displayName": "Total",
+         "shortDisplayName": "Total",
+         "over": {
+          "open": {
+           "line": "o2.5",
+           "odds": "-115"
+          },
+          "close": {
+           "line": "o2.5",
+           "odds": "-115",
+           "link": {
+            "rel": [
+             "over",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828733%3Foutcomes%3D0OU86736575O250_1",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874779,
+              "betSide": "over",
+              "betType": "straight",
+              "betDetails": "Over:2.5"
+             }
+            }
+           }
+          }
+         },
+         "under": {
+          "open": {
+           "line": "u2.5",
+           "odds": "-120"
+          },
+          "close": {
+           "line": "u2.5",
+           "odds": "-110",
+           "link": {
+            "rel": [
+             "under",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828733%3Foutcomes%3D0OU86736575U250_3",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874779,
+              "betSide": "under",
+              "betType": "straight",
+              "betDetails": "Under:2.5"
+             }
+            }
+           }
+          }
+         }
+        },
+        "pointSpread": {
+         "displayName": "Spread",
+         "shortDisplayName": "Spread",
+         "home": {
+          "open": {
+           "line": "+0.5",
+           "odds": "-110"
+          },
+          "close": {
+           "line": "+0.5",
+           "odds": "-105",
+           "link": {
+            "rel": [
+             "homeSpread",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828733%3Foutcomes%3D0HC86736580P50_1",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874779,
+              "betSide": "home",
+              "betType": "straight",
+              "betDetails": "Spread:UDI+0.5"
+             }
+            }
+           }
+          }
+         },
+         "away": {
+          "open": {
+           "line": "-0.5",
+           "odds": "-140"
+          },
+          "close": {
+           "line": "-0.5",
+           "odds": "-135",
+           "link": {
+            "rel": [
+             "awaySpread",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828733%3Foutcomes%3D0HC86736580N50_3",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874779,
+              "betSide": "away",
+              "betType": "straight",
+              "betDetails": "Spread:MIL-0.5"
+             }
+            }
+           }
+          }
+         }
+        },
+        "moneyline": {
+         "displayName": "Moneyline",
+         "shortDisplayName": "ML",
+         "home": {
+          "open": {
+           "odds": "+300"
+          },
+          "close": {
+           "odds": "+320",
+           "link": {
+            "rel": [
+             "home",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828733%3Foutcomes%3D0ML86735918_1",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874779,
+              "betSide": "home",
+              "betType": "straight"
+             }
+            }
+           }
+          }
+         },
+         "away": {
+          "open": {
+           "odds": "-130"
+          },
+          "close": {
+           "odds": "-125",
+           "link": {
+            "rel": [
+             "away",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828733%3Foutcomes%3D0ML86735918_3",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874779,
+              "betSide": "away",
+              "betType": "straight"
+             }
+            }
+           }
+          }
+         },
+         "draw": {
+          "open": {
+           "odds": "+245"
+          },
+          "close": {
+           "odds": "+250",
+           "link": {
+            "rel": [
+             "draw",
+             "bets"
+            ],
+            "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34828733%3Foutcomes%3D0ML86735918_2",
+            "tracking": {
+             "campaign": "betting-integrations",
+             "tags": {
+              "league": "ita.1",
+              "sport": "soccer",
+              "gameId": 401874779,
+              "betSide": "draw",
+              "betType": "straight"
+             }
+            }
+           }
+          }
+         }
+        },
+        "details": "MIL -125"
+       }
+      ],
+      "wasSuspended": false,
+      "playByPlayAvailable": true,
+      "playByPlayAthletes": true
+     }
+    ],
+    "status": {
+     "clock": 0,
+     "displayClock": "0'",
+     "type": {
+      "id": "1",
+      "name": "STATUS_SCHEDULED",
+      "state": "pre",
+      "completed": false,
+      "description": "Scheduled",
+      "detail": "Sun, October 25th at 3:45 PM EDT",
+      "shortDetail": "Scheduled"
+     }
+    },
+    "venue": {
+     "displayName": "Stadio Friuli"
+    },
+    "links": [
+     {
+      "language": "en-US",
+      "rel": [
+       "summary",
+       "desktop",
+       "event"
+      ],
+      "href": "https://www.espn.com/soccer/match/_/gameId/401874779/ac-milan-udinese",
+      "text": "Summary",
+      "shortText": "Summary",
       "isExternal": false,
       "isPremium": false,
       "isHidden": false
@@ -3361,9 +4025,23 @@
   ],
   "provider": {
    "id": "100",
-   "name": "Draft Kings",
-   "displayName": "Draft Kings",
-   "priority": 1
+   "name": "DraftKings",
+   "priority": 1,
+   "displayName": "DraftKings",
+   "logos": [
+    {
+     "href": "https://a.espncdn.com/i/betting/Draftkings_Light.svg",
+     "rel": [
+      "light"
+     ]
+    },
+    {
+     "href": "https://a.espncdn.com/i/betting/Draftkings_Dark.svg",
+     "rel": [
+      "dark"
+     ]
+    }
+   ]
   }
  }
 }

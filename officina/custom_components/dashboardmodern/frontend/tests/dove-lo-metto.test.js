@@ -62,7 +62,10 @@ test("un interruttore che non dice cosa comanda non si propone", () => {
   assert.equal(laSezioneGiusta({ entity: "switch.qualcosa" }), null);
   /* E un sensore che misura qualcosa senza un posto suo: la qualità dell'aria,
    * la luce ambiente. */
-  assert.equal(laSezioneGiusta({ entity: "sensor.luce_ambiente", device_class: "illuminance" }), null);
+  assert.equal(
+    laSezioneGiusta({ entity: "sensor.luce_ambiente", device_class: "illuminance" }),
+    null,
+  );
   assert.equal(laSezioneGiusta({ entity: "binary_sensor.boh" }), null);
   assert.equal(laSezioneGiusta({}), null);
 });
@@ -232,7 +235,8 @@ test("una voce propria finisce in una pagina, o non si vede da nessuna parte", (
   assert.equal(scritto.cd_entita_mie[0].icona, "⭐");
   /* E dove uno la vuole, se lo dice. */
   assert.equal(
-    laVoceDaScrivere("entita_mie", { entity: "sensor.x", dove: "energy" }, {}).cd_entita_mie[0].sezione,
+    laVoceDaScrivere("entita_mie", { entity: "sensor.x", dove: "energy" }, {}).cd_entita_mie[0]
+      .sezione,
     "energy",
   );
 });
@@ -246,7 +250,10 @@ test("rifare il giro corregge, non duplica", () => {
   assert.equal(dopo.cd_prese[0].name, "Nuovo");
 
   const clima = laVoceDaScrivere("clima", { entity: "climate.x", nome: "A" }, {});
-  assert.equal(laVoceDaScrivere("clima", { entity: "climate.x", nome: "B" }, clima).cd_clima_units.length, 1);
+  assert.equal(
+    laVoceDaScrivere("clima", { entity: "climate.x", nome: "B" }, clima).cd_clima_units.length,
+    1,
+  );
 });
 
 test("senza entità non si scrive niente", () => {
@@ -291,7 +298,12 @@ test("ogni sezione porta le due meta' del nome, e quelle del Config sono le sue"
     assert.equal(typeof voce.en, "string", `${voce.chiave}: manca l'inglese`);
     assert.ok(voce.it && voce.en, `${voce.chiave}: una meta' e' vuota`);
     const suo = nomeDellaSezione(voce.chiave);
-    if (suo) assert.deepEqual({ it: voce.it, en: voce.en }, suo, `${voce.chiave}: nome diverso dal Config`);
+    if (suo)
+      assert.deepEqual(
+        { it: voce.it, en: voce.en },
+        suo,
+        `${voce.chiave}: nome diverso dal Config`,
+      );
   }
   /* E le due che il Config non conosce sono proprio quelle due: se un domani
    * le prese avessero una scheda, questa riga lo dice invece di lasciare due
@@ -320,7 +332,11 @@ test("una porta si aggiunge alle righe dei varchi, non al foglietto di prima", (
   );
   assert.equal(scritto.cd_varchi.righe[0].name, "Porta d'ingresso");
   /* Rifarlo non la scrive due volte: resta una riga, col nome nuovo. */
-  const ancora = laVoceDaScrivere("varchi", { entity: "binary_sensor.porta", nome: "Porta" }, scritto);
+  const ancora = laVoceDaScrivere(
+    "varchi",
+    { entity: "binary_sensor.porta", nome: "Porta" },
+    scritto,
+  );
   assert.equal(ancora.cd_varchi.righe.length, 1);
   assert.equal(ancora.cd_varchi.righe[0].name, "Porta");
 });
@@ -389,5 +405,55 @@ test("un elenco di entità vuoto non è un dispositivo", () => {
    * — passava di qui e si sentiva rispondere «non lo so» per tutto: si
    * cercava chi decide dentro il nulla. */
   assert.equal(laSezioneGiusta({ entity: "light.x", entities: [] }).chiave, "luci");
-  assert.equal(laSezioneGiusta({ entity: "binary_sensor.p", device_class: "door", entities: [] }).chiave, "varchi");
+  assert.equal(
+    laSezioneGiusta({ entity: "binary_sensor.p", device_class: "door", entities: [] }).chiave,
+    "varchi",
+  );
+});
+
+/* «Nella sezione dice sconosciuto quando funziona realmente.» Un sensore di
+ * apertura messo fra le Finestre va nella casella del contatto: scritto come
+ * tapparella, la card gli metteva Apri/Stop/Chiudi e lo stato «Sconosciuta». */
+test("un sensore di apertura fra le Finestre va nella casella del contatto", () => {
+  const fuori = laVoceDaScrivere(
+    "tapparelle",
+    {
+      entity: "binary_sensor.finestra_cucinino_contact",
+      nome: "Finestra Cucinino",
+      stanza_id: "r1",
+    },
+    {},
+  );
+  assert.deepEqual(fuori.cd_tapparelle, [
+    {
+      contact: "binary_sensor.finestra_cucinino_contact",
+      name: "Finestra Cucinino",
+      room_id: "r1",
+    },
+  ]);
+});
+
+test("la riga scritta prima come tapparella si raddrizza rimettendola", () => {
+  const fuori = laVoceDaScrivere(
+    "tapparelle",
+    { entity: "binary_sensor.finestra_cucinino_contact", nome: "Finestra Cucinino" },
+    {
+      cd_tapparelle: [
+        {
+          entity: "binary_sensor.finestra_cucinino_contact",
+          name: "Finestra Cucinino",
+          room_id: "r1",
+        },
+      ],
+    },
+  );
+  assert.equal(fuori.cd_tapparelle.length, 1);
+  assert.equal(fuori.cd_tapparelle[0].contact, "binary_sensor.finestra_cucinino_contact");
+  assert.equal("entity" in fuori.cd_tapparelle[0], false);
+});
+
+test("una tapparella vera resta nella sua casella", () => {
+  const fuori = laVoceDaScrivere("tapparelle", { entity: "cover.cucina", nome: "Cucina" }, {});
+  assert.equal(fuori.cd_tapparelle[0].entity, "cover.cucina");
+  assert.equal("contact" in fuori.cd_tapparelle[0], false);
 });

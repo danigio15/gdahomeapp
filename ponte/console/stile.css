@@ -1286,6 +1286,11 @@ code {
   margin: 12px 0 6px;
 }
 
+/* «Parte da»: solo per i modelli che possono prendere dalla principale. */
+.partenza-plancia {
+  margin-top: 14px;
+}
+
 .modelli {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
