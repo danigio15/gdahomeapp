@@ -530,12 +530,14 @@ function cartaAdesso(l) {
       }<span>${info.max}%</span></div>
       ${
         info.scrivibile
-          ? `<div class="dm-na-passi"><span class="dm-na-scorciatoie">${leScorciatoie(info)
+          ? `<div class="dm-na-passi">${tendinaBassa(info, obiettivo)}<span class="dm-na-scorciatoie">${leScorciatoie(
+              info,
+            )
               .map(
                 (n) =>
                   `<button type="button" data-na-pct-scelta="${n}" aria-pressed="${Math.round(obiettivo) === n}">${n}%</button>`,
               )
-              .join("")}</span>${tendinaBassa(info, obiettivo)}</div>`
+              .join("")}</span></div>`
           : `<p class="dm-na-nota">${esc(t("L'obiettivo si legge soltanto: l'entità non accetta comandi.", "The target is read-only: the entity accepts no commands."))}</p>`
       }
     </div>`
@@ -1373,7 +1375,7 @@ function alCambio(evento) {
   }
 }
 
-/* Le percentuali sotto il 60%, in una tendina accanto ai tasti. Quando
+/* Le percentuali sotto il 60%, in una tendina prima dei tasti. Quando
  * l'obiettivo e' una di queste, la tendina la mostra scelta e si accende come
  * un tasto premuto. */
 function tendinaBassa(info, obiettivo) {
@@ -1725,7 +1727,7 @@ function stile() {
     ${P} .dm-na-storico-testa .dm-na-titolo{width:100%}
     ${P} .dm-na-periodo{width:100%;justify-content:space-between}
     ${P} .dm-na-scorciatoie{margin-left:0}
-    /* Sul telefono i cinque tasti e la tendina in due file da tre, tutte
+    /* Sul telefono la tendina e i cinque tasti in due file da tre, tutte
      * larghe uguali: la tendina non resta da sola su una riga. */
     ${P} .dm-na-passi{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
     ${P} .dm-na-passi .dm-na-scorciatoie{display:contents}

@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-JCEHM62W.js";
+} from "../../chunk-Y3SOZNJN.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -133794,9 +133794,11 @@ function cartaAdesso(l) {
         <i class="dm-na-fino"></i>
       </div>
       <div class="dm-na-scala"><span>${info.min}%</span>${l.batteria === null ? "" : `<span class="dm-na-adesso">${Math.round(l.batteria)}% ${esc(t("adesso", "now"))}</span>`}<span>${info.max}%</span></div>
-      ${info.scrivibile ? `<div class="dm-na-passi"><span class="dm-na-scorciatoie">${leScorciatoie(info).map(
+      ${info.scrivibile ? `<div class="dm-na-passi">${tendinaBassa(info, obiettivo2)}<span class="dm-na-scorciatoie">${leScorciatoie(
+    info
+  ).map(
     (n) => `<button type="button" data-na-pct-scelta="${n}" aria-pressed="${Math.round(obiettivo2) === n}">${n}%</button>`
-  ).join("")}</span>${tendinaBassa(info, obiettivo2)}</div>` : `<p class="dm-na-nota">${esc(t("L'obiettivo si legge soltanto: l'entità non accetta comandi.", "The target is read-only: the entity accepts no commands."))}</p>`}
+  ).join("")}</span></div>` : `<p class="dm-na-nota">${esc(t("L'obiettivo si legge soltanto: l'entità non accetta comandi.", "The target is read-only: the entity accepts no commands."))}</p>`}
     </div>` : "";
   const prezzo = prezzoDellOra()(Date.now());
   const costoFinora = l.sessione !== null && prezzo !== null ? l.sessione * prezzo * (l.soleSessione === null ? 1 : 1 - l.soleSessione / 100) : null;
@@ -134803,7 +134805,7 @@ function stile6() {
     ${P9} .dm-na-storico-testa .dm-na-titolo{width:100%}
     ${P9} .dm-na-periodo{width:100%;justify-content:space-between}
     ${P9} .dm-na-scorciatoie{margin-left:0}
-    /* Sul telefono i cinque tasti e la tendina in due file da tre, tutte
+    /* Sul telefono la tendina e i cinque tasti in due file da tre, tutte
      * larghe uguali: la tendina non resta da sola su una riga. */
     ${P9} .dm-na-passi{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
     ${P9} .dm-na-passi .dm-na-scorciatoie{display:contents}
