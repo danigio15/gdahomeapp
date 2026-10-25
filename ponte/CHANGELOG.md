@@ -32,6 +32,12 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 - **Sport, Formula 1:** il simbolo di ogni scuderia accanto ai piloti e ai
   costruttori; una sessione appena finita dice che i risultati arrivano poco
   dopo, invece di restare vuota.
+- **Sport, la grafica:** la pagina e i popup sono a colori, coi colori della
+  squadra che segui (rosso per la Formula 1 e la MotoGP), e le linguette
+  Statistiche e Formazioni si distinguono.
+- **Installazione e aggiornamenti:** la percentuale avanza davvero. Home
+  Assistant scarica l'add-on già pronto invece di costruirlo in casa, che
+  restava a 0% fino alla fine.
 
 ## 1.18.4
 
