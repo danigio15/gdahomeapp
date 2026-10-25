@@ -4117,14 +4117,14 @@ function configAperto() {
  * pannello, che sta sopra tutto: «l'icona hamburger non funziona, non si apre
  * il menu laterale». Mentre il menu e' aperto il pannello scende sotto il
  * cassetto; il primo tocco fuori dal ☰ lo rimette sopra. */
-function scendiSottoIlMenu() {
-  const tela = doc?.getElementById?.(ID);
+function scendiSottoIlMenu({ idTela = ID, tasto = '[data-mu-fa="menu"]' } = {}) {
+  const tela = doc?.getElementById?.(idTela);
   if (!tela) return;
   tela.dataset.muSottoIlMenu = "true";
   const aperto = Date.now();
   const risali = (evento) => {
     if (Date.now() - aperto < 300) return;
-    if (evento?.target?.closest?.('[data-mu-fa="menu"]')) return;
+    if (evento?.target?.closest?.(tasto)) return;
     doc.removeEventListener("pointerdown", risali, true);
     /* Dopo il tocco, non durante: il tocco finisce su quello che c'e' sopra
      * adesso — il velo del menu, che lo chiude — e non sul pannello. */
@@ -4178,8 +4178,11 @@ function laBarraDiHomeAssistant(casa) {
   }
 }
 
-export function apriLaBarraAccanto(casa) {
-  const tela = doc?.getElementById?.(ID);
+export function apriLaBarraAccanto(
+  casa,
+  { idTela = ID, tasto = '[data-mu-fa="menu"]', rimisura = (tela) => misura(tela, state.muro) } = {},
+) {
+  const tela = doc?.getElementById?.(idTela);
   const { main, barra } = laBarraDiHomeAssistant(casa);
   if (!tela || !main) return false;
   const vista = casa.defaultView || root;
@@ -4195,7 +4198,7 @@ export function apriLaBarraAccanto(casa) {
     const destra = Math.round(barra?.getBoundingClientRect?.().right || 0);
     state.accanto = destra > 0 ? destra : 256;
     tela.style.setProperty("left", `${state.accanto}px`, "important");
-    misura(tela, state.muro);
+    rimisura(tela);
   };
   tela.dataset.muAccantoAlMenu = "true";
   scosta();
@@ -4204,7 +4207,7 @@ export function apriLaBarraAccanto(casa) {
   const aperto = Date.now();
   const rimetti = (evento) => {
     if (Date.now() - aperto < 300) return;
-    if (evento?.target?.closest?.('[data-mu-fa="menu"]')) return;
+    if (evento?.target?.closest?.(tasto)) return;
     /* Solo un tocco sul pannello lo rimette: un tocco sulla barra e' la scelta
      * di una voce, e il pannello che le torna sopra se la mangerebbe. */
     const strada = evento?.composedPath?.() || [evento?.target];
@@ -4213,16 +4216,18 @@ export function apriLaBarraAccanto(casa) {
     delete tela.dataset.muAccantoAlMenu;
     state.accanto = 0;
     tela.style.removeProperty("left");
-    misura(tela, state.muro);
+    rimisura(tela);
   };
   doc.addEventListener("pointerdown", rimetti, true);
   return true;
 }
 
-export function apriIlMenu() {
+/* `come` dice di quale pannello: di serie quello a muro; il «Colpo d'occhio»
+ * passa la sua tela e il suo tasto, e il menu si apre allo stesso modo. */
+export function apriIlMenu(come = {}) {
   const largo = root.gdahomeDice?.postMessage ? null : homeAssistantLargo();
-  if (largo && apriLaBarraAccanto(largo)) return true;
-  scendiSottoIlMenu();
+  if (largo && apriLaBarraAccanto(largo, come)) return true;
+  scendiSottoIlMenu(come);
   try {
     if (root.gdahomeDice?.postMessage) {
       root.gdahomeDice.postMessage("gdahome:menu");

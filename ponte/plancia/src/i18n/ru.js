@@ -7482,4 +7482,7 @@ export default Object.freeze({
   "What it opens": "Что открывает",
   "At a glance is Premium": "«С первого взгляда» — Premium",
   "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a single page with the weather and big tiles, and each tile opens its data in a popup. Premium is turned on from the GdAHome app.": "С GdAHome Base эта панель остаётся обычной панелью. С Premium она становится одной страницей с погодой и большими плитками, и каждая плитка открывает свои данные во всплывающем окне. Premium включается в приложении GdAHome.",
+  "Open menu": "Открыть меню",
+  "This session's results have not been published yet: they usually arrive a few hours after it ends.": "Результаты этой сессии ещё не опубликованы: обычно они появляются через несколько часов после её окончания.",
+  "No charging in the last 30 days.": "За последние 30 дней зарядок не было.",
 });

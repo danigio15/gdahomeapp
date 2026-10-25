@@ -155,3 +155,77 @@ for (const id of ids) {
   await writeFile(`${qui}loghi/${id}.png`, Buffer.from(await r.arrayBuffer()));
 }
 console.log("loghi", ids.size);
+
+/* Le qualifiche di un Gran Premio per numero (Austin 2026 e' il 18): il
+ * dettaglio che la plancia chiede toccando «Qualifiche». */
+await salva("f1-qualifiche-18", await scarica(`${F1}/current/18/qualifying.json`));
+await salva("f1-qualifiche-2026-18", await scarica(`${F1}/2026/18/qualifying.json`));
+
+/* L'ultima partita del Napoli (ESPN 114), col dettaglio: statistiche e
+ * formazioni. */
+const delNapoli = (
+  (await scarica(`${ESPN}/soccer/all/teams/114/schedule`)).json?.events || []
+).filter((e) => e.competitions?.[0]?.status?.type?.completed);
+const napoli = delNapoli.at(-1);
+if (napoli) {
+  const lega = napoli.league?.slug || napoli.competitions?.[0]?.league?.slug || "ita.1";
+  await salva(
+    "calcio-napoli-partita",
+    await scarica(`${ESPN}/soccer/ita.1/summary?event=${napoli.id}`),
+  );
+  console.log("napoli", napoli.id, lega);
+}
+
+/* I simboli delle scuderie di F1: si provano gli indirizzi possibili e si
+ * scrive quali rispondono, e con che tipo. */
+await mkdir(`${qui}scuderie`, { recursive: true });
+const costruttori =
+  (await scarica(`${F1}/current/constructorStandings.json`)).json?.MRData?.StandingsTable
+    ?.StandingsLists?.[0]?.ConstructorStandings || [];
+const NOMI_F1 = {
+  mercedes: "mercedes",
+  ferrari: "ferrari",
+  mclaren: "mclaren",
+  red_bull: "redbullracing",
+  rb: "racingbulls",
+  alpine: "alpine",
+  haas: "haasf1team",
+  audi: "audi",
+  sauber: "kicksauber",
+  williams: "williams",
+  aston_martin: "astonmartin",
+  cadillac: "cadillac",
+};
+const prove = [];
+for (const c of costruttori) {
+  const id = c.Constructor?.constructorId;
+  const slug = NOMI_F1[id] || String(id).replace(/_/g, "");
+  const candidati = [
+    `https://media.formula1.com/image/upload/c_lfill,w_96/q_auto/v1740000000/common/f1/2026/${slug}/2026${slug}logowhite.webp`,
+    `https://media.formula1.com/image/upload/c_lfill,w_96/q_auto/v1740000000/common/f1/2026/${slug}/2026${slug}logo.webp`,
+    `https://media.formula1.com/image/upload/c_lfill,w_96/q_auto/v1740000000/common/f1/2025/${slug}/2025${slug}logowhite.webp`,
+    `https://media.formula1.com/content/dam/fom-website/teams/2025/${slug}-logo.png`,
+    `https://media.formula1.com/content/dam/fom-website/teams/2024/${slug}-logo.png.transform/2col/image.png`,
+  ];
+  for (const u of candidati) {
+    let stato = 0;
+    let tipo = "";
+    let byte = 0;
+    try {
+      const r = await fetch(u);
+      stato = r.status;
+      tipo = r.headers.get("content-type") || "";
+      if (r.ok) {
+        const b = Buffer.from(await r.arrayBuffer());
+        byte = b.length;
+        const est = tipo.includes("webp") ? "webp" : tipo.includes("svg") ? "svg" : "png";
+        await writeFile(`${qui}scuderie/${id}-${candidati.indexOf(u)}.${est}`, b);
+      }
+    } catch (e) {
+      tipo = String(e?.message || e);
+    }
+    prove.push({ id, slug, u, stato, tipo, byte });
+  }
+}
+await salva("f1-scuderie-loghi", prove);
+console.log("scuderie", prove.filter((p) => p.stato === 200).length, "/", prove.length);

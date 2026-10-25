@@ -10,6 +10,35 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.5
+
+- **Navigatore, ricerca:** trova anche le aziende che non hanno un negozio,
+  come «Romeo Gestioni Napoli», grazie alla ricerca di HERE accanto a TomTom e
+  OpenStreetMap. OpenStreetMap torna a rispondere (da tempo restava muto), i
+  risultati della città scritta vengono prima e quelli dall'altra parte del
+  mondo non compaiono più. Le categorie sono in italiano.
+- **Automazioni, con tante automazioni:** l'elenco si apre in pochi istanti
+  anche con un centinaio di automazioni; prima poteva non arrivare mai.
+- **Auto, ricariche a casa:** si apre sull'ultima ricarica (quando, quanta
+  energia, quanto sole, quanto è costata, ora per ora), poi la settimana, il
+  mese e il periodo.
+- **Colpo d'occhio:** il ☰ in alto apre il menu laterale di Home Assistant o
+  dell'app, come nella plancia a muro, e il meteo ha la stessa card della
+  plancia principale, coi giorni che vengono.
+- **Sport, i dati che non si aggiornavano:** se una fonte (ESPN, Formula 1,
+  MotoGP) non si raggiungeva per un momento, la pagina perdeva i risultati e
+  restava su «non risponde» per un quarto d'ora. Ora resta quello che si
+  sapeva e si riprova dopo un minuto.
+- **Sport, Formula 1:** il simbolo di ogni scuderia accanto ai piloti e ai
+  costruttori; una sessione appena finita dice che i risultati arrivano poco
+  dopo, invece di restare vuota.
+- **Sport, la grafica:** la pagina e i popup sono a colori, coi colori della
+  squadra che segui (rosso per la Formula 1 e la MotoGP), e le linguette
+  Statistiche e Formazioni si distinguono.
+- **Installazione e aggiornamenti:** la percentuale avanza davvero. Home
+  Assistant scarica l'add-on già pronto invece di costruirlo in casa, che
+  restava a 0% fino alla fine.
+
 ## 1.18.4
 
 - **Colpo d'occhio, plancia nuova (Premium):** una pagina sola col meteo e i

@@ -106,9 +106,21 @@ async function chiediIRisultati(firma, seguiti) {
   try {
     const risposta = await chiediAHomeAssistant({ type: "ponte/sport/risultati", seguiti }, ATTESA);
     if (dati.firma !== firma) return;
-    dati.risultati = Array.isArray(risposta?.risultati) ? risposta.risultati : [];
+    const nuovi = Array.isArray(risposta?.risultati) ? risposta.risultati : [];
+    /* Una cosa seguita che questa volta non e' arrivata (la fonte non
+     * rispondeva) non cancella quella di prima: si tiene, e si riprova fra
+     * un minuto invece che fra un quarto d'ora. Le risposte sono nello stesso
+     * ordine delle cose seguite, e la firma e' la stessa. */
+    const prima = dati.risultati;
+    let mancanti = false;
+    dati.risultati = nuovi.map((r, i) => {
+      if (!r?.errore) return r;
+      mancanti = true;
+      return prima[i] && !prima[i].errore ? prima[i] : r;
+    });
     dati.arrivati = Date.now();
     dati.guasto = "";
+    if (mancanti) dati.chiesti = Date.now() - fraQuantoSiRichiede(dati.risultati) + DOPO_UN_ERRORE;
   } catch (errore) {
     if (dati.firma !== firma) return;
     const codice = clean(errore?.code || errore?.error?.code || errore?.message);
@@ -320,6 +332,23 @@ function stemma(squadra, misura = 40) {
   return `<span class="dm-sport-stemma dm-sport-sigla" style="--m:${misura}px;--c:${esc(colore)}" aria-hidden="true">${esc(sigla)}</span>`;
 }
 
+/* Il simbolo di una scuderia di F1, bianco sul colore della scuderia: lo
+ * porta il ponte (`ponte/sport/logo` con `f1:<id>`). Finche' non c'e', il
+ * riquadrino ha solo il colore. */
+function scuderia(id, misura = 18) {
+  const chiave = clean(id);
+  if (!chiave) return "";
+  const url = /^[a-z_]{2,20}$/.test(chiave) ? LOGHI.logo(`f1:${chiave}`) : "";
+  return `<span class="dm-sport-scud" style="--m:${misura}px;--c:${esc(COLORI_F1[chiave] || "#64748b")}" aria-hidden="true">${
+    url ? `<img src="${esc(url)}" alt="" decoding="async">` : ""
+  }</span>`;
+}
+
+/* La squadra sotto il nome: per la F1 col simbolo davanti. */
+function squadraDi(r, x, misura = 16) {
+  return r.tipo === "f1" ? `${scuderia(x.scuderiaId, misura)}${esc(x.scuderia)}` : esc(x.moto);
+}
+
 /* `dove` fa unici i disegni: la stessa icona nella pagina e nella finestra
  * della Home, con le stesse sfumature, si pesterebbe i piedi e verrebbe nera. */
 function titoloDelBlocco(chiave, titolo, sotto = "", dove = "pagina") {
@@ -514,7 +543,9 @@ function calcioMarkup(r, seguito, adesso, indice = 0) {
   const sotto = pos
     ? `${esc(r.campionato?.nome || "")} · <b>${conN(t("{n}°", "#{n}"), pos.posizione)}</b> · ${conN(esc(t("{n} punti", "{n} pts")), pos.punti)}`
     : esc(r.campionato?.nome || "");
-  return `<section class="dm-sport-blocco" data-dm-sport-blocco="${esc(chiaveDelSeguito(seguito))}">
+  return `<section class="dm-sport-blocco" data-dm-sport-blocco="${esc(chiaveDelSeguito(seguito))}" style="--blocco:${esc(
+    coloreDellaSquadra(r.squadra?.colore, "#16a34a"),
+  )}">
       <div class="dm-sport-testa">${stemma(r.squadra, 30)}<h3 class="dm-sport-titolo"><span>${esc(
         r.squadra.nome || seguito.nome,
       )}</span><small>${sotto}</small></h3></div>
@@ -565,9 +596,7 @@ function pilotaDelCuoreMarkup(r, seguito) {
   return `<div class="dm-sport-cuore" style="--c:${coloreDi(r, chi)}">
       <div class="dm-sport-cuore-testa"><span>${esc(
         mio ? t("Il tuo pilota", "Your rider") : t("In testa al mondiale", "Championship leader"),
-      )}</span><strong>${chi.numero ? `<i>#${esc(chi.numero)}</i> ` : ""}${esc(nomePilota(r, chi))}</strong><small>${esc(
-        r.tipo === "f1" ? chi.scuderia : chi.moto,
-      )}</small></div>
+      )}</span><strong>${chi.numero ? `<i>#${esc(chi.numero)}</i> ` : ""}${esc(nomePilota(r, chi))}</strong><small>${squadraDi(r, chi, 18)}</small></div>
       <div class="dm-sport-cuore-numeri">
         ${numero(conN(t("{n}°", "#{n}"), chi.posizione), t("Mondiale", "Standing"))}
         ${numero(chi.punti, t("Punti", "Points"))}
@@ -623,7 +652,7 @@ function prossimoGpMarkup(r, adesso, seguito = null) {
       ${seguito ? pilotaDelCuoreMarkup(r, seguito) : ""}`,
     {
       classe: "dm-sport-partita dm-sport-gara-prossima",
-      attr: `style="--squadra:${r.tipo === "f1" ? "#e10600" : "#111827"}"`,
+      attr: `style="--squadra:${r.tipo === "f1" ? "#e10600" : "#c8102e"}"`,
     },
   );
 }
@@ -659,7 +688,7 @@ function ultimaGaraMarkup(r, seguito) {
       (x) => `<div class="dm-sport-gradino" data-pos="${x.posizione}" style="--c:${coloreDi(r, x)}">
         <span class="dm-sport-pilota-num">${x.numero ? `#${esc(x.numero)}` : ""}</span>
         <strong${x.id === preferito ? ' class="mio"' : ""}>${esc(r.tipo === "f1" ? x.cognome || x.nome : cognomeDi(x.nome))}</strong>
-        <small>${esc(r.tipo === "f1" ? x.scuderia : x.moto)}</small>
+        <small>${squadraDi(r, x, 18)}</small>
         <span class="dm-sport-scalino">${x.posizione}</span>
       </div>`,
     )
@@ -670,7 +699,7 @@ function ultimaGaraMarkup(r, seguito) {
       (x) => `<li class="dm-sport-pos${x.id === preferito ? " mia" : ""}">
         <span class="dm-sport-num">${x.posizione ?? "–"}</span><i class="dm-sport-colore" style="--c:${coloreDi(r, x)}"></i>
         <span class="dm-sport-nome">${esc(nomePilota(r, x))}</span>
-        <span class="dm-sport-g">${esc(r.tipo === "f1" ? x.scuderia : x.moto)}</span>
+        <span class="dm-sport-g">${squadraDi(r, x)}</span>
         <b>${x.punti ? `+${x.punti}` : ""}</b>
       </li>`,
     )
@@ -739,7 +768,7 @@ function classificaPilotiMarkup(r, seguito, indice = 0) {
     x.quota * 100
   ).toFixed(1)}%;--c:${coloreDi(r, x)}">
       <span class="dm-sport-num">${x.posizione}</span>
-      <span class="dm-sport-nome">${esc(nomePilota(r, x))}<small>${esc(r.tipo === "f1" ? x.scuderia : x.moto)}</small><i class="dm-sport-quota" aria-hidden="true"></i></span>
+      <span class="dm-sport-nome">${esc(nomePilota(r, x))}<small>${squadraDi(r, x)}</small><i class="dm-sport-quota" aria-hidden="true"></i></span>
       <b>${x.punti}</b>
     </li>`;
   const titolo =
@@ -768,7 +797,7 @@ function costruttoriMarkup(r) {
         (
           x,
         ) => `<li class="dm-sport-pos dm-sport-barra" style="--q:${(x.quota * 100).toFixed(1)}%;--c:${COLORI_F1[x.id] || "#64748b"}">
-        <span class="dm-sport-num">${x.posizione}</span><span class="dm-sport-nome">${esc(x.nome)}<i class="dm-sport-quota" aria-hidden="true"></i></span><b>${x.punti}</b>
+        <span class="dm-sport-num">${x.posizione}</span><span class="dm-sport-nome"><span class="dm-sport-con-scud">${scuderia(x.id, 26)}${esc(x.nome)}</span><i class="dm-sport-quota" aria-hidden="true"></i></span><b>${x.punti}</b>
       </li>`,
       )
       .join("")}</ol>`,
@@ -785,7 +814,9 @@ function corseMarkup(r, seguito, adesso, indice = 0) {
   ]
     .filter(Boolean)
     .join(" · ");
-  return `<section class="dm-sport-blocco" data-dm-sport-blocco="${esc(r.tipo)}">
+  return `<section class="dm-sport-blocco" data-dm-sport-blocco="${esc(r.tipo)}" style="--blocco:${
+    r.tipo === "f1" ? "#e10600" : "#c8102e"
+  }">
       <div class="dm-sport-testa">${titoloDelBlocco(r.tipo, nomeDelTipo(r.tipo), sotto)}</div>
       <div class="dm-sport-griglia dm-sport-corse" data-quante="${r.tipo === "f1" ? 4 : 3}">
         ${prossimoGpMarkup(r, adesso, seguito)}
@@ -1009,7 +1040,7 @@ export function sessioneDettaglioMarkup(d, preferito = "") {
       const mio = preferito && clean(x.id) === preferito;
       const colore = f1 ? COLORI_F1[x.scuderiaId] || "#64748b" : coloreDellaMoto(x.moto);
       const chi = f1 ? clean(x.nome) || clean(x.cognome) : clean(x.nome);
-      const squadra = f1 ? x.scuderia : x.moto;
+      const squadra = f1 ? `${scuderia(x.scuderiaId, 16)}${esc(x.scuderia)}` : esc(x.moto);
       const guadagno = corsa && x.griglia && x.posizione ? x.griglia - x.posizione : null;
       const valori = qualifica
         ? [x.q1, x.q2, x.q3, x.tempo]
@@ -1018,7 +1049,7 @@ export function sessioneDettaglioMarkup(d, preferito = "") {
           : [x.tempo || x.giro || x.stato, x.distacco, x.punti ? `+${x.punti}` : ""];
       return `<li class="dm-sport-pos${mio ? " mia" : ""}" style="--c:${colore}">
         <span class="dm-sport-num">${x.posizione ?? "–"}</span><i class="dm-sport-colore"></i>
-        <span class="dm-sport-nome">${esc(chi)}${x.numero && !f1 ? ` <small class="dm-sport-pilota-num">#${esc(x.numero)}</small>` : ""}<small>${esc(squadra)}${
+        <span class="dm-sport-nome">${esc(chi)}${x.numero && !f1 ? ` <small class="dm-sport-pilota-num">#${esc(x.numero)}</small>` : ""}<small>${squadra}${
           guadagno
             ? ` · <em class="${guadagno > 0 ? "su" : "giu"}">${guadagno > 0 ? "▲" : "▼"}${Math.abs(guadagno)}</em>`
             : ""
@@ -1081,7 +1112,7 @@ export function pilotiMarkup(r, preferito = "") {
         x,
       ) => `<li class="dm-sport-pos dm-sport-barra${x.id === preferito ? " mia" : ""}" style="--q:${(x.quota * 100).toFixed(1)}%;--c:${coloreDi(r, x)}">
         <span class="dm-sport-num">${x.posizione}</span>
-        <span class="dm-sport-nome">${esc(nomePilota(r, x))}<small>${esc(f1 ? x.scuderia : x.moto)}</small><i class="dm-sport-quota" aria-hidden="true"></i></span>
+        <span class="dm-sport-nome">${esc(nomePilota(r, x))}<small>${squadraDi(r, x)}</small><i class="dm-sport-quota" aria-hidden="true"></i></span>
         <span class="dm-sport-tempi">${f1 ? `<span>${x.vittorie ?? 0}</span>` : ""}<b>${x.punti}</b></span>
       </li>`,
     )
@@ -1106,8 +1137,12 @@ function avvisoDelFoglio(testo) {
 async function apriIlDettaglio(cosa, titolo) {
   const corpo = apriIlFoglioDiScelta({ titolo, id: "dm-sport-dettaglio" });
   if (!corpo) return;
-  corpo.parentElement?.classList.add("dm-sport-largo");
+  const scheda = corpo.parentElement;
+  scheda?.classList.add("dm-sport-largo");
   corpo.closest(".dm-foglio-scelta")?.classList.add("dm-sport-foglio");
+  /* Il colore del foglio: quello della F1, della MotoGP, delle due squadre
+   * quando arriva la partita. «I popup tutto bianco non mi piacciono.» */
+  if (scheda) scheda.dataset.sportTipo = clean(cosa.tipo) || "tabella";
   installaLoStileDelFoglio();
   if (cosa.tipo === "tabella" || cosa.tipo === "piloti") {
     corpo.innerHTML =
@@ -1119,9 +1154,15 @@ async function apriIlDettaglio(cosa, titolo) {
   try {
     const risposta = await chiediAHomeAssistant({ type: "ponte/sport/dettaglio", cosa }, ATTESA);
     const d = risposta?.dettaglio;
-    html =
-      d?.tipo === "calcio"
-        ? partitaDettaglioMarkup(d, Date.now())
+    html = d?.nonAncora
+      ? avvisoDelFoglio(
+          t(
+            "I risultati di questa sessione non sono ancora stati pubblicati: di solito arrivano qualche ora dopo la fine.",
+            "This session's results have not been published yet: they usually arrive a few hours after it ends.",
+          ),
+        )
+      : d?.tipo === "calcio"
+        ? (coloraIlFoglio(scheda, d), partitaDettaglioMarkup(d, Date.now()))
         : sessioneDettaglioMarkup(d, preferitoDi(d?.tipo));
   } catch (_errore) {}
   if (!corpo.isConnected) return;
@@ -1133,6 +1174,27 @@ async function apriIlDettaglio(cosa, titolo) {
         "The details are not coming in right now: try again shortly.",
       ),
     );
+}
+
+/* Il colore di una squadra per il foglio: quello di ESPN, se c'e' e non e'
+ * quasi bianco (sarebbe una fascia bianca con le scritte bianche); se no la
+ * riserva. Due squadre dello stesso colore non si confondono: la seconda
+ * prende la sua riserva. */
+function coloreDellaSquadra(colore, riserva) {
+  const c = clean(colore);
+  if (!/^#[0-9a-f]{6}$/i.test(c)) return riserva;
+  const n = Number.parseInt(c.slice(1), 16);
+  const luce = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  return luce > 0.82 ? riserva : c;
+}
+
+function coloraIlFoglio(scheda, d) {
+  if (!scheda) return;
+  const casa = coloreDellaSquadra(d?.casa?.colore, "#2563eb");
+  let ospite = coloreDellaSquadra(d?.ospite?.colore, "#f97316");
+  if (ospite.toLowerCase() === casa.toLowerCase()) ospite = casa === "#f97316" ? "#2563eb" : "#f97316";
+  scheda.style.setProperty("--sq-casa", casa);
+  scheda.style.setProperty("--sq-ospite", ospite);
 }
 
 function alTocco(evento) {
@@ -1584,6 +1646,11 @@ export function foglioDelloSport(P) {
   ${P} .dm-sport-schede{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--card-border,#e2e8f0)}
   ${P} .dm-sport-scheda-tasto{display:inline-flex;align-items:center;min-height:30px;padding:0 12px;border-radius:999px;cursor:pointer;
     font-size:12px;font-weight:800;color:var(--text,#0f172a);background:var(--surface-2,#f1f5f9);box-shadow:inset 0 0 0 1px var(--card-border,#e2e8f0)}
+  ${P} .dm-sport-scud{display:inline-grid;place-items:center;width:var(--m,18px);height:var(--m,18px);margin-right:6px;border-radius:5px;
+    background:var(--c,#64748b);vertical-align:-0.28em;overflow:hidden;flex:0 0 auto;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+  ${P} .dm-sport-scud img{width:78%;height:78%;object-fit:contain}
+  ${P} .dm-sport-con-scud{display:flex;align-items:center;min-width:0}
+  ${P} .dm-sport-con-scud .dm-sport-scud{margin-right:10px;border-radius:7px}
   ${P} .dm-sport-scheda-tasto.questa{color:#fff;background:#0f172a;box-shadow:none}
   ${P} .dm-sport-scheda-tasto:hover{filter:brightness(.96)}
 
@@ -1605,10 +1672,17 @@ export function foglioDelloSport(P) {
   ${P} .dm-sport-info{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 16px;padding:8px 0 12px;font-size:12px;font-weight:700;color:var(--text-dim,#64748b);
     border-bottom:1px solid var(--card-border,#eef2f7)}
   ${P} .dm-sport-info b{color:var(--text,#0f172a)}
-  ${P} .dm-sport-linguette{position:sticky;top:0;z-index:1;display:flex;gap:4px;margin:12px 0 10px;padding:4px;border-radius:14px;background:var(--surface-2,#f1f5f9)}
-  ${P} .dm-sport-linguette button{flex:1 1 0;min-height:36px;border:0;border-radius:10px;background:transparent;cursor:pointer;
-    font:inherit;font-size:12.5px;font-weight:800;color:var(--text-dim,#64748b)}
-  ${P} .dm-sport-linguette button[aria-selected="true"]{color:var(--text,#0f172a);background:var(--card-bg,#fff);box-shadow:0 1px 4px rgba(15,23,42,.12)}
+  /* «Devi mettere qualche colore sui tab se no non si vedono»: grigio su
+     grigio le linguette sembravano testo. Ognuna e' un tasto col suo bordo, e
+     quella scelta e' piena, d'azzurro. */
+  ${P} .dm-sport-linguette{position:sticky;top:0;z-index:1;display:flex;gap:6px;margin:12px 0 10px;padding:5px;border-radius:14px;
+    background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);box-shadow:0 2px 8px rgba(15,23,42,.08)}
+  ${P} .dm-sport-linguette button{flex:1 1 0;min-height:38px;border:1.5px solid color-mix(in srgb,#0ea5e9 35%,transparent);border-radius:10px;
+    background:color-mix(in srgb,#0ea5e9 8%,transparent);cursor:pointer;font:inherit;font-size:12.5px;font-weight:800;color:#0284c7;
+    transition:background .15s ease,color .15s ease}
+  ${P} .dm-sport-linguette button[aria-selected="true"]{color:#fff;border-color:transparent;
+    background:linear-gradient(135deg,#0ea5e9,#2563eb);box-shadow:0 4px 12px rgba(37,99,235,.35)}
+  html[data-theme="dark"] ${P} .dm-sport-linguette button:not([aria-selected="true"]){color:#7dd3fc;border-color:rgba(56,189,248,.45);background:rgba(56,189,248,.12)}
   ${P} .dm-sport-cronaca{display:grid;gap:4px;margin:0;padding:0;list-style:none}
   ${P} .dm-sport-cronaca li{display:grid;grid-template-columns:minmax(0,1fr) 44px minmax(0,1fr);align-items:center;gap:8px;min-height:34px}
   ${P} .dm-sport-cronaca li>div:first-child{display:flex;justify-content:flex-end}
@@ -1699,7 +1773,46 @@ export function foglioDelloSport(P) {
     ${P} .dm-sport-ora{font-size:30px}
     ${P} .dm-sport-gp strong{font-size:28px}
     ${P} .dm-sport-wrap{gap:22px}
-  }`;
+  }
+
+  /* «Pure della sezione proprio non riesci a fare meglio»: la pagina a colori.
+   * Ogni blocco ha la sua fascia — il colore della squadra, il rosso della F1,
+   * quello della MotoGP — e il riquadro grande (la partita, il prossimo gran
+   * premio) e' pieno del suo colore, con le scritte bianche. Le altre schede
+   * restano carte bianche, con un filo del colore del blocco in cima. */
+  ${P} .dm-sport-blocco{--blocco:#0ea5e9}
+  ${P} .dm-sport-blocco>.dm-sport-testa{margin:0;padding:12px 16px;border-radius:18px;color:#fff;
+    background:linear-gradient(120deg,var(--blocco),color-mix(in srgb,var(--blocco) 55%,#0f172a));
+    box-shadow:0 8px 22px color-mix(in srgb,var(--blocco) 30%,transparent)}
+  ${P} .dm-sport-blocco>.dm-sport-testa .dm-sport-titolo,${P} .dm-sport-blocco>.dm-sport-testa .dm-sport-titolo small,
+  ${P} .dm-sport-blocco>.dm-sport-testa .dm-sport-titolo small b{color:#fff}
+  ${P} .dm-sport-blocco>.dm-sport-testa .dm-sport-titolo small{opacity:.85}
+  ${P} .dm-sport-blocco>.dm-sport-testa .dm-sport-stemma{border-radius:50%;background:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.9)}
+  ${P} .dm-sport-blocco>.dm-sport-testa .dm-sport-titolo-ic{padding:3px;border-radius:50%;background:rgba(255,255,255,.92)}
+  ${P} .dm-sport-blocco>.dm-sport-testa .dm-sport-titolo-ic svg{width:22px;height:22px}
+  ${P} .dm-sport-blocco .dm-sport-scheda:not(.dm-sport-partita){border-top:4px solid var(--blocco)}
+  ${P} .dm-sport-coppa .dm-sport-scheda:not(.dm-sport-partita){border-top-color:var(--coppa)}
+  ${P} .dm-sport-coppa-titolo{padding:10px 14px;border-radius:16px;color:#fff;
+    background:linear-gradient(120deg,var(--coppa),color-mix(in srgb,var(--coppa) 55%,#0f172a))}
+  ${P} .dm-sport-coppa-titolo small,${P} .dm-sport-coppa-titolo small b{color:#fff}
+  ${P} .dm-sport-coppa-stella{background:rgba(255,255,255,.25)}
+
+  ${P} .dm-sport-partita{--text:#fff;--text-dim:rgba(255,255,255,.78);--card-border:rgba(255,255,255,.28);--surface-2:rgba(255,255,255,.14);
+    color:#fff;border:0;
+    background:radial-gradient(120% 90% at 100% 0%,rgba(255,255,255,.16),transparent 55%),
+      linear-gradient(135deg,var(--squadra),color-mix(in srgb,var(--squadra) 50%,#0b1220))!important;
+    box-shadow:0 14px 32px color-mix(in srgb,var(--squadra) 32%,transparent)}
+  ${P} .dm-sport-partita::before{display:none}
+  ${P} .dm-sport-partita .dm-sport-stemma{border-radius:50%;background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.85),0 8px 18px rgba(0,0,0,.25)}
+  ${P} .dm-sport-partita .dm-sport-gol i{color:rgba(255,255,255,.6)}
+  ${P} .dm-sport-partita .dm-sport-manca,${P} .dm-sport-partita .dm-sport-esito:not([data-esito]){color:#fff;background:rgba(255,255,255,.2)}
+  ${P} .dm-sport-partita .dm-sport-poi{border-top-color:rgba(255,255,255,.3)}
+  ${P} .dm-sport-partita .dm-sport-sessioni li{background:rgba(255,255,255,.12)}
+  ${P} .dm-sport-partita .dm-sport-sessioni li.prossima{background:#fff;box-shadow:none}
+  ${P} .dm-sport-partita .dm-sport-sessioni li.prossima span,${P} .dm-sport-partita .dm-sport-sessioni li.prossima b{color:#0f172a}
+  ${P} .dm-sport-partita .dm-sport-cuore{--text:#0f172a;--text-dim:#64748b;color:#0f172a;background:#fff!important;border:0;box-shadow:0 8px 20px rgba(0,0,0,.18)}
+  ${P} .dm-sport-partita.dm-sport-tocca:hover{filter:brightness(1.05)}
+`;
 }
 
 function installStyles() {
@@ -1708,12 +1821,68 @@ function installStyles() {
 
 /* Il foglio dei dettagli sta fuori dalla pagina, sopra tutto: ha i suoi
  * stili, gli stessi della pagina, e una scheda piu' larga. */
+/* Il foglio del dettaglio a colori: una fascia in cima col colore di quello
+ * che si guarda — le due squadre, il rosso della F1, il nero e rosso della
+ * MotoGP, l'azzurro delle classifiche — e sotto un fondo tinto con le parti in
+ * carte bianche, invece di un foglio bianco tutto uguale. */
+function foglioColorato(F) {
+  const S = `${F} .dm-foglio-scelta-scheda`;
+  return `
+    ${S}{--sp-a:#0ea5e9;--sp-b:#2563eb;--sp-fondo:#eef3f9;--sp-carta:#fff;--sp-filo:rgba(15,23,42,.07);
+      padding:0!important;overflow:hidden!important;background:var(--sp-fondo)!important}
+    html[data-theme="dark"] ${S}{--sp-fondo:#0b1220;--sp-carta:#131c2e;--sp-filo:rgba(148,163,184,.14)}
+    ${S}[data-sport-tipo="f1"]{--sp-a:#e10600;--sp-b:#7a0400}
+    ${S}[data-sport-tipo="motogp"]{--sp-a:#1f2937;--sp-b:#c8102e}
+    ${S}[data-sport-tipo="calcio"]{--sp-a:var(--sq-casa,#2563eb);--sp-b:var(--sq-ospite,#f97316)}
+    ${S}>strong{margin:0!important;padding:16px 18px 14px!important;font-size:16px!important;color:#fff!important;
+      background:linear-gradient(120deg,var(--sp-a),var(--sp-b))!important;text-shadow:0 1px 2px rgba(0,0,0,.3)}
+    ${S} .dm-foglio-scelta-corpo{padding:14px 14px 4px!important}
+    ${S} .dm-foglio-scelta-chiudi{margin:6px 14px 14px!important;color:#fff!important;
+      background:linear-gradient(120deg,var(--sp-a),var(--sp-b))!important;box-shadow:0 6px 16px rgba(15,23,42,.18)}
+
+    /* La partita: il tabellone continua la fascia, coi colori delle squadre. */
+    ${S} .dm-sport-tabellone{margin:-14px -14px 12px;padding:4px 14px 18px;color:#fff;
+      background:linear-gradient(rgba(0,0,0,.16),rgba(0,0,0,.28)),linear-gradient(120deg,var(--sp-a),var(--sp-b))}
+    ${S} .dm-sport-tabellone .dm-sport-lato strong,${S} .dm-sport-tabellone .dm-sport-gol,
+    ${S} .dm-sport-tabellone .dm-sport-marcatori,${S} .dm-sport-tabellone .dm-sport-ora{color:#fff}
+    ${S} .dm-sport-tabellone .dm-sport-gol i,${S} .dm-sport-tabellone .dm-sport-centro small,
+    ${S} .dm-sport-tabellone .dm-sport-marcatori small{color:rgba(255,255,255,.78)}
+    ${S} .dm-sport-tabellone .dm-sport-esito{color:#fff;background:rgba(255,255,255,.18);padding:3px 10px;border-radius:999px}
+    ${S} .dm-sport-tabellone .dm-sport-stemma{border-radius:50%;box-shadow:0 0 0 3px rgba(255,255,255,.9),0 6px 16px rgba(0,0,0,.25)}
+    ${S} .dm-sport-tabellone .dm-sport-stemma:not(.dm-sport-sigla){background:#fff}
+    ${S} .dm-sport-info{margin:0 0 4px;padding:8px 12px;border:0;border-radius:14px;background:var(--sp-carta)}
+
+    /* Le parti: carte sul fondo tinto. */
+    ${S} .dm-sport-cronaca li{padding:6px 8px;border-radius:12px;background:var(--sp-carta)}
+    ${S} .dm-sport-cronaca li[data-lato="casa"] .dm-sport-minuto{color:#fff;background:var(--sp-a)}
+    ${S} .dm-sport-cronaca li[data-lato="ospite"] .dm-sport-minuto{color:#fff;background:var(--sp-b)}
+    ${S} .dm-sport-statistiche{gap:8px}
+    ${S} .dm-sport-statistiche li{padding:10px 12px;border-radius:12px;background:var(--sp-carta)}
+    ${S} .dm-sport-statistiche li>i{height:8px;border-radius:4px;
+      background:linear-gradient(90deg,var(--sp-a) calc(var(--q) - 1px),transparent calc(var(--q) - 1px),transparent calc(var(--q) + 1px),var(--sp-b) calc(var(--q) + 1px))}
+    ${S} .dm-sport-formazione{overflow:hidden;padding:0 0 8px;border-radius:14px;background:var(--sp-carta)}
+    ${S} .dm-sport-formazione-testa{padding:10px 12px;color:#fff;background:var(--sp-a)}
+    ${S} .dm-sport-formazione:nth-child(2) .dm-sport-formazione-testa{background:var(--sp-b)}
+    ${S} .dm-sport-formazione-testa strong{color:#fff}
+    ${S} .dm-sport-formazione-testa small{color:#fff;background:rgba(255,255,255,.22)}
+    ${S} .dm-sport-formazione ol,${S} .dm-sport-formazione h5{padding:0 10px}
+
+    /* Le classifiche e le sessioni: una carta, con le righe a strisce. */
+    ${S} .dm-sport-tabella{padding:8px;border-radius:16px;background:var(--sp-carta)}
+    ${S} .dm-sport-tabella-testa{margin:-8px -8px 4px;padding:10px 14px 8px;border-radius:16px 16px 0 0;
+      color:var(--sp-a);background:color-mix(in srgb,var(--sp-a) 10%,transparent)}
+    ${S} .dm-sport-tabella>.dm-sport-pos:nth-of-type(even){background:color-mix(in srgb,var(--sp-a) 5%,transparent)}
+    ${S} .dm-sport-avviso,${S} .dm-sport-vuoto{padding:14px;border-radius:14px;background:var(--sp-carta)}
+  `;
+}
+
 function installaLoStileDelFoglio() {
   installStyle(
     "dm-sport-foglio-style",
     `${foglioDelloSport(".dm-sport-foglio")}
     .dm-sport-foglio .dm-foglio-scelta-scheda.dm-sport-largo{width:min(720px,100%)!important;max-height:90dvh!important}
-    .dm-sport-foglio .dm-foglio-scelta-corpo{padding:0 2px}`,
+    .dm-sport-foglio .dm-foglio-scelta-corpo{padding:0 2px}
+    ${foglioColorato(".dm-sport-foglio")}`,
   );
 }
 

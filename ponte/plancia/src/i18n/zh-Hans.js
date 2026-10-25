@@ -7329,4 +7329,7 @@ export default Object.freeze({
   "What it opens": "打开的对象",
   "At a glance is Premium": "「一目了然」是 Premium 功能",
   "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a single page with the weather and big tiles, and each tile opens its data in a popup. Premium is turned on from the GdAHome app.": "使用 GdAHome Base 时，此仪表板仍是普通仪表板。使用 Premium 后，它会变成一个包含天气和大磁贴的单页，每个磁贴在弹窗中打开数据。Premium 在 GdAHome 应用中开启。",
+  "Open menu": "打开菜单",
+  "This session's results have not been published yet: they usually arrive a few hours after it ends.": "本节的成绩尚未公布：通常在结束几小时后发布。",
+  "No charging in the last 30 days.": "过去 30 天内没有充电。",
 });

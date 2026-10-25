@@ -441,6 +441,41 @@ test("l'elenco: tutte quelle di Home Assistant, la stanza, l'ultima volta e la f
   assert.equal(c.chiamate.filter((x) => x.metodo === "GET").length, prima);
 });
 
+test("cento automazioni: l'elenco si legge dal filo, senza far rileggere il file a Home Assistant", async () => {
+  /* «Gli aiutanti li legge in 4 secondi, le automazioni no.» b2 sta in un
+   * pacchetto YAML: il filo la da', la porta REST no. */
+  const c = unaCasa({ configurazioni: { a1: semplice, b2: complessa } });
+  const pacchetto = structuredClone(c.salvate.b2);
+  delete c.salvate.b2;
+  const dalFilo = { "automation.a1": semplice, "automation.b2": pacchetto };
+  const chiediPrima = c.ponte.casa.chiedi;
+  c.ponte.casa.chiedi = async (m) => {
+    if (m.type === "automation/config") {
+      c.chiamate.push({ ws: m.type, entity: m.entity_id });
+      if (!dalFilo[m.entity_id]) throw new Error("not_found");
+      return { config: structuredClone(dalFilo[m.entity_id]) };
+    }
+    return chiediPrima(m);
+  };
+  const elenco = await c.ponte.elencoDiCasa();
+  assert.equal(elenco.length, 3);
+  assert.equal(elenco.find((v) => v.id === "a1").modello.quando.tipo, "orario");
+  assert.equal(elenco.find((v) => v.id === "b2").categoria, "energia");
+  assert.equal(c.chiamate.filter((x) => x.ws === "automation/config").length, 2);
+  /* La porta REST si chiede dopo, per sapere chi si modifica: b2 no. */
+  await c.ponte._controllando;
+  const dopo = await c.ponte.elencoDiCasa();
+  assert.equal(dopo.find((v) => v.id === "a1").modificabile, true);
+  assert.equal(dopo.find((v) => v.id === "b2").modificabile, false);
+  /* E una di un pacchetto non si salva in automations.yaml: sarebbero due. */
+  const r = await c.ponte.salva({
+    automazione: elenco.find((v) => v.id === "a1").modello,
+    id: "b2",
+  });
+  assert.equal(r.errore, "complessa");
+  assert.equal(c.salvate.b2, undefined);
+});
+
 test("chi legge, chi scrive: un utente per leggere, chi amministra e Premium per scrivere", async () => {
   const c = unaCasa({ configurazioni: { a1: semplice } });
   const commissioni = new Commissioni({});

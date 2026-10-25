@@ -1,0 +1,3923 @@
+{
+ "stato": 200,
+ "json": {
+  "boxscore": {
+   "teams": [
+    {
+     "team": {
+      "id": "114",
+      "uid": "s:600~t:114",
+      "slug": "ita.napoli",
+      "location": "Napoli",
+      "name": "Napoli",
+      "abbreviation": "NAP",
+      "displayName": "Napoli",
+      "shortDisplayName": "Napoli",
+      "color": "0677d2",
+      "alternateColor": "ffffff",
+      "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/114.png"
+     },
+     "statistics": [],
+     "displayOrder": 1,
+     "homeAway": "home"
+    },
+    {
+     "team": {
+      "id": "85",
+      "uid": "s:600~t:85",
+      "slug": "esp.celta_vigo",
+      "location": "Celta Vigo",
+      "name": "Celta Vigo",
+      "abbreviation": "CEL",
+      "displayName": "Celta Vigo",
+      "shortDisplayName": "Celta Vigo",
+      "color": "6cace4",
+      "alternateColor": "004996",
+      "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/85.png"
+     },
+     "statistics": [],
+     "displayOrder": 2,
+     "homeAway": "away"
+    }
+   ]
+  },
+  "format": {
+   "regulation": {
+    "periods": 2,
+    "displayName": "Half",
+    "slug": "half",
+    "clock": 2700
+   }
+  },
+  "gameInfo": {
+   "attendance": 0
+  },
+  "lastFiveGames": [
+   {
+    "displayOrder": 1,
+    "team": {
+     "id": "114",
+     "uid": "s:600~t:114",
+     "displayName": "Napoli",
+     "abbreviation": "NAP",
+     "links": [
+      {
+       "href": "https://www.espn.com/soccer/club/_/id/114/napoli",
+       "text": "Clubhouse"
+      },
+      {
+       "href": "https://www.espn.com/soccer/team/fixtures/_/id/114/napoli",
+       "text": "Fixtures"
+      }
+     ],
+     "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/114.png",
+     "logos": [
+      {
+       "href": "https://a.espncdn.com/i/teamlogos/soccer/500/114.png",
+       "width": 500,
+       "height": 500,
+       "alt": "",
+       "rel": [
+        "full",
+        "default"
+       ],
+       "lastUpdated": "2019-05-08T16:07Z"
+      },
+      {
+       "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/114.png",
+       "width": 500,
+       "height": 500,
+       "alt": "",
+       "rel": [
+        "full",
+        "dark"
+       ],
+       "lastUpdated": "2019-05-08T16:07Z"
+      }
+     ]
+    },
+    "events": [
+     {
+      "id": "737116",
+      "links": [
+       {
+        "href": "https://www.espn.com/soccer/match/_/gameId/737116/cremonese-napoli",
+        "text": "Summary"
+       }
+      ],
+      "atVs": "vs",
+      "gameDate": "2026-04-24T18:45Z",
+      "score": "4-0",
+      "homeTeamId": "114",
+      "awayTeamId": "4050",
+      "homeTeamScore": "4",
+      "awayTeamScore": "0",
+      "homeAggregateScore": "0",
+      "awayAggregateScore": "0",
+      "homeShootoutScore": "0",
+      "awayShootoutScore": "0",
+      "gameResult": "W",
+      "competitionName": "2025-26 Italian Serie A",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A",
+      "opponent": {
+       "id": "4050",
+       "uid": "s:600~t:4050",
+       "displayName": "Cremonese",
+       "abbreviation": "CRE",
+       "links": [
+        {
+         "href": "https://www.espn.com/soccer/club/_/id/4050/cremonese",
+         "text": "Clubhouse"
+        },
+        {
+         "href": "https://www.espn.com/soccer/team/fixtures/_/id/4050/cremonese",
+         "text": "Fixtures"
+        }
+       ],
+       "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/4050.png",
+       "logos": [
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/soccer/500/4050.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "default"
+         ],
+         "lastUpdated": "2019-01-02T21:49Z"
+        },
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/4050.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "dark"
+         ],
+         "lastUpdated": "2019-01-02T22:22Z"
+        }
+       ]
+      },
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/4050.png"
+     },
+     {
+      "id": "737130",
+      "links": [
+       {
+        "href": "https://www.espn.com/soccer/match/_/gameId/737130/napoli-como",
+        "text": "Summary"
+       }
+      ],
+      "atVs": "@",
+      "gameDate": "2026-05-02T16:00Z",
+      "score": "0-0",
+      "homeTeamId": "2572",
+      "awayTeamId": "114",
+      "homeTeamScore": "0",
+      "awayTeamScore": "0",
+      "homeAggregateScore": "0",
+      "awayAggregateScore": "0",
+      "homeShootoutScore": "0",
+      "awayShootoutScore": "0",
+      "gameResult": "D",
+      "competitionName": "2025-26 Italian Serie A",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A",
+      "opponent": {
+       "id": "2572",
+       "uid": "s:600~t:2572",
+       "displayName": "Como",
+       "abbreviation": "COMO",
+       "links": [
+        {
+         "href": "https://www.espn.com/soccer/club/_/id/2572/como",
+         "text": "Clubhouse"
+        },
+        {
+         "href": "https://www.espn.com/soccer/team/fixtures/_/id/2572/como",
+         "text": "Fixtures"
+        }
+       ],
+       "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/2572.png",
+       "logos": [
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/soccer/500/2572.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "default"
+         ],
+         "lastUpdated": "2021-08-18T17:35Z"
+        },
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/2572.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "dark"
+         ],
+         "lastUpdated": "2021-08-18T17:39Z"
+        }
+       ]
+      },
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/2572.png"
+     },
+     {
+      "id": "737135",
+      "links": [
+       {
+        "href": "https://www.espn.com/soccer/match/_/gameId/737135/bologna-napoli",
+        "text": "Summary"
+       }
+      ],
+      "atVs": "vs",
+      "gameDate": "2026-05-11T18:45Z",
+      "score": "3-2",
+      "homeTeamId": "114",
+      "awayTeamId": "107",
+      "homeTeamScore": "2",
+      "awayTeamScore": "3",
+      "homeAggregateScore": "0",
+      "awayAggregateScore": "0",
+      "homeShootoutScore": "0",
+      "awayShootoutScore": "0",
+      "gameResult": "L",
+      "competitionName": "2025-26 Italian Serie A",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A",
+      "opponent": {
+       "id": "107",
+       "uid": "s:600~t:107",
+       "displayName": "Bologna",
+       "abbreviation": "BOL",
+       "links": [
+        {
+         "href": "https://www.espn.com/soccer/club/_/id/107/bologna",
+         "text": "Clubhouse"
+        },
+        {
+         "href": "https://www.espn.com/soccer/team/fixtures/_/id/107/bologna",
+         "text": "Fixtures"
+        }
+       ],
+       "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/107.png",
+       "logos": [
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/soccer/500/107.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "default"
+         ],
+         "lastUpdated": "2024-01-04T17:49Z"
+        },
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/107.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "dark"
+         ],
+         "lastUpdated": "2023-01-27T21:39Z"
+        }
+       ]
+      },
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/107.png"
+     },
+     {
+      "id": "737149",
+      "links": [
+       {
+        "href": "https://www.espn.com/soccer/match/_/gameId/737149/napoli-pisa",
+        "text": "Summary"
+       }
+      ],
+      "atVs": "@",
+      "gameDate": "2026-05-17T10:00Z",
+      "score": "3-0",
+      "homeTeamId": "3956",
+      "awayTeamId": "114",
+      "homeTeamScore": "0",
+      "awayTeamScore": "3",
+      "homeAggregateScore": "0",
+      "awayAggregateScore": "0",
+      "homeShootoutScore": "0",
+      "awayShootoutScore": "0",
+      "gameResult": "W",
+      "competitionName": "2025-26 Italian Serie A",
+      "opponent": {
+       "id": "3956",
+       "uid": "s:600~t:3956",
+       "displayName": "Pisa",
+       "abbreviation": "PIS",
+       "links": [
+        {
+         "href": "https://www.espn.com/soccer/club/_/id/3956/pisa",
+         "text": "Clubhouse"
+        },
+        {
+         "href": "https://www.espn.com/soccer/team/fixtures/_/id/3956/pisa",
+         "text": "Fixtures"
+        }
+       ],
+       "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/3956.png",
+       "logos": [
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/soccer/500/3956.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "default"
+         ],
+         "lastUpdated": "2023-01-14T04:21Z"
+        },
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/3956.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "dark"
+         ],
+         "lastUpdated": "2023-01-14T04:22Z"
+        }
+       ]
+      },
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/3956.png",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A"
+     },
+     {
+      "id": "737156",
+      "links": [
+       {
+        "href": "https://www.espn.com/soccer/match/_/gameId/737156/udinese-napoli",
+        "text": "Summary"
+       }
+      ],
+      "atVs": "vs",
+      "gameDate": "2026-05-24T16:00Z",
+      "score": "1-0",
+      "homeTeamId": "114",
+      "awayTeamId": "118",
+      "homeTeamScore": "1",
+      "awayTeamScore": "0",
+      "homeAggregateScore": "0",
+      "awayAggregateScore": "0",
+      "homeShootoutScore": "0",
+      "awayShootoutScore": "0",
+      "gameResult": "W",
+      "competitionName": "2025-26 Italian Serie A",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A",
+      "opponent": {
+       "id": "118",
+       "uid": "s:600~t:118",
+       "displayName": "Udinese",
+       "abbreviation": "UDI",
+       "links": [
+        {
+         "href": "https://www.espn.com/soccer/club/_/id/118/udinese",
+         "text": "Clubhouse"
+        },
+        {
+         "href": "https://www.espn.com/soccer/team/fixtures/_/id/118/udinese",
+         "text": "Fixtures"
+        }
+       ],
+       "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/118.png",
+       "logos": [
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/soccer/500/118.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "default"
+         ],
+         "lastUpdated": "2019-05-08T16:07Z"
+        },
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/118.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "dark"
+         ],
+         "lastUpdated": "2019-05-08T16:07Z"
+        }
+       ]
+      },
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/118.png"
+     }
+    ]
+   },
+   {
+    "displayOrder": 2,
+    "team": {
+     "id": "85",
+     "uid": "s:600~t:85",
+     "displayName": "Celta Vigo",
+     "abbreviation": "CEL",
+     "links": [
+      {
+       "href": "https://www.espn.com/soccer/club/_/id/85/celta-vigo",
+       "text": "Clubhouse"
+      },
+      {
+       "href": "https://www.espn.com/soccer/team/fixtures/_/id/85/celta-vigo",
+       "text": "Fixtures"
+      }
+     ],
+     "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/85.png",
+     "logos": [
+      {
+       "href": "https://a.espncdn.com/i/teamlogos/soccer/500/85.png",
+       "width": 500,
+       "height": 500,
+       "alt": "",
+       "rel": [
+        "full",
+        "default"
+       ],
+       "lastUpdated": "2024-01-04T17:49Z"
+      },
+      {
+       "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/85.png",
+       "width": 500,
+       "height": 500,
+       "alt": "",
+       "rel": [
+        "full",
+        "dark"
+       ],
+       "lastUpdated": "2024-01-04T17:53Z"
+      }
+     ]
+    },
+    "events": [
+     {
+      "id": "748483",
+      "links": [
+       {
+        "href": "https://www.espn.com/soccer/match/_/gameId/748483/elche-celta-vigo",
+        "text": "Summary"
+       }
+      ],
+      "atVs": "vs",
+      "gameDate": "2026-05-03T12:00Z",
+      "score": "3-1",
+      "homeTeamId": "85",
+      "awayTeamId": "3751",
+      "homeTeamScore": "3",
+      "awayTeamScore": "1",
+      "homeAggregateScore": "0",
+      "awayAggregateScore": "0",
+      "homeShootoutScore": "0",
+      "awayShootoutScore": "0",
+      "gameResult": "W",
+      "competitionName": "2025-26 LALIGA",
+      "leagueName": "Spanish LALIGA",
+      "leagueAbbreviation": "LALIGA",
+      "opponent": {
+       "id": "3751",
+       "uid": "s:600~t:3751",
+       "displayName": "Elche",
+       "abbreviation": "ELC",
+       "links": [
+        {
+         "href": "https://www.espn.com/soccer/club/_/id/3751/elche",
+         "text": "Clubhouse"
+        },
+        {
+         "href": "https://www.espn.com/soccer/team/fixtures/_/id/3751/elche",
+         "text": "Fixtures"
+        }
+       ],
+       "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/3751.png",
+       "logos": [
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/soccer/500/3751.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "default"
+         ],
+         "lastUpdated": "2019-05-08T16:07Z"
+        },
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/3751.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "dark"
+         ],
+         "lastUpdated": "2019-05-08T16:07Z"
+        }
+       ]
+      },
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/3751.png"
+     },
+     {
+      "id": "748487",
+      "links": [
+       {
+        "href": "https://www.espn.com/soccer/match/_/gameId/748487/celta-vigo-atletico-madrid",
+        "text": "Summary"
+       }
+      ],
+      "atVs": "@",
+      "gameDate": "2026-05-09T16:30Z",
+      "score": "1-0",
+      "homeTeamId": "1068",
+      "awayTeamId": "85",
+      "homeTeamScore": "0",
+      "awayTeamScore": "1",
+      "homeAggregateScore": "0",
+      "awayAggregateScore": "0",
+      "homeShootoutScore": "0",
+      "awayShootoutScore": "0",
+      "gameResult": "W",
+      "competitionName": "2025-26 LALIGA",
+      "leagueName": "Spanish LALIGA",
+      "leagueAbbreviation": "LALIGA",
+      "opponent": {
+       "id": "1068",
+       "uid": "s:600~t:1068",
+       "displayName": "Atlético Madrid",
+       "abbreviation": "ATM",
+       "links": [
+        {
+         "href": "https://www.espn.com/soccer/club/_/id/1068/atletico-madrid",
+         "text": "Clubhouse"
+        },
+        {
+         "href": "https://www.espn.com/soccer/team/fixtures/_/id/1068/atletico-madrid",
+         "text": "Fixtures"
+        }
+       ],
+       "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/1068.png",
+       "logos": [
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/soccer/500/1068.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "default"
+         ],
+         "lastUpdated": "2025-09-19T20:43Z"
+        },
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/1068.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "dark"
+         ],
+         "lastUpdated": "2025-09-19T20:42Z"
+        }
+       ]
+      },
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/1068.png"
+     },
+     {
+      "id": "748500",
+      "links": [
+       {
+        "href": "https://www.espn.com/soccer/match/_/gameId/748500/levante-celta-vigo",
+        "text": "Summary"
+       }
+      ],
+      "atVs": "vs",
+      "gameDate": "2026-05-12T17:00Z",
+      "score": "3-2",
+      "homeTeamId": "85",
+      "awayTeamId": "1538",
+      "homeTeamScore": "2",
+      "awayTeamScore": "3",
+      "homeAggregateScore": "0",
+      "awayAggregateScore": "0",
+      "homeShootoutScore": "0",
+      "awayShootoutScore": "0",
+      "gameResult": "L",
+      "competitionName": "2025-26 LALIGA",
+      "opponent": {
+       "id": "1538",
+       "uid": "s:600~t:1538",
+       "displayName": "Levante",
+       "abbreviation": "LEV",
+       "links": [
+        {
+         "href": "https://www.espn.com/soccer/club/_/id/1538/levante",
+         "text": "Clubhouse"
+        },
+        {
+         "href": "https://www.espn.com/soccer/team/fixtures/_/id/1538/levante",
+         "text": "Fixtures"
+        }
+       ],
+       "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/1538.png",
+       "logos": [
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/soccer/500/1538.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "default"
+         ],
+         "lastUpdated": "2019-05-08T16:07Z"
+        },
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/1538.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "dark"
+         ],
+         "lastUpdated": "2019-05-08T16:07Z"
+        }
+       ]
+      },
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/1538.png",
+      "leagueName": "Spanish LALIGA",
+      "leagueAbbreviation": "LALIGA"
+     },
+     {
+      "id": "748506",
+      "links": [
+       {
+        "href": "https://www.espn.com/soccer/match/_/gameId/748506/celta-vigo-athletic-club",
+        "text": "Summary"
+       }
+      ],
+      "atVs": "@",
+      "gameDate": "2026-05-17T17:00Z",
+      "score": "1-1",
+      "homeTeamId": "93",
+      "awayTeamId": "85",
+      "homeTeamScore": "1",
+      "awayTeamScore": "1",
+      "homeAggregateScore": "0",
+      "awayAggregateScore": "0",
+      "homeShootoutScore": "0",
+      "awayShootoutScore": "0",
+      "gameResult": "D",
+      "competitionName": "2025-26 LALIGA",
+      "opponent": {
+       "id": "93",
+       "uid": "s:600~t:93",
+       "displayName": "Athletic Club",
+       "abbreviation": "ATH",
+       "links": [
+        {
+         "href": "https://www.espn.com/soccer/club/_/id/93/athletic-club",
+         "text": "Clubhouse"
+        },
+        {
+         "href": "https://www.espn.com/soccer/team/fixtures/_/id/93/athletic-club",
+         "text": "Fixtures"
+        }
+       ],
+       "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/93.png",
+       "logos": [
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/soccer/500/93.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "default"
+         ],
+         "lastUpdated": "2022-05-18T17:24Z"
+        },
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/93.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "dark"
+         ],
+         "lastUpdated": "2019-05-08T16:07Z"
+        }
+       ]
+      },
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/93.png",
+      "leagueName": "Spanish LALIGA",
+      "leagueAbbreviation": "LALIGA"
+     },
+     {
+      "id": "748517",
+      "links": [
+       {
+        "href": "https://www.espn.com/soccer/match/_/gameId/748517/sevilla-celta-vigo",
+        "text": "Summary"
+       }
+      ],
+      "atVs": "vs",
+      "gameDate": "2026-05-23T19:00Z",
+      "score": "1-0",
+      "homeTeamId": "85",
+      "awayTeamId": "243",
+      "homeTeamScore": "1",
+      "awayTeamScore": "0",
+      "homeAggregateScore": "0",
+      "awayAggregateScore": "0",
+      "homeShootoutScore": "0",
+      "awayShootoutScore": "0",
+      "gameResult": "W",
+      "competitionName": "2025-26 LALIGA",
+      "leagueName": "Spanish LALIGA",
+      "leagueAbbreviation": "LALIGA",
+      "opponent": {
+       "id": "243",
+       "uid": "s:600~t:243",
+       "displayName": "Sevilla",
+       "abbreviation": "SEV",
+       "links": [
+        {
+         "href": "https://www.espn.com/soccer/club/_/id/243/sevilla",
+         "text": "Clubhouse"
+        },
+        {
+         "href": "https://www.espn.com/soccer/team/fixtures/_/id/243/sevilla",
+         "text": "Fixtures"
+        }
+       ],
+       "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/243.png",
+       "logos": [
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/soccer/500/243.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "default"
+         ],
+         "lastUpdated": "2019-05-08T16:07Z"
+        },
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/243.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "dark"
+         ],
+         "lastUpdated": "2019-05-08T16:07Z"
+        }
+       ]
+      },
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/243.png"
+     }
+    ]
+   }
+  ],
+  "broadcasts": [],
+  "pickcenter": [
+   {
+    "provider": {
+     "id": "100",
+     "name": "DraftKings",
+     "priority": 1,
+     "logos": [
+      {
+       "href": "https://a.espncdn.com/i/betting/Draftkings_Light.svg",
+       "rel": [
+        "light"
+       ]
+      },
+      {
+       "href": "https://a.espncdn.com/i/betting/Draftkings_Dark.svg",
+       "rel": [
+        "dark"
+       ]
+      }
+     ]
+    },
+    "details": "NAP -115",
+    "overUnder": 2.5,
+    "spread": -0.5,
+    "overOdds": -115,
+    "underOdds": -120,
+    "awayTeamOdds": {
+     "favorite": false,
+     "underdog": true,
+     "moneyLine": 275,
+     "spreadOdds": -115,
+     "team": {
+      "$ref": "http://sports.core.api.espn.pvt/v2/sports/soccer/leagues/club.friendly/seasons/2026/teams/85?lang=en&region=us"
+     },
+     "teamId": "85",
+     "favoriteAtOpen": false
+    },
+    "homeTeamOdds": {
+     "favorite": true,
+     "underdog": false,
+     "moneyLine": -115,
+     "spreadOdds": -120,
+     "team": {
+      "$ref": "http://sports.core.api.espn.pvt/v2/sports/soccer/leagues/club.friendly/seasons/2026/teams/114?lang=en&region=us"
+     },
+     "teamId": "114",
+     "favoriteAtOpen": true
+    },
+    "drawOdds": {
+     "moneyLine": 255
+    },
+    "links": [
+     {
+      "language": "en-US",
+      "rel": [
+       "home",
+       "desktop",
+       "bets",
+       "draftkings"
+      ],
+      "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34495892%3Foutcomes%3D0ML85802297_1",
+      "text": "Home Bet",
+      "shortText": "Home Bet",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en-US",
+      "rel": [
+       "away",
+       "desktop",
+       "bets",
+       "draftkings"
+      ],
+      "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34495892%3Foutcomes%3D0ML85802297_3",
+      "text": "Away Bet",
+      "shortText": "Away Bet",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en-US",
+      "rel": [
+       "draw",
+       "desktop",
+       "bets",
+       "draftkings"
+      ],
+      "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34495892%3Foutcomes%3D0ML85802297_2",
+      "text": "Draw Bet",
+      "shortText": "Draw Bet",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en-US",
+      "rel": [
+       "homeSpread",
+       "desktop",
+       "bets"
+      ],
+      "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34495892%3Foutcomes%3D0HC85802356N50_1",
+      "text": "Home Point Spread",
+      "shortText": "Home Point Spread",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en-US",
+      "rel": [
+       "awaySpread",
+       "desktop",
+       "bets"
+      ],
+      "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34495892%3Foutcomes%3D0HC85802356P50_3",
+      "text": "Away Point Spread",
+      "shortText": "Away Point Spread",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en-US",
+      "rel": [
+       "over",
+       "desktop",
+       "bets"
+      ],
+      "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34495892%3Foutcomes%3D0OU85802353O250_1",
+      "text": "Over Odds",
+      "shortText": "Over Odds",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en-US",
+      "rel": [
+       "under",
+       "desktop",
+       "bets"
+      ],
+      "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34495892%3Foutcomes%3D0OU85802353U250_3",
+      "text": "Under Odds",
+      "shortText": "Under Odds",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en-US",
+      "rel": [
+       "game",
+       "desktop",
+       "bets"
+      ],
+      "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34495892",
+      "text": "Game",
+      "shortText": "Game",
+      "isExternal": true,
+      "isPremium": false
+     }
+    ],
+    "moneyline": {
+     "displayName": "Moneyline",
+     "shortDisplayName": "ML",
+     "home": {
+      "close": {
+       "odds": "-115"
+      },
+      "open": {
+       "odds": "+100"
+      }
+     },
+     "away": {
+      "close": {
+       "odds": "+275"
+      },
+      "open": {
+       "odds": "+220"
+      }
+     },
+     "draw": {
+      "close": {
+       "odds": "+255"
+      },
+      "open": {
+       "odds": "+235"
+      }
+     }
+    },
+    "pointSpread": {
+     "displayName": "Spread",
+     "shortDisplayName": "Spread",
+     "home": {
+      "close": {
+       "line": "-0.5",
+       "odds": "-120"
+      },
+      "open": {
+       "line": "-0.5",
+       "odds": "-105"
+      }
+     },
+     "away": {
+      "close": {
+       "line": "+0.5",
+       "odds": "-115"
+      },
+      "open": {
+       "line": "+0.5",
+       "odds": "-145"
+      }
+     }
+    },
+    "total": {
+     "displayName": "Total",
+     "shortDisplayName": "Total",
+     "over": {
+      "close": {
+       "line": "o2.5",
+       "odds": "-115"
+      },
+      "open": {
+       "line": "o2.5",
+       "odds": "-125"
+      }
+     },
+     "under": {
+      "close": {
+       "line": "u2.5",
+       "odds": "-120"
+      },
+      "open": {
+       "line": "u2.5",
+       "odds": "-125"
+      }
+     }
+    },
+    "link": {
+     "text": "See More Odds",
+     "language": "en-US",
+     "rel": [
+      "main",
+      "desktop",
+      "bets"
+     ],
+     "href": "https://sportsbook.draftkings.com",
+     "isExternal": true,
+     "isPremium": false
+    },
+    "header": {
+     "logo": {
+      "dark": "https://a.espncdn.com/i/espnbet/dark/espn-bet-square-off.svg",
+      "light": "https://a.espncdn.com/i/espnbet/espn-bet-square-off.svg",
+      "exclusivesLogoDark": "https://a.espncdn.com/i/espnbet/espn-bet-square-mint.svg",
+      "exclusivesLogoLight": "https://a.espncdn.com/i/espnbet/espn-bet-square-mint.svg"
+     },
+     "text": "Game Odds"
+    },
+    "footer": {
+     "disclaimer": "GAMBLING PROBLEM? CALL 1-800-GAMBLER or 1-800-MY-RESET, (800) 327-5050 or visit gamblinghelplinema.org (MA). Call 877-8-HOPENY/text HOPENY (467369) (NY). Call 888-789-7777/visit ccpg.org (CT), or visit www.mdgamblinghelp.org (MD), 1-800-981-0023 (PR). 21+ and present in most states. (18+ DC/KY/NH/PR/WY). Void in ONT. Eligibility restrictions apply. Terms: draftkings.com/sportsbook. On behalf of Boot Hill Casino (KS). Pass-thru of per wager tax may apply in IL."
+    }
+   }
+  ],
+  "odds": [
+   {
+    "provider": {
+     "id": "100",
+     "name": "DraftKings",
+     "priority": 1,
+     "logos": [
+      {
+       "href": "https://a.espncdn.com/i/betting/Draftkings_Light.svg",
+       "rel": [
+        "light"
+       ]
+      },
+      {
+       "href": "https://a.espncdn.com/i/betting/Draftkings_Dark.svg",
+       "rel": [
+        "dark"
+       ]
+      }
+     ]
+    },
+    "details": "NAP -115",
+    "overUnder": 2.5,
+    "spread": -0.5,
+    "overOdds": -115,
+    "underOdds": -120,
+    "awayTeamOdds": {
+     "favorite": false,
+     "underdog": true,
+     "moneyLine": 275,
+     "spreadOdds": -115,
+     "team": {
+      "$ref": "http://sports.core.api.espn.pvt/v2/sports/soccer/leagues/club.friendly/seasons/2026/teams/85?lang=en&region=us"
+     },
+     "teamId": "85",
+     "favoriteAtOpen": false
+    },
+    "homeTeamOdds": {
+     "favorite": true,
+     "underdog": false,
+     "moneyLine": -115,
+     "spreadOdds": -120,
+     "team": {
+      "$ref": "http://sports.core.api.espn.pvt/v2/sports/soccer/leagues/club.friendly/seasons/2026/teams/114?lang=en&region=us"
+     },
+     "teamId": "114",
+     "favoriteAtOpen": true
+    },
+    "drawOdds": {
+     "moneyLine": 255
+    },
+    "links": [
+     {
+      "language": "en-US",
+      "rel": [
+       "home",
+       "desktop",
+       "bets",
+       "draftkings"
+      ],
+      "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34495892%3Foutcomes%3D0ML85802297_1",
+      "text": "Home Bet",
+      "shortText": "Home Bet",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en-US",
+      "rel": [
+       "away",
+       "desktop",
+       "bets",
+       "draftkings"
+      ],
+      "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34495892%3Foutcomes%3D0ML85802297_3",
+      "text": "Away Bet",
+      "shortText": "Away Bet",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en-US",
+      "rel": [
+       "draw",
+       "desktop",
+       "bets",
+       "draftkings"
+      ],
+      "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34495892%3Foutcomes%3D0ML85802297_2",
+      "text": "Draw Bet",
+      "shortText": "Draw Bet",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en-US",
+      "rel": [
+       "homeSpread",
+       "desktop",
+       "bets"
+      ],
+      "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34495892%3Foutcomes%3D0HC85802356N50_1",
+      "text": "Home Point Spread",
+      "shortText": "Home Point Spread",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en-US",
+      "rel": [
+       "awaySpread",
+       "desktop",
+       "bets"
+      ],
+      "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34495892%3Foutcomes%3D0HC85802356P50_3",
+      "text": "Away Point Spread",
+      "shortText": "Away Point Spread",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en-US",
+      "rel": [
+       "over",
+       "desktop",
+       "bets"
+      ],
+      "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34495892%3Foutcomes%3D0OU85802353O250_1",
+      "text": "Over Odds",
+      "shortText": "Over Odds",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en-US",
+      "rel": [
+       "under",
+       "desktop",
+       "bets"
+      ],
+      "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34495892%3Foutcomes%3D0OU85802353U250_3",
+      "text": "Under Odds",
+      "shortText": "Under Odds",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en-US",
+      "rel": [
+       "game",
+       "desktop",
+       "bets"
+      ],
+      "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34495892",
+      "text": "Game",
+      "shortText": "Game",
+      "isExternal": true,
+      "isPremium": false
+     }
+    ],
+    "moneyline": {
+     "displayName": "Moneyline",
+     "shortDisplayName": "ML",
+     "home": {
+      "close": {
+       "odds": "-115"
+      },
+      "open": {
+       "odds": "+100"
+      }
+     },
+     "away": {
+      "close": {
+       "odds": "+275"
+      },
+      "open": {
+       "odds": "+220"
+      }
+     },
+     "draw": {
+      "close": {
+       "odds": "+255"
+      },
+      "open": {
+       "odds": "+235"
+      }
+     }
+    },
+    "pointSpread": {
+     "displayName": "Spread",
+     "shortDisplayName": "Spread",
+     "home": {
+      "close": {
+       "line": "-0.5",
+       "odds": "-120"
+      },
+      "open": {
+       "line": "-0.5",
+       "odds": "-105"
+      }
+     },
+     "away": {
+      "close": {
+       "line": "+0.5",
+       "odds": "-115"
+      },
+      "open": {
+       "line": "+0.5",
+       "odds": "-145"
+      }
+     }
+    },
+    "total": {
+     "displayName": "Total",
+     "shortDisplayName": "Total",
+     "over": {
+      "close": {
+       "line": "o2.5",
+       "odds": "-115"
+      },
+      "open": {
+       "line": "o2.5",
+       "odds": "-125"
+      }
+     },
+     "under": {
+      "close": {
+       "line": "u2.5",
+       "odds": "-120"
+      },
+      "open": {
+       "line": "u2.5",
+       "odds": "-125"
+      }
+     }
+    },
+    "link": {
+     "text": "See More Odds",
+     "language": "en-US",
+     "rel": [
+      "main",
+      "desktop",
+      "bets"
+     ],
+     "href": "https://sportsbook.draftkings.com",
+     "isExternal": true,
+     "isPremium": false
+    },
+    "header": {
+     "logo": {
+      "dark": "https://a.espncdn.com/i/espnbet/dark/espn-bet-square-off.svg",
+      "light": "https://a.espncdn.com/i/espnbet/espn-bet-square-off.svg",
+      "exclusivesLogoDark": "https://a.espncdn.com/i/espnbet/espn-bet-square-mint.svg",
+      "exclusivesLogoLight": "https://a.espncdn.com/i/espnbet/espn-bet-square-mint.svg"
+     },
+     "text": "Game Odds"
+    },
+    "footer": {
+     "disclaimer": "GAMBLING PROBLEM? CALL 1-800-GAMBLER or 1-800-MY-RESET, (800) 327-5050 or visit gamblinghelplinema.org (MA). Call 877-8-HOPENY/text HOPENY (467369) (NY). Call 888-789-7777/visit ccpg.org (CT), or visit www.mdgamblinghelp.org (MD), 1-800-981-0023 (PR). 21+ and present in most states. (18+ DC/KY/NH/PR/WY). Void in ONT. Eligibility restrictions apply. Terms: draftkings.com/sportsbook. On behalf of Boot Hill Casino (KS). Pass-thru of per wager tax may apply in IL."
+    }
+   }
+  ],
+  "hasOdds": false,
+  "rosters": [
+   {
+    "homeAway": "home",
+    "winner": false,
+    "team": {
+     "id": "114",
+     "abbreviation": "NAP",
+     "displayName": "Napoli",
+     "color": "0677d2",
+     "alternateColor": "ffffff",
+     "logos": [
+      {
+       "href": "https://a.espncdn.com/i/teamlogos/soccer/500/114.png",
+       "width": 500,
+       "height": 500,
+       "alt": "",
+       "rel": [
+        "full",
+        "default"
+       ],
+       "lastUpdated": "2019-05-08T16:07Z"
+      },
+      {
+       "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/114.png",
+       "width": 500,
+       "height": 500,
+       "alt": "",
+       "rel": [
+        "full",
+        "dark"
+       ],
+       "lastUpdated": "2019-05-08T16:07Z"
+      }
+     ]
+    }
+   },
+   {
+    "homeAway": "away",
+    "winner": false,
+    "team": {
+     "id": "85",
+     "abbreviation": "CEL",
+     "displayName": "Celta Vigo",
+     "color": "6cace4",
+     "alternateColor": "004996",
+     "logos": [
+      {
+       "href": "https://a.espncdn.com/i/teamlogos/soccer/500/85.png",
+       "width": 500,
+       "height": 500,
+       "alt": "",
+       "rel": [
+        "full",
+        "default"
+       ],
+       "lastUpdated": "2024-01-04T17:49Z"
+      },
+      {
+       "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/85.png",
+       "width": 500,
+       "height": 500,
+       "alt": "",
+       "rel": [
+        "full",
+        "dark"
+       ],
+       "lastUpdated": "2024-01-04T17:53Z"
+      }
+     ]
+    }
+   }
+  ],
+  "news": {
+   "header": "Club Friendly News",
+   "link": {
+    "language": "en",
+    "rel": [
+     "index",
+     "desktop",
+     "league"
+    ],
+    "href": "https://www.espn.com/football/league/_/name/club.friendly",
+    "text": "All Club Friendly News",
+    "shortText": "All News",
+    "isExternal": false,
+    "isPremium": false
+   },
+   "articles": [
+    {
+     "id": 50213629,
+     "nowId": "1-50213629",
+     "contentKey": "50213629-1-293-1",
+     "dataSourceIdentifier": "3e090294060dc",
+     "type": "Media",
+     "headline": "Arteta: Madueke is loved in the dressing room at Arsenal",
+     "description": "Arteta: Madueke is loved in the dressing room at Arsenal",
+     "lastModified": "2026-10-18T22:00:29Z",
+     "published": "2026-10-18T22:00:29Z",
+     "images": [
+      {
+       "name": "Arteta: Madueke is loved in the dressing room at Arsenal",
+       "caption": "Arteta: Madueke is loved in the dressing room at Arsenal",
+       "alt": "",
+       "height": 324,
+       "width": 576,
+       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1018/dm_261018_Arteta_Madueke_is_loved_in_the_dressing_room_at_Arsenal/dm_261018_Arteta_Madueke_is_loved_in_the_dressing_room_at_Arsenal.jpg"
+      }
+     ],
+     "categories": [
+      {
+       "id": 142299,
+       "type": "team",
+       "uid": "s:600~t:359",
+       "guid": "feb44e87-58fa-9597-2691-b3c32768ebe4",
+       "description": "Arsenal",
+       "sportId": 600,
+       "teamId": 359,
+       "team": {
+        "id": 359,
+        "description": "Arsenal",
+        "abbreviation": "ARS",
+        "shortDisplayName": "Arsenal",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/359/arsenal"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/359/arsenal"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 434842,
+       "type": "league",
+       "uid": "s:600~l:19834",
+       "guid": "b80fe25a-86ec-3df7-8124-6ab924d1a69e",
+       "description": "Club Friendly",
+       "sportId": 600,
+       "leagueId": 68,
+       "league": {
+        "id": 19834,
+        "description": "Club Friendly",
+        "abbreviation": "Club Friendly",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/club.friendly"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/club.friendly"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 72576,
+       "type": "team",
+       "uid": "s:600~t:448",
+       "guid": "217dee4e-6974-a197-49a2-afda6e1788c9",
+       "description": "England",
+       "sportId": 600,
+       "teamId": 448,
+       "team": {
+        "id": 448,
+        "description": "England",
+        "abbreviation": "ENG",
+        "shortDisplayName": "England",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/team/_/id/448/england"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/team/_/id/448/england"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137781,
+       "type": "league",
+       "uid": "s:600~l:700",
+       "guid": "6949f3af-300c-35f1-beab-b95669eedd38",
+       "description": "English Premier League",
+       "sportId": 600,
+       "leagueId": 23,
+       "league": {
+        "id": 700,
+        "description": "English Premier League",
+        "abbreviation": "Premier League",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 400734,
+       "type": "athlete",
+       "uid": "s:600~a:293236",
+       "guid": "e8393d3a-a2e5-b262-f720-eccb7252e525",
+       "description": "Noni Madueke",
+       "sportId": 600,
+       "athleteId": 293236,
+       "athlete": {
+        "id": 293236,
+        "description": "Noni Madueke",
+        "links": {
+         "mobile": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/293236/noni-madueke"
+          }
+         },
+         "web": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/293236/noni-madueke"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142546,
+       "type": "team",
+       "uid": "s:600~t:393",
+       "guid": "ad9ef79b-ca27-077e-8a6f-335e0d220b27",
+       "description": "Nottingham Forest",
+       "sportId": 600,
+       "teamId": 393,
+       "team": {
+        "id": 393,
+        "description": "Nottingham Forest",
+        "abbreviation": "NFO",
+        "shortDisplayName": "Nottm Forest",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/393/nottingham-forest"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/393/nottingham-forest"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 81497,
+       "type": "league",
+       "uid": "s:600",
+       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+       "description": "Soccer",
+       "sportId": 600,
+       "leagueId": 600,
+       "league": {
+        "id": 600,
+        "description": "Soccer",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 192468,
+       "type": "league",
+       "uid": "s:600~l:2395",
+       "guid": "c9dcd0ac-3188-31e2-9cf7-b91bd6b08b3f",
+       "description": "UEFA Nations League",
+       "sportId": 600,
+       "leagueId": 2395,
+       "league": {
+        "id": 2395,
+        "description": "UEFA Nations League",
+        "abbreviation": "UEFA Nations League",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.nations"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.nations"
+          }
+         }
+        }
+       }
+      },
+      {
+       "type": "event",
+       "uid": "s:600~l:700~e:401878769",
+       "guid": "2306912b-ca06-3fca-ad9e-db895f6ab891",
+       "description": "Arsenal @ Nottingham Forest",
+       "eventId": 401878769,
+       "event": {
+        "id": 401878769,
+        "sport": "soccer",
+        "league": "eng.1",
+        "description": "Arsenal @ Nottingham Forest"
+       }
+      }
+     ],
+     "links": {
+      "api": {
+       "artwork": {
+        "href": "https://artwork.api.espn.com/artwork/collections/media/ca92d00c-93ea-4394-a8b9-055e2005a99a"
+       },
+       "self": {
+        "href": "https://content.core.api.espn.com/v1/video/clips/50213629"
+       }
+      },
+      "sportscenter": {
+       "href": "sportscenter://x-callback-url/showVideo?videoID=50213629&videoDSI=3e090294060dc"
+      },
+      "web": {
+       "href": "https://www.espn.com/video/clip/_/id/50213629/madueke-loved-dressing-room-arsenal",
+       "self": {
+        "href": "https://www.espn.com/video/clip/_/id/50213629/madueke-loved-dressing-room-arsenal",
+        "dsi": {
+         "href": "https://www.espn.com/video/clip?id=3e090294060dc"
+        }
+       }
+      }
+     },
+     "premium": false
+    },
+    {
+     "id": 50159355,
+     "nowId": "1-50159355",
+     "contentKey": "50159355-1-293-1",
+     "dataSourceIdentifier": "278cd8f03f152",
+     "type": "Media",
+     "headline": "Dawson: Anfield win could mean nothing if Man City are punished",
+     "description": "Dawson: Anfield win could mean nothing if Man City are punished",
+     "lastModified": "2026-10-11T18:38:15Z",
+     "published": "2026-10-11T18:38:15Z",
+     "images": [
+      {
+       "name": "Dawson: Anfield win could mean nothing if Man City are punished",
+       "caption": "Dawson: Anfield win could mean nothing if Man City are punished",
+       "alt": "",
+       "height": 324,
+       "width": 576,
+       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1011/dm_261011_Dawson_Three_points_vs_Liverpool_could_be_taken_off_Manchester_City/dm_261011_Dawson_Three_points_vs_Liverpool_could_be_taken_off_Manchester_City.jpg"
+      }
+     ],
+     "categories": [
+      {
+       "id": 193317,
+       "type": "league",
+       "uid": "s:600~l:17930",
+       "guid": "4c27e892-49cf-4e64-9576-03e0428980bd",
+       "description": "Audi Cup",
+       "sportId": 600,
+       "leagueId": 2387,
+       "league": {
+        "id": 17930,
+        "description": "Audi Cup",
+        "abbreviation": "Audi Cup",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ger.audi_cup"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ger.audi_cup"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 434842,
+       "type": "league",
+       "uid": "s:600~l:19834",
+       "guid": "b80fe25a-86ec-3df7-8124-6ab924d1a69e",
+       "description": "Club Friendly",
+       "sportId": 600,
+       "leagueId": 68,
+       "league": {
+        "id": 19834,
+        "description": "Club Friendly",
+        "abbreviation": "Club Friendly",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/club.friendly"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/club.friendly"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137809,
+       "type": "league",
+       "uid": "s:600~l:3920",
+       "guid": "7d7df547-a8c6-37a7-947d-7b661c801ff5",
+       "description": "English Carabao Cup",
+       "sportId": 600,
+       "leagueId": 41,
+       "league": {
+        "id": 3920,
+        "description": "English Carabao Cup",
+        "abbreviation": "Carabao Cup",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.league_cup"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.league_cup"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 193279,
+       "type": "league",
+       "uid": "s:600~l:5329",
+       "guid": "e991e23d-495b-3325-981b-a7ad3a46cd96",
+       "description": "English FA Community Shield",
+       "sportId": 600,
+       "leagueId": 43,
+       "league": {
+        "id": 5329,
+        "description": "English FA Community Shield",
+        "abbreviation": "Community Shield",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.charity"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.charity"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137779,
+       "type": "league",
+       "uid": "s:600~l:3918",
+       "guid": "332e6880-b05d-4315-ae73-defad8bc3920",
+       "description": "English FA Cup",
+       "sportId": 600,
+       "leagueId": 40,
+       "league": {
+        "id": 3918,
+        "description": "English FA Cup",
+        "abbreviation": "English FA Cup",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.fa"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.fa"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 760536,
+       "type": "league",
+       "guid": "fc0dd81d-b51b-31dd-9e3e-4801e7878ebd",
+       "description": "English FA Cup Qualifying",
+       "sportId": 0,
+       "leagueId": 0,
+       "league": {
+        "id": 0,
+        "description": "English FA Cup Qualifying",
+        "abbreviation": "English FA Cup Qualifying"
+       }
+      },
+      {
+       "id": 137781,
+       "type": "league",
+       "uid": "s:600~l:700",
+       "guid": "6949f3af-300c-35f1-beab-b95669eedd38",
+       "description": "English Premier League",
+       "sportId": 600,
+       "leagueId": 23,
+       "league": {
+        "id": 700,
+        "description": "English Premier League",
+        "abbreviation": "Premier League",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137776,
+       "type": "league",
+       "uid": "s:600~l:5501",
+       "guid": "2b32f22a-51ed-36ba-8c26-f031db272902",
+       "description": "FIFA Club World Cup",
+       "sportId": 600,
+       "leagueId": 1932,
+       "league": {
+        "id": 5501,
+        "description": "FIFA Club World Cup",
+        "abbreviation": "Club World Cup",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/fifa.cwc"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/fifa.cwc"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 686873,
+       "type": "league",
+       "uid": "s:600~l:22902",
+       "guid": "6ee85dc2-7f03-31ed-b2e6-4b1783395785",
+       "description": "FIFA Intercontinental Cup",
+       "sportId": 600,
+       "leagueId": 2526,
+       "league": {
+        "id": 22902,
+        "description": "FIFA Intercontinental Cup",
+        "abbreviation": "FIFA Intercontinental Cup",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/fifa.intercontinental_cup"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/fifa.intercontinental_cup"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 193687,
+       "type": "league",
+       "uid": "s:600~l:8307",
+       "guid": "8c4414d4-6fde-4066-9356-8cfa8f9c9f1a",
+       "description": "International Champions Cup",
+       "sportId": 600,
+       "leagueId": 2326,
+       "league": {
+        "id": 8307,
+        "description": "International Champions Cup",
+        "abbreviation": "Champions Cup",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/global.champs_cup"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/global.champs_cup"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 193353,
+       "type": "league",
+       "uid": "s:600~l:17931",
+       "guid": "b19a428c-43f4-3d95-9b08-9dcf05ba00a6",
+       "description": "Japanese J.League World Challenge",
+       "sportId": 600,
+       "leagueId": 2388,
+       "league": {
+        "id": 17931,
+        "description": "Japanese J.League World Challenge",
+        "abbreviation": "J.League World Challenge",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/jpn.world_challenge"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/jpn.world_challenge"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142295,
+       "type": "team",
+       "uid": "s:600~t:364",
+       "guid": "a47fbcec-c948-cf4c-9e41-3dfa37588c9c",
+       "description": "Liverpool",
+       "sportId": 600,
+       "teamId": 364,
+       "team": {
+        "id": 364,
+        "description": "Liverpool",
+        "abbreviation": "LIV",
+        "shortDisplayName": "Liverpool",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/364/liverpool"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/364/liverpool"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142287,
+       "type": "team",
+       "uid": "s:600~t:382",
+       "guid": "94fd5d7e-35b1-9d52-c9f2-4a37259bea36",
+       "description": "Manchester City",
+       "sportId": 600,
+       "teamId": 382,
+       "team": {
+        "id": 382,
+        "description": "Manchester City",
+        "abbreviation": "MNC",
+        "shortDisplayName": "Man City",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/382/manchester-city"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/382/manchester-city"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 193984,
+       "type": "league",
+       "uid": "s:600~l:17928",
+       "guid": "e646abda-cb6b-358b-8d26-6001e6e51d98",
+       "description": "Premier League Asia Trophy",
+       "sportId": 600,
+       "leagueId": 2385,
+       "league": {
+        "id": 17928,
+        "description": "Premier League Asia Trophy",
+        "abbreviation": "Premier League Asia Trophy",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.asia_trophy"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.asia_trophy"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 81497,
+       "type": "league",
+       "uid": "s:600",
+       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+       "description": "Soccer",
+       "sportId": 600,
+       "leagueId": 600,
+       "league": {
+        "id": 600,
+        "description": "Soccer",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137793,
+       "type": "league",
+       "uid": "s:600~l:775",
+       "guid": "da52796f-2621-3351-8e77-955da92ea82d",
+       "description": "UEFA Champions League",
+       "sportId": 600,
+       "leagueId": 2,
+       "league": {
+        "id": 775,
+        "description": "UEFA Champions League",
+        "abbreviation": "UEFA Champions League",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.champions"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.champions"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 439488,
+       "type": "league",
+       "uid": "s:600~l:19874",
+       "guid": "747d2d85-ce54-3187-a533-316df9a17259",
+       "description": "UEFA Champions League Qualifying",
+       "sportId": 600,
+       "leagueId": 2426,
+       "league": {
+        "id": 19874,
+        "description": "UEFA Champions League Qualifying",
+        "abbreviation": "UEFA Champions League Qualifying",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.champions_qual"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.champions_qual"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137789,
+       "type": "league",
+       "uid": "s:600~l:776",
+       "guid": "ffe3e604-9c8d-38dc-ab82-c033a9112867",
+       "description": "UEFA Europa League",
+       "sportId": 600,
+       "leagueId": 2310,
+       "league": {
+        "id": 776,
+        "description": "UEFA Europa League",
+        "abbreviation": "UEFA Europa League",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.europa"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.europa"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 441840,
+       "type": "league",
+       "uid": "s:600~l:19887",
+       "guid": "728ee140-51fb-36cf-9be2-f87a545a1a63",
+       "description": "UEFA Europa League Qualifying",
+       "sportId": 600,
+       "leagueId": 2424,
+       "league": {
+        "id": 19887,
+        "description": "UEFA Europa League Qualifying",
+        "abbreviation": "UEFA Europa League Qualfiying",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.europa_qual"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.europa_qual"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 191774,
+       "type": "league",
+       "uid": "s:600~l:8203",
+       "guid": "7f415a07-d986-388f-8130-ebfdf5fc880a",
+       "description": "WORLD FOOTBALL CHALLENGE",
+       "sportId": 600,
+       "leagueId": 2312,
+       "league": {
+        "id": 8203,
+        "description": "WORLD FOOTBALL CHALLENGE",
+        "abbreviation": "WFC",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/global.world_football_challenge"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/global.world_football_challenge"
+          }
+         }
+        }
+       }
+      },
+      {
+       "type": "event",
+       "uid": "s:600~l:700~e:401879264",
+       "guid": "d411c796-f586-33c4-a82a-c4df2628c52c",
+       "description": "Manchester City @ Liverpool",
+       "eventId": 401879264,
+       "event": {
+        "id": 401879264,
+        "sport": "soccer",
+        "league": "eng.1",
+        "description": "Manchester City @ Liverpool"
+       }
+      }
+     ],
+     "links": {
+      "api": {
+       "artwork": {
+        "href": "https://artwork.api.espn.com/artwork/collections/media/8f2fde27-251e-41e2-b316-b6bef4a8d749"
+       },
+       "self": {
+        "href": "https://content.core.api.espn.com/v1/video/clips/50159355"
+       }
+      },
+      "sportscenter": {
+       "href": "sportscenter://x-callback-url/showVideo?videoID=50159355&videoDSI=278cd8f03f152"
+      },
+      "web": {
+       "href": "https://www.espn.com/video/clip/_/id/50159355/anfield-win-mean-man-city-punished",
+       "self": {
+        "href": "https://www.espn.com/video/clip/_/id/50159355/anfield-win-mean-man-city-punished",
+        "dsi": {
+         "href": "https://www.espn.com/video/clip?id=278cd8f03f152"
+        }
+       }
+      }
+     },
+     "premium": false
+    },
+    {
+     "id": 50159327,
+     "nowId": "1-50159327",
+     "contentKey": "50159327-1-293-1",
+     "dataSourceIdentifier": "7c4197b3641fb",
+     "type": "Media",
+     "headline": "Nicol: We might as well get AI to referee Liverpool vs. Manchester City",
+     "description": "Nicol: We might as well get AI to referee Liverpool vs. Manchester City",
+     "lastModified": "2026-10-11T18:12:10Z",
+     "published": "2026-10-11T18:12:10Z",
+     "images": [
+      {
+       "name": "Nicol: We might as well get AI to referee Liverpool vs. Manchester City",
+       "caption": "Nicol: We might as well get AI to referee Liverpool vs. Manchester City",
+       "alt": "",
+       "height": 324,
+       "width": 576,
+       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1011/dm_261011_Nicol_We_might_as_well_get_AI_to_referee_Liverpool_vs_Manchester_City/dm_261011_Nicol_We_might_as_well_get_AI_to_referee_Liverpool_vs_Manchester_City.jpg"
+      }
+     ],
+     "categories": [
+      {
+       "id": 193317,
+       "type": "league",
+       "uid": "s:600~l:17930",
+       "guid": "4c27e892-49cf-4e64-9576-03e0428980bd",
+       "description": "Audi Cup",
+       "sportId": 600,
+       "leagueId": 2387,
+       "league": {
+        "id": 17930,
+        "description": "Audi Cup",
+        "abbreviation": "Audi Cup",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ger.audi_cup"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ger.audi_cup"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 434842,
+       "type": "league",
+       "uid": "s:600~l:19834",
+       "guid": "b80fe25a-86ec-3df7-8124-6ab924d1a69e",
+       "description": "Club Friendly",
+       "sportId": 600,
+       "leagueId": 68,
+       "league": {
+        "id": 19834,
+        "description": "Club Friendly",
+        "abbreviation": "Club Friendly",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/club.friendly"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/club.friendly"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137809,
+       "type": "league",
+       "uid": "s:600~l:3920",
+       "guid": "7d7df547-a8c6-37a7-947d-7b661c801ff5",
+       "description": "English Carabao Cup",
+       "sportId": 600,
+       "leagueId": 41,
+       "league": {
+        "id": 3920,
+        "description": "English Carabao Cup",
+        "abbreviation": "Carabao Cup",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.league_cup"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.league_cup"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 193279,
+       "type": "league",
+       "uid": "s:600~l:5329",
+       "guid": "e991e23d-495b-3325-981b-a7ad3a46cd96",
+       "description": "English FA Community Shield",
+       "sportId": 600,
+       "leagueId": 43,
+       "league": {
+        "id": 5329,
+        "description": "English FA Community Shield",
+        "abbreviation": "Community Shield",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.charity"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.charity"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137779,
+       "type": "league",
+       "uid": "s:600~l:3918",
+       "guid": "332e6880-b05d-4315-ae73-defad8bc3920",
+       "description": "English FA Cup",
+       "sportId": 600,
+       "leagueId": 40,
+       "league": {
+        "id": 3918,
+        "description": "English FA Cup",
+        "abbreviation": "English FA Cup",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.fa"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.fa"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 760536,
+       "type": "league",
+       "guid": "fc0dd81d-b51b-31dd-9e3e-4801e7878ebd",
+       "description": "English FA Cup Qualifying",
+       "sportId": 0,
+       "leagueId": 0,
+       "league": {
+        "id": 0,
+        "description": "English FA Cup Qualifying",
+        "abbreviation": "English FA Cup Qualifying"
+       }
+      },
+      {
+       "id": 137781,
+       "type": "league",
+       "uid": "s:600~l:700",
+       "guid": "6949f3af-300c-35f1-beab-b95669eedd38",
+       "description": "English Premier League",
+       "sportId": 600,
+       "leagueId": 23,
+       "league": {
+        "id": 700,
+        "description": "English Premier League",
+        "abbreviation": "Premier League",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137776,
+       "type": "league",
+       "uid": "s:600~l:5501",
+       "guid": "2b32f22a-51ed-36ba-8c26-f031db272902",
+       "description": "FIFA Club World Cup",
+       "sportId": 600,
+       "leagueId": 1932,
+       "league": {
+        "id": 5501,
+        "description": "FIFA Club World Cup",
+        "abbreviation": "Club World Cup",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/fifa.cwc"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/fifa.cwc"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 686873,
+       "type": "league",
+       "uid": "s:600~l:22902",
+       "guid": "6ee85dc2-7f03-31ed-b2e6-4b1783395785",
+       "description": "FIFA Intercontinental Cup",
+       "sportId": 600,
+       "leagueId": 2526,
+       "league": {
+        "id": 22902,
+        "description": "FIFA Intercontinental Cup",
+        "abbreviation": "FIFA Intercontinental Cup",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/fifa.intercontinental_cup"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/fifa.intercontinental_cup"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 193687,
+       "type": "league",
+       "uid": "s:600~l:8307",
+       "guid": "8c4414d4-6fde-4066-9356-8cfa8f9c9f1a",
+       "description": "International Champions Cup",
+       "sportId": 600,
+       "leagueId": 2326,
+       "league": {
+        "id": 8307,
+        "description": "International Champions Cup",
+        "abbreviation": "Champions Cup",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/global.champs_cup"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/global.champs_cup"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 193353,
+       "type": "league",
+       "uid": "s:600~l:17931",
+       "guid": "b19a428c-43f4-3d95-9b08-9dcf05ba00a6",
+       "description": "Japanese J.League World Challenge",
+       "sportId": 600,
+       "leagueId": 2388,
+       "league": {
+        "id": 17931,
+        "description": "Japanese J.League World Challenge",
+        "abbreviation": "J.League World Challenge",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/jpn.world_challenge"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/jpn.world_challenge"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142295,
+       "type": "team",
+       "uid": "s:600~t:364",
+       "guid": "a47fbcec-c948-cf4c-9e41-3dfa37588c9c",
+       "description": "Liverpool",
+       "sportId": 600,
+       "teamId": 364,
+       "team": {
+        "id": 364,
+        "description": "Liverpool",
+        "abbreviation": "LIV",
+        "shortDisplayName": "Liverpool",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/364/liverpool"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/364/liverpool"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142287,
+       "type": "team",
+       "uid": "s:600~t:382",
+       "guid": "94fd5d7e-35b1-9d52-c9f2-4a37259bea36",
+       "description": "Manchester City",
+       "sportId": 600,
+       "teamId": 382,
+       "team": {
+        "id": 382,
+        "description": "Manchester City",
+        "abbreviation": "MNC",
+        "shortDisplayName": "Man City",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/382/manchester-city"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/382/manchester-city"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 193984,
+       "type": "league",
+       "uid": "s:600~l:17928",
+       "guid": "e646abda-cb6b-358b-8d26-6001e6e51d98",
+       "description": "Premier League Asia Trophy",
+       "sportId": 600,
+       "leagueId": 2385,
+       "league": {
+        "id": 17928,
+        "description": "Premier League Asia Trophy",
+        "abbreviation": "Premier League Asia Trophy",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.asia_trophy"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.asia_trophy"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 81497,
+       "type": "league",
+       "uid": "s:600",
+       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+       "description": "Soccer",
+       "sportId": 600,
+       "leagueId": 600,
+       "league": {
+        "id": 600,
+        "description": "Soccer",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137793,
+       "type": "league",
+       "uid": "s:600~l:775",
+       "guid": "da52796f-2621-3351-8e77-955da92ea82d",
+       "description": "UEFA Champions League",
+       "sportId": 600,
+       "leagueId": 2,
+       "league": {
+        "id": 775,
+        "description": "UEFA Champions League",
+        "abbreviation": "UEFA Champions League",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.champions"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.champions"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 439488,
+       "type": "league",
+       "uid": "s:600~l:19874",
+       "guid": "747d2d85-ce54-3187-a533-316df9a17259",
+       "description": "UEFA Champions League Qualifying",
+       "sportId": 600,
+       "leagueId": 2426,
+       "league": {
+        "id": 19874,
+        "description": "UEFA Champions League Qualifying",
+        "abbreviation": "UEFA Champions League Qualifying",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.champions_qual"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.champions_qual"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137789,
+       "type": "league",
+       "uid": "s:600~l:776",
+       "guid": "ffe3e604-9c8d-38dc-ab82-c033a9112867",
+       "description": "UEFA Europa League",
+       "sportId": 600,
+       "leagueId": 2310,
+       "league": {
+        "id": 776,
+        "description": "UEFA Europa League",
+        "abbreviation": "UEFA Europa League",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.europa"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.europa"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 441840,
+       "type": "league",
+       "uid": "s:600~l:19887",
+       "guid": "728ee140-51fb-36cf-9be2-f87a545a1a63",
+       "description": "UEFA Europa League Qualifying",
+       "sportId": 600,
+       "leagueId": 2424,
+       "league": {
+        "id": 19887,
+        "description": "UEFA Europa League Qualifying",
+        "abbreviation": "UEFA Europa League Qualfiying",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.europa_qual"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.europa_qual"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 191774,
+       "type": "league",
+       "uid": "s:600~l:8203",
+       "guid": "7f415a07-d986-388f-8130-ebfdf5fc880a",
+       "description": "WORLD FOOTBALL CHALLENGE",
+       "sportId": 600,
+       "leagueId": 2312,
+       "league": {
+        "id": 8203,
+        "description": "WORLD FOOTBALL CHALLENGE",
+        "abbreviation": "WFC",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/global.world_football_challenge"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/global.world_football_challenge"
+          }
+         }
+        }
+       }
+      }
+     ],
+     "links": {
+      "api": {
+       "artwork": {
+        "href": "https://artwork.api.espn.com/artwork/collections/media/08801aa2-f47d-49ba-b5c2-9bb911e25aa0"
+       },
+       "self": {
+        "href": "https://content.core.api.espn.com/v1/video/clips/50159327"
+       }
+      },
+      "sportscenter": {
+       "href": "sportscenter://x-callback-url/showVideo?videoID=50159327&videoDSI=7c4197b3641fb"
+      },
+      "web": {
+       "href": "https://www.espn.com/video/clip/_/id/50159327/well-get-ai-referee-liverpool-vs-manchester-city",
+       "self": {
+        "href": "https://www.espn.com/video/clip/_/id/50159327/well-get-ai-referee-liverpool-vs-manchester-city",
+        "dsi": {
+         "href": "https://www.espn.com/video/clip?id=7c4197b3641fb"
+        }
+       }
+      }
+     },
+     "premium": false
+    },
+    {
+     "id": 50156783,
+     "nowId": "1-50156783",
+     "contentKey": "50156783-1-293-1",
+     "dataSourceIdentifier": "dc1d12a81bb6e",
+     "type": "Media",
+     "headline": "De Zerbi: Bentancur red card encouraged Tottenham to play with more character",
+     "description": "De Zerbi: Bentancur red card encouraged Tottenham to play with more character",
+     "lastModified": "2026-10-11T13:54:15Z",
+     "published": "2026-10-11T13:54:15Z",
+     "images": [
+      {
+       "name": "De Zerbi: Bentancur red card encouraged Tottenham to play with more character",
+       "caption": "De Zerbi: Bentancur red card encouraged Tottenham to play with more character",
+       "alt": "",
+       "height": 324,
+       "width": 576,
+       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1011/dm_261011_De_Zerbi_Bentancur_red_card_encouraged_Tottenham_to_play_with_more_character/dm_261011_De_Zerbi_Bentancur_red_card_encouraged_Tottenham_to_play_with_more_character.jpg"
+      }
+     ],
+     "categories": [
+      {
+       "id": 434842,
+       "type": "league",
+       "uid": "s:600~l:19834",
+       "guid": "b80fe25a-86ec-3df7-8124-6ab924d1a69e",
+       "description": "Club Friendly",
+       "sportId": 600,
+       "leagueId": 68,
+       "league": {
+        "id": 19834,
+        "description": "Club Friendly",
+        "abbreviation": "Club Friendly",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/club.friendly"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/club.friendly"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137781,
+       "type": "league",
+       "uid": "s:600~l:700",
+       "guid": "6949f3af-300c-35f1-beab-b95669eedd38",
+       "description": "English Premier League",
+       "sportId": 600,
+       "leagueId": 23,
+       "league": {
+        "id": 700,
+        "description": "English Premier League",
+        "abbreviation": "Premier League",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 33303,
+       "type": "league",
+       "uid": "s:600~l:606",
+       "guid": "34f478c4-cf9a-35da-abd5-33db021e09d2",
+       "description": "FIFA World Cup",
+       "sportId": 600,
+       "leagueId": 4,
+       "league": {
+        "id": 606,
+        "description": "FIFA World Cup",
+        "abbreviation": "FIFA World Cup",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/worldcup/"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/worldcup/"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137784,
+       "type": "league",
+       "uid": "s:600~l:3922",
+       "guid": "7caf8c74-4880-ec75-3a4e-43f851664fe9",
+       "description": "International Friendly",
+       "sportId": 600,
+       "leagueId": 53,
+       "league": {
+        "id": 3922,
+        "description": "International Friendly",
+        "abbreviation": "Men's International Friendly",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/fifa.friendly"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/fifa.friendly"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142292,
+       "type": "team",
+       "uid": "s:600~t:360",
+       "guid": "6ebc2fd0-35d3-733b-5666-b75035a3bce9",
+       "description": "Manchester United",
+       "sportId": 600,
+       "teamId": 360,
+       "team": {
+        "id": 360,
+        "description": "Manchester United",
+        "abbreviation": "MAN",
+        "shortDisplayName": "Man United",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/360/manchester-united"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/360/manchester-united"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 250311,
+       "type": "athlete",
+       "uid": "s:600~a:215772",
+       "guid": "7e854a7c-b4d6-1007-9a89-10bd46c9325c",
+       "description": "Rodrigo Bentancur",
+       "sportId": 600,
+       "athleteId": 215772,
+       "athlete": {
+        "id": 215772,
+        "description": "Rodrigo Bentancur",
+        "links": {
+         "mobile": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/215772/rodrigo-bentancur"
+          }
+         },
+         "web": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/215772/rodrigo-bentancur"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 81497,
+       "type": "league",
+       "uid": "s:600",
+       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+       "description": "Soccer",
+       "sportId": 600,
+       "leagueId": 600,
+       "league": {
+        "id": 600,
+        "description": "Soccer",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142303,
+       "type": "team",
+       "uid": "s:600~t:367",
+       "guid": "f987a4b2-f3f9-e7f6-eb7d-eda43893be5a",
+       "description": "Tottenham Hotspur",
+       "sportId": 600,
+       "teamId": 367,
+       "team": {
+        "id": 367,
+        "description": "Tottenham Hotspur",
+        "abbreviation": "TOT",
+        "shortDisplayName": "Spurs",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/367/tottenham-hotspur"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/367/tottenham-hotspur"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 72574,
+       "type": "team",
+       "uid": "s:600~t:212",
+       "guid": "881562ef-95fb-355a-edd7-7e40e04b51c2",
+       "description": "Uruguay",
+       "sportId": 600,
+       "teamId": 212,
+       "team": {
+        "id": 212,
+        "description": "Uruguay",
+        "abbreviation": "URU",
+        "shortDisplayName": "Uruguay",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/team/_/id/212/uruguay"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/team/_/id/212/uruguay"
+          }
+         }
+        }
+       }
+      },
+      {
+       "type": "event",
+       "uid": "s:600~l:700~e:401878773",
+       "guid": "7a1798e1-1f4b-35b5-87f1-94286e246692",
+       "description": "Tottenham Hotspur @ Manchester United",
+       "eventId": 401878773,
+       "event": {
+        "id": 401878773,
+        "sport": "soccer",
+        "league": "eng.1",
+        "description": "Tottenham Hotspur @ Manchester United"
+       }
+      }
+     ],
+     "links": {
+      "api": {
+       "artwork": {
+        "href": "https://artwork.api.espn.com/artwork/collections/media/78a3c4cf-db26-4d8e-8b7d-366889200cf2"
+       },
+       "self": {
+        "href": "https://content.core.api.espn.com/v1/video/clips/50156783"
+       }
+      },
+      "sportscenter": {
+       "href": "sportscenter://x-callback-url/showVideo?videoID=50156783&videoDSI=dc1d12a81bb6e"
+      },
+      "web": {
+       "href": "https://www.espn.com/video/clip/_/id/50156783/bentancur-red-card-encouraged-tottenham-play-more-character",
+       "self": {
+        "href": "https://www.espn.com/video/clip/_/id/50156783/bentancur-red-card-encouraged-tottenham-play-more-character",
+        "dsi": {
+         "href": "https://www.espn.com/video/clip?id=dc1d12a81bb6e"
+        }
+       }
+      }
+     },
+     "premium": false
+    },
+    {
+     "id": 50131761,
+     "nowId": "1-50131761",
+     "contentKey": "50131761-1-293-1",
+     "dataSourceIdentifier": "8c416409d74a0",
+     "type": "Media",
+     "headline": "CAS General Secretary promises AFCON final verdict 'as soon as possible'",
+     "description": "CAS General Secretary promises AFCON final verdict 'as soon as possible'",
+     "lastModified": "2026-10-08T10:02:23Z",
+     "published": "2026-10-08T10:02:23Z",
+     "images": [
+      {
+       "name": "CAS General Secretary promises AFCON final verdict 'as soon as possible'",
+       "caption": "CAS General Secretary promises AFCON final verdict 'as soon as possible'",
+       "alt": "",
+       "height": 324,
+       "width": 576,
+       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1008/dm_261008_COM_SOC_Presser_CAS_General_Secretary_promises_AFCON_final_verdict_as_soon_as_possible__202610/dm_261008_COM_SOC_Presser_CAS_General_Secretary_promises_AFCON_final_verdict_as_soon_as_possible__202610.jpg"
+      }
+     ],
+     "categories": [
+      {
+       "id": 137783,
+       "type": "league",
+       "uid": "s:600~l:3908",
+       "guid": "bb156ba1-46ad-7892-2b1c-afb73035e08f",
+       "description": "Africa Cup of Nations",
+       "sportId": 600,
+       "leagueId": 76,
+       "league": {
+        "id": 3908,
+        "description": "Africa Cup of Nations",
+        "abbreviation": "Africa Cup of Nations",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/caf.nations"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/caf.nations"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 191715,
+       "type": "league",
+       "uid": "s:600~l:8315",
+       "guid": "a145df97-4da9-3bb0-9d32-ddebfaf01c31",
+       "description": "Africa Cup of Nations Qualifying",
+       "sportId": 600,
+       "leagueId": 2333,
+       "league": {
+        "id": 8315,
+        "description": "Africa Cup of Nations Qualifying",
+        "abbreviation": "AFCON Qualifying",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/caf.nations_qual"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/caf.nations_qual"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 191685,
+       "type": "league",
+       "uid": "s:600~l:8365",
+       "guid": "ca7b51c2-a211-377a-9a3a-3a27f591f2c6",
+       "description": "African Nations Championship",
+       "sportId": 600,
+       "leagueId": 2348,
+       "league": {
+        "id": 8365,
+        "description": "African Nations Championship",
+        "abbreviation": "CHAN",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/caf.championship"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/caf.championship"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 434842,
+       "type": "league",
+       "uid": "s:600~l:19834",
+       "guid": "b80fe25a-86ec-3df7-8124-6ab924d1a69e",
+       "description": "Club Friendly",
+       "sportId": 600,
+       "leagueId": 68,
+       "league": {
+        "id": 19834,
+        "description": "Club Friendly",
+        "abbreviation": "Club Friendly",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/club.friendly"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/club.friendly"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137784,
+       "type": "league",
+       "uid": "s:600~l:3922",
+       "guid": "7caf8c74-4880-ec75-3a4e-43f851664fe9",
+       "description": "International Friendly",
+       "sportId": 600,
+       "leagueId": 53,
+       "league": {
+        "id": 3922,
+        "description": "International Friendly",
+        "abbreviation": "Men's International Friendly",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/fifa.friendly"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/fifa.friendly"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142317,
+       "type": "team",
+       "uid": "s:600~t:2869",
+       "guid": "a6945df8-27b1-9615-af13-7379154954b9",
+       "description": "Morocco",
+       "sportId": 600,
+       "teamId": 2869,
+       "team": {
+        "id": 2869,
+        "description": "Morocco",
+        "abbreviation": "MAR",
+        "shortDisplayName": "Morocco",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/team/_/id/2869/morocco"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/team/_/id/2869/morocco"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142454,
+       "type": "team",
+       "uid": "s:600~t:654",
+       "guid": "3d969454-cda7-bf55-21fb-33a8c2ca21ee",
+       "description": "Senegal",
+       "sportId": 600,
+       "teamId": 654,
+       "team": {
+        "id": 654,
+        "description": "Senegal",
+        "abbreviation": "SEN",
+        "shortDisplayName": "Senegal",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/team/_/id/654/senegal"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/team/_/id/654/senegal"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 81497,
+       "type": "league",
+       "uid": "s:600",
+       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+       "description": "Soccer",
+       "sportId": 600,
+       "leagueId": 600,
+       "league": {
+        "id": 600,
+        "description": "Soccer",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         }
+        }
+       }
+      }
+     ],
+     "links": {
+      "api": {
+       "artwork": {
+        "href": "https://artwork.api.espn.com/artwork/collections/media/2bb4b726-7687-4674-9613-2f3ac07aa5c6"
+       },
+       "self": {
+        "href": "https://content.core.api.espn.com/v1/video/clips/50131761"
+       }
+      },
+      "sportscenter": {
+       "href": "sportscenter://x-callback-url/showVideo?videoID=50131761&videoDSI=8c416409d74a0"
+      },
+      "web": {
+       "href": "https://www.espn.com/video/clip/_/id/50131761/cas-general-secretary-promises-afcon-final-verdict-soon-possible",
+       "self": {
+        "href": "https://www.espn.com/video/clip/_/id/50131761/cas-general-secretary-promises-afcon-final-verdict-soon-possible",
+        "dsi": {
+         "href": "https://www.espn.com/video/clip?id=8c416409d74a0"
+        }
+       }
+      }
+     },
+     "premium": false
+    },
+    {
+     "id": 50124605,
+     "nowId": "1-50124605",
+     "contentKey": "50124605-1-293-1",
+     "dataSourceIdentifier": "d4ec9a9873eff",
+     "type": "Media",
+     "headline": "Lineker: Ronaldo deserves a beautiful farewell like Messi",
+     "description": "Lineker: Ronaldo deserves a beautiful farewell like Messi",
+     "lastModified": "2026-10-07T13:26:59Z",
+     "published": "2026-10-07T13:26:59Z",
+     "images": [
+      {
+       "name": "Lineker: Ronaldo deserves a beautiful farewell like Messi",
+       "caption": "Lineker: Ronaldo deserves a beautiful farewell like Messi",
+       "alt": "",
+       "height": 324,
+       "width": 576,
+       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1007/dm_261007_Lineker_Ronaldo_deserves_a_beautiful_farewell_like_Messi/dm_261007_Lineker_Ronaldo_deserves_a_beautiful_farewell_like_Messi.jpg"
+      }
+     ],
+     "categories": [
+      {
+       "id": 376005,
+       "type": "team",
+       "uid": "s:600~t:817",
+       "guid": "c8042dbb-8c34-277a-3b47-6694e167062c",
+       "description": "Al Nassr",
+       "sportId": 600,
+       "teamId": 817,
+       "team": {
+        "id": 817,
+        "description": "Al Nassr",
+        "abbreviation": "NSR",
+        "shortDisplayName": "Al Nassr",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/817/al-nassr"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/817/al-nassr"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 434842,
+       "type": "league",
+       "uid": "s:600~l:19834",
+       "guid": "b80fe25a-86ec-3df7-8124-6ab924d1a69e",
+       "description": "Club Friendly",
+       "sportId": 600,
+       "leagueId": 68,
+       "league": {
+        "id": 19834,
+        "description": "Club Friendly",
+        "abbreviation": "Club Friendly",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/club.friendly"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/club.friendly"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 256604,
+       "type": "athlete",
+       "uid": "s:600~a:22774",
+       "guid": "19e162c0-6bf5-d817-e9f9-81bf96001ee2",
+       "description": "Cristiano Ronaldo",
+       "sportId": 600,
+       "athleteId": 22774,
+       "athlete": {
+        "id": 22774,
+        "description": "Cristiano Ronaldo",
+        "links": {
+         "mobile": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/22774/cristiano-ronaldo"
+          }
+         },
+         "web": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/22774/cristiano-ronaldo"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 72587,
+       "type": "team",
+       "uid": "s:600~t:482",
+       "guid": "12433baf-649d-7f4f-7233-6db63a5f62f4",
+       "description": "Portugal",
+       "sportId": 600,
+       "teamId": 482,
+       "team": {
+        "id": 482,
+        "description": "Portugal",
+        "abbreviation": "POR",
+        "shortDisplayName": "Portugal",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/team/_/id/482/portugal"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/team/_/id/482/portugal"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 81497,
+       "type": "league",
+       "uid": "s:600",
+       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+       "description": "Soccer",
+       "sportId": 600,
+       "leagueId": 600,
+       "league": {
+        "id": 600,
+        "description": "Soccer",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 192468,
+       "type": "league",
+       "uid": "s:600~l:2395",
+       "guid": "c9dcd0ac-3188-31e2-9cf7-b91bd6b08b3f",
+       "description": "UEFA Nations League",
+       "sportId": 600,
+       "leagueId": 2395,
+       "league": {
+        "id": 2395,
+        "description": "UEFA Nations League",
+        "abbreviation": "UEFA Nations League",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.nations"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.nations"
+          }
+         }
+        }
+       }
+      },
+      {
+       "type": "event",
+       "uid": "s:600~l:2395~e:401861126",
+       "guid": "d891f1cd-0390-3b95-87ab-d5d5e0721352",
+       "description": "Norway @ Portugal",
+       "eventId": 401861126,
+       "event": {
+        "id": 401861126,
+        "sport": "soccer",
+        "league": "uefa.nations",
+        "description": "Norway @ Portugal"
+       }
+      }
+     ],
+     "links": {
+      "api": {
+       "self": {
+        "href": "https://content.core.api.espn.com/v1/video/clips/50124605"
+       }
+      },
+      "sportscenter": {
+       "href": "sportscenter://x-callback-url/showVideo?videoID=50124605&videoDSI=d4ec9a9873eff"
+      },
+      "web": {
+       "href": "https://www.espn.com/video/clip/_/id/50124605/ronaldo-deserves-beautiful-farewell-messi",
+       "self": {
+        "href": "https://www.espn.com/video/clip/_/id/50124605/ronaldo-deserves-beautiful-farewell-messi",
+        "dsi": {
+         "href": "https://www.espn.com/video/clip?id=d4ec9a9873eff"
+        }
+       }
+      }
+     },
+     "premium": false
+    }
+   ]
+  },
+  "commentary": [],
+  "videos": [],
+  "header": {
+   "id": "401906390",
+   "uid": "s:600~l:19834~e:401906390",
+   "season": {
+    "year": 2026,
+    "current": true,
+    "type": 13818,
+    "name": "2026 Club Friendly"
+   },
+   "timeValid": true,
+   "competitions": [
+    {
+     "id": "401906390",
+     "uid": "s:600~l:19834~e:401906390~c:401906390",
+     "date": "2026-08-08T19:00Z",
+     "neutralSite": false,
+     "conferenceCompetition": false,
+     "boxscoreAvailable": true,
+     "commentaryAvailable": false,
+     "liveAvailable": false,
+     "onWatchESPN": false,
+     "recent": false,
+     "wallclockAvailable": false,
+     "boxscoreSource": "full",
+     "playByPlaySource": "full",
+     "competitors": [
+      {
+       "id": "114",
+       "uid": "s:600~t:114",
+       "order": 0,
+       "homeAway": "home",
+       "winner": false,
+       "team": {
+        "id": "114",
+        "guid": "20179aab-ac9f-93cf-f139-404e49a3f3cb",
+        "uid": "s:600~t:114",
+        "location": "Napoli",
+        "name": "Napoli",
+        "abbreviation": "NAP",
+        "displayName": "Napoli",
+        "shortDisplayName": "Napoli",
+        "color": "0677d2",
+        "alternateColor": "ffffff",
+        "logos": [
+         {
+          "href": "https://a.espncdn.com/i/teamlogos/soccer/500/114.png",
+          "width": 500,
+          "height": 500,
+          "alt": "",
+          "rel": [
+           "full",
+           "default"
+          ],
+          "lastUpdated": "2019-05-08T16:07Z"
+         },
+         {
+          "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/114.png",
+          "width": 500,
+          "height": 500,
+          "alt": "",
+          "rel": [
+           "full",
+           "dark"
+          ],
+          "lastUpdated": "2019-05-08T16:07Z"
+         }
+        ],
+        "links": [
+         {
+          "rel": [
+           "clubhouse",
+           "desktop",
+           "team"
+          ],
+          "href": "https://www.espn.com/soccer/club/_/id/114/napoli",
+          "text": "Clubhouse"
+         }
+        ],
+        "form": "DWLLW"
+       },
+       "score": "1",
+       "linescores": [
+        {
+         "displayValue": "0"
+        },
+        {
+         "displayValue": "1"
+        }
+       ],
+       "record": [],
+       "possession": false
+      },
+      {
+       "id": "85",
+       "uid": "s:600~t:85",
+       "order": 1,
+       "homeAway": "away",
+       "winner": false,
+       "team": {
+        "id": "85",
+        "guid": "13bc5b3a-1d14-ecd2-2fa2-35b32dbcf7d1",
+        "uid": "s:600~t:85",
+        "location": "Celta Vigo",
+        "name": "Celta Vigo",
+        "abbreviation": "CEL",
+        "displayName": "Celta Vigo",
+        "shortDisplayName": "Celta Vigo",
+        "color": "6cace4",
+        "alternateColor": "004996",
+        "logos": [
+         {
+          "href": "https://a.espncdn.com/i/teamlogos/soccer/500/85.png",
+          "width": 500,
+          "height": 500,
+          "alt": "",
+          "rel": [
+           "full",
+           "default"
+          ],
+          "lastUpdated": "2024-01-04T17:49Z"
+         },
+         {
+          "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/85.png",
+          "width": 500,
+          "height": 500,
+          "alt": "",
+          "rel": [
+           "full",
+           "dark"
+          ],
+          "lastUpdated": "2024-01-04T17:53Z"
+         }
+        ],
+        "links": [
+         {
+          "rel": [
+           "clubhouse",
+           "desktop",
+           "team"
+          ],
+          "href": "https://www.espn.com/soccer/club/_/id/85/celta-vigo",
+          "text": "Clubhouse"
+         }
+        ],
+        "form": "DWLDW"
+       },
+       "score": "1",
+       "linescores": [
+        {
+         "displayValue": "0"
+        },
+        {
+         "displayValue": "1"
+        }
+       ],
+       "record": [],
+       "possession": false
+      }
+     ],
+     "notes": [],
+     "status": {
+      "type": {
+       "id": "28",
+       "name": "STATUS_FULL_TIME",
+       "state": "post",
+       "completed": true,
+       "description": "Full Time",
+       "detail": "FT",
+       "shortDetail": "FT"
+      }
+     },
+     "broadcasts": [],
+     "details": [],
+     "groups": {
+      "id": "1",
+      "name": "2008 Friendly",
+      "abbreviation": "2008 Friendly"
+     },
+     "isFinal": false,
+     "isThirdPlace": false,
+     "altGameNote": "Club Friendly",
+     "boxscoreMinutes": false,
+     "shotMapAvailable": true
+    }
+   ],
+   "links": [
+    {
+     "rel": [
+      "summary",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/soccer/match/_/gameId/401906390/celta-vigo-napoli",
+     "text": "Summary",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "rel": [
+      "commentary",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/soccer/commentary/_/gameId/401906390",
+     "text": "Commentary",
+     "shortText": "Commentary",
+     "isExternal": false,
+     "isPremium": false
+    }
+   ],
+   "league": {
+    "id": "19834",
+    "uid": "s:600~l:19834",
+    "name": "Club Friendly",
+    "abbreviation": "Club Friendly",
+    "shortName": "Club Friendly",
+    "midsizeName": "CLUB.FRIENDLY",
+    "slug": "club.friendly",
+    "isTournament": false,
+    "links": [
+     {
+      "rel": [
+       "index",
+       "desktop",
+       "league"
+      ],
+      "href": "https://www.espn.com/soccer/league/_/name/club.friendly",
+      "text": "Index"
+     },
+     {
+      "rel": [
+       "index",
+       "sportscenter",
+       "app",
+       "league"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~l:19834",
+      "text": "Index"
+     },
+     {
+      "rel": [
+       "schedule",
+       "desktop",
+       "league"
+      ],
+      "href": "https://www.espn.com/soccer/schedule/_/league/club.friendly",
+      "text": "Schedule"
+     },
+     {
+      "rel": [
+       "schedule",
+       "sportscenter",
+       "app",
+       "league"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~l:19834&section=scores",
+      "text": "Schedule"
+     },
+     {
+      "rel": [
+       "scores",
+       "desktop",
+       "league"
+      ],
+      "href": "https://www.espn.com/soccer/scoreboard/_/league/club.friendly",
+      "text": "Scores"
+     },
+     {
+      "rel": [
+       "scores",
+       "sportscenter",
+       "app",
+       "league"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~l:19834&section=scores",
+      "text": "Scores"
+     },
+     {
+      "rel": [
+       "stats",
+       "desktop",
+       "league"
+      ],
+      "href": "https://www.espn.com/soccer/stats/_/league/club.friendly",
+      "text": "Stats"
+     },
+     {
+      "rel": [
+       "stats",
+       "sportscenter",
+       "app",
+       "league"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~l:19834&section=stats",
+      "text": "Stats"
+     },
+     {
+      "rel": [
+       "teams",
+       "desktop",
+       "league"
+      ],
+      "href": "https://www.espn.com/soccer/teams/_/league/club.friendly",
+      "text": "Teams"
+     }
+    ]
+   },
+   "linksv4": [
+    {
+     "rel": [
+      "summary",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/soccer/match/_/gameId/401906390/celta-vigo-napoli",
+     "text": "Gamecast",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "rel": [
+      "commentary",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/soccer/commentary/_/gameId/401906390",
+     "text": "Commentary",
+     "shortText": "Commentary",
+     "isExternal": false,
+     "isPremium": false
+    }
+   ]
+  },
+  "wallclockAvailable": false,
+  "meta": {
+   "gp_topic": "gp-soccer-club.friendly-401906390",
+   "gameSwitcherEnabled": false,
+   "picker_topic": "picker-soccer-club.friendly",
+   "gameState": "post"
+  },
+  "standings": {
+   "groups": []
+  }
+ }
+}

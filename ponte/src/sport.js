@@ -64,6 +64,34 @@ export function campionatoValido(c) {
   return typeof c === "string" && Object.hasOwn(CAMPIONATI, c);
 }
 
+/* Le scuderie di F1, col nome che hanno negli indirizzi del sito della F1:
+ * il loro simbolo (bianco, da mettere sul colore della scuderia) sta in
+ * `common/f1/<anno>/<nome>/<anno><nome>logowhite.webp`. Solo queste: un
+ * identificativo che non e' qui non diventa un indirizzo. */
+export const SCUDERIE_F1 = Object.freeze({
+  mercedes: "mercedes",
+  ferrari: "ferrari",
+  mclaren: "mclaren",
+  red_bull: "redbullracing",
+  rb: "racingbulls",
+  alpine: "alpine",
+  haas: "haasf1team",
+  audi: "audi",
+  sauber: "kicksauber",
+  williams: "williams",
+  aston_martin: "astonmartin",
+  cadillac: "cadillac",
+});
+
+/** `f1:<constructorId>` di una scuderia che si conosce. */
+export function scuderiaValida(chiave) {
+  const m = /^f1:([a-z_]{2,20})$/.exec(typeof chiave === "string" ? chiave : "");
+  return Boolean(m && Object.hasOwn(SCUDERIE_F1, m[1]));
+}
+
+const simboloDellaScuderia = (slug, anno) =>
+  `https://media.formula1.com/image/upload/c_lfill,w_96/q_auto/v1740000000/common/f1/${anno}/${slug}/${anno}${slug}logowhite.webp`;
+
 export function squadraValida(id) {
   return typeof id === "string" ? /^\d{1,7}$/.test(id) : Number.isInteger(id) && id > 0;
 }
@@ -693,10 +721,20 @@ export function creaSport({ scarica = (u, o) => fetch(u, o), orologio = () => Da
   async function json(indirizzo, quanto = PER_UN_PO) {
     const tenuta = memoria.get(indirizzo);
     if (tenuta && tenuta.fino > orologio()) return tenuta.valore;
-    const r = await scarica(indirizzo, {
-      headers: { accept: "application/json" },
-      signal: AbortSignal.timeout(ATTESA),
-    });
+    let r;
+    try {
+      r = await scarica(indirizzo, {
+        headers: { accept: "application/json" },
+        signal: AbortSignal.timeout(ATTESA),
+      });
+    } catch (errore) {
+      /* «I dati non si aggiornavano»: una fonte che non si raggiunge per un
+       * momento (la rete, un tempo scaduto) faceva sparire tutto quello che si
+       * sapeva, e la plancia restava col «non risponde». Si tiene l'ultima
+       * risposta buona, come quando la fonte risponde male. */
+      if (tenuta) return tenuta.valore;
+      throw errore;
+    }
     if (!r.ok) {
       /* Una fonte che non risponde non cancella quello che si sapeva. */
       if (tenuta) return tenuta.valore;
@@ -876,11 +914,15 @@ export function creaSport({ scarica = (u, o) => fetch(u, o), orologio = () => Da
       if (!Number.isInteger(giro) || giro < 1 || giro > 30 || !["Q", "S", "G"].includes(sessione))
         throw new Error("sport: sessione");
       const pezzo = sessione === "Q" ? "qualifying" : sessione === "S" ? "sprint" : "results";
-      const fuori = sessioneF1DaJolpica(
-        await json(`${F1}/current/${giro}/${pezzo}.json`, PER_POCO * 5),
-        sessione,
-      );
-      if (!fuori?.risultati?.length) throw new Error("sport: sessione");
+      const risposta = await json(`${F1}/current/${giro}/${pezzo}.json`, PER_POCO * 5);
+      const fuori = sessioneF1DaJolpica(risposta, sessione);
+      /* Jolpica pubblica una sessione qualche ora dopo che e' finita: fino ad
+       * allora risponde bene, ma senza la gara dentro. Non e' un guasto, e la
+       * plancia lo dice cosi'. */
+      if (!fuori?.risultati?.length) {
+        if (risposta?.MRData) return { tipo: "f1", sessione, giro, risultati: [], nonAncora: true };
+        throw new Error("sport: sessione");
+      }
       return fuori;
     }
     if (chiesto?.tipo === "motogp") {
@@ -895,8 +937,30 @@ export function creaSport({ scarica = (u, o) => fetch(u, o), orologio = () => Da
     throw new Error("sport: dettaglio");
   }
 
-  /** Il logo di una squadra: i byte e il tipo. Solo numeri, solo ESPN. */
+  /** Il simbolo di una scuderia di F1: quello di quest'anno, o se non c'e'
+   * ancora quello dell'anno prima. */
+  async function simbolo(chiave) {
+    const slug = SCUDERIE_F1[chiave.slice(3)];
+    const anno = new Date(orologio()).getUTCFullYear();
+    for (const quale of [anno, anno - 1]) {
+      const indirizzo = simboloDellaScuderia(slug, quale);
+      const tenuta = memoria.get(indirizzo);
+      if (tenuta && tenuta.fino > orologio()) return tenuta.valore;
+      const r = await scarica(indirizzo, { signal: AbortSignal.timeout(ATTESA) });
+      if (!r.ok) continue;
+      const byte = Buffer.from(await r.arrayBuffer());
+      if (byte.length > 256 * 1024) throw new Error("sport: simbolo troppo grande");
+      const valore = { tipo: "image/webp", base64: byte.toString("base64") };
+      memoria.set(indirizzo, { valore, fino: orologio() + PER_UN_GIORNO });
+      return valore;
+    }
+    throw new Error("sport: simbolo");
+  }
+
+  /** Il logo di una squadra (solo numeri, solo ESPN) o il simbolo di una
+   * scuderia di F1 (`f1:<constructorId>`): i byte e il tipo. */
   async function logo(id) {
+    if (scuderiaValida(id)) return simbolo(id);
     if (!squadraValida(id)) throw new Error("sport: logo");
     const indirizzo = stemmaDi(id);
     const tenuta = memoria.get(indirizzo);
