@@ -559,7 +559,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-MGPXIUUJ.js";
+} from "../../chunk-RRHU64GA.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -64635,9 +64635,17 @@ async function chiediIRisultati(firma2, seguiti) {
   try {
     const risposta = await chiediAHomeAssistant({ type: "ponte/sport/risultati", seguiti }, ATTESA2);
     if (dati.firma !== firma2) return;
-    dati.risultati = Array.isArray(risposta?.risultati) ? risposta.risultati : [];
+    const nuovi = Array.isArray(risposta?.risultati) ? risposta.risultati : [];
+    const prima = dati.risultati;
+    let mancanti = false;
+    dati.risultati = nuovi.map((r, i) => {
+      if (!r?.errore) return r;
+      mancanti = true;
+      return prima[i] && !prima[i].errore ? prima[i] : r;
+    });
     dati.arrivati = Date.now();
     dati.guasto = "";
+    if (mancanti) dati.chiesti = Date.now() - fraQuantoSiRichiede(dati.risultati) + DOPO_UN_ERRORE;
   } catch (errore) {
     if (dati.firma !== firma2) return;
     const codice = clean(errore?.code || errore?.error?.code || errore?.message);
