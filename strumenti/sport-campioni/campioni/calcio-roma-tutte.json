@@ -2,7 +2,7 @@
  "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams/104/schedule",
  "stato": 200,
  "json": {
-  "timestamp": "2026-10-25T13:34:33Z",
+  "timestamp": "2026-10-25T13:47:06Z",
   "status": "success",
   "season": {
    "year": 2026,

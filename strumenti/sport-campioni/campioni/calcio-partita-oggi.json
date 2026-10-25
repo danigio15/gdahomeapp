@@ -55,7 +55,7 @@
       },
       {
        "name": "possessionPct",
-       "displayValue": "63",
+       "displayValue": "63.3",
        "label": "Possession"
       },
       {
@@ -85,12 +85,12 @@
       },
       {
        "name": "accuratePasses",
-       "displayValue": "503",
+       "displayValue": "510",
        "label": "Accurate Passes"
       },
       {
        "name": "totalPasses",
-       "displayValue": "554",
+       "displayValue": "563",
        "label": "Passes"
       },
       {
@@ -115,12 +115,12 @@
       },
       {
        "name": "totalLongBalls",
-       "displayValue": "32",
+       "displayValue": "31",
        "label": "Long Balls"
       },
       {
        "name": "accurateLongBalls",
-       "displayValue": "22",
+       "displayValue": "21",
        "label": "Accurate Long Balls"
       },
       {
@@ -130,7 +130,7 @@
       },
       {
        "name": "blockedShots",
-       "displayValue": "4",
+       "displayValue": "5",
        "label": "Blocked Shots"
       },
       {
@@ -140,7 +140,7 @@
       },
       {
        "name": "totalTackles",
-       "displayValue": "19",
+       "displayValue": "20",
        "label": "Tackles"
       },
       {
@@ -194,7 +194,7 @@
       },
       {
        "name": "yellowCards",
-       "displayValue": "1",
+       "displayValue": "3",
        "label": "Yellow Cards"
       },
       {
@@ -214,12 +214,12 @@
       },
       {
        "name": "saves",
-       "displayValue": "8",
+       "displayValue": "9",
        "label": "Saves"
       },
       {
        "name": "possessionPct",
-       "displayValue": "37",
+       "displayValue": "36.7",
        "label": "Possession"
       },
       {
@@ -420,8 +420,6 @@
       "awayShootoutScore": "0",
       "gameResult": "W",
       "competitionName": "2026 Club Friendly",
-      "leagueName": "Club Friendly",
-      "leagueAbbreviation": "Club Friendly",
       "opponent": {
        "id": "4146",
        "uid": "s:600~t:4146",
@@ -438,7 +436,9 @@
         }
        ],
        "logos": []
-      }
+      },
+      "leagueName": "Club Friendly",
+      "leagueAbbreviation": "Club Friendly"
      },
      {
       "id": "401875021",
@@ -461,8 +461,6 @@
       "awayShootoutScore": "0",
       "gameResult": "W",
       "competitionName": "2026-27 Italian Serie A",
-      "leagueName": "Italian Serie A",
-      "leagueAbbreviation": "Serie A",
       "opponent": {
        "id": "115",
        "uid": "s:600~t:115",
@@ -504,7 +502,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/115.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/115.png",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A"
      },
      {
       "id": "401915413",
@@ -528,8 +528,6 @@
       "gameResult": "L",
       "competitionName": "2026-27 UEFA Champions League",
       "roundName": "League Phase",
-      "leagueName": "UEFA Champions League",
-      "leagueAbbreviation": "UEFA Champions League",
       "opponent": {
        "id": "570",
        "uid": "s:600~t:570",
@@ -571,7 +569,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/570.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/570.png",
+      "leagueName": "UEFA Champions League",
+      "leagueAbbreviation": "UEFA Champions League"
      },
      {
       "id": "401874953",
@@ -594,8 +594,6 @@
       "awayShootoutScore": "0",
       "gameResult": "W",
       "competitionName": "2026-27 Italian Serie A",
-      "leagueName": "Italian Serie A",
-      "leagueAbbreviation": "Serie A",
       "opponent": {
        "id": "107",
        "uid": "s:600~t:107",
@@ -637,7 +635,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/107.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/107.png",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A"
      },
      {
       "id": "401915390",
@@ -661,8 +661,6 @@
       "gameResult": "W",
       "competitionName": "2026-27 UEFA Champions League",
       "roundName": "League Phase",
-      "leagueName": "UEFA Champions League",
-      "leagueAbbreviation": "UEFA Champions League",
       "opponent": {
        "id": "493",
        "uid": "s:600~t:493",
@@ -704,7 +702,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/493.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/493.png",
+      "leagueName": "UEFA Champions League",
+      "leagueAbbreviation": "UEFA Champions League"
      }
     ]
    },
@@ -774,8 +774,6 @@
       "gameResult": "W",
       "competitionName": "2026-27 Coppa Italia",
       "roundName": "Second Round",
-      "leagueName": "Coppa Italia",
-      "leagueAbbreviation": "Coppa Italia",
       "opponent": {
        "id": "3956",
        "uid": "s:600~t:3956",
@@ -817,7 +815,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/3956.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/3956.png",
+      "leagueName": "Coppa Italia",
+      "leagueAbbreviation": "Coppa Italia"
      },
      {
       "id": "401874934",
@@ -840,8 +840,6 @@
       "awayShootoutScore": "0",
       "gameResult": "D",
       "competitionName": "2026-27 Italian Serie A",
-      "leagueName": "Italian Serie A",
-      "leagueAbbreviation": "Serie A",
       "opponent": {
        "id": "114",
        "uid": "s:600~t:114",
@@ -883,7 +881,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/114.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/114.png",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A"
      },
      {
       "id": "401923793",
@@ -947,8 +947,6 @@
       "awayShootoutScore": "0",
       "gameResult": "L",
       "competitionName": "2026-27 Italian Serie A",
-      "leagueName": "Italian Serie A",
-      "leagueAbbreviation": "Serie A",
       "opponent": {
        "id": "3263",
        "uid": "s:600~t:3263",
@@ -990,7 +988,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/3263.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/3263.png",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A"
      },
      {
       "id": "401874774",
@@ -1013,8 +1013,6 @@
       "awayShootoutScore": "0",
       "gameResult": "L",
       "competitionName": "2026-27 Italian Serie A",
-      "leagueName": "Italian Serie A",
-      "leagueAbbreviation": "Serie A",
       "opponent": {
        "id": "2572",
        "uid": "s:600~t:2572",
@@ -1056,7 +1054,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/2572.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/2572.png",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A"
      }
     ]
    }
@@ -1188,15 +1188,15 @@
           "shortDisplayName": "xG",
           "description": "Total expected goals",
           "abbreviation": "xG",
-          "value": 0.827,
-          "displayValue": "0.83"
+          "value": 0.671,
+          "displayValue": "0.67"
          }
         ],
         "mainStat": {
          "value": "9",
          "label": "SHOT"
         },
-        "summary": "4 SOG, 0.83 xG"
+        "summary": "4 SOG, 0.67 xG"
        }
       ],
       "advantage": true
@@ -1206,7 +1206,7 @@
       "displayName": "Accurate Passes",
       "leaders": [
        {
-        "displayValue": "82",
+        "displayValue": "83",
         "athlete": {
          "id": "214562",
          "uid": "s:600~a:214562",
@@ -1266,8 +1266,8 @@
           "shortDisplayName": "ACPASS",
           "description": "The number of passes completed.",
           "abbreviation": "AC.PASS",
-          "value": 82,
-          "displayValue": "82"
+          "value": 83,
+          "displayValue": "83"
          },
          {
           "name": "totalPasses",
@@ -1275,8 +1275,8 @@
           "shortDisplayName": "PASS",
           "description": "The number of passes attempted.",
           "abbreviation": "PASS",
-          "value": 88,
-          "displayValue": "88"
+          "value": 90,
+          "displayValue": "90"
          },
          {
           "name": "bigChanceCreated",
@@ -1289,10 +1289,10 @@
          }
         ],
         "mainStat": {
-         "value": "82",
+         "value": "83",
          "label": "ACPASS"
         },
-        "summary": "88 PASS, 0 BCC"
+        "summary": "90 PASS, 0 BCC"
        }
       ],
       "advantage": true
@@ -1823,7 +1823,7 @@
       "displayName": "Saves",
       "leaders": [
        {
-        "displayValue": "8",
+        "displayValue": "9",
         "athlete": {
          "id": "108482",
          "uid": "s:600~a:108482",
@@ -1883,8 +1883,8 @@
           "shortDisplayName": "SV",
           "description": "The number of times a goalkeeper makes a save.",
           "abbreviation": "SV",
-          "value": 8,
-          "displayValue": "8"
+          "value": 9,
+          "displayValue": "9"
          },
          {
           "name": "shotsOnGoalAgainst",
@@ -1892,8 +1892,8 @@
           "shortDisplayName": "SOGA",
           "description": "The number of shots on goal the opposing team has had against this team",
           "abbreviation": "SOGA",
-          "value": 10,
-          "displayValue": "10"
+          "value": 11,
+          "displayValue": "11"
          },
          {
           "name": "expectedGoalsConceded",
@@ -1901,15 +1901,15 @@
           "shortDisplayName": "xGC",
           "description": "Total Expected Goals Against",
           "abbreviation": "xGC",
-          "value": 3.404,
-          "displayValue": "3.40"
+          "value": 2.904,
+          "displayValue": "2.90"
          }
         ],
         "mainStat": {
-         "value": "8",
+         "value": "9",
          "label": "SV"
         },
-        "summary": "10 SOGA, 3.40 xGC"
+        "summary": "11 SOGA, 2.90 xGC"
        }
       ],
       "advantage": true
@@ -8595,8 +8595,8 @@
         "shortDisplayName": "SV",
         "description": "The number of times a goalkeeper makes a save.",
         "abbreviation": "SV",
-        "value": 8,
-        "displayValue": "8"
+        "value": 9,
+        "displayValue": "9"
        },
        {
         "name": "shotsFaced",
@@ -9170,8 +9170,8 @@
         "shortDisplayName": "YC",
         "description": "The number of yellow cards accumulated.",
         "abbreviation": "YC",
-        "value": 0,
-        "displayValue": "0"
+        "value": 1,
+        "displayValue": "1"
        },
        {
         "name": "goalsConceded",
@@ -9235,6 +9235,19 @@
         "abbreviation": "SHOT",
         "value": 1,
         "displayValue": "1"
+       }
+      ],
+      "plays": [
+       {
+        "clock": {
+         "displayValue": "90'+5'"
+        },
+        "scoringPlay": false,
+        "substitution": false,
+        "redCard": false,
+        "yellowCard": true,
+        "penaltyKick": false,
+        "ownGoal": false
        }
       ]
      },
@@ -12610,8 +12623,8 @@
         "shortDisplayName": "YC",
         "description": "The number of yellow cards accumulated.",
         "abbreviation": "YC",
-        "value": 0,
-        "displayValue": "0"
+        "value": 1,
+        "displayValue": "1"
        },
        {
         "name": "goalsConceded",
@@ -12708,6 +12721,17 @@
         "substitution": true,
         "redCard": false,
         "yellowCard": false,
+        "penaltyKick": false,
+        "ownGoal": false
+       },
+       {
+        "clock": {
+         "displayValue": "90'+11'"
+        },
+        "scoringPlay": false,
+        "substitution": false,
+        "redCard": false,
+        "yellowCard": true,
         "penaltyKick": false,
         "ownGoal": false
        }
@@ -14460,6 +14484,7 @@
     }
    ]
   },
+  "videos": [],
   "header": {
    "id": "401875036",
    "uid": "s:600~l:730~e:401875036",
@@ -14541,7 +14566,7 @@
           "text": "Clubhouse"
          }
         ],
-        "form": "DWLWD"
+        "form": "DWWLW"
        },
        "score": "2",
        "linescores": [
@@ -14621,7 +14646,7 @@
           "text": "Clubhouse"
          }
         ],
-        "form": "DLDWW"
+        "form": "LLLDW"
        },
        "score": "1",
        "linescores": [
@@ -15085,7 +15110,6 @@
     }
    ]
   },
-  "videos": [],
   "seasonseries": [
    {
     "type": "head-to-head",
@@ -16084,6 +16108,32 @@
     "shootout": false
    },
    {
+    "id": "54267495",
+    "type": {
+     "id": "130",
+     "text": "End Delay",
+     "type": "end-delay"
+    },
+    "period": {
+     "number": 2
+    },
+    "clock": {
+     "value": 3023,
+     "displayValue": "51'"
+    },
+    "scoringPlay": false,
+    "team": {
+     "id": "110",
+     "displayName": "Internazionale"
+    },
+    "source": {
+     "id": "38",
+     "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-10-25T12:41:08Z",
+    "shootout": false
+   },
+   {
     "id": "54267552",
     "type": {
      "id": "76",
@@ -16123,32 +16173,6 @@
      "description": "SA.ENVOY"
     },
     "wallclock": "2026-10-25T12:41:14Z",
-    "shootout": false
-   },
-   {
-    "id": "54267495",
-    "type": {
-     "id": "130",
-     "text": "End Delay",
-     "type": "end-delay"
-    },
-    "period": {
-     "number": 2
-    },
-    "clock": {
-     "value": 3036,
-     "displayValue": "51'"
-    },
-    "scoringPlay": false,
-    "team": {
-     "id": "110",
-     "displayName": "Internazionale"
-    },
-    "source": {
-     "id": "38",
-     "description": "SA.ENVOY"
-    },
-    "wallclock": "2026-10-25T12:41:22Z",
     "shootout": false
    },
    {
@@ -16242,8 +16266,8 @@
      "number": 2
     },
     "clock": {
-     "value": 3191,
-     "displayValue": "54'"
+     "value": 3179,
+     "displayValue": "53'"
     },
     "scoringPlay": false,
     "team": {
@@ -16254,7 +16278,7 @@
      "id": "38",
      "description": "SA.ENVOY"
     },
-    "wallclock": "2026-10-25T12:43:56Z",
+    "wallclock": "2026-10-25T12:43:44Z",
     "shootout": false
    },
    {
@@ -16311,6 +16335,33 @@
     "shootout": false
    },
    {
+    "id": "54267902",
+    "type": {
+     "id": "130",
+     "text": "End Delay",
+     "type": "end-delay"
+    },
+    "text": "Delay over. They are ready to continue.",
+    "period": {
+     "number": 2
+    },
+    "clock": {
+     "value": 3612,
+     "displayValue": "61'"
+    },
+    "scoringPlay": false,
+    "team": {
+     "id": "109",
+     "displayName": "Fiorentina"
+    },
+    "source": {
+     "id": "38",
+     "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-10-25T12:50:57Z",
+    "shootout": false
+   },
+   {
     "id": "54267901",
     "type": {
      "id": "130",
@@ -16334,33 +16385,6 @@
      "description": "SA.ENVOY"
     },
     "wallclock": "2026-10-25T12:50:58Z",
-    "shootout": false
-   },
-   {
-    "id": "54267902",
-    "type": {
-     "id": "130",
-     "text": "End Delay",
-     "type": "end-delay"
-    },
-    "text": "Delay over. They are ready to continue.",
-    "period": {
-     "number": 2
-    },
-    "clock": {
-     "value": 3618,
-     "displayValue": "61'"
-    },
-    "scoringPlay": false,
-    "team": {
-     "id": "109",
-     "displayName": "Fiorentina"
-    },
-    "source": {
-     "id": "38",
-     "description": "SA.ENVOY"
-    },
-    "wallclock": "2026-10-25T12:51:03Z",
     "shootout": false
    },
    {
@@ -16872,6 +16896,42 @@
     "fieldPosition2Y": 46.1
    },
    {
+    "id": "54270099",
+    "type": {
+     "id": "94",
+     "text": "Yellow Card",
+     "type": "yellow-card"
+    },
+    "text": "Valde (Fiorentina) is shown the yellow card for a bad foul.",
+    "shortText": "Víctor Valdepeñas Yellow Card",
+    "period": {
+     "number": 2
+    },
+    "clock": {
+     "value": 5400,
+     "displayValue": "90'+5'"
+    },
+    "scoringPlay": false,
+    "team": {
+     "id": "109",
+     "displayName": "Fiorentina"
+    },
+    "participants": [
+     {
+      "athlete": {
+       "id": "401558",
+       "displayName": "Víctor Valdepeñas"
+      }
+     }
+    ],
+    "source": {
+     "id": "38",
+     "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-10-25T13:25:15Z",
+    "shootout": false
+   },
+   {
     "id": "54269443",
     "type": {
      "id": "98",
@@ -16911,6 +16971,42 @@
     "fieldPositionY": 50,
     "fieldPosition2X": 100,
     "fieldPosition2Y": 52
+   },
+   {
+    "id": "54269885",
+    "type": {
+     "id": "94",
+     "text": "Yellow Card",
+     "type": "yellow-card"
+    },
+    "text": "Dodô (Fiorentina) is shown the yellow card.",
+    "shortText": "Dodô Yellow Card",
+    "period": {
+     "number": 2
+    },
+    "clock": {
+     "value": 5400,
+     "displayValue": "90'+11'"
+    },
+    "scoringPlay": false,
+    "team": {
+     "id": "109",
+     "displayName": "Fiorentina"
+    },
+    "participants": [
+     {
+      "athlete": {
+       "id": "168453",
+       "displayName": "Dodô"
+      }
+     }
+    ],
+    "source": {
+     "id": "38",
+     "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-10-25T13:31:37Z",
+    "shootout": false
    },
    {
     "id": "54269625",
@@ -17211,7 +17307,7 @@
       "id": "38",
       "description": "SA.ENVOY"
      },
-     "wallclock": "2026-10-25T11:44:00Z",
+     "wallclock": "2026-10-25T11:43:59Z",
      "goalPositionY": 51.7,
      "fieldPositionX": 71.4,
      "fieldPositionY": 64.2,
@@ -17225,7 +17321,7 @@
      "value": 778,
      "displayValue": "13'"
     },
-    "text": "Foul by Marin Pongracic (Fiorentina).",
+    "text": "Marcus Thuram (Inter Milan) wins a free kick in the defensive half.",
     "play": {
      "id": "54265614",
      "type": {
@@ -17272,7 +17368,7 @@
      "value": 778,
      "displayValue": "13'"
     },
-    "text": "Marcus Thuram (Inter Milan) wins a free kick in the defensive half.",
+    "text": "Foul by Marin Pongracic (Fiorentina).",
     "play": {
      "id": "54265614",
      "type": {
@@ -17499,7 +17595,7 @@
       "id": "38",
       "description": "SA.ENVOY"
      },
-     "wallclock": "2026-10-25T11:50:07Z",
+     "wallclock": "2026-10-25T11:50:06Z",
      "fieldPositionX": 38.2,
      "fieldPositionY": 84.3
     }
@@ -17546,7 +17642,7 @@
       "id": "38",
       "description": "SA.ENVOY"
      },
-     "wallclock": "2026-10-25T11:50:07Z",
+     "wallclock": "2026-10-25T11:50:06Z",
      "fieldPositionX": 38.2,
      "fieldPositionY": 84.3
     }
@@ -18049,7 +18145,7 @@
       "id": "38",
       "description": "SA.ENVOY"
      },
-     "wallclock": "2026-10-25T12:02:26Z",
+     "wallclock": "2026-10-25T12:02:25Z",
      "fieldPositionX": 87.8,
      "fieldPositionY": 32.3,
      "fieldPosition2X": 95.7,
@@ -18098,7 +18194,7 @@
       "id": "38",
       "description": "SA.ENVOY"
      },
-     "wallclock": "2026-10-25T12:04:17Z",
+     "wallclock": "2026-10-25T12:04:16Z",
      "goalPositionY": 30.9,
      "fieldPositionX": 87,
      "fieldPositionY": 52.7,
@@ -18326,7 +18422,7 @@
       "id": "38",
       "description": "SA.ENVOY"
      },
-     "wallclock": "2026-10-25T12:07:42Z",
+     "wallclock": "2026-10-25T12:07:41Z",
      "goalPositionY": 51.5,
      "fieldPositionX": 90.9,
      "fieldPositionY": 52.4,
@@ -18747,7 +18843,7 @@
       "id": "38",
       "description": "SA.ENVOY"
      },
-     "wallclock": "2026-10-25T12:15:44Z",
+     "wallclock": "2026-10-25T12:15:43Z",
      "goalPositionY": 67.2,
      "fieldPositionX": 90.2,
      "fieldPositionY": 28.4,
@@ -19354,7 +19450,7 @@
    {
     "sequence": 57,
     "time": {
-     "value": 3242,
+     "value": 3241,
      "displayValue": "55'"
     },
     "text": "Attempt missed. Henrikh Mkhitaryan (Inter Milan) left footed shot from outside the box is too high.",
@@ -19371,7 +19467,7 @@
       "number": 2
      },
      "clock": {
-      "value": 3242,
+      "value": 3241,
       "displayValue": "55'"
      },
      "team": {
@@ -19388,7 +19484,7 @@
       "id": "38",
       "description": "SA.ENVOY"
      },
-     "wallclock": "2026-10-25T12:44:48Z",
+     "wallclock": "2026-10-25T12:44:47Z",
      "goalPositionY": 53.4,
      "fieldPositionX": 74.3,
      "fieldPositionY": 53,
@@ -19569,7 +19665,7 @@
       "id": "38",
       "description": "SA.ENVOY"
      },
-     "wallclock": "2026-10-25T12:46:51Z",
+     "wallclock": "2026-10-25T12:46:50Z",
      "fieldPositionX": 95,
      "fieldPositionY": 49
     }
@@ -19703,7 +19799,7 @@
    {
     "sequence": 65,
     "time": {
-     "value": 3618,
+     "value": 3612,
      "displayValue": "61'"
     },
     "text": "Delay over. They are ready to continue.",
@@ -19719,7 +19815,7 @@
       "number": 2
      },
      "clock": {
-      "value": 3618,
+      "value": 3612,
       "displayValue": "61'"
      },
      "team": {
@@ -19729,7 +19825,7 @@
       "id": "38",
       "description": "SA.ENVOY"
      },
-     "wallclock": "2026-10-25T12:51:03Z"
+     "wallclock": "2026-10-25T12:50:57Z"
     }
    },
    {
@@ -20347,13 +20443,13 @@
       "id": "38",
       "description": "SA.ENVOY"
      },
-     "wallclock": "2026-10-25T13:00:06Z"
+     "wallclock": "2026-10-25T13:00:05Z"
     }
    },
    {
     "sequence": 79,
     "time": {
-     "value": 4215,
+     "value": 4212,
      "displayValue": "71'"
     },
     "text": "Carlos Augusto (Inter Milan) hits the bar with a header from the centre of the box. Assisted by Hakan Çalhanoglu with a cross following a set piece situation.",
@@ -20370,7 +20466,7 @@
       "number": 2
      },
      "clock": {
-      "value": 4215,
+      "value": 4212,
       "displayValue": "71'"
      },
      "team": {
@@ -20392,7 +20488,7 @@
       "id": "38",
       "description": "SA.ENVOY"
      },
-     "wallclock": "2026-10-25T13:01:00Z",
+     "wallclock": "2026-10-25T13:00:57Z",
      "goalPositionY": 48.7,
      "fieldPositionX": 91.2,
      "fieldPositionY": 43.5,
@@ -20403,7 +20499,7 @@
    {
     "sequence": 80,
     "time": {
-     "value": 4259,
+     "value": 4258,
      "displayValue": "71'"
     },
     "text": "Attempt missed. Hakan Çalhanoglu (Inter Milan) right footed shot from outside the box is too high. Assisted by Carlos Augusto.",
@@ -20420,7 +20516,7 @@
       "number": 2
      },
      "clock": {
-      "value": 4259,
+      "value": 4258,
       "displayValue": "71'"
      },
      "team": {
@@ -20442,7 +20538,7 @@
       "id": "38",
       "description": "SA.ENVOY"
      },
-     "wallclock": "2026-10-25T13:01:45Z",
+     "wallclock": "2026-10-25T13:01:43Z",
      "goalPositionY": 53.8,
      "fieldPositionX": 80.2,
      "fieldPositionY": 56.2,
@@ -20453,7 +20549,7 @@
    {
     "sequence": 81,
     "time": {
-     "value": 4314,
+     "value": 4315,
      "displayValue": "72'"
     },
     "text": "Attempt blocked. Ange-Yoan Bonny (Inter Milan) right footed shot from a difficult angle on the left is blocked.",
@@ -20470,7 +20566,7 @@
       "number": 2
      },
      "clock": {
-      "value": 4314,
+      "value": 4315,
       "displayValue": "72'"
      },
      "team": {
@@ -20487,7 +20583,7 @@
       "id": "38",
       "description": "SA.ENVOY"
      },
-     "wallclock": "2026-10-25T13:02:40Z",
+     "wallclock": "2026-10-25T13:02:41Z",
      "goalPositionY": 49.4,
      "fieldPositionX": 96.6,
      "fieldPositionY": 66.5,
@@ -20525,15 +20621,15 @@
       "description": "SA.ENVOY"
      },
      "wallclock": "2026-10-25T13:02:54Z",
-     "fieldPositionX": 89,
-     "fieldPositionY": 25.2
+     "fieldPositionX": 89.1,
+     "fieldPositionY": 26.5
     }
    },
    {
     "sequence": 83,
     "time": {
-     "value": 4381,
-     "displayValue": "74'"
+     "value": 4367,
+     "displayValue": "73'"
     },
     "text": "Corner, Inter Milan. Conceded by Marco Brescianini.",
     "play": {
@@ -20566,7 +20662,7 @@
    {
     "sequence": 84,
     "time": {
-     "value": 4398,
+     "value": 4397,
      "displayValue": "74'"
     },
     "text": "Attempt missed. Manuel Akanji (Inter Milan) header from the centre of the box is too high. Assisted by Hakan Çalhanoglu with a cross following a corner.",
@@ -20583,7 +20679,7 @@
       "number": 2
      },
      "clock": {
-      "value": 4398,
+      "value": 4397,
       "displayValue": "74'"
      },
      "team": {
@@ -20605,7 +20701,7 @@
       "id": "38",
       "description": "SA.ENVOY"
      },
-     "wallclock": "2026-10-25T13:04:03Z",
+     "wallclock": "2026-10-25T13:04:02Z",
      "goalPositionY": 49.8,
      "fieldPositionX": 91.7,
      "fieldPositionY": 50.2,
@@ -20983,7 +21079,7 @@
       "id": "38",
       "description": "SA.ENVOY"
      },
-     "wallclock": "2026-10-25T13:07:23Z",
+     "wallclock": "2026-10-25T13:07:22Z",
      "goalPositionY": 50.4,
      "fieldPositionX": 84.6,
      "fieldPositionY": 74.9,
@@ -21163,7 +21259,7 @@
       "id": "38",
       "description": "SA.ENVOY"
      },
-     "wallclock": "2026-10-25T13:09:29Z",
+     "wallclock": "2026-10-25T13:09:28Z",
      "goalPositionY": 49.6,
      "fieldPositionX": 87.7,
      "fieldPositionY": 30.6,
@@ -21382,7 +21478,7 @@
      },
      "wallclock": "2026-10-25T13:12:10Z",
      "fieldPositionX": 87.6,
-     "fieldPositionY": 17.7
+     "fieldPositionY": 17.6
     }
    },
    {
@@ -21711,7 +21807,7 @@
    {
     "sequence": 109,
     "time": {
-     "value": 5259,
+     "value": 5256,
      "displayValue": "88'"
     },
     "text": "Attempt missed. Marcus Thuram (Inter Milan) right footed shot from the centre of the box is high and wide to the right. Assisted by Matteo Lavelli.",
@@ -21728,7 +21824,7 @@
       "number": 2
      },
      "clock": {
-      "value": 5259,
+      "value": 5256,
       "displayValue": "88'"
      },
      "team": {
@@ -21750,7 +21846,7 @@
       "id": "38",
       "description": "SA.ENVOY"
      },
-     "wallclock": "2026-10-25T13:18:24Z",
+     "wallclock": "2026-10-25T13:18:21Z",
      "goalPositionY": 35.6,
      "fieldPositionX": 87.6,
      "fieldPositionY": 58.3,
@@ -22052,12 +22148,12 @@
       "id": "38",
       "description": "SA.ENVOY"
      },
-     "wallclock": "2026-10-25T13:23:22Z",
-     "goalPositionY": 51.6,
-     "fieldPositionX": 89.8,
-     "fieldPositionY": 50.6,
-     "fieldPosition2X": 92.9,
-     "fieldPosition2Y": 50.9
+     "wallclock": "2026-10-25T13:23:23Z",
+     "goalPositionY": 50.7,
+     "fieldPositionX": 88,
+     "fieldPositionY": 54.2,
+     "fieldPosition2X": 90.1,
+     "fieldPosition2Y": 53.6
     }
    },
    {
@@ -22154,7 +22250,7 @@
      },
      "wallclock": "2026-10-25T13:24:12Z",
      "fieldPositionX": 62,
-     "fieldPositionY": 34
+     "fieldPositionY": 34.1
     }
    },
    {
@@ -22201,25 +22297,25 @@
      },
      "wallclock": "2026-10-25T13:24:12Z",
      "fieldPositionX": 62,
-     "fieldPositionY": 34
+     "fieldPositionY": 34.1
     }
    },
    {
     "sequence": 120,
     "time": {
-     "value": 5652,
+     "value": 5651,
      "displayValue": "90'+5'"
     },
-    "text": "Attempt missed. Marcus Thuram (Inter Milan) left footed shot from the centre of the box misses to the left.",
+    "text": "Attempt blocked. Marcus Thuram (Inter Milan) left footed shot from the centre of the box is blocked. Assisted by Carlos Augusto with a cross.",
     "play": {
      "id": "54269339",
      "type": {
-      "id": "117",
-      "text": "Shot Off Target",
-      "type": "shot-off-target"
+      "id": "135",
+      "text": "Shot Blocked",
+      "type": "shot-blocked"
      },
-     "text": "Attempt missed. Marcus Thuram (Inter Milan) right footed shot from the centre of the box misses to the left.",
-     "shortText": "Marcus Thuram Shot Off Target",
+     "text": "Attempt blocked. Marcus Thuram (Inter Milan) left footed shot from the centre of the box is blocked. Assisted by Carlos Augusto with a cross.",
+     "shortText": "Marcus Thuram Shot Blocked",
      "period": {
       "number": 2
      },
@@ -22235,6 +22331,11 @@
        "athlete": {
         "displayName": "Marcus Thuram"
        }
+      },
+      {
+       "athlete": {
+        "displayName": "Carlos Augusto"
+       }
       }
      ],
      "source": {
@@ -22242,11 +22343,11 @@
       "description": "SA.ENVOY"
      },
      "wallclock": "2026-10-25T13:24:57Z",
-     "goalPositionY": 61.7,
+     "goalPositionY": 51.1,
      "fieldPositionX": 90.2,
      "fieldPositionY": 46.5,
-     "fieldPosition2X": 97.3,
-     "fieldPosition2Y": 59.2
+     "fieldPosition2X": 92.6,
+     "fieldPosition2Y": 47.6
     }
    },
    {
@@ -22255,7 +22356,7 @@
      "value": 5664,
      "displayValue": "90'+5'"
     },
-    "text": "Attempt blocked. Matteo Lavelli (Inter Milan) right footed shot from the centre of the box is blocked.",
+    "text": "Attempt blocked. Matteo Lavelli (Inter Milan) header from the centre of the box is blocked. Assisted by Manuel Akanji with a cross.",
     "play": {
      "id": "54269347",
      "type": {
@@ -22263,7 +22364,7 @@
       "text": "Shot Blocked",
       "type": "shot-blocked"
      },
-     "text": "Attempt blocked. Matteo Lavelli (Inter Milan) right footed shot from the centre of the box is blocked.",
+     "text": "Attempt blocked. Matteo Lavelli (Inter Milan) header from the centre of the box is blocked. Assisted by Manuel Akanji with a cross.",
      "shortText": "Matteo Lavelli Shot Blocked",
      "period": {
       "number": 2
@@ -22280,6 +22381,11 @@
        "athlete": {
         "displayName": "Matteo Lavelli"
        }
+      },
+      {
+       "athlete": {
+        "displayName": "Manuel Akanji"
+       }
       }
      ],
      "source": {
@@ -22288,8 +22394,8 @@
      },
      "wallclock": "2026-10-25T13:25:09Z",
      "goalPositionY": 50.3,
-     "fieldPositionX": 93.3,
-     "fieldPositionY": 44.1,
+     "fieldPositionX": 91.1,
+     "fieldPositionY": 48.3,
      "fieldPosition2X": 95.4,
      "fieldPosition2Y": 46
     }
@@ -22337,8 +22443,8 @@
       "description": "SA.ENVOY"
      },
      "wallclock": "2026-10-25T13:25:11Z",
-     "fieldPositionX": 7.8,
-     "fieldPositionY": 48.8
+     "fieldPositionX": 8.4,
+     "fieldPositionY": 48.1
     }
    },
    {
@@ -22384,12 +22490,52 @@
       "description": "SA.ENVOY"
      },
      "wallclock": "2026-10-25T13:25:11Z",
-     "fieldPositionX": 7.8,
-     "fieldPositionY": 48.8
+     "fieldPositionX": 8.4,
+     "fieldPositionY": 48.1
     }
    },
    {
     "sequence": 124,
+    "time": {
+     "value": 5670,
+     "displayValue": "90'+5'"
+    },
+    "text": "Valde (Fiorentina) is shown the yellow card for a bad foul.",
+    "play": {
+     "id": "54270099",
+     "type": {
+      "id": "94",
+      "text": "Yellow Card",
+      "type": "yellow-card"
+     },
+     "text": "Valde (Fiorentina) is shown the yellow card for a bad foul.",
+     "shortText": "Víctor Valdepeñas Yellow Card",
+     "period": {
+      "number": 2
+     },
+     "clock": {
+      "value": 5400,
+      "displayValue": "90'+5'"
+     },
+     "team": {
+      "displayName": "Fiorentina"
+     },
+     "participants": [
+      {
+       "athlete": {
+        "displayName": "Víctor Valdepeñas"
+       }
+      }
+     ],
+     "source": {
+      "id": "38",
+      "description": "SA.ENVOY"
+     },
+     "wallclock": "2026-10-25T13:25:15Z"
+    }
+   },
+   {
+    "sequence": 125,
     "time": {
      "value": 5820,
      "displayValue": "90'+7'"
@@ -22434,7 +22580,7 @@
     }
    },
    {
-    "sequence": 125,
+    "sequence": 126,
     "time": {
      "value": 5972,
      "displayValue": "90'+10'"
@@ -22481,7 +22627,7 @@
     }
    },
    {
-    "sequence": 126,
+    "sequence": 127,
     "time": {
      "value": 5972,
      "displayValue": "90'+10'"
@@ -22528,7 +22674,7 @@
     }
    },
    {
-    "sequence": 127,
+    "sequence": 128,
     "time": {
      "value": 6051,
      "displayValue": "90'+11'"
@@ -22536,7 +22682,47 @@
     "text": "Second Half ends, Inter Milan 2, Fiorentina 1."
    },
    {
-    "sequence": 128,
+    "sequence": 129,
+    "time": {
+     "value": 6052,
+     "displayValue": "90'+11'"
+    },
+    "text": "Dodô (Fiorentina) is shown the yellow card.",
+    "play": {
+     "id": "54269885",
+     "type": {
+      "id": "94",
+      "text": "Yellow Card",
+      "type": "yellow-card"
+     },
+     "text": "Dodô (Fiorentina) is shown the yellow card.",
+     "shortText": "Dodô Yellow Card",
+     "period": {
+      "number": 2
+     },
+     "clock": {
+      "value": 5400,
+      "displayValue": "90'+11'"
+     },
+     "team": {
+      "displayName": "Fiorentina"
+     },
+     "participants": [
+      {
+       "athlete": {
+        "displayName": "Dodô"
+       }
+      }
+     ],
+     "source": {
+      "id": "38",
+      "description": "SA.ENVOY"
+     },
+     "wallclock": "2026-10-25T13:31:37Z"
+    }
+   },
+   {
+    "sequence": 130,
     "time": {
      "value": 0,
      "displayValue": ""
@@ -22549,9 +22735,9 @@
    "gp_topic": "gp-soccer-ita.1-401875036",
    "gameSwitcherEnabled": true,
    "picker_topic": "picker-soccer-ita.1",
-   "lastUpdatedAt": "2026-10-25T13:30:18Z",
+   "lastUpdatedAt": "2026-10-25T13:31:37Z",
    "firstPlayWallClock": "2026-10-25T11:32:43Z",
-   "lastPlayWallClock": "2026-10-25T13:30:18Z",
+   "lastPlayWallClock": "2026-10-25T13:31:37Z",
    "gameState": "post",
    "syncUrl": "https://client.espncdn.com/fauxcast/stats/730/401875036/en/us/"
   },

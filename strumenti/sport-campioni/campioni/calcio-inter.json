@@ -1001,7 +1001,7 @@
        },
        {
         "name": "pointsAgainst",
-        "value": 9
+        "value": 10
        },
        {
         "name": "awayGamesPlayed",
@@ -1025,23 +1025,23 @@
        },
        {
         "name": "points",
-        "value": 19
+        "value": 22
        },
        {
         "name": "homeWins",
-        "value": 4
+        "value": 5
        },
        {
         "name": "pointDifferential",
-        "value": 12
+        "value": 13
        },
        {
         "name": "homePointsAgainst",
-        "value": 6
+        "value": 7
        },
        {
         "name": "gamesPlayed",
-        "value": 7
+        "value": 8
        },
        {
         "name": "ties",
@@ -1053,11 +1053,11 @@
        },
        {
         "name": "rank",
-        "value": 2
+        "value": 1
        },
        {
         "name": "homePointsFor",
-        "value": 15
+        "value": 17
        },
        {
         "name": "awayTies",
@@ -1065,7 +1065,7 @@
        },
        {
         "name": "wins",
-        "value": 6
+        "value": 7
        },
        {
         "name": "ppg",
@@ -1081,7 +1081,7 @@
        },
        {
         "name": "pointsFor",
-        "value": 21
+        "value": 23
        },
        {
         "name": "homeLosses",
@@ -1093,21 +1093,21 @@
        },
        {
         "name": "homeGamesPlayed",
-        "value": 4
+        "value": 5
        },
        {
         "name": "awayPointsAgainst",
         "value": 3
        }
       ],
-      "summary": "6-1-0",
+      "summary": "7-1-0",
       "type": "total"
      }
     ]
    },
    "shortDisplayName": "Inter Milan",
    "slug": "ita.inter_milan",
-   "standingSummary": "2nd in Italian Serie A",
+   "standingSummary": "1st in Italian Serie A",
    "uid": "s:600~t:110"
   }
  }
