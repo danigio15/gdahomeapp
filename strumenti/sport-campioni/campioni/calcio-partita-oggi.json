@@ -169,6 +169,8 @@
       "awayShootoutScore": "0",
       "gameResult": "W",
       "competitionName": "2026 Club Friendly",
+      "leagueName": "Club Friendly",
+      "leagueAbbreviation": "Club Friendly",
       "opponent": {
        "id": "4146",
        "uid": "s:600~t:4146",
@@ -185,9 +187,7 @@
         }
        ],
        "logos": []
-      },
-      "leagueName": "Club Friendly",
-      "leagueAbbreviation": "Club Friendly"
+      }
      },
      {
       "id": "401875021",
@@ -589,6 +589,8 @@
       "awayShootoutScore": "0",
       "gameResult": "D",
       "competitionName": "2026-27 Italian Serie A",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A",
       "opponent": {
        "id": "114",
        "uid": "s:600~t:114",
@@ -630,9 +632,7 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/114.png",
-      "leagueName": "Italian Serie A",
-      "leagueAbbreviation": "Serie A"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/114.png"
      },
      {
       "id": "401923793",
@@ -655,8 +655,6 @@
       "awayShootoutScore": "0",
       "gameResult": "W",
       "competitionName": "2026 Club Friendly",
-      "leagueName": "Club Friendly",
-      "leagueAbbreviation": "Club Friendly",
       "opponent": {
        "id": "133948",
        "uid": "s:600~t:133948",
@@ -673,7 +671,9 @@
         }
        ],
        "logos": []
-      }
+      },
+      "leagueName": "Club Friendly",
+      "leagueAbbreviation": "Club Friendly"
      },
      {
       "id": "401874947",
@@ -7131,6 +7131,392 @@
     }
    ]
   },
+  "header": {
+   "id": "401875036",
+   "uid": "s:600~l:730~e:401875036",
+   "season": {
+    "year": 2026,
+    "current": true,
+    "type": 14240,
+    "name": "2026-27 Italian Serie A"
+   },
+   "timeValid": true,
+   "competitions": [
+    {
+     "id": "401875036",
+     "uid": "s:600~l:730~e:401875036~c:401875036",
+     "date": "2026-10-25T11:30Z",
+     "neutralSite": false,
+     "conferenceCompetition": false,
+     "boxscoreAvailable": true,
+     "commentaryAvailable": false,
+     "liveAvailable": false,
+     "onWatchESPN": false,
+     "recent": true,
+     "wallclockAvailable": false,
+     "boxscoreSource": "full",
+     "playByPlaySource": "full",
+     "competitors": [
+      {
+       "id": "110",
+       "uid": "s:600~t:110",
+       "order": 0,
+       "homeAway": "home",
+       "winner": false,
+       "team": {
+        "id": "110",
+        "guid": "864b1935-65cc-fb9b-850d-790e4c8a8d47",
+        "uid": "s:600~t:110",
+        "location": "Internazionale",
+        "name": "Internazionale",
+        "abbreviation": "INT",
+        "displayName": "Internazionale",
+        "shortDisplayName": "Inter Milan",
+        "color": "00239c",
+        "alternateColor": "ffffff",
+        "logos": [
+         {
+          "href": "https://a.espncdn.com/i/teamlogos/soccer/500/110.png",
+          "width": 500,
+          "height": 500,
+          "alt": "",
+          "rel": [
+           "full",
+           "default"
+          ],
+          "lastUpdated": "2024-01-04T17:49Z"
+         },
+         {
+          "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/110.png",
+          "width": 500,
+          "height": 500,
+          "alt": "",
+          "rel": [
+           "full",
+           "dark"
+          ],
+          "lastUpdated": "2024-01-04T17:53Z"
+         }
+        ],
+        "groups": {
+         "name": "2026-2027 Italian Serie A"
+        },
+        "links": [
+         {
+          "rel": [
+           "clubhouse",
+           "desktop",
+           "team"
+          ],
+          "href": "https://www.espn.com/soccer/club/_/id/110/internazionale",
+          "text": "Clubhouse"
+         }
+        ]
+       },
+       "record": [
+        {
+         "type": "total",
+         "summary": "6-1-0",
+         "displayValue": "6-1-0"
+        },
+        {
+         "type": "points",
+         "summary": "19",
+         "displayValue": "19"
+        }
+       ],
+       "possession": false,
+       "form": "DWLWD"
+      },
+      {
+       "id": "109",
+       "uid": "s:600~t:109",
+       "order": 1,
+       "homeAway": "away",
+       "winner": false,
+       "team": {
+        "id": "109",
+        "guid": "b83bf35a-2c4b-c57b-1eb6-70e5046c8461",
+        "uid": "s:600~t:109",
+        "location": "Fiorentina",
+        "name": "Fiorentina",
+        "abbreviation": "FIO",
+        "displayName": "Fiorentina",
+        "shortDisplayName": "Fiorentina",
+        "color": "4c1d84",
+        "alternateColor": "ffffff",
+        "logos": [
+         {
+          "href": "https://a.espncdn.com/i/teamlogos/soccer/500/109.png",
+          "width": 500,
+          "height": 500,
+          "alt": "",
+          "rel": [
+           "full",
+           "default"
+          ],
+          "lastUpdated": "2019-05-08T16:07Z"
+         },
+         {
+          "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/109.png",
+          "width": 500,
+          "height": 500,
+          "alt": "",
+          "rel": [
+           "full",
+           "dark"
+          ],
+          "lastUpdated": "2019-05-08T16:07Z"
+         }
+        ],
+        "groups": {
+         "name": "2026-2027 Italian Serie A"
+        },
+        "links": [
+         {
+          "rel": [
+           "clubhouse",
+           "desktop",
+           "team"
+          ],
+          "href": "https://www.espn.com/soccer/club/_/id/109/fiorentina",
+          "text": "Clubhouse"
+         }
+        ]
+       },
+       "record": [
+        {
+         "type": "total",
+         "summary": "1-1-5",
+         "displayValue": "1-1-5"
+        },
+        {
+         "type": "points",
+         "summary": "4",
+         "displayValue": "4"
+        }
+       ],
+       "possession": false,
+       "form": "DLDWW"
+      }
+     ],
+     "notes": [],
+     "status": {
+      "type": {
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "state": "pre",
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Sun, October 25th at 7:30 AM EDT",
+       "shortDetail": "10/25 - 7:30 AM EDT"
+      }
+     },
+     "broadcasts": [
+      {
+       "type": {
+        "id": "1",
+        "shortName": "TV"
+       },
+       "market": {
+        "id": "1",
+        "type": "National"
+       },
+       "media": {
+        "shortName": "CBSSN"
+       },
+       "lang": "en",
+       "region": "us",
+       "isNational": true
+      },
+      {
+       "type": {
+        "id": "4",
+        "shortName": "STREAMING"
+       },
+       "market": {},
+       "media": {
+        "shortName": "Paramount+"
+       },
+       "lang": "en",
+       "region": "us",
+       "isNational": false
+      }
+     ],
+     "groups": {
+      "id": "1",
+      "name": "2000/2001 Italian Serie A\r\n",
+      "abbreviation": "2000/2001"
+     },
+     "isFinal": false,
+     "isThirdPlace": false,
+     "altGameNote": "Serie A",
+     "boxscoreMinutes": false,
+     "shotMapAvailable": true
+    }
+   ],
+   "links": [
+    {
+     "rel": [
+      "summary",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/soccer/match/_/gameId/401875036/fiorentina-internazionale",
+     "text": "Summary",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    }
+   ],
+   "league": {
+    "id": "730",
+    "uid": "s:600~l:730",
+    "name": "Italian Serie A",
+    "abbreviation": "Serie A",
+    "shortName": "Serie A",
+    "midsizeName": "ITA.1",
+    "slug": "ita.1",
+    "isTournament": false,
+    "links": [
+     {
+      "rel": [
+       "index",
+       "desktop",
+       "league"
+      ],
+      "href": "https://www.espn.com/soccer/league/_/name/ita.1",
+      "text": "Index"
+     },
+     {
+      "rel": [
+       "index",
+       "sportscenter",
+       "app",
+       "league"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~l:730",
+      "text": "Index"
+     },
+     {
+      "rel": [
+       "schedule",
+       "desktop",
+       "league"
+      ],
+      "href": "https://www.espn.com/soccer/schedule/_/league/ita.1",
+      "text": "Schedule"
+     },
+     {
+      "rel": [
+       "schedule",
+       "sportscenter",
+       "app",
+       "league"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~l:730&section=scores",
+      "text": "Schedule"
+     },
+     {
+      "rel": [
+       "standings",
+       "desktop",
+       "league"
+      ],
+      "href": "https://www.espn.com/soccer/table/_/league/ita.1",
+      "text": "Standings"
+     },
+     {
+      "rel": [
+       "standings",
+       "sportscenter",
+       "app",
+       "league"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~l:730&section=standings",
+      "text": "Standings"
+     },
+     {
+      "rel": [
+       "scores",
+       "desktop",
+       "league"
+      ],
+      "href": "https://www.espn.com/soccer/scoreboard/_/league/ita.1",
+      "text": "Scores"
+     },
+     {
+      "rel": [
+       "scores",
+       "sportscenter",
+       "app",
+       "league"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~l:730&section=scores",
+      "text": "Scores"
+     },
+     {
+      "rel": [
+       "stats",
+       "desktop",
+       "league"
+      ],
+      "href": "https://www.espn.com/soccer/stats/_/league/ita.1",
+      "text": "Stats"
+     },
+     {
+      "rel": [
+       "stats",
+       "sportscenter",
+       "app",
+       "league"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~l:730&section=stats",
+      "text": "Stats"
+     },
+     {
+      "rel": [
+       "teams",
+       "desktop",
+       "league"
+      ],
+      "href": "https://www.espn.com/soccer/teams/_/league/ita.1",
+      "text": "Teams"
+     }
+    ],
+    "logos": [
+     {
+      "href": "https://a.espncdn.com/i/leaguelogos/soccer/500/12.png",
+      "rel": [
+       "full",
+       "default"
+      ]
+     },
+     {
+      "href": "https://a.espncdn.com/i/leaguelogos/soccer/500-dark/12.png",
+      "rel": [
+       "full",
+       "dark"
+      ]
+     }
+    ]
+   },
+   "linksv4": [
+    {
+     "rel": [
+      "summary",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/soccer/match/_/gameId/401875036/fiorentina-internazionale",
+     "text": "Gamecast",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    }
+   ]
+  },
+  "wallclockAvailable": false,
   "seasonseries": [
    {
     "type": "head-to-head",
@@ -7980,392 +8366,6 @@
     ]
    }
   ],
-  "header": {
-   "id": "401875036",
-   "uid": "s:600~l:730~e:401875036",
-   "season": {
-    "year": 2026,
-    "current": true,
-    "type": 14240,
-    "name": "2026-27 Italian Serie A"
-   },
-   "timeValid": true,
-   "competitions": [
-    {
-     "id": "401875036",
-     "uid": "s:600~l:730~e:401875036~c:401875036",
-     "date": "2026-10-25T11:30Z",
-     "neutralSite": false,
-     "conferenceCompetition": false,
-     "boxscoreAvailable": true,
-     "commentaryAvailable": false,
-     "liveAvailable": false,
-     "onWatchESPN": false,
-     "recent": true,
-     "wallclockAvailable": false,
-     "boxscoreSource": "full",
-     "playByPlaySource": "full",
-     "competitors": [
-      {
-       "id": "110",
-       "uid": "s:600~t:110",
-       "order": 0,
-       "homeAway": "home",
-       "winner": false,
-       "team": {
-        "id": "110",
-        "guid": "864b1935-65cc-fb9b-850d-790e4c8a8d47",
-        "uid": "s:600~t:110",
-        "location": "Internazionale",
-        "name": "Internazionale",
-        "abbreviation": "INT",
-        "displayName": "Internazionale",
-        "shortDisplayName": "Inter Milan",
-        "color": "00239c",
-        "alternateColor": "ffffff",
-        "logos": [
-         {
-          "href": "https://a.espncdn.com/i/teamlogos/soccer/500/110.png",
-          "width": 500,
-          "height": 500,
-          "alt": "",
-          "rel": [
-           "full",
-           "default"
-          ],
-          "lastUpdated": "2024-01-04T17:49Z"
-         },
-         {
-          "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/110.png",
-          "width": 500,
-          "height": 500,
-          "alt": "",
-          "rel": [
-           "full",
-           "dark"
-          ],
-          "lastUpdated": "2024-01-04T17:53Z"
-         }
-        ],
-        "groups": {
-         "name": "2026-2027 Italian Serie A"
-        },
-        "links": [
-         {
-          "rel": [
-           "clubhouse",
-           "desktop",
-           "team"
-          ],
-          "href": "https://www.espn.com/soccer/club/_/id/110/internazionale",
-          "text": "Clubhouse"
-         }
-        ]
-       },
-       "record": [
-        {
-         "type": "total",
-         "summary": "6-1-0",
-         "displayValue": "6-1-0"
-        },
-        {
-         "type": "points",
-         "summary": "19",
-         "displayValue": "19"
-        }
-       ],
-       "possession": false,
-       "form": "DWLWD"
-      },
-      {
-       "id": "109",
-       "uid": "s:600~t:109",
-       "order": 1,
-       "homeAway": "away",
-       "winner": false,
-       "team": {
-        "id": "109",
-        "guid": "b83bf35a-2c4b-c57b-1eb6-70e5046c8461",
-        "uid": "s:600~t:109",
-        "location": "Fiorentina",
-        "name": "Fiorentina",
-        "abbreviation": "FIO",
-        "displayName": "Fiorentina",
-        "shortDisplayName": "Fiorentina",
-        "color": "4c1d84",
-        "alternateColor": "ffffff",
-        "logos": [
-         {
-          "href": "https://a.espncdn.com/i/teamlogos/soccer/500/109.png",
-          "width": 500,
-          "height": 500,
-          "alt": "",
-          "rel": [
-           "full",
-           "default"
-          ],
-          "lastUpdated": "2019-05-08T16:07Z"
-         },
-         {
-          "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/109.png",
-          "width": 500,
-          "height": 500,
-          "alt": "",
-          "rel": [
-           "full",
-           "dark"
-          ],
-          "lastUpdated": "2019-05-08T16:07Z"
-         }
-        ],
-        "groups": {
-         "name": "2026-2027 Italian Serie A"
-        },
-        "links": [
-         {
-          "rel": [
-           "clubhouse",
-           "desktop",
-           "team"
-          ],
-          "href": "https://www.espn.com/soccer/club/_/id/109/fiorentina",
-          "text": "Clubhouse"
-         }
-        ]
-       },
-       "record": [
-        {
-         "type": "total",
-         "summary": "1-1-5",
-         "displayValue": "1-1-5"
-        },
-        {
-         "type": "points",
-         "summary": "4",
-         "displayValue": "4"
-        }
-       ],
-       "possession": false,
-       "form": "DLDWW"
-      }
-     ],
-     "notes": [],
-     "status": {
-      "type": {
-       "id": "1",
-       "name": "STATUS_SCHEDULED",
-       "state": "pre",
-       "completed": false,
-       "description": "Scheduled",
-       "detail": "Sun, October 25th at 7:30 AM EDT",
-       "shortDetail": "10/25 - 7:30 AM EDT"
-      }
-     },
-     "broadcasts": [
-      {
-       "type": {
-        "id": "1",
-        "shortName": "TV"
-       },
-       "market": {
-        "id": "1",
-        "type": "National"
-       },
-       "media": {
-        "shortName": "CBSSN"
-       },
-       "lang": "en",
-       "region": "us",
-       "isNational": true
-      },
-      {
-       "type": {
-        "id": "4",
-        "shortName": "STREAMING"
-       },
-       "market": {},
-       "media": {
-        "shortName": "Paramount+"
-       },
-       "lang": "en",
-       "region": "us",
-       "isNational": false
-      }
-     ],
-     "groups": {
-      "id": "1",
-      "name": "2000/2001 Italian Serie A\r\n",
-      "abbreviation": "2000/2001"
-     },
-     "isFinal": false,
-     "isThirdPlace": false,
-     "altGameNote": "Serie A",
-     "boxscoreMinutes": false,
-     "shotMapAvailable": true
-    }
-   ],
-   "links": [
-    {
-     "rel": [
-      "summary",
-      "desktop",
-      "event"
-     ],
-     "href": "https://www.espn.com/soccer/match/_/gameId/401875036/fiorentina-internazionale",
-     "text": "Summary",
-     "shortText": "Summary",
-     "isExternal": false,
-     "isPremium": false
-    }
-   ],
-   "league": {
-    "id": "730",
-    "uid": "s:600~l:730",
-    "name": "Italian Serie A",
-    "abbreviation": "Serie A",
-    "shortName": "Serie A",
-    "midsizeName": "ITA.1",
-    "slug": "ita.1",
-    "isTournament": false,
-    "links": [
-     {
-      "rel": [
-       "index",
-       "desktop",
-       "league"
-      ],
-      "href": "https://www.espn.com/soccer/league/_/name/ita.1",
-      "text": "Index"
-     },
-     {
-      "rel": [
-       "index",
-       "sportscenter",
-       "app",
-       "league"
-      ],
-      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~l:730",
-      "text": "Index"
-     },
-     {
-      "rel": [
-       "schedule",
-       "desktop",
-       "league"
-      ],
-      "href": "https://www.espn.com/soccer/schedule/_/league/ita.1",
-      "text": "Schedule"
-     },
-     {
-      "rel": [
-       "schedule",
-       "sportscenter",
-       "app",
-       "league"
-      ],
-      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~l:730&section=scores",
-      "text": "Schedule"
-     },
-     {
-      "rel": [
-       "standings",
-       "desktop",
-       "league"
-      ],
-      "href": "https://www.espn.com/soccer/table/_/league/ita.1",
-      "text": "Standings"
-     },
-     {
-      "rel": [
-       "standings",
-       "sportscenter",
-       "app",
-       "league"
-      ],
-      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~l:730&section=standings",
-      "text": "Standings"
-     },
-     {
-      "rel": [
-       "scores",
-       "desktop",
-       "league"
-      ],
-      "href": "https://www.espn.com/soccer/scoreboard/_/league/ita.1",
-      "text": "Scores"
-     },
-     {
-      "rel": [
-       "scores",
-       "sportscenter",
-       "app",
-       "league"
-      ],
-      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~l:730&section=scores",
-      "text": "Scores"
-     },
-     {
-      "rel": [
-       "stats",
-       "desktop",
-       "league"
-      ],
-      "href": "https://www.espn.com/soccer/stats/_/league/ita.1",
-      "text": "Stats"
-     },
-     {
-      "rel": [
-       "stats",
-       "sportscenter",
-       "app",
-       "league"
-      ],
-      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~l:730&section=stats",
-      "text": "Stats"
-     },
-     {
-      "rel": [
-       "teams",
-       "desktop",
-       "league"
-      ],
-      "href": "https://www.espn.com/soccer/teams/_/league/ita.1",
-      "text": "Teams"
-     }
-    ],
-    "logos": [
-     {
-      "href": "https://a.espncdn.com/i/leaguelogos/soccer/500/12.png",
-      "rel": [
-       "full",
-       "default"
-      ]
-     },
-     {
-      "href": "https://a.espncdn.com/i/leaguelogos/soccer/500-dark/12.png",
-      "rel": [
-       "full",
-       "dark"
-      ]
-     }
-    ]
-   },
-   "linksv4": [
-    {
-     "rel": [
-      "summary",
-      "desktop",
-      "event"
-     ],
-     "href": "https://www.espn.com/soccer/match/_/gameId/401875036/fiorentina-internazionale",
-     "text": "Gamecast",
-     "shortText": "Summary",
-     "isExternal": false,
-     "isPremium": false
-    }
-   ]
-  },
-  "wallclockAvailable": false,
   "meta": {
    "gp_topic": "gp-soccer-ita.1-401875036",
    "gameSwitcherEnabled": true,
