@@ -25,6 +25,10 @@ export function contactEntity(cover = {}) {
     const value = clean(cover[key]);
     if (value) return value;
   }
+  /* Un sensore di apertura scritto nella casella della tapparella: e' il
+   * contatto della finestra, non un motore («Sconosciuta» con Apri e Chiudi). */
+  const nellaTapparella = clean(cover.entity);
+  if (nellaTapparella.toLowerCase().startsWith("binary_sensor.")) return nellaTapparella;
   return "";
 }
 

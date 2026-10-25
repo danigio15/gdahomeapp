@@ -558,7 +558,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-VYHXBVFJ.js";
+} from "../../chunk-PNUPWMTM.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -85597,8 +85597,16 @@ function laVoceDaScrivere(quale, voce3 = {}, dentro3 = {}, daImportare = []) {
   }
   if (suo2.chiave === "tapparelle") {
     const tapparelle = Array.isArray(dentro3.cd_tapparelle) ? [...dentro3.cd_tapparelle] : [];
-    const nuova2 = { entity: entita3, name: nome, room_id: stanza2 };
-    const dove2 = tapparelle.findIndex((riga3) => pulito53(riga3?.entity) === entita3);
+    const eUnContatto2 = dominioDi6(entita3) === "binary_sensor";
+    const nuova2 = eUnContatto2 ? { contact: entita3, name: nome, room_id: stanza2 } : { entity: entita3, name: nome, room_id: stanza2 };
+    const dove2 = tapparelle.findIndex(
+      (riga3) => pulito53(riga3?.entity) === entita3 || pulito53(riga3?.contact) === entita3
+    );
+    if (dove2 >= 0 && eUnContatto2 && pulito53(tapparelle[dove2]?.entity) === entita3) {
+      const { entity: _vecchia, ...resto } = tapparelle[dove2];
+      tapparelle[dove2] = { ...resto, ...nuova2 };
+      return { cd_tapparelle: tapparelle };
+    }
     if (dove2 >= 0) tapparelle[dove2] = { ...tapparelle[dove2], ...nuova2 };
     else tapparelle.push(nuova2);
     return { cd_tapparelle: tapparelle };

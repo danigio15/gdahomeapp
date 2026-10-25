@@ -404,8 +404,26 @@ export function laVoceDaScrivere(quale, voce = {}, dentro = {}, daImportare = []
 
   if (suo.chiave === "tapparelle") {
     const tapparelle = Array.isArray(dentro.cd_tapparelle) ? [...dentro.cd_tapparelle] : [];
-    const nuova = { entity: entita, name: nome, room_id: stanza };
-    const dove = tapparelle.findIndex((riga) => pulito(riga?.entity) === entita);
+    /* Un sensore di apertura messo fra le Finestre va nella casella del
+     * contatto, non in quella della tapparella. Scritto come tapparella, la
+     * card lo trattava da motore: Apri, Ferma e Chiudi su una finestra che
+     * non si comanda, e lo stato «Sconosciuta» perche' un contatto una
+     * posizione non ce l'ha. Con il solo contatto la riga e' una finestra
+     * senza motori, quella che dice solo se e' aperta. */
+    const eUnContatto = dominioDi(entita) === "binary_sensor";
+    const nuova = eUnContatto
+      ? { contact: entita, name: nome, room_id: stanza }
+      : { entity: entita, name: nome, room_id: stanza };
+    const dove = tapparelle.findIndex(
+      (riga) => pulito(riga?.entity) === entita || pulito(riga?.contact) === entita,
+    );
+    /* Una riga scritta prima col contatto al posto della tapparella si
+     * raddrizza: il contatto torna nella sua casella e la tapparella sparisce. */
+    if (dove >= 0 && eUnContatto && pulito(tapparelle[dove]?.entity) === entita) {
+      const { entity: _vecchia, ...resto } = tapparelle[dove];
+      tapparelle[dove] = { ...resto, ...nuova };
+      return { cd_tapparelle: tapparelle };
+    }
     if (dove >= 0) tapparelle[dove] = { ...tapparelle[dove], ...nuova };
     else tapparelle.push(nuova);
     return { cd_tapparelle: tapparelle };
