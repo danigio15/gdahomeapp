@@ -69,3 +69,5 @@ GoogleService-Info.plist
 .impeccable/hook.cache.json
 .impeccable/questions/
 .impeccable/mocks/
+strumenti/render-mappa/node_modules/
+strumenti/render-mappa/package*.json

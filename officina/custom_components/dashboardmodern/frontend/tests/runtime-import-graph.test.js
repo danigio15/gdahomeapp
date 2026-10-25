@@ -1594,8 +1594,13 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // `sections/dispositivi-app-section.js` (Dispositivi e Integrazioni) e
   // `sections/aiutanti-app-section.js`. Il Pianificatore sta dentro le
   // Automazioni, e non aggiunge moduli.
+  // 485 con `core/scrivi-tenendo-il-campo.js`: le pagine dell'app si
+  // ridisegnano senza toccare il campo dove si sta scrivendo.
+  // 489 con lo sport: `core/lo-sport.js` (le regole), `sections/sport-
+  // section.js` (la pagina), `sections/sport-editor-section.js` (la scheda del
+  // Config) e `sections/finestre/sport.js` (la finestra della tessera).
   assert.ok(
-    relative.length <= 484,
+    relative.length <= 489,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

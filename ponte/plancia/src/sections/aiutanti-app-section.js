@@ -17,6 +17,7 @@
  * per chi amministra Home Assistant, solo con GdAHome Premium: lo decide il
  * ponte (`ponte/src/aiutanti.js`), e qui il no si racconta.
  */
+import { scriviTenendoIlCampo } from "../core/scrivi-tenendo-il-campo.js";
 import {
   SPIEGAZIONI_DEGLI_AIUTANTI,
   TIPI_DEGLI_AIUTANTI,
@@ -375,9 +376,12 @@ function ridisegna() {
     const attivo = doc.activeElement;
     const cercava = attivo?.matches?.("[data-ai-cerca]");
     const cursore = cercava ? attivo.selectionStart : null;
-    wrap.innerHTML = html;
+    /* Mentre si scrive nella ricerca il campo non si riscrive: si cambia
+     * solo il resto (`scrivi-tenendo-il-campo.js`). */
+    const tenuto = cercava && scriviTenendoIlCampo(wrap, html, attivo);
+    if (!tenuto) wrap.innerHTML = html;
     wrap.dataset.aiScritto = html;
-    if (cercava) {
+    if (cercava && !tenuto) {
       const campo = wrap.querySelector("[data-ai-cerca]");
       campo?.focus?.();
       try {
@@ -447,7 +451,9 @@ function comandiDelValore(a) {
     return `<div class="ai-valore"><b>${esc(valoreDi(id))}</b></div><div class="tasti">${tasto("decrement", "−")}${tasto("increment", "+")}${tasto("reset", t("Azzera", "Reset to zero"))}</div>`;
   if (a.tipo === "timer")
     return `<div class="ai-valore"><b>${esc(valoreDi(id))}</b></div><div class="tasti">${
-      v === "active" ? tasto("pause", t("Pausa", "Pause")) : tasto("start", t("Avvia", "Start timer"))
+      v === "active"
+        ? tasto("pause", t("Pausa", "Pause"))
+        : tasto("start", t("Avvia", "Start timer"))
     }${tasto("cancel", t("Annulla", "Cancel"))}${tasto("finish", t("Finisci", "Finish"))}</div>`;
   if (a.tipo === "input_button")
     return `<div class="tasti">${tasto("press", t("Premi", "Press"))}</div>`;

@@ -177,6 +177,8 @@ export const SCHEDE = Object.freeze({
   tapp: { famiglia: "casa", posizione: 30 }, // Finestre e tapparelle
   appliances: { famiglia: "casa", posizione: 40 }, // Elettrodomestici
   media: { famiglia: "casa", posizione: 50 }, // Musica
+  /* Lo sport: tempo libero, come la musica, subito dopo. */
+  sport: { famiglia: "casa", posizione: 52 },
   robot: { famiglia: "casa", posizione: 60 },
   /* Le stampanti (#469): stanno accanto al robot, che e' l'altra macchina di
    * casa che si guarda per sapere se ha finito. */

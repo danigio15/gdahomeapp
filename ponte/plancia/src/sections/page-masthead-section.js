@@ -87,6 +87,12 @@ const PAGES = Object.freeze([
     en: ["Weather", "Now · My station · Forecast · Radar"],
   },
   {
+    id: "page-sport",
+    tint: ["22,163,74", "225,6,0"],
+    it: ["Sport", "La tua squadra · Formula 1 · MotoGP"],
+    en: ["Sports", "Your team · Formula 1 · MotoGP"],
+  },
+  {
     id: "page-tapparelle",
     tint: ["99,102,241", "14,165,233"],
     it: ["Finestre", "Tapparelle · Tende · Sensori di apertura"],

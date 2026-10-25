@@ -28,6 +28,7 @@ import { PlanceInCasa } from "./plance-in-casa.js";
 import { IL_CRUSCOTTO, LA_GESTIONE, VoceNellaBarra } from "./voci-nella-barra.js";
 import { UtentiDiCasa } from "./utenti.js";
 import { Identita } from "./identita.js";
+import { creaSport } from "./sport.js";
 import { Indirizzi } from "./indirizzi.js";
 import { Licenze } from "./licenze.js";
 import { laRicevutaDaFuori } from "./ricevuta-da-fuori.js";
@@ -240,6 +241,8 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registri,
     /* La via dell'auto fuori casa, chiesta a OpenStreetMap da qui. */
     indirizzi: new Indirizzi({ versione: opzioni.versione }),
+    /* Lo sport seguito in casa, chiesto alle fonti pubbliche da qui. */
+    sport: creaSport(),
     plancia,
     plance,
     configurazione,

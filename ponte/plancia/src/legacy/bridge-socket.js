@@ -115,6 +115,10 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
   "ponte/registri",
   /* La via dell'auto fuori casa, chiesta dal ponte a OpenStreetMap. */
   "ponte/indirizzo",
+  /* Lo sport seguito in casa (calcio, F1, MotoGP), chiesto dal ponte. */
+  "ponte/sport/risultati",
+  "ponte/sport/squadre",
+  "ponte/sport/logo",
   // Le segnalazioni. Stessa ragione dell'upload, e una in piu': la chiave del
   // manutentore sta nelle opzioni del config entry e la chiamata verso il
   // relay la fa il backend, quindi qui passa la domanda e non il segreto.

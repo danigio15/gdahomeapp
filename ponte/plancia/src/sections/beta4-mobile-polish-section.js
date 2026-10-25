@@ -60,6 +60,8 @@ const TAB_ICONS = Object.freeze({
   animali: "🐾",
   /* Il meteo (#206): il sole dietro la nuvola, come la sua voce nella barra. */
   meteo: "🌦️",
+  /* Lo sport: il pallone, come la sua voce nella barra. */
+  sport: "⚽",
 });
 
 /* Quale disegno di casa porta ogni scheda della configurazione.
@@ -126,6 +128,8 @@ const OGGETTO_DELLA_SCHEDA = Object.freeze({
   scollegati: "nonrisponde",
   /* Il meteo (#206): lo stesso disegno della sua voce nella barra. */
   meteo: "meteo",
+  /* Lo sport: il pallone della sua tessera. */
+  sport: "sport",
 });
 
 const FLOW_LOADS = Object.freeze({

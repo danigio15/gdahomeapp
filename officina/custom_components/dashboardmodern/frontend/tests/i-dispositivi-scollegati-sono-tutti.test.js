@@ -112,3 +112,57 @@ test("marca e modello dal registro dei dispositivi, senza ripetere la marca", ()
   });
   assert.deepEqual(modelli, { d1: "Daikin FTXM25R" });
 });
+
+/* «I dispositivi risultano non raggiungibili, in realtà funzionano» (#307).
+ * Senza le mappe dei registri non si sa di chi sia un'entità: un sensore
+ * secondario fermo diventava un «dispositivo non connesso». */
+test("senza registri l'avviso guarda solo le entità della plancia", () => {
+  const stati = {
+    "light.salotto": vivo("Salotto"),
+    /* Il sensore secondario fermo di una luce che va benissimo. */
+    "sensor.salotto_firmware": muto("Salotto firmware"),
+    "switch.presa_cantina": muto("Presa cantina"),
+  };
+  const { adesso, altre } = iDispositiviScollegati({
+    configurate: ["switch.presa_cantina", "light.salotto"],
+    states: stati,
+  });
+  assert.deepEqual(
+    adesso.map((una) => una.entity),
+    ["switch.presa_cantina"],
+  );
+  /* Il resto non suona, ma si cerca e si toglie lo stesso. */
+  assert.deepEqual(
+    altre.map((una) => una.entity),
+    ["sensor.salotto_firmware"],
+  );
+});
+
+test("le altre entità ferme si tolgono col cestino come le righe dell'avviso", () => {
+  const stati = {
+    "sensor.salotto_firmware": muto("Salotto firmware"),
+    "input_boolean.vacanze": muto("Vacanze"),
+  };
+  const escluse = mettiDaParte([], ["sensor.salotto_firmware"]);
+  const { altre, messiDaParte } = iDispositiviScollegati({ states: stati, escluse });
+  /* Tolta, e l'aiutante non è un dispositivo. */
+  assert.deepEqual(altre, []);
+  assert.equal(messiDaParte[0].entity, "sensor.salotto_firmware");
+});
+
+test("con i registri, le mute di un dispositivo che risponde stanno fra le altre", () => {
+  const { adesso, altre } = iDispositiviScollegati({
+    states: { ...STATI, "sensor.salotto_firmware": muto("Salotto firmware") },
+    di: { ...DI, "sensor.salotto_firmware": "d-luce" },
+    nomi: NOMI,
+    modelli: MODELLI,
+  });
+  assert.equal(
+    adesso.some((una) => una.entita.includes("sensor.salotto_firmware")),
+    false,
+  );
+  assert.deepEqual(
+    altre.map((una) => una.entity),
+    ["sensor.salotto_firmware"],
+  );
+});

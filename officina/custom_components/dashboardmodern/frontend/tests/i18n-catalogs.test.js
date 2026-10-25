@@ -132,6 +132,9 @@ test("no translation is left as its English source", async () => {
 /* Strings that legitimately read the same in every language we ship. */
 const SHARED_ACROSS_LANGUAGES = new Set([
   ".",
+  /* Lo sport: «Sprint» e' il nome della gara corta, in F1 e in MotoGP, e si
+   * dice cosi' in tutte le lingue che ce l'hanno. */
+  "Sprint",
   /* La console di evcc nella pagina Auto: due nomi propri. */
   "Wallbox · evcc",
   /* Il suono «Ding» del campanello a muro: e' il suono, non una parola. */
@@ -229,6 +232,11 @@ const SHARED_ACROSS_LANGUAGES = new Set([
  */
 const LOCALE_IDENTITIES = {
   es: new Set([
+    /* Lo sport: parole che in questa lingua si scrivono come in inglese
+     * («d» per i giorni, «Pts» per i punti in classifica). */
+    "Pts",
+    "d",
+    "{n} pts",
     /* Le pagine Dispositivi, Aiutanti e il Pianificatore: parole che in
      * questa lingua sono le stesse, e sono quelle di Home Assistant. */
     "error",
@@ -259,6 +267,11 @@ const LOCALE_IDENTITIES = {
     "Animal",
   ]),
   fr: new Set([
+    /* Lo sport: parole che in questa lingua si scrivono come in inglese
+     * («d» per i giorni, «Pts» per i punti in classifica). */
+    "Football",
+    "Pts",
+    "{n} pts",
     /* Le pagine Dispositivi, Aiutanti e il Pianificatore: parole che in
      * questa lingua sono le stesse, e sono quelle di Home Assistant. */
     "cloud",
@@ -353,6 +366,12 @@ const LOCALE_IDENTITIES = {
     "Zone",
   ]),
   de: new Set([
+    /* Lo sport: parole che in questa lingua si scrivono come in inglese
+     * («d» per i giorni, «Pts» per i punti in classifica). */
+    "Form",
+    "in {n}",
+    "Qualifying",
+    "Team",
     /* «Ingresso · live» sopra il video del citofono: la parola e' quella. */
     "live",
     /* Il foglio di un dispositivo: «Integration» e «Version» sono le parole
@@ -434,6 +453,11 @@ const LOCALE_IDENTITIES = {
     "Zone",
   ]),
   pt: new Set([
+    /* Lo sport: parole che in questa lingua si scrivono come in inglese
+     * («d» per i giorni, «Pts» per i punti in classifica). */
+    "Pts",
+    "d",
+    "{n} pts",
     /* La regia a muro: «audio» e «zoom» sono la stessa parola, e sopra un
      * cursore o accanto a una telecamera nessuno ne usa un'altra. */
     "Zoom",
@@ -455,6 +479,11 @@ const LOCALE_IDENTITIES = {
     "Volume",
   ]),
   nl: new Set([
+    /* Lo sport: parole che in questa lingua si scrivono come in inglese
+     * («d» per i giorni, «Pts» per i punti in classifica). */
+    "Team",
+    "Race",
+    "d",
     /* Le pagine Dispositivi, Aiutanti e il Pianificatore: parole che in
      * questa lingua sono le stesse, e sono quelle di Home Assistant. */
     "cloud",
@@ -553,6 +582,9 @@ const LOCALE_IDENTITIES = {
     "Zone",
   ]),
   pl: new Set([
+    /* Lo sport: parole che in questa lingua si scrivono come in inglese
+     * («d» per i giorni, «Pts» per i punti in classifica). */
+    "d",
     /* La regia a muro: «audio» e «zoom» sono la stessa parola, e sopra un
      * cursore o accanto a una telecamera nessuno ne usa un'altra. */
     "Audio",
@@ -573,6 +605,9 @@ const LOCALE_IDENTITIES = {
     "Start",
   ]),
   tr: new Set([
+    /* Lo sport: parole che in questa lingua si scrivono come in inglese
+     * («d» per i giorni, «Pts» per i punti in classifica). */
+    "Form",
     "Polo",
     "Robot",
     "🛡️ ALARM",

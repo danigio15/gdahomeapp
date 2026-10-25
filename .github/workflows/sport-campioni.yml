@@ -1,0 +1,33 @@
+# Le risposte vere delle fonti dello sport (calcio, F1, MotoGP), per scrivere
+# la sezione Sport su dati come sono davvero.
+#
+# Da qui la sessione di lavoro non raggiunge quei server; GitHub si'. Gira
+# solo sui branch di lavoro e solo quando cambia lo scaricatore, e rimette le
+# risposte nel branch. Non costruisce app e non pubblica niente.
+name: I campioni dello sport
+on:
+  push:
+    branches:
+      - "claude/**"
+    paths:
+      - "strumenti/sport-campioni/scarica.mjs"
+permissions:
+  contents: write
+jobs:
+  campioni:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Le risposte
+        run: node strumenti/sport-campioni/scarica.mjs
+      - name: Nel branch
+        run: |
+          git config user.name "gdahome-foto"
+          git config user.email "gdahome-foto@users.noreply.github.com"
+          git add strumenti/sport-campioni/campioni strumenti/sport-campioni/loghi
+          git commit -m "Campioni dello sport" || exit 0
+          git push

@@ -343,7 +343,10 @@
 /* La revisione 69 aggiunge le bollette (`cd_bollette`, #295): quali sensori
  * dell'integrazione del fornitore sono l'ultima bolletta, il da pagare, lo
  * stato del pagamento. Sono della casa, e viaggiano coi dispositivi. */
-export const CONFIG_KEYS_REVISION = 69;
+/* La revisione 70 aggiunge lo sport (`cd_sport`): la squadra di calcio, la
+ * Formula 1 e la MotoGP che la casa segue. E' una scelta della casa come le
+ * altre pagine, e si vede uguale dal telefono e dal tablet. */
+export const CONFIG_KEYS_REVISION = 70;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -659,4 +662,7 @@ export const CONFIG_KEYS = Object.freeze([
   /* Le immagini delle card che non sono voci di un elenco: la ragione per
    * cui stanno qui è scritta accanto alla revisione 68. */
   "cd_immagini_riquadri",
+  /* Lo sport: la ragione per cui sta qui è scritta accanto alla revisione
+   * 70. */
+  "cd_sport",
 ]);

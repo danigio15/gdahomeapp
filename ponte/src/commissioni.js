@@ -344,6 +344,9 @@ const REGISTRI = "ponte/registri";
 /* L'indirizzo di un punto, per la posizione dell'auto (`indirizzi.js`). */
 const INDIRIZZO = "ponte/indirizzo";
 const DIMMI_IL_DISPOSITIVO = "ponte/zigbee/dimmi";
+/* Lo sport (`sport.js`): `ponte/sport/risultati`, `ponte/sport/squadre`,
+ * `ponte/sport/logo`. Solo per chi e' entrato: vedi `_loSport`. */
+const LO_SPORT = "ponte/sport/";
 
 /* La chat di assistenza della dashboard: quattro comandi sono di chi chiede, e
  * li fa il ponte per ogni casa. */
@@ -597,6 +600,8 @@ export class Commissioni {
     registri = null,
     /* L'indirizzo dei punti (`indirizzi.js`): la via dell'auto fuori casa. */
     indirizzi = null,
+    /* Lo sport seguito in casa (`sport.js`): calcio, Formula 1, MotoGP. */
+    sport = null,
     ritorno = null,
     /* Le licenze di questa casa (`licenze.js`). Senza — un ponte sul banco, o
      * le prove di ieri — nessun limite, e `ponte/licenza/stato` dice che le
@@ -624,6 +629,7 @@ export class Commissioni {
     this.chiaveDelCruscotto = String(chiaveDelCruscotto || "");
     this.chiaveDellaGestione = String(chiaveDellaGestione || "");
     this.indirizzi = indirizzi;
+    this.sport = sport;
     this.utenti = utenti;
     this.configurazione = configurazione;
     /* Il catalogo delle integrazioni e le foto: le altre due cose che la
@@ -972,6 +978,8 @@ export class Commissioni {
     if (typeof tipo === "string" && tipo.startsWith("ponte/zigbee/")) return this._zigbee(detto);
     if (tipo === REGISTRI) return this._registri(detto);
     if (tipo === INDIRIZZO) return this._lIndirizzo(detto);
+    if (typeof tipo === "string" && tipo.startsWith(LO_SPORT))
+      return this._loSport(detto, chiChiede);
     if (tipo === CONFIG_REVISIONI)
       return this._revisioni(detto, soloLaPrima, chiChiede, amministra);
     if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE) {
@@ -1060,6 +1068,40 @@ export class Commissioni {
     const indirizzo = await this.indirizzi.indirizzoDi(detto?.lat, detto?.lon);
     if (!indirizzo) return no(id, "not_found", "di quel punto non si sa l'indirizzo");
     return si(id, { indirizzo });
+  }
+
+  /* Lo sport seguito in casa: risultati, squadre di un campionato, logo di
+   * una squadra.
+   *
+   * SOLO CHI E' ENTRATO. La domanda la fa la plancia dentro Home Assistant
+   * (l'ingress dice chi la guarda) o un telefono abbinato e intestato a un
+   * utente; chi non ha un nome riceve un no e il ponte non chiede niente a
+   * nessuno. Dalla plancia arrivano solo le scelte — un campionato
+   * dell'elenco, il numero di una squadra, «f1», «motogp» — e gli indirizzi
+   * li scrive `sport.js`: nel ponte non resta e non si vede nulla, e fuori
+   * escono solo domande uguali per tutti («la Serie A», «la squadra 110»). */
+  async _loSport(detto, chiChiede = "") {
+    const id = detto?.id ?? null;
+    const tipo = detto?.type;
+    if (!this.sport) return no(id, "unknown_command", `non conosco ${tipo}`);
+    if (!String(chiChiede || "").trim())
+      return no(id, "unauthorized", "lo sport lo vede chi e' entrato");
+    try {
+      if (tipo === `${LO_SPORT}risultati`) {
+        const seguiti = Array.isArray(detto?.seguiti) ? detto.seguiti : [];
+        return si(id, { risultati: await this.sport.risultati(seguiti) });
+      }
+      if (tipo === `${LO_SPORT}squadre`) {
+        return si(id, { squadre: await this.sport.squadre(detto?.campionato) });
+      }
+      if (tipo === `${LO_SPORT}logo`) {
+        const logo = await this.sport.logo(String(detto?.squadra ?? ""));
+        return si(id, { stato: 200, tipo: logo.tipo, corpo: logo.base64 });
+      }
+    } catch (_e) {
+      return no(id, "not_found", "lo sport adesso non risponde");
+    }
+    return no(id, "unknown_command", `non conosco ${tipo}`);
   }
 
   async _registri(detto) {
