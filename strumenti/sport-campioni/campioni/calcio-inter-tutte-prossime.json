@@ -2,7 +2,7 @@
  "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams/110/schedule?fixture=true",
  "stato": 200,
  "json": {
-  "timestamp": "2026-10-25T07:54:50Z",
+  "timestamp": "2026-10-25T09:27:05Z",
   "status": "success",
   "season": {
    "year": 2026,
@@ -359,13 +359,13 @@
          "name": "DraftKings",
          "priority": 1
         },
-        "details": "INT -295",
+        "details": "INT -310",
         "overUnder": 3.5,
         "spread": -1.5,
         "awayTeamOdds": {
          "favorite": false,
          "underdog": true,
-         "moneyLine": 600,
+         "moneyLine": 650,
          "spreadOdds": -120,
          "open": {
           "favorite": false,
@@ -404,12 +404,12 @@
            "american": "-120"
           },
           "moneyLine": {
-           "value": 7,
-           "displayValue": "6/1",
-           "alternateDisplayValue": "+600",
-           "decimal": 7,
-           "fraction": "6/1",
-           "american": "+600"
+           "value": 7.5,
+           "displayValue": "13/2",
+           "alternateDisplayValue": "+650",
+           "decimal": 7.5,
+           "fraction": "13/2",
+           "american": "+650"
           }
          },
          "team": {
@@ -423,7 +423,7 @@
         "homeTeamOdds": {
          "favorite": true,
          "underdog": false,
-         "moneyLine": -295,
+         "moneyLine": -310,
          "spreadOdds": -115,
          "open": {
           "favorite": true,
@@ -462,12 +462,12 @@
            "american": "-115"
           },
           "moneyLine": {
-           "value": 1.33,
-           "displayValue": "20/59",
-           "alternateDisplayValue": "-295",
-           "decimal": 1.33,
-           "fraction": "20/59",
-           "american": "-295"
+           "value": 1.32,
+           "displayValue": "10/31",
+           "alternateDisplayValue": "-310",
+           "decimal": 1.32,
+           "fraction": "10/31",
+           "american": "-310"
           }
          },
          "team": {

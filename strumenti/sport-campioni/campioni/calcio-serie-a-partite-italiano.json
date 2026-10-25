@@ -2415,8 +2415,8 @@
          "name": "Bet 365"
         },
         "awayTeamOdds": {
-         "summary": "1/2",
-         "value": 1.5,
+         "summary": "8/15",
+         "value": 1.533,
          "handicap": 0,
          "team": {
           "id": "111",
@@ -2433,7 +2433,7 @@
            "bets",
            "bet-365"
           ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=201585795-39212239~1/2",
+          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=201585795-39212239~8/15",
           "text": "Away Bet",
           "shortText": "Away Bet",
           "isExternal": true,
@@ -2442,8 +2442,8 @@
          }
         },
         "homeTeamOdds": {
-         "summary": "6/1",
-         "value": 7,
+         "summary": "11/2",
+         "value": 6.5,
          "handicap": 0,
          "team": {
           "id": "113",
@@ -2460,7 +2460,7 @@
            "bets",
            "bet-365"
           ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=201585795-39212236~6/1",
+          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=201585795-39212236~11/2",
           "text": "Home Bet",
           "shortText": "Home Bet",
           "isExternal": true,
@@ -2469,8 +2469,8 @@
          }
         },
         "drawOdds": {
-         "summary": "31/10",
-         "value": 4.1,
+         "summary": "3/1",
+         "value": 4,
          "handicap": 0,
          "link": {
           "language": "it-IT",
@@ -2480,7 +2480,7 @@
            "bets",
            "bet-365"
           ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=201585795-39212238~31/10",
+          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=201585795-39212238~3/1",
           "text": "Draw Bet",
           "shortText": "Draw Bet",
           "isExternal": true,
