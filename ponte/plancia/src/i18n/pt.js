@@ -7495,4 +7495,6 @@ export default Object.freeze({
   "To set up": "Por configurar",
   "Used at home": "Consumida em casa",
   "What it opens": "O que abre",
+  "At a glance is Premium": "«Num relance» é Premium",
+  "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a single page with the weather and big tiles, and each tile opens its data in a popup. Premium is turned on from the GdAHome app.": "Com o GdAHome Base este painel continua a ser um painel normal. Com o Premium torna-se uma só página com o tempo e mosaicos grandes, e cada mosaico abre os seus dados numa janela. O Premium ativa-se na app GdAHome.",
 });

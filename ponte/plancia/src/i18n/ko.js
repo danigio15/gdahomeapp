@@ -7437,4 +7437,6 @@ export default Object.freeze({
   "To set up": "설정 필요",
   "Used at home": "집에서 사용",
   "What it opens": "여는 대상",
+  "At a glance is Premium": "「한눈에」는 Premium입니다",
+  "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a single page with the weather and big tiles, and each tile opens its data in a popup. Premium is turned on from the GdAHome app.": "GdAHome Base에서는 이 대시보드가 일반 대시보드로 남습니다. Premium에서는 날씨와 큰 타일이 있는 한 페이지가 되고, 각 타일은 팝업으로 데이터를 엽니다. Premium은 GdAHome 앱에서 켭니다.",
 });

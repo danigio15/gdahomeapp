@@ -7512,4 +7512,6 @@ export default Object.freeze({
   "To set up": "Por configurar",
   "Used at home": "Consumida en casa",
   "What it opens": "Qué abre",
+  "At a glance is Premium": "«De un vistazo» es Premium",
+  "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a single page with the weather and big tiles, and each tile opens its data in a popup. Premium is turned on from the GdAHome app.": "Con GdAHome Base este panel sigue siendo un panel normal. Con Premium se convierte en una sola página con el tiempo y mosaicos grandes, y cada mosaico abre sus datos en una ventana. Premium se activa desde la app GdAHome.",
 });

@@ -7463,4 +7463,6 @@ export default Object.freeze({
   "To set up": "Ayarlanacak",
   "Used at home": "Evde kullanılan",
   "What it opens": "Neyi açar",
+  "At a glance is Premium": "«Bir bakışta» Premium'dur",
+  "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a single page with the weather and big tiles, and each tile opens its data in a popup. Premium is turned on from the GdAHome app.": "GdAHome Base ile bu pano normal bir pano olarak kalır. Premium ile hava durumu ve büyük kutucuklardan oluşan tek bir sayfaya dönüşür ve her kutucuk verilerini bir pencerede açar. Premium, GdAHome uygulamasından açılır.",
 });

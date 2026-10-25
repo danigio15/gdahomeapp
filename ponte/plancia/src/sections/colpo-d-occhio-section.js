@@ -33,6 +33,7 @@ import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import { segnoDelTempo } from "../core/la-card-del-meteo.js";
 import { istantaneaInViaggio, loadCameraFrame, sorvegliaIFlussi } from "./live-ui-section.js";
 import { chiediLeCapacita } from "./telecamera-capacita-section.js";
+import { premiumDellaCasa, premiumRicordato } from "./plancia-a-muro-section.js";
 import { fermaIVideo } from "./telecamera-webrtc-section.js";
 import { CHIAVE_RISERVATE, telecamereVisibili } from "../core/telecamere-riservate.js";
 import { normalizePeople } from "../core/person-model.js";
@@ -60,6 +61,8 @@ const state = (root[KEY] ||= {
   installed: false,
   frame: 0,
   cameraUrls: new Map(),
+  premium: null,
+  chiedendo: false,
   timer: 0,
   finestra: null,
   periodo: "adesso",
@@ -512,6 +515,40 @@ function finestraDiAdesso(occhio, states) {
   return "";
 }
 
+/* ── Premium ──────────────────────────────────────────────────────────────
+ *
+ * Come la plancia a muro: la pagina a colpo d'occhio si accende solo se il
+ * ponte dice che la casa e' Premium. Con Base la plancia resta quella di
+ * sempre, e il config resta scritto per il giorno dopo. La risposta del ponte
+ * vale mezz'ora; nel frattempo vale quello che il dispositivo ha saputo
+ * l'ultima volta, cosi' una casa Premium non vede la plancia classica prima
+ * della sua. */
+const MEZZ_ORA = 30 * 60 * 1000;
+
+function eCasaPremium() {
+  if (state.premium === null && premiumRicordato() === true) state.premium = true;
+  /* Si richiede alla mezz'ora: una licenza scaduta spegne la pagina, una
+   * comprata la accende, senza ricaricare. */
+  if (state.premium === null || Date.now() - (state.chiestaIl || 0) > MEZZ_ORA) chiediLaLicenza();
+  return state.premium === true;
+}
+
+function chiediLaLicenza() {
+  if (state.chiedendo) return;
+  state.chiedendo = true;
+  state.chiestaIl = Date.now();
+  premiumDellaCasa()
+    .then((premium) => {
+      const prima = state.premium;
+      state.premium = premium === true;
+      if (prima !== state.premium) ridisegna();
+    })
+    .catch(() => {})
+    .finally(() => {
+      state.chiedendo = false;
+    });
+}
+
 /* ── il disegno ───────────────────────────────────────────────────────── */
 
 function editorAperto() {
@@ -546,7 +583,7 @@ export function disegna() {
   /* Col Config aperto la pagina resta dov'e', nascosta dal foglio di stile
    * (`:has(#editor-modal)`): quando il Config si chiude ricompare da sola,
    * senza che nessuno debba accorgersene. */
-  if (!occhio.attiva) {
+  if (!occhio.attiva || !eCasaPremium()) {
     togliLaTela();
     return;
   }

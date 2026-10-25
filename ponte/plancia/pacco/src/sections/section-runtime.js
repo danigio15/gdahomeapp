@@ -559,7 +559,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-7Y2KCUMO.js";
+} from "../../chunk-FKQWOS7Z.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -3344,6 +3344,7 @@ var SOURCE_INDEX = Object.freeze({
   "con credenziali": "with credentials",
   "Con esclusioni": "With bypass",
   "Con GdAHome Base questa plancia resta una plancia normale. Con Premium diventa un pannello per un tablet a muro: Stanza, Scene o Ingresso, in orizzontale e in verticale. Premium si attiva dall'app GdAHome.": "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a panel for a wall tablet: Room, Scenes or Entrance, landscape and portrait. Premium is turned on from the GdAHome app.",
+  "Con GdAHome Base questa plancia resta una plancia normale. Con Premium diventa una pagina sola con il meteo e i riquadri grandi, e ogni riquadro apre i suoi dati in un popup. Premium si attiva dall'app GdAHome.": "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a single page with the weather and big tiles, and each tile opens its data in a popup. Premium is turned on from the GdAHome app.",
   "con l'etichetta": "labelled",
   "Con l'orario": "By the clock",
   "Con l'orario: chiaro di giorno, scuro la sera": "By the clock: light by day, dark in the evening",
@@ -4392,6 +4393,7 @@ var SOURCE_INDEX = Object.freeze({
   "Il codice non è giusto, o è scaduto.": "The code is wrong, or expired.",
   "Il codice si chiede prima di inserire": "The code is asked before arming",
   "Il collare è quasi scarico: mettilo in carica.": "The collar is almost flat: charge it.",
+  "Il Colpo d'occhio è Premium": "At a glance is Premium",
   "Il comando rapido della plancia: modalità, gradi e ventola scelti per ogni stanza nella scheda Clima. Premuto di nuovo, spegne.": "The dashboard quick command: mode, degrees and fan chosen for each room in the Climate tab. Pressed again, it turns off.",
   "Il contatore che conta (total o total_increasing), oppure il sensore della pressione, della portata o del sale.": "The meter that counts (total or total_increasing), or the pressure, flow or salt sensor.",
   "Il contatore che lo misura: compare nel flusso di quell'impianto.": "The meter that measures it: it shows up in that plant's flow.",
@@ -106483,6 +106485,10 @@ function trattieniIlVelo() {
   });
 }
 var lasciaIlVelo = () => decidi?.();
+function premiumRicordato() {
+  if (typeof root.__GDAHOME_PREMIUM__ === "boolean") return root.__GDAHOME_PREMIUM__;
+  return ricordo().premium;
+}
 async function premiumDellaCasa({ forza = false } = {}) {
   if (typeof root.__GDAHOME_PREMIUM__ === "boolean") {
     state119.premium = root.__GDAHOME_PREMIUM__;
@@ -147749,6 +147755,8 @@ var state173 = root[KEY177] ||= {
   installed: false,
   frame: 0,
   cameraUrls: /* @__PURE__ */ new Map(),
+  premium: null,
+  chiedendo: false,
   timer: 0,
   finestra: null,
   periodo: "adesso",
@@ -148092,6 +148100,25 @@ function finestraDiAdesso(occhio2, states) {
   if (f.tipo === "antifurto") return antifurtoFinestra(occhio2, states);
   return "";
 }
+var MEZZ_ORA3 = 30 * 60 * 1e3;
+function eCasaPremium() {
+  if (state173.premium === null && premiumRicordato() === true) state173.premium = true;
+  if (state173.premium === null || Date.now() - (state173.chiestaIl || 0) > MEZZ_ORA3) chiediLaLicenza();
+  return state173.premium === true;
+}
+function chiediLaLicenza() {
+  if (state173.chiedendo) return;
+  state173.chiedendo = true;
+  state173.chiestaIl = Date.now();
+  premiumDellaCasa().then((premium2) => {
+    const prima = state173.premium;
+    state173.premium = premium2 === true;
+    if (prima !== state173.premium) ridisegna29();
+  }).catch(() => {
+  }).finally(() => {
+    state173.chiedendo = false;
+  });
+}
 function editorAperto2() {
   return Boolean(doc?.getElementById("editor-modal"));
 }
@@ -148118,7 +148145,7 @@ function disegna11() {
   if (!doc?.body) return;
   const states = allStates() || {};
   const occhio2 = occhioDaMostrare(states);
-  if (!occhio2.attiva) {
+  if (!occhio2.attiva || !eCasaPremium()) {
     togliLaTela2();
     return;
   }
@@ -148640,7 +148667,7 @@ senzaCadere(installColpoDOcchio);
 
 // src/sections/colpo-d-occhio-editor-section.js
 var KEY178 = "__DASHBOARDMODERN_COLPO_D_OCCHIO_EDITOR__";
-var state174 = root[KEY178] ||= { installed: false };
+var state174 = root[KEY178] ||= { installed: false, premium: null, chiedendo: false };
 var OCCHIO_TAB = "occhio";
 var DOMINI2 = {
   meteo: ["weather"],
@@ -148795,15 +148822,44 @@ function antifurtoMarkup(o) {
     ${voci4}
     <div class="dm-oc-ed-tasti"><button type="button" class="ed-btn-add" data-dm-oc-nuova="antifurto.modi" ${a.modi.length >= MODI_AL_MASSIMO ? "disabled" : ""}>+ ${esc(t("Modo", "Mode"))}</button></div>`;
 }
+function chiediLaLicenza2() {
+  if (state174.chiedendo) return;
+  state174.chiedendo = true;
+  premiumDellaCasa({ forza: true }).then((premium2) => {
+    state174.premium = premium2 === true;
+  }).catch(() => {
+    state174.premium = false;
+  }).finally(() => {
+    state174.chiedendo = false;
+    ridisegna30();
+  });
+}
 function corpoMarkup16() {
+  const contenuto = contenutoMarkup();
+  if (state174.premium === true) return `<div class="dm-oc-ed">${contenuto}</div>`;
+  if (state174.premium === null)
+    return `<div class="dm-oc-ed"><p class="dm-oc-ed-nota">${esc(
+      t("Controllo la licenza…", "Checking the licence…")
+    )}</p>${contenuto}</div>`;
+  return `<div class="dm-oc-ed dm-oc-ed-chiuso"><div class="dm-oc-ed-dietro" aria-hidden="true" inert>${contenuto}</div>
+    <div class="dm-oc-ed-lucchetto"><span aria-hidden="true">🔒</span>
+      <b>${esc(t("Il Colpo d'occhio è Premium", "At a glance is Premium"))}</b>
+      <p>${esc(
+    t(
+      "Con GdAHome Base questa plancia resta una plancia normale. Con Premium diventa una pagina sola con il meteo e i riquadri grandi, e ogni riquadro apre i suoi dati in un popup. Premium si attiva dall'app GdAHome.",
+      "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a single page with the weather and big tiles, and each tile opens its data in a popup. Premium is turned on from the GdAHome app."
+    )
+  )}</p></div></div>`;
+}
+function contenutoMarkup() {
   const o = occhio();
-  return `<div class="dm-oc-ed">
+  return `
     <div class="ed-intro">${esc(
     t(
       "Colpo d'occhio: una pagina sola con il meteo e i riquadri grandi. Ogni riquadro apre i suoi dati in un popup — il flusso del fotovoltaico, le telecamere dal vivo, i tasti dell'antifurto — e il cancello si apre con un tocco.",
       "At a glance: one page with the weather and big tiles. Each tile opens its data in a popup — the solar flow, live cameras, alarm buttons — and the gate opens with one tap."
     )
-  )}</div>
+  )} <span class="dm-oc-ed-premium">PREMIUM</span></div>
     <div class="ed-list">
       ${gruppo(
     "testata",
@@ -148820,7 +148876,7 @@ function corpoMarkup16() {
       ${gruppo("energia", "solar", t("Fotovoltaico", "Solar"), energiaMarkup(o))}
       ${gruppo("telecamere", "camera", t("Telecamere", "Cameras"), telecamereMarkup(o), `<span class="dm-oc-ed-conto">${o.telecamere.length}</span>`)}
       ${gruppo("antifurto", "security", t("Antifurto", "Alarm"), antifurtoMarkup(o))}
-    </div></div>`;
+    </div>`;
 }
 function serve() {
   return grezzo() !== null;
@@ -148828,7 +148884,8 @@ function serve() {
 function ensureOcchioEditor() {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva16() !== OCCHIO_TAB) return false;
-  const firma2 = JSON.stringify(occhio());
+  if (state174.premium === null) chiediLaLicenza2();
+  const firma2 = `${state174.premium}:${JSON.stringify(occhio())}`;
   if (body.dataset.dmOcchioEditor === firma2 && body.querySelector(".dm-oc-ed")) return true;
   if (body.querySelector(".dm-oc-ed") && body.contains(doc.activeElement) && doc.activeElement?.dataset?.dmOcCampo)
     return true;
@@ -148845,6 +148902,7 @@ function ridisegna30() {
 function nelCorpo2(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva16() !== OCCHIO_TAB || !body.contains(event.target)) return null;
+  if (event.target.closest?.(".dm-oc-ed-dietro")) return null;
   return body;
 }
 function scrivi5(config, percorso, valore3) {
@@ -148994,6 +149052,15 @@ function installaLoStile8() {
       #ed-body .dm-oc-ed-tasti{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
       #ed-body .dm-oc-ed-tasti .ed-btn-add{flex:1 1 160px}
       #ed-body .dm-oc-ed-tasti .ed-btn-add[disabled]{opacity:.4;cursor:default}
+      #ed-body .dm-oc-ed-premium{display:inline-block;margin-left:6px;font-size:9.5px;font-weight:900;letter-spacing:.08em;padding:2px 7px;border-radius:6px;
+        color:#b45309;border:1px solid #f59e0b88;background:#f59e0b18}
+      #ed-body .dm-oc-ed-chiuso{position:relative;min-height:420px}
+      #ed-body .dm-oc-ed-dietro{filter:blur(2px);opacity:.4;pointer-events:none;max-height:520px;overflow:hidden}
+      #ed-body .dm-oc-ed-lucchetto{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+        text-align:center;padding:24px}
+      #ed-body .dm-oc-ed-lucchetto>span{font-size:44px;line-height:1}
+      #ed-body .dm-oc-ed-lucchetto b{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:26px;text-transform:uppercase;color:var(--text,#0f172a)}
+      #ed-body .dm-oc-ed-lucchetto p{max-width:520px;margin:0;font-size:14px;line-height:1.55;color:var(--text-dim,#64748b)}
       #ed-body .dm-oc-ed-nota{margin:4px 2px;font-size:11.5px;font-weight:700;line-height:1.45;color:var(--text-dim,#64748b)}
       @media(max-width:760px){
         /* Sul telefono le frecce salgono accanto al titolo: i campi prendono

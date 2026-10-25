@@ -7465,4 +7465,6 @@ export default Object.freeze({
   "To set up": "要設定",
   "Used at home": "家で使用",
   "What it opens": "開く対象",
+  "At a glance is Premium": "「ひと目で」は Premium です",
+  "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a single page with the weather and big tiles, and each tile opens its data in a popup. Premium is turned on from the GdAHome app.": "GdAHome Base では、このダッシュボードは通常のダッシュボードのままです。Premium では天気と大きなタイルの1ページになり、各タイルはデータをポップアップで開きます。Premium は GdAHome アプリから有効にします。",
 });

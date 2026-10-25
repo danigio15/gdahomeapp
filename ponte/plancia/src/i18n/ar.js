@@ -7410,4 +7410,6 @@ export default Object.freeze({
   "To set up": "للإعداد",
   "Used at home": "المستهلكة في المنزل",
   "What it opens": "ما يفتحه",
+  "At a glance is Premium": "«بنظرة واحدة» ميزة Premium",
+  "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a single page with the weather and big tiles, and each tile opens its data in a popup. Premium is turned on from the GdAHome app.": "مع GdAHome Base تبقى هذه اللوحة لوحة عادية. مع Premium تصبح صفحة واحدة مع الطقس ومربعات كبيرة، وكل مربع يفتح بياناته في نافذة منبثقة. يتم تفعيل Premium من تطبيق GdAHome.",
 });

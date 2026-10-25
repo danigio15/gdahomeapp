@@ -155,8 +155,12 @@ function scena(i) {
   </svg>`;
 }
 
-async function boot(page, testInfo, { tema = "light", config = OCCHIO } = {}) {
+async function boot(page, testInfo, { tema = "light", config = OCCHIO, premium = true } = {}) {
   test.setTimeout(150_000);
+  /* La licenza: il Colpo d'occhio e' Premium, come la plancia a muro. */
+  await page.addInitScript((p) => {
+    window.__GDAHOME_PREMIUM__ = p;
+  }, premium);
   await page.clock.install({ time: ADESSO });
   await page.route("**/api/camera_proxy/**", (route) => {
     const n = TELECAMERE.findIndex((x) => route.request().url().includes(`camera.${x}`));
@@ -227,6 +231,7 @@ async function boot(page, testInfo, { tema = "light", config = OCCHIO } = {}) {
     },
     { stati: stati(), config, tema },
   );
+  if (!premium) return;
   await expect(page.locator("#dm-occhio .oc-riquadro")).toHaveCount(config.riquadri.length, {
     timeout: 20_000,
   });
@@ -346,6 +351,32 @@ test("le telecamere riservate non si vedono quando in casa c'e' qualcuno", async
   await expect(tela.locator('.oc-cam[data-oc-cam="camera.ingresso"]')).toHaveCount(0);
 });
 
+test("con GdAHome Base la plancia resta quella di sempre, e la scheda del Config e' chiusa", async ({
+  page,
+}, testInfo) => {
+  await boot(page, testInfo, { premium: false });
+  await page.waitForTimeout(1500);
+  await expect(page.locator("#dm-occhio")).toHaveCount(0);
+  /* Il config resta scritto per il giorno in cui la casa diventa Premium. */
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("cd_occhio")).attiva)).toBe(
+    true,
+  );
+  await page.evaluate(() => {
+    window.apriConfigEntita?.();
+    setTimeout(() => window.editorSwitch?.("occhio"), 50);
+  });
+  const lucchetto = page.locator("#ed-body .dm-oc-ed-lucchetto");
+  await expect(lucchetto).toBeVisible({ timeout: 20_000 });
+  await expect(lucchetto).toContainText("Premium");
+  /* Dietro il lucchetto i campi non si possono cambiare. */
+  await expect(page.locator("#ed-body .dm-oc-ed-dietro")).toHaveAttribute("inert", "");
+  const dove = foto(testInfo, "occhio-config-base");
+  if (dove) {
+    await page.waitForTimeout(300);
+    await page.locator("#editor-modal").screenshot({ path: dove, animations: "disabled" });
+  }
+});
+
 test("spenta, la plancia resta quella di sempre", async ({ page }, testInfo) => {
   await boot(page, testInfo);
   await page.evaluate(() => {
@@ -363,6 +394,12 @@ test("dal tasto in cima si apre la sua scheda del Config, e quello che si cambia
   const corpo = page.locator("#ed-body .dm-oc-ed");
   await expect(corpo).toBeVisible({ timeout: 20_000 });
   await expect(page.locator('.ed-tab[data-tab="occhio"]')).toHaveClass(/active/);
+  /* Nel menu del Config sta sotto «Plancia», subito dopo «A muro». */
+  const doveSta = foto(testInfo, "occhio-config-aperto");
+  if (doveSta) {
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: doveSta, animations: "disabled" });
+  }
   /* Il Config sta sopra: la pagina si fa da parte finche' e' aperto. */
   await expect(page.locator("#dm-occhio")).toBeHidden();
   await expect(corpo.locator('[data-dm-oc-campo="energia.solare"]')).toHaveValue(
