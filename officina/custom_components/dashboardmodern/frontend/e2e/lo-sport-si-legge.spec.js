@@ -131,6 +131,24 @@ function stemmi() {
       if (existsSync(file)) fuori[id] = readFileSync(file).toString("base64");
     }
   }
+  /* E i simboli delle scuderie di F1, bianchi (`f1:<constructorId>`). */
+  const scuderie = new URL("../../../../../strumenti/sport-campioni/scuderie/", import.meta.url);
+  for (const id of [
+    "mercedes",
+    "ferrari",
+    "mclaren",
+    "red_bull",
+    "rb",
+    "alpine",
+    "haas",
+    "audi",
+    "williams",
+    "aston_martin",
+    "cadillac",
+  ]) {
+    const file = new URL(`${id}-0.webp`, scuderie);
+    if (existsSync(file)) fuori[`f1:${id}`] = readFileSync(file).toString("base64");
+  }
   return fuori;
 }
 
@@ -185,8 +203,14 @@ async function boot(page, testInfo, { adesso, tema = "light" }) {
                     : dettagli.motogp,
             };
           } else if (message.type === "ponte/sport/logo") {
+            (window.__sport.loghi ||= []).push(String(message.squadra));
             const corpo = loghi[String(message.squadra)];
-            if (corpo) result = { stato: 200, tipo: "image/png", corpo };
+            if (corpo)
+              result = {
+                stato: 200,
+                tipo: String(message.squadra).startsWith("f1:") ? "image/webp" : "image/png",
+                corpo,
+              };
             else {
               success = false;
               result = null;
@@ -279,6 +303,14 @@ for (const tema of ["light", "dark"]) {
     const f1 = pagina.locator('[data-dm-sport-blocco="f1"]');
     await expect(f1).toContainText("United States");
     await expect(f1.locator(".dm-sport-gradino")).toHaveCount(3);
+    /* Il simbolo di ogni scuderia, bianco sul suo colore: nel podio e nei
+     * costruttori. */
+    await expect(f1.locator(".dm-sport-gradino .dm-sport-scud img")).toHaveCount(3, {
+      timeout: 10_000,
+    });
+    await expect(f1.locator(".dm-sport-scud img").first()).toHaveAttribute("src", /^(data|blob):/);
+    const chiesti = await page.evaluate(() => window.__sport.loghi || []);
+    expect(chiesti.some((x) => x === "f1:mercedes")).toBe(true);
     /* Al ponte vanno solo le scelte: niente nomi, niente pilota del cuore. */
     const chieste = await page.evaluate(() => window.__sport.chieste[0]);
     expect(chieste).toEqual([

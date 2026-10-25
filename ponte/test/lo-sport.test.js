@@ -17,6 +17,7 @@ import {
   campionatoValido,
   creaSport,
   partitaDaEspn,
+  scuderiaValida,
   squadraValida,
 } from "../src/sport.js";
 import { Commissioni } from "../src/commissioni.js";
@@ -433,4 +434,53 @@ test("calcio: senza la classifica della coppa il blocco c'e' lo stesso, con le p
   assert.equal(inter.coppe[0].classifica.length, 0);
   assert.equal(inter.coppe[0].posizione, null);
   assert.ok(inter.coppe[0].ultime.length >= 1);
+});
+
+test("il simbolo di una scuderia di F1: solo quelle dell'elenco, l'anno prima se quest'anno manca", async () => {
+  for (const no of ["f1:", "f1:topolino", "f1:../x", "f1:MERCEDES", "mercedes", null, 42])
+    assert.equal(scuderiaValida(no), false);
+  assert.equal(scuderiaValida("f1:red_bull"), true);
+
+  const chiamate = [];
+  const scarica = async (indirizzo) => {
+    chiamate.push(indirizzo);
+    if (!indirizzo.startsWith("https://media.formula1.com/") || indirizzo.includes("/2026/"))
+      return { ok: false, status: 404 };
+    return {
+      ok: true,
+      status: 200,
+      arrayBuffer: async () => new Uint8Array([82, 73, 70, 70]).buffer,
+    };
+  };
+  const sport = creaSport({ scarica, orologio: () => SABATO });
+  const simbolo = await sport.logo("f1:red_bull");
+  assert.equal(simbolo.tipo, "image/webp");
+  assert.equal(Buffer.from(simbolo.base64, "base64")[0], 82);
+  assert.deepEqual(
+    chiamate.map((u) => u.replace(/^.*\/common\/f1\//, "")),
+    [
+      "2026/redbullracing/2026redbullracinglogowhite.webp",
+      "2025/redbullracing/2025redbullracinglogowhite.webp",
+    ],
+  );
+  /* La seconda volta non si chiede di nuovo, e uno che non c'e' non va fuori. */
+  await sport.logo("f1:red_bull");
+  await assert.rejects(sport.logo("f1:topolino"));
+  assert.equal(chiamate.length, 3);
+});
+
+test("una sessione di F1 non ancora pubblicata non e' un guasto: la plancia lo dice", async () => {
+  const scarica = async (indirizzo) =>
+    /f1\/current\/18\/qualifying\.json$/.test(indirizzo)
+      ? {
+          ok: true,
+          status: 200,
+          json: async () => ({ MRData: { RaceTable: { season: "2026", round: "18", Races: [] } } }),
+        }
+      : { ok: false, status: 404, json: async () => ({}) };
+  const sport = creaSport({ scarica, orologio: () => SABATO });
+  const d = await sport.dettaglio({ tipo: "f1", giro: 18, sessione: "Q" });
+  assert.deepEqual(d, { tipo: "f1", sessione: "Q", giro: 18, risultati: [], nonAncora: true });
+  /* Una fonte che non risponde resta un errore. */
+  await assert.rejects(sport.dettaglio({ tipo: "f1", giro: 19, sessione: "Q" }));
 });

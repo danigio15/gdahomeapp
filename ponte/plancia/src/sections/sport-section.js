@@ -320,6 +320,23 @@ function stemma(squadra, misura = 40) {
   return `<span class="dm-sport-stemma dm-sport-sigla" style="--m:${misura}px;--c:${esc(colore)}" aria-hidden="true">${esc(sigla)}</span>`;
 }
 
+/* Il simbolo di una scuderia di F1, bianco sul colore della scuderia: lo
+ * porta il ponte (`ponte/sport/logo` con `f1:<id>`). Finche' non c'e', il
+ * riquadrino ha solo il colore. */
+function scuderia(id, misura = 18) {
+  const chiave = clean(id);
+  if (!chiave) return "";
+  const url = /^[a-z_]{2,20}$/.test(chiave) ? LOGHI.logo(`f1:${chiave}`) : "";
+  return `<span class="dm-sport-scud" style="--m:${misura}px;--c:${esc(COLORI_F1[chiave] || "#64748b")}" aria-hidden="true">${
+    url ? `<img src="${esc(url)}" alt="" decoding="async">` : ""
+  }</span>`;
+}
+
+/* La squadra sotto il nome: per la F1 col simbolo davanti. */
+function squadraDi(r, x, misura = 16) {
+  return r.tipo === "f1" ? `${scuderia(x.scuderiaId, misura)}${esc(x.scuderia)}` : esc(x.moto);
+}
+
 /* `dove` fa unici i disegni: la stessa icona nella pagina e nella finestra
  * della Home, con le stesse sfumature, si pesterebbe i piedi e verrebbe nera. */
 function titoloDelBlocco(chiave, titolo, sotto = "", dove = "pagina") {
@@ -565,9 +582,7 @@ function pilotaDelCuoreMarkup(r, seguito) {
   return `<div class="dm-sport-cuore" style="--c:${coloreDi(r, chi)}">
       <div class="dm-sport-cuore-testa"><span>${esc(
         mio ? t("Il tuo pilota", "Your rider") : t("In testa al mondiale", "Championship leader"),
-      )}</span><strong>${chi.numero ? `<i>#${esc(chi.numero)}</i> ` : ""}${esc(nomePilota(r, chi))}</strong><small>${esc(
-        r.tipo === "f1" ? chi.scuderia : chi.moto,
-      )}</small></div>
+      )}</span><strong>${chi.numero ? `<i>#${esc(chi.numero)}</i> ` : ""}${esc(nomePilota(r, chi))}</strong><small>${squadraDi(r, chi, 18)}</small></div>
       <div class="dm-sport-cuore-numeri">
         ${numero(conN(t("{n}°", "#{n}"), chi.posizione), t("Mondiale", "Standing"))}
         ${numero(chi.punti, t("Punti", "Points"))}
@@ -659,7 +674,7 @@ function ultimaGaraMarkup(r, seguito) {
       (x) => `<div class="dm-sport-gradino" data-pos="${x.posizione}" style="--c:${coloreDi(r, x)}">
         <span class="dm-sport-pilota-num">${x.numero ? `#${esc(x.numero)}` : ""}</span>
         <strong${x.id === preferito ? ' class="mio"' : ""}>${esc(r.tipo === "f1" ? x.cognome || x.nome : cognomeDi(x.nome))}</strong>
-        <small>${esc(r.tipo === "f1" ? x.scuderia : x.moto)}</small>
+        <small>${squadraDi(r, x, 18)}</small>
         <span class="dm-sport-scalino">${x.posizione}</span>
       </div>`,
     )
@@ -670,7 +685,7 @@ function ultimaGaraMarkup(r, seguito) {
       (x) => `<li class="dm-sport-pos${x.id === preferito ? " mia" : ""}">
         <span class="dm-sport-num">${x.posizione ?? "–"}</span><i class="dm-sport-colore" style="--c:${coloreDi(r, x)}"></i>
         <span class="dm-sport-nome">${esc(nomePilota(r, x))}</span>
-        <span class="dm-sport-g">${esc(r.tipo === "f1" ? x.scuderia : x.moto)}</span>
+        <span class="dm-sport-g">${squadraDi(r, x)}</span>
         <b>${x.punti ? `+${x.punti}` : ""}</b>
       </li>`,
     )
@@ -739,7 +754,7 @@ function classificaPilotiMarkup(r, seguito, indice = 0) {
     x.quota * 100
   ).toFixed(1)}%;--c:${coloreDi(r, x)}">
       <span class="dm-sport-num">${x.posizione}</span>
-      <span class="dm-sport-nome">${esc(nomePilota(r, x))}<small>${esc(r.tipo === "f1" ? x.scuderia : x.moto)}</small><i class="dm-sport-quota" aria-hidden="true"></i></span>
+      <span class="dm-sport-nome">${esc(nomePilota(r, x))}<small>${squadraDi(r, x)}</small><i class="dm-sport-quota" aria-hidden="true"></i></span>
       <b>${x.punti}</b>
     </li>`;
   const titolo =
@@ -768,7 +783,7 @@ function costruttoriMarkup(r) {
         (
           x,
         ) => `<li class="dm-sport-pos dm-sport-barra" style="--q:${(x.quota * 100).toFixed(1)}%;--c:${COLORI_F1[x.id] || "#64748b"}">
-        <span class="dm-sport-num">${x.posizione}</span><span class="dm-sport-nome">${esc(x.nome)}<i class="dm-sport-quota" aria-hidden="true"></i></span><b>${x.punti}</b>
+        <span class="dm-sport-num">${x.posizione}</span><span class="dm-sport-nome"><span class="dm-sport-con-scud">${scuderia(x.id, 26)}${esc(x.nome)}</span><i class="dm-sport-quota" aria-hidden="true"></i></span><b>${x.punti}</b>
       </li>`,
       )
       .join("")}</ol>`,
@@ -1009,7 +1024,7 @@ export function sessioneDettaglioMarkup(d, preferito = "") {
       const mio = preferito && clean(x.id) === preferito;
       const colore = f1 ? COLORI_F1[x.scuderiaId] || "#64748b" : coloreDellaMoto(x.moto);
       const chi = f1 ? clean(x.nome) || clean(x.cognome) : clean(x.nome);
-      const squadra = f1 ? x.scuderia : x.moto;
+      const squadra = f1 ? `${scuderia(x.scuderiaId, 16)}${esc(x.scuderia)}` : esc(x.moto);
       const guadagno = corsa && x.griglia && x.posizione ? x.griglia - x.posizione : null;
       const valori = qualifica
         ? [x.q1, x.q2, x.q3, x.tempo]
@@ -1018,7 +1033,7 @@ export function sessioneDettaglioMarkup(d, preferito = "") {
           : [x.tempo || x.giro || x.stato, x.distacco, x.punti ? `+${x.punti}` : ""];
       return `<li class="dm-sport-pos${mio ? " mia" : ""}" style="--c:${colore}">
         <span class="dm-sport-num">${x.posizione ?? "–"}</span><i class="dm-sport-colore"></i>
-        <span class="dm-sport-nome">${esc(chi)}${x.numero && !f1 ? ` <small class="dm-sport-pilota-num">#${esc(x.numero)}</small>` : ""}<small>${esc(squadra)}${
+        <span class="dm-sport-nome">${esc(chi)}${x.numero && !f1 ? ` <small class="dm-sport-pilota-num">#${esc(x.numero)}</small>` : ""}<small>${squadra}${
           guadagno
             ? ` · <em class="${guadagno > 0 ? "su" : "giu"}">${guadagno > 0 ? "▲" : "▼"}${Math.abs(guadagno)}</em>`
             : ""
@@ -1081,7 +1096,7 @@ export function pilotiMarkup(r, preferito = "") {
         x,
       ) => `<li class="dm-sport-pos dm-sport-barra${x.id === preferito ? " mia" : ""}" style="--q:${(x.quota * 100).toFixed(1)}%;--c:${coloreDi(r, x)}">
         <span class="dm-sport-num">${x.posizione}</span>
-        <span class="dm-sport-nome">${esc(nomePilota(r, x))}<small>${esc(f1 ? x.scuderia : x.moto)}</small><i class="dm-sport-quota" aria-hidden="true"></i></span>
+        <span class="dm-sport-nome">${esc(nomePilota(r, x))}<small>${squadraDi(r, x)}</small><i class="dm-sport-quota" aria-hidden="true"></i></span>
         <span class="dm-sport-tempi">${f1 ? `<span>${x.vittorie ?? 0}</span>` : ""}<b>${x.punti}</b></span>
       </li>`,
     )
@@ -1119,8 +1134,14 @@ async function apriIlDettaglio(cosa, titolo) {
   try {
     const risposta = await chiediAHomeAssistant({ type: "ponte/sport/dettaglio", cosa }, ATTESA);
     const d = risposta?.dettaglio;
-    html =
-      d?.tipo === "calcio"
+    html = d?.nonAncora
+      ? avvisoDelFoglio(
+          t(
+            "I risultati di questa sessione non sono ancora stati pubblicati: di solito arrivano qualche ora dopo la fine.",
+            "This session's results have not been published yet: they usually arrive a few hours after it ends.",
+          ),
+        )
+      : d?.tipo === "calcio"
         ? partitaDettaglioMarkup(d, Date.now())
         : sessioneDettaglioMarkup(d, preferitoDi(d?.tipo));
   } catch (_errore) {}
@@ -1584,6 +1605,11 @@ export function foglioDelloSport(P) {
   ${P} .dm-sport-schede{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--card-border,#e2e8f0)}
   ${P} .dm-sport-scheda-tasto{display:inline-flex;align-items:center;min-height:30px;padding:0 12px;border-radius:999px;cursor:pointer;
     font-size:12px;font-weight:800;color:var(--text,#0f172a);background:var(--surface-2,#f1f5f9);box-shadow:inset 0 0 0 1px var(--card-border,#e2e8f0)}
+  ${P} .dm-sport-scud{display:inline-grid;place-items:center;width:var(--m,18px);height:var(--m,18px);margin-right:6px;border-radius:5px;
+    background:var(--c,#64748b);vertical-align:-0.28em;overflow:hidden;flex:0 0 auto;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+  ${P} .dm-sport-scud img{width:78%;height:78%;object-fit:contain}
+  ${P} .dm-sport-con-scud{display:flex;align-items:center;min-width:0}
+  ${P} .dm-sport-con-scud .dm-sport-scud{margin-right:10px;border-radius:7px}
   ${P} .dm-sport-scheda-tasto.questa{color:#fff;background:#0f172a;box-shadow:none}
   ${P} .dm-sport-scheda-tasto:hover{filter:brightness(.96)}
 
