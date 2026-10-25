@@ -707,7 +707,7 @@
           },
           "close": {
            "line": "o3.5",
-           "odds": "+105",
+           "odds": "+100",
            "link": {
             "rel": [
              "over",
@@ -825,7 +825,7 @@
            "odds": "-295"
           },
           "close": {
-           "odds": "-310",
+           "odds": "-295",
            "link": {
             "rel": [
              "home",
@@ -896,7 +896,7 @@
           }
          }
         },
-        "details": "INT -310"
+        "details": "INT -295"
        }
       ],
       "wasSuspended": false,
@@ -1449,7 +1449,7 @@
          "priority": 1
         },
         "drawOdds": {
-         "moneyLine": 300,
+         "moneyLine": 295,
          "link": {
           "language": "en-US",
           "rel": [
@@ -1476,7 +1476,7 @@
           },
           "close": {
            "line": "o3.5",
-           "odds": "+100",
+           "odds": "-120",
            "link": {
             "rel": [
              "over",
@@ -1504,7 +1504,7 @@
           },
           "close": {
            "line": "u3.5",
-           "odds": "-125",
+           "odds": "-105",
            "link": {
             "rel": [
              "under",
@@ -1536,7 +1536,7 @@
           },
           "close": {
            "line": "-0.5",
-           "odds": "-135",
+           "odds": "-125",
            "link": {
             "rel": [
              "homeSpread",
@@ -1564,7 +1564,7 @@
           },
           "close": {
            "line": "+0.5",
-           "odds": "-105",
+           "odds": "-110",
            "link": {
             "rel": [
              "awaySpread",
@@ -1594,7 +1594,7 @@
            "odds": "-170"
           },
           "close": {
-           "odds": "-125",
+           "odds": "-120",
            "link": {
             "rel": [
              "home",
@@ -1619,7 +1619,7 @@
            "odds": "+350"
           },
           "close": {
-           "odds": "+265",
+           "odds": "+250",
            "link": {
             "rel": [
              "away",
@@ -1644,7 +1644,7 @@
            "odds": "+300"
           },
           "close": {
-           "odds": "+300",
+           "odds": "+295",
            "link": {
             "rel": [
              "draw",
@@ -1665,7 +1665,7 @@
           }
          }
         },
-        "details": "ATA -125"
+        "details": "ATA -120"
        }
       ],
       "wasSuspended": false,
@@ -2218,7 +2218,7 @@
          "priority": 1
         },
         "drawOdds": {
-         "moneyLine": 215,
+         "moneyLine": 220,
          "link": {
           "language": "en-US",
           "rel": [
@@ -2245,7 +2245,7 @@
           },
           "close": {
            "line": "o2.5",
-           "odds": "-105",
+           "odds": "+100",
            "link": {
             "rel": [
              "over",
@@ -2273,7 +2273,7 @@
           },
           "close": {
            "line": "u2.5",
-           "odds": "-120",
+           "odds": "-125",
            "link": {
             "rel": [
              "under",
@@ -2333,7 +2333,7 @@
           },
           "close": {
            "line": "+0.5",
-           "odds": "-145",
+           "odds": "-150",
            "link": {
             "rel": [
              "awaySpread",
@@ -2388,7 +2388,7 @@
            "odds": "+240"
           },
           "close": {
-           "odds": "+245",
+           "odds": "+235",
            "link": {
             "rel": [
              "away",
@@ -2413,7 +2413,7 @@
            "odds": "+210"
           },
           "close": {
-           "odds": "+215",
+           "odds": "+220",
            "link": {
             "rel": [
              "draw",
@@ -2987,7 +2987,7 @@
          "priority": 1
         },
         "drawOdds": {
-         "moneyLine": 310,
+         "moneyLine": 300,
          "link": {
           "language": "en-US",
           "rel": [
@@ -3074,7 +3074,7 @@
           },
           "close": {
            "line": "+1.5",
-           "odds": "-190",
+           "odds": "-195",
            "link": {
             "rel": [
              "homeSpread",
@@ -3102,7 +3102,7 @@
           },
           "close": {
            "line": "-1.5",
-           "odds": "+135",
+           "odds": "+140",
            "link": {
             "rel": [
              "awaySpread",
@@ -3157,7 +3157,7 @@
            "odds": "-245"
           },
           "close": {
-           "odds": "-220",
+           "odds": "-205",
            "link": {
             "rel": [
              "away",
@@ -3182,7 +3182,7 @@
            "odds": "+300"
           },
           "close": {
-           "odds": "+310",
+           "odds": "+300",
            "link": {
             "rel": [
              "draw",
@@ -3203,7 +3203,7 @@
           }
          }
         },
-        "details": "JUV -220"
+        "details": "JUV -205"
        }
       ],
       "wasSuspended": false,
@@ -3758,7 +3758,7 @@
          "priority": 1
         },
         "drawOdds": {
-         "moneyLine": 265,
+         "moneyLine": 250,
          "link": {
           "language": "en-US",
           "rel": [
@@ -3845,7 +3845,7 @@
           },
           "close": {
            "line": "+0.5",
-           "odds": "+105",
+           "odds": "-105",
            "link": {
             "rel": [
              "homeSpread",
@@ -3873,7 +3873,7 @@
           },
           "close": {
            "line": "-0.5",
-           "odds": "-145",
+           "odds": "-135",
            "link": {
             "rel": [
              "awaySpread",
@@ -3903,7 +3903,7 @@
            "odds": "+300"
           },
           "close": {
-           "odds": "+340",
+           "odds": "+320",
            "link": {
             "rel": [
              "home",
@@ -3928,7 +3928,7 @@
            "odds": "-130"
           },
           "close": {
-           "odds": "-135",
+           "odds": "-125",
            "link": {
             "rel": [
              "away",
@@ -3953,7 +3953,7 @@
            "odds": "+245"
           },
           "close": {
-           "odds": "+265",
+           "odds": "+250",
            "link": {
             "rel": [
              "draw",
@@ -3974,7 +3974,7 @@
           }
          }
         },
-        "details": "MIL -135"
+        "details": "MIL -125"
        }
       ],
       "wasSuspended": false,
