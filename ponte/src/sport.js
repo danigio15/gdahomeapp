@@ -32,6 +32,11 @@ const stemmaDi = (id) =>
   `https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/${id}.png&h=128&w=128`;
 const F1 = "https://api.jolpi.ca/ergast/f1";
 const MOTO = "https://api.motogp.pulselive.com/motogp/v1";
+/* Dal vivo. La F1 ufficiale e OpenF1 durante una sessione non rispondono a
+ * chi non paga; ESPN si', con l'ordine dei piloti e il giro. La MotoGP ha il
+ * suo cronometraggio. */
+const ESPN_F1 = "https://site.api.espn.com/apis/site/v2/sports/racing/f1/scoreboard";
+const MOTO_DAL_VIVO = `${MOTO}/timing-gateway/livetiming-lite`;
 
 /** I campionati di cui si possono scegliere le squadre. La chiave e' quella
  * di ESPN; il nome e' quello che si legge. */
@@ -49,6 +54,7 @@ export const CAMPIONATI = Object.freeze({
 /* Quanto si tiene a mente una risposta. Con una partita in corso il
  * risultato cambia: un minuto. Altrimenti un quarto d'ora; l'elenco delle
  * squadre un giorno. */
+const PER_MEZZO_MINUTO = 30_000;
 const PER_POCO = 60_000;
 const PER_UN_PO = 15 * 60_000;
 const PER_UN_GIORNO = 24 * 60 * 60_000;
@@ -406,6 +412,132 @@ export function f1DaJolpica({
       punti: numero(x.points) ?? 0,
       vittorie: numero(x.wins) ?? 0,
     })),
+  };
+}
+
+/* Minuscole e senza accenti: «Pérez» di ESPN e «Perez» di Jolpica sono lo
+ * stesso pilota. */
+const semplice = (v) =>
+  testo(v)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+/* Quanto dura una sessione, per sapere quando guardare se e' in corso. */
+const DURATA_DI = { G: 3 * 3600_000, S: 1.5 * 3600_000 };
+const durataDi = (sigla) => DURATA_DI[sigla] || 1.5 * 3600_000;
+
+/** La sessione del calendario che potrebbe essere in corso adesso (dieci
+ * minuti prima dell'inizio, fino alla fine piu' qualche ritardo). */
+export function sessioneDaGuardare(sessioni, adesso = Date.now()) {
+  return (
+    (sessioni || []).find((s) => {
+      const inizio = Date.parse(s?.quando);
+      if (!Number.isFinite(inizio) || s.annullata) return false;
+      return adesso >= inizio - 10 * 60_000 && adesso <= inizio + durataDi(s.sigla);
+    }) || null
+  );
+}
+
+const SIGLE_ESPN_F1 = {
+  FP1: "L1",
+  FP2: "L2",
+  FP3: "L3",
+  Qual: "Q",
+  Race: "G",
+  Sprint: "S",
+  SS: "QS",
+  SQ: "QS",
+  "Sprint Shootout": "QS",
+};
+
+/** La sessione di F1 in corso da ESPN: l'ordine dei piloti (coi dati del
+ * mondiale per la scuderia) e, in gara e in sprint, il giro. */
+export function f1DalVivoDaEspn(json, piloti = []) {
+  const perNome = new Map((piloti || []).map((p) => [semplice(p.nome), p]));
+  const perCognome = new Map((piloti || []).map((p) => [semplice(p.cognome), p]));
+  for (const e of json?.events || []) {
+    for (const c of e?.competitions || []) {
+      if (c?.status?.type?.state !== "in") continue;
+      const sigla = SIGLE_ESPN_F1[testo(c.type?.abbreviation)] || "";
+      const ordine = (c.competitors || [])
+        .map((x) => {
+          const nome = testo(x?.athlete?.displayName || x?.athlete?.fullName);
+          const cognome = nome.split(/\s+/).slice(1).join(" ");
+          const p = perNome.get(semplice(nome)) || perCognome.get(semplice(cognome)) || {};
+          return {
+            posizione: numero(x?.order),
+            id: testo(p.id),
+            nome,
+            cognome: testo(p.cognome) || cognome || nome,
+            numero: testo(p.numero),
+            scuderia: testo(p.scuderia),
+            scuderiaId: testo(p.scuderiaId),
+          };
+        })
+        .filter((x) => x.nome && x.posizione)
+        .sort((a, b) => a.posizione - b.posizione)
+        .slice(0, 30);
+      if (!ordine.length) continue;
+      const giro = numero(c.status?.period);
+      return {
+        tipo: "f1",
+        sessione: sigla,
+        giro: (sigla === "G" || sigla === "S") && giro ? giro : null,
+        giri: null,
+        ordine,
+      };
+    }
+  }
+  return null;
+}
+
+const SIGLE_MOTO_DAL_VIVO = {
+  RAC: "G",
+  SPR: "S",
+  Q1: "Q1",
+  Q2: "Q2",
+  FP1: "FP1",
+  FP2: "FP2",
+  PR: "PR",
+};
+const maiuscolaIniziale = (v) =>
+  testo(v)
+    .toLowerCase()
+    .replace(/(^|[\s'-])\p{L}/gu, (c) => c.toUpperCase());
+
+/** La sessione di MotoGP in corso dal cronometraggio: ordine, distacchi,
+ * giro. Solo la classe regina, e solo se qualcuno ha gia' fatto un giro. */
+export function motoDalVivoDaPulselive(json) {
+  const h = json?.head;
+  if (!h || !/^motogp$/i.test(testo(h.category))) return null;
+  const sigla = SIGLE_MOTO_DAL_VIVO[testo(h.session_shortname).toUpperCase()] || "";
+  const righe = Object.values(json?.rider || {}).filter((x) => numero(x?.pos) > 0);
+  const giro = Math.max(0, ...righe.map((x) => numero(x?.num_lap) || 0));
+  if (!sigla || !righe.length || !giro) return null;
+  const distacco = (v) => {
+    const t = testo(v);
+    return !t || /^0+(\.0+)?$/.test(t) ? "" : `+${t.replace(/^\+/, "")}`;
+  };
+  return {
+    tipo: "motogp",
+    sessione: sigla,
+    giro,
+    giri: sigla === "G" || sigla === "S" ? numero(h.num_laps) || null : null,
+    ordine: righe
+      .sort((a, b) => numero(a.pos) - numero(b.pos))
+      .slice(0, 30)
+      .map((x) => ({
+        posizione: numero(x.pos),
+        nome: maiuscolaIniziale(`${testo(x.rider_name)} ${testo(x.rider_surname)}`),
+        numero: testo(x.rider_number),
+        squadra: testo(x.team_name),
+        moto: testo(x.bike_name),
+        distacco: distacco(x.gap_first),
+        aiBox: x.on_pit === true,
+      })),
   };
 }
 
@@ -815,7 +947,13 @@ export function creaSport({ scarica = (u, o) => fetch(u, o), orologio = () => Da
       json(`${F1}/current/driverStandings.json`),
       json(`${F1}/current/constructorStandings.json`),
     ]);
-    return f1DaJolpica({ gara, sprint, calendario, piloti, costruttori, adesso: orologio() });
+    const r = f1DaJolpica({ gara, sprint, calendario, piloti, costruttori, adesso: orologio() });
+    /* Una sessione forse in corso: l'ordine dal vivo, ogni mezzo minuto. */
+    if (sessioneDaGuardare(r.prossima?.sessioni, orologio())) {
+      const vivo = await json(ESPN_F1, PER_MEZZO_MINUTO).catch(() => null);
+      r.dalVivo = f1DalVivoDaEspn(vivo, r.piloti);
+    }
+    return r;
   }
 
   async function motogp() {
@@ -879,7 +1017,7 @@ export function creaSport({ scarica = (u, o) => fetch(u, o), orologio = () => Da
           PER_POCO * 5,
         ).catch(() => [])) || [];
     }
-    return motoDaPulselive({
+    const r = motoDaPulselive({
       eventi,
       eventoGara,
       tipo,
@@ -890,6 +1028,16 @@ export function creaSport({ scarica = (u, o) => fetch(u, o), orologio = () => Da
       sessioniGara,
       adesso: orologio(),
     });
+    /* Il cronometraggio dice la sessione che sta girando: vale se e' quella
+     * del calendario (le classi minori girano sulla stessa pista). */
+    const daGuardare = sessioneDaGuardare(r.prossima?.tutte, orologio());
+    if (daGuardare) {
+      const vivo = motoDalVivoDaPulselive(
+        await json(MOTO_DAL_VIVO, PER_MEZZO_MINUTO).catch(() => null),
+      );
+      if (vivo && vivo.sessione === daGuardare.sigla) r.dalVivo = vivo;
+    }
+    return r;
   }
 
   /**
