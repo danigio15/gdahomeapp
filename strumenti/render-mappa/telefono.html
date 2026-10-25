@@ -50,7 +50,7 @@
     ? q.get("vista")
     : "inclinata";
   const scuro = q.get("stile") === "scuro";
-  const INCLINAZIONE = { piatta: 0, inclinata: 58, immersiva: 64 };
+  const INCLINAZIONE = { piatta: 0, inclinata: 58, immersiva: 60 };
   const ZOOM = { piatta: 16, inclinata: 17, immersiva: 18 };
   const LARGHEZZA_CORSIA = 3.5;
 
@@ -165,47 +165,45 @@
         );
       const daQui = punti.slice(c.findIndex((x) => x >= Math.max(0, centro - 120)));
       mappa.getSource("gdanav-percorso")?.setData(collezione([linea([qui, ...daQui])]));
-      mappa
-        .getSource("gdanav-io")
-        ?.setData(
-          collezione([
-            {
-              type: "Feature",
-              properties: { rotta: verso },
-              geometry: { type: "Point", coordinates: qui },
-            },
-          ]),
-        );
-      /* La freccia della manovra: 60 m prima, 45 dopo (`datiManovra`). */
-      mappa
-        .getSource("gdanav-manovra")
-        ?.setData(collezione([linea(tratto(punti, c, centro - 60, centro + 45))]));
+      mappa.getSource("gdanav-io")?.setData(
+        collezione([
+          {
+            type: "Feature",
+            properties: { rotta: verso },
+            geometry: { type: "Point", coordinates: qui },
+          },
+        ]),
+      );
       /* Le corsie (`datiCorsie`): gli ultimi 160 m prima della manovra. */
       const corsie = (manovra.intersections?.[0]?.lanes || []).filter(Boolean);
       const utili =
         corsie.length > 1 && corsie.some((l) => l.valid) && corsie.some((l) => !l.valid);
+      /* La freccia della manovra (`datiManovra`): 60 m prima e 45 dopo; con
+       * le corsie sulla strada parte dalla manovra, come nell'app. */
+      const prima = vista === "immersiva" && utili ? 10 : 60;
+      mappa
+        .getSource("gdanav-manovra")
+        ?.setData(collezione([linea(tratto(punti, c, centro - prima, centro + 45))]));
       if (vista === "immersiva" && utili) {
         const pezzo = tratto(punti, c, Math.max(0, centro - 160), centro);
         const n = corsie.length;
-        mappa
-          .getSource("gdanav-corsie")
-          ?.setData(
-            collezione([
-              ...corsie.map((l, i) =>
-                linea(pezzo, {
-                  tipo: "corsia",
-                  giusta: Boolean(l.valid),
-                  spostamento: (i - (n - 1) / 2) * LARGHEZZA_CORSIA,
-                }),
-              ),
-              ...Array.from({ length: n + 1 }, (_x, i) =>
-                linea(pezzo, {
-                  tipo: i === 0 || i === n ? "bordo" : "riga",
-                  spostamento: (i - n / 2) * LARGHEZZA_CORSIA,
-                }),
-              ),
-            ]),
-          );
+        mappa.getSource("gdanav-corsie")?.setData(
+          collezione([
+            ...corsie.map((l, i) =>
+              linea(pezzo, {
+                tipo: "corsia",
+                giusta: Boolean(l.valid),
+                spostamento: (i - (n - 1) / 2) * LARGHEZZA_CORSIA,
+              }),
+            ),
+            ...Array.from({ length: n + 1 }, (_x, i) =>
+              linea(pezzo, {
+                tipo: i === 0 || i === n ? "bordo" : "riga",
+                spostamento: (i - n / 2) * LARGHEZZA_CORSIA,
+              }),
+            ),
+          ]),
+        );
       }
       const auto = document.createElement("div");
       auto.className = "auto";
