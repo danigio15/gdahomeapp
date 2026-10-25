@@ -30,10 +30,10 @@ import {
 } from "../core/colpo-d-occhio.js";
 import { alarmActiveMode, alarmCodeNeeded, alarmModes } from "../core/alarm-panel.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
-import { segnoDelTempo } from "../core/la-card-del-meteo.js";
+import { giorniCheVengono, oggiFraMassimaEMinima, segnoDelTempo } from "../core/la-card-del-meteo.js";
 import { istantaneaInViaggio, loadCameraFrame, sorvegliaIFlussi } from "./live-ui-section.js";
 import { chiediLeCapacita } from "./telecamera-capacita-section.js";
-import { premiumDellaCasa, premiumRicordato } from "./plancia-a-muro-section.js";
+import { apriIlMenu, premiumDellaCasa, premiumRicordato } from "./plancia-a-muro-section.js";
 import { fermaIVideo } from "./telecamera-webrtc-section.js";
 import { CHIAVE_RISERVATE, telecamereVisibili } from "../core/telecamere-riservate.js";
 import { normalizePeople } from "../core/person-model.js";
@@ -124,6 +124,7 @@ function testataMarkup(occhio, admin) {
   const adesso = new Date();
   const collegata = Object.keys(allStates() || {}).length > 0;
   return `<div class="oc-testa">
+      <button type="button" class="oc-menu" data-oc="menu" aria-label="${esc(t("Apri il menu", "Open menu"))}"><span></span><span></span><span></span></button>
       <span class="oc-testa-ic" aria-hidden="true">${segno("home", 32)}</span>
       <div class="oc-testa-testo">
         <h1>${esc(nome)}</h1>
@@ -147,21 +148,68 @@ function testataMarkup(occhio, admin) {
     </div>`;
 }
 
+/* Il meteo come la card della plancia principale: il segno grosso, i gradi,
+ * la condizione e la massima e la minima di oggi; le misure in pastiglie
+ * larghe uguali (umidita', vento, pressione, tramonto); sotto un filo, i
+ * quattro giorni che vengono. Le previsioni sono quelle del popup: una
+ * domanda sola per tutti e due. */
 function meteoMarkup(occhio, states) {
   const m = meteoDiQui(occhio, states);
   if (!m?.stato) return "";
   const a = m.stato.attributes || {};
-  const unitaVento = clean(a.wind_speed_unit) || "km/h";
+  const p = previsioniDelMeteo(m.id, () => ridisegna());
+  const gradi = (v) => (v == null || v === "" || !Number.isFinite(Number(v)) ? "" : `${numero(v)}°`);
+  const oggi = oggiFraMassimaEMinima(p.giornaliere);
+  const misure = [];
+  const misura = (v) => (v == null || v === "" || !Number.isFinite(Number(v)) ? null : Number(v));
+  if (misura(a.humidity) !== null)
+    misure.push(["💧", t("Umidità", "Humidity"), `${numero(a.humidity)}%`]);
+  if (misura(a.wind_speed) !== null)
+    misure.push(["💨", t("Vento", "Wind"), `${numero(a.wind_speed)} ${clean(a.wind_speed_unit) || "km/h"}`]);
+  if (misura(a.pressure) !== null)
+    misure.push(["🧭", t("Pressione", "Pressure"), `${numero(a.pressure)} ${clean(a.pressure_unit) || "hPa"}`]);
+  const tramonto = Date.parse(clean(states["sun.sun"]?.attributes?.next_setting));
+  if (Number.isFinite(tramonto))
+    misure.push(["🌅", t("Tramonto", "Sunset"), ora(tramonto, { hour: "2-digit", minute: "2-digit" })]);
+  const giorni = giorniCheVengono(p.giornaliere, 4);
   return `<button type="button" class="oc-meteo" data-oc="meteo">
-      <span class="oc-meteo-segno" aria-hidden="true">${segnoDelTempo(m.stato.state)}</span>
-      <span class="oc-meteo-centro">
-        <b>${a.temperature != null ? `${esc(numero(a.temperature, 0))}°` : "—"}</b>
-        <small>${esc(parolaDellaCondizione(m.stato.state) || m.stato.state)}</small>
+      <span class="oc-meteo-capo">
+        <span class="oc-meteo-segno" aria-hidden="true">${segnoDelTempo(m.stato.state)}</span>
+        <span class="oc-meteo-gradi">
+          <b>${esc(gradi(a.temperature) || "—")}</b>
+          <small>${esc(parolaDellaCondizione(m.stato.state) || m.stato.state)}</small>
+          ${
+            oggi
+              ? `<em>${esc(t("Oggi", "Today"))} <b>${esc(gradi(oggi.alta))}</b>${
+                  gradi(oggi.bassa) ? ` / ${esc(gradi(oggi.bassa))}` : ""
+                }</em>`
+              : ""
+          }
+        </span>
       </span>
-      <span class="oc-meteo-destra">
-        ${a.humidity != null ? `<span>💧 ${esc(numero(a.humidity))}%</span>` : ""}
-        ${a.wind_speed != null ? `<span>💨 ${esc(numero(a.wind_speed))} ${esc(unitaVento)}</span>` : ""}
-      </span>
+      ${
+        misure.length
+          ? `<span class="oc-meteo-misure">${misure
+              .map(
+                ([segno, parola, valore]) =>
+                  `<span>${segno} <i>${esc(parola)}</i> <b>${esc(valore)}</b></span>`,
+              )
+              .join("")}</span>`
+          : ""
+      }
+      ${
+        giorni.length
+          ? `<span class="oc-meteo-giorni">${giorni
+              .map(
+                (g) => `<span class="oc-meteo-giorno">
+                  <i>${esc(ora(g.quando, { weekday: "short" }).replace(/\./g, ""))}</i>
+                  <span aria-hidden="true">${segnoDelTempo(g.condizione)}</span>
+                  <b>${esc(gradi(g.alta))} <i>${esc(gradi(g.bassa))}</i></b>
+                </span>`,
+              )
+              .join("")}</span>`
+          : ""
+      }
     </button>`;
 }
 
@@ -817,6 +865,12 @@ function alClic(evento) {
     return;
   }
   if (cosa === "chiudi") return chiudi();
+  /* Il ☰: come sulla plancia a muro, apre la barra laterale di Home
+   * Assistant, o il menu dell'app GdAHome quando la plancia sta li'. */
+  if (cosa === "menu") {
+    apriIlMenu({ idTela: ID, tasto: '[data-oc="menu"]', rimisura: () => {} });
+    return;
+  }
   if (cosa === "config") {
     try {
       root.apriConfigEntita?.();
@@ -909,21 +963,43 @@ function installaLoStile() {
     @keyframes oc-batte{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}50%{box-shadow:0 0 0 6px rgba(16,185,129,0)}}
     ${P} .oc-ora{padding:6px 10px;border-radius:999px;font-family:'Oswald',system-ui,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;
       background:var(--oc-morbido);border:1px solid var(--oc-bordo)}
+    ${P} .oc-menu{display:flex;flex-direction:column;justify-content:center;gap:5px;flex:0 0 auto;width:52px;height:52px;padding:0 14px;
+      border-radius:16px;border:1px solid var(--oc-bordo);background:var(--oc-morbido);cursor:pointer;box-shadow:var(--oc-ombra)}
+    ${P} .oc-menu span{display:block;height:3px;border-radius:3px;background:var(--oc-testo)}
+    /* Col menu aperto la pagina scende sotto il cassetto (o si scosta, con
+     * la barra di Home Assistant larga): lo fa \`apriIlMenu\`. */
+    ${P}[data-mu-sotto-il-menu]{z-index:4!important}
+    ${P}[data-mu-accanto-al-menu]{right:0}
     ${P} .oc-config{display:grid;place-items:center;flex:0 0 auto;width:42px;height:42px;border-radius:14px;border:1px solid var(--oc-bordo);
       background:var(--oc-morbido);cursor:pointer}
     ${P} .oc-config svg{width:22px;height:22px}
 
-    ${P} .oc-meteo{display:flex;align-items:center;gap:20px;width:100%;margin-bottom:20px;padding:24px;border-radius:28px;cursor:pointer;text-align:left;
-      background:linear-gradient(135deg,var(--oc-card) 0%,color-mix(in srgb,#0ea5e9 8%,var(--oc-card)) 100%);border:1px solid var(--oc-bordo);
-      box-shadow:var(--oc-ombra);transition:transform .3s cubic-bezier(.165,.84,.44,1),box-shadow .3s}
-    ${P} .oc-meteo:hover{transform:translateY(-2px);box-shadow:var(--oc-ombra-su)}
-    ${P} .oc-meteo-segno{font-size:56px;line-height:1;flex:0 0 auto}
-    ${P} .oc-meteo-centro{flex:1;display:grid;justify-items:center;text-align:center}
-    ${P} .oc-meteo-centro b{font-family:'Oswald',system-ui,sans-serif;font-size:38px;font-weight:700;line-height:1}
-    ${P} .oc-meteo-centro small{margin-top:4px;font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#0284c7}
-    ${P} .oc-meteo-destra{display:flex;flex-direction:column;gap:8px}
-    ${P} .oc-meteo-destra span{padding:6px 12px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;
-      background:var(--oc-morbido);border:1px solid var(--oc-bordo)}
+    /* Il meteo vestito come la card della plancia principale. */
+    ${P} .oc-meteo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);align-items:center;gap:14px 20px;width:100%;
+      margin-bottom:20px;padding:20px 22px 16px;border-radius:22px;cursor:pointer;text-align:left;
+      background:var(--oc-card);border:1px solid var(--oc-bordo);box-shadow:var(--oc-ombra);
+      transition:transform .18s cubic-bezier(.16,1,.3,1),box-shadow .2s ease}
+    ${P} .oc-meteo:hover{transform:translateY(-4px);box-shadow:var(--oc-ombra-su)}
+    ${P} .oc-meteo-capo{display:flex;align-items:center;gap:16px;min-width:0}
+    ${P} .oc-meteo-segno{font-size:52px;line-height:1;flex:0 0 auto;filter:drop-shadow(0 6px 14px rgba(15,23,42,.14))}
+    ${P} .oc-meteo-gradi{display:grid;gap:3px;min-width:0}
+    ${P} .oc-meteo-gradi>b{font-size:42px;font-weight:900;letter-spacing:-2px;line-height:1;font-variant-numeric:tabular-nums}
+    ${P} .oc-meteo-gradi small{font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--oc-fioco);
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    ${P} .oc-meteo-gradi em{font-style:normal;font-size:12px;font-weight:800;color:var(--oc-fioco);font-variant-numeric:tabular-nums}
+    ${P} .oc-meteo-gradi em b{color:var(--oc-testo)}
+    ${P} .oc-meteo-misure{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+    ${P} .oc-meteo-misure>span{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:12px;background:var(--oc-morbido);
+      border:1px solid var(--oc-bordo);font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    ${P} .oc-meteo-misure i{font-style:normal;color:var(--oc-fioco)}
+    ${P} .oc-meteo-misure b{font-weight:900;font-variant-numeric:tabular-nums}
+    ${P} .oc-meteo-giorni{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;
+      border-top:1px dashed var(--oc-bordo);padding-top:13px}
+    ${P} .oc-meteo-giorno{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 4px;border-radius:13px;background:var(--oc-morbido)}
+    ${P} .oc-meteo-giorno>i{font-style:normal;font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--oc-fioco)}
+    ${P} .oc-meteo-giorno>span{font-size:21px;line-height:1}
+    ${P} .oc-meteo-giorno>b{font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}
+    ${P} .oc-meteo-giorno>b i{font-style:normal;color:var(--oc-fioco)}
 
     ${P} .oc-titolo{margin:18px 4px 14px;font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--oc-fioco)}
     ${P} .oc-riquadri{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
@@ -1069,16 +1145,22 @@ function installaLoStile() {
       ${P} .oc-pagina{padding:12px 12px 80px}
       ${P} .oc-testa{padding:16px 18px;border-radius:22px;gap:12px}
       ${P} .oc-testa-ic{width:48px;height:48px;border-radius:16px}
+      ${P} .oc-menu{width:44px;height:44px;padding:0 12px;border-radius:14px;gap:4px}
+      /* Sul telefono il ☰ prende il posto dell'icona della casa. */
+      ${P} .oc-menu + .oc-testa-ic{display:none}
       ${P} .oc-testa-ic svg{width:28px;height:28px}
       ${P} .oc-testa-testo h1{font-size:20px}
       ${P} .oc-testa-testo p{font-size:10px}
       ${P} .oc-pill{font-size:9px;padding:4px 8px}
       ${P} .oc-ora{font-size:10px;padding:4px 8px}
-      ${P} .oc-meteo{padding:18px;border-radius:22px;gap:12px}
-      ${P} .oc-meteo-segno{font-size:44px}
-      ${P} .oc-meteo-centro b{font-size:30px}
-      ${P} .oc-meteo-centro small{font-size:11px}
-      ${P} .oc-meteo-destra span{font-size:10px;padding:4px 10px}
+      ${P} .oc-meteo{grid-template-columns:1fr;padding:14px 14px 12px;gap:10px}
+      ${P} .oc-meteo-segno{font-size:40px}
+      ${P} .oc-meteo-gradi>b{font-size:32px;letter-spacing:-1.4px}
+      ${P} .oc-meteo-gradi small{font-size:10.5px}
+      ${P} .oc-meteo-misure{grid-template-columns:repeat(auto-fit,minmax(106px,1fr))}
+      ${P} .oc-meteo-misure>span{padding:7px 9px;font-size:11px;gap:5px}
+      ${P} .oc-meteo-misure i{display:none}
+      ${P} .oc-meteo-giorno>span{font-size:19px}
       ${P} .oc-riquadro{padding:22px 12px;border-radius:20px;min-height:120px}
       ${P} .oc-riquadro-ic{width:52px;height:52px;border-radius:16px;margin-bottom:10px}
       ${P} .oc-riquadro-ic svg{width:30px;height:30px}

@@ -559,7 +559,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-FKQWOS7Z.js";
+} from "../../chunk-ARIC22D7.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -4337,6 +4337,7 @@ var SOURCE_INDEX = Object.freeze({
   "I risultati adesso non arrivano: si riprova da soli fra un minuto.": "Results are not coming in right now: it will try again in a minute.",
   "I risultati adesso non arrivano.": "Results are not coming in right now.",
   "I risultati dello sport li porta l'add-on GdAHome: da questa plancia non si raggiunge.": "Sports results come through the GdAHome add-on, which this dashboard cannot reach.",
+  "I risultati di questa sessione non sono ancora stati pubblicati: di solito arrivano qualche ora dopo la fine.": "This session's results have not been published yet: they usually arrive a few hours after it ends.",
   "I robot": "The robots",
   "I robot di casa — aspirapolvere e tagliaerba: stato, batteria, comandi e mappa. Ogni robot ha la sua scheda nella sezione Robot.": "The home robots — vacuums and lawn mowers: state, battery, controls and map. Each robot gets its own card in the Robot section.",
   "I sensori che il robot pubblica accanto a sé — durata del filtro, spazzola principale e laterale, area pulita, pulizie fatte: entità sensor.*, binary_sensor.*, number.*. Compaiono sulla scheda sotto i comandi, col loro nome e la loro unità, nell'ordine in cui le aggiungi.": "The sensors the robot publishes next to itself — filter life, main and side brush, area cleaned, cleaning count: sensor.*, binary_sensor.*, number.* entities. They appear on the card under the controls, with their own name and unit, in the order you add them.",
@@ -64796,6 +64797,15 @@ function stemma(squadra, misura7 = 40) {
   const sigla = clean(squadra?.sigla || squadra?.nome).slice(0, 3).toUpperCase();
   return `<span class="dm-sport-stemma dm-sport-sigla" style="--m:${misura7}px;--c:${esc(colore2)}" aria-hidden="true">${esc(sigla)}</span>`;
 }
+function scuderia(id, misura7 = 18) {
+  const chiave2 = clean(id);
+  if (!chiave2) return "";
+  const url = /^[a-z_]{2,20}$/.test(chiave2) ? LOGHI.logo(`f1:${chiave2}`) : "";
+  return `<span class="dm-sport-scud" style="--m:${misura7}px;--c:${esc(COLORI_F1[chiave2] || "#64748b")}" aria-hidden="true">${url ? `<img src="${esc(url)}" alt="" decoding="async">` : ""}</span>`;
+}
+function squadraDi(r, x, misura7 = 16) {
+  return r.tipo === "f1" ? `${scuderia(x.scuderiaId, misura7)}${esc(x.scuderia)}` : esc(x.moto);
+}
 function titoloDelBlocco(chiave2, titolo3, sotto = "", dove = "pagina") {
   return `<h3 class="dm-sport-titolo"><span class="dm-sport-titolo-ic" aria-hidden="true">${oggettoWidget(
     chiave2,
@@ -64967,9 +64977,7 @@ function pilotaDelCuoreMarkup(r, seguito) {
   return `<div class="dm-sport-cuore" style="--c:${coloreDi(r, chi)}">
       <div class="dm-sport-cuore-testa"><span>${esc(
     mio ? t("Il tuo pilota", "Your rider") : t("In testa al mondiale", "Championship leader")
-  )}</span><strong>${chi.numero ? `<i>#${esc(chi.numero)}</i> ` : ""}${esc(nomePilota(r, chi))}</strong><small>${esc(
-    r.tipo === "f1" ? chi.scuderia : chi.moto
-  )}</small></div>
+  )}</span><strong>${chi.numero ? `<i>#${esc(chi.numero)}</i> ` : ""}${esc(nomePilota(r, chi))}</strong><small>${squadraDi(r, chi, 18)}</small></div>
       <div class="dm-sport-cuore-numeri">
         ${numero61(conN(t("{n}°", "#{n}"), chi.posizione), t("Mondiale", "Standing"))}
         ${numero61(chi.punti, t("Punti", "Points"))}
@@ -65038,7 +65046,7 @@ function ultimaGaraMarkup(r, seguito) {
     (x) => `<div class="dm-sport-gradino" data-pos="${x.posizione}" style="--c:${coloreDi(r, x)}">
         <span class="dm-sport-pilota-num">${x.numero ? `#${esc(x.numero)}` : ""}</span>
         <strong${x.id === preferito ? ' class="mio"' : ""}>${esc(r.tipo === "f1" ? x.cognome || x.nome : cognomeDi(x.nome))}</strong>
-        <small>${esc(r.tipo === "f1" ? x.scuderia : x.moto)}</small>
+        <small>${squadraDi(r, x, 18)}</small>
         <span class="dm-sport-scalino">${x.posizione}</span>
       </div>`
   ).join("");
@@ -65046,7 +65054,7 @@ function ultimaGaraMarkup(r, seguito) {
     (x) => `<li class="dm-sport-pos${x.id === preferito ? " mia" : ""}">
         <span class="dm-sport-num">${x.posizione ?? "–"}</span><i class="dm-sport-colore" style="--c:${coloreDi(r, x)}"></i>
         <span class="dm-sport-nome">${esc(nomePilota(r, x))}</span>
-        <span class="dm-sport-g">${esc(r.tipo === "f1" ? x.scuderia : x.moto)}</span>
+        <span class="dm-sport-g">${squadraDi(r, x)}</span>
         <b>${x.punti ? `+${x.punti}` : ""}</b>
       </li>`
   ).join("");
@@ -65089,7 +65097,7 @@ function classificaPilotiMarkup(r, seguito, indice = 0) {
   const mio = righe3.find((x) => x.id === preferito && x.posizione > 10);
   const riga3 = (x) => `<li class="dm-sport-pos dm-sport-barra${x.id === preferito ? " mia" : ""}" style="--q:${(x.quota * 100).toFixed(1)}%;--c:${coloreDi(r, x)}">
       <span class="dm-sport-num">${x.posizione}</span>
-      <span class="dm-sport-nome">${esc(nomePilota(r, x))}<small>${esc(r.tipo === "f1" ? x.scuderia : x.moto)}</small><i class="dm-sport-quota" aria-hidden="true"></i></span>
+      <span class="dm-sport-nome">${esc(nomePilota(r, x))}<small>${squadraDi(r, x)}</small><i class="dm-sport-quota" aria-hidden="true"></i></span>
       <b>${x.punti}</b>
     </li>`;
   const titolo3 = r.tipo === "f1" ? t("Classifica piloti", "Drivers' standings") : t("Classifica piloti", "Riders' standings");
@@ -65111,7 +65119,7 @@ function costruttoriMarkup(r) {
     esc(t("Costruttori", "Constructors")),
     `<ol class="dm-sport-classifica">${righe3.map(
       (x) => `<li class="dm-sport-pos dm-sport-barra" style="--q:${(x.quota * 100).toFixed(1)}%;--c:${COLORI_F1[x.id] || "#64748b"}">
-        <span class="dm-sport-num">${x.posizione}</span><span class="dm-sport-nome">${esc(x.nome)}<i class="dm-sport-quota" aria-hidden="true"></i></span><b>${x.punti}</b>
+        <span class="dm-sport-num">${x.posizione}</span><span class="dm-sport-nome"><span class="dm-sport-con-scud">${scuderia(x.id, 26)}${esc(x.nome)}</span><i class="dm-sport-quota" aria-hidden="true"></i></span><b>${x.punti}</b>
       </li>`
     ).join("")}</ol>`
   );
@@ -65262,12 +65270,12 @@ function sessioneDettaglioMarkup(d, preferito = "") {
     const mio = preferito && clean(x.id) === preferito;
     const colore2 = f12 ? COLORI_F1[x.scuderiaId] || "#64748b" : coloreDellaMoto(x.moto);
     const chi = f12 ? clean(x.nome) || clean(x.cognome) : clean(x.nome);
-    const squadra = f12 ? x.scuderia : x.moto;
+    const squadra = f12 ? `${scuderia(x.scuderiaId, 16)}${esc(x.scuderia)}` : esc(x.moto);
     const guadagno = corsa && x.griglia && x.posizione ? x.griglia - x.posizione : null;
     const valori = qualifica ? [x.q1, x.q2, x.q3, x.tempo] : corsa ? [x.tempo || x.stato, x.punti ? `+${x.punti}` : ""] : [x.tempo || x.giro || x.stato, x.distacco, x.punti ? `+${x.punti}` : ""];
     return `<li class="dm-sport-pos${mio ? " mia" : ""}" style="--c:${colore2}">
         <span class="dm-sport-num">${x.posizione ?? "–"}</span><i class="dm-sport-colore"></i>
-        <span class="dm-sport-nome">${esc(chi)}${x.numero && !f12 ? ` <small class="dm-sport-pilota-num">#${esc(x.numero)}</small>` : ""}<small>${esc(squadra)}${guadagno ? ` · <em class="${guadagno > 0 ? "su" : "giu"}">${guadagno > 0 ? "▲" : "▼"}${Math.abs(guadagno)}</em>` : ""}${x.giroVeloce ? ` · <em class="viola">${esc(t("giro veloce", "fastest lap"))}</em>` : ""}</small></span>
+        <span class="dm-sport-nome">${esc(chi)}${x.numero && !f12 ? ` <small class="dm-sport-pilota-num">#${esc(x.numero)}</small>` : ""}<small>${squadra}${guadagno ? ` · <em class="${guadagno > 0 ? "su" : "giu"}">${guadagno > 0 ? "▲" : "▼"}${Math.abs(guadagno)}</em>` : ""}${x.giroVeloce ? ` · <em class="viola">${esc(t("giro veloce", "fastest lap"))}</em>` : ""}</small></span>
         <span class="dm-sport-tempi">${valori.map((v) => `<span>${esc(clean(v) || "–")}</span>`).join("")}</span>
       </li>`;
   }).join("");
@@ -65310,7 +65318,7 @@ function pilotiMarkup(r, preferito = "") {
   )}</span><span>${esc(f12 ? t("Pilota", "Driver") : t("Pilota", "Rider"))}</span><span class="dm-sport-tempi">${f12 ? `<span>${esc(t("Vittorie", "Wins"))}</span>` : ""}<span>${esc(t("Pt", "Pts"))}</span></span></div><ol class="dm-sport-classifica">${righe3.map(
     (x) => `<li class="dm-sport-pos dm-sport-barra${x.id === preferito ? " mia" : ""}" style="--q:${(x.quota * 100).toFixed(1)}%;--c:${coloreDi(r, x)}">
         <span class="dm-sport-num">${x.posizione}</span>
-        <span class="dm-sport-nome">${esc(nomePilota(r, x))}<small>${esc(f12 ? x.scuderia : x.moto)}</small><i class="dm-sport-quota" aria-hidden="true"></i></span>
+        <span class="dm-sport-nome">${esc(nomePilota(r, x))}<small>${squadraDi(r, x)}</small><i class="dm-sport-quota" aria-hidden="true"></i></span>
         <span class="dm-sport-tempi">${f12 ? `<span>${x.vittorie ?? 0}</span>` : ""}<b>${x.punti}</b></span>
       </li>`
   ).join("")}</ol></div>`;
@@ -65341,7 +65349,12 @@ async function apriIlDettaglio2(cosa, titolo3) {
   try {
     const risposta = await chiediAHomeAssistant({ type: "ponte/sport/dettaglio", cosa }, ATTESA2);
     const d = risposta?.dettaglio;
-    html = d?.tipo === "calcio" ? partitaDettaglioMarkup(d, Date.now()) : sessioneDettaglioMarkup(d, preferitoDi(d?.tipo));
+    html = d?.nonAncora ? avvisoDelFoglio(
+      t(
+        "I risultati di questa sessione non sono ancora stati pubblicati: di solito arrivano qualche ora dopo la fine.",
+        "This session's results have not been published yet: they usually arrive a few hours after it ends."
+      )
+    ) : d?.tipo === "calcio" ? partitaDettaglioMarkup(d, Date.now()) : sessioneDettaglioMarkup(d, preferitoDi(d?.tipo));
   } catch (_errore) {
   }
   if (!corpo5.isConnected) return;
@@ -65735,6 +65748,11 @@ function foglioDelloSport(P9) {
   ${P9} .dm-sport-schede{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--card-border,#e2e8f0)}
   ${P9} .dm-sport-scheda-tasto{display:inline-flex;align-items:center;min-height:30px;padding:0 12px;border-radius:999px;cursor:pointer;
     font-size:12px;font-weight:800;color:var(--text,#0f172a);background:var(--surface-2,#f1f5f9);box-shadow:inset 0 0 0 1px var(--card-border,#e2e8f0)}
+  ${P9} .dm-sport-scud{display:inline-grid;place-items:center;width:var(--m,18px);height:var(--m,18px);margin-right:6px;border-radius:5px;
+    background:var(--c,#64748b);vertical-align:-0.28em;overflow:hidden;flex:0 0 auto;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+  ${P9} .dm-sport-scud img{width:78%;height:78%;object-fit:contain}
+  ${P9} .dm-sport-con-scud{display:flex;align-items:center;min-width:0}
+  ${P9} .dm-sport-con-scud .dm-sport-scud{margin-right:10px;border-radius:7px}
   ${P9} .dm-sport-scheda-tasto.questa{color:#fff;background:#0f172a;box-shadow:none}
   ${P9} .dm-sport-scheda-tasto:hover{filter:brightness(.96)}
 
@@ -109099,14 +109117,14 @@ function configAperto() {
   };
   guardaIlConfig = root.requestAnimationFrame?.(giro) || root.setTimeout?.(giro, 200);
 }
-function scendiSottoIlMenu() {
-  const tela3 = doc?.getElementById?.(ID2);
+function scendiSottoIlMenu({ idTela = ID2, tasto: tasto4 = '[data-mu-fa="menu"]' } = {}) {
+  const tela3 = doc?.getElementById?.(idTela);
   if (!tela3) return;
   tela3.dataset.muSottoIlMenu = "true";
   const aperto2 = Date.now();
   const risali = (evento) => {
     if (Date.now() - aperto2 < 300) return;
-    if (evento?.target?.closest?.('[data-mu-fa="menu"]')) return;
+    if (evento?.target?.closest?.(tasto4)) return;
     doc.removeEventListener("pointerdown", risali, true);
     root.setTimeout?.(() => delete tela3.dataset.muSottoIlMenu, 350);
   };
@@ -109131,8 +109149,8 @@ function laBarraDiHomeAssistant(casa) {
     return { main: null, barra: null };
   }
 }
-function apriLaBarraAccanto(casa) {
-  const tela3 = doc?.getElementById?.(ID2);
+function apriLaBarraAccanto(casa, { idTela = ID2, tasto: tasto4 = '[data-mu-fa="menu"]', rimisura = (tela3) => misura4(tela3, state119.muro) } = {}) {
+  const tela3 = doc?.getElementById?.(idTela);
   const { main, barra: barra3 } = laBarraDiHomeAssistant(casa);
   if (!tela3 || !main) return false;
   const vista2 = casa.defaultView || root;
@@ -109148,7 +109166,7 @@ function apriLaBarraAccanto(casa) {
     const destra = Math.round(barra3?.getBoundingClientRect?.().right || 0);
     state119.accanto = destra > 0 ? destra : 256;
     tela3.style.setProperty("left", `${state119.accanto}px`, "important");
-    misura4(tela3, state119.muro);
+    rimisura(tela3);
   };
   tela3.dataset.muAccantoAlMenu = "true";
   scosta();
@@ -109156,22 +109174,22 @@ function apriLaBarraAccanto(casa) {
   const aperto2 = Date.now();
   const rimetti2 = (evento) => {
     if (Date.now() - aperto2 < 300) return;
-    if (evento?.target?.closest?.('[data-mu-fa="menu"]')) return;
+    if (evento?.target?.closest?.(tasto4)) return;
     const strada2 = evento?.composedPath?.() || [evento?.target];
     if (!strada2.includes(tela3)) return;
     doc.removeEventListener("pointerdown", rimetti2, true);
     delete tela3.dataset.muAccantoAlMenu;
     state119.accanto = 0;
     tela3.style.removeProperty("left");
-    misura4(tela3, state119.muro);
+    rimisura(tela3);
   };
   doc.addEventListener("pointerdown", rimetti2, true);
   return true;
 }
-function apriIlMenu2() {
+function apriIlMenu2(come2 = {}) {
   const largo = root.gdahomeDice?.postMessage ? null : homeAssistantLargo();
-  if (largo && apriLaBarraAccanto(largo)) return true;
-  scendiSottoIlMenu();
+  if (largo && apriLaBarraAccanto(largo, come2)) return true;
+  scendiSottoIlMenu(come2);
   try {
     if (root.gdahomeDice?.postMessage) {
       root.gdahomeDice.postMessage("gdahome:menu");
@@ -147801,6 +147819,7 @@ function testataMarkup(occhio2, admin) {
   const adesso2 = /* @__PURE__ */ new Date();
   const collegata = Object.keys(allStates() || {}).length > 0;
   return `<div class="oc-testa">
+      <button type="button" class="oc-menu" data-oc="menu" aria-label="${esc(t("Apri il menu", "Open menu"))}"><span></span><span></span><span></span></button>
       <span class="oc-testa-ic" aria-hidden="true">${segno4("home", 32)}</span>
       <div class="oc-testa-testo">
         <h1>${esc(nome)}</h1>
@@ -147823,17 +147842,40 @@ function meteoMarkup(occhio2, states) {
   const m = meteoDiQui(occhio2, states);
   if (!m?.stato) return "";
   const a = m.stato.attributes || {};
-  const unitaVento = clean(a.wind_speed_unit) || "km/h";
+  const p = previsioniDelMeteo(m.id, () => ridisegna29());
+  const gradi10 = (v) => v == null || v === "" || !Number.isFinite(Number(v)) ? "" : `${numero59(v)}°`;
+  const oggi = oggiFraMassimaEMinima(p.giornaliere);
+  const misure = [];
+  const misura7 = (v) => v == null || v === "" || !Number.isFinite(Number(v)) ? null : Number(v);
+  if (misura7(a.humidity) !== null)
+    misure.push(["💧", t("Umidità", "Humidity"), `${numero59(a.humidity)}%`]);
+  if (misura7(a.wind_speed) !== null)
+    misure.push(["💨", t("Vento", "Wind"), `${numero59(a.wind_speed)} ${clean(a.wind_speed_unit) || "km/h"}`]);
+  if (misura7(a.pressure) !== null)
+    misure.push(["🧭", t("Pressione", "Pressure"), `${numero59(a.pressure)} ${clean(a.pressure_unit) || "hPa"}`]);
+  const tramonto = Date.parse(clean(states["sun.sun"]?.attributes?.next_setting));
+  if (Number.isFinite(tramonto))
+    misure.push(["🌅", t("Tramonto", "Sunset"), ora7(tramonto, { hour: "2-digit", minute: "2-digit" })]);
+  const giorni = giorniCheVengono(p.giornaliere, 4);
   return `<button type="button" class="oc-meteo" data-oc="meteo">
-      <span class="oc-meteo-segno" aria-hidden="true">${segnoDelTempo(m.stato.state)}</span>
-      <span class="oc-meteo-centro">
-        <b>${a.temperature != null ? `${esc(numero59(a.temperature, 0))}°` : "—"}</b>
-        <small>${esc(parolaDellaCondizione(m.stato.state) || m.stato.state)}</small>
+      <span class="oc-meteo-capo">
+        <span class="oc-meteo-segno" aria-hidden="true">${segnoDelTempo(m.stato.state)}</span>
+        <span class="oc-meteo-gradi">
+          <b>${esc(gradi10(a.temperature) || "—")}</b>
+          <small>${esc(parolaDellaCondizione(m.stato.state) || m.stato.state)}</small>
+          ${oggi ? `<em>${esc(t("Oggi", "Today"))} <b>${esc(gradi10(oggi.alta))}</b>${gradi10(oggi.bassa) ? ` / ${esc(gradi10(oggi.bassa))}` : ""}</em>` : ""}
+        </span>
       </span>
-      <span class="oc-meteo-destra">
-        ${a.humidity != null ? `<span>💧 ${esc(numero59(a.humidity))}%</span>` : ""}
-        ${a.wind_speed != null ? `<span>💨 ${esc(numero59(a.wind_speed))} ${esc(unitaVento)}</span>` : ""}
-      </span>
+      ${misure.length ? `<span class="oc-meteo-misure">${misure.map(
+    ([segno5, parola, valore3]) => `<span>${segno5} <i>${esc(parola)}</i> <b>${esc(valore3)}</b></span>`
+  ).join("")}</span>` : ""}
+      ${giorni.length ? `<span class="oc-meteo-giorni">${giorni.map(
+    (g) => `<span class="oc-meteo-giorno">
+                  <i>${esc(ora7(g.quando, { weekday: "short" }).replace(/\./g, ""))}</i>
+                  <span aria-hidden="true">${segnoDelTempo(g.condizione)}</span>
+                  <b>${esc(gradi10(g.alta))} <i>${esc(gradi10(g.bassa))}</i></b>
+                </span>`
+  ).join("")}</span>` : ""}
     </button>`;
 }
 function sottoDelRiquadro(r, occhio2, states) {
@@ -148338,6 +148380,11 @@ function alClic4(evento) {
     return;
   }
   if (cosa === "chiudi") return chiudi2();
+  if (cosa === "menu") {
+    apriIlMenu2({ idTela: ID3, tasto: '[data-oc="menu"]', rimisura: () => {
+    } });
+    return;
+  }
   if (cosa === "config") {
     try {
       root.apriConfigEntita?.();
@@ -148425,21 +148472,43 @@ function installaLoStile7() {
     @keyframes oc-batte{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}50%{box-shadow:0 0 0 6px rgba(16,185,129,0)}}
     ${P9} .oc-ora{padding:6px 10px;border-radius:999px;font-family:'Oswald',system-ui,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;
       background:var(--oc-morbido);border:1px solid var(--oc-bordo)}
+    ${P9} .oc-menu{display:flex;flex-direction:column;justify-content:center;gap:5px;flex:0 0 auto;width:52px;height:52px;padding:0 14px;
+      border-radius:16px;border:1px solid var(--oc-bordo);background:var(--oc-morbido);cursor:pointer;box-shadow:var(--oc-ombra)}
+    ${P9} .oc-menu span{display:block;height:3px;border-radius:3px;background:var(--oc-testo)}
+    /* Col menu aperto la pagina scende sotto il cassetto (o si scosta, con
+     * la barra di Home Assistant larga): lo fa \`apriIlMenu\`. */
+    ${P9}[data-mu-sotto-il-menu]{z-index:4!important}
+    ${P9}[data-mu-accanto-al-menu]{right:0}
     ${P9} .oc-config{display:grid;place-items:center;flex:0 0 auto;width:42px;height:42px;border-radius:14px;border:1px solid var(--oc-bordo);
       background:var(--oc-morbido);cursor:pointer}
     ${P9} .oc-config svg{width:22px;height:22px}
 
-    ${P9} .oc-meteo{display:flex;align-items:center;gap:20px;width:100%;margin-bottom:20px;padding:24px;border-radius:28px;cursor:pointer;text-align:left;
-      background:linear-gradient(135deg,var(--oc-card) 0%,color-mix(in srgb,#0ea5e9 8%,var(--oc-card)) 100%);border:1px solid var(--oc-bordo);
-      box-shadow:var(--oc-ombra);transition:transform .3s cubic-bezier(.165,.84,.44,1),box-shadow .3s}
-    ${P9} .oc-meteo:hover{transform:translateY(-2px);box-shadow:var(--oc-ombra-su)}
-    ${P9} .oc-meteo-segno{font-size:56px;line-height:1;flex:0 0 auto}
-    ${P9} .oc-meteo-centro{flex:1;display:grid;justify-items:center;text-align:center}
-    ${P9} .oc-meteo-centro b{font-family:'Oswald',system-ui,sans-serif;font-size:38px;font-weight:700;line-height:1}
-    ${P9} .oc-meteo-centro small{margin-top:4px;font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#0284c7}
-    ${P9} .oc-meteo-destra{display:flex;flex-direction:column;gap:8px}
-    ${P9} .oc-meteo-destra span{padding:6px 12px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;
-      background:var(--oc-morbido);border:1px solid var(--oc-bordo)}
+    /* Il meteo vestito come la card della plancia principale. */
+    ${P9} .oc-meteo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);align-items:center;gap:14px 20px;width:100%;
+      margin-bottom:20px;padding:20px 22px 16px;border-radius:22px;cursor:pointer;text-align:left;
+      background:var(--oc-card);border:1px solid var(--oc-bordo);box-shadow:var(--oc-ombra);
+      transition:transform .18s cubic-bezier(.16,1,.3,1),box-shadow .2s ease}
+    ${P9} .oc-meteo:hover{transform:translateY(-4px);box-shadow:var(--oc-ombra-su)}
+    ${P9} .oc-meteo-capo{display:flex;align-items:center;gap:16px;min-width:0}
+    ${P9} .oc-meteo-segno{font-size:52px;line-height:1;flex:0 0 auto;filter:drop-shadow(0 6px 14px rgba(15,23,42,.14))}
+    ${P9} .oc-meteo-gradi{display:grid;gap:3px;min-width:0}
+    ${P9} .oc-meteo-gradi>b{font-size:42px;font-weight:900;letter-spacing:-2px;line-height:1;font-variant-numeric:tabular-nums}
+    ${P9} .oc-meteo-gradi small{font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--oc-fioco);
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    ${P9} .oc-meteo-gradi em{font-style:normal;font-size:12px;font-weight:800;color:var(--oc-fioco);font-variant-numeric:tabular-nums}
+    ${P9} .oc-meteo-gradi em b{color:var(--oc-testo)}
+    ${P9} .oc-meteo-misure{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+    ${P9} .oc-meteo-misure>span{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:12px;background:var(--oc-morbido);
+      border:1px solid var(--oc-bordo);font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    ${P9} .oc-meteo-misure i{font-style:normal;color:var(--oc-fioco)}
+    ${P9} .oc-meteo-misure b{font-weight:900;font-variant-numeric:tabular-nums}
+    ${P9} .oc-meteo-giorni{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;
+      border-top:1px dashed var(--oc-bordo);padding-top:13px}
+    ${P9} .oc-meteo-giorno{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 4px;border-radius:13px;background:var(--oc-morbido)}
+    ${P9} .oc-meteo-giorno>i{font-style:normal;font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--oc-fioco)}
+    ${P9} .oc-meteo-giorno>span{font-size:21px;line-height:1}
+    ${P9} .oc-meteo-giorno>b{font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}
+    ${P9} .oc-meteo-giorno>b i{font-style:normal;color:var(--oc-fioco)}
 
     ${P9} .oc-titolo{margin:18px 4px 14px;font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--oc-fioco)}
     ${P9} .oc-riquadri{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
@@ -148585,16 +148654,22 @@ function installaLoStile7() {
       ${P9} .oc-pagina{padding:12px 12px 80px}
       ${P9} .oc-testa{padding:16px 18px;border-radius:22px;gap:12px}
       ${P9} .oc-testa-ic{width:48px;height:48px;border-radius:16px}
+      ${P9} .oc-menu{width:44px;height:44px;padding:0 12px;border-radius:14px;gap:4px}
+      /* Sul telefono il ☰ prende il posto dell'icona della casa. */
+      ${P9} .oc-menu + .oc-testa-ic{display:none}
       ${P9} .oc-testa-ic svg{width:28px;height:28px}
       ${P9} .oc-testa-testo h1{font-size:20px}
       ${P9} .oc-testa-testo p{font-size:10px}
       ${P9} .oc-pill{font-size:9px;padding:4px 8px}
       ${P9} .oc-ora{font-size:10px;padding:4px 8px}
-      ${P9} .oc-meteo{padding:18px;border-radius:22px;gap:12px}
-      ${P9} .oc-meteo-segno{font-size:44px}
-      ${P9} .oc-meteo-centro b{font-size:30px}
-      ${P9} .oc-meteo-centro small{font-size:11px}
-      ${P9} .oc-meteo-destra span{font-size:10px;padding:4px 10px}
+      ${P9} .oc-meteo{grid-template-columns:1fr;padding:14px 14px 12px;gap:10px}
+      ${P9} .oc-meteo-segno{font-size:40px}
+      ${P9} .oc-meteo-gradi>b{font-size:32px;letter-spacing:-1.4px}
+      ${P9} .oc-meteo-gradi small{font-size:10.5px}
+      ${P9} .oc-meteo-misure{grid-template-columns:repeat(auto-fit,minmax(106px,1fr))}
+      ${P9} .oc-meteo-misure>span{padding:7px 9px;font-size:11px;gap:5px}
+      ${P9} .oc-meteo-misure i{display:none}
+      ${P9} .oc-meteo-giorno>span{font-size:19px}
       ${P9} .oc-riquadro{padding:22px 12px;border-radius:20px;min-height:120px}
       ${P9} .oc-riquadro-ic{width:52px;height:52px;border-radius:16px;margin-bottom:10px}
       ${P9} .oc-riquadro-ic svg{width:30px;height:30px}

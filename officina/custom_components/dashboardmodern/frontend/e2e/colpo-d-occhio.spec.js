@@ -252,6 +252,13 @@ for (const tema of ["light", "dark"]) {
     await boot(page, testInfo, { tema });
     const tela = page.locator("#dm-occhio");
     await expect(tela.locator(".oc-testa h1")).toHaveText("Casa");
+    /* Il ☰ in cima, come sulla plancia a muro: apre il menu di chi ospita. */
+    await page.evaluate(() => {
+      window.__menuAperto = 0;
+      window.apriMenuLaterale = () => (window.__menuAperto += 1);
+    });
+    await tela.locator('[data-oc="menu"]').click();
+    expect(await page.evaluate(() => window.__menuAperto)).toBe(1);
     await expect(tela.locator(".oc-meteo")).toContainText("19°");
     await expect(tela.locator('.oc-riquadro[data-tipo="antifurto"]')).toContainText("Notte");
     await expect(tela.locator('.oc-riquadro[data-tipo="antifurto"]')).toHaveAttribute(

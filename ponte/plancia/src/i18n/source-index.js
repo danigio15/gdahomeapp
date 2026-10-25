@@ -2726,6 +2726,7 @@ export const SOURCE_INDEX = Object.freeze({
   "I risultati adesso non arrivano: si riprova da soli fra un minuto.": "Results are not coming in right now: it will try again in a minute.",
   "I risultati adesso non arrivano.": "Results are not coming in right now.",
   "I risultati dello sport li porta l'add-on GdAHome: da questa plancia non si raggiunge.": "Sports results come through the GdAHome add-on, which this dashboard cannot reach.",
+  "I risultati di questa sessione non sono ancora stati pubblicati: di solito arrivano qualche ora dopo la fine.": "This session's results have not been published yet: they usually arrive a few hours after it ends.",
   "I robot": "The robots",
   "I robot di casa — aspirapolvere e tagliaerba: stato, batteria, comandi e mappa. Ogni robot ha la sua scheda nella sezione Robot.": "The home robots — vacuums and lawn mowers: state, battery, controls and map. Each robot gets its own card in the Robot section.",
   "I sensori che il robot pubblica accanto a sé — durata del filtro, spazzola principale e laterale, area pulita, pulizie fatte: entità sensor.*, binary_sensor.*, number.*. Compaiono sulla scheda sotto i comandi, col loro nome e la loro unità, nell'ordine in cui le aggiungi.": "The sensors the robot publishes next to itself — filter life, main and side brush, area cleaned, cleaning count: sensor.*, binary_sensor.*, number.* entities. They appear on the card under the controls, with their own name and unit, in the order you add them.",

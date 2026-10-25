@@ -7527,4 +7527,6 @@ export default Object.freeze({
   "What it opens": "Was es öffnet",
   "At a glance is Premium": "«Auf einen Blick» ist Premium",
   "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a single page with the weather and big tiles, and each tile opens its data in a popup. Premium is turned on from the GdAHome app.": "Mit GdAHome Base bleibt dieses Dashboard ein normales Dashboard. Mit Premium wird es eine einzige Seite mit dem Wetter und großen Kacheln, und jede Kachel öffnet ihre Daten in einem Popup. Premium wird in der GdAHome-App aktiviert.",
+  "Open menu": "Menü öffnen",
+  "This session's results have not been published yet: they usually arrive a few hours after it ends.": "Die Ergebnisse dieser Session sind noch nicht veröffentlicht: Sie kommen meist ein paar Stunden nach dem Ende.",
 });
