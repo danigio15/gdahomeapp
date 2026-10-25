@@ -268,7 +268,7 @@
   "slug": "haasf1team",
   "u": "https://media.formula1.com/content/dam/fom-website/teams/2025/haasf1team-logo.png",
   "stato": 404,
-  "tipo": "application/octet-stream",
+  "tipo": "text/plain; charset=utf-8",
   "byte": 0
  },
  {
@@ -428,7 +428,7 @@
   "slug": "cadillac",
   "u": "https://media.formula1.com/content/dam/fom-website/teams/2025/cadillac-logo.png",
   "stato": 404,
-  "tipo": "application/octet-stream",
+  "tipo": "text/plain; charset=utf-8",
   "byte": 0
  },
  {

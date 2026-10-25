@@ -3483,17 +3483,17 @@
       "timeValid": true,
       "recent": true,
       "status": {
-       "clock": 3780,
-       "displayClock": "63'",
+       "clock": 5400,
+       "displayClock": "90'+4'",
        "period": 2,
        "type": {
-        "id": "26",
-        "name": "STATUS_SECOND_HALF",
-        "state": "in",
-        "completed": false,
-        "description": "Second Half",
-        "detail": "63'",
-        "shortDetail": "63'"
+        "id": "28",
+        "name": "STATUS_FULL_TIME",
+        "state": "post",
+        "completed": true,
+        "description": "Full Time",
+        "detail": "FT",
+        "shortDetail": "FT"
        }
       },
       "venue": {
@@ -3528,7 +3528,7 @@
          {
           "name": "Total",
           "type": "total",
-          "summary": "1-1-5",
+          "summary": "1-1-6",
           "abbreviation": "Total"
          }
         ],
@@ -3659,12 +3659,12 @@
          {
           "name": "foulsCommitted",
           "abbreviation": "FC",
-          "displayValue": "8"
+          "displayValue": "11"
          },
          {
           "name": "wonCorners",
           "abbreviation": "CW",
-          "displayValue": "2"
+          "displayValue": "5"
          },
          {
           "name": "goalAssists",
@@ -3674,17 +3674,17 @@
          {
           "name": "possessionPct",
           "abbreviation": "PP",
-          "displayValue": "42.5"
+          "displayValue": "40.1"
          },
          {
           "name": "shotAssists",
           "abbreviation": "SHAST",
-          "displayValue": "5"
+          "displayValue": "8"
          },
          {
           "name": "shotsOnTarget",
           "abbreviation": "SOG",
-          "displayValue": "4"
+          "displayValue": "5"
          },
          {
           "name": "totalGoals",
@@ -3694,7 +3694,7 @@
          {
           "name": "totalShots",
           "abbreviation": "SHOT",
-          "displayValue": "7"
+          "displayValue": "12"
          }
         ]
        },
@@ -3704,14 +3704,14 @@
         "type": "team",
         "order": 1,
         "homeAway": "away",
-        "winner": false,
-        "form": "DWWDW",
-        "score": "1",
+        "winner": true,
+        "form": "DLWWD",
+        "score": "2",
         "records": [
          {
           "name": "Total",
           "type": "total",
-          "summary": "4-3-0",
+          "summary": "5-3-0",
           "abbreviation": "Total"
          }
         ],
@@ -3842,12 +3842,12 @@
          {
           "name": "foulsCommitted",
           "abbreviation": "FC",
-          "displayValue": "9"
+          "displayValue": "13"
          },
          {
           "name": "wonCorners",
           "abbreviation": "CW",
-          "displayValue": "3"
+          "displayValue": "4"
          },
          {
           "name": "goalAssists",
@@ -3857,27 +3857,27 @@
          {
           "name": "possessionPct",
           "abbreviation": "PP",
-          "displayValue": "57.5"
+          "displayValue": "59.9"
          },
          {
           "name": "shotAssists",
           "abbreviation": "SHAST",
-          "displayValue": "6"
+          "displayValue": "12"
          },
          {
           "name": "shotsOnTarget",
           "abbreviation": "SOG",
-          "displayValue": "2"
+          "displayValue": "7"
          },
          {
           "name": "totalGoals",
           "abbreviation": "G",
-          "displayValue": "1"
+          "displayValue": "2"
          },
          {
           "name": "totalShots",
           "abbreviation": "SHOT",
-          "displayValue": "9"
+          "displayValue": "19"
          }
         ]
        }
@@ -4044,104 +4044,118 @@
           "position": "CM-L"
          }
         ]
+       },
+       {
+        "type": {
+         "id": "70",
+         "text": "Goal"
+        },
+        "clock": {
+         "value": 3897,
+         "displayValue": "65'"
+        },
+        "team": {
+         "id": "103"
+        },
+        "scoreValue": 1,
+        "scoringPlay": true,
+        "redCard": false,
+        "yellowCard": false,
+        "penaltyKick": false,
+        "ownGoal": false,
+        "shootout": false,
+        "athletesInvolved": [
+         {
+          "id": "322771",
+          "displayName": "Omari Hutchinson",
+          "shortName": "O. Hutchinson",
+          "fullName": "Omari Hutchinson",
+          "jersey": "20",
+          "team": {
+           "id": "103"
+          },
+          "links": [
+           {
+            "rel": [
+             "playercard",
+             "desktop",
+             "athlete"
+            ],
+            "href": "https://www.espn.com/soccer/player/_/id/322771/omari-hutchinson",
+            "isHidden": false
+           },
+           {
+            "rel": [
+             "playercard",
+             "sportscenter",
+             "app",
+             "athlete"
+            ],
+            "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~a:322771",
+            "isHidden": false
+           }
+          ],
+          "position": "CF-R"
+         }
+        ]
+       },
+       {
+        "type": {
+         "id": "94",
+         "text": "Yellow Card"
+        },
+        "clock": {
+         "value": 5363,
+         "displayValue": "90'"
+        },
+        "team": {
+         "id": "103"
+        },
+        "scoreValue": 0,
+        "scoringPlay": false,
+        "redCard": false,
+        "yellowCard": true,
+        "penaltyKick": false,
+        "ownGoal": false,
+        "shootout": false,
+        "athletesInvolved": [
+         {
+          "id": "76762",
+          "displayName": "Luka Modric",
+          "shortName": "L. Modric",
+          "fullName": "Luka Modric",
+          "jersey": "14",
+          "team": {
+           "id": "103"
+          },
+          "links": [
+           {
+            "rel": [
+             "playercard",
+             "desktop",
+             "athlete"
+            ],
+            "href": "https://www.espn.com/soccer/player/_/id/76762/luka-modric",
+            "isHidden": false
+           },
+           {
+            "rel": [
+             "playercard",
+             "sportscenter",
+             "app",
+             "athlete"
+            ],
+            "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~a:76762",
+            "isHidden": false
+           }
+          ],
+          "position": "CM-R"
+         }
+        ]
        }
       ],
       "odds": [
-       {
-        "provider": {
-         "id": "2000",
-         "name": "Bet 365",
-         "displayName": "Bet 365",
-         "logos": [
-          {
-           "href": "https://a.espncdn.com/redesign/assets/img/logos/logo-bet365.png",
-           "rel": [
-            "light"
-           ]
-          },
-          {
-           "href": "https://a.espncdn.com/redesign/assets/img/logos/logo-bet365.png",
-           "rel": [
-            "dark"
-           ]
-          }
-         ]
-        },
-        "awayTeamOdds": {
-         "summary": "1/5",
-         "value": 1.2,
-         "handicap": 0,
-         "team": {
-          "id": "103",
-          "uid": "s:600~t:103",
-          "abbreviation": "MIL",
-          "displayName": "AC Milan",
-          "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/103.png"
-         },
-         "link": {
-          "language": "it-IT",
-          "rel": [
-           "away",
-           "desktop",
-           "bets",
-           "bet-365"
-          ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=203392185-287134456~2/9",
-          "text": "Away Bet",
-          "shortText": "Away Bet",
-          "isExternal": true,
-          "isPremium": false,
-          "isHidden": false
-         }
-        },
-        "homeTeamOdds": {
-         "summary": "22/1",
-         "value": 23,
-         "handicap": 0,
-         "team": {
-          "id": "118",
-          "uid": "s:600~t:118",
-          "abbreviation": "UDI",
-          "displayName": "Udinese",
-          "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/118.png"
-         },
-         "link": {
-          "language": "it-IT",
-          "rel": [
-           "home",
-           "desktop",
-           "bets",
-           "bet-365"
-          ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=203392185-287134452~18/1",
-          "text": "Home Bet",
-          "shortText": "Home Bet",
-          "isExternal": true,
-          "isPremium": false,
-          "isHidden": false
-         }
-        },
-        "drawOdds": {
-         "summary": "9/2",
-         "value": 5.5,
-         "handicap": 0,
-         "link": {
-          "language": "it-IT",
-          "rel": [
-           "draw",
-           "desktop",
-           "bets",
-           "bet-365"
-          ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=203392185-287134454~4/1",
-          "text": "Draw Bet",
-          "shortText": "Draw Bet",
-          "isExternal": true,
-          "isPremium": false,
-          "isHidden": false
-         }
-        }
-       }
+       null
       ],
       "wasSuspended": false,
       "playByPlayAvailable": true,
@@ -4149,17 +4163,17 @@
      }
     ],
     "status": {
-     "clock": 3780,
-     "displayClock": "63'",
+     "clock": 5400,
+     "displayClock": "90'+4'",
      "period": 2,
      "type": {
-      "id": "26",
-      "name": "STATUS_SECOND_HALF",
-      "state": "in",
-      "completed": false,
-      "description": "Second Half",
-      "detail": "63'",
-      "shortDetail": "63'"
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "state": "post",
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "shortDetail": "FT"
      }
     },
     "venue": {
@@ -4169,13 +4183,13 @@
      {
       "language": "it-IT",
       "rel": [
-       "live",
+       "summary",
        "desktop",
        "event"
       ],
-      "href": "https://www.espn.com/soccer/match?gameId=401874779",
-      "text": "Live",
-      "shortText": "Live",
+      "href": "https://www.espn.com/soccer/match?gameId=401874779/ac-milan-udinese",
+      "text": "Summary",
+      "shortText": "Summary",
       "isExternal": false,
       "isPremium": false,
       "isHidden": false
@@ -4212,23 +4226,10 @@
    }
   ],
   "provider": {
-   "id": "2000",
-   "name": "Bet 365",
-   "displayName": "Bet 365",
-   "logos": [
-    {
-     "href": "https://a.espncdn.com/redesign/assets/img/logos/logo-bet365.png",
-     "rel": [
-      "light"
-     ]
-    },
-    {
-     "href": "https://a.espncdn.com/redesign/assets/img/logos/logo-bet365.png",
-     "rel": [
-      "dark"
-     ]
-    }
-   ]
+   "id": "100",
+   "name": "Draft Kings",
+   "displayName": "Draft Kings",
+   "priority": 1
   }
  }
 }
