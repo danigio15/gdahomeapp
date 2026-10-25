@@ -15,6 +15,7 @@ import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
 import {
   calcioDaEspn,
   f1DaJolpica,
+  f1DalVivoDaEspn,
   motoDaPulselive,
   partitaDettaglioDaEspn,
   sessioneF1DaJolpica,
@@ -47,6 +48,8 @@ const campione = (nome) =>
 
 const SABATO = Date.parse("2026-10-24T20:00:00Z");
 const DOMENICA = Date.parse("2026-10-25T12:10:00Z");
+/* Domenica sera: il gran premio degli Stati Uniti e' al giro 36 (ESPN vero). */
+const IN_GARA = Date.parse("2026-10-25T21:06:00Z");
 
 const CONFIG = {
   seguiti: [
@@ -88,6 +91,7 @@ function risultati(adesso) {
     costruttori: campione("f1-costruttori"),
     adesso,
   });
+  if (adesso === IN_GARA) f1.dalVivo = f1DalVivoDaEspn(campione("f1-dal-vivo"), f1.piloti);
   const eventi = campione("moto-eventi");
   const moto = motoDaPulselive({
     eventi,
@@ -351,6 +355,47 @@ test("sabato sera: la prossima partita col conto alla rovescia, la tessera e la 
     await finestra.screenshot({ path: doveFinestra, animations: "disabled" });
   }
 });
+
+for (const tema of ["light", "dark"]) {
+  test(`gara in corso: l'ordine dal vivo, il giro, tutto l'ordine, la Home (${tema})`, async ({
+    page,
+  }, testInfo) => {
+    await boot(page, testInfo, { adesso: IN_GARA, tema });
+    await apriLoSport(page);
+    const f1 = page.locator('#page-sport [data-dm-sport-blocco="f1"]');
+    const vivo = f1.locator("[data-dm-sport-dal-vivo]");
+    await expect(vivo).toContainText("Giro 36");
+    await expect(vivo.locator(".dm-sport-vivo > li.dm-sport-pos")).toHaveCount(10);
+    await expect(vivo.locator(".dm-sport-vivo > li").first()).toContainText("Antonelli");
+    /* Leclerc e' il pilota del cuore: la sua riga si vede. */
+    await expect(vivo.locator(".dm-sport-vivo > li.mia")).toContainText("Leclerc");
+    /* Nell'elenco delle sessioni la gara dice «In diretta», non l'ora. */
+    await expect(f1.locator(".dm-sport-sessioni li.in-corso")).toContainText("In diretta");
+    await fotoDellaPagina(page, foto(testInfo, `sport-in-gara-${tema}`));
+    await vivo.locator(".dm-sport-tutta").click();
+    const foglio = page.locator(".dm-foglio-scelta");
+    await expect(foglio.locator("li.dm-sport-pos")).toHaveCount(22);
+    const doveFoglio = foto(testInfo, `sport-in-gara-ordine-${tema}`);
+    if (doveFoglio) {
+      await page.waitForTimeout(300);
+      await page.screenshot({ path: doveFoglio, animations: "disabled" });
+    }
+    await page.keyboard.press("Escape");
+    /* In Home la tessera dice chi e' in testa e a che giro. */
+    await page.locator('.tab[data-tab="home"]').evaluate((n) => n.click());
+    const tessera = page.locator('#dm-widgets .dm-tile[data-dm-widget="sport"]');
+    await expect(tessera).toContainText("Antonelli", { timeout: 20_000 });
+    await expect(tessera).toContainText("Giro 36");
+    await tessera.click();
+    const finestra = page.locator("#dm-widget-popup");
+    await expect(finestra.locator("[data-dm-sport-dal-vivo] .dm-sport-vivo > li")).toHaveCount(5);
+    const doveFinestra = foto(testInfo, `sport-in-gara-finestra-${tema}`);
+    if (doveFinestra) {
+      await page.waitForTimeout(300);
+      await finestra.screenshot({ path: doveFinestra, animations: "disabled" });
+    }
+  });
+}
 
 test("la scheda Sport del Config: cosa si segue, il pilota del cuore, aggiungere una squadra", async ({
   page,

@@ -308,7 +308,7 @@
   "slug": "audi",
   "u": "https://media.formula1.com/content/dam/fom-website/teams/2025/audi-logo.png",
   "stato": 404,
-  "tipo": "application/octet-stream",
+  "tipo": "text/plain; charset=utf-8",
   "byte": 0
  },
  {

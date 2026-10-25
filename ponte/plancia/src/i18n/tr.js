@@ -7468,4 +7468,8 @@ export default Object.freeze({
   "Open menu": "Menüyü aç",
   "This session's results have not been published yet: they usually arrive a few hours after it ends.": "Bu seansın sonuçları henüz yayınlanmadı: genellikle bittikten birkaç saat sonra gelir.",
   "No charging in the last 30 days.": "Son 30 günde şarj yok.",
+  "Full order": "Tüm sıralama",
+  "In pit": "Pitte",
+  "Lap {n}": "Tur {n}",
+  "The session is over.": "Seans bitti.",
 });

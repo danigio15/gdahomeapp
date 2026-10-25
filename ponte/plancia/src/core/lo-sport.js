@@ -215,8 +215,23 @@ export function fraQuantoSiRichiede(risultati, adesso = Date.now()) {
     return q != null && Math.abs(q - adesso) < 3 * 3600_000;
   };
   for (const r of risultati || []) {
+    /* Una corsa in diretta cambia a ogni giro: mezzo minuto. */
+    if (r?.dalVivo && r.tipo !== "calcio") return 30_000;
+  }
+  for (const r of risultati || []) {
     if (r?.dalVivo) return 60_000;
     if (r?.tipo === "calcio" && vicino(r.prossime?.[0]?.quando)) return 60_000;
+    /* Una sessione partita da poco (o a momenti): ogni minuto, per vedere
+     * subito quando diventa «in diretta». */
+    const sessioni = r?.prossima?.tutte || r?.prossima?.sessioni || [];
+    if (
+      (r?.tipo === "f1" || r?.tipo === "motogp") &&
+      sessioni.some((x) => {
+        const q = ora(x?.quando);
+        return q != null && adesso >= q - 10 * 60_000 && adesso <= q + 3 * 3600_000 && !x.finita;
+      })
+    )
+      return 60_000;
     if (r?.tipo === "f1" && vicino(prossimaSessione(r, adesso)?.quando)) return 5 * 60_000;
   }
   return 15 * 60_000;
@@ -236,6 +251,10 @@ export function inEvidenza(risultati, adesso = Date.now()) {
   const dalVivo = buoni.find((r) => r.tipo === "calcio" && r.dalVivo);
   if (dalVivo)
     return { tipo: "calcio", cosa: "dal-vivo", risultato: dalVivo, partita: dalVivo.dalVivo };
+  const corsa = buoni.find(
+    (r) => (r.tipo === "f1" || r.tipo === "motogp") && r.dalVivo?.ordine?.length,
+  );
+  if (corsa) return { tipo: corsa.tipo, cosa: "dal-vivo", risultato: corsa, corsa: corsa.dalVivo };
   const prossimi = [];
   const passati = [];
   for (const r of buoni) {

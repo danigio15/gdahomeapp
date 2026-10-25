@@ -7502,4 +7502,8 @@ export default Object.freeze({
   "Open menu": "Menu openen",
   "This session's results have not been published yet: they usually arrive a few hours after it ends.": "De uitslagen van deze sessie zijn nog niet gepubliceerd: ze komen meestal een paar uur na afloop.",
   "No charging in the last 30 days.": "Geen laadbeurt in de afgelopen 30 dagen.",
+  "Full order": "Hele volgorde",
+  "In pit": "In de pits",
+  "Lap {n}": "Ronde {n}",
+  "The session is over.": "De sessie is voorbij.",
 });

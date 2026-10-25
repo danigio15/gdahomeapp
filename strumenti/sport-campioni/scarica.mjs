@@ -51,6 +51,59 @@ async function scarica(url) {
 await mkdir(`${qui}campioni`, { recursive: true });
 const salva = (nome, cosa) =>
   writeFile(`${qui}campioni/${nome}.json`, `${JSON.stringify(cosa, null, 1)}\n`);
+
+/* Dal vivo: cosa danno le fonti mentre una sessione e' in corso (F1 dal
+ * sito del cronometraggio e da OpenF1, ESPN, MotoGP). Prima di tutto il
+ * resto, perche' la sessione non aspetta. */
+async function testo(url) {
+  try {
+    const r = await fetch(url, { headers: { "user-agent": "Mozilla/5.0", accept: "*/*" } });
+    const t = await r.text();
+    return { url, stato: r.status, lunghezza: t.length, testo: t.slice(0, 60000) };
+  } catch (e) {
+    return { url, errore: String(e) };
+  }
+}
+const LT = "https://livetiming.formula1.com/static";
+const indice = await testo(`${LT}/2026/Index.json`);
+await salva("live-f1-indice", indice);
+await salva("live-f1-stato-stream", await testo(`${LT}/StreamingStatus.json`));
+try {
+  const idx = JSON.parse(indice.testo.replace(/^\uFEFF/, ""));
+  const riunione = idx.Meetings?.at(-1);
+  const sessione = riunione?.Sessions?.at(-1);
+  if (sessione?.Path) {
+    for (const f of [
+      "SessionInfo.json",
+      "SessionStatus.json",
+      "TrackStatus.json",
+      "LapCount.json",
+      "DriverList.json",
+      "TimingData.json",
+      "TimingAppData.json",
+      "TimingStats.json",
+      "RaceControlMessages.json",
+      "TimingData.jsonStream",
+    ]) {
+      await salva(`live-f1-${f.replace(/\W/g, "-")}`, await testo(`${LT}/${sessione.Path}${f}`));
+    }
+  }
+} catch (e) {
+  console.log("live f1", e);
+}
+const OPENF1 = "https://api.openf1.org/v1";
+for (const [nome, u] of Object.entries({
+  sessione: "sessions?session_key=latest",
+  intervalli: "intervals?session_key=latest",
+  posizioni: "position?session_key=latest",
+  giri: "laps?session_key=latest&lap_number>=1",
+  piloti: "drivers?session_key=latest",
+})) {
+  await salva(`live-openf1-${nome}`, await testo(`${OPENF1}/${u}`));
+}
+await salva("live-espn-f1", await testo(`${ESPN}/racing/f1/scoreboard`));
+await salva("live-moto-lite", await testo(`${MOTO}/timing-gateway/livetiming-lite`));
+console.log("live fatto");
 for (const [nome, url] of Object.entries(DA_SCARICARE)) {
   const r = await scarica(url);
   await salva(nome, { url, ...r });

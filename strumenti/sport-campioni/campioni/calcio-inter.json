@@ -709,12 +709,12 @@
          "homeTeamOdds": {
           "current": {
            "moneyLine": {
-            "alternateDisplayValue": "+720",
-            "american": "+720"
+            "alternateDisplayValue": "+730",
+            "american": "+730"
            }
           },
           "favorite": false,
-          "moneyLine": 720,
+          "moneyLine": 730,
           "team": {
            "abbreviation": "VEN",
            "id": "17530",
