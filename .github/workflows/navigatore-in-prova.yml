@@ -100,11 +100,13 @@ jobs:
           # Map), se questa repository le ha fra i segreti con lo stesso nome.
           TOMTOM: ${{ secrets.GDANAV_TOMTOM_CHIAVE }}
           OCM: ${{ secrets.GDANAV_OCM_CHIAVE }}
+          HERE: ${{ secrets.GDANAV_HERE_CHIAVE }}
           VERA: ${{ steps.chiave.outputs.vera }}
         run: |
           VERSIONE="navigatore-$CORSA-${GITHUB_SHA:0:7}"
           comuni=(--release --build-number="$NUMERO" --dart-define=VERSIONE="$VERSIONE"
-            --dart-define=GDANAV_TOMTOM_CHIAVE="$TOMTOM" --dart-define=GDANAV_OCM_CHIAVE="$OCM")
+            --dart-define=GDANAV_TOMTOM_CHIAVE="$TOMTOM" --dart-define=GDANAV_OCM_CHIAVE="$OCM" --dart-define=GDANAV_HERE_CHIAVE="$HERE")
+          if [ -z "$HERE" ]; then echo "::warning::Manca il segreto GDANAV_HERE_CHIAVE: la ricerca esce senza HERE."; fi
           flutter build appbundle "${comuni[@]}"
           flutter build apk "${comuni[@]}"
           {
