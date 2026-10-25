@@ -37,7 +37,7 @@
       href="caratteri/archivo-variabile.woff2"
       crossorigin
     />
-    <link rel="stylesheet" href="stile.css?v=4bc08432" />
+    <link rel="stylesheet" href="stile.css?v=57de4b3a" />
   </head>
   <body>
     <!-- ── La testata ──────────────────────────────────────────────────── -->
@@ -1062,14 +1062,29 @@
                   Più plance e più case — quella dei genitori, quella al mare — a un tocco l’una
                   dall’altra
                 </li>
-                <li data-en="The devices: every entity by domain, with its controls">
-                  I dispositivi: tutte le entità per dominio, con i comandi
+                <li
+                  data-en="The devices room by room, and the integrations: you add them, reload them, repair them"
+                >
+                  I dispositivi stanza per stanza, e le integrazioni: si aggiungono, si ricaricano,
+                  si riparano
                 </li>
                 <li
                   data-en="&lt;b&gt;Zigbee from the app&lt;/b&gt;: you pair a device and answer “Where do I put it?” — it goes into the right section of the dashboard"
                 >
                   <b>Zigbee dall’app</b>: si abbina un dispositivo e si risponde a «Dove lo metto?»
                   — finisce nella sezione giusta della plancia
+                </li>
+                <li
+                  data-en="The Home Assistant &lt;b&gt;helpers and automations&lt;/b&gt;, with the scheduler: routines at set times and on/off slots drawn on bars"
+                >
+                  Gli <b>aiutanti e le automazioni</b> di Home Assistant, col pianificatore: routine
+                  a orari e fasce acceso/spento disegnate sulle barre
+                </li>
+                <li
+                  data-en="Notifications with the camera photo, the 15-second motion clip, the evening summary and “Your day”"
+                >
+                  Le notifiche con la foto della telecamera, il mini video del movimento, il
+                  riepilogo della sera e «La tua giornata»
                 </li>
                 <li
                   data-en="The home’s updates in the menu: Home Assistant, the add-ons, GdAHome, the firmware"
@@ -1094,10 +1109,10 @@
               </p>
               <p
                 class="in-arrivo"
-                data-en="&lt;b&gt;Coming:&lt;/b&gt; the Home Assistant helpers, native in the app, and automations written from the app with a guided flow."
+                data-en='What is Base and what is Premium, function by function: &lt;a href="#confronto"&gt;the table in Prices&lt;/a&gt;.'
               >
-                <b>In arrivo:</b> gli aiutanti di Home Assistant, nativi nell’app, e le automazioni
-                scritte dall’app con una procedura guidata.
+                Cosa è Base e cosa è Premium, funzione per funzione:
+                <a href="#confronto">la tabella nei Prezzi</a>.
               </p>
             </div>
           </div>
@@ -1170,11 +1185,11 @@
             </h2>
             <p
               class="guida"
-              data-en="GdANav takes you there by voice, warns you about queues, police and speed cameras, and with an electric car tells you where to stop and charge and with how much battery you arrive. It is inside GdAHome, in the menu, and it also exists as an app of its own for Android and iPhone."
+              data-en="GdANav takes you there by voice, warns you about queues, police and speed cameras, and with an electric car tells you where to stop and charge and with how much battery you arrive. It is inside GdAHome, in the menu: for now it is not available on its own, only in GdAHome."
             >
               GdANav ti porta a destinazione con la voce, ti avvisa di code, polizia e autovelox e,
               con l’auto elettrica, ti dice dove fermarti a caricare e con quanta batteria arrivi.
-              Sta dentro GdAHome, nel menu, ed esiste anche come app a sé per Android e iPhone.
+              Sta dentro GdAHome, nel menu: per ora non esiste da solo, c’è solo in GdAHome.
             </p>
           </div>
         </div>
@@ -1264,17 +1279,6 @@
             <figcaption>
               <b data-en="Your car, electric or not">La tua auto, elettrica o termica</b>
             </figcaption>
-          </figure>
-          <figure class="telefono">
-            <img
-              src="statico/gdanav/premium.jpg"
-              alt="GdANav Premium: Home Assistant e la batteria letta dall’auto, le soste alle colonnine, Android Auto; 29,99 € all’anno o 2,99 € al mese, con 14 giorni di prova."
-              width="420"
-              height="909"
-              loading="lazy"
-              data-en-alt="GdANav Premium: Home Assistant and the battery read from the car, stops at the chargers, Android Auto; €29.99 a year or €2.99 a month, with a 14-day trial."
-            />
-            <figcaption><b>GdANav Premium</b></figcaption>
           </figure>
         </div>
 
@@ -1384,11 +1388,12 @@
 
           <div class="gdanav-piede">
             <p
-              data-en="&lt;b&gt;GdANav is free&lt;/b&gt;, with no adverts and no account. &lt;b&gt;Premium&lt;/b&gt; adds the battery read from the car, the stops at the chargers, Home Assistant, Android Auto and CarPlay — and it is included in GdAHome Premium."
+              data-en="&lt;b&gt;For now GdANav is only in GdAHome&lt;/b&gt;: it is not downloaded or bought on its own. With GdAHome Base there is the free version; &lt;b&gt;GdAHome Premium&lt;/b&gt; unlocks everything — the battery read from the car, the stops at the chargers, Home Assistant, Android Auto and CarPlay."
             >
-              <b>GdANav è gratis</b>, senza pubblicità e senza account. <b>Premium</b> aggiunge la
+              <b>Per ora GdANav c’è solo in GdAHome</b>: non si scarica e non si compra da solo. Con
+              GdAHome Base c’è la versione gratis; <b>GdAHome Premium</b> sblocca tutto — la
               batteria letta dall’auto, le soste alle colonnine, Home Assistant, Android Auto e
-              CarPlay — ed è compreso in GdAHome Premium.
+              CarPlay.
             </p>
             <a class="bottone bottone-chiaro" href="#prezzi" data-en="See the prices"
               >Vedi i prezzi</a
@@ -1433,6 +1438,12 @@
                 >
                   GdANav gratis: l’auto termica completa, l’elettrica con la batteria scritta a mano
                 </li>
+                <li data-en="Plain notifications; safety alerts always arrive">
+                  Le notifiche semplici; gli avvisi di sicurezza arrivano sempre
+                </li>
+                <li data-en="The updates, the energy suppliers, the fingerprint lock">
+                  Gli aggiornamenti, i fornitori di energia, il lucchetto con l’impronta
+                </li>
                 <li data-en="Reports and the support chat">
                   Le segnalazioni e la chat di assistenza
                 </li>
@@ -1460,13 +1471,25 @@
                   <b>Configurazione e Zigbee</b> dal telefono: la plancia e «Dove lo metto?»
                 </li>
                 <li
+                  data-en="&lt;b&gt;Devices, integrations, helpers and automations&lt;/b&gt; from the app, with the scheduler"
+                >
+                  <b>Dispositivi, integrazioni, aiutanti e automazioni</b> dall’app, col
+                  pianificatore
+                </li>
+                <li
+                  data-en="&lt;b&gt;Rich notifications&lt;/b&gt;, the motion clip, the evening summary and “Your day”"
+                >
+                  <b>Notifiche elaborate</b>, il mini video del movimento, il riepilogo della sera e
+                  «La tua giornata»
+                </li>
+                <li
                   data-en="The &lt;b&gt;wall dashboard&lt;/b&gt;, up to 8 pages; the home &lt;b&gt;on your wrist&lt;/b&gt; and &lt;b&gt;in the car&lt;/b&gt;"
                 >
                   La <b>plancia a muro</b>, fino a 8 pagine; la casa <b>al polso</b> e
                   <b>in auto</b>
                 </li>
-                <li data-en="&lt;b&gt;GdANav Premium included&lt;/b&gt;, with everything unlocked">
-                  <b>GdANav Premium compreso</b>, con tutto sbloccato
+                <li data-en="&lt;b&gt;GdANav&lt;/b&gt;, the navigator, with everything unlocked">
+                  <b>GdANav</b>, il navigatore, con tutto sbloccato
                 </li>
                 <li data-en="For every phone of the home, and for the app in the browser">
                   Per tutti i telefoni della casa, e per l’app dal browser
@@ -1483,17 +1506,312 @@
             salvate fino al rinnovo.
           </p>
 
+          <h3
+            class="sottotitolo"
+            id="confronto"
+            data-en="Everything GdAHome does, Base and Premium"
+          >
+            Tutto quello che fa GdAHome, Base e Premium
+          </h3>
+          <p
+            class="guida"
+            data-en="Function by function, as the app and the add-on apply it today. Devices, helpers and automations are for whoever administers Home Assistant."
+          >
+            Funzione per funzione, come oggi le fanno valere l’app e l’add-on. Dispositivi, aiutanti
+            e automazioni sono per chi amministra Home Assistant.
+          </p>
+          <div class="confronto">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col"><span class="nascosto" data-en="Function">Funzione</span></th>
+                  <th scope="col">Base</th>
+                  <th scope="col" class="col-premium">Premium</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="gruppo">
+                  <th scope="colgroup" colspan="3" data-en="The dashboard">La plancia</th>
+                </tr>
+                <tr>
+                  <th
+                    scope="row"
+                    data-en="The main dashboard, with the thirty sections and the Energy page"
+                  >
+                    La plancia principale, con le trenta sezioni e la pagina Energia
+                  </th>
+                  <td class="si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+                <tr>
+                  <th scope="row" data-en="Sections of your own, with the entities you choose">
+                    Le sezioni tue, con le entità che scegli
+                  </th>
+                  <td class="si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+                <tr>
+                  <th
+                    scope="row"
+                    data-en="The dashboard in the Home Assistant sidebar, from any browser at home"
+                  >
+                    La plancia nella barra di Home Assistant, da ogni browser di casa
+                  </th>
+                  <td class="si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+                <tr>
+                  <th scope="row" data-en="Dashboards for each home">Plance per ogni casa</th>
+                  <td class="detto" data-en="One, the main one">Una, la principale</td>
+                  <td class="col-premium detto" data-en="Up to 30">Fino a 30</td>
+                </tr>
+                <tr>
+                  <th
+                    scope="row"
+                    data-en="Configuring the dashboard from the phone: sections, rooms, order"
+                  >
+                    Configurare la plancia dal telefono: sezioni, stanze, ordine
+                  </th>
+                  <td class="no"><span class="nascosto">No</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+                <tr>
+                  <th scope="row" data-en="The wall dashboard, on a tablet or an NSPanel">
+                    La plancia a muro, su tablet o NSPanel
+                  </th>
+                  <td class="no"><span class="nascosto">No</span></td>
+                  <td class="col-premium detto" data-en="Up to 8 pages">Fino a 8 pagine</td>
+                </tr>
+              </tbody>
+              <tbody>
+                <tr class="gruppo">
+                  <th scope="colgroup" colspan="3" data-en="Homes and the connection">
+                    Le case e il collegamento
+                  </th>
+                </tr>
+                <tr>
+                  <th scope="row" data-en="Pairing with the QR code, with no password or token">
+                    L’abbinamento col QR code, senza password né token
+                  </th>
+                  <td class="si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+                <tr>
+                  <th scope="row" data-en="The app for Android and iPhone, and from a browser">
+                    L’app per Android e iPhone, e dal browser
+                  </th>
+                  <td class="si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+                <tr>
+                  <th scope="row" data-en="Homes in the app">Case nell’app</th>
+                  <td class="detto" data-en="One">Una</td>
+                  <td class="col-premium detto" data-en="Up to 10">Fino a 10</td>
+                </tr>
+                <tr>
+                  <th scope="row" data-en="On the home network">Sulla rete di casa</th>
+                  <td class="si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+                <tr>
+                  <th scope="row" data-en="From away, encrypted and with no ports to open">
+                    Da fuori casa, cifrato e senza aprire porte
+                  </th>
+                  <td class="no"><span class="nascosto">No</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+              </tbody>
+              <tbody>
+                <tr class="gruppo">
+                  <th scope="colgroup" colspan="3" data-en="Notifications">Le notifiche</th>
+                </tr>
+                <tr>
+                  <th
+                    scope="row"
+                    data-en="Safety alerts: burglar alarm, alarms, leaks, blackouts, UPS"
+                  >
+                    Gli avvisi di sicurezza: antifurto, allarmi, perdite, blackout, UPS
+                  </th>
+                  <td class="detto" data-en="Always">Sempre</td>
+                  <td class="col-premium detto" data-en="Always">Sempre</td>
+                </tr>
+                <tr>
+                  <th scope="row" data-en="The home’s notifications, plain">
+                    Le notifiche della casa, semplici
+                  </th>
+                  <td class="si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+                <tr>
+                  <th
+                    scope="row"
+                    data-en="The camera photo when the doorbell rings or there is motion"
+                  >
+                    La foto della telecamera quando suona il campanello o c’è movimento
+                  </th>
+                  <td class="si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+                <tr>
+                  <th scope="row" data-en="Rich notifications, with the card and the chart">
+                    Le notifiche elaborate, con la scheda e il grafico
+                  </th>
+                  <td class="no"><span class="nascosto">No</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+                <tr>
+                  <th scope="row" data-en="The evening summary and “Your day”, hour by hour">
+                    Il riepilogo della sera e «La tua giornata», ora per ora
+                  </th>
+                  <td class="no"><span class="nascosto">No</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+                <tr>
+                  <th scope="row" data-en="The motion clip, 5 seconds before and 5 after">
+                    Il mini video del movimento, 5 secondi prima e 5 dopo
+                  </th>
+                  <td class="no"><span class="nascosto">No</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+                <tr>
+                  <th scope="row" data-en="Notifications from Home Assistant automations">
+                    Le notifiche delle automazioni di Home Assistant
+                  </th>
+                  <td class="detto" data-en="The text, on this phone">
+                    Il testo, su questo telefono
+                  </td>
+                  <td class="col-premium detto" data-en="With photos, buttons, to other phones">
+                    Con foto, tasti, ad altri telefoni
+                  </td>
+                </tr>
+              </tbody>
+              <tbody>
+                <tr class="gruppo">
+                  <th scope="colgroup" colspan="3" data-en="Home Assistant from the app">
+                    Home Assistant dall’app
+                  </th>
+                </tr>
+                <tr>
+                  <th
+                    scope="row"
+                    data-en="Updates: Home Assistant, the add-ons, GdAHome, the firmware"
+                  >
+                    Gli aggiornamenti: Home Assistant, gli add-on, GdAHome, i firmware
+                  </th>
+                  <td class="si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+                <tr>
+                  <th scope="row" data-en="Energy suppliers: bills, due dates, contracted power">
+                    I fornitori di energia: bollette, scadenze, potenza impegnata
+                  </th>
+                  <td class="si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+                <tr>
+                  <th
+                    scope="row"
+                    data-en="Devices room by room, and integrations: adding, reloading, repairing them"
+                  >
+                    I dispositivi stanza per stanza, e le integrazioni: aggiungerle, ricaricarle,
+                    ripararle
+                  </th>
+                  <td class="no"><span class="nascosto">No</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+                <tr>
+                  <th scope="row" data-en="Zigbee: pair a device and choose where it goes">
+                    Zigbee: abbini un dispositivo e scegli dove metterlo
+                  </th>
+                  <td class="no"><span class="nascosto">No</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+                <tr>
+                  <th
+                    scope="row"
+                    data-en="Helpers: toggles, numbers, dropdowns, timers, computed sensors"
+                  >
+                    Gli aiutanti: interruttori, numeri, elenchi, timer, sensori calcolati
+                  </th>
+                  <td class="no"><span class="nascosto">No</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+                <tr>
+                  <th scope="row" data-en="Automations, with the time and slot scheduler">
+                    Le automazioni, col pianificatore a orari e a fasce
+                  </th>
+                  <td class="no"><span class="nascosto">No</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+              </tbody>
+              <tbody>
+                <tr class="gruppo">
+                  <th scope="colgroup" colspan="3" data-en="On your wrist and in the car">
+                    Al polso e in auto
+                  </th>
+                </tr>
+                <tr>
+                  <th scope="row" data-en="The home on Apple Watch and Wear OS">
+                    La casa su Apple Watch e Wear OS
+                  </th>
+                  <td class="no"><span class="nascosto">No</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+                <tr>
+                  <th scope="row" data-en="The home in Android Auto and CarPlay">
+                    La casa in Android Auto e CarPlay
+                  </th>
+                  <td class="no"><span class="nascosto">No</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+                <tr>
+                  <th scope="row" data-en="GdANav, the navigator">GdANav, il navigatore</th>
+                  <td class="detto" data-en="The free version">La versione gratis</td>
+                  <td class="col-premium detto" data-en="Everything unlocked">Tutto sbloccato</td>
+                </tr>
+              </tbody>
+              <tbody>
+                <tr class="gruppo">
+                  <th scope="colgroup" colspan="3" data-en="Always included">Sempre compreso</th>
+                </tr>
+                <tr>
+                  <th
+                    scope="row"
+                    data-en="The lock: the app opens with your fingerprint or your face"
+                  >
+                    Il lucchetto: l’app si apre con l’impronta o col volto
+                  </th>
+                  <td class="si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+                <tr>
+                  <th scope="row" data-en="Reports with photos and videos, and the support chat">
+                    Le segnalazioni con foto e video, e la chat di assistenza
+                  </th>
+                  <td class="si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+                <tr>
+                  <th scope="row" data-en="No account, no adverts">
+                    Nessun account, nessuna pubblicità
+                  </th>
+                  <td class="si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                  <td class="col-premium si"><span class="nascosto" data-en="Yes">Sì</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <h3 class="sottotitolo" data-en="GdANav, the navigator">GdANav, il navigatore</h3>
           <p
             class="guida"
-            data-en="With GdAHome Premium it is included: the Premium home unlocks everything in the navigator too, with no second subscription."
+            data-en="For now GdANav is not available on its own: it is inside GdAHome, in the menu, and follows the home’s plan. There is nothing separate to download or pay for."
           >
-            Con GdAHome Premium è compreso: la casa Premium sblocca tutto anche nel navigatore,
-            senza un secondo abbonamento.
+            Per ora GdANav non c’è da solo: sta dentro GdAHome, nel menu, e segue il piano della
+            casa. Non c’è niente da scaricare né da pagare a parte.
           </p>
           <div class="piani piani-piccoli">
             <article class="piano">
-              <h3 class="piano-nome">GdANav</h3>
+              <h3 class="piano-nome" data-en="GdANav with GdAHome Base">GdANav con GdAHome Base</h3>
               <p class="prezzo numero" data-en="Free">Gratis</p>
               <ul class="elenco">
                 <li data-en="Combustion car complete: route, fuel stations, prices">
@@ -1508,12 +1826,13 @@
               </ul>
             </article>
             <article class="piano piano-premium">
-              <h3 class="piano-nome">GdANav Premium</h3>
-              <p class="prezzo numero" data-en="€2.99 &lt;span&gt;a month&lt;/span&gt;">
-                2,99 € <span>al mese</span>
+              <h3 class="piano-nome" data-en="GdANav with GdAHome Premium">
+                GdANav con GdAHome Premium
+              </h3>
+              <p class="prezzo numero" data-en="Included">Compreso</p>
+              <p class="piano-detto" data-en="in the €4.99 a month or €49.99 a year">
+                nei 4,99 € al mese o 49,99 € all’anno
               </p>
-              <p class="piano-detto" data-en="or €29.99 a year">o 29,99 € all’anno</p>
-              <p class="piano-prova" data-en="first 14 days free">primi 14 giorni gratis</p>
               <ul class="elenco">
                 <li data-en="&lt;b&gt;Home Assistant, and the battery read from the car&lt;/b&gt;">
                   <b>Home Assistant, e la batteria letta dall’auto</b>
@@ -1522,9 +1841,6 @@
                   Percorso con le soste alle colonnine, e il loro stato in tempo reale
                 </li>
                 <li data-en="Android Auto and CarPlay">Android Auto e CarPlay</li>
-                <li data-en="&lt;b&gt;Included in GdAHome Premium&lt;/b&gt;">
-                  <b>Compreso in GdAHome Premium</b>
-                </li>
               </ul>
             </article>
           </div>

@@ -40396,7 +40396,11 @@ function installSegnalazioniSection() {
 senzaCadere(installSegnalazioniSection);
 
 // legacy/build-info.js
+<<<<<<<< HEAD:ponte/plancia/pacco/chunk-JHWLSSDE.js
 var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.18.2", "dashboardVersion": "1.18.2", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-10-25T06:27:50+00:00", "commit": "16917e2bb665532772115560e0cf0205ea2d4d85", "assetHash": "cc86b72bcf7cfa9f" });
+========
+var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.18.2", "dashboardVersion": "1.18.2", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-10-24T13:50:05+00:00", "commit": "fe046038bf8a00f486d74cf10e1ce00f7a4fb10f", "assetHash": "c127fa761e34dad4" });
+>>>>>>>> origin/main:ponte/plancia/pacco/chunk-4GXT6GV6.js
 
 export {
   DEFAULT_LOCALE,
