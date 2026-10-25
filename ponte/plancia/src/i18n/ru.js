@@ -7342,4 +7342,6 @@ export default Object.freeze({
   "away": "в гостях",
   "Other silent entities": "Другие молчащие сущности",
   "They are silent, but it is not known whether a stopped device is behind them: that is why they are not in the warning. The bin keeps them out for good, later too.": "Они молчат, но неизвестно, стоит ли за ними остановившееся устройство: поэтому их нет в предупреждении. Корзина исключает их навсегда, и в будущем тоже.",
+  "Below 60%": "Ниже 60%",
+  "Less…": "Меньше…",
 });

@@ -7325,4 +7325,6 @@ export default Object.freeze({
   "away": "deplasman",
   "Other silent entities": "Diğer sessiz varlıklar",
   "They are silent, but it is not known whether a stopped device is behind them: that is why they are not in the warning. The bin keeps them out for good, later too.": "Sessizler, ancak arkalarında durmuş bir cihaz olup olmadığı bilinmiyor: bu yüzden uyarıda değiller. Çöp kutusu onları kalıcı olarak, sonrasında da dışarıda tutar.",
+  "Below 60%": "%60'ın altında",
+  "Less…": "Daha az…",
 });

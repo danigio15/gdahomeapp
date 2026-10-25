@@ -7308,4 +7308,6 @@ export default Object.freeze({
   "away": "बाहर",
   "Other silent entities": "अन्य मौन एंटिटी",
   "They are silent, but it is not known whether a stopped device is behind them: that is why they are not in the warning. The bin keeps them out for good, later too.": "ये चुप हैं, पर पता नहीं कि इनके पीछे कोई बंद डिवाइस है या नहीं: इसलिए ये चेतावनी में नहीं हैं। कूड़ेदान इन्हें हमेशा के लिए बाहर रखता है, आगे भी।",
+  "Below 60%": "60% से कम",
+  "Less…": "कम…",
 });

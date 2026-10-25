@@ -7192,4 +7192,6 @@ export default Object.freeze({
   "away": "客场",
   "Other silent entities": "其他无响应的实体",
   "They are silent, but it is not known whether a stopped device is behind them: that is why they are not in the warning. The bin keeps them out for good, later too.": "它们没有响应，但不确定背后是否有停止的设备：因此不在警告中。放入回收站后将永久排除，以后也是如此。",
+  "Below 60%": "低于 60%",
+  "Less…": "更低…",
 });

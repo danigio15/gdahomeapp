@@ -14,7 +14,7 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
 - **Auto, carica fino a:** la barra dice soltanto fin dove si carica e non si
   trascina più: scorrendo la pagina col dito l'obiettivo cambiava per sbaglio.
-  Si cambia con −, + e i tasti delle percentuali.
+  Si sceglie coi tasti dal 60% al 100%, e sotto il 60% dal menu «Meno…».
 - **Finestre, sensore di apertura:** «Mettilo nella plancia» mette un sensore
   di apertura nella casella del contatto, non in quella della tapparella. Una
   riga già scritta così si vede come finestra senza comandi (aperta o chiusa),

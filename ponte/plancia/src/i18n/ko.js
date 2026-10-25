@@ -7299,4 +7299,6 @@ export default Object.freeze({
   "away": "원정",
   "Other silent entities": "기타 응답 없는 엔터티",
   "They are silent, but it is not known whether a stopped device is behind them: that is why they are not in the warning. The bin keeps them out for good, later too.": "응답이 없지만 그 뒤에 멈춘 기기가 있는지는 알 수 없습니다. 그래서 경고에 포함되지 않습니다. 휴지통에 넣으면 앞으로도 계속 제외됩니다.",
+  "Below 60%": "60% 미만",
+  "Less…": "더 낮게…",
 });

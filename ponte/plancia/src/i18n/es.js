@@ -7372,4 +7372,6 @@ export default Object.freeze({
   "away": "fuera",
   "Other silent entities": "Otras entidades en silencio",
   "They are silent, but it is not known whether a stopped device is behind them: that is why they are not in the warning. The bin keeps them out for good, later too.": "Están en silencio, pero no se sabe si detrás hay un dispositivo parado: por eso no están en el aviso. La papelera las deja fuera para siempre, también más adelante.",
+  "Below 60%": "Menos del 60 %",
+  "Less…": "Menos…",
 });

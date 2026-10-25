@@ -7273,4 +7273,6 @@ export default Object.freeze({
   "away": "خارج أرضه",
   "Other silent entities": "كيانات صامتة أخرى",
   "They are silent, but it is not known whether a stopped device is behind them: that is why they are not in the warning. The bin keeps them out for good, later too.": "إنها صامتة، لكن لا يُعرف ما إذا كان خلفها جهاز متوقف: لهذا ليست في التنبيه. سلة المهملات تبعدها نهائيًا، لاحقًا أيضًا.",
+  "Below 60%": "أقل من 60%",
+  "Less…": "أقل…",
 });
