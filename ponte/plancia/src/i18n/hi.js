@@ -7450,4 +7450,5 @@ export default Object.freeze({
   "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a single page with the weather and big tiles, and each tile opens its data in a popup. Premium is turned on from the GdAHome app.": "GdAHome Base के साथ यह डैशबोर्ड सामान्य डैशबोर्ड रहता है। Premium के साथ यह मौसम और बड़ी टाइलों वाला एक पेज बन जाता है, और हर टाइल अपना डेटा पॉपअप में खोलती है। Premium को GdAHome ऐप से चालू किया जाता है।",
   "Open menu": "मेनू खोलें",
   "This session's results have not been published yet: they usually arrive a few hours after it ends.": "इस सत्र के परिणाम अभी प्रकाशित नहीं हुए हैं: वे आमतौर पर इसके खत्म होने के कुछ घंटे बाद आते हैं।",
+  "No charging in the last 30 days.": "पिछले 30 दिनों में कोई चार्जिंग नहीं।",
 });

@@ -559,7 +559,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-ARIC22D7.js";
+} from "../../chunk-MGPXIUUJ.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -5533,6 +5533,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nessuna presa configurata": "No socket configured",
   "Nessuna previsione": "No forecast",
   "Nessuna ricarica in questo periodo.": "No charging in this period.",
+  "Nessuna ricarica negli ultimi 30 giorni.": "No charging in the last 30 days.",
   "Nessuna risponde": "None reporting",
   "nessuna risposta": "no answer",
   "Nessuna risposta in otto secondi.": "No answer within eight seconds.",
@@ -134745,6 +134746,7 @@ function giornoScritto(quando5) {
   const due3 = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${due3(d.getMonth() + 1)}-${due3(d.getDate())}`;
 }
+var GIORNI_DELL_ULTIMA = 30;
 function finestraDelloStorico(vista2, { adesso: adesso2 = Date.now(), mese = null, dal = "", al = "" } = {}) {
   const domaniData = new Date(inizioDelGiorno3(adesso2));
   domaniData.setDate(domaniData.getDate() + 1);
@@ -134783,9 +134785,15 @@ function finestraDelloStorico(vista2, { adesso: adesso2 = Date.now(), mese = nul
       tagliato: tetto.getTime() < Math.min(dopoA.getTime(), domani2)
     };
   }
+  const indietro = vista2 === "ultima" ? GIORNI_DELL_ULTIMA : 7;
   const inizio = new Date(inizioDelGiorno3(adesso2));
-  inizio.setDate(inizio.getDate() - 6);
-  return { vista: "7", inizio: inizio.getTime(), fine: domani2, giorni: 7 };
+  inizio.setDate(inizio.getDate() - (indietro - 1));
+  return {
+    vista: vista2 === "ultima" ? "ultima" : "7",
+    inizio: inizio.getTime(),
+    fine: domani2,
+    giorni: indietro
+  };
 }
 function giorniFra2(inizio, fine) {
   return Math.max(0, Math.round((inizioDelGiorno3(fine) - inizioDelGiorno3(inizio)) / GIORNO5));
@@ -135001,7 +135009,8 @@ var state152 = root[KEY156] ||= {
   installed: false,
   frame: 0,
   firma: "",
-  vista: "7",
+  /* Le ricariche a casa si aprono sull'ultima, poi la settimana. */
+  vista: "ultima",
   mese: null,
   dal: "",
   al: "",
@@ -135414,6 +135423,7 @@ function wallbox(l) {
 var nomiDeiMesi = (anno, mese) => new Date(anno, mese, 1).toLocaleDateString(locale(), { month: "long", year: "numeric" });
 function selettoreDelPeriodo(vista2, { mese, dal, al }, gruppo2) {
   const viste2 = [
+    ...gruppo2 === "storico" ? [["ultima", t("Ultima", "Last")]] : [],
     ["7", t("7 giorni", "7 days")],
     ["mese", t("Mese", "Month")],
     ...gruppo2 === "storico" ? [["periodo", t("Periodo", "Period")]] : []
@@ -135482,6 +135492,7 @@ function cartaStorico(l) {
     corpo5 = `<p class="dm-na-vuoto">${esc(t("Leggo lo storico di Home Assistant…", "Reading Home Assistant history…"))}</p>`;
   else if (s.stato === "errore")
     corpo5 = `<p class="dm-na-vuoto">${esc(t("Lo storico non ha risposto: riprovo fra poco.", "History didn't answer: retrying shortly."))}</p>`;
+  else if (state152.vista === "ultima") corpo5 = laUltima(s.dati);
   else {
     const { giorni, ricariche, totali, conRete } = s.dati;
     const pieni = state152.vista === "mese" ? riempiIlMese(giorni, finestra6) : giorni;
@@ -135504,6 +135515,49 @@ function cartaStorico(l) {
       ${selettoreDelPeriodo(state152.vista, state152, "storico")}</div>
     ${corpo5}
   </section>`;
+}
+function laUltima({ ricariche = [], ore = [], conRete } = {}) {
+  const r = ricariche[0];
+  if (!r)
+    return `<p class="dm-na-vuoto">${esc(
+      t("Nessuna ricarica negli ultimi 30 giorni.", "No charging in the last 30 days.")
+    )}</p>`;
+  const ORA10 = 36e5;
+  const perOra = new Map(ore.map((o) => [o.inizio, o]));
+  const colonneMinime = 8;
+  const quante3 = Math.max(colonneMinime, Math.round((r.fine - r.inizio) / ORA10) + 2);
+  const prima = r.inizio - ORA10 * Math.max(1, Math.floor((quante3 - Math.round((r.fine - r.inizio) / ORA10)) / 2));
+  const sue = Array.from({ length: quante3 }, (_, i) => {
+    const inizio = prima + i * ORA10;
+    return perOra.get(inizio) || { inizio, kwh: 0, sole: null };
+  });
+  const ora8 = (x) => new Date(x).toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit", hour12: false });
+  const giorno3 = new Date(r.inizio).toLocaleDateString(locale(), {
+    weekday: "long",
+    day: "numeric",
+    month: "long"
+  });
+  const durata6 = Math.max(1, Math.round((r.fine - r.inizio) / 36e5));
+  const massimo = Math.max(1e-4, ...sue.map((o) => o.kwh || 0));
+  const colonne = sue.map((o) => {
+    const v = o.kwh || 0;
+    const quota = o.sole !== null && v > 0 ? Math.max(0, Math.min(1, o.sole / v)) : null;
+    const titolo3 = `${ora8(o.inizio)}: ${formatNumber(v, 1)} kWh`;
+    return `<div class="dm-na-colonna" data-futuro="false" title="${esc(titolo3)}">
+        <div class="dm-na-barra" style="height:${(v > 0 ? Math.max(3, v / massimo * 100) : 0).toFixed(1)}%">${quota === null ? "<i></i>" : `<i class="rete" style="flex:${(1 - quota).toFixed(3)}"></i><i class="sole" style="flex:${quota.toFixed(3)}"></i>`}</div><small>${esc(ora8(o.inizio).slice(0, 2))}</small></div>`;
+  }).join("");
+  const alKwh = r.costo === null || r.kwh <= 0 ? null : r.costo / r.kwh;
+  return `<p class="dm-na-ultima-quando"><b>${esc(giorno3.charAt(0).toLocaleUpperCase(locale()) + giorno3.slice(1))}</b> · ${esc(
+    ora8(r.inizio)
+  )}–${esc(ora8(r.fine))}</p>
+    <div class="dm-na-totali">
+      <div class="dm-na-tessera"><span>${esc(t("Energia", "Energy"))}</span><b>${kwh4(r.kwh, 1)}<small>kWh</small></b></div>
+      <div class="dm-na-tessera" data-tono="sole"><span>${esc(t("Dal sole", "From the sun"))}</span><b>${r.quotaSole === null ? "—" : `${percento7(r.quotaSole)}<small>%</small>`}</b></div>
+      <div class="dm-na-tessera"><span>${esc(t("Spesa", "Spent"))}</span><b>${r.costo === null ? "—" : `${euro2(r.costo)}<small>€</small>`}</b></div>
+      <div class="dm-na-tessera"><span>${esc(t("Durata", "Duration"))}</span><b>${durata6}<small>h${alKwh === null ? "" : ` · ${euro2(alKwh)} €/kWh`}</small></b></div>
+    </div>
+    ${sue.length ? `<div class="dm-na-grafico" data-fitta="${sue.length > 16}">${colonne}</div>` : ""}
+    ${conRete ? `<div class="dm-na-legenda"><span><i class="sole"></i>${esc(t("dal sole", "from the sun"))}</span><span><i class="rete"></i>${esc(t("dalla rete", "from the grid"))}</span></div>` : ""}`;
 }
 function riempiIlMese(giorni, finestra6) {
   const fuori = [...giorni];
@@ -135694,7 +135748,7 @@ function caricaLoStorico(l) {
       chiave: chiave2,
       stato: "pronto",
       alle: Date.now(),
-      dati: { giorni, ricariche, totali: totaliDelloStorico(giorni, ricariche), conRete }
+      dati: { giorni, ricariche, ore, totali: totaliDelloStorico(giorni, ricariche), conRete }
     };
     ridisegna20();
   }).catch(() => {
@@ -136233,6 +136287,8 @@ function stile6() {
   /* lo storico */
   ${P9} .dm-na-storico-testa{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
   ${P9} .dm-na-storico-testa .dm-na-titolo{margin:0;margin-right:auto}
+  ${P9} .dm-na-ultima-quando{margin:0 0 12px;font-size:14px;font-weight:700;color:var(--text-dim,#64748b)}
+  ${P9} .dm-na-ultima-quando b{color:var(--text,#0f172a)}
   ${P9} .dm-na-periodo{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   ${P9} .dm-na-mese{display:flex;align-items:center;gap:8px}
   ${P9} .dm-na-mese b{font-size:15px;font-weight:900;color:var(--text,#0f172a);text-transform:capitalize;min-width:120px;text-align:center}

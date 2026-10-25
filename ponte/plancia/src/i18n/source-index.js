@@ -3922,6 +3922,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Nessuna presa configurata": "No socket configured",
   "Nessuna previsione": "No forecast",
   "Nessuna ricarica in questo periodo.": "No charging in this period.",
+  "Nessuna ricarica negli ultimi 30 giorni.": "No charging in the last 30 days.",
   "Nessuna risponde": "None reporting",
   "nessuna risposta": "no answer",
   "Nessuna risposta in otto secondi.": "No answer within eight seconds.",

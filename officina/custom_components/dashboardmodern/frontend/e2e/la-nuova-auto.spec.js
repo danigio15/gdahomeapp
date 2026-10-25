@@ -427,7 +427,18 @@ for (const tema of ["dark", "light"])
     await expect(pagina.locator('[data-na-sempre][aria-pressed="true"]')).toHaveText("Sempre");
     /* La notte e' la carta di sempre, spostata qui. */
     await expect(pagina.locator('[data-na-posto="notte"] #dm-rn')).toBeVisible();
-    /* Lo storico: sette colonne, e le ricariche dal Recorder. */
+    /* Lo storico si apre sull'ultima ricarica: quando, i suoi numeri, le ore. */
+    await expect(pagina.locator('[data-na-vista="ultima"]')).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await expect(pagina.locator(".dm-na-ultima-quando")).toContainText("–");
+    await expect(pagina.locator(".dm-na-storico .dm-na-tessera")).toHaveCount(4);
+    await expect(pagina.locator(".dm-na-storico .dm-na-colonna").first()).toBeVisible();
+    await nienteSborda(page);
+    await foto(page, `ricarica-ultima-${tema}-${testInfo.project.name}`);
+    /* Poi la settimana: sette colonne, e le ricariche dal Recorder. */
+    await pagina.locator('[data-na-vista="7"][data-na-gruppo="storico"]').click();
     await expect(pagina.locator(".dm-na-storico .dm-na-colonna")).toHaveCount(7);
     await expect(pagina.locator(".dm-na-ricarica").first()).toContainText("kWh");
     await nienteSborda(page);

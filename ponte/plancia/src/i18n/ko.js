@@ -7441,4 +7441,5 @@ export default Object.freeze({
   "With GdAHome Base this dashboard stays a normal dashboard. With Premium it becomes a single page with the weather and big tiles, and each tile opens its data in a popup. Premium is turned on from the GdAHome app.": "GdAHome Base에서는 이 대시보드가 일반 대시보드로 남습니다. Premium에서는 날씨와 큰 타일이 있는 한 페이지가 되고, 각 타일은 팝업으로 데이터를 엽니다. Premium은 GdAHome 앱에서 켭니다.",
   "Open menu": "메뉴 열기",
   "This session's results have not been published yet: they usually arrive a few hours after it ends.": "이 세션의 결과는 아직 발표되지 않았습니다. 보통 종료 후 몇 시간 뒤에 나옵니다.",
+  "No charging in the last 30 days.": "지난 30일 동안 충전 기록이 없습니다.",
 });

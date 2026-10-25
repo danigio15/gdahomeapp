@@ -3497,6 +3497,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "No change recorded in this period",
   "No charger among the integrations with devices: only evcc's are here, and evcc connects from the other button.",
   "No charger field could be recognised from this device.",
+  "No charging in the last 30 days.",
   "No charging in this period.",
   "No code needed",
   "No collection",

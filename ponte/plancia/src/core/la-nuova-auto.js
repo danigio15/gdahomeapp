@@ -58,10 +58,14 @@ export function giornoScritto(quando) {
   return `${d.getFullYear()}-${due(d.getMonth() + 1)}-${due(d.getDate())}`;
 }
 
+/** Quanti giorni indietro si cerca l'ultima ricarica. */
+export const GIORNI_DELL_ULTIMA = 30;
+
 /**
  * Da dove a dove chiedere. `fine` e' esclusa e non va mai oltre la fine di
  * oggi: il futuro non ha righe, e un mese in corso finisce stanotte.
  *
+ * - `ultima`: oggi e i ventinove giorni prima, dove cercare l'ultima ricarica;
  * - `7`: oggi e i sei giorni prima;
  * - `mese`: il mese di `mese` (`{anno, mese}`, mese da 0), oppure quello di oggi;
  * - `periodo`: dal giorno `dal` al giorno `al` compresi (`AAAA-MM-GG`), girati
@@ -112,9 +116,17 @@ export function finestraDelloStorico(
       tagliato: tetto.getTime() < Math.min(dopoA.getTime(), domani),
     };
   }
+  /* «Ultima»: la ricarica piu' recente si cerca negli ultimi trenta giorni,
+   * che una macchina ferma da una settimana non resta senza. */
+  const indietro = vista === "ultima" ? GIORNI_DELL_ULTIMA : 7;
   const inizio = new Date(inizioDelGiorno(adesso));
-  inizio.setDate(inizio.getDate() - 6);
-  return { vista: "7", inizio: inizio.getTime(), fine: domani, giorni: 7 };
+  inizio.setDate(inizio.getDate() - (indietro - 1));
+  return {
+    vista: vista === "ultima" ? "ultima" : "7",
+    inizio: inizio.getTime(),
+    fine: domani,
+    giorni: indietro,
+  };
 }
 
 /** Quanti giorni di calendario ci sono fra due mezzenotti (l'ora legale non conta). */

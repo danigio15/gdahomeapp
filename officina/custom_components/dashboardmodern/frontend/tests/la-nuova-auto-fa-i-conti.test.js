@@ -101,6 +101,12 @@ test("le finestre: sette giorni, un mese, un periodo", () => {
   const sette = finestraDelloStorico("7", { adesso });
   assert.equal(sette.inizio, new Date(2026, 9, 14).getTime());
   assert.equal(sette.fine, new Date(2026, 9, 21).getTime());
+  /* L'ultima ricarica si cerca negli ultimi trenta giorni. */
+  const ultima = finestraDelloStorico("ultima", { adesso });
+  assert.equal(ultima.vista, "ultima");
+  assert.equal(ultima.inizio, new Date(2026, 8, 21).getTime());
+  assert.equal(ultima.fine, sette.fine);
+  assert.equal(ultima.giorni, 30);
   /* Il mese in corso finisce stanotte, ma il grafico tiene i suoi 31 giorni. */
   const mese = finestraDelloStorico("mese", { adesso });
   assert.equal(mese.inizio, new Date(2026, 9, 1).getTime());

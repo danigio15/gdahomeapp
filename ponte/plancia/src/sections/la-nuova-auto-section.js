@@ -93,7 +93,8 @@ const state = (root[KEY] ||= {
   installed: false,
   frame: 0,
   firma: "",
-  vista: "7",
+  /* Le ricariche a casa si aprono sull'ultima, poi la settimana. */
+  vista: "ultima",
   mese: null,
   dal: "",
   al: "",
@@ -646,6 +647,7 @@ const nomiDeiMesi = (anno, mese) =>
 
 function selettoreDelPeriodo(vista, { mese, dal, al }, gruppo) {
   const viste = [
+    ...(gruppo === "storico" ? [["ultima", t("Ultima", "Last")]] : []),
     ["7", t("7 giorni", "7 days")],
     ["mese", t("Mese", "Month")],
     ...(gruppo === "storico" ? [["periodo", t("Periodo", "Period")]] : []),
@@ -738,6 +740,7 @@ function cartaStorico(l) {
     corpo = `<p class="dm-na-vuoto">${esc(t("Leggo lo storico di Home Assistant…", "Reading Home Assistant history…"))}</p>`;
   else if (s.stato === "errore")
     corpo = `<p class="dm-na-vuoto">${esc(t("Lo storico non ha risposto: riprovo fra poco.", "History didn't answer: retrying shortly."))}</p>`;
+  else if (state.vista === "ultima") corpo = laUltima(s.dati);
   else {
     const { giorni, ricariche, totali, conRete } = s.dati;
     const pieni = state.vista === "mese" ? riempiIlMese(giorni, finestra) : giorni;
@@ -772,6 +775,63 @@ function cartaStorico(l) {
       ${selettoreDelPeriodo(state.vista, state, "storico")}</div>
     ${corpo}
   </section>`;
+}
+
+/* L'ultima ricarica: i suoi quattro numeri, e ora per ora quanto e' entrato
+ * nell'auto, dal sole e dalla rete. Si cerca negli ultimi trenta giorni. */
+function laUltima({ ricariche = [], ore = [], conRete } = {}) {
+  const r = ricariche[0];
+  if (!r)
+    return `<p class="dm-na-vuoto">${esc(
+      t("Nessuna ricarica negli ultimi 30 giorni.", "No charging in the last 30 days."),
+    )}</p>`;
+  /* Le ore della ricarica con un'ora vuota prima e dopo, e almeno otto
+   * colonne: una ricarica di un'ora non resta una barra sola in mezzo al nulla. */
+  const ORA = 3600000;
+  const perOra = new Map(ore.map((o) => [o.inizio, o]));
+  const colonneMinime = 8;
+  const quante = Math.max(colonneMinime, Math.round((r.fine - r.inizio) / ORA) + 2);
+  const prima = r.inizio - ORA * Math.max(1, Math.floor((quante - Math.round((r.fine - r.inizio) / ORA)) / 2));
+  const sue = Array.from({ length: quante }, (_, i) => {
+    const inizio = prima + i * ORA;
+    return perOra.get(inizio) || { inizio, kwh: 0, sole: null };
+  });
+  const ora = (x) =>
+    new Date(x).toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit", hour12: false });
+  const giorno = new Date(r.inizio).toLocaleDateString(locale(), {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+  const durata = Math.max(1, Math.round((r.fine - r.inizio) / 3600000));
+  const massimo = Math.max(0.0001, ...sue.map((o) => o.kwh || 0));
+  const colonne = sue
+    .map((o) => {
+      const v = o.kwh || 0;
+      const quota = o.sole !== null && v > 0 ? Math.max(0, Math.min(1, o.sole / v)) : null;
+      const titolo = `${ora(o.inizio)}: ${formatNumber(v, 1)} kWh`;
+      return `<div class="dm-na-colonna" data-futuro="false" title="${esc(titolo)}">
+        <div class="dm-na-barra" style="height:${(v > 0 ? Math.max(3, (v / massimo) * 100) : 0).toFixed(1)}%">${
+          quota === null
+            ? "<i></i>"
+            : `<i class="rete" style="flex:${(1 - quota).toFixed(3)}"></i><i class="sole" style="flex:${quota.toFixed(3)}"></i>`
+        }</div><small>${esc(ora(o.inizio).slice(0, 2))}</small></div>`;
+    })
+    .join("");
+  const alKwh = r.costo === null || r.kwh <= 0 ? null : r.costo / r.kwh;
+  return `<p class="dm-na-ultima-quando"><b>${esc(giorno.charAt(0).toLocaleUpperCase(locale()) + giorno.slice(1))}</b> · ${esc(
+    ora(r.inizio),
+  )}–${esc(ora(r.fine))}</p>
+    <div class="dm-na-totali">
+      <div class="dm-na-tessera"><span>${esc(t("Energia", "Energy"))}</span><b>${kwh(r.kwh, 1)}<small>kWh</small></b></div>
+      <div class="dm-na-tessera" data-tono="sole"><span>${esc(t("Dal sole", "From the sun"))}</span><b>${r.quotaSole === null ? "—" : `${percento(r.quotaSole)}<small>%</small>`}</b></div>
+      <div class="dm-na-tessera"><span>${esc(t("Spesa", "Spent"))}</span><b>${r.costo === null ? "—" : `${euro(r.costo)}<small>€</small>`}</b></div>
+      <div class="dm-na-tessera"><span>${esc(t("Durata", "Duration"))}</span><b>${durata}<small>h${
+        alKwh === null ? "" : ` · ${euro(alKwh)} €/kWh`
+      }</small></b></div>
+    </div>
+    ${sue.length ? `<div class="dm-na-grafico" data-fitta="${sue.length > 16}">${colonne}</div>` : ""}
+    ${conRete ? `<div class="dm-na-legenda"><span><i class="sole"></i>${esc(t("dal sole", "from the sun"))}</span><span><i class="rete"></i>${esc(t("dalla rete", "from the grid"))}</span></div>` : ""}`;
 }
 
 /* Il mese intero: i giorni che devono ancora venire tengono il loro posto. */
@@ -1041,7 +1101,7 @@ function caricaLoStorico(l) {
         chiave,
         stato: "pronto",
         alle: Date.now(),
-        dati: { giorni, ricariche, totali: totaliDelloStorico(giorni, ricariche), conRete },
+        dati: { giorni, ricariche, ore, totali: totaliDelloStorico(giorni, ricariche), conRete },
       };
       ridisegna();
     })
@@ -1615,6 +1675,8 @@ function stile() {
   /* lo storico */
   ${P} .dm-na-storico-testa{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
   ${P} .dm-na-storico-testa .dm-na-titolo{margin:0;margin-right:auto}
+  ${P} .dm-na-ultima-quando{margin:0 0 12px;font-size:14px;font-weight:700;color:var(--text-dim,#64748b)}
+  ${P} .dm-na-ultima-quando b{color:var(--text,#0f172a)}
   ${P} .dm-na-periodo{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   ${P} .dm-na-mese{display:flex;align-items:center;gap:8px}
   ${P} .dm-na-mese b{font-size:15px;font-weight:900;color:var(--text,#0f172a);text-transform:capitalize;min-width:120px;text-align:center}
