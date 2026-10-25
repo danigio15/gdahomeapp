@@ -1599,8 +1599,10 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 489 con lo sport: `core/lo-sport.js` (le regole), `sections/sport-
   // section.js` (la pagina), `sections/sport-editor-section.js` (la scheda del
   // Config) e `sections/finestre/sport.js` (la finestra della tessera).
+  // 491 col server Proxmox nella pagina MiniPC: `core/proxmox.js` (il nodo,
+  // le VM, i container, i dischi dal registro) e `sections/proxmox-section.js`.
   assert.ok(
-    relative.length <= 489,
+    relative.length <= 491,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
