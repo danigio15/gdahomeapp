@@ -1,0 +1,52 @@
+name: Le immagini dell'add-on
+
+# «Quando si installa la percentuale non avanza, resta sempre a zero e poi
+# diventa aggiornato.» Senza `image:` nel manifesto, Home Assistant costruisce
+# l'add-on in casa dal Dockerfile, e una costruzione non ha una percentuale:
+# resta a 0% finche' non ha finito. Con l'immagine gia' pronta la scarica, e
+# lo scaricamento la percentuale ce l'ha.
+#
+# Qui si costruiscono le immagini, una per architettura, e si mettono su
+# GitHub Packages (ghcr.io) col numero della versione del manifesto. Il
+# manifesto le chiama (`image:`) solo quando ci sono: se le chiamasse prima,
+# ogni aggiornamento fallirebbe.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, "claude/**"]
+    paths:
+      - "ponte/**"
+      - ".github/workflows/immagini-add-on.yml"
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: immagini-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  costruisci:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [aarch64, amd64, armhf, armv7, i386]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Costruisce e pubblica gdahome-${{ matrix.arch }}
+        uses: home-assistant/builder@2024.08.2
+        with:
+          args: |
+            --${{ matrix.arch }}
+            --target /data/ponte
+            --image "gdahome-{arch}"
+            --docker-hub ghcr.io/${{ github.repository_owner }}
+            --addon
