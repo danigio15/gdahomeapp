@@ -12,6 +12,19 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
 ## 1.18.4
 
+- **Colpo d'occhio, plancia nuova (Premium):** una pagina sola col meteo e i
+  riquadri grandi, e ogni riquadro apre i suoi dati in un popup: il flusso del
+  fotovoltaico (adesso, oggi, il mese), le telecamere dal vivo, i tasti grandi
+  dell'antifurto, e il cancello che si apre con un tocco. Si crea dalla scheda
+  «Le tue plance» dell'add-on, partendo da quello che sa già la plancia
+  principale o da zero, e si configura dal tasto 🔧 della pagina.
+- **MiniPC, server Proxmox:** il nodo con CPU, memoria, dischi e gli
+  aggiornamenti da fare, e sotto le sue macchine virtuali e i container.
+- **Sport:** le coppe europee della squadra che segui, e toccando una partita
+  o una sessione se ne vedono i dettagli. La pagina è stata ridisegnata.
+- **Navigatore:** la ricerca trova anche le aziende, e cercando «pub», «bar»,
+  «farmacia» o altre categorie mostra tutti quelli dei dintorni, dal più
+  vicino.
 - **Auto, carica fino a:** la barra dice soltanto fin dove si carica e non si
   trascina più: scorrendo la pagina col dito l'obiettivo cambiava per sbaglio.
   Si sceglie coi tasti dal 60% al 100%, e sotto il 60% dal menu «Meno…».
