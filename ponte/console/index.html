@@ -469,6 +469,18 @@
                 </span>
               </label>
               <label class="modello">
+                <input type="radio" name="modello-plancia" value="occhio" />
+                <span>
+                  <strong data-en="👁️ At a glance">👁️ Colpo d'occhio</strong>
+                  <small
+                    data-en="One page, no sections: weather and big tiles, and each tile opens its data in a popup — solar, cameras, alarm, gate."
+                    >Una pagina sola, senza sezioni: il meteo e i riquadri grandi, e ogni riquadro
+                    apre i suoi dati in un popup — fotovoltaico, telecamere, antifurto,
+                    cancello.</small
+                  >
+                </span>
+              </label>
+              <label class="modello">
                 <input type="radio" name="modello-plancia" value="classica" />
                 <span>
                   <strong data-en="🏠 Classic">🏠 Classica</strong>
@@ -479,6 +491,36 @@
                   >
                 </span>
               </label>
+            </div>
+            <div class="partenza-plancia" id="partenza-plancia" hidden>
+              <p class="etichetta" data-en="Starts from">Parte da</p>
+              <div
+                class="modelli"
+                role="radiogroup"
+                aria-label="Parte da"
+                data-en-aria-label="Starts from"
+              >
+                <label class="modello">
+                  <input type="radio" name="partenza-plancia" value="principale" checked />
+                  <span>
+                    <strong data-en="Follow the main dashboard">Segue la plancia principale</strong>
+                    <small
+                      data-en="It takes the solar, cameras, alarm, gate and weather already set up in the main dashboard."
+                      >Prende fotovoltaico, telecamere, antifurto, cancello e meteo già configurati
+                      nella principale.</small
+                    >
+                  </span>
+                </label>
+                <label class="modello">
+                  <input type="radio" name="partenza-plancia" value="zero" />
+                  <span>
+                    <strong data-en="From scratch">Da zero</strong>
+                    <small data-en="The tiles start empty: you fill them in its Config."
+                      >I riquadri nascono vuoti: si riempiono nel suo Config.</small
+                    >
+                  </span>
+                </label>
+              </div>
             </div>
             <p class="etichetta" data-en="Who sees it">Chi la vede</p>
             <div class="chi-la-vede-nuova" id="utenti-plancia-nuova"></div>

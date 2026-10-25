@@ -190,6 +190,8 @@ import { installIFornitoriDiEnergia } from "./i-fornitori-di-energia-section.js"
 import { installAccumuloEditor } from "./accumulo-editor-section.js";
 import { installMacchine } from "./macchine-e-rete-section.js";
 import { installProxmox } from "./proxmox-section.js";
+import { installColpoDOcchio } from "./colpo-d-occhio-section.js";
+import { installOcchioEditor } from "./colpo-d-occhio-editor-section.js";
 import { installMacchineEditor } from "./macchine-editor-section.js";
 import { installNodiSection } from "./nodi-section.js";
 import { installNodiEditor } from "./nodi-editor-section.js";
@@ -1267,6 +1269,8 @@ export function installSectionRuntime() {
     senzaCadere(installAccumuloEditor);
     senzaCadere(installMacchine);
     senzaCadere(installProxmox);
+    senzaCadere(installColpoDOcchio);
+    senzaCadere(installOcchioEditor);
     senzaCadere(installMacchineEditor);
     senzaCadere(installNodiSection);
     senzaCadere(installNodiEditor);

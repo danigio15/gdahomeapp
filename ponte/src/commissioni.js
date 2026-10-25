@@ -1725,6 +1725,7 @@ export class Commissioni {
             {
               titolo,
               modello: detto.modello,
+              partenza: detto.partenza,
               utenti: Array.isArray(detto.utenti) ? detto.utenti : null,
             },
           );

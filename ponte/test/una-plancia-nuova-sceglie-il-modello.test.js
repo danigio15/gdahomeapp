@@ -12,7 +12,14 @@ import { join } from "node:path";
 
 import { Configurazione } from "../src/configurazione.js";
 import { Plance, PremiumRichiesto } from "../src/plance.js";
-import { aggiungiUnaPlancia, conIlModello, eAMuro, modelloPulito } from "../src/plancia-nuova.js";
+import {
+  aggiungiUnaPlancia,
+  conIlModello,
+  eAColpoDOcchio,
+  eAMuro,
+  modelloPulito,
+  partenzaPulita,
+} from "../src/plancia-nuova.js";
 
 const ZITTO = { info() {}, attenzione() {}, errore() {} };
 
@@ -160,6 +167,78 @@ test("l'elenco dice quali plance partono a muro", () => {
       [
         ["primary", false],
         ["tablet", true],
+      ],
+    );
+  } finally {
+    b.via();
+  }
+});
+
+test("il colpo d'occhio e' un modello che si conosce", () => {
+  assert.equal(modelloPulito("occhio"), "occhio");
+});
+
+test("a colpo d'occhio dalla principale: telecamere e centrale vengono da li', il resto no", () => {
+  const b = banco();
+  try {
+    const quale = aggiungiUnaPlancia(b, { titolo: "Occhio", modello: "occhio" });
+    assert.equal(quale.a_occhio, true);
+    assert.equal(quale.a_muro, false);
+    const valori = b.configurazione.leggi("occhio").snapshot.values;
+    /* Solo la sua chiave: della principale non si copia nient'altro. */
+    assert.deepEqual(Object.keys(valori), ["cd_occhio"]);
+    const occhio = JSON.parse(valori.cd_occhio);
+    assert.equal(occhio.attiva, true);
+    assert.deepEqual(
+      occhio.telecamere.map((c) => c.entity),
+      ["camera.cancello"],
+    );
+    assert.equal(occhio.antifurto.centrale, "alarm_control_panel.casa");
+    assert.deepEqual(
+      occhio.riquadri.map((r) => r.tipo),
+      ["telecamere", "antifurto"],
+    );
+    /* E la principale non si tocca. */
+    assert.equal(eAColpoDOcchio(b.configurazione, "primary"), false);
+  } finally {
+    b.via();
+  }
+});
+
+test("a colpo d'occhio da zero: i quattro riquadri da riempire, niente dalla principale", () => {
+  const b = banco();
+  try {
+    const quale = aggiungiUnaPlancia(b, { titolo: "Vuota", modello: "occhio", partenza: "zero" });
+    assert.equal(quale.a_occhio, true);
+    const occhio = JSON.parse(b.configurazione.leggi("vuota").snapshot.values.cd_occhio);
+    assert.deepEqual(
+      occhio.riquadri.map((r) => r.tipo),
+      ["energia", "telecamere", "antifurto", "apri"],
+    );
+    assert.deepEqual(occhio.telecamere, []);
+    assert.equal(occhio.antifurto.centrale, "");
+  } finally {
+    b.via();
+  }
+});
+
+test("una partenza che non si conosce e' la principale", () => {
+  assert.equal(partenzaPulita("zero"), "zero");
+  assert.equal(partenzaPulita("principale"), "principale");
+  assert.equal(partenzaPulita("altro"), "principale");
+  assert.equal(partenzaPulita(undefined), "principale");
+});
+
+test("l'elenco dice quali plance partono a colpo d'occhio", () => {
+  const b = banco();
+  try {
+    aggiungiUnaPlancia(b, { titolo: "Occhio", modello: "occhio" });
+    const elenco = conIlModello(b.plance.elenco(), b.configurazione);
+    assert.deepEqual(
+      elenco.map((p) => [p.profilo, p.a_muro, p.a_occhio]),
+      [
+        ["primary", false, false],
+        ["occhio", false, true],
       ],
     );
   } finally {

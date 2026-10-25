@@ -1092,7 +1092,12 @@ async function api({
          * qui, insieme al nome: una plancia a muro nasce accesa. */
         const quale = aggiungiUnaPlancia(
           { plance, configurazione, registro },
-          { titolo: detto?.titolo, modello: detto?.modello, utenti: detto?.utenti },
+          {
+            titolo: detto?.titolo,
+            modello: detto?.modello,
+            partenza: detto?.partenza,
+            utenti: detto?.utenti,
+          },
         );
         json(risposta, { plance: conIlModello(plance.elenco(), configurazione), quale }, 201);
         return;

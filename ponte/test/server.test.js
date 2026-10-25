@@ -628,8 +628,9 @@ test("le plance si aggiungono, si rinominano e si tolgono dalla scheda dell'add-
         /* Vuoto: la vedono tutti quelli che entrano in casa. */
         utenti: [],
         solo_admin: false,
-        /* Classica: nessuno l'ha fatta partire a muro. */
+        /* Classica: nessuno l'ha fatta partire a muro, ne' a colpo d'occhio. */
         a_muro: false,
+        a_occhio: false,
       },
     ]);
 
