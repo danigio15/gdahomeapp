@@ -10,6 +10,28 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.3
+
+- **Sport, sezione nuova:** le squadre di calcio che segui (Serie A, coppe
+  europee e altri campionati), la Formula 1 e la MotoGP: partite dal vivo,
+  risultati, classifica, prossima gara e pilota del cuore. Si sceglie cosa
+  seguire nel Config («⚽ Sport»), e in Home c'è la tessera con la finestra.
+  I dati passano dal ponte e li vede solo chi è entrato.
+- **Dispositivi non connessi:** non compaiono più dispositivi che funzionano.
+  Quando la plancia non ha ancora l'elenco dei dispositivi di Home Assistant,
+  l'avviso guarda solo le entità della plancia. Nella scheda del Config le
+  altre entità ferme della casa si vedono a parte («Altre entità ferme»): si
+  cercano e si tolgono col cestino.
+- **Integrazioni:** nella ricerca le lettere restano in ordine e la pagina non
+  lampeggia.
+- **GdANav, vista immersiva:** accanto a 2D e 3D, sul telefono, su Android Auto
+  e su CarPlay. Le strade sono larghe quanto sono, le corsie compaiono sulla
+  strada prima della manovra, gli edifici stanno sopra il percorso.
+- **GdANav, viaggi pianificati in auto:** si rileggono quando l'auto si accende
+  e si riprova da soli se la casa non risponde, su Android Auto e su CarPlay.
+- **GdANav, ricerca:** TomTom e OpenStreetMap insieme, e prima il locale che si
+  chiama come si è scritto.
+
 ## 1.18.2
 
 - **Solo per chi amministra:** Dispositivi (con le Integrazioni), Aiutanti e
