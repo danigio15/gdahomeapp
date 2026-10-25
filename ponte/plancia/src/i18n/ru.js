@@ -7485,4 +7485,8 @@ export default Object.freeze({
   "Open menu": "Открыть меню",
   "This session's results have not been published yet: they usually arrive a few hours after it ends.": "Результаты этой сессии ещё не опубликованы: обычно они появляются через несколько часов после её окончания.",
   "No charging in the last 30 days.": "За последние 30 дней зарядок не было.",
+  "Full order": "Весь порядок",
+  "In pit": "В боксах",
+  "Lap {n}": "Круг {n}",
+  "The session is over.": "Сессия закончилась.",
 });

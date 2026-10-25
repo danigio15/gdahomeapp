@@ -7415,4 +7415,8 @@ export default Object.freeze({
   "Open menu": "فتح القائمة",
   "This session's results have not been published yet: they usually arrive a few hours after it ends.": "لم تُنشر نتائج هذه الجلسة بعد: تصل عادةً بعد بضع ساعات من انتهائها.",
   "No charging in the last 30 days.": "لا يوجد شحن في آخر 30 يومًا.",
+  "Full order": "الترتيب الكامل",
+  "In pit": "في الحظيرة",
+  "Lap {n}": "اللفة {n}",
+  "The session is over.": "انتهت الجلسة.",
 });

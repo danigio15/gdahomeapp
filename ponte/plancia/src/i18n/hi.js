@@ -7451,4 +7451,8 @@ export default Object.freeze({
   "Open menu": "मेनू खोलें",
   "This session's results have not been published yet: they usually arrive a few hours after it ends.": "इस सत्र के परिणाम अभी प्रकाशित नहीं हुए हैं: वे आमतौर पर इसके खत्म होने के कुछ घंटे बाद आते हैं।",
   "No charging in the last 30 days.": "पिछले 30 दिनों में कोई चार्जिंग नहीं।",
+  "Full order": "पूरा क्रम",
+  "In pit": "पिट में",
+  "Lap {n}": "लैप {n}",
+  "The session is over.": "सत्र खत्म हो गया।",
 });

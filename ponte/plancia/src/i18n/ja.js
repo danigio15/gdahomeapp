@@ -7470,4 +7470,8 @@ export default Object.freeze({
   "Open menu": "メニューを開く",
   "This session's results have not been published yet: they usually arrive a few hours after it ends.": "このセッションの結果はまだ公開されていません。通常は終了の数時間後に公開されます。",
   "No charging in the last 30 days.": "過去30日間に充電はありません。",
+  "Full order": "全順位",
+  "In pit": "ピットイン",
+  "Lap {n}": "{n}周目",
+  "The session is over.": "セッションは終了しました。",
 });

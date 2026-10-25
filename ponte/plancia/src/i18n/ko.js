@@ -7442,4 +7442,8 @@ export default Object.freeze({
   "Open menu": "메뉴 열기",
   "This session's results have not been published yet: they usually arrive a few hours after it ends.": "이 세션의 결과는 아직 발표되지 않았습니다. 보통 종료 후 몇 시간 뒤에 나옵니다.",
   "No charging in the last 30 days.": "지난 30일 동안 충전 기록이 없습니다.",
+  "Full order": "전체 순위",
+  "In pit": "피트 인",
+  "Lap {n}": "{n}랩",
+  "The session is over.": "세션이 끝났습니다.",
 });

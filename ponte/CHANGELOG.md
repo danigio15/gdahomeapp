@@ -10,6 +10,17 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.6
+
+- **Sport dal vivo:** quando una sessione di Formula 1 o di MotoGP è in
+  corso, la pagina mostra la scheda «In diretta» con l'ordine dei piloti e il
+  giro (per la MotoGP anche i distacchi e chi è ai box), il tuo pilota
+  evidenziato e «Tutto l'ordine» per vederli tutti. Nell'elenco delle sessioni
+  quella in corso dice «In diretta», e la tessera della Home dice chi è in
+  testa. Durante la diretta si aggiorna ogni mezzo minuto.
+- **Navigatore, ricerca:** un'azienda cercata con la forma della società in
+  mezzo («… spa napoli») ora si trova.
+
 ## 1.18.5
 
 - **Navigatore, ricerca:** trova anche le aziende che non hanno un negozio,

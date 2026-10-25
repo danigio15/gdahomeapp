@@ -7500,4 +7500,8 @@ export default Object.freeze({
   "Open menu": "Abrir o menu",
   "This session's results have not been published yet: they usually arrive a few hours after it ends.": "Os resultados desta sessão ainda não foram publicados: costumam chegar algumas horas depois do fim.",
   "No charging in the last 30 days.": "Nenhum carregamento nos últimos 30 dias.",
+  "Full order": "Ordem completa",
+  "In pit": "Nas boxes",
+  "Lap {n}": "Volta {n}",
+  "The session is over.": "A sessão terminou.",
 });

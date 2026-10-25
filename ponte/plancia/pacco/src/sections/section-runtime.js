@@ -559,7 +559,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-FNNIGK4S.js";
+} from "../../chunk-XLSBQEJD.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2446,6 +2446,7 @@ var SOURCE_INDEX = Object.freeze({
   "aggiunto da": "added from",
   "Agli sgoccioli:": "Almost out:",
   "Agosto": "August",
+  "Ai box": "In pit",
   "Aiutanti": "Helpers",
   "Aiuto": "Help",
   "al": "at level",
@@ -4207,6 +4208,7 @@ var SOURCE_INDEX = Object.freeze({
   "Giorno e notte da": "Day and night from",
   "giorno fa": "day ago",
   "Giri a tappe": "Multi-stop trips",
+  "Giro {n}": "Lap {n}",
   "giro veloce": "fastest lap",
   "giù": "down",
   "Giù": "Down",
@@ -4900,6 +4902,7 @@ var SOURCE_INDEX = Object.freeze({
   "La scheda tiene dodici comandi, e ci sono tutti: togline uno per farci stare questo. Un robot arrivato da un'integrazione parte spesso già pieno di quelli che pubblica lei.": "The card holds twelve commands and they are all taken: remove one to make room. A robot that came from an integration often starts out full of the ones it publishes.",
   "La scheda tiene quattro mappe, e ci sono tutte: togline una per farci stare questa.": "The card holds four maps and they are all taken: remove one to make room.",
   "La segnalazione diventa una pagina pubblica su github.com, aperta a tuo nome: chiunque potra' leggerla. La risposta arriva qui, sotto la discussione.": "The report becomes a public page on github.com, opened under your name: anyone will be able to read it. The reply comes back here, under the discussion.",
+  "La sessione è finita.": "The session is over.",
   "la somma di tutti gli impianti": "the total of every plant",
   "La spengo?": "Turn it off?",
   "La stanza in cui si trova: serve alla pagina Stanze, non cambia niente qui.": "The room it sits in: it feeds the Rooms page and changes nothing here.",
@@ -7670,6 +7673,7 @@ var SOURCE_INDEX = Object.freeze({
   "Tutto in piedi · ${conto.totale}": "All up · ${conto.totale}",
   "tutto l'anno": "all year",
   "Tutto l'anno": "All year",
+  "Tutto l'ordine": "Full order",
   "Tutto nella norma": "All in range",
   "Tutto quello che c'e' sulla repository": "Everything on the repository",
   "Tutto quello che la plancia sa fare, e se si vede. Lo stesso interruttore sta anche in cima alla scheda di ognuna: qui ci sono tutti insieme, per vedere cosa c'è senza aprirle una per una.": "Everything the dashboard can do, and whether it shows. The same switch is also at the top of each section's own tab: here they are all together, so you can see what exists without opening them one by one.",
@@ -64513,8 +64517,17 @@ function fraQuantoSiRichiede(risultati, adesso2 = Date.now()) {
     return q != null && Math.abs(q - adesso2) < 3 * 36e5;
   };
   for (const r of risultati || []) {
+    if (r?.dalVivo && r.tipo !== "calcio") return 3e4;
+  }
+  for (const r of risultati || []) {
     if (r?.dalVivo) return 6e4;
     if (r?.tipo === "calcio" && vicino(r.prossime?.[0]?.quando)) return 6e4;
+    const sessioni = r?.prossima?.tutte || r?.prossima?.sessioni || [];
+    if ((r?.tipo === "f1" || r?.tipo === "motogp") && sessioni.some((x) => {
+      const q = ora4(x?.quando);
+      return q != null && adesso2 >= q - 10 * 6e4 && adesso2 <= q + 3 * 36e5 && !x.finita;
+    }))
+      return 6e4;
     if (r?.tipo === "f1" && vicino(prossimaSessione(r, adesso2)?.quando)) return 5 * 6e4;
   }
   return 15 * 6e4;
@@ -64525,6 +64538,10 @@ function inEvidenza(risultati, adesso2 = Date.now()) {
   const dalVivo = buoni.find((r) => r.tipo === "calcio" && r.dalVivo);
   if (dalVivo)
     return { tipo: "calcio", cosa: "dal-vivo", risultato: dalVivo, partita: dalVivo.dalVivo };
+  const corsa = buoni.find(
+    (r) => (r.tipo === "f1" || r.tipo === "motogp") && r.dalVivo?.ordine?.length
+  );
+  if (corsa) return { tipo: corsa.tipo, cosa: "dal-vivo", risultato: corsa, corsa: corsa.dalVivo };
   const prossimi = [];
   const passati = [];
   for (const r of buoni) {
@@ -64997,6 +65014,57 @@ function pilotaDelCuoreMarkup(r, seguito) {
       </div>
     </div>`;
 }
+function dalVivoMarkup(r, seguito, indice = 0, quanti2 = 10) {
+  const v = r.dalVivo;
+  if (!v?.ordine?.length) return "";
+  const nomi2 = SIGLE_DELLE_SESSIONI();
+  const gp = nomeBreveDelGp(r.prossima?.nome) || clean(r.prossima?.paese);
+  const sessione = nomi2[v.sessione] || v.sessione;
+  const giro = v.giro ? v.giri ? conN(t("Giro {n}", "Lap {n}"), `${v.giro}/${v.giri}`) : conN(t("Giro {n}", "Lap {n}"), v.giro) : "";
+  const preferito = clean(seguito?.preferito);
+  const mio = (x) => preferito && (clean(x.id) === preferito || clean(x.numero) === preferito);
+  const riga3 = (x) => `<li class="dm-sport-pos${mio(x) ? " mia" : ""}" style="--c:${coloreDi(r, x)}">
+        <span class="dm-sport-num">${x.posizione ?? "–"}</span><i class="dm-sport-colore"></i>
+        <span class="dm-sport-nome">${esc(r.tipo === "f1" ? x.cognome || x.nome : x.nome)}${x.numero ? ` <small class="dm-sport-pilota-num">#${esc(x.numero)}</small>` : ""}</span>
+        <span class="dm-sport-g">${r.tipo === "f1" ? x.scuderiaId ? scuderia(x.scuderiaId, 16) : "" : esc(x.moto || "")}</span>
+        <b>${esc(x.aiBox ? t("Ai box", "In pit") : x.distacco || "")}</b>
+      </li>`;
+  const prime = v.ordine.slice(0, quanti2);
+  const suo2 = v.ordine.find((x) => mio(x) && x.posizione > quanti2);
+  const titolo3 = `${sessione} · ${gp}`;
+  return schedaMarkup7(
+    "",
+    `<div class="dm-sport-partita-testa"><span class="dm-sport-live" data-dm-sport-live><i aria-hidden="true"></i>${esc(
+      t("In diretta", "Live")
+    )}</span><span>${esc(giro)}</span></div>
+      <div class="dm-sport-gp"><strong>${esc(sessione)}</strong><small>${esc(gp)}</small></div>
+      <ol class="dm-sport-classifica dm-sport-vivo">${prime.map(riga3).join("")}${suo2 ? `<li class="dm-sport-salto" aria-hidden="true">⋯</li>${riga3(suo2)}` : ""}</ol>${v.ordine.length > quanti2 ? `<span class="dm-sport-tutta dm-sport-tocca" ${tasto2({ tipo: "ordine", dove: `${indice}:` }, titolo3)}>${esc(
+      t("Tutto l'ordine", "Full order")
+    )} ›</span>` : ""}`,
+    {
+      classe: "dm-sport-partita dm-sport-dal-vivo",
+      attr: `data-dm-sport-dal-vivo style="--squadra:${r.tipo === "f1" ? "#e10600" : "#c8102e"}"`
+    }
+  );
+}
+function ordineDalVivoMarkup(r, preferito = "") {
+  const righe3 = r?.dalVivo?.ordine || [];
+  if (!righe3.length) return "";
+  const f12 = r.tipo === "f1";
+  return `<div class="dm-sport-tabella" data-colonne="1"><div class="dm-sport-tabella-testa"><span>${esc(
+    t("Pos", "Pos")
+  )}</span><span>${esc(t("Pilota", "Driver"))}</span><span class="dm-sport-tempi"><span>${esc(
+    f12 ? "" : t("Distacco", "Gap")
+  )}</span></span></div><ol class="dm-sport-classifica">${righe3.map((x) => {
+    const mio = preferito && (clean(x.id) === preferito || clean(x.numero) === preferito);
+    const squadra = f12 ? `${scuderia(x.scuderiaId, 16)}${esc(x.scuderia)}` : esc(x.moto || x.squadra);
+    return `<li class="dm-sport-pos${mio ? " mia" : ""}" style="--c:${coloreDi(r, x)}">
+        <span class="dm-sport-num">${x.posizione ?? "–"}</span><i class="dm-sport-colore"></i>
+        <span class="dm-sport-nome">${esc(x.nome)}${x.numero ? ` <small class="dm-sport-pilota-num">#${esc(x.numero)}</small>` : ""}<small>${squadra}</small></span>
+        <span class="dm-sport-tempi"><span>${esc(x.aiBox ? t("Ai box", "In pit") : x.distacco || "")}</span></span>
+      </li>`;
+  }).join("")}</ol></div>`;
+}
 function prossimoGpMarkup(r, adesso2, seguito = null) {
   const p = r.prossima;
   if (!p) return "";
@@ -65015,9 +65083,8 @@ function prossimoGpMarkup(r, adesso2, seguito = null) {
       s === prossima ? "prossima" : fatta ? "fatta" : "",
       tocca2 ? "dm-sport-tocca" : ""
     ].filter(Boolean).join(" ");
-    return `<li class="${classe3}" ${tocca2}><span>${esc(nomi2[s.sigla] || s.sigla)}</span><b>${esc(
-      s.annullata ? t("Annullata", "Cancelled") : quandoInParole2(s.quando, adesso2)
-    )}</b>${tocca2 ? `<i class="dm-sport-freccia" aria-hidden="true">›</i>` : ""}</li>`;
+    const inCorso2 = r.dalVivo?.sessione && r.dalVivo.sessione === s.sigla;
+    return `<li class="${inCorso2 ? "prossima in-corso" : classe3}" ${inCorso2 ? "" : tocca2}><span>${esc(nomi2[s.sigla] || s.sigla)}</span><b>${inCorso2 ? `<span class="dm-sport-live"><i aria-hidden="true"></i>${esc(t("In diretta", "Live"))}</span>` : esc(s.annullata ? t("Annullata", "Cancelled") : quandoInParole2(s.quando, adesso2))}</b>${tocca2 && !inCorso2 ? `<i class="dm-sport-freccia" aria-hidden="true">›</i>` : ""}</li>`;
   }).join("");
   return schedaMarkup7(
     "",
@@ -65144,6 +65211,7 @@ function corseMarkup(r, seguito, adesso2, indice = 0) {
   return `<section class="dm-sport-blocco" data-dm-sport-blocco="${esc(r.tipo)}" style="--blocco:${r.tipo === "f1" ? "#e10600" : "#c8102e"}">
       <div class="dm-sport-testa">${titoloDelBlocco(r.tipo, nomeDelTipo(r.tipo), sotto)}</div>
       <div class="dm-sport-griglia dm-sport-corse" data-quante="${r.tipo === "f1" ? 4 : 3}">
+        ${dalVivoMarkup(r, seguito, indice)}
         ${prossimoGpMarkup(r, adesso2, seguito)}
         ${ultimaGaraMarkup(r, seguito)}
         ${classificaPilotiMarkup(r, seguito, indice)}
@@ -65353,6 +65421,12 @@ async function apriIlDettaglio2(cosa, titolo3) {
   corpo5.closest(".dm-foglio-scelta")?.classList.add("dm-sport-foglio");
   if (scheda8) scheda8.dataset.sportTipo = clean(cosa.tipo) || "tabella";
   installaLoStileDelFoglio();
+  if (cosa.tipo === "ordine") {
+    const r = state53.dati.risultati[Number(clean(cosa.dove).split(":")[0])];
+    if (scheda8 && (r?.tipo === "f1" || r?.tipo === "motogp")) scheda8.dataset.sportTipo = r.tipo;
+    corpo5.innerHTML = (r && !r.errore ? ordineDalVivoMarkup(r, preferitoDi(r.tipo)) : "") || avvisoDelFoglio(t("La sessione è finita.", "The session is over."));
+    return;
+  }
   if (cosa.tipo === "tabella" || cosa.tipo === "piloti") {
     corpo5.innerHTML = tabellaDa(cosa.dove) || avvisoDelFoglio(t("La classifica non c'è ancora.", "No table yet."));
     return;
@@ -65389,7 +65463,8 @@ function coloraIlFoglio(scheda8, d) {
   if (!scheda8) return;
   const casa = coloreDellaSquadra(d?.casa?.colore, "#2563eb");
   let ospite3 = coloreDellaSquadra(d?.ospite?.colore, "#f97316");
-  if (ospite3.toLowerCase() === casa.toLowerCase()) ospite3 = casa === "#f97316" ? "#2563eb" : "#f97316";
+  if (ospite3.toLowerCase() === casa.toLowerCase())
+    ospite3 = casa === "#f97316" ? "#2563eb" : "#f97316";
   scheda8.style.setProperty("--sq-casa", casa);
   scheda8.style.setProperty("--sq-ospite", ospite3);
 }
@@ -65453,6 +65528,16 @@ function tesseraDelloSport(vista2, adesso2 = Date.now()) {
     };
   }
   const gp = nomeBreveDelGp((ev.evento || ev.risultato?.prossima || ev.gara)?.nome);
+  if (ev.cosa === "dal-vivo") {
+    const primo2 = ev.corsa.ordine[0];
+    const giro = ev.corsa.giro ? ` · ${conN(t("Giro {n}", "Lap {n}"), ev.corsa.giro)}` : "";
+    return {
+      valore: clean(ev.tipo === "f1" ? primo2.cognome || primo2.nome : cognomeDi(primo2.nome)),
+      riga: `${nomeDelTipo(ev.tipo)} · ${nomi2[ev.corsa.sessione] || ev.corsa.sessione}${giro}`,
+      oggetto: ev.tipo,
+      dalVivo: true
+    };
+  }
   if (ev.cosa === "prossima" && ev.sessione)
     return {
       valore: oraDi3(ev.sessione.quando),
@@ -65495,10 +65580,12 @@ function finestraDelloSportMarkup(vista2, adesso2 = Date.now()) {
     const podio = (g?.risultati || []).slice(0, 3).map(
       (x) => `<span style="--c:${coloreDi(r, x)}"><b>${x.posizione}</b>${esc(r.tipo === "f1" ? x.cognome || x.nome : cognomeDi(x.nome))}</span>`
     ).join("");
-    return `<section class="dm-sport-blocco"><div class="dm-sport-testa">${titoloDelBlocco(r.tipo, nomeDelTipo(r.tipo), "", "finestra")}</div>${prossimoGpMarkup(
+    return `<section class="dm-sport-blocco"><div class="dm-sport-testa">${titoloDelBlocco(r.tipo, nomeDelTipo(r.tipo), "", "finestra")}</div>${dalVivoMarkup(
       r,
-      adesso2
-    )}${podio ? `<div class="dm-sport-podio-breve"><small>${esc(g.tipo === "SPR" || g === r.sprint ? t("Ultima sprint", "Last sprint") : t("Ultima gara", "Last race"))} · ${esc(
+      seguito,
+      i,
+      5
+    )}${prossimoGpMarkup(r, adesso2)}${podio ? `<div class="dm-sport-podio-breve"><small>${esc(g.tipo === "SPR" || g === r.sprint ? t("Ultima sprint", "Last sprint") : t("Ultima gara", "Last race"))} · ${esc(
       nomeBreveDelGp(g.nome)
     )}</small><div>${podio}</div></div>` : ""}</section>`;
   }).join("")}</div>`;
@@ -65940,6 +66027,10 @@ function foglioDelloSport(P9) {
   ${P9} .dm-sport-partita .dm-sport-sessioni li{background:rgba(255,255,255,.12)}
   ${P9} .dm-sport-partita .dm-sport-sessioni li.prossima{background:#fff;box-shadow:none}
   ${P9} .dm-sport-partita .dm-sport-sessioni li.prossima span,${P9} .dm-sport-partita .dm-sport-sessioni li.prossima b{color:#0f172a}
+  ${P9} .dm-sport-dal-vivo .dm-sport-tutta{color:#fff;font-weight:800}
+  ${P9} .dm-sport-dal-vivo .dm-sport-colore{box-shadow:0 0 0 1.5px rgba(255,255,255,.75)}
+  ${P9} .dm-sport-dal-vivo .dm-sport-pos b{color:#fff;font-variant-numeric:tabular-nums}
+  ${P9} .dm-sport-sessioni li.in-corso b .dm-sport-live{padding:3px 10px;font-size:.78em}
   ${P9} .dm-sport-partita .dm-sport-cuore{--text:#0f172a;--text-dim:#64748b;color:#0f172a;background:#fff!important;border:0;box-shadow:0 8px 20px rgba(0,0,0,.18)}
   ${P9} .dm-sport-partita.dm-sport-tocca:hover{filter:brightness(1.05)}
 `;

@@ -7332,4 +7332,8 @@ export default Object.freeze({
   "Open menu": "打开菜单",
   "This session's results have not been published yet: they usually arrive a few hours after it ends.": "本节的成绩尚未公布：通常在结束几小时后发布。",
   "No charging in the last 30 days.": "过去 30 天内没有充电。",
+  "Full order": "完整排名",
+  "In pit": "进站",
+  "Lap {n}": "第 {n} 圈",
+  "The session is over.": "本节已结束。",
 });
