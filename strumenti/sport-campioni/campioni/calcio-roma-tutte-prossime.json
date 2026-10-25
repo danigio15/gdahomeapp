@@ -2,7 +2,7 @@
  "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams/104/schedule?fixture=true",
  "stato": 200,
  "json": {
-  "timestamp": "2026-10-25T09:34:31Z",
+  "timestamp": "2026-10-25T13:34:33Z",
   "status": "success",
   "season": {
    "year": 2026,
@@ -1842,14 +1842,14 @@
          "name": "DraftKings",
          "priority": 1
         },
-        "details": "MAN +105",
+        "details": "MAN +115",
         "overUnder": 3.5,
         "spread": -0.5,
         "awayTeamOdds": {
          "favorite": false,
          "underdog": true,
-         "moneyLine": 210,
-         "spreadOdds": -145,
+         "moneyLine": 195,
+         "spreadOdds": -155,
          "open": {
           "favorite": false,
           "pointSpread": {
@@ -1879,20 +1879,20 @@
            "american": "+0.5"
           },
           "spread": {
-           "value": 1.68,
-           "displayValue": "20/29",
-           "alternateDisplayValue": "-145",
-           "decimal": 1.68,
-           "fraction": "20/29",
-           "american": "-145"
+           "value": 1.64,
+           "displayValue": "20/31",
+           "alternateDisplayValue": "-155",
+           "decimal": 1.64,
+           "fraction": "20/31",
+           "american": "-155"
           },
           "moneyLine": {
-           "value": 3.1,
-           "displayValue": "21/10",
-           "alternateDisplayValue": "+210",
-           "decimal": 3.1,
-           "fraction": "21/10",
-           "american": "+210"
+           "value": 2.95,
+           "displayValue": "39/20",
+           "alternateDisplayValue": "+195",
+           "decimal": 2.95,
+           "fraction": "39/20",
+           "american": "+195"
           }
          },
          "team": {
@@ -1906,8 +1906,8 @@
         "homeTeamOdds": {
          "favorite": true,
          "underdog": false,
-         "moneyLine": 105,
-         "spreadOdds": -105,
+         "moneyLine": 115,
+         "spreadOdds": 100,
          "open": {
           "favorite": true,
           "pointSpread": {
@@ -1937,20 +1937,20 @@
            "american": "-0.5"
           },
           "spread": {
-           "value": 1.95,
-           "displayValue": "20/21",
-           "alternateDisplayValue": "-105",
-           "decimal": 1.95,
-           "fraction": "20/21",
-           "american": "-105"
+           "value": 2,
+           "displayValue": "1/1",
+           "alternateDisplayValue": "+100",
+           "decimal": 2,
+           "fraction": "1/1",
+           "american": "+100"
           },
           "moneyLine": {
-           "value": 2.05,
-           "displayValue": "21/20",
-           "alternateDisplayValue": "+105",
-           "decimal": 2.05,
-           "fraction": "21/20",
-           "american": "+105"
+           "value": 2.15,
+           "displayValue": "23/20",
+           "alternateDisplayValue": "+115",
+           "decimal": 2.15,
+           "fraction": "23/20",
+           "american": "+115"
           }
          },
          "team": {
@@ -2179,7 +2179,7 @@
         "description": "Champions League - Manchester United vs AS Roma",
         "maxPrice": 9106,
         "startingPrice": 174,
-        "numberAvailable": 987,
+        "numberAvailable": 986,
         "totalPostings": 449,
         "links": [
          {
@@ -6496,8 +6496,8 @@
         "description": "Roma vs Juventus (Matchday 16: Dec 18-21)",
         "maxPrice": 1942,
         "startingPrice": 164,
-        "numberAvailable": 155,
-        "totalPostings": 45,
+        "numberAvailable": 153,
+        "totalPostings": 44,
         "links": [
          {
           "rel": [

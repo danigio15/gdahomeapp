@@ -486,8 +486,6 @@
       "awayShootoutScore": "3",
       "gameResult": "W",
       "competitionName": "2026 Club Friendly",
-      "leagueName": "Club Friendly",
-      "leagueAbbreviation": "Club Friendly",
       "opponent": {
        "id": "382",
        "uid": "s:600~t:382",
@@ -529,7 +527,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/382.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/382.png",
+      "leagueName": "Club Friendly",
+      "leagueAbbreviation": "Club Friendly"
      },
      {
       "id": "401869428",
@@ -552,8 +552,6 @@
       "awayShootoutScore": "0",
       "gameResult": "D",
       "competitionName": "2026 Club Friendly",
-      "leagueName": "Club Friendly",
-      "leagueAbbreviation": "Club Friendly",
       "opponent": {
        "id": "103",
        "uid": "s:600~t:103",
@@ -595,7 +593,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/103.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/103.png",
+      "leagueName": "Club Friendly",
+      "leagueAbbreviation": "Club Friendly"
      },
      {
       "id": "401869429",
@@ -1042,8 +1042,6 @@
       "gameResult": "W",
       "competitionName": "2026-27 Coppa Italia",
       "roundName": "First Round",
-      "leagueName": "Coppa Italia",
-      "leagueAbbreviation": "Coppa Italia",
       "opponent": {
        "id": "4055",
        "uid": "s:600~t:4055",
@@ -1074,7 +1072,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/4055.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/4055.png",
+      "leagueName": "Coppa Italia",
+      "leagueAbbreviation": "Coppa Italia"
      }
     ]
    }
@@ -3703,1337 +3703,6 @@
    }
   ],
   "hasOdds": false,
-  "news": {
-   "header": "Serie A News",
-   "link": {
-    "language": "en",
-    "rel": [
-     "index",
-     "desktop",
-     "league"
-    ],
-    "href": "https://www.espn.com/football/league/_/name/ita.1",
-    "text": "All Serie A News",
-    "shortText": "All News",
-    "isExternal": false,
-    "isPremium": false
-   },
-   "articles": [
-    {
-     "id": 50267803,
-     "nowId": "1-50267803",
-     "contentKey": "50267803-1-5-1",
-     "dataSourceIdentifier": "67382bac72c1c",
-     "type": "HeadlineNews",
-     "headline": "Napoli's Scott McTominay bags brace in derby day thriller against Roma",
-     "description": "Napoli's stuttering start in Serie A continued as Roma twice fought back to secure a 3-3 draw in a dramatic Derby del Sole.",
-     "lastModified": "2026-10-24T18:27:19Z",
-     "published": "2026-10-24T18:27:19Z",
-     "images": [
-      {
-       "dataSourceIdentifier": "8d0e6183744c6",
-       "id": 50267753,
-       "type": "header",
-       "name": "Napoli's Scott McTominay [1296x729]",
-       "alt": "NAPLES, ITALY - OCTOBER 24: Napoli's Scott McTominay (L) celebrates as he scores his team's second goal during the Italian Serie A football match between Napoli and Roma at Diego Armando Maradona Stadium in Naples, Italy, on October 24, 2026.",
-       "credit": "Isabella Bonotto/Anadolu via Getty Images",
-       "height": 729,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/1024/r1735526_1296x729_16-9.jpg"
-      },
-      {
-       "dataSourceIdentifier": "69d95f7bd97f5",
-       "id": 50267777,
-       "type": "header",
-       "name": "Leonardo Balerdi of AS Roma celebrates [1296x729]",
-       "alt": "Leonardo Balerdi of AS Roma celebrates after scored the second goal for his team during the Serie A match between SSC Napoli and AS Roma at Stadio Diego Armando Maradona on October 24, 2026 in Naples, Italy.",
-       "credit": "Fabio Rossi/AS Roma via Getty Images",
-       "height": 729,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/1024/r1735528_1296x729_16-9.jpg"
-      }
-     ],
-     "categories": [
-      {
-       "id": 81497,
-       "type": "league",
-       "uid": "s:600",
-       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
-       "description": "Soccer",
-       "sportId": 600,
-       "leagueId": 600,
-       "league": {
-        "id": 600,
-        "description": "Soccer",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 142589,
-       "type": "team",
-       "uid": "s:600~t:114",
-       "guid": "20179aab-ac9f-93cf-f139-404e49a3f3cb",
-       "description": "Napoli",
-       "sportId": 600,
-       "teamId": 114,
-       "team": {
-        "id": 114,
-        "description": "Napoli",
-        "abbreviation": "NAP",
-        "shortDisplayName": "Napoli",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/114/napoli"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/114/napoli"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 142587,
-       "type": "team",
-       "uid": "s:600~t:104",
-       "guid": "154c1cfa-e721-b7dd-9a1b-9b9762936b76",
-       "description": "AS Roma",
-       "sportId": 600,
-       "teamId": 104,
-       "team": {
-        "id": 104,
-        "description": "AS Roma",
-        "abbreviation": "ROMA",
-        "shortDisplayName": "AS Roma",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/104/as-roma"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/104/as-roma"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137798,
-       "type": "league",
-       "uid": "s:600~l:730",
-       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
-       "description": "Italian Serie A",
-       "sportId": 600,
-       "leagueId": 12,
-       "league": {
-        "id": 730,
-        "description": "Italian Serie A",
-        "abbreviation": "Serie A",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         }
-        }
-       }
-      }
-     ],
-     "byline": "PA",
-     "links": {
-      "api": {
-       "self": {
-        "href": "https://content.core.api.espn.com/v1/sports/news/50267803"
-       }
-      },
-      "app": {
-       "sportscenter": {
-        "href": "sportscenter://x-callback-url/showStory?uid=50267803"
-       }
-      },
-      "mobile": {
-       "href": "http://m.espn.go.com/soccer/story?storyId=50267803"
-      },
-      "web": {
-       "href": "https://www.espn.com/soccer/story/_/id/50267803/napoli-scott-mctominay-bags-brace-derby-day-thriller-roma"
-      }
-     },
-     "premium": false
-    },
-    {
-     "id": 50265302,
-     "nowId": "1-50265302",
-     "contentKey": "50265302-1-5-1",
-     "dataSourceIdentifier": "2f8128b1ff9a2",
-     "type": "HeadlineNews",
-     "headline": "Curtis Jones: Serie A too slow? Inter arrival explains Liverpool similarity",
-     "description": "Inter Milan midfielder Curtis Jones insists Serie A is no different to the Premier League when it comes to playing for the top clubs.",
-     "lastModified": "2026-10-24T13:00:33Z",
-     "published": "2026-10-24T13:00:33Z",
-     "images": [
-      {
-       "dataSourceIdentifier": "547be7f4157b8",
-       "id": 50265280,
-       "type": "header",
-       "name": "Curtis Jones [1296x729]",
-       "credit": "Getty",
-       "height": 729,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/1024/r1735381_1296x729_16-9.jpg"
-      },
-      {
-       "type": "Media",
-       "name": "Leboeuf hails Ngumoha after Liverpool's comeback vs. Villarreal",
-       "caption": "Leboeuf hails Ngumoha after Liverpool's comeback vs. Villarreal",
-       "height": 324,
-       "width": 576,
-       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1020/dm_261020_COM_SOC_Analysis_Leboeuf_hails_Ngumoha_after_Liverpools_comeback_vs_Villarreal_20261020_GLOBAL/dm_261020_COM_SOC_Analysis_Leboeuf_hails_Ngumoha_after_Liverpools_comeback_vs_Villarreal_20261020_GLOBAL.jpg"
-      }
-     ],
-     "categories": [
-      {
-       "id": 81497,
-       "type": "league",
-       "uid": "s:600",
-       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
-       "description": "Soccer",
-       "sportId": 600,
-       "leagueId": 600,
-       "league": {
-        "id": 600,
-        "description": "Soccer",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 142295,
-       "type": "team",
-       "uid": "s:600~t:364",
-       "guid": "a47fbcec-c948-cf4c-9e41-3dfa37588c9c",
-       "description": "Liverpool",
-       "sportId": 600,
-       "teamId": 364,
-       "team": {
-        "id": 364,
-        "description": "Liverpool",
-        "abbreviation": "LIV",
-        "shortDisplayName": "Liverpool",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/364/liverpool"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/364/liverpool"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 142583,
-       "type": "team",
-       "uid": "s:600~t:110",
-       "guid": "864b1935-65cc-fb9b-850d-790e4c8a8d47",
-       "description": "Internazionale",
-       "sportId": 600,
-       "teamId": 110,
-       "team": {
-        "id": 110,
-        "description": "Internazionale",
-        "abbreviation": "INT",
-        "shortDisplayName": "Inter Milan",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/110/internazionale"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/110/internazionale"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 274231,
-       "type": "athlete",
-       "uid": "s:600~a:190257",
-       "guid": "e559e4c9-460a-9a45-70f4-f7d0534a18ea",
-       "description": "Curtis Jones",
-       "sportId": 600,
-       "athleteId": 190257,
-       "athlete": {
-        "id": 190257,
-        "description": "Curtis Jones",
-        "links": {
-         "mobile": {
-          "athletes": {
-           "href": "https://www.espn.com/soccer/player/_/id/190257/curtis-jones"
-          }
-         },
-         "web": {
-          "athletes": {
-           "href": "https://www.espn.com/soccer/player/_/id/190257/curtis-jones"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137798,
-       "type": "league",
-       "uid": "s:600~l:730",
-       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
-       "description": "Italian Serie A",
-       "sportId": 600,
-       "leagueId": 12,
-       "league": {
-        "id": 730,
-        "description": "Italian Serie A",
-        "abbreviation": "Serie A",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         }
-        }
-       }
-      }
-     ],
-     "byline": "PA",
-     "links": {
-      "api": {
-       "self": {
-        "href": "https://content.core.api.espn.com/v1/sports/news/50265302"
-       }
-      },
-      "app": {
-       "sportscenter": {
-        "href": "sportscenter://x-callback-url/showStory?uid=50265302"
-       }
-      },
-      "mobile": {
-       "href": "http://m.espn.go.com/soccer/story?storyId=50265302"
-      },
-      "web": {
-       "href": "https://www.espn.com/soccer/story/_/id/50265302/curtis-jones-serie-slow-inter-liverpool"
-      }
-     },
-     "premium": false
-    },
-    {
-     "id": 50259678,
-     "nowId": "1-50259678",
-     "contentKey": "50259678-1-5-1",
-     "dataSourceIdentifier": "1ae9d3195f0f5",
-     "type": "HeadlineNews",
-     "headline": "AC Milan condemn racist abuse of Mike Maignan after red card vs. Bournemouth",
-     "description": "AC Milan have condemned what they called \"serious and unacceptable racist abuse\" directed at goalkeeper Mike Maignan on social media following his red card in Thursday's Europa League loss to Bournemouth.",
-     "lastModified": "2026-10-23T19:08:17Z",
-     "published": "2026-10-23T19:08:17Z",
-     "images": [
-      {
-       "dataSourceIdentifier": "e833abde7c48d",
-       "id": 50259806,
-       "type": "header",
-       "name": "Mike Maignan Milan [1296x729]",
-       "caption": "Mike Maignan was shown a red card in AC Milan's loss to Bournemouth.",
-       "alt": "Mike Maignan of AC Milan prepares ahead of Bournemouth's first penalty during the UEFA Europa League 2026/27 League Phase MD3 match between AFC Bournemouth and AC Milan at Bournemouth Stadium on October 22, 2026 in Bournemouth, England.",
-       "credit": "MB Media/Getty Images",
-       "height": 729,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/1023/r1735121_1296x729_16-9.jpg"
-      }
-     ],
-     "categories": [
-      {
-       "id": 81497,
-       "type": "league",
-       "uid": "s:600",
-       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
-       "description": "Soccer",
-       "sportId": 600,
-       "leagueId": 600,
-       "league": {
-        "id": 600,
-        "description": "Soccer",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 142590,
-       "type": "team",
-       "uid": "s:600~t:103",
-       "guid": "7ca4fb35-d78e-49f0-67fe-7fa95588e28d",
-       "description": "AC Milan",
-       "sportId": 600,
-       "teamId": 103,
-       "team": {
-        "id": 103,
-        "description": "AC Milan",
-        "abbreviation": "MIL",
-        "shortDisplayName": "Milan",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 243094,
-       "type": "athlete",
-       "uid": "s:600~a:189026",
-       "guid": "3266a4c5-2370-d4a1-f0ef-bf1af7d14b29",
-       "description": "Mike Maignan",
-       "sportId": 600,
-       "athleteId": 189026,
-       "athlete": {
-        "id": 189026,
-        "description": "Mike Maignan",
-        "links": {
-         "mobile": {
-          "athletes": {
-           "href": "https://www.espn.com/soccer/player/_/id/189026/mike-maignan"
-          }
-         },
-         "web": {
-          "athletes": {
-           "href": "https://www.espn.com/soccer/player/_/id/189026/mike-maignan"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 142305,
-       "type": "team",
-       "uid": "s:600~t:349",
-       "guid": "1e76c2fe-68a5-3950-8881-47e916c0c115",
-       "description": "AFC Bournemouth",
-       "sportId": 600,
-       "teamId": 349,
-       "team": {
-        "id": 349,
-        "description": "AFC Bournemouth",
-        "abbreviation": "BOU",
-        "shortDisplayName": "Bournemouth",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/349/afc-bournemouth"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/349/afc-bournemouth"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137789,
-       "type": "league",
-       "uid": "s:600~l:776",
-       "guid": "ffe3e604-9c8d-38dc-ab82-c033a9112867",
-       "description": "UEFA Europa League",
-       "sportId": 600,
-       "leagueId": 2310,
-       "league": {
-        "id": 776,
-        "description": "UEFA Europa League",
-        "abbreviation": "UEFA Europa League",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/uefa.europa"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/uefa.europa"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137798,
-       "type": "league",
-       "uid": "s:600~l:730",
-       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
-       "description": "Italian Serie A",
-       "sportId": 600,
-       "leagueId": 12,
-       "league": {
-        "id": 730,
-        "description": "Italian Serie A",
-        "abbreviation": "Serie A",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 72584,
-       "type": "team",
-       "uid": "s:600~t:478",
-       "guid": "81be996c-0f98-eec4-6284-c6be0d186360",
-       "description": "France",
-       "sportId": 600,
-       "teamId": 478,
-       "team": {
-        "id": 478,
-        "description": "France",
-        "abbreviation": "FRA",
-        "shortDisplayName": "France",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/team/_/id/478/france"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/team/_/id/478/france"
-          }
-         }
-        }
-       }
-      }
-     ],
-     "byline": "ESPN News Services",
-     "links": {
-      "api": {
-       "self": {
-        "href": "https://content.core.api.espn.com/v1/sports/news/50259678"
-       }
-      },
-      "app": {
-       "sportscenter": {
-        "href": "sportscenter://x-callback-url/showStory?uid=50259678"
-       }
-      },
-      "mobile": {
-       "href": "http://m.espn.go.com/soccer/story?storyId=50259678"
-      },
-      "web": {
-       "href": "https://www.espn.com/soccer/story/_/id/50259678/ac-milan-mike-maignan-red-card-racist-abuse-bournemouth"
-      }
-     },
-     "premium": false
-    },
-    {
-     "id": 50249819,
-     "nowId": "1-50249819",
-     "contentKey": "50249819-1-6-1",
-     "dataSourceIdentifier": "ced9417abd05c",
-     "type": "Story",
-     "headline": "Musah is back in Milan, back in midfield and back in contention for the USMNT",
-     "description": "Last year, on loan at Atalanta, Yunus Musah wasn't playing much, certainly not in his preferred midfield role. Now back at Milan, that's all changed.",
-     "lastModified": "2026-10-23T13:59:46Z",
-     "published": "2026-10-23T13:59:46Z",
-     "images": [
-      {
-       "dataSourceIdentifier": "bc339d7193e4f",
-       "id": 50249794,
-       "type": "header",
-       "name": "Yunus Musah 260725 [1296x729]",
-       "caption": "Yunus Musah",
-       "alt": "Yunus Musah",
-       "credit": "Claudio Villa/AC Milan via Getty Images",
-       "height": 729,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/1022/r1734554_1296x729_16-9.jpg"
-      },
-      {
-       "type": "Media",
-       "name": "Jones: I'm excited about the future of the USMNT",
-       "caption": "Jones: I'm excited about the future of the USMNT",
-       "height": 324,
-       "width": 576,
-       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1007/dm_261007_COM_SOC_ANALYSIS_Jones_I_m_excited_about_the_future_of_the_USMNT_2026_10_6/dm_261007_COM_SOC_ANALYSIS_Jones_I_m_excited_about_the_future_of_the_USMNT_2026_10_6.jpg"
-      }
-     ],
-     "categories": [
-      {
-       "id": 81497,
-       "type": "league",
-       "uid": "s:600",
-       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
-       "description": "Soccer",
-       "sportId": 600,
-       "leagueId": 600,
-       "league": {
-        "id": 600,
-        "description": "Soccer",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 72593,
-       "type": "team",
-       "uid": "s:600~t:660",
-       "guid": "e6b65d49-258c-b730-b7db-df75c6b1f714",
-       "description": "United States",
-       "sportId": 600,
-       "teamId": 660,
-       "team": {
-        "id": 660,
-        "description": "United States",
-        "abbreviation": "USA",
-        "shortDisplayName": "USA",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/team/_/id/660/united-states"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/team/_/id/660/united-states"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137798,
-       "type": "league",
-       "uid": "s:600~l:730",
-       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
-       "description": "Italian Serie A",
-       "sportId": 600,
-       "leagueId": 12,
-       "league": {
-        "id": 730,
-        "description": "Italian Serie A",
-        "abbreviation": "Serie A",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 142590,
-       "type": "team",
-       "uid": "s:600~t:103",
-       "guid": "7ca4fb35-d78e-49f0-67fe-7fa95588e28d",
-       "description": "AC Milan",
-       "sportId": 600,
-       "teamId": 103,
-       "team": {
-        "id": 103,
-        "description": "AC Milan",
-        "abbreviation": "MIL",
-        "shortDisplayName": "Milan",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 446000,
-       "type": "athlete",
-       "uid": "s:600~a:307527",
-       "guid": "2362bba7-e1c6-3585-8d4a-d78775ad6eaf",
-       "description": "Yunus Musah",
-       "sportId": 600,
-       "athleteId": 307527,
-       "athlete": {
-        "id": 307527,
-        "description": "Yunus Musah",
-        "links": {
-         "mobile": {
-          "athletes": {
-           "href": "https://www.espn.com/soccer/player/_/id/307527/yunus-musah"
-          }
-         },
-         "web": {
-          "athletes": {
-           "href": "https://www.espn.com/soccer/player/_/id/307527/yunus-musah"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 696446,
-       "type": "contributor",
-       "guid": "989b38a0-5870-3a49-a6f3-211bd3b85535",
-       "description": "Jeff Carlisle",
-       "slug": "jeff-carlisle",
-       "contributor": {
-        "id": 1275,
-        "description": "Jeff Carlisle",
-        "links": {
-         "mobile": {
-          "contributors": {
-           "href": "https://www.espn.com/contributor/jeff-carlisle"
-          }
-         },
-         "web": {
-          "contributors": {
-           "href": "https://www.espn.com/contributor/jeff-carlisle"
-          }
-         }
-        }
-       }
-      }
-     ],
-     "byline": "Jeff Carlisle",
-     "links": {
-      "api": {
-       "self": {
-        "href": "https://content.core.api.espn.com/v1/sports/news/50249819"
-       }
-      },
-      "app": {
-       "sportscenter": {
-        "href": "sportscenter://x-callback-url/showStory?uid=50249819"
-       }
-      },
-      "mobile": {
-       "href": "http://m.espn.go.com/soccer/story?storyId=50249819"
-      },
-      "web": {
-       "href": "https://www.espn.com/soccer/story/_/id/50249819/yunus-musah-back-ac-milan-back-midfield-back-contention-usmnt"
-      }
-     },
-     "premium": false
-    },
-    {
-     "id": 50166049,
-     "nowId": "1-50166049",
-     "contentKey": "50166049-1-6-1",
-     "dataSourceIdentifier": "c731297feaa3d",
-     "type": "Story",
-     "headline": "A global experiment: Can ESPN predict the Ballon d'Or awards?",
-     "description": "The Ballon d'Or awards are typically tough to predict, but can ESPN and our global resources do just that?",
-     "lastModified": "2026-10-23T08:57:06Z",
-     "published": "2026-10-23T08:57:06Z",
-     "images": [
-      {
-       "dataSourceIdentifier": "5714dc2ea235d",
-       "id": 50140669,
-       "type": "header",
-       "name": "261020_soc_ballon-dor [1296x729]",
-       "caption": "261020_soc_ballon-dor",
-       "alt": "261020_soc_ballon-dor",
-       "credit": "ESPN Illustration",
-       "height": 729,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/1009/261020_soc_ballon-dor_mixed_16x9.jpg"
-      },
-      {
-       "dataSourceIdentifier": "8b3d1f888c8c8",
-       "id": 50140681,
-       "type": "header",
-       "name": "261020_soc_ballon-dor [1296x864]",
-       "caption": "261020_soc_ballon-dor",
-       "alt": "261020_soc_ballon-dor",
-       "credit": "ESPN Illustration",
-       "height": 864,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/1009/261020_soc_ballon-dor_mixed_3x2.jpg"
-      },
-      {
-       "type": "Media",
-       "name": "Enrique questions why Doué isn't a Ballon d'Or contender",
-       "caption": "Enrique questions why Doué isn't a Ballon d'Or contender",
-       "height": 324,
-       "width": 576,
-       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/0918/dm_260918_Enrique_questions_why_Doue_isnt_a_Ballon_dOr_contender/dm_260918_Enrique_questions_why_Doue_isnt_a_Ballon_dOr_contender.jpg"
-      }
-     ],
-     "categories": [
-      {
-       "id": 81497,
-       "type": "league",
-       "uid": "s:600",
-       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
-       "description": "Soccer",
-       "sportId": 600,
-       "leagueId": 600,
-       "league": {
-        "id": 600,
-        "description": "Soccer",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137781,
-       "type": "league",
-       "uid": "s:600~l:700",
-       "guid": "6949f3af-300c-35f1-beab-b95669eedd38",
-       "description": "English Premier League",
-       "sportId": 600,
-       "leagueId": 23,
-       "league": {
-        "id": 700,
-        "description": "English Premier League",
-        "abbreviation": "Premier League",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/eng.1"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/eng.1"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137787,
-       "type": "league",
-       "uid": "s:600~l:740",
-       "guid": "cf7b0c51-7c48-3e9a-8abb-0c01b1a973a0",
-       "description": "Spanish LALIGA",
-       "sportId": 600,
-       "leagueId": 15,
-       "league": {
-        "id": 740,
-        "description": "Spanish LALIGA",
-        "abbreviation": "LALIGA",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/esp.1"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/esp.1"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137799,
-       "type": "league",
-       "uid": "s:600~l:710",
-       "guid": "b7217910-7773-3ea8-bc69-30c19c579306",
-       "description": "French Ligue 1",
-       "sportId": 600,
-       "leagueId": 9,
-       "league": {
-        "id": 710,
-        "description": "French Ligue 1",
-        "abbreviation": "Ligue 1",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/fra.1"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/fra.1"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137798,
-       "type": "league",
-       "uid": "s:600~l:730",
-       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
-       "description": "Italian Serie A",
-       "sportId": 600,
-       "leagueId": 12,
-       "league": {
-        "id": 730,
-        "description": "Italian Serie A",
-        "abbreviation": "Serie A",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137790,
-       "type": "league",
-       "uid": "s:600~l:720",
-       "guid": "30244926-00c4-3f69-8946-f8421c97ff71",
-       "description": "German Bundesliga",
-       "sportId": 600,
-       "leagueId": 10,
-       "league": {
-        "id": 720,
-        "description": "German Bundesliga",
-        "abbreviation": "Bundesliga",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ger.1"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ger.1"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 250037,
-       "type": "athlete",
-       "uid": "s:600~a:142200",
-       "guid": "66b16016-7a3a-434f-ae82-e767fc5fac88",
-       "description": "Harry Kane",
-       "sportId": 600,
-       "athleteId": 142200,
-       "athlete": {
-        "id": 142200,
-        "description": "Harry Kane",
-        "links": {
-         "mobile": {
-          "athletes": {
-           "href": "https://www.espn.com/soccer/player/_/id/142200/harry-kane"
-          }
-         },
-         "web": {
-          "athletes": {
-           "href": "https://www.espn.com/soccer/player/_/id/142200/harry-kane"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 596595,
-       "type": "athlete",
-       "uid": "s:600~a:362150",
-       "guid": "de67ce6f-0991-36b9-afb9-c008f21dc4b4",
-       "description": "Lamine Yamal",
-       "sportId": 600,
-       "athleteId": 362150,
-       "athlete": {
-        "id": 362150,
-        "description": "Lamine Yamal",
-        "links": {
-         "mobile": {
-          "athletes": {
-           "href": "https://www.espn.com/soccer/player/_/id/362150/lamine-yamal"
-          }
-         },
-         "web": {
-          "athletes": {
-           "href": "https://www.espn.com/soccer/player/_/id/362150/lamine-yamal"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 238474,
-       "type": "athlete",
-       "uid": "s:600~a:45843",
-       "guid": "dc5f8d51-332b-0ab2-b4b0-c97efdc624e0",
-       "description": "Lionel Messi",
-       "sportId": 600,
-       "athleteId": 45843,
-       "athlete": {
-        "id": 45843,
-        "description": "Lionel Messi",
-        "links": {
-         "mobile": {
-          "athletes": {
-           "href": "https://www.espn.com/soccer/player/_/id/45843/lionel-messi"
-          }
-         },
-         "web": {
-          "athletes": {
-           "href": "https://www.espn.com/soccer/player/_/id/45843/lionel-messi"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 145507,
-       "type": "league",
-       "uid": "s:600~l:770",
-       "guid": "d9d3698e-67b3-3ca5-9eb4-f23b8e19a464",
-       "description": "MLS",
-       "sportId": 600,
-       "leagueId": 19,
-       "league": {
-        "id": 770,
-        "description": "MLS",
-        "abbreviation": "MLS",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/usa.1"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/usa.1"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 233179,
-       "type": "athlete",
-       "uid": "s:600~a:231388",
-       "guid": "61edbcca-c316-afde-575f-d9dd69176cc4",
-       "description": "Kylian Mbappé",
-       "sportId": 600,
-       "athleteId": 231388,
-       "athlete": {
-        "id": 231388,
-        "description": "Kylian Mbappé",
-        "links": {
-         "mobile": {
-          "athletes": {
-           "href": "https://www.espn.com/soccer/player/_/id/231388/kylian-mbappe"
-          }
-         },
-         "web": {
-          "athletes": {
-           "href": "https://www.espn.com/soccer/player/_/id/231388/kylian-mbappe"
-          }
-         }
-        }
-       }
-      }
-     ],
-     "byline": "ESPN",
-     "links": {
-      "api": {
-       "self": {
-        "href": "https://content.core.api.espn.com/v1/sports/news/50166049"
-       }
-      },
-      "app": {
-       "sportscenter": {
-        "href": "sportscenter://x-callback-url/showStory?uid=50166049"
-       }
-      },
-      "mobile": {
-       "href": "http://m.espn.go.com/soccer/story?storyId=50166049"
-      },
-      "web": {
-       "href": "https://www.espn.com/soccer/story/_/id/50166049/a-global-experiment-espn-predict-ballon-dor"
-      }
-     },
-     "premium": false
-    },
-    {
-     "id": 50239096,
-     "nowId": "1-50239096",
-     "contentKey": "50239096-1-6-1",
-     "dataSourceIdentifier": "f77ff8f424471",
-     "type": "Story",
-     "headline": "Who are Como? The vacation-destination club that just rocked Man United",
-     "description": "Seven years ago, Como were a team of amateurs. Now they're a Champions League club with a brand born from the city's reputation as a holiday hotspot.",
-     "lastModified": "2026-10-22T07:47:14Z",
-     "published": "2026-10-22T07:47:14Z",
-     "images": [
-      {
-       "dataSourceIdentifier": "381580ed78351",
-       "id": 50239656,
-       "type": "header",
-       "name": "Nico Paz 261021 [1296x729]",
-       "caption": "Nico Paz",
-       "alt": "Nico Paz",
-       "credit": "Mattia Ozbot - UEFA/UEFA via Getty Images",
-       "height": 729,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/1021/r1734022_1296x729_16-9.jpg"
-      },
-      {
-       "dataSourceIdentifier": "d9496a729f6e9",
-       "id": 50239634,
-       "type": "header",
-       "name": "Stadio Giuseppe Sinigaglia 261011 [1296x729]",
-       "caption": "Stadio Giuseppe Sinigaglia",
-       "alt": "Stadio Giuseppe Sinigaglia",
-       "credit": "Mattia Ozbot/Getty Images",
-       "height": 729,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/1021/r1734021_1296x729_16-9.jpg"
-      },
-      {
-       "type": "Media",
-       "name": "Dawson: Carrick's future under mounting pressure after loss vs. Como",
-       "caption": "Dawson: Carrick's future under mounting pressure after loss vs. Como",
-       "height": 324,
-       "width": 576,
-       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1021/dm_261021_Dawson_Carricks_future_under_mounting_pressure_after_loss_vs_Como/dm_261021_Dawson_Carricks_future_under_mounting_pressure_after_loss_vs_Como.jpg"
-      }
-     ],
-     "categories": [
-      {
-       "id": 81497,
-       "type": "league",
-       "uid": "s:600",
-       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
-       "description": "Soccer",
-       "sportId": 600,
-       "leagueId": 600,
-       "league": {
-        "id": 600,
-        "description": "Soccer",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137793,
-       "type": "league",
-       "uid": "s:600~l:775",
-       "guid": "da52796f-2621-3351-8e77-955da92ea82d",
-       "description": "UEFA Champions League",
-       "sportId": 600,
-       "leagueId": 2,
-       "league": {
-        "id": 775,
-        "description": "UEFA Champions League",
-        "abbreviation": "UEFA Champions League",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/uefa.champions"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/uefa.champions"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 193180,
-       "type": "team",
-       "uid": "s:600~t:2572",
-       "guid": "3f2c043b-2747-1851-c74a-4e05fd6e614b",
-       "description": "Como",
-       "sportId": 600,
-       "teamId": 2572,
-       "team": {
-        "id": 2572,
-        "description": "Como",
-        "abbreviation": "COMO",
-        "shortDisplayName": "Como",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/2572/como"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/2572/como"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137798,
-       "type": "league",
-       "uid": "s:600~l:730",
-       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
-       "description": "Italian Serie A",
-       "sportId": 600,
-       "leagueId": 12,
-       "league": {
-        "id": 730,
-        "description": "Italian Serie A",
-        "abbreviation": "Serie A",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 696369,
-       "type": "contributor",
-       "guid": "2a444df4-ef0c-3bef-bb70-ef5d02615d57",
-       "description": "Rob Dawson",
-       "slug": "rob-dawson",
-       "contributor": {
-        "id": 3040,
-        "description": "Rob Dawson"
-       }
-      }
-     ],
-     "byline": "Rob Dawson",
-     "links": {
-      "api": {
-       "self": {
-        "href": "https://content.core.api.espn.com/v1/sports/news/50239096"
-       }
-      },
-      "app": {
-       "sportscenter": {
-        "href": "sportscenter://x-callback-url/showStory?uid=50239096"
-       }
-      },
-      "mobile": {
-       "href": "http://m.espn.go.com/soccer/story?storyId=50239096"
-      },
-      "web": {
-       "href": "https://www.espn.com/soccer/story/_/id/50239096/who-como-1907-vacation-destination-club-just-rocked-manchester-united"
-      }
-     },
-     "premium": false
-    }
-   ]
-  },
   "rosters": [
    {
     "homeAway": "home",
@@ -13969,241 +12638,1337 @@
     "formation": "3-4-3"
    }
   ],
-  "article": {
-   "id": 49674203,
-   "nowId": "1-49674203",
-   "contentKey": "49674203-1-21-1",
-   "dataSourceIdentifier": "c79e08f7dcaec",
-   "publishedkey": "soccer401874931",
-   "type": "Recap",
-   "gameId": "401874931",
-   "headline": "Champions Inter dominate Monza in Serie A opener",
-   "description": "Inter Milan launched their Serie A title defence with a 4-1 opening-day win against newly promoted Monza at San Siro.",
-   "linkText": "Champs Inter make winning start as Stones debuts",
-   "categorized": "2026-08-23T00:37:30Z",
-   "originallyPosted": "2026-08-22T18:40:00Z",
-   "lastModified": "2026-08-23T00:37:28Z",
-   "published": "2026-08-22T18:40:00Z",
-   "section": "Soccer",
-   "images": [
+  "news": {
+   "header": "Serie A News",
+   "link": {
+    "language": "en",
+    "rel": [
+     "index",
+     "desktop",
+     "league"
+    ],
+    "href": "https://www.espn.com/football/league/_/name/ita.1",
+    "text": "All Serie A News",
+    "shortText": "All News",
+    "isExternal": false,
+    "isPremium": false
+   },
+   "articles": [
     {
-     "dataSourceIdentifier": "f3d2b50dbcd8a",
-     "id": 49693086,
-     "type": "header",
-     "name": "Inter [1296x729]",
-     "credit": "Getty",
-     "height": 729,
-     "width": 1296,
-     "url": "https://a.espncdn.com/photo/2026/0822/r1705378_1296x729_16-9.jpg",
-     "peers": [
+     "id": 50267803,
+     "nowId": "1-50267803",
+     "contentKey": "50267803-1-5-1",
+     "dataSourceIdentifier": "67382bac72c1c",
+     "type": "HeadlineNews",
+     "headline": "Napoli's Scott McTominay bags brace in derby day thriller against Roma",
+     "description": "Napoli's stuttering start in Serie A continued as Roma twice fought back to secure a 3-3 draw in a dramatic Derby del Sole.",
+     "lastModified": "2026-10-24T18:27:19Z",
+     "published": "2026-10-24T18:27:19Z",
+     "images": [
       {
-       "dataSourceIdentifier": "54771e74afac8",
-       "id": 49693102,
+       "dataSourceIdentifier": "8d0e6183744c6",
+       "id": 50267753,
        "type": "header",
-       "name": "Inter [1296x1296]",
-       "credit": "Getty",
-       "height": 1296,
+       "name": "Napoli's Scott McTominay [1296x729]",
+       "alt": "NAPLES, ITALY - OCTOBER 24: Napoli's Scott McTominay (L) celebrates as he scores his team's second goal during the Italian Serie A football match between Napoli and Roma at Diego Armando Maradona Stadium in Naples, Italy, on October 24, 2026.",
+       "credit": "Isabella Bonotto/Anadolu via Getty Images",
+       "height": 729,
        "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/0822/r1705378_1296x1296_1-1.jpg"
+       "url": "https://a.espncdn.com/photo/2026/1024/r1735526_1296x729_16-9.jpg"
       },
       {
-       "dataSourceIdentifier": "f3d2b50dbcd8a",
-       "id": 49693086,
+       "dataSourceIdentifier": "69d95f7bd97f5",
+       "id": 50267777,
        "type": "header",
-       "name": "Inter [1296x729]",
+       "name": "Leonardo Balerdi of AS Roma celebrates [1296x729]",
+       "alt": "Leonardo Balerdi of AS Roma celebrates after scored the second goal for his team during the Serie A match between SSC Napoli and AS Roma at Stadio Diego Armando Maradona on October 24, 2026 in Naples, Italy.",
+       "credit": "Fabio Rossi/AS Roma via Getty Images",
+       "height": 729,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/1024/r1735528_1296x729_16-9.jpg"
+      }
+     ],
+     "categories": [
+      {
+       "id": 81497,
+       "type": "league",
+       "uid": "s:600",
+       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+       "description": "Soccer",
+       "sportId": 600,
+       "leagueId": 600,
+       "league": {
+        "id": 600,
+        "description": "Soccer",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142589,
+       "type": "team",
+       "uid": "s:600~t:114",
+       "guid": "20179aab-ac9f-93cf-f139-404e49a3f3cb",
+       "description": "Napoli",
+       "sportId": 600,
+       "teamId": 114,
+       "team": {
+        "id": 114,
+        "description": "Napoli",
+        "abbreviation": "NAP",
+        "shortDisplayName": "Napoli",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/114/napoli"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/114/napoli"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142587,
+       "type": "team",
+       "uid": "s:600~t:104",
+       "guid": "154c1cfa-e721-b7dd-9a1b-9b9762936b76",
+       "description": "AS Roma",
+       "sportId": 600,
+       "teamId": 104,
+       "team": {
+        "id": 104,
+        "description": "AS Roma",
+        "abbreviation": "ROMA",
+        "shortDisplayName": "AS Roma",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/104/as-roma"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/104/as-roma"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137798,
+       "type": "league",
+       "uid": "s:600~l:730",
+       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
+       "description": "Italian Serie A",
+       "sportId": 600,
+       "leagueId": 12,
+       "league": {
+        "id": 730,
+        "description": "Italian Serie A",
+        "abbreviation": "Serie A",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         }
+        }
+       }
+      }
+     ],
+     "byline": "PA",
+     "links": {
+      "api": {
+       "self": {
+        "href": "https://content.core.api.espn.com/v1/sports/news/50267803"
+       }
+      },
+      "app": {
+       "sportscenter": {
+        "href": "sportscenter://x-callback-url/showStory?uid=50267803"
+       }
+      },
+      "mobile": {
+       "href": "http://m.espn.go.com/soccer/story?storyId=50267803"
+      },
+      "web": {
+       "href": "https://www.espn.com/soccer/story/_/id/50267803/napoli-scott-mctominay-bags-brace-derby-day-thriller-roma"
+      }
+     },
+     "premium": false
+    },
+    {
+     "id": 50265302,
+     "nowId": "1-50265302",
+     "contentKey": "50265302-1-5-1",
+     "dataSourceIdentifier": "2f8128b1ff9a2",
+     "type": "HeadlineNews",
+     "headline": "Curtis Jones: Serie A too slow? Inter arrival explains Liverpool similarity",
+     "description": "Inter Milan midfielder Curtis Jones insists Serie A is no different to the Premier League when it comes to playing for the top clubs.",
+     "lastModified": "2026-10-24T13:00:33Z",
+     "published": "2026-10-24T13:00:33Z",
+     "images": [
+      {
+       "dataSourceIdentifier": "547be7f4157b8",
+       "id": 50265280,
+       "type": "header",
+       "name": "Curtis Jones [1296x729]",
        "credit": "Getty",
        "height": 729,
        "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/0822/r1705378_1296x729_16-9.jpg"
+       "url": "https://a.espncdn.com/photo/2026/1024/r1735381_1296x729_16-9.jpg"
       },
       {
-       "dataSourceIdentifier": "a3652cddc7067",
-       "id": 49693091,
-       "type": "header",
-       "name": "Inter [864x1296]",
-       "credit": "Getty",
-       "height": 1296,
-       "width": 864,
-       "url": "https://a.espncdn.com/photo/2026/0822/r1705378_864x1296_2-3.jpg"
+       "type": "Media",
+       "name": "Leboeuf hails Ngumoha after Liverpool's comeback vs. Villarreal",
+       "caption": "Leboeuf hails Ngumoha after Liverpool's comeback vs. Villarreal",
+       "height": 324,
+       "width": 576,
+       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1020/dm_261020_COM_SOC_Analysis_Leboeuf_hails_Ngumoha_after_Liverpools_comeback_vs_Villarreal_20261020_GLOBAL/dm_261020_COM_SOC_Analysis_Leboeuf_hails_Ngumoha_after_Liverpools_comeback_vs_Villarreal_20261020_GLOBAL.jpg"
+      }
+     ],
+     "categories": [
+      {
+       "id": 81497,
+       "type": "league",
+       "uid": "s:600",
+       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+       "description": "Soccer",
+       "sportId": 600,
+       "leagueId": 600,
+       "league": {
+        "id": 600,
+        "description": "Soccer",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         }
+        }
+       }
       },
       {
-       "dataSourceIdentifier": "712e23d82c268",
-       "id": 49693095,
+       "id": 142295,
+       "type": "team",
+       "uid": "s:600~t:364",
+       "guid": "a47fbcec-c948-cf4c-9e41-3dfa37588c9c",
+       "description": "Liverpool",
+       "sportId": 600,
+       "teamId": 364,
+       "team": {
+        "id": 364,
+        "description": "Liverpool",
+        "abbreviation": "LIV",
+        "shortDisplayName": "Liverpool",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/364/liverpool"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/364/liverpool"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142583,
+       "type": "team",
+       "uid": "s:600~t:110",
+       "guid": "864b1935-65cc-fb9b-850d-790e4c8a8d47",
+       "description": "Internazionale",
+       "sportId": 600,
+       "teamId": 110,
+       "team": {
+        "id": 110,
+        "description": "Internazionale",
+        "abbreviation": "INT",
+        "shortDisplayName": "Inter Milan",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/110/internazionale"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/110/internazionale"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 274231,
+       "type": "athlete",
+       "uid": "s:600~a:190257",
+       "guid": "e559e4c9-460a-9a45-70f4-f7d0534a18ea",
+       "description": "Curtis Jones",
+       "sportId": 600,
+       "athleteId": 190257,
+       "athlete": {
+        "id": 190257,
+        "description": "Curtis Jones",
+        "links": {
+         "mobile": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/190257/curtis-jones"
+          }
+         },
+         "web": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/190257/curtis-jones"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137798,
+       "type": "league",
+       "uid": "s:600~l:730",
+       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
+       "description": "Italian Serie A",
+       "sportId": 600,
+       "leagueId": 12,
+       "league": {
+        "id": 730,
+        "description": "Italian Serie A",
+        "abbreviation": "Serie A",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         }
+        }
+       }
+      }
+     ],
+     "byline": "PA",
+     "links": {
+      "api": {
+       "self": {
+        "href": "https://content.core.api.espn.com/v1/sports/news/50265302"
+       }
+      },
+      "app": {
+       "sportscenter": {
+        "href": "sportscenter://x-callback-url/showStory?uid=50265302"
+       }
+      },
+      "mobile": {
+       "href": "http://m.espn.go.com/soccer/story?storyId=50265302"
+      },
+      "web": {
+       "href": "https://www.espn.com/soccer/story/_/id/50265302/curtis-jones-serie-slow-inter-liverpool"
+      }
+     },
+     "premium": false
+    },
+    {
+     "id": 50259678,
+     "nowId": "1-50259678",
+     "contentKey": "50259678-1-5-1",
+     "dataSourceIdentifier": "1ae9d3195f0f5",
+     "type": "HeadlineNews",
+     "headline": "AC Milan condemn racist abuse of Mike Maignan after red card vs. Bournemouth",
+     "description": "AC Milan have condemned what they called \"serious and unacceptable racist abuse\" directed at goalkeeper Mike Maignan on social media following his red card in Thursday's Europa League loss to Bournemouth.",
+     "lastModified": "2026-10-23T19:08:17Z",
+     "published": "2026-10-23T19:08:17Z",
+     "images": [
+      {
+       "dataSourceIdentifier": "e833abde7c48d",
+       "id": 50259806,
        "type": "header",
-       "name": "Inter [1296x864]",
-       "credit": "Getty",
+       "name": "Mike Maignan Milan [1296x729]",
+       "caption": "Mike Maignan was shown a red card in AC Milan's loss to Bournemouth.",
+       "alt": "Mike Maignan of AC Milan prepares ahead of Bournemouth's first penalty during the UEFA Europa League 2026/27 League Phase MD3 match between AFC Bournemouth and AC Milan at Bournemouth Stadium on October 22, 2026 in Bournemouth, England.",
+       "credit": "MB Media/Getty Images",
+       "height": 729,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/1023/r1735121_1296x729_16-9.jpg"
+      }
+     ],
+     "categories": [
+      {
+       "id": 81497,
+       "type": "league",
+       "uid": "s:600",
+       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+       "description": "Soccer",
+       "sportId": 600,
+       "leagueId": 600,
+       "league": {
+        "id": 600,
+        "description": "Soccer",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142590,
+       "type": "team",
+       "uid": "s:600~t:103",
+       "guid": "7ca4fb35-d78e-49f0-67fe-7fa95588e28d",
+       "description": "AC Milan",
+       "sportId": 600,
+       "teamId": 103,
+       "team": {
+        "id": 103,
+        "description": "AC Milan",
+        "abbreviation": "MIL",
+        "shortDisplayName": "Milan",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 243094,
+       "type": "athlete",
+       "uid": "s:600~a:189026",
+       "guid": "3266a4c5-2370-d4a1-f0ef-bf1af7d14b29",
+       "description": "Mike Maignan",
+       "sportId": 600,
+       "athleteId": 189026,
+       "athlete": {
+        "id": 189026,
+        "description": "Mike Maignan",
+        "links": {
+         "mobile": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/189026/mike-maignan"
+          }
+         },
+         "web": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/189026/mike-maignan"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142305,
+       "type": "team",
+       "uid": "s:600~t:349",
+       "guid": "1e76c2fe-68a5-3950-8881-47e916c0c115",
+       "description": "AFC Bournemouth",
+       "sportId": 600,
+       "teamId": 349,
+       "team": {
+        "id": 349,
+        "description": "AFC Bournemouth",
+        "abbreviation": "BOU",
+        "shortDisplayName": "Bournemouth",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/349/afc-bournemouth"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/349/afc-bournemouth"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137789,
+       "type": "league",
+       "uid": "s:600~l:776",
+       "guid": "ffe3e604-9c8d-38dc-ab82-c033a9112867",
+       "description": "UEFA Europa League",
+       "sportId": 600,
+       "leagueId": 2310,
+       "league": {
+        "id": 776,
+        "description": "UEFA Europa League",
+        "abbreviation": "UEFA Europa League",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.europa"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.europa"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137798,
+       "type": "league",
+       "uid": "s:600~l:730",
+       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
+       "description": "Italian Serie A",
+       "sportId": 600,
+       "leagueId": 12,
+       "league": {
+        "id": 730,
+        "description": "Italian Serie A",
+        "abbreviation": "Serie A",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 72584,
+       "type": "team",
+       "uid": "s:600~t:478",
+       "guid": "81be996c-0f98-eec4-6284-c6be0d186360",
+       "description": "France",
+       "sportId": 600,
+       "teamId": 478,
+       "team": {
+        "id": 478,
+        "description": "France",
+        "abbreviation": "FRA",
+        "shortDisplayName": "France",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/team/_/id/478/france"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/team/_/id/478/france"
+          }
+         }
+        }
+       }
+      }
+     ],
+     "byline": "ESPN News Services",
+     "links": {
+      "api": {
+       "self": {
+        "href": "https://content.core.api.espn.com/v1/sports/news/50259678"
+       }
+      },
+      "app": {
+       "sportscenter": {
+        "href": "sportscenter://x-callback-url/showStory?uid=50259678"
+       }
+      },
+      "mobile": {
+       "href": "http://m.espn.go.com/soccer/story?storyId=50259678"
+      },
+      "web": {
+       "href": "https://www.espn.com/soccer/story/_/id/50259678/ac-milan-mike-maignan-red-card-racist-abuse-bournemouth"
+      }
+     },
+     "premium": false
+    },
+    {
+     "id": 50249819,
+     "nowId": "1-50249819",
+     "contentKey": "50249819-1-6-1",
+     "dataSourceIdentifier": "ced9417abd05c",
+     "type": "Story",
+     "headline": "Musah is back in Milan, back in midfield and back in contention for the USMNT",
+     "description": "Last year, on loan at Atalanta, Yunus Musah wasn't playing much, certainly not in his preferred midfield role. Now back at Milan, that's all changed.",
+     "lastModified": "2026-10-23T13:59:46Z",
+     "published": "2026-10-23T13:59:46Z",
+     "images": [
+      {
+       "dataSourceIdentifier": "bc339d7193e4f",
+       "id": 50249794,
+       "type": "header",
+       "name": "Yunus Musah 260725 [1296x729]",
+       "caption": "Yunus Musah",
+       "alt": "Yunus Musah",
+       "credit": "Claudio Villa/AC Milan via Getty Images",
+       "height": 729,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/1022/r1734554_1296x729_16-9.jpg"
+      },
+      {
+       "type": "Media",
+       "name": "Jones: I'm excited about the future of the USMNT",
+       "caption": "Jones: I'm excited about the future of the USMNT",
+       "height": 324,
+       "width": 576,
+       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1007/dm_261007_COM_SOC_ANALYSIS_Jones_I_m_excited_about_the_future_of_the_USMNT_2026_10_6/dm_261007_COM_SOC_ANALYSIS_Jones_I_m_excited_about_the_future_of_the_USMNT_2026_10_6.jpg"
+      }
+     ],
+     "categories": [
+      {
+       "id": 81497,
+       "type": "league",
+       "uid": "s:600",
+       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+       "description": "Soccer",
+       "sportId": 600,
+       "leagueId": 600,
+       "league": {
+        "id": 600,
+        "description": "Soccer",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 72593,
+       "type": "team",
+       "uid": "s:600~t:660",
+       "guid": "e6b65d49-258c-b730-b7db-df75c6b1f714",
+       "description": "United States",
+       "sportId": 600,
+       "teamId": 660,
+       "team": {
+        "id": 660,
+        "description": "United States",
+        "abbreviation": "USA",
+        "shortDisplayName": "USA",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/team/_/id/660/united-states"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/team/_/id/660/united-states"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137798,
+       "type": "league",
+       "uid": "s:600~l:730",
+       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
+       "description": "Italian Serie A",
+       "sportId": 600,
+       "leagueId": 12,
+       "league": {
+        "id": 730,
+        "description": "Italian Serie A",
+        "abbreviation": "Serie A",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142590,
+       "type": "team",
+       "uid": "s:600~t:103",
+       "guid": "7ca4fb35-d78e-49f0-67fe-7fa95588e28d",
+       "description": "AC Milan",
+       "sportId": 600,
+       "teamId": 103,
+       "team": {
+        "id": 103,
+        "description": "AC Milan",
+        "abbreviation": "MIL",
+        "shortDisplayName": "Milan",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 446000,
+       "type": "athlete",
+       "uid": "s:600~a:307527",
+       "guid": "2362bba7-e1c6-3585-8d4a-d78775ad6eaf",
+       "description": "Yunus Musah",
+       "sportId": 600,
+       "athleteId": 307527,
+       "athlete": {
+        "id": 307527,
+        "description": "Yunus Musah",
+        "links": {
+         "mobile": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/307527/yunus-musah"
+          }
+         },
+         "web": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/307527/yunus-musah"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 696446,
+       "type": "contributor",
+       "guid": "989b38a0-5870-3a49-a6f3-211bd3b85535",
+       "description": "Jeff Carlisle",
+       "slug": "jeff-carlisle",
+       "contributor": {
+        "id": 1275,
+        "description": "Jeff Carlisle",
+        "links": {
+         "mobile": {
+          "contributors": {
+           "href": "https://www.espn.com/contributor/jeff-carlisle"
+          }
+         },
+         "web": {
+          "contributors": {
+           "href": "https://www.espn.com/contributor/jeff-carlisle"
+          }
+         }
+        }
+       }
+      }
+     ],
+     "byline": "Jeff Carlisle",
+     "links": {
+      "api": {
+       "self": {
+        "href": "https://content.core.api.espn.com/v1/sports/news/50249819"
+       }
+      },
+      "app": {
+       "sportscenter": {
+        "href": "sportscenter://x-callback-url/showStory?uid=50249819"
+       }
+      },
+      "mobile": {
+       "href": "http://m.espn.go.com/soccer/story?storyId=50249819"
+      },
+      "web": {
+       "href": "https://www.espn.com/soccer/story/_/id/50249819/yunus-musah-back-ac-milan-back-midfield-back-contention-usmnt"
+      }
+     },
+     "premium": false
+    },
+    {
+     "id": 50166049,
+     "nowId": "1-50166049",
+     "contentKey": "50166049-1-6-1",
+     "dataSourceIdentifier": "c731297feaa3d",
+     "type": "Story",
+     "headline": "A global experiment: Can ESPN predict the Ballon d'Or awards?",
+     "description": "The Ballon d'Or awards are typically tough to predict, but can ESPN and our global resources do just that?",
+     "lastModified": "2026-10-23T08:57:06Z",
+     "published": "2026-10-23T08:57:06Z",
+     "images": [
+      {
+       "dataSourceIdentifier": "5714dc2ea235d",
+       "id": 50140669,
+       "type": "header",
+       "name": "261020_soc_ballon-dor [1296x729]",
+       "caption": "261020_soc_ballon-dor",
+       "alt": "261020_soc_ballon-dor",
+       "credit": "ESPN Illustration",
+       "height": 729,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/1009/261020_soc_ballon-dor_mixed_16x9.jpg"
+      },
+      {
+       "dataSourceIdentifier": "8b3d1f888c8c8",
+       "id": 50140681,
+       "type": "header",
+       "name": "261020_soc_ballon-dor [1296x864]",
+       "caption": "261020_soc_ballon-dor",
+       "alt": "261020_soc_ballon-dor",
+       "credit": "ESPN Illustration",
        "height": 864,
        "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/0822/r1705378_1296x864_3-2.jpg"
+       "url": "https://a.espncdn.com/photo/2026/1009/261020_soc_ballon-dor_mixed_3x2.jpg"
       },
       {
-       "dataSourceIdentifier": "1414f03313afb",
-       "id": 49693099,
+       "type": "Media",
+       "name": "Enrique questions why Doué isn't a Ballon d'Or contender",
+       "caption": "Enrique questions why Doué isn't a Ballon d'Or contender",
+       "height": 324,
+       "width": 576,
+       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/0918/dm_260918_Enrique_questions_why_Doue_isnt_a_Ballon_dOr_contender/dm_260918_Enrique_questions_why_Doue_isnt_a_Ballon_dOr_contender.jpg"
+      }
+     ],
+     "categories": [
+      {
+       "id": 81497,
+       "type": "league",
+       "uid": "s:600",
+       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+       "description": "Soccer",
+       "sportId": 600,
+       "leagueId": 600,
+       "league": {
+        "id": 600,
+        "description": "Soccer",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137781,
+       "type": "league",
+       "uid": "s:600~l:700",
+       "guid": "6949f3af-300c-35f1-beab-b95669eedd38",
+       "description": "English Premier League",
+       "sportId": 600,
+       "leagueId": 23,
+       "league": {
+        "id": 700,
+        "description": "English Premier League",
+        "abbreviation": "Premier League",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137787,
+       "type": "league",
+       "uid": "s:600~l:740",
+       "guid": "cf7b0c51-7c48-3e9a-8abb-0c01b1a973a0",
+       "description": "Spanish LALIGA",
+       "sportId": 600,
+       "leagueId": 15,
+       "league": {
+        "id": 740,
+        "description": "Spanish LALIGA",
+        "abbreviation": "LALIGA",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/esp.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/esp.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137799,
+       "type": "league",
+       "uid": "s:600~l:710",
+       "guid": "b7217910-7773-3ea8-bc69-30c19c579306",
+       "description": "French Ligue 1",
+       "sportId": 600,
+       "leagueId": 9,
+       "league": {
+        "id": 710,
+        "description": "French Ligue 1",
+        "abbreviation": "Ligue 1",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/fra.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/fra.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137798,
+       "type": "league",
+       "uid": "s:600~l:730",
+       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
+       "description": "Italian Serie A",
+       "sportId": 600,
+       "leagueId": 12,
+       "league": {
+        "id": 730,
+        "description": "Italian Serie A",
+        "abbreviation": "Serie A",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137790,
+       "type": "league",
+       "uid": "s:600~l:720",
+       "guid": "30244926-00c4-3f69-8946-f8421c97ff71",
+       "description": "German Bundesliga",
+       "sportId": 600,
+       "leagueId": 10,
+       "league": {
+        "id": 720,
+        "description": "German Bundesliga",
+        "abbreviation": "Bundesliga",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ger.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ger.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 250037,
+       "type": "athlete",
+       "uid": "s:600~a:142200",
+       "guid": "66b16016-7a3a-434f-ae82-e767fc5fac88",
+       "description": "Harry Kane",
+       "sportId": 600,
+       "athleteId": 142200,
+       "athlete": {
+        "id": 142200,
+        "description": "Harry Kane",
+        "links": {
+         "mobile": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/142200/harry-kane"
+          }
+         },
+         "web": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/142200/harry-kane"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 596595,
+       "type": "athlete",
+       "uid": "s:600~a:362150",
+       "guid": "de67ce6f-0991-36b9-afb9-c008f21dc4b4",
+       "description": "Lamine Yamal",
+       "sportId": 600,
+       "athleteId": 362150,
+       "athlete": {
+        "id": 362150,
+        "description": "Lamine Yamal",
+        "links": {
+         "mobile": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/362150/lamine-yamal"
+          }
+         },
+         "web": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/362150/lamine-yamal"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 238474,
+       "type": "athlete",
+       "uid": "s:600~a:45843",
+       "guid": "dc5f8d51-332b-0ab2-b4b0-c97efdc624e0",
+       "description": "Lionel Messi",
+       "sportId": 600,
+       "athleteId": 45843,
+       "athlete": {
+        "id": 45843,
+        "description": "Lionel Messi",
+        "links": {
+         "mobile": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/45843/lionel-messi"
+          }
+         },
+         "web": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/45843/lionel-messi"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 145507,
+       "type": "league",
+       "uid": "s:600~l:770",
+       "guid": "d9d3698e-67b3-3ca5-9eb4-f23b8e19a464",
+       "description": "MLS",
+       "sportId": 600,
+       "leagueId": 19,
+       "league": {
+        "id": 770,
+        "description": "MLS",
+        "abbreviation": "MLS",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/usa.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/usa.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 233179,
+       "type": "athlete",
+       "uid": "s:600~a:231388",
+       "guid": "61edbcca-c316-afde-575f-d9dd69176cc4",
+       "description": "Kylian Mbappé",
+       "sportId": 600,
+       "athleteId": 231388,
+       "athlete": {
+        "id": 231388,
+        "description": "Kylian Mbappé",
+        "links": {
+         "mobile": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/231388/kylian-mbappe"
+          }
+         },
+         "web": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/231388/kylian-mbappe"
+          }
+         }
+        }
+       }
+      }
+     ],
+     "byline": "ESPN",
+     "links": {
+      "api": {
+       "self": {
+        "href": "https://content.core.api.espn.com/v1/sports/news/50166049"
+       }
+      },
+      "app": {
+       "sportscenter": {
+        "href": "sportscenter://x-callback-url/showStory?uid=50166049"
+       }
+      },
+      "mobile": {
+       "href": "http://m.espn.go.com/soccer/story?storyId=50166049"
+      },
+      "web": {
+       "href": "https://www.espn.com/soccer/story/_/id/50166049/a-global-experiment-espn-predict-ballon-dor"
+      }
+     },
+     "premium": false
+    },
+    {
+     "id": 50239096,
+     "nowId": "1-50239096",
+     "contentKey": "50239096-1-6-1",
+     "dataSourceIdentifier": "f77ff8f424471",
+     "type": "Story",
+     "headline": "Who are Como? The vacation-destination club that just rocked Man United",
+     "description": "Seven years ago, Como were a team of amateurs. Now they're a Champions League club with a brand born from the city's reputation as a holiday hotspot.",
+     "lastModified": "2026-10-22T07:47:14Z",
+     "published": "2026-10-22T07:47:14Z",
+     "images": [
+      {
+       "dataSourceIdentifier": "381580ed78351",
+       "id": 50239656,
        "type": "header",
-       "name": "Inter [1296x518]",
-       "credit": "Getty",
-       "height": 518,
+       "name": "Nico Paz 261021 [1296x729]",
+       "caption": "Nico Paz",
+       "alt": "Nico Paz",
+       "credit": "Mattia Ozbot - UEFA/UEFA via Getty Images",
+       "height": 729,
        "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/0822/r1705378_1296x518_5-2.jpg"
+       "url": "https://a.espncdn.com/photo/2026/1021/r1734022_1296x729_16-9.jpg"
+      },
+      {
+       "dataSourceIdentifier": "d9496a729f6e9",
+       "id": 50239634,
+       "type": "header",
+       "name": "Stadio Giuseppe Sinigaglia 261011 [1296x729]",
+       "caption": "Stadio Giuseppe Sinigaglia",
+       "alt": "Stadio Giuseppe Sinigaglia",
+       "credit": "Mattia Ozbot/Getty Images",
+       "height": 729,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/1021/r1734021_1296x729_16-9.jpg"
+      },
+      {
+       "type": "Media",
+       "name": "Dawson: Carrick's future under mounting pressure after loss vs. Como",
+       "caption": "Dawson: Carrick's future under mounting pressure after loss vs. Como",
+       "height": 324,
+       "width": 576,
+       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1021/dm_261021_Dawson_Carricks_future_under_mounting_pressure_after_loss_vs_Como/dm_261021_Dawson_Carricks_future_under_mounting_pressure_after_loss_vs_Como.jpg"
       }
-     ]
+     ],
+     "categories": [
+      {
+       "id": 81497,
+       "type": "league",
+       "uid": "s:600",
+       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+       "description": "Soccer",
+       "sportId": 600,
+       "leagueId": 600,
+       "league": {
+        "id": 600,
+        "description": "Soccer",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137793,
+       "type": "league",
+       "uid": "s:600~l:775",
+       "guid": "da52796f-2621-3351-8e77-955da92ea82d",
+       "description": "UEFA Champions League",
+       "sportId": 600,
+       "leagueId": 2,
+       "league": {
+        "id": 775,
+        "description": "UEFA Champions League",
+        "abbreviation": "UEFA Champions League",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.champions"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.champions"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 193180,
+       "type": "team",
+       "uid": "s:600~t:2572",
+       "guid": "3f2c043b-2747-1851-c74a-4e05fd6e614b",
+       "description": "Como",
+       "sportId": 600,
+       "teamId": 2572,
+       "team": {
+        "id": 2572,
+        "description": "Como",
+        "abbreviation": "COMO",
+        "shortDisplayName": "Como",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/2572/como"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/2572/como"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137798,
+       "type": "league",
+       "uid": "s:600~l:730",
+       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
+       "description": "Italian Serie A",
+       "sportId": 600,
+       "leagueId": 12,
+       "league": {
+        "id": 730,
+        "description": "Italian Serie A",
+        "abbreviation": "Serie A",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 696369,
+       "type": "contributor",
+       "guid": "2a444df4-ef0c-3bef-bb70-ef5d02615d57",
+       "description": "Rob Dawson",
+       "slug": "rob-dawson",
+       "contributor": {
+        "id": 3040,
+        "description": "Rob Dawson"
+       }
+      }
+     ],
+     "byline": "Rob Dawson",
+     "links": {
+      "api": {
+       "self": {
+        "href": "https://content.core.api.espn.com/v1/sports/news/50239096"
+       }
+      },
+      "app": {
+       "sportscenter": {
+        "href": "sportscenter://x-callback-url/showStory?uid=50239096"
+       }
+      },
+      "mobile": {
+       "href": "http://m.espn.go.com/soccer/story?storyId=50239096"
+      },
+      "web": {
+       "href": "https://www.espn.com/soccer/story/_/id/50239096/who-como-1907-vacation-destination-club-just-rocked-manchester-united"
+      }
+     },
+     "premium": false
     }
-   ],
-   "video": [],
-   "categories": [
-    {
-     "id": 81497,
-     "type": "league",
-     "uid": "s:600",
-     "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
-     "description": "Soccer",
-     "sportId": 600,
-     "leagueId": 600,
-     "league": {
-      "id": 600,
-      "description": "Soccer",
-      "links": {
-       "mobile": {
-        "leagues": {
-         "href": "https://www.espn.com/soccer/"
-        }
-       },
-       "web": {
-        "leagues": {
-         "href": "https://www.espn.com/soccer/"
-        }
-       }
-      }
-     }
-    },
-    {
-     "id": 137798,
-     "type": "league",
-     "uid": "s:600~l:730",
-     "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
-     "description": "Italian Serie A",
-     "sportId": 600,
-     "leagueId": 12,
-     "league": {
-      "id": 730,
-      "description": "Italian Serie A",
-      "abbreviation": "Serie A",
-      "links": {
-       "mobile": {
-        "leagues": {
-         "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-        }
-       },
-       "web": {
-        "leagues": {
-         "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-        }
-       }
-      }
-     }
-    },
-    {
-     "id": 142583,
-     "type": "team",
-     "uid": "s:600~t:110",
-     "guid": "864b1935-65cc-fb9b-850d-790e4c8a8d47",
-     "description": "Internazionale",
-     "sportId": 600,
-     "teamId": 110,
-     "team": {
-      "id": 110,
-      "description": "Internazionale",
-      "abbreviation": "INT",
-      "shortDisplayName": "Inter Milan",
-      "links": {
-       "mobile": {
-        "teams": {
-         "href": "https://www.espn.com/soccer/club/_/id/110/internazionale"
-        }
-       },
-       "web": {
-        "teams": {
-         "href": "https://www.espn.com/soccer/club/_/id/110/internazionale"
-        }
-       }
-      }
-     }
-    },
-    {
-     "id": 192469,
-     "type": "team",
-     "uid": "s:600~t:4007",
-     "guid": "8225e6a4-9fb7-27d5-06de-7112ad7ac058",
-     "description": "Monza",
-     "sportId": 600,
-     "teamId": 4007,
-     "team": {
-      "id": 4007,
-      "description": "Monza",
-      "abbreviation": "MON",
-      "shortDisplayName": "Monza",
-      "links": {
-       "mobile": {
-        "teams": {
-         "href": "https://www.espn.com/soccer/club/_/id/4007/monza"
-        }
-       },
-       "web": {
-        "teams": {
-         "href": "https://www.espn.com/soccer/club/_/id/4007/monza"
-        }
-       }
-      }
-     }
-    },
-    {
-     "type": "event",
-     "uid": "s:600~l:730~e:401874931",
-     "guid": "343deeeb-d124-3a3f-a993-8dde57eaf0ad",
-     "description": "Monza @ Internazionale",
-     "eventId": 401874931,
-     "event": {
-      "id": 401874931,
-      "sport": "soccer",
-      "league": "ita.1",
-      "description": "Monza @ Internazionale"
-     }
-    }
-   ],
-   "keywords": [
-    "Soccer",
-    "Italian Serie A",
-    "Internazionale",
-    "Monza",
-    "Monza @ Internazionale"
-   ],
-   "story": "<p>Inter Milan launched their <a data-league-guid=\"9c1e0753-2757-3b78-a6ed-1b595caf8191\" href=\"https://www.espn.com/soccer/league/_/name/ITA.1\">Serie A</a> title defence with a 4-1 opening-day win against newly promoted <a data-clubhouse-guid=\"8225e6a4-9fb7-27d5-06de-7112ad7ac058\" href=\"http://espn.com/soccer/team?id=4007\">Monza</a> at San Siro.</p>\n<p>Monza's Portuguese forward <a data-player-guid=\"e6ed6493-4b72-3f11-82d2-df71d486e94c\" href=\"http://espn.com/soccer/player/_/id/384482/gustavo-varela\">Gustavo Varela</a> cancelled out Hakan Calhanoglu's early opener for Inter before the break, but second-half goals from <a data-player-guid=\"59825881-dbb5-e23d-3628-3d8641f7bdf0\" href=\"http://espn.com/soccer/player/_/id/177782/piotr-zielinski\">Piotr Zielinski</a>, Francesco <a data-player-guid=\"132b9264-bbc0-3e99-af3e-a7bb174999aa\" href=\"http://espn.com/soccer/player/_/id/362674/pio-esposito\">Pio Esposito</a> and <a data-player-guid=\"18869da8-cc1f-bf28-7b5f-b756467fea6b\" href=\"http://espn.com/soccer/player/_/id/266660/yann-bisseck\">Yann Bisseck</a> ensured a comfortable afternoon for the champions.</p>\n<p>It was also a winning start for <a data-clubhouse-guid=\"217dee4e-6974-a197-49a2-afda6e1788c9\" href=\"http://espn.com/soccer/team?id=448\">England</a> defender <a data-player-guid=\"6672587d-4363-ea87-31f9-fa5bd4ec10cc\" href=\"http://espn.com/soccer/player/_/id/157974/john-stones\">John Stones</a>, who made his Inter debut as a second-half substitute.</p>\n<p>Two more English summer signings, <a data-player-guid=\"e559e4c9-460a-9a45-70f4-f7d0534a18ea\" href=\"http://espn.com/soccer/player/_/id/190257/curtis-jones\">Curtis Jones</a> and <a data-player-guid=\"68b803ee-5842-c7e3-edb1-644e9398e648\" href=\"http://espn.com/soccer/player/_/id/267711/djed-spence\">Djed Spence</a>, were not included in Cristian Chivu's squad, but with Stones on the bench, Inter made an ideal start.</p>\n<p><a data-player-guid=\"c244419a-02b4-31a3-acc8-5d6c71e2c0b0\" href=\"http://espn.com/soccer/player/_/id/319167/andy-diouf\">Andy Diouf</a> teed up Calhanoglu on the edge of the box and the Turkey midfielder lashed a right-footed shot into the roof of the net.</p>\n<p><photo caption=\"Inter were rampant against Monza.\"></p>\n<p><a data-player-guid=\"7c7905ad-8be5-85d8-7001-5c817a9187b2\" href=\"http://espn.com/soccer/player/_/id/204441/nicolo-barella\">Nicolò Barella</a> went close to doubling Inter's lead before Monza stunned the home fans by scoring with their first attempt on goal, with Varela drilling an angled finish into the bottom corner from inside the penalty area in the 29th minute.</p>\n<p>Varela then headed wide before Inter twice threatened to regain the lead through <a data-player-guid=\"1275ab36-1f54-749f-fca6-58aa94ff9367\" href=\"http://espn.com/soccer/player/_/id/194748/federico-dimarco\">Federico Dimarco</a> and Esposito, while Barella blazed another chance over before the interval.</p>\n<p>Inter made another fast start to the second half, scoring twice in seven minutes to take control.</p>\n<p>Zielinski buried a loose ball following a corner three minutes after the restart and Esposito swept home from close range following another assist from Diouf.</p>\n<p>Esposito then turned provider, setting up Bisseck to fire into the top corner from the centre of the box for Inter's fourth goal in the 63rd minute.</p>\n<p><a data-player-guid=\"05565c83-6cae-802b-9669-ea4ba9bd1856\" href=\"http://espn.com/soccer/player/_/id/214562/manuel-akanji\">Manuel Akanji</a> headed Dimarco's cross against the bar soon after as Monza became more ragged.</p>\n<p>Stones stepped off the bench to replace Akanji for his Serie A debut in the 75th minute before Inter goalkeeper <a data-player-guid=\"54d7cf61-e139-a080-96bf-0368bca80de1\" href=\"http://espn.com/soccer/player/_/id/240533/josep-martinez\">Josep Martínez</a> produced a low save to keep out Samuele Birindelli's low effort.</p>\n<p><a data-player-guid=\"f40d7185-aa35-3fa5-9d46-722c69ef7277\" href=\"http://espn.com/soccer/player/_/id/308288/nicolas-galazzi\">Nicolas Galazzi</a> pulled another effort on goal for Monza wide as the home side took their foot off the gas, while Esposito spurned the chance of his second and Inter's fifth when he headed wide in time added on.</p>\n\n\n\n\n",
-   "allowComments": true,
-   "allowContentReactions": false,
-   "allowSearch": true,
-   "byline": "PA",
-   "isLiveBlog": false,
-   "links": {
-    "api": {
-     "self": {
-      "href": "https://content.core.api.espn.com/v1/sports/news/49674203"
-     }
-    },
-    "app": {
-     "sportscenter": {
-      "href": "sportscenter://x-callback-url/showStory?uid=49674203"
-     }
-    },
-    "mobile": {
-     "href": "http://m.espn.go.com/soccer/story?storyId=49674203"
-    },
-    "web": {
-     "href": "http://www.espn.com/soccer/report/_/gameId/401874931"
-    }
-   },
-   "premium": false
+   ]
   },
-  "videos": [],
   "header": {
    "id": "401874931",
    "uid": "s:600~l:730~e:401874931",
@@ -14953,6 +14718,241 @@
     }
    ]
   },
+  "article": {
+   "id": 49674203,
+   "nowId": "1-49674203",
+   "contentKey": "49674203-1-21-1",
+   "dataSourceIdentifier": "c79e08f7dcaec",
+   "publishedkey": "soccer401874931",
+   "type": "Recap",
+   "gameId": "401874931",
+   "headline": "Champions Inter dominate Monza in Serie A opener",
+   "description": "Inter Milan launched their Serie A title defence with a 4-1 opening-day win against newly promoted Monza at San Siro.",
+   "linkText": "Champs Inter make winning start as Stones debuts",
+   "categorized": "2026-08-23T00:37:30Z",
+   "originallyPosted": "2026-08-22T18:40:00Z",
+   "lastModified": "2026-08-23T00:37:28Z",
+   "published": "2026-08-22T18:40:00Z",
+   "section": "Soccer",
+   "images": [
+    {
+     "dataSourceIdentifier": "f3d2b50dbcd8a",
+     "id": 49693086,
+     "type": "header",
+     "name": "Inter [1296x729]",
+     "credit": "Getty",
+     "height": 729,
+     "width": 1296,
+     "url": "https://a.espncdn.com/photo/2026/0822/r1705378_1296x729_16-9.jpg",
+     "peers": [
+      {
+       "dataSourceIdentifier": "54771e74afac8",
+       "id": 49693102,
+       "type": "header",
+       "name": "Inter [1296x1296]",
+       "credit": "Getty",
+       "height": 1296,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/0822/r1705378_1296x1296_1-1.jpg"
+      },
+      {
+       "dataSourceIdentifier": "f3d2b50dbcd8a",
+       "id": 49693086,
+       "type": "header",
+       "name": "Inter [1296x729]",
+       "credit": "Getty",
+       "height": 729,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/0822/r1705378_1296x729_16-9.jpg"
+      },
+      {
+       "dataSourceIdentifier": "a3652cddc7067",
+       "id": 49693091,
+       "type": "header",
+       "name": "Inter [864x1296]",
+       "credit": "Getty",
+       "height": 1296,
+       "width": 864,
+       "url": "https://a.espncdn.com/photo/2026/0822/r1705378_864x1296_2-3.jpg"
+      },
+      {
+       "dataSourceIdentifier": "712e23d82c268",
+       "id": 49693095,
+       "type": "header",
+       "name": "Inter [1296x864]",
+       "credit": "Getty",
+       "height": 864,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/0822/r1705378_1296x864_3-2.jpg"
+      },
+      {
+       "dataSourceIdentifier": "1414f03313afb",
+       "id": 49693099,
+       "type": "header",
+       "name": "Inter [1296x518]",
+       "credit": "Getty",
+       "height": 518,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/0822/r1705378_1296x518_5-2.jpg"
+      }
+     ]
+    }
+   ],
+   "video": [],
+   "categories": [
+    {
+     "id": 81497,
+     "type": "league",
+     "uid": "s:600",
+     "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+     "description": "Soccer",
+     "sportId": 600,
+     "leagueId": 600,
+     "league": {
+      "id": 600,
+      "description": "Soccer",
+      "links": {
+       "mobile": {
+        "leagues": {
+         "href": "https://www.espn.com/soccer/"
+        }
+       },
+       "web": {
+        "leagues": {
+         "href": "https://www.espn.com/soccer/"
+        }
+       }
+      }
+     }
+    },
+    {
+     "id": 137798,
+     "type": "league",
+     "uid": "s:600~l:730",
+     "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
+     "description": "Italian Serie A",
+     "sportId": 600,
+     "leagueId": 12,
+     "league": {
+      "id": 730,
+      "description": "Italian Serie A",
+      "abbreviation": "Serie A",
+      "links": {
+       "mobile": {
+        "leagues": {
+         "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+        }
+       },
+       "web": {
+        "leagues": {
+         "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+        }
+       }
+      }
+     }
+    },
+    {
+     "id": 142583,
+     "type": "team",
+     "uid": "s:600~t:110",
+     "guid": "864b1935-65cc-fb9b-850d-790e4c8a8d47",
+     "description": "Internazionale",
+     "sportId": 600,
+     "teamId": 110,
+     "team": {
+      "id": 110,
+      "description": "Internazionale",
+      "abbreviation": "INT",
+      "shortDisplayName": "Inter Milan",
+      "links": {
+       "mobile": {
+        "teams": {
+         "href": "https://www.espn.com/soccer/club/_/id/110/internazionale"
+        }
+       },
+       "web": {
+        "teams": {
+         "href": "https://www.espn.com/soccer/club/_/id/110/internazionale"
+        }
+       }
+      }
+     }
+    },
+    {
+     "id": 192469,
+     "type": "team",
+     "uid": "s:600~t:4007",
+     "guid": "8225e6a4-9fb7-27d5-06de-7112ad7ac058",
+     "description": "Monza",
+     "sportId": 600,
+     "teamId": 4007,
+     "team": {
+      "id": 4007,
+      "description": "Monza",
+      "abbreviation": "MON",
+      "shortDisplayName": "Monza",
+      "links": {
+       "mobile": {
+        "teams": {
+         "href": "https://www.espn.com/soccer/club/_/id/4007/monza"
+        }
+       },
+       "web": {
+        "teams": {
+         "href": "https://www.espn.com/soccer/club/_/id/4007/monza"
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "event",
+     "uid": "s:600~l:730~e:401874931",
+     "guid": "343deeeb-d124-3a3f-a993-8dde57eaf0ad",
+     "description": "Monza @ Internazionale",
+     "eventId": 401874931,
+     "event": {
+      "id": 401874931,
+      "sport": "soccer",
+      "league": "ita.1",
+      "description": "Monza @ Internazionale"
+     }
+    }
+   ],
+   "keywords": [
+    "Soccer",
+    "Italian Serie A",
+    "Internazionale",
+    "Monza",
+    "Monza @ Internazionale"
+   ],
+   "story": "<p>Inter Milan launched their <a data-league-guid=\"9c1e0753-2757-3b78-a6ed-1b595caf8191\" href=\"https://www.espn.com/soccer/league/_/name/ITA.1\">Serie A</a> title defence with a 4-1 opening-day win against newly promoted <a data-clubhouse-guid=\"8225e6a4-9fb7-27d5-06de-7112ad7ac058\" href=\"http://espn.com/soccer/team?id=4007\">Monza</a> at San Siro.</p>\n<p>Monza's Portuguese forward <a data-player-guid=\"e6ed6493-4b72-3f11-82d2-df71d486e94c\" href=\"http://espn.com/soccer/player/_/id/384482/gustavo-varela\">Gustavo Varela</a> cancelled out Hakan Calhanoglu's early opener for Inter before the break, but second-half goals from <a data-player-guid=\"59825881-dbb5-e23d-3628-3d8641f7bdf0\" href=\"http://espn.com/soccer/player/_/id/177782/piotr-zielinski\">Piotr Zielinski</a>, Francesco <a data-player-guid=\"132b9264-bbc0-3e99-af3e-a7bb174999aa\" href=\"http://espn.com/soccer/player/_/id/362674/pio-esposito\">Pio Esposito</a> and <a data-player-guid=\"18869da8-cc1f-bf28-7b5f-b756467fea6b\" href=\"http://espn.com/soccer/player/_/id/266660/yann-bisseck\">Yann Bisseck</a> ensured a comfortable afternoon for the champions.</p>\n<p>It was also a winning start for <a data-clubhouse-guid=\"217dee4e-6974-a197-49a2-afda6e1788c9\" href=\"http://espn.com/soccer/team?id=448\">England</a> defender <a data-player-guid=\"6672587d-4363-ea87-31f9-fa5bd4ec10cc\" href=\"http://espn.com/soccer/player/_/id/157974/john-stones\">John Stones</a>, who made his Inter debut as a second-half substitute.</p>\n<p>Two more English summer signings, <a data-player-guid=\"e559e4c9-460a-9a45-70f4-f7d0534a18ea\" href=\"http://espn.com/soccer/player/_/id/190257/curtis-jones\">Curtis Jones</a> and <a data-player-guid=\"68b803ee-5842-c7e3-edb1-644e9398e648\" href=\"http://espn.com/soccer/player/_/id/267711/djed-spence\">Djed Spence</a>, were not included in Cristian Chivu's squad, but with Stones on the bench, Inter made an ideal start.</p>\n<p><a data-player-guid=\"c244419a-02b4-31a3-acc8-5d6c71e2c0b0\" href=\"http://espn.com/soccer/player/_/id/319167/andy-diouf\">Andy Diouf</a> teed up Calhanoglu on the edge of the box and the Turkey midfielder lashed a right-footed shot into the roof of the net.</p>\n<p><photo caption=\"Inter were rampant against Monza.\"></p>\n<p><a data-player-guid=\"7c7905ad-8be5-85d8-7001-5c817a9187b2\" href=\"http://espn.com/soccer/player/_/id/204441/nicolo-barella\">Nicolò Barella</a> went close to doubling Inter's lead before Monza stunned the home fans by scoring with their first attempt on goal, with Varela drilling an angled finish into the bottom corner from inside the penalty area in the 29th minute.</p>\n<p>Varela then headed wide before Inter twice threatened to regain the lead through <a data-player-guid=\"1275ab36-1f54-749f-fca6-58aa94ff9367\" href=\"http://espn.com/soccer/player/_/id/194748/federico-dimarco\">Federico Dimarco</a> and Esposito, while Barella blazed another chance over before the interval.</p>\n<p>Inter made another fast start to the second half, scoring twice in seven minutes to take control.</p>\n<p>Zielinski buried a loose ball following a corner three minutes after the restart and Esposito swept home from close range following another assist from Diouf.</p>\n<p>Esposito then turned provider, setting up Bisseck to fire into the top corner from the centre of the box for Inter's fourth goal in the 63rd minute.</p>\n<p><a data-player-guid=\"05565c83-6cae-802b-9669-ea4ba9bd1856\" href=\"http://espn.com/soccer/player/_/id/214562/manuel-akanji\">Manuel Akanji</a> headed Dimarco's cross against the bar soon after as Monza became more ragged.</p>\n<p>Stones stepped off the bench to replace Akanji for his Serie A debut in the 75th minute before Inter goalkeeper <a data-player-guid=\"54d7cf61-e139-a080-96bf-0368bca80de1\" href=\"http://espn.com/soccer/player/_/id/240533/josep-martinez\">Josep Martínez</a> produced a low save to keep out Samuele Birindelli's low effort.</p>\n<p><a data-player-guid=\"f40d7185-aa35-3fa5-9d46-722c69ef7277\" href=\"http://espn.com/soccer/player/_/id/308288/nicolas-galazzi\">Nicolas Galazzi</a> pulled another effort on goal for Monza wide as the home side took their foot off the gas, while Esposito spurned the chance of his second and Inter's fifth when he headed wide in time added on.</p>\n\n\n\n\n",
+   "allowComments": true,
+   "allowContentReactions": false,
+   "allowSearch": true,
+   "byline": "PA",
+   "isLiveBlog": false,
+   "links": {
+    "api": {
+     "self": {
+      "href": "https://content.core.api.espn.com/v1/sports/news/49674203"
+     }
+    },
+    "app": {
+     "sportscenter": {
+      "href": "sportscenter://x-callback-url/showStory?uid=49674203"
+     }
+    },
+    "mobile": {
+     "href": "http://m.espn.go.com/soccer/story?storyId=49674203"
+    },
+    "web": {
+     "href": "http://www.espn.com/soccer/report/_/gameId/401874931"
+    }
+   },
+   "premium": false
+  },
+  "videos": [],
   "seasonseries": [
    {
     "type": "head-to-head",

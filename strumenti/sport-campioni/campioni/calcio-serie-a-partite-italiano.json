@@ -163,18 +163,19 @@
       "startDate": "2026-10-25T11:30Z",
       "attendance": 0,
       "timeValid": true,
-      "recent": false,
+      "recent": true,
       "status": {
-       "clock": 0,
-       "displayClock": "0'",
+       "clock": 5400,
+       "displayClock": "90'+11'",
+       "period": 2,
        "type": {
-        "id": "1",
-        "name": "STATUS_SCHEDULED",
-        "state": "pre",
+        "id": "26",
+        "name": "STATUS_SECOND_HALF",
+        "state": "in",
         "completed": false,
-        "description": "Scheduled",
-        "detail": "dom, ottobre 25º at 7:30 AM EDT",
-        "shortDetail": "Scheduled"
+        "description": "Second Half",
+        "detail": "90'+11'",
+        "shortDetail": "90'+11'"
        }
       },
       "venue": {
@@ -204,7 +205,7 @@
         "homeAway": "home",
         "winner": false,
         "form": "DWLWD",
-        "score": "0",
+        "score": "2",
         "records": [
          {
           "name": "Total",
@@ -331,87 +332,51 @@
           "id": "26"
          }
         },
-        "statistics": [],
-        "leaders": [
+        "statistics": [
          {
-          "name": "goals",
-          "displayName": "Goals",
-          "shortDisplayName": "Goals",
-          "abbreviation": "G",
-          "leaders": [
-           {
-            "displayValue": "4",
-            "value": 4,
-            "athlete": {
-             "id": "217331",
-             "displayName": "Marcus Thuram",
-             "shortName": "M. Thuram",
-             "fullName": "Marcus Thuram",
-             "jersey": "9",
-             "active": true,
-             "team": {
-              "id": "110"
-             },
-             "links": [
-              {
-               "rel": [
-                "playercard",
-                "desktop",
-                "athlete"
-               ],
-               "href": "https://www.espn.com/soccer/player/_/id/217331/marcus-thuram",
-               "isHidden": false
-              }
-             ],
-             "position": {
-              "abbreviation": "F"
-             }
-            },
-            "team": {
-             "id": "110"
-            }
-           }
-          ]
+          "name": "appearances",
+          "abbreviation": "APP",
+          "displayValue": "0"
          },
          {
-          "name": "goalsLeaders",
-          "displayName": "Goals",
-          "shortDisplayName": "Goals",
+          "name": "foulsCommitted",
+          "abbreviation": "FC",
+          "displayValue": "13"
+         },
+         {
+          "name": "wonCorners",
+          "abbreviation": "CW",
+          "displayValue": "6"
+         },
+         {
+          "name": "goalAssists",
+          "abbreviation": "A",
+          "displayValue": "1"
+         },
+         {
+          "name": "possessionPct",
+          "abbreviation": "PP",
+          "displayValue": "63.2"
+         },
+         {
+          "name": "shotAssists",
+          "abbreviation": "SHAST",
+          "displayValue": "24"
+         },
+         {
+          "name": "shotsOnTarget",
+          "abbreviation": "SOG",
+          "displayValue": "11"
+         },
+         {
+          "name": "totalGoals",
           "abbreviation": "G",
-          "leaders": [
-           {
-            "displayValue": "4",
-            "value": 4,
-            "athlete": {
-             "id": "217331",
-             "displayName": "Marcus Thuram",
-             "shortName": "M. Thuram",
-             "fullName": "Marcus Thuram",
-             "jersey": "9",
-             "active": true,
-             "team": {
-              "id": "110"
-             },
-             "links": [
-              {
-               "rel": [
-                "playercard",
-                "desktop",
-                "athlete"
-               ],
-               "href": "https://www.espn.com/soccer/player/_/id/217331/marcus-thuram",
-               "isHidden": false
-              }
-             ],
-             "position": {
-              "abbreviation": "F"
-             }
-            },
-            "team": {
-             "id": "110"
-            }
-           }
-          ]
+          "displayValue": "2"
+         },
+         {
+          "name": "totalShots",
+          "abbreviation": "SHOT",
+          "displayValue": "33"
          }
         ]
        },
@@ -423,7 +388,7 @@
         "homeAway": "away",
         "winner": false,
         "form": "DLDWW",
-        "score": "0",
+        "score": "1",
         "records": [
          {
           "name": "Total",
@@ -550,188 +515,275 @@
           "id": "10720"
          }
         },
-        "statistics": [],
-        "leaders": [
+        "statistics": [
          {
-          "name": "goals",
-          "displayName": "Goals",
-          "shortDisplayName": "Goals",
-          "abbreviation": "G",
-          "leaders": [
-           {
-            "displayValue": "3",
-            "value": 3,
-            "athlete": {
-             "id": "376473",
-             "displayName": "Franco Mastantuono",
-             "shortName": "F. Mastantuono",
-             "fullName": "Franco Mastantuono",
-             "jersey": "30",
-             "active": true,
-             "team": {
-              "id": "109"
-             },
-             "links": [
-              {
-               "rel": [
-                "playercard",
-                "desktop",
-                "athlete"
-               ],
-               "href": "https://www.espn.com/soccer/player/_/id/376473/franco-mastantuono",
-               "isHidden": false
-              }
-             ],
-             "position": {
-              "abbreviation": "F"
-             }
-            },
-            "team": {
-             "id": "109"
-            }
-           }
-          ]
+          "name": "appearances",
+          "abbreviation": "APP",
+          "displayValue": "0"
          },
          {
-          "name": "goalsLeaders",
-          "displayName": "Goals",
-          "shortDisplayName": "Goals",
+          "name": "foulsCommitted",
+          "abbreviation": "FC",
+          "displayValue": "13"
+         },
+         {
+          "name": "wonCorners",
+          "abbreviation": "CW",
+          "displayValue": "1"
+         },
+         {
+          "name": "goalAssists",
+          "abbreviation": "A",
+          "displayValue": "1"
+         },
+         {
+          "name": "possessionPct",
+          "abbreviation": "PP",
+          "displayValue": "36.8"
+         },
+         {
+          "name": "shotAssists",
+          "abbreviation": "SHAST",
+          "displayValue": "4"
+         },
+         {
+          "name": "shotsOnTarget",
+          "abbreviation": "SOG",
+          "displayValue": "2"
+         },
+         {
+          "name": "totalGoals",
           "abbreviation": "G",
-          "leaders": [
-           {
-            "displayValue": "3",
-            "value": 3,
-            "athlete": {
-             "id": "376473",
-             "displayName": "Franco Mastantuono",
-             "shortName": "F. Mastantuono",
-             "fullName": "Franco Mastantuono",
-             "jersey": "30",
-             "active": true,
-             "team": {
-              "id": "109"
-             },
-             "links": [
-              {
-               "rel": [
-                "playercard",
-                "desktop",
-                "athlete"
-               ],
-               "href": "https://www.espn.com/soccer/player/_/id/376473/franco-mastantuono",
-               "isHidden": false
-              }
-             ],
-             "position": {
-              "abbreviation": "F"
-             }
-            },
-            "team": {
-             "id": "109"
-            }
-           }
-          ]
+          "displayValue": "1"
+         },
+         {
+          "name": "totalShots",
+          "abbreviation": "SHOT",
+          "displayValue": "7"
          }
         ]
        }
       ],
-      "details": [],
-      "odds": [
+      "details": [
        {
-        "provider": {
-         "id": "2000",
-         "name": "Bet 365",
-         "displayName": "Bet 365",
-         "logos": [
-          {
-           "href": "https://a.espncdn.com/redesign/assets/img/logos/logo-bet365.png",
-           "rel": [
-            "light"
-           ]
+        "type": {
+         "id": "70",
+         "text": "Goal"
+        },
+        "clock": {
+         "value": 3846,
+         "displayValue": "65'"
+        },
+        "team": {
+         "id": "109"
+        },
+        "scoreValue": 1,
+        "scoringPlay": true,
+        "redCard": false,
+        "yellowCard": false,
+        "penaltyKick": false,
+        "ownGoal": false,
+        "shootout": false,
+        "athletesInvolved": [
+         {
+          "id": "367861",
+          "displayName": "Álex Jiménez",
+          "shortName": "Á. Jiménez",
+          "fullName": "Álex Jiménez",
+          "jersey": "20",
+          "team": {
+           "id": "109"
           },
-          {
-           "href": "https://a.espncdn.com/redesign/assets/img/logos/logo-bet365.png",
-           "rel": [
-            "dark"
-           ]
-          }
-         ]
-        },
-        "awayTeamOdds": {
-         "summary": "6/1",
-         "value": 7,
-         "handicap": 0,
-         "team": {
-          "id": "109",
-          "uid": "s:600~t:109",
-          "abbreviation": "FIO",
-          "displayName": "Fiorentina",
-          "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/109.png"
-         },
-         "link": {
-          "language": "it-IT",
-          "rel": [
-           "away",
-           "desktop",
-           "bets",
-           "bet-365"
+          "links": [
+           {
+            "rel": [
+             "playercard",
+             "desktop",
+             "athlete"
+            ],
+            "href": "https://www.espn.com/soccer/player/_/id/367861/alex-jimenez",
+            "isHidden": false
+           },
+           {
+            "rel": [
+             "playercard",
+             "sportscenter",
+             "app",
+             "athlete"
+            ],
+            "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~a:367861",
+            "isHidden": false
+           }
           ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=201585789-39211190~6/1",
-          "text": "Away Bet",
-          "shortText": "Away Bet",
-          "isExternal": true,
-          "isPremium": false,
-          "isHidden": false
+          "position": "RB"
          }
+        ]
+       },
+       {
+        "type": {
+         "id": "94",
+         "text": "Yellow Card"
         },
-        "homeTeamOdds": {
-         "summary": "4/11",
-         "value": 1.364,
-         "handicap": 0,
-         "team": {
-          "id": "110",
-          "uid": "s:600~t:110",
-          "abbreviation": "INT",
-          "displayName": "Internazionale",
-          "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/110.png"
-         },
-         "link": {
-          "language": "it-IT",
-          "rel": [
-           "home",
-           "desktop",
-           "bets",
-           "bet-365"
-          ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=201585789-39211178~4/11",
-          "text": "Home Bet",
-          "shortText": "Home Bet",
-          "isExternal": true,
-          "isPremium": false,
-          "isHidden": false
-         }
+        "clock": {
+         "value": 4160,
+         "displayValue": "70'"
         },
-        "drawOdds": {
-         "summary": "17/4",
-         "value": 5.25,
-         "handicap": 0,
-         "link": {
-          "language": "it-IT",
-          "rel": [
-           "draw",
-           "desktop",
-           "bets",
-           "bet-365"
+        "team": {
+         "id": "109"
+        },
+        "scoreValue": 0,
+        "scoringPlay": false,
+        "redCard": false,
+        "yellowCard": true,
+        "penaltyKick": false,
+        "ownGoal": false,
+        "shootout": false,
+        "athletesInvolved": [
+         {
+          "id": "364156",
+          "displayName": "Viery",
+          "shortName": "Viery",
+          "fullName": "Viery",
+          "jersey": "33",
+          "team": {
+           "id": "109"
+          },
+          "links": [
+           {
+            "rel": [
+             "playercard",
+             "desktop",
+             "athlete"
+            ],
+            "href": "https://www.espn.com/soccer/player/_/id/364156/viery",
+            "isHidden": false
+           },
+           {
+            "rel": [
+             "playercard",
+             "sportscenter",
+             "app",
+             "athlete"
+            ],
+            "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~a:364156",
+            "isHidden": false
+           }
           ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=201585789-39211186~17/4",
-          "text": "Draw Bet",
-          "shortText": "Draw Bet",
-          "isExternal": true,
-          "isPremium": false,
-          "isHidden": false
+          "position": "SUB"
          }
-        }
+        ]
+       },
+       {
+        "type": {
+         "id": "70",
+         "text": "Goal"
+        },
+        "clock": {
+         "value": 5400,
+         "displayValue": "90'+1'"
+        },
+        "team": {
+         "id": "110"
+        },
+        "scoreValue": 1,
+        "scoringPlay": true,
+        "redCard": false,
+        "yellowCard": false,
+        "penaltyKick": false,
+        "ownGoal": false,
+        "shootout": false,
+        "athletesInvolved": [
+         {
+          "id": "217331",
+          "displayName": "Marcus Thuram",
+          "shortName": "M. Thuram",
+          "fullName": "Marcus Thuram",
+          "jersey": "9",
+          "team": {
+           "id": "110"
+          },
+          "links": [
+           {
+            "rel": [
+             "playercard",
+             "desktop",
+             "athlete"
+            ],
+            "href": "https://www.espn.com/soccer/player/_/id/217331/marcus-thuram",
+            "isHidden": false
+           },
+           {
+            "rel": [
+             "playercard",
+             "sportscenter",
+             "app",
+             "athlete"
+            ],
+            "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~a:217331",
+            "isHidden": false
+           }
+          ],
+          "position": "CF-L"
+         }
+        ]
+       },
+       {
+        "type": {
+         "id": "98",
+         "text": "Penalty - Scored"
+        },
+        "clock": {
+         "value": 5400,
+         "displayValue": "90'+7'"
+        },
+        "team": {
+         "id": "110"
+        },
+        "scoreValue": 1,
+        "scoringPlay": true,
+        "redCard": false,
+        "yellowCard": false,
+        "penaltyKick": true,
+        "ownGoal": false,
+        "shootout": false,
+        "athletesInvolved": [
+         {
+          "id": "177782",
+          "displayName": "Piotr Zielinski",
+          "shortName": "P. Zielinski",
+          "fullName": "Piotr Zielinski",
+          "jersey": "7",
+          "team": {
+           "id": "110"
+          },
+          "links": [
+           {
+            "rel": [
+             "playercard",
+             "desktop",
+             "athlete"
+            ],
+            "href": "https://www.espn.com/soccer/player/_/id/177782/piotr-zielinski",
+            "isHidden": false
+           },
+           {
+            "rel": [
+             "playercard",
+             "sportscenter",
+             "app",
+             "athlete"
+            ],
+            "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~a:177782",
+            "isHidden": false
+           }
+          ],
+          "position": "SUB"
+         }
+        ]
        }
+      ],
+      "odds": [
+       null
       ],
       "wasSuspended": false,
       "playByPlayAvailable": true,
@@ -739,16 +791,17 @@
      }
     ],
     "status": {
-     "clock": 0,
-     "displayClock": "0'",
+     "clock": 5400,
+     "displayClock": "90'+11'",
+     "period": 2,
      "type": {
-      "id": "1",
-      "name": "STATUS_SCHEDULED",
-      "state": "pre",
+      "id": "26",
+      "name": "STATUS_SECOND_HALF",
+      "state": "in",
       "completed": false,
-      "description": "Scheduled",
-      "detail": "dom, ottobre 25º at 7:30 AM EDT",
-      "shortDetail": "Scheduled"
+      "description": "Second Half",
+      "detail": "90'+11'",
+      "shortDetail": "90'+11'"
      }
     },
     "venue": {
@@ -758,13 +811,41 @@
      {
       "language": "it-IT",
       "rel": [
-       "summary",
+       "live",
        "desktop",
        "event"
       ],
-      "href": "https://www.espn.com/soccer/match?gameId=401875036/fiorentina-internazionale",
-      "text": "Summary",
-      "shortText": "Summary",
+      "href": "https://www.espn.com/soccer/match?gameId=401875036",
+      "text": "Live",
+      "shortText": "Live",
+      "isExternal": false,
+      "isPremium": false,
+      "isHidden": false
+     },
+     {
+      "language": "it-IT",
+      "rel": [
+       "team-stats",
+       "desktop",
+       "event"
+      ],
+      "href": "https://www.espn.com/soccer/team-stats/_/gameId/401875036/league/ita.1",
+      "text": "Team Stats",
+      "shortText": "Team Stats",
+      "isExternal": false,
+      "isPremium": false,
+      "isHidden": false
+     },
+     {
+      "language": "it-IT",
+      "rel": [
+       "player-stats",
+       "desktop",
+       "event"
+      ],
+      "href": "https://www.espn.com/soccer/player-stats/_/gameId/401875036/league/ita.1",
+      "text": "Player Stats",
+      "shortText": "Player Stats",
       "isExternal": false,
       "isPremium": false,
       "isHidden": false
@@ -790,7 +871,7 @@
       "startDate": "2026-10-25T14:00Z",
       "attendance": 0,
       "timeValid": true,
-      "recent": false,
+      "recent": true,
       "status": {
        "clock": 0,
        "displayClock": "0'",
@@ -958,7 +1039,53 @@
           "id": "4253"
          }
         },
-        "statistics": [],
+        "statistics": [
+         {
+          "name": "appearances",
+          "abbreviation": "APP",
+          "displayValue": "0"
+         },
+         {
+          "name": "foulsCommitted",
+          "abbreviation": "FC",
+          "displayValue": "0"
+         },
+         {
+          "name": "wonCorners",
+          "abbreviation": "CW",
+          "displayValue": "0"
+         },
+         {
+          "name": "goalAssists",
+          "abbreviation": "A",
+          "displayValue": "0"
+         },
+         {
+          "name": "possessionPct",
+          "abbreviation": "PP",
+          "displayValue": "0"
+         },
+         {
+          "name": "shotAssists",
+          "abbreviation": "SHAST",
+          "displayValue": "0"
+         },
+         {
+          "name": "shotsOnTarget",
+          "abbreviation": "SOG",
+          "displayValue": "0"
+         },
+         {
+          "name": "totalGoals",
+          "abbreviation": "G",
+          "displayValue": "0"
+         },
+         {
+          "name": "totalShots",
+          "abbreviation": "SHOT",
+          "displayValue": "0"
+         }
+        ],
         "leaders": [
          {
           "name": "goals",
@@ -1177,7 +1304,53 @@
           "id": "10439"
          }
         },
-        "statistics": [],
+        "statistics": [
+         {
+          "name": "appearances",
+          "abbreviation": "APP",
+          "displayValue": "0"
+         },
+         {
+          "name": "foulsCommitted",
+          "abbreviation": "FC",
+          "displayValue": "0"
+         },
+         {
+          "name": "wonCorners",
+          "abbreviation": "CW",
+          "displayValue": "0"
+         },
+         {
+          "name": "goalAssists",
+          "abbreviation": "A",
+          "displayValue": "0"
+         },
+         {
+          "name": "possessionPct",
+          "abbreviation": "PP",
+          "displayValue": "0"
+         },
+         {
+          "name": "shotAssists",
+          "abbreviation": "SHAST",
+          "displayValue": "0"
+         },
+         {
+          "name": "shotsOnTarget",
+          "abbreviation": "SOG",
+          "displayValue": "0"
+         },
+         {
+          "name": "totalGoals",
+          "abbreviation": "G",
+          "displayValue": "0"
+         },
+         {
+          "name": "totalShots",
+          "abbreviation": "SHOT",
+          "displayValue": "0"
+         }
+        ],
         "leaders": [
          {
           "name": "goals",
@@ -1267,7 +1440,22 @@
        {
         "provider": {
          "id": "2000",
-         "name": "Bet 365"
+         "name": "Bet 365",
+         "displayName": "Bet 365",
+         "logos": [
+          {
+           "href": "https://a.espncdn.com/redesign/assets/img/logos/logo-bet365.png",
+           "rel": [
+            "light"
+           ]
+          },
+          {
+           "href": "https://a.espncdn.com/redesign/assets/img/logos/logo-bet365.png",
+           "rel": [
+            "dark"
+           ]
+          }
+         ]
         },
         "awayTeamOdds": {
          "summary": "5/2",
@@ -1402,7 +1590,7 @@
       "startDate": "2026-10-25T14:00Z",
       "attendance": 0,
       "timeValid": true,
-      "recent": false,
+      "recent": true,
       "status": {
        "clock": 0,
        "displayClock": "0'",
@@ -1570,7 +1758,53 @@
           "id": "10689"
          }
         },
-        "statistics": [],
+        "statistics": [
+         {
+          "name": "appearances",
+          "abbreviation": "APP",
+          "displayValue": "0"
+         },
+         {
+          "name": "foulsCommitted",
+          "abbreviation": "FC",
+          "displayValue": "0"
+         },
+         {
+          "name": "wonCorners",
+          "abbreviation": "CW",
+          "displayValue": "0"
+         },
+         {
+          "name": "goalAssists",
+          "abbreviation": "A",
+          "displayValue": "0"
+         },
+         {
+          "name": "possessionPct",
+          "abbreviation": "PP",
+          "displayValue": "0"
+         },
+         {
+          "name": "shotAssists",
+          "abbreviation": "SHAST",
+          "displayValue": "0"
+         },
+         {
+          "name": "shotsOnTarget",
+          "abbreviation": "SOG",
+          "displayValue": "0"
+         },
+         {
+          "name": "totalGoals",
+          "abbreviation": "G",
+          "displayValue": "0"
+         },
+         {
+          "name": "totalShots",
+          "abbreviation": "SHOT",
+          "displayValue": "0"
+         }
+        ],
         "leaders": [
          {
           "name": "goals",
@@ -1789,7 +2023,53 @@
           "id": "10688"
          }
         },
-        "statistics": [],
+        "statistics": [
+         {
+          "name": "appearances",
+          "abbreviation": "APP",
+          "displayValue": "0"
+         },
+         {
+          "name": "foulsCommitted",
+          "abbreviation": "FC",
+          "displayValue": "0"
+         },
+         {
+          "name": "wonCorners",
+          "abbreviation": "CW",
+          "displayValue": "0"
+         },
+         {
+          "name": "goalAssists",
+          "abbreviation": "A",
+          "displayValue": "0"
+         },
+         {
+          "name": "possessionPct",
+          "abbreviation": "PP",
+          "displayValue": "0"
+         },
+         {
+          "name": "shotAssists",
+          "abbreviation": "SHAST",
+          "displayValue": "0"
+         },
+         {
+          "name": "shotsOnTarget",
+          "abbreviation": "SOG",
+          "displayValue": "0"
+         },
+         {
+          "name": "totalGoals",
+          "abbreviation": "G",
+          "displayValue": "0"
+         },
+         {
+          "name": "totalShots",
+          "abbreviation": "SHOT",
+          "displayValue": "0"
+         }
+        ],
         "leaders": [
          {
           "name": "goals",
