@@ -21,7 +21,10 @@ _Solo Home Assistant: l'app sul telefono non cambia._
   pagato, o al rimborso, senza i tre giorni in più. Chi ha il rinnovo
   automatico acceso tiene i tre giorni, il tempo che il rinnovo arrivi.
 - **Sport:** se i risultati non arrivano, il registro dell'add-on dice quale
-  cosa seguita non risponde e perché.
+  cosa seguita non risponde e perché, e se la plancia si è chiusa prima
+  della risposta.
+- **Registro:** quando la plancia si chiude il registro dice se l'ha chiusa
+  la pagina o Home Assistant, e dopo quanto.
 
 ## 1.18.7.1
 
