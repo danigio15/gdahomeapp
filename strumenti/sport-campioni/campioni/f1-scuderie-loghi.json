@@ -116,7 +116,7 @@
   "slug": "redbullracing",
   "u": "https://media.formula1.com/content/dam/fom-website/teams/2024/redbullracing-logo.png.transform/2col/image.png",
   "stato": 404,
-  "tipo": "image/gif",
+  "tipo": "application/octet-stream",
   "byte": 0
  },
  {
@@ -196,7 +196,7 @@
   "slug": "racingbulls",
   "u": "https://media.formula1.com/content/dam/fom-website/teams/2024/racingbulls-logo.png.transform/2col/image.png",
   "stato": 404,
-  "tipo": "image/gif",
+  "tipo": "application/octet-stream",
   "byte": 0
  },
  {
@@ -276,7 +276,7 @@
   "slug": "haasf1team",
   "u": "https://media.formula1.com/content/dam/fom-website/teams/2024/haasf1team-logo.png.transform/2col/image.png",
   "stato": 404,
-  "tipo": "image/gif",
+  "tipo": "application/octet-stream",
   "byte": 0
  },
  {
@@ -308,7 +308,7 @@
   "slug": "audi",
   "u": "https://media.formula1.com/content/dam/fom-website/teams/2025/audi-logo.png",
   "stato": 404,
-  "tipo": "image/gif",
+  "tipo": "application/octet-stream",
   "byte": 0
  },
  {
@@ -396,7 +396,7 @@
   "slug": "astonmartin",
   "u": "https://media.formula1.com/content/dam/fom-website/teams/2024/astonmartin-logo.png.transform/2col/image.png",
   "stato": 404,
-  "tipo": "image/gif",
+  "tipo": "application/octet-stream",
   "byte": 0
  },
  {
@@ -428,7 +428,7 @@
   "slug": "cadillac",
   "u": "https://media.formula1.com/content/dam/fom-website/teams/2025/cadillac-logo.png",
   "stato": 404,
-  "tipo": "image/gif",
+  "tipo": "application/octet-stream",
   "byte": 0
  },
  {
