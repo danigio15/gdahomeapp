@@ -423,6 +423,53 @@ test("«Ricontrolla adesso»: chiede subito, e premuto di fila bussa una volta s
   assert.equal(quadro.chieste.length, 3, "passati quindici secondi si bussa di nuovo");
 });
 
+test("licenza tolta: il centralino lo dice, la casa richiede subito e torna Base", async () => {
+  let ora = ADESSO;
+  let gettoni = { gdahome: unGettone({ sog: CASA, origine: "regalo" }, { adesso: ADESSO }) };
+  const { licenze, quadro } = leLicenze({
+    adesso: () => ora,
+    risposte: { "/v1/licenze/casa": () => conGettoni(gettoni) },
+  });
+  const cambi = [];
+  licenze.on("cambio", (stato) => cambi.push(stato.gdahome.attiva));
+  await licenze.rinnova();
+  assert.equal(licenze.premium, true);
+
+  /* Il gestore la toglie: il quadro non da' piu' il gettone. */
+  gettoni = {};
+  ora += 60_000;
+  licenze.richiamata();
+  const fine = Date.now() + 2000;
+  while (licenze.premium && Date.now() < fine) await new Promise((ok) => setTimeout(ok, 2));
+  assert.equal(licenze.premium, false, "Base subito, non al giro delle sei ore");
+  assert.equal(quadro.chieste.length, 2);
+  assert.deepEqual(cambi, [true, false]);
+  licenze.ferma();
+});
+
+test("licenza tolta appena dopo una domanda: si richiede quando il freno lo lascia", async () => {
+  let ora = ADESSO;
+  const { licenze, quadro } = leLicenze({
+    adesso: () => ora,
+    risposte: { "/v1/licenze/casa": () => conGettoni({}) },
+  });
+  await licenze.rinnova();
+  ora += 5_000;
+  licenze.richiamata();
+  licenze.richiamata();
+  await new Promise((ok) => setTimeout(ok, 20));
+  assert.equal(quadro.chieste.length, 1, "non subito: la domanda di prima e' troppo fresca");
+  assert.ok(licenze._richiamo, "ma ce n'e' una in attesa, una sola");
+  licenze.ferma();
+  assert.equal(licenze._richiamo, null);
+
+  /* A licenze spente non parte niente. */
+  const spente = leLicenze({ chiave: "" });
+  spente.licenze.richiamata();
+  await new Promise((ok) => setTimeout(ok, 20));
+  assert.equal(spente.quadro.chieste.length, 0);
+});
+
 test("«Ricontrolla adesso» con il quadro giu': restano i gettoni, e lo dice `ultima`", async () => {
   let ora = ADESSO;
   let giu = false;

@@ -225,6 +225,8 @@ export class Centralino {
     this.foto = foto;
     this.chiaveLicenze = String(chiaveLicenze || "");
     this.revoche = revoche;
+    /* Una licenza appena tolta chiude subito, non al giro di controllo. */
+    if (revoche) revoche.alleNuove = (lic) => this.licenzeAppenaTolte(lic);
     this.vitaDelCanaleDiAbbinamento = vitaDelCanaleDiAbbinamento;
     /** Fino a quando una casa e' gdahome Premium, per identificativo.
      *
@@ -561,6 +563,21 @@ export class Centralino {
     this.licenzaDi.delete(casa.id);
     if (this.impone) casa.chiudiITelefoni(PREMIUM_RICHIESTO.codice, PREMIUM_RICHIESTO.motivo);
     return false;
+  }
+
+  /* Il quadro ha appena detto tolte queste licenze. Le case collegate col
+   * gettone di una di queste si sentono dire di richiedere la loro licenza
+   * al quadro (`ricontrolla-licenza`): cosi' il Premium se ne va anche in
+   * casa adesso, non al giro delle sei ore. E con `impone` i loro telefoni da
+   * fuori escono subito. La casa non si fida di questo messaggio: richiede e
+   * basta, e a decidere e' il quadro con la sua firma. */
+  licenzeAppenaTolte(lic) {
+    const tolte = new Set(lic);
+    for (const casa of [...this.collegate.values()]) {
+      if (!casa.id || !tolte.has(this.licenzaDi.get(casa.id))) continue;
+      casa.ricontrollaLaLicenza();
+      if (this.impone) casa.chiudiITelefoni(PREMIUM_RICHIESTO.codice, PREMIUM_RICHIESTO.motivo);
+    }
   }
 
   /* ─── La ricevuta di chi compra fuori casa ────────────────────────────── */
@@ -1121,6 +1138,12 @@ class CasaCollegata {
     let quanti = 0;
     for (const canale of this.canali.values()) if (canale.via === "abbinamento") quanti += 1;
     return quanti;
+  }
+
+  /* Alla casa: richiedi la tua licenza al quadro. Un add-on di prima non
+   * conosce la parola e la lascia cadere. */
+  ricontrollaLaLicenza() {
+    if (!this.chiusa) this._manda(JSON.stringify({ t: "ricontrolla-licenza" }));
   }
 
   /* Chiude i telefoni entrati da fuori, non quelli che si stanno abbinando:

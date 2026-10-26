@@ -1445,6 +1445,59 @@ test("Google rinnova in ritardo: un'ora dopo la fine del periodo la casa e' anco
   }
 });
 
+test("chi ha spento il rinnovo automatico chiude alla fine del periodo, senza margine", async () => {
+  const token = "token-google-disdetto-0123456789";
+  const riga = (quando) => ({
+    productId: "gdahome_premium",
+    expiryTime: new Date(quando).toISOString(),
+  });
+  const abbonamenti = {
+    [token]: {
+      subscriptionState: "SUBSCRIPTION_STATE_ACTIVE",
+      acknowledgementState: "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+      lineItems: [riga(Date.now() + 2 * ORA)],
+    },
+  };
+  const { negozi } = unGoogleFinto(abbonamenti);
+  const b = await banco({ negozi });
+  try {
+    const presa = await b.fuori("negozio", {
+      casa: UNA,
+      segreto: SEGRETO,
+      app: "gdahome",
+      piattaforma: "android",
+      prodotto: "gdahome_premium",
+      ricevuta: token,
+    });
+    assert.equal(presa.stato, 200);
+    const una = b.licenze.quella(presa.detto.licenze[0].lic);
+    const finito = Date.now() - ORA;
+    una.scade = finito;
+    una.ricontrollata = Date.now();
+    abbonamenti[token] = { ...abbonamenti[token], lineItems: [riga(finito)] };
+
+    /* Col rinnovo acceso il margine resta: il rinnovo puo' essere in viaggio. */
+    una.negozio.abbonamento = { ...una.negozio.abbonamento, rinnovo: true };
+    const acceso = await b.fuori("casa", { casa: UNA, segreto: SEGRETO });
+    assert.ok(verificaIlGettone(acceso.detto.gettoni.gdahome, PUBBLICA, { sog: UNA }));
+    assert.deepEqual(b.licenze.tolte(), []);
+
+    /* Rinnovo spento: niente sta arrivando. Niente gettone nuovo, e il
+     * centralino la trova fra le tolte e chiude chi ha ancora quello vecchio. */
+    una.negozio.abbonamento = { ...una.negozio.abbonamento, rinnovo: false };
+    const spento = await b.fuori("casa", { casa: UNA, segreto: SEGRETO });
+    assert.deepEqual(spento.detto.gettoni, {});
+    assert.deepEqual(b.licenze.tolte(), [una.lic]);
+
+    /* Passato il margine il gettone vecchio non vale piu' da se': l'elenco
+     * non serve, e non la tiene. */
+    una.scade = Date.now() - MARGINE_DEL_RINNOVO - ORA;
+    assert.deepEqual(b.licenze.tolte(), []);
+  } finally {
+    await b.chiudi();
+  }
+});
+
 test("senza la fase dell'offerta, la prova si riconosce dal tag dell'offerta di Google", async () => {
   const token = "token-google-col-tag-0123456789";
   const { negozi } = unGoogleFinto({
@@ -1591,8 +1644,9 @@ test("Apple: la prova, il rinnovo chiesto con la transazione originale, e un rim
     );
     assert.equal("prova" in ilPayload(dopo.detto.gettoni.gdahome), false);
 
-    /* Scaduta da poco, e intanto rimborsata: non si allunga. Nei tre giorni
-     * del margine il gettone arriva ancora, fermo al periodo di prima. */
+    /* Scaduta da poco, e intanto rimborsata: non si allunga, e il margine dei
+     * tre giorni non c'e' piu' — nessun rinnovo sta arrivando. Niente
+     * gettone, e la licenza va nell'elenco delle tolte per il centralino. */
     const finita = Date.now() - GIORNO;
     una.scade = finita;
     una.ricontrollata = Date.now() - 2 * ORA;
@@ -1605,9 +1659,8 @@ test("Apple: la prova, il rinnovo chiesto con la transazione originale, e un rim
     const rimborsata = await b.fuori("casa", { casa: UNA, segreto: SEGRETO });
     assert.equal(rimborsata.stato, 200);
     assert.equal(una.scade, finita, "rimborsato: non si allunga");
-    const nelMargine = verificaIlGettone(rimborsata.detto.gettoni.gdahome, PUBBLICA, { sog: UNA });
-    assert.equal(nelMargine.pagato, finita);
-    assert.equal(nelMargine.scade, finita + MARGINE_DEL_RINNOVO);
+    assert.deepEqual(rimborsata.detto.gettoni, {});
+    assert.deepEqual(b.licenze.tolte(), [una.lic]);
 
     /* Passato anche il margine: niente gettone. */
     una.scade = Date.now() - MARGINE_DEL_RINNOVO - ORA;

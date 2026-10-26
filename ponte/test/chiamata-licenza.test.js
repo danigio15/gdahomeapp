@@ -92,6 +92,21 @@ test("con le licenze spente la presentazione e' quella di sempre", async () => {
   chiamata.spegni();
 });
 
+test("il centralino dice «ricontrolla-licenza»: la casa richiede la sua licenza", async () => {
+  let richiesta = 0;
+  const { chiamata, presa } = await unaChiamata((una) => {
+    una.diLaLicenza("");
+    una.alRicontrollo = () => {
+      richiesta += 1;
+    };
+  });
+  presa.dice({ t: "ricontrolla-licenza" });
+  const fine = Date.now() + 2000;
+  while (!richiesta && Date.now() < fine) await new Promise((ok) => setTimeout(ok, 2));
+  assert.equal(richiesta, 1);
+  chiamata.spegni();
+});
+
 test("la ricevuta girata dal centralino ha la sua risposta, col suo numero", async () => {
   const arrivate = [];
   const { chiamata, presa } = await unaChiamata((una) => {

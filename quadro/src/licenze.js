@@ -72,8 +72,10 @@
  * (`MARGINE_DEL_RINNOVO`): bastano per un rinnovo in ritardo, per un quadro
  * fermo un fine settimana, per una casa senza rete in quei giorni. Nel
  * gettone `scade` e' la fine del periodo piu' il margine, e la fine vera sta
- * in `pagato`: e' quella che si scrive a schermo. Chi disdice tiene Premium
- * al massimo tre giorni in piu'; chi paga non lo perde per un ritardo.
+ * in `pagato`: e' quella che si scrive a schermo. Chi paga non lo perde per
+ * un ritardo. Chi ha spento il rinnovo automatico, o e' stato rimborsato,
+ * il margine non ce l'ha: nessun rinnovo sta arrivando, e il centralino lo
+ * chiude entro un minuto con l'elenco delle licenze tolte.
  *
  * ─── Gli abbonamenti ─────────────────────────────────────────────────────
  *
@@ -144,6 +146,19 @@ export const UNA_VOLTA_OGNI = 60 * 60 * 1000;
 /** Quanto vale ancora una licenza del negozio dopo il periodo pagato: il tempo
  * che il rinnovo arrivi fino alla casa («I rinnovi», in cima). */
 export const MARGINE_DEL_RINNOVO = 3 * 24 * 60 * 60 * 1000;
+
+/* Un abbonamento che non si rinnova piu': il cliente ha spento il rinnovo
+ * automatico (lo dice il negozio nel giro di ogni giorno), oppure e' stato
+ * rimborsato. Per lui il margine dei tre giorni non serve — nessun rinnovo
+ * sta arrivando — e la licenza chiude alla fine del periodo pagato, o al
+ * rimborso. Un abbonamento col rinnovo acceso tiene il margine: Google
+ * rinnova a periodo finito e per qualche ora dice «scaduto» anche a chi paga. */
+const rimborsata = (una) => una.negozio?.finito === "acquisto-rimborsato";
+const finitaDavvero = (una) => rimborsata(una) || una.negozio?.abbonamento?.rinnovo === false;
+
+/* Tolta dal gestore o da un installatore negli ultimi otto giorni: prima,
+ * ogni suo gettone e' gia' scaduto da se'. */
+const tolta = (una, ora) => Boolean(una.revocata) && ora - una.revocata < OTTO_GIORNI;
 
 /** Quanto si aspetta il negozio mentre qualcuno aspetta i suoi gettoni. */
 export const ATTESA_DEL_NEGOZIO = 5000;
@@ -551,7 +566,12 @@ export class Licenze {
    */
   fineDi(una) {
     if (una.scade === null) return null;
-    return una.origine === "negozio" ? una.scade + MARGINE_DEL_RINNOVO : una.scade;
+    if (una.origine !== "negozio") return una.scade;
+    if (!finitaDavvero(una)) return una.scade + MARGINE_DEL_RINNOVO;
+    /* Un rimborso chiude da quando il negozio l'ha detto, anche a periodo
+     * pagato non ancora finito. */
+    const detto = Number(una.negozio.finitoIl);
+    return rimborsata(una) && detto > 0 ? Math.min(una.scade, detto) : una.scade;
   }
 
   /**
@@ -628,10 +648,13 @@ export class Licenze {
    *    due e se ne vede togliere una non deve restare fuori nelle ore che gli
    *    servono a farsi dare il gettone dell'altra.
    *
-   * Le licenze scadute o rimborsate non ci vanno: il loro gettone porta gia'
-   * la scadenza, e un abbonamento rinnovato dopo torna buono con la stessa
-   * licenza — metterlo qui vorrebbe dire chiudere chi ha pagato. Una licenza
-   * tolta invece non torna mai. */
+   * E ci va un abbonamento che non si rinnova piu' (rinnovo automatico spento,
+   * o rimborsato: `finitaDavvero`) a periodo pagato finito, finche' il gettone
+   * che la casa ha in mano — col margine dei tre giorni — vale ancora: «se
+   * scade una licenza non deve aspettare». Se il cliente lo riaccende e il
+   * negozio lo rinnova, la scadenza va avanti e dall'elenco esce da se'. Le licenze a tempo
+   * dei regali e degli installatori non ci vanno: il loro gettone porta gia'
+   * la scadenza vera, e il centralino chiude all'ora giusta. */
   tolte(ora = this.adesso()) {
     const conAltre = new Set(
       this.licenze
@@ -643,11 +666,18 @@ export class Licenze {
         (una) =>
           una.app === "gdahome" &&
           CASA.test(String(una.sog)) &&
-          una.revocata &&
-          ora - una.revocata < OTTO_GIORNI &&
+          (tolta(una, ora) || this._finitaNelMargine(una, ora)) &&
           !conAltre.has(una.sog),
       )
       .map((una) => una.lic);
+  }
+
+  /* Un abbonamento che non si rinnova piu' (`finitaDavvero`), a periodo
+   * finito, mentre un gettone firmato prima — col margine — potrebbe ancora
+   * valere sul telefono di qualcuno. */
+  _finitaNelMargine(una, ora) {
+    if (una.origine !== "negozio" || una.scade === null || !finitaDavvero(una)) return false;
+    return this.fineDi(una) <= ora && ora < una.scade + MARGINE_DEL_RINNOVO;
   }
 
   /** L'elenco delle licenze tolte, firmato come un gettone (`tipo: "revoche"`). */
@@ -910,6 +940,7 @@ export class Licenze {
     /* Col rinnovo detto, la richiesta di ogni giorno puo' aspettare domani. */
     if (typeof detto.rinnovo === "boolean") una.negozio.aggiornata = this.adesso();
     delete una.negozio.finito;
+    delete una.negozio.finitoIl;
   }
 
   /* ─── I rinnovi ─────────────────────────────────────────────────────── */
@@ -965,6 +996,12 @@ export class Licenze {
           if (this._dalRicontrollo(una, esito)) allungate += 1;
         })
         .catch((errore) => {
+          /* Rimborsato: niente margine, e la licenza chiude adesso (`tolte`). */
+          if (errore?.errore === "acquisto-rimborsato") {
+            una.negozio.finito = errore.errore;
+            una.negozio.finitoIl ??= this.adesso();
+            una.negozio.aggiornata = this.adesso();
+          }
           const detto = errore?.errore || errore?.message || String(errore);
           registro?.[errore?.errore ? "info" : "attenzione"]?.(
             `il rinnovo di ${una.lic} non si e' potuto controllare: ${detto}`,
@@ -1044,6 +1081,7 @@ export class Licenze {
         .catch((errore) => {
           if (errore?.errore) {
             una.negozio.finito = errore.errore;
+            una.negozio.finitoIl ??= ora;
             una.negozio.aggiornata = ora;
           }
           registro?.[errore?.errore ? "info" : "attenzione"]?.(

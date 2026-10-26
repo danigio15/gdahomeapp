@@ -90,7 +90,12 @@ test("il centralino acceso legge VERSIONE_MINIMA_APP", async () => {
   const vecchio = process.env.VERSIONE_MINIMA_APP;
   process.env.VERSIONE_MINIMA_APP = "1070000";
   try {
-    const acceso = await alzaIlCentralino({ porta: 0, cartella, livello: "errore" });
+    const acceso = await alzaIlCentralino({
+      porta: 0,
+      cartella,
+      livello: "errore",
+      dellaRevoche: "",
+    });
     try {
       const risposta = await fetch(`http://127.0.0.1:${acceso.server.address().port}/versioni`);
       assert.deepEqual(await risposta.json(), { gdahome: { minima: 1070000 } });
