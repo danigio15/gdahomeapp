@@ -1,0 +1,364 @@
+{
+"sports": [
+{
+"leagues": [
+{
+"teams": [
+{
+"team": {
+"id": "25",
+"abbreviation": "ANA",
+"displayName": "Anaheim Ducks",
+"shortDisplayName": "Ducks",
+"name": "Ducks",
+"location": "Anaheim",
+"color": "fc4c02"
+}
+},
+{
+"team": {
+"id": "1",
+"abbreviation": "BOS",
+"displayName": "Boston Bruins",
+"shortDisplayName": "Bruins",
+"name": "Bruins",
+"location": "Boston",
+"color": "231f20"
+}
+},
+{
+"team": {
+"id": "2",
+"abbreviation": "BUF",
+"displayName": "Buffalo Sabres",
+"shortDisplayName": "Sabres",
+"name": "Sabres",
+"location": "Buffalo",
+"color": "00468b"
+}
+},
+{
+"team": {
+"id": "3",
+"abbreviation": "CGY",
+"displayName": "Calgary Flames",
+"shortDisplayName": "Flames",
+"name": "Flames",
+"location": "Calgary",
+"color": "dd1a32"
+}
+},
+{
+"team": {
+"id": "7",
+"abbreviation": "CAR",
+"displayName": "Carolina Hurricanes",
+"shortDisplayName": "Hurricanes",
+"name": "Hurricanes",
+"location": "Carolina",
+"color": "e30426"
+}
+},
+{
+"team": {
+"id": "4",
+"abbreviation": "CHI",
+"displayName": "Chicago Blackhawks",
+"shortDisplayName": "Blackhawks",
+"name": "Blackhawks",
+"location": "Chicago",
+"color": "e31937"
+}
+},
+{
+"team": {
+"id": "17",
+"abbreviation": "COL",
+"displayName": "Colorado Avalanche",
+"shortDisplayName": "Avalanche",
+"name": "Avalanche",
+"location": "Colorado",
+"color": "860038"
+}
+},
+{
+"team": {
+"id": "29",
+"abbreviation": "CBJ",
+"displayName": "Columbus Blue Jackets",
+"shortDisplayName": "Blue Jackets",
+"name": "Blue Jackets",
+"location": "Columbus",
+"color": "002d62"
+}
+},
+{
+"team": {
+"id": "9",
+"abbreviation": "DAL",
+"displayName": "Dallas Stars",
+"shortDisplayName": "Stars",
+"name": "Stars",
+"location": "Dallas",
+"color": "20864c"
+}
+},
+{
+"team": {
+"id": "5",
+"abbreviation": "DET",
+"displayName": "Detroit Red Wings",
+"shortDisplayName": "Red Wings",
+"name": "Red Wings",
+"location": "Detroit",
+"color": "e30526"
+}
+},
+{
+"team": {
+"id": "6",
+"abbreviation": "EDM",
+"displayName": "Edmonton Oilers",
+"shortDisplayName": "Oilers",
+"name": "Oilers",
+"location": "Edmonton",
+"color": "00205b"
+}
+},
+{
+"team": {
+"id": "26",
+"abbreviation": "FLA",
+"displayName": "Florida Panthers",
+"shortDisplayName": "Panthers",
+"name": "Panthers",
+"location": "Florida",
+"color": "e51937"
+}
+},
+{
+"team": {
+"id": "8",
+"abbreviation": "LA",
+"displayName": "Los Angeles Kings",
+"shortDisplayName": "Kings",
+"name": "Kings",
+"location": "Los Angeles",
+"color": "121212"
+}
+},
+{
+"team": {
+"id": "30",
+"abbreviation": "MIN",
+"displayName": "Minnesota Wild",
+"shortDisplayName": "Wild",
+"name": "Wild",
+"location": "Minnesota",
+"color": "124734"
+}
+},
+{
+"team": {
+"id": "10",
+"abbreviation": "MTL",
+"displayName": "Montreal Canadiens",
+"shortDisplayName": "Canadiens",
+"name": "Canadiens",
+"location": "Montreal",
+"color": "c41230"
+}
+},
+{
+"team": {
+"id": "27",
+"abbreviation": "NSH",
+"displayName": "Nashville Predators",
+"shortDisplayName": "Predators",
+"name": "Predators",
+"location": "Nashville",
+"color": "fdba31"
+}
+},
+{
+"team": {
+"id": "11",
+"abbreviation": "NJ",
+"displayName": "New Jersey Devils",
+"shortDisplayName": "Devils",
+"name": "Devils",
+"location": "New Jersey",
+"color": "e30b2b"
+}
+},
+{
+"team": {
+"id": "12",
+"abbreviation": "NYI",
+"displayName": "New York Islanders",
+"shortDisplayName": "Islanders",
+"name": "Islanders",
+"location": "New York",
+"color": "00529b"
+}
+},
+{
+"team": {
+"id": "13",
+"abbreviation": "NYR",
+"displayName": "New York Rangers",
+"shortDisplayName": "Rangers",
+"name": "Rangers",
+"location": "New York",
+"color": "0056ae"
+}
+},
+{
+"team": {
+"id": "14",
+"abbreviation": "OTT",
+"displayName": "Ottawa Senators",
+"shortDisplayName": "Senators",
+"name": "Senators",
+"location": "Ottawa",
+"color": "dd1a32"
+}
+},
+{
+"team": {
+"id": "15",
+"abbreviation": "PHI",
+"displayName": "Philadelphia Flyers",
+"shortDisplayName": "Flyers",
+"name": "Flyers",
+"location": "Philadelphia",
+"color": "fe5823"
+}
+},
+{
+"team": {
+"id": "16",
+"abbreviation": "PIT",
+"displayName": "Pittsburgh Penguins",
+"shortDisplayName": "Penguins",
+"name": "Penguins",
+"location": "Pittsburgh",
+"color": "000000"
+}
+},
+{
+"team": {
+"id": "18",
+"abbreviation": "SJ",
+"displayName": "San Jose Sharks",
+"shortDisplayName": "Sharks",
+"name": "Sharks",
+"location": "San Jose",
+"color": "00788a"
+}
+},
+{
+"team": {
+"id": "124292",
+"abbreviation": "SEA",
+"displayName": "Seattle Kraken",
+"shortDisplayName": "Kraken",
+"name": "Kraken",
+"location": "Seattle",
+"color": "000d33"
+}
+},
+{
+"team": {
+"id": "19",
+"abbreviation": "STL",
+"displayName": "St. Louis Blues",
+"shortDisplayName": "Blues",
+"name": "Blues",
+"location": "St. Louis",
+"color": "0070b9"
+}
+},
+{
+"team": {
+"id": "20",
+"abbreviation": "TB",
+"displayName": "Tampa Bay Lightning",
+"shortDisplayName": "Lightning",
+"name": "Lightning",
+"location": "Tampa Bay",
+"color": "003e7e"
+}
+},
+{
+"team": {
+"id": "21",
+"abbreviation": "TOR",
+"displayName": "Toronto Maple Leafs",
+"shortDisplayName": "Maple Leafs",
+"name": "Maple Leafs",
+"location": "Toronto",
+"color": "003e7e"
+}
+},
+{
+"team": {
+"id": "129764",
+"abbreviation": "UTAH",
+"displayName": "Utah Mammoth",
+"shortDisplayName": "Mammoth",
+"name": "Mammoth",
+"location": "Utah",
+"color": "000000"
+}
+},
+{
+"team": {
+"id": "22",
+"abbreviation": "VAN",
+"displayName": "Vancouver Canucks",
+"shortDisplayName": "Canucks",
+"name": "Canucks",
+"location": "Vancouver",
+"color": "003e7e"
+}
+},
+{
+"team": {
+"id": "37",
+"abbreviation": "VGK",
+"displayName": "Vegas Golden Knights",
+"shortDisplayName": "Golden Knights",
+"name": "Golden Knights",
+"location": "Vegas",
+"color": "344043"
+}
+},
+{
+"team": {
+"id": "23",
+"abbreviation": "WSH",
+"displayName": "Washington Capitals",
+"shortDisplayName": "Capitals",
+"name": "Capitals",
+"location": "Washington",
+"color": "d71830"
+}
+},
+{
+"team": {
+"id": "28",
+"abbreviation": "WPG",
+"displayName": "Winnipeg Jets",
+"shortDisplayName": "Jets",
+"name": "Jets",
+"location": "Winnipeg",
+"color": "002d62"
+}
+}
+]
+}
+]
+}
+]
+}

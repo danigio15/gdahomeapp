@@ -7269,8 +7269,6 @@ export default Object.freeze({
     "الفرق لا تصل الآن: حاول مجددًا بعد قليل.",
   "Teams come from the GdAHome add-on, which cannot be reached from here.":
     "تأتي الفرق من إضافة GdAHome، ولا يمكن الوصول إليها من هنا.",
-  "The Sports page: your football team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.":
-    "صفحة الرياضة: فريقك لكرة القدم والفورمولا 1 وموتو جي بي، مع النتائج والمباريات والسباقات القادمة والترتيب. في الصفحة الرئيسية تعرض البطاقة ما يهم الآن: المباراة الجارية، مباراة اليوم، آخر منصة تتويج. تجلب الإضافة النتائج من مصادر عامة، للمستخدمين الذين سجّلوا الدخول فقط.",
   "What you follow": "ما تتابعه",
   Won: "فوز",
   "Your team": "فريقك",
@@ -7419,4 +7417,10 @@ export default Object.freeze({
   "In pit": "في الحظيرة",
   "Lap {n}": "اللفة {n}",
   "The session is over.": "انتهت الجلسة.",
+  "games and standings": "المباريات والترتيب",
+  "Hockey team": "فريق هوكي",
+  "overtime": "وقت إضافي",
+  "shootout": "ركلات الترجيح",
+  "The Sports page: your football or hockey team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.": "صفحة الرياضة: فريقك لكرة القدم أو الهوكي، والفورمولا 1 وموتو جي بي، مع النتائج والمباريات والسباقات القادمة والترتيب. في الصفحة الرئيسية يعرض المربع ما يهم الآن: المباراة الجارية، مباراة اليوم، آخر منصة تتويج. تجلب الإضافة النتائج من مصادر عامة، للمستخدمين المسجلين فقط.",
+  "The team's games, results (live too) and its place in its conference are shown. Italian leagues are not available: they have no public data source.": "تظهر مباريات الفريق ونتائجه (مباشرة أيضًا) ومركزه في مجموعته. الدوريات الإيطالية غير متاحة: ليس لها مصدر بيانات عام.",
 });

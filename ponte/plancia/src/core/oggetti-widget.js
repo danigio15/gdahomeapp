@@ -1179,6 +1179,25 @@ const OGGETTI = Object.freeze({
     <g fill="#0f172a"><rect x="10.0" y="5.0" width="3.6" height="3"/><rect x="17.2" y="5.0" width="3.6" height="3"/><rect x="24.4" y="5.0" width="3.6" height="3"/><rect x="13.6" y="8.0" width="3.6" height="3"/><rect x="20.8" y="8.0" width="3.6" height="3"/><rect x="10.0" y="11.0" width="3.6" height="3"/><rect x="17.2" y="11.0" width="3.6" height="3"/><rect x="24.4" y="11.0" width="3.6" height="3"/><rect x="13.6" y="14.0" width="3.6" height="3"/><rect x="20.8" y="14.0" width="3.6" height="3"/></g>
     <rect x="10" y="5" width="18" height="12" rx="1" fill="url(#dmoF1L)"/>
     <rect x="10" y="5" width="18" height="12" rx="1" fill="none" stroke="#334155" stroke-opacity=".55" stroke-width=".8"/>`,
+  /* L'hockey: due bastoni incrociati, col nastro sulla paletta, e il disco
+   * nero davanti. E' la squadra di hockey quando non c'e' ancora il suo
+   * stemma, e la voce nel Config. */
+  hockey: `<defs>
+      <linearGradient id="dmoHockeyB" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#fde68a"/><stop offset=".55" stop-color="#d97706"/>
+        <stop offset="1" stop-color="#92400e"/></linearGradient>
+      <radialGradient id="dmoHockeyD" cx=".4" cy=".3" r=".8">
+        <stop offset="0" stop-color="#475569"/><stop offset="1" stop-color="#020617"/></radialGradient></defs>
+    ${OMBRA(16, 29.2, 11)}
+    <path d="M7.2 3.4l12.6 19.2c.6.9 1.6 1.4 2.6 1.4h5.2v-2.8h-4.4c-.4 0-.7-.2-.9-.5L9.6 1.9z" fill="url(#dmoHockeyB)"/>
+    <path d="M24.8 3.4L12.2 22.6c-.6.9-1.6 1.4-2.6 1.4H4.4v-2.8h4.4c.4 0 .7-.2.9-.5L22.4 1.9z" fill="url(#dmoHockeyB)"/>
+    <path d="M24.4 21.2h3.2v2.8h-3.2zM4.4 21.2h3.2v2.8H4.4z" fill="#1e293b"/>
+    <path d="M9.2 3.2l2.2 3.4M22.8 3.2l-2.2 3.4" stroke="#fff" stroke-opacity=".6" stroke-width="1"
+      stroke-linecap="round"/>
+    <ellipse cx="16" cy="26.4" rx="5.2" ry="2.2" fill="#020617"/>
+    <ellipse cx="16" cy="25.4" rx="5.2" ry="2.2" fill="url(#dmoHockeyD)"/>
+    <path d="M12.6 24.8a4.6 1.4 0 0 1 4.4-1" stroke="#fff" stroke-opacity=".55" stroke-width=".9"
+      fill="none" stroke-linecap="round"/>`,
   /* La MotoGP: il casco da pista, con la visiera scura e la riga di gara. */
   motogp: `<defs>
       <linearGradient id="dmoMotoH" x1="0" y1="0" x2=".4" y2="1">

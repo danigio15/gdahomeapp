@@ -7344,8 +7344,6 @@ export default Object.freeze({
     "Drużyny teraz nie docierają: spróbuj za chwilę.",
   "Teams come from the GdAHome add-on, which cannot be reached from here.":
     "Drużyny pochodzą z dodatku GdAHome, który jest stąd nieosiągalny.",
-  "The Sports page: your football team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.":
-    "Strona Sport: twoja drużyna piłkarska, Formuła 1 i MotoGP, z wynikami, nadchodzącymi meczami i wyścigami oraz klasyfikacjami. Na stronie głównej kafelek pokazuje to, co ważne teraz: trwający mecz, dzisiejszy mecz, ostatnie podium. Wyniki pobiera dodatek z publicznych źródeł, tylko dla zalogowanych użytkowników.",
   "What you follow": "Co obserwujesz",
   Won: "Wygrany",
   "Your team": "Twoja drużyna",
@@ -7494,4 +7492,10 @@ export default Object.freeze({
   "In pit": "W boksie",
   "Lap {n}": "Okrążenie {n}",
   "The session is over.": "Sesja się zakończyła.",
+  "games and standings": "mecze i tabela",
+  "Hockey team": "Drużyna hokejowa",
+  "overtime": "dogrywka",
+  "shootout": "rzuty karne",
+  "The Sports page: your football or hockey team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.": "Strona Sport: twoja drużyna piłkarska lub hokejowa, Formuła 1 i MotoGP, z wynikami, nadchodzącymi meczami i wyścigami oraz tabelami. Na stronie głównej kafelek pokazuje to, co ważne teraz: trwający mecz, dzisiejszy mecz, ostatnie podium. Wyniki pobiera dodatek ze źródeł publicznych, tylko dla zalogowanych użytkowników.",
+  "The team's games, results (live too) and its place in its conference are shown. Italian leagues are not available: they have no public data source.": "Widać mecze drużyny, wyniki (także na żywo) i jej miejsce w konferencji. Lig włoskich nie ma: nie mają publicznego źródła danych.",
 });

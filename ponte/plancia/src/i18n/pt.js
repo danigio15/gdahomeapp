@@ -7354,8 +7354,6 @@ export default Object.freeze({
     "As equipas não estão a chegar agora: tenta de novo daqui a pouco.",
   "Teams come from the GdAHome add-on, which cannot be reached from here.":
     "As equipas vêm do suplemento GdAHome, que não é alcançável a partir daqui.",
-  "The Sports page: your football team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.":
-    "A página Desporto: a tua equipa de futebol, a Fórmula 1 e o MotoGP, com resultados, próximos jogos e corridas, e classificações. No Início o mosaico mostra o que importa agora: o jogo a decorrer, o jogo de hoje, o último pódio. Os resultados são obtidos pelo suplemento a partir de fontes públicas, só para utilizadores com sessão iniciada.",
   "What you follow": "O que segues",
   Won: "Ganho",
   "Your team": "A tua equipa",
@@ -7504,4 +7502,10 @@ export default Object.freeze({
   "In pit": "Nas boxes",
   "Lap {n}": "Volta {n}",
   "The session is over.": "A sessão terminou.",
+  "games and standings": "jogos e classificação",
+  "Hockey team": "Equipa de hóquei",
+  "overtime": "prolongamento",
+  "shootout": "desempate por penáltis",
+  "The Sports page: your football or hockey team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.": "A página Desporto: a tua equipa de futebol ou de hóquei, a Fórmula 1 e o MotoGP, com resultados, próximos jogos e corridas, e classificações. No Início, o cartão mostra o que importa agora: o jogo a decorrer, o de hoje, o último pódio. Os resultados são obtidos pelo add-on de fontes públicas, só para utilizadores com sessão iniciada.",
+  "The team's games, results (live too) and its place in its conference are shown. Italian leagues are not available: they have no public data source.": "Mostram-se os jogos da equipa, os resultados (também em direto) e o lugar na sua conferência. As ligas italianas não estão disponíveis: não têm uma fonte pública de dados.",
 });

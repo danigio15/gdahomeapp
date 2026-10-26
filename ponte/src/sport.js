@@ -69,6 +69,22 @@ const numero = (v) => {
 };
 const testo = (v) => (typeof v === "string" ? v.trim() : v == null ? "" : String(v));
 
+/** I campionati di hockey: solo la NHL. Le leghe italiane (ghiaccio, pista,
+ * prato) non hanno una fonte pubblica con i dati: solo pagine web, che
+ * cambiano senza avviso. */
+export const LEGHE_HOCKEY = Object.freeze({ nhl: "NHL" });
+const ESPN_HOCKEY = "https://site.api.espn.com/apis/site/v2/sports/hockey";
+const ESPN_CLASSIFICHE_HOCKEY = "https://site.web.api.espn.com/apis/v2/sports/hockey";
+
+export function legaHockeyValida(l) {
+  return typeof l === "string" && Object.hasOwn(LEGHE_HOCKEY, l);
+}
+
+/** `nhl:<sigla>` di uno stemma di hockey: la sigla e' quella di ESPN. */
+export function stemmaHockeyValido(chiave) {
+  return /^nhl:[a-z]{2,4}$/.test(typeof chiave === "string" ? chiave : "");
+}
+
 export function campionatoValido(c) {
   return typeof c === "string" && Object.hasOwn(CAMPIONATI, c);
 }
@@ -309,6 +325,90 @@ export function calcioDaEspn({
         classifica: tab,
       };
     }),
+  };
+}
+
+/* --------------------------------------------------------------- hockey */
+
+/* Lo stemma di una squadra di hockey si chiede al ponte con la sua sigla:
+ * l'identificativo numerico di ESPN e' lo stesso spazio di quello del
+ * calcio, e la stessa cifra sarebbe due squadre diverse. */
+function conLoStemma(sq) {
+  const sigla = testo(sq?.sigla).toLowerCase();
+  return { ...sq, stemma: /^[a-z]{2,4}$/.test(sigla) ? `nhl:${sigla}` : "" };
+}
+
+/** Una partita di hockey di ESPN: come una di calcio, piu' il tempo
+ * supplementare o i rigori (`OT`, `SO`) e il periodo in corso. */
+export function partitaDiHockey(evento, mia, lega = "nhl") {
+  const p = partitaDaEspn(evento, mia);
+  if (!p) return null;
+  const stato = evento?.competitions?.[0]?.status || evento?.status || {};
+  const altro = testo(stato.type?.altDetail).toUpperCase();
+  return {
+    ...p,
+    competizione: LEGHE_HOCKEY[lega] || "",
+    /* Il dettaglio di una partita di hockey non c'e': senza lega non si
+     * tocca. */
+    lega: "",
+    casa: conLoStemma(p.casa),
+    fuori: conLoStemma(p.fuori),
+    minuto: p.fase === "in" ? testo(stato.type?.shortDetail || stato.displayClock) : "",
+    intervallo: /END_PERIOD|INTERMISSION/.test(stato.type?.name || ""),
+    supplementari: altro === "OT" || altro === "SO" ? altro : "",
+  };
+}
+
+/** La classifica di hockey: la conference della squadra, per punti. */
+export function classificaDiHockey(json, id) {
+  const gruppi = json?.children?.length ? json.children : [json];
+  const suo =
+    gruppi.find((g) =>
+      (g?.standings?.entries || []).some((e) => String(e?.team?.id) === String(id)),
+    ) || gruppi[0];
+  const righe = classificaDaEspn({ standings: suo?.standings })
+    .map((r) => conLoStemma(r))
+    .sort((a, b) => b.punti - a.punti || a.giocate - b.giocate || b.vinte - a.vinte);
+  return {
+    nome: testo(suo?.name || ""),
+    righe: righe.map((r, i) => ({ ...r, posizione: i + 1, zona: null })),
+  };
+}
+
+/** Tutto della squadra di hockey seguita, nella forma della squadra di
+ * calcio: la plancia la disegna con gli stessi pezzi. */
+export function hockeyDaEspn({ id, lega = "nhl", calendario, classifica }) {
+  const tutte = new Map();
+  for (const e of calendario?.events || []) {
+    const p = partitaDiHockey(e, id, lega);
+    if (p && !tutte.has(p.id)) tutte.set(p.id, p);
+  }
+  const inOrdine = [...tutte.values()].sort((a, b) => Date.parse(a.quando) - Date.parse(b.quando));
+  const tabella = classificaDiHockey(classifica, id);
+  const riga = tabella.righe.find((r) => r.id === String(id)) || null;
+  const io = conLoStemma(squadraDi(calendario?.team || {}));
+  return {
+    tipo: "hockey",
+    campionato: {
+      id: lega,
+      nome: [LEGHE_HOCKEY[lega], tabella.nome].filter(Boolean).join(" · "),
+    },
+    squadra: {
+      ...io,
+      id: String(id),
+      nome: io.nome || riga?.nome || "",
+      breve: riga?.breve || io.breve,
+      colore: io.colore || riga?.colore || null,
+    },
+    dalVivo: inOrdine.find((p) => p.fase === "in") || null,
+    ultime: inOrdine
+      .filter((p) => p.fase === "fine")
+      .slice(-5)
+      .reverse(),
+    prossime: inOrdine.filter((p) => p.fase === "prima" && !p.rinviata).slice(0, 5),
+    posizione: riga,
+    classifica: tabella.righe,
+    coppe: [],
   };
 }
 
@@ -897,6 +997,10 @@ export function creaSport({
   }
 
   async function squadre(campionato) {
+    if (legaHockeyValida(campionato))
+      return squadreDaEspn(await json(`${ESPN_HOCKEY}/${campionato}/teams`, PER_UN_GIORNO)).map(
+        conLoStemma,
+      );
     if (!campionatoValido(campionato)) throw new Error("sport: campionato");
     return squadreDaEspn(await json(`${ESPN}/${campionato}/teams`, PER_UN_GIORNO));
   }
@@ -953,6 +1057,39 @@ export function creaSport({
           classificheDelleCoppe,
         });
       }
+    }
+    return r;
+  }
+
+  async function hockey(lega, id) {
+    if (!legaHockeyValida(lega) || !squadraValida(id)) throw new Error("sport: squadra");
+    const [calendario, classifica] = await Promise.all([
+      json(`${ESPN_HOCKEY}/${lega}/teams/${id}/schedule`),
+      json(`${ESPN_CLASSIFICHE_HOCKEY}/${lega}/standings`).catch(() => null),
+    ]);
+    let r = hockeyDaEspn({ id: String(id), lega, calendario, classifica });
+    /* Una partita oggi, in corso o a momenti: il risultato dalla giornata,
+     * che si aggiorna ogni minuto. */
+    const adesso = orologio();
+    const vicina = [r.dalVivo, ...r.prossime].find(
+      (p) => p && Math.abs(Date.parse(p.quando) - adesso) < 4 * 3600_000,
+    );
+    if (vicina) {
+      const giorno = vicina.quando.slice(0, 10).replaceAll("-", "");
+      const oggi = await json(`${ESPN_HOCKEY}/${lega}/scoreboard?dates=${giorno}`, PER_POCO).catch(
+        () => null,
+      );
+      const viva = (oggi?.events || []).find((e) => String(e.id) === vicina.id);
+      if (viva)
+        r = hockeyDaEspn({
+          id: String(id),
+          lega,
+          calendario: {
+            ...calendario,
+            events: [...(calendario?.events || []).filter((e) => String(e.id) !== vicina.id), viva],
+          },
+          classifica,
+        });
     }
     return r;
   }
@@ -1127,6 +1264,18 @@ export function creaSport({
    * scuderia di F1 (`f1:<constructorId>`): i byte e il tipo. */
   async function logo(id) {
     if (scuderiaValida(id)) return simbolo(id);
+    if (stemmaHockeyValido(id)) {
+      const indirizzo = `https://a.espncdn.com/i/teamlogos/nhl/500/${id.slice(4)}.png`;
+      const tenuto = memoria.get(indirizzo);
+      if (tenuto && tenuto.fino > orologio()) return tenuto.valore;
+      const r = await scarica(indirizzo, { signal: AbortSignal.timeout(ATTESA) });
+      if (!r.ok) throw new Error(`sport: ${r.status}`);
+      const byte = Buffer.from(await r.arrayBuffer());
+      if (byte.length > 512 * 1024) throw new Error("sport: logo troppo grande");
+      const valore = { tipo: "image/png", base64: byte.toString("base64") };
+      memoria.set(indirizzo, { valore, fino: orologio() + PER_UN_GIORNO });
+      return valore;
+    }
     if (!squadraValida(id)) throw new Error("sport: logo");
     const indirizzo = stemmaDi(id);
     const tenuta = memoria.get(indirizzo);
@@ -1158,9 +1307,12 @@ export function creaSport({
       elenco.map(async (s) => {
         const tipo = testo(s?.tipo);
         const chiave =
-          tipo === "calcio" ? `calcio:${testo(s?.campionato)}:${testo(s?.squadra)}` : tipo;
+          tipo === "calcio" || tipo === "hockey"
+            ? `${tipo}:${testo(s?.campionato)}:${testo(s?.squadra)}`
+            : tipo;
         const lavoro = (async () => {
           if (tipo === "calcio") return calcio(s.campionato, String(s.squadra));
+          if (tipo === "hockey") return hockey(s.campionato, String(s.squadra));
           if (tipo === "f1") return f1();
           if (tipo === "motogp") return motogp();
           return { tipo, errore: "sconosciuto" };
@@ -1194,5 +1346,5 @@ export function creaSport({
     );
   }
 
-  return { squadre, risultati, dettaglio, logo, calcio, f1, motogp };
+  return { squadre, risultati, dettaglio, logo, calcio, hockey, f1, motogp };
 }

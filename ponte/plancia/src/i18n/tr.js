@@ -7322,8 +7322,6 @@ export default Object.freeze({
     "Takımlar şu anda gelmiyor: birazdan tekrar dene.",
   "Teams come from the GdAHome add-on, which cannot be reached from here.":
     "Takımlar, buradan erişilemeyen GdAHome eklentisinden gelir.",
-  "The Sports page: your football team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.":
-    "Spor sayfası: futbol takımın, Formula 1 ve MotoGP; sonuçlar, yaklaşan maçlar ve yarışlar, klasmanlarla. Ana sayfada kutucuk şu an önemli olanı gösterir: oynanan maç, bugünkü maç, son podyum. Sonuçları eklenti açık kaynaklardan alır, yalnızca oturum açmış kullanıcılar için.",
   "What you follow": "Takip ettiklerin",
   Won: "Kazanıldı",
   "Your team": "Takımın",
@@ -7472,4 +7470,10 @@ export default Object.freeze({
   "In pit": "Pitte",
   "Lap {n}": "Tur {n}",
   "The session is over.": "Seans bitti.",
+  "games and standings": "maçlar ve puan durumu",
+  "Hockey team": "Hokey takımı",
+  "overtime": "uzatma",
+  "shootout": "penaltı atışları",
+  "The Sports page: your football or hockey team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.": "Spor sayfası: futbol veya hokey takımın, Formula 1 ve MotoGP; sonuçlar, yaklaşan maçlar ve yarışlar, puan durumları. Ana sayfada kutucuk şu an önemli olanı gösterir: oynanan maç, bugünkü maç, son podyum. Sonuçları eklenti herkese açık kaynaklardan alır, yalnızca oturum açmış kullanıcılar için.",
+  "The team's games, results (live too) and its place in its conference are shown. Italian leagues are not available: they have no public data source.": "Takımın maçları, sonuçları (canlı da) ve konferanstaki yeri gösterilir. İtalyan ligleri yok: herkese açık bir veri kaynakları yok.",
 });

@@ -7187,8 +7187,6 @@ export default Object.freeze({
   "Teams are not coming in right now: try again shortly.": "球队暂时无法获取：请稍后再试。",
   "Teams come from the GdAHome add-on, which cannot be reached from here.":
     "球队来自 GdAHome 加载项，从这里无法连接。",
-  "The Sports page: your football team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.":
-    "体育页面：你的足球队、F1 和 MotoGP，包含结果、即将进行的比赛和赛事以及积分榜。主页上的磁贴显示当下最重要的内容：正在进行的比赛、今天的比赛、上一次领奖台。结果由加载项从公开来源获取，仅对已登录用户显示。",
   "What you follow": "关注的内容",
   Won: "胜",
   "Your team": "你的球队",
@@ -7336,4 +7334,10 @@ export default Object.freeze({
   "In pit": "进站",
   "Lap {n}": "第 {n} 圈",
   "The session is over.": "本节已结束。",
+  "games and standings": "比赛和积分榜",
+  "Hockey team": "冰球队",
+  "overtime": "加时",
+  "shootout": "点球大战",
+  "The Sports page: your football or hockey team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.": "体育页面：你的足球队或冰球队、F1 和 MotoGP，包括结果、即将进行的比赛和积分榜。主页上的卡片显示当下最重要的内容：正在进行的比赛、今天的比赛、最近的领奖台。结果由加载项从公开来源获取，仅限已登录用户。",
+  "The team's games, results (live too) and its place in its conference are shown. Italian leagues are not available: they have no public data source.": "显示球队的比赛、结果（包括直播）及其在分区中的排名。没有意大利联赛：它们没有公开的数据来源。",
 });

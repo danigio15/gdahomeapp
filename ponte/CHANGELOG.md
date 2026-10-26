@@ -10,6 +10,16 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.3
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Sport, l'hockey:** nella configurazione c'è «Squadra di hockey». Della
+  squadra NHL scelta si vedono la prossima partita col conto alla rovescia, il
+  risultato dal vivo col periodo, le ultime cinque (con supplementari e rigori)
+  e la classifica della sua conference. Le leghe italiane non ci sono: non
+  hanno una fonte pubblica con i dati.
+
 ## 1.18.7.2
 
 _Solo Home Assistant: l'app sul telefono non cambia._

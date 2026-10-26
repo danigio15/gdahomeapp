@@ -6,6 +6,8 @@
  *   · una squadra di calcio: prima il campionato, poi la squadra dall'elenco
  *     che il ponte chiede alla fonte (`ponte/sport/squadre`). Le partite sono
  *     quelle di tutte le sue competizioni, coppe comprese;
+ *   · una squadra di hockey, allo stesso modo: per ora la NHL, l'unica lega
+ *     con una fonte pubblica coi dati;
  *   · la Formula 1 e la MotoGP, ognuna col suo pilota del cuore, scelto dalla
  *     classifica di quest'anno: nella pagina e' in evidenza.
  *
@@ -15,6 +17,8 @@
 import {
   CAMPIONATI,
   CHIAVE_SPORT,
+  LEGHE_HOCKEY,
+  diSquadra,
   QUANTI_AL_MASSIMO,
   chiaveDelSeguito,
   normalizzaSport,
@@ -40,7 +44,7 @@ const KEY = "__DASHBOARDMODERN_SPORT_EDITOR__";
 const state = (root[KEY] ||= {
   installed: false,
   /* La squadra che si sta aggiungendo: il campionato scelto e le sue squadre. */
-  nuova: { aperta: false, campionato: "ita.1", squadre: {}, caricando: "", guasto: "" },
+  nuova: { aperta: false, sport: "calcio", campionato: "ita.1", squadre: {}, caricando: "", guasto: "" },
 });
 
 export const SPORT_EDITOR_TAB = SPORT_TAB;
@@ -119,13 +123,19 @@ function sceltaDelPreferito(seguito, indice) {
   )}</span><select class="ed-in" data-dm-sport-preferito="${indice}">${opzioni}${dentro}</select></label>`;
 }
 
+/* Le leghe tra cui scegliere, per lo sport della squadra che si aggiunge. */
+const legheDi = (sport) => (sport === "hockey" ? LEGHE_HOCKEY : CAMPIONATI);
+const legaDiSerie = (sport) => (sport === "hockey" ? "nhl" : "ita.1");
+
 function seguitoMarkup(seguito, indice, quanti) {
   const disegno = seguito.tipo === "calcio" ? "sport" : seguito.tipo;
-  const nome = seguito.tipo === "calcio" ? seguito.nome || t("Squadra", "Team") : nomeDelTipo(seguito.tipo);
+  const nome = diSquadra(seguito.tipo) ? seguito.nome || t("Squadra", "Team") : nomeDelTipo(seguito.tipo);
   const sotto =
     seguito.tipo === "calcio"
       ? `${CAMPIONATI[seguito.campionato] || ""} · ${t("tutte le competizioni", "all competitions")}`
-      : t("Prossimo gran premio, ultima gara, classifiche", "Next grand prix, last race, standings");
+      : seguito.tipo === "hockey"
+        ? `${LEGHE_HOCKEY[seguito.campionato] || ""} · ${t("partite e classifica", "games and standings")}`
+        : t("Prossimo gran premio, ultima gara, classifiche", "Next grand prix, last race, standings");
   return `<div class="dm-sport-ed-voce" data-dm-sport-voce="${esc(chiaveDelSeguito(seguito))}">
       <div class="dm-sport-ed-frecce">
         <button type="button" class="ed-del" data-dm-sport-su="${indice}" ${indice === 0 ? "disabled" : ""}
@@ -138,7 +148,7 @@ function seguitoMarkup(seguito, indice, quanti) {
       <button type="button" class="ed-del dm-sport-ed-togli" data-dm-sport-togli="${indice}" aria-label="${esc(
         t("Togli", "Remove"),
       )}">🗑️</button>
-      ${seguito.tipo === "calcio" ? "" : `<div class="dm-sport-ed-sotto">${sceltaDelPreferito(seguito, indice)}</div>`}
+      ${diSquadra(seguito.tipo) ? "" : `<div class="dm-sport-ed-sotto">${sceltaDelPreferito(seguito, indice)}</div>`}
     </div>`;
 }
 
@@ -147,16 +157,17 @@ function aggiungiMarkup(config) {
   const ce = (tipo) => config.seguiti.some((s) => s.tipo === tipo);
   const nuova = state.nuova;
   const tasti = `<div class="dm-sport-ed-tasti">
-      <button type="button" class="ed-btn-add" data-dm-sport-nuova ${pieno ? "disabled" : ""}>⚽ ${esc(t("Squadra di calcio", "Football team"))}</button>
+      <button type="button" class="ed-btn-add" data-dm-sport-nuova="calcio" ${pieno ? "disabled" : ""}>⚽ ${esc(t("Squadra di calcio", "Football team"))}</button>
+      <button type="button" class="ed-btn-add" data-dm-sport-nuova="hockey" ${pieno ? "disabled" : ""}>🏒 ${esc(t("Squadra di hockey", "Hockey team"))}</button>
       <button type="button" class="ed-btn-add" data-dm-sport-aggiungi="f1" ${pieno || ce("f1") ? "disabled" : ""}>🏁 Formula 1</button>
       <button type="button" class="ed-btn-add" data-dm-sport-aggiungi="motogp" ${pieno || ce("motogp") ? "disabled" : ""}>🏍️ MotoGP</button>
     </div>`;
   if (!nuova.aperta || pieno) return tasti;
-  const campionati = Object.entries(CAMPIONATI)
+  const campionati = Object.entries(legheDi(nuova.sport))
     .map(([id, nome]) => `<option value="${esc(id)}"${id === nuova.campionato ? " selected" : ""}>${esc(nome)}</option>`)
     .join("");
   const squadre = nuova.squadre[nuova.campionato];
-  const gia = new Set(config.seguiti.filter((s) => s.tipo === "calcio").map((s) => s.squadra));
+  const gia = new Set(config.seguiti.filter((s) => s.tipo === nuova.sport).map((s) => s.squadra));
   let scelta = "";
   if (squadre?.length)
     scelta = `<label class="ed-slot dm-sport-ed-campo"><span class="ed-slot-lbl">${esc(t("Squadra", "Team"))}</span>
@@ -176,10 +187,15 @@ function aggiungiMarkup(config) {
         <select class="ed-in" data-dm-sport-campionato>${campionati}</select></label>
       ${scelta}
       <p class="dm-sport-ed-nota">${esc(
-        t(
-          "Della squadra si vedono le partite di tutte le competizioni: campionato, coppe ed Europa.",
-          "All of the team's competitions are shown: league, cups and Europe.",
-        ),
+        nuova.sport === "hockey"
+          ? t(
+              "Della squadra si vedono le partite, i risultati anche dal vivo e il posto nella sua conference. Le leghe italiane non ci sono: non hanno una fonte pubblica con i dati.",
+              "The team's games, results (live too) and its place in its conference are shown. Italian leagues are not available: they have no public data source.",
+            )
+          : t(
+              "Della squadra si vedono le partite di tutte le competizioni: campionato, coppe ed Europa.",
+              "All of the team's competitions are shown: league, cups and Europe.",
+            ),
       )}</p>
     </div>`;
 }
@@ -198,8 +214,8 @@ function corpoMarkup() {
   return `${fasciaMarkup()}<div class="dm-sport-ed">
     <div class="ed-intro">${esc(
       t(
-        "La pagina Sport: la tua squadra di calcio, la Formula 1 e la MotoGP, con i risultati, le prossime partite e gare e le classifiche. In Home la tessera dice la cosa che conta adesso: la partita in corso, quella di oggi, l'ultimo podio. I risultati li chiede l'add-on alle fonti pubbliche, solo per chi è entrato.",
-        "The Sports page: your football team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.",
+        "La pagina Sport: la tua squadra di calcio o di hockey, la Formula 1 e la MotoGP, con i risultati, le prossime partite e gare e le classifiche. In Home la tessera dice la cosa che conta adesso: la partita in corso, quella di oggi, l'ultimo podio. I risultati li chiede l'add-on alle fonti pubbliche, solo per chi è entrato.",
+        "The Sports page: your football or hockey team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.",
       ),
     )}</div>
     <div class="ed-list dm-todo-ed-list">
@@ -282,9 +298,20 @@ function onClick(event) {
     root.edToast?.(t("✅ Aggiunto allo sport", "✅ Added to sports"));
     return;
   }
-  if (event.target.closest("[data-dm-sport-nuova]")) {
+  const nuova = event.target.closest("[data-dm-sport-nuova]");
+  if (nuova) {
     event.preventDefault();
-    state.nuova.aperta = !state.nuova.aperta;
+    const sport = nuova.dataset.dmSportNuova === "hockey" ? "hockey" : "calcio";
+    /* Lo stesso tasto chiude; l'altro passa all'altro sport. */
+    if (state.nuova.aperta && state.nuova.sport === sport) state.nuova.aperta = false;
+    else {
+      state.nuova.aperta = true;
+      if (state.nuova.sport !== sport) {
+        state.nuova.sport = sport;
+        state.nuova.campionato = legaDiSerie(sport);
+        state.nuova.guasto = "";
+      }
+    }
     ridisegna();
   }
 }
@@ -294,7 +321,8 @@ function onChange(event) {
   const config = configurazioneDelloSport();
   const campionato = event.target.closest("[data-dm-sport-campionato]");
   if (campionato) {
-    state.nuova.campionato = Object.hasOwn(CAMPIONATI, campionato.value) ? campionato.value : "ita.1";
+    const sport = state.nuova.sport;
+    state.nuova.campionato = Object.hasOwn(legheDi(sport), campionato.value) ? campionato.value : legaDiSerie(sport);
     ridisegna();
     return;
   }
@@ -302,7 +330,10 @@ function onChange(event) {
   if (squadra && /^\d{1,7}$/.test(squadra.value)) {
     const nome = clean(squadra.selectedOptions?.[0]?.dataset?.nome);
     salvaLoSport({
-      seguiti: [...config.seguiti, { tipo: "calcio", campionato: state.nuova.campionato, squadra: squadra.value, nome }],
+      seguiti: [
+        ...config.seguiti,
+        { tipo: state.nuova.sport, campionato: state.nuova.campionato, squadra: squadra.value, nome },
+      ],
     });
     state.nuova.aperta = false;
     ridisegna();

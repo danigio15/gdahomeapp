@@ -7296,8 +7296,6 @@ export default Object.freeze({
     "지금은 팀 목록이 오지 않습니다: 잠시 후 다시 시도하세요.",
   "Teams come from the GdAHome add-on, which cannot be reached from here.":
     "팀 목록은 GdAHome 애드온에서 오며, 여기서는 연결할 수 없습니다.",
-  "The Sports page: your football team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.":
-    "스포츠 페이지: 응원하는 축구 팀, F1, MotoGP의 결과, 다가오는 경기와 레이스, 순위를 보여줍니다. 홈의 타일은 지금 중요한 것을 보여줍니다: 진행 중인 경기, 오늘의 경기, 지난 포디움. 결과는 애드온이 공개 소스에서 가져오며, 로그인한 사용자에게만 표시됩니다.",
   "What you follow": "팔로우 중",
   Won: "승리",
   "Your team": "내 팀",
@@ -7446,4 +7444,10 @@ export default Object.freeze({
   "In pit": "피트 인",
   "Lap {n}": "{n}랩",
   "The session is over.": "세션이 끝났습니다.",
+  "games and standings": "경기와 순위",
+  "Hockey team": "하키 팀",
+  "overtime": "연장전",
+  "shootout": "승부치기",
+  "The Sports page: your football or hockey team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.": "스포츠 페이지: 응원하는 축구 또는 하키 팀, 포뮬러 1, MotoGP의 결과, 다가오는 경기와 레이스, 순위. 홈의 타일은 지금 중요한 것을 보여줍니다: 진행 중인 경기, 오늘 경기, 최근 시상대. 결과는 애드온이 공개 소스에서 가져오며, 로그인한 사용자에게만 표시됩니다.",
+  "The team's games, results (live too) and its place in its conference are shown. Italian leagues are not available: they have no public data source.": "팀의 경기, 결과(실시간 포함), 콘퍼런스 순위가 표시됩니다. 이탈리아 리그는 없습니다: 공개 데이터 소스가 없습니다.",
 });

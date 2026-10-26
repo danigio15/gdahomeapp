@@ -7356,8 +7356,6 @@ export default Object.freeze({
     "De teams komen nu niet binnen: probeer het zo opnieuw.",
   "Teams come from the GdAHome add-on, which cannot be reached from here.":
     "De teams komen van de GdAHome-add-on, die hiervandaan niet bereikbaar is.",
-  "The Sports page: your football team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.":
-    "De Sportpagina: je voetbalteam, Formule 1 en MotoGP, met uitslagen, komende wedstrijden en races, en klassementen. Op Home toont de tegel wat nu telt: de wedstrijd die bezig is, de wedstrijd van vandaag, het laatste podium. De uitslagen haalt de add-on op uit openbare bronnen, alleen voor aangemelde gebruikers.",
   "What you follow": "Wat je volgt",
   Won: "Gewonnen",
   "Your team": "Je team",
@@ -7506,4 +7504,10 @@ export default Object.freeze({
   "In pit": "In de pits",
   "Lap {n}": "Ronde {n}",
   "The session is over.": "De sessie is voorbij.",
+  "games and standings": "wedstrijden en stand",
+  "Hockey team": "IJshockeyteam",
+  "overtime": "verlenging",
+  "shootout": "shoot-out",
+  "The Sports page: your football or hockey team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.": "De Sportpagina: je voetbal- of ijshockeyteam, Formule 1 en MotoGP, met uitslagen, komende wedstrijden en races, en standen. Op Home toont de tegel wat nu telt: de wedstrijd die bezig is, die van vandaag, het laatste podium. De add-on haalt de uitslagen uit openbare bronnen, alleen voor aangemelde gebruikers.",
+  "The team's games, results (live too) and its place in its conference are shown. Italian leagues are not available: they have no public data source.": "Je ziet de wedstrijden van het team, de uitslagen (ook live) en de plaats in de conference. Italiaanse competities zijn er niet: ze hebben geen openbare gegevensbron.",
 });
