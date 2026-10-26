@@ -504,3 +504,28 @@ test("una sessione di F1 non ancora pubblicata non e' un guasto: la plancia lo d
   /* Una fonte che non risponde resta un errore. */
   await assert.rejects(sport.dettaglio({ tipo: "f1", giro: 19, sessione: "Q" }));
 });
+
+test("una fonte lenta non ferma tutto: si risponde entro il tempo, con l'ultimo risultato buono", async () => {
+  let ferma = false;
+  const veloce = fonteFinta();
+  const scarica = (u, o) => (ferma && u.includes("/f1/") ? new Promise(() => {}) : veloce(u, o));
+  let adesso = SABATO;
+  const sport = creaSport({ scarica, orologio: () => adesso, entro: 200 });
+  const seguiti = [{ tipo: "f1" }, { tipo: "calcio", campionato: "ita.1", squadra: "110" }];
+  const prima = await sport.risultati(seguiti);
+  assert.equal(prima[0].tipo, "f1");
+  assert.ok(!prima[0].errore);
+  /* Un'ora dopo la F1 non risponde piu': la risposta arriva lo stesso, in
+   * tempo, con quello che si sapeva; il calcio e' fresco. */
+  ferma = true;
+  adesso += 3600_000;
+  const inizio = Date.now();
+  const dopo = await sport.risultati(seguiti);
+  assert.ok(Date.now() - inizio < 2000);
+  assert.deepEqual(dopo[0], prima[0]);
+  assert.equal(dopo[1].tipo, "calcio");
+  /* Senza niente di prima, e' un errore di quella cosa sola. */
+  const nuova = await creaSport({ scarica, orologio: () => adesso, entro: 200 }).risultati(seguiti);
+  assert.equal(nuova[0].errore, "non-risponde");
+  assert.ok(!nuova[1].errore);
+});

@@ -59,6 +59,9 @@ const PER_POCO = 60_000;
 const PER_UN_PO = 15 * 60_000;
 const PER_UN_GIORNO = 24 * 60 * 60_000;
 const ATTESA = 15_000;
+/* Quanto ha ogni cosa seguita per rispondere: la plancia aspetta 25 secondi
+ * tutta la risposta. */
+const ENTRO = 15_000;
 
 const numero = (v) => {
   const n = Number(v);
@@ -847,7 +850,11 @@ export function sessioneMotoDaPulselive(json) {
  * La casa che chiede. `scarica(indirizzo)` e' `fetch` (le prove ne passano
  * uno finto); `orologio()` il tempo di adesso.
  */
-export function creaSport({ scarica = (u, o) => fetch(u, o), orologio = () => Date.now() } = {}) {
+export function creaSport({
+  scarica = (u, o) => fetch(u, o),
+  orologio = () => Date.now(),
+  entro = ENTRO,
+} = {}) {
   const memoria = new Map();
 
   async function json(indirizzo, quanto = PER_UN_PO) {
@@ -1122,19 +1129,47 @@ export function creaSport({ scarica = (u, o) => fetch(u, o), orologio = () => Da
     return valore;
   }
 
+  /* L'ultimo risultato buono di ogni cosa seguita, per quando una fonte e'
+   * lenta. */
+  const ultimi = new Map();
+
   /** Quello che serve alla plancia: un pezzo per ogni cosa seguita, nello
-   * stesso ordine. Chi non risponde ha `errore`, gli altri ci sono lo stesso. */
+   * stesso ordine. Chi non risponde ha `errore`, gli altri ci sono lo stesso.
+   *
+   * «Improvvisamente non escono i dati»: una fonte lenta teneva ferma tutta
+   * la risposta (per il calcio tre giri di domande, quindici secondi l'uno),
+   * la plancia smetteva di aspettare dopo venticinque e non mostrava niente.
+   * Ora ogni cosa seguita ha [ENTRO] per rispondere; se non ce la fa vale
+   * l'ultimo risultato buono, e la domanda continua per la volta dopo. */
   async function risultati(seguiti = []) {
     const elenco = (Array.isArray(seguiti) ? seguiti : []).slice(0, 8);
     return Promise.all(
       elenco.map(async (s) => {
+        const tipo = testo(s?.tipo);
+        const chiave =
+          tipo === "calcio" ? `calcio:${testo(s?.campionato)}:${testo(s?.squadra)}` : tipo;
+        const lavoro = (async () => {
+          if (tipo === "calcio") return calcio(s.campionato, String(s.squadra));
+          if (tipo === "f1") return f1();
+          if (tipo === "motogp") return motogp();
+          return { tipo, errore: "sconosciuto" };
+        })().then((r) => {
+          if (r && !r.errore) ultimi.set(chiave, r);
+          return r;
+        });
+        let scaduto;
+        const tempo = new Promise((risolvi) => {
+          scaduto = setTimeout(() => risolvi(null), entro);
+        });
         try {
-          if (s?.tipo === "calcio") return await calcio(s.campionato, String(s.squadra));
-          if (s?.tipo === "f1") return await f1();
-          if (s?.tipo === "motogp") return await motogp();
-          return { tipo: testo(s?.tipo), errore: "sconosciuto" };
+          const r = await Promise.race([lavoro, tempo]);
+          if (r) return r;
+          lavoro.catch(() => {});
+          return ultimi.get(chiave) || { tipo, errore: "non-risponde" };
         } catch (e) {
-          return { tipo: testo(s?.tipo), errore: "non-risponde" };
+          return ultimi.get(chiave) || { tipo, errore: "non-risponde" };
+        } finally {
+          clearTimeout(scaduto);
         }
       }),
     );

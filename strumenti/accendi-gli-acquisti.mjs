@@ -134,7 +134,14 @@ export function doveSiaGdanav(radice = RADICE) {
  * gira su un albero che non si sa se sta in piedi. */
 function leProveVanno(radice) {
   try {
-    execFileSync("npm", ["test"], { cwd: radice, stdio: "pipe", encoding: "utf8" });
+    /* L'uscita di tutte le prove passa il mega che `execFileSync` tiene di
+     * serie: oltre, si ferma con ENOBUFS, e un albero verde sembrava rosso. */
+    execFileSync("npm", ["test"], {
+      cwd: radice,
+      stdio: "pipe",
+      encoding: "utf8",
+      maxBuffer: 256 * 1024 * 1024,
+    });
     return { verdi: true };
   } catch (errore) {
     return { verdi: false, perche: String(errore.stdout || errore.message).slice(-2000) };
