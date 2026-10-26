@@ -10,6 +10,11 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7
+
+- **Navigatore, ricerca delle aziende:** l'app ha di nuovo la ricerca di HERE,
+  che conosce le aziende senza un negozio; nella 1.18.6 era rimasta fuori.
+
 ## 1.18.6
 
 - **Sport dal vivo:** quando una sessione di Formula 1 o di MotoGP è in
