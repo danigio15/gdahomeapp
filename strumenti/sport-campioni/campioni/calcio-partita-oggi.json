@@ -170,8 +170,6 @@
       "awayShootoutScore": "0",
       "gameResult": "W",
       "competitionName": "2026-27 Italian Serie A",
-      "leagueName": "Italian Serie A",
-      "leagueAbbreviation": "Serie A",
       "opponent": {
        "id": "111",
        "uid": "s:600~t:111",
@@ -213,7 +211,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/111.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/111.png",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A"
      },
      {
       "id": "401874756",
@@ -236,8 +236,6 @@
       "awayShootoutScore": "0",
       "gameResult": "L",
       "competitionName": "2026-27 Italian Serie A",
-      "leagueName": "Italian Serie A",
-      "leagueAbbreviation": "Serie A",
       "opponent": {
        "id": "4007",
        "uid": "s:600~t:4007",
@@ -279,7 +277,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/4007.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/4007.png",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A"
      },
      {
       "id": "401874789",
@@ -612,6 +612,8 @@
       "awayShootoutScore": "0",
       "gameResult": "D",
       "competitionName": "2026 Club Friendly",
+      "leagueName": "Club Friendly",
+      "leagueAbbreviation": "Club Friendly",
       "opponent": {
        "id": "3975",
        "uid": "s:600~t:3975",
@@ -653,9 +655,7 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/3975.png",
-      "leagueName": "Club Friendly",
-      "leagueAbbreviation": "Club Friendly"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/3975.png"
      },
      {
       "id": "401874951",
@@ -810,8 +810,6 @@
       "awayShootoutScore": "0",
       "gameResult": "W",
       "competitionName": "2026-27 Italian Serie A",
-      "leagueName": "Italian Serie A",
-      "leagueAbbreviation": "Serie A",
       "opponent": {
        "id": "115",
        "uid": "s:600~t:115",
@@ -853,7 +851,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/115.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/115.png",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A"
      }
     ]
    }
@@ -7604,12 +7604,6 @@
    ]
   },
   "wallclockAvailable": false,
-  "meta": {
-   "gp_topic": "gp-soccer-ita.1-401874980",
-   "gameSwitcherEnabled": true,
-   "picker_topic": "picker-soccer-ita.1",
-   "gameState": "pre"
-  },
   "seasonseries": [
    {
     "type": "head-to-head",
@@ -8460,6 +8454,12 @@
     ]
    }
   ],
+  "meta": {
+   "gp_topic": "gp-soccer-ita.1-401874980",
+   "gameSwitcherEnabled": true,
+   "picker_topic": "picker-soccer-ita.1",
+   "gameState": "pre"
+  },
   "standings": {
    "fullViewLink": {
     "text": "Full Table",
