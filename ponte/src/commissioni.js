@@ -194,6 +194,10 @@ const IL_QUADRO = "ponte/quadro/stato";
  * abbia un telefono abbinato la vede e la puo' comprare o riscattare — come
  * in un negozio chiunque puo' fare un regalo. Quello che si ottiene e' piu'
  * roba per tutti, non un potere su qualcuno. */
+/* Quanto si aspetta il quadro, al massimo, quando un telefono chiede la
+ * licenza: vedi `_laLicenzaFresca`. */
+export const ATTESA_DELLA_LICENZA = 4000;
+
 const LICENZA = new Map([
   ["ponte/licenza/stato", "stato"],
   ["ponte/licenza/negozio", "negozio"],
@@ -1791,6 +1795,29 @@ export class Commissioni {
    * Con questa riga la casa resta Premium per tutti e due, e l'app, solo su
    * quei telefoni, lascia in vista gli abbonamenti. Agli altri telefoni non
    * si dice niente: la loro pagina Premium resta quella di sempre. */
+  /* Lo stato delle licenze chiesto al quadro adesso, non quello del giro
+   * delle sei ore.
+   *
+   * L'app lo chiede a ogni collegamento. Prima rispondeva quello che la casa
+   * sapeva gia': un Premium ridato — un regalo rifatto, un abbonamento
+   * ripreso — la casa lo vedeva fino a sei ore dopo, e il telefono restava
+   * fuori. Adesso a ogni collegamento la casa richiede al quadro; una domanda
+   * di pochi secondi fa vale ancora (`ANCORA_FRESCA` in `licenze.js`), e il
+   * quadro ha il suo freno. Se il quadro tarda si risponde con quello che si
+   * sa: l'app non resta ad aspettare. */
+  async _laLicenzaFresca(licenze) {
+    if (typeof licenze.ricontrolla !== "function") return licenze.stato();
+    let tardi;
+    const attesa = new Promise((ok) => {
+      tardi = setTimeout(() => ok(licenze.stato()), ATTESA_DELLA_LICENZA);
+    });
+    try {
+      return await Promise.race([licenze.ricontrolla(), attesa]);
+    } finally {
+      clearTimeout(tardi);
+    }
+  }
+
   async _laLicenza(detto, { diProva = false } = {}) {
     const id = detto?.id ?? null;
     const licenze = this.licenze;
@@ -1808,7 +1835,7 @@ export class Commissioni {
           ultima: null,
         });
       }
-      return si(id, aChiChiede(licenze.stato()));
+      return si(id, aChiChiede(await this._laLicenzaFresca(licenze)));
     }
     if (!licenze) return no(id, "licenze-spente", "questo ponte non ha le licenze");
     try {

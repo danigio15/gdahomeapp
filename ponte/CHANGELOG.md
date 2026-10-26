@@ -10,6 +10,16 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.4
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Premium ridato, subito:** a ogni collegamento dell'app la casa richiede la
+  sua licenza, invece di aspettare il giro delle sei ore. Fuori casa, un
+  telefono che bussa a una casa senza Premium le fa ricontrollare la licenza e
+  aspetta qualche secondo la risposta: se il Premium è tornato, entra al primo
+  colpo.
+
 ## 1.18.7.3
 
 _Solo Home Assistant: l'app sul telefono non cambia._
