@@ -14,7 +14,9 @@ la plancia, `ponte/plancia/`), negli strumenti o nei workflow dell'add-on.
   `app/lib/versione.dart` restano a `1.18.7` e il numero di costruzione segue
   la correzione (1.18.7.1 → 1180701), come vuole `ponte/test/marchio.test.js`;
   `ponte/plancia/ORIGINE.json` resta a `1.18.7`.
-- Nel CHANGELOG il titolo è `## 1.18.7.1 — solo Home Assistant`.
+- Nel CHANGELOG il titolo è solo il numero (`## 1.18.7.1`: lo strumento delle
+  note lo cerca così) e la prima riga del capitolo dice
+  `_Solo Home Assistant: l'app sul telefono non cambia._`
 - **Niente** build dell'app, niente Play, niente TestFlight, niente App Store:
   si unisce la PR e basta. Le immagini dell'add-on si costruiscono da sole.
 
@@ -25,6 +27,7 @@ Quando cambia qualcosa che l'app si porta dentro: `app/`, il navigatore
 insieme.
 
 - Numero nuovo a tre cifre (1.18.8), uguale in app, add-on e plancia.
-- Nel CHANGELOG il titolo è `## 1.18.8 — app e Home Assistant`.
+- Nel CHANGELOG il titolo è solo il numero (`## 1.18.8`) e la prima riga del
+  capitolo dice `_App GdAHome e Home Assistant._`
 - Dopo il merge: la build dell'app (`app.yml`, test interno e TestFlight) e,
   quando lo si chiede, la produzione nei negozi.

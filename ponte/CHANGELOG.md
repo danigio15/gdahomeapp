@@ -10,7 +10,9 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
-## 1.18.7.1 — solo Home Assistant
+## 1.18.7.1
+
+_Solo Home Assistant: l'app sul telefono non cambia._
 
 - **Sport, «i risultati adesso non arrivano»:** se una fonte rispondeva
   lenta, la pagina restava vuota anche per le cose seguite che erano pronte.
