@@ -6801,7 +6801,7 @@
           <div class="capo-sezione">
             <div>
               <h2>Abbonamenti</h2>
-              <p>GdAHome Premium comprato nell'app, su App Store e su Google Play. Il quadro li richiede al negozio una volta al giorno: chi disdice si vede il giorno dopo. I regali stanno in «Regali e codici».</p>
+              <p>GdAHome Premium comprato nell'app, su App Store e su Google Play. Il quadro li richiede al negozio ogni ora, e subito quando Apple o Google avvisano di un cambio: chi compra, disdice o viene rimborsato si vede in pochi secondi. I regali stanno in «Regali e codici».</p>
             </div>
           </div>`;
         if (!A)
@@ -7051,6 +7051,31 @@
             ? `<p class="minuta" style="margin: 10px 2px 0">Nell'elenco ci sono i primi ${numero(elenco.length)}: i numeri sopra li contano tutti e ${numero(inTutto)}.</p>`
             : "";
 
+        /* Dove Apple e Google mandano i loro avvisi, e se ne arrivano: e' il
+         * modo di sapere che App Store Connect e la Play Console sono scritti
+         * giusti. L'indirizzo di Google ha dentro un segreto: questa pagina la
+         * vede solo chi tiene il quadro. */
+        const av = A.avvisi || {};
+        const unAvviso = (nome, via, ultimo, dove) => `
+          <div class="servizio-blocco">
+            <div class="servizio-capo">
+              <span class="servizio-ic" aria-hidden="true">${LE_ICONE["telefono"]}</span>
+              <div class="servizio-chi">
+                <b>${testo(nome)}</b>
+                <span>${testo(ultimo ? `ultimo avviso ${daQuanto(ultimo)}` : `nessun avviso ancora: l'indirizzo va scritto in ${dove}`)}</span>
+              </div>
+              <span class="pastiglia ${ultimo ? "posto" : ""}">${ultimo ? "arrivano" : "da scrivere"}</span>
+            </div>
+            <p class="minuta" style="margin: 8px 0 0; word-break: break-all"><code>${testo(via ? location.origin + via : "—")}</code></p>
+          </div>`;
+        const gliAvvisi = `
+          <details class="apri-riga">
+            <summary>Avvisi in tempo reale da Apple e Google<span class="freccina">${LE_ICONE["freccia"]}</span></summary>
+            ${/* già HTML */ unAvviso("App Store", av.apple, av.ultimi?.ios, "App Store Connect → App → Informazioni sull'app → Notifiche del server App Store (versione 2), produzione e sandbox")}
+            ${/* già HTML */ unAvviso("Google Play", av.google, av.ultimi?.android, "Google Cloud Pub/Sub (iscrizione push) e nella Play Console → Monetizza → Configurazione della monetizzazione → Notifiche in tempo reale")}
+            <p class="minuta" style="margin: 10px 2px 0">Con gli avvisi, chi compra, disdice, viene rimborsato o si riabbona si vede qui in pochi secondi. Senza, il quadro li richiede comunque ogni ora. Dell'avviso si usa solo quale abbonamento riguarda: lo stato vero si chiede sempre al negozio.</p>
+          </details>`;
+
         return `${/* già HTML */ testa}
           ${
             A.accese
@@ -7085,6 +7110,7 @@
               </div>
               ${iNegozi.map(negozio).join("")}
             </details>
+            ${/* già HTML */ gliAvvisi}
           </section>
 
           <p class="minuta" style="margin: 14px 2px 0">
