@@ -90,10 +90,13 @@
  *
  * Il rinnovo automatico si spegne quando il cliente disdice, e il negozio non
  * lo dice a nessuno. Chi aspettasse la scadenza per saperlo vedrebbe un
- * annuale disdetto a gennaio solo a dicembre. Percio' una volta al giorno il
- * quadro richiede al negozio **ogni** abbonamento, non solo quelli vicini
- * alla scadenza (`aggiorna`, nel giro di ogni ora). Una richiesta al giorno
- * per abbonamento: i limiti dei negozi sono lontanissimi.
+ * annuale disdetto a gennaio solo a dicembre. Percio' ogni ora il quadro
+ * richiede al negozio **ogni** abbonamento, non solo quelli vicini alla
+ * scadenza (`aggiorna`, nel giro di ogni ora): chi disdice si vede entro
+ * un'ora, non il giorno dopo. E quando il negozio avvisa da se' — Apple con le
+ * App Store Server Notifications, Google con le Real-time developer
+ * notifications — l'abbonamento si richiede subito (`avvisoDelNegozio`). Una
+ * richiesta all'ora per abbonamento: i limiti dei negozi sono lontanissimi.
  *
  * Niente di questo cambia chi e' Premium: lo decide la scadenza, come prima.
  */
@@ -163,8 +166,14 @@ const tolta = (una, ora) => Boolean(una.revocata) && ora - una.revocata < OTTO_G
 /** Quanto si aspetta il negozio mentre qualcuno aspetta i suoi gettoni. */
 export const ATTESA_DEL_NEGOZIO = 5000;
 
-/** Ogni quanto si richiede al negozio un abbonamento, anche lontano dalla scadenza. */
-export const UNA_VOLTA_AL_GIORNO = 24 * 60 * 60 * 1000;
+/** Ogni quanto si richiede al negozio un abbonamento, anche lontano dalla
+ * scadenza: un po' meno di un'ora, perche' il giro e' di un'ora e non deve
+ * saltarne uno per qualche secondo. */
+export const OGNI_QUANTO_SI_AGGIORNA = 50 * 60 * 1000;
+
+/** Quanto si aspetta, dopo un avviso del negozio, prima di richiedere di nuovo
+ * lo stesso abbonamento: Apple e Google ne mandano spesso due o tre insieme. */
+export const DOPO_UN_AVVISO = 10 * 1000;
 
 /** Quanti abbonamenti si mandano alla Gestione, al massimo, uno per riga. */
 export const ABBONAMENTI_IN_ELENCO = 500;
@@ -1052,8 +1061,8 @@ export class Licenze {
         !una.negozio.finito &&
         una.scade !== null &&
         ora - una.scade < DOPO_SCADUTA &&
-        !(una.negozio.aggiornata && ora - una.negozio.aggiornata < UNA_VOLTA_AL_GIORNO) &&
-        !(una.ricontrollata && ora - una.ricontrollata < UNA_VOLTA_OGNI),
+        !(una.negozio.aggiornata && ora - una.negozio.aggiornata < OGNI_QUANTO_SI_AGGIORNA) &&
+        !(una.ricontrollata && ora - una.ricontrollata < OGNI_QUANTO_SI_AGGIORNA),
     );
   }
 
@@ -1070,34 +1079,75 @@ export class Licenze {
       negozi?.configurato?.(una.negozio.piattaforma),
     );
     let aggiornati = 0;
-    for (const una of quali) {
-      una.ricontrollata = ora;
-      const lavoro = negozi
-        .ricontrolla({ piattaforma: una.negozio.piattaforma, ricevuta: una.negozio.ricevuta })
-        .then((esito) => {
-          this._dalRicontrollo(una, esito);
-          aggiornati += 1;
-        })
-        .catch((errore) => {
-          if (errore?.errore) {
-            una.negozio.finito = errore.errore;
-            una.negozio.finitoIl ??= ora;
-            una.negozio.aggiornata = ora;
-          }
-          registro?.[errore?.errore ? "info" : "attenzione"]?.(
-            `l'abbonamento di ${una.lic} non si e' potuto aggiornare: ${errore?.errore || errore?.message || errore}`,
-          );
-        });
-      let timer;
-      const scaduto = new Promise((ok) => {
-        timer = setTimeout(ok, attesa);
-        timer.unref?.();
-      });
-      await Promise.race([lavoro, scaduto]);
-      clearTimeout(timer);
-    }
+    for (const una of quali)
+      if (await this._aggiornaUna(negozi, una, { ora, attesa, registro })) aggiornati += 1;
     if (quali.length) this.archivio.salva();
     return aggiornati;
+  }
+
+  /* Un abbonamento richiesto al negozio adesso: `true` se il negozio ha
+   * risposto. Uno che il negozio dice finito si segna `finito`; se il negozio
+   * non risponde in `attesa`, si riprova al giro dopo (la risposta che arriva
+   * tardi vale lo stesso). */
+  async _aggiornaUna(negozi, una, { ora = this.adesso(), attesa = ATTESA_DEL_NEGOZIO, registro }) {
+    una.ricontrollata = ora;
+    let rispose = false;
+    const lavoro = negozi
+      .ricontrolla({ piattaforma: una.negozio.piattaforma, ricevuta: una.negozio.ricevuta })
+      .then((esito) => {
+        this._dalRicontrollo(una, esito);
+        rispose = true;
+      })
+      .catch((errore) => {
+        if (errore?.errore) {
+          una.negozio.finito = errore.errore;
+          una.negozio.finitoIl ??= ora;
+          una.negozio.aggiornata = ora;
+        }
+        registro?.[errore?.errore ? "info" : "attenzione"]?.(
+          `l'abbonamento di ${una.lic} non si e' potuto aggiornare: ${errore?.errore || errore?.message || errore}`,
+        );
+      });
+    let timer;
+    const scaduto = new Promise((ok) => {
+      timer = setTimeout(ok, attesa);
+      timer.unref?.();
+    });
+    await Promise.race([lavoro, scaduto]);
+    clearTimeout(timer);
+    return rispose;
+  }
+
+  /**
+   * Il negozio ha avvisato che un abbonamento e' cambiato: comprato, rinnovato,
+   * disdetto, rimborsato. L'avviso dice **quale** — il token di Google, la
+   * transazione originale di Apple — e nient'altro conta: l'abbonamento si
+   * richiede al negozio adesso, come al giro di ogni ora, e vale quello che
+   * risponde lui. Anche uno che si credeva finito: chi si riabbona su Apple
+   * torna con la stessa transazione originale. Torna quanti ne ha richiesti;
+   * zero se non e' di nessuno (un acquisto la cui ricevuta non e' ancora
+   * arrivata dall'app) o se e' stato richiesto pochi secondi fa.
+   */
+  async avvisoDelNegozio(
+    negozi,
+    { piattaforma, chiave, attesa = ATTESA_DEL_NEGOZIO, registro = null } = {},
+  ) {
+    const detta = String(chiave ?? "");
+    if (!detta || !negozi?.configurato?.(piattaforma)) return 0;
+    const ora = this.adesso();
+    const quali = this.licenze.filter(
+      (una) =>
+        una.origine === "negozio" &&
+        !una.revocata &&
+        una.negozio?.piattaforma === piattaforma &&
+        (piattaforma === "ios"
+          ? una.negozio.ricevuta?.originale === detta
+          : una.negozio.ricevuta?.token === detta) &&
+        !(una.ricontrollata && ora - una.ricontrollata < DOPO_UN_AVVISO),
+    );
+    for (const una of quali) await this._aggiornaUna(negozi, una, { ora, attesa, registro });
+    if (quali.length) this.archivio.salva();
+    return quali.length;
   }
 
   /* ─── Gli abbonamenti, per la Gestione ──────────────────────────────── */

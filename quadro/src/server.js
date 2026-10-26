@@ -142,6 +142,7 @@ import {
   ilPacchettoDetto,
 } from "./licenze.js";
 import { NegozioGiu, Negozi, RicevutaNonValida } from "./negozi.js";
+import { AVVISO_MASSIMO, cosaDiceApple, cosaDiceGoogle } from "./avvisi-dei-negozi.js";
 
 /**
  * Quanto puo' essere grossa un rapporto. Le vere stanno sotto i quattro KiB —
@@ -351,6 +352,9 @@ export function costruisciIlServer({
   /* Quanto si aspetta il negozio, per i rinnovi, mentre una casa aspetta i
    * suoi gettoni. */
   attesaDelNegozio = ATTESA_DEL_NEGOZIO,
+  /* Il segreto nell'indirizzo degli avvisi di Google (`avvisi-dei-negozi.js`).
+   * Vuoto: la porta non c'e'. */
+  segretoDegliAvvisiGoogle = "",
   /* Il freno delle licenze, per indirizzo: una casa chiede ogni sei ore, e
    * un'app al massimo qualche volta di fila. Quello dei codici e' piu'
    * stretto, per indirizzo **e** per soggetto: e' la porta da cui si
@@ -410,6 +414,11 @@ export function costruisciIlServer({
    * cadono, le case se ne accorgono e li riaprono, e nel frattempo c'e' il
    * rapporto al minuto che non ha mai smesso. */
   const aspettano = new Map();
+
+  /* Quando e' arrivato l'ultimo avviso buono di ciascun negozio: la Gestione
+   * lo mostra, ed e' il modo di sapere che la Play Console e App Store
+   * Connect sono scritti giusti. In memoria e basta. */
+  const ultimiAvvisi = { ios: null, android: null };
 
   function sveglia(casa, cosa) {
     const chi = aspettano.get(casa);
@@ -923,6 +932,26 @@ export function costruisciIlServer({
       return;
     }
 
+    /* Gli avvisi dei negozi (`avvisi-dei-negozi.js`): Apple firma i suoi,
+     * Google li manda all'indirizzo col segreto. Si risponde subito — i
+     * negozi riprovano se si tarda — e l'abbonamento si richiede dopo. */
+    if (via === "/v1/negozi/apple" && metodo === "POST") {
+      await unAvvisoDelNegozio(richiesta, risposta, "ios");
+      return;
+    }
+    const daGoogle = /^\/v1\/negozi\/google\/([^/]{1,200})$/.exec(via);
+    if (daGoogle && metodo === "POST") {
+      if (
+        String(segretoDegliAvvisiGoogle).length < 24 ||
+        !stessoSegreto(daGoogle[1], segretoDegliAvvisiGoogle)
+      ) {
+        male(risposta, 404, "non-trovato");
+        return;
+      }
+      await unAvvisoDelNegozio(richiesta, risposta, "android");
+      return;
+    }
+
     const perLeLicenze = /^\/v1\/licenze\/(casa|negozio|riscatta|telefono)$/.exec(via);
     if (perLeLicenze && metodo === "POST") {
       await leLicenzeDaFuori(richiesta, risposta, perLeLicenze[1]);
@@ -1259,6 +1288,51 @@ export function costruisciIlServer({
       return;
     }
     throw errore;
+  }
+
+  /* Un avviso di Apple o di Google. Un avviso che non si legge, o che non e'
+   * nostro, ha comunque risposta 200: il negozio non deve riprovare a
+   * mandarlo, e chi bussa per vedere cosa succede non impara niente. */
+  async function unAvvisoDelNegozio(richiesta, risposta, piattaforma) {
+    const fraQuanto = frenoDelleLicenze.passa(`negozio:${daChiSiConta(richiesta)}`);
+    if (fraQuanto) {
+      frenato(risposta, fraQuanto);
+      return;
+    }
+    let corpo;
+    try {
+      corpo = await ilCorpo(richiesta, AVVISO_MASSIMO);
+    } catch (_errore) {
+      male(risposta, 400, "corpo-non-valido");
+      return;
+    }
+    json(risposta, { ok: true });
+    if (!licenze.accese || !negozi.configurato(piattaforma)) return;
+    const detto =
+      piattaforma === "ios"
+        ? cosaDiceApple(corpo, { bundle: negozi.apple?.bundle, radice: negozi.apple?.radice })
+        : cosaDiceGoogle(corpo, { pacchetto: negozi.google?.pacchetto });
+    if (!detto) {
+      registro.attenzione(
+        `un avviso di ${piattaforma === "ios" ? "Apple" : "Google"} non si legge`,
+      );
+      return;
+    }
+    ultimiAvvisi[piattaforma] = Date.now();
+    if (detto.prova) {
+      registro.info("l'avviso di prova di Google e' arrivato");
+      return;
+    }
+    licenze
+      .avvisoDelNegozio(negozi, { piattaforma, chiave: detto.chiave, registro })
+      .then((quanti) =>
+        registro.info(
+          `avviso di ${piattaforma === "ios" ? "Apple" : "Google"} (${detto.tipo}): ${quanti ? "abbonamento richiesto al negozio" : "di nessuno, o appena richiesto"}`,
+        ),
+      )
+      .catch((errore) =>
+        registro.attenzione(`un avviso del negozio non e' andato: ${errore?.message || errore}`),
+      );
   }
 
   async function leLicenzeDaFuori(richiesta, risposta, quale) {
@@ -2093,7 +2167,21 @@ export function costruisciIlServer({
 
     /* Gli abbonamenti comprati nell'app, per la schermata «Abbonamenti». */
     if (via === "/abbonamenti" && metodo === "GET") {
-      json(risposta, licenze.abbonamenti());
+      /* E dove i negozi mandano i loro avvisi: le vie da scrivere in App Store
+       * Connect e nella Play Console, con l'ultima volta che ne e' arrivato
+       * uno. La gestione e' di chi tiene il quadro: il segreto lo vede solo
+       * lui. */
+      json(risposta, {
+        ...licenze.abbonamenti(),
+        avvisi: {
+          apple: "/v1/negozi/apple",
+          google:
+            String(segretoDegliAvvisiGoogle).length >= 24
+              ? `/v1/negozi/google/${segretoDegliAvvisiGoogle}`
+              : null,
+          ultimi: { ...ultimiAvvisi },
+        },
+      });
       return;
     }
 
