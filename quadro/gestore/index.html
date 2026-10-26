@@ -7056,18 +7056,23 @@
          * giusti. L'indirizzo di Google ha dentro un segreto: questa pagina la
          * vede solo chi tiene il quadro. */
         const av = A.avvisi || {};
-        const unAvviso = (nome, via, ultimo, dove) => `
+        const unAvviso = (nome, via, ultimo, dove) => {
+          const stato = ultimo
+            ? "ultimo avviso " + daQuanto(ultimo)
+            : "nessun avviso ancora: l'indirizzo va scritto in " + dove;
+          return `
           <div class="servizio-blocco">
             <div class="servizio-capo">
               <span class="servizio-ic" aria-hidden="true">${LE_ICONE["telefono"]}</span>
               <div class="servizio-chi">
                 <b>${testo(nome)}</b>
-                <span>${testo(ultimo ? `ultimo avviso ${daQuanto(ultimo)}` : `nessun avviso ancora: l'indirizzo va scritto in ${dove}`)}</span>
+                <span>${testo(stato)}</span>
               </div>
               <span class="pastiglia ${ultimo ? "posto" : ""}">${ultimo ? "arrivano" : "da scrivere"}</span>
             </div>
             <p class="minuta" style="margin: 8px 0 0; word-break: break-all"><code>${testo(via ? location.origin + via : "—")}</code></p>
           </div>`;
+        };
         const gliAvvisi = `
           <details class="apri-riga">
             <summary>Avvisi in tempo reale da Apple e Google<span class="freccina">${LE_ICONE["freccia"]}</span></summary>

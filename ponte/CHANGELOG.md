@@ -10,6 +10,15 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.5
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Telecamere:** una telecamera aperta, anche a schermo intero, non si ferma
+  più al primo sensore che cambia in casa. La bloccava la pagina «Colpo
+  d'occhio», che si ridisegnava anche da spenta. Vale anche dentro l'app, che
+  la plancia la prende dall'add-on.
+
 ## 1.18.7.4
 
 _Solo Home Assistant: l'app sul telefono non cambia._
