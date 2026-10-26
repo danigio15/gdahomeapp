@@ -2,7 +2,7 @@
  "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams/104/schedule?fixture=true",
  "stato": 200,
  "json": {
-  "timestamp": "2026-10-26T15:09:41Z",
+  "timestamp": "2026-10-26T15:54:01Z",
   "status": "success",
   "season": {
    "year": 2026,
@@ -606,8 +606,8 @@
           "shortDisplayName": "Cagliari"
          },
          "odds": {
-          "summary": "17/2",
-          "value": 9.5,
+          "summary": "9/1",
+          "value": 10,
           "handicap": 0
          }
         },
@@ -626,8 +626,8 @@
          }
         },
         "drawOdds": {
-         "summary": "15/4",
-         "value": 4.75,
+         "summary": "4/1",
+         "value": 5,
          "handicap": 0
         },
         "links": [
@@ -653,7 +653,7 @@
            "bets",
            "bet-365"
           ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202203237-121811590~17/2",
+          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202203237-121811590~9/1",
           "text": "Away Bet",
           "shortText": "Away Bet",
           "isExternal": true,
@@ -667,7 +667,7 @@
            "bets",
            "bet-365"
           ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202203237-121811589~15/4",
+          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202203237-121811589~4/1",
           "text": "Draw Bet",
           "shortText": "Draw Bet",
           "isExternal": true,
@@ -1480,8 +1480,8 @@
           "shortDisplayName": "Udinese"
          },
          "odds": {
-          "summary": "17/4",
-          "value": 5.25,
+          "summary": "9/2",
+          "value": 5.5,
           "handicap": 0
          }
         },
@@ -1499,7 +1499,7 @@
            "bets",
            "bet-365"
           ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426265-150745756~17/4",
+          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426265-150745756~9/2",
           "text": "Home Bet",
           "shortText": "Home Bet",
           "isExternal": true,
@@ -2417,8 +2417,8 @@
         "description": "Champions League - Manchester United vs AS Roma",
         "maxPrice": 7310,
         "startingPrice": 184,
-        "numberAvailable": 884,
-        "totalPostings": 396,
+        "numberAvailable": 880,
+        "totalPostings": 395,
         "links": [
          {
           "rel": [
