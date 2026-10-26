@@ -24,7 +24,7 @@ import { CHIAVE_PUBBLICA_LICENZE } from "../src/chiave-licenze.js";
 import { leggiGettone, verificaGettone } from "../src/gettone.js";
 import { codiceRegaloPulito, LicenzaNo, Licenze } from "../src/licenze.js";
 import { Plance, PremiumRichiesto } from "../src/plance.js";
-import { Commissioni } from "../src/commissioni.js";
+import { ATTESA_DELLA_LICENZA, Commissioni } from "../src/commissioni.js";
 import { GIORNO, PUBBLICA_DI_PROVA, unGettone } from "./gettoni-di-prova.js";
 
 const CASA = "casa_0123456789abcdef0123456789abcdef";
@@ -776,4 +776,41 @@ test("ponte/licenza/*: al telefono della casa di prova si dice che e' di prova, 
     assert.equal(diCasa.success, true, comando.type);
     assert.equal("telefonoDiProva" in diCasa.result, false, comando.type);
   }
+});
+
+test("ponte/licenza/stato: a ogni collegamento la licenza si richiede al quadro, senza farsi aspettare", async () => {
+  /* Un Premium ridato — un regalo rifatto, un abbonamento ripreso — la casa
+   * lo vedeva al giro delle sei ore: il telefono che chiede lo stato adesso
+   * ha quello fresco. */
+  let premium = false;
+  let chieste = 0;
+  const stato = () => ({ attive: true, gdahome: { attiva: premium } });
+  const licenze = {
+    limitata: false,
+    stato,
+    async ricontrolla() {
+      chieste += 1;
+      premium = true;
+      return stato();
+    },
+  };
+  const commissioni = new Commissioni({ licenze, registro: ZITTO });
+  const chi = { dalTelefono: true, puoAmministrare: false };
+  const fresca = await commissioni.rispondi({ id: 1, type: "ponte/licenza/stato" }, chi);
+  assert.equal(chieste, 1);
+  assert.equal(fresca.result.gdahome.attiva, true);
+
+  /* Un quadro che non risponde non tiene fermo il telefono: si dice quello
+   * che si sa. */
+  const ferma = {
+    limitata: false,
+    stato: () => ({ attive: true, gdahome: { attiva: false } }),
+    ricontrolla: () => new Promise(() => {}),
+  };
+  const lenta = new Commissioni({ licenze: ferma, registro: ZITTO });
+  const prima = Date.now();
+  const detta = await lenta.rispondi({ id: 2, type: "ponte/licenza/stato" }, chi);
+  assert.equal(detta.success, true);
+  assert.equal(detta.result.gdahome.attiva, false);
+  assert.ok(Date.now() - prima < ATTESA_DELLA_LICENZA + 1500);
 });

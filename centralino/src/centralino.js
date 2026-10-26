@@ -174,6 +174,20 @@ export const PREMIUM_RICHIESTO = Object.freeze({ codice: 4402, motivo: "premium-
  * Assistant, e a quella casa non vende niente. */
 export const ADDON_DA_AGGIORNARE = Object.freeze({ codice: 4426, motivo: "aggiorna-add-on" });
 
+/* Ogni quanto, al massimo, si chiede a una casa senza Premium di richiedere
+ * la sua licenza perche' un suo telefono ha bussato da fuori: vedi
+ * `accogliUnTelefono`. */
+export const RICONTROLLO_DA_FUORI = 15 * 1000;
+
+/* Quanto resta sulla porta, al massimo, un telefono mentre la sua casa
+ * richiede la licenza al quadro: il giro casa-quadro-casa e' di un secondo o
+ * due. Oltre, il no di sempre. */
+export const ATTESA_DELLA_LICENZA_DA_FUORI = 4000;
+
+/* Quanto puo' dire un telefono mentre aspetta sulla porta: la stretta di mano
+ * e poco altro. */
+const MESSAGGIO_TENUTO_MASSIMO = 64 * 1024;
+
 /* Quanto aspetta una ricevuta la risposta della casa. La casa la porta al
  * quadro, e il quadro la chiede ad Apple o a Google: di solito due secondi,
  * con un negozio lento anche venti. */
@@ -196,6 +210,7 @@ export class Centralino {
     adesso = () => Date.now(),
     attesaDellaPresentazione = ATTESA_DELLA_PRESENTAZIONE,
     attesaDellaPrimaParola = ATTESA_DELLA_PRIMA_PAROLA,
+    attesaDellaLicenzaDaFuori = ATTESA_DELLA_LICENZA_DA_FUORI,
     preseInTutto = PRESE_IN_TUTTO,
     presePerIndirizzo = PRESE_PER_INDIRIZZO,
     codaMassima = CODA_MASSIMA,
@@ -238,6 +253,12 @@ export class Centralino {
     this.premiumFino = new Map();
     /** E di quale licenza era il gettone, per le licenze tolte. */
     this.licenzaDi = new Map();
+    /* Quando si e' chiesto l'ultima volta a una casa di ricontrollare la
+     * licenza per un telefono fermato da fuori (`accogliUnTelefono`). */
+    this.ricontrolloChiesto = new Map();
+    /* Le case che stanno richiedendo la licenza adesso, coi telefoni sulla
+     * porta: vedi `_laLicenzaRichiesta`. */
+    this.licenzaInArrivo = new Map();
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
     this.modoLicenze =
       modoLicenze === undefined
@@ -259,6 +280,7 @@ export class Centralino {
     this.adesso = adesso;
     this.attesaDellaPresentazione = attesaDellaPresentazione;
     this.attesaDellaPrimaParola = attesaDellaPrimaParola;
+    this.attesaDellaLicenzaDaFuori = attesaDellaLicenzaDaFuori;
     this.preseInTutto = preseInTutto;
     this.presePerIndirizzo = presePerIndirizzo;
     this.codaMassima = codaMassima;
@@ -512,6 +534,11 @@ export class Centralino {
        * guardare prima di imporre. */
       this.conti.telefoniSenzaLicenza += 1;
       if (this.impone) {
+        const attesa = casa.dicelaLicenza ? this._laLicenzaRichiesta(casa, idDellaCasa) : null;
+        if (attesa) {
+          this._tieniFinoAllaLicenza(presa, attesa, { casa, idDellaCasa, da, che });
+          return null;
+        }
         const no = casa.dicelaLicenza ? PREMIUM_RICHIESTO : ADDON_DA_AGGIORNARE;
         presa.chiudi(no.codice, no.motivo);
         return null;
@@ -520,7 +547,84 @@ export class Centralino {
     return casa.apriUnCanale(presa, da, this._sorvegliaIlTelefono(presa), "telefono", che);
   }
 
+  /* Il telefono resta sulla porta mentre la casa richiede la licenza al
+   * quadro (`_laLicenzaRichiesta`): poi entra, se adesso e' Premium, o si
+   * sente dire 4402. Quello che dice intanto non si perde: si tiene da parte
+   * e si ripete al canale, nello stesso ordine. Dentro non si guarda niente,
+   * come sempre: sono buste cifrate per la casa. */
+  _tieniFinoAllaLicenza(presa, attesa, { casa, idDellaCasa, da, che }) {
+    const haParlato = this._sorvegliaIlTelefono(presa);
+    const detti = [];
+    let tenuti = 0;
+    presa.onMessaggio = (testo, eraTesto = typeof testo === "string") => {
+      haParlato();
+      tenuti += Buffer.byteLength(typeof testo === "string" ? testo : testo || "");
+      /* Chi parla tanto prima di entrare non sta aspettando di entrare. */
+      if (tenuti > MESSAGGIO_TENUTO_MASSIMO) {
+        presa.chiudi(CHIUSURA.troppoGrande, "troppo prima di entrare");
+        return;
+      }
+      detti.push([testo, eraTesto]);
+    };
+    void attesa.then(() => {
+      if (!presa.viva) return;
+      if (this.collegate.get(idDellaCasa) !== casa) {
+        presa.chiudi(CHIUSURA.normale, "casa non collegata");
+        return;
+      }
+      if (!this.ePremium(idDellaCasa)) {
+        presa.chiudi(PREMIUM_RICHIESTO.codice, PREMIUM_RICHIESTO.motivo);
+        return;
+      }
+      const canale = casa.apriUnCanale(presa, da, haParlato, "telefono", che);
+      if (!canale) return;
+      for (const [testo, eraTesto] of detti) {
+        if (!presa.viva) return;
+        presa.onMessaggio(testo, eraTesto);
+      }
+    });
+  }
+
   /* ─── Le licenze ─────────────────────────────────────────────────────── */
+
+  /* Un telefono e' stato fermato da fuori: la casa si sente dire di
+   * richiedere la sua licenza al quadro.
+   *
+   * Una licenza tolta il centralino la sa subito (`revoche.js`); una licenza
+   * ridata — un regalo rifatto, un abbonamento ripreso — no: la casa se ne
+   * accorgeva al suo giro delle sei ore, e fino ad allora il suo telefono da
+   * fuori restava fuori. Chi bussa da fuori a una casa senza Premium e' quasi
+   * sempre chi il Premium l'ha appena avuto, e al tentativo dopo entra. Una
+   * volta ogni `RICONTROLLO_DA_FUORI` per casa, non a ogni bussata: decide
+   * sempre il quadro, con la sua firma, e il centralino chiede soltanto. */
+  _laLicenzaRichiesta(casa, idDellaCasa) {
+    const inCorso = this.licenzaInArrivo.get(idDellaCasa);
+    if (inCorso) return inCorso;
+    const ora = this.adesso();
+    const prima = this.ricontrolloChiesto.get(idDellaCasa);
+    if (prima !== undefined && ora - prima < RICONTROLLO_DA_FUORI) return null;
+    this.ricontrolloChiesto.set(idDellaCasa, ora);
+    casa.ricontrollaLaLicenza();
+    /* Finche' la casa non ha ridetto la licenza, o al massimo
+     * `ATTESA_DELLA_LICENZA_DA_FUORI`. Chi bussa intanto aspetta la stessa
+     * risposta, invece di sentirsi dire di no mentre arriva. */
+    const attesa = new Promise((pronta) => {
+      const fine = Date.now() + this.attesaDellaLicenzaDaFuori;
+      const guarda = setInterval(() => {
+        const finita =
+          this.ePremium(idDellaCasa) ||
+          this.collegate.get(idDellaCasa) !== casa ||
+          Date.now() >= fine;
+        if (!finita) return;
+        clearInterval(guarda);
+        this.licenzaInArrivo.delete(idDellaCasa);
+        pronta();
+      }, 50);
+      guarda.unref?.();
+    });
+    this.licenzaInArrivo.set(idDellaCasa, attesa);
+    return attesa;
+  }
 
   /* Se questa casa e' Premium per il centralino: un gettone buono, non
    * scaduto, di una licenza che il quadro non ha detto tolta. A licenze

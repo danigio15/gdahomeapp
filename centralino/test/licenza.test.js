@@ -22,7 +22,12 @@ import { join } from "node:path";
 import { createHash, randomBytes } from "node:crypto";
 
 import { Case } from "../src/case.js";
-import { ADDON_DA_AGGIORNARE, Centralino, PREMIUM_RICHIESTO } from "../src/centralino.js";
+import {
+  ADDON_DA_AGGIORNARE,
+  Centralino,
+  PREMIUM_RICHIESTO,
+  RICONTROLLO_DA_FUORI,
+} from "../src/centralino.js";
 import { Freno } from "../src/freno.js";
 import { Ricevute } from "../src/ricevute.js";
 import { costruisciIlServer } from "../src/server.js";
@@ -46,6 +51,7 @@ async function banco({
   attesaDellaRicevuta,
   freno,
   adesso,
+  attesaDellaLicenzaDaFuori = 200,
 } = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "centralino-licenza-"));
   const centralino = new Centralino({
@@ -53,6 +59,7 @@ async function banco({
     chiaveLicenze,
     ...(attesaDellaRicevuta ? { attesaDellaRicevuta } : {}),
     ...(adesso ? { adesso } : {}),
+    attesaDellaLicenzaDaFuori,
   });
   const ricevute = new Ricevute({ centralino, ...(freno ? { freno } : {}) });
   const server = costruisciIlServer({ centralino, ricevute });
@@ -146,6 +153,48 @@ test("una casa Base col suo add-on nuovo: il telefono si chiude con 4402 premium
     assert.deepEqual(PREMIUM_RICHIESTO, { codice: 4402, motivo: "premium-richiesto" });
     /* Alla casa non e' arrivato nessun canale: il telefono non e' entrato. */
     assert.equal(casa.canali().length, 0);
+    casa.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("un telefono da fuori fa ricontrollare la licenza alla casa, e se torna Premium entra al primo colpo", async () => {
+  /* Una licenza ridata il centralino non la sa: la casa la richiede al
+   * quadro quando un suo telefono bussa da fuori, e il telefono aspetta sulla
+   * porta la risposta. Una volta ogni tanto per casa, non a ogni bussata. */
+  let ora = Date.now();
+  const b = await banco({ adesso: () => ora });
+  try {
+    const casa = unaCasa(b.dove);
+    await casa.entra({ gettone: "" });
+    const ricontrolli = () => casa.detti.filter((uno) => uno.t === "ricontrolla-licenza").length;
+
+    /* Il quadro dice ancora Base: dopo l'attesa, il no di sempre. */
+    const primo = unTelefono(b.dove, `/telefono/${casa.id}`);
+    await attendi(() => ricontrolli() === 1);
+    assert.deepEqual(await primo.chiusa, { codice: 4402, motivo: "premium-richiesto" });
+
+    /* Subito dopo non si richiede: no secco. */
+    const subito = unTelefono(b.dove, `/telefono/${casa.id}`);
+    assert.equal((await subito.chiusa).codice, 4402);
+    assert.equal(ricontrolli(), 1);
+
+    /* Passato il tempo, si richiede; la casa intanto e' tornata Premium, e
+     * il telefono che aspettava entra, con quello che aveva gia' detto. */
+    ora += RICONTROLLO_DA_FUORI;
+    const dentro = unTelefono(b.dove, `/telefono/${casa.id}`);
+    await dentro.aperta;
+    await attendi(() => ricontrolli() === 2);
+    dentro.presa.send("la prima parola");
+    casa.manda({
+      t: "licenza",
+      tipo: "licenza",
+      gettone: unGettone({ sog: casa.id }, { adesso: ora }),
+    });
+    await attendi(() => casa.canali().length === 1);
+    await attendi(() => casa.detti.some((uno) => uno.t === "d" && uno.m === "la prima parola"));
+    dentro.chiudi();
     casa.chiudi();
   } finally {
     await b.spegni();
