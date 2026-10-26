@@ -2563,7 +2563,7 @@
       "startDate": "2026-10-25T17:00Z",
       "attendance": 0,
       "timeValid": true,
-      "recent": true,
+      "recent": false,
       "status": {
        "clock": 5400,
        "displayClock": "90'+5'",
@@ -3249,7 +3249,7 @@
       "startDate": "2026-10-25T19:45Z",
       "attendance": 0,
       "timeValid": true,
-      "recent": true,
+      "recent": false,
       "status": {
        "clock": 5400,
        "displayClock": "90'+4'",

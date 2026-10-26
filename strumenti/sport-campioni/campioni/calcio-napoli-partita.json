@@ -560,8 +560,6 @@
       "awayShootoutScore": "0",
       "gameResult": "W",
       "competitionName": "2025-26 LALIGA",
-      "leagueName": "Spanish LALIGA",
-      "leagueAbbreviation": "LALIGA",
       "opponent": {
        "id": "1068",
        "uid": "s:600~t:1068",
@@ -603,7 +601,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/1068.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/1068.png",
+      "leagueName": "Spanish LALIGA",
+      "leagueAbbreviation": "LALIGA"
      },
      {
       "id": "748500",

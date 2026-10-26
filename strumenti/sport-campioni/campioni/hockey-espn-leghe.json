@@ -1,0 +1,30 @@
+{
+ "url": "https://sports.core.api.espn.com/v2/sports/hockey/leagues?limit=100",
+ "stato": 200,
+ "json": {
+  "count": 6,
+  "pageIndex": 1,
+  "pageSize": 100,
+  "pageCount": 1,
+  "items": [
+   {
+    "$ref": "http://sports.core.api.espn.com/v2/sports/hockey/leagues/hockey-world-cup?lang=en&region=us"
+   },
+   {
+    "$ref": "http://sports.core.api.espn.com/v2/sports/hockey/leagues/mens-college-hockey?lang=en&region=us"
+   },
+   {
+    "$ref": "http://sports.core.api.espn.com/v2/sports/hockey/leagues/nhl?lang=en&region=us"
+   },
+   {
+    "$ref": "http://sports.core.api.espn.com/v2/sports/hockey/leagues/olympics-mens-ice-hockey?lang=en&region=us"
+   },
+   {
+    "$ref": "http://sports.core.api.espn.com/v2/sports/hockey/leagues/olympics-womens-ice-hockey?lang=en&region=us"
+   },
+   {
+    "$ref": "http://sports.core.api.espn.com/v2/sports/hockey/leagues/womens-college-hockey?lang=en&region=us"
+   }
+  ]
+ }
+}

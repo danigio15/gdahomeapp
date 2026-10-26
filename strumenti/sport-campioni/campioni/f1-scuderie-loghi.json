@@ -80,6 +80,46 @@
   "byte": 11232
  },
  {
+  "id": "red_bull",
+  "slug": "redbullracing",
+  "u": "https://media.formula1.com/image/upload/c_lfill,w_96/q_auto/v1740000000/common/f1/2026/redbullracing/2026redbullracinglogowhite.webp",
+  "stato": 200,
+  "tipo": "image/webp",
+  "byte": 522
+ },
+ {
+  "id": "red_bull",
+  "slug": "redbullracing",
+  "u": "https://media.formula1.com/image/upload/c_lfill,w_96/q_auto/v1740000000/common/f1/2026/redbullracing/2026redbullracinglogo.webp",
+  "stato": 200,
+  "tipo": "image/webp",
+  "byte": 730
+ },
+ {
+  "id": "red_bull",
+  "slug": "redbullracing",
+  "u": "https://media.formula1.com/image/upload/c_lfill,w_96/q_auto/v1740000000/common/f1/2025/redbullracing/2025redbullracinglogowhite.webp",
+  "stato": 200,
+  "tipo": "image/webp",
+  "byte": 522
+ },
+ {
+  "id": "red_bull",
+  "slug": "redbullracing",
+  "u": "https://media.formula1.com/content/dam/fom-website/teams/2025/redbullracing-logo.png",
+  "stato": 404,
+  "tipo": "image/gif",
+  "byte": 0
+ },
+ {
+  "id": "red_bull",
+  "slug": "redbullracing",
+  "u": "https://media.formula1.com/content/dam/fom-website/teams/2024/redbullracing-logo.png.transform/2col/image.png",
+  "stato": 404,
+  "tipo": "image/gif",
+  "byte": 0
+ },
+ {
   "id": "mclaren",
   "slug": "mclaren",
   "u": "https://media.formula1.com/image/upload/c_lfill,w_96/q_auto/v1740000000/common/f1/2026/mclaren/2026mclarenlogowhite.webp",
@@ -120,46 +160,6 @@
   "byte": 3056
  },
  {
-  "id": "red_bull",
-  "slug": "redbullracing",
-  "u": "https://media.formula1.com/image/upload/c_lfill,w_96/q_auto/v1740000000/common/f1/2026/redbullracing/2026redbullracinglogowhite.webp",
-  "stato": 200,
-  "tipo": "image/webp",
-  "byte": 522
- },
- {
-  "id": "red_bull",
-  "slug": "redbullracing",
-  "u": "https://media.formula1.com/image/upload/c_lfill,w_96/q_auto/v1740000000/common/f1/2026/redbullracing/2026redbullracinglogo.webp",
-  "stato": 200,
-  "tipo": "image/webp",
-  "byte": 730
- },
- {
-  "id": "red_bull",
-  "slug": "redbullracing",
-  "u": "https://media.formula1.com/image/upload/c_lfill,w_96/q_auto/v1740000000/common/f1/2025/redbullracing/2025redbullracinglogowhite.webp",
-  "stato": 200,
-  "tipo": "image/webp",
-  "byte": 522
- },
- {
-  "id": "red_bull",
-  "slug": "redbullracing",
-  "u": "https://media.formula1.com/content/dam/fom-website/teams/2025/redbullracing-logo.png",
-  "stato": 404,
-  "tipo": "application/octet-stream",
-  "byte": 0
- },
- {
-  "id": "red_bull",
-  "slug": "redbullracing",
-  "u": "https://media.formula1.com/content/dam/fom-website/teams/2024/redbullracing-logo.png.transform/2col/image.png",
-  "stato": 404,
-  "tipo": "application/octet-stream",
-  "byte": 0
- },
- {
   "id": "rb",
   "slug": "racingbulls",
   "u": "https://media.formula1.com/image/upload/c_lfill,w_96/q_auto/v1740000000/common/f1/2026/racingbulls/2026racingbullslogowhite.webp",
@@ -188,7 +188,7 @@
   "slug": "racingbulls",
   "u": "https://media.formula1.com/content/dam/fom-website/teams/2025/racingbulls-logo.png",
   "stato": 404,
-  "tipo": "application/octet-stream",
+  "tipo": "image/gif",
   "byte": 0
  },
  {
@@ -196,7 +196,7 @@
   "slug": "racingbulls",
   "u": "https://media.formula1.com/content/dam/fom-website/teams/2024/racingbulls-logo.png.transform/2col/image.png",
   "stato": 404,
-  "tipo": "application/octet-stream",
+  "tipo": "image/gif",
   "byte": 0
  },
  {
@@ -268,7 +268,7 @@
   "slug": "haasf1team",
   "u": "https://media.formula1.com/content/dam/fom-website/teams/2025/haasf1team-logo.png",
   "stato": 404,
-  "tipo": "text/plain; charset=utf-8",
+  "tipo": "image/gif",
   "byte": 0
  },
  {
@@ -276,7 +276,7 @@
   "slug": "haasf1team",
   "u": "https://media.formula1.com/content/dam/fom-website/teams/2024/haasf1team-logo.png.transform/2col/image.png",
   "stato": 404,
-  "tipo": "application/octet-stream",
+  "tipo": "image/gif",
   "byte": 0
  },
  {
@@ -300,7 +300,7 @@
   "slug": "audi",
   "u": "https://media.formula1.com/image/upload/c_lfill,w_96/q_auto/v1740000000/common/f1/2025/audi/2025audilogowhite.webp",
   "stato": 404,
-  "tipo": "application/octet-stream",
+  "tipo": "image/gif",
   "byte": 0
  },
  {
@@ -308,7 +308,7 @@
   "slug": "audi",
   "u": "https://media.formula1.com/content/dam/fom-website/teams/2025/audi-logo.png",
   "stato": 404,
-  "tipo": "text/plain; charset=utf-8",
+  "tipo": "image/gif",
   "byte": 0
  },
  {
@@ -316,7 +316,7 @@
   "slug": "audi",
   "u": "https://media.formula1.com/content/dam/fom-website/teams/2024/audi-logo.png.transform/2col/image.png",
   "stato": 404,
-  "tipo": "application/octet-stream",
+  "tipo": "image/gif",
   "byte": 0
  },
  {
@@ -388,7 +388,7 @@
   "slug": "astonmartin",
   "u": "https://media.formula1.com/content/dam/fom-website/teams/2025/astonmartin-logo.png",
   "stato": 404,
-  "tipo": "application/octet-stream",
+  "tipo": "image/gif",
   "byte": 0
  },
  {
@@ -396,7 +396,7 @@
   "slug": "astonmartin",
   "u": "https://media.formula1.com/content/dam/fom-website/teams/2024/astonmartin-logo.png.transform/2col/image.png",
   "stato": 404,
-  "tipo": "application/octet-stream",
+  "tipo": "image/gif",
   "byte": 0
  },
  {
@@ -420,7 +420,7 @@
   "slug": "cadillac",
   "u": "https://media.formula1.com/image/upload/c_lfill,w_96/q_auto/v1740000000/common/f1/2025/cadillac/2025cadillaclogowhite.webp",
   "stato": 404,
-  "tipo": "application/octet-stream",
+  "tipo": "image/gif",
   "byte": 0
  },
  {
@@ -428,7 +428,7 @@
   "slug": "cadillac",
   "u": "https://media.formula1.com/content/dam/fom-website/teams/2025/cadillac-logo.png",
   "stato": 404,
-  "tipo": "text/plain; charset=utf-8",
+  "tipo": "image/gif",
   "byte": 0
  },
  {
@@ -436,7 +436,7 @@
   "slug": "cadillac",
   "u": "https://media.formula1.com/content/dam/fom-website/teams/2024/cadillac-logo.png.transform/2col/image.png",
   "stato": 404,
-  "tipo": "application/octet-stream",
+  "tipo": "image/gif",
   "byte": 0
  }
 ]

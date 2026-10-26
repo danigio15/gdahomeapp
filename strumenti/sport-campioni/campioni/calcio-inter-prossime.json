@@ -2,7 +2,7 @@
  "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/ita.1/teams/110/schedule?fixture=true",
  "stato": 200,
  "json": {
-  "timestamp": "2026-10-25T22:38:39Z",
+  "timestamp": "2026-10-26T14:43:57Z",
   "status": "success",
   "season": {
    "year": 2026,
@@ -352,6 +352,246 @@
        }
       ],
       "notes": [],
+      "odds": [
+       {
+        "provider": {
+         "id": "100",
+         "name": "DraftKings",
+         "priority": 1
+        },
+        "details": "INT -310",
+        "overUnder": 3.5,
+        "spread": 1.5,
+        "awayTeamOdds": {
+         "favorite": true,
+         "underdog": false,
+         "moneyLine": -310,
+         "spreadOdds": -120,
+         "open": {
+          "favorite": true,
+          "pointSpread": {
+           "alternateDisplayValue": "-1.5",
+           "american": "-1.5"
+          },
+          "spread": {
+           "value": 1.8,
+           "displayValue": "4/5",
+           "alternateDisplayValue": "-125",
+           "decimal": 1.8,
+           "fraction": "4/5",
+           "american": "-125"
+          },
+          "moneyLine": {
+           "value": 1.32,
+           "displayValue": "10/31",
+           "alternateDisplayValue": "-310",
+           "decimal": 1.32,
+           "fraction": "10/31",
+           "american": "-310"
+          }
+         },
+         "current": {
+          "pointSpread": {
+           "alternateDisplayValue": "-1.5",
+           "american": "-1.5"
+          },
+          "spread": {
+           "value": 1.83,
+           "displayValue": "5/6",
+           "alternateDisplayValue": "-120",
+           "decimal": 1.83,
+           "fraction": "5/6",
+           "american": "-120"
+          },
+          "moneyLine": {
+           "value": 1.32,
+           "displayValue": "10/31",
+           "alternateDisplayValue": "-310",
+           "decimal": 1.32,
+           "fraction": "10/31",
+           "american": "-310"
+          }
+         },
+         "team": {
+          "id": "110",
+          "name": "Internazionale",
+          "abbreviation": "INT",
+          "displayName": "Internazionale",
+          "shortDisplayName": "Inter Milan"
+         }
+        },
+        "homeTeamOdds": {
+         "favorite": false,
+         "underdog": true,
+         "moneyLine": 600,
+         "spreadOdds": -115,
+         "open": {
+          "favorite": false,
+          "pointSpread": {
+           "alternateDisplayValue": "+1.5",
+           "american": "+1.5"
+          },
+          "spread": {
+           "value": 1.9,
+           "displayValue": "10/11",
+           "alternateDisplayValue": "-110",
+           "decimal": 1.9,
+           "fraction": "10/11",
+           "american": "-110"
+          },
+          "moneyLine": {
+           "value": 7,
+           "displayValue": "6/1",
+           "alternateDisplayValue": "+600",
+           "decimal": 7,
+           "fraction": "6/1",
+           "american": "+600"
+          }
+         },
+         "current": {
+          "pointSpread": {
+           "alternateDisplayValue": "+1.5",
+           "american": "+1.5"
+          },
+          "spread": {
+           "value": 1.86,
+           "displayValue": "20/23",
+           "alternateDisplayValue": "-115",
+           "decimal": 1.86,
+           "fraction": "20/23",
+           "american": "-115"
+          },
+          "moneyLine": {
+           "value": 7,
+           "displayValue": "6/1",
+           "alternateDisplayValue": "+600",
+           "decimal": 7,
+           "fraction": "6/1",
+           "american": "+600"
+          }
+         },
+         "team": {
+          "id": "17530",
+          "name": "Venezia",
+          "abbreviation": "VEN",
+          "displayName": "Venezia",
+          "shortDisplayName": "Venezia"
+         }
+        },
+        "drawOdds": {
+         "moneyLine": 450
+        },
+        "links": [
+         {
+          "language": "en-US",
+          "rel": [
+           "home",
+           "desktop",
+           "bets",
+           "draftkings"
+          ],
+          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0ML86939625_1",
+          "text": "Home Bet",
+          "shortText": "Home Bet",
+          "isExternal": true,
+          "isPremium": false
+         },
+         {
+          "language": "en-US",
+          "rel": [
+           "away",
+           "desktop",
+           "bets",
+           "draftkings"
+          ],
+          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0ML86939625_3",
+          "text": "Away Bet",
+          "shortText": "Away Bet",
+          "isExternal": true,
+          "isPremium": false
+         },
+         {
+          "language": "en-US",
+          "rel": [
+           "draw",
+           "desktop",
+           "bets",
+           "draftkings"
+          ],
+          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0ML86939625_2",
+          "text": "Draw Bet",
+          "shortText": "Draw Bet",
+          "isExternal": true,
+          "isPremium": false
+         },
+         {
+          "language": "en-US",
+          "rel": [
+           "homeSpread",
+           "desktop",
+           "bets"
+          ],
+          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0HC86939635P150_1",
+          "text": "Home Point Spread",
+          "shortText": "Home Point Spread",
+          "isExternal": true,
+          "isPremium": false
+         },
+         {
+          "language": "en-US",
+          "rel": [
+           "awaySpread",
+           "desktop",
+           "bets"
+          ],
+          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0HC86939635N150_3",
+          "text": "Away Point Spread",
+          "shortText": "Away Point Spread",
+          "isExternal": true,
+          "isPremium": false
+         },
+         {
+          "language": "en-US",
+          "rel": [
+           "over",
+           "desktop",
+           "bets"
+          ],
+          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0OU86939630O350_1",
+          "text": "Over Odds",
+          "shortText": "Over Odds",
+          "isExternal": true,
+          "isPremium": false
+         },
+         {
+          "language": "en-US",
+          "rel": [
+           "under",
+           "desktop",
+           "bets"
+          ],
+          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0OU86939630U350_3",
+          "text": "Under Odds",
+          "shortText": "Under Odds",
+          "isExternal": true,
+          "isPremium": false
+         },
+         {
+          "language": "en-US",
+          "rel": [
+           "game",
+           "desktop",
+           "bets"
+          ],
+          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758",
+          "text": "Game",
+          "shortText": "Game",
+          "isExternal": true,
+          "isPremium": false
+         }
+        ]
+       }
+      ],
       "broadcasts": [
        {
         "type": {
@@ -904,8 +1144,8 @@
           "shortDisplayName": "Inter Milan"
          },
          "odds": {
-          "summary": "5/4",
-          "value": 2.25,
+          "summary": "11/10",
+          "value": 2.1,
           "handicap": 0
          }
         },
@@ -918,8 +1158,8 @@
           "shortDisplayName": "Milan"
          },
          "odds": {
-          "summary": "19/10",
-          "value": 2.9,
+          "summary": "11/5",
+          "value": 3.2,
           "handicap": 0
          }
         },
@@ -937,7 +1177,7 @@
            "bets",
            "bet-365"
           ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746292~19/10",
+          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746292~11/5",
           "text": "Home Bet",
           "shortText": "Home Bet",
           "isExternal": true,
@@ -951,7 +1191,7 @@
            "bets",
            "bet-365"
           ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746306~5/4",
+          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746306~11/10",
           "text": "Away Bet",
           "shortText": "Away Bet",
           "isExternal": true,
