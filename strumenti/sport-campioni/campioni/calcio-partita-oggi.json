@@ -236,6 +236,8 @@
       "awayShootoutScore": "0",
       "gameResult": "L",
       "competitionName": "2026-27 Italian Serie A",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A",
       "opponent": {
        "id": "4007",
        "uid": "s:600~t:4007",
@@ -277,9 +279,7 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/4007.png",
-      "leagueName": "Italian Serie A",
-      "leagueAbbreviation": "Serie A"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/4007.png"
      },
      {
       "id": "401874789",
@@ -368,6 +368,8 @@
       "awayShootoutScore": "0",
       "gameResult": "L",
       "competitionName": "2026-27 Italian Serie A",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A",
       "opponent": {
        "id": "4057",
        "uid": "s:600~t:4057",
@@ -409,9 +411,7 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/4057.png",
-      "leagueName": "Italian Serie A",
-      "leagueAbbreviation": "Serie A"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/4057.png"
      },
      {
       "id": "401874961",
@@ -810,6 +810,8 @@
       "awayShootoutScore": "0",
       "gameResult": "W",
       "competitionName": "2026-27 Italian Serie A",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A",
       "opponent": {
        "id": "115",
        "uid": "s:600~t:115",
@@ -851,9 +853,7 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/115.png",
-      "leagueName": "Italian Serie A",
-      "leagueAbbreviation": "Serie A"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/115.png"
      }
     ]
    }
@@ -5825,6 +5825,78 @@
    }
   ],
   "hasOdds": false,
+  "rosters": [
+   {
+    "homeAway": "home",
+    "winner": false,
+    "team": {
+     "id": "3997",
+     "abbreviation": "SAS",
+     "displayName": "Sassuolo",
+     "color": "0fa653",
+     "alternateColor": "ADAEB0",
+     "logos": [
+      {
+       "href": "https://a.espncdn.com/i/teamlogos/soccer/500/3997.png",
+       "width": 500,
+       "height": 500,
+       "alt": "",
+       "rel": [
+        "full",
+        "default"
+       ],
+       "lastUpdated": "2024-01-04T17:49Z"
+      },
+      {
+       "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/3997.png",
+       "width": 500,
+       "height": 500,
+       "alt": "",
+       "rel": [
+        "full",
+        "dark"
+       ],
+       "lastUpdated": "2024-01-04T17:52Z"
+      }
+     ]
+    }
+   },
+   {
+    "homeAway": "away",
+    "winner": false,
+    "team": {
+     "id": "112",
+     "abbreviation": "LAZ",
+     "displayName": "Lazio",
+     "color": "74bde7",
+     "alternateColor": "FFFFFF",
+     "logos": [
+      {
+       "href": "https://a.espncdn.com/i/teamlogos/soccer/500/112.png",
+       "width": 500,
+       "height": 500,
+       "alt": "",
+       "rel": [
+        "full",
+        "default"
+       ],
+       "lastUpdated": "2024-01-04T17:49Z"
+      },
+      {
+       "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/112.png",
+       "width": 500,
+       "height": 500,
+       "alt": "",
+       "rel": [
+        "full",
+        "dark"
+       ],
+       "lastUpdated": "2024-01-04T17:53Z"
+      }
+     ]
+    }
+   }
+  ],
   "news": {
    "header": "Serie A News",
    "link": {
@@ -7162,78 +7234,6 @@
     }
    ]
   },
-  "rosters": [
-   {
-    "homeAway": "home",
-    "winner": false,
-    "team": {
-     "id": "3997",
-     "abbreviation": "SAS",
-     "displayName": "Sassuolo",
-     "color": "0fa653",
-     "alternateColor": "ADAEB0",
-     "logos": [
-      {
-       "href": "https://a.espncdn.com/i/teamlogos/soccer/500/3997.png",
-       "width": 500,
-       "height": 500,
-       "alt": "",
-       "rel": [
-        "full",
-        "default"
-       ],
-       "lastUpdated": "2024-01-04T17:49Z"
-      },
-      {
-       "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/3997.png",
-       "width": 500,
-       "height": 500,
-       "alt": "",
-       "rel": [
-        "full",
-        "dark"
-       ],
-       "lastUpdated": "2024-01-04T17:52Z"
-      }
-     ]
-    }
-   },
-   {
-    "homeAway": "away",
-    "winner": false,
-    "team": {
-     "id": "112",
-     "abbreviation": "LAZ",
-     "displayName": "Lazio",
-     "color": "74bde7",
-     "alternateColor": "FFFFFF",
-     "logos": [
-      {
-       "href": "https://a.espncdn.com/i/teamlogos/soccer/500/112.png",
-       "width": 500,
-       "height": 500,
-       "alt": "",
-       "rel": [
-        "full",
-        "default"
-       ],
-       "lastUpdated": "2024-01-04T17:49Z"
-      },
-      {
-       "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/112.png",
-       "width": 500,
-       "height": 500,
-       "alt": "",
-       "rel": [
-        "full",
-        "dark"
-       ],
-       "lastUpdated": "2024-01-04T17:53Z"
-      }
-     ]
-    }
-   }
-  ],
   "header": {
    "id": "401874980",
    "uid": "s:600~l:730~e:401874980",
