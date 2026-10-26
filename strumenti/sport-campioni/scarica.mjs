@@ -283,18 +283,16 @@ for (const c of costruttori) {
 await salva("f1-scuderie-loghi", prove);
 console.log("scuderie", prove.filter((p) => p.stato === 200).length, "/", prove.length);
 
-/* L'hockey, terzo giro: da dove prendono i dati i siti delle leghe italiane. */
+/* L'hockey NHL: il calendario di una squadra (Florida, 26), giocate e
+ * prossime, e il dettaglio di una partita. */
 for (const [nome, u] of [
-  ["hockey-ice-classifica-js", "https://www.ice.hockey/media/mod_ice_standings/js/standings.js?1.2.2"],
-  ["hockey-ice-team-js", "https://www.ice.hockey/media/plg_system_iceesportsteamlinks/js/team-links.js?0.4.1"],
-  ["hockey-ice-classifica-pagina", "https://www.ice.hockey/de/tabelle"],
-  ["hockey-pista-portale-js", "https://www.server2.sidgad.es/portales.js?v=123"],
-  ["hockey-pista-feed", "https://www.server2.sidgad.es/public_docs/rfep/hp_feed.php"],
-  ["hockey-fisg-cerca", "https://www.fisg.it/wp-json/wp/v2/pages?search=classifica&per_page=5"],
-  ["hockey-fisg-tipi", "https://www.fisg.it/wp-json/wp/v2/types"],
-  ["hockey-alps-sito", "https://www.alpshockey.net/"],
-  ["hockey-prato-sito", "https://www.federhockey.it/"],
-  ["hockey-prato-risultati", "https://www.federhockey.it/campionati"],
+  ["hockey-nhl-florida", `${ESPN}/hockey/nhl/teams/26/schedule`],
+  ["hockey-nhl-florida-prossime", `${ESPN}/hockey/nhl/teams/26/schedule?fixture=true`],
+  ["hockey-nhl-florida-squadra", `${ESPN}/hockey/nhl/teams/26`],
+  ["hockey-nhl-giorno", `${ESPN}/hockey/nhl/scoreboard?dates=20261025`],
+  ["hockey-nhl-partita", `${ESPN}/hockey/nhl/summary?event=401892578`],
 ]) {
-  await salva(nome, await testo(u));
+  const r = await scarica(u);
+  await salva(nome, r);
+  console.log(nome, r.stato);
 }
