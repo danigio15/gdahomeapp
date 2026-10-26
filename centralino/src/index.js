@@ -11,7 +11,7 @@ import { numeroDa } from "./freno.js";
 import { Contatti, Postino } from "./posta.js";
 import { ilModoDelleLicenze } from "./modo-delle-licenze.js";
 import { apriIlRegistro } from "./registro.js";
-import { Revoche } from "./revoche.js";
+import { REVOCHE_DI_SERIE, Revoche } from "./revoche.js";
 import { Ricevute } from "./ricevute.js";
 import { costruisciIlServer } from "./server.js";
 import { Sportello } from "./sportello.js";
@@ -71,10 +71,11 @@ export async function alzaIlCentralino({
    * con la chiave vuota, `impone` con la chiave scritta. `registra` conta
    * senza chiudere; con una chiave vuota o storta non si impone comunque. */
   modoLicenze = process.env.MODO_LICENZE || "",
-  /* Dove chiedere al quadro le licenze tolte (`revoche.js`), per esempio
-   * `https://quadro.gdahome.org/v1/licenze/revocate`. Vuoto: non si chiede,
-   * e una licenza tolta vale fino alla fine del suo gettone, come prima. */
-  dellaRevoche = process.env.QUADRO_REVOCHE || "",
+  /* Dove chiedere al quadro le licenze tolte (`revoche.js`). Di serie il
+   * quadro vero: una licenza tolta deve chiudere subito, non alla fine del
+   * suo gettone, e sulla macchina `QUADRO_REVOCHE` non era mai stato
+   * scritto. Chi accende il centralino dalle prove passa "" e non chiede. */
+  dellaRevoche = process.env.QUADRO_REVOCHE || REVOCHE_DI_SERIE,
   /* Se una linea della chat nasce solo col nome e il segreto di una casa
    * gia' presentata dal filo. Vedi `chat.js`: si accende quando il ponte
    * scrivera' in chat con l'identita' del filo. */

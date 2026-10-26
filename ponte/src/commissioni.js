@@ -1090,7 +1090,16 @@ export class Commissioni {
     try {
       if (tipo === `${LO_SPORT}risultati`) {
         const seguiti = Array.isArray(detto?.seguiti) ? detto.seguiti : [];
-        return si(id, { risultati: await this.sport.risultati(seguiti) });
+        const partita = Date.now();
+        const risultati = await this.sport.risultati(seguiti);
+        /* La plancia aspetta venticinque secondi: una risposta che ci va
+         * vicino si dice nel registro, con quante cose seguite. */
+        const quanto = Date.now() - partita;
+        if (quanto > 10_000)
+          this.registro?.attenzione?.(
+            `sport: ${seguiti.length} cose seguite in ${Math.round(quanto / 1000)} s`,
+          );
+        return si(id, { risultati });
       }
       if (tipo === `${LO_SPORT}squadre`) {
         return si(id, { squadre: await this.sport.squadre(detto?.campionato) });
@@ -1106,7 +1115,8 @@ export class Commissioni {
         const logo = await this.sport.logo(String(detto?.squadra ?? ""));
         return si(id, { stato: 200, tipo: logo.tipo, corpo: logo.base64 });
       }
-    } catch (_e) {
+    } catch (e) {
+      this.registro?.attenzione?.(`sport: ${tipo}: ${e?.message || e}`);
       return no(id, "not_found", "lo sport adesso non risponde");
     }
     return no(id, "unknown_command", `non conosco ${tipo}`);

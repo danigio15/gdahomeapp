@@ -524,8 +524,14 @@ test("una fonte lenta non ferma tutto: si risponde entro il tempo, con l'ultimo 
   assert.ok(Date.now() - inizio < 2000);
   assert.deepEqual(dopo[0], prima[0]);
   assert.equal(dopo[1].tipo, "calcio");
-  /* Senza niente di prima, e' un errore di quella cosa sola. */
-  const nuova = await creaSport({ scarica, orologio: () => adesso, entro: 200 }).risultati(seguiti);
+  /* Senza niente di prima, e' un errore di quella cosa sola. E il registro
+   * dice quale, una volta sola anche se la si richiede subito. */
+  const righe = [];
+  const registro = { attenzione: (riga) => righe.push(riga) };
+  const nuovo = creaSport({ scarica, orologio: () => adesso, entro: 200, registro });
+  const nuova = await nuovo.risultati(seguiti);
   assert.equal(nuova[0].errore, "non-risponde");
   assert.ok(!nuova[1].errore);
+  await nuovo.risultati(seguiti);
+  assert.deepEqual(righe, ["sport: f1 non ha risposto in 0 s"]);
 });

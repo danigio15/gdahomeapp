@@ -63,6 +63,11 @@
  * le conosce, e a un telefono che bussa in quel millisecondo non dice
  * «aggiorna l'add-on» per sbaglio.
  *
+ * Il centralino chiede ogni minuto al quadro le licenze tolte. Se c'e' quella
+ * di questa casa le manda `{"t": "ricontrolla-licenza"}`, e la casa richiede
+ * subito i suoi gettoni al quadro: una licenza tolta toglie il Premium anche
+ * in casa in un minuto, non al giro delle sei ore.
+ *
  * ─── La ricevuta di chi compra fuori casa ─────────────────────────────────
  *
  * Il centralino puo' girare qui una ricevuta del negozio, consegnata a lui da
@@ -459,6 +464,15 @@ export class Chiamata {
 
     if (detto.t === "ricevuta") {
       void this._laRicevuta(detto);
+      return;
+    }
+
+    /* Il centralino ha saputo dal quadro che la licenza di questa casa e'
+     * stata tolta: si richiede adesso, invece che al giro delle sei ore. Non
+     * e' un ordine di cui fidarsi: e' solo una domanda in piu' al quadro, e
+     * decide la sua firma. */
+    if (detto.t === "ricontrolla-licenza") {
+      this.alRicontrollo?.();
       return;
     }
 

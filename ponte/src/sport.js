@@ -854,8 +854,19 @@ export function creaSport({
   scarica = (u, o) => fetch(u, o),
   orologio = () => Date.now(),
   entro = ENTRO,
+  /* Dove si scrive quale cosa seguita non risponde, e perche': «continua a
+   * non uscire» senza una riga nel registro non si capisce da qui. */
+  registro = null,
 } = {}) {
   const memoria = new Map();
+  /* Una riga per cosa seguita ogni dieci minuti al piu'. */
+  const dettoIl = new Map();
+  const dillo = (chiave, perche) => {
+    const ora = orologio();
+    if (ora - (dettoIl.get(chiave) || 0) < 10 * 60 * 1000) return;
+    dettoIl.set(chiave, ora);
+    registro?.attenzione?.(`sport: ${chiave} ${perche}`);
+  };
 
   async function json(indirizzo, quanto = PER_UN_PO) {
     const tenuta = memoria.get(indirizzo);
@@ -1153,10 +1164,17 @@ export function creaSport({
           if (tipo === "f1") return f1();
           if (tipo === "motogp") return motogp();
           return { tipo, errore: "sconosciuto" };
-        })().then((r) => {
-          if (r && !r.errore) ultimi.set(chiave, r);
-          return r;
-        });
+        })().then(
+          (r) => {
+            if (r && !r.errore) ultimi.set(chiave, r);
+            else if (r?.errore) dillo(chiave, `non va: ${r.errore}`);
+            return r;
+          },
+          (e) => {
+            dillo(chiave, `non va: ${e?.cause?.code || e?.message || e}`);
+            throw e;
+          },
+        );
         let scaduto;
         const tempo = new Promise((risolvi) => {
           scaduto = setTimeout(() => risolvi(null), entro);
@@ -1165,6 +1183,7 @@ export function creaSport({
           const r = await Promise.race([lavoro, tempo]);
           if (r) return r;
           lavoro.catch(() => {});
+          dillo(chiave, `non ha risposto in ${Math.round(entro / 1000)} s`);
           return ultimi.get(chiave) || { tipo, errore: "non-risponde" };
         } catch (e) {
           return ultimi.get(chiave) || { tipo, errore: "non-risponde" };

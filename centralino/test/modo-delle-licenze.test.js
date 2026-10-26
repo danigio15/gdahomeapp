@@ -38,7 +38,13 @@ import {
 import { CHIAVE_PUBBLICA_LICENZE } from "../src/chiave-licenze.js";
 import { alzaIlCentralino } from "../src/index.js";
 import { chiaveBuona, ilModoDelleLicenze } from "../src/modo-delle-licenze.js";
-import { ELENCO_VECCHIO, Revoche, leggiLElenco } from "../src/revoche.js";
+import {
+  ELENCO_VECCHIO,
+  OGNI_QUANTO,
+  REVOCHE_DI_SERIE,
+  Revoche,
+  leggiLElenco,
+} from "../src/revoche.js";
 import { costruisciIlServer } from "../src/server.js";
 import { PUBBLICA_DI_PROVA, unGettone } from "../../ponte/test/gettoni-di-prova.js";
 
@@ -239,6 +245,7 @@ test("il centralino vero, acceso come in produzione: spento senza chiave, impone
       porta: 0,
       cartella,
       livello: "errore",
+      dellaRevoche: "",
       ...opzioni,
     });
     try {
@@ -710,6 +717,80 @@ test("impone: una licenza tolta mentre il telefono e' dentro esce al giro dopo",
     casa.chiudi();
   } finally {
     await b.spegni();
+  }
+});
+
+test("una licenza appena tolta: il telefono esce subito e la casa richiede la sua licenza", async () => {
+  const revoche = new Revoche({ dove: "x", chiave: PUBBLICA_DI_PROVA });
+  const b = await banco({ modoLicenze: "impone", revoche });
+  try {
+    const casa = unaCasa(b.dove);
+    await casa.entra({ gettone: unGettone({ sog: casa.id, lic: UNA_LICENZA }) });
+    const altra = unaCasa(b.dove);
+    await altra.entra({ gettone: unGettone({ sog: altra.id, lic: UN_ALTRA }) });
+    const telefono = unTelefono(b.dove, `/telefono/${casa.id}`);
+    const suo = unTelefono(b.dove, `/telefono/${altra.id}`);
+    await attendi(() => casa.canali().length === 1 && altra.canali().length === 1);
+
+    /* Nessun giro di controllo: chiude l'elenco nuovo, appena arriva. */
+    revoche.tieni(unElenco({ lic: [UNA_LICENZA] }));
+    assert.deepEqual(await telefono.chiusa, PREMIUM_RICHIESTO);
+    await attendi(() => casa.detti.some((uno) => uno.t === "ricontrolla-licenza"));
+    /* L'altra casa non c'entra. */
+    await new Promise((ok) => setTimeout(ok, 50));
+    assert.equal(suo.eChiuso(), false);
+    assert.equal(
+      altra.detti.some((uno) => uno.t === "ricontrolla-licenza"),
+      false,
+    );
+
+    /* Lo stesso elenco di nuovo non ridice niente. */
+    const prima = casa.detti.length;
+    revoche.tieni(unElenco({ lic: [UNA_LICENZA] }));
+    await new Promise((ok) => setTimeout(ok, 50));
+    assert.equal(casa.detti.length, prima);
+    suo.chiudi();
+    casa.chiudi();
+    altra.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("le licenze tolte si chiedono ogni minuto al quadro vero, senza scrivere niente", async () => {
+  assert.equal(OGNI_QUANTO, 60 * 1000);
+  assert.equal(REVOCHE_DI_SERIE, "https://quadro.gdahome.org/v1/licenze/revocate");
+  const vecchio = process.env.QUADRO_REVOCHE;
+  delete process.env.QUADRO_REVOCHE;
+  const { alzaIlCentralino: alza } = await import(`../src/index.js?di-serie=${Date.now()}`);
+  const cartella = mkdtempSync(join(tmpdir(), "centralino-revoche-"));
+  const prese = [];
+  const fetchVero = globalThis.fetch;
+  globalThis.fetch = async (dove, ...resto) => {
+    if (String(dove).startsWith("https://quadro.gdahome.org/")) {
+      prese.push(String(dove));
+      return new Response(JSON.stringify({ elenco: unElenco({ lic: [] }) }), { status: 200 });
+    }
+    return fetchVero(dove, ...resto);
+  };
+  try {
+    const acceso = await alza({
+      porta: 0,
+      cartella,
+      livello: "errore",
+      chiaveLicenze: PUBBLICA_DI_PROVA,
+    });
+    try {
+      assert.equal(acceso.centralino.revoche?.dove, REVOCHE_DI_SERIE);
+      await attendi(() => prese.length > 0);
+      assert.deepEqual(prese, [REVOCHE_DI_SERIE]);
+    } finally {
+      await acceso.abbassa();
+    }
+  } finally {
+    globalThis.fetch = fetchVero;
+    if (vecchio !== undefined) process.env.QUADRO_REVOCHE = vecchio;
+    rmSync(cartella, { recursive: true, force: true });
   }
 });
 

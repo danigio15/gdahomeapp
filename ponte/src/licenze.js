@@ -126,6 +126,7 @@ export class Licenze extends EventEmitter {
       ? new Archivio(join(String(cartella), "licenze.json"), {})
       : { dati: {}, salva() {} };
     this._orologio = null;
+    this._richiamo = null;
     this._inCorso = null;
     /* Le domande al quadro, in fila: vedi `_inFila`. */
     this._fila = Promise.resolve();
@@ -259,6 +260,8 @@ export class Licenze extends EventEmitter {
   ferma() {
     clearInterval(this._orologio);
     this._orologio = null;
+    clearTimeout(this._richiamo);
+    this._richiamo = null;
   }
 
   /* ─── Le tre domande al quadro ─────────────────────────────────────────── */
@@ -294,6 +297,27 @@ export class Licenze extends EventEmitter {
     const ultima = this._esito;
     if (ultima && this.adesso() - ultima.quando < ANCORA_FRESCA) return this.stato();
     return this.rinnova();
+  }
+
+  /** Il centralino dice che la licenza di questa casa e' stata tolta
+   * (`chiamata.js`, `ricontrolla-licenza`). Si richiede subito; se una
+   * domanda e' appena partita si richiede appena il freno del quadro lo
+   * lascia fare, perche' quella poteva essere di un attimo prima della
+   * revoca. Non toglie niente da se': i gettoni li cambia solo il quadro. */
+  richiamata() {
+    if (!this.attive) return;
+    const ultima = this._esito;
+    const passato = ultima ? this.adesso() - ultima.quando : Infinity;
+    if (passato >= ANCORA_FRESCA) {
+      void this.rinnova();
+      return;
+    }
+    if (this._richiamo) return;
+    this._richiamo = setTimeout(() => {
+      this._richiamo = null;
+      void this.rinnova();
+    }, ANCORA_FRESCA - passato);
+    this._richiamo.unref?.();
   }
 
   /** Una ricevuta del negozio, girata al quadro che la controlla. */

@@ -251,7 +251,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     /* La via dell'auto fuori casa, chiesta a OpenStreetMap da qui. */
     indirizzi: new Indirizzi({ versione: opzioni.versione }),
     /* Lo sport seguito in casa, chiesto alle fonti pubbliche da qui. */
-    sport: creaSport(),
+    sport: creaSport({ registro }),
     plancia,
     plance,
     configurazione,
@@ -537,6 +537,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   if (licenze.attive) {
     chiamata.diLaLicenza(licenze.gettonePerIlCentralino);
     licenze.on("cambio", () => chiamata.diLaLicenza(licenze.gettonePerIlCentralino));
+    /* Una licenza tolta: il centralino lo sa dal quadro e lo dice qui, e la
+     * casa richiede subito la sua licenza (`chiamata.js`). */
+    chiamata.alRicontrollo = () => licenze.richiamata();
     /* E la ricevuta di chi compra fuori casa, che il centralino gira qui:
      * passa solo se l'ha firmata un telefono abbinato (`ricevuta-da-fuori.js`). */
     chiamata.alRicevere = (corpo) =>

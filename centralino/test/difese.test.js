@@ -417,7 +417,12 @@ test("il centralino ascolta solo su questa macchina, se non gli si dice altro", 
   const vecchio = process.env.CENTRALINO_REGISTRO;
   process.env.CENTRALINO_REGISTRO = "errore";
   try {
-    const acceso = await alzaIlCentralino({ porta: 0, cartella, livello: "errore" });
+    const acceso = await alzaIlCentralino({
+      porta: 0,
+      cartella,
+      livello: "errore",
+      dellaRevoche: "",
+    });
     try {
       assert.equal(acceso.server.address().address, "127.0.0.1");
     } finally {

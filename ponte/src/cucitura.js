@@ -105,7 +105,16 @@ export class Cucitura {
       this.filo = await this.casa.apriIlFilo({
         onMessaggio: (dallaCasa) => this._allaPagina(dallaCasa),
         onChiusa: (perche = "") => {
-          this.registro.attenzione(`il filo della plancia si e' chiuso${perche}`);
+          const dopo = this._daQuanto();
+          /* Se se n'e' andata la pagina (ricaricata, chiusa) non e' un guasto:
+           * si dice e basta. Se ha chiuso Home Assistant, si'. Con quanto e'
+           * durata: una plancia che si riapre e si richiude ogni pochi
+           * secondi non riceve le risposte lente, come quelle dello sport. */
+          if (this.chiusa) this.registro.info(`la plancia si e' chiusa dopo ${dopo}`);
+          else
+            this.registro.attenzione(
+              `Home Assistant ha chiuso il filo della plancia dopo ${dopo}${perche}`,
+            );
           this.chiudi(1011, "Home Assistant ha chiuso");
         },
       });
@@ -123,10 +132,16 @@ export class Cucitura {
       this.filo.chiudi();
       return;
     }
+    this._apertaIl = Date.now();
     this.registro.info(
       `la plancia${this.quale?.titolo ? ` «${this.quale.titolo}»` : ""} si e' aperta da ${this.da}`,
     );
     this._manda({ type: "auth_ok", ha_version: NOME });
+  }
+
+  _daQuanto() {
+    const secondi = Math.round((Date.now() - (this._apertaIl || Date.now())) / 1000);
+    return secondi < 120 ? `${secondi} s` : `${Math.round(secondi / 60)} min`;
   }
 
   _dallaPagina(testo) {
@@ -205,7 +220,14 @@ export class Cucitura {
         return no(detto.id ?? null, "ponte_plancia", "non ha funzionato");
       })
       .then((detta) => {
-        if (!this.chiusa) this.presa.manda(JSON.stringify(detta));
+        if (!this.chiusa) {
+          this.presa.manda(JSON.stringify(detta));
+          return;
+        }
+        /* La risposta e' pronta ma la pagina non c'e' piu': per lei questa
+         * domanda non ha mai risposto. */
+        if (String(detto.type || "").startsWith("ponte/sport/"))
+          this.registro.attenzione(`${detto.type}: pronta, ma la plancia si era gia' chiusa`);
       });
   }
 

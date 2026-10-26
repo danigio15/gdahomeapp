@@ -10,6 +10,22 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.2
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Licenze tolte, subito:** quando una licenza viene tolta, la casa torna
+  GdAHome Base entro un minuto, anche in casa, e da fuori i telefoni escono
+  subito. Prima poteva valere fino a otto giorni.
+- **Abbonamenti disdetti o rimborsati:** finiscono alla fine del periodo
+  pagato, o al rimborso, senza i tre giorni in più. Chi ha il rinnovo
+  automatico acceso tiene i tre giorni, il tempo che il rinnovo arrivi.
+- **Sport:** se i risultati non arrivano, il registro dell'add-on dice quale
+  cosa seguita non risponde e perché, e se la plancia si è chiusa prima
+  della risposta.
+- **Registro:** quando la plancia si chiude il registro dice se l'ha chiusa
+  la pagina o Home Assistant, e dopo quanto.
+
 ## 1.18.7.1
 
 _Solo Home Assistant: l'app sul telefono non cambia._

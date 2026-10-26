@@ -1,5 +1,12 @@
 /* Le licenze tolte, chieste al quadro.
  *
+ * «Se revoco una licenza e/o scade una licenza non deve aspettare 8 giorni ma
+ * deve essere immediata la revoca». Quindi: l'elenco si chiede ogni minuto,
+ * e appena una licenza ci entra il centralino chiude i telefoni di quella casa
+ * e le dice di richiedere la sua licenza al quadro (`ricontrolla-licenza`),
+ * cosi' anche in casa il Premium se ne va subito invece che al giro delle sei
+ * ore. Senza `QUADRO_REVOCHE` l'indirizzo e' quello del quadro vero.
+ *
  * Un gettone vale otto giorni dalla firma (`quadro/src/licenze.js`), e il
  * centralino lo verifica da se', senza chiedere a nessuno. Vuol dire che una
  * licenza tolta dal gestore o da un installatore — un regalo sbagliato, un
@@ -34,15 +41,20 @@
  *  - Una casa offline non c'entra: da fuori, una casa che non e' collegata
  *    non si apre comunque, e in casa decide il ponte, col suo gettone.
  *
- * Senza `QUADRO_REVOCHE` non si chiede niente, ed e' com'era.
+ * L'indirizzo lo da' `index.js`: `QUADRO_REVOCHE` se c'e', se no quello del
+ * quadro vero. Senza indirizzo (le prove) non si chiede niente.
  */
 
 import { createPublicKey, verify } from "node:crypto";
 
 import { chiaveBuona } from "./modo-delle-licenze.js";
 
-/* Ogni quanto si chiede l'elenco. */
-export const OGNI_QUANTO = 10 * 60 * 1000;
+/* Dove sta l'elenco, se nessuno dice altro: il quadro vero. */
+export const REVOCHE_DI_SERIE = "https://quadro.gdahome.org/v1/licenze/revocate";
+
+/* Ogni quanto si chiede l'elenco: un minuto. E' una risposta firmata di
+ * poche righe, e una licenza tolta deve chiudere subito. */
+export const OGNI_QUANTO = 60 * 1000;
 
 /* Oltre quanto un elenco non vale piu': si torna agli otto giorni del
  * gettone. */
@@ -107,6 +119,9 @@ export class Revoche {
     adesso = () => Date.now(),
     ogni = OGNI_QUANTO,
     prendi = (...argomenti) => fetch(...argomenti),
+    /* Chi vuole sapere quali licenze sono appena entrate nell'elenco: il
+     * centralino, che chiude e avvisa le case. */
+    alleNuove = null,
   } = {}) {
     this.dove = String(dove || "");
     this.chiave = String(chiave || "");
@@ -114,6 +129,7 @@ export class Revoche {
     this.adesso = adesso;
     this.ogni = ogni;
     this.prendi = prendi;
+    this.alleNuove = alleNuove;
     /** Le licenze tolte dell'ultimo elenco buono, e quando l'ha firmato il quadro. */
     this.tolte = new Set();
     this.emesso = 0;
@@ -158,9 +174,18 @@ export class Revoche {
       return false;
     }
     if (detto.emesso < this.emesso) return false;
+    const prima = this.vale ? this.tolte : new Set();
     this.tolte = new Set(detto.lic);
     this.emesso = detto.emesso;
     this.arrivatoIl = ora;
+    const nuove = detto.lic.filter((una) => !prima.has(una));
+    if (nuove.length) {
+      try {
+        this.alleNuove?.(nuove);
+      } catch (errore) {
+        this.registro.attenzione(`le licenze appena tolte: ${errore?.message || errore}`);
+      }
+    }
     return true;
   }
 
