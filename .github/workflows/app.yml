@@ -353,7 +353,11 @@ jobs:
           fi
           if [ -n "$OCM" ]; then definizioni+=(--dart-define=GDANAV_OCM_CHIAVE="$OCM"); fi
           # I pedaggi veri, casello per casello (HERE). Senza, il navigatore li stima.
-          if [ -n "$HERE" ]; then definizioni+=(--dart-define=GDANAV_HERE_CHIAVE="$HERE"); fi
+          if [ -n "$HERE" ]; then
+            definizioni+=(--dart-define=GDANAV_HERE_CHIAVE="$HERE")
+          else
+            echo "::warning::Manca il segreto GDANAV_HERE_CHIAVE in questa repository: il navigatore esce senza HERE (aziende nella ricerca, pedaggi veri)."
+          fi
           flutter build apk --release "${definizioni[@]}"
 
       # Il pacchetto per il Play Store, che gli APK non li prende.
@@ -382,7 +386,11 @@ jobs:
           if [ -n "$TOMTOM" ]; then definizioni+=(--dart-define=GDANAV_TOMTOM_CHIAVE="$TOMTOM"); fi
           if [ -n "$OCM" ]; then definizioni+=(--dart-define=GDANAV_OCM_CHIAVE="$OCM"); fi
           # I pedaggi veri, casello per casello (HERE). Senza, il navigatore li stima.
-          if [ -n "$HERE" ]; then definizioni+=(--dart-define=GDANAV_HERE_CHIAVE="$HERE"); fi
+          if [ -n "$HERE" ]; then
+            definizioni+=(--dart-define=GDANAV_HERE_CHIAVE="$HERE")
+          else
+            echo "::warning::Manca il segreto GDANAV_HERE_CHIAVE in questa repository: il navigatore esce senza HERE (aziende nella ricerca, pedaggi veri)."
+          fi
           flutter build appbundle --release "${definizioni[@]}"
           {
             echo "### Il pacchetto per il Play Store"
@@ -577,7 +585,11 @@ jobs:
           fi
           if [ -n "$OCM" ]; then definizioni+=(--dart-define=GDANAV_OCM_CHIAVE="$OCM"); fi
           # I pedaggi veri, casello per casello (HERE). Senza, il navigatore li stima.
-          if [ -n "$HERE" ]; then definizioni+=(--dart-define=GDANAV_HERE_CHIAVE="$HERE"); fi
+          if [ -n "$HERE" ]; then
+            definizioni+=(--dart-define=GDANAV_HERE_CHIAVE="$HERE")
+          else
+            echo "::warning::Manca il segreto GDANAV_HERE_CHIAVE in questa repository: il navigatore esce senza HERE (aziende nella ricerca, pedaggi veri)."
+          fi
           # Il progetto Firebase, se il passo di prima l'ha letto.
           if [ -f "$RUNNER_TEMP/firebase.env" ]; then
             while IFS= read -r riga; do definizioni+=(--dart-define="$riga"); done < "$RUNNER_TEMP/firebase.env"
