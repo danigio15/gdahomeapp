@@ -37,7 +37,7 @@ import {
 } from "../src/centralino.js";
 import { CHIAVE_PUBBLICA_LICENZE } from "../src/chiave-licenze.js";
 import { alzaIlCentralino } from "../src/index.js";
-import { ilModoDelleLicenze } from "../src/modo-delle-licenze.js";
+import { chiaveBuona, ilModoDelleLicenze } from "../src/modo-delle-licenze.js";
 import { ELENCO_VECCHIO, Revoche, leggiLElenco } from "../src/revoche.js";
 import { costruisciIlServer } from "../src/server.js";
 import { PUBBLICA_DI_PROVA, unGettone } from "../../ponte/test/gettoni-di-prova.js";
@@ -160,11 +160,13 @@ const GIA_ABBINATO = { v: 1, chi: "dm_telefono", apertura: "AAAAAAAAAAAAAAAAAAAA
 
 /* ─── 1. Il modo ──────────────────────────────────────────────────────── */
 
-test("oggi: la chiave e' vuota, e il modo di serie e' spento", () => {
-  /* E' la riga che dice che non cambia niente per nessuno. */
-  assert.equal(CHIAVE_PUBBLICA_LICENZE, "");
-  assert.equal(ilModoDelleLicenze(undefined, { chiave: CHIAVE_PUBBLICA_LICENZE }), "spento");
-  assert.equal(ilModoDelleLicenze("", { chiave: CHIAVE_PUBBLICA_LICENZE }), "spento");
+test("oggi: la chiave c'e', e' quella vera, e il modo di serie e' impone", () => {
+  /* Gli acquisti sono accesi anche qui: il fuori casa e' Premium. Si riapre
+   * senza un rilascio con MODO_LICENZE=spento nell'ambiente del tramite. */
+  assert.ok(chiaveBuona(CHIAVE_PUBBLICA_LICENZE));
+  assert.notEqual(CHIAVE_PUBBLICA_LICENZE, PUBBLICA_DI_PROVA);
+  assert.equal(ilModoDelleLicenze(undefined, { chiave: CHIAVE_PUBBLICA_LICENZE }), "impone");
+  assert.equal(ilModoDelleLicenze("", { chiave: CHIAVE_PUBBLICA_LICENZE }), "impone");
 });
 
 test("con la chiave scritta e nessun modo detto si impone, come si e' sempre fatto", () => {
@@ -224,9 +226,9 @@ test("la classe, senza modo detto, fa quello che faceva: con la chiave impone, s
 
 test("il centralino vero, acceso come in produzione: spento senza chiave, impone con la chiave", async () => {
   for (const [opzioni, atteso] of [
-    [{}, "spento"],
-    [{ modoLicenze: "impone" }, "spento"],
-    [{ modoLicenze: "registra" }, "spento"],
+    [{ chiaveLicenze: "" }, "spento"],
+    [{ chiaveLicenze: "", modoLicenze: "impone" }, "spento"],
+    [{ chiaveLicenze: "", modoLicenze: "registra" }, "spento"],
     [{ chiaveLicenze: PUBBLICA_DI_PROVA }, "impone"],
     [{ chiaveLicenze: PUBBLICA_DI_PROVA, modoLicenze: "registra" }, "registra"],
     [{ chiaveLicenze: PUBBLICA_DI_PROVA, modoLicenze: "impone" }, "impone"],
