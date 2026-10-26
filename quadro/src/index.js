@@ -27,6 +27,7 @@ import { Giro } from "./giro.js";
 import { Installatori } from "./installatori.js";
 import { Licenze } from "./licenze.js";
 import { Negozi } from "./negozi.js";
+import { ilSegretoDegliAvvisi } from "./avvisi-dei-negozi.js";
 import { PlanciaServita } from "./plancia-servita.js";
 import { apriIlRegistro } from "./registro.js";
 import { costruisciIlServer } from "./server.js";
@@ -71,6 +72,11 @@ export async function alzaIlQuadro({
   /* Quanto si aspetta il negozio per un rinnovo mentre una casa aspetta i
    * suoi gettoni: di serie cinque secondi (`licenze.js`). */
   attesaDelNegozio = undefined,
+  /* Il segreto nell'indirizzo a cui Google manda i suoi avvisi
+   * (`/v1/negozi/google/<segreto>`, `avvisi-dei-negozi.js`). Vuoto: lo fa il
+   * quadro la prima volta e lo tiene nella cartella dei dati. Quelli di Apple
+   * sono firmati, e un segreto non serve. */
+  segretoDegliAvvisiGoogle = process.env.QUADRO_GOOGLE_AVVISI || "",
 } = {}) {
   const registro = apriIlRegistro(livello);
   const case_ = new CaseSeguite({ cartella });
@@ -107,6 +113,7 @@ export async function alzaIlQuadro({
     licenze,
     negozi: iNegozi,
     attesaDelNegozio,
+    segretoDegliAvvisiGoogle: segretoDegliAvvisiGoogle || ilSegretoDegliAvvisi(cartella),
   });
 
   /* Il giro degli avvisi: quello che fa lavorare il quadro mentre nessuno lo
@@ -159,9 +166,10 @@ export async function alzaIlQuadro({
 
   /* I rinnovi: ogni ora, le licenze del negozio che scadono entro un giorno o
    * sono scadute da poco si richiedono al negozio, anche quelle di chi non
-   * chiede (`licenze.js`, «I rinnovi»). Poi, nello stesso giro, gli
-   * abbonamenti non richiesti da un giorno: chi ha disdetto si sa il giorno
-   * dopo, non alla scadenza («Gli abbonamenti»). Uno alla volta: se il giro
+   * chiede (`licenze.js`, «I rinnovi»). Poi, nello stesso giro, tutti gli
+   * altri abbonamenti: chi ha disdetto si sa entro un'ora, non alla scadenza
+   * («Gli abbonamenti»). Gli avvisi dei negozi lo dicono anche prima
+   * (`avvisi-dei-negozi.js`). Uno alla volta: se il giro
    * prima non ha finito, questo salta. */
   let rinnoviInCorso = false;
   const rinnovi = setInterval(() => {

@@ -69,7 +69,13 @@ const unIndirizzo = () => {
   return `203.0.${Math.floor(indirizzo / 250) % 250}.${(indirizzo % 250) + 1}`;
 };
 
-async function banco({ chiave = PRIVATA, negozi, installatori = [], attesaDelNegozio } = {}) {
+async function banco({
+  chiave = PRIVATA,
+  negozi,
+  installatori = [],
+  attesaDelNegozio,
+  segretoDegliAvvisiGoogle,
+} = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "quadro-licenze-"));
   const acceso = await alzaIlQuadro({
     porta: 0,
@@ -79,6 +85,7 @@ async function banco({ chiave = PRIVATA, negozi, installatori = [], attesaDelNeg
     chiaveDelleLicenze: chiave,
     negozi: negozi ?? new Negozi({ ambiente: {} }),
     attesaDelNegozio,
+    segretoDegliAvvisiGoogle,
   });
   const dove = `http://127.0.0.1:${acceso.porta}`;
   const gestore = async (via, { metodo = "GET", corpo } = {}) => {
@@ -131,11 +138,21 @@ async function banco({ chiave = PRIVATA, negozi, installatori = [], attesaDelNeg
     }
     iscritti.push(detto);
   }
+  /* Un avviso di un negozio, come lo manda lui. */
+  const avviso = async (via, corpo) => {
+    const risposta = await fetch(`${dove}/v1/negozi/${via}`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-forwarded-for": unIndirizzo() },
+      body: JSON.stringify(corpo),
+    });
+    return { stato: risposta.status, detto: await risposta.json() };
+  };
   return {
     ...acceso,
     gestore,
     retro,
     fuori,
+    avviso,
     iscritti,
     chiudi: async () => {
       await acceso.spegni();
@@ -1119,6 +1136,7 @@ function unAppleFinto(transazioni, { radice = RADICE_DI_PROVA, stati = {}, rinno
       },
       fetch,
     }),
+    firmata,
   };
 }
 
@@ -2282,3 +2300,170 @@ MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgtCX5yXHn28oNzb7h
 tdKCCLRlrtR80maKJoJVBmgA1vyhRANCAATpjb/flWyCzESaWIBch1NO7W2Y7rhX
 z+NH9vTytgirTN6ld/dhzXY4Up0fCqHVkjSn2erh8v1jiMGZHebpDieV
 -----END PRIVATE KEY-----`;
+
+/* ─── Gli avvisi dei negozi ──────────────────────────────────────────────── */
+
+async function finoA(condizione, entro = 3000) {
+  const fine = Date.now() + entro;
+  while (Date.now() < fine) {
+    if (condizione()) return;
+    await new Promise((ok) => setTimeout(ok, 10));
+  }
+  throw new Error("non e' successo in tempo");
+}
+
+test("un avviso di Apple fa richiedere subito l'abbonamento; uno non firmato o di un'altra app no", async () => {
+  const ORIGINALE = "2000000777000001";
+  const transazione = {
+    transactionId: ORIGINALE,
+    originalTransactionId: ORIGINALE,
+    bundleId: "com.gdahome.gdahome",
+    productId: "gdahome_premium_mensile",
+    expiresDate: Date.now() + 20 * GIORNO,
+  };
+  const stati = { [ORIGINALE]: transazione };
+  const rinnovi = { [ORIGINALE]: { autoRenewStatus: 1 } };
+  const { negozi, chiesti, firmata } = unAppleFinto(
+    { [ORIGINALE]: transazione },
+    { stati, rinnovi },
+  );
+  const b = await banco({ negozi });
+  try {
+    const presa = await b.fuori("negozio", {
+      casa: UNA,
+      segreto: SEGRETO,
+      app: "gdahome",
+      piattaforma: "ios",
+      prodotto: "gdahome_premium_mensile",
+      ricevuta: ORIGINALE,
+    });
+    assert.equal(presa.stato, 200);
+    const richieste = () => chiesti.filter((uno) => uno.endsWith(`/subscriptions/${ORIGINALE}`));
+    const avviso = (dati) => ({
+      signedPayload: firmata({
+        notificationType: "DID_CHANGE_RENEWAL_STATUS",
+        subtype: "AUTO_RENEW_DISABLED",
+        data: { bundleId: "com.gdahome.gdahome", environment: "Sandbox", ...dati },
+      }),
+    });
+
+    /* Il cliente spegne il rinnovo: Apple avvisa, e la Gestione lo sa subito.
+     * (Appena comprato non si richiede: il negozio l'ha appena detto.) */
+    const una = b.licenze.quella(presa.detto.licenze[0].lic);
+    una.ricontrollata = 0;
+    rinnovi[ORIGINALE] = { autoRenewStatus: 0 };
+    const detto = await b.avviso("apple", avviso({ signedTransactionInfo: firmata(transazione) }));
+    assert.equal(detto.stato, 200);
+    await finoA(() => richieste().length > 0);
+    await finoA(() => una.negozio.abbonamento?.rinnovo === false);
+
+    /* Lo stesso avviso subito dopo non richiede di nuovo. */
+    const prima = richieste().length;
+    await b.avviso("apple", avviso({ signedTransactionInfo: firmata(transazione) }));
+    await new Promise((ok) => setTimeout(ok, 100));
+    assert.equal(richieste().length, prima);
+
+    /* Non firmato da Apple, o di un'altra app: 200, e non si chiede niente. */
+    una.ricontrollata = 0;
+    const finto = avviso({ signedTransactionInfo: firmata(transazione) });
+    const [testa, , firma] = finto.signedPayload.split(".");
+    const corpoFalso = Buffer.from(
+      JSON.stringify({
+        notificationType: "REFUND",
+        data: { bundleId: "com.gdahome.gdahome", signedTransactionInfo: firmata(transazione) },
+      }),
+    ).toString("base64url");
+    assert.equal(
+      (await b.avviso("apple", { signedPayload: `${testa}.${corpoFalso}.${firma}` })).stato,
+      200,
+    );
+    await b.avviso(
+      "apple",
+      avviso({ bundleId: "com.altri.app", signedTransactionInfo: firmata(transazione) }),
+    );
+    await b.avviso("apple", { niente: true });
+    await new Promise((ok) => setTimeout(ok, 100));
+    assert.equal(richieste().length, prima);
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("un avviso di Google arriva solo col segreto giusto, e fa richiedere subito l'abbonamento", async () => {
+  const TOKEN = "token-google-con-avviso-0123456";
+  const SEGRETO_DEGLI_AVVISI = "un-segreto-lungo-per-gli-avvisi-0123";
+  const google = {
+    [TOKEN]: {
+      subscriptionState: "SUBSCRIPTION_STATE_ACTIVE",
+      acknowledgementState: "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+      lineItems: [unaRigaDiGoogle({ fra: 20 * GIORNO, piano: "mensile", euro: 4.99 })],
+    },
+  };
+  const { negozi, chiesti } = unGoogleFinto(google);
+  const b = await banco({ negozi, segretoDegliAvvisiGoogle: SEGRETO_DEGLI_AVVISI });
+  try {
+    const presa = await b.fuori("negozio", {
+      casa: UNA,
+      segreto: SEGRETO,
+      app: "gdahome",
+      piattaforma: "android",
+      prodotto: "gdahome_premium",
+      ricevuta: TOKEN,
+    });
+    assert.equal(presa.stato, 200);
+    const una = b.licenze.quella(presa.detto.licenze[0].lic);
+    const richieste = () => chiesti.filter((uno) => uno.dove.endsWith(`/tokens/${TOKEN}`)).length;
+    const avviso = (dentro) => ({
+      message: {
+        data: Buffer.from(
+          JSON.stringify({ packageName: "com.gdahome.gdahome", ...dentro }),
+        ).toString("base64"),
+        messageId: "1",
+      },
+      subscription: "projects/gdahome/subscriptions/avvisi",
+    });
+    const disdetto = avviso({
+      subscriptionNotification: { version: "1.0", notificationType: 3, purchaseToken: TOKEN },
+    });
+
+    /* Senza il segreto, o con quello sbagliato, la porta non c'e'. */
+    assert.equal((await b.avviso("google", disdetto)).stato, 404);
+    assert.equal((await b.avviso("google/un-altro-segreto-lungo-0123456789", disdetto)).stato, 404);
+
+    /* Disdetto: Google avvisa, e si sa subito. */
+    google[TOKEN] = {
+      ...google[TOKEN],
+      subscriptionState: "SUBSCRIPTION_STATE_CANCELED",
+      lineItems: [
+        unaRigaDiGoogle({ fra: 20 * GIORNO, piano: "mensile", rinnovo: false, euro: 4.99 }),
+      ],
+    };
+    const prima = richieste();
+    una.ricontrollata = 0;
+    assert.equal((await b.avviso(`google/${SEGRETO_DEGLI_AVVISI}`, disdetto)).stato, 200);
+    await finoA(() => una.negozio.abbonamento?.rinnovo === false);
+    assert.equal(richieste(), prima + 1);
+
+    /* L'avviso di prova, uno di un altro pacchetto, uno illeggibile: niente. */
+    una.ricontrollata = 0;
+    await b.avviso(
+      `google/${SEGRETO_DEGLI_AVVISI}`,
+      avviso({ testNotification: { version: "1.0" } }),
+    );
+    await b.avviso(`google/${SEGRETO_DEGLI_AVVISI}`, {
+      message: {
+        data: Buffer.from(
+          JSON.stringify({
+            packageName: "com.altri.app",
+            subscriptionNotification: { purchaseToken: TOKEN },
+          }),
+        ).toString("base64"),
+      },
+    });
+    await b.avviso(`google/${SEGRETO_DEGLI_AVVISI}`, { message: { data: "!!!" } });
+    await new Promise((ok) => setTimeout(ok, 100));
+    assert.equal(richieste(), prima + 1);
+  } finally {
+    await b.chiudi();
+  }
+});
