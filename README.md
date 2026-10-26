@@ -98,8 +98,8 @@ posto. Gli aggiornamenti poi arrivano come per ogni altro add-on.
   <img src="docs/immagini/addon-genera-qr.png" alt="Abbina un telefono: premi Genera QR code e inquadralo con l'app" width="640">
 </p>
 
-**4. Inquadralo con l'app.** Scarica GdAHome dal **Play Store** (Android) o
-dall'**App Store** (iPhone e iPad), oppure apri
+**4. Inquadralo con l'app.** Scarica GdAHome dal **[Play Store](https://play.google.com/store/apps/details?id=com.gdahome.gdahome)** (Android) o
+dall'**[App Store](https://apps.apple.com/app/id6816421418)** (iPhone e iPad), oppure apri
 **[webapp.gdahome.org](https://webapp.gdahome.org)** dal browser, e inquadra il
 codice. Senza fotocamera lo si digita: sedici caratteri, in quattro gruppi.
 

@@ -57,7 +57,7 @@ const String pacchettoNelPlayStore = 'com.gdahome.gdahome';
 /// Il numero dell'app nell'App Store: in App Store Connect, «Informazioni
 /// sull'app» → «Apple ID», solo cifre. Si scrive qui quando l'app e' nel
 /// negozio; vuoto, il bottone apre la ricerca di gdahome nell'App Store.
-const String numeroNellAppStore = '';
+const String numeroNellAppStore = '6816421418';
 
 /// Dove si aggiorna sull'iPhone.
 Uri get indirizzoNellAppStore => numeroNellAppStore.isEmpty
