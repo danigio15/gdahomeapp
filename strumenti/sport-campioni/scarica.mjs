@@ -282,3 +282,53 @@ for (const c of costruttori) {
 }
 await salva("f1-scuderie-loghi", prove);
 console.log("scuderie", prove.filter((p) => p.stato === 200).length, "/", prove.length);
+
+/* L'hockey: cosa danno le fonti pubbliche per i quattro hockey (NHL, ghiaccio
+ * italiano, pista italiano, prato). Prima di scrivere una riga si guarda chi
+ * risponde, e con cosa. */
+const TSDB = "https://www.thesportsdb.com/api/v1/json/3";
+const HOCKEY = {
+  "hockey-nhl-squadre": `${ESPN}/hockey/nhl/teams`,
+  "hockey-nhl-partite": `${ESPN}/hockey/nhl/scoreboard`,
+  "hockey-nhl-classifica": `${ESPN_CLASSIFICHE}/hockey/nhl/standings`,
+  "hockey-espn-leghe": "https://sports.core.api.espn.com/v2/sports/hockey/leagues?limit=100",
+  "hockey-tsdb-sport": `${TSDB}/all_sports.php`,
+  "hockey-tsdb-ghiaccio-italia": `${TSDB}/search_all_leagues.php?c=Italy&s=Ice_Hockey`,
+  "hockey-tsdb-prato-italia": `${TSDB}/search_all_leagues.php?c=Italy&s=Field_Hockey`,
+  "hockey-tsdb-italia": `${TSDB}/search_all_leagues.php?c=Italy`,
+  "hockey-tsdb-ghiaccio-tutte": `${TSDB}/search_all_leagues.php?s=Ice_Hockey`,
+  "hockey-tsdb-prato-tutte": `${TSDB}/search_all_leagues.php?s=Field_Hockey`,
+};
+for (const [nome, url] of Object.entries(HOCKEY)) {
+  const r = await scarica(url);
+  await salva(nome, { url, ...r });
+  console.log(nome, r.stato);
+}
+/* Le leghe italiane trovate su TheSportsDB: squadre, ultime e prossime. */
+const leghe = [
+  ...((await scarica(`${TSDB}/search_all_leagues.php?c=Italy&s=Ice_Hockey`)).json?.countries || []),
+  ...((await scarica(`${TSDB}/search_all_leagues.php?c=Italy&s=Field_Hockey`)).json?.countries || []),
+];
+for (const l of leghe.slice(0, 6)) {
+  const id = l.idLeague;
+  for (const [cosa, u] of [
+    ["squadre", `${TSDB}/lookup_all_teams.php?id=${id}`],
+    ["ultime", `${TSDB}/eventspastleague.php?id=${id}`],
+    ["prossime", `${TSDB}/eventsnextleague.php?id=${id}`],
+    ["classifica", `${TSDB}/lookuptable.php?l=${id}`],
+  ]) {
+    const r = await scarica(u);
+    await salva(`hockey-tsdb-${id}-${cosa}`, { lega: l.strLeague, url: u, ...r });
+    console.log("tsdb", id, l.strLeague, cosa, r.stato);
+  }
+}
+/* Altre fonti per pista e ghiaccio italiani: solo se rispondono, e con cosa. */
+for (const [nome, u] of [
+  ["hockey-sofa-ghiaccio", "https://api.sofascore.com/api/v1/sport/ice-hockey/categories"],
+  ["hockey-sofa-pista", "https://api.sofascore.com/api/v1/sport/rink-hockey/categories"],
+  ["hockey-sofa-prato", "https://api.sofascore.com/api/v1/sport/field-hockey/categories"],
+  ["hockey-alps", "https://www.alpshockey.com/"],
+  ["hockey-fisr-pista", "https://www.fisr.it/hockey-pista.html"],
+]) {
+  await salva(nome, await testo(u));
+}
