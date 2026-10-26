@@ -42,10 +42,10 @@ test("l'attributo sta sulla radice, non sull'intestazione", () => {
 test("si tiene ferma con sticky, non con fixed", () => {
   /* Sticky resta dentro il flusso: la pagina sotto non ci va a finire dietro e
    * non serve compensare l'altezza a mano — che è il modo in cui queste cose
-   * si rompono al primo schermo di dimensione diversa. Ferma sotto la fascia
-   * del sistema, non sul bordo del vetro (#214): dove la fascia non c'e' la
-   * variabile vale zero, ed e' il «top:0» di prima. */
-  assert.match(sezione, /position:sticky;top:var\(--dm-cima-libera,0px\)/);
+   * si rompono al primo schermo di dimensione diversa. Ferma a zero: chi
+   * scorre e' il corpo, che sotto l'orologio ci sta gia' col suo margine in
+   * cima (#214) — la fascia ripetuta qui la faceva scendere due volte. */
+  assert.match(sezione, /position:sticky;top:0;z-index:30;/);
   assert.doesNotMatch(sezione, /position:fixed/);
   /* E non su uno schermo basso, dove del resto resterebbe una feritoia. */
   assert.match(sezione, /@media \(min-height:560px\)/);
@@ -69,10 +69,13 @@ test("vale in tutti e due i posti dove l'intestazione può stare", () => {
    * in cui l'utente l'aveva spostata, e tornava a funzionare uscendo dalla
    * Home — il contrario di quello che chiede chi la accende. */
   assert.match(sezione, /body > header,\s*\n\s*html\[\$\{ATTRIBUTO\}="true"\] #page-home > header\{/);
+  /* E la card resta la sua, in tutti e due i posti e col tema scuro: il fondo
+   * della plancia sta sotto il suo colore, non sopra. */
   assert.match(
     sezione,
-    /body > header::before,\s*\n\s*html\[\$\{ATTRIBUTO\}="true"\] #page-home > header::before\{/,
+    /\[\$\{ATTRIBUTO\}="true"\] body > header,\s*\n\s*html\[data-theme="dark"\]\[\$\{ATTRIBUTO\}="true"\] #page-home > header\{/,
   );
+  assert.doesNotMatch(sezione, /header::before/);
   /* E quel trasloco esiste davvero: se un giorno cambia nome o destinazione,
    * questa riga lo dice prima che la testa ferma smetta di funzionare. */
   const blocchi = leggi("sections/home-blocchi-section.js");

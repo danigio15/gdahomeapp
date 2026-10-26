@@ -10,6 +10,15 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.6
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Intestazione fissa:** accesa, non scende più sotto la riga dell'orario e
+  non la copre: resta dov'è, con la sua card, e mentre si scorre sta ferma
+  sotto l'orologio. Sul telefono scendeva di un'intera fascia, nell'app come
+  in Home Assistant.
+
 ## 1.18.7.5
 
 _Solo Home Assistant: l'app sul telefono non cambia._

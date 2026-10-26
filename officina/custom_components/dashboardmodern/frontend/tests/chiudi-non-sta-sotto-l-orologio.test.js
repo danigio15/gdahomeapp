@@ -79,8 +79,13 @@ test("col chiosco la fascia della Home comincia sotto l'orologio, anche ferma", 
     chiosco,
     /padding-top:max\(env\(safe-area-inset-top,0px\),var\(--dm-cima-di-sistema,0px\),var\(--gdahome-alto,0px\)\)!important/,
   );
+  /* Ferma, resta dove il corpo l'ha messa: il corpo e' quello che scorre, e la
+   * fascia l'ha gia' lasciata fuori col margine qui sopra. Dirla di nuovo
+   * alla testa ferma la spingeva giu' una seconda volta, sopra la riga sotto
+   * il meteo (la-testa-fissa-non-copre-la-riga.spec.js). */
   const testaFissa = leggi("../src/sections/testa-fissa-section.js");
-  assert.match(testaFissa, /position:sticky;top:var\(--dm-cima-libera,0px\)/);
+  assert.match(testaFissa, /position:sticky;top:0;/);
+  assert.doesNotMatch(testaFissa, /top:var\(--dm-cima-libera/);
 });
 
 test("Esc chiude la scheda della luce anche col fuoco altrove", () => {

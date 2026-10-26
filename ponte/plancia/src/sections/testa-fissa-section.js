@@ -79,9 +79,23 @@ export function setTestaFissa(accesa) {
 export function applicaTestaFissa() {
   const radice = doc?.documentElement;
   if (!radice) return false;
-  if (testaFissaAttiva()) radice.setAttribute(ATTRIBUTO, "true");
-  else radice.removeAttribute(ATTRIBUTO);
+  if (testaFissaAttiva()) {
+    radice.setAttribute(ATTRIBUTO, "true");
+    misuraIlMargine();
+  } else radice.removeAttribute(ATTRIBUTO);
   return true;
+}
+
+/* Quanto spazio lascia la card sotto di se': 30 px sul computer, 12 sul
+ * telefono, e domani magari un altro numero. Il fondo intorno alla testa
+ * ferma deve chiudere proprio quella fessura, ne' meno — si vedrebbe passare
+ * quello che scorre — ne' piu' — coprirebbe la riga che viene dopo. */
+function misuraIlMargine() {
+  const testa = doc?.querySelector?.("body > header, #page-home > header");
+  if (!testa) return;
+  const margine = Number.parseFloat(root.getComputedStyle?.(testa)?.marginBottom);
+  if (Number.isFinite(margine))
+    doc.documentElement.style.setProperty("--dm-testa-sotto", `${Math.max(0, margine)}px`);
 }
 
 /* Fatto come il chiosco, che e' fatto come tutti gli altri blocchi di questa
@@ -164,41 +178,44 @@ function installStili() {
 
     /* La testa ferma.
      *
-     * Il fondo e' quello della plancia e non e' trasparente: sotto ci scorre
-     * il contenuto, e una striscia trasparente lo lascerebbe passare attraverso
-     * le parole. Il margine che l'intestazione ha sempre avuto diventa
-     * riempimento in basso, o fra lei e la prima card si aprirebbe una fessura
-     * da cui si vede scorrere quello che passa.
+     * Resta la card di sempre — il suo fondo, il suo bordo, la sua ombra — e
+     * il fondo della plancia le sta intorno, perche' quello che scorre sotto
+     * non si veda passare ai lati e nella fessura sotto di lei. La card non si
+     * ridipinge: si mette sotto il suo colore il fondo della plancia, cosi'
+     * anche la card «di vetro» del tema scuro resta opaca senza cambiare
+     * tinta. Intorno ci pensa un'ombra piena del colore del fondo, larga ai
+     * lati e lunga sotto quanto il margine della card («--dm-testa-sotto»,
+     * misurato: cambia col vetro). Prima il fondo stava in un «::before»
+     * sopra il fondo della card, e la card spariva: restava una striscia
+     * piatta col menu e il meteo, senza riquadro.
      *
      * Due genitori e non uno. L'intestazione sta sotto «body», ma chi la mette
      * in fila fra i blocchi della Home la sposta dentro «#page-home»
      * (portaLaTestataInPagina): con il solo «body > header» la testa ferma
      * smetteva di funzionare proprio nella pagina in cui l'utente l'aveva
-     * spostata, e tornava a funzionare uscendo dalla Home — il contrario di
-     * quello che chiede chi la accende. Si dichiarano tutti e due i posti che
-     * la plancia le conosce, invece di un selettore che ne indovina uno.
+     * spostata. Si dichiarano tutti e due i posti che la plancia le conosce.
      *
-     * Sopra i 900 px di altezza e basta: su uno schermo basso — un telefono
+     * Sopra i 560 px di altezza e basta: su uno schermo basso — un telefono
      * coricato, una finestra stretta — una testa ferma alta un quinto lascia
      * per il resto una feritoia, e chi l'ha accesa non voleva quello.
      *
-     * Ferma sotto la fascia del sistema, non sul bordo del vetro: col chiosco
-     * di Home Assistant su iPhone la cima della pagina e' sotto l'orologio, e
-     * una testa ferma a zero ci restava sotto con l'hamburger e il nome della
-     * casa (#214). Il fondo dietro sale fin li', o nella fascia si vedrebbe
-     * passare quello che scorre. */
+     * Ferma a zero, non sotto la fascia dell'orologio: chi scorre e' il corpo
+     * della pagina, e il corpo la fascia l'ha gia' lasciata fuori col suo
+     * margine in cima (beta12, #214). Lo zero di una testa ferma e' gia' sotto
+     * l'orologio; dire di nuovo «la fascia» la spingeva giu' una seconda
+     * volta — nell'app e su iPhone scendeva di un'intera fascia e copriva la
+     * riga sotto il meteo, quella di cosa e' acceso. */
     @media (min-height:560px){
       html[${ATTRIBUTO}="true"] body > header,
       html[${ATTRIBUTO}="true"] #page-home > header{
-        position:sticky;top:var(--dm-cima-libera,0px);z-index:30;
-        margin-bottom:0;padding-bottom:18px;
-        background:var(--bg-sculpted,#f0f4f8)}
-      /* L'intestazione ha il suo riquadro dentro di se': il fondo della
-         striscia sta dietro, e la card resta quella di prima. */
-      html[${ATTRIBUTO}="true"] body > header::before,
-      html[${ATTRIBUTO}="true"] #page-home > header::before{
-        content:"";position:absolute;inset:calc(-14px - var(--dm-cima-libera,0px)) -14px 0;z-index:-1;
-        background:var(--bg-sculpted,#f0f4f8)}
+        position:sticky;top:0;z-index:30;
+        background-color:var(--bg-sculpted,#f0f4f8);
+        background-image:linear-gradient(var(--card-bg,#fff),var(--card-bg,#fff));
+        box-shadow:var(--shadow-sculpted,none),
+          0 calc(var(--dm-testa-sotto,12px) - 14px) 0 14px var(--bg-sculpted,#f0f4f8)}
+      html[data-theme="dark"][${ATTRIBUTO}="true"] body > header,
+      html[data-theme="dark"][${ATTRIBUTO}="true"] #page-home > header{
+        background-image:linear-gradient(var(--card-glass),var(--card-glass))}
     }
     `,
   );
@@ -210,6 +227,9 @@ export function installTestaFissa() {
   installStili();
   applicaTestaFissa();
   doc.addEventListener("click", onClick);
+  root.addEventListener?.("resize", () => {
+    if (testaFissaAttiva()) misuraIlMargine();
+  });
   onEditorRedraw("__dmTestaFissa", () => root.queueMicrotask?.(ensureTestaFissa));
   ensureTestaFissa();
   return true;
