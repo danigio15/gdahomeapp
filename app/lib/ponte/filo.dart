@@ -104,6 +104,7 @@ class Filo {
     this.quantiTentativiAFreddo = 6,
     bool legameGiaVisto = false,
     this.quandoLega,
+    this.quandoDiceNo,
   }) : _trovaLApprodo = approdo,
        _apri = apri ?? PresaSuWebSocket.apri,
        _legameVisto = legameGiaVisto;
@@ -172,6 +173,15 @@ class Filo {
   /// lo segna nell'archivio delle case (`CasaConosciuta.legata`), e alla
   /// prossima apertura torna qui come `legameGiaVisto`.
   final void Function()? quandoLega;
+
+  /// Chi va avvisato quando il centralino dice di no alla casa: non e'
+  /// Premium ([PremiumRichiesto]) o ha l'add-on vecchio
+  /// ([AddonDaAggiornare]). La prima volta lo sa gia' chi aspetta in [apri];
+  /// questo serve a tutte le altre, quando il filo ribussa da solo e quel no
+  /// finirebbe solo fra le cadute. Senza, chi era sulla pagina «Fuori casa
+  /// serve GdAHome Premium» se la vedeva cambiare in «Non trovo la casa» alla
+  /// prima ribussata: due cose diverse per lo stesso no.
+  final void Function(PremiumRichiesto no)? quandoDiceNo;
 
   /// Se questa casa il legame l'ha gia' ripetuto, con una busta aperta a
   /// provarlo: da qui in poi lo si pretende.
@@ -568,6 +578,7 @@ class Filo {
        * ha detto chi e' caduto arriva fino in fondo, e in «Come va l'app» si
        * legge. */
       final primaVolta = _tentativi == 0;
+      if (errore is PremiumRichiesto) quandoDiceNo?.call(errore);
       _caduto(
         errore is ErroreDelPonte
             ? errore.spiegazione
@@ -599,14 +610,17 @@ class Filo {
       _arrivato,
       /* Il perche' e' quello che ha detto chi ha chiuso, quando l'ha detto:
        * vedi `PresaSuWebSocket.messaggi`. */
-      onError: (Object errore) => _caduto(
-        errore is ErroreDelPonte
-            ? errore.spiegazione
-            : inLingua(
-                it: 'il filo si è interrotto',
-                en: 'the connection broke off',
-              ),
-      ),
+      onError: (Object errore) {
+        if (errore is PremiumRichiesto) quandoDiceNo?.call(errore);
+        _caduto(
+          errore is ErroreDelPonte
+              ? errore.spiegazione
+              : inLingua(
+                  it: 'il filo si è interrotto',
+                  en: 'the connection broke off',
+                ),
+        );
+      },
       onDone: () => _caduto(
         inLingua(it: 'il filo si è chiuso', en: 'the connection closed'),
       ),
