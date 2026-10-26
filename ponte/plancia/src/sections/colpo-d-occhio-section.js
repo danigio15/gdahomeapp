@@ -785,12 +785,20 @@ function accendiIlVideo(occhio, sopra) {
   }
   try {
     apri({ entity: c.entity, stream: c.stream, name: c.nome }, c.nome || c.entity, posto);
+    state.videoAperto = true;
   } catch (errore) {
     root.console?.warn?.("[DashboardModern] colpo d'occhio, video", errore);
   }
 }
 
+/* Chiude solo il video che ha aperto il Colpo d'occhio. Il motore delle
+ * telecamere e' uno, e `dmCamCleanup` ferma qualunque video sia aperto:
+ * chiamarlo a ogni ridisegno — e il Colpo d'occhio si ridisegna a ogni stato
+ * che cambia in casa, anche quando e' spento — fermava la telecamera aperta
+ * dalla plancia, a schermo intero compreso, al primo sensore che si muoveva. */
 function chiudiIlVideo() {
+  if (!state.videoAperto) return;
+  state.videoAperto = false;
   try {
     lexicalGlobal("dmCamCleanup")?.();
   } catch (_errore) {}

@@ -559,7 +559,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-DA7ZJQR5.js";
+} from "../../chunk-6PUV4EGX.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -148616,11 +148616,14 @@ function accendiIlVideo(occhio2, sopra) {
   }
   try {
     apri7({ entity: c.entity, stream: c.stream, name: c.nome }, c.nome || c.entity, posto);
+    state173.videoAperto = true;
   } catch (errore) {
     root.console?.warn?.("[DashboardModern] colpo d'occhio, video", errore);
   }
 }
 function chiudiIlVideo() {
+  if (!state173.videoAperto) return;
+  state173.videoAperto = false;
   try {
     lexicalGlobal("dmCamCleanup")?.();
   } catch (_errore) {
