@@ -7339,8 +7339,6 @@ export default Object.freeze({
     "Команды сейчас не приходят: попробуй чуть позже.",
   "Teams come from the GdAHome add-on, which cannot be reached from here.":
     "Команды приходят из дополнения GdAHome, недоступного отсюда.",
-  "The Sports page: your football team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.":
-    "Страница «Спорт»: твоя футбольная команда, Формула 1 и MotoGP — результаты, ближайшие матчи и гонки, турнирные таблицы. На главной плитка показывает самое важное сейчас: идущий матч, сегодняшний матч, последний подиум. Результаты дополнение берёт из открытых источников, только для вошедших пользователей.",
   "What you follow": "Что ты отслеживаешь",
   Won: "Победа",
   "Your team": "Твоя команда",
@@ -7489,4 +7487,10 @@ export default Object.freeze({
   "In pit": "В боксах",
   "Lap {n}": "Круг {n}",
   "The session is over.": "Сессия закончилась.",
+  "games and standings": "матчи и таблица",
+  "Hockey team": "Хоккейная команда",
+  "overtime": "овертайм",
+  "shootout": "буллиты",
+  "The Sports page: your football or hockey team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.": "Страница «Спорт»: ваша футбольная или хоккейная команда, Формула 1 и MotoGP — результаты, ближайшие матчи и гонки, таблицы. На главной плитка показывает самое важное сейчас: идущий матч, сегодняшний матч, последний подиум. Результаты дополнение получает из открытых источников, только для вошедших пользователей.",
+  "The team's games, results (live too) and its place in its conference are shown. Italian leagues are not available: they have no public data source.": "Показываются матчи команды, результаты (в том числе в прямом эфире) и её место в конференции. Итальянских лиг нет: у них нет открытого источника данных.",
 });

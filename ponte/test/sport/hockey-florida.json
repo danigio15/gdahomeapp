@@ -1,0 +1,757 @@
+{
+"team": {
+"id": "26",
+"abbreviation": "FLA",
+"displayName": "Florida Panthers",
+"name": "Panthers",
+"location": "Florida",
+"color": "e51937"
+},
+"events": [
+{
+"id": "401892489",
+"date": "2026-10-13T22:15Z",
+"name": "Florida Panthers at Columbus Blue Jackets",
+"seasonType": {
+"id": "2",
+"type": 2,
+"name": "Regular Season",
+"abbreviation": "reg"
+},
+"competitions": [
+{
+"id": "401892489",
+"date": "2026-10-13T22:15Z",
+"venue": {
+"fullName": "Nationwide Arena"
+},
+"status": {
+"displayClock": "0:00",
+"period": 3,
+"type": {
+"id": "3",
+"name": "STATUS_FINAL",
+"state": "post",
+"completed": true,
+"description": "Final",
+"detail": "Final",
+"shortDetail": "Final"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"winner": false,
+"score": {
+"value": 3,
+"displayValue": "3"
+},
+"team": {
+"id": "29",
+"abbreviation": "CBJ",
+"displayName": "Columbus Blue Jackets",
+"shortDisplayName": "Blue Jackets",
+"location": "Columbus"
+}
+},
+{
+"homeAway": "away",
+"winner": true,
+"score": {
+"value": 7,
+"displayValue": "7"
+},
+"team": {
+"id": "26",
+"abbreviation": "FLA",
+"displayName": "Florida Panthers",
+"shortDisplayName": "Panthers",
+"location": "Florida"
+}
+}
+]
+}
+]
+},
+{
+"id": "401892510",
+"date": "2026-10-15T23:00Z",
+"name": "Vancouver Canucks at Florida Panthers",
+"seasonType": {
+"id": "2",
+"type": 2,
+"name": "Regular Season",
+"abbreviation": "reg"
+},
+"competitions": [
+{
+"id": "401892510",
+"date": "2026-10-15T23:00Z",
+"venue": {
+"fullName": "Amerant Bank Arena"
+},
+"status": {
+"displayClock": "0:00",
+"period": 4,
+"type": {
+"id": "3",
+"name": "STATUS_FINAL",
+"state": "post",
+"completed": true,
+"description": "Final",
+"detail": "Final/OT",
+"shortDetail": "Final/OT",
+"altDetail": "OT"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"winner": true,
+"score": {
+"value": 3,
+"displayValue": "3"
+},
+"team": {
+"id": "26",
+"abbreviation": "FLA",
+"displayName": "Florida Panthers",
+"shortDisplayName": "Panthers",
+"location": "Florida"
+}
+},
+{
+"homeAway": "away",
+"winner": false,
+"score": {
+"value": 2,
+"displayValue": "2"
+},
+"team": {
+"id": "22",
+"abbreviation": "VAN",
+"displayName": "Vancouver Canucks",
+"shortDisplayName": "Canucks",
+"location": "Vancouver"
+}
+}
+]
+}
+]
+},
+{
+"id": "401892522",
+"date": "2026-10-17T22:00Z",
+"name": "Seattle Kraken at Florida Panthers",
+"seasonType": {
+"id": "2",
+"type": 2,
+"name": "Regular Season",
+"abbreviation": "reg"
+},
+"competitions": [
+{
+"id": "401892522",
+"date": "2026-10-17T22:00Z",
+"venue": {
+"fullName": "Amerant Bank Arena"
+},
+"status": {
+"displayClock": "0:00",
+"period": 3,
+"type": {
+"id": "3",
+"name": "STATUS_FINAL",
+"state": "post",
+"completed": true,
+"description": "Final",
+"detail": "Final",
+"shortDetail": "Final"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"winner": true,
+"score": {
+"value": 8,
+"displayValue": "8"
+},
+"team": {
+"id": "26",
+"abbreviation": "FLA",
+"displayName": "Florida Panthers",
+"shortDisplayName": "Panthers",
+"location": "Florida"
+}
+},
+{
+"homeAway": "away",
+"winner": false,
+"score": {
+"value": 3,
+"displayValue": "3"
+},
+"team": {
+"id": "124292",
+"abbreviation": "SEA",
+"displayName": "Seattle Kraken",
+"shortDisplayName": "Kraken",
+"location": "Seattle"
+}
+}
+]
+}
+]
+},
+{
+"id": "401892551",
+"date": "2026-10-21T23:30Z",
+"name": "Florida Panthers at Ottawa Senators",
+"seasonType": {
+"id": "2",
+"type": 2,
+"name": "Regular Season",
+"abbreviation": "reg"
+},
+"competitions": [
+{
+"id": "401892551",
+"date": "2026-10-21T23:30Z",
+"venue": {
+"fullName": "Canadian Tire Centre"
+},
+"status": {
+"displayClock": "0:00",
+"period": 3,
+"type": {
+"id": "3",
+"name": "STATUS_FINAL",
+"state": "post",
+"completed": true,
+"description": "Final",
+"detail": "Final",
+"shortDetail": "Final"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"winner": true,
+"score": {
+"value": 5,
+"displayValue": "5"
+},
+"team": {
+"id": "14",
+"abbreviation": "OTT",
+"displayName": "Ottawa Senators",
+"shortDisplayName": "Senators",
+"location": "Ottawa"
+}
+},
+{
+"homeAway": "away",
+"winner": false,
+"score": {
+"value": 1,
+"displayValue": "1"
+},
+"team": {
+"id": "26",
+"abbreviation": "FLA",
+"displayName": "Florida Panthers",
+"shortDisplayName": "Panthers",
+"location": "Florida"
+}
+}
+]
+}
+]
+},
+{
+"id": "401892556",
+"date": "2026-10-22T23:00Z",
+"name": "Florida Panthers at Pittsburgh Penguins",
+"seasonType": {
+"id": "2",
+"type": 2,
+"name": "Regular Season",
+"abbreviation": "reg"
+},
+"competitions": [
+{
+"id": "401892556",
+"date": "2026-10-22T23:00Z",
+"venue": {
+"fullName": "PPG Paints Arena"
+},
+"status": {
+"displayClock": "0:00",
+"period": 3,
+"type": {
+"id": "3",
+"name": "STATUS_FINAL",
+"state": "post",
+"completed": true,
+"description": "Final",
+"detail": "Final",
+"shortDetail": "Final"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"winner": true,
+"score": {
+"value": 4,
+"displayValue": "4"
+},
+"team": {
+"id": "16",
+"abbreviation": "PIT",
+"displayName": "Pittsburgh Penguins",
+"shortDisplayName": "Penguins",
+"location": "Pittsburgh"
+}
+},
+{
+"homeAway": "away",
+"winner": false,
+"score": {
+"value": 0,
+"displayValue": "0"
+},
+"team": {
+"id": "26",
+"abbreviation": "FLA",
+"displayName": "Florida Panthers",
+"shortDisplayName": "Panthers",
+"location": "Florida"
+}
+}
+]
+}
+]
+},
+{
+"id": "401892578",
+"date": "2026-10-25T19:00Z",
+"name": "Florida Panthers at Chicago Blackhawks",
+"seasonType": {
+"id": "2",
+"type": 2,
+"name": "Regular Season",
+"abbreviation": "reg"
+},
+"competitions": [
+{
+"id": "401892578",
+"date": "2026-10-25T19:00Z",
+"venue": {
+"fullName": "United Center"
+},
+"status": {
+"displayClock": "0:00",
+"period": 3,
+"type": {
+"id": "3",
+"name": "STATUS_FINAL",
+"state": "post",
+"completed": true,
+"description": "Final",
+"detail": "Final",
+"shortDetail": "Final"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"winner": false,
+"score": {
+"value": 2,
+"displayValue": "2"
+},
+"team": {
+"id": "4",
+"abbreviation": "CHI",
+"displayName": "Chicago Blackhawks",
+"shortDisplayName": "Blackhawks",
+"location": "Chicago"
+}
+},
+{
+"homeAway": "away",
+"winner": true,
+"score": {
+"value": 3,
+"displayValue": "3"
+},
+"team": {
+"id": "26",
+"abbreviation": "FLA",
+"displayName": "Florida Panthers",
+"shortDisplayName": "Panthers",
+"location": "Florida"
+}
+}
+]
+}
+]
+},
+{
+"id": "401892591",
+"date": "2026-10-28T00:00Z",
+"name": "Florida Panthers at Winnipeg Jets",
+"seasonType": {
+"id": "2",
+"type": 2,
+"name": "Regular Season",
+"abbreviation": "reg"
+},
+"competitions": [
+{
+"id": "401892591",
+"date": "2026-10-28T00:00Z",
+"venue": {
+"fullName": "Canada Life Centre"
+},
+"status": {
+"displayClock": "0:00",
+"period": 0,
+"type": {
+"id": "1",
+"name": "STATUS_SCHEDULED",
+"state": "pre",
+"completed": false,
+"description": "Scheduled",
+"detail": "Tue, October 27th at 8:00 PM EDT",
+"shortDetail": "10/27 - 8:00 PM EDT"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"winner": null,
+"score": null,
+"team": {
+"id": "28",
+"abbreviation": "WPG",
+"displayName": "Winnipeg Jets",
+"shortDisplayName": "Jets",
+"location": "Winnipeg"
+}
+},
+{
+"homeAway": "away",
+"winner": null,
+"score": null,
+"team": {
+"id": "26",
+"abbreviation": "FLA",
+"displayName": "Florida Panthers",
+"shortDisplayName": "Panthers",
+"location": "Florida"
+}
+}
+]
+}
+]
+},
+{
+"id": "401892612",
+"date": "2026-10-30T23:00Z",
+"name": "Winnipeg Jets at Florida Panthers",
+"seasonType": {
+"id": "2",
+"type": 2,
+"name": "Regular Season",
+"abbreviation": "reg"
+},
+"competitions": [
+{
+"id": "401892612",
+"date": "2026-10-30T23:00Z",
+"venue": {
+"fullName": "Amerant Bank Arena"
+},
+"status": {
+"displayClock": "0:00",
+"period": 0,
+"type": {
+"id": "1",
+"name": "STATUS_SCHEDULED",
+"state": "pre",
+"completed": false,
+"description": "Scheduled",
+"detail": "Fri, October 30th at 7:00 PM EDT",
+"shortDetail": "10/30 - 7:00 PM EDT"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"winner": null,
+"score": null,
+"team": {
+"id": "26",
+"abbreviation": "FLA",
+"displayName": "Florida Panthers",
+"shortDisplayName": "Panthers",
+"location": "Florida"
+}
+},
+{
+"homeAway": "away",
+"winner": null,
+"score": null,
+"team": {
+"id": "28",
+"abbreviation": "WPG",
+"displayName": "Winnipeg Jets",
+"shortDisplayName": "Jets",
+"location": "Winnipeg"
+}
+}
+]
+}
+]
+},
+{
+"id": "401892630",
+"date": "2026-11-03T00:00Z",
+"name": "Detroit Red Wings at Florida Panthers",
+"seasonType": {
+"id": "2",
+"type": 2,
+"name": "Regular Season",
+"abbreviation": "reg"
+},
+"competitions": [
+{
+"id": "401892630",
+"date": "2026-11-03T00:00Z",
+"venue": {
+"fullName": "Amerant Bank Arena"
+},
+"status": {
+"displayClock": "0:00",
+"period": 0,
+"type": {
+"id": "1",
+"name": "STATUS_SCHEDULED",
+"state": "pre",
+"completed": false,
+"description": "Scheduled",
+"detail": "Mon, November 2nd at 7:00 PM EST",
+"shortDetail": "11/2 - 7:00 PM EST"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"winner": null,
+"score": null,
+"team": {
+"id": "26",
+"abbreviation": "FLA",
+"displayName": "Florida Panthers",
+"shortDisplayName": "Panthers",
+"location": "Florida"
+}
+},
+{
+"homeAway": "away",
+"winner": null,
+"score": null,
+"team": {
+"id": "5",
+"abbreviation": "DET",
+"displayName": "Detroit Red Wings",
+"shortDisplayName": "Red Wings",
+"location": "Detroit"
+}
+}
+]
+}
+]
+},
+{
+"id": "401892645",
+"date": "2026-11-05T00:30Z",
+"name": "Chicago Blackhawks at Florida Panthers",
+"seasonType": {
+"id": "2",
+"type": 2,
+"name": "Regular Season",
+"abbreviation": "reg"
+},
+"competitions": [
+{
+"id": "401892645",
+"date": "2026-11-05T00:30Z",
+"venue": {
+"fullName": "Amerant Bank Arena"
+},
+"status": {
+"displayClock": "0:00",
+"period": 0,
+"type": {
+"id": "1",
+"name": "STATUS_SCHEDULED",
+"state": "pre",
+"completed": false,
+"description": "Scheduled",
+"detail": "Wed, November 4th at 7:30 PM EST",
+"shortDetail": "11/4 - 7:30 PM EST"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"winner": null,
+"score": null,
+"team": {
+"id": "26",
+"abbreviation": "FLA",
+"displayName": "Florida Panthers",
+"shortDisplayName": "Panthers",
+"location": "Florida"
+}
+},
+{
+"homeAway": "away",
+"winner": null,
+"score": null,
+"team": {
+"id": "4",
+"abbreviation": "CHI",
+"displayName": "Chicago Blackhawks",
+"shortDisplayName": "Blackhawks",
+"location": "Chicago"
+}
+}
+]
+}
+]
+},
+{
+"id": "401892662",
+"date": "2026-11-07T17:30Z",
+"name": "Florida Panthers at Washington Capitals",
+"seasonType": {
+"id": "2",
+"type": 2,
+"name": "Regular Season",
+"abbreviation": "reg"
+},
+"competitions": [
+{
+"id": "401892662",
+"date": "2026-11-07T17:30Z",
+"venue": {
+"fullName": "Capital One Arena"
+},
+"status": {
+"displayClock": "0:00",
+"period": 0,
+"type": {
+"id": "1",
+"name": "STATUS_SCHEDULED",
+"state": "pre",
+"completed": false,
+"description": "Scheduled",
+"detail": "Sat, November 7th at 12:30 PM EST",
+"shortDetail": "11/7 - 12:30 PM EST"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"winner": null,
+"score": null,
+"team": {
+"id": "23",
+"abbreviation": "WSH",
+"displayName": "Washington Capitals",
+"shortDisplayName": "Capitals",
+"location": "Washington"
+}
+},
+{
+"homeAway": "away",
+"winner": null,
+"score": null,
+"team": {
+"id": "26",
+"abbreviation": "FLA",
+"displayName": "Florida Panthers",
+"shortDisplayName": "Panthers",
+"location": "Florida"
+}
+}
+]
+}
+]
+},
+{
+"id": "401892674",
+"date": "2026-11-08T18:00Z",
+"name": "Florida Panthers at Boston Bruins",
+"seasonType": {
+"id": "2",
+"type": 2,
+"name": "Regular Season",
+"abbreviation": "reg"
+},
+"competitions": [
+{
+"id": "401892674",
+"date": "2026-11-08T18:00Z",
+"venue": {
+"fullName": "TD Garden"
+},
+"status": {
+"displayClock": "0:00",
+"period": 0,
+"type": {
+"id": "1",
+"name": "STATUS_SCHEDULED",
+"state": "pre",
+"completed": false,
+"description": "Scheduled",
+"detail": "Sun, November 8th at 1:00 PM EST",
+"shortDetail": "11/8 - 1:00 PM EST"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"winner": null,
+"score": null,
+"team": {
+"id": "1",
+"abbreviation": "BOS",
+"displayName": "Boston Bruins",
+"shortDisplayName": "Bruins",
+"location": "Boston"
+}
+},
+{
+"homeAway": "away",
+"winner": null,
+"score": null,
+"team": {
+"id": "26",
+"abbreviation": "FLA",
+"displayName": "Florida Panthers",
+"shortDisplayName": "Panthers",
+"location": "Florida"
+}
+}
+]
+}
+]
+}
+]
+}

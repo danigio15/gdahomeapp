@@ -14,6 +14,8 @@ import { readFileSync } from "node:fs";
 import {
   CAMPIONATI,
   CHIAVE_SPORT,
+  LEGHE_HOCKEY,
+  diSquadra,
   domandaDelleScelte,
   formaRecente,
   fraQuantoSiRichiede,
@@ -32,7 +34,9 @@ import {
 } from "../src/core/lo-sport.js";
 import {
   CAMPIONATI as CAMPIONATI_DEL_PONTE,
+  LEGHE_HOCKEY as LEGHE_HOCKEY_DEL_PONTE,
   calcioDaEspn,
+  hockeyDaEspn,
   f1DaJolpica,
   motoDaPulselive,
 } from "../../../../../ponte/src/sport.js";
@@ -214,4 +218,57 @@ test("la Home: prima la partita in corso, poi quello che c'e' oggi, poi il risul
   assert.equal(domenica.cosa, "prossima");
   assert.equal(inEvidenza([{ tipo: "f1", errore: "non-risponde" }], SABATO), null);
   assert.equal(inEvidenza([], SABATO), null);
+});
+
+/* ── l'hockey: la NHL, coi pezzi del calcio ─────────────────────────────── */
+
+const florida = hockeyDaEspn({
+  id: "26",
+  calendario: campione("hockey-florida"),
+  classifica: campione("hockey-classifica"),
+});
+
+test("hockey: le leghe sono quelle del ponte, e una squadra si segue come una di calcio", () => {
+  assert.deepEqual(LEGHE_HOCKEY, LEGHE_HOCKEY_DEL_PONTE);
+  assert.equal(diSquadra("hockey"), true);
+  assert.equal(diSquadra("f1"), false);
+  const c = normalizzaSport({
+    seguiti: [
+      { tipo: "hockey", campionato: "nhl", squadra: "26", nome: "Florida Panthers" },
+      { tipo: "hockey", campionato: "nhl", squadra: "26" },
+      { tipo: "hockey", campionato: "ita.1", squadra: "26" },
+      { tipo: "hockey", campionato: "nhl", squadra: "x" },
+      /* La stessa cifra nel calcio e' un'altra squadra: si tengono tutte e due. */
+      { tipo: "calcio", campionato: "ita.1", squadra: "26" },
+    ],
+  });
+  assert.deepEqual(c.seguiti, [
+    { tipo: "hockey", campionato: "nhl", squadra: "26", nome: "Florida Panthers" },
+    { tipo: "calcio", campionato: "ita.1", squadra: "26", nome: "" },
+  ]);
+  assert.deepEqual(domandaDelleScelte(c), [
+    { tipo: "hockey", campionato: "nhl", squadra: "26" },
+    { tipo: "calcio", campionato: "ita.1", squadra: "26" },
+  ]);
+});
+
+test("hockey: la partita in grande, la forma e la classifica attorno alla squadra", () => {
+  assert.equal(partitaInGrande(florida).perche, "prossima");
+  assert.deepEqual(formaRecente(florida), ["V", "V", "P", "P", "V"]);
+  const righe = righeAttorno(florida.classifica, "26", { primi: 3, accanto: 1 });
+  assert.deepEqual(
+    righe.map((r) => (r.salto ? "…" : `${r.posizione}${r.mia ? "*" : ""}`)),
+    ["1", "2", "3", "…", "8", "9*", "10"],
+  );
+});
+
+test("hockey: la Home racconta la partita della squadra di hockey", () => {
+  const ieri = Date.parse(florida.ultime[0].quando) + 3 * 3600_000;
+  const ev = inEvidenza([florida], ieri);
+  assert.equal(ev.tipo, "hockey");
+  assert.equal(ev.cosa, "ultima");
+  const inCorso = { ...florida, dalVivo: { ...florida.prossime[0], fase: "in" } };
+  assert.equal(inEvidenza([f1, inCorso], ieri).tipo, "hockey");
+  assert.equal(inEvidenza([f1, inCorso], ieri).cosa, "dal-vivo");
+  assert.equal(fraQuantoSiRichiede([inCorso], ieri), 60_000);
 });

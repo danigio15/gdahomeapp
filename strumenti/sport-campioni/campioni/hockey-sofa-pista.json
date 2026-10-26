@@ -1,0 +1,6 @@
+{
+ "url": "https://api.sofascore.com/api/v1/sport/rink-hockey/categories",
+ "stato": 403,
+ "lunghezza": 48,
+ "testo": "{\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}"
+}

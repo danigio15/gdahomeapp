@@ -7323,8 +7323,6 @@ export default Object.freeze({
     "チームを取得できません：しばらくしてから再試行してください。",
   "Teams come from the GdAHome add-on, which cannot be reached from here.":
     "チームは GdAHome アドオンから届きますが、ここからは接続できません。",
-  "The Sports page: your football team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.":
-    "スポーツページ：サッカーチーム、F1、MotoGP の結果、今後の試合とレース、ランキングを表示します。ホームのタイルには今大切なことを表示します：進行中の試合、今日の試合、前回の表彰台。結果はアドオンが公開ソースから取得し、サインインしたユーザーにのみ表示します。",
   "What you follow": "フォロー中",
   Won: "勝利",
   "Your team": "あなたのチーム",
@@ -7474,4 +7472,10 @@ export default Object.freeze({
   "In pit": "ピットイン",
   "Lap {n}": "{n}周目",
   "The session is over.": "セッションは終了しました。",
+  "games and standings": "試合と順位",
+  "Hockey team": "アイスホッケーのチーム",
+  "overtime": "延長",
+  "shootout": "シュートアウト",
+  "The Sports page: your football or hockey team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.": "スポーツページ：あなたのサッカーまたはホッケーのチーム、F1、MotoGP の結果、次の試合とレース、順位表。ホームのタイルは今大事なことを表示します：進行中の試合、今日の試合、直近の表彰台。結果はアドオンが公開ソースから取得し、サインインしたユーザーのみに表示されます。",
+  "The team's games, results (live too) and its place in its conference are shown. Italian leagues are not available: they have no public data source.": "チームの試合、結果（ライブも）、カンファレンスでの順位を表示します。イタリアのリーグはありません：公開データソースがないためです。",
 });

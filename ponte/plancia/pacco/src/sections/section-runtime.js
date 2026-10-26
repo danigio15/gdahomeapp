@@ -559,7 +559,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-VH4RTGOH.js";
+} from "../../chunk-74QSGH4C.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -3648,6 +3648,7 @@ var SOURCE_INDEX = Object.freeze({
   "Delicati": "Delicates",
   "Della linguetta e del titolo": "Of the tab and the title",
   "Della squadra si vedono le partite di tutte le competizioni: campionato, coppe ed Europa.": "All of the team's competitions are shown: league, cups and Europe.",
+  "Della squadra si vedono le partite, i risultati anche dal vivo e il posto nella sua conference. Le leghe italiane non ci sono: non hanno una fonte pubblica con i dati.": "The team's games, results (live too) and its place in its conference are shown. Italian leagues are not available: they have no public data source.",
   "Della stampante servono due risposte: se è pronta, e quanto inchiostro le resta. Scrivi l'entità che dice come sta — la crea l'integrazione della stampante — e le cartucce si cercano da sole partendo da quel nome. La pagina Stampanti compare da sé appena ce n'è una.": "A printer needs two answers: whether it is ready, and how much ink is left. Write the entity that says how it is doing — the printer integration creates it — and the cartridges are found on their own from that name. The Printers page appears by itself as soon as there is one.",
   "Delta fra le celle": "Cell voltage delta",
   "dentro ${gradi}": "inside ${gradi}",
@@ -4862,7 +4863,7 @@ var SOURCE_INDEX = Object.freeze({
   "La pagina": "The page",
   "La pagina Meteo: com'è il tempo adesso, le misure della tua stazione con le ultime 24 ore, le previsioni ora per ora e dei prossimi giorni, e il radar della pioggia. Basta l'entità meteo: il resto è facoltativo, e un blocco senza dati non compare.": "The Weather page: what the weather is like now, your station's readings with the last 24 hours, the hourly and daily forecast, and the rain radar. The weather entity is enough: the rest is optional, and a block with no data does not show.",
   "La pagina MiniPC ha due fasce: le macchine e la rete. Questa riga va in quella che scegli qui.": "The MiniPC page has two bands: machines and network. This row goes in the one you pick here.",
-  "La pagina Sport: la tua squadra di calcio, la Formula 1 e la MotoGP, con i risultati, le prossime partite e gare e le classifiche. In Home la tessera dice la cosa che conta adesso: la partita in corso, quella di oggi, l'ultimo podio. I risultati li chiede l'add-on alle fonti pubbliche, solo per chi è entrato.": "The Sports page: your football team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.",
+  "La pagina Sport: la tua squadra di calcio o di hockey, la Formula 1 e la MotoGP, con i risultati, le prossime partite e gare e le classifiche. In Home la tessera dice la cosa che conta adesso: la partita in corso, quella di oggi, l'ultimo podio. I risultati li chiede l'add-on alle fonti pubbliche, solo per chi è entrato.": "The Sports page: your football or hockey team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.",
   "La pagina tiene otto nodi, e ci sono tutti: togline uno per farci stare questo.": "The page holds eight nodes and they are all taken: remove one to make room.",
   "La parola che la stufa scrive sul display: accensione, lavoro, pulizia braciere, spegnimento… Se la pagina non la conosce, la scrive com'è.": "The word the stove shows on its display: ignition, working, brazier cleaning, shutdown… If the page does not know it, it shows it as it is.",
   "La parte in alto — hamburger, nome della casa, meteo — resta ferma e il resto della plancia le scorre sotto. Vale solo su questo apparecchio.": "The top strip — hamburger, house name, weather — stays put while the rest of the dashboard scrolls under it. This device only.",
@@ -5883,6 +5884,7 @@ var SOURCE_INDEX = Object.freeze({
   "Parti da un modello pronto e cambia quello che vuoi, oppure da zero.": "Start from a ready-made template and change what you like, or from scratch.",
   "Partita alle ${inizio}": "Started at ${inizio}",
   "Partita alle ${inizio} ${alPartenza}": "Started at ${inizio} at ${partenza}%",
+  "partite e classifica": "games and standings",
   "Partizioni dell'antifurto": "Alarm partitions",
   "Parto alle": "Leave at",
   "Parziale": "Custom",
@@ -6556,7 +6558,7 @@ var SOURCE_INDEX = Object.freeze({
   "Righe": "Rows",
   "rigore": "penalty",
   "rigore sbagliato": "missed penalty",
-  "rigori": "pens",
+  "rigori": "shootout",
   "rileva": "detecting",
   "Rileva da Home Assistant": "Detect from Home Assistant",
   "Rileva dal telefono": "Detect from the phone",
@@ -7211,6 +7213,7 @@ var SOURCE_INDEX = Object.freeze({
   "Spunta quello che hai davvero: la pagina mostra solo quello, e con più d'uno compaiono in alto le linguette per passare dall'uno all'altro.": "Tick what you actually have: the page shows only that, and with more than one the tabs appear at the top to switch between them.",
   "Squadra": "Team",
   "Squadra di calcio": "Football team",
+  "Squadra di hockey": "Hockey team",
   "Squilibrio fra le celle": "Cell imbalance",
   "Squilla da": "Ringing for",
   "Squillo finito": "Ring over",
@@ -7362,6 +7365,7 @@ var SOURCE_INDEX = Object.freeze({
   "Suono": "Sound",
   "Supercattivo": "Supervillain",
   "Supereroe": "Superhero",
+  "supplementari": "overtime",
   "Svuota": "Clear",
   "Svuota i campi di periodo": "Clear the period fields",
   "Svuota il posto": "Clear the slot",
@@ -64388,14 +64392,16 @@ var CAMPIONATI = Object.freeze({
   "por.1": "Primeira Liga",
   "ned.1": "Eredivisie"
 });
-var TIPI3 = Object.freeze(["calcio", "f1", "motogp"]);
+var LEGHE_HOCKEY = Object.freeze({ nhl: "NHL" });
+var TIPI3 = Object.freeze(["calcio", "hockey", "f1", "motogp"]);
+var diSquadra = (tipo) => tipo === "calcio" || tipo === "hockey";
 var pulito49 = (v) => typeof v === "string" ? v.trim() : v == null ? "" : String(v).trim();
 var ora4 = (iso) => {
   const n = Date.parse(iso || "");
   return Number.isFinite(n) ? n : null;
 };
 function chiaveDelSeguito(s) {
-  if (s?.tipo === "calcio") return `calcio:${pulito49(s.squadra)}`;
+  if (diSquadra(s?.tipo)) return `${s.tipo}:${pulito49(s.squadra)}`;
   return pulito49(s?.tipo);
 }
 function normalizzaSport(grezza) {
@@ -64411,6 +64417,11 @@ function normalizzaSport(grezza) {
       const squadra = pulito49(s.squadra);
       if (!Object.hasOwn(CAMPIONATI, campionato) || !/^\d{1,7}$/.test(squadra)) continue;
       voce3 = { tipo: "calcio", campionato, squadra, nome: pulito49(s.nome).slice(0, 60) };
+    } else if (s.tipo === "hockey") {
+      const campionato = pulito49(s.campionato);
+      const squadra = pulito49(s.squadra);
+      if (!Object.hasOwn(LEGHE_HOCKEY, campionato) || !/^\d{1,7}$/.test(squadra)) continue;
+      voce3 = { tipo: "hockey", campionato, squadra, nome: pulito49(s.nome).slice(0, 60) };
     } else {
       voce3 = { tipo: s.tipo, preferito: pulito49(s.preferito).slice(0, 60) };
     }
@@ -64431,7 +64442,7 @@ function spostaIlSeguito(seguiti, indice, verso2) {
 }
 function domandaDelleScelte(config) {
   return normalizzaSport(config).seguiti.map(
-    (s) => s.tipo === "calcio" ? { tipo: "calcio", campionato: s.campionato, squadra: s.squadra } : { tipo: s.tipo }
+    (s) => diSquadra(s.tipo) ? { tipo: s.tipo, campionato: s.campionato, squadra: s.squadra } : { tipo: s.tipo }
   );
 }
 function formaRecente(calcio, quante3 = 5) {
@@ -64517,11 +64528,11 @@ function fraQuantoSiRichiede(risultati, adesso2 = Date.now()) {
     return q != null && Math.abs(q - adesso2) < 3 * 36e5;
   };
   for (const r of risultati || []) {
-    if (r?.dalVivo && r.tipo !== "calcio") return 3e4;
+    if (r?.dalVivo && !diSquadra(r.tipo)) return 3e4;
   }
   for (const r of risultati || []) {
     if (r?.dalVivo) return 6e4;
-    if (r?.tipo === "calcio" && vicino(r.prossime?.[0]?.quando)) return 6e4;
+    if (diSquadra(r?.tipo) && vicino(r.prossime?.[0]?.quando)) return 6e4;
     const sessioni = r?.prossima?.tutte || r?.prossima?.sessioni || [];
     if ((r?.tipo === "f1" || r?.tipo === "motogp") && sessioni.some((x) => {
       const q = ora4(x?.quando);
@@ -64535,9 +64546,9 @@ function fraQuantoSiRichiede(risultati, adesso2 = Date.now()) {
 function inEvidenza(risultati, adesso2 = Date.now()) {
   const buoni = (risultati || []).filter((r) => r && !r.errore);
   if (!buoni.length) return null;
-  const dalVivo = buoni.find((r) => r.tipo === "calcio" && r.dalVivo);
+  const dalVivo = buoni.find((r) => diSquadra(r.tipo) && r.dalVivo);
   if (dalVivo)
-    return { tipo: "calcio", cosa: "dal-vivo", risultato: dalVivo, partita: dalVivo.dalVivo };
+    return { tipo: dalVivo.tipo, cosa: "dal-vivo", risultato: dalVivo, partita: dalVivo.dalVivo };
   const corsa = buoni.find(
     (r) => (r.tipo === "f1" || r.tipo === "motogp") && r.dalVivo?.ordine?.length
   );
@@ -64545,11 +64556,11 @@ function inEvidenza(risultati, adesso2 = Date.now()) {
   const prossimi = [];
   const passati = [];
   for (const r of buoni) {
-    if (r.tipo === "calcio") {
+    if (diSquadra(r.tipo)) {
       const p = r.prossime?.[0];
       if (p)
         prossimi.push({
-          tipo: "calcio",
+          tipo: r.tipo,
           cosa: "prossima",
           risultato: r,
           partita: p,
@@ -64558,7 +64569,7 @@ function inEvidenza(risultati, adesso2 = Date.now()) {
       const u = r.ultime?.[0];
       if (u)
         passati.push({
-          tipo: "calcio",
+          tipo: r.tipo,
           cosa: "ultima",
           risultato: r,
           partita: u,
@@ -64788,7 +64799,7 @@ var ZONE = () => ({
   retrocede: t("Retrocessione", "Relegation")
 });
 function nomeDelTipo(tipo) {
-  return { calcio: t("Calcio", "Football"), f1: "Formula 1", motogp: "MotoGP" }[tipo] || tipo;
+  return { calcio: t("Calcio", "Football"), hockey: "Hockey", f1: "Formula 1", motogp: "MotoGP" }[tipo] || tipo;
 }
 var COLORI_F1 = {
   mercedes: "#00d2be",
@@ -64816,7 +64827,8 @@ var coloreDellaMoto = (moto) => Object.entries(COLORI_MOTO).find(
 )?.[1] || "#64748b";
 function stemma(squadra, misura7 = 40) {
   const id = clean(squadra?.id);
-  const url = /^\d{1,7}$/.test(id) && squadra?.logo !== false ? LOGHI.logo(id) : "";
+  const suo2 = clean(squadra?.stemma);
+  const url = /^nhl:[a-z]{2,4}$/.test(suo2) ? LOGHI.logo(suo2) : /^\d{1,7}$/.test(id) && squadra?.logo !== false ? LOGHI.logo(id) : "";
   if (url)
     return `<span class="dm-sport-stemma" style="--m:${misura7}px"><img src="${esc(url)}" alt="" decoding="async"></span>`;
   const colore2 = clean(squadra?.colore) || "#64748b";
@@ -64845,14 +64857,15 @@ function schedaMarkup7(titolo3, corpo5, { classe: classe3 = "", attr = "" } = {}
 function punteggio(p) {
   if (p.fase === "prima") return `<b class="dm-sport-ora">${esc(oraDi3(p.quando))}</b>`;
   const rigori = p.casa.rigori != null && p.fuori.rigori != null ? `<small class="dm-sport-rigori">${esc(t("rigori", "pens"))} ${p.casa.rigori}–${p.fuori.rigori}</small>` : "";
-  return `<b class="dm-sport-gol">${p.casa.gol ?? 0}<i>–</i>${p.fuori.gol ?? 0}</b>${rigori}`;
+  const oltre = { OT: t("supplementari", "overtime"), SO: t("rigori", "shootout") }[p.supplementari];
+  return `<b class="dm-sport-gol">${p.casa.gol ?? 0}<i>–</i>${p.fuori.gol ?? 0}</b>${rigori}${oltre && !rigori ? `<small class="dm-sport-rigori">${esc(oltre)}</small>` : ""}`;
 }
 function partitaGrande(r, seguito, adesso2) {
   const grande = partitaInGrande(r);
   if (!grande) return "";
   const { partita: p, perche: perche5 } = grande;
   const lati = latiDellaPartita(p, r.squadra.id);
-  const colore2 = clean(lati?.mia?.colore) || "#16a34a";
+  const colore2 = clean(lati?.mia?.colore) || clean(r.squadra?.colore) || "#16a34a";
   const stato3 = perche5 === "dal-vivo" ? `<span class="dm-sport-live" data-dm-sport-live><i aria-hidden="true"></i>${esc(
     p.intervallo ? t("Intervallo", "Half time") : `${t("In diretta", "Live")} · ${clean(p.minuto)}`
   )}</span>` : perche5 === "prossima" ? `<span class="dm-sport-manca">${esc(mancaInParole(p.quando, adesso2))}</span>` : `<span class="dm-sport-esito" data-esito="${esc(p.esito || "")}">${esc(ESITI()[p.esito]?.nome || t("Finita", "Full time"))}</span>`;
@@ -65220,7 +65233,7 @@ function corseMarkup(r, seguito, adesso2, indice = 0) {
     </section>`;
 }
 function guastoDelBloccoMarkup(seguito) {
-  const titolo3 = seguito.tipo === "calcio" ? seguito.nome || t("La tua squadra", "Your team") : nomeDelTipo(seguito.tipo);
+  const titolo3 = diSquadra(seguito.tipo) ? seguito.nome || t("La tua squadra", "Your team") : nomeDelTipo(seguito.tipo);
   return `<section class="dm-sport-blocco" data-dm-sport-blocco="${esc(chiaveDelSeguito(seguito))}">
       <div class="dm-sport-testa">${titoloDelBlocco(seguito.tipo === "calcio" ? "sport" : seguito.tipo, titolo3)}</div>
       ${schedaMarkup7(
@@ -65406,7 +65419,7 @@ function tabellaDa(dove) {
   const [i, lega] = clean(dove).split(":");
   const r = state53.dati.risultati[Number(i)];
   if (!r || r.errore) return "";
-  if (r.tipo !== "calcio") return pilotiMarkup(r, preferitoDi(r.tipo));
+  if (!diSquadra(r.tipo)) return pilotiMarkup(r, preferitoDi(r.tipo));
   const tab = lega ? r.coppe?.find((c) => c.lega === lega)?.classifica : r.classifica;
   return tabellaMarkup(tab, r.squadra?.id);
 }
@@ -65499,31 +65512,32 @@ function tesseraDelloSport(vista2, adesso2 = Date.now()) {
   const nomi2 = SIGLE_DELLE_SESSIONI();
   if (!ev) {
     const seguiti = vista2.config.seguiti.map(
-      (x) => x.tipo === "calcio" ? x.nome || nomeDelTipo("calcio") : nomeDelTipo(x.tipo)
+      (x) => diSquadra(x.tipo) ? x.nome || nomeDelTipo(x.tipo) : nomeDelTipo(x.tipo)
     );
     return { valore: "—", riga: seguiti.join(" · "), oggetto: "sport", dalVivo: false };
   }
-  if (ev.tipo === "calcio") {
+  if (diSquadra(ev.tipo)) {
+    const oggetto3 = ev.tipo === "hockey" ? "hockey" : "sport";
     const p = ev.partita;
     const coppia2 = `${nomeDellaSquadra(p.casa)}–${nomeDellaSquadra(p.fuori)}`;
     if (ev.cosa === "dal-vivo")
       return {
         valore: `${p.casa.gol ?? 0}–${p.fuori.gol ?? 0}`,
         riga: `${coppia2} · ${p.intervallo ? t("Intervallo", "Half time") : clean(p.minuto)}`,
-        oggetto: "sport",
+        oggetto: oggetto3,
         dalVivo: true
       };
     if (ev.cosa === "prossima")
       return {
         valore: oraDi3(p.quando),
         riga: `${coppia2} · ${quandoInParole2(p.quando, adesso2).split(" · ")[0]}`,
-        oggetto: "sport",
+        oggetto: oggetto3,
         dalVivo: false
       };
     return {
       valore: `${p.casa.gol ?? 0}–${p.fuori.gol ?? 0}`,
       riga: `${coppia2} · ${ESITI()[p.esito]?.nome || t("Finita", "Full time")}`,
-      oggetto: "sport",
+      oggetto: oggetto3,
       dalVivo: false
     };
   }
@@ -65568,7 +65582,7 @@ function finestraDelloSportMarkup(vista2, adesso2 = Date.now()) {
   return `<div class="dm-sport-wrap dm-sport-finestra">${config.seguiti.map((seguito, i) => {
     const r = risultati[i];
     if (!r || r.errore || r.tipo !== seguito.tipo) return guastoDelBloccoMarkup(seguito);
-    if (r.tipo === "calcio") {
+    if (diSquadra(r.tipo)) {
       const pos = r.posizione;
       const sotto = pos ? `<b>${conN(t("{n}°", "#{n}"), pos.posizione)}</b> · ${conN(esc(t("{n} punti", "{n} pts")), pos.punti)}` : "";
       const forma2 = formaRecente(r).map((e) => `<i data-esito="${e}"></i>`).join("");
@@ -65607,7 +65621,7 @@ function paginaDelloSportMarkup(vista2, adesso2 = Date.now()) {
   return config.seguiti.map((seguito, i) => {
     const r = risultati[i];
     if (!r || r.errore || r.tipo !== seguito.tipo) return guastoDelBloccoMarkup(seguito);
-    if (r.tipo === "calcio") return calcioMarkup(r, seguito, adesso2, i);
+    if (diSquadra(r.tipo)) return calcioMarkup(r, seguito, adesso2, i);
     return corseMarkup(r, seguito, adesso2, i);
   }).join("");
 }
@@ -65709,7 +65723,7 @@ function titoloDellaPagina2() {
   const { seguiti } = configurazioneDelloSport();
   if (!seguiti.length) return null;
   return {
-    subtitle: seguiti.map((s) => s.tipo === "calcio" ? s.nome || nomeDelTipo("calcio") : nomeDelTipo(s.tipo)).join(" · ")
+    subtitle: seguiti.map((s) => diSquadra(s.tipo) ? s.nome || nomeDelTipo(s.tipo) : nomeDelTipo(s.tipo)).join(" · ")
   };
 }
 function foglioDelloSport(P9) {
@@ -146109,7 +146123,7 @@ var KEY173 = "__DASHBOARDMODERN_SPORT_EDITOR__";
 var state169 = root[KEY173] ||= {
   installed: false,
   /* La squadra che si sta aggiungendo: il campionato scelto e le sue squadre. */
-  nuova: { aperta: false, campionato: "ita.1", squadre: {}, caricando: "", guasto: "" }
+  nuova: { aperta: false, sport: "calcio", campionato: "ita.1", squadre: {}, caricando: "", guasto: "" }
 };
 var SPORT_EDITOR_TAB = SPORT_TAB;
 function schedaAttiva15() {
@@ -146171,10 +146185,12 @@ function sceltaDelPreferito(seguito, indice) {
     seguito.tipo === "f1" ? t("Pilota del cuore", "Favourite driver") : t("Pilota del cuore", "Favourite rider")
   )}</span><select class="ed-in" data-dm-sport-preferito="${indice}">${opzioni2}${dentro3}</select></label>`;
 }
+var legheDi = (sport) => sport === "hockey" ? LEGHE_HOCKEY : CAMPIONATI;
+var legaDiSerie = (sport) => sport === "hockey" ? "nhl" : "ita.1";
 function seguitoMarkup(seguito, indice, quanti2) {
   const disegno9 = seguito.tipo === "calcio" ? "sport" : seguito.tipo;
-  const nome = seguito.tipo === "calcio" ? seguito.nome || t("Squadra", "Team") : nomeDelTipo(seguito.tipo);
-  const sotto = seguito.tipo === "calcio" ? `${CAMPIONATI[seguito.campionato] || ""} · ${t("tutte le competizioni", "all competitions")}` : t("Prossimo gran premio, ultima gara, classifiche", "Next grand prix, last race, standings");
+  const nome = diSquadra(seguito.tipo) ? seguito.nome || t("Squadra", "Team") : nomeDelTipo(seguito.tipo);
+  const sotto = seguito.tipo === "calcio" ? `${CAMPIONATI[seguito.campionato] || ""} · ${t("tutte le competizioni", "all competitions")}` : seguito.tipo === "hockey" ? `${LEGHE_HOCKEY[seguito.campionato] || ""} · ${t("partite e classifica", "games and standings")}` : t("Prossimo gran premio, ultima gara, classifiche", "Next grand prix, last race, standings");
   return `<div class="dm-sport-ed-voce" data-dm-sport-voce="${esc(chiaveDelSeguito(seguito))}">
       <div class="dm-sport-ed-frecce">
         <button type="button" class="ed-del" data-dm-sport-su="${indice}" ${indice === 0 ? "disabled" : ""}
@@ -146187,7 +146203,7 @@ function seguitoMarkup(seguito, indice, quanti2) {
       <button type="button" class="ed-del dm-sport-ed-togli" data-dm-sport-togli="${indice}" aria-label="${esc(
     t("Togli", "Remove")
   )}">🗑️</button>
-      ${seguito.tipo === "calcio" ? "" : `<div class="dm-sport-ed-sotto">${sceltaDelPreferito(seguito, indice)}</div>`}
+      ${diSquadra(seguito.tipo) ? "" : `<div class="dm-sport-ed-sotto">${sceltaDelPreferito(seguito, indice)}</div>`}
     </div>`;
 }
 function aggiungiMarkup(config) {
@@ -146195,14 +146211,15 @@ function aggiungiMarkup(config) {
   const ce = (tipo) => config.seguiti.some((s) => s.tipo === tipo);
   const nuova = state169.nuova;
   const tasti2 = `<div class="dm-sport-ed-tasti">
-      <button type="button" class="ed-btn-add" data-dm-sport-nuova ${pieno ? "disabled" : ""}>⚽ ${esc(t("Squadra di calcio", "Football team"))}</button>
+      <button type="button" class="ed-btn-add" data-dm-sport-nuova="calcio" ${pieno ? "disabled" : ""}>⚽ ${esc(t("Squadra di calcio", "Football team"))}</button>
+      <button type="button" class="ed-btn-add" data-dm-sport-nuova="hockey" ${pieno ? "disabled" : ""}>🏒 ${esc(t("Squadra di hockey", "Hockey team"))}</button>
       <button type="button" class="ed-btn-add" data-dm-sport-aggiungi="f1" ${pieno || ce("f1") ? "disabled" : ""}>🏁 Formula 1</button>
       <button type="button" class="ed-btn-add" data-dm-sport-aggiungi="motogp" ${pieno || ce("motogp") ? "disabled" : ""}>🏍️ MotoGP</button>
     </div>`;
   if (!nuova.aperta || pieno) return tasti2;
-  const campionati = Object.entries(CAMPIONATI).map(([id, nome]) => `<option value="${esc(id)}"${id === nuova.campionato ? " selected" : ""}>${esc(nome)}</option>`).join("");
+  const campionati = Object.entries(legheDi(nuova.sport)).map(([id, nome]) => `<option value="${esc(id)}"${id === nuova.campionato ? " selected" : ""}>${esc(nome)}</option>`).join("");
   const squadre = nuova.squadre[nuova.campionato];
-  const gia = new Set(config.seguiti.filter((s) => s.tipo === "calcio").map((s) => s.squadra));
+  const gia = new Set(config.seguiti.filter((s) => s.tipo === nuova.sport).map((s) => s.squadra));
   let scelta3 = "";
   if (squadre?.length)
     scelta3 = `<label class="ed-slot dm-sport-ed-campo"><span class="ed-slot-lbl">${esc(t("Squadra", "Team"))}</span>
@@ -146217,7 +146234,10 @@ function aggiungiMarkup(config) {
         <select class="ed-in" data-dm-sport-campionato>${campionati}</select></label>
       ${scelta3}
       <p class="dm-sport-ed-nota">${esc(
-    t(
+    nuova.sport === "hockey" ? t(
+      "Della squadra si vedono le partite, i risultati anche dal vivo e il posto nella sua conference. Le leghe italiane non ci sono: non hanno una fonte pubblica con i dati.",
+      "The team's games, results (live too) and its place in its conference are shown. Italian leagues are not available: they have no public data source."
+    ) : t(
       "Della squadra si vedono le partite di tutte le competizioni: campionato, coppe ed Europa.",
       "All of the team's competitions are shown: league, cups and Europe."
     )
@@ -146237,8 +146257,8 @@ function corpoMarkup15() {
   return `${fasciaMarkup9()}<div class="dm-sport-ed">
     <div class="ed-intro">${esc(
     t(
-      "La pagina Sport: la tua squadra di calcio, la Formula 1 e la MotoGP, con i risultati, le prossime partite e gare e le classifiche. In Home la tessera dice la cosa che conta adesso: la partita in corso, quella di oggi, l'ultimo podio. I risultati li chiede l'add-on alle fonti pubbliche, solo per chi è entrato.",
-      "The Sports page: your football team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users."
+      "La pagina Sport: la tua squadra di calcio o di hockey, la Formula 1 e la MotoGP, con i risultati, le prossime partite e gare e le classifiche. In Home la tessera dice la cosa che conta adesso: la partita in corso, quella di oggi, l'ultimo podio. I risultati li chiede l'add-on alle fonti pubbliche, solo per chi è entrato.",
+      "The Sports page: your football or hockey team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users."
     )
   )}</div>
     <div class="ed-list dm-todo-ed-list">
@@ -146312,9 +146332,19 @@ function onClick55(event) {
     root.edToast?.(t("✅ Aggiunto allo sport", "✅ Added to sports"));
     return;
   }
-  if (event.target.closest("[data-dm-sport-nuova]")) {
+  const nuova = event.target.closest("[data-dm-sport-nuova]");
+  if (nuova) {
     event.preventDefault();
-    state169.nuova.aperta = !state169.nuova.aperta;
+    const sport = nuova.dataset.dmSportNuova === "hockey" ? "hockey" : "calcio";
+    if (state169.nuova.aperta && state169.nuova.sport === sport) state169.nuova.aperta = false;
+    else {
+      state169.nuova.aperta = true;
+      if (state169.nuova.sport !== sport) {
+        state169.nuova.sport = sport;
+        state169.nuova.campionato = legaDiSerie(sport);
+        state169.nuova.guasto = "";
+      }
+    }
     ridisegna28();
   }
 }
@@ -146323,7 +146353,8 @@ function onChange18(event) {
   const config = configurazioneDelloSport();
   const campionato = event.target.closest("[data-dm-sport-campionato]");
   if (campionato) {
-    state169.nuova.campionato = Object.hasOwn(CAMPIONATI, campionato.value) ? campionato.value : "ita.1";
+    const sport = state169.nuova.sport;
+    state169.nuova.campionato = Object.hasOwn(legheDi(sport), campionato.value) ? campionato.value : legaDiSerie(sport);
     ridisegna28();
     return;
   }
@@ -146331,7 +146362,10 @@ function onChange18(event) {
   if (squadra && /^\d{1,7}$/.test(squadra.value)) {
     const nome = clean(squadra.selectedOptions?.[0]?.dataset?.nome);
     salvaLoSport({
-      seguiti: [...config.seguiti, { tipo: "calcio", campionato: state169.nuova.campionato, squadra: squadra.value, nome }]
+      seguiti: [
+        ...config.seguiti,
+        { tipo: state169.nuova.sport, campionato: state169.nuova.campionato, squadra: squadra.value, nome }
+      ]
     });
     state169.nuova.aperta = false;
     ridisegna28();

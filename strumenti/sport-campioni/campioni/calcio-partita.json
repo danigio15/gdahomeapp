@@ -431,6 +431,8 @@
       "awayShootoutScore": "0",
       "gameResult": "W",
       "competitionName": "2026 Club Friendly",
+      "leagueName": "Club Friendly",
+      "leagueAbbreviation": "Club Friendly",
       "opponent": {
        "id": "4471",
        "uid": "s:600~t:4471",
@@ -461,9 +463,7 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/4471.png",
-      "leagueName": "Club Friendly",
-      "leagueAbbreviation": "Club Friendly"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/4471.png"
      },
      {
       "id": "401871493",
@@ -12655,6 +12655,354 @@
    },
    "articles": [
     {
+     "id": 50166049,
+     "nowId": "1-50166049",
+     "contentKey": "50166049-1-6-1",
+     "dataSourceIdentifier": "c731297feaa3d",
+     "type": "Story",
+     "headline": "A global experiment: Can ESPN predict the Ballon d'Or awards?",
+     "description": "The Ballon d'Or awards are typically tough to predict, but can ESPN and our global resources do just that?",
+     "lastModified": "2026-10-26T13:29:44Z",
+     "published": "2026-10-26T13:29:44Z",
+     "images": [
+      {
+       "dataSourceIdentifier": "5714dc2ea235d",
+       "id": 50140669,
+       "type": "header",
+       "name": "261020_soc_ballon-dor [1296x729]",
+       "caption": "261020_soc_ballon-dor",
+       "alt": "261020_soc_ballon-dor",
+       "credit": "ESPN Illustration",
+       "height": 729,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/1009/261020_soc_ballon-dor_mixed_16x9.jpg"
+      },
+      {
+       "dataSourceIdentifier": "8b3d1f888c8c8",
+       "id": 50140681,
+       "type": "header",
+       "name": "261020_soc_ballon-dor [1296x864]",
+       "caption": "261020_soc_ballon-dor",
+       "alt": "261020_soc_ballon-dor",
+       "credit": "ESPN Illustration",
+       "height": 864,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/1009/261020_soc_ballon-dor_mixed_3x2.jpg"
+      },
+      {
+       "type": "Media",
+       "name": "Enrique questions why Doué isn't a Ballon d'Or contender",
+       "caption": "Enrique questions why Doué isn't a Ballon d'Or contender",
+       "height": 324,
+       "width": 576,
+       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/0918/dm_260918_Enrique_questions_why_Doue_isnt_a_Ballon_dOr_contender/dm_260918_Enrique_questions_why_Doue_isnt_a_Ballon_dOr_contender.jpg"
+      }
+     ],
+     "categories": [
+      {
+       "id": 81497,
+       "type": "league",
+       "uid": "s:600",
+       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+       "description": "Soccer",
+       "sportId": 600,
+       "leagueId": 600,
+       "league": {
+        "id": 600,
+        "description": "Soccer",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137781,
+       "type": "league",
+       "uid": "s:600~l:700",
+       "guid": "6949f3af-300c-35f1-beab-b95669eedd38",
+       "description": "English Premier League",
+       "sportId": 600,
+       "leagueId": 23,
+       "league": {
+        "id": 700,
+        "description": "English Premier League",
+        "abbreviation": "Premier League",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137787,
+       "type": "league",
+       "uid": "s:600~l:740",
+       "guid": "cf7b0c51-7c48-3e9a-8abb-0c01b1a973a0",
+       "description": "Spanish LALIGA",
+       "sportId": 600,
+       "leagueId": 15,
+       "league": {
+        "id": 740,
+        "description": "Spanish LALIGA",
+        "abbreviation": "LALIGA",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/esp.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/esp.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137799,
+       "type": "league",
+       "uid": "s:600~l:710",
+       "guid": "b7217910-7773-3ea8-bc69-30c19c579306",
+       "description": "French Ligue 1",
+       "sportId": 600,
+       "leagueId": 9,
+       "league": {
+        "id": 710,
+        "description": "French Ligue 1",
+        "abbreviation": "Ligue 1",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/fra.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/fra.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137798,
+       "type": "league",
+       "uid": "s:600~l:730",
+       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
+       "description": "Italian Serie A",
+       "sportId": 600,
+       "leagueId": 12,
+       "league": {
+        "id": 730,
+        "description": "Italian Serie A",
+        "abbreviation": "Serie A",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137790,
+       "type": "league",
+       "uid": "s:600~l:720",
+       "guid": "30244926-00c4-3f69-8946-f8421c97ff71",
+       "description": "German Bundesliga",
+       "sportId": 600,
+       "leagueId": 10,
+       "league": {
+        "id": 720,
+        "description": "German Bundesliga",
+        "abbreviation": "Bundesliga",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ger.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ger.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 250037,
+       "type": "athlete",
+       "uid": "s:600~a:142200",
+       "guid": "66b16016-7a3a-434f-ae82-e767fc5fac88",
+       "description": "Harry Kane",
+       "sportId": 600,
+       "athleteId": 142200,
+       "athlete": {
+        "id": 142200,
+        "description": "Harry Kane",
+        "links": {
+         "mobile": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/142200/harry-kane"
+          }
+         },
+         "web": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/142200/harry-kane"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 596595,
+       "type": "athlete",
+       "uid": "s:600~a:362150",
+       "guid": "de67ce6f-0991-36b9-afb9-c008f21dc4b4",
+       "description": "Lamine Yamal",
+       "sportId": 600,
+       "athleteId": 362150,
+       "athlete": {
+        "id": 362150,
+        "description": "Lamine Yamal",
+        "links": {
+         "mobile": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/362150/lamine-yamal"
+          }
+         },
+         "web": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/362150/lamine-yamal"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 238474,
+       "type": "athlete",
+       "uid": "s:600~a:45843",
+       "guid": "dc5f8d51-332b-0ab2-b4b0-c97efdc624e0",
+       "description": "Lionel Messi",
+       "sportId": 600,
+       "athleteId": 45843,
+       "athlete": {
+        "id": 45843,
+        "description": "Lionel Messi",
+        "links": {
+         "mobile": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/45843/lionel-messi"
+          }
+         },
+         "web": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/45843/lionel-messi"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 145507,
+       "type": "league",
+       "uid": "s:600~l:770",
+       "guid": "d9d3698e-67b3-3ca5-9eb4-f23b8e19a464",
+       "description": "MLS",
+       "sportId": 600,
+       "leagueId": 19,
+       "league": {
+        "id": 770,
+        "description": "MLS",
+        "abbreviation": "MLS",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/usa.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/usa.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 233179,
+       "type": "athlete",
+       "uid": "s:600~a:231388",
+       "guid": "61edbcca-c316-afde-575f-d9dd69176cc4",
+       "description": "Kylian Mbappé",
+       "sportId": 600,
+       "athleteId": 231388,
+       "athlete": {
+        "id": 231388,
+        "description": "Kylian Mbappé",
+        "links": {
+         "mobile": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/231388/kylian-mbappe"
+          }
+         },
+         "web": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/231388/kylian-mbappe"
+          }
+         }
+        }
+       }
+      }
+     ],
+     "byline": "ESPN",
+     "links": {
+      "api": {
+       "self": {
+        "href": "https://content.core.api.espn.com/v1/sports/news/50166049"
+       }
+      },
+      "app": {
+       "sportscenter": {
+        "href": "sportscenter://x-callback-url/showStory?uid=50166049"
+       }
+      },
+      "mobile": {
+       "href": "http://m.espn.go.com/soccer/story?storyId=50166049"
+      },
+      "web": {
+       "href": "https://www.espn.com/soccer/story/_/id/50166049/a-global-experiment-espn-predict-ballon-dor"
+      }
+     },
+     "premium": false
+    },
+    {
      "id": 50278887,
      "nowId": "1-50278887",
      "contentKey": "50278887-1-21-1",
@@ -13621,214 +13969,6 @@
       },
       "web": {
        "href": "https://www.espn.com/soccer/story/_/id/50259678/ac-milan-mike-maignan-red-card-racist-abuse-bournemouth"
-      }
-     },
-     "premium": false
-    },
-    {
-     "id": 50249819,
-     "nowId": "1-50249819",
-     "contentKey": "50249819-1-6-1",
-     "dataSourceIdentifier": "ced9417abd05c",
-     "type": "Story",
-     "headline": "Musah is back in Milan, back in midfield and back in contention for the USMNT",
-     "description": "Last year, on loan at Atalanta, Yunus Musah wasn't playing much, certainly not in his preferred midfield role. Now back at Milan, that's all changed.",
-     "lastModified": "2026-10-23T13:59:46Z",
-     "published": "2026-10-23T13:59:46Z",
-     "images": [
-      {
-       "dataSourceIdentifier": "bc339d7193e4f",
-       "id": 50249794,
-       "type": "header",
-       "name": "Yunus Musah 260725 [1296x729]",
-       "caption": "Yunus Musah",
-       "alt": "Yunus Musah",
-       "credit": "Claudio Villa/AC Milan via Getty Images",
-       "height": 729,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/1022/r1734554_1296x729_16-9.jpg"
-      },
-      {
-       "type": "Media",
-       "name": "Jones: I'm excited about the future of the USMNT",
-       "caption": "Jones: I'm excited about the future of the USMNT",
-       "height": 324,
-       "width": 576,
-       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1007/dm_261007_COM_SOC_ANALYSIS_Jones_I_m_excited_about_the_future_of_the_USMNT_2026_10_6/dm_261007_COM_SOC_ANALYSIS_Jones_I_m_excited_about_the_future_of_the_USMNT_2026_10_6.jpg"
-      }
-     ],
-     "categories": [
-      {
-       "id": 81497,
-       "type": "league",
-       "uid": "s:600",
-       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
-       "description": "Soccer",
-       "sportId": 600,
-       "leagueId": 600,
-       "league": {
-        "id": 600,
-        "description": "Soccer",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 72593,
-       "type": "team",
-       "uid": "s:600~t:660",
-       "guid": "e6b65d49-258c-b730-b7db-df75c6b1f714",
-       "description": "United States",
-       "sportId": 600,
-       "teamId": 660,
-       "team": {
-        "id": 660,
-        "description": "United States",
-        "abbreviation": "USA",
-        "shortDisplayName": "USA",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/team/_/id/660/united-states"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/team/_/id/660/united-states"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137798,
-       "type": "league",
-       "uid": "s:600~l:730",
-       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
-       "description": "Italian Serie A",
-       "sportId": 600,
-       "leagueId": 12,
-       "league": {
-        "id": 730,
-        "description": "Italian Serie A",
-        "abbreviation": "Serie A",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 142590,
-       "type": "team",
-       "uid": "s:600~t:103",
-       "guid": "7ca4fb35-d78e-49f0-67fe-7fa95588e28d",
-       "description": "AC Milan",
-       "sportId": 600,
-       "teamId": 103,
-       "team": {
-        "id": 103,
-        "description": "AC Milan",
-        "abbreviation": "MIL",
-        "shortDisplayName": "Milan",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 446000,
-       "type": "athlete",
-       "uid": "s:600~a:307527",
-       "guid": "2362bba7-e1c6-3585-8d4a-d78775ad6eaf",
-       "description": "Yunus Musah",
-       "sportId": 600,
-       "athleteId": 307527,
-       "athlete": {
-        "id": 307527,
-        "description": "Yunus Musah",
-        "links": {
-         "mobile": {
-          "athletes": {
-           "href": "https://www.espn.com/soccer/player/_/id/307527/yunus-musah"
-          }
-         },
-         "web": {
-          "athletes": {
-           "href": "https://www.espn.com/soccer/player/_/id/307527/yunus-musah"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 696446,
-       "type": "contributor",
-       "guid": "989b38a0-5870-3a49-a6f3-211bd3b85535",
-       "description": "Jeff Carlisle",
-       "slug": "jeff-carlisle",
-       "contributor": {
-        "id": 1275,
-        "description": "Jeff Carlisle",
-        "links": {
-         "mobile": {
-          "contributors": {
-           "href": "https://www.espn.com/contributor/jeff-carlisle"
-          }
-         },
-         "web": {
-          "contributors": {
-           "href": "https://www.espn.com/contributor/jeff-carlisle"
-          }
-         }
-        }
-       }
-      }
-     ],
-     "byline": "Jeff Carlisle",
-     "links": {
-      "api": {
-       "self": {
-        "href": "https://content.core.api.espn.com/v1/sports/news/50249819"
-       }
-      },
-      "app": {
-       "sportscenter": {
-        "href": "sportscenter://x-callback-url/showStory?uid=50249819"
-       }
-      },
-      "mobile": {
-       "href": "http://m.espn.go.com/soccer/story?storyId=50249819"
-      },
-      "web": {
-       "href": "https://www.espn.com/soccer/story/_/id/50249819/yunus-musah-back-ac-milan-back-midfield-back-contention-usmnt"
       }
      },
      "premium": false

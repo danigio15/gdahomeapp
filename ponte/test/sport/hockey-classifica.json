@@ -1,0 +1,1683 @@
+{
+"name": "National Hockey League",
+"children": [
+{
+"name": "Eastern Conference",
+"standings": {
+"entries": [
+{
+"team": {
+"id": "7",
+"abbreviation": "CAR",
+"displayName": "Carolina Hurricanes",
+"shortDisplayName": "Hurricanes",
+"name": "Hurricanes",
+"location": "Carolina"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 2,
+"displayValue": "2"
+},
+{
+"name": "gamesPlayed",
+"value": 13,
+"displayValue": "13"
+},
+{
+"name": "losses",
+"value": 2,
+"displayValue": "2"
+},
+{
+"name": "playoffSeed",
+"value": 1,
+"displayValue": "1"
+},
+{
+"name": "points",
+"value": 20,
+"displayValue": "20"
+},
+{
+"name": "pointsAgainst",
+"value": 33,
+"displayValue": "33"
+},
+{
+"name": "pointsFor",
+"value": 51,
+"displayValue": "51"
+},
+{
+"name": "wins",
+"value": 9,
+"displayValue": "9"
+}
+]
+},
+{
+"team": {
+"id": "1",
+"abbreviation": "BOS",
+"displayName": "Boston Bruins",
+"shortDisplayName": "Bruins",
+"name": "Bruins",
+"location": "Boston"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 1,
+"displayValue": "1"
+},
+{
+"name": "gamesPlayed",
+"value": 12,
+"displayValue": "12"
+},
+{
+"name": "losses",
+"value": 2,
+"displayValue": "2"
+},
+{
+"name": "playoffSeed",
+"value": 2,
+"displayValue": "2"
+},
+{
+"name": "points",
+"value": 19,
+"displayValue": "19"
+},
+{
+"name": "pointsAgainst",
+"value": 26,
+"displayValue": "26"
+},
+{
+"name": "pointsFor",
+"value": 48,
+"displayValue": "48"
+},
+{
+"name": "wins",
+"value": 9,
+"displayValue": "9"
+}
+]
+},
+{
+"team": {
+"id": "14",
+"abbreviation": "OTT",
+"displayName": "Ottawa Senators",
+"shortDisplayName": "Senators",
+"name": "Senators",
+"location": "Ottawa"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 0,
+"displayValue": "0"
+},
+{
+"name": "gamesPlayed",
+"value": 12,
+"displayValue": "12"
+},
+{
+"name": "losses",
+"value": 4,
+"displayValue": "4"
+},
+{
+"name": "playoffSeed",
+"value": 3,
+"displayValue": "3"
+},
+{
+"name": "points",
+"value": 16,
+"displayValue": "16"
+},
+{
+"name": "pointsAgainst",
+"value": 34,
+"displayValue": "34"
+},
+{
+"name": "pointsFor",
+"value": 38,
+"displayValue": "38"
+},
+{
+"name": "wins",
+"value": 8,
+"displayValue": "8"
+}
+]
+},
+{
+"team": {
+"id": "21",
+"abbreviation": "TOR",
+"displayName": "Toronto Maple Leafs",
+"shortDisplayName": "Maple Leafs",
+"name": "Maple Leafs",
+"location": "Toronto"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 2,
+"displayValue": "2"
+},
+{
+"name": "gamesPlayed",
+"value": 13,
+"displayValue": "13"
+},
+{
+"name": "losses",
+"value": 4,
+"displayValue": "4"
+},
+{
+"name": "playoffSeed",
+"value": 4,
+"displayValue": "4"
+},
+{
+"name": "points",
+"value": 16,
+"displayValue": "16"
+},
+{
+"name": "pointsAgainst",
+"value": 41,
+"displayValue": "41"
+},
+{
+"name": "pointsFor",
+"value": 50,
+"displayValue": "50"
+},
+{
+"name": "wins",
+"value": 7,
+"displayValue": "7"
+}
+]
+},
+{
+"team": {
+"id": "20",
+"abbreviation": "TB",
+"displayName": "Tampa Bay Lightning",
+"shortDisplayName": "Lightning",
+"name": "Lightning",
+"location": "Tampa Bay"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 1,
+"displayValue": "1"
+},
+{
+"name": "gamesPlayed",
+"value": 11,
+"displayValue": "11"
+},
+{
+"name": "losses",
+"value": 3,
+"displayValue": "3"
+},
+{
+"name": "playoffSeed",
+"value": 5,
+"displayValue": "5"
+},
+{
+"name": "points",
+"value": 15,
+"displayValue": "15"
+},
+{
+"name": "pointsAgainst",
+"value": 34,
+"displayValue": "34"
+},
+{
+"name": "pointsFor",
+"value": 38,
+"displayValue": "38"
+},
+{
+"name": "wins",
+"value": 7,
+"displayValue": "7"
+}
+]
+},
+{
+"team": {
+"id": "13",
+"abbreviation": "NYR",
+"displayName": "New York Rangers",
+"shortDisplayName": "Rangers",
+"name": "Rangers",
+"location": "New York"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 1,
+"displayValue": "1"
+},
+{
+"name": "gamesPlayed",
+"value": 13,
+"displayValue": "13"
+},
+{
+"name": "losses",
+"value": 5,
+"displayValue": "5"
+},
+{
+"name": "playoffSeed",
+"value": 6,
+"displayValue": "6"
+},
+{
+"name": "points",
+"value": 15,
+"displayValue": "15"
+},
+{
+"name": "pointsAgainst",
+"value": 36,
+"displayValue": "36"
+},
+{
+"name": "pointsFor",
+"value": 41,
+"displayValue": "41"
+},
+{
+"name": "wins",
+"value": 7,
+"displayValue": "7"
+}
+]
+},
+{
+"team": {
+"id": "11",
+"abbreviation": "NJ",
+"displayName": "New Jersey Devils",
+"shortDisplayName": "Devils",
+"name": "Devils",
+"location": "New Jersey"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 0,
+"displayValue": "0"
+},
+{
+"name": "gamesPlayed",
+"value": 11,
+"displayValue": "11"
+},
+{
+"name": "losses",
+"value": 4,
+"displayValue": "4"
+},
+{
+"name": "playoffSeed",
+"value": 7,
+"displayValue": "7"
+},
+{
+"name": "points",
+"value": 14,
+"displayValue": "14"
+},
+{
+"name": "pointsAgainst",
+"value": 32,
+"displayValue": "32"
+},
+{
+"name": "pointsFor",
+"value": 36,
+"displayValue": "36"
+},
+{
+"name": "wins",
+"value": 7,
+"displayValue": "7"
+}
+]
+},
+{
+"team": {
+"id": "10",
+"abbreviation": "MTL",
+"displayName": "Montreal Canadiens",
+"shortDisplayName": "Canadiens",
+"name": "Canadiens",
+"location": "Montreal"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 2,
+"displayValue": "2"
+},
+{
+"name": "gamesPlayed",
+"value": 11,
+"displayValue": "11"
+},
+{
+"name": "losses",
+"value": 3,
+"displayValue": "3"
+},
+{
+"name": "playoffSeed",
+"value": 8,
+"displayValue": "8"
+},
+{
+"name": "points",
+"value": 14,
+"displayValue": "14"
+},
+{
+"name": "pointsAgainst",
+"value": 36,
+"displayValue": "36"
+},
+{
+"name": "pointsFor",
+"value": 36,
+"displayValue": "36"
+},
+{
+"name": "wins",
+"value": 6,
+"displayValue": "6"
+}
+]
+},
+{
+"team": {
+"id": "26",
+"abbreviation": "FLA",
+"displayName": "Florida Panthers",
+"shortDisplayName": "Panthers",
+"name": "Panthers",
+"location": "Florida"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 2,
+"displayValue": "2"
+},
+{
+"name": "gamesPlayed",
+"value": 12,
+"displayValue": "12"
+},
+{
+"name": "losses",
+"value": 4,
+"displayValue": "4"
+},
+{
+"name": "playoffSeed",
+"value": 9,
+"displayValue": "9"
+},
+{
+"name": "points",
+"value": 14,
+"displayValue": "14"
+},
+{
+"name": "pointsAgainst",
+"value": 36,
+"displayValue": "36"
+},
+{
+"name": "pointsFor",
+"value": 34,
+"displayValue": "34"
+},
+{
+"name": "wins",
+"value": 6,
+"displayValue": "6"
+}
+]
+},
+{
+"team": {
+"id": "23",
+"abbreviation": "WSH",
+"displayName": "Washington Capitals",
+"shortDisplayName": "Capitals",
+"name": "Capitals",
+"location": "Washington"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 0,
+"displayValue": "0"
+},
+{
+"name": "gamesPlayed",
+"value": 10,
+"displayValue": "10"
+},
+{
+"name": "losses",
+"value": 4,
+"displayValue": "4"
+},
+{
+"name": "playoffSeed",
+"value": 10,
+"displayValue": "10"
+},
+{
+"name": "points",
+"value": 12,
+"displayValue": "12"
+},
+{
+"name": "pointsAgainst",
+"value": 32,
+"displayValue": "32"
+},
+{
+"name": "pointsFor",
+"value": 34,
+"displayValue": "34"
+},
+{
+"name": "wins",
+"value": 6,
+"displayValue": "6"
+}
+]
+},
+{
+"team": {
+"id": "12",
+"abbreviation": "NYI",
+"displayName": "New York Islanders",
+"shortDisplayName": "Islanders",
+"name": "Islanders",
+"location": "New York"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 2,
+"displayValue": "2"
+},
+{
+"name": "gamesPlayed",
+"value": 11,
+"displayValue": "11"
+},
+{
+"name": "losses",
+"value": 4,
+"displayValue": "4"
+},
+{
+"name": "playoffSeed",
+"value": 11,
+"displayValue": "11"
+},
+{
+"name": "points",
+"value": 12,
+"displayValue": "12"
+},
+{
+"name": "pointsAgainst",
+"value": 29,
+"displayValue": "29"
+},
+{
+"name": "pointsFor",
+"value": 32,
+"displayValue": "32"
+},
+{
+"name": "wins",
+"value": 5,
+"displayValue": "5"
+}
+]
+},
+{
+"team": {
+"id": "5",
+"abbreviation": "DET",
+"displayName": "Detroit Red Wings",
+"shortDisplayName": "Red Wings",
+"name": "Red Wings",
+"location": "Detroit"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 3,
+"displayValue": "3"
+},
+{
+"name": "gamesPlayed",
+"value": 11,
+"displayValue": "11"
+},
+{
+"name": "losses",
+"value": 4,
+"displayValue": "4"
+},
+{
+"name": "playoffSeed",
+"value": 12,
+"displayValue": "12"
+},
+{
+"name": "points",
+"value": 11,
+"displayValue": "11"
+},
+{
+"name": "pointsAgainst",
+"value": 34,
+"displayValue": "34"
+},
+{
+"name": "pointsFor",
+"value": 29,
+"displayValue": "29"
+},
+{
+"name": "wins",
+"value": 4,
+"displayValue": "4"
+}
+]
+},
+{
+"team": {
+"id": "2",
+"abbreviation": "BUF",
+"displayName": "Buffalo Sabres",
+"shortDisplayName": "Sabres",
+"name": "Sabres",
+"location": "Buffalo"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 3,
+"displayValue": "3"
+},
+{
+"name": "gamesPlayed",
+"value": 11,
+"displayValue": "11"
+},
+{
+"name": "losses",
+"value": 4,
+"displayValue": "4"
+},
+{
+"name": "playoffSeed",
+"value": 13,
+"displayValue": "13"
+},
+{
+"name": "points",
+"value": 11,
+"displayValue": "11"
+},
+{
+"name": "pointsAgainst",
+"value": 41,
+"displayValue": "41"
+},
+{
+"name": "pointsFor",
+"value": 31,
+"displayValue": "31"
+},
+{
+"name": "wins",
+"value": 4,
+"displayValue": "4"
+}
+]
+},
+{
+"team": {
+"id": "16",
+"abbreviation": "PIT",
+"displayName": "Pittsburgh Penguins",
+"shortDisplayName": "Penguins",
+"name": "Penguins",
+"location": "Pittsburgh"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 1,
+"displayValue": "1"
+},
+{
+"name": "gamesPlayed",
+"value": 12,
+"displayValue": "12"
+},
+{
+"name": "losses",
+"value": 6,
+"displayValue": "6"
+},
+{
+"name": "playoffSeed",
+"value": 14,
+"displayValue": "14"
+},
+{
+"name": "points",
+"value": 11,
+"displayValue": "11"
+},
+{
+"name": "pointsAgainst",
+"value": 40,
+"displayValue": "40"
+},
+{
+"name": "pointsFor",
+"value": 40,
+"displayValue": "40"
+},
+{
+"name": "wins",
+"value": 5,
+"displayValue": "5"
+}
+]
+},
+{
+"team": {
+"id": "15",
+"abbreviation": "PHI",
+"displayName": "Philadelphia Flyers",
+"shortDisplayName": "Flyers",
+"name": "Flyers",
+"location": "Philadelphia"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 3,
+"displayValue": "3"
+},
+{
+"name": "gamesPlayed",
+"value": 13,
+"displayValue": "13"
+},
+{
+"name": "losses",
+"value": 7,
+"displayValue": "7"
+},
+{
+"name": "playoffSeed",
+"value": 15,
+"displayValue": "15"
+},
+{
+"name": "points",
+"value": 9,
+"displayValue": "9"
+},
+{
+"name": "pointsAgainst",
+"value": 42,
+"displayValue": "42"
+},
+{
+"name": "pointsFor",
+"value": 24,
+"displayValue": "24"
+},
+{
+"name": "wins",
+"value": 3,
+"displayValue": "3"
+}
+]
+},
+{
+"team": {
+"id": "29",
+"abbreviation": "CBJ",
+"displayName": "Columbus Blue Jackets",
+"shortDisplayName": "Blue Jackets",
+"name": "Blue Jackets",
+"location": "Columbus"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 0,
+"displayValue": "0"
+},
+{
+"name": "gamesPlayed",
+"value": 9,
+"displayValue": "9"
+},
+{
+"name": "losses",
+"value": 5,
+"displayValue": "5"
+},
+{
+"name": "playoffSeed",
+"value": 16,
+"displayValue": "16"
+},
+{
+"name": "points",
+"value": 8,
+"displayValue": "8"
+},
+{
+"name": "pointsAgainst",
+"value": 30,
+"displayValue": "30"
+},
+{
+"name": "pointsFor",
+"value": 22,
+"displayValue": "22"
+},
+{
+"name": "wins",
+"value": 4,
+"displayValue": "4"
+}
+]
+}
+]
+}
+},
+{
+"name": "Western Conference",
+"standings": {
+"entries": [
+{
+"team": {
+"id": "30",
+"abbreviation": "MIN",
+"displayName": "Minnesota Wild",
+"shortDisplayName": "Wild",
+"name": "Wild",
+"location": "Minnesota"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 2,
+"displayValue": "2"
+},
+{
+"name": "gamesPlayed",
+"value": 13,
+"displayValue": "13"
+},
+{
+"name": "losses",
+"value": 3,
+"displayValue": "3"
+},
+{
+"name": "playoffSeed",
+"value": 1,
+"displayValue": "1"
+},
+{
+"name": "points",
+"value": 18,
+"displayValue": "18"
+},
+{
+"name": "pointsAgainst",
+"value": 30,
+"displayValue": "30"
+},
+{
+"name": "pointsFor",
+"value": 41,
+"displayValue": "41"
+},
+{
+"name": "wins",
+"value": 8,
+"displayValue": "8"
+}
+]
+},
+{
+"team": {
+"id": "6",
+"abbreviation": "EDM",
+"displayName": "Edmonton Oilers",
+"shortDisplayName": "Oilers",
+"name": "Oilers",
+"location": "Edmonton"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 1,
+"displayValue": "1"
+},
+{
+"name": "gamesPlayed",
+"value": 11,
+"displayValue": "11"
+},
+{
+"name": "losses",
+"value": 2,
+"displayValue": "2"
+},
+{
+"name": "playoffSeed",
+"value": 2,
+"displayValue": "2"
+},
+{
+"name": "points",
+"value": 17,
+"displayValue": "17"
+},
+{
+"name": "pointsAgainst",
+"value": 39,
+"displayValue": "39"
+},
+{
+"name": "pointsFor",
+"value": 49,
+"displayValue": "49"
+},
+{
+"name": "wins",
+"value": 8,
+"displayValue": "8"
+}
+]
+},
+{
+"team": {
+"id": "37",
+"abbreviation": "VGK",
+"displayName": "Vegas Golden Knights",
+"shortDisplayName": "Golden Knights",
+"name": "Golden Knights",
+"location": "Vegas"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 1,
+"displayValue": "1"
+},
+{
+"name": "gamesPlayed",
+"value": 13,
+"displayValue": "13"
+},
+{
+"name": "losses",
+"value": 4,
+"displayValue": "4"
+},
+{
+"name": "playoffSeed",
+"value": 3,
+"displayValue": "3"
+},
+{
+"name": "points",
+"value": 17,
+"displayValue": "17"
+},
+{
+"name": "pointsAgainst",
+"value": 38,
+"displayValue": "38"
+},
+{
+"name": "pointsFor",
+"value": 47,
+"displayValue": "47"
+},
+{
+"name": "wins",
+"value": 8,
+"displayValue": "8"
+}
+]
+},
+{
+"team": {
+"id": "129764",
+"abbreviation": "UTA",
+"displayName": "Utah Mammoth",
+"shortDisplayName": "Mammoth",
+"name": "Mammoth",
+"location": "Utah"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 0,
+"displayValue": "0"
+},
+{
+"name": "gamesPlayed",
+"value": 12,
+"displayValue": "12"
+},
+{
+"name": "losses",
+"value": 4,
+"displayValue": "4"
+},
+{
+"name": "playoffSeed",
+"value": 4,
+"displayValue": "4"
+},
+{
+"name": "points",
+"value": 16,
+"displayValue": "16"
+},
+{
+"name": "pointsAgainst",
+"value": 40,
+"displayValue": "40"
+},
+{
+"name": "pointsFor",
+"value": 46,
+"displayValue": "46"
+},
+{
+"name": "wins",
+"value": 8,
+"displayValue": "8"
+}
+]
+},
+{
+"team": {
+"id": "9",
+"abbreviation": "DAL",
+"displayName": "Dallas Stars",
+"shortDisplayName": "Stars",
+"name": "Stars",
+"location": "Dallas"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 1,
+"displayValue": "1"
+},
+{
+"name": "gamesPlayed",
+"value": 11,
+"displayValue": "11"
+},
+{
+"name": "losses",
+"value": 3,
+"displayValue": "3"
+},
+{
+"name": "playoffSeed",
+"value": 5,
+"displayValue": "5"
+},
+{
+"name": "points",
+"value": 15,
+"displayValue": "15"
+},
+{
+"name": "pointsAgainst",
+"value": 20,
+"displayValue": "20"
+},
+{
+"name": "pointsFor",
+"value": 32,
+"displayValue": "32"
+},
+{
+"name": "wins",
+"value": 7,
+"displayValue": "7"
+}
+]
+},
+{
+"team": {
+"id": "124292",
+"abbreviation": "SEA",
+"displayName": "Seattle Kraken",
+"shortDisplayName": "Kraken",
+"name": "Kraken",
+"location": "Seattle"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 1,
+"displayValue": "1"
+},
+{
+"name": "gamesPlayed",
+"value": 12,
+"displayValue": "12"
+},
+{
+"name": "losses",
+"value": 4,
+"displayValue": "4"
+},
+{
+"name": "playoffSeed",
+"value": 6,
+"displayValue": "6"
+},
+{
+"name": "points",
+"value": 15,
+"displayValue": "15"
+},
+{
+"name": "pointsAgainst",
+"value": 42,
+"displayValue": "42"
+},
+{
+"name": "pointsFor",
+"value": 45,
+"displayValue": "45"
+},
+{
+"name": "wins",
+"value": 7,
+"displayValue": "7"
+}
+]
+},
+{
+"team": {
+"id": "17",
+"abbreviation": "COL",
+"displayName": "Colorado Avalanche",
+"shortDisplayName": "Avalanche",
+"name": "Avalanche",
+"location": "Colorado"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 1,
+"displayValue": "1"
+},
+{
+"name": "gamesPlayed",
+"value": 12,
+"displayValue": "12"
+},
+{
+"name": "losses",
+"value": 5,
+"displayValue": "5"
+},
+{
+"name": "playoffSeed",
+"value": 7,
+"displayValue": "7"
+},
+{
+"name": "points",
+"value": 13,
+"displayValue": "13"
+},
+{
+"name": "pointsAgainst",
+"value": 40,
+"displayValue": "40"
+},
+{
+"name": "pointsFor",
+"value": 49,
+"displayValue": "49"
+},
+{
+"name": "wins",
+"value": 6,
+"displayValue": "6"
+}
+]
+},
+{
+"team": {
+"id": "18",
+"abbreviation": "SJ",
+"displayName": "San Jose Sharks",
+"shortDisplayName": "Sharks",
+"name": "Sharks",
+"location": "San Jose"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 1,
+"displayValue": "1"
+},
+{
+"name": "gamesPlayed",
+"value": 12,
+"displayValue": "12"
+},
+{
+"name": "losses",
+"value": 5,
+"displayValue": "5"
+},
+{
+"name": "playoffSeed",
+"value": 8,
+"displayValue": "8"
+},
+{
+"name": "points",
+"value": 13,
+"displayValue": "13"
+},
+{
+"name": "pointsAgainst",
+"value": 43,
+"displayValue": "43"
+},
+{
+"name": "pointsFor",
+"value": 37,
+"displayValue": "37"
+},
+{
+"name": "wins",
+"value": 6,
+"displayValue": "6"
+}
+]
+},
+{
+"team": {
+"id": "27",
+"abbreviation": "NSH",
+"displayName": "Nashville Predators",
+"shortDisplayName": "Predators",
+"name": "Predators",
+"location": "Nashville"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 4,
+"displayValue": "4"
+},
+{
+"name": "gamesPlayed",
+"value": 11,
+"displayValue": "11"
+},
+{
+"name": "losses",
+"value": 3,
+"displayValue": "3"
+},
+{
+"name": "playoffSeed",
+"value": 9,
+"displayValue": "9"
+},
+{
+"name": "points",
+"value": 12,
+"displayValue": "12"
+},
+{
+"name": "pointsAgainst",
+"value": 35,
+"displayValue": "35"
+},
+{
+"name": "pointsFor",
+"value": 31,
+"displayValue": "31"
+},
+{
+"name": "wins",
+"value": 4,
+"displayValue": "4"
+}
+]
+},
+{
+"team": {
+"id": "19",
+"abbreviation": "STL",
+"displayName": "St. Louis Blues",
+"shortDisplayName": "Blues",
+"name": "Blues",
+"location": "St. Louis"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 1,
+"displayValue": "1"
+},
+{
+"name": "gamesPlayed",
+"value": 11,
+"displayValue": "11"
+},
+{
+"name": "losses",
+"value": 5,
+"displayValue": "5"
+},
+{
+"name": "playoffSeed",
+"value": 10,
+"displayValue": "10"
+},
+{
+"name": "points",
+"value": 11,
+"displayValue": "11"
+},
+{
+"name": "pointsAgainst",
+"value": 35,
+"displayValue": "35"
+},
+{
+"name": "pointsFor",
+"value": 35,
+"displayValue": "35"
+},
+{
+"name": "wins",
+"value": 5,
+"displayValue": "5"
+}
+]
+},
+{
+"team": {
+"id": "28",
+"abbreviation": "WPG",
+"displayName": "Winnipeg Jets",
+"shortDisplayName": "Jets",
+"name": "Jets",
+"location": "Winnipeg"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 3,
+"displayValue": "3"
+},
+{
+"name": "gamesPlayed",
+"value": 11,
+"displayValue": "11"
+},
+{
+"name": "losses",
+"value": 4,
+"displayValue": "4"
+},
+{
+"name": "playoffSeed",
+"value": 11,
+"displayValue": "11"
+},
+{
+"name": "points",
+"value": 11,
+"displayValue": "11"
+},
+{
+"name": "pointsAgainst",
+"value": 31,
+"displayValue": "31"
+},
+{
+"name": "pointsFor",
+"value": 27,
+"displayValue": "27"
+},
+{
+"name": "wins",
+"value": 4,
+"displayValue": "4"
+}
+]
+},
+{
+"team": {
+"id": "25",
+"abbreviation": "ANA",
+"displayName": "Anaheim Ducks",
+"shortDisplayName": "Ducks",
+"name": "Ducks",
+"location": "Anaheim"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 0,
+"displayValue": "0"
+},
+{
+"name": "gamesPlayed",
+"value": 11,
+"displayValue": "11"
+},
+{
+"name": "losses",
+"value": 6,
+"displayValue": "6"
+},
+{
+"name": "playoffSeed",
+"value": 12,
+"displayValue": "12"
+},
+{
+"name": "points",
+"value": 10,
+"displayValue": "10"
+},
+{
+"name": "pointsAgainst",
+"value": 37,
+"displayValue": "37"
+},
+{
+"name": "pointsFor",
+"value": 32,
+"displayValue": "32"
+},
+{
+"name": "wins",
+"value": 5,
+"displayValue": "5"
+}
+]
+},
+{
+"team": {
+"id": "3",
+"abbreviation": "CGY",
+"displayName": "Calgary Flames",
+"shortDisplayName": "Flames",
+"name": "Flames",
+"location": "Calgary"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 0,
+"displayValue": "0"
+},
+{
+"name": "gamesPlayed",
+"value": 10,
+"displayValue": "10"
+},
+{
+"name": "losses",
+"value": 6,
+"displayValue": "6"
+},
+{
+"name": "playoffSeed",
+"value": 13,
+"displayValue": "13"
+},
+{
+"name": "points",
+"value": 8,
+"displayValue": "8"
+},
+{
+"name": "pointsAgainst",
+"value": 39,
+"displayValue": "39"
+},
+{
+"name": "pointsFor",
+"value": 23,
+"displayValue": "23"
+},
+{
+"name": "wins",
+"value": 4,
+"displayValue": "4"
+}
+]
+},
+{
+"team": {
+"id": "8",
+"abbreviation": "LA",
+"displayName": "Los Angeles Kings",
+"shortDisplayName": "Kings",
+"name": "Kings",
+"location": "Los Angeles"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 2,
+"displayValue": "2"
+},
+{
+"name": "gamesPlayed",
+"value": 9,
+"displayValue": "9"
+},
+{
+"name": "losses",
+"value": 5,
+"displayValue": "5"
+},
+{
+"name": "playoffSeed",
+"value": 14,
+"displayValue": "14"
+},
+{
+"name": "points",
+"value": 6,
+"displayValue": "6"
+},
+{
+"name": "pointsAgainst",
+"value": 32,
+"displayValue": "32"
+},
+{
+"name": "pointsFor",
+"value": 21,
+"displayValue": "21"
+},
+{
+"name": "wins",
+"value": 2,
+"displayValue": "2"
+}
+]
+},
+{
+"team": {
+"id": "4",
+"abbreviation": "CHI",
+"displayName": "Chicago Blackhawks",
+"shortDisplayName": "Blackhawks",
+"name": "Blackhawks",
+"location": "Chicago"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 0,
+"displayValue": "0"
+},
+{
+"name": "gamesPlayed",
+"value": 11,
+"displayValue": "11"
+},
+{
+"name": "losses",
+"value": 8,
+"displayValue": "8"
+},
+{
+"name": "playoffSeed",
+"value": 15,
+"displayValue": "15"
+},
+{
+"name": "points",
+"value": 6,
+"displayValue": "6"
+},
+{
+"name": "pointsAgainst",
+"value": 43,
+"displayValue": "43"
+},
+{
+"name": "pointsFor",
+"value": 24,
+"displayValue": "24"
+},
+{
+"name": "wins",
+"value": 3,
+"displayValue": "3"
+}
+]
+},
+{
+"team": {
+"id": "22",
+"abbreviation": "VAN",
+"displayName": "Vancouver Canucks",
+"shortDisplayName": "Canucks",
+"name": "Canucks",
+"location": "Vancouver"
+},
+"stats": [
+{
+"name": "otLosses",
+"value": 1,
+"displayValue": "1"
+},
+{
+"name": "gamesPlayed",
+"value": 13,
+"displayValue": "13"
+},
+{
+"name": "losses",
+"value": 10,
+"displayValue": "10"
+},
+{
+"name": "playoffSeed",
+"value": 16,
+"displayValue": "16"
+},
+{
+"name": "points",
+"value": 5,
+"displayValue": "5"
+},
+{
+"name": "pointsAgainst",
+"value": 60,
+"displayValue": "60"
+},
+{
+"name": "pointsFor",
+"value": 37,
+"displayValue": "37"
+},
+{
+"name": "wins",
+"value": 2,
+"displayValue": "2"
+}
+]
+}
+]
+}
+}
+]
+}

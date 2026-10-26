@@ -1,0 +1,7 @@
+{
+ "url": "https://www.thesportsdb.com/api/v1/json/123/search_all_leagues.php?c=Italy&s=Ice%20Hockey",
+ "stato": 200,
+ "json": {
+  "countries": null
+ }
+}

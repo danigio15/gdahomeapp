@@ -7305,8 +7305,6 @@ export default Object.freeze({
     "टीमें अभी नहीं आ रहीं: थोड़ी देर में फिर कोशिश करें।",
   "Teams come from the GdAHome add-on, which cannot be reached from here.":
     "टीमें GdAHome ऐड-ऑन से आती हैं, जिस तक यहाँ से नहीं पहुँचा जा सकता।",
-  "The Sports page: your football team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.":
-    "खेल पेज: आपकी फ़ुटबॉल टीम, फ़ॉर्मूला 1 और MotoGP — नतीजे, आने वाले मैच और रेस, और रैंकिंग। होम पर टाइल अभी ज़रूरी चीज़ दिखाती है: चल रहा मैच, आज का मैच, पिछला पोडियम। नतीजे ऐड-ऑन सार्वजनिक स्रोतों से लाता है, केवल साइन-इन किए उपयोगकर्ताओं के लिए।",
   "What you follow": "आप क्या फ़ॉलो करते हैं",
   Won: "जीता",
   "Your team": "आपकी टीम",
@@ -7455,4 +7453,10 @@ export default Object.freeze({
   "In pit": "पिट में",
   "Lap {n}": "लैप {n}",
   "The session is over.": "सत्र खत्म हो गया।",
+  "games and standings": "मैच और अंक तालिका",
+  "Hockey team": "हॉकी टीम",
+  "overtime": "ओवरटाइम",
+  "shootout": "शूटआउट",
+  "The Sports page: your football or hockey team, Formula 1 and MotoGP, with results, upcoming matches and races, and standings. On Home the tile shows what matters now: the match being played, today's match, the last podium. Results are fetched by the add-on from public sources, only for signed-in users.": "खेल पेज: आपकी फ़ुटबॉल या हॉकी टीम, फ़ॉर्मूला 1 और MotoGP, नतीजों, आगामी मैचों और रेसों तथा अंक तालिकाओं के साथ। होम पर टाइल वही दिखाती है जो अभी मायने रखता है: चल रहा मैच, आज का मैच, पिछला पोडियम। नतीजे ऐड-ऑन सार्वजनिक स्रोतों से लाता है, केवल साइन-इन किए उपयोगकर्ताओं के लिए।",
+  "The team's games, results (live too) and its place in its conference are shown. Italian leagues are not available: they have no public data source.": "टीम के मैच, नतीजे (लाइव भी) और उसकी कॉन्फ़्रेंस में स्थिति दिखाई जाती है। इतालवी लीग उपलब्ध नहीं हैं: उनका कोई सार्वजनिक डेटा स्रोत नहीं है।",
 });

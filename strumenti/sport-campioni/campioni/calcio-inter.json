@@ -693,12 +693,52 @@
          "awayTeamOdds": {
           "current": {
            "moneyLine": {
-            "alternateDisplayValue": "-313",
-            "american": "-313"
+            "alternateDisplayValue": "-310",
+            "american": "-310",
+            "decimal": 1.32,
+            "displayValue": "10/31",
+            "fraction": "10/31",
+            "value": 1.32
+           },
+           "pointSpread": {
+            "alternateDisplayValue": "-1.5",
+            "american": "-1.5"
+           },
+           "spread": {
+            "alternateDisplayValue": "-120",
+            "american": "-120",
+            "decimal": 1.83,
+            "displayValue": "5/6",
+            "fraction": "5/6",
+            "value": 1.83
            }
           },
           "favorite": true,
-          "moneyLine": -313,
+          "moneyLine": -310,
+          "open": {
+           "favorite": true,
+           "moneyLine": {
+            "alternateDisplayValue": "-310",
+            "american": "-310",
+            "decimal": 1.32,
+            "displayValue": "10/31",
+            "fraction": "10/31",
+            "value": 1.32
+           },
+           "pointSpread": {
+            "alternateDisplayValue": "-1.5",
+            "american": "-1.5"
+           },
+           "spread": {
+            "alternateDisplayValue": "-125",
+            "american": "-125",
+            "decimal": 1.8,
+            "displayValue": "4/5",
+            "fraction": "4/5",
+            "value": 1.8
+           }
+          },
+          "spreadOdds": -120,
           "team": {
            "abbreviation": "INT",
            "id": "110",
@@ -709,12 +749,52 @@
          "homeTeamOdds": {
           "current": {
            "moneyLine": {
-            "alternateDisplayValue": "+730",
-            "american": "+730"
+            "alternateDisplayValue": "+600",
+            "american": "+600",
+            "decimal": 7,
+            "displayValue": "6/1",
+            "fraction": "6/1",
+            "value": 7
+           },
+           "pointSpread": {
+            "alternateDisplayValue": "+1.5",
+            "american": "+1.5"
+           },
+           "spread": {
+            "alternateDisplayValue": "-115",
+            "american": "-115",
+            "decimal": 1.86,
+            "displayValue": "20/23",
+            "fraction": "20/23",
+            "value": 1.86
            }
           },
           "favorite": false,
-          "moneyLine": 730,
+          "moneyLine": 600,
+          "open": {
+           "favorite": false,
+           "moneyLine": {
+            "alternateDisplayValue": "+600",
+            "american": "+600",
+            "decimal": 7,
+            "displayValue": "6/1",
+            "fraction": "6/1",
+            "value": 7
+           },
+           "pointSpread": {
+            "alternateDisplayValue": "+1.5",
+            "american": "+1.5"
+           },
+           "spread": {
+            "alternateDisplayValue": "-110",
+            "american": "-110",
+            "decimal": 1.9,
+            "displayValue": "10/11",
+            "fraction": "10/11",
+            "value": 1.9
+           }
+          },
+          "spreadOdds": -115,
           "team": {
            "abbreviation": "VEN",
            "id": "17530",
@@ -724,43 +804,111 @@
          },
          "links": [
           {
-           "href": "https://online.caliente.mx/page?member=espndigital&campaign=DEFAULT&channel=DEFAULT&zone=54300998&lp=57942232&ev_id=33674271",
+           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0ML86939625_1",
            "isExternal": true,
            "isPremium": false,
            "language": "en-US",
            "rel": [
             "home",
             "desktop",
-            "bets"
+            "bets",
+            "draftkings"
            ],
            "shortText": "Home Bet",
            "text": "Home Bet"
           },
           {
-           "href": "https://online.caliente.mx/page?member=espndigital&campaign=DEFAULT&channel=DEFAULT&zone=54300998&lp=57942232&ev_id=33674271",
+           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0ML86939625_3",
            "isExternal": true,
            "isPremium": false,
            "language": "en-US",
            "rel": [
             "away",
             "desktop",
-            "bets"
+            "bets",
+            "draftkings"
            ],
            "shortText": "Away Bet",
            "text": "Away Bet"
           },
           {
-           "href": "https://online.caliente.mx/page?member=espndigital&campaign=DEFAULT&channel=DEFAULT&zone=54300998&lp=57942232&ev_id=33674271",
+           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0ML86939625_2",
            "isExternal": true,
            "isPremium": false,
            "language": "en-US",
            "rel": [
             "draw",
             "desktop",
-            "bets"
+            "bets",
+            "draftkings"
            ],
            "shortText": "Draw Bet",
            "text": "Draw Bet"
+          },
+          {
+           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0HC86939635P150_1",
+           "isExternal": true,
+           "isPremium": false,
+           "language": "en-US",
+           "rel": [
+            "homeSpread",
+            "desktop",
+            "bets"
+           ],
+           "shortText": "Home Point Spread",
+           "text": "Home Point Spread"
+          },
+          {
+           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0HC86939635N150_3",
+           "isExternal": true,
+           "isPremium": false,
+           "language": "en-US",
+           "rel": [
+            "awaySpread",
+            "desktop",
+            "bets"
+           ],
+           "shortText": "Away Point Spread",
+           "text": "Away Point Spread"
+          },
+          {
+           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0OU86939630O350_1",
+           "isExternal": true,
+           "isPremium": false,
+           "language": "en-US",
+           "rel": [
+            "over",
+            "desktop",
+            "bets"
+           ],
+           "shortText": "Over Odds",
+           "text": "Over Odds"
+          },
+          {
+           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0OU86939630U350_3",
+           "isExternal": true,
+           "isPremium": false,
+           "language": "en-US",
+           "rel": [
+            "under",
+            "desktop",
+            "bets"
+           ],
+           "shortText": "Under Odds",
+           "text": "Under Odds"
+          },
+          {
+           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758",
+           "isExternal": true,
+           "isPremium": false,
+           "language": "en-US",
+           "rel": [
+            "game",
+            "desktop",
+            "bets"
+           ],
+           "shortText": "Game",
+           "text": "Game"
           }
          ]
         }

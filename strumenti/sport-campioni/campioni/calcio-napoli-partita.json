@@ -250,8 +250,6 @@
       "awayShootoutScore": "0",
       "gameResult": "L",
       "competitionName": "2025-26 Italian Serie A",
-      "leagueName": "Italian Serie A",
-      "leagueAbbreviation": "Serie A",
       "opponent": {
        "id": "107",
        "uid": "s:600~t:107",
@@ -293,7 +291,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/107.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/107.png",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A"
      },
      {
       "id": "737149",
@@ -316,8 +316,6 @@
       "awayShootoutScore": "0",
       "gameResult": "W",
       "competitionName": "2025-26 Italian Serie A",
-      "leagueName": "Italian Serie A",
-      "leagueAbbreviation": "Serie A",
       "opponent": {
        "id": "3956",
        "uid": "s:600~t:3956",
@@ -359,7 +357,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/3956.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/3956.png",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A"
      },
      {
       "id": "737156",
@@ -494,6 +494,8 @@
       "awayShootoutScore": "0",
       "gameResult": "W",
       "competitionName": "2025-26 LALIGA",
+      "leagueName": "Spanish LALIGA",
+      "leagueAbbreviation": "LALIGA",
       "opponent": {
        "id": "3751",
        "uid": "s:600~t:3751",
@@ -535,9 +537,7 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/3751.png",
-      "leagueName": "Spanish LALIGA",
-      "leagueAbbreviation": "LALIGA"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/3751.png"
      },
      {
       "id": "748487",
@@ -758,8 +758,6 @@
       "awayShootoutScore": "0",
       "gameResult": "W",
       "competitionName": "2025-26 LALIGA",
-      "leagueName": "Spanish LALIGA",
-      "leagueAbbreviation": "LALIGA",
       "opponent": {
        "id": "243",
        "uid": "s:600~t:243",
@@ -801,7 +799,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/243.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/243.png",
+      "leagueName": "Spanish LALIGA",
+      "leagueAbbreviation": "LALIGA"
      }
     ]
    }

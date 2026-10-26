@@ -282,3 +282,22 @@ for (const c of costruttori) {
 }
 await salva("f1-scuderie-loghi", prove);
 console.log("scuderie", prove.filter((p) => p.stato === 200).length, "/", prove.length);
+
+/* Gli stemmi delle squadre NHL, piccoli, per le foto della pagina. */
+await mkdir(`${qui}loghi`, { recursive: true });
+const squadreNhl =
+  (await scarica(`${ESPN}/hockey/nhl/teams`)).json?.sports?.[0]?.leagues?.[0]?.teams || [];
+let stemmiNhl = 0;
+for (const { team } of squadreNhl) {
+  const sigla = String(team?.abbreviation || "").toLowerCase();
+  if (!/^[a-z]{2,4}$/.test(sigla)) continue;
+  try {
+    const r = await fetch(
+      `https://a.espncdn.com/combiner/i?img=/i/teamlogos/nhl/500/${sigla}.png&w=96&h=96`,
+    );
+    if (!r.ok) continue;
+    await writeFile(`${qui}loghi/nhl-${sigla}.png`, Buffer.from(await r.arrayBuffer()));
+    stemmiNhl += 1;
+  } catch {}
+}
+console.log("stemmi nhl", stemmiNhl);

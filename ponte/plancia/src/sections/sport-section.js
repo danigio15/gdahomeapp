@@ -22,6 +22,7 @@
 import {
   CHIAVE_SPORT,
   chiaveDelSeguito,
+  diSquadra,
   domandaDelleScelte,
   formaRecente,
   fraQuantoSiRichiede,
@@ -288,7 +289,11 @@ const ZONE = () => ({
 });
 
 export function nomeDelTipo(tipo) {
-  return { calcio: t("Calcio", "Football"), f1: "Formula 1", motogp: "MotoGP" }[tipo] || tipo;
+  return (
+    { calcio: t("Calcio", "Football"), hockey: "Hockey", f1: "Formula 1", motogp: "MotoGP" }[
+      tipo
+    ] || tipo
+  );
 }
 
 /* I colori delle scuderie di F1 e delle case di MotoGP, per le barre. */
@@ -322,7 +327,14 @@ const coloreDellaMoto = (moto) =>
 
 function stemma(squadra, misura = 40) {
   const id = clean(squadra?.id);
-  const url = /^\d{1,7}$/.test(id) && squadra?.logo !== false ? LOGHI.logo(id) : "";
+  /* Le squadre di hockey hanno lo stemma per sigla (`nhl:fla`): il numero
+   * di ESPN e' lo stesso spazio di quello del calcio. */
+  const suo = clean(squadra?.stemma);
+  const url = /^nhl:[a-z]{2,4}$/.test(suo)
+    ? LOGHI.logo(suo)
+    : /^\d{1,7}$/.test(id) && squadra?.logo !== false
+      ? LOGHI.logo(id)
+      : "";
   if (url)
     return `<span class="dm-sport-stemma" style="--m:${misura}px"><img src="${esc(url)}" alt="" decoding="async"></span>`;
   const colore = clean(squadra?.colore) || "#64748b";
@@ -373,7 +385,13 @@ function punteggio(p) {
     p.casa.rigori != null && p.fuori.rigori != null
       ? `<small class="dm-sport-rigori">${esc(t("rigori", "pens"))} ${p.casa.rigori}–${p.fuori.rigori}</small>`
       : "";
-  return `<b class="dm-sport-gol">${p.casa.gol ?? 0}<i>–</i>${p.fuori.gol ?? 0}</b>${rigori}`;
+  /* L'hockey: vinta o persa ai supplementari, o ai rigori. */
+  const oltre = { OT: t("supplementari", "overtime"), SO: t("rigori", "shootout") }[
+    p.supplementari
+  ];
+  return `<b class="dm-sport-gol">${p.casa.gol ?? 0}<i>–</i>${p.fuori.gol ?? 0}</b>${rigori}${
+    oltre && !rigori ? `<small class="dm-sport-rigori">${esc(oltre)}</small>` : ""
+  }`;
 }
 
 function partitaGrande(r, seguito, adesso) {
@@ -381,7 +399,9 @@ function partitaGrande(r, seguito, adesso) {
   if (!grande) return "";
   const { partita: p, perche } = grande;
   const lati = latiDellaPartita(p, r.squadra.id);
-  const colore = clean(lati?.mia?.colore) || "#16a34a";
+  /* Il calendario dell'hockey non dice i colori delle due squadre: vale
+   * quello della squadra seguita. */
+  const colore = clean(lati?.mia?.colore) || clean(r.squadra?.colore) || "#16a34a";
   const stato =
     perche === "dal-vivo"
       ? `<span class="dm-sport-live" data-dm-sport-live><i aria-hidden="true"></i>${esc(
@@ -907,10 +927,9 @@ function corseMarkup(r, seguito, adesso, indice = 0) {
 }
 
 function guastoDelBloccoMarkup(seguito) {
-  const titolo =
-    seguito.tipo === "calcio"
-      ? seguito.nome || t("La tua squadra", "Your team")
-      : nomeDelTipo(seguito.tipo);
+  const titolo = diSquadra(seguito.tipo)
+    ? seguito.nome || t("La tua squadra", "Your team")
+    : nomeDelTipo(seguito.tipo);
   return `<section class="dm-sport-blocco" data-dm-sport-blocco="${esc(chiaveDelSeguito(seguito))}">
       <div class="dm-sport-testa">${titoloDelBlocco(seguito.tipo === "calcio" ? "sport" : seguito.tipo, titolo)}</div>
       ${schedaMarkup(
@@ -1204,7 +1223,7 @@ function tabellaDa(dove) {
   const [i, lega] = clean(dove).split(":");
   const r = state.dati.risultati[Number(i)];
   if (!r || r.errore) return "";
-  if (r.tipo !== "calcio") return pilotiMarkup(r, preferitoDi(r.tipo));
+  if (!diSquadra(r.tipo)) return pilotiMarkup(r, preferitoDi(r.tipo));
   const tab = lega ? r.coppe?.find((c) => c.lega === lega)?.classifica : r.classifica;
   return tabellaMarkup(tab, r.squadra?.id);
 }
@@ -1324,31 +1343,32 @@ export function tesseraDelloSport(vista, adesso = Date.now()) {
   const nomi = SIGLE_DELLE_SESSIONI();
   if (!ev) {
     const seguiti = vista.config.seguiti.map((x) =>
-      x.tipo === "calcio" ? x.nome || nomeDelTipo("calcio") : nomeDelTipo(x.tipo),
+      diSquadra(x.tipo) ? x.nome || nomeDelTipo(x.tipo) : nomeDelTipo(x.tipo),
     );
     return { valore: "—", riga: seguiti.join(" · "), oggetto: "sport", dalVivo: false };
   }
-  if (ev.tipo === "calcio") {
+  if (diSquadra(ev.tipo)) {
+    const oggetto = ev.tipo === "hockey" ? "hockey" : "sport";
     const p = ev.partita;
     const coppia = `${nomeDellaSquadra(p.casa)}–${nomeDellaSquadra(p.fuori)}`;
     if (ev.cosa === "dal-vivo")
       return {
         valore: `${p.casa.gol ?? 0}–${p.fuori.gol ?? 0}`,
         riga: `${coppia} · ${p.intervallo ? t("Intervallo", "Half time") : clean(p.minuto)}`,
-        oggetto: "sport",
+        oggetto,
         dalVivo: true,
       };
     if (ev.cosa === "prossima")
       return {
         valore: oraDi(p.quando),
         riga: `${coppia} · ${quandoInParole(p.quando, adesso).split(" · ")[0]}`,
-        oggetto: "sport",
+        oggetto,
         dalVivo: false,
       };
     return {
       valore: `${p.casa.gol ?? 0}–${p.fuori.gol ?? 0}`,
       riga: `${coppia} · ${ESITI()[p.esito]?.nome || t("Finita", "Full time")}`,
-      oggetto: "sport",
+      oggetto,
       dalVivo: false,
     };
   }
@@ -1399,7 +1419,7 @@ export function finestraDelloSportMarkup(vista, adesso = Date.now()) {
     .map((seguito, i) => {
       const r = risultati[i];
       if (!r || r.errore || r.tipo !== seguito.tipo) return guastoDelBloccoMarkup(seguito);
-      if (r.tipo === "calcio") {
+      if (diSquadra(r.tipo)) {
         const pos = r.posizione;
         const sotto = pos
           ? `<b>${conN(t("{n}°", "#{n}"), pos.posizione)}</b> · ${conN(esc(t("{n} punti", "{n} pts")), pos.punti)}`
@@ -1464,7 +1484,7 @@ export function paginaDelloSportMarkup(vista, adesso = Date.now()) {
     .map((seguito, i) => {
       const r = risultati[i];
       if (!r || r.errore || r.tipo !== seguito.tipo) return guastoDelBloccoMarkup(seguito);
-      if (r.tipo === "calcio") return calcioMarkup(r, seguito, adesso, i);
+      if (diSquadra(r.tipo)) return calcioMarkup(r, seguito, adesso, i);
       return corseMarkup(r, seguito, adesso, i);
     })
     .join("");
@@ -1588,7 +1608,7 @@ function titoloDellaPagina() {
   if (!seguiti.length) return null;
   return {
     subtitle: seguiti
-      .map((s) => (s.tipo === "calcio" ? s.nome || nomeDelTipo("calcio") : nomeDelTipo(s.tipo)))
+      .map((s) => (diSquadra(s.tipo) ? s.nome || nomeDelTipo(s.tipo) : nomeDelTipo(s.tipo)))
       .join(" · "),
   };
 }

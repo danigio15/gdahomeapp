@@ -2,7 +2,7 @@
  "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/ita.1/teams/110/schedule",
  "stato": 200,
  "json": {
-  "timestamp": "2026-10-25T22:38:55Z",
+  "timestamp": "2026-10-26T15:09:56Z",
   "status": "success",
   "season": {
    "year": 2026,

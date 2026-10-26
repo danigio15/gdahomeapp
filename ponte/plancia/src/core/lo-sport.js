@@ -29,7 +29,14 @@ export const CAMPIONATI = Object.freeze({
   "ned.1": "Eredivisie",
 });
 
-export const TIPI = Object.freeze(["calcio", "f1", "motogp"]);
+/** I campionati di hockey: solo la NHL (`LEGHE_HOCKEY` in
+ * `ponte/src/sport.js`). Le leghe italiane non hanno una fonte coi dati. */
+export const LEGHE_HOCKEY = Object.freeze({ nhl: "NHL" });
+
+export const TIPI = Object.freeze(["calcio", "hockey", "f1", "motogp"]);
+
+/** Gli sport di squadra: una squadra scelta, le sue partite, la classifica. */
+export const diSquadra = (tipo) => tipo === "calcio" || tipo === "hockey";
 
 const pulito = (v) => (typeof v === "string" ? v.trim() : v == null ? "" : String(v).trim());
 const ora = (iso) => {
@@ -39,7 +46,7 @@ const ora = (iso) => {
 
 /** La chiave di una cosa seguita: una squadra, la F1, la MotoGP. */
 export function chiaveDelSeguito(s) {
-  if (s?.tipo === "calcio") return `calcio:${pulito(s.squadra)}`;
+  if (diSquadra(s?.tipo)) return `${s.tipo}:${pulito(s.squadra)}`;
   return pulito(s?.tipo);
 }
 
@@ -61,6 +68,11 @@ export function normalizzaSport(grezza) {
       const squadra = pulito(s.squadra);
       if (!Object.hasOwn(CAMPIONATI, campionato) || !/^\d{1,7}$/.test(squadra)) continue;
       voce = { tipo: "calcio", campionato, squadra, nome: pulito(s.nome).slice(0, 60) };
+    } else if (s.tipo === "hockey") {
+      const campionato = pulito(s.campionato);
+      const squadra = pulito(s.squadra);
+      if (!Object.hasOwn(LEGHE_HOCKEY, campionato) || !/^\d{1,7}$/.test(squadra)) continue;
+      voce = { tipo: "hockey", campionato, squadra, nome: pulito(s.nome).slice(0, 60) };
     } else {
       voce = { tipo: s.tipo, preferito: pulito(s.preferito).slice(0, 60) };
     }
@@ -85,8 +97,8 @@ export function spostaIlSeguito(seguiti, indice, verso) {
 /** Quello che si manda al ponte: solo le scelte, niente nomi. */
 export function domandaDelleScelte(config) {
   return normalizzaSport(config).seguiti.map((s) =>
-    s.tipo === "calcio"
-      ? { tipo: "calcio", campionato: s.campionato, squadra: s.squadra }
+    diSquadra(s.tipo)
+      ? { tipo: s.tipo, campionato: s.campionato, squadra: s.squadra }
       : { tipo: s.tipo },
   );
 }
@@ -216,11 +228,11 @@ export function fraQuantoSiRichiede(risultati, adesso = Date.now()) {
   };
   for (const r of risultati || []) {
     /* Una corsa in diretta cambia a ogni giro: mezzo minuto. */
-    if (r?.dalVivo && r.tipo !== "calcio") return 30_000;
+    if (r?.dalVivo && !diSquadra(r.tipo)) return 30_000;
   }
   for (const r of risultati || []) {
     if (r?.dalVivo) return 60_000;
-    if (r?.tipo === "calcio" && vicino(r.prossime?.[0]?.quando)) return 60_000;
+    if (diSquadra(r?.tipo) && vicino(r.prossime?.[0]?.quando)) return 60_000;
     /* Una sessione partita da poco (o a momenti): ogni minuto, per vedere
      * subito quando diventa «in diretta». */
     const sessioni = r?.prossima?.tutte || r?.prossima?.sessioni || [];
@@ -248,9 +260,9 @@ export function fraQuantoSiRichiede(risultati, adesso = Date.now()) {
 export function inEvidenza(risultati, adesso = Date.now()) {
   const buoni = (risultati || []).filter((r) => r && !r.errore);
   if (!buoni.length) return null;
-  const dalVivo = buoni.find((r) => r.tipo === "calcio" && r.dalVivo);
+  const dalVivo = buoni.find((r) => diSquadra(r.tipo) && r.dalVivo);
   if (dalVivo)
-    return { tipo: "calcio", cosa: "dal-vivo", risultato: dalVivo, partita: dalVivo.dalVivo };
+    return { tipo: dalVivo.tipo, cosa: "dal-vivo", risultato: dalVivo, partita: dalVivo.dalVivo };
   const corsa = buoni.find(
     (r) => (r.tipo === "f1" || r.tipo === "motogp") && r.dalVivo?.ordine?.length,
   );
@@ -258,11 +270,11 @@ export function inEvidenza(risultati, adesso = Date.now()) {
   const prossimi = [];
   const passati = [];
   for (const r of buoni) {
-    if (r.tipo === "calcio") {
+    if (diSquadra(r.tipo)) {
       const p = r.prossime?.[0];
       if (p)
         prossimi.push({
-          tipo: "calcio",
+          tipo: r.tipo,
           cosa: "prossima",
           risultato: r,
           partita: p,
@@ -271,7 +283,7 @@ export function inEvidenza(risultati, adesso = Date.now()) {
       const u = r.ultime?.[0];
       if (u)
         passati.push({
-          tipo: "calcio",
+          tipo: r.tipo,
           cosa: "ultima",
           risultato: r,
           partita: u,

@@ -16,6 +16,7 @@ import {
   calcioDaEspn,
   f1DaJolpica,
   f1DalVivoDaEspn,
+  hockeyDaEspn,
   motoDaPulselive,
   partitaDettaglioDaEspn,
   sessioneF1DaJolpica,
@@ -156,7 +157,36 @@ function stemmi() {
   return fuori;
 }
 
-async function boot(page, testInfo, { adesso, tema = "light" }) {
+/* La squadra di hockey: i Florida Panthers, NHL, il lunedi' dopo. */
+const LUNEDI = Date.parse("2026-10-26T14:00:00Z");
+const HOCKEY = {
+  seguiti: [{ tipo: "hockey", campionato: "nhl", squadra: "26", nome: "Florida Panthers" }],
+};
+function laSquadraDiHockey() {
+  return hockeyDaEspn({
+    id: "26",
+    calendario: campione("hockey-florida"),
+    classifica: campione("hockey-classifica"),
+  });
+}
+/* Gli stemmi NHL veri, se GitHub li ha scaricati: per sigla (`nhl:fla`). */
+function stemmiNhl() {
+  const fuori = {};
+  const cartella = new URL("../../../../../strumenti/sport-campioni/loghi/", import.meta.url);
+  const r = laSquadraDiHockey();
+  const squadre = [
+    r.squadra,
+    ...r.classifica,
+    ...[...r.ultime, ...r.prossime].flatMap((p) => [p.casa, p.fuori]),
+  ];
+  for (const sq of squadre) {
+    const file = new URL(`nhl-${String(sq.sigla).toLowerCase()}.png`, cartella);
+    if (sq.stemma && existsSync(file)) fuori[sq.stemma] = readFileSync(file).toString("base64");
+  }
+  return fuori;
+}
+
+async function boot(page, testInfo, { adesso, tema = "light", config = CONFIG, risposte = null }) {
   test.setTimeout(testInfo.project.name === "webkit-ipad" ? 150_000 : 100_000);
   await page.clock.install({ time: adesso });
   await page.addInitScript(
@@ -240,7 +270,11 @@ async function boot(page, testInfo, { adesso, tema = "light" }) {
       window.__DASHBOARDMODERN_BRIDGE_WS__ = MockSocket;
       window.WebSocket = MockSocket;
     },
-    { risposte: risultati(adesso), loghi: stemmi(), dettagli: dettagli() },
+    {
+      risposte: risposte || risultati(adesso),
+      loghi: { ...stemmi(), ...stemmiNhl() },
+      dettagli: dettagli(),
+    },
   );
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
@@ -262,7 +296,7 @@ async function boot(page, testInfo, { adesso, tema = "light" }) {
       window.render?.();
       window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
     },
-    { config: CONFIG, tema },
+    { config, tema },
   );
 }
 
@@ -520,4 +554,60 @@ test("la Champions: il suo blocco, la classifica della fase campionato, la class
   await expect(foglio.locator(".dm-sport-pos")).toHaveCount(36);
   await expect(foglio.locator(".dm-sport-legenda")).toContainText("Ottavi");
   await fotoDelFoglio(page, foto(testInfo, "sport-champions-classifica"));
+});
+
+for (const tema of ["light", "dark"]) {
+  test(`hockey: la squadra NHL nella pagina Sport (${tema})`, async ({ page }, testInfo) => {
+    await boot(page, testInfo, {
+      adesso: LUNEDI,
+      tema,
+      config: HOCKEY,
+      risposte: [laSquadraDiHockey()],
+    });
+    const voce = page.locator('.tab[data-tab="sport"]');
+    await expect(voce).toHaveCount(1, { timeout: 20_000 });
+    await voce.evaluate((n) => n.click());
+    const blocco = page.locator('#page-sport [data-dm-sport-blocco="hockey:26"]');
+    await expect(blocco).toHaveCount(1, { timeout: 20_000 });
+    await expect(blocco).toContainText("Florida Panthers");
+    await expect(blocco).toContainText("Eastern Conference");
+    /* La prossima partita in grande, le ultime cinque, la classifica. */
+    await expect(blocco.locator('[data-dm-sport-partita="prossima"]')).toHaveCount(1);
+    await expect(blocco.locator(".dm-sport-righe li")).toHaveCount(5);
+    await expect(blocco.locator(".dm-sport-classifica .mia")).toContainText("Panthers");
+    /* Gli stemmi si chiedono per sigla, non col numero del calcio. */
+    const chiesti = await page.evaluate(() => window.__sport.loghi || []);
+    expect(chiesti.some((x) => x === "nhl:fla")).toBe(true);
+    expect(chiesti.some((x) => x === "26")).toBe(false);
+    const chieste = await page.evaluate(() => window.__sport.chieste[0]);
+    expect(chieste).toEqual([{ tipo: "hockey", campionato: "nhl", squadra: "26" }]);
+    await fotoDellaPagina(page, foto(testInfo, `sport-hockey-${tema}`));
+  });
+}
+
+test("hockey: nel Config si aggiunge una squadra della NHL", async ({ page }, testInfo) => {
+  await boot(page, testInfo, {
+    adesso: LUNEDI,
+    config: { seguiti: [] },
+    risposte: [laSquadraDiHockey()],
+  });
+  await page.evaluate(() => window.apriConfigEntita?.());
+  await page.evaluate(() => window.editorSwitch?.("sport"));
+  const corpo = page.locator("#ed-body .dm-sport-ed");
+  await expect(corpo).toHaveCount(1, { timeout: 20_000 });
+  await corpo.locator('[data-dm-sport-nuova="hockey"]').click();
+  await expect(corpo.locator("[data-dm-sport-campionato] option")).toHaveText(["NHL"]);
+  await expect(corpo).toContainText("Le leghe italiane non ci sono");
+  const squadra = corpo.locator("[data-dm-sport-squadra]");
+  await expect(squadra).toHaveCount(1, { timeout: 20_000 });
+  await squadra.selectOption("26");
+  await expect(corpo.locator('[data-dm-sport-voce="hockey:26"]')).toHaveCount(1);
+  const salvata = await page.evaluate(() => JSON.parse(localStorage.getItem("cd_sport")));
+  expect(salvata.seguiti).toEqual([
+    { tipo: "hockey", campionato: "nhl", squadra: "26", nome: "Florida Panthers" },
+  ]);
+  await page.screenshot({
+    path: foto(testInfo, "sport-hockey-config") || undefined,
+    animations: "disabled",
+  });
 });
