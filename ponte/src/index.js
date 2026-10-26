@@ -251,7 +251,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     /* La via dell'auto fuori casa, chiesta a OpenStreetMap da qui. */
     indirizzi: new Indirizzi({ versione: opzioni.versione }),
     /* Lo sport seguito in casa, chiesto alle fonti pubbliche da qui. */
-    sport: creaSport(),
+    sport: creaSport({ registro }),
     plancia,
     plance,
     configurazione,

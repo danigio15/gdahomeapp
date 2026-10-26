@@ -20,6 +20,8 @@ _Solo Home Assistant: l'app sul telefono non cambia._
 - **Abbonamenti disdetti o rimborsati:** finiscono alla fine del periodo
   pagato, o al rimborso, senza i tre giorni in più. Chi ha il rinnovo
   automatico acceso tiene i tre giorni, il tempo che il rinnovo arrivi.
+- **Sport:** se i risultati non arrivano, il registro dell'add-on dice quale
+  cosa seguita non risponde e perché.
 
 ## 1.18.7.1
 
