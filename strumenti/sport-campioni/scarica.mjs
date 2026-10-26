@@ -283,16 +283,21 @@ for (const c of costruttori) {
 await salva("f1-scuderie-loghi", prove);
 console.log("scuderie", prove.filter((p) => p.stato === 200).length, "/", prove.length);
 
-/* L'hockey NHL: il calendario di una squadra (Florida, 26), giocate e
- * prossime, e il dettaglio di una partita. */
-for (const [nome, u] of [
-  ["hockey-nhl-florida", `${ESPN}/hockey/nhl/teams/26/schedule`],
-  ["hockey-nhl-florida-prossime", `${ESPN}/hockey/nhl/teams/26/schedule?fixture=true`],
-  ["hockey-nhl-florida-squadra", `${ESPN}/hockey/nhl/teams/26`],
-  ["hockey-nhl-giorno", `${ESPN}/hockey/nhl/scoreboard?dates=20261025`],
-  ["hockey-nhl-partita", `${ESPN}/hockey/nhl/summary?event=401892578`],
-]) {
-  const r = await scarica(u);
-  await salva(nome, r);
-  console.log(nome, r.stato);
+/* Gli stemmi delle squadre NHL, piccoli, per le foto della pagina. */
+await mkdir(`${qui}loghi`, { recursive: true });
+const squadreNhl =
+  (await scarica(`${ESPN}/hockey/nhl/teams`)).json?.sports?.[0]?.leagues?.[0]?.teams || [];
+let stemmiNhl = 0;
+for (const { team } of squadreNhl) {
+  const sigla = String(team?.abbreviation || "").toLowerCase();
+  if (!/^[a-z]{2,4}$/.test(sigla)) continue;
+  try {
+    const r = await fetch(
+      `https://a.espncdn.com/combiner/i?img=/i/teamlogos/nhl/500/${sigla}.png&w=96&h=96`,
+    );
+    if (!r.ok) continue;
+    await writeFile(`${qui}loghi/nhl-${sigla}.png`, Buffer.from(await r.arrayBuffer()));
+    stemmiNhl += 1;
+  } catch {}
 }
+console.log("stemmi nhl", stemmiNhl);
