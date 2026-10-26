@@ -2,7 +2,7 @@
  "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams/104/schedule?fixture=true",
  "stato": 200,
  "json": {
-  "timestamp": "2026-10-26T14:10:59Z",
+  "timestamp": "2026-10-26T14:58:29Z",
   "status": "success",
   "season": {
    "year": 2026,
@@ -2415,7 +2415,7 @@
         "id": "7497143",
         "summary": "Tickets as low as $184",
         "description": "Champions League - Manchester United vs AS Roma",
-        "maxPrice": 8223,
+        "maxPrice": 7310,
         "startingPrice": 184,
         "numberAvailable": 884,
         "totalPostings": 396,
