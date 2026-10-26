@@ -283,52 +283,42 @@ for (const c of costruttori) {
 await salva("f1-scuderie-loghi", prove);
 console.log("scuderie", prove.filter((p) => p.stato === 200).length, "/", prove.length);
 
-/* L'hockey: cosa danno le fonti pubbliche per i quattro hockey (NHL, ghiaccio
- * italiano, pista italiano, prato). Prima di scrivere una riga si guarda chi
- * risponde, e con cosa. */
-const TSDB = "https://www.thesportsdb.com/api/v1/json/3";
-const HOCKEY = {
-  "hockey-nhl-squadre": `${ESPN}/hockey/nhl/teams`,
-  "hockey-nhl-partite": `${ESPN}/hockey/nhl/scoreboard`,
-  "hockey-nhl-classifica": `${ESPN_CLASSIFICHE}/hockey/nhl/standings`,
-  "hockey-espn-leghe": "https://sports.core.api.espn.com/v2/sports/hockey/leagues?limit=100",
-  "hockey-tsdb-sport": `${TSDB}/all_sports.php`,
-  "hockey-tsdb-ghiaccio-italia": `${TSDB}/search_all_leagues.php?c=Italy&s=Ice_Hockey`,
-  "hockey-tsdb-prato-italia": `${TSDB}/search_all_leagues.php?c=Italy&s=Field_Hockey`,
+/* L'hockey, secondo giro: la chiave di prova nuova di TheSportsDB, il sito
+ * dei risultati dell'hockey su pista, la lega del ghiaccio (ICE, con Bolzano
+ * e Val Pusteria; Alps), la federazione dell'hockey su prato. */
+const TSDB = "https://www.thesportsdb.com/api/v1/json/123";
+for (const [nome, url] of Object.entries({
   "hockey-tsdb-italia": `${TSDB}/search_all_leagues.php?c=Italy`,
-  "hockey-tsdb-ghiaccio-tutte": `${TSDB}/search_all_leagues.php?s=Ice_Hockey`,
-  "hockey-tsdb-prato-tutte": `${TSDB}/search_all_leagues.php?s=Field_Hockey`,
-};
-for (const [nome, url] of Object.entries(HOCKEY)) {
+  "hockey-tsdb-ghiaccio-italia": `${TSDB}/search_all_leagues.php?c=Italy&s=Ice%20Hockey`,
+  "hockey-tsdb-prato-italia": `${TSDB}/search_all_leagues.php?c=Italy&s=Field%20Hockey`,
+  "hockey-tsdb-tutte": `${TSDB}/all_leagues.php`,
+})) {
   const r = await scarica(url);
   await salva(nome, { url, ...r });
   console.log(nome, r.stato);
 }
-/* Le leghe italiane trovate su TheSportsDB: squadre, ultime e prossime. */
-const leghe = [
-  ...((await scarica(`${TSDB}/search_all_leagues.php?c=Italy&s=Ice_Hockey`)).json?.countries || []),
-  ...((await scarica(`${TSDB}/search_all_leagues.php?c=Italy&s=Field_Hockey`)).json?.countries || []),
-];
-for (const l of leghe.slice(0, 6)) {
-  const id = l.idLeague;
+const tsdbItalia = [
+  ...((await scarica(`${TSDB}/search_all_leagues.php?c=Italy`)).json?.countries || []),
+].filter((l) => /hockey/i.test(`${l.strSport} ${l.strLeague}`));
+for (const l of tsdbItalia.slice(0, 8)) {
   for (const [cosa, u] of [
-    ["squadre", `${TSDB}/lookup_all_teams.php?id=${id}`],
-    ["ultime", `${TSDB}/eventspastleague.php?id=${id}`],
-    ["prossime", `${TSDB}/eventsnextleague.php?id=${id}`],
-    ["classifica", `${TSDB}/lookuptable.php?l=${id}`],
+    ["squadre", `${TSDB}/lookup_all_teams.php?id=${l.idLeague}`],
+    ["ultime", `${TSDB}/eventspastleague.php?id=${l.idLeague}`],
+    ["prossime", `${TSDB}/eventsnextleague.php?id=${l.idLeague}`],
+    ["classifica", `${TSDB}/lookuptable.php?l=${l.idLeague}`],
   ]) {
     const r = await scarica(u);
-    await salva(`hockey-tsdb-${id}-${cosa}`, { lega: l.strLeague, url: u, ...r });
-    console.log("tsdb", id, l.strLeague, cosa, r.stato);
+    await salva(`hockey-tsdb-${l.idLeague}-${cosa}`, { lega: l.strLeague, sport: l.strSport, url: u, ...r });
+    console.log("tsdb", l.idLeague, l.strLeague, cosa, r.stato);
   }
 }
-/* Altre fonti per pista e ghiaccio italiani: solo se rispondono, e con cosa. */
 for (const [nome, u] of [
-  ["hockey-sofa-ghiaccio", "https://api.sofascore.com/api/v1/sport/ice-hockey/categories"],
-  ["hockey-sofa-pista", "https://api.sofascore.com/api/v1/sport/rink-hockey/categories"],
-  ["hockey-sofa-prato", "https://api.sofascore.com/api/v1/sport/field-hockey/categories"],
-  ["hockey-alps", "https://www.alpshockey.com/"],
-  ["hockey-fisr-pista", "https://www.fisr.it/hockey-pista.html"],
+  ["hockey-pista-sito", "https://hockeypista.fisr.it/"],
+  ["hockey-ice-sito", "https://www.ice.hockey/"],
+  ["hockey-alps-sito", "https://www.alpshl.com/"],
+  ["hockey-fisg-sito", "https://www.fisg.it/"],
+  ["hockey-prato-sito", "https://www.federhockey.it/"],
+  ["hockey-fih-sito", "https://www.fih.hockey/"],
 ]) {
   await salva(nome, await testo(u));
 }
