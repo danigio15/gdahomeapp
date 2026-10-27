@@ -29,6 +29,8 @@ const RADICE = fileURLToPath(new URL("../", import.meta.url));
 /* Cio' che resta su un dispositivo solo, e perche'. */
 const SOLO_DI_QUESTO_DISPOSITIVO = Object.freeze({
   cd_connection: "le credenziali di questo dispositivo",
+  dm_alexa_musica_echo:
+    "su quali Echo fa partire la musica QUESTO schermo, in Alexa › Musica: la scelta e' di chi tocca, non della casa",
   dm_radio_dove:
     "su quale lettore suona la radio da QUESTO schermo: il tablet in cucina sceglie l'Echo della cucina, il telefono di uno il Sonos del salotto",
   dm_messaggio_scelte:

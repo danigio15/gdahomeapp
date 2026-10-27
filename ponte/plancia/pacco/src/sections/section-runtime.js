@@ -560,7 +560,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-KAJOZBRR.js";
+} from "../../chunk-5O6Y6WRN.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -5997,6 +5997,7 @@ var SOURCE_INDEX = Object.freeze({
   "Per ora nessuna proposta: quando la casa ne trova una, la vedi qui.": "No suggestions for now: when the home finds one, you'll see it here.",
   "Per quelle ore Home Assistant non tiene il consumo della casa, e non si sa quanto venisse dal sole. La fascia però è quella giusta.": "For those hours Home Assistant doesn't keep the house consumption, so we can't tell how much came from the sun. The band is right all the same.",
   "Per quello che si ricarica e non si cambia: il tablet a muro, un accumulatore. Le due entità sono number.* o input_number.*, quelle che il dispositivo espone per dire sotto quanto riparte e sopra quanto si ferma. Lasciale vuote e questa resta una batteria come le altre.": "For what recharges instead of being replaced: the wall tablet, a power bank. The two entities are number.* or input_number.*, the ones the device exposes to say where it starts again and where it stops. Leave them empty and this stays a battery like the others.",
+  "Per scegliere da un elenco aggiungi l'integrazione «Radio Browser» in Home Assistant; intanto scrivi il nome della radio.": "To pick from a list add the «Radio Browser» integration in Home Assistant; meanwhile write the station name.",
   "Per stanza": "By room",
   "Per stanza · prima le aperte": "By room · open first",
   "Per tipo": "By type",
@@ -6835,6 +6836,7 @@ var SOURCE_INDEX = Object.freeze({
   "scattato": "triggered",
   "Scegli": "Choose",
   "Scegli a chi mandarlo.": "Choose who to send it to.",
+  "Scegli almeno un Echo.": "Choose at least one Echo.",
   "Scegli almeno un giorno.": "Choose at least one day.",
   "Scegli almeno un termostato.": "Choose at least one thermostat.",
   "Scegli almeno una cosa da accendere.": "Choose at least one thing to turn on.",
@@ -59156,15 +59158,23 @@ ${P2} .dm-f-prese-watt{margin-left:auto;text-align:right}
 ${P2} .dm-f-prese-watt .dm-f-num{display:block;font-size:26px;color:${TESTO}}
 ${P2} .dm-f-prese-watt small{letter-spacing:0;text-transform:none;font-size:12px;font-weight:750}
 ${P2} .dm-f-prese-presa{position:relative;display:flex;flex-direction:column;min-height:112px;padding:13px;border-radius:20px;background:${FONDO};border:1px solid ${LINEA};box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
-${P2} .dm-f-prese-presa[data-on="true"]{background:linear-gradient(160deg,${tinta(3)},${tinta(9)});border-color:${bordo(45)}}
+/* La presa accesa si colora come la luce accesa nella finestra Luci: il
+   giallo dice «acceso» in tutta la plancia, e sul colore della sezione (un
+   grigio) le prese accese non si distinguevano dalle spente. Il fondo e'
+   chiaro in tutti e due i temi, quindi le scritte sopra vanno scure. */
+${P2} .dm-f-prese-presa[data-on="true"]{border-color:color-mix(in srgb,#f59e0b 45%,transparent);
+  background:radial-gradient(120% 90% at 18% 0%,rgba(253,224,71,.55),transparent 62%),linear-gradient(160deg,#fffbeb,#fef3c7);
+  box-shadow:0 14px 26px -18px rgba(217,119,6,.75)}
+${P2} .dm-f-prese-presa[data-on="true"] b{color:#451a03}
+${P2} .dm-f-prese-presa[data-on="true"] small,${P2} .dm-f-prese-presa[data-on="true"] .dm-f-prese-lucchetto{color:#b45309}
 ${P2} .dm-f-prese-presa[data-muta="true"]{opacity:.6;border-style:dashed;box-shadow:none}
 ${P2} .dm-f-prese-ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:19px;background:color-mix(in srgb,${SPENTO5} 10%,transparent);color:${SPENTO5}}
-${P2} .dm-f-prese-presa[data-on="true"] .dm-f-prese-ic{background:${A};color:#fff}
+${P2} .dm-f-prese-presa[data-on="true"] .dm-f-prese-ic{background:#fff;color:#b45309;box-shadow:0 0 0 4px rgba(253,224,71,.35),0 0 18px rgba(250,204,21,.8)}
 ${P2} .dm-f-prese-presa b{margin-top:auto;padding-top:10px;font-size:14.5px;font-weight:850;line-height:1.2;color:${TESTO};overflow-wrap:anywhere}
 ${P2} .dm-f-prese-presa small{margin-top:2px;font-size:12px;font-weight:750;color:${SPENTO5}}
 ${P2} .dm-f-prese-int{position:absolute;top:13px;right:13px;width:46px;height:28px;padding:0;border:0;border-radius:999px;cursor:pointer;background:color-mix(in srgb,${SPENTO5} 25%,transparent)}
 ${P2} .dm-f-prese-int i{position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .18s}
-${P2} .dm-f-prese-int[data-on="true"]{background:${A}}
+${P2} .dm-f-prese-int[data-on="true"]{background:#f59e0b}
 ${P2} .dm-f-prese-int[data-on="true"] i{left:22px}
 ${P2} .dm-f-prese-lucchetto{position:absolute;top:15px;right:13px;font-size:11px;font-weight:850;color:${SPENTO5}}
 
@@ -96455,7 +96465,14 @@ var state94 = root[KEY98] ||= {
   erroreAvviso: "",
   /* La scheda «Musica»: gli Echo su cui suonare (null = quelli delle
    * notifiche), il servizio, quello che si sta scrivendo, l'ultima risposta. */
-  musica: { echo: null, servizio: SERVIZIO_DI_SERIE, cosa: "", esito: "" },
+  musica: {
+    echo: null,
+    servizio: SERVIZIO_DI_SERIE,
+    cosa: "",
+    esito: "",
+    stazioni: null,
+    chiedoStazioni: false
+  },
   vivo: ""
 };
 var ALEXA_EDITOR_TAB = "alexa";
@@ -96657,9 +96674,62 @@ function copertina(foto, onde) {
   const url = clean(foto).replace(/["'()\\\s]/g, (carattere) => encodeURIComponent(carattere));
   return `<span class="dm-alexa-arte" aria-hidden="true"${url ? ` style="background-image:url('${url}')"` : ""}>${onde ? "📻" : "🎵"}</span>`;
 }
-function echoDellaMusica(config, stati4) {
-  const scelti = state94.musica.echo ?? config.altoparlanti;
-  return echoPuliti(scelti, stati4);
+var ECHO_DELLA_MUSICA = "dm_alexa_musica_echo";
+function echoDellaMusica(_config, stati4) {
+  if (state94.musica.echo === null) {
+    try {
+      const scritti = JSON.parse(root.localStorage?.getItem(ECHO_DELLA_MUSICA) || "[]");
+      state94.musica.echo = Array.isArray(scritti) ? scritti.map(String) : [];
+    } catch (_errore) {
+      state94.musica.echo = [];
+    }
+  }
+  return echoPuliti(state94.musica.echo, stati4);
+}
+function ricordaGliEcho(scelti) {
+  state94.musica.echo = scelti;
+  try {
+    root.localStorage?.setItem(ECHO_DELLA_MUSICA, JSON.stringify(scelti));
+  } catch (_errore) {
+  }
+}
+async function chiediLeStazioni() {
+  const musica = state94.musica;
+  if (musica.stazioni || musica.chiedoStazioni) return;
+  musica.chiedoStazioni = true;
+  try {
+    musica.stazioni = stazioniDellaRisposta(
+      await chiediAHomeAssistant(domandaDelleRadio("local"), 15e3)
+    );
+  } catch (_errore) {
+    musica.stazioni = [];
+  } finally {
+    musica.chiedoStazioni = false;
+    ridisegna8();
+  }
+}
+function stazioniMarkup(su) {
+  const musica = state94.musica;
+  if (musica.servizio !== "TUNEIN") return "";
+  void chiediLeStazioni();
+  if (!musica.stazioni)
+    return `<small class="dm-alexa-esito">${esc(t("Cerco le radio…", "Looking for stations…"))}</small>`;
+  if (!musica.stazioni.length)
+    return `<small class="dm-alexa-esito">${esc(
+      t(
+        "Per scegliere da un elenco aggiungi l'integrazione «Radio Browser» in Home Assistant; intanto scrivi il nome della radio.",
+        "To pick from a list add the «Radio Browser» integration in Home Assistant; meanwhile write the station name."
+      )
+    )}</small>`;
+  const filtrate = filtraLeStazioni(musica.stazioni, musica.cosa).slice(0, 30);
+  if (!filtrate.length)
+    return `<small class="dm-alexa-esito">${esc(t("Nessuna radio con questo nome", "No station with this name"))}</small>`;
+  return `<div class="dm-alexa-stazioni">${filtrate.map((una) => {
+    const logo3 = clean(una.logo).replace(/["'()\\\s]/g, (c) => encodeURIComponent(c));
+    return `<button type="button" class="dm-alexa-stazione" data-dm-mu-stazione="${esc(una.nome)}"${su.length ? "" : " disabled"}>
+        <span class="dm-alexa-stazione-logo" aria-hidden="true"${logo3 ? ` style="background-image:url('${logo3}')"` : ""}>📻</span>
+        <span>${esc(una.nome)}</span></button>`;
+  }).join("")}</div>`;
 }
 function dalVivoMarkup2(stati4, su) {
   const inCasa = musicaCheSuona(stati4);
@@ -96741,7 +96811,9 @@ function corpoDellaMusica() {
     )
   )}</small><div class="dm-alexa-echo">${echo.map(
     (uno) => `<button type="button" class="dm-alexa-pastiglia" aria-pressed="${su.includes(uno.entita)}" data-dm-mu-echo="${esc(uno.entita)}">🔊 ${esc(uno.nome)}${uno.spento ? ` <small>${esc(t("spento", "offline"))}</small>` : ""}</button>`
-  ).join("")}</div></div></div>
+  ).join("")}</div><small class="dm-alexa-suona-su">${su.length ? `${esc(t("Suona su", "Plays on"))}: <b>${esc(
+    echo.filter((uno) => su.includes(uno.entita)).map((uno) => uno.nome).join(", ")
+  )}</b>` : esc(t("Scegli almeno un Echo.", "Choose at least one Echo."))}</small></div></div>
     </div>
     <div data-dm-mu-vivo>${vivo2}</div>
     <div class="mu-ed-blocco">
@@ -96767,6 +96839,7 @@ function corpoDellaMusica() {
           <button type="button" class="dm-alexa-tasto" data-dm-mu-tieni${giaTenuto || config.musica.length >= PREFERITI_AL_PIU ? " disabled" : ""} aria-label="${esc(t("Tieni nei preferiti", "Keep in favourites"))}">☆</button>
         </div>
         ${musica.esito ? `<small class="dm-alexa-esito">${esc(musica.esito)}</small>` : ""}
+        <div data-dm-mu-lista>${stazioniMarkup(su)}</div>
       </div>
       ${preferiti ? `<div class="mu-ed-riga"><div class="mu-ed-testo"><b>${esc(t("Preferiti", "Favourites"))}</b><div class="dm-alexa-echo">${preferiti}</div></div></div>` : ""}
       ${leRadio}
@@ -96801,11 +96874,22 @@ function suLaMusica(d, config, evento) {
   };
   if ("dmMuEcho" in d) {
     const entita4 = clean(d.dmMuEcho);
-    musica.echo = su.includes(entita4) ? su.filter((uno) => uno !== entita4) : [...su, entita4];
+    ricordaGliEcho(su.includes(entita4) ? su.filter((uno) => uno !== entita4) : [...su, entita4]);
+    return fatto2();
+  }
+  if ("dmMuStazione" in d) {
+    musica.cosa = clean(d.dmMuStazione);
+    const chiamata = chiamataPerSuonare({ echo: su, servizio: "TUNEIN", cosa: musica.cosa }, stati4);
+    if (chiamata)
+      suonaSugliEcho(
+        [chiamata],
+        t("✓ Chiesto agli Echo: tra un attimo la senti.", "✓ Asked the Echos: you will hear it in a moment.")
+      );
     return fatto2();
   }
   if ("dmMuServizio" in d) {
     musica.servizio = servizioPulito(d.dmMuServizio);
+    musica.esito = "";
     return fatto2();
   }
   if ("dmMuSposta" in d) {
@@ -97171,6 +97255,12 @@ function onInput3(evento) {
   const campo6 = evento.target;
   if (campo6?.matches?.("#ed-body [data-dm-mu-cosa]")) {
     state94.musica.cosa = String(campo6.value || "").slice(0, CERCA_AL_PIU);
+    const lista7 = doc?.querySelector?.("#ed-body [data-dm-mu-lista]");
+    if (evento.type === "input" && lista7 && state94.musica.servizio === "TUNEIN") {
+      const stati4 = allStates() || {};
+      const nuova = stazioniMarkup(echoDellaMusica(configurazione13(), stati4));
+      if (lista7.innerHTML !== nuova) lista7.innerHTML = nuova;
+    }
     return;
   }
   if (!bozza3 || !campo6?.closest?.("[data-dm-av-bozza]")) return;
@@ -97255,6 +97345,17 @@ function installAlexaEditor() {
     #ed-body .dm-alexa-cerca .ed-input{margin:0;flex:1 1 220px;min-width:0}
     #ed-body .dm-alexa-cerca .mu-ed-prova,#ed-body .dm-alexa-cerca .dm-alexa-tasto{flex:none}
     #ed-body .dm-alexa-servizi{margin-top:0}
+    #ed-body .dm-alexa-suona-su{display:block;margin-top:8px;font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    #ed-body .dm-alexa-suona-su b{color:var(--text,inherit)}
+    #ed-body .dm-alexa-stazioni{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;
+      max-height:340px;overflow:auto;padding:2px}
+    #ed-body .dm-alexa-stazione{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;cursor:pointer;
+      font:inherit;font-size:13px;font-weight:750;text-align:left;color:inherit;
+      border:1px solid var(--divider-color,#dbe4ee);background:var(--card-background-color,var(--card-bg,#fff))}
+    #ed-body .dm-alexa-stazione>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    #ed-body .dm-alexa-stazione-logo{flex:0 0 34px;width:34px;height:34px;border-radius:9px;display:grid;place-items:center;
+      font-size:17px;background:#fff center/contain no-repeat;box-shadow:0 0 0 1px var(--divider-color,#dbe4ee)}
+    #ed-body .dm-alexa-stazione-logo[style]{font-size:0}
     #ed-body .dm-alexa-esito{font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
     #ed-body .dm-alexa-preferito{display:inline-flex;align-items:center;gap:2px}
     #ed-body .dm-alexa-via-piccolo{border:0;background:none;color:var(--text-dim,#64748b);cursor:pointer;
@@ -154193,6 +154294,20 @@ var state186 = root[KEY190] ||= {
 };
 var RADIO_TAB = "media_radio";
 var configurazione24 = () => normalizzaRadio(readJson(CHIAVE_RADIO, null));
+function leRadioDiCasa() {
+  const viste2 = /* @__PURE__ */ new Set();
+  const tutte = [];
+  const tieni = (una) => {
+    const chiave2 = una?.nome?.toLowerCase();
+    if (!chiave2 || viste2.has(chiave2)) return;
+    viste2.add(chiave2);
+    tutte.push(una);
+  };
+  for (const una of configurazione24().preferite) tieni(una);
+  for (const uno of normalizzaAlexa(readJson(CHIAVE_ALEXA, null)).musica)
+    if (uno.servizio === "TUNEIN") tieni(stazionePulita({ nome: uno.cosa }));
+  return tutte;
+}
 function salva35(preferite) {
   writeJsonIfChanged(CHIAVE_RADIO, normalizzaRadio({ preferite }));
   try {
@@ -154256,7 +154371,7 @@ function logoMarkup(stazione, classe3) {
 }
 function riquadroMarkup() {
   const stati4 = allStates() || {};
-  const { preferite } = configurazione24();
+  const preferite = leRadioDiCasa();
   const lettori2 = iLettori(stati4);
   const dove = doveSuona(lettori2);
   const testa2 = `<div class="dm-radio-testa">
@@ -154319,7 +154434,7 @@ function sulRiquadro(evento) {
     ricordaDove(clean(d.dmRadioDove));
     state186.esito = "";
   } else if ("dmRadioSuona" in d) {
-    const una = configurazione24().preferite[Number(d.dmRadioSuona)];
+    const una = leRadioDiCasa()[Number(d.dmRadioSuona)];
     const dove = doveSuona(lettori2);
     const chiamata = una && dove && chiamataDellaRadio(una, dove.entita, { echo: dove.echo });
     if (!chiamata)
@@ -154526,6 +154641,7 @@ function sullaScheda(evento) {
   return true;
 }
 function suUnClic(evento) {
+  if (evento.target?.closest?.(`.tab[data-tab="media"]`)) root.queueMicrotask?.(ridisegnaLaRadio);
   if (sulRiquadro(evento)) return;
   sullaScheda(evento);
 }

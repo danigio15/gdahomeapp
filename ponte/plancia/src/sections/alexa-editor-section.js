@@ -45,7 +45,14 @@ import {
   preferitoPulito,
   servizioPulito,
 } from "../core/alexa-musica.js";
-import { CHIAVE_RADIO, chiamataDellaRadio, normalizzaRadio } from "../core/radio.js";
+import {
+  CHIAVE_RADIO,
+  chiamataDellaRadio,
+  domandaDelleRadio,
+  filtraLeStazioni,
+  normalizzaRadio,
+  stazioniDellaRisposta,
+} from "../core/radio.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
 import {
   allStates,
@@ -73,7 +80,14 @@ const state = (root[KEY] ||= {
   erroreAvviso: "",
   /* La scheda «Musica»: gli Echo su cui suonare (null = quelli delle
    * notifiche), il servizio, quello che si sta scrivendo, l'ultima risposta. */
-  musica: { echo: null, servizio: SERVIZIO_DI_SERIE, cosa: "", esito: "" },
+  musica: {
+    echo: null,
+    servizio: SERVIZIO_DI_SERIE,
+    cosa: "",
+    esito: "",
+    stazioni: null,
+    chiedoStazioni: false,
+  },
   vivo: "",
 });
 
@@ -368,9 +382,76 @@ function copertina(foto, onde) {
   return `<span class="dm-alexa-arte" aria-hidden="true"${url ? ` style="background-image:url('${url}')"` : ""}>${onde ? "📻" : "🎵"}</span>`;
 }
 
-function echoDellaMusica(config, stati) {
-  const scelti = state.musica.echo ?? config.altoparlanti;
-  return echoPuliti(scelti, stati);
+/* Gli Echo su cui suona la musica li sceglie chi la fa partire, su questo
+ * schermo: di serie nessuno. Prima erano quelli delle notifiche, e chi
+ * toccava «Camera» e «Sala» se ne trovava un terzo acceso senza averlo
+ * scelto. La scelta si ricorda qui (`dm_alexa_musica_echo`), non viaggia. */
+const ECHO_DELLA_MUSICA = "dm_alexa_musica_echo";
+
+function echoDellaMusica(_config, stati) {
+  if (state.musica.echo === null) {
+    try {
+      const scritti = JSON.parse(root.localStorage?.getItem(ECHO_DELLA_MUSICA) || "[]");
+      state.musica.echo = Array.isArray(scritti) ? scritti.map(String) : [];
+    } catch (_errore) {
+      state.musica.echo = [];
+    }
+  }
+  return echoPuliti(state.musica.echo, stati);
+}
+
+function ricordaGliEcho(scelti) {
+  state.musica.echo = scelti;
+  try {
+    root.localStorage?.setItem(ECHO_DELLA_MUSICA, JSON.stringify(scelti));
+  } catch (_errore) {
+    /* Senza memoria vale finche' la pagina e' aperta. */
+  }
+}
+
+/* Le radio da scegliere invece che da scrivere: quelle dell'integrazione
+ * Radio Browser di Home Assistant (le vicine), chieste una volta. Un Echo
+ * le suona per nome, da TuneIn. */
+async function chiediLeStazioni() {
+  const musica = state.musica;
+  if (musica.stazioni || musica.chiedoStazioni) return;
+  musica.chiedoStazioni = true;
+  try {
+    musica.stazioni = stazioniDellaRisposta(
+      await chiediAHomeAssistant(domandaDelleRadio("local"), 15000),
+    );
+  } catch (_errore) {
+    musica.stazioni = [];
+  } finally {
+    musica.chiedoStazioni = false;
+    ridisegna();
+  }
+}
+
+function stazioniMarkup(su) {
+  const musica = state.musica;
+  if (musica.servizio !== "TUNEIN") return "";
+  void chiediLeStazioni();
+  if (!musica.stazioni)
+    return `<small class="dm-alexa-esito">${esc(t("Cerco le radio…", "Looking for stations…"))}</small>`;
+  if (!musica.stazioni.length)
+    return `<small class="dm-alexa-esito">${esc(
+      t(
+        "Per scegliere da un elenco aggiungi l'integrazione «Radio Browser» in Home Assistant; intanto scrivi il nome della radio.",
+        "To pick from a list add the «Radio Browser» integration in Home Assistant; meanwhile write the station name.",
+      ),
+    )}</small>`;
+  const filtrate = filtraLeStazioni(musica.stazioni, musica.cosa).slice(0, 30);
+  if (!filtrate.length)
+    return `<small class="dm-alexa-esito">${esc(t("Nessuna radio con questo nome", "No station with this name"))}</small>`;
+  return `<div class="dm-alexa-stazioni">${filtrate
+    .map((una) => {
+      const logo = clean(una.logo).replace(/["'()\\\s]/g, (c) => encodeURIComponent(c));
+      return `<button type="button" class="dm-alexa-stazione" data-dm-mu-stazione="${esc(una.nome)}"${su.length ? "" : " disabled"}>
+        <span class="dm-alexa-stazione-logo" aria-hidden="true"${logo ? ` style="background-image:url('${logo}')"` : ""}>📻</span>
+        <span>${esc(una.nome)}</span></button>`;
+    })
+    .join("")}</div>`;
 }
 
 function dalVivoMarkup(stati, su) {
@@ -488,7 +569,16 @@ function corpoDellaMusica() {
           (uno) =>
             `<button type="button" class="dm-alexa-pastiglia" aria-pressed="${su.includes(uno.entita)}" data-dm-mu-echo="${esc(uno.entita)}">🔊 ${esc(uno.nome)}${uno.spento ? ` <small>${esc(t("spento", "offline"))}</small>` : ""}</button>`,
         )
-        .join("")}</div></div></div>
+        .join("")}</div><small class="dm-alexa-suona-su">${
+        su.length
+          ? `${esc(t("Suona su", "Plays on"))}: <b>${esc(
+              echo
+                .filter((uno) => su.includes(uno.entita))
+                .map((uno) => uno.nome)
+                .join(", "),
+            )}</b>`
+          : esc(t("Scegli almeno un Echo.", "Choose at least one Echo."))
+      }</small></div></div>
     </div>
     <div data-dm-mu-vivo>${vivo}</div>
     <div class="mu-ed-blocco">
@@ -519,6 +609,7 @@ function corpoDellaMusica() {
           } aria-label="${esc(t("Tieni nei preferiti", "Keep in favourites"))}">☆</button>
         </div>
         ${musica.esito ? `<small class="dm-alexa-esito">${esc(musica.esito)}</small>` : ""}
+        <div data-dm-mu-lista>${stazioniMarkup(su)}</div>
       </div>
       ${
         preferiti
@@ -567,11 +658,25 @@ function suLaMusica(d, config, evento) {
   };
   if ("dmMuEcho" in d) {
     const entita = clean(d.dmMuEcho);
-    musica.echo = su.includes(entita) ? su.filter((uno) => uno !== entita) : [...su, entita];
+    ricordaGliEcho(su.includes(entita) ? su.filter((uno) => uno !== entita) : [...su, entita]);
+    return fatto();
+  }
+  if ("dmMuStazione" in d) {
+    musica.cosa = clean(d.dmMuStazione);
+    const chiamata = chiamataPerSuonare({ echo: su, servizio: "TUNEIN", cosa: musica.cosa }, stati);
+    if (chiamata)
+      suonaSugliEcho(
+        [chiamata],
+        t(
+          "✓ Chiesto agli Echo: tra un attimo la senti.",
+          "✓ Asked the Echos: you will hear it in a moment.",
+        ),
+      );
     return fatto();
   }
   if ("dmMuServizio" in d) {
     musica.servizio = servizioPulito(d.dmMuServizio);
+    musica.esito = "";
     return fatto();
   }
   if ("dmMuSposta" in d) {
@@ -976,6 +1081,17 @@ function onInput(evento) {
   const campo = evento.target;
   if (campo?.matches?.("#ed-body [data-dm-mu-cosa]")) {
     state.musica.cosa = String(campo.value || "").slice(0, CERCA_AL_PIU);
+    /* Con la radio l'elenco si stringe mentre si scrive, senza toccare il
+     * campo: si riscrive solo la lista. */
+    /* Solo mentre si scrive, e solo se cambia: col «change» — che arriva
+     * quando il campo perde il fuoco, cioe' proprio quando si tocca una
+     * radio dell'elenco — la lista rifatta sotto il dito si mangiava il tocco. */
+    const lista = doc?.querySelector?.("#ed-body [data-dm-mu-lista]");
+    if (evento.type === "input" && lista && state.musica.servizio === "TUNEIN") {
+      const stati = allStates() || {};
+      const nuova = stazioniMarkup(echoDellaMusica(configurazione(), stati));
+      if (lista.innerHTML !== nuova) lista.innerHTML = nuova;
+    }
     return;
   }
   if (!bozza || !campo?.closest?.("[data-dm-av-bozza]")) return;
@@ -1066,6 +1182,17 @@ export function installAlexaEditor() {
     #ed-body .dm-alexa-cerca .ed-input{margin:0;flex:1 1 220px;min-width:0}
     #ed-body .dm-alexa-cerca .mu-ed-prova,#ed-body .dm-alexa-cerca .dm-alexa-tasto{flex:none}
     #ed-body .dm-alexa-servizi{margin-top:0}
+    #ed-body .dm-alexa-suona-su{display:block;margin-top:8px;font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    #ed-body .dm-alexa-suona-su b{color:var(--text,inherit)}
+    #ed-body .dm-alexa-stazioni{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;
+      max-height:340px;overflow:auto;padding:2px}
+    #ed-body .dm-alexa-stazione{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;cursor:pointer;
+      font:inherit;font-size:13px;font-weight:750;text-align:left;color:inherit;
+      border:1px solid var(--divider-color,#dbe4ee);background:var(--card-background-color,var(--card-bg,#fff))}
+    #ed-body .dm-alexa-stazione>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    #ed-body .dm-alexa-stazione-logo{flex:0 0 34px;width:34px;height:34px;border-radius:9px;display:grid;place-items:center;
+      font-size:17px;background:#fff center/contain no-repeat;box-shadow:0 0 0 1px var(--divider-color,#dbe4ee)}
+    #ed-body .dm-alexa-stazione-logo[style]{font-size:0}
     #ed-body .dm-alexa-esito{font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
     #ed-body .dm-alexa-preferito{display:inline-flex;align-items:center;gap:2px}
     #ed-body .dm-alexa-via-piccolo{border:0;background:none;color:var(--text-dim,#64748b);cursor:pointer;

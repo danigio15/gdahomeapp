@@ -24,6 +24,7 @@ import {
   stazioniDellaRisposta,
 } from "../core/radio.js";
 import { eUnEcho } from "../core/alexa-musica.js";
+import { CHIAVE_ALEXA, normalizzaAlexa } from "../core/alexa-annunci.js";
 import { lettoriConfigurati } from "../core/media-player.js";
 import { CHIAVE_MEDIA, PAGINA_MEDIA } from "./media-player-section.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
@@ -61,6 +62,25 @@ const state = (root[KEY] ||= {
 export const RADIO_TAB = "media_radio";
 
 const configurazione = () => normalizzaRadio(readJson(CHIAVE_RADIO, null));
+
+/* Le radio della pagina Musica: le preferite della Radio, e anche quelle
+ * tenute fra i preferiti di Alexa › Musica con TuneIn — chi le ha salvate
+ * li' le cerca qui per cambiarle, e prima qui non c'erano. Quelle di Alexa
+ * hanno solo il nome: suonano sugli Echo. */
+function leRadioDiCasa() {
+  const viste = new Set();
+  const tutte = [];
+  const tieni = (una) => {
+    const chiave = una?.nome?.toLowerCase();
+    if (!chiave || viste.has(chiave)) return;
+    viste.add(chiave);
+    tutte.push(una);
+  };
+  for (const una of configurazione().preferite) tieni(una);
+  for (const uno of normalizzaAlexa(readJson(CHIAVE_ALEXA, null)).musica)
+    if (uno.servizio === "TUNEIN") tieni(stazionePulita({ nome: uno.cosa }));
+  return tutte;
+}
 
 function salva(preferite) {
   writeJsonIfChanged(CHIAVE_RADIO, normalizzaRadio({ preferite }));
@@ -137,7 +157,7 @@ function logoMarkup(stazione, classe) {
 
 function riquadroMarkup() {
   const stati = allStates() || {};
-  const { preferite } = configurazione();
+  const preferite = leRadioDiCasa();
   const lettori = iLettori(stati);
   const dove = doveSuona(lettori);
   const testa = `<div class="dm-radio-testa">
@@ -216,7 +236,7 @@ function sulRiquadro(evento) {
     ricordaDove(clean(d.dmRadioDove));
     state.esito = "";
   } else if ("dmRadioSuona" in d) {
-    const una = configurazione().preferite[Number(d.dmRadioSuona)];
+    const una = leRadioDiCasa()[Number(d.dmRadioSuona)];
     const dove = doveSuona(lettori);
     const chiamata = una && dove && chiamataDellaRadio(una, dove.entita, { echo: dove.echo });
     if (!chiamata)
@@ -459,6 +479,9 @@ function sullaScheda(evento) {
 }
 
 function suUnClic(evento) {
+  /* Si apre la pagina Musica: le preferite possono essere cambiate nel
+   * Config un momento fa, e nessuno stato di casa e' cambiato per dirlo. */
+  if (evento.target?.closest?.(`.tab[data-tab="media"]`)) root.queueMicrotask?.(ridisegnaLaRadio);
   if (sulRiquadro(evento)) return;
   sullaScheda(evento);
 }
