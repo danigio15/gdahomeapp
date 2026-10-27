@@ -1605,8 +1605,10 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // `core/colpo-d-occhio.js` (le regole), `sections/colpo-d-occhio-section.js`
   // (la pagina) e `sections/colpo-d-occhio-editor-section.js` (la scheda del
   // Config).
+  // 496 con Alexa nelle notifiche: `core/alexa-annunci.js` (le regole) e
+  // `sections/alexa-editor-section.js` (la scheda del Config).
   assert.ok(
-    relative.length <= 494,
+    relative.length <= 496,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

@@ -89,6 +89,14 @@ export const FAMIGLIE = Object.freeze([
     it: "Avvisi",
     en: "Alerts",
   }),
+  /* Gli Echo di casa: le notifiche dette ad alta voce e gli avvisi scritti a
+   * mano. Una sezione sua, non una scheda fra gli Avvisi. «Alexa» e' un nome
+   * proprio, uguale in tutte le lingue: sta in `nome` e non si traduce. */
+  Object.freeze({
+    chiave: "alexa",
+    glifo: "🔊",
+    nome: "Alexa",
+  }),
   /* Il homelab: l'unica famiglia che non parla della casa. */
   Object.freeze({
     chiave: "macchine",
@@ -208,6 +216,10 @@ export const SCHEDE = Object.freeze({
   agenda: { famiglia: "avvisi", posizione: 30 },
   rifiuti: { famiglia: "avvisi", posizione: 40 },
 
+  /* ── 🔊 Alexa ──────────────────────────────────────────────────────── */
+  alexa: { famiglia: "alexa", posizione: 10 }, // Notifiche dette dagli Echo
+  alexa_avvisi: { famiglia: "alexa", posizione: 20 }, // Avvisi personalizzati
+
   /* ── 🖥️ Macchine e rete ────────────────────────────────────────────── */
   sez6: { famiglia: "macchine", posizione: 10 }, // Server, container, rete
   /* Chi in questa casa non risponde piu'. Sta con le macchine e la rete
@@ -220,6 +232,14 @@ export const SCHEDE = Object.freeze({
 /** Di che famiglia è questa scheda. Una che non si conosce va in fondo. */
 export function famigliaDellaScheda(id) {
   return SCHEDE[pulito(id)]?.famiglia || FAMIGLIA_IGNOTA;
+}
+
+/**
+ * Il nome di una famiglia da scrivere: il nome proprio se ce l'ha (`nome`,
+ * uguale in tutte le lingue), se no quello tradotto con `t(it, en)`.
+ */
+export function nomeDellaFamigliaCon(voce, t) {
+  return voce?.nome || t(voce?.it, voce?.en);
 }
 
 /** Come si chiama una famiglia, nella lingua chiesta. */

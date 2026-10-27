@@ -10,6 +10,21 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.7
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Alexa:** una sezione nuova nel Config, «🔊 Alexa». Nella scheda
+  «Notifiche» si sceglie se le notifiche le dicono anche gli Echo di casa,
+  quali Echo, quali notifiche (di serie solo le urgenti), il silenzio di notte
+  (le urgenti si dicono lo stesso) e se con l'annuncio o solo la voce, col
+  tasto per provarlo. Serve l'integrazione Alexa Media Player in Home
+  Assistant.
+- **Avvisi personalizzati:** nella scheda «Avvisi personalizzati» si scrivono
+  frasi che gli Echo dicono a un orario, nei giorni scelti, o quando una cosa
+  di casa resta com'è scritto per un po' («il garage è aperto da 10
+  minuti»). Le modifica e le prova solo chi amministra la casa.
+
 ## 1.18.7.6
 
 _Solo Home Assistant: l'app sul telefono non cambia._

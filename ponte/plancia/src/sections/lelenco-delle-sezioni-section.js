@@ -29,6 +29,7 @@
  */
 import { rememberManualVisibility } from "./beta26-real-device-stability-section.js";
 import { SEZIONI, sezioneAccesa, sezioniPerFamiglia } from "../core/lelenco-delle-sezioni.js";
+import { nomeDellaFamigliaCon } from "../core/alberatura-del-config.js";
 import {
   ORDINE_IMPOSTAZIONI,
   clean,
@@ -91,7 +92,7 @@ function corpoMarkup() {
   const gruppi = sezioniPerFamiglia(SEZIONI)
     .map(
       (famiglia) => `<div class="dm-elenco-famiglia">
-        <span class="dm-elenco-insegna"><span aria-hidden="true">${esc(famiglia.glifo)}</span>${esc(t(famiglia.it, famiglia.en))}</span>
+        <span class="dm-elenco-insegna"><span aria-hidden="true">${esc(famiglia.glifo)}</span>${esc(nomeDellaFamigliaCon(famiglia, t))}</span>
         ${famiglia.sezioni.map((voce) => rigaMarkup(voce, sezioni)).join("")}
       </div>`,
     )
