@@ -97,6 +97,9 @@ abstract interface class ServitoreDiQuestoSistema {
   Uri indirizzoDi(String percorso, {Map<String, String> domande});
 
   Future<void> spegni();
+
+  /// Sul browser non c'e' una porta da rialzare: il service worker resta.
+  Future<bool> rimettiInPiedi();
   set leggera(bool valore);
   set margini(({double alto, double basso}) quanto);
 }
@@ -222,6 +225,9 @@ class _ServitoreSulWeb implements ServitoreDiQuestoSistema {
       Uri.base
           .resolve(percorso.startsWith('/') ? percorso.substring(1) : percorso)
           .replace(queryParameters: domande.isEmpty ? null : domande);
+
+  @override
+  Future<bool> rimettiInPiedi() async => false;
 
   @override
   Future<void> spegni() async {

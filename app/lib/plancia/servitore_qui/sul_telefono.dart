@@ -24,6 +24,10 @@ abstract interface class ServitoreDiQuestoSistema {
 
   Future<void> spegni();
 
+  /// Al ritorno in primo piano: rialza la porta se il sistema l'ha chiusa.
+  /// `true` se l'ha dovuta rialzare, e la pagina va ricaricata.
+  Future<bool> rimettiInPiedi();
+
   /// La plancia leggera: vale dalla pagina dopo.
   set leggera(bool valore);
 
@@ -46,6 +50,9 @@ class _SulTelefono implements ServitoreDiQuestoSistema {
 
   @override
   Future<void> spegni() => _servitore.spegni();
+
+  @override
+  Future<bool> rimettiInPiedi() => _servitore.rimettiInPiedi();
 
   @override
   set leggera(bool valore) => _servitore.leggera = valore;

@@ -104,6 +104,9 @@ class _ServitoreFinto implements ServitoreDiQuestoSistema {
   Future<void> spegni() async {}
 
   @override
+  Future<bool> rimettiInPiedi() async => false;
+
+  @override
   set leggera(bool valore) {}
 
   @override

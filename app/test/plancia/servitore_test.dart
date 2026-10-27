@@ -105,6 +105,47 @@ void main() {
     }
   });
 
+  test('se il sistema chiude la porta mentre l\'app è in tasca, al ritorno si rialza', () async {
+    /* iPhone: l'app sospesa perde le sue porte in ascolto. Al ritorno la
+     * pagina restava a schermo senza nessuno dall'altra parte, finche' non
+     * si chiudeva e riapriva l'app. */
+    final suaCartella = await Directory.systemTemp.createTemp('porta-persa-');
+    final suo = Servitore(filo: () => filo, cartella: suaCartella);
+    Future<bool> risponde(int porta) async {
+      try {
+        (await Socket.connect(InternetAddress.loopbackIPv4, porta)).destroy();
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    try {
+      await suo.alza(porta: portaDiCasa);
+      final porta = suo.porta;
+      /* Tutto a posto: non c'e' niente da rifare. */
+      expect(await suo.rimettiInPiedi(), isFalse);
+
+      await suo.perdiLaPorta();
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(await risponde(porta), isFalse);
+
+      expect(
+        await suo.rimettiInPiedi(),
+        isTrue,
+        reason: 'la pagina va ricaricata',
+      );
+      expect(suo.acceso, isTrue);
+      expect(await risponde(suo.porta), isTrue);
+      /* La stessa porta: la pagina tiene le sue cose per indirizzo. */
+      expect(suo.porta, porta);
+      expect(await suo.rimettiInPiedi(), isFalse);
+    } finally {
+      await suo.spegni();
+      await suaCartella.delete(recursive: true);
+    }
+  });
+
   tearDown(() async {
     await servitore.spegni();
     await filo.chiudi();
