@@ -204,6 +204,7 @@ import { installSezioniMieEditor } from "./sezioni-mie-editor-section.js";
 import { installEntitaMie } from "./entita-mie-section.js";
 import { installEntitaMieEditor } from "./entita-mie-editor-section.js";
 import { installMediaPlayer } from "./media-player-section.js";
+import { installaLaRadio } from "./radio-section.js";
 import { installMediaEditor } from "./media-player-editor-section.js";
 import { installMediaInAzioni } from "./media-in-azioni-section.js";
 import { installIndirizzoDiCasa } from "./indirizzo-di-casa-section.js";
@@ -1297,6 +1298,7 @@ export function installSectionRuntime() {
     /* La musica (#269): la pagina, la scheda che dichiara i lettori, e la
      * copertina addosso al tasto nelle Azioni rapide. */
     senzaCadere(installMediaPlayer);
+    senzaCadere(installaLaRadio);
     senzaCadere(installMediaEditor);
     senzaCadere(installMediaInAzioni);
     /* Una stanza si mostra col suo nome: gli elenchi del guscio scrivevano

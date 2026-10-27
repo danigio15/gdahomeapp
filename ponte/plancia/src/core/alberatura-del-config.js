@@ -188,6 +188,7 @@ export const SCHEDE = Object.freeze({
   tapp: { famiglia: "casa", posizione: 30 }, // Finestre e tapparelle
   appliances: { famiglia: "casa", posizione: 40 }, // Elettrodomestici
   media: { famiglia: "casa", posizione: 50 }, // Musica
+  media_radio: { famiglia: "casa", posizione: 51 }, // Radio
   /* Lo sport: tempo libero, come la musica, subito dopo. */
   sport: { famiglia: "casa", posizione: 52 },
   robot: { famiglia: "casa", posizione: 60 },
