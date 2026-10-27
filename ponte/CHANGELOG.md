@@ -10,6 +10,19 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.8
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Sport:** all'apertura della plancia la pagina non dice più «I risultati
+  adesso non arrivano» quando la connessione con la casa non è ancora pronta
+  o una risposta tarda una volta: riprova da sola dopo pochi secondi, e lo
+  dice solo se non arriva niente due volte di fila.
+- **Sport nella barra:** la voce sta sempre al posto scelto nell'ordine della
+  barra, invece di comparire una volta in testa e una volta in fondo.
+- Dalla plancia di Home Assistant senza l'add-on, la pagina Sport dice che i
+  risultati arrivano dall'add-on GdAHome.
+
 ## 1.18.7.7
 
 _Solo Home Assistant: l'app sul telefono non cambia._
