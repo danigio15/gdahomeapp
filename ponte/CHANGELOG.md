@@ -10,6 +10,25 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.9
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Messaggio, una card nuova in Home:** si scrive una frase, o si tocca una
+  di quelle pronte («🍝 A tavola!», «🚗 Sto arrivando»…), e la si manda agli
+  Echo di casa, ai telefoni di famiglia con l'app GdAHome, o a tutti e due.
+  Gli Echo la dicono subito con il nome di chi scrive; sui telefoni arriva
+  come notifica, a tutti o solo a chi si sceglie, e chi scrive non la
+  riceve. La card compare da sola quando c'è un Echo o qualcuno con l'app.
+- Il messaggio lo manda l'add-on, e solo per chi è entrato: gli Echo devono
+  essere Echo veri, le persone utenti di casa, al più sei messaggi al minuto.
+  Del messaggio nell'add-on non resta niente.
+- **Alexa › 🎵 Musica,** una scheda nuova nel Config: la musica che suona in
+  casa (Sonos, TV, Spotify…) passa sugli Echo scelti con un tocco, e il
+  lettore di prima va in pausa; oppure si sceglie cosa ascoltare da Amazon
+  Music, Spotify, Apple Music, Deezer o la radio (TuneIn), con i preferiti a
+  un tocco. Sotto, quello che suona sugli Echo, con pausa, avanti e stop.
+
 ## 1.18.7.8
 
 _Solo Home Assistant: l'app sul telefono non cambia._

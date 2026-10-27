@@ -96,9 +96,18 @@ import {
   daDire,
   normalizzaAlexa,
   paroleDaDire,
+  altoparlantiAlexa,
 } from "../plancia/src/core/alexa-annunci.js";
+import {
+  fraseDegliEcho,
+  messaggioPulito,
+  paroleDelMessaggio,
+} from "../plancia/src/core/messaggio-di-casa.js";
 
 const MINUTO = 60 * 1000;
+/* I messaggi dalla Home, al minuto per chi scrive: abbastanza per una
+ * conversazione, troppo pochi per far suonare la casa di continuo. */
+const MESSAGGI_AL_MINUTO = 6;
 /* Le larghezze chieste per la foto di un movimento, dalla piu' bella alla
  * piu' leggera (vedi `_laFoto`). */
 export const LARGHEZZE_DELLA_FOTO = Object.freeze([1280, 640, 320]);
@@ -548,6 +557,8 @@ export class Notifiche {
     this._rimandati = new Map();
     /** Quante notifiche per telefono nell'ultima ora. */
     this._conti = new Map();
+    /* I messaggi dalla Home per chi scrive, nell'ultimo minuto. */
+    this._messaggiDi = new Map();
     this._riepilogoDel = new Map();
     this._firmaDeiGettoni = "";
     this._giro = null;
@@ -1141,6 +1152,8 @@ export class Notifiche {
       return false;
     if (evento.tipo === "arrivi" && !imp.persone.includes(evento.persona)) return false;
     if (evento.solo?.length && !evento.solo.includes(utente)) return false;
+    /* Un messaggio dalla Home non torna a chi l'ha scritto. */
+    if (evento.tranne && evento.tranne === utente) return false;
     /* Un viaggio pianificato l'ha messo chi lo riceve, a quell'ora: passa le
      * ore di silenzio come le urgenti (la sveglia per partire alle sei). */
     if (
@@ -1470,6 +1483,92 @@ export class Notifiche {
     } catch (errore) {
       return no("home_assistant", String(errore?.message || errore).slice(0, 200));
     }
+  }
+
+  /* Chi puo' ricevere un messaggio dalla Home: gli utenti attivi con un
+   * telefono abbinato, tranne chi chiede. Solo id e nome: nient'altro di
+   * loro esce di qui. */
+  async chiPuoRicevere(chiChiede = "") {
+    const chiCe = (await this._chiCe()) || [];
+    const conIlTelefono = new Set(
+      this.dispositivi
+        .elenco()
+        .filter((uno) => uno.utente && this.archivio.dati.telefoni[uno.id]?.gettone)
+        .map((uno) => uno.utente),
+    );
+    return chiCe
+      .filter((uno) => uno.attivo !== false && conIlTelefono.has(uno.id) && uno.id !== chiChiede)
+      .map((uno) => ({ id: uno.id, nome: String(uno.nome || "").trim() || "—" }))
+      .sort((uno, due) => uno.nome.localeCompare(due.nome, "it"));
+  }
+
+  /* Un messaggio scritto nella Home (`messaggio-di-casa.js`): agli Echo
+   * scelti, ai telefoni di famiglia, o a tutti e due. Lo chiede solo chi e'
+   * entrato (`commissioni.js` lo controlla prima di arrivare qui). Gli Echo
+   * devono essere Echo che Home Assistant conosce, le persone utenti di
+   * casa; al piu' MESSAGGI_AL_MINUTO messaggi al minuto per chi scrive. Nel
+   * ponte non resta niente: torna solo quanti l'hanno avuto. */
+  async mandaUnMessaggio(detto, chiChiede = "") {
+    const id = detto?.id ?? null;
+    const no = (code, message) => ({
+      id,
+      type: "result",
+      success: false,
+      error: { code, message },
+    });
+    const chi = String(chiChiede || "").trim();
+    if (!chi) return no("unauthorized", "i messaggi li manda chi e' entrato");
+    const messaggio = messaggioPulito(detto);
+    if (!messaggio) return no("invalid", "manca il messaggio o a chi mandarlo");
+    const ora = this.adesso();
+    const volte = (this._messaggiDi.get(chi) || []).filter((quando) => ora - quando < MINUTO);
+    if (volte.length >= MESSAGGI_AL_MINUTO)
+      return no("rate_limited", "troppi messaggi, aspetta un minuto");
+    volte.push(ora);
+    this._messaggiDi.set(chi, volte);
+    const chiCe = (await this._chiCe()) || [];
+    const nome = chiCe.find((uno) => uno.id === chi)?.nome || "";
+    const risultato = { telefoni: 0, echo: 0 };
+    if (messaggio.telefoni) {
+      const diCasa = new Set(chiCe.map((uno) => uno.id));
+      const persone = messaggio.persone.filter((uno) => diCasa.has(uno));
+      if (!messaggio.persone.length || persone.length)
+        risultato.telefoni = await this.consegna({
+          tipo: "messaggio",
+          urgenza: "normale",
+          chiave: `messaggio-${ora}-${chi}`,
+          quando: ora,
+          parole: paroleDelMessaggio(messaggio.testo, nome),
+          ...(persone.length ? { solo: persone } : {}),
+          tranne: chi,
+        });
+    }
+    if (messaggio.echo.length && this.casa) {
+      const stati = [...(this.sentinella?.stati || new Map())].map(([entity_id, stato]) => ({
+        entity_id,
+        ...stato,
+      }));
+      const veri = new Set(altoparlantiAlexa(stati).map((uno) => uno.entita));
+      const echo = messaggio.echo.filter((uno) => veri.has(uno));
+      if (echo.length) {
+        const { lingua } = this._alexa();
+        try {
+          await this.casa.chiedi(
+            chiamataAlexa(
+              { modo: messaggio.modo },
+              paroleDaDire(fraseDegliEcho(messaggio.testo, nome, lingua), ""),
+              echo,
+            ),
+          );
+          risultato.echo = echo.length;
+        } catch (errore) {
+          this.registro.attenzione?.(
+            `un messaggio agli Echo non e' partito: ${errore?.message || errore}`,
+          );
+        }
+      }
+    }
+    return { id, type: "result", success: true, result: risultato };
   }
 
   /* Le parole di un evento per quel telefono: quelle del racconto, nello

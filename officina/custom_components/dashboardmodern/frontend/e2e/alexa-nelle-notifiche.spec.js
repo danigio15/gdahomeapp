@@ -178,3 +178,107 @@ test("gli avvisi personalizzati: uno a orario e uno sul garage", async ({ page }
   await page.locator("[data-dm-av-bozza]").scrollIntoViewIfNeeded();
   await page.screenshot({ path: testInfo.outputPath("avvisi-bozza.png") });
 });
+
+/* «🎵 Musica»: spostare sugli Echo quello che suona in casa, o suonare
+ * quello che si sceglie. Si guarda cosa arriva a Home Assistant. */
+const COPERTINA = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f59e0b"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs><rect width="100" height="100" fill="url(#g)"/><circle cx="50" cy="50" r="26" fill="#111827"/><circle cx="50" cy="50" r="7" fill="#f9fafb"/></svg>`;
+
+const MUSICA = {
+  ...ECHO,
+  "media_player.echo_sala": {
+    entity_id: "media_player.echo_sala",
+    state: "playing",
+    attributes: {
+      friendly_name: "Echo Sala",
+      last_called: false,
+      media_title: "Radio Deejay",
+      media_channel: "Radio Deejay",
+      app_name: "TuneIn",
+    },
+  },
+  "media_player.sonos_soggiorno": {
+    entity_id: "media_player.sonos_soggiorno",
+    state: "playing",
+    attributes: {
+      friendly_name: "Sonos Soggiorno",
+      media_title: "Albachiara",
+      media_artist: "Vasco Rossi",
+      app_name: "Spotify",
+      entity_picture: "/copertina.png",
+    },
+  },
+};
+
+test("la musica: si sposta sugli Echo e si sceglie cosa ascoltare", async ({ page }, testInfo) => {
+  test.setTimeout(180_000);
+  await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
+  await page.route("**/copertina.png", (route) =>
+    route.fulfill({ status: 200, contentType: "image/svg+xml", body: COPERTINA }),
+  );
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
+  await page.evaluate(() => {
+    localStorage.setItem(
+      "cd_alexa",
+      JSON.stringify({
+        altoparlanti: ["media_player.echo_cucina"],
+        musica: [{ servizio: "TUNEIN", cosa: "Radio Deejay" }],
+      }),
+    );
+    window.__chiamate = [];
+    window.cdCallServiceJson = async (domain, service, data) => {
+      window.__chiamate.push({ domain, service, data });
+    };
+  });
+  await conStati(page, MUSICA);
+  await apriAvvisi(page, "alexa_musica");
+  const blocco = page.locator("[data-dm-alexa-ed]");
+  await expect(blocco.locator("[data-dm-mu-vivo]")).toHaveCount(1, { timeout: 20_000 });
+  await expect(blocco).toContainText("Albachiara");
+  // Gli Echo che suonano non sono «in casa»: stanno sotto, con i loro tasti.
+  await expect(blocco.locator("[data-dm-mu-sposta]")).toHaveCount(1);
+  await expect(blocco.locator("[data-dm-mu-tasto='pausa']")).toHaveCount(1);
+  await blocco.locator("[data-dm-mu-echo]").first().scrollIntoViewIfNeeded();
+  await page.evaluate(() =>
+    document.querySelector("[data-dm-alexa-ed]")?.scrollIntoView({ block: "start" }),
+  );
+  await page.screenshot({ path: testInfo.outputPath("alexa-musica.png") });
+  await page.locator("[data-dm-mu-vivo]").scrollIntoViewIfNeeded();
+  await page.screenshot({ path: testInfo.outputPath("alexa-musica-adesso.png") });
+
+  await blocco.locator("[data-dm-mu-sposta='media_player.sonos_soggiorno']").click();
+  let chiamate = await page.evaluate(() => window.__chiamate);
+  expect(chiamate).toEqual([
+    {
+      domain: "media_player",
+      service: "play_media",
+      data: {
+        entity_id: ["media_player.echo_cucina"],
+        media_content_id: "Albachiara Vasco Rossi",
+        media_content_type: "SPOTIFY",
+      },
+    },
+    {
+      domain: "media_player",
+      service: "media_pause",
+      data: { entity_id: "media_player.sonos_soggiorno" },
+    },
+  ]);
+
+  await page.locator("[data-dm-mu-servizio='SPOTIFY']").click();
+  await page.locator("[data-dm-mu-cosa]").fill("Top 50 Italia");
+  await page.locator("[data-dm-mu-cosa]").press("Enter");
+  chiamate = await page.evaluate(() => window.__chiamate);
+  expect(chiamate.at(-1).data).toEqual({
+    entity_id: ["media_player.echo_cucina"],
+    media_content_id: "Top 50 Italia",
+    media_content_type: "SPOTIFY",
+  });
+  await page.locator("[data-dm-mu-tieni]").click();
+  const salvata = await page.evaluate(() => JSON.parse(localStorage.getItem("cd_alexa")));
+  expect(salvata.musica).toEqual([
+    { servizio: "TUNEIN", cosa: "Radio Deejay" },
+    { servizio: "SPOTIFY", cosa: "Top 50 Italia" },
+  ]);
+  await page.locator("[data-dm-mu-cosa]").scrollIntoViewIfNeeded();
+  await page.screenshot({ path: testInfo.outputPath("alexa-musica-cerca.png") });
+});

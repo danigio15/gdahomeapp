@@ -97,6 +97,9 @@ function catalogoTessere() {
     ["meteo", "🌤️", t("Meteo", "Weather")],
     /* Lo sport: compare da solo quando si segue qualcosa (Casa › Sport). */
     ["sport", "⚽", t("Sport", "Sports")],
+    /* Il messaggio agli Echo e ai telefoni: compare da solo quando c'e' a
+     * chi scrivere. */
+    ["messaggio", "💬", t("Messaggio", "Message")],
     /* Il MiniPC mancava del tutto: aveva la sua pagina e le sue caselle, e in
      * Home non c'era modo ne' di vederlo ne' di dire che non lo si vuole. */
     ["minipc", "🖥️", t("MiniPC", "MiniPC")],

@@ -132,6 +132,13 @@ test("no translation is left as its English source", async () => {
 /* Strings that legitimately read the same in every language we ship. */
 const SHARED_ACROSS_LANGUAGES = new Set([
   ".",
+  /* La musica sugli Echo: «Echo» e' il nome dell'altoparlante, gli esempi
+   * del campo di ricerca sono nomi propri, «Radio» si scrive cosi' in mezza
+   * Europa e TuneIn e' un marchio. */
+  "1 Echo",
+  "BBC Radio 2",
+  "Coldplay, Yellow, Today's Top Hits…",
+  "Radio (TuneIn)",
   /* Lo sport: «Sprint» e' il nome della gara corta, in F1 e in MotoGP, e si
    * dice cosi' in tutte le lingue che ce l'hanno. */
   "Sprint",
@@ -269,6 +276,8 @@ const LOCALE_IDENTITIES = {
   fr: new Set([
     /* La scheda delle notifiche di Alexa: in francese si dice uguale. */
     "Notifications",
+    /* La card della Home per scrivere a casa. */
+    "Message",
     /* Lo sport: parole che in questa lingua si scrivono come in inglese
      * («d» per i giorni, «Pts» per i punti in classifica). */
     "Football",
