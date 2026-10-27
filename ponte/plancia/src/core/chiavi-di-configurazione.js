@@ -351,7 +351,9 @@
 /* La revisione 72 aggiunge gli Echo che dicono le notifiche (`cd_alexa`):
  * quali Echo, quali notifiche, quando stare zitti. Gli Echo sono della casa,
  * e la scelta la legge il ponte quando manda una notifica. */
-export const CONFIG_KEYS_REVISION = 72;
+/* La revisione 73 aggiunge le radio preferite (`cd_radio`): le stazioni che
+ * la pagina Musica offre, su un lettore di casa o sugli Echo. */
+export const CONFIG_KEYS_REVISION = 73;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -463,6 +465,8 @@ export const CONFIG_KEYS = Object.freeze([
   "cd_bollette",
   // Gli Echo che dicono le notifiche (Alexa Media Player): quali, cosa, quando.
   "cd_alexa",
+  // Le radio preferite della pagina Musica.
+  "cd_radio",
   // Se il tocco su un'apertura chiede conferma (#275).
   "cd_porte_conferma",
   "cd_ups",

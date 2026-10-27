@@ -29,6 +29,8 @@ const RADICE = fileURLToPath(new URL("../", import.meta.url));
 /* Cio' che resta su un dispositivo solo, e perche'. */
 const SOLO_DI_QUESTO_DISPOSITIVO = Object.freeze({
   cd_connection: "le credenziali di questo dispositivo",
+  dm_radio_dove:
+    "su quale lettore suona la radio da QUESTO schermo: il tablet in cucina sceglie l'Echo della cucina, il telefono di uno il Sonos del salotto",
   dm_messaggio_scelte:
     "a chi scrive la card Messaggio da QUESTO schermo — quali Echo, quali persone: il tablet in cucina scrive alla famiglia, il telefono di uno scrive a chi vuole lui",
   dm_muro_ricordo:

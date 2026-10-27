@@ -139,6 +139,8 @@ const SHARED_ACROSS_LANGUAGES = new Set([
   "BBC Radio 2",
   "Coldplay, Yellow, Today's Top Hits…",
   "Radio (TuneIn)",
+  /* La radio della pagina Musica: «Radio» si scrive cosi' in mezza Europa. */
+  "Radio",
   /* Lo sport: «Sprint» e' il nome della gara corta, in F1 e in MotoGP, e si
    * dice cosi' in tutte le lingue che ce l'hanno. */
   "Sprint",

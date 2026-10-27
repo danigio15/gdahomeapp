@@ -278,7 +278,7 @@ test("togliere una chiave non alza la revisione", async () => {
    * configurata dal computer, deve aprirsi uguale sul tablet. */
   /* E la 72 con gli Echo che dicono le notifiche (`cd_alexa`): la legge
    * il ponte, e vale per la casa. */
-  assert.equal(CONFIG_KEYS_REVISION, 72);
+  assert.equal(CONFIG_KEYS_REVISION, 73);
   assert.ok(CONFIG_KEYS.includes("cd_alexa"));
   assert.ok(CONFIG_KEYS.includes("cd_occhio"));
   assert.ok(CONFIG_KEYS.includes("cd_sport"));

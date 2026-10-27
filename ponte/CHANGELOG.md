@@ -10,6 +10,22 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.10
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **📻 Radio nella pagina Musica:** in cima alla pagina compaiono le radio
+  preferite, con il loro logo. Si sceglie dove suonarle — un lettore di casa
+  o un Echo — e si tocca la radio; quella che sta suonando dice «In onda», e
+  «Ferma» la spegne. Compare quando la Musica ha dei lettori configurati.
+- **Config › Casa › 📻 Radio:** le radio si scelgono fra quelle
+  dell'integrazione Radio Browser di Home Assistant («Vicino a te» o «Più
+  ascoltate», con il filtro per nome). Una radio che non c'è si aggiunge per
+  nome, e la sentono gli Echo. Senza Radio Browser la scheda dice come
+  aggiungerla.
+- **Con Alexa:** sugli Echo la radio la cerca TuneIn, e le preferite
+  compaiono anche in Config › Alexa › 🎵 Musica, a un tocco.
+
 ## 1.18.7.9
 
 _Solo Home Assistant: l'app sul telefono non cambia._

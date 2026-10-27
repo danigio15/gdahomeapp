@@ -1610,8 +1610,10 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 499 con la musica sugli Echo e il messaggio della Home:
   // `core/alexa-musica.js`, `core/messaggio-di-casa.js` (le regole) e
   // `sections/finestre/messaggio.js` (la finestra della tessera).
+  // 501 con la radio: `core/radio.js` (le regole) e `sections/radio-section.js`
+  // (il riquadro della pagina Musica e la scheda del Config).
   assert.ok(
-    relative.length <= 499,
+    relative.length <= 501,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

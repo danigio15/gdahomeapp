@@ -45,6 +45,7 @@ import {
   preferitoPulito,
   servizioPulito,
 } from "../core/alexa-musica.js";
+import { CHIAVE_RADIO, chiamataDellaRadio, normalizzaRadio } from "../core/radio.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
 import {
   allStates,
@@ -461,6 +462,20 @@ function corpoDellaMusica() {
       uno.servizio === musica.servizio &&
       uno.cosa.toLowerCase() === cosaPulita(musica.cosa).toLowerCase(),
   );
+  const radio = normalizzaRadio(readJson(CHIAVE_RADIO, null)).preferite;
+  const leRadio = radio.length
+    ? `<div class="mu-ed-riga"><div class="mu-ed-testo"><b>📻 ${esc(t("Le radio preferite", "Favourite stations"))}</b><small>${esc(
+        t(
+          "Quelle scelte in Musica › Radio: sugli Echo le cerca TuneIn.",
+          "The ones chosen in Media › Radio: on the Echos TuneIn looks them up.",
+        ),
+      )}</small><div class="dm-alexa-echo">${radio
+        .map(
+          (una, indice) =>
+            `<button type="button" class="dm-alexa-pastiglia" data-dm-mu-radio="${indice}"${su.length ? "" : " disabled"}>▶ ${esc(una.nome)}</button>`,
+        )
+        .join("")}</div></div></div>`
+    : "";
   return `<div class="mu-ed dm-alexa-ed" data-dm-alexa-ed>
     <div class="mu-ed-blocco">
       <div class="mu-ed-riga"><div class="mu-ed-testo"><b>${esc(t("Su quali Echo", "On which Echos"))}</b><small>${esc(
@@ -510,6 +525,7 @@ function corpoDellaMusica() {
           ? `<div class="mu-ed-riga"><div class="mu-ed-testo"><b>${esc(t("Preferiti", "Favourites"))}</b><div class="dm-alexa-echo">${preferiti}</div></div></div>`
           : ""
       }
+      ${leRadio}
     </div>
   </div>`;
 }
@@ -604,6 +620,20 @@ function suLaMusica(d, config, evento) {
           "✓ Asked the Echos: you will hear it in a moment.",
         ),
       );
+    return fatto();
+  }
+  if ("dmMuRadio" in d) {
+    const una = normalizzaRadio(readJson(CHIAVE_RADIO, null)).preferite[Number(d.dmMuRadio)];
+    const chiamate = una
+      ? su.map((echo) => chiamataDellaRadio(una, echo, { echo: true })).filter(Boolean)
+      : [];
+    suonaSugliEcho(
+      chiamate,
+      t(
+        "✓ Chiesto agli Echo: tra un attimo la senti.",
+        "✓ Asked the Echos: you will hear it in a moment.",
+      ),
+    );
     return fatto();
   }
   if ("dmMuTieni" in d) {
