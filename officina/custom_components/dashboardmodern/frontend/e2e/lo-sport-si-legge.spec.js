@@ -209,12 +209,17 @@ async function boot(page, testInfo, { adesso, tema = "light", config = CONFIG, r
           if (message.type === "auth") return;
           let result = null;
           let success = true;
+          let errore = { code: "not_found" };
           if (message.type === "get_states") result = [];
           else if (message.type === "frontend/get_user_data") result = { value: null };
           else if (message.type === "get_config") result = { latitude: 45.46, longitude: 9.19 };
           else if (message.type === "ponte/sport/risultati") {
             window.__sport.chieste.push(message.seguiti);
-            result = { risultati: risposte };
+            /* Home Assistant senza l'add-on: il comando non lo conosce. */
+            if (risposte === "senza-ponte") {
+              success = false;
+              errore = { code: "unknown_command", message: "Unknown command." };
+            } else result = { risultati: risposte };
           } else if (message.type === "ponte/sport/squadre") {
             result = {
               squadre: risposte[0].classifica.map(({ id, nome, breve, sigla, colore }) => ({
@@ -259,7 +264,7 @@ async function boot(page, testInfo, { adesso, tema = "light", config = CONFIG, r
                       id: message.id,
                       type: "result",
                       success: false,
-                      error: { code: "not_found" },
+                      error: errore,
                     },
               ),
             });
@@ -430,6 +435,18 @@ for (const tema of ["light", "dark"]) {
     }
   });
 }
+
+test("senza l'add-on la pagina dice perché lo sport non arriva", async ({ page }, testInfo) => {
+  /* Home Assistant risponde «Unknown command.»: la pagina diceva «I
+   * risultati adesso non arrivano», come per un intoppo che passa. Il
+   * codice dice che da qui lo sport non si raggiunge. */
+  await boot(page, testInfo, { adesso: DOMENICA, risposte: "senza-ponte" });
+  const voce = page.locator('.tab[data-tab="sport"]');
+  await expect(voce).toHaveCount(1, { timeout: 20_000 });
+  await voce.evaluate((n) => n.click());
+  await expect(page.locator("#page-sport")).toContainText("add-on GdAHome", { timeout: 20_000 });
+  await expect(page.locator("#page-sport")).not.toContainText("non arrivano");
+});
 
 test("la scheda Sport del Config: cosa si segue, il pilota del cuore, aggiungere una squadra", async ({
   page,

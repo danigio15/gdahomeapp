@@ -478,9 +478,17 @@ export function chiediAHomeAssistant(payload, timeout = 8000) {
       root.clearTimeout?.(timer);
       /* Il messaggio di Home Assistant e' la sola spiegazione che chi guarda
        * puo' capire: «l'evento non esiste piu'» invece di «errore». */
-      if (message?.success === false)
-        reject(new Error(clean(message?.error?.message) || "home assistant"));
-      else resolve(message?.result);
+      if (message?.success === false) {
+        /* Anche il codice, non solo le parole: Home Assistant senza l'add-on
+         * risponde «Unknown command.» con il codice «unknown_command», e chi
+         * chiede capisce dal codice che quella cosa da qui non si raggiunge
+         * (lo sport, «I risultati adesso non arrivano» invece di dire
+         * perche'). */
+        const errore = new Error(clean(message?.error?.message) || "home assistant");
+        const codice = clean(message?.error?.code);
+        if (codice) errore.code = codice;
+        reject(errore);
+      } else resolve(message?.result);
     };
     try {
       socket.send(JSON.stringify({ ...payload, id }));
