@@ -470,6 +470,13 @@ test("la gestione vede anche i numeri del tramite, presi uno per uno", async () 
         segnalazioni: true,
         chat: { linee: 5, console: true },
         posta: false,
+        licenze: {
+          modo: "impone",
+          senza_premium: 118,
+          da_aggiornare: 4,
+          telefoni_senza_licenza: 31,
+          segreto: "<b>non passa</b>",
+        },
         /* Quello che non e' nell'elenco non passa. */
         altro: "<img src=x onerror=alert(1)>",
       }),
@@ -487,6 +494,7 @@ test("la gestione vede anche i numeri del tramite, presi uno per uno", async () 
       collegamenti: 22,
       app: 7,
       web: 3,
+      licenze: { modo: "impone", senza_premium: 118, da_aggiornare: 4 },
       segnalazioni: true,
       chat: 5,
       console: true,
@@ -518,6 +526,7 @@ test("i numeri che un tramite vecchio non dice arrivano null, non zero", async (
     const detto = await (await b.gestore("/salute")).json();
     assert.equal(detto.tramite.installate, null);
     assert.equal(detto.tramite.web, null);
+    assert.equal(detto.tramite.licenze, null);
     assert.equal(detto.tramite.case, 131, "quello che sa dire arriva com'e'");
   } finally {
     await b.chiudi();
