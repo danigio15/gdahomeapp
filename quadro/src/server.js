@@ -1193,6 +1193,20 @@ export function costruisciIlServer({
         /* E quanti guardano dal browser. Come sopra: `null` finche' il tramite
          * non lo dice. */
         web: numero(detto?.web),
+        /* Le licenze: il modo (una delle tre parole, nient'altro) e quante
+         * delle accese resterebbero fuori. Senza queste la pagina Collegamenti
+         * non sa dire quante case si raggiungono da fuori, e scriveva «—»
+         * anche col tramite che le contava. Un tramite che non le dice le
+         * lascia `null`. */
+        licenze: detto?.licenze
+          ? {
+              modo: ["spento", "registra", "impone"].includes(detto.licenze.modo)
+                ? detto.licenze.modo
+                : null,
+              senza_premium: numero(detto.licenze.senza_premium),
+              da_aggiornare: numero(detto.licenze.da_aggiornare),
+            }
+          : null,
         segnalazioni: detto?.segnalazioni === true,
         chat: numero(detto?.chat?.linee),
         console: detto?.chat?.console === true,

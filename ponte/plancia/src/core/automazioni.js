@@ -66,7 +66,9 @@ export const AUTOMAZIONI_AL_MASSIMO = 500;
 export const CONDIZIONI_AL_MASSIMO = 4;
 export const AZIONI_AL_MASSIMO = 12;
 export const ORARI_AL_MASSIMO = 4;
-export const ENTITA_AL_MASSIMO = 10;
+/* Le cose di un'azione: «spegni tutte le luci» in una casa vera sono venti o
+ * trenta luci, e a dieci l'automazione proposta ne lasciava accese meta'. */
+export const ENTITA_AL_MASSIMO = 60;
 export const TERMOSTATI_AL_MASSIMO = 6;
 export const FASCE_AL_MASSIMO = 6;
 /* Un «aspetta» piu' lungo di dodici ore non e' un'attesa: e' un'altra

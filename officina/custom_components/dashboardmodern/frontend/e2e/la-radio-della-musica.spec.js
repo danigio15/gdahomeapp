@@ -234,3 +234,70 @@ test("nel Config: le radio di Home Assistant, filtrate, fra le preferite", async
   await page.locator("[data-dm-radio-ed] .dm-radio-ed-trovate").scrollIntoViewIfNeeded();
   await page.screenshot({ path: testInfo.outputPath("radio-config-cerca.png") });
 });
+
+test("Alexa › Musica: la radio si sceglie da un elenco, e torna nella pagina Musica", async ({
+  page,
+}, testInfo) => {
+  await boot(page, testInfo, { tema: "dark" });
+  await page.evaluate(() => globalThis.apriConfigEntita?.());
+  await page.locator('.ed-tab[data-tab="alexa_musica"]').click();
+  const scheda = page.locator("[data-dm-alexa-ed]");
+  await expect(scheda.locator(".dm-alexa-suona-su")).toContainText("Scegli almeno un Echo");
+  await scheda.locator("[data-dm-mu-echo='media_player.echo_cucina']").click();
+  await expect(page.locator(".dm-alexa-suona-su")).toContainText("Echo Cucina");
+  await page.locator("[data-dm-mu-servizio='TUNEIN']").click();
+  await expect(page.locator(".dm-alexa-stazione")).toHaveCount(6, { timeout: 20_000 });
+  await page.locator("[data-dm-mu-cosa]").fill("radio");
+  await expect(page.locator(".dm-alexa-stazione")).toHaveCount(3);
+  await page.waitForTimeout(400);
+  await page.locator("[data-dm-mu-lista]").scrollIntoViewIfNeeded();
+  await page.screenshot({ path: testInfo.outputPath("alexa-radio-elenco.png") });
+  await page.locator('[data-dm-mu-stazione="Radio Kiss Kiss"]').click();
+  await expect.poll(() => page.evaluate(() => window.__SERVIZI__.length)).toBeGreaterThan(0);
+  const ultima = await page.evaluate(() => window.__SERVIZI__.at(-1));
+  expect(ultima).toMatchObject({
+    service: "play_media",
+    service_data: {
+      entity_id: ["media_player.echo_cucina"],
+      media_content_id: "Radio Kiss Kiss",
+      media_content_type: "TUNEIN",
+    },
+  });
+  // La tiene fra i preferiti di Alexa: compare anche nella pagina Musica.
+  await page.locator("[data-dm-mu-tieni]").click();
+  await page.evaluate(() => {
+    window.chiudiConfigEntita?.();
+    document.getElementById("editor-modal")?.classList.remove("open");
+  });
+  await page.locator('.tab[data-tab="media"]').evaluate((n) => n.click());
+  const radio = page.locator("#page-media [data-dm-radio]");
+  await expect(radio).toContainText("Radio Kiss Kiss");
+  await page.waitForTimeout(300);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("cd_alexa")).musica)).toEqual([
+    { servizio: "TUNEIN", cosa: "Radio Kiss Kiss" },
+  ]);
+});
+
+test("le radio tenute in Alexa › Musica compaiono nella pagina Musica, per cambiarle", async ({
+  page,
+}, testInfo) => {
+  await boot(page, testInfo, { tema: "dark", preferite: PREFERITE.slice(0, 3) });
+  await page.evaluate(() => {
+    localStorage.setItem(
+      "cd_alexa",
+      JSON.stringify({ musica: [{ servizio: "TUNEIN", cosa: "Radio Italia" }] }),
+    );
+    window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed"));
+  });
+  await page.locator('.tab[data-tab="media"]').evaluate((n) => n.click());
+  const radio = page.locator("#page-media [data-dm-radio]");
+  await expect(radio.locator(".dm-radio-st")).toHaveCount(4);
+  await expect(radio.locator(".dm-radio-st").last()).toContainText("Radio Italia");
+  await radio.locator('[data-dm-radio-dove="media_player.echo_cucina"]').click();
+  await radio.locator('[data-dm-radio-suona="3"]').click();
+  expect(await page.evaluate(() => window.__SERVIZI__.at(-1))).toMatchObject({
+    service_data: { entity_id: "media_player.echo_cucina", media_content_id: "Radio Italia" },
+  });
+  await page.waitForTimeout(300);
+  await radio.screenshot({ path: testInfo.outputPath("radio-con-alexa.png") });
+});

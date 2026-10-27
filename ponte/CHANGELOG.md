@@ -10,6 +10,21 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.11
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Alexa › 🎵 Musica:** con «Radio (TuneIn)» le radio si scelgono da un
+  elenco, col loro logo, invece di scriverle a mano; scrivendo l'elenco si
+  restringe. Di serie non è scelto nessun Echo, e sotto c'è scritto su quali
+  suonerà: prima partivano anche gli Echo delle notifiche.
+- **Pagina Musica:** le radio tenute fra i preferiti di Alexa compaiono anche
+  nel riquadro 📻 Radio, per cambiarle con un tocco.
+- **Prese:** nella finestra del widget le prese accese si colorano di giallo,
+  come le luci accese.
+- **Automazioni:** «spegni tutte le luci» spegne tutte le luci, non le prime
+  dieci; un'azione ne porta fino a sessanta.
+
 ## 1.18.7.10
 
 _Solo Home Assistant: l'app sul telefono non cambia._

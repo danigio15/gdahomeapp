@@ -7611,4 +7611,7 @@ export default Object.freeze({
   "The ones chosen in Media › Radio: on the Echos TuneIn looks them up.": "Выбранные в «Музыка › Радио»: на Echo их ищет TuneIn.",
   "They show at the top of the Media page: play them on a home player or on the Echos.": "Они видны вверху страницы «Музыка»: слушайте их на плеере в доме или на Echo.",
   "This station plays on the Echos only: choose an Echo.": "Эта станция играет только на Echo: выберите Echo.",
+  "Choose at least one Echo.": "Выберите хотя бы одно Echo.",
+  "Plays on": "Играет на",
+  "To pick from a list add the «Radio Browser» integration in Home Assistant; meanwhile write the station name.": "Чтобы выбирать из списка, добавьте в Home Assistant интеграцию «Radio Browser»; пока напишите название станции.",
 });

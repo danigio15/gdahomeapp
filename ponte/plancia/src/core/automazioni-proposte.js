@@ -33,6 +33,7 @@
  */
 
 import {
+  ENTITA_AL_MASSIMO,
   automazioniPulite,
   dominioDi,
   minutiDi,
@@ -174,7 +175,7 @@ export function proposteDaiDispositivi({ entita = [] } = {}) {
       chiave: "fuoriLuci",
       disegno: "persone",
       dati: { quante: luci.length },
-      cose: { luci: luci.slice(0, 10) },
+      cose: { luci: luci.slice(0, ENTITA_AL_MASSIMO) },
     });
   /* Nessuno in casa da mezz'ora, e il clima va ancora: si spegne. */
   const climi = tutte.filter(eClima).map((e) => e.id);
@@ -185,7 +186,7 @@ export function proposteDaiDispositivi({ entita = [] } = {}) {
       chiave: "vuotaClima",
       disegno: "clima",
       dati: {},
-      cose: { climi: climi.slice(0, 10) },
+      cose: { climi: climi.slice(0, ENTITA_AL_MASSIMO) },
     });
   /* L'antifurto inserito: le luci si spengono. */
   const antifurto = tutte.find(eAntifurto);
@@ -196,7 +197,7 @@ export function proposteDaiDispositivi({ entita = [] } = {}) {
       chiave: "antifurtoLuci",
       disegno: "sicurezza",
       dati: {},
-      cose: { antifurto: antifurto.id, luci: luci.slice(0, 10) },
+      cose: { antifurto: antifurto.id, luci: luci.slice(0, ENTITA_AL_MASSIMO) },
     });
   /* Le tapparelle: al tramonto si chiudono. */
   const tapparelle = tutte.filter(eTapparella).map((e) => e.id);
@@ -207,7 +208,7 @@ export function proposteDaiDispositivi({ entita = [] } = {}) {
       chiave: "tramontoTapparelle",
       disegno: "tapparelle",
       dati: { quante: tapparelle.length },
-      cose: { tapparelle: tapparelle.slice(0, 10) },
+      cose: { tapparelle: tapparelle.slice(0, ENTITA_AL_MASSIMO) },
     });
   return fuori.map(conLAutomazione);
 }
@@ -375,7 +376,7 @@ export function proposteDalleAbitudini({
       chiave: "abitudineFuoriLuci",
       disegno: "persone",
       dati: { volte },
-      cose: { luci: dimenticate.slice(0, 10) },
+      cose: { luci: dimenticate.slice(0, ENTITA_AL_MASSIMO) },
     });
   return fuori.map(conLAutomazione);
 }

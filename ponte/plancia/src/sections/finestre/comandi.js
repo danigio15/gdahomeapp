@@ -937,15 +937,23 @@ ${P} .dm-f-prese-watt{margin-left:auto;text-align:right}
 ${P} .dm-f-prese-watt .dm-f-num{display:block;font-size:26px;color:${TESTO}}
 ${P} .dm-f-prese-watt small{letter-spacing:0;text-transform:none;font-size:12px;font-weight:750}
 ${P} .dm-f-prese-presa{position:relative;display:flex;flex-direction:column;min-height:112px;padding:13px;border-radius:20px;background:${FONDO};border:1px solid ${LINEA};box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}
-${P} .dm-f-prese-presa[data-on="true"]{background:linear-gradient(160deg,${tinta(3)},${tinta(9)});border-color:${bordo(45)}}
+/* La presa accesa si colora come la luce accesa nella finestra Luci: il
+   giallo dice «acceso» in tutta la plancia, e sul colore della sezione (un
+   grigio) le prese accese non si distinguevano dalle spente. Il fondo e'
+   chiaro in tutti e due i temi, quindi le scritte sopra vanno scure. */
+${P} .dm-f-prese-presa[data-on="true"]{border-color:color-mix(in srgb,#f59e0b 45%,transparent);
+  background:radial-gradient(120% 90% at 18% 0%,rgba(253,224,71,.55),transparent 62%),linear-gradient(160deg,#fffbeb,#fef3c7);
+  box-shadow:0 14px 26px -18px rgba(217,119,6,.75)}
+${P} .dm-f-prese-presa[data-on="true"] b{color:#451a03}
+${P} .dm-f-prese-presa[data-on="true"] small,${P} .dm-f-prese-presa[data-on="true"] .dm-f-prese-lucchetto{color:#b45309}
 ${P} .dm-f-prese-presa[data-muta="true"]{opacity:.6;border-style:dashed;box-shadow:none}
 ${P} .dm-f-prese-ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:19px;background:color-mix(in srgb,${SPENTO} 10%,transparent);color:${SPENTO}}
-${P} .dm-f-prese-presa[data-on="true"] .dm-f-prese-ic{background:${A};color:#fff}
+${P} .dm-f-prese-presa[data-on="true"] .dm-f-prese-ic{background:#fff;color:#b45309;box-shadow:0 0 0 4px rgba(253,224,71,.35),0 0 18px rgba(250,204,21,.8)}
 ${P} .dm-f-prese-presa b{margin-top:auto;padding-top:10px;font-size:14.5px;font-weight:850;line-height:1.2;color:${TESTO};overflow-wrap:anywhere}
 ${P} .dm-f-prese-presa small{margin-top:2px;font-size:12px;font-weight:750;color:${SPENTO}}
 ${P} .dm-f-prese-int{position:absolute;top:13px;right:13px;width:46px;height:28px;padding:0;border:0;border-radius:999px;cursor:pointer;background:color-mix(in srgb,${SPENTO} 25%,transparent)}
 ${P} .dm-f-prese-int i{position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .18s}
-${P} .dm-f-prese-int[data-on="true"]{background:${A}}
+${P} .dm-f-prese-int[data-on="true"]{background:#f59e0b}
 ${P} .dm-f-prese-int[data-on="true"] i{left:22px}
 ${P} .dm-f-prese-lucchetto{position:absolute;top:15px;right:13px;font-size:11px;font-weight:850;color:${SPENTO}}
 

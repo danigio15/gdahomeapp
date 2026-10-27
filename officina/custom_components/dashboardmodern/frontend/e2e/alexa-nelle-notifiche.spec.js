@@ -234,6 +234,10 @@ test("la musica: si sposta sugli Echo e si sceglie cosa ascoltare", async ({ pag
   const blocco = page.locator("[data-dm-alexa-ed]");
   await expect(blocco.locator("[data-dm-mu-vivo]")).toHaveCount(1, { timeout: 20_000 });
   await expect(blocco).toContainText("Albachiara");
+  // Di serie non suona su nessun Echo: si sceglie.
+  await expect(blocco.locator("[data-dm-mu-echo][aria-pressed='true']")).toHaveCount(0);
+  await blocco.locator("[data-dm-mu-echo='media_player.echo_cucina']").click();
+  await expect(blocco.locator(".dm-alexa-suona-su")).toContainText("Echo Cucina");
   // Gli Echo che suonano non sono «in casa»: stanno sotto, con i loro tasti.
   await expect(blocco.locator("[data-dm-mu-sposta]")).toHaveCount(1);
   await expect(blocco.locator("[data-dm-mu-tasto='pausa']")).toHaveCount(1);

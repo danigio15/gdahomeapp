@@ -5877,14 +5877,39 @@
         const collegate = n(t.case) ?? 0;
         const app = n(t.app) ?? 0;
         const web = n(t.web);
-        /* Da fuori si entra solo con Premium (anche regalato): sono le accese
-         * meno quelle senza Premium e quelle con l'add-on di prima. Con le
-         * licenze spente il tramite lascia entrare tutte, e non lo dice. */
+        /* Chi si raggiunge da fuori dipende dal modo delle licenze.
+         *
+         * Solo con «impone» da fuori si entra soltanto con Premium (anche
+         * regalato): sono le accese meno quelle senza Premium e quelle con
+         * l'add-on di prima. Con «spento» e con «registra» il tramite lascia
+         * entrare TUTTE le accese — con «registra» conta chi resterebbe fuori,
+         * ma non lo chiude. Prima qui c'era «—, il tramite non lo dice ancora»
+         * proprio quando lo diceva: a licenze spente si entra da fuori in
+         * tutte, e il numero e' quello delle accese. */
         const lic = t.licenze;
+        const modo = lic?.modo;
+        const senza = n(lic?.senza_premium);
         const conPremium =
-          lic && lic.modo !== "spento" && n(lic.senza_premium) !== null
-            ? Math.max(0, collegate - n(lic.senza_premium) - (n(lic.da_aggiornare) ?? 0))
+          lic && senza !== null
+            ? Math.max(0, collegate - senza - (n(lic.da_aggiornare) ?? 0))
             : null;
+        let daFuori = null;
+        let dettaglioDaFuori = "il tramite non lo dice ancora: va aggiornato";
+        if (lic && modo === "impone") {
+          daFuori = conPremium;
+          dettaglioDaFuori =
+            conPremium === null
+              ? "il tramite non lo dice ancora"
+              : "accese adesso, con Premium (anche regalato)";
+        } else if (lic) {
+          daFuori = collegate;
+          dettaglioDaFuori =
+            modo === "registra"
+              ? `tutte le accese: le licenze si contano ma non si fanno rispettare${
+                  conPremium === null ? "" : ` (${numero(conPremium)} con Premium)`
+                }`
+              : "tutte le accese: le licenze non sono attive";
+        }
         const guardano = app + (web ?? 0);
         const daQuando =
           t.vivo && t.accesoDa !== null && t.accesoDa !== undefined
@@ -5902,7 +5927,7 @@
           <div class="griglia griglia-4">
             ${/* già HTML */ grande("casa", "Hanno installato GdAHome", installate, installate === null ? "il tramite non lo dice ancora: va aggiornato" : "case registrate, anche se adesso sono spente")}
             ${/* già HTML */ grande("filo", "Accese adesso", collegate, (sulTotale(collegate) ? sulTotale(collegate) + ", " : "") + "collegate al tramite, Premium o no")}
-            ${/* già HTML */ grande("stella", "Raggiungibili da fuori", conPremium, conPremium === null ? "il tramite non lo dice ancora" : "accese adesso, con Premium (anche regalato)")}
+            ${/* già HTML */ grande("stella", "Raggiungibili da fuori", daFuori, dettaglioDaFuori)}
             ${/* già HTML */ grande("telefono", "Guardano adesso", guardano, web === null ? `${numero(app)} dall'app` : `${numero(app)} dall'app, ${numero(web)} dal browser`)}
           </div>
           <section class="scheda">
@@ -5910,7 +5935,7 @@
             <ul class="elenco">
               <li><span class="riga-testo"><b>Hanno installato GdAHome</b><span>Le case che si sono presentate almeno una volta al tramite: restano contate anche quando la casa è spenta.</span></span></li>
               <li><span class="riga-testo"><b>Accese adesso</b><span>Le case accese in questo momento: ogni add-on resta collegato al tramite, anche senza Premium. Non vuol dire che da fuori ci si entri.</span></span></li>
-              <li><span class="riga-testo"><b>Raggiungibili da fuori</b><span>Delle accese, quelle con Premium (comprato o regalato): sono le sole in cui si entra da fuori casa. Le altre si aprono solo dal loro Wi-Fi.</span></span></li>
+              <li><span class="riga-testo"><b>Raggiungibili da fuori</b><span>Le accese in cui si entra da fuori casa. Con le licenze attive («impone») sono solo quelle con Premium (comprato o regalato), e le altre si aprono solo dal loro Wi-Fi; con le licenze spente o solo contate («registra») si entra in tutte.</span></span></li>
               <li><span class="riga-testo"><b>Guardano adesso</b><span>Chi le sta guardando adesso da fuori: dall'app GdAHome sul telefono o sul tablet, o da una pagina del browser.</span></span></li>
             </ul>
             <p class="minuta">${testo(daQuando)} I numeri si aggiornano da soli ogni minuto, o col pallino in alto.</p>
