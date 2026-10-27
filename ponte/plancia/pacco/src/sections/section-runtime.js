@@ -560,7 +560,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-5O6Y6WRN.js";
+} from "../../chunk-GY3YS3OZ.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -96883,7 +96883,10 @@ function suLaMusica(d, config, evento) {
     if (chiamata)
       suonaSugliEcho(
         [chiamata],
-        t("✓ Chiesto agli Echo: tra un attimo la senti.", "✓ Asked the Echos: you will hear it in a moment.")
+        t(
+          "✓ Chiesto agli Echo: tra un attimo la senti.",
+          "✓ Asked the Echos: you will hear it in a moment."
+        )
       );
     return fatto2();
   }
