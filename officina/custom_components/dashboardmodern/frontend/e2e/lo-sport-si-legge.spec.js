@@ -219,7 +219,11 @@ async function boot(page, testInfo, { adesso, tema = "light", config = CONFIG, r
             if (risposte === "senza-ponte") {
               success = false;
               errore = { code: "unknown_command", message: "Unknown command." };
-            } else result = { risultati: risposte };
+            } else if (risposte?.primaNo && window.__sport.chieste.length === 1) {
+              /* La prima domanda non ha risposta buona: un intoppo. */
+              success = false;
+              errore = { code: "timeout", message: "timeout" };
+            } else result = { risultati: risposte?.primaNo ? risposte.poi : risposte };
           } else if (message.type === "ponte/sport/squadre") {
             result = {
               squadre: risposte[0].classifica.map(({ id, nome, breve, sigla, colore }) => ({
@@ -448,6 +452,48 @@ test("senza l'add-on la pagina dice perché lo sport non arriva", async ({ page 
   await expect(page.locator("#page-sport")).not.toContainText("non arrivano");
 });
 
+test("un primo intoppo non fa dire «non arrivano»: si riprova e i risultati arrivano", async ({
+  page,
+}, testInfo) => {
+  await boot(page, testInfo, {
+    adesso: DOMENICA,
+    risposte: { primaNo: true, poi: risultati(DOMENICA) },
+  });
+  const voce = page.locator('.tab[data-tab="sport"]');
+  await expect(voce).toHaveCount(1, { timeout: 20_000 });
+  await voce.evaluate((n) => n.click());
+  await expect.poll(() => page.evaluate(() => window.__sport.chieste.length)).toBeGreaterThan(0);
+  await expect(page.locator("#page-sport")).not.toContainText("non arrivano");
+  await page.clock.runFor(6_000);
+  await expect(page.locator("#page-sport .dm-sport-blocco")).toHaveCount(3, { timeout: 20_000 });
+  expect(await page.evaluate(() => window.__sport.chieste.length)).toBeGreaterThanOrEqual(2);
+});
+
+test("la voce Sport sta dove dice l'ordine della barra", async ({ page }, testInfo) => {
+  await boot(page, testInfo, { adesso: DOMENICA });
+  const voce = page.locator('.tab[data-tab="sport"]');
+  await expect(voce).toHaveCount(1, { timeout: 20_000 });
+  /* L'ordine salvato mette lo sport subito dopo la Home. */
+  const ordine = await page.evaluate(() => {
+    const chiavi = [...document.querySelectorAll(".tab[data-tab]")].map((n) => n.dataset.tab);
+    const senza = chiavi.filter((k) => k !== "sport");
+    const voluto = [senza[0], "sport", ...senza.slice(1)];
+    localStorage.setItem("cd_navbar_order", JSON.stringify(voluto));
+    /* La voce rinasce, come a un nuovo avvio. */
+    document.querySelector('.tab[data-tab="sport"]').remove();
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
+    return voluto;
+  });
+  await expect(voce).toHaveCount(1, { timeout: 20_000 });
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        [...document.querySelectorAll(".tab[data-tab]")].map((n) => n.dataset.tab).indexOf("sport"),
+      ),
+    )
+    .toBe(ordine.indexOf("sport"));
+});
+
 test("la scheda Sport del Config: cosa si segue, il pilota del cuore, aggiungere una squadra", async ({
   page,
 }, testInfo) => {
@@ -462,7 +508,7 @@ test("la scheda Sport del Config: cosa si segue, il pilota del cuore, aggiungere
   await expect(corpo.locator('[data-dm-sport-preferito="1"]')).toHaveValue("leclerc");
   /* La F1 e la MotoGP ci sono gia': i loro tasti sono spenti. */
   await expect(corpo.locator('[data-dm-sport-aggiungi="f1"]')).toBeDisabled();
-  await corpo.locator("[data-dm-sport-nuova]").click();
+  await corpo.locator('[data-dm-sport-nuova="calcio"]').click();
   const squadra = page.locator("#ed-body [data-dm-sport-squadra]");
   await expect(squadra).toBeVisible({ timeout: 10_000 });
   const dove = foto(testInfo, "sport-config");
