@@ -18,6 +18,8 @@
  * Qui non c'e' un documento ne' un filo: si prova da solo.
  */
 
+import { preferitiPuliti } from "./alexa-musica.js";
+
 /** La casella della plancia. */
 export const CHIAVE_ALEXA = "cd_alexa";
 
@@ -66,6 +68,8 @@ export const ALEXA_DI_SERIE = Object.freeze({
   silenzio: Object.freeze({ da: "23:00", a: "07:00" }),
   modo: "annuncio",
   avvisi: Object.freeze([]),
+  /* I preferiti della scheda «🎵 Musica» (`alexa-musica.js`). */
+  musica: Object.freeze([]),
 });
 
 /** Quanti Echo al massimo, e quanto lungo al massimo quello che si dice. */
@@ -92,6 +96,7 @@ export function normalizzaAlexa(grezzo) {
       categorie: [...ALEXA_DI_SERIE.categorie],
       silenzio: { ...ALEXA_DI_SERIE.silenzio },
       avvisi: [],
+      musica: [],
     };
   const altoparlanti = [
     ...new Set(
@@ -111,6 +116,7 @@ export function normalizzaAlexa(grezzo) {
     silenzio,
     modo: MODI_ALEXA.includes(valore.modo) ? valore.modo : ALEXA_DI_SERIE.modo,
     avvisi: avvisiPuliti(valore.avvisi),
+    musica: preferitiPuliti(valore.musica),
   };
 }
 

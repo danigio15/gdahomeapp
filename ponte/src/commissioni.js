@@ -70,6 +70,7 @@
  * del fornitore e il tipo di un errore.
  */
 
+import { MESSAGGIO_CHI, MESSAGGIO_MANDA } from "../plancia/src/core/messaggio-di-casa.js";
 import { QUADRO_DI_DIFETTO } from "./rapporto.js";
 import { request as richiestaHttp } from "node:http";
 import { request as richiestaHttps } from "node:https";
@@ -780,6 +781,21 @@ export class Commissioni {
         return no(id, "unauthorized", "questo lo fa solo chi amministra la casa");
       if (!this.notifiche) return no(id, "unknown_command", `non conosco ${tipo}`);
       return this.notifiche.provaAlexa(detto);
+    }
+    /* Il messaggio della Home (`messaggio-di-casa.js`): SOLO CHI E' ENTRATO.
+     * Chi scrive lo dicono l'ingress di Home Assistant o il telefono
+     * abbinato; senza un nome si risponde di no e non parte niente. Dalla
+     * plancia arrivano la frase e le scelte; quali Echo esistono e chi e' di
+     * casa li controlla il ponte. Esce solo l'elenco di chi puo' ricevere —
+     * id e nome, a chi e' gia' di casa — e quanti l'hanno avuto: nel ponte
+     * non si vede nulla e del messaggio non resta niente. */
+    if (tipo === MESSAGGIO_CHI || tipo === MESSAGGIO_MANDA) {
+      if (!String(chiChiede || "").trim())
+        return no(id, "unauthorized", "i messaggi li manda chi e' entrato");
+      if (!this.notifiche) return no(id, "unknown_command", `non conosco ${tipo}`);
+      if (tipo === MESSAGGIO_CHI)
+        return si(id, { persone: await this.notifiche.chiPuoRicevere(chiChiede) });
+      return this.notifiche.mandaUnMessaggio(detto, chiChiede);
     }
     /* Le notifiche semplici ed elaborate (`notifiche.js`) non hanno comandi
      * di qui: le loro domande — `ponte/notifiche/*` — arrivano solo da un

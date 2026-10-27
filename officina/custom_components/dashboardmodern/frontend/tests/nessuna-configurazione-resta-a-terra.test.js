@@ -29,6 +29,8 @@ const RADICE = fileURLToPath(new URL("../", import.meta.url));
 /* Cio' che resta su un dispositivo solo, e perche'. */
 const SOLO_DI_QUESTO_DISPOSITIVO = Object.freeze({
   cd_connection: "le credenziali di questo dispositivo",
+  dm_messaggio_scelte:
+    "a chi scrive la card Messaggio da QUESTO schermo — quali Echo, quali persone: il tablet in cucina scrive alla famiglia, il telefono di uno scrive a chi vuole lui",
   dm_muro_ricordo:
     "quello che il tablet a muro ha saputo l'ultima volta — la licenza e la plancia di origine — per disegnarsi subito all'avvio: e' una memoria di questo schermo, non una scelta",
   cd_theme: "il tema scelto qui (la barra invece viaggia: e' una scelta della plancia)",

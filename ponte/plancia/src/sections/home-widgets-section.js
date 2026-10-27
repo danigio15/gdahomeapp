@@ -398,6 +398,7 @@ import "./finestre/servizi.js";
 import "./finestre/sistema.js";
 import "./finestre/meteo.js";
 import "./finestre/sport.js";
+import { chiPuoRicevere, gliEcho, installaIlMessaggio } from "./finestre/messaggio.js";
 import { SPORT_TAB, risultatiDelloSport, tesseraDelloSport } from "./sport-section.js";
 import {
   METEO_TAB,
@@ -2650,6 +2651,37 @@ function sportModel() {
     dalVivo: tessera.dalVivo,
     vista,
     minuto,
+  };
+}
+
+/* Il messaggio: una frase agli Echo di casa e ai telefoni di famiglia.
+ *
+ * Dal campo: «una card nella Home per inviare messaggi istantanei». La
+ * tessera compare da sola quando c'e' a chi scrivere — un Echo in Home
+ * Assistant, o qualcuno con l'app GdAHome sul telefono — e la finestra
+ * (`finestre/messaggio.js`) e' quella dove si scrive. A mandare e' il ponte,
+ * solo per chi e' entrato. */
+function messaggioModel(states) {
+  installaIlMessaggio();
+  const { tutti } = gliEcho(states);
+  const persone = chiPuoRicevere(schedule) || [];
+  if (!tutti.length && !persone.length) return null;
+  const quanti = [
+    tutti.length ? `🔊 ${tutti.length} Echo` : "",
+    persone.length
+      ? `📱 ${persone.length} ${persone.length === 1 ? t("persona", "person") : t("persone", "people")}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  return {
+    key: "messaggio",
+    accent: "#7c3aed",
+    icon: "💬",
+    label: t("Messaggio", "Message"),
+    value: t("Scrivi", "Write"),
+    caption: quanti,
+    ring: null,
   };
 }
 
@@ -6698,6 +6730,7 @@ export function modelliDelleTessere(states) {
       temperatureModel(states),
       meteoModel(states),
       sportModel(),
+      messaggioModel(states),
       evModel(states),
       robotsModel(states),
       solarThermalModel(states),

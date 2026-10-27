@@ -219,6 +219,7 @@ export const SCHEDE = Object.freeze({
   /* ── 🔊 Alexa ──────────────────────────────────────────────────────── */
   alexa: { famiglia: "alexa", posizione: 10 }, // Notifiche dette dagli Echo
   alexa_avvisi: { famiglia: "alexa", posizione: 20 }, // Avvisi personalizzati
+  alexa_musica: { famiglia: "alexa", posizione: 30 }, // Musica sugli Echo
 
   /* ── 🖥️ Macchine e rete ────────────────────────────────────────────── */
   sez6: { famiglia: "macchine", posizione: 10 }, // Server, container, rete

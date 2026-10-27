@@ -1,5 +1,5 @@
-/* «🔊 Alexa», una sezione del Config tutta sua, con due schede: «Notifiche»
- * e «Avvisi personalizzati».
+/* «🔊 Alexa», una sezione del Config tutta sua, con tre schede: «Notifiche»,
+ * «Avvisi personalizzati» e «Musica».
  *
  * «Notifiche verso Alexa?» Le notifiche vanno ai telefoni; qui si sceglie se
  * le dicono anche gli Echo di casa, quali Echo, quali famiglie di notifiche,
@@ -11,6 +11,11 @@
  * lo dice, e spiega dove si installa, invece di offrire una scelta vuota. Il
  * tasto «Prova» chiede al ponte una frase sugli Echo scelti — lo fa solo chi
  * amministra, e il ponte risponde solo «fatto» o no.
+ *
+ * «🎵 Musica» sposta sugli Echo la musica che suona gia' in casa, o fa
+ * suonare quello che si sceglie (`core/alexa-musica.js`). Qui il ponte non
+ * c'entra: e' la plancia a chiedere `media_player.play_media` a Home
+ * Assistant, come fanno i tasti della pagina dei lettori.
  *
  * Il vestito e' quello della scheda «A muro» (`mu-ed-*`): righe con il testo
  * a sinistra e il comando a destra, interruttori e scelte a pastiglia.
@@ -25,9 +30,25 @@ import {
   avvisoPulito,
   normalizzaAlexa,
 } from "../core/alexa-annunci.js";
+import {
+  CERCA_AL_PIU,
+  PREFERITI_AL_PIU,
+  SERVIZI_MUSICA,
+  SERVIZIO_DI_SERIE,
+  chiamataPerSuonare,
+  chiamataSulLettore,
+  chiamatePerSpostare,
+  cosaPulita,
+  echoPuliti,
+  musicaCheSuona,
+  musicaSugliEcho,
+  preferitoPulito,
+  servizioPulito,
+} from "../core/alexa-musica.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
 import {
   allStates,
+  chiamaServizio,
   chiediAHomeAssistant,
   clean,
   doc,
@@ -49,12 +70,18 @@ const state = (root[KEY] ||= {
   scritto: "",
   bozza: null,
   erroreAvviso: "",
+  /* La scheda «Musica»: gli Echo su cui suonare (null = quelli delle
+   * notifiche), il servizio, quello che si sta scrivendo, l'ultima risposta. */
+  musica: { echo: null, servizio: SERVIZIO_DI_SERIE, cosa: "", esito: "" },
+  vivo: "",
 });
 
 export const ALEXA_EDITOR_TAB = "alexa";
 /* La seconda scheda della sezione: gli avvisi personalizzati. */
 export const ALEXA_AVVISI_TAB = "alexa_avvisi";
-const LE_SCHEDE = [ALEXA_EDITOR_TAB, ALEXA_AVVISI_TAB];
+/* La terza: la musica sugli Echo. */
+export const ALEXA_MUSICA_TAB = "alexa_musica";
+const LE_SCHEDE = [ALEXA_EDITOR_TAB, ALEXA_AVVISI_TAB, ALEXA_MUSICA_TAB];
 
 /* Come si chiamano le famiglie di notifiche, in italiano e in inglese: una
  * tabella che l'estrattore delle traduzioni legge (`SECTION_TABLES`). */
@@ -303,8 +330,301 @@ function corpoDegliAvvisi() {
   </div>`;
 }
 
+/* ─── La musica sugli Echo ────────────────────────────────────────────
+ *
+ * In cima gli Echo su cui suonare; poi quello che suona in casa adesso, con
+ * il tasto per spostarlo; poi quello che suona sugli Echo, con pausa e stop;
+ * in fondo la ricerca e i preferiti. Le due parti «adesso» cambiano da sole
+ * (`aggiornaDalVivo`): si riscrive solo il loro riquadro, e la ricerca che si
+ * sta scrivendo resta dov'e'. */
+/* Disegnati e non emoji: «⏸» e «⏹» senza il carattere a colori diventano
+ * due quadratini uguali. */
+const SEGNI_DEI_TASTI = Object.freeze({
+  pausa: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5" width="3.8" height="14" rx="1.2" fill="currentColor"/><rect x="13.7" y="5" width="3.8" height="14" rx="1.2" fill="currentColor"/></svg>`,
+  suona: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.6v12.8a1 1 0 0 0 1.5.86l10.2-6.4a1 1 0 0 0 0-1.72L9.5 4.74A1 1 0 0 0 8 5.6Z" fill="currentColor"/></svg>`,
+  successivo: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.3v11.4a.9.9 0 0 0 1.4.75l8.3-5.7a.9.9 0 0 0 0-1.5L6.4 5.55A.9.9 0 0 0 5 6.3Z" fill="currentColor"/><rect x="16.4" y="5.2" width="2.8" height="13.6" rx="1.1" fill="currentColor"/></svg>`,
+  ferma: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2.2" fill="currentColor"/></svg>`,
+});
+
+const NOMI_DEI_TASTI = Object.freeze({
+  pausa: ["Pausa", "Pause"],
+  suona: ["Riprendi", "Resume"],
+  successivo: ["Avanti", "Next"],
+  ferma: ["Ferma", "Stop"],
+});
+
+/* Come si dice il servizio: i nomi dei marchi restano quelli, TuneIn si
+ * spiega perche' non tutti sanno che e' la radio. */
+const nomeDelServizio = (id) =>
+  id === "TUNEIN"
+    ? t("Radio (TuneIn)", "Radio (TuneIn)")
+    : SERVIZI_MUSICA.find((uno) => uno.id === id)?.nome || id;
+
+/* Una copertina dentro «url()»: le virgolette e le parentesi si codificano,
+ * perche' sono le sole cose che uscirebbero dal loro posto. */
+function copertina(foto, onde) {
+  const url = clean(foto).replace(/["'()\\\s]/g, (carattere) => encodeURIComponent(carattere));
+  return `<span class="dm-alexa-arte" aria-hidden="true"${url ? ` style="background-image:url('${url}')"` : ""}>${onde ? "📻" : "🎵"}</span>`;
+}
+
+function echoDellaMusica(config, stati) {
+  const scelti = state.musica.echo ?? config.altoparlanti;
+  return echoPuliti(scelti, stati);
+}
+
+function dalVivoMarkup(stati, su) {
+  const inCasa = musicaCheSuona(stati);
+  const sugliEcho = musicaSugliEcho(stati);
+  const sotto = (uno) =>
+    [uno.radio ? uno.canale || "" : uno.artista, uno.nome, uno.app]
+      .filter(Boolean)
+      .map(esc)
+      .join(" · ");
+  const righeInCasa = inCasa.length
+    ? inCasa
+        .map(
+          (uno) => `<div class="mu-ed-riga dm-alexa-brano">
+        ${copertina(uno.foto, uno.radio)}
+        <div class="mu-ed-testo"><b>${esc(uno.titolo || uno.canale)}</b><small>${sotto(uno)}${
+          uno.stato === "paused" ? ` · ${esc(t("in pausa", "paused"))}` : ""
+        }</small></div>
+        <div class="mu-ed-dx"><button type="button" class="mu-ed-prova" data-dm-mu-sposta="${esc(uno.entita)}"${
+          su.length ? "" : " disabled"
+        }>🔊 ${esc(t("Sugli Echo", "To the Echos"))}</button></div>
+      </div>`,
+        )
+        .join("")
+    : `<div class="mu-ed-riga"><div class="mu-ed-testo"><small>${esc(
+        t(
+          "Niente suona in casa adesso. Quando un lettore suona, compare qui.",
+          "Nothing is playing at home right now. When a player plays, it shows up here.",
+        ),
+      )}</small></div></div>`;
+  const tasti = (uno) =>
+    (uno.stato === "playing" ? ["pausa", "successivo", "ferma"] : ["suona", "ferma"])
+      .map(
+        (comando) =>
+          `<button type="button" class="dm-alexa-tasto" data-dm-mu-tasto="${comando}" data-dm-mu-echo-di="${esc(uno.entita)}" aria-label="${esc(
+            t(...NOMI_DEI_TASTI[comando]),
+          )}">${SEGNI_DEI_TASTI[comando]}</button>`,
+      )
+      .join("");
+  const righeSugliEcho = sugliEcho
+    .map(
+      (uno) => `<div class="mu-ed-riga dm-alexa-brano">
+        ${copertina(uno.foto, uno.radio)}
+        <div class="mu-ed-testo"><b>${esc(uno.titolo || uno.canale)}</b><small>🔊 ${sotto(uno)}</small></div>
+        <div class="mu-ed-dx dm-alexa-comandi">${tasti(uno)}</div>
+      </div>`,
+    )
+    .join("");
+  return `<div class="mu-ed-blocco">
+      ${riga(
+        esc(t("Suona in casa adesso", "Playing at home now")),
+        esc(
+          t(
+            "Un tocco e la stessa musica passa sugli Echo scelti: gli Echo la cercano per titolo e artista, il lettore di prima va in pausa.",
+            "One tap and the same music moves to the chosen Echos: the Echos look it up by title and artist, the previous player pauses.",
+          ),
+        ),
+        "",
+      )}
+      ${righeInCasa}
+    </div>
+    ${
+      sugliEcho.length
+        ? `<div class="mu-ed-blocco">${riga(esc(t("Sugli Echo adesso", "On the Echos now")), "", "")}${righeSugliEcho}</div>`
+        : ""
+    }`;
+}
+
+function corpoDellaMusica() {
+  const config = configurazione();
+  const stati = allStates() || {};
+  const echo = altoparlantiAlexa(stati);
+  if (!echo.length)
+    return `<div class="mu-ed dm-alexa-ed" data-dm-alexa-ed><div class="mu-ed-blocco">${echoMarkup(config, echo)}</div></div>`;
+  const su = echoDellaMusica(config, stati);
+  const musica = state.musica;
+  const vivo = dalVivoMarkup(stati, su);
+  state.vivo = vivo;
+  const preferiti = config.musica
+    .map(
+      (uno, indice) => `<span class="dm-alexa-preferito">
+        <button type="button" class="dm-alexa-pastiglia" data-dm-mu-preferito="${indice}"${su.length ? "" : " disabled"}>▶ ${esc(uno.cosa)} <small>${esc(nomeDelServizio(uno.servizio))}</small></button>
+        <button type="button" class="dm-alexa-via-piccolo" data-dm-mu-togli="${indice}" aria-label="${esc(t("Togli dai preferiti", "Remove from favourites"))}">✕</button>
+      </span>`,
+    )
+    .join("");
+  const giaTenuto = config.musica.some(
+    (uno) =>
+      uno.servizio === musica.servizio &&
+      uno.cosa.toLowerCase() === cosaPulita(musica.cosa).toLowerCase(),
+  );
+  return `<div class="mu-ed dm-alexa-ed" data-dm-alexa-ed>
+    <div class="mu-ed-blocco">
+      <div class="mu-ed-riga"><div class="mu-ed-testo"><b>${esc(t("Su quali Echo", "On which Echos"))}</b><small>${esc(
+        t(
+          "Tocca un Echo per sceglierlo. Più Echo suonano la stessa musica, ognuno per conto suo: per averla insieme usa un gruppo di altoparlanti dell'app Alexa.",
+          "Tap an Echo to choose it. Several Echos play the same music, each on its own: to have it in sync use a speaker group from the Alexa app.",
+        ),
+      )}</small><div class="dm-alexa-echo">${echo
+        .map(
+          (uno) =>
+            `<button type="button" class="dm-alexa-pastiglia" aria-pressed="${su.includes(uno.entita)}" data-dm-mu-echo="${esc(uno.entita)}">🔊 ${esc(uno.nome)}${uno.spento ? ` <small>${esc(t("spento", "offline"))}</small>` : ""}</button>`,
+        )
+        .join("")}</div></div></div>
+    </div>
+    <div data-dm-mu-vivo>${vivo}</div>
+    <div class="mu-ed-blocco">
+      ${riga(
+        esc(t("Scegli cosa ascoltare", "Choose what to play")),
+        esc(
+          t(
+            "Un artista, un brano, un album, una playlist o una radio. Il servizio deve essere collegato agli Echo nell'app Alexa.",
+            "An artist, a song, an album, a playlist or a radio station. The service must be linked to the Echos in the Alexa app.",
+          ),
+        ),
+        "",
+      )}
+      <div class="mu-ed-riga dm-alexa-bozza">
+        <div class="dm-alexa-echo dm-alexa-servizi">${SERVIZI_MUSICA.map(
+          (uno) =>
+            `<button type="button" class="dm-alexa-pastiglia" aria-pressed="${musica.servizio === uno.id}" data-dm-mu-servizio="${uno.id}">${esc(nomeDelServizio(uno.id))}</button>`,
+        ).join("")}</div>
+        <div class="dm-alexa-cerca">
+          <input class="ed-input" data-dm-mu-cosa value="${esc(musica.cosa)}" maxlength="${CERCA_AL_PIU}" enterkeyhint="go" placeholder="${esc(
+            musica.servizio === "TUNEIN"
+              ? t("Radio Deejay", "BBC Radio 2")
+              : t("Vasco Rossi, Albachiara, Top 50 Italia…", "Coldplay, Yellow, Today's Top Hits…"),
+          )}">
+          <button type="button" class="mu-ed-prova" data-dm-mu-suona${su.length ? "" : " disabled"}>▶ ${esc(t("Suona", "Play"))}</button>
+          <button type="button" class="dm-alexa-tasto" data-dm-mu-tieni${
+            giaTenuto || config.musica.length >= PREFERITI_AL_PIU ? " disabled" : ""
+          } aria-label="${esc(t("Tieni nei preferiti", "Keep in favourites"))}">☆</button>
+        </div>
+        ${musica.esito ? `<small class="dm-alexa-esito">${esc(musica.esito)}</small>` : ""}
+      </div>
+      ${
+        preferiti
+          ? `<div class="mu-ed-riga"><div class="mu-ed-testo"><b>${esc(t("Preferiti", "Favourites"))}</b><div class="dm-alexa-echo">${preferiti}</div></div></div>`
+          : ""
+      }
+    </div>
+  </div>`;
+}
+
+/* Le parti «adesso» si rinfrescano da sole mentre la scheda e' aperta: un
+ * brano finisce, un altro comincia, e la scheda lo deve dire senza che si
+ * tocchi niente. Lo dice Home Assistant, con lo stato che cambia: nessun
+ * timer. */
+function aggiornaDalVivo() {
+  if (schedaAttiva() !== ALEXA_MUSICA_TAB) return;
+  const scatola = doc?.querySelector?.("#ed-body [data-dm-mu-vivo]");
+  if (!scatola) return;
+  const stati = allStates() || {};
+  const vivo = dalVivoMarkup(stati, echoDellaMusica(configurazione(), stati));
+  if (vivo === state.vivo) return;
+  state.vivo = vivo;
+  scatola.innerHTML = vivo;
+}
+
+function suonaSugliEcho(chiamate, detto) {
+  if (!chiamate.length) return;
+  let andate = true;
+  for (const chiamata of chiamate) andate = chiamaServizio(chiamata) && andate;
+  state.musica.esito = andate
+    ? detto
+    : t("Manca il collegamento a Home Assistant.", "No connection to Home Assistant.");
+  root.navigator?.vibrate?.(8);
+}
+
+/* I tasti della scheda «Musica». Torna vero se il tasto era suo. */
+function suLaMusica(d, config, evento) {
+  const musica = state.musica;
+  const stati = allStates() || {};
+  const su = echoDellaMusica(config, stati);
+  const fatto = () => {
+    evento.preventDefault();
+    ridisegna();
+    return true;
+  };
+  if ("dmMuEcho" in d) {
+    const entita = clean(d.dmMuEcho);
+    musica.echo = su.includes(entita) ? su.filter((uno) => uno !== entita) : [...su, entita];
+    return fatto();
+  }
+  if ("dmMuServizio" in d) {
+    musica.servizio = servizioPulito(d.dmMuServizio);
+    return fatto();
+  }
+  if ("dmMuSposta" in d) {
+    const lettura = musicaCheSuona(stati).find((uno) => uno.entita === d.dmMuSposta);
+    suonaSugliEcho(
+      chiamatePerSpostare(lettura, su, stati),
+      t(
+        "✓ Passata sugli Echo: tra un attimo la senti.",
+        "✓ Moved to the Echos: you will hear it in a moment.",
+      ),
+    );
+    return fatto();
+  }
+  if ("dmMuTasto" in d) {
+    const chiamata = chiamataSulLettore(d.dmMuEchoDi, d.dmMuTasto);
+    if (chiamata) chiamaServizio(chiamata);
+    evento.preventDefault();
+    return true;
+  }
+  if ("dmMuSuona" in d) {
+    const chiamata = chiamataPerSuonare(
+      { echo: su, servizio: musica.servizio, cosa: musica.cosa },
+      stati,
+    );
+    if (!chiamata) {
+      musica.esito = t("Scrivi cosa vuoi ascoltare.", "Write what you want to play.");
+      return fatto();
+    }
+    suonaSugliEcho(
+      [chiamata],
+      t(
+        "✓ Chiesto agli Echo: tra un attimo la senti.",
+        "✓ Asked the Echos: you will hear it in a moment.",
+      ),
+    );
+    return fatto();
+  }
+  if ("dmMuPreferito" in d) {
+    const uno = config.musica[Number(d.dmMuPreferito)];
+    const chiamata = uno && chiamataPerSuonare({ echo: su, ...uno }, stati);
+    if (chiamata)
+      suonaSugliEcho(
+        [chiamata],
+        t(
+          "✓ Chiesto agli Echo: tra un attimo la senti.",
+          "✓ Asked the Echos: you will hear it in a moment.",
+        ),
+      );
+    return fatto();
+  }
+  if ("dmMuTieni" in d) {
+    const uno = preferitoPulito({ servizio: musica.servizio, cosa: musica.cosa });
+    if (uno) {
+      salva({ musica: [...config.musica, uno] });
+      root.edToast?.(t("☆ Nei preferiti", "☆ In favourites"));
+    }
+    return fatto();
+  }
+  if ("dmMuTogli" in d) {
+    const indice = Number(d.dmMuTogli);
+    salva({ musica: config.musica.filter((_uno, posto) => posto !== indice) });
+    return fatto();
+  }
+  return false;
+}
+
 function corpoMarkup() {
   if (schedaAttiva() === ALEXA_AVVISI_TAB) return corpoDegliAvvisi();
+  if (schedaAttiva() === ALEXA_MUSICA_TAB) return corpoDellaMusica();
   const config = configurazione();
   const echo = altoparlantiAlexa(allStates() || {});
   const dis = config.attivo ? "" : " dm-alexa-spento";
@@ -398,6 +718,7 @@ export function ensureAlexaEditor() {
     if (!LE_SCHEDE.includes(scheda)) {
       state.esito = "";
       state.bozza = null;
+      state.musica.esito = "";
     }
     return false;
   }
@@ -413,8 +734,8 @@ export function ensureAlexaEditor() {
   return true;
 }
 
-/* Le due linguette della sezione Alexa: le notifiche dette dagli Echo, e gli
- * avvisi scritti da chi amministra. L'albero le mette nella famiglia «Alexa»
+/* Le tre linguette della sezione Alexa: le notifiche dette dagli Echo, gli
+ * avvisi scritti da chi amministra e la musica. L'albero le mette nella famiglia «Alexa»
  * (`core/alberatura-del-config.js`). */
 export function ensureAlexaEditorTab() {
   const linguette = doc?.querySelector(".ed-tab")?.parentElement;
@@ -423,6 +744,7 @@ export function ensureAlexaEditorTab() {
   for (const [id, nome] of [
     [ALEXA_EDITOR_TAB, `🔔 ${t("Notifiche", "Notifications")}`],
     [ALEXA_AVVISI_TAB, `📝 ${t("Avvisi personalizzati", "Custom announcements")}`],
+    [ALEXA_MUSICA_TAB, `🎵 ${t("Musica", "Music")}`],
   ]) {
     if (linguette.querySelector(`.ed-tab[data-tab="${id}"]`)) continue;
     const linguetta = doc.createElement("button");
@@ -485,6 +807,7 @@ function onClick(evento) {
   const config = configurazione();
   const d = tasto.dataset;
   if (suUnAvviso(d, config, evento)) return;
+  if (suLaMusica(d, config, evento)) return;
   if ("dmAlexaAttivo" in d) salva({ attivo: !config.attivo });
   else if ("dmAlexaEcho" in d) {
     const entita = clean(d.dmAlexaEcho);
@@ -621,6 +944,10 @@ function suUnAvviso(d, config, evento) {
 function onInput(evento) {
   const bozza = state.bozza;
   const campo = evento.target;
+  if (campo?.matches?.("#ed-body [data-dm-mu-cosa]")) {
+    state.musica.cosa = String(campo.value || "").slice(0, CERCA_AL_PIU);
+    return;
+  }
   if (!bozza || !campo?.closest?.("[data-dm-av-bozza]")) return;
   if (campo.matches("[data-dm-av-frase]")) bozza.frase = String(campo.value || "");
   else if (campo.matches("[data-dm-av-ora]")) bozza.ora = clean(campo.value) || bozza.ora;
@@ -648,6 +975,16 @@ function onChange(evento) {
     },
   });
   ridisegna();
+}
+
+/* Invio nel campo della musica vale come «Suona». */
+function onKeydown(evento) {
+  if (evento.key !== "Enter" || !evento.target?.matches?.("#ed-body [data-dm-mu-cosa]")) return;
+  const tasto = doc?.querySelector?.("#ed-body [data-dm-mu-suona]");
+  if (!tasto || tasto.disabled) return;
+  evento.preventDefault();
+  state.musica.cosa = String(evento.target.value || "").slice(0, CERCA_AL_PIU);
+  tasto.click();
 }
 
 export function installAlexaEditor() {
@@ -683,11 +1020,33 @@ export function installAlexaEditor() {
       border-radius:10px;padding:8px 12px;font:inherit;font-weight:800;font-size:12.5px;cursor:pointer}
     #ed-body .dm-alexa-via{color:#dc2626;border-color:color-mix(in srgb,#dc2626 40%,transparent)}
     #ed-body .dm-alexa-corta .mu-ed-testo{flex:1 1 0}
+    #ed-body .dm-alexa-brano{flex-wrap:wrap;gap:10px 12px}
+    #ed-body .dm-alexa-brano .mu-ed-testo{flex:1 1 150px;min-width:0}
+    #ed-body .dm-alexa-brano .mu-ed-dx{margin-left:auto}
+    #ed-body .dm-alexa-brano .mu-ed-testo b,#ed-body .dm-alexa-brano .mu-ed-testo small{
+      display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    #ed-body .dm-alexa-arte{flex:none;width:46px;height:46px;border-radius:10px;display:grid;place-items:center;
+      font-size:20px;background:color-mix(in srgb,#0ea5e9 14%,transparent) center/cover no-repeat;
+      box-shadow:inset 0 0 0 1px var(--divider-color,#dbe4ee)}
+    #ed-body .dm-alexa-arte[style]{font-size:0}
+    #ed-body .dm-alexa-comandi{display:flex;gap:6px;flex-wrap:nowrap}
+    #ed-body .dm-alexa-comandi .dm-alexa-tasto{display:grid;place-items:center;width:40px;height:36px;padding:0}
+    #ed-body .dm-alexa-comandi svg{width:17px;height:17px}
+    #ed-body .dm-alexa-cerca{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+    #ed-body .dm-alexa-cerca .ed-input{margin:0;flex:1 1 220px;min-width:0}
+    #ed-body .dm-alexa-cerca .mu-ed-prova,#ed-body .dm-alexa-cerca .dm-alexa-tasto{flex:none}
+    #ed-body .dm-alexa-servizi{margin-top:0}
+    #ed-body .dm-alexa-esito{font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
+    #ed-body .dm-alexa-preferito{display:inline-flex;align-items:center;gap:2px}
+    #ed-body .dm-alexa-via-piccolo{border:0;background:none;color:var(--text-dim,#64748b);cursor:pointer;
+      font:inherit;font-size:12px;padding:6px}
+    #ed-body button[disabled]{opacity:.5;cursor:default}
     `,
   );
   doc.addEventListener("click", onClick);
   doc.addEventListener("change", onChange);
   doc.addEventListener("input", onInput);
+  doc.addEventListener("keydown", onKeydown);
   const ancora = () =>
     root.queueMicrotask?.(() => {
       ensureAlexaEditorTab();
@@ -700,6 +1059,8 @@ export function installAlexaEditor() {
   onEditorRedraw("__dmAlexaEditor", ancora);
   for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:editor-rendered"])
     root.addEventListener?.(evento, ancora);
+  for (const evento of ["dashboardmodern:state-changed", "dashboardmodern:states-ready"])
+    root.addEventListener?.(evento, aggiornaDalVivo);
   ensureAlexaEditorTab();
   ensureAlexaEditor();
   return true;

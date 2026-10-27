@@ -141,6 +141,9 @@ const SECTION_TABLES = Object.freeze([
   { file: "alexa-editor-section.js", name: "NOMI_DELLE_FAMIGLIE", rows: "values", at: [0, 1] },
   { file: "alexa-editor-section.js", name: "GIORNI", rows: "values", at: [0, 1] },
   { file: "alexa-editor-section.js", name: "CONDIZIONI", rows: "values", at: [0, 1] },
+  /* I tasti sotto la musica degli Echo, e le frasi pronte del messaggio. */
+  { file: "alexa-editor-section.js", name: "NOMI_DEI_TASTI", rows: "values", at: [0, 1] },
+  { file: "finestre/messaggio.js", name: "FRASI_PRONTE", rows: "items", at: [0, 1] },
   /* Le parole dei ruoli della card, per dire quali caselle il collegamento a
      un'integrazione ha compilato. */
   { file: "appliance-editor-section.js", name: "ROLE_WORDS", rows: "values", at: [0, 1] },
