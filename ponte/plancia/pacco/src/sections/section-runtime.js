@@ -560,7 +560,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-QT2S6GVS.js";
+} from "../../chunk-4O27JSOH.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -64684,6 +64684,8 @@ var state53 = root[KEY57] ||= {
     arrivati: 0,
     inVolo: false,
     guasto: "",
+    /* Quante domande di fila non hanno avuto risposta. */
+    falliti: 0,
     attesi: []
   }
 };
@@ -64691,6 +64693,8 @@ var SPORT_PAGE_ID = "page-sport";
 var SPORT_TAB = "sport";
 var ATTESA2 = 25e3;
 var DOPO_UN_ERRORE = 6e4;
+var SENZA_FILO = 1500;
+var DOPO_IL_PRIMO = 5e3;
 var BATTITO = 6e4;
 function configurazioneDelloSport() {
   return normalizzaSport(readJson(CHIAVE_SPORT, {}));
@@ -64722,11 +64726,22 @@ async function chiediIRisultati(firma2, seguiti) {
     dati.arrivati = Date.now();
     dati.guasto = "";
     if (mancanti) dati.chiesti = Date.now() - fraQuantoSiRichiede(dati.risultati) + DOPO_UN_ERRORE;
+    dati.falliti = 0;
   } catch (errore) {
     if (dati.firma !== firma2) return;
     const codice = clean(errore?.code || errore?.error?.code || errore?.message);
-    dati.guasto = /unknown_command|not permitted/i.test(codice) ? "senza-ponte" : /unauthorized/i.test(codice) ? "non-entrato" : "non-risponde";
-    dati.chiesti = Date.now() - fraQuantoSiRichiede(dati.risultati) + DOPO_UN_ERRORE;
+    if (/^(socket|msgId)$/i.test(codice)) {
+      dati.chiesti = Date.now() - fraQuantoSiRichiede(dati.risultati) + SENZA_FILO;
+      root.setTimeout?.(() => schedule19(), SENZA_FILO + 50);
+      return;
+    }
+    const guasto = /unknown_command|not permitted/i.test(codice) ? "senza-ponte" : /unauthorized/i.test(codice) ? "non-entrato" : "non-risponde";
+    dati.falliti += 1;
+    root.console?.warn?.("[DashboardModern] sport: risposta mancata", codice || "?");
+    const primo = guasto === "non-risponde" && dati.falliti < 2;
+    if (!primo) dati.guasto = guasto;
+    dati.chiesti = Date.now() - fraQuantoSiRichiede(dati.risultati) + (primo ? DOPO_IL_PRIMO : DOPO_UN_ERRORE);
+    if (primo) root.setTimeout?.(() => schedule19(), DOPO_IL_PRIMO + 50);
   } finally {
     if (dati.firma === firma2) dati.inVolo = false;
     avvisaChiAspetta();
@@ -64745,6 +64760,7 @@ function risultatiDelloSport(quandoArrivano = null) {
     dati.arrivati = 0;
     dati.guasto = "";
     dati.inVolo = false;
+    dati.falliti = 0;
   }
   if (seguiti.length && planciaVisibile() && !dati.inVolo) {
     const ogni = fraQuantoSiRichiede(dati.risultati);
@@ -65716,6 +65732,10 @@ function ensureSportTab() {
   voce3.addEventListener("click", () => apriLaPagina(voce3));
   if (dopo) dopo.after(voce3);
   else barra3.append(voce3);
+  try {
+    lexicalGlobal("cdApplyNavOrder")?.();
+  } catch (_errore) {
+  }
   return voce3;
 }
 function sezioneAccesa7() {

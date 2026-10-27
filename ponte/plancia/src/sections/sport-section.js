@@ -46,6 +46,7 @@ import {
   clean,
   doc,
   esc,
+  lexicalGlobal,
   installStyle,
   locale,
   paginaVisibile,
@@ -72,6 +73,8 @@ const state = (root[KEY] ||= {
     arrivati: 0,
     inVolo: false,
     guasto: "",
+    /* Quante domande di fila non hanno avuto risposta. */
+    falliti: 0,
     attesi: [],
   },
 });
@@ -81,6 +84,10 @@ export const SPORT_TAB = "sport";
 
 const ATTESA = 25_000;
 const DOPO_UN_ERRORE = 60_000;
+/* Il filo con la casa non e' ancora aperto: si riprova fra poco. */
+const SENZA_FILO = 1_500;
+/* Il primo intoppo si riprova presto, prima di dire che non arriva niente. */
+const DOPO_IL_PRIMO = 5_000;
 const BATTITO = 60_000;
 
 /* ── cosa si segue ────────────────────────────────────────────────────── */
@@ -122,18 +129,41 @@ async function chiediIRisultati(firma, seguiti) {
     dati.arrivati = Date.now();
     dati.guasto = "";
     if (mancanti) dati.chiesti = Date.now() - fraQuantoSiRichiede(dati.risultati) + DOPO_UN_ERRORE;
+    dati.falliti = 0;
   } catch (errore) {
     if (dati.firma !== firma) return;
     const codice = clean(errore?.code || errore?.error?.code || errore?.message);
+    /* «Lo sport a volte non arriva, e la voce cambia posto nella barra.» La
+     * sezione puo' partire prima che il filo con la casa sia aperto: la prima
+     * domanda tornava subito con «socket», la pagina diceva «I risultati
+     * adesso non arrivano» e riprovava dopo un minuto. Ma un filo non ancora
+     * aperto non e' un guasto: si aspetta un attimo e si richiede, e intanto
+     * si dice che arrivano. */
+    if (/^(socket|msgId)$/i.test(codice)) {
+      dati.chiesti = Date.now() - fraQuantoSiRichiede(dati.risultati) + SENZA_FILO;
+      root.setTimeout?.(() => schedule(), SENZA_FILO + 50);
+      return;
+    }
     /* Senza il ponte — la plancia dentro Home Assistant senza l'add-on — la
      * domanda torna «non conosco»: non e' un intoppo, e' cosi'. */
-    dati.guasto = /unknown_command|not permitted/i.test(codice)
+    const guasto = /unknown_command|not permitted/i.test(codice)
       ? "senza-ponte"
       : /unauthorized/i.test(codice)
         ? "non-entrato"
         : "non-risponde";
-    /* Un intoppo si riprova presto; quello che si sapeva resta. */
-    dati.chiesti = Date.now() - fraQuantoSiRichiede(dati.risultati) + DOPO_UN_ERRORE;
+    dati.falliti += 1;
+    /* Il perche', per chi guarda la console: senza, «non arrivano» non dice
+     * se e' il filo, il tempo o l'add-on. */
+    root.console?.warn?.("[DashboardModern] sport: risposta mancata", codice || "?");
+    /* Un intoppo (una risposta che non arriva in tempo, un filo appena
+     * riaperto) al primo giro si richiede dopo pochi secondi senza dirlo; dal
+     * secondo di fila lo si dice, e si riprova ogni minuto. Quello che si
+     * sapeva resta. */
+    const primo = guasto === "non-risponde" && dati.falliti < 2;
+    if (!primo) dati.guasto = guasto;
+    dati.chiesti =
+      Date.now() - fraQuantoSiRichiede(dati.risultati) + (primo ? DOPO_IL_PRIMO : DOPO_UN_ERRORE);
+    if (primo) root.setTimeout?.(() => schedule(), DOPO_IL_PRIMO + 50);
   } finally {
     if (dati.firma === firma) dati.inVolo = false;
     avvisaChiAspetta();
@@ -157,6 +187,7 @@ export function risultatiDelloSport(quandoArrivano = null) {
     dati.arrivati = 0;
     dati.guasto = "";
     dati.inVolo = false;
+    dati.falliti = 0;
   }
   if (seguiti.length && planciaVisibile() && !dati.inVolo) {
     const ogni = fraQuantoSiRichiede(dati.risultati);
@@ -1540,6 +1571,12 @@ export function ensureSportTab() {
   voce.addEventListener("click", () => apriLaPagina(voce));
   if (dopo) dopo.after(voce);
   else barra.append(voce);
+  /* Il posto scelto nell'«Ordine navbar», se c'e': la voce nasce quando la
+   * sezione parte, a volte prima e a volte dopo che la barra e' stata messa
+   * in ordine, e cosi' finiva una volta in fondo e una volta in testa. */
+  try {
+    lexicalGlobal("cdApplyNavOrder")?.();
+  } catch (_errore) {}
   return voce;
 }
 
