@@ -89,6 +89,14 @@ import {
 import { COMPOSITORI, PEZZI_DEL_CICLO } from "./parole-delle-notifiche.js";
 import { NotificheDiHomeAssistant } from "./notifiche-di-home-assistant.js";
 import { chiaveBuona, Filmati, idBuono } from "./i-filmati.js";
+import {
+  CHIAVE_ALEXA,
+  avvisiDaDire,
+  chiamataAlexa,
+  daDire,
+  normalizzaAlexa,
+  paroleDaDire,
+} from "../plancia/src/core/alexa-annunci.js";
 
 const MINUTO = 60 * 1000;
 /* Le larghezze chieste per la foto di un movimento, dalla piu' bella alla
@@ -132,6 +140,12 @@ export const PERSONALIZZATE_AL_PIU = 40;
 
 /* Ogni quanto gira la sentinella lenta, e ogni quanto si chiede la previsione. */
 const BATTITO = 30 * 1000;
+
+/* Gli Echo: lo stesso evento non prima di due minuti, e al piu' venti cose
+ * dette in un'ora (`_dilloAdAlexa`). */
+const UN_ORA = 60 * 60 * 1000;
+const ALEXA_PAUSA = 2 * 60 * 1000;
+const ALEXA_IN_UN_ORA = 20;
 const PREVISIONE_OGNI = 15 * MINUTO;
 const REGISTRI_OGNI = 6 * ORA;
 
@@ -796,6 +810,7 @@ export class Notifiche {
     );
     void this._leTelecamereDaTenere();
     this.sentinella.battito();
+    await this._gliAvvisiDiAlexa();
     this._campionaIlDiario();
     await this._leAttese();
     this.sincronizza();
@@ -1193,6 +1208,11 @@ export class Notifiche {
         this.filmati?.registra?.(evento.camera, evento.quando ?? this.adesso()) ?? null;
     /* Il riepilogo della sera in Base non esiste. */
     if (evento?.tipo === "riepilogo" && !evento.sempre && !premium) return 0;
+    /* Gli Echo di casa una volta per evento, non una per telefono: la
+     * consegna a un telefono solo (il riepilogo, la prova, chi aspettava) e'
+     * gia' stata detta o non si dice. Non si aspetta: la voce non ferma i
+     * telefoni. */
+    if (!soloA) void this._dilloAdAlexa(evento);
     const elenco = this.dispositivi.elenco();
     const chiCe = await this._chiCe();
     const ora = this.adesso();
@@ -1337,6 +1357,119 @@ export class Notifiche {
     }
     if (quanti) this.registro.debug?.(`notifica «${evento.tipo}» a ${quanti} telefoni`);
     return quanti;
+  }
+
+  /* ─── Gli Echo di casa ─────────────────────────────────────────────── */
+
+  /* La scelta della casa su Alexa (`cd_alexa` nella plancia principale) e la
+   * lingua in cui la si dice: quella della plancia, italiano o inglese come
+   * le notifiche. */
+  _alexa() {
+    const valori = this._valori();
+    const lingua = String(valori.cd_lingua || "it").startsWith("en") ? "en" : "it";
+    return { conf: normalizzaAlexa(valori[CHIAVE_ALEXA]), lingua };
+  }
+
+  /* Fa dire un evento agli Echo scelti, se la casa lo vuole
+   * (`alexa-annunci.js`, `daDire`). Lo stesso evento (`chiave`) non si
+   * ripete prima di due minuti, e in un'ora al piu' ALEXA_IN_UN_ORA volte:
+   * un sensore che sbatte non deve far parlare la casa tutto il giorno.
+   * Torna se l'ha mandato a Home Assistant. */
+  async _dilloAdAlexa(evento) {
+    try {
+      if (!this.casa || !evento) return false;
+      const { conf, lingua } = this._alexa();
+      const categoria = categoriaDi(evento.tipo);
+      if (
+        !daDire(
+          conf,
+          { categoria, urgenza: evento.urgenza, tipo: evento.tipo },
+          new Date(this.adesso()),
+        )
+      )
+        return false;
+      const ora = this.adesso();
+      this._alexaDette = (this._alexaDette || []).filter((una) => ora - una.quando < UN_ORA);
+      const chiave = String(evento.chiave ?? evento.tipo);
+      if (this._alexaDette.some((una) => una.chiave === chiave && ora - una.quando < ALEXA_PAUSA))
+        return false;
+      if (this._alexaDette.length >= ALEXA_IN_UN_ORA) return false;
+      const { titolo, testo } = this._parole(evento, lingua, { stile: "semplice" });
+      const parole = paroleDaDire(titolo, testo);
+      if (!parole) return false;
+      this._alexaDette.push({ chiave, quando: ora });
+      await this.casa.chiedi(chiamataAlexa(conf, parole));
+      this.registro.debug?.(`alexa: «${evento.tipo}» su ${conf.altoparlanti.length} Echo`);
+      return true;
+    } catch (errore) {
+      this.registro.attenzione?.(`alexa non parla: ${errore?.message || errore}`);
+      return false;
+    }
+  }
+
+  /* Gli avvisi personalizzati degli Echo (`alexa-annunci.js`,
+   * `avvisiDaDire`): a un orario, o quando una cosa di casa resta com'e'
+   * scritto. La memoria di chi e' gia' stato detto sta qui, in memoria: un
+   * ponte riavviato al piu' ridice un avviso a orario dei cinque minuti
+   * prima. Un avviso che non parte non ferma il giro. */
+  async _gliAvvisiDiAlexa() {
+    if (!this.casa) return 0;
+    let detti = 0;
+    try {
+      const { conf } = this._alexa();
+      if (!conf.avvisi.length) return 0;
+      this._memoriaDiAlexa ??= {};
+      const daDireAdesso = avvisiDaDire(
+        conf,
+        this.sentinella.stati,
+        new Date(this.adesso()),
+        this._memoriaDiAlexa,
+      );
+      for (const { avviso, altoparlanti } of daDireAdesso) {
+        const parole = paroleDaDire(avviso.frase, "");
+        if (!parole) continue;
+        try {
+          await this.casa.chiedi(chiamataAlexa(conf, parole, altoparlanti));
+          detti += 1;
+        } catch (errore) {
+          this.registro.attenzione?.(`alexa non dice un avviso: ${errore?.message || errore}`);
+        }
+      }
+    } catch (errore) {
+      this.registro.attenzione?.(`gli avvisi di alexa: ${errore?.message || errore}`);
+    }
+    return detti;
+  }
+
+  /* Il tasto «Prova» del config: una frase sugli Echo scelti adesso (anche
+   * se non ancora salvati), senza guardare categorie ne' silenzio. Solo chi
+   * amministra (`commissioni.js`). */
+  async provaAlexa(detto) {
+    const id = detto?.id ?? null;
+    const no = (code, message) => ({
+      id,
+      type: "result",
+      success: false,
+      error: { code, message },
+    });
+    if (!this.casa) return no("not_connected", "home assistant non c'e'");
+    const { conf, lingua } = this._alexa();
+    const scelti = normalizzaAlexa({ altoparlanti: detto?.altoparlanti }).altoparlanti;
+    const altoparlanti = scelti.length ? scelti : conf.altoparlanti;
+    if (!altoparlanti.length) return no("invalid", "nessun echo scelto");
+    const modo = detto?.modo === "voce" || detto?.modo === "annuncio" ? detto.modo : conf.modo;
+    /* La prova di un avviso dice la sua frase; senza, quella di sempre. */
+    const parole =
+      paroleDaDire(String(detto?.frase ?? "").slice(0, 400), "") ||
+      (lingua === "en"
+        ? "GdAHome test. From now on your notifications can be heard here too."
+        : "Prova di GdAHome. Da adesso le notifiche si sentono anche qui.");
+    try {
+      await this.casa.chiedi(chiamataAlexa({ ...conf, modo }, parole, altoparlanti));
+      return { id, type: "result", success: true, result: { fatto: true } };
+    } catch (errore) {
+      return no("home_assistant", String(errore?.message || errore).slice(0, 200));
+    }
   }
 
   /* Le parole di un evento per quel telefono: quelle del racconto, nello

@@ -35,7 +35,12 @@
  * costa niente, e farlo dopo ogni ridisegno vuol dire che una scheda nuova
  * trova il suo posto senza che nessuno la registri da nessuna parte.
  */
-import { famigliaDellaScheda, famiglieConSchede, inOrdine } from "../core/alberatura-del-config.js";
+import {
+  famigliaDellaScheda,
+  famiglieConSchede,
+  inOrdine,
+  nomeDellaFamigliaCon,
+} from "../core/alberatura-del-config.js";
 import { clean, doc, esc, installStyle, onEditorRedraw, root, t, senzaCadere } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_ALBERATURA__";
@@ -62,7 +67,7 @@ function schedaAttiva() {
 
 /** Come si chiama una famiglia adesso, nella lingua di chi guarda. */
 function nomeDellaFamiglia(voce) {
-  return t(voce.it, voce.en);
+  return nomeDellaFamigliaCon(voce, t);
 }
 
 /* ── il riordino ──────────────────────────────────────────────────────── */

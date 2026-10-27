@@ -772,6 +772,15 @@ export class Commissioni {
       if (!this.notifiche) return no(id, "unknown_command", `non conosco ${tipo}`);
       return this.notifiche.casaCapita(detto);
     }
+    /* La prova degli Echo dal config («Dillo anche su Alexa»): fa parlare
+     * gli Echo di casa, quindi solo chi amministra. Torna solo «fatto» o un
+     * no: nessuno stato della casa esce di qui. */
+    if (tipo === "ponte/alexa/prova") {
+      if (puoAmministrare !== true)
+        return no(id, "unauthorized", "questo lo fa solo chi amministra la casa");
+      if (!this.notifiche) return no(id, "unknown_command", `non conosco ${tipo}`);
+      return this.notifiche.provaAlexa(detto);
+    }
     /* Le notifiche semplici ed elaborate (`notifiche.js`) non hanno comandi
      * di qui: le loro domande — `ponte/notifiche/*` — arrivano solo da un
      * telefono abbinato e intestato a un utente di Home Assistant

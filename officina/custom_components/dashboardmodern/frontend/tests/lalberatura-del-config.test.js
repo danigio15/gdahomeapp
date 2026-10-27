@@ -149,6 +149,12 @@ test("ogni scheda dell'elenco sta in una famiglia che esiste davvero", () => {
 
 test("ogni famiglia ha un nome in tutte e due le lingue", () => {
   for (const voce of FAMIGLIE) {
+    /* Un nome proprio — «Alexa» — e' uguale in tutte le lingue: sta in
+     * `nome`, da solo, e non si traduce. Tutti gli altri ne hanno due. */
+    if (voce.nome) {
+      assert.ok(!voce.it && !voce.en, `${voce.chiave}: un nome proprio non si traduce`);
+      continue;
+    }
     assert.ok(voce.it && voce.en, `${voce.chiave}: manca un nome`);
     assert.notEqual(voce.it, voce.en, `${voce.chiave}: le due lingue dicono la stessa cosa`);
     assert.ok(voce.glifo, `${voce.chiave}: manca il glifo`);

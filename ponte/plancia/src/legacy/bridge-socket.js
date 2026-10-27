@@ -120,6 +120,9 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
   "ponte/sport/squadre",
   "ponte/sport/dettaglio",
   "ponte/sport/logo",
+  /* La prova degli Echo dal Config (scheda Alexa): solo chi amministra, lo
+   * decide il ponte (`commissioni.js`). */
+  "ponte/alexa/prova",
   // Le segnalazioni. Stessa ragione dell'upload, e una in piu': la chiave del
   // manutentore sta nelle opzioni del config entry e la chiamata verso il
   // relay la fa il backend, quindi qui passa la domanda e non il segreto.

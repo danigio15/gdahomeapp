@@ -65,6 +65,7 @@ import { installVmcEditor } from "./vmc-editor-section.js";
 import { installDeumidificatoriEditor } from "./deumidificatori-editor-section.js";
 import { installAssistSection } from "./assist-section.js";
 import { installAssistEditor } from "./assist-editor-section.js";
+import { installAlexaEditor } from "./alexa-editor-section.js";
 import { installClimaCosaManca } from "./il-clima-dice-cosa-manca-section.js";
 import { installTrvEditor } from "./trv-editor-section.js";
 import { installSecurityShowcaseSection } from "./security-showcase-section.js";
@@ -1029,6 +1030,9 @@ export function installSectionRuntime() {
      * riga che lo accende fra le Impostazioni. */
     senzaCadere(installAssistSection);
     senzaCadere(installAssistEditor);
+    /* Alexa: le notifiche dette anche dagli Echo, in fondo alla scheda
+     * Avvisi del Config (`core/alexa-annunci.js`). */
+    senzaCadere(installAlexaEditor);
     senzaCadere(installLiveUiSection);
     /* Il video vero delle telecamere (#294): WebRTC e HLS nelle tessere, e il
      * WebRTC nativo del popup negoziato con i server ICE di casa. */

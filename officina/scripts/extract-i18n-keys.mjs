@@ -137,6 +137,10 @@ function codePairs() {
  */
 const SECTION_TABLES = Object.freeze([
   { file: "alerts-section.js", name: "GROUPS", rows: "items", at: [2, 3] },
+  /* Le famiglie di notifiche che gli Echo possono dire. */
+  { file: "alexa-editor-section.js", name: "NOMI_DELLE_FAMIGLIE", rows: "values", at: [0, 1] },
+  { file: "alexa-editor-section.js", name: "GIORNI", rows: "values", at: [0, 1] },
+  { file: "alexa-editor-section.js", name: "CONDIZIONI", rows: "values", at: [0, 1] },
   /* Le parole dei ruoli della card, per dire quali caselle il collegamento a
      un'integrazione ha compilato. */
   { file: "appliance-editor-section.js", name: "ROLE_WORDS", rows: "values", at: [0, 1] },
@@ -150,11 +154,31 @@ const SECTION_TABLES = Object.freeze([
   /* Le caselle della caldaia e i loro aiuti (#253, #274): erano scritte in
      tupla e stavano fuori dai cataloghi — tredici lingue le leggevano in
      italiano. */
-  { file: "impianti-termici-editor-section.js", name: "CAMPI_CALDAIA", rows: "values", at: ["it", "en"] },
-  { file: "impianti-termici-editor-section.js", name: "CAMPI_CALDAIA", rows: "values", at: ["aiutoIt", "aiutoEn"] },
+  {
+    file: "impianti-termici-editor-section.js",
+    name: "CAMPI_CALDAIA",
+    rows: "values",
+    at: ["it", "en"],
+  },
+  {
+    file: "impianti-termici-editor-section.js",
+    name: "CAMPI_CALDAIA",
+    rows: "values",
+    at: ["aiutoIt", "aiutoEn"],
+  },
   /* E quelle della stufa a pellet (#183), nella stessa forma. */
-  { file: "impianti-termici-editor-section.js", name: "CAMPI_STUFA", rows: "values", at: ["it", "en"] },
-  { file: "impianti-termici-editor-section.js", name: "CAMPI_STUFA", rows: "values", at: ["aiutoIt", "aiutoEn"] },
+  {
+    file: "impianti-termici-editor-section.js",
+    name: "CAMPI_STUFA",
+    rows: "values",
+    at: ["it", "en"],
+  },
+  {
+    file: "impianti-termici-editor-section.js",
+    name: "CAMPI_STUFA",
+    rows: "values",
+    at: ["aiutoIt", "aiutoEn"],
+  },
   /* Gli aiuti sotto la scelta delle macchine: la pagina li scrive con
      `t(...AIUTI[tipo])`, che la prova delle tabelle non vede, e stavano fuori
      dai cataloghi — tredici lingue li leggevano in inglese. Se n'e' accorta
@@ -208,8 +232,7 @@ function declaredLiteral(source, name) {
     if (char === '"' || char === "'" || char === "`") quote = char;
     else if ("([{".includes(char)) depth += 1;
     else if (")]}".includes(char)) depth -= 1;
-    else if (char === ";" && depth === 0)
-      return source.slice(source.indexOf("= ", start) + 2, at);
+    else if (char === ";" && depth === 0) return source.slice(source.indexOf("= ", start) + 2, at);
   }
   throw new Error(`${name}: never closed`);
 }
@@ -441,7 +464,13 @@ async function build() {
    * shell, whose pairs a person wrote by hand against a build they read — and
    * the alias file, where a human wrote the answer down, outranks everything.
    */
-  const sources = [codePairs(), await catalogPairs(), runtimePairs(), runtimeExtras(), shellPairs()];
+  const sources = [
+    codePairs(),
+    await catalogPairs(),
+    runtimePairs(),
+    runtimeExtras(),
+    shellPairs(),
+  ];
   for (const source of sources) {
     for (const [english, italian] of source) {
       if (!pairs.has(english)) pairs.set(english, italian);
@@ -453,7 +482,8 @@ async function build() {
   /* The broken spellings are sources for the index, never keys: a catalog asked
    * to answer "Power batteria (W)" would be asked to keep the mistake. */
   for (const [broken, english] of liveRepairs()) {
-    if (!pairs.has(english)) throw new Error(`a repair points at a key nothing authors: ${english}`);
+    if (!pairs.has(english))
+      throw new Error(`a repair points at a key nothing authors: ${english}`);
     pairs.delete(broken);
     index.set(broken, english);
   }
@@ -461,7 +491,8 @@ async function build() {
   const keys = [...pairs.keys()].sort((a, b) => a.localeCompare(b, "en"));
   const known = new Set(keys);
   for (const [source, english] of shellAliases()) {
-    if (!known.has(english)) throw new Error(`alias points at a key outside the corpus: ${english}`);
+    if (!known.has(english))
+      throw new Error(`alias points at a key outside the corpus: ${english}`);
     if (source !== english) index.set(source, english);
   }
 

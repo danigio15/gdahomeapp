@@ -267,6 +267,8 @@ const LOCALE_IDENTITIES = {
     "Animal",
   ]),
   fr: new Set([
+    /* La scheda delle notifiche di Alexa: in francese si dice uguale. */
+    "Notifications",
     /* Lo sport: parole che in questa lingua si scrivono come in inglese
      * («d» per i giorni, «Pts» per i punti in classifica). */
     "Football",
