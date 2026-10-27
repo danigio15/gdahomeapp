@@ -520,3 +520,14 @@ test("nel ponte: un'automazione salvata toglie la sua proposta", async () => {
     false,
   );
 });
+
+test("con l'antifurto inserito si spengono tutte le luci, non le prime dieci", () => {
+  const luci = Array.from({ length: 25 }, (_, i) => ({ id: `light.luce_${i}`, nome: `Luce ${i}` }));
+  const proposte = proposteDaiDispositivi({
+    entita: [{ id: "alarm_control_panel.casa", nome: "Antifurto" }, ...luci],
+  });
+  const antifurto = proposte.find((una) => una.chiave === "antifurtoLuci");
+  assert.equal(antifurto.cose.luci.length, 25);
+  const spegni = automazioneDellaProposta(antifurto).allora.find((una) => una.tipo === "spegni");
+  assert.equal(spegni.entita.length, 25);
+});

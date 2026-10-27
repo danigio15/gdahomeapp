@@ -560,7 +560,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-AOTUP3AK.js";
+} from "../../chunk-KAJOZBRR.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -119077,7 +119077,7 @@ var AUTOMAZIONI_AL_MASSIMO = 500;
 var CONDIZIONI_AL_MASSIMO = 4;
 var AZIONI_AL_MASSIMO2 = 12;
 var ORARI_AL_MASSIMO = 4;
-var ENTITA_AL_MASSIMO = 10;
+var ENTITA_AL_MASSIMO = 60;
 var TERMOSTATI_AL_MASSIMO = 6;
 var FASCE_AL_MASSIMO = 6;
 var ASPETTA_AL_MASSIMO = 12 * 60;
