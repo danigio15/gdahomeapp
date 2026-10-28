@@ -49,6 +49,9 @@ Future<Map<String, String>> _presentazioneVera(
   return {
     ...?modello?.perLaCasa(),
     'app': versioneDiQuestApp,
+    /* Il numero di costruzione: «1.18.7» da solo non distingue una build
+     * dall'altra, e la Gestione vuole sapere chi e' rimasto indietro. */
+    'costruzione': '$costruzioneDiQuestApp',
     if (diChi.isNotEmpty) 'proprietario': diChi,
   };
 }
