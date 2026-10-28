@@ -31,6 +31,10 @@ enum PostoDellaNotifica {
   /// Il navigatore (gdanav), coi viaggi pianificati.
   navigatore,
 
+  /// Il negozio da cui si aggiorna l'app: «aggiorna l'app»
+  /// (`ponte/src/ultime-dell-app.js`).
+  negozio,
+
   /// La pagina della notifica, nell'app: nessun posto suo.
   pagina,
 }
@@ -69,6 +73,7 @@ const Map<String, String> sezioneDelTipo = {
   'blackout': 'energia',
   'viaggi': 'viaggi',
   'ha_notify': 'plancia',
+  'aggiorna_app': 'negozio',
 };
 
 /// Le linguette della plancia di ogni sezione, nell'ordine in cui si
@@ -107,6 +112,7 @@ DoveApre doveApre(NotificaArrivata notifica) {
     );
   }
   if (sezione == 'viaggi') return const DoveApre(PostoDellaNotifica.navigatore);
+  if (sezione == 'negozio') return const DoveApre(PostoDellaNotifica.negozio);
   final linguette = linguetteDellaSezione[sezione];
   if (linguette == null) {
     return DoveApre(PostoDellaNotifica.pagina, entita: entita);
@@ -128,6 +134,8 @@ String? etichettaDelPosto(DoveApre dove) {
       return inLingua(it: 'Apri la tua giornata', en: 'Open your day');
     case PostoDellaNotifica.navigatore:
       return inLingua(it: 'Apri i viaggi', en: 'Open trips');
+    case PostoDellaNotifica.negozio:
+      return inLingua(it: "Aggiorna l'app", en: 'Update the app');
     case PostoDellaNotifica.pagina:
       return null;
     case PostoDellaNotifica.plancia:
