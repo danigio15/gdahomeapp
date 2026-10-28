@@ -420,8 +420,6 @@
       "awayShootoutScore": "0",
       "gameResult": "D",
       "competitionName": "2026-27 Italian Serie A",
-      "leagueName": "Italian Serie A",
-      "leagueAbbreviation": "Serie A",
       "opponent": {
        "id": "3997",
        "uid": "s:600~t:3997",
@@ -463,7 +461,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/3997.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/3997.png",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A"
      },
      {
       "id": "401915568",
@@ -620,8 +620,6 @@
       "gameResult": "L",
       "competitionName": "2026-27 UEFA Europa League",
       "roundName": "League Phase",
-      "leagueName": "UEFA Europa League",
-      "leagueAbbreviation": "UEFA Europa League",
       "opponent": {
        "id": "349",
        "uid": "s:600~t:349",
@@ -663,7 +661,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/349.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/349.png",
+      "leagueName": "UEFA Europa League",
+      "leagueAbbreviation": "UEFA Europa League"
      },
      {
       "id": "401874779",
@@ -686,8 +686,6 @@
       "awayShootoutScore": "0",
       "gameResult": "W",
       "competitionName": "2026-27 Italian Serie A",
-      "leagueName": "Italian Serie A",
-      "leagueAbbreviation": "Serie A",
       "opponent": {
        "id": "118",
        "uid": "s:600~t:118",
@@ -729,7 +727,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/118.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/118.png",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A"
      }
     ]
    },
@@ -1062,6 +1062,8 @@
       "awayShootoutScore": "0",
       "gameResult": "W",
       "competitionName": "2026-27 Italian Serie A",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A",
       "opponent": {
        "id": "2925",
        "uid": "s:600~t:2925",
@@ -1103,9 +1105,7 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/2925.png",
-      "leagueName": "Italian Serie A",
-      "leagueAbbreviation": "Serie A"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/2925.png"
      }
     ]
    }
@@ -14933,6 +14933,253 @@
     "formation": "3-4-2-1"
    }
   ],
+  "article": {
+   "id": 50253268,
+   "nowId": "1-50253268",
+   "contentKey": "50253268-1-21-1",
+   "dataSourceIdentifier": "b6fc8b80d6ca7",
+   "publishedkey": "soccer401874993",
+   "type": "Recap",
+   "gameId": "401874993",
+   "headline": "Bologna storm back to hand Milan, Amorim first Serie A loss",
+   "description": "Samuel Mbangula fired a hat trick as Bologna beat AC Milan 4-2 to hand the hosts a first Serie A loss of the season.",
+   "linkText": "Bologna storm back to hand Milan, Amorim first Serie A loss",
+   "categorized": "2026-10-28T20:59:34Z",
+   "originallyPosted": "2026-10-28T19:51:00Z",
+   "lastModified": "2026-10-28T20:59:34Z",
+   "published": "2026-10-28T19:51:00Z",
+   "section": "Soccer",
+   "images": [
+    {
+     "dataSourceIdentifier": "fa3e4f4fbfe31",
+     "id": 50310148,
+     "type": "header",
+     "name": "Bologna celeb vs Milan_261028 [1296x729]",
+     "caption": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
+     "alt": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
+     "credit": "Getty Images",
+     "height": 729,
+     "width": 1296,
+     "url": "https://a.espncdn.com/photo/2026/1028/r1737648_1296x729_16-9.jpg",
+     "peers": [
+      {
+       "dataSourceIdentifier": "6e87c2fef4040",
+       "id": 50310165,
+       "type": "header",
+       "name": "Bologna celeb vs Milan_261028 [1296x1296]",
+       "caption": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
+       "alt": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
+       "credit": "Getty Images",
+       "height": 1296,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/1028/r1737648_1296x1296_1-1.jpg"
+      },
+      {
+       "dataSourceIdentifier": "fa3e4f4fbfe31",
+       "id": 50310148,
+       "type": "header",
+       "name": "Bologna celeb vs Milan_261028 [1296x729]",
+       "caption": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
+       "alt": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
+       "credit": "Getty Images",
+       "height": 729,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/1028/r1737648_1296x729_16-9.jpg"
+      },
+      {
+       "dataSourceIdentifier": "0f20c8fa3e9d3",
+       "id": 50310153,
+       "type": "header",
+       "name": "Bologna celeb vs Milan_261028 [864x1296]",
+       "caption": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
+       "alt": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
+       "credit": "Getty Images",
+       "height": 1296,
+       "width": 864,
+       "url": "https://a.espncdn.com/photo/2026/1028/r1737648_864x1296_2-3.jpg"
+      },
+      {
+       "dataSourceIdentifier": "6e6d6ce4f984a",
+       "id": 50310157,
+       "type": "header",
+       "name": "Bologna celeb vs Milan_261028 [1296x864]",
+       "caption": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
+       "alt": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
+       "credit": "Getty Images",
+       "height": 864,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/1028/r1737648_1296x864_3-2.jpg"
+      },
+      {
+       "dataSourceIdentifier": "e06f93f827581",
+       "id": 50310162,
+       "type": "header",
+       "name": "Bologna celeb vs Milan_261028 [1296x518]",
+       "caption": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
+       "alt": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
+       "credit": "Getty Images",
+       "height": 518,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/1028/r1737648_1296x518_5-2.jpg"
+      }
+     ]
+    }
+   ],
+   "video": [],
+   "categories": [
+    {
+     "id": 81497,
+     "type": "league",
+     "uid": "s:600",
+     "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+     "description": "Soccer",
+     "sportId": 600,
+     "leagueId": 600,
+     "league": {
+      "id": 600,
+      "description": "Soccer",
+      "links": {
+       "mobile": {
+        "leagues": {
+         "href": "https://www.espn.com/soccer/"
+        }
+       },
+       "web": {
+        "leagues": {
+         "href": "https://www.espn.com/soccer/"
+        }
+       }
+      }
+     }
+    },
+    {
+     "id": 137798,
+     "type": "league",
+     "uid": "s:600~l:730",
+     "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
+     "description": "Italian Serie A",
+     "sportId": 600,
+     "leagueId": 12,
+     "league": {
+      "id": 730,
+      "description": "Italian Serie A",
+      "abbreviation": "Serie A",
+      "links": {
+       "mobile": {
+        "leagues": {
+         "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+        }
+       },
+       "web": {
+        "leagues": {
+         "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+        }
+       }
+      }
+     }
+    },
+    {
+     "id": 142590,
+     "type": "team",
+     "uid": "s:600~t:103",
+     "guid": "7ca4fb35-d78e-49f0-67fe-7fa95588e28d",
+     "description": "AC Milan",
+     "sportId": 600,
+     "teamId": 103,
+     "team": {
+      "id": 103,
+      "description": "AC Milan",
+      "abbreviation": "MIL",
+      "shortDisplayName": "Milan",
+      "links": {
+       "mobile": {
+        "teams": {
+         "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
+        }
+       },
+       "web": {
+        "teams": {
+         "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
+        }
+       }
+      }
+     }
+    },
+    {
+     "id": 142595,
+     "type": "team",
+     "uid": "s:600~t:107",
+     "guid": "30829603-0f31-d496-4b60-2aa0f5627b42",
+     "description": "Bologna",
+     "sportId": 600,
+     "teamId": 107,
+     "team": {
+      "id": 107,
+      "description": "Bologna",
+      "abbreviation": "BOL",
+      "shortDisplayName": "Bologna",
+      "links": {
+       "mobile": {
+        "teams": {
+         "href": "https://www.espn.com/soccer/club/_/id/107/bologna"
+        }
+       },
+       "web": {
+        "teams": {
+         "href": "https://www.espn.com/soccer/club/_/id/107/bologna"
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "event",
+     "uid": "s:600~l:730~e:401874993",
+     "guid": "47651221-643d-3e61-91c3-c99dce2a8f19",
+     "description": "Bologna @ AC Milan",
+     "eventId": 401874993,
+     "event": {
+      "id": 401874993,
+      "sport": "soccer",
+      "league": "ita.1",
+      "description": "Bologna @ AC Milan"
+     }
+    }
+   ],
+   "keywords": [
+    "Soccer",
+    "Italian Serie A",
+    "AC Milan",
+    "Bologna",
+    "Bologna @ AC Milan"
+   ],
+   "story": "<p><a data-player-guid=\"206fbfd2-15a2-378d-935e-5b2ef44e4e7a\" href=\"http://espn.com/soccer/player/_/id/355997/samuel-mbangula\">Samuel Mbangula</a> fired a hat trick as <a data-clubhouse-guid=\"30829603-0f31-d496-4b60-2aa0f5627b42\" href=\"http://espn.com/soccer/team?id=107\">Bologna</a> beat <a data-clubhouse-guid=\"7ca4fb35-d78e-49f0-67fe-7fa95588e28d\" href=\"http://espn.com/soccer/team?id=103\">AC Milan</a> 4-2 to seal their first <a data-league-guid=\"9c1e0753-2757-3b78-a6ed-1b595caf8191\" href=\"https://www.espn.com/soccer/league/_/name/ITA.1\">Serie A</a> win at San Siro in over 10 years -- and hand the hosts a first league loss of the season -- on Wednesday.</p>\n<p>Belgian forward Mbangula, on loan from <a data-clubhouse-guid=\"a3a831e5-335d-8b0d-f0c6-791c7cc37c1a\" href=\"http://espn.com/soccer/team?id=137\">Werder Bremen</a>, opened the scoring and struck twice more after Milan defender Davide Bartesaghi's own goal had given the visitors a second-half lead.</p>\n<p>Milan midfielder <a data-player-guid=\"a10104f4-0963-3a81-b0ba-ea8f6246d90b\" href=\"http://espn.com/soccer/player/_/id/359754/alphadjo-cisse\">Alphadjo Cissè</a> scored twice, cancelling out Mbangula's opener and then giving his side a halftime lead, but it was not enough as Ruben Amorim saw his team lose for the first time in Serie A since his arrival.</p>\n<p>Bologna had won their previous two league games on the road and they silenced the home fans in the eighth minute when Mbangula converted from inside the box after being teed up by <a data-player-guid=\"a098150c-ef26-8d5c-e3b2-d75ffe7c83a5\" href=\"http://espn.com/soccer/player/_/id/291560/nadir-zortea\">Nadir Zortea</a>.</p>\n<p>The visitors' lead was short-lived. Milan's on-loan <a data-clubhouse-guid=\"ad9ef79b-ca27-077e-8a6f-335e0d220b27\" href=\"http://espn.com/soccer/team?id=393\">Nottingham Forest</a> winger <a data-player-guid=\"067f5172-6a17-363d-9575-3e991a72b1c2\" href=\"http://espn.com/soccer/player/_/id/322771/omari-hutchinson\">Omari Hutchinson</a> dispossessed Bologna defender <a data-player-guid=\"696d1f15-e908-3add-ae9e-34b8c9a85d4a\" href=\"http://espn.com/soccer/player/_/id/304222/arthur-theate\">Arthur Theate</a> and squared for Cisse to steer in the equaliser.</p>\n<p>Hutchinson then had a hand as Milan took a 27th-minute lead, driving into the box before <a data-player-guid=\"7b6e989d-cc29-2c6e-2998-6f9544034045\" href=\"http://espn.com/soccer/player/_/id/236210/fikayo-tomori\">Fikayo Tomori</a> set up Cisse, who stabbed home his seventh goal of the season in all competitions at the back post.</p>\n<p>Bologna boss Raffaele Palladino made a triple change on the hour-mark, sending on <a data-player-guid=\"28b3585e-42b4-3555-acd2-311e8780bc50\" href=\"http://espn.com/soccer/player/_/id/261616/juan-miranda\">Juan Miranda</a>, <a data-player-guid=\"829f5fa1-04c5-497a-79f9-4e88e3de2b30\" href=\"http://espn.com/soccer/player/_/id/287790/nicolo-cambiaghi\">Nicolò Cambiaghi</a> and <a data-player-guid=\"5994f7d2-bf95-3deb-8032-f1c27332d56a\" href=\"http://espn.com/soccer/player/_/id/309110/martin-vitik\">Martin Vitík</a>, and his side responded with two goals in as many minutes to turn the game on its head.</p>\n<p>Bartesaghi diverted a free kick into the box past his own goalkeeper to level it up at 2-2 in the 60th minute and Mbangula lashed home his second from Miranda's assist.</p>\n<p><a data-player-guid=\"45f3ef12-ebff-3dbf-b115-e9bef0477359\" href=\"http://espn.com/soccer/player/_/id/377563/francesco-camarda\">Francesco Camarda</a> and <a data-player-guid=\"44a54862-3936-3a4d-a309-b06e17c3d330\" href=\"http://espn.com/soccer/player/_/id/388239/sankhoun-diawara\">Sankhoun Diawara</a> both headed narrowly wide for Milan as they chased a late equaliser, but Bologna sealed all three points on the counter-attack as Mbangula swept home Odgaard's cross for his hat trick.</p>\n<p>The loss comes ahead of Milan's weekend derby against Inter, who went top of the league on Wednesday with a win over Venezia to move ahead of Lazio on goal difference.</p>\n<p><em>Information from PA was used in this recap.</em></p>\n\n\n\n\n",
+   "allowComments": true,
+   "allowContentReactions": false,
+   "allowSearch": true,
+   "byline": "ESPN News Services",
+   "isLiveBlog": false,
+   "links": {
+    "api": {
+     "self": {
+      "href": "https://content.core.api.espn.com/v1/sports/news/50253268"
+     }
+    },
+    "app": {
+     "sportscenter": {
+      "href": "sportscenter://x-callback-url/showStory?uid=50253268"
+     }
+    },
+    "mobile": {
+     "href": "http://m.espn.go.com/soccer/story?storyId=50253268"
+    },
+    "web": {
+     "href": "http://www.espn.com/soccer/report/_/gameId/401874993"
+    }
+   },
+   "premium": false
+  },
+  "videos": [],
   "header": {
    "id": "401874993",
    "uid": "s:600~l:730~e:401874993",
@@ -15738,253 +15985,6 @@
     }
    ]
   },
-  "article": {
-   "id": 50253268,
-   "nowId": "1-50253268",
-   "contentKey": "50253268-1-21-1",
-   "dataSourceIdentifier": "b6fc8b80d6ca7",
-   "publishedkey": "soccer401874993",
-   "type": "Recap",
-   "gameId": "401874993",
-   "headline": "Bologna storm back to hand Milan, Amorim first Serie A loss",
-   "description": "Samuel Mbangula fired a hat trick as Bologna beat AC Milan 4-2 to hand the hosts a first Serie A loss of the season.",
-   "linkText": "Bologna storm back to hand Milan, Amorim first Serie A loss",
-   "categorized": "2026-10-28T20:59:34Z",
-   "originallyPosted": "2026-10-28T19:51:00Z",
-   "lastModified": "2026-10-28T20:59:34Z",
-   "published": "2026-10-28T19:51:00Z",
-   "section": "Soccer",
-   "images": [
-    {
-     "dataSourceIdentifier": "fa3e4f4fbfe31",
-     "id": 50310148,
-     "type": "header",
-     "name": "Bologna celeb vs Milan_261028 [1296x729]",
-     "caption": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
-     "alt": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
-     "credit": "Getty Images",
-     "height": 729,
-     "width": 1296,
-     "url": "https://a.espncdn.com/photo/2026/1028/r1737648_1296x729_16-9.jpg",
-     "peers": [
-      {
-       "dataSourceIdentifier": "6e87c2fef4040",
-       "id": 50310165,
-       "type": "header",
-       "name": "Bologna celeb vs Milan_261028 [1296x1296]",
-       "caption": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
-       "alt": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
-       "credit": "Getty Images",
-       "height": 1296,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/1028/r1737648_1296x1296_1-1.jpg"
-      },
-      {
-       "dataSourceIdentifier": "fa3e4f4fbfe31",
-       "id": 50310148,
-       "type": "header",
-       "name": "Bologna celeb vs Milan_261028 [1296x729]",
-       "caption": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
-       "alt": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
-       "credit": "Getty Images",
-       "height": 729,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/1028/r1737648_1296x729_16-9.jpg"
-      },
-      {
-       "dataSourceIdentifier": "0f20c8fa3e9d3",
-       "id": 50310153,
-       "type": "header",
-       "name": "Bologna celeb vs Milan_261028 [864x1296]",
-       "caption": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
-       "alt": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
-       "credit": "Getty Images",
-       "height": 1296,
-       "width": 864,
-       "url": "https://a.espncdn.com/photo/2026/1028/r1737648_864x1296_2-3.jpg"
-      },
-      {
-       "dataSourceIdentifier": "6e6d6ce4f984a",
-       "id": 50310157,
-       "type": "header",
-       "name": "Bologna celeb vs Milan_261028 [1296x864]",
-       "caption": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
-       "alt": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
-       "credit": "Getty Images",
-       "height": 864,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/1028/r1737648_1296x864_3-2.jpg"
-      },
-      {
-       "dataSourceIdentifier": "e06f93f827581",
-       "id": 50310162,
-       "type": "header",
-       "name": "Bologna celeb vs Milan_261028 [1296x518]",
-       "caption": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
-       "alt": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
-       "credit": "Getty Images",
-       "height": 518,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/1028/r1737648_1296x518_5-2.jpg"
-      }
-     ]
-    }
-   ],
-   "video": [],
-   "categories": [
-    {
-     "id": 81497,
-     "type": "league",
-     "uid": "s:600",
-     "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
-     "description": "Soccer",
-     "sportId": 600,
-     "leagueId": 600,
-     "league": {
-      "id": 600,
-      "description": "Soccer",
-      "links": {
-       "mobile": {
-        "leagues": {
-         "href": "https://www.espn.com/soccer/"
-        }
-       },
-       "web": {
-        "leagues": {
-         "href": "https://www.espn.com/soccer/"
-        }
-       }
-      }
-     }
-    },
-    {
-     "id": 137798,
-     "type": "league",
-     "uid": "s:600~l:730",
-     "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
-     "description": "Italian Serie A",
-     "sportId": 600,
-     "leagueId": 12,
-     "league": {
-      "id": 730,
-      "description": "Italian Serie A",
-      "abbreviation": "Serie A",
-      "links": {
-       "mobile": {
-        "leagues": {
-         "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-        }
-       },
-       "web": {
-        "leagues": {
-         "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-        }
-       }
-      }
-     }
-    },
-    {
-     "id": 142590,
-     "type": "team",
-     "uid": "s:600~t:103",
-     "guid": "7ca4fb35-d78e-49f0-67fe-7fa95588e28d",
-     "description": "AC Milan",
-     "sportId": 600,
-     "teamId": 103,
-     "team": {
-      "id": 103,
-      "description": "AC Milan",
-      "abbreviation": "MIL",
-      "shortDisplayName": "Milan",
-      "links": {
-       "mobile": {
-        "teams": {
-         "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
-        }
-       },
-       "web": {
-        "teams": {
-         "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
-        }
-       }
-      }
-     }
-    },
-    {
-     "id": 142595,
-     "type": "team",
-     "uid": "s:600~t:107",
-     "guid": "30829603-0f31-d496-4b60-2aa0f5627b42",
-     "description": "Bologna",
-     "sportId": 600,
-     "teamId": 107,
-     "team": {
-      "id": 107,
-      "description": "Bologna",
-      "abbreviation": "BOL",
-      "shortDisplayName": "Bologna",
-      "links": {
-       "mobile": {
-        "teams": {
-         "href": "https://www.espn.com/soccer/club/_/id/107/bologna"
-        }
-       },
-       "web": {
-        "teams": {
-         "href": "https://www.espn.com/soccer/club/_/id/107/bologna"
-        }
-       }
-      }
-     }
-    },
-    {
-     "type": "event",
-     "uid": "s:600~l:730~e:401874993",
-     "guid": "47651221-643d-3e61-91c3-c99dce2a8f19",
-     "description": "Bologna @ AC Milan",
-     "eventId": 401874993,
-     "event": {
-      "id": 401874993,
-      "sport": "soccer",
-      "league": "ita.1",
-      "description": "Bologna @ AC Milan"
-     }
-    }
-   ],
-   "keywords": [
-    "Soccer",
-    "Italian Serie A",
-    "AC Milan",
-    "Bologna",
-    "Bologna @ AC Milan"
-   ],
-   "story": "<p><a data-player-guid=\"206fbfd2-15a2-378d-935e-5b2ef44e4e7a\" href=\"http://espn.com/soccer/player/_/id/355997/samuel-mbangula\">Samuel Mbangula</a> fired a hat trick as <a data-clubhouse-guid=\"30829603-0f31-d496-4b60-2aa0f5627b42\" href=\"http://espn.com/soccer/team?id=107\">Bologna</a> beat <a data-clubhouse-guid=\"7ca4fb35-d78e-49f0-67fe-7fa95588e28d\" href=\"http://espn.com/soccer/team?id=103\">AC Milan</a> 4-2 to seal their first <a data-league-guid=\"9c1e0753-2757-3b78-a6ed-1b595caf8191\" href=\"https://www.espn.com/soccer/league/_/name/ITA.1\">Serie A</a> win at San Siro in over 10 years -- and hand the hosts a first league loss of the season -- on Wednesday.</p>\n<p>Belgian forward Mbangula, on loan from <a data-clubhouse-guid=\"a3a831e5-335d-8b0d-f0c6-791c7cc37c1a\" href=\"http://espn.com/soccer/team?id=137\">Werder Bremen</a>, opened the scoring and struck twice more after Milan defender Davide Bartesaghi's own goal had given the visitors a second-half lead.</p>\n<p>Milan midfielder <a data-player-guid=\"a10104f4-0963-3a81-b0ba-ea8f6246d90b\" href=\"http://espn.com/soccer/player/_/id/359754/alphadjo-cisse\">Alphadjo Cissè</a> scored twice, cancelling out Mbangula's opener and then giving his side a halftime lead, but it was not enough as Ruben Amorim saw his team lose for the first time in Serie A since his arrival.</p>\n<p>Bologna had won their previous two league games on the road and they silenced the home fans in the eighth minute when Mbangula converted from inside the box after being teed up by <a data-player-guid=\"a098150c-ef26-8d5c-e3b2-d75ffe7c83a5\" href=\"http://espn.com/soccer/player/_/id/291560/nadir-zortea\">Nadir Zortea</a>.</p>\n<p>The visitors' lead was short-lived. Milan's on-loan <a data-clubhouse-guid=\"ad9ef79b-ca27-077e-8a6f-335e0d220b27\" href=\"http://espn.com/soccer/team?id=393\">Nottingham Forest</a> winger <a data-player-guid=\"067f5172-6a17-363d-9575-3e991a72b1c2\" href=\"http://espn.com/soccer/player/_/id/322771/omari-hutchinson\">Omari Hutchinson</a> dispossessed Bologna defender <a data-player-guid=\"696d1f15-e908-3add-ae9e-34b8c9a85d4a\" href=\"http://espn.com/soccer/player/_/id/304222/arthur-theate\">Arthur Theate</a> and squared for Cisse to steer in the equaliser.</p>\n<p>Hutchinson then had a hand as Milan took a 27th-minute lead, driving into the box before <a data-player-guid=\"7b6e989d-cc29-2c6e-2998-6f9544034045\" href=\"http://espn.com/soccer/player/_/id/236210/fikayo-tomori\">Fikayo Tomori</a> set up Cisse, who stabbed home his seventh goal of the season in all competitions at the back post.</p>\n<p>Bologna boss Raffaele Palladino made a triple change on the hour-mark, sending on <a data-player-guid=\"28b3585e-42b4-3555-acd2-311e8780bc50\" href=\"http://espn.com/soccer/player/_/id/261616/juan-miranda\">Juan Miranda</a>, <a data-player-guid=\"829f5fa1-04c5-497a-79f9-4e88e3de2b30\" href=\"http://espn.com/soccer/player/_/id/287790/nicolo-cambiaghi\">Nicolò Cambiaghi</a> and <a data-player-guid=\"5994f7d2-bf95-3deb-8032-f1c27332d56a\" href=\"http://espn.com/soccer/player/_/id/309110/martin-vitik\">Martin Vitík</a>, and his side responded with two goals in as many minutes to turn the game on its head.</p>\n<p>Bartesaghi diverted a free kick into the box past his own goalkeeper to level it up at 2-2 in the 60th minute and Mbangula lashed home his second from Miranda's assist.</p>\n<p><a data-player-guid=\"45f3ef12-ebff-3dbf-b115-e9bef0477359\" href=\"http://espn.com/soccer/player/_/id/377563/francesco-camarda\">Francesco Camarda</a> and <a data-player-guid=\"44a54862-3936-3a4d-a309-b06e17c3d330\" href=\"http://espn.com/soccer/player/_/id/388239/sankhoun-diawara\">Sankhoun Diawara</a> both headed narrowly wide for Milan as they chased a late equaliser, but Bologna sealed all three points on the counter-attack as Mbangula swept home Odgaard's cross for his hat trick.</p>\n<p>The loss comes ahead of Milan's weekend derby against Inter, who went top of the league on Wednesday with a win over Venezia to move ahead of Lazio on goal difference.</p>\n<p><em>Information from PA was used in this recap.</em></p>\n\n\n\n\n",
-   "allowComments": true,
-   "allowContentReactions": false,
-   "allowSearch": true,
-   "byline": "ESPN News Services",
-   "isLiveBlog": false,
-   "links": {
-    "api": {
-     "self": {
-      "href": "https://content.core.api.espn.com/v1/sports/news/50253268"
-     }
-    },
-    "app": {
-     "sportscenter": {
-      "href": "sportscenter://x-callback-url/showStory?uid=50253268"
-     }
-    },
-    "mobile": {
-     "href": "http://m.espn.go.com/soccer/story?storyId=50253268"
-    },
-    "web": {
-     "href": "http://www.espn.com/soccer/report/_/gameId/401874993"
-    }
-   },
-   "premium": false
-  },
-  "videos": [],
   "seasonseries": [
    {
     "type": "head-to-head",
