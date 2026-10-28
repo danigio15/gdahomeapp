@@ -7637,4 +7637,11 @@ export default Object.freeze({
   "Without a camera or open buttons it is hidden anyway": "Zonder camera of openknoppen wordt hij toch verborgen",
   "Hour": "Uur",
   "Alarm · Leaving": "Alarm · Vertrek",
+  "Can't find this station for this player: try an Echo, or add it from the Config.": "Deze zender vind ik niet voor deze speler: probeer een Echo of voeg hem toe via de Configuratie.",
+  "Italian stations": "Italiaanse zenders",
+  "Players that aren't Echos need Home Assistant's Radio Browser integration.": "Spelers die geen Echo zijn hebben de Radio Browser-integratie van Home Assistant nodig.",
+  "Your favourites, with their logos, are chosen in Config › Media › 📻 Radio.": "Je favorieten, met logo, kies je in Configuratie › Media › 📻 Radio.",
+  "stations ready to play": "zenders klaar om te luisteren",
+  "ready · tap to choose": "klaar · tik om te kiezen",
+  "Tap a station to listen": "Tik op een zender om te luisteren",
 });

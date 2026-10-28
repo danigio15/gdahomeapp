@@ -7605,4 +7605,11 @@ export default Object.freeze({
   "Without a camera or open buttons it is hidden anyway": "カメラや開錠ボタンがなければいずれにしても非表示です",
   "Hour": "時",
   "Alarm · Leaving": "警報 · 外出",
+  "Can't find this station for this player: try an Echo, or add it from the Config.": "このプレーヤーではこの局が見つかりません。Echo を試すか、設定から追加してください。",
+  "Italian stations": "イタリアのラジオ局",
+  "Players that aren't Echos need Home Assistant's Radio Browser integration.": "Echo 以外のプレーヤーには Home Assistant の Radio Browser 統合が必要です。",
+  "Your favourites, with their logos, are chosen in Config › Media › 📻 Radio.": "ロゴ付きのお気に入りは 設定 › メディア › 📻 ラジオ で選びます。",
+  "stations ready to play": "局をすぐに聴けます",
+  "ready · tap to choose": "準備完了 · タップして選択",
+  "Tap a station to listen": "局をタップして聴く",
 });

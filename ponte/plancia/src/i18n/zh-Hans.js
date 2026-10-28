@@ -7467,4 +7467,11 @@ export default Object.freeze({
   "Without a camera or open buttons it is hidden anyway": "没有摄像头也没有开门按钮时本来就会隐藏",
   "Hour": "小时",
   "Alarm · Leaving": "报警 · 离家",
+  "Can't find this station for this player: try an Echo, or add it from the Config.": "在此播放器上找不到这个电台：试试 Echo，或在配置中添加。",
+  "Italian stations": "意大利电台",
+  "Players that aren't Echos need Home Assistant's Radio Browser integration.": "不是 Echo 的播放器需要 Home Assistant 的 Radio Browser 集成。",
+  "Your favourites, with their logos, are chosen in Config › Media › 📻 Radio.": "带标志的收藏电台在 配置 › 媒体 › 📻 收音机 中选择。",
+  "stations ready to play": "个电台可直接收听",
+  "ready · tap to choose": "已就绪 · 点按选择",
+  "Tap a station to listen": "点按电台即可收听",
 });

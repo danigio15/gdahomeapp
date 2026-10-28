@@ -7683,4 +7683,11 @@ export default Object.freeze({
   "Without a camera or open buttons it is hidden anyway": "Sans caméra ni boutons d'ouverture, il est masqué de toute façon",
   "Hour": "Heure",
   "Alarm · Leaving": "Alarme · Sortie",
+  "Can't find this station for this player: try an Echo, or add it from the Config.": "Je ne trouve pas cette station pour ce lecteur : essayez un Echo ou ajoutez-la depuis la Configuration.",
+  "Italian stations": "Radios italiennes",
+  "Players that aren't Echos need Home Assistant's Radio Browser integration.": "Les lecteurs qui ne sont pas des Echo ont besoin de l'intégration Radio Browser de Home Assistant.",
+  "Your favourites, with their logos, are chosen in Config › Media › 📻 Radio.": "Vos favorites, avec leur logo, se choisissent dans Configuration › Médias › 📻 Radio.",
+  "stations ready to play": "radios prêtes à écouter",
+  "ready · tap to choose": "prêtes · touchez pour choisir",
+  "Tap a station to listen": "Touchez une radio pour l'écouter",
 });

@@ -146,6 +146,70 @@ export function chiamataDellaRadio(stazione, lettore, { echo = false } = {}) {
   };
 }
 
+/**
+ * Le radio pronte, senza passare dal Config: «io farei un menu a tendina per
+ * le radio, gia' preimpostate». Le piu' ascoltate in Italia, ognuna col suo
+ * bollino (la sigla e il colore che la fanno riconoscere al volo). Per nome: un Echo
+ * le chiede a TuneIn cosi' come sono scritte; un altro lettore le cerca fra le
+ * radio italiane di Radio Browser (`RADIO_DEL_PAESE`).
+ */
+export const RADIO_PRONTE = Object.freeze(
+  [
+    ["RTL 102.5", "RTL", "#e30613"],
+    ["Radio Deejay", "DJ", "#111827"],
+    ["RDS 100% Grandi Successi", "RDS", "#be123c"],
+    ["Radio 105", "105", "#f59e0b"],
+    ["Radio Italia", "RI", "#16a34a"],
+    ["Virgin Radio", "V", "#dc2626"],
+    ["m2o", "m2o", "#0ea5e9"],
+    ["Radio Kiss Kiss", "KK", "#db2777"],
+    ["Kiss Kiss Napoli", "KKN", "#9d174d"],
+    ["Radio Capital", "CAP", "#1d4ed8"],
+    ["R101", "101", "#7c3aed"],
+    ["Radio Monte Carlo", "RMC", "#0f766e"],
+    ["Radio 24", "24", "#2563eb"],
+    ["Radio Zeta", "Z", "#f97316"],
+    ["Radio Subasio", "SUB", "#059669"],
+    ["Radio Freccia", "F", "#b91c1c"],
+    ["Radio Marte", "M", "#9333ea"],
+    ["Rai Radio 1", "R1", "#0369a1"],
+    ["Rai Radio 2", "R2", "#0891b2"],
+    ["Rai Radio 3", "R3", "#4338ca"],
+  ].map(([nome, sigla, colore]) => Object.freeze({ nome, sigla, colore })),
+);
+
+/** Dove Radio Browser tiene le radio italiane. */
+export const RADIO_DEL_PAESE = "country/IT";
+
+const piano = (valore) =>
+  pulito(valore)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+/**
+ * La stazione che porta quel nome, fra quelle di Radio Browser: prima quella
+ * che si chiama proprio cosi', poi quella che ne contiene tutte le parole e
+ * ha il nome piu' corto («RTL 102.5» e non «RTL 102.5 Best»). Null se non c'e'.
+ */
+export function stazioneDalNome(stazioni, nome) {
+  const cercato = piano(nome);
+  if (!cercato) return null;
+  const elenco = Array.isArray(stazioni) ? stazioni.filter((una) => una?.id) : [];
+  const uguale = elenco.find((una) => piano(una.nome) === cercato);
+  if (uguale) return uguale;
+  const parole = cercato.split(" ");
+  const simili = elenco
+    .filter((una) => {
+      const suo = ` ${piano(una.nome)} `;
+      return parole.every((parola) => suo.includes(` ${parola} `));
+    })
+    .sort((a, b) => piano(a.nome).length - piano(b.nome).length);
+  return simili[0] || null;
+}
+
 /** Fermare quello che suona su quel lettore. */
 export function chiamataPerFermare(lettore) {
   const chi = pulito(lettore);
