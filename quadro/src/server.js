@@ -132,6 +132,7 @@ import { SEGNO_VALIDO, Segni } from "./segni.js";
 import { Biglietti, GettoniDellEditor } from "./biglietti.js";
 import { laFormaDel, leRigheDeiSegni } from "./forma-del-rapporto.js";
 import { Freno } from "./freno.js";
+import { leVersioniDelleApp } from "./versioni-delle-app.js";
 import { daChiSiConta, eDaQui } from "./indirizzo.js";
 import {
   ATTESA_DEL_NEGOZIO,
@@ -2187,6 +2188,9 @@ export function costruisciIlServer({
        * lui. */
       json(risposta, {
         ...licenze.abbonamenti(),
+        /* Le versioni dell'app sui telefoni, dai rapporti delle case: solo
+         * quanti per versione, mai quali telefoni. */
+        versioniDelleApp: leVersioniDelleApp(case_.elenco(TUTTE)),
         avvisi: {
           apple: "/v1/negozi/apple",
           google:

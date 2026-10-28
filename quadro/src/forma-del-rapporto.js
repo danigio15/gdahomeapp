@@ -221,7 +221,20 @@ const LA_FORMA = oggetto({
        * dal rapporto, e il cruscotto le contava meno di quante sono. */
     }, 32),
   }),
-  telefoni: oggetto({ abbinati: numero, visti7gg: numero }),
+  telefoni: oggetto({
+    abbinati: numero,
+    visti7gg: numero,
+    /* Quanti telefoni per negozio e versione dell'app, senza sapere quali. */
+    versioni: elenco(
+      oggetto({
+        negozio: fatta(/^(apple|google)?$/, 10),
+        versione: parola(40),
+        costruzione: numero,
+        quanti: numero,
+      }),
+      30,
+    ),
+  }),
   fuori: oggetto({ acceso: siNo, filo: siNo }),
   entita: oggetto({
     totali: numero,

@@ -90,6 +90,10 @@ export function chiE(detto = {}) {
       .trim();
     if (pulito) fuori[campo] = pulito;
   }
+  /* Il numero di costruzione dell'app (`costruzioneDiQuestApp`): «1.18.7» da
+   * solo non distingue la 1180712 dalla 1180714. Solo cifre, o niente. */
+  const costruzione = campoCorto(detto?.costruzione);
+  if (/^\d{1,10}$/.test(costruzione)) fuori.costruzione = costruzione;
   return fuori;
 }
 

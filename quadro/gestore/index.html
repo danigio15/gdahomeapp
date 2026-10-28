@@ -599,6 +599,11 @@
 
       /* ─── Le pastiglie: una parola, un colore, una forma ─────────────── */
 
+      /* Le versioni dell'app: un titolo di sezione staccato da quello che
+         c'e' sopra. */
+      .capo-sezione.le-versioni {
+        margin-top: 28px;
+      }
       .pastiglia {
         display: inline-flex;
         align-items: center;
@@ -7106,6 +7111,115 @@
             <p class="minuta" style="margin: 10px 2px 0">Con gli avvisi, chi compra, disdice, viene rimborsato o si riabbona si vede qui in pochi secondi. Senza, il quadro li richiede comunque ogni ora. Dell'avviso si usa solo quale abbonamento riguarda: lo stato vero si chiede sempre al negozio.</p>
           </details>`;
 
+        /* Le versioni dell'app sui telefoni, negozio per negozio: quante per
+         * versione, dai rapporti delle case (solo quanti, mai quali
+         * telefoni). In ogni negozio la piu' nuova vista e' «la più nuova»,
+         * le altre «indietro»: una build puo' essere gia' su Google Play e
+         * ancora in revisione da Apple. */
+        const VUOTO_NEGOZIO = { versioni: [], telefoni: 0, piuNuova: 0 };
+        const V = A.versioniDelleApp || { negozi: {}, case: [], telefoni: 0 };
+        const IL_NEGOZIO = {
+          apple: { nome: "App Store", chi: "iPhone e iPad" },
+          google: { nome: "Google Play", chi: "Android" },
+          altro: { nome: "Nel browser o non detto", corto: "Altro:", chi: "" },
+        };
+        const laVersione = (v) =>
+          v.versione
+            ? `${v.versione}${v.costruzione ? ` (${v.costruzione})` : " · numero non detto"}`
+            : "Versione non detta";
+        const rigaVersione = (N) => (v) => {
+          const parte = N.telefoni ? Math.round((v.telefoni / N.telefoni) * 100) : 0;
+          const nuova = N.piuNuova > 0 && v.costruzione === N.piuNuova;
+          return `
+          <li class="ferma">
+            <span class="tondino">${LE_ICONE["telefono"]}</span>
+            <span class="riga-testo">
+              <b>${testo(laVersione(v))}</b>
+              <span>${testo(plurale(v.telefoni, "telefono", "telefoni"))} · ${testo(v.case === 1 ? "in 1 casa" : `in ${numero(v.case)} case`)} · ${testo(parte)}%</span>
+            </span>
+            <span class="pastiglia ${nuova ? "posto" : N.piuNuova ? "guardare" : ""}">${nuova ? "la più nuova" : N.piuNuova ? "indietro" : "senza numero"}</span>
+          </li>`;
+        };
+        const unNegozio = (chiave) => {
+          const N = V.negozi?.[chiave] || VUOTO_NEGOZIO;
+          const cosa = IL_NEGOZIO[chiave];
+          const nuove = N.versioni.filter((v) => N.piuNuova > 0 && v.costruzione === N.piuNuova);
+          const aggiornati = nuove.reduce((somma, v) => somma + v.telefoni, 0);
+          const sotto = !N.telefoni
+            ? "nessun telefono visto negli ultimi 7 giorni"
+            : N.piuNuova
+              ? `${plurale(N.telefoni, "telefono", "telefoni")} · ${aggiornati} con la più nuova, ${N.telefoni - aggiornati} da aggiornare`
+              : plurale(N.telefoni, "telefono", "telefoni");
+          return `
+          <div class="scheda servizio-blocco">
+            <div class="servizio-capo">
+              <span class="servizio-ic" aria-hidden="true">${LE_ICONE["telefono"]}</span>
+              <div class="servizio-chi">
+                <b>${testo(cosa.nome)}</b>
+                <span>${cosa.chi ? `${testo(cosa.chi)} · ` : ""}${testo(sotto)}</span>
+              </div>
+              ${
+                N.piuNuova ? `<span class="pastiglia posto">ultima ${testo(N.piuNuova)}</span>` : ""
+              }
+            </div>
+            ${
+              N.versioni.length
+                ? `<ul class="elenco">${N.versioni.map(rigaVersione(N)).join("")}</ul>`
+                : `<div class="vuoto"><b>Ancora nessuna versione</b> Arriva col prossimo rapporto delle case.</div>`
+            }
+          </div>`;
+        };
+        const rigaCasa = (una) => {
+          const di = CONTI.tutte.find((c) => c.matricola === una.casa)?.chi || "";
+          return `
+          <li data-apri-casa="${testo(una.casa)}" data-di="${testo(di)}" role="button" tabindex="0">
+            <span class="tondino">${LE_ICONE["telefono"]}</span>
+            <span class="riga-testo">
+              <b>${testo(CONTI.nomi.get(una.casa) || una.nome || "Casa senza nome · " + String(una.casa).slice(5, 13))}</b>
+              <span>${una.versioni.map((v) => testo((IL_NEGOZIO[v.negozio]?.corto || IL_NEGOZIO[v.negozio]?.nome) + " " + laVersione(v) + " × " + v.quanti)).join(" · ")}</span>
+            </span>
+            <span class="pastiglia ${una.indietro ? "guardare" : "posto"}">${una.indietro ? "da aggiornare" : "aggiornata"}</span>
+            <span class="freccina">${LE_ICONE["freccia"]}</span>
+          </li>`;
+        };
+        const altri = V.negozi?.altro || VUOTO_NEGOZIO;
+        const leVersioni = `
+          <div class="capo-sezione le-versioni">
+            <div>
+              <h2>Versioni dell'app sui telefoni</h2>
+              <p>${testo(
+                V.telefoni
+                  ? `${plurale(V.telefoni, "telefono visto", "telefoni visti")} negli ultimi 7 giorni, negozio per negozio. Da ogni casa arriva solo quanti telefoni per versione, senza nomi né modelli.`
+                  : "Le case dicono le versioni nel loro rapporto dalla GdAHome 1.18.7.14: contano i telefoni visti negli ultimi 7 giorni, senza nomi né modelli.",
+              )}</p>
+            </div>
+          </div>
+          <div class="griglia griglia-2">
+            ${/* già HTML */ unNegozio("apple")}
+            ${/* già HTML */ unNegozio("google")}
+          </div>
+          ${
+            altri.telefoni || V.case.length
+              ? `<section class="scheda">
+              ${
+                altri.telefoni
+                  ? `<p class="servizio-titolo">${testo(IL_NEGOZIO.altro.nome)}</p>
+                     <ul class="elenco">${altri.versioni.map(rigaVersione(altri)).join("")}</ul>`
+                  : ""
+              }
+              ${
+                V.case.length
+                  ? `<details class="apri-riga">
+                       <summary>Casa per casa<span class="freccina">${LE_ICONE["freccia"]}</span></summary>
+                       <ul class="elenco si-tocca">${V.case.map(rigaCasa).join("")}</ul>
+                     </details>`
+                  : ""
+              }
+            </section>`
+              : ""
+          }
+          <p class="minuta" style="margin: 10px 2px 0">Il numero fra parentesi lo dice l'app dalla prossima versione: quelle di adesso compaiono come «numero non detto».</p>`;
+
         return `${/* già HTML */ testa}
           ${
             A.accese
@@ -7142,6 +7256,8 @@
             </details>
             ${/* già HTML */ gliAvvisi}
           </section>
+
+          ${/* già HTML */ leVersioni}
 
           <p class="minuta" style="margin: 14px 2px 0">
             <b>Paganti</b>: hanno pagato e si rinnovano. <b>In prova gratuita</b>: non hanno ancora pagato; pagano quando la prova finisce, se non disdicono. <b>Disdetti</b>: hanno spento il rinnovo, restano Premium fino alla scadenza e poi finiscono. Gli <b>acquisti di test</b> (TestFlight e tester di Google) si vedono in fondo all'elenco e non entrano in nessun numero.
