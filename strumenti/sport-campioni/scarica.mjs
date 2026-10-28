@@ -52,36 +52,40 @@ await mkdir(`${qui}campioni`, { recursive: true });
 const salva = (nome, cosa) =>
   writeFile(`${qui}campioni/${nome}.json`, `${JSON.stringify(cosa, null, 1)}\n`);
 
-/* La Serie C, che ESPN forse non ha: si prova ESPN e poi TheSportsDB, con
- * le due chiavi pubbliche, per vedere come rispondono davvero. */
+/* La Serie C su TheSportsDB. La chiave pubblica e' «123» (la «3» e' spenta)
+ * e con lei l'elenco dei campionati si ferma a cinque: i gironi si trovano
+ * dalle squadre. Si prova cosa risponde ogni domanda. */
 try {
-  await salva("serie-c-espn-squadre", await scarica(`${ESPN}/soccer/ita.3/teams`));
-  for (const chiave of ["3", "123"]) {
-    const T = `https://www.thesportsdb.com/api/v1/json/${chiave}`;
-    const leghe = await scarica(`${T}/search_all_leagues.php?c=Italy&s=Soccer`);
-    await salva(`serie-c-tsdb-${chiave}-leghe`, leghe);
-    const elenco = leghe.json?.countries || leghe.json?.countrys || [];
-    const serieC = elenco.filter((l) => /serie\s*c/i.test(`${l.strLeague} ${l.strLeagueAlternate}`));
-    for (const lega of serieC.slice(0, 3)) {
-      const squadre = await scarica(`${T}/lookup_all_teams.php?id=${lega.idLeague}`);
-      await salva(`serie-c-tsdb-${chiave}-squadre-${lega.idLeague}`, squadre);
-      await salva(
-        `serie-c-tsdb-${chiave}-classifica-${lega.idLeague}`,
-        await scarica(`${T}/lookuptable.php?l=${lega.idLeague}&s=2026-2027`),
-      );
-      const una = squadre.json?.teams?.[0];
-      if (una && lega === serieC[0]) {
-        await salva(`serie-c-tsdb-${chiave}-squadra`, await scarica(`${T}/lookupteam.php?id=${una.idTeam}`));
-        await salva(`serie-c-tsdb-${chiave}-ultime`, await scarica(`${T}/eventslast.php?id=${una.idTeam}`));
-        await salva(`serie-c-tsdb-${chiave}-prossime`, await scarica(`${T}/eventsnext.php?id=${una.idTeam}`));
-        const stemma = una.strBadge || una.strTeamBadge;
-        if (stemma) {
-          await mkdir(`${qui}loghi`, { recursive: true });
-          for (const [nome, u] of [["piccolo", `${stemma}/small`], ["pieno", stemma]]) {
-            const r = await fetch(u);
-            if (r.ok) await writeFile(`${qui}loghi/serie-c-${chiave}-${nome}.png`, Buffer.from(await r.arrayBuffer()));
-          }
-        }
+  const T = "https://www.thesportsdb.com/api/v1/json/123";
+  const leghe = new Map();
+  for (const nome of ["Ternana", "Catania", "Benevento", "Vicenza", "Triestina", "Arezzo", "Salernitana", "Lecco", "Perugia", "Trapani"]) {
+    const r = await scarica(`${T}/searchteams.php?t=${encodeURIComponent(nome)}`);
+    await salva(`serie-c-cerca-${nome.toLowerCase()}`, r);
+    for (const t of r.json?.teams || [])
+      for (const k of ["idLeague", "idLeague2", "idLeague3"])
+        if (t[k]) leghe.set(t[k], `${t.strLeague} / ${t.strLeague2 || ""}`);
+  }
+  await salva("serie-c-leghe-viste", [...leghe]);
+  for (const [id] of leghe) {
+    await salva(`serie-c-lega-${id}`, await scarica(`${T}/lookupleague.php?id=${id}`));
+    await salva(`serie-c-squadre-${id}`, await scarica(`${T}/lookup_all_teams.php?id=${id}`));
+    for (const stagione of ["2026-2027", "2025-2026"])
+      await salva(`serie-c-classifica-${id}-${stagione}`, await scarica(`${T}/lookuptable.php?l=${id}&s=${stagione}`));
+    await salva(`serie-c-prossime-lega-${id}`, await scarica(`${T}/eventsnextleague.php?id=${id}`));
+    await salva(`serie-c-ultime-lega-${id}`, await scarica(`${T}/eventspastleague.php?id=${id}`));
+  }
+  const una = (await scarica(`${T}/searchteams.php?t=Ternana`)).json?.teams?.[0];
+  if (una) {
+    await salva("serie-c-squadra", await scarica(`${T}/lookupteam.php?id=${una.idTeam}`));
+    await salva("serie-c-ultime", await scarica(`${T}/eventslast.php?id=${una.idTeam}`));
+    await salva("serie-c-prossime", await scarica(`${T}/eventsnext.php?id=${una.idTeam}`));
+    const stemma = una.strBadge || una.strTeamBadge;
+    if (stemma) {
+      await mkdir(`${qui}loghi`, { recursive: true });
+      for (const [nome, u] of [["piccolo", `${stemma}/small`], ["pieno", stemma]]) {
+        const r = await fetch(u);
+        await salva(`serie-c-stemma-${nome}`, { u, stato: r.status, tipo: r.headers.get("content-type") });
+        if (r.ok) await writeFile(`${qui}loghi/serie-c-${nome}.png`, Buffer.from(await r.arrayBuffer()));
       }
     }
   }
