@@ -10,6 +10,13 @@ name: Le immagini dell'add-on
 # `ponte/build.yaml`, e si mettono su GitHub Packages (ghcr.io) col numero
 # della versione del manifesto. Il manifesto le chiama (`image:`) solo quando
 # ci sono: se le chiamasse prima, ogni aggiornamento fallirebbe.
+#
+# «26 file non tornano» su un add-on appena aggiornato: il numero della versione
+# e' il nome dell'immagine, e lo pubblicava anche chi lavorava su un ramo —
+# ogni passo di un rilascio a meta' (la versione nuova prima del sigillo) e
+# ogni spinta dopo. Adesso l'immagine col numero la pubblica solo `main`, e
+# solo dopo averla aperta e aver guardato che la plancia dentro torni col suo
+# sigillo; sui rami si costruisce e si guarda, e basta.
 
 on:
   workflow_dispatch:
@@ -61,7 +68,21 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Costruisce e pubblica gdahome-${{ matrix.arch }}
+      # Solo per sapere, prima di costruire: quella che c'e' gia' su ghcr.io col
+      # numero, se c'e', torna? Non ferma niente.
+      - name: Quella gia' pubblicata col numero
+        continue-on-error: true
+        run: |
+          docker run --rm --pull always --platform ${{ matrix.piattaforma }} --entrypoint node \
+            ghcr.io/${{ github.repository_owner }}/gdahome-${{ matrix.arch }}:${{ steps.dati.outputs.versione }} \
+            --input-type=module -e "$GUARDA"
+        env:
+          GUARDA: |
+            import { guardaLaPlancia, inDueParole } from "/app/src/provenienza.js";
+            const v = guardaLaPlancia("/app/plancia");
+            console.log(inDueParole(v));
+            if (v.quali?.length) console.log(v.quali.join("\n"));
+      - name: Costruisce gdahome-${{ matrix.arch }}
         uses: docker/build-push-action@v6
         with:
           context: ponte
@@ -76,6 +97,24 @@ jobs:
             io.hass.arch=${{ matrix.arch }}
             io.hass.version=${{ steps.dati.outputs.versione }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
-          push: true
+          load: true
+          push: false
           provenance: false
           tags: ghcr.io/${{ github.repository_owner }}/gdahome-${{ matrix.arch }}:${{ steps.dati.outputs.versione }}
+      # La stessa domanda che si fa la console dell'add-on, fatta dentro
+      # l'immagine appena costruita: se qui non torna, a casa non tornerebbe.
+      - name: La plancia dentro l'immagine torna col suo sigillo
+        run: |
+          docker run --rm --platform ${{ matrix.piattaforma }} --entrypoint node \
+            ghcr.io/${{ github.repository_owner }}/gdahome-${{ matrix.arch }}:${{ steps.dati.outputs.versione }} \
+            --input-type=module -e "$GUARDA"
+        env:
+          GUARDA: |
+            import { guardaLaPlancia, inDueParole } from "/app/src/provenienza.js";
+            const v = guardaLaPlancia("/app/plancia");
+            console.log(inDueParole(v));
+            if (v.quali?.length) console.log(v.quali.join("\n"));
+            if (v.stato === "modificata" || v.stato === "senza-origine") process.exit(1);
+      - name: Pubblica gdahome-${{ matrix.arch }}
+        if: github.ref == 'refs/heads/main'
+        run: docker push ghcr.io/${{ github.repository_owner }}/gdahome-${{ matrix.arch }}:${{ steps.dati.outputs.versione }}
