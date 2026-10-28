@@ -560,7 +560,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-T3TRZXWI.js";
+} from "../../chunk-AZ4QAPQO.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -29457,17 +29457,17 @@ function laViaDellAuto(coordinate) {
   if (vieTrovate.has(chiave2)) return vieTrovate.get(chiave2);
   if (!vieChieste.has(chiave2) && ilPonteCE()) {
     vieChieste.add(chiave2);
-    const prova2 = (resta) => chiediAlPonte({ type: "ponte/indirizzo", lat: coordinate.lat, lon: coordinate.lon }, 15e3).then((detto3) => {
+    const prova3 = (resta) => chiediAlPonte({ type: "ponte/indirizzo", lat: coordinate.lat, lon: coordinate.lon }, 15e3).then((detto3) => {
       const via = clean(detto3?.indirizzo);
       if (!via) return;
       vieTrovate.set(chiave2, via);
       root.dispatchEvent?.(new CustomEvent("dashboardmodern:state-changed"));
     }).catch((errore) => {
       if (resta > 0 && /filo|risponde/.test(String(errore?.message || "")))
-        root.setTimeout?.(() => prova2(resta - 1), 3e3);
+        root.setTimeout?.(() => prova3(resta - 1), 3e3);
       else vieChieste.delete(chiave2);
     });
-    void prova2(3);
+    void prova3(3);
   }
   return "";
 }
@@ -32541,7 +32541,7 @@ function livelloDalColore(testo5) {
     return livelloDalColore(
       davanti[1] === "0" ? "green" : { 1: "green", 2: "yellow", 3: "orange", 4: "red" }[davanti[1]]
     );
-  for (const [prova2, livello] of COLORI) if (prova2.test(voce3)) return livello;
+  for (const [prova3, livello] of COLORI) if (prova3.test(voce3)) return livello;
   return null;
 }
 function leggiMeteo(voce3, stati4) {
@@ -32593,7 +32593,7 @@ function livelloDellIndice(indice, unita3) {
   return indice >= 4 ? "allarme" : indice >= 3 ? "attenzione" : indice >= 2 ? "nota" : "quiete";
 }
 function livelloDellaParola(parola) {
-  for (const [prova2, esito2] of PAROLE_POLLINI) if (prova2.test(parola)) return esito2;
+  for (const [prova3, esito2] of PAROLE_POLLINI) if (prova3.test(parola)) return esito2;
   return null;
 }
 function leggiUnPolline(chiave2, stato3) {
@@ -32681,8 +32681,8 @@ function leggiUnDisagio(stato3) {
   } else if (grezzo2 === "on" || grezzo2 === "off") {
     livello = grezzo2 === "on" ? "attenzione" : "quiete";
   } else {
-    for (const [prova2, esito2] of PAROLE_COMFORT)
-      if (prova2.test(grezzo2)) {
+    for (const [prova3, esito2] of PAROLE_COMFORT)
+      if (prova3.test(grezzo2)) {
         livello = esito2;
         break;
       }
@@ -33720,7 +33720,7 @@ function materialeDalSensore(stato3) {
 function materialeDalNome(testo5) {
   const voce3 = minuscolo6(testo5);
   if (!voce3) return "altro";
-  for (const [chiave2, prova2] of INDIZI) if (prova2.test(voce3)) return chiave2;
+  for (const [chiave2, prova3] of INDIZI) if (prova3.test(voce3)) return chiave2;
   return "altro";
 }
 function nomeCheAggiungeQualcosa(testo5) {
@@ -34006,7 +34006,7 @@ var MESI = Object.freeze([
 var meseDaParola = (parola) => {
   const voce3 = minuscolo6(parola).replace(/\.$/, "");
   if (!voce3) return -1;
-  return MESI.findIndex((prova2) => prova2.test(voce3));
+  return MESI.findIndex((prova3) => prova3.test(voce3));
 };
 var PREPOSIZIONI = /^(il|lo|al|del|di|on|at|am|el|le|op|den|op de)$/;
 var PAROLE_DA_TOGLIERE = 2;
@@ -34016,7 +34016,7 @@ function senzaIlGiornoDavanti(voce3) {
     const m = /^([\p{L}]+)[.,]?\s+(.+)$/u.exec(resto);
     if (!m) break;
     const parola = minuscolo6(m[1]);
-    const inutile = PREPOSIZIONI.test(parola) || GIORNI_DELLA_SETTIMANA.some((prova2) => prova2.test(parola));
+    const inutile = PREPOSIZIONI.test(parola) || GIORNI_DELLA_SETTIMANA.some((prova3) => prova3.test(parola));
     if (!inutile) break;
     const dopo = pulito27(m[2]);
     if (!/\d/.test(dopo)) break;
@@ -34064,7 +34064,7 @@ var GIORNI_DELLA_SETTIMANA = Object.freeze([
 function giornoDellaSettimana2(testo5, adesso2 = Date.now()) {
   const voce3 = minuscolo6(testo5);
   if (!voce3) return null;
-  const indice = GIORNI_DELLA_SETTIMANA.findIndex((prova2) => prova2.test(voce3));
+  const indice = GIORNI_DELLA_SETTIMANA.findIndex((prova3) => prova3.test(voce3));
   if (indice < 0) return null;
   const oggi = inizioDelGiorno(adesso2);
   const fra2 = (indice - oggi.getDay() + 7) % 7;
@@ -66433,7 +66433,7 @@ function letturaDi3(stato3) {
   const artista = pulito50(a.media_artist || a.media_album_artist);
   const canale = pulito50(a.media_channel);
   const radio = Boolean(canale) || tipo === "channel" || tipo === "radio" || !artista && /tune\s*in|radio/i.test(dove);
-  const trovato = DA_DOVE.find(([prova2]) => prova2.test(dove));
+  const trovato = DA_DOVE.find(([prova3]) => prova3.test(dove));
   return {
     entita: stato3.entity_id,
     nome: pulito50(a.friendly_name) || stato3.entity_id,
@@ -68521,16 +68521,16 @@ function provaLIndirizzo(modello2, luogo, raggio = RAGGIO_DI_SERIE, tetto = null
       risolvi4({ ok: false, motivo: "senza-indirizzo" });
       return;
     }
-    const prova2 = new root.Image();
+    const prova3 = new root.Image();
     const fine = (esito2) => {
-      prova2.onload = null;
-      prova2.onerror = null;
+      prova3.onload = null;
+      prova3.onerror = null;
       risolvi4(esito2);
     };
-    prova2.onload = () => fine({ ok: prova2.naturalWidth > 0, motivo: "", url });
-    prova2.onerror = () => fine({ ok: false, motivo: "non-arriva", url });
+    prova3.onload = () => fine({ ok: prova3.naturalWidth > 0, motivo: "", url });
+    prova3.onerror = () => fine({ ok: false, motivo: "non-arriva", url });
     root.setTimeout?.(() => fine({ ok: false, motivo: "troppo-lenta", url }), 8e3);
-    prova2.src = url;
+    prova3.src = url;
   });
 }
 function zoneMarkup2(scelta3) {
@@ -68889,11 +68889,11 @@ async function onClick8(event) {
     if (input) root.wzPickEntity?.(input);
     return;
   }
-  const prova2 = event.target?.closest?.("[data-dm-radar-prova]");
-  if (prova2) {
+  const prova3 = event.target?.closest?.("[data-dm-radar-prova]");
+  if (prova3) {
     event.preventDefault();
     if (state55.provando) return;
-    const dentro3 = prova2.closest(".dm-radar-ed");
+    const dentro3 = prova3.closest(".dm-radar-ed");
     const esito2 = dentro3?.querySelector("[data-dm-radar-esito]");
     if (!dentro3 || !esito2) return;
     const config = raccogli3(dentro3);
@@ -71824,7 +71824,7 @@ var GLIFI_EV = Object.freeze([
 function glifoEv(riferimento) {
   const dato2 = casellaDellAuto(riferimento);
   if (dato2) return dato2.glifo;
-  for (const [prova2, glifo2] of GLIFI_EV) if (prova2.test(riferimento)) return glifo2;
+  for (const [prova3, glifo2] of GLIFI_EV) if (prova3.test(riferimento)) return glifo2;
   return "🚗";
 }
 var RIF_MOTORE = "dm.ev_motore";
@@ -81115,13 +81115,13 @@ var statoDi5 = (entity2, states) => clean(states?.[clean(entity2)]?.state);
 var SI_COMANDA_ACCESO = /^(on|playing|cleaning)$/i;
 var CLIMA_ACCESO = /^(heat|cool|auto|dry|fan_only|heat_cool)$/i;
 var climaAcceso = (entity2, stato3, states) => climaAccesoDaiWatt(entity2, states) ?? CLIMA_ACCESO.test(stato3);
-function acceseNelBlocco(pagina3, chiave2, states, prova2) {
+function acceseNelBlocco(pagina3, chiave2, states, prova3) {
   const blocco3 = (pagina3?.blocchi || []).find((voce3) => voce3.key === chiave2);
   if (!blocco3) return 0;
   let quante3 = 0;
   for (const voce3 of blocco3.voci) {
     const entity2 = entitaVoce(voce3);
-    if (entity2 && prova2(statoDi5(entity2, states), entity2)) quante3 += 1;
+    if (entity2 && prova3(statoDi5(entity2, states), entity2)) quante3 += 1;
   }
   return quante3;
 }
@@ -81501,7 +81501,7 @@ function runScene(on) {
 }
 function apriLaVoce(entity2) {
   if (!entity2 || !doc) return false;
-  const prova2 = () => {
+  const prova3 = () => {
     if (typeof root.apriClimaPopup === "function" && entity2.startsWith("climate.")) {
       try {
         root.apriClimaPopup(entity2);
@@ -81518,8 +81518,8 @@ function apriLaVoce(entity2) {
     return true;
   };
   root.requestAnimationFrame?.(() => {
-    if (!prova2()) root.setTimeout?.(prova2, 220);
-  }) || root.setTimeout?.(prova2, 0);
+    if (!prova3()) root.setTimeout?.(prova3, 220);
+  }) || root.setTimeout?.(prova3, 0);
   return true;
 }
 function telecameraDellEntita(entity2, lista7) {
@@ -96585,6 +96585,48 @@ function installAlberatura() {
 }
 senzaCadere(installAlberatura);
 
+// src/sections/loghi-delle-radio.js
+var COM_E_ANDATA = /* @__PURE__ */ new Map();
+var perLoSfondo = (url) => String(url || "").replace(/["'()\\\s]/g, (c) => encodeURIComponent(c));
+function logoDellaRadioMarkup(logo3, classe3) {
+  const url = perLoSfondo(logo3);
+  return `<span class="${classe3}" aria-hidden="true"${url ? ` data-dm-radio-logo="${esc(url)}"` : ""}>📻</span>`;
+}
+function mettiLoSfondo(segnaposto, url) {
+  if (segnaposto.isConnected !== false) segnaposto.style.backgroundImage = `url('${url}')`;
+}
+function prova(url) {
+  const andata = COM_E_ANDATA.get(url);
+  if (andata) return andata;
+  const attesa = new Promise((fatto2) => {
+    const immagine2 = new Image();
+    immagine2.referrerPolicy = "no-referrer";
+    immagine2.onload = () => {
+      COM_E_ANDATA.set(url, immagine2.naturalWidth > 0 ? "si" : "no");
+      fatto2();
+    };
+    immagine2.onerror = () => {
+      COM_E_ANDATA.set(url, "no");
+      fatto2();
+    };
+    immagine2.src = url;
+  });
+  COM_E_ANDATA.set(url, attesa);
+  return attesa;
+}
+function mettiILoghiDelleRadio(contenitore5) {
+  if (typeof Image !== "function") return;
+  for (const segnaposto of contenitore5?.querySelectorAll?.("[data-dm-radio-logo]") || []) {
+    const url = segnaposto.dataset.dmRadioLogo;
+    const andata = COM_E_ANDATA.get(url);
+    if (andata === "si") mettiLoSfondo(segnaposto, url);
+    else if (andata !== "no")
+      void prova(url).then(() => {
+        if (COM_E_ANDATA.get(url) === "si") mettiLoSfondo(segnaposto, url);
+      });
+  }
+}
+
 // src/sections/alexa-editor-section.js
 var KEY98 = "__DASHBOARDMODERN_ALEXA_EDITOR__";
 var state94 = root[KEY98] ||= {
@@ -96609,6 +96651,7 @@ var state94 = root[KEY98] ||= {
 var ALEXA_EDITOR_TAB = "alexa";
 var ALEXA_AVVISI_TAB = "alexa_avvisi";
 var ALEXA_MUSICA_TAB = "alexa_musica";
+var LISTE_SCRITTE = /* @__PURE__ */ new WeakMap();
 var LE_SCHEDE = [ALEXA_EDITOR_TAB, ALEXA_AVVISI_TAB, ALEXA_MUSICA_TAB];
 var NOMI_DELLE_FAMIGLIE = Object.freeze({
   urgenti: [
@@ -96856,9 +96899,8 @@ function stazioniMarkup(su) {
   if (!filtrate.length)
     return `<small class="dm-alexa-esito">${esc(t("Nessuna radio con questo nome", "No station with this name"))}</small>`;
   return `<div class="dm-alexa-stazioni">${filtrate.map((una) => {
-    const logo3 = clean(una.logo).replace(/["'()\\\s]/g, (c) => encodeURIComponent(c));
     return `<button type="button" class="dm-alexa-stazione" data-dm-mu-stazione="${esc(una.nome)}"${su.length ? "" : " disabled"}>
-        <span class="dm-alexa-stazione-logo" aria-hidden="true"${logo3 ? ` style="background-image:url('${logo3}')"` : ""}>📻</span>
+        ${logoDellaRadioMarkup(clean(una.logo), "dm-alexa-stazione-logo")}
         <span>${esc(una.nome)}</span></button>`;
   }).join("")}</div>`;
 }
@@ -97193,6 +97235,7 @@ function ensureAlexaEditor() {
   state94.scritto = markup7;
   corpo6.innerHTML = markup7;
   corpo6.dataset.renderer = scheda8;
+  mettiILoghiDelleRadio(corpo6);
   ensureTitoloDellaSezione();
   return true;
 }
@@ -97223,7 +97266,7 @@ function ridisegna8() {
   state94.scritto = "";
   ensureAlexaEditor();
 }
-async function prova({ frase: frase4 = "", altoparlanti = null } = {}) {
+async function prova2({ frase: frase4 = "", altoparlanti = null } = {}) {
   const config = configurazione13();
   const su = altoparlanti?.length ? altoparlanti : config.altoparlanti;
   if (state94.provando || !su.length) return;
@@ -97274,7 +97317,7 @@ function onClick19(evento) {
   else if ("dmAlexaModo" in d) salva14({ modo: clean(d.dmAlexaModo) });
   else if ("dmAlexaProva" in d) {
     evento.preventDefault();
-    void prova();
+    void prova2();
     return;
   } else return;
   evento.preventDefault();
@@ -97359,7 +97402,7 @@ function suUnAvviso(d, config, evento) {
   if ("dmAvProva" in d) {
     evento.preventDefault();
     if (bozza3.frase.trim())
-      void prova({ frase: bozza3.frase.trim(), altoparlanti: bozza3.altoparlanti });
+      void prova2({ frase: bozza3.frase.trim(), altoparlanti: bozza3.altoparlanti });
     return true;
   }
   if ("dmAvSalva" in d) {
@@ -97393,7 +97436,11 @@ function onInput3(evento) {
     if (evento.type === "input" && lista7 && state94.musica.servizio === "TUNEIN") {
       const stati4 = allStates() || {};
       const nuova = stazioniMarkup(echoDellaMusica(configurazione13(), stati4));
-      if (lista7.innerHTML !== nuova) lista7.innerHTML = nuova;
+      if (LISTE_SCRITTE.get(lista7) !== nuova) {
+        LISTE_SCRITTE.set(lista7, nuova);
+        lista7.innerHTML = nuova;
+        mettiILoghiDelleRadio(lista7);
+      }
     }
     return;
   }
@@ -98646,7 +98693,7 @@ function orologioAcceso() {
   }
 }
 function lettureOrologio(adesso2 = /* @__PURE__ */ new Date(), lingua8 = locale()) {
-  const prova2 = (opzioni2) => {
+  const prova3 = (opzioni2) => {
     try {
       return new Intl.DateTimeFormat(lingua8, opzioni2).format(adesso2);
     } catch (_error) {
@@ -98654,10 +98701,10 @@ function lettureOrologio(adesso2 = /* @__PURE__ */ new Date(), lingua8 = locale(
     }
   };
   return {
-    ora: prova2({ hour: "2-digit", minute: "2-digit" }) || "",
-    data: prova2({ weekday: "short", day: "numeric", month: "short" }) || "",
+    ora: prova3({ hour: "2-digit", minute: "2-digit" }) || "",
+    data: prova3({ weekday: "short", day: "numeric", month: "short" }) || "",
     /* Per esteso, per lo schermo largo: «giovedì 22 ottobre». */
-    giorno: prova2({ weekday: "long", day: "numeric", month: "long" }) || ""
+    giorno: prova3({ weekday: "long", day: "numeric", month: "long" }) || ""
   };
 }
 function fraQuantoIlMinuto(adesso2 = /* @__PURE__ */ new Date()) {
@@ -115572,10 +115619,10 @@ function onClick28(event) {
     ridisegna11();
     return;
   }
-  const prova2 = event.target.closest("[data-mu-ed-prova]");
-  if (prova2) {
+  const prova3 = event.target.closest("[data-mu-ed-prova]");
+  if (prova3) {
     event.preventDefault();
-    const o = opzioniDelCampanello(bozza().pagine?.[Number(prova2.dataset.muEdProva)]?.ingresso);
+    const o = opzioniDelCampanello(bozza().pagine?.[Number(prova3.dataset.muEdProva)]?.ingresso);
     suonaIlCampanello(o.suono, o.volume, { ripeti: false });
     return;
   }
@@ -120799,8 +120846,8 @@ var SCELTE2 = {
   ].includes(dominio3(id))
 };
 function opzioni(quale) {
-  const prova2 = SCELTE2[quale] || (() => false);
-  return Object.entries(stati()).filter(([id, s]) => prova2(id, s)).map(([id]) => [id, nomeDi13(id)]).sort((a, b2) => a[1].localeCompare(b2[1], locale()));
+  const prova3 = SCELTE2[quale] || (() => false);
+  return Object.entries(stati()).filter(([id, s]) => prova3(id, s)).map(([id]) => [id, nomeDi13(id)]).sort((a, b2) => a[1].localeCompare(b2[1], locale()));
 }
 var primaDi = (quale, preferita = null) => {
   const tutte = opzioni(quale);
@@ -132687,17 +132734,17 @@ var forme = () => state148.forme ||= /* @__PURE__ */ new Map();
 function imparaLaForma(url) {
   if (!url || forme().has(url) || state148.inMisura?.has(url)) return;
   (state148.inMisura ||= /* @__PURE__ */ new Set()).add(url);
-  const prova2 = new root.Image();
-  prova2.decoding = "async";
-  prova2.onload = () => {
+  const prova3 = new root.Image();
+  prova3.decoding = "async";
+  prova3.onload = () => {
     state148.inMisura.delete(url);
-    if (prova2.naturalHeight > 0) {
-      forme().set(url, prova2.naturalWidth / prova2.naturalHeight);
+    if (prova3.naturalHeight > 0) {
+      forme().set(url, prova3.naturalWidth / prova3.naturalHeight);
       scheduleEvShowcase();
     }
   };
-  prova2.onerror = () => state148.inMisura.delete(url);
-  prova2.src = url;
+  prova3.onerror = () => state148.inMisura.delete(url);
+  prova3.src = url;
 }
 function formaDellaCornice(image, loaded) {
   const inMostra = clean(image.getAttribute("src"));
@@ -154567,8 +154614,7 @@ function inOnda(stazione, lettore, stati4) {
   );
 }
 function logoMarkup(stazione, classe3) {
-  const url = clean(stazione.logo).replace(/["'()\\\s]/g, (c) => encodeURIComponent(c));
-  return `<span class="${classe3}" aria-hidden="true"${url ? ` style="background-image:url('${url}')"` : ""}>📻</span>`;
+  return logoDellaRadioMarkup(clean(stazione.logo), classe3);
 }
 function riquadroMarkup() {
   const stati4 = allStates() || {};
@@ -154641,6 +154687,7 @@ function ridisegnaLaRadio() {
   if (markup7 === state186.firma && riquadro.firstChild) return true;
   state186.firma = markup7;
   riquadro.innerHTML = markup7;
+  mettiILoghiDelleRadio(riquadro);
   return true;
 }
 function sulRiquadro(evento) {
@@ -154839,6 +154886,7 @@ function ridisegnaLaScheda() {
   const fuoco = doc.activeElement?.matches?.("[data-dm-radio-filtro],[data-dm-radio-nome]") ? doc.activeElement.matches("[data-dm-radio-filtro]") ? "[data-dm-radio-filtro]" : "[data-dm-radio-nome]" : "";
   corpo6.innerHTML = markup7;
   corpo6.dataset.renderer = RADIO_TAB;
+  mettiILoghiDelleRadio(corpo6);
   ensureTitoloDellaSezione();
   if (fuoco) {
     const campo6 = corpo6.querySelector(fuoco);
