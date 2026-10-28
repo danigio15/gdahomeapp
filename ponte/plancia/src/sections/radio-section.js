@@ -64,6 +64,7 @@ const state = (root[KEY] ||= {
   /* Le radio italiane di Radio Browser, chieste una volta: servono alle radio
    * pronte sui lettori che non sono Echo. */
   delPaese: null,
+  paeseChiesto: false,
   /* L'elenco delle radio pronte, aperto o chiuso. */
   tendina: false,
 });
@@ -222,6 +223,7 @@ function riquadroMarkup() {
   /* Le radio pronte: un tasto che si apre in una griglia di tessere, ognuna
    * col suo bollino. Si ascoltano subito, senza averle scelte nel Config. */
   const aperte = state.tendina === true;
+  if (aperte) chiediLeRadioDelPaese();
   const pronte = `<div class="dm-radio-pronte${aperte ? " aperte" : ""}">
       <button type="button" class="dm-radio-pronte-apri" data-dm-radio-tendina aria-expanded="${aperte}"${dove ? "" : " disabled"}>
         <span class="dm-radio-pronte-ic" aria-hidden="true">🇮🇹</span>
@@ -236,8 +238,12 @@ function riquadroMarkup() {
         aperte
           ? `<div class="dm-radio-pronte-elenco">${RADIO_PRONTE.map((una, indice) => {
               const onda = dove && inOnda(una, dove, stati);
+              /* Il logo vero, se Radio Browser ne ha uno per questa radio: si
+               * mette solo quando arriva, e fino ad allora — o se non c'e' —
+               * resta il bollino con la sigla. */
+              const logo = stazioneDalNome(state.delPaese || [], una.nome)?.logo || "";
               return `<button type="button" class="dm-radio-pr${onda ? " in-onda" : ""}" data-dm-radio-pronta="${indice}" style="--pr:${esc(una.colore)}">
-                <span class="dm-radio-pr-sigla" aria-hidden="true">${esc(una.sigla)}</span>
+                ${logoDellaRadioMarkup(logo, "dm-radio-pr-sigla", { dentro: esc(una.sigla) })}
                 <b>${esc(una.nome)}</b>
                 ${onda ? `<i class="dm-radio-pr-onda" role="img" aria-label="${esc(t("In onda", "On air"))}"></i>` : ""}
               </button>`;
@@ -321,6 +327,23 @@ function sulRiquadro(evento) {
   state.firma = "";
   ridisegnaLaRadio();
   return true;
+}
+
+/* Le radio italiane di Radio Browser, una volta sola: servono a suonare le
+ * pronte sui lettori che non sono Echo, e ai loro loghi. Senza
+ * l'integrazione la risposta non arriva, e restano i bollini. */
+function chiediLeRadioDelPaese() {
+  if (state.delPaese || state.paeseChiesto) return;
+  state.paeseChiesto = true;
+  chiediAHomeAssistant(domandaDelleRadio(RADIO_DEL_PAESE), 15000)
+    .then((risposta) => {
+      state.delPaese = stazioniDellaRisposta(risposta);
+      state.firma = "";
+      ridisegnaLaRadio();
+    })
+    .catch(() => {
+      /* Niente Radio Browser: i bollini bastano. */
+    });
 }
 
 /* Una radio pronta, scelta dal menu: sull'Echo per nome, a TuneIn; su un
@@ -635,6 +658,8 @@ function stili() {
     .dm-radio-pr-sigla{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;
       font-size:12px;font-weight:900;letter-spacing:-.02em;color:#fff;background:var(--pr);
       box-shadow:0 8px 16px -10px var(--pr)}
+    .dm-radio-pr-sigla[style]{font-size:0;background:#fff center/contain no-repeat;
+      box-shadow:0 0 0 1px var(--card-border,#e2e8f0)}
     .dm-radio-pr b{flex:1 1 auto;min-width:0;font-size:13px;font-weight:800;line-height:1.2;
       overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
     .dm-radio-pr-onda{flex:none;width:10px;height:10px;border-radius:999px;background:#8b5cf6;

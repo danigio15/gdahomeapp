@@ -20,10 +20,11 @@ const COM_E_ANDATA = new Map();
 /* Un indirizzo che sta in `url('…')` senza uscirne. */
 const perLoSfondo = (url) => String(url || "").replace(/["'()\\\s]/g, (c) => encodeURIComponent(c));
 
-/** Il segnaposto col 📻 e, se c'e', l'indirizzo del logo da provare. */
-export function logoDellaRadioMarkup(logo, classe) {
+/** Il segnaposto col 📻 (o con `dentro`, gia' HTML: il bollino di una radio
+ * pronta) e, se c'e', l'indirizzo del logo da provare. */
+export function logoDellaRadioMarkup(logo, classe, { dentro = "📻", stile = "" } = {}) {
   const url = perLoSfondo(logo);
-  return `<span class="${classe}" aria-hidden="true"${url ? ` data-dm-radio-logo="${esc(url)}"` : ""}>📻</span>`;
+  return `<span class="${classe}" aria-hidden="true"${stile ? ` style="${esc(stile)}"` : ""}${url ? ` data-dm-radio-logo="${esc(url)}"` : ""}>${dentro}</span>`;
 }
 
 function mettiLoSfondo(segnaposto, url) {

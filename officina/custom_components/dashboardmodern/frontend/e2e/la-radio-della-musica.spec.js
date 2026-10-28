@@ -28,16 +28,27 @@ const seme = {
 
 const LETTORI = [{ id: "mp1", entity: "media_player.sonos", nome: "Sonos Salotto" }];
 
-const logo = (colore, lettera) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="${colore}"/><text x="32" y="42" font-size="28" font-family="Arial" font-weight="700" fill="#fff" text-anchor="middle">${lettera}</text></svg>`;
-
 /* RDS e m2o hanno un logo che non arriva (un sito che non c'e' piu'): deve
  * restare il 📻, non un quadratino bianco. */
+const svg = (dentro) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">${dentro}</svg>`;
+/* Loghi disegnati come loghi (scritte, non bollini), per vedere nelle foto
+ * che il logo prende il posto della sigla. */
 const LOGHI = {
-  deejay: logo("#111827", "DJ"),
-  rtl: logo("#2563eb", "RTL"),
-  virgin: logo("#e11d48", "V"),
-  kiss: logo("#db2777", "K"),
+  deejay: svg(
+    `<rect width="64" height="64" fill="#fff"/><text x="32" y="38" font-size="15" font-family="Arial Black,Arial" font-weight="900" font-style="italic" fill="#111" text-anchor="middle">DEEJAY</text><rect x="10" y="43" width="44" height="4" fill="#e30613"/>`,
+  ),
+  rtl: svg(
+    `<rect width="64" height="64" fill="#0b1d4d"/><text x="32" y="33" font-size="22" font-family="Arial Black,Arial" font-weight="900" fill="#fff" text-anchor="middle">RTL</text><text x="32" y="52" font-size="15" font-family="Arial" font-weight="700" fill="#ffd200" text-anchor="middle">102.5</text>`,
+  ),
+  virgin: svg(
+    `<rect width="64" height="64" fill="#fff"/><circle cx="32" cy="32" r="28" fill="#e10a0a"/><text x="32" y="39" font-size="17" font-family="Georgia,serif" font-style="italic" font-weight="700" fill="#fff" text-anchor="middle">Virgin</text>`,
+  ),
+  rdsvero: svg(
+    `<rect width="64" height="64" fill="#fff"/><path d="M8 14 L60 10 L54 54 L4 54 Z" fill="#e2412b"/><text x="31" y="40" font-size="24" font-family="Arial Black,Arial" font-weight="900" fill="#fff" text-anchor="middle">RDS</text><text x="30" y="50" font-size="5.2" font-family="Arial" font-weight="700" fill="#fff" text-anchor="middle">100% GRANDI SUCCESSI</text>`,
+  ),
+  kiss: svg(
+    `<rect width="64" height="64" fill="#fff"/><text x="32" y="30" font-size="17" font-family="Arial Black,Arial" font-weight="900" fill="#e6007e" text-anchor="middle">KISS</text><text x="32" y="50" font-size="17" font-family="Arial Black,Arial" font-weight="900" fill="#e6007e" text-anchor="middle">KISS</text>`,
+  ),
 };
 
 const stazione = (uuid, nome, chiave) => ({
@@ -68,6 +79,9 @@ const RADIO = {
       stazione("it1", "RTL 102.5 Best", "rtl"),
       stazione("it2", "RTL 102.5", "rtl"),
       stazione("it3", "Radio DEEJAY", "deejay"),
+      stazione("it4", "Virgin Radio", "virgin"),
+      stazione("it5", "Radio Kiss Kiss", "kiss"),
+      stazione("it6", "RDS 100% Grandi Successi", "rdsvero"),
     ],
   },
   "media-source://radio_browser/popular": {
@@ -401,6 +415,14 @@ test("le radio pronte dal menu: sull'Echo per nome, sul Sonos da Radio Browser",
   const pronta = (nome) => radio.locator(".dm-radio-pr", { hasText: nome }).first();
   await expect(radio.locator(".dm-radio-pr")).toHaveCount(20);
   await expect(pronta("RTL 102.5")).toBeVisible();
+  /* «Continua a non vedersi le icone delle stazioni radio»: dove Radio
+   * Browser ha la radio col suo logo, il logo vero prende il posto del
+   * bollino; dove non ce l'ha, resta il bollino con la sigla. */
+  const sigla = (nome) => pronta(nome).locator(".dm-radio-pr-sigla");
+  await expect(sigla("RTL 102.5")).toHaveAttribute("style", /background-image/);
+  await expect(sigla("Radio Deejay")).toHaveAttribute("style", /background-image/);
+  await expect(sigla("Radio 105")).not.toHaveAttribute("style", /background-image/);
+  await expect(sigla("Radio 105")).toHaveText("105");
   await page.waitForTimeout(300);
   await radio.screenshot({ path: testInfo.outputPath("radio-pronte-aperta.png") });
 
