@@ -560,7 +560,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-BRCXV6GQ.js";
+} from "../../chunk-XNEIIEPG.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2617,6 +2617,7 @@ var SOURCE_INDEX = Object.freeze({
   "Antifurto · Telecamere": "Alarm · Cameras",
   "Antifurto · Total": "Alarm · Total",
   "Antifurto · Totale": "Alarm · Total",
+  "Antifurto · Uscita": "Alarm · Leaving",
   "Antifurto e serrature chiedono il codice": "Alarm and locks ask for the code",
   "Antifurto e videosorveglianza": "Alarm system and video surveillance",
   "Antifurto inserito: luci spente": "Alarm armed: lights off",
@@ -3566,6 +3567,7 @@ var SOURCE_INDEX = Object.freeze({
   "Da cambiare subito": "Change it now",
   "da casa": "from home",
   "Da casa": "From the house",
+  "Da che ora si guarda a domani": "From what time it looks at tomorrow",
   "Da come sta si capisce dove va il calore: al riscaldamento o al sanitario.": "Where the heat is going is told by how it sits: to the heating or to the hot water.",
   "da confermare": "to confirm",
   "da controllare": "check them",
@@ -4501,6 +4503,7 @@ var SOURCE_INDEX = Object.freeze({
   "Il rilevamento aggiunge solo ciò che manca: niente doppioni.": "Detection only adds what is missing: no duplicates.",
   "Il riquadro delle telecamere adesso non c'è. L'allarme e i varchi restano dove sono, e le telecamere configurate non sono state toccate.": "The camera panel is not there now. The alarm and the openings stay where they are, and the configured cameras have not been touched.",
   "Il rischio delle graminacee preso da sé: da 1, molto basso, a 4, alto. Chi è allergico a una sola famiglia vede l'allerta anche quando la media della giornata è tranquilla.": "The grass risk on its own: from 1, very low, to 4, high. Whoever is allergic to one family only still sees the alert when the day's average is quiet.",
+  "Il ritiro di oggi a quest'ora è già passato: da qui in poi la pagina e la tessera in Home dicono quello di domani, cioè cosa mettere fuori stasera.": "By this time today's collection has already gone: from then on the page and the Home tile show tomorrow's, which is what to put out tonight.",
   "Il ritiro è domani mattina.": "Collection is tomorrow morning.",
   "Il ritiro è stamattina.": "Collection is this morning.",
   "Il salto è grande: l'impianto sta chiedendo molto calore.": "The drop is large: the system is asking for a lot of heat.",
@@ -5054,7 +5057,6 @@ var SOURCE_INDEX = Object.freeze({
   "Le quattro temperature di una VMC dicono da sole se la macchina sta lavorando: l'aria entra da fuori, si scalda con quella che esce, e la differenza fra le due è il recupero. La pagina del Clima le mostra incrociate come i due flussi, con il bypass, la stagione e i filtri.": "The four temperatures of a heat-recovery unit tell you on their own whether the machine is doing its job: air comes in from outside, warms up with the air going out, and the difference between the two is the recovery. The Climate page shows them crossed like the two flows, with the bypass, the season and the filters.",
   "Le radio di Home Assistant non rispondono": "Home Assistant radio is not answering",
   "Le radio preferite": "Favourite stations",
-  "Le radio preferite si scelgono in Config › Musica › 📻 Radio, e qui si ascoltano su un lettore o sugli Echo.": "Favourite stations are chosen in Config › Media › 📻 Radio, and played here on a player or on the Echos.",
   "Le routine fanno delle cose a degli orari, nei giorni e nel periodo che scegli: «alle 6:30 caldaia, alle 7 tapparelle su». I calendari a fasce tengono accesa una cosa nelle fasce che disegni.": "Routines do things at set times, on the days and in the period you choose: «boiler at 6:30, shutters up at 7». Time-slot calendars keep something on in the slots you draw.",
   "Le routine fanno delle cose a degli orari; i calendari tengono accesa una cosa nelle fasce che disegni. Le esegue Home Assistant.": "Routines do things at set times; calendars keep something on in the slots you draw. Home Assistant runs them.",
   "Le segnalazioni partono a tuo nome: la prima volta serve un passaggio su GitHub.": "Reports go out under your name: the first time takes one step on GitHub.",
@@ -5084,6 +5086,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le tue entità": "Your entities",
   "Le tue entità nella fascia": "Your own entities in the bar",
   "Le tue notifiche personalizzate": "Your custom notifications",
+  "Le tue preferite, coi loghi, si scelgono in Config › Musica › 📻 Radio.": "Your favourites, with their logos, are chosen in Config › Media › 📻 Radio.",
   "Le tue richieste": "Your requests",
   "Le tue segnalazioni · Stato · Risposte": "Your reports · Status · Replies",
   "Le tue sezioni": "Your sections",
@@ -5388,6 +5391,7 @@ var SOURCE_INDEX = Object.freeze({
   "Mostra «Caldaia accesa» nella Home": "Show “Boiler on” on Home",
   "Mostra dispositivi ed entità che hanno consumato": "Show devices and energy sources",
   "Mostra il cerchio quando configurato": "Show node when configured",
+  "Mostra il citofono": "Show the intercom",
   "Mostra in pagina": "Show on the page",
   "Mostra le opzioni": "Show options",
   "Mostra le telecamere in Sicurezza": "Show the cameras under Security",
@@ -5592,7 +5596,6 @@ var SOURCE_INDEX = Object.freeze({
   "Nessuna presa": "No socket",
   "Nessuna presa configurata": "No socket configured",
   "Nessuna previsione": "No forecast",
-  "Nessuna radio ancora": "No radio yet",
   "Nessuna radio con questo nome": "No station with this name",
   "Nessuna radio preferita": "No favourite station",
   "Nessuna ricarica in questo periodo.": "No charging in this period.",
@@ -5890,7 +5893,7 @@ var SOURCE_INDEX = Object.freeze({
   "oppure un'azione": "or an action",
   "Opzioni": "Options",
   "ora": "time",
-  "Ora": "Time",
+  "Ora": "Hour",
   "ora ${oraLetta}°": "now ${oraLetta}°",
   "ora ${soc}%": "now ${soc}%",
   "Ora e data": "Time and date",
@@ -5983,6 +5986,7 @@ var SOURCE_INDEX = Object.freeze({
   "Per finire l'aggiornamento di": "To finish updating",
   "Per frigo e congelatore: mostra la barra temperatura al posto della potenza.": "For fridge and freezer: shows the temperature strip instead of the power bar.",
   "Per i km di ogni giorno serve il contachilometri.": "Daily km need the odometer.",
+  "Per i lettori che non sono Echo serve l'integrazione Radio Browser di Home Assistant.": "Players that aren't Echos need Home Assistant's Radio Browser integration.",
   "Per il ritorno servirà una ricarica": "You will need to charge for the way back",
   "Per il tasto «Spegni sirena» nella notifica e nella Sicurezza.": "For the “Siren off” button in the notification and in Security.",
   "Per integrazione": "By integration",
@@ -6323,6 +6327,7 @@ var SOURCE_INDEX = Object.freeze({
   "Pronta fra ${durata}": "Ready in ${durata}",
   "pronta per la doccia": "ready for a shower",
   "Pronte · Inchiostro · Pagine": "Ready · Ink · Pages",
+  "pronte · tocca per scegliere": "ready · tap to choose",
   "Proposta ✨": "Suggestion ✨",
   "Proposte": "Suggestions",
   "Proposte pensate per la tua casa": "Suggestions designed for your home",
@@ -6485,6 +6490,7 @@ var SOURCE_INDEX = Object.freeze({
   "questa plancia": "this dashboard",
   "Questa presa è configurata come «si vede ma non si comanda»: la finestra la racconta, ma non la accende né la spegne.": "This socket is configured as shown but not controllable: this window reports it, it never switches it.",
   "Questa radio si ascolta solo sugli Echo: scegli un Echo.": "This station plays on the Echos only: choose an Echo.",
+  "Questa radio su questo lettore non la trovo: prova un Echo, o aggiungila dal Config.": "Can't find this station for this player: try an Echo, or add it from the Config.",
   "Questa ricarica": "This charge",
   "Questa serratura sa fare tutte e due le cose, e sono diverse: «sblocca» gira la chiave, «apri» tira lo scrocco e la porta si apre. Lasciandola com'è il tocco apre, come ha sempre fatto.": "This lock can do both, and they are not the same: “unlock” turns the key, “open” pulls the latch and the door opens. Left as it is, a tap opens, as it always has.",
   "Questa Sett.": "This week",
@@ -6535,6 +6541,8 @@ var SOURCE_INDEX = Object.freeze({
   "Radar pioggia": "Rain radar",
   "Radiazione solare": "Solar radiation",
   "Radio Deejay": "BBC Radio 2",
+  "Radio italiane": "Italian stations",
+  "radio pronte da ascoltare": "stations ready to play",
   "raffica": "gust",
   "Raffica": "Wind gust",
   "raffiche": "gusts",
@@ -7039,6 +7047,7 @@ var SOURCE_INDEX = Object.freeze({
   "Senza piano": "No floor",
   "Senza stanza questa finestra non ha un'umidità da guardare: sceglila qui sopra.": "Without a room this window has no humidity to watch: pick one above.",
   "Senza tasto Accendi/Spegni": "Without the On/Off button",
+  "Senza telecamera e senza tasti per aprire non si vede comunque": "Without a camera or open buttons it is hidden anyway",
   "Senza tipo": "Untyped",
   "Senza titolo": "Untitled",
   "Senza traffico, con un margine: GdANav lo ricalcola col traffico vero fino alla partenza": "Without traffic, with a margin: GdANav recalculates with live traffic until you leave",
@@ -7656,6 +7665,7 @@ var SOURCE_INDEX = Object.freeze({
   "Tocca un Echo per sceglierlo. Più Echo suonano la stessa musica, ognuno per conto suo: per averla insieme usa un gruppo di altoparlanti dell'app Alexa.": "Tap an Echo to choose it. Several Echos play the same music, each on its own: to have it in sync use a speaker group from the Alexa app.",
   "Tocca un lettore per metterlo o toglierlo dal gruppo": "Tap a player to add it to or remove it from the group",
   "Tocca un sensore": "Tap a sensor",
+  "Tocca una radio per ascoltarla": "Tap a station to listen",
   "Tocca una stanza: ogni unità accende con i suoi passi": "Tap a room: each unit starts with its own steps",
   "Toccando una stanza": "Tapping a room",
   "Toggle entità": "Toggle entity",
@@ -12249,14 +12259,14 @@ function stanzePerPiano(pagine, { piani = [] } = {}) {
   const elenco17 = Array.isArray(pagine) ? pagine.filter(Boolean) : [];
   const gruppi2 = /* @__PURE__ */ new Map();
   for (const stanza2 of elenco17) {
-    const piano = pulito5(stanza2.floor);
-    if (!gruppi2.has(piano)) gruppi2.set(piano, []);
-    gruppi2.get(piano).push(stanza2);
+    const piano2 = pulito5(stanza2.floor);
+    if (!gruppi2.has(piano2)) gruppi2.set(piano2, []);
+    gruppi2.get(piano2).push(stanza2);
   }
   const dichiarati = (Array.isArray(piani) ? piani : []).map(pulito5).filter(Boolean);
-  const posto = (piano) => {
-    if (!piano) return Number.MAX_SAFE_INTEGER;
-    const indice = dichiarati.indexOf(piano);
+  const posto = (piano2) => {
+    if (!piano2) return Number.MAX_SAFE_INTEGER;
+    const indice = dichiarati.indexOf(piano2);
     return indice < 0 ? Number.MAX_SAFE_INTEGER - 1 : indice;
   };
   const chiavi2 = [...gruppi2.keys()].sort((una, altra) => {
@@ -12265,10 +12275,10 @@ function stanzePerPiano(pagine, { piani = [] } = {}) {
     return 0;
   });
   const uno = chiavi2.length < 2;
-  return chiavi2.map((piano) => ({
-    piano,
+  return chiavi2.map((piano2) => ({
+    piano: piano2,
     intitolare: !uno,
-    stanze: gruppi2.get(piano)
+    stanze: gruppi2.get(piano2)
   }));
 }
 var PASTIGLIE_DELLA_STANZA = Object.freeze([
@@ -16956,10 +16966,10 @@ function ordinaLeStanzePerPiano(stanze4, salvati) {
   const dove = new Map(dichiarati.map((nome, indice) => [nome, indice]));
   const conosciuti = new Map(dove);
   const posto = (stanza2) => {
-    const piano = pulito9(stanza2?.floor);
-    if (!piano) return Number.MAX_SAFE_INTEGER;
-    if (!conosciuti.has(piano)) conosciuti.set(piano, dichiarati.length + conosciuti.size);
-    return conosciuti.get(piano);
+    const piano2 = pulito9(stanza2?.floor);
+    if (!piano2) return Number.MAX_SAFE_INTEGER;
+    if (!conosciuti.has(piano2)) conosciuti.set(piano2, dichiarati.length + conosciuti.size);
+    return conosciuti.get(piano2);
   };
   return elenco(stanze4).map((stanza2, indice) => ({ stanza: stanza2, indice, posto: posto(stanza2) })).sort((una, altra) => una.posto - altra.posto || una.indice - altra.indice).map((voce3) => voce3.stanza);
 }
@@ -25063,6 +25073,12 @@ function perDispositivo(sciolte, di, nomi2) {
   }
   return [...fuori, ...insieme3.values()];
 }
+var TACE_DA_ALMENO = 5 * 60 * 1e3;
+function taceDaAbbastanza(riga5, adesso2 = Date.now(), soglia3 = TACE_DA_ALMENO) {
+  const da = Number(riga5?.da);
+  if (!Number.isFinite(da) || da <= 0) return true;
+  return adesso2 - da >= soglia3;
+}
 var mettiDaParte = (escluse, entita4) => (Array.isArray(entita4) ? entita4 : [entita4]).reduce(
   (elenco17, una) => togliDallaTessera(elenco17, TESSERA_SCOLLEGATI, una),
   escluse
@@ -28829,8 +28845,8 @@ function planMasthead(page2) {
   const { mount, best } = mountFor(host2);
   return { page: page2, host: host2, mount, best, mast: null };
 }
-function placeMasthead(piano) {
-  const { page: page2, host: host2, mount } = piano;
+function placeMasthead(piano2) {
+  const { page: page2, host: host2, mount } = piano2;
   const labels = labelsFor(page2);
   let mast = state22.mastheads?.[page2.id];
   if (mast && !mast.isConnected) mast = null;
@@ -28856,20 +28872,20 @@ function placeMasthead(piano) {
   if (mast.parentElement !== mount || mount.firstElementChild !== mast) {
     mount.insertBefore(mast, mount.firstChild);
   }
-  piano.mast = mast;
+  piano2.mast = mast;
   return true;
 }
-function measureMasthead(piano) {
-  const { host: host2, mast, mount, best } = piano;
+function measureMasthead(piano2) {
+  const { host: host2, mast, mount, best } = piano2;
   if (!mast) return;
-  piano.bleed = mountBleed(mast, mount);
+  piano2.bleed = mountBleed(mast, mount);
   const content = mount === host2 ? best || null : null;
   const declared = content ? root.getComputedStyle?.(content)?.maxWidth : "";
-  piano.width = /^[\d.]+px$/.test(declared || "") ? Number.parseFloat(declared) : 0;
-  piano.room = host2.getBoundingClientRect().width;
+  piano2.width = /^[\d.]+px$/.test(declared || "") ? Number.parseFloat(declared) : 0;
+  piano2.room = host2.getBoundingClientRect().width;
 }
-function applyMasthead(piano) {
-  const { page: page2, host: host2, mast, bleed, width, room } = piano;
+function applyMasthead(piano2) {
+  const { page: page2, host: host2, mast, bleed, width, room } = piano2;
   if (!mast) return;
   applyMountBleed(mast, bleed);
   if (width > 0 && room - width > 3) {
@@ -28916,12 +28932,12 @@ function renderPageMastheads() {
   unaSolaPaginaAperta();
   const piani = [];
   for (const page2 of pagesToRender()) {
-    const piano = planMasthead(page2);
-    if (piano) piani.push(piano);
+    const piano2 = planMasthead(page2);
+    if (piano2) piani.push(piano2);
   }
-  for (const piano of piani) placeMasthead(piano);
-  for (const piano of piani) measureMasthead(piano);
-  for (const piano of piani) applyMasthead(piano);
+  for (const piano2 of piani) placeMasthead(piano2);
+  for (const piano2 of piani) measureMasthead(piano2);
+  for (const piano2 of piani) applyMasthead(piano2);
   state22.seeded = true;
   state22.passate += 1;
   return true;
@@ -33939,10 +33955,21 @@ function ritiriDaUnElenco(stato3, adesso2 = Date.now()) {
     quando: quandoCodice(voce3.giorni)
   }));
 }
+var DOPO_LE_DI_SERIE = 14;
+function dopoLePulito(valore3) {
+  if (valore3 === null || valore3 === void 0 || valore3 === "") return DOPO_LE_DI_SERIE;
+  const ora8 = Number(valore3);
+  return Number.isInteger(ora8) && ora8 >= 0 && ora8 <= 23 ? ora8 : DOPO_LE_DI_SERIE;
+}
 function normalizzaRifiuti(stored) {
   const dato2 = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
   const righe3 = (Array.isArray(dato2.righe) ? dato2.righe : Array.isArray(dato2.rows) ? dato2.rows : []).map(normalizzaRiga).filter(Boolean).slice(0, MASSIMO_RIGHE);
-  return { calendario: pulito27(dato2.calendario), righe: righe3, turno: normalizzaTurno(dato2.turno) };
+  return {
+    calendario: pulito27(dato2.calendario),
+    righe: righe3,
+    turno: normalizzaTurno(dato2.turno),
+    dopoLe: dopoLePulito(dato2.dopoLe)
+  };
 }
 function righeConfigurate(config) {
   return normalizzaRifiuti(config).righe.filter((riga5) => riga5.entity.includes("."));
@@ -34225,18 +34252,20 @@ function letturaRifiuti(config, states = {}, resolve = (value) => value, adesso2
     };
   }
   const future = righe3.filter((riga5) => riga5.giorni !== null && riga5.giorni >= 0);
-  const candidati = [...future];
+  const tutti = [...future];
   if (calendario && calendario.giorni !== null && calendario.giorni >= 0 && !future.some(
     (riga5) => riga5.materiale === calendario.materiale && riga5.giorni === calendario.giorni
   ))
-    candidati.push({ ...calendario, id: "calendario", dalCalendario: true });
-  candidati.sort((a, b2) => a.giorni - b2.giorni);
+    tutti.push({ ...calendario, id: "calendario", dalCalendario: true });
+  tutti.sort((a, b2) => a.giorni - b2.giorni);
+  const giaPassato = new Date(adesso2).getHours() >= dato2.dopoLe;
+  const candidati = tutti.filter((riga5) => !(giaPassato && riga5.giorni === 0));
   const primo = candidati.length ? candidati[0].giorni : null;
   return {
     righe: righe3,
     calendario,
     prossimi: primo === null ? [] : candidati.filter((riga5) => riga5.giorni === primo),
-    oggi: candidati.filter((riga5) => riga5.giorni === 0),
+    oggi: tutti.filter((riga5) => riga5.giorni === 0),
     domani: candidati.filter((riga5) => riga5.giorni === 1)
   };
 }
@@ -57597,6 +57626,23 @@ function tastoServizio({ domain, service, data = {} }, { classe: classe3 = "", t
   const sicuro = (valore3) => String(valore3 ?? "").replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
   return `<button type="button" class="${sicuro(classe3)}" data-dm-w-servizio="${sicuro(comando2)}"${conferma ? ` data-dm-w-conferma="${sicuro(conferma)}"` : ""} ${attributi2}>${testo5}</button>`;
 }
+var ordini = { chiave: "", ordine: [] };
+function inOrdineFermo(chiave2, righe3, idDi, ordina = (elenco17) => elenco17) {
+  const elenco17 = Array.isArray(righe3) ? righe3 : [];
+  if (ordini.chiave !== chiave2) {
+    ordini.chiave = chiave2;
+    ordini.ordine = ordina([...elenco17]).map(idDi);
+  }
+  const visti = new Set(ordini.ordine);
+  const nuove = elenco17.filter((riga5) => !visti.has(idDi(riga5)));
+  if (nuove.length) ordini.ordine.push(...ordina(nuove).map(idDi));
+  const posto = new Map(ordini.ordine.map((id, indice) => [id, indice]));
+  return [...elenco17].sort((a, b2) => posto.get(idDi(a)) - posto.get(idDi(b2)));
+}
+function dimenticaLOrdine() {
+  ordini.chiave = "";
+  ordini.ordine = [];
+}
 
 // src/sections/finestre/la-pressione.js
 function numero40(valore3) {
@@ -58788,10 +58834,16 @@ function presaMarkup(riga5) {
 function finestraPrese(widget) {
   const righe3 = Array.isArray(widget.rows) ? widget.rows : [];
   const accese = righe3.filter((riga5) => riga5.on);
-  const spente = [
-    ...righe3.filter((riga5) => !riga5.on && riga5.disponibile),
-    ...righe3.filter((riga5) => !riga5.on && !riga5.disponibile)
-  ];
+  const inFila = inOrdineFermo(
+    "prese",
+    righe3,
+    (riga5) => clean(riga5.entity),
+    (elenco17) => [
+      ...elenco17.filter((riga5) => riga5.on),
+      ...elenco17.filter((riga5) => !riga5.on && riga5.disponibile),
+      ...elenco17.filter((riga5) => !riga5.on && !riga5.disponibile)
+    ]
+  );
   const watt6 = Number.isFinite(widget.watt) ? `<span class="dm-f-prese-watt"><b class="dm-f-num">${esc(formatNumber(widget.watt, 0))} W</b><small>${esc(
     t("assorbiti adesso", "drawn right now")
   )}</small></span>` : "";
@@ -58800,8 +58852,7 @@ function finestraPrese(widget) {
       <span class="dm-f-prese-conto"><small>${esc(t("Accese", "On"))}</small><b class="dm-f-num">${accese.length}<em> / ${righe3.length}</em></b></span>
       ${watt6}
     </div>
-    ${accese.length ? `${titolo(t("Accese", "On"))}<div class="dm-f-griglia">${accese.map(presaMarkup).join("")}</div>` : ""}
-    ${spente.length ? `${titolo(t("Spente", "Off"))}<div class="dm-f-griglia">${spente.map(presaMarkup).join("")}</div>` : ""}
+    ${inFila.length ? `<div class="dm-f-griglia">${inFila.map(presaMarkup).join("")}</div>` : ""}
   </div>`;
 }
 function tastoPorta(riga5, gesto, parola, leggero = false) {
@@ -63167,7 +63218,9 @@ function finestraRifiuti(widget) {
     return a.giorni - b2.giorni;
   });
   if (!righe3.length) return "";
-  const future = righe3.filter((riga5) => riga5.giorni !== null && riga5.giorni >= 0);
+  const future = righe3.filter(
+    (riga5) => riga5.giorni !== null && riga5.giorni >= 0 && !(widget.oltreLOra && riga5.giorni === 0)
+  );
   const prima = future[0] || null;
   let eroe2 = "";
   if (prima) {
@@ -63797,6 +63850,7 @@ ${P6} .dm-f-el-su{display:flex;align-items:center;gap:12px;min-width:0}
 ${P6} .dm-f-el-ic{flex:0 0 auto;width:46px;height:46px;border-radius:15px;display:grid;place-items:center;font-size:24px;
   background:color-mix(in srgb,var(--dm-widget-accent,#06b6d4) 12%,var(--card-bg,#fff));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dm-widget-accent,#06b6d4) 30%,transparent)}
 ${P6} .dm-f-el-ic svg{width:30px;height:30px}
+${P6} .dm-f-el-mac,${P6} .dm-f-el-fermo{cursor:pointer}
 ${P6} .dm-f-el-nome{flex:1;min-width:0}
 ${P6} .dm-f-el-nome b{display:block;font-size:15.5px;font-weight:850;color:var(--text,#0f172a);overflow-wrap:anywhere}
 ${P6} .dm-f-el-nome em{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-style:normal;font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}
@@ -71171,10 +71225,10 @@ function wattsOf(states, entity2) {
 }
 function oggiDellImpianto(states, impianto, primo) {
   const oggi = {};
-  for (const piano of PERIOD_SOURCES) {
-    const entita4 = clean(impianto?.[piano.group]?.[piano.periodKeys.day]) || (primo ? piano.slots.day : "");
+  for (const piano2 of PERIOD_SOURCES) {
+    const entita4 = clean(impianto?.[piano2.group]?.[piano2.periodKeys.day]) || (primo ? piano2.slots.day : "");
     const letto = entita4 ? numOf(states, entita4) : null;
-    if (letto != null) oggi[piano.key] = letto;
+    if (letto != null) oggi[piano2.key] = letto;
   }
   return oggi;
 }
@@ -73739,17 +73793,20 @@ function nonRispondeModel(states) {
     nomi: nomi2
   });
   if (!mute.length) return null;
+  const adesso2 = Date.now();
+  const tacciono = mute.filter((una) => taceDaAbbastanza(una, adesso2));
+  if (!tacciono.length) return null;
   return {
     key: "nonrisponde",
     accent: "#dc2626",
     icon: "📡",
     alert: true,
     label: t("Dispositivi non connessi", "Disconnected devices"),
-    value: String(mute.length),
-    caption: mute.map((una) => una.nome).join(" · "),
+    value: String(tacciono.length),
+    caption: tacciono.map((una) => una.nome).join(" · "),
     ring: null,
     attiva: true,
-    rows: mute.map((una) => ({
+    rows: tacciono.map((una) => ({
       glyph: "📡",
       name: una.nome,
       entity: una.entity,
@@ -73923,7 +73980,10 @@ function rifiutiModel(states) {
     attiva: Boolean(primo && (primo.quando === "oggi" || primo.quando === "domani")),
     alert: false,
     prossimi,
-    rows
+    rows,
+    /* Passata l'ora del cambio (#333): la finestra mette in grande quello di
+     * domani, come la tessera. */
+    oltreLOra: (/* @__PURE__ */ new Date()).getHours() >= config.dopoLe
   };
 }
 function animaliModel(states) {
@@ -74510,9 +74570,10 @@ function agendaDetail(widget, states) {
       ${cose}
     </div>`;
 }
+var accesePrima = (righe3) => righe3.sort((a, b2) => Number(b2.on) - Number(a.on));
 function lightsDetail(widget) {
   if (!widget.on.length && !widget.rows.length) return "";
-  const rows = [...widget.rows].sort((a, b2) => Number(b2.on) - Number(a.on));
+  const rows = inOrdineFermo("luci", widget.rows, (row) => clean(row.entity), accesePrima);
   const spegnibili = widget.on.filter((row) => row.comando !== false);
   const tutte = spegnibili.length > 1 ? `<button type="button" class="dm-w-tutte-btn" data-dm-w-lights-off="${esc(
     spegnibili.map((row) => clean(row.entity)).filter(Boolean).join(" ")
@@ -74677,7 +74738,7 @@ function climatePanelMarkup(entity2) {
   return riga5 ? climatePanel(riga5, true) : "";
 }
 function climateDetail(widget) {
-  const righe3 = [...widget.rows].sort((a, b2) => Number(b2.on) - Number(a.on));
+  const righe3 = inOrdineFermo("clima", widget.rows, (row) => clean(row.entity), accesePrima);
   const accese = righe3.filter((row) => row.on).length;
   const verso2 = (row) => {
     if (!row.on) return row.acceso ? "pausa" : "spento";
@@ -74808,6 +74869,13 @@ function energyDetail() {
   return "";
 }
 var apertoInFinestra = "";
+function apriLaSchedaDellApparecchio(indice) {
+  if (!Number.isInteger(indice) || indice < 0 || typeof root.apriApplianceDetail !== "function")
+    return false;
+  chiudiPopup();
+  root.apriApplianceDetail(indice);
+  return true;
+}
 function appliancesDetail(widget) {
   const righe3 = Array.isArray(widget.rows) ? widget.rows : [];
   if (!righe3.length)
@@ -75733,8 +75801,10 @@ function renderHomeWidgets() {
     const stato3 = avvisi ? "avviso" : "quiete";
     if (mounted.dataset.dmMood !== stato3) mounted.dataset.dmMood = stato3;
   }
-  if (state57.expanded && !tutti.some((widget) => widget.key === state57.expanded))
+  if (state57.expanded && !tutti.some((widget) => widget.key === state57.expanded)) {
     state57.expanded = "";
+    dimenticaLOrdine();
+  }
   const grid = mounted.querySelector(".dm-widgets-grid");
   if (!grid) return false;
   const signature4 = structureSignature(models);
@@ -75856,6 +75926,7 @@ function popupHost() {
     if (pastiglia5) {
       event.stopPropagation();
       const id = clean(pastiglia5.dataset.dmApplChip);
+      if (apriLaSchedaDellApparecchio(applianceModelById(id)?.index)) return;
       const apre = apertoInFinestra !== id;
       apertoInFinestra = apre ? id : "";
       schedule21();
@@ -75865,6 +75936,18 @@ function popupHost() {
             host2.querySelector(".dm-w-appl-card")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
           })
         );
+      return;
+    }
+    const apparecchio = event.target?.closest?.("[data-dm-f-apparecchio]");
+    if (apparecchio && !event.target.closest("button,a,input,select") && apriLaSchedaDellApparecchio(
+      applianceModelById(clean(apparecchio.dataset.dmFApparecchio))?.index
+    )) {
+      event.stopPropagation();
+      return;
+    }
+    const carta = event.target?.closest?.(".dm-w-appl-card .dm-ap-card[data-idx]");
+    if (carta && !event.target.closest("button,select,a,input,[data-dm-power-toggle],[data-dm-history]") && apriLaSchedaDellApparecchio(Number(carta.dataset.idx))) {
+      event.stopPropagation();
       return;
     }
     const interruttore5 = event.target?.closest?.("[data-dm-power-toggle]");
@@ -75938,6 +76021,7 @@ function riparteCioCheStaDietro() {
 }
 function chiudiPopup() {
   state57.expanded = "";
+  dimenticaLOrdine();
   state57.corpo = { chiave: "", markup: "" };
   const host2 = doc?.getElementById?.("dm-widget-popup");
   if (host2) {
@@ -76130,12 +76214,14 @@ function apriLaTessera(chiave2) {
     esiste = false;
   }
   if (!esiste) return false;
+  if (state57.expanded !== nome) dimenticaLOrdine();
   state57.expanded = nome;
   schedule21();
   return true;
 }
 function toggleExpand(key) {
   const prossimo = state57.expanded === key ? "" : clean(key);
+  dimenticaLOrdine();
   state57.expanded = prossimo;
   schedule21();
 }
@@ -83500,18 +83586,18 @@ function cerchiDelleStanze({
     const perPianoMappa = /* @__PURE__ */ new Map();
     const fusi = [];
     for (const gruppo2 of conStanza) {
-      const piano = gruppo2.stanza.piano;
-      if (!piano) {
+      const piano2 = gruppo2.stanza.piano;
+      if (!piano2) {
         fusi.push(gruppo2);
         continue;
       }
-      const chiave2 = piano.toLowerCase();
+      const chiave2 = piano2.toLowerCase();
       let unito3 = perPianoMappa.get(chiave2);
       if (!unito3) {
         unito3 = {
           stanza: {
             id: chiave2,
-            nome: piano,
+            nome: piano2,
             icona: "mdi:floor-plan",
             indice: gruppo2.stanza.indice
           },
@@ -86063,18 +86149,18 @@ function riquadroDegliImpianti(panel2, plant, impianti2) {
   const suoi2 = new Set(pianiDellImpianto(plant).map((voce3) => voce3.toLowerCase()));
   if (piani.length) {
     const fila2 = element("div", "dm-imp-piani");
-    for (const piano of piani) {
-      const quante3 = stanzeDiCasa4().filter((stanza2) => clean(stanza2.floor) === piano).length;
+    for (const piano2 of piani) {
+      const quante3 = stanzeDiCasa4().filter((stanza2) => clean(stanza2.floor) === piano2).length;
       const tasto4 = element(
         "button",
         "dm-imp-piano",
-        `${suoi2.has(piano.toLowerCase()) ? "✓ " : ""}${piano} · ${quante3} ${quante3 === 1 ? t("stanza", "room") : t("stanze", "rooms")}`
+        `${suoi2.has(piano2.toLowerCase()) ? "✓ " : ""}${piano2} · ${quante3} ${quante3 === 1 ? t("stanza", "room") : t("stanze", "rooms")}`
       );
       tasto4.type = "button";
-      tasto4.dataset.dmImpPiano = piano;
-      if (suoi2.has(piano.toLowerCase())) tasto4.dataset.on = "true";
+      tasto4.dataset.dmImpPiano = piano2;
+      if (suoi2.has(piano2.toLowerCase())) tasto4.dataset.on = "true";
       tasto4.addEventListener("click", () => {
-        const nuovi = suoi2.has(piano.toLowerCase()) ? pianiDellImpianto(plant).filter((voce3) => voce3.toLowerCase() !== piano.toLowerCase()) : [...pianiDellImpianto(plant), piano];
+        const nuovi = suoi2.has(piano2.toLowerCase()) ? pianiDellImpianto(plant).filter((voce3) => voce3.toLowerCase() !== piano2.toLowerCase()) : [...pianiDellImpianto(plant), piano2];
         void scriviMetadatiImpianto(panel2, plant.id, { [PIANI_FIELD]: nuovi });
       });
       fila2.append(tasto4);
@@ -88547,40 +88633,40 @@ function quante2(numero61) {
   return numero61 === 1 ? t("1 stanza", "1 room") : `${numero61} ${t("stanze", "rooms")}`;
 }
 function pannelloDeiPiani(piani, senza = [], { chiede = "", rinomina: rinomina3 = "", segnoAperto = "", errore = "" } = {}) {
-  const tutte = piani.reduce((totale, piano) => totale + piano.stanze.length, 0) + senza.length;
-  const righe3 = piani.map((piano, indice) => {
-    const nomi2 = piano.stanze.map((stanza2) => clean(stanza2?.name)).filter(Boolean);
-    if (chiede === piano.nome)
+  const tutte = piani.reduce((totale, piano2) => totale + piano2.stanze.length, 0) + senza.length;
+  const righe3 = piani.map((piano2, indice) => {
+    const nomi2 = piano2.stanze.map((stanza2) => clean(stanza2?.name)).filter(Boolean);
+    if (chiede === piano2.nome)
       return `
-        <div class="dm-piano" data-dm-piano="${esc(piano.nome)}" data-chiede="si">
+        <div class="dm-piano" data-dm-piano="${esc(piano2.nome)}" data-chiede="si">
           <div class="dm-piano-icona">🗑️</div>
           <div class="dm-piano-domanda">
-            <b>${esc(t("Elimino", "Delete"))} «${esc(piano.nome)}»?</b>
+            <b>${esc(t("Elimino", "Delete"))} «${esc(piano2.nome)}»?</b>
             <span>${/* Il numero davanti e la frase intera dietro: «Le sue» piu' il
        * conto piu' «restano senza piano» sono tre pezzi incollati, e
        * si incollano in quell'ordine solo in italiano. */
-      piano.stanze.length ? esc(`${quante2(piano.stanze.length)} ${t("restano senza piano: non vengono cancellate.", "are left with no floor: they are not deleted.")}`) : esc(t("Non ha stanze dentro.", "It has no rooms in it."))}</span>
+      piano2.stanze.length ? esc(`${quante2(piano2.stanze.length)} ${t("restano senza piano: non vengono cancellate.", "are left with no floor: they are not deleted.")}`) : esc(t("Non ha stanze dentro.", "It has no rooms in it."))}</span>
           </div>
           <div class="dm-piano-tasti">
             <button type="button" data-dm-piano-annulla>${esc(t("Annulla", "Cancel"))}</button>
             <button type="button" class="dm-piano-rosso" data-dm-piano-cancella>${esc(t("Elimina", "Delete"))}</button>
           </div>
         </div>`;
-    const titolo3 = rinomina3 === piano.nome ? `<input class="ed-input dm-piano-campo" value="${esc(piano.nome)}" data-dm-piano-nuovo-nome aria-label="${esc(t("Nome del piano", "Floor name"))}">` : `<div class="dm-piano-nome">${esc(piano.nome)}</div>
-             <div class="dm-piano-stanze">${esc(quante2(piano.stanze.length))}${nomi2.length ? ` · ${esc(nomi2.join(" · "))}` : ""}</div>`;
-    const striscia = segnoAperto === piano.nome ? `<div class="dm-piano-segni">${SEGNI_DEI_PIANI.map(
-      (voce3) => `<button type="button" data-dm-piano-scegli="${esc(voce3)}"${voce3 === piano.segno ? ' aria-pressed="true"' : ""}>${esc(voce3)}</button>`
+    const titolo3 = rinomina3 === piano2.nome ? `<input class="ed-input dm-piano-campo" value="${esc(piano2.nome)}" data-dm-piano-nuovo-nome aria-label="${esc(t("Nome del piano", "Floor name"))}">` : `<div class="dm-piano-nome">${esc(piano2.nome)}</div>
+             <div class="dm-piano-stanze">${esc(quante2(piano2.stanze.length))}${nomi2.length ? ` · ${esc(nomi2.join(" · "))}` : ""}</div>`;
+    const striscia = segnoAperto === piano2.nome ? `<div class="dm-piano-segni">${SEGNI_DEI_PIANI.map(
+      (voce3) => `<button type="button" data-dm-piano-scegli="${esc(voce3)}"${voce3 === piano2.segno ? ' aria-pressed="true"' : ""}>${esc(voce3)}</button>`
     ).join("")}</div>` : "";
     return `
-      <div class="dm-piano" data-dm-piano="${esc(piano.nome)}">
+      <div class="dm-piano" data-dm-piano="${esc(piano2.nome)}">
         <div class="dm-piano-sposta">
           <button type="button" data-dm-piano-su ${indice === 0 ? "disabled" : ""} title="${esc(t("Più in alto", "Move up"))}" aria-label="${esc(t("Più in alto", "Move up"))}">▲</button>
           <button type="button" data-dm-piano-giu ${indice === piani.length - 1 ? "disabled" : ""} title="${esc(t("Più in basso", "Move down"))}" aria-label="${esc(t("Più in basso", "Move down"))}">▼</button>
         </div>
-        <button type="button" class="dm-piano-icona" data-dm-piano-segno title="${esc(t("Cambia icona", "Change icon"))}">${esc(piano.segno)}</button>
+        <button type="button" class="dm-piano-icona" data-dm-piano-segno title="${esc(t("Cambia icona", "Change icon"))}">${esc(piano2.segno)}</button>
         <div class="dm-piano-testa">${titolo3}</div>
         <div class="dm-piano-tasti">
-          <button type="button" data-dm-piano-rinomina title="${esc(t("Rinomina", "Rename"))}" aria-label="${esc(t("Rinomina", "Rename"))}">${rinomina3 === piano.nome ? "💾" : "✏️"}</button>
+          <button type="button" data-dm-piano-rinomina title="${esc(t("Rinomina", "Rename"))}" aria-label="${esc(t("Rinomina", "Rename"))}">${rinomina3 === piano2.nome ? "💾" : "✏️"}</button>
           <button type="button" data-dm-piano-chiedi title="${esc(t("Elimina", "Delete"))}" aria-label="${esc(t("Elimina", "Delete"))}">🗑️</button>
         </div>
         ${striscia}
@@ -88635,7 +88721,7 @@ function righeDelleStanze(corpo6) {
 function intitolaIGruppi(corpo6, stanze4, piani, ripetuti) {
   const righe3 = righeDelleStanze(corpo6);
   if (!righe3.length) return false;
-  const segni = new Map(piani.map((piano) => [piano.nome, piano.segno]));
+  const segni = new Map(piani.map((piano2) => [piano2.nome, piano2.segno]));
   const gruppi2 = new Set(stanze4.map((stanza2) => clean(stanza2?.floor)));
   const intitolare = gruppi2.size > 1;
   let ultimo = null;
@@ -88643,10 +88729,10 @@ function intitolaIGruppi(corpo6, stanze4, piani, ripetuti) {
     const stanza2 = stanze4[posizione];
     riga5.previousElementSibling?.classList?.contains("dm-piano-titolo-lista") && riga5.previousElementSibling.remove();
     if (intitolare && stanza2) {
-      const piano = clean(stanza2.floor);
-      if (piano !== ultimo) {
-        ultimo = piano;
-        riga5.before(titoloDelGruppo(segni.get(piano) || "", piano));
+      const piano2 = clean(stanza2.floor);
+      if (piano2 !== ultimo) {
+        ultimo = piano2;
+        riga5.before(titoloDelGruppo(segni.get(piano2) || "", piano2));
       }
     }
     if (intitolare) riga5.querySelector(".ed-row-old")?.remove();
@@ -88770,7 +88856,7 @@ function alTocco4(evento) {
   if (bersaglio.hasAttribute("data-dm-piano-su") || bersaglio.hasAttribute("data-dm-piano-giu")) {
     evento.preventDefault();
     const verso2 = bersaglio.hasAttribute("data-dm-piano-su") ? -1 : 1;
-    const dichiarati = iPianiDellaCasa(iPiani2(), stanze4, iSegni()).map((piano) => piano.nome);
+    const dichiarati = iPianiDellaCasa(iPiani2(), stanze4, iSegni()).map((piano2) => piano2.nome);
     salva5({ piani: spostaIlPiano(dichiarati, nome, verso2) });
     rifaiLaScheda();
     return;
@@ -89251,7 +89337,7 @@ async function aggiornaIlReportDelleFasce(bundle, { forza = false } = {}) {
   state70.inCorso = true;
   try {
     const unita3 = Object.fromEntries(
-      fonti.filter((piano) => piano.entity).map((piano) => [piano.entity, piano.unita || ""])
+      fonti.filter((piano2) => piano2.entity).map((piano2) => [piano2.entity, piano2.unita || ""])
     );
     const arco3 = periodRange("month", new Date(periodo.year, periodo.month - 1, 1), /* @__PURE__ */ new Date());
     const pezzo2 = { ...arco3, kind: "month", period: "hour" };
@@ -96056,10 +96142,10 @@ function stazioniDellaRisposta(risposta) {
   ).filter((una) => una && una.id);
 }
 function filtraLeStazioni(stazioni, testo5) {
-  const piano = (valore3) => pulito59(valore3).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-  const parole4 = piano(testo5).split(/\s+/).filter(Boolean);
+  const piano2 = (valore3) => pulito59(valore3).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  const parole4 = piano2(testo5).split(/\s+/).filter(Boolean);
   if (!parole4.length) return stazioni;
-  return stazioni.filter((una) => parole4.every((parola) => piano(una.nome).includes(parola)));
+  return stazioni.filter((una) => parole4.every((parola) => piano2(una.nome).includes(parola)));
 }
 function chiamataDellaRadio(stazione, lettore, { echo = false } = {}) {
   const chi = pulito59(lettore);
@@ -96077,6 +96163,45 @@ function chiamataDellaRadio(stazione, lettore, { echo = false } = {}) {
     service: "play_media",
     data: { entity_id: chi, media_content_id: una.id, media_content_type: una.tipo || "music" }
   };
+}
+var RADIO_PRONTE = Object.freeze(
+  [
+    ["RTL 102.5", "RTL", "#e30613"],
+    ["Radio Deejay", "DJ", "#111827"],
+    ["RDS 100% Grandi Successi", "RDS", "#be123c"],
+    ["Radio 105", "105", "#f59e0b"],
+    ["Radio Italia", "RI", "#16a34a"],
+    ["Virgin Radio", "V", "#dc2626"],
+    ["m2o", "m2o", "#0ea5e9"],
+    ["Radio Kiss Kiss", "KK", "#db2777"],
+    ["Kiss Kiss Napoli", "KKN", "#9d174d"],
+    ["Radio Capital", "CAP", "#1d4ed8"],
+    ["R101", "101", "#7c3aed"],
+    ["Radio Monte Carlo", "RMC", "#0f766e"],
+    ["Radio 24", "24", "#2563eb"],
+    ["Radio Zeta", "Z", "#f97316"],
+    ["Radio Subasio", "SUB", "#059669"],
+    ["Radio Freccia", "F", "#b91c1c"],
+    ["Radio Marte", "M", "#9333ea"],
+    ["Rai Radio 1", "R1", "#0369a1"],
+    ["Rai Radio 2", "R2", "#0891b2"],
+    ["Rai Radio 3", "R3", "#4338ca"]
+  ].map(([nome, sigla, colore2]) => Object.freeze({ nome, sigla, colore: colore2 }))
+);
+var RADIO_DEL_PAESE = "country/IT";
+var piano = (valore3) => pulito59(valore3).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+function stazioneDalNome(stazioni, nome) {
+  const cercato = piano(nome);
+  if (!cercato) return null;
+  const elenco17 = Array.isArray(stazioni) ? stazioni.filter((una) => una?.id) : [];
+  const uguale = elenco17.find((una) => piano(una.nome) === cercato);
+  if (uguale) return uguale;
+  const parole4 = cercato.split(" ");
+  const simili = elenco17.filter((una) => {
+    const suo2 = ` ${piano(una.nome)} `;
+    return parole4.every((parola) => suo2.includes(` ${parola} `));
+  }).sort((a, b2) => piano(a.nome).length - piano(b2.nome).length);
+  return simili[0] || null;
 }
 function chiamataPerFermare(lettore) {
   const chi = pulito59(lettore);
@@ -100795,7 +100920,7 @@ function openShutterEditor(item, index) {
 function tendinaDeiPiani(scelto) {
   const suo2 = clean(scelto);
   const nomi2 = iPianiDellaCasa(readJson(CHIAVE_PIANI, []), listFor("room"), {}).map(
-    (piano) => piano.nome
+    (piano2) => piano2.nome
   );
   if (suo2 && !nomi2.includes(suo2)) nomi2.push(suo2);
   const voci4 = nomi2.map(
@@ -107016,6 +107141,10 @@ var INGRESSO_VUOTO = Object.freeze({
   parla: false,
   persone: true,
   finestre: true,
+  /* La tessera del citofono nella pagina Ingresso: «mi compare la
+   * telecamera anche se non ne ho da impostare» (#337). Si puo' togliere; e
+   * senza telecamera e senza tasti per aprire non c'e' comunque. */
+  citofono: true,
   aree: [],
   letture: [],
   comandi: []
@@ -107040,6 +107169,10 @@ var DOMINI_DA_LEGGERE = Object.freeze([
   "person"
 ]);
 var DOMINI_DA_TOCCARE = Object.freeze(["lock", "cover"]);
+function ciEIlCitofono(ingresso = {}) {
+  if (ingresso?.citofono === false) return false;
+  return Boolean(ingresso?.telecamera || ingresso?.apri || ingresso?.apri2);
+}
 function eLetturaDellIngresso(id) {
   return DOMINI_DA_LEGGERE.includes(dominioDi8(entita2(id)));
 }
@@ -107074,6 +107207,7 @@ function ingressoPulito(input = {}) {
     ...opzioniDelCampanello(dentro3),
     persone: vero2(dentro3.persone, INGRESSO_VUOTO.persone),
     finestre: vero2(dentro3.finestre, INGRESSO_VUOTO.finestre),
+    citofono: vero2(dentro3.citofono, INGRESSO_VUOTO.citofono),
     aree: unici(
       voci(dentro3.aree).map(entita2).filter((id) => id.startsWith("alarm_control_panel."))
     ).slice(0, AREE_AL_MASSIMO),
@@ -108925,6 +109059,8 @@ function titoloLungo(titolo3) {
 function sottoDellaPagina(pagina3) {
   if (pagina3.modello === "meteo" && Object.keys(sensoriDellaStazione()).length)
     return t("Adesso · La mia stazione · Previsioni", "Now · My station · Forecast");
+  if (pagina3.modello === "ingresso" && !ciEIlCitofono(pagina3.ingresso))
+    return t("Antifurto · Uscita", "Alarm · Leaving");
   return SOTTO()[pagina3.modello];
 }
 function testa(pagina3, muro) {
@@ -110625,14 +110761,15 @@ function restoDellIngresso(pagina3, carta, spento) {
   const azioneUscita = azioneDi(uscita);
   const telecamera2 = clean(ing.telecamera);
   const altro = altroDellIngresso(ing);
-  return `<div class="mu-ingresso${altro ? " mu-con-striscia" : ""}">
+  const citofono = ciEIlCitofono(ing);
+  return `<div class="mu-ingresso${altro ? " mu-con-striscia" : ""}${citofono ? "" : " mu-senza-citofono"}">
     ${carta}
-    <div class="mu-carta mu-citofono${classeDellaTessera("citofono")}">${fondoDellaTessera("citofono")}
+    ${citofono ? `<div class="mu-carta mu-citofono${classeDellaTessera("citofono")}">${fondoDellaTessera("citofono")}
       <div class="mu-video">${telecamera2 ? `<img data-mu-telecamera="${esc(telecamera2)}" alt="">` : `<div class="mu-video-vuoto">${disegno("telecamere", 80, "tele-vuota")}</div>`}<span class="mu-live">${esc(telecamera2 ? nomeDi9(telecamera2) : t("Nessuna telecamera", "No camera"))}</span></div>
       ${ing.apri || ing.apri2 ? `<div class="mu-due">${ing.apri ? `<button type="button" class="mu-btn pieno" data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}">${disegno("varchi", 26, "apri1")}${esc(nomeDi9(ing.apri, ing.nomeApri))}</button>` : ""}${ing.apri2 ? `<button type="button" class="mu-btn" data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}">${disegno("aperture", 26, "apri2")}${esc(nomeDi9(ing.apri2, ing.nomeApri2))}</button>` : ""}</div>` : ""}
-    </div>
+    </div>` : ""}
     ${altro ? `<div class="mu-carta mu-ing-striscia${classeDellaTessera("letture")}">${fondoDellaTessera("letture")}${altro}</div>` : ""}
-    <div class="mu-piede">
+    <div class="mu-piede${azioneUscita && ing.persone && persone4.tutte ? "" : " mu-piede-uno"}">
       ${azioneUscita ? tessera2({
     chiave: spento ? "aperture" : "home",
     accento: "#0ea5e9",
@@ -113427,6 +113564,7 @@ ${MURO} .mu-aree[data-quante="4"] .mu-area-nome{font-size:16px}
 ${MURO} .mu-ing-altro{display:flex;flex-direction:column;gap:8px;flex:0 0 auto;min-width:0}
 ${MURO} .mu-ing-letture,${MURO} .mu-ing-comandi{display:flex;flex-wrap:wrap;gap:8px}
 ${MURO} .mu-ingresso.mu-con-striscia{grid-template-rows:minmax(0,1fr) auto auto}
+${MURO} .mu-ingresso.mu-senza-citofono{grid-template-columns:1fr}
 ${MURO} .mu-ing-striscia{grid-column:1/-1;padding:10px 12px;min-width:0}
 ${MURO} .mu-ing-striscia .mu-ing-altro{flex-direction:row;align-items:center;gap:8px;overflow-x:auto;scrollbar-width:none}
 ${MURO} .mu-ing-striscia .mu-ing-letture,${MURO} .mu-ing-striscia .mu-ing-comandi{flex-wrap:nowrap;flex:0 0 auto}
@@ -113460,6 +113598,7 @@ ${MURO} .mu-video img{position:absolute;inset:0;width:100%;height:100%;object-fi
 ${MURO} .mu-video-vuoto{position:absolute;inset:0;display:grid;place-items:center;opacity:.5}
 ${MURO} .mu-live{position:absolute;left:14px;top:14px;padding:6px 12px;border-radius:999px;background:#000a;color:#fff;font-size:11.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
 ${MURO} .mu-piede{grid-column:1/-1;display:grid;grid-template-columns:1.5fr 1fr;gap:16px}
+${MURO} .mu-piede.mu-piede-uno{grid-template-columns:1fr}
 ${MURO} .mu-piede .mu-card{padding:16px 22px}
 ${MURO} .mu-velo{position:absolute;inset:0;display:grid;place-items:center;background:rgba(5,8,15,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);z-index:5}
 ${MURO} .mu-finestra{width:min(880px,92%);padding:30px}
@@ -113630,6 +113769,7 @@ ${MURO}[data-verso="verticale"] .mu-ora{margin-left:auto}
 ${MURO}[data-verso="verticale"] .mu-ingresso{grid-template-columns:1fr;grid-template-rows:auto 1fr auto}
 ${MURO}[data-verso="verticale"] .mu-ingresso.mu-con-striscia{grid-template-rows:auto minmax(0,1fr) auto auto}
 ${MURO}[data-verso="verticale"] .mu-piede{grid-template-columns:1fr 1fr}
+${MURO}[data-verso="verticale"] .mu-piede.mu-piede-uno{grid-template-columns:1fr}
 ${MURO}[data-verso="verticale"] .mu-fin-luce{grid-template-columns:1fr}
 ${MURO}[data-verso="verticale"] .mu-colonna{height:300px}
 ${MURO}[data-verso="verticale"] .mu-orologione{font-size:180px}
@@ -114689,6 +114829,7 @@ function paginaMarkup(p, i, tutte) {
       })
     )}
     <div class="mu-ed-sotto-titolo">${esc(t("Citofono / telecamera", "Intercom / camera"))}</div>
+    ${riga3(t("Mostra il citofono", "Show the intercom"), t("Senza telecamera e senza tasti per aprire non si vede comunque", "Without a camera or open buttons it is hidden anyway"), interruttore2(`${via}.ingresso.citofono`, ing.citofono, "citofono"))}
     ${riga3(t("Telecamera", "Camera"), t("Il video del citofono", "The intercom video"), cerca2(`${via}.ingresso.telecamera`, ing.telecamera, { domini: "camera" }))}
     ${rigaDelCampanello(via, ing)}
     ${campanelloMarkup(i, via, ing)}
@@ -138733,7 +138874,7 @@ async function aggiornaLeFasceDelDispositivo({ forza = false } = {}) {
   try {
     const fonti = pianiDelleFonti("month");
     const unita3 = Object.fromEntries(
-      fonti.filter((piano) => piano.entity).map((piano) => [piano.entity, piano.unita || ""])
+      fonti.filter((piano2) => piano2.entity).map((piano2) => [piano2.entity, piano2.unita || ""])
     );
     const arco3 = periodRange("month", new Date(periodo.year, periodo.month - 1, 1), /* @__PURE__ */ new Date());
     const pezzo2 = { ...arco3, kind: "month", period: "hour" };
@@ -145061,6 +145202,16 @@ function sezioneNascosta3() {
     return false;
   }
 }
+function oraMarkup(dato2) {
+  return `<label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${esc(t("Da che ora si guarda a domani", "From what time it looks at tomorrow"))}</span>
+      <span class="dm-rifiuti-ora"><input class="ed-input mono" type="number" min="0" max="23" step="1" inputmode="numeric" data-dm-rifiuti-dopo-le value="${dato2.dopoLe}" aria-label="${esc(t("Ora", "Hour"))}"><b aria-hidden="true">:00</b></span>
+      <small>${esc(
+    t(
+      "Il ritiro di oggi a quest'ora è già passato: da qui in poi la pagina e la tessera in Home dicono quello di domani, cioè cosa mettere fuori stasera.",
+      "By this time today's collection has already gone: from then on the page and the Home tile show tomorrow's, which is what to put out tonight."
+    )
+  )}</small></label>`;
+}
 function corpoMarkup14() {
   const dato2 = bozza2();
   const piene = dato2.righe.length >= MASSIMO_RIGHE;
@@ -145085,6 +145236,7 @@ function corpoMarkup14() {
       "If the collections live in one place, put it here: a calendar.* with one event per collection, or a sensor.* carrying the list of upcoming collections in its attributes. Each entry becomes a row, with the material guessed from its name."
     )
   )}</small></label>
+    ${oraMarkup(dato2)}
     ${turnoMarkup(dato2)}
     <button type="button" class="ed-save-btn" data-dm-rifiuti-save>💾 ${esc(t("Salva rifiuti", "Save waste"))}</button>
   </div></div>`;
@@ -145123,7 +145275,8 @@ function raccogli9(body) {
   return {
     calendario: clean(body.querySelector("[data-dm-rifiuti-calendario]")?.value),
     righe: righe3,
-    turno: { ...turno, inizio: inizioScritto() || turno.inizio }
+    turno: { ...turno, inizio: inizioScritto() || turno.inizio },
+    dopoLe: body.querySelector("[data-dm-rifiuti-dopo-le]")?.value ?? dato2.dopoLe
   };
 }
 function onClick52(event) {
@@ -145224,6 +145377,9 @@ function installStyles78() {
       #ed-body .dm-rifiuti-ed-aggiungi{width:100%;margin:6px 0 12px}
       /* Il calendario di casa (#366): due file da sette, come un calendario da
        * parete — e' il modo in cui uno guarda il foglietto sul frigo. */
+      #ed-body .dm-rifiuti-ora{display:inline-flex;align-items:center;gap:6px;margin:4px 0}
+      #ed-body .dm-rifiuti-ora input{width:84px;text-align:center;font-size:18px;font-weight:800}
+      #ed-body .dm-rifiuti-ora b{font-size:18px;font-weight:800;color:var(--text,#0f172a)}
       #ed-body .dm-turno{margin:14px 0 4px}
       #ed-body .dm-turno-griglia{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px}
       #ed-body .dm-turno-sett{grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--secondary-text-color,#64748b);margin:4px 0 0}
@@ -154319,7 +154475,12 @@ var state186 = root[KEY190] ||= {
   guaio: "",
   filtro: "",
   perNome: "",
-  scritto: ""
+  scritto: "",
+  /* Le radio italiane di Radio Browser, chieste una volta: servono alle radio
+   * pronte sui lettori che non sono Echo. */
+  delPaese: null,
+  /* L'elenco delle radio pronte, aperto o chiuso. */
+  tendina: false
 };
 var RADIO_TAB = "media_radio";
 var configurazione24 = () => normalizzaRadio(readJson(CHIAVE_RADIO, null));
@@ -154358,8 +154519,10 @@ function iLettori(stati4 = allStates() || {}) {
       echo: eUnEcho({ entity_id: riga5.entity, ...stato3 })
     });
   }
+  const scelti = echoScelti();
   for (const stato3 of Object.values(stati4)) {
     if (!eUnEcho(stato3) || visti.has(stato3.entity_id)) continue;
+    if (scelti.size && !scelti.has(stato3.entity_id)) continue;
     visti.add(stato3.entity_id);
     tutti.push({
       entita: stato3.entity_id,
@@ -154368,6 +154531,15 @@ function iLettori(stati4 = allStates() || {}) {
     });
   }
   return tutti;
+}
+var ECHO_DELLA_MUSICA2 = "dm_alexa_musica_echo";
+function echoScelti() {
+  try {
+    const scritti = JSON.parse(root.localStorage?.getItem(ECHO_DELLA_MUSICA2) || "[]");
+    return new Set(Array.isArray(scritti) ? scritti.map(String) : []);
+  } catch (_errore) {
+    return /* @__PURE__ */ new Set();
+  }
 }
 function doveSuona(lettori2) {
   let scelto = "";
@@ -154406,16 +154578,9 @@ function riquadroMarkup() {
   const testa2 = `<div class="dm-radio-testa">
       <span class="dm-radio-ic" aria-hidden="true">📻</span>
       <div><b>${esc(t("Radio", "Radio"))}</b><small>${esc(
-    preferite.length ? `${preferite.length} ${t("preferite", "favourites")}` : t("Nessuna radio ancora", "No radio yet")
+    preferite.length ? `${preferite.length} ${t("preferite", "favourites")}` : `${RADIO_PRONTE.length} ${t("radio pronte da ascoltare", "stations ready to play")}`
   )}</small></div>
     </div>`;
-  if (!preferite.length)
-    return `${testa2}<p class="dm-radio-vuoto">${esc(
-      t(
-        "Le radio preferite si scelgono in Config › Musica › 📻 Radio, e qui si ascoltano su un lettore o sugli Echo.",
-        "Favourite stations are chosen in Config › Media › 📻 Radio, and played here on a player or on the Echos."
-      )
-    )}</p>`;
   const lettoriMarkup = lettori2.map(
     (uno) => `<button type="button" class="dm-radio-pa" aria-pressed="${uno.entita === dove?.entita}" data-dm-radio-dove="${esc(uno.entita)}">${uno.echo ? "🔊" : "🎵"} ${esc(uno.nome)}</button>`
   ).join("");
@@ -154430,9 +154595,33 @@ function riquadroMarkup() {
     )}</small>
       </button>`;
   }).join("");
+  const aperte = state186.tendina === true;
+  const pronte = `<div class="dm-radio-pronte${aperte ? " aperte" : ""}">
+      <button type="button" class="dm-radio-pronte-apri" data-dm-radio-tendina aria-expanded="${aperte}"${dove ? "" : " disabled"}>
+        <span class="dm-radio-pronte-ic" aria-hidden="true">🇮🇹</span>
+        <span class="dm-radio-pronte-tx"><b>${esc(t("Radio italiane", "Italian stations"))}</b><small>${esc(
+    aperte ? t("Tocca una radio per ascoltarla", "Tap a station to listen") : `${RADIO_PRONTE.length} ${t("pronte · tocca per scegliere", "ready · tap to choose")}`
+  )}</small></span>
+        <i aria-hidden="true">${aperte ? "▴" : "▾"}</i>
+      </button>
+      ${aperte ? `<div class="dm-radio-pronte-elenco">${RADIO_PRONTE.map((una, indice) => {
+    const onda2 = dove && inOnda(una, dove, stati4);
+    return `<button type="button" class="dm-radio-pr${onda2 ? " in-onda" : ""}" data-dm-radio-pronta="${indice}" style="--pr:${esc(una.colore)}">
+                <span class="dm-radio-pr-sigla" aria-hidden="true">${esc(una.sigla)}</span>
+                <b>${esc(una.nome)}</b>
+                ${onda2 ? `<i class="dm-radio-pr-onda" role="img" aria-label="${esc(t("In onda", "On air"))}"></i>` : ""}
+              </button>`;
+  }).join("")}</div>` : ""}
+    </div>`;
   return `${testa2}
     <div class="dm-radio-dove"><span>${esc(t("Suona su", "Play on"))}</span><div class="dm-radio-fila">${lettoriMarkup}</div></div>
-    <div class="dm-radio-griglia">${stazioni}</div>
+    ${pronte}
+    ${stazioni ? `<div class="dm-radio-griglia">${stazioni}</div>` : `<p class="dm-radio-vuoto">${esc(
+    t(
+      "Le tue preferite, coi loghi, si scelgono in Config › Musica › 📻 Radio.",
+      "Your favourites, with their logos, are chosen in Config › Media › 📻 Radio."
+    )
+  )}</p>`}
     <div class="dm-radio-piede">
       <button type="button" class="dm-radio-ferma" data-dm-radio-ferma${dove ? "" : " disabled"}>⏹ ${esc(t("Ferma", "Stop"))}</button>
       ${state186.esito ? `<small>${esc(state186.esito)}</small>` : ""}
@@ -154476,6 +154665,12 @@ function sulRiquadro(evento) {
       root.navigator?.vibrate?.(8);
       state186.esito = `▶ ${una.nome} · ${dove.nome}`;
     }
+  } else if ("dmRadioTendina" in d) {
+    state186.tendina = !state186.tendina;
+  } else if ("dmRadioPronta" in d) {
+    const una = RADIO_PRONTE[Number(d.dmRadioPronta)];
+    state186.tendina = false;
+    if (una) suonaUnaPronta(una.nome);
   } else if ("dmRadioFerma" in d) {
     const dove = doveSuona(lettori2);
     const chiamata = dove && chiamataPerFermare(dove.entita);
@@ -154486,6 +154681,37 @@ function sulRiquadro(evento) {
   state186.firma = "";
   ridisegnaLaRadio();
   return true;
+}
+async function suonaUnaPronta(nome) {
+  const dove = doveSuona(iLettori());
+  if (!dove || !nome) return;
+  let stazione = { nome };
+  if (!dove.echo) {
+    try {
+      if (!state186.delPaese)
+        state186.delPaese = stazioniDellaRisposta(
+          await chiediAHomeAssistant(domandaDelleRadio(RADIO_DEL_PAESE), 15e3)
+        );
+    } catch (_errore) {
+      state186.delPaese = null;
+    }
+    stazione = stazioneDalNome(state186.delPaese || [], nome);
+  }
+  const chiamata = stazione && chiamataDellaRadio(stazione, dove.entita, { echo: dove.echo });
+  if (chiamata) {
+    chiamaServizio(chiamata);
+    root.navigator?.vibrate?.(8);
+    state186.esito = `▶ ${nome} · ${dove.nome}`;
+  } else
+    state186.esito = state186.delPaese ? t(
+      "Questa radio su questo lettore non la trovo: prova un Echo, o aggiungila dal Config.",
+      "Can't find this station for this player: try an Echo, or add it from the Config."
+    ) : t(
+      "Per i lettori che non sono Echo serve l'integrazione Radio Browser di Home Assistant.",
+      "Players that aren't Echos need Home Assistant's Radio Browser integration."
+    );
+  state186.firma = "";
+  ridisegnaLaRadio();
 }
 var schedaAttiva22 = () => clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 async function chiediLeRadio(posto) {
@@ -154698,6 +154924,38 @@ function stili8() {
     .dm-radio-dove{display:grid;gap:6px}
     .dm-radio-dove>span{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
+    .dm-radio-pronte{display:grid;gap:10px;border-radius:18px;padding:4px;
+      background:linear-gradient(135deg,rgba(0,146,70,.07),rgba(255,255,255,0) 45%,rgba(206,43,55,.07));
+      border:1px solid color-mix(in srgb,#8b5cf6 22%,var(--card-border,#e2e8f0))}
+    .dm-radio-pronte-apri{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border:0;
+      border-radius:14px;background:none;font:inherit;text-align:left;cursor:pointer;color:var(--text,#0f172a)}
+    .dm-radio-pronte-apri:disabled{opacity:.55;cursor:default}
+    .dm-radio-pronte-ic{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;
+      font-size:20px;background:var(--card-background-color,#fff);box-shadow:0 6px 16px -10px rgba(2,6,23,.5)}
+    .dm-radio-pronte-tx{flex:1 1 auto;min-width:0}
+    .dm-radio-pronte-tx b{display:block;font-size:15px;font-weight:850}
+    .dm-radio-pronte-tx small{display:block;font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    .dm-radio-pronte-apri i{flex:none;width:30px;height:30px;border-radius:999px;display:grid;place-items:center;
+      font-style:normal;font-size:14px;font-weight:900;color:#7c3aed;
+      background:color-mix(in srgb,#8b5cf6 14%,transparent)}
+    .dm-radio-pronte-elenco{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+      padding:0 6px 8px;max-height:min(58vh,520px);overflow:auto}
+    @media (min-width:640px){.dm-radio-pronte-elenco{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}}
+    .dm-radio-pr{display:flex;align-items:center;gap:8px;min-width:0;padding:7px 8px 7px 7px;border-radius:14px;
+      font:inherit;text-align:left;cursor:pointer;color:var(--text,#0f172a);
+      border:1px solid var(--card-border,#e2e8f0);background:var(--card-background-color,#fff);
+      transition:transform .12s ease,box-shadow .12s ease}
+    .dm-radio-pr:active{transform:scale(.97)}
+    .dm-radio-pr-sigla{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;
+      font-size:12px;font-weight:900;letter-spacing:-.02em;color:#fff;background:var(--pr);
+      box-shadow:0 8px 16px -10px var(--pr)}
+    .dm-radio-pr b{flex:1 1 auto;min-width:0;font-size:13px;font-weight:800;line-height:1.2;
+      overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+    .dm-radio-pr-onda{flex:none;width:10px;height:10px;border-radius:999px;background:#8b5cf6;
+      box-shadow:0 0 0 4px color-mix(in srgb,#8b5cf6 22%,transparent)}
+    .dm-radio-pr.in-onda{border-color:#8b5cf6;box-shadow:inset 0 0 0 1px #8b5cf699;
+      background:color-mix(in srgb,#8b5cf6 10%,var(--card-background-color,#fff))}
+    html[data-theme="dark"] .dm-radio-pronte-apri i{color:#c4b5fd}
     .dm-radio-fila{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
     .dm-radio-fila::-webkit-scrollbar{display:none}
     .dm-radio-pa{flex:none;padding:8px 13px;border-radius:999px;font:inherit;font-size:13px;font-weight:800;
