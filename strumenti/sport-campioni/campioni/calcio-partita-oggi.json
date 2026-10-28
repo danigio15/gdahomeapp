@@ -487,8 +487,6 @@
       "gameResult": "W",
       "competitionName": "2026-27 UEFA Europa League",
       "roundName": "League Phase",
-      "leagueName": "UEFA Europa League",
-      "leagueAbbreviation": "UEFA Europa League",
       "opponent": {
        "id": "2790",
        "uid": "s:600~t:2790",
@@ -530,7 +528,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/2790.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/2790.png",
+      "leagueName": "UEFA Europa League",
+      "leagueAbbreviation": "UEFA Europa League"
      },
      {
       "id": "401874978",
@@ -553,6 +553,8 @@
       "awayShootoutScore": "0",
       "gameResult": "W",
       "competitionName": "2026-27 Italian Serie A",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A",
       "opponent": {
        "id": "105",
        "uid": "s:600~t:105",
@@ -594,9 +596,7 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/105.png",
-      "leagueName": "Italian Serie A",
-      "leagueAbbreviation": "Serie A"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/105.png"
      },
      {
       "id": "401915552",
@@ -686,6 +686,8 @@
       "awayShootoutScore": "0",
       "gameResult": "W",
       "competitionName": "2026-27 Italian Serie A",
+      "leagueName": "Italian Serie A",
+      "leagueAbbreviation": "Serie A",
       "opponent": {
        "id": "118",
        "uid": "s:600~t:118",
@@ -727,9 +729,7 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/118.png",
-      "leagueName": "Italian Serie A",
-      "leagueAbbreviation": "Serie A"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/118.png"
      }
     ]
    },
@@ -3810,1063 +3810,6 @@
    }
   ],
   "hasOdds": false,
-  "news": {
-   "header": "Serie A News",
-   "link": {
-    "language": "en",
-    "rel": [
-     "index",
-     "desktop",
-     "league"
-    ],
-    "href": "https://www.espn.com/football/league/_/name/ita.1",
-    "text": "All Serie A News",
-    "shortText": "All News",
-    "isExternal": false,
-    "isPremium": false
-   },
-   "articles": [
-    {
-     "id": 50305774,
-     "nowId": "1-50305774",
-     "contentKey": "50305774-1-6-1",
-     "dataSourceIdentifier": "63548db54a377",
-     "type": "Story",
-     "headline": "Transfer rumors, news: Juventus eye move for USMNT's Balogun",
-     "description": "AS Monaco and USMNT striker Folarin Balogun is reportedly linked with a move to Juventus. Transfer Talk has the latest.",
-     "lastModified": "2026-10-28T20:05:27Z",
-     "published": "2026-10-28T20:05:27Z",
-     "images": [
-      {
-       "dataSourceIdentifier": "8acec34879365",
-       "id": 50310369,
-       "type": "header",
-       "name": "Balogun [1296x729]",
-       "credit": "(Photo by Doug Zimmerman/ISI Photos/ISI Photos via Getty Images)",
-       "height": 729,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/1028/r1737670_2_1296x729_16-9.jpg"
-      },
-      {
-       "type": "Media",
-       "name": "Ogden: Arsenal's Carabao Cup exit to Fleetwood Town is 'embarrassing'",
-       "caption": "Ogden: Arsenal's Carabao Cup exit to Fleetwood Town is 'embarrassing'",
-       "height": 324,
-       "width": 576,
-       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1027/dm_261027_COM_SOC_Analysis_Ogden_Arsenals_Carabao_Cup_exit_to_Fleetwood_Town_is_embarrassing_20261027/dm_261027_COM_SOC_Analysis_Ogden_Arsenals_Carabao_Cup_exit_to_Fleetwood_Town_is_embarrassing_20261027.jpg"
-      }
-     ],
-     "categories": [
-      {
-       "id": 518441,
-       "type": "topic",
-       "guid": "c20f7f80-f88e-4084-6567-d1bf00c52bf0",
-       "description": "soccer transfers",
-       "sportId": 0,
-       "topicId": 3
-      },
-      {
-       "id": 81497,
-       "type": "league",
-       "uid": "s:600",
-       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
-       "description": "Soccer",
-       "sportId": 600,
-       "leagueId": 600,
-       "league": {
-        "id": 600,
-        "description": "Soccer",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137781,
-       "type": "league",
-       "uid": "s:600~l:700",
-       "guid": "6949f3af-300c-35f1-beab-b95669eedd38",
-       "description": "English Premier League",
-       "sportId": 600,
-       "leagueId": 23,
-       "league": {
-        "id": 700,
-        "description": "English Premier League",
-        "abbreviation": "Premier League",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/eng.1"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/eng.1"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137799,
-       "type": "league",
-       "uid": "s:600~l:710",
-       "guid": "b7217910-7773-3ea8-bc69-30c19c579306",
-       "description": "French Ligue 1",
-       "sportId": 600,
-       "leagueId": 9,
-       "league": {
-        "id": 710,
-        "description": "French Ligue 1",
-        "abbreviation": "Ligue 1",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/fra.1"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/fra.1"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 142614,
-       "type": "team",
-       "uid": "s:600~t:174",
-       "guid": "8e37a6b1-d9b7-251c-9920-88d467d9c871",
-       "description": "AS Monaco",
-       "sportId": 600,
-       "teamId": 174,
-       "team": {
-        "id": 174,
-        "description": "AS Monaco",
-        "abbreviation": "MON",
-        "shortDisplayName": "Monaco",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/174/as-monaco"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/174/as-monaco"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 142584,
-       "type": "team",
-       "uid": "s:600~t:111",
-       "guid": "87fe4844-a7cf-c88e-2ebe-aeb57325e990",
-       "description": "Juventus",
-       "sportId": 600,
-       "teamId": 111,
-       "team": {
-        "id": 111,
-        "description": "Juventus",
-        "abbreviation": "JUV",
-        "shortDisplayName": "Juventus",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/111/juventus"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/111/juventus"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137798,
-       "type": "league",
-       "uid": "s:600~l:730",
-       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
-       "description": "Italian Serie A",
-       "sportId": 600,
-       "leagueId": 12,
-       "league": {
-        "id": 730,
-        "description": "Italian Serie A",
-        "abbreviation": "Serie A",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 72593,
-       "type": "team",
-       "uid": "s:600~t:660",
-       "guid": "e6b65d49-258c-b730-b7db-df75c6b1f714",
-       "description": "United States",
-       "sportId": 600,
-       "teamId": 660,
-       "team": {
-        "id": 660,
-        "description": "United States",
-        "abbreviation": "USA",
-        "shortDisplayName": "USA",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/team/_/id/660/united-states"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/team/_/id/660/united-states"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 407922,
-       "type": "athlete",
-       "uid": "s:600~a:282643",
-       "guid": "2e8fce58-86b5-b7e1-174d-eb785db17a1b",
-       "description": "Folarin Balogun",
-       "sportId": 600,
-       "athleteId": 282643,
-       "athlete": {
-        "id": 282643,
-        "description": "Folarin Balogun",
-        "links": {
-         "mobile": {
-          "athletes": {
-           "href": "https://www.espn.com/soccer/player/_/id/282643/folarin-balogun"
-          }
-         },
-         "web": {
-          "athletes": {
-           "href": "https://www.espn.com/soccer/player/_/id/282643/folarin-balogun"
-          }
-         }
-        }
-       }
-      }
-     ],
-     "byline": "ESPN",
-     "links": {
-      "api": {
-       "self": {
-        "href": "https://content.core.api.espn.com/v1/sports/news/50305774"
-       }
-      },
-      "app": {
-       "sportscenter": {
-        "href": "sportscenter://x-callback-url/showStory?uid=50305774"
-       }
-      },
-      "mobile": {
-       "href": "http://m.espn.go.com/soccer/story?storyId=50305774"
-      },
-      "web": {
-       "href": "https://www.espn.com/soccer/story/_/id/50305774/transfer-rumors-news-arsenal-chelsea-manchester-city-tracking-psg-star-desire-doue"
-      }
-     },
-     "premium": false
-    },
-    {
-     "id": 50253268,
-     "nowId": "1-50253268",
-     "contentKey": "50253268-1-21-1",
-     "dataSourceIdentifier": "b6fc8b80d6ca7",
-     "type": "Recap",
-     "headline": "Bologna storm back to hand Milan, Amorim first Serie A loss",
-     "description": "Samuel Mbangula fired a hat trick as Bologna beat AC Milan 4-2 to hand the hosts a first Serie A loss of the season.",
-     "lastModified": "2026-10-28T20:59:34Z",
-     "published": "2026-10-28T20:59:34Z",
-     "images": [
-      {
-       "dataSourceIdentifier": "fa3e4f4fbfe31",
-       "id": 50310148,
-       "type": "header",
-       "name": "Bologna celeb vs Milan_261028 [1296x729]",
-       "caption": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
-       "alt": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
-       "credit": "Getty Images",
-       "height": 729,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/1028/r1737648_1296x729_16-9.jpg"
-      }
-     ],
-     "categories": [
-      {
-       "id": 81497,
-       "type": "league",
-       "uid": "s:600",
-       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
-       "description": "Soccer",
-       "sportId": 600,
-       "leagueId": 600,
-       "league": {
-        "id": 600,
-        "description": "Soccer",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137798,
-       "type": "league",
-       "uid": "s:600~l:730",
-       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
-       "description": "Italian Serie A",
-       "sportId": 600,
-       "leagueId": 12,
-       "league": {
-        "id": 730,
-        "description": "Italian Serie A",
-        "abbreviation": "Serie A",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 142590,
-       "type": "team",
-       "uid": "s:600~t:103",
-       "guid": "7ca4fb35-d78e-49f0-67fe-7fa95588e28d",
-       "description": "AC Milan",
-       "sportId": 600,
-       "teamId": 103,
-       "team": {
-        "id": 103,
-        "description": "AC Milan",
-        "abbreviation": "MIL",
-        "shortDisplayName": "Milan",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 142595,
-       "type": "team",
-       "uid": "s:600~t:107",
-       "guid": "30829603-0f31-d496-4b60-2aa0f5627b42",
-       "description": "Bologna",
-       "sportId": 600,
-       "teamId": 107,
-       "team": {
-        "id": 107,
-        "description": "Bologna",
-        "abbreviation": "BOL",
-        "shortDisplayName": "Bologna",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/107/bologna"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/107/bologna"
-          }
-         }
-        }
-       }
-      },
-      {
-       "type": "event",
-       "uid": "s:600~l:730~e:401874993",
-       "guid": "47651221-643d-3e61-91c3-c99dce2a8f19",
-       "description": "Bologna @ AC Milan",
-       "eventId": 401874993,
-       "event": {
-        "id": 401874993,
-        "sport": "soccer",
-        "league": "ita.1",
-        "description": "Bologna @ AC Milan"
-       }
-      }
-     ],
-     "byline": "ESPN News Services",
-     "links": {
-      "api": {
-       "self": {
-        "href": "https://content.core.api.espn.com/v1/sports/news/50253268"
-       }
-      },
-      "app": {
-       "sportscenter": {
-        "href": "sportscenter://x-callback-url/showStory?uid=50253268"
-       }
-      },
-      "mobile": {
-       "href": "http://m.espn.go.com/soccer/story?storyId=50253268"
-      },
-      "web": {
-       "href": "http://www.espn.com/soccer/report/_/gameId/401874993"
-      }
-     },
-     "premium": false
-    },
-    {
-     "id": 50308537,
-     "nowId": "1-50308537",
-     "contentKey": "50308537-1-5-1",
-     "dataSourceIdentifier": "00a8372190dcf",
-     "type": "HeadlineNews",
-     "headline": "Mussolini's great-grandson scores first goal for Lazio",
-     "description": "Romano Floriani Mussolini, the great-grandson of former Italian dictator Benito Mussolini, scored his first goal for Lazio on Tuesday.",
-     "lastModified": "2026-10-28T15:21:00Z",
-     "published": "2026-10-28T15:21:00Z",
-     "images": [
-      {
-       "dataSourceIdentifier": "3697ec8c371dc",
-       "id": 50308542,
-       "type": "header",
-       "name": "Mussolini [1296x729]",
-       "credit": "MB Media/Getty Images",
-       "height": 729,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/1028/r1737518_1296x729_16-9.jpg"
-      }
-     ],
-     "categories": [
-      {
-       "id": 409224,
-       "type": "topic",
-       "guid": "52313677-19f8-b106-ec91-d8d17e6087fe",
-       "description": "news",
-       "sportId": 0,
-       "topicId": 781
-      },
-      {
-       "id": 81497,
-       "type": "league",
-       "uid": "s:600",
-       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
-       "description": "Soccer",
-       "sportId": 600,
-       "leagueId": 600,
-       "league": {
-        "id": 600,
-        "description": "Soccer",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 142586,
-       "type": "team",
-       "uid": "s:600~t:112",
-       "guid": "bbeffb3b-a5b0-c47a-afdf-dcaf5280f9d2",
-       "description": "Lazio",
-       "sportId": 600,
-       "teamId": 112,
-       "team": {
-        "id": 112,
-        "description": "Lazio",
-        "abbreviation": "LAZ",
-        "shortDisplayName": "Lazio",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/112/lazio"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/112/lazio"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137798,
-       "type": "league",
-       "uid": "s:600~l:730",
-       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
-       "description": "Italian Serie A",
-       "sportId": 600,
-       "leagueId": 12,
-       "league": {
-        "id": 730,
-        "description": "Italian Serie A",
-        "abbreviation": "Serie A",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         }
-        }
-       }
-      }
-     ],
-     "byline": "Associated Press",
-     "links": {
-      "api": {
-       "self": {
-        "href": "https://content.core.api.espn.com/v1/sports/news/50308537"
-       }
-      },
-      "app": {
-       "sportscenter": {
-        "href": "sportscenter://x-callback-url/showStory?uid=50308537"
-       }
-      },
-      "mobile": {
-       "href": "http://m.espn.go.com/soccer/story?storyId=50308537"
-      },
-      "web": {
-       "href": "https://www.espn.com/soccer/story/_/id/50308537/mussolini-great-grandson-scores-first-goal-lazio-serie-a"
-      }
-     },
-     "premium": false
-    },
-    {
-     "id": 50305893,
-     "nowId": "1-50305893",
-     "contentKey": "50305893-1-5-1",
-     "dataSourceIdentifier": "a2e2a5f067e6d",
-     "type": "HeadlineNews",
-     "headline": "Sources: USMNT's Christian Pulisic set to sign new AC Milan contract",
-     "description": "United States star Christian Pulisic is set to sign a new contract with AC Milan through to 2031, sources have told ESPN.",
-     "lastModified": "2026-10-28T17:24:14Z",
-     "published": "2026-10-28T17:24:14Z",
-     "images": [
-      {
-       "dataSourceIdentifier": "d580bfa0da45c",
-       "id": 50305845,
-       "type": "header",
-       "name": "Christian Pulisic of Milan celebrates his goal annulled by VAR decision during the Serie A match between AC Milan and Atalanta BC at Stadio Giuseppe Meazza\n [1296x729]",
-       "alt": "Christian Pulisic of Milan celebrates his goal annulled by VAR decision during the Serie A match between AC Milan and Atalanta BC at Stadio Giuseppe Meazza",
-       "credit": "Image Photo Agency/Getty Images",
-       "height": 729,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/1028/r1737410_1296x729_16-9.jpg"
-      },
-      {
-       "type": "Media",
-       "name": "Christian Pulisic nets second goal for AC Milan",
-       "caption": "Cesar Hernandez recaps Christian Pulisic's performance in his club's 2-0 victory over Udinese.",
-       "height": 324,
-       "width": 576,
-       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1025/dm_261025_Hernandez_Pulisic_USMNT/dm_261025_Hernandez_Pulisic_USMNT.jpg"
-      }
-     ],
-     "categories": [
-      {
-       "id": 81497,
-       "type": "league",
-       "uid": "s:600",
-       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
-       "description": "Soccer",
-       "sportId": 600,
-       "leagueId": 600,
-       "league": {
-        "id": 600,
-        "description": "Soccer",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137798,
-       "type": "league",
-       "uid": "s:600~l:730",
-       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
-       "description": "Italian Serie A",
-       "sportId": 600,
-       "leagueId": 12,
-       "league": {
-        "id": 730,
-        "description": "Italian Serie A",
-        "abbreviation": "Serie A",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 280017,
-       "type": "athlete",
-       "uid": "s:600~a:225607",
-       "guid": "4e537717-24b3-a77d-8d12-9cde8792bed6",
-       "description": "Christian Pulisic",
-       "sportId": 600,
-       "athleteId": 225607,
-       "athlete": {
-        "id": 225607,
-        "description": "Christian Pulisic",
-        "links": {
-         "mobile": {
-          "athletes": {
-           "href": "https://www.espn.com/soccer/player/_/id/225607/christian-pulisic"
-          }
-         },
-         "web": {
-          "athletes": {
-           "href": "https://www.espn.com/soccer/player/_/id/225607/christian-pulisic"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 72593,
-       "type": "team",
-       "uid": "s:600~t:660",
-       "guid": "e6b65d49-258c-b730-b7db-df75c6b1f714",
-       "description": "United States",
-       "sportId": 600,
-       "teamId": 660,
-       "team": {
-        "id": 660,
-        "description": "United States",
-        "abbreviation": "USA",
-        "shortDisplayName": "USA",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/team/_/id/660/united-states"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/team/_/id/660/united-states"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 518441,
-       "type": "topic",
-       "guid": "c20f7f80-f88e-4084-6567-d1bf00c52bf0",
-       "description": "soccer transfers",
-       "sportId": 0,
-       "topicId": 3
-      },
-      {
-       "id": 142590,
-       "type": "team",
-       "uid": "s:600~t:103",
-       "guid": "7ca4fb35-d78e-49f0-67fe-7fa95588e28d",
-       "description": "AC Milan",
-       "sportId": 600,
-       "teamId": 103,
-       "team": {
-        "id": 103,
-        "description": "AC Milan",
-        "abbreviation": "MIL",
-        "shortDisplayName": "Milan",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 696412,
-       "type": "contributor",
-       "guid": "86f38f4b-82f2-30ca-9d57-a35e3a571493",
-       "description": "Tom Hamilton",
-       "slug": "tom-hamilton",
-       "contributor": {
-        "id": 2637,
-        "description": "Tom Hamilton"
-       }
-      }
-     ],
-     "byline": "Tom Hamilton",
-     "links": {
-      "api": {
-       "self": {
-        "href": "https://content.core.api.espn.com/v1/sports/news/50305893"
-       }
-      },
-      "app": {
-       "sportscenter": {
-        "href": "sportscenter://x-callback-url/showStory?uid=50305893"
-       }
-      },
-      "mobile": {
-       "href": "http://m.espn.go.com/soccer/story?storyId=50305893"
-      },
-      "web": {
-       "href": "https://www.espn.com/soccer/story/_/id/50305893/usmnt-christian-pulisic-set-sign-new-ac-milan-contract-sources"
-      }
-     },
-     "premium": false
-    },
-    {
-     "id": 50299199,
-     "nowId": "1-50299199",
-     "contentKey": "50299199-1-5-1",
-     "dataSourceIdentifier": "89f7c7d82ab2e",
-     "type": "HeadlineNews",
-     "headline": "Napoli coach Massimiliano Allegri will not appeal touchline ban",
-     "description": "Napoli coach Massimiliano Allegri will watch Wednesday's Serie A clash with Monza from the stands after deciding not to appeal against his touchline ban.",
-     "lastModified": "2026-10-27T17:08:45Z",
-     "published": "2026-10-27T17:08:45Z",
-     "images": [
-      {
-       "dataSourceIdentifier": "5c1d5065fd66b",
-       "id": 40275148,
-       "type": "header",
-       "name": "Massimiliano Allegri head coach fo Juventus FC gestures during the Coppa Italia 2023/2024 Frecciarossa final match between Atalanta BC and Juventus FC at Stadio Olimpico [1296x729]",
-       "credit": "Giuseppe Maffia/NurPhoto via Getty Images",
-       "height": 729,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2024/0604/r1341465_1296x729_16-9.jpg"
-      }
-     ],
-     "categories": [
-      {
-       "id": 81497,
-       "type": "league",
-       "uid": "s:600",
-       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
-       "description": "Soccer",
-       "sportId": 600,
-       "leagueId": 600,
-       "league": {
-        "id": 600,
-        "description": "Soccer",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 409224,
-       "type": "topic",
-       "guid": "52313677-19f8-b106-ec91-d8d17e6087fe",
-       "description": "news",
-       "sportId": 0,
-       "topicId": 781
-      },
-      {
-       "id": 142589,
-       "type": "team",
-       "uid": "s:600~t:114",
-       "guid": "20179aab-ac9f-93cf-f139-404e49a3f3cb",
-       "description": "Napoli",
-       "sportId": 600,
-       "teamId": 114,
-       "team": {
-        "id": 114,
-        "description": "Napoli",
-        "abbreviation": "NAP",
-        "shortDisplayName": "Napoli",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/114/napoli"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/114/napoli"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137798,
-       "type": "league",
-       "uid": "s:600~l:730",
-       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
-       "description": "Italian Serie A",
-       "sportId": 600,
-       "leagueId": 12,
-       "league": {
-        "id": 730,
-        "description": "Italian Serie A",
-        "abbreviation": "Serie A",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         }
-        }
-       }
-      }
-     ],
-     "byline": "PA",
-     "links": {
-      "api": {
-       "self": {
-        "href": "https://content.core.api.espn.com/v1/sports/news/50299199"
-       }
-      },
-      "app": {
-       "sportscenter": {
-        "href": "sportscenter://x-callback-url/showStory?uid=50299199"
-       }
-      },
-      "mobile": {
-       "href": "http://m.espn.go.com/soccer/story?storyId=50299199"
-      },
-      "web": {
-       "href": "https://www.espn.com/soccer/story/_/id/50299199/napoli-coach-massimiliano-allegri-not-appeal-touchline-ban"
-      }
-     },
-     "premium": false
-    },
-    {
-     "id": 50298045,
-     "nowId": "1-50298045",
-     "contentKey": "50298045-1-5-1",
-     "dataSourceIdentifier": "df83b6d01bae9",
-     "type": "HeadlineNews",
-     "headline": "Milan boss Ruben Amorim faces injury headache ahead of pre-derby Bologna game",
-     "description": "A growing injury list has left AC Milan head coach Ruben Amorim facing a difficult week leading up to the weekend's derby against Inter Milan.",
-     "lastModified": "2026-10-27T15:24:05Z",
-     "published": "2026-10-27T15:24:05Z",
-     "images": [
-      {
-       "dataSourceIdentifier": "001d8fd1c4c2c",
-       "id": 50297811,
-       "type": "header",
-       "name": "Ruben Loftus Cheek  [1296x729]",
-       "credit": "Photo by Image Photo Agency/Getty Images",
-       "height": 729,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/1027/r1737008_1296x729_16-9.jpg"
-      },
-      {
-       "type": "Media",
-       "name": "Christian Pulisic nets second goal for AC Milan",
-       "caption": "Cesar Hernandez recaps Christian Pulisic's performance in his club's 2-0 victory over Udinese.",
-       "height": 324,
-       "width": 576,
-       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1025/dm_261025_Hernandez_Pulisic_USMNT/dm_261025_Hernandez_Pulisic_USMNT.jpg"
-      }
-     ],
-     "categories": [
-      {
-       "id": 81497,
-       "type": "league",
-       "uid": "s:600",
-       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
-       "description": "Soccer",
-       "sportId": 600,
-       "leagueId": 600,
-       "league": {
-        "id": 600,
-        "description": "Soccer",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 409224,
-       "type": "topic",
-       "guid": "52313677-19f8-b106-ec91-d8d17e6087fe",
-       "description": "news",
-       "sportId": 0,
-       "topicId": 781
-      },
-      {
-       "id": 142590,
-       "type": "team",
-       "uid": "s:600~t:103",
-       "guid": "7ca4fb35-d78e-49f0-67fe-7fa95588e28d",
-       "description": "AC Milan",
-       "sportId": 600,
-       "teamId": 103,
-       "team": {
-        "id": 103,
-        "description": "AC Milan",
-        "abbreviation": "MIL",
-        "shortDisplayName": "Milan",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137798,
-       "type": "league",
-       "uid": "s:600~l:730",
-       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
-       "description": "Italian Serie A",
-       "sportId": 600,
-       "leagueId": 12,
-       "league": {
-        "id": 730,
-        "description": "Italian Serie A",
-        "abbreviation": "Serie A",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         }
-        }
-       }
-      }
-     ],
-     "byline": "PA",
-     "links": {
-      "api": {
-       "self": {
-        "href": "https://content.core.api.espn.com/v1/sports/news/50298045"
-       }
-      },
-      "app": {
-       "sportscenter": {
-        "href": "sportscenter://x-callback-url/showStory?uid=50298045"
-       }
-      },
-      "mobile": {
-       "href": "http://m.espn.go.com/soccer/story?storyId=50298045"
-      },
-      "web": {
-       "href": "https://www.espn.com/soccer/story/_/id/50298045/ac-milan-ruben-amorim-injuries-bologna-match"
-      }
-     },
-     "premium": false
-    }
-   ]
-  },
   "rosters": [
    {
     "homeAway": "home",
@@ -14933,6 +13876,1063 @@
     "formation": "3-4-2-1"
    }
   ],
+  "news": {
+   "header": "Serie A News",
+   "link": {
+    "language": "en",
+    "rel": [
+     "index",
+     "desktop",
+     "league"
+    ],
+    "href": "https://www.espn.com/football/league/_/name/ita.1",
+    "text": "All Serie A News",
+    "shortText": "All News",
+    "isExternal": false,
+    "isPremium": false
+   },
+   "articles": [
+    {
+     "id": 50305774,
+     "nowId": "1-50305774",
+     "contentKey": "50305774-1-6-1",
+     "dataSourceIdentifier": "63548db54a377",
+     "type": "Story",
+     "headline": "Transfer rumors, news: Juventus eye move for USMNT's Balogun",
+     "description": "AS Monaco and USMNT striker Folarin Balogun is reportedly linked with a move to Juventus. Transfer Talk has the latest.",
+     "lastModified": "2026-10-28T20:05:27Z",
+     "published": "2026-10-28T20:05:27Z",
+     "images": [
+      {
+       "dataSourceIdentifier": "8acec34879365",
+       "id": 50310369,
+       "type": "header",
+       "name": "Balogun [1296x729]",
+       "credit": "(Photo by Doug Zimmerman/ISI Photos/ISI Photos via Getty Images)",
+       "height": 729,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/1028/r1737670_2_1296x729_16-9.jpg"
+      },
+      {
+       "type": "Media",
+       "name": "Ogden: Arsenal's Carabao Cup exit to Fleetwood Town is 'embarrassing'",
+       "caption": "Ogden: Arsenal's Carabao Cup exit to Fleetwood Town is 'embarrassing'",
+       "height": 324,
+       "width": 576,
+       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1027/dm_261027_COM_SOC_Analysis_Ogden_Arsenals_Carabao_Cup_exit_to_Fleetwood_Town_is_embarrassing_20261027/dm_261027_COM_SOC_Analysis_Ogden_Arsenals_Carabao_Cup_exit_to_Fleetwood_Town_is_embarrassing_20261027.jpg"
+      }
+     ],
+     "categories": [
+      {
+       "id": 518441,
+       "type": "topic",
+       "guid": "c20f7f80-f88e-4084-6567-d1bf00c52bf0",
+       "description": "soccer transfers",
+       "sportId": 0,
+       "topicId": 3
+      },
+      {
+       "id": 81497,
+       "type": "league",
+       "uid": "s:600",
+       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+       "description": "Soccer",
+       "sportId": 600,
+       "leagueId": 600,
+       "league": {
+        "id": 600,
+        "description": "Soccer",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137781,
+       "type": "league",
+       "uid": "s:600~l:700",
+       "guid": "6949f3af-300c-35f1-beab-b95669eedd38",
+       "description": "English Premier League",
+       "sportId": 600,
+       "leagueId": 23,
+       "league": {
+        "id": 700,
+        "description": "English Premier League",
+        "abbreviation": "Premier League",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137799,
+       "type": "league",
+       "uid": "s:600~l:710",
+       "guid": "b7217910-7773-3ea8-bc69-30c19c579306",
+       "description": "French Ligue 1",
+       "sportId": 600,
+       "leagueId": 9,
+       "league": {
+        "id": 710,
+        "description": "French Ligue 1",
+        "abbreviation": "Ligue 1",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/fra.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/fra.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142614,
+       "type": "team",
+       "uid": "s:600~t:174",
+       "guid": "8e37a6b1-d9b7-251c-9920-88d467d9c871",
+       "description": "AS Monaco",
+       "sportId": 600,
+       "teamId": 174,
+       "team": {
+        "id": 174,
+        "description": "AS Monaco",
+        "abbreviation": "MON",
+        "shortDisplayName": "Monaco",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/174/as-monaco"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/174/as-monaco"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142584,
+       "type": "team",
+       "uid": "s:600~t:111",
+       "guid": "87fe4844-a7cf-c88e-2ebe-aeb57325e990",
+       "description": "Juventus",
+       "sportId": 600,
+       "teamId": 111,
+       "team": {
+        "id": 111,
+        "description": "Juventus",
+        "abbreviation": "JUV",
+        "shortDisplayName": "Juventus",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/111/juventus"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/111/juventus"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137798,
+       "type": "league",
+       "uid": "s:600~l:730",
+       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
+       "description": "Italian Serie A",
+       "sportId": 600,
+       "leagueId": 12,
+       "league": {
+        "id": 730,
+        "description": "Italian Serie A",
+        "abbreviation": "Serie A",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 72593,
+       "type": "team",
+       "uid": "s:600~t:660",
+       "guid": "e6b65d49-258c-b730-b7db-df75c6b1f714",
+       "description": "United States",
+       "sportId": 600,
+       "teamId": 660,
+       "team": {
+        "id": 660,
+        "description": "United States",
+        "abbreviation": "USA",
+        "shortDisplayName": "USA",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/team/_/id/660/united-states"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/team/_/id/660/united-states"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 407922,
+       "type": "athlete",
+       "uid": "s:600~a:282643",
+       "guid": "2e8fce58-86b5-b7e1-174d-eb785db17a1b",
+       "description": "Folarin Balogun",
+       "sportId": 600,
+       "athleteId": 282643,
+       "athlete": {
+        "id": 282643,
+        "description": "Folarin Balogun",
+        "links": {
+         "mobile": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/282643/folarin-balogun"
+          }
+         },
+         "web": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/282643/folarin-balogun"
+          }
+         }
+        }
+       }
+      }
+     ],
+     "byline": "ESPN",
+     "links": {
+      "api": {
+       "self": {
+        "href": "https://content.core.api.espn.com/v1/sports/news/50305774"
+       }
+      },
+      "app": {
+       "sportscenter": {
+        "href": "sportscenter://x-callback-url/showStory?uid=50305774"
+       }
+      },
+      "mobile": {
+       "href": "http://m.espn.go.com/soccer/story?storyId=50305774"
+      },
+      "web": {
+       "href": "https://www.espn.com/soccer/story/_/id/50305774/transfer-rumors-news-arsenal-chelsea-manchester-city-tracking-psg-star-desire-doue"
+      }
+     },
+     "premium": false
+    },
+    {
+     "id": 50253268,
+     "nowId": "1-50253268",
+     "contentKey": "50253268-1-21-1",
+     "dataSourceIdentifier": "b6fc8b80d6ca7",
+     "type": "Recap",
+     "headline": "Bologna storm back to hand Milan, Amorim first Serie A loss",
+     "description": "Samuel Mbangula fired a hat trick as Bologna beat AC Milan 4-2 to hand the hosts a first Serie A loss of the season.",
+     "lastModified": "2026-10-28T20:59:34Z",
+     "published": "2026-10-28T20:59:34Z",
+     "images": [
+      {
+       "dataSourceIdentifier": "fa3e4f4fbfe31",
+       "id": 50310148,
+       "type": "header",
+       "name": "Bologna celeb vs Milan_261028 [1296x729]",
+       "caption": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
+       "alt": "Bologna players celebrate after scoring a goal against Milan in Serie A.",
+       "credit": "Getty Images",
+       "height": 729,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/1028/r1737648_1296x729_16-9.jpg"
+      }
+     ],
+     "categories": [
+      {
+       "id": 81497,
+       "type": "league",
+       "uid": "s:600",
+       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+       "description": "Soccer",
+       "sportId": 600,
+       "leagueId": 600,
+       "league": {
+        "id": 600,
+        "description": "Soccer",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137798,
+       "type": "league",
+       "uid": "s:600~l:730",
+       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
+       "description": "Italian Serie A",
+       "sportId": 600,
+       "leagueId": 12,
+       "league": {
+        "id": 730,
+        "description": "Italian Serie A",
+        "abbreviation": "Serie A",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142590,
+       "type": "team",
+       "uid": "s:600~t:103",
+       "guid": "7ca4fb35-d78e-49f0-67fe-7fa95588e28d",
+       "description": "AC Milan",
+       "sportId": 600,
+       "teamId": 103,
+       "team": {
+        "id": 103,
+        "description": "AC Milan",
+        "abbreviation": "MIL",
+        "shortDisplayName": "Milan",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142595,
+       "type": "team",
+       "uid": "s:600~t:107",
+       "guid": "30829603-0f31-d496-4b60-2aa0f5627b42",
+       "description": "Bologna",
+       "sportId": 600,
+       "teamId": 107,
+       "team": {
+        "id": 107,
+        "description": "Bologna",
+        "abbreviation": "BOL",
+        "shortDisplayName": "Bologna",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/107/bologna"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/107/bologna"
+          }
+         }
+        }
+       }
+      },
+      {
+       "type": "event",
+       "uid": "s:600~l:730~e:401874993",
+       "guid": "47651221-643d-3e61-91c3-c99dce2a8f19",
+       "description": "Bologna @ AC Milan",
+       "eventId": 401874993,
+       "event": {
+        "id": 401874993,
+        "sport": "soccer",
+        "league": "ita.1",
+        "description": "Bologna @ AC Milan"
+       }
+      }
+     ],
+     "byline": "ESPN News Services",
+     "links": {
+      "api": {
+       "self": {
+        "href": "https://content.core.api.espn.com/v1/sports/news/50253268"
+       }
+      },
+      "app": {
+       "sportscenter": {
+        "href": "sportscenter://x-callback-url/showStory?uid=50253268"
+       }
+      },
+      "mobile": {
+       "href": "http://m.espn.go.com/soccer/story?storyId=50253268"
+      },
+      "web": {
+       "href": "http://www.espn.com/soccer/report/_/gameId/401874993"
+      }
+     },
+     "premium": false
+    },
+    {
+     "id": 50308537,
+     "nowId": "1-50308537",
+     "contentKey": "50308537-1-5-1",
+     "dataSourceIdentifier": "00a8372190dcf",
+     "type": "HeadlineNews",
+     "headline": "Mussolini's great-grandson scores first goal for Lazio",
+     "description": "Romano Floriani Mussolini, the great-grandson of former Italian dictator Benito Mussolini, scored his first goal for Lazio on Tuesday.",
+     "lastModified": "2026-10-28T15:21:00Z",
+     "published": "2026-10-28T15:21:00Z",
+     "images": [
+      {
+       "dataSourceIdentifier": "3697ec8c371dc",
+       "id": 50308542,
+       "type": "header",
+       "name": "Mussolini [1296x729]",
+       "credit": "MB Media/Getty Images",
+       "height": 729,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/1028/r1737518_1296x729_16-9.jpg"
+      }
+     ],
+     "categories": [
+      {
+       "id": 409224,
+       "type": "topic",
+       "guid": "52313677-19f8-b106-ec91-d8d17e6087fe",
+       "description": "news",
+       "sportId": 0,
+       "topicId": 781
+      },
+      {
+       "id": 81497,
+       "type": "league",
+       "uid": "s:600",
+       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+       "description": "Soccer",
+       "sportId": 600,
+       "leagueId": 600,
+       "league": {
+        "id": 600,
+        "description": "Soccer",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142586,
+       "type": "team",
+       "uid": "s:600~t:112",
+       "guid": "bbeffb3b-a5b0-c47a-afdf-dcaf5280f9d2",
+       "description": "Lazio",
+       "sportId": 600,
+       "teamId": 112,
+       "team": {
+        "id": 112,
+        "description": "Lazio",
+        "abbreviation": "LAZ",
+        "shortDisplayName": "Lazio",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/112/lazio"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/112/lazio"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137798,
+       "type": "league",
+       "uid": "s:600~l:730",
+       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
+       "description": "Italian Serie A",
+       "sportId": 600,
+       "leagueId": 12,
+       "league": {
+        "id": 730,
+        "description": "Italian Serie A",
+        "abbreviation": "Serie A",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         }
+        }
+       }
+      }
+     ],
+     "byline": "Associated Press",
+     "links": {
+      "api": {
+       "self": {
+        "href": "https://content.core.api.espn.com/v1/sports/news/50308537"
+       }
+      },
+      "app": {
+       "sportscenter": {
+        "href": "sportscenter://x-callback-url/showStory?uid=50308537"
+       }
+      },
+      "mobile": {
+       "href": "http://m.espn.go.com/soccer/story?storyId=50308537"
+      },
+      "web": {
+       "href": "https://www.espn.com/soccer/story/_/id/50308537/mussolini-great-grandson-scores-first-goal-lazio-serie-a"
+      }
+     },
+     "premium": false
+    },
+    {
+     "id": 50305893,
+     "nowId": "1-50305893",
+     "contentKey": "50305893-1-5-1",
+     "dataSourceIdentifier": "a2e2a5f067e6d",
+     "type": "HeadlineNews",
+     "headline": "Sources: USMNT's Christian Pulisic set to sign new AC Milan contract",
+     "description": "United States star Christian Pulisic is set to sign a new contract with AC Milan through to 2031, sources have told ESPN.",
+     "lastModified": "2026-10-28T17:24:14Z",
+     "published": "2026-10-28T17:24:14Z",
+     "images": [
+      {
+       "dataSourceIdentifier": "d580bfa0da45c",
+       "id": 50305845,
+       "type": "header",
+       "name": "Christian Pulisic of Milan celebrates his goal annulled by VAR decision during the Serie A match between AC Milan and Atalanta BC at Stadio Giuseppe Meazza\n [1296x729]",
+       "alt": "Christian Pulisic of Milan celebrates his goal annulled by VAR decision during the Serie A match between AC Milan and Atalanta BC at Stadio Giuseppe Meazza",
+       "credit": "Image Photo Agency/Getty Images",
+       "height": 729,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/1028/r1737410_1296x729_16-9.jpg"
+      },
+      {
+       "type": "Media",
+       "name": "Christian Pulisic nets second goal for AC Milan",
+       "caption": "Cesar Hernandez recaps Christian Pulisic's performance in his club's 2-0 victory over Udinese.",
+       "height": 324,
+       "width": 576,
+       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1025/dm_261025_Hernandez_Pulisic_USMNT/dm_261025_Hernandez_Pulisic_USMNT.jpg"
+      }
+     ],
+     "categories": [
+      {
+       "id": 81497,
+       "type": "league",
+       "uid": "s:600",
+       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+       "description": "Soccer",
+       "sportId": 600,
+       "leagueId": 600,
+       "league": {
+        "id": 600,
+        "description": "Soccer",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137798,
+       "type": "league",
+       "uid": "s:600~l:730",
+       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
+       "description": "Italian Serie A",
+       "sportId": 600,
+       "leagueId": 12,
+       "league": {
+        "id": 730,
+        "description": "Italian Serie A",
+        "abbreviation": "Serie A",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 280017,
+       "type": "athlete",
+       "uid": "s:600~a:225607",
+       "guid": "4e537717-24b3-a77d-8d12-9cde8792bed6",
+       "description": "Christian Pulisic",
+       "sportId": 600,
+       "athleteId": 225607,
+       "athlete": {
+        "id": 225607,
+        "description": "Christian Pulisic",
+        "links": {
+         "mobile": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/225607/christian-pulisic"
+          }
+         },
+         "web": {
+          "athletes": {
+           "href": "https://www.espn.com/soccer/player/_/id/225607/christian-pulisic"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 72593,
+       "type": "team",
+       "uid": "s:600~t:660",
+       "guid": "e6b65d49-258c-b730-b7db-df75c6b1f714",
+       "description": "United States",
+       "sportId": 600,
+       "teamId": 660,
+       "team": {
+        "id": 660,
+        "description": "United States",
+        "abbreviation": "USA",
+        "shortDisplayName": "USA",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/team/_/id/660/united-states"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/team/_/id/660/united-states"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 518441,
+       "type": "topic",
+       "guid": "c20f7f80-f88e-4084-6567-d1bf00c52bf0",
+       "description": "soccer transfers",
+       "sportId": 0,
+       "topicId": 3
+      },
+      {
+       "id": 142590,
+       "type": "team",
+       "uid": "s:600~t:103",
+       "guid": "7ca4fb35-d78e-49f0-67fe-7fa95588e28d",
+       "description": "AC Milan",
+       "sportId": 600,
+       "teamId": 103,
+       "team": {
+        "id": 103,
+        "description": "AC Milan",
+        "abbreviation": "MIL",
+        "shortDisplayName": "Milan",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 696412,
+       "type": "contributor",
+       "guid": "86f38f4b-82f2-30ca-9d57-a35e3a571493",
+       "description": "Tom Hamilton",
+       "slug": "tom-hamilton",
+       "contributor": {
+        "id": 2637,
+        "description": "Tom Hamilton"
+       }
+      }
+     ],
+     "byline": "Tom Hamilton",
+     "links": {
+      "api": {
+       "self": {
+        "href": "https://content.core.api.espn.com/v1/sports/news/50305893"
+       }
+      },
+      "app": {
+       "sportscenter": {
+        "href": "sportscenter://x-callback-url/showStory?uid=50305893"
+       }
+      },
+      "mobile": {
+       "href": "http://m.espn.go.com/soccer/story?storyId=50305893"
+      },
+      "web": {
+       "href": "https://www.espn.com/soccer/story/_/id/50305893/usmnt-christian-pulisic-set-sign-new-ac-milan-contract-sources"
+      }
+     },
+     "premium": false
+    },
+    {
+     "id": 50299199,
+     "nowId": "1-50299199",
+     "contentKey": "50299199-1-5-1",
+     "dataSourceIdentifier": "89f7c7d82ab2e",
+     "type": "HeadlineNews",
+     "headline": "Napoli coach Massimiliano Allegri will not appeal touchline ban",
+     "description": "Napoli coach Massimiliano Allegri will watch Wednesday's Serie A clash with Monza from the stands after deciding not to appeal against his touchline ban.",
+     "lastModified": "2026-10-27T17:08:45Z",
+     "published": "2026-10-27T17:08:45Z",
+     "images": [
+      {
+       "dataSourceIdentifier": "5c1d5065fd66b",
+       "id": 40275148,
+       "type": "header",
+       "name": "Massimiliano Allegri head coach fo Juventus FC gestures during the Coppa Italia 2023/2024 Frecciarossa final match between Atalanta BC and Juventus FC at Stadio Olimpico [1296x729]",
+       "credit": "Giuseppe Maffia/NurPhoto via Getty Images",
+       "height": 729,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2024/0604/r1341465_1296x729_16-9.jpg"
+      }
+     ],
+     "categories": [
+      {
+       "id": 81497,
+       "type": "league",
+       "uid": "s:600",
+       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+       "description": "Soccer",
+       "sportId": 600,
+       "leagueId": 600,
+       "league": {
+        "id": 600,
+        "description": "Soccer",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 409224,
+       "type": "topic",
+       "guid": "52313677-19f8-b106-ec91-d8d17e6087fe",
+       "description": "news",
+       "sportId": 0,
+       "topicId": 781
+      },
+      {
+       "id": 142589,
+       "type": "team",
+       "uid": "s:600~t:114",
+       "guid": "20179aab-ac9f-93cf-f139-404e49a3f3cb",
+       "description": "Napoli",
+       "sportId": 600,
+       "teamId": 114,
+       "team": {
+        "id": 114,
+        "description": "Napoli",
+        "abbreviation": "NAP",
+        "shortDisplayName": "Napoli",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/114/napoli"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/114/napoli"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137798,
+       "type": "league",
+       "uid": "s:600~l:730",
+       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
+       "description": "Italian Serie A",
+       "sportId": 600,
+       "leagueId": 12,
+       "league": {
+        "id": 730,
+        "description": "Italian Serie A",
+        "abbreviation": "Serie A",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         }
+        }
+       }
+      }
+     ],
+     "byline": "PA",
+     "links": {
+      "api": {
+       "self": {
+        "href": "https://content.core.api.espn.com/v1/sports/news/50299199"
+       }
+      },
+      "app": {
+       "sportscenter": {
+        "href": "sportscenter://x-callback-url/showStory?uid=50299199"
+       }
+      },
+      "mobile": {
+       "href": "http://m.espn.go.com/soccer/story?storyId=50299199"
+      },
+      "web": {
+       "href": "https://www.espn.com/soccer/story/_/id/50299199/napoli-coach-massimiliano-allegri-not-appeal-touchline-ban"
+      }
+     },
+     "premium": false
+    },
+    {
+     "id": 50298045,
+     "nowId": "1-50298045",
+     "contentKey": "50298045-1-5-1",
+     "dataSourceIdentifier": "df83b6d01bae9",
+     "type": "HeadlineNews",
+     "headline": "Milan boss Ruben Amorim faces injury headache ahead of pre-derby Bologna game",
+     "description": "A growing injury list has left AC Milan head coach Ruben Amorim facing a difficult week leading up to the weekend's derby against Inter Milan.",
+     "lastModified": "2026-10-27T15:24:05Z",
+     "published": "2026-10-27T15:24:05Z",
+     "images": [
+      {
+       "dataSourceIdentifier": "001d8fd1c4c2c",
+       "id": 50297811,
+       "type": "header",
+       "name": "Ruben Loftus Cheek  [1296x729]",
+       "credit": "Photo by Image Photo Agency/Getty Images",
+       "height": 729,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/1027/r1737008_1296x729_16-9.jpg"
+      },
+      {
+       "type": "Media",
+       "name": "Christian Pulisic nets second goal for AC Milan",
+       "caption": "Cesar Hernandez recaps Christian Pulisic's performance in his club's 2-0 victory over Udinese.",
+       "height": 324,
+       "width": 576,
+       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1025/dm_261025_Hernandez_Pulisic_USMNT/dm_261025_Hernandez_Pulisic_USMNT.jpg"
+      }
+     ],
+     "categories": [
+      {
+       "id": 81497,
+       "type": "league",
+       "uid": "s:600",
+       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+       "description": "Soccer",
+       "sportId": 600,
+       "leagueId": 600,
+       "league": {
+        "id": 600,
+        "description": "Soccer",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 409224,
+       "type": "topic",
+       "guid": "52313677-19f8-b106-ec91-d8d17e6087fe",
+       "description": "news",
+       "sportId": 0,
+       "topicId": 781
+      },
+      {
+       "id": 142590,
+       "type": "team",
+       "uid": "s:600~t:103",
+       "guid": "7ca4fb35-d78e-49f0-67fe-7fa95588e28d",
+       "description": "AC Milan",
+       "sportId": 600,
+       "teamId": 103,
+       "team": {
+        "id": 103,
+        "description": "AC Milan",
+        "abbreviation": "MIL",
+        "shortDisplayName": "Milan",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137798,
+       "type": "league",
+       "uid": "s:600~l:730",
+       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
+       "description": "Italian Serie A",
+       "sportId": 600,
+       "leagueId": 12,
+       "league": {
+        "id": 730,
+        "description": "Italian Serie A",
+        "abbreviation": "Serie A",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         }
+        }
+       }
+      }
+     ],
+     "byline": "PA",
+     "links": {
+      "api": {
+       "self": {
+        "href": "https://content.core.api.espn.com/v1/sports/news/50298045"
+       }
+      },
+      "app": {
+       "sportscenter": {
+        "href": "sportscenter://x-callback-url/showStory?uid=50298045"
+       }
+      },
+      "mobile": {
+       "href": "http://m.espn.go.com/soccer/story?storyId=50298045"
+      },
+      "web": {
+       "href": "https://www.espn.com/soccer/story/_/id/50298045/ac-milan-ruben-amorim-injuries-bologna-match"
+      }
+     },
+     "premium": false
+    }
+   ]
+  },
   "article": {
    "id": 50253268,
    "nowId": "1-50253268",

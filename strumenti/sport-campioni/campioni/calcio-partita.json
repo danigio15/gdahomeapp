@@ -431,6 +431,8 @@
       "awayShootoutScore": "0",
       "gameResult": "W",
       "competitionName": "2026 Club Friendly",
+      "leagueName": "Club Friendly",
+      "leagueAbbreviation": "Club Friendly",
       "opponent": {
        "id": "4471",
        "uid": "s:600~t:4471",
@@ -461,9 +463,7 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/4471.png",
-      "leagueName": "Club Friendly",
-      "leagueAbbreviation": "Club Friendly"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/4471.png"
      },
      {
       "id": "401871493",
@@ -486,6 +486,8 @@
       "awayShootoutScore": "3",
       "gameResult": "W",
       "competitionName": "2026 Club Friendly",
+      "leagueName": "Club Friendly",
+      "leagueAbbreviation": "Club Friendly",
       "opponent": {
        "id": "382",
        "uid": "s:600~t:382",
@@ -527,9 +529,7 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/382.png",
-      "leagueName": "Club Friendly",
-      "leagueAbbreviation": "Club Friendly"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/382.png"
      },
      {
       "id": "401869428",
@@ -552,6 +552,8 @@
       "awayShootoutScore": "0",
       "gameResult": "D",
       "competitionName": "2026 Club Friendly",
+      "leagueName": "Club Friendly",
+      "leagueAbbreviation": "Club Friendly",
       "opponent": {
        "id": "103",
        "uid": "s:600~t:103",
@@ -593,9 +595,7 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/103.png",
-      "leagueName": "Club Friendly",
-      "leagueAbbreviation": "Club Friendly"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/103.png"
      },
      {
       "id": "401869429",
@@ -618,6 +618,8 @@
       "awayShootoutScore": "0",
       "gameResult": "W",
       "competitionName": "2026 Club Friendly",
+      "leagueName": "Club Friendly",
+      "leagueAbbreviation": "Club Friendly",
       "opponent": {
        "id": "111",
        "uid": "s:600~t:111",
@@ -659,9 +661,7 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/111.png",
-      "leagueName": "Club Friendly",
-      "leagueAbbreviation": "Club Friendly"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/111.png"
      },
      {
       "id": "401905173",
@@ -684,6 +684,8 @@
       "awayShootoutScore": "0",
       "gameResult": "W",
       "competitionName": "2026 Club Friendly",
+      "leagueName": "Club Friendly",
+      "leagueAbbreviation": "Club Friendly",
       "opponent": {
        "id": "244",
        "uid": "s:600~t:244",
@@ -725,9 +727,7 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/244.png",
-      "leagueName": "Club Friendly",
-      "leagueAbbreviation": "Club Friendly"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/244.png"
      }
     ]
    },
@@ -797,6 +797,8 @@
       "gameResult": "W",
       "competitionName": "2025-26 Italian Serie B",
       "roundName": "Promotion Finals",
+      "leagueName": "Italian Serie B",
+      "leagueAbbreviation": "Italian Serie B",
       "opponent": {
        "id": "3257",
        "uid": "s:600~t:3257",
@@ -827,9 +829,7 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/3257.png",
-      "leagueName": "Italian Serie B",
-      "leagueAbbreviation": "Italian Serie B"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/3257.png"
      },
      {
       "id": "401873595",
@@ -854,6 +854,8 @@
       "aggregateScore": "0(2)-(0)0",
       "competitionName": "2025-26 Italian Serie B",
       "roundName": "Promotion Finals",
+      "leagueName": "Italian Serie B",
+      "leagueAbbreviation": "Italian Serie B",
       "opponent": {
        "id": "3257",
        "uid": "s:600~t:3257",
@@ -884,9 +886,7 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/3257.png",
-      "leagueName": "Italian Serie B",
-      "leagueAbbreviation": "Italian Serie B"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/3257.png"
      },
      {
       "id": "401886528",
@@ -1042,6 +1042,8 @@
       "gameResult": "W",
       "competitionName": "2026-27 Coppa Italia",
       "roundName": "First Round",
+      "leagueName": "Coppa Italia",
+      "leagueAbbreviation": "Coppa Italia",
       "opponent": {
        "id": "4055",
        "uid": "s:600~t:4055",
@@ -1072,9 +1074,7 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/4055.png",
-      "leagueName": "Coppa Italia",
-      "leagueAbbreviation": "Coppa Italia"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/4055.png"
      }
     ]
    }
