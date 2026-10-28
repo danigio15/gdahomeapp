@@ -107,16 +107,23 @@ export function normalizzaModoSuMisura(grezzo, indice = 0) {
      *
      * Facoltativo: chi non lo scrive preme e basta, come ha sempre fatto. */
     pin: normalizzaIlCodice(grezzo.pin),
+    /* Il codice c'e' ma lo tiene il ponte: e' il tasto come arriva a un
+     * pannello a muro entrato con un utente che la plancia di origine non la
+     * vede (`MURO_FONTE`). Il tastierino esce lo stesso, e il codice scritto
+     * lo controlla il ponte (`MURO_CODICE`): qui non arriva mai. */
+    codiceAlPonte: !normalizzaIlCodice(grezzo.pin) && grezzo.codiceAlPonte === true,
   });
 }
 
 /** Se questo tasto, prima di partire, chiede il codice. */
 export function ilModoChiedeIlCodice(modo) {
-  return ilCodiceServe(modo?.pin);
+  return ilCodiceServe(modo?.pin) || modo?.codiceAlPonte === true;
 }
 
 /** Il codice digitato fa partire questo tasto? Un tasto senza codice parte sempre. */
 export function ilCodiceApreIlModo(modo, digitato) {
+  /* Un codice tenuto dal ponte qui non si sa: apre solo la sua risposta. */
+  if (modo?.codiceAlPonte === true && !ilCodiceServe(modo?.pin)) return false;
   return ilCodiceCombacia(modo?.pin, digitato);
 }
 

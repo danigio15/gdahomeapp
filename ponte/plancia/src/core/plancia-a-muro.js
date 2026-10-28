@@ -1626,14 +1626,18 @@ const elenco = (valore) => (Array.isArray(valore) ? valore : []);
  */
 export const MURO_FONTE = "ponte/muro/fonte";
 
+/** La domanda al ponte: il codice scritto sul pannello apre quel tasto? */
+export const MURO_CODICE = "ponte/muro/codice";
+
 /**
  * L'origine senza nessun codice dentro.
  *
- * I tasti dell'antifurto su misura col codice lo controllano sul tablet, quindi
- * il codice viaggia con loro: a chi la plancia di origine non la vede non si
- * manda. Quei tasti non ci sono proprio — un tasto senza codice partirebbe
- * senza chiederlo, e un tasto che parte senza codice e' peggio di un tasto
- * che manca.
+ * I tasti dell'antifurto su misura col codice, sulla plancia, lo controllano
+ * sul tablet, quindi il codice viaggerebbe con loro: a chi la plancia di
+ * origine non la vede non si manda. Il tasto c'e' lo stesso, col segno
+ * `codiceAlPonte` al posto del codice: il tastierino esce, e quello che si
+ * scrive lo controlla il ponte (`MURO_CODICE`). Il segno lo mette solo il
+ * ponte, e solo a un tasto che il codice ce l'ha davvero.
  */
 export function fonteSenzaCodici(fonte = {}) {
   const antifurto = fonte?.antifurto && typeof fonte.antifurto === "object" ? fonte.antifurto : {};
@@ -1641,9 +1645,12 @@ export function fonteSenzaCodici(fonte = {}) {
     ...fonte,
     antifurto: {
       ...antifurto,
-      suMisura: elenco(antifurto.suMisura).filter(
-        (modo) => modo && typeof modo === "object" && !ilModoChiedeIlCodice(modo),
-      ),
+      suMisura: elenco(antifurto.suMisura)
+        .filter((modo) => modo && typeof modo === "object")
+        .map((modo) => {
+          const { pin: _pin, codiceAlPonte: _segno, ...resto } = modo;
+          return ilModoChiedeIlCodice({ pin: _pin }) ? { ...resto, codiceAlPonte: true } : resto;
+        }),
     },
   };
 }

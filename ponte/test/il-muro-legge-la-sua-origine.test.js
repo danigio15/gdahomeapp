@@ -49,8 +49,8 @@ function unaCasa() {
         },
       }),
       cd_antifurto_su_misura: JSON.stringify([
-        { id: "notte", label: "Notte", entita: "script.notte", pin: "1234" },
-        { id: "via", label: "Via", entita: "script.via" },
+        { id: "notte", nome: "Notte", entita: "script.notte", pin: "1234" },
+        { id: "via", nome: "Via", entita: "script.via" },
       ]),
       cd_avvisi_custom: "[]",
       cd_segreto_della_principale: "non deve uscire",
@@ -111,12 +111,15 @@ test("esce solo quello che il pannello mostra: niente configurazione e nessun co
     assert.equal(scritto.includes("non deve uscire"), false);
     assert.equal(scritto.includes("dm_dashboard_state"), false);
     assert.equal(scritto.includes("snapshot"), false);
-    /* Il tasto col codice non c'e' proprio: senza il codice partirebbe libero. */
+    /* Il tasto col codice c'e', ma senza il codice: col segno che lo tiene
+     * il ponte. Quello senza codice resta com'e'. */
     assert.equal(scritto.includes("1234"), false);
-    assert.deepEqual(
-      detto.result.fonte.antifurto.suMisura.map((m) => m.id),
-      ["via"],
-    );
+    const [notte, via] = detto.result.fonte.antifurto.suMisura;
+    assert.equal(notte.id, "notte");
+    assert.equal(notte.codiceAlPonte, true);
+    assert.equal("pin" in notte, false);
+    assert.equal(via.id, "via");
+    assert.equal(via.codiceAlPonte, undefined);
   } finally {
     rmSync(casa.cartella, { recursive: true, force: true });
   }
@@ -153,6 +156,44 @@ test("solo un pannello vero, che legge da un'altra plancia che c'e'", async () =
       { ...SCATTO, keys_revision: 3 },
     );
     assert.equal((await chiedi(casa, RUSTICO)).error.code, "not_found");
+  } finally {
+    rmSync(casa.cartella, { recursive: true, force: true });
+  }
+});
+
+const codice = (casa, chi, scritto, modo = "notte") =>
+  casa.commissioni.rispondi(
+    { id: 2, type: "ponte/muro/codice", profile: casa.muro, modo, codice: scritto },
+    { chiChiede: chi },
+  );
+
+test("il codice scritto sul pannello lo controlla il ponte: risponde si' o no, e basta", async () => {
+  const casa = unaCasa();
+  try {
+    const giusto = await codice(casa, RUSTICO, "1234");
+    assert.deepEqual(giusto.result, { giusto: true });
+    const sbagliato = await codice(casa, RUSTICO, "0000");
+    assert.deepEqual(sbagliato.result, { giusto: false });
+    assert.equal(JSON.stringify(sbagliato).includes("1234"), false);
+    /* Un tasto che non c'e'. */
+    assert.equal((await codice(casa, RUSTICO, "1234", "inventato")).error.code, "not_found");
+    /* Le stesse porte della fonte: chi non e' entrato, chi non vede il pannello. */
+    assert.equal((await codice(casa, "", "1234")).error.code, "unauthorized");
+    assert.equal((await codice(casa, ESTRANEO, "1234")).error.code, "not_found");
+  } finally {
+    rmSync(casa.cartella, { recursive: true, force: true });
+  }
+});
+
+test("il tastierino non si prova a forza: cinque sbagliati e per un minuto no", async () => {
+  const casa = unaCasa();
+  try {
+    for (let volta = 0; volta < 5; volta += 1)
+      assert.equal((await codice(casa, RUSTICO, "0000")).result.giusto, false);
+    /* Anche quello giusto, per quel minuto: non si guarda nemmeno. */
+    assert.equal((await codice(casa, RUSTICO, "1234")).error.code, "rate_limited");
+    /* Un altro utente non paga per lui. */
+    assert.equal((await codice(casa, MARCO, "1234")).result.giusto, true);
   } finally {
     rmSync(casa.cartella, { recursive: true, force: true });
   }

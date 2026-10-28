@@ -131,6 +131,7 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
    * da cui legge: solo chi e' entrato, e solo quello che il pannello mostra,
    * lo decide il ponte (`commissioni.js`). */
   "ponte/muro/fonte",
+  "ponte/muro/codice",
   // Le segnalazioni. Stessa ragione dell'upload, e una in piu': la chiave del
   // manutentore sta nelle opzioni del config entry e la chiamata verso il
   // relay la fa il backend, quindi qui passa la domanda e non il segreto.

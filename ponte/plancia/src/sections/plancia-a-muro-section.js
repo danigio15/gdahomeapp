@@ -120,6 +120,7 @@ import {
   meteoDelMuro,
   potenzaConIlSegno,
   grigliaPer,
+  MURO_CODICE,
   MURO_FONTE,
   fonteDaiValori,
   grigliaDellaPagina,
@@ -496,7 +497,11 @@ export function servizioDellAzione(azione) {
   if (d === "button" || d === "input_button")
     return { domain: d, service: "press", data: { entity_id: id } };
   if (MENU.has(d))
-    return { domain: d, service: "select_option", data: { entity_id: id, option: clean(azione.option) } };
+    return {
+      domain: d,
+      service: "select_option",
+      data: { entity_id: id, option: clean(azione.option) },
+    };
   if (d === "lock") return { domain: d, service: "unlock", data: { entity_id: id } };
   return { domain: "homeassistant", service: "toggle", data: { entity_id: id } };
 }
@@ -1698,7 +1703,18 @@ function cardClima(c, i, zonaDellaLinguetta = "") {
    * e il piu' sotto. Con il nome su una riga sua in mezzo, nella griglia tre
    * per tre sotto le linguette il meno e il piu' finivano fuori dal riquadro. */
   if (state.muro?.cartaClima === "plancia")
-    return cardClimaComeLaPlancia({ c, i, id, a, s, on, azione, faccia, zona, rapido: rapidoDi(id, zona) });
+    return cardClimaComeLaPlancia({
+      c,
+      i,
+      id,
+      a,
+      s,
+      on,
+      azione,
+      faccia,
+      zona,
+      rapido: rapidoDi(id, zona),
+    });
   if (state.compatto)
     return `<div class="mu-carta mu-card mu-clima-mini ${on ? "mu-accesa" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
     <div class="mu-mini-alto"><span class="mu-chip mu-acc" style="--c:40px">${disegno(faccia.chiave, 24, `clima-${i}`)}</span><div class="mu-nome"><div class="mu-n">${esc(nomeDi(id, c.nome))}</div><div class="mu-sotto">${esc(t("ora", "now"))} ${decimale(a.current_temperature)}°</div></div><span class="mu-mini-t">${gradi}</span></div>
@@ -2001,7 +2017,9 @@ function cardEntita(c, i, grande = false) {
       sotto: clean(c.sotto) || (grande ? statoInParole(id) : ""),
       grande,
       classi: grande ? "" : "mu-comando",
-      destra: grande ? "" : `<span class="mu-verbo" aria-hidden="true">${esc(t("Scegli", "Choose"))}</span>`,
+      destra: grande
+        ? ""
+        : `<span class="mu-verbo" aria-hidden="true">${esc(t("Scegli", "Choose"))}</span>`,
       dati: `data-mu-fa="scelte" data-mu-entita="${esc(id)}"`,
       dove: `en-${i}-${grande ? "g" : "p"}`,
       immagine: c.immagine,
@@ -2871,11 +2889,21 @@ function paginaMeteo(pagina) {
   const misure = [];
   if (m.percepita)
     misure.push(
-      misura("percepita", "temperatura", t("Percepita", "Feels like"), `${decimale(m.percepita.valore, 0)}°`),
+      misura(
+        "percepita",
+        "temperatura",
+        t("Percepita", "Feels like"),
+        `${decimale(m.percepita.valore, 0)}°`,
+      ),
     );
   if (m.umidita)
     misure.push(
-      misura("umidita", "umidita", t("Umidità", "Humidity"), `${decimale(m.umidita.valore, 0)}<i>%</i>`),
+      misura(
+        "umidita",
+        "umidita",
+        t("Umidità", "Humidity"),
+        `${decimale(m.umidita.valore, 0)}<i>%</i>`,
+      ),
     );
   if (m.vento) {
     const sigla = v.spicchio === null ? "" : SIGLE_DEL_VENTO()[v.spicchio];
@@ -2943,7 +2971,8 @@ function paginaMeteo(pagina) {
         .map((g) => {
           const min = g.bassa ?? g.temperatura;
           const max = g.temperatura ?? g.bassa;
-          const p = Number.isFinite(g.probabilita) && g.probabilita > 0 ? Math.round(g.probabilita) : null;
+          const p =
+            Number.isFinite(g.probabilita) && g.probabilita > 0 ? Math.round(g.probabilita) : null;
           const da = Number.isFinite(min) ? posto(min) : 0;
           const a = Number.isFinite(max) ? posto(max) : 100;
           return `<div class="mu-mt-giorno${g.oggi ? " oggi" : ""}" data-mu-meteo-giorno="${g.quando}">
@@ -4193,7 +4222,11 @@ function laBarraDiHomeAssistant(casa) {
 
 export function apriLaBarraAccanto(
   casa,
-  { idTela = ID, tasto = '[data-mu-fa="menu"]', rimisura = (tela) => misura(tela, state.muro) } = {},
+  {
+    idTela = ID,
+    tasto = '[data-mu-fa="menu"]',
+    rimisura = (tela) => misura(tela, state.muro),
+  } = {},
 ) {
   const tela = doc?.getElementById?.(idTela);
   const { main, barra } = laBarraDiHomeAssistant(casa);
@@ -5138,18 +5171,33 @@ function allarme(modo, codice = "", area = "") {
       apriFinestra({ tipo: "codice", scopo: "allarme", modo, scritto: "" });
       return;
     }
-    if (codice && !ilCodiceApreIlModo(mio, codice)) {
+    const sbagliato = () => {
       const f = state.finestra;
       if (f?.tipo === "codice") {
         f.errore = true;
         f.scritto = "";
         disegna();
       }
+    };
+    const parti = () => {
+      const chiamata = chiamataDelModo(mio);
+      chiudiFinestra();
+      if (chiamata) comanda(chiamata.domain, chiamata.service, { ...chiamata.data });
+    };
+    /* Il codice di questo tasto lo tiene il ponte (`codiceAlPonte`): la
+     * plancia di origine chi e' entrato qui non la vede, e il codice non gli
+     * e' arrivato. Si chiede a lui se quello scritto e' giusto. */
+    if (codice && mio.codiceAlPonte) {
+      bridgeRequest(MURO_CODICE, { profile: currentProfile(), modo: mio.id, codice })
+        .then((detto) => (detto?.giusto === true ? parti() : sbagliato()))
+        .catch(sbagliato);
       return;
     }
-    const chiamata = chiamataDelModo(mio);
-    chiudiFinestra();
-    if (chiamata) comanda(chiamata.domain, chiamata.service, { ...chiamata.data });
+    if (codice && !ilCodiceApreIlModo(mio, codice)) {
+      sbagliato();
+      return;
+    }
+    parti();
     return;
   }
   if (!s) return;
@@ -5778,7 +5826,11 @@ function battito() {
   /* Una finestra che nessuno tocca da cinque minuti si chiude da sola: il
    * citofono dopo lo squillo, ma anche le altre. Da li' il riposo e il
    * ritorno alla Home tornano a valere. */
-  if (state.finestra && !state.trascina && finestraDaChiudere(state.finestra, state.toccatoDalDito, Date.now()))
+  if (
+    state.finestra &&
+    !state.trascina &&
+    finestraDaChiudere(state.finestra, state.toccatoDalDito, Date.now())
+  )
     chiudiFinestra();
   const fermo = Date.now() - state.toccato;
   const sonno = (muro.riposo.attivo ? muro.riposo.minuti : 0) * 60 * 1000;
