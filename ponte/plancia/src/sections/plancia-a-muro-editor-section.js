@@ -814,6 +814,7 @@ function paginaMarkup(p, i, tutte) {
       }),
     )}
     <div class="mu-ed-sotto-titolo">${esc(t("Citofono / telecamera", "Intercom / camera"))}</div>
+    ${riga(t("Mostra il citofono", "Show the intercom"), t("Senza telecamera e senza tasti per aprire non si vede comunque", "Without a camera or open buttons it is hidden anyway"), interruttore(`${via}.ingresso.citofono`, ing.citofono, "citofono"))}
     ${riga(t("Telecamera", "Camera"), t("Il video del citofono", "The intercom video"), cerca(`${via}.ingresso.telecamera`, ing.telecamera, { domini: "camera" }))}
     ${rigaDelCampanello(via, ing)}
     ${campanelloMarkup(i, via, ing)}

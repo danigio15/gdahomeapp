@@ -7677,4 +7677,10 @@ export default Object.freeze({
   "Choose at least one Echo.": "Choisissez au moins un Echo.",
   "Plays on": "Joue sur",
   "To pick from a list add the «Radio Browser» integration in Home Assistant; meanwhile write the station name.": "Pour choisir dans une liste, ajoutez l'intégration « Radio Browser » dans Home Assistant ; en attendant, écrivez le nom de la station.",
+  "By this time today's collection has already gone: from then on the page and the Home tile show tomorrow's, which is what to put out tonight.": "À cette heure-ci, la collecte du jour est déjà passée : ensuite la page et la tuile d'accueil montrent celle de demain, c'est-à-dire ce qu'il faut sortir ce soir.",
+  "From what time it looks at tomorrow": "À partir de quelle heure on regarde demain",
+  "Show the intercom": "Afficher l'interphone",
+  "Without a camera or open buttons it is hidden anyway": "Sans caméra ni boutons d'ouverture, il est masqué de toute façon",
+  "Hour": "Heure",
+  "Alarm · Leaving": "Alarme · Sortie",
 });

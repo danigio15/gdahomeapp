@@ -7631,4 +7631,10 @@ export default Object.freeze({
   "Choose at least one Echo.": "Kies minstens één Echo.",
   "Plays on": "Speelt op",
   "To pick from a list add the «Radio Browser» integration in Home Assistant; meanwhile write the station name.": "Om uit een lijst te kiezen voeg je in Home Assistant de integratie «Radio Browser» toe; schrijf intussen de naam van de zender.",
+  "By this time today's collection has already gone: from then on the page and the Home tile show tomorrow's, which is what to put out tonight.": "Op dit uur is de ophaling van vandaag al voorbij: vanaf dan tonen de pagina en de tegel op Home die van morgen, dus wat er vanavond buiten moet.",
+  "From what time it looks at tomorrow": "Vanaf welk uur naar morgen gekeken wordt",
+  "Show the intercom": "Intercom tonen",
+  "Without a camera or open buttons it is hidden anyway": "Zonder camera of openknoppen wordt hij toch verborgen",
+  "Hour": "Uur",
+  "Alarm · Leaving": "Alarm · Vertrek",
 });

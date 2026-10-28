@@ -1066,7 +1066,12 @@ function finestraRifiuti(widget) {
     return a.giorni - b.giorni;
   });
   if (!righe.length) return "";
-  const future = righe.filter((riga) => riga.giorni !== null && riga.giorni >= 0);
+  /* Passata l'ora del cambio il ritiro di oggi e' andato (#333): in grande
+   * c'e' quello da mettere fuori stasera. Oggi resta nella settimana. */
+  const future = righe.filter(
+    (riga) =>
+      riga.giorni !== null && riga.giorni >= 0 && !(widget.oltreLOra && riga.giorni === 0),
+  );
   const prima = future[0] || null;
   let eroe = "";
   if (prima) {

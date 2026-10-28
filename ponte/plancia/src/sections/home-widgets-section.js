@@ -51,6 +51,7 @@ import {
 import { parolaDellaPorta, parolaDiStato } from "./le-parole-di-home-assistant.js";
 import { haOggettoWidget, oggettoWidget } from "../core/oggetti-widget.js";
 import { iDispositiviScollegati } from "../core/i-dispositivi-scollegati.js";
+import { taceDaAbbastanza } from "../core/i-dispositivi-scollegati.js";
 import { iDispositiviRicordati } from "../core/i-dispositivi-di-home-assistant.js";
 import { entitaConfigurate } from "../core/entita-configurate.js";
 import { CONFIG_KEYS } from "../core/chiavi-di-configurazione.js";
@@ -389,7 +390,12 @@ import { laMisuraDallUnita, lEnergiaInParole, laPotenzaInParole } from "../core/
 import { importRateEntity, resolveRate } from "../core/energy-calculations.js";
 import { CHIAVE_FASCE, normalizzaLeFasce, prezzoMedioDelleFasce } from "../core/fasce-della-tariffa.js";
 import { tintaDellaPagina } from "./page-masthead-section.js";
-import { finestraDi, stiliDelleFinestre } from "./finestre-dei-widget.js";
+import {
+  dimenticaLOrdine,
+  finestraDi,
+  inOrdineFermo,
+  stiliDelleFinestre,
+} from "./finestre-dei-widget.js";
 import "./finestre/proposti.js";
 import "./finestre/comandi.js";
 import "./finestre/sicurezza.js";
@@ -6108,17 +6114,22 @@ function nonRispondeModel(states) {
     nomi,
   });
   if (!mute.length) return null;
+  /* Solo chi tace da almeno cinque minuti (#307): un riavvio o un riaggancio
+   * non e' un dispositivo scollegato. */
+  const adesso = Date.now();
+  const tacciono = mute.filter((una) => taceDaAbbastanza(una, adesso));
+  if (!tacciono.length) return null;
   return {
     key: "nonrisponde",
     accent: "#dc2626",
     icon: "📡",
     alert: true,
     label: t("Dispositivi non connessi", "Disconnected devices"),
-    value: String(mute.length),
-    caption: mute.map((una) => una.nome).join(" · "),
+    value: String(tacciono.length),
+    caption: tacciono.map((una) => una.nome).join(" · "),
     ring: null,
     attiva: true,
-    rows: mute.map((una) => ({
+    rows: tacciono.map((una) => ({
       glyph: "📡",
       name: una.nome,
       entity: una.entity,
@@ -6381,6 +6392,9 @@ function rifiutiModel(states) {
     alert: false,
     prossimi,
     rows,
+    /* Passata l'ora del cambio (#333): la finestra mette in grande quello di
+     * domani, come la tessera. */
+    oltreLOra: new Date().getHours() >= config.dopoLe,
   };
 }
 
@@ -7371,6 +7385,9 @@ function agendaDetail(widget, states) {
     </div>`;
 }
 
+/* Accese in cima: l'ordine con cui una finestra si apre (`inOrdineFermo`). */
+const accesePrima = (righe) => righe.sort((a, b) => Number(b.on) - Number(a.on));
+
 function lightsDetail(widget) {
   if (!widget.on.length && !widget.rows.length) return "";
   /* Tutte, non le prime quattordici (#335).
@@ -7380,7 +7397,7 @@ function lightsDetail(widget) {
    * chi ha molte luci — e gli interruttori aggiunti a mano, che qui contano
    * come luci — vedeva un numero in alto e una lista che non lo raggiungeva.
    * Il corpo della finestra scorre gia': si elencano tutte, accese prima. */
-  const rows = [...widget.rows].sort((a, b) => Number(b.on) - Number(a.on));
+  const rows = inOrdineFermo("luci", widget.rows, (row) => clean(row.entity), accesePrima);
   /* «Sul widget luci metterei anche spegni tutte» (#315).
    *
    * Una riga sola sopra l'elenco, e solo quando c'e' qualcosa da spegnere: con
@@ -7697,7 +7714,7 @@ function climateDetail(widget) {
   /* Come le luci: niente verdetto, caselle e pillole sopra — l'elenco che si
    * comanda, con le unita' accese in cima. Ogni scheda dice dove sta, quanti
    * gradi ci sono e quanti ne vuole, e ha l'accensione a portata di pollice. */
-  const righe = [...widget.rows].sort((a, b) => Number(b.on) - Number(a.on));
+  const righe = inOrdineFermo("clima", widget.rows, (row) => clean(row.entity), accesePrima);
   const accese = righe.filter((row) => row.on).length;
   const verso = (row) => {
     if (!row.on) return row.acceso ? "pausa" : "spento";
@@ -7942,6 +7959,16 @@ function energyDetail() {
  * perche' il corpo si ridisegna da solo ogni due secondi: se lo stato stesse
  * in un attributo, il primo travaso lo richiuderebbe sotto il dito. */
 let apertoInFinestra = "";
+
+/* La scheda di un elettrodomestico (`apriApplianceDetail`), al posto della
+ * finestra della tessera: questa si chiude, e la scheda resta da sola. */
+function apriLaSchedaDellApparecchio(indice) {
+  if (!Number.isInteger(indice) || indice < 0 || typeof root.apriApplianceDetail !== "function")
+    return false;
+  chiudiPopup();
+  root.apriApplianceDetail(indice);
+  return true;
+}
 
 /* La finestra degli elettrodomestici: una pastiglia per ognuno, e la card
  * intera di quello che si tocca.
@@ -9615,8 +9642,10 @@ export function renderHomeWidgets() {
    * tasto. Un'azione rapida che qualcuno ha aggiunto apposta — «Popup TUTTE
    * le prese» (#25) — apre la sua finestra anche se quella tessera dalla Home
    * l'ha tolta, e prima veniva richiusa qui il giro dopo. */
-  if (state.expanded && !tutti.some((widget) => widget.key === state.expanded))
+  if (state.expanded && !tutti.some((widget) => widget.key === state.expanded)) {
     state.expanded = "";
+    dimenticaLOrdine();
+  }
   const grid = mounted.querySelector(".dm-widgets-grid");
   if (!grid) return false;
 
@@ -9820,6 +9849,11 @@ function popupHost() {
     if (pastiglia) {
       event.stopPropagation();
       const id = clean(pastiglia.dataset.dmApplChip);
+      /* «Faccio tap su asciugatrice e mi apre la sua scheda diretta, senza
+       * passare per Apri sezione» (#335): la scheda dell'elettrodomestico,
+       * quella della sezione, si apre subito. Dove non c'e' si apre la card
+       * qui dentro, come prima. */
+      if (apriLaSchedaDellApparecchio(applianceModelById(id)?.index)) return;
       const apre = apertoInFinestra !== id;
       apertoInFinestra = apre ? id : "";
       schedule();
@@ -9834,6 +9868,30 @@ function popupHost() {
               ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
           }),
         );
+      return;
+    }
+    /* Un apparecchio nella finestra disegnata (`finestre/sistema.js`), acceso
+     * o fermo: il tocco apre la sua scheda (#335). Il tasto «Cottura» va
+     * dove dice. */
+    const apparecchio = event.target?.closest?.("[data-dm-f-apparecchio]");
+    if (
+      apparecchio &&
+      !event.target.closest("button,a,input,select") &&
+      apriLaSchedaDellApparecchio(
+        applianceModelById(clean(apparecchio.dataset.dmFApparecchio))?.index,
+      )
+    ) {
+      event.stopPropagation();
+      return;
+    }
+    /* La card stessa, fuori dai suoi tasti: anche lei porta alla scheda. */
+    const carta = event.target?.closest?.(".dm-w-appl-card .dm-ap-card[data-idx]");
+    if (
+      carta &&
+      !event.target.closest("button,select,a,input,[data-dm-power-toggle],[data-dm-history]") &&
+      apriLaSchedaDellApparecchio(Number(carta.dataset.idx))
+    ) {
+      event.stopPropagation();
       return;
     }
     /* I due tasti della card, che dentro la finestra non hanno il guscio
@@ -9962,6 +10020,7 @@ function riparteCioCheStaDietro() {
 
 function chiudiPopup() {
   state.expanded = "";
+  dimenticaLOrdine();
   state.corpo = { chiave: "", markup: "" };
   const host = doc?.getElementById?.("dm-widget-popup");
   if (host) {
@@ -10295,6 +10354,7 @@ export function apriLaTessera(chiave) {
     esiste = false;
   }
   if (!esiste) return false;
+  if (state.expanded !== nome) dimenticaLOrdine();
   state.expanded = nome;
   schedule();
   return true;
@@ -10302,6 +10362,7 @@ export function apriLaTessera(chiave) {
 
 function toggleExpand(key) {
   const prossimo = state.expanded === key ? "" : clean(key);
+  dimenticaLOrdine();
   state.expanded = prossimo;
   /* La griglia non cambia: il dettaglio vive nel popup. Azzerare la firma
    * rifarebbe tutte le tessere — e sarebbe il tremolio di prima. */

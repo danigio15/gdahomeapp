@@ -494,6 +494,20 @@ export function ritiriDaUnElenco(stato, adesso = Date.now()) {
   );
 }
 
+/**
+ * Da che ora la giornata guarda a domani: «stamattina avevo l'indifferenziato,
+ * stasera devo mettere fuori organico e vetro per domani mattina, e in Home
+ * c'era ancora quello di oggi» (#333). Il ritiro di oggi a quell'ora e' gia'
+ * passato: da li' in poi il prossimo e' quello di domani. Di serie le 14.
+ */
+export const DOPO_LE_DI_SERIE = 14;
+
+export function dopoLePulito(valore) {
+  if (valore === null || valore === undefined || valore === "") return DOPO_LE_DI_SERIE;
+  const ora = Number(valore);
+  return Number.isInteger(ora) && ora >= 0 && ora <= 23 ? ora : DOPO_LE_DI_SERIE;
+}
+
 /** La configurazione, ripulita. */
 export function normalizzaRifiuti(stored) {
   const dato = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
@@ -501,7 +515,12 @@ export function normalizzaRifiuti(stored) {
     .map(normalizzaRiga)
     .filter(Boolean)
     .slice(0, MASSIMO_RIGHE);
-  return { calendario: pulito(dato.calendario), righe, turno: normalizzaTurno(dato.turno) };
+  return {
+    calendario: pulito(dato.calendario),
+    righe,
+    turno: normalizzaTurno(dato.turno),
+    dopoLe: dopoLePulito(dato.dopoLe),
+  };
 }
 
 /** Le righe con un'entita' dietro: quelle che si possono leggere. */
@@ -1009,7 +1028,7 @@ export function letturaRifiuti(
    * sette giorni e il calendario l'umido domani, il prossimo e' l'umido — e la
    * pagina e la tessera lo dicevano della carta. Un evento che ripete una riga,
    * stesso materiale e stesso giorno, non si conta due volte. */
-  const candidati = [...future];
+  const tutti = [...future];
   if (
     calendario &&
     calendario.giorni !== null &&
@@ -1018,14 +1037,18 @@ export function letturaRifiuti(
       (riga) => riga.materiale === calendario.materiale && riga.giorni === calendario.giorni,
     )
   )
-    candidati.push({ ...calendario, id: "calendario", dalCalendario: true });
-  candidati.sort((a, b) => a.giorni - b.giorni);
+    tutti.push({ ...calendario, id: "calendario", dalCalendario: true });
+  tutti.sort((a, b) => a.giorni - b.giorni);
+  /* Dopo l'ora del cambio il ritiro di oggi e' passato: il prossimo e'
+   * domani, e la sera si legge cosa mettere fuori (#333). `oggi` resta. */
+  const giaPassato = new Date(adesso).getHours() >= dato.dopoLe;
+  const candidati = tutti.filter((riga) => !(giaPassato && riga.giorni === 0));
   const primo = candidati.length ? candidati[0].giorni : null;
   return {
     righe,
     calendario,
     prossimi: primo === null ? [] : candidati.filter((riga) => riga.giorni === primo),
-    oggi: candidati.filter((riga) => riga.giorni === 0),
+    oggi: tutti.filter((riga) => riga.giorni === 0),
     domani: candidati.filter((riga) => riga.giorni === 1),
   };
 }

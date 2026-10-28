@@ -7571,4 +7571,10 @@ export default Object.freeze({
   "Choose at least one Echo.": "Echo를 하나 이상 고르세요.",
   "Plays on": "재생 위치",
   "To pick from a list add the «Radio Browser» integration in Home Assistant; meanwhile write the station name.": "목록에서 고르려면 Home Assistant에 «Radio Browser» 통합을 추가하세요. 그동안은 방송국 이름을 쓰세요.",
+  "By this time today's collection has already gone: from then on the page and the Home tile show tomorrow's, which is what to put out tonight.": "이 시간이면 오늘 수거는 이미 끝났습니다. 이후로는 페이지와 홈 타일에 내일 수거, 즉 오늘 밤 내놓을 것이 표시됩니다.",
+  "From what time it looks at tomorrow": "내일 기준으로 바뀌는 시각",
+  "Show the intercom": "인터폰 표시",
+  "Without a camera or open buttons it is hidden anyway": "카메라나 열기 버튼이 없으면 어차피 숨겨집니다",
+  "Hour": "시",
+  "Alarm · Leaving": "경보 · 외출",
 });

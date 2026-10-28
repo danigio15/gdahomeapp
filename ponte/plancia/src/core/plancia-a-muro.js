@@ -382,6 +382,10 @@ const INGRESSO_VUOTO = Object.freeze({
   parla: false,
   persone: true,
   finestre: true,
+  /* La tessera del citofono nella pagina Ingresso: «mi compare la
+   * telecamera anche se non ne ho da impostare» (#337). Si puo' togliere; e
+   * senza telecamera e senza tasti per aprire non c'e' comunque. */
+  citofono: true,
   aree: [],
   letture: [],
   comandi: [],
@@ -423,6 +427,12 @@ const DOMINI_DA_LEGGERE = Object.freeze([
 const DOMINI_DA_TOCCARE = Object.freeze(["lock", "cover"]);
 
 /** Se quell'entita' si puo' guardare fra le «Altre letture» dell'ingresso. */
+/** Se la pagina Ingresso mostra la tessera del citofono (#337). */
+export function ciEIlCitofono(ingresso = {}) {
+  if (ingresso?.citofono === false) return false;
+  return Boolean(ingresso?.telecamera || ingresso?.apri || ingresso?.apri2);
+}
+
 export function eLetturaDellIngresso(id) {
   return DOMINI_DA_LEGGERE.includes(dominioDi(entita(id)));
 }
@@ -462,6 +472,7 @@ function ingressoPulito(input = {}) {
     ...opzioniDelCampanello(dentro),
     persone: vero(dentro.persone, INGRESSO_VUOTO.persone),
     finestre: vero(dentro.finestre, INGRESSO_VUOTO.finestre),
+    citofono: vero(dentro.citofono, INGRESSO_VUOTO.citofono),
     aree: unici(
       voci(dentro.aree)
         .map(entita)

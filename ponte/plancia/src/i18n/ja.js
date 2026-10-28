@@ -7599,4 +7599,10 @@ export default Object.freeze({
   "Choose at least one Echo.": "Echo を 1 台以上選んでください。",
   "Plays on": "再生先",
   "To pick from a list add the «Radio Browser» integration in Home Assistant; meanwhile write the station name.": "リストから選ぶには Home Assistant に「Radio Browser」連携を追加してください。それまでは局名を書いてください。",
+  "By this time today's collection has already gone: from then on the page and the Home tile show tomorrow's, which is what to put out tonight.": "この時刻には今日の収集はもう終わっています。以降はページとホームのタイルに明日の分、つまり今夜出すものが表示されます。",
+  "From what time it looks at tomorrow": "明日の表示に切り替える時刻",
+  "Show the intercom": "インターホンを表示",
+  "Without a camera or open buttons it is hidden anyway": "カメラや開錠ボタンがなければいずれにしても非表示です",
+  "Hour": "時",
+  "Alarm · Leaving": "警報 · 外出",
 });

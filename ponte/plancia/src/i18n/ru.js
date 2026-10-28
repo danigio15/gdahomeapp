@@ -7614,4 +7614,10 @@ export default Object.freeze({
   "Choose at least one Echo.": "Выберите хотя бы одно Echo.",
   "Plays on": "Играет на",
   "To pick from a list add the «Radio Browser» integration in Home Assistant; meanwhile write the station name.": "Чтобы выбирать из списка, добавьте в Home Assistant интеграцию «Radio Browser»; пока напишите название станции.",
+  "By this time today's collection has already gone: from then on the page and the Home tile show tomorrow's, which is what to put out tonight.": "К этому времени сегодняшний вывоз уже прошёл: дальше страница и плитка на главной показывают завтрашний — то, что нужно выставить сегодня вечером.",
+  "From what time it looks at tomorrow": "С какого часа смотреть на завтра",
+  "Show the intercom": "Показывать домофон",
+  "Without a camera or open buttons it is hidden anyway": "Без камеры и кнопок открытия он всё равно скрыт",
+  "Hour": "Час",
+  "Alarm · Leaving": "Сигнализация · Выход",
 });

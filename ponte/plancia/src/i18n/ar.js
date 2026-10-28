@@ -7544,4 +7544,10 @@ export default Object.freeze({
   "Choose at least one Echo.": "اختر جهاز Echo واحدًا على الأقل.",
   "Plays on": "يعمل على",
   "To pick from a list add the «Radio Browser» integration in Home Assistant; meanwhile write the station name.": "للاختيار من قائمة أضف تكامل «Radio Browser» في Home Assistant؛ وفي الأثناء اكتب اسم المحطة.",
+  "By this time today's collection has already gone: from then on the page and the Home tile show tomorrow's, which is what to put out tonight.": "في هذه الساعة يكون جمع اليوم قد مضى: من بعدها تعرض الصفحة وبطاقة الرئيسية جمع الغد، أي ما يجب إخراجه الليلة.",
+  "From what time it looks at tomorrow": "من أي ساعة يتم النظر إلى الغد",
+  "Show the intercom": "إظهار الإنتركم",
+  "Without a camera or open buttons it is hidden anyway": "بدون كاميرا أو أزرار فتح يكون مخفيًا على أي حال",
+  "Hour": "الساعة",
+  "Alarm · Leaving": "الإنذار · الخروج",
 });

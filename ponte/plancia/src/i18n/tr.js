@@ -7597,4 +7597,10 @@ export default Object.freeze({
   "Choose at least one Echo.": "En az bir Echo seç.",
   "Plays on": "Çaldığı yer",
   "To pick from a list add the «Radio Browser» integration in Home Assistant; meanwhile write the station name.": "Listeden seçmek için Home Assistant'ta «Radio Browser» entegrasyonunu ekle; bu arada istasyon adını yaz.",
+  "By this time today's collection has already gone: from then on the page and the Home tile show tomorrow's, which is what to put out tonight.": "Bu saatte bugünkü toplama geçmiştir: bundan sonra sayfa ve Ana sayfa kutucuğu yarınkini, yani bu akşam dışarı çıkarılacak olanı gösterir.",
+  "From what time it looks at tomorrow": "Hangi saatten itibaren yarına bakılsın",
+  "Show the intercom": "Diyafonu göster",
+  "Without a camera or open buttons it is hidden anyway": "Kamera ve açma düğmeleri olmadan zaten gizlenir",
+  "Hour": "Saat",
+  "Alarm · Leaving": "Alarm · Çıkış",
 });

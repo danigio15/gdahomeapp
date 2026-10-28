@@ -18,7 +18,7 @@
  * `data-dm-cassetta-presa` per la posta, `data-dm-w-light` per le prese. Dove
  * una lingua non c'e', `tastoServizio`.
  */
-import { registraFinestra, tastoServizio } from "../finestre-dei-widget.js";
+import { inOrdineFermo, registraFinestra, tastoServizio } from "../finestre-dei-widget.js";
 import { clean, esc, formatNumber, locale, section, siComanda, t } from "../shared.js";
 import { iconGlyphMarkup } from "../icon-engine-section.js";
 import { quantoTempoInParole } from "../../core/da-quanto.js";
@@ -405,10 +405,19 @@ function presaMarkup(riga) {
 function finestraPrese(widget) {
   const righe = Array.isArray(widget.rows) ? widget.rows : [];
   const accese = righe.filter((riga) => riga.on);
-  const spente = [
-    ...righe.filter((riga) => !riga.on && riga.disponibile),
-    ...righe.filter((riga) => !riga.on && !riga.disponibile),
-  ];
+  /* Accese in cima quando la finestra si apre, poi l'ordine resta quello: una
+   * presa accesa o spenta non salta da un gruppo all'altro sotto il dito
+   * (#334). Il colore dice se e' accesa. */
+  const inFila = inOrdineFermo(
+    "prese",
+    righe,
+    (riga) => clean(riga.entity),
+    (elenco) => [
+      ...elenco.filter((riga) => riga.on),
+      ...elenco.filter((riga) => !riga.on && riga.disponibile),
+      ...elenco.filter((riga) => !riga.on && !riga.disponibile),
+    ],
+  );
   const watt = Number.isFinite(widget.watt)
     ? `<span class="dm-f-prese-watt"><b class="dm-f-num">${esc(formatNumber(widget.watt, 0))} W</b><small>${esc(
         t("assorbiti adesso", "drawn right now"),
@@ -419,8 +428,7 @@ function finestraPrese(widget) {
       <span class="dm-f-prese-conto"><small>${esc(t("Accese", "On"))}</small><b class="dm-f-num">${accese.length}<em> / ${righe.length}</em></b></span>
       ${watt}
     </div>
-    ${accese.length ? `${titolo(t("Accese", "On"))}<div class="dm-f-griglia">${accese.map(presaMarkup).join("")}</div>` : ""}
-    ${spente.length ? `${titolo(t("Spente", "Off"))}<div class="dm-f-griglia">${spente.map(presaMarkup).join("")}</div>` : ""}
+    ${inFila.length ? `<div class="dm-f-griglia">${inFila.map(presaMarkup).join("")}</div>` : ""}
   </div>`;
 }
 

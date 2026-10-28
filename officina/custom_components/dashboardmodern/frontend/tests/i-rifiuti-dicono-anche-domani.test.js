@@ -15,8 +15,13 @@ import { letturaRifiuti } from "../src/core/rifiuti-model.js";
 
 const leggi = (rel) => readFile(new URL(rel, import.meta.url), "utf8");
 
-const ADESSO = Date.parse("2026-09-08T18:00:00Z");
-const giorno = (quanti) => new Date(ADESSO + quanti * 86400000).toISOString().slice(0, 10);
+/* La mattina, nel fuso di chi guarda: prima dell'ora del cambio (#333). */
+const ADESSO = new Date(2026, 8, 8, 10, 0).getTime();
+const giorno = (quanti) => {
+  const quando = new Date(2026, 8, 8 + quanti, 12, 0);
+  const due = (n) => String(n).padStart(2, "0");
+  return `${quando.getFullYear()}-${due(quando.getMonth() + 1)}-${due(quando.getDate())}`;
+};
 
 const CONFIG = {
   righe: [
@@ -45,6 +50,28 @@ test("la lettura separa già quello di oggi da quello di domani", () => {
   /* E il prossimo resta quello di oggi: domani non lo scavalca. */
   assert.deepEqual(
     lettura.prossimi.map((riga) => riga.materiale),
+    ["organico"],
+  );
+});
+
+test("dopo l'ora del cambio il prossimo è quello di domani (#333)", () => {
+  /* «Stamattina avevo l'indifferenziato, stasera devo mettere fuori organico
+   * e vetro per domani mattina»: la sera il ritiro di oggi e' passato. */
+  const sera = new Date(2026, 8, 8, 19, 0).getTime();
+  const lettura = letturaRifiuti(CONFIG, STATI, (v) => v, sera);
+  assert.deepEqual(
+    lettura.prossimi.map((riga) => riga.materiale),
+    ["plastica"],
+  );
+  /* Quello di oggi si sa ancora, ma non e' piu' il prossimo. */
+  assert.deepEqual(
+    lettura.oggi.map((riga) => riga.materiale),
+    ["organico"],
+  );
+  /* L'ora si sceglie: alle 20 si guarda ancora a oggi. */
+  const tardi = letturaRifiuti({ ...CONFIG, dopoLe: 20 }, STATI, (v) => v, sera);
+  assert.deepEqual(
+    tardi.prossimi.map((riga) => riga.materiale),
     ["organico"],
   );
 });

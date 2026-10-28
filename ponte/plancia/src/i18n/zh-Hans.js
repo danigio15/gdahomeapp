@@ -7461,4 +7461,10 @@ export default Object.freeze({
   "Choose at least one Echo.": "请至少选择一台 Echo。",
   "Plays on": "播放于",
   "To pick from a list add the «Radio Browser» integration in Home Assistant; meanwhile write the station name.": "要从列表中选择，请在 Home Assistant 中添加「Radio Browser」集成；在此之前请写下电台名称。",
+  "By this time today's collection has already gone: from then on the page and the Home tile show tomorrow's, which is what to put out tonight.": "到这个时间今天的收运已经过去了：之后页面和首页卡片会显示明天的，也就是今晚要拿出去的。",
+  "From what time it looks at tomorrow": "从几点开始看明天",
+  "Show the intercom": "显示对讲",
+  "Without a camera or open buttons it is hidden anyway": "没有摄像头也没有开门按钮时本来就会隐藏",
+  "Hour": "小时",
+  "Alarm · Leaving": "报警 · 离家",
 });
