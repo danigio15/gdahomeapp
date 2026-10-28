@@ -109,3 +109,32 @@ test("su un lettore di casa suona l'id, su un Echo il nome a TuneIn", () => {
     data: { entity_id: "media_player.sonos" },
   });
 });
+
+test("le radio pronte: si trovano per nome fra quelle di Radio Browser", async () => {
+  const { RADIO_PRONTE, stazioneDalNome } = await import("../src/core/radio.js");
+  const nomi = RADIO_PRONTE.map((una) => una.nome);
+  assert.ok(nomi.includes("RTL 102.5"));
+  assert.ok(nomi.includes("Radio Deejay"));
+  /* Ognuna col suo bollino: una sigla corta e un colore vero. */
+  for (const una of RADIO_PRONTE) {
+    assert.ok(una.sigla.length >= 1 && una.sigla.length <= 3, una.nome);
+    assert.match(una.colore, /^#[0-9a-f]{6}$/i, una.nome);
+  }
+  const italiane = [
+    { nome: "RTL 102.5 Best", id: "media-source://radio_browser/b1", tipo: "", logo: "" },
+    { nome: "RTL 102.5", id: "media-source://radio_browser/r1", tipo: "", logo: "" },
+    { nome: "Radio DEEJAY", id: "media-source://radio_browser/d1", tipo: "", logo: "" },
+    { nome: "Radio Kiss Kiss Napoli", id: "media-source://radio_browser/k1", tipo: "", logo: "" },
+  ];
+  /* Quella che si chiama proprio cosi', non la sorella piu' lunga. */
+  assert.equal(stazioneDalNome(italiane, "RTL 102.5")?.id, "media-source://radio_browser/r1");
+  /* Maiuscole e segni non contano. */
+  assert.equal(stazioneDalNome(italiane, "Radio Deejay")?.id, "media-source://radio_browser/d1");
+  /* Tutte le parole, anche in mezzo ad altre. */
+  assert.equal(
+    stazioneDalNome(italiane, "Kiss Kiss Napoli")?.id,
+    "media-source://radio_browser/k1",
+  );
+  assert.equal(stazioneDalNome(italiane, "Radio Zeta"), null);
+  assert.equal(stazioneDalNome([], "RTL 102.5"), null);
+});

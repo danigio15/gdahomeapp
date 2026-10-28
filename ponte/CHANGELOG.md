@@ -10,6 +10,28 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.13
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Radio italiane pronte:** nella pagina Musica il tasto «Radio italiane» apre
+  venti radio già pronte (RTL 102.5, Radio Deejay, RDS, Radio 105, m2o, Rai…),
+  ognuna col suo bollino, senza sceglierle prima nel Config. Sugli Echo
+  partono per nome; sugli altri lettori con Radio Browser.
+- **Radio e Alexa:** nel riquadro Radio compaiono solo gli Echo scelti in
+  Alexa › Musica; senza una scelta, tutti.
+- **Rifiuti:** dall'ora scelta nel Config (di serie le 14) la tessera, la
+  finestra e la pagina dicono il ritiro di domani, cioè cosa mettere fuori
+  stasera.
+- **Luci, clima e prese:** nella finestra le righe non cambiano più posto
+  mentre si accende o si spegne; l'ordine si rifà alla riapertura.
+- **Elettrodomestici:** un tocco su un apparecchio nella finestra della Home
+  apre direttamente la sua scheda.
+- **Plancia a muro:** nella pagina Ingresso il citofono compare solo con una
+  telecamera o un tasto per aprire, e si può togliere con «Mostra il citofono».
+- **Dispositivi non connessi:** l'avviso arriva solo dopo cinque minuti di
+  silenzio, non per un riavvio o un riaggancio.
+
 ## 1.18.7.12
 
 _Solo Home Assistant: l'app sul telefono non cambia._

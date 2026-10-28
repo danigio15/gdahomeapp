@@ -15,11 +15,14 @@ import {
   CHIAVE_RADIO,
   POSTI_RADIO,
   RADIO_AL_PIU,
+  RADIO_DEL_PAESE,
+  RADIO_PRONTE,
   chiamataDellaRadio,
   chiamataPerFermare,
   domandaDelleRadio,
   filtraLeStazioni,
   normalizzaRadio,
+  stazioneDalNome,
   stazionePulita,
   stazioniDellaRisposta,
 } from "../core/radio.js";
@@ -57,6 +60,11 @@ const state = (root[KEY] ||= {
   filtro: "",
   perNome: "",
   scritto: "",
+  /* Le radio italiane di Radio Browser, chieste una volta: servono alle radio
+   * pronte sui lettori che non sono Echo. */
+  delPaese: null,
+  /* L'elenco delle radio pronte, aperto o chiuso. */
+  tendina: false,
 });
 
 export const RADIO_TAB = "media_radio";
@@ -106,8 +114,13 @@ function iLettori(stati = allStates() || {}) {
       echo: eUnEcho({ entity_id: riga.entity, ...stato }),
     });
   }
+  /* Gli Echo: quelli scelti in Alexa › Musica, se se ne e' scelto qualcuno
+   * («anche se selezioni gli Alexa nella scheda musica te li da' tutti»);
+   * senza una scelta, tutti quelli di casa. */
+  const scelti = echoScelti();
   for (const stato of Object.values(stati)) {
     if (!eUnEcho(stato) || visti.has(stato.entity_id)) continue;
+    if (scelti.size && !scelti.has(stato.entity_id)) continue;
     visti.add(stato.entity_id);
     tutti.push({
       entita: stato.entity_id,
@@ -116,6 +129,19 @@ function iLettori(stati = allStates() || {}) {
     });
   }
   return tutti;
+}
+
+/* La scelta degli Echo di Alexa › Musica, su questo schermo
+ * (`dm_alexa_musica_echo`, vedi `alexa-editor-section.js`). */
+const ECHO_DELLA_MUSICA = "dm_alexa_musica_echo";
+
+function echoScelti() {
+  try {
+    const scritti = JSON.parse(root.localStorage?.getItem(ECHO_DELLA_MUSICA) || "[]");
+    return new Set(Array.isArray(scritti) ? scritti.map(String) : []);
+  } catch (_errore) {
+    return new Set();
+  }
 }
 
 function doveSuona(lettori) {
@@ -165,16 +191,9 @@ function riquadroMarkup() {
       <div><b>${esc(t("Radio", "Radio"))}</b><small>${esc(
         preferite.length
           ? `${preferite.length} ${t("preferite", "favourites")}`
-          : t("Nessuna radio ancora", "No radio yet"),
+          : `${RADIO_PRONTE.length} ${t("radio pronte da ascoltare", "stations ready to play")}`,
       )}</small></div>
     </div>`;
-  if (!preferite.length)
-    return `${testa}<p class="dm-radio-vuoto">${esc(
-      t(
-        "Le radio preferite si scelgono in Config › Musica › 📻 Radio, e qui si ascoltano su un lettore o sugli Echo.",
-        "Favourite stations are chosen in Config › Media › 📻 Radio, and played here on a player or on the Echos.",
-      ),
-    )}</p>`;
   const lettoriMarkup = lettori
     .map(
       (uno) =>
@@ -200,9 +219,45 @@ function riquadroMarkup() {
       </button>`;
     })
     .join("");
+  /* Le radio pronte: un tasto che si apre in una griglia di tessere, ognuna
+   * col suo bollino. Si ascoltano subito, senza averle scelte nel Config. */
+  const aperte = state.tendina === true;
+  const pronte = `<div class="dm-radio-pronte${aperte ? " aperte" : ""}">
+      <button type="button" class="dm-radio-pronte-apri" data-dm-radio-tendina aria-expanded="${aperte}"${dove ? "" : " disabled"}>
+        <span class="dm-radio-pronte-ic" aria-hidden="true">🇮🇹</span>
+        <span class="dm-radio-pronte-tx"><b>${esc(t("Radio italiane", "Italian stations"))}</b><small>${esc(
+          aperte
+            ? t("Tocca una radio per ascoltarla", "Tap a station to listen")
+            : `${RADIO_PRONTE.length} ${t("pronte · tocca per scegliere", "ready · tap to choose")}`,
+        )}</small></span>
+        <i aria-hidden="true">${aperte ? "▴" : "▾"}</i>
+      </button>
+      ${
+        aperte
+          ? `<div class="dm-radio-pronte-elenco">${RADIO_PRONTE.map((una, indice) => {
+              const onda = dove && inOnda(una, dove, stati);
+              return `<button type="button" class="dm-radio-pr${onda ? " in-onda" : ""}" data-dm-radio-pronta="${indice}" style="--pr:${esc(una.colore)}">
+                <span class="dm-radio-pr-sigla" aria-hidden="true">${esc(una.sigla)}</span>
+                <b>${esc(una.nome)}</b>
+                ${onda ? `<i class="dm-radio-pr-onda" role="img" aria-label="${esc(t("In onda", "On air"))}"></i>` : ""}
+              </button>`;
+            }).join("")}</div>`
+          : ""
+      }
+    </div>`;
   return `${testa}
     <div class="dm-radio-dove"><span>${esc(t("Suona su", "Play on"))}</span><div class="dm-radio-fila">${lettoriMarkup}</div></div>
-    <div class="dm-radio-griglia">${stazioni}</div>
+    ${pronte}
+    ${
+      stazioni
+        ? `<div class="dm-radio-griglia">${stazioni}</div>`
+        : `<p class="dm-radio-vuoto">${esc(
+            t(
+              "Le tue preferite, coi loghi, si scelgono in Config › Musica › 📻 Radio.",
+              "Your favourites, with their logos, are chosen in Config › Media › 📻 Radio.",
+            ),
+          )}</p>`
+    }
     <div class="dm-radio-piede">
       <button type="button" class="dm-radio-ferma" data-dm-radio-ferma${dove ? "" : " disabled"}>⏹ ${esc(t("Ferma", "Stop"))}</button>
       ${state.esito ? `<small>${esc(state.esito)}</small>` : ""}
@@ -249,6 +304,12 @@ function sulRiquadro(evento) {
       root.navigator?.vibrate?.(8);
       state.esito = `▶ ${una.nome} · ${dove.nome}`;
     }
+  } else if ("dmRadioTendina" in d) {
+    state.tendina = !state.tendina;
+  } else if ("dmRadioPronta" in d) {
+    const una = RADIO_PRONTE[Number(d.dmRadioPronta)];
+    state.tendina = false;
+    if (una) suonaUnaPronta(una.nome);
   } else if ("dmRadioFerma" in d) {
     const dove = doveSuona(lettori);
     const chiamata = dove && chiamataPerFermare(dove.entita);
@@ -259,6 +320,42 @@ function sulRiquadro(evento) {
   state.firma = "";
   ridisegnaLaRadio();
   return true;
+}
+
+/* Una radio pronta, scelta dal menu: sull'Echo per nome, a TuneIn; su un
+ * altro lettore la stessa radio presa fra quelle italiane di Radio Browser. */
+async function suonaUnaPronta(nome) {
+  const dove = doveSuona(iLettori());
+  if (!dove || !nome) return;
+  let stazione = { nome };
+  if (!dove.echo) {
+    try {
+      if (!state.delPaese)
+        state.delPaese = stazioniDellaRisposta(
+          await chiediAHomeAssistant(domandaDelleRadio(RADIO_DEL_PAESE), 15000),
+        );
+    } catch (_errore) {
+      state.delPaese = null;
+    }
+    stazione = stazioneDalNome(state.delPaese || [], nome);
+  }
+  const chiamata = stazione && chiamataDellaRadio(stazione, dove.entita, { echo: dove.echo });
+  if (chiamata) {
+    chiamaServizio(chiamata);
+    root.navigator?.vibrate?.(8);
+    state.esito = `▶ ${nome} · ${dove.nome}`;
+  } else
+    state.esito = state.delPaese
+      ? t(
+          "Questa radio su questo lettore non la trovo: prova un Echo, o aggiungila dal Config.",
+          "Can't find this station for this player: try an Echo, or add it from the Config.",
+        )
+      : t(
+          "Per i lettori che non sono Echo serve l'integrazione Radio Browser di Home Assistant.",
+          "Players that aren't Echos need Home Assistant's Radio Browser integration.",
+        );
+  state.firma = "";
+  ridisegnaLaRadio();
 }
 
 /* ── la scheda nel Config: Musica › 📻 Radio ──────────────────────────── */
@@ -511,6 +608,38 @@ function stili() {
     .dm-radio-dove{display:grid;gap:6px}
     .dm-radio-dove>span{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
       color:var(--text-dim,#64748b)}
+    .dm-radio-pronte{display:grid;gap:10px;border-radius:18px;padding:4px;
+      background:linear-gradient(135deg,rgba(0,146,70,.07),rgba(255,255,255,0) 45%,rgba(206,43,55,.07));
+      border:1px solid color-mix(in srgb,#8b5cf6 22%,var(--card-border,#e2e8f0))}
+    .dm-radio-pronte-apri{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border:0;
+      border-radius:14px;background:none;font:inherit;text-align:left;cursor:pointer;color:var(--text,#0f172a)}
+    .dm-radio-pronte-apri:disabled{opacity:.55;cursor:default}
+    .dm-radio-pronte-ic{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;
+      font-size:20px;background:var(--card-background-color,#fff);box-shadow:0 6px 16px -10px rgba(2,6,23,.5)}
+    .dm-radio-pronte-tx{flex:1 1 auto;min-width:0}
+    .dm-radio-pronte-tx b{display:block;font-size:15px;font-weight:850}
+    .dm-radio-pronte-tx small{display:block;font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    .dm-radio-pronte-apri i{flex:none;width:30px;height:30px;border-radius:999px;display:grid;place-items:center;
+      font-style:normal;font-size:14px;font-weight:900;color:#7c3aed;
+      background:color-mix(in srgb,#8b5cf6 14%,transparent)}
+    .dm-radio-pronte-elenco{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+      padding:0 6px 8px;max-height:min(58vh,520px);overflow:auto}
+    @media (min-width:640px){.dm-radio-pronte-elenco{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}}
+    .dm-radio-pr{display:flex;align-items:center;gap:8px;min-width:0;padding:7px 8px 7px 7px;border-radius:14px;
+      font:inherit;text-align:left;cursor:pointer;color:var(--text,#0f172a);
+      border:1px solid var(--card-border,#e2e8f0);background:var(--card-background-color,#fff);
+      transition:transform .12s ease,box-shadow .12s ease}
+    .dm-radio-pr:active{transform:scale(.97)}
+    .dm-radio-pr-sigla{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;
+      font-size:12px;font-weight:900;letter-spacing:-.02em;color:#fff;background:var(--pr);
+      box-shadow:0 8px 16px -10px var(--pr)}
+    .dm-radio-pr b{flex:1 1 auto;min-width:0;font-size:13px;font-weight:800;line-height:1.2;
+      overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+    .dm-radio-pr-onda{flex:none;width:10px;height:10px;border-radius:999px;background:#8b5cf6;
+      box-shadow:0 0 0 4px color-mix(in srgb,#8b5cf6 22%,transparent)}
+    .dm-radio-pr.in-onda{border-color:#8b5cf6;box-shadow:inset 0 0 0 1px #8b5cf699;
+      background:color-mix(in srgb,#8b5cf6 10%,var(--card-background-color,#fff))}
+    html[data-theme="dark"] .dm-radio-pronte-apri i{color:#c4b5fd}
     .dm-radio-fila{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
     .dm-radio-fila::-webkit-scrollbar{display:none}
     .dm-radio-pa{flex:none;padding:8px 13px;border-radius:999px;font:inherit;font-size:13px;font-weight:800;

@@ -261,6 +261,21 @@ function perDispositivo(sciolte, di, nomi) {
  * non dispositivi: cosi' le voci gia' scritte da prima continuano a valere, e
  * una casa che i registri non li ha — dove non si raggruppa — si comporta
  * uguale. */
+/**
+ * Da quanto deve tacere un dispositivo prima che la tessera in Home lo dica
+ * (#307): «risultano non raggiungibili, in realta' funzionano». Un riavvio di
+ * Home Assistant, un riaggancio Zigbee o un Wi-Fi che salta durano meno: chi
+ * torna entro cinque minuti non era scollegato. Chi tace da prima — o non si
+ * sa da quando — si dice.
+ */
+export const TACE_DA_ALMENO = 5 * 60 * 1000;
+
+export function taceDaAbbastanza(riga, adesso = Date.now(), soglia = TACE_DA_ALMENO) {
+  const da = Number(riga?.da);
+  if (!Number.isFinite(da) || da <= 0) return true;
+  return adesso - da >= soglia;
+}
+
 export const mettiDaParte = (escluse, entita) =>
   (Array.isArray(entita) ? entita : [entita]).reduce(
     (elenco, una) => togliDallaTessera(elenco, TESSERA_SCOLLEGATI, una),

@@ -71,3 +71,32 @@ export function tastoServizio(
     conferma ? ` data-dm-w-conferma="${sicuro(conferma)}"` : ""
   } ${attributi}>${testo}</button>`;
 }
+
+/* L'ordine delle righe di una finestra, fermo finche' resta aperta (#334).
+ *
+ * «Quando ne spengo o accendo una si riordinano, e spesso mentre faccio tap mi
+ * confonde e sbaglio a premere.» Le luci, il clima e le prese mettono in cima
+ * quelle accese: va bene quando la finestra si apre, non mentre ci si tocca
+ * dentro — la finestra si ridisegna ogni due secondi e la riga appena accesa
+ * saltava su, sotto il dito. L'ordine si decide all'apertura e resta quello;
+ * una riga nuova va in fondo. Chiusa la finestra, si dimentica. */
+const ordini = { chiave: "", ordine: [] };
+
+export function inOrdineFermo(chiave, righe, idDi, ordina = (elenco) => elenco) {
+  const elenco = Array.isArray(righe) ? righe : [];
+  if (ordini.chiave !== chiave) {
+    ordini.chiave = chiave;
+    ordini.ordine = ordina([...elenco]).map(idDi);
+  }
+  const visti = new Set(ordini.ordine);
+  const nuove = elenco.filter((riga) => !visti.has(idDi(riga)));
+  if (nuove.length) ordini.ordine.push(...ordina(nuove).map(idDi));
+  const posto = new Map(ordini.ordine.map((id, indice) => [id, indice]));
+  return [...elenco].sort((a, b) => posto.get(idDi(a)) - posto.get(idDi(b)));
+}
+
+/** Chiusa (o cambiata) la finestra: alla prossima apertura l'ordine si rifa'. */
+export function dimenticaLOrdine() {
+  ordini.chiave = "";
+  ordini.ordine = [];
+}

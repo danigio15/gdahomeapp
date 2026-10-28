@@ -62,6 +62,14 @@ const RADIO = {
       stazione("a6", "m2o", "m2o"),
     ],
   },
+  "media-source://radio_browser/country/IT": {
+    title: "Italia",
+    children: [
+      stazione("it1", "RTL 102.5 Best", "rtl"),
+      stazione("it2", "RTL 102.5", "rtl"),
+      stazione("it3", "Radio DEEJAY", "deejay"),
+    ],
+  },
   "media-source://radio_browser/popular": {
     title: "Popular",
     children: [stazione("p1", "BBC Radio 1", "rtl")],
@@ -134,7 +142,11 @@ async function fingiHomeAssistant(page) {
   }, RADIO);
 }
 
-async function boot(page, testInfo, { tema = "light", preferite = [] } = {}) {
+async function boot(
+  page,
+  testInfo,
+  { tema = "light", preferite = [], stati = STATI, echoScelti = null } = {},
+) {
   test.setTimeout(120_000);
   await page.route("https://radio.example/**", (route) => {
     const chiave = route.request().url().split("/").pop().replace(".svg", "");
@@ -143,8 +155,10 @@ async function boot(page, testInfo, { tema = "light", preferite = [] } = {}) {
   await fingiHomeAssistant(page);
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, seme);
   await page.evaluate(
-    ({ s, lettori, preferite, tema }) => {
+    ({ s, lettori, preferite, tema, echoScelti }) => {
       document.documentElement.setAttribute("data-theme", tema);
+      if (echoScelti)
+        window.localStorage.setItem("dm_alexa_musica_echo", JSON.stringify(echoScelti));
       window.__HASS__ = { states: s };
       window.hass = { ...(window.hass || {}), states: s };
       window._RAW_STATES = s;
@@ -153,7 +167,7 @@ async function boot(page, testInfo, { tema = "light", preferite = [] } = {}) {
       window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
       window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed"));
     },
-    { s: STATI, lettori: LETTORI, preferite, tema },
+    { s: stati, lettori: LETTORI, preferite, tema, echoScelti },
   );
 }
 
@@ -300,4 +314,93 @@ test("le radio tenute in Alexa › Musica compaiono nella pagina Musica, per cam
   });
   await page.waitForTimeout(300);
   await radio.screenshot({ path: testInfo.outputPath("radio-con-alexa.png") });
+});
+
+test("gli Echo della radio sono quelli scelti in Alexa › Musica", async ({ page }, testInfo) => {
+  const stati = {
+    ...STATI,
+    "media_player.echo_sala": {
+      entity_id: "media_player.echo_sala",
+      state: "idle",
+      attributes: { friendly_name: "Echo Sala", last_called: false },
+    },
+  };
+  await boot(page, testInfo, {
+    preferite: PREFERITE,
+    stati,
+    echoScelti: ["media_player.echo_cucina"],
+  });
+  await page.locator('.tab[data-tab="media"]').click();
+  const radio = page.locator("#page-media [data-dm-radio]");
+  await expect(radio).toBeVisible();
+  // Il lettore della Musica c'e' sempre; degli Echo solo quello scelto.
+  await expect(radio.locator('[data-dm-radio-dove="media_player.sonos"]')).toHaveCount(1);
+  await expect(radio.locator('[data-dm-radio-dove="media_player.echo_cucina"]')).toHaveCount(1);
+  await expect(radio.locator('[data-dm-radio-dove="media_player.echo_sala"]')).toHaveCount(0);
+  await radio.screenshot({ path: testInfo.outputPath("radio-echo-scelti.png") });
+});
+
+test("senza una scelta in Alexa › Musica, la radio offre tutti gli Echo", async ({
+  page,
+}, testInfo) => {
+  const stati = {
+    ...STATI,
+    "media_player.echo_sala": {
+      entity_id: "media_player.echo_sala",
+      state: "idle",
+      attributes: { friendly_name: "Echo Sala", last_called: false },
+    },
+  };
+  await boot(page, testInfo, { preferite: PREFERITE, stati });
+  await page.locator('.tab[data-tab="media"]').click();
+  const radio = page.locator("#page-media [data-dm-radio]");
+  await expect(radio).toBeVisible();
+  await expect(radio.locator('[data-dm-radio-dove="media_player.echo_cucina"]')).toHaveCount(1);
+  await expect(radio.locator('[data-dm-radio-dove="media_player.echo_sala"]')).toHaveCount(1);
+});
+
+test("le radio pronte dal menu: sull'Echo per nome, sul Sonos da Radio Browser", async ({
+  page,
+}, testInfo) => {
+  /* «Io farei un menu a tendina per le radio, gia' preimpostate, senza andare
+   * in config a metterle»: nessuna preferita, e il menu c'e' lo stesso. */
+  await boot(page, testInfo, { preferite: [] });
+  await page.locator('.tab[data-tab="media"]').click();
+  const radio = page.locator("#page-media [data-dm-radio]");
+  await expect(radio).toBeVisible();
+  const apri = radio.locator("[data-dm-radio-tendina]");
+  await expect(apri).toBeVisible();
+  await page.waitForTimeout(300);
+  await radio.screenshot({ path: testInfo.outputPath("radio-pronte.png") });
+  await apri.click();
+  const pronta = (nome) => radio.locator(".dm-radio-pr", { hasText: nome }).first();
+  await expect(radio.locator(".dm-radio-pr")).toHaveCount(20);
+  await expect(pronta("RTL 102.5")).toBeVisible();
+  await page.waitForTimeout(300);
+  await radio.screenshot({ path: testInfo.outputPath("radio-pronte-aperta.png") });
+
+  /* Sul Sonos: la stessa radio, presa fra quelle italiane di Radio Browser. */
+  await pronta("RTL 102.5").click();
+  await expect
+    .poll(() => page.evaluate(() => window.__SERVIZI__.at(-1)?.service_data))
+    .toMatchObject({
+      entity_id: "media_player.sonos",
+      media_content_id: "media-source://radio_browser/it2",
+    });
+  /* Scelta la radio, l'elenco si richiude. */
+  await expect(radio.locator(".dm-radio-pr")).toHaveCount(0);
+
+  /* Sull'Echo: per nome, a TuneIn. */
+  await radio.locator('[data-dm-radio-dove="media_player.echo_cucina"]').click();
+  await radio.locator("[data-dm-radio-tendina]").click();
+  await pronta("Radio Deejay").click();
+  await expect
+    .poll(() => page.evaluate(() => window.__SERVIZI__.at(-1)?.service_data))
+    .toMatchObject({
+      entity_id: "media_player.echo_cucina",
+      media_content_id: "Radio Deejay",
+      media_content_type: "TUNEIN",
+    });
+  await expect(radio).toContainText("Radio Deejay · Echo Cucina");
+  await radio.screenshot({ path: testInfo.outputPath("radio-pronte-echo.png") });
 });

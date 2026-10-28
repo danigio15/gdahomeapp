@@ -325,6 +325,20 @@ function sezioneNascosta() {
   }
 }
 
+/* Da che ora si guarda a domani (#333): «stamattina avevo l'indifferenziato,
+ * stasera devo mettere fuori organico e vetro, e in Home c'era ancora quello
+ * di oggi». */
+function oraMarkup(dato) {
+  return `<label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${esc(t("Da che ora si guarda a domani", "From what time it looks at tomorrow"))}</span>
+      <span class="dm-rifiuti-ora"><input class="ed-input mono" type="number" min="0" max="23" step="1" inputmode="numeric" data-dm-rifiuti-dopo-le value="${dato.dopoLe}" aria-label="${esc(t("Ora", "Hour"))}"><b aria-hidden="true">:00</b></span>
+      <small>${esc(
+        t(
+          "Il ritiro di oggi a quest'ora è già passato: da qui in poi la pagina e la tessera in Home dicono quello di domani, cioè cosa mettere fuori stasera.",
+          "By this time today's collection has already gone: from then on the page and the Home tile show tomorrow's, which is what to put out tonight.",
+        ),
+      )}</small></label>`;
+}
+
 function corpoMarkup() {
   const dato = bozza();
   const piene = dato.righe.length >= MASSIMO_RIGHE;
@@ -349,6 +363,7 @@ function corpoMarkup() {
           "If the collections live in one place, put it here: a calendar.* with one event per collection, or a sensor.* carrying the list of upcoming collections in its attributes. Each entry becomes a row, with the material guessed from its name.",
         ),
       )}</small></label>
+    ${oraMarkup(dato)}
     ${turnoMarkup(dato)}
     <button type="button" class="ed-save-btn" data-dm-rifiuti-save>💾 ${esc(t("Salva rifiuti", "Save waste"))}</button>
   </div></div>`;
@@ -403,6 +418,7 @@ function raccogli(body) {
     calendario: clean(body.querySelector("[data-dm-rifiuti-calendario]")?.value),
     righe,
     turno: { ...turno, inizio: inizioScritto() || turno.inizio },
+    dopoLe: body.querySelector("[data-dm-rifiuti-dopo-le]")?.value ?? dato.dopoLe,
   };
 }
 
@@ -517,6 +533,9 @@ function installStyles() {
       #ed-body .dm-rifiuti-ed-aggiungi{width:100%;margin:6px 0 12px}
       /* Il calendario di casa (#366): due file da sette, come un calendario da
        * parete — e' il modo in cui uno guarda il foglietto sul frigo. */
+      #ed-body .dm-rifiuti-ora{display:inline-flex;align-items:center;gap:6px;margin:4px 0}
+      #ed-body .dm-rifiuti-ora input{width:84px;text-align:center;font-size:18px;font-weight:800}
+      #ed-body .dm-rifiuti-ora b{font-size:18px;font-weight:800;color:var(--text,#0f172a)}
       #ed-body .dm-turno{margin:14px 0 4px}
       #ed-body .dm-turno-griglia{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px}
       #ed-body .dm-turno-sett{grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--secondary-text-color,#64748b);margin:4px 0 0}

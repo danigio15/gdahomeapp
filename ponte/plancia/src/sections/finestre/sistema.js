@@ -189,6 +189,7 @@ ${P} .dm-f-el-su{display:flex;align-items:center;gap:12px;min-width:0}
 ${P} .dm-f-el-ic{flex:0 0 auto;width:46px;height:46px;border-radius:15px;display:grid;place-items:center;font-size:24px;
   background:color-mix(in srgb,var(--dm-widget-accent,#06b6d4) 12%,var(--card-bg,#fff));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dm-widget-accent,#06b6d4) 30%,transparent)}
 ${P} .dm-f-el-ic svg{width:30px;height:30px}
+${P} .dm-f-el-mac,${P} .dm-f-el-fermo{cursor:pointer}
 ${P} .dm-f-el-nome{flex:1;min-width:0}
 ${P} .dm-f-el-nome b{display:block;font-size:15.5px;font-weight:850;color:var(--text,#0f172a);overflow-wrap:anywhere}
 ${P} .dm-f-el-nome em{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-style:normal;font-size:12px;font-weight:750;color:var(--text-dim,#64748b)}

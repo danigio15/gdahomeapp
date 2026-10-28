@@ -82,6 +82,7 @@ import {
   posizioneOra,
 } from "../core/media-player.js";
 import {
+  ciEIlCitofono,
   CHIAVE_MURO,
   areeDellIngresso,
   avvisiAccesi,
@@ -786,6 +787,9 @@ function titoloLungo(titolo) {
 function sottoDellaPagina(pagina) {
   if (pagina.modello === "meteo" && Object.keys(sensoriDellaStazione()).length)
     return t("Adesso · La mia stazione · Previsioni", "Now · My station · Forecast");
+  /* Senza citofono non si promette il citofono (#337). */
+  if (pagina.modello === "ingresso" && !ciEIlCitofono(pagina.ingresso))
+    return t("Antifurto · Uscita", "Alarm · Leaving");
   return SOTTO()[pagina.modello];
 }
 
@@ -3352,18 +3356,25 @@ function restoDellIngresso(pagina, carta, spento) {
   /* Le altre letture e gli altri comandi: una striscia sotto l'antifurto e
    * il citofono, larga quanto la pagina. */
   const altro = altroDellIngresso(ing);
-  return `<div class="mu-ingresso${altro ? " mu-con-striscia" : ""}">
+  /* Senza telecamera e senza tasti per aprire, o tolto nel config, il
+   * citofono non c'e': l'antifurto prende tutta la larghezza (#337). */
+  const citofono = ciEIlCitofono(ing);
+  return `<div class="mu-ingresso${altro ? " mu-con-striscia" : ""}${citofono ? "" : " mu-senza-citofono"}">
     ${carta}
-    <div class="mu-carta mu-citofono${classeDellaTessera("citofono")}">${fondoDellaTessera("citofono")}
+    ${
+      citofono
+        ? `<div class="mu-carta mu-citofono${classeDellaTessera("citofono")}">${fondoDellaTessera("citofono")}
       <div class="mu-video">${telecamera ? `<img data-mu-telecamera="${esc(telecamera)}" alt="">` : `<div class="mu-video-vuoto">${disegno("telecamere", 80, "tele-vuota")}</div>`}<span class="mu-live">${esc(telecamera ? nomeDi(telecamera) : t("Nessuna telecamera", "No camera"))}</span></div>
       ${
         ing.apri || ing.apri2
           ? `<div class="mu-due">${ing.apri ? `<button type="button" class="mu-btn pieno" data-mu-fa="apri" data-mu-entita="${esc(ing.apri)}">${disegno("varchi", 26, "apri1")}${esc(nomeDi(ing.apri, ing.nomeApri))}</button>` : ""}${ing.apri2 ? `<button type="button" class="mu-btn" data-mu-fa="apri" data-mu-entita="${esc(ing.apri2)}">${disegno("aperture", 26, "apri2")}${esc(nomeDi(ing.apri2, ing.nomeApri2))}</button>` : ""}</div>`
           : ""
       }
-    </div>
+    </div>`
+        : ""
+    }
     ${altro ? `<div class="mu-carta mu-ing-striscia${classeDellaTessera("letture")}">${fondoDellaTessera("letture")}${altro}</div>` : ""}
-    <div class="mu-piede">
+    <div class="mu-piede${azioneUscita && ing.persone && persone.tutte ? "" : " mu-piede-uno"}">
       ${
         azioneUscita
           ? tessera({
@@ -6928,6 +6939,7 @@ ${MURO} .mu-aree[data-quante="4"] .mu-area-nome{font-size:16px}
 ${MURO} .mu-ing-altro{display:flex;flex-direction:column;gap:8px;flex:0 0 auto;min-width:0}
 ${MURO} .mu-ing-letture,${MURO} .mu-ing-comandi{display:flex;flex-wrap:wrap;gap:8px}
 ${MURO} .mu-ingresso.mu-con-striscia{grid-template-rows:minmax(0,1fr) auto auto}
+${MURO} .mu-ingresso.mu-senza-citofono{grid-template-columns:1fr}
 ${MURO} .mu-ing-striscia{grid-column:1/-1;padding:10px 12px;min-width:0}
 ${MURO} .mu-ing-striscia .mu-ing-altro{flex-direction:row;align-items:center;gap:8px;overflow-x:auto;scrollbar-width:none}
 ${MURO} .mu-ing-striscia .mu-ing-letture,${MURO} .mu-ing-striscia .mu-ing-comandi{flex-wrap:nowrap;flex:0 0 auto}
@@ -6961,6 +6973,7 @@ ${MURO} .mu-video img{position:absolute;inset:0;width:100%;height:100%;object-fi
 ${MURO} .mu-video-vuoto{position:absolute;inset:0;display:grid;place-items:center;opacity:.5}
 ${MURO} .mu-live{position:absolute;left:14px;top:14px;padding:6px 12px;border-radius:999px;background:#000a;color:#fff;font-size:11.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
 ${MURO} .mu-piede{grid-column:1/-1;display:grid;grid-template-columns:1.5fr 1fr;gap:16px}
+${MURO} .mu-piede.mu-piede-uno{grid-template-columns:1fr}
 ${MURO} .mu-piede .mu-card{padding:16px 22px}
 ${MURO} .mu-velo{position:absolute;inset:0;display:grid;place-items:center;background:rgba(5,8,15,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);z-index:5}
 ${MURO} .mu-finestra{width:min(880px,92%);padding:30px}
@@ -7131,6 +7144,7 @@ ${MURO}[data-verso="verticale"] .mu-ora{margin-left:auto}
 ${MURO}[data-verso="verticale"] .mu-ingresso{grid-template-columns:1fr;grid-template-rows:auto 1fr auto}
 ${MURO}[data-verso="verticale"] .mu-ingresso.mu-con-striscia{grid-template-rows:auto minmax(0,1fr) auto auto}
 ${MURO}[data-verso="verticale"] .mu-piede{grid-template-columns:1fr 1fr}
+${MURO}[data-verso="verticale"] .mu-piede.mu-piede-uno{grid-template-columns:1fr}
 ${MURO}[data-verso="verticale"] .mu-fin-luce{grid-template-columns:1fr}
 ${MURO}[data-verso="verticale"] .mu-colonna{height:300px}
 ${MURO}[data-verso="verticale"] .mu-orologione{font-size:180px}
