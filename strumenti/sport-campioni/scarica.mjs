@@ -52,6 +52,43 @@ await mkdir(`${qui}campioni`, { recursive: true });
 const salva = (nome, cosa) =>
   writeFile(`${qui}campioni/${nome}.json`, `${JSON.stringify(cosa, null, 1)}\n`);
 
+/* La Serie C, che ESPN forse non ha: si prova ESPN e poi TheSportsDB, con
+ * le due chiavi pubbliche, per vedere come rispondono davvero. */
+try {
+  await salva("serie-c-espn-squadre", await scarica(`${ESPN}/soccer/ita.3/teams`));
+  for (const chiave of ["3", "123"]) {
+    const T = `https://www.thesportsdb.com/api/v1/json/${chiave}`;
+    const leghe = await scarica(`${T}/search_all_leagues.php?c=Italy&s=Soccer`);
+    await salva(`serie-c-tsdb-${chiave}-leghe`, leghe);
+    const elenco = leghe.json?.countries || leghe.json?.countrys || [];
+    const serieC = elenco.filter((l) => /serie\s*c/i.test(`${l.strLeague} ${l.strLeagueAlternate}`));
+    for (const lega of serieC.slice(0, 3)) {
+      const squadre = await scarica(`${T}/lookup_all_teams.php?id=${lega.idLeague}`);
+      await salva(`serie-c-tsdb-${chiave}-squadre-${lega.idLeague}`, squadre);
+      await salva(
+        `serie-c-tsdb-${chiave}-classifica-${lega.idLeague}`,
+        await scarica(`${T}/lookuptable.php?l=${lega.idLeague}&s=2026-2027`),
+      );
+      const una = squadre.json?.teams?.[0];
+      if (una && lega === serieC[0]) {
+        await salva(`serie-c-tsdb-${chiave}-squadra`, await scarica(`${T}/lookupteam.php?id=${una.idTeam}`));
+        await salva(`serie-c-tsdb-${chiave}-ultime`, await scarica(`${T}/eventslast.php?id=${una.idTeam}`));
+        await salva(`serie-c-tsdb-${chiave}-prossime`, await scarica(`${T}/eventsnext.php?id=${una.idTeam}`));
+        const stemma = una.strBadge || una.strTeamBadge;
+        if (stemma) {
+          await mkdir(`${qui}loghi`, { recursive: true });
+          for (const [nome, u] of [["piccolo", `${stemma}/small`], ["pieno", stemma]]) {
+            const r = await fetch(u);
+            if (r.ok) await writeFile(`${qui}loghi/serie-c-${chiave}-${nome}.png`, Buffer.from(await r.arrayBuffer()));
+          }
+        }
+      }
+    }
+  }
+} catch (e) {
+  await salva("serie-c-errore", { errore: String(e?.stack || e) });
+}
+
 /* Dal vivo: cosa danno le fonti mentre una sessione e' in corso (F1 dal
  * sito del cronometraggio e da OpenF1, ESPN, MotoGP). Prima di tutto il
  * resto, perche' la sessione non aspetta. */
