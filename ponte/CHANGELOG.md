@@ -20,6 +20,12 @@ _Solo Home Assistant: l'app sul telefono non cambia._
 - **Aggiornamenti più sicuri:** l'add-on pubblicato viene controllato prima
   di uscire: la plancia dentro deve tornare col suo sigillo, così la console
   non segnala «file che non tornano» dopo un aggiornamento.
+- **Versioni dell'app:** la casa dice al quadro quanti telefoni, fra quelli
+  visti in settimana, hanno quale versione dell'app e da quale negozio (App
+  Store o Google Play). Solo quanti: niente nomi, modelli o di chi sono.
+- **«Aggiorna l'app»:** quando esce una nuova versione nel negozio, la casa
+  avvisa una volta i telefoni rimasti indietro, con una notifica silenziosa
+  che rispetta le ore di silenzio. Vale per le prossime versioni dell'app.
 
 ## 1.18.7.13
 
