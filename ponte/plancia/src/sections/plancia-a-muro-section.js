@@ -120,6 +120,8 @@ import {
   meteoDelMuro,
   potenzaConIlSegno,
   grigliaPer,
+  MURO_CODICE,
+  MURO_FONTE,
   fonteDaiValori,
   grigliaDellaPagina,
   lettoriDellaPagina,
@@ -311,13 +313,25 @@ export async function fonteDelMuro(muro, { forza = false } = {}) {
       const letto = await bridgeRequest("dashboardmodern/config/get", { profile: di });
       fonte = fonteDaiValori(letto?.snapshot?.values || {});
     } catch (_errore) {
-      fonte = state.fonte;
+      fonte = await fonteDalPonte();
     }
   }
   state.fonte = fonte || fonteDiQui();
   state.fonteDi = di;
   state.fonteLetta = Date.now();
   ricorda({ fonte: state.fonte, fonteDi: di });
+  return state.fonte;
+}
+
+/* Quando la plancia di origine e' riservata ad altri utenti («il 4 pollici
+ * e' collegato come rustico»): il ponte non ne da' la configurazione a chi non
+ * la vede, ma a chi vede questo pannello da' quello che il pannello mostra
+ * (`MURO_FONTE`). Se non risponde nemmeno lui, si tiene quello che si sapeva. */
+async function fonteDalPonte() {
+  try {
+    const detto = await bridgeRequest(MURO_FONTE, { profile: currentProfile() });
+    if (detto?.fonte && typeof detto.fonte === "object") return detto.fonte;
+  } catch (_errore) {}
   return state.fonte;
 }
 
@@ -5125,18 +5139,33 @@ function allarme(modo, codice = "", area = "") {
       apriFinestra({ tipo: "codice", scopo: "allarme", modo, scritto: "" });
       return;
     }
-    if (codice && !ilCodiceApreIlModo(mio, codice)) {
+    const sbagliato = () => {
       const f = state.finestra;
       if (f?.tipo === "codice") {
         f.errore = true;
         f.scritto = "";
         disegna();
       }
+    };
+    const parti = () => {
+      const chiamata = chiamataDelModo(mio);
+      chiudiFinestra();
+      if (chiamata) comanda(chiamata.domain, chiamata.service, { ...chiamata.data });
+    };
+    /* Il codice di questo tasto lo tiene il ponte (`codiceAlPonte`): la
+     * plancia di origine chi e' entrato qui non la vede, e il codice non gli
+     * e' arrivato. Si chiede a lui se quello scritto e' giusto. */
+    if (codice && mio.codiceAlPonte) {
+      bridgeRequest(MURO_CODICE, { profile: currentProfile(), modo: mio.id, codice })
+        .then((detto) => (detto?.giusto === true ? parti() : sbagliato()))
+        .catch(sbagliato);
       return;
     }
-    const chiamata = chiamataDelModo(mio);
-    chiudiFinestra();
-    if (chiamata) comanda(chiamata.domain, chiamata.service, { ...chiamata.data });
+    if (codice && !ilCodiceApreIlModo(mio, codice)) {
+      sbagliato();
+      return;
+    }
+    parti();
     return;
   }
   if (!s) return;

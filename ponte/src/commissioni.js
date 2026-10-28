@@ -71,6 +71,19 @@
  */
 
 import { MESSAGGIO_CHI, MESSAGGIO_MANDA } from "../plancia/src/core/messaggio-di-casa.js";
+import {
+  CHIAVE_ANTIFURTO_SU_MISURA,
+  ilCodiceApreIlModo,
+  normalizzaModiSuMisura,
+} from "../plancia/src/core/antifurto-su-misura.js";
+import {
+  CHIAVE_MURO,
+  MURO_CODICE,
+  MURO_FONTE,
+  fonteDaiValori,
+  fonteSenzaCodici,
+  muroPulito,
+} from "../plancia/src/core/plancia-a-muro.js";
 import { QUADRO_DI_DIFETTO } from "./rapporto.js";
 import { request as richiestaHttp } from "node:http";
 import { request as richiestaHttps } from "node:https";
@@ -228,6 +241,8 @@ export function conservaLeAutomazioni(nuovi, salvati, chiChiede = "") {
 }
 
 const CONFIG_GET = "dashboardmodern/config/get";
+/* Codici sbagliati sul pannello a muro, per chi scrive, in un minuto. */
+const CODICI_SBAGLIATI_AL_MINUTO = 5;
 const CONFIG_SET = "dashboardmodern/config/set";
 const EVENTO_CONFIGURAZIONE = "dashboardmodern_config";
 const CONFIG_RESTORE = "dashboardmodern/config/restore";
@@ -797,6 +812,13 @@ export class Commissioni {
         return si(id, { persone: await this.notifiche.chiPuoRicevere(chiChiede) });
       return this.notifiche.mandaUnMessaggio(detto, chiChiede);
     }
+    /* L'origine del pannello a muro (`plancia-a-muro.js`, `MURO_FONTE`): SOLO
+     * CHI E' ENTRATO e vede il pannello. Torna solo quello che il pannello
+     * mostra, senza codici: vedi `_laFonteDelMuro`. E il codice di un tasto
+     * dell'antifurto lo controlla il ponte: vedi `_ilCodiceDelMuro`. */
+    if (tipo === MURO_FONTE) return this._laFonteDelMuro(detto, chiChiede, amministra, soloLaPrima);
+    if (tipo === MURO_CODICE)
+      return this._ilCodiceDelMuro(detto, chiChiede, amministra, soloLaPrima);
     /* Le notifiche semplici ed elaborate (`notifiche.js`) non hanno comandi
      * di qui: le loro domande — `ponte/notifiche/*` — arrivano solo da un
      * telefono abbinato e intestato a un utente di Home Assistant
@@ -1717,6 +1739,102 @@ export class Commissioni {
     const quale = this.plance.quale?.(String(profilo || PROFILO_PRINCIPALE));
     if (!quale) return false;
     return !laVede(quale, chiChiede, amministra);
+  }
+
+  /* L'origine del pannello a muro, per chi vede il pannello ma non la
+   * plancia da cui legge («il 4 pollici e' collegato come rustico»).
+   *
+   * Le regole, tutte, uguali per le due domande (`MURO_FONTE`, `MURO_CODICE`):
+   *
+   *  - solo chi e' entrato: senza un utente si risponde di no;
+   *  - con GdAHome Base dall'app, solo la principale (il pannello e' Premium);
+   *  - il pannello dev'essere una plancia che c'e', che chi chiede vede, e
+   *    che e' davvero a muro; la sua origine dev'essere un'altra plancia che
+   *    c'e'. Altrimenti «non c'e'», come per una plancia riservata;
+   *  - esce `fonteDaiValori` — stanze, luci, clima, tapparelle, telecamere,
+   *    azioni, persone, antifurto, energia: quello che il pannello disegna —
+   *    e mai la configurazione della plancia di origine; e nessun codice: i
+   *    tasti dell'antifurto che ne chiedono uno arrivano col segno
+   *    `codiceAlPonte` (`fonteSenzaCodici`), e il codice scritto lo controlla
+   *    `_ilCodiceDelMuro`, che risponde si' o no e basta.
+   *
+   * Niente si scrive: sono domande e basta. */
+  async _laOrigineDelMuro(detto, chiChiede = "", amministra = null, soloLaPrima = false) {
+    const id = detto?.id ?? null;
+    if (!String(chiChiede || "").trim())
+      return { no: no(id, "unauthorized", "il pannello a muro lo legge chi e' entrato") };
+    const cassetta = this.configurazione;
+    if (!cassetta) return { no: no(id, "unknown_command", `non conosco ${detto?.type}`) };
+    const profilo = String(detto?.profile ?? "");
+    if (!Configurazione.profiloBuono(profilo))
+      return { no: no(id, "invalid_format", "profilo non valido") };
+    if (soloLaPrima && profilo !== PROFILO_PRINCIPALE)
+      return {
+        no: no(id, "premium-richiesto", "con GdAHome Base l'app vede la plancia principale"),
+      };
+    const nonCe = { no: no(id, "not_found", "quella plancia non c'e'") };
+    if (this.plance && !this.plance.quale?.(profilo)) return nonCe;
+    if (this._profiloNascosto(profilo, chiChiede, amministra)) return nonCe;
+    await this._laPrendeDallIntegrazione(profilo);
+    const muro = muroPulito(cassetta.leggi(profilo)?.snapshot?.values?.[CHIAVE_MURO]);
+    const origine = muro.fonte;
+    if (!muro.attiva || !origine || origine === profilo) return nonCe;
+    if (!Configurazione.profiloBuono(origine)) return nonCe;
+    if (this.plance && !this.plance.quale?.(origine)) return nonCe;
+    await this._laPrendeDallIntegrazione(origine);
+    return { valori: cassetta.leggi(origine)?.snapshot?.values || {} };
+  }
+
+  async _laFonteDelMuro(detto, chiChiede = "", amministra = null, soloLaPrima = false) {
+    const id = detto?.id ?? null;
+    try {
+      const letta = await this._laOrigineDelMuro(detto, chiChiede, amministra, soloLaPrima);
+      if (letta.no) return letta.no;
+      return si(id, { fonte: fonteSenzaCodici(fonteDaiValori(letta.valori)) });
+    } catch (errore) {
+      this.registro.errore(`origine del pannello a muro: ${errore?.message || errore}`);
+      return no(id, "ponte_config", "non ha funzionato");
+    }
+  }
+
+  /* Il codice di un tasto dell'antifurto su misura, scritto su un pannello a
+   * muro che quel codice non l'ha avuto (`codiceAlPonte`). Si confronta con
+   * quello della plancia di origine e si risponde `giusto: true/false`: il
+   * codice non esce mai. Cinque sbagliati in un minuto per chi scrive, e per
+   * quel minuto si risponde di no senza nemmeno guardare: un tastierino non
+   * si prova a forza di tentativi. */
+  async _ilCodiceDelMuro(detto, chiChiede = "", amministra = null, soloLaPrima = false) {
+    const id = detto?.id ?? null;
+    const chi = String(chiChiede || "").trim();
+    const adesso = Date.now();
+    this._codiciSbagliati ??= new Map();
+    const sbagliati = (this._codiciSbagliati.get(chi) || []).filter((t) => adesso - t < 60000);
+    if (chi && sbagliati.length >= CODICI_SBAGLIATI_AL_MINUTO)
+      return no(id, "rate_limited", "troppi codici sbagliati: riprova fra un minuto");
+    try {
+      const letta = await this._laOrigineDelMuro(detto, chiChiede, amministra, soloLaPrima);
+      if (letta.no) return letta.no;
+      const modo = normalizzaModiSuMisura(
+        (() => {
+          try {
+            const grezzo = letta.valori[CHIAVE_ANTIFURTO_SU_MISURA];
+            return typeof grezzo === "string" ? JSON.parse(grezzo) : grezzo;
+          } catch (_errore) {
+            return [];
+          }
+        })(),
+      ).find((uno) => uno.id === String(detto?.modo ?? ""));
+      if (!modo) return no(id, "not_found", "quel tasto non c'e'");
+      const giusto = ilCodiceApreIlModo(modo, String(detto?.codice ?? ""));
+      if (!giusto) {
+        sbagliati.push(adesso);
+        this._codiciSbagliati.set(chi, sbagliati);
+      } else this._codiciSbagliati.delete(chi);
+      return si(id, { giusto });
+    } catch (errore) {
+      this.registro.errore(`codice del pannello a muro: ${errore?.message || errore}`);
+      return no(id, "ponte_config", "non ha funzionato");
+    }
   }
 
   _lePlanceSue(chiChiede = "", amministra = null, soloLaPrima = false) {

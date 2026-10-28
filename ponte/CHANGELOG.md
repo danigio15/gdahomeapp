@@ -10,6 +10,20 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.12
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Plancia a muro:** un tablet a muro entrato con un utente che vede il
+  pannello ma non la plancia principale (riservata ad altri) restava coi
+  posti vuoti. Adesso gli arriva tutto quello che il pannello prende dalla
+  principale — stanze, luci, clima, tapparelle, scene, antifurto — e la
+  principale resta chiusa: non ne riceve la configurazione.
+- **Antifurto sul pannello a muro:** anche i tasti su misura col codice. Il
+  codice non arriva al tablet: quello scritto sul tastierino lo controlla il
+  ponte, che risponde solo giusto o sbagliato. Cinque codici sbagliati in un
+  minuto e per quel minuto il tastierino non apre.
+
 ## 1.18.7.11
 
 _Solo Home Assistant: l'app sul telefono non cambia._

@@ -560,7 +560,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-GY3YS3OZ.js";
+} from "../../chunk-BRCXV6GQ.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -22864,13 +22864,19 @@ function normalizzaModoSuMisura(grezzo2, indice = 0) {
      * mandare il comando — esattamente come per le aperture.
      *
      * Facoltativo: chi non lo scrive preme e basta, come ha sempre fatto. */
-    pin: normalizzaIlCodice(grezzo2.pin)
+    pin: normalizzaIlCodice(grezzo2.pin),
+    /* Il codice c'e' ma lo tiene il ponte: e' il tasto come arriva a un
+     * pannello a muro entrato con un utente che la plancia di origine non la
+     * vede (`MURO_FONTE`). Il tastierino esce lo stesso, e il codice scritto
+     * lo controlla il ponte (`MURO_CODICE`): qui non arriva mai. */
+    codiceAlPonte: !normalizzaIlCodice(grezzo2.pin) && grezzo2.codiceAlPonte === true
   });
 }
 function ilModoChiedeIlCodice(modo) {
-  return ilCodiceServe(modo?.pin);
+  return ilCodiceServe(modo?.pin) || modo?.codiceAlPonte === true;
 }
 function ilCodiceApreIlModo(modo, digitato) {
+  if (modo?.codiceAlPonte === true && !ilCodiceServe(modo?.pin)) return false;
   return ilCodiceCombacia(modo?.pin, digitato);
 }
 function normalizzaModiSuMisura(stored) {
@@ -107861,6 +107867,8 @@ var json = (valore3, ripiego) => {
   }
 };
 var elenco11 = (valore3) => Array.isArray(valore3) ? valore3 : [];
+var MURO_FONTE = "ponte/muro/fonte";
+var MURO_CODICE = "ponte/muro/codice";
 function fonteDaiValori(valori = {}) {
   const stato3 = json(valori.dm_dashboard_state, {});
   const sezioni2 = stato3?.sections && typeof stato3.sections === "object" ? stato3.sections : {};
@@ -108547,13 +108555,21 @@ async function fonteDelMuro(muro, { forza = false } = {}) {
       const letto = await bridgeRequest("dashboardmodern/config/get", { profile: di });
       fonte = fonteDaiValori(letto?.snapshot?.values || {});
     } catch (_errore) {
-      fonte = state121.fonte;
+      fonte = await fonteDalPonte();
     }
   }
   state121.fonte = fonte || fonteDiQui();
   state121.fonteDi = di;
   state121.fonteLetta = Date.now();
   ricorda({ fonte: state121.fonte, fonteDi: di });
+  return state121.fonte;
+}
+async function fonteDalPonte() {
+  try {
+    const detto3 = await bridgeRequest(MURO_FONTE, { profile: currentProfile() });
+    if (detto3?.fonte && typeof detto3.fonte === "object") return detto3.fonte;
+  } catch (_errore) {
+  }
   return state121.fonte;
 }
 var fonteEQui = (di) => !root.__DM_MURO_FONTE__ && (di === currentProfile() || !root.__DASHBOARDMODERN_HOSTED__);
@@ -111871,18 +111887,28 @@ function allarme(modo, codice = "", area = "") {
       apriFinestra({ tipo: "codice", scopo: "allarme", modo, scritto: "" });
       return;
     }
-    if (codice && !ilCodiceApreIlModo(mio, codice)) {
+    const sbagliato2 = () => {
       const f = state121.finestra;
       if (f?.tipo === "codice") {
         f.errore = true;
         f.scritto = "";
         disegna7();
       }
+    };
+    const parti = () => {
+      const chiamata = chiamataDelModo2(mio);
+      chiudiFinestra();
+      if (chiamata) comanda2(chiamata.domain, chiamata.service, { ...chiamata.data });
+    };
+    if (codice && mio.codiceAlPonte) {
+      bridgeRequest(MURO_CODICE, { profile: currentProfile(), modo: mio.id, codice }).then((detto3) => detto3?.giusto === true ? parti() : sbagliato2()).catch(sbagliato2);
       return;
     }
-    const chiamata = chiamataDelModo2(mio);
-    chiudiFinestra();
-    if (chiamata) comanda2(chiamata.domain, chiamata.service, { ...chiamata.data });
+    if (codice && !ilCodiceApreIlModo(mio, codice)) {
+      sbagliato2();
+      return;
+    }
+    parti();
     return;
   }
   if (!s) return;

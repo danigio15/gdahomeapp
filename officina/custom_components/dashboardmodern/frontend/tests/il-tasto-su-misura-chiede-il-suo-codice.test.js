@@ -113,13 +113,19 @@ test("il tastierino e' quello del guscio, non un secondo uguale", () => {
 
   /* Un tasto col PIN NON scavalca il guscio: gli lascia fare quello che ha
    * sempre fatto, tastierino compreso. Senza PIN parte dritto. */
-  assert.match(sorgente, /if \(ilModoChiedeIlCodice\(modo\)\) \{\s*\n\s*const esito = originale\.apply/);
+  assert.match(
+    sorgente,
+    /if \(ilModoChiedeIlCodice\(modo\)\) \{\s*\n\s*const esito = originale\.apply/,
+  );
   assert.match(sorgente, /premiIlModoSuMisura\(id\);\s*\n\s*return undefined;/);
 
   /* All'OK il guscio chiama `callAlarmService(servizio, codice)`: li' si
    * confronta il codice, e solo se combacia parte l'entita'. */
   assert.match(sorgente, /const nome = "callAlarmService";/);
-  assert.match(sorgente, /if \(modo && ilCodiceApreIlModo\(modo, argomenti\[1\]\)\) premiIlModoSuMisura\(id\);/);
+  assert.match(
+    sorgente,
+    /if \(modo && ilCodiceApreIlModo\(modo, argomenti\[1\]\)\) premiIlModoSuMisura\(id\);/,
+  );
 
   /* E non esiste un secondo tastierino: quello delle aperture resta il loro,
    * e qui non se ne disegna nessuno. */
@@ -134,4 +140,36 @@ test("la casella del PIN sta nella scheda del tasto, come in quella delle apertu
   /* Il messaggio e' quello che le aperture danno gia' per lo stesso errore:
    * la stessa casella sbagliata nello stesso modo si dice nello stesso modo. */
   assert.match(sorgente, /t\("Il PIN è di 4-8 cifre\.", "The PIN is 4-8 digits\."\)/);
+});
+
+test("sul pannello a muro di chi non vede l'origine il codice lo tiene il ponte", async () => {
+  const { fonteSenzaCodici } = await import("../src/core/plancia-a-muro.js");
+  const fonte = fonteSenzaCodici({
+    antifurto: {
+      suMisura: [
+        { id: "notte", entita: "script.notte", pin: "1234" },
+        { id: "via", entita: "script.via" },
+      ],
+    },
+  });
+  /* Il codice non c'e' piu': c'e' il segno. */
+  assert.equal(JSON.stringify(fonte).includes("1234"), false);
+  const [notte, via] = fonte.antifurto.suMisura.map((m, i) => normalizzaModoSuMisura(m, i));
+  /* Il tastierino esce lo stesso... */
+  assert.equal(ilModoChiedeIlCodice(notte), true);
+  /* ...ma qui nessun codice lo apre: lo dice solo il ponte. */
+  assert.equal(ilCodiceApreIlModo(notte, "1234"), false);
+  assert.equal(ilCodiceApreIlModo(notte, ""), false);
+  /* Il tasto senza codice resta libero come prima. */
+  assert.equal(ilModoChiedeIlCodice(via), false);
+  assert.equal(ilCodiceApreIlModo(via, ""), true);
+  /* Un segno scritto a mano accanto a un codice vero non cambia niente. */
+  const conPin = normalizzaModoSuMisura({
+    id: "x",
+    entita: "script.x",
+    pin: "5678",
+    codiceAlPonte: true,
+  });
+  assert.equal(conPin.codiceAlPonte, false);
+  assert.equal(ilCodiceApreIlModo(conPin, "5678"), true);
 });

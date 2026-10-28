@@ -23,6 +23,7 @@ import { alarmHiddenModes, centraliAllarme, entitaDellaCentrale } from "./alarm-
 import {
   CASELLA_DELLO_SCATTATO,
   eScattatoAdesso,
+  ilModoChiedeIlCodice,
   normalizzaScattato,
 } from "./antifurto-su-misura.js";
 import { canonicalClimateType } from "./device-model.js";
@@ -1608,6 +1609,51 @@ const json = (valore, ripiego) => {
   }
 };
 const elenco = (valore) => (Array.isArray(valore) ? valore : []);
+
+/**
+ * La domanda al ponte per l'origine del pannello, quando la plancia di
+ * origine e' riservata ad altri utenti.
+ *
+ * «Il 4 pollici e' collegato come rustico e non vedo la plancia come sul pc»:
+ * il pannello leggeva l'origine con `dashboardmodern/config/get`, e il ponte
+ * — giustamente — non da' la configurazione di una plancia riservata a chi
+ * non la vede. Il pannello restava coi posti vuoti.
+ *
+ * Con questa domanda il ponte risponde SOLO a chi e' entrato e vede il
+ * pannello, e SOLO con quello che il pannello mostra (`fonteDaiValori`, gia'
+ * ripulita), senza i tasti dell'antifurto che chiedono un codice: vedi
+ * `fonteSenzaCodici`. La configurazione della plancia di origine resta sua.
+ */
+export const MURO_FONTE = "ponte/muro/fonte";
+
+/** La domanda al ponte: il codice scritto sul pannello apre quel tasto? */
+export const MURO_CODICE = "ponte/muro/codice";
+
+/**
+ * L'origine senza nessun codice dentro.
+ *
+ * I tasti dell'antifurto su misura col codice, sulla plancia, lo controllano
+ * sul tablet, quindi il codice viaggerebbe con loro: a chi la plancia di
+ * origine non la vede non si manda. Il tasto c'e' lo stesso, col segno
+ * `codiceAlPonte` al posto del codice: il tastierino esce, e quello che si
+ * scrive lo controlla il ponte (`MURO_CODICE`). Il segno lo mette solo il
+ * ponte, e solo a un tasto che il codice ce l'ha davvero.
+ */
+export function fonteSenzaCodici(fonte = {}) {
+  const antifurto = fonte?.antifurto && typeof fonte.antifurto === "object" ? fonte.antifurto : {};
+  return {
+    ...fonte,
+    antifurto: {
+      ...antifurto,
+      suMisura: elenco(antifurto.suMisura)
+        .filter((modo) => modo && typeof modo === "object")
+        .map((modo) => {
+          const { pin: _pin, codiceAlPonte: _segno, ...resto } = modo;
+          return ilModoChiedeIlCodice({ pin: _pin }) ? { ...resto, codiceAlPonte: true } : resto;
+        }),
+    },
+  };
+}
 
 /**
  * Le cose che servono al tablet, dai valori del config di un'altra plancia —
