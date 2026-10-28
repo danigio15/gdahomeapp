@@ -31,13 +31,13 @@ const LETTORI = [{ id: "mp1", entity: "media_player.sonos", nome: "Sonos Salotto
 const logo = (colore, lettera) =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="${colore}"/><text x="32" y="42" font-size="28" font-family="Arial" font-weight="700" fill="#fff" text-anchor="middle">${lettera}</text></svg>`;
 
+/* RDS e m2o hanno un logo che non arriva (un sito che non c'e' piu'): deve
+ * restare il 📻, non un quadratino bianco. */
 const LOGHI = {
   deejay: logo("#111827", "DJ"),
-  rds: logo("#dc2626", "RDS"),
   rtl: logo("#2563eb", "RTL"),
   virgin: logo("#e11d48", "V"),
   kiss: logo("#db2777", "K"),
-  m2o: logo("#7c3aed", "m2o"),
 };
 
 const stazione = (uuid, nome, chiave) => ({
@@ -150,7 +150,8 @@ async function boot(
   test.setTimeout(120_000);
   await page.route("https://radio.example/**", (route) => {
     const chiave = route.request().url().split("/").pop().replace(".svg", "");
-    return route.fulfill({ status: 200, contentType: "image/svg+xml", body: LOGHI[chiave] || "" });
+    if (!LOGHI[chiave]) return route.fulfill({ status: 404, body: "" });
+    return route.fulfill({ status: 200, contentType: "image/svg+xml", body: LOGHI[chiave] });
   });
   await fingiHomeAssistant(page);
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, seme);
@@ -247,6 +248,30 @@ test("nel Config: le radio di Home Assistant, filtrate, fra le preferite", async
   await page.screenshot({ path: testInfo.outputPath("radio-config.png") });
   await page.locator("[data-dm-radio-ed] .dm-radio-ed-trovate").scrollIntoViewIfNeeded();
   await page.screenshot({ path: testInfo.outputPath("radio-config-cerca.png") });
+});
+
+test("i loghi che non arrivano lasciano il 📻, quelli che arrivano si vedono", async ({
+  page,
+}, testInfo) => {
+  await boot(page, testInfo);
+  await page.evaluate(() => globalThis.apriConfigEntita?.());
+  await page.locator('.ed-tab[data-tab="media_radio"]').click();
+  const scheda = page.locator("[data-dm-radio-ed]");
+  await expect(scheda.locator(".dm-radio-ed-trovata")).toHaveCount(6, { timeout: 20_000 });
+  const logo = (uuid) =>
+    scheda.locator(
+      `[data-dm-radio-aggiungi="media-source://radio_browser/${uuid}"] .dm-radio-ed-logo`,
+    );
+  await expect(logo("a1")).toHaveAttribute("style", /background-image/);
+  await expect(logo("a3")).toHaveAttribute("style", /background-image/);
+  await page.waitForTimeout(400);
+  for (const morta of ["a2", "a6"]) {
+    await expect(logo(morta)).not.toHaveAttribute("style", /background-image/);
+    expect(await logo(morta).evaluate((el) => getComputedStyle(el).fontSize)).not.toBe("0px");
+  }
+  await scheda.locator(".dm-radio-ed-trovate").screenshot({
+    path: testInfo.outputPath("radio-loghi-che-mancano.png"),
+  });
 });
 
 test("Alexa › Musica: la radio si sceglie da un elenco, e torna nella pagina Musica", async ({
