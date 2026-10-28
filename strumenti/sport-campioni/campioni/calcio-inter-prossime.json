@@ -2,7 +2,7 @@
  "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/ita.1/teams/110/schedule?fixture=true",
  "stato": 200,
  "json": {
-  "timestamp": "2026-10-26T15:53:52Z",
+  "timestamp": "2026-10-28T23:03:20Z",
   "status": "success",
   "season": {
    "year": 2026,
@@ -20,7 +20,7 @@
    "clubhouse": "https://www.espn.com/soccer/club/_/id/110/internazionale",
    "color": "00239c",
    "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/110.png",
-   "recordSummary": "7-1-0",
+   "recordSummary": "8-1-0",
    "seasonSummary": "2026-27",
    "standingSummary": "1st in Italian Serie A",
    "isNational": false,
@@ -29,782 +29,6 @@
    }
   },
   "events": [
-   {
-    "id": "401874773",
-    "date": "2026-10-28T17:30Z",
-    "name": "Internazionale at Venezia",
-    "shortName": "INT @ VEN",
-    "season": {
-     "year": 2026,
-     "displayName": "2026-27 Italian Serie A"
-    },
-    "seasonType": {
-     "id": "1",
-     "type": 14240,
-     "name": "2026-27 Italian Serie A",
-     "abbreviation": "2026-27 Italian Serie A"
-    },
-    "timeValid": true,
-    "competitions": [
-     {
-      "id": "401874773",
-      "date": "2026-10-28T17:30Z",
-      "attendance": 0,
-      "timeValid": true,
-      "neutralSite": false,
-      "boxscoreAvailable": true,
-      "ticketsAvailable": false,
-      "venue": {
-       "fullName": "Stadio Pier Luigi Penzo",
-       "address": {
-        "city": "Venezia",
-        "country": "Italy"
-       }
-      },
-      "competitors": [
-       {
-        "id": "17530",
-        "type": "team",
-        "order": 0,
-        "homeAway": "home",
-        "winner": false,
-        "team": {
-         "id": "17530",
-         "location": "Venezia",
-         "abbreviation": "VEN",
-         "displayName": "Venezia",
-         "shortDisplayName": "Venezia",
-         "logos": [
-          {
-           "href": "https://a.espncdn.com/i/teamlogos/soccer/500/17530.png",
-           "width": 500,
-           "height": 500,
-           "alt": "",
-           "rel": [
-            "full",
-            "default"
-           ],
-           "lastUpdated": "2023-01-14T04:21Z"
-          },
-          {
-           "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/17530.png",
-           "width": 500,
-           "height": 500,
-           "alt": "",
-           "rel": [
-            "full",
-            "dark"
-           ],
-           "lastUpdated": "2023-01-14T04:22Z"
-          }
-         ],
-         "links": [
-          {
-           "rel": [
-            "clubhouse",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/club/_/id/17530/venezia",
-           "text": "Clubhouse"
-          },
-          {
-           "rel": [
-            "stats",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/stats/_/id/17530/venezia",
-           "text": "Stats"
-          },
-          {
-           "rel": [
-            "stats",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:17530&section=stats",
-           "text": "Stats"
-          },
-          {
-           "rel": [
-            "schedule",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/fixtures/_/id/17530/venezia",
-           "text": "Fixtures"
-          },
-          {
-           "rel": [
-            "schedule",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:17530&section=scores",
-           "text": "Fixtures"
-          },
-          {
-           "rel": [
-            "results",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/results/_/id/17530/venezia",
-           "text": "Results"
-          },
-          {
-           "rel": [
-            "results",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:17530&section=scores",
-           "text": "Results"
-          },
-          {
-           "rel": [
-            "standings",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/standings/_/league/ita.1",
-           "text": "Standings"
-          },
-          {
-           "rel": [
-            "standings",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:17530&section=standings",
-           "text": "Standings"
-          },
-          {
-           "rel": [
-            "squad",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/squad/_/id/17530/venezia",
-           "text": "Squad"
-          },
-          {
-           "rel": [
-            "squad",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:17530&section=squad",
-           "text": "Squad"
-          }
-         ]
-        }
-       },
-       {
-        "id": "110",
-        "type": "team",
-        "order": 1,
-        "homeAway": "away",
-        "winner": false,
-        "team": {
-         "id": "110",
-         "location": "Internazionale",
-         "abbreviation": "INT",
-         "displayName": "Internazionale",
-         "shortDisplayName": "Inter Milan",
-         "logos": [
-          {
-           "href": "https://a.espncdn.com/i/teamlogos/soccer/500/110.png",
-           "width": 500,
-           "height": 500,
-           "alt": "",
-           "rel": [
-            "full",
-            "default"
-           ],
-           "lastUpdated": "2024-01-04T17:49Z"
-          },
-          {
-           "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/110.png",
-           "width": 500,
-           "height": 500,
-           "alt": "",
-           "rel": [
-            "full",
-            "dark"
-           ],
-           "lastUpdated": "2024-01-04T17:53Z"
-          }
-         ],
-         "links": [
-          {
-           "rel": [
-            "clubhouse",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/club/_/id/110/internazionale",
-           "text": "Clubhouse"
-          },
-          {
-           "rel": [
-            "stats",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/stats/_/id/110/internazionale",
-           "text": "Stats"
-          },
-          {
-           "rel": [
-            "stats",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:110&section=stats",
-           "text": "Stats"
-          },
-          {
-           "rel": [
-            "schedule",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/fixtures/_/id/110/internazionale",
-           "text": "Fixtures"
-          },
-          {
-           "rel": [
-            "schedule",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:110&section=scores",
-           "text": "Fixtures"
-          },
-          {
-           "rel": [
-            "results",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/results/_/id/110/internazionale",
-           "text": "Results"
-          },
-          {
-           "rel": [
-            "results",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:110&section=scores",
-           "text": "Results"
-          },
-          {
-           "rel": [
-            "standings",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/standings/_/league/ita.1",
-           "text": "Standings"
-          },
-          {
-           "rel": [
-            "standings",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:110&section=standings",
-           "text": "Standings"
-          },
-          {
-           "rel": [
-            "squad",
-            "desktop",
-            "team"
-           ],
-           "href": "https://www.espn.com/soccer/team/squad/_/id/110/internazionale",
-           "text": "Squad"
-          },
-          {
-           "rel": [
-            "squad",
-            "sportscenter",
-            "app",
-            "team"
-           ],
-           "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:110&section=squad",
-           "text": "Squad"
-          }
-         ]
-        }
-       }
-      ],
-      "notes": [],
-      "odds": [
-       {
-        "provider": {
-         "id": "100",
-         "name": "DraftKings",
-         "priority": 1
-        },
-        "details": "INT -310",
-        "overUnder": 3.5,
-        "spread": 1.5,
-        "awayTeamOdds": {
-         "favorite": true,
-         "underdog": false,
-         "moneyLine": -310,
-         "spreadOdds": -120,
-         "open": {
-          "favorite": true,
-          "pointSpread": {
-           "alternateDisplayValue": "-1.5",
-           "american": "-1.5"
-          },
-          "spread": {
-           "value": 1.8,
-           "displayValue": "4/5",
-           "alternateDisplayValue": "-125",
-           "decimal": 1.8,
-           "fraction": "4/5",
-           "american": "-125"
-          },
-          "moneyLine": {
-           "value": 1.32,
-           "displayValue": "10/31",
-           "alternateDisplayValue": "-310",
-           "decimal": 1.32,
-           "fraction": "10/31",
-           "american": "-310"
-          }
-         },
-         "current": {
-          "pointSpread": {
-           "alternateDisplayValue": "-1.5",
-           "american": "-1.5"
-          },
-          "spread": {
-           "value": 1.83,
-           "displayValue": "5/6",
-           "alternateDisplayValue": "-120",
-           "decimal": 1.83,
-           "fraction": "5/6",
-           "american": "-120"
-          },
-          "moneyLine": {
-           "value": 1.32,
-           "displayValue": "10/31",
-           "alternateDisplayValue": "-310",
-           "decimal": 1.32,
-           "fraction": "10/31",
-           "american": "-310"
-          }
-         },
-         "team": {
-          "id": "110",
-          "name": "Internazionale",
-          "abbreviation": "INT",
-          "displayName": "Internazionale",
-          "shortDisplayName": "Inter Milan"
-         }
-        },
-        "homeTeamOdds": {
-         "favorite": false,
-         "underdog": true,
-         "moneyLine": 600,
-         "spreadOdds": -115,
-         "open": {
-          "favorite": false,
-          "pointSpread": {
-           "alternateDisplayValue": "+1.5",
-           "american": "+1.5"
-          },
-          "spread": {
-           "value": 1.9,
-           "displayValue": "10/11",
-           "alternateDisplayValue": "-110",
-           "decimal": 1.9,
-           "fraction": "10/11",
-           "american": "-110"
-          },
-          "moneyLine": {
-           "value": 7,
-           "displayValue": "6/1",
-           "alternateDisplayValue": "+600",
-           "decimal": 7,
-           "fraction": "6/1",
-           "american": "+600"
-          }
-         },
-         "current": {
-          "pointSpread": {
-           "alternateDisplayValue": "+1.5",
-           "american": "+1.5"
-          },
-          "spread": {
-           "value": 1.86,
-           "displayValue": "20/23",
-           "alternateDisplayValue": "-115",
-           "decimal": 1.86,
-           "fraction": "20/23",
-           "american": "-115"
-          },
-          "moneyLine": {
-           "value": 7,
-           "displayValue": "6/1",
-           "alternateDisplayValue": "+600",
-           "decimal": 7,
-           "fraction": "6/1",
-           "american": "+600"
-          }
-         },
-         "team": {
-          "id": "17530",
-          "name": "Venezia",
-          "abbreviation": "VEN",
-          "displayName": "Venezia",
-          "shortDisplayName": "Venezia"
-         }
-        },
-        "drawOdds": {
-         "moneyLine": 450
-        },
-        "links": [
-         {
-          "language": "en-US",
-          "rel": [
-           "home",
-           "desktop",
-           "bets",
-           "draftkings"
-          ],
-          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0ML86939625_1",
-          "text": "Home Bet",
-          "shortText": "Home Bet",
-          "isExternal": true,
-          "isPremium": false
-         },
-         {
-          "language": "en-US",
-          "rel": [
-           "away",
-           "desktop",
-           "bets",
-           "draftkings"
-          ],
-          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0ML86939625_3",
-          "text": "Away Bet",
-          "shortText": "Away Bet",
-          "isExternal": true,
-          "isPremium": false
-         },
-         {
-          "language": "en-US",
-          "rel": [
-           "draw",
-           "desktop",
-           "bets",
-           "draftkings"
-          ],
-          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0ML86939625_2",
-          "text": "Draw Bet",
-          "shortText": "Draw Bet",
-          "isExternal": true,
-          "isPremium": false
-         },
-         {
-          "language": "en-US",
-          "rel": [
-           "homeSpread",
-           "desktop",
-           "bets"
-          ],
-          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0HC86939635P150_1",
-          "text": "Home Point Spread",
-          "shortText": "Home Point Spread",
-          "isExternal": true,
-          "isPremium": false
-         },
-         {
-          "language": "en-US",
-          "rel": [
-           "awaySpread",
-           "desktop",
-           "bets"
-          ],
-          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0HC86939635N150_3",
-          "text": "Away Point Spread",
-          "shortText": "Away Point Spread",
-          "isExternal": true,
-          "isPremium": false
-         },
-         {
-          "language": "en-US",
-          "rel": [
-           "over",
-           "desktop",
-           "bets"
-          ],
-          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0OU86939630O350_1",
-          "text": "Over Odds",
-          "shortText": "Over Odds",
-          "isExternal": true,
-          "isPremium": false
-         },
-         {
-          "language": "en-US",
-          "rel": [
-           "under",
-           "desktop",
-           "bets"
-          ],
-          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0OU86939630U350_3",
-          "text": "Under Odds",
-          "shortText": "Under Odds",
-          "isExternal": true,
-          "isPremium": false
-         },
-         {
-          "language": "en-US",
-          "rel": [
-           "game",
-           "desktop",
-           "bets"
-          ],
-          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758",
-          "text": "Game",
-          "shortText": "Game",
-          "isExternal": true,
-          "isPremium": false
-         }
-        ]
-       }
-      ],
-      "broadcasts": [
-       {
-        "type": {
-         "id": "4",
-         "shortName": "STREAMING"
-        },
-        "media": {
-         "shortName": "Paramount+"
-        },
-        "lang": "en",
-        "region": "us"
-       }
-      ],
-      "status": {
-       "clock": 0,
-       "addedClock": 0,
-       "displayClock": "0'",
-       "period": 0,
-       "type": {
-        "id": "1",
-        "name": "STATUS_SCHEDULED",
-        "state": "pre",
-        "completed": false,
-        "description": "Scheduled",
-        "detail": "Wed, October 28th at 1:30 PM EDT",
-        "shortDetail": "10/28 - 1:30 PM EDT"
-       }
-      }
-     }
-    ],
-    "links": [
-     {
-      "language": "en-US",
-      "rel": [
-       "summary",
-       "desktop",
-       "event"
-      ],
-      "href": "https://www.espn.com/soccer/match/_/gameId/401874773/internazionale-venezia",
-      "text": "Summary",
-      "shortText": "Summary",
-      "isExternal": false,
-      "isPremium": false
-     },
-     {
-      "language": "en-US",
-      "rel": [
-       "summary",
-       "mobile",
-       "event"
-      ],
-      "href": "https://m.espn.com/soccer/match?gameId=401874773&action=summary",
-      "text": "Summary",
-      "shortText": "Summary",
-      "isExternal": false,
-      "isPremium": false
-     },
-     {
-      "language": "en-US",
-      "rel": [
-       "summary",
-       "sportscenter",
-       "app",
-       "event"
-      ],
-      "href": "sportscenter://x-callback-url/showGame?sportName=soccer&leagueAbbrev=ita.1&gameId=401874773",
-      "text": "Summary",
-      "shortText": "Summary",
-      "isExternal": false,
-      "isPremium": false
-     },
-     {
-      "language": "en-US",
-      "rel": [
-       "videos",
-       "desktop",
-       "event"
-      ],
-      "href": "https://www.espn.com/soccer/video/_/gameId/401874773",
-      "text": "Videos",
-      "shortText": "Videos",
-      "isExternal": false,
-      "isPremium": false
-     },
-     {
-      "language": "en-US",
-      "rel": [
-       "standings",
-       "desktop",
-       "event"
-      ],
-      "href": "https://www.espn.com/soccer/table/_/league/ita.1",
-      "text": "Table",
-      "shortText": "Table",
-      "isExternal": false,
-      "isPremium": false
-     },
-     {
-      "language": "en-US",
-      "rel": [
-       "odds",
-       "desktop",
-       "event"
-      ],
-      "href": "https://www.espn.com/soccer/odds/_/gameId/401874773",
-      "text": "Odds",
-      "shortText": "Odds",
-      "isExternal": false,
-      "isPremium": false
-     },
-     {
-      "language": "en-US",
-      "rel": [
-       "odds",
-       "mobile",
-       "event"
-      ],
-      "href": "https://m.espn.com/soccer/odds/_/gameId/401874773",
-      "text": "Odds",
-      "shortText": "Odds",
-      "isExternal": false,
-      "isPremium": false
-     },
-     {
-      "language": "en-US",
-      "rel": [
-       "livestandings",
-       "desktop",
-       "event"
-      ],
-      "href": "https://www.espn.com/soccer/table/_/gameId/401874773",
-      "text": "Live Table",
-      "shortText": "Live Table",
-      "isExternal": false,
-      "isPremium": false
-     },
-     {
-      "language": "en-US",
-      "rel": [
-       "stats",
-       "desktop",
-       "event"
-      ],
-      "href": "https://www.espn.com/soccer/matchstats/_/gameId/401874773",
-      "text": "Statistics",
-      "shortText": "Statistics",
-      "isExternal": false,
-      "isPremium": false
-     },
-     {
-      "language": "en-US",
-      "rel": [
-       "commentary",
-       "desktop",
-       "event"
-      ],
-      "href": "https://www.espn.com/soccer/commentary/_/gameId/401874773",
-      "text": "Commentary",
-      "shortText": "Commentary",
-      "isExternal": false,
-      "isPremium": false
-     },
-     {
-      "language": "en-US",
-      "rel": [
-       "bet365",
-       "desktop",
-       "event"
-      ],
-      "href": "http://www.bet365.com/home/?affiliate=365_351846",
-      "text": "Bet 365",
-      "shortText": "Bet 365",
-      "isExternal": true,
-      "isPremium": false
-     },
-     {
-      "language": "en-US",
-      "rel": [
-       "player-stats",
-       "desktop",
-       "event"
-      ],
-      "href": "https://www.espn.com/soccer/player-stats/_/gameId/401874773/league/ita.1",
-      "text": "Player Stats",
-      "shortText": "Player Stats",
-      "isExternal": false,
-      "isPremium": false
-     },
-     {
-      "language": "en-US",
-      "rel": [
-       "team-stats",
-       "desktop",
-       "event"
-      ],
-      "href": "https://www.espn.com/soccer/team-stats/_/gameId/401874773/league/ita.1",
-      "text": "Team Stats",
-      "shortText": "Team Stats",
-      "isExternal": false,
-      "isPremium": false
-     }
-    ],
-    "league": {
-     "id": "730",
-     "alternateId": "12",
-     "name": "Italian Serie A",
-     "abbreviation": "Serie A",
-     "shortName": "Serie A",
-     "midsizeName": "ITA.1",
-     "slug": "ita.1",
-     "isTournament": false
-    }
-   },
    {
     "id": "401874795",
     "date": "2026-10-31T19:45Z",
@@ -1131,6 +355,244 @@
       "odds": [
        {
         "provider": {
+         "id": "100",
+         "name": "DraftKings",
+         "priority": 1
+        },
+        "details": "INT -105",
+        "overUnder": 2.5,
+        "spread": 0.5,
+        "awayTeamOdds": {
+         "favorite": true,
+         "underdog": false,
+         "moneyLine": -105,
+         "spreadOdds": -110,
+         "open": {
+          "favorite": true,
+          "pointSpread": {
+           "alternateDisplayValue": "-0.5",
+           "american": "-0.5"
+          },
+          "spread": {
+           "value": 1.95,
+           "displayValue": "20/21",
+           "alternateDisplayValue": "-105",
+           "decimal": 1.95,
+           "fraction": "20/21",
+           "american": "-105"
+          },
+          "moneyLine": {
+           "value": 2.05,
+           "displayValue": "21/20",
+           "alternateDisplayValue": "+105",
+           "decimal": 2.05,
+           "fraction": "21/20",
+           "american": "+105"
+          }
+         },
+         "current": {
+          "pointSpread": {
+           "alternateDisplayValue": "-0.5",
+           "american": "-0.5"
+          },
+          "spread": {
+           "value": 1.9,
+           "displayValue": "10/11",
+           "alternateDisplayValue": "-110",
+           "decimal": 1.9,
+           "fraction": "10/11",
+           "american": "-110"
+          },
+          "moneyLine": {
+           "value": 1.95,
+           "displayValue": "20/21",
+           "alternateDisplayValue": "-105",
+           "decimal": 1.95,
+           "fraction": "20/21",
+           "american": "-105"
+          }
+         },
+         "team": {
+          "id": "110",
+          "name": "Internazionale",
+          "abbreviation": "INT",
+          "displayName": "Internazionale",
+          "shortDisplayName": "Inter Milan"
+         }
+        },
+        "homeTeamOdds": {
+         "favorite": false,
+         "underdog": true,
+         "moneyLine": 245,
+         "spreadOdds": -125,
+         "open": {
+          "favorite": false,
+          "pointSpread": {
+           "alternateDisplayValue": "+0.5",
+           "american": "+0.5"
+          },
+          "spread": {
+           "value": 1.71,
+           "displayValue": "5/7",
+           "alternateDisplayValue": "-140",
+           "decimal": 1.71,
+           "fraction": "5/7",
+           "american": "-140"
+          },
+          "moneyLine": {
+           "value": 3.15,
+           "displayValue": "43/20",
+           "alternateDisplayValue": "+215",
+           "decimal": 3.15,
+           "fraction": "43/20",
+           "american": "+215"
+          }
+         },
+         "current": {
+          "pointSpread": {
+           "alternateDisplayValue": "+0.5",
+           "american": "+0.5"
+          },
+          "spread": {
+           "value": 1.8,
+           "displayValue": "4/5",
+           "alternateDisplayValue": "-125",
+           "decimal": 1.8,
+           "fraction": "4/5",
+           "american": "-125"
+          },
+          "moneyLine": {
+           "value": 3.45,
+           "displayValue": "49/20",
+           "alternateDisplayValue": "+245",
+           "decimal": 3.45,
+           "fraction": "49/20",
+           "american": "+245"
+          }
+         },
+         "team": {
+          "id": "103",
+          "name": "AC Milan",
+          "abbreviation": "MIL",
+          "displayName": "AC Milan",
+          "shortDisplayName": "Milan"
+         }
+        },
+        "drawOdds": {
+         "moneyLine": 265
+        },
+        "links": [
+         {
+          "language": "en-US",
+          "rel": [
+           "home",
+           "desktop",
+           "bets",
+           "draftkings"
+          ],
+          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34908276%3Foutcomes%3D0ML86948141_1",
+          "text": "Home Bet",
+          "shortText": "Home Bet",
+          "isExternal": true,
+          "isPremium": false
+         },
+         {
+          "language": "en-US",
+          "rel": [
+           "away",
+           "desktop",
+           "bets",
+           "draftkings"
+          ],
+          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34908276%3Foutcomes%3D0ML86948141_3",
+          "text": "Away Bet",
+          "shortText": "Away Bet",
+          "isExternal": true,
+          "isPremium": false
+         },
+         {
+          "language": "en-US",
+          "rel": [
+           "draw",
+           "desktop",
+           "bets",
+           "draftkings"
+          ],
+          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34908276%3Foutcomes%3D0ML86948141_2",
+          "text": "Draw Bet",
+          "shortText": "Draw Bet",
+          "isExternal": true,
+          "isPremium": false
+         },
+         {
+          "language": "en-US",
+          "rel": [
+           "homeSpread",
+           "desktop",
+           "bets"
+          ],
+          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34908276%3Foutcomes%3D0HC86948196P50_1",
+          "text": "Home Point Spread",
+          "shortText": "Home Point Spread",
+          "isExternal": true,
+          "isPremium": false
+         },
+         {
+          "language": "en-US",
+          "rel": [
+           "awaySpread",
+           "desktop",
+           "bets"
+          ],
+          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34908276%3Foutcomes%3D0HC86948196N50_3",
+          "text": "Away Point Spread",
+          "shortText": "Away Point Spread",
+          "isExternal": true,
+          "isPremium": false
+         },
+         {
+          "language": "en-US",
+          "rel": [
+           "over",
+           "desktop",
+           "bets"
+          ],
+          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34908276%3Foutcomes%3D0OU86948191O250_1",
+          "text": "Over Odds",
+          "shortText": "Over Odds",
+          "isExternal": true,
+          "isPremium": false
+         },
+         {
+          "language": "en-US",
+          "rel": [
+           "under",
+           "desktop",
+           "bets"
+          ],
+          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34908276%3Foutcomes%3D0OU86948191U250_3",
+          "text": "Under Odds",
+          "shortText": "Under Odds",
+          "isExternal": true,
+          "isPremium": false
+         },
+         {
+          "language": "en-US",
+          "rel": [
+           "game",
+           "desktop",
+           "bets"
+          ],
+          "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34908276",
+          "text": "Game",
+          "shortText": "Game",
+          "isExternal": true,
+          "isPremium": false
+         }
+        ]
+       },
+       {
+        "provider": {
          "id": "2000",
          "name": "Bet 365",
          "priority": 0
@@ -1144,8 +606,8 @@
           "shortDisplayName": "Inter Milan"
          },
          "odds": {
-          "summary": "11/10",
-          "value": 2.1,
+          "summary": "1/1",
+          "value": 2,
           "handicap": 0
          }
         },
@@ -1158,14 +620,14 @@
           "shortDisplayName": "Milan"
          },
          "odds": {
-          "summary": "11/5",
-          "value": 3.2,
+          "summary": "5/2",
+          "value": 3.5,
           "handicap": 0
          }
         },
         "drawOdds": {
-         "summary": "13/5",
-         "value": 3.6,
+         "summary": "27/10",
+         "value": 3.7,
          "handicap": 0
         },
         "links": [
@@ -1177,7 +639,7 @@
            "bets",
            "bet-365"
           ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746292~11/5",
+          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746292~5/2",
           "text": "Home Bet",
           "shortText": "Home Bet",
           "isExternal": true,
@@ -1191,7 +653,7 @@
            "bets",
            "bet-365"
           ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746306~11/10",
+          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746306~1/1",
           "text": "Away Bet",
           "shortText": "Away Bet",
           "isExternal": true,
@@ -1205,7 +667,7 @@
            "bets",
            "bet-365"
           ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746302~13/5",
+          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746302~27/10",
           "text": "Draw Bet",
           "shortText": "Draw Bet",
           "isExternal": true,

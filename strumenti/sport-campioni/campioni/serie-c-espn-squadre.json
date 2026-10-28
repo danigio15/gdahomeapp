@@ -1,0 +1,23 @@
+{
+ "stato": 200,
+ "json": {
+  "sports": [
+   {
+    "id": "600",
+    "leagues": [
+     {
+      "abbreviation": "ITA.3",
+      "name": "Italian Serie C1-A",
+      "shortName": "ITA.3",
+      "slug": "ita.3",
+      "teams": [],
+      "uid": "s:600"
+     }
+    ],
+    "name": "Soccer",
+    "slug": "soccer",
+    "uid": "s:600"
+   }
+  ]
+ }
+}

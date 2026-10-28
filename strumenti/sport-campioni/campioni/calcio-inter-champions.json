@@ -2,7 +2,7 @@
  "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/uefa.champions/teams/110/schedule",
  "stato": 200,
  "json": {
-  "timestamp": "2026-10-26T15:53:36Z",
+  "timestamp": "2026-10-28T23:04:46Z",
   "status": "success",
   "season": {
    "year": 2026,
