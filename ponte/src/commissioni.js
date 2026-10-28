@@ -71,6 +71,13 @@
  */
 
 import { MESSAGGIO_CHI, MESSAGGIO_MANDA } from "../plancia/src/core/messaggio-di-casa.js";
+import {
+  CHIAVE_MURO,
+  MURO_FONTE,
+  fonteDaiValori,
+  fonteSenzaCodici,
+  muroPulito,
+} from "../plancia/src/core/plancia-a-muro.js";
 import { QUADRO_DI_DIFETTO } from "./rapporto.js";
 import { request as richiestaHttp } from "node:http";
 import { request as richiestaHttps } from "node:https";
@@ -797,6 +804,10 @@ export class Commissioni {
         return si(id, { persone: await this.notifiche.chiPuoRicevere(chiChiede) });
       return this.notifiche.mandaUnMessaggio(detto, chiChiede);
     }
+    /* L'origine del pannello a muro (`plancia-a-muro.js`, `MURO_FONTE`): SOLO
+     * CHI E' ENTRATO e vede il pannello. Torna solo quello che il pannello
+     * mostra, senza codici: vedi `_laFonteDelMuro`. */
+    if (tipo === MURO_FONTE) return this._laFonteDelMuro(detto, chiChiede, amministra, soloLaPrima);
     /* Le notifiche semplici ed elaborate (`notifiche.js`) non hanno comandi
      * di qui: le loro domande — `ponte/notifiche/*` — arrivano solo da un
      * telefono abbinato e intestato a un utente di Home Assistant
@@ -1717,6 +1728,52 @@ export class Commissioni {
     const quale = this.plance.quale?.(String(profilo || PROFILO_PRINCIPALE));
     if (!quale) return false;
     return !laVede(quale, chiChiede, amministra);
+  }
+
+  /* L'origine del pannello a muro, per chi vede il pannello ma non la
+   * plancia da cui legge («il 4 pollici e' collegato come rustico»).
+   *
+   * Le regole, tutte:
+   *
+   *  - solo chi e' entrato: senza un utente si risponde di no;
+   *  - con GdAHome Base dall'app, solo la principale (il pannello e' Premium);
+   *  - il pannello dev'essere una plancia che c'e', che chi chiede vede, e
+   *    che e' davvero a muro; la sua origine dev'essere un'altra plancia che
+   *    c'e'. Altrimenti «non c'e'», come per una plancia riservata;
+   *  - esce `fonteDaiValori` — stanze, luci, clima, tapparelle, telecamere,
+   *    azioni, persone, antifurto, energia: quello che il pannello disegna —
+   *    e mai la configurazione della plancia di origine; e senza i tasti
+   *    dell'antifurto che chiedono un codice (`fonteSenzaCodici`).
+   *
+   * Niente si scrive: e' una domanda e basta. */
+  async _laFonteDelMuro(detto, chiChiede = "", amministra = null, soloLaPrima = false) {
+    const id = detto?.id ?? null;
+    if (!String(chiChiede || "").trim())
+      return no(id, "unauthorized", "il pannello a muro lo legge chi e' entrato");
+    const cassetta = this.configurazione;
+    if (!cassetta) return no(id, "unknown_command", `non conosco ${detto?.type}`);
+    const profilo = String(detto?.profile ?? "");
+    if (!Configurazione.profiloBuono(profilo))
+      return no(id, "invalid_format", "profilo non valido");
+    if (soloLaPrima && profilo !== PROFILO_PRINCIPALE)
+      return no(id, "premium-richiesto", "con GdAHome Base l'app vede la plancia principale");
+    const nonCe = () => no(id, "not_found", "quella plancia non c'e'");
+    if (this.plance && !this.plance.quale?.(profilo)) return nonCe();
+    if (this._profiloNascosto(profilo, chiChiede, amministra)) return nonCe();
+    try {
+      await this._laPrendeDallIntegrazione(profilo);
+      const muro = muroPulito(cassetta.leggi(profilo)?.snapshot?.values?.[CHIAVE_MURO]);
+      const origine = muro.fonte;
+      if (!muro.attiva || !origine || origine === profilo) return nonCe();
+      if (!Configurazione.profiloBuono(origine)) return nonCe();
+      if (this.plance && !this.plance.quale?.(origine)) return nonCe();
+      await this._laPrendeDallIntegrazione(origine);
+      const valori = cassetta.leggi(origine)?.snapshot?.values || {};
+      return si(id, { fonte: fonteSenzaCodici(fonteDaiValori(valori)) });
+    } catch (errore) {
+      this.registro.errore(`origine del pannello a muro: ${errore?.message || errore}`);
+      return no(id, "ponte_config", "non ha funzionato");
+    }
   }
 
   _lePlanceSue(chiChiede = "", amministra = null, soloLaPrima = false) {

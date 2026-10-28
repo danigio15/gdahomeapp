@@ -120,6 +120,7 @@ import {
   meteoDelMuro,
   potenzaConIlSegno,
   grigliaPer,
+  MURO_FONTE,
   fonteDaiValori,
   grigliaDellaPagina,
   lettoriDellaPagina,
@@ -311,13 +312,25 @@ export async function fonteDelMuro(muro, { forza = false } = {}) {
       const letto = await bridgeRequest("dashboardmodern/config/get", { profile: di });
       fonte = fonteDaiValori(letto?.snapshot?.values || {});
     } catch (_errore) {
-      fonte = state.fonte;
+      fonte = await fonteDalPonte();
     }
   }
   state.fonte = fonte || fonteDiQui();
   state.fonteDi = di;
   state.fonteLetta = Date.now();
   ricorda({ fonte: state.fonte, fonteDi: di });
+  return state.fonte;
+}
+
+/* Quando la plancia di origine e' riservata ad altri utenti («il 4 pollici
+ * e' collegato come rustico»): il ponte non ne da' la configurazione a chi non
+ * la vede, ma a chi vede questo pannello da' quello che il pannello mostra
+ * (`MURO_FONTE`). Se non risponde nemmeno lui, si tiene quello che si sapeva. */
+async function fonteDalPonte() {
+  try {
+    const detto = await bridgeRequest(MURO_FONTE, { profile: currentProfile() });
+    if (detto?.fonte && typeof detto.fonte === "object") return detto.fonte;
+  } catch (_errore) {}
   return state.fonte;
 }
 

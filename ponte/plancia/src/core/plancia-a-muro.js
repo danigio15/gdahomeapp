@@ -23,6 +23,7 @@ import { alarmHiddenModes, centraliAllarme, entitaDellaCentrale } from "./alarm-
 import {
   CASELLA_DELLO_SCATTATO,
   eScattatoAdesso,
+  ilModoChiedeIlCodice,
   normalizzaScattato,
 } from "./antifurto-su-misura.js";
 import { canonicalClimateType } from "./device-model.js";
@@ -1608,6 +1609,44 @@ const json = (valore, ripiego) => {
   }
 };
 const elenco = (valore) => (Array.isArray(valore) ? valore : []);
+
+/**
+ * La domanda al ponte per l'origine del pannello, quando la plancia di
+ * origine e' riservata ad altri utenti.
+ *
+ * «Il 4 pollici e' collegato come rustico e non vedo la plancia come sul pc»:
+ * il pannello leggeva l'origine con `dashboardmodern/config/get`, e il ponte
+ * — giustamente — non da' la configurazione di una plancia riservata a chi
+ * non la vede. Il pannello restava coi posti vuoti.
+ *
+ * Con questa domanda il ponte risponde SOLO a chi e' entrato e vede il
+ * pannello, e SOLO con quello che il pannello mostra (`fonteDaiValori`, gia'
+ * ripulita), senza i tasti dell'antifurto che chiedono un codice: vedi
+ * `fonteSenzaCodici`. La configurazione della plancia di origine resta sua.
+ */
+export const MURO_FONTE = "ponte/muro/fonte";
+
+/**
+ * L'origine senza nessun codice dentro.
+ *
+ * I tasti dell'antifurto su misura col codice lo controllano sul tablet, quindi
+ * il codice viaggia con loro: a chi la plancia di origine non la vede non si
+ * manda. Quei tasti non ci sono proprio — un tasto senza codice partirebbe
+ * senza chiederlo, e un tasto che parte senza codice e' peggio di un tasto
+ * che manca.
+ */
+export function fonteSenzaCodici(fonte = {}) {
+  const antifurto = fonte?.antifurto && typeof fonte.antifurto === "object" ? fonte.antifurto : {};
+  return {
+    ...fonte,
+    antifurto: {
+      ...antifurto,
+      suMisura: elenco(antifurto.suMisura).filter(
+        (modo) => modo && typeof modo === "object" && !ilModoChiedeIlCodice(modo),
+      ),
+    },
+  };
+}
 
 /**
  * Le cose che servono al tablet, dai valori del config di un'altra plancia —
