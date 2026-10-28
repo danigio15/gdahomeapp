@@ -10,6 +10,17 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.14
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Loghi delle radio:** nell'elenco delle radio (Config › Musica › Radio,
+  pagina Musica, Alexa › Musica) le radio il cui logo non si carica mostrano
+  il 📻 invece di un quadratino bianco vuoto.
+- **Aggiornamenti più sicuri:** l'add-on pubblicato viene controllato prima
+  di uscire: la plancia dentro deve tornare col suo sigillo, così la console
+  non segnala «file che non tornano» dopo un aggiornamento.
+
 ## 1.18.7.13
 
 _Solo Home Assistant: l'app sul telefono non cambia._
