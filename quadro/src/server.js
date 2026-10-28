@@ -53,6 +53,7 @@
  *   POST   /v1/licenze/riscatta          un codice regalo, per una casa o un telefono
  *   POST   /v1/licenze/telefono          gdanav da solo chiede i suoi
  *   GET    /v1/licenze/revocate          le licenze tolte da poco, firmate: le chiede il centralino
+ *   GET    /v1/app/ultime                l'ultima versione dell'app nei negozi, firmata: la chiedono le case
  *
  *   GET    /gestore/                     la pagina di chi tiene il quadro
  *   GET    /gestore/installatori         chi c'e', quanti impianti ha ognuno e
@@ -69,6 +70,7 @@
  *   PATCH  /gestore/installatori/<id>    il suo pacchetto di licenze (anche nome e limite)
  *   GET    /gestore/licenze              tutte le licenze e tutti i codici
  *   GET    /gestore/abbonamenti          gli abbonamenti dei negozi, coi conti
+ *   PUT    /gestore/ultime-dell-app/<apple|google>   l'ultima versione nel negozio
  *   POST   /gestore/licenze              una licenza in regalo a una casa
  *   DELETE /gestore/licenze/<lic_…>      toglila
  *   POST   /gestore/codici               codici regalo, quanti se ne vuole
@@ -133,6 +135,7 @@ import { Biglietti, GettoniDellEditor } from "./biglietti.js";
 import { laFormaDel, leRigheDeiSegni } from "./forma-del-rapporto.js";
 import { Freno } from "./freno.js";
 import { leVersioniDelleApp } from "./versioni-delle-app.js";
+import { UltimeDellApp } from "./ultime-dell-app.js";
 import { daChiSiConta, eDaQui } from "./indirizzo.js";
 import {
   ATTESA_DEL_NEGOZIO,
@@ -140,6 +143,7 @@ import {
   Licenze,
   NoLicenza,
   TELEFONO,
+  firmaIlGettone,
   ilPacchettoDetto,
 } from "./licenze.js";
 import { NegozioGiu, Negozi, RicevutaNonValida } from "./negozi.js";
@@ -349,6 +353,9 @@ export function costruisciIlServer({
    * Di serie spente: senza la chiave privata le vie di `/v1/licenze`
    * rispondono 503, e senza le chiavi dei negozi quella del negozio. */
   licenze = new Licenze({ cartella }),
+  /* L'ultima versione dell'app nei negozi, scritta dalla gestione
+   * (`ultime-dell-app.js`): da li' le case sanno chi avvisare. */
+  ultime = new UltimeDellApp({ cartella }),
   negozi = new Negozi({ ambiente: {} }),
   /* Quanto si aspetta il negozio, per i rinnovi, mentre una casa aspetta i
    * suoi gettoni. */
@@ -930,6 +937,24 @@ export function costruisciIlServer({
         return;
       }
       json(risposta, { elenco: licenze.elencoDelleTolte() });
+      return;
+    }
+
+    /* L'ultima versione dell'app nei negozi, per le case che avvisano i
+     * telefoni rimasti indietro (`ultime-dell-app.js`). Senza chiave, come
+     * le revoche: dentro ci sono due numeri e due versioni, e la firma dice
+     * che vengono da qui. */
+    if (via === "/v1/app/ultime" && metodo === "GET") {
+      const fraQuanto = frenoDelleLicenze.passa(daChiSiConta(richiesta));
+      if (fraQuanto) {
+        frenato(risposta, fraQuanto);
+        return;
+      }
+      if (!licenze.accese) {
+        male(risposta, 503, "licenze-non-configurate");
+        return;
+      }
+      json(risposta, { ultime: firmaIlGettone(licenze.privata, ultime.daFirmare()) });
       return;
     }
 
@@ -2180,6 +2205,28 @@ export function costruisciIlServer({
       return;
     }
 
+    /* L'ultima versione pubblicata in un negozio: da qui le case avvisano i
+     * telefoni rimasti indietro. Vuota la toglie. */
+    const ultimaDi = /^\/ultime-dell-app\/(apple|google)$/.exec(via);
+    if (ultimaDi && metodo === "PUT") {
+      const detto = await ilDetto(richiesta);
+      try {
+        const tutte = ultime.imposta(ultimaDi[1], {
+          costruzione: detto?.costruzione,
+          versione: detto?.versione,
+        });
+        registro.info(
+          tutte[ultimaDi[1]]
+            ? `l'ultima su ${ultimaDi[1]} e' la ${tutte[ultimaDi[1]].costruzione}`
+            : `l'ultima su ${ultimaDi[1]} e' tolta`,
+        );
+        json(risposta, { ultimeDellApp: tutte });
+      } catch (errore) {
+        male(risposta, 400, errore?.codice || "non-valida");
+      }
+      return;
+    }
+
     /* Gli abbonamenti comprati nell'app, per la schermata «Abbonamenti». */
     if (via === "/abbonamenti" && metodo === "GET") {
       /* E dove i negozi mandano i loro avvisi: le vie da scrivere in App Store
@@ -2190,7 +2237,8 @@ export function costruisciIlServer({
         ...licenze.abbonamenti(),
         /* Le versioni dell'app sui telefoni, dai rapporti delle case: solo
          * quanti per versione, mai quali telefoni. */
-        versioniDelleApp: leVersioniDelleApp(case_.elenco(TUTTE)),
+        versioniDelleApp: leVersioniDelleApp(case_.elenco(TUTTE), ultime.tutte()),
+        ultimeDellApp: ultime.tutte(),
         avvisi: {
           apple: "/v1/negozi/apple",
           google:

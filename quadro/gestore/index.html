@@ -604,6 +604,17 @@
       .capo-sezione.le-versioni {
         margin-top: 28px;
       }
+
+      /* L'ultima pubblicata, in fondo al riquadro del negozio. */
+      .ultima-del-negozio {
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid var(--linea);
+      }
+
+      .ultima-del-negozio .ultima-ora {
+        margin: 0 0 10px;
+      }
       .pastiglia {
         display: inline-flex;
         align-items: center;
@@ -6825,6 +6836,51 @@
         test: "Nessun acquisto di test.",
       };
 
+      /* Scrive (o toglie) l'ultima versione pubblicata in un negozio. Prima
+       * di avvisare tutti si chiede conferma: una volta partita, la notifica
+       * arriva ai telefoni indietro e non si richiama. */
+      async function scriviLUltima(negozio, tasto, { togli = false } = {}) {
+        const blocco = tasto.closest("[data-ultima]");
+        const versione = togli
+          ? ""
+          : blocco?.querySelector("[data-ultima-versione]")?.value.trim() || "";
+        const costruzione = togli
+          ? ""
+          : blocco?.querySelector("[data-ultima-costruzione]")?.value.trim() || "";
+        const nome = negozio === "apple" ? "App Store" : "Google Play";
+        if (!togli) {
+          if (!/^\d{1,10}$/.test(costruzione)) {
+            alert("Scrivi il numero della build, solo cifre (per esempio 1180801).");
+            return;
+          }
+          const ok = confirm(
+            `${versione || "La build"} ${costruzione} è davvero su ${nome}?\n\nI telefoni ${nome === "App Store" ? "iPhone e iPad" : "Android"} con una build più vecchia ricevono una volta la notifica «aggiorna l'app».`,
+          );
+          if (!ok) return;
+        }
+        tasto.disabled = true;
+        try {
+          const detto = await chiedi(`/ultime-dell-app/${negozio}`, {
+            method: "PUT",
+            body: JSON.stringify({ versione, costruzione }),
+          });
+          if (ABBONAMENTI) ABBONAMENTI.ultimeDellApp = detto.ultimeDellApp;
+          try {
+            ABBONAMENTI = await chiedi("/abbonamenti");
+          } catch (_niente) {
+            /* Si tiene quello di prima, con l'ultima nuova. */
+          }
+          disegna();
+        } catch (errore) {
+          alert(
+            errore?.message === "versione-non-valida"
+              ? "La versione si scrive come nel negozio, per esempio 1.18.8."
+              : "Non si è salvata. Riprova fra poco.",
+          );
+          tasto.disabled = false;
+        }
+      }
+
       function gliAbbonamenti() {
         const A = ABBONAMENTI;
         const testa = `
@@ -7167,7 +7223,39 @@
                 ? `<ul class="elenco">${N.versioni.map(rigaVersione(N)).join("")}</ul>`
                 : `<div class="vuoto"><b>Ancora nessuna versione</b> Arriva col prossimo rapporto delle case.</div>`
             }
+            ${/* già HTML */ lUltima(chiave)}
           </div>`;
+        };
+        /* L'ultima pubblicata in questo negozio: la scrive chi tiene il
+         * quadro quando la versione e' davvero nel negozio, ed e' quello
+         * che fa partire l'avviso «aggiorna l'app» ai telefoni indietro. */
+        const ULTIME = A.ultimeDellApp || {};
+        const lUltima = (chiave) => {
+          const una = ULTIME[chiave];
+          const cosa = IL_NEGOZIO[chiave];
+          return `
+            <div class="ultima-del-negozio" data-ultima="${testo(chiave)}">
+              <p class="servizio-titolo">Ultima pubblicata su ${testo(cosa.nome)}</p>
+              ${
+                una
+                  ? `<p class="minuta ultima-ora">${testo(laVersione(una))}${una.il ? ` · scritta ${testo(conLArticolo("il", una.il))}` : ""}. Chi ha una build più vecchia riceve una volta la notifica «aggiorna l'app».</p>`
+                  : `<p class="minuta ultima-ora">Non scritta: nessun telefono viene avvisato.</p>`
+              }
+              <div class="due-campi pari">
+                <div class="campo">
+                  <label for="ultima-versione-${testo(chiave)}">Versione</label>
+                  <input type="text" id="ultima-versione-${testo(chiave)}" data-ultima-versione maxlength="24" placeholder="1.18.8" value="${testo(una?.versione || "")}" autocomplete="off" spellcheck="false" />
+                </div>
+                <div class="campo">
+                  <label for="ultima-costruzione-${testo(chiave)}">Build</label>
+                  <input type="text" id="ultima-costruzione-${testo(chiave)}" data-ultima-costruzione inputmode="numeric" maxlength="10" placeholder="1180801" value="${testo(una?.costruzione || "")}" autocomplete="off" spellcheck="false" />
+                </div>
+              </div>
+              <div class="azioni">
+                <button type="button" class="tasto forte" data-ultima-salva="${testo(chiave)}">${LE_ICONE["telefono"]}È nel negozio: avvisa</button>
+                ${una ? `<button type="button" class="tasto" data-ultima-togli="${testo(chiave)}">Togli</button>` : ""}
+              </div>
+            </div>`;
         };
         const rigaCasa = (una) => {
           const di = CONTI.tutte.find((c) => c.matricola === una.casa)?.chi || "";
@@ -8439,6 +8527,12 @@
             CERCA_CASE = cerca.value;
             ridisegnaLeCase();
           };
+        dove.querySelectorAll("[data-ultima-salva]").forEach((tasto) => {
+          tasto.onclick = () => scriviLUltima(tasto.dataset.ultimaSalva, tasto);
+        });
+        dove.querySelectorAll("[data-ultima-togli]").forEach((tasto) => {
+          tasto.onclick = () => scriviLUltima(tasto.dataset.ultimaTogli, tasto, { togli: true });
+        });
         dove.querySelectorAll("[data-filtro-abbonamenti]").forEach((pastiglia) => {
           pastiglia.onclick = () => {
             FILTRO_ABBONAMENTI = pastiglia.dataset.filtroAbbonamenti;

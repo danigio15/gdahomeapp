@@ -98,10 +98,27 @@ test("senza nessun numero di costruzione nessuno e' «indietro»", () => {
 });
 
 test("la gestione le chiede con gli abbonamenti, e la pagina le scrive negozio per negozio senza fidarsi", () => {
-  assert.match(SERVER, /versioniDelleApp: leVersioniDelleApp\(case_\.elenco\(TUTTE\)\)/);
+  assert.match(
+    SERVER,
+    /versioniDelleApp: leVersioniDelleApp\(case_\.elenco\(TUTTE\), ultime\.tutte\(\)\)/,
+  );
   assert.match(GESTORE, /Versioni dell'app sui telefoni/);
   assert.match(GESTORE, /unNegozio\("apple"\)/);
   assert.match(GESTORE, /unNegozio\("google"\)/);
   /* Ogni cosa che arriva da una casa passa da `testo(…)`. */
   assert.match(GESTORE, /<b>\$\{testo\(laVersione\(v\)\)\}<\/b>/);
+});
+
+test("l'ultima scritta come pubblicata conta come la piu' nuova del suo negozio", () => {
+  const V = leVersioniDelleApp(
+    [
+      casa("casa_1", "Villa", [
+        { negozio: "apple", versione: "1.18.7", costruzione: 1180715, quanti: 1 },
+      ]),
+    ],
+    { apple: { costruzione: 1180801, versione: "1.18.8" }, google: null },
+  );
+  assert.equal(V.negozi.apple.piuNuova, 1180801);
+  assert.equal(V.case[0].indietro, true);
+  assert.equal(V.negozi.google.piuNuova, 0);
 });

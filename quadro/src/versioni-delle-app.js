@@ -42,7 +42,7 @@ const dallaPiuNuova = (una, altra) =>
  * `indietro` vero se c'e' un telefono con una costruzione piu' vecchia della
  * piu' nuova vista nel suo negozio.
  */
-export function leVersioniDelleApp(tutte = []) {
+export function leVersioniDelleApp(tutte = [], ultime = {}) {
   const perNegozio = Object.fromEntries(NEGOZI.map((n) => [n, new Map()]));
   const perCasa = [];
   for (const una of tutte) {
@@ -81,7 +81,12 @@ export function leVersioniDelleApp(tutte = []) {
     negozi[negozio] = {
       versioni,
       telefoni: versioni.reduce((somma, v) => somma + v.telefoni, 0),
-      piuNuova: versioni.reduce((max, v) => Math.max(max, v.costruzione), 0),
+      /* La piu' nuova vista, o quella scritta come pubblicata se e' piu'
+       * avanti: appena esce, chi non l'ha ancora presa e' indietro. */
+      piuNuova: versioni.reduce(
+        (max, v) => Math.max(max, v.costruzione),
+        Number.isSafeInteger(ultime?.[negozio]?.costruzione) ? ultime[negozio].costruzione : 0,
+      ),
     };
   }
   const case_ = perCasa
