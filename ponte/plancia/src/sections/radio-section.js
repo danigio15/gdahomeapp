@@ -106,8 +106,13 @@ function iLettori(stati = allStates() || {}) {
       echo: eUnEcho({ entity_id: riga.entity, ...stato }),
     });
   }
+  /* Gli Echo: quelli scelti in Alexa › Musica, se se ne e' scelto qualcuno
+   * («anche se selezioni gli Alexa nella scheda musica te li da' tutti»);
+   * senza una scelta, tutti quelli di casa. */
+  const scelti = echoScelti();
   for (const stato of Object.values(stati)) {
     if (!eUnEcho(stato) || visti.has(stato.entity_id)) continue;
+    if (scelti.size && !scelti.has(stato.entity_id)) continue;
     visti.add(stato.entity_id);
     tutti.push({
       entita: stato.entity_id,
@@ -116,6 +121,19 @@ function iLettori(stati = allStates() || {}) {
     });
   }
   return tutti;
+}
+
+/* La scelta degli Echo di Alexa › Musica, su questo schermo
+ * (`dm_alexa_musica_echo`, vedi `alexa-editor-section.js`). */
+const ECHO_DELLA_MUSICA = "dm_alexa_musica_echo";
+
+function echoScelti() {
+  try {
+    const scritti = JSON.parse(root.localStorage?.getItem(ECHO_DELLA_MUSICA) || "[]");
+    return new Set(Array.isArray(scritti) ? scritti.map(String) : []);
+  } catch (_errore) {
+    return new Set();
+  }
 }
 
 function doveSuona(lettori) {
