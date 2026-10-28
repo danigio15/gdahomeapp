@@ -7625,4 +7625,6 @@ export default Object.freeze({
   "stations ready to play": "станций готовы к прослушиванию",
   "ready · tap to choose": "готовы · нажмите, чтобы выбрать",
   "Tap a station to listen": "Нажмите на станцию, чтобы слушать",
+  "As is": "Как есть",
+  "Echo volume": "Громкость Echo",
 });

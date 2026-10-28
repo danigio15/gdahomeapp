@@ -7472,4 +7472,6 @@ export default Object.freeze({
   "stations ready to play": "个电台可直接收听",
   "ready · tap to choose": "已就绪 · 点按选择",
   "Tap a station to listen": "点按电台即可收听",
+  "As is": "保持不变",
+  "Echo volume": "Echo 音量",
 });

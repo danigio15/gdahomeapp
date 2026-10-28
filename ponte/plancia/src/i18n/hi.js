@@ -7591,4 +7591,6 @@ export default Object.freeze({
   "stations ready to play": "सुनने के लिए तैयार स्टेशन",
   "ready · tap to choose": "तैयार · चुनने के लिए टैप करें",
   "Tap a station to listen": "सुनने के लिए किसी स्टेशन पर टैप करें",
+  "As is": "जैसा है",
+  "Echo volume": "Echo वॉल्यूम",
 });

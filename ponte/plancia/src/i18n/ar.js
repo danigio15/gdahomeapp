@@ -7555,4 +7555,6 @@ export default Object.freeze({
   "stations ready to play": "محطة جاهزة للاستماع",
   "ready · tap to choose": "جاهزة · المس للاختيار",
   "Tap a station to listen": "المس محطة للاستماع إليها",
+  "As is": "كما هو",
+  "Echo volume": "مستوى صوت Echo",
 });

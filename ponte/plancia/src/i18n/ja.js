@@ -7610,4 +7610,6 @@ export default Object.freeze({
   "stations ready to play": "局をすぐに聴けます",
   "ready · tap to choose": "準備完了 · タップして選択",
   "Tap a station to listen": "局をタップして聴く",
+  "As is": "そのまま",
+  "Echo volume": "Echo の音量",
 });

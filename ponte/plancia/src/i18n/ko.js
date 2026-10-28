@@ -7582,4 +7582,6 @@ export default Object.freeze({
   "stations ready to play": "개 방송국 바로 듣기",
   "ready · tap to choose": "준비됨 · 탭하여 선택",
   "Tap a station to listen": "방송국을 탭해 들으세요",
+  "As is": "그대로",
+  "Echo volume": "Echo 볼륨",
 });

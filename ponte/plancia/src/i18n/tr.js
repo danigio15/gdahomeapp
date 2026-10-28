@@ -7608,4 +7608,6 @@ export default Object.freeze({
   "stations ready to play": "dinlemeye hazır istasyon",
   "ready · tap to choose": "hazır · seçmek için dokunun",
   "Tap a station to listen": "Dinlemek için bir istasyona dokunun",
+  "As is": "Olduğu gibi",
+  "Echo volume": "Echo ses düzeyi",
 });

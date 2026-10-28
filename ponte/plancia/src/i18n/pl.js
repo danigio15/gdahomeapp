@@ -7630,4 +7630,6 @@ export default Object.freeze({
   "stations ready to play": "stacji gotowych do słuchania",
   "ready · tap to choose": "gotowe · dotknij, aby wybrać",
   "Tap a station to listen": "Dotknij stacji, aby słuchać",
+  "As is": "Bez zmian",
+  "Echo volume": "Głośność Echo",
 });

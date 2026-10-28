@@ -7670,4 +7670,6 @@ export default Object.freeze({
   "stations ready to play": "Sender bereit zum Hören",
   "ready · tap to choose": "bereit · tippen zum Auswählen",
   "Tap a station to listen": "Tippe auf einen Sender, um ihn zu hören",
+  "As is": "Wie es ist",
+  "Echo volume": "Echo-Lautstärke",
 });

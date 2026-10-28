@@ -7642,4 +7642,6 @@ export default Object.freeze({
   "stations ready to play": "zenders klaar om te luisteren",
   "ready · tap to choose": "klaar · tik om te kiezen",
   "Tap a station to listen": "Tik op een zender om te luisteren",
+  "As is": "Zoals het is",
+  "Echo volume": "Echo-volume",
 });
