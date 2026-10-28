@@ -541,7 +541,56 @@ test("i telefoni: conta di piu' quanti si sono visti che quanti sono abbinati", 
     adesso: () => adesso,
   });
   const foglio = await fabbrica();
-  assert.deepEqual(foglio.telefoni, { abbinati: 3, visti7gg: 2 });
+  assert.deepEqual(foglio.telefoni, {
+    abbinati: 3,
+    visti7gg: 2,
+    versioni: [{ negozio: "", versione: "", costruzione: 0, quanti: 2 }],
+  });
+});
+
+test("le versioni dell'app: quanti telefoni per negozio e versione, solo quelli della settimana e senza dire quali", async () => {
+  const adesso = Date.parse("2026-10-28T09:00:00Z");
+  const giorni = (quanti) => adesso - quanti * 24 * 60 * 60 * 1000;
+  const telefono = (vistoIl, sistema, app, costruzione) => ({
+    id: `t${Math.random()}`,
+    nome: "Galaxy S24 di Persona 1",
+    modello: "Galaxy S24",
+    proprietario: "Persona 1",
+    sistema,
+    vistoIl,
+    ...(app ? { app } : {}),
+    ...(costruzione ? { costruzione } : {}),
+  });
+  const fabbrica = fabbricaIlRapporto({
+    identita: { casa: "casa_abc" },
+    casa: { chiedi: async () => [] },
+    ferro: ferroFinto(null),
+    dispositivi: {
+      elenco: () => [
+        telefono(giorni(1), "android", "1.18.7", "1180715"),
+        telefono(giorni(2), "android", "1.18.7", "1180715"),
+        telefono(giorni(2), "ios", "1.18.7", "1180714"),
+        telefono(giorni(3), "android", "1.18.7"),
+        telefono(giorni(4), "ios", "1.18.6"),
+        telefono(giorni(5), "web"),
+        telefono(giorni(30), "android", "1.17.0", "1170000"),
+      ],
+    },
+    registro: ZITTO,
+    adesso: () => adesso,
+  });
+  const foglio = await fabbrica();
+  assert.deepEqual(foglio.telefoni.versioni, [
+    { negozio: "", versione: "", costruzione: 0, quanti: 1 },
+    { negozio: "apple", versione: "1.18.7", costruzione: 1180714, quanti: 1 },
+    { negozio: "apple", versione: "1.18.6", costruzione: 0, quanti: 1 },
+    { negozio: "google", versione: "1.18.7", costruzione: 1180715, quanti: 2 },
+    { negozio: "google", versione: "1.18.7", costruzione: 0, quanti: 1 },
+  ]);
+  /* Niente nomi, modelli o di chi e': solo quanti. */
+  const scritto = JSON.stringify(foglio.telefoni);
+  for (const segreto of ["Galaxy", "Persona", "t0."])
+    assert.equal(scritto.includes(segreto), false);
 });
 
 test("quando non arriva, il perché lo capisce chi ci abita", () => {

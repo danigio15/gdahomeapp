@@ -165,6 +165,18 @@ export const LE_ECCEZIONI = Object.freeze([
       "la coppia di prova delle licenze: il quadro ci firma i gettoni delle prove, e le prove degli altri pezzi li verificano con la pubblica di prova. Non vale in nessuna casa: quella vera e' un'altra, nata sulla macchina del quadro, e `strumenti/chiave-licenze.mjs` rifiuta di scrivere questa",
   },
   {
+    file: "quadro/test/l-ultima-versione-si-scrive-e-si-firma.test.js",
+    segno: "chiave-ed25519-grezza",
+    perche:
+      "la stessa coppia di prova di `docs/LICENZE.md` e di `le-licenze.test.js`: firma l'ultima versione dell'app nei negozi che le case di prova verificano. Non vale in nessuna casa",
+  },
+  {
+    file: "ponte/test/aggiorna-l-app.test.js",
+    segno: "chiave-ed25519-grezza",
+    perche:
+      "la stessa coppia di prova di `docs/LICENZE.md` e di `le-licenze.test.js`: firma l'ultima versione dell'app che la casa di prova verifica prima di avvisare. Non vale in nessuna casa",
+  },
+  {
     file: "quadro/test/le-licenze-tolte-arrivano-al-centralino.test.js",
     segno: "chiave-ed25519-grezza",
     perche:

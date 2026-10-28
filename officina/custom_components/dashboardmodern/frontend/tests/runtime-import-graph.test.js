@@ -1612,8 +1612,10 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // `sections/finestre/messaggio.js` (la finestra della tessera).
   // 501 con la radio: `core/radio.js` (le regole) e `sections/radio-section.js`
   // (il riquadro della pagina Musica e la scheda del Config).
+  // 502 coi loghi delle radio che si mettono solo quando arrivano:
+  // `sections/loghi-delle-radio.js`.
   assert.ok(
-    relative.length <= 501,
+    relative.length <= 502,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

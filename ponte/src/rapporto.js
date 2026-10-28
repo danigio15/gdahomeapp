@@ -681,14 +681,57 @@ function lePlance(plance, configurazione, { conRevisione = false } = {}) {
 /* Quanti telefoni sono abbinati, e quanti si sono fatti vedere in una
  * settimana. Il secondo numero conta piu' del primo: e' quello che dice se
  * l'app in quella casa la usa qualcuno o se e' stata provata una volta e
- * basta. */
+ * basta.
+ *
+ * E con quale versione dell'app, quelli della settimana: «nella sezione
+ * abbonamenti mi metti anche una parte per verificare le versioni installate
+ * delle app», «per singolo negozio, Apple e Google». Solo quanti per negozio
+ * e versione — niente nomi, modelli o di chi e':
+ * al quadro serve sapere chi e' rimasto indietro, non chi e'. Un telefono che
+ * non l'ha mai detta conta sotto una versione vuota. */
 function iTelefoni(dispositivi, adesso) {
   const elenco = typeof dispositivi.elenco === "function" ? dispositivi.elenco() : [];
   const settimana = adesso() - 7 * 24 * 60 * 60 * 1000;
+  const visti = elenco.filter((uno) => Number(uno.vistoIl || 0) >= settimana);
   return {
     abbinati: elenco.length,
-    visti7gg: elenco.filter((uno) => Number(uno.vistoIl || 0) >= settimana).length,
+    visti7gg: visti.length,
+    versioni: leVersioniDellApp(visti),
   };
+}
+
+/* Da quale negozio viene l'app di un telefono: l'App Store per iPhone e
+ * iPad, Google Play per Android, niente per il browser e per chi non l'ha
+ * detto. */
+function ilNegozioDi(sistema) {
+  const detto = String(sistema || "").toLowerCase();
+  if (detto === "ios") return "apple";
+  if (detto === "android") return "google";
+  return "";
+}
+
+/* Quanti telefoni per negozio e versione dell'app, dalla piu' nuova. */
+export function leVersioniDellApp(telefoni) {
+  const conti = new Map();
+  for (const uno of telefoni) {
+    const negozio = ilNegozioDi(uno.sistema);
+    const versione = String(uno.app || "").slice(0, 40);
+    const costruzione = /^\d{1,10}$/.test(String(uno.costruzione || ""))
+      ? Number(uno.costruzione)
+      : 0;
+    const chiave = `${negozio}|${versione}|${costruzione}`;
+    const gia = conti.get(chiave);
+    if (gia) gia.quanti += 1;
+    else conti.set(chiave, { negozio, versione, costruzione, quanti: 1 });
+  }
+  return [...conti.values()]
+    .sort(
+      (una, altra) =>
+        una.negozio.localeCompare(altra.negozio) ||
+        altra.costruzione - una.costruzione ||
+        altra.versione.localeCompare(una.versione, "it", { numeric: true }),
+    )
+    .slice(0, 30);
 }
 
 /**

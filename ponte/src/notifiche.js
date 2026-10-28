@@ -440,6 +440,8 @@ const SEZIONE_DI = Object.freeze({
   blackout: "energia",
   viaggi: "viaggi",
   ha_notify: "plancia",
+  /* «Aggiorna l'app»: il tocco apre il negozio (`ultime-dell-app.js`). */
+  aggiorna_app: "negozio",
 });
 
 /** Dove porta il tocco su questa notifica, per chi la riceve. `camera` e'
@@ -1694,9 +1696,12 @@ export class Notifiche {
       tipo: evento.tipo,
       /* Una prova arriva nella categoria della notifica che imita: e' quella
        * che sceglie il canale sul telefono (il riepilogo senza suono). */
+      /* «Aggiorna l'app» non ha un interruttore suo e dice la sua
+       * (`manutenzione`, il canale senza suono). */
       cat:
         categoriaDi(evento.tipo) ??
-        (evento.tipo === "prova" && Object.hasOwn(CATEGORIE, evento.categoria ?? "")
+        ((evento.tipo === "prova" || evento.tipo === "aggiorna_app") &&
+        Object.hasOwn(CATEGORIE, evento.categoria ?? "")
           ? evento.categoria
           : "prova"),
       urg: evento.urgenza,

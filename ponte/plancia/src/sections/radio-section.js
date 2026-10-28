@@ -31,6 +31,7 @@ import { CHIAVE_ALEXA, normalizzaAlexa } from "../core/alexa-annunci.js";
 import { lettoriConfigurati } from "../core/media-player.js";
 import { CHIAVE_MEDIA, PAGINA_MEDIA } from "./media-player-section.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
+import { logoDellaRadioMarkup, mettiILoghiDelleRadio } from "./loghi-delle-radio.js";
 import {
   allStates,
   chiamaServizio,
@@ -177,8 +178,7 @@ function inOnda(stazione, lettore, stati) {
 /* ── il riquadro nella pagina Musica ──────────────────────────────────── */
 
 function logoMarkup(stazione, classe) {
-  const url = clean(stazione.logo).replace(/["'()\\\s]/g, (c) => encodeURIComponent(c));
-  return `<span class="${classe}" aria-hidden="true"${url ? ` style="background-image:url('${url}')"` : ""}>📻</span>`;
+  return logoDellaRadioMarkup(clean(stazione.logo), classe);
 }
 
 function riquadroMarkup() {
@@ -279,6 +279,7 @@ export function ridisegnaLaRadio() {
   if (markup === state.firma && riquadro.firstChild) return true;
   state.firma = markup;
   riquadro.innerHTML = markup;
+  mettiILoghiDelleRadio(riquadro);
   return true;
 }
 
@@ -516,6 +517,7 @@ export function ridisegnaLaScheda() {
     : "";
   corpo.innerHTML = markup;
   corpo.dataset.renderer = RADIO_TAB;
+  mettiILoghiDelleRadio(corpo);
   ensureTitoloDellaSezione();
   if (fuoco) {
     const campo = corpo.querySelector(fuoco);

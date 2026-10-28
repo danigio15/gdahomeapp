@@ -54,6 +54,7 @@ import {
   stazioniDellaRisposta,
 } from "../core/radio.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
+import { logoDellaRadioMarkup, mettiILoghiDelleRadio } from "./loghi-delle-radio.js";
 import {
   allStates,
   chiamaServizio,
@@ -96,6 +97,8 @@ export const ALEXA_EDITOR_TAB = "alexa";
 export const ALEXA_AVVISI_TAB = "alexa_avvisi";
 /* La terza: la musica sugli Echo. */
 export const ALEXA_MUSICA_TAB = "alexa_musica";
+/* La lista delle radio scritta l'ultima volta, per ogni lista nella pagina. */
+const LISTE_SCRITTE = new WeakMap();
 const LE_SCHEDE = [ALEXA_EDITOR_TAB, ALEXA_AVVISI_TAB, ALEXA_MUSICA_TAB];
 
 /* Come si chiamano le famiglie di notifiche, in italiano e in inglese: una
@@ -446,9 +449,8 @@ function stazioniMarkup(su) {
     return `<small class="dm-alexa-esito">${esc(t("Nessuna radio con questo nome", "No station with this name"))}</small>`;
   return `<div class="dm-alexa-stazioni">${filtrate
     .map((una) => {
-      const logo = clean(una.logo).replace(/["'()\\\s]/g, (c) => encodeURIComponent(c));
       return `<button type="button" class="dm-alexa-stazione" data-dm-mu-stazione="${esc(una.nome)}"${su.length ? "" : " disabled"}>
-        <span class="dm-alexa-stazione-logo" aria-hidden="true"${logo ? ` style="background-image:url('${logo}')"` : ""}>📻</span>
+        ${logoDellaRadioMarkup(clean(una.logo), "dm-alexa-stazione-logo")}
         <span>${esc(una.nome)}</span></button>`;
     })
     .join("")}</div>`;
@@ -865,6 +867,7 @@ export function ensureAlexaEditor() {
   state.scritto = markup;
   corpo.innerHTML = markup;
   corpo.dataset.renderer = scheda;
+  mettiILoghiDelleRadio(corpo);
   ensureTitoloDellaSezione();
   return true;
 }
@@ -1090,7 +1093,13 @@ function onInput(evento) {
     if (evento.type === "input" && lista && state.musica.servizio === "TUNEIN") {
       const stati = allStates() || {};
       const nuova = stazioniMarkup(echoDellaMusica(configurazione(), stati));
-      if (lista.innerHTML !== nuova) lista.innerHTML = nuova;
+      /* Si guarda con quello scritto l'ultima volta, non con l'innerHTML: i
+       * loghi arrivati dopo cambiano l'innerHTML, e non sono un cambiamento. */
+      if (LISTE_SCRITTE.get(lista) !== nuova) {
+        LISTE_SCRITTE.set(lista, nuova);
+        lista.innerHTML = nuova;
+        mettiILoghiDelleRadio(lista);
+      }
     }
     return;
   }

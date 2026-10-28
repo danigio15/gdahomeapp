@@ -128,6 +128,13 @@ test("campi lunghi o strani: ripuliti, accorciati, e solo quelli conosciuti", ()
   assert.equal(detto.versione, "15");
 });
 
+test("il numero di costruzione dell'app: solo cifre, o niente", () => {
+  assert.equal(chiE({ app: "1.18.7", costruzione: "1180715" }).costruzione, "1180715");
+  assert.equal(chiE({ costruzione: 1180715 }).costruzione, "1180715");
+  for (const storto of ["11807x5", "", "1".repeat(11), "-5", "1.5", null])
+    assert.equal("costruzione" in chiE({ costruzione: storto }), false, String(storto));
+});
+
 test("chi-sono per un telefono che non c'e' non fa niente", () => {
   const c = cartella();
   try {

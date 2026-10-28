@@ -34,6 +34,8 @@ import { Indirizzi } from "./indirizzi.js";
 import { Licenze } from "./licenze.js";
 import { laRicevutaDaFuori } from "./ricevuta-da-fuori.js";
 import { VersioneMinima } from "./versione-minima.js";
+import { UltimeDellApp, ULTIME_DI_SERIE } from "./ultime-dell-app.js";
+import { CHIAVE_PUBBLICA_LICENZE } from "./chiave-licenze.js";
 import { Dispositivi } from "./dispositivi.js";
 import { leggiLeOpzioni } from "./opzioni.js";
 import { Ponte } from "./ponte.js";
@@ -477,6 +479,18 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     /* Premium o Base: lo stile, la foto, il riepilogo, «La tua giornata». */
     licenze,
   });
+  /* «Aggiorna l'app»: la casa chiede al quadro l'ultima versione nei
+   * negozi, firmata, e avvisa una volta i telefoni rimasti indietro
+   * (`ultime-dell-app.js`). `PONTE_ULTIME` e' per il banco, vuota non chiede
+   * niente. */
+  const ultimeDellApp = new UltimeDellApp({
+    dove: process.env.PONTE_ULTIME ?? ULTIME_DI_SERIE,
+    chiave: CHIAVE_PUBBLICA_LICENZE,
+    cartella: opzioni.cartella,
+    dispositivi,
+    notifiche,
+    registro,
+  });
   chiamata.alGettoneMorto = (telefono) => notifiche.gettoneMorto(telefono);
   ponte.notifiche = notifiche;
   /* I viaggi pianificati di gdanav: stanno qui, e la casa avvisa e accende il
@@ -688,6 +702,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * e le licenze non ne hanno bisogno. Manda solo chi e' la casa. */
   licenze.parti();
   versioneMinima.parti();
+  ultimeDellApp.parti();
 
   const saluto = await casa.saluta();
   if (saluto.viva) registro.info("Home Assistant risponde");
@@ -772,6 +787,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     postino.ferma();
     licenze.ferma();
     versioneMinima.ferma();
+    ultimeDellApp.ferma();
     ponte.chiudiTutto();
     spegnimento.chiudi();
     zigbee.spegni();
