@@ -20,6 +20,9 @@ _App GdAHome e Home Assistant._
   Connect su Android (orologi compresi) e porta le misure a casa.
 - **Temperature:** cambiando la stanza di una temperatura in modifica, i
   sensori si spostano davvero nella stanza scelta, col loro nome.
+- **Plance:** nella pagina di GdAHome, «Apri» su una plancia appena creata
+  non dà più «401: Unauthorized» nell'app di Home Assistant: apre la sua
+  voce fra le Plance, nella stessa finestra.
 - **Musica:** «Cerca e ascolta» sugli Echo (artista, brano, album, playlist),
   la scheda del lettore toccando il riquadro, la radio anche sul pannello a
   muro, e Subasio+ fra le radio pronte accanto a Subasio.

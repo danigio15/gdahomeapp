@@ -1217,20 +1217,22 @@
       var tasti = vediPagina.createElement("div");
       tasti.className = "tasti";
 
-      /* «Apri»: la plancia, servita dal ponte, in una scheda sua.
+      /* «Apri»: la voce della plancia fra le «Plance» di Home Assistant
+       * (`gdahome-<profilo>`, la scrive `src/plance-in-casa.js`), nella stessa
+       * finestra.
        *
-       * E' lo stesso indirizzo che apre la sua voce fra le «Plance» di Home
-       * Assistant, e sta qui perche' e' il posto dove si guarda quando si e'
-       * appena aggiunta una plancia — prima di andare a cercarla nella barra
-       * laterale. Relativo, non assoluto: davanti c'e' il prefisso
-       * dell'ingress, che cambia a ogni riavvio di Home Assistant e che da
-       * qui non si conosce. */
+       * Prima apriva l'indirizzo dell'ingress in una scheda nuova. Ma l'ingress
+       * vuole una sessione, e la sessione c'e' solo dentro la pagina di Home
+       * Assistant: nell'app di Home Assistant sul telefono una scheda nuova si
+       * apre nel browser, senza sessione, e Home Assistant rispondeva
+       * «401: Unauthorized» — «ho creato una plancia e mi da' errore 401». La
+       * voce della barra laterale invece la sessione la chiede da se'
+       * (`carta/accompagna.js`), e si apre dove si e' gia'. */
       var apri = vediPagina.createElement("a");
       apri.className = "tenue";
       apri.textContent = due("Apri", "Open");
-      apri.target = "_blank";
-      apri.rel = "noopener";
-      apri.href = una.primaria ? "plancia/" : "plancia/" + encodeURIComponent(una.profilo) + "/";
+      apri.target = "_top";
+      apri.href = "/gdahome-" + encodeURIComponent(una.profilo);
       tasti.appendChild(apri);
 
       var rinomina = unTasto(due("Rinomina", "Rename"), "tenue");
