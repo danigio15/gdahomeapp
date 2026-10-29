@@ -3,7 +3,7 @@
  "json": {
   "table": [
    {
-    "idStanding": "10019942",
+    "idStanding": "10022677",
     "intRank": "1",
     "idTeam": "137257",
     "strTeam": "Potenza",
@@ -22,10 +22,10 @@
     "intGoalsAgainst": "15",
     "intGoalDifference": "13",
     "intPoints": "26",
-    "dateUpdated": "2026-10-28 11:20:10"
+    "dateUpdated": "2026-10-29 10:17:53"
    },
    {
-    "idStanding": "10019943",
+    "idStanding": "10022678",
     "intRank": "2",
     "idTeam": "133688",
     "strTeam": "Bari",
@@ -44,10 +44,10 @@
     "intGoalsAgainst": "7",
     "intGoalDifference": "7",
     "intPoints": "21",
-    "dateUpdated": "2026-10-28 11:20:10"
+    "dateUpdated": "2026-10-29 10:17:53"
    },
    {
-    "idStanding": "10019944",
+    "idStanding": "10022679",
     "intRank": "3",
     "idTeam": "143030",
     "strTeam": "Sorrento",
@@ -66,10 +66,10 @@
     "intGoalsAgainst": "11",
     "intGoalDifference": "4",
     "intPoints": "20",
-    "dateUpdated": "2026-10-28 11:20:10"
+    "dateUpdated": "2026-10-29 10:17:53"
    },
    {
-    "idStanding": "10019945",
+    "idStanding": "10022680",
     "intRank": "4",
     "idTeam": "133671",
     "strTeam": "Catania",
@@ -88,10 +88,10 @@
     "intGoalsAgainst": "12",
     "intGoalDifference": "12",
     "intPoints": "19",
-    "dateUpdated": "2026-10-28 11:20:10"
+    "dateUpdated": "2026-10-29 10:17:53"
    },
    {
-    "idStanding": "10019946",
+    "idStanding": "10022681",
     "intRank": "5",
     "idTeam": "135956",
     "strTeam": "Monopoli",
@@ -110,7 +110,7 @@
     "intGoalsAgainst": "9",
     "intGoalDifference": "4",
     "intPoints": "18",
-    "dateUpdated": "2026-10-28 11:20:10"
+    "dateUpdated": "2026-10-29 10:17:53"
    }
   ]
  }

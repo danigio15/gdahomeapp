@@ -3,7 +3,7 @@
  "json": {
   "table": [
    {
-    "idStanding": "10017833",
+    "idStanding": "10024503",
     "intRank": "1",
     "idTeam": "133692",
     "strTeam": "Cittadella",
@@ -22,10 +22,10 @@
     "intGoalsAgainst": "6",
     "intGoalDifference": "12",
     "intPoints": "27",
-    "dateUpdated": "2026-10-28 10:34:05"
+    "dateUpdated": "2026-10-29 11:05:10"
    },
    {
-    "idStanding": "10017834",
+    "idStanding": "10024504",
     "intRank": "2",
     "idTeam": "143532",
     "strTeam": "Trento",
@@ -44,10 +44,10 @@
     "intGoalsAgainst": "6",
     "intGoalDifference": "11",
     "intPoints": "23",
-    "dateUpdated": "2026-10-28 10:34:05"
+    "dateUpdated": "2026-10-29 11:05:10"
    },
    {
-    "idStanding": "10017835",
+    "idStanding": "10024505",
     "intRank": "3",
     "idTeam": "152839",
     "strTeam": "Union Brescia",
@@ -66,10 +66,10 @@
     "intGoalsAgainst": "9",
     "intGoalDifference": "10",
     "intPoints": "22",
-    "dateUpdated": "2026-10-28 10:34:05"
+    "dateUpdated": "2026-10-29 11:05:10"
    },
    {
-    "idStanding": "10017836",
+    "idStanding": "10024506",
     "intRank": "4",
     "idTeam": "137256",
     "strTeam": "Arzignano Valchiampo",
@@ -88,10 +88,10 @@
     "intGoalsAgainst": "11",
     "intGoalDifference": "5",
     "intPoints": "20",
-    "dateUpdated": "2026-10-28 10:34:05"
+    "dateUpdated": "2026-10-29 11:05:10"
    },
    {
-    "idStanding": "10017837",
+    "idStanding": "10024507",
     "intRank": "5",
     "idTeam": "133860",
     "strTeam": "Treviso",
@@ -110,7 +110,7 @@
     "intGoalsAgainst": "8",
     "intGoalDifference": "4",
     "intPoints": "19",
-    "dateUpdated": "2026-10-28 10:34:05"
+    "dateUpdated": "2026-10-29 11:05:10"
    }
   ]
  }

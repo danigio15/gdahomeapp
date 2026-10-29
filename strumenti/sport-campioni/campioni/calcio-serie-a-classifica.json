@@ -1032,8 +1032,8 @@
          "description": "Number of Games Played",
          "abbreviation": "GP",
          "type": "gamesplayed",
-         "value": 8,
-         "displayValue": "8"
+         "value": 9,
+         "displayValue": "9"
         },
         {
          "name": "losses",
@@ -1052,8 +1052,8 @@
          "description": "Goal Difference",
          "abbreviation": "GD",
          "type": "pointdifferential",
-         "value": 4,
-         "displayValue": "+4"
+         "value": 8,
+         "displayValue": "+8"
         },
         {
          "name": "points",
@@ -1062,8 +1062,8 @@
          "description": "Points",
          "abbreviation": "P",
          "type": "points",
-         "value": 14,
-         "displayValue": "14"
+         "value": 17,
+         "displayValue": "17"
         },
         {
          "name": "pointsAgainst",
@@ -1072,8 +1072,8 @@
          "description": "Goals Against",
          "abbreviation": "A",
          "type": "pointsagainst",
-         "value": 13,
-         "displayValue": "13"
+         "value": 14,
+         "displayValue": "14"
         },
         {
          "name": "pointsFor",
@@ -1082,8 +1082,8 @@
          "description": "Goals For",
          "abbreviation": "F",
          "type": "pointsfor",
-         "value": 17,
-         "displayValue": "17"
+         "value": 22,
+         "displayValue": "22"
         },
         {
          "name": "ties",
@@ -1102,8 +1102,8 @@
          "description": "Wins",
          "abbreviation": "W",
          "type": "wins",
-         "value": 4,
-         "displayValue": "4"
+         "value": 5,
+         "displayValue": "5"
         },
         {
          "name": "advanced",
@@ -1163,8 +1163,8 @@
          "shortDisplayName": "OVER",
          "description": "Overall Record",
          "type": "total",
-         "summary": "4-2-2",
-         "displayValue": "4-2-2"
+         "summary": "5-2-2",
+         "displayValue": "5-2-2"
         }
        ]
       },
@@ -2509,8 +2509,8 @@
          "description": "Number of Games Played",
          "abbreviation": "GP",
          "type": "gamesplayed",
-         "value": 8,
-         "displayValue": "8"
+         "value": 9,
+         "displayValue": "9"
         },
         {
          "name": "losses",
@@ -2519,8 +2519,8 @@
          "description": "Losses",
          "abbreviation": "L",
          "type": "losses",
-         "value": 5,
-         "displayValue": "5"
+         "value": 6,
+         "displayValue": "6"
         },
         {
          "name": "pointDifferential",
@@ -2529,8 +2529,8 @@
          "description": "Goal Difference",
          "abbreviation": "GD",
          "type": "pointdifferential",
-         "value": -5,
-         "displayValue": "-5"
+         "value": -9,
+         "displayValue": "-9"
         },
         {
          "name": "points",
@@ -2549,8 +2549,8 @@
          "description": "Goals Against",
          "abbreviation": "A",
          "type": "pointsagainst",
-         "value": 14,
-         "displayValue": "14"
+         "value": 19,
+         "displayValue": "19"
         },
         {
          "name": "pointsFor",
@@ -2559,8 +2559,8 @@
          "description": "Goals For",
          "abbreviation": "F",
          "type": "pointsfor",
-         "value": 9,
-         "displayValue": "9"
+         "value": 10,
+         "displayValue": "10"
         },
         {
          "name": "ties",
@@ -2640,8 +2640,8 @@
          "shortDisplayName": "OVER",
          "description": "Overall Record",
          "type": "total",
-         "summary": "3-0-5",
-         "displayValue": "3-0-5"
+         "summary": "3-0-6",
+         "displayValue": "3-0-6"
         }
        ]
       },
