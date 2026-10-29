@@ -900,7 +900,8 @@ class _HomeState extends State<Home> {
                                 /* Le misure dell'orologio, portate a casa. */
                                 Sezione.salute => SchermataDellaSalute(
                                   collegamento: collegamento,
-                                  postino: PostinoDellaSalute.istanza ??
+                                  postino:
+                                      PostinoDellaSalute.istanza ??
                                       PostinoDellaSalute(
                                         lettore: lettoreDiQuestoSistema(),
                                       ),

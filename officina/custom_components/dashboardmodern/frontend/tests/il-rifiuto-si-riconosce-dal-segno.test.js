@@ -33,6 +33,16 @@ const { fraseDellaTessera } = await import("../src/core/racconto-tessera.js");
 
 const IT = (italiano) => italiano;
 
+/* Le prove guardano il ritiro di OGGI, e dalla sera il ritiro di oggi è già
+ * passato (#333: la sera si guardano quelli di domani). Fatte girare dopo
+ * l'ora di cambio fallivano: l'orologio delle prove sta alle dieci del
+ * mattino di oggi. */
+function allaMattina(t) {
+  const oggi = new Date();
+  oggi.setHours(10, 0, 0, 0);
+  t.mock.timers.enable({ apis: ["Date"], now: oggi.getTime() });
+}
+
 /** Una data scritta come la scrive chi compila la scheda. */
 function giorno(avanti) {
   const data = new Date(Date.now() + avanti * 86400000);
@@ -65,7 +75,8 @@ const calendario = (messaggio, avanti) => [
   },
 ];
 
-test("la faccia della tessera è il bidone del prossimo ritiro", () => {
+test("la faccia della tessera è il bidone del prossimo ritiro", (t) => {
+  allaMattina(t);
   const rifiuti = tessera(turno(0, [["plastica"], [], [], [], [], [], [], [], [], [], [], [], [], []]));
   assert.equal(rifiuti.value, "Oggi");
   /* Il disegno è quello nostro, non un'emoji: si riconosce dal marchio che il
@@ -145,7 +156,8 @@ test("e quando non lo dice non si disegna un bidone a caso", () => {
   assert.equal(rifiuti.rows[0].glyph, "📅");
 });
 
-test("la frase parlata resta senza segni: si legge, non si guarda", () => {
+test("la frase parlata resta senza segni: si legge, non si guarda", (t) => {
+  allaMattina(t);
   const rifiuti = tessera(turno(0, [["plastica"], [], [], [], [], [], [], [], [], [], [], [], [], []]));
   const frase = fraseDellaTessera(rifiuti, IT);
   assert.match(frase, /Plastica/);
