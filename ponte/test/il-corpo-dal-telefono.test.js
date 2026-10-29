@@ -34,7 +34,13 @@ function prepara({ telefoni = ["tel-marco", "tel-giulia"] } = {}) {
   };
   const dispositivi = { elenco: () => telefoni.map((id) => ({ id })) };
   const cartella = mkdtempSync(join(tmpdir(), "corpo-"));
-  const corpo = new IlCorpoDalTelefono({ cartella, casa, dispositivi, registro, adesso: () => ADESSO });
+  const corpo = new IlCorpoDalTelefono({
+    cartella,
+    casa,
+    dispositivi,
+    registro,
+    adesso: () => ADESSO,
+  });
   return { corpo, chiamate, righe, cartella };
 }
 
@@ -50,7 +56,10 @@ const MISURE = {
 
 test("le misure di un telefono intestato diventano sensori col nome della persona", async () => {
   const { corpo, chiamate, righe, cartella } = prepara();
-  const r = await corpo.rispondi({ id: 1, type: SALUTE_MISURE, persona: "Marco", misure: MISURE }, { dispositivo: MARCO });
+  const r = await corpo.rispondi(
+    { id: 1, type: SALUTE_MISURE, persona: "Marco", misure: MISURE },
+    { dispositivo: MARCO },
+  );
   assert.equal(r.success, true);
   assert.deepEqual(r.result.scritte.sort(), Object.keys(MISURE).sort());
   const radice = radiceDelTelefono("tel-marco");
@@ -83,13 +92,22 @@ test("un telefono senza utente, o senza filo, non scrive niente", async () => {
 
 test("ognuno le sue: Giulia non tocca i sensori di Marco", async () => {
   const { corpo, chiamate } = prepara();
-  await corpo.rispondi({ id: 1, type: SALUTE_MISURE, persona: "Marco", misure: MISURE }, { dispositivo: MARCO });
+  await corpo.rispondi(
+    { id: 1, type: SALUTE_MISURE, persona: "Marco", misure: MISURE },
+    { dispositivo: MARCO },
+  );
   chiamate.length = 0;
   const giulia = { id: "tel-giulia", utente: "giulia" };
   await corpo.rispondi({ id: 2, type: SALUTE_SPEGNI }, { dispositivo: giulia });
   assert.equal(chiamate.length, 0);
   const stato = await corpo.rispondi({ id: 3, type: SALUTE_STATO }, { dispositivo: giulia });
-  assert.deepEqual(stato.result, { acceso: false, premium: true, persona: "", misure: [], aggiornato: 0 });
+  assert.deepEqual(stato.result, {
+    acceso: false,
+    premium: true,
+    persona: "",
+    misure: [],
+    aggiornato: 0,
+  });
   const mio = await corpo.rispondi({ id: 4, type: SALUTE_STATO }, { dispositivo: MARCO });
   assert.equal(mio.result.acceso, true);
   assert.equal(mio.result.persona, "Marco");
@@ -127,8 +145,13 @@ test("una misura tolta dalle scelte sparisce; senza nome si usa il proprietario"
   const { sonno, ...senzaSonno } = MISURE;
   await corpo.rispondi({ id: 2, type: SALUTE_MISURE, misure: senzaSonno }, { dispositivo: MARCO });
   const radice = radiceDelTelefono("tel-marco");
-  assert.ok(chiamate.some((c) => c.metodo === "DELETE" && c.percorso === `states/sensor.${radice}_sonno`));
-  assert.equal(chiamate.find((c) => c.metodo === "POST").corpo.attributes.friendly_name.split(" ")[0], "Marco");
+  assert.ok(
+    chiamate.some((c) => c.metodo === "DELETE" && c.percorso === `states/sensor.${radice}_sonno`),
+  );
+  assert.equal(
+    chiamate.find((c) => c.metodo === "POST").corpo.attributes.friendly_name.split(" ")[0],
+    "Marco",
+  );
 });
 
 test("il giro dei dieci minuti riscrive, e chi non e' piu' della casa perde le sue misure", async () => {
@@ -142,7 +165,11 @@ test("il giro dei dieci minuti riscrive, e chi non e' piu' della casa perde le s
   await corpo.rimettiGliStati();
   const vecchio = radiceDelTelefono("tel-vecchio");
   assert.ok(chiamate.some((c) => c.metodo === "DELETE" && c.percorso.includes(vecchio)));
-  assert.ok(chiamate.some((c) => c.metodo === "POST" && c.percorso.includes(radiceDelTelefono("tel-marco"))));
+  assert.ok(
+    chiamate.some(
+      (c) => c.metodo === "POST" && c.percorso.includes(radiceDelTelefono("tel-marco")),
+    ),
+  );
   assert.deepEqual(Object.keys(corpo.telefoni), ["tel-marco"]);
 });
 
@@ -151,7 +178,10 @@ test("e' di GdAHome Premium: senza, niente misure; spegnere si puo' sempre", asy
   await corpo.rispondi({ id: 1, type: SALUTE_MISURE, misure: MISURE }, { dispositivo: MARCO });
   corpo.licenze = { attive: true, premium: false };
   chiamate.length = 0;
-  const r = await corpo.rispondi({ id: 2, type: SALUTE_MISURE, misure: MISURE }, { dispositivo: MARCO });
+  const r = await corpo.rispondi(
+    { id: 2, type: SALUTE_MISURE, misure: MISURE },
+    { dispositivo: MARCO },
+  );
   assert.equal(r.success, false);
   assert.equal(r.error.code, "premium-richiesto");
   /* Il giro dei dieci minuti non riscrive. */
@@ -164,6 +194,9 @@ test("e' di GdAHome Premium: senza, niente misure; spegnere si puo' sempre", asy
   assert.ok(chiamate.length > 0 && chiamate.every((c) => c.metodo === "DELETE"));
   /* Col Premium attivo si scrive di nuovo. */
   corpo.licenze = { attive: true, premium: true };
-  const ok = await corpo.rispondi({ id: 5, type: SALUTE_MISURE, misure: MISURE }, { dispositivo: MARCO });
+  const ok = await corpo.rispondi(
+    { id: 5, type: SALUTE_MISURE, misure: MISURE },
+    { dispositivo: MARCO },
+  );
   assert.equal(ok.success, true);
 });

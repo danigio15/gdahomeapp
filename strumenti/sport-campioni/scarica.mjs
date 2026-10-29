@@ -75,10 +75,18 @@ try {
   await piano("serie-c-stagione-4398", `${T}/eventsseason.php?id=4398&s=2026-2027`);
   const stemma = "https://r2.thesportsdb.com/images/media/team/badge/mov8wk1677499346.png";
   await mkdir(`${qui}loghi`, { recursive: true });
-  for (const [nome, u] of [["piccolo", `${stemma}/small`], ["pieno", stemma]]) {
+  for (const [nome, u] of [
+    ["piccolo", `${stemma}/small`],
+    ["pieno", stemma],
+  ]) {
     const r = await fetch(u);
-    await salva(`serie-c-stemma-${nome}`, { u, stato: r.status, tipo: r.headers.get("content-type") });
-    if (r.ok) await writeFile(`${qui}loghi/serie-c-${nome}.png`, Buffer.from(await r.arrayBuffer()));
+    await salva(`serie-c-stemma-${nome}`, {
+      u,
+      stato: r.status,
+      tipo: r.headers.get("content-type"),
+    });
+    if (r.ok)
+      await writeFile(`${qui}loghi/serie-c-${nome}.png`, Buffer.from(await r.arrayBuffer()));
   }
 } catch (e) {
   await salva("serie-c-errore", { errore: String(e?.stack || e) });

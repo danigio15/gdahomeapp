@@ -61,8 +61,22 @@ const VECCHIA = 45 * UN_GIORNO;
  * contare. I passi e le calorie ripartono ogni mattina: `total_increasing`,
  * e Home Assistant legge la discesa di mezzanotte come un nuovo giro. */
 export const MISURE_DAL_TELEFONO = Object.freeze({
-  passi: { nome: "Steps", unita: "steps", min: 0, max: 200_000, classe: "total_increasing", icona: "mdi:walk" },
-  battito: { nome: "Heart rate", unita: "bpm", min: 20, max: 250, classe: "measurement", icona: "mdi:heart-pulse" },
+  passi: {
+    nome: "Steps",
+    unita: "steps",
+    min: 0,
+    max: 200_000,
+    classe: "total_increasing",
+    icona: "mdi:walk",
+  },
+  battito: {
+    nome: "Heart rate",
+    unita: "bpm",
+    min: 20,
+    max: 250,
+    classe: "measurement",
+    icona: "mdi:heart-pulse",
+  },
   battitoRiposo: {
     nome: "Resting heart rate",
     unita: "bpm",
@@ -80,7 +94,14 @@ export const MISURE_DAL_TELEFONO = Object.freeze({
     tipo: "weight",
     icona: "mdi:scale-bathroom",
   },
-  grasso: { nome: "Body fat", unita: "%", min: 1, max: 80, classe: "measurement", icona: "mdi:percent" },
+  grasso: {
+    nome: "Body fat",
+    unita: "%",
+    min: 1,
+    max: 80,
+    classe: "measurement",
+    icona: "mdi:percent",
+  },
   sistolica: {
     nome: "Blood pressure systolic",
     unita: "mmHg",
@@ -97,7 +118,14 @@ export const MISURE_DAL_TELEFONO = Object.freeze({
     classe: "measurement",
     icona: "mdi:heart-flash",
   },
-  ossigeno: { nome: "Oxygen saturation", unita: "%", min: 50, max: 100, classe: "measurement", icona: "mdi:lungs" },
+  ossigeno: {
+    nome: "Oxygen saturation",
+    unita: "%",
+    min: 50,
+    max: 100,
+    classe: "measurement",
+    icona: "mdi:lungs",
+  },
   sonno: {
     nome: "Sleep duration",
     unita: "min",
@@ -117,7 +145,12 @@ export const MISURE_DAL_TELEFONO = Object.freeze({
   },
 });
 
-const no = (id, code, message) => ({ id, type: "result", success: false, error: { code, message } });
+const no = (id, code, message) => ({
+  id,
+  type: "result",
+  success: false,
+  error: { code, message },
+});
 const si = (id, result) => ({ id, type: "result", success: true, result });
 
 /* Un nome di persona: parole corte, niente segni strani. */
@@ -171,7 +204,11 @@ export class IlCorpoDalTelefono {
     registro = null,
     adesso = () => Date.now(),
   } = {}) {
-    this.archivio = new Archivio(join(cartella, "il-corpo.json"), { telefoni: {} }, { modo: 0o600 });
+    this.archivio = new Archivio(
+      join(cartella, "il-corpo.json"),
+      { telefoni: {} },
+      { modo: 0o600 },
+    );
     this.casa = casa;
     this.dispositivi = dispositivi;
     this.licenze = licenze;
@@ -214,7 +251,11 @@ export class IlCorpoDalTelefono {
     const id = detto?.id ?? null;
     const telefono = String(dispositivo?.id || "");
     if (!telefono || !String(dispositivo?.utente || "").trim())
-      return no(id, "unauthorized", "la salute la manda solo un telefono intestato a chi e' entrato");
+      return no(
+        id,
+        "unauthorized",
+        "la salute la manda solo un telefono intestato a chi e' entrato",
+      );
     switch (detto?.type) {
       case SALUTE_STATO: {
         const voce = this.telefoni[telefono];
@@ -227,14 +268,17 @@ export class IlCorpoDalTelefono {
         });
       }
       case SALUTE_MISURE: {
-        if (!this.sbloccato) return no(id, "premium-richiesto", "la salute dal telefono e' di GdAHome Premium");
+        if (!this.sbloccato)
+          return no(id, "premium-richiesto", "la salute dal telefono e' di GdAHome Premium");
         const misure = misurePulite(detto.misure, this.adesso());
         const persona =
           personaPulita(detto.persona) || personaPulita(dispositivo?.proprietario) || "GdAHome";
         const prima = this.telefoni[telefono];
         /* Una misura che non arriva piu' (si e' tolta dalle scelte nell'app)
          * si cancella anche da Home Assistant. */
-        const tolte = Object.keys(prima?.misure || {}).filter((k) => !(k in misure) && !detto.aggiungi);
+        const tolte = Object.keys(prima?.misure || {}).filter(
+          (k) => !(k in misure) && !detto.aggiungi,
+        );
         const voce = {
           persona,
           misure: detto.aggiungi ? { ...(prima?.misure || {}), ...misure } : misure,
@@ -289,7 +333,9 @@ export class IlCorpoDalTelefono {
           },
         });
       } catch (errore) {
-        this.registro.attenzione(`salute: Home Assistant non prende i sensori (${errore?.code || "?"})`);
+        this.registro.attenzione(
+          `salute: Home Assistant non prende i sensori (${errore?.code || "?"})`,
+        );
         return;
       }
     }
@@ -309,7 +355,9 @@ export class IlCorpoDalTelefono {
   /* Ogni dieci minuti: si riscrive quello che si sa, e chi non e' piu' un
    * telefono di questa casa perde le sue misure. */
   async rimettiGliStati() {
-    const vivi = this.dispositivi?.elenco ? new Set(this.dispositivi.elenco().map((d) => String(d.id))) : null;
+    const vivi = this.dispositivi?.elenco
+      ? new Set(this.dispositivi.elenco().map((d) => String(d.id)))
+      : null;
     for (const [telefono, voce] of Object.entries(this.telefoni)) {
       if (vivi && !vivi.has(telefono)) {
         await this._cancella(telefono, Object.keys(MISURE_DAL_TELEFONO));
