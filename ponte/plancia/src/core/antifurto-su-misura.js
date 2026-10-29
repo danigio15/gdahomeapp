@@ -219,7 +219,10 @@ export function tastiSuMisura(stored) {
        * motore delle icone, che il disegno lo trova da se'. */
       icona: modo.icona,
       label: modo.nome || modo.id,
-      hint: modo.entita,
+      /* Sotto il nome niente: l'entita' che lo fa partire
+       * («script.attiva_zone_1») e' lunga e usciva dal tasto (#346). Il
+       * widget della Home la toglieva gia' (#303); ora e' cosi' ovunque. */
+      hint: "",
       suMisura: true,
     }),
   );
