@@ -80,7 +80,8 @@ const MISURE = Object.freeze([
     chiave: "sonno",
     parole: /sleep|sonno|dormito/,
     unita: /^(h|hr|hrs|hours?|ore|min|mins|minutes?|minuti|s|sec|seconds?)$/,
-    escludi: /deep|profondo|light|leggero|\brem\b|awake|sveglio|score|punteggio|goal|obiettiv|latency|wake|start|end|inizio|fine/,
+    escludi:
+      /deep|profondo|light|leggero|\brem\b|awake|sveglio|score|punteggio|goal|obiettiv|latency|wake|start|end|inizio|fine/,
   },
   {
     chiave: "calorie",
@@ -99,11 +100,18 @@ const PAROLE_DELLE_MISURE =
   /\b(health connect|withings|garmin connect|garmin|fitbit|resting heart rate|heart rate|heart pulse|resting|blood pressure|systolic|diastolic|blood oxygen|oxygen saturation|spo2|body fat|fat ratio|fat percentage|total sleep time|sleep duration|sleep time|sleep|total steps|daily steps|steps today|steps|step count|weight|body mass|calories burned|active calories|total calories|calories|energy burned|today|daily|oggi|giornalieri|passi|peso|battito cardiaco|battito|frequenza cardiaca|pressione|sistolica|diastolica|sonno|ossigeno|saturazione|calorie|massa grassa|grasso|burned|bruciate|active|attive|sensor)\b/gi;
 
 function chiDalNome(nome) {
-  return clean(String(nome).replace(PAROLE_DELLE_MISURE, " ").replace(/[_·:()-]+/g, " ").replace(/\s+/g, " "));
+  return clean(
+    String(nome)
+      .replace(PAROLE_DELLE_MISURE, " ")
+      .replace(/[_·:()-]+/g, " ")
+      .replace(/\s+/g, " "),
+  );
 }
 
 function testo(entity, nome) {
-  return `${clean(entity).replace(/^sensor\./, "").replace(/_/g, " ")} ${clean(nome)}`.toLowerCase();
+  return `${clean(entity)
+    .replace(/^sensor\./, "")
+    .replace(/_/g, " ")} ${clean(nome)}`.toLowerCase();
 }
 
 /** La misura di un sensore, o "" se non e' del corpo. */
@@ -208,7 +216,8 @@ export function personeDellaSalute(states = {}, config = {}) {
     /* Due sensori della stessa misura per la stessa persona: vince quello
      * scritto piu' di recente. */
     const gia = persona.misure[chiave];
-    if (!gia || (Date.parse(lettura.quando) || 0) > (Date.parse(gia.quando) || 0)) persona.misure[chiave] = lettura;
+    if (!gia || (Date.parse(lettura.quando) || 0) > (Date.parse(gia.quando) || 0))
+      persona.misure[chiave] = lettura;
     persone.set(chi, persona);
   };
   for (const [entity, stato] of Object.entries(states || {})) {
@@ -223,7 +232,10 @@ export function personeDellaSalute(states = {}, config = {}) {
   return [...persone.values()]
     .map((p) => ({ ...p, nome: nomi[p.chi] || p.chi }))
     .filter((p) => Object.keys(p.misure).length)
-    .sort((a, b) => Object.keys(b.misure).length - Object.keys(a.misure).length || a.chi.localeCompare(b.chi));
+    .sort(
+      (a, b) =>
+        Object.keys(b.misure).length - Object.keys(a.misure).length || a.chi.localeCompare(b.chi),
+    );
 }
 
 /** «7 h 32» da minuti. */
@@ -269,7 +281,9 @@ export function giorniDalleStatistiche(righe = [], classe = "") {
       const massimo = numero(r?.max) ?? numero(r?.state);
       const media = numero(r?.mean);
       let valore;
-      if (somma) valore = cambio !== null && cambio >= 0 && cambio <= (massimo ?? Infinity) ? cambio : massimo;
+      if (somma)
+        valore =
+          cambio !== null && cambio >= 0 && cambio <= (massimo ?? Infinity) ? cambio : massimo;
       else valore = media ?? massimo;
       return valore === null ? null : { inizio, valore };
     })

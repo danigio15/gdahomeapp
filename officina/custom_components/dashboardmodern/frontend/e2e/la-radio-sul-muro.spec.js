@@ -10,12 +10,19 @@ const STATI = {
   "media_player.sonos_salotto": {
     entity_id: "media_player.sonos_salotto",
     state: "idle",
-    attributes: { friendly_name: "Sonos Salotto", supported_features: 1 + 4 + 8 + 512 + 4096 + 131072 },
+    attributes: {
+      friendly_name: "Sonos Salotto",
+      supported_features: 1 + 4 + 8 + 512 + 4096 + 131072,
+    },
   },
   "media_player.echo_cucina": {
     entity_id: "media_player.echo_cucina",
     state: "idle",
-    attributes: { friendly_name: "Echo Cucina", last_called: false, supported_features: 1 + 4 + 512 },
+    attributes: {
+      friendly_name: "Echo Cucina",
+      last_called: false,
+      supported_features: 1 + 4 + 512,
+    },
   },
 };
 

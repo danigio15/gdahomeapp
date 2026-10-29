@@ -30,7 +30,8 @@ const LETTORI = [{ id: "mp1", entity: "media_player.sonos", nome: "Sonos Salotto
 
 /* RDS e m2o hanno un logo che non arriva (un sito che non c'e' piu'): deve
  * restare il 📻, non un quadratino bianco. */
-const svg = (dentro) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">${dentro}</svg>`;
+const svg = (dentro) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">${dentro}</svg>`;
 /* Loghi disegnati come loghi (scritte, non bollini), per vedere nelle foto
  * che il logo prende il posto della sigla. */
 const LOGHI = {

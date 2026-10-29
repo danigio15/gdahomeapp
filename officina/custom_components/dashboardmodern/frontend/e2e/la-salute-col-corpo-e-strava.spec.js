@@ -32,7 +32,11 @@ const SEME = {
 
 const lista = (stati) => Object.entries(stati).map(([entity_id, s]) => ({ entity_id, ...s }));
 
-async function boot(page, testInfo, { tema = "light", corpo = true, strava = true, salute = null } = {}) {
+async function boot(
+  page,
+  testInfo,
+  { tema = "light", corpo = true, strava = true, salute = null } = {},
+) {
   await page.clock.setFixedTime(ADESSO);
   await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
   const stati = lista({ ...(corpo ? statiSalute() : {}), ...(strava ? statiStrava() : {}) });
@@ -146,22 +150,37 @@ for (const tema of ["light", "dark"]) {
     for (const misura of ["battito", "pressione", "peso", "sonno", "ossigeno", "calorie"])
       await expect(pagina.locator(`[data-dm-salute-misura="${misura}"]`)).toHaveCount(1);
     await expect(pagina.locator('[data-dm-salute-misura="pressione"]')).toContainText("124/81");
-    await expect(pagina.locator('[data-dm-salute-misura="pressione"] .dm-salute-fascia')).toHaveText("Ottimale");
+    await expect(
+      pagina.locator('[data-dm-salute-misura="pressione"] .dm-salute-fascia'),
+    ).toHaveText("Ottimale");
     await expect(pagina.locator('[data-dm-salute-misura="sonno"]')).toContainText("7 h 32");
-    await expect(pagina.locator('[data-dm-salute-misura="peso"] .dm-salute-linea svg')).toHaveCount(1, { timeout: 10_000 });
-    const chieste = await page.evaluate(() => window.__salute.domande.map((d) => `${d.statistic_ids[0]}:${d.period}`));
-    expect(chieste).toEqual(expect.arrayContaining(["sensor.pixel_8_steps:day", "sensor.pixel_8_weight:day"]));
+    await expect(pagina.locator('[data-dm-salute-misura="peso"] .dm-salute-linea svg')).toHaveCount(
+      1,
+      { timeout: 10_000 },
+    );
+    const chieste = await page.evaluate(() =>
+      window.__salute.domande.map((d) => `${d.statistic_ids[0]}:${d.period}`),
+    );
+    expect(chieste).toEqual(
+      expect.arrayContaining(["sensor.pixel_8_steps:day", "sensor.pixel_8_weight:day"]),
+    );
     await fotoDellaPagina(page, foto(testInfo, `salute-corpo-${tema}`));
     /* Giulia: la bilancia e il misuratore Withings, la pressione alta. */
     await pagina.locator('[data-dm-salute-chi="Giulia"]').click();
     await expect(pagina.locator(".dm-salute-eroe")).toHaveCount(0);
-    await expect(pagina.locator('[data-dm-salute-misura="pressione"] .dm-salute-fascia')).toHaveText("Alta");
-    await expect(pagina.locator('[data-dm-salute-misura="peso"]')).toContainText("Massa grassa: 24,8%");
+    await expect(
+      pagina.locator('[data-dm-salute-misura="pressione"] .dm-salute-fascia'),
+    ).toHaveText("Alta");
+    await expect(pagina.locator('[data-dm-salute-misura="peso"]')).toContainText(
+      "Massa grassa: 24,8%",
+    );
     await fotoDellaPagina(page, foto(testInfo, `salute-giulia-${tema}`));
   });
 }
 
-test("la linguetta Strava: la settimana, le dodici settimane, la bici coi record", async ({ page }, testInfo) => {
+test("la linguetta Strava: la settimana, le dodici settimane, la bici coi record", async ({
+  page,
+}, testInfo) => {
   await boot(page, testInfo);
   await apriLaSalute(page);
   const pagina = page.locator("#page-salute");
@@ -179,14 +198,17 @@ test("la linguetta Strava: la settimana, le dodici settimane, la bici coi record
   await fotoDellaPagina(page, foto(testInfo, "salute-strava-bici"));
 });
 
-test("in Home: la tessera Salute coi passi e la sua finestra col corpo e Strava", async ({ page }, testInfo) => {
+test("in Home: la tessera Salute coi passi e la sua finestra col corpo e Strava", async ({
+  page,
+}, testInfo) => {
   await boot(page, testInfo, { salute: { nomi: { "Pixel 8": "Marco" } } });
   await page.locator('.tab[data-tab="home"]').evaluate((n) => n.click());
   const tessera = page.locator('#dm-widgets .dm-tile[data-dm-widget="salute"]');
   await expect(tessera).toBeVisible({ timeout: 20_000 });
   await expect(tessera).toContainText("7.842");
   const doveTessera = foto(testInfo, "salute-tessera");
-  if (doveTessera) await page.locator("#dm-widgets").screenshot({ path: doveTessera, animations: "disabled" });
+  if (doveTessera)
+    await page.locator("#dm-widgets").screenshot({ path: doveTessera, animations: "disabled" });
   await tessera.click();
   const finestra = page.locator("#dm-widget-popup");
   await expect(finestra.locator(".dm-salute-finestra .dm-salute-eroe")).toHaveCount(1);
@@ -206,7 +228,9 @@ test("solo Strava: la pagina si apre su Strava, senza linguette", async ({ page 
   await expect(pagina.locator(".dm-strava-eroe-km")).toContainText("31,6 km");
 });
 
-test("senza misure e senza Strava non c'e' ne' la voce ne' la tessera", async ({ page }, testInfo) => {
+test("senza misure e senza Strava non c'e' ne' la voce ne' la tessera", async ({
+  page,
+}, testInfo) => {
   await boot(page, testInfo, { corpo: false, strava: false });
   await page.waitForTimeout(800);
   await expect(page.locator('.tab[data-tab="salute"]:visible')).toHaveCount(0);
@@ -232,7 +256,7 @@ test("la scheda Salute del Config: il nome, l'obiettivo, una misura tolta, l'int
   await expect
     .poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("cd_salute") || "{}")))
     .toMatchObject({ obiettivoPassi: 8000, nomi: { "Pixel 8": "Marco" }, scelte: { sonno: "-" } });
-  await page.locator("#ed-body [data-key=\"salute\"]").click();
+  await page.locator('#ed-body [data-key="salute"]').click();
   await expect
     .poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("cd_sections") || "{}").salute))
     .toBe(false);

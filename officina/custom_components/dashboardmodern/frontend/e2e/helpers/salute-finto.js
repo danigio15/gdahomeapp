@@ -32,17 +32,25 @@ export function statiSalute() {
       unit_of_measurement: "bpm",
       state_class: "measurement",
     }),
-    "sensor.pixel_8_weight": sensore(78.4, {
-      friendly_name: "Pixel 8 Weight",
-      unit_of_measurement: "kg",
-      device_class: "weight",
-      state_class: "measurement",
-    }, "2026-10-28T07:05:00+00:00"),
-    "sensor.pixel_8_sleep_duration": sensore(452, {
-      friendly_name: "Pixel 8 Sleep duration",
-      unit_of_measurement: "min",
-      device_class: "duration",
-    }, "2026-10-29T06:30:00+00:00"),
+    "sensor.pixel_8_weight": sensore(
+      78.4,
+      {
+        friendly_name: "Pixel 8 Weight",
+        unit_of_measurement: "kg",
+        device_class: "weight",
+        state_class: "measurement",
+      },
+      "2026-10-28T07:05:00+00:00",
+    ),
+    "sensor.pixel_8_sleep_duration": sensore(
+      452,
+      {
+        friendly_name: "Pixel 8 Sleep duration",
+        unit_of_measurement: "min",
+        device_class: "duration",
+      },
+      "2026-10-29T06:30:00+00:00",
+    ),
     "sensor.pixel_8_oxygen_saturation": sensore(97, {
       friendly_name: "Pixel 8 Oxygen saturation",
       unit_of_measurement: "%",
@@ -52,37 +60,65 @@ export function statiSalute() {
       unit_of_measurement: "kcal",
       state_class: "total",
     }),
-    "sensor.pixel_8_blood_pressure_systolic": sensore(124, {
-      friendly_name: "Pixel 8 Blood pressure systolic",
-      unit_of_measurement: "mmHg",
-    }, "2026-10-28T20:10:00+00:00"),
-    "sensor.pixel_8_blood_pressure_diastolic": sensore(81, {
-      friendly_name: "Pixel 8 Blood pressure diastolic",
-      unit_of_measurement: "mmHg",
-    }, "2026-10-28T20:10:00+00:00"),
-    "sensor.giulia_weight": sensore(61.2, {
-      friendly_name: "Withings Giulia Weight",
-      unit_of_measurement: "kg",
-      device_class: "weight",
-      state_class: "measurement",
-    }, "2026-10-29T07:12:00+00:00"),
-    "sensor.giulia_fat_ratio": sensore(24.8, {
-      friendly_name: "Withings Giulia Fat ratio",
-      unit_of_measurement: "%",
-      state_class: "measurement",
-    }, "2026-10-29T07:12:00+00:00"),
-    "sensor.giulia_systolic_blood_pressure": sensore(142, {
-      friendly_name: "Withings Giulia Systolic blood pressure",
-      unit_of_measurement: "mmHg",
-    }, "2026-10-28T21:00:00+00:00"),
-    "sensor.giulia_diastolic_blood_pressure": sensore(88, {
-      friendly_name: "Withings Giulia Diastolic blood pressure",
-      unit_of_measurement: "mmHg",
-    }, "2026-10-28T21:00:00+00:00"),
-    "sensor.giulia_heart_pulse": sensore(66, {
-      friendly_name: "Withings Giulia Heart pulse",
-      unit_of_measurement: "bpm",
-    }, "2026-10-28T21:00:00+00:00"),
+    "sensor.pixel_8_blood_pressure_systolic": sensore(
+      124,
+      {
+        friendly_name: "Pixel 8 Blood pressure systolic",
+        unit_of_measurement: "mmHg",
+      },
+      "2026-10-28T20:10:00+00:00",
+    ),
+    "sensor.pixel_8_blood_pressure_diastolic": sensore(
+      81,
+      {
+        friendly_name: "Pixel 8 Blood pressure diastolic",
+        unit_of_measurement: "mmHg",
+      },
+      "2026-10-28T20:10:00+00:00",
+    ),
+    "sensor.giulia_weight": sensore(
+      61.2,
+      {
+        friendly_name: "Withings Giulia Weight",
+        unit_of_measurement: "kg",
+        device_class: "weight",
+        state_class: "measurement",
+      },
+      "2026-10-29T07:12:00+00:00",
+    ),
+    "sensor.giulia_fat_ratio": sensore(
+      24.8,
+      {
+        friendly_name: "Withings Giulia Fat ratio",
+        unit_of_measurement: "%",
+        state_class: "measurement",
+      },
+      "2026-10-29T07:12:00+00:00",
+    ),
+    "sensor.giulia_systolic_blood_pressure": sensore(
+      142,
+      {
+        friendly_name: "Withings Giulia Systolic blood pressure",
+        unit_of_measurement: "mmHg",
+      },
+      "2026-10-28T21:00:00+00:00",
+    ),
+    "sensor.giulia_diastolic_blood_pressure": sensore(
+      88,
+      {
+        friendly_name: "Withings Giulia Diastolic blood pressure",
+        unit_of_measurement: "mmHg",
+      },
+      "2026-10-28T21:00:00+00:00",
+    ),
+    "sensor.giulia_heart_pulse": sensore(
+      66,
+      {
+        friendly_name: "Withings Giulia Heart pulse",
+        unit_of_measurement: "bpm",
+      },
+      "2026-10-28T21:00:00+00:00",
+    ),
     /* Quelli che il corpo non sono. */
     "sensor.pixel_8_steps_goal": sensore(10000, {
       friendly_name: "Pixel 8 Steps goal",
@@ -120,8 +156,9 @@ export function passiDellaSettimana(fine = Date.parse("2026-10-29T10:00:00Z")) {
 
 /** Il peso dell'ultimo mese, una media al giorno. */
 export function pesoDelMese(fine = Date.parse("2026-10-29T10:00:00Z")) {
-  const valori = Array.from({ length: 30 }, (_v, i) =>
-    Math.round((80.6 - i * 0.075 + Math.sin(i / 2.3) * 0.35) * 10) / 10,
+  const valori = Array.from(
+    { length: 30 },
+    (_v, i) => Math.round((80.6 - i * 0.075 + Math.sin(i / 2.3) * 0.35) * 10) / 10,
   );
   valori[29] = 78.4;
   return giorni(30, fine, valori, "mean");
