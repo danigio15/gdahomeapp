@@ -116,6 +116,8 @@ class _VoceZitta implements Voce {
   Future<void> parla(String frase) async {}
   @override
   Future<void> zitta() async {}
+  @override
+  Future<void> suona() async {}
 }
 
 /* ── La mappa: un disegno di strade al posto di quella nativa ────────── */
