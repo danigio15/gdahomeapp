@@ -393,6 +393,59 @@ void main() {
     expect(find.byKey(const Key('codice-regalo')), findsOneWidget);
   });
 
+  testWidgets('abbonati dal negozio: «Gestisci abbonamento» porta al negozio', (
+    tester,
+  ) async {
+    late String gettone;
+    await tester.runAsync(() async {
+      gettone = await firmaUnGettone(
+        origine: 'negozio',
+        scade: DateTime(2027, 3, 12),
+      );
+    });
+    final collegamento = await casaSenzaFilo(tester, gettone: gettone);
+    await mostra(
+      tester,
+      SchermataPremium(collegamento: collegamento, sulWeb: false),
+    );
+    expect(find.byKey(const Key('gestisci-abbonamento')), findsOneWidget);
+    expect(find.text('Gestisci abbonamento'), findsOneWidget);
+    expect(
+      SchermataPremium.gestioneDelNegozio(TargetPlatform.iOS),
+      'https://apps.apple.com/account/subscriptions',
+    );
+    expect(
+      SchermataPremium.gestioneDelNegozio(TargetPlatform.android),
+      contains('play.google.com/store/account/subscriptions'),
+    );
+  }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
+  testWidgets('con un regalo, o nel browser, niente «Gestisci abbonamento»', (
+    tester,
+  ) async {
+    late String regalo, negozio;
+    await tester.runAsync(() async {
+      regalo = await firmaUnGettone(origine: 'regalo');
+      negozio = await firmaUnGettone(origine: 'negozio');
+    });
+    await mostra(
+      tester,
+      SchermataPremium(
+        collegamento: await casaSenzaFilo(tester, gettone: regalo),
+        sulWeb: false,
+      ),
+    );
+    expect(find.byKey(const Key('gestisci-abbonamento')), findsNothing);
+    await mostra(
+      tester,
+      SchermataPremium(
+        collegamento: await casaSenzaFilo(tester, gettone: negozio),
+        sulWeb: true,
+      ),
+    );
+    expect(find.byKey(const Key('gestisci-abbonamento')), findsNothing);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
   testWidgets(
     'sul telefono della casa di prova, con Premium, gli abbonamenti restano',
     (tester) async {

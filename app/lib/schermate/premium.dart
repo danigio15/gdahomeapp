@@ -341,6 +341,14 @@ class SchermataPremium extends StatefulWidget {
 
   /// Le condizioni d'uso: quelle standard di Apple (EULA), come in gdanav,
   /// valide anche per Google Play finche' gdahome non ne ha di sue sul sito.
+  /// Dove si gestisce l'abbonamento: disdire, riattivare il rinnovo,
+  /// cambiare piano. Lo fa il negozio, non l'app.
+  static String gestioneDelNegozio(TargetPlatform piattaforma) =>
+      piattaforma == TargetPlatform.iOS
+      ? 'https://apps.apple.com/account/subscriptions'
+      : 'https://play.google.com/store/account/subscriptions'
+            '?sku=$idPremiumGdahome&package=com.gdahome.gdahome';
+
   static const condizioni =
       'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
 
@@ -643,6 +651,24 @@ class _SchermataPremiumState extends State<SchermataPremium> {
               ),
             ),
           ],
+        ],
+        /* «Gestisci abbonamento»: chi ha disdetto lo riattiva da qui, chi
+         * vuole cambiare piano o disdire anche. Solo per l'abbonamento del
+         * negozio, e dove il negozio c'e'. */
+        if (premium &&
+            siCompraQui &&
+            licenza.gettoneDi(casa)?.origine == 'negozio') ...[
+          OutlinedButton.icon(
+            key: const Key('gestisci-abbonamento'),
+            onPressed: () => _apri(
+              SchermataPremium.gestioneDelNegozio(defaultTargetPlatform),
+            ),
+            icon: const Icon(Icons.autorenew),
+            label: Text(
+              inLingua(it: 'Gestisci abbonamento', en: 'Manage subscription'),
+            ),
+          ),
+          const SizedBox(height: 8),
         ],
         if (come != ComeStaLaLicenza.casaSenzaLicenze &&
             (widget.codiceRegalo ??

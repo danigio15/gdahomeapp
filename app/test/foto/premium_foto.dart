@@ -265,6 +265,23 @@ void main() {
     await scatta(tester, 'premium-attivo', _sistema);
   }, variant: _sistemi);
 
+  testWidgets('la pagina Premium, abbonati dal negozio', (tester) async {
+    quantoGrande(tester);
+    late String gettone;
+    await tester.runAsync(() async {
+      gettone = await firmaUnGettone(
+        origine: 'negozio',
+        scade: DateTime(2027, 3, 12),
+      );
+    });
+    final collegamento = await casaSenzaFilo(tester, gettone: gettone);
+    await tester.pumpWidget(
+      _lApp(SchermataPremium(collegamento: collegamento, sulWeb: false)),
+    );
+    await passa(tester);
+    await scatta(tester, 'premium-abbonato', _sistema);
+  }, variant: _sistemi);
+
   testWidgets('la pagina Premium col negozio che offre la prova', (
     tester,
   ) async {
