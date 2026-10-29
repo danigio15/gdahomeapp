@@ -49,6 +49,9 @@ Future<Map<String, String>> _presentazioneVera(
   return {
     ...?modello?.perLaCasa(),
     'app': versioneDiQuestApp,
+    /* Il numero di costruzione: «1.18.7» da solo non distingue una build
+     * dall'altra, e la Gestione vuole sapere chi e' rimasto indietro. */
+    'costruzione': '$costruzioneDiQuestApp',
     if (diChi.isNotEmpty) 'proprietario': diChi,
   };
 }
@@ -97,7 +100,7 @@ class Collegamento {
     GestoreLicenza? licenza,
     this.attesaPerLaRicevuta = const Duration(seconds: 20),
     this.ogniQuantoLaLicenza = const Duration(hours: 6),
-    this.ogniQuantoSiRiprovaDaFuori = const Duration(minutes: 10),
+    this.ogniQuantoSiRiprovaDaFuori = const Duration(minutes: 1),
     this.consegnaAlCentralino,
     Future<Map<String, String>> Function()? comeSiPresenta,
   }) : _comeSiPresenta = comeSiPresenta ?? (() => _presentazioneVera(archivio)),
@@ -427,7 +430,8 @@ class Collegamento {
     final prova = _laProvaDaFuori(casa);
     _prova = prova;
 
-    final filo = Filo(
+    late final Filo filo;
+    filo = Filo(
       approdo: () => _trova(casa),
       segno: casa.segno,
       chi: casa.identificativo!,
@@ -445,6 +449,21 @@ class Collegamento {
            * prossima stretta legata ci riprova. */
         }),
       ),
+      /* Il no del centralino quando il filo ribussa da solo: la pagina resta
+       * «Fuori casa serve GdAHome Premium», col tasto per comprarlo. Prima
+       * quel no finiva solo fra le cadute, e alla ribussata la pagina
+       * diventava «Non trovo la casa»: due cose diverse per lo stesso no. */
+      quandoDiceNo: (no) {
+        if (_filo != filo || _comeVa == ComeVa.aperta) return;
+        _fuoriSenzaPremium = true;
+        _siRiconnette = false;
+        _perche = no.spiegazione;
+        if (_comeVa != ComeVa.irraggiungibile) {
+          _vai(ComeVa.irraggiungibile);
+        } else {
+          _avvisa();
+        }
+      },
     );
     _filo = filo;
 
@@ -521,8 +540,8 @@ class Collegamento {
       if (errore is PremiumRichiesto) {
         /* Un no vero: il centralino che chiude con 4402 (o 4426) la bussata
          * da fuori, o la casa che si e' detta Base poco fa e da allora si
-         * bussa solo in casa. Se era la prova, e' il suo verdetto: fino ai
-         * prossimi dieci minuti non si riprova da fuori. */
+         * bussa solo in casa. Se era la prova, e' il suo verdetto: per il
+         * prossimo minuto non si riprova da fuori. */
         _fuoriSenzaPremium = true;
         if (dallaProva) {
           _provataDaFuoriIl[casa.id] = DateTime.now();
@@ -1411,7 +1430,9 @@ class Collegamento {
       _fuoriSenzaPremium = true;
       throw PremiumRichiesto(fuoriCasaServePremium);
     }
-    _fuoriSenzaPremium = false;
+    /* Trovata una strada non vuol dire entrati: da fuori il centralino puo'
+     * ancora dire di no. «Serve Premium» lo toglie l'ingresso vero
+     * ([_vai] con [ComeVa.aperta]) o una nuova apertura, non la strada. */
     _daDove = approdo.da;
     /* Si scrive solo quando cambia: il filo si riapre a ogni ascensore. */
     unawaited(archivio.segnaLApprodo(casa.id, approdo.da));

@@ -119,6 +119,7 @@ const SCHEDA_DELLA_CASELLA = Object.freeze({
   cd_radar_meteo: "meteo",
   cd_meteo: "meteo",
   cd_sport: "sport",
+  cd_salute: "salute",
   cd_sections: "visib",
   cd_section_names: "visib",
   cd_branding: "visib",

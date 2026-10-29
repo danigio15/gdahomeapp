@@ -200,6 +200,42 @@ void main() {
     expect(ponte.collegamenti, 1);
   });
 
+  test('Premium tolto mentre l\'app lo crede ancora: alle ribussate resta '
+      '«serve Premium», mai «non trovo la casa»', () async {
+    /* L'app ha ancora il gettone Premium, e bussa da fuori: il centralino
+     * trova la casa e dice 4402 a ogni bussata. Prima la prima bussata diceva
+     * «serve Premium», e alla ribussata la strada trovata cancellava quel no:
+     * restava «Non trovo la casa» con sotto la frase di Premium. */
+    ponte
+      ..chiudeSubitoDicendo = 'premium-richiesto'
+      ..chiudeSubitoColNumero = 4402;
+    final id = await unaCasaCredutaBase();
+    await archivio.segnaIlGettone(
+      id,
+      await firmaUnGettone(origine: 'regalo', perSempre: true),
+    );
+    final collegamento = unCollegamento();
+
+    await collegamento.apri();
+    expect(collegamento.comeVa, ComeVa.irraggiungibile);
+    expect(collegamento.fuoriCasaSenzaPremium, isTrue);
+
+    final visti = <bool>[];
+    collegamento.cambiamenti.listen((_) {
+      if (collegamento.comeVa == ComeVa.irraggiungibile) {
+        visti.add(collegamento.fuoriCasaSenzaPremium);
+      }
+    });
+    final prima = ponte.collegamenti;
+    for (var i = 0; i < 200 && ponte.collegamenti < prima + 2; i += 1) {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+    expect(ponte.collegamenti, greaterThanOrEqualTo(prima + 2));
+    expect(collegamento.comeVa, ComeVa.irraggiungibile);
+    expect(collegamento.fuoriCasaSenzaPremium, isTrue);
+    expect(visti, isNot(contains(false)));
+  });
+
   test('mai chiesto: da fuori si entra come prima, senza prova', () async {
     ponte.licenza = {
       'gettoni': {'gdahome': await firmaUnGettone()},

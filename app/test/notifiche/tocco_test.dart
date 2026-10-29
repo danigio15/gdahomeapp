@@ -54,6 +54,7 @@ void main() {
       expect(di('pioggia').linguette.first, 'meteo');
       expect(di('ha_notify').linguette, ['home']);
       expect(di('viaggi').posto, PostoDellaNotifica.navigatore);
+      expect(di('aggiorna_app').posto, PostoDellaNotifica.negozio);
       expect(di('riepilogo').posto, PostoDellaNotifica.giornata);
       expect(
         di('movimento', camera: 'camera.balcone').posto,

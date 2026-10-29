@@ -52,6 +52,46 @@ await mkdir(`${qui}campioni`, { recursive: true });
 const salva = (nome, cosa) =>
   writeFile(`${qui}campioni/${nome}.json`, `${JSON.stringify(cosa, null, 1)}\n`);
 
+/* La Serie C su TheSportsDB (chiave pubblica «123», al piu' 30 domande al
+ * minuto: una ogni due secondi e mezzo). I gironi: A 5340, B 5339, C 4398. */
+try {
+  const T = "https://www.thesportsdb.com/api/v1/json/123";
+  const piano = async (nome, u) => {
+    await new Promise((r) => setTimeout(r, 2500));
+    await salva(nome, await scarica(u));
+  };
+  for (const id of ["5340", "5339", "4398"]) {
+    await piano(`serie-c-lega-${id}`, `${T}/lookupleague.php?id=${id}`);
+    await piano(`serie-c-squadre-${id}`, `${T}/lookup_all_teams.php?id=${id}`);
+    await piano(`serie-c-classifica-${id}`, `${T}/lookuptable.php?l=${id}&s=2026-2027`);
+  }
+  await piano("serie-c-classifica-4398-2025", `${T}/lookuptable.php?l=4398&s=2025-2026`);
+  await piano("serie-c-prossime-lega-4398", `${T}/eventsnextleague.php?id=4398`);
+  await piano("serie-c-ultime-lega-4398", `${T}/eventspastleague.php?id=4398`);
+  /* Catania (Girone C). */
+  await piano("serie-c-squadra", `${T}/lookupteam.php?id=133671`);
+  await piano("serie-c-ultime", `${T}/eventslast.php?id=133671`);
+  await piano("serie-c-prossime", `${T}/eventsnext.php?id=133671`);
+  await piano("serie-c-stagione-4398", `${T}/eventsseason.php?id=4398&s=2026-2027`);
+  const stemma = "https://r2.thesportsdb.com/images/media/team/badge/mov8wk1677499346.png";
+  await mkdir(`${qui}loghi`, { recursive: true });
+  for (const [nome, u] of [
+    ["piccolo", `${stemma}/small`],
+    ["pieno", stemma],
+  ]) {
+    const r = await fetch(u);
+    await salva(`serie-c-stemma-${nome}`, {
+      u,
+      stato: r.status,
+      tipo: r.headers.get("content-type"),
+    });
+    if (r.ok)
+      await writeFile(`${qui}loghi/serie-c-${nome}.png`, Buffer.from(await r.arrayBuffer()));
+  }
+} catch (e) {
+  await salva("serie-c-errore", { errore: String(e?.stack || e) });
+}
+
 /* Dal vivo: cosa danno le fonti mentre una sessione e' in corso (F1 dal
  * sito del cronometraggio e da OpenF1, ESPN, MotoGP). Prima di tutto il
  * resto, perche' la sessione non aspetta. */

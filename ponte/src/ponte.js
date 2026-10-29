@@ -409,6 +409,19 @@ class Collegamento {
         });
       return;
     }
+    /* La Salute di questo telefono (`il-corpo-dal-telefono.js`): solo da qui,
+     * dal filo di un telefono, mai dalla plancia. Chi manda e' il telefono di
+     * questo filo, intestato a un utente: lo dice il segno, non il messaggio. */
+    const ilCorpo = this.ponte.ilCorpo;
+    if (ilCorpo?.riconosce?.(detto.type)) {
+      ilCorpo
+        .rispondi(detto, { dispositivo: this.dispositivo })
+        .catch(() => no(detto.id ?? null, "ponte_salute", "non ha funzionato"))
+        .then((detta) => {
+          if (!this.chiuso) this.presa.manda(JSON.stringify(detta));
+        });
+      return;
+    }
     const commissioni = this.ponte.commissioni;
     /* Chi chiede: il telefono che ha aperto questo filo, cioe' l'utente di
      * Home Assistant a cui e' intestato. Serve alle plance riservate — senza,

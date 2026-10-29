@@ -149,7 +149,7 @@ class PlanciaVera extends StatefulWidget {
   State<PlanciaVera> createState() => PlanciaVeraState();
 }
 
-class PlanciaVeraState extends State<PlanciaVera> {
+class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
   final _riquadro = GlobalKey<RiquadroDellaPlanciaState>();
   ServitoreDiQuestoSistema? _servitore;
   bool _servitoreChiesto = false;
@@ -203,10 +203,28 @@ class PlanciaVeraState extends State<PlanciaVera> {
       (_) => ricarica(),
     );
     if (!kIsWeb) unawaited(_accendi());
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  /* Tornando in primo piano si guarda che la porta della plancia ci sia
+   * ancora: su iPhone il sistema se la riprende mentre l'app e' in tasca, e
+   * la pagina restava a schermo senza nessuno dall'altra parte. Se la si e'
+   * dovuta rialzare, la pagina si ricarica (vedi
+   * `Servitore.rimettiInPiedi`). */
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    final servitore = _servitore;
+    if (servitore == null) return;
+    unawaited(() async {
+      final rifatta = await servitore.rimettiInPiedi();
+      if (rifatta && mounted && identical(_servitore, servitore)) ricarica();
+    }());
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _ascoltoLeImpostazioni?.cancel();
     _ascoltoLaConfigurazione?.cancel();
     _scadenzaDelVelo?.cancel();

@@ -97,6 +97,8 @@ void main() {
     expect(nelBrowser, isNot(contains(Sezione.impostazioniDellApp)));
     /* E le notifiche: nel browser una notifica ad app chiusa non arriva. */
     expect(nelBrowser, isNot(contains(Sezione.notifiche)));
+    /* E la salute: Apple Salute e Health Connect stanno sul telefono. */
+    expect(nelBrowser, isNot(contains(Sezione.salute)));
     /* E il resto c'è tutto: si tolgono quattro voci, non si fa un'altra
        * app. */
     expect(nelBrowser, contains(Sezione.plancia));
@@ -105,8 +107,8 @@ void main() {
     expect(
       vociDellaBarra(chiAmministra: true, conZigbee: true).length -
           nelBrowser.length,
-      4,
-      reason: 'nella webapp mancano esattamente quelle quattro',
+      5,
+      reason: 'nella webapp mancano esattamente quelle cinque',
     );
   });
 
@@ -118,6 +120,8 @@ void main() {
       Sezione.zigbee,
       Sezione.impostazioniDellApp,
       Sezione.notifiche,
+      /* La salute: Apple Salute e Health Connect stanno sul telefono. */
+      Sezione.salute,
     });
   });
 

@@ -1,6 +1,6 @@
 # Privacy di GdAHome
 
-Ultimo aggiornamento: 14 ottobre 2026.
+Ultimo aggiornamento: 29 ottobre 2026.
 
 GdAHome è l'app che apre la plancia di Home Assistant sul telefono. Questa
 pagina dice, in modo chiaro e senza giri di parole, **quali dati ci sono di
@@ -106,6 +106,26 @@ della pioggia a RainViewer (`api.rainviewer.com`) e la mappa sotto a Esri
 (`server.arcgisonline.com`), o al servizio che scegli nella Configurazione.
 Ricevono la zona della mappa che stai guardando, non chi sei. Senza quella
 sezione non parte niente.
+
+## La salute
+
+Solo se la accendi tu, dal menu dell'app › **Salute**. Spenta, GdAHome non
+legge niente e non chiede niente.
+
+Accesa, l'app **legge** da Apple Salute (iPhone) o da Health Connect
+(Android) le sole misure che scegli — passi, battito, battito a riposo, peso,
+massa grassa, pressione, ossigeno, sonno, calorie attive — e solo le ultime.
+Non scrive mai nulla in Salute o in Health Connect.
+
+Le misure vanno **soltanto alla tua casa**: al ponte GdAHome nel tuo Home
+Assistant, cifrate. Da fuori casa passano dal centralino, che porta byte
+cifrati e non può leggerli. Il ponte le scrive come sensori del tuo Home
+Assistant, col nome che scegli, e le tiene in un file che legge solo lui. Non
+vanno a nessun nostro server, a nessuna pubblicità, a nessun altro.
+
+Spegnendo, la casa cancella i sensori e le misure di questo telefono; lo
+stesso succede se il telefono viene staccato dalla casa. I dati restano anche
+nello storico di Home Assistant, che è tuo: lo gestisci da lì.
 
 ## La fotocamera
 

@@ -1614,8 +1614,13 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // (il riquadro della pagina Musica e la scheda del Config).
   // 502 coi loghi delle radio che si mettono solo quando arrivano:
   // `sections/loghi-delle-radio.js`.
+  // 508 con la Salute e Strava dentro: `core/salute.js`, `core/strava.js`
+  // (le regole), `sections/salute-section.js` (la pagina),
+  // `sections/salute-editor-section.js` (la scheda del Config),
+  // `sections/strava-pezzi.js` (la linguetta Strava) e
+  // `sections/finestre/salute.js` (la finestra della tessera).
   assert.ok(
-    relative.length <= 502,
+    relative.length <= 508,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

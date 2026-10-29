@@ -37,6 +37,8 @@ import 'schermate/navigatore_qui/qui.dart' as navigatore;
 import 'licenza/negozio.dart';
 import 'casa/lo_schermo.dart' show loSchermoRimetti;
 import 'schermate/plancia_vera.dart';
+import 'salute/lettore.dart';
+import 'salute/postino_della_salute.dart';
 import 'schermate/premium.dart';
 import 'schermate/riconoscimento.dart';
 import 'vestito/sfondo.dart';
@@ -491,6 +493,22 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     if (!kIsWeb && widget.cassaforte == null && Postino.istanza == null) {
       unawaited(Postino(collegamento: _collegamento).accendi());
     }
+    /* La salute dal telefono: manda le misure scelte quando il filo si apre,
+     * e ogni quarto d'ora con l'app aperta. Spenta finche' non la si accende
+     * dalla pagina «Salute»: senza, non legge niente e non chiede niente. */
+    if (!kIsWeb &&
+        widget.cassaforte == null &&
+        PostinoDellaSalute.istanza == null) {
+      final salute = PostinoDellaSalute(lettore: lettoreDiQuestoSistema())
+        /* Di GdAHome Premium: la licenza della casa in uso, come per le
+         * altre voci col lucchetto (`home.dart`, `_bloccate`). */
+        ..sbloccata = () {
+          final licenza = _collegamento.licenza;
+          return !licenza.controlliAccesi || licenza.premium;
+        };
+      PostinoDellaSalute.istanza = salute;
+      salute.segui(() => _collegamento.filo, _collegamento.cambiamenti);
+    }
     _accendi();
   }
 
@@ -839,6 +857,9 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
       WidgetsBinding.instance.addPostFrameCallback((_) => sopra.value = null);
     }
     Misure.io.spegni();
+    /* Il quarto d'ora della salute: con l'app che se ne va, si ferma. */
+    PostinoDellaSalute.istanza?.ferma();
+    PostinoDellaSalute.istanza = null;
     _impostazioni.chiudi();
     /* Il filo dell'app non si chiude se la macchina lo sta usando: lo schermo
      * dell'auto resta acceso quando l'app sul telefono se ne va, ed e'

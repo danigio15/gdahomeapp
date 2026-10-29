@@ -125,7 +125,14 @@ test("le radio pronte: si trovano per nome fra quelle di Radio Browser", async (
     { nome: "RTL 102.5", id: "media-source://radio_browser/r1", tipo: "", logo: "" },
     { nome: "Radio DEEJAY", id: "media-source://radio_browser/d1", tipo: "", logo: "" },
     { nome: "Radio Kiss Kiss Napoli", id: "media-source://radio_browser/k1", tipo: "", logo: "" },
+    { nome: "Radio Subasio+", id: "media-source://radio_browser/s2", tipo: "", logo: "" },
+    { nome: "Radio Subasio", id: "media-source://radio_browser/s1", tipo: "", logo: "" },
   ];
+  /* «Subasio+, senza pubblicità, insieme a Subasio normale»: sono due, e
+   * ognuna trova la sua. */
+  assert.ok(nomi.includes("Radio Subasio Più"));
+  assert.equal(stazioneDalNome(italiane, "Radio Subasio Più")?.id, "media-source://radio_browser/s2");
+  assert.equal(stazioneDalNome(italiane, "Radio Subasio")?.id, "media-source://radio_browser/s1");
   /* Quella che si chiama proprio cosi', non la sorella piu' lunga. */
   assert.equal(stazioneDalNome(italiane, "RTL 102.5")?.id, "media-source://radio_browser/r1");
   /* Maiuscole e segni non contano. */

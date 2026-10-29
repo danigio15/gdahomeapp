@@ -97,6 +97,8 @@ function catalogoTessere() {
     ["meteo", "🌤️", t("Meteo", "Weather")],
     /* Lo sport: compare da solo quando si segue qualcosa (Casa › Sport). */
     ["sport", "⚽", t("Sport", "Sports")],
+    /* La Salute: compare da sola coi sensori del corpo o di Strava. */
+    ["salute", "❤️", t("Salute", "Health")],
     /* Il messaggio agli Echo e ai telefoni: compare da solo quando c'e' a
      * chi scrivere. */
     ["messaggio", "💬", t("Messaggio", "Message")],

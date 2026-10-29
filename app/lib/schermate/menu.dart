@@ -87,6 +87,12 @@ enum Sezione {
    * non si apre. Il disegno e' quello delle allerte: «avvisi» ce l'ha gia' la
    * Console. */
   notifiche('allerte', pronta: true, soloNellApp: true),
+  /* La salute (#227): le misure dell'orologio — Apple Salute, Health
+   * Connect — portate a casa, dove la pagina Salute della plancia le mostra.
+   * **Solo sul telefono**: nel browser ne' Salute ne' Health Connect ci
+   * sono. Il disegno e' il cuore della pagina Salute. E' di GdAHome
+   * Premium: senza, la voce porta il lucchetto e il ponte non scrive. */
+  salute('salute', pronta: true, soloNellApp: true),
   segnalazioni('segnalazioni', pronta: true),
   assistenza('assistenza', pronta: true),
   /* Le automazioni della casa (Premium): tutte quelle di Home Assistant, a
@@ -201,6 +207,7 @@ enum Sezione {
     ),
     Sezione.aggiornamenti => inLingua(it: 'Aggiornamenti', en: 'Updates'),
     Sezione.notifiche => inLingua(it: 'Notifiche', en: 'Notifications'),
+    Sezione.salute => inLingua(it: 'Salute', en: 'Health'),
     Sezione.segnalazioni => inLingua(it: 'Segnalazioni', en: 'Reports'),
     Sezione.assistenza => inLingua(it: 'Assistenza', en: 'Support'),
     Sezione.console => inLingua(it: 'Console', en: 'Console'),
@@ -237,7 +244,8 @@ enum Sezione {
     Sezione.navigatore ||
     Sezione.configurazione ||
     Sezione.aggiornamenti ||
-    Sezione.notifiche => GruppoDellaBarra.casa,
+    Sezione.notifiche ||
+    Sezione.salute => GruppoDellaBarra.casa,
     /* Con «Come va l'app»: sono le due voci che parlano dell'app e non della
      * casa, e chi cerca l'una guarda dov'e' l'altra. */
     Sezione.impostazioniDellApp ||
@@ -284,7 +292,8 @@ enum Sezione {
     Sezione.dispositivi ||
     Sezione.automazioni ||
     Sezione.zigbee ||
-    Sezione.aiutanti => true,
+    Sezione.aiutanti ||
+    Sezione.salute => true,
     _ => false,
   };
 }

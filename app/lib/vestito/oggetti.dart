@@ -96,6 +96,8 @@ const disegniDegliOggetti = <String>{
   'caldaia',
   'clima',
   'custom',
+  /* Il cuore della pagina Salute (#227), lo stesso della plancia. */
+  'salute',
   'elettrodomestici',
   'energia',
   'ev',

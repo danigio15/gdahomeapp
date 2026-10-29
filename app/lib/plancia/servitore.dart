@@ -58,6 +58,8 @@ import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
+
 import '../misure/lavori.dart';
 import '../parole.dart';
 import '../ponte/altrove/altrove.dart';
@@ -272,6 +274,11 @@ class Servitore {
   set pannello(PannelloDellaPlancia? quale) => premesse.pannello = quale;
 
   HttpServer? _server;
+
+  /* La porta chiesta ad [alza]: quella su cui rialzarsi se il sistema ci
+   * chiude la nostra (vedi [rimettiInPiedi]). */
+  int _portaChiesta = 0;
+  bool _alzato = false;
   final _inArrivo = <String, Future<_Scaricato>>{};
   final _cuciture = <Cucitura>{};
 
@@ -332,6 +339,8 @@ class Servitore {
   /// [portaDiCasa], e il perche' e' scritto li'.
   Future<void> alza({int porta = 0}) async {
     if (_server != null) return;
+    _portaChiesta = porta;
+    _alzato = true;
     final server = porta == portaDiCasa
         ? await _laPortaDiCasa()
         : await HttpServer.bind(InternetAddress.loopbackIPv4, porta);
@@ -381,6 +390,7 @@ class Servitore {
   Future<void> spegni() async {
     final server = _server;
     _server = null;
+    _alzato = false;
     for (final cucitura in List.of(_cuciture)) {
       await cucitura.chiudi();
     }
@@ -392,13 +402,67 @@ class Servitore {
   }
 
   Future<void> _ascolta(HttpServer server) async {
-    await for (final richiesta in server) {
-      unawaited(
-        _servi(richiesta).catchError((Object errore) {
-          _racconta('richiesta andata storta: $errore');
-          _rispondi(richiesta, 500, 'text/plain', utf8.encode('$errore'));
-        }),
+    try {
+      await for (final richiesta in server) {
+        unawaited(
+          _servi(richiesta).catchError((Object errore) {
+            _racconta('richiesta andata storta: $errore');
+            _rispondi(richiesta, 500, 'text/plain', utf8.encode('$errore'));
+          }),
+        );
+      }
+    } catch (errore) {
+      _racconta('la porta della plancia si è rotta: $errore');
+    }
+    /* Finito senza che nessuno l'abbia spenta: l'ha chiusa il sistema. Si
+     * segna, e [rimettiInPiedi] la rialza. */
+    if (identical(_server, server)) _server = null;
+  }
+
+  /// Rialza la porta se il sistema l'ha chiusa. Torna `true` se l'ha
+  /// dovuta rialzare: allora la pagina che c'era non parla piu' con nessuno,
+  /// e va ricaricata.
+  ///
+  /// «Se rimane aperta l'app poi entro e sembra tutto a posto, ma in realtà
+  /// non sta facendo niente; si sistema solo chiudendola e riaprendola.» Su
+  /// iPhone un'app in tasca viene sospesa, e il sistema si riprende le sue
+  /// porte in ascolto: tornando, quella della plancia non c'era piu'. La
+  /// pagina restava a schermo, con gli ultimi stati e i tasti, ma ogni cosa
+  /// che chiedeva andava a una porta chiusa — e nessuno la riapriva, perche'
+  /// per l'app il server era ancora acceso. Adesso al ritorno si bussa alla
+  /// propria porta: se non risponde, si rialza (la stessa, se si puo': la
+  /// pagina tiene le sue cose per indirizzo) e la pagina si ricarica.
+  Future<bool> rimettiInPiedi() async {
+    if (!_alzato) return false;
+    final server = _server;
+    if (server != null && await _risponde(server.port)) return false;
+    _racconta('la porta della plancia non risponde: la rialzo');
+    _server = null;
+    try {
+      await server?.close(force: true);
+    } catch (_) {
+      /* Gia' chiusa dal sistema. */
+    }
+    await alza(porta: _portaChiesta);
+    return true;
+  }
+
+  /// Per le prove: la porta si chiude come la chiude il sistema, senza che
+  /// il servitore lo sappia.
+  @visibleForTesting
+  Future<void> perdiLaPorta() async => _server?.close(force: true);
+
+  static Future<bool> _risponde(int porta) async {
+    try {
+      final presa = await Socket.connect(
+        InternetAddress.loopbackIPv4,
+        porta,
+        timeout: const Duration(seconds: 2),
       );
+      presa.destroy();
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 

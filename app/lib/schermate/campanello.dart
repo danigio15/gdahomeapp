@@ -32,6 +32,7 @@ import 'dart:io' show Directory;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../aggiornamento_obbligatorio.dart' show apriIlNegozio;
 import '../casa/collegamento.dart';
 import '../casa/la_finestra.dart';
 import '../notifiche/consegna.dart';
@@ -195,6 +196,8 @@ Future<void> apriLaNotifica(
         } catch (_) {
           /* Resta dov'e'. */
         }
+      case PostoDellaNotifica.negozio:
+        await apriIlNegozio();
       case PostoDellaNotifica.pagina:
         return;
     }

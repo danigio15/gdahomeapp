@@ -207,7 +207,11 @@ function makeTemperatureNameField(id, label) {
 }
 
 function temperatureLabelSourceRoom(form) {
-  const original = clean(form?.dataset?.dmOriginalRoom);
+  /* In modifica i nomi sono quelli della stanza da cui si parte, anche
+   * cambiando la stanza nella tendina: la temperatura si sposta col suo nome,
+   * non prende quelli (vuoti) della stanza nuova. */
+  const original =
+    clean(form?.dataset?.beta25EditingRoom) || clean(form?.dataset?.dmOriginalRoom);
   const selected = clean(form?.querySelector("#dm-temperature-room")?.value);
   return temperatureRoom(original || selected);
 }
@@ -252,7 +256,7 @@ function ensureTemperatureNameFields(form) {
     return true;
   }
 
-  const original = clean(form.dataset.dmOriginalRoom);
+  const original = clean(form.dataset.beta25EditingRoom) || clean(form.dataset.dmOriginalRoom);
   const editing =
     Boolean(original) ||
     /^(modifica|edit)\b/i.test(

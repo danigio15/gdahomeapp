@@ -22,6 +22,10 @@
 export const MESSAGGIO_CHI = "ponte/messaggio/chi";
 export const MESSAGGIO_MANDA = "ponte/messaggio/manda";
 
+/** I volumi che si possono scegliere per gli Echo, in percento. `null`:
+ * quello che l'Echo ha gia'. */
+export const VOLUMI_DEL_MESSAGGIO = Object.freeze([30, 50, 70, 100]);
+
 /** Quanto lungo al piu' un messaggio, e a quanti Echo e persone al piu'. */
 export const MESSAGGIO_AL_PIU = 200;
 const ECHO_AL_PIU = 12;
@@ -65,7 +69,28 @@ export function messaggioPulito(detto) {
     ),
   ].slice(0, PERSONE_AL_PIU);
   if (!echo.length && !telefoni) return null;
-  return { testo, echo, telefoni, persone, modo: detto?.modo === "voce" ? "voce" : "annuncio" };
+  /* «Se in casa mettono il volume basso io invio il messaggio ma non lo sente
+   * nessuno»: il volume a cui gli Echo lo dicono, o `null` per lasciarli
+   * come sono. Solo uno dei volumi della finestra. */
+  const volume = VOLUMI_DEL_MESSAGGIO.includes(detto?.volume) ? detto.volume : null;
+  return {
+    testo,
+    echo,
+    telefoni,
+    persone,
+    modo: detto?.modo === "voce" ? "voce" : "annuncio",
+    volume,
+  };
+}
+
+/**
+ * Quanto aspettare, dopo averlo mandato, prima di rimettere agli Echo il
+ * volume di prima: il tempo di dire la frase (col suono dell'annuncio e
+ * «Messaggio da …» davanti), con un margine. Fra 8 e 40 secondi.
+ */
+export function attesaPerIlVolume(testo) {
+  const lettere = String(testo ?? "").length;
+  return Math.min(40_000, Math.max(8_000, 6_000 + lettere * 90));
 }
 
 const nomeCorto = (nome) =>

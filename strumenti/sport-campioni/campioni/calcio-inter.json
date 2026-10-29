@@ -401,15 +401,15 @@
        "competitors": [
         {
          "homeAway": "home",
-         "id": "17530",
+         "id": "103",
          "order": 0,
          "team": {
-          "abbreviation": "VEN",
-          "displayName": "Venezia",
-          "id": "17530",
+          "abbreviation": "MIL",
+          "displayName": "AC Milan",
+          "id": "103",
           "links": [
            {
-            "href": "https://www.espn.com/soccer/club/_/id/17530/venezia",
+            "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan",
             "rel": [
              "clubhouse",
              "desktop",
@@ -418,7 +418,7 @@
             "text": "Clubhouse"
            },
            {
-            "href": "https://www.espn.com/soccer/team/stats/_/id/17530/venezia",
+            "href": "https://www.espn.com/soccer/team/stats/_/id/103/ac-milan",
             "rel": [
              "stats",
              "desktop",
@@ -427,7 +427,7 @@
             "text": "Stats"
            },
            {
-            "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:17530&section=stats",
+            "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:103&section=stats",
             "rel": [
              "stats",
              "sportscenter",
@@ -437,7 +437,7 @@
             "text": "Stats"
            },
            {
-            "href": "https://www.espn.com/soccer/team/fixtures/_/id/17530/venezia",
+            "href": "https://www.espn.com/soccer/team/fixtures/_/id/103/ac-milan",
             "rel": [
              "schedule",
              "desktop",
@@ -446,7 +446,7 @@
             "text": "Fixtures"
            },
            {
-            "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:17530&section=scores",
+            "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:103&section=scores",
             "rel": [
              "schedule",
              "sportscenter",
@@ -456,7 +456,7 @@
             "text": "Fixtures"
            },
            {
-            "href": "https://www.espn.com/soccer/team/results/_/id/17530/venezia",
+            "href": "https://www.espn.com/soccer/team/results/_/id/103/ac-milan",
             "rel": [
              "results",
              "desktop",
@@ -465,7 +465,7 @@
             "text": "Results"
            },
            {
-            "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:17530&section=scores",
+            "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:103&section=scores",
             "rel": [
              "results",
              "sportscenter",
@@ -484,7 +484,7 @@
             "text": "Standings"
            },
            {
-            "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:17530&section=standings",
+            "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:103&section=standings",
             "rel": [
              "standings",
              "sportscenter",
@@ -494,7 +494,7 @@
             "text": "Standings"
            },
            {
-            "href": "https://www.espn.com/soccer/team/squad/_/id/17530/venezia",
+            "href": "https://www.espn.com/soccer/team/squad/_/id/103/ac-milan",
             "rel": [
              "squad",
              "desktop",
@@ -503,7 +503,7 @@
             "text": "Squad"
            },
            {
-            "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:17530&section=squad",
+            "href": "sportscenter://x-callback-url/showClubhouse?uid=s:600~t:103&section=squad",
             "rel": [
              "squad",
              "sportscenter",
@@ -513,12 +513,12 @@
             "text": "Squad"
            }
           ],
-          "location": "Venezia",
+          "location": "AC Milan",
           "logos": [
            {
             "alt": "",
             "height": 500,
-            "href": "https://a.espncdn.com/i/teamlogos/soccer/500/17530.png",
+            "href": "https://a.espncdn.com/i/teamlogos/soccer/500/103.png",
             "rel": [
              "full",
              "default"
@@ -528,7 +528,7 @@
            {
             "alt": "",
             "height": 500,
-            "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/17530.png",
+            "href": "https://a.espncdn.com/i/teamlogos/soccer/500-dark/103.png",
             "rel": [
              "full",
              "dark"
@@ -536,7 +536,7 @@
             "width": 500
            }
           ],
-          "shortDisplayName": "Venezia"
+          "shortDisplayName": "Milan"
          },
          "type": "team",
          "winner": false
@@ -684,8 +684,8 @@
          "winner": false
         }
        ],
-       "date": "2026-10-28T17:30Z",
-       "id": "401874773",
+       "date": "2026-10-31T19:45Z",
+       "id": "401874795",
        "neutralSite": false,
        "notes": [],
        "odds": [
@@ -693,97 +693,16 @@
          "awayTeamOdds": {
           "current": {
            "moneyLine": {
-            "alternateDisplayValue": "-310",
-            "american": "-310",
-            "decimal": 1.32,
-            "displayValue": "10/31",
-            "fraction": "10/31",
-            "value": 1.32
+            "alternateDisplayValue": "-105",
+            "american": "-105",
+            "decimal": 1.95,
+            "displayValue": "20/21",
+            "fraction": "20/21",
+            "value": 1.95
            },
            "pointSpread": {
-            "alternateDisplayValue": "-1.5",
-            "american": "-1.5"
-           },
-           "spread": {
-            "alternateDisplayValue": "-120",
-            "american": "-120",
-            "decimal": 1.83,
-            "displayValue": "5/6",
-            "fraction": "5/6",
-            "value": 1.83
-           }
-          },
-          "favorite": true,
-          "moneyLine": -310,
-          "open": {
-           "favorite": true,
-           "moneyLine": {
-            "alternateDisplayValue": "-310",
-            "american": "-310",
-            "decimal": 1.32,
-            "displayValue": "10/31",
-            "fraction": "10/31",
-            "value": 1.32
-           },
-           "pointSpread": {
-            "alternateDisplayValue": "-1.5",
-            "american": "-1.5"
-           },
-           "spread": {
-            "alternateDisplayValue": "-125",
-            "american": "-125",
-            "decimal": 1.8,
-            "displayValue": "4/5",
-            "fraction": "4/5",
-            "value": 1.8
-           }
-          },
-          "spreadOdds": -120,
-          "team": {
-           "abbreviation": "INT",
-           "id": "110",
-           "name": "Internazionale"
-          },
-          "underdog": false
-         },
-         "homeTeamOdds": {
-          "current": {
-           "moneyLine": {
-            "alternateDisplayValue": "+600",
-            "american": "+600",
-            "decimal": 7,
-            "displayValue": "6/1",
-            "fraction": "6/1",
-            "value": 7
-           },
-           "pointSpread": {
-            "alternateDisplayValue": "+1.5",
-            "american": "+1.5"
-           },
-           "spread": {
-            "alternateDisplayValue": "-115",
-            "american": "-115",
-            "decimal": 1.86,
-            "displayValue": "20/23",
-            "fraction": "20/23",
-            "value": 1.86
-           }
-          },
-          "favorite": false,
-          "moneyLine": 600,
-          "open": {
-           "favorite": false,
-           "moneyLine": {
-            "alternateDisplayValue": "+600",
-            "american": "+600",
-            "decimal": 7,
-            "displayValue": "6/1",
-            "fraction": "6/1",
-            "value": 7
-           },
-           "pointSpread": {
-            "alternateDisplayValue": "+1.5",
-            "american": "+1.5"
+            "alternateDisplayValue": "-0.5",
+            "american": "-0.5"
            },
            "spread": {
             "alternateDisplayValue": "-110",
@@ -794,17 +713,98 @@
             "value": 1.9
            }
           },
-          "spreadOdds": -115,
+          "favorite": true,
+          "moneyLine": -105,
+          "open": {
+           "favorite": true,
+           "moneyLine": {
+            "alternateDisplayValue": "+105",
+            "american": "+105",
+            "decimal": 2.05,
+            "displayValue": "21/20",
+            "fraction": "21/20",
+            "value": 2.05
+           },
+           "pointSpread": {
+            "alternateDisplayValue": "-0.5",
+            "american": "-0.5"
+           },
+           "spread": {
+            "alternateDisplayValue": "-105",
+            "american": "-105",
+            "decimal": 1.95,
+            "displayValue": "20/21",
+            "fraction": "20/21",
+            "value": 1.95
+           }
+          },
+          "spreadOdds": -110,
           "team": {
-           "abbreviation": "VEN",
-           "id": "17530",
-           "name": "Venezia"
+           "abbreviation": "INT",
+           "id": "110",
+           "name": "Internazionale"
+          },
+          "underdog": false
+         },
+         "homeTeamOdds": {
+          "current": {
+           "moneyLine": {
+            "alternateDisplayValue": "+240",
+            "american": "+240",
+            "decimal": 3.4,
+            "displayValue": "12/5",
+            "fraction": "12/5",
+            "value": 3.4
+           },
+           "pointSpread": {
+            "alternateDisplayValue": "+0.5",
+            "american": "+0.5"
+           },
+           "spread": {
+            "alternateDisplayValue": "-125",
+            "american": "-125",
+            "decimal": 1.8,
+            "displayValue": "4/5",
+            "fraction": "4/5",
+            "value": 1.8
+           }
+          },
+          "favorite": false,
+          "moneyLine": 240,
+          "open": {
+           "favorite": false,
+           "moneyLine": {
+            "alternateDisplayValue": "+215",
+            "american": "+215",
+            "decimal": 3.15,
+            "displayValue": "43/20",
+            "fraction": "43/20",
+            "value": 3.15
+           },
+           "pointSpread": {
+            "alternateDisplayValue": "+0.5",
+            "american": "+0.5"
+           },
+           "spread": {
+            "alternateDisplayValue": "-140",
+            "american": "-140",
+            "decimal": 1.71,
+            "displayValue": "5/7",
+            "fraction": "5/7",
+            "value": 1.71
+           }
+          },
+          "spreadOdds": -125,
+          "team": {
+           "abbreviation": "MIL",
+           "id": "103",
+           "name": "AC Milan"
           },
           "underdog": true
          },
          "links": [
           {
-           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0ML86939625_1",
+           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34908276%3Foutcomes%3D0ML86948141_1",
            "isExternal": true,
            "isPremium": false,
            "language": "en-US",
@@ -818,7 +818,7 @@
            "text": "Home Bet"
           },
           {
-           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0ML86939625_3",
+           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34908276%3Foutcomes%3D0ML86948141_3",
            "isExternal": true,
            "isPremium": false,
            "language": "en-US",
@@ -832,7 +832,7 @@
            "text": "Away Bet"
           },
           {
-           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0ML86939625_2",
+           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34908276%3Foutcomes%3D0ML86948141_2",
            "isExternal": true,
            "isPremium": false,
            "language": "en-US",
@@ -846,7 +846,7 @@
            "text": "Draw Bet"
           },
           {
-           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0HC86939635P150_1",
+           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34908276%3Foutcomes%3D0HC86948196P50_1",
            "isExternal": true,
            "isPremium": false,
            "language": "en-US",
@@ -859,7 +859,7 @@
            "text": "Home Point Spread"
           },
           {
-           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0HC86939635N150_3",
+           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34908276%3Foutcomes%3D0HC86948196N50_3",
            "isExternal": true,
            "isPremium": false,
            "language": "en-US",
@@ -872,7 +872,7 @@
            "text": "Away Point Spread"
           },
           {
-           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0OU86939630O350_1",
+           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34908276%3Foutcomes%3D0OU86948191O250_1",
            "isExternal": true,
            "isPremium": false,
            "language": "en-US",
@@ -885,7 +885,7 @@
            "text": "Over Odds"
           },
           {
-           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758%3Foutcomes%3D0OU86939630U350_3",
+           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34908276%3Foutcomes%3D0OU86948191U250_3",
            "isExternal": true,
            "isPremium": false,
            "language": "en-US",
@@ -898,7 +898,7 @@
            "text": "Under Odds"
           },
           {
-           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34904758",
+           "href": "https://sportsbook.draftkings.com/gateway?s=__s__&wpcid=__wpcid__&wpsrc=413&wpcn=ESPN&wpscn=Widget&wpcrn=BetSlipDeepLink&wpscid=__wpscid__&wpcrid=xx&preurl=https%3A%2F%2Fsportsbook.draftkings.com%2Fevent%2F34908276",
            "isExternal": true,
            "isPremium": false,
            "language": "en-US",
@@ -911,6 +911,76 @@
            "text": "Game"
           }
          ]
+        },
+        {
+         "awayTeamOdds": {
+          "odds": {
+           "handicap": 0,
+           "summary": "1/1",
+           "value": 2
+          },
+          "team": {
+           "abbreviation": "INT",
+           "id": "110",
+           "name": "Internazionale"
+          }
+         },
+         "homeTeamOdds": {
+          "odds": {
+           "handicap": 0,
+           "summary": "5/2",
+           "value": 3.5
+          },
+          "team": {
+           "abbreviation": "MIL",
+           "id": "103",
+           "name": "AC Milan"
+          }
+         },
+         "links": [
+          {
+           "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746292~5/2",
+           "isExternal": true,
+           "isPremium": false,
+           "language": "en-US",
+           "rel": [
+            "home",
+            "desktop",
+            "bets",
+            "bet-365"
+           ],
+           "shortText": "Home Bet",
+           "text": "Home Bet"
+          },
+          {
+           "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746306~1/1",
+           "isExternal": true,
+           "isPremium": false,
+           "language": "en-US",
+           "rel": [
+            "away",
+            "desktop",
+            "bets",
+            "bet-365"
+           ],
+           "shortText": "Away Bet",
+           "text": "Away Bet"
+          },
+          {
+           "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746302~27/10",
+           "isExternal": true,
+           "isPremium": false,
+           "language": "en-US",
+           "rel": [
+            "draw",
+            "desktop",
+            "bets",
+            "bet-365"
+           ],
+           "shortText": "Draw Bet",
+           "text": "Draw Bet"
+          }
+         ]
         }
        ],
        "status": {
@@ -921,10 +991,10 @@
         "type": {
          "completed": false,
          "description": "Scheduled",
-         "detail": "Wed, October 28th at 1:30 PM EDT",
+         "detail": "Sat, October 31st at 3:45 PM EDT",
          "id": "1",
          "name": "STATUS_SCHEDULED",
-         "shortDetail": "10/28 - 1:30 PM EDT",
+         "shortDetail": "10/31 - 3:45 PM EDT",
          "state": "pre"
         }
        },
@@ -932,15 +1002,15 @@
        "timeValid": true,
        "venue": {
         "address": {
-         "city": "Venezia",
+         "city": "Milano",
          "country": "Italy"
         },
-        "fullName": "Stadio Pier Luigi Penzo"
+        "fullName": "San Siro"
        }
       }
      ],
-     "date": "2026-10-28T17:30Z",
-     "id": "401874773",
+     "date": "2026-10-31T19:45Z",
+     "id": "401874795",
      "league": {
       "abbreviation": "Serie A",
       "alternateId": "12",
@@ -953,7 +1023,7 @@
      },
      "links": [
       {
-       "href": "https://www.espn.com/soccer/match/_/gameId/401874773/internazionale-venezia",
+       "href": "https://www.espn.com/soccer/match/_/gameId/401874795/internazionale-ac-milan",
        "isExternal": false,
        "isPremium": false,
        "language": "en-US",
@@ -966,7 +1036,7 @@
        "text": "Summary"
       },
       {
-       "href": "https://m.espn.com/soccer/match?gameId=401874773&action=summary",
+       "href": "https://m.espn.com/soccer/match?gameId=401874795&action=summary",
        "isExternal": false,
        "isPremium": false,
        "language": "en-US",
@@ -979,7 +1049,7 @@
        "text": "Summary"
       },
       {
-       "href": "sportscenter://x-callback-url/showGame?sportName=soccer&leagueAbbrev=ita.1&gameId=401874773",
+       "href": "sportscenter://x-callback-url/showGame?sportName=soccer&leagueAbbrev=ita.1&gameId=401874795",
        "isExternal": false,
        "isPremium": false,
        "language": "en-US",
@@ -993,7 +1063,7 @@
        "text": "Summary"
       },
       {
-       "href": "https://www.espn.com/soccer/video/_/gameId/401874773",
+       "href": "https://www.espn.com/soccer/video/_/gameId/401874795",
        "isExternal": false,
        "isPremium": false,
        "language": "en-US",
@@ -1019,7 +1089,7 @@
        "text": "Table"
       },
       {
-       "href": "https://www.espn.com/soccer/odds/_/gameId/401874773",
+       "href": "https://www.espn.com/soccer/odds/_/gameId/401874795",
        "isExternal": false,
        "isPremium": false,
        "language": "en-US",
@@ -1032,7 +1102,7 @@
        "text": "Odds"
       },
       {
-       "href": "https://m.espn.com/soccer/odds/_/gameId/401874773",
+       "href": "https://m.espn.com/soccer/odds/_/gameId/401874795",
        "isExternal": false,
        "isPremium": false,
        "language": "en-US",
@@ -1045,7 +1115,7 @@
        "text": "Odds"
       },
       {
-       "href": "https://www.espn.com/soccer/table/_/gameId/401874773",
+       "href": "https://www.espn.com/soccer/table/_/gameId/401874795",
        "isExternal": false,
        "isPremium": false,
        "language": "en-US",
@@ -1058,7 +1128,7 @@
        "text": "Live Table"
       },
       {
-       "href": "https://www.espn.com/soccer/matchstats/_/gameId/401874773",
+       "href": "https://www.espn.com/soccer/matchstats/_/gameId/401874795",
        "isExternal": false,
        "isPremium": false,
        "language": "en-US",
@@ -1071,7 +1141,7 @@
        "text": "Statistics"
       },
       {
-       "href": "https://www.espn.com/soccer/commentary/_/gameId/401874773",
+       "href": "https://www.espn.com/soccer/commentary/_/gameId/401874795",
        "isExternal": false,
        "isPremium": false,
        "language": "en-US",
@@ -1097,7 +1167,7 @@
        "text": "Bet 365"
       },
       {
-       "href": "https://www.espn.com/soccer/player-stats/_/gameId/401874773/league/ita.1",
+       "href": "https://www.espn.com/soccer/player-stats/_/gameId/401874795/league/ita.1",
        "isExternal": false,
        "isPremium": false,
        "language": "en-US",
@@ -1110,7 +1180,7 @@
        "text": "Player Stats"
       },
       {
-       "href": "https://www.espn.com/soccer/team-stats/_/gameId/401874773/league/ita.1",
+       "href": "https://www.espn.com/soccer/team-stats/_/gameId/401874795/league/ita.1",
        "isExternal": false,
        "isPremium": false,
        "language": "en-US",
@@ -1123,7 +1193,7 @@
        "text": "Team Stats"
       }
      ],
-     "name": "Internazionale at Venezia",
+     "name": "Internazionale at AC Milan",
      "season": {
       "displayName": "2026-27 Italian Serie A",
       "year": 2026
@@ -1134,7 +1204,7 @@
       "name": "2026-27 Italian Serie A",
       "type": 14240
      },
-     "shortName": "INT @ VEN",
+     "shortName": "INT @ MIL",
      "timeValid": true
     }
    ],
@@ -1145,7 +1215,7 @@
       "stats": [
        {
         "name": "awayPointsFor",
-        "value": 6
+        "value": 8
        },
        {
         "name": "pointsAgainst",
@@ -1153,7 +1223,7 @@
        },
        {
         "name": "awayGamesPlayed",
-        "value": 3
+        "value": 4
        },
        {
         "name": "advanced",
@@ -1161,7 +1231,7 @@
        },
        {
         "name": "awayWins",
-        "value": 2
+        "value": 3
        },
        {
         "name": "deductions",
@@ -1173,7 +1243,7 @@
        },
        {
         "name": "points",
-        "value": 22
+        "value": 25
        },
        {
         "name": "homeWins",
@@ -1181,7 +1251,7 @@
        },
        {
         "name": "pointDifferential",
-        "value": 13
+        "value": 15
        },
        {
         "name": "homePointsAgainst",
@@ -1189,7 +1259,7 @@
        },
        {
         "name": "gamesPlayed",
-        "value": 8
+        "value": 9
        },
        {
         "name": "ties",
@@ -1213,7 +1283,7 @@
        },
        {
         "name": "wins",
-        "value": 7
+        "value": 8
        },
        {
         "name": "ppg",
@@ -1229,7 +1299,7 @@
        },
        {
         "name": "pointsFor",
-        "value": 23
+        "value": 25
        },
        {
         "name": "homeLosses",
@@ -1248,7 +1318,7 @@
         "value": 3
        }
       ],
-      "summary": "7-1-0",
+      "summary": "8-1-0",
       "type": "total"
      }
     ]

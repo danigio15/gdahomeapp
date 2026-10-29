@@ -28,16 +28,28 @@ const seme = {
 
 const LETTORI = [{ id: "mp1", entity: "media_player.sonos", nome: "Sonos Salotto" }];
 
-const logo = (colore, lettera) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="${colore}"/><text x="32" y="42" font-size="28" font-family="Arial" font-weight="700" fill="#fff" text-anchor="middle">${lettera}</text></svg>`;
-
 /* RDS e m2o hanno un logo che non arriva (un sito che non c'e' piu'): deve
  * restare il 📻, non un quadratino bianco. */
+const svg = (dentro) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">${dentro}</svg>`;
+/* Loghi disegnati come loghi (scritte, non bollini), per vedere nelle foto
+ * che il logo prende il posto della sigla. */
 const LOGHI = {
-  deejay: logo("#111827", "DJ"),
-  rtl: logo("#2563eb", "RTL"),
-  virgin: logo("#e11d48", "V"),
-  kiss: logo("#db2777", "K"),
+  deejay: svg(
+    `<rect width="64" height="64" fill="#fff"/><text x="32" y="38" font-size="15" font-family="Arial Black,Arial" font-weight="900" font-style="italic" fill="#111" text-anchor="middle">DEEJAY</text><rect x="10" y="43" width="44" height="4" fill="#e30613"/>`,
+  ),
+  rtl: svg(
+    `<rect width="64" height="64" fill="#0b1d4d"/><text x="32" y="33" font-size="22" font-family="Arial Black,Arial" font-weight="900" fill="#fff" text-anchor="middle">RTL</text><text x="32" y="52" font-size="15" font-family="Arial" font-weight="700" fill="#ffd200" text-anchor="middle">102.5</text>`,
+  ),
+  virgin: svg(
+    `<rect width="64" height="64" fill="#fff"/><circle cx="32" cy="32" r="28" fill="#e10a0a"/><text x="32" y="39" font-size="17" font-family="Georgia,serif" font-style="italic" font-weight="700" fill="#fff" text-anchor="middle">Virgin</text>`,
+  ),
+  rdsvero: svg(
+    `<rect width="64" height="64" fill="#fff"/><path d="M8 14 L60 10 L54 54 L4 54 Z" fill="#e2412b"/><text x="31" y="40" font-size="24" font-family="Arial Black,Arial" font-weight="900" fill="#fff" text-anchor="middle">RDS</text><text x="30" y="50" font-size="5.2" font-family="Arial" font-weight="700" fill="#fff" text-anchor="middle">100% GRANDI SUCCESSI</text>`,
+  ),
+  kiss: svg(
+    `<rect width="64" height="64" fill="#fff"/><text x="32" y="30" font-size="17" font-family="Arial Black,Arial" font-weight="900" fill="#e6007e" text-anchor="middle">KISS</text><text x="32" y="50" font-size="17" font-family="Arial Black,Arial" font-weight="900" fill="#e6007e" text-anchor="middle">KISS</text>`,
+  ),
 };
 
 const stazione = (uuid, nome, chiave) => ({
@@ -68,6 +80,9 @@ const RADIO = {
       stazione("it1", "RTL 102.5 Best", "rtl"),
       stazione("it2", "RTL 102.5", "rtl"),
       stazione("it3", "Radio DEEJAY", "deejay"),
+      stazione("it4", "Virgin Radio", "virgin"),
+      stazione("it5", "Radio Kiss Kiss", "kiss"),
+      stazione("it6", "RDS 100% Grandi Successi", "rdsvero"),
     ],
   },
   "media-source://radio_browser/popular": {
@@ -399,8 +414,16 @@ test("le radio pronte dal menu: sull'Echo per nome, sul Sonos da Radio Browser",
   await radio.screenshot({ path: testInfo.outputPath("radio-pronte.png") });
   await apri.click();
   const pronta = (nome) => radio.locator(".dm-radio-pr", { hasText: nome }).first();
-  await expect(radio.locator(".dm-radio-pr")).toHaveCount(20);
+  await expect(radio.locator(".dm-radio-pr")).toHaveCount(21);
   await expect(pronta("RTL 102.5")).toBeVisible();
+  /* «Continua a non vedersi le icone delle stazioni radio»: dove Radio
+   * Browser ha la radio col suo logo, il logo vero prende il posto del
+   * bollino; dove non ce l'ha, resta il bollino con la sigla. */
+  const sigla = (nome) => pronta(nome).locator(".dm-radio-pr-sigla");
+  await expect(sigla("RTL 102.5")).toHaveAttribute("style", /background-image/);
+  await expect(sigla("Radio Deejay")).toHaveAttribute("style", /background-image/);
+  await expect(sigla("Radio 105")).not.toHaveAttribute("style", /background-image/);
+  await expect(sigla("Radio 105")).toHaveText("105");
   await page.waitForTimeout(300);
   await radio.screenshot({ path: testInfo.outputPath("radio-pronte-aperta.png") });
 
@@ -428,4 +451,46 @@ test("le radio pronte dal menu: sull'Echo per nome, sul Sonos da Radio Browser",
     });
   await expect(radio).toContainText("Radio Deejay · Echo Cucina");
   await radio.screenshot({ path: testInfo.outputPath("radio-pronte-echo.png") });
+});
+
+/* #347: «nelle impostazioni ho visto che posso richiamare brani o playlist:
+ * sarebbe possibile avere tale box nella sua sezione?». Scelto un Echo, la
+ * radio della pagina Musica ha «Cerca e ascolta», coi preferiti di Alexa. */
+test("Cerca e ascolta: un brano o una playlist sull'Echo scelto", async ({ page }, testInfo) => {
+  await boot(page, testInfo, { preferite: PREFERITE.slice(0, 2) });
+  await page.evaluate(() => {
+    localStorage.setItem(
+      "cd_alexa",
+      JSON.stringify({ musica: [{ servizio: "SPOTIFY", cosa: "Top 50 Italia" }] }),
+    );
+  });
+  await page.locator('.tab[data-tab="media"]').evaluate((n) => n.click());
+  const radio = page.locator("#page-media [data-dm-radio]");
+  await expect(radio).toBeVisible();
+  /* Sul Sonos un brano per nome non si cerca: il riquadro non c'e'. */
+  await radio.locator('[data-dm-radio-dove="media_player.sonos"]').click();
+  await expect(radio.locator("[data-dm-radio-cerca]")).toHaveCount(0);
+
+  await radio.locator('[data-dm-radio-dove="media_player.echo_cucina"]').click();
+  const cerca = radio.locator("[data-dm-radio-cerca]");
+  await expect(cerca).toBeVisible();
+  await cerca.locator('[data-dm-radio-servizio="SPOTIFY"]').click();
+  await cerca.locator("[data-dm-radio-cosa]").fill("Vasco Rossi Albachiara");
+  await cerca.locator("[data-dm-radio-cosa]").press("Enter");
+  await expect
+    .poll(() => page.evaluate(() => window.__SERVIZI__.at(-1)?.service_data))
+    .toMatchObject({
+      entity_id: ["media_player.echo_cucina"],
+      media_content_id: "Vasco Rossi Albachiara",
+      media_content_type: "SPOTIFY",
+    });
+  await expect(radio).toContainText("Vasco Rossi Albachiara · Echo Cucina");
+
+  /* Un preferito di Alexa › Musica, con un tocco. */
+  await radio.locator('[data-dm-radio-preferito="0"]').click();
+  await expect
+    .poll(() => page.evaluate(() => window.__SERVIZI__.at(-1)?.service_data))
+    .toMatchObject({ media_content_id: "Top 50 Italia", media_content_type: "SPOTIFY" });
+  await page.waitForTimeout(300);
+  await radio.screenshot({ path: testInfo.outputPath("radio-cerca-e-ascolta.png") });
 });

@@ -183,6 +183,8 @@ import { installPianteEditor } from "./piante-editor-section.js";
 import { installMeteo } from "./meteo-section.js";
 import { installMeteoEditor } from "./meteo-editor-section.js";
 import { installSport } from "./sport-section.js";
+import { installSalute } from "./salute-section.js";
+import { installSaluteEditor } from "./salute-editor-section.js";
 import { installSportEditor } from "./sport-editor-section.js";
 import { installAcquario } from "./acquario-section.js";
 import { installAccumuloInEnergia } from "./accumulo-in-energia-section.js";
@@ -1262,6 +1264,10 @@ export function installSectionRuntime() {
     /* Lo sport: la pagina e la sua scheda. I risultati li porta il ponte. */
     senzaCadere(installSport);
     senzaCadere(installSportEditor);
+    /* La Salute (#227), con Strava dentro (#344): la pagina compare da sola
+     * coi sensori del corpo o di `ha_strava`; la sua scheda subito dopo. */
+    senzaCadere(installSalute);
+    senzaCadere(installSaluteEditor);
     /* Le vasche (#127): la storia del livello, i comandi, il cambio d'acqua e
      * il travaso di `cd_acquario` negli Animali. La pagina e la scheda sono
      * quelle degli Animali. */
@@ -1410,6 +1416,8 @@ export function installSectionRuntime() {
         "meteo-editor",
         "sport",
         "sport-editor",
+        "salute",
+        "salute-editor",
         "acquario",
         "accumulo",
         "accumulo-editor",

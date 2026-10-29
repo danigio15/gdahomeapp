@@ -1844,8 +1844,10 @@ function securityCss() {
 /* keypad — keeps the legacy .alarm-mode-btn contract */
 .dm-sec-modes{
   /* Tante colonne quanti sono i tasti: la centrale decide quanti ce ne sono
-     — tre erano quelli di prima, non una legge. */
-  position:relative;z-index:1;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px;
+     — tre erano quelli di prima, non una legge. Ognuno largo almeno quanto
+     serve a leggerlo: con i tasti su misura possono essere otto, e in una
+     riga sola i nomi si accavallavano (#346); quelli in piu' vanno a capo. */
+  position:relative;z-index:1;display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:6px;
   margin-top:24px;padding:6px;border-radius:20px;
   background:var(--surface-2,#f8fafc);border:1px solid var(--dm-sec-border);
   box-shadow:inset 0 2px 8px rgba(15,23,42,.05)
@@ -1879,6 +1881,13 @@ function securityCss() {
   font-family:var(--dm-sec-mono);font-size:9.5px;letter-spacing:1px;text-transform:uppercase;
   color:var(--dm-sec-dim);opacity:.85
 }
+/* Un nome lungo resta dentro il suo tasto e si legge tutto: niente puntini
+   (#346). I tasti sono larghi abbastanza per un nome intero; uno che non ci
+   sta va a capo fra le parole, mai sopra il tasto accanto. */
+.dm-sec-modes .alarm-mode-btn{min-width:0}
+.dm-sec-mode-tx{max-width:100%;white-space:normal;overflow-wrap:break-word;line-height:1.15;text-align:center}
+/* La spiegazione sotto va a capo, come prima, ma senza uscire. */
+.dm-sec-mode-hint{max-width:100%;overflow-wrap:break-word;text-align:center}
 
 /* ── cameras ─────────────────────────────────────────────────────────── */
 .dm-sec-cctv{display:flex;flex-direction:column;gap:14px}
@@ -2046,10 +2055,11 @@ function securityCss() {
   .dm-sec-orb{width:78px;height:78px;flex:0 0 78px}
   .dm-sec-orb-core{width:56px;height:56px;font-size:24px}
   .dm-sec-beacon{width:13px;height:13px;top:2px;right:2px}
-  .dm-sec-modes{margin-top:18px;gap:5px;padding:5px;border-radius:17px}
+  .dm-sec-modes{margin-top:18px;gap:5px;padding:5px;border-radius:17px;
+    grid-template-columns:repeat(auto-fit,minmax(86px,1fr))}
   .dm-sec-modes .alarm-mode-btn{padding:11px 3px 10px;gap:6px}
   .dm-sec-mode-ic{width:34px;height:34px;font-size:17px;border-radius:11px}
-  .dm-sec-mode-tx{font-size:11px}
+  .dm-sec-mode-tx{font-size:11px;letter-spacing:.4px}
   .dm-sec-mode-hint{display:none}
   .dm-sec-cctv-head h3{font-size:15px;letter-spacing:1.6px}
   /* second line: channel count on the left, clock pushed to the right */

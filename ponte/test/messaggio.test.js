@@ -177,3 +177,65 @@ test("chi puo' ricevere: solo chi ha un telefono abbinato, tranne chi chiede", a
     rmSync(banco.cartella, { recursive: true, force: true });
   }
 });
+
+test("col volume scelto: gli Echo si alzano, dicono il messaggio, e tornano com'erano", async () => {
+  const banco = unBanco();
+  banco.notifiche.attesaDelVolume = 0;
+  banco.notifiche.sentinella.stati.set("media_player.echo_cucina", {
+    state: "idle",
+    attributes: { friendly_name: "Echo Cucina", last_called: false, volume_level: 0.1 },
+  });
+  const orologi = [];
+  const vero = globalThis.setTimeout;
+  globalThis.setTimeout = (fai, quanto) => {
+    if (quanto >= 8000) {
+      orologi.push({ fai, quanto });
+      return { unref() {} };
+    }
+    return vero(fai, quanto);
+  };
+  try {
+    const fatto = await banco.commissioni.rispondi(MANDA({ volume: 70, telefoni: false }), {
+      chiChiede: "u_marco",
+    });
+    assert.deepEqual(fatto.result, { telefoni: 0, echo: 1 });
+    assert.deepEqual(
+      banco.chiamate.map((c) => `${c.domain}.${c.service}`),
+      ["media_player.volume_set", "notify.alexa_media"],
+    );
+    assert.deepEqual(banco.chiamate[0].service_data, {
+      entity_id: ["media_player.echo_cucina"],
+      volume_level: 0.7,
+    });
+    /* Dopo il tempo di dirlo, il volume di prima. */
+    assert.equal(orologi.length, 1);
+    orologi[0].fai();
+    await new Promise((fatto) => vero(fatto, 0));
+    assert.deepEqual(banco.chiamate[2].service_data, {
+      entity_id: "media_player.echo_cucina",
+      volume_level: 0.1,
+    });
+  } finally {
+    globalThis.setTimeout = vero;
+    rmSync(banco.cartella, { recursive: true, force: true });
+  }
+});
+
+test("senza volume, o con uno inventato, il volume non si tocca", async () => {
+  const banco = unBanco();
+  try {
+    for (const volume of [undefined, null, 42, "100", 1000]) {
+      banco.chiamate.length = 0;
+      await banco.commissioni.rispondi(MANDA({ volume, telefoni: false }), {
+        chiChiede: `u_${String(volume)}`,
+      });
+      assert.deepEqual(
+        banco.chiamate.map((c) => `${c.domain}.${c.service}`),
+        ["notify.alexa_media"],
+        String(volume),
+      );
+    }
+  } finally {
+    rmSync(banco.cartella, { recursive: true, force: true });
+  }
+});

@@ -10,6 +10,34 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.15
+
+_App GdAHome e Home Assistant._
+
+- **Salute:** una sezione nuova, con le linguette «Il corpo» e Strava: passi
+  con l'obiettivo, peso, pressione, battito, sonno, una scheda per persona, e
+  le settimane di Strava. Con Premium l'app legge Salute di iPhone e Health
+  Connect su Android (orologi compresi) e porta le misure a casa.
+- **Temperature:** cambiando la stanza di una temperatura in modifica, i
+  sensori si spostano davvero nella stanza scelta, col loro nome.
+- **Plance:** nella pagina di GdAHome, «Apri» su una plancia appena creata
+  non dà più «401: Unauthorized» nell'app di Home Assistant: apre la sua
+  voce fra le Plance, nella stessa finestra.
+- **Musica:** «Cerca e ascolta» sugli Echo (artista, brano, album, playlist),
+  la scheda del lettore toccando il riquadro, la radio anche sul pannello a
+  muro, e Subasio+ fra le radio pronte accanto a Subasio.
+- **Robot:** i comandi si chiamano come si vuole.
+- **Sicurezza:** i tasti dell'antifurto restano leggibili.
+- **Premium:** nell'app il tasto «Gestisci abbonamento» porta alla pagina
+  degli abbonamenti dell'App Store o di Google Play.
+- **App:** su iPhone la plancia torna viva dopo che l'app è rimasta in
+  tasca; l'avviso «aggiorna l'app» porta al negozio.
+- **Navigatore:** notte più chiara, tachimetro e limite molto più grandi
+  (anche su Android Auto e CarPlay), il limite anche senza navigazione,
+  autovelox fissi, mobili e semafori con foto riconoscibili col limite
+  accanto, avvisi con Voce, Beep, Schermo o Spento, la posizione dell'auto
+  senza ritardo, e il traffico sopra il percorso nella vista immersiva.
+
 ## 1.18.7.14
 
 _Solo Home Assistant: l'app sul telefono non cambia._

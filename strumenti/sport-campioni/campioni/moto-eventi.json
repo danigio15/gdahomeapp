@@ -1197,7 +1197,7 @@
    },
    "event_files": {
     "circuit_information": {
-     "url": "",
+     "url": "https://resources.motogp.com/files/results/2026/MAL/CircuitInformation.pdf",
      "menu_position": 1
     },
     "podiums": {
@@ -1226,7 +1226,7 @@
     "events_id": null
    },
    "test": false,
-   "sponsored_name": "Petronas Grand Prix of Malaysia",
+   "sponsored_name": "PETRONAS GRAND PRIX OF MALAYSIA ",
    "date_end": "2026-11-01",
    "toad_api_uuid": "d1aedfce-d7c8-4d4a-9532-99c82547baad",
    "date_start": "2026-10-30",
@@ -1253,7 +1253,7 @@
    },
    "short_name": "MAL",
    "id": "ea2ba334-b943-462f-aedb-084ac38408d1",
-   "status": "NOT-STARTED"
+   "status": "CURRENT"
   },
   {
    "country": {

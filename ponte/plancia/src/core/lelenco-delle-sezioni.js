@@ -75,6 +75,8 @@ export const SEZIONI = Object.freeze(
     { scheda: "meteo", chiave: "meteo", glifo: "🌦️", it: "Meteo", en: "Weather" },
     /* Lo sport: la squadra di calcio, la Formula 1, la MotoGP. */
     { scheda: "sport", chiave: "sport", glifo: "⚽", it: "Sport", en: "Sports" },
+    /* La Salute (#227): il corpo di chi abita la casa, e Strava (#344). */
+    { scheda: "salute", chiave: "salute", glifo: "❤️", it: "Salute", en: "Health" },
     { scheda: "sez9", chiave: "clima", glifo: "❄️", it: "Clima", en: "Climate" },
     { scheda: "tapp", chiave: "tapparelle", glifo: "🪟", it: "Finestre", en: "Windows" },
     { scheda: "pool", chiave: "piscina", glifo: "🏊", it: "Piscina", en: "Pool" },

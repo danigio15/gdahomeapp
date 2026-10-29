@@ -99,6 +99,7 @@ import {
   altoparlantiAlexa,
 } from "../plancia/src/core/alexa-annunci.js";
 import {
+  attesaPerIlVolume,
   fraseDegliEcho,
   messaggioPulito,
   paroleDelMessaggio,
@@ -1554,6 +1555,9 @@ export class Notifiche {
       const echo = messaggio.echo.filter((uno) => veri.has(uno));
       if (echo.length) {
         const { lingua } = this._alexa();
+        /* Il volume scelto, se c'e': prima si alza, poi si dice, e dopo il
+         * tempo di dirlo si rimette quello che ogni Echo aveva. */
+        const prima = messaggio.volume ? await this._alzaIlVolume(echo, messaggio.volume) : null;
         try {
           await this.casa.chiedi(
             chiamataAlexa(
@@ -1568,9 +1572,58 @@ export class Notifiche {
             `un messaggio agli Echo non e' partito: ${errore?.message || errore}`,
           );
         }
+        if (prima) this._rimettiIlVolume(prima, attesaPerIlVolume(messaggio.testo));
       }
     }
     return { id, type: "result", success: true, result: risultato };
+  }
+
+  /* Il volume del messaggio: «se in casa mettono il volume basso io invio il
+   * messaggio ma non lo sente nessuno». Si porta ogni Echo al volume scelto e
+   * si ricorda quello che aveva, per rimetterlo dopo. Torna `{entita:
+   * livello}` di quelli che si sanno rimettere; un Echo che il volume non lo
+   * dice si alza lo stesso, e resta cosi'. */
+  async _alzaIlVolume(echo, percento) {
+    const prima = {};
+    for (const entita of echo) {
+      const livello = Number(this.sentinella?.stati?.get?.(entita)?.attributes?.volume_level);
+      if (Number.isFinite(livello) && livello >= 0 && livello <= 1) prima[entita] = livello;
+    }
+    try {
+      await this.casa.chiedi({
+        type: "call_service",
+        domain: "media_player",
+        service: "volume_set",
+        service_data: { entity_id: [...echo], volume_level: percento / 100 },
+      });
+      /* Alexa ci mette un attimo a prendere il volume nuovo. */
+      await new Promise((fatto) => setTimeout(fatto, this.attesaDelVolume ?? 800));
+    } catch (errore) {
+      this.registro.attenzione?.(`il volume degli Echo non si alza: ${errore?.message || errore}`);
+      return null;
+    }
+    return prima;
+  }
+
+  /* Dopo il tempo di dire il messaggio, a ogni Echo il volume che aveva. */
+  _rimettiIlVolume(prima, dopo) {
+    const orologio = setTimeout(() => {
+      for (const [entita, livello] of Object.entries(prima)) {
+        void Promise.resolve(
+          this.casa?.chiedi?.({
+            type: "call_service",
+            domain: "media_player",
+            service: "volume_set",
+            service_data: { entity_id: entita, volume_level: livello },
+          }),
+        ).catch((errore) =>
+          this.registro.attenzione?.(
+            `il volume di ${entita} non torna com'era: ${errore?.message || errore}`,
+          ),
+        );
+      }
+    }, dopo);
+    orologio.unref?.();
   }
 
   /* Le parole di un evento per quel telefono: quelle del racconto, nello

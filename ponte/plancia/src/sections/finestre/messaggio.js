@@ -18,6 +18,7 @@ import {
   MESSAGGIO_AL_PIU,
   MESSAGGIO_CHI,
   MESSAGGIO_MANDA,
+  VOLUMI_DEL_MESSAGGIO,
   testoPulito,
 } from "../../core/messaggio-di-casa.js";
 
@@ -77,6 +78,8 @@ function leScelte() {
     telefoniAcceso: salvate?.telefoniAcceso !== false,
     echo: Array.isArray(salvate?.echo) ? salvate.echo.map(String) : null,
     persone: Array.isArray(salvate?.persone) ? salvate.persone.map(String) : [],
+    /* Il volume degli Echo: `null` com'e', o uno di VOLUMI_DEL_MESSAGGIO. */
+    volume: VOLUMI_DEL_MESSAGGIO.includes(salvate?.volume) ? salvate.volume : null,
   };
   return state.scelte;
 }
@@ -167,6 +170,19 @@ function corpo() {
         )
         .join("")}</div></div>`
     : "";
+  /* «Se in casa mettono il volume basso io invio il messaggio ma non lo
+   * sente nessuno»: a che volume lo dicono gli Echo. Dopo, ognuno torna al
+   * suo. */
+  const icona = (v) => (v >= 100 ? "📢" : v >= 70 ? "🔊" : v >= 50 ? "🔉" : "🔈");
+  const volume = echoAcceso
+    ? `<div class="dm-msg-riga"><span>${esc(t("Volume degli Echo", "Echo volume"))}</span><div class="dm-msg-fila">${pastiglia(
+        scelte.volume === null,
+        'data-dm-msg-volume=""',
+        esc(t("Com'è", "As is")),
+      )}${VOLUMI_DEL_MESSAGGIO.map((v) =>
+        pastiglia(scelte.volume === v, `data-dm-msg-volume="${v}"`, `${icona(v)} ${v}%`),
+      ).join("")}</div></div>`
+    : "";
   const tuttiITelefoni = !scelte.persone.some((id) => persone.some((uno) => uno.id === id));
   const chi = telefoniAcceso
     ? `<div class="dm-msg-riga"><span>${esc(t("A chi", "To whom"))}</span><div class="dm-msg-fila">${pastiglia(
@@ -189,7 +205,7 @@ function corpo() {
       `<button type="button" class="dm-msg-pronta" data-dm-msg-pronta="${indice}">${esc(t(it, en))}</button>`,
   ).join("");
   return `<div class="dm-msg-a">${aChi}</div>
-    ${quali}${chi}
+    ${quali}${volume}${chi}
     <div class="dm-msg-pronte">${pronte}</div>
     <div class="dm-msg-scrivi">
       <textarea class="dm-msg-testo" data-dm-msg-testo rows="2" maxlength="${MESSAGGIO_AL_PIU}" placeholder="${esc(
@@ -254,6 +270,7 @@ async function invia() {
         echo,
         telefoni,
         persone: scelte.persone.filter((id) => persone.some((uno) => uno.id === id)),
+        ...(echo.length && scelte.volume ? { volume: scelte.volume } : {}),
       },
       15000,
     );
@@ -293,6 +310,9 @@ function suUnTasto(evento) {
     scelte.echo = scelti.includes(entita)
       ? scelti.filter((uno) => uno !== entita)
       : [...scelti, entita];
+  } else if ("dmMsgVolume" in d) {
+    const v = Number(d.dmMsgVolume);
+    scelte.volume = VOLUMI_DEL_MESSAGGIO.includes(v) ? v : null;
   } else if ("dmMsgTutti" in d) scelte.persone = [];
   else if ("dmMsgPersona" in d) {
     const id = clean(d.dmMsgPersona);

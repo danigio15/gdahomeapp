@@ -132,6 +132,13 @@ for (const tema of ["light", "dark"]) {
     await finestra.locator("[data-dm-msg-persona='u_marco']").click();
     await finestra.locator("[data-dm-msg-pronta='0']").click();
     await expect(finestra.locator("[data-dm-msg-testo]")).toHaveValue("🍝 A tavola!");
+    // Il volume degli Echo: di serie «Com'è»; si sceglie il 70%.
+    await expect(finestra.locator("[data-dm-msg-volume=''][aria-pressed='true']")).toHaveCount(1);
+    await finestra.locator("[data-dm-msg-volume='70']").click();
+    await expect(finestra.locator("[data-dm-msg-volume='70']")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
     await page.waitForTimeout(300);
     await finestra.screenshot({ path: testInfo.outputPath(`messaggio-finestra-${tema}.png`) });
 
@@ -145,6 +152,7 @@ for (const tema of ["light", "dark"]) {
       echo: ["media_player.echo_cucina"],
       telefoni: true,
       persone: ["u_marco"],
+      volume: 70,
     });
     await expect(finestra.locator("[data-dm-msg-testo]")).toHaveValue("");
     await page.waitForTimeout(300);
@@ -158,5 +166,7 @@ for (const tema of ["light", "dark"]) {
     await expect.poll(() => page.evaluate(() => window.__messaggi.length)).toBe(2);
     const secondo = await page.evaluate(() => window.__messaggi[1]);
     expect(secondo).toMatchObject({ testo: "Torno alle 8", echo: [], telefoni: true, persone: [] });
+    // Senza Echo il volume non parte.
+    expect(secondo.volume).toBeUndefined();
   });
 }
