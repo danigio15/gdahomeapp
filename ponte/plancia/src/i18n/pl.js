@@ -7636,4 +7636,6 @@ export default Object.freeze({
   "Search and play": "Szukaj i słuchaj",
   "What to play": "Co odtworzyć",
   "Write what to play.": "Wpisz, co odtworzyć.",
+  "Empty keeps the integration's name. For a command of your own — mop, vacuum a room, a mode — create a script in Home Assistant, add it to the commands and give it the name you want here.": "Puste zostawia nazwę z integracji. Dla własnej komendy — mopowanie, odkurzanie pokoju, tryb — utwórz skrypt w Home Assistant, dodaj go do komend i nadaj mu tutaj dowolną nazwę.",
+  "Names on the card": "Nazwy na karcie",
 });

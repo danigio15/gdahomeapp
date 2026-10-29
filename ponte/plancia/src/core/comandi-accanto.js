@@ -89,6 +89,38 @@ export function elencoComandi(input) {
   return fuori;
 }
 
+/* «Sarebbe possibile eliminare la parola Scorciatoia?» (#340). Alcune
+ * integrazioni dei robot pubblicano i programmi salvati nell'app come tasti
+ * «Scorciatoia Pulizia cucina»: sulla scheda la parola davanti non dice
+ * niente, si toglie — se dopo resta un nome. */
+const PAROLA_DAVANTI = /^(scorciatoia|shortcut)\s*[:·\-–—]?\s*/i;
+function senzaLaParolaDavanti(nome) {
+  const coda = clean(nome).replace(PAROLA_DAVANTI, "");
+  return coda ? coda[0].toUpperCase() + coda.slice(1) : clean(nome);
+}
+
+/** Quanto lungo al piu' il nome scritto a mano di un comando. */
+export const NOME_DEL_COMANDO_AL_PIU = 40;
+
+/**
+ * I nomi scritti a mano dei comandi (#340): `{voce: nome}`, solo per i
+ * comandi che ci sono, corti e su una riga.
+ */
+export function nomiDeiComandi(input, comandi = []) {
+  const voci = new Set(elencoComandi(comandi));
+  const fuori = {};
+  if (!input || typeof input !== "object") return fuori;
+  for (const [voce, nome] of Object.entries(input)) {
+    const scritto = clean(nome)
+      .replace(/[\u0000-\u001f\u007f<>]/g, " ")
+      .replace(/\s+/g, " ")
+      .slice(0, NOME_DEL_COMANDO_AL_PIU)
+      .trim();
+    if (voci.has(clean(voce)) && scritto) fuori[clean(voce)] = scritto;
+  }
+  return fuori;
+}
+
 /** I comandi di un dispositivo come stanno adesso: nome, genere, stato, opzioni. */
 export function comandiDelDispositivo(dispositivo = {}, states = {}) {
   return elencoComandi(dispositivo?.comandi).map((entity) => {
@@ -99,12 +131,14 @@ export function comandiDelDispositivo(dispositivo = {}, states = {}) {
     const corrente = states?.[id];
     const attributi = corrente?.attributes || {};
     const stato = clean(corrente?.state).toLowerCase();
+    /* Il nome scritto a mano vince; senza, quello dell'entita' senza il nome
+     * del dispositivo e senza «Scorciatoia» davanti. */
+    const suo = clean(dispositivo?.nomi?.[entity]).slice(0, NOME_DEL_COMANDO_AL_PIU);
+    const base = senzaLaParolaDavanti(nomeAccantoAlDispositivo(id, dispositivo, states));
     return {
       entity,
       genere,
-      name: comando
-        ? `${nomeAccantoAlDispositivo(id, dispositivo, states)} · ${comando}`
-        : nomeAccantoAlDispositivo(id, dispositivo, states),
+      name: suo || (comando ? `${base} · ${comando}` : base),
       entita: id,
       comando,
       /* Un tasto mai premuto sta su «unknown», ed e' un tasto che funziona:

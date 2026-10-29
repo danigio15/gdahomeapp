@@ -7561,4 +7561,6 @@ export default Object.freeze({
   "Search and play": "ابحث واستمع",
   "What to play": "ماذا تريد أن تسمع",
   "Write what to play.": "اكتب ما تريد سماعه.",
+  "Empty keeps the integration's name. For a command of your own — mop, vacuum a room, a mode — create a script in Home Assistant, add it to the commands and give it the name you want here.": "إذا تُرك فارغاً يبقى اسم التكامل. لأمر خاص بك — مسح، تنظيف غرفة، وضع — أنشئ نصاً برمجياً (script) في Home Assistant، وأضفه إلى الأوامر وأعطه هنا الاسم الذي تريده.",
+  "Names on the card": "الأسماء على البطاقة",
 });

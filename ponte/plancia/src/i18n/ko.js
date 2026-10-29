@@ -7588,4 +7588,6 @@ export default Object.freeze({
   "Search and play": "검색해서 재생",
   "What to play": "재생할 항목",
   "Write what to play.": "재생할 항목을 입력하세요.",
+  "Empty keeps the integration's name. For a command of your own — mop, vacuum a room, a mode — create a script in Home Assistant, add it to the commands and give it the name you want here.": "비워 두면 통합의 이름이 그대로 쓰입니다. 나만의 명령(물걸레, 방 청소, 모드 등)은 Home Assistant에서 스크립트를 만들어 명령에 추가하고 여기서 원하는 이름을 붙이세요.",
+  "Names on the card": "카드에 표시할 이름",
 });

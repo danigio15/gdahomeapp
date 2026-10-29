@@ -7616,4 +7616,6 @@ export default Object.freeze({
   "Search and play": "検索して再生",
   "What to play": "再生するもの",
   "Write what to play.": "再生したいものを入力してください。",
+  "Empty keeps the integration's name. For a command of your own — mop, vacuum a room, a mode — create a script in Home Assistant, add it to the commands and give it the name you want here.": "空欄なら連携の名前のままです。独自のコマンド(モップがけ、部屋の掃除、モードなど)は Home Assistant でスクリプトを作り、コマンドに追加して、ここで好きな名前を付けてください。",
+  "Names on the card": "カードに表示する名前",
 });

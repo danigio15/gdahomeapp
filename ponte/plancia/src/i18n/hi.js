@@ -7597,4 +7597,6 @@ export default Object.freeze({
   "Search and play": "खोजें और सुनें",
   "What to play": "क्या सुनना है",
   "Write what to play.": "लिखें कि क्या सुनना है।",
+  "Empty keeps the integration's name. For a command of your own — mop, vacuum a room, a mode — create a script in Home Assistant, add it to the commands and give it the name you want here.": "खाली छोड़ने पर इंटीग्रेशन का नाम रहता है। अपने कमांड के लिए — पोछा, किसी कमरे की सफ़ाई, कोई मोड — Home Assistant में एक स्क्रिप्ट बनाएँ, उसे कमांड में जोड़ें और यहाँ मनचाहा नाम दें।",
+  "Names on the card": "कार्ड पर नाम",
 });

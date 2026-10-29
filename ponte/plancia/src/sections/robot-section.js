@@ -1062,7 +1062,8 @@ function installStyles() {
       /* I comandi a parte (#306): una fila sotto quelli di sempre, separata da
          un filo; l'interruttore acceso si vede dal bordo e dal fondo. */
       #page-robot .dm-robot-comandi{margin-top:8px;padding-top:10px;border-top:1px dashed var(--divider-color,#dbe4ee)}
-      #page-robot .dm-robot-cmd .dm-robot-btn-tx{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      /* I nomi dei comandi si leggono interi: vanno a capo, non si tagliano (#340). */
+      #page-robot .dm-robot-cmd .dm-robot-btn-tx{max-width:100%;white-space:normal;overflow-wrap:break-word;text-align:center;line-height:1.15}
       #page-robot .dm-robot-cmd[aria-pressed="true"]{border-color:#0ea5e9;background:color-mix(in srgb,#0ea5e9 14%,var(--card-bg,#fff));color:#0369a1}
       #page-robot .dm-robot-cmd[disabled]{opacity:.45;cursor:not-allowed}
       #page-robot .dm-robot-tendina{margin-left:0}

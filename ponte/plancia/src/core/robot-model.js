@@ -21,6 +21,7 @@ import {
   comandiDelDispositivo,
   elencoComandi,
   genereDelComando,
+  nomiDeiComandi,
 } from "./comandi-accanto.js";
 import { conservaIlConfigurato } from "./device-model.js";
 import { immaginePulita } from "./immagine-del-riquadro.js";
@@ -178,6 +179,9 @@ export function normalizeRobot(input = {}, index = 0) {
        * l'integrazione pubblica accanto a lui. Sopravvivono alla normalizzazione
        * come la batteria, o sparirebbero a ogni salvataggio. */
       comandi: elencoComandi(input.comandi ?? input.commands),
+      /* I loro nomi scritti a mano (#340): «Scorciatoia 3» diventa «Lava
+       * la cucina». Solo per i comandi che ci sono. */
+      nomi: nomiDeiComandi(input.nomi, input.comandi ?? input.commands),
       /* Le altre letture (#468): i sensori del robot che chi configura vuole
        * vedere sulla scheda. Come i comandi, sopravvivono alla
        * normalizzazione o sparirebbero a ogni salvataggio. */

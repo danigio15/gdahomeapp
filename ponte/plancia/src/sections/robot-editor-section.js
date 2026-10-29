@@ -29,6 +29,7 @@ import {
   tettoDellElenco,
 } from "../core/robot-model.js";
 import {
+  comandiDelDispositivo,
   comandiVicini,
   elencoComandi,
   genereDelComando,
@@ -253,6 +254,34 @@ function listaMarkup(tipo, robot, index) {
   </div>`;
 }
 
+/* «Sarebbe possibile personalizzare le scritte delle scorciatoie?» (#340).
+ * Ogni comando scelto ha il suo nome sulla scheda: vuoto vale quello che
+ * l'integrazione gli ha dato, senza il nome del robot e senza «Scorciatoia».
+ * I comandi su misura — lavare, aspirare una stanza, una modalita' — sono
+ * script di Home Assistant: si aggiungono fra i comandi e qui si chiamano
+ * come si vuole. */
+function nomiMarkup(robot) {
+  const states = allStates();
+  const comandi = comandiDelDispositivo({ ...robot, nomi: {} }, states);
+  if (!comandi.length) return "";
+  const nomi = robot.nomi || {};
+  return `<div class="ed-slot dm-robot-field dm-robot-nomi">
+    <span class="ed-slot-lbl">${esc(t("I nomi sulla scheda", "Names on the card"))}</span>
+    ${comandi
+      .map(
+        (c) =>
+          `<label class="dm-robot-nome"><small class="mono">${esc(c.entity)}</small><input class="ed-input" data-robot-nome="${esc(c.entity)}" value="${esc(clean(nomi[c.entity]))}" maxlength="40" placeholder="${esc(c.name)}"></label>`,
+      )
+      .join("")}
+    <small>${esc(
+      t(
+        "Vuoto, resta il nome dell'integrazione. Per un comando tuo — lavare, aspirare una stanza, una modalità — crea uno script in Home Assistant, aggiungilo fra i comandi e dagli qui il nome che vuoi.",
+        "Empty keeps the integration's name. For a command of your own — mop, vacuum a room, a mode — create a script in Home Assistant, add it to the commands and give it the name you want here.",
+      ),
+    )}</small>
+  </div>`;
+}
+
 function rigaMarkup(robot, index) {
   const aperto = state.aperto === index;
   /* L'icona della riga dice la specie: chi ha un aspirapolvere e un tagliaerba
@@ -271,6 +300,7 @@ function rigaMarkup(robot, index) {
       ${listaMarkup("mappe", robot, index)}
       ${campo(`dm-robot-${index}-battery`, t("Batteria", "Battery"), robot.battery, "sensor.robot_batteria", t("Facoltativa: il sensore che dice la carica, se il robot la pubblica a parte — capita spesso coi tagliaerba. Se indicata, vince sulla batteria dell'entità del robot.", "Optional: the sensor reporting the charge, when the robot publishes it separately — common with lawn mowers. When set, it wins over the robot entity's own battery."))}
       ${listaMarkup("comandi", robot, index)}
+      ${nomiMarkup(robot)}
       ${listaMarkup("letture", robot, index)}
       <label class="ed-slot dm-robot-field"><span class="ed-slot-lbl">${t("Stanza", "Room")}</span><span class="ed-form-row"><select id="dm-robot-${index}-room" class="ed-input" data-robot-field="room">${roomOptionsMarkup(clean(robot.room), t("Nessuna stanza", "No room"))}</select></span></label>
       <output class="dm-robot-error" data-robot-error></output>
@@ -311,6 +341,11 @@ function leggiRiga(riga, robot) {
   const next = { ...robot };
   for (const input of riga.querySelectorAll("[data-robot-field]"))
     next[clean(input.dataset.robotField)] = clean(input.value);
+  /* I nomi dei comandi (#340): solo quelli scritti. */
+  const nomi = {};
+  for (const input of riga.querySelectorAll("[data-robot-nome]"))
+    if (clean(input.value)) nomi[clean(input.dataset.robotNome)] = clean(input.value);
+  next.nomi = nomi;
   return next;
 }
 
@@ -598,6 +633,10 @@ function installStyles() {
       /* I comandi a parte (#306): pastiglie, quelle scelte con la croce e
          quelle proposte col piu'; la tendina si riconosce dal bordo tratteggiato. */
       #ed-body .dm-robot-chips{display:flex;flex-wrap:wrap;gap:6px}
+      #ed-body .dm-robot-nomi{display:grid;gap:8px}
+      #ed-body .dm-robot-nome{display:grid;gap:3px}
+      #ed-body .dm-robot-nome small{font-size:11px;color:var(--text-dim,#64748b);overflow-wrap:anywhere}
+      #ed-body .dm-robot-nome .ed-input{margin:0}
       #ed-body .dm-robot-chip{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:5px 10px;border:1px solid var(--divider-color,#dbe4ee);border-radius:999px;background:var(--card-bg,#fff);font:inherit;font-size:12px;font-weight:800;color:var(--text,#0f172a);cursor:pointer}
       #ed-body .dm-robot-chip>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       #ed-body .dm-robot-chip>i{font-style:normal;opacity:.7}

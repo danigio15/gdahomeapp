@@ -7478,4 +7478,6 @@ export default Object.freeze({
   "Search and play": "搜索并播放",
   "What to play": "播放什么",
   "Write what to play.": "请输入要播放的内容。",
+  "Empty keeps the integration's name. For a command of your own — mop, vacuum a room, a mode — create a script in Home Assistant, add it to the commands and give it the name you want here.": "留空则沿用集成的名称。要用自己的命令(拖地、清扫某个房间、某种模式),请在 Home Assistant 中创建脚本,加入命令,并在这里起你想要的名字。",
+  "Names on the card": "卡片上的名称",
 });

@@ -7648,4 +7648,6 @@ export default Object.freeze({
   "Search and play": "Zoeken en afspelen",
   "What to play": "Wat afspelen",
   "Write what to play.": "Schrijf wat je wilt afspelen.",
+  "Empty keeps the integration's name. For a command of your own — mop, vacuum a room, a mode — create a script in Home Assistant, add it to the commands and give it the name you want here.": "Leeg blijft de naam van de integratie. Voor een eigen opdracht — dweilen, een kamer stofzuigen, een modus — maak je een script in Home Assistant, voeg je het toe aan de opdrachten en geef je het hier de naam die je wilt.",
+  "Names on the card": "Namen op de kaart",
 });

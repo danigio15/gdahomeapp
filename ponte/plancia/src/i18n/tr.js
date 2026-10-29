@@ -7614,4 +7614,6 @@ export default Object.freeze({
   "Search and play": "Ara ve dinle",
   "What to play": "Ne çalınsın",
   "Write what to play.": "Ne çalınacağını yaz.",
+  "Empty keeps the integration's name. For a command of your own — mop, vacuum a room, a mode — create a script in Home Assistant, add it to the commands and give it the name you want here.": "Boş bırakılırsa entegrasyonun adı kalır. Kendi komutun için — paspas, bir odayı süpürme, bir mod — Home Assistant'ta bir betik oluştur, komutlara ekle ve burada istediğin adı ver.",
+  "Names on the card": "Karttaki adlar",
 });
