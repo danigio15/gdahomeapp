@@ -62,6 +62,9 @@ import 'misure.dart';
 import 'plancia_vera.dart';
 import 'riquadro/pagine.dart';
 import 'premium.dart';
+import '../salute/lettore.dart';
+import '../salute/postino_della_salute.dart';
+import 'salute.dart';
 import 'segnalazioni.dart';
 
 class Home extends StatefulWidget {
@@ -446,6 +449,7 @@ class _HomeState extends State<Home> {
             Sezione.automazioni => PerchePremium.automazioni,
             Sezione.dispositivi => PerchePremium.dispositivi,
             Sezione.aiutanti => PerchePremium.aiutanti,
+            Sezione.salute => PerchePremium.salute,
             _ => null,
           },
         ),
@@ -892,6 +896,15 @@ class _HomeState extends State<Home> {
                                   postino: Postino.istanza,
                                   nuda: true,
                                   visibile: _sezione == Sezione.notifiche,
+                                ),
+                                /* Le misure dell'orologio, portate a casa. */
+                                Sezione.salute => SchermataDellaSalute(
+                                  collegamento: collegamento,
+                                  postino: PostinoDellaSalute.istanza ??
+                                      PostinoDellaSalute(
+                                        lettore: lettoreDiQuestoSistema(),
+                                      ),
+                                  nuda: true,
                                 ),
                                 Sezione.segnalazioni =>
                                   SchermataDelleSegnalazioni(

@@ -54,6 +54,7 @@ import { Registri } from "./registri.js";
 import { Notifiche } from "./notifiche.js";
 import { Viaggi } from "./viaggi.js";
 import { Fornitori } from "./fornitori.js";
+import { IlCorpoDalTelefono } from "./il-corpo-dal-telefono.js";
 import { RicaricaDiNotte } from "./ricarica-di-notte.js";
 import { Automazioni } from "./automazioni.js";
 import { Integrazioni } from "./integrazioni.js";
@@ -493,6 +494,19 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   });
   chiamata.alGettoneMorto = (telefono) => notifiche.gettoneMorto(telefono);
   ponte.notifiche = notifiche;
+  /* La Salute dal telefono: le misure che l'app legge da Apple Salute o da
+   * Health Connect, scritte come sensori di Home Assistant. Solo dai telefoni
+   * intestati, ognuno le sue; il perche' di ogni regola sta in cima a
+   * `il-corpo-dal-telefono.js`. */
+  const ilCorpo = new IlCorpoDalTelefono({
+    cartella: opzioni.cartella,
+    casa,
+    dispositivi,
+    licenze,
+    registro,
+  });
+  ilCorpo.avvia();
+  ponte.ilCorpo = ilCorpo;
   /* I viaggi pianificati di gdanav: stanno qui, e la casa avvisa e accende il
    * clima dell'auto all'ora giusta anche col telefono spento. */
   const viaggi = new Viaggi({
@@ -782,6 +796,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     notifiche.ferma();
     viaggi.ferma();
     fornitori.ferma();
+    ilCorpo.ferma();
     ricaricaDiNotte.ferma();
     automazioni.ferma();
     postino.ferma();

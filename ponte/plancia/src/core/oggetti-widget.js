@@ -1179,6 +1179,18 @@ const OGGETTI = Object.freeze({
     <g fill="#0f172a"><rect x="10.0" y="5.0" width="3.6" height="3"/><rect x="17.2" y="5.0" width="3.6" height="3"/><rect x="24.4" y="5.0" width="3.6" height="3"/><rect x="13.6" y="8.0" width="3.6" height="3"/><rect x="20.8" y="8.0" width="3.6" height="3"/><rect x="10.0" y="11.0" width="3.6" height="3"/><rect x="17.2" y="11.0" width="3.6" height="3"/><rect x="24.4" y="11.0" width="3.6" height="3"/><rect x="13.6" y="14.0" width="3.6" height="3"/><rect x="20.8" y="14.0" width="3.6" height="3"/></g>
     <rect x="10" y="5" width="18" height="12" rx="1" fill="url(#dmoF1L)"/>
     <rect x="10" y="5" width="18" height="12" rx="1" fill="none" stroke="#334155" stroke-opacity=".55" stroke-width=".8"/>`,
+  /* La Salute (#227): il cuore, rosso e lucido, col battito che lo
+   * attraversa. E' la voce della pagina, la sua tessera e la sua scheda. */
+  salute: `<defs>
+      <radialGradient id="dmoSaluteC" cx=".34" cy=".28" r=".9">
+        <stop offset="0" stop-color="#fecdd3"/><stop offset=".45" stop-color="#f43f5e"/>
+        <stop offset="1" stop-color="#9f1239"/></radialGradient></defs>
+    ${OMBRA(16, 29, 9)}
+    <path d="M16 27.2C9.4 22.4 3.6 17.6 3.6 11.4 3.6 7.6 6.5 4.8 10.1 4.8c2.5 0 4.6 1.3 5.9 3.3 1.3-2 3.4-3.3 5.9-3.3 3.6 0 6.5 2.8 6.5 6.6 0 6.2-5.8 11-12.4 15.8Z" fill="url(#dmoSaluteC)"/>
+    <path d="M5.4 15.4h5.4l1.8-3.6 2.6 7.2 2.4-5.4 1.4 1.8h7.6" stroke="#fff" stroke-width="1.9"
+      fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M7.4 8.6a4 4 0 0 1 3.4-2" stroke="#fff" stroke-opacity=".8" stroke-width="1.6"
+      fill="none" stroke-linecap="round"/>`,
   /* L'hockey: due bastoni incrociati, col nastro sulla paletta, e il disco
    * nero davanti. E' la squadra di hockey quando non c'e' ancora il suo
    * stemma, e la voce nel Config. */

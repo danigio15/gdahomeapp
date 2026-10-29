@@ -61,6 +61,13 @@
 	<string>Serve al navigatore, per continuare a guidarti con lo schermo del telefono spento o mentre usi CarPlay.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Serve al navigatore solo se colleghi un dongle OBD, per leggere la batteria della tua auto.</string>
+	<!-- La Salute (#227): le misure dell'Apple Watch e dell'iPhone, portate
+	     alla casa. GdAHome legge e basta; la seconda riga Apple la vuole
+	     comunque per un'app con HealthKit, e dice la stessa cosa. -->
+	<key>NSHealthShareUsageDescription</key>
+	<string>Serve a leggere passi, battito, pressione, peso e sonno che scegli tu, e a mandarli solo alla tua casa, dove li vedi nella pagina Salute. Non vanno da nessun'altra parte.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>GdAHome non scrive nulla in Salute: legge soltanto le misure che scegli tu, per mostrarle nella pagina Salute della tua casa.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Serve a parlare con la tua Home Assistant quando sei in casa, direttamente sulla tua rete, senza passare da internet. Fuori casa non viene usato.</string>
 	<key>LSRequiresIPhoneOS</key>

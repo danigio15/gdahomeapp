@@ -92,18 +92,21 @@ void main() {
     expect(File('assets/oggetti/automazioni.svg').existsSync(), isTrue);
   });
 
-  test('le voci Premium: dispositivi, configurazione, automazioni, zigbee, aiutanti', () {
+  test('le voci Premium: dispositivi, configurazione, automazioni, zigbee, aiutanti, salute', () {
     expect(Sezione.values.where((s) => s.diPremium).toSet(), {
       Sezione.dispositivi,
       Sezione.configurazione,
       Sezione.automazioni,
       Sezione.zigbee,
       Sezione.aiutanti,
+      /* «devi metterle come premium su app questa funzione» */
+      Sezione.salute,
     });
     final casa = File('lib/schermate/home.dart').readAsStringSync();
     final bloccate = casa.substring(casa.indexOf('Set<Sezione> get _bloccate'));
     expect(bloccate.substring(0, 300), contains('una.diPremium'));
     expect(casa, contains('PerchePremium.automazioni'));
+    expect(casa, contains('PerchePremium.salute'));
   });
 
   test('apre la pagina della plancia con la sua maniglia, sul telefono e nel browser', () {
@@ -145,9 +148,9 @@ void main() {
     await prova.pumpWidget(_conLaBarra(chiave));
     chiave.currentState!.apri();
     await prova.pumpAndSettle();
-    /* Dispositivi, Configurazione, Automazioni e Aiutanti: Zigbee c'e' solo
-     * dove c'e' la rete. */
-    expect(find.byKey(const Key('bollino-premium')), findsNWidgets(4));
+    /* Dispositivi, Configurazione, Automazioni, Aiutanti e Salute: Zigbee
+     * c'e' solo dove c'e' la rete. */
+    expect(find.byKey(const Key('bollino-premium')), findsNWidgets(5));
 
     final chiusa = GlobalKey<BarraDelleSezioniState>();
     await prova.pumpWidget(
@@ -162,6 +165,6 @@ void main() {
     chiusa.currentState!.apri();
     await prova.pumpAndSettle();
     expect(find.byKey(const Key('bollino-premium')), findsNothing);
-    expect(find.byIcon(Icons.lock_rounded), findsNWidgets(4));
+    expect(find.byIcon(Icons.lock_rounded), findsNWidgets(5));
   });
 }

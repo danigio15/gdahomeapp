@@ -112,6 +112,15 @@ abstract final class PerchePremium {
         'for automations — are part of GdAHome Premium.',
   );
 
+  static String get salute => inLingua(
+    it:
+        'La salute dall\'orologio — passi, battito, pressione, peso e sonno '
+        'portati nella tua casa — è di GdAHome Premium.',
+    en:
+        'Health from your watch — steps, heart rate, blood pressure, weight '
+        'and sleep brought into your home — is part of GdAHome Premium.',
+  );
+
   static String get fuoriCasa => inLingua(
     it:
         'Fuori casa serve GdAHome Premium. Sotto il Wi-Fi di casa si entra '
@@ -944,6 +953,14 @@ List<(IconData, String, String)> _funzioni(bool sulWeb) {
       inLingua(
         it: 'Li abbini dal telefono e scegli dove metterli',
         en: 'Pair them from your phone and choose where they go',
+      ),
+    ),
+    (
+      Icons.monitor_heart_outlined,
+      inLingua(it: 'La salute dall\'orologio', en: 'Health from your watch'),
+      inLingua(
+        it: 'Apple Watch, Galaxy Watch, Fitbit, Amazfit: le misure a casa',
+        en: 'Apple Watch, Galaxy Watch, Fitbit, Amazfit: your readings at home',
       ),
     ),
     (

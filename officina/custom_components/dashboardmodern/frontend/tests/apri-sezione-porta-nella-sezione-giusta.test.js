@@ -32,6 +32,7 @@ import { PRESE_TAB } from "../src/sections/prese-section.js";
 import { PRESENZA_TAB } from "../src/sections/presenza-section.js";
 import { RIFIUTI_TAB } from "../src/sections/rifiuti-section.js";
 import { SPORT_TAB } from "../src/sections/sport-section.js";
+import { SALUTE_TAB } from "../src/sections/salute-section.js";
 import { ROBOT_TAB } from "../src/sections/robot-section.js";
 import { APERTURE_TAB } from "../src/sections/security-doors-section.js";
 import { STAMPANTI_TAB } from "../src/sections/stampanti-section.js";
@@ -59,6 +60,7 @@ const COSTANTI = Object.freeze({
   RIFIUTI_TAB,
   ROBOT_TAB,
   SPORT_TAB,
+  SALUTE_TAB,
   STAMPANTI_TAB,
   UPS_TAB,
   VARCHI_TAB,

@@ -276,6 +276,8 @@ const LOCALE_IDENTITIES = {
     "Animal",
   ]),
   fr: new Set([
+    /* Strava: le calorie di un'attivita', in francese si scrive uguale. */
+    "Calories",
     /* La scheda delle notifiche di Alexa: in francese si dice uguale. */
     "Notifications",
     /* La card della Home per scrivere a casa. */
@@ -379,6 +381,8 @@ const LOCALE_IDENTITIES = {
     "Zone",
   ]),
   de: new Set([
+    /* La Salute: la pressione «ottimale» in tedesco si dice uguale. */
+    "Optimal",
     /* Lo sport: parole che in questa lingua si scrivono come in inglese
      * («d» per i giorni, «Pts» per i punti in classifica). */
     "Form",

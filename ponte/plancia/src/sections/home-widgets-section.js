@@ -409,8 +409,10 @@ import "./finestre/servizi.js";
 import "./finestre/sistema.js";
 import "./finestre/meteo.js";
 import "./finestre/sport.js";
+import "./finestre/salute.js";
 import { chiPuoRicevere, gliEcho, installaIlMessaggio } from "./finestre/messaggio.js";
 import { SPORT_TAB, risultatiDelloSport, tesseraDelloSport } from "./sport-section.js";
+import { SALUTE_TAB, tesseraSalute, vistaSalute } from "./salute-section.js";
 import {
   METEO_TAB,
   fraseInParole,
@@ -2662,6 +2664,28 @@ function sportModel() {
     dalVivo: tessera.dalVivo,
     vista,
     minuto,
+  };
+}
+
+/* La Salute (#227), con Strava dentro (#344): i passi di oggi, se no questa
+ * settimana di Strava. Compare da sola coi sensori del corpo (Health Connect,
+ * Withings, Garmin…) o di `ha_strava`; la finestra mostra le misure e le
+ * ultime attivita', la pagina Salute tutto il resto. */
+function saluteModel(states) {
+  const vista = vistaSalute(states || {});
+  if (!vista) return null;
+  const tessera = tesseraSalute(vista);
+  return {
+    key: "salute",
+    accent: "#e11d48",
+    icon: "❤️",
+    faccia: oggettoWidget("salute", "", "tessera-salute"),
+    facciaFirma: "salute",
+    label: t("Salute", "Health"),
+    value: tessera.valore || "—",
+    caption: tessera.riga,
+    ring: null,
+    vista,
   };
 }
 
@@ -6749,6 +6773,7 @@ export function modelliDelleTessere(states) {
       temperatureModel(states),
       meteoModel(states),
       sportModel(),
+      saluteModel(states),
       messaggioModel(states),
       evModel(states),
       robotsModel(states),
@@ -9205,6 +9230,8 @@ const SEZIONE_DEL_WIDGET = Object.freeze({
   meteo: METEO_TAB,
   /* Lo sport: la pagina Sport, con le classifiche intere. */
   sport: SPORT_TAB,
+  /* La Salute: la sua pagina, col corpo, Strava, i grafici e lo storico. */
+  salute: SALUTE_TAB,
   ev: "ev",
   solare: "boiler",
   scaldabagno: "boiler",

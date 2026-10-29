@@ -353,7 +353,10 @@
  * e la scelta la legge il ponte quando manda una notifica. */
 /* La revisione 73 aggiunge le radio preferite (`cd_radio`): le stazioni che
  * la pagina Musica offre, su un lettore di casa o sugli Echo. */
-export const CONFIG_KEYS_REVISION = 73;
+/* La revisione 74 aggiunge la Salute (`cd_salute`): l'obiettivo dei passi,
+ * i sensori scelti per ogni misura e i nomi delle persone. Sono scelte della
+ * casa, e si vedono uguali dal telefono e dal tablet. */
+export const CONFIG_KEYS_REVISION = 74;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -467,6 +470,8 @@ export const CONFIG_KEYS = Object.freeze([
   "cd_alexa",
   // Le radio preferite della pagina Musica.
   "cd_radio",
+  // La Salute: l'obiettivo dei passi, i sensori scelti, i nomi delle persone.
+  "cd_salute",
   // Se il tocco su un'apertura chiede conferma (#275).
   "cd_porte_conferma",
   "cd_ups",

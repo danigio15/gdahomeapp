@@ -92,6 +92,13 @@ const PAGES = Object.freeze([
     it: ["Sport", "La tua squadra · Formula 1 · MotoGP"],
     en: ["Sports", "Your team · Formula 1 · MotoGP"],
   },
+  /* La Salute, #227 e #344: il rosso del cuore e l'arancio di Strava. */
+  {
+    id: "page-salute",
+    tint: ["225,29,72", "252,76,2"],
+    it: ["Salute", "Passi · Battito · Pressione · Peso · Sonno · Strava"],
+    en: ["Health", "Steps · Heart rate · Blood pressure · Weight · Sleep · Strava"],
+  },
   {
     id: "page-tapparelle",
     tint: ["99,102,241", "14,165,233"],

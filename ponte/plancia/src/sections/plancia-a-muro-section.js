@@ -6430,8 +6430,8 @@ ${MURO} .mu-pag-musica{grid-template-rows:auto 1fr}
 ${MURO} .mu-radio-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;
   max-height:60vh;overflow:auto;padding:2px}
 ${MURO} .mu-radio-st{display:flex;align-items:center;gap:10px;padding:10px;border-radius:16px;cursor:pointer;
-  font:inherit;text-align:left;color:inherit;background:var(--mu-carta,rgba(255,255,255,.06));
-  border:1px solid var(--mu-bordo,rgba(148,163,184,.25))}
+  font:inherit;text-align:left;color:inherit;background:rgba(255,255,255,.06);
+  border:1px solid rgba(148,163,184,.25)}
 ${MURO} .mu-radio-st b{flex:1 1 auto;min-width:0;font-size:15px;font-weight:800;line-height:1.2;overflow-wrap:break-word}
 ${MURO} .mu-radio-logo{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;
   font-size:13px;font-weight:900;color:#fff;background:var(--pr)}
