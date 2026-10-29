@@ -413,7 +413,7 @@ test("le radio pronte dal menu: sull'Echo per nome, sul Sonos da Radio Browser",
   await radio.screenshot({ path: testInfo.outputPath("radio-pronte.png") });
   await apri.click();
   const pronta = (nome) => radio.locator(".dm-radio-pr", { hasText: nome }).first();
-  await expect(radio.locator(".dm-radio-pr")).toHaveCount(20);
+  await expect(radio.locator(".dm-radio-pr")).toHaveCount(21);
   await expect(pronta("RTL 102.5")).toBeVisible();
   /* «Continua a non vedersi le icone delle stazioni radio»: dove Radio
    * Browser ha la radio col suo logo, il logo vero prende il posto del

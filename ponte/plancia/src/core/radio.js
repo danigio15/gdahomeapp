@@ -170,6 +170,9 @@ export const RADIO_PRONTE = Object.freeze(
     ["Radio 24", "24", "#2563eb"],
     ["Radio Zeta", "Z", "#f97316"],
     ["Radio Subasio", "SUB", "#059669"],
+    /* «Subasio+, senza pubblicità, insieme a Subasio normale.» Si scrive
+     * come si dice ad Alexa; su Radio Browser e' «Radio Subasio+». */
+    ["Radio Subasio Più", "S+", "#0d9488"],
     ["Radio Freccia", "F", "#b91c1c"],
     ["Radio Marte", "M", "#9333ea"],
     ["Rai Radio 1", "R1", "#0369a1"],
@@ -186,6 +189,8 @@ const piano = (valore) =>
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
+    /* «Subasio+» e' «Subasio Più»: il + si legge, non si butta. */
+    .replace(/\+/g, " piu ")
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 
