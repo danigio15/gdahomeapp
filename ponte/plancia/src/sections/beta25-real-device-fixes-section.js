@@ -172,6 +172,7 @@ function renderBeta25TemperatureEditor() {
     editingEntryId = "";
     temperatureNameDraft = "";
     delete form.dataset.beta25EditingId;
+    delete form.dataset.beta25EditingRoom;
     form.reset();
     select.disabled = false;
     target.querySelector("[data-beta25-temperature-title]").textContent = `＋ ${t("Aggiungi temperatura", "Add temperature")}`;
@@ -192,8 +193,13 @@ function renderBeta25TemperatureEditor() {
       editingRoomId = clean(room.id);
       editingEntryId = clean(entry.id);
       form.dataset.beta25EditingId = editingEntryId;
+      /* La stanza da cui si parte: i nomi si leggono da qui anche se la
+       * tendina cambia (la temperatura si sposta col suo nome). */
+      form.dataset.beta25EditingRoom = editingRoomId;
       select.value = editingRoomId;
-      select.disabled = true;
+      /* La stanza si puo' cambiare anche in modifica: vuol dire spostare la
+       * temperatura in un'altra stanza (vedi il salvataggio). */
+      select.disabled = false;
       nameInput.value = clean(entry.name);
       temperatureNameDraft = nameInput.value;
       /* Il valore si scrive, e si dice a chi lo disegna che e' cambiato.
@@ -231,26 +237,40 @@ function renderBeta25TemperatureEditor() {
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     event.stopImmediatePropagation();
-    const roomId = editingRoomId || clean(select.value);
+    /* La stanza e' quella scelta adesso nella tendina. Dal campo: «se
+     * cambio la stanza e salvo, mi ritorna alla stanza di prima» — in
+     * modifica si salvava sempre nella stanza da cui si era partiti. */
+    const roomId = clean(select.value) || editingRoomId;
     const temp = clean(form.querySelector("#ed-pl-temp")?.value);
     if (!roomId || !temp.includes(".")) {
       root.alert?.(t("Seleziona una stanza e un'entità temperatura valida.", "Select a room and a valid temperature entity."));
       return;
     }
     const store = dashboardStore();
-    const room = store?.getSection?.("rooms")?.find((item) => clean(item.id) === roomId);
+    const stanze = store?.getSection?.("rooms") || [];
+    const room = stanze.find((item) => clean(item.id) === roomId);
     if (!room) return;
-    const next = upsertTemperatureEntry(
-      room,
-      {
-        id: editingEntryId || `temperature-${Date.now().toString(36)}`,
-        name: clean(temperatureNameDraft),
-        temp,
-        hum: clean(form.querySelector("#dm-humidity-new")?.value),
-      },
-      editingEntryId,
-    );
-    await store.updateItem("rooms", roomId, next);
+    const voce = {
+      id: editingEntryId || `temperature-${Date.now().toString(36)}`,
+      name: clean(temperatureNameDraft),
+      temp,
+      hum: clean(form.querySelector("#dm-humidity-new")?.value),
+    };
+    const sposta = Boolean(editingEntryId) && Boolean(editingRoomId) && roomId !== editingRoomId;
+    if (sposta) {
+      /* Spostata in un'altra stanza: via dalla vecchia, e nella nuova come
+       * un'associazione sua (la prima, se la stanza non ne aveva). */
+      const vecchia = stanze.find((item) => clean(item.id) === editingRoomId);
+      if (vecchia)
+        await store.updateItem("rooms", editingRoomId, removeTemperatureEntry(vecchia, editingEntryId));
+      await store.updateItem(
+        "rooms",
+        roomId,
+        upsertTemperatureEntry(room, { ...voce, id: `temperature-${Date.now().toString(36)}` }),
+      );
+    } else {
+      await store.updateItem("rooms", roomId, upsertTemperatureEntry(room, voce, editingEntryId));
+    }
     reset();
     renderBeta25TemperatureCards();
     root.queueMicrotask?.(renderBeta25TemperatureEditor);
