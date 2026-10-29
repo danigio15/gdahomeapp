@@ -2,7 +2,7 @@
  "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams/104/schedule?fixture=true",
  "stato": 200,
  "json": {
-  "timestamp": "2026-10-28T23:07:46Z",
+  "timestamp": "2026-10-29T20:25:18Z",
   "status": "success",
   "season": {
    "year": 2026,
@@ -359,14 +359,14 @@
          "name": "DraftKings",
          "priority": 1
         },
-        "details": "ROMA -190",
+        "details": "ROMA -195",
         "overUnder": 2.5,
         "spread": 1.5,
         "awayTeamOdds": {
          "favorite": true,
          "underdog": false,
-         "moneyLine": -190,
-         "spreadOdds": 140,
+         "moneyLine": -195,
+         "spreadOdds": 135,
          "open": {
           "favorite": true,
           "pointSpread": {
@@ -396,20 +396,20 @@
            "american": "-1.5"
           },
           "spread": {
-           "value": 2.4,
-           "displayValue": "7/5",
-           "alternateDisplayValue": "+140",
-           "decimal": 2.4,
-           "fraction": "7/5",
-           "american": "+140"
+           "value": 2.35,
+           "displayValue": "27/20",
+           "alternateDisplayValue": "+135",
+           "decimal": 2.35,
+           "fraction": "27/20",
+           "american": "+135"
           },
           "moneyLine": {
-           "value": 1.52,
-           "displayValue": "10/19",
-           "alternateDisplayValue": "-190",
-           "decimal": 1.52,
-           "fraction": "10/19",
-           "american": "-190"
+           "value": 1.51,
+           "displayValue": "20/39",
+           "alternateDisplayValue": "-195",
+           "decimal": 1.51,
+           "fraction": "20/39",
+           "american": "-195"
           }
          },
          "team": {
@@ -424,7 +424,7 @@
          "favorite": false,
          "underdog": true,
          "moneyLine": 425,
-         "spreadOdds": -195,
+         "spreadOdds": -190,
          "open": {
           "favorite": false,
           "pointSpread": {
@@ -454,12 +454,12 @@
            "american": "+1.5"
           },
           "spread": {
-           "value": 1.51,
-           "displayValue": "20/39",
-           "alternateDisplayValue": "-195",
-           "decimal": 1.51,
-           "fraction": "20/39",
-           "american": "-195"
+           "value": 1.52,
+           "displayValue": "10/19",
+           "alternateDisplayValue": "-190",
+           "decimal": 1.52,
+           "fraction": "10/19",
+           "american": "-190"
           },
           "moneyLine": {
            "value": 5.25,
@@ -1553,12 +1553,12 @@
       "tickets": [
        {
         "id": "7497143",
-        "summary": "Tickets as low as $138",
+        "summary": "Tickets as low as $142",
         "description": "Champions League - Manchester United vs AS Roma",
         "maxPrice": 6838,
-        "startingPrice": 138,
-        "numberAvailable": 8123,
-        "totalPostings": 1889,
+        "startingPrice": 142,
+        "numberAvailable": 8147,
+        "totalPostings": 1899,
         "links": [
          {
           "rel": [

@@ -3,7 +3,7 @@
  "json": {
   "table": [
    {
-    "idStanding": "10020978",
+    "idStanding": "10023426",
     "intRank": "1",
     "idTeam": "133879",
     "strTeam": "Spezia",
@@ -22,10 +22,10 @@
     "intGoalsAgainst": "5",
     "intGoalDifference": "14",
     "intPoints": "29",
-    "dateUpdated": "2026-10-28 20:18:19"
+    "dateUpdated": "2026-10-29 10:34:13"
    },
    {
-    "idStanding": "10020979",
+    "idStanding": "10023427",
     "intRank": "2",
     "idTeam": "133880",
     "strTeam": "Ravenna",
@@ -44,10 +44,10 @@
     "intGoalsAgainst": "6",
     "intGoalDifference": "14",
     "intPoints": "23",
-    "dateUpdated": "2026-10-28 20:18:19"
+    "dateUpdated": "2026-10-29 10:34:13"
    },
    {
-    "idStanding": "10020980",
+    "idStanding": "10023428",
     "intRank": "3",
     "idTeam": "138167",
     "strTeam": "Grosseto",
@@ -66,10 +66,10 @@
     "intGoalsAgainst": "13",
     "intGoalDifference": "10",
     "intPoints": "22",
-    "dateUpdated": "2026-10-28 20:18:19"
+    "dateUpdated": "2026-10-29 10:34:13"
    },
    {
-    "idStanding": "10020981",
+    "idStanding": "10023429",
     "intRank": "4",
     "idTeam": "133685",
     "strTeam": "Pescara",
@@ -88,10 +88,10 @@
     "intGoalsAgainst": "13",
     "intGoalDifference": "2",
     "intPoints": "18",
-    "dateUpdated": "2026-10-28 20:18:19"
+    "dateUpdated": "2026-10-29 10:34:13"
    },
    {
-    "idStanding": "10020982",
+    "idStanding": "10023430",
     "intRank": "5",
     "idTeam": "134656",
     "strTeam": "Torres",
@@ -110,7 +110,7 @@
     "intGoalsAgainst": "12",
     "intGoalDifference": "1",
     "intPoints": "18",
-    "dateUpdated": "2026-10-28 20:18:19"
+    "dateUpdated": "2026-10-29 10:34:13"
    }
   ]
  }

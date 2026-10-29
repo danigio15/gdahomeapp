@@ -797,8 +797,6 @@
       "gameResult": "W",
       "competitionName": "2025-26 Italian Serie B",
       "roundName": "Promotion Finals",
-      "leagueName": "Italian Serie B",
-      "leagueAbbreviation": "Italian Serie B",
       "opponent": {
        "id": "3257",
        "uid": "s:600~t:3257",
@@ -829,7 +827,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/3257.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/3257.png",
+      "leagueName": "Italian Serie B",
+      "leagueAbbreviation": "Italian Serie B"
      },
      {
       "id": "401873595",
@@ -854,8 +854,6 @@
       "aggregateScore": "0(2)-(0)0",
       "competitionName": "2025-26 Italian Serie B",
       "roundName": "Promotion Finals",
-      "leagueName": "Italian Serie B",
-      "leagueAbbreviation": "Italian Serie B",
       "opponent": {
        "id": "3257",
        "uid": "s:600~t:3257",
@@ -886,7 +884,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/3257.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/3257.png",
+      "leagueName": "Italian Serie B",
+      "leagueAbbreviation": "Italian Serie B"
      },
      {
       "id": "401886528",
@@ -1377,9 +1377,9 @@
          {
           "name": "effectiveTackles",
           "displayName": "Tackles Won",
-          "shortDisplayName": "TKLW",
+          "shortDisplayName": "TKL",
           "description": "The number of tackles where the player wins the ball.",
-          "abbreviation": "TKLW",
+          "abbreviation": "TKL",
           "value": 1,
           "displayValue": "1"
          },
@@ -1397,7 +1397,7 @@
          "value": "11",
          "label": "DINT"
         },
-        "summary": "1 TKLW, 2 DUELW"
+        "summary": "1 TKL, 2 DUELW"
        }
       ]
      },
@@ -1794,9 +1794,9 @@
          {
           "name": "effectiveTackles",
           "displayName": "Tackles Won",
-          "shortDisplayName": "TKLW",
+          "shortDisplayName": "TKL",
           "description": "The number of tackles where the player wins the ball.",
-          "abbreviation": "TKLW",
+          "abbreviation": "TKL",
           "value": 1,
           "displayValue": "1"
          },
@@ -1814,7 +1814,7 @@
          "value": "13",
          "label": "DINT"
         },
-        "summary": "1 TKLW, 3 DUELW"
+        "summary": "1 TKL, 3 DUELW"
        }
       ],
       "advantage": true
@@ -3809,7 +3809,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -3995,7 +3995,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -4076,9 +4076,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -4216,7 +4216,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 1,
@@ -4297,9 +4297,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -4402,7 +4402,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -4483,9 +4483,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -4602,7 +4602,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -4683,9 +4683,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -4835,7 +4835,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -4916,9 +4916,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -5021,7 +5021,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 1,
@@ -5102,9 +5102,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -5265,7 +5265,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 1,
@@ -5346,9 +5346,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -5451,7 +5451,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 1,
@@ -5532,9 +5532,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -5696,7 +5696,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 1,
@@ -5777,9 +5777,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -5928,7 +5928,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -6009,9 +6009,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -6139,7 +6139,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -6220,9 +6220,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -6324,7 +6324,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -6405,9 +6405,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -6544,7 +6544,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -6625,9 +6625,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -6729,7 +6729,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -6810,9 +6810,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -6915,7 +6915,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -6996,9 +6996,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -7136,7 +7136,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -7217,9 +7217,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -7356,7 +7356,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -7437,9 +7437,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -7541,7 +7541,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -7726,7 +7726,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -7912,7 +7912,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -7993,9 +7993,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -8133,7 +8133,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -8353,7 +8353,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -8434,9 +8434,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -8582,7 +8582,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -8768,7 +8768,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 4,
@@ -8849,9 +8849,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -9000,7 +9000,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 1,
@@ -9081,9 +9081,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -9186,7 +9186,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 2,
@@ -9267,9 +9267,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -9385,7 +9385,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -9466,9 +9466,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -9618,7 +9618,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 2,
@@ -9699,9 +9699,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -9804,7 +9804,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 1,
@@ -9885,9 +9885,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 3,
         "displayValue": "3"
        },
@@ -9990,7 +9990,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 3,
@@ -10071,9 +10071,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -10211,7 +10211,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 1,
@@ -10292,9 +10292,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 2,
         "displayValue": "2"
        },
@@ -10444,7 +10444,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -10525,9 +10525,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 1,
         "displayValue": "1"
        },
@@ -10630,7 +10630,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -10711,9 +10711,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -10851,7 +10851,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -10932,9 +10932,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -11072,7 +11072,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -11153,9 +11153,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -11293,7 +11293,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -11479,7 +11479,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -11560,9 +11560,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -11665,7 +11665,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -11746,9 +11746,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -11851,7 +11851,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -11932,9 +11932,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -12072,7 +12072,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -12153,9 +12153,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 2,
         "displayValue": "2"
        },
@@ -12293,7 +12293,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -12479,7 +12479,7 @@
        {
         "name": "foulsCommitted",
         "displayName": "Fouls Committed",
-        "shortDisplayName": "FC",
+        "shortDisplayName": "FOUL",
         "description": "The number of fouls comitted by a player or team.",
         "abbreviation": "FC",
         "value": 0,
@@ -12560,9 +12560,9 @@
        {
         "name": "offsides",
         "displayName": "Offsides",
-        "shortDisplayName": "OF",
+        "shortDisplayName": "OFF",
         "description": "The number of times a player or team gets caught offside.",
-        "abbreviation": "OF",
+        "abbreviation": "OFF",
         "value": 0,
         "displayValue": "0"
        },
@@ -12654,6 +12654,305 @@
     "isPremium": false
    },
    "articles": [
+    {
+     "id": 50309811,
+     "nowId": "1-50309811",
+     "contentKey": "50309811-1-6-1",
+     "dataSourceIdentifier": "3b4d6a98cfd3e",
+     "type": "Story",
+     "headline": "Man City, Bayern among the good, bad and lucky in Europe's top leagues",
+     "description": "We're a quarter of the way through the 2026-27 European season -- long enough to separate fact from fiction when it comes to from. Who's been lucky? Who's been good? Who's been both, or neither?",
+     "lastModified": "2026-10-29T16:26:42Z",
+     "published": "2026-10-29T16:26:42Z",
+     "images": [
+      {
+       "dataSourceIdentifier": "351ca1f1bab2b",
+       "id": 50317738,
+       "type": "header",
+       "name": "bayern munich celeb 261029 [1296x729]",
+       "credit": "Daniela Porcelli/Getty Images",
+       "height": 729,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/1029/r1738028_1296x729_16-9.jpg"
+      },
+      {
+       "type": "Media",
+       "name": "Why Harry Kane was the rightful winner of the Ballon d'Or",
+       "caption": "Why Harry Kane was the rightful winner of the Ballon d'Or",
+       "height": 324,
+       "width": 576,
+       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1026/dm_261026_COM_SOC_Analysis_Why_Harry_Kane_was_the_rightful_winner_of_the_Ballon_dOr_20261026_GLOBAL/dm_261026_COM_SOC_Analysis_Why_Harry_Kane_was_the_rightful_winner_of_the_Ballon_dOr_20261026_GLOBAL.jpg"
+      }
+     ],
+     "categories": [
+      {
+       "id": 81497,
+       "type": "league",
+       "uid": "s:600",
+       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+       "description": "Soccer",
+       "sportId": 600,
+       "leagueId": 600,
+       "league": {
+        "id": 600,
+        "description": "Soccer",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137793,
+       "type": "league",
+       "uid": "s:600~l:775",
+       "guid": "da52796f-2621-3351-8e77-955da92ea82d",
+       "description": "UEFA Champions League",
+       "sportId": 600,
+       "leagueId": 2,
+       "league": {
+        "id": 775,
+        "description": "UEFA Champions League",
+        "abbreviation": "UEFA Champions League",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.champions"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/uefa.champions"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137790,
+       "type": "league",
+       "uid": "s:600~l:720",
+       "guid": "30244926-00c4-3f69-8946-f8421c97ff71",
+       "description": "German Bundesliga",
+       "sportId": 600,
+       "leagueId": 10,
+       "league": {
+        "id": 720,
+        "description": "German Bundesliga",
+        "abbreviation": "Bundesliga",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ger.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ger.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137781,
+       "type": "league",
+       "uid": "s:600~l:700",
+       "guid": "6949f3af-300c-35f1-beab-b95669eedd38",
+       "description": "English Premier League",
+       "sportId": 600,
+       "leagueId": 23,
+       "league": {
+        "id": 700,
+        "description": "English Premier League",
+        "abbreviation": "Premier League",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/eng.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137798,
+       "type": "league",
+       "uid": "s:600~l:730",
+       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
+       "description": "Italian Serie A",
+       "sportId": 600,
+       "leagueId": 12,
+       "league": {
+        "id": 730,
+        "description": "Italian Serie A",
+        "abbreviation": "Serie A",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137799,
+       "type": "league",
+       "uid": "s:600~l:710",
+       "guid": "b7217910-7773-3ea8-bc69-30c19c579306",
+       "description": "French Ligue 1",
+       "sportId": 600,
+       "leagueId": 9,
+       "league": {
+        "id": 710,
+        "description": "French Ligue 1",
+        "abbreviation": "Ligue 1",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/fra.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/fra.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 137787,
+       "type": "league",
+       "uid": "s:600~l:740",
+       "guid": "cf7b0c51-7c48-3e9a-8abb-0c01b1a973a0",
+       "description": "Spanish LALIGA",
+       "sportId": 600,
+       "leagueId": 15,
+       "league": {
+        "id": 740,
+        "description": "Spanish LALIGA",
+        "abbreviation": "LALIGA",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/esp.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/esp.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142490,
+       "type": "team",
+       "uid": "s:600~t:132",
+       "guid": "25b5e432-d3d2-939f-f73b-6e531a6fbd91",
+       "description": "Bayern Munich",
+       "sportId": 600,
+       "teamId": 132,
+       "team": {
+        "id": 132,
+        "description": "Bayern Munich",
+        "abbreviation": "MUN",
+        "shortDisplayName": "Bayern",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/132/bayern-munich"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/132/bayern-munich"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142287,
+       "type": "team",
+       "uid": "s:600~t:382",
+       "guid": "94fd5d7e-35b1-9d52-c9f2-4a37259bea36",
+       "description": "Manchester City",
+       "sportId": 600,
+       "teamId": 382,
+       "team": {
+        "id": 382,
+        "description": "Manchester City",
+        "abbreviation": "MNC",
+        "shortDisplayName": "Man City",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/382/manchester-city"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/382/manchester-city"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 696344,
+       "type": "contributor",
+       "guid": "7bdb57b2-bf36-360a-82d4-d694d6310771",
+       "description": "Bill Connelly",
+       "slug": "bill-connelly",
+       "contributor": {
+        "id": 3812,
+        "description": "Bill Connelly"
+       }
+      }
+     ],
+     "byline": "Bill Connelly",
+     "links": {
+      "api": {
+       "self": {
+        "href": "https://content.core.api.espn.com/v1/sports/news/50309811"
+       }
+      },
+      "app": {
+       "sportscenter": {
+        "href": "sportscenter://x-callback-url/showStory?uid=50309811"
+       }
+      },
+      "mobile": {
+       "href": "http://m.espn.go.com/soccer/story?storyId=50309811"
+      },
+      "web": {
+       "href": "https://www.espn.com/soccer/story/_/id/50309811/man-city-bayern-munich-como-sunderland-good-bad-lucky-european-soccer"
+      }
+     },
+     "premium": false
+    },
     {
      "id": 50305774,
      "nowId": "1-50305774",
@@ -13550,145 +13849,6 @@
       },
       "web": {
        "href": "https://www.espn.com/soccer/story/_/id/50299199/napoli-coach-massimiliano-allegri-not-appeal-touchline-ban"
-      }
-     },
-     "premium": false
-    },
-    {
-     "id": 50298045,
-     "nowId": "1-50298045",
-     "contentKey": "50298045-1-5-1",
-     "dataSourceIdentifier": "df83b6d01bae9",
-     "type": "HeadlineNews",
-     "headline": "Milan boss Ruben Amorim faces injury headache ahead of pre-derby Bologna game",
-     "description": "A growing injury list has left AC Milan head coach Ruben Amorim facing a difficult week leading up to the weekend's derby against Inter Milan.",
-     "lastModified": "2026-10-27T15:24:05Z",
-     "published": "2026-10-27T15:24:05Z",
-     "images": [
-      {
-       "dataSourceIdentifier": "001d8fd1c4c2c",
-       "id": 50297811,
-       "type": "header",
-       "name": "Ruben Loftus Cheek  [1296x729]",
-       "credit": "Photo by Image Photo Agency/Getty Images",
-       "height": 729,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/1027/r1737008_1296x729_16-9.jpg"
-      },
-      {
-       "type": "Media",
-       "name": "Christian Pulisic nets second goal for AC Milan",
-       "caption": "Cesar Hernandez recaps Christian Pulisic's performance in his club's 2-0 victory over Udinese.",
-       "height": 324,
-       "width": 576,
-       "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1025/dm_261025_Hernandez_Pulisic_USMNT/dm_261025_Hernandez_Pulisic_USMNT.jpg"
-      }
-     ],
-     "categories": [
-      {
-       "id": 81497,
-       "type": "league",
-       "uid": "s:600",
-       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
-       "description": "Soccer",
-       "sportId": 600,
-       "leagueId": 600,
-       "league": {
-        "id": 600,
-        "description": "Soccer",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 409224,
-       "type": "topic",
-       "guid": "52313677-19f8-b106-ec91-d8d17e6087fe",
-       "description": "news",
-       "sportId": 0,
-       "topicId": 781
-      },
-      {
-       "id": 142590,
-       "type": "team",
-       "uid": "s:600~t:103",
-       "guid": "7ca4fb35-d78e-49f0-67fe-7fa95588e28d",
-       "description": "AC Milan",
-       "sportId": 600,
-       "teamId": 103,
-       "team": {
-        "id": 103,
-        "description": "AC Milan",
-        "abbreviation": "MIL",
-        "shortDisplayName": "Milan",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137798,
-       "type": "league",
-       "uid": "s:600~l:730",
-       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
-       "description": "Italian Serie A",
-       "sportId": 600,
-       "leagueId": 12,
-       "league": {
-        "id": 730,
-        "description": "Italian Serie A",
-        "abbreviation": "Serie A",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         }
-        }
-       }
-      }
-     ],
-     "byline": "PA",
-     "links": {
-      "api": {
-       "self": {
-        "href": "https://content.core.api.espn.com/v1/sports/news/50298045"
-       }
-      },
-      "app": {
-       "sportscenter": {
-        "href": "sportscenter://x-callback-url/showStory?uid=50298045"
-       }
-      },
-      "mobile": {
-       "href": "http://m.espn.go.com/soccer/story?storyId=50298045"
-      },
-      "web": {
-       "href": "https://www.espn.com/soccer/story/_/id/50298045/ac-milan-ruben-amorim-injuries-bologna-match"
       }
      },
      "premium": false
@@ -21232,8 +21392,8 @@
           "description": "Number of Games Played",
           "abbreviation": "GP",
           "type": "gamesplayed",
-          "value": 8,
-          "displayValue": "8"
+          "value": 9,
+          "displayValue": "9"
          },
          {
           "name": "losses",
@@ -21252,8 +21412,8 @@
           "description": "Goal Difference",
           "abbreviation": "GD",
           "type": "pointdifferential",
-          "value": 4,
-          "displayValue": "+4"
+          "value": 8,
+          "displayValue": "+8"
          },
          {
           "name": "points",
@@ -21262,8 +21422,8 @@
           "description": "Points",
           "abbreviation": "P",
           "type": "points",
-          "value": 14,
-          "displayValue": "14"
+          "value": 17,
+          "displayValue": "17"
          },
          {
           "name": "ties",
@@ -21282,8 +21442,8 @@
           "description": "Wins",
           "abbreviation": "W",
           "type": "wins",
-          "value": 4,
-          "displayValue": "4"
+          "value": 5,
+          "displayValue": "5"
          },
          {
           "name": "rank",
@@ -21303,8 +21463,8 @@
           "shortDisplayName": "OVER",
           "description": "Overall Record",
           "type": "total",
-          "summary": "4-2-2",
-          "displayValue": "4-2-2"
+          "summary": "5-2-2",
+          "displayValue": "5-2-2"
          }
         ],
         "logo": [
@@ -22048,8 +22208,8 @@
           "description": "Number of Games Played",
           "abbreviation": "GP",
           "type": "gamesplayed",
-          "value": 8,
-          "displayValue": "8"
+          "value": 9,
+          "displayValue": "9"
          },
          {
           "name": "losses",
@@ -22058,8 +22218,8 @@
           "description": "Losses",
           "abbreviation": "L",
           "type": "losses",
-          "value": 5,
-          "displayValue": "5"
+          "value": 6,
+          "displayValue": "6"
          },
          {
           "name": "pointDifferential",
@@ -22068,8 +22228,8 @@
           "description": "Goal Difference",
           "abbreviation": "GD",
           "type": "pointdifferential",
-          "value": -5,
-          "displayValue": "-5"
+          "value": -9,
+          "displayValue": "-9"
          },
          {
           "name": "points",
@@ -22119,8 +22279,8 @@
           "shortDisplayName": "OVER",
           "description": "Overall Record",
           "type": "total",
-          "summary": "3-0-5",
-          "displayValue": "3-0-5"
+          "summary": "3-0-6",
+          "displayValue": "3-0-6"
          }
         ],
         "logo": [

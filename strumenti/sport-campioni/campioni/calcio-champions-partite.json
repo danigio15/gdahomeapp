@@ -638,7 +638,7 @@
          ]
         },
         "drawOdds": {
-         "moneyLine": 310,
+         "moneyLine": 300,
          "link": {
           "language": "en-US",
           "rel": [
@@ -753,7 +753,7 @@
           },
           "close": {
            "line": "+0.5",
-           "odds": "-165",
+           "odds": "-155",
            "link": {
             "rel": [
              "awaySpread",
@@ -783,7 +783,7 @@
            "odds": "+125"
           },
           "close": {
-           "odds": "+125",
+           "odds": "+120",
            "link": {
             "rel": [
              "home",
@@ -808,7 +808,7 @@
            "odds": "+165"
           },
           "close": {
-           "odds": "+170",
+           "odds": "+180",
            "link": {
             "rel": [
              "away",
@@ -833,7 +833,7 @@
            "odds": "+310"
           },
           "close": {
-           "odds": "+310",
+           "odds": "+300",
            "link": {
             "rel": [
              "draw",
@@ -854,7 +854,7 @@
           }
          }
         },
-        "details": "GAL +125"
+        "details": "GAL +120"
        }
       ],
       "wasSuspended": false,
@@ -938,8 +938,8 @@
       },
       "tickets": [
        {
-        "summary": "Tickets as low as $68",
-        "numberAvailable": 313,
+        "summary": "Tickets as low as $69",
+        "numberAvailable": 317,
         "links": [
          {
           "href": "https://www.vividseats.com/shakhtar-donetsk-tickets-stamford-bridge-11-3-2026--sports-soccer/production/7497188?wsUser=717"
@@ -1505,7 +1505,7 @@
           },
           "close": {
            "line": "+0.5",
-           "odds": "-120",
+           "odds": "-125",
            "link": {
             "rel": [
              "homeSpread",
@@ -1533,7 +1533,7 @@
           },
           "close": {
            "line": "-0.5",
-           "odds": "-120",
+           "odds": "-115",
            "link": {
             "rel": [
              "awaySpread",
@@ -1718,8 +1718,8 @@
       },
       "tickets": [
        {
-        "summary": "Tickets as low as $143",
-        "numberAvailable": 563,
+        "summary": "Tickets as low as $139",
+        "numberAvailable": 556,
         "links": [
          {
           "href": "https://www.vividseats.com/atletico-madrid-tickets-riyadh-air-metropolitano-11-3-2026--sports-soccer/production/7497557?wsUser=717"
@@ -2501,8 +2501,8 @@
       },
       "tickets": [
        {
-        "summary": "Tickets as low as $337",
-        "numberAvailable": 424,
+        "summary": "Tickets as low as $255",
+        "numberAvailable": 423,
         "links": [
          {
           "href": "https://www.vividseats.com/fc-barcelona-tickets-spotify-camp-nou-11-3-2026--sports-soccer/production/7497149?wsUser=717"
@@ -3780,7 +3780,7 @@
           },
           "close": {
            "line": "o3.5",
-           "odds": "+120",
+           "odds": "+115",
            "link": {
             "rel": [
              "over",
@@ -3808,7 +3808,7 @@
           },
           "close": {
            "line": "u3.5",
-           "odds": "-155",
+           "odds": "-150",
            "link": {
             "rel": [
              "under",
@@ -3840,7 +3840,7 @@
           },
           "close": {
            "line": "-0.5",
-           "odds": "-130",
+           "odds": "-125",
            "link": {
             "rel": [
              "homeSpread",
@@ -5590,8 +5590,8 @@
       },
       "tickets": [
        {
-        "summary": "Tickets as low as $138",
-        "numberAvailable": 8123,
+        "summary": "Tickets as low as $142",
+        "numberAvailable": 8147,
         "links": [
          {
           "href": "https://www.vividseats.com/manchester-united-fc-tickets-old-trafford-football-ground-11-3-2026--sports-soccer/production/7497143?wsUser=717"
@@ -6375,8 +6375,8 @@
       },
       "tickets": [
        {
-        "summary": "Tickets as low as $241",
-        "numberAvailable": 35,
+        "summary": "Tickets as low as $287",
+        "numberAvailable": 30,
         "links": [
          {
           "href": "https://www.vividseats.com/villarreal-cf-tickets-estadio-de-la-ceramica-11-3-2026--sports-soccer/production/7497202?wsUser=717"
@@ -6913,7 +6913,7 @@
           },
           "close": {
            "line": "u3.5",
-           "odds": "-115",
+           "odds": "-120",
            "link": {
             "rel": [
              "under",

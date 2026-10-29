@@ -1159,7 +1159,7 @@
         "order": 1,
         "homeAway": "away",
         "winner": false,
-        "form": "DWLWD",
+        "form": "DDWLW",
         "score": "4",
         "records": [
          {
@@ -2627,7 +2627,7 @@
         "order": 0,
         "homeAway": "home",
         "winner": false,
-        "form": "DWLLW",
+        "form": "DLWLL",
         "score": "0",
         "records": [
          {

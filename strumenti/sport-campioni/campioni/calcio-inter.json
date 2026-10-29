@@ -749,12 +749,12 @@
          "homeTeamOdds": {
           "current": {
            "moneyLine": {
-            "alternateDisplayValue": "+245",
-            "american": "+245",
-            "decimal": 3.45,
-            "displayValue": "49/20",
-            "fraction": "49/20",
-            "value": 3.45
+            "alternateDisplayValue": "+240",
+            "american": "+240",
+            "decimal": 3.4,
+            "displayValue": "12/5",
+            "fraction": "12/5",
+            "value": 3.4
            },
            "pointSpread": {
             "alternateDisplayValue": "+0.5",
@@ -770,7 +770,7 @@
            }
           },
           "favorite": false,
-          "moneyLine": 245,
+          "moneyLine": 240,
           "open": {
            "favorite": false,
            "moneyLine": {

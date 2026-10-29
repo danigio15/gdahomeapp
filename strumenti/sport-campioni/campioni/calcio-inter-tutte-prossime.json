@@ -2,7 +2,7 @@
  "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams/110/schedule?fixture=true",
  "stato": 200,
  "json": {
-  "timestamp": "2026-10-28T23:07:54Z",
+  "timestamp": "2026-10-29T20:25:25Z",
   "status": "success",
   "season": {
    "year": 2026,
@@ -423,7 +423,7 @@
         "homeTeamOdds": {
          "favorite": false,
          "underdog": true,
-         "moneyLine": 245,
+         "moneyLine": 240,
          "spreadOdds": -125,
          "open": {
           "favorite": false,
@@ -462,12 +462,12 @@
            "american": "-125"
           },
           "moneyLine": {
-           "value": 3.45,
-           "displayValue": "49/20",
-           "alternateDisplayValue": "+245",
-           "decimal": 3.45,
-           "fraction": "49/20",
-           "american": "+245"
+           "value": 3.4,
+           "displayValue": "12/5",
+           "alternateDisplayValue": "+240",
+           "decimal": 3.4,
+           "fraction": "12/5",
+           "american": "+240"
           }
          },
          "team": {
