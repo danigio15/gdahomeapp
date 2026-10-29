@@ -7627,4 +7627,8 @@ export default Object.freeze({
   "Tap a station to listen": "Нажмите на станцию, чтобы слушать",
   "As is": "Как есть",
   "Echo volume": "Громкость Echo",
+  "An artist, a song, an album or a playlist": "Исполнитель, песня, альбом или плейлист",
+  "Search and play": "Найти и слушать",
+  "What to play": "Что включить",
+  "Write what to play.": "Напишите, что включить.",
 });

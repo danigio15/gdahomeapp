@@ -7474,4 +7474,8 @@ export default Object.freeze({
   "Tap a station to listen": "点按电台即可收听",
   "As is": "保持不变",
   "Echo volume": "Echo 音量",
+  "An artist, a song, an album or a playlist": "艺人、歌曲、专辑或播放列表",
+  "Search and play": "搜索并播放",
+  "What to play": "播放什么",
+  "Write what to play.": "请输入要播放的内容。",
 });

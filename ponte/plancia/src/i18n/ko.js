@@ -7584,4 +7584,8 @@ export default Object.freeze({
   "Tap a station to listen": "방송국을 탭해 들으세요",
   "As is": "그대로",
   "Echo volume": "Echo 볼륨",
+  "An artist, a song, an album or a playlist": "아티스트, 노래, 앨범 또는 플레이리스트",
+  "Search and play": "검색해서 재생",
+  "What to play": "재생할 항목",
+  "Write what to play.": "재생할 항목을 입력하세요.",
 });

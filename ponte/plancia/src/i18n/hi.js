@@ -7593,4 +7593,8 @@ export default Object.freeze({
   "Tap a station to listen": "सुनने के लिए किसी स्टेशन पर टैप करें",
   "As is": "जैसा है",
   "Echo volume": "Echo वॉल्यूम",
+  "An artist, a song, an album or a playlist": "कोई कलाकार, गाना, एल्बम या प्लेलिस्ट",
+  "Search and play": "खोजें और सुनें",
+  "What to play": "क्या सुनना है",
+  "Write what to play.": "लिखें कि क्या सुनना है।",
 });

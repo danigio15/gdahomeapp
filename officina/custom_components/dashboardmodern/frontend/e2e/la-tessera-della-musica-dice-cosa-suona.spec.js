@@ -147,3 +147,27 @@ test("il brano che cambia riscrive la tessera senza rifarla", async ({ page }, t
   await expect(tessera.locator("[data-dm-tile-sotto]")).toHaveText("Un artista");
   await expect(tessera).toHaveAttribute("data-dm-prova", "1");
 });
+
+/* #347: «come per gli elettrodomestici, aprendo Musica saltare direttamente
+ * alla scheda aperta». Nella finestra della Musica il lettore toccato fuori
+ * dai suoi tasti apre la sua scheda, come un elettrodomestico apre la sua. */
+test("nella finestra della Musica il lettore toccato apre la sua scheda", async ({
+  page,
+}, testInfo) => {
+  const tessera = await apri(page, testInfo, suonando);
+  await tessera.click();
+  const finestra = page.locator("#dm-widget-popup");
+  const eroe = finestra.locator('.dm-f-media-eroe[data-dm-w-lettore="media_player.sonos"]');
+  await expect(eroe).toHaveCount(1);
+  /* Un tasto resta un tasto: non apre la scheda. */
+  await eroe.locator(".dm-f-media-centro").click();
+  await expect(page.locator("#dm-mp-popup")).toBeHidden();
+  /* Il titolo del brano, invece, apre la scheda del lettore. */
+  await eroe.locator(".dm-f-media-cosa b").click();
+  const scheda = page.locator("#dm-mp-popup");
+  await expect(scheda).toBeVisible();
+  await expect(scheda.locator(".dm-mp-card")).toContainText("So What");
+  await expect(finestra).toBeHidden();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: testInfo.outputPath("scheda-dal-widget.png") });
+});

@@ -7557,4 +7557,8 @@ export default Object.freeze({
   "Tap a station to listen": "المس محطة للاستماع إليها",
   "As is": "كما هو",
   "Echo volume": "مستوى صوت Echo",
+  "An artist, a song, an album or a playlist": "فنان أو أغنية أو ألبوم أو قائمة تشغيل",
+  "Search and play": "ابحث واستمع",
+  "What to play": "ماذا تريد أن تسمع",
+  "Write what to play.": "اكتب ما تريد سماعه.",
 });

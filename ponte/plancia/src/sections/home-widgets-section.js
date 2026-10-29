@@ -235,7 +235,12 @@ import {
 import { disegnoDelBidone } from "../core/disegni-rifiuti.js";
 import { CHIAVE_VMC, entitaDellaVmc, letturaVmc, vmcDisegnabili, vmcParla } from "../core/vmc-model.js";
 import { avvisiAppenaAccesi } from "../core/avvisi-che-si-aprono.js";
-import { comandiMediaMarkup, sottoDelLettore, titoloDelLettore } from "./media-player-section.js";
+import {
+  apriIlLettore,
+  comandiMediaMarkup,
+  sottoDelLettore,
+  titoloDelLettore,
+} from "./media-player-section.js";
 import { iconaPresaMarkup } from "./prese-section.js";
 import { puntiDi, quandoArrivaLoStorico } from "./storico-condiviso-section.js";
 import {
@@ -4640,7 +4645,7 @@ function nonRispondeDetail(widget) {
 function mediaDetail(widget) {
   return (widget.lettori || [])
     .map(
-      (riga) => `<div class="dm-w-media" data-suona="${riga.suona}" data-muta="${riga.muto}">
+      (riga) => `<div class="dm-w-media" data-suona="${riga.suona}" data-muta="${riga.muto}" data-dm-w-lettore="${esc(riga.entity)}">
       ${
         riga.copertina
           ? `<img class="dm-w-media-arte" src="${esc(riga.copertina)}" alt="" aria-hidden="true">`
@@ -9870,6 +9875,19 @@ function popupHost() {
         );
       return;
     }
+    /* Un lettore nella finestra della Musica, fuori dai suoi tasti: apre la
+     * sua scheda, quella coi comandi, il volume e la sorgente — come un
+     * elettrodomestico apre la sua (#347, come #335). */
+    const lettore = event.target?.closest?.("[data-dm-w-lettore]");
+    if (lettore && !event.target.closest("button,a,input,select,label,[role='slider']")) {
+      const entita = clean(lettore.dataset.dmWLettore);
+      if (entita) {
+        event.stopPropagation();
+        chiudiPopup();
+        apriIlLettore(entita);
+        return;
+      }
+    }
     /* Un apparecchio nella finestra disegnata (`finestre/sistema.js`), acceso
      * o fermo: il tocco apre la sua scheda (#335). Il tasto «Cottura» va
      * dove dice. */
@@ -11084,7 +11102,7 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-wi
    tasti sotto. Su una finestra larga un palmo i tasti non ci stanno in fila
    col resto, e mandarli a capo e' meglio che stringerli. */
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-media{
-  display:grid;grid-template-columns:56px minmax(0,1fr);gap:11px;align-items:center;
+  display:grid;grid-template-columns:56px minmax(0,1fr);gap:11px;align-items:center;cursor:pointer;
   padding:11px;border-radius:16px;margin-bottom:9px;
   background:var(--bg-sculpted,#f0f4f8);border:1px solid var(--card-border,#e2e8f0)}
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-media[data-muta="true"]{opacity:.6}

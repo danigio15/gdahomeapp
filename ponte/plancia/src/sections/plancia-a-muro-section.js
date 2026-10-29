@@ -170,6 +170,8 @@ import {
 import { avviaWebRtcNativo } from "./telecamera-webrtc-section.js";
 import { consiglioInCima } from "./assistente-di-casa-section.js";
 import { apriLoSfoglio } from "./media-player-section.js";
+import { radioDelMuro, suonaLaRadioSu } from "./radio-section.js";
+import { logoDellaRadioMarkup, mettiILoghiDelleRadio } from "./loghi-delle-radio.js";
 import {
   allStates,
   chiamaServizio,
@@ -2394,6 +2396,7 @@ function lettoreGrande(l) {
         ${sotto ? `<div class="mu-sotto">${esc(sotto)}</div>` : ""}
       </div>
       ${bottoneDaScegliere(l)}
+      ${bottoneDellaRadio(l)}
       ${bottoneDelGruppo(l)}
       ${l.puo.spegni && !l.spento ? tastoMusica(l, "spegni", "accendi", { etichetta: t("Spegni", "Turn off") }) : ""}
     </div>
@@ -2508,6 +2511,14 @@ let lettoriDiQui = [];
 function bottoneDaScegliere(l) {
   if (!l.puo.sfoglia || l.muto) return "";
   return `<button type="button" class="mu-mp-gruppo mu-mp-scegli" data-mu-fa="mp-scegli-musica" data-mu-entita="${esc(l.entity)}" aria-label="${esc(t("Scegli cosa suonare", "Choose what to play"))}"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.4 6.6h11.2M4.4 11h11.2M4.4 15.4h6.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M19.4 8.6v7.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="17.5" cy="16.4" r="2" fill="currentColor"/></svg><span>${esc(t("Scegli", "Choose"))}</span></button>`;
+}
+
+/* «In Musica fa uscire anche la radio»: le stesse radio della pagina Musica
+ * della plancia (`radio-section.js`), in una finestra, per il lettore in
+ * grande. */
+function bottoneDellaRadio(l) {
+  if (l.muto) return "";
+  return `<button type="button" class="mu-mp-gruppo mu-mp-radio" data-mu-fa="mp-radio" data-mu-entita="${esc(l.entity)}" aria-label="${esc(t("Radio", "Radio"))}"><span aria-hidden="true">📻</span><span>${esc(t("Radio", "Radio"))}</span></button>`;
 }
 
 function bottoneDelGruppo(l) {
@@ -3868,6 +3879,22 @@ function finestra() {
         })
         .join("")}</div>
       ${compagni.length ? `<button type="button" class="mu-btn" data-mu-fa="mp-sciogli" data-mu-entita="${esc(capo.entity)}">${esc(t("Sciogli il gruppo", "Ungroup all"))}</button>` : ""}</div>`;
+  } else if (f.tipo === "radio") {
+    const radio = radioDelMuro(() => {
+      if (state.finestra?.tipo === "radio") disegna();
+    });
+    dentro = `<div class="mu-fin-clima mu-fin-radio">
+      <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:52px"><span style="font-size:28px">📻</span></span><div class="mu-nome"><div class="mu-n" style="font-size:24px">${esc(t("Radio", "Radio"))}</div><div class="mu-sotto">${esc(`${t("Suona su", "Plays on")} ${nomeDi(f.entita)}`)}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+      <div class="mu-radio-griglia">${radio
+        .map(
+          (una) =>
+            `<button type="button" class="mu-radio-st" data-mu-fa="mp-radio-suona" data-mu-entita="${esc(f.entita)}" data-mu-radio="${esc(una.nome)}" style="--pr:${esc(una.colore || "#7c3aed")}">${logoDellaRadioMarkup(
+              una.logo,
+              "mu-radio-logo",
+              { dentro: una.sigla ? esc(una.sigla) : "📻" },
+            )}<b>${esc(una.nome)}</b></button>`,
+        )
+        .join("")}</div></div>`;
   } else if (f.tipo === "telecamera") {
     dentro = `<div class="mu-fin-clima">
       <div class="mu-riga1"><div class="mu-nome"><div class="mu-n" style="font-size:22px">${esc(nomeDi(f.entita))}</div></div><button type="button" class="mu-tondo" data-mu-fa="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
@@ -4939,6 +4966,7 @@ export function disegna() {
   }
   adattaLeLinguette(nodo);
   mettiLaPillola(nodo);
+  mettiILoghiDelleRadio(nodo);
   battitoDellaMusica();
   rimettiLaVoce(nodo);
   if (state.riposo) posizionaIlRiposo(nodo);
@@ -5418,6 +5446,17 @@ function onClick(event) {
     case "mp-scegli-musica":
       apriLoSfoglio(id);
       return;
+    case "mp-radio":
+      apriFinestra({ tipo: "radio", entita: id });
+      return;
+    case "mp-radio-suona": {
+      const nome = bersaglio.dataset.muRadio;
+      chiudiFinestra();
+      void suonaLaRadioSu(id, nome).then((partita) => {
+        if (partita && root.navigator?.vibrate) root.navigator.vibrate(8);
+      });
+      return;
+    }
     case "mp-sorgente":
       comanda("media_player", "select_source", {
         entity_id: id,
@@ -6388,6 +6427,15 @@ ${MURO} .mu-g6{--mu-col:3;--mu-righe:2;--mu-gap:16px;--mu-alto:150px;display:gri
 ${MURO} .mu-g6.mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - var(--mu-gap) * (var(--mu-righe) - 1)) / var(--mu-righe));overflow-y:auto;scroll-snap-type:y proximity;overscroll-behavior:contain;scrollbar-width:none}
 ${MURO} .mu-pagine.mu-molte button:not(.si) span,${MURO} .mu-pagine.mu-icone button span{display:none}
 ${MURO} .mu-pag-musica{grid-template-rows:auto 1fr}
+${MURO} .mu-radio-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;
+  max-height:60vh;overflow:auto;padding:2px}
+${MURO} .mu-radio-st{display:flex;align-items:center;gap:10px;padding:10px;border-radius:16px;cursor:pointer;
+  font:inherit;text-align:left;color:inherit;background:var(--mu-carta,rgba(255,255,255,.06));
+  border:1px solid var(--mu-bordo,rgba(148,163,184,.25))}
+${MURO} .mu-radio-st b{flex:1 1 auto;min-width:0;font-size:15px;font-weight:800;line-height:1.2;overflow-wrap:break-word}
+${MURO} .mu-radio-logo{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;
+  font-size:13px;font-weight:900;color:#fff;background:var(--pr)}
+${MURO} .mu-radio-logo[style]{font-size:0;background:#fff center/contain no-repeat}
 ${MURO} .mu-musica{display:grid;grid-template-columns:1.55fr 1fr;gap:16px;min-height:0}
 ${MURO} .mu-musica.solo{grid-template-columns:1fr}
 ${MURO} .mu-mp{padding:26px;display:flex;flex-direction:column;gap:20px;min-height:0}

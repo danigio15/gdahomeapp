@@ -451,3 +451,45 @@ test("le radio pronte dal menu: sull'Echo per nome, sul Sonos da Radio Browser",
   await expect(radio).toContainText("Radio Deejay · Echo Cucina");
   await radio.screenshot({ path: testInfo.outputPath("radio-pronte-echo.png") });
 });
+
+/* #347: «nelle impostazioni ho visto che posso richiamare brani o playlist:
+ * sarebbe possibile avere tale box nella sua sezione?». Scelto un Echo, la
+ * radio della pagina Musica ha «Cerca e ascolta», coi preferiti di Alexa. */
+test("Cerca e ascolta: un brano o una playlist sull'Echo scelto", async ({ page }, testInfo) => {
+  await boot(page, testInfo, { preferite: PREFERITE.slice(0, 2) });
+  await page.evaluate(() => {
+    localStorage.setItem(
+      "cd_alexa",
+      JSON.stringify({ musica: [{ servizio: "SPOTIFY", cosa: "Top 50 Italia" }] }),
+    );
+  });
+  await page.locator('.tab[data-tab="media"]').evaluate((n) => n.click());
+  const radio = page.locator("#page-media [data-dm-radio]");
+  await expect(radio).toBeVisible();
+  /* Sul Sonos un brano per nome non si cerca: il riquadro non c'e'. */
+  await radio.locator('[data-dm-radio-dove="media_player.sonos"]').click();
+  await expect(radio.locator("[data-dm-radio-cerca]")).toHaveCount(0);
+
+  await radio.locator('[data-dm-radio-dove="media_player.echo_cucina"]').click();
+  const cerca = radio.locator("[data-dm-radio-cerca]");
+  await expect(cerca).toBeVisible();
+  await cerca.locator('[data-dm-radio-servizio="SPOTIFY"]').click();
+  await cerca.locator("[data-dm-radio-cosa]").fill("Vasco Rossi Albachiara");
+  await cerca.locator("[data-dm-radio-cosa]").press("Enter");
+  await expect
+    .poll(() => page.evaluate(() => window.__SERVIZI__.at(-1)?.service_data))
+    .toMatchObject({
+      entity_id: ["media_player.echo_cucina"],
+      media_content_id: "Vasco Rossi Albachiara",
+      media_content_type: "SPOTIFY",
+    });
+  await expect(radio).toContainText("Vasco Rossi Albachiara · Echo Cucina");
+
+  /* Un preferito di Alexa › Musica, con un tocco. */
+  await radio.locator('[data-dm-radio-preferito="0"]').click();
+  await expect
+    .poll(() => page.evaluate(() => window.__SERVIZI__.at(-1)?.service_data))
+    .toMatchObject({ media_content_id: "Top 50 Italia", media_content_type: "SPOTIFY" });
+  await page.waitForTimeout(300);
+  await radio.screenshot({ path: testInfo.outputPath("radio-cerca-e-ascolta.png") });
+});

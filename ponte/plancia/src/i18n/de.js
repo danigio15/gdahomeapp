@@ -7672,4 +7672,8 @@ export default Object.freeze({
   "Tap a station to listen": "Tippe auf einen Sender, um ihn zu hören",
   "As is": "Wie es ist",
   "Echo volume": "Echo-Lautstärke",
+  "An artist, a song, an album or a playlist": "Ein Künstler, ein Song, ein Album oder eine Playlist",
+  "Search and play": "Suchen und abspielen",
+  "What to play": "Was abspielen",
+  "Write what to play.": "Schreib, was gespielt werden soll.",
 });

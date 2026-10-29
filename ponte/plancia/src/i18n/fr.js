@@ -7690,4 +7690,8 @@ export default Object.freeze({
   "Tap a station to listen": "Touchez une radio pour l'écouter",
   "As is": "Tel quel",
   "Echo volume": "Volume des Echo",
+  "An artist, a song, an album or a playlist": "Un artiste, un titre, un album ou une playlist",
+  "Search and play": "Rechercher et écouter",
+  "What to play": "Quoi écouter",
+  "Write what to play.": "Écris ce que tu veux écouter.",
 });

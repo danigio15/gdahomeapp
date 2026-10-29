@@ -7610,4 +7610,8 @@ export default Object.freeze({
   "Tap a station to listen": "Dinlemek için bir istasyona dokunun",
   "As is": "Olduğu gibi",
   "Echo volume": "Echo ses düzeyi",
+  "An artist, a song, an album or a playlist": "Bir sanatçı, şarkı, albüm veya çalma listesi",
+  "Search and play": "Ara ve dinle",
+  "What to play": "Ne çalınsın",
+  "Write what to play.": "Ne çalınacağını yaz.",
 });

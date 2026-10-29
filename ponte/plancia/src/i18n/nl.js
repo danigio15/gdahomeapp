@@ -7644,4 +7644,8 @@ export default Object.freeze({
   "Tap a station to listen": "Tik op een zender om te luisteren",
   "As is": "Zoals het is",
   "Echo volume": "Echo-volume",
+  "An artist, a song, an album or a playlist": "Een artiest, nummer, album of playlist",
+  "Search and play": "Zoeken en afspelen",
+  "What to play": "Wat afspelen",
+  "Write what to play.": "Schrijf wat je wilt afspelen.",
 });

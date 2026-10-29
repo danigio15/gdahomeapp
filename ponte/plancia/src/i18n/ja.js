@@ -7612,4 +7612,8 @@ export default Object.freeze({
   "Tap a station to listen": "局をタップして聴く",
   "As is": "そのまま",
   "Echo volume": "Echo の音量",
+  "An artist, a song, an album or a playlist": "アーティスト、曲、アルバム、プレイリスト",
+  "Search and play": "検索して再生",
+  "What to play": "再生するもの",
+  "Write what to play.": "再生したいものを入力してください。",
 });

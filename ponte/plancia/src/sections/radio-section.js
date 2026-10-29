@@ -26,7 +26,15 @@ import {
   stazionePulita,
   stazioniDellaRisposta,
 } from "../core/radio.js";
-import { eUnEcho } from "../core/alexa-musica.js";
+import {
+  CERCA_AL_PIU,
+  SERVIZI_MUSICA,
+  SERVIZIO_DI_SERIE,
+  chiamataPerSuonare,
+  cosaPulita,
+  eUnEcho,
+  servizioPulito,
+} from "../core/alexa-musica.js";
 import { CHIAVE_ALEXA, normalizzaAlexa } from "../core/alexa-annunci.js";
 import { lettoriConfigurati } from "../core/media-player.js";
 import { CHIAVE_MEDIA, PAGINA_MEDIA } from "./media-player-section.js";
@@ -67,6 +75,9 @@ const state = (root[KEY] ||= {
   paeseChiesto: false,
   /* L'elenco delle radio pronte, aperto o chiuso. */
   tendina: false,
+  /* «Cerca e ascolta» sull'Echo scelto: il servizio e cosa si e' scritto. */
+  servizio: SERVIZIO_DI_SERIE,
+  cosa: "",
 });
 
 export const RADIO_TAB = "media_radio";
@@ -253,6 +264,7 @@ function riquadroMarkup() {
     </div>`;
   return `${testa}
     <div class="dm-radio-dove"><span>${esc(t("Suona su", "Play on"))}</span><div class="dm-radio-fila">${lettoriMarkup}</div></div>
+    ${dove?.echo ? cercaSullEchoMarkup() : ""}
     ${pronte}
     ${
       stazioni
@@ -270,6 +282,60 @@ function riquadroMarkup() {
     </div>`;
 }
 
+/* «Cerca e ascolta» sull'Echo scelto (#347): «nelle impostazioni posso
+ * richiamare brani o playlist: sarebbe possibile avere tale box nella sua
+ * sezione?». E' lo stesso di Config › Alexa › Musica — un servizio, cosa
+ * cercare, ▶ — con i preferiti salvati li'. Suona solo sull'Echo scelto in
+ * «Suona su»: gli altri lettori un brano per nome non lo sanno cercare. */
+function cercaSullEchoMarkup() {
+  const servizio = servizioPulito(state.servizio);
+  const preferiti = normalizzaAlexa(readJson(CHIAVE_ALEXA, null)).musica.filter(
+    (uno) => uno.servizio !== "TUNEIN",
+  );
+  const nomeDi = (id) => SERVIZI_MUSICA.find((uno) => uno.id === id)?.nome || id;
+  return `<div class="dm-radio-cerca" data-dm-radio-cerca>
+      <div class="dm-radio-cerca-testa"><b>🎵 ${esc(t("Cerca e ascolta", "Search and play"))}</b><small>${esc(
+        t("Un artista, un brano, un album o una playlist", "An artist, a song, an album or a playlist"),
+      )}</small></div>
+      <div class="dm-radio-fila">${SERVIZI_MUSICA.filter((uno) => uno.id !== "TUNEIN")
+        .map(
+          (uno) =>
+            `<button type="button" class="dm-radio-pa" aria-pressed="${uno.id === servizio}" data-dm-radio-servizio="${uno.id}">${esc(uno.nome)}</button>`,
+        )
+        .join("")}</div>
+      <div class="dm-radio-cerca-riga">
+        <input class="dm-radio-cerca-campo" data-dm-radio-cosa value="${esc(state.cosa)}" maxlength="${CERCA_AL_PIU}" enterkeyhint="go" aria-label="${esc(
+          t("Cosa ascoltare", "What to play"),
+        )}" placeholder="${esc(t("Vasco Rossi, Albachiara, Top 50 Italia…", "Coldplay, Yellow, Today's Top Hits…"))}">
+        <button type="button" class="dm-radio-cerca-suona" data-dm-radio-cerca-suona>▶ ${esc(t("Suona", "Play"))}</button>
+      </div>
+      ${
+        preferiti.length
+          ? `<div class="dm-radio-fila">${preferiti
+              .map(
+                (uno, indice) =>
+                  `<button type="button" class="dm-radio-pa" data-dm-radio-preferito="${indice}">▶ ${esc(uno.cosa)} <small>${esc(nomeDi(uno.servizio))}</small></button>`,
+              )
+              .join("")}</div>`
+          : ""
+      }
+    </div>`;
+}
+
+/* Fa suonare sull'Echo scelto quello che si e' cercato. */
+function suonaSullEcho(dove, servizio, cosa) {
+  const chiamata =
+    dove?.echo &&
+    chiamataPerSuonare({ echo: [dove.entita], servizio, cosa }, allStates() || {});
+  if (!chiamata) {
+    state.esito = t("Scrivi cosa ascoltare.", "Write what to play.");
+    return;
+  }
+  chiamaServizio(chiamata);
+  root.navigator?.vibrate?.(8);
+  state.esito = `▶ ${cosaPulita(cosa)} · ${dove.nome}`;
+}
+
 /** Il riquadro, in cima alla pagina Musica; solo se la pagina c'e'. */
 export function ridisegnaLaRadio() {
   const pagina = doc?.getElementById?.(PAGINA_MEDIA);
@@ -281,6 +347,9 @@ export function ridisegnaLaRadio() {
     riquadro.dataset.dmRadio = "";
     pagina.prepend(riquadro);
   }
+  /* Mentre si scrive cosa ascoltare non si ridisegna: il campo perderebbe
+   * il dito e la parola a meta'. */
+  if (doc.activeElement?.matches?.("[data-dm-radio] [data-dm-radio-cosa]")) return true;
   const markup = riquadroMarkup();
   if (markup === state.firma && riquadro.firstChild) return true;
   state.firma = markup;
@@ -297,6 +366,15 @@ function sulRiquadro(evento) {
   if ("dmRadioDove" in d) {
     ricordaDove(clean(d.dmRadioDove));
     state.esito = "";
+  } else if ("dmRadioServizio" in d) {
+    state.servizio = servizioPulito(d.dmRadioServizio);
+  } else if ("dmRadioCercaSuona" in d) {
+    suonaSullEcho(doveSuona(lettori), state.servizio, state.cosa);
+  } else if ("dmRadioPreferito" in d) {
+    const uno = normalizzaAlexa(readJson(CHIAVE_ALEXA, null)).musica.filter(
+      (x) => x.servizio !== "TUNEIN",
+    )[Number(d.dmRadioPreferito)];
+    if (uno) suonaSullEcho(doveSuona(lettori), uno.servizio, uno.cosa);
   } else if ("dmRadioSuona" in d) {
     const una = leRadioDiCasa()[Number(d.dmRadioSuona)];
     const dove = doveSuona(lettori);
@@ -332,18 +410,92 @@ function sulRiquadro(evento) {
 /* Le radio italiane di Radio Browser, una volta sola: servono a suonare le
  * pronte sui lettori che non sono Echo, e ai loro loghi. Senza
  * l'integrazione la risposta non arriva, e restano i bollini. */
-function chiediLeRadioDelPaese() {
-  if (state.delPaese || state.paeseChiesto) return;
+/* Chi aspetta le radio del paese per ridisegnarsi coi loghi: la pagina
+ * Musica, e la finestra della radio sulla plancia a muro. */
+const QUANDO_ARRIVANO = new Set();
+
+function chiediLeRadioDelPaese(poi) {
+  if (state.delPaese) return;
+  /* Si aspetta solo finche' non sono arrivate: dopo, chi ridisegna le ha. */
+  if (typeof poi === "function") QUANDO_ARRIVANO.add(poi);
+  if (state.paeseChiesto) return;
   state.paeseChiesto = true;
   chiediAHomeAssistant(domandaDelleRadio(RADIO_DEL_PAESE), 15000)
     .then((risposta) => {
       state.delPaese = stazioniDellaRisposta(risposta);
       state.firma = "";
       ridisegnaLaRadio();
+      /* Una copia: chi si ridisegna puo' richiamare questa, e la lista non
+       * deve crescere mentre la si scorre. */
+      const chi = [...QUANDO_ARRIVANO];
+      QUANDO_ARRIVANO.clear();
+      for (const avvisa of chi) {
+        try {
+          avvisa();
+        } catch (_errore) {}
+      }
     })
     .catch(() => {
       /* Niente Radio Browser: i bollini bastano. */
     });
+}
+
+/* ── la radio dalla plancia a muro ─────────────────────────────────────
+ *
+ * «In Musica fa uscire anche la radio»: la pagina Musica del muro apre una
+ * finestra con le stesse radio di qui — le preferite, poi le italiane pronte
+ * — e le fa suonare sul lettore in grande. Le regole sono queste, non una
+ * copia: sull'Echo per nome, a TuneIn; sugli altri da Radio Browser. */
+
+/**
+ * Le radio da offrire sul muro: `[{nome, sigla, colore, logo}]`, prima le
+ * preferite e poi le pronte che non lo sono gia'. `poi` si chiama quando
+ * arrivano i loghi di Radio Browser, per ridisegnare.
+ */
+export function radioDelMuro(poi) {
+  chiediLeRadioDelPaese(poi);
+  const viste = new Set();
+  const fuori = [];
+  for (const una of leRadioDiCasa()) {
+    viste.add(una.nome.toLowerCase());
+    fuori.push({ nome: una.nome, sigla: "", colore: "", logo: clean(una.logo) });
+  }
+  for (const una of RADIO_PRONTE) {
+    if (viste.has(una.nome.toLowerCase())) continue;
+    fuori.push({
+      nome: una.nome,
+      sigla: una.sigla,
+      colore: una.colore,
+      logo: stazioneDalNome(state.delPaese || [], una.nome)?.logo || "",
+    });
+  }
+  return fuori;
+}
+
+/** Fa suonare la radio `nome` sul lettore `entita`. Torna `true` se e' partita. */
+export async function suonaLaRadioSu(entita, nome) {
+  const stato = (allStates() || {})[entita];
+  if (!stato || !clean(nome)) return false;
+  const echo = eUnEcho({ entity_id: entita, ...stato });
+  let stazione =
+    leRadioDiCasa().find((una) => una.nome.toLowerCase() === clean(nome).toLowerCase()) || {
+      nome: clean(nome),
+    };
+  if (!echo && !stazione.id) {
+    try {
+      if (!state.delPaese)
+        state.delPaese = stazioniDellaRisposta(
+          await chiediAHomeAssistant(domandaDelleRadio(RADIO_DEL_PAESE), 15000),
+        );
+    } catch (_errore) {
+      state.delPaese = null;
+    }
+    stazione = stazioneDalNome(state.delPaese || [], nome);
+  }
+  const chiamata = stazione && chiamataDellaRadio(stazione, entita, { echo });
+  if (!chiamata) return false;
+  chiamaServizio(chiamata);
+  return true;
 }
 
 /* Una radio pronta, scelta dal menu: sull'Echo per nome, a TuneIn; su un
@@ -610,6 +762,10 @@ function suUnClic(evento) {
 
 function suUnaParola(evento) {
   const campo = evento.target;
+  if (campo?.matches?.("[data-dm-radio] [data-dm-radio-cosa]")) {
+    state.cosa = String(campo.value || "").slice(0, CERCA_AL_PIU);
+    return;
+  }
   if (campo?.matches?.("#ed-body [data-dm-radio-filtro]")) {
     state.filtro = String(campo.value || "").slice(0, 60);
     ridisegnaLaScheda();
@@ -661,7 +817,7 @@ function stili() {
     .dm-radio-pr-sigla[style]{font-size:0;background:#fff center/contain no-repeat;
       box-shadow:0 0 0 1px var(--card-border,#e2e8f0)}
     .dm-radio-pr b{flex:1 1 auto;min-width:0;font-size:13px;font-weight:800;line-height:1.2;
-      overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+      overflow-wrap:break-word}
     .dm-radio-pr-onda{flex:none;width:10px;height:10px;border-radius:999px;background:#8b5cf6;
       box-shadow:0 0 0 4px color-mix(in srgb,#8b5cf6 22%,transparent)}
     .dm-radio-pr.in-onda{border-color:#8b5cf6;box-shadow:inset 0 0 0 1px #8b5cf699;
@@ -679,8 +835,9 @@ function stili() {
     .dm-radio-st{display:grid;justify-items:center;gap:6px;padding:12px 8px;border-radius:18px;cursor:pointer;
       font:inherit;color:var(--text,#0f172a);text-align:center;
       border:1px solid var(--card-border,#e2e8f0);background:var(--bg-sculpted,#f8fafc)}
+    /* I nomi delle radio si leggono interi: vanno a capo, non si tagliano. */
     .dm-radio-st b{font-size:13px;font-weight:850;line-height:1.2;max-width:100%;
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      text-align:center;overflow-wrap:break-word}
     .dm-radio-st small{font-size:11px;font-weight:700;color:var(--text-dim,#64748b)}
     .dm-radio-st[aria-disabled="true"]{opacity:.5}
     .dm-radio-st.in-onda{border-color:#8b5cf6;box-shadow:inset 0 0 0 1px #8b5cf6;
@@ -689,6 +846,17 @@ function stili() {
     .dm-radio-logo{width:56px;height:56px;border-radius:14px;display:grid;place-items:center;font-size:26px;
       background:#fff center/contain no-repeat;box-shadow:0 0 0 1px var(--card-border,#e2e8f0)}
     .dm-radio-logo[style],.dm-radio-ed-logo[style]{font-size:0}
+    .dm-radio-cerca{display:grid;gap:10px;padding:12px;border-radius:18px;
+      background:var(--surface-2,#f8fafc);border:1px solid var(--card-border,#e2e8f0)}
+    .dm-radio-cerca .dm-radio-fila{flex-wrap:wrap;overflow:visible}
+    .dm-radio-cerca-testa b{display:block;font-size:14px;font-weight:850}
+    .dm-radio-cerca-testa small{display:block;font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    .dm-radio-cerca-riga{display:flex;gap:8px;align-items:center}
+    .dm-radio-cerca-campo{flex:1 1 auto;min-width:0;padding:10px 12px;border-radius:12px;font:inherit;font-size:14px;
+      color:var(--text,#0f172a);background:var(--card-background-color,#fff);border:1px solid var(--card-border,#e2e8f0)}
+    .dm-radio-cerca-suona{flex:none;padding:10px 14px;border-radius:12px;border:0;font:inherit;font-size:13px;
+      font-weight:850;color:#fff;background:#7c3aed;cursor:pointer}
+    .dm-radio-pa small{font-size:11px;font-weight:700;opacity:.7}
     .dm-radio-piede{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
     .dm-radio-piede small{font-size:12.5px;font-weight:750;color:var(--text-dim,#64748b)}
     .dm-radio-ferma{padding:8px 14px;border-radius:12px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;
@@ -722,6 +890,17 @@ export function installaLaRadio() {
   stili();
   doc.addEventListener("click", suUnClic);
   doc.addEventListener("input", suUnaParola);
+  /* Invio nel campo «Cerca e ascolta» suona, come il tasto ▶. */
+  doc.addEventListener("keydown", (evento) => {
+    if (evento.key !== "Enter" || !evento.target?.matches?.("[data-dm-radio] [data-dm-radio-cosa]"))
+      return;
+    evento.preventDefault();
+    state.cosa = String(evento.target.value || "").slice(0, CERCA_AL_PIU);
+    suonaSullEcho(doveSuona(iLettori()), state.servizio, state.cosa);
+    evento.target.blur?.();
+    state.firma = "";
+    ridisegnaLaRadio();
+  });
   const tutto = () => {
     ridisegnaLaRadio();
     ensureRadioTab();

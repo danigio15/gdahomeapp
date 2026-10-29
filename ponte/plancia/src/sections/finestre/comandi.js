@@ -587,7 +587,8 @@ function eroeMedia(riga) {
   const punto = posizioneOra(riga);
   const centro = ilTastoCentrale(riga);
   const percento = Math.round((riga.volume ?? 0) * 100);
-  return `<div class="dm-f-media-eroe">
+  /* Toccato fuori dai tasti, il lettore apre la sua scheda (#347). */
+  return `<div class="dm-f-media-eroe" data-dm-w-lettore="${esc(riga.entity)}">
     <div class="dm-f-media-testa">
       ${
         riga.copertina
@@ -624,7 +625,7 @@ function eroeMedia(riga) {
 
 function cassaMarkup(riga) {
   const centro = ilTastoCentrale(riga);
-  return `<article class="dm-f-media-cassa" data-spenta="${riga.spento || riga.muto}">
+  return `<article class="dm-f-media-cassa" data-spenta="${riga.spento || riga.muto}" data-dm-w-lettore="${esc(riga.entity)}">
     <span class="dm-f-media-ic" aria-hidden="true">${
       riga.copertina && !riga.spento
         ? `<img src="${esc(riga.copertina)}" alt="">`
@@ -990,6 +991,7 @@ ${P} .dm-f-porte-tasto[data-leggero="true"]{background:color-mix(in srgb,var(--d
 :root[data-theme="dark"] ${P} .dm-f-porte-avviso small{color:#fecaca}
 
 /* Musica */
+${P} [data-dm-w-lettore]{cursor:pointer}
 ${P} .dm-f-media-eroe{border-radius:26px;padding:16px;color:#fff;background:linear-gradient(160deg,color-mix(in srgb,${A} 45%,#0b0420),color-mix(in srgb,${A} 80%,#1e0b3d) 60%,${A});box-shadow:0 20px 40px -28px color-mix(in srgb,${A} 90%,#000)}
 ${P} .dm-f-media-testa{display:flex;gap:14px;align-items:center}
 ${P} .dm-f-media-arte{flex:0 0 96px;width:96px;height:96px;border-radius:18px;object-fit:cover;display:grid;place-items:center;font-size:40px;background:rgba(255,255,255,.14);box-shadow:0 10px 24px -12px rgba(0,0,0,.6)}
