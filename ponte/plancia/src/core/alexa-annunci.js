@@ -180,6 +180,10 @@ export function paroleDaDire(titolo, testo, lingua = "it") {
     unita
       .reduce((frase, [sigla, parola]) => frase.replace(sigla, parola), String(pezzo ?? ""))
       .replace(FIGURINE, "")
+      /* Una frase da ascoltare: i puntini e gli a capo della notifica
+       * diventano virgole e punti. */
+      .replace(/\s*·\s*/g, ", ")
+      .replace(/\s*\n+\s*/g, ". ")
       .replace(/\s+/g, " ")
       .trim();
   const prima = pulito(titolo);
