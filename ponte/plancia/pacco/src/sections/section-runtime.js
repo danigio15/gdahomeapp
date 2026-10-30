@@ -560,7 +560,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-2MPIJD5Y.js";
+} from "../../chunk-Y5V6NZOM.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -139644,8 +139644,19 @@ function cartaAdesso(l) {
   const prezzo = prezzoDellOra()(Date.now());
   const costoFinora = l.sessione !== null && prezzo !== null ? l.sessione * prezzo * (l.soleSessione === null ? 1 : 1 - l.soleSessione / 100) : null;
   const tessere2 = [
-    l.sessione === null ? "" : `<div class="dm-na-tessera"><span>${esc(t("Questa ricarica", "This session"))}</span><b>${kwh4(l.sessione)}<small>kWh</small></b></div>`,
-    l.soleSessione === null ? "" : `<div class="dm-na-tessera" data-tono="sole"><span>${esc(t("Dal sole", "From the sun"))}</span><b>${Math.round(l.soleSessione)}<small>%</small></b></div>`,
+    l.sessione === null ? "" : tesseraStorica(
+      l,
+      "dm.ev_energia_sessione",
+      t("Questa ricarica", "This session"),
+      `${kwh4(l.sessione)}<small>kWh</small>`
+    ),
+    l.soleSessione === null ? "" : tesseraStorica(
+      l,
+      "dm.ev_percentuale_solare_sessione",
+      t("Dal sole", "From the sun"),
+      `${Math.round(l.soleSessione)}<small>%</small>`,
+      "sole"
+    ),
     costoFinora === null ? "" : `<div class="dm-na-tessera"><span>${esc(t("Costo finora", "Cost so far"))}</span><b>${euro2(costoFinora)}<small>€</small></b></div>`
   ].join("");
   return `<section class="dm-na-carta dm-na-adesso-carta">
@@ -139683,11 +139694,32 @@ var DESCRIZIONE_DEI_MODI = {
   now: () => t("Al massimo, subito", "Full power, now"),
   fast: () => t("Al massimo, subito", "Full power, now")
 };
+function tesseraStorica(l, ref, nome, corpo6, tono = "") {
+  const entita4 = l.lettore.entita(ref);
+  const apre = entita4 ? ` role="button" tabindex="0" data-dm-storico="${esc(entita4)}" data-dm-nome="${esc(nome)}"` : "";
+  return `<div class="dm-na-tessera"${tono ? ` data-tono="${tono}"` : ""}${apre}><span>${esc(nome)}</span><b>${corpo6}</b></div>`;
+}
+function misureDellaWallbox(l) {
+  const misura8 = (ref, nome, unitaDiSerie, cifre3) => {
+    const n = l.lettore.numero(ref);
+    if (n === null) return "";
+    const unita3 = clean(l.lettore.vivo(ref)?.attributes?.unit_of_measurement) || unitaDiSerie;
+    return tesseraStorica(l, ref, nome, `${formatNumber(n, cifre3)}<small>${esc(unita3)}</small>`);
+  };
+  return [
+    misura8("dm.ev_tensione_wallbox", t("Tensione", "Voltage"), "V", 0),
+    misura8("dm.ev_temperatura_wallbox", t("Temperatura", "Temperature"), "°C", 1)
+  ].join("");
+}
 function wallbox(l) {
   if (!l.inUso) return "";
   let resolve = (valore3) => valore3;
   if (typeof root.resolveEntity === "function") resolve = root.resolveEntity;
-  if (!evccPresence(l.lettore.stati, resolve).mode) return "";
+  const misure = misureDellaWallbox(l);
+  const tessere2 = misure ? `<div class="dm-na-tessere">${misure}</div>` : "";
+  if (!evccPresence(l.lettore.stati, resolve).mode) {
+    return tessere2 ? `<div class="dm-na-wallbox"><h4 class="dm-na-sottotitolo">🔌 ${esc(t("Wallbox", "Wallbox"))}</h4>${tessere2}</div>` : "";
+  }
   const statoModo = l.lettore.vivo("dm.ev_modalita_ricarica_evcc");
   const modi = iModiDiEvcc(statoModo);
   const acceso6 = ilModoAcceso(statoModo, modi);
@@ -139710,6 +139742,7 @@ function wallbox(l) {
           <b><span aria-hidden="true">${esc(m.icona)}</span> ${esc(NOMI_DEI_MODI[m.id.toLowerCase()]?.() || m.it)}</b>${descrizione ? `<small>${esc(descrizione)}</small>` : ""}</button>`;
   }).join("")}</div>
     ${sempre}
+    ${tessere2}
   </div>`;
 }
 var nomiDeiMesi = (anno, mese) => new Date(anno, mese, 1).toLocaleDateString(locale(), { month: "long", year: "numeric" });
@@ -140305,7 +140338,7 @@ function alTocco6(evento) {
   const misura8 = bersaglio?.closest?.("[data-dm-storico]");
   if (misura8?.dataset.dmStorico) {
     try {
-      root.apriStorico?.(evento, misura8.dataset.dmStorico, "");
+      root.apriStorico?.(evento, misura8.dataset.dmStorico, misura8.dataset.dmNome || "");
     } catch (_errore) {
     }
   }
@@ -140548,6 +140581,9 @@ function stile6() {
   ${P11} .dm-na-totali-due{grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
   ${P11} .dm-na-tessera{display:grid;gap:4px;padding:11px 14px;border-radius:15px;background:var(--surface-2,#f8fafc);
     border:1px solid var(--card-border,#e8edf3);min-width:0}
+  ${P11} .dm-na-tessera[data-dm-storico]{cursor:pointer;transition:border-color .15s,transform .15s}
+  ${P11} .dm-na-tessera[data-dm-storico]:hover{border-color:var(--accent,#10b981)}
+  ${P11} .dm-na-tessera[data-dm-storico]:active{transform:scale(.98)}
   ${P11} .dm-na-tessera>span{font-size:12px;font-weight:800;color:var(--text-dim,#64748b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   ${P11} .dm-na-tessera>b{font-family:'Oswald',system-ui,sans-serif;font-size:26px;font-weight:700;color:var(--text,#0f172a);line-height:1.05;white-space:nowrap}
   ${P11} .dm-na-tessera>b small{font-family:inherit;font-size:13px;font-weight:700;color:var(--text-dim,#64748b);margin-left:4px}
