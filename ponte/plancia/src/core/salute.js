@@ -44,7 +44,10 @@ const MISURE = Object.freeze([
     chiave: "passi",
     parole: /\b(steps?|passi|step count)\b/,
     unita: /^(steps?|passi|)$/,
-    escludi: /goal|obiettiv|cadence|cadenza|floors|piani|length|lunghezza/,
+    /* Le valvole termostatiche contano i passi del motorino («Closing steps»,
+     * «Idle steps»), senza unita': non sono passi di nessuno. */
+    escludi:
+      /goal|obiettiv|cadence|cadenza|floors|piani|length|lunghezza|clos|open|apertur|chiusur|idle|valv|trv|termostat|thermostat|motor|stepper/,
   },
   {
     chiave: "battitoRiposo",
