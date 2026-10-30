@@ -214,16 +214,15 @@ export function lePisteDette(nome, { davvero = false } = {}) {
   }
   const viste = [];
   for (const quale of dette) if (!viste.includes(quale)) viste.push(quale);
-  if (viste.includes("production") && !davvero) {
+  /* Anche quella dell'orologio, `wear:production`: pubblica a tutti uguale. */
+  const aTutti = (una) => /^(wear:)?production$/.test(una);
+  if (viste.some(aTutti) && !davvero) {
     throw new Error(
       "«production» pubblica a tutti e non si torna indietro premendo un tasto: " +
         "se e' quello che vuoi, aggiungi --davvero",
     );
   }
-  return [
-    ...viste.filter((una) => una !== "production"),
-    ...viste.filter((una) => una === "production"),
-  ];
+  return [...viste.filter((una) => !aTutti(una)), ...viste.filter(aTutti)];
 }
 
 /** Quanto pesa, detto come lo dice un essere umano. */

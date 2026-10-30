@@ -161,6 +161,13 @@ test("«production» non parte per sbaglio", () => {
   /* Le piste fatte a mano hanno un nome loro, e passano: l'elenco delle solite
    * serve a suggerire, non a vietare. */
   assert.deepEqual(lePisteDette("custom-12345"), ["custom-12345"]);
+  /* Le piste dell'orologio: la sua production frena come quella del telefono. */
+  assert.deepEqual(lePisteDette("wear:internal"), ["wear:internal"]);
+  assert.throws(() => lePisteDette("wear:production"), /aggiungi --davvero/);
+  assert.deepEqual(lePisteDette("wear:production,wear:alpha", { davvero: true }), [
+    "wear:alpha",
+    "wear:production",
+  ]);
 });
 
 test("piu' piste in una volta: si scrivono con la virgola, e production va in fondo", () => {
