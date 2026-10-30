@@ -476,6 +476,42 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # L'orologio nel negozio, dopo il telefono e sulle stesse piste — le sue,
+      # quelle che il Play Console apre aggiungendo Wear OS fra i fattori di
+      # forma: `internal` diventa `wear:internal`. Il pacchetto e' un altro,
+      # col suo numero (quello del telefono piu' uno), e senza il telefono gia'
+      # accettato non ha senso: se il passo di prima si ferma, questo non parte.
+      - name: L'orologio nel negozio
+        if: >-
+          vars.GDAHOME_OROLOGIO == 'si' &&
+          steps.chiave.outputs.vera == 'si' &&
+          (inputs.negozio != '' ||
+           (github.ref_type == 'tag' && vars.PISTA_DEL_NEGOZIO != ''))
+        env:
+          NEGOZIO_GOOGLE: ${{ secrets.NEGOZIO_GOOGLE }}
+          PISTA: ${{ inputs.negozio || vars.PISTA_DEL_NEGOZIO }}
+          PROVA: ${{ inputs.prova_del_negozio }}
+          DAVVERO: ${{ inputs.davvero_in_produzione }}
+        run: |
+          pacco=app/build/orologio/outputs/bundle/release/orologio-release.aab
+          if [ ! -f "$pacco" ]; then
+            echo "::error::Il pacchetto dell'orologio non c'e' ($pacco)."
+            exit 1
+          fi
+          piste=$(echo "$PISTA" | tr ',' '\n' | sed 's/^ *//; s/ *$//; /^$/d; s/^/wear:/' | paste -sd, -)
+          solo=""
+          if [ "$PROVA" = "true" ]; then solo="--prova"; fi
+          if [ "$DAVVERO" = "true" ]; then solo="$solo --davvero"; fi
+          set -o pipefail
+          node strumenti/porta-nel-negozio.mjs "$pacco" --pista="$piste" $solo | tee orologio.txt
+          {
+            echo "### L'orologio nel negozio: \`$piste\`"
+            echo ""
+            echo '```'
+            cat orologio.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
   iphone:
     name: iPhone (IPA)
     # Un'app per iPhone la puo' costruire **solo** un Mac, ed e' l'unica
