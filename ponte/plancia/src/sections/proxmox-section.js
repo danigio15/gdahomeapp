@@ -108,9 +108,27 @@ function barra(nome, valore, sotto = "") {
   </div>`;
 }
 
-function cifra(nome, valore, classe = "") {
-  return `<div class="dm-px-cifra ${classe}"><b>${esc(valore)}</b><span>${esc(nome)}</span></div>`;
+function cifra(nome, valore, classe = "", storico = "") {
+  const apre = storico
+    ? ` role="button" tabindex="0" data-dm-storico="${esc(storico)}" data-dm-nome="${esc(nome)}"`
+    : "";
+  return `<div class="dm-px-cifra ${classe}"${apre}><b>${esc(valore)}</b><span>${esc(nome)}</span></div>`;
 }
+
+/* Sopra questa una CPU o un disco scaldano troppo: la stessa tacca che la
+ * pagina del mini PC disegna sull'arco della temperatura. */
+const TROPPO_CALDO = 75;
+
+/* La temperatura del mini PC, quella del Config (`dm.server_temperatura_cpu`):
+ * e' la stessa macchina del nodo, quando Proxmox gira sul mini PC. */
+function temperaturaDelMiniPc(states = allStates()) {
+  const entita = clean(root.resolveEntity?.("dm.server_temperatura_cpu"));
+  if (!entita || entita.startsWith("dm.")) return null;
+  const n = Number(String(states?.[entita]?.state ?? "").replace(",", "."));
+  return Number.isFinite(n) && states?.[entita] ? { valore: n, entita } : null;
+}
+
+const gradi = (n) => `${Math.round(n)} °C`;
 
 function tasto(entity, testo, { pericolo = false, conferma = "" } = {}) {
   return `<button type="button" class="dm-px-tasto${pericolo ? " dm-px-pericolo" : ""}" data-dm-px-premi="${esc(entity)}"${
@@ -232,6 +250,26 @@ function nodoMarkup(n, admin) {
         ${n.vmAccese != null ? cifra(t("VM accese", "VMs running"), String(n.vmAccese)) : ""}
         ${n.ctAccesi != null ? cifra(t("Container accesi", "Containers running"), String(n.ctAccesi)) : ""}
         ${n.aggiornamenti.quanti != null ? cifra(t("Aggiornamenti", "Updates"), String(n.aggiornamenti.quanti), n.aggiornamenti.quanti > 0 ? "dm-px-avviso" : "") : ""}
+        ${
+          n.temperaturaCpu
+            ? cifra(
+                t("Temperatura CPU", "CPU temperature"),
+                gradi(n.temperaturaCpu.valore),
+                n.temperaturaCpu.valore >= TROPPO_CALDO ? "dm-px-avviso" : "",
+                n.temperaturaCpu.entita,
+              )
+            : ""
+        }
+        ${
+          n.discoPiuCaldo
+            ? cifra(
+                t("Disco più caldo", "Hottest disk"),
+                gradi(n.discoPiuCaldo.temperatura),
+                n.discoPiuCaldo.temperatura >= TROPPO_CALDO ? "dm-px-avviso" : "",
+                n.discoPiuCaldo.temperaturaEntita,
+              )
+            : ""
+        }
       </div>
       <div class="dm-px-barre">
         ${barra(t("CPU", "CPU"), n.cpu)}
@@ -290,10 +328,21 @@ function guestMarkup(g, admin) {
     </article>`;
 }
 
-export function proxmoxMarkup(server, { admin = false } = {}) {
+export function proxmoxMarkup(server, { admin = false, miniPc = null } = {}) {
   if (!server?.nodi?.length) return "";
   return server.nodi
-    .map((n) => {
+    .map((nodo, i) => {
+      /* La temperatura della CPU: quella del nodo, se l'integrazione la da';
+       * se no, sul nodo principale, quella del mini PC del Config. */
+      const n = {
+        ...nodo,
+        temperaturaCpu:
+          nodo.temperatura != null
+            ? { valore: nodo.temperatura, entita: nodo.temperaturaEntita }
+            : i === 0
+              ? miniPc
+              : null,
+      };
       const accesi = n.guest.filter((g) => g.stato === "su").length;
       return `<section class="dm-px" data-dm-px-nodo="${esc(n.nome)}">
         ${n.id ? nodoMarkup(n, admin) : ""}
@@ -344,10 +393,18 @@ function dipingi() {
     }
   })();
   const minuto = Math.floor(Date.now() / 60_000);
-  const firma = JSON.stringify([server, admin, minuto, [...state.aperti], t("Acceso", "Running")]);
+  const miniPc = temperaturaDelMiniPc();
+  const firma = JSON.stringify([
+    server,
+    admin,
+    minuto,
+    miniPc,
+    [...state.aperti],
+    t("Acceso", "Running"),
+  ]);
   if (firma === state.firma) return;
   state.firma = firma;
-  dove.innerHTML = proxmoxMarkup(server, { admin });
+  dove.innerHTML = proxmoxMarkup(server, { admin, miniPc });
   dove.hidden = !server.nodi.length;
 }
 
@@ -391,6 +448,15 @@ function alClic(evento) {
     renderProxmox();
     return;
   }
+  /* Una temperatura si tocca per vederne lo storico. */
+  const misura = evento.target?.closest?.(".dm-px [data-dm-storico]");
+  if (misura) {
+    evento.preventDefault();
+    try {
+      root.apriStorico?.(evento, clean(misura.dataset.dmStorico), clean(misura.dataset.dmNome));
+    } catch (_errore) {}
+    return;
+  }
   const premi = evento.target?.closest?.("[data-dm-px-premi]");
   if (!premi) return;
   evento.preventDefault();
@@ -430,6 +496,7 @@ function installaLoStile() {
       letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;color:color-mix(in srgb,var(--px) 80%,var(--text,#0f172a));
       background:color-mix(in srgb,var(--px) 14%,transparent)}
     ${P} .dm-px-cifre{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+    ${P} .dm-px-cifra[data-dm-storico]{cursor:pointer}
     ${P} .dm-px-cifra{display:grid;gap:2px;padding:10px 12px;border-radius:14px;background:var(--surface-2,#f8fafc);
       border:1px solid var(--card-border,#eef2f7)}
     ${P} .dm-px-cifra b{font-family:'Oswald',system-ui,sans-serif;font-size:22px;font-weight:700;line-height:1.05;color:var(--text,#0f172a)}

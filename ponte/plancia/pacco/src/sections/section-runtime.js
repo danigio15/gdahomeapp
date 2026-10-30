@@ -560,7 +560,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-Y26IZEL5.js";
+} from "../../chunk-576NKOHD.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -12353,9 +12353,9 @@ function pastiglieDellaStanza(conti = {}) {
   for (const voce3 of PASTIGLIE_DELLA_STANZA) {
     if (voce3.chiave === "gradi") {
       const letta2 = conti.gradi;
-      const gradi10 = letta2 === null || letta2 === void 0 || letta2 === "" ? NaN : Number(letta2);
-      if (!Number.isFinite(gradi10)) continue;
-      fuori.push({ ...voce3, valore: gradi10, conto: 0 });
+      const gradi11 = letta2 === null || letta2 === void 0 || letta2 === "" ? NaN : Number(letta2);
+      if (!Number.isFinite(gradi11)) continue;
+      fuori.push({ ...voce3, valore: gradi11, conto: 0 });
       continue;
     }
     const conto = conta(conti[voce3.chiave]);
@@ -18183,8 +18183,8 @@ function letturaVmc(unita3 = {}, states = {}) {
     const lettura4 = letturaNumero(sua[voce3.chiave], states);
     if (lettura4) numeri[voce3.chiave] = { ...lettura4, ...voce3 };
   }
-  const gradi10 = (chiave2) => temperature[chiave2] && !temperature[chiave2].muto ? temperature[chiave2].valore : null;
-  const recupero = recuperoDiCalore(gradi10("esterna"), gradi10("immissione"), gradi10("ripresa"));
+  const gradi11 = (chiave2) => temperature[chiave2] && !temperature[chiave2].muto ? temperature[chiave2].valore : null;
+  const recupero = recuperoDiCalore(gradi11("esterna"), gradi11("immissione"), gradi11("ripresa"));
   const avvisi = [];
   if (interruttori.filtri && !interruttori.filtri.muto && interruttori.filtri.acceso === true)
     avvisi.push({ chiave: "filtri_da_cambiare", gravita: "attenzione" });
@@ -20789,8 +20789,8 @@ var PROPOSTE = Object.freeze([
     casella: "cottura_temperatura",
     domini: ["sensor"],
     punti: (c, voce3, states) => {
-      const gradi10 = classeDi(voce3, states) === "temperature" || /°/.test(unitaDi(voce3, states)) || /\btemp\b/.test(c);
-      if (!gradi10 || /\b(probe|sonda|target|set|desired|voluta|keep warm)\b/.test(c)) return null;
+      const gradi11 = classeDi(voce3, states) === "temperature" || /°/.test(unitaDi(voce3, states)) || /\btemp\b/.test(c);
+      if (!gradi11 || /\b(probe|sonda|target|set|desired|voluta|keep warm)\b/.test(c)) return null;
       return /\b(current|attuale)\b/.test(c) ? 9 : 6;
     }
   },
@@ -20952,8 +20952,8 @@ function prontaFra(lettura4) {
     t(`Pronto fra ${durata6}`, `Ready in ${durata6}`)
   );
 }
-function gradiInParole(gradi10) {
-  return gradi10 ? `${Math.round(gradi10.valore)} ${gradi10.unita}` : "";
+function gradiInParole(gradi11) {
+  return gradi11 ? `${Math.round(gradi11.valore)} ${gradi11.unita}` : "";
 }
 function elenco2(nomi2) {
   try {
@@ -21093,8 +21093,8 @@ function temperaturaMarkup(voce3) {
   const meno = tastoMarkup(voce3, "meno_caldo", "dm-cl-step", MENO, "", t("Meno caldo", "Cooler"));
   const piu = tastoMarkup(voce3, "piu_caldo", "dm-cl-step", PIU, "", t("Più caldo", "Hotter"));
   const dentro3 = lettura4.dentro ? (() => {
-    const gradi10 = gradiInParole(lettura4.dentro);
-    return `<small class="dm-cot-dentro">${esc(t(`dentro ${gradi10}`, `inside ${gradi10}`))}</small>`;
+    const gradi11 = gradiInParole(lettura4.dentro);
+    return `<small class="dm-cot-dentro">${esc(t(`dentro ${gradi11}`, `inside ${gradi11}`))}</small>`;
   })() : "";
   return `<div class="dm-cot-temp">
     <span class="dm-cot-temp-l">🌡️ ${esc(t("Temperatura", "Temperature"))}${dentro3}</span>
@@ -21147,8 +21147,8 @@ function rigaDegliAltri(voce3) {
   const accanto = [];
   const misura8 = lettura4.dentro || (lettura4.fase === "spenta" ? null : lettura4.gradi) || null;
   if (lettura4.fase === "spenta" && lettura4.gradi) {
-    const gradi10 = gradiInParole(lettura4.gradi);
-    accanto.push(t(`dentro ${gradi10}`, `inside ${gradi10}`));
+    const gradi11 = gradiInParole(lettura4.gradi);
+    accanto.push(t(`dentro ${gradi11}`, `inside ${gradi11}`));
   } else if (misura8) accanto.push(gradiInParole(misura8));
   if (lettura4.programma) accanto.push(lettura4.programma);
   if (lettura4.fase !== "spenta" && voce3.watt != null && voce3.watt >= 1)
@@ -21248,14 +21248,14 @@ function tesseraDellaCottura(vista2 = vistaDellaCucina()) {
   if (lettura4.fase === "pronta" && !lettura4.fresca) return null;
   const pronta = lettura4.fase === "pronta";
   const conta2 = (lettura4.fase === "cottura" || lettura4.fase === "preriscaldamento") && lettura4.rimasti != null;
-  const gradi10 = gradiInParole(lettura4.gradi);
+  const gradi11 = gradiInParole(lettura4.gradi);
   let valore3 = parolaDellaFase(lettura4);
   if (conta2) {
     const minuti = minutiCheMancano(lettura4.rimasti);
     valore3 = minuti < 60 ? t(`${minuti} min`, `${minuti} min`) : minutiESecondi(lettura4.rimasti).replace(/:\d\d$/, "");
   }
   const quando6 = quandoInParole(lettura4);
-  const racconto = conta2 ? [prontaFra(lettura4), gradi10, lettura4.programma] : pronta ? [lettura4.programma, quando6] : [parolaDellaFase(lettura4), gradi10, lettura4.programma, quando6];
+  const racconto = conta2 ? [prontaFra(lettura4), gradi11, lettura4.programma] : pronta ? [lettura4.programma, quando6] : [parolaDellaFase(lettura4), gradi11, lettura4.programma, quando6];
   const righe3 = [];
   if (lettura4.programma)
     righe3.push({
@@ -21268,7 +21268,7 @@ function tesseraDellaCottura(vista2 = vistaDellaCucina()) {
     righe3.push({
       name: t("Temperatura", "Temperature"),
       glyph: "🌡️",
-      value: gradi10,
+      value: gradi11,
       tono: "quiete"
     });
   if (lettura4.rimasti != null && !pronta)
@@ -25456,10 +25456,10 @@ var LETTURE = Object.freeze({
     const righe3 = Array.isArray(tessera3?.rows) ? tessera3.rows : [];
     const pompa = tessera3?.attiva === true;
     const gradoDi = (r) => num(r?.raw ?? r?.temperature);
-    const gradi10 = righe3.filter((r) => gradoDi(r) != null && r?.sonda !== false);
+    const gradi11 = righe3.filter((r) => gradoDi(r) != null && r?.sonda !== false);
     const punti = [];
     const estremo = estremi(
-      gradi10.map((r) => ({ ...r, gradi: gradoDi(r) })),
+      gradi11.map((r) => ({ ...r, gradi: gradoDi(r) })),
       "gradi"
     );
     if (estremo && estremo.massimo !== estremo.minimo) {
@@ -25476,7 +25476,7 @@ var LETTURE = Object.freeze({
         )
       );
     }
-    if (!gradi10.length)
+    if (!gradi11.length)
       return {
         tono: pompa ? VERDETTI.corso : VERDETTI.bene,
         frase: pompa ? tr("La pompa sta girando.", "The pump is running.") : tr("La pompa e' ferma.", "The pump is idle."),
@@ -27338,9 +27338,9 @@ function laSettimana(lettura4 = {}) {
 function temperatureDellAuto(lettura4 = {}) {
   const fuori = [];
   for (const voce3 of TEMPERATURE_DELL_AUTO) {
-    const gradi10 = valoreDi(lettura4, voce3.campo);
-    if (gradi10 === null || typeof gradi10 !== "number") continue;
-    fuori.push({ chi: voce3.chi, ref: voce3.ref, gradi: gradi10 });
+    const gradi11 = valoreDi(lettura4, voce3.campo);
+    if (gradi11 === null || typeof gradi11 !== "number") continue;
+    fuori.push({ chi: voce3.chi, ref: voce3.ref, gradi: gradi11 });
   }
   return fuori;
 }
@@ -32750,12 +32750,12 @@ function leggiUnDisagio(stato3) {
   if (!stato3 || MUTI5.has(minuscolo5(stato3.state))) return null;
   const grezzo2 = parolaNormalizzata(stato3.state);
   const unita3 = pulito25(stato3?.attributes?.unit_of_measurement);
-  const gradi10 = gradiInCelsius(numero19(minuscolo5(stato3.state)), unita3);
+  const gradi11 = gradiInCelsius(numero19(minuscolo5(stato3.state)), unita3);
   let livello = "quiete";
-  if (gradi10 != null) {
-    if (gradi10 >= 41) livello = "allarme";
-    else if (gradi10 >= 32) livello = "attenzione";
-    else if (gradi10 >= 27 || gradi10 <= 0) livello = "nota";
+  if (gradi11 != null) {
+    if (gradi11 >= 41) livello = "allarme";
+    else if (gradi11 >= 32) livello = "attenzione";
+    else if (gradi11 >= 27 || gradi11 <= 0) livello = "nota";
   } else if (grezzo2 === "on" || grezzo2 === "off") {
     livello = grezzo2 === "on" ? "attenzione" : "quiete";
   } else {
@@ -32767,7 +32767,7 @@ function leggiUnDisagio(stato3) {
   }
   return {
     livello,
-    codice: gradi10 == null ? grezzo2 : "",
+    codice: gradi11 == null ? grezzo2 : "",
     /* Lo stato come lo scrive il sensore, senza toccarlo (#428): «anche se il
      * sensore espone uno stato scritto in italiano, la dashboard prende
      * l'opzione dell'attributo scritta in lowcase ed in inglese». Il codice
@@ -32781,7 +32781,7 @@ function leggiUnDisagio(stato3) {
      * uguale rendeva apribile ogni tessera del comfort per mostrarci dentro
      * niente. */
     scritto: pulito25(stato3.state),
-    gradi: gradi10,
+    gradi: gradi11,
     unita: unita3
   };
 }
@@ -49694,6 +49694,10 @@ function serverProxmox({ dispositivi = [], entita: entita4 = {}, states = {} } =
           totale: l("disk_total")
         },
         swap: percento4(l("swap_used_perc")),
+        /* La temperatura del nodo, se l'integrazione la da' (non tutte):
+         * altrimenti la plancia ci mette quella del mini PC. */
+        temperatura: l("cpu_temperature")?.valore ?? l("temperature")?.valore ?? null,
+        temperaturaEntita: clean23((l("cpu_temperature") || l("temperature"))?.entity),
         avvio: avvioDi(l("uptime")),
         vmAccese: l("qemu_on")?.valore ?? null,
         ctAccesi: l("lxc_on")?.valore ?? null,
@@ -49740,6 +49744,7 @@ function serverProxmox({ dispositivi = [], entita: entita4 = {}, states = {} } =
         /* «health» e' un sensore di problema: acceso vuol dire guasto. */
         sano: salute && !salute.muto ? salute.testo !== "on" : null,
         temperatura: l("temperature")?.valore ?? l("temperature_air")?.valore ?? null,
+        temperaturaEntita: clean23((l("temperature") || l("temperature_air"))?.entity),
         vita: l("life_left")?.valore ?? (l("disk_wearout")?.valore != null ? 100 - l("disk_wearout").valore : null),
         ore: l("power_hours")?.valore ?? null,
         entita: ids
@@ -49767,6 +49772,8 @@ function serverProxmox({ dispositivi = [], entita: entita4 = {}, states = {} } =
       (a, b2) => peso(a) - peso(b2) || Number(a.vmid || 0) - Number(b2.vmid || 0) || a.nome.localeCompare(b2.nome)
     );
     n.dischi.sort((a, b2) => a.nome.localeCompare(b2.nome));
+    const caldi = n.dischi.filter((d) => d.temperatura != null);
+    n.discoPiuCaldo = caldi.length ? caldi.reduce((a, b2) => b2.temperatura > a.temperatura ? b2 : a) : null;
     n.storage.sort((a, b2) => a.nome.localeCompare(b2.nome));
   }
   if (!nodi.length && guest.length)
@@ -50120,9 +50127,18 @@ function barra(nome, valore3, sotto = "") {
     ${sotto ? `<small>${esc(sotto)}</small>` : ""}
   </div>`;
 }
-function cifra(nome, valore3, classe3 = "") {
-  return `<div class="dm-px-cifra ${classe3}"><b>${esc(valore3)}</b><span>${esc(nome)}</span></div>`;
+function cifra(nome, valore3, classe3 = "", storico2 = "") {
+  const apre = storico2 ? ` role="button" tabindex="0" data-dm-storico="${esc(storico2)}" data-dm-nome="${esc(nome)}"` : "";
+  return `<div class="dm-px-cifra ${classe3}"${apre}><b>${esc(valore3)}</b><span>${esc(nome)}</span></div>`;
 }
+var TROPPO_CALDO = 75;
+function temperaturaDelMiniPc(states = allStates()) {
+  const entita4 = clean(root.resolveEntity?.("dm.server_temperatura_cpu"));
+  if (!entita4 || entita4.startsWith("dm.")) return null;
+  const n = Number(String(states?.[entita4]?.state ?? "").replace(",", "."));
+  return Number.isFinite(n) && states?.[entita4] ? { valore: n, entita: entita4 } : null;
+}
+var gradi5 = (n) => `${Math.round(n)} °C`;
 function tasto(entity2, testo6, { pericolo = false, conferma = "" } = {}) {
   return `<button type="button" class="dm-px-tasto${pericolo ? " dm-px-pericolo" : ""}" data-dm-px-premi="${esc(entity2)}"${conferma ? ` data-dm-px-conferma="${esc(conferma)}"` : ""}>${esc(testo6)}</button>`;
 }
@@ -50206,6 +50222,18 @@ function nodoMarkup(n, admin) {
         ${n.vmAccese != null ? cifra(t("VM accese", "VMs running"), String(n.vmAccese)) : ""}
         ${n.ctAccesi != null ? cifra(t("Container accesi", "Containers running"), String(n.ctAccesi)) : ""}
         ${n.aggiornamenti.quanti != null ? cifra(t("Aggiornamenti", "Updates"), String(n.aggiornamenti.quanti), n.aggiornamenti.quanti > 0 ? "dm-px-avviso" : "") : ""}
+        ${n.temperaturaCpu ? cifra(
+    t("Temperatura CPU", "CPU temperature"),
+    gradi5(n.temperaturaCpu.valore),
+    n.temperaturaCpu.valore >= TROPPO_CALDO ? "dm-px-avviso" : "",
+    n.temperaturaCpu.entita
+  ) : ""}
+        ${n.discoPiuCaldo ? cifra(
+    t("Disco più caldo", "Hottest disk"),
+    gradi5(n.discoPiuCaldo.temperatura),
+    n.discoPiuCaldo.temperatura >= TROPPO_CALDO ? "dm-px-avviso" : "",
+    n.discoPiuCaldo.temperaturaEntita
+  ) : ""}
       </div>
       <div class="dm-px-barre">
         ${barra(t("CPU", "CPU"), n.cpu)}
@@ -50249,9 +50277,13 @@ function guestMarkup(g, admin) {
       ${elenco17 ? `<div class="dm-px-tasti">${elenco17}</div>` : ""}
     </article>`;
 }
-function proxmoxMarkup(server, { admin = false } = {}) {
+function proxmoxMarkup(server, { admin = false, miniPc = null } = {}) {
   if (!server?.nodi?.length) return "";
-  return server.nodi.map((n) => {
+  return server.nodi.map((nodo2, i) => {
+    const n = {
+      ...nodo2,
+      temperaturaCpu: nodo2.temperatura != null ? { valore: nodo2.temperatura, entita: nodo2.temperaturaEntita } : i === 0 ? miniPc : null
+    };
     const accesi = n.guest.filter((g) => g.stato === "su").length;
     return `<section class="dm-px" data-dm-px-nodo="${esc(n.nome)}">
         ${n.id ? nodoMarkup(n, admin) : ""}
@@ -50292,10 +50324,18 @@ function dipingi7() {
     }
   })();
   const minuto = Math.floor(Date.now() / 6e4);
-  const firma2 = JSON.stringify([server, admin, minuto, [...state45.aperti], t("Acceso", "Running")]);
+  const miniPc = temperaturaDelMiniPc();
+  const firma2 = JSON.stringify([
+    server,
+    admin,
+    minuto,
+    miniPc,
+    [...state45.aperti],
+    t("Acceso", "Running")
+  ]);
   if (firma2 === state45.firma) return;
   state45.firma = firma2;
-  dove.innerHTML = proxmoxMarkup(server, { admin });
+  dove.innerHTML = proxmoxMarkup(server, { admin, miniPc });
   dove.hidden = !server.nodi.length;
 }
 function schedule14() {
@@ -50335,6 +50375,15 @@ function alClic(evento) {
     renderProxmox();
     return;
   }
+  const misura8 = evento.target?.closest?.(".dm-px [data-dm-storico]");
+  if (misura8) {
+    evento.preventDefault();
+    try {
+      root.apriStorico?.(evento, clean(misura8.dataset.dmStorico), clean(misura8.dataset.dmNome));
+    } catch (_errore) {
+    }
+    return;
+  }
   const premi2 = evento.target?.closest?.("[data-dm-px-premi]");
   if (!premi2) return;
   evento.preventDefault();
@@ -50371,6 +50420,7 @@ function installaLoStile3() {
       letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;color:color-mix(in srgb,var(--px) 80%,var(--text,#0f172a));
       background:color-mix(in srgb,var(--px) 14%,transparent)}
     ${P11} .dm-px-cifre{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+    ${P11} .dm-px-cifra[data-dm-storico]{cursor:pointer}
     ${P11} .dm-px-cifra{display:grid;gap:2px;padding:10px 12px;border-radius:14px;background:var(--surface-2,#f8fafc);
       border:1px solid var(--card-border,#eef2f7)}
     ${P11} .dm-px-cifra b{font-family:'Oswald',system-ui,sans-serif;font-size:22px;font-weight:700;line-height:1.05;color:var(--text,#0f172a)}
@@ -52871,11 +52921,11 @@ rilevatore("comfort", "comfort", (c, o, l) => {
   }).slice(0, 1).map((s) => {
     const t2 = numero37(s.temperatura);
     const fredda = t2 < 17;
-    const gradi10 = decimale(t2, l);
+    const gradi11 = decimale(t2, l);
     return {
       urgenza: "idea",
       disegno: "thermometer",
-      titolo: fredda ? pick(`${s.name} è fredda: ${gradi10}°`, `${s.name} is cold: ${gradi10}°`, l) : pick(`${s.name} è calda: ${gradi10}°`, `${s.name} is hot: ${gradi10}°`, l),
+      titolo: fredda ? pick(`${s.name} è fredda: ${gradi11}°`, `${s.name} is cold: ${gradi11}°`, l) : pick(`${s.name} è calda: ${gradi11}°`, `${s.name} is hot: ${gradi11}°`, l),
       motivo: pick("Vuoi regolare il clima?", "Adjust the climate?", l),
       azioni: [vedi(l, "clima", "clima")],
       entita: [s.entity || `stanza:${pulito43(s.name)}`]
@@ -53682,7 +53732,7 @@ var NUMERI_A_PAROLE = {
 };
 function numeriDellaFrase(f) {
   const p = f.parole;
-  let gradi10 = null;
+  let gradi11 = null;
   let passo = null;
   let percento8 = null;
   let numero63 = null;
@@ -53699,7 +53749,7 @@ function numeriDellaFrase(f) {
       continue;
     if (/^(grad[oi]|degrees?|celsius)$/.test(dopo)) {
       if (/^(di|by)$/.test(prima)) passo = n;
-      else gradi10 = n;
+      else gradi11 = n;
       continue;
     }
     if (/^(percento|percent|per)$/.test(dopo)) {
@@ -53718,7 +53768,7 @@ function numeriDellaFrase(f) {
     numero63 ??= n;
   }
   if (percento8 === null && /\b(a meta|half way|halfway|meta)\b/.test(f.testo)) percento8 = 50;
-  return { gradi: gradi10, passo, percento: percento8, numero: numero63 };
+  return { gradi: gradi11, passo, percento: percento8, numero: numero63 };
 }
 var GIORNI_IT = ["domenica", "lunedi", "martedi", "mercoledi", "giovedi", "venerdi", "sabato"];
 var GIORNI_EN = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
@@ -54386,7 +54436,7 @@ function cifra2(valore3, decimali, lingua8) {
     return n.toFixed(decimali);
   }
 }
-function gradi5(valore3, lingua8, unita3 = "°C") {
+function gradi6(valore3, lingua8, unita3 = "°C") {
   const n = Number(valore3);
   const tondo = Math.abs(n - Math.round(n)) < 0.05;
   const testo6 = cifra2(n, tondo ? 0 : 1, lingua8);
@@ -54710,7 +54760,7 @@ RISPOSTE.temperatura_dentro = (c, s) => {
         ),
         chips: altre.map(
           (r) => chiedi4(
-            `${r.stanza} ${gradi5(r.temperatura, l, "°")}`,
+            `${r.stanza} ${gradi6(r.temperatura, l, "°")}`,
             dire(l, `che temperatura c'è in ${r.stanza}`, `temperature in ${r.stanza}`)
           )
         )
@@ -54725,8 +54775,8 @@ RISPOSTE.temperatura_dentro = (c, s) => {
     return {
       testo: dire(
         l,
-        `In ${riga5.stanza} ci sono ${gradi5(riga5.temperatura, l, u)}${umido2}${giudizio2}.`,
-        `It's ${gradi5(riga5.temperatura, l, u)} in ${riga5.stanza}${umido2}${giudizio2}.`
+        `In ${riga5.stanza} ci sono ${gradi6(riga5.temperatura, l, u)}${umido2}${giudizio2}.`,
+        `It's ${gradi6(riga5.temperatura, l, u)} in ${riga5.stanza}${umido2}${giudizio2}.`
       ),
       chips: [
         ...fuoriChip,
@@ -54762,20 +54812,20 @@ RISPOSTE.temperatura_dentro = (c, s) => {
   if (righe3.length === 1)
     testo6 = dire(
       l,
-      `In casa ci sono ${gradi5(mediaT, l, u)} (${righe3[0].stanza}).`,
-      `It's ${gradi5(mediaT, l, u)} inside (${righe3[0].stanza}).`
+      `In casa ci sono ${gradi6(mediaT, l, u)} (${righe3[0].stanza}).`,
+      `It's ${gradi6(mediaT, l, u)} inside (${righe3[0].stanza}).`
     );
   else {
     const fredda = righe3.reduce((a, b2) => b2.temperatura < a.temperatura ? b2 : a);
     const calda = righe3.reduce((a, b2) => b2.temperatura > a.temperatura ? b2 : a);
     testo6 = Math.abs(calda.temperatura - fredda.temperatura) < 0.3 ? dire(
       l,
-      `In casa ci sono ${gradi5(mediaT, l, u)}, uguali in tutte le ${righe3.length} stanze.`,
-      `It's ${gradi5(mediaT, l, u)} inside, the same in all ${righe3.length} rooms.`
+      `In casa ci sono ${gradi6(mediaT, l, u)}, uguali in tutte le ${righe3.length} stanze.`,
+      `It's ${gradi6(mediaT, l, u)} inside, the same in all ${righe3.length} rooms.`
     ) : dire(
       l,
-      `In casa ci sono in media ${gradi5(mediaT, l, u)}: da ${gradi5(fredda.temperatura, l, "°")} in ${fredda.stanza} a ${gradi5(calda.temperatura, l, "°")} in ${calda.stanza}.`,
-      `It's ${gradi5(mediaT, l, u)} on average inside: from ${gradi5(fredda.temperatura, l, "°")} in ${fredda.stanza} to ${gradi5(calda.temperatura, l, "°")} in ${calda.stanza}.`
+      `In casa ci sono in media ${gradi6(mediaT, l, u)}: da ${gradi6(fredda.temperatura, l, "°")} in ${fredda.stanza} a ${gradi6(calda.temperatura, l, "°")} in ${calda.stanza}.`,
+      `It's ${gradi6(mediaT, l, u)} on average inside: from ${gradi6(fredda.temperatura, l, "°")} in ${fredda.stanza} to ${gradi6(calda.temperatura, l, "°")} in ${calda.stanza}.`
     );
   }
   return {
@@ -54784,7 +54834,7 @@ RISPOSTE.temperatura_dentro = (c, s) => {
       ...fuoriChip,
       ...righe3.slice(0, 3).map(
         (r) => chiedi4(
-          `${r.stanza} ${gradi5(r.temperatura, l, "°")}`,
+          `${r.stanza} ${gradi6(r.temperatura, l, "°")}`,
           dire(l, `che temperatura c'è in ${r.stanza}`, `temperature in ${r.stanza}`)
         )
       )
@@ -54865,12 +54915,12 @@ function rigaDellaPrevisione(p, l, u = "°") {
     pezzi.push(
       dire(
         l,
-        `tra ${gradi5(min, l, u)} e ${gradi5(max, l, u)}`,
-        `between ${gradi5(min, l, u)} and ${gradi5(max, l, u)}`
+        `tra ${gradi6(min, l, u)} e ${gradi6(max, l, u)}`,
+        `between ${gradi6(min, l, u)} and ${gradi6(max, l, u)}`
       )
     );
   else if (max !== null)
-    pezzi.push(dire(l, `massima ${gradi5(max, l, u)}`, `high of ${gradi5(max, l, u)}`));
+    pezzi.push(dire(l, `massima ${gradi6(max, l, u)}`, `high of ${gradi6(max, l, u)}`));
   if (pioggia !== null && pioggia >= 20)
     pezzi.push(
       /* «pioggia, pioggia all'80%» si dice una volta sola. */
@@ -54895,14 +54945,14 @@ RISPOSTE.temperatura_fuori = (c, s) => {
   const cielo = f.condizione ? `, ${condizioneDetta(f.condizione, l)}` : "";
   const giornata = oggi && numero39(oggi.temperature) !== null ? dire(
     l,
-    ` Oggi ${numero39(oggi.templow) !== null ? `tra ${gradi5(oggi.templow, l, "°")} e ` : "massima "}${gradi5(oggi.temperature, l, "°")}.`,
-    ` Today ${numero39(oggi.templow) !== null ? `between ${gradi5(oggi.templow, l, "°")} and ` : "high of "}${gradi5(oggi.temperature, l, "°")}.`
+    ` Oggi ${numero39(oggi.templow) !== null ? `tra ${gradi6(oggi.templow, l, "°")} e ` : "massima "}${gradi6(oggi.temperature, l, "°")}.`,
+    ` Today ${numero39(oggi.templow) !== null ? `between ${gradi6(oggi.templow, l, "°")} and ` : "high of "}${gradi6(oggi.temperature, l, "°")}.`
   ) : "";
   return {
     testo: dire(
       l,
-      `Fuori ci sono ${gradi5(f.temperatura, l, s.unitaTemperatura || "°C")}${cielo}.${giornata}`,
-      `It's ${gradi5(f.temperatura, l, s.unitaTemperatura || "°C")} outside${cielo}.${giornata}`
+      `Fuori ci sono ${gradi6(f.temperatura, l, s.unitaTemperatura || "°C")}${cielo}.${giornata}`,
+      `It's ${gradi6(f.temperatura, l, s.unitaTemperatura || "°C")} outside${cielo}.${giornata}`
     ),
     chips: [
       chiedi4(
@@ -54993,8 +55043,8 @@ RISPOSTE.meteo = (c, s) => {
       const min = numero39(p.templow);
       const temp = max !== null && min !== null ? dire(
         l,
-        ` Tra ${gradi5(min, l, "°")} e ${gradi5(max, l, "°")}.`,
-        ` Between ${gradi5(min, l, "°")} and ${gradi5(max, l, "°")}.`
+        ` Tra ${gradi6(min, l, "°")} e ${gradi6(max, l, "°")}.`,
+        ` Between ${gradi6(min, l, "°")} and ${gradi6(max, l, "°")}.`
       ) : "";
       const ombrello = si && !nevChiesta ? dire(l, " Meglio l'ombrello.", " Take an umbrella.") : "";
       return { testo: `${apertura}${temp}${ombrello}`, chips };
@@ -55004,8 +55054,8 @@ RISPOSTE.meteo = (c, s) => {
   if (adessoSi && f.condizione) {
     const ora8 = dire(
       l,
-      `Adesso è ${condizioneDetta(f.condizione, l)}${f.temperatura !== null && f.temperatura !== void 0 ? `, ${gradi5(f.temperatura, l, s.unitaTemperatura || "°C")}` : ""}.`,
-      `Right now it's ${condizioneDetta(f.condizione, l)}${f.temperatura !== null && f.temperatura !== void 0 ? `, ${gradi5(f.temperatura, l, s.unitaTemperatura || "°C")}` : ""}.`
+      `Adesso è ${condizioneDetta(f.condizione, l)}${f.temperatura !== null && f.temperatura !== void 0 ? `, ${gradi6(f.temperatura, l, s.unitaTemperatura || "°C")}` : ""}.`,
+      `Right now it's ${condizioneDetta(f.condizione, l)}${f.temperatura !== null && f.temperatura !== void 0 ? `, ${gradi6(f.temperatura, l, s.unitaTemperatura || "°C")}` : ""}.`
     );
     const resto = p ? dire(l, ` Oggi: ${rigaDellaPrevisione(p, l)}.`, ` Today: ${rigaDellaPrevisione(p, l)}.`) : "";
     return { testo: `${apertura}${ora8}${resto}`, chips };
@@ -55945,8 +55995,8 @@ RISPOSTE.clima_imposta = (c, s, m) => {
     return {
       testo: dire(
         l,
-        `A quanti gradi metto ${e.nome}?${attuale !== null ? ` Adesso è a ${gradi5(attuale, l, u)}.` : ""}`,
-        `What temperature for ${e.nome}?${attuale !== null ? ` It's set to ${gradi5(attuale, l, u)}.` : ""}`
+        `A quanti gradi metto ${e.nome}?${attuale !== null ? ` Adesso è a ${gradi6(attuale, l, u)}.` : ""}`,
+        `What temperature for ${e.nome}?${attuale !== null ? ` It's set to ${gradi6(attuale, l, u)}.` : ""}`
       ),
       chips: [20, 21, 22].map(
         (g) => chiedi4(
@@ -55974,28 +56024,28 @@ RISPOSTE.clima_imposta = (c, s, m) => {
   const spento = e.stato === "off" ? dire(l, " (adesso è spento)", " (it's off right now)") : "";
   const fatto2 = dire(
     l,
-    `Fatto: ${e.nome} a ${gradi5(nuovo, l, u)}.`,
-    `Done: ${e.nome} set to ${gradi5(nuovo, l, u)}.`
+    `Fatto: ${e.nome} a ${gradi6(nuovo, l, u)}.`,
+    `Done: ${e.nome} set to ${gradi6(nuovo, l, u)}.`
   );
   return {
     testo: attuale !== null && attuale !== nuovo ? dire(
       l,
-      `Porto ${e.nome} da ${gradi5(attuale, l, u)} a ${gradi5(nuovo, l, u)}${spento}?`,
-      `Set ${e.nome} from ${gradi5(attuale, l, u)} to ${gradi5(nuovo, l, u)}${spento}?`
+      `Porto ${e.nome} da ${gradi6(attuale, l, u)} a ${gradi6(nuovo, l, u)}${spento}?`,
+      `Set ${e.nome} from ${gradi6(attuale, l, u)} to ${gradi6(nuovo, l, u)}${spento}?`
     ) : attuale === nuovo ? dire(
       l,
-      `${e.nome} è già a ${gradi5(nuovo, l, u)}.`,
-      `${e.nome} is already set to ${gradi5(nuovo, l, u)}.`
+      `${e.nome} è già a ${gradi6(nuovo, l, u)}.`,
+      `${e.nome} is already set to ${gradi6(nuovo, l, u)}.`
     ) : dire(
       l,
-      `Metto ${e.nome} a ${gradi5(nuovo, l, u)}${spento}?`,
-      `Set ${e.nome} to ${gradi5(nuovo, l, u)}${spento}?`
+      `Metto ${e.nome} a ${gradi6(nuovo, l, u)}${spento}?`,
+      `Set ${e.nome} to ${gradi6(nuovo, l, u)}${spento}?`
     ),
     soggetto: [e.entity],
     inAttesa: attuale === nuovo ? null : { servizi: chiamata, fatto: fatto2 },
     chips: attuale === nuovo ? [] : [
       fai(
-        dire(l, `Sì, ${gradi5(nuovo, l, "°")}`, `Yes, ${gradi5(nuovo, l, "°")}`),
+        dire(l, `Sì, ${gradi6(nuovo, l, "°")}`, `Yes, ${gradi6(nuovo, l, "°")}`),
         chiamata,
         fatto2
       ),
@@ -56013,7 +56063,7 @@ RISPOSTE.stato_dispositivo = (c, s) => {
     const t2 = numero39(a.current_temperature);
     const obiettivo2 = numero39(a.temperature);
     const modo = e.stato === "off" ? dire(l, "spento", "off") : dire(l, `acceso (${e.stato})`, `on (${e.stato})`);
-    stato3 = `${modo}${t2 !== null ? dire(l, `, in stanza ${gradi5(t2, l)}`, `, room at ${gradi5(t2, l)}`) : ""}${obiettivo2 !== null && e.stato !== "off" ? dire(l, `, impostato a ${gradi5(obiettivo2, l)}`, `, set to ${gradi5(obiettivo2, l)}`) : ""}`;
+    stato3 = `${modo}${t2 !== null ? dire(l, `, in stanza ${gradi6(t2, l)}`, `, room at ${gradi6(t2, l)}`) : ""}${obiettivo2 !== null && e.stato !== "off" ? dire(l, `, impostato a ${gradi6(obiettivo2, l)}`, `, set to ${gradi6(obiettivo2, l)}`) : ""}`;
   } else if (e.dominio === "cover") {
     const pos = numero39(a.current_position);
     stato3 = e.stato === "closed" ? dire(l, "chiuso", "closed") : pos !== null && pos < 100 ? dire(l, `aperto ${alPercento2(pos, l)}`, `${pos}% open`) : dire(l, "aperto", "open");
@@ -57740,8 +57790,8 @@ function comeStaLaPressione(bar, norma = PRESSIONE_NORMA) {
 function manometro(bar, norma = PRESSIONE_NORMA) {
   const fondo = Math.max(norma.fondo, Math.ceil(Number(bar) || 0));
   const angolo = (valore3) => -210 + 240 * Math.max(0, Math.min(fondo, valore3)) / fondo;
-  const punto2 = (gradi10, raggio) => {
-    const r = gradi10 * Math.PI / 180;
+  const punto2 = (gradi11, raggio) => {
+    const r = gradi11 * Math.PI / 180;
     return [32 + raggio * Math.cos(r), 32 + raggio * Math.sin(r)].map((n) => n.toFixed(2));
   };
   const arco3 = (da, a, colore2) => {
@@ -57819,7 +57869,7 @@ function numero41(valore3) {
 var unito2 = (testo6) => String(testo6 ?? "").replace(/ (?=\S+$)/, " ");
 var watt3 = (valore3) => unito2(laPotenzaInParole(valore3, { lingua: locale() }));
 var kwh3 = (valore3) => unito2(lEnergiaInParole(valore3, { lingua: locale() }));
-var gradi6 = (valore3) => `${formatNumber(valore3, 1)}°`;
+var gradi7 = (valore3) => `${formatNumber(valore3, 1)}°`;
 var titoletto = (testo6) => `<h4 class="dm-w-titoletto">${esc(testo6)}</h4>`;
 function daQuanto4(quando6, adesso2 = Date.now()) {
   const inizio = numero41(quando6);
@@ -58013,13 +58063,13 @@ function disegnaTemperatura(widget) {
   const ampiezza = calda.temperature - fredda.temperature;
   const scala2 = misurate.length > 1 && ampiezza > 0 ? `<div class="dm-f-temperatura-scala">
           <i aria-hidden="true"></i>
-          <span><b>${esc(gradi6(fredda.temperature))} ${esc(fredda.name)}</b><b>${esc(
-    gradi6(calda.temperature)
+          <span><b>${esc(gradi7(fredda.temperature))} ${esc(fredda.name)}</b><b>${esc(
+    gradi7(calda.temperature)
   )} ${esc(calda.name)}</b></span>
         </div>` : "";
   const eroe2 = `<section class="dm-f-temperatura-eroe">
       <div><small>${esc(misurate.length > 1 ? t("In casa", "At home") : misurate[0].name)}</small>
-        <span class="dm-f-num">${esc(gradi6(media3))}</span></div>
+        <span class="dm-f-num">${esc(gradi7(media3))}</span></div>
       ${scala2}
     </section>`;
   const elenco17 = [...diCasa, ...stanze4.filter((riga5) => riga5.fuori)].map((riga5) => {
@@ -58030,7 +58080,7 @@ function disegnaTemperatura(widget) {
         <span class="dm-f-temperatura-nome"><b>${esc(riga5.name)}</b><i style="--w:${larga.toFixed(
       0
     )}%;--c:${coloreDeiGradi(riga5.temperature, fahrenheit)}"></i></span>
-        <span class="dm-f-temperatura-val"><span class="dm-f-num">${esc(gradi6(riga5.temperature))}</span>${umidita != null ? `<span class="dm-f-temperatura-um"${umidita > 65 ? ' data-alta="true"' : ""}>💧 ${Math.round(umidita)}%</span>` : ""}</span>
+        <span class="dm-f-temperatura-val"><span class="dm-f-num">${esc(gradi7(riga5.temperature))}</span>${umidita != null ? `<span class="dm-f-temperatura-um"${umidita > 65 ? ' data-alta="true"' : ""}>💧 ${Math.round(umidita)}%</span>` : ""}</span>
       </div>`;
   }).join("");
   return `<div class="dm-f dm-f-temperatura">
@@ -58548,10 +58598,10 @@ function disegnaSolare(widget) {
   const delta = deltaLetto ?? (pannello != null && boiler2 != null ? pannello - boiler2 : null);
   const segno5 = (valore3) => `${valore3 > 0 ? "+" : valore3 < 0 ? "−" : ""}${formatNumber(Math.abs(valore3), 0)}°`;
   const nodoPannello = pannello != null ? `<div class="dm-f-solare-nodo"><span class="dm-f-solare-ic" aria-hidden="true">${disegnoDiCasa("solar", { misura: 48 })}</span>
-          <small>${esc(t("Pannello", "Panel"))}</small><span class="dm-f-num">${esc(gradi6(pannello))}</span>${boiler2 != null && pannello !== boiler2 ? `<em>${esc(pannello < boiler2 ? t("più freddo del boiler", "colder than the boiler") : t("più caldo del boiler", "warmer than the boiler"))}</em>` : ""}</div>` : "";
-  const sottoBoiler = basso != null && boiler2 !== basso && alto != null ? `${t("in basso", "at the bottom")} ${gradi6(basso)}` : "";
+          <small>${esc(t("Pannello", "Panel"))}</small><span class="dm-f-num">${esc(gradi7(pannello))}</span>${boiler2 != null && pannello !== boiler2 ? `<em>${esc(pannello < boiler2 ? t("più freddo del boiler", "colder than the boiler") : t("più caldo del boiler", "warmer than the boiler"))}</em>` : ""}</div>` : "";
+  const sottoBoiler = basso != null && boiler2 !== basso && alto != null ? `${t("in basso", "at the bottom")} ${gradi7(basso)}` : "";
   const nodoBoiler = boiler2 != null ? `<div class="dm-f-solare-nodo"><span class="dm-f-solare-ic" aria-hidden="true">${disegnoDiCasa("boiler", { misura: 48 })}</span>
-          <small>${esc(t("Boiler", "Boiler"))}</small><span class="dm-f-num">${esc(gradi6(boiler2))}</span>${sottoBoiler ? `<em>${esc(sottoBoiler)}</em>` : ""}</div>` : "";
+          <small>${esc(t("Boiler", "Boiler"))}</small><span class="dm-f-num">${esc(gradi7(boiler2))}</span>${sottoBoiler ? `<em>${esc(sottoBoiler)}</em>` : ""}</div>` : "";
   const filo = nodoPannello && nodoBoiler ? `<div class="dm-f-solare-filo" data-gira="${pompa === true}"><i aria-hidden="true"></i><b>${delta != null ? `${esc(segno5(delta))}<br>` : ""}${pompa == null ? "" : esc(pompa ? t("pompa in funzione", "pump running") : t("pompa ferma", "pump idle"))}</b></div>` : "";
   const schema = nodoPannello || nodoBoiler ? `<section class="dm-f-solare-schema" data-due="${Boolean(nodoPannello && nodoBoiler)}">${nodoPannello}${filo}${nodoBoiler}</section>` : "";
   const frase4 = fraseDelSolare(pannello, boiler2, pompa);
@@ -58565,7 +58615,7 @@ function disegnaSolare(widget) {
   );
   if (alto != null && delBoiler != null && daRif("dm.boiler_temperatura")?.entity !== daRif("dm.boiler_sonda_temperatura_3")?.entity)
     misure.unshift(
-      `<div class="dm-f-solare-cas"><small>${esc(t("Temperatura del boiler", "Tank temperature"))}</small><span class="dm-f-num">${esc(gradi6(delBoiler))}</span></div>`
+      `<div class="dm-f-solare-cas"><small>${esc(t("Temperatura del boiler", "Tank temperature"))}</small><span class="dm-f-num">${esc(gradi7(delBoiler))}</span></div>`
     );
   if (!filo && deltaLetto != null)
     misure.push(
@@ -61489,8 +61539,8 @@ var num3 = (valore3) => {
   return Number.isFinite(letto) ? letto : null;
 };
 var tra = (valore3, minimo, massimo) => Math.max(minimo, Math.min(massimo, valore3));
-var gradi7 = (valore3, cifre3 = 1) => `${formatNumber(valore3, cifre3)}°`;
-var gradiUtili = (valore3) => gradi7(valore3, Number.isInteger(Math.round(valore3 * 10) / 10) ? 0 : 1);
+var gradi8 = (valore3, cifre3 = 1) => `${formatNumber(valore3, cifre3)}°`;
+var gradiUtili = (valore3) => gradi8(valore3, Number.isInteger(Math.round(valore3 * 10) / 10) ? 0 : 1);
 var percento5 = (valore3) => `${formatNumber(Math.round(valore3), 0)}%`;
 function watt4(valore3) {
   const assoluto = Math.abs(valore3);
@@ -61599,7 +61649,7 @@ function unoScaldabagno(lettura4, piuDiUno, states, prezzo) {
   const righe3 = [];
   if (stato3 === "scalda" && obiettivo2 != null && temperatura != null)
     righe3.push(
-      `<b>${esc(gradi7(Math.max(0, obiettivo2 - temperatura)))}</b> ${esc(t("sotto l'obiettivo di", "below the target of"))} ${esc(gradiUtili(obiettivo2))}`
+      `<b>${esc(gradi8(Math.max(0, obiettivo2 - temperatura)))}</b> ${esc(t("sotto l'obiettivo di", "below the target of"))} ${esc(gradiUtili(obiettivo2))}`
     );
   else if (stato3 === "pronto" && obiettivo2 != null)
     righe3.push(`${esc(t("Obiettivo", "Target"))} ${esc(gradiUtili(obiettivo2))}`);
@@ -61615,7 +61665,7 @@ function unoScaldabagno(lettura4, piuDiUno, states, prezzo) {
     <div class="dm-f-imp-dx">
       <small class="dm-f-imp-etic">${esc(t("L'acqua adesso", "Water now"))}</small>
       <span class="dm-f-imp-num dm-f-imp-grande">${esc(
-    temperatura != null ? gradi7(temperatura) : acceso6 ? t("Acceso", "On") : t("Spento", "Off")
+    temperatura != null ? gradi8(temperatura) : acceso6 ? t("Acceso", "On") : t("Spento", "Off")
   )}</span>
       ${righe3.length ? `<div class="dm-f-imp-fianco">${righe3.join("<br>")}</div>` : ""}
       ${chip ? `<span class="dm-f-imp-chip" data-on="${stato3 === "scalda"}"><i></i>${esc(chip)}</span>` : ""}
@@ -61691,10 +61741,10 @@ function unaCaldaia(lettura4, piuDiUna) {
   const mandata = num3(lettura4.mandata);
   const ritorno = num3(lettura4.ritorno);
   const salto = num3(lettura4.salto);
-  const nodo2 = (etichetta3, valore3) => `<div class="dm-f-caldaia-nodo"><small class="dm-f-imp-etic">${esc(etichetta3)}</small><span class="dm-f-imp-num">${esc(valore3 == null ? "—" : gradi7(valore3))}</span></div>`;
+  const nodo2 = (etichetta3, valore3) => `<div class="dm-f-caldaia-nodo"><small class="dm-f-imp-etic">${esc(etichetta3)}</small><span class="dm-f-imp-num">${esc(valore3 == null ? "—" : gradi8(valore3))}</span></div>`;
   const giro = mandata == null && ritorno == null ? "" : `<div class="dm-f-caldaia-giro">
           ${nodo2(t("Mandata", "Flow"), mandata)}
-          <div class="dm-f-caldaia-freccia">${salto == null ? '<i aria-hidden="true">⇄</i>' : `<i aria-hidden="true">⇄</i>${esc(t("cede", "gives off"))}<br>${esc(gradi7(salto))}`}</div>
+          <div class="dm-f-caldaia-freccia">${salto == null ? '<i aria-hidden="true">⇄</i>' : `<i aria-hidden="true">⇄</i>${esc(t("cede", "gives off"))}<br>${esc(gradi8(salto))}`}</div>
           ${nodo2(t("Ritorno", "Return"), ritorno)}
         </div>`;
   const frase4 = accesa3 && salto != null ? `<p class="dm-f-imp-frase">${esc(fraseDelSalto(salto))}</p>` : "";
@@ -61733,7 +61783,7 @@ function unaCaldaia(lettura4, piuDiUna) {
     acquaCalda == null ? "" : casella3({
       chiave: "acqua-calda",
       etichetta: t("Acqua calda", "Hot water"),
-      valore: gradi7(acquaCalda),
+      valore: gradi8(acquaCalda),
       sotto: acquaCalda >= 40 ? t("pronta per la doccia", "ready for a shower") : ""
     })
   ]);
@@ -61790,7 +61840,7 @@ function unUps({ nome, lettura: lettura4 = {}, da = null }, piuDiUno) {
     temperatura == null ? "" : casella3({
       chiave: "temperatura",
       etichetta: t("Temperatura", "Temperature"),
-      valore: gradi7(temperatura),
+      valore: gradi8(temperatura),
       sotto: temperatura < 40 ? t("nella norma", "in range") : t("calda", "hot"),
       tono: temperatura < 40 ? "bene" : "occhio"
     })
@@ -62074,7 +62124,7 @@ function unaVasca(vasca, piuDiUna) {
     })
   ].filter(Boolean);
   const eroe2 = acqua == null && !chimica.length ? "" : `<section class="dm-f-imp-eroe dm-f-piscina-eroe">
-        ${acqua == null ? giudizio : `<div class="dm-f-piscina-acqua"><div><small class="dm-f-imp-etic">${esc(t("L'acqua", "The water"))}</small><span class="dm-f-imp-num dm-f-imp-grande">${esc(gradi7(acqua))}</span></div>${giudizio}</div>`}
+        ${acqua == null ? giudizio : `<div class="dm-f-piscina-acqua"><div><small class="dm-f-imp-etic">${esc(t("L'acqua", "The water"))}</small><span class="dm-f-imp-num dm-f-imp-grande">${esc(gradi8(acqua))}</span></div>${giudizio}</div>`}
         ${chimica.length ? `<div class="dm-f-piscina-chimiche">${chimica.join("")}</div>` : ""}
       </section>`;
   const tasti2 = (vasca.comandi || []).map((comando2) => {
@@ -62260,9 +62310,9 @@ function unaVmc(lettura4, piuDiUna, states) {
     )}</span></div>`;
   else if (immissione != null)
     testa2 = `<small class="dm-f-imp-etic">${esc(t("Aria in casa", "Air into the house"))}</small>
-      <span class="dm-f-imp-num dm-f-imp-grande">${esc(gradi7(immissione))}</span>`;
+      <span class="dm-f-imp-num dm-f-imp-grande">${esc(gradi8(immissione))}</span>`;
   const cella = (chiave2, etichetta3, valore3, casa = false) => `<div class="dm-f-vmc-t"${casa ? ' data-casa="true"' : ""} data-dm-f-temperatura="${chiave2}"><small class="dm-f-imp-etic">${esc(etichetta3)}</small><span class="dm-f-imp-num">${esc(
-    valore3 == null ? "—" : gradi7(valore3)
+    valore3 == null ? "—" : gradi8(valore3)
   )}</span></div>`;
   const quante3 = [esterna, immissione, ripresa, espulsione].filter(
     (valore3) => valore3 != null
@@ -63989,7 +64039,7 @@ function finestraCottura(widget) {
   const eroe2 = `<div class="dm-f-cot-eroe">${anello2}
     <div class="dm-f-cot-dx"><b data-dm-no-i18n>${esc(cucina.programma || cucina.parola || "")}</b>${righe3.map((riga5) => `<span class="dm-f-cot-q">${riga5}</span>`).join("")}${cassetto}</div>
   </div>`;
-  const gradi10 = cucina.gradi ? `<h4 class="dm-f-tit">${esc(t("Temperatura", "Temperature"))}</h4>
+  const gradi11 = cucina.gradi ? `<h4 class="dm-f-tit">${esc(t("Temperatura", "Temperature"))}</h4>
       <div class="dm-f-cot-gradi"><b>🌡️ ${esc(t("Gradi", "Degrees"))}</b><div class="dm-f-cot-ctl">${tastoCottura(
     cucina,
     "meno_caldo",
@@ -64013,7 +64063,7 @@ function finestraCottura(widget) {
     ].filter(Boolean).join(" · ");
     return `<div><span aria-hidden="true">${esc(altro.glifo)}</span><span><b data-dm-no-i18n>${esc(altro.nome)}</b><em>${esc(sotto)}</em></span></div>`;
   }).join("")}</div>` : "";
-  return `<div class="dm-f dm-f-cottura" data-fase="${esc(cucina.fase || "")}">${eroe2}${gradi10}${tasti2.length ? `<div class="dm-f-cot-tasti" style="--n:${tasti2.length}">${tasti2.join("")}</div>` : ""}${altri}</div>`;
+  return `<div class="dm-f dm-f-cottura" data-fase="${esc(cucina.fase || "")}">${eroe2}${gradi11}${tasti2.length ? `<div class="dm-f-cot-tasti" style="--n:${tasti2.length}">${tasti2.join("")}</div>` : ""}${altri}</div>`;
 }
 var STILE_COTTURA = `
 ${P6} .dm-f-cot-eroe{display:flex;gap:16px;align-items:center;padding:18px;border-radius:26px;
@@ -64508,7 +64558,7 @@ registraFinestra("assistenza", { disegna: finestraAssistenza, stile: STILE_ASSIS
 // src/sections/finestre/meteo.js
 var P7 = ":is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)";
 var finito2 = (valore3) => Number.isFinite(valore3);
-var gradi8 = (valore3) => finito2(valore3) ? `${Math.round(valore3)}°` : "—";
+var gradi9 = (valore3) => finito2(valore3) ? `${Math.round(valore3)}°` : "—";
 function ora3(quando6) {
   try {
     return new Date(quando6).toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" });
@@ -64528,8 +64578,8 @@ function adesso(w) {
   const m = w.misure || {};
   const sotto = [
     finito2(m.percepita?.valore) ? `${esc(t("Percepita", "Feels like"))} <b>${esc(formatNumber(m.percepita.valore, 1))}°</b>` : "",
-    finito2(w.oggi?.bassa) ? `${esc(t("Min", "Min"))} <b>${gradi8(w.oggi.bassa)}</b>` : "",
-    finito2(w.oggi?.alta) ? `${esc(t("Max", "Max"))} <b>${gradi8(w.oggi.alta)}</b>` : ""
+    finito2(w.oggi?.bassa) ? `${esc(t("Min", "Min"))} <b>${gradi9(w.oggi.bassa)}</b>` : "",
+    finito2(w.oggi?.alta) ? `${esc(t("Max", "Max"))} <b>${gradi9(w.oggi.alta)}</b>` : ""
   ].filter(Boolean).join(" · ");
   const pastiglie = [
     finito2(m.umidita?.valore) ? ["💧", t("Umidità", "Humidity"), `${Math.round(m.umidita.valore)}%`] : null,
@@ -64563,7 +64613,7 @@ function prossimeOre(w) {
     return `<div class="dm-f-mt-ora${indice === 0 ? " adesso" : ""}">
           <span class="dm-f-mt-h">${esc(indice === 0 ? t("Ora", "Now") : ora3(voce3.quando))}</span>
           <span class="dm-f-mt-ic" aria-hidden="true">${segnoDelTempo(voce3.condizione)}</span>
-          <b>${gradi8(voce3.temperatura)}</b>
+          <b>${gradi9(voce3.temperatura)}</b>
           <small${pioggia !== null && pioggia >= 50 ? ' data-bagnata="true"' : ""}>${pioggia === null ? "&nbsp;" : `☔ ${pioggia}%`}</small>
         </div>`;
   }).join("")}</div>`;
@@ -64587,9 +64637,9 @@ function prossimiGiorni(w) {
           <span class="dm-f-mt-g">${esc(giorno2(voce3.quando))}</span>
           <span class="dm-f-mt-ic" aria-hidden="true">${segnoDelTempo(voce3.condizione)}</span>
           <small class="dm-f-mt-pp">${pioggia ? `☔ ${pioggia}%` : ""}</small>
-          <span class="dm-f-mt-min">${gradi8(min)}</span>
+          <span class="dm-f-mt-min">${gradi9(min)}</span>
           <span class="dm-f-mt-barra" aria-hidden="true"><i style="left:${da.toFixed(1)}%;right:${(100 - a).toFixed(1)}%"></i></span>
-          <span class="dm-f-mt-max">${gradi8(max)}</span>
+          <span class="dm-f-mt-max">${gradi9(max)}</span>
         </div>`;
   }).join("")}</div>`;
 }
@@ -64597,7 +64647,7 @@ function finestraMeteo(w) {
   return `<div class="dm-f-mt">${adesso(w)}${prossimeOre(w)}${prossimiGiorni(w)}</div>`;
 }
 function sottotitoloMeteo(w) {
-  return [clean(w.cielo), w.oggi && finito2(w.oggi.alta) ? `${gradi8(w.oggi.alta)} / ${gradi8(w.oggi.bassa)}` : ""].filter(Boolean).join(" · ");
+  return [clean(w.cielo), w.oggi && finito2(w.oggi.alta) ? `${gradi9(w.oggi.alta)} / ${gradi9(w.oggi.bassa)}` : ""].filter(Boolean).join(" · ");
 }
 var STILE10 = `
 ${P7} .dm-f-mt{--mt:#0284c7;display:grid;gap:12px}
@@ -68378,12 +68428,12 @@ function inCelsius(valore3, unita3 = "°C") {
   return /f$/i.test(pulito51(unita3)) ? (n - 32) * 5 / 9 : n;
 }
 function puntoDiRugiada(temperatura, umidita, unita3 = "°C") {
-  const gradi10 = inCelsius(temperatura, unita3);
+  const gradi11 = inCelsius(temperatura, unita3);
   const relativa = numero45(umidita);
-  if (gradi10 === null || relativa === null || relativa <= 0 || relativa > 100) return null;
+  if (gradi11 === null || relativa === null || relativa <= 0 || relativa > 100) return null;
   const a = 17.62;
   const b2 = 243.12;
-  const gamma = Math.log(relativa / 100) + a * gradi10 / (b2 + gradi10);
+  const gamma = Math.log(relativa / 100) + a * gradi11 / (b2 + gradi11);
   const rugiada = b2 * gamma / (a - gamma);
   return /f$/i.test(pulito51(unita3)) ? rugiada * 9 / 5 + 32 : rugiada;
 }
@@ -70708,14 +70758,14 @@ function barre(valori, colore2, alto = 46) {
   }).join("")}
     </svg>`;
 }
-function bussola(gradi10) {
+function bussola(gradi11) {
   const tacche3 = Array.from({ length: 12 }, (_, i) => {
     const a = i * 30 * Math.PI / 180;
     const r1 = i % 3 ? 40 : 37;
     return `<line x1="${(50 + Math.sin(a) * r1).toFixed(1)}" y1="${(50 - Math.cos(a) * r1).toFixed(1)}" x2="${(50 + Math.sin(a) * 44).toFixed(1)}" y2="${(50 - Math.cos(a) * 44).toFixed(1)}" stroke="currentColor" stroke-opacity=".35" stroke-width="${i % 3 ? 1 : 2}"/>`;
   }).join("");
   const [n, , e, , s, , o] = spicchi().map((voce3) => esc(voce3[0]));
-  const freccia3 = Number.isFinite(gradi10) ? `<g data-dm-meteo-freccia="${Math.round((gradi10 + 180) % 360)}" transform="rotate(${(gradi10 + 180) % 360} 50 50)">
+  const freccia3 = Number.isFinite(gradi11) ? `<g data-dm-meteo-freccia="${Math.round((gradi11 + 180) % 360)}" transform="rotate(${(gradi11 + 180) % 360} 50 50)">
         <path d="M50 16 L57 34 L50 30 L43 34 Z" fill="var(--dm-meteo-c)"/>
         <line x1="50" y1="30" x2="50" y2="76" stroke="var(--dm-meteo-c)" stroke-width="4" stroke-linecap="round"/>
         <circle cx="50" cy="76" r="4" fill="none" stroke="var(--dm-meteo-c)" stroke-width="2.5"/>
@@ -70754,11 +70804,11 @@ function adessoMarkup2(vista2) {
   const { meteo: meteo3, entita: entita4, misure, frase: frase4, oggi, sole } = vista2;
   const temperatura = misure.temperatura;
   const unitaT = clean(temperatura?.unita) || "°C";
-  const gradi10 = (valore3) => `${numeroBello3(valore3, 0)}°`;
+  const gradi11 = (valore3) => `${numeroBello3(valore3, 0)}°`;
   const sotto = [
     misure.percepita ? `${esc(t("Percepita", "Feels like"))} ${b(`${numeroBello3(misure.percepita.valore, 1)}°`)}` : "",
-    oggi?.bassa != null ? `${esc(t("Min", "Min"))} ${b(gradi10(oggi.bassa))}` : "",
-    oggi?.alta != null ? `${esc(t("Max", "Max"))} ${b(gradi10(oggi.alta))}` : ""
+    oggi?.bassa != null ? `${esc(t("Min", "Min"))} ${b(gradi11(oggi.bassa))}` : "",
+    oggi?.alta != null ? `${esc(t("Max", "Max"))} ${b(gradi11(oggi.alta))}` : ""
   ].filter(Boolean).join(" · ");
   const parole4 = fraseInParole(frase4);
   const pastiglia5 = (segno5, testo6) => `<span class="dm-meteo-pill"><span aria-hidden="true">${segno5}</span><span>${testo6}</span></span>`;
@@ -70905,8 +70955,8 @@ function stazioneMarkup(vista2) {
   if (vento) {
     const raffica = stazione.raffica;
     const direzione = stazione.direzione;
-    const gradi10 = direzione ? gradiDelVento(direzione.valore) : null;
-    const spicchio = gradi10 === null ? null : spicchioDelVento(gradi10);
+    const gradi11 = direzione ? gradiDelVento(direzione.valore) : null;
+    const spicchio = gradi11 === null ? null : spicchioDelVento(gradi11);
     tessere2.push(
       tessera({
         chiave: "vento",
@@ -70917,7 +70967,7 @@ function stazioneMarkup(vista2) {
         unita: vento.unita || "km/h",
         sotto: [
           raffica ? `${esc(t("raffica", "gust"))} ${b(`${numeroBello3(raffica.valore, 0)} ${raffica.unita || vento.unita}`)}` : "",
-          spicchio === null ? "" : `${esc(t("da", "from"))} ${b(spicchi()[spicchio][1])} (${Math.round(gradi10)}°)`
+          spicchio === null ? "" : `${esc(t("da", "from"))} ${b(spicchi()[spicchio][1])} (${Math.round(gradi11)}°)`
         ].filter(Boolean).join(" · "),
         grafico: spark(passo(vento), {
           colore: "#14b8a6",
@@ -70926,7 +70976,7 @@ function stazioneMarkup(vista2) {
           secondo: raffica ? passo(raffica) : null
         }),
         colore: "#14b8a6",
-        extra: direzione ? bussola(gradi10) : ""
+        extra: direzione ? bussola(gradi11) : ""
       })
     );
   }
@@ -72831,7 +72881,7 @@ function meteoModel(states) {
   const condizione = clean(states[entita4].state).toLowerCase();
   if (!condizione || condizione === "unavailable" || condizione === "unknown") return null;
   const m = vista2.misure || {};
-  const gradi10 = Number.isFinite(m.temperatura?.valore) ? m.temperatura.valore : null;
+  const gradi11 = Number.isFinite(m.temperatura?.valore) ? m.temperatura.valore : null;
   const cielo = parolaDellaCondizione(condizione);
   const forbice = vista2.oggi && Number.isFinite(vista2.oggi.alta) && Number.isFinite(vista2.oggi.bassa) ? `${Math.round(vista2.oggi.alta)}° / ${Math.round(vista2.oggi.bassa)}°` : "";
   return {
@@ -72839,7 +72889,7 @@ function meteoModel(states) {
     accent: "#0284c7",
     icon: segnoDelTempo(condizione),
     label: t("Meteo", "Weather"),
-    value: gradi10 == null ? "—" : `${formatNumber(gradi10, 1)}°`,
+    value: gradi11 == null ? "—" : `${formatNumber(gradi11, 1)}°`,
     caption: [cielo, forbice].filter(Boolean).join(" · "),
     ring: null,
     entita: entita4,
@@ -75904,13 +75954,13 @@ function climatePanel(row, solo = false) {
     )}</button>`
   ).join("")}</div>
       </div>` : "";
-  const gradi10 = row.target == null ? null : formatNumber(row.target, 1);
+  const gradi11 = row.target == null ? null : formatNumber(row.target, 1);
   const temperaturaMarkup2 = row.obiettivi?.doppio ? obiettiviDoppiMarkup(row) : row.target == null ? "" : `<div class="dm-w-panel-row">
           <span class="dm-w-panel-lbl">${esc(t("Temperatura", "Temperature"))}</span>
           <div class="dm-w-stepper">
             <button type="button" data-dm-w-temp="-1" data-dm-w-target="${esc(row.entity)}"
               aria-label="${esc(t("Abbassa", "Lower"))}">−</button>
-            <b>${gradi10}°</b>
+            <b>${gradi11}°</b>
             <button type="button" data-dm-w-temp="1" data-dm-w-target="${esc(row.entity)}"
               aria-label="${esc(t("Alza", "Raise"))}">+</button>
           </div>
@@ -75975,9 +76025,9 @@ function obiettiviDoppiMarkup(row) {
   }).join("");
 }
 function gradiDellaCoppia(obiettivi) {
-  const gradi10 = (valore3) => formatNumber(valore3, Number.isInteger(valore3) ? 0 : 1);
+  const gradi11 = (valore3) => formatNumber(valore3, Number.isInteger(valore3) ? 0 : 1);
   if (obiettivi.mostra === "entrambi")
-    return `${gradi10(obiettivi.basso)}–${gradi10(obiettivi.alto)}°`;
+    return `${gradi11(obiettivi.basso)}–${gradi11(obiettivi.alto)}°`;
   return obiettiviScritti(obiettivi, (valore3) => formatNumber(valore3, 1));
 }
 function climatePanelMarkup(entity2) {
@@ -76323,12 +76373,12 @@ function summaryChips(widget) {
     ];
   }
   if (widget.key === "temperatura") {
-    const gradi10 = righe3.filter((riga5) => !riga5?.fuori).map((riga5) => Number(riga5?.temperature)).filter((valore3) => Number.isFinite(valore3));
-    if (gradi10.length < 2) return [];
+    const gradi11 = righe3.filter((riga5) => !riga5?.fuori).map((riga5) => Number(riga5?.temperature)).filter((valore3) => Number.isFinite(valore3));
+    if (gradi11.length < 2) return [];
     return [
-      [t("media", "average"), `${formatNumber(media3(gradi10), 1)}°`],
-      [t("la più fredda", "coldest"), `${formatNumber(Math.min(...gradi10), 1)}°`],
-      [t("la più calda", "warmest"), `${formatNumber(Math.max(...gradi10), 1)}°`]
+      [t("media", "average"), `${formatNumber(media3(gradi11), 1)}°`],
+      [t("la più fredda", "coldest"), `${formatNumber(Math.min(...gradi11), 1)}°`],
+      [t("la più calda", "warmest"), `${formatNumber(Math.max(...gradi11), 1)}°`]
     ];
   }
   return [];
@@ -77714,19 +77764,19 @@ function onClick9(event) {
     root.setTimeout?.(schedule22, 500);
     return;
   }
-  const gradi10 = event.target?.closest?.("[data-dm-w-temp]");
-  if (gradi10) {
+  const gradi11 = event.target?.closest?.("[data-dm-w-temp]");
+  if (gradi11) {
     event.preventDefault();
-    const entity2 = clean(gradi10.dataset.dmWTarget);
+    const entity2 = clean(gradi11.dataset.dmWTarget);
     const riga5 = climateRow(entity2);
-    const estremo = clean(gradi10.dataset.dmWObj);
+    const estremo = clean(gradi11.dataset.dmWObj);
     if (riga5?.obiettivi?.doppio && (estremo === "basso" || estremo === "alto")) {
-      const dati = coppiaSpostata(riga5.obiettivi, estremo, Number(gradi10.dataset.dmWTemp) || 0, {
+      const dati = coppiaSpostata(riga5.obiettivi, estremo, Number(gradi11.dataset.dmWTemp) || 0, {
         passo: riga5.passo || 0.5,
         scala: [riga5.minima, riga5.massima]
       });
       if (dati) {
-        const casella7 = gradi10.parentElement?.querySelector?.("b");
+        const casella7 = gradi11.parentElement?.querySelector?.("b");
         const nuovo = estremo === "basso" ? dati.target_temp_low : dati.target_temp_high;
         if (casella7) casella7.textContent = `${formatNumber(nuovo, 1)}°`;
         callHa("climate", "set_temperature", { entity_id: entity2, ...dati });
@@ -77735,9 +77785,9 @@ function onClick9(event) {
       return;
     }
     if (riga5 && riga5.target != null) {
-      const passo = (Number(gradi10.dataset.dmWTemp) || 0) * (riga5.passo || 0.5);
+      const passo = (Number(gradi11.dataset.dmWTemp) || 0) * (riga5.passo || 0.5);
       const voluta = Math.min(riga5.massima, Math.max(riga5.minima, riga5.target + passo));
-      const casella7 = gradi10.parentElement?.querySelector?.("b");
+      const casella7 = gradi11.parentElement?.querySelector?.("b");
       if (casella7) casella7.textContent = `${formatNumber(voluta, 1)}°`;
       callHa("climate", "set_temperature", { entity_id: entity2, temperature: voluta });
       root.setTimeout?.(schedule22, 700);
@@ -81066,14 +81116,14 @@ function tastoRapido(unita3, states) {
   const acceso6 = climaAccesoDaiWatt(unita3.entity, states) ?? perLEntita;
   const modo = clean(lexicalGlobal("currentClimaMode")).toLowerCase() || "freddo";
   const freddo = modo !== "caldo";
-  let gradi10 = "";
+  let gradi11 = "";
   if (freddo && stato3) {
     const obiettivo2 = stato3.attributes?.temperature;
     const ambiente = stato3.attributes?.current_temperature;
     const obiettivi = obiettiviDelClima(stato3.attributes, grezzo2);
-    if (acceso6 && obiettivi.doppio) gradi10 = obiettiviScritti(obiettivi);
-    else if (acceso6 && obiettivo2 !== void 0 && obiettivo2 !== null) gradi10 = `${obiettivo2}°`;
-    else if (ambiente !== void 0) gradi10 = `${Math.round(ambiente)}°`;
+    if (acceso6 && obiettivi.doppio) gradi11 = obiettiviScritti(obiettivi);
+    else if (acceso6 && obiettivo2 !== void 0 && obiettivo2 !== null) gradi11 = `${obiettivo2}°`;
+    else if (ambiente !== void 0) gradi11 = `${Math.round(ambiente)}°`;
   }
   const tasto4 = doc.createElement("button");
   tasto4.type = "button";
@@ -81088,7 +81138,7 @@ function tastoRapido(unita3, states) {
   const nome = clean(unita3.name) || clean(unita3.room) || unita3.entity;
   const disegno9 = disegnoDellaStanza3(unita3.room, unita3.name) || disegnoDelModo(freddo);
   const icona3 = freddo ? "❄️" : "🔥";
-  tasto4.innerHTML = `${gradi10 ? `<span class="ns-clima-btn-temp">${esc(gradi10)}</span>` : ""}<span class="ns-clima-btn-icon">${disegno9 || esc(icona3)}</span><span class="ns-clima-btn-name">${esc(nome)}</span>`;
+  tasto4.innerHTML = `${gradi11 ? `<span class="ns-clima-btn-temp">${esc(gradi11)}</span>` : ""}<span class="ns-clima-btn-icon">${disegno9 || esc(icona3)}</span><span class="ns-clima-btn-name">${esc(nome)}</span>`;
   return tasto4;
 }
 function disegnaClimaRapido() {
@@ -82180,9 +82230,9 @@ function entitaDelClima(pagina3) {
   return ((pagina3?.blocchi || []).find((blocco3) => blocco3.key === "clima")?.voci || []).map((voce3) => entitaVoce(voce3)).filter(Boolean);
 }
 function dentroAlClima(clima) {
-  const gradi10 = clima?.obiettivo == null ? "—" : `${clima.obiettivo}°`;
+  const gradi11 = clima?.obiettivo == null ? "—" : `${clima.obiettivo}°`;
   const modo = clima ? parolaDiStato(clima.modo) : t("Non disponibile", "Unavailable");
-  return `<b>${esc(gradi10)}</b><small>${esc(modo)}</small>`;
+  return `<b>${esc(gradi11)}</b><small>${esc(modo)}</small>`;
 }
 function toniDelClima(clima) {
   if (!clima?.acceso) return "spento";
@@ -83294,7 +83344,7 @@ var OGGETTO_DEL_BLOCCO = Object.freeze({
   altro: "evidenza"
 });
 function riassuntoDellaStanza(pagina3, states = allStates()) {
-  const gradi10 = numero47(pagina3?.temp, states);
+  const gradi11 = numero47(pagina3?.temp, states);
   const umidita = numero47(pagina3?.hum, states);
   let accese = 0;
   const perTipo = [];
@@ -83309,7 +83359,7 @@ function riassuntoDellaStanza(pagina3, states = allStates()) {
     accese += quante3;
     perTipo.push({ chiave: chiave2, oggetto: OGGETTO_DEL_BLOCCO[chiave2] || "evidenza", quante: quante3 });
   }
-  return { gradi: gradi10, umidita, accese, perTipo, quante: Number(pagina3?.count) || 0 };
+  return { gradi: gradi11, umidita, accese, perTipo, quante: Number(pagina3?.count) || 0 };
 }
 var SI_SPENGONO2 = PASTIGLIE_DELLA_STANZA.filter((voce3) => voce3.comanda === "spegni").map(
   (voce3) => voce3.chiave
@@ -83370,9 +83420,9 @@ function zonaDeiComandi(pagina3, tasti2) {
   if (!tasti2.length) return "";
   return `<span class="dm-stanza-plancia-comandi" data-dm-momento="tasti">${tasti2.map((tasto4) => tastoMarkup4(pagina3, tasto4)).join("")}</span>`;
 }
-function misureMarkup(gradi10, umidita) {
-  if (gradi10 === null && umidita === null) return "";
-  const grado = gradi10 === null ? "" : `<b class="dm-stanza-plancia-gradi">${esc(formatNumber(gradi10, 1))}</b><i class="dm-stanza-plancia-grado">°</i>`;
+function misureMarkup(gradi11, umidita) {
+  if (gradi11 === null && umidita === null) return "";
+  const grado = gradi11 === null ? "" : `<b class="dm-stanza-plancia-gradi">${esc(formatNumber(gradi11, 1))}</b><i class="dm-stanza-plancia-grado">°</i>`;
   const umido = umidita === null ? "" : `<i class="dm-stanza-plancia-umido">${esc(String(Math.round(umidita)))}%</i>`;
   return `<span class="dm-stanza-plancia-misure">${grado}${umido}</span>`;
 }
@@ -96140,12 +96190,12 @@ function normalizeQuickClimate(stored) {
   const dato2 = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
   const mode = pulito58(dato2.mode).toLowerCase();
   const fan = pulito58(dato2.fan);
-  const gradi10 = Number(dato2.temperature);
+  const gradi11 = Number(dato2.temperature);
   return {
     mode: QUICK_CLIMATE_MODES.includes(mode) ? mode : QUICK_CLIMATE_DEFAULT.mode,
     /* `null` non e' «zero gradi»: e' «la temperatura non la tocco». Si
      * distingue dalla casella vuota, che e' proprio quello che si vuol dire. */
-    temperature: dato2.temperature === null || pulito58(dato2.temperature) === "" ? null : Number.isFinite(gradi10) ? Math.min(MAX, Math.max(MIN, Math.round(gradi10 * 2) / 2)) : QUICK_CLIMATE_DEFAULT.temperature,
+    temperature: dato2.temperature === null || pulito58(dato2.temperature) === "" ? null : Number.isFinite(gradi11) ? Math.min(MAX, Math.max(MIN, Math.round(gradi11 * 2) / 2)) : QUICK_CLIMATE_DEFAULT.temperature,
     fan
   };
 }
@@ -96171,7 +96221,7 @@ function quickClimateSteps(preset2, attributi2 = null, { zona = "" } = {}) {
   return passi2;
 }
 var RAFFRESCANO = /* @__PURE__ */ new Set(["cool", "dry", "fan_only"]);
-var gradi9 = (valore3) => {
+var gradi10 = (valore3) => {
   if (valore3 === null || valore3 === void 0 || pulito58(valore3) === "") return null;
   const dato2 = Number(valore3);
   return Number.isFinite(dato2) ? dato2 : null;
@@ -96180,9 +96230,9 @@ function temperaturaDelPreset(scelta3, attributi2, zona) {
   const lettura4 = attributi2 ? obiettiviDelClima(attributi2, scelta3.mode) : null;
   if (!lettura4?.doppio) return { temperature: scelta3.temperature };
   const quale = scelta3.mode === "heat" ? "basso" : RAFFRESCANO.has(scelta3.mode) ? "alto" : estremoDiPartenza({ zona });
-  const minimo = gradi9(attributi2.min_temp);
-  const massimo = gradi9(attributi2.max_temp);
-  const passo = gradi9(attributi2.target_temp_step) > 0 ? gradi9(attributi2.target_temp_step) : null;
+  const minimo = gradi10(attributi2.min_temp);
+  const massimo = gradi10(attributi2.max_temp);
+  const passo = gradi10(attributi2.target_temp_step) > 0 ? gradi10(attributi2.target_temp_step) : null;
   let voluto = scelta3.temperature;
   if (passo) {
     const origine = minimo ?? 0;
@@ -111494,8 +111544,8 @@ function obiettivo(id, zona) {
   return quale ? lettura4[quale] : null;
 }
 function gradiVoluti(id, zona) {
-  const gradi10 = obiettivo(id, zona);
-  return gradi10 === null ? "—" : `${esc(decimale2(gradi10))}°`;
+  const gradi11 = obiettivo(id, zona);
+  return gradi11 === null ? "—" : `${esc(decimale2(gradi11))}°`;
 }
 var SEGNI_DEL_TERMOSTATO = Object.freeze({
   basso: '<svg class="mu-est-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5c3.2 3 4.8 5.6 4.8 8a4.8 4.8 0 0 1-9.6 0c0-1.3.5-2.5 1.4-3.6.3 1.4 1 2.2 2 2.4-.4-2.4.1-4.7 1.4-6.8Z"/><path d="M6.4 13.5A6.6 6.6 0 0 0 12 21.5a6.6 6.6 0 0 0 5.6-8"/></svg>',
@@ -111530,9 +111580,9 @@ function righeDelTermostato(id) {
   }).join("");
 }
 var accensioneDiVetro = (id, on) => `<button type="button" class="dm-rq-dt dm-rq-acceso ${on ? "si" : ""}" data-mu-fa="clima-acceso" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(t("Acceso", "Power"))}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9M18.4 6.6a9 9 0 1 1-12.8 0"/></svg></button>`;
-var menoGradiPiu = (id, gradi10, estremo = "", fermo = () => "") => {
+var menoGradiPiu = (id, gradi11, estremo = "", fermo = () => "") => {
   const quale = estremo ? ` data-mu-estremo="${estremo}"` : "";
-  return `<span class="dm-rq-gradi"><button type="button" class="dm-rq-dt" data-mu-fa="meno"${quale} data-mu-entita="${esc(id)}" aria-label="−"${fermo(-1)}>−</button><b>${gradi10}</b><button type="button" class="dm-rq-dt" data-mu-fa="piu"${quale} data-mu-entita="${esc(id)}" aria-label="+"${fermo(1)}>+</button></span>`;
+  return `<span class="dm-rq-gradi"><button type="button" class="dm-rq-dt" data-mu-fa="meno"${quale} data-mu-entita="${esc(id)}" aria-label="−"${fermo(-1)}>−</button><b>${gradi11}</b><button type="button" class="dm-rq-dt" data-mu-fa="piu"${quale} data-mu-entita="${esc(id)}" aria-label="+"${fermo(1)}>+</button></span>`;
 };
 function righeDiVetro(id) {
   const coppia2 = coppiaDelMuro(id);
@@ -111638,7 +111688,7 @@ function cardClima(c, i, zonaDellaLinguetta = "") {
   const atteso = state123.inAttesa[id]?.acceso;
   const on = typeof atteso === "boolean" ? atteso : Boolean(s && s !== "off" && s !== "unavailable");
   const azione = a.hvac_action ? AZIONI_DEL_CLIMA()[a.hvac_action] : on ? PAROLE_DEL_CLIMA()[s] : t("Spento", "Off");
-  const gradi10 = gradiVoluti(id, zona);
+  const gradi11 = gradiVoluti(id, zona);
   const conImmagine2 = cardConImmagine(c, i, {
     nome: nomeDi9(id, c.nome),
     stato: [azione, `${t("ora", "now")} ${decimale2(a.current_temperature)}°`].filter(Boolean).join(" · "),
@@ -111647,21 +111697,21 @@ function cardClima(c, i, zonaDellaLinguetta = "") {
     destra: accensioneDiVetro(id, on),
     dati: `data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}"`,
     classi: "mu-clima-rq",
-    comandi: `${on ? `<button type="button" class="dm-rq-dt dm-rq-modo" data-mu-fa="modo" data-mu-entita="${esc(id)}">${esc(PAROLE_DEL_CLIMA()[s] || s)}</button>` : ""}${menoGradiPiu(id, gradi10)}`
+    comandi: `${on ? `<button type="button" class="dm-rq-dt dm-rq-modo" data-mu-fa="modo" data-mu-entita="${esc(id)}">${esc(PAROLE_DEL_CLIMA()[s] || s)}</button>` : ""}${menoGradiPiu(id, gradi11)}`
   });
   if (conImmagine2) return conImmagine2;
   if (state123.muro?.cartaClima === "plancia")
     return cardClimaComeLaPlancia({ c, i, id, a, s, on, azione, faccia, zona, rapido: rapidoDi(id, zona) });
   if (state123.compatto)
     return `<div class="mu-carta mu-card mu-clima-mini ${on ? "mu-accesa" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
-    <div class="mu-mini-alto"><span class="mu-chip mu-acc" style="--c:40px">${disegno(faccia.chiave, 24, `clima-${i}`)}</span><div class="mu-nome"><div class="mu-n">${esc(nomeDi9(id, c.nome))}</div><div class="mu-sotto">${esc(t("ora", "now"))} ${decimale2(a.current_temperature)}°</div></div><span class="mu-mini-t">${gradi10}</span></div>
+    <div class="mu-mini-alto"><span class="mu-chip mu-acc" style="--c:40px">${disegno(faccia.chiave, 24, `clima-${i}`)}</span><div class="mu-nome"><div class="mu-n">${esc(nomeDi9(id, c.nome))}</div><div class="mu-sotto">${esc(t("ora", "now"))} ${decimale2(a.current_temperature)}°</div></div><span class="mu-mini-t">${gradi11}</span></div>
     <div class="mu-mini-tasti"><button type="button" class="mu-tondo" data-mu-fa="meno" data-mu-entita="${esc(id)}" aria-label="−">−</button><button type="button" class="mu-tondo" data-mu-fa="piu" data-mu-entita="${esc(id)}" aria-label="+">+</button></div></div>`;
   const rapido = rapidoDi(id, zona);
   return `<div class="mu-carta mu-card ${on ? "mu-accesa" : ""}${rapido ? " mu-col-rapido" : ""}" style="--acc:${faccia.accento}" data-mu-card="${i}" data-mu-entita="${esc(id)}" data-mu-lato="${faccia.chiave}">
     <div class="mu-riga1"><span class="mu-chip mu-acc" style="--c:46px">${disegno(faccia.chiave, 26, `clima-${i}`)}</span>
       <div class="mu-nome"><div class="mu-n">${esc(nomeDi9(id, c.nome))}</div><div class="mu-sotto">${esc(t("ora", "now"))} ${decimale2(a.current_temperature)}°</div></div>
-      ${azione ? `<span class="mu-pasti">${esc(azione)}</span>` : ""}<span class="mu-t-alto" aria-hidden="true">${gradi10}</span></div>
-    <div class="mu-target"><span class="mu-grande">${gradi10}</span><span class="mu-et">Target</span></div>
+      ${azione ? `<span class="mu-pasti">${esc(azione)}</span>` : ""}<span class="mu-t-alto" aria-hidden="true">${gradi11}</span></div>
+    <div class="mu-target"><span class="mu-grande">${gradi11}</span><span class="mu-et">Target</span></div>
     <div class="mu-comandi">
       ${on ? `<button type="button" class="mu-pasti mu-modo" data-mu-fa="modo" data-mu-entita="${esc(id)}">${esc(PAROLE_DEL_CLIMA()[s] || s)}</button>` : ""}
       <span class="mu-spazio"></span>
@@ -112437,10 +112487,10 @@ function paginaMeteo(pagina3) {
     segna("sun.sun");
   }
   const m = v.misure;
-  const gradi10 = (n) => Number.isFinite(n) ? `${Math.round(n)}°` : "—";
+  const gradi11 = (n) => Number.isFinite(n) ? `${Math.round(n)}°` : "—";
   const forbice = [
-    v.oggi?.bassa != null ? `${esc(t("Min", "Min"))} <b>${gradi10(v.oggi.bassa)}</b>` : "",
-    v.oggi?.alta != null ? `${esc(t("Max", "Max"))} <b>${gradi10(v.oggi.alta)}</b>` : ""
+    v.oggi?.bassa != null ? `${esc(t("Min", "Min"))} <b>${gradi11(v.oggi.bassa)}</b>` : "",
+    v.oggi?.alta != null ? `${esc(t("Max", "Max"))} <b>${gradi11(v.oggi.alta)}</b>` : ""
   ].filter(Boolean).join(" · ");
   const misura8 = (chiave2, disegnoDi2, etichetta3, valore3, sotto = "") => `<div class="mu-mt-misura" data-mu-meteo-misura="${chiave2}"><span class="mu-mt-misura-testa">${disegno(disegnoDi2, 22, `mt-${chiave2}`)}<span class="mu-et">${esc(etichetta3)}</span></span><b>${valore3}</b>${sotto ? `<small>${esc(sotto)}</small>` : ""}</div>`;
   const misure = [];
@@ -112496,7 +112546,7 @@ function paginaMeteo(pagina3) {
     return `<div class="mu-mt-ora${i === 0 ? " ora" : ""}" data-mu-meteo-ora="${voce3.quando}">
           <span class="mu-mt-ora-h">${esc(i === 0 ? t("Ora", "Now") : oraDelMeteo(voce3.quando))}</span>
           <span class="mu-mt-ora-segno" aria-hidden="true">${segnoDelTempo(voce3.condizione)}</span>
-          <b>${gradi10(voce3.temperatura)}</b>
+          <b>${gradi11(voce3.temperatura)}</b>
           <span class="mu-mt-goccia${p ? "" : " zero"}" style="--p:${p ?? 0}%"><i></i></span>
           <small>${p === null ? "" : `${p}%`}</small>
         </div>`;
@@ -112517,9 +112567,9 @@ function paginaMeteo(pagina3) {
           <span class="mu-mt-giorno-n">${esc(giornoDelMeteo(g))}</span>
           <span class="mu-mt-giorno-segno" aria-hidden="true">${segnoDelTempo(g.condizione)}</span>
           <span class="mu-mt-giorno-p">${p === null ? "" : `💧 ${p}%`}</span>
-          <b class="mu-mt-min">${gradi10(min)}</b>
+          <b class="mu-mt-min">${gradi11(min)}</b>
           <span class="mu-mt-barra"><i style="left:${da.toFixed(1)}%;right:${(100 - a).toFixed(1)}%"></i></span>
-          <b class="mu-mt-max">${gradi10(max)}</b>
+          <b class="mu-mt-max">${gradi11(max)}</b>
         </div>`;
   }).join("")}</div>` : `<div class="mu-mt-attesa">${esc(inArrivo2)}</div>`;
   const blocchiDelleOre = `<div class="mu-carta mu-mt-scheda mu-mt-prossimi" data-mu-meteo-blocco="giorni">${titoletto4(t("Prossimi giorni", "Next days"))}${righe3}</div>
@@ -121840,11 +121890,11 @@ var CRONO_DI_SERIE = Object.freeze({
 });
 function cronoPulito(dato2) {
   const d = dato2 && typeof dato2 === "object" ? dato2 : {};
-  const gradi10 = (v, ripiego) => fra(Math.round((numero55(v) ?? ripiego) * 2) / 2, 5, 30);
+  const gradi11 = (v, ripiego) => fra(Math.round((numero55(v) ?? ripiego) * 2) / 2, 5, 30);
   return {
     termostati: elencoDiEntita3(d.termostati, DOMINI.clima, TERMOSTATI_AL_MASSIMO),
-    inCasa: gradi10(d.inCasa, CRONO_DI_SERIE.inCasa),
-    fuori: gradi10(d.fuori, CRONO_DI_SERIE.fuori),
+    inCasa: gradi11(d.inCasa, CRONO_DI_SERIE.inCasa),
+    fuori: gradi11(d.fuori, CRONO_DI_SERIE.fuori),
     feriali: fascePulite(d.feriali ?? CRONO_DI_SERIE.feriali),
     festivi: fascePulite(d.festivi ?? CRONO_DI_SERIE.festivi),
     finestre: elencoDiEntita3(d.finestre, DOMINI.finestre),
@@ -122525,8 +122575,8 @@ function servizioCrudo(servizio3, { chi = "", dati = {} } = {}) {
   }
   if (dominio8 === "climate" || dominio8 === "water_heater") {
     if (nome === "set_temperature") {
-      const gradi10 = d.temperature ?? d.target_temp_high ?? d.target_temp_low;
-      return gradi10 !== void 0 && numero56(gradi10) ? coppia(`imposta ${chi} a ${numero56(gradi10)}°`, `set ${chi} to ${numeroEn(gradi10)}°`) : su("regola", "adjust");
+      const gradi11 = d.temperature ?? d.target_temp_high ?? d.target_temp_low;
+      return gradi11 !== void 0 && numero56(gradi11) ? coppia(`imposta ${chi} a ${numero56(gradi11)}°`, `set ${chi} to ${numeroEn(gradi11)}°`) : su("regola", "adjust");
     }
     if (nome === "set_hvac_mode") {
       const modo = pulito68(d.hvac_mode).toLowerCase();
@@ -128676,7 +128726,7 @@ function legaLAutoAlDispositivo({ entities = [], states = {} } = {}) {
   const conParola = (chiave3, dom) => (voce3) => (!dom || dominio4(voce3) === dom) && PAROLE6[chiave3].test(parole2(voce3, states));
   const percentuale5 = (voce3) => unita2(voce3, states) === "%";
   const distanza3 = (voce3) => conClasse("distance")(voce3) || UNITA_DI_DISTANZA.test(unita2(voce3, states));
-  const gradi10 = (voce3) => conClasse("temperature")(voce3) || /°\s?[cf]$/i.test(unita2(voce3, states));
+  const gradi11 = (voce3) => conClasse("temperature")(voce3) || /°\s?[cf]$/i.test(unita2(voce3, states));
   const nome = (voce3) => clean30(voce3?.name);
   prendi("dm.ev_posizione", (voce3) => dominio4(voce3) === "device_tracker");
   const diServizio = (voce3) => PAROLE6.batteriaServizio.test(parole2(voce3, states)) || /\b(car battery level|lv batt\w*|low voltage)\b/i.test(nome(voce3));
@@ -128844,16 +128894,16 @@ function legaLAutoAlDispositivo({ entities = [], states = {} } = {}) {
   prendi("dm.ev_allarme", conParola("allarme"));
   prendi(
     "dm.ev_motore",
-    (voce3) => conParola("motore")(voce3) && dominio4(voce3) !== "button" && !unita2(voce3, states) && !gradi10(voce3)
+    (voce3) => conParola("motore")(voce3) && dominio4(voce3) !== "button" && !unita2(voce3, states) && !gradi11(voce3)
   );
-  prendi("dm.ev_temperatura_olio", (voce3) => gradi10(voce3) && conParola("olio")(voce3));
-  prendi("dm.ev_temperatura_esterna", (voce3) => gradi10(voce3) && conParola("esterna")(voce3));
-  prendi("dm.ev_temperatura_interna", (voce3) => gradi10(voce3) && conParola("interna")(voce3));
+  prendi("dm.ev_temperatura_olio", (voce3) => gradi11(voce3) && conParola("olio")(voce3));
+  prendi("dm.ev_temperatura_esterna", (voce3) => gradi11(voce3) && conParola("esterna")(voce3));
+  prendi("dm.ev_temperatura_interna", (voce3) => gradi11(voce3) && conParola("interna")(voce3));
   prendi(
     "dm.ev_temperatura_batteria",
-    (voce3) => gradi10(voce3) && /\b(batter\w*|pack|hv|akku|bms|cell\w*)\b/i.test(parole2(voce3, states)) && !diServizio(voce3)
+    (voce3) => gradi11(voce3) && /\b(batter\w*|pack|hv|akku|bms|cell\w*)\b/i.test(parole2(voce3, states)) && !diServizio(voce3)
   );
-  const unaGomma = (voce3) => PAROLE6.pneumatici.test(parole2(voce3, states)) && !gradi10(voce3) && !["battery", "voltage", "signal_strength"].includes(classe2(voce3, states)) && !/^(%|m?v)$/i.test(unita2(voce3, states)) && !/\b(temperatur\w*|temp|batter\w*)\b/i.test(parole2(voce3, states));
+  const unaGomma = (voce3) => PAROLE6.pneumatici.test(parole2(voce3, states)) && !gradi11(voce3) && !["battery", "voltage", "signal_strength"].includes(classe2(voce3, states)) && !/^(%|m?v)$/i.test(unita2(voce3, states)) && !/\b(temperatur\w*|temp|batter\w*)\b/i.test(parole2(voce3, states));
   for (const [ref, ruota] of RUOTE3)
     prendi(ref, (voce3) => unaGomma(voce3) && ruota.test(parole2(voce3, states)));
   prendi("dm.ev_pneumatici", unaGomma);
@@ -141261,8 +141311,8 @@ function passiDelFlusso(delta) {
   const d = numero59(delta);
   return Math.max(1, Math.min(PASSI, 1 + Math.round(Math.max(0, d ?? 0) / 6)));
 }
-function caloreDelPannello(gradi10) {
-  const g = numero59(gradi10);
+function caloreDelPannello(gradi11) {
+  const g = numero59(gradi11);
   if (g === null) return 0;
   return Math.max(0, Math.min(1, (g - 30) / 60));
 }
@@ -152480,7 +152530,7 @@ function meteoMarkup(occhio2, states) {
   if (!m?.stato) return "";
   const a = m.stato.attributes || {};
   const p = previsioniDelMeteo(m.id, () => ridisegna31());
-  const gradi10 = (v) => v == null || v === "" || !Number.isFinite(Number(v)) ? "" : `${numero61(v)}°`;
+  const gradi11 = (v) => v == null || v === "" || !Number.isFinite(Number(v)) ? "" : `${numero61(v)}°`;
   const oggi = oggiFraMassimaEMinima(p.giornaliere);
   const misure = [];
   const misura8 = (v) => v == null || v === "" || !Number.isFinite(Number(v)) ? null : Number(v);
@@ -152498,9 +152548,9 @@ function meteoMarkup(occhio2, states) {
       <span class="oc-meteo-capo">
         <span class="oc-meteo-segno" aria-hidden="true">${segnoDelTempo(m.stato.state)}</span>
         <span class="oc-meteo-gradi">
-          <b>${esc(gradi10(a.temperature) || "—")}</b>
+          <b>${esc(gradi11(a.temperature) || "—")}</b>
           <small>${esc(parolaDellaCondizione(m.stato.state) || m.stato.state)}</small>
-          ${oggi ? `<em>${esc(t("Oggi", "Today"))} <b>${esc(gradi10(oggi.alta))}</b>${gradi10(oggi.bassa) ? ` / ${esc(gradi10(oggi.bassa))}` : ""}</em>` : ""}
+          ${oggi ? `<em>${esc(t("Oggi", "Today"))} <b>${esc(gradi11(oggi.alta))}</b>${gradi11(oggi.bassa) ? ` / ${esc(gradi11(oggi.bassa))}` : ""}</em>` : ""}
         </span>
       </span>
       ${misure.length ? `<span class="oc-meteo-misure">${misure.map(
@@ -152510,7 +152560,7 @@ function meteoMarkup(occhio2, states) {
     (g) => `<span class="oc-meteo-giorno">
                   <i>${esc(ora7(g.quando, { weekday: "short" }).replace(/\./g, ""))}</i>
                   <span aria-hidden="true">${segnoDelTempo(g.condizione)}</span>
-                  <b>${esc(gradi10(g.alta))} <i>${esc(gradi10(g.bassa))}</i></b>
+                  <b>${esc(gradi11(g.alta))} <i>${esc(gradi11(g.bassa))}</i></b>
                 </span>`
   ).join("")}</span>` : ""}
     </button>`;
@@ -154429,7 +154479,7 @@ function bindNodoToDevice({
   ) || elenco17.find(
     (voce3) => dominio8(voce3) === "binary_sensor" && PAROLE7.stato.test(parole3(voce3, states))
   );
-  const gradi10 = elenco17.find(
+  const gradi11 = elenco17.find(
     (voce3) => dominio8(voce3) === "sensor" && (classe3(voce3) === "temperature" || ["°c", "°f"].includes(unita3(voce3))) && PAROLE7.temperatura.test(parole3(voce3, states))
   );
   return {
@@ -154439,7 +154489,7 @@ function bindNodoToDevice({
     cpu: clean33(percentuale5("cpu")?.entity_id) || clean33(precedente.cpu),
     ram: clean33(percentuale5("ram")?.entity_id) || clean33(precedente.ram),
     disco: clean33(percentuale5("disco")?.entity_id) || clean33(precedente.disco),
-    temperatura: clean33(gradi10?.entity_id) || clean33(precedente.temperatura)
+    temperatura: clean33(gradi11?.entity_id) || clean33(precedente.temperatura)
   };
 }
 
