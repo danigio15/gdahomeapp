@@ -749,12 +749,12 @@
          "homeTeamOdds": {
           "current": {
            "moneyLine": {
-            "alternateDisplayValue": "+240",
-            "american": "+240",
-            "decimal": 3.4,
-            "displayValue": "12/5",
-            "fraction": "12/5",
-            "value": 3.4
+            "alternateDisplayValue": "+245",
+            "american": "+245",
+            "decimal": 3.45,
+            "displayValue": "49/20",
+            "fraction": "49/20",
+            "value": 3.45
            },
            "pointSpread": {
             "alternateDisplayValue": "+0.5",
@@ -770,7 +770,7 @@
            }
           },
           "favorite": false,
-          "moneyLine": 240,
+          "moneyLine": 245,
           "open": {
            "favorite": false,
            "moneyLine": {
@@ -916,8 +916,8 @@
          "awayTeamOdds": {
           "odds": {
            "handicap": 0,
-           "summary": "1/1",
-           "value": 2
+           "summary": "19/20",
+           "value": 1.95
           },
           "team": {
            "abbreviation": "INT",
@@ -928,8 +928,8 @@
          "homeTeamOdds": {
           "odds": {
            "handicap": 0,
-           "summary": "5/2",
-           "value": 3.5
+           "summary": "13/5",
+           "value": 3.6
           },
           "team": {
            "abbreviation": "MIL",
@@ -939,7 +939,7 @@
          },
          "links": [
           {
-           "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746292~5/2",
+           "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746292~13/5",
            "isExternal": true,
            "isPremium": false,
            "language": "en-US",
@@ -953,7 +953,7 @@
            "text": "Home Bet"
           },
           {
-           "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746306~1/1",
+           "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746306~19/20",
            "isExternal": true,
            "isPremium": false,
            "language": "en-US",
@@ -967,7 +967,7 @@
            "text": "Away Bet"
           },
           {
-           "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746302~27/10",
+           "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746302~11/4",
            "isExternal": true,
            "isPremium": false,
            "language": "en-US",

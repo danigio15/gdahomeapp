@@ -2,7 +2,7 @@
  "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams/110/schedule?fixture=true",
  "stato": 200,
  "json": {
-  "timestamp": "2026-10-29T20:25:25Z",
+  "timestamp": "2026-10-30T05:14:34Z",
   "status": "success",
   "season": {
    "year": 2026,
@@ -423,7 +423,7 @@
         "homeTeamOdds": {
          "favorite": false,
          "underdog": true,
-         "moneyLine": 240,
+         "moneyLine": 245,
          "spreadOdds": -125,
          "open": {
           "favorite": false,
@@ -462,12 +462,12 @@
            "american": "-125"
           },
           "moneyLine": {
-           "value": 3.4,
-           "displayValue": "12/5",
-           "alternateDisplayValue": "+240",
-           "decimal": 3.4,
-           "fraction": "12/5",
-           "american": "+240"
+           "value": 3.45,
+           "displayValue": "49/20",
+           "alternateDisplayValue": "+245",
+           "decimal": 3.45,
+           "fraction": "49/20",
+           "american": "+245"
           }
          },
          "team": {
@@ -479,7 +479,7 @@
          }
         },
         "drawOdds": {
-         "moneyLine": 265
+         "moneyLine": 255
         },
         "links": [
          {
@@ -606,8 +606,8 @@
           "shortDisplayName": "Inter Milan"
          },
          "odds": {
-          "summary": "1/1",
-          "value": 2,
+          "summary": "19/20",
+          "value": 1.95,
           "handicap": 0
          }
         },
@@ -620,14 +620,14 @@
           "shortDisplayName": "Milan"
          },
          "odds": {
-          "summary": "5/2",
-          "value": 3.5,
+          "summary": "13/5",
+          "value": 3.6,
           "handicap": 0
          }
         },
         "drawOdds": {
-         "summary": "27/10",
-         "value": 3.7,
+         "summary": "11/4",
+         "value": 3.75,
          "handicap": 0
         },
         "links": [
@@ -639,7 +639,7 @@
            "bets",
            "bet-365"
           ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746292~5/2",
+          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746292~13/5",
           "text": "Home Bet",
           "shortText": "Home Bet",
           "isExternal": true,
@@ -653,7 +653,7 @@
            "bets",
            "bet-365"
           ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746306~1/1",
+          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746306~19/20",
           "text": "Away Bet",
           "shortText": "Away Bet",
           "isExternal": true,
@@ -667,7 +667,7 @@
            "bets",
            "bet-365"
           ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746302~27/10",
+          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426270-150746302~11/4",
           "text": "Draw Bet",
           "shortText": "Draw Bet",
           "isExternal": true,

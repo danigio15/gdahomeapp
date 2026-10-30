@@ -5,28 +5,28 @@
    "date": "2026-10-30T10:45:00+00:00",
    "number": 1,
    "condition": {
-    "track": "",
-    "air": "º",
-    "humidity": "%",
-    "ground": "º",
-    "weather": ""
+    "track": "Dry",
+    "air": "30º",
+    "humidity": "74%",
+    "ground": "37º",
+    "weather": "Cloudy"
    },
    "circuit": "Petronas Sepang International Circuit",
    "session_files": {
     "classification": {
-     "url": "",
+     "url": "https://resources.motogp.com/files/results/2026/MAL/MotoGP/FP1/Classification.pdf",
      "menu_position": 1
     },
     "analysis": {
-     "url": "",
+     "url": "https://resources.motogp.com/files/results/2026/MAL/MotoGP/FP1/Analysis.pdf",
      "menu_position": 2
     },
     "average_speed": {
-     "url": "",
+     "url": "https://resources.motogp.com/files/results/2026/MAL/MotoGP/FP1/AverageSpeed.pdf",
      "menu_position": 2
     },
     "fast_lap_sequence": {
-     "url": "",
+     "url": "https://resources.motogp.com/files/results/2026/MAL/MotoGP/FP1/FastLapSequence.pdf",
      "menu_position": 2
     },
     "lap_chart": {
@@ -46,7 +46,7 @@
      "menu_position": 2
     },
     "session": {
-     "url": "",
+     "url": "https://resources.motogp.com/files/results/2026/MAL/MotoGP/FP1/Session.pdf",
      "menu_position": 2
     },
     "world_standing": {
@@ -54,11 +54,11 @@
      "menu_position": 2
     },
     "best_partial_time": {
-     "url": "",
+     "url": "https://resources.motogp.com/files/results/2026/MAL/MotoGP/FP1/BestPartialTime.pdf",
      "menu_position": 2
     },
     "maximum_speed": {
-     "url": "",
+     "url": "https://resources.motogp.com/files/results/2026/MAL/MotoGP/FP1/MaximumSpeed.pdf",
      "menu_position": 2
     },
     "combined_practice": {
@@ -98,7 +98,7 @@
      "region_iso": ""
     }
    },
-   "status": "NOT-STARTED"
+   "status": "FINISHED"
   },
   {
    "date": "2026-10-30T15:00:00+00:00",
