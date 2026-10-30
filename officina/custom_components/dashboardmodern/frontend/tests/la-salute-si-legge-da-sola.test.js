@@ -53,6 +53,23 @@ test("quello che il corpo non e' resta fuori: obiettivi, stanze, pellet, Strava"
   );
 });
 
+test("i passi del motorino delle valvole non sono i passi di una persona", () => {
+  const valvola = (nome) => ({ state: "459", attributes: { friendly_name: nome } });
+  const stati = {
+    "sensor.valvola_bagno_closing_steps": valvola("Valvola Bagno Closing steps"),
+    "sensor.valvola_bagno_idle_steps": valvola("Valvola Bagno Idle steps"),
+    "sensor.trv_cucina_opening_steps": valvola("TRV Cucina Opening steps"),
+    "sensor.termostato_studio_valve_steps": valvola("Termostato Studio Valve steps"),
+  };
+  for (const [entity, stato] of Object.entries(stati)) assert.equal(misuraDelSensore(entity, stato), "", entity);
+  assert.deepEqual(personeDellaSalute(stati), []);
+  // I passi veri, senza unita', restano.
+  assert.equal(
+    misuraDelSensore("sensor.pixel_8_steps", { state: "459", attributes: { friendly_name: "Pixel 8 Steps" } }),
+    "passi",
+  );
+});
+
 test("il sonno si legge in minuti, da ore o da secondi", () => {
   const ore = { state: "7.5", attributes: { friendly_name: "Garmin Sleep duration", unit_of_measurement: "h" } };
   const secondi = { state: "27000", attributes: { friendly_name: "Fitbit Sleep time", unit_of_measurement: "s" } };

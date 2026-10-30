@@ -560,7 +560,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-LSIZTVZN.js";
+} from "../../chunk-2MPIJD5Y.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -66612,7 +66612,9 @@ var MISURE5 = Object.freeze([
     chiave: "passi",
     parole: /\b(steps?|passi|step count)\b/,
     unita: /^(steps?|passi|)$/,
-    escludi: /goal|obiettiv|cadence|cadenza|floors|piani|length|lunghezza/
+    /* Le valvole termostatiche contano i passi del motorino («Closing steps»,
+     * «Idle steps»), senza unita': non sono passi di nessuno. */
+    escludi: /goal|obiettiv|cadence|cadenza|floors|piani|length|lunghezza|clos|open|apertur|chiusur|idle|valv|trv|termostat|thermostat|motor|stepper/
   },
   {
     chiave: "battitoRiposo",
