@@ -431,8 +431,6 @@
       "awayShootoutScore": "0",
       "gameResult": "W",
       "competitionName": "2026 Club Friendly",
-      "leagueName": "Club Friendly",
-      "leagueAbbreviation": "Club Friendly",
       "opponent": {
        "id": "4471",
        "uid": "s:600~t:4471",
@@ -463,7 +461,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/4471.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/4471.png",
+      "leagueName": "Club Friendly",
+      "leagueAbbreviation": "Club Friendly"
      },
      {
       "id": "401871493",
@@ -552,8 +552,6 @@
       "awayShootoutScore": "0",
       "gameResult": "D",
       "competitionName": "2026 Club Friendly",
-      "leagueName": "Club Friendly",
-      "leagueAbbreviation": "Club Friendly",
       "opponent": {
        "id": "103",
        "uid": "s:600~t:103",
@@ -595,7 +593,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/103.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/103.png",
+      "leagueName": "Club Friendly",
+      "leagueAbbreviation": "Club Friendly"
      },
      {
       "id": "401869429",
@@ -684,8 +684,6 @@
       "awayShootoutScore": "0",
       "gameResult": "W",
       "competitionName": "2026 Club Friendly",
-      "leagueName": "Club Friendly",
-      "leagueAbbreviation": "Club Friendly",
       "opponent": {
        "id": "244",
        "uid": "s:600~t:244",
@@ -727,7 +725,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/244.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/244.png",
+      "leagueName": "Club Friendly",
+      "leagueAbbreviation": "Club Friendly"
      }
     ]
    },
@@ -1042,8 +1042,6 @@
       "gameResult": "W",
       "competitionName": "2026-27 Coppa Italia",
       "roundName": "First Round",
-      "leagueName": "Coppa Italia",
-      "leagueAbbreviation": "Coppa Italia",
       "opponent": {
        "id": "4055",
        "uid": "s:600~t:4055",
@@ -1074,7 +1072,9 @@
         }
        ]
       },
-      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/4055.png"
+      "opponentLogo": "https://a.espncdn.com/i/teamlogos/soccer/500/4055.png",
+      "leagueName": "Coppa Italia",
+      "leagueAbbreviation": "Coppa Italia"
      }
     ]
    }
@@ -12655,6 +12655,200 @@
    },
    "articles": [
     {
+     "id": 50317859,
+     "nowId": "1-50317859",
+     "contentKey": "50317859-1-5-1",
+     "dataSourceIdentifier": "82e076a467a6f",
+     "type": "HeadlineNews",
+     "headline": "Sources: New Milan, Inter stadium gets $725M naming rights deal with Generali",
+     "description": "AC Milan and Inter Milan have agreed a naming rights deal with Italian insurance giant Generali for the new San Siro.",
+     "lastModified": "2026-10-29T20:42:17Z",
+     "published": "2026-10-29T20:42:17Z",
+     "images": [
+      {
+       "dataSourceIdentifier": "c25b3012a66d0",
+       "id": 50321285,
+       "type": "header",
+       "name": "Generali Stadium interior [1296x729]",
+       "caption": "A rendering of the interior of the new Generali Stadium.",
+       "alt": "A rendering of the interior of the new Generali Stadium.",
+       "credit": "Courtesy of AC Milan and Internazionale.",
+       "height": 729,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/1029/r1738250_1296x729_16-9.jpg"
+      },
+      {
+       "dataSourceIdentifier": "a7465221b85b4",
+       "id": 50320459,
+       "type": "header",
+       "name": "New Generali Stadium San Siro renderings [1296x729]",
+       "caption": "A rendering of the outside of the new Generali Stadium.",
+       "credit": "Courtesy of AC Milan and Internazionale.",
+       "height": 729,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/1029/r1738197_1296x729_16-9.jpg"
+      }
+     ],
+     "categories": [
+      {
+       "id": 137798,
+       "type": "league",
+       "uid": "s:600~l:730",
+       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
+       "description": "Italian Serie A",
+       "sportId": 600,
+       "leagueId": 12,
+       "league": {
+        "id": 730,
+        "description": "Italian Serie A",
+        "abbreviation": "Serie A",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142583,
+       "type": "team",
+       "uid": "s:600~t:110",
+       "guid": "864b1935-65cc-fb9b-850d-790e4c8a8d47",
+       "description": "Internazionale",
+       "sportId": 600,
+       "teamId": 110,
+       "team": {
+        "id": 110,
+        "description": "Internazionale",
+        "abbreviation": "INT",
+        "shortDisplayName": "Inter Milan",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/110/internazionale"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/110/internazionale"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 142590,
+       "type": "team",
+       "uid": "s:600~t:103",
+       "guid": "7ca4fb35-d78e-49f0-67fe-7fa95588e28d",
+       "description": "AC Milan",
+       "sportId": 600,
+       "teamId": 103,
+       "team": {
+        "id": 103,
+        "description": "AC Milan",
+        "abbreviation": "MIL",
+        "shortDisplayName": "Milan",
+        "links": {
+         "mobile": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
+          }
+         },
+         "web": {
+          "teams": {
+           "href": "https://www.espn.com/soccer/club/_/id/103/ac-milan"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 81497,
+       "type": "league",
+       "uid": "s:600",
+       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+       "description": "Soccer",
+       "sportId": 600,
+       "leagueId": 600,
+       "league": {
+        "id": 600,
+        "description": "Soccer",
+        "links": {
+         "mobile": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         },
+         "web": {
+          "leagues": {
+           "href": "https://www.espn.com/soccer/"
+          }
+         }
+        }
+       }
+      },
+      {
+       "id": 409224,
+       "type": "topic",
+       "guid": "52313677-19f8-b106-ec91-d8d17e6087fe",
+       "description": "news",
+       "sportId": 0,
+       "topicId": 781
+      },
+      {
+       "id": 696446,
+       "type": "contributor",
+       "guid": "989b38a0-5870-3a49-a6f3-211bd3b85535",
+       "description": "Jeff Carlisle",
+       "slug": "jeff-carlisle",
+       "contributor": {
+        "id": 1275,
+        "description": "Jeff Carlisle",
+        "links": {
+         "mobile": {
+          "contributors": {
+           "href": "https://www.espn.com/contributor/jeff-carlisle"
+          }
+         },
+         "web": {
+          "contributors": {
+           "href": "https://www.espn.com/contributor/jeff-carlisle"
+          }
+         }
+        }
+       }
+      }
+     ],
+     "byline": "Jeff Carlisle",
+     "links": {
+      "api": {
+       "self": {
+        "href": "https://content.core.api.espn.com/v1/sports/news/50317859"
+       }
+      },
+      "app": {
+       "sportscenter": {
+        "href": "sportscenter://x-callback-url/showStory?uid=50317859"
+       }
+      },
+      "mobile": {
+       "href": "http://m.espn.go.com/soccer/story?storyId=50317859"
+      },
+      "web": {
+       "href": "https://www.espn.com/soccer/story/_/id/50317859/milan-inter-new-stadium-generali-naming-rights-new-san-siro"
+      }
+     },
+     "premium": false
+    },
+    {
      "id": 50309811,
      "nowId": "1-50309811",
      "contentKey": "50309811-1-6-1",
@@ -13721,139 +13915,242 @@
       }
      },
      "premium": false
-    },
-    {
-     "id": 50299199,
-     "nowId": "1-50299199",
-     "contentKey": "50299199-1-5-1",
-     "dataSourceIdentifier": "89f7c7d82ab2e",
-     "type": "HeadlineNews",
-     "headline": "Napoli coach Massimiliano Allegri will not appeal touchline ban",
-     "description": "Napoli coach Massimiliano Allegri will watch Wednesday's Serie A clash with Monza from the stands after deciding not to appeal against his touchline ban.",
-     "lastModified": "2026-10-27T17:08:45Z",
-     "published": "2026-10-27T17:08:45Z",
-     "images": [
-      {
-       "dataSourceIdentifier": "5c1d5065fd66b",
-       "id": 40275148,
-       "type": "header",
-       "name": "Massimiliano Allegri head coach fo Juventus FC gestures during the Coppa Italia 2023/2024 Frecciarossa final match between Atalanta BC and Juventus FC at Stadio Olimpico [1296x729]",
-       "credit": "Giuseppe Maffia/NurPhoto via Getty Images",
-       "height": 729,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2024/0604/r1341465_1296x729_16-9.jpg"
-      }
-     ],
-     "categories": [
-      {
-       "id": 81497,
-       "type": "league",
-       "uid": "s:600",
-       "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
-       "description": "Soccer",
-       "sportId": 600,
-       "leagueId": 600,
-       "league": {
-        "id": 600,
-        "description": "Soccer",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 409224,
-       "type": "topic",
-       "guid": "52313677-19f8-b106-ec91-d8d17e6087fe",
-       "description": "news",
-       "sportId": 0,
-       "topicId": 781
-      },
-      {
-       "id": 142589,
-       "type": "team",
-       "uid": "s:600~t:114",
-       "guid": "20179aab-ac9f-93cf-f139-404e49a3f3cb",
-       "description": "Napoli",
-       "sportId": 600,
-       "teamId": 114,
-       "team": {
-        "id": 114,
-        "description": "Napoli",
-        "abbreviation": "NAP",
-        "shortDisplayName": "Napoli",
-        "links": {
-         "mobile": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/114/napoli"
-          }
-         },
-         "web": {
-          "teams": {
-           "href": "https://www.espn.com/soccer/club/_/id/114/napoli"
-          }
-         }
-        }
-       }
-      },
-      {
-       "id": 137798,
-       "type": "league",
-       "uid": "s:600~l:730",
-       "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
-       "description": "Italian Serie A",
-       "sportId": 600,
-       "leagueId": 12,
-       "league": {
-        "id": 730,
-        "description": "Italian Serie A",
-        "abbreviation": "Serie A",
-        "links": {
-         "mobile": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         },
-         "web": {
-          "leagues": {
-           "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-          }
-         }
-        }
-       }
-      }
-     ],
-     "byline": "PA",
-     "links": {
-      "api": {
-       "self": {
-        "href": "https://content.core.api.espn.com/v1/sports/news/50299199"
-       }
-      },
-      "app": {
-       "sportscenter": {
-        "href": "sportscenter://x-callback-url/showStory?uid=50299199"
-       }
-      },
-      "mobile": {
-       "href": "http://m.espn.go.com/soccer/story?storyId=50299199"
-      },
-      "web": {
-       "href": "https://www.espn.com/soccer/story/_/id/50299199/napoli-coach-massimiliano-allegri-not-appeal-touchline-ban"
-      }
-     },
-     "premium": false
     }
    ]
+  },
+  "article": {
+   "id": 49674203,
+   "nowId": "1-49674203",
+   "contentKey": "49674203-1-21-1",
+   "dataSourceIdentifier": "c79e08f7dcaec",
+   "publishedkey": "soccer401874931",
+   "type": "Recap",
+   "gameId": "401874931",
+   "headline": "Champions Inter dominate Monza in Serie A opener",
+   "description": "Inter Milan launched their Serie A title defence with a 4-1 opening-day win against newly promoted Monza at San Siro.",
+   "linkText": "Champs Inter make winning start as Stones debuts",
+   "categorized": "2026-08-23T00:37:30Z",
+   "originallyPosted": "2026-08-22T18:40:00Z",
+   "lastModified": "2026-08-23T00:37:28Z",
+   "published": "2026-08-22T18:40:00Z",
+   "section": "Soccer",
+   "images": [
+    {
+     "dataSourceIdentifier": "f3d2b50dbcd8a",
+     "id": 49693086,
+     "type": "header",
+     "name": "Inter [1296x729]",
+     "credit": "Getty",
+     "height": 729,
+     "width": 1296,
+     "url": "https://a.espncdn.com/photo/2026/0822/r1705378_1296x729_16-9.jpg",
+     "peers": [
+      {
+       "dataSourceIdentifier": "54771e74afac8",
+       "id": 49693102,
+       "type": "header",
+       "name": "Inter [1296x1296]",
+       "credit": "Getty",
+       "height": 1296,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/0822/r1705378_1296x1296_1-1.jpg"
+      },
+      {
+       "dataSourceIdentifier": "f3d2b50dbcd8a",
+       "id": 49693086,
+       "type": "header",
+       "name": "Inter [1296x729]",
+       "credit": "Getty",
+       "height": 729,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/0822/r1705378_1296x729_16-9.jpg"
+      },
+      {
+       "dataSourceIdentifier": "a3652cddc7067",
+       "id": 49693091,
+       "type": "header",
+       "name": "Inter [864x1296]",
+       "credit": "Getty",
+       "height": 1296,
+       "width": 864,
+       "url": "https://a.espncdn.com/photo/2026/0822/r1705378_864x1296_2-3.jpg"
+      },
+      {
+       "dataSourceIdentifier": "712e23d82c268",
+       "id": 49693095,
+       "type": "header",
+       "name": "Inter [1296x864]",
+       "credit": "Getty",
+       "height": 864,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/0822/r1705378_1296x864_3-2.jpg"
+      },
+      {
+       "dataSourceIdentifier": "1414f03313afb",
+       "id": 49693099,
+       "type": "header",
+       "name": "Inter [1296x518]",
+       "credit": "Getty",
+       "height": 518,
+       "width": 1296,
+       "url": "https://a.espncdn.com/photo/2026/0822/r1705378_1296x518_5-2.jpg"
+      }
+     ]
+    }
+   ],
+   "video": [],
+   "categories": [
+    {
+     "id": 81497,
+     "type": "league",
+     "uid": "s:600",
+     "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
+     "description": "Soccer",
+     "sportId": 600,
+     "leagueId": 600,
+     "league": {
+      "id": 600,
+      "description": "Soccer",
+      "links": {
+       "mobile": {
+        "leagues": {
+         "href": "https://www.espn.com/soccer/"
+        }
+       },
+       "web": {
+        "leagues": {
+         "href": "https://www.espn.com/soccer/"
+        }
+       }
+      }
+     }
+    },
+    {
+     "id": 137798,
+     "type": "league",
+     "uid": "s:600~l:730",
+     "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
+     "description": "Italian Serie A",
+     "sportId": 600,
+     "leagueId": 12,
+     "league": {
+      "id": 730,
+      "description": "Italian Serie A",
+      "abbreviation": "Serie A",
+      "links": {
+       "mobile": {
+        "leagues": {
+         "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+        }
+       },
+       "web": {
+        "leagues": {
+         "href": "https://www.espn.com/soccer/league/_/name/ita.1"
+        }
+       }
+      }
+     }
+    },
+    {
+     "id": 142583,
+     "type": "team",
+     "uid": "s:600~t:110",
+     "guid": "864b1935-65cc-fb9b-850d-790e4c8a8d47",
+     "description": "Internazionale",
+     "sportId": 600,
+     "teamId": 110,
+     "team": {
+      "id": 110,
+      "description": "Internazionale",
+      "abbreviation": "INT",
+      "shortDisplayName": "Inter Milan",
+      "links": {
+       "mobile": {
+        "teams": {
+         "href": "https://www.espn.com/soccer/club/_/id/110/internazionale"
+        }
+       },
+       "web": {
+        "teams": {
+         "href": "https://www.espn.com/soccer/club/_/id/110/internazionale"
+        }
+       }
+      }
+     }
+    },
+    {
+     "id": 192469,
+     "type": "team",
+     "uid": "s:600~t:4007",
+     "guid": "8225e6a4-9fb7-27d5-06de-7112ad7ac058",
+     "description": "Monza",
+     "sportId": 600,
+     "teamId": 4007,
+     "team": {
+      "id": 4007,
+      "description": "Monza",
+      "abbreviation": "MON",
+      "shortDisplayName": "Monza",
+      "links": {
+       "mobile": {
+        "teams": {
+         "href": "https://www.espn.com/soccer/club/_/id/4007/monza"
+        }
+       },
+       "web": {
+        "teams": {
+         "href": "https://www.espn.com/soccer/club/_/id/4007/monza"
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "event",
+     "uid": "s:600~l:730~e:401874931",
+     "guid": "343deeeb-d124-3a3f-a993-8dde57eaf0ad",
+     "description": "Monza @ Internazionale",
+     "eventId": 401874931,
+     "event": {
+      "id": 401874931,
+      "sport": "soccer",
+      "league": "ita.1",
+      "description": "Monza @ Internazionale"
+     }
+    }
+   ],
+   "keywords": [
+    "Soccer",
+    "Italian Serie A",
+    "Internazionale",
+    "Monza",
+    "Monza @ Internazionale"
+   ],
+   "story": "<p>Inter Milan launched their <a data-league-guid=\"9c1e0753-2757-3b78-a6ed-1b595caf8191\" href=\"https://www.espn.com/soccer/league/_/name/ITA.1\">Serie A</a> title defence with a 4-1 opening-day win against newly promoted <a data-clubhouse-guid=\"8225e6a4-9fb7-27d5-06de-7112ad7ac058\" href=\"http://espn.com/soccer/team?id=4007\">Monza</a> at San Siro.</p>\n<p>Monza's Portuguese forward <a data-player-guid=\"e6ed6493-4b72-3f11-82d2-df71d486e94c\" href=\"http://espn.com/soccer/player/_/id/384482/gustavo-varela\">Gustavo Varela</a> cancelled out Hakan Calhanoglu's early opener for Inter before the break, but second-half goals from <a data-player-guid=\"59825881-dbb5-e23d-3628-3d8641f7bdf0\" href=\"http://espn.com/soccer/player/_/id/177782/piotr-zielinski\">Piotr Zielinski</a>, Francesco <a data-player-guid=\"132b9264-bbc0-3e99-af3e-a7bb174999aa\" href=\"http://espn.com/soccer/player/_/id/362674/pio-esposito\">Pio Esposito</a> and <a data-player-guid=\"18869da8-cc1f-bf28-7b5f-b756467fea6b\" href=\"http://espn.com/soccer/player/_/id/266660/yann-bisseck\">Yann Bisseck</a> ensured a comfortable afternoon for the champions.</p>\n<p>It was also a winning start for <a data-clubhouse-guid=\"217dee4e-6974-a197-49a2-afda6e1788c9\" href=\"http://espn.com/soccer/team?id=448\">England</a> defender <a data-player-guid=\"6672587d-4363-ea87-31f9-fa5bd4ec10cc\" href=\"http://espn.com/soccer/player/_/id/157974/john-stones\">John Stones</a>, who made his Inter debut as a second-half substitute.</p>\n<p>Two more English summer signings, <a data-player-guid=\"e559e4c9-460a-9a45-70f4-f7d0534a18ea\" href=\"http://espn.com/soccer/player/_/id/190257/curtis-jones\">Curtis Jones</a> and <a data-player-guid=\"68b803ee-5842-c7e3-edb1-644e9398e648\" href=\"http://espn.com/soccer/player/_/id/267711/djed-spence\">Djed Spence</a>, were not included in Cristian Chivu's squad, but with Stones on the bench, Inter made an ideal start.</p>\n<p><a data-player-guid=\"c244419a-02b4-31a3-acc8-5d6c71e2c0b0\" href=\"http://espn.com/soccer/player/_/id/319167/andy-diouf\">Andy Diouf</a> teed up Calhanoglu on the edge of the box and the Turkey midfielder lashed a right-footed shot into the roof of the net.</p>\n<p><photo caption=\"Inter were rampant against Monza.\"></p>\n<p><a data-player-guid=\"7c7905ad-8be5-85d8-7001-5c817a9187b2\" href=\"http://espn.com/soccer/player/_/id/204441/nicolo-barella\">Nicolò Barella</a> went close to doubling Inter's lead before Monza stunned the home fans by scoring with their first attempt on goal, with Varela drilling an angled finish into the bottom corner from inside the penalty area in the 29th minute.</p>\n<p>Varela then headed wide before Inter twice threatened to regain the lead through <a data-player-guid=\"1275ab36-1f54-749f-fca6-58aa94ff9367\" href=\"http://espn.com/soccer/player/_/id/194748/federico-dimarco\">Federico Dimarco</a> and Esposito, while Barella blazed another chance over before the interval.</p>\n<p>Inter made another fast start to the second half, scoring twice in seven minutes to take control.</p>\n<p>Zielinski buried a loose ball following a corner three minutes after the restart and Esposito swept home from close range following another assist from Diouf.</p>\n<p>Esposito then turned provider, setting up Bisseck to fire into the top corner from the centre of the box for Inter's fourth goal in the 63rd minute.</p>\n<p><a data-player-guid=\"05565c83-6cae-802b-9669-ea4ba9bd1856\" href=\"http://espn.com/soccer/player/_/id/214562/manuel-akanji\">Manuel Akanji</a> headed Dimarco's cross against the bar soon after as Monza became more ragged.</p>\n<p>Stones stepped off the bench to replace Akanji for his Serie A debut in the 75th minute before Inter goalkeeper <a data-player-guid=\"54d7cf61-e139-a080-96bf-0368bca80de1\" href=\"http://espn.com/soccer/player/_/id/240533/josep-martinez\">Josep Martínez</a> produced a low save to keep out Samuele Birindelli's low effort.</p>\n<p><a data-player-guid=\"f40d7185-aa35-3fa5-9d46-722c69ef7277\" href=\"http://espn.com/soccer/player/_/id/308288/nicolas-galazzi\">Nicolas Galazzi</a> pulled another effort on goal for Monza wide as the home side took their foot off the gas, while Esposito spurned the chance of his second and Inter's fifth when he headed wide in time added on.</p>\n\n\n\n\n",
+   "allowComments": true,
+   "allowContentReactions": false,
+   "allowSearch": true,
+   "byline": "PA",
+   "isLiveBlog": false,
+   "links": {
+    "api": {
+     "self": {
+      "href": "https://content.core.api.espn.com/v1/sports/news/49674203"
+     }
+    },
+    "app": {
+     "sportscenter": {
+      "href": "sportscenter://x-callback-url/showStory?uid=49674203"
+     }
+    },
+    "mobile": {
+     "href": "http://m.espn.go.com/soccer/story?storyId=49674203"
+    },
+    "web": {
+     "href": "http://www.espn.com/soccer/report/_/gameId/401874931"
+    }
+   },
+   "premium": false
   },
   "header": {
    "id": "401874931",
@@ -14603,240 +14900,6 @@
      "isPremium": false
     }
    ]
-  },
-  "article": {
-   "id": 49674203,
-   "nowId": "1-49674203",
-   "contentKey": "49674203-1-21-1",
-   "dataSourceIdentifier": "c79e08f7dcaec",
-   "publishedkey": "soccer401874931",
-   "type": "Recap",
-   "gameId": "401874931",
-   "headline": "Champions Inter dominate Monza in Serie A opener",
-   "description": "Inter Milan launched their Serie A title defence with a 4-1 opening-day win against newly promoted Monza at San Siro.",
-   "linkText": "Champs Inter make winning start as Stones debuts",
-   "categorized": "2026-08-23T00:37:30Z",
-   "originallyPosted": "2026-08-22T18:40:00Z",
-   "lastModified": "2026-08-23T00:37:28Z",
-   "published": "2026-08-22T18:40:00Z",
-   "section": "Soccer",
-   "images": [
-    {
-     "dataSourceIdentifier": "f3d2b50dbcd8a",
-     "id": 49693086,
-     "type": "header",
-     "name": "Inter [1296x729]",
-     "credit": "Getty",
-     "height": 729,
-     "width": 1296,
-     "url": "https://a.espncdn.com/photo/2026/0822/r1705378_1296x729_16-9.jpg",
-     "peers": [
-      {
-       "dataSourceIdentifier": "54771e74afac8",
-       "id": 49693102,
-       "type": "header",
-       "name": "Inter [1296x1296]",
-       "credit": "Getty",
-       "height": 1296,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/0822/r1705378_1296x1296_1-1.jpg"
-      },
-      {
-       "dataSourceIdentifier": "f3d2b50dbcd8a",
-       "id": 49693086,
-       "type": "header",
-       "name": "Inter [1296x729]",
-       "credit": "Getty",
-       "height": 729,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/0822/r1705378_1296x729_16-9.jpg"
-      },
-      {
-       "dataSourceIdentifier": "a3652cddc7067",
-       "id": 49693091,
-       "type": "header",
-       "name": "Inter [864x1296]",
-       "credit": "Getty",
-       "height": 1296,
-       "width": 864,
-       "url": "https://a.espncdn.com/photo/2026/0822/r1705378_864x1296_2-3.jpg"
-      },
-      {
-       "dataSourceIdentifier": "712e23d82c268",
-       "id": 49693095,
-       "type": "header",
-       "name": "Inter [1296x864]",
-       "credit": "Getty",
-       "height": 864,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/0822/r1705378_1296x864_3-2.jpg"
-      },
-      {
-       "dataSourceIdentifier": "1414f03313afb",
-       "id": 49693099,
-       "type": "header",
-       "name": "Inter [1296x518]",
-       "credit": "Getty",
-       "height": 518,
-       "width": 1296,
-       "url": "https://a.espncdn.com/photo/2026/0822/r1705378_1296x518_5-2.jpg"
-      }
-     ]
-    }
-   ],
-   "video": [],
-   "categories": [
-    {
-     "id": 81497,
-     "type": "league",
-     "uid": "s:600",
-     "guid": "119cfa41-71d4-39bf-a790-6273a52b0259",
-     "description": "Soccer",
-     "sportId": 600,
-     "leagueId": 600,
-     "league": {
-      "id": 600,
-      "description": "Soccer",
-      "links": {
-       "mobile": {
-        "leagues": {
-         "href": "https://www.espn.com/soccer/"
-        }
-       },
-       "web": {
-        "leagues": {
-         "href": "https://www.espn.com/soccer/"
-        }
-       }
-      }
-     }
-    },
-    {
-     "id": 137798,
-     "type": "league",
-     "uid": "s:600~l:730",
-     "guid": "9c1e0753-2757-3b78-a6ed-1b595caf8191",
-     "description": "Italian Serie A",
-     "sportId": 600,
-     "leagueId": 12,
-     "league": {
-      "id": 730,
-      "description": "Italian Serie A",
-      "abbreviation": "Serie A",
-      "links": {
-       "mobile": {
-        "leagues": {
-         "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-        }
-       },
-       "web": {
-        "leagues": {
-         "href": "https://www.espn.com/soccer/league/_/name/ita.1"
-        }
-       }
-      }
-     }
-    },
-    {
-     "id": 142583,
-     "type": "team",
-     "uid": "s:600~t:110",
-     "guid": "864b1935-65cc-fb9b-850d-790e4c8a8d47",
-     "description": "Internazionale",
-     "sportId": 600,
-     "teamId": 110,
-     "team": {
-      "id": 110,
-      "description": "Internazionale",
-      "abbreviation": "INT",
-      "shortDisplayName": "Inter Milan",
-      "links": {
-       "mobile": {
-        "teams": {
-         "href": "https://www.espn.com/soccer/club/_/id/110/internazionale"
-        }
-       },
-       "web": {
-        "teams": {
-         "href": "https://www.espn.com/soccer/club/_/id/110/internazionale"
-        }
-       }
-      }
-     }
-    },
-    {
-     "id": 192469,
-     "type": "team",
-     "uid": "s:600~t:4007",
-     "guid": "8225e6a4-9fb7-27d5-06de-7112ad7ac058",
-     "description": "Monza",
-     "sportId": 600,
-     "teamId": 4007,
-     "team": {
-      "id": 4007,
-      "description": "Monza",
-      "abbreviation": "MON",
-      "shortDisplayName": "Monza",
-      "links": {
-       "mobile": {
-        "teams": {
-         "href": "https://www.espn.com/soccer/club/_/id/4007/monza"
-        }
-       },
-       "web": {
-        "teams": {
-         "href": "https://www.espn.com/soccer/club/_/id/4007/monza"
-        }
-       }
-      }
-     }
-    },
-    {
-     "type": "event",
-     "uid": "s:600~l:730~e:401874931",
-     "guid": "343deeeb-d124-3a3f-a993-8dde57eaf0ad",
-     "description": "Monza @ Internazionale",
-     "eventId": 401874931,
-     "event": {
-      "id": 401874931,
-      "sport": "soccer",
-      "league": "ita.1",
-      "description": "Monza @ Internazionale"
-     }
-    }
-   ],
-   "keywords": [
-    "Soccer",
-    "Italian Serie A",
-    "Internazionale",
-    "Monza",
-    "Monza @ Internazionale"
-   ],
-   "story": "<p>Inter Milan launched their <a data-league-guid=\"9c1e0753-2757-3b78-a6ed-1b595caf8191\" href=\"https://www.espn.com/soccer/league/_/name/ITA.1\">Serie A</a> title defence with a 4-1 opening-day win against newly promoted <a data-clubhouse-guid=\"8225e6a4-9fb7-27d5-06de-7112ad7ac058\" href=\"http://espn.com/soccer/team?id=4007\">Monza</a> at San Siro.</p>\n<p>Monza's Portuguese forward <a data-player-guid=\"e6ed6493-4b72-3f11-82d2-df71d486e94c\" href=\"http://espn.com/soccer/player/_/id/384482/gustavo-varela\">Gustavo Varela</a> cancelled out Hakan Calhanoglu's early opener for Inter before the break, but second-half goals from <a data-player-guid=\"59825881-dbb5-e23d-3628-3d8641f7bdf0\" href=\"http://espn.com/soccer/player/_/id/177782/piotr-zielinski\">Piotr Zielinski</a>, Francesco <a data-player-guid=\"132b9264-bbc0-3e99-af3e-a7bb174999aa\" href=\"http://espn.com/soccer/player/_/id/362674/pio-esposito\">Pio Esposito</a> and <a data-player-guid=\"18869da8-cc1f-bf28-7b5f-b756467fea6b\" href=\"http://espn.com/soccer/player/_/id/266660/yann-bisseck\">Yann Bisseck</a> ensured a comfortable afternoon for the champions.</p>\n<p>It was also a winning start for <a data-clubhouse-guid=\"217dee4e-6974-a197-49a2-afda6e1788c9\" href=\"http://espn.com/soccer/team?id=448\">England</a> defender <a data-player-guid=\"6672587d-4363-ea87-31f9-fa5bd4ec10cc\" href=\"http://espn.com/soccer/player/_/id/157974/john-stones\">John Stones</a>, who made his Inter debut as a second-half substitute.</p>\n<p>Two more English summer signings, <a data-player-guid=\"e559e4c9-460a-9a45-70f4-f7d0534a18ea\" href=\"http://espn.com/soccer/player/_/id/190257/curtis-jones\">Curtis Jones</a> and <a data-player-guid=\"68b803ee-5842-c7e3-edb1-644e9398e648\" href=\"http://espn.com/soccer/player/_/id/267711/djed-spence\">Djed Spence</a>, were not included in Cristian Chivu's squad, but with Stones on the bench, Inter made an ideal start.</p>\n<p><a data-player-guid=\"c244419a-02b4-31a3-acc8-5d6c71e2c0b0\" href=\"http://espn.com/soccer/player/_/id/319167/andy-diouf\">Andy Diouf</a> teed up Calhanoglu on the edge of the box and the Turkey midfielder lashed a right-footed shot into the roof of the net.</p>\n<p><photo caption=\"Inter were rampant against Monza.\"></p>\n<p><a data-player-guid=\"7c7905ad-8be5-85d8-7001-5c817a9187b2\" href=\"http://espn.com/soccer/player/_/id/204441/nicolo-barella\">Nicolò Barella</a> went close to doubling Inter's lead before Monza stunned the home fans by scoring with their first attempt on goal, with Varela drilling an angled finish into the bottom corner from inside the penalty area in the 29th minute.</p>\n<p>Varela then headed wide before Inter twice threatened to regain the lead through <a data-player-guid=\"1275ab36-1f54-749f-fca6-58aa94ff9367\" href=\"http://espn.com/soccer/player/_/id/194748/federico-dimarco\">Federico Dimarco</a> and Esposito, while Barella blazed another chance over before the interval.</p>\n<p>Inter made another fast start to the second half, scoring twice in seven minutes to take control.</p>\n<p>Zielinski buried a loose ball following a corner three minutes after the restart and Esposito swept home from close range following another assist from Diouf.</p>\n<p>Esposito then turned provider, setting up Bisseck to fire into the top corner from the centre of the box for Inter's fourth goal in the 63rd minute.</p>\n<p><a data-player-guid=\"05565c83-6cae-802b-9669-ea4ba9bd1856\" href=\"http://espn.com/soccer/player/_/id/214562/manuel-akanji\">Manuel Akanji</a> headed Dimarco's cross against the bar soon after as Monza became more ragged.</p>\n<p>Stones stepped off the bench to replace Akanji for his Serie A debut in the 75th minute before Inter goalkeeper <a data-player-guid=\"54d7cf61-e139-a080-96bf-0368bca80de1\" href=\"http://espn.com/soccer/player/_/id/240533/josep-martinez\">Josep Martínez</a> produced a low save to keep out Samuele Birindelli's low effort.</p>\n<p><a data-player-guid=\"f40d7185-aa35-3fa5-9d46-722c69ef7277\" href=\"http://espn.com/soccer/player/_/id/308288/nicolas-galazzi\">Nicolas Galazzi</a> pulled another effort on goal for Monza wide as the home side took their foot off the gas, while Esposito spurned the chance of his second and Inter's fifth when he headed wide in time added on.</p>\n\n\n\n\n",
-   "allowComments": true,
-   "allowContentReactions": false,
-   "allowSearch": true,
-   "byline": "PA",
-   "isLiveBlog": false,
-   "links": {
-    "api": {
-     "self": {
-      "href": "https://content.core.api.espn.com/v1/sports/news/49674203"
-     }
-    },
-    "app": {
-     "sportscenter": {
-      "href": "sportscenter://x-callback-url/showStory?uid=49674203"
-     }
-    },
-    "mobile": {
-     "href": "http://m.espn.go.com/soccer/story?storyId=49674203"
-    },
-    "web": {
-     "href": "http://www.espn.com/soccer/report/_/gameId/401874931"
-    }
-   },
-   "premium": false
   },
   "videos": [],
   "seasonseries": [
@@ -22004,8 +22067,8 @@
           "description": "Number of Games Played",
           "abbreviation": "GP",
           "type": "gamesplayed",
-          "value": 8,
-          "displayValue": "8"
+          "value": 9,
+          "displayValue": "9"
          },
          {
           "name": "losses",
@@ -22034,8 +22097,8 @@
           "description": "Points",
           "abbreviation": "P",
           "type": "points",
-          "value": 10,
-          "displayValue": "10"
+          "value": 11,
+          "displayValue": "11"
          },
          {
           "name": "ties",
@@ -22044,8 +22107,8 @@
           "description": "Draws",
           "abbreviation": "D",
           "type": "ties",
-          "value": 1,
-          "displayValue": "1"
+          "value": 2,
+          "displayValue": "2"
          },
          {
           "name": "wins",
@@ -22075,8 +22138,8 @@
           "shortDisplayName": "OVER",
           "description": "Overall Record",
           "type": "total",
-          "summary": "3-1-4",
-          "displayValue": "3-1-4"
+          "summary": "3-2-4",
+          "displayValue": "3-2-4"
          }
         ],
         "logo": [
@@ -22604,10 +22667,10 @@
         ]
        },
        {
-        "team": "Parma",
-        "link": "https://www.espn.com/soccer/club/_/id/115/parma",
-        "id": "115",
-        "uid": "s:600~t:115",
+        "team": "Fiorentina",
+        "link": "https://www.espn.com/soccer/club/_/id/109/fiorentina",
+        "id": "109",
+        "uid": "s:600~t:109",
         "stats": [
          {
           "name": "gamesPlayed",
@@ -22693,7 +22756,7 @@
         ],
         "logo": [
          {
-          "href": "https://a.espncdn.com/i/teamlogos/soccer/500/115.png",
+          "href": "https://a.espncdn.com/i/teamlogos/soccer/500/109.png",
           "width": 500,
           "height": 500,
           "alt": "",
@@ -22706,10 +22769,10 @@
         ]
        },
        {
-        "team": "Fiorentina",
-        "link": "https://www.espn.com/soccer/club/_/id/109/fiorentina",
-        "id": "109",
-        "uid": "s:600~t:109",
+        "team": "Parma",
+        "link": "https://www.espn.com/soccer/club/_/id/115/parma",
+        "id": "115",
+        "uid": "s:600~t:115",
         "stats": [
          {
           "name": "gamesPlayed",
@@ -22718,8 +22781,8 @@
           "description": "Number of Games Played",
           "abbreviation": "GP",
           "type": "gamesplayed",
-          "value": 8,
-          "displayValue": "8"
+          "value": 9,
+          "displayValue": "9"
          },
          {
           "name": "losses",
@@ -22748,8 +22811,8 @@
           "description": "Points",
           "abbreviation": "P",
           "type": "points",
-          "value": 4,
-          "displayValue": "4"
+          "value": 5,
+          "displayValue": "5"
          },
          {
           "name": "ties",
@@ -22758,8 +22821,8 @@
           "description": "Draws",
           "abbreviation": "D",
           "type": "ties",
-          "value": 1,
-          "displayValue": "1"
+          "value": 2,
+          "displayValue": "2"
          },
          {
           "name": "wins",
@@ -22789,13 +22852,13 @@
           "shortDisplayName": "OVER",
           "description": "Overall Record",
           "type": "total",
-          "summary": "1-1-6",
-          "displayValue": "1-1-6"
+          "summary": "1-2-6",
+          "displayValue": "1-2-6"
          }
         ],
         "logo": [
          {
-          "href": "https://a.espncdn.com/i/teamlogos/soccer/500/109.png",
+          "href": "https://a.espncdn.com/i/teamlogos/soccer/500/115.png",
           "width": 500,
           "height": 500,
           "alt": "",

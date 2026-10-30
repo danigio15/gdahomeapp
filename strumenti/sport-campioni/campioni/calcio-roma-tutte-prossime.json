@@ -2,7 +2,7 @@
  "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams/104/schedule?fixture=true",
  "stato": 200,
  "json": {
-  "timestamp": "2026-10-29T20:25:18Z",
+  "timestamp": "2026-10-30T05:14:45Z",
   "status": "success",
   "season": {
    "year": 2026,
@@ -626,8 +626,8 @@
          }
         },
         "drawOdds": {
-         "summary": "3/1",
-         "value": 4,
+         "summary": "10/3",
+         "value": 4.333,
          "handicap": 0
         },
         "links": [
@@ -667,7 +667,7 @@
            "bets",
            "bet-365"
           ],
-          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426265-150745759~3/1",
+          "href": "https://www.bet365.com/dl/sportsbookredirect?affiliate=365_307577&bet=1&bs=202426265-150745759~10/3",
           "text": "Draw Bet",
           "shortText": "Draw Bet",
           "isExternal": true,
@@ -1557,8 +1557,8 @@
         "description": "Champions League - Manchester United vs AS Roma",
         "maxPrice": 6838,
         "startingPrice": 142,
-        "numberAvailable": 8147,
-        "totalPostings": 1899,
+        "numberAvailable": 8151,
+        "totalPostings": 1900,
         "links": [
          {
           "rel": [
@@ -5870,10 +5870,10 @@
       "tickets": [
        {
         "id": "7145709",
-        "summary": "Tickets as low as $152",
+        "summary": "Tickets as low as $150",
         "description": "Roma vs Juventus (Matchday 16: Dec 18-21)",
         "maxPrice": 1942,
-        "startingPrice": 152,
+        "startingPrice": 150,
         "numberAvailable": 147,
         "totalPostings": 45,
         "links": [

@@ -2141,8 +2141,8 @@
          "description": "Number of Games Played",
          "abbreviation": "GP",
          "type": "gamesplayed",
-         "value": 8,
-         "displayValue": "8"
+         "value": 9,
+         "displayValue": "9"
         },
         {
          "name": "losses",
@@ -2171,8 +2171,8 @@
          "description": "Points",
          "abbreviation": "P",
          "type": "points",
-         "value": 10,
-         "displayValue": "10"
+         "value": 11,
+         "displayValue": "11"
         },
         {
          "name": "pointsAgainst",
@@ -2181,8 +2181,8 @@
          "description": "Goals Against",
          "abbreviation": "A",
          "type": "pointsagainst",
-         "value": 15,
-         "displayValue": "15"
+         "value": 17,
+         "displayValue": "17"
         },
         {
          "name": "pointsFor",
@@ -2191,8 +2191,8 @@
          "description": "Goals For",
          "abbreviation": "F",
          "type": "pointsfor",
-         "value": 14,
-         "displayValue": "14"
+         "value": 16,
+         "displayValue": "16"
         },
         {
          "name": "ties",
@@ -2201,8 +2201,8 @@
          "description": "Draws",
          "abbreviation": "D",
          "type": "ties",
-         "value": 1,
-         "displayValue": "1"
+         "value": 2,
+         "displayValue": "2"
         },
         {
          "name": "wins",
@@ -2272,8 +2272,8 @@
          "shortDisplayName": "OVER",
          "description": "Overall Record",
          "type": "total",
-         "summary": "3-1-4",
-         "displayValue": "3-1-4"
+         "summary": "3-2-4",
+         "displayValue": "3-2-4"
         }
        ]
       },
@@ -3199,6 +3199,195 @@
       },
       {
        "team": {
+        "id": "109",
+        "uid": "s:600~t:109",
+        "location": "Fiorentina",
+        "name": "Fiorentina",
+        "abbreviation": "FIO",
+        "displayName": "Fiorentina",
+        "shortDisplayName": "Fiorentina",
+        "isActive": true,
+        "logos": [
+         {
+          "href": "https://a.espncdn.com/i/teamlogos/soccer/500/109.png",
+          "width": 500,
+          "height": 500,
+          "alt": "",
+          "rel": [
+           "full",
+           "default"
+          ],
+          "lastUpdated": "2019-05-08T16:07Z"
+         }
+        ],
+        "links": [
+         {
+          "language": "en-US",
+          "rel": [
+           "clubhouse",
+           "desktop",
+           "team"
+          ],
+          "href": "https://www.espn.com/soccer/club/_/id/109/fiorentina",
+          "text": "Clubhouse",
+          "shortText": "Clubhouse",
+          "isExternal": false,
+          "isPremium": false
+         }
+        ],
+        "isNational": false
+       },
+       "note": {
+        "color": "#FF7F84",
+        "description": "Relegated",
+        "rank": 18
+       },
+       "stats": [
+        {
+         "name": "gamesPlayed",
+         "displayName": "Games Played",
+         "shortDisplayName": "GP",
+         "description": "Number of Games Played",
+         "abbreviation": "GP",
+         "type": "gamesplayed",
+         "value": 9,
+         "displayValue": "9"
+        },
+        {
+         "name": "losses",
+         "displayName": "Losses",
+         "shortDisplayName": "L",
+         "description": "Losses",
+         "abbreviation": "L",
+         "type": "losses",
+         "value": 6,
+         "displayValue": "6"
+        },
+        {
+         "name": "pointDifferential",
+         "displayName": "Goal Difference",
+         "shortDisplayName": "GD",
+         "description": "Goal Difference",
+         "abbreviation": "GD",
+         "type": "pointdifferential",
+         "value": -10,
+         "displayValue": "-10"
+        },
+        {
+         "name": "points",
+         "displayName": "Points",
+         "shortDisplayName": "P",
+         "description": "Points",
+         "abbreviation": "P",
+         "type": "points",
+         "value": 5,
+         "displayValue": "5"
+        },
+        {
+         "name": "pointsAgainst",
+         "displayName": "Goals Against",
+         "shortDisplayName": "A",
+         "description": "Goals Against",
+         "abbreviation": "A",
+         "type": "pointsagainst",
+         "value": 21,
+         "displayValue": "21"
+        },
+        {
+         "name": "pointsFor",
+         "displayName": "Goals For",
+         "shortDisplayName": "F",
+         "description": "Goals For",
+         "abbreviation": "F",
+         "type": "pointsfor",
+         "value": 11,
+         "displayValue": "11"
+        },
+        {
+         "name": "ties",
+         "displayName": "Draws",
+         "shortDisplayName": "D",
+         "description": "Draws",
+         "abbreviation": "D",
+         "type": "ties",
+         "value": 2,
+         "displayValue": "2"
+        },
+        {
+         "name": "wins",
+         "displayName": "Wins",
+         "shortDisplayName": "W",
+         "description": "Wins",
+         "abbreviation": "W",
+         "type": "wins",
+         "value": 1,
+         "displayValue": "1"
+        },
+        {
+         "name": "advanced",
+         "displayName": "Advanced",
+         "shortDisplayName": "ADV",
+         "description": "Advanced",
+         "abbreviation": "ADV",
+         "type": "advanced",
+         "value": 0,
+         "displayValue": "0"
+        },
+        {
+         "name": "deductions",
+         "displayName": "Point Deductions",
+         "shortDisplayName": "Deductions",
+         "description": "Point Deductions",
+         "abbreviation": "PD",
+         "type": "deductions",
+         "value": 0,
+         "displayValue": ""
+        },
+        {
+         "name": "ppg",
+         "displayName": "Points Per Game",
+         "shortDisplayName": "PPG",
+         "description": "Points Per Game",
+         "abbreviation": "PPG",
+         "type": "ppg",
+         "value": 0,
+         "displayValue": "0"
+        },
+        {
+         "name": "rank",
+         "displayName": "Rank",
+         "shortDisplayName": "Rank",
+         "description": "Rank",
+         "abbreviation": "R",
+         "type": "rank",
+         "value": 18,
+         "displayValue": "18"
+        },
+        {
+         "name": "rankChange",
+         "displayName": "Rank Change",
+         "shortDisplayName": "Rank Change",
+         "description": "Rank Change",
+         "abbreviation": "RC",
+         "type": "rankchange",
+         "value": 0,
+         "displayValue": "0"
+        },
+        {
+         "id": "0",
+         "name": "overall",
+         "abbreviation": "Total",
+         "displayName": "Overall",
+         "shortDisplayName": "OVER",
+         "description": "Overall Record",
+         "type": "total",
+         "summary": "1-2-6",
+         "displayValue": "1-2-6"
+        }
+       ]
+      },
+      {
+       "team": {
         "id": "115",
         "uid": "s:600~t:115",
         "location": "Parma",
@@ -3240,7 +3429,7 @@
        "note": {
         "color": "#FF7F84",
         "description": "Relegated",
-        "rank": 18
+        "rank": 19
        },
        "stats": [
         {
@@ -3360,8 +3549,8 @@
          "description": "Rank",
          "abbreviation": "R",
          "type": "rank",
-         "value": 18,
-         "displayValue": "18"
+         "value": 19,
+         "displayValue": "19"
         },
         {
          "name": "rankChange",
@@ -3383,195 +3572,6 @@
          "type": "total",
          "summary": "1-2-6",
          "displayValue": "1-2-6"
-        }
-       ]
-      },
-      {
-       "team": {
-        "id": "109",
-        "uid": "s:600~t:109",
-        "location": "Fiorentina",
-        "name": "Fiorentina",
-        "abbreviation": "FIO",
-        "displayName": "Fiorentina",
-        "shortDisplayName": "Fiorentina",
-        "isActive": true,
-        "logos": [
-         {
-          "href": "https://a.espncdn.com/i/teamlogos/soccer/500/109.png",
-          "width": 500,
-          "height": 500,
-          "alt": "",
-          "rel": [
-           "full",
-           "default"
-          ],
-          "lastUpdated": "2019-05-08T16:07Z"
-         }
-        ],
-        "links": [
-         {
-          "language": "en-US",
-          "rel": [
-           "clubhouse",
-           "desktop",
-           "team"
-          ],
-          "href": "https://www.espn.com/soccer/club/_/id/109/fiorentina",
-          "text": "Clubhouse",
-          "shortText": "Clubhouse",
-          "isExternal": false,
-          "isPremium": false
-         }
-        ],
-        "isNational": false
-       },
-       "note": {
-        "color": "#FF7F84",
-        "description": "Relegated",
-        "rank": 19
-       },
-       "stats": [
-        {
-         "name": "gamesPlayed",
-         "displayName": "Games Played",
-         "shortDisplayName": "GP",
-         "description": "Number of Games Played",
-         "abbreviation": "GP",
-         "type": "gamesplayed",
-         "value": 8,
-         "displayValue": "8"
-        },
-        {
-         "name": "losses",
-         "displayName": "Losses",
-         "shortDisplayName": "L",
-         "description": "Losses",
-         "abbreviation": "L",
-         "type": "losses",
-         "value": 6,
-         "displayValue": "6"
-        },
-        {
-         "name": "pointDifferential",
-         "displayName": "Goal Difference",
-         "shortDisplayName": "GD",
-         "description": "Goal Difference",
-         "abbreviation": "GD",
-         "type": "pointdifferential",
-         "value": -10,
-         "displayValue": "-10"
-        },
-        {
-         "name": "points",
-         "displayName": "Points",
-         "shortDisplayName": "P",
-         "description": "Points",
-         "abbreviation": "P",
-         "type": "points",
-         "value": 4,
-         "displayValue": "4"
-        },
-        {
-         "name": "pointsAgainst",
-         "displayName": "Goals Against",
-         "shortDisplayName": "A",
-         "description": "Goals Against",
-         "abbreviation": "A",
-         "type": "pointsagainst",
-         "value": 19,
-         "displayValue": "19"
-        },
-        {
-         "name": "pointsFor",
-         "displayName": "Goals For",
-         "shortDisplayName": "F",
-         "description": "Goals For",
-         "abbreviation": "F",
-         "type": "pointsfor",
-         "value": 9,
-         "displayValue": "9"
-        },
-        {
-         "name": "ties",
-         "displayName": "Draws",
-         "shortDisplayName": "D",
-         "description": "Draws",
-         "abbreviation": "D",
-         "type": "ties",
-         "value": 1,
-         "displayValue": "1"
-        },
-        {
-         "name": "wins",
-         "displayName": "Wins",
-         "shortDisplayName": "W",
-         "description": "Wins",
-         "abbreviation": "W",
-         "type": "wins",
-         "value": 1,
-         "displayValue": "1"
-        },
-        {
-         "name": "advanced",
-         "displayName": "Advanced",
-         "shortDisplayName": "ADV",
-         "description": "Advanced",
-         "abbreviation": "ADV",
-         "type": "advanced",
-         "value": 0,
-         "displayValue": "0"
-        },
-        {
-         "name": "deductions",
-         "displayName": "Point Deductions",
-         "shortDisplayName": "Deductions",
-         "description": "Point Deductions",
-         "abbreviation": "PD",
-         "type": "deductions",
-         "value": 0,
-         "displayValue": ""
-        },
-        {
-         "name": "ppg",
-         "displayName": "Points Per Game",
-         "shortDisplayName": "PPG",
-         "description": "Points Per Game",
-         "abbreviation": "PPG",
-         "type": "ppg",
-         "value": 0,
-         "displayValue": "0"
-        },
-        {
-         "name": "rank",
-         "displayName": "Rank",
-         "shortDisplayName": "Rank",
-         "description": "Rank",
-         "abbreviation": "R",
-         "type": "rank",
-         "value": 19,
-         "displayValue": "19"
-        },
-        {
-         "name": "rankChange",
-         "displayName": "Rank Change",
-         "shortDisplayName": "Rank Change",
-         "description": "Rank Change",
-         "abbreviation": "RC",
-         "type": "rankchange",
-         "value": 0,
-         "displayValue": "0"
-        },
-        {
-         "id": "0",
-         "name": "overall",
-         "abbreviation": "Total",
-         "displayName": "Overall",
-         "shortDisplayName": "OVER",
-         "description": "Overall Record",
-         "type": "total",
-         "summary": "1-1-6",
-         "displayValue": "1-1-6"
         }
        ]
       },
