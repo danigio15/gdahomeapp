@@ -100,6 +100,26 @@ test("accesa, l'Echo scelto dice la notifica, senza figurine", async () => {
   }
 });
 
+test("la lavatrice che ha finito si annuncia e basta: niente minuti ne' kWh", async () => {
+  /* Dal campo: «dice la lavatrice ha finito, il tempo, e poi kappa doppia W». */
+  const banco = unBanco({ alexa: accesa({ categorie: ["urgenti", "casa", "elettrodomestici"] }) });
+  try {
+    const dati = {
+      nome: "Lavatrice",
+      genere: "lavatrice",
+      conSole: false,
+      ciclo: { da: 0, a: 1, min: 92, kwh: 0.85, eur: 0.21, sole: 0, rkwh: 0.85, reur: 0.21 },
+    };
+    const evento = { ...lavatrice(), componi: { tipo: "ciclo", dati } };
+    assert.equal(await banco.notifiche._dilloAdAlexa(evento), true);
+    const detto = banco.dette()[0]?.service_data?.message || "";
+    assert.match(detto, /^Lavatrice/);
+    assert.doesNotMatch(detto, /kWh|chilowatt|min|€|euro/);
+  } finally {
+    rmSync(banco.cartella, { recursive: true, force: true });
+  }
+});
+
 test("solo le famiglie scelte, e la prova non si dice", async () => {
   const banco = unBanco({ alexa: accesa({ categorie: ["urgenti"] }) });
   try {

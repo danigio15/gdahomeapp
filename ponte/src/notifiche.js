@@ -1411,7 +1411,10 @@ export class Notifiche {
         return false;
       if (this._alexaDette.length >= ALEXA_IN_UN_ORA) return false;
       const { titolo, testo } = this._parole(evento, lingua, { stile: "semplice" });
-      const parole = paroleDaDire(titolo, testo);
+      /* Un elettrodomestico che ha finito si annuncia e basta: «la lavatrice ha
+       * finito». Durata, consumo e costo stanno nella notifica, da leggere. */
+      const soloIlTitolo = evento.componi?.tipo === "ciclo";
+      const parole = paroleDaDire(titolo, soloIlTitolo ? "" : testo, lingua);
       if (!parole) return false;
       this._alexaDette.push({ chiave, quando: ora });
       await this.casa.chiedi(chiamataAlexa(conf, parole));
