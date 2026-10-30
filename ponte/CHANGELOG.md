@@ -10,6 +10,14 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.16
+
+_App GdAHome e Home Assistant._
+
+- **Salute:** le valvole dei termosifoni non compaiono più come persone. I
+  loro sensori «Closing steps» e «Idle steps» contano i passi del motorino,
+  non quelli di chi cammina.
+
 ## 1.18.7.15
 
 _App GdAHome e Home Assistant._
