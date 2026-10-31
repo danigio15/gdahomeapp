@@ -7534,4 +7534,6 @@ export default Object.freeze({
   "What to call “${p.chi}”": "如何称呼“${p.chi}”",
   "With the Strava integration from HACS in Home Assistant, the Health page also gets a Strava tab.": "Home Assistant 中有来自 HACS 的 Strava 集成时，健康页面也会出现 Strava 标签页。",
   "No body readings yet. The easiest way: in the GdAHome app on the phone, menu › Health, turn it on and it brings your watch readings here (Apple Watch, Galaxy Watch, Fitbit, Amazfit…). They also come from Withings, Garmin or the Home Assistant app.": "还没有身体数据。最简单的方法：在手机的 GdAHome 应用中打开 菜单 › 健康，手表的数据就会来到这里 (Apple Watch, Galaxy Watch, Fitbit, Amazfit…)。也可以来自 Withings、Garmin 或 Home Assistant 应用。",
+  "Hottest disk": "最热的磁盘",
+  "Wallbox": "壁挂充电桩",
 });

@@ -7644,4 +7644,6 @@ export default Object.freeze({
   "What to call “${p.chi}”": "「${p.chi}」을(를) 뭐라고 부를까요",
   "With the Strava integration from HACS in Home Assistant, the Health page also gets a Strava tab.": "Home Assistant에 HACS의 Strava 통합이 있으면 건강 페이지에 Strava 탭도 생깁니다.",
   "No body readings yet. The easiest way: in the GdAHome app on the phone, menu › Health, turn it on and it brings your watch readings here (Apple Watch, Galaxy Watch, Fitbit, Amazfit…). They also come from Withings, Garmin or the Home Assistant app.": "아직 몸 측정값이 없습니다. 가장 쉬운 방법: 휴대폰의 GdAHome 앱에서 메뉴 › 건강을 켜면 시계의 측정값이 여기로 옵니다 (Apple Watch, Galaxy Watch, Fitbit, Amazfit…). Withings, Garmin, Home Assistant 앱에서도 옵니다.",
+  "Hottest disk": "가장 뜨거운 디스크",
+  "Wallbox": "월박스",
 });

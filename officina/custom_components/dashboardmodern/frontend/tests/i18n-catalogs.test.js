@@ -132,6 +132,8 @@ test("no translation is left as its English source", async () => {
 /* Strings that legitimately read the same in every language we ship. */
 const SHARED_ACROSS_LANGUAGES = new Set([
   ".",
+  /* «Wallbox» si dice cosi' in tedesco, spagnolo, polacco, portoghese. */
+  "Wallbox",
   /* La musica sugli Echo: «Echo» e' il nome dell'altoparlante, gli esempi
    * del campo di ricerca sono nomi propri, «Radio» si scrive cosi' in mezza
    * Europa e TuneIn e' un marchio. */

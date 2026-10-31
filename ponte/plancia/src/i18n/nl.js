@@ -7704,4 +7704,6 @@ export default Object.freeze({
   "What to call “${p.chi}”": "Hoe „${p.chi}” te noemen",
   "With the Strava integration from HACS in Home Assistant, the Health page also gets a Strava tab.": "Met de Strava-integratie uit HACS in Home Assistant krijgt de Gezondheidspagina ook een Strava-tabblad.",
   "No body readings yet. The easiest way: in the GdAHome app on the phone, menu › Health, turn it on and it brings your watch readings here (Apple Watch, Galaxy Watch, Fitbit, Amazfit…). They also come from Withings, Garmin or the Home Assistant app.": "Nog geen lichaamsmetingen. Het eenvoudigst: in de GdAHome-app op de telefoon, menu › Gezondheid, aanzetten en de metingen van je horloge komen hier (Apple Watch, Galaxy Watch, Fitbit, Amazfit…). Ze komen ook van Withings, Garmin of de Home Assistant-app.",
+  "Hottest disk": "Heetste schijf",
+  "Wallbox": "Laadpaal",
 });

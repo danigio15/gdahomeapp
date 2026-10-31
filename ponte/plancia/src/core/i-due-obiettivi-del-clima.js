@@ -136,8 +136,7 @@ export function eUnTermostatoACoppia(attributi) {
    * condizionatori dichiarano tutte e due le cose; la coppia la fa chi ha i
    * due numeri davvero (qui sopra), o chi l'obiettivo singolo non ce l'ha. */
   const haIlSingolo =
-    Number.isFinite(dichiarate) &&
-    (dichiarate & CLIMA_CON_UN_OBIETTIVO) === CLIMA_CON_UN_OBIETTIVO;
+    Number.isFinite(dichiarate) && (dichiarate & CLIMA_CON_UN_OBIETTIVO) === CLIMA_CON_UN_OBIETTIVO;
   if (haIlSingolo) return false;
   if (
     Number.isFinite(dichiarate) &&

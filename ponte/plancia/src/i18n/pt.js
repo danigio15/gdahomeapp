@@ -7702,4 +7702,6 @@ export default Object.freeze({
   "What to call “${p.chi}”": "Como chamar «${p.chi}»",
   "With the Strava integration from HACS in Home Assistant, the Health page also gets a Strava tab.": "Com a integração Strava do HACS no Home Assistant, a página Saúde também tem um separador Strava.",
   "No body readings yet. The easiest way: in the GdAHome app on the phone, menu › Health, turn it on and it brings your watch readings here (Apple Watch, Galaxy Watch, Fitbit, Amazfit…). They also come from Withings, Garmin or the Home Assistant app.": "Ainda sem medições do corpo. O mais simples: na app GdAHome do telemóvel, menu › Saúde, ative e traz para aqui as medições do relógio (Apple Watch, Galaxy Watch, Fitbit, Amazfit…). Também chegam da Withings, Garmin ou da app Home Assistant.",
+  "Hottest disk": "Disco mais quente",
+  "Wallbox": "Wallbox",
 });

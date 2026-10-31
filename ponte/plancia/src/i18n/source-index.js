@@ -2145,6 +2145,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Disattivata: ${v.titolo}": "Disabled: ${v.titolo}",
   "Dischi": "Disks",
   "Disco": "Disk",
+  "Disco più caldo": "Hottest disk",
   "Discreta": "Fair",
   "Disegno": "Drawing",
   "Disegno (se non c'è immagine)": "Drawing (when there is no image)",

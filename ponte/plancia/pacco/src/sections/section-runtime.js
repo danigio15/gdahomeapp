@@ -560,7 +560,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-7MYL5KBU.js";
+} from "../../chunk-IOBPPRXV.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -3757,6 +3757,7 @@ var SOURCE_INDEX = Object.freeze({
   "Disattivata: ${v.titolo}": "Disabled: ${v.titolo}",
   "Dischi": "Disks",
   "Disco": "Disk",
+  "Disco più caldo": "Hottest disk",
   "Discreta": "Fair",
   "Disegno": "Drawing",
   "Disegno (se non c'è immagine)": "Drawing (when there is no image)",
