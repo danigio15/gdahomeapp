@@ -9,7 +9,8 @@ import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/painting.dart' show Color;
 import 'package:flutter/services.dart' show HapticFeedback;
-import 'package:flutter/widgets.dart' show Widget;
+import 'package:flutter/widgets.dart'
+    show Offstage, ValueListenableBuilder, Widget;
 import 'package:file_selector/file_selector.dart' as archivio;
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -23,6 +24,7 @@ import '../../casa/lo_schermo.dart';
 import '../../plancia/il_fondo.dart';
 import '../../plancia/premesse.dart' show ilMenuDalTelefono, laPlanciaSiVede;
 import '../../parole.dart';
+import '../da_parte.dart' show planciaCopertaDelTutto;
 import 'biglietto.dart';
 import 'gli_errori.dart';
 import 'pagine.dart';
@@ -749,11 +751,20 @@ Widget riquadroDelWebView(
 }) {
   final piattaforma = controllore.platform;
   if (ibrido && piattaforma is AndroidWebViewController) {
-    return WebViewWidget.fromPlatformCreationParams(
+    final vista = WebViewWidget.fromPlatformCreationParams(
       params: AndroidWebViewWidgetCreationParams(
         controller: piattaforma,
         displayWithHybridComposition: true,
       ),
+    );
+    /* Col menu aperto fino in fondo la plancia esce dalla scena: composta dal
+     * sistema, rallenterebbe tutto quello che le scorre sopra
+     * (`planciaCopertaDelTutto`). `Offstage` la tiene viva e caricata. */
+    return ValueListenableBuilder<bool>(
+      valueListenable: planciaCopertaDelTutto,
+      builder: (_, coperta, figlio) =>
+          Offstage(offstage: coperta, child: figlio),
+      child: vista,
     );
   }
   return WebViewWidget(controller: controllore);
