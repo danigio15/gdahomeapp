@@ -7772,4 +7772,7 @@ export default Object.freeze({
   "1 window or door open": "نافذة أو باب واحد مفتوح",
   "${aperte} windows or doors open": "نوافذ أو أبواب مفتوحة: ${aperte}",
   "Motion in 1 spot": "حركة في موضع واحد",
+  "Your home isn't here yet": "منزلك غير موجود بعد",
+  "Create it from the floor plan and room photos: then you'll see floors, furniture and devices with their state here.": "أنشئه من المخطط وصور الغرف: بعدها سترى هنا الطوابق والأثاث والأجهزة مع حالتها.",
+  "Whoever manages the home still has to create it. It will appear here as soon as it's ready.": "لا يزال على من يدير المنزل إنشاؤه. سيظهر هنا بمجرد أن يصبح جاهزًا.",
 });

@@ -7827,4 +7827,7 @@ export default Object.freeze({
   "1 window or door open": "窓またはドアが 1 か所開いています",
   "${aperte} windows or doors open": "窓またはドアが ${aperte} か所開いています",
   "Motion in 1 spot": "1 か所で動きを検知",
+  "Your home isn't here yet": "まだ家がありません",
+  "Create it from the floor plan and room photos: then you'll see floors, furniture and devices with their state here.": "間取り図と部屋の写真から作成してください。その後、ここに階、家具、デバイスの状態が表示されます。",
+  "Whoever manages the home still has to create it. It will appear here as soon as it's ready.": "家の管理者がまだ作成していません。準備ができるとここに表示されます。",
 });

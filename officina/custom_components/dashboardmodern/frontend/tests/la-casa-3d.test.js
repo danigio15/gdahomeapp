@@ -95,8 +95,13 @@ test("la casa pulita butta quello che non va e tiene quello che serve", () => {
   );
 });
 
-test("senza piani la casa non si accende", () => {
-  assert.equal(casa3dPulita({ attiva: true }).attiva, false);
+/* «Avevo selezionato 3D, ma quando faccio Aggiungi va la classica»: una
+ * casa senza piani si spegneva da sola, e una plancia Casa 3D appena nata
+ * ricadeva nella classica. Accesa resta accesa anche vuota: la plancia
+ * mostra «Crea la tua casa». Spenta di serie, come prima. */
+test("accesa anche senza piani, spenta di serie", () => {
+  assert.equal(casa3dPulita({ attiva: true }).attiva, true);
+  assert.deepEqual(casa3dPulita({ attiva: true }).piani, []);
   assert.equal(CASA3D_VUOTA.attiva, false);
 });
 

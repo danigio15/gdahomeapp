@@ -7842,4 +7842,7 @@ export default Object.freeze({
   "1 window or door open": "Открыто 1 окно или дверь",
   "${aperte} windows or doors open": "Открыто окон или дверей: ${aperte}",
   "Motion in 1 spot": "Движение в 1 месте",
+  "Your home isn't here yet": "Вашего дома здесь пока нет",
+  "Create it from the floor plan and room photos: then you'll see floors, furniture and devices with their state here.": "Создайте его по плану и фотографиям комнат: тогда здесь появятся этажи, мебель и устройства с их состоянием.",
+  "Whoever manages the home still has to create it. It will appear here as soon as it's ready.": "Тот, кто управляет домом, ещё должен его создать. Он появится здесь, как только будет готов.",
 });

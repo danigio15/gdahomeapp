@@ -7808,4 +7808,7 @@ export default Object.freeze({
   "1 window or door open": "1 खिड़की या दरवाज़ा खुला है",
   "${aperte} windows or doors open": "${aperte} खिड़कियाँ या दरवाज़े खुले हैं",
   "Motion in 1 spot": "1 जगह पर हलचल",
+  "Your home isn't here yet": "आपका घर अभी यहाँ नहीं है",
+  "Create it from the floor plan and room photos: then you'll see floors, furniture and devices with their state here.": "इसे नक्शे और कमरों की तस्वीरों से बनाइए: फिर यहाँ मंज़िलें, फ़र्नीचर और डिवाइस उनकी स्थिति के साथ दिखेंगे।",
+  "Whoever manages the home still has to create it. It will appear here as soon as it's ready.": "घर को संभालने वाले को अभी इसे बनाना है। तैयार होते ही यह यहाँ दिखेगा।",
 });

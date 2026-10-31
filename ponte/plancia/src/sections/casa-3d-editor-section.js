@@ -103,7 +103,7 @@ function corpoMarkup() {
   return `<div class="dm-c3-ed">
     <article class="ed-row dm-c3-ed-gruppo">
       <div class="dm-c3-ed-testa"><span>🏠</span><strong>${esc(t("Casa 3D", "3D Home"))}</strong><span class="dm-c3-ed-premium">PREMIUM</span></div>
-      <label class="dm-c3-ed-spunta"><input type="checkbox" data-dm-c3-attiva ${c.attiva ? "checked" : ""} ${c.piani.length ? "" : "disabled"}><span>${esc(
+      <label class="dm-c3-ed-spunta"><input type="checkbox" data-dm-c3-attiva ${c.attiva ? "checked" : ""}><span>${esc(
         t("Mostra la plancia Casa 3D", "Show the 3D Home dashboard"),
       )}</span></label>
       <div class="dm-c3-ed-piani">${piani}</div>

@@ -7689,4 +7689,7 @@ export default Object.freeze({
   "1 window or door open": "1 扇窗或门开着",
   "${aperte} windows or doors open": "${aperte} 扇窗或门开着",
   "Motion in 1 spot": "1 处检测到移动",
+  "Your home isn't here yet": "你的家还没有创建",
+  "Create it from the floor plan and room photos: then you'll see floors, furniture and devices with their state here.": "用平面图和房间照片来创建：之后这里会显示楼层、家具和设备及其状态。",
+  "Whoever manages the home still has to create it. It will appear here as soon as it's ready.": "管理这个家的人还没有创建它。准备好后会显示在这里。",
 });

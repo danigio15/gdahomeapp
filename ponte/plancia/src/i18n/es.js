@@ -7874,4 +7874,7 @@ export default Object.freeze({
   "1 window or door open": "1 ventana o puerta abierta",
   "${aperte} windows or doors open": "${aperte} ventanas o puertas abiertas",
   "Motion in 1 spot": "Movimiento en 1 punto",
+  "Your home isn't here yet": "Tu casa aún no está aquí",
+  "Create it from the floor plan and room photos: then you'll see floors, furniture and devices with their state here.": "Créala a partir del plano y de las fotos de las habitaciones: luego verás aquí las plantas, los muebles y los dispositivos con su estado.",
+  "Whoever manages the home still has to create it. It will appear here as soon as it's ready.": "Quien administra la casa todavía tiene que crearla. Aparecerá aquí en cuanto esté lista.",
 });

@@ -7859,4 +7859,7 @@ export default Object.freeze({
   "1 window or door open": "1 raam of deur geopend",
   "${aperte} windows or doors open": "${aperte} ramen of deuren geopend",
   "Motion in 1 spot": "Beweging op 1 plek",
+  "Your home isn't here yet": "Je huis is er nog niet",
+  "Create it from the floor plan and room photos: then you'll see floors, furniture and devices with their state here.": "Maak het van de plattegrond en foto's van de kamers: daarna zie je hier verdiepingen, meubels en apparaten met hun status.",
+  "Whoever manages the home still has to create it. It will appear here as soon as it's ready.": "Wie het huis beheert, moet het nog maken. Zodra het klaar is, verschijnt het hier.",
 });
