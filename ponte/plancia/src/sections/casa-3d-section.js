@@ -144,12 +144,33 @@ function testataMarkup(casa, admin) {
         .join("")}</div>
       <span class="c3-spazio"></span>
       ${
-        admin
+        admin && casa.piani.length
           ? `<button type="button" class="c3-tasto" data-c3s="arreda" aria-pressed="${state.arreda}">🎨 ${esc(t("Arreda", "Furnish"))}</button>
              <button type="button" class="c3-tasto" data-c3s="crea">🏗️ ${esc(t("Crea / modifica la casa", "Create / edit the house"))}</button>`
           : ""
       }
       <span class="c3-ora">${esc(adesso)}</span>
+    </div>`;
+}
+
+/* La casa che non c'e' ancora: chi amministra la crea da qui, gli altri
+ * sanno che cosa aspettano. */
+function casaDaCreareMarkup(admin) {
+  return `<div class="c3-da-creare">
+      <span aria-hidden="true">🏗️</span>
+      <h2>${esc(t("La tua casa non c'è ancora", "Your home isn't here yet"))}</h2>
+      <p>${esc(
+        admin
+          ? t(
+              "Creala dalla planimetria e dalle foto delle stanze: poi qui vedrai piani, arredi e dispositivi col loro stato.",
+              "Create it from the floor plan and room photos: then you'll see floors, furniture and devices with their state here.",
+            )
+          : t(
+              "Chi amministra la casa deve ancora crearla. Appena è pronta compare qui.",
+              "Whoever manages the home still has to create it. It will appear here as soon as it's ready.",
+            ),
+      )}</p>
+      ${admin ? `<button type="button" class="c3-tasto c3-tasto-grande" data-c3s="crea">🏗️ ${esc(t("Crea la tua casa", "Create your home"))}</button>` : ""}
     </div>`;
 }
 
@@ -530,20 +551,25 @@ function disegna() {
   nodo.dataset.tema = doc.documentElement.getAttribute("data-theme") || "light";
   nodo.dataset.arreda = String(state.arreda);
   scriviSeCambia(nodo.querySelector(".c3-testa-posto"), testataMarkup(casa, admin));
-  scriviSeCambia(nodo.querySelector(".c3-sinistra"), sinistraMarkup(casa, states, admin));
+  /* Una plancia Casa 3D appena nata non ha ancora la casa: niente scena,
+   * niente schede, e al posto della casa l'invito a crearla. */
+  const vuota = !casa.piani.length;
+  scriviSeCambia(nodo.querySelector(".c3-sinistra"), vuota ? "" : sinistraMarkup(casa, states, admin));
   const guardabili = telecamereGuardabili(casa, states);
-  scriviSeCambia(nodo.querySelector(".c3-elenco"), elencoMarkup(casa, states, guardabili));
+  scriviSeCambia(nodo.querySelector(".c3-elenco"), vuota ? "" : elencoMarkup(casa, states, guardabili));
   /* La scena: si costruisce una volta, si rifa' solo se la casa e' cambiata
    * da un'altra parte (la procedura «Crea», un altro dispositivo). */
   const firma = JSON.stringify(casa);
   if (state.scena && state.firma !== firma) spegniLaScena();
   if (state.scena) state.scena.aggiornaStati(states);
-  else if (!state.caricando && !state.guasto) avviaLaScena(admin);
+  else if (!vuota && !state.caricando && !state.guasto) avviaLaScena(admin);
   scriviSeCambia(
     nodo.querySelector(".c3-attesa"),
     state.scena
       ? ""
-      : `<p>${esc(state.guasto ? t("La casa in 3D non si apre su questo dispositivo.", "The 3D house cannot open on this device.") : t("Arriva la casa…", "Loading the house…"))}</p>`,
+      : vuota
+        ? casaDaCreareMarkup(admin)
+        : `<p>${esc(state.guasto ? t("La casa in 3D non si apre su questo dispositivo.", "The 3D house cannot open on this device.") : t("Arriva la casa…", "Loading the house…"))}</p>`,
   );
   /* Il video vivo non si ridisegna finche' resta aperto; una telecamera che
    * smette di potersi guardare si chiude subito. */
@@ -743,6 +769,11 @@ function installaLoStile() {
     ${C3} .c3-posto{position:absolute;inset:0;border-radius:inherit}
     ${C3} .c3-attesa{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;color:#cbd5e1;font-size:13px;font-weight:700}
     ${C3} .c3-attesa:empty{display:none}
+    ${C3} .c3-da-creare{pointer-events:auto;display:grid;justify-items:center;gap:10px;max-width:420px;padding:24px;text-align:center}
+    ${C3} .c3-da-creare>span{font-size:44px}
+    ${C3} .c3-da-creare h2{margin:0;font-size:20px;color:inherit}
+    ${C3} .c3-da-creare p{margin:0;font-weight:500;line-height:1.45}
+    ${C3} .c3-da-creare .c3-tasto-grande{padding:12px 20px;font-size:15px;background:#0ea5e9;border-color:#0ea5e9;color:#fff}
 
     ${C3} .c3-elenco-righe{display:grid;gap:8px;margin:0;padding:0;list-style:none}
     ${C3} .c3-disp{--c:100,116,139;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:14px;background:var(--c3-morbido);

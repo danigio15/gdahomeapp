@@ -7825,4 +7825,7 @@ export default Object.freeze({
   "1 window or door open": "1 pencere veya kapı açık",
   "${aperte} windows or doors open": "${aperte} pencere veya kapı açık",
   "Motion in 1 spot": "1 noktada hareket",
+  "Your home isn't here yet": "Eviniz henüz burada değil",
+  "Create it from the floor plan and room photos: then you'll see floors, furniture and devices with their state here.": "Kat planından ve oda fotoğraflarından oluşturun: ardından katları, mobilyaları ve cihazları durumlarıyla burada görürsünüz.",
+  "Whoever manages the home still has to create it. It will appear here as soon as it's ready.": "Evi yöneten kişinin onu henüz oluşturması gerekiyor. Hazır olduğunda burada görünecek.",
 });

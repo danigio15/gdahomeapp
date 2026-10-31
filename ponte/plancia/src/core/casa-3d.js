@@ -405,7 +405,9 @@ export function casa3dPulita(raw) {
   const piani = elenco(c.piani).map(pianoPulito).filter(Boolean).slice(0, PIANI_AL_MASSIMO);
   return {
     versione: VERSIONE_CASA3D,
-    attiva: c.attiva === true && piani.length > 0,
+    /* Accesa anche senza piani: una plancia «Casa 3D» appena nata e' gia'
+     * lei, e mostra «Crea la tua casa» invece di ricadere nella classica. */
+    attiva: c.attiva === true,
     tipo,
     esterno: {
       pianiPalazzo: numero(e.pianiPalazzo, 2, 20, 6) | 0,

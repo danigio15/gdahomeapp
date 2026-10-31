@@ -114,7 +114,7 @@ function configDiPartenza(configurazione, modello, partenza) {
   if (modello === "casa3d") {
     const casa = casaDellaPrincipale(configurazione);
     return {
-      [CHIAVE_CASA3D]: JSON.stringify(casa3dPulita({ ...casa, attiva: casa.piani.length > 0 })),
+      [CHIAVE_CASA3D]: JSON.stringify(casa3dPulita({ ...casa, attiva: true })),
     };
   }
   if (modello === "occhio")

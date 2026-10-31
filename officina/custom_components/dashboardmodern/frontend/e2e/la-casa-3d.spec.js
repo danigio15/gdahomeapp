@@ -359,3 +359,37 @@ test("chi amministra arreda", async ({ page }, testInfo) => {
   await expect(casa.locator(".c3-arreda-posto")).toBeVisible();
   await scatta(page, testInfo, "casa3d-arreda");
 });
+
+/* «Avevo selezionato 3D ma quando faccio Aggiungi va la classica»: una
+ * plancia Casa 3D appena nata, senza casa, resta Casa 3D. Al posto della
+ * casa l'invito a crearla, e il motore 3D non si scarica per niente. */
+test("senza casa la plancia resta Casa 3D e invita a crearla", async ({ page }, testInfo) => {
+  test.setTimeout(240_000);
+  await page.addInitScript(() => {
+    window.__GDAHOME_PREMIUM__ = true;
+  });
+  const motore = [];
+  page.on("request", (r) => {
+    if (r.url().includes("three.module.min.js")) motore.push(r.url());
+  });
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
+  await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
+  await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true, null, {
+    timeout: 60_000,
+  });
+  await page.evaluate(() => {
+    localStorage.setItem("cd_casa3d", JSON.stringify({ attiva: true, piani: [] }));
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
+  });
+  const casa = page.locator("#dm-casa3d");
+  await expect(casa.locator(".c3-da-creare h2")).toHaveText("La tua casa non c'è ancora", {
+    timeout: 30_000,
+  });
+  await expect(casa.locator("canvas")).toHaveCount(0);
+  await expect(casa.locator('[data-c3s="arreda"]')).toHaveCount(0);
+  expect(motore).toEqual([]);
+  const dove = foto(testInfo, "casa3d-da-creare");
+  if (dove) await page.screenshot({ path: dove });
+  await casa.locator('.c3-da-creare [data-c3s="crea"]').click();
+  await expect(page.locator("#dm-c3c")).toBeVisible({ timeout: 20_000 });
+});

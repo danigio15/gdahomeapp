@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-OWYBWHBE.js";
+} from "../../chunk-MRC2A2AM.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -598,7 +598,7 @@ import {
   statoDelDispositivo,
   stessoFlusso,
   vuoleIlVivo
-} from "../../chunk-IV3QWHBB.js";
+} from "../../chunk-2HDBHXHW.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -3262,6 +3262,7 @@ var SOURCE_INDEX = Object.freeze({
   "Che cosa l'ha fatto scattare (facoltativo)": "What set it off (optional)",
   "Che materiale è": "Which material",
   "chi": "who",
+  "Chi amministra la casa deve ancora crearla. Appena è pronta compare qui.": "Whoever manages the home still has to create it. It will appear here as soon as it's ready.",
   "Chi c'è vicino · basta una fonte": "Who is nearby · one source is enough",
   "chi è in casa": "who is home",
   "Chi è in casa": "Who is home",
@@ -3635,6 +3636,7 @@ var SOURCE_INDEX = Object.freeze({
   "Crea la prima": "Create the first one",
   "Crea la tua casa": "Create your home",
   "Crea token": "Create token",
+  "Creala dalla planimetria e dalle foto delle stanze: poi qui vedrai piani, arredi e dispositivi col loro stato.": "Create it from the floor plan and room photos: then you'll see floors, furniture and devices with their state here.",
   "Createte token": "Create token",
   "Creato: ${nome} ✓": "Created: ${nome} ✓",
   "crei un avviso su qualsiasi entità, con nome, condizione e icona a scelta.": "you can create an alert on any entity, with your own name, condition and icon.",
@@ -5109,6 +5111,7 @@ var SOURCE_INDEX = Object.freeze({
   "La trovi lì e la esegue Home Assistant.": "You'll find it there and Home Assistant runs it.",
   "La tua auto": "Your car",
   "La tua casa": "Your home",
+  "La tua casa non c'è ancora": "Your home isn't here yet",
   "La tua domanda": "Your question",
   "La tua sezione": "Your section",
   "La tua squadra": "Your team",
@@ -153811,9 +153814,25 @@ function testataMarkup2(casa2, admin) {
       </div>
       <div class="c3-pillole">${pillola2("esterno", `${casa2.tipo === "palazzo" ? "🏢" : "🏡"} ${t("Esterno", "Outside")}`)}${pianiDallAlto(casa2).map((x) => pillola2(x.k, x.nome)).join("")}</div>
       <span class="c3-spazio"></span>
-      ${admin ? `<button type="button" class="c3-tasto" data-c3s="arreda" aria-pressed="${state180.arreda}">🎨 ${esc(t("Arreda", "Furnish"))}</button>
+      ${admin && casa2.piani.length ? `<button type="button" class="c3-tasto" data-c3s="arreda" aria-pressed="${state180.arreda}">🎨 ${esc(t("Arreda", "Furnish"))}</button>
              <button type="button" class="c3-tasto" data-c3s="crea">🏗️ ${esc(t("Crea / modifica la casa", "Create / edit the house"))}</button>` : ""}
       <span class="c3-ora">${esc(adesso2)}</span>
+    </div>`;
+}
+function casaDaCreareMarkup(admin) {
+  return `<div class="c3-da-creare">
+      <span aria-hidden="true">🏗️</span>
+      <h2>${esc(t("La tua casa non c'è ancora", "Your home isn't here yet"))}</h2>
+      <p>${esc(
+    admin ? t(
+      "Creala dalla planimetria e dalle foto delle stanze: poi qui vedrai piani, arredi e dispositivi col loro stato.",
+      "Create it from the floor plan and room photos: then you'll see floors, furniture and devices with their state here."
+    ) : t(
+      "Chi amministra la casa deve ancora crearla. Appena è pronta compare qui.",
+      "Whoever manages the home still has to create it. It will appear here as soon as it's ready."
+    )
+  )}</p>
+      ${admin ? `<button type="button" class="c3-tasto c3-tasto-grande" data-c3s="crea">🏗️ ${esc(t("Crea la tua casa", "Create your home"))}</button>` : ""}
     </div>`;
 }
 function sinistraMarkup(casa2, states, admin) {
@@ -153989,7 +154008,7 @@ async function avviaLaScena(admin) {
   try {
     const [THREE, { creaScena }] = await Promise.all([
       import(TRE),
-      import("../../scena-TTATZIYZ.js")
+      import("../../scena-IZLBTXJA.js")
     ]);
     const nodo3 = doc.getElementById(ID4);
     const posto = nodo3?.querySelector(".c3-posto");
@@ -154131,16 +154150,17 @@ function disegna13() {
   nodo3.dataset.tema = doc.documentElement.getAttribute("data-theme") || "light";
   nodo3.dataset.arreda = String(state180.arreda);
   scriviSeCambia(nodo3.querySelector(".c3-testa-posto"), testataMarkup2(casa2, admin));
-  scriviSeCambia(nodo3.querySelector(".c3-sinistra"), sinistraMarkup(casa2, states, admin));
+  const vuota2 = !casa2.piani.length;
+  scriviSeCambia(nodo3.querySelector(".c3-sinistra"), vuota2 ? "" : sinistraMarkup(casa2, states, admin));
   const guardabili = telecamereGuardabili(casa2, states);
-  scriviSeCambia(nodo3.querySelector(".c3-elenco"), elencoMarkup4(casa2, states, guardabili));
+  scriviSeCambia(nodo3.querySelector(".c3-elenco"), vuota2 ? "" : elencoMarkup4(casa2, states, guardabili));
   const firma2 = JSON.stringify(casa2);
   if (state180.scena && state180.firma !== firma2) spegniLaScena();
   if (state180.scena) state180.scena.aggiornaStati(states);
-  else if (!state180.caricando && !state180.guasto) avviaLaScena(admin);
+  else if (!vuota2 && !state180.caricando && !state180.guasto) avviaLaScena(admin);
   scriviSeCambia(
     nodo3.querySelector(".c3-attesa"),
-    state180.scena ? "" : `<p>${esc(state180.guasto ? t("La casa in 3D non si apre su questo dispositivo.", "The 3D house cannot open on this device.") : t("Arriva la casa…", "Loading the house…"))}</p>`
+    state180.scena ? "" : vuota2 ? casaDaCreareMarkup(admin) : `<p>${esc(state180.guasto ? t("La casa in 3D non si apre su questo dispositivo.", "The 3D house cannot open on this device.") : t("Arriva la casa…", "Loading the house…"))}</p>`
   );
   const sopra = nodo3.querySelector(".c3-sopra");
   const video = sopra.querySelector("[data-c3-video]");
@@ -154313,6 +154333,11 @@ function installaLoStile9() {
     ${C3} .c3-posto{position:absolute;inset:0;border-radius:inherit}
     ${C3} .c3-attesa{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;color:#cbd5e1;font-size:13px;font-weight:700}
     ${C3} .c3-attesa:empty{display:none}
+    ${C3} .c3-da-creare{pointer-events:auto;display:grid;justify-items:center;gap:10px;max-width:420px;padding:24px;text-align:center}
+    ${C3} .c3-da-creare>span{font-size:44px}
+    ${C3} .c3-da-creare h2{margin:0;font-size:20px;color:inherit}
+    ${C3} .c3-da-creare p{margin:0;font-weight:500;line-height:1.45}
+    ${C3} .c3-da-creare .c3-tasto-grande{padding:12px 20px;font-size:15px;background:#0ea5e9;border-color:#0ea5e9;color:#fff}
 
     ${C3} .c3-elenco-righe{display:grid;gap:8px;margin:0;padding:0;list-style:none}
     ${C3} .c3-disp{--c:100,116,139;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:14px;background:var(--c3-morbido);
@@ -154458,7 +154483,7 @@ function corpoMarkup20() {
   return `<div class="dm-c3-ed">
     <article class="ed-row dm-c3-ed-gruppo">
       <div class="dm-c3-ed-testa"><span>🏠</span><strong>${esc(t("Casa 3D", "3D Home"))}</strong><span class="dm-c3-ed-premium">PREMIUM</span></div>
-      <label class="dm-c3-ed-spunta"><input type="checkbox" data-dm-c3-attiva ${c.attiva ? "checked" : ""} ${c.piani.length ? "" : "disabled"}><span>${esc(
+      <label class="dm-c3-ed-spunta"><input type="checkbox" data-dm-c3-attiva ${c.attiva ? "checked" : ""}><span>${esc(
     t("Mostra la plancia Casa 3D", "Show the 3D Home dashboard")
   )}</span></label>
       <div class="dm-c3-ed-piani">${piani}</div>

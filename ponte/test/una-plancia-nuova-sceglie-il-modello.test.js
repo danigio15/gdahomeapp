@@ -256,13 +256,15 @@ test("la Casa 3D e' un modello che si conosce", () => {
   assert.equal(modelloPulito("casa3d"), "casa3d");
 });
 
-test("con la Casa 3D senza una casa nella principale: nasce spenta, da creare", () => {
+/* Sceglierla e trovarsi la classica non va: senza una casa nella
+ * principale nasce accesa e vuota, e la plancia invita a crearla. */
+test("con la Casa 3D senza una casa nella principale: nasce Casa 3D, da creare", () => {
   const b = banco();
   try {
     const quale = aggiungiUnaPlancia(b, { titolo: "Casa", modello: "casa3d" });
-    assert.equal(quale.a_casa3d, false);
+    assert.equal(quale.a_casa3d, true);
     const casa = JSON.parse(b.configurazione.leggi("casa").snapshot.values.cd_casa3d);
-    assert.equal(casa.attiva, false);
+    assert.equal(casa.attiva, true);
     assert.deepEqual(casa.piani, []);
   } finally {
     b.via();
