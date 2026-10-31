@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-637A4KNW.js";
+} from "../../chunk-GJU2YP2W.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -153160,7 +153160,7 @@ function installaLoStile7() {
     ${P12} .oc-cctv{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:12px 16px;border-radius:16px;
       background:var(--oc-morbido);border:1px solid var(--oc-bordo)}
     ${P12} .oc-cctv strong{font-family:'Oswald',system-ui,sans-serif;font-size:16px;letter-spacing:.8px;text-transform:uppercase}
-    ${P12} .oc-cam-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:14px}
+    ${P12} .oc-cam-griglia{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:14px}
     ${P12} .oc-cam{position:relative;overflow:hidden;padding:0;padding-top:56.25%;border-radius:20px;cursor:pointer;background:#0f172a;
       border:1px solid var(--oc-bordo);box-shadow:var(--oc-ombra);transition:transform .3s,border-color .3s}
     ${P12} .oc-cam:hover{transform:translateY(-3px) scale(1.01);border-color:#06b6d4}
@@ -153168,6 +153168,13 @@ function installaLoStile7() {
      * fotogramma vero, mai un'icona rotta o un lampo nero fra uno e l'altro. */
     ${P12} .oc-cam img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .25s ease}
     ${P12} .oc-cam img[data-dm-camera-state="ready"],${P12} .oc-cam img[data-dm-camera-frame]{opacity:1}
+    /* Il video dal vivo lo mette il motore della plancia accanto alla foto:
+     * senza questo stava sotto di lei con la sua misura vera, allungava il
+     * riquadro in una striscia alta e allargava la finestra mentre la si
+     * guardava. Sta sopra la foto, nella stessa cornice 16:9. */
+    ${P12} .oc-cam>video.dm-cam-video{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;opacity:0;
+      pointer-events:none;background:#0b1220;transition:opacity .35s ease}
+    ${P12} .oc-cam[data-dm-video="on"]>video.dm-cam-video{opacity:1}
     ${P12} .oc-cam-attesa{position:absolute;inset:0;display:grid;place-items:center;padding:0 16px;font-size:12px;font-weight:700;letter-spacing:.4px;
       color:rgba(226,232,240,.7);text-align:center}
     ${P12} .oc-cam-su,${P12} .oc-cam-giu{position:absolute;left:0;right:0;z-index:2;display:flex;justify-content:space-between;align-items:center;

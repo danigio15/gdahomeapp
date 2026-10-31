@@ -438,3 +438,77 @@ test("dal tasto in cima si apre la sua scheda del Config, e quello che si cambia
   await expect(page.locator("#dm-occhio")).toBeVisible({ timeout: 10_000 });
   await expect(page.locator("#dm-occhio .oc-testa h1")).toHaveText("Villa", { timeout: 10_000 });
 });
+
+/* «Verifica apertura telecamere a colpo d'occhio, non va bene»: aperta la
+ * griglia, la finestra nasceva giusta e un attimo dopo diventava grande, con
+ * le telecamere in due strisce alte e strette e mezza finestra vuota. Era il
+ * video dal vivo: il motore della plancia lo mette accanto alla foto, e qui
+ * non aveva uno stile, cosi' stava sotto di lei con la sua misura vera. Qui
+ * lo si mette come lo mette il motore, e verticale, per non fidarsi del caso. */
+test("il video dal vivo non cambia la misura dei riquadri ne' della finestra", async ({
+  page,
+}, testInfo) => {
+  await boot(page, testInfo);
+  const tela = page.locator("#dm-occhio");
+  await tela.locator('.oc-riquadro[data-tipo="telecamere"]').click();
+  await expect(tela.locator(".oc-cam")).toHaveCount(6);
+  const misura = () =>
+    page.evaluate(() => {
+      const finestra = document.querySelector("#dm-occhio .oc-finestra");
+      const cam = [...document.querySelectorAll("#dm-occhio .oc-cam")].map((c) => {
+        const r = c.getBoundingClientRect();
+        return { w: Math.round(r.width), h: Math.round(r.height) };
+      });
+      return { finestra: Math.round(finestra.getBoundingClientRect().width), cam };
+    });
+  /* La finestra entra con un piccolo ingrandimento, e la telecamera sotto il
+   * puntatore si solleva: si misura a fine corsa, col puntatore altrove. */
+  await page.mouse.move(2, 2);
+  await page.waitForTimeout(600);
+  const prima = await misura();
+  await page.evaluate(() => {
+    for (const img of document.querySelectorAll("#dm-occhio .oc-cam img")) {
+      const video = document.createElement("video");
+      video.className = "dm-cam-video";
+      video.width = 1080;
+      video.height = 1920;
+      img.after(video);
+      img.parentElement.dataset.dmVideo = "on";
+    }
+  });
+  const dopo = await misura();
+  expect(dopo.finestra).toBe(prima.finestra);
+  for (const [i, c] of dopo.cam.entries()) {
+    expect(c).toEqual(prima.cam[i]);
+    expect(Math.abs(c.w / c.h - 16 / 9)).toBeLessThan(0.05);
+  }
+  /* Il video sta sopra la foto, dentro la cornice. */
+  const box = await tela.locator(".oc-cam").first().boundingBox();
+  const vbox = await tela.locator(".oc-cam video.dm-cam-video").first().boundingBox();
+  /* Dentro il bordo di un pixel della cornice. */
+  expect(Math.abs(vbox.width - box.width)).toBeLessThanOrEqual(2.5);
+  await scatta(page, testInfo, "occhio-telecamere-dal-vivo");
+});
+
+test("due telecamere riempiono la finestra, senza una colonna vuota", async ({
+  page,
+}, testInfo) => {
+  await boot(page, testInfo);
+  await page.evaluate(() => {
+    const ns = window.__DASHBOARDMODERN_STORAGE_NS__ || "";
+    const occhio = JSON.parse(localStorage.getItem("cd_occhio"));
+    occhio.telecamere = occhio.telecamere.slice(0, 2);
+    localStorage.setItem("cd_occhio", JSON.stringify(occhio));
+    if (ns) localStorage.setItem(`${ns}cd_occhio`, JSON.stringify(occhio));
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
+  });
+  const tela = page.locator("#dm-occhio");
+  await tela.locator('.oc-riquadro[data-tipo="telecamere"]').click();
+  await expect(tela.locator(".oc-cam")).toHaveCount(2, { timeout: 10_000 });
+  await page.mouse.move(2, 2);
+  await page.waitForTimeout(600);
+  const griglia = await tela.locator(".oc-cam-griglia").boundingBox();
+  const ultima = await tela.locator(".oc-cam").nth(1).boundingBox();
+  expect(Math.abs(griglia.x + griglia.width - (ultima.x + ultima.width))).toBeLessThan(2);
+  await scatta(page, testInfo, "occhio-due-telecamere");
+});
