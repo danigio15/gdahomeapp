@@ -297,7 +297,14 @@ export function climateUnits() {
       // La prima zona tiene l'id storico `card-<entity>`: il runtime legacy
       // (`cdAutoHide`) lo cerca per nome. La card gemella della pompa di
       // calore, nell'altra zona, prende un suffisso per non duplicare l'id.
-      const attributi = resolvedState(entity, states)?.attributes || null;
+      /* Un clima «non disponibile» non dice com'e' fatto: Home Assistant gli
+       * lascia solo qualche attributo, e quelli sembravano una coppia. Dal
+       * campo: «quando il clima e' non disponibile esce il Termostato, appena
+       * torna online scompare». Finche' non risponde va dove lo mette la
+       * configurazione. */
+      const stato = resolvedState(entity, states);
+      const muto = ["unavailable", "unknown", ""].includes(clean(stato?.state).toLowerCase());
+      const attributi = muto ? null : stato?.attributes || null;
       return climateZones(unit, attributi).map((zone, extra) => ({
         entity,
         name: clean(unit?.name) || entity,

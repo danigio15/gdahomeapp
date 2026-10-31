@@ -560,7 +560,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-T7SHM2G5.js";
+} from "../../chunk-2UBQ6C7P.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -79853,7 +79853,9 @@ function climateUnits() {
     const entity2 = clean(unit?.entity || unit?.entity_id || unit?.entities?.[0]);
     if (!entity2) return [];
     if (eUnUmidificatore(entity2)) return [];
-    const attributi2 = resolvedState(entity2, states)?.attributes || null;
+    const stato3 = resolvedState(entity2, states);
+    const muto2 = ["unavailable", "unknown", ""].includes(clean(stato3?.state).toLowerCase());
+    const attributi2 = muto2 ? null : stato3?.attributes || null;
     return climateZones(unit, attributi2).map((zone, extra) => ({
       entity: entity2,
       name: clean(unit?.name) || entity2,
