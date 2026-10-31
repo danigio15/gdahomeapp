@@ -133,6 +133,7 @@ const ALFABETO = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
 /** Quanto vale un gettone, al massimo, da quando e' firmato. */
 export const OTTO_GIORNI = 8 * 24 * 60 * 60 * 1000;
+const UN_ORA_DEL_NEGOZIO = 60 * 60 * 1000;
 
 /** Quanti codici si fanno in una volta, al massimo. */
 export const CODICI_AL_MASSIMO = 200;
@@ -1006,11 +1007,8 @@ export class Licenze {
         })
         .catch((errore) => {
           /* Rimborsato: niente margine, e la licenza chiude adesso (`tolte`). */
-          if (errore?.errore === "acquisto-rimborsato") {
-            una.negozio.finito = errore.errore;
-            una.negozio.finitoIl ??= this.adesso();
-            una.negozio.aggiornata = this.adesso();
-          }
+          if (this._interrotta(una, errore) === "acquisto-rimborsato")
+            this._finitaDalNegozio(una, errore, this.adesso());
           const detto = errore?.errore || errore?.message || String(errore);
           registro?.[errore?.errore ? "info" : "attenzione"]?.(
             `il rinnovo di ${una.lic} non si e' potuto controllare: ${detto}`,
@@ -1028,6 +1026,38 @@ export class Licenze {
     else for (const una of quali) await richiedi(una);
     this.archivio.salva();
     return allungate;
+  }
+
+  /* Perche' il negozio dice che una licenza e' finita.
+   *
+   * Google, a un abbonamento rimborsato con revoca o stornato, risponde
+   * «scaduto» come a uno arrivato in fondo — ma con una fine che viene prima
+   * di quella pagata. Quella e' un'interruzione, e vale come un rimborso: la
+   * licenza chiude da li', non dopo il periodo e i tre giorni di margine
+   * (prima restava Premium fino all'ultimo giorno pagato, anche per un
+   * annuale rimborsato il giorno dopo). Un'ora di tolleranza: le due fini
+   * non arrivano mai al millisecondo. */
+  _interrotta(una, errore) {
+    const perche = errore?.errore;
+    if (perche !== "abbonamento-scaduto") return perche;
+    const detta = Number(errore.scade) || 0;
+    const sapeva = Number(una.scade) || 0;
+    return detta > 0 && sapeva > 0 && detta < sapeva - UN_ORA_DEL_NEGOZIO
+      ? "acquisto-rimborsato"
+      : perche;
+  }
+
+  _finitaDalNegozio(una, errore, ora) {
+    const perche = this._interrotta(una, errore);
+    una.negozio.finito = perche;
+    if (perche === "acquisto-rimborsato") {
+      const detta = Number(errore?.scade) || 0;
+      const quando = detta > 0 ? Math.min(detta, ora) : ora;
+      una.negozio.finitoIl = Math.min(Number(una.negozio.finitoIl) || quando, quando);
+    } else {
+      una.negozio.finitoIl ??= ora;
+    }
+    una.negozio.aggiornata = ora;
   }
 
   /* Quello che il negozio ha detto di una licenza gia' sua. La casa resta
@@ -1099,11 +1129,7 @@ export class Licenze {
         rispose = true;
       })
       .catch((errore) => {
-        if (errore?.errore) {
-          una.negozio.finito = errore.errore;
-          una.negozio.finitoIl ??= ora;
-          una.negozio.aggiornata = ora;
-        }
+        if (errore?.errore) this._finitaDalNegozio(una, errore, ora);
         registro?.[errore?.errore ? "info" : "attenzione"]?.(
           `l'abbonamento di ${una.lic} non si e' potuto aggiornare: ${errore?.errore || errore?.message || errore}`,
         );

@@ -1516,6 +1516,101 @@ test("chi ha spento il rinnovo automatico chiude alla fine del periodo, senza ma
   }
 });
 
+test("un abbonamento Google rimborsato o stornato chiude subito, non a fine periodo", async () => {
+  for (const [nome, fine] of [
+    /* Google mette la fine al momento della revoca… */
+    ["revoca nel passato", () => Date.now() - 60_000],
+    /* …o dice «scaduto» lasciando la fine pagata: interrotto lo stesso. */
+    ["fine pagata nel futuro", () => Date.now() + 200 * GIORNO],
+  ]) {
+    const token = `token-google-rimborsato-${nome.length}-0123456789`;
+    const riga = (quando) => ({
+      productId: "gdahome_premium",
+      expiryTime: new Date(quando).toISOString(),
+    });
+    const abbonamenti = {
+      [token]: {
+        subscriptionState: "SUBSCRIPTION_STATE_ACTIVE",
+        acknowledgementState: "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+        lineItems: [riga(Date.now() + 300 * GIORNO)],
+      },
+    };
+    const { negozi } = unGoogleFinto(abbonamenti);
+    const b = await banco({ negozi });
+    try {
+      const presa = await b.fuori("negozio", {
+        casa: UNA,
+        segreto: SEGRETO,
+        app: "gdahome",
+        piattaforma: "android",
+        prodotto: "gdahome_premium",
+        ricevuta: token,
+      });
+      assert.equal(presa.stato, 200, nome);
+      const una = b.licenze.quella(presa.detto.licenze[0].lic);
+      abbonamenti[token] = {
+        ...abbonamenti[token],
+        subscriptionState: "SUBSCRIPTION_STATE_EXPIRED",
+        lineItems: [riga(fine())],
+      };
+      una.ricontrollata = 0;
+      /* L'avviso di Google (RTDN) fa richiedere l'abbonamento. */
+      assert.equal(
+        await b.licenze.avvisoDelNegozio(negozi, { piattaforma: "android", chiave: token }),
+        1,
+      );
+      assert.equal(una.negozio.finito, "acquisto-rimborsato", nome);
+      const ancora = await b.fuori("casa", { casa: UNA, segreto: SEGRETO });
+      assert.deepEqual(ancora.detto.gettoni, {}, `${nome}: niente gettone nuovo`);
+      assert.ok(b.licenze.fineDi(una) <= Date.now(), `${nome}: la licenza e' finita adesso`);
+      assert.deepEqual(b.licenze.tolte(), [una.lic], `${nome}: e il centralino la toglie`);
+    } finally {
+      await b.chiudi();
+    }
+  }
+});
+
+test("un abbonamento Google arrivato in fondo tiene il margine del rinnovo", async () => {
+  const token = "token-google-in-fondo-0123456789";
+  const riga = (quando) => ({
+    productId: "gdahome_premium",
+    expiryTime: new Date(quando).toISOString(),
+  });
+  const abbonamenti = {
+    [token]: {
+      subscriptionState: "SUBSCRIPTION_STATE_ACTIVE",
+      acknowledgementState: "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+      lineItems: [riga(Date.now() + 2 * ORA)],
+    },
+  };
+  const { negozi } = unGoogleFinto(abbonamenti);
+  const b = await banco({ negozi });
+  try {
+    const presa = await b.fuori("negozio", {
+      casa: UNA,
+      segreto: SEGRETO,
+      app: "gdahome",
+      piattaforma: "android",
+      prodotto: "gdahome_premium",
+      ricevuta: token,
+    });
+    const una = b.licenze.quella(presa.detto.licenze[0].lic);
+    const finito = Date.now() - ORA;
+    una.scade = finito;
+    abbonamenti[token] = {
+      ...abbonamenti[token],
+      subscriptionState: "SUBSCRIPTION_STATE_EXPIRED",
+      lineItems: [riga(finito)],
+    };
+    una.ricontrollata = 0;
+    await b.licenze.avvisoDelNegozio(negozi, { piattaforma: "android", chiave: token });
+    assert.equal(una.negozio.finito, "abbonamento-scaduto");
+    assert.equal(b.licenze.fineDi(una), finito + MARGINE_DEL_RINNOVO);
+  } finally {
+    await b.chiudi();
+  }
+});
+
 test("senza la fase dell'offerta, la prova si riconosce dal tag dell'offerta di Google", async () => {
   const token = "token-google-col-tag-0123456789";
   const { negozi } = unGoogleFinto({

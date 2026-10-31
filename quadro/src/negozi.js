@@ -390,8 +390,20 @@ export class Negozi {
     /* La prova la dice la riga che dura di piu': quella del periodo in corso. */
     const ultima = sue.find((una) => (Date.parse(una.expiryTime) || 0) === scade) ?? riga;
     if (!scade) throw new RicevutaNonValida("ricevuta-senza-scadenza");
-    if (!GOOGLE_VALIDI.has(detto.subscriptionState) || scade <= this.adesso())
-      throw new RicevutaNonValida("abbonamento-scaduto");
+    if (!GOOGLE_VALIDI.has(detto.subscriptionState) || scade <= this.adesso()) {
+      /* «Scaduto» con il periodo pagato non ancora finito vuol dire che
+       * l'abbonamento e' stato interrotto: un rimborso con revoca, o uno
+       * storno. Google non lo chiama rimborso, ma per la licenza lo e': si
+       * chiude adesso, senza i tre giorni di margine. La fine detta dal
+       * negozio va col rifiuto: il quadro la confronta con quella che sapeva. */
+      const interrotto =
+        detto.subscriptionState === "SUBSCRIPTION_STATE_EXPIRED" && scade > this.adesso();
+      const errore = new RicevutaNonValida(
+        interrotto ? "acquisto-rimborsato" : "abbonamento-scaduto",
+      );
+      errore.scade = scade;
+      throw errore;
+    }
 
     if (detto.acknowledgementState === "ACKNOWLEDGEMENT_STATE_PENDING") {
       try {
