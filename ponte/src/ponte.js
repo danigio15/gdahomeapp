@@ -24,8 +24,8 @@
 
 import { CasaIrraggiungibile } from "./casa.js";
 import { Chiacchieroni } from "./chiacchieroni.js";
-import { eUnaCommissione, no } from "./commissioni.js";
-import { passaLaDogana } from "./dogana.js";
+import { TUTTE_CHIUSE, eUnaCommissione, no } from "./commissioni.js";
+import { passaLaDogana, senzaIGettoniDelleTelecamere } from "./dogana.js";
 import { NOME } from "./marchio.js";
 
 /* Il telefono riabbinato che stacca quello che era prima: vedi
@@ -555,8 +555,9 @@ class Collegamento {
   /* Quello che va al telefono. Da qui passa **solo** cio' che arriva da Home
    * Assistant: le risposte del ponte se ne vanno per conto loro, e sono poche.
    */
-  _alTelefono(testo) {
+  _alTelefono(arrivato) {
     if (this.chiuso) return;
+    const testo = this._senzaIGettoni(arrivato);
     /* Prima di tutto il resto, e costa un'espressione regolare sui primi
      * quattrocento caratteri: il ponte gli eventi non li apre, e questo non
      * comincia adesso. */
@@ -577,6 +578,22 @@ class Collegamento {
     if (this._svuota) return;
     this._svuota = setTimeout(() => this._svuotaIlMucchio(), FINESTRA_DEL_MUCCHIO);
     this._svuota.unref?.();
+  }
+
+  /* I gettoni delle telecamere che questo telefono non vede non gli arrivano
+   * (`dogana.js`): senza un utente addosso nessuna, per chi non amministra
+   * quelle delle plance riservate agli altri. Si guarda solo un messaggio
+   * che porta un gettone. */
+  _senzaIGettoni(testo) {
+    if (typeof testo !== "string" || !testo.includes("token")) return testo;
+    const utente = this.dispositivo?.utente || "";
+    if (!utente) return senzaIGettoniDelleTelecamere(testo, TUTTE_CHIUSE);
+    if (this._amministra()) return testo;
+    const chiuse = this.ponte.commissioni?.telecamereChiuse?.(
+      utente,
+      this.ponte.utenti?.amministratoreSubito?.(utente) ?? null,
+    );
+    return senzaIGettoniDelleTelecamere(testo, chiuse);
   }
 
   _svuotaIlMucchio() {
