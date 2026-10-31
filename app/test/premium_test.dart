@@ -48,7 +48,8 @@ class _NegozioFinto implements NegozioGdahome {
   @override
   Stream<List<PurchaseDetails>> get acquisti => _acquisti.stream;
   @override
-  Future<void> compra(String piano) async => comprati.add(piano);
+  Future<void> compra(String piano, {String? conto}) async =>
+      comprati.add(piano);
   @override
   Future<void> ripristina() async => ripristinati += 1;
   @override

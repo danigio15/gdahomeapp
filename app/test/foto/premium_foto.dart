@@ -136,7 +136,7 @@ class _NegozioConLaProva implements NegozioGdahome {
   @override
   Stream<List<PurchaseDetails>> get acquisti => const Stream.empty();
   @override
-  Future<void> compra(String piano) async {}
+  Future<void> compra(String piano, {String? conto}) async {}
   @override
   Future<void> ripristina() async {}
   @override

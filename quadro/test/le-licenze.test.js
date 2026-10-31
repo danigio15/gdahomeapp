@@ -33,6 +33,7 @@ import {
   OTTO_GIORNI,
   codiceRegaloPulito,
   contaGliAbbonamenti,
+  contoDellaCasa,
   firmaIlGettone,
   mesiDopo,
   verificaIlGettone,
@@ -50,6 +51,8 @@ const TERZA = "casa_0b1c2d3e4f5a69788796a5b4c3d2e1f0";
 const TEL = "tel_00112233445566778899aabbccddeeff";
 const SEGRETO = "un-segreto-lungo-della-casa-0001";
 const GIORNO = 24 * 60 * 60 * 1000;
+/* Il conto di «casa_000…0»: lo stesso numero lo deve dare l'app. */
+const CONTO_DI_PROVA = "5fdf9e6e-8349-4c1e-ab88-5760c721977f";
 
 const RAPPORTO = {
   quando: new Date().toISOString(),
@@ -1582,6 +1585,62 @@ test("lo stesso acquisto portato su un'altra casa lo perde la casa di prima", as
   } finally {
     await b.chiudi();
   }
+});
+
+test("un acquisto fatto per una casa non lo prende un'altra finche' quella c'e'", async () => {
+  const token = "token-google-della-casa-0123456789";
+  const abbonamenti = {
+    [token]: {
+      subscriptionState: "SUBSCRIPTION_STATE_ACTIVE",
+      acknowledgementState: "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+      externalAccountIdentifiers: { obfuscatedExternalAccountId: contoDellaCasa(UNA) },
+      lineItems: [
+        {
+          productId: "gdahome_premium",
+          expiryTime: new Date(Date.now() + 300 * GIORNO).toISOString(),
+        },
+      ],
+    },
+  };
+  const { negozi } = unGoogleFinto(abbonamenti);
+  const b = await banco({ negozi });
+  try {
+    const compra = (casa) =>
+      b.fuori("negozio", {
+        casa,
+        segreto: SEGRETO,
+        app: "gdahome",
+        piattaforma: "android",
+        prodotto: "gdahome_premium",
+        ricevuta: token,
+      });
+    assert.equal((await compra(UNA)).stato, 200);
+    /* Chi conosce il token dell'acquisto di UNA prova a portarselo: no. */
+    const presa = await compra(ALTRA);
+    assert.equal(presa.stato, 409);
+    assert.equal(presa.detto.errore, "acquisto-di-un-altra-casa");
+    const ancora = await b.fuori("casa", { casa: UNA, segreto: SEGRETO });
+    assert.ok(verificaIlGettone(ancora.detto.gettoni.gdahome, PUBBLICA, { sog: UNA }));
+    assert.deepEqual(b.licenze.tolte(), []);
+
+    /* UNA non si fa vedere da piu' di trenta giorni: la casa e' stata rifatta,
+     * e l'acquisto va su quella nuova. */
+    b.licenze.archivio.dati.soggetti[UNA].visto = Date.now() - 31 * GIORNO;
+    const spostata = await compra(ALTRA);
+    assert.equal(spostata.stato, 200);
+    assert.ok(verificaIlGettone(spostata.detto.gettoni.gdahome, PUBBLICA, { sog: ALTRA }));
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("il conto della casa e' un UUID, sempre lo stesso per la stessa casa", () => {
+  const uno = contoDellaCasa(UNA);
+  assert.match(uno, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  assert.equal(contoDellaCasa(UNA), uno);
+  assert.notEqual(contoDellaCasa(ALTRA), uno);
+  /* Lo stesso numero lo calcola l'app (conto_della_casa_test.dart). */
+  assert.equal(contoDellaCasa("casa_00000000000000000000000000000000"), CONTO_DI_PROVA);
 });
 
 test("un abbonamento Google rimborsato o stornato chiude subito, non a fine periodo", async () => {

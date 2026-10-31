@@ -828,6 +828,7 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
         acquistiDellApp = GestoreDegliAcquisti(
           negozio: negozio,
           porta: _collegamento.mandaLaRicevuta,
+          casa: () => _collegamento.casa?.casaAlCentralino,
         );
         unawaited(acquistiDellApp!.avvia());
       }

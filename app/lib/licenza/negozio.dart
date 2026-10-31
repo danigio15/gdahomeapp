@@ -24,6 +24,7 @@ import 'package:in_app_purchase_storekit/store_kit_2_wrappers.dart';
 import 'package:in_app_purchase_storekit/store_kit_wrappers.dart';
 
 import '../parole.dart';
+import 'conto_della_casa.dart';
 import 'licenza.dart';
 
 /// L'abbonamento nella Play Console, coi suoi due piani base.
@@ -85,7 +86,10 @@ abstract interface class NegozioGdahome {
   Future<bool> disponibile();
   Future<List<PianoGdahome>> piani();
   Stream<List<PurchaseDetails>> get acquisti;
-  Future<void> compra(String piano);
+
+  /// [conto]: il conto della casa per cui si compra ([contoDellaCasa]), che
+  /// il negozio tiene nell'acquisto.
+  Future<void> compra(String piano, {String? conto});
   Future<void> ripristina();
   Future<void> completa(PurchaseDetails acquisto);
 
@@ -157,14 +161,17 @@ class NegozioGooglePlay implements NegozioGdahome {
   Stream<List<PurchaseDetails>> get acquisti => _iap.purchaseStream;
 
   @override
-  Future<void> compra(String piano) async {
+  Future<void> compra(String piano, {String? conto}) async {
     if (_perPiano.isEmpty) await piani();
     final dettaglio = _perPiano[piano];
     if (dettaglio == null) {
       throw StateError('Piano $piano non disponibile nel negozio');
     }
     await _iap.buyNonConsumable(
-      purchaseParam: GooglePlayPurchaseParam(productDetails: dettaglio),
+      purchaseParam: GooglePlayPurchaseParam(
+        productDetails: dettaglio,
+        applicationUserName: conto,
+      ),
     );
   }
 
@@ -247,14 +254,19 @@ class NegozioAppStore implements NegozioGdahome {
   Stream<List<PurchaseDetails>> get acquisti => _iap.purchaseStream;
 
   @override
-  Future<void> compra(String piano) async {
+  Future<void> compra(String piano, {String? conto}) async {
     if (_perPiano.isEmpty) await piani();
     final dettaglio = _perPiano[piano];
     if (dettaglio == null) {
       throw StateError('Piano $piano non disponibile nel negozio');
     }
+    /* Con StoreKit 2 `applicationUserName` diventa l'`appAccountToken`, che
+     * deve essere un UUID: il conto lo e'. */
     await _iap.buyNonConsumable(
-      purchaseParam: PurchaseParam(productDetails: dettaglio),
+      purchaseParam: PurchaseParam(
+        productDetails: dettaglio,
+        applicationUserName: conto,
+      ),
     );
   }
 
@@ -291,12 +303,15 @@ typedef PortaLaRicevuta = Future<void> Function({
 /// Gli acquisti di gdahome Premium: i piani coi prezzi, il comprare, il
 /// ripristinare, e la ricevuta portata alla casa.
 class GestoreDegliAcquisti extends ChangeNotifier {
-  GestoreDegliAcquisti({required this.negozio, required this.porta});
+  GestoreDegliAcquisti({required this.negozio, required this.porta, this.casa});
 
   /// `null`: nessun negozio (web, prove). Allora i piani sono quelli di
   /// riserva e i tasti per comprare non ci sono.
   final NegozioGdahome? negozio;
   final PortaLaRicevuta porta;
+
+  /// L'id della casa aperta (`casaAlCentralino`): l'acquisto si fa per lei.
+  final String? Function()? casa;
 
   /// I piani in vendita; vuoto finche' il negozio non risponde.
   List<PianoGdahome> piani = const [];
@@ -449,7 +464,7 @@ class GestoreDegliAcquisti extends ChangeNotifier {
     inCorso = true;
     notifyListeners();
     try {
-      await n.compra(piano);
+      await n.compra(piano, conto: await contoDellaCasa(casa?.call()));
     } catch (_) {
       _male(
         inLingua(

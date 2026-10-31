@@ -458,6 +458,7 @@ export class Negozi {
       scade,
       acquisto: token,
       prima: detto.linkedPurchaseToken || null,
+      conto: String(detto.externalAccountIdentifiers?.obfuscatedExternalAccountId ?? "") || null,
       prova: inProvaSuGoogle(ultima),
       ricevuta: { token, prodotto: riga.productId },
       abbonamento: lAbbonamento({
@@ -589,6 +590,7 @@ export class Negozi {
        * ritrovare la stessa licenza. */
       acquisto: String(t.originalTransactionId || t.transactionId),
       prima: null,
+      conto: typeof t.appAccountToken === "string" && t.appAccountToken ? t.appAccountToken : null,
       prova: inProvaSuApple(t),
       ricevuta: { originale: String(t.originalTransactionId || t.transactionId) },
       abbonamento: lAbbonamento({
