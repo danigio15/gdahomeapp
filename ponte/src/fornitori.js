@@ -542,13 +542,14 @@ export class Fornitori {
   }
 
   async _eonDalBrowser(utente, perche) {
+    const tentativo = new eon.TentativoEon();
     let link;
     try {
-      link = await this.accessoEon.linkDelBrowser();
+      link = await this.accessoEon.linkDelBrowser(tentativo);
     } catch (_errore) {
       throw new ErroreDelFornitore("fornitore");
     }
-    this.passi.set(utente, { fornitore: "eon", tipo: "incolla", alle: this.adesso() });
+    this.passi.set(utente, { fornitore: "eon", tipo: "incolla", tentativo, alle: this.adesso() });
     return { serve: "incolla", link, perche };
   }
 
@@ -651,12 +652,12 @@ export class Fornitori {
   async incolla(utente, fornitore, indirizzo) {
     const passo = this._passo(utente, fornitore, "incolla");
     if (fornitore === "eon") {
-      const codice = eon.ilCodiceDa(indirizzo);
-      if (!codice) throw new ErroreDelFornitore("link");
       let gettoni;
       try {
-        gettoni = await this.accessoEon.scambiaIlCodice(codice);
+        gettoni = await this.accessoEon.completaDalBrowser(passo.tentativo, indirizzo);
       } catch (errore) {
+        /* Un ritorno sbagliato non brucia l'accesso; uno scambio tentato si'. */
+        if (passo.tentativo.usato) this.passi.delete(utente);
         if (errore instanceof eon.AccessoNegato) throw new ErroreDelFornitore("link");
         throw new ErroreDelFornitore("fornitore");
       }

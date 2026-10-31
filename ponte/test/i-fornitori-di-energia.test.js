@@ -12,7 +12,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { generateKeyPairSync, sign } from "node:crypto";
+import { createHash, generateKeyPairSync, sign } from "node:crypto";
 import { mkdtempSync, readFileSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -28,7 +28,7 @@ const PASSWORD = "una-password-che-non-deve-restare";
 const POD_EON = "IT001E12345678";
 const POD_ENGIE = "IT002E99887766";
 const ADESSO = Date.UTC(2026, 9, 21, 9, 0, 0);
-const API_EON = "https://api.eon.finta.invalid";
+const API_EON = "https://api-finta.eon.it";
 
 const b64 = (oggetto) => Buffer.from(JSON.stringify(oggetto)).toString("base64url");
 /* Un gettone con la sola scadenza: E.ON lo legge per sapere quando
@@ -45,7 +45,11 @@ function risposta(corpo, { status = 200, headers = [] } = {}) {
 
 function eonFinto({ mfa = true, controllo = false, rifiutaIlRinnovo = false } = {}) {
   const visti = [];
-  const stato = { rinnovi: 0, rifiutaIlRinnovo };
+  /* Lo `state` e la sfida PKCE dell'ultimo `/authorize`: Auth0 rimanda lo
+   * `state` sul ritorno, e allo scambio vuole il segreto che da' la sfida. */
+  const stato = { rinnovi: 0, rifiutaIlRinnovo, state: "", sfida: "", scambi: [] };
+  const ritorno = () =>
+    `${RITORNO_EON}?code=CODICE-EON-12345678901&state=${encodeURIComponent(stato.state)}`;
   const pagina = (campi, azione = "") =>
     `<html><form method="post" action="${azione}">${Object.entries(campi)
       .map(([n, v]) => `<input type="hidden" name="${n}" value="${v}">`)
@@ -60,6 +64,10 @@ function eonFinto({ mfa = true, controllo = false, rifiutaIlRinnovo = false } = 
         `window.env={"apicrm.url":"${API_EON.replace(/\//g, "\\/")}","subscription.key":"0123456789abcdef0123456789abcdef"};`,
       );
     if (url.hostname === "auth.eon-energia.com") {
+      if (url.pathname === "/authorize") {
+        stato.state = url.searchParams.get("state") || "";
+        stato.sfida = url.searchParams.get("code_challenge") || "";
+      }
       if (url.pathname === "/authorize")
         return risposta("", {
           status: 302,
@@ -92,12 +100,7 @@ function eonFinto({ mfa = true, controllo = false, rifiutaIlRinnovo = false } = 
       if (url.pathname === "/authorize/resume")
         return risposta("", {
           status: 302,
-          headers: [
-            [
-              "location",
-              mfa ? "/u/mfa-sms-challenge?state=S1" : `${RITORNO_EON}?code=CODICE-EON-12345678901`,
-            ],
-          ],
+          headers: [["location", mfa ? "/u/mfa-sms-challenge?state=S1" : ritorno()]],
         });
       if (url.pathname === "/u/mfa-sms-challenge" && metodo === "GET")
         return risposta(pagina({ state: "S1" }, "/u/mfa-sms-challenge?state=S1") + "Enter code");
@@ -113,7 +116,7 @@ function eonFinto({ mfa = true, controllo = false, rifiutaIlRinnovo = false } = 
       if (url.pathname === "/authorize/resume2")
         return risposta("", {
           status: 302,
-          headers: [["location", `${RITORNO_EON}?code=CODICE-EON-12345678901`]],
+          headers: [["location", ritorno()]],
         });
       if (url.pathname === "/oauth/token") {
         if (corpo.includes("refresh_token")) {
@@ -125,6 +128,13 @@ function eonFinto({ mfa = true, controllo = false, rifiutaIlRinnovo = false } = 
             expires_in: 7200,
           });
         }
+        const scambio = JSON.parse(corpo);
+        stato.scambi.push(scambio);
+        const sfida = createHash("sha256")
+          .update(String(scambio.code_verifier || ""))
+          .digest("base64url");
+        if (!stato.sfida || sfida !== stato.sfida)
+          return risposta({ error: "invalid_grant" }, { status: 403 });
         return risposta({ access_token: gettoneEon("primo"), refresh_token: "rinnovo-0" });
       }
     }
@@ -444,7 +454,8 @@ test("E.ON con la password sbagliata dice «credenziali» e non collega niente",
 });
 
 test("E.ON col controllo «non sei un robot» passa dal browser", async () => {
-  const p = preparati(eonFinto({ controllo: true }).prendi);
+  const eon = eonFinto({ controllo: true });
+  const p = preparati(eon.prendi);
   try {
     const passo = await p.chiedi({
       type: `${T}collega`,
@@ -455,16 +466,32 @@ test("E.ON col controllo «non sei un robot» passa dal browser", async () => {
     assert.equal(passo.result.serve, "incolla");
     assert.equal(passo.result.perche, "captcha");
     assert.match(passo.result.link, /^https:\/\/auth\.eon-energia\.com\/authorize\?/);
-    const niente = await p.chiedi({
-      type: `${T}incolla`,
-      fornitore: "eon",
-      indirizzo: "https://esempio.invalid/",
-    });
-    assert.equal(niente.error.message, "link");
+    const link = new URL(passo.result.link);
+    assert.ok(link.searchParams.get("state"), "il link porta lo state");
+    assert.equal(link.searchParams.get("code_challenge_method"), "S256");
+    const state = link.searchParams.get("state");
+    /* E' il browser di chi usa la casa ad aprire il link, non il ponte. */
+    await eon.prendi(link.toString());
+    /* Quello che non e' il ritorno di questo accesso non passa: un indirizzo
+     * qualsiasi, il codice da solo, il ritorno di un altro accesso, un
+     * ritorno incollato dentro un indirizzo di qualcun altro senza lo state. */
+    for (const indirizzo of [
+      "https://esempio.invalid/",
+      "CODICE-DELL-ATTACCANTE-0001",
+      "https://evil.example/qualunque?code=CODICE-DELL-ATTACCANTE-0001",
+      `${RITORNO_EON}?code=CODICE-DELL-ATTACCANTE-0001`,
+      `${RITORNO_EON}?code=CODICE-DELL-ATTACCANTE-0001&state=un-altro-accesso`,
+      `${RITORNO_EON}?code=A1234567890&code=B1234567890&state=${state}`,
+      `${RITORNO_EON}?error=access_denied&state=${state}`,
+    ]) {
+      const niente = await p.chiedi({ type: `${T}incolla`, fornitore: "eon", indirizzo });
+      assert.equal(niente.error?.message, "link", indirizzo);
+    }
+    assert.equal(eon.stato.scambi.length, 0, "nessun codice sbagliato arriva allo scambio");
     const fatto = await p.chiedi({
       type: `${T}incolla`,
       fornitore: "eon",
-      indirizzo: `Failed to launch '${RITORNO_EON}?code=CODICE-EON-12345678901' because the scheme does not have a registered handler.`,
+      indirizzo: `Failed to launch '${RITORNO_EON}?code=CODICE-EON-12345678901&state=${state}' because the scheme does not have a registered handler.`,
     });
     assert.equal(fatto.success, true, JSON.stringify(fatto.error));
     assert.equal(fatto.result.stato.collegati[0].fornitore, "eon");

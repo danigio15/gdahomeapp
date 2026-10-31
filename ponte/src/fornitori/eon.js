@@ -20,7 +20,13 @@
  * area clienti, coi dati di chi entra.
  */
 
-import { createDecipheriv, scryptSync } from "node:crypto";
+import {
+  createDecipheriv,
+  createHash,
+  randomBytes,
+  scryptSync,
+  timingSafeEqual,
+} from "node:crypto";
 
 export const DOMINIO_DELL_ACCESSO = "https://auth.eon-energia.com";
 /* Il client dell'app nativa: accetta il ritorno su uno schema suo, ed e' quello
@@ -122,7 +128,25 @@ export function leggiLaConfigurazione(js) {
       break;
     }
   }
-  return indirizzo && chiave ? { base_url: indirizzo, subscription_key: chiave } : null;
+  if (!indirizzo || !chiave || !unIndirizzoDiEon(indirizzo)) return null;
+  return { base_url: indirizzo, subscription_key: chiave };
+}
+
+/* L'indirizzo dell'API letto dalla pagina va bene solo se e' di E.ON e in
+ * https: e' li' che partono il gettone e la chiave dell'abbonamento. Uno
+ * qualsiasi — una pagina manomessa — si scarta, e vale la coppia nota. */
+export function unIndirizzoDiEon(indirizzo) {
+  try {
+    const url = new URL(indirizzo);
+    return (
+      url.protocol === "https:" &&
+      !url.username &&
+      !url.password &&
+      /(^|\.)(eon\.it|eon-energia\.com)$/i.test(url.hostname)
+    );
+  } catch (_errore) {
+    return false;
+  }
 }
 
 const UN_GIORNO = 86_400_000;
@@ -218,30 +242,68 @@ function assoluto(indirizzo) {
   return indirizzo.startsWith("/") ? DOMINIO_DELL_ACCESSO + indirizzo : indirizzo;
 }
 
-/* Il codice dell'accesso, da qualunque cosa si sia riusciti a copiare: il
- * ritorno ha uno schema che il browser non apre, quindi c'e' chi incolla
- * l'indirizzo, chi la riga intera della console («Failed to launch
- * 'com.eon-energia…?code=abc' because…»), chi il codice da solo. */
-export function ilCodiceDa(testo) {
-  const pulito = String(testo || "")
-    .trim()
-    .replace(/^['"]|['"]$/g, "");
-  if (!pulito) return null;
-  const trovato = pulito.match(/[?&#]code=([^&\s'"]+)/);
-  if (trovato) {
-    try {
-      return decodeURIComponent(trovato[1]);
-    } catch (_errore) {
-      return trovato[1];
-    }
-  }
-  return /^[A-Za-z0-9_\-.~]{20,}$/.test(pulito) ? pulito : null;
+const base64url = (dati) => Buffer.from(dati).toString("base64url");
+
+function uguali(a, b) {
+  const x = Buffer.from(String(a));
+  const y = Buffer.from(String(b));
+  return x.length === y.length && timingSafeEqual(x, y);
 }
 
-function ilCodiceNelRitorno(indirizzo) {
-  if (!indirizzo) return null;
-  if (!indirizzo.startsWith(RITORNO) && !indirizzo.includes("code=")) return null;
-  return ilCodiceDa(indirizzo);
+/* Un accesso a E.ON, dall'inizio alla fine: lo `state` che lega il ritorno a
+ * QUESTO accesso e il segreto PKCE che rende il codice inutile a chi lo
+ * intercetta. Senza, un codice incollato da chiunque — o rubato dallo schema
+ * del ritorno, che su Android un'altra app puo' registrare — collegava la
+ * casa al conto di qualcun altro, o dava il conto della casa a lui. */
+export class TentativoEon {
+  constructor() {
+    this.verifier = base64url(randomBytes(48));
+    this.state = base64url(randomBytes(24));
+    this.usato = false;
+  }
+
+  /* I pezzi che vanno nel link di `/authorize`. */
+  get domanda() {
+    return {
+      state: this.state,
+      code_challenge: base64url(createHash("sha256").update(this.verifier).digest()),
+      code_challenge_method: "S256",
+    };
+  }
+
+  /* Il codice dal ritorno, se e' proprio il ritorno di questo accesso.
+   *
+   * Il ritorno ha uno schema che il browser non apre: c'e' chi incolla
+   * l'indirizzo e chi la riga intera della console («Failed to launch
+   * 'com.eon-energia…?code=abc&state=…' because…»). In tutti e due i casi
+   * dentro c'e' il ritorno intero, con lo `state`: il codice da solo non
+   * basta piu', perche' non si saprebbe di quale accesso e'. */
+  ilCodice(testo) {
+    if (this.usato) throw new AccessoNegato("tentativo finito");
+    const grezzo = typeof testo === "string" && testo.length <= 8192 ? testo : "";
+    const inizio = grezzo.indexOf(RITORNO);
+    if (inizio < 0) throw new AccessoNegato("indirizzo");
+    const ritorno = grezzo.slice(inizio).split(/[\s'"<>]/)[0];
+    if (ritorno[RITORNO.length] !== "?" || ritorno.includes("#"))
+      throw new AccessoNegato("indirizzo");
+    const domanda = new URLSearchParams(ritorno.slice(RITORNO.length + 1));
+    const stati = domanda.getAll("state");
+    if (stati.length !== 1 || !uguali(stati[0], this.state)) throw new AccessoNegato("state");
+    if (domanda.has("error")) throw new AccessoNegato("rifiutato");
+    const codici = domanda.getAll("code");
+    if (codici.length !== 1 || !/^[A-Za-z0-9_\-.~]{8,2048}$/.test(codici[0]))
+      throw new AccessoNegato("codice");
+    return codici[0];
+  }
+
+  /* Il segreto si da' una volta sola: un secondo scambio non ce l'ha. */
+  consuma() {
+    if (this.usato) throw new AccessoNegato("tentativo finito");
+    this.usato = true;
+    const verifier = this.verifier;
+    this.verifier = "";
+    return verifier;
+  }
 }
 
 export class AccessoEon {
@@ -250,7 +312,7 @@ export class AccessoEon {
     this.configurazione = configurazione ?? new ConfigurazioneEon({ prendi });
   }
 
-  async linkDelBrowser() {
+  async _autorizza(tentativo) {
     const { base_url } = await this.configurazione.leggi();
     const domanda = new URLSearchParams({
       os: "ios",
@@ -259,11 +321,26 @@ export class AccessoEon {
       redirect_uri: RITORNO,
       scope: AMBITO,
       audience: base_url,
+      ...tentativo.domanda,
     });
     return `${DOMINIO_DELL_ACCESSO}/authorize?${domanda}`;
   }
 
+  async linkDelBrowser(tentativo) {
+    if (!(tentativo instanceof TentativoEon)) throw new ErroreEon("serve un tentativo");
+    return this._autorizza(tentativo);
+  }
+
   async _chiedi(indirizzo, biscotti, { metodo = "GET", modulo = null } = {}) {
+    /* I biscotti di Auth0, la password e il codice SMS vanno solo ad Auth0:
+     * un rimando o un modulo che punta altrove si ferma qui. */
+    let origine = "";
+    try {
+      origine = new URL(indirizzo).origin;
+    } catch (_errore) {
+      origine = "";
+    }
+    if (origine !== DOMINIO_DELL_ACCESSO) throw new AccessoNegato("fuori dal dominio");
     const intestazioni = {
       "user-agent": UN_TELEFONO,
       origin: DOMINIO_DELL_ACCESSO,
@@ -298,7 +375,8 @@ export class AccessoEon {
     return { risposta, dove, testo: await risposta.text() };
   }
 
-  async _scambia(codice) {
+  async _scambia(codice, tentativo) {
+    const verifier = tentativo.consuma();
     const risposta = await this.prendi(GETTONI, {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -306,6 +384,7 @@ export class AccessoEon {
         grant_type: "authorization_code",
         client_id: CLIENT_ID,
         code: codice,
+        code_verifier: verifier,
         redirect_uri: RITORNO,
       }),
       signal: AbortSignal.timeout(ATTESA),
@@ -316,24 +395,19 @@ export class AccessoEon {
     return gettoni;
   }
 
-  async scambiaIlCodice(codice) {
-    return this._scambia(codice);
+  /* Dal ritorno incollato ai gettoni, per l'accesso cominciato col link. */
+  async completaDalBrowser(tentativo, incollato) {
+    if (!(tentativo instanceof TentativoEon)) throw new AccessoNegato("nessun tentativo");
+    return this._scambia(tentativo.ilCodice(incollato), tentativo);
   }
 
   /* Email e password, come le scrive chi entra nell'area clienti. Torna i
    * gettoni, o solleva `ServeIlCodice` (con l'accesso a meta'), `ServeIlBrowser`
    * o `AccessoNegato`. */
   async entra(email, password) {
-    const { base_url } = await this.configurazione.leggi();
+    const tentativo = new TentativoEon();
     const biscotti = new Biscotti();
-    const autorizza = `${DOMINIO_DELL_ACCESSO}/authorize?${new URLSearchParams({
-      os: "ios",
-      response_type: "code",
-      client_id: CLIENT_ID,
-      redirect_uri: RITORNO,
-      scope: AMBITO,
-      audience: base_url,
-    })}`;
+    const autorizza = await this._autorizza(tentativo);
     const inizio = await this._segui(autorizza, biscotti);
     const stato = new URL(inizio.dove).searchParams.get("state");
     if (!stato) throw new AccessoNegato("nessuno stato");
@@ -374,17 +448,16 @@ export class AccessoEon {
       throw new AccessoNegato("password");
     }
     if (rimando.includes("/u/login")) throw new AccessoNegato("password");
-    const codice = await this._finoAlCodice(rimando, biscotti, stato);
-    return this._scambia(codice);
+    const codice = await this._finoAlCodice(rimando, biscotti, stato, tentativo);
+    return this._scambia(codice, tentativo);
   }
 
   /* Dalla password al codice: i rimandi, la pagina che chiede cosa sa fare il
    * browser, il consenso all'app, e — se E.ON lo chiede — il codice SMS. */
-  async _finoAlCodice(primo, biscotti, stato) {
+  async _finoAlCodice(primo, biscotti, stato, tentativo) {
     let dove = primo;
     for (let giro = 0; giro < 10 && dove; giro += 1) {
-      const codice = ilCodiceNelRitorno(dove);
-      if (codice) return codice;
+      if (dove.startsWith(RITORNO)) return tentativo.ilCodice(dove);
       const pagina = assoluto(dove);
       const risposta = await this._chiedi(pagina, biscotti);
       let prossimo = risposta.headers.get("location");
@@ -415,6 +488,7 @@ export class AccessoEon {
             nascosti: campiNascosti(html),
             biscotti: biscotti.comeOggetto(),
             stato,
+            tentativo,
           });
         } else {
           break;
@@ -423,13 +497,13 @@ export class AccessoEon {
       if (!prossimo) break;
       dove = prossimo;
     }
-    const codice = ilCodiceNelRitorno(dove);
-    if (!codice) throw new AccessoNegato("nessun codice");
-    return codice;
+    if (dove?.startsWith(RITORNO)) return tentativo.ilCodice(dove);
+    throw new AccessoNegato("nessun codice");
   }
 
   /* Il codice SMS, sull'accesso lasciato a meta'. */
   async conIlCodice(codiceSms, sessione) {
+    if (!(sessione?.tentativo instanceof TentativoEon)) throw new AccessoNegato("nessun tentativo");
     const biscotti = new Biscotti(sessione?.biscotti || {});
     const risposta = await this._chiedi(sessione.indirizzo, biscotti, {
       metodo: "POST",
@@ -440,12 +514,12 @@ export class AccessoEon {
       throw new AccessoNegato("codice");
     let codice;
     try {
-      codice = await this._finoAlCodice(rimando, biscotti, sessione.stato);
+      codice = await this._finoAlCodice(rimando, biscotti, sessione.stato, sessione.tentativo);
     } catch (errore) {
       if (errore instanceof ServeIlCodice) throw new AccessoNegato("codice");
       throw errore;
     }
-    return this._scambia(codice);
+    return this._scambia(codice, sessione.tentativo);
   }
 }
 
