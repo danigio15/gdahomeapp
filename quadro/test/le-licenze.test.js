@@ -1034,7 +1034,8 @@ test("una ricevuta di Google Play diventa una licenza fino alla scadenza, una so
     const altraApp = await ricevuta(TOKEN_BUONO, { app: "gdanav", prodotto: "gdanav_premium" });
     assert.equal(altraApp.stato, 402);
 
-    /* Lo stesso acquisto da un'altra casa: la licenza si sposta. */
+    /* Lo stesso acquisto da un'altra casa: la licenza si sposta, con un
+     * numero nuovo, e quello di prima va fra i tolti. */
     const spostata = await b.fuori("negozio", {
       casa: ALTRA,
       segreto: SEGRETO,
@@ -1043,7 +1044,8 @@ test("una ricevuta di Google Play diventa una licenza fino alla scadenza, una so
       prodotto: "gdahome_premium",
       ricevuta: TOKEN_NUOVO,
     });
-    assert.equal(spostata.detto.licenze[0].lic, letto.lic);
+    assert.notEqual(spostata.detto.licenze[0].lic, letto.lic);
+    assert.ok(b.licenze.tolte().includes(letto.lic));
     assert.deepEqual((await b.fuori("casa", { casa: UNA, segreto: SEGRETO })).detto.gettoni, {});
   } finally {
     await b.chiudi();
