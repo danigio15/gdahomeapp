@@ -37,7 +37,7 @@ import {
   mesiDopo,
   verificaIlGettone,
 } from "../src/licenze.js";
-import { Negozi, laAppDel } from "../src/negozi.js";
+import { Negozi, laAppDel, verificaLaJwsDiApple } from "../src/negozi.js";
 
 /* La coppia **di prova** del contratto. Non va mai in un file di produzione. */
 const PUBBLICA = "6P9sdqQtlHcmH7Ve_SgzmyJmxJS28CNORRJJfjI3rnI";
@@ -2463,6 +2463,81 @@ MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgtCX5yXHn28oNzb7h
 tdKCCLRlrtR80maKJoJVBmgA1vyhRANCAATpjb/flWyCzESaWIBch1NO7W2Y7rhX
 z+NH9vTytgirTN6ld/dhzXY4Up0fCqHVkjSn2erh8v1jiMGZHebpDieV
 -----END PRIVATE KEY-----`;
+
+/* Una catena fabbricata: la radice e' una CA, ma il certificato in mezzo e'
+ * di uno sviluppatore — non una CA — e firma lui la foglia. Prima passava:
+ * la firma di ogni certificato tornava, e la radice era quella giusta. */
+const RADICE_FINTA = "65D9ADEF26054CD9F0D97B73DF92F1E5B0D8FB6060991378AD729CC1621DA975";
+const FINTA_RADICE =
+  "MIIBkzCCATmgAwIBAgIUNmwVIXTjXu2mqV9Nhrc0KO729j4wCgYIKoZIzj0EAwIwFzEVMBMGA1UEAwwMUmFkaWNl" +
+  "IGZpbnRhMB4XDTI2MTAzMTA4NDg0NloXDTQ2MTAyNjA4NDg0NlowFzEVMBMGA1UEAwwMUmFkaWNlIGZpbnRhMFkw" +
+  "EwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEmxg7KH7GX0BA6cTV9MDTdf1UDLQQVDYiPoRdQij1YFSovVe+K7ALZTXh" +
+  "+Bzpxyjfu2iD2SBBEPmlfWLGD+RGaKNjMGEwHQYDVR0OBBYEFJph0I3Zn0r0FSiBDSV+MiqDP5rXMB8GA1UdIwQY" +
+  "MBaAFJph0I3Zn0r0FSiBDSV+MiqDP5rXMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgIEMAoGCCqGSM49" +
+  "BAMCA0gAMEUCID4WwaWAeIzliw3b5IW5iIVJELrfMSmbhvr1TlPmu1c2AiEA810EFmygEPIzUUb5PmyjtJauiyuU" +
+  "fW5cUNSFajUmfyI=";
+const FINTO_MEZZO_NON_CA =
+  "MIIBizCCATKgAwIBAgIUGWrSqKzlbnjGqUEwg9BZRxQV2OIwCgYIKoZIzj0EAwIwFzEVMBMGA1UEAwwMUmFkaWNl" +
+  "IGZpbnRhMB4XDTI2MTAzMTA4NDg0NloXDTQ2MTAyNjA4NDg0NlowIzEhMB8GA1UEAwwYU3ZpbHVwcGF0b3JlLCBu" +
+  "b24gdW5hIENBMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1rOh7lJc2NwKN6DC+e6bxrN0ciOJDmpjqi9Fh+/C" +
+  "6kXnwREpFPXneKoESZuoLvZLxjWi7pwg4An/0+1GpmjQNKNQME4wDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQUuyJB" +
+  "KTI0svnFnq9c4iqBlWfF3+YwHwYDVR0jBBgwFoAUmmHQjdmfSvQVKIENJX4yKoM/mtcwCgYIKoZIzj0EAwIDRwAw" +
+  "RAIgNfqa5csg2Prbw53po/sOvA4nwMsde6bASrplk7JiYsoCIBeOvXcSJc2lESmkA11NawiUgfAglAj3bC1m9Nj7" +
+  "47kY";
+const FINTA_FOGLIA =
+  "MIIBOTCB4AIUAz7B4AQLXub0dlIO9+fv2TGdU70wCgYIKoZIzj0EAwIwIzEhMB8GA1UEAwwYU3ZpbHVwcGF0b3Jl" +
+  "LCBub24gdW5hIENBMB4XDTI2MTAzMTA4NDg0NloXDTQ2MTAyNjA4NDg0NlowHDEaMBgGA1UEAwwRRm9nbGlhIGZh" +
+  "YmJyaWNhdGEwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAQbIjRZDti8NPznLO2iVrvuAhkj40S0RzL4Hx3lR3us" +
+  "Bv2iTwIEyuvzl9UuBQibhg5acHkGTRKPfCWxscVBnRsEMAoGCCqGSM49BAMCA0gAMEUCIQCHxyGc2mKCkPMn2x0d" +
+  "kPfJkMNRHCOjvRfaZP4y6ERknAIgCU0KZn/iWB+eZa3ksOd5aAC/OFvRrq3j4h1znIIPqW0=";
+const CHIAVE_DELLA_FINTA_FOGLIA = `-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgJeHpKTWscOBt+bZV
+dUAwLpaBzEfS+WeSyLsJNtsRANuhRANCAAQbIjRZDti8NPznLO2iVrvuAhkj40S0
+RzL4Hx3lR3usBv2iTwIEyuvzl9UuBQibhg5acHkGTRKPfCWxscVBnRsE
+-----END PRIVATE KEY-----`;
+
+test("una catena di Apple col certificato di mezzo che non e' una CA non passa", () => {
+  const jws = (x5c, chiave = CHIAVE_DELLA_FINTA_FOGLIA) => {
+    const testa = Buffer.from(JSON.stringify({ alg: "ES256", x5c })).toString("base64url");
+    const corpo = Buffer.from(JSON.stringify({ notificationType: "FABBRICATA" })).toString(
+      "base64url",
+    );
+    const firma = sign("sha256", Buffer.from(`${testa}.${corpo}`), {
+      key: createPrivateKey(chiave),
+      dsaEncoding: "ieee-p1363",
+    }).toString("base64url");
+    return `${testa}.${corpo}.${firma}`;
+  };
+  assert.throws(
+    () => verificaLaJwsDiApple(jws([FINTA_FOGLIA, FINTO_MEZZO_NON_CA, FINTA_RADICE]), RADICE_FINTA),
+    /risposta-apple-catena-rotta/,
+  );
+  /* Apple firma sempre con tre certificati: ne' due, ne' quattro. */
+  assert.throws(
+    () => verificaLaJwsDiApple(jws([FINTO_MEZZO_NON_CA, FINTA_RADICE]), RADICE_FINTA),
+    /risposta-apple-senza-catena/,
+  );
+  assert.throws(
+    () =>
+      verificaLaJwsDiApple(
+        jws([FINTA_FOGLIA, FINTO_MEZZO_NON_CA, FINTA_RADICE, FINTA_RADICE]),
+        RADICE_FINTA,
+      ),
+    /risposta-apple-senza-catena/,
+  );
+  /* La catena di prova buona, foglia-intermedio-radice, passa ancora. */
+  const buona = verificaLaJwsDiApple(
+    jws([CERT_FOGLIA, CERT_MEZZO, CERT_RADICE], CHIAVE_DELLA_FOGLIA),
+    RADICE_DI_PROVA,
+  );
+  assert.equal(buona.notificationType, "FABBRICATA");
+  /* E con la radice vera di Apple servono anche le estensioni dell'App Store:
+   * una catena di prova (senza) non passa nemmeno se avesse quella radice. */
+  assert.throws(
+    () => verificaLaJwsDiApple(jws([CERT_FOGLIA, CERT_MEZZO, CERT_RADICE], CHIAVE_DELLA_FOGLIA)),
+    /risposta-apple-(catena-rotta|radice-sconosciuta)/,
+  );
+});
 
 /* ─── Gli avvisi dei negozi ──────────────────────────────────────────────── */
 
