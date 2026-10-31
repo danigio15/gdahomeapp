@@ -39,23 +39,159 @@ export const CELLA = Object.freeze({ fuori: -2, muro: -3, davanzale: -4, porta: 
 /* I dispositivi che si mettono nella casa e a cosa si collegano. `domini`
  * e `classi` dicono quali entita' proporre; `tocco` dice cosa fa toccarlo. */
 export const DISPOSITIVI_3D = Object.freeze({
-  luce: { icona: "💡", nome: ["Punto luce", "Light"], domini: ["light", "switch"], classi: [], parole: ["luce", "lamp", "light", "faretti", "plafon"], mont: "soffitto", tocco: "accendi" },
-  telecamera: { icona: "📷", nome: ["Telecamera", "Camera"], domini: ["camera"], classi: [], parole: ["cam", "telecamera"], mont: "angolo", tocco: "guarda" },
-  tapparella: { icona: "🪟", nome: ["Tapparella", "Shutter"], domini: ["cover"], classi: ["shutter", "blind", "window", "curtain", "awning", "shade"], parole: ["tapparella", "persiana", "tenda", "shutter"], mont: "finestra", tocco: "apri" },
-  finestra: { icona: "🪟", nome: ["Sensore finestra", "Window sensor"], domini: ["binary_sensor"], classi: ["window", "opening"], parole: ["finestra", "window"], mont: "finestra", tocco: null },
-  porta: { icona: "🚪", nome: ["Sensore porta", "Door sensor"], domini: ["binary_sensor", "lock"], classi: ["door", "garage_door", "opening"], parole: ["porta", "door", "ingresso", "portone"], mont: "porta", tocco: null },
-  movimento: { icona: "🚶", nome: ["Sensore movimento", "Motion sensor"], domini: ["binary_sensor"], classi: ["motion", "occupancy"], parole: ["movimento", "motion", "pir"], mont: "angolo", tocco: null },
-  presenza: { icona: "📡", nome: ["Sensore presenza", "Presence sensor"], domini: ["binary_sensor"], classi: ["occupancy", "presence"], parole: ["presenza", "presence", "mmwave", "occupancy"], mont: "soffitto", tocco: null },
-  termometro: { icona: "🌡️", nome: ["Termometro", "Thermometer"], domini: ["sensor"], classi: ["temperature"], parole: ["temperatura", "temperature"], mont: "muro", tocco: null },
-  clima: { icona: "❄️", nome: ["Climatizzatore", "Air conditioner"], domini: ["climate"], classi: [], parole: ["clima", "condizionatore", "split", "ac"], mont: "muro", tocco: "accendi" },
-  termostato: { icona: "🔥", nome: ["Termostato", "Thermostat"], domini: ["climate"], classi: [], parole: ["termostato", "thermostat", "riscaldamento"], mont: "muro", tocco: null },
-  fumo: { icona: "🚨", nome: ["Rilevatore fumo", "Smoke detector"], domini: ["binary_sensor"], classi: ["smoke", "gas", "carbon_monoxide"], parole: ["fumo", "smoke", "gas"], mont: "soffitto", tocco: null },
-  acqua: { icona: "💧", nome: ["Sensore allagamento", "Leak sensor"], domini: ["binary_sensor"], classi: ["moisture"], parole: ["acqua", "allagamento", "leak", "water"], mont: "pavimento", tocco: null },
-  presa: { icona: "🔌", nome: ["Presa", "Plug"], domini: ["switch"], classi: ["outlet"], parole: ["presa", "plug", "outlet"], mont: "muro", tocco: "accendi" },
-  tv: { icona: "📺", nome: ["TV", "TV"], domini: ["media_player"], classi: ["tv"], parole: ["tv", "televisore"], mont: "muro", tocco: "accendi" },
-  altoparlante: { icona: "🔊", nome: ["Altoparlante", "Speaker"], domini: ["media_player"], classi: ["speaker"], parole: ["echo", "speaker", "sonos", "altoparlante"], mont: "muro", tocco: null },
-  antifurto: { icona: "🛡️", nome: ["Sirena / sensore allarme", "Alarm sensor"], domini: ["binary_sensor", "alarm_control_panel"], classi: ["motion", "tamper", "safety"], parole: ["allarme", "alarm", "sirena"], mont: "angolo", tocco: null },
-  pannello: { icona: "🖲️", nome: ["Pannello / interruttore", "Wall panel"], domini: ["switch", "light", "button", "event"], classi: [], parole: ["pannello", "interruttore", "touch"], mont: "muro", tocco: null },
+  luce: {
+    icona: "💡",
+    nome: ["Punto luce", "Light"],
+    domini: ["light", "switch"],
+    classi: [],
+    parole: ["luce", "lamp", "light", "faretti", "plafon"],
+    mont: "soffitto",
+    tocco: "accendi",
+  },
+  telecamera: {
+    icona: "📷",
+    nome: ["Telecamera", "Camera"],
+    domini: ["camera"],
+    classi: [],
+    parole: ["cam", "telecamera"],
+    mont: "angolo",
+    tocco: "guarda",
+  },
+  tapparella: {
+    icona: "🪟",
+    nome: ["Tapparella", "Shutter"],
+    domini: ["cover"],
+    classi: ["shutter", "blind", "window", "curtain", "awning", "shade"],
+    parole: ["tapparella", "persiana", "tenda", "shutter"],
+    mont: "finestra",
+    tocco: "apri",
+  },
+  finestra: {
+    icona: "🪟",
+    nome: ["Sensore finestra", "Window sensor"],
+    domini: ["binary_sensor"],
+    classi: ["window", "opening"],
+    parole: ["finestra", "window"],
+    mont: "finestra",
+    tocco: null,
+  },
+  porta: {
+    icona: "🚪",
+    nome: ["Sensore porta", "Door sensor"],
+    domini: ["binary_sensor", "lock"],
+    classi: ["door", "garage_door", "opening"],
+    parole: ["porta", "door", "ingresso", "portone"],
+    mont: "porta",
+    tocco: null,
+  },
+  movimento: {
+    icona: "🚶",
+    nome: ["Sensore movimento", "Motion sensor"],
+    domini: ["binary_sensor"],
+    classi: ["motion", "occupancy"],
+    parole: ["movimento", "motion", "pir"],
+    mont: "angolo",
+    tocco: null,
+  },
+  presenza: {
+    icona: "📡",
+    nome: ["Sensore presenza", "Presence sensor"],
+    domini: ["binary_sensor"],
+    classi: ["occupancy", "presence"],
+    parole: ["presenza", "presence", "mmwave", "occupancy"],
+    mont: "soffitto",
+    tocco: null,
+  },
+  termometro: {
+    icona: "🌡️",
+    nome: ["Termometro", "Thermometer"],
+    domini: ["sensor"],
+    classi: ["temperature"],
+    parole: ["temperatura", "temperature"],
+    mont: "muro",
+    tocco: null,
+  },
+  clima: {
+    icona: "❄️",
+    nome: ["Climatizzatore", "Air conditioner"],
+    domini: ["climate"],
+    classi: [],
+    parole: ["clima", "condizionatore", "split", "ac"],
+    mont: "muro",
+    tocco: "accendi",
+  },
+  termostato: {
+    icona: "🔥",
+    nome: ["Termostato", "Thermostat"],
+    domini: ["climate"],
+    classi: [],
+    parole: ["termostato", "thermostat", "riscaldamento"],
+    mont: "muro",
+    tocco: null,
+  },
+  fumo: {
+    icona: "🚨",
+    nome: ["Rilevatore fumo", "Smoke detector"],
+    domini: ["binary_sensor"],
+    classi: ["smoke", "gas", "carbon_monoxide"],
+    parole: ["fumo", "smoke", "gas"],
+    mont: "soffitto",
+    tocco: null,
+  },
+  acqua: {
+    icona: "💧",
+    nome: ["Sensore allagamento", "Leak sensor"],
+    domini: ["binary_sensor"],
+    classi: ["moisture"],
+    parole: ["acqua", "allagamento", "leak", "water"],
+    mont: "pavimento",
+    tocco: null,
+  },
+  presa: {
+    icona: "🔌",
+    nome: ["Presa", "Plug"],
+    domini: ["switch"],
+    classi: ["outlet"],
+    parole: ["presa", "plug", "outlet"],
+    mont: "muro",
+    tocco: "accendi",
+  },
+  tv: {
+    icona: "📺",
+    nome: ["TV", "TV"],
+    domini: ["media_player"],
+    classi: ["tv"],
+    parole: ["tv", "televisore"],
+    mont: "muro",
+    tocco: "accendi",
+  },
+  altoparlante: {
+    icona: "🔊",
+    nome: ["Altoparlante", "Speaker"],
+    domini: ["media_player"],
+    classi: ["speaker"],
+    parole: ["echo", "speaker", "sonos", "altoparlante"],
+    mont: "muro",
+    tocco: null,
+  },
+  antifurto: {
+    icona: "🛡️",
+    nome: ["Sirena / sensore allarme", "Alarm sensor"],
+    domini: ["binary_sensor", "alarm_control_panel"],
+    classi: ["motion", "tamper", "safety"],
+    parole: ["allarme", "alarm", "sirena"],
+    mont: "angolo",
+    tocco: null,
+  },
+  pannello: {
+    icona: "🖲️",
+    nome: ["Pannello / interruttore", "Wall panel"],
+    domini: ["switch", "light", "button", "event"],
+    classi: [],
+    parole: ["pannello", "interruttore", "touch"],
+    mont: "muro",
+    tocco: null,
+  },
 });
 export const TIPI_DI_DISPOSITIVO = Object.freeze(Object.keys(DISPOSITIVI_3D));
 
@@ -66,7 +202,8 @@ const numero = (v, min, max, ripiego) => {
   const n = Number(v);
   return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : ripiego;
 };
-const colore = (v, ripiego = "") => (/^#[0-9a-f]{6}$/i.test(clean(v)) ? clean(v).toLowerCase() : ripiego);
+const colore = (v, ripiego = "") =>
+  /^#[0-9a-f]{6}$/i.test(clean(v)) ? clean(v).toLowerCase() : ripiego;
 const chiave = (v, ripiego = "") => (/^[a-z0-9_]{1,24}$/.test(clean(v)) ? clean(v) : ripiego);
 
 /* ── la pianta compressa ──────────────────────────────────────────────────
@@ -79,7 +216,9 @@ const B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 function aBase64(byte) {
   let out = "";
   for (let i = 0; i < byte.length; i += 3) {
-    const a = byte[i], b = byte[i + 1], c = byte[i + 2];
+    const a = byte[i],
+      b = byte[i + 1],
+      c = byte[i + 2];
     out += B64[a >> 2] + B64[((a & 3) << 4) | ((b ?? 0) >> 4)];
     out += b === undefined ? "=" : B64[((b & 15) << 2) | ((c ?? 0) >> 6)];
     out += c === undefined ? "=" : B64[c & 63];
@@ -103,10 +242,10 @@ function daBase64(testo64) {
 export function comprimiGriglia(tipo) {
   const byte = [];
   const N = tipo.length;
-  for (let i = 0; i < N; ) {
+  for (let i = 0; i < N;) {
     const v = Math.max(-8, Math.min(247, tipo[i] | 0));
     let n = 1;
-    while (i + n < N && (Math.max(-8, Math.min(247, tipo[i + n] | 0)) === v)) n++;
+    while (i + n < N && Math.max(-8, Math.min(247, tipo[i + n] | 0)) === v) n++;
     byte.push(v + 8);
     let resto = n;
     do {
@@ -124,10 +263,13 @@ export function comprimiGriglia(tipo) {
 export function espandiGriglia(testo64, N) {
   const tipo = new Int16Array(Math.max(0, Math.min(CELLE_AL_MASSIMO, N | 0))).fill(CELLA.fuori);
   const byte = daBase64(testo64);
-  let i = 0, k = 0;
+  let i = 0,
+    k = 0;
   while (k < byte.length && i < tipo.length) {
     const v = byte[k++] - 8;
-    let n = 0, peso = 1, b;
+    let n = 0,
+      peso = 1,
+      b;
     do {
       b = byte[k++] ?? 0;
       n += (b & 127) * peso;
@@ -142,7 +284,8 @@ export function espandiGriglia(testo64, N) {
 /** Ricampiona una griglia a un altro passo (il piu' vicino: le stanze restano intere). */
 export function ricampiona({ W, H, passo, tipo }, nuovoPasso = PASSO_SALVATO) {
   const f = passo / nuovoPasso;
-  const W2 = Math.max(1, Math.round(W * f)), H2 = Math.max(1, Math.round(H * f));
+  const W2 = Math.max(1, Math.round(W * f)),
+    H2 = Math.max(1, Math.round(H * f));
   const out = new Int16Array(W2 * H2);
   for (let y = 0; y < H2; y++) {
     const sy = Math.min(H - 1, Math.floor((y + 0.5) / f));
@@ -165,7 +308,14 @@ function stanzaPulita(s) {
     id,
     nome: testo(s?.nome, 40) || `Stanza ${id}`,
     area: testo(s?.area, 64), // l'area di Home Assistant (area_id), se c'e'
-    pavimento: s?.pavimento ? { tipo: chiave(s.pavimento.tipo, "gres60"), colore: colore(s.pavimento.colore, "#d9cbb3"), colore2: colore(s.pavimento.colore2), diagonale: s.pavimento.diagonale === true } : null,
+    pavimento: s?.pavimento
+      ? {
+          tipo: chiave(s.pavimento.tipo, "gres60"),
+          colore: colore(s.pavimento.colore, "#d9cbb3"),
+          colore2: colore(s.pavimento.colore2),
+          diagonale: s.pavimento.diagonale === true,
+        }
+      : null,
     pareti: colore(s?.pareti),
     fuori: s?.fuori === true,
   };
@@ -174,13 +324,28 @@ function stanzaPulita(s) {
 function aperturaPulita(a) {
   const tipo = ["porta", "finestra"].includes(a?.tipo) ? a.tipo : null;
   if (!tipo) return null;
-  return { tipo, ...punto({ x: a.cx ?? a.x, y: a.cy ?? a.y }), largo: numero(a?.largo, 0.4, 6, 0.9), orizz: a?.orizz !== false, verso: [-1, 0, 1].includes(a?.verso) ? a.verso : 0, portafinestra: a?.portafinestra === true, stanza: numero(a?.stanza, 0, 247, 0) | 0 };
+  return {
+    tipo,
+    ...punto({ x: a.cx ?? a.x, y: a.cy ?? a.y }),
+    largo: numero(a?.largo, 0.4, 6, 0.9),
+    orizz: a?.orizz !== false,
+    verso: [-1, 0, 1].includes(a?.verso) ? a.verso : 0,
+    portafinestra: a?.portafinestra === true,
+    stanza: numero(a?.stanza, 0, 247, 0) | 0,
+  };
 }
 
 function arredoPulito(a) {
   const k = chiave(a?.k);
   if (!k) return null;
-  return { k, stanza: numero(a?.stanza, 0, 247, 0) | 0, ...punto(a), rot: numero(a?.rot, -100, 100, 0), tinta: colore(a?.tinta), sotto: a?.sotto === true };
+  return {
+    k,
+    stanza: numero(a?.stanza, 0, 247, 0) | 0,
+    ...punto(a),
+    rot: numero(a?.rot, -100, 100, 0),
+    tinta: colore(a?.tinta),
+    sotto: a?.sotto === true,
+  };
 }
 
 /** Un dispositivo: il tipo, dove sta e a quale entita' di Home Assistant risponde. */
@@ -191,7 +356,16 @@ export function dispositivoPulito(d) {
     k,
     stanza: numero(d?.stanza, 0, 247, 0) | 0,
     ...punto(d),
-    h: numero(d?.h, 0, 4, DISPOSITIVI_3D[k].mont === "soffitto" ? 2.9 : DISPOSITIVI_3D[k].mont === "pavimento" ? 0 : 2.3),
+    h: numero(
+      d?.h,
+      0,
+      4,
+      DISPOSITIVI_3D[k].mont === "soffitto"
+        ? 2.9
+        : DISPOSITIVI_3D[k].mont === "pavimento"
+          ? 0
+          : 2.3,
+    ),
     rot: numero(d?.rot, -100, 100, 0),
     entity: entita(d?.entity),
     nome: testo(d?.nome, 40),
@@ -201,20 +375,25 @@ export function dispositivoPulito(d) {
 }
 
 function pianoPulito(p, i) {
-  const W = numero(p?.W, 1, 1200, 0) | 0, H = numero(p?.H, 1, 1200, 0) | 0;
+  const W = numero(p?.W, 1, 1200, 0) | 0,
+    H = numero(p?.H, 1, 1200, 0) | 0;
   if (!W || !H || W * H > CELLE_AL_MASSIMO || !clean(p?.griglia)) return null;
   const stanze = elenco(p?.stanze).map(stanzaPulita).filter(Boolean).slice(0, STANZE_AL_MASSIMO);
   return {
     k: chiave(p?.k, `piano${i}`),
     nome: testo(p?.nome, 30) || `Piano ${i}`,
     livello: numero(p?.livello, -3, 30, i) | 0,
-    W, H,
+    W,
+    H,
     passo: numero(p?.passo, 0.02, 0.2, PASSO_SALVATO),
     griglia: clean(p.griglia).slice(0, 2_000_000),
     stanze,
     aperture: elenco(p?.aperture).map(aperturaPulita).filter(Boolean).slice(0, APERTURE_AL_MASSIMO),
     arredi: elenco(p?.arredi).map(arredoPulito).filter(Boolean).slice(0, ARREDI_AL_MASSIMO),
-    dispositivi: elenco(p?.dispositivi).map(dispositivoPulito).filter(Boolean).slice(0, DISPOSITIVI_AL_MASSIMO),
+    dispositivi: elenco(p?.dispositivi)
+      .map(dispositivoPulito)
+      .filter(Boolean)
+      .slice(0, DISPOSITIVI_AL_MASSIMO),
   };
 }
 
@@ -236,7 +415,10 @@ export function casa3dPulita(raw) {
       persiane: colore(e.persiane, "#3f6b4e"),
       coppi: colore(e.coppi, "#b5532f"),
       giardino: e.giardino !== false,
-      telecamere: elenco(e.telecamere).map(dispositivoPulito).filter((d) => d && d.k === "telecamera").slice(0, 16),
+      telecamere: elenco(e.telecamere)
+        .map(dispositivoPulito)
+        .filter((d) => d && d.k === "telecamera")
+        .slice(0, 16),
     },
     piani,
   };
@@ -258,7 +440,10 @@ const parole = (s) =>
     .split(/[^a-z0-9]+/)
     .filter((w) => w.length > 2);
 
-export function entitaCandidate(k, { stanza = "", area = "", states = {}, aree = {}, usate = [] } = {}) {
+export function entitaCandidate(
+  k,
+  { stanza = "", area = "", states = {}, aree = {}, usate = [] } = {},
+) {
   const D = DISPOSITIVI_3D[k];
   if (!D) return [];
   const daStanza = new Set([...parole(stanza), ...parole(area)]);
@@ -278,7 +463,8 @@ export function entitaCandidate(k, { stanza = "", area = "", states = {}, aree =
     if (sue.some((w) => D.parole.some((p) => w.startsWith(p)))) punti += 8;
     const suaArea = aree[id] || "";
     if (suaArea && area && suaArea === area) punti += 40;
-    if (sue.some((w) => daStanza.has(w)) || parole(suaArea).some((w) => daStanza.has(w))) punti += 25;
+    if (sue.some((w) => daStanza.has(w)) || parole(suaArea).some((w) => daStanza.has(w)))
+      punti += 25;
     if (usateSet.has(id)) punti -= 50;
     if (st?.state === "unavailable") punti -= 5;
     out.push({ entity: id, nome: clean(attr.friendly_name) || id, punti });
@@ -294,43 +480,126 @@ export function entitaProposta(k, contesto) {
 
 /* ── cosa dice e cosa fa ─────────────────────────────────────────────── */
 
-const ACCESO = new Set(["on", "open", "opening", "detected", "home", "playing", "heat", "cool", "heat_cool", "auto", "dry", "fan_only", "triggered", "unlocked"]);
+const ACCESO = new Set([
+  "on",
+  "open",
+  "opening",
+  "detected",
+  "home",
+  "playing",
+  "heat",
+  "cool",
+  "heat_cool",
+  "auto",
+  "dry",
+  "fan_only",
+  "triggered",
+  "unlocked",
+]);
 
 /** Lo stato da mostrare sopra il dispositivo. */
 export function statoDelDispositivo(k, st, italiano = true) {
   const D = DISPOSITIVI_3D[k];
   const s = clean(st?.state);
   const L = (it, en) => (italiano ? it : en);
-  if (!D || !st) return { attivo: false, testo: D?.icona || "", tono: "spento", disponibile: false };
-  if (s === "unavailable" || s === "unknown") return { attivo: false, testo: `${D.icona} ${L("non risponde", "offline")}`, tono: "spento", disponibile: false };
+  if (!D || !st)
+    return { attivo: false, testo: D?.icona || "", tono: "spento", disponibile: false };
+  if (s === "unavailable" || s === "unknown")
+    return {
+      attivo: false,
+      testo: `${D.icona} ${L("non risponde", "offline")}`,
+      tono: "spento",
+      disponibile: false,
+    };
   const attr = st.attributes || {};
   switch (k) {
-    case "luce": case "presa": case "tv": {
-      const pct = typeof attr.brightness === "number" ? ` ${Math.round((attr.brightness / 255) * 100)}%` : "";
-      return { attivo: s === "on" || s === "playing", testo: `${D.icona}${s === "on" ? pct || " " + L("accesa", "on") : s === "playing" ? " ▶" : ""}`, tono: s === "on" || s === "playing" ? "luce" : "spento", disponibile: true, luminosita: typeof attr.brightness === "number" ? attr.brightness / 255 : s === "on" ? 1 : 0 };
+    case "luce":
+    case "presa":
+    case "tv": {
+      const pct =
+        typeof attr.brightness === "number" ? ` ${Math.round((attr.brightness / 255) * 100)}%` : "";
+      return {
+        attivo: s === "on" || s === "playing",
+        testo: `${D.icona}${s === "on" ? pct || " " + L("accesa", "on") : s === "playing" ? " ▶" : ""}`,
+        tono: s === "on" || s === "playing" ? "luce" : "spento",
+        disponibile: true,
+        luminosita:
+          typeof attr.brightness === "number" ? attr.brightness / 255 : s === "on" ? 1 : 0,
+      };
     }
     case "tapparella": {
-      const pos = typeof attr.current_position === "number" ? attr.current_position : s === "open" ? 100 : s === "closed" ? 0 : 50;
-      return { attivo: pos > 0, testo: `${D.icona} ${pos === 0 ? L("chiusa", "closed") : pos === 100 ? L("aperta", "open") : pos + "%"}`, tono: "neutro", disponibile: true, apertura: pos / 100 };
+      const pos =
+        typeof attr.current_position === "number"
+          ? attr.current_position
+          : s === "open"
+            ? 100
+            : s === "closed"
+              ? 0
+              : 50;
+      return {
+        attivo: pos > 0,
+        testo: `${D.icona} ${pos === 0 ? L("chiusa", "closed") : pos === 100 ? L("aperta", "open") : pos + "%"}`,
+        tono: "neutro",
+        disponibile: true,
+        apertura: pos / 100,
+      };
     }
-    case "finestra": case "porta": {
+    case "finestra":
+    case "porta": {
       const aperta = s === "on" || s === "open" || s === "unlocked";
-      return { attivo: aperta, testo: aperta ? `${D.icona} ${L("aperta", "open")}` : D.icona, tono: aperta ? "allarme" : "neutro", disponibile: true, apertura: aperta ? 1 : 0 };
+      return {
+        attivo: aperta,
+        testo: aperta ? `${D.icona} ${L("aperta", "open")}` : D.icona,
+        tono: aperta ? "allarme" : "neutro",
+        disponibile: true,
+        apertura: aperta ? 1 : 0,
+      };
     }
-    case "movimento": case "presenza": case "antifurto":
-      return { attivo: s === "on" || s === "triggered", testo: s === "on" || s === "triggered" ? `${D.icona} ${L("movimento", "motion")}` : D.icona, tono: s === "on" || s === "triggered" ? "movimento" : "neutro", disponibile: true };
-    case "fumo": case "acqua":
-      return { attivo: s === "on", testo: s === "on" ? `${D.icona} ${L("ALLARME", "ALARM")}` : D.icona, tono: s === "on" ? "allarme" : "ok", disponibile: true };
+    case "movimento":
+    case "presenza":
+    case "antifurto":
+      return {
+        attivo: s === "on" || s === "triggered",
+        testo: s === "on" || s === "triggered" ? `${D.icona} ${L("movimento", "motion")}` : D.icona,
+        tono: s === "on" || s === "triggered" ? "movimento" : "neutro",
+        disponibile: true,
+      };
+    case "fumo":
+    case "acqua":
+      return {
+        attivo: s === "on",
+        testo: s === "on" ? `${D.icona} ${L("ALLARME", "ALARM")}` : D.icona,
+        tono: s === "on" ? "allarme" : "ok",
+        disponibile: true,
+      };
     case "termometro": {
       const v = Number(s);
-      return { attivo: false, testo: Number.isFinite(v) ? `${D.icona} ${v.toFixed(1).replace(".", italiano ? "," : ".")}°` : D.icona, tono: "clima", disponibile: true };
+      return {
+        attivo: false,
+        testo: Number.isFinite(v)
+          ? `${D.icona} ${v.toFixed(1).replace(".", italiano ? "," : ".")}°`
+          : D.icona,
+        tono: "clima",
+        disponibile: true,
+      };
     }
-    case "clima": case "termostato": {
+    case "clima":
+    case "termostato": {
       const t = attr.current_temperature;
-      return { attivo: ACCESO.has(s) && s !== "off", testo: `${D.icona}${typeof t === "number" ? " " + t.toFixed(1).replace(".", italiano ? "," : ".") + "°" : ""}${s === "off" ? "" : " · " + s}`, tono: s === "off" ? "spento" : "clima", disponibile: true };
+      return {
+        attivo: ACCESO.has(s) && s !== "off",
+        testo: `${D.icona}${typeof t === "number" ? " " + t.toFixed(1).replace(".", italiano ? "," : ".") + "°" : ""}${s === "off" ? "" : " · " + s}`,
+        tono: s === "off" ? "spento" : "clima",
+        disponibile: true,
+      };
     }
     case "telecamera":
-      return { attivo: true, testo: `${D.icona} ${L("live", "live")}`, tono: "telecamera", disponibile: true };
+      return {
+        attivo: true,
+        testo: `${D.icona} ${L("live", "live")}`,
+        tono: "telecamera",
+        disponibile: true,
+      };
     default:
       return { attivo: ACCESO.has(s), testo: D.icona, tono: "neutro", disponibile: true };
   }
@@ -344,20 +613,43 @@ export function azioneDelTocco(k, entity, st) {
   const dom = id.split(".")[0];
   if (D.tocco === "guarda") return { pagina: "telecamera", entity: id };
   if (D.tocco === "accendi") {
-    if (dom === "climate") return { domain: "climate", service: clean(st?.state) === "off" ? "turn_on" : "turn_off", data: { entity_id: id } };
-    if (["light", "switch", "media_player", "fan"].includes(dom)) return { domain: dom, service: "toggle", data: { entity_id: id } };
+    if (dom === "climate")
+      return {
+        domain: "climate",
+        service: clean(st?.state) === "off" ? "turn_on" : "turn_off",
+        data: { entity_id: id },
+      };
+    if (["light", "switch", "media_player", "fan"].includes(dom))
+      return { domain: dom, service: "toggle", data: { entity_id: id } };
   }
   if (D.tocco === "apri" && dom === "cover") {
     const s = clean(st?.state);
-    return { domain: "cover", service: s === "opening" || s === "closing" ? "stop_cover" : s === "closed" ? "open_cover" : "close_cover", data: { entity_id: id } };
+    return {
+      domain: "cover",
+      service:
+        s === "opening" || s === "closing"
+          ? "stop_cover"
+          : s === "closed"
+            ? "open_cover"
+            : "close_cover",
+      data: { entity_id: id },
+    };
   }
   return null;
 }
 
 /** Quante cose della casa sono collegate e quante no: per dire cosa manca. */
 export function contaCollegati(casa) {
-  let tutti = 0, collegati = 0;
-  for (const p of casa?.piani || []) for (const d of p.dispositivi || []) { tutti++; if (d.entity) collegati++; }
-  for (const d of casa?.esterno?.telecamere || []) { tutti++; if (d.entity) collegati++; }
+  let tutti = 0,
+    collegati = 0;
+  for (const p of casa?.piani || [])
+    for (const d of p.dispositivi || []) {
+      tutti++;
+      if (d.entity) collegati++;
+    }
+  for (const d of casa?.esterno?.telecamere || []) {
+    tutti++;
+    if (d.entity) collegati++;
+  }
   return { tutti, collegati, mancano: tutti - collegati };
 }

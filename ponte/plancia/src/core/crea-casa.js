@@ -72,7 +72,21 @@ export const ARREDI_DELLE_FOTO = Object.freeze({
 
 /* Quelli che stanno contro il muro che si guarda: la profondita' nella foto
  * non conta, si appoggiano alla parete. */
-export const ACCOSTATI = new Set(["tv", "libreria", "cucina", "armadio", "madia", "pensile", "quadro", "camino", "frigo", "lavabo", "wc", "vasca", "cassettiera"]);
+export const ACCOSTATI = new Set([
+  "tv",
+  "libreria",
+  "cucina",
+  "armadio",
+  "madia",
+  "pensile",
+  "quadro",
+  "camino",
+  "frigo",
+  "lavabo",
+  "wc",
+  "vasca",
+  "cassettiera",
+]);
 
 /* Dalle classi di COCO-SSD alle cose della casa. Alcune sono due cose
  * insieme: la TV e' un mobile e un dispositivo da collegare. */
@@ -98,8 +112,10 @@ const riquadro = (b) => {
 };
 
 function sovrapposti(a, b) {
-  const x0 = Math.max(a[0], b[0]), y0 = Math.max(a[1], b[1]);
-  const x1 = Math.min(a[0] + a[2], b[0] + b[2]), y1 = Math.min(a[1] + a[3], b[1] + b[3]);
+  const x0 = Math.max(a[0], b[0]),
+    y0 = Math.max(a[1], b[1]);
+  const x1 = Math.min(a[0] + a[2], b[0] + b[2]),
+    y1 = Math.min(a[1] + a[3], b[1] + b[3]);
   const dentro = Math.max(0, x1 - x0) * Math.max(0, y1 - y0);
   return dentro / Math.min(a[2] * a[3], b[2] * b[3]);
 }
@@ -108,7 +124,8 @@ function sovrapposti(a, b) {
  * Due riquadri dello stesso tipo che si coprono quasi tutti sono una cosa sola
  * (i libri di una libreria, le sedie di un divano). */
 export function oggettiDaCoco(rilevati, { soglia = 0.3 } = {}) {
-  const arredi = [], dispositivi = [];
+  const arredi = [],
+    dispositivi = [];
   const ordinati = elenco(rilevati)
     .map((d) => ({ classe: clean(d?.class), box: riquadro(d?.bbox), score: Number(d?.score) || 0 }))
     .filter((d) => d.box && d.score >= soglia && DA_COCO[d.classe])
@@ -161,8 +178,10 @@ export function aggiungiPiano(casa, piano) {
 /** Le entita' gia' date a un dispositivo della casa (tranne `tranne`). */
 export function entitaUsate(casa, tranne = null) {
   const out = [];
-  for (const p of elenco(casa?.piani)) for (const d of elenco(p?.dispositivi)) if (d !== tranne && d?.entity) out.push(d.entity);
-  for (const d of elenco(casa?.esterno?.telecamere)) if (d !== tranne && d?.entity) out.push(d.entity);
+  for (const p of elenco(casa?.piani))
+    for (const d of elenco(p?.dispositivi)) if (d !== tranne && d?.entity) out.push(d.entity);
+  for (const d of elenco(casa?.esterno?.telecamere))
+    if (d !== tranne && d?.entity) out.push(d.entity);
   return out;
 }
 
@@ -173,9 +192,12 @@ export function entitaUsate(casa, tranne = null) {
  * Assistant ci sono anche `hass.areas`, `hass.entities`, `hass.devices`.
  * Si prende quello che c'e', senza chiedere niente a nessuno. */
 export function areeDaiRegistri({ wiz = null, hass = null, ricordate = null } = {}) {
-  const aree = {}, diEntita = {};
-  for (const [id, nome] of Object.entries(wiz?.areaNames || {})) if (clean(id) && clean(nome)) aree[clean(id)] = clean(nome);
-  for (const a of Object.values(hass?.areas || {})) if (clean(a?.area_id) && clean(a?.name)) aree[clean(a.area_id)] ||= clean(a.name);
+  const aree = {},
+    diEntita = {};
+  for (const [id, nome] of Object.entries(wiz?.areaNames || {}))
+    if (clean(id) && clean(nome)) aree[clean(id)] = clean(nome);
+  for (const a of Object.values(hass?.areas || {}))
+    if (clean(a?.area_id) && clean(a?.name)) aree[clean(a.area_id)] ||= clean(a.name);
   for (const [id, riga] of Object.entries(wiz?.entReg || {})) {
     const area = clean(riga?.a) || clean(wiz?.devArea?.[clean(riga?.d)]);
     if (area) diEntita[id] = area;
@@ -208,27 +230,44 @@ export function areeDaiRegistri({ wiz = null, hass = null, ricordate = null } = 
 const ROT = { N: 0, S: Math.PI, E: -Math.PI / 2, O: Math.PI / 2 };
 
 function lungoLaParete(r, verso, u, prof, margine) {
-  const X0 = r.x0 + margine, X1 = Math.max(X0, r.x1 - margine), Y0 = r.y0 + margine, Y1 = Math.max(Y0, r.y1 - margine);
+  const X0 = r.x0 + margine,
+    X1 = Math.max(X0, r.x1 - margine),
+    Y0 = r.y0 + margine,
+    Y1 = Math.max(Y0, r.y1 - margine);
   switch (verso) {
-    case "N": return { x: X0 + u * (X1 - X0), y: Y0 + prof * (Y1 - Y0) };
-    case "S": return { x: X1 - u * (X1 - X0), y: Y1 - prof * (Y1 - Y0) };
-    case "E": return { x: X1 - prof * (X1 - X0), y: Y0 + u * (Y1 - Y0) };
-    default: return { x: X0 + prof * (X1 - X0), y: Y1 - u * (Y1 - Y0) };
+    case "N":
+      return { x: X0 + u * (X1 - X0), y: Y0 + prof * (Y1 - Y0) };
+    case "S":
+      return { x: X1 - u * (X1 - X0), y: Y1 - prof * (Y1 - Y0) };
+    case "E":
+      return { x: X1 - prof * (X1 - X0), y: Y0 + u * (Y1 - Y0) };
+    default:
+      return { x: X0 + prof * (X1 - X0), y: Y1 - u * (Y1 - Y0) };
   }
 }
 
-const riquadroDi = (s) => s?.riquadro || { x0: (s?.sx || 0) - 2, x1: (s?.sx || 0) + 2, y0: (s?.sy || 0) - 2, y1: (s?.sy || 0) + 2 };
+const riquadroDi = (s) =>
+  s?.riquadro || {
+    x0: (s?.sx || 0) - 2,
+    x1: (s?.sx || 0) + 2,
+    y0: (s?.sy || 0) - 2,
+    y1: (s?.sy || 0) + 2,
+  };
 const versoDi = (v) => (["N", "S", "E", "O"].includes(v) ? v : "N");
 
 /** Dove sta, nella stanza, una cosa vista nella foto: `{ x, y, rot }` in metri. */
 export function posaDallaFoto(stanza, foto, box, { accostato = false, mont = "" } = {}) {
   const b = riquadro(box);
-  const W = Number(foto?.w) || 1, H = Number(foto?.h) || 1, verso = versoDi(foto?.verso);
+  const W = Number(foto?.w) || 1,
+    H = Number(foto?.h) || 1,
+    verso = versoDi(foto?.verso);
   if (!b) return { x: stanza?.sx || 0, y: stanza?.sy || 0, rot: ROT[verso] };
   let u = tra((b[0] + b[2] / 2) / W, 0, 1);
-  let prof, margine = 0.35;
+  let prof,
+    margine = 0.35;
   if (mont === "soffitto") prof = tra((0.5 - (b[1] + b[3] / 2) / H) / 0.5, 0, 1);
-  else if (mont === "pavimento" || (!mont && !accostato)) prof = tra(((b[1] + b[3]) / H - 0.5) / 0.5, 0, 1);
+  else if (mont === "pavimento" || (!mont && !accostato))
+    prof = tra(((b[1] + b[3]) / H - 0.5) / 0.5, 0, 1);
   else prof = 0;
   if (mont && mont !== "soffitto" && mont !== "pavimento") margine = 0.08;
   if (mont === "angolo") {
@@ -243,20 +282,29 @@ export function posaDallaFoto(stanza, foto, box, { accostato = false, mont = "" 
 export function nellaStanza(casa, id, x, y) {
   const { W, H, passo, tipo } = casa || {};
   if (!tipo || !W || !H) return { x, y };
-  const cx = tra(Math.floor(x / passo), 0, W - 1), cy = tra(Math.floor(y / passo), 0, H - 1);
+  const cx = tra(Math.floor(x / passo), 0, W - 1),
+    cy = tra(Math.floor(y / passo), 0, H - 1);
   if (tipo[cy * W + cx] === id) return { x, y };
-  let meglio = -1, d = Infinity;
+  let meglio = -1,
+    d = Infinity;
   for (let i = 0; i < W * H; i++) {
     if (tipo[i] !== id) continue;
-    const q = (i % W - cx) ** 2 + (((i / W) | 0) - cy) ** 2;
-    if (q < d) { d = q; meglio = i; }
+    const q = ((i % W) - cx) ** 2 + (((i / W) | 0) - cy) ** 2;
+    if (q < d) {
+      d = q;
+      meglio = i;
+    }
   }
   if (meglio < 0) return { x, y };
   /* un passo piu' dentro, verso il centro della stanza: non sul filo del muro */
   const s = elenco(casa.stanze).find((v) => v.id === id);
-  let px = ((meglio % W) + 0.5) * passo, py = (((meglio / W) | 0) + 0.5) * passo;
+  let px = ((meglio % W) + 0.5) * passo,
+    py = (((meglio / W) | 0) + 0.5) * passo;
   if (s) {
-    const dx = s.sx - px, dy = s.sy - py, l = Math.hypot(dx, dy) || 1, k = Math.min(l, 0.12);
+    const dx = s.sx - px,
+      dy = s.sy - py,
+      l = Math.hypot(dx, dy) || 1,
+      k = Math.min(l, 0.12);
     px += (dx / l) * k;
     py += (dy / l) * k;
   }
@@ -269,15 +317,35 @@ export function arrediDallaFoto(casa, stanza, foto) {
     .filter((o) => ARREDI_DELLE_FOTO[o?.k])
     .map((o) => {
       const p = posaDallaFoto(stanza, foto, o.box, { accostato: ACCOSTATI.has(o.k) });
-      return { k: o.k, stanza: stanza.id, ...nellaStanza(casa, stanza.id, p.x, p.y), rot: p.rot, tinta: colore(o.colore) };
+      return {
+        k: o.k,
+        stanza: stanza.id,
+        ...nellaStanza(casa, stanza.id, p.x, p.y),
+        rot: p.rot,
+        tinta: colore(o.colore),
+      };
     });
 }
 
 /* L'altezza da terra di ogni dispositivo, se non la si sa meglio. */
 export const ALTEZZA_DI_SERIE = Object.freeze({
-  luce: 2.85, telecamera: 2.5, tapparella: 2.2, finestra: 1.4, porta: 2.0, movimento: 2.25, presenza: 2.9,
-  termometro: 1.5, clima: 2.3, termostato: 1.5, fumo: 2.92, acqua: 0, presa: 0.3, tv: 1.1, altoparlante: 1.0,
-  antifurto: 2.3, pannello: 1.2,
+  luce: 2.85,
+  telecamera: 2.5,
+  tapparella: 2.2,
+  finestra: 1.4,
+  porta: 2.0,
+  movimento: 2.25,
+  presenza: 2.9,
+  termometro: 1.5,
+  clima: 2.3,
+  termostato: 1.5,
+  fumo: 2.92,
+  acqua: 0,
+  presa: 0.3,
+  tv: 1.1,
+  altoparlante: 1.0,
+  antifurto: 2.3,
+  pannello: 1.2,
 });
 
 /** I dispositivi segnati o riconosciuti in una foto, al loro posto. */
@@ -297,8 +365,14 @@ export function dispositiviDallaFoto(casa, stanza, foto) {
         if (vicina && vicina.d < 2.5) p = { ...p, x: vicina.a.cx, y: vicina.a.cy };
       }
       return {
-        k: d.k, stanza: stanza.id, ...nellaStanza(casa, stanza.id, p.x, p.y), h: ALTEZZA_DI_SERIE[d.k] ?? 2.3, rot: p.rot,
-        entity: entita(d.entity), nome: clean(d.nome).slice(0, 40), da: "foto",
+        k: d.k,
+        stanza: stanza.id,
+        ...nellaStanza(casa, stanza.id, p.x, p.y),
+        h: ALTEZZA_DI_SERIE[d.k] ?? 2.3,
+        rot: p.rot,
+        entity: entita(d.entity),
+        nome: clean(d.nome).slice(0, 40),
+        da: "foto",
         ...(d.k === "telecamera" ? { fov: 100 } : {}),
       };
     });
@@ -309,7 +383,8 @@ export function dispositiviDallaFoto(casa, stanza, foto) {
  * metterli uno sopra l'altro. */
 export function posaDiRipiego(casa, stanza, k, quanti = 0) {
   const mont = DISPOSITIVI_3D[k]?.mont || "muro";
-  const r = riquadroDi(stanza), passo = 0.4 * quanti;
+  const r = riquadroDi(stanza),
+    passo = 0.4 * quanti;
   let p;
   if (mont === "finestra" || mont === "porta") {
     const tipo = mont === "porta" ? "porta" : "finestra";
@@ -318,11 +393,17 @@ export function posaDiRipiego(casa, stanza, k, quanti = 0) {
     if (a) p = { x: a.cx ?? a.x, y: a.cy ?? a.y, rot: 0 };
   }
   if (!p && mont === "angolo") {
-    const angoli = [[r.x0 + 0.15, r.y0 + 0.15, Math.PI / 4], [r.x1 - 0.15, r.y0 + 0.15, -Math.PI / 4], [r.x1 - 0.15, r.y1 - 0.15, (-3 * Math.PI) / 4], [r.x0 + 0.15, r.y1 - 0.15, (3 * Math.PI) / 4]];
+    const angoli = [
+      [r.x0 + 0.15, r.y0 + 0.15, Math.PI / 4],
+      [r.x1 - 0.15, r.y0 + 0.15, -Math.PI / 4],
+      [r.x1 - 0.15, r.y1 - 0.15, (-3 * Math.PI) / 4],
+      [r.x0 + 0.15, r.y1 - 0.15, (3 * Math.PI) / 4],
+    ];
     const [x, y, rot] = angoli[quanti % 4];
     p = { x, y, rot };
   }
-  if (!p && (mont === "muro" || mont === "finestra" || mont === "porta")) p = { x: tra(stanza.sx + passo, r.x0 + 0.1, r.x1 - 0.1), y: r.y0 + 0.08, rot: 0 };
+  if (!p && (mont === "muro" || mont === "finestra" || mont === "porta"))
+    p = { x: tra(stanza.sx + passo, r.x0 + 0.1, r.x1 - 0.1), y: r.y0 + 0.08, rot: 0 };
   /* al soffitto o a terra: un po' discosto dal centro, dove la pianta scrive il nome */
   if (!p) p = { x: stanza.sx + 0.7 + passo, y: stanza.sy + 0.5, rot: 0 };
   const dentro = nellaStanza(casa, stanza.id, p.x, p.y);
@@ -335,7 +416,10 @@ export function posaDiRipiego(casa, stanza, k, quanti = 0) {
 export function pavimentoDalColore(c) {
   const hex = colore(c);
   if (!hex) return null;
-  const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+  const n = parseInt(hex.slice(1), 16),
+    r = n >> 16,
+    g = (n >> 8) & 255,
+    b = n & 255;
   const legno = r > g && g > b && r - b > 45 && r < 235;
   return { tipo: legno ? "listoni" : "gres60", colore: hex };
 }
@@ -346,13 +430,19 @@ export function pavimentoDalColore(c) {
  * muro, entro 60 cm). */
 function latiDelVarco(casa, a) {
   const { W, H, passo, tipo } = casa;
-  const cx = Math.floor(a.cx / passo), cy = Math.floor(a.cy / passo), lati = [];
+  const cx = Math.floor(a.cx / passo),
+    cy = Math.floor(a.cy / passo),
+    lati = [];
   for (const segno of [-1, 1]) {
     for (let d = 1; d < Math.round(0.6 / passo); d++) {
-      const x = a.orizz ? cx : cx + segno * d, y = a.orizz ? cy + segno * d : cy;
+      const x = a.orizz ? cx : cx + segno * d,
+        y = a.orizz ? cy + segno * d : cy;
       if (x < 0 || y < 0 || x >= W || y >= H) break;
       const v = tipo[y * W + x];
-      if (v > 0 || v === CELLA.fuori) { lati.push(v); break; }
+      if (v > 0 || v === CELLA.fuori) {
+        lati.push(v);
+        break;
+      }
     }
   }
   return lati;
@@ -369,7 +459,17 @@ function latiDelVarco(casa, a) {
  *  - `dispositivi`: quelli aggiunti senza foto ({ k, stanza, entity, nome });
  *  - `livello`, `nome`, `k`: che piano e'.
  */
-export function pianoDaRiconoscimento({ casa, nomi = {}, aree = {}, fuori = [], foto = {}, dispositivi = [], livello = 0, nome = "", k = "" } = {}) {
+export function pianoDaRiconoscimento({
+  casa,
+  nomi = {},
+  aree = {},
+  fuori = [],
+  foto = {},
+  dispositivi = [],
+  livello = 0,
+  nome = "",
+  k = "",
+} = {}) {
   if (!casa?.tipo || !casa.W || !casa.H) return null;
   const { W, H, passo } = casa;
   const daFuori = new Set([...fuori].map(Number));
@@ -379,18 +479,32 @@ export function pianoDaRiconoscimento({ casa, nomi = {}, aree = {}, fuori = [], 
   const tipo = Int16Array.from(casa.tipo, (v) => (v > 0 && !idVivi.has(v) ? CELLA.fuori : v));
 
   /* il ritaglio sulla casa, con mezzo metro intorno */
-  let x0 = W, x1 = -1, y0 = H, y1 = -1;
+  let x0 = W,
+    x1 = -1,
+    y0 = H,
+    y1 = -1;
   for (let i = 0; i < W * H; i++) {
     if (tipo[i] === CELLA.fuori) continue;
-    const x = i % W, y = (i / W) | 0;
-    if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+    const x = i % W,
+      y = (i / W) | 0;
+    if (x < x0) x0 = x;
+    if (x > x1) x1 = x;
+    if (y < y0) y0 = y;
+    if (y > y1) y1 = y;
   }
   if (x1 < 0) return null;
   const bordo = Math.round(0.5 / passo);
-  x0 = Math.max(0, x0 - bordo); y0 = Math.max(0, y0 - bordo); x1 = Math.min(W - 1, x1 + bordo); y1 = Math.min(H - 1, y1 + bordo);
-  const Wr = x1 - x0 + 1, Hr = y1 - y0 + 1, tagliata = new Int16Array(Wr * Hr);
-  for (let y = 0; y < Hr; y++) for (let x = 0; x < Wr; x++) tagliata[y * Wr + x] = tipo[(y + y0) * W + x + x0];
-  const ox = x0 * passo, oy = y0 * passo;
+  x0 = Math.max(0, x0 - bordo);
+  y0 = Math.max(0, y0 - bordo);
+  x1 = Math.min(W - 1, x1 + bordo);
+  y1 = Math.min(H - 1, y1 + bordo);
+  const Wr = x1 - x0 + 1,
+    Hr = y1 - y0 + 1,
+    tagliata = new Int16Array(Wr * Hr);
+  for (let y = 0; y < Hr; y++)
+    for (let x = 0; x < Wr; x++) tagliata[y * Wr + x] = tipo[(y + y0) * W + x + x0];
+  const ox = x0 * passo,
+    oy = y0 * passo;
   const salvata = ricampiona({ W: Wr, H: Hr, passo, tipo: tagliata }, PASSO_SALVATO);
   const sposta = (p) => ({ ...p, x: tondo(p.x - ox), y: tondo(p.y - oy) });
   const vista = { ...casa, tipo };
@@ -414,18 +528,22 @@ export function pianoDaRiconoscimento({ casa, nomi = {}, aree = {}, fuori = [], 
     const suFuori = lati.some((v) => daFuori.has(v)) || daFuori.has(a.stanza);
     const stanza = idVivi.has(a.stanza) ? a.stanza : lati.find((v) => idVivi.has(v)) || 0;
     if (!stanza && (suFuori || a.stanza)) return []; // fra due cose che sono fuori: non serve
-    return [sposta({
-      tipo: suFuori ? "finestra" : a.tipo,
-      x: a.cx, y: a.cy,
-      largo: tondo(a.largo, 2),
-      orizz: a.orizz !== false,
-      verso: a.verso || 0,
-      portafinestra: a.portafinestra === true || (suFuori && a.tipo === "porta"),
-      stanza: stanza || 0,
-    })];
+    return [
+      sposta({
+        tipo: suFuori ? "finestra" : a.tipo,
+        x: a.cx,
+        y: a.cy,
+        largo: tondo(a.largo, 2),
+        orizz: a.orizz !== false,
+        verso: a.verso || 0,
+        portafinestra: a.portafinestra === true || (suFuori && a.tipo === "porta"),
+        stanza: stanza || 0,
+      }),
+    ];
   });
 
-  const arredi = [], posati = [];
+  const arredi = [],
+    posati = [];
   for (const s of vive) {
     for (const f of elenco(foto[s.id])) {
       arredi.push(...arrediDallaFoto(vista, s, f).map(sposta));
@@ -437,9 +555,25 @@ export function pianoDaRiconoscimento({ casa, nomi = {}, aree = {}, fuori = [], 
     const s = vive.find((v) => v.id === Number(d?.stanza));
     if (!s || !DISPOSITIVI_3D[d?.k]) continue;
     const chiave = `${s.id}:${d.k}`;
-    const p = Number.isFinite(d.x) && Number.isFinite(d.y) ? { x: d.x, y: d.y, rot: d.rot || 0, h: d.h ?? ALTEZZA_DI_SERIE[d.k] } : posaDiRipiego(vista, s, d.k, contati[chiave] || 0);
+    const p =
+      Number.isFinite(d.x) && Number.isFinite(d.y)
+        ? { x: d.x, y: d.y, rot: d.rot || 0, h: d.h ?? ALTEZZA_DI_SERIE[d.k] }
+        : posaDiRipiego(vista, s, d.k, contati[chiave] || 0);
     contati[chiave] = (contati[chiave] || 0) + 1;
-    posati.push(sposta({ k: d.k, stanza: s.id, x: p.x, y: p.y, h: p.h, rot: p.rot, entity: entita(d.entity), nome: clean(d.nome).slice(0, 40), da: "mano", ...(d.k === "telecamera" ? { fov: 100 } : {}) }));
+    posati.push(
+      sposta({
+        k: d.k,
+        stanza: s.id,
+        x: p.x,
+        y: p.y,
+        h: p.h,
+        rot: p.rot,
+        entity: entita(d.entity),
+        nome: clean(d.nome).slice(0, 40),
+        da: "mano",
+        ...(d.k === "telecamera" ? { fov: 100 } : {}),
+      }),
+    );
   }
 
   const qualePiano = pianoDelLivello(livello);
