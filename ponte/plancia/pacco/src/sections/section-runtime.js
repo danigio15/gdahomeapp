@@ -560,7 +560,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-576NKOHD.js";
+} from "../../chunk-T7SHM2G5.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -16631,6 +16631,7 @@ function telecamereVisibili(cameras = [], { config = {}, persone: persone4 = [],
 }
 
 // src/core/i-due-obiettivi-del-clima.js
+var CLIMA_CON_UN_OBIETTIVO = 1;
 var CLIMA_CON_DUE_OBIETTIVI = 2;
 var AUTOMATICHE = /* @__PURE__ */ new Set(["heat_cool", "auto"]);
 var pulito7 = (valore3) => String(valore3 ?? "").trim().toLowerCase();
@@ -16668,6 +16669,8 @@ function eUnTermostatoACoppia(attributi2) {
   if (numero3(attributi2.target_temp_low) !== null || numero3(attributi2.target_temp_high) !== null)
     return true;
   const dichiarate = Number(attributi2.supported_features);
+  const haIlSingolo = Number.isFinite(dichiarate) && (dichiarate & CLIMA_CON_UN_OBIETTIVO) === CLIMA_CON_UN_OBIETTIVO;
+  if (haIlSingolo) return false;
   if (Number.isFinite(dichiarate) && (dichiarate & CLIMA_CON_DUE_OBIETTIVI) === CLIMA_CON_DUE_OBIETTIVI)
     return true;
   const modi = Array.isArray(attributi2.hvac_modes) ? attributi2.hvac_modes.map(pulito7) : [];
