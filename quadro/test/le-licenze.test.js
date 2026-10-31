@@ -1516,6 +1516,72 @@ test("chi ha spento il rinnovo automatico chiude alla fine del periodo, senza ma
   }
 });
 
+test("lo stesso acquisto portato su un'altra casa lo perde la casa di prima", async () => {
+  const token = "token-google-spostato-0123456789";
+  const { negozi } = unGoogleFinto({
+    [token]: {
+      subscriptionState: "SUBSCRIPTION_STATE_ACTIVE",
+      acknowledgementState: "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+      lineItems: [
+        {
+          productId: "gdahome_premium",
+          expiryTime: new Date(Date.now() + 300 * GIORNO).toISOString(),
+        },
+      ],
+    },
+  });
+  const b = await banco({ negozi });
+  try {
+    const compra = (casa) =>
+      b.fuori("negozio", {
+        casa,
+        segreto: SEGRETO,
+        app: "gdahome",
+        piattaforma: "android",
+        prodotto: "gdahome_premium",
+        ricevuta: token,
+      });
+    const prima = await compra(UNA);
+    assert.equal(prima.stato, 200);
+    const vecchio = verificaIlGettone(prima.detto.gettoni.gdahome, PUBBLICA, { sog: UNA });
+    assert.ok(vecchio);
+    assert.deepEqual(b.licenze.tolte(), []);
+
+    /* «Ripristina acquisti» dall'app di un'altra casa. */
+    const dopo = await compra(ALTRA);
+    assert.equal(dopo.stato, 200);
+    const nuovo = verificaIlGettone(dopo.detto.gettoni.gdahome, PUBBLICA, { sog: ALTRA });
+    assert.ok(nuovo, "la casa nuova e' Premium");
+    assert.notEqual(nuovo.lic, vecchio.lic, "con un numero di licenza suo");
+    assert.deepEqual(
+      b.licenze.tolte(),
+      [vecchio.lic],
+      "quello di prima va al centralino come tolto",
+    );
+    const casaDiPrima = await b.fuori("casa", { casa: UNA, segreto: SEGRETO });
+    assert.deepEqual(casaDiPrima.detto.gettoni, {}, "e la casa di prima non ha piu' il gettone");
+
+    /* Il segno dello spostamento non e' una licenza: non vale e non si conta. */
+    const segno = b.licenze.quella(vecchio.lic);
+    assert.equal(segno.origine, "spostata");
+    assert.equal(b.licenze.vale(segno), false);
+    assert.equal(
+      b.licenze.licenze.filter((una) => una.origine === "negozio").length,
+      1,
+      "un acquisto, una licenza",
+    );
+
+    /* E tornando indietro, la stessa cosa al contrario. */
+    const ancora = await compra(UNA);
+    const terzo = verificaIlGettone(ancora.detto.gettoni.gdahome, PUBBLICA, { sog: UNA });
+    assert.ok(terzo);
+    assert.ok(b.licenze.tolte().includes(nuovo.lic));
+    assert.ok(!b.licenze.tolte().includes(terzo.lic));
+  } finally {
+    await b.chiudi();
+  }
+});
+
 test("un abbonamento Google rimborsato o stornato chiude subito, non a fine periodo", async () => {
   for (const [nome, fine] of [
     /* Google mette la fine al momento della revoca… */

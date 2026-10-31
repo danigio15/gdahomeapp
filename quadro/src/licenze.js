@@ -901,6 +901,7 @@ export class Licenze {
     } else {
       /* Com'e' fatto l'abbonamento resta: lo stesso acquisto, visto ancora. */
       const { abbonamento: suo, aggiornata } = una.negozio || {};
+      if (una.sog !== sog) this._spostata(una);
       una.sog = sog;
       una.app = app;
       una.scade = scade;
@@ -919,6 +920,33 @@ export class Licenze {
     una.ricontrollata = this.adesso();
     this.archivio.salva();
     return una;
+  }
+
+  /* Lo stesso acquisto portato su un'altra casa («ripristina acquisti»
+   * dall'app di un'altra casa, o una casa nuova).
+   *
+   * La licenza segue l'acquisto, e la casa di prima non deve tenerla: prima il
+   * suo gettone valeva ancora fino a otto giorni, e rifacendo il giro ogni
+   * settimana un abbonamento solo teneva Premium piu' case insieme. Adesso la
+   * licenza prende un numero nuovo per la casa nuova, e quello vecchio resta
+   * come tolto: entra nell'elenco del centralino (`tolte`), che chiude i
+   * telefoni da fuori della casa di prima, e la casa di prima al prossimo
+   * giro non riceve piu' il gettone. Il segno non e' una licenza: non vale,
+   * non si conta e non si richiede al negozio. */
+  _spostata(una) {
+    const ora = this.adesso();
+    this.licenze.push({
+      lic: una.lic,
+      app: una.app,
+      sog: una.sog,
+      origine: "spostata",
+      scade: una.scade,
+      creata: una.creata ?? ora,
+      revocata: ora,
+      nota: "spostata su un'altra casa",
+    });
+    una.lic = `lic_${randomBytes(8).toString("hex")}`;
+    una.spostataIl = ora;
   }
 
   /* La prova gratuita, e la sua storia: se c'e' stata, e se dopo si e'
