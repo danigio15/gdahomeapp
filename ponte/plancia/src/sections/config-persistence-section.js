@@ -429,16 +429,90 @@ export function sharedReconcileAction({
  * chiave in sospeso che localmente non esiste piu' vuol dire una cancellazione,
  * e una cancellazione si rispetta togliendola anche dalla copia fusa.
  */
-export function conLeModificheInSospeso(remoti = {}, locali = {}, daTenere = []) {
+export function conLeModificheInSospeso(remoti = {}, locali = {}, daTenere = [], base = {}) {
   const uscita = { ...(remoti && typeof remoti === "object" ? remoti : {}) };
   for (const chiave of Array.isArray(daTenere) ? daTenere : []) {
     const nome = String(chiave || "");
     if (!nome || !CONFIG_KEYS.includes(nome)) continue;
     const mio = locali?.[nome];
+    if (CHIAVI_A_CASELLE.includes(nome) && mio !== undefined && mio !== null) {
+      uscita[nome] = fondiLeCaselle(uscita[nome], mio, base?.[nome]);
+      continue;
+    }
     if (mio === undefined || mio === null) delete uscita[nome];
     else uscita[nome] = mio;
   }
   return uscita;
+}
+
+/* Le chiavi fatte a caselle: una mappa dove ogni casella e' di qualcuno di
+ * diverso. `cd_entity_overrides` tiene insieme le entita' del MiniPC, del
+ * meteo, dell'antifurto, del solare, delle auto: scriverla tutta intera vuol
+ * dire scrivere anche le caselle che questo dispositivo non ha mai toccato.
+ *
+ * «Ho configurato il MiniPC dal PC ma sul tablet, pur riavviando, non vedo le
+ * modifiche» — e prima era successo col meteo. Il tablet aveva una copia
+ * vecchia della mappa; bastava che scrivesse una casella qualsiasi (cambiare
+ * area all'antifurto, una linguetta del solare) perche' la sua mappa intera,
+ * vecchia, passasse sopra quella del PC. Le caselle del MiniPC tornavano
+ * vuote per tutti.
+ *
+ * Adesso si fonde casella per casella, a tre vie: si guarda com'era la mappa
+ * l'ultima volta che questo dispositivo era allineato (`base`). Le caselle che
+ * qui sono cambiate da allora sono modifiche di questo dispositivo e vincono;
+ * tutte le altre le decide la copia condivisa. Senza base — un dispositivo che
+ * non e' mai stato allineato — si tiene la copia condivisa e ci si aggiungono
+ * sopra quelle di qui, che e' gia' meglio di buttarla via tutta. */
+export const CHIAVI_A_CASELLE = ["cd_entity_overrides"];
+
+function mappaDa(testo) {
+  if (testo === undefined || testo === null) return null;
+  try {
+    const valore = typeof testo === "string" ? JSON.parse(testo) : testo;
+    return valore && typeof valore === "object" && !Array.isArray(valore) ? valore : null;
+  } catch (_error) {
+    return null;
+  }
+}
+
+export function fondiLeCaselle(remoto, locale, base) {
+  const loro = mappaDa(remoto);
+  const mia = mappaDa(locale);
+  if (!mia) return locale;
+  if (!loro) return locale;
+  const prima = mappaDa(base);
+  const fusa = prima ? { ...loro } : { ...loro, ...mia };
+  if (prima) {
+    const uguali = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+    for (const casella of new Set([...Object.keys(mia), ...Object.keys(prima)])) {
+      if (uguali(mia[casella], prima[casella])) continue;
+      if (casella in mia) fusa[casella] = mia[casella];
+      else delete fusa[casella];
+    }
+  }
+  return JSON.stringify(fusa);
+}
+
+const BASE_KEY = "dm_persistence_base";
+
+function leggiBase(storage = root.localStorage) {
+  try {
+    const letta = JSON.parse(storage?.getItem?.(BASE_KEY) || "null");
+    return letta && typeof letta === "object" && !Array.isArray(letta) ? letta : {};
+  } catch (_error) {
+    return {};
+  }
+}
+
+function ricordaBase(values, storage = root.localStorage) {
+  if (!values || typeof values !== "object") return;
+  try {
+    const base = {};
+    for (const chiave of CHIAVI_A_CASELLE) if (values[chiave] != null) base[chiave] = values[chiave];
+    storage?.setItem?.(BASE_KEY, JSON.stringify(base));
+  } catch (_error) {
+    /* senza base si fonde lo stesso, solo con meno finezza */
+  }
 }
 
 function readMeta(storage = root.localStorage) {
@@ -665,7 +739,19 @@ function queuePendingFromStorage(key = "") {
   if (!state.dirtyMarkTimer) markPending();
 }
 
-function rememberSynced(revision, updatedAt) {
+/* Dopo una fusione la copia applicata azzera il sospeso: le chiavi tenute si
+ * rimettono subito, senza aspettare un giro, cosi' la spinta che segue le
+ * porta e un ricaricamento a meta' non le perde. */
+function rimettiInSospeso(chiavi = []) {
+  if (!chiavi.length) return;
+  if (!state.dirtyKeys) state.dirtyKeys = new Set();
+  for (const chiave of chiavi) if (CONFIG_KEYS.includes(String(chiave))) state.dirtyKeys.add(String(chiave));
+  state.dirtyAt = Date.now();
+  writeMeta({ pending_at: state.dirtyAt, pending_keys: chiaviInSospeso() });
+}
+
+function rememberSynced(revision, updatedAt, values = null) {
+  ricordaBase(values || localValues());
   state.dirtyAt = 0;
   state.dirtyKeys = new Set();
   state.remoteRevision = Number(revision) || 0;
@@ -705,7 +791,7 @@ async function pushShared(attempt = 0) {
   if (status === "saved" || status === "unchanged") {
     state.localWasConfigured = configured;
     state.remoteConfigured = meaningfulConfigValues(result?.snapshot?.values || value.values);
-    rememberSynced(result?.snapshot?.revision, result?.snapshot?.updated_at);
+    rememberSynced(result?.snapshot?.revision, result?.snapshot?.updated_at, result?.snapshot?.values || value.values);
     root.dispatchEvent?.(new CustomEvent("dashboardmodern:persistence-saved", { detail: value }));
     return true;
   }
@@ -733,6 +819,17 @@ async function pushShared(attempt = 0) {
       }
       console.warn("[DashboardModern] shared config conflict persisted; keeping the stored copy");
       return applySharedSnapshot(result.snapshot);
+    }
+    /* Prima qui si rispingeva lo stesso scatto locale con la revisione nuova:
+     * la copia condivisa — quella che un altro dispositivo aveva appena
+     * salvato — veniva coperta per intero da quella di questo. Ora si fonde:
+     * la copia condivisa per tutto, questa solo dove ha scritto davvero. */
+    const loro = normalizeSharedSnapshot(result?.snapshot);
+    if (loro) {
+      const daTenere = chiaviInSospeso();
+      const fusi = conLeModificheInSospeso(loro.values, localValues(), daTenere, leggiBase());
+      applySharedSnapshot({ ...loro, values: fusi });
+      rimettiInSospeso(daTenere);
     }
     return pushShared(attempt + 1);
   }
@@ -869,6 +966,19 @@ function refreshRuntimeAfterRestore(remote) {
   // disegno a restare indietro, e le sezioni configurate sparivano.
   runSteps(
     [
+      /* La mappa delle entita' che il guscio tiene in memoria: senza questo
+       * passo restava quella di prima — il MiniPC e il meteo continuavano a
+       * leggere le caselle vecchie, e il primo salvataggio dall'editor
+       * riscriveva la mappa vecchia sopra quella appena arrivata. */
+      [
+        "cdApplyCanonicalOverrides",
+        () =>
+          root.cdApplyCanonicalOverrides?.(
+            root.DashboardModernModules?.store?.getSection?.("entityOverrides") ||
+              mappaDa(root.localStorage?.getItem?.("cd_entity_overrides")) ||
+              {},
+          ),
+      ],
       ["cdEvCarsRefresh", () => root.cdEvCarsRefresh?.()],
       ["buildQuickActions", () => root.buildQuickActions?.()],
       ["cdApplyNavOrder", () => root.cdApplyNavOrder?.()],
@@ -903,7 +1013,7 @@ function applySharedSnapshot(rawSnapshot) {
   state.remoteRevision = normalized.revision;
   state.remoteConfigured = meaningfulConfigValues(normalized.values);
   state.localWasConfigured = meaningfulLocal(localValues());
-  rememberSynced(normalized.revision, normalized.updated_at);
+  rememberSynced(normalized.revision, normalized.updated_at, normalized.values);
   refreshRuntimeAfterRestore(merged);
   return true;
 }
@@ -969,8 +1079,11 @@ async function hydrateShared() {
     /* La copia remota per tutto, la propria dove si e' appena scritto — e poi
      * si rispinge, cosi' la modifica arriva anche agli altri dispositivi
      * invece di restare su questo. */
-    const fusi = conLeModificheInSospeso(stored.values, local, daTenere);
+    const fusi = conLeModificheInSospeso(stored.values, local, daTenere, leggiBase());
     applySharedSnapshot({ ...stored, values: fusi });
+    /* L'applicazione azzera le chiavi in sospeso e fissa la base sulla copia
+     * fusa: si rimettono le chiavi tenute, cosi' la spinta che segue le porta. */
+    rimettiInSospeso(daTenere);
     return await pushShared();
   }
   if (action === "auto-recover") {
@@ -980,7 +1093,7 @@ async function hydrateShared() {
   }
   if (action === "in-sync") {
     state.localWasConfigured = localConfigured;
-    rememberSynced(stored.revision, stored.updated_at);
+    rememberSynced(stored.revision, stored.updated_at, stored.values);
     /* Stessi valori ma busta vecchia: si ristampa, cosi' lo scatto porta la
      * revisione delle chiavi e la generazione correnti. */
     if (
