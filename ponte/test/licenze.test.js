@@ -265,6 +265,52 @@ test("un gettone che scade fa tornare Base senza che arrivi niente", async () =>
   assert.equal(licenze.limitata, false);
 });
 
+test("rimettere indietro l'orologio non fa tornare buono un gettone scaduto", async () => {
+  const cartella = unPosto();
+  try {
+    let ora = ADESSO;
+    const risposte = {
+      "/v1/licenze/casa": conGettoni({ gdahome: unGettone({ sog: CASA }, { adesso: ADESSO }) }),
+    };
+    const { licenze } = leLicenze({ cartella, adesso: () => ora, risposte });
+    await licenze.rinnova();
+    assert.equal(licenze.premium, true);
+    /* Passano sessanta giorni col quadro fuori: Base. */
+    ora = ADESSO + 60 * GIORNO;
+    assert.equal(licenze.premium, false);
+    /* L'orologio di casa rimesso a un'ora in cui il gettone valeva: resta Base. */
+    ora = ADESSO + GIORNO;
+    assert.equal(licenze.premium, false, "l'ora non torna indietro");
+    /* Anche dopo un riavvio: l'ora piu' tarda vista sta sul disco. */
+    const { licenze: dopo } = leLicenze({
+      cartella,
+      adesso: () => ora,
+      risposte: { "/v1/licenze/casa": new TypeError("fetch failed") },
+    });
+    assert.equal(dopo.premium, false, "e regge al riavvio");
+    /* E mai prima di quando il quadro l'ha firmato. */
+    const { licenze: prima } = leLicenze({ adesso: () => ADESSO - 30 * GIORNO, risposte });
+    await prima.rinnova();
+    assert.ok(prima._ora() >= ADESSO - 30 * GIORNO);
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("un orologio andato avanti per sbaglio si rimette con la prima risposta del quadro", async () => {
+  let ora = ADESSO + 365 * GIORNO;
+  const risposte = {
+    "/v1/licenze/casa": () => conGettoni({ gdahome: unGettone({ sog: CASA }, { adesso: ora }) }),
+  };
+  const { licenze } = leLicenze({ adesso: () => ora, risposte });
+  await licenze.rinnova();
+  /* L'orologio torna giusto: il gettone di un anno avanti non vale, ma la
+   * prima risposta del quadro con l'ora giusta rimette tutto a posto. */
+  ora = ADESSO;
+  await licenze.rinnova();
+  assert.equal(licenze.premium, true);
+});
+
 test("il gettone di un'altra casa non si tiene nemmeno sul disco", async () => {
   const { licenze } = leLicenze({
     risposte: {

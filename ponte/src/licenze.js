@@ -93,6 +93,9 @@ export class LicenzaNo extends Error {
   }
 }
 
+/* Ogni quanto si scrive l'ora piu' tarda vista (`_ora`). */
+const SCRIVI_L_ORA_OGNI = 60 * 60 * 1000;
+
 export class Licenze extends EventEmitter {
   constructor({
     casa = "",
@@ -150,11 +153,35 @@ export class Licenze extends EventEmitter {
     return detti && typeof detti === "object" ? detti : {};
   }
 
+  /* L'ora per le licenze: quella di casa, ma mai prima della piu' tarda gia'
+   * vista.
+   *
+   * Il gettone scade col suo `fino`, e lo si confronta con l'orologio di Home
+   * Assistant: rimettendolo indietro un gettone scaduto da mesi tornava
+   * buono, e la casa restava Premium senza il quadro. Adesso l'ora non va
+   * piu' indietro: ne' prima di quando i gettoni sono arrivati, ne' prima
+   * della piu' tarda vista, che si scrive accanto ai gettoni (ogni ora al
+   * piu', per non scrivere il disco a ogni commissione) e regge ai riavvii. */
+  _ora() {
+    const ora = Number(this.adesso()) || 0;
+    const dati = this._memoria.dati || {};
+    const vista = Math.max(Number(dati.vista) || 0, Number(dati.ricevutiIl) || 0);
+    if (ora > vista && ora - (Number(dati.vista) || 0) >= SCRIVI_L_ORA_OGNI) {
+      this._memoria.dati = { ...dati, vista: ora };
+      try {
+        this._memoria.salva();
+      } catch (_errore) {
+        /* Non scritta: resta in memoria, e si riprova al prossimo giro. */
+      }
+    }
+    return Math.max(ora, vista);
+  }
+
   /* Il gettone di un'app, se vale adesso. Per `gdanav` vale anche quello di
    * gdahome: e' la regola del contratto, e sta in `verificaGettone`. */
   _valido(app) {
     if (!this.attive) return null;
-    const adesso = this.adesso();
+    const adesso = this._ora();
     const di = (quale) => {
       const gettone = this.gettoni[quale];
       if (typeof gettone !== "string") return null;
@@ -173,7 +200,9 @@ export class Licenze extends EventEmitter {
         );
       }
       const detto = this._firmati.get(chiave);
-      return detto && valeAdesso(detto, { sog: this.casa, app, adesso }) ? detto : null;
+      /* Prima dell'emissione non si torna: il quadro ha firmato a quell'ora. */
+      const ora = Math.max(adesso, Number(detto?.emesso) || 0);
+      return detto && valeAdesso(detto, { sog: this.casa, app, adesso: ora }) ? detto : null;
     };
     return app === "gdanav" ? di("gdanav") || di("gdahome") : di("gdahome");
   }
@@ -450,7 +479,16 @@ export class Licenze extends EventEmitter {
       }));
 
     const prima = JSON.stringify(this.gettoni);
-    this._memoria.dati = { gettoni, licenze, ricevutiIl: this.adesso() };
+    this._memoria.dati = {
+      gettoni,
+      licenze,
+      ricevutiIl: this.adesso(),
+      /* Una risposta del quadro rimette l'ora piu' tarda a quella di adesso:
+       * un orologio andato avanti per sbaglio, e poi rimesso giusto, non
+       * lascia la casa senza licenze. Chi tiene il quadro fuori per tornare
+       * indietro col tempo, questa risposta non ce l'ha. */
+      vista: this.adesso(),
+    };
     try {
       this._memoria.salva();
     } catch (errore) {
