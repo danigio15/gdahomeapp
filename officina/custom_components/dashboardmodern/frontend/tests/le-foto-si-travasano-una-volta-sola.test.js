@@ -281,7 +281,9 @@ test("togliere una chiave non alza la revisione", async () => {
   /* E la 73 con le radio preferite (`cd_radio`), e la 74 con la Salute
    * (`cd_salute`): l'obiettivo dei passi e i nomi delle persone sono della
    * casa, uguali dal telefono e dal tablet. */
-  assert.equal(CONFIG_KEYS_REVISION, 74);
+  /* E la 75 con la Casa 3D (`cd_casa3d`): la casa in tre dimensioni e i suoi
+   * dispositivi collegati sono della casa, non del vetro da cui la si guarda. */
+  assert.equal(CONFIG_KEYS_REVISION, 75);
   assert.ok(CONFIG_KEYS.includes("cd_salute"));
   assert.ok(CONFIG_KEYS.includes("cd_alexa"));
   assert.ok(CONFIG_KEYS.includes("cd_occhio"));

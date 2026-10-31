@@ -17,6 +17,7 @@ import {
   occhioDiPartenza,
   occhioPulito,
 } from "../plancia/src/core/colpo-d-occhio.js";
+import { CHIAVE_CASA3D, casa3dPulita } from "../plancia/src/core/casa-3d.js";
 import {
   CHIAVE_MURO,
   PROFILO_DI_ORIGINE,
@@ -27,7 +28,9 @@ import {
 
 /* «Colpo d'occhio» (`occhio`): una pagina sola coi riquadri grandi, e ognuno
  * apre il suo popup — vedi `plancia/src/core/colpo-d-occhio.js`. */
-export const MODELLI_DI_PLANCIA = Object.freeze(["classica", "muro", "occhio"]);
+/* «Casa 3D» (`casa3d`): la casa in tre dimensioni, coi suoi piani, gli arredi
+ * e i dispositivi — vedi `plancia/src/core/casa-3d.js`. */
+export const MODELLI_DI_PLANCIA = Object.freeze(["classica", "muro", "occhio", "casa3d"]);
 
 /* Da dove parte una plancia nuova a muro o a colpo d'occhio: dalla
  * principale, con quello che lei sa, o da zero, coi riquadri da riempire. */
@@ -62,6 +65,31 @@ export function eAColpoDOcchio(configurazione, profilo) {
   }
 }
 
+/** Se la configurazione di questa plancia la fa partire con la Casa 3D. */
+export function eCasa3D(configurazione, profilo) {
+  if (!configurazione) return false;
+  try {
+    const valori = configurazione.leggi(profilo)?.snapshot?.values || {};
+    const grezza = valori[CHIAVE_CASA3D];
+    if (!grezza) return false;
+    return casa3dPulita(typeof grezza === "string" ? JSON.parse(grezza) : grezza).attiva === true;
+  } catch (_errore) {
+    return false;
+  }
+}
+
+/* La casa della principale: e' la stessa casa, e una plancia 3D nuova la
+ * ritrova gia' fatta. Se la principale non l'ha ancora, nasce vuota e la si
+ * crea dal suo Config. */
+function casaDellaPrincipale(configurazione) {
+  try {
+    const grezza = configurazione?.leggi(PROFILO_DI_ORIGINE)?.snapshot?.values?.[CHIAVE_CASA3D];
+    return casa3dPulita(typeof grezza === "string" ? JSON.parse(grezza) : grezza);
+  } catch (_errore) {
+    return casa3dPulita(null);
+  }
+}
+
 /* Le cose della plancia principale, come le legge il tablet a muro. */
 function fonteDellaPrincipale(configurazione) {
   let valori = {};
@@ -83,6 +111,10 @@ function muroDallaPrincipale(configurazione) {
 function configDiPartenza(configurazione, modello, partenza) {
   if (modello === "muro")
     return { [CHIAVE_MURO]: JSON.stringify(muroDallaPrincipale(configurazione)) };
+  if (modello === "casa3d") {
+    const casa = casaDellaPrincipale(configurazione);
+    return { [CHIAVE_CASA3D]: JSON.stringify(casa3dPulita({ ...casa, attiva: casa.piani.length > 0 })) };
+  }
   if (modello === "occhio")
     return {
       [CHIAVE_OCCHIO]: JSON.stringify(
@@ -127,7 +159,7 @@ export function aggiungiUnaPlancia(
     ? configDiPartenza(configurazione, modelloPulito(modello), partenza)
     : null;
   if (primo) {
-    const come = modelloPulito(modello) === "muro" ? "a muro" : "a colpo d'occhio";
+    const come = { muro: "a muro", occhio: "a colpo d'occhio", casa3d: "con la Casa 3D" }[modelloPulito(modello)];
     try {
       configurazione.scrivi(quale.profilo, primo, {
         keys_revision: CONFIG_KEYS_REVISION,
@@ -144,6 +176,7 @@ export function aggiungiUnaPlancia(
     ...quale,
     a_muro: eAMuro(configurazione, quale.profilo),
     a_occhio: eAColpoDOcchio(configurazione, quale.profilo),
+    a_casa3d: eCasa3D(configurazione, quale.profilo),
   };
 }
 
@@ -153,5 +186,6 @@ export function conIlModello(elenco, configurazione) {
     ...una,
     a_muro: eAMuro(configurazione, una.profilo),
     a_occhio: eAColpoDOcchio(configurazione, una.profilo),
+    a_casa3d: eCasa3D(configurazione, una.profilo),
   }));
 }

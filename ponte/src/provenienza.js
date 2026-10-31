@@ -78,6 +78,7 @@ const SUFFISSI = new Set([
   ".ico",
   ".woff2",
   ".woff",
+  ".bin",
   ".md",
   ".txt",
   ".diff",

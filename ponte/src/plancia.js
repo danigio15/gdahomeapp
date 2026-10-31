@@ -43,6 +43,9 @@ const TIPI = Object.freeze({
   ".ico": "image/x-icon",
   ".woff2": "font/woff2",
   ".woff": "font/woff",
+  /* I pesi del modello che riconosce gli arredi nelle foto della Casa 3D:
+   * si leggono come byte, sul dispositivo, e da li' non escono. */
+  ".bin": "application/octet-stream",
   /* Le licenze dei ritratti e dei loghi delle auto, che stanno nella cartella
    * delle immagini che coprono. Una licenza che si distribuisce ma non si puo'
    * aprire non serve a niente. Gli altri file della plancia che non sono roba

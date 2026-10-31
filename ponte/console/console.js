@@ -1199,14 +1199,16 @@
         chi.join(" · ");
       /* Una plancia a muro lo dice accanto al nome: chi la apre sul telefono
        * e trova un pannello invece della plancia deve poterlo leggere qui. */
-      if (una.a_muro || una.a_occhio) {
+      if (una.a_muro || una.a_occhio || una.a_casa3d) {
         var rigaDelTitolo = vediPagina.createElement("div");
         rigaDelTitolo.className = "riga-del-nome";
         var aMuro = vediPagina.createElement("span");
         aMuro.className = "etichetta-muro";
         aMuro.textContent = una.a_muro
           ? due("📟 a muro", "📟 on the wall")
-          : due("👁️ colpo d'occhio", "👁️ at a glance");
+          : una.a_casa3d
+            ? due("🧊 casa 3D", "🧊 3D home")
+            : due("👁️ colpo d'occhio", "👁️ at a glance");
         rigaDelTitolo.appendChild(forte);
         rigaDelTitolo.appendChild(aMuro);
         nome.appendChild(rigaDelTitolo);

@@ -1619,8 +1619,14 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // `sections/salute-editor-section.js` (la scheda del Config),
   // `sections/strava-pezzi.js` (la linguetta Strava) e
   // `sections/finestre/salute.js` (la finestra della tessera).
+  // 513 con la Casa 3D: `core/casa-3d.js`, `core/pianta-da-foto.js`,
+  // `core/crea-casa.js` (le regole), `sections/casa-3d-crea-section.js` (la
+  // procedura che la crea dalle foto) e `sections/casa-3d-editor-section.js`
+  // (la scheda del Config); poi la pagina: `sections/casa-3d-section.js` e i
+  // suoi pezzi in `sections/casa-3d/` (la scena, gli arredi, le finiture).
+  // three.js non conta: si legge solo quando la casa si apre.
   assert.ok(
-    relative.length <= 508,
+    relative.length <= 517,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
@@ -1760,6 +1766,11 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
    * browser dietro o col Config aperto, e si spegne da solo quando la pagina
    * se ne va.
    *
+   * Il diciannovesimo e' la «Casa 3D»: l'ora in cima, ogni mezzo minuto. Gli
+   * stati dei dispositivi arrivano dagli eventi; il battito c'e' solo con la
+   * casa aperta, sta fermo con la scheda dietro o col Config aperto, e si
+   * spegne da solo quando la casa si chiude.
+   *
    * These are the intervals production is allowed, and they are named here so
    * another one cannot arrive unnoticed. */
   const intervals = [...graph.entries()].filter(([, source]) =>
@@ -1770,6 +1781,7 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
     [
       "src/sections/assistente-di-casa-section.js",
       "src/sections/assistenza-section.js",
+      "src/sections/casa-3d-section.js",
       "src/sections/colpo-d-occhio-section.js",
       "src/sections/cottura-section.js",
       "src/sections/english-runtime-strings-section.js",
