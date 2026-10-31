@@ -560,7 +560,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-JSWOFMAG.js";
+} from "../../chunk-YQZPD3UY.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -142277,21 +142277,11 @@ function motoCss() {
   @keyframes dmxCoil { from { stroke-dashoffset:0; } to { stroke-dashoffset:-120; } }
   @keyframes dmxCoil2 { from { stroke-dashoffset:-60; } to { stroke-dashoffset:-180; } }
 
-  /* The boiler's element drawing power: it glows, the tank steams, the hot
-     water tap drips. Never on the safety valve, which has its own banner. */
+  /* The boiler's element drawing power: it glows. No steam and no drips:
+     a closed tank doesn't smoke. Never on the safety valve, which has its own banner. */
   #page-boiler .dmx-element { fill:#94a3b8; opacity:0; }
   #page-boiler[data-dmx-boiler="on"] .dmx-element { opacity:1; fill:#ef4444; filter:url(#dm-st-glow); animation:dmxElement 1s ease-in-out infinite; }
   @keyframes dmxElement { 0%,100% { fill:#dc2626; } 50% { fill:#fca5a5; } }
-  #page-boiler .dmx-steam-w { fill:none; stroke:#94a3b8; stroke-width:3; stroke-linecap:round; opacity:0; filter:url(#dmx-blur); }
-  html[data-theme="dark"] #page-boiler .dmx-steam-w { stroke:#e2e8f0; }
-  #page-boiler .dmx-steam-small { stroke-width:2.2; }
-  #page-boiler[data-dmx-boiler="on"] .dmx-steam-w { animation:dmxSteam 2s ease-out infinite; }
-  @keyframes dmxSteam { 0% { transform:translateY(4px) scaleX(.8); opacity:0; } 30% { opacity:.75; } 100% { transform:translateY(-26px) scaleX(1.3); opacity:0; } }
-  #page-boiler .dmx-drop { fill:#60a5fa; opacity:0; }
-  #page-boiler[data-dmx-boiler="on"] .dmx-drop { animation:dmxDrop 2s cubic-bezier(.5,0,1,1) infinite; }
-  #page-boiler[data-dmx-boiler="on"] .dmx-drop2 { animation-delay:-1s; }
-  @keyframes dmxDrop { 0% { transform:translateY(-4px) scale(.3); opacity:0; } 20% { transform:translateY(0) scale(1); opacity:1; }
-    70% { transform:translateY(34px) scale(1); opacity:1; } 80%,100% { transform:translateY(40px) scale(1.4,.4); opacity:0; } }
 
   /* The valve: open says so with a green ping and chevrons crossing it,
      closed with a dashed red ring and the handle across. */
@@ -142308,15 +142298,14 @@ function motoCss() {
   #page-boiler #syn-v-chiave:not(.active) .valve-open-shape { transform:rotate(90deg); }
   #page-boiler:has(#syn-p-solare.active) #syn-v-chiave.active .valve-svg { opacity:.35; }
 
-  #page-boiler .dmx-wave, #page-boiler .dmx-wisp, #page-boiler .dmx-steam-w, #page-boiler .dmx-cline,
-  #page-boiler .dmx-drip path { transform-box:fill-box; transform-origin:center; }
+  #page-boiler .dmx-wave, #page-boiler .dmx-wisp, #page-boiler .dmx-cline { transform-box:fill-box; transform-origin:center; }
   /* The live pill breathes in 2 s, a divisor of the 4 s loop. */
   #page-boiler:has(#syn-p-solare.active) .dm-st-live::before { animation-duration:2s; }
 
   /* Reduced motion: the decoration stops; the state keeps moving, slower
      (particles at half speed, the rotor at a quarter). */
   @media (prefers-reduced-motion: reduce) {
-    #page-boiler :is(.dmx-sweep,.dmx-wave,.dmx-beam,.dmx-rays,.dm-st-sun,.dmx-wisp,.dmx-cline,.dmx-warm,.dmx-panel-heat,.dm-st-riser,.dmx-halo,.dmx-ring,.dmx-steam-w,.dmx-current) { animation:none !important; }
+    #page-boiler :is(.dmx-sweep,.dmx-wave,.dmx-beam,.dmx-rays,.dm-st-sun,.dmx-wisp,.dmx-cline,.dmx-warm,.dmx-panel-heat,.dm-st-riser,.dmx-halo,.dmx-ring,.dmx-current) { animation:none !important; }
     #page-boiler .dmx-wave, #page-boiler .dmx-wisp { opacity:0 !important; }
     html body #page-boiler:has(#flow-sol-hot.active) .dmx-hot .dmx-dots,
     html body #page-boiler:has(#flow-sol-cold.active) .dmx-cold .dmx-dots { animation:dmxRun25 var(--dmx-cycle) linear infinite !important; }
@@ -142455,22 +142444,10 @@ function frontMarkup(L) {
   tank += `<path class="dm-st-coil" d="${coil}"/>`;
   tank += `<g class="dmx dmx-coil"><path class="dmx-coil-warm" d="${coil}"/><path class="dmx-coil-pulse" d="${coil}"/><path class="dmx-coil-pulse dmx-coil-pulse2" d="${coil}"/></g>`;
   tank += `<rect x="${wx}" y="${wy}" width="${ww}" height="${wh}" rx="${ww / 2}" fill="url(#dm-st-win)"/></g>`;
-  tank += `<g class="dmx dmx-steam">`;
-  for (let i = 0; i < 4; i += 1) {
-    const bx = T.cx - 30 + i * 18;
-    tank += `<path class="dmx-steam-w" d="M ${bx} ${f1(T.top - ry + 2)} c -7 -9, 7 -15, 0 -24 c -7 -9, 7 -15, 0 -24" style="animation-delay:${(-i * 0.5 - i % 2 * 1).toFixed(2)}s"/>`;
-  }
-  tank += `</g>`;
   let tap = "";
   if (L.tap) {
     const [x, y] = L.tap;
     tap = `<g data-dm-st-art="tap" filter="url(#dm-st-drop)"><circle class="dm-st-tap-disc" cx="${x}" cy="${y}" r="24"/><text x="${x}" y="${y + 7}" text-anchor="middle" font-size="20">🚿</text></g>`;
-    const drop = `M ${x - 4} ${y + 30} q 4 -8 8 0 a 4 4 0 1 1 -8 0 z`;
-    tap += `<g class="dmx dmx-drip"><path class="dmx-drop" d="${drop}"/><path class="dmx-drop dmx-drop2" d="${drop}"/>`;
-    for (let i = 0; i < 3; i += 1) {
-      tap += `<path class="dmx-steam-w dmx-steam-small" d="M ${x - 12 + i * 12} ${y - 26} c -5 -7, 5 -12, 0 -19 c -5 -7, 5 -12, 0 -19" style="animation-delay:${(-i * 0.66).toFixed(2)}s"/>`;
-    }
-    tap += `</g>`;
   }
   let leads = "";
   for (const [name, [x1, y1, x2, y2]] of Object.entries(L.leaders)) {
