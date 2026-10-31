@@ -560,7 +560,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-2UBQ6C7P.js";
+} from "../../chunk-7MYL5KBU.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -11248,7 +11248,7 @@ async function eseguiIlRefresh(period, carico) {
       error
     );
     segnaLaRagione(state6.lastError);
-    const presaCaduta = /connection (lost|timeout|unavailable)/i.test(state6.lastError);
+    const presaCaduta = presaDaRifare(state6.lastError);
     if (state6.bundle || state6.retryCount >= 40) {
       scheduleEnergyRefresh(true, presaCaduta ? RIPRESA_DOPO_LA_PRESA_MS : riposoDeiPeriodi());
     } else {
@@ -11273,6 +11273,11 @@ function scheduleProjection() {
 var RIPOSO_ENERGIA_MS = 6e4;
 var RIPOSO_ENERGIA_DI_SPALLE_MS = 5 * 6e4;
 var RIPRESA_DOPO_LA_PRESA_MS = 3e3;
+function presaDaRifare(errore) {
+  return /connection (lost|timeout|unavailable)|casa non risponde|home is not answering/i.test(
+    String(errore || "")
+  );
+}
 function riposoDeiPeriodi(documento = doc, inAffanno = broker?.recorderInAffanno?.()) {
   if (documento?.visibilityState === "hidden") return RIPOSO_ENERGIA_DI_SPALLE_MS;
   if (inAffanno) return RIPOSO_ENERGIA_DI_SPALLE_MS;
@@ -11680,6 +11685,7 @@ function subscribeStore2() {
   });
 }
 function annunciaGliStati() {
+  if (state6.lastError && hasConfiguredEnergy()) scheduleEnergyRefresh(true);
   root.dispatchEvent?.(
     new CustomEvent("dashboardmodern:states-ready", {
       detail: { count: Object.keys(allStates()).length }

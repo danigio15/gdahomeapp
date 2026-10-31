@@ -2111,7 +2111,7 @@ async function eseguiIlRefresh(period, carico) {
      * tentativi ci si fermava per sempre. Adesso si riprova sempre: subito
      * se la presa e' caduta (la prossima domanda ne apre una nuova), al
      * passo di sempre negli altri casi. */
-    const presaCaduta = /connection (lost|timeout|unavailable)/i.test(state.lastError);
+    const presaCaduta = presaDaRifare(state.lastError);
     if (state.bundle || state.retryCount >= 40) {
       scheduleEnergyRefresh(true, presaCaduta ? RIPRESA_DOPO_LA_PRESA_MS : riposoDeiPeriodi());
     } else {
@@ -2184,6 +2184,18 @@ export const RIPOSO_ENERGIA_DI_SPALLE_MS = 5 * 60_000;
 /* Dopo una presa caduta si richiede presto: il Recorder non c'entra, e la
  * nuova presa si apre in un attimo. */
 export const RIPRESA_DOPO_LA_PRESA_MS = 3000;
+
+/* Gli errori che vogliono dire «la presa non c'e'», non «il Recorder arranca».
+ *
+ * Oltre alla presa caduta del browser c'e' quella dell'app: tornando dal
+ * background il filo verso casa si riapre, e se non e' pronto in tempo l'app
+ * risponde «la casa non risponde» e chiude. Non e' un Recorder lento, e'
+ * una presa da rifare: si riprova presto, non dopo cinque minuti. */
+export function presaDaRifare(errore) {
+  return /connection (lost|timeout|unavailable)|casa non risponde|home is not answering/i.test(
+    String(errore || ""),
+  );
+}
 
 /* E dopo un timeout si riposa comunque a lungo.
  *
@@ -2741,8 +2753,14 @@ function subscribeStore() {
   });
 }
 
-/* Gli stati sono arrivati: lo si dice a chi disegna. */
+/* Gli stati sono arrivati: lo si dice a chi disegna.
+ *
+ * E se l'Energia era rimasta su un errore, la casa che rimanda gli stati e'
+ * la prova che adesso risponde: i totali si richiedono subito, invece di
+ * aspettare il prossimo giro (dal campo: l'app tornata davanti dopo il
+ * background, «la casa non risponde» e i numeri fermi). */
 function annunciaGliStati() {
+  if (state.lastError && hasConfiguredEnergy()) scheduleEnergyRefresh(true);
   root.dispatchEvent?.(
     new CustomEvent("dashboardmodern:states-ready", {
       detail: { count: Object.keys(allStates()).length },
