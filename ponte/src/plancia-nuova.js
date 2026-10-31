@@ -113,7 +113,9 @@ function configDiPartenza(configurazione, modello, partenza) {
     return { [CHIAVE_MURO]: JSON.stringify(muroDallaPrincipale(configurazione)) };
   if (modello === "casa3d") {
     const casa = casaDellaPrincipale(configurazione);
-    return { [CHIAVE_CASA3D]: JSON.stringify(casa3dPulita({ ...casa, attiva: casa.piani.length > 0 })) };
+    return {
+      [CHIAVE_CASA3D]: JSON.stringify(casa3dPulita({ ...casa, attiva: casa.piani.length > 0 })),
+    };
   }
   if (modello === "occhio")
     return {
@@ -159,7 +161,9 @@ export function aggiungiUnaPlancia(
     ? configDiPartenza(configurazione, modelloPulito(modello), partenza)
     : null;
   if (primo) {
-    const come = { muro: "a muro", occhio: "a colpo d'occhio", casa3d: "con la Casa 3D" }[modelloPulito(modello)];
+    const come = { muro: "a muro", occhio: "a colpo d'occhio", casa3d: "con la Casa 3D" }[
+      modelloPulito(modello)
+    ];
     try {
       configurazione.scrivi(quale.profilo, primo, {
         keys_revision: CONFIG_KEYS_REVISION,

@@ -276,14 +276,23 @@ test("con la Casa 3D e una casa nella principale: la ritrova, accesa", () => {
     const principale = b.configurazione.leggi("primary").snapshot.values;
     b.configurazione.scrivi(
       "primary",
-      { ...principale, cd_casa3d: JSON.stringify({ attiva: false, piani: [{ k: "terra", W: 4, H: 4, griglia, stanze: [{ id: 1, nome: "Salone" }] }] }) },
+      {
+        ...principale,
+        cd_casa3d: JSON.stringify({
+          attiva: false,
+          piani: [{ k: "terra", W: 4, H: 4, griglia, stanze: [{ id: 1, nome: "Salone" }] }],
+        }),
+      },
       { updated_at: 2 },
     );
     const quale = aggiungiUnaPlancia(b, { titolo: "Tre D", modello: "casa3d" });
     assert.equal(quale.a_casa3d, true);
     assert.equal(eCasa3D(b.configurazione, "primary"), false);
     const casa = JSON.parse(b.configurazione.leggi("tre-d").snapshot.values.cd_casa3d);
-    assert.deepEqual(casa.piani[0].stanze.map((s) => s.nome), ["Salone"]);
+    assert.deepEqual(
+      casa.piani[0].stanze.map((s) => s.nome),
+      ["Salone"],
+    );
   } finally {
     b.via();
   }
