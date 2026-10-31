@@ -21,6 +21,9 @@ import test from "node:test";
 import { Commissioni } from "../src/commissioni.js";
 import { leDueMappe, Registri } from "../src/registri.js";
 
+/* Un utente di Home Assistant: le commissioni sono per chi e' entrato. */
+const CHI_DI_PROVA = "c0ffee00c0ffee00c0ffee00c0ffee00";
+
 /* Una casa che conta quante volte le si chiede ogni registro, e che puo'
  * prendersi tempo per rispondere. */
 function casaFinta({ dispositivi = [], entita = [], lenta = false } = {}) {
@@ -130,7 +133,10 @@ test("la plancia chiede «ponte/registri» e si sente rispondere le due mappe", 
     commissioni.riconosce({ type: "ponte/registri" }),
     "comincia per «ponte/»: la fa il ponte, e non si gira a Home Assistant",
   );
-  const detta = await commissioni.rispondi({ id: 7, type: "ponte/registri" });
+  const detta = await commissioni.rispondi(
+    { id: 7, type: "ponte/registri" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(detta.id, 7);
   assert.equal(detta.success, true);
   assert.equal(detta.result.di["switch.presa_giardino"], "giard1");
@@ -140,7 +146,10 @@ test("la plancia chiede «ponte/registri» e si sente rispondere le due mappe", 
 test("da quella porta non esce nessuno stato", async () => {
   const casa = casaFinta({ dispositivi: DISPOSITIVI, entita: ENTITA });
   const commissioni = commissioniCon(new Registri({ casa }));
-  const detta = await commissioni.rispondi({ id: 1, type: "ponte/registri" });
+  const detta = await commissioni.rispondi(
+    { id: 1, type: "ponte/registri" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   /* Due chiavi e basta. Che cosa stia facendo adesso quella presa non è roba
    * di questa porta, e non lo deve diventare: è la stessa riga che il
    * rapporto tiene da sempre. */
@@ -155,7 +164,10 @@ test("un ponte senza anagrafe risponde «non conosco», e la plancia se la cava"
    * esiste: lì le mappe le ha già lasciate il pannello, e chiedere sarebbe
    * chiedere una cosa che non manca. */
   const commissioni = commissioniCon(null);
-  const detta = await commissioni.rispondi({ id: 3, type: "ponte/registri" });
+  const detta = await commissioni.rispondi(
+    { id: 3, type: "ponte/registri" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(detta.success, false);
   assert.equal(detta.error.code, "unknown_command");
 });

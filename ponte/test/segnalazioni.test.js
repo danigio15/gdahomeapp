@@ -17,6 +17,9 @@ import {
   baseDelCentralino,
 } from "../src/segnalazioni.js";
 
+/* Un utente di Home Assistant: le commissioni sono per chi e' entrato. */
+const CHI_DI_PROVA = "c0ffee00c0ffee00c0ffee00c0ffee00";
+
 const IDENTITA = { casa: `casa_${"c".repeat(32)}`, segreto: "il-segreto-della-casa" };
 const ZITTO = { info() {}, attenzione() {}, errore() {} };
 
@@ -255,36 +258,54 @@ test("dall'app: i comandi ponte/segnalazioni, e i loro no", async () => {
   });
   assert.equal(con.riconosce({ type: "ponte/segnalazioni/elenco" }), true);
 
-  const vuoto = await con.rispondi({ id: 1, type: "ponte/segnalazioni/elenco" });
+  const vuoto = await con.rispondi(
+    { id: 1, type: "ponte/segnalazioni/elenco" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(vuoto.success, true);
   assert.deepEqual(vuoto.result.segnalazioni, []);
 
-  const creata = await con.rispondi({
-    id: 2,
-    type: "ponte/segnalazioni/crea",
-    tipo: "domanda",
-    titolo: "Come si fa?",
-    corpo: "…",
-    diagnostica: { app: "10" },
-  });
+  const creata = await con.rispondi(
+    {
+      id: 2,
+      type: "ponte/segnalazioni/crea",
+      tipo: "domanda",
+      titolo: "Come si fa?",
+      corpo: "…",
+      diagnostica: { app: "10" },
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(creata.success, true);
   assert.equal(creata.result.numero, 7);
 
-  const letta = await con.rispondi({ id: 3, type: "ponte/segnalazioni/leggi", numero: 7 });
+  const letta = await con.rispondi(
+    { id: 3, type: "ponte/segnalazioni/leggi", numero: 7 },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(letta.result.titolo, "Come si fa?");
-  const risposta = await con.rispondi({
-    id: 4,
-    type: "ponte/segnalazioni/rispondi",
-    numero: 7,
-    testo: "Aggiungo…",
-  });
+  const risposta = await con.rispondi(
+    {
+      id: 4,
+      type: "ponte/segnalazioni/rispondi",
+      numero: 7,
+      testo: "Aggiungo…",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(risposta.result.messaggi.length, 2);
   assert.equal(
-    (await con.rispondi({ id: 5, type: "ponte/segnalazioni/leggi" })).error.code,
+    (await con.rispondi({ id: 5, type: "ponte/segnalazioni/leggi" }, { chiChiede: CHI_DI_PROVA }))
+      .error.code,
     "invalid_format",
   );
   assert.equal(
-    (await con.rispondi({ id: 6, type: "ponte/segnalazioni/leggi", numero: 99 })).error.code,
+    (
+      await con.rispondi(
+        { id: 6, type: "ponte/segnalazioni/leggi", numero: 99 },
+        { chiChiede: CHI_DI_PROVA },
+      )
+    ).error.code,
     "non_trovata",
   );
 
@@ -293,21 +314,33 @@ test("dall'app: i comandi ponte/segnalazioni, e i loro no", async () => {
    * pagina pubblica. Senza la chat del ponte queste porte non si aprono —
    * `chat.test.js` e `commissioni.test.js` guardano quelle che si aprono. */
   assert.equal(
-    (await con.rispondi({ id: 7, type: "ponte/chat/leggi" })).error.code,
+    (await con.rispondi({ id: 7, type: "ponte/chat/leggi" }, { chiChiede: CHI_DI_PROVA })).error
+      .code,
     "unknown_command",
   );
   assert.equal(
-    (await con.rispondi({ id: 8, type: "ponte/chat/scrivi", testo: "Ciao" })).error.code,
+    (
+      await con.rispondi(
+        { id: 8, type: "ponte/chat/scrivi", testo: "Ciao" },
+        { chiChiede: CHI_DI_PROVA },
+      )
+    ).error.code,
     "unknown_command",
   );
   assert.equal(
-    (await con.rispondi({ id: 10, type: "ponte/segnalazioni/boh" })).error.code,
+    (await con.rispondi({ id: 10, type: "ponte/segnalazioni/boh" }, { chiChiede: CHI_DI_PROVA }))
+      .error.code,
     "unknown_command",
   );
 
   const senza = new Commissioni({ casa: { indirizzo: "x", segno: "s" }, registro: ZITTO });
   assert.equal(
-    (await senza.rispondi({ id: 11, type: "ponte/segnalazioni/elenco" })).error.code,
+    (
+      await senza.rispondi(
+        { id: 11, type: "ponte/segnalazioni/elenco" },
+        { chiChiede: CHI_DI_PROVA },
+      )
+    ).error.code,
     "unknown_command",
   );
   const senzaCentralino = new Commissioni({
@@ -321,8 +354,12 @@ test("dall'app: i comandi ponte/segnalazioni, e i loro no", async () => {
     }),
   });
   assert.equal(
-    (await senzaCentralino.rispondi({ id: 12, type: "ponte/segnalazioni/crea", titolo: "t" })).error
-      .code,
+    (
+      await senzaCentralino.rispondi(
+        { id: 12, type: "ponte/segnalazioni/crea", titolo: "t" },
+        { chiChiede: CHI_DI_PROVA },
+      )
+    ).error.code,
     "senza_centralino",
   );
 
@@ -342,24 +379,30 @@ test("un allegato va al centralino in binario, col nome e il tipo, e torna nel f
       registro: ZITTO,
     }),
   });
-  const creata = await con.rispondi({
-    id: 1,
-    type: "ponte/segnalazioni/crea",
-    tipo: "problema",
-    titolo: "La luce",
-    corpo: "Non va",
-  });
+  const creata = await con.rispondi(
+    {
+      id: 1,
+      type: "ponte/segnalazioni/crea",
+      tipo: "problema",
+      titolo: "La luce",
+      corpo: "Non va",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   const numero = creata.result.numero;
   const byte = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 4, 5]);
 
-  const conFoto = await con.rispondi({
-    id: 2,
-    type: "ponte/segnalazioni/allega",
-    numero,
-    nome: "cucina.jpg",
-    tipo: "image/jpeg",
-    byte: byte.toString("base64"),
-  });
+  const conFoto = await con.rispondi(
+    {
+      id: 2,
+      type: "ponte/segnalazioni/allega",
+      numero,
+      nome: "cucina.jpg",
+      tipo: "image/jpeg",
+      byte: byte.toString("base64"),
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(conFoto.success, true);
   assert.match(conFoto.result.messaggi.at(-1).testo, /^📷 cucina\.jpg \(9 B\)/);
 
@@ -370,24 +413,30 @@ test("un allegato va al centralino in binario, col nome e il tipo, e torna nel f
   assert.deepEqual([...arrivato.byte], [...byte]);
 
   /* Senza file, o con roba che non e' base64: no. */
-  const senza = await con.rispondi({
-    id: 3,
-    type: "ponte/segnalazioni/allega",
-    numero,
-    byte: "!!!",
-  });
+  const senza = await con.rispondi(
+    {
+      id: 3,
+      type: "ponte/segnalazioni/allega",
+      numero,
+      byte: "!!!",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(senza.success, false);
   assert.equal(senza.error.code, "invalid_format");
   /* Troppo grande: lo dice il ponte, senza nemmeno chiamare. */
   const prima = centralino.arrivate.length;
-  const grosso = await con.rispondi({
-    id: 4,
-    type: "ponte/segnalazioni/allega",
-    numero,
-    nome: "film.mp4",
-    tipo: "video/mp4",
-    byte: Buffer.alloc(ALLEGATO_MASSIMO + 1).toString("base64"),
-  });
+  const grosso = await con.rispondi(
+    {
+      id: 4,
+      type: "ponte/segnalazioni/allega",
+      numero,
+      nome: "film.mp4",
+      tipo: "video/mp4",
+      byte: Buffer.alloc(ALLEGATO_MASSIMO + 1).toString("base64"),
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(grosso.success, false);
   assert.equal(grosso.error.code, "troppo_grande");
   assert.equal(centralino.arrivate.length, prima);

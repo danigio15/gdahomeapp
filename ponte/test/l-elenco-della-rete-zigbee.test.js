@@ -645,6 +645,9 @@ test("con «rifai» il giro parte, e poi si rilegge", async () => {
 import { ilDisegnoDi } from "../src/mappa-zigbee.js";
 import { Commissioni } from "../src/commissioni.js";
 
+/* Un utente di Home Assistant: le commissioni sono per chi e' entrato. */
+const CHI_DI_PROVA = "c0ffee00c0ffee00c0ffee00c0ffee00";
+
 test("il nome dice l'oggetto, e la stanza non glielo ruba", () => {
   /* «Presa garage» è una presa che sta in garage, non una porta di garage.
    * Con le stanze davanti nell'elenco si prendeva il basculante — e un'icona
@@ -755,11 +758,14 @@ test("di un dispositivo che c'è già si sanno le entità, per la plancia", asyn
     registro: zitto,
     registri: new Registri({ casa }),
   });
-  const detta = await commissioni.rispondi({
-    id: 4,
-    type: "ponte/zigbee/dimmi",
-    dispositivo: "dev-porta",
-  });
+  const detta = await commissioni.rispondi(
+    {
+      id: 4,
+      type: "ponte/zigbee/dimmi",
+      dispositivo: "dev-porta",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(detta.success, true);
   const suo = detta.result.dispositivo;
   assert.equal(suo.nome, "Porta ingresso");
@@ -783,11 +789,14 @@ test("un dispositivo che questa casa non ha si dice, invece di uno vuoto", async
       },
     }),
   });
-  const detta = await commissioni.rispondi({
-    id: 5,
-    type: "ponte/zigbee/dimmi",
-    dispositivo: "dev-fantasma",
-  });
+  const detta = await commissioni.rispondi(
+    {
+      id: 5,
+      type: "ponte/zigbee/dimmi",
+      dispositivo: "dev-fantasma",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(detta.success, false);
   assert.equal(detta.error.code, "not_found");
 });

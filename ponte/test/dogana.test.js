@@ -21,6 +21,9 @@ import {
   servizioVietato,
 } from "../src/dogana.js";
 
+/* Un utente di Home Assistant: le commissioni sono per chi e' entrato. */
+const CHI_DI_PROVA = "c0ffee00c0ffee00c0ffee00c0ffee00";
+
 const ZITTO = { info() {}, attenzione() {}, errore() {} };
 const SEGNO = "il-segno-del-supervisor";
 
@@ -223,7 +226,7 @@ test("ponte/http non esce da /core/api, nemmeno coi punti in percentuale", async
   ]) {
     const risposta = await commissioni.rispondi(
       { id: 1, type: TIPO, percorso },
-      { puoAmministrare: true },
+      { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
     );
     assert.equal(risposta.success, false, percorso);
   }
@@ -232,17 +235,20 @@ test("ponte/http non esce da /core/api, nemmeno coi punti in percentuale", async
   /* Il Supervisor attraverso Home Assistant no, per nessuno. */
   const supervisor = await commissioni.rispondi(
     { id: 2, type: TIPO, percorso: "/api/hassio/addons/self/info" },
-    { puoAmministrare: true },
+    { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
   );
   assert.equal(supervisor.error.code, "unauthorized");
   /* E chi non amministra non scrive gli stati. */
-  const scritto = await commissioni.rispondi({
-    id: 3,
-    type: TIPO,
-    metodo: "POST",
-    percorso: "/api/states/light.x",
-    corpo: Buffer.from("{}").toString("base64"),
-  });
+  const scritto = await commissioni.rispondi(
+    {
+      id: 3,
+      type: TIPO,
+      metodo: "POST",
+      percorso: "/api/states/light.x",
+      corpo: Buffer.from("{}").toString("base64"),
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(scritto.error.code, "unauthorized");
   assert.equal(chieste.length, 0);
 });
@@ -298,7 +304,7 @@ test("le commissioni che cambiano la casa le fa solo chi amministra", async () =
   }
   const fatto = await commissioni.rispondi(
     { id: 6, type: "ponte/plance/aggiungi", titolo: "x" },
-    { puoAmministrare: true },
+    { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
   );
   assert.equal(fatto.success, true);
 });
@@ -561,7 +567,7 @@ test("da `ponte/http`, l'automazione di chi amministra non arriva nemmeno a Home
       corpo: Buffer.from(JSON.stringify(automazione)).toString("base64"),
       tipo: "application/json",
     },
-    { puoAmministrare: true },
+    { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
   );
   assert.equal(scritta.success, false);
   assert.equal(scritta.error.code, "unauthorized");

@@ -33,6 +33,9 @@ import { Plance } from "../src/plance.js";
 import { aggiungiUnaPlancia } from "../src/plancia-nuova.js";
 import { Ponte } from "../src/ponte.js";
 
+/* Un utente di Home Assistant: le commissioni sono per chi e' entrato. */
+const CHI_DI_PROVA = "c0ffee00c0ffee00c0ffee00c0ffee00";
+
 const SEGNO_DEL_SUPERVISOR = "il-segno-del-supervisor";
 const ZITTO = { info() {}, attenzione() {}, errore() {} };
 
@@ -62,17 +65,23 @@ test("/api/ passa dal Supervisor col segno, /dashboardmodern_static/ va dritto s
   const { scarica, chieste } = scaricaFinto();
   const commissioni = new Commissioni({ casa: casaDiProva(), registro: ZITTO, scarica });
 
-  const api = await commissioni.rispondi({ id: 1, type: TIPO, percorso: "/api/states?x=1" });
+  const api = await commissioni.rispondi(
+    { id: 1, type: TIPO, percorso: "/api/states?x=1" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(api.success, true);
   assert.equal(chieste[0].url, "http://supervisor/core/api/states?x=1");
   assert.equal(chieste[0].intestazioni.authorization, `Bearer ${SEGNO_DEL_SUPERVISOR}`);
   assert.equal(chieste[0].insicuro, false);
 
-  const file = await commissioni.rispondi({
-    id: 2,
-    type: TIPO,
-    percorso: "/dashboardmodern_static/abc/legacy/dashboard.html",
-  });
+  const file = await commissioni.rispondi(
+    {
+      id: 2,
+      type: TIPO,
+      percorso: "/dashboardmodern_static/abc/legacy/dashboard.html",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(file.success, true);
   assert.equal(
     chieste[1].url,
@@ -100,7 +109,10 @@ test("fuori dalle due cartelle non si va, e nemmeno con i trucchi", async () => 
     42,
     undefined,
   ]) {
-    const risposta = await commissioni.rispondi({ id: 7, type: TIPO, percorso });
+    const risposta = await commissioni.rispondi(
+      { id: 7, type: TIPO, percorso },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.equal(risposta.success, false, `doveva rifiutare ${JSON.stringify(percorso)}`);
     assert.equal(risposta.error.code, "not_allowed");
     assert.equal(risposta.id, 7);
@@ -112,24 +124,33 @@ test("un metodo strano, un corpo strano, un tipo di messaggio strano", async () 
   const { scarica, chieste } = scaricaFinto();
   const commissioni = new Commissioni({ casa: casaDiProva(), registro: ZITTO, scarica });
 
-  const metodo = await commissioni.rispondi({
-    id: 1,
-    type: TIPO,
-    metodo: "TRACE",
-    percorso: "/api/states",
-  });
+  const metodo = await commissioni.rispondi(
+    {
+      id: 1,
+      type: TIPO,
+      metodo: "TRACE",
+      percorso: "/api/states",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(metodo.error.code, "not_allowed");
 
-  const corpo = await commissioni.rispondi({
-    id: 2,
-    type: TIPO,
-    metodo: "POST",
-    percorso: "/api/states",
-    corpo: { non: "una stringa" },
-  });
+  const corpo = await commissioni.rispondi(
+    {
+      id: 2,
+      type: TIPO,
+      metodo: "POST",
+      percorso: "/api/states",
+      corpo: { non: "una stringa" },
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(corpo.error.code, "not_allowed");
 
-  const altro = await commissioni.rispondi({ id: 3, type: "ponte/vola" });
+  const altro = await commissioni.rispondi(
+    { id: 3, type: "ponte/vola" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(altro.success, false);
   assert.equal(altro.error.code, "unknown_command");
   assert.equal(chieste.length, 0);
@@ -139,14 +160,17 @@ test("una POST porta il corpo e il suo tipo", async () => {
   const { scarica, chieste } = scaricaFinto();
   const commissioni = new Commissioni({ casa: casaDiProva(), registro: ZITTO, scarica });
 
-  await commissioni.rispondi({
-    id: 1,
-    type: TIPO,
-    metodo: "post",
-    percorso: "/api/services/light/turn_on",
-    tipo: "application/json",
-    corpo: Buffer.from('{"entity_id":"light.sala"}').toString("base64"),
-  });
+  await commissioni.rispondi(
+    {
+      id: 1,
+      type: TIPO,
+      metodo: "post",
+      percorso: "/api/services/light/turn_on",
+      tipo: "application/json",
+      corpo: Buffer.from('{"entity_id":"light.sala"}').toString("base64"),
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(chieste[0].metodo, "POST");
   assert.equal(chieste[0].corpo.toString("utf8"), '{"entity_id":"light.sala"}');
   assert.equal(chieste[0].intestazioni["content-type"], "application/json");
@@ -155,7 +179,10 @@ test("una POST porta il corpo e il suo tipo", async () => {
 test("quando Home Assistant non risponde, la risposta e' un no e non un'eccezione", async () => {
   const { scarica } = scaricaFinto(new Error("ECONNREFUSED"));
   const commissioni = new Commissioni({ casa: casaDiProva(), registro: ZITTO, scarica });
-  const risposta = await commissioni.rispondi({ id: 9, type: TIPO, percorso: "/api/states" });
+  const risposta = await commissioni.rispondi(
+    { id: 9, type: TIPO, percorso: "/api/states" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(risposta.success, false);
   assert.equal(risposta.error.code, "ponte_http");
   assert.match(risposta.error.message, /ECONNREFUSED/);
@@ -164,11 +191,14 @@ test("quando Home Assistant non risponde, la risposta e' un no e non un'eccezion
 test("uno stato che non e' 200 torna com'e': e' la plancia che decide", async () => {
   const { scarica } = scaricaFinto({ stato: 404, tipo: "text/plain", corpo: Buffer.from("no") });
   const commissioni = new Commissioni({ casa: casaDiProva(), registro: ZITTO, scarica });
-  const risposta = await commissioni.rispondi({
-    id: 1,
-    type: TIPO,
-    percorso: "/dashboardmodern_static/x/manca.js",
-  });
+  const risposta = await commissioni.rispondi(
+    {
+      id: 1,
+      type: TIPO,
+      percorso: "/dashboardmodern_static/x/manca.js",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(risposta.success, true);
   assert.equal(risposta.result.stato, 404);
 });
@@ -215,7 +245,10 @@ test("non piu' di tante insieme: le altre aspettano il loro turno", async () => 
   });
   const tutte = await Promise.all(
     Array.from({ length: 10 }, (_, i) =>
-      commissioni.rispondi({ id: i, type: TIPO, percorso: `/api/${i}` }),
+      commissioni.rispondi(
+        { id: i, type: TIPO, percorso: `/api/${i}` },
+        { chiChiede: CHI_DI_PROVA },
+      ),
     ),
   );
   assert.equal(tutte.length, 10);
@@ -263,7 +296,10 @@ test("con il TLS acceso si va in https, e chi scarica lo sa", async () => {
 
   const { scarica, chieste } = scaricaFinto();
   const commissioni = new Commissioni({ casa, registro: ZITTO, scarica });
-  await commissioni.rispondi({ id: 1, type: TIPO, percorso: "/dashboardmodern_static/a.js" });
+  await commissioni.rispondi(
+    { id: 1, type: TIPO, percorso: "/dashboardmodern_static/a.js" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(chieste[0].insicuro, true);
 });
 
@@ -537,30 +573,36 @@ test("i file della plancia vengono dall'add-on, senza andare in Home Assistant",
   const plancia = new Plancia();
   const con = new Commissioni({ casa: casaDiProva(), registro: ZITTO, scarica, plancia });
 
-  const dove = await con.rispondi({ id: 1, type: TIPO_PLANCIA });
+  const dove = await con.rispondi({ id: 1, type: TIPO_PLANCIA }, { chiChiede: CHI_DI_PROVA });
   assert.equal(dove.success, true);
   assert.equal(dove.result.base, plancia.base);
   assert.deepEqual(dove.result.varianti, ["dashboard-en.html", "dashboard.html"]);
 
-  const pagina = await con.rispondi({
-    id: 2,
-    type: TIPO,
-    percorso: `${plancia.base}/legacy/dashboard.html`,
-  });
+  const pagina = await con.rispondi(
+    {
+      id: 2,
+      type: TIPO,
+      percorso: `${plancia.base}/legacy/dashboard.html`,
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(pagina.result.stato, 200);
   assert.equal(pagina.result.compresso, "gzip");
   assert.match(gunzipSync(Buffer.from(pagina.result.corpo, "base64")).toString(), /<html/);
 
-  const vecchia = await con.rispondi({
-    id: 3,
-    type: TIPO,
-    percorso: "/dashboardmodern_static/vecchia/legacy/dashboard.html",
-  });
+  const vecchia = await con.rispondi(
+    {
+      id: 3,
+      type: TIPO,
+      percorso: "/dashboardmodern_static/vecchia/legacy/dashboard.html",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(vecchia.result.stato, 404);
   assert.equal(chieste.length, 0, "in Home Assistant non si va");
 
   /* Le chiamate REST invece si'. */
-  await con.rispondi({ id: 4, type: TIPO, percorso: "/api/states" });
+  await con.rispondi({ id: 4, type: TIPO, percorso: "/api/states" }, { chiChiede: CHI_DI_PROVA });
   assert.equal(chieste.length, 1);
 });
 
@@ -573,14 +615,17 @@ test("senza la plancia nell'add-on, ponte/plancia dice di no e i file si chiedon
     scarica,
     plancia: new Plancia({ cartella }),
   });
-  const dove = await con.rispondi({ id: 1, type: TIPO_PLANCIA });
+  const dove = await con.rispondi({ id: 1, type: TIPO_PLANCIA }, { chiChiede: CHI_DI_PROVA });
   assert.equal(dove.success, false);
   assert.equal(dove.error.code, "not_found");
-  await con.rispondi({
-    id: 2,
-    type: TIPO,
-    percorso: "/dashboardmodern_static/x/legacy/dashboard.html",
-  });
+  await con.rispondi(
+    {
+      id: 2,
+      type: TIPO,
+      percorso: "/dashboardmodern_static/x/legacy/dashboard.html",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(chieste.length, 1);
   rmSync(cartella, { recursive: true, force: true });
 });
@@ -626,7 +671,10 @@ test("chi aveva la dashboard in Home Assistant non ricomincia da zero: la config
 
   /* La prima lettura: qui non c'e' niente, e quello che c'e' in Home Assistant
    * arriva alla pagina senza che nessuno riconfiguri niente. */
-  const prima = await con.rispondi({ id: 1, type: "dashboardmodern/config/get" });
+  const prima = await con.rispondi(
+    { id: 1, type: "dashboardmodern/config/get" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(prima.success, true);
   assert.equal(prima.result.snapshot.values.cd_stanze, '[{"name":"Cucina"}]');
   assert.deepEqual(casa.chieste, [{ type: "dashboardmodern/config/get", profile: "primary" }]);
@@ -634,7 +682,10 @@ test("chi aveva la dashboard in Home Assistant non ricomincia da zero: la config
   /* E adesso e' **nostra**: la seconda lettura non chiede piu' niente a
    * nessuno, e la revisione e' quella del ponte — la sua cresce e basta, e non
    * si eredita quella di un altro deposito. */
-  const dopo = await con.rispondi({ id: 2, type: "dashboardmodern/config/get" });
+  const dopo = await con.rispondi(
+    { id: 2, type: "dashboardmodern/config/get" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(dopo.result.snapshot.values.cd_stanze, '[{"name":"Cucina"}]');
   assert.equal(dopo.result.snapshot.revision, 1);
   assert.equal(casa.chieste.length, 1);
@@ -658,11 +709,14 @@ test("una plancia gia' configurata dall'app non viene coperta da quella dell'int
       snapshot: { values: { cd_stanze: '[{"name":"Sala"}]' }, keys_revision: 1 },
       expected_revision: 0,
     },
-    { puoAmministrare: true },
+    { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
   );
   assert.equal(scritta.result.status, "saved");
 
-  const letta = await con.rispondi({ id: 2, type: "dashboardmodern/config/get" });
+  const letta = await con.rispondi(
+    { id: 2, type: "dashboardmodern/config/get" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(letta.result.snapshot.values.cd_stanze, '[{"name":"Sala"}]');
   /* Se non l'avviso al pannello a muro, che e' un dire e non un chiedere. */
   assert.deepEqual(
@@ -685,18 +739,24 @@ test("in una casa senza l'integrazione si chiede una volta sola, e la plancia si
     configurazione: new Configurazione({ cartella, adesso: () => 5000 }),
   });
 
-  const prima = await con.rispondi({ id: 1, type: "dashboardmodern/config/get" });
+  const prima = await con.rispondi(
+    { id: 1, type: "dashboardmodern/config/get" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(prima.success, true);
   assert.equal(prima.result.snapshot, null);
   assert.equal(casa.chieste.length, 1);
 
   /* Un'altra plancia, un altro profilo: l'integrazione non c'e' e non ci sara'
    * nemmeno fra un minuto, quindi non si chiede piu' per nessuno. */
-  const altra = await con.rispondi({
-    id: 2,
-    type: "dashboardmodern/config/get",
-    profile: "seconda",
-  });
+  const altra = await con.rispondi(
+    {
+      id: 2,
+      type: "dashboardmodern/config/get",
+      profile: "seconda",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(altra.result.snapshot, null);
   assert.equal(casa.chieste.length, 1, "una volta sola, per tutta la vita del ponte");
 
@@ -710,7 +770,10 @@ test("se l'integrazione risponde una plancia vuota non si adotta niente, e il fi
     registro: ZITTO,
     configurazione: new Configurazione({ cartella, adesso: () => 5000 }),
   });
-  const niente = await vuota.rispondi({ id: 1, type: "dashboardmodern/config/get" });
+  const niente = await vuota.rispondi(
+    { id: 1, type: "dashboardmodern/config/get" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(niente.success, true);
   assert.equal(niente.result.snapshot, null);
 
@@ -719,7 +782,10 @@ test("se l'integrazione risponde una plancia vuota non si adotta niente, e il fi
     registro: ZITTO,
     configurazione: new Configurazione({ cartella, adesso: () => 5000 }),
   });
-  const comunque = await caduto.rispondi({ id: 2, type: "dashboardmodern/config/get" });
+  const comunque = await caduto.rispondi(
+    { id: 2, type: "dashboardmodern/config/get" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(comunque.success, true, "una risposta, non un errore");
   assert.equal(comunque.result.snapshot, null);
 
@@ -743,7 +809,7 @@ test("una configurazione salvata si dice sul bus, perche' il pannello a muro la 
   const scrivi = (id) =>
     con.rispondi(
       { id, type: "dashboardmodern/config/set", profile: "muro-1", snapshot: scatto },
-      { puoAmministrare: true },
+      { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
     );
   assert.equal((await scrivi(1)).result.status, "saved");
   const avvisi = () => casa.chieste.filter((c) => c.type === "fire_event");
@@ -764,7 +830,10 @@ test("la configurazione della plancia la tiene il ponte, con le stesse risposte 
     configurazione: new Configurazione({ cartella, adesso: () => 5000 }),
   });
 
-  const vuota = await con.rispondi({ id: 1, type: "dashboardmodern/config/get" });
+  const vuota = await con.rispondi(
+    { id: 1, type: "dashboardmodern/config/get" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.deepEqual(vuota, {
     id: 1,
     type: "result",
@@ -791,7 +860,7 @@ test("la configurazione della plancia la tiene il ponte, con le stesse risposte 
       },
       expected_revision: 0,
     },
-    { puoAmministrare: true },
+    { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
   );
   assert.equal(scritta.success, true);
   assert.equal(scritta.result.status, "saved");
@@ -805,15 +874,18 @@ test("la configurazione della plancia la tiene il ponte, con le stesse risposte 
       snapshot: { values: { cd_stanze: "[]" } },
       expected_revision: 0,
     },
-    { puoAmministrare: true },
+    { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
   );
   assert.equal(conflitto.result.status, "conflict");
 
-  const letta = await con.rispondi({
-    id: 4,
-    type: "dashboardmodern/config/get",
-    profile: "primary",
-  });
+  const letta = await con.rispondi(
+    {
+      id: 4,
+      type: "dashboardmodern/config/get",
+      profile: "primary",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(letta.result.snapshot.values.cd_stanze, '[{"name":"Sala"}]');
 
   const storta = await con.rispondi(
@@ -822,7 +894,7 @@ test("la configurazione della plancia la tiene il ponte, con le stesse risposte 
       type: "dashboardmodern/config/set",
       snapshot: { values: "no" },
     },
-    { puoAmministrare: true },
+    { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
   );
   assert.equal(storta.success, false);
   assert.equal(storta.error.code, "invalid_format");
@@ -832,19 +904,22 @@ test("la configurazione della plancia la tiene il ponte, con le stesse risposte 
       type: "dashboardmodern/config/set",
       snapshot: { values: { a: "x".repeat(3 * 1024 * 1024) } },
     },
-    { puoAmministrare: true },
+    { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
   );
   assert.equal(troppo.error.code, "snapshot_too_large");
-  const profilo = await con.rispondi({
-    id: 7,
-    type: "dashboardmodern/config/get",
-    profile: "../x",
-  });
+  const profilo = await con.rispondi(
+    {
+      id: 7,
+      type: "dashboardmodern/config/get",
+      profile: "../x",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(profilo.error.code, "invalid_format");
 
   const senzaRevisione = await con.rispondi(
     { id: 8, type: "dashboardmodern/config/restore" },
-    { puoAmministrare: true },
+    { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
   );
   assert.equal(senzaRevisione.error.code, "invalid_format");
   const ripristino = await con.rispondi(
@@ -853,23 +928,29 @@ test("la configurazione della plancia la tiene il ponte, con le stesse risposte 
       type: "dashboardmodern/config/restore",
       revision: 42,
     },
-    { puoAmministrare: true },
+    { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
   );
   assert.equal(ripristino.result.status, "conflict");
 
   /* La copia vecchia per utente: una risposta innocua. */
-  const vecchia = await con.rispondi({
-    id: 10,
-    type: "frontend/get_user_data",
-    key: "dashboardmodern_integration_config",
-  });
+  const vecchia = await con.rispondi(
+    {
+      id: 10,
+      type: "frontend/get_user_data",
+      key: "dashboardmodern_integration_config",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.deepEqual(vecchia.result, { value: null });
-  const scrittaVecchia = await con.rispondi({
-    id: 11,
-    type: "frontend/set_user_data",
-    key: "dashboardmodern_integration_config",
-    value: {},
-  });
+  const scrittaVecchia = await con.rispondi(
+    {
+      id: 11,
+      type: "frontend/set_user_data",
+      key: "dashboardmodern_integration_config",
+      value: {},
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(scrittaVecchia.success, true);
   assert.equal(scrittaVecchia.result, null);
   rmSync(cartella, { recursive: true, force: true });
@@ -1034,17 +1115,23 @@ test("le segnalazioni della plancia: cosa risponde un ponte senza centralino", a
    * ne ha accese, scrivere e' un comando che non sa fare: e' diverso da «da
    * qui non si fa», ed e' la differenza fra un guasto e una regola. */
   const con = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
-  const risposta = await con.rispondi({
-    id: 4,
-    type: "dashboardmodern/tickets/create",
-    title: "x",
-  });
+  const risposta = await con.rispondi(
+    {
+      id: 4,
+      type: "dashboardmodern/tickets/create",
+      title: "x",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(risposta.success, false);
   assert.equal(risposta.error.code, "unknown_command");
 
   /* La coda di chi risponde invece e' una regola, e si dice con una frase:
    * quei bottoni stanno nella console dell'app. */
-  const coda2 = await con.rispondi({ id: 6, type: "dashboardmodern/tickets/queue" });
+  const coda2 = await con.rispondi(
+    { id: 6, type: "dashboardmodern/tickets/queue" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(coda2.success, false);
   assert.equal(coda2.error.code, "not_supported");
   assert.match(coda2.error.message, /console dell'app/);
@@ -1052,7 +1139,10 @@ test("le segnalazioni della plancia: cosa risponde un ponte senza centralino", a
   /* E i tre comandi della firma rispondono sempre, anche cosi': la finestra li
    * chiama da se', e un rifiuto le farebbe disegnare un errore rosso per una
    * cosa che in gdahome non serve a nessuno. */
-  const firma = await con.rispondi({ id: 7, type: "dashboardmodern/tickets/auth/start" });
+  const firma = await con.rispondi(
+    { id: 7, type: "dashboardmodern/tickets/auth/start" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(firma.success, true);
   assert.equal(firma.result.niente_da_collegare, true);
 
@@ -1060,7 +1150,7 @@ test("le segnalazioni della plancia: cosa risponde un ponte senza centralino", a
    * fare — come lo e' scrivere. */
   const coda = await con.rispondi(
     { id: 5, type: "dashboardmodern/chat/queue" },
-    { puoAmministrare: true },
+    { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
   );
   assert.equal(coda.success, false);
   assert.equal(coda.error.code, "unknown_command");
@@ -1151,7 +1241,10 @@ test("la finestra dell'assistenza della plancia arriva alla chat, non a un rifiu
     /* Prima di tutto: i quattro comandi di chi chiede si riconoscono, e la
      * porta si disegna perche' un posto dove scrivere c'e'. */
     assert.equal(con.riconosce({ type: "dashboardmodern/chat/state" }), true);
-    const stato = await con.rispondi({ id: 1, type: "dashboardmodern/chat/state" });
+    const stato = await con.rispondi(
+      { id: 1, type: "dashboardmodern/chat/state" },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.equal(stato.success, true);
     assert.deepEqual(stato.result, {
       enabled: true,
@@ -1167,15 +1260,21 @@ test("la finestra dell'assistenza della plancia arriva alla chat, non a un rifiu
     /* Si scrive, e si legge quello che si e' scritto. Le chiavi sono quelle
      * dell'integrazione: la finestra e' la sua e non sa che dietro c'e' il
      * ponte. */
-    const mandato = await con.rispondi({
-      id: 2,
-      type: "dashboardmodern/chat/send",
-      message: "Buongiorno, una domanda.",
-      name: "Persona 1",
-      locale: "it",
-    });
+    const mandato = await con.rispondi(
+      {
+        id: 2,
+        type: "dashboardmodern/chat/send",
+        message: "Buongiorno, una domanda.",
+        name: "Persona 1",
+        locale: "it",
+      },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.equal(mandato.result.message.testo, "Buongiorno, una domanda.");
-    const filo = await con.rispondi({ id: 3, type: "dashboardmodern/chat/thread" });
+    const filo = await con.rispondi(
+      { id: 3, type: "dashboardmodern/chat/thread" },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.equal(filo.result.enabled, true);
     assert.equal(filo.result.name, "Persona 1");
     assert.deepEqual(
@@ -1185,12 +1284,18 @@ test("la finestra dell'assistenza della plancia arriva alla chat, non a un rifiu
 
     /* Una frase vuota non parte, e il no e' quello della chat: la finestra
      * sa cosa farne. */
-    const vuoto = await con.rispondi({ id: 4, type: "dashboardmodern/chat/send", message: "  " });
+    const vuoto = await con.rispondi(
+      { id: 4, type: "dashboardmodern/chat/send", message: "  " },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.equal(vuoto.success, false);
     assert.equal(vuoto.error.code, "empty");
 
     /* Dimenticare cancella anche dal centralino. */
-    const via = await con.rispondi({ id: 5, type: "dashboardmodern/chat/forget" });
+    const via = await con.rispondi(
+      { id: 5, type: "dashboardmodern/chat/forget" },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.deepEqual(via.result, { forgotten: true });
     assert.equal(finto.righe.length, 0);
   } finally {
@@ -1204,17 +1309,23 @@ test("dall'app la chat e' la stessa, e un allegato non ci sta", async () => {
     const finto = chatDiProva(cartella);
     const con = new Commissioni({ casa: casaDiProva(), registro: ZITTO, chat: finto.chat });
     /* Niente di scritto: l'app non disegna nessun filo, e non e' un errore. */
-    assert.deepEqual((await con.rispondi({ id: 1, type: "ponte/chat/leggi" })).result, {
-      chat: null,
-      guaio: "",
-    });
+    assert.deepEqual(
+      (await con.rispondi({ id: 1, type: "ponte/chat/leggi" }, { chiChiede: CHI_DI_PROVA })).result,
+      {
+        chat: null,
+        guaio: "",
+      },
+    );
 
-    const scritto = await con.rispondi({
-      id: 2,
-      type: "ponte/chat/scrivi",
-      testo: "Buongiorno, una domanda.",
-      diagnostica: { app: "1.0.2", schermo: "400x800" },
-    });
+    const scritto = await con.rispondi(
+      {
+        id: 2,
+        type: "ponte/chat/scrivi",
+        testo: "Buongiorno, una domanda.",
+        diagnostica: { app: "1.0.2", schermo: "400x800" },
+      },
+      { chiChiede: CHI_DI_PROVA },
+    );
     /* La forma e' quella di una conversazione, come la legge la schermata
      * dell'app: la stessa di prima, quando sotto c'era una issue. */
     assert.equal(scritto.result.tipo, "chat");
@@ -1232,7 +1343,10 @@ test("dall'app la chat e' la stessa, e un allegato non ci sta", async () => {
     assert.ok(posta["x-versione"].length <= 40);
 
     /* E la stessa conversazione si rilegge, senza niente da dire accanto. */
-    const letto = await con.rispondi({ id: 3, type: "ponte/chat/leggi" });
+    const letto = await con.rispondi(
+      { id: 3, type: "ponte/chat/leggi" },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.equal(letto.result.chat.messaggi.length, 1);
     assert.equal(letto.result.guaio, "");
 
@@ -1244,13 +1358,19 @@ test("dall'app la chat e' la stessa, e un allegato non ci sta", async () => {
       throw new Error("ECONNREFUSED");
     };
     finto.chat._lettoIl = 0;
-    const giu = await con.rispondi({ id: 6, type: "ponte/chat/leggi" });
+    const giu = await con.rispondi(
+      { id: 6, type: "ponte/chat/leggi" },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.equal(giu.success, true);
     assert.equal(giu.result.chat.messaggi.length, 1);
     assert.match(giu.result.guaio, /raggiungibile/);
 
     /* Un allegato no: questa chat passa parole, e si dice dove metterlo. */
-    const foto = await con.rispondi({ id: 4, type: "ponte/chat/allega", nome: "x.jpg" });
+    const foto = await con.rispondi(
+      { id: 4, type: "ponte/chat/allega", nome: "x.jpg" },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.equal(foto.success, false);
     assert.equal(foto.error.code, "not_supported");
     assert.match(foto.error.message, /segnalazione/);
@@ -1260,7 +1380,8 @@ test("dall'app la chat e' la stessa, e un allegato non ci sta", async () => {
      * giusta, e l'app ne fa una frase che dice di aggiornare l'add-on. */
     const senza = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
     assert.equal(
-      (await senza.rispondi({ id: 5, type: "ponte/chat/leggi" })).error.code,
+      (await senza.rispondi({ id: 5, type: "ponte/chat/leggi" }, { chiChiede: CHI_DI_PROVA })).error
+        .code,
       "unknown_command",
     );
   } finally {
@@ -1280,27 +1401,39 @@ test("il catalogo passa dal ponte, coi dispositivi chiesti", async () => {
       },
     },
   });
-  const tutto = await con.rispondi({ id: 1, type: "dashboardmodern/integrations/catalog" });
+  const tutto = await con.rispondi(
+    { id: 1, type: "dashboardmodern/integrations/catalog" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(tutto.success, true);
   assert.deepEqual(tutto.result.integrations, [{ domain: "hon" }]);
-  await con.rispondi({
-    id: 2,
-    type: "dashboardmodern/integrations/catalog",
-    device_ids: ["d-lav"],
-  });
+  await con.rispondi(
+    {
+      id: 2,
+      type: "dashboardmodern/integrations/catalog",
+      device_ids: ["d-lav"],
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.deepEqual(chieste, [null, ["d-lav"]]);
 
-  const storta = await con.rispondi({
-    id: 3,
-    type: "dashboardmodern/integrations/catalog",
-    device_ids: "d-lav",
-  });
+  const storta = await con.rispondi(
+    {
+      id: 3,
+      type: "dashboardmodern/integrations/catalog",
+      device_ids: "d-lav",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(storta.error.code, "invalid_format");
-  const troppi = await con.rispondi({
-    id: 4,
-    type: "dashboardmodern/integrations/catalog",
-    device_ids: Array.from({ length: 201 }, (_, i) => `d${i}`),
-  });
+  const troppi = await con.rispondi(
+    {
+      id: 4,
+      type: "dashboardmodern/integrations/catalog",
+      device_ids: Array.from({ length: 201 }, (_, i) => `d${i}`),
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(troppi.error.code, "invalid_format");
 
   const rotto = new Commissioni({
@@ -1313,10 +1446,13 @@ test("il catalogo passa dal ponte, coi dispositivi chiesti", async () => {
       },
     },
   });
-  const senzaRisposta = await rotto.rispondi({
-    id: 5,
-    type: "dashboardmodern/integrations/catalog",
-  });
+  const senzaRisposta = await rotto.rispondi(
+    {
+      id: 5,
+      type: "dashboardmodern/integrations/catalog",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(senzaRisposta.success, false);
   assert.match(senzaRisposta.error.message, /non ha risposto/);
 });
@@ -1332,44 +1468,65 @@ test("le foto si caricano e si elencano dal ponte, e la pagina le riceve come fi
   });
   const png = Buffer.concat([Buffer.from("\x89PNG\r\n\x1a\n", "latin1"), Buffer.alloc(16, 7)]);
 
-  const vuoto = await con.rispondi({ id: 1, type: "dashboardmodern/www/list" });
+  const vuoto = await con.rispondi(
+    { id: 1, type: "dashboardmodern/www/list" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(vuoto.success, true);
   assert.equal(vuoto.result.available, false);
 
-  const caricata = await con.rispondi({
-    id: 2,
-    type: "dashboardmodern/www/upload",
-    filename: "Auto.png",
-    data: png.toString("base64"),
-  });
+  const caricata = await con.rispondi(
+    {
+      id: 2,
+      type: "dashboardmodern/www/upload",
+      filename: "Auto.png",
+      data: png.toString("base64"),
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(caricata.success, true);
   assert.equal(caricata.result.path, `${BASE_DELLE_FOTO}/dashboardmodern/auto.png`);
 
-  const elenco = await con.rispondi({
-    id: 3,
-    type: "dashboardmodern/www/list",
-    path: "dashboardmodern",
-  });
+  const elenco = await con.rispondi(
+    {
+      id: 3,
+      type: "dashboardmodern/www/list",
+      path: "dashboardmodern",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.deepEqual(
     elenco.result.images.map((una) => una.url),
     [`${BASE_DELLE_FOTO}/dashboardmodern/auto.png`],
   );
-  const fuori = await con.rispondi({ id: 4, type: "dashboardmodern/www/list", path: "../" });
+  const fuori = await con.rispondi(
+    { id: 4, type: "dashboardmodern/www/list", path: "../" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(fuori.error.code, "not_found");
 
-  const nonUnaFoto = await con.rispondi({
-    id: 5,
-    type: "dashboardmodern/www/upload",
-    filename: "x.png",
-    data: Buffer.from("questo e' testo, non un png").toString("base64"),
-  });
+  const nonUnaFoto = await con.rispondi(
+    {
+      id: 5,
+      type: "dashboardmodern/www/upload",
+      filename: "x.png",
+      data: Buffer.from("questo e' testo, non un png").toString("base64"),
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(nonUnaFoto.error.code, "invalid_upload");
-  const senzaNome = await con.rispondi({ id: 6, type: "dashboardmodern/www/upload", data: "AAAA" });
+  const senzaNome = await con.rispondi(
+    { id: 6, type: "dashboardmodern/www/upload", data: "AAAA" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(senzaNome.error.code, "invalid_format");
 
   /* E la pagina la chiede come un file qualunque: dal ponte, non da Home
    * Assistant. */
-  const servita = await con.rispondi({ id: 7, type: TIPO, percorso: caricata.result.path });
+  const servita = await con.rispondi(
+    { id: 7, type: TIPO, percorso: caricata.result.path },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(servita.result.stato, 200);
   assert.equal(servita.result.tipo, "image/png");
   assert.deepEqual(Buffer.from(servita.result.corpo, "base64"), png);
@@ -1392,28 +1549,37 @@ test("le foto dei riquadri vanno in riquadri/, e una cartella fuori elenco e' un
     Buffer.from("WEBP"),
     Buffer.alloc(8),
   ]);
-  const messa = await con.rispondi({
-    id: 1,
-    type: "dashboardmodern/www/upload",
-    filename: "terrazza.webp",
-    cartella: "riquadri",
-    data: webp.toString("base64"),
-  });
+  const messa = await con.rispondi(
+    {
+      id: 1,
+      type: "dashboardmodern/www/upload",
+      filename: "terrazza.webp",
+      cartella: "riquadri",
+      data: webp.toString("base64"),
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(messa.success, true);
   assert.equal(messa.result.path, `${BASE_DELLE_FOTO}/dashboardmodern/riquadri/terrazza.webp`);
-  const servita = await con.rispondi({ id: 2, type: TIPO, percorso: messa.result.path });
+  const servita = await con.rispondi(
+    { id: 2, type: TIPO, percorso: messa.result.path },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(servita.result.stato, 200);
   assert.equal(servita.result.tipo, "image/webp");
 
   let id = 10;
   for (const cattiva of ["../", "..", "riquadri/../..", "/etc", "x", 7, null, ["riquadri"], {}]) {
-    const no = await con.rispondi({
-      id: (id += 1),
-      type: "dashboardmodern/www/upload",
-      filename: "x.webp",
-      cartella: cattiva,
-      data: webp.toString("base64"),
-    });
+    const no = await con.rispondi(
+      {
+        id: (id += 1),
+        type: "dashboardmodern/www/upload",
+        filename: "x.webp",
+        cartella: cattiva,
+        data: webp.toString("base64"),
+      },
+      { chiChiede: CHI_DI_PROVA },
+    );
     /* `null` vale come «nessuna cartella», come se non ci fosse. */
     if (cattiva === null) {
       assert.equal(no.success, true);
@@ -1494,11 +1660,14 @@ test("una foto di casa col nome che le ha dato chi l'ha scattata", async () => {
       registro: ZITTO,
       fotoDiCasa,
     });
-    const risposta = await commissioni.rispondi({
-      id: 11,
-      type: TIPO,
-      percorso: "/local/mia auto.png",
-    });
+    const risposta = await commissioni.rispondi(
+      {
+        id: 11,
+        type: TIPO,
+        percorso: "/local/mia auto.png",
+      },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.equal(risposta.success, true);
     assert.equal(risposta.result.stato, 200);
     assert.equal(risposta.result.tipo, "image/png");
@@ -1524,7 +1693,10 @@ test("l'elenco delle foto dice in quale cartella si guarda, e quali ci sono", as
      * guardava nel ponte, e a chi ha duecento foto in `config/www` la
      * maschera diceva «la cartella config/www non esiste ancora: creala»:
      * rispondeva di un'altra cartella, e dava torto a chi aveva ragione. */
-    const senzaDirniente = await commissioni.rispondi({ id: 1, type: "dashboardmodern/www/list" });
+    const senzaDirniente = await commissioni.rispondi(
+      { id: 1, type: "dashboardmodern/www/list" },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.equal(senzaDirniente.result.root, "casa");
     /* Anche quella col nome «normale», con lo spazio dentro: l'elenco la
      * mostra, e il suo indirizzo lo sa portare. */
@@ -1536,19 +1708,25 @@ test("l'elenco delle foto dice in quale cartella si guarda, e quali ci sono", as
 
     /* Chi vuole quella del ponte — dove finisce quello che si carica
      * dall'app — la chiede per nome. */
-    const suo = await commissioni.rispondi({
-      id: 2,
-      type: "dashboardmodern/www/list",
-      root: "ponte",
-    });
+    const suo = await commissioni.rispondi(
+      {
+        id: 2,
+        type: "dashboardmodern/www/list",
+        root: "ponte",
+      },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.equal(suo.result.root, "ponte");
     assert.deepEqual(suo.result.images, []);
 
-    const diCasa = await commissioni.rispondi({
-      id: 3,
-      type: "dashboardmodern/www/list",
-      root: "casa",
-    });
+    const diCasa = await commissioni.rispondi(
+      {
+        id: 3,
+        type: "dashboardmodern/www/list",
+        root: "casa",
+      },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.equal(diCasa.result.root, "casa");
   } finally {
     via();
@@ -1568,7 +1746,10 @@ test("senza la cartella di Home Assistant montata si ripiega su quella del ponte
       foto,
       fotoDiCasa: new Foto({ cartella: "", base: BASE_DI_CASA, scrivibile: false }),
     });
-    const risposta = await commissioni.rispondi({ id: 1, type: "dashboardmodern/www/list" });
+    const risposta = await commissioni.rispondi(
+      { id: 1, type: "dashboardmodern/www/list" },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.equal(risposta.result.root, "ponte");
     assert.deepEqual(risposta.result.roots, { ponte: false, casa: false });
   } finally {
@@ -1586,38 +1767,47 @@ test("una foto di Home Assistant si serve a `/local/…`, e non ci si scrive", a
       fotoDiCasa,
     });
 
-    const letta = await commissioni.rispondi({
-      id: 1,
-      type: TIPO,
-      metodo: "GET",
-      percorso: "/local/auto.png",
-      senzaGzip: true,
-    });
+    const letta = await commissioni.rispondi(
+      {
+        id: 1,
+        type: TIPO,
+        metodo: "GET",
+        percorso: "/local/auto.png",
+        senzaGzip: true,
+      },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.equal(letta.result.stato, 200);
     assert.equal(letta.result.tipo, "image/png");
 
     /* Dalla cartella non si esce: e' l'unico modo in cui una richiesta
      * potrebbe leggere le automazioni o i segreti di chi ci abita. */
-    const fuori = await commissioni.rispondi({
-      id: 2,
-      type: TIPO,
-      metodo: "GET",
-      percorso: "/local/secrets.yaml",
-      senzaGzip: true,
-    });
+    const fuori = await commissioni.rispondi(
+      {
+        id: 2,
+        type: TIPO,
+        metodo: "GET",
+        percorso: "/local/secrets.yaml",
+        senzaGzip: true,
+      },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.equal(fuori.result.stato, 404);
 
     /* Il caricamento va sempre nella cartella del ponte, mai in quella di
      * Home Assistant. */
-    const messa = await commissioni.rispondi({
-      id: 3,
-      type: "dashboardmodern/www/upload",
-      filename: "nuova.png",
-      data: Buffer.concat([
-        Buffer.from("\x89PNG\r\n\x1a\n", "latin1"),
-        Buffer.alloc(16, 1),
-      ]).toString("base64"),
-    });
+    const messa = await commissioni.rispondi(
+      {
+        id: 3,
+        type: "dashboardmodern/www/upload",
+        filename: "nuova.png",
+        data: Buffer.concat([
+          Buffer.from("\x89PNG\r\n\x1a\n", "latin1"),
+          Buffer.alloc(16, 1),
+        ]).toString("base64"),
+      },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.match(messa.result.path, /^\/dashboardmodern_static\/www\//);
   } finally {
     via();
@@ -1633,11 +1823,14 @@ test("senza la cartella di Home Assistant non succede niente di male", async () 
     foto: new Foto({ cartella: join(tmpdir(), "non-esiste-mai", "www") }),
     fotoDiCasa: new Foto({ cartella: "", base: BASE_DI_CASA, scrivibile: false }),
   });
-  const detto = await commissioni.rispondi({
-    id: 1,
-    type: "dashboardmodern/www/list",
-    root: "casa",
-  });
+  const detto = await commissioni.rispondi(
+    {
+      id: 1,
+      type: "dashboardmodern/www/list",
+      root: "casa",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(detto.result.available, false);
   assert.deepEqual(detto.result.roots, { ponte: false, casa: false });
 });
@@ -1656,11 +1849,14 @@ test("la coda di chi risponde passa dal ponte, e solo con la chiave", async () =
       registro: ZITTO,
       chat: normale.chat,
     });
-    const spenta = await casaQualunque.rispondi({ id: 1, type: "dashboardmodern/chat/state" });
+    const spenta = await casaQualunque.rispondi(
+      { id: 1, type: "dashboardmodern/chat/state" },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.equal(spenta.result.console, false);
     const negata = await casaQualunque.rispondi(
       { id: 2, type: "dashboardmodern/chat/queue" },
-      { puoAmministrare: true },
+      { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
     );
     assert.equal(negata.success, false);
     assert.equal(negata.error.code, "forbidden");
@@ -1669,14 +1865,17 @@ test("la coda di chi risponde passa dal ponte, e solo con la chiave", async () =
      * lo stesso `console: true` che l'integrazione manda alla finestra. */
     const dove = chatDiProva(conChiave, { chiave: "una-chiave-lunga-abbastanza-davvero" });
     const con = new Commissioni({ casa: casaDiProva(), registro: ZITTO, chat: dove.chat });
-    const acceso = await con.rispondi({ id: 3, type: "dashboardmodern/chat/state" });
+    const acceso = await con.rispondi(
+      { id: 3, type: "dashboardmodern/chat/state" },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.equal(acceso.result.console, true);
 
     /* Le quattro risposte hanno i nomi di `websocket_api.py`, perche' a
      * leggerle c'e' il Cruscotto della plancia, che e' scritto per quelli. */
     const coda = await con.rispondi(
       { id: 4, type: "dashboardmodern/chat/queue" },
-      { puoAmministrare: true },
+      { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
     );
     assert.deepEqual(coda.result, {
       conversations: [{ id: "casa_1", nome: "Persona 1", non_letti: 1 }],
@@ -1687,7 +1886,7 @@ test("la coda di chi risponde passa dal ponte, e solo con la chiave", async () =
         type: "dashboardmodern/chat/open",
         line: "casa_1",
       },
-      { puoAmministrare: true },
+      { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
     );
     assert.deepEqual(filo.result, { messages: [{ id: 1, da: "casa", testo: "non parte" }] });
     const risposto = await con.rispondi(
@@ -1697,7 +1896,7 @@ test("la coda di chi risponde passa dal ponte, e solo con la chiave", async () =
         line: "casa_1",
         message: "Ci guardo subito.",
       },
-      { puoAmministrare: true },
+      { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
     );
     assert.equal(risposto.result.message.testo, "Ci guardo subito.");
     const buttata = await con.rispondi(
@@ -1706,7 +1905,7 @@ test("la coda di chi risponde passa dal ponte, e solo con la chiave", async () =
         type: "dashboardmodern/chat/drop",
         line: "casa_1",
       },
-      { puoAmministrare: true },
+      { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
     );
     assert.deepEqual(buttata.result, { dropped: true });
 
@@ -1714,7 +1913,7 @@ test("la coda di chi risponde passa dal ponte, e solo con la chiave", async () =
      * stesso metodo, e una linea si chiama `linea` invece che `line`. */
     const codaDellApp = await con.rispondi(
       { id: 8, type: "ponte/console/coda" },
-      { puoAmministrare: true },
+      { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
     );
     assert.deepEqual(codaDellApp.result, coda.result);
     const filoDellApp = await con.rispondi(
@@ -1723,7 +1922,7 @@ test("la coda di chi risponde passa dal ponte, e solo con la chiave", async () =
         type: "ponte/console/apri",
         linea: "casa_1",
       },
-      { puoAmministrare: true },
+      { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
     );
     assert.deepEqual(filoDellApp.result, filo.result);
     const rispostaDellApp = await con.rispondi(
@@ -1733,7 +1932,7 @@ test("la coda di chi risponde passa dal ponte, e solo con la chiave", async () =
         linea: "casa_1",
         testo: "Ci guardo subito.",
       },
-      { puoAmministrare: true },
+      { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
     );
     assert.equal(rispostaDellApp.result.message.testo, "Ci guardo subito.");
 
@@ -1765,7 +1964,7 @@ test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () =
 
     /* Senza chiedere niente si ha la **prima**: e' la risposta di sempre, e
      * un'app di ieri non si accorge che da oggi ce ne possono essere altre. */
-    const sola = await con.rispondi({ id: 1, type: "ponte/plancia" });
+    const sola = await con.rispondi({ id: 1, type: "ponte/plancia" }, { chiChiede: CHI_DI_PROVA });
     assert.equal(sola.result.titolo, "GdAHome");
     assert.equal(sola.result.istanza, "gdahome");
     assert.equal(sola.result.profilo, "primary");
@@ -1784,7 +1983,7 @@ test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () =
         type: "ponte/plance/aggiungi",
         titolo: "Casa al mare",
       },
-      { puoAmministrare: true },
+      { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
     );
     assert.equal(aggiunta.result.quale.profilo, "casa-al-mare");
     assert.deepEqual(
@@ -1794,11 +1993,14 @@ test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () =
 
     /* Chiedendo quella, si apre quella: stessi file, altro cassetto, altra
      * istanza. */
-    const altra = await con.rispondi({
-      id: 3,
-      type: "ponte/plancia",
-      profilo: "casa-al-mare",
-    });
+    const altra = await con.rispondi(
+      {
+        id: 3,
+        type: "ponte/plancia",
+        profilo: "casa-al-mare",
+      },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.equal(altra.result.titolo, "Casa al mare");
     /* L'istanza porta il cassetto e la nascita: una plancia rifatta con lo
      * stesso titolo non ritrova nel browser la roba di quella tolta. */
@@ -1810,7 +2012,10 @@ test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () =
     assert.equal(altra.result.impronta, sola.result.impronta);
 
     /* Una plancia che non c'e' non si apre, e si dice quale. */
-    const mai = await con.rispondi({ id: 4, type: "ponte/plancia", profilo: "mai-esistita" });
+    const mai = await con.rispondi(
+      { id: 4, type: "ponte/plancia", profilo: "mai-esistita" },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.equal(mai.success, false);
     assert.equal(mai.error.code, "not_found");
 
@@ -1822,7 +2027,7 @@ test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () =
         profilo: "casa-al-mare",
         titolo: "Al mare",
       },
-      { puoAmministrare: true },
+      { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
     );
     assert.equal(rinominata.result.quale.titolo, "Al mare");
     assert.equal(rinominata.result.quale.istanza, altra.result.istanza);
@@ -1836,7 +2041,7 @@ test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () =
         type: "ponte/plance/togli",
         profilo: "casa-al-mare",
       },
-      { puoAmministrare: true },
+      { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
     );
     assert.deepEqual(
       tolta.result.plance.map((una) => una.profilo),
@@ -1848,7 +2053,7 @@ test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () =
      * cosa farne. */
     const negata = await con.rispondi(
       { id: 7, type: "ponte/plance/togli", profilo: "primary" },
-      { puoAmministrare: true },
+      { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
     );
     assert.equal(negata.success, false);
     assert.equal(negata.error.code, "non_la_prima");
@@ -1859,7 +2064,10 @@ test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () =
      * che non lo sa fare. */
     const senza = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
     assert.equal(senza.riconosce({ type: "ponte/plance/elenco" }), true);
-    const detta = await senza.rispondi({ id: 8, type: "ponte/plance/elenco" });
+    const detta = await senza.rispondi(
+      { id: 8, type: "ponte/plance/elenco" },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.equal(detta.success, false);
     assert.equal(detta.error.code, "unknown_command");
   } finally {
@@ -1886,7 +2094,8 @@ test("una plancia tolta non torna: la sua pagina non riempie il cassetto, ne' pr
       plance,
       configurazione: cassetta,
     });
-    const chiedi = (detto) => con.rispondi(detto, { puoAmministrare: true });
+    const chiedi = (detto) =>
+      con.rispondi(detto, { chiChiede: CHI_DI_PROVA, puoAmministrare: true });
     const aMuro = { cd_muro: '{"attiva":true}', cd_stanze: '[{"nome":"Sala"}]' };
     const scrivi = (id, entry_id, values = aMuro) =>
       chiedi({
@@ -1987,7 +2196,7 @@ test("il telefono può chiedere sul filo dove sta questa casa", async () => {
   const con = new Commissioni({ casa: casaDiProva(), registro: ZITTO, ritorno });
 
   assert.equal(con.riconosce({ type: "ponte/casa/dove" }), true);
-  const detta = await con.rispondi({ id: 1, type: "ponte/casa/dove" });
+  const detta = await con.rispondi({ id: 1, type: "ponte/casa/dove" }, { chiChiede: CHI_DI_PROVA });
   assert.equal(detta.success, true);
   assert.deepEqual(detta.result.indirizzi, ["http://192.168.1.8:8098", "http://10.0.0.4:8098"]);
   assert.equal(detta.result.centralino, "https://tramite.gdahome.org");
@@ -1995,7 +2204,10 @@ test("il telefono può chiedere sul filo dove sta questa casa", async () => {
   /* Un ponte che non sa dirlo — il Supervisor che non risponde, o un ponte
    * sul banco — risponde di no, e il telefono resta dov'e'. */
   const senza = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
-  const negata = await senza.rispondi({ id: 2, type: "ponte/casa/dove" });
+  const negata = await senza.rispondi(
+    { id: 2, type: "ponte/casa/dove" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(negata.success, false);
   assert.equal(negata.error.code, "unknown_command");
 
@@ -2009,7 +2221,10 @@ test("il telefono può chiedere sul filo dove sta questa casa", async () => {
       },
     },
   });
-  const inciampata = await rotto.rispondi({ id: 3, type: "ponte/casa/dove" });
+  const inciampata = await rotto.rispondi(
+    { id: 3, type: "ponte/casa/dove" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(inciampata.success, false);
   assert.equal(inciampata.error.code, "unknown_error");
 });
@@ -2026,7 +2241,10 @@ test("il telefono chiede sul filo se questa casa ha il cruscotto, la gestione, o
    * per due campi sarebbero due giri. */
   const nessuno = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
   assert.equal(nessuno.riconosce({ type: "ponte/quadro/stato" }), true);
-  const niente = await nessuno.rispondi({ id: 1, type: "ponte/quadro/stato" });
+  const niente = await nessuno.rispondi(
+    { id: 1, type: "ponte/quadro/stato" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(niente.success, true);
   assert.equal(niente.result.installatore, false);
   assert.equal(niente.result.gestore, false);
@@ -2041,7 +2259,10 @@ test("il telefono chiede sul filo se questa casa ha il cruscotto, la gestione, o
     registro: ZITTO,
     installatore: true,
   });
-  const suo = await chiInstalla.rispondi({ id: 2, type: "ponte/quadro/stato" });
+  const suo = await chiInstalla.rispondi(
+    { id: 2, type: "ponte/quadro/stato" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(suo.result.installatore, true);
   assert.match(suo.result.dove, /^https:\/\/.+\/console\/$/);
   assert.equal(suo.result.gestore, false);
@@ -2053,7 +2274,10 @@ test("il telefono chiede sul filo se questa casa ha il cruscotto, la gestione, o
     registro: ZITTO,
     gestore: true,
   });
-  const tenuta = await chiTiene.rispondi({ id: 3, type: "ponte/quadro/stato" });
+  const tenuta = await chiTiene.rispondi(
+    { id: 3, type: "ponte/quadro/stato" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(tenuta.result.gestore, true);
   assert.match(tenuta.result.doveGestione, /^https:\/\/.+\/gestore\/$/);
   assert.equal(tenuta.result.installatore, false);
@@ -2067,7 +2291,10 @@ test("il telefono chiede sul filo se questa casa ha il cruscotto, la gestione, o
     installatore: true,
     gestore: true,
   });
-  const due = await tutt.rispondi({ id: 4, type: "ponte/quadro/stato" });
+  const due = await tutt.rispondi(
+    { id: 4, type: "ponte/quadro/stato" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(due.result.installatore, true);
   assert.equal(due.result.gestore, true);
   assert.notEqual(due.result.dove, due.result.doveGestione);
@@ -2079,7 +2306,10 @@ test("il quadro dice se chi guarda amministra: le pagine da amministratore nel m
    * nel menu solo con `amministra: true`, che e' la stessa regola con cui il
    * ponte risponde a quelle pagine. */
   const c = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
-  const si = await c.rispondi({ id: 1, type: "ponte/quadro/stato" }, { puoAmministrare: true });
+  const si = await c.rispondi(
+    { id: 1, type: "ponte/quadro/stato" },
+    { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
+  );
   assert.equal(si.result.amministra, true);
   for (const chi of [{}, { puoAmministrare: false }, { amministra: true }]) {
     const no = await c.rispondi({ id: 2, type: "ponte/quadro/stato" }, chi);
@@ -2274,11 +2504,14 @@ test("le revisioni delle plance si chiedono senza scaricare lo scatto", async ()
   });
   assert.equal(con.riconosce({ type: "ponte/config/revisioni" }), true);
 
-  const prima = await con.rispondi({
-    id: 1,
-    type: "ponte/config/revisioni",
-    profili: ["primary", "tablet-cucina", "../fuori"],
-  });
+  const prima = await con.rispondi(
+    {
+      id: 1,
+      type: "ponte/config/revisioni",
+      profili: ["primary", "tablet-cucina", "../fuori"],
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(prima.success, true);
   assert.deepEqual(prima.result, { revisioni: { primary: 0, "tablet-cucina": 0 } });
 
@@ -2290,15 +2523,46 @@ test("le revisioni delle plance si chiedono senza scaricare lo scatto", async ()
       snapshot: { values: { cd_muro: '{"attiva":true}' }, keys_revision: 1 },
       expected_revision: 0,
     },
-    { puoAmministrare: true },
+    { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
   );
-  const dopo = await con.rispondi({
-    id: 3,
-    type: "ponte/config/revisioni",
-    profili: ["primary", "tablet-cucina"],
-  });
+  const dopo = await con.rispondi(
+    {
+      id: 3,
+      type: "ponte/config/revisioni",
+      profili: ["primary", "tablet-cucina"],
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.deepEqual(dopo.result, { revisioni: { primary: 0, "tablet-cucina": 1 } });
   assert.equal(JSON.stringify(dopo).includes("cd_muro"), false, "niente valori, solo numeri");
 
   rmSync(cartella, { recursive: true, force: true });
+});
+
+test("senza un utente si disegna la plancia e basta: il resto e' per chi e' entrato", async () => {
+  const c = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
+  /* Quello che la plancia chiede per disegnarsi passa anche senza utente. */
+  for (const tipo of ["auth/current_user", "ponte/plance/elenco", "ponte/quadro/stato"]) {
+    const detta = await c.rispondi({ id: 1, type: tipo }, { chiChiede: "" });
+    assert.notEqual(detta.error?.code, "unauthorized", tipo);
+  }
+  /* Tutto il resto no, e una commissione nuova nasce chiusa. */
+  for (const detto of [
+    { type: "ponte/registri" },
+    { type: "ponte/catalogo" },
+    { type: "ponte/aggiornamenti/elenco" },
+    { type: "dashboardmodern/config/set", config: {} },
+    { type: "ponte/segnalazioni/elenco" },
+    { type: "ponte/http", metodo: "POST", percorso: "/api/services/lock/unlock" },
+    { type: "ponte/una-commissione-che-ancora-non-c-e" },
+  ]) {
+    const detta = await c.rispondi({ id: 2, ...detto }, { chiChiede: "" });
+    assert.equal(detta.error?.code, "unauthorized", detto.type);
+  }
+  /* Le opzioni non arrivano dal messaggio: scriverle dentro non apre niente. */
+  const finta = await c.rispondi(
+    { id: 3, type: "ponte/registri", dalPonte: true, chiChiede: CHI_DI_PROVA },
+    { chiChiede: "" },
+  );
+  assert.equal(finta.error?.code, "unauthorized");
 });

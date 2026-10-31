@@ -515,6 +515,24 @@ export function eUnaCommissione(testo) {
   );
 }
 
+/* Quello che un filo senza utente puo' chiedere: le letture con cui la
+ * plancia si disegna (i suoi file, la plancia e l'elenco di quelle aperte a
+ * tutti, la loro configurazione e le revisioni), chi e', la licenza della
+ * casa, e le risposte innocue al codice vecchio. Niente che scriva. */
+function PER_CHI_NON_E_ENTRATO(tipo, detto) {
+  if (tipo === TIPO_MOLTI || tipo === TIPO_PLANCIA || tipo === CHI_SONO) return true;
+  /* Cosa c'e' nel menu dell'app: i codici dentro arrivano solo a chi
+   * amministra (`_ilQuadro`), e un filo senza utente non amministra. */
+  if (tipo === IL_QUADRO) return true;
+  if (tipo === CONFIG_GET || tipo === CONFIG_REVISIONI) return true;
+  if (tipo === "ponte/plance/elenco") return true;
+  if (LICENZA.has(tipo)) return true;
+  /* Le GET di Home Assistant con cui la plancia legge storico e statistiche:
+   * la dogana di `ponte/http` le filtra gia' (`dogana.js`). */
+  if (tipo === TIPO) return String(detto?.metodo ?? "GET").toUpperCase() === "GET";
+  return eLaCopiaVecchia(detto);
+}
+
 function eLaCopiaVecchia(detto) {
   const tipo = detto?.type;
   if (tipo !== "frontend/get_user_data" && tipo !== "frontend/set_user_data") return false;
@@ -765,12 +783,30 @@ export class Commissioni {
       puoAmministrare = false,
       dalTelefono = false,
       diProva = false,
+      /* Chiede il ponte stesso (`index.js`), non un filo: nessuno da fuori
+       * puo' metterlo, perche' le opzioni non arrivano dal messaggio. */
+      dalPonte = false,
     } = {},
   ) {
     const id = detto?.id ?? null;
     const tipo = detto?.type;
     if (SOLO_CHI_AMMINISTRA.has(tipo) && puoAmministrare !== true) {
       return no(id, "unauthorized", "questo lo fa solo chi amministra la casa");
+    }
+    /* SOLO CHI E' ENTRATO. Un filo senza un utente di Home Assistant — un
+     * telefono abbinato prima che i telefoni si intestassero a qualcuno, o
+     * una pagina di cui l'ingress non ha detto chi e' — puo' solo disegnare
+     * la plancia aperta a tutti e sapere chi e' (cioe' nessuno: il segnale per
+     * riabbinarsi). Ogni altra commissione — leggere i registri, la chat, le
+     * foto, gli aggiornamenti, scrivere la configurazione — e' per chi e'
+     * entrato col suo utente. Si nega per difetto: una commissione nuova e'
+     * chiusa finche' qualcuno non la apre qui, apposta. */
+    if (
+      dalPonte !== true &&
+      !String(chiChiede || "").trim() &&
+      !PER_CHI_NON_E_ENTRATO(tipo, detto)
+    ) {
+      return no(id, "unauthorized", "per questo entra col tuo utente: riabbina questo telefono");
     }
     /* Base, visto dall'app: la plancia principale e basta. Con le licenze
      * spente e' sempre falso, e tutto va com'e' sempre andato. */

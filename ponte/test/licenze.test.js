@@ -27,6 +27,9 @@ import { Plance, PremiumRichiesto } from "../src/plance.js";
 import { ATTESA_DELLA_LICENZA, Commissioni } from "../src/commissioni.js";
 import { GIORNO, PUBBLICA_DI_PROVA, unGettone } from "./gettoni-di-prova.js";
 
+/* Un utente di Home Assistant: le commissioni sono per chi e' entrato. */
+const CHI_DI_PROVA = "c0ffee00c0ffee00c0ffee00c0ffee00";
+
 const CASA = "casa_0123456789abcdef0123456789abcdef";
 const ADESSO = 1_760_000_000_000;
 const ZITTO = { debug() {}, info() {}, attenzione() {}, errore() {} };
@@ -705,13 +708,16 @@ test("con Base l'app vede solo la plancia principale; dentro Home Assistant tutt
     /* Aggiungere: il no del contratto, anche a chi amministra. */
     const aggiunta = await commissioni.rispondi(
       { id: 4, type: "ponte/plance/aggiungi", titolo: "Monti" },
-      { ...dallApp, puoAmministrare: true },
+      { chiChiede: CHI_DI_PROVA, ...dallApp, puoAmministrare: true },
     );
     assert.equal(aggiunta.error.code, "premium-richiesto");
 
     /* Dentro Home Assistant le plance stanno fra le Dashboard: l'elenco e'
      * quello intero. */
-    const inCasa = await commissioni.rispondi({ id: 5, type: "ponte/plance/elenco" });
+    const inCasa = await commissioni.rispondi(
+      { id: 5, type: "ponte/plance/elenco" },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.deepEqual(
       inCasa.result.plance.map((una) => una.profilo),
       ["primary", "mare"],
@@ -728,7 +734,7 @@ test("senza limiti l'app vede tutte le plance, com'era", async () => {
     plance.aggiungi("Mare");
     const elenco = await commissioni.rispondi(
       { id: 1, type: "ponte/plance/elenco" },
-      { dalTelefono: true },
+      { chiChiede: CHI_DI_PROVA, dalTelefono: true },
     );
     assert.deepEqual(
       elenco.result.plance.map((una) => una.profilo),
@@ -736,7 +742,7 @@ test("senza limiti l'app vede tutte le plance, com'era", async () => {
     );
     const laSeconda = await commissioni.rispondi(
       { id: 2, type: "ponte/plancia", profilo: "mare" },
-      { dalTelefono: true },
+      { chiChiede: CHI_DI_PROVA, dalTelefono: true },
     );
     assert.equal(laSeconda.success, true);
   } finally {
@@ -812,13 +818,16 @@ test("ponte/licenza/*: al telefono della casa di prova si dice che e' di prova, 
   for (const [id, comando] of comandi.entries()) {
     const diProva = await commissioni.rispondi(
       { id, ...comando },
-      { dalTelefono: true, diProva: true },
+      { chiChiede: CHI_DI_PROVA, dalTelefono: true, diProva: true },
     );
     assert.equal(diProva.success, true, comando.type);
     assert.equal(diProva.result.telefonoDiProva, true, comando.type);
     assert.equal(diProva.result.gdahome.attiva, true, comando.type);
 
-    const diCasa = await commissioni.rispondi({ id, ...comando }, { dalTelefono: true });
+    const diCasa = await commissioni.rispondi(
+      { id, ...comando },
+      { chiChiede: CHI_DI_PROVA, dalTelefono: true },
+    );
     assert.equal(diCasa.success, true, comando.type);
     assert.equal("telefonoDiProva" in diCasa.result, false, comando.type);
   }

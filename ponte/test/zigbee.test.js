@@ -37,6 +37,9 @@ import {
   prefissoDellaCassetta,
 } from "../src/zigbee.js";
 
+/* Un utente di Home Assistant: le commissioni sono per chi e' entrato. */
+const CHI_DI_PROVA = "c0ffee00c0ffee00c0ffee00c0ffee00";
+
 /* ── quale rete c'è ─────────────────────────────────────────────────────── */
 
 test("ZHA c'è solo se è davvero in piedi", () => {
@@ -534,7 +537,10 @@ test("i comandi zigbee esistono solo dove una rete c'è", async () => {
    * suo, non una domanda girata a qualcun altro. */
   const senza = new Commissioni({ casa: {}, registro: ZITTO });
   assert.equal(senza.riconosce({ type: "ponte/zigbee/stato" }), true);
-  const rifiuto = await senza.rispondi({ id: 1, type: "ponte/zigbee/stato" });
+  const rifiuto = await senza.rispondi(
+    { id: 1, type: "ponte/zigbee/stato" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(rifiuto.success, false);
   assert.equal(rifiuto.error.code, "unknown_command");
 
@@ -544,14 +550,17 @@ test("i comandi zigbee esistono solo dove una rete c'è", async () => {
   for (const tipo of ["stato", "apri", "chiudi", "rinomina"])
     assert.equal(con.riconosce({ type: `ponte/zigbee/${tipo}` }), true, tipo);
 
-  const stato = await con.rispondi({ id: 2, type: "ponte/zigbee/stato" });
+  const stato = await con.rispondi(
+    { id: 2, type: "ponte/zigbee/stato" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(stato.success, true);
   assert.equal(stato.result.quale, ZHA);
   assert.equal(stato.result.aperta, false);
 
   const aperta = await con.rispondi(
     { id: 3, type: "ponte/zigbee/apri", secondi: 45 },
-    { puoAmministrare: true },
+    { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
   );
   assert.equal(aperta.success, true);
   assert.equal(aperta.result.restano, 45);
@@ -559,15 +568,15 @@ test("i comandi zigbee esistono solo dove una rete c'è", async () => {
   /* E in una casa che una rete non ce l'ha, la risposta è «nessuna»: è quello
    * che l'app legge per non disegnare la voce nel menu. */
   const spoglia = new Zigbee({ casa: casaFinta({}) });
-  const niente = await new Commissioni({ casa: {}, registro: ZITTO, zigbee: spoglia }).rispondi({
-    id: 9,
-    type: "ponte/zigbee/stato",
-  });
+  const niente = await new Commissioni({ casa: {}, registro: ZITTO, zigbee: spoglia }).rispondi(
+    { id: 9, type: "ponte/zigbee/stato" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(niente.success, true);
   assert.equal(niente.result.quale, NESSUNA);
 
   /* Un comando che non esiste si sente dire di no, non va in errore. */
-  const boh = await con.rispondi({ id: 4, type: "ponte/zigbee/vola" });
+  const boh = await con.rispondi({ id: 4, type: "ponte/zigbee/vola" }, { chiChiede: CHI_DI_PROVA });
   assert.equal(boh.success, false);
   assert.equal(boh.error.code, "unknown_command");
   zigbee.spegni();

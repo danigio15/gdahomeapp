@@ -601,7 +601,10 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
        * vuol dire due schermi che ne mostrano una sola, ed e' successo — nel
        * cruscotto restavano le letterine mentre nell'app le icone c'erano. */
       ilLogoDiCasa: (entita) =>
-        commissioni.rispondi({ id: null, type: "ponte/aggiornamenti/logo", entity_id: entita }),
+        commissioni.rispondi(
+          { id: null, type: "ponte/aggiornamenti/logo", entity_id: entita },
+          { dalPonte: true },
+        ),
     }),
     segniChiesti: () => postino.segniChiesti,
     lavori,

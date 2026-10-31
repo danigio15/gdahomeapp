@@ -6,6 +6,9 @@ import assert from "node:assert/strict";
 
 import { Catalogo, costruisciIlCatalogo, DISPOSITIVI_MASSIMI } from "../src/catalogo.js";
 
+/* Un utente di Home Assistant: le commissioni sono per chi e' entrato. */
+const CHI_DI_PROVA = "c0ffee00c0ffee00c0ffee00c0ffee00";
+
 const dispositivi = [
   {
     id: "d-lav",
@@ -329,18 +332,24 @@ test("dal filo: entity_ids si controlla e passa al catalogo", async () => {
     },
   };
   const commissioni = new Commissioni({ casa: {}, catalogo });
-  const bene = await commissioni.rispondi({
-    id: 7,
-    type: "dashboardmodern/integrations/catalog",
-    entity_ids: ["binary_sensor.pve_lxc_101_status"],
-  });
+  const bene = await commissioni.rispondi(
+    {
+      id: 7,
+      type: "dashboardmodern/integrations/catalog",
+      entity_ids: ["binary_sensor.pve_lxc_101_status"],
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(bene.success, true);
   assert.deepEqual(chieste, [{ deviceIds: null, entityIds: ["binary_sensor.pve_lxc_101_status"] }]);
-  const male = await commissioni.rispondi({
-    id: 8,
-    type: "dashboardmodern/integrations/catalog",
-    entity_ids: ["x"],
-  });
+  const male = await commissioni.rispondi(
+    {
+      id: 8,
+      type: "dashboardmodern/integrations/catalog",
+      entity_ids: ["x"],
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(male.success, false);
   assert.equal(male.error.code, "invalid_format");
 });

@@ -10,6 +10,9 @@ import assert from "node:assert/strict";
 import { Indirizzi, indirizzoDaNominatim, NOMINATIM, puntoBuono } from "../src/indirizzi.js";
 import { Commissioni } from "../src/commissioni.js";
 
+/* Un utente di Home Assistant: le commissioni sono per chi e' entrato. */
+const CHI_DI_PROVA = "c0ffee00c0ffee00c0ffee00c0ffee00";
+
 const ZITTO = { info() {}, attenzione() {}, errore() {}, debug() {} };
 
 const RISPOSTA = {
@@ -109,9 +112,15 @@ test("il comando ponte/indirizzo passa dalle commissioni", async () => {
     indirizzi: new Indirizzi({ prendi, aspetta: async () => {} }),
   });
   assert.equal(con.riconosce({ type: "ponte/indirizzo" }), true);
-  const si = await con.rispondi({ id: 1, type: "ponte/indirizzo", lat: 45.4642, lon: 9.19 }, {});
+  const si = await con.rispondi(
+    { id: 1, type: "ponte/indirizzo", lat: 45.4642, lon: 9.19 },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.deepEqual(si.result, { indirizzo: "Via Roma 12, Milano" });
-  const no = await con.rispondi({ id: 2, type: "ponte/indirizzo", lat: "x", lon: 9 }, {});
+  const no = await con.rispondi(
+    { id: 2, type: "ponte/indirizzo", lat: "x", lon: 9 },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(no.success, false);
   assert.equal(no.error.code, "not_found");
 });
