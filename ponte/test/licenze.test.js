@@ -27,6 +27,9 @@ import { Plance, PremiumRichiesto } from "../src/plance.js";
 import { ATTESA_DELLA_LICENZA, Commissioni } from "../src/commissioni.js";
 import { GIORNO, PUBBLICA_DI_PROVA, unGettone } from "./gettoni-di-prova.js";
 
+/* Un utente di Home Assistant: le commissioni sono per chi e' entrato. */
+const CHI_DI_PROVA = "c0ffee00c0ffee00c0ffee00c0ffee00";
+
 const CASA = "casa_0123456789abcdef0123456789abcdef";
 const ADESSO = 1_760_000_000_000;
 const ZITTO = { debug() {}, info() {}, attenzione() {}, errore() {} };
@@ -265,6 +268,52 @@ test("un gettone che scade fa tornare Base senza che arrivi niente", async () =>
   assert.equal(licenze.limitata, false);
 });
 
+test("rimettere indietro l'orologio non fa tornare buono un gettone scaduto", async () => {
+  const cartella = unPosto();
+  try {
+    let ora = ADESSO;
+    const risposte = {
+      "/v1/licenze/casa": conGettoni({ gdahome: unGettone({ sog: CASA }, { adesso: ADESSO }) }),
+    };
+    const { licenze } = leLicenze({ cartella, adesso: () => ora, risposte });
+    await licenze.rinnova();
+    assert.equal(licenze.premium, true);
+    /* Passano sessanta giorni col quadro fuori: Base. */
+    ora = ADESSO + 60 * GIORNO;
+    assert.equal(licenze.premium, false);
+    /* L'orologio di casa rimesso a un'ora in cui il gettone valeva: resta Base. */
+    ora = ADESSO + GIORNO;
+    assert.equal(licenze.premium, false, "l'ora non torna indietro");
+    /* Anche dopo un riavvio: l'ora piu' tarda vista sta sul disco. */
+    const { licenze: dopo } = leLicenze({
+      cartella,
+      adesso: () => ora,
+      risposte: { "/v1/licenze/casa": new TypeError("fetch failed") },
+    });
+    assert.equal(dopo.premium, false, "e regge al riavvio");
+    /* E mai prima di quando il quadro l'ha firmato. */
+    const { licenze: prima } = leLicenze({ adesso: () => ADESSO - 30 * GIORNO, risposte });
+    await prima.rinnova();
+    assert.ok(prima._ora() >= ADESSO - 30 * GIORNO);
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("un orologio andato avanti per sbaglio si rimette con la prima risposta del quadro", async () => {
+  let ora = ADESSO + 365 * GIORNO;
+  const risposte = {
+    "/v1/licenze/casa": () => conGettoni({ gdahome: unGettone({ sog: CASA }, { adesso: ora }) }),
+  };
+  const { licenze } = leLicenze({ adesso: () => ora, risposte });
+  await licenze.rinnova();
+  /* L'orologio torna giusto: il gettone di un anno avanti non vale, ma la
+   * prima risposta del quadro con l'ora giusta rimette tutto a posto. */
+  ora = ADESSO;
+  await licenze.rinnova();
+  assert.equal(licenze.premium, true);
+});
+
 test("il gettone di un'altra casa non si tiene nemmeno sul disco", async () => {
   const { licenze } = leLicenze({
     risposte: {
@@ -284,7 +333,9 @@ test("un gettone nuovo si annuncia: e' cosi' che il centralino lo riceve", async
     risposte: {
       "/v1/licenze/casa": () => {
         giro += 1;
-        return conGettoni({ gdahome: unGettone({ sog: CASA, emesso: giro }, { adesso: ADESSO }) });
+        return conGettoni({
+          gdahome: unGettone({ sog: CASA, emesso: ADESSO + giro }, { adesso: ADESSO }),
+        });
       },
     },
   });
@@ -659,13 +710,16 @@ test("con Base l'app vede solo la plancia principale; dentro Home Assistant tutt
     /* Aggiungere: il no del contratto, anche a chi amministra. */
     const aggiunta = await commissioni.rispondi(
       { id: 4, type: "ponte/plance/aggiungi", titolo: "Monti" },
-      { ...dallApp, puoAmministrare: true },
+      { chiChiede: CHI_DI_PROVA, ...dallApp, puoAmministrare: true },
     );
     assert.equal(aggiunta.error.code, "premium-richiesto");
 
     /* Dentro Home Assistant le plance stanno fra le Dashboard: l'elenco e'
      * quello intero. */
-    const inCasa = await commissioni.rispondi({ id: 5, type: "ponte/plance/elenco" });
+    const inCasa = await commissioni.rispondi(
+      { id: 5, type: "ponte/plance/elenco" },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.deepEqual(
       inCasa.result.plance.map((una) => una.profilo),
       ["primary", "mare"],
@@ -682,7 +736,7 @@ test("senza limiti l'app vede tutte le plance, com'era", async () => {
     plance.aggiungi("Mare");
     const elenco = await commissioni.rispondi(
       { id: 1, type: "ponte/plance/elenco" },
-      { dalTelefono: true },
+      { chiChiede: CHI_DI_PROVA, dalTelefono: true },
     );
     assert.deepEqual(
       elenco.result.plance.map((una) => una.profilo),
@@ -690,12 +744,55 @@ test("senza limiti l'app vede tutte le plance, com'era", async () => {
     );
     const laSeconda = await commissioni.rispondi(
       { id: 2, type: "ponte/plancia", profilo: "mare" },
-      { dalTelefono: true },
+      { chiChiede: CHI_DI_PROVA, dalTelefono: true },
     );
     assert.equal(laSeconda.success, true);
   } finally {
     rmSync(cartella, { recursive: true, force: true });
   }
+});
+
+test("con Base vera il ponte da' all'app solo la principale, anche se l'app chiede la seconda", async () => {
+  const cartella = unPosto();
+  try {
+    let ora = ADESSO;
+    const { licenze } = leLicenze({
+      adesso: () => ora,
+      risposte: {
+        "/v1/licenze/casa": conGettoni({ gdahome: unGettone({ sog: CASA }, { adesso: ADESSO }) }),
+      },
+    });
+    const plance = new Plance({ cartella, registro: ZITTO, limitata: () => false });
+    plance.aggiungi("Mare");
+    const plancia = {
+      cE: true,
+      descrizione: (quale) => ({ profilo: quale?.profilo ?? "primary" }),
+    };
+    const commissioni = new Commissioni({ registro: ZITTO, plance, plancia, licenze });
+    const dallApp = { chiChiede: CHI_DI_PROVA, dalTelefono: true };
+    const chiedi = (come) =>
+      commissioni.rispondi({ id: 1, type: "ponte/plancia", profilo: "mare" }, come);
+
+    /* Premium: la seconda arriva. */
+    await licenze.rinnova();
+    assert.equal(licenze.soloLaPrincipaleNellApp, false);
+    assert.equal((await chiedi(dallApp)).success, true);
+
+    /* Il gettone e' scaduto: Base. L'app modificata la chiede per nome e il
+     * ponte dice di no; dentro Home Assistant resta tutto com'era. */
+    ora = ADESSO + 9 * GIORNO;
+    assert.equal(licenze.soloLaPrincipaleNellApp, true);
+    assert.equal((await chiedi(dallApp)).error?.code, "premium-richiesto");
+    assert.equal((await chiedi({ chiChiede: CHI_DI_PROVA })).success, true);
+    assert.equal(licenze.limitata, false, "il resto di Base non cambia");
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("a licenze spente l'app vede tutte le plance", () => {
+  const { licenze } = leLicenze({ chiave: "" });
+  assert.equal(licenze.soloLaPrincipaleNellApp, false);
 });
 
 test("ponte/licenza/* li chiede qualunque telefono abbinato, non solo chi amministra", async () => {
@@ -766,13 +863,16 @@ test("ponte/licenza/*: al telefono della casa di prova si dice che e' di prova, 
   for (const [id, comando] of comandi.entries()) {
     const diProva = await commissioni.rispondi(
       { id, ...comando },
-      { dalTelefono: true, diProva: true },
+      { chiChiede: CHI_DI_PROVA, dalTelefono: true, diProva: true },
     );
     assert.equal(diProva.success, true, comando.type);
     assert.equal(diProva.result.telefonoDiProva, true, comando.type);
     assert.equal(diProva.result.gdahome.attiva, true, comando.type);
 
-    const diCasa = await commissioni.rispondi({ id, ...comando }, { dalTelefono: true });
+    const diCasa = await commissioni.rispondi(
+      { id, ...comando },
+      { chiChiede: CHI_DI_PROVA, dalTelefono: true },
+    );
     assert.equal(diCasa.success, true, comando.type);
     assert.equal("telefonoDiProva" in diCasa.result, false, comando.type);
   }

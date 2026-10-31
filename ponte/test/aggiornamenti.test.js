@@ -24,6 +24,9 @@ import { aggiornamentiDaFare as quelliDellaPlancia } from "../plancia/src/core/a
 import { Commissioni } from "../src/commissioni.js";
 import { RispostaNegativa } from "../src/casa.js";
 
+/* Un utente di Home Assistant: le commissioni sono per chi e' entrato. */
+const CHI_DI_PROVA = "c0ffee00c0ffee00c0ffee00c0ffee00";
+
 const ZITTO = { info() {}, attenzione() {}, errore() {} };
 
 /* Una casa che risponde quello che le si dice, e si ricorda cosa le e' stato
@@ -296,17 +299,23 @@ test("i tre comandi sul filo, e quello che risponde un ponte che non li sa fare"
     assert.equal(commissioni.riconosce({ type: tipo }), true, tipo);
   }
 
-  const elenco = await commissioni.rispondi({ id: 1, type: "ponte/aggiornamenti/elenco" });
+  const elenco = await commissioni.rispondi(
+    { id: 1, type: "ponte/aggiornamenti/elenco" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(elenco.success, true);
   assert.equal(elenco.result.aggiornamenti.length, 4);
   assert.equal(elenco.result.aggiornamenti[0].entita, "update.dashboardmodern_update");
 
   /* Installare e' da chi amministra: chi non lo dice, non lo puo'. */
-  const daChiNonAmministra = await commissioni.rispondi({
-    id: 2,
-    type: "ponte/aggiornamenti/installa",
-    entity_id: "update.dashboardmodern_update",
-  });
+  const daChiNonAmministra = await commissioni.rispondi(
+    {
+      id: 2,
+      type: "ponte/aggiornamenti/installa",
+      entity_id: "update.dashboardmodern_update",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(daChiNonAmministra.success, false);
   assert.equal(daChiNonAmministra.error.code, "unauthorized");
 
@@ -316,7 +325,7 @@ test("i tre comandi sul filo, e quello che risponde un ponte che non li sa fare"
       type: "ponte/aggiornamenti/installa",
       entity_id: "update.dashboardmodern_update",
     },
-    { puoAmministrare: true },
+    { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
   );
   assert.equal(messo.success, true);
   assert.equal(messo.result.avviato, true);
@@ -327,7 +336,7 @@ test("i tre comandi sul filo, e quello che risponde un ponte che non li sa fare"
       type: "ponte/aggiornamenti/installa",
       entity_id: "sensor.niente",
     },
-    { puoAmministrare: true },
+    { chiChiede: CHI_DI_PROVA, puoAmministrare: true },
   );
   assert.equal(storto.success, false);
   assert.equal(storto.error.code, "not_found");
@@ -335,7 +344,10 @@ test("i tre comandi sul filo, e quello che risponde un ponte che non li sa fare"
   /* Un ponte di prima non li conosce, e lo dice con la stessa parola con cui
    * l'app spiega «gdahome in casa e' piu' vecchio dell'app». */
   const vecchio = new Commissioni({ casa, registro: ZITTO });
-  const niente = await vecchio.rispondi({ id: 4, type: "ponte/aggiornamenti/elenco" });
+  const niente = await vecchio.rispondi(
+    { id: 4, type: "ponte/aggiornamenti/elenco" },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(niente.success, false);
   assert.equal(niente.error.code, "unknown_command");
 });
@@ -614,11 +626,14 @@ test("l'icona di un add-on la chiede al Supervisor, non al proxy di casa", async
     },
   });
 
-  const preso = await commissioni.rispondi({
-    id: 1,
-    type: "ponte/aggiornamenti/logo",
-    entity_id: "update.un_altro_addon",
-  });
+  const preso = await commissioni.rispondi(
+    {
+      id: 1,
+      type: "ponte/aggiornamenti/logo",
+      entity_id: "update.un_altro_addon",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(preso.success, true);
   assert.equal(chieste.length, 1);
   /* Diretta al Supervisor: niente `/core/api/hassio/` in mezzo. */
@@ -653,11 +668,14 @@ test("senza Supervisor l'icona di un add-on passa da dove passava", async () => 
     },
   });
 
-  const preso = await commissioni.rispondi({
-    id: 1,
-    type: "ponte/aggiornamenti/logo",
-    entity_id: "update.un_addon",
-  });
+  const preso = await commissioni.rispondi(
+    {
+      id: 1,
+      type: "ponte/aggiornamenti/logo",
+      entity_id: "update.un_addon",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(preso.success, true);
   assert.equal(chieste[0].url, "http://dentro:8123/api/hassio/addons/uno/icon");
 });
@@ -688,11 +706,14 @@ test("il logo di casa passa dal segno di Home Assistant", async () => {
   });
 
   assert.equal(commissioni.riconosce({ type: "ponte/aggiornamenti/logo" }), true);
-  const preso = await commissioni.rispondi({
-    id: 1,
-    type: "ponte/aggiornamenti/logo",
-    entity_id: "update.una_cosa",
-  });
+  const preso = await commissioni.rispondi(
+    {
+      id: 1,
+      type: "ponte/aggiornamenti/logo",
+      entity_id: "update.una_cosa",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(preso.success, true);
   assert.equal(preso.result.tipo, "image/png");
   assert.equal(Buffer.from(preso.result.corpo, "base64").length, 3);
@@ -724,11 +745,14 @@ test("il logo dei marchi si prende fuori, senza il segno di casa", async () => {
     },
   });
 
-  const preso = await commissioni.rispondi({
-    id: 1,
-    type: "ponte/aggiornamenti/logo",
-    entity_id: "update.una_presa",
-  });
+  const preso = await commissioni.rispondi(
+    {
+      id: 1,
+      type: "ponte/aggiornamenti/logo",
+      entity_id: "update.una_presa",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(preso.success, true);
   assert.equal(chieste[0].url, dove);
   /* Il segno di casa non si manda a nessun altro. */
@@ -780,7 +804,10 @@ test("un logo che salta d'indirizzo lascia il suo turno una volta sola", async (
 
   const presi = await Promise.all(
     ["update.una_presa", "update.altra_presa", "update.terza_presa"].map((entity_id, i) =>
-      commissioni.rispondi({ id: i + 1, type: "ponte/aggiornamenti/logo", entity_id }),
+      commissioni.rispondi(
+        { id: i + 1, type: "ponte/aggiornamenti/logo", entity_id },
+        { chiChiede: CHI_DI_PROVA },
+      ),
     ),
   );
   assert.ok(presi.every((preso) => preso.success === true));
@@ -824,11 +851,14 @@ test("il logo di un'entita' che l'elenco non ha non si va a prendere", async () 
   });
 
   for (const chi of ["update.spento", "sensor.niente", "update.mai_vista", "", "../etc/passwd"]) {
-    const niente = await commissioni.rispondi({
-      id: 1,
-      type: "ponte/aggiornamenti/logo",
-      entity_id: chi,
-    });
+    const niente = await commissioni.rispondi(
+      {
+        id: 1,
+        type: "ponte/aggiornamenti/logo",
+        entity_id: chi,
+      },
+      { chiChiede: CHI_DI_PROVA },
+    );
     assert.equal(niente.success, false, chi);
     assert.equal(niente.error.code, "not_found", chi);
   }
@@ -838,11 +868,14 @@ test("il logo di un'entita' che l'elenco non ha non si va a prendere", async () 
 test("un ponte senza aggiornamenti non conosce nemmeno i loghi", async () => {
   const casa = casaFinta({ stati: [] });
   const vecchio = new Commissioni({ casa, registro: ZITTO });
-  const niente = await vecchio.rispondi({
-    id: 1,
-    type: "ponte/aggiornamenti/logo",
-    entity_id: "update.uno",
-  });
+  const niente = await vecchio.rispondi(
+    {
+      id: 1,
+      type: "ponte/aggiornamenti/logo",
+      entity_id: "update.uno",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(niente.success, false);
   assert.equal(niente.error.code, "unknown_command");
 });
@@ -970,11 +1003,14 @@ test("un no di Home Assistant sulle note si dice com'e'", async () => {
   /* Una Home Assistant vecchia che quel comando non lo conosce: il no e' il
    * suo, e ha un codice **suo** — non `unknown_command`, che nell'app vuol
    * dire «aggiorna l'add-on» e manderebbe a aggiornare la cosa sbagliata. */
-  const niente = await commissioni.rispondi({
-    id: 1,
-    type: "ponte/aggiornamenti/note",
-    entity_id: "update.uno",
-  });
+  const niente = await commissioni.rispondi(
+    {
+      id: 1,
+      type: "ponte/aggiornamenti/note",
+      entity_id: "update.uno",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(niente.success, false);
   assert.equal(niente.error.code, "note_non_date");
 });
@@ -988,11 +1024,14 @@ test("le note passano dal ponte con la loro versione", async () => {
   });
   /* `CASA_VERA` non dichiara il bit delle note su nessuno: percio' la
    * risposta e' un no chiaro, e non una pagina vuota. */
-  const niente = await commissioni.rispondi({
-    id: 1,
-    type: "ponte/aggiornamenti/note",
-    entity_id: "update.dashboardmodern_update",
-  });
+  const niente = await commissioni.rispondi(
+    {
+      id: 1,
+      type: "ponte/aggiornamenti/note",
+      entity_id: "update.dashboardmodern_update",
+    },
+    { chiChiede: CHI_DI_PROVA },
+  );
   assert.equal(niente.success, false);
   assert.equal(niente.error.code, "not_found");
 });

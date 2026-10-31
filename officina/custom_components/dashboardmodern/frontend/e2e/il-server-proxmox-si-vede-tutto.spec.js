@@ -30,7 +30,7 @@ const SEME = {
     pool: {},
     irrigation: { zones: [] },
     energy: {},
-    entityOverrides: {},
+    entityOverrides: { "dm.server_temperatura_cpu": "sensor.minipc_cpu_temperatura" },
   },
   visibility: { home: true, server: true },
 };
@@ -61,6 +61,10 @@ function statiConLaCasa() {
   const tutti = {
     ...stati(ADESSO),
     "light.salotto": { state: "off", attributes: { friendly_name: "Salotto" } },
+    "sensor.minipc_cpu_temperatura": {
+      state: "52.3",
+      attributes: { unit_of_measurement: "°C", device_class: "temperature", friendly_name: "CPU" },
+    },
     "binary_sensor.nas_online": {
       state: "on",
       attributes: { device_class: "connectivity", friendly_name: "NAS" },
@@ -218,6 +222,13 @@ for (const tema of ["light", "dark"]) {
     /* I dischi e lo storage. */
     await expect(nodo.locator(".dm-px-dischi li")).toHaveCount(2);
     await expect(nodo.locator(".dm-px-dischi")).toContainText("41 °C");
+    /* La temperatura: quella del mini PC sul nodo, e il disco piu' caldo. */
+    await expect(nodo.locator(".dm-px-cifra", { hasText: "Temperatura CPU" })).toContainText(
+      "52 °C",
+    );
+    await expect(nodo.locator(".dm-px-cifra", { hasText: "Disco più caldo" })).toContainText(
+      "41 °C",
+    );
     await expect(nodo.locator(".dm-px-storage")).toContainText("local-lvm");
     /* Le VM e i container sotto il nodo, coi loro numeri. */
     const guest = page.locator("#page-server .dm-px-guest");

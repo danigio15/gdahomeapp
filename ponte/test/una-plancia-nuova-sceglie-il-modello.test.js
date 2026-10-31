@@ -245,3 +245,55 @@ test("l'elenco dice quali plance partono a colpo d'occhio", () => {
     b.via();
   }
 });
+
+/* «Casa 3D»: la plancia con la casa in tre dimensioni. La casa e' la stessa
+ * della principale: se li' c'e' gia', la plancia nuova la ritrova accesa;
+ * se non c'e', nasce spenta e la si crea dal suo Config. */
+import { comprimiGriglia } from "../plancia/src/core/casa-3d.js";
+import { eCasa3D } from "../src/plancia-nuova.js";
+
+test("la Casa 3D e' un modello che si conosce", () => {
+  assert.equal(modelloPulito("casa3d"), "casa3d");
+});
+
+test("con la Casa 3D senza una casa nella principale: nasce spenta, da creare", () => {
+  const b = banco();
+  try {
+    const quale = aggiungiUnaPlancia(b, { titolo: "Casa", modello: "casa3d" });
+    assert.equal(quale.a_casa3d, false);
+    const casa = JSON.parse(b.configurazione.leggi("casa").snapshot.values.cd_casa3d);
+    assert.equal(casa.attiva, false);
+    assert.deepEqual(casa.piani, []);
+  } finally {
+    b.via();
+  }
+});
+
+test("con la Casa 3D e una casa nella principale: la ritrova, accesa", () => {
+  const b = banco();
+  try {
+    const griglia = comprimiGriglia(new Int16Array(16).fill(1));
+    const principale = b.configurazione.leggi("primary").snapshot.values;
+    b.configurazione.scrivi(
+      "primary",
+      {
+        ...principale,
+        cd_casa3d: JSON.stringify({
+          attiva: false,
+          piani: [{ k: "terra", W: 4, H: 4, griglia, stanze: [{ id: 1, nome: "Salone" }] }],
+        }),
+      },
+      { updated_at: 2 },
+    );
+    const quale = aggiungiUnaPlancia(b, { titolo: "Tre D", modello: "casa3d" });
+    assert.equal(quale.a_casa3d, true);
+    assert.equal(eCasa3D(b.configurazione, "primary"), false);
+    const casa = JSON.parse(b.configurazione.leggi("tre-d").snapshot.values.cd_casa3d);
+    assert.deepEqual(
+      casa.piani[0].stanze.map((s) => s.nome),
+      ["Salone"],
+    );
+  } finally {
+    b.via();
+  }
+});

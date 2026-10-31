@@ -100,6 +100,54 @@ test("accesa, l'Echo scelto dice la notifica, senza figurine", async () => {
   }
 });
 
+const CICLO = {
+  nome: "Lavatrice",
+  genere: "lavatrice",
+  conSole: true,
+  ciclo: { da: 0, a: 1, min: 92, kwh: 0.85, eur: 0.21, sole: 0.42, rkwh: 0.5, reur: 0.21 },
+};
+const lavatriceFinita = () => ({ ...lavatrice(), componi: { tipo: "ciclo", dati: CICLO } });
+const ALEXA_ELETTRODOMESTICI = { categorie: ["urgenti", "casa", "elettrodomestici"] };
+
+test("la lavatrice si dice come la sua notifica: con «solo che ha finito», solo quello", async () => {
+  /* Dal campo: «sulla notifica ho messo solo che ha finito», e l'Echo diceva
+   * il tempo e «kappa doppia W». */
+  const banco = unBanco({ alexa: accesa(ALEXA_ELETTRODOMESTICI) });
+  try {
+    banco.notifiche.archivio.dati.telefoni = {
+      t1: { gettone: "g1", impostazioni: { su: { elettrodomestici: { dentro: [] } } } },
+    };
+    assert.equal(await banco.notifiche._dilloAdAlexa(lavatriceFinita()), true);
+    assert.equal(banco.dette()[0].service_data.message, "Lavatrice ha finito.");
+  } finally {
+    rmSync(banco.cartella, { recursive: true, force: true });
+  }
+});
+
+test("con i pezzi scelti, una frase da ascoltare: niente sigle e niente puntini", async () => {
+  const banco = unBanco({ alexa: accesa(ALEXA_ELETTRODOMESTICI) });
+  try {
+    banco.notifiche.archivio.dati.telefoni = {
+      t1: {
+        gettone: "g1",
+        impostazioni: { su: { elettrodomestici: { dentro: ["durata", "kwh", "costo"] } } },
+      },
+      /* Un altro telefono che il costo non lo vuole: gli Echo non lo dicono. */
+      t2: {
+        gettone: "g2",
+        impostazioni: { su: { elettrodomestici: { dentro: ["durata", "kwh"] } } },
+      },
+    };
+    assert.equal(await banco.notifiche._dilloAdAlexa(lavatriceFinita()), true);
+    assert.equal(
+      banco.dette()[0].service_data.message,
+      "Lavatrice ha finito. Ci ha messo un'ora e 32 minuti, ha consumato 0,85 chilowattora.",
+    );
+  } finally {
+    rmSync(banco.cartella, { recursive: true, force: true });
+  }
+});
+
 test("solo le famiglie scelte, e la prova non si dice", async () => {
   const banco = unBanco({ alexa: accesa({ categorie: ["urgenti"] }) });
   try {

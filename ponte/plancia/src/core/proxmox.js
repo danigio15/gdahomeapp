@@ -206,6 +206,10 @@ export function serverProxmox({ dispositivi = [], entita = {}, states = {} } = {
           totale: l("disk_total"),
         },
         swap: percento(l("swap_used_perc")),
+        /* La temperatura del nodo, se l'integrazione la da' (non tutte):
+         * altrimenti la plancia ci mette quella del mini PC. */
+        temperatura: l("cpu_temperature")?.valore ?? l("temperature")?.valore ?? null,
+        temperaturaEntita: clean((l("cpu_temperature") || l("temperature"))?.entity),
         avvio: avvioDi(l("uptime")),
         vmAccese: l("qemu_on")?.valore ?? null,
         ctAccesi: l("lxc_on")?.valore ?? null,
@@ -252,6 +256,7 @@ export function serverProxmox({ dispositivi = [], entita = {}, states = {} } = {
         /* «health» e' un sensore di problema: acceso vuol dire guasto. */
         sano: salute && !salute.muto ? salute.testo !== "on" : null,
         temperatura: l("temperature")?.valore ?? l("temperature_air")?.valore ?? null,
+        temperaturaEntita: clean((l("temperature") || l("temperature_air"))?.entity),
         vita:
           l("life_left")?.valore ??
           (l("disk_wearout")?.valore != null ? 100 - l("disk_wearout").valore : null),
@@ -286,6 +291,11 @@ export function serverProxmox({ dispositivi = [], entita = {}, states = {} } = {
         a.nome.localeCompare(b.nome),
     );
     n.dischi.sort((a, b) => a.nome.localeCompare(b.nome));
+    /* Il disco piu' caldo, da dire accanto al nodo. */
+    const caldi = n.dischi.filter((d) => d.temperatura != null);
+    n.discoPiuCaldo = caldi.length
+      ? caldi.reduce((a, b) => (b.temperatura > a.temperatura ? b : a))
+      : null;
     n.storage.sort((a, b) => a.nome.localeCompare(b.nome));
   }
   /* Senza nodi — un'integrazione senza permessi sul nodo — le VM restano

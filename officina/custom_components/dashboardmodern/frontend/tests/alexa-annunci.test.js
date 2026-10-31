@@ -91,6 +91,16 @@ test("le parole si dicono senza figurine, e non troppo lunghe", () => {
     "Fumo in cucina. Il sensore ha visto fumo.",
   );
   assert.equal(paroleDaDire("Lavatrice finita", ""), "Lavatrice finita");
+  /* Le sigle delle unita' un Echo le legge lettera per lettera: si dicono per esteso. */
+  assert.equal(
+    paroleDaDire("Lavatrice finita", "In funzione 1 h 32 min · 0,85 kWh · 1500 W, 2,3kW"),
+    "Lavatrice finita. In funzione 1 h 32 min, 0,85 chilowattora, 1500 watt, 2,3 chilowatt",
+  );
+  /* I puntini e gli a capo della notifica diventano virgole e punti. */
+  assert.equal(paroleDaDire("Giornata", "Sole 12 kWh\nRete 3 kWh"), "Giornata. Sole 12 chilowattora. Rete 3 chilowattora");
+  assert.equal(paroleDaDire("Washer done", "0.85 kWh", "en"), "Washer done. 0.85 kilowatt hours");
+  /* Una parola che comincia per W non e' un'unita'. */
+  assert.equal(paroleDaDire("Wallbox pronta", ""), "Wallbox pronta");
   const lunga = paroleDaDire("Titolo", "a".repeat(1000));
   assert.ok(lunga.length <= 280);
   assert.ok(lunga.endsWith("…"));

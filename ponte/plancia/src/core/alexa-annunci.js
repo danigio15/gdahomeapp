@@ -158,11 +158,32 @@ export function daDire(conf, { categoria, urgenza, tipo } = {}, data = new Date(
 /* Le figurine non si leggono: un Echo direbbe «faccina che sorride». */
 const FIGURINE = /[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\u{FE0F}\u{200D}\u{20E3}]/gu;
 
-/** Le parole da dire: il titolo, poi il testo, senza figurine. */
-export function paroleDaDire(titolo, testo) {
+/* Le unita' dette per esteso. Dal campo: «la lavatrice ha finito … e dice
+ * kappa doppia W»: un Echo legge le sigle lettera per lettera. */
+const UNITA_A_VOCE = {
+  it: [
+    [/(\d)\s*kWh\b/g, "$1 chilowattora"],
+    [/(\d)\s*kW\b/g, "$1 chilowatt"],
+    [/(\d)\s*W\b/g, "$1 watt"],
+  ],
+  en: [
+    [/(\d)\s*kWh\b/g, "$1 kilowatt hours"],
+    [/(\d)\s*kW\b/g, "$1 kilowatts"],
+    [/(\d)\s*W\b/g, "$1 watts"],
+  ],
+};
+
+/** Le parole da dire: il titolo, poi il testo, senza figurine e con le unita' per esteso. */
+export function paroleDaDire(titolo, testo, lingua = "it") {
+  const unita = UNITA_A_VOCE[lingua === "en" ? "en" : "it"];
   const pulito = (pezzo) =>
-    String(pezzo ?? "")
+    unita
+      .reduce((frase, [sigla, parola]) => frase.replace(sigla, parola), String(pezzo ?? ""))
       .replace(FIGURINE, "")
+      /* Una frase da ascoltare: i puntini e gli a capo della notifica
+       * diventano virgole e punti. */
+      .replace(/\s*·\s*/g, ", ")
+      .replace(/\s*\n+\s*/g, ". ")
       .replace(/\s+/g, " ")
       .trim();
   const prima = pulito(titolo);

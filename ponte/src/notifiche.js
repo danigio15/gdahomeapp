@@ -86,7 +86,7 @@ import {
   prezzoDiCessione,
   senzaNomiDiPersone,
 } from "./la-giornata-di-casa.js";
-import { COMPOSITORI, PEZZI_DEL_CICLO } from "./parole-delle-notifiche.js";
+import { COMPOSITORI, PEZZI_DEL_CICLO, voceDelCiclo } from "./parole-delle-notifiche.js";
 import { NotificheDiHomeAssistant } from "./notifiche-di-home-assistant.js";
 import { chiaveBuona, Filmati, idBuono } from "./i-filmati.js";
 import {
@@ -1410,8 +1410,20 @@ export class Notifiche {
       if (this._alexaDette.some((una) => una.chiave === chiave && ora - una.quando < ALEXA_PAUSA))
         return false;
       if (this._alexaDette.length >= ALEXA_IN_UN_ORA) return false;
-      const { titolo, testo } = this._parole(evento, lingua, { stile: "semplice" });
-      const parole = paroleDaDire(titolo, testo);
+      let parole = "";
+      if (evento.componi?.tipo === "ciclo") {
+        /* L'elettrodomestico che ha finito si dice come e' scritta la sua
+         * notifica: con i pezzi scelti nei telefoni, e una frase da ascoltare. */
+        const { stile, dentro } = this._comeSiDiceIn(evento.tipo);
+        parole = paroleDaDire(
+          voceDelCiclo(evento.componi.dati, lingua, { stile, dentro }),
+          "",
+          lingua,
+        );
+      } else {
+        const { titolo, testo } = this._parole(evento, lingua, { stile: "semplice" });
+        parole = paroleDaDire(titolo, testo, lingua);
+      }
       if (!parole) return false;
       this._alexaDette.push({ chiave, quando: ora });
       await this.casa.chiedi(chiamataAlexa(conf, parole));
@@ -1421,6 +1433,28 @@ export class Notifiche {
       this.registro.attenzione?.(`alexa non parla: ${errore?.message || errore}`);
       return false;
     }
+  }
+
+  /* Come si racconta un evento a tutta la casa, dalle scelte dei telefoni.
+   *
+   * Gli Echo sono di tutti, le notifiche di ognuno: si dice solo quello che
+   * ogni telefono ha scelto di dire (i pezzi in comune), e lo stile elaborato
+   * solo se e' quello di tutti, e con Premium. Senza telefoni, la notifica di
+   * serie: semplice, con tutti i pezzi. */
+  _comeSiDiceIn(tipo) {
+    const telefoni = Object.values(this.archivio?.dati?.telefoni || {}).filter(
+      (voce) => voce?.gettone,
+    );
+    if (!telefoni.length) return { stile: "semplice", dentro: [...PEZZI_DEL_CICLO] };
+    let dentro = [...PEZZI_DEL_CICLO];
+    let tuttiElaborati = true;
+    for (const voce of telefoni) {
+      const imp = impostazioniPulite(voce.impostazioni);
+      const su = suDi(imp, tipo);
+      dentro = dentro.filter((pezzo) => su.dentro.includes(pezzo));
+      if (stileDi(imp, tipo) !== "elaborata") tuttiElaborati = false;
+    }
+    return { stile: this.premium && tuttiElaborati ? "elaborata" : "semplice", dentro };
   }
 
   /* Gli avvisi personalizzati degli Echo (`alexa-annunci.js`,

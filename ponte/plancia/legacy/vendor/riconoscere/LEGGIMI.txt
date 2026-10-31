@@ -1,0 +1,8 @@
+Riconoscere gli arredi nelle foto della Casa 3D, sul dispositivo.
+
+- tf.min.js: TensorFlow.js 4.22.0 (Apache License 2.0) — https://github.com/tensorflow/tfjs
+- coco-ssd.min.js: @tensorflow-models/coco-ssd 2.2.3 (Apache License 2.0) — https://github.com/tensorflow/tfjs-models
+- model.json e group1-shard*.bin: SSDLite MobileNet v2 addestrato su COCO, pubblicato
+  da TensorFlow.js (Apache License 2.0) — https://storage.googleapis.com/tfjs-models/savedmodel/ssdlite_mobilenet_v2/
+
+Le foto non lasciano mai il dispositivo: il modello gira nella pagina.

@@ -173,6 +173,30 @@ export function prefissoDellIngress(richiesta) {
   return PREFISSO_BUONO.test(detto) ? detto : "";
 }
 
+/* Una richiesta che il browser dice partita da un altro sito.
+ *
+ * La console si apre solo dall'ingress, e l'ingress vuole la sessione di Home
+ * Assistant: ma quella sessione il browser la porta anche a una richiesta
+ * fatta partire da una pagina qualsiasi (CSRF), e a un WebSocket aperto da
+ * li'. Il browser dice da dove parte (`Sec-Fetch-Site`; `Origin` per i
+ * WebSocket dei browser di prima): da Home Assistant e' «same-origin», da un
+ * altro sito «cross-site» o «same-site». Chi non lo dice (un client che non
+ * e' un browser) non porta la sessione di nessuno, e passa. */
+export function daUnAltroSito(richiesta) {
+  const sito = String(richiesta?.headers?.["sec-fetch-site"] || "").toLowerCase();
+  if (sito === "cross-site" || sito === "same-site") return true;
+  return false;
+}
+
+/* Un corpo che il browser puo' mandare senza chiedere permesso (un modulo, un
+ * testo) non e' un corpo della console: lei manda sempre JSON. */
+export function corpoNonDiJson(richiesta) {
+  const tipo = String(richiesta?.headers?.["content-type"] || "").toLowerCase();
+  const lungo = Number(richiesta?.headers?.["content-length"] || 0);
+  const conCorpo = lungo > 0 || Boolean(richiesta?.headers?.["transfer-encoding"]);
+  return conCorpo && !tipo.startsWith("application/json");
+}
+
 async function corpoDiJson(richiesta) {
   let quanto = 0;
   const pezzi = [];
@@ -472,6 +496,14 @@ export function costruisciLaConsole({
     const metodo = String(richiesta.method || "").toUpperCase();
 
     if (via.startsWith("/api/")) {
+      if (
+        metodo !== "GET" &&
+        metodo !== "HEAD" &&
+        (daUnAltroSito(richiesta) || corpoNonDiJson(richiesta))
+      ) {
+        male(risposta, 403, "questa richiesta non parte da Home Assistant");
+        return;
+      }
       /* Tutto quello che sta sotto `/api/` e' roba di chi amministra: i
        * codici di abbinamento, i telefoni, le plance, l'aggiornamento, il
        * quadro. Home Assistant di serie apre questa pagina solo a chi
@@ -609,7 +641,7 @@ export function costruisciLaConsole({
    * prende un filo suo, come ogni telefono: i numeri dei messaggi sono i suoi
    * e non c'e' niente da rinumerare. */
   server.on("upgrade", (richiesta, socket) => {
-    if (!daLIngress(socket.remoteAddress, proxyDellIngress)) {
+    if (!daLIngress(socket.remoteAddress, proxyDellIngress) || daUnAltroSito(richiesta)) {
       socket.end("HTTP/1.1 403 Forbidden\r\n\r\n");
       return;
     }

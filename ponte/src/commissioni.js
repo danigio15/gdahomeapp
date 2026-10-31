@@ -302,6 +302,10 @@ const AGGIORNAMENTI_LOGO = "ponte/aggiornamenti/logo";
 const AGGIORNAMENTI_NOTE = "ponte/aggiornamenti/note";
 
 const TIMER_ELENCO = "dashboardmodern/clima/timer/list";
+/* Le unita' che lo spegnimento programmato puo' spegnere: quelle che la
+ * pagina del clima mette nella casella dell'unita'. */
+const UN_CLIMA_DA_SPEGNERE =
+  /^(climate|switch|input_boolean|fan|humidifier|water_heater)\.[a-z0-9_]+$/;
 const TIMER_METTI = "dashboardmodern/clima/timer/set";
 const TIMER_TOGLI = "dashboardmodern/clima/timer/clear";
 
@@ -509,6 +513,24 @@ export function eUnaCommissione(testo) {
       testo.includes('"frontend/') ||
       testo.includes(`"${CHI_SONO}"`))
   );
+}
+
+/* Quello che un filo senza utente puo' chiedere: le letture con cui la
+ * plancia si disegna (i suoi file, la plancia e l'elenco di quelle aperte a
+ * tutti, la loro configurazione e le revisioni), chi e', la licenza della
+ * casa, e le risposte innocue al codice vecchio. Niente che scriva. */
+function PER_CHI_NON_E_ENTRATO(tipo, detto) {
+  if (tipo === TIPO_MOLTI || tipo === TIPO_PLANCIA || tipo === CHI_SONO) return true;
+  /* Cosa c'e' nel menu dell'app: i codici dentro arrivano solo a chi
+   * amministra (`_ilQuadro`), e un filo senza utente non amministra. */
+  if (tipo === IL_QUADRO) return true;
+  if (tipo === CONFIG_GET || tipo === CONFIG_REVISIONI) return true;
+  if (tipo === "ponte/plance/elenco") return true;
+  if (LICENZA.has(tipo)) return true;
+  /* Le GET di Home Assistant con cui la plancia legge storico e statistiche:
+   * la dogana di `ponte/http` le filtra gia' (`dogana.js`). */
+  if (tipo === TIPO) return String(detto?.metodo ?? "GET").toUpperCase() === "GET";
+  return eLaCopiaVecchia(detto);
 }
 
 function eLaCopiaVecchia(detto) {
@@ -761,12 +783,30 @@ export class Commissioni {
       puoAmministrare = false,
       dalTelefono = false,
       diProva = false,
+      /* Chiede il ponte stesso (`index.js`), non un filo: nessuno da fuori
+       * puo' metterlo, perche' le opzioni non arrivano dal messaggio. */
+      dalPonte = false,
     } = {},
   ) {
     const id = detto?.id ?? null;
     const tipo = detto?.type;
     if (SOLO_CHI_AMMINISTRA.has(tipo) && puoAmministrare !== true) {
       return no(id, "unauthorized", "questo lo fa solo chi amministra la casa");
+    }
+    /* SOLO CHI E' ENTRATO. Un filo senza un utente di Home Assistant — un
+     * telefono abbinato prima che i telefoni si intestassero a qualcuno, o
+     * una pagina di cui l'ingress non ha detto chi e' — puo' solo disegnare
+     * la plancia aperta a tutti e sapere chi e' (cioe' nessuno: il segnale per
+     * riabbinarsi). Ogni altra commissione — leggere i registri, la chat, le
+     * foto, gli aggiornamenti, scrivere la configurazione — e' per chi e'
+     * entrato col suo utente. Si nega per difetto: una commissione nuova e'
+     * chiusa finche' qualcuno non la apre qui, apposta. */
+    if (
+      dalPonte !== true &&
+      !String(chiChiede || "").trim() &&
+      !PER_CHI_NON_E_ENTRATO(tipo, detto)
+    ) {
+      return no(id, "unauthorized", "per questo entra col tuo utente: riabbina questo telefono");
     }
     /* Base, visto dall'app: la plancia principale e basta. Con le licenze
      * spente e' sempre falso, e tutto va com'e' sempre andato. */
@@ -1085,7 +1125,7 @@ export class Commissioni {
       return this._chat(detto);
     if (DI_CHI_RISPONDE.has(tipo)) return this._laConsoleDellaChat(detto);
     if (tipo === TIMER_ELENCO || tipo === TIMER_METTI || tipo === TIMER_TOGLI)
-      return this._timerDelClima(detto);
+      return this._timerDelClima(detto, chiChiede);
     if (
       tipo === AGGIORNAMENTI_ELENCO ||
       tipo === AGGIORNAMENTI_INSTALLA ||
@@ -1366,14 +1406,24 @@ export class Commissioni {
   /* Lo spegnimento programmato: le stesse tre risposte dell'integrazione.
    * Un'entita' e' una parola con un punto dentro; i minuti vanno da zero
    * (togli il timer) a settecentoventi, come lo slider. */
-  _timerDelClima(detto) {
+  /* SOLO CHI E' ENTRATO, e solo su quello che il timer sa spegnere.
+   *
+   * Lo spegnimento parte piu' tardi col gettone del Supervisor, e sopravvive
+   * a chi l'ha chiesto: un telefono senza utente — abbinato prima che i
+   * telefoni si intestassero — poteva programmare un `turn_off` su qualunque
+   * entita' della casa (una serratura, un allarme, un interruttore della
+   * rete). Adesso serve un utente, e il timer vale per le unita' del clima:
+   * i domini che la pagina del clima mette in quella casella. */
+  _timerDelClima(detto, chiChiede = "") {
     const id = detto.id ?? null;
     const timer = this.spegnimento;
     if (!timer) return no(id, "unknown_command", `non conosco ${detto.type}`);
+    if (!String(chiChiede || "").trim())
+      return no(id, "unauthorized", "il timer lo usa solo chi e' entrato");
     try {
       if (detto.type === TIMER_ELENCO) return si(id, { scadenze: timer.scadenze() });
       const entita = typeof detto.entity_id === "string" ? detto.entity_id.trim() : "";
-      if (entita.length < 3 || entita.length > 255 || !entita.includes("."))
+      if (entita.length < 3 || entita.length > 255 || !UN_CLIMA_DA_SPEGNERE.test(entita))
         return no(id, "invalid_format", "entity_id non valido");
       if (detto.type === TIMER_TOGLI) {
         timer.annulla(entita);
@@ -1919,7 +1969,7 @@ export class Commissioni {
   /* Se questa casa sta nei limiti di gdahome Base. Senza licenze, no. */
   _limitata() {
     try {
-      return this.licenze?.limitata === true;
+      return this.licenze?.limitata === true || this.licenze?.soloLaPrincipaleNellApp === true;
     } catch (_errore) {
       return false;
     }

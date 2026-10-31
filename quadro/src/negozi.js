@@ -199,6 +199,12 @@ export function ilCorpoDi(jws) {
  * certificato firmato dal successivo, e l'ultimo con l'impronta della radice.
  * Torna il corpo, o solleva.
  */
+/* Le estensioni che Apple mette nei certificati che firmano l'App Store
+ * (1.2.840.113635.100.6.11.1 sulla foglia, 1.2.840.113635.100.6.2.1
+ * sull'intermedio WWDR), come stanno scritte dentro il certificato. */
+const OID_DELLA_FOGLIA_APPLE = Buffer.from("060a2a864886f76364060b01", "hex");
+const OID_DELL_INTERMEDIO_APPLE = Buffer.from("060a2a864886f76364060201", "hex");
+
 export function verificaLaJwsDiApple(jws, radice = RADICE_APPLE, adesso = Date.now()) {
   const pezzi = String(jws ?? "").split(".");
   if (pezzi.length !== 3) throw new RicevutaNonValida("risposta-apple-illeggibile");
@@ -208,9 +214,24 @@ export function verificaLaJwsDiApple(jws, radice = RADICE_APPLE, adesso = Date.n
   } catch (_errore) {
     throw new RicevutaNonValida("risposta-apple-illeggibile");
   }
-  if (testa?.alg !== "ES256" || !Array.isArray(testa.x5c) || testa.x5c.length < 2)
+  /* Apple firma con tre certificati, sempre: la foglia, l'intermedio (WWDR) e
+   * la radice G3. Una catena di altra lunghezza non e' di Apple. */
+  if (testa?.alg !== "ES256" || !Array.isArray(testa.x5c) || testa.x5c.length !== 3)
     throw new RicevutaNonValida("risposta-apple-senza-catena");
-  const catena = testa.x5c.map((uno) => new X509Certificate(Buffer.from(uno, "base64")));
+  let catena;
+  try {
+    catena = testa.x5c.map((uno) => new X509Certificate(Buffer.from(String(uno), "base64")));
+  } catch (_errore) {
+    throw new RicevutaNonValida("risposta-apple-illeggibile");
+  }
+  /* Firmati dalla radice di Apple ci sono anche certificati che non sono
+   * suoi per firmare i negozi (quelli degli sviluppatori, per esempio): chi
+   * ne ha la chiave poteva fabbricare una catena che passava. Solo una CA
+   * puo' firmare sotto di se', la foglia non e' una CA, e con la radice vera
+   * la foglia e l'intermedio devono essere proprio quelli dell'App Store
+   * (le loro estensioni di Apple). */
+  if (catena[0].ca || !catena[1].ca || !catena[2].ca)
+    throw new RicevutaNonValida("risposta-apple-catena-rotta");
   for (let i = 0; i < catena.length; i += 1) {
     const uno = catena[i];
     if (Date.parse(uno.validFrom) > adesso || Date.parse(uno.validTo) < adesso)
@@ -221,6 +242,13 @@ export function verificaLaJwsDiApple(jws, radice = RADICE_APPLE, adesso = Date.n
   const impronta = catena.at(-1).fingerprint256.replace(/:/g, "").toUpperCase();
   if (impronta !== String(radice).replace(/:/g, "").toUpperCase())
     throw new RicevutaNonValida("risposta-apple-radice-sconosciuta");
+  if (String(radice).replace(/:/g, "").toUpperCase() === RADICE_APPLE) {
+    if (
+      !catena[0].raw.includes(OID_DELLA_FOGLIA_APPLE) ||
+      !catena[1].raw.includes(OID_DELL_INTERMEDIO_APPLE)
+    )
+      throw new RicevutaNonValida("risposta-apple-catena-rotta");
+  }
   const firmata = Buffer.from(`${pezzi[0]}.${pezzi[1]}`, "ascii");
   const buona = verify(
     "sha256",
@@ -390,8 +418,20 @@ export class Negozi {
     /* La prova la dice la riga che dura di piu': quella del periodo in corso. */
     const ultima = sue.find((una) => (Date.parse(una.expiryTime) || 0) === scade) ?? riga;
     if (!scade) throw new RicevutaNonValida("ricevuta-senza-scadenza");
-    if (!GOOGLE_VALIDI.has(detto.subscriptionState) || scade <= this.adesso())
-      throw new RicevutaNonValida("abbonamento-scaduto");
+    if (!GOOGLE_VALIDI.has(detto.subscriptionState) || scade <= this.adesso()) {
+      /* «Scaduto» con il periodo pagato non ancora finito vuol dire che
+       * l'abbonamento e' stato interrotto: un rimborso con revoca, o uno
+       * storno. Google non lo chiama rimborso, ma per la licenza lo e': si
+       * chiude adesso, senza i tre giorni di margine. La fine detta dal
+       * negozio va col rifiuto: il quadro la confronta con quella che sapeva. */
+      const interrotto =
+        detto.subscriptionState === "SUBSCRIPTION_STATE_EXPIRED" && scade > this.adesso();
+      const errore = new RicevutaNonValida(
+        interrotto ? "acquisto-rimborsato" : "abbonamento-scaduto",
+      );
+      errore.scade = scade;
+      throw errore;
+    }
 
     if (detto.acknowledgementState === "ACKNOWLEDGEMENT_STATE_PENDING") {
       try {
@@ -418,6 +458,7 @@ export class Negozi {
       scade,
       acquisto: token,
       prima: detto.linkedPurchaseToken || null,
+      conto: String(detto.externalAccountIdentifiers?.obfuscatedExternalAccountId ?? "") || null,
       prova: inProvaSuGoogle(ultima),
       ricevuta: { token, prodotto: riga.productId },
       abbonamento: lAbbonamento({
@@ -549,6 +590,7 @@ export class Negozi {
        * ritrovare la stessa licenza. */
       acquisto: String(t.originalTransactionId || t.transactionId),
       prima: null,
+      conto: typeof t.appAccountToken === "string" && t.appAccountToken ? t.appAccountToken : null,
       prova: inProvaSuApple(t),
       ricevuta: { originale: String(t.originalTransactionId || t.transactionId) },
       abbonamento: lAbbonamento({

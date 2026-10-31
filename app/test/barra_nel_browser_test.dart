@@ -31,6 +31,12 @@ class _DaParteFinta extends LaPlanciaDaParte {
 
   @override
   void siFaDaParte(bool si) => spostata.add(si);
+
+  /// Ogni volta che la barra la copre del tutto, o smette.
+  final List<bool> coperta = [];
+
+  @override
+  void copertaDelTutto(bool si) => coperta.add(si);
 }
 
 Widget _conLaBarra({
@@ -240,4 +246,29 @@ void main() {
       expect(premute, [Sezione.plancia]);
     });
   });
+
+  testWidgets(
+    'aperta fino in fondo la barra copre la plancia del tutto, e chiudendo smette',
+    (prova) async {
+      /* «Lo scroll del menu non scorre fluido»: a menu aperto la plancia,
+       * composta dal sistema, si toglie dalla scena. Solo a menu aperto del
+       * tutto, e solo sopra la plancia. */
+      prova.view.physicalSize = const Size(400, 800);
+      prova.view.devicePixelRatio = 1;
+      addTearDown(prova.view.reset);
+      final chiave = GlobalKey<BarraDelleSezioniState>();
+      final daParte = _DaParteFinta();
+      await prova.pumpWidget(
+        _conLaBarra(chiave: chiave, daParte: daParte, sopraLaPlancia: true),
+      );
+      chiave.currentState!.apri();
+      await prova.pump(const Duration(milliseconds: 50));
+      expect(daParte.coperta, isEmpty, reason: 'mentre entra si vede ancora');
+      await prova.pumpAndSettle();
+      expect(daParte.coperta, [true]);
+      chiave.currentState!.chiudi();
+      await prova.pumpAndSettle();
+      expect(daParte.coperta, [true, false]);
+    },
+  );
 }

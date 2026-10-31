@@ -133,6 +133,7 @@ const ALFABETO = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
 /** Quanto vale un gettone, al massimo, da quando e' firmato. */
 export const OTTO_GIORNI = 8 * 24 * 60 * 60 * 1000;
+const UN_ORA_DEL_NEGOZIO = 60 * 60 * 1000;
 
 /** Quanti codici si fanno in una volta, al massimo. */
 export const CODICI_AL_MASSIMO = 200;
@@ -190,6 +191,29 @@ const TESTA_PUBBLICA = Buffer.from("302a300506032b6570032100", "hex");
 export const base64url = (byte) => Buffer.from(byte).toString("base64url");
 
 /** Un errore con dentro lo stato HTTP e la parola che il contratto dice. */
+/**
+ * Il «conto» di una casa nei negozi: quello che l'app mette nell'acquisto
+ * (`appAccountToken` su Apple, `obfuscatedAccountId` su Google), e che il
+ * negozio poi ridice. E' un'impronta dell'id della casa a forma di UUID,
+ * perche' Apple vuole un UUID: dall'impronta non si risale alla casa, e la
+ * stessa casa da' sempre lo stesso conto. L'app la calcola allo stesso modo
+ * (`app/lib/licenza/conto_della_casa.dart`).
+ */
+export function contoDellaCasa(sog) {
+  const h = createHash("sha256")
+    .update(`gdahome-conto:${String(sog ?? "")}`)
+    .digest();
+  h[6] = (h[6] & 0x0f) | 0x40;
+  h[8] = (h[8] & 0x3f) | 0x80;
+  const x = h.subarray(0, 16).toString("hex");
+  return `${x.slice(0, 8)}-${x.slice(8, 12)}-${x.slice(12, 16)}-${x.slice(16, 20)}-${x.slice(20)}`;
+}
+
+/* Una casa che non si fa vedere da trenta giorni e' una casa che non c'e'
+ * piu' (rifatta, venduta, spenta): il suo acquisto puo' andare su un'altra. */
+export const CASA_SPARITA = 30 * 24 * 60 * 60 * 1000;
+const RICORDA_LA_VISTA_OGNI = 60 * 60 * 1000;
+
 export class NoLicenza extends Error {
   constructor(stato, errore) {
     super(errore);
@@ -551,12 +575,30 @@ export class Licenze {
     const suo = this.archivio.dati.soggetti[chi];
     const segno = impronta(detto);
     if (!suo) {
-      this.archivio.dati.soggetti[chi] = { impronta: segno, da: this.adesso() };
+      this.archivio.dati.soggetti[chi] = {
+        impronta: segno,
+        da: this.adesso(),
+        visto: this.adesso(),
+      };
       this.archivio.salva();
       return chi;
     }
     if (!stessoSegreto(suo.impronta, segno)) throw new NoLicenza(403, "segreto-sbagliato");
+    /* Quando si e' fatta vedere l'ultima volta (`dalNegozio`): si scrive al
+     * piu' una volta l'ora, le case bussano spesso. */
+    const ora = this.adesso();
+    if (!(ora - (Number(suo.visto) || 0) < RICORDA_LA_VISTA_OGNI)) {
+      suo.visto = ora;
+      this.archivio.salva();
+    }
     return chi;
+  }
+
+  /* Se una casa si e' fatta vedere negli ultimi trenta giorni. Una casa di
+   * cui non si sa (nata prima che lo si scrivesse) non trattiene niente. */
+  _casaViva(sog, ora = this.adesso()) {
+    const visto = Number(this.archivio.dati.soggetti?.[sog]?.visto) || 0;
+    return visto > 0 && ora - visto < CASA_SPARITA;
   }
 
   /* ─── Quello che si risponde a chi chiede ────────────────────────────── */
@@ -878,6 +920,7 @@ export class Licenze {
     prova = false,
     ricevuta = null,
     abbonamento = null,
+    conto = null,
   }) {
     unaApp(app);
     const chiave = createHash("sha256").update(`${piattaforma}:${acquisto}`).digest("hex");
@@ -900,6 +943,23 @@ export class Licenze {
     } else {
       /* Com'e' fatto l'abbonamento resta: lo stesso acquisto, visto ancora. */
       const { abbonamento: suo, aggiornata } = una.negozio || {};
+      if (una.sog !== sog) {
+        /* L'acquisto e' stato fatto per una casa (il conto che il negozio
+         * ridice): finche' quella casa c'e', non lo si porta via da un'altra.
+         * Senza, chi conosceva il numero di un acquisto altrui — sono quasi in
+         * fila, su Apple — se lo prendeva. Uno fatto per questa casa, uno
+         * senza conto (un'app di prima) o uno di una casa sparita si sposta
+         * come sempre. */
+        const fattoPer = typeof conto === "string" && conto ? conto.toLowerCase() : "";
+        if (
+          fattoPer &&
+          fattoPer !== contoDellaCasa(sog) &&
+          fattoPer === contoDellaCasa(una.sog) &&
+          this._casaViva(una.sog)
+        )
+          throw new NoLicenza(409, "acquisto-di-un-altra-casa");
+        this._spostata(una);
+      }
       una.sog = sog;
       una.app = app;
       una.scade = scade;
@@ -918,6 +978,33 @@ export class Licenze {
     una.ricontrollata = this.adesso();
     this.archivio.salva();
     return una;
+  }
+
+  /* Lo stesso acquisto portato su un'altra casa («ripristina acquisti»
+   * dall'app di un'altra casa, o una casa nuova).
+   *
+   * La licenza segue l'acquisto, e la casa di prima non deve tenerla: prima il
+   * suo gettone valeva ancora fino a otto giorni, e rifacendo il giro ogni
+   * settimana un abbonamento solo teneva Premium piu' case insieme. Adesso la
+   * licenza prende un numero nuovo per la casa nuova, e quello vecchio resta
+   * come tolto: entra nell'elenco del centralino (`tolte`), che chiude i
+   * telefoni da fuori della casa di prima, e la casa di prima al prossimo
+   * giro non riceve piu' il gettone. Il segno non e' una licenza: non vale,
+   * non si conta e non si richiede al negozio. */
+  _spostata(una) {
+    const ora = this.adesso();
+    this.licenze.push({
+      lic: una.lic,
+      app: una.app,
+      sog: una.sog,
+      origine: "spostata",
+      scade: una.scade,
+      creata: una.creata ?? ora,
+      revocata: ora,
+      nota: "spostata su un'altra casa",
+    });
+    una.lic = `lic_${randomBytes(8).toString("hex")}`;
+    una.spostataIl = ora;
   }
 
   /* La prova gratuita, e la sua storia: se c'e' stata, e se dopo si e'
@@ -1006,11 +1093,8 @@ export class Licenze {
         })
         .catch((errore) => {
           /* Rimborsato: niente margine, e la licenza chiude adesso (`tolte`). */
-          if (errore?.errore === "acquisto-rimborsato") {
-            una.negozio.finito = errore.errore;
-            una.negozio.finitoIl ??= this.adesso();
-            una.negozio.aggiornata = this.adesso();
-          }
+          if (this._interrotta(una, errore) === "acquisto-rimborsato")
+            this._finitaDalNegozio(una, errore, this.adesso());
           const detto = errore?.errore || errore?.message || String(errore);
           registro?.[errore?.errore ? "info" : "attenzione"]?.(
             `il rinnovo di ${una.lic} non si e' potuto controllare: ${detto}`,
@@ -1028,6 +1112,38 @@ export class Licenze {
     else for (const una of quali) await richiedi(una);
     this.archivio.salva();
     return allungate;
+  }
+
+  /* Perche' il negozio dice che una licenza e' finita.
+   *
+   * Google, a un abbonamento rimborsato con revoca o stornato, risponde
+   * «scaduto» come a uno arrivato in fondo — ma con una fine che viene prima
+   * di quella pagata. Quella e' un'interruzione, e vale come un rimborso: la
+   * licenza chiude da li', non dopo il periodo e i tre giorni di margine
+   * (prima restava Premium fino all'ultimo giorno pagato, anche per un
+   * annuale rimborsato il giorno dopo). Un'ora di tolleranza: le due fini
+   * non arrivano mai al millisecondo. */
+  _interrotta(una, errore) {
+    const perche = errore?.errore;
+    if (perche !== "abbonamento-scaduto") return perche;
+    const detta = Number(errore.scade) || 0;
+    const sapeva = Number(una.scade) || 0;
+    return detta > 0 && sapeva > 0 && detta < sapeva - UN_ORA_DEL_NEGOZIO
+      ? "acquisto-rimborsato"
+      : perche;
+  }
+
+  _finitaDalNegozio(una, errore, ora) {
+    const perche = this._interrotta(una, errore);
+    una.negozio.finito = perche;
+    if (perche === "acquisto-rimborsato") {
+      const detta = Number(errore?.scade) || 0;
+      const quando = detta > 0 ? Math.min(detta, ora) : ora;
+      una.negozio.finitoIl = Math.min(Number(una.negozio.finitoIl) || quando, quando);
+    } else {
+      una.negozio.finitoIl ??= ora;
+    }
+    una.negozio.aggiornata = ora;
   }
 
   /* Quello che il negozio ha detto di una licenza gia' sua. La casa resta
@@ -1099,11 +1215,7 @@ export class Licenze {
         rispose = true;
       })
       .catch((errore) => {
-        if (errore?.errore) {
-          una.negozio.finito = errore.errore;
-          una.negozio.finitoIl ??= ora;
-          una.negozio.aggiornata = ora;
-        }
+        if (errore?.errore) this._finitaDalNegozio(una, errore, ora);
         registro?.[errore?.errore ? "info" : "attenzione"]?.(
           `l'abbonamento di ${una.lic} non si e' potuto aggiornare: ${errore?.errore || errore?.message || errore}`,
         );

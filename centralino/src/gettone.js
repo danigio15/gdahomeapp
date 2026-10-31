@@ -102,11 +102,18 @@ export function verificaGettone(
 
 /* Le regole che non sono la firma: il gettone e' di questa casa, di questa
  * app, e vale ancora adesso. */
+const OTTO_GIORNI_E_UN_MINUTO = 8 * 24 * 60 * 60 * 1000 + 60 * 1000;
+
 export function valeAdesso(detto, { sog, app, adesso }) {
   if (!detto || detto.v !== 1) return false;
   if (detto.sog !== sog) return false;
   if (detto.app !== app && !(app === "gdanav" && detto.app === "gdahome")) return false;
   if (typeof detto.fino !== "number" || !(detto.fino > adesso)) return false;
+  /* Un gettone vale al piu' otto giorni dalla firma (un minuto di tolleranza
+   * fra gli orologi): uno che dice di piu' non e' del contratto. Come l'app
+   * (`gettone.dart`). */
+  if (typeof detto.emesso === "number" && detto.fino - detto.emesso > OTTO_GIORNI_E_UN_MINUTO)
+    return false;
   if (detto.scade !== null && !(typeof detto.scade === "number" && detto.scade > adesso)) {
     return false;
   }

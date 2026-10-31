@@ -223,6 +223,80 @@ export function paroleDelCiclo(
   };
 }
 
+/* ─── L'elettrodomestico che ha finito, detto da un Echo ────────────────── */
+
+/* «un'ora e 32 minuti», «45 minuti»: come lo dice una persona. */
+function durataDetta(minuti, en) {
+  const m = Math.max(1, Math.round(Number(minuti) || 0));
+  const ore = Math.floor(m / 60);
+  const resto = m % 60;
+  const min = (n) => (en ? `${n} minute${n === 1 ? "" : "s"}` : `${n} minut${n === 1 ? "o" : "i"}`);
+  if (!ore) return min(resto);
+  const h = en ? (ore === 1 ? "an hour" : `${ore} hours`) : ore === 1 ? "un'ora" : `${ore} ore`;
+  return resto ? `${h} ${en ? "and" : "e"} ${min(resto)}` : h;
+}
+
+/* «21 centesimi», «1,35 euro». */
+function euroDetti(valore, en) {
+  const n = Math.max(0, Number(valore) || 0);
+  if (n < 0.995) {
+    const cent = Math.round(n * 100);
+    return en
+      ? `${cent} cent${cent === 1 ? "" : "s"}`
+      : `${cent} centesim${cent === 1 ? "o" : "i"}`;
+  }
+  return en ? `${n.toFixed(2)} euros` : `${n.toFixed(2).replace(".", ",")} euro`;
+}
+
+/**
+ * Quello che un Echo dice quando un elettrodomestico ha finito: una frase
+ * sola, da ascoltare, con dentro solo i pezzi scelti per la notifica
+ * (`dentro`) e, nello stile elaborato, anche quanto ha dato il sole.
+ * Niente sigle e niente puntini: «La lavatrice ha finito. Ci ha messo un'ora
+ * e 32 minuti, ha consumato 0,85 chilowattora, per una spesa di 21 centesimi.»
+ */
+export function voceDelCiclo(
+  dati,
+  lingua = "it",
+  { stile = "semplice", dentro = PEZZI_DEL_CICLO } = {},
+) {
+  const en = lingua === "en";
+  const nome = String(dati?.nome || (en ? "The appliance" : "L'elettrodomestico")).slice(0, 40);
+  const prima = en ? `${nome} has finished.` : `${nome} ha finito.`;
+  const c = dati?.ciclo;
+  if (!c) return prima;
+  const vuole = (pezzo) => dentro.includes(pezzo);
+  const tuttaColSole = c.sole >= 0.98 && (c.eur === null || c.eur < 0.005);
+  const pezzi = [];
+  if (vuole("durata") && c.min > 0)
+    pezzi.push(en ? `it took ${durataDetta(c.min, en)}` : `ci ha messo ${durataDetta(c.min, en)}`);
+  if (vuole("kwh") && c.kwh > 0)
+    pezzi.push(
+      en
+        ? `it used ${decimale(c.kwh, 2, lingua)} kilowatt hours`
+        : `ha consumato ${decimale(c.kwh, 2, lingua)} chilowattora`,
+    );
+  if (stile === "elaborata" && vuole("sole") && dati.conSole && c.sole > 0.005 && !tuttaColSole)
+    pezzi.push(
+      en
+        ? `${Math.round(c.sole * 100)} percent from the sun`
+        : `il ${Math.round(c.sole * 100)} per cento dal sole`,
+    );
+  if (vuole("costo") && c.eur !== null && c.eur !== undefined)
+    pezzi.push(
+      tuttaColSole
+        ? en
+          ? "all from the sun, so free"
+          : "tutta col sole, quindi gratis"
+        : en
+          ? `costing ${euroDetti(c.eur, en)}`
+          : `per una spesa di ${euroDetti(c.eur, en)}`,
+    );
+  if (!pezzi.length) return prima;
+  const frase = pezzi.join(", ");
+  return `${prima} ${frase.charAt(0).toUpperCase()}${frase.slice(1)}.`;
+}
+
 /* «Lavatrice finita», «Forno finito»: le macchine della casa sono quasi tutte
  * femminili (la lavatrice, l'asciugatrice, la lavastoviglie), gli altri si
  * riconoscono dalla fine della parola. */

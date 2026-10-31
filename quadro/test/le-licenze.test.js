@@ -33,11 +33,12 @@ import {
   OTTO_GIORNI,
   codiceRegaloPulito,
   contaGliAbbonamenti,
+  contoDellaCasa,
   firmaIlGettone,
   mesiDopo,
   verificaIlGettone,
 } from "../src/licenze.js";
-import { Negozi, laAppDel } from "../src/negozi.js";
+import { Negozi, laAppDel, verificaLaJwsDiApple } from "../src/negozi.js";
 
 /* La coppia **di prova** del contratto. Non va mai in un file di produzione. */
 const PUBBLICA = "6P9sdqQtlHcmH7Ve_SgzmyJmxJS28CNORRJJfjI3rnI";
@@ -50,6 +51,8 @@ const TERZA = "casa_0b1c2d3e4f5a69788796a5b4c3d2e1f0";
 const TEL = "tel_00112233445566778899aabbccddeeff";
 const SEGRETO = "un-segreto-lungo-della-casa-0001";
 const GIORNO = 24 * 60 * 60 * 1000;
+/* Il conto di «casa_000…0»: lo stesso numero lo deve dare l'app. */
+const CONTO_DI_PROVA = "5fdf9e6e-8349-4c1e-ab88-5760c721977f";
 
 const RAPPORTO = {
   quando: new Date().toISOString(),
@@ -1034,7 +1037,8 @@ test("una ricevuta di Google Play diventa una licenza fino alla scadenza, una so
     const altraApp = await ricevuta(TOKEN_BUONO, { app: "gdanav", prodotto: "gdanav_premium" });
     assert.equal(altraApp.stato, 402);
 
-    /* Lo stesso acquisto da un'altra casa: la licenza si sposta. */
+    /* Lo stesso acquisto da un'altra casa: la licenza si sposta, con un
+     * numero nuovo, e quello di prima va fra i tolti. */
     const spostata = await b.fuori("negozio", {
       casa: ALTRA,
       segreto: SEGRETO,
@@ -1043,7 +1047,8 @@ test("una ricevuta di Google Play diventa una licenza fino alla scadenza, una so
       prodotto: "gdahome_premium",
       ricevuta: TOKEN_NUOVO,
     });
-    assert.equal(spostata.detto.licenze[0].lic, letto.lic);
+    assert.notEqual(spostata.detto.licenze[0].lic, letto.lic);
+    assert.ok(b.licenze.tolte().includes(letto.lic));
     assert.deepEqual((await b.fuori("casa", { casa: UNA, segreto: SEGRETO })).detto.gettoni, {});
   } finally {
     await b.chiudi();
@@ -1511,6 +1516,223 @@ test("chi ha spento il rinnovo automatico chiude alla fine del periodo, senza ma
      * non serve, e non la tiene. */
     una.scade = Date.now() - MARGINE_DEL_RINNOVO - ORA;
     assert.deepEqual(b.licenze.tolte(), []);
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("lo stesso acquisto portato su un'altra casa lo perde la casa di prima", async () => {
+  const token = "token-google-spostato-0123456789";
+  const { negozi } = unGoogleFinto({
+    [token]: {
+      subscriptionState: "SUBSCRIPTION_STATE_ACTIVE",
+      acknowledgementState: "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+      lineItems: [
+        {
+          productId: "gdahome_premium",
+          expiryTime: new Date(Date.now() + 300 * GIORNO).toISOString(),
+        },
+      ],
+    },
+  });
+  const b = await banco({ negozi });
+  try {
+    const compra = (casa) =>
+      b.fuori("negozio", {
+        casa,
+        segreto: SEGRETO,
+        app: "gdahome",
+        piattaforma: "android",
+        prodotto: "gdahome_premium",
+        ricevuta: token,
+      });
+    const prima = await compra(UNA);
+    assert.equal(prima.stato, 200);
+    const vecchio = verificaIlGettone(prima.detto.gettoni.gdahome, PUBBLICA, { sog: UNA });
+    assert.ok(vecchio);
+    assert.deepEqual(b.licenze.tolte(), []);
+
+    /* «Ripristina acquisti» dall'app di un'altra casa. */
+    const dopo = await compra(ALTRA);
+    assert.equal(dopo.stato, 200);
+    const nuovo = verificaIlGettone(dopo.detto.gettoni.gdahome, PUBBLICA, { sog: ALTRA });
+    assert.ok(nuovo, "la casa nuova e' Premium");
+    assert.notEqual(nuovo.lic, vecchio.lic, "con un numero di licenza suo");
+    assert.deepEqual(
+      b.licenze.tolte(),
+      [vecchio.lic],
+      "quello di prima va al centralino come tolto",
+    );
+    const casaDiPrima = await b.fuori("casa", { casa: UNA, segreto: SEGRETO });
+    assert.deepEqual(casaDiPrima.detto.gettoni, {}, "e la casa di prima non ha piu' il gettone");
+
+    /* Il segno dello spostamento non e' una licenza: non vale e non si conta. */
+    const segno = b.licenze.quella(vecchio.lic);
+    assert.equal(segno.origine, "spostata");
+    assert.equal(b.licenze.vale(segno), false);
+    assert.equal(
+      b.licenze.licenze.filter((una) => una.origine === "negozio").length,
+      1,
+      "un acquisto, una licenza",
+    );
+
+    /* E tornando indietro, la stessa cosa al contrario. */
+    const ancora = await compra(UNA);
+    const terzo = verificaIlGettone(ancora.detto.gettoni.gdahome, PUBBLICA, { sog: UNA });
+    assert.ok(terzo);
+    assert.ok(b.licenze.tolte().includes(nuovo.lic));
+    assert.ok(!b.licenze.tolte().includes(terzo.lic));
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("un acquisto fatto per una casa non lo prende un'altra finche' quella c'e'", async () => {
+  const token = "token-google-della-casa-0123456789";
+  const abbonamenti = {
+    [token]: {
+      subscriptionState: "SUBSCRIPTION_STATE_ACTIVE",
+      acknowledgementState: "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+      externalAccountIdentifiers: { obfuscatedExternalAccountId: contoDellaCasa(UNA) },
+      lineItems: [
+        {
+          productId: "gdahome_premium",
+          expiryTime: new Date(Date.now() + 300 * GIORNO).toISOString(),
+        },
+      ],
+    },
+  };
+  const { negozi } = unGoogleFinto(abbonamenti);
+  const b = await banco({ negozi });
+  try {
+    const compra = (casa) =>
+      b.fuori("negozio", {
+        casa,
+        segreto: SEGRETO,
+        app: "gdahome",
+        piattaforma: "android",
+        prodotto: "gdahome_premium",
+        ricevuta: token,
+      });
+    assert.equal((await compra(UNA)).stato, 200);
+    /* Chi conosce il token dell'acquisto di UNA prova a portarselo: no. */
+    const presa = await compra(ALTRA);
+    assert.equal(presa.stato, 409);
+    assert.equal(presa.detto.errore, "acquisto-di-un-altra-casa");
+    const ancora = await b.fuori("casa", { casa: UNA, segreto: SEGRETO });
+    assert.ok(verificaIlGettone(ancora.detto.gettoni.gdahome, PUBBLICA, { sog: UNA }));
+    assert.deepEqual(b.licenze.tolte(), []);
+
+    /* UNA non si fa vedere da piu' di trenta giorni: la casa e' stata rifatta,
+     * e l'acquisto va su quella nuova. */
+    b.licenze.archivio.dati.soggetti[UNA].visto = Date.now() - 31 * GIORNO;
+    const spostata = await compra(ALTRA);
+    assert.equal(spostata.stato, 200);
+    assert.ok(verificaIlGettone(spostata.detto.gettoni.gdahome, PUBBLICA, { sog: ALTRA }));
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("il conto della casa e' un UUID, sempre lo stesso per la stessa casa", () => {
+  const uno = contoDellaCasa(UNA);
+  assert.match(uno, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  assert.equal(contoDellaCasa(UNA), uno);
+  assert.notEqual(contoDellaCasa(ALTRA), uno);
+  /* Lo stesso numero lo calcola l'app (conto_della_casa_test.dart). */
+  assert.equal(contoDellaCasa("casa_00000000000000000000000000000000"), CONTO_DI_PROVA);
+});
+
+test("un abbonamento Google rimborsato o stornato chiude subito, non a fine periodo", async () => {
+  for (const [nome, fine] of [
+    /* Google mette la fine al momento della revoca… */
+    ["revoca nel passato", () => Date.now() - 60_000],
+    /* …o dice «scaduto» lasciando la fine pagata: interrotto lo stesso. */
+    ["fine pagata nel futuro", () => Date.now() + 200 * GIORNO],
+  ]) {
+    const token = `token-google-rimborsato-${nome.length}-0123456789`;
+    const riga = (quando) => ({
+      productId: "gdahome_premium",
+      expiryTime: new Date(quando).toISOString(),
+    });
+    const abbonamenti = {
+      [token]: {
+        subscriptionState: "SUBSCRIPTION_STATE_ACTIVE",
+        acknowledgementState: "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+        lineItems: [riga(Date.now() + 300 * GIORNO)],
+      },
+    };
+    const { negozi } = unGoogleFinto(abbonamenti);
+    const b = await banco({ negozi });
+    try {
+      const presa = await b.fuori("negozio", {
+        casa: UNA,
+        segreto: SEGRETO,
+        app: "gdahome",
+        piattaforma: "android",
+        prodotto: "gdahome_premium",
+        ricevuta: token,
+      });
+      assert.equal(presa.stato, 200, nome);
+      const una = b.licenze.quella(presa.detto.licenze[0].lic);
+      abbonamenti[token] = {
+        ...abbonamenti[token],
+        subscriptionState: "SUBSCRIPTION_STATE_EXPIRED",
+        lineItems: [riga(fine())],
+      };
+      una.ricontrollata = 0;
+      /* L'avviso di Google (RTDN) fa richiedere l'abbonamento. */
+      assert.equal(
+        await b.licenze.avvisoDelNegozio(negozi, { piattaforma: "android", chiave: token }),
+        1,
+      );
+      assert.equal(una.negozio.finito, "acquisto-rimborsato", nome);
+      const ancora = await b.fuori("casa", { casa: UNA, segreto: SEGRETO });
+      assert.deepEqual(ancora.detto.gettoni, {}, `${nome}: niente gettone nuovo`);
+      assert.ok(b.licenze.fineDi(una) <= Date.now(), `${nome}: la licenza e' finita adesso`);
+      assert.deepEqual(b.licenze.tolte(), [una.lic], `${nome}: e il centralino la toglie`);
+    } finally {
+      await b.chiudi();
+    }
+  }
+});
+
+test("un abbonamento Google arrivato in fondo tiene il margine del rinnovo", async () => {
+  const token = "token-google-in-fondo-0123456789";
+  const riga = (quando) => ({
+    productId: "gdahome_premium",
+    expiryTime: new Date(quando).toISOString(),
+  });
+  const abbonamenti = {
+    [token]: {
+      subscriptionState: "SUBSCRIPTION_STATE_ACTIVE",
+      acknowledgementState: "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+      lineItems: [riga(Date.now() + 2 * ORA)],
+    },
+  };
+  const { negozi } = unGoogleFinto(abbonamenti);
+  const b = await banco({ negozi });
+  try {
+    const presa = await b.fuori("negozio", {
+      casa: UNA,
+      segreto: SEGRETO,
+      app: "gdahome",
+      piattaforma: "android",
+      prodotto: "gdahome_premium",
+      ricevuta: token,
+    });
+    const una = b.licenze.quella(presa.detto.licenze[0].lic);
+    const finito = Date.now() - ORA;
+    una.scade = finito;
+    abbonamenti[token] = {
+      ...abbonamenti[token],
+      subscriptionState: "SUBSCRIPTION_STATE_EXPIRED",
+      lineItems: [riga(finito)],
+    };
+    una.ricontrollata = 0;
+    await b.licenze.avvisoDelNegozio(negozi, { piattaforma: "android", chiave: token });
+    assert.equal(una.negozio.finito, "abbonamento-scaduto");
+    assert.equal(b.licenze.fineDi(una), finito + MARGINE_DEL_RINNOVO);
   } finally {
     await b.chiudi();
   }
@@ -2300,6 +2522,81 @@ MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgtCX5yXHn28oNzb7h
 tdKCCLRlrtR80maKJoJVBmgA1vyhRANCAATpjb/flWyCzESaWIBch1NO7W2Y7rhX
 z+NH9vTytgirTN6ld/dhzXY4Up0fCqHVkjSn2erh8v1jiMGZHebpDieV
 -----END PRIVATE KEY-----`;
+
+/* Una catena fabbricata: la radice e' una CA, ma il certificato in mezzo e'
+ * di uno sviluppatore — non una CA — e firma lui la foglia. Prima passava:
+ * la firma di ogni certificato tornava, e la radice era quella giusta. */
+const RADICE_FINTA = "65D9ADEF26054CD9F0D97B73DF92F1E5B0D8FB6060991378AD729CC1621DA975";
+const FINTA_RADICE =
+  "MIIBkzCCATmgAwIBAgIUNmwVIXTjXu2mqV9Nhrc0KO729j4wCgYIKoZIzj0EAwIwFzEVMBMGA1UEAwwMUmFkaWNl" +
+  "IGZpbnRhMB4XDTI2MTAzMTA4NDg0NloXDTQ2MTAyNjA4NDg0NlowFzEVMBMGA1UEAwwMUmFkaWNlIGZpbnRhMFkw" +
+  "EwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEmxg7KH7GX0BA6cTV9MDTdf1UDLQQVDYiPoRdQij1YFSovVe+K7ALZTXh" +
+  "+Bzpxyjfu2iD2SBBEPmlfWLGD+RGaKNjMGEwHQYDVR0OBBYEFJph0I3Zn0r0FSiBDSV+MiqDP5rXMB8GA1UdIwQY" +
+  "MBaAFJph0I3Zn0r0FSiBDSV+MiqDP5rXMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgIEMAoGCCqGSM49" +
+  "BAMCA0gAMEUCID4WwaWAeIzliw3b5IW5iIVJELrfMSmbhvr1TlPmu1c2AiEA810EFmygEPIzUUb5PmyjtJauiyuU" +
+  "fW5cUNSFajUmfyI=";
+const FINTO_MEZZO_NON_CA =
+  "MIIBizCCATKgAwIBAgIUGWrSqKzlbnjGqUEwg9BZRxQV2OIwCgYIKoZIzj0EAwIwFzEVMBMGA1UEAwwMUmFkaWNl" +
+  "IGZpbnRhMB4XDTI2MTAzMTA4NDg0NloXDTQ2MTAyNjA4NDg0NlowIzEhMB8GA1UEAwwYU3ZpbHVwcGF0b3JlLCBu" +
+  "b24gdW5hIENBMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1rOh7lJc2NwKN6DC+e6bxrN0ciOJDmpjqi9Fh+/C" +
+  "6kXnwREpFPXneKoESZuoLvZLxjWi7pwg4An/0+1GpmjQNKNQME4wDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQUuyJB" +
+  "KTI0svnFnq9c4iqBlWfF3+YwHwYDVR0jBBgwFoAUmmHQjdmfSvQVKIENJX4yKoM/mtcwCgYIKoZIzj0EAwIDRwAw" +
+  "RAIgNfqa5csg2Prbw53po/sOvA4nwMsde6bASrplk7JiYsoCIBeOvXcSJc2lESmkA11NawiUgfAglAj3bC1m9Nj7" +
+  "47kY";
+const FINTA_FOGLIA =
+  "MIIBOTCB4AIUAz7B4AQLXub0dlIO9+fv2TGdU70wCgYIKoZIzj0EAwIwIzEhMB8GA1UEAwwYU3ZpbHVwcGF0b3Jl" +
+  "LCBub24gdW5hIENBMB4XDTI2MTAzMTA4NDg0NloXDTQ2MTAyNjA4NDg0NlowHDEaMBgGA1UEAwwRRm9nbGlhIGZh" +
+  "YmJyaWNhdGEwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAQbIjRZDti8NPznLO2iVrvuAhkj40S0RzL4Hx3lR3us" +
+  "Bv2iTwIEyuvzl9UuBQibhg5acHkGTRKPfCWxscVBnRsEMAoGCCqGSM49BAMCA0gAMEUCIQCHxyGc2mKCkPMn2x0d" +
+  "kPfJkMNRHCOjvRfaZP4y6ERknAIgCU0KZn/iWB+eZa3ksOd5aAC/OFvRrq3j4h1znIIPqW0=";
+const CHIAVE_DELLA_FINTA_FOGLIA = `-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgJeHpKTWscOBt+bZV
+dUAwLpaBzEfS+WeSyLsJNtsRANuhRANCAAQbIjRZDti8NPznLO2iVrvuAhkj40S0
+RzL4Hx3lR3usBv2iTwIEyuvzl9UuBQibhg5acHkGTRKPfCWxscVBnRsE
+-----END PRIVATE KEY-----`;
+
+test("una catena di Apple col certificato di mezzo che non e' una CA non passa", () => {
+  const jws = (x5c, chiave = CHIAVE_DELLA_FINTA_FOGLIA) => {
+    const testa = Buffer.from(JSON.stringify({ alg: "ES256", x5c })).toString("base64url");
+    const corpo = Buffer.from(JSON.stringify({ notificationType: "FABBRICATA" })).toString(
+      "base64url",
+    );
+    const firma = sign("sha256", Buffer.from(`${testa}.${corpo}`), {
+      key: createPrivateKey(chiave),
+      dsaEncoding: "ieee-p1363",
+    }).toString("base64url");
+    return `${testa}.${corpo}.${firma}`;
+  };
+  assert.throws(
+    () => verificaLaJwsDiApple(jws([FINTA_FOGLIA, FINTO_MEZZO_NON_CA, FINTA_RADICE]), RADICE_FINTA),
+    /risposta-apple-catena-rotta/,
+  );
+  /* Apple firma sempre con tre certificati: ne' due, ne' quattro. */
+  assert.throws(
+    () => verificaLaJwsDiApple(jws([FINTO_MEZZO_NON_CA, FINTA_RADICE]), RADICE_FINTA),
+    /risposta-apple-senza-catena/,
+  );
+  assert.throws(
+    () =>
+      verificaLaJwsDiApple(
+        jws([FINTA_FOGLIA, FINTO_MEZZO_NON_CA, FINTA_RADICE, FINTA_RADICE]),
+        RADICE_FINTA,
+      ),
+    /risposta-apple-senza-catena/,
+  );
+  /* La catena di prova buona, foglia-intermedio-radice, passa ancora. */
+  const buona = verificaLaJwsDiApple(
+    jws([CERT_FOGLIA, CERT_MEZZO, CERT_RADICE], CHIAVE_DELLA_FOGLIA),
+    RADICE_DI_PROVA,
+  );
+  assert.equal(buona.notificationType, "FABBRICATA");
+  /* E con la radice vera di Apple servono anche le estensioni dell'App Store:
+   * una catena di prova (senza) non passa nemmeno se avesse quella radice. */
+  assert.throws(
+    () => verificaLaJwsDiApple(jws([CERT_FOGLIA, CERT_MEZZO, CERT_RADICE], CHIAVE_DELLA_FOGLIA)),
+    /risposta-apple-(catena-rotta|radice-sconosciuta)/,
+  );
+});
 
 /* ─── Gli avvisi dei negozi ──────────────────────────────────────────────── */
 

@@ -226,6 +226,7 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
 
   /// Se in questo momento il menu copre quello che c'e' sotto.
   bool _copre = false;
+  bool _copreTutta = false;
 
   bool get aperta => _molla.value > 0.02;
 
@@ -262,6 +263,7 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
     /* Il menu se ne va, e quello che aveva spostato si rimette a posto: se no
      * la plancia resta a non prendere tocchi. */
     if (_copre) widget.daParte.siFaDaParte(false);
+    if (_copreTutta) widget.daParte.copertaDelTutto(false);
     _molla.dispose();
     _scorrimento.dispose();
     _scritto.dispose();
@@ -377,6 +379,13 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
    *
    * Si guarda a ogni scatto dell'animazione e a ogni ridisegno. */
   void _seIlMenuCopre() {
+    /* Aperto fino in fondo: la plancia dietro si toglie dalla scena, e il
+     * menu scorre senza scatti (`planciaCopertaDelTutto`). */
+    final tutta = widget.sopraLaPlancia && _molla.value >= 0.999;
+    if (tutta != _copreTutta) {
+      _copreTutta = tutta;
+      widget.daParte.copertaDelTutto(tutta);
+    }
     final copre = widget.sopraLaPlancia && _molla.value > 0.02;
     if (copre == _copre) return;
     _copre = copre;

@@ -356,7 +356,11 @@
 /* La revisione 74 aggiunge la Salute (`cd_salute`): l'obiettivo dei passi,
  * i sensori scelti per ogni misura e i nomi delle persone. Sono scelte della
  * casa, e si vedono uguali dal telefono e dal tablet. */
-export const CONFIG_KEYS_REVISION = 74;
+/* La revisione 75 aggiunge la «Casa 3D» (`cd_casa3d`): la casa in tre
+ * dimensioni, coi suoi piani, le stanze, gli arredi, i colori e i
+ * dispositivi collegati alle loro entita'. Le foto da cui nasce non ci sono:
+ * restano sul dispositivo che le ha caricate. */
+export const CONFIG_KEYS_REVISION = 75;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -578,6 +582,7 @@ export const CONFIG_KEYS = Object.freeze([
   "cd_quick_actions",
   "cd_muro",
   "cd_occhio",
+  "cd_casa3d",
   "cd_navbar_order",
   // La barra a scomparsa o ferma e' una scelta della plancia, non del
   // dispositivo che l'ha fatta: chi la mette ferma sul telefono se la ritrova

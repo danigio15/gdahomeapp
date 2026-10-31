@@ -39,8 +39,15 @@
 
 import { CasaIrraggiungibile } from "./casa.js";
 import { eUnaCommissione, no } from "./commissioni.js";
-import { passaLaDogana } from "./dogana.js";
+import { passaLaDogana, senzaIGettoniDelleTelecamere } from "./dogana.js";
 import { NOME } from "./marchio.js";
+
+/* Quanti messaggi una pagina puo' mandare: gli stessi di un telefono
+ * (`ponte.js`). Una plancia vera ne manda qualche decina all'avvio e poi
+ * pochi; una che ne manda migliaia al secondo non e' una plancia, e ogni suo
+ * messaggio e' lavoro per Home Assistant. */
+const MESSAGGI_AL_SECONDO = 50;
+const RAFFICA = 600;
 
 function leggi(testo) {
   try {
@@ -83,8 +90,25 @@ export class Cucitura {
     /* Se chi guarda amministra, chiesto a Home Assistant quando il filo si
      * alza: vedi `_amministra`. */
     this._amministraAllaStretta = false;
+    this._gettoni = RAFFICA;
+    this._ultimoGettone = Date.now();
     presa.onMessaggio = (testo) => this._dallaPagina(testo);
     presa.onChiusa = () => this._laPaginaSeNEAndata();
+    /* Un utente tolto o spento in Home Assistant non resta dentro: come i
+     * telefoni (`ponte.js`, `_fuoriChiNonCE`). Prima la plancia aperta da lui
+     * restava cucita e riceveva ancora tutta la casa. */
+    this._smettiDiGuardare = chiGuarda
+      ? (utenti?.quandoCambia?.((elenco) => this._seNonCEPiu(elenco)) ?? null)
+      : null;
+  }
+
+  /* Un elenco vuoto e' una risposta strana, non una sentenza: si lascia. */
+  _seNonCEPiu(elenco) {
+    if (this.chiusa || !Array.isArray(elenco) || elenco.length === 0) return;
+    const vivo = elenco.some((uno) => uno.id === this.chiGuarda && uno.attivo !== false);
+    if (vivo) return;
+    this.registro.attenzione("la plancia era aperta da un utente che non c'e' piu': chiusa");
+    this.chiudi(1008, "l'utente non c'e' piu'");
   }
 
   /* Si apre il filo verso Home Assistant e si dice alla pagina che e'
@@ -144,8 +168,25 @@ export class Cucitura {
     return secondi < 120 ? `${secondi} s` : `${Math.round(secondi / 60)} min`;
   }
 
+  _cePosto() {
+    const ora = Date.now();
+    this._gettoni = Math.min(
+      RAFFICA,
+      this._gettoni + ((ora - this._ultimoGettone) / 1000) * MESSAGGI_AL_SECONDO,
+    );
+    this._ultimoGettone = ora;
+    if (this._gettoni < 1) return false;
+    this._gettoni -= 1;
+    return true;
+  }
+
   _dallaPagina(testo) {
     if (this.chiusa) return;
+    if (!this._cePosto()) {
+      this.registro.attenzione("la plancia ha mandato troppi messaggi: chiusa");
+      this.chiudi(1008, "troppi messaggi");
+      return;
+    }
     /* Un `auth` che arriva lo stesso si lascia cadere: qui non c'e' niente da
      * autenticare, e rispondergli «no» chiuderebbe una pagina che va bene. */
     if (eUnaCommissione(testo)) {
@@ -231,8 +272,18 @@ export class Cucitura {
       });
   }
 
+  /* Anche qui i gettoni delle telecamere che chi guarda non vede non
+   * arrivano alla pagina (`dogana.js`). Chi amministra le vede tutte. */
   _allaPagina(testo) {
     if (this.chiusa) return;
+    if (typeof testo === "string" && testo.includes("token") && !this._amministra()) {
+      const chiuse = this.commissioni?.telecamereChiuse?.(
+        this.chiGuarda || "",
+        this.utenti?.amministratoreSubito?.(this.chiGuarda || "") ?? null,
+      );
+      this.presa.manda(senzaIGettoniDelleTelecamere(testo, chiuse));
+      return;
+    }
     this.presa.manda(testo);
   }
 
@@ -252,6 +303,8 @@ export class Cucitura {
   }
 
   chiudi(codice = 1000, perche = "") {
+    this._smettiDiGuardare?.();
+    this._smettiDiGuardare = null;
     if (this.chiusa) {
       this.filo?.chiudi();
       this.filo = null;

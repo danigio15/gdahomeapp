@@ -95,6 +95,8 @@ const STATI = [
   s("sensor.wallbox_sessione", "3.4", "kWh"),
   s("sensor.wallbox_sole_sessione", "42", "%"),
   s("sensor.wallbox_energia_oggi", "6.1", "kWh", { state_class: "total_increasing" }),
+  s("sensor.wallbox_tensione", "231", "V", { device_class: "voltage" }),
+  s("sensor.wallbox_temperatura", "34.5", "°C", { device_class: "temperature" }),
   s("sensor.rete_prelevata_oggi", "9.2", "kWh", { state_class: "total_increasing" }),
   s("select.evcc_modo", "smart", "", { options: ["off", "smart", "now"] }),
   s("select.evcc_sempre", "on", "", { options: ["off", "on", "once"] }),
@@ -145,6 +147,8 @@ const BYD = {
   "dm.ev_energia_sessione": "sensor.wallbox_sessione",
   "dm.ev_percentuale_solare_sessione": "sensor.wallbox_sole_sessione",
   "dm.ev_energia_wallbox_oggi": "sensor.wallbox_energia_oggi",
+  "dm.ev_tensione_wallbox": "sensor.wallbox_tensione",
+  "dm.ev_temperatura_wallbox": "sensor.wallbox_temperatura",
   "dm.ev_modalita_ricarica_evcc": "select.evcc_modo",
   "dm.ev_ricarica_sempre_evcc": "select.evcc_sempre",
 };
@@ -268,6 +272,23 @@ async function avvia(page, testInfo, { tema = "dark", nuova = true, attiva = "0"
           } else if (messaggio.type === "call_service") {
             window.__chiamate = [...(window.__chiamate || []), messaggio];
             risultato = {};
+          } else if (messaggio.type === "history/history_during_period") {
+            /* Un giorno di letture, una ogni mezz'ora, che sale e scende. */
+            const da = new Date(messaggio.start_time).getTime();
+            const a = new Date(messaggio.end_time).getTime();
+            const passo = Math.max((a - da) / 48, 60000);
+            risultato = Object.fromEntries(
+              messaggio.entity_ids.map((id) => {
+                const base = Number(elenco.find((uno) => uno.entity_id === id)?.state) || 0;
+                const righe = [];
+                for (let t = da, i = 0; t <= a; t += passo, i += 1)
+                  righe.push({
+                    s: String((base * (1 + 0.08 * Math.sin(i / 5))).toFixed(1)),
+                    lu: t / 1000,
+                  });
+                return [id, righe];
+              }),
+            );
           } else if (messaggio.type === "recorder/statistics_during_period") {
             const inizio = Math.floor(new Date(messaggio.start_time).getTime() / ORA) * ORA;
             const fine = new Date(messaggio.end_time).getTime();
@@ -425,6 +446,21 @@ for (const tema of ["dark", "light"])
     await expect(pagina.locator(".dm-na-modo")).toHaveText([/Spento/, /Intelligente/, /Fast/]);
     await expect(pagina.locator('.dm-na-modo[aria-pressed="true"]')).toContainText("Intelligente");
     await expect(pagina.locator('[data-na-sempre][aria-pressed="true"]')).toHaveText("Sempre");
+    /* E sotto, la tensione e la temperatura della wallbox. */
+    await expect(pagina.locator(".dm-na-wallbox .dm-na-tessera")).toHaveText([
+      /Tensione\s*231\s*V/,
+      /Temperatura\s*34,5\s*°C/,
+    ]);
+    /* Toccata, la temperatura apre il suo storico. */
+    await pagina.locator('.dm-na-wallbox [data-dm-storico="sensor.wallbox_temperatura"]').click();
+    await expect(page.locator("#history-modal")).toBeVisible();
+    await expect(page.locator("#history-modal")).toContainText("Temperatura");
+    await expect(page.locator("#history-modal")).toHaveAttribute(
+      "data-dm-history-entity",
+      "sensor.wallbox_temperatura",
+    );
+    await expect(page.locator("#history-modal")).toHaveAttribute("data-dm-history-loaded", "true");
+    await page.evaluate(() => window.forceClose("history-modal"));
     /* La notte e' la carta di sempre, spostata qui. */
     await expect(pagina.locator('[data-na-posto="notte"] #dm-rn')).toBeVisible();
     /* Lo storico si apre sull'ultima ricarica: quando, i suoi numeri, le ore. */

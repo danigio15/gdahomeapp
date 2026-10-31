@@ -3,8 +3,8 @@
 # E' gdahome — la plancia, il menu, la casa — con gdanav dentro come sezione,
 # e in Android Auto parte dalla mappa del navigatore con la casa dietro un
 # tasto (servizio di navigazione, non IOT), come ogni gdahome che si
-# pubblica. Stesso nome (`com.gdahome.gdahome`) e stessa chiave vera: e' il
-# pacchetto di un ramo di lavoro, da caricare nel test interno. Vedi
+# pubblica. Firmato con la chiave di prova (`com.gdahome.gdahome.prova`):
+# la chiave vera resta ai rilasci, dietro l'environment `negozio`. Vedi
 # `GDAHOME_NAVIGATORE` in `app/android/app/build.gradle.kts`.
 #
 # Gira solo sui rami `claude/**` e non pubblica niente, nemmeno su GitHub:
@@ -48,33 +48,16 @@ jobs:
       # provare deve avere quelli di adesso, non quelli del lucchetto.
       - run: flutter pub upgrade gdanav_app
 
-      # La chiave vera di gdahome, dagli stessi segreti dei rilasci (app.yml).
-      # Senza, il pacchetto si firma di prova e si chiama
-      # `com.gdahome.gdahome.prova`: si installa, ma nel Play Console non si
-      # carica.
+      # La chiave di prova, sempre. Questo pacchetto non va da nessuna parte:
+      # si costruisce per sapere che sta in piedi, e su GitHub non resta
+      # niente. La chiave vera di gdahome serve solo a chi carica nei negozi
+      # (app.yml, con l'environment `negozio`): qui, su ogni ramo di lavoro,
+      # sarebbe soltanto un segreto in piu' esposto al codice di quel ramo.
       - name: La chiave
         id: chiave
-        env:
-          CHIAVE: ${{ secrets.CHIAVE_ANDROID }}
-          PAROLA: ${{ secrets.CHIAVE_ANDROID_PASSWORD }}
-          PAROLA_DELLA_CHIAVE: ${{ secrets.CHIAVE_ANDROID_KEY_PASSWORD }}
-          COME_SI_CHIAMA: ${{ secrets.CHIAVE_ANDROID_ALIAS }}
         run: |
-          if [ -z "$CHIAVE" ] || [ -z "$PAROLA" ]; then
-            echo "vera=no" >> "$GITHUB_OUTPUT"
-            echo "GDAHOME_FIRMA_DI_PROVA=si" >> "$GITHUB_ENV"
-            echo "::warning::Mancano i segreti della chiave vera: pacchetto firmato di prova (com.gdahome.gdahome.prova), non caricabile nel Play Console."
-            exit 0
-          fi
-          dove="$RUNNER_TEMP/chiave.jks"
-          printf '%s' "$CHIAVE" | tr -d '[:space:]' | base64 -d > "$dove"
-          {
-            echo "storeFile=$dove"
-            echo "storePassword=$PAROLA"
-            echo "keyAlias=${COME_SI_CHIAMA:-gdahome}"
-            echo "keyPassword=${PAROLA_DELLA_CHIAVE:-$PAROLA}"
-          } > android/chiave.properties
-          echo "vera=si" >> "$GITHUB_OUTPUT"
+          echo "vera=no" >> "$GITHUB_OUTPUT"
+          echo "GDAHOME_FIRMA_DI_PROVA=si" >> "$GITHUB_ENV"
 
       # Il numero che chiede il Play Store deve crescere sempre. Si parte da
       # quello della versione in pubspec (1.6.7 → 1060700) e si aggiunge il

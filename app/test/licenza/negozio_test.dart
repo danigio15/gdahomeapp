@@ -17,6 +17,7 @@ const _token = 'token-play-della-prova-0123456789';
 
 class _GooglePlayFinto implements NegozioGdahome {
   final comprati = <String>[];
+  final conti = <String?>[];
   var completati = 0;
 
   /// Quelli che il negozio dice rimasti a meta', all'avvio.
@@ -47,7 +48,11 @@ class _GooglePlayFinto implements NegozioGdahome {
   @override
   Stream<List<PurchaseDetails>> get acquisti => _acquisti.stream;
   @override
-  Future<void> compra(String piano) async => comprati.add(piano);
+  Future<void> compra(String piano, {String? conto}) async {
+    comprati.add(piano);
+    conti.add(conto);
+  }
+
   @override
   Future<void> ripristina() async {}
   @override
@@ -109,6 +114,31 @@ void main() {
       await pumpEventQueue();
       expect(acquisti.inCorso, isFalse);
       expect(acquisti.errore, isNull);
+    },
+  );
+
+  test(
+    'si compra per la casa aperta: il negozio riceve il suo conto',
+    () async {
+      final negozio = _GooglePlayFinto();
+      final acquisti = GestoreDegliAcquisti(
+        negozio: negozio,
+        porta: ({required piattaforma, required prodotto, required ricevuta}) =>
+            fail('niente da portare alla casa'),
+        casa: () => 'casa_00000000000000000000000000000000',
+      );
+      await acquisti.avvia();
+      await acquisti.compra(pianoMensile);
+      expect(negozio.conti, ['5fdf9e6e-8349-4c1e-ab88-5760c721977f']);
+      /* Senza una casa si compra lo stesso, senza conto. */
+      final senza = GestoreDegliAcquisti(
+        negozio: negozio,
+        porta: ({required piattaforma, required prodotto, required ricevuta}) =>
+            fail('niente da portare alla casa'),
+      );
+      await senza.avvia();
+      await senza.compra(pianoMensile);
+      expect(negozio.conti.last, isNull);
     },
   );
 

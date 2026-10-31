@@ -149,3 +149,26 @@ test("senza Proxmox non c'e' niente", () => {
     [],
   );
 });
+
+test("il nodo dice il disco piu' caldo, e senza una sua temperatura non ne inventa", () => {
+  const [pve] = server().nodi;
+  assert.equal(pve.discoPiuCaldo.nome, "CT1000P3PSSD8");
+  assert.equal(pve.discoPiuCaldo.temperatura, 41);
+  assert.equal(pve.discoPiuCaldo.temperaturaEntita, "sensor.disk_pve_ct1000p3pssd8_temperature");
+  /* L'integrazione di Proxmox la temperatura del nodo non la da'. */
+  assert.equal(pve.temperatura, null);
+});
+
+test("sul nodo principale la temperatura della CPU e' quella del mini PC", async () => {
+  const { proxmoxMarkup } = await import("../src/sections/proxmox-section.js");
+  const html = proxmoxMarkup(server(), {
+    miniPc: { valore: 78.4, entita: "sensor.minipc_cpu_temperatura" },
+  });
+  assert.match(html, /data-dm-storico="sensor\.minipc_cpu_temperatura"/);
+  assert.match(html, /78 °C/);
+  /* Sopra i 75 °C si fa vedere. */
+  assert.match(html, /dm-px-cifra dm-px-avviso"[^>]*data-dm-storico="sensor\.minipc_cpu_temperatura"/);
+  assert.match(html, /41 °C<\/b><span>Disco più caldo/);
+  /* Senza il mini PC nel Config, la temperatura della CPU non c'e'. */
+  assert.doesNotMatch(proxmoxMarkup(server()), /Temperatura CPU/);
+});

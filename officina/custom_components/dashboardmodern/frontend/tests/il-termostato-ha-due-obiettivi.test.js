@@ -75,6 +75,23 @@ test("chi e' un termostato a coppia: i due numeri, il bit, o heat_cool senza sin
   assert.equal(eUnTermostatoACoppia({ hvac_modes: ["off", "heat"], temperature: 21 }), false);
   assert.equal(eUnTermostatoACoppia(null), false);
   assert.equal(eUnTermostatoACoppia({ target_temp_low: null, target_temp_high: "" }), false);
+  /* «Non ho alcun termostato configurato»: un condizionatore spento che
+   * dichiara l'obiettivo singolo e l'intervallo, coi due numeri vuoti e
+   * senza `temperature`, resta un condizionatore. */
+  assert.equal(
+    eUnTermostatoACoppia({
+      hvac_modes: ["off", "cool", "heat", "heat_cool", "dry", "fan_only"],
+      supported_features: 1 | 2 | 8 | 128 | 256,
+      target_temp_low: null,
+      target_temp_high: null,
+    }),
+    false,
+  );
+  /* Coi due numeri veri, invece, e' una coppia anche se dichiara il singolo. */
+  assert.equal(
+    eUnTermostatoACoppia({ supported_features: 1 | 2, target_temp_low: 20, target_temp_high: 25 }),
+    true,
+  );
 });
 
 test("la coppia del termostato e' sempre intera, qualunque sia la modalita'", () => {

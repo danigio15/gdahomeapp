@@ -753,3 +753,66 @@ export function perLaVia({
   if (SCRIVIBILI_PER_TUTTI.some((una) => sottoLaVia(via, una))) return null;
   return `${verbo} ${via} e' per chi amministra la casa`;
 }
+
+/* ─── I gettoni delle telecamere, nelle risposte ─────────────────────────
+ *
+ * La dogana guarda le domande; ma lo stato di una telecamera porta con se'
+ * il suo gettone (`attributes.access_token`, e `entity_picture` con
+ * `?token=`), e con quel gettone Home Assistant apre `camera_proxy` a
+ * chiunque, senza altro. Cosi' chi non poteva chiedere la telecamera se la
+ * trovava lo stesso dentro `get_states` o in un evento. Qui, per chi una
+ * telecamera non la deve vedere, quei gettoni escono dalle risposte prima di
+ * arrivare: in `get_states`, negli eventi `state_changed` e nella forma corta
+ * di `subscribe_entities` (`a`, `c`). Il resto dello stato resta: si vede che
+ * la telecamera c'e', non cosa guarda. */
+const UNA_TELECAMERA = /^(camera|image)\.[A-Za-z0-9_]+$/;
+const UN_ENTITA = /^[a-z_]+\.[A-Za-z0-9_]+$/;
+
+function togliIGettoni(nodo, entita, chiusa) {
+  if (Array.isArray(nodo)) {
+    let tolto = false;
+    for (const uno of nodo) if (togliIGettoni(uno, entita, chiusa)) tolto = true;
+    return tolto;
+  }
+  if (!nodo || typeof nodo !== "object") return false;
+  const qui = typeof nodo.entity_id === "string" ? nodo.entity_id : entita;
+  const daChiudere = chiusa(qui);
+  let tolto = false;
+  for (const [chiave, valore] of Object.entries(nodo)) {
+    if (daChiudere && chiave === "access_token") {
+      delete nodo[chiave];
+      tolto = true;
+    } else if (daChiudere && chiave === "entity_picture" && typeof valore === "string") {
+      const pulita = valore.replace(/([?&])token=[^&#]*&?/g, "$1").replace(/[?&]$/, "");
+      if (pulita !== valore) {
+        nodo[chiave] = pulita;
+        tolto = true;
+      }
+    } else if (valore && typeof valore === "object") {
+      if (togliIGettoni(valore, UN_ENTITA.test(chiave) ? chiave : qui, chiusa)) tolto = true;
+    }
+  }
+  return tolto;
+}
+
+/**
+ * Il messaggio di Home Assistant senza i gettoni delle telecamere chiuse a chi
+ * lo riceve. `chiuse` e' l'insieme delle telecamere che non vede (anche
+ * `TUTTE_CHIUSE`, che dice di si' a tutte); vuoto o assente: il messaggio
+ * passa com'e'. Un messaggio senza gettoni non si apre nemmeno.
+ */
+export function senzaIGettoniDelleTelecamere(testo, chiuse) {
+  if (!chiuse || !chiuse.size || typeof testo !== "string") return testo;
+  if (!testo.includes("access_token") && !testo.includes("token=")) return testo;
+  let detto;
+  try {
+    detto = JSON.parse(testo);
+  } catch (_errore) {
+    return testo;
+  }
+  const chiusa = (entita) =>
+    typeof entita === "string"
+      ? UNA_TELECAMERA.test(entita) && chiuse.has(entita)
+      : chiuse.size === Infinity;
+  return togliIGettoni(detto, undefined, chiusa) ? JSON.stringify(detto) : testo;
+}

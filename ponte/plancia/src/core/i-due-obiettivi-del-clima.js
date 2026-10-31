@@ -37,6 +37,8 @@
  * vuole leggere; la scelta pero' la fanno i numeri presenti, non il bit: un
  * termostato che dichiara la coppia e la lascia vuota non ha niente da
  * mostrare, e uno che la pubblica senza dichiararla la comanda lo stesso. */
+/** Il bit TARGET_TEMPERATURE: un obiettivo solo, in `temperature`. */
+export const CLIMA_CON_UN_OBIETTIVO = 1;
 export const CLIMA_CON_DUE_OBIETTIVI = 2;
 
 /* Le modalita' in cui la coppia e' la verita' anche quando c'e' il singolo. */
@@ -127,6 +129,15 @@ export function eUnTermostatoACoppia(attributi) {
   if (numero(attributi.target_temp_low) !== null || numero(attributi.target_temp_high) !== null)
     return true;
   const dichiarate = Number(attributi.supported_features);
+  /* Chi dichiara anche l'obiettivo singolo e ha i due numeri vuoti e' un
+   * condizionatore, non una coppia. Dal campo, ancora: «non ho alcun
+   * termostato configurato», e il condizionatore della camera da letto,
+   * spento, finiva nella linguetta Termostato coi due numeri a «--». Tanti
+   * condizionatori dichiarano tutte e due le cose; la coppia la fa chi ha i
+   * due numeri davvero (qui sopra), o chi l'obiettivo singolo non ce l'ha. */
+  const haIlSingolo =
+    Number.isFinite(dichiarate) && (dichiarate & CLIMA_CON_UN_OBIETTIVO) === CLIMA_CON_UN_OBIETTIVO;
+  if (haIlSingolo) return false;
   if (
     Number.isFinite(dichiarate) &&
     (dichiarate & CLIMA_CON_DUE_OBIETTIVI) === CLIMA_CON_DUE_OBIETTIVI

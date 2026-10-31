@@ -1089,3 +1089,34 @@ test("senza nessuno col mini video acceso, il video non comincia", async () => {
     banco.spegni();
   }
 });
+
+test("la voce di un ciclo: una frase da ascoltare, coi pezzi scelti", async () => {
+  const { voceDelCiclo } = await import("../src/parole-delle-notifiche.js");
+  const dati = {
+    nome: "Lavastoviglie",
+    conSole: true,
+    ciclo: { min: 45, kwh: 1.2, eur: 1.35, sole: 0.4 },
+  };
+  assert.equal(voceDelCiclo(dati, "it", { dentro: [] }), "Lavastoviglie ha finito.");
+  assert.equal(
+    voceDelCiclo(dati, "it", { dentro: ["durata", "kwh", "costo", "sole"] }),
+    "Lavastoviglie ha finito. Ci ha messo 45 minuti, ha consumato 1,20 chilowattora, per una spesa di 1,35 euro.",
+  );
+  /* Il sole lo dice solo lo stile elaborato. */
+  assert.equal(
+    voceDelCiclo(dati, "it", { stile: "elaborata", dentro: ["sole", "costo"] }),
+    "Lavastoviglie ha finito. Il 40 per cento dal sole, per una spesa di 1,35 euro.",
+  );
+  assert.equal(
+    voceDelCiclo({ ...dati, ciclo: { min: 60, kwh: 1, eur: 0, sole: 1 } }, "it", {
+      dentro: ["durata", "costo"],
+    }),
+    "Lavastoviglie ha finito. Ci ha messo un'ora, tutta col sole, quindi gratis.",
+  );
+  assert.equal(
+    voceDelCiclo(dati, "en", { dentro: ["durata", "kwh", "costo"] }),
+    "Lavastoviglie has finished. It took 45 minutes, it used 1.20 kilowatt hours, costing 1.35 euros.",
+  );
+  /* Senza misure, solo che ha finito. */
+  assert.equal(voceDelCiclo({ nome: "Forno", ciclo: null }), "Forno ha finito.");
+});
