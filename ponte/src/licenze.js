@@ -38,6 +38,10 @@
  * browser, leggendo la licenza da qui; il fuori casa, a suo tempo, lo chiude
  * il centralino (`docs/ACCENDERE-GLI-ACQUISTI.md`). E' la scelta del 29
  * settembre: «base funziona e anche addon funziona». `limitata` resta falso.
+ *
+ * Una regola sola la fa valere anche la casa, perche' l'app da sola non basta
+ * (un'app modificata la saltava): con Base all'app si serve la plancia
+ * principale e basta (`soloLaPrincipaleNellApp`).
  */
 
 import { EventEmitter } from "node:events";
@@ -225,6 +229,19 @@ export class Licenze extends EventEmitter {
    * il fuori casa lo chiudera' il centralino (vedi in cima). */
   get limitata() {
     return false;
+  }
+
+  /* L'unica regola di Base che la casa fa valere da se': all'app si serve la
+   * plancia principale e basta.
+   *
+   * Il resto resta com'era deciso («base funziona e anche addon funziona»:
+   * dentro Home Assistant le plance sono tutte, il fuori casa lo decide il
+   * centralino). Ma questa regola la metteva solo l'app, leggendo la licenza
+   * da qui: un'app modificata chiedeva la seconda plancia per nome e la
+   * riceveva. Adesso la chiede e si sente dire di no anche dal ponte. Con le
+   * licenze spente e' sempre falso. */
+  get soloLaPrincipaleNellApp() {
+    return this.attive && !this.premium;
   }
 
   /* Il gettone da dare al centralino: quello di gdahome, cosi' com'e'. Lo

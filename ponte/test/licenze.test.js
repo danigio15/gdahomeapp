@@ -750,6 +750,49 @@ test("senza limiti l'app vede tutte le plance, com'era", async () => {
   }
 });
 
+test("con Base vera il ponte da' all'app solo la principale, anche se l'app chiede la seconda", async () => {
+  const cartella = unPosto();
+  try {
+    let ora = ADESSO;
+    const { licenze } = leLicenze({
+      adesso: () => ora,
+      risposte: {
+        "/v1/licenze/casa": conGettoni({ gdahome: unGettone({ sog: CASA }, { adesso: ADESSO }) }),
+      },
+    });
+    const plance = new Plance({ cartella, registro: ZITTO, limitata: () => false });
+    plance.aggiungi("Mare");
+    const plancia = {
+      cE: true,
+      descrizione: (quale) => ({ profilo: quale?.profilo ?? "primary" }),
+    };
+    const commissioni = new Commissioni({ registro: ZITTO, plance, plancia, licenze });
+    const dallApp = { chiChiede: CHI_DI_PROVA, dalTelefono: true };
+    const chiedi = (come) =>
+      commissioni.rispondi({ id: 1, type: "ponte/plancia", profilo: "mare" }, come);
+
+    /* Premium: la seconda arriva. */
+    await licenze.rinnova();
+    assert.equal(licenze.soloLaPrincipaleNellApp, false);
+    assert.equal((await chiedi(dallApp)).success, true);
+
+    /* Il gettone e' scaduto: Base. L'app modificata la chiede per nome e il
+     * ponte dice di no; dentro Home Assistant resta tutto com'era. */
+    ora = ADESSO + 9 * GIORNO;
+    assert.equal(licenze.soloLaPrincipaleNellApp, true);
+    assert.equal((await chiedi(dallApp)).error?.code, "premium-richiesto");
+    assert.equal((await chiedi({ chiChiede: CHI_DI_PROVA })).success, true);
+    assert.equal(licenze.limitata, false, "il resto di Base non cambia");
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("a licenze spente l'app vede tutte le plance", () => {
+  const { licenze } = leLicenze({ chiave: "" });
+  assert.equal(licenze.soloLaPrincipaleNellApp, false);
+});
+
 test("ponte/licenza/* li chiede qualunque telefono abbinato, non solo chi amministra", async () => {
   const chiesti = [];
   const licenze = {

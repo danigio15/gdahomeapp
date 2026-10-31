@@ -1969,7 +1969,7 @@ export class Commissioni {
   /* Se questa casa sta nei limiti di gdahome Base. Senza licenze, no. */
   _limitata() {
     try {
-      return this.licenze?.limitata === true;
+      return this.licenze?.limitata === true || this.licenze?.soloLaPrincipaleNellApp === true;
     } catch (_errore) {
       return false;
     }
