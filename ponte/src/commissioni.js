@@ -302,6 +302,10 @@ const AGGIORNAMENTI_LOGO = "ponte/aggiornamenti/logo";
 const AGGIORNAMENTI_NOTE = "ponte/aggiornamenti/note";
 
 const TIMER_ELENCO = "dashboardmodern/clima/timer/list";
+/* Le unita' che lo spegnimento programmato puo' spegnere: quelle che la
+ * pagina del clima mette nella casella dell'unita'. */
+const UN_CLIMA_DA_SPEGNERE =
+  /^(climate|switch|input_boolean|fan|humidifier|water_heater)\.[a-z0-9_]+$/;
 const TIMER_METTI = "dashboardmodern/clima/timer/set";
 const TIMER_TOGLI = "dashboardmodern/clima/timer/clear";
 
@@ -1085,7 +1089,7 @@ export class Commissioni {
       return this._chat(detto);
     if (DI_CHI_RISPONDE.has(tipo)) return this._laConsoleDellaChat(detto);
     if (tipo === TIMER_ELENCO || tipo === TIMER_METTI || tipo === TIMER_TOGLI)
-      return this._timerDelClima(detto);
+      return this._timerDelClima(detto, chiChiede);
     if (
       tipo === AGGIORNAMENTI_ELENCO ||
       tipo === AGGIORNAMENTI_INSTALLA ||
@@ -1366,14 +1370,24 @@ export class Commissioni {
   /* Lo spegnimento programmato: le stesse tre risposte dell'integrazione.
    * Un'entita' e' una parola con un punto dentro; i minuti vanno da zero
    * (togli il timer) a settecentoventi, come lo slider. */
-  _timerDelClima(detto) {
+  /* SOLO CHI E' ENTRATO, e solo su quello che il timer sa spegnere.
+   *
+   * Lo spegnimento parte piu' tardi col gettone del Supervisor, e sopravvive
+   * a chi l'ha chiesto: un telefono senza utente — abbinato prima che i
+   * telefoni si intestassero — poteva programmare un `turn_off` su qualunque
+   * entita' della casa (una serratura, un allarme, un interruttore della
+   * rete). Adesso serve un utente, e il timer vale per le unita' del clima:
+   * i domini che la pagina del clima mette in quella casella. */
+  _timerDelClima(detto, chiChiede = "") {
     const id = detto.id ?? null;
     const timer = this.spegnimento;
     if (!timer) return no(id, "unknown_command", `non conosco ${detto.type}`);
+    if (!String(chiChiede || "").trim())
+      return no(id, "unauthorized", "il timer lo usa solo chi e' entrato");
     try {
       if (detto.type === TIMER_ELENCO) return si(id, { scadenze: timer.scadenze() });
       const entita = typeof detto.entity_id === "string" ? detto.entity_id.trim() : "";
-      if (entita.length < 3 || entita.length > 255 || !entita.includes("."))
+      if (entita.length < 3 || entita.length > 255 || !UN_CLIMA_DA_SPEGNERE.test(entita))
         return no(id, "invalid_format", "entity_id non valido");
       if (detto.type === TIMER_TOGLI) {
         timer.annulla(entita);

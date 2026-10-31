@@ -185,37 +185,76 @@ test("dal filo: list, set e clear rispondono come l'integrazione", async () => {
     ])
       assert.equal(commissioni.riconosce({ type: tipo }), true);
 
-    const vuoto = await commissioni.rispondi({ id: 1, type: "dashboardmodern/clima/timer/list" });
+    const chi = { chiChiede: "a1b2c3d4e5f60718293a4b5c6d7e8f90" };
+    const vuoto = await commissioni.rispondi(
+      { id: 1, type: "dashboardmodern/clima/timer/list" },
+      chi,
+    );
     assert.deepEqual(vuoto, { id: 1, type: "result", success: true, result: { scadenze: {} } });
 
-    const messo = await commissioni.rispondi({
-      id: 2,
-      type: "dashboardmodern/clima/timer/set",
-      entity_id: "climate.camera",
-      minuti: 45,
-    });
+    const messo = await commissioni.rispondi(
+      {
+        id: 2,
+        type: "dashboardmodern/clima/timer/set",
+        entity_id: "climate.camera",
+        minuti: 45,
+      },
+      chi,
+    );
     assert.equal(messo.success, true);
     assert.equal(messo.result.entity_id, "climate.camera");
     assert.equal(messo.result.scadenza, b.adesso() + 45 * 60_000);
 
-    const elenco = await commissioni.rispondi({ id: 3, type: "dashboardmodern/clima/timer/list" });
+    const elenco = await commissioni.rispondi(
+      { id: 3, type: "dashboardmodern/clima/timer/list" },
+      chi,
+    );
     assert.deepEqual(elenco.result.scadenze, { "climate.camera": messo.result.scadenza });
 
-    const storto = await commissioni.rispondi({
-      id: 4,
-      type: "dashboardmodern/clima/timer/set",
-      entity_id: "climate.camera",
-      minuti: 9999,
-    });
+    const storto = await commissioni.rispondi(
+      {
+        id: 4,
+        type: "dashboardmodern/clima/timer/set",
+        entity_id: "climate.camera",
+        minuti: 9999,
+      },
+      chi,
+    );
     assert.equal(storto.success, false);
     assert.equal(storto.error.code, "invalid_format");
 
-    const tolto = await commissioni.rispondi({
-      id: 5,
-      type: "dashboardmodern/clima/timer/clear",
-      entity_id: "climate.camera",
-    });
+    const tolto = await commissioni.rispondi(
+      {
+        id: 5,
+        type: "dashboardmodern/clima/timer/clear",
+        entity_id: "climate.camera",
+      },
+      chi,
+    );
     assert.deepEqual(tolto.result, { removed: true });
+    assert.deepEqual(spegnimento.scadenze(), {});
+
+    /* Solo chi e' entrato, e solo sulle unita' del clima: un telefono senza
+     * utente non programma niente, e nessuno spegne una serratura col timer. */
+    const senzaUtente = await commissioni.rispondi({
+      id: 6,
+      type: "dashboardmodern/clima/timer/set",
+      entity_id: "climate.camera",
+      minuti: 10,
+    });
+    assert.equal(senzaUtente.error.code, "unauthorized");
+    for (const entity_id of [
+      "lock.porta",
+      "alarm_control_panel.casa",
+      "climate.camera; x",
+      "switch",
+    ]) {
+      const fuori = await commissioni.rispondi(
+        { id: 7, type: "dashboardmodern/clima/timer/set", entity_id, minuti: 10 },
+        chi,
+      );
+      assert.equal(fuori.error.code, "invalid_format", entity_id);
+    }
     assert.deepEqual(spegnimento.scadenze(), {});
 
     /* Senza il modulo la commissione non si riconosce: va in Home Assistant,
