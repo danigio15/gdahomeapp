@@ -393,3 +393,77 @@ test("senza casa la plancia resta Casa 3D e invita a crearla", async ({ page }, 
   await casa.locator('.c3-da-creare [data-c3s="crea"]').click();
   await expect(page.locator("#dm-c3c")).toBeVisible({ timeout: 20_000 });
 });
+
+/* La procedura «Crea la tua casa» aperta su una plancia Casa 3D vuota. */
+async function apriLaProcedura(page, testInfo) {
+  test.setTimeout(300_000);
+  await page.addInitScript(() => {
+    window.__GDAHOME_PREMIUM__ = true;
+  });
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
+  await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
+  await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true, null, {
+    timeout: 60_000,
+  });
+  await page.evaluate(() => {
+    localStorage.setItem("cd_casa3d", JSON.stringify({ attiva: true, piani: [] }));
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
+  });
+  await page.locator('#dm-casa3d .c3-da-creare [data-c3s="crea"]').click({ timeout: 30_000 });
+  const crea = page.locator("#dm-c3c");
+  await expect(crea).toBeVisible({ timeout: 20_000 });
+  return crea;
+}
+
+const fotoDiretta = async (page, testInfo, nome) => {
+  const dove = foto(testInfo, nome);
+  if (dove) await page.screenshot({ path: dove });
+};
+
+/* «Manca la possibilità di crearla direttamente sulla plancia se non ho
+ * nulla da caricare»: le misure del piano, un contorno di muri in scala, e
+ * le stanze si dividono col «Muro dritto». */
+test("senza planimetria la casa si disegna qui", async ({ page }, testInfo) => {
+  const crea = await apriLaProcedura(page, testInfo);
+  const fai = crea.locator('[data-c3c="amano"]');
+  await expect(fai).toBeDisabled();
+  await crea.locator('[data-c3c-mano="w"]').fill("12");
+  await crea.locator('[data-c3c-mano="h"]').fill("10");
+  await expect(fai).toBeEnabled();
+  await fotoDiretta(page, testInfo, "crea-a-mano-misure");
+  await fai.click();
+  await expect(crea.locator('[data-c3c-strumento="dritto"]')).toHaveClass(/si/, {
+    timeout: 30_000,
+  });
+  await expect(crea.locator(".c3c-pannello")).toContainText("Trovati 1 ambienti");
+  /* Un muro dritto a meta': le stanze diventano due. */
+  const tela = crea.locator(".c3c-tela");
+  const b = await tela.boundingBox();
+  await page.mouse.move(b.x + b.width * 0.5, b.y + b.height * 0.1);
+  await page.mouse.down();
+  await page.mouse.move(b.x + b.width * 0.52, b.y + b.height * 0.5, { steps: 4 });
+  await page.mouse.move(b.x + b.width * 0.51, b.y + b.height * 0.9, { steps: 4 });
+  await page.mouse.up();
+  await expect(crea.locator(".c3c-pannello")).toContainText("Trovati 2 ambienti", {
+    timeout: 20_000,
+  });
+  await fotoDiretta(page, testInfo, "crea-a-mano-muri");
+});
+
+/* Il DWG vero si prova solo col file a portata di mano (DM_DWG=percorso):
+ * le planimetrie vere non stanno nella repository. */
+test("un DWG coi piani affiancati: si sceglie il piano, scala e nomi dal disegno", async ({
+  page,
+}, testInfo) => {
+  test.skip(!process.env.DM_DWG, "serve DM_DWG col percorso di un file .dwg");
+  const crea = await apriLaProcedura(page, testInfo);
+  await crea.locator('[data-c3c-file="dwg"]').setInputFiles(process.env.DM_DWG);
+  const piani = crea.locator(".c3c-dwg-piano");
+  await expect(piani.first()).toBeVisible({ timeout: 120_000 });
+  await fotoDiretta(page, testInfo, "crea-dwg-piani");
+  await piani.nth(Number(process.env.DM_DWG_PIANO || 1)).click();
+  await expect(crea.locator('[data-c3c-strumento="dritto"]')).toBeVisible({ timeout: 60_000 });
+  await fotoDiretta(page, testInfo, "crea-dwg-muri");
+  await crea.locator('[data-c3c="avanti"]').click();
+  await fotoDiretta(page, testInfo, "crea-dwg-stanze");
+});

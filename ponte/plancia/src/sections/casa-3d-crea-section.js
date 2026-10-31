@@ -43,6 +43,7 @@ import {
   posaDiRipiego,
 } from "../core/crea-casa.js";
 import { PASSO, grigliaDeiMuri, inchiostro, riconosciDaFoto, stimaInclinazione } from "../core/pianta-da-foto.js";
+import { eNomeDiStanza, nomeDaScritta, pezziDelDisegno, pianiDelDisegno } from "../core/pianta-da-dwg.js";
 import { leStanzeRicordate } from "../core/le-stanze-di-home-assistant.js";
 import { premiumDellaCasa, premiumRicordato } from "./plancia-a-muro-section.js";
 import { puoConfigurare } from "./la-config-e-di-chi-la-amministra-section.js";
@@ -114,6 +115,13 @@ function statoNuovo(salvata, livello = 0) {
     esterno: { ...e, foto: null, scelta: "facciata" },
     lavoro: "",
     avviso: "",
+    /* Dal DWG: i piani trovati nel disegno (se piu' d'uno si sceglie), e i
+     * nomi delle stanze scritti nel disegno, in pixel della tela. */
+    dwg: null,
+    etichette: [],
+    /* «Disegnala qui»: le misure del contorno, in metri. */
+    aMano: { w: "", h: "" },
+    inizio: null,
   };
 }
 
@@ -157,6 +165,22 @@ const VENDOR = (() => {
   return TF.slice(0, TF.lastIndexOf("/") + 1);
 })();
 void COCO;
+
+/* LibreDWG (GPL-3, vedi legacy/vendor/libredwg/LEGGIMI.txt): si scarica solo
+ * quando si sceglie un DWG, ed e' grosso (11 MB). Stessa strada del resto. */
+const LIBREDWG_JS = (() => {
+  try {
+    return new URL("../../legacy/vendor/libredwg/dist/libredwg-web.js", import.meta.url).href;
+  } catch (_errore) {
+    return "../../legacy/vendor/libredwg/dist/libredwg-web.js";
+  }
+})();
+const LIBREDWG = (() => {
+  const qui = String(import.meta.url || "");
+  const taglio = qui.indexOf("/dashboardmodern_static/");
+  if (taglio >= 0) return `${qui.slice(0, taglio)}/dashboardmodern_static/legacy/vendor/libredwg/`;
+  return LIBREDWG_JS.slice(0, LIBREDWG_JS.length - "dist/libredwg-web.js".length);
+})();
 
 function copione(src, pronto) {
   if (pronto()) return Promise.resolve(true);
@@ -285,6 +309,7 @@ function disegnaLaTela() {
   sopra.innerHTML = "";
   if (S.premium !== true) return vuota("");
   if (S.passo <= P.scala) {
+    if (S.dwg) return vuota(t("Scegli il piano del disegno", "Choose the floor from the drawing"));
     if (!S.dritta) return vuota(t("Carica la planimetria", "Upload the floor plan"));
     const g = adatta(S.dritta.width, S.dritta.height), s = state.vista.s;
     g.drawImage(S.dritta, 0, 0, pezzo(".c3c-tela").width, pezzo(".c3c-tela").height);
@@ -537,8 +562,21 @@ function pPlanimetria() {
       `<button type="button" class="c3c-carica" data-c3c="carica"><b>📄</b>${esc(t("Carica una foto della planimetria", "Upload a photo of the floor plan"))}<span class="c3c-piccolo">${esc(
         t("va bene anche la foto col telefono della planimetria catastale (per un PDF, una schermata)", "a phone photo of the cadastral plan is fine too (for a PDF, a screenshot)"),
       )}</span></button>
+      <button type="button" class="c3c-carica" data-c3c="caricadwg"><b>📐</b>${esc(t("Carica il disegno DWG", "Upload the DWG drawing"))}<span class="c3c-piccolo">${esc(
+        t("il file dell'architetto o del geometra: la scala e i nomi delle stanze li prendo dal disegno", "the architect's file: scale and room names come from the drawing"),
+      )}</span></button>
       ${S.lavoro ? `<div class="c3c-lavoro">⏳ ${esc(S.lavoro)}</div>` : ""}
-      ${S.dritta ? nota(`✓ ${esc(t("Raddrizzata di", "Straightened by"))} ${esc(numero(Math.abs(S.angolo)))}° · ${S.dritta.width}×${S.dritta.height} px`) : ""}`,
+      ${S.avviso ? `<div class="c3c-lavoro">⚠️ ${esc(S.avviso)}</div>` : ""}
+      ${dwgScelta()}
+      ${S.dritta && !S.dwg ? nota(`✓ ${esc(t("Raddrizzata di", "Straightened by"))} ${esc(numero(Math.abs(S.angolo)))}° · ${S.dritta.width}×${S.dritta.height} px`) : ""}`,
+    ) +
+    scheda(
+      `✏️ <b>${esc(t("Non hai una planimetria?", "No floor plan?"))}</b>`,
+      `${nota(esc(t("Disegnala qui: scrivi le misure esterne del piano, poi dividi le stanze col «Muro dritto».", "Draw it here: enter the floor's outer size, then split the rooms with the «Straight wall».")))}
+      <div class="c3c-mano"><label class="c3c-metri"><input class="c3c-in" data-c3c-mano="w" inputmode="decimal" value="${esc(S.aMano.w)}" placeholder="${esc(t("larghezza, es. 12", "width, e.g. 12"))}"> <span>m</span></label>
+      <span aria-hidden="true">×</span>
+      <label class="c3c-metri"><input class="c3c-in" data-c3c-mano="h" inputmode="decimal" value="${esc(S.aMano.h)}" placeholder="${esc(t("profondità, es. 10", "depth, e.g. 10"))}"> <span>m</span></label></div>
+      <button type="button" class="c3c-carica c3c-carica-piccola" data-c3c="amano"${misureAMano() ? "" : " disabled"}><b>✏️</b>${esc(t("Disegnala qui", "Draw it here"))}</button>`,
     ) +
     scheda(
       `💡 <b>${esc(t("Consigli", "Tips"))}</b>`,
@@ -567,13 +605,16 @@ function pMuri() {
   const S = state.S, c = S.casa;
   const porte = c.aperture.filter((a) => a.tipo === "porta").length, fin = c.aperture.filter((a) => a.tipo === "finestra").length;
   const strumenti = [
+    ["dritto", "📏", t("Muro dritto", "Straight wall")],
     ["muro", "✏️", t("Muro", "Wall")],
     ["gomma", "🧽", t("Gomma", "Eraser")],
     ["porta", "🚪", t("Porta", "Door")],
     ["finestra", "🪟", t("Finestra", "Window")],
   ];
   const aiuto =
-    S.strumento === "muro"
+    S.strumento === "dritto"
+      ? t("Trascina da un punto all'altro: il muro viene dritto (orizzontale o verticale se ci sei vicino).", "Drag from one point to another: the wall comes out straight (snapped when close to level).")
+      : S.strumento === "muro"
       ? t("Trascina per disegnare un muro: divide due stanze unite.", "Drag to draw a wall: it splits two merged rooms.")
       : S.strumento === "gomma"
         ? t("Trascina per cancellare un pezzo di muro sbagliato.", "Drag to erase a wrong piece of wall.")
@@ -840,7 +881,7 @@ async function usaPlanimetria(src) {
   disegnaIlPannello();
   await new Promise((ok) => setTimeout(ok, 30));
   try {
-    let img = await immagine(src);
+    let img = typeof src === "string" ? await immagine(src) : src;
     const lato = Math.max(img.width, img.height);
     if (lato > 2400) {
       const k = 2400 / lato, c = tela2d(Math.round(img.width * k), Math.round(img.height * k));
@@ -849,19 +890,156 @@ async function usaPlanimetria(src) {
     }
     const c0 = tela2d(img.width, img.height), q = c0.getContext("2d");
     q.drawImage(img, 0, 0);
-    S.angolo = stimaInclinazione(q.getImageData(0, 0, c0.width, c0.height));
+    /* Un disegno (DWG, «Disegnala qui») e' gia' dritto: si raddrizzano solo
+     * le foto. */
+    S.angolo = typeof src === "string" ? stimaInclinazione(q.getImageData(0, 0, c0.width, c0.height)) : 0;
     const d = tela2d(img.width, img.height), r = d.getContext("2d");
     r.fillStyle = "#3b3a37";
     r.fillRect(0, 0, d.width, d.height);
     r.translate(d.width / 2, d.height / 2);
     r.rotate((S.angolo * Math.PI) / 180);
     r.drawImage(img, -img.width / 2, -img.height / 2);
-    Object.assign(S, { img, dritta: d, punti: [], metri: null, mpp: null, griglia: null, casa: null, nomi: {}, aree: {}, fuori: new Set(), foto: {}, manuali: [] });
+    Object.assign(S, { img, dritta: d, punti: [], metri: null, mpp: null, griglia: null, casa: null, nomi: {}, aree: {}, fuori: new Set(), foto: {}, manuali: [], etichette: [] });
   } catch (errore) {
     root.console?.warn?.("[DashboardModern] Casa 3D: planimetria", errore);
   }
   S.lavoro = "";
   disegna();
+}
+
+/* ── dal disegno: DWG e «Disegnala qui» ─────────────────────────────── */
+
+let libreDwg = null;
+async function caricaLibreDwg() {
+  if (!libreDwg)
+    libreDwg = import(/* @vite-ignore */ `${LIBREDWG}dist/libredwg-web.js`).then((m) =>
+      m.LibreDwg.create(`${LIBREDWG}wasm`).then((lib) => ({ lib, tipo: m.Dwg_File_Type })),
+    );
+  try {
+    return await libreDwg;
+  } catch (errore) {
+    libreDwg = null;
+    throw errore;
+  }
+}
+
+async function usaDwg(file) {
+  const S = state.S;
+  Object.assign(S, { dwg: null, avviso: "", lavoro: t("Leggo il disegno DWG…", "Reading the DWG drawing…") });
+  disegnaIlPannello();
+  try {
+    const [{ lib, tipo }, dati] = await Promise.all([caricaLibreDwg(), file.arrayBuffer()]);
+    const letto = lib.dwg_read_data(dati, tipo.DWG);
+    if (!letto) throw new Error("dwg");
+    let db;
+    try {
+      db = lib.convert(letto);
+    } finally {
+      lib.dwg_free(letto);
+    }
+    const piani = pianiDelDisegno(pezziDelDisegno(db), { insunits: Number(db?.header?.INSUNITS) || 0 });
+    S.lavoro = "";
+    if (!piani.length) {
+      S.avviso = t("Nel disegno non ho trovato una pianta: muri e linee mancano o stanno in blocchi.", "No floor plan found in the drawing: walls and lines are missing or inside blocks.");
+      return disegna();
+    }
+    if (piani.length === 1) return usaPianoDwg(piani[0]);
+    S.dwg = { piani: piani.map((p) => ({ ...p, anteprima: tavolaDelPiano(p, 260).tela.toDataURL("image/png") })) };
+    disegna();
+    nodo()?.querySelector(".c3c-dwg")?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+    return;
+  } catch (errore) {
+    root.console?.warn?.("[DashboardModern] Casa 3D: DWG", errore);
+    S.lavoro = "";
+    S.avviso = t("Questo DWG non si legge. Prova a salvarlo da AutoCAD in una versione più vecchia, o carica una foto.", "This DWG can't be read. Try saving it from AutoCAD as an older version, or upload a photo.");
+    return disegna();
+  }
+}
+
+/* Il piano del disegno su una tela bianca: muri neri, in scala nota. */
+function tavolaDelPiano(p, lungo = 2400) {
+  const margine = 0.6 / p.metriPerUnita;
+  const w = p.x1 - p.x0 + 2 * margine,
+    h = p.y1 - p.y0 + 2 * margine;
+  const ppu = lungo / Math.max(w, h);
+  const tela = tela2d(Math.max(8, Math.round(w * ppu)), Math.max(8, Math.round(h * ppu)));
+  const g = tela.getContext("2d");
+  const X = (x) => (x - p.x0 + margine) * ppu,
+    Y = (y) => (p.y1 + margine - y) * ppu;
+  g.fillStyle = "#fff";
+  g.fillRect(0, 0, tela.width, tela.height);
+  g.fillStyle = g.strokeStyle = "#000";
+  g.lineCap = g.lineJoin = "round";
+  g.lineWidth = Math.max(1.5, 0.035 * ppu / p.metriPerUnita);
+  for (const l of p.linee) {
+    g.beginPath();
+    l.forEach(([x, y], i) => (i ? g.lineTo(X(x), Y(y)) : g.moveTo(X(x), Y(y))));
+    g.stroke();
+  }
+  for (const c of p.piene) {
+    g.beginPath();
+    c.forEach(([x, y], i) => (i ? g.lineTo(X(x), Y(y)) : g.moveTo(X(x), Y(y))));
+    g.closePath();
+    g.fill();
+  }
+  const etichette = p.scritte.filter((e) => eNomeDiStanza(e.t)).map((e) => ({ t: nomeDaScritta(e.t), x: X(e.x), y: Y(e.y) }));
+  return { tela, mpp: p.metriPerUnita / ppu, etichette };
+}
+
+async function usaPianoDwg(p) {
+  const S = state.S;
+  if (!p) return;
+  const { tela, mpp, etichette } = tavolaDelPiano(p);
+  S.dwg = null;
+  await usaPlanimetria(tela);
+  return pronta(mpp, etichette);
+}
+
+/* Dopo un disegno la scala e' gia' nota: si va dritti ai muri. */
+function pronta(mpp, etichette = []) {
+  const S = state.S;
+  Object.assign(S, { mpp, etichette, avviso: "" });
+  S.passo = P.scala;
+  vaiAvanti();
+}
+
+function misureAMano() {
+  const S = state.S, n = (v) => parseFloat(String(v || "").replace(",", "."));
+  const w = n(S?.aMano?.w), h = n(S?.aMano?.h);
+  return w >= 2 && w <= 60 && h >= 2 && h <= 60 ? { w, h } : null;
+}
+
+/* «Disegnala qui»: un contorno di muri esterni nelle misure scritte. Le
+ * stanze si dividono poi col «Muro dritto». */
+async function disegnaAMano() {
+  const S = state.S, m = misureAMano();
+  if (!m) return;
+  const ppm = Math.min(120, 2000 / Math.max(m.w, m.h) / 1.1),
+    margine = 0.6,
+    spesso = 0.3;
+  const tela = tela2d(Math.round((m.w + 2 * margine) * ppm), Math.round((m.h + 2 * margine) * ppm));
+  const g = tela.getContext("2d");
+  g.fillStyle = "#fff";
+  g.fillRect(0, 0, tela.width, tela.height);
+  g.strokeStyle = "#000";
+  g.lineWidth = spesso * ppm;
+  g.strokeRect((margine + spesso / 2) * ppm, (margine + spesso / 2) * ppm, (m.w - spesso) * ppm, (m.h - spesso) * ppm);
+  S.dwg = null;
+  await usaPlanimetria(tela);
+  S.strumento = "dritto";
+  return pronta(1 / ppm);
+}
+
+/* I piani di un DWG che ne ha piu' d'uno: si sceglie quale. */
+function dwgScelta() {
+  const S = state.S;
+  if (!S.dwg?.piani?.length) return "";
+  return `<div class="c3c-dwg"><b>${esc(t("Nel disegno ci sono più piani: quale fai adesso?", "The drawing has several floors: which one now?"))}</b>
+    <div class="c3c-dwg-piani">${S.dwg.piani
+      .map(
+        (p, i) => `<button type="button" class="c3c-dwg-piano" data-c3c-dwg="${i}"><img alt="" src="${p.anteprima}"><span>${esc(p.nome || t(`Piano ${i + 1}`, `Floor ${i + 1}`))}</span><small>${esc(numero(p.larghezzaMetri, 1))} × ${esc(numero(p.profonditaMetri, 1))} m</small></button>`,
+      )
+      .join("")}</div></div>`;
 }
 
 function riconosci() {
@@ -890,6 +1068,17 @@ function ricalcola() {
     if (v.area) aree[s.id] = v.area;
     if (v.fuori) fuori.add(s.id);
     if (v.foto) foto[s.id] = v.foto;
+  }
+  /* I nomi scritti nel disegno (DWG): una stanza senza nome prende la
+   * scritta che le sta dentro. */
+  if (S.etichette?.length && S.mpp) {
+    const lato = PASSO / S.mpp;
+    for (const e of S.etichette) {
+      const cx = Math.floor(e.x / lato), cy = Math.floor(e.y / lato);
+      if (cx < 0 || cy < 0 || cx >= S.casa.W || cy >= S.casa.H) continue;
+      const id = S.casa.tipo[cy * S.casa.W + cx];
+      if (id > 0 && !nomi[id]) nomi[id] = e.t;
+    }
   }
   Object.assign(S, { nomi, aree, fuori, foto });
   S.manuali = S.manuali.filter((d) => daA[d.stanza]).map((d) => ({ ...d, stanza: daA[d.stanza] }));
@@ -1054,6 +1243,8 @@ async function alClic(ev) {
   if (S.premium !== true) return;
   switch (d.c3c) {
     case "carica": return n.querySelector("[data-c3c-file='pianta']").click();
+    case "caricadwg": return n.querySelector("[data-c3c-file='dwg']").click();
+    case "amano": return disegnaAMano();
     case "caricast": return n.querySelector("[data-c3c-file='stanza']").click();
     case "caricaf": return n.querySelector("[data-c3c-file='facciata']").click();
     case "indietro": S.passo = Math.max(0, S.passo - 1); S.aggiungi = null; break;
@@ -1081,6 +1272,7 @@ async function alClic(ev) {
   }
   if (d.c3cP !== undefined && Number(d.c3cP) <= S.passo) { S.passo = Number(d.c3cP); S.aggiungi = null; }
   if (d.c3cLivello !== undefined) S.livello = Number(d.c3cLivello);
+  if (d.c3cDwg !== undefined && S.dwg) return usaPianoDwg(S.dwg.piani[Number(d.c3cDwg)]);
   if (d.c3cStrumento) S.strumento = d.c3cStrumento;
   if (d.c3cStanza && !ev.target.closest("select,input,[data-c3c-fuori]")) S.sel = Number(d.c3cStanza);
   if (d.c3cStanza && ev.target.closest("select,input")) return;
@@ -1179,6 +1371,7 @@ async function alFile(e) {
   e.value = "";
   if (!file.length) return;
   if (quale === "pianta") return usaPlanimetria(await leggi(file[0]));
+  if (quale === "dwg") return usaDwg(file[0]);
   if (quale === "stanza") {
     for (const f of file) if (state.S === S) await aggiungiFotoStanza(await leggi(f));
     return;
@@ -1191,6 +1384,12 @@ async function alFile(e) {
 
 function alScrivere(ev) {
   const S = state.S, e = ev.target;
+  if (S && e.dataset.c3cMano) {
+    S.aMano[e.dataset.c3cMano] = clean(e.value);
+    const b = nodo().querySelector("[data-c3c='amano']");
+    if (b) b.disabled = !misureAMano();
+    return;
+  }
   if (!S || e.dataset.c3cMetri === undefined) return;
   const v = parseFloat(clean(e.value).replace(",", "."));
   S.metri = v > 0 && v < 500 ? v : null;
@@ -1214,6 +1413,10 @@ function giu(ev) {
   if (S.passo === P.muri) {
     premuto = true;
     pezzo(".c3c-tela").setPointerCapture?.(ev.pointerId);
+    if (S.strumento === "dritto") {
+      S.inizio = [x + S.ritaglio.x0, y + S.ritaglio.y0];
+      return;
+    }
     return pennello(ev);
   }
   if (S.passo === P.scala) {
@@ -1242,15 +1445,40 @@ function giu(ev) {
 }
 
 function muovi(ev) {
-  if (premuto && state.S?.passo === P.muri) pennello(ev);
+  if (premuto && state.S?.passo === P.muri && state.S.strumento !== "dritto") pennello(ev);
 }
 
-function su() {
+function su(ev) {
   if (!premuto) return;
   premuto = false;
-  if (state.S?.passo !== P.muri) return;
+  const S = state.S;
+  if (S?.passo !== P.muri) return;
+  if (S.strumento === "dritto" && S.inizio && ev && pezzo(".c3c-tela")) {
+    const [x, y] = daSchermo(ev);
+    muroDritto(S.inizio, [x + S.ritaglio.x0, y + S.ritaglio.y0]);
+    S.inizio = null;
+  }
   ricalcola();
   disegna();
+}
+
+/* Un muro dritto nella griglia, da un punto all'altro; vicino all'orizzontale
+ * o alla verticale si raddrizza del tutto. Spesso come un tramezzo. */
+function muroDritto([x0, y0], [x1, y1]) {
+  const S = state.S, { W, H, muro, barriera } = S.griglia;
+  let dx = x1 - x0, dy = y1 - y0;
+  if (Math.abs(dx) > 4 * Math.abs(dy)) dy = 0;
+  else if (Math.abs(dy) > 4 * Math.abs(dx)) dx = 0;
+  const passi = Math.max(1, Math.ceil(Math.hypot(dx, dy)));
+  for (let k = 0; k <= passi; k++) {
+    const cx = Math.round(x0 + (dx * k) / passi), cy = Math.round(y0 + (dy * k) / passi);
+    for (let oy = -2; oy <= 2; oy++)
+      for (let ox = -2; ox <= 2; ox++) {
+        const xx = cx + ox, yy = cy + oy;
+        if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue;
+        muro[yy * W + xx] = barriera[yy * W + xx] = 1;
+      }
+  }
 }
 
 /* ── aprire e chiudere ───────────────────────────────────────────────── */
@@ -1273,7 +1501,8 @@ function montaLaTela() {
     </div>
     <input type="file" data-c3c-file="pianta" accept="image/*" hidden>
     <input type="file" data-c3c-file="stanza" accept="image/*" multiple hidden>
-    <input type="file" data-c3c-file="facciata" accept="image/*" hidden>`;
+    <input type="file" data-c3c-file="facciata" accept="image/*" hidden>
+    <input type="file" data-c3c-file="dwg" accept=".dwg,image/vnd.dwg,application/acad,application/x-dwg" hidden>`;
   doc.body.appendChild(n);
   n.addEventListener("click", alClic);
   n.addEventListener("change", alCambio);
@@ -1395,6 +1624,17 @@ function installaLoStile() {
     ${Q} .c3c-lavoro.no{background:rgba(245,158,11,.12);color:#f59e0b}
     ${Q} .c3c-carica{display:block;width:100%;border:2px dashed var(--c3c-bordo);border-radius:18px;padding:22px;text-align:center;cursor:pointer;background:var(--c3c-s2);font-weight:700;font-size:13px}
     ${Q} .c3c-carica b{display:block;font-size:30px;margin-bottom:6px}
+    ${Q} .c3c-carica+.c3c-carica{margin-top:10px}
+    ${Q} .c3c-carica-piccola{padding:12px;margin-top:10px}
+    ${Q} .c3c-carica-piccola b{display:inline;font-size:18px;margin:0 6px 0 0}
+    ${Q} .c3c-carica:disabled{opacity:.5;cursor:default}
+    ${Q} .c3c-mano{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+    ${Q} .c3c-mano .c3c-in{width:9em}
+    ${Q} .c3c-dwg{margin-top:12px;display:grid;gap:10px}
+    ${Q} .c3c-dwg-piani{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+    ${Q} .c3c-dwg-piano{display:grid;gap:4px;justify-items:center;padding:8px;border-radius:14px;border:1px solid var(--c3c-bordo);background:var(--c3c-s2);cursor:pointer;color:inherit;font:inherit;font-weight:700;font-size:12px;text-align:center}
+    ${Q} .c3c-dwg-piano img{width:100%;aspect-ratio:1;object-fit:contain;background:#fff;border-radius:8px}
+    ${Q} .c3c-dwg-piano small{font-weight:500;opacity:.75}
     ${Q} .c3c-carica.basso{padding:12px;margin-top:8px}
     ${Q} .c3c-carica.basso b{font-size:22px}
     ${Q} .c3c-carica .c3c-piccolo{display:block;font-weight:400;margin-top:6px}
