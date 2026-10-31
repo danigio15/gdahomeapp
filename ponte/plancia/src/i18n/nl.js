@@ -7829,7 +7829,6 @@ export default Object.freeze({
   "Your floor": "Jouw verdieping",
   "⚠️ Not saved": "⚠️ Niet opgeslagen",
   "${allarmi} alarms": "${allarmi} alarmen",
-  "${aperte} open": "${aperte} geopend",
   "${casa.esterno.pianiPalazzo}-storey building": "Gebouw met ${casa.esterno.pianiPalazzo} verdiepingen",
   "${conto.mancano} devices to link: «Furnish» → Devices.": "${conto.mancano} apparaten te koppelen: «Inrichten» → Apparaten.",
   "${luciAccese} of ${luciTutte} lights on": "${luciAccese} van ${luciTutte} lampen aan",
@@ -7856,4 +7855,8 @@ export default Object.freeze({
   "Watch live": "Live bekijken",
   "Windows and doors closed": "Ramen en deuren dicht",
   "Your home": "Jouw huis",
+  "1 of ${luciTutte} lights on": "1 van ${luciTutte} lampen aan",
+  "1 window or door open": "1 raam of deur geopend",
+  "${aperte} windows or doors open": "${aperte} ramen of deuren geopend",
+  "Motion in 1 spot": "Beweging op 1 plek",
 });

@@ -7778,7 +7778,6 @@ export default Object.freeze({
   "Your floor": "आपकी मंज़िल",
   "⚠️ Not saved": "⚠️ सहेजा नहीं गया",
   "${allarmi} alarms": "${allarmi} अलार्म",
-  "${aperte} open": "${aperte} खुले",
   "${casa.esterno.pianiPalazzo}-storey building": "${casa.esterno.pianiPalazzo} मंज़िला इमारत",
   "${conto.mancano} devices to link: «Furnish» → Devices.": "जोड़ने के लिए ${conto.mancano} डिवाइस: «सजाएँ» → डिवाइस।",
   "${luciAccese} of ${luciTutte} lights on": "${luciTutte} में से ${luciAccese} लाइटें जल रही हैं",
@@ -7805,4 +7804,8 @@ export default Object.freeze({
   "Watch live": "लाइव देखें",
   "Windows and doors closed": "खिड़कियाँ और दरवाज़े बंद",
   "Your home": "आपका घर",
+  "1 of ${luciTutte} lights on": "${luciTutte} में से 1 लाइट जली है",
+  "1 window or door open": "1 खिड़की या दरवाज़ा खुला है",
+  "${aperte} windows or doors open": "${aperte} खिड़कियाँ या दरवाज़े खुले हैं",
+  "Motion in 1 spot": "1 जगह पर हलचल",
 });

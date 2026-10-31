@@ -7795,7 +7795,6 @@ export default Object.freeze({
   "Your floor": "Katın",
   "⚠️ Not saved": "⚠️ Kaydedilmedi",
   "${allarmi} alarms": "${allarmi} alarm",
-  "${aperte} open": "${aperte} açık",
   "${casa.esterno.pianiPalazzo}-storey building": "${casa.esterno.pianiPalazzo} katlı bina",
   "${conto.mancano} devices to link: «Furnish» → Devices.": "Bağlanacak ${conto.mancano} cihaz: «Döşe» → Cihazlar.",
   "${luciAccese} of ${luciTutte} lights on": "${luciTutte} ışıktan ${luciAccese} tanesi açık",
@@ -7822,4 +7821,8 @@ export default Object.freeze({
   "Watch live": "Canlı izle",
   "Windows and doors closed": "Pencereler ve kapılar kapalı",
   "Your home": "Evin",
+  "1 of ${luciTutte} lights on": "${luciTutte} ışıktan 1'i açık",
+  "1 window or door open": "1 pencere veya kapı açık",
+  "${aperte} windows or doors open": "${aperte} pencere veya kapı açık",
+  "Motion in 1 spot": "1 noktada hareket",
 });

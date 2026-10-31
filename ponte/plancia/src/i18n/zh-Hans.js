@@ -7659,7 +7659,6 @@ export default Object.freeze({
   "Your floor": "你的楼层",
   "⚠️ Not saved": "⚠️ 未保存",
   "${allarmi} alarms": "${allarmi} 个警报",
-  "${aperte} open": "${aperte} 处打开",
   "${casa.esterno.pianiPalazzo}-storey building": "${casa.esterno.pianiPalazzo} 层楼",
   "${conto.mancano} devices to link: «Furnish» → Devices.": "${conto.mancano} 个设备待关联：«布置» → 设备。",
   "${luciAccese} of ${luciTutte} lights on": "${luciTutte} 盏灯中 ${luciAccese} 盏亮着",
@@ -7686,4 +7685,8 @@ export default Object.freeze({
   "Watch live": "观看直播",
   "Windows and doors closed": "门窗已关闭",
   "Your home": "你的家",
+  "1 of ${luciTutte} lights on": "${luciTutte} 盏灯中 1 盏亮着",
+  "1 window or door open": "1 扇窗或门开着",
+  "${aperte} windows or doors open": "${aperte} 扇窗或门开着",
+  "Motion in 1 spot": "1 处检测到移动",
 });

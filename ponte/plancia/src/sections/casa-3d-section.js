@@ -183,9 +183,13 @@ function sinistraMarkup(casa, states, admin) {
     }
   }
   const tutta = [
-    luciTutte ? `💡 ${t(`${luciAccese} luci accese su ${luciTutte}`, `${luciAccese} of ${luciTutte} lights on`)}` : "",
-    `🪟 ${aperte ? t(`${aperte} aperte`, `${aperte} open`) : t("Finestre e porte chiuse", "Windows and doors closed")}`,
-    movimento ? `🚶 ${t(`Movimento in ${movimento} punti`, `Motion in ${movimento} spots`)}` : "",
+    luciTutte
+      ? `💡 ${luciAccese === 1 ? t(`1 luce accesa su ${luciTutte}`, `1 of ${luciTutte} lights on`) : t(`${luciAccese} luci accese su ${luciTutte}`, `${luciAccese} of ${luciTutte} lights on`)}`
+      : "",
+    `🪟 ${aperte === 1 ? t("1 finestra o porta aperta", "1 window or door open") : aperte ? t(`${aperte} finestre o porte aperte`, `${aperte} windows or doors open`) : t("Finestre e porte chiuse", "Windows and doors closed")}`,
+    movimento
+      ? `🚶 ${movimento === 1 ? t("Movimento in 1 punto", "Motion in 1 spot") : t(`Movimento in ${movimento} punti`, `Motion in ${movimento} spots`)}`
+      : "",
     allarmi ? `🚨 ${t(`${allarmi} allarmi`, `${allarmi} alarms`)}` : "",
   ].filter(Boolean);
   const conto = contaCollegati(casa);

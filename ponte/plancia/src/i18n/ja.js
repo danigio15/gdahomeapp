@@ -7797,7 +7797,6 @@ export default Object.freeze({
   "Your floor": "あなたの階",
   "⚠️ Not saved": "⚠️ 未保存",
   "${allarmi} alarms": "アラーム ${allarmi} 件",
-  "${aperte} open": "${aperte} 件が開いています",
   "${casa.esterno.pianiPalazzo}-storey building": "${casa.esterno.pianiPalazzo} 階建ての建物",
   "${conto.mancano} devices to link: «Furnish» → Devices.": "リンクが必要なデバイス ${conto.mancano} 台: «家具配置» → デバイス。",
   "${luciAccese} of ${luciTutte} lights on": "照明 ${luciTutte} 個中 ${luciAccese} 個が点灯",
@@ -7824,4 +7823,8 @@ export default Object.freeze({
   "Watch live": "ライブで見る",
   "Windows and doors closed": "窓とドアは閉まっています",
   "Your home": "あなたのホーム",
+  "1 of ${luciTutte} lights on": "${luciTutte} 個中 1 個の照明が点灯",
+  "1 window or door open": "窓またはドアが 1 か所開いています",
+  "${aperte} windows or doors open": "窓またはドアが ${aperte} か所開いています",
+  "Motion in 1 spot": "1 か所で動きを検知",
 });

@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-GJU2YP2W.js";
+} from "../../chunk-7NAIF5KJ.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -2026,7 +2026,7 @@ var SOURCE_INDEX = Object.freeze({
   "${allarmi} in allarme": "${allarmi} alarming",
   "${alLimite} (limite di evcc) o alle ${fine}": "at ${limite}% (evcc limit) or at ${fine}",
   "${alzate} tapparelle alzate": "${alzate} shutters up",
-  "${aperte} aperte": "${aperte} open",
+  "${aperte} finestre o porte aperte": "${aperte} windows or doors open",
   "${appliance.name} aggiunto dall'integrazione": "${appliance.name} added from the integration",
   "${appliance.name} aggiunto: ${quante} caselle compilate dall'integrazione": "${appliance.name} added: ${quante} fields filled from the integration",
   "${attive.length} allerte in corso": "${attive.length} alerts in force",
@@ -2248,6 +2248,7 @@ var SOURCE_INDEX = Object.freeze({
   "1 escluso": "1 bypassed",
   "1 evento recente": "1 recent event",
   "1 finestra aperta": "1 window open",
+  "1 finestra o porta aperta": "1 window or door open",
   "1 fonte": "1 source",
   "1 fonte non risponde": "1 source not responding",
   "1 fulmine": "1 strike",
@@ -2255,6 +2256,7 @@ var SOURCE_INDEX = Object.freeze({
   "1 in riproduzione": "1 playing",
   "1 libera": "1 free",
   "1 luce": "1 light",
+  "1 luce accesa su ${luciTutte}": "1 of ${luciTutte} lights on",
   "1 luce accesa su ${totale}": "1 of ${totale} lights on",
   "1 mese": "1 month",
   "1 metro = ${Math.round(1 / S.mpp)} pixel della foto": "1 metre = ${Math.round(1 / S.mpp)} photo pixels",
@@ -5573,6 +5575,7 @@ var SOURCE_INDEX = Object.freeze({
   "Movimento adesso": "Motion now",
   "Movimento da": "Movement for",
   "Movimento in ${movimento} punti": "Motion in ${movimento} spots",
+  "Movimento in 1 punto": "Motion in 1 spot",
   "Movimento rilevato": "Movement detected",
   "Muratore": "Builder",
   "muro": "wall",
@@ -153841,9 +153844,9 @@ function sinistraMarkup(casa2, states, admin) {
     }
   }
   const tutta = [
-    luciTutte ? `💡 ${t(`${luciAccese2} luci accese su ${luciTutte}`, `${luciAccese2} of ${luciTutte} lights on`)}` : "",
-    `🪟 ${aperte ? t(`${aperte} aperte`, `${aperte} open`) : t("Finestre e porte chiuse", "Windows and doors closed")}`,
-    movimento ? `🚶 ${t(`Movimento in ${movimento} punti`, `Motion in ${movimento} spots`)}` : "",
+    luciTutte ? `💡 ${luciAccese2 === 1 ? t(`1 luce accesa su ${luciTutte}`, `1 of ${luciTutte} lights on`) : t(`${luciAccese2} luci accese su ${luciTutte}`, `${luciAccese2} of ${luciTutte} lights on`)}` : "",
+    `🪟 ${aperte === 1 ? t("1 finestra o porta aperta", "1 window or door open") : aperte ? t(`${aperte} finestre o porte aperte`, `${aperte} windows or doors open`) : t("Finestre e porte chiuse", "Windows and doors closed")}`,
+    movimento ? `🚶 ${movimento === 1 ? t("Movimento in 1 punto", "Motion in 1 spot") : t(`Movimento in ${movimento} punti`, `Motion in ${movimento} spots`)}` : "",
     allarmi ? `🚨 ${t(`${allarmi} allarmi`, `${allarmi} alarms`)}` : ""
   ].filter(Boolean);
   const conto = contaCollegati(casa2);
@@ -153986,7 +153989,7 @@ async function avviaLaScena(admin) {
   try {
     const [THREE, { creaScena }] = await Promise.all([
       import(TRE),
-      import("../../scena-3IUQOUC6.js")
+      import("../../scena-2GSWVDFV.js")
     ]);
     const nodo3 = doc.getElementById(ID4);
     const posto = nodo3?.querySelector(".c3-posto");

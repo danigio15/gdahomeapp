@@ -7742,7 +7742,6 @@ export default Object.freeze({
   "Your floor": "طابقك",
   "⚠️ Not saved": "⚠️ غير محفوظ",
   "${allarmi} alarms": "${allarmi} إنذارات",
-  "${aperte} open": "${aperte} مفتوحة",
   "${casa.esterno.pianiPalazzo}-storey building": "مبنى من ${casa.esterno.pianiPalazzo} طوابق",
   "${conto.mancano} devices to link: «Furnish» → Devices.": "${conto.mancano} أجهزة بانتظار الربط: «تأثيث» → الأجهزة.",
   "${luciAccese} of ${luciTutte} lights on": "${luciAccese} من ${luciTutte} أضواء مضاءة",
@@ -7769,4 +7768,8 @@ export default Object.freeze({
   "Watch live": "مشاهدة مباشرة",
   "Windows and doors closed": "النوافذ والأبواب مغلقة",
   "Your home": "منزلك",
+  "1 of ${luciTutte} lights on": "مصباح واحد مضاء من ${luciTutte}",
+  "1 window or door open": "نافذة أو باب واحد مفتوح",
+  "${aperte} windows or doors open": "نوافذ أو أبواب مفتوحة: ${aperte}",
+  "Motion in 1 spot": "حركة في موضع واحد",
 });

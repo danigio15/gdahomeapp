@@ -1088,12 +1088,19 @@ export function creaScena(THREE, opzioni = {}) {
     S.ultimo = t;
     const ancora = avanza(dt);
     disegna();
+    /* Detto sul palco: la vista e' arrivata (chi guarda da fuori — le prove,
+     * una foto — sa quando la casa e' ferma). */
+    const fermo = String(!S.vola);
+    if (palco.dataset.fermo !== fermo) palco.dataset.fermo = fermo;
     if (ancora || S.presa) S.raf = requestAnimationFrame(giro);
   }
   /* Un passo dell'animazione; torna vero se qualcosa si sta ancora muovendo. */
   function avanza(dt) {
     S.tempo += dt;
     let muove = false;
+    /* La vista in viaggio (camera e taglio), distinta da cio' che pulsa sempre
+     * — la zona di un sensore di movimento acceso. */
+    let vola = false;
     const verso = (a, b, v) => {
       if (Math.abs(b - a) > 1e-3) muove = true;
       return a + Math.sign(b - a) * Math.min(Math.abs(b - a), v * dt);
@@ -1101,10 +1108,11 @@ export function creaScena(THREE, opzioni = {}) {
     const k = 1 - Math.pow(0.02, dt);
     for (const c of ["az", "al", "d", "ty", "tx", "tz"]) {
       const a = S.cam[c] ?? 0, b = S.camVoluta[c] ?? 0;
-      if (Math.abs(b - a) > 1e-3 * (c === "d" ? 10 : 1)) muove = true;
+      if (Math.abs(b - a) > 1e-3 * (c === "d" ? 10 : 1)) muove = vola = true;
       S.cam[c] = Math.abs(b - a) < 1e-4 ? b : a + (b - a) * k;
     }
-    if (Math.abs(S.taglio - S.taglioVoluto) > 0.01) muove = true;
+    if (Math.abs(S.taglio - S.taglioVoluto) > 0.01) muove = vola = true;
+    S.vola = vola;
     S.taglio = Math.abs(S.taglio - S.taglioVoluto) < 0.005 ? S.taglioVoluto : S.taglio + (S.taglioVoluto - S.taglio) * k;
     taglio.constant = S.taglio;
     const fermo = Math.abs(S.taglio - S.taglioVoluto) < 0.05;

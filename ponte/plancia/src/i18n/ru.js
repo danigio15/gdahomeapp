@@ -7812,7 +7812,6 @@ export default Object.freeze({
   "Your floor": "Ваш этаж",
   "⚠️ Not saved": "⚠️ Не сохранено",
   "${allarmi} alarms": "Тревог: ${allarmi}",
-  "${aperte} open": "Открыто: ${aperte}",
   "${casa.esterno.pianiPalazzo}-storey building": "Этажей в здании: ${casa.esterno.pianiPalazzo}",
   "${conto.mancano} devices to link: «Furnish» → Devices.": "Устройств для привязки: ${conto.mancano}. «Обставить» → Устройства.",
   "${luciAccese} of ${luciTutte} lights on": "Включено светильников: ${luciAccese} из ${luciTutte}",
@@ -7839,4 +7838,8 @@ export default Object.freeze({
   "Watch live": "Смотреть в прямом эфире",
   "Windows and doors closed": "Окна и двери закрыты",
   "Your home": "Ваш дом",
+  "1 of ${luciTutte} lights on": "Включён 1 свет из ${luciTutte}",
+  "1 window or door open": "Открыто 1 окно или дверь",
+  "${aperte} windows or doors open": "Открыто окон или дверей: ${aperte}",
+  "Motion in 1 spot": "Движение в 1 месте",
 });

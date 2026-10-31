@@ -10,6 +10,31 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.17
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Casa 3D (Premium):** una plancia nuova con la casa in tre dimensioni.
+  Esterno della villa o del palazzo, i piani, le stanze arredate e i
+  dispositivi coi loro stati veri: si accendono le luci, si muovono le
+  tapparelle, si guardano le telecamere. La casa si crea dal Config con
+  «Crea la tua casa»: la pianta da una foto della planimetria, le foto delle
+  stanze per proporre arredi e punti luce, e i dispositivi da collegare.
+- **Colpo d'occhio:** le telecamere dal vivo restano nella loro cornice; la
+  finestra non si allarga più e con due telecamere si riempie tutta.
+- **Configurazione:** quello che si salva da un dispositivo arriva anche
+  sugli altri.
+- **Auto:** tensione e temperatura della wallbox nella Ricarica, e i
+  riquadri aprono lo storico.
+- **Alexa:** l'elettrodomestico che ha finito si annuncia in una frase da
+  ascoltare, con le unità dette per esteso.
+- **Proxmox:** sul nodo la temperatura della CPU e il disco più caldo.
+- **Clima:** un condizionatore spento o non disponibile non finisce più fra
+  i termostati.
+- **Solare termico:** via il vapore sopra il boiler e le gocce al rubinetto.
+- **Sicurezza:** licenze, acquisti, gettoni, telecamere, console e accesso
+  E.ON più stretti: ognuno vede e usa solo quello che è suo.
+
 ## 1.18.7.16
 
 _App GdAHome e Home Assistant._

@@ -7875,7 +7875,6 @@ export default Object.freeze({
   "Your floor": "Votre étage",
   "⚠️ Not saved": "⚠️ Non enregistré",
   "${allarmi} alarms": "${allarmi} alarmes",
-  "${aperte} open": "${aperte} ouvertes",
   "${casa.esterno.pianiPalazzo}-storey building": "Immeuble de ${casa.esterno.pianiPalazzo} étages",
   "${conto.mancano} devices to link: «Furnish» → Devices.": "${conto.mancano} appareils à lier : « Aménager » → Appareils.",
   "${luciAccese} of ${luciTutte} lights on": "${luciAccese} lumières allumées sur ${luciTutte}",
@@ -7902,4 +7901,8 @@ export default Object.freeze({
   "Watch live": "Voir en direct",
   "Windows and doors closed": "Fenêtres et portes fermées",
   "Your home": "Votre maison",
+  "1 of ${luciTutte} lights on": "1 lumière allumée sur ${luciTutte}",
+  "1 window or door open": "1 fenêtre ou porte ouverte",
+  "${aperte} windows or doors open": "${aperte} fenêtres ou portes ouvertes",
+  "Motion in 1 spot": "Mouvement à 1 endroit",
 });

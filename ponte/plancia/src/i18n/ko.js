@@ -7769,7 +7769,6 @@ export default Object.freeze({
   "Your floor": "내 층",
   "⚠️ Not saved": "⚠️ 저장되지 않음",
   "${allarmi} alarms": "알람 ${allarmi}개",
-  "${aperte} open": "${aperte}개 열림",
   "${casa.esterno.pianiPalazzo}-storey building": "${casa.esterno.pianiPalazzo}층 건물",
   "${conto.mancano} devices to link: «Furnish» → Devices.": "연결할 기기 ${conto.mancano}개: «꾸미기» → 기기.",
   "${luciAccese} of ${luciTutte} lights on": "조명 ${luciTutte}개 중 ${luciAccese}개 켜짐",
@@ -7796,4 +7795,8 @@ export default Object.freeze({
   "Watch live": "실시간 보기",
   "Windows and doors closed": "창문과 문 닫힘",
   "Your home": "내 홈",
+  "1 of ${luciTutte} lights on": "조명 ${luciTutte}개 중 1개 켜짐",
+  "1 window or door open": "창문 또는 문 1개 열림",
+  "${aperte} windows or doors open": "창문 또는 문 ${aperte}개 열림",
+  "Motion in 1 spot": "1곳에서 움직임 감지",
 });
