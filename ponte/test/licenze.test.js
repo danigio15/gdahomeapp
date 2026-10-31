@@ -333,7 +333,9 @@ test("un gettone nuovo si annuncia: e' cosi' che il centralino lo riceve", async
     risposte: {
       "/v1/licenze/casa": () => {
         giro += 1;
-        return conGettoni({ gdahome: unGettone({ sog: CASA, emesso: giro }, { adesso: ADESSO }) });
+        return conGettoni({
+          gdahome: unGettone({ sog: CASA, emesso: ADESSO + giro }, { adesso: ADESSO }),
+        });
       },
     },
   });

@@ -87,7 +87,10 @@ class Gettone {
   /// il gettone sia di **una casa**. Arriva comunque dal filo cifrato con
   /// quella casa, e non da un posto qualunque.
   bool vale({String? soggetto, String app = 'gdahome', DateTime? adesso}) {
-    final ora = adesso ?? DateTime.now();
+    /* Mai prima di quando il quadro l'ha firmato: un orologio del telefono
+     * rimesso indietro non allunga un gettone (come il ponte, `gettone.js`). */
+    final detta = adesso ?? DateTime.now();
+    final ora = detta.isBefore(emesso) ? emesso : detta;
     if (soggetto != null && soggetto.isNotEmpty) {
       if (this.soggetto != soggetto) return false;
     } else if (!this.soggetto.startsWith('casa_')) {
@@ -139,6 +142,9 @@ Future<Gettone?> leggiIlGettone(String? grezzo, {String? chiave}) async {
     final pagato = detto['pagato'];
     if (app is! String || soggetto is! String) return null;
     if (fino is! num || emesso is! num) return null;
+    /* `scade` c'e' sempre: `null` (per sempre) o un numero. Un gettone senza
+     * non e' del contratto, come per il ponte. */
+    if (!detto.containsKey('scade')) return null;
     if (scade != null && scade is! num) return null;
     final finoIl = DateTime.fromMillisecondsSinceEpoch(fino.toInt());
     final emessoIl = DateTime.fromMillisecondsSinceEpoch(emesso.toInt());
