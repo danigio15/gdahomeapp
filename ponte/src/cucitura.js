@@ -42,6 +42,13 @@ import { eUnaCommissione, no } from "./commissioni.js";
 import { passaLaDogana, senzaIGettoniDelleTelecamere } from "./dogana.js";
 import { NOME } from "./marchio.js";
 
+/* Quanti messaggi una pagina puo' mandare: gli stessi di un telefono
+ * (`ponte.js`). Una plancia vera ne manda qualche decina all'avvio e poi
+ * pochi; una che ne manda migliaia al secondo non e' una plancia, e ogni suo
+ * messaggio e' lavoro per Home Assistant. */
+const MESSAGGI_AL_SECONDO = 50;
+const RAFFICA = 600;
+
 function leggi(testo) {
   try {
     const detto = JSON.parse(testo);
@@ -83,6 +90,8 @@ export class Cucitura {
     /* Se chi guarda amministra, chiesto a Home Assistant quando il filo si
      * alza: vedi `_amministra`. */
     this._amministraAllaStretta = false;
+    this._gettoni = RAFFICA;
+    this._ultimoGettone = Date.now();
     presa.onMessaggio = (testo) => this._dallaPagina(testo);
     presa.onChiusa = () => this._laPaginaSeNEAndata();
     /* Un utente tolto o spento in Home Assistant non resta dentro: come i
@@ -159,8 +168,25 @@ export class Cucitura {
     return secondi < 120 ? `${secondi} s` : `${Math.round(secondi / 60)} min`;
   }
 
+  _cePosto() {
+    const ora = Date.now();
+    this._gettoni = Math.min(
+      RAFFICA,
+      this._gettoni + ((ora - this._ultimoGettone) / 1000) * MESSAGGI_AL_SECONDO,
+    );
+    this._ultimoGettone = ora;
+    if (this._gettoni < 1) return false;
+    this._gettoni -= 1;
+    return true;
+  }
+
   _dallaPagina(testo) {
     if (this.chiusa) return;
+    if (!this._cePosto()) {
+      this.registro.attenzione("la plancia ha mandato troppi messaggi: chiusa");
+      this.chiudi(1008, "troppi messaggi");
+      return;
+    }
     /* Un `auth` che arriva lo stesso si lascia cadere: qui non c'e' niente da
      * autenticare, e rispondergli «no» chiuderebbe una pagina che va bene. */
     if (eUnaCommissione(testo)) {

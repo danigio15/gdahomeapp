@@ -61,3 +61,15 @@ test("un elenco vuoto non chiude niente, e chiudendo si smette di ascoltare", ()
   cucitura.chiudi(1000, "la pagina se n'e' andata");
   assert.equal(ascoltatori.size, 0);
 });
+
+test("una pagina che manda migliaia di messaggi di fila si chiude", async () => {
+  const { cucitura, chiusure } = preparati(MARIO);
+  await cucitura.avvia();
+  /* Una plancia vera, all'avvio, passa. */
+  for (let i = 0; i < 100; i += 1) cucitura._dallaPagina(JSON.stringify({ id: i, type: "ping" }));
+  assert.equal(cucitura.chiusa, false);
+  for (let i = 0; i < 700 && !cucitura.chiusa; i += 1)
+    cucitura._dallaPagina(JSON.stringify({ id: i, type: "ping" }));
+  assert.equal(cucitura.chiusa, true);
+  assert.equal(chiusure[0].codice, 1008);
+});
