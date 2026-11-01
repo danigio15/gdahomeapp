@@ -1290,6 +1290,7 @@ async function usaPlanimetria(src) {
      * prospettiva, non solo girando la foto. */
     let dritta = d;
     S.prospettiva = false;
+    S.pianoDaFoto = typeof src === "string";
     if (typeof src === "string") {
       const dati = r.getImageData(0, 0, d.width, d.height),
         p = prospettiva(dati);
@@ -1786,7 +1787,9 @@ function riconosci() {
     };
     /* Una pianta a muri pieni (l'architetto, il catasto) si legge dai soli
      * muri: le righe sottili attorno facevano stanze finte. */
-    const pieni = S.disegno ? null : muriPieni(im, S.mpp);
+    /* Solo le foto: la scansione del catasto (un PDF) si legge a righe,
+     * come sempre. */
+    const pieni = S.disegno || !S.pianoDaFoto ? null : muriPieni(im, S.mpp);
     /* A muri pieni i muri sono gia' puliti, e le righe sottili dicono porte,
      * finestre, tramezzi e scale. */
     S.griglia =

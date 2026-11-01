@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-23HSHJIW.js";
+} from "../../chunk-UDXZE3ZB.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -158711,6 +158711,7 @@ async function usaPlanimetria(src) {
     r.drawImage(img, -img.width / 2, -img.height / 2);
     let dritta = d;
     S.prospettiva = false;
+    S.pianoDaFoto = typeof src === "string";
     if (typeof src === "string") {
       const dati = r.getImageData(0, 0, d.width, d.height), p = prospettiva(dati);
       if (p && p.sposta > Math.max(d.width, d.height) * 0.01) {
@@ -159109,7 +159110,7 @@ function riconosci() {
       for (let i = 0; i < m.length; i++) m[i] = d[i * 4 + 3] > 64 ? 1 : 0;
       return m;
     };
-    const pieni = S.disegno ? null : muriPieni(im, S.mpp);
+    const pieni = S.disegno || !S.pianoDaFoto ? null : muriPieni(im, S.mpp);
     S.griglia = pieni && pieni.metri >= MURI_PIENI_MINIMO ? grigliaDaMuriPieni(pieni.ink, pieni.linee, im.width, im.height, S.mpp) : grigliaDeiMuri(inchiostro(im), im.width, im.height, S.mpp, {
       vetri: mappa2(S.vetri),
       porte: mappa2(S.porte),
