@@ -44,9 +44,14 @@ import {
   riprendiIlPiano,
 } from "../core/crea-casa.js";
 import {
+  MURI_PIENI_MINIMO,
   PASSO,
+  grigliaDaMuriPieni,
   grigliaDeiMuri,
   inchiostro,
+  muriPieni,
+  prospettiva,
+  raddrizza,
   riconosciDaFoto,
   scalaScritta,
   stimaInclinazione,
@@ -800,7 +805,7 @@ function pPlanimetria() {
       ${S.lavoro ? `<div class="c3c-lavoro">⏳ ${esc(S.lavoro)}</div>` : ""}
       ${S.avviso ? `<div class="c3c-lavoro">⚠️ ${esc(S.avviso)}${S.dettaglio ? `<small class="c3c-dettaglio" translate="no">${esc(S.dettaglio)}</small>` : ""}</div>` : ""}
       ${dwgScelta()}
-      ${S.dritta && !S.dwg ? nota(`✓ ${esc(t("Raddrizzata di", "Straightened by"))} ${esc(numero(Math.abs(S.angolo)))}° · ${S.dritta.width}×${S.dritta.height} px`) : ""}`,
+      ${S.dritta && !S.dwg ? nota(`✓ ${esc(t("Raddrizzata di", "Straightened by"))} ${esc(numero(Math.abs(S.angolo)))}°${S.prospettiva ? ` · ${esc(t("prospettiva corretta", "perspective corrected"))}` : ""} · ${S.dritta.width}×${S.dritta.height} px`) : ""}`,
     ) +
     scheda(
       `✏️ <b>${esc(t("Non hai una planimetria?", "No floor plan?"))}</b>`,
@@ -1281,9 +1286,28 @@ async function usaPlanimetria(src) {
     r.translate(d.width / 2, d.height / 2);
     r.rotate((S.angolo * Math.PI) / 180);
     r.drawImage(img, -img.width / 2, -img.height / 2);
+    /* Il foglio fotografato di sbieco: i muri si raddrizzano anche in
+     * prospettiva, non solo girando la foto. */
+    let dritta = d;
+    S.prospettiva = false;
+    if (typeof src === "string") {
+      const dati = r.getImageData(0, 0, d.width, d.height),
+        p = prospettiva(dati);
+      if (p && p.sposta > Math.max(d.width, d.height) * 0.01) {
+        const nuova = raddrizza(dati, p),
+          t2 = tela2d(nuova.width, nuova.height);
+        t2.getContext("2d").putImageData(
+          new ImageData(nuova.data, nuova.width, nuova.height),
+          0,
+          0,
+        );
+        dritta = t2;
+        S.prospettiva = true;
+      }
+    }
     Object.assign(S, {
       img,
-      dritta: d,
+      dritta,
       vetri: null,
       porte: null,
       disegno: false,
@@ -1760,11 +1784,19 @@ function riconosci() {
       for (let i = 0; i < m.length; i++) m[i] = d[i * 4 + 3] > 64 ? 1 : 0;
       return m;
     };
-    S.griglia = grigliaDeiMuri(inchiostro(im), im.width, im.height, S.mpp, {
-      vetri: mappa(S.vetri),
-      porte: mappa(S.porte),
-      disegno: S.disegno === true,
-    });
+    /* Una pianta a muri pieni (l'architetto, il catasto) si legge dai soli
+     * muri: le righe sottili attorno facevano stanze finte. */
+    const pieni = S.disegno ? null : muriPieni(im, S.mpp);
+    /* A muri pieni i muri sono gia' puliti, e le righe sottili dicono porte,
+     * finestre, tramezzi e scale. */
+    S.griglia =
+      pieni && pieni.metri >= MURI_PIENI_MINIMO
+        ? grigliaDaMuriPieni(pieni.ink, pieni.linee, im.width, im.height, S.mpp)
+        : grigliaDeiMuri(inchiostro(im), im.width, im.height, S.mpp, {
+            vetri: mappa(S.vetri),
+            porte: mappa(S.porte),
+            disegno: S.disegno === true,
+          });
   }
   ricalcola();
 }

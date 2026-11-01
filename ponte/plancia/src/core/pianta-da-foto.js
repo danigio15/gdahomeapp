@@ -60,6 +60,298 @@ export function stimaInclinazione(im) {
   return meglio;
 }
 
+/* ── la foto di sbieco ──────────────────────────────────────────────────
+ *
+ * «Guarda attentamente la foto della planimetria: non c'entra nulla con
+ * quella che hai fatto.» Una pianta fotografata col telefono non e' mai
+ * davanti: il foglio e' un trapezio, i muri di sopra e di sotto non sono
+ * paralleli e girare la foto non basta. Qui si cercano le righe lunghe dei
+ * muri pieni (la trasformata di Hough sui loro bordi), si dividono nelle due
+ * famiglie (quasi orizzontali e quasi verticali), si trova il punto dove
+ * ogni famiglia converge e da li' la trasformazione che le rende di nuovo
+ * parallele e dritte. */
+
+/* Il bordo dei muri pieni: i pixel del nucleo con un vicino fuori. */
+function bordiDeiMuri(im) {
+  const { width: w, height: h, data } = im;
+  const g = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++)
+    g[i] = 0.3 * data[i * 4] + 0.59 * data[i * 4 + 1] + 0.11 * data[i * 4 + 2];
+  const nucleo = nucleoDeiMuri(g, w, h, Math.max(2, Math.round(Math.max(w, h) / 230)));
+  const punti = [];
+  for (let y = 1; y < h - 1; y++)
+    for (let x = 1; x < w - 1; x++) {
+      const i = y * w + x;
+      if (!nucleo[i]) continue;
+      if (!nucleo[i - 1] || !nucleo[i + 1] || !nucleo[i - w] || !nucleo[i + w]) punti.push(x, y);
+    }
+  return punti;
+}
+
+/* Gli autovettori di una matrice 3x3 simmetrica (Jacobi): quello del valore
+ * piu' piccolo. */
+function minimoAutovettore(m) {
+  const a = m.map((r) => r.slice()),
+    v = [
+      [1, 0, 0],
+      [0, 1, 0],
+      [0, 0, 1],
+    ];
+  for (let giro = 0; giro < 60; giro++) {
+    let p = 0,
+      q = 1;
+    for (const [i, j] of [
+      [0, 1],
+      [0, 2],
+      [1, 2],
+    ])
+      if (Math.abs(a[i][j]) > Math.abs(a[p][q])) ((p = i), (q = j));
+    if (Math.abs(a[p][q]) < 1e-15) break;
+    const t = 0.5 * Math.atan2(2 * a[p][q], a[q][q] - a[p][p]),
+      c = Math.cos(t),
+      s = Math.sin(t);
+    for (let k = 0; k < 3; k++) {
+      const akp = a[k][p],
+        akq = a[k][q];
+      a[k][p] = c * akp - s * akq;
+      a[k][q] = s * akp + c * akq;
+    }
+    for (let k = 0; k < 3; k++) {
+      const apk = a[p][k],
+        aqk = a[q][k];
+      a[p][k] = c * apk - s * aqk;
+      a[q][k] = s * apk + c * aqk;
+    }
+    for (let k = 0; k < 3; k++) {
+      const vkp = v[k][p],
+        vkq = v[k][q];
+      v[k][p] = c * vkp - s * vkq;
+      v[k][q] = s * vkp + c * vkq;
+    }
+  }
+  let k = 0;
+  for (let i = 1; i < 3; i++) if (a[i][i] < a[k][k]) k = i;
+  return [v[0][k], v[1][k], v[2][k]];
+}
+
+const croce = (a, b) => [
+  a[1] * b[2] - a[2] * b[1],
+  a[2] * b[0] - a[0] * b[2],
+  a[0] * b[1] - a[1] * b[0],
+];
+
+function per3(m, v) {
+  return [0, 1, 2].map((i) => m[i][0] * v[0] + m[i][1] * v[1] + m[i][2] * v[2]);
+}
+function prodotto(a, b) {
+  return [0, 1, 2].map((i) =>
+    [0, 1, 2].map((j) => a[i][0] * b[0][j] + a[i][1] * b[1][j] + a[i][2] * b[2][j]),
+  );
+}
+function inversa(m) {
+  const [[a, b, c], [d, e, f], [g, h, i]] = m;
+  const A = e * i - f * h,
+    B = -(d * i - f * g),
+    C = d * h - e * g,
+    det = a * A + b * B + c * C;
+  if (Math.abs(det) < 1e-12) return null;
+  return [
+    [A / det, -(b * i - c * h) / det, (b * f - c * e) / det],
+    [B / det, (a * i - c * g) / det, -(a * f - c * d) / det],
+    [C / det, -(a * h - b * g) / det, (a * e - b * d) / det],
+  ];
+}
+
+/**
+ * Le righe dei muri e la trasformazione che le raddrizza, o `null` se la
+ * foto e' gia' davanti (o se le righe non bastano per dirlo).
+ *
+ * Torna `{ T, righe }`: T porta un punto della foto (x, y, 1) nel punto
+ * raddrizzato, in pixel; righe sono quelle trovate (per le prove).
+ */
+export function prospettiva(im) {
+  const { width: w, height: h } = im;
+  let punti = bordiDeiMuri(im);
+  /* abbastanza bordi, non troppi */
+  const quanti = punti.length / 2;
+  if (quanti < 200) return null;
+  const salto = Math.max(1, Math.round(quanti / 60000));
+  const cx = w / 2,
+    cy = h / 2,
+    sc = Math.max(w, h) / 2;
+  const passoA = 0.2,
+    largo = 16,
+    nA = Math.round((2 * largo) / passoA) + 1,
+    rMax = Math.ceil(Math.hypot(w, h) / 2),
+    nR = 2 * rMax + 1;
+  const famiglie = [];
+  for (const base of [90, 0]) {
+    /* base 90: la normale in verticale, righe orizzontali */
+    const acc = new Int32Array(nA * nR),
+      cs = [],
+      sn = [];
+    for (let a = 0; a < nA; a++) {
+      const t = ((base - largo + a * passoA) * Math.PI) / 180;
+      cs.push(Math.cos(t));
+      sn.push(Math.sin(t));
+    }
+    for (let p = 0; p < punti.length; p += 2 * salto) {
+      const x = punti[p] - cx,
+        y = punti[p + 1] - cy;
+      for (let a = 0; a < nA; a++) acc[a * nR + Math.round(x * cs[a] + y * sn[a]) + rMax]++;
+    }
+    const minimo = Math.max(30, Math.round((Math.max(w, h) * 0.07) / salto));
+    const righe = [];
+    for (let giro = 0; giro < 14; giro++) {
+      let m = 0,
+        dove = -1;
+      for (let i = 0; i < acc.length; i++)
+        if (acc[i] > m) {
+          m = acc[i];
+          dove = i;
+        }
+      if (m < minimo) break;
+      const a = Math.floor(dove / nR),
+        r = (dove % nR) - rMax;
+      righe.push({ t: base - largo + a * passoA, r, voti: m });
+      /* via i vicini: la stessa riga, l'altra faccia dello stesso muro */
+      for (let da = -15; da <= 15; da++)
+        for (let dr = -12; dr <= 12; dr++) {
+          const aa = a + da,
+            rr = r + dr + rMax;
+          if (aa >= 0 && aa < nA && rr >= 0 && rr < nR) acc[aa * nR + rr] = 0;
+        }
+    }
+    famiglie.push(righe);
+  }
+  const [oriz, vert] = famiglie;
+  if (oriz.length < 2 || vert.length < 2) return null;
+  /* il punto dove converge ogni famiglia, in coordinate col centro in mezzo */
+  const fuga = (righe) => {
+    const M = [
+      [0, 0, 0],
+      [0, 0, 0],
+      [0, 0, 0],
+    ];
+    for (const { t, r, voti } of righe) {
+      const a = (t * Math.PI) / 180,
+        l = [Math.cos(a), Math.sin(a), -r / sc];
+      for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) M[i][j] += voti * l[i] * l[j];
+    }
+    return minimoAutovettore(M);
+  };
+  const v1 = fuga(oriz),
+    v2 = fuga(vert);
+  const linf = croce(v1, v2);
+  if (Math.abs(linf[2]) < 1e-9) return null;
+  const H1 = [
+    [1, 0, 0],
+    [0, 1, 0],
+    [linf[0] / linf[2], linf[1] / linf[2], 1],
+  ];
+  /* dopo H1 le due famiglie sono parallele: le direzioni vanno sugli assi */
+  const d1 = per3(H1, v1),
+    d2 = per3(H1, v2);
+  let a1 = [d1[0], d1[1]],
+    a2 = [d2[0], d2[1]];
+  const n1 = Math.hypot(...a1),
+    n2 = Math.hypot(...a2);
+  if (!n1 || !n2) return null;
+  a1 = a1.map((v) => v / n1);
+  a2 = a2.map((v) => v / n2);
+  if (a1[0] < 0) a1 = a1.map((v) => -v);
+  if (a2[1] < 0) a2 = a2.map((v) => -v);
+  const B = inversa([
+    [a1[0], a2[0], 0],
+    [a1[1], a2[1], 0],
+    [0, 0, 1],
+  ]);
+  if (!B) return null;
+  const N = [
+    [1 / sc, 0, -cx / sc],
+    [0, 1 / sc, -cy / sc],
+    [0, 0, 1],
+  ];
+  let T = prodotto(B, prodotto(H1, N));
+  /* gia' davanti: niente da fare */
+  const ang = (x, y) => {
+    const p = per3(T, [x, y, 1]);
+    return [p[0] / p[2], p[1] / p[2]];
+  };
+  const angoli = [ang(0, 0), ang(w, 0), ang(w, h), ang(0, h)];
+  for (const [x, y] of [
+    [0, 0],
+    [w, 0],
+    [w, h],
+    [0, h],
+  ])
+    if (per3(T, [x, y, 1])[2] <= 0) return null;
+  const xs = angoli.map((p) => p[0]),
+    ys = angoli.map((p) => p[1]);
+  const bw = Math.max(...xs) - Math.min(...xs),
+    bh = Math.max(...ys) - Math.min(...ys);
+  const k = Math.max(w, h) / Math.max(bw, bh);
+  const S = [
+    [k, 0, -Math.min(...xs) * k],
+    [0, k, -Math.min(...ys) * k],
+    [0, 0, 1],
+  ];
+  T = prodotto(S, T);
+  /* quanto si sposta un angolo: sotto un pixel e mezzo, la foto e' davanti */
+  let sposta = 0;
+  const ow = Math.round(bw * k),
+    oh = Math.round(bh * k);
+  const scala = Math.max(w, h) / Math.max(ow, oh);
+  void scala;
+  for (const [x, y] of [
+    [w * 0.25, h * 0.25],
+    [w * 0.75, h * 0.25],
+    [w * 0.75, h * 0.75],
+    [w * 0.25, h * 0.75],
+  ]) {
+    const p = per3(T, [x, y, 1]);
+    sposta = Math.max(sposta, Math.hypot(p[0] / p[2] - x * (ow / w), p[1] / p[2] - y * (oh / h)));
+  }
+  /* troppo storta per crederci: le righe erano sbagliate */
+  if (ow < w * 0.5 || oh < h * 0.5 || ow > w * 2 || oh > h * 2) return null;
+  return { T, larghezza: ow, altezza: oh, sposta, righe: { oriz, vert } };
+}
+
+/** La foto raddrizzata con la trasformazione di `prospettiva`. */
+export function raddrizza(im, { T, larghezza, altezza }) {
+  const { width: w, height: h, data } = im;
+  const I = inversa(T);
+  const out = new Uint8ClampedArray(larghezza * altezza * 4);
+  for (let y = 0; y < altezza; y++)
+    for (let x = 0; x < larghezza; x++) {
+      const zz = I[2][0] * x + I[2][1] * y + I[2][2],
+        sx = (I[0][0] * x + I[0][1] * y + I[0][2]) / zz,
+        sy = (I[1][0] * x + I[1][1] * y + I[1][2]) / zz;
+      const o = (y * larghezza + x) * 4;
+      const x0 = Math.floor(sx),
+        y0 = Math.floor(sy);
+      if (x0 < 0 || y0 < 0 || x0 >= w - 1 || y0 >= h - 1) {
+        out[o] = 59;
+        out[o + 1] = 58;
+        out[o + 2] = 55;
+        out[o + 3] = 255;
+        continue;
+      }
+      const fx = sx - x0,
+        fy = sy - y0;
+      for (let c = 0; c < 3; c++) {
+        const i = (y0 * w + x0) * 4 + c;
+        out[o + c] =
+          data[i] * (1 - fx) * (1 - fy) +
+          data[i + 4] * fx * (1 - fy) +
+          data[i + w * 4] * (1 - fx) * fy +
+          data[i + w * 4 + 4] * fx * fy;
+      }
+      out[o + 3] = 255;
+    }
+  return { data: out, width: larghezza, height: altezza };
+}
+
 /** L'inchiostro: 1 dove il pixel e' scuro rispetto ai dintorni (media su una finestra di 31 px). */
 export function inchiostro(im) {
   const { width: w, height: h, data } = im,
@@ -142,6 +434,120 @@ export function inchiostro(im) {
     }
   return out;
 }
+
+/**
+ * I muri pieni di una pianta (campiti di grigio o di nero), e solo loro.
+ *
+ * «Guarda attentamente la foto della planimetria: non c'entra nulla con
+ * quella che hai fatto.» Nelle piante dell'architetto e del catasto i muri
+ * sono pieni e tutto il resto — quote, scritte, sanitari, scale, il
+ * contorno del tetto, l'albero — e' fatto di righe sottili. L'inchiostro
+ * le prende tutte, e chiudendole venivano stanze finte fuori casa. Qui si
+ * guarda la media su un quadrato di 18 cm: dentro un muro resta scura,
+ * su una riga sottile (anche nera) si schiarisce col bianco attorno.
+ *
+ * Torna `{ ink, metri }`: l'inchiostro dei soli muri (riallargati al loro
+ * spessore) e quanti m² di muro pieno ci sono. Con pochi m² la pianta non ha
+ * muri pieni (un disegno a doppia riga) e si usa `inchiostro`.
+ */
+export function muriPieni(im, mpp) {
+  const { width: w, height: h, data } = im;
+  const g = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++)
+    g[i] = 0.3 * data[i * 4] + 0.59 * data[i * 4 + 1] + 0.11 * data[i * 4 + 2];
+  /* un quadrato di 13 cm: ci sta dentro anche un tramezzo da 15 */
+  const r = Math.max(2, Math.round(0.06 / (mpp || 0.01)));
+  const carta = cartaDi(g);
+  const nucleo = nucleoDeiMuri(g, w, h, r, carta);
+  let n = 0,
+    pieno = 0;
+  for (let i = 0; i < w * h; i++)
+    if (nucleo[i]) {
+      n++;
+      if (g[i] < carta * 0.8) pieno++;
+    }
+  /* il muro intero: lo scuro a non piu' di r dal nucleo */
+  const J = new Int32Array((w + 1) * (h + 1));
+  for (let y = 0; y < h; y++) {
+    let riga = 0;
+    for (let x = 0; x < w; x++) {
+      riga += nucleo[y * w + x];
+      J[(y + 1) * (w + 1) + x + 1] = J[y * (w + 1) + x + 1] + riga;
+    }
+  }
+  const ink = new Uint8Array(w * h),
+    linee = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      if (g[i] >= carta * 0.85) continue;
+      const x0 = Math.max(0, x - r),
+        x1 = Math.min(w, x + r + 1),
+        y0 = Math.max(0, y - r),
+        y1 = Math.min(h, y + r + 1);
+      if (
+        J[y1 * (w + 1) + x1] - J[y0 * (w + 1) + x1] - J[y1 * (w + 1) + x0] + J[y0 * (w + 1) + x0] >
+        0
+      )
+        ink[i] = 1;
+      /* le righe sottili: il vetro delle finestre, i tramezzi a doppia riga,
+       * i gradini delle scale */
+      else if (g[i] < carta * 0.75) linee[i] = 1;
+    }
+  /* Pieno davvero: dentro il muro quasi tutto e' scuro. Due righe vicine
+   * (il catasto a doppia riga) fanno scura la media ma in mezzo c'e' bianco. */
+  const riempito = n ? pieno / n : 0;
+  return { ink, linee, metri: riempito >= 0.62 ? n * (mpp || 0.01) ** 2 : 0, riempito };
+}
+
+/* la carta: il chiaro che c'e' di piu' */
+function cartaDi(g) {
+  const campione = [];
+  const passo = Math.max(1, Math.floor(g.length / 20000));
+  for (let i = 0; i < g.length; i += passo) campione.push(g[i]);
+  campione.sort((a, b) => a - b);
+  return campione[Math.floor(campione.length * 0.7)] || 255;
+}
+
+/* Il cuore dei muri pieni: dove la media su un quadrato di lato 2r+1 e'
+ * scura e quasi nessun pixel e' chiaro. Dentro un muro campito di grigio non
+ * c'e' bianco; in un mucchio di righe (i sanitari, le scale, le piastrelle,
+ * una scritta, l'albero) la media e' scura uguale, ma fra una riga e l'altra
+ * c'e' la carta. */
+function nucleoDeiMuri(g, w, h, r, carta = cartaDi(g)) {
+  const I = new Float64Array((w + 1) * (h + 1)),
+    K = new Int32Array((w + 1) * (h + 1));
+  for (let y = 0; y < h; y++) {
+    let riga = 0,
+      chiari = 0;
+    for (let x = 0; x < w; x++) {
+      riga += g[y * w + x];
+      chiari += g[y * w + x] >= carta * 0.85 ? 1 : 0;
+      I[(y + 1) * (w + 1) + x + 1] = I[y * (w + 1) + x + 1] + riga;
+      K[(y + 1) * (w + 1) + x + 1] = K[y * (w + 1) + x + 1] + chiari;
+    }
+  }
+  const soglia = carta * 0.72,
+    nucleo = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const x0 = Math.max(0, x - r),
+        x1 = Math.min(w, x + r + 1),
+        y0 = Math.max(0, y - r),
+        y1 = Math.min(h, y + r + 1),
+        area = (x1 - x0) * (y1 - y0);
+      const a = y1 * (w + 1) + x1,
+        b = y0 * (w + 1) + x1,
+        c = y1 * (w + 1) + x0,
+        d = y0 * (w + 1) + x0;
+      if ((I[a] - I[b] - I[c] + I[d]) / area < soglia && (K[a] - K[b] - K[c] + K[d]) / area <= 0.08)
+        nucleo[y * w + x] = 1;
+    }
+  return nucleo;
+}
+
+/** I m² di muro pieno oltre i quali la pianta e' «a muri pieni». */
+export const MURI_PIENI_MINIMO = 3;
 
 /* Le operazioni sulla griglia: «c'e' inchiostro in un quadrato di lato 2r+1
  * attorno?» (allarga) e «e' tutto pieno?» (stringe), con l'immagine integrale
@@ -780,8 +1186,484 @@ export function grigliaDeiMuri(
   return { W, H, muro, barriera: spessa, vetro };
 }
 
+/**
+ * La griglia dei muri di una pianta a muri pieni (l'architetto, una foto del
+ * progetto): i muri sono gia' puliti (`muriPieni`), e le righe sottili
+ * (`linee`) dicono il resto.
+ *
+ *   1. muro: le celle col muro pieno, senza i pezzetti sotto i 40 cm (il
+ *      lavello, il frigo disegnati scuri);
+ *   2. tramezzi: due righe lunghe e parallele a 6-40 cm l'una dall'altra,
+ *      attaccate a un muro, sono un muro sottile (il bagno, l'antibagno);
+ *   3. varchi: fra due tratti di muro, nella loro fila e fino a 4 m, se nel
+ *      varco ci sono le righe del vetro e' una finestra; se e' vuoto e
+ *      largo fino a 1,3 m e' una porta;
+ *   4. scale: almeno quattro righe parallele, lunghe e a passo regolare
+ *      (i gradini).
+ */
+export function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
+  const lato = PASSO / mpp,
+    W = Math.max(1, Math.floor(w / lato)),
+    H = Math.max(1, Math.floor(h / lato)),
+    N = W * H;
+  const celleDi = (px, quota) => {
+    const celle = new Uint8Array(N);
+    for (let cy = 0; cy < H; cy++)
+      for (let cx = 0; cx < W; cx++) {
+        const x0 = Math.floor(cx * lato),
+          y0 = Math.floor(cy * lato),
+          x1 = Math.max(x0 + 1, Math.floor((cx + 1) * lato)),
+          y1 = Math.max(y0 + 1, Math.floor((cy + 1) * lato));
+        let c = 0,
+          n = 0;
+        for (let y = y0; y < y1 && y < h; y++)
+          for (let x = x0; x < x1 && x < w; x++) {
+            n++;
+            if (px[y * w + x]) c++;
+          }
+        celle[cy * W + cx] = n && c / n >= quota ? 1 : 0;
+      }
+    return celle;
+  };
+  let muro = celleDi(ink, 0.5);
+  /* i buchini dentro il muro (un riflesso, la grana della foto) */
+  muro = stringi(allarga(muro, W, H, 1), W, H, 1);
+  const riga = celleDi(linee, 0.01);
+  for (let i = 0; i < N; i++) if (muro[i]) riga[i] = 0;
+  /* I muri pieni veri, per dire dove si appoggia un tramezzo: i pezzi di
+   * almeno 60 cm (non le lettere in grassetto di una scritta). */
+  const appoggi = new Uint8Array(N);
+  for (const p of pezziDi(muro, W, H).pezzi)
+    if (Math.max(p.x1 - p.x0, p.y1 - p.y0) + 1 >= 0.6 / PASSO)
+      for (const c of p.celle) appoggi[c] = 1;
+  const vicinoAgliAppoggi = allarga(appoggi, W, H, Math.round(0.3 / PASSO));
+  /* Un tramezzo va da un muro all'altro: almeno un capo tocca un muro vero.
+   * Il riquadro di una scritta in mezzo alla stanza, due quote parallele
+   * sotto il disegno, no. */
+  const appoggiato = (p) => {
+    const oriz = p.x1 - p.x0 >= p.y1 - p.y0;
+    const capo = (da, a) =>
+      p.celle.some((c) => {
+        const t = oriz ? c % W : (c / W) | 0;
+        return t >= da && t <= a && vicinoAgliAppoggi[c];
+      });
+    return oriz
+      ? capo(p.x0, p.x0 + 2) || capo(p.x1 - 2, p.x1)
+      : capo(p.y0, p.y0 + 2) || capo(p.y1 - 2, p.y1);
+  };
+  /* Una fascia sottile fra due tratti di muro piu' spessi di lei, nella
+   * stessa fila, e' il vetro di una finestra, non un tramezzo. */
+  const vetroNelMuro = (p) => {
+    const oriz = p.x1 - p.x0 >= p.y1 - p.y0;
+    const banda = oriz ? p.y1 - p.y0 + 1 : p.x1 - p.x0 + 1,
+      mezzo = oriz ? (p.y0 + p.y1) >> 1 : (p.x0 + p.x1) >> 1;
+    let accanto = 0;
+    for (const [da, aa] of oriz
+      ? [
+          [p.x0 - 12, p.x0 - 1],
+          [p.x1 + 1, p.x1 + 12],
+        ]
+      : [
+          [p.y0 - 12, p.y0 - 1],
+          [p.y1 + 1, p.y1 + 12],
+        ])
+      for (let t = Math.max(0, da); t <= aa && t < (oriz ? W : H); t++) {
+        const i = oriz ? mezzo * W + t : t * W + mezzo;
+        if (!muro[i]) continue;
+        const passo = oriz ? W : 1;
+        let n = 1;
+        for (let j = i - passo; j >= 0 && muro[j] && n < 40; j -= passo) n++;
+        for (let j = i + passo; j < N && muro[j] && n < 40; j += passo) n++;
+        /* un muro di traverso (lungo piu' di 70 cm di qua e di la') non
+         * e' lo stesso muro: e' quello dove il tramezzo si appoggia */
+        if (n <= Math.round(0.7 / PASSO)) accanto = Math.max(accanto, n);
+      }
+    return accanto > banda + 1;
+  };
+  /* Un tramezzo pieno a meta': una fascia scura lunga (90 cm e oltre) e
+   * sottile (9-40 cm), un po' muro campito e un po' righe. A pezzi i suoi
+   * tratti pieni sembravano un lavello e se ne andavano. */
+  const pieno = new Uint8Array(N);
+  {
+    const scuro = new Uint8Array(N);
+    for (let i = 0; i < N; i++) scuro[i] = muro[i] || riga[i] ? 1 : 0;
+    const lunga = Math.round(0.9 / PASSO),
+      sMin = 3,
+      sMax = Math.round(0.21 / PASSO);
+    for (const oriz of [true, false]) {
+      const n = oriz ? H : W,
+        m = oriz ? W : H,
+        at = oriz ? (a, b) => a * W + b : (a, b) => b * W + a;
+      const run = new Int32Array(N);
+      for (let a = 0; a < n; a++) {
+        let b = 0;
+        while (b < m) {
+          if (!scuro[at(a, b)]) {
+            b++;
+            continue;
+          }
+          let e = b;
+          while (e < m && scuro[at(a, e)]) e++;
+          for (let q = b; q < e; q++) run[at(a, q)] = e - b;
+          b = e;
+        }
+      }
+      /* di traverso: quanto e' spessa la fascia lunga */
+      for (let b = 0; b < m; b++) {
+        let a = 0;
+        while (a < n) {
+          if (run[at(a, b)] < lunga) {
+            a++;
+            continue;
+          }
+          let e = a;
+          while (e < n && run[at(e, b)] >= lunga) e++;
+          if (e - a >= sMin && e - a <= sMax) for (let q = a; q < e; q++) pieno[at(q, b)] = 1;
+          a = e;
+        }
+      }
+    }
+    for (let i = 0; i < N; i++) if (muro[i]) pieno[i] = 0;
+    /* Pieno a meta' davvero: lungo la fascia ci sono tratti di muro campito.
+     * Una quota con sopra i numeri, il vetro di una finestra, sono solo
+     * righe. */
+    const oltre = Math.round(0.5 / PASSO);
+    for (const p of pezziDi(pieno, W, H).pezzi) {
+      /* il riquadro allungato di mezzo metro: i tratti campiti stanno in
+       * fila coi pezzi a righe */
+      const oriz = p.x1 - p.x0 >= p.y1 - p.y0,
+        x0 = Math.max(0, p.x0 - (oriz ? oltre : 0)),
+        x1 = Math.min(W - 1, p.x1 + (oriz ? oltre : 0)),
+        y0 = Math.max(0, p.y0 - (oriz ? 0 : oltre)),
+        y1 = Math.min(H - 1, p.y1 + (oriz ? 0 : oltre));
+      let m = 0,
+        a = 0;
+      for (let y = y0; y <= y1; y++)
+        for (let x = x0; x <= x1; x++) {
+          a++;
+          if (muro[y * W + x]) m++;
+        }
+      const fuori = vetroNelMuro(p) ? Infinity : 0;
+      if (m < a * 0.2 || fuori > m * 0.3 || !appoggiato(p)) for (const c of p.celle) pieno[c] = 0;
+    }
+  }
+  /* le corse delle righe, in orizzontale e in verticale (con un buco di una
+   * cella: una riga fotografata non e' mai perfetta) */
+  const corsa = (lungo) => {
+    const out = new Int32Array(N);
+    const n = lungo ? H : W,
+      m = lungo ? W : H,
+      at = lungo ? (a, b) => a * W + b : (a, b) => b * W + a;
+    for (let a = 0; a < n; a++) {
+      let b = 0;
+      while (b < m) {
+        const vicino = (q) =>
+          riga[at(a, q)] || (a > 0 && riga[at(a - 1, q)]) || (a < n - 1 && riga[at(a + 1, q)]);
+        if (!riga[at(a, b)]) {
+          b++;
+          continue;
+        }
+        let e = b,
+          buco = 0;
+        while (e < m && (vicino(e) || (buco < 2 && e + 1 < m && vicino(e + 1)))) {
+          buco = vicino(e) ? 0 : buco + 1;
+          e++;
+        }
+        for (let q = b; q < e; q++) if (riga[at(a, q)]) out[at(a, q)] = e - b;
+        b = e;
+      }
+    }
+    return out;
+  };
+  const corsaO = corsa(true),
+    corsaV = corsa(false);
+  /* 2. i tramezzi a doppia riga */
+  const tramezzo = new Uint8Array(N);
+  const lungaT = Math.round(0.9 / PASSO),
+    dMin = 2,
+    dMax = Math.round(0.4 / PASSO);
+  const cercaDoppie = (oriz) => {
+    const c = oriz ? corsaO : corsaV,
+      passo = oriz ? W : 1;
+    for (let i = 0; i < N; i++) {
+      if (c[i] < lungaT) continue;
+      /* una riga spessa (9 cm e oltre): le due righe del tramezzo cosi'
+       * vicine che nella griglia si toccano */
+      if (i + 2 * passo < N && c[i + passo] >= lungaT && c[i + 2 * passo] >= lungaT) {
+        for (let q = 0; q <= 2; q++) tramezzo[i + q * passo] = 1;
+        continue;
+      }
+      for (let d = dMin; d <= dMax; d++) {
+        const j = i + d * passo;
+        if (j >= N) break;
+        if (c[j] < lungaT) continue;
+        /* in mezzo nessun muro e nessuna altra riga lunga: due righe, non un
+         * pettine (le piastrelle, i gradini) */
+        let pulito = true;
+        for (let q = 1; q < d && pulito; q++) if (muro[i + q * passo]) pulito = false;
+        if (!pulito) break;
+        for (let q = 0; q <= d; q++) tramezzo[i + q * passo] = 1;
+        break;
+      }
+    }
+  };
+  cercaDoppie(true);
+  cercaDoppie(false);
+  {
+    const { pezzi } = pezziDi(tramezzo, W, H);
+    for (const p of pezzi) {
+      const lungo = Math.max(p.x1 - p.x0, p.y1 - p.y0) + 1,
+        spesso = Math.min(p.x1 - p.x0, p.y1 - p.y0) + 1;
+      /* un tramezzo e' lungo e sottile e si appoggia a un muro */
+      if (lungo < lungaT || spesso > dMax + 2 || !appoggiato(p) || vetroNelMuro(p))
+        for (const c of p.celle) tramezzo[c] = 0;
+    }
+  }
+  /* 4. le scale: righe parallele lunghe almeno 60 cm a passo di 20-40 cm */
+  const scale = [];
+  const gradino = Math.round(0.6 / PASSO),
+    pMin = Math.round(0.18 / PASSO),
+    pMax = Math.round(0.4 / PASSO);
+  const segnaScale = new Uint8Array(N);
+  for (const oriz of [true, false]) {
+    const c = oriz ? corsaO : corsaV;
+    /* le righe lunghe, una per fila, coi loro capi */
+    const n = oriz ? H : W,
+      m = oriz ? W : H,
+      at = oriz ? (a, b) => a * W + b : (a, b) => b * W + a;
+    const file = [];
+    for (let a = 0; a < n; a++) {
+      const tratti = [];
+      let b = 0;
+      while (b < m) {
+        if (c[at(a, b)] >= gradino && c[at(a, b)] < Math.round(2.2 / PASSO)) {
+          let e = b;
+          while (e < m && (c[at(a, e)] >= gradino || (e + 1 < m && c[at(a, e + 1)] >= gradino)))
+            e++;
+          tratti.push([b, e]);
+          b = e;
+        } else b++;
+      }
+      file.push(tratti);
+    }
+    /* una fila per riga: le file vicine sono la stessa riga, spessa */
+    const centri = [];
+    for (let a = 0; a < n; a++)
+      for (const [b, e] of file[a]) {
+        const ultimo = centri.find(
+          (q) => a - q.a1 <= 1 && Math.min(e, q.e) - Math.max(b, q.b) > (e - b) * 0.6,
+        );
+        if (ultimo)
+          ((ultimo.a1 = a), (ultimo.b = Math.min(ultimo.b, b)), (ultimo.e = Math.max(ultimo.e, e)));
+        else centri.push({ a0: a, a1: a, b, e });
+      }
+    centri.sort((p, q) => p.a0 - q.a0);
+    /* catene di righe a passo regolare che si sovrappongono */
+    const usata = new Set();
+    for (let k = 0; k < centri.length; k++) {
+      if (usata.has(k)) continue;
+      const catena = [k];
+      let ultimo = centri[k];
+      for (let j = k + 1; j < centri.length; j++) {
+        const q = centri[j],
+          dist = (q.a0 + q.a1) / 2 - (ultimo.a0 + ultimo.a1) / 2;
+        if (dist < pMin) continue;
+        if (dist > pMax) break;
+        const sovrapposti = Math.min(q.e, ultimo.e) - Math.max(q.b, ultimo.b);
+        if (sovrapposti < Math.min(q.e - q.b, ultimo.e - ultimo.b) * 0.7) continue;
+        catena.push(j);
+        ultimo = q;
+      }
+      if (catena.length < 5) continue;
+      for (const j of catena) usata.add(j);
+      const pezzi = catena.map((j) => centri[j]);
+      const passi = pezzi
+        .slice(1)
+        .map((q, i) => (q.a0 + q.a1) / 2 - (pezzi[i].a0 + pezzi[i].a1) / 2);
+      const medio = passi.reduce((a, b) => a + b, 0) / passi.length;
+      /* regolare: i gradini sono tutti uguali (le piastrelle pure, ma
+       * vanno in tutte e due le direzioni: si guarda sotto) */
+      if (passi.some((p) => Math.abs(p - medio) > Math.max(2, medio * 0.3))) continue;
+      const b = Math.min(...pezzi.map((q) => q.b)),
+        e = Math.max(...pezzi.map((q) => q.e)),
+        a0 = pezzi[0].a0,
+        a1 = pezzi[pezzi.length - 1].a1;
+      /* una scala sta fra due muri: i gradini vanno da un muro all'altro.
+       * Le righe di una scritta, di un riquadro, dell'albero no. */
+      const toccaMuro = (q, capo) => {
+        for (let a = q.a0; a <= q.a1; a++)
+          for (let d = 0; d <= Math.round(0.25 / PASSO); d++) {
+            const bb = capo ? q.e + d : q.b - d;
+            if (bb >= 0 && bb < m && muro[at(a, bb)]) return true;
+          }
+        return false;
+      };
+      const fraMuri = pezzi.filter((q) => toccaMuro(q, false) && toccaMuro(q, true)).length;
+      if (fraMuri < pezzi.length * 0.7) continue;
+      scale.push(
+        oriz
+          ? { x0: b, x1: e, y0: a0, y1: a1, oriz: false, gradini: pezzi.length, passo: medio }
+          : { x0: a0, x1: a1, y0: b, y1: e, oriz: true, gradini: pezzi.length, passo: medio },
+      );
+    }
+  }
+  /* Le piastrelle sono un reticolo: righe a passo regolare in tutte e due
+   * le direzioni nello stesso posto. Una scala ha i gradini in una sola. */
+  const tutte = scale.filter(
+    (s) =>
+      !scale.some(
+        (t) =>
+          t !== s &&
+          t.oriz !== s.oriz &&
+          Math.min(s.x1, t.x1) - Math.max(s.x0, t.x0) > 0 &&
+          Math.min(s.y1, t.y1) - Math.max(s.y0, t.y0) > 0,
+      ),
+  );
+  /* la stessa scala trovata piu' volte: si tiene la piu' grande */
+  const vere = [];
+  for (const s of [...tutte].sort(
+    (a, b) => (b.x1 - b.x0) * (b.y1 - b.y0) - (a.x1 - a.x0) * (a.y1 - a.y0),
+  )) {
+    const sopra = vere.some(
+      (t) =>
+        Math.min(s.x1, t.x1) - Math.max(s.x0, t.x0) > 0 &&
+        Math.min(s.y1, t.y1) - Math.max(s.y0, t.y0) > 0,
+    );
+    if (!sopra) vere.push(s);
+  }
+  for (const s of vere)
+    for (let y = s.y0; y <= s.y1; y++) for (let x = s.x0; x <= s.x1; x++) segnaScale[y * W + x] = 1;
+  for (let i = 0; i < N; i++) if ((tramezzo[i] || pieno[i]) && !segnaScale[i]) muro[i] = 1;
+  /* via i pezzetti sotto gli 80 cm (il lavello, il frigo, un simbolo
+   * disegnati scuri) e lo scuro che tocca il bordo della foto (il tavolo
+   * sotto il foglio) */
+  {
+    const { pezzi } = pezziDi(muro, W, H),
+      minimo = 0.8 / PASSO;
+    for (const p of pezzi)
+      if (
+        Math.max(p.x1 - p.x0, p.y1 - p.y0) + 1 < minimo ||
+        p.x0 === 0 ||
+        p.y0 === 0 ||
+        p.x1 === W - 1 ||
+        p.y1 === H - 1
+      )
+        for (const c of p.celle) muro[c] = 0;
+    /* La casa e' la rete di muri piu' grande, saltando i vani delle
+     * finestre (fino a 1,6 m): i pezzi lontani da lei (l'albero, il
+     * cartiglio, le quote sotto il disegno) se ne vanno. */
+    const unita = pezziDi(allarga(muro, W, H, Math.round(0.8 / PASSO)), W, H);
+    if (unita.pezzi.length > 1) {
+      let k = 0;
+      unita.pezzi.forEach((p, i) => {
+        if (p.celle.length > unita.pezzi[k].celle.length) k = i;
+      });
+      for (let i = 0; i < N; i++) if (muro[i] && unita.id[i] !== k) muro[i] = 0;
+    }
+  }
+  /* 3. i varchi nella fila di un muro */
+  const vetro = new Uint8Array(N),
+    soglie = new Uint8Array(N);
+  const spessoreMax = Math.round(0.7 / PASSO),
+    varco = Math.round(1.3 / PASSO),
+    varcoLargo = Math.round(4 / PASSO),
+    vetroMax = Math.round(3 / PASSO),
+    varcoUnLato = Math.round(1.0 / PASSO),
+    tratto = Math.round(0.2 / PASSO);
+  const corre = (i, passo, fino) => {
+    let n = 0;
+    for (let j = i; n < fino && j >= 0 && j < N && muro[j]; j += passo) n++;
+    return n;
+  };
+  /* il muro in a corre lungo «passo» (indietro) ed e' sottile di traverso */
+  const nellaFila = (a, passo, largo) => {
+    if (corre(a, -passo, tratto) < tratto) return false;
+    const spesso = corre(a, largo, spessoreMax + 1) + corre(a, -largo, spessoreMax + 1) - 1;
+    return spesso <= spessoreMax;
+  };
+  const varchi = (oriz) => {
+    const passo = oriz ? 1 : W,
+      largo = oriz ? W : 1,
+      n = oriz ? H : W,
+      m = oriz ? W : H,
+      at = oriz ? (a, b) => a * W + b : (a, b) => b * W + a;
+    for (let a = 1; a < n - 1; a++)
+      for (let b = 1; b < m - 1; b++) {
+        const i = at(a, b);
+        if (!muro[i - passo] || muro[i]) continue;
+        let e = b;
+        while (e < m && !muro[at(a, e)] && e - b <= varcoLargo) e++;
+        if (e >= m || e - b > varcoLargo) continue;
+        const k = e - b,
+          j = at(a, e);
+        const fa = nellaFila(i - passo, passo, largo),
+          fb = nellaFila(j, -passo, largo);
+        if (!fa && !fb) continue;
+        /* il vetro: righe nel varco che corrono lungo la fila (non quelle di
+         * traverso, come le piastrelle di un'entrata) */
+        const lungoLa = oriz ? corsaO : corsaV;
+        let righe = 0;
+        for (let q = b; q < e; q++) {
+          const c = at(a, q);
+          if (
+            [c, c - largo, c + largo, c - 2 * largo, c + 2 * largo].some(
+              (z) => riga[z] && lungoLa[z] >= k * 0.5,
+            )
+          )
+            righe++;
+        }
+        if (fa && fb && k <= vetroMax && righe >= k * 0.5)
+          for (let q = b; q < e; q++) vetro[at(a, q)] = 1;
+        else if (k <= (fa && fb ? varco : varcoUnLato))
+          for (let q = b; q < e; q++) soglie[at(a, q)] = 1;
+      }
+  };
+  varchi(true);
+  varchi(false);
+  /* ai piedi e in cima a una scala non c'e' ne' porta ne' finestra */
+  {
+    const vicino = allarga(segnaScale, W, H, Math.round(0.3 / PASSO));
+    for (let i = 0; i < N; i++) if (vicino[i]) vetro[i] = soglie[i] = 0;
+  }
+  /* Un varco e' tutto vetro o tutto soglia: le righe del vetro stanno in
+   * poche file dello spessore del muro, le altre file erano «vuote». */
+  {
+    const unione = new Uint8Array(N);
+    for (let i = 0; i < N; i++) unione[i] = vetro[i] || soglie[i] ? 1 : 0;
+    for (const p of pezziDi(unione, W, H).pezzi) {
+      const n = p.celle.filter((c) => vetro[c]).length,
+        tutto = n >= p.celle.length * 0.2;
+      for (const c of p.celle) {
+        vetro[c] = tutto ? 1 : 0;
+        soglie[c] = tutto ? 0 : 1;
+      }
+    }
+  }
+  const barriera = muro.slice();
+  for (let i = 0; i < N; i++) if (vetro[i] || soglie[i]) barriera[i] = 1;
+  return {
+    W,
+    H,
+    muro,
+    barriera,
+    vetro,
+    pieni: true,
+    scale: vere.map((s) => ({
+      x0: s.x0 * PASSO,
+      x1: (s.x1 + 1) * PASSO,
+      y0: s.y0 * PASSO,
+      y1: (s.y1 + 1) * PASSO,
+      oriz: s.oriz,
+      gradini: s.gradini,
+    })),
+  };
+}
+
 /** Dai muri alla casa, nella stessa forma che esce dal DWG (importa.js). */
-export function riconosciDaFoto({ W, H, muro, barriera, vetro }, { fuori = new Set() } = {}) {
+export function riconosciDaFoto(
+  { W, H, muro, barriera, vetro, pieni = false, scale = [] },
+  { fuori = new Set(), squadra = true } = {},
+) {
   const N = W * H,
     passo = PASSO,
     ostacolo = barriera || muro;
@@ -815,12 +1697,38 @@ export function riconosciDaFoto({ W, H, muro, barriera, vetro }, { fuori = new S
   const lab = new Int32Array(N);
   let n = 1;
   const cuori = [{ id: 1, celle: 0, bordo: true }];
+  /* Una pianta a muri pieni non disegna le soglie: il fuori entrerebbe dal
+   * portone e si prenderebbe tutta la casa. Il fuori passa solo dove e'
+   * largo (piu' di 65 cm dai muri): una porta, un'entrata fino a 1,3 m lo
+   * fermano. */
+  const largoFuori = pieni ? Math.round(0.65 / passo) : 0;
+  let lontano = null;
+  if (largoFuori) {
+    lontano = new Int32Array(N).fill(1e9);
+    let a = 0,
+      b = 0;
+    for (let i = 0; i < N; i++)
+      if (ostacolo[i]) {
+        lontano[i] = 0;
+        coda[b++] = i;
+      }
+    while (a < b) {
+      const c = coda[a++],
+        x = c % W;
+      for (const j of [x > 0 ? c - 1 : -1, x < W - 1 ? c + 1 : -1, c - W, c + W])
+        if (j >= 0 && j < N && lontano[j] > lontano[c] + 1) {
+          lontano[j] = lontano[c] + 1;
+          coda[b++] = j;
+        }
+    }
+  }
+  const passaFuori = (i) => !ostacolo[i] && (!lontano || lontano[i] >= largoFuori);
   {
     const pila = [];
     for (let x = 0; x < W; x++)
       for (const y of [0, H - 1]) {
         const i = y * W + x;
-        if (!ostacolo[i] && !lab[i]) {
+        if (passaFuori(i) && !lab[i]) {
           lab[i] = 1;
           pila.push(i);
         }
@@ -828,7 +1736,7 @@ export function riconosciDaFoto({ W, H, muro, barriera, vetro }, { fuori = new S
     for (let y = 0; y < H; y++)
       for (const x of [0, W - 1]) {
         const i = y * W + x;
-        if (!ostacolo[i] && !lab[i]) {
+        if (passaFuori(i) && !lab[i]) {
           lab[i] = 1;
           pila.push(i);
         }
@@ -837,7 +1745,7 @@ export function riconosciDaFoto({ W, H, muro, barriera, vetro }, { fuori = new S
       const c = pila.pop(),
         x = c % W;
       for (const j of [x > 0 ? c - 1 : -1, x < W - 1 ? c + 1 : -1, c - W, c + W])
-        if (j >= 0 && j < N && !lab[j] && !ostacolo[j]) {
+        if (j >= 0 && j < N && !lab[j] && passaFuori(j)) {
           lab[j] = 1;
           pila.push(j);
           cuori[0].celle++;
@@ -1019,10 +1927,14 @@ export function riconosciDaFoto({ W, H, muro, barriera, vetro }, { fuori = new S
     const segna = [],
       { x0, x1, y0, y1, orizz } = gr;
     const muroIn = (x, y) => x >= 0 && y >= 0 && x < W && y < H && muro[y * W + x];
+    /* il muro ai due capi, entro tre celle: lo spigolo di una stanza
+     * fotografata si infila un poco nel vano */
+    const muroVicino = (x, y, dx, dy) =>
+      muroIn(x + dx, y + dy) || muroIn(x + 2 * dx, y + 2 * dy) || muroIn(x + 3 * dx, y + 3 * dy);
     const fianchi = (p) =>
       orizz
-        ? (muroIn(x0 - 1, p) || muroIn(x0 - 2, p)) && (muroIn(x1 + 1, p) || muroIn(x1 + 2, p))
-        : (muroIn(p, y0 - 1) || muroIn(p, y0 - 2)) && (muroIn(p, y1 + 1) || muroIn(p, y1 + 2));
+        ? muroVicino(x0, p, -1, 0) && muroVicino(x1, p, 1, 0)
+        : muroVicino(p, y0, 0, -1) && muroVicino(p, y1, 0, 1);
     const centro = orizz ? Math.round((y0 + y1) / 2) : Math.round((x0 + x1) / 2);
     if (!fianchi(centro)) continue; // non e' un varco in un muro
     let p0 = centro,
@@ -1084,6 +1996,7 @@ export function riconosciDaFoto({ W, H, muro, barriera, vetro }, { fuori = new S
     for (let i = 0; i < N; i++) if (tipo[i] === s.id) tipo[i] = dove;
   }
   const vive = stanze.filter((s) => !s.via);
+  if (squadra) squadraLaCasa(tipo, W, H, vive);
   // centro, area, riquadro
   for (const s of vive) {
     let sx = 0,
@@ -1108,6 +2021,8 @@ export function riconosciDaFoto({ W, H, muro, barriera, vetro }, { fuori = new S
     s.riquadro = { x0: bx0 * passo, x1: bx1 * passo, y0: by0 * passo, y1: by1 * passo };
     s.celle = c;
     s.area = c * passo * passo;
+    /* squadrata, una nicchia puo' restare senza celle: non e' una stanza */
+    if (!c) continue;
     let cx = Math.round(sx / c),
       cy = Math.round(sy / c);
     if (tipo[cy * W + cx] !== s.id) {
@@ -1154,10 +2069,13 @@ export function riconosciDaFoto({ W, H, muro, barriera, vetro }, { fuori = new S
     H,
     passo,
     tipo,
-    stanze: vive,
+    stanze: vive.filter((s) => s.celle > 0),
     vuoti: [],
-    aperture: aperture.filter((a) => vive.some((s) => s.id === a.stanza) || !a.stanza),
+    aperture: aperture.filter(
+      (a) => vive.some((s) => s.id === a.stanza && s.celle > 0) || !a.stanza,
+    ),
     rettangoli,
+    scale: scaleDellaCasa(scale, tipo, W, H, passo, muro),
     larghezza: W * passo,
     profondita: H * passo,
     cuori: cuori.map((c) => ({
@@ -1167,6 +2085,247 @@ export function riconosciDaFoto({ W, H, muro, barriera, vetro }, { fuori = new S
     })),
     lab,
   };
+}
+
+/* Le scale trovate nella pianta, al loro posto nella casa: il centro, la
+ * stanza e il verso. Sale verso il capo chiuso da un muro (si parte dal lato
+ * aperto); senza muro a nessuno dei due capi, verso l'alto del disegno. */
+function scaleDellaCasa(scale, tipo, W, H, passo, muro) {
+  const fuori = [];
+  for (const s of scale || []) {
+    const x0 = Math.round(s.x0 / passo),
+      x1 = Math.round(s.x1 / passo) - 1,
+      y0 = Math.round(s.y0 / passo),
+      y1 = Math.round(s.y1 / passo) - 1;
+    const cx = Math.round((x0 + x1) / 2),
+      cy = Math.round((y0 + y1) / 2);
+    if (cx < 0 || cy < 0 || cx >= W || cy >= H) continue;
+    /* la stanza: quella che ha piu' celle sotto la scala */
+    const conta = new Map();
+    for (let y = y0; y <= y1; y++)
+      for (let x = x0; x <= x1; x++) {
+        const t = tipo[y * W + x];
+        if (t > 0) conta.set(t, (conta.get(t) || 0) + 1);
+      }
+    const stanza = [...conta].sort((a, b) => b[1] - a[1])[0]?.[0];
+    if (!stanza) continue;
+    /* quanto muro c'e' oltre i due capi, nella fascia della scala */
+    const muroOltre = (verso) => {
+      let n = 0;
+      for (let d = 1; d <= 6; d++)
+        if (s.oriz)
+          for (let y = y0; y <= y1; y++) {
+            const x = verso < 0 ? x0 - d : x1 + d;
+            if (x >= 0 && x < W && muro[y * W + x]) n++;
+          }
+        else
+          for (let x = x0; x <= x1; x++) {
+            const y = verso < 0 ? y0 - d : y1 + d;
+            if (y >= 0 && y < H && muro[y * W + x]) n++;
+          }
+      return n;
+    };
+    const prima = muroOltre(-1),
+      dopo = muroOltre(1);
+    /* rot 0: sale verso y piu' piccole (l'alto del disegno) */
+    const rot = s.oriz ? (dopo > prima ? -Math.PI / 2 : Math.PI / 2) : dopo > prima ? Math.PI : 0;
+    fuori.push({
+      x: ((x0 + x1 + 1) / 2) * passo,
+      y: ((y0 + y1 + 1) / 2) * passo,
+      lungo: (s.oriz ? x1 - x0 + 1 : y1 - y0 + 1) * passo,
+      largo: (s.oriz ? y1 - y0 + 1 : x1 - x0 + 1) * passo,
+      rot,
+      gradini: s.gradini,
+      stanza,
+    });
+  }
+  return fuori;
+}
+
+/* ── la casa in squadra ─────────────────────────────────────────────────
+ *
+ * «Perfeziona la mappa dal caricamento PDF e foto, non puo' uscire cosi':
+ * metti le cose piu' definite.» Dalla foto le stanze escono coi bordi a
+ * dente di sega e i muri a macchie. Una casa e' fatta di rettangoli: ogni
+ * stanza diventa i pochi rettangoli piu' grandi che la riempiono, i bordi
+ * vicini di stanze diverse si allineano sulla stessa riga (lo stesso muro),
+ * e i muri restano solo attorno alle stanze, spessi al piu' 30 cm verso fuori:
+ * le macchie lontane (quote, scritte, l'albero) se ne vanno. */
+
+/* Il rettangolo piu' grande tutto dentro `m` (istogramma per righe). */
+function rettangoloMassimo(m, W, H) {
+  const alto = new Int32Array(W);
+  let meglio = { area: 0, x0: 0, y0: 0, x1: -1, y1: -1 };
+  const pila = new Int32Array(W + 1);
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) alto[x] = m[y * W + x] ? alto[x] + 1 : 0;
+    let cima = 0;
+    for (let x = 0; x <= W; x++) {
+      const h = x < W ? alto[x] : 0;
+      while (cima > 0 && alto[pila[cima - 1]] >= h) {
+        const hh = alto[pila[--cima]];
+        const sinistra = cima > 0 ? pila[cima - 1] + 1 : 0;
+        const area = hh * (x - sinistra);
+        if (area > meglio.area) meglio = { area, x0: sinistra, x1: x - 1, y0: y - hh + 1, y1: y };
+      }
+      pila[cima++] = x;
+    }
+  }
+  return meglio;
+}
+
+/* I valori vicini (entro `tolleranza`) diventano uno: la loro media pesata. */
+function allinea(valori, tolleranza) {
+  const ordinati = [...valori].sort((a, b) => a.v - b.v);
+  const mappa = new Map();
+  let gruppo = [];
+  const chiudi = () => {
+    if (!gruppo.length) return;
+    const peso = gruppo.reduce((t, g) => t + g.peso, 0);
+    const media = Math.round(gruppo.reduce((t, g) => t + g.v * g.peso, 0) / peso);
+    for (const g of gruppo) mappa.set(g.v, media);
+    gruppo = [];
+  };
+  for (const o of ordinati) {
+    if (gruppo.length && o.v - gruppo[gruppo.length - 1].v > tolleranza) chiudi();
+    gruppo.push(o);
+  }
+  chiudi();
+  return mappa;
+}
+
+export function squadraLaCasa(tipo, W, H, stanze) {
+  const N = W * H;
+  const minimo = Math.round(1.2 / (PASSO * PASSO)); // 1,2 m²
+  const rett = [];
+  for (const s of stanze) {
+    const m = new Uint8Array(N);
+    let tot = 0;
+    for (let i = 0; i < N; i++)
+      if (tipo[i] === s.id) {
+        m[i] = 1;
+        tot++;
+      }
+    if (!tot) continue;
+    for (let k = 0; k < 8; k++) {
+      const r = rettangoloMassimo(m, W, H);
+      /* i pezzetti (sotto 1,2 m² o un ventesimo della stanza) sono denti, non stanza */
+      if (!r.area || r.area < minimo || (k > 0 && r.area < tot * 0.05)) break;
+      rett.push({ id: s.id, ...r });
+      for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) m[y * W + x] = 0;
+    }
+  }
+  if (!rett.length) return;
+  /* Ogni rettangolo si allarga fino al muro vero (al massimo 60 cm per lato):
+   * i sanitari e le scritte avevano mangiato i bordi della stanza. Una
+   * striscia si prende se e' quasi tutta libera (niente muro, niente altra
+   * stanza). */
+  const max = Math.round(0.6 / PASSO);
+  const libera = (i, id) =>
+    tipo[i] === id || (tipo[i] !== -3 && tipo[i] !== -4 && tipo[i] <= 0 && tipo[i] !== -2);
+  const striscia = (r, lato) => {
+    let liberi = 0,
+      tutti = 0;
+    if (lato === "su" || lato === "giu") {
+      const y = lato === "su" ? r.y0 - 1 : r.y1 + 1;
+      if (y < 0 || y >= H) return false;
+      for (let x = r.x0; x <= r.x1; x++, tutti++) if (libera(y * W + x, r.id)) liberi++;
+    } else {
+      const x = lato === "sx" ? r.x0 - 1 : r.x1 + 1;
+      if (x < 0 || x >= W) return false;
+      for (let y = r.y0; y <= r.y1; y++, tutti++) if (libera(y * W + x, r.id)) liberi++;
+    }
+    return liberi >= tutti * 0.8;
+  };
+  for (const r of rett)
+    for (const lato of ["su", "giu", "sx", "dx"])
+      for (let k = 0; k < max && striscia(r, lato); k++) {
+        if (lato === "su") r.y0--;
+        else if (lato === "giu") r.y1++;
+        else if (lato === "sx") r.x0--;
+        else r.x1++;
+      }
+  /* I bordi che quasi coincidono diventano la stessa riga (15 cm): i lati
+   * sinistri coi sinistri, i destri coi destri — un tramezzo e' fra il destro
+   * di una stanza e il sinistro dell'altra, e non deve sparire. */
+  const tol = Math.max(2, Math.round(0.15 / PASSO));
+  const alto = (r) => r.y1 - r.y0 + 1,
+    largo = (r) => r.x1 - r.x0 + 1;
+  const x0s = allinea(
+    rett.map((r) => ({ v: r.x0, peso: alto(r) })),
+    tol,
+  );
+  const x1s = allinea(
+    rett.map((r) => ({ v: r.x1, peso: alto(r) })),
+    tol,
+  );
+  const y0s = allinea(
+    rett.map((r) => ({ v: r.y0, peso: largo(r) })),
+    tol,
+  );
+  const y1s = allinea(
+    rett.map((r) => ({ v: r.y1, peso: largo(r) })),
+    tol,
+  );
+  const nuovo = new Int16Array(N);
+  for (let i = 0; i < N; i++) nuovo[i] = tipo[i] > 0 ? -3 : tipo[i];
+  const dipinto = new Uint8Array(N);
+  for (const r of rett) {
+    const x0 = x0s.get(r.x0),
+      x1 = x1s.get(r.x1),
+      y0 = y0s.get(r.y0),
+      y1 = y1s.get(r.y1);
+    for (let y = Math.max(0, y0); y <= Math.min(H - 1, y1); y++)
+      for (let x = Math.max(0, x0); x <= Math.min(W - 1, x1); x++) {
+        const i = y * W + x;
+        if (dipinto[i]) continue;
+        nuovo[i] = r.id;
+        dipinto[i] = 1;
+      }
+  }
+  /* i muri: solo attorno alle stanze, fino a 30 cm (distanza a quadretti,
+   * cosi' gli spigoli restano spigoli) */
+  const fino = Math.max(3, Math.round(0.3 / PASSO));
+  const dist = new Int16Array(N).fill(32767);
+  const coda = new Int32Array(N);
+  let testa = 0,
+    fondo = 0;
+  for (let i = 0; i < N; i++)
+    if (dipinto[i]) {
+      dist[i] = 0;
+      coda[fondo++] = i;
+    }
+  while (testa < fondo) {
+    const i = coda[testa++],
+      d = dist[i];
+    if (d >= fino) continue;
+    const x = i % W,
+      y = (i / W) | 0;
+    for (let dy = -1; dy <= 1; dy++)
+      for (let dx = -1; dx <= 1; dx++) {
+        const xx = x + dx,
+          yy = y + dy;
+        if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue;
+        const j = yy * W + xx;
+        if (dist[j] > d + 1) {
+          dist[j] = d + 1;
+          coda[fondo++] = j;
+        }
+      }
+  }
+  /* Fra due stanze vicine (fino a due metri) e' tutto muro: la casa
+   * e' una, non scatole staccate. Si chiude l'insieme delle stanze di un metro
+   * e quello che resta dentro e non e' stanza e' muro. */
+  const rc = Math.round(1 / PASSO);
+  const casa = stringi(allarga(dipinto, W, H, rc), W, H, rc);
+  for (let i = 0; i < N; i++) {
+    if (dipinto[i]) continue;
+    const v = nuovo[i];
+    if (casa[i]) {
+      if (v !== -4 && v !== -5) nuovo[i] = -3;
+    } else if (v === -3 || v === -4 || v === -5) nuovo[i] = dist[i] <= fino ? v : -2;
+  }
+  tipo.set(nuovo);
 }
 
 /**

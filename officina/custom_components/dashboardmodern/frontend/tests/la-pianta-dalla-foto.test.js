@@ -7,8 +7,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   PASSO,
+  grigliaDaMuriPieni,
   grigliaDeiMuri,
   inchiostro,
+  muriPieni,
+  MURI_PIENI_MINIMO,
+  prospettiva,
+  raddrizza,
   riconosciDaFoto,
   stimaInclinazione,
 } from "../src/core/pianta-da-foto.js";
@@ -361,4 +366,196 @@ test("una quota dal bordo dell'immagine fino al muro non porta via la casa", () 
   const casa = riconosciDaFoto(grigliaDeiMuri(inchiostro(im), W, H, 1 / pxm));
   const grandi = casa.stanze.filter((s) => s.area > 10).map((s) => Math.round(s.area));
   assert.equal(grandi.length, 2, `due stanze: ${casa.stanze.map((s) => s.area.toFixed(1))}`);
+});
+
+/* «Guarda attentamente la foto: non c'entra nulla con quella che hai
+ * fatto.» La pianta dell'architetto: muri grigi pieni, e attorno le quote
+ * che chiudono dei rettangoli fuori casa, le scritte nelle stanze, un WC
+ * disegnato a righe. Dai soli muri pieni escono le due stanze vere, e
+ * nessuna stanza finta fra le quote. */
+test("la pianta a muri pieni: le quote e le scritte non fanno stanze finte", () => {
+  const W = 1500,
+    H = 1300,
+    pxm = 110,
+    mpp = 1 / pxm;
+  const im = foglio(W, H);
+  for (let i = 0; i < W * H; i++) {
+    const p = i * 4;
+    im.data[p] = im.data[p + 1] = im.data[p + 2] = 196;
+  }
+  const m = (v) => 200 + v * pxm,
+    grigio = 120,
+    sp = 0.26 * pxm,
+    riga = (x0, y0, x1, y1) => rettangolo(im, x0, y0, x1 + 3, y1 + 3, 45);
+  rettangolo(im, m(0), m(0), m(8), m(0) + sp, grigio);
+  rettangolo(im, m(0), m(6) - sp, m(8), m(6), grigio);
+  rettangolo(im, m(0), m(0), m(0) + sp, m(6), grigio);
+  rettangolo(im, m(8) - sp, m(0), m(8), m(6), grigio);
+  rettangolo(im, m(4) - sp / 2, m(0), m(4) + sp / 2, m(2.5), grigio);
+  rettangolo(im, m(4) - sp / 2, m(3.4), m(4) + sp / 2, m(6), grigio);
+  /* le quote attorno: chiudono un rettangolo largo un metro fuori casa */
+  riga(m(-1), m(-1), m(9), m(-1));
+  riga(m(-1), m(7), m(9), m(7));
+  riga(m(-1), m(-1), m(-1), m(7));
+  riga(m(9), m(-1), m(9), m(7));
+  for (const x of [0, 4, 8]) riga(m(x), m(-1.2), m(x), m(0));
+  /* le scritte: tratti fitti nelle stanze */
+  for (let k = 0; k < 12; k++) riga(m(1.2) + k * 9, m(2.5), m(1.2) + k * 9, m(2.8));
+  /* un WC a righe contro il muro */
+  for (const [a, b, c, d] of [
+    [5.2, 0.26, 5.2, 0.8],
+    [5.7, 0.26, 5.7, 0.8],
+    [5.2, 0.8, 5.7, 0.8],
+  ])
+    riga(m(a), m(b), m(c), m(d));
+  const pieni = muriPieni(im, mpp);
+  assert.ok(pieni.metri >= MURI_PIENI_MINIMO, `muri pieni: ${pieni.metri.toFixed(1)} m²`);
+  const casa = riconosciDaFoto(grigliaDeiMuri(pieni.ink, W, H, mpp));
+  const aree = casa.stanze.map((s) => Math.round(s.area));
+  assert.equal(aree.length, 2, `solo le due stanze vere: ${aree}`);
+  for (const a of aree) assert.ok(a >= 18 && a <= 24, `stanza di ${a} m²`);
+  /* e una pianta a righe (doppia riga, niente pieno) non e' a muri pieni */
+  const righe = foglio(W, H);
+  for (const [x0, y0, x1, y1] of [
+    [m(0), m(0), m(8), m(0)],
+    [m(0), m(0) + 30, m(8), m(0) + 30],
+  ])
+    rettangolo(righe, x0, y0, x1, y1 + 2, 30);
+  assert.ok(muriPieni(righe, mpp).metri < MURI_PIENI_MINIMO);
+});
+
+/* «Guarda attentamente la foto della planimetria» e «devi riconoscere le
+ * scale e le altre cose». Una pianta dell'architetto: muri grigi pieni, il
+ * bagno chiuso da un tramezzo a due righe sottili, una finestra col vetro
+ * disegnato nel vano, una porta vuota, una scala fra due muri, i sanitari a
+ * righe e le scritte. Poi la stessa pianta fotografata di sbieco. */
+function piantaDellArchitetto() {
+  const W = 1500,
+    H = 1250,
+    pxm = 110,
+    mpp = 1 / pxm;
+  const im = foglio(W, H);
+  for (let i = 0; i < W * H; i++) im.data[i * 4] = im.data[i * 4 + 1] = im.data[i * 4 + 2] = 196;
+  const m = (v) => 150 + v * pxm,
+    grigio = 115,
+    sp = 0.28 * pxm,
+    riga = (x0, y0, x1, y1) => rettangolo(im, m(x0), m(y0), m(x1) + 2, m(y1) + 2, 40);
+  /* i muri di fuori, con la finestra in alto (da 6,4 a 7,8 m) */
+  rettangolo(im, m(0), m(0), m(6.4), m(0) + sp, grigio);
+  rettangolo(im, m(7.8), m(0), m(10), m(0) + sp, grigio);
+  rettangolo(im, m(0), m(8) - sp, m(10), m(8), grigio);
+  rettangolo(im, m(0), m(0), m(0) + sp, m(8), grigio);
+  rettangolo(im, m(10) - sp, m(0), m(10), m(8), grigio);
+  /* il vetro nel vano: tre righe lungo il muro */
+  for (const y of [0.06, 0.14, 0.22]) riga(6.4, y, 7.8, y);
+  /* il muro in mezzo, con la porta (da 3,5 a 4,4 m) */
+  rettangolo(im, m(5) - sp / 2, m(0), m(5) + sp / 2, m(3.5), grigio);
+  rettangolo(im, m(5) - sp / 2, m(4.4), m(5) + sp / 2, m(8), grigio);
+  /* il tramezzo del bagno: due righe a 10 cm, da muro a muro */
+  riga(0.28, 2.5, 4.86, 2.5);
+  riga(0.28, 2.6, 4.86, 2.6);
+  /* i sanitari a righe e le scritte nel bagno */
+  for (const [a, b, c, d] of [
+    [1, 0.3, 1, 0.8],
+    [1.4, 0.3, 1.4, 0.8],
+    [1, 0.8, 1.4, 0.8],
+    [2, 0.3, 2.6, 0.3],
+    [2, 0.7, 2.6, 0.7],
+  ])
+    riga(a, b, c, d);
+  for (let k = 0; k < 10; k++) riga(1.5 + k * 0.08, 1.4, 1.5 + k * 0.08, 1.7);
+  /* la scala: un muretto a sinistra e dieci gradini fino al muro di fuori */
+  rettangolo(im, m(8.4), m(2.5), m(8.55), m(5.6), grigio);
+  for (let k = 0; k < 10; k++) riga(8.55, 2.7 + k * 0.28, 9.72, 2.7 + k * 0.28);
+  return { im, W, H, mpp };
+}
+
+function laCasaDalleRighe(im, mpp) {
+  const pieni = muriPieni(im, mpp);
+  assert.ok(pieni.metri >= MURI_PIENI_MINIMO, `muri pieni: ${pieni.metri.toFixed(1)} m²`);
+  const griglia = grigliaDaMuriPieni(pieni.ink, pieni.linee, im.width, im.height, mpp);
+  return { griglia, casa: riconosciDaFoto(griglia) };
+}
+
+test("la pianta dell'architetto: bagno dal tramezzo, finestra dal vetro, porta e scala", () => {
+  const { im, mpp } = piantaDellArchitetto();
+  const { griglia, casa } = laCasaDalleRighe(im, mpp);
+  const aree = casa.stanze.map((s) => s.area).sort((a, b) => a - b);
+  assert.equal(aree.length, 3, `bagno, camera e soggiorno: ${aree.map((a) => a.toFixed(1))}`);
+  /* il bagno (5 x 2,5 meno i muri) e la camera sotto (5 x 5,4) */
+  assert.ok(aree[0] > 8 && aree[0] < 12.5, `il bagno: ${aree[0].toFixed(1)} m²`);
+  assert.ok(aree[1] > 18 && aree[1] < 27, `la camera: ${aree[1].toFixed(1)} m²`);
+  const finestre = casa.aperture.filter((a) => a.tipo === "finestra"),
+    porte = casa.aperture.filter((a) => a.tipo === "porta");
+  assert.ok(
+    finestre.some((f) => Math.abs(f.cx - 7.1 - 150 * mpp) < 0.5),
+    `la finestra in alto: ${JSON.stringify(finestre)}`,
+  );
+  assert.ok(porte.length >= 1, "la porta fra camera e soggiorno");
+  assert.equal(griglia.scale.length, 1, `una scala: ${JSON.stringify(griglia.scale)}`);
+  assert.equal(casa.scale.length, 1);
+  /* gia' dritta: la prospettiva non la tocca */
+  const p = prospettiva(im);
+  assert.ok(!p || p.sposta < Math.max(im.width, im.height) * 0.01, `dritta: ${p?.sposta}`);
+  assert.ok(casa.scale[0].lungo > 2.2 && casa.scale[0].lungo < 3.2, `lunga ${casa.scale[0].lungo}`);
+});
+
+test("la pianta fotografata di sbieco si raddrizza e torna la stessa casa", () => {
+  const { im, W, H, mpp } = piantaDellArchitetto();
+  /* il foglio visto dal basso: in alto piu' stretto che in basso */
+  const T = [
+    [1, -0.05, 30],
+    [0.02, 0.92, 20],
+    [0.00003, 0.00008, 1],
+  ];
+  const det = (m) =>
+    m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) -
+    m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) +
+    m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+  assert.ok(Math.abs(det(T)) > 0);
+  const storta = foglio(W, H);
+  /* per ogni pixel della foto, il punto del foglio (T inversa, a mano) */
+  const inv = (() => {
+    const [[a, b, c], [d, e, f], [g, h, i]] = T,
+      D = det(T);
+    return [
+      [(e * i - f * h) / D, (c * h - b * i) / D, (b * f - c * e) / D],
+      [(f * g - d * i) / D, (a * i - c * g) / D, (c * d - a * f) / D],
+      [(d * h - e * g) / D, (b * g - a * h) / D, (a * e - b * d) / D],
+    ];
+  })();
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
+      const z = inv[2][0] * x + inv[2][1] * y + inv[2][2],
+        sx = Math.round((inv[0][0] * x + inv[0][1] * y + inv[0][2]) / z),
+        sy = Math.round((inv[1][0] * x + inv[1][1] * y + inv[1][2]) / z);
+      const o = (y * W + x) * 4;
+      const v = sx >= 0 && sy >= 0 && sx < W && sy < H ? im.data[(sy * W + sx) * 4] : 60;
+      storta.data[o] = storta.data[o + 1] = storta.data[o + 2] = v;
+    }
+  const p = prospettiva(storta);
+  assert.ok(p, "le righe dei muri si trovano");
+  assert.ok(p.sposta > 10, `e la foto era storta: ${p.sposta.toFixed(1)} px`);
+  const dritta = raddrizza(storta, p);
+  /* la scala cambia un poco col raddrizzare: si misura sul muro di fuori,
+   * largo 10 m */
+  const pieni = muriPieni(dritta, mpp);
+  let x0 = Infinity,
+    x1 = -1;
+  const meta = Math.round(dritta.height / 2);
+  for (let x = 0; x < dritta.width; x++)
+    if (pieni.ink[meta * dritta.width + x]) {
+      x0 = Math.min(x0, x);
+      x1 = Math.max(x1, x);
+    }
+  const mppD = 10 / (x1 - x0 + 1);
+  const { casa } = laCasaDalleRighe(dritta, mppD);
+  const aree = casa.stanze.map((s) => s.area).sort((a, b) => a - b);
+  assert.equal(aree.length, 3, `le tre stanze anche di sbieco: ${aree.map((a) => a.toFixed(1))}`);
+  /* e i muri sono di nuovo dritti: il riquadro di ogni stanza e' pieno */
+  for (const s of casa.stanze) {
+    const r = s.riquadro,
+      area = (r.x1 - r.x0 + PASSO) * (r.y1 - r.y0 + PASSO);
+    assert.ok(s.area / area > 0.9, `stanza ${s.id} squadrata: ${(s.area / area).toFixed(2)}`);
+  }
 });

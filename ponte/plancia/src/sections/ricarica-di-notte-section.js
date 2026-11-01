@@ -19,8 +19,12 @@
  * (`laPastigliaDellaNotte`).
  */
 import { evccPresence } from "../core/ev-console.js";
+import { inKilowatt } from "../core/il-tempo-della-ricarica.js";
+import { capacitaDellaBatteria } from "../core/vehicle-model.js";
+import { activeVehicle } from "./ev-section.js";
 import {
   CHIAVE_RICARICA_NOTTE,
+  ciArriva,
   entitaDellaRicarica,
   fasciaDi,
   impostazioniPulite,
@@ -430,6 +434,11 @@ function scheletro() {
       ),
     )}</small>
   </div>
+  <div class="dm-rn-riga dm-rn-riga-alta" data-rn="arrivaRiga">
+    <div class="dm-rn-coppia"><span class="dm-rn-nome">${esc(t("Ci arriva?", "Will it get there?"))}</span><b class="dm-rn-valore" data-rn="arriva"></b></div>
+    <small class="dm-rn-nota" data-rn="arrivaNota"></small>
+    <label class="dm-rn-kw"><span>${esc(t("Potenza della wallbox", "Wallbox power"))}</span><input class="dm-rn-kw-campo" data-rn="kw" type="number" inputmode="decimal" min="1" max="50" step="0.1" placeholder="${esc(t("automatica", "automatic"))}"><small>kW</small></label>
+  </div>
   <div class="dm-rn-riga">
     <span class="dm-rn-nome">${esc(t("Poi", "Then"))}</span>
     ${segmentato("poi", [
@@ -634,6 +643,22 @@ export function renderRicaricaDiNotte(adesso = Date.now()) {
     state.ponte?.sessione?.fine ??
     (fascia.dentro ? fascia.fine : (prossimaFascia(imp, adesso)?.fine ?? fascia.fine));
   testo(q("ferma"), siFerma(lettura.limite ?? state.ponte?.auto?.limite ?? null, fine));
+  /* «Mi devi dire se la vettura riesce ad arrivare alla percentuale che ho
+   * impostato.» */
+  const kwCampo = q("kw");
+  if (kwCampo && doc.activeElement !== kwCampo) {
+    const scritto = imp.kw ? String(imp.kw) : "";
+    if (kwCampo.value !== scritto) kwCampo.value = scritto;
+    const vista = potenzaVista();
+    const segnaposto = vista
+      ? `${formatNumber(vista, 1)} (${t("vista", "seen")})`
+      : t("automatica", "automatic");
+    if (kwCampo.placeholder !== segnaposto) kwCampo.placeholder = segnaposto;
+  }
+  const arriva = laRispostaCiArriva(imp, lettura, adesso);
+  testo(q("arriva"), arriva.titolo);
+  testo(q("arrivaNota"), arriva.nota);
+  attributo(q("arrivaRiga"), "data-tono", arriva.tono);
   const cursore = q("sotto");
   if (cursore && doc.activeElement !== cursore && cursore.value !== String(imp.sotto))
     cursore.value = String(imp.sotto);
@@ -668,6 +693,118 @@ export function renderRicaricaDiNotte(adesso = Date.now()) {
   const sotto = q("statoSotto");
   if (sotto && sotto.hidden !== !racconto.sotto) sotto.hidden = !racconto.sotto;
   return true;
+}
+
+/* La potenza vista mentre carica, ricordata per le notti dopo: di notte la
+ * wallbox e' ferma e non la dice. */
+const CHIAVE_KW_VISTA = "dm_rn_kw_vista";
+function potenzaVista() {
+  const kw = potenzaAdesso();
+  if (kw !== null && kw >= 1) {
+    try {
+      root.localStorage?.setItem?.(CHIAVE_KW_VISTA, String(Math.round(kw * 10) / 10));
+    } catch (_errore) {}
+    return kw;
+  }
+  try {
+    const n = Number(root.localStorage?.getItem?.(CHIAVE_KW_VISTA));
+    return Number.isFinite(n) && n >= 1 ? n : null;
+  } catch (_errore) {
+    return null;
+  }
+}
+
+function potenzaAdesso() {
+  const stati = allStates() || {};
+  for (const ref of ["dm.ev_potenza_wallbox", "dm.ev_charge_power", "dm.ev_potenza_ricarica"]) {
+    const id = risolvi(ref);
+    const st = id && id !== ref ? stati[id] : null;
+    const n = Number(clean(st?.state).replace(",", "."));
+    if (st && Number.isFinite(n) && n > 0)
+      return inKilowatt(n, clean(st.attributes?.unit_of_measurement));
+  }
+  return null;
+}
+
+function laRispostaCiArriva(imp, lettura, adesso) {
+  const limite = lettura.limite ?? state.ponte?.auto?.limite ?? null;
+  const soc = lettura.soc ?? state.ponte?.auto?.soc ?? null;
+  const fascia = fasciaDi(imp, adesso);
+  const prossima = fascia.dentro ? null : prossimaFascia(imp, adesso);
+  const inizio = fascia.dentro ? adesso : prossima?.inizio;
+  const fine = fascia.dentro ? fascia.fine : prossima?.fine;
+  const kw = imp.kw || potenzaVista();
+  let capacita = null;
+  try {
+    capacita = capacitaDellaBatteria(activeVehicle() || {}, allStates()) || null;
+  } catch (_errore) {
+    capacita = null;
+  }
+  const r = ciArriva({ soc, limite, capacita, kw, inizio, fine });
+  const lim = limite === null ? "" : `${Math.round(limite)}%`;
+  const socR = soc === null ? 0 : Math.round(soc),
+    soglia = imp.sotto;
+  if (soc !== null && imp.sotto < 100 && soc >= imp.sotto && !fascia.dentro)
+    return {
+      titolo: t("Stanotte non carica", "No charge tonight"),
+      nota: t(
+        `La batteria è al ${socR}%, sopra la soglia del ${soglia}%.`,
+        `The battery is at ${socR}%, above the ${soglia}% threshold.`,
+      ),
+      tono: "neutro",
+    };
+  const durata = (m) =>
+    m >= 60 ? `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, "0")} min` : `${m} min`;
+  if (r.esito === "gia")
+    return { titolo: t(`Sì: è già al ${lim}`, `Yes: already at ${lim}`), nota: "", tono: "ok" };
+  if (r.esito === "si") {
+    const alLim = alPercento(Math.round(limite));
+    const quando = ora(r.alle);
+    const dal = Math.round(soc);
+    const quanto = durata(r.minuti);
+    const kwT = formatNumber(kw, 1);
+    const capT = formatNumber(capacita, 0);
+    return {
+      titolo: t(`Sì, ${alLim} verso le ${quando}`, `Yes, ${lim} by ${quando}`),
+      nota: t(
+        `Dal ${dal}% servono ${quanto} a ${kwT} kW, con una batteria da ${capT} kWh.`,
+        `From ${dal}% it takes ${quanto} at ${kwT} kW, with a ${capT} kWh battery.`,
+      ),
+      tono: "ok",
+    };
+  }
+  if (r.esito === "no") {
+    const quando = ora(r.alle);
+    const sara = alPercento(r.percentuale);
+    const per = r.percentuale;
+    const alLim = alPercento(Math.round(limite));
+    const quanto = durata(r.minuti);
+    const kwT = formatNumber(kw, 1);
+    return {
+      titolo: t(`No: alle ${quando} sarà ${sara}`, `No: at ${quando} it will be at ${per}%`),
+      nota: t(
+        `Per arrivare ${alLim} servono ${quanto} a ${kwT} kW: comincia prima o finisci più tardi.`,
+        `Reaching ${lim} takes ${quanto} at ${kwT} kW: start earlier or end later.`,
+      ),
+      tono: "attenzione",
+    };
+  }
+  /* Manca qualcosa: si dice cosa. */
+  const manca =
+    soc === null
+      ? t("Non leggo la batteria dell'auto.", "I can't read the car's battery.")
+      : limite === null
+        ? t("Non leggo il limite di evcc.", "I can't read the evcc limit.")
+        : !capacita
+          ? t(
+              "Non so quanto è grande la batteria dell'auto.",
+              "I don't know how big the car's battery is.",
+            )
+          : t(
+              "Scrivi qui sotto la potenza della wallbox (o lasciala vedere mentre carica).",
+              "Enter the wallbox power below (or let it be seen while charging).",
+            );
+  return { titolo: "—", nota: manca, tono: "neutro" };
 }
 
 function pitturaIlCursore(carta, valore) {
@@ -728,6 +865,7 @@ function alCambio(evento) {
       salva(() => ({ [nome]: scritta }));
     } else campo.value = leImpostazioni()[nome];
   } else if (nome === "sotto") salva(() => ({ sotto: Number(campo.value) }));
+  else if (nome === "kw") salva(() => ({ kw: campo.value }));
 }
 
 function alCursore(evento) {
@@ -864,6 +1002,11 @@ function stile() {
 .dm-rn-valore{font-size:13.5px;font-weight:700;color:var(--rn-text);text-align:right}
 .dm-rn-grande{font-size:16px}
 .dm-rn-nota{font-size:11.5px;font-weight:600;line-height:1.4;color:var(--rn-dim)}
+.dm-rn-riga[data-tono="ok"] [data-rn="arriva"]{color:#16a34a}
+.dm-rn-riga[data-tono="attenzione"] [data-rn="arriva"]{color:#dc2626}
+.dm-rn-kw{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--rn-dim)}
+.dm-rn-kw span{flex:1}
+.dm-rn-kw-campo{width:120px;padding:6px 10px;border-radius:10px;border:1px solid var(--rn-line);background:transparent;color:inherit;font:inherit;text-align:right}
 .dm-rn-seg{display:inline-flex;gap:2px;padding:3px;border-radius:12px;background:var(--rn-box);box-shadow:inset 0 0 0 1px var(--rn-line);
   flex-wrap:wrap;max-width:100%}
 .dm-rn-seg-btn{border:0;background:transparent;color:var(--rn-dim);font:700 13px/1.2 inherit;padding:8px 12px;border-radius:9px;cursor:pointer;

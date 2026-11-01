@@ -35,7 +35,7 @@ const STATI = {
   "binary_sensor.evcc_garage_connected": { state: "on", attributes: {} },
 };
 
-const PROFILI = [{ id: "auto1", uid: "auto-1", name: "La macchina", ov: { ...MAPPA } }];
+const PROFILI = [{ id: "auto1", uid: "auto-1", name: "La macchina", kwh: "60", ov: { ...MAPPA } }];
 
 const SEME = {
   schema_version: 4,
@@ -208,6 +208,7 @@ test("la carta sta sotto la console di evcc, spenta di serie, e scrive le scelte
       poi: "prima",
       giorni: [true, true, true, true, true, true, false],
       sotto: 60,
+      kw: 0,
     });
   await expect(carta.locator('[data-rn="sottoDetto"]')).toHaveText("60%");
   await expect(carta.locator('[data-rn-giorno="6"]')).toHaveAttribute("aria-pressed", "false");
@@ -217,6 +218,29 @@ test("la carta sta sotto la console di evcc, spenta di serie, e scrive le scelte
   await expect(carta.locator('[data-rn="statoSotto"]')).toHaveText(
     "Auto collegata ✓ — partirà da sola",
   );
+});
+
+/* «Se attivo la ricarica notturna mi devi dire se la vettura riesce ad
+ * arrivare alla percentuale che ho impostato di ricarica.» Batteria al 42%,
+ * limite di evcc all'80%, 60 kWh: servono 22,8 kWh. */
+test("dice se l'auto arriva al limite entro la fine della fascia", async ({ page }, testInfo) => {
+  await avvia(page, testInfo, {
+    impostazioni: { attiva: true, da: "23:00", a: "05:00", kw: 7.4 },
+  });
+  const carta = await apriLaPaginaAuto(page);
+  const riga = carta.locator('[data-rn="arrivaRiga"]');
+  /* a 7,4 kW bastano 3 ore e mezza: ci arriva verso le 02:26 */
+  await expect(carta.locator('[data-rn="arriva"]')).toContainText("Sì, all'80% verso le 02:");
+  await expect(carta.locator('[data-rn="arrivaNota"]')).toContainText("Dal 42% servono 3 h");
+  await expect(riga).toHaveAttribute("data-tono", "ok");
+  await fotografa(page, "ricarica-notte-ci-arriva", carta);
+  /* a 2,3 kW (una presa) in sei ore no */
+  await carta.locator('[data-rn="kw"]').fill("2.3");
+  await carta.locator('[data-rn="kw"]').dispatchEvent("change");
+  await expect.poll(() => salvate(page).then((s) => s.kw)).toBe(2.3);
+  await expect(carta.locator('[data-rn="arriva"]')).toContainText("No: alle 05:00 sarà al 62%");
+  await expect(riga).toHaveAttribute("data-tono", "attenzione");
+  await fotografa(page, "ricarica-notte-non-ci-arriva", carta);
 });
 
 test("il prezzo: la F3, poi la tariffa unica, poi «Prezzo non impostato» senza rimandi", async ({

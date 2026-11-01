@@ -79,6 +79,7 @@ export const ARREDI_DELLE_FOTO = Object.freeze({
   ufficio: { icona: "🪑", nome: ["Sedia da ufficio", "Office chair"] },
   pianoforte: { icona: "🎹", nome: ["Pianoforte", "Piano"] },
   cyclette: { icona: "🚴", nome: ["Cyclette", "Exercise bike"] },
+  scala: { icona: "🪜", nome: ["Scala", "Staircase"] },
 });
 
 /* Quelli che stanno contro il muro che si guarda: la profondita' nella foto
@@ -577,6 +578,13 @@ export function pianoDaRiconoscimento({
       arredi.push(...arrediDallaFoto(vista, s, f).map(sposta));
       posati.push(...dispositiviDallaFoto(vista, s, f).map(sposta));
     }
+  }
+  /* le scale disegnate nella pianta: un arredo «scala» al loro posto */
+  for (const sc of elenco(casa.scale)) {
+    if (!idVivi.has(sc.stanza)) continue;
+    arredi.push(
+      sposta({ k: "scala", stanza: sc.stanza, x: tondo(sc.x), y: tondo(sc.y), rot: sc.rot || 0 }),
+    );
   }
   /* gli arredi di un piano ripreso: le foto non ci sono piu', gli arredi si' */
   for (const a of elenco(arrediGia))

@@ -10,6 +10,31 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.27
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **La foto della pianta dell'architetto coincide con la casa:** il foglio
+  fotografato di sbieco si raddrizza anche in prospettiva (non solo
+  girandolo), e i muri si leggono solo dove il grigio e' pieno. Sanitari,
+  scale, piastrelle, scritte, quote e l'albero non diventano piu' muri; il
+  riquadro col nome di una stanza non la spezza in due.
+- **Porte, finestre e tramezzi dalla pianta:** il vetro disegnato nel vano
+  fa la finestra, il vano vuoto la porta; i tramezzi sottili (anche a due
+  righe) chiudono il bagno e separano le camere.
+- **Le scale si riconoscono:** i gradini disegnati fra due muri diventano
+  una scala nella Casa 3D, che sale verso il lato chiuso. La scala si puo'
+  anche mettere a mano con «Arreda».
+- **Elettrodomestici a mano nella Casa 3D:** lavatrice, asciugatrice,
+  lavastoviglie e forno si inseriscono a mano e mostrano quando lavorano;
+  le foto delle stanze riconoscono piu' cose.
+- **Ricarica notturna, «Ci arriva?»:** dice se l'auto arriva alla
+  percentuale impostata entro la fine della fascia, e a che ora; se non ci
+  arriva, a quanto sara'. La potenza della wallbox si legge mentre carica o
+  si scrive una volta.
+- **Auto, Energia di oggi:** i km percorsi oggi e il consumo di oggi.
+- **Colpo d'occhio:** il Config della sua plancia e' solo il suo.
+
 ## 1.18.7.26
 
 _Solo Home Assistant: l'app sul telefono non cambia._

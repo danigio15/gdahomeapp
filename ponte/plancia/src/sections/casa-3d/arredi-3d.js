@@ -87,6 +87,7 @@ export const CATALOGO_ARREDI = Object.freeze([
       ["ufficio", "🪑", "Sedia da ufficio", "Office chair", 0.6, 0.6],
       ["pianoforte", "🎹", "Pianoforte", "Piano", 1.5, 0.6],
       ["cyclette", "🚴", "Cyclette", "Exercise bike", 0.6, 1.1],
+      ["scala", "🪜", "Scala", "Staircase", 0.9, 2.4],
     ],
   },
 ]);
@@ -445,6 +446,24 @@ export function arredo3D(THREE, k, tinta = "#64748b") {
       elettrodomestico(e, chiave.slice(3));
       e.position.z = 0.31;
       g.add(e);
+      break;
+    }
+    /* ── la scala: sale verso il fondo (z negativa), dal pavimento al piano di sopra ── */
+    case "scala": {
+      const n = 13,
+        lungo = 2.4,
+        alzata = 2.8 / n,
+        pedata = lungo / n;
+      for (let i = 0; i < n; i++) {
+        scatola(g, 0.9, (i + 1) * alzata, pedata, i % 2 ? legnoChiaro : legnoScuro, 0, 0, lungo / 2 - (i + 0.5) * pedata);
+      }
+      /* il corrimano, sul lato aperto */
+      const corrimano = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, Math.hypot(lungo, 2.8), 8), metallo);
+      corrimano.position.set(0.43, 1.4 + 0.9, 0);
+      corrimano.rotation.x = -Math.atan2(lungo, 2.8);
+      g.add(corrimano);
+      for (let i = 0; i <= n; i += 3)
+        cilindro(g, 0.012, 0.9, metallo, 0.43, i * alzata, lungo / 2 - i * pedata, 6);
       break;
     }
     /* ── studio ── */

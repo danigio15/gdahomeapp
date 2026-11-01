@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-LNCXXPXZ.js";
+} from "../../chunk-FFRGNBZF.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -3318,6 +3318,7 @@ var SOURCE_INDEX = Object.freeze({
   "chiuso": "closed",
   "Chiuso": "Closed",
   "Chiuso da": "Closed for",
+  "Ci arriva?": "Will it get there?",
   "Ci pensa la pioggia": "The rain will see to it",
   "Ci pensa un'automazione": "An automation handles it",
   "Ci sono ${quante} telecamere configurate che adesso non si vedono qui.": "There are ${quante} configured cameras that are not shown here now.",
@@ -3758,6 +3759,7 @@ var SOURCE_INDEX = Object.freeze({
   "Dai un nome al gruppo (es. Piano Terra)": "Name the group (e.g. Ground Floor)",
   "Dai un nome all'unità: è quello che si legge sulla card.": "Name the unit: it is what the card shows.",
   "dal ${da} all'${a} · ${min} min": "from ${da} to ${a} · ${min} min",
+  "Dal ${dal}% servono ${quanto} a ${kwT} kW, con una batteria da ${capT} kWh.": "From ${dal}% it takes ${quanto} at ${kwT} kW, with a ${capT} kWh battery.",
   "Dal calendario di casa.": "From the home calendar.",
   "Dal dispositivo": "From this device",
   "dal fotovoltaico": "from solar",
@@ -4998,6 +5000,7 @@ var SOURCE_INDEX = Object.freeze({
   "l'unità è": "the unit is",
   "L'UPS non risponde": "The UPS is not answering",
   "La % di umidità del terreno compare nella card del programma.": "The soil moisture % appears on the schedule card.",
+  "La batteria è al ${socR}%, sopra la soglia del ${soglia}%.": "The battery is at ${socR}%, above the ${soglia}% threshold.",
   "La batteria non risponde": "The battery is not answering",
   "La card e il popup offrono sempre la tendina con tutte le percentuali: 0 = chiusa, 100 = aperta. Qui scegli quella di casa — 5 chiude quasi tutto lasciando passare un po' d'aria — e nella tendina compare con la stella. Vuoto = nessuna preferita.": "The card and the popup always offer the dropdown with every percentage: 0 = closed, 100 = open. Here you pick your usual one — 5 closes almost fully while letting some air through — and it shows up starred in the dropdown. Empty = no favorite.",
   "La card resta In funzione per questi minuti dopo l'ultima potenza sopra soglia: copre l'asciugatura a 0 W della lavastoviglie e le pause del ciclo.": "The card stays Running for these minutes after the last power reading above the threshold: it covers the dishwasher's 0 W drying phase and mid-cycle pauses.",
@@ -5868,6 +5871,7 @@ var SOURCE_INDEX = Object.freeze({
   "No room con sensore — aggiungila nel tab Temperatura dell'editor": "No room with a sensor — add one in the editor's Temperature tab",
   "No room. Aggiungine una qui sotto.": "No room. Add one below.",
   "No, grazie": "No, thanks",
+  "No: alle ${quando} sarà ${sara}": "No: at ${quando} it will be at ${per}%",
   "nodi": "nodes",
   "nodo": "node",
   "Nodo": "Node",
@@ -5960,6 +5964,8 @@ var SOURCE_INDEX = Object.freeze({
   "Non hai una planimetria?": "No floor plan?",
   "Non in carica": "Not charging",
   "Non l'ha ricevuto nessuno: i telefoni scelti hanno spento le notifiche o non hanno l'app.": "Nobody received it: the chosen phones have notifications off or no app.",
+  "Non leggo il limite di evcc.": "I can't read the evcc limit.",
+  "Non leggo la batteria dell'auto.": "I can't read the car's battery.",
   "Non lo so": "I do not know",
   "Non pagata": "Unpaid",
   "Non più di una volta ogni": "No more than once every",
@@ -5988,6 +5994,7 @@ var SOURCE_INDEX = Object.freeze({
   "Non si sa": "Unknown",
   "Non so dove metterlo: scegli tu qui sotto. Un dispositivo che non ha una sezione sua sta bene fra le tue entità.": "I do not know where this goes: pick below. A device with no section of its own belongs with your own entities.",
   "Non so dove sia casa: Home Assistant non ha risposto. Scegli una zona o scrivi le coordinate.": "I do not know where home is: Home Assistant did not answer. Pick a zone or write the coordinates.",
+  "Non so quanto è grande la batteria dell'auto.": "I don't know how big the car's battery is.",
   "Non sono riuscito a eliminarlo.": "Could not delete it.",
   "Non sono riuscito a leggere la coda:": "I could not read the queue:",
   "Non spartiti:": "Not split:",
@@ -6190,6 +6197,7 @@ var SOURCE_INDEX = Object.freeze({
   "Pensate sui tuoi dispositivi e su come li usi": "Based on your devices and how you use them",
   "per": "for",
   "per accenderla o spegnerla manualmente.": "to switch it on or off manually.",
+  "Per arrivare ${alLim} servono ${quanto} a ${kwT} kW: comincia prima o finisci più tardi.": "Reaching ${lim} takes ${quanto} at ${kwT} kW: start earlier or end later.",
   "Per categoria": "By category",
   "Per chi ha due serbatoi: in pagina compaiono affiancati, Pellet 1 e Pellet 2, con la stessa soglia del primo.": "For whoever has two hoppers: the page shows them side by side, Pellet 1 and Pellet 2, with the same threshold as the first.",
   "Per dividere i calendari fra le persone servono le persone di Home Assistant, ognuna legata al suo utente.": "To split calendars between people you need Home Assistant persons, each linked to its own user.",
@@ -6416,6 +6424,7 @@ var SOURCE_INDEX = Object.freeze({
   "Potenza consumo casa (W)": "Home consumption power (W)",
   "Potenza del riscaldatore (W)": "Heater power (W)",
   "Potenza della batteria": "Battery power",
+  "Potenza della wallbox": "Wallbox power",
   "Potenza di aspirazione": "Suction power",
   "potenza di casa": "home power",
   "Potenza di ricarica dell'auto (kW)": "Car charging power (kW)",
@@ -6563,6 +6572,7 @@ var SOURCE_INDEX = Object.freeze({
   "Proposte pensate per la tua casa": "Suggestions designed for your home",
   "Proposte per la tua casa": "Suggestions for your home",
   "Proprio tutto": "Everything",
+  "prospettiva corretta": "perspective corrected",
   "prossima": "next",
   "Prossima partita": "Next match",
   "Prossime 24 ore": "Next 24 hours",
@@ -7189,6 +7199,7 @@ var SOURCE_INDEX = Object.freeze({
   "Scrivi il tuo messaggio…": "Write your message…",
   "Scrivi la tua domanda…": "Type your question…",
   "Scrivi pure: dall'altra parte c'e' una persona, non un modulo.": "Go ahead and write: on the other side there is a person, not a form.",
+  "Scrivi qui sotto la potenza della wallbox (o lasciala vedere mentre carica).": "Enter the wallbox power below (or let it be seen while charging).",
   "Scrivi qui: il messaggio finisce sotto la segnalazione, a nome tuo.": "Write here: the message goes under the report, under your name.",
   "Scrivi un messaggio…": "Write a message…",
   "Scrivi una risposta…": "Write a reply…",
@@ -7409,8 +7420,10 @@ var SOURCE_INDEX = Object.freeze({
   "Si vede ma non si comanda da qui": "Visible but not controlled from here",
   "Si vede quando questa entità…": "Show it when this entity…",
   "Si vedono: ${periodo}. Se li accendi compaiono comunque.": "They show: ${periodo}. Switched on, they show anyway.",
+  "Sì, ${alLim} verso le ${quando}": "Yes, ${lim} by ${quando}",
   "Sì, elimina": "Yes, delete",
   "Sì, vai": "Yes, go",
+  "Sì: è già al ${lim}": "Yes: already at ${lim}",
   "Sicurezza": "Security",
   "Sicurezza: inserimenti, aperture, movimento": "Security: arming, openings, motion",
   "Siete fuori e ${g.name} è aperto": "You're out and ${g.name} is open",
@@ -7605,6 +7618,7 @@ var SOURCE_INDEX = Object.freeze({
   "stanotte": "last night",
   "stanotte alle ${alle}": "tonight at ${alle}",
   "Stanotte alle ${alle}": "Tonight at ${alle}",
+  "Stanotte non carica": "No charge tonight",
   "Stanotte non parte": "Not charging tonight",
   "Stanotte non tocco più niente: evcc è su ${modo}": "Nothing else is touched tonight: evcc is on ${modo}",
   "stanza": "room",
@@ -8376,6 +8390,7 @@ var SOURCE_INDEX = Object.freeze({
   "Visite alla lettiera": "Litter box visits",
   "visite alla lettiera oggi": "litter box visits today",
   "Visite oggi": "Visits today",
+  "vista": "seen",
   "Vista della stanza": "Room view",
   "Vista elenco": "List view",
   "Vista griglia": "Grid view",
@@ -27677,7 +27692,10 @@ var IMPOSTAZIONI_DI_SERIE = Object.freeze({
   inFascia: "now",
   poi: "off",
   giorni: Object.freeze([true, true, true, true, true, true, true]),
-  sotto: 100
+  sotto: 100,
+  /* La potenza della wallbox in kW, per dire se ci si arriva: 0 = quella vista
+   * mentre carica. */
+  kw: 0
 });
 var GRAZIA_DEL_COMANDO = 3 * MINUTO2;
 var ESITO_VALE = 18 * ORA2;
@@ -27712,7 +27730,11 @@ function impostazioniPulite(dato2) {
     giorni,
     /* Fra il 5 e il 100: sotto il 5% non c'e' niente da decidere, e il 100
      * vuol dire «parte sempre». */
-    sotto: Number.isFinite(sotto) ? Math.max(5, Math.min(100, sotto)) : IMPOSTAZIONI_DI_SERIE.sotto
+    sotto: Number.isFinite(sotto) ? Math.max(5, Math.min(100, sotto)) : IMPOSTAZIONI_DI_SERIE.sotto,
+    kw: (() => {
+      const k = Number(pulito23(d.kw).replace(",", "."));
+      return Number.isFinite(k) && k >= 1 && k <= 50 ? Math.round(k * 10) / 10 : 0;
+    })()
   };
 }
 var giornoDellaSettimana = (istante8) => (new Date(istante8).getDay() + 6) % 7;
@@ -27895,6 +27917,24 @@ function prezzoDellaNotte({
   } else if (typeof scritto3 === "string") unica = prezzoBuono(scritto3);
   if (unica) return { prezzo: unica, fonte: "unica", fascia: "" };
   return { prezzo: null, fonte: "nessuno", fascia: "" };
+}
+function ciArriva({ soc, limite, capacita, kw, inizio, fine, rendimento = 0.9 } = {}) {
+  const n = (v) => v === null || v === void 0 || v === "" ? null : Number(v);
+  const s = n(soc), l = n(limite), c = n(capacita), p = n(kw), a = n(inizio), b2 = n(fine);
+  if (![s, l].every(Number.isFinite)) return { esito: "nonso" };
+  if (s >= l - 0.5) return { esito: "gia", percentuale: s };
+  if (![c, p, a, b2].every(Number.isFinite) || c <= 0 || p <= 0 || b2 <= a) return { esito: "nonso" };
+  const kwhServono = (l - s) / 100 * c;
+  const minuti = Math.ceil(kwhServono / (p * rendimento) * 60);
+  const disponibili = (b2 - a) / 6e4;
+  if (minuti <= disponibili) return { esito: "si", alle: a + minuti * 6e4, minuti };
+  const arrivati = p * rendimento * (disponibili / 60) * 100 / c;
+  return {
+    esito: "no",
+    percentuale: Math.min(l, Math.floor(s + arrivati)),
+    minuti,
+    alle: b2
+  };
 }
 
 // src/sections/ricarica-di-notte-section.js
@@ -28199,6 +28239,11 @@ function scheletro() {
     )
   )}</small>
   </div>
+  <div class="dm-rn-riga dm-rn-riga-alta" data-rn="arrivaRiga">
+    <div class="dm-rn-coppia"><span class="dm-rn-nome">${esc(t("Ci arriva?", "Will it get there?"))}</span><b class="dm-rn-valore" data-rn="arriva"></b></div>
+    <small class="dm-rn-nota" data-rn="arrivaNota"></small>
+    <label class="dm-rn-kw"><span>${esc(t("Potenza della wallbox", "Wallbox power"))}</span><input class="dm-rn-kw-campo" data-rn="kw" type="number" inputmode="decimal" min="1" max="50" step="0.1" placeholder="${esc(t("automatica", "automatic"))}"><small>kW</small></label>
+  </div>
   <div class="dm-rn-riga">
     <span class="dm-rn-nome">${esc(t("Poi", "Then"))}</span>
     ${segmentato("poi", [
@@ -28366,6 +28411,18 @@ function renderRicaricaDiNotte(adesso2 = Date.now()) {
   const fascia2 = fasciaDi(imp, adesso2);
   const fine = state20.ponte?.sessione?.fine ?? (fascia2.dentro ? fascia2.fine : prossimaFascia(imp, adesso2)?.fine ?? fascia2.fine);
   testo(q("ferma"), siFerma(lettura4.limite ?? state20.ponte?.auto?.limite ?? null, fine));
+  const kwCampo = q("kw");
+  if (kwCampo && doc.activeElement !== kwCampo) {
+    const scritto3 = imp.kw ? String(imp.kw) : "";
+    if (kwCampo.value !== scritto3) kwCampo.value = scritto3;
+    const vista2 = potenzaVista();
+    const segnaposto = vista2 ? `${formatNumber(vista2, 1)} (${t("vista", "seen")})` : t("automatica", "automatic");
+    if (kwCampo.placeholder !== segnaposto) kwCampo.placeholder = segnaposto;
+  }
+  const arriva = laRispostaCiArriva(imp, lettura4, adesso2);
+  testo(q("arriva"), arriva.titolo);
+  testo(q("arrivaNota"), arriva.nota);
+  attributo(q("arrivaRiga"), "data-tono", arriva.tono);
   const cursore2 = q("sotto");
   if (cursore2 && doc.activeElement !== cursore2 && cursore2.value !== String(imp.sotto))
     cursore2.value = String(imp.sotto);
@@ -28397,6 +28454,104 @@ function renderRicaricaDiNotte(adesso2 = Date.now()) {
   const sotto = q("statoSotto");
   if (sotto && sotto.hidden !== !racconto.sotto) sotto.hidden = !racconto.sotto;
   return true;
+}
+var CHIAVE_KW_VISTA = "dm_rn_kw_vista";
+function potenzaVista() {
+  const kw = potenzaAdesso();
+  if (kw !== null && kw >= 1) {
+    try {
+      root.localStorage?.setItem?.(CHIAVE_KW_VISTA, String(Math.round(kw * 10) / 10));
+    } catch (_errore) {
+    }
+    return kw;
+  }
+  try {
+    const n = Number(root.localStorage?.getItem?.(CHIAVE_KW_VISTA));
+    return Number.isFinite(n) && n >= 1 ? n : null;
+  } catch (_errore) {
+    return null;
+  }
+}
+function potenzaAdesso() {
+  const stati4 = allStates() || {};
+  for (const ref of ["dm.ev_potenza_wallbox", "dm.ev_charge_power", "dm.ev_potenza_ricarica"]) {
+    const id = risolvi(ref);
+    const st = id && id !== ref ? stati4[id] : null;
+    const n = Number(clean(st?.state).replace(",", "."));
+    if (st && Number.isFinite(n) && n > 0)
+      return inKilowatt(n, clean(st.attributes?.unit_of_measurement));
+  }
+  return null;
+}
+function laRispostaCiArriva(imp, lettura4, adesso2) {
+  const limite = lettura4.limite ?? state20.ponte?.auto?.limite ?? null;
+  const soc = lettura4.soc ?? state20.ponte?.auto?.soc ?? null;
+  const fascia2 = fasciaDi(imp, adesso2);
+  const prossima = fascia2.dentro ? null : prossimaFascia(imp, adesso2);
+  const inizio = fascia2.dentro ? adesso2 : prossima?.inizio;
+  const fine = fascia2.dentro ? fascia2.fine : prossima?.fine;
+  const kw = imp.kw || potenzaVista();
+  let capacita = null;
+  try {
+    capacita = capacitaDellaBatteria(activeVehicle() || {}, allStates()) || null;
+  } catch (_errore) {
+    capacita = null;
+  }
+  const r = ciArriva({ soc, limite, capacita, kw, inizio, fine });
+  const lim = limite === null ? "" : `${Math.round(limite)}%`;
+  const socR = soc === null ? 0 : Math.round(soc), soglia3 = imp.sotto;
+  if (soc !== null && imp.sotto < 100 && soc >= imp.sotto && !fascia2.dentro)
+    return {
+      titolo: t("Stanotte non carica", "No charge tonight"),
+      nota: t(
+        `La batteria è al ${socR}%, sopra la soglia del ${soglia3}%.`,
+        `The battery is at ${socR}%, above the ${soglia3}% threshold.`
+      ),
+      tono: "neutro"
+    };
+  const durata6 = (m) => m >= 60 ? `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, "0")} min` : `${m} min`;
+  if (r.esito === "gia")
+    return { titolo: t(`Sì: è già al ${lim}`, `Yes: already at ${lim}`), nota: "", tono: "ok" };
+  if (r.esito === "si") {
+    const alLim = alPercento(Math.round(limite));
+    const quando6 = ora(r.alle);
+    const dal = Math.round(soc);
+    const quanto = durata6(r.minuti);
+    const kwT = formatNumber(kw, 1);
+    const capT = formatNumber(capacita, 0);
+    return {
+      titolo: t(`Sì, ${alLim} verso le ${quando6}`, `Yes, ${lim} by ${quando6}`),
+      nota: t(
+        `Dal ${dal}% servono ${quanto} a ${kwT} kW, con una batteria da ${capT} kWh.`,
+        `From ${dal}% it takes ${quanto} at ${kwT} kW, with a ${capT} kWh battery.`
+      ),
+      tono: "ok"
+    };
+  }
+  if (r.esito === "no") {
+    const quando6 = ora(r.alle);
+    const sara = alPercento(r.percentuale);
+    const per = r.percentuale;
+    const alLim = alPercento(Math.round(limite));
+    const quanto = durata6(r.minuti);
+    const kwT = formatNumber(kw, 1);
+    return {
+      titolo: t(`No: alle ${quando6} sarà ${sara}`, `No: at ${quando6} it will be at ${per}%`),
+      nota: t(
+        `Per arrivare ${alLim} servono ${quanto} a ${kwT} kW: comincia prima o finisci più tardi.`,
+        `Reaching ${lim} takes ${quanto} at ${kwT} kW: start earlier or end later.`
+      ),
+      tono: "attenzione"
+    };
+  }
+  const manca = soc === null ? t("Non leggo la batteria dell'auto.", "I can't read the car's battery.") : limite === null ? t("Non leggo il limite di evcc.", "I can't read the evcc limit.") : !capacita ? t(
+    "Non so quanto è grande la batteria dell'auto.",
+    "I don't know how big the car's battery is."
+  ) : t(
+    "Scrivi qui sotto la potenza della wallbox (o lasciala vedere mentre carica).",
+    "Enter the wallbox power below (or let it be seen while charging)."
+  );
+  return { titolo: "—", nota: manca, tono: "neutro" };
 }
 function pitturaIlCursore(carta, valore3) {
   const n = Number.isFinite(valore3) ? valore3 : 100;
@@ -28449,6 +28604,7 @@ function alCambio(evento) {
       salva(() => ({ [nome]: scritta }));
     } else campo6.value = leImpostazioni()[nome];
   } else if (nome === "sotto") salva(() => ({ sotto: Number(campo6.value) }));
+  else if (nome === "kw") salva(() => ({ kw: campo6.value }));
 }
 function alCursore(evento) {
   if (evento.target?.dataset?.rn !== "sotto") return;
@@ -28570,6 +28726,11 @@ function stile() {
 .dm-rn-valore{font-size:13.5px;font-weight:700;color:var(--rn-text);text-align:right}
 .dm-rn-grande{font-size:16px}
 .dm-rn-nota{font-size:11.5px;font-weight:600;line-height:1.4;color:var(--rn-dim)}
+.dm-rn-riga[data-tono="ok"] [data-rn="arriva"]{color:#16a34a}
+.dm-rn-riga[data-tono="attenzione"] [data-rn="arriva"]{color:#dc2626}
+.dm-rn-kw{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--rn-dim)}
+.dm-rn-kw span{flex:1}
+.dm-rn-kw-campo{width:120px;padding:6px 10px;border-radius:10px;border:1px solid var(--rn-line);background:transparent;color:inherit;font:inherit;text-align:right}
 .dm-rn-seg{display:inline-flex;gap:2px;padding:3px;border-radius:12px;background:var(--rn-box);box-shadow:inset 0 0 0 1px var(--rn-line);
   flex-wrap:wrap;max-width:100%}
 .dm-rn-seg-btn{border:0;background:transparent;color:var(--rn-dim);font:700 13px/1.2 inherit;padding:8px 12px;border-radius:9px;cursor:pointer;
@@ -45875,12 +46036,12 @@ function telecomandoMarkup(riga5) {
   const tasti2 = new Set(tastiDelTelecomando(riga5?.telecomando));
   if (!tasti2.size) return "";
   const quali = (elenco17) => elenco17.filter((tasto4) => tasti2.has(tasto4));
-  const croce = quali(["su", "sinistra", "ok", "destra", "giu"]);
+  const croce2 = quali(["su", "sinistra", "ok", "destra", "giu"]);
   const navigare = quali(["indietro", "home", "menu"]);
   const canali = quali(["canale_meno", "canale_piu"]);
   const tutti = (elenco17) => elenco17.map((tasto4) => tastoDelTelecomando(riga5, tasto4)).join("");
   return `<div class="dm-mp-tele" data-dm-mp-tele="${esc(riga5.entity)}">
-    ${croce.length ? `<div class="dm-mp-croce">${tutti(croce)}</div>` : ""}
+    ${croce2.length ? `<div class="dm-mp-croce">${tutti(croce2)}</div>` : ""}
     ${navigare.length || canali.length ? `<div class="dm-mp-tele-fila">${tutti(navigare)}${canali.length ? `<span class="dm-mp-tele-canali">${tutti(canali)}</span>` : ""}</div>` : ""}
   </div>`;
 }
@@ -58086,10 +58247,10 @@ function daDoveArriva({ casa: casa2 = null, sole = null, batteria = null, rete =
   return quote.filter(([, valore3]) => valore3 > 0).map(([fonte, valore3]) => ({ fonte, quota: valore3 / totale * 100 }));
 }
 function autoconsumoDiOggi(oggi = {}) {
-  const prodotto = numero41(oggi?.solar);
+  const prodotto2 = numero41(oggi?.solar);
   const dato2 = numero41(oggi?.gridExport);
-  if (prodotto == null || dato2 == null || !(prodotto > 0)) return null;
-  return Math.max(0, Math.min(100, (prodotto - dato2) / prodotto * 100));
+  if (prodotto2 == null || dato2 == null || !(prodotto2 > 0)) return null;
+  return Math.max(0, Math.min(100, (prodotto2 - dato2) / prodotto2 * 100));
 }
 function nomeDellaFonte(fonte) {
   if (fonte === "solar") return t("Sole", "Sun");
@@ -139356,7 +139517,7 @@ function oreDiRicarica(auto = [], rete = null, prezzo = () => null, altre = {}) 
   const sappiamoLaRete = piene(rete);
   const dallaRete = sappiamoLaRete ? perOra(rete) : null;
   const sappiamoLEccedenza = !sappiamoLaRete && piene(altre?.sole) && piene(altre?.casa);
-  const prodotto = sappiamoLEccedenza ? perOra(altre.sole) : null;
+  const prodotto2 = sappiamoLEccedenza ? perOra(altre.sole) : null;
   const consumato = sappiamoLEccedenza ? perOra(altre.casa) : null;
   const ore = [];
   for (const riga5 of Array.isArray(auto) ? auto : []) {
@@ -139366,7 +139527,7 @@ function oreDiRicarica(auto = [], rete = null, prezzo = () => null, altre = {}) 
     let presa = null;
     if (sappiamoLaRete) presa = Math.min(kwh5, dallaRete.get(t2) || 0);
     else if (sappiamoLEccedenza) {
-      const eccedenza = (prodotto.get(t2) || 0) - Math.max(0, (consumato.get(t2) || 0) - kwh5);
+      const eccedenza = (prodotto2.get(t2) || 0) - Math.max(0, (consumato.get(t2) || 0) - kwh5);
       presa = kwh5 - Math.min(kwh5, Math.max(0, eccedenza));
     }
     const pagata = presa === null ? kwh5 : presa;
@@ -154244,7 +154405,7 @@ async function avviaLaScena(admin) {
   state180.caricando = true;
   state180.guasto = "";
   try {
-    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-ZPZKML3H.js")]);
+    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-WED5HTQH.js")]);
     const nodo3 = doc.getElementById(ID4);
     const posto = nodo3?.querySelector(".c3-posto");
     if (!posto) return;
@@ -154956,6 +155117,224 @@ function stimaInclinazione(im) {
   }
   return meglio;
 }
+function bordiDeiMuri(im) {
+  const { width: w, height: h, data } = im;
+  const g = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++)
+    g[i] = 0.3 * data[i * 4] + 0.59 * data[i * 4 + 1] + 0.11 * data[i * 4 + 2];
+  const nucleo = nucleoDeiMuri(g, w, h, Math.max(2, Math.round(Math.max(w, h) / 230)));
+  const punti = [];
+  for (let y = 1; y < h - 1; y++)
+    for (let x = 1; x < w - 1; x++) {
+      const i = y * w + x;
+      if (!nucleo[i]) continue;
+      if (!nucleo[i - 1] || !nucleo[i + 1] || !nucleo[i - w] || !nucleo[i + w]) punti.push(x, y);
+    }
+  return punti;
+}
+function minimoAutovettore(m) {
+  const a = m.map((r) => r.slice()), v = [
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]
+  ];
+  for (let giro = 0; giro < 60; giro++) {
+    let p = 0, q = 1;
+    for (const [i, j] of [
+      [0, 1],
+      [0, 2],
+      [1, 2]
+    ])
+      if (Math.abs(a[i][j]) > Math.abs(a[p][q])) p = i, q = j;
+    if (Math.abs(a[p][q]) < 1e-15) break;
+    const t2 = 0.5 * Math.atan2(2 * a[p][q], a[q][q] - a[p][p]), c = Math.cos(t2), s = Math.sin(t2);
+    for (let k2 = 0; k2 < 3; k2++) {
+      const akp = a[k2][p], akq = a[k2][q];
+      a[k2][p] = c * akp - s * akq;
+      a[k2][q] = s * akp + c * akq;
+    }
+    for (let k2 = 0; k2 < 3; k2++) {
+      const apk = a[p][k2], aqk = a[q][k2];
+      a[p][k2] = c * apk - s * aqk;
+      a[q][k2] = s * apk + c * aqk;
+    }
+    for (let k2 = 0; k2 < 3; k2++) {
+      const vkp = v[k2][p], vkq = v[k2][q];
+      v[k2][p] = c * vkp - s * vkq;
+      v[k2][q] = s * vkp + c * vkq;
+    }
+  }
+  let k = 0;
+  for (let i = 1; i < 3; i++) if (a[i][i] < a[k][k]) k = i;
+  return [v[0][k], v[1][k], v[2][k]];
+}
+var croce = (a, b2) => [
+  a[1] * b2[2] - a[2] * b2[1],
+  a[2] * b2[0] - a[0] * b2[2],
+  a[0] * b2[1] - a[1] * b2[0]
+];
+function per3(m, v) {
+  return [0, 1, 2].map((i) => m[i][0] * v[0] + m[i][1] * v[1] + m[i][2] * v[2]);
+}
+function prodotto(a, b2) {
+  return [0, 1, 2].map(
+    (i) => [0, 1, 2].map((j) => a[i][0] * b2[0][j] + a[i][1] * b2[1][j] + a[i][2] * b2[2][j])
+  );
+}
+function inversa(m) {
+  const [[a, b2, c], [d, e, f], [g, h, i]] = m;
+  const A2 = e * i - f * h, B = -(d * i - f * g), C = d * h - e * g, det = a * A2 + b2 * B + c * C;
+  if (Math.abs(det) < 1e-12) return null;
+  return [
+    [A2 / det, -(b2 * i - c * h) / det, (b2 * f - c * e) / det],
+    [B / det, (a * i - c * g) / det, -(a * f - c * d) / det],
+    [C / det, -(a * h - b2 * g) / det, (a * e - b2 * d) / det]
+  ];
+}
+function prospettiva(im) {
+  const { width: w, height: h } = im;
+  let punti = bordiDeiMuri(im);
+  const quanti3 = punti.length / 2;
+  if (quanti3 < 200) return null;
+  const salto = Math.max(1, Math.round(quanti3 / 6e4));
+  const cx = w / 2, cy = h / 2, sc = Math.max(w, h) / 2;
+  const passoA = 0.2, largo = 16, nA = Math.round(2 * largo / passoA) + 1, rMax = Math.ceil(Math.hypot(w, h) / 2), nR = 2 * rMax + 1;
+  const famiglie2 = [];
+  for (const base of [90, 0]) {
+    const acc = new Int32Array(nA * nR), cs = [], sn = [];
+    for (let a = 0; a < nA; a++) {
+      const t2 = (base - largo + a * passoA) * Math.PI / 180;
+      cs.push(Math.cos(t2));
+      sn.push(Math.sin(t2));
+    }
+    for (let p = 0; p < punti.length; p += 2 * salto) {
+      const x = punti[p] - cx, y = punti[p + 1] - cy;
+      for (let a = 0; a < nA; a++) acc[a * nR + Math.round(x * cs[a] + y * sn[a]) + rMax]++;
+    }
+    const minimo = Math.max(30, Math.round(Math.max(w, h) * 0.07 / salto));
+    const righe3 = [];
+    for (let giro = 0; giro < 14; giro++) {
+      let m = 0, dove = -1;
+      for (let i = 0; i < acc.length; i++)
+        if (acc[i] > m) {
+          m = acc[i];
+          dove = i;
+        }
+      if (m < minimo) break;
+      const a = Math.floor(dove / nR), r = dove % nR - rMax;
+      righe3.push({ t: base - largo + a * passoA, r, voti: m });
+      for (let da = -15; da <= 15; da++)
+        for (let dr = -12; dr <= 12; dr++) {
+          const aa = a + da, rr = r + dr + rMax;
+          if (aa >= 0 && aa < nA && rr >= 0 && rr < nR) acc[aa * nR + rr] = 0;
+        }
+    }
+    famiglie2.push(righe3);
+  }
+  const [oriz, vert] = famiglie2;
+  if (oriz.length < 2 || vert.length < 2) return null;
+  const fuga = (righe3) => {
+    const M = [
+      [0, 0, 0],
+      [0, 0, 0],
+      [0, 0, 0]
+    ];
+    for (const { t: t2, r, voti } of righe3) {
+      const a = t2 * Math.PI / 180, l = [Math.cos(a), Math.sin(a), -r / sc];
+      for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) M[i][j] += voti * l[i] * l[j];
+    }
+    return minimoAutovettore(M);
+  };
+  const v1 = fuga(oriz), v2 = fuga(vert);
+  const linf = croce(v1, v2);
+  if (Math.abs(linf[2]) < 1e-9) return null;
+  const H1 = [
+    [1, 0, 0],
+    [0, 1, 0],
+    [linf[0] / linf[2], linf[1] / linf[2], 1]
+  ];
+  const d1 = per3(H1, v1), d2 = per3(H1, v2);
+  let a1 = [d1[0], d1[1]], a2 = [d2[0], d2[1]];
+  const n1 = Math.hypot(...a1), n2 = Math.hypot(...a2);
+  if (!n1 || !n2) return null;
+  a1 = a1.map((v) => v / n1);
+  a2 = a2.map((v) => v / n2);
+  if (a1[0] < 0) a1 = a1.map((v) => -v);
+  if (a2[1] < 0) a2 = a2.map((v) => -v);
+  const B = inversa([
+    [a1[0], a2[0], 0],
+    [a1[1], a2[1], 0],
+    [0, 0, 1]
+  ]);
+  if (!B) return null;
+  const N = [
+    [1 / sc, 0, -cx / sc],
+    [0, 1 / sc, -cy / sc],
+    [0, 0, 1]
+  ];
+  let T = prodotto(B, prodotto(H1, N));
+  const ang = (x, y) => {
+    const p = per3(T, [x, y, 1]);
+    return [p[0] / p[2], p[1] / p[2]];
+  };
+  const angoli = [ang(0, 0), ang(w, 0), ang(w, h), ang(0, h)];
+  for (const [x, y] of [
+    [0, 0],
+    [w, 0],
+    [w, h],
+    [0, h]
+  ])
+    if (per3(T, [x, y, 1])[2] <= 0) return null;
+  const xs = angoli.map((p) => p[0]), ys = angoli.map((p) => p[1]);
+  const bw = Math.max(...xs) - Math.min(...xs), bh = Math.max(...ys) - Math.min(...ys);
+  const k = Math.max(w, h) / Math.max(bw, bh);
+  const S = [
+    [k, 0, -Math.min(...xs) * k],
+    [0, k, -Math.min(...ys) * k],
+    [0, 0, 1]
+  ];
+  T = prodotto(S, T);
+  let sposta3 = 0;
+  const ow = Math.round(bw * k), oh = Math.round(bh * k);
+  const scala2 = Math.max(w, h) / Math.max(ow, oh);
+  void scala2;
+  for (const [x, y] of [
+    [w * 0.25, h * 0.25],
+    [w * 0.75, h * 0.25],
+    [w * 0.75, h * 0.75],
+    [w * 0.25, h * 0.75]
+  ]) {
+    const p = per3(T, [x, y, 1]);
+    sposta3 = Math.max(sposta3, Math.hypot(p[0] / p[2] - x * (ow / w), p[1] / p[2] - y * (oh / h)));
+  }
+  if (ow < w * 0.5 || oh < h * 0.5 || ow > w * 2 || oh > h * 2) return null;
+  return { T, larghezza: ow, altezza: oh, sposta: sposta3, righe: { oriz, vert } };
+}
+function raddrizza(im, { T, larghezza, altezza }) {
+  const { width: w, height: h, data } = im;
+  const I = inversa(T);
+  const out = new Uint8ClampedArray(larghezza * altezza * 4);
+  for (let y = 0; y < altezza; y++)
+    for (let x = 0; x < larghezza; x++) {
+      const zz = I[2][0] * x + I[2][1] * y + I[2][2], sx = (I[0][0] * x + I[0][1] * y + I[0][2]) / zz, sy = (I[1][0] * x + I[1][1] * y + I[1][2]) / zz;
+      const o = (y * larghezza + x) * 4;
+      const x0 = Math.floor(sx), y0 = Math.floor(sy);
+      if (x0 < 0 || y0 < 0 || x0 >= w - 1 || y0 >= h - 1) {
+        out[o] = 59;
+        out[o + 1] = 58;
+        out[o + 2] = 55;
+        out[o + 3] = 255;
+        continue;
+      }
+      const fx = sx - x0, fy = sy - y0;
+      for (let c = 0; c < 3; c++) {
+        const i = (y0 * w + x0) * 4 + c;
+        out[o + c] = data[i] * (1 - fx) * (1 - fy) + data[i + 4] * fx * (1 - fy) + data[i + w * 4] * (1 - fx) * fy + data[i + w * 4 + 4] * fx * fy;
+      }
+      out[o + 3] = 255;
+    }
+  return { data: out, width: larghezza, height: altezza };
+}
 function inchiostro(im) {
   const { width: w, height: h, data } = im, g = new Float32Array(w * h);
   for (let i = 0; i < w * h; i++)
@@ -155010,6 +155389,70 @@ function inchiostro(im) {
     }
   return out;
 }
+function muriPieni(im, mpp) {
+  const { width: w, height: h, data } = im;
+  const g = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++)
+    g[i] = 0.3 * data[i * 4] + 0.59 * data[i * 4 + 1] + 0.11 * data[i * 4 + 2];
+  const r = Math.max(2, Math.round(0.06 / (mpp || 0.01)));
+  const carta = cartaDi(g);
+  const nucleo = nucleoDeiMuri(g, w, h, r, carta);
+  let n = 0, pieno = 0;
+  for (let i = 0; i < w * h; i++)
+    if (nucleo[i]) {
+      n++;
+      if (g[i] < carta * 0.8) pieno++;
+    }
+  const J = new Int32Array((w + 1) * (h + 1));
+  for (let y = 0; y < h; y++) {
+    let riga5 = 0;
+    for (let x = 0; x < w; x++) {
+      riga5 += nucleo[y * w + x];
+      J[(y + 1) * (w + 1) + x + 1] = J[y * (w + 1) + x + 1] + riga5;
+    }
+  }
+  const ink = new Uint8Array(w * h), linee = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      if (g[i] >= carta * 0.85) continue;
+      const x0 = Math.max(0, x - r), x1 = Math.min(w, x + r + 1), y0 = Math.max(0, y - r), y1 = Math.min(h, y + r + 1);
+      if (J[y1 * (w + 1) + x1] - J[y0 * (w + 1) + x1] - J[y1 * (w + 1) + x0] + J[y0 * (w + 1) + x0] > 0)
+        ink[i] = 1;
+      else if (g[i] < carta * 0.75) linee[i] = 1;
+    }
+  const riempito = n ? pieno / n : 0;
+  return { ink, linee, metri: riempito >= 0.62 ? n * (mpp || 0.01) ** 2 : 0, riempito };
+}
+function cartaDi(g) {
+  const campione = [];
+  const passo = Math.max(1, Math.floor(g.length / 2e4));
+  for (let i = 0; i < g.length; i += passo) campione.push(g[i]);
+  campione.sort((a, b2) => a - b2);
+  return campione[Math.floor(campione.length * 0.7)] || 255;
+}
+function nucleoDeiMuri(g, w, h, r, carta = cartaDi(g)) {
+  const I = new Float64Array((w + 1) * (h + 1)), K = new Int32Array((w + 1) * (h + 1));
+  for (let y = 0; y < h; y++) {
+    let riga5 = 0, chiari = 0;
+    for (let x = 0; x < w; x++) {
+      riga5 += g[y * w + x];
+      chiari += g[y * w + x] >= carta * 0.85 ? 1 : 0;
+      I[(y + 1) * (w + 1) + x + 1] = I[y * (w + 1) + x + 1] + riga5;
+      K[(y + 1) * (w + 1) + x + 1] = K[y * (w + 1) + x + 1] + chiari;
+    }
+  }
+  const soglia3 = carta * 0.72, nucleo = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const x0 = Math.max(0, x - r), x1 = Math.min(w, x + r + 1), y0 = Math.max(0, y - r), y1 = Math.min(h, y + r + 1), area = (x1 - x0) * (y1 - y0);
+      const a = y1 * (w + 1) + x1, b2 = y0 * (w + 1) + x1, c = y1 * (w + 1) + x0, d = y0 * (w + 1) + x0;
+      if ((I[a] - I[b2] - I[c] + I[d]) / area < soglia3 && (K[a] - K[b2] - K[c] + K[d]) / area <= 0.08)
+        nucleo[y * w + x] = 1;
+    }
+  return nucleo;
+}
+var MURI_PIENI_MINIMO = 3;
 function integrale(g, W2, H7) {
   const I = new Int32Array((W2 + 1) * (H7 + 1));
   for (let y = 0; y < H7; y++) {
@@ -155455,7 +155898,341 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
     }
   return { W: W2, H: H7, muro, barriera: spessa, vetro };
 }
-function riconosciDaFoto({ W: W2, H: H7, muro, barriera, vetro }, { fuori = /* @__PURE__ */ new Set() } = {}) {
+function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
+  const lato = PASSO / mpp, W2 = Math.max(1, Math.floor(w / lato)), H7 = Math.max(1, Math.floor(h / lato)), N = W2 * H7;
+  const celleDi = (px, quota) => {
+    const celle = new Uint8Array(N);
+    for (let cy = 0; cy < H7; cy++)
+      for (let cx = 0; cx < W2; cx++) {
+        const x0 = Math.floor(cx * lato), y0 = Math.floor(cy * lato), x1 = Math.max(x0 + 1, Math.floor((cx + 1) * lato)), y1 = Math.max(y0 + 1, Math.floor((cy + 1) * lato));
+        let c = 0, n = 0;
+        for (let y = y0; y < y1 && y < h; y++)
+          for (let x = x0; x < x1 && x < w; x++) {
+            n++;
+            if (px[y * w + x]) c++;
+          }
+        celle[cy * W2 + cx] = n && c / n >= quota ? 1 : 0;
+      }
+    return celle;
+  };
+  let muro = celleDi(ink, 0.5);
+  muro = stringi(allarga(muro, W2, H7, 1), W2, H7, 1);
+  const riga5 = celleDi(linee, 0.01);
+  for (let i = 0; i < N; i++) if (muro[i]) riga5[i] = 0;
+  const appoggi = new Uint8Array(N);
+  for (const p of pezziDi(muro, W2, H7).pezzi)
+    if (Math.max(p.x1 - p.x0, p.y1 - p.y0) + 1 >= 0.6 / PASSO)
+      for (const c of p.celle) appoggi[c] = 1;
+  const vicinoAgliAppoggi = allarga(appoggi, W2, H7, Math.round(0.3 / PASSO));
+  const appoggiato = (p) => {
+    const oriz = p.x1 - p.x0 >= p.y1 - p.y0;
+    const capo = (da, a) => p.celle.some((c) => {
+      const t2 = oriz ? c % W2 : c / W2 | 0;
+      return t2 >= da && t2 <= a && vicinoAgliAppoggi[c];
+    });
+    return oriz ? capo(p.x0, p.x0 + 2) || capo(p.x1 - 2, p.x1) : capo(p.y0, p.y0 + 2) || capo(p.y1 - 2, p.y1);
+  };
+  const vetroNelMuro = (p) => {
+    const oriz = p.x1 - p.x0 >= p.y1 - p.y0;
+    const banda = oriz ? p.y1 - p.y0 + 1 : p.x1 - p.x0 + 1, mezzo = oriz ? p.y0 + p.y1 >> 1 : p.x0 + p.x1 >> 1;
+    let accanto = 0;
+    for (const [da, aa] of oriz ? [
+      [p.x0 - 12, p.x0 - 1],
+      [p.x1 + 1, p.x1 + 12]
+    ] : [
+      [p.y0 - 12, p.y0 - 1],
+      [p.y1 + 1, p.y1 + 12]
+    ])
+      for (let t2 = Math.max(0, da); t2 <= aa && t2 < (oriz ? W2 : H7); t2++) {
+        const i = oriz ? mezzo * W2 + t2 : t2 * W2 + mezzo;
+        if (!muro[i]) continue;
+        const passo = oriz ? W2 : 1;
+        let n = 1;
+        for (let j = i - passo; j >= 0 && muro[j] && n < 40; j -= passo) n++;
+        for (let j = i + passo; j < N && muro[j] && n < 40; j += passo) n++;
+        if (n <= Math.round(0.7 / PASSO)) accanto = Math.max(accanto, n);
+      }
+    return accanto > banda + 1;
+  };
+  const pieno = new Uint8Array(N);
+  {
+    const scuro = new Uint8Array(N);
+    for (let i = 0; i < N; i++) scuro[i] = muro[i] || riga5[i] ? 1 : 0;
+    const lunga = Math.round(0.9 / PASSO), sMin = 3, sMax = Math.round(0.21 / PASSO);
+    for (const oriz of [true, false]) {
+      const n = oriz ? H7 : W2, m = oriz ? W2 : H7, at = oriz ? (a, b2) => a * W2 + b2 : (a, b2) => b2 * W2 + a;
+      const run2 = new Int32Array(N);
+      for (let a = 0; a < n; a++) {
+        let b2 = 0;
+        while (b2 < m) {
+          if (!scuro[at(a, b2)]) {
+            b2++;
+            continue;
+          }
+          let e = b2;
+          while (e < m && scuro[at(a, e)]) e++;
+          for (let q = b2; q < e; q++) run2[at(a, q)] = e - b2;
+          b2 = e;
+        }
+      }
+      for (let b2 = 0; b2 < m; b2++) {
+        let a = 0;
+        while (a < n) {
+          if (run2[at(a, b2)] < lunga) {
+            a++;
+            continue;
+          }
+          let e = a;
+          while (e < n && run2[at(e, b2)] >= lunga) e++;
+          if (e - a >= sMin && e - a <= sMax) for (let q = a; q < e; q++) pieno[at(q, b2)] = 1;
+          a = e;
+        }
+      }
+    }
+    for (let i = 0; i < N; i++) if (muro[i]) pieno[i] = 0;
+    const oltre = Math.round(0.5 / PASSO);
+    for (const p of pezziDi(pieno, W2, H7).pezzi) {
+      const oriz = p.x1 - p.x0 >= p.y1 - p.y0, x0 = Math.max(0, p.x0 - (oriz ? oltre : 0)), x1 = Math.min(W2 - 1, p.x1 + (oriz ? oltre : 0)), y0 = Math.max(0, p.y0 - (oriz ? 0 : oltre)), y1 = Math.min(H7 - 1, p.y1 + (oriz ? 0 : oltre));
+      let m = 0, a = 0;
+      for (let y = y0; y <= y1; y++)
+        for (let x = x0; x <= x1; x++) {
+          a++;
+          if (muro[y * W2 + x]) m++;
+        }
+      const fuori = vetroNelMuro(p) ? Infinity : 0;
+      if (m < a * 0.2 || fuori > m * 0.3 || !appoggiato(p)) for (const c of p.celle) pieno[c] = 0;
+    }
+  }
+  const corsa = (lungo) => {
+    const out = new Int32Array(N);
+    const n = lungo ? H7 : W2, m = lungo ? W2 : H7, at = lungo ? (a, b2) => a * W2 + b2 : (a, b2) => b2 * W2 + a;
+    for (let a = 0; a < n; a++) {
+      let b2 = 0;
+      while (b2 < m) {
+        const vicino = (q) => riga5[at(a, q)] || a > 0 && riga5[at(a - 1, q)] || a < n - 1 && riga5[at(a + 1, q)];
+        if (!riga5[at(a, b2)]) {
+          b2++;
+          continue;
+        }
+        let e = b2, buco = 0;
+        while (e < m && (vicino(e) || buco < 2 && e + 1 < m && vicino(e + 1))) {
+          buco = vicino(e) ? 0 : buco + 1;
+          e++;
+        }
+        for (let q = b2; q < e; q++) if (riga5[at(a, q)]) out[at(a, q)] = e - b2;
+        b2 = e;
+      }
+    }
+    return out;
+  };
+  const corsaO = corsa(true), corsaV = corsa(false);
+  const tramezzo = new Uint8Array(N);
+  const lungaT = Math.round(0.9 / PASSO), dMin = 2, dMax = Math.round(0.4 / PASSO);
+  const cercaDoppie = (oriz) => {
+    const c = oriz ? corsaO : corsaV, passo = oriz ? W2 : 1;
+    for (let i = 0; i < N; i++) {
+      if (c[i] < lungaT) continue;
+      if (i + 2 * passo < N && c[i + passo] >= lungaT && c[i + 2 * passo] >= lungaT) {
+        for (let q = 0; q <= 2; q++) tramezzo[i + q * passo] = 1;
+        continue;
+      }
+      for (let d = dMin; d <= dMax; d++) {
+        const j = i + d * passo;
+        if (j >= N) break;
+        if (c[j] < lungaT) continue;
+        let pulito72 = true;
+        for (let q = 1; q < d && pulito72; q++) if (muro[i + q * passo]) pulito72 = false;
+        if (!pulito72) break;
+        for (let q = 0; q <= d; q++) tramezzo[i + q * passo] = 1;
+        break;
+      }
+    }
+  };
+  cercaDoppie(true);
+  cercaDoppie(false);
+  {
+    const { pezzi } = pezziDi(tramezzo, W2, H7);
+    for (const p of pezzi) {
+      const lungo = Math.max(p.x1 - p.x0, p.y1 - p.y0) + 1, spesso = Math.min(p.x1 - p.x0, p.y1 - p.y0) + 1;
+      if (lungo < lungaT || spesso > dMax + 2 || !appoggiato(p) || vetroNelMuro(p))
+        for (const c of p.celle) tramezzo[c] = 0;
+    }
+  }
+  const scale = [];
+  const gradino = Math.round(0.6 / PASSO), pMin = Math.round(0.18 / PASSO), pMax = Math.round(0.4 / PASSO);
+  const segnaScale = new Uint8Array(N);
+  for (const oriz of [true, false]) {
+    const c = oriz ? corsaO : corsaV;
+    const n = oriz ? H7 : W2, m = oriz ? W2 : H7, at = oriz ? (a, b2) => a * W2 + b2 : (a, b2) => b2 * W2 + a;
+    const file = [];
+    for (let a = 0; a < n; a++) {
+      const tratti2 = [];
+      let b2 = 0;
+      while (b2 < m) {
+        if (c[at(a, b2)] >= gradino && c[at(a, b2)] < Math.round(2.2 / PASSO)) {
+          let e = b2;
+          while (e < m && (c[at(a, e)] >= gradino || e + 1 < m && c[at(a, e + 1)] >= gradino))
+            e++;
+          tratti2.push([b2, e]);
+          b2 = e;
+        } else b2++;
+      }
+      file.push(tratti2);
+    }
+    const centri = [];
+    for (let a = 0; a < n; a++)
+      for (const [b2, e] of file[a]) {
+        const ultimo = centri.find(
+          (q) => a - q.a1 <= 1 && Math.min(e, q.e) - Math.max(b2, q.b) > (e - b2) * 0.6
+        );
+        if (ultimo)
+          ultimo.a1 = a, ultimo.b = Math.min(ultimo.b, b2), ultimo.e = Math.max(ultimo.e, e);
+        else centri.push({ a0: a, a1: a, b: b2, e });
+      }
+    centri.sort((p, q) => p.a0 - q.a0);
+    const usata = /* @__PURE__ */ new Set();
+    for (let k = 0; k < centri.length; k++) {
+      if (usata.has(k)) continue;
+      const catena = [k];
+      let ultimo = centri[k];
+      for (let j = k + 1; j < centri.length; j++) {
+        const q = centri[j], dist = (q.a0 + q.a1) / 2 - (ultimo.a0 + ultimo.a1) / 2;
+        if (dist < pMin) continue;
+        if (dist > pMax) break;
+        const sovrapposti2 = Math.min(q.e, ultimo.e) - Math.max(q.b, ultimo.b);
+        if (sovrapposti2 < Math.min(q.e - q.b, ultimo.e - ultimo.b) * 0.7) continue;
+        catena.push(j);
+        ultimo = q;
+      }
+      if (catena.length < 5) continue;
+      for (const j of catena) usata.add(j);
+      const pezzi = catena.map((j) => centri[j]);
+      const passi2 = pezzi.slice(1).map((q, i) => (q.a0 + q.a1) / 2 - (pezzi[i].a0 + pezzi[i].a1) / 2);
+      const medio2 = passi2.reduce((a, b3) => a + b3, 0) / passi2.length;
+      if (passi2.some((p) => Math.abs(p - medio2) > Math.max(2, medio2 * 0.3))) continue;
+      const b2 = Math.min(...pezzi.map((q) => q.b)), e = Math.max(...pezzi.map((q) => q.e)), a0 = pezzi[0].a0, a1 = pezzi[pezzi.length - 1].a1;
+      const toccaMuro = (q, capo) => {
+        for (let a = q.a0; a <= q.a1; a++)
+          for (let d = 0; d <= Math.round(0.25 / PASSO); d++) {
+            const bb = capo ? q.e + d : q.b - d;
+            if (bb >= 0 && bb < m && muro[at(a, bb)]) return true;
+          }
+        return false;
+      };
+      const fraMuri = pezzi.filter((q) => toccaMuro(q, false) && toccaMuro(q, true)).length;
+      if (fraMuri < pezzi.length * 0.7) continue;
+      scale.push(
+        oriz ? { x0: b2, x1: e, y0: a0, y1: a1, oriz: false, gradini: pezzi.length, passo: medio2 } : { x0: a0, x1: a1, y0: b2, y1: e, oriz: true, gradini: pezzi.length, passo: medio2 }
+      );
+    }
+  }
+  const tutte = scale.filter(
+    (s) => !scale.some(
+      (t2) => t2 !== s && t2.oriz !== s.oriz && Math.min(s.x1, t2.x1) - Math.max(s.x0, t2.x0) > 0 && Math.min(s.y1, t2.y1) - Math.max(s.y0, t2.y0) > 0
+    )
+  );
+  const vere = [];
+  for (const s of [...tutte].sort(
+    (a, b2) => (b2.x1 - b2.x0) * (b2.y1 - b2.y0) - (a.x1 - a.x0) * (a.y1 - a.y0)
+  )) {
+    const sopra = vere.some(
+      (t2) => Math.min(s.x1, t2.x1) - Math.max(s.x0, t2.x0) > 0 && Math.min(s.y1, t2.y1) - Math.max(s.y0, t2.y0) > 0
+    );
+    if (!sopra) vere.push(s);
+  }
+  for (const s of vere)
+    for (let y = s.y0; y <= s.y1; y++) for (let x = s.x0; x <= s.x1; x++) segnaScale[y * W2 + x] = 1;
+  for (let i = 0; i < N; i++) if ((tramezzo[i] || pieno[i]) && !segnaScale[i]) muro[i] = 1;
+  {
+    const { pezzi } = pezziDi(muro, W2, H7), minimo = 0.8 / PASSO;
+    for (const p of pezzi)
+      if (Math.max(p.x1 - p.x0, p.y1 - p.y0) + 1 < minimo || p.x0 === 0 || p.y0 === 0 || p.x1 === W2 - 1 || p.y1 === H7 - 1)
+        for (const c of p.celle) muro[c] = 0;
+    const unita3 = pezziDi(allarga(muro, W2, H7, Math.round(0.8 / PASSO)), W2, H7);
+    if (unita3.pezzi.length > 1) {
+      let k = 0;
+      unita3.pezzi.forEach((p, i) => {
+        if (p.celle.length > unita3.pezzi[k].celle.length) k = i;
+      });
+      for (let i = 0; i < N; i++) if (muro[i] && unita3.id[i] !== k) muro[i] = 0;
+    }
+  }
+  const vetro = new Uint8Array(N), soglie = new Uint8Array(N);
+  const spessoreMax = Math.round(0.7 / PASSO), varco = Math.round(1.3 / PASSO), varcoLargo = Math.round(4 / PASSO), vetroMax = Math.round(3 / PASSO), varcoUnLato = Math.round(1 / PASSO), tratto = Math.round(0.2 / PASSO);
+  const corre = (i, passo, fino) => {
+    let n = 0;
+    for (let j = i; n < fino && j >= 0 && j < N && muro[j]; j += passo) n++;
+    return n;
+  };
+  const nellaFila = (a, passo, largo) => {
+    if (corre(a, -passo, tratto) < tratto) return false;
+    const spesso = corre(a, largo, spessoreMax + 1) + corre(a, -largo, spessoreMax + 1) - 1;
+    return spesso <= spessoreMax;
+  };
+  const varchi = (oriz) => {
+    const passo = oriz ? 1 : W2, largo = oriz ? W2 : 1, n = oriz ? H7 : W2, m = oriz ? W2 : H7, at = oriz ? (a, b2) => a * W2 + b2 : (a, b2) => b2 * W2 + a;
+    for (let a = 1; a < n - 1; a++)
+      for (let b2 = 1; b2 < m - 1; b2++) {
+        const i = at(a, b2);
+        if (!muro[i - passo] || muro[i]) continue;
+        let e = b2;
+        while (e < m && !muro[at(a, e)] && e - b2 <= varcoLargo) e++;
+        if (e >= m || e - b2 > varcoLargo) continue;
+        const k = e - b2, j = at(a, e);
+        const fa = nellaFila(i - passo, passo, largo), fb = nellaFila(j, -passo, largo);
+        if (!fa && !fb) continue;
+        const lungoLa = oriz ? corsaO : corsaV;
+        let righe3 = 0;
+        for (let q = b2; q < e; q++) {
+          const c = at(a, q);
+          if ([c, c - largo, c + largo, c - 2 * largo, c + 2 * largo].some(
+            (z) => riga5[z] && lungoLa[z] >= k * 0.5
+          ))
+            righe3++;
+        }
+        if (fa && fb && k <= vetroMax && righe3 >= k * 0.5)
+          for (let q = b2; q < e; q++) vetro[at(a, q)] = 1;
+        else if (k <= (fa && fb ? varco : varcoUnLato))
+          for (let q = b2; q < e; q++) soglie[at(a, q)] = 1;
+      }
+  };
+  varchi(true);
+  varchi(false);
+  {
+    const vicino = allarga(segnaScale, W2, H7, Math.round(0.3 / PASSO));
+    for (let i = 0; i < N; i++) if (vicino[i]) vetro[i] = soglie[i] = 0;
+  }
+  {
+    const unione = new Uint8Array(N);
+    for (let i = 0; i < N; i++) unione[i] = vetro[i] || soglie[i] ? 1 : 0;
+    for (const p of pezziDi(unione, W2, H7).pezzi) {
+      const n = p.celle.filter((c) => vetro[c]).length, tutto = n >= p.celle.length * 0.2;
+      for (const c of p.celle) {
+        vetro[c] = tutto ? 1 : 0;
+        soglie[c] = tutto ? 0 : 1;
+      }
+    }
+  }
+  const barriera = muro.slice();
+  for (let i = 0; i < N; i++) if (vetro[i] || soglie[i]) barriera[i] = 1;
+  return {
+    W: W2,
+    H: H7,
+    muro,
+    barriera,
+    vetro,
+    pieni: true,
+    scale: vere.map((s) => ({
+      x0: s.x0 * PASSO,
+      x1: (s.x1 + 1) * PASSO,
+      y0: s.y0 * PASSO,
+      y1: (s.y1 + 1) * PASSO,
+      oriz: s.oriz,
+      gradini: s.gradini
+    }))
+  };
+}
+function riconosciDaFoto({ W: W2, H: H7, muro, barriera, vetro, pieni = false, scale = [] }, { fuori = /* @__PURE__ */ new Set(), squadra = true } = {}) {
   const N = W2 * H7, passo = PASSO, ostacolo = barriera || muro;
   const dist = new Int32Array(N).fill(1e9), coda = new Int32Array(N);
   let t2 = 0, k = 0;
@@ -155483,12 +156260,32 @@ function riconosciDaFoto({ W: W2, H: H7, muro, barriera, vetro }, { fuori = /* @
   const lab = new Int32Array(N);
   let n = 1;
   const cuori = [{ id: 1, celle: 0, bordo: true }];
+  const largoFuori = pieni ? Math.round(0.65 / passo) : 0;
+  let lontano = null;
+  if (largoFuori) {
+    lontano = new Int32Array(N).fill(1e9);
+    let a = 0, b2 = 0;
+    for (let i = 0; i < N; i++)
+      if (ostacolo[i]) {
+        lontano[i] = 0;
+        coda[b2++] = i;
+      }
+    while (a < b2) {
+      const c = coda[a++], x = c % W2;
+      for (const j of [x > 0 ? c - 1 : -1, x < W2 - 1 ? c + 1 : -1, c - W2, c + W2])
+        if (j >= 0 && j < N && lontano[j] > lontano[c] + 1) {
+          lontano[j] = lontano[c] + 1;
+          coda[b2++] = j;
+        }
+    }
+  }
+  const passaFuori = (i) => !ostacolo[i] && (!lontano || lontano[i] >= largoFuori);
   {
     const pila2 = [];
     for (let x = 0; x < W2; x++)
       for (const y of [0, H7 - 1]) {
         const i = y * W2 + x;
-        if (!ostacolo[i] && !lab[i]) {
+        if (passaFuori(i) && !lab[i]) {
           lab[i] = 1;
           pila2.push(i);
         }
@@ -155496,7 +156293,7 @@ function riconosciDaFoto({ W: W2, H: H7, muro, barriera, vetro }, { fuori = /* @
     for (let y = 0; y < H7; y++)
       for (const x of [0, W2 - 1]) {
         const i = y * W2 + x;
-        if (!ostacolo[i] && !lab[i]) {
+        if (passaFuori(i) && !lab[i]) {
           lab[i] = 1;
           pila2.push(i);
         }
@@ -155504,7 +156301,7 @@ function riconosciDaFoto({ W: W2, H: H7, muro, barriera, vetro }, { fuori = /* @
     while (pila2.length) {
       const c = pila2.pop(), x = c % W2;
       for (const j of [x > 0 ? c - 1 : -1, x < W2 - 1 ? c + 1 : -1, c - W2, c + W2])
-        if (j >= 0 && j < N && !lab[j] && !ostacolo[j]) {
+        if (j >= 0 && j < N && !lab[j] && passaFuori(j)) {
           lab[j] = 1;
           pila2.push(j);
           cuori[0].celle++;
@@ -155651,7 +156448,8 @@ function riconosciDaFoto({ W: W2, H: H7, muro, barriera, vetro }, { fuori = /* @
     const verso0 = ta === -2 || tb === -2;
     const segna2 = [], { x0, x1, y0, y1, orizz } = gr;
     const muroIn = (x, y) => x >= 0 && y >= 0 && x < W2 && y < H7 && muro[y * W2 + x];
-    const fianchi = (p) => orizz ? (muroIn(x0 - 1, p) || muroIn(x0 - 2, p)) && (muroIn(x1 + 1, p) || muroIn(x1 + 2, p)) : (muroIn(p, y0 - 1) || muroIn(p, y0 - 2)) && (muroIn(p, y1 + 1) || muroIn(p, y1 + 2));
+    const muroVicino = (x, y, dx, dy) => muroIn(x + dx, y + dy) || muroIn(x + 2 * dx, y + 2 * dy) || muroIn(x + 3 * dx, y + 3 * dy);
+    const fianchi = (p) => orizz ? muroVicino(x0, p, -1, 0) && muroVicino(x1, p, 1, 0) : muroVicino(p, y0, 0, -1) && muroVicino(p, y1, 0, 1);
     const centro2 = orizz ? Math.round((y0 + y1) / 2) : Math.round((x0 + x1) / 2);
     if (!fianchi(centro2)) continue;
     let p0 = centro2, p1 = centro2;
@@ -155701,6 +156499,7 @@ function riconosciDaFoto({ W: W2, H: H7, muro, barriera, vetro }, { fuori = /* @
     for (let i = 0; i < N; i++) if (tipo[i] === s.id) tipo[i] = dove;
   }
   const vive = stanze4.filter((s) => !s.via);
+  if (squadra) squadraLaCasa(tipo, W2, H7, vive);
   for (const s of vive) {
     let sx = 0, sy = 0, c = 0, bx0 = W2, bx1 = 0, by0 = H7, by1 = 0;
     for (let i = 0; i < N; i++)
@@ -155717,6 +156516,7 @@ function riconosciDaFoto({ W: W2, H: H7, muro, barriera, vetro }, { fuori = /* @
     s.riquadro = { x0: bx0 * passo, x1: bx1 * passo, y0: by0 * passo, y1: by1 * passo };
     s.celle = c;
     s.area = c * passo * passo;
+    if (!c) continue;
     let cx = Math.round(sx / c), cy = Math.round(sy / c);
     if (tipo[cy * W2 + cx] !== s.id) {
       let m = 1e9;
@@ -155759,10 +156559,13 @@ function riconosciDaFoto({ W: W2, H: H7, muro, barriera, vetro }, { fuori = /* @
     H: H7,
     passo,
     tipo,
-    stanze: vive,
+    stanze: vive.filter((s) => s.celle > 0),
     vuoti: [],
-    aperture: aperture.filter((a) => vive.some((s) => s.id === a.stanza) || !a.stanza),
+    aperture: aperture.filter(
+      (a) => vive.some((s) => s.id === a.stanza && s.celle > 0) || !a.stanza
+    ),
     rettangoli,
+    scale: scaleDellaCasa(scale, tipo, W2, H7, passo, muro),
     larghezza: W2 * passo,
     profondita: H7 * passo,
     cuori: cuori.map((c) => ({
@@ -155772,6 +156575,197 @@ function riconosciDaFoto({ W: W2, H: H7, muro, barriera, vetro }, { fuori = /* @
     })),
     lab
   };
+}
+function scaleDellaCasa(scale, tipo, W2, H7, passo, muro) {
+  const fuori = [];
+  for (const s of scale || []) {
+    const x0 = Math.round(s.x0 / passo), x1 = Math.round(s.x1 / passo) - 1, y0 = Math.round(s.y0 / passo), y1 = Math.round(s.y1 / passo) - 1;
+    const cx = Math.round((x0 + x1) / 2), cy = Math.round((y0 + y1) / 2);
+    if (cx < 0 || cy < 0 || cx >= W2 || cy >= H7) continue;
+    const conta2 = /* @__PURE__ */ new Map();
+    for (let y = y0; y <= y1; y++)
+      for (let x = x0; x <= x1; x++) {
+        const t2 = tipo[y * W2 + x];
+        if (t2 > 0) conta2.set(t2, (conta2.get(t2) || 0) + 1);
+      }
+    const stanza2 = [...conta2].sort((a, b2) => b2[1] - a[1])[0]?.[0];
+    if (!stanza2) continue;
+    const muroOltre = (verso2) => {
+      let n = 0;
+      for (let d = 1; d <= 6; d++)
+        if (s.oriz)
+          for (let y = y0; y <= y1; y++) {
+            const x = verso2 < 0 ? x0 - d : x1 + d;
+            if (x >= 0 && x < W2 && muro[y * W2 + x]) n++;
+          }
+        else
+          for (let x = x0; x <= x1; x++) {
+            const y = verso2 < 0 ? y0 - d : y1 + d;
+            if (y >= 0 && y < H7 && muro[y * W2 + x]) n++;
+          }
+      return n;
+    };
+    const prima = muroOltre(-1), dopo = muroOltre(1);
+    const rot = s.oriz ? dopo > prima ? -Math.PI / 2 : Math.PI / 2 : dopo > prima ? Math.PI : 0;
+    fuori.push({
+      x: (x0 + x1 + 1) / 2 * passo,
+      y: (y0 + y1 + 1) / 2 * passo,
+      lungo: (s.oriz ? x1 - x0 + 1 : y1 - y0 + 1) * passo,
+      largo: (s.oriz ? y1 - y0 + 1 : x1 - x0 + 1) * passo,
+      rot,
+      gradini: s.gradini,
+      stanza: stanza2
+    });
+  }
+  return fuori;
+}
+function rettangoloMassimo(m, W2, H7) {
+  const alto = new Int32Array(W2);
+  let meglio = { area: 0, x0: 0, y0: 0, x1: -1, y1: -1 };
+  const pila2 = new Int32Array(W2 + 1);
+  for (let y = 0; y < H7; y++) {
+    for (let x = 0; x < W2; x++) alto[x] = m[y * W2 + x] ? alto[x] + 1 : 0;
+    let cima = 0;
+    for (let x = 0; x <= W2; x++) {
+      const h = x < W2 ? alto[x] : 0;
+      while (cima > 0 && alto[pila2[cima - 1]] >= h) {
+        const hh = alto[pila2[--cima]];
+        const sinistra = cima > 0 ? pila2[cima - 1] + 1 : 0;
+        const area = hh * (x - sinistra);
+        if (area > meglio.area) meglio = { area, x0: sinistra, x1: x - 1, y0: y - hh + 1, y1: y };
+      }
+      pila2[cima++] = x;
+    }
+  }
+  return meglio;
+}
+function allinea2(valori, tolleranza2) {
+  const ordinati = [...valori].sort((a, b2) => a.v - b2.v);
+  const mappa2 = /* @__PURE__ */ new Map();
+  let gruppo2 = [];
+  const chiudi5 = () => {
+    if (!gruppo2.length) return;
+    const peso = gruppo2.reduce((t2, g) => t2 + g.peso, 0);
+    const media3 = Math.round(gruppo2.reduce((t2, g) => t2 + g.v * g.peso, 0) / peso);
+    for (const g of gruppo2) mappa2.set(g.v, media3);
+    gruppo2 = [];
+  };
+  for (const o of ordinati) {
+    if (gruppo2.length && o.v - gruppo2[gruppo2.length - 1].v > tolleranza2) chiudi5();
+    gruppo2.push(o);
+  }
+  chiudi5();
+  return mappa2;
+}
+function squadraLaCasa(tipo, W2, H7, stanze4) {
+  const N = W2 * H7;
+  const minimo = Math.round(1.2 / (PASSO * PASSO));
+  const rett = [];
+  for (const s of stanze4) {
+    const m = new Uint8Array(N);
+    let tot = 0;
+    for (let i = 0; i < N; i++)
+      if (tipo[i] === s.id) {
+        m[i] = 1;
+        tot++;
+      }
+    if (!tot) continue;
+    for (let k = 0; k < 8; k++) {
+      const r = rettangoloMassimo(m, W2, H7);
+      if (!r.area || r.area < minimo || k > 0 && r.area < tot * 0.05) break;
+      rett.push({ id: s.id, ...r });
+      for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) m[y * W2 + x] = 0;
+    }
+  }
+  if (!rett.length) return;
+  const max = Math.round(0.6 / PASSO);
+  const libera = (i, id) => tipo[i] === id || tipo[i] !== -3 && tipo[i] !== -4 && tipo[i] <= 0 && tipo[i] !== -2;
+  const striscia = (r, lato) => {
+    let liberi = 0, tutti = 0;
+    if (lato === "su" || lato === "giu") {
+      const y = lato === "su" ? r.y0 - 1 : r.y1 + 1;
+      if (y < 0 || y >= H7) return false;
+      for (let x = r.x0; x <= r.x1; x++, tutti++) if (libera(y * W2 + x, r.id)) liberi++;
+    } else {
+      const x = lato === "sx" ? r.x0 - 1 : r.x1 + 1;
+      if (x < 0 || x >= W2) return false;
+      for (let y = r.y0; y <= r.y1; y++, tutti++) if (libera(y * W2 + x, r.id)) liberi++;
+    }
+    return liberi >= tutti * 0.8;
+  };
+  for (const r of rett)
+    for (const lato of ["su", "giu", "sx", "dx"])
+      for (let k = 0; k < max && striscia(r, lato); k++) {
+        if (lato === "su") r.y0--;
+        else if (lato === "giu") r.y1++;
+        else if (lato === "sx") r.x0--;
+        else r.x1++;
+      }
+  const tol = Math.max(2, Math.round(0.15 / PASSO));
+  const alto = (r) => r.y1 - r.y0 + 1, largo = (r) => r.x1 - r.x0 + 1;
+  const x0s = allinea2(
+    rett.map((r) => ({ v: r.x0, peso: alto(r) })),
+    tol
+  );
+  const x1s = allinea2(
+    rett.map((r) => ({ v: r.x1, peso: alto(r) })),
+    tol
+  );
+  const y0s = allinea2(
+    rett.map((r) => ({ v: r.y0, peso: largo(r) })),
+    tol
+  );
+  const y1s = allinea2(
+    rett.map((r) => ({ v: r.y1, peso: largo(r) })),
+    tol
+  );
+  const nuovo = new Int16Array(N);
+  for (let i = 0; i < N; i++) nuovo[i] = tipo[i] > 0 ? -3 : tipo[i];
+  const dipinto = new Uint8Array(N);
+  for (const r of rett) {
+    const x0 = x0s.get(r.x0), x1 = x1s.get(r.x1), y0 = y0s.get(r.y0), y1 = y1s.get(r.y1);
+    for (let y = Math.max(0, y0); y <= Math.min(H7 - 1, y1); y++)
+      for (let x = Math.max(0, x0); x <= Math.min(W2 - 1, x1); x++) {
+        const i = y * W2 + x;
+        if (dipinto[i]) continue;
+        nuovo[i] = r.id;
+        dipinto[i] = 1;
+      }
+  }
+  const fino = Math.max(3, Math.round(0.3 / PASSO));
+  const dist = new Int16Array(N).fill(32767);
+  const coda = new Int32Array(N);
+  let testa2 = 0, fondo = 0;
+  for (let i = 0; i < N; i++)
+    if (dipinto[i]) {
+      dist[i] = 0;
+      coda[fondo++] = i;
+    }
+  while (testa2 < fondo) {
+    const i = coda[testa2++], d = dist[i];
+    if (d >= fino) continue;
+    const x = i % W2, y = i / W2 | 0;
+    for (let dy = -1; dy <= 1; dy++)
+      for (let dx = -1; dx <= 1; dx++) {
+        const xx = x + dx, yy = y + dy;
+        if (xx < 0 || yy < 0 || xx >= W2 || yy >= H7) continue;
+        const j = yy * W2 + xx;
+        if (dist[j] > d + 1) {
+          dist[j] = d + 1;
+          coda[fondo++] = j;
+        }
+      }
+  }
+  const rc = Math.round(1 / PASSO);
+  const casa2 = stringi(allarga(dipinto, W2, H7, rc), W2, H7, rc);
+  for (let i = 0; i < N; i++) {
+    if (dipinto[i]) continue;
+    const v = nuovo[i];
+    if (casa2[i]) {
+      if (v !== -4 && v !== -5) nuovo[i] = -3;
+    } else if (v === -3 || v === -4 || v === -5) nuovo[i] = dist[i] <= fino ? v : -2;
+  }
+  tipo.set(nuovo);
 }
 function scalaScritta(testo5) {
   const t2 = String(testo5 || "").replace(/\s+/g, " ");
@@ -155824,7 +156818,8 @@ var ARREDI_DELLE_FOTO = Object.freeze({
   culla: { icona: "👶", nome: ["Lettino", "Cot"] },
   ufficio: { icona: "🪑", nome: ["Sedia da ufficio", "Office chair"] },
   pianoforte: { icona: "🎹", nome: ["Pianoforte", "Piano"] },
-  cyclette: { icona: "🚴", nome: ["Cyclette", "Exercise bike"] }
+  cyclette: { icona: "🚴", nome: ["Cyclette", "Exercise bike"] },
+  scala: { icona: "🪜", nome: ["Scala", "Staircase"] }
 });
 var ACCOSTATI = /* @__PURE__ */ new Set([
   "tv",
@@ -156188,6 +157183,12 @@ function pianoDaRiconoscimento({
       arredi.push(...arrediDallaFoto(vista2, s, f).map(sposta3));
       posati.push(...dispositiviDallaFoto(vista2, s, f).map(sposta3));
     }
+  }
+  for (const sc of elenco15(casa2.scale)) {
+    if (!idVivi.has(sc.stanza)) continue;
+    arredi.push(
+      sposta3({ k: "scala", stanza: sc.stanza, x: tondo(sc.x), y: tondo(sc.y), rot: sc.rot || 0 })
+    );
   }
   for (const a of elenco15(arrediGia))
     if (idVivi.has(Number(a?.stanza)) && Number.isFinite(a?.x) && Number.isFinite(a?.y))
@@ -157232,7 +158233,7 @@ function pPlanimetria() {
       ${S.lavoro ? `<div class="c3c-lavoro">⏳ ${esc(S.lavoro)}</div>` : ""}
       ${S.avviso ? `<div class="c3c-lavoro">⚠️ ${esc(S.avviso)}${S.dettaglio ? `<small class="c3c-dettaglio" translate="no">${esc(S.dettaglio)}</small>` : ""}</div>` : ""}
       ${dwgScelta()}
-      ${S.dritta && !S.dwg ? nota(`✓ ${esc(t("Raddrizzata di", "Straightened by"))} ${esc(numero62(Math.abs(S.angolo)))}° · ${S.dritta.width}×${S.dritta.height} px`) : ""}`
+      ${S.dritta && !S.dwg ? nota(`✓ ${esc(t("Raddrizzata di", "Straightened by"))} ${esc(numero62(Math.abs(S.angolo)))}°${S.prospettiva ? ` · ${esc(t("prospettiva corretta", "perspective corrected"))}` : ""} · ${S.dritta.width}×${S.dritta.height} px`) : ""}`
   ) + scheda7(
     `✏️ <b>${esc(t("Non hai una planimetria?", "No floor plan?"))}</b>`,
     `${nota(esc(t("Disegnala qui: scrivi le misure esterne del piano, poi dividi le stanze col «Muro dritto».", "Draw it here: enter the floor's outer size, then split the rooms with the «Straight wall».")))}
@@ -157590,9 +158591,24 @@ async function usaPlanimetria(src) {
     r.translate(d.width / 2, d.height / 2);
     r.rotate(S.angolo * Math.PI / 180);
     r.drawImage(img, -img.width / 2, -img.height / 2);
+    let dritta = d;
+    S.prospettiva = false;
+    if (typeof src === "string") {
+      const dati = r.getImageData(0, 0, d.width, d.height), p = prospettiva(dati);
+      if (p && p.sposta > Math.max(d.width, d.height) * 0.01) {
+        const nuova = raddrizza(dati, p), t2 = tela2d(nuova.width, nuova.height);
+        t2.getContext("2d").putImageData(
+          new ImageData(nuova.data, nuova.width, nuova.height),
+          0,
+          0
+        );
+        dritta = t2;
+        S.prospettiva = true;
+      }
+    }
     Object.assign(S, {
       img,
-      dritta: d,
+      dritta,
       vetri: null,
       porte: null,
       disegno: false,
@@ -157975,7 +158991,8 @@ function riconosci() {
       for (let i = 0; i < m.length; i++) m[i] = d[i * 4 + 3] > 64 ? 1 : 0;
       return m;
     };
-    S.griglia = grigliaDeiMuri(inchiostro(im), im.width, im.height, S.mpp, {
+    const pieni = S.disegno ? null : muriPieni(im, S.mpp);
+    S.griglia = pieni && pieni.metri >= MURI_PIENI_MINIMO ? grigliaDaMuriPieni(pieni.ink, pieni.linee, im.width, im.height, S.mpp) : grigliaDeiMuri(inchiostro(im), im.width, im.height, S.mpp, {
       vetri: mappa2(S.vetri),
       porte: mappa2(S.porte),
       disegno: S.disegno === true
@@ -162960,7 +163977,7 @@ function testoConINomi(testo5, nome = roomLabel) {
     return trovato && trovato !== id ? trovato : id;
   });
 }
-function raddrizza(radice3) {
+function raddrizza2(radice3) {
   if (!radice3 || !String(radice3.textContent || "").includes("room_")) return 0;
   const passeggiata = doc.createTreeWalker(radice3, root.NodeFilter?.SHOW_TEXT ?? 4);
   let cambiati = 0;
@@ -162979,8 +163996,8 @@ function raddrizza(radice3) {
 }
 function raddrizzaLeStanze() {
   if (!doc) return 0;
-  let cambiati = raddrizza(doc.getElementById("ed-body"));
-  for (const pagina3 of doc.querySelectorAll(".page.active")) cambiati += raddrizza(pagina3);
+  let cambiati = raddrizza2(doc.getElementById("ed-body"));
+  for (const pagina3 of doc.querySelectorAll(".page.active")) cambiati += raddrizza2(pagina3);
   return cambiati;
 }
 function leStanze2() {
