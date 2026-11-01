@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-LFX62MW3.js";
+} from "../../chunk-Y66WNEYH.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -153874,6 +153874,7 @@ function testataMarkup2(casa2, admin) {
       ${admin && casa2.piani.length ? `<button type="button" class="c3-tasto" data-c3s="arreda" aria-pressed="${state180.arreda}">🎨 ${esc(t("Arreda", "Furnish"))}</button>
              <button type="button" class="c3-tasto" data-c3s="crea">🏗️ ${esc(t("Crea / modifica la casa", "Create / edit the house"))}</button>` : ""}
       <span class="c3-ora">${esc(adesso2)}</span>
+      ${admin ? `<button type="button" class="c3-config" data-c3s="config" aria-label="${esc(t("Config", "Config"))}">⚙</button>` : ""}
     </div>`;
 }
 function casaDaCreareMarkup(admin) {
@@ -154308,6 +154309,14 @@ function alClic5(evento) {
     return;
   }
   if (cosa === "chiudi") return chiudi3();
+  if (cosa === "config") {
+    try {
+      root.apriConfigEntita?.();
+      root.setTimeout?.(() => root.editorSwitch?.("casa3d"), 50);
+    } catch (_errore) {
+    }
+    return;
+  }
   if (cosa === "menu") {
     apriIlMenu2({
       idTela: ID4,
@@ -154407,6 +154416,8 @@ function installaLoStile9() {
     ${C3} .c3-tasto{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:999px;cursor:pointer;
       font-size:13px;font-weight:800;border:1px solid var(--c3-bordo);background:var(--c3-morbido);white-space:nowrap}
     ${C3} .c3-tasto[aria-pressed="true"]{background:var(--c3-accento);border-color:transparent;color:#fff}
+    ${C3} .c3-config{display:grid;place-items:center;flex:0 0 auto;width:46px;height:46px;border-radius:14px;cursor:pointer;font-size:20px;
+      border:1px solid var(--c3-bordo);background:var(--c3-morbido);color:var(--c3-testo)}
     ${C3} .c3-ora{flex:0 0 auto;padding:6px 10px;border-radius:999px;font-family:'Oswald',system-ui,sans-serif;font-size:13px;font-weight:700;
       letter-spacing:1px;background:var(--c3-morbido);border:1px solid var(--c3-bordo)}
 
@@ -154599,7 +154610,7 @@ function corpoMarkup20() {
 }
 function serve2() {
   try {
-    return puoConfigurare();
+    return puoConfigurare() && casa().attiva === true && currentProfile() !== "primary";
   } catch (_errore) {
     return false;
   }

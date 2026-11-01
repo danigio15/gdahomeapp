@@ -1,7 +1,7 @@
 /* La scheda «Casa 3D» nel Config.
  *
- * Chi amministra la plancia accende la casa in tre dimensioni, la crea dalle
- * foto (planimetria e stanze) e vede, dispositivo per dispositivo, a quale
+ * Solo nelle plance Casa 3D (mai nella principale). Chi amministra la crea
+ * dalle foto (planimetria e stanze) e vede, dispositivo per dispositivo, a quale
  * entita' di Home Assistant risponde: quelli senza entita' si collegano qui,
  * scegliendo dall'elenco gia' filtrato o scrivendola a mano.
  *
@@ -18,6 +18,7 @@ import {
 } from "../core/casa-3d.js";
 import { premiumDellaCasa } from "./plancia-a-muro-section.js";
 import { puoConfigurare } from "./la-config-e-di-chi-la-amministra-section.js";
+import { currentProfile } from "./config-persistence-section.js";
 import {
   allStates,
   clean,
@@ -117,9 +118,12 @@ function corpoMarkup() {
   </div>`;
 }
 
+/* La scheda c'e' solo nelle plance Casa 3D — come il «Colpo d'occhio» — e
+ * mai sulla principale: la Casa 3D e' una plancia a se', svincolata da lei.
+ * Una plancia Casa 3D nasce dalla console gia' accesa (plancia-nuova.js). */
 function serve() {
   try {
-    return puoConfigurare();
+    return puoConfigurare() && casa().attiva === true && currentProfile() !== "primary";
   } catch (_errore) {
     return false;
   }

@@ -172,6 +172,11 @@ function testataMarkup(casa, admin) {
           : ""
       }
       <span class="c3-ora">${esc(adesso)}</span>
+      ${
+        admin
+          ? `<button type="button" class="c3-config" data-c3s="config" aria-label="${esc(t("Config", "Config"))}">⚙</button>`
+          : ""
+      }
     </div>`;
 }
 
@@ -711,6 +716,16 @@ function alClic(evento) {
     return;
   }
   if (cosa === "chiudi") return chiudi();
+  /* Il ⚙ di chi amministra: il Config di questa plancia, sulla scheda Casa 3D
+   * — come il «Colpo d'occhio». Il Config sta sopra, e la casa si fa da parte
+   * finche' e' aperto. */
+  if (cosa === "config") {
+    try {
+      root.apriConfigEntita?.();
+      root.setTimeout?.(() => root.editorSwitch?.("casa3d"), 50);
+    } catch (_errore) {}
+    return;
+  }
   if (cosa === "menu") {
     apriIlMenu({
       idTela: ID,
@@ -821,6 +836,8 @@ function installaLoStile() {
     ${C3} .c3-tasto{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:999px;cursor:pointer;
       font-size:13px;font-weight:800;border:1px solid var(--c3-bordo);background:var(--c3-morbido);white-space:nowrap}
     ${C3} .c3-tasto[aria-pressed="true"]{background:var(--c3-accento);border-color:transparent;color:#fff}
+    ${C3} .c3-config{display:grid;place-items:center;flex:0 0 auto;width:46px;height:46px;border-radius:14px;cursor:pointer;font-size:20px;
+      border:1px solid var(--c3-bordo);background:var(--c3-morbido);color:var(--c3-testo)}
     ${C3} .c3-ora{flex:0 0 auto;padding:6px 10px;border-radius:999px;font-family:'Oswald',system-ui,sans-serif;font-size:13px;font-weight:700;
       letter-spacing:1px;background:var(--c3-morbido);border:1px solid var(--c3-bordo)}
 

@@ -813,3 +813,40 @@ test("il ☰ della Casa 3D apre la barra di Home Assistant senza scoprire la pla
   await page.waitForTimeout(400);
   expect(await casa.evaluate((n) => Math.round(n.getBoundingClientRect().left))).toBe(0);
 });
+
+/* «Deve funzionare come le altre plance aggiuntive, in maniera autonoma»: come
+ * il «Colpo d'occhio», chi amministra ha il ⚙ che apre il Config di questa
+ * plancia sulla scheda Casa 3D. */
+test("il ⚙ della Casa 3D apre il suo Config sulla scheda Casa 3D", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "basta una misura");
+  await boot(page, testInfo);
+  const casa = page.locator("#dm-casa3d");
+  await casa.locator('[data-c3s="config"]').click();
+  await expect(page.locator("#editor-modal")).toBeVisible({ timeout: 20_000 });
+  await expect(page.locator('#editor-modal .ed-tab[data-tab="casa3d"]')).toHaveClass(/active/, {
+    timeout: 10_000,
+  });
+  await expect(page.locator("#ed-body .dm-c3-ed")).toBeVisible();
+});
+
+/* E sulla principale la scheda Casa 3D non c'è: la Casa 3D è svincolata
+ * da lei, la si crea e la si configura solo nella sua plancia. */
+test("sulla plancia principale il Config non ha la scheda Casa 3D", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "basta una misura");
+  await page.addInitScript(() => {
+    window.__DASHBOARDMODERN_PROFILE__ = "primary";
+    window.__GDAHOME_PREMIUM__ = true;
+  });
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
+  await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
+  await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true, null, {
+    timeout: 60_000,
+  });
+  await page.evaluate(() => {
+    localStorage.setItem("cd_casa3d", JSON.stringify({ attiva: true, piani: [] }));
+    window.apriConfigEntita?.();
+  });
+  await expect(page.locator("#editor-modal")).toBeVisible({ timeout: 20_000 });
+  await page.waitForTimeout(800);
+  await expect(page.locator('#editor-modal .ed-tab[data-tab="casa3d"]')).toHaveCount(0);
+});

@@ -83,18 +83,6 @@ export function eCasa3D(configurazione, profilo) {
   }
 }
 
-/* La casa della principale: e' la stessa casa, e una plancia 3D nuova la
- * ritrova gia' fatta. Se la principale non l'ha ancora, nasce vuota e la si
- * crea dal suo Config. */
-function casaDellaPrincipale(configurazione) {
-  try {
-    const grezza = configurazione?.leggi(PROFILO_DI_ORIGINE)?.snapshot?.values?.[CHIAVE_CASA3D];
-    return casa3dPulita(typeof grezza === "string" ? JSON.parse(grezza) : grezza);
-  } catch (_errore) {
-    return casa3dPulita(null);
-  }
-}
-
 /* Le cose della plancia principale, come le legge il tablet a muro. */
 function fonteDellaPrincipale(configurazione) {
   let valori = {};
@@ -116,12 +104,10 @@ function muroDallaPrincipale(configurazione) {
 function configDiPartenza(configurazione, modello, partenza) {
   if (modello === "muro")
     return { [CHIAVE_MURO]: JSON.stringify(muroDallaPrincipale(configurazione)) };
-  if (modello === "casa3d") {
-    const casa = casaDellaPrincipale(configurazione);
-    return {
-      [CHIAVE_CASA3D]: JSON.stringify(casa3dPulita({ ...casa, attiva: true })),
-    };
-  }
+  /* La Casa 3D nasce vuota, tutta sua: svincolata dalla principale, la
+   * casa si crea dal suo Config o dal suo «Crea la tua casa». */
+  if (modello === "casa3d")
+    return { [CHIAVE_CASA3D]: JSON.stringify(casa3dPulita({ attiva: true })) };
   if (modello === "occhio")
     return {
       [CHIAVE_OCCHIO]: JSON.stringify(

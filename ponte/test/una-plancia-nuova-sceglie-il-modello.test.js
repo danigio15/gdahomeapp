@@ -256,9 +256,9 @@ test("la Casa 3D e' un modello che si conosce", () => {
   assert.equal(modelloPulito("casa3d"), "casa3d");
 });
 
-/* Sceglierla e trovarsi la classica non va: senza una casa nella
- * principale nasce accesa e vuota, e la plancia invita a crearla. */
-test("con la Casa 3D senza una casa nella principale: nasce Casa 3D, da creare", () => {
+/* Sceglierla e trovarsi la classica non va: nasce accesa e vuota, e la
+ * plancia invita a crearla. */
+test("con la Casa 3D: nasce Casa 3D, da creare", () => {
   const b = banco();
   try {
     const quale = aggiungiUnaPlancia(b, { titolo: "Casa", modello: "casa3d" });
@@ -271,7 +271,10 @@ test("con la Casa 3D senza una casa nella principale: nasce Casa 3D, da creare",
   }
 });
 
-test("con la Casa 3D e una casa nella principale: la ritrova, accesa", () => {
+/* «Deve essere completamente svincolata dalla principale»: una casa fatta
+ * nella principale (le versioni di prima lo permettevano) non passa nella
+ * Casa 3D nuova, che nasce vuota e tutta sua. */
+test("con la Casa 3D e una casa nella principale: non la prende, nasce vuota", () => {
   const b = banco();
   try {
     const griglia = comprimiGriglia(new Int16Array(16).fill(1));
@@ -291,10 +294,8 @@ test("con la Casa 3D e una casa nella principale: la ritrova, accesa", () => {
     assert.equal(quale.a_casa3d, true);
     assert.equal(eCasa3D(b.configurazione, "primary"), false);
     const casa = JSON.parse(b.configurazione.leggi("tre-d").snapshot.values.cd_casa3d);
-    assert.deepEqual(
-      casa.piani[0].stanze.map((s) => s.nome),
-      ["Salone"],
-    );
+    assert.equal(casa.attiva, true);
+    assert.deepEqual(casa.piani, []);
   } finally {
     b.via();
   }
