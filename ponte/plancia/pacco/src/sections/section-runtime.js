@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-ZWNKUGBL.js";
+} from "../../chunk-V4EL235Z.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -155232,7 +155232,7 @@ function pezziDi(g, W2, H7) {
   }
   return { id, pezzi };
 }
-function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, disegno: disegno8 = false } = {}) {
+function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: disegno8 = false } = {}) {
   const lato = PASSO / mpp, W2 = Math.max(1, Math.floor(w / lato)), H7 = Math.max(1, Math.floor(h / lato)), riga5 = new Uint8Array(W2 * H7);
   for (let cy = 0; cy < H7; cy++)
     for (let cx = 0; cx < W2; cx++) {
@@ -155246,20 +155246,24 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, disegno: disegno8 = fals
           }
       riga5[cy * W2 + cx] = c;
     }
-  const celleVetri = new Uint8Array(W2 * H7);
-  if (vetri)
+  const celleDi = (px) => {
+    const celle = new Uint8Array(W2 * H7);
+    if (!px) return celle;
     for (let cy = 0; cy < H7; cy++)
       for (let cx = 0; cx < W2; cx++) {
         const x0 = Math.floor(cx * lato), y0 = Math.floor(cy * lato), x1 = Math.max(x0 + 1, Math.floor((cx + 1) * lato)), y1 = Math.max(y0 + 1, Math.floor((cy + 1) * lato));
         let c = 0;
         for (let y = y0; y < y1 && y < h && !c; y++)
           for (let x = x0; x < x1 && x < w; x++)
-            if (vetri[y * w + x]) {
+            if (px[y * w + x]) {
               c = 1;
               break;
             }
-        celleVetri[cy * W2 + cx] = c;
+        celle[cy * W2 + cx] = c;
       }
+    return celle;
+  };
+  const celleVetri = celleDi(vetri), cellePorte = celleDi(porte);
   const fondo = new Uint8Array(W2 * H7), coda = [];
   const semina = (i) => {
     if (riga5[i] && !fondo[i]) {
@@ -155550,9 +155554,9 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, disegno: disegno8 = fals
     }
     return true;
   };
-  const corre = (i, passo, fino) => {
+  const corre = (i, passo, fino2) => {
     let n = 0;
-    for (let j = i; n < fino && j >= 0 && j < W2 * H7 && muro[j]; j += passo) n++;
+    for (let j = i; n < fino2 && j >= 0 && j < W2 * H7 && muro[j]; j += passo) n++;
     return n;
   };
   const lontano = 2 * spessoreMax;
@@ -155566,14 +155570,26 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, disegno: disegno8 = fals
     if (dritto(a, -passo) && dritto(b2, passo)) return true;
     return fine(a, -passo, largo) && corre(b2, passo, 2) >= 2 || fine(b2, passo, largo) && corre(a, -passo, 2) >= 2;
   };
+  const varcoLargo = Math.round(4 / PASSO);
+  const segnato = allarga(
+    celleVetri.map((v, i) => v || cellePorte[i] ? 1 : 0),
+    W2,
+    H7,
+    Math.max(1, Math.round(0.2 / PASSO))
+  );
+  const fino = (i, passo, k) => {
+    for (let q = 0; q < k; q++) if (segnato[i + passo * q]) return true;
+    return false;
+  };
+  const apri7 = (a, b2, passo, largo, k) => k <= varco ? chiudi5(a, b2, passo, largo) : dritto(a, -passo) && dritto(b2, passo) && fino(a + passo, passo, k);
   for (let y = 1; y < H7 - 1; y++)
     for (let x = 1; x < W2 - 1; x++) {
       const i = y * W2 + x;
       if (!muro[i - 1] || muro[i]) continue;
       let e = x;
-      while (e < W2 && !muro[y * W2 + e] && e - x <= varco) e++;
-      if (e >= W2 || e - x > varco || !muro[y * W2 + e]) continue;
-      if (!chiudi5(i - 1, y * W2 + e, 1, W2)) continue;
+      while (e < W2 && !muro[y * W2 + e] && e - x <= varcoLargo) e++;
+      if (e >= W2 || e - x > varcoLargo || !muro[y * W2 + e]) continue;
+      if (!apri7(i - 1, y * W2 + e, 1, W2, e - x)) continue;
       for (let q = x; q < e; q++) soglie[y * W2 + q] = 1;
     }
   for (let x = 1; x < W2 - 1; x++)
@@ -155581,9 +155597,9 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, disegno: disegno8 = fals
       const i = y * W2 + x;
       if (!muro[i - W2] || muro[i]) continue;
       let e = y;
-      while (e < H7 && !muro[e * W2 + x] && e - y <= varco) e++;
-      if (e >= H7 || e - y > varco || !muro[e * W2 + x]) continue;
-      if (!chiudi5(i - W2, e * W2 + x, W2, 1)) continue;
+      while (e < H7 && !muro[e * W2 + x] && e - y <= varcoLargo) e++;
+      if (e >= H7 || e - y > varcoLargo || !muro[e * W2 + x]) continue;
+      if (!apri7(i - W2, e * W2 + x, W2, 1, e - y)) continue;
       for (let q = y; q < e; q++) soglie[q * W2 + x] = 1;
     }
   for (let i = 0; i < W2 * H7; i++) if (soglie[i]) barriera[i] = 1;
@@ -155787,7 +155803,7 @@ function riconosciDaFoto({ W: W2, H: H7, muro, barriera, vetro }, { fuori = /* @
   const aperture = [];
   const tipoDi2 = (lbl) => esterno.has(lbl) ? -2 : idDi.get(radice3(lbl)) || -2;
   for (const gr of gruppi2) {
-    if (gr.unito || gr.largo < 0.5 || gr.largo > 3.2) continue;
+    if (gr.unito || gr.largo < 0.5 || gr.largo > 4) continue;
     const ta = tipoDi2(gr.a), tb = tipoDi2(gr.b);
     if (ta === tb) continue;
     const verso0 = ta === -2 || tb === -2;
@@ -155926,11 +155942,13 @@ function scalaScritta(testo5) {
 var STRATI_DA_SALTARE = /quot|dim|arred|furn|mobil|testi|text|cartig|retin|tratteg/i;
 var STRATI_DI_MURI = /tompagn|muri|muro|wall|murat|sezion|campit/i;
 var STRATI_DI_INFISSI = /infiss|finestr|window|vetr|serrament|glaz/i;
-var STRATI_NON_MURI = /vist|proiez|port|door|scal|stair|rampa|ascens|lift|assi\b|asse\b|axis|simbol|symbol|arred|furn|quot|dim|defpoints|^0$/i;
+var STRATI_NON_MURI = /vist|proiez|scal|stair|rampa|ascens|lift|assi\b|asse\b|axis|simbol|symbol|arred|furn|quot|dim|defpoints|^0$/i;
+var STRATI_DI_PORTE = /port|door|basculant|serrand|cancell/i;
 function ruoloDelloStrato(nome) {
   const s = String(nome || "").trim();
   if (STRATI_DI_MURI.test(s)) return "muro";
   if (STRATI_DI_INFISSI.test(s)) return "infisso";
+  if (STRATI_DI_PORTE.test(s)) return "porta";
   if (STRATI_NON_MURI.test(s)) return "altro";
   return "forse";
 }
@@ -156154,6 +156172,54 @@ function eNomeDiStanza(t2) {
 function nomeDaScritta(t2) {
   const s = String(t2 || "").trim().toLowerCase();
   return s.charAt(0).toUpperCase() + s.slice(1);
+}
+function nomiDalleScritte({ W: W2, H: H7, tipo, passo = 0.03 }, scritte, lato) {
+  const raggio = Math.ceil(1 / passo);
+  const stanzaVicina = (cx, cy) => {
+    if (cx < 0 || cy < 0 || cx >= W2 || cy >= H7) return 0;
+    if (tipo[cy * W2 + cx] > 0) return tipo[cy * W2 + cx];
+    for (let r = 1; r <= raggio; r++)
+      for (let d = -r; d <= r; d++)
+        for (const [x, y] of [
+          [cx + d, cy - r],
+          [cx + d, cy + r],
+          [cx - r, cy + d],
+          [cx + r, cy + d]
+        ])
+          if (x >= 0 && y >= 0 && x < W2 && y < H7 && tipo[y * W2 + x] > 0) return tipo[y * W2 + x];
+    return 0;
+  };
+  const per = /* @__PURE__ */ new Map();
+  for (const s of scritte || []) {
+    const id = stanzaVicina(Math.floor(s.x / lato), Math.floor(s.y / lato));
+    if (!id) continue;
+    const nomi2 = per.get(id) || [];
+    if (!nomi2.some((n) => n.toLowerCase() === s.t.toLowerCase())) nomi2.push(s.t);
+    per.set(id, nomi2);
+  }
+  return Object.fromEntries([...per].map(([id, nomi2]) => [id, nomi2.join(" / ")]));
+}
+function nomiDiRipiego(ids, presi, parola = "Stanza") {
+  const usati = new Set(
+    Object.values(presi || {}).flatMap((n) => String(n).toLowerCase().split(" / "))
+  );
+  const fuori = {};
+  let k = 0;
+  for (const id of ids) {
+    if (presi?.[id]) continue;
+    let nome;
+    do
+      nome = `${parola} ${++k}`;
+    while (usati.has(nome.toLowerCase()));
+    usati.add(nome.toLowerCase());
+    fuori[id] = nome;
+  }
+  return fuori;
+}
+function eNomeDiFuori(t2) {
+  return /cortil|giardin|terrazz|balcon|loggi|portic|patio|esterno|corte\b|area scoperta|scoperto|yard|garden|terrace|balcony|porch/i.test(
+    String(t2 || "")
+  );
 }
 
 // src/sections/casa-3d-crea-section.js
@@ -156618,7 +156684,11 @@ function disegnaFacciata() {
 var stanzeVive = () => (state182.S.casa?.stanze || []).filter((s) => !state182.S.fuori.has(s.id));
 var stanzaDi2 = (id) => (state182.S.casa?.stanze || []).find((s) => s.id === Number(id));
 function nomeDi18(id) {
-  return clean(state182.S.nomi[id]) || stanzaDi2(id)?.nome || `${t("Stanza", "Room")} ${id}`;
+  const S = state182.S, dato2 = clean(S.nomi[id]);
+  if (dato2) return dato2;
+  const ids = (S.casa?.stanze || []).map((s) => s.id), presi = {};
+  for (const k of ids) if (clean(S.nomi[k])) presi[k] = clean(S.nomi[k]);
+  return nomiDiRipiego(ids, presi, t("Stanza", "Room"))[id] || `${t("Stanza", "Room")} ${id}`;
 }
 function trova(ref) {
   const S = state182.S, [tipo, a, b2, c] = clean(ref).split(":");
@@ -157104,6 +157174,7 @@ async function usaPlanimetria(src) {
       img,
       dritta: d,
       vetri: null,
+      porte: null,
       disegno: false,
       punti: [],
       metri: null,
@@ -157263,15 +157334,16 @@ function tavolaDelPiano(p, lungo = 2400) {
   g.lineCap = g.lineJoin = "round";
   g.lineWidth = Math.max(1.5, 0.035 * ppu / p.metriPerUnita);
   const vetri = p.soloMuri ? tela2d(tela4.width, tela4.height) : null, gv = vetri?.getContext("2d");
-  if (gv) {
-    gv.strokeStyle = "#000";
-    gv.lineCap = "round";
-    gv.lineWidth = g.lineWidth;
+  const porte = p.soloMuri ? tela2d(tela4.width, tela4.height) : null, gp = porte?.getContext("2d");
+  for (const q of [gv, gp].filter(Boolean)) {
+    q.strokeStyle = "#000";
+    q.lineCap = "round";
+    q.lineWidth = g.lineWidth;
   }
   for (const l of p.linee) {
     const ruolo = p.soloMuri ? ruoloDelloStrato(l.strato) : "muro";
     if (ruolo === "altro") continue;
-    const su2 = ruolo === "infisso" ? gv : g;
+    const su2 = ruolo === "infisso" ? gv : ruolo === "porta" ? gp : g;
     su2.beginPath();
     l.forEach(([x, y], i) => i ? su2.lineTo(X(x), Y(y)) : su2.moveTo(X(x), Y(y)));
     su2.stroke();
@@ -157284,15 +157356,15 @@ function tavolaDelPiano(p, lungo = 2400) {
     g.fill();
   }
   const etichette = p.scritte.filter((e) => eNomeDiStanza(e.t)).map((e) => ({ t: nomeDaScritta(e.t), x: X(e.x), y: Y(e.y) }));
-  return { tela: tela4, vetri, mpp: p.metriPerUnita / ppu, etichette };
+  return { tela: tela4, vetri, porte, mpp: p.metriPerUnita / ppu, etichette };
 }
 async function usaPianoDwg(p) {
   const S = state182.S;
   if (!p) return;
-  const { tela: tela4, vetri, mpp, etichette } = tavolaDelPiano(p);
+  const { tela: tela4, vetri, porte, mpp, etichette } = tavolaDelPiano(p);
   S.dwg = null;
   await usaPlanimetria(tela4);
-  Object.assign(S, { vetri, disegno: true });
+  Object.assign(S, { vetri, porte, disegno: true });
   return pronta(mpp, etichette);
 }
 function pronta(mpp, etichette = []) {
@@ -157339,14 +157411,15 @@ function riconosci() {
   const S = state182.S;
   if (!S.griglia) {
     const im = S.dritta.getContext("2d").getImageData(0, 0, S.dritta.width, S.dritta.height);
-    let vetri = null;
-    if (S.vetri?.width === im.width && S.vetri.height === im.height) {
-      const d = S.vetri.getContext("2d").getImageData(0, 0, im.width, im.height).data;
-      vetri = new Uint8Array(im.width * im.height);
-      for (let i = 0; i < vetri.length; i++) vetri[i] = d[i * 4 + 3] > 64 ? 1 : 0;
-    }
+    const mappa2 = (tela4) => {
+      if (tela4?.width !== im.width || tela4.height !== im.height) return null;
+      const d = tela4.getContext("2d").getImageData(0, 0, im.width, im.height).data, m = new Uint8Array(im.width * im.height);
+      for (let i = 0; i < m.length; i++) m[i] = d[i * 4 + 3] > 64 ? 1 : 0;
+      return m;
+    };
     S.griglia = grigliaDeiMuri(inchiostro(im), im.width, im.height, S.mpp, {
-      vetri,
+      vetri: mappa2(S.vetri),
+      porte: mappa2(S.porte),
       disegno: S.disegno === true
     });
   }
@@ -157378,12 +157451,11 @@ function ricalcola2() {
     if (v.foto) foto[s.id] = v.foto;
   }
   if (S.etichette?.length && S.mpp) {
-    const lato = PASSO / S.mpp;
-    for (const e of S.etichette) {
-      const cx = Math.floor(e.x / lato), cy = Math.floor(e.y / lato);
-      if (cx < 0 || cy < 0 || cx >= S.casa.W || cy >= S.casa.H) continue;
-      const id = S.casa.tipo[cy * S.casa.W + cx];
-      if (id > 0 && !nomi2[id]) nomi2[id] = e.t;
+    const dalDisegno = nomiDalleScritte(S.casa, S.etichette, PASSO / S.mpp), giaViste = new Set(Object.values(daA));
+    for (const [id, nome] of Object.entries(dalDisegno)) {
+      if (nomi2[id]) continue;
+      nomi2[id] = nome;
+      if (!giaViste.has(Number(id)) && eNomeDiFuori(nome)) fuori.add(Number(id));
     }
   }
   Object.assign(S, { nomi: nomi2, aree: aree2, fuori, foto });

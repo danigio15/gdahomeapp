@@ -51,8 +51,11 @@ import {
   stimaInclinazione,
 } from "../core/pianta-da-foto.js";
 import {
+  eNomeDiFuori,
   eNomeDiStanza,
   nomeDaScritta,
+  nomiDalleScritte,
+  nomiDiRipiego,
   pezziDelDisegno,
   pianiDelDisegno,
   ruoloDelloStrato,
@@ -642,8 +645,17 @@ function disegnaFacciata() {
 const stanzeVive = () => (state.S.casa?.stanze || []).filter((s) => !state.S.fuori.has(s.id));
 const stanzaDi = (id) => (state.S.casa?.stanze || []).find((s) => s.id === Number(id));
 
+/* Il nome di una stanza: quello dato (o scritto nel disegno), altrimenti
+ * «Stanza N» contando le stanze senza nome e senza ripetere un nome gia'
+ * preso. */
 function nomeDi(id) {
-  return clean(state.S.nomi[id]) || stanzaDi(id)?.nome || `${t("Stanza", "Room")} ${id}`;
+  const S = state.S,
+    dato = clean(S.nomi[id]);
+  if (dato) return dato;
+  const ids = (S.casa?.stanze || []).map((s) => s.id),
+    presi = {};
+  for (const k of ids) if (clean(S.nomi[k])) presi[k] = clean(S.nomi[k]);
+  return nomiDiRipiego(ids, presi, t("Stanza", "Room"))[id] || `${t("Stanza", "Room")} ${id}`;
 }
 
 /* Ogni dispositivo ha un riferimento: «f:stanza:foto:n» se viene da una
@@ -1284,6 +1296,7 @@ async function usaPlanimetria(src) {
       img,
       dritta: d,
       vetri: null,
+      porte: null,
       disegno: false,
       punti: [],
       metri: null,
@@ -1455,10 +1468,14 @@ function tavolaDelPiano(p, lungo = 2400) {
    * parte: dicono dove sono le finestre, senza indovinarle. */
   const vetri = p.soloMuri ? tela2d(tela.width, tela.height) : null,
     gv = vetri?.getContext("2d");
-  if (gv) {
-    gv.strokeStyle = "#000";
-    gv.lineCap = "round";
-    gv.lineWidth = g.lineWidth;
+  /* Le porte (e i basculanti) su un'altra tela: non sono muri, ma dicono
+   * quale varco largo e' un'apertura da chiudere. */
+  const porte = p.soloMuri ? tela2d(tela.width, tela.height) : null,
+    gp = porte?.getContext("2d");
+  for (const q of [gv, gp].filter(Boolean)) {
+    q.strokeStyle = "#000";
+    q.lineCap = "round";
+    q.lineWidth = g.lineWidth;
   }
   for (const l of p.linee) {
     /* Se il disegno separa i muri in uno strato loro, le altre righe (scale,
@@ -1466,7 +1483,7 @@ function tavolaDelPiano(p, lungo = 2400) {
      * chiusura le farebbe diventare muri. */
     const ruolo = p.soloMuri ? ruoloDelloStrato(l.strato) : "muro";
     if (ruolo === "altro") continue;
-    const su = ruolo === "infisso" ? gv : g;
+    const su = ruolo === "infisso" ? gv : ruolo === "porta" ? gp : g;
     su.beginPath();
     l.forEach(([x, y], i) => (i ? su.lineTo(X(x), Y(y)) : su.moveTo(X(x), Y(y))));
     su.stroke();
@@ -1481,16 +1498,16 @@ function tavolaDelPiano(p, lungo = 2400) {
   const etichette = p.scritte
     .filter((e) => eNomeDiStanza(e.t))
     .map((e) => ({ t: nomeDaScritta(e.t), x: X(e.x), y: Y(e.y) }));
-  return { tela, vetri, mpp: p.metriPerUnita / ppu, etichette };
+  return { tela, vetri, porte, mpp: p.metriPerUnita / ppu, etichette };
 }
 
 async function usaPianoDwg(p) {
   const S = state.S;
   if (!p) return;
-  const { tela, vetri, mpp, etichette } = tavolaDelPiano(p);
+  const { tela, vetri, porte, mpp, etichette } = tavolaDelPiano(p);
   S.dwg = null;
   await usaPlanimetria(tela);
-  Object.assign(S, { vetri, disegno: true });
+  Object.assign(S, { vetri, porte, disegno: true });
   return pronta(mpp, etichette);
 }
 
@@ -1554,14 +1571,17 @@ function riconosci() {
   const S = state.S;
   if (!S.griglia) {
     const im = S.dritta.getContext("2d").getImageData(0, 0, S.dritta.width, S.dritta.height);
-    let vetri = null;
-    if (S.vetri?.width === im.width && S.vetri.height === im.height) {
-      const d = S.vetri.getContext("2d").getImageData(0, 0, im.width, im.height).data;
-      vetri = new Uint8Array(im.width * im.height);
-      for (let i = 0; i < vetri.length; i++) vetri[i] = d[i * 4 + 3] > 64 ? 1 : 0;
-    }
+    /* le tele a parte del disegno (infissi, porte), come mappe di pixel */
+    const mappa = (tela) => {
+      if (tela?.width !== im.width || tela.height !== im.height) return null;
+      const d = tela.getContext("2d").getImageData(0, 0, im.width, im.height).data,
+        m = new Uint8Array(im.width * im.height);
+      for (let i = 0; i < m.length; i++) m[i] = d[i * 4 + 3] > 64 ? 1 : 0;
+      return m;
+    };
     S.griglia = grigliaDeiMuri(inchiostro(im), im.width, im.height, S.mpp, {
-      vetri,
+      vetri: mappa(S.vetri),
+      porte: mappa(S.porte),
       disegno: S.disegno === true,
     });
   }
@@ -1604,13 +1624,14 @@ function ricalcola() {
   /* I nomi scritti nel disegno (DWG): una stanza senza nome prende la
    * scritta che le sta dentro. */
   if (S.etichette?.length && S.mpp) {
-    const lato = PASSO / S.mpp;
-    for (const e of S.etichette) {
-      const cx = Math.floor(e.x / lato),
-        cy = Math.floor(e.y / lato);
-      if (cx < 0 || cy < 0 || cx >= S.casa.W || cy >= S.casa.H) continue;
-      const id = S.casa.tipo[cy * S.casa.W + cx];
-      if (id > 0 && !nomi[id]) nomi[id] = e.t;
+    const dalDisegno = nomiDalleScritte(S.casa, S.etichette, PASSO / S.mpp),
+      giaViste = new Set(Object.values(daA));
+    for (const [id, nome] of Object.entries(dalDisegno)) {
+      if (nomi[id]) continue;
+      nomi[id] = nome;
+      /* «cortile interno», «giardino»: il disegno dice che e' fuori. Solo
+       * per una stanza nuova: se l'utente l'ha gia' rimessa dentro, resta. */
+      if (!giaViste.has(Number(id)) && eNomeDiFuori(nome)) fuori.add(Number(id));
     }
   }
   Object.assign(S, { nomi, aree, fuori, foto });

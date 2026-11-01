@@ -22,12 +22,15 @@ const STRATI_DI_INFISSI = /infiss|finestr|window|vetr|serrament|glaz/i;
  * taglio (scale, rampe, sporti), le porte aperte, gli assi, i simboli. Lo
  * strato «0» in un disegno ordinato tiene le crocette e le linee d'aiuto. */
 const STRATI_NON_MURI =
-  /vist|proiez|port|door|scal|stair|rampa|ascens|lift|assi\b|asse\b|axis|simbol|symbol|arred|furn|quot|dim|defpoints|^0$/i;
+  /vist|proiez|scal|stair|rampa|ascens|lift|assi\b|asse\b|axis|simbol|symbol|arred|furn|quot|dim|defpoints|^0$/i;
+/* Le porte: non sono muri, ma dicono dove un varco largo (un basculante,
+ * un portone) e' un'apertura da chiudere. */
+const STRATI_DI_PORTE = /port|door|basculant|serrand|cancell/i;
 
 /**
  * Cosa disegna uno strato, dal nome: «muro» (i muri tagliati e le loro
- * campiture), «infisso» (finestre), «altro» (viste, proiezioni, scale,
- * porte aperte, assi, simboli) o «forse» (un nome che non dice niente, come
+ * campiture), «infisso» (finestre), «porta» (porte e basculanti), «altro»
+ * (viste, proiezioni, scale, assi, simboli) o «forse» (un nome che non dice niente, come
  * «SANATORIA_DIFFORMI», che spesso tiene proprio dei tramezzi). Serve a non
  * far diventare muri le righe fitte delle scale.
  */
@@ -35,6 +38,7 @@ export function ruoloDelloStrato(nome) {
   const s = String(nome || "").trim();
   if (STRATI_DI_MURI.test(s)) return "muro";
   if (STRATI_DI_INFISSI.test(s)) return "infisso";
+  if (STRATI_DI_PORTE.test(s)) return "porta";
   if (STRATI_NON_MURI.test(s)) return "altro";
   return "forse";
 }
@@ -350,4 +354,69 @@ export function nomeDaScritta(t) {
     .trim()
     .toLowerCase();
   return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/**
+ * I nomi delle stanze dalle scritte del disegno, sulla griglia della casa
+ * riconosciuta (tipo: stanze 1..n, muri e fuori negativi). Una scritta che
+ * cade su un muro o appena fuori va alla stanza piu' vicina entro un metro.
+ * Se in una stanza cadono due scritte («bagno 2» e «disimpegno») il nome le
+ * dice tutte e due: li' manca un muro, e cosi' si vede.
+ *
+ * scritte: [{ t, x, y }] in pixel della tela; lato: pixel per cella.
+ */
+export function nomiDalleScritte({ W, H, tipo, passo = 0.03 }, scritte, lato) {
+  const raggio = Math.ceil(1 / passo);
+  const stanzaVicina = (cx, cy) => {
+    if (cx < 0 || cy < 0 || cx >= W || cy >= H) return 0;
+    if (tipo[cy * W + cx] > 0) return tipo[cy * W + cx];
+    for (let r = 1; r <= raggio; r++)
+      for (let d = -r; d <= r; d++)
+        for (const [x, y] of [
+          [cx + d, cy - r],
+          [cx + d, cy + r],
+          [cx - r, cy + d],
+          [cx + r, cy + d],
+        ])
+          if (x >= 0 && y >= 0 && x < W && y < H && tipo[y * W + x] > 0) return tipo[y * W + x];
+    return 0;
+  };
+  const per = new Map();
+  for (const s of scritte || []) {
+    const id = stanzaVicina(Math.floor(s.x / lato), Math.floor(s.y / lato));
+    if (!id) continue;
+    const nomi = per.get(id) || [];
+    if (!nomi.some((n) => n.toLowerCase() === s.t.toLowerCase())) nomi.push(s.t);
+    per.set(id, nomi);
+  }
+  return Object.fromEntries([...per].map(([id, nomi]) => [id, nomi.join(" / ")]));
+}
+
+/**
+ * Il nome di ripiego per una stanza senza nome: «Stanza 1», «Stanza 2»…
+ * contando solo quelle senza nome e saltando i nomi gia' presi (il disegno
+ * ha spesso una sua «stanza 2»).
+ */
+export function nomiDiRipiego(ids, presi, parola = "Stanza") {
+  const usati = new Set(
+    Object.values(presi || {}).flatMap((n) => String(n).toLowerCase().split(" / ")),
+  );
+  const fuori = {};
+  let k = 0;
+  for (const id of ids) {
+    if (presi?.[id]) continue;
+    let nome;
+    do nome = `${parola} ${++k}`;
+    while (usati.has(nome.toLowerCase()));
+    usati.add(nome.toLowerCase());
+    fuori[id] = nome;
+  }
+  return fuori;
+}
+
+/** Una scritta che dice uno spazio aperto: cortile, giardino, terrazzo… */
+export function eNomeDiFuori(t) {
+  return /cortil|giardin|terrazz|balcon|loggi|portic|patio|esterno|corte\b|area scoperta|scoperto|yard|garden|terrace|balcony|porch/i.test(
+    String(t || ""),
+  );
 }

@@ -223,7 +223,13 @@ function pezziDi(g, W, H) {
  *   5. la barriera aggiunge le righe sottili attaccate ai muri (il vetro delle
  *      finestre, le soglie), che servono a capire dov'e' il fuori.
  */
-export function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, disegno = false } = {}) {
+export function grigliaDeiMuri(
+  ink,
+  w,
+  h,
+  mpp,
+  { vetri = null, porte = null, disegno = false } = {},
+) {
   const lato = PASSO / mpp,
     W = Math.max(1, Math.floor(w / lato)),
     H = Math.max(1, Math.floor(h / lato)),
@@ -247,8 +253,9 @@ export function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, disegno = false }
     }
   /* Gli infissi, quando il disegno li da' a parte (lo strato del DWG), nelle
    * stesse celle. */
-  const celleVetri = new Uint8Array(W * H);
-  if (vetri)
+  const celleDi = (px) => {
+    const celle = new Uint8Array(W * H);
+    if (!px) return celle;
     for (let cy = 0; cy < H; cy++)
       for (let cx = 0; cx < W; cx++) {
         const x0 = Math.floor(cx * lato),
@@ -258,12 +265,16 @@ export function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, disegno = false }
         let c = 0;
         for (let y = y0; y < y1 && y < h && !c; y++)
           for (let x = x0; x < x1 && x < w; x++)
-            if (vetri[y * w + x]) {
+            if (px[y * w + x]) {
               c = 1;
               break;
             }
-        celleVetri[cy * W + cx] = c;
+        celle[cy * W + cx] = c;
       }
+    return celle;
+  };
+  const celleVetri = celleDi(vetri),
+    cellePorte = celleDi(porte);
   /* Lo scuro che tocca il bordo e' il tavolo sotto il foglio, non un muro. */
   const fondo = new Uint8Array(W * H),
     coda = [];
@@ -691,14 +702,33 @@ export function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, disegno = false }
     );
   };
 
+  /* Un varco piu' largo di una porta (un basculante, un portone, una
+   * vetrata) si chiude solo se il disegno ci mette dentro qualcosa: la riga
+   * della porta o del vetro, nello stesso muro e fino a 4 m. Allargata un
+   * poco, perche' la riga sta in una fila sola dello spessore del muro. */
+  const varcoLargo = Math.round(4 / PASSO);
+  const segnato = allarga(
+    celleVetri.map((v, i) => (v || cellePorte[i] ? 1 : 0)),
+    W,
+    H,
+    Math.max(1, Math.round(0.2 / PASSO)),
+  );
+  const fino = (i, passo, k) => {
+    for (let q = 0; q < k; q++) if (segnato[i + passo * q]) return true;
+    return false;
+  };
+  const apri = (a, b, passo, largo, k) =>
+    k <= varco
+      ? chiudi(a, b, passo, largo)
+      : dritto(a, -passo) && dritto(b, passo) && fino(a + passo, passo, k);
   for (let y = 1; y < H - 1; y++)
     for (let x = 1; x < W - 1; x++) {
       const i = y * W + x;
       if (!muro[i - 1] || muro[i]) continue;
       let e = x;
-      while (e < W && !muro[y * W + e] && e - x <= varco) e++;
-      if (e >= W || e - x > varco || !muro[y * W + e]) continue;
-      if (!chiudi(i - 1, y * W + e, 1, W)) continue;
+      while (e < W && !muro[y * W + e] && e - x <= varcoLargo) e++;
+      if (e >= W || e - x > varcoLargo || !muro[y * W + e]) continue;
+      if (!apri(i - 1, y * W + e, 1, W, e - x)) continue;
       for (let q = x; q < e; q++) soglie[y * W + q] = 1;
     }
   for (let x = 1; x < W - 1; x++)
@@ -706,9 +736,9 @@ export function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, disegno = false }
       const i = y * W + x;
       if (!muro[i - W] || muro[i]) continue;
       let e = y;
-      while (e < H && !muro[e * W + x] && e - y <= varco) e++;
-      if (e >= H || e - y > varco || !muro[e * W + x]) continue;
-      if (!chiudi(i - W, e * W + x, W, 1)) continue;
+      while (e < H && !muro[e * W + x] && e - y <= varcoLargo) e++;
+      if (e >= H || e - y > varcoLargo || !muro[e * W + x]) continue;
+      if (!apri(i - W, e * W + x, W, 1, e - y)) continue;
       for (let q = y; q < e; q++) soglie[q * W + x] = 1;
     }
   for (let i = 0; i < W * H; i++) if (soglie[i]) barriera[i] = 1;
@@ -958,7 +988,7 @@ export function riconosciDaFoto({ W, H, muro, barriera, vetro }, { fuori = new S
   const aperture = [];
   const tipoDi = (lbl) => (esterno.has(lbl) ? -2 : idDi.get(radice(lbl)) || -2);
   for (const gr of gruppi) {
-    if (gr.unito || gr.largo < 0.5 || gr.largo > 3.2) continue;
+    if (gr.unito || gr.largo < 0.5 || gr.largo > 4) continue;
     const ta = tipoDi(gr.a),
       tb = tipoDi(gr.b);
     if (ta === tb) continue;

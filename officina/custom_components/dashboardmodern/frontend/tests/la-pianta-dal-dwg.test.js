@@ -8,9 +8,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  eNomeDiFuori,
   eNomeDiStanza,
   metriPerUnita,
   nomeDaScritta,
+  nomiDalleScritte,
+  nomiDiRipiego,
   pezziDelDisegno,
   pianiDelDisegno,
   ruoloDelloStrato,
@@ -158,9 +161,11 @@ test("gli strati: muri, infissi, cose che muri non sono, e quelli che non dicono
     assert.equal(ruoloDelloStrato(n), "muro", n);
   for (const n of ["INFISSI", "finestre", "A-GLAZ"])
     assert.equal(ruoloDelloStrato(n), "infisso", n);
-  /* le scale, le viste sotto e sopra il taglio, le porte aperte, lo strato 0 */
-  for (const n of ["VISTA", "VISTA 2 PROIEZIONE", "PORTE", "QUOTE", "0", "SCALE", "ascensore"])
+  /* le scale, le viste sotto e sopra il taglio, lo strato 0 */
+  for (const n of ["VISTA", "VISTA 2 PROIEZIONE", "QUOTE", "0", "SCALE", "ascensore"])
     assert.equal(ruoloDelloStrato(n), "altro", n);
+  /* le porte e i basculanti dicono quale varco largo e' un'apertura */
+  for (const n of ["PORTE", "A-DOOR", "basculante"]) assert.equal(ruoloDelloStrato(n), "porta", n);
   /* «SANATORIA_DIFFORMI» nel disegno vero tiene proprio dei tramezzi */
   assert.equal(ruoloDelloStrato("SANATORIA_DIFFORMI"), "forse");
 });
@@ -173,4 +178,40 @@ test("le linee sanno il loro strato; con pochi muri nominati si disegna tutto", 
   const tanti = disegno();
   for (let i = 0; i < 6; i++) tanti.entities.push(linea(100 + i * 900, 200, 100 + i * 900, 9800));
   assert.equal(pianiDelDisegno(pezziDelDisegno(tanti), { insunits: 4 })[0].soloMuri, true);
+});
+
+/* «Stanza 2» due volte, «Bagno 2» su 21 m²: i nomi dal disegno vero. */
+test("i nomi dalle scritte: due scritte nella stessa stanza, una scritta sul muro", () => {
+  /* tre stanze in fila su una griglia 30×10, muri a x=10-11 e x=20 */
+  const W = 30,
+    H = 10,
+    tipo = new Int16Array(W * H);
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++)
+      tipo[y * W + x] = x === 10 || x === 11 || x === 20 ? -3 : x < 10 ? 1 : x < 20 ? 2 : 3;
+  const casa = { W, H, tipo };
+  const nomi = nomiDalleScritte(
+    casa,
+    [
+      { t: "Bagno 2", x: 3, y: 5 },
+      { t: "Disimpegno", x: 7, y: 5 }, // stessa stanza: li' manca un muro
+      { t: "Cucina", x: 11, y: 5 }, // sul muro: va alla stanza piu' vicina
+      { t: "bagno 2", x: 4, y: 2 }, // ripetuta: non si ripete
+    ],
+    1,
+  );
+  assert.equal(nomi[1], "Bagno 2 / Disimpegno");
+  assert.equal(nomi[2], "Cucina");
+  assert.equal(nomi[3], undefined);
+});
+
+test("il nome di ripiego non ripete un nome gia' preso dal disegno", () => {
+  const nomi = nomiDiRipiego([1, 2, 3, 4], { 2: "Stanza 2", 3: "Bagno 1 / Stanza 1" });
+  assert.deepEqual(nomi, { 1: "Stanza 3", 4: "Stanza 4" });
+});
+
+test("le scritte di uno spazio aperto: il cortile e' fuori, il box no", () => {
+  for (const n of ["cortile interno", "Giardino", "TERRAZZO", "balcone", "portico"])
+    assert.ok(eNomeDiFuori(n), n);
+  for (const n of ["BOX", "locale tecnico", "cucina", "corridoio"]) assert.ok(!eNomeDiFuori(n), n);
 });
