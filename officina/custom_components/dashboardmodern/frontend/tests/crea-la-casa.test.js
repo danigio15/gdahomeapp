@@ -13,6 +13,8 @@ import { riconosciDaFoto } from "../src/core/pianta-da-foto.js";
 import {
   aggiungiPiano,
   areeDaiRegistri,
+  arrediDallaFoto,
+  dispositiviDallaFoto,
   entitaUsate,
   larghezzaDallaFoto,
   oggettiDallaFoto,
@@ -570,4 +572,35 @@ test("dalle foto: la cucina con l'isola, gli sgabelli e le colonne", () => {
       stanza,
     );
   }
+});
+
+/* Dalla revisione: il dispositivo nato dal tasto ⚡ su un arredo (la lampada a
+ * stelo → luce) stava dove sta un punto luce a soffitto, a 2,85 m contro la
+ * parete, lontano dalla lampada. Deve stare dove sta l'arredo, alla sua altezza. */
+test("il dispositivo nato da un arredo sta dove sta l'arredo, alla sua altezza", () => {
+  const stanza = { id: 1, sx: 3, sy: 2, riquadro: { x0: 0, x1: 6, y0: 0, y1: 4 } };
+  const casa = {
+    W: 200,
+    H: 134,
+    passo: 0.03,
+    tipo: new Int16Array(200 * 134).fill(1),
+    stanze: [stanza],
+  };
+  const box = [3000, 1200, 300, 1500];
+  const foto = {
+    w: 4000,
+    h: 3000,
+    verso: "N",
+    oggetti: [{ k: "stelo", box }],
+    dispositivi: [
+      { k: "luce", box, daArredo: true, arredo: "stelo", h: 1.5, entity: "light.sala" },
+      { k: "luce", box: [1000, 1300, 300, 300], entity: "light.soffitto" },
+    ],
+  };
+  const [arredo] = arrediDallaFoto(casa, stanza, foto);
+  const [daArredo, aSoffitto] = dispositiviDallaFoto(casa, stanza, foto);
+  assert.ok(Math.abs(daArredo.x - arredo.x) < 0.01 && Math.abs(daArredo.y - arredo.y) < 0.01);
+  assert.equal(daArredo.h, 1.5);
+  assert.equal(aSoffitto.h, 2.85, "un punto luce vero resta a soffitto");
+  assert.ok(Math.abs(aSoffitto.y - arredo.y) > 0.5, "e non dove sta la lampada");
 });

@@ -69,8 +69,10 @@ export function tipoDellaStanza(nome) {
   return "giorno";
 }
 
-const MISURA_MINIMA = 1.8,
-  MISURA_MASSIMA = 9;
+/** Quanto puo' essere larga o profonda una stanza: da un disimpegno a un
+ * open space. Gli stessi limiti valgono nel campo delle misure. */
+export const MISURA_MINIMA = 1.5,
+  MISURA_MASSIMA = 15;
 /* il passo indietro di chi fotografa: dalla porta, dalla parete di fronte */
 const DALLA_PARETE_OPPOSTA = 0.6;
 
@@ -203,8 +205,11 @@ export function disponiLeStanze(stanze, { perTipo = true } = {}) {
   const S = elenco(stanze)
     .map((s, i) => ({
       ...s,
-      larghezza: tra(Number(s?.larghezza) || MISURA_MINIMA, MISURA_MINIMA, MISURA_MASSIMA),
-      profondita: tra(Number(s?.profondita) || MISURA_MINIMA, MISURA_MINIMA, MISURA_MASSIMA),
+      /* al decimo, come le x che si sommano: i bordi devono coincidere */
+      larghezza: decimo(tra(Number(s?.larghezza) || MISURA_MINIMA, MISURA_MINIMA, MISURA_MASSIMA)),
+      profondita: decimo(
+        tra(Number(s?.profondita) || MISURA_MINIMA, MISURA_MINIMA, MISURA_MASSIMA),
+      ),
       tipo: ORDINE[s?.tipo] !== undefined ? s.tipo : "giorno",
       ordine: i,
     }))
@@ -312,94 +317,91 @@ export function porteFraLeStanze(disposte) {
   return porte;
 }
 
-/** Le finestre: una per stanza sul muro esterno piu' lungo (larga 1,2 m; 0,7
- * in bagno; 1,8 nel giorno), e la porta di casa sul muro esterno in basso
- * della stanza principale. Torna `{ finestre: [{ stanza, lato, pos, centro,
- * larghezza }], ingresso: {...} | null }`. */
+/* I quattro lati di una stanza, nell'ordine in cui si preferiscono per la
+ * porta di casa: basso, sinistra, destra, alto. */
+const latiDi = (s) => [
+  {
+    nome: "basso",
+    lungo: s.larghezza,
+    lato: "x",
+    pos: s.y + s.profondita,
+    da: s.x,
+    a: s.x + s.larghezza,
+  },
+  { nome: "sinistra", lungo: s.profondita, lato: "y", pos: s.x, da: s.y, a: s.y + s.profondita },
+  {
+    nome: "destra",
+    lungo: s.profondita,
+    lato: "y",
+    pos: s.x + s.larghezza,
+    da: s.y,
+    a: s.y + s.profondita,
+  },
+  { nome: "alto", lungo: s.larghezza, lato: "x", pos: s.y, da: s.x, a: s.x + s.larghezza },
+];
+const stessoMuro = (v, l) => v && v.lato === l.lato && Math.abs(v.pos - l.pos) < 0.02;
+
+/** La porta di casa e le finestre. Prima la porta, che e' obbligatoria: sul
+ * primo muro esterno libero (almeno 1,4 m) della stanza principale, in basso
+ * se si puo'; se la principale non ne ha, sulla prima stanza (per tipo) che
+ * tocca il fuori. Poi una finestra per stanza sul muro esterno piu' lungo
+ * (larga 1,2 m; 0,7 in bagno; 1,8 nel giorno, o quanto ci sta), lasciando
+ * il posto alla porta se e' sullo stesso muro. Torna `{ finestre: [{ stanza,
+ * lato, pos, centro, larghezza }], ingresso: {...} | null }`. */
 export function finestreDelleStanze(disposte) {
   const S = elenco(disposte);
-  const finestre = [];
-  /* il lato di s (in alto/basso/destra/sinistra) e' dentro la casa se un'altra
-   * stanza ci sta attaccata proprio da quel lato */
-  function lo(s, o, lato) {
-    const eps = 0.02;
-    if (lato === "alto") return Math.abs(o.y + o.profondita - s.y) < eps;
-    if (lato === "basso") return Math.abs(s.y + s.profondita - o.y) < eps;
-    if (lato === "sinistra") return Math.abs(o.x + o.larghezza - s.x) < eps;
-    return Math.abs(s.x + s.larghezza - o.x) < eps;
-  }
-  const copertura = (s, lato) => {
-    /* quanto di quel lato e' coperto da altre stanze */
-    let c = 0;
-    for (const o of S) {
-      if (o === s || !lo(s, o, lato)) continue;
-      const m = muroInComune(s, o, 0.01);
-      if (m) c += m.a - m.da;
+  if (!S.length) return { finestre: [], ingresso: null };
+  const principale =
+    S.find((s) => s.tipo === "giorno") || S.find((s) => s.tipo === "corridoio") || S[0];
+  const candidate = [
+    principale,
+    ...S.filter((s) => s !== principale).sort(
+      (a, b) => (ORDINE[a.tipo] ?? 9) - (ORDINE[b.tipo] ?? 9),
+    ),
+  ];
+  let ingresso = null;
+  for (const p of candidate) {
+    for (const l of latiDi(p)) {
+      const tratto = trattoLibero(S, p, l);
+      if (!tratto || tratto.a - tratto.da < 1.4) continue;
+      ingresso = {
+        stanza: p.id,
+        lato: l.lato,
+        pos: l.pos,
+        centro: decimo((tratto.da + tratto.a) / 2),
+        larghezza: 0.9,
+      };
+      break;
     }
-    return c;
-  };
+    if (ingresso) break;
+  }
+  const finestre = [];
   for (const s of S) {
-    const lati = [
-      ["alto", s.larghezza, "x", s.y, s.x, s.x + s.larghezza],
-      ["basso", s.larghezza, "x", s.y + s.profondita, s.x, s.x + s.larghezza],
-      ["sinistra", s.profondita, "y", s.x, s.y, s.y + s.profondita],
-      ["destra", s.profondita, "y", s.x + s.larghezza, s.y, s.y + s.profondita],
-    ];
-    const liberi = lati
-      .map(([nome, lungo, lato, pos, da, a]) => ({
-        nome,
-        lato,
-        pos,
-        da,
-        a,
-        libero: lungo - copertura(s, nome),
-      }))
-      .filter((l) => l.libero >= 1.0)
-      .sort((a, b) => b.libero - a.libero);
-    if (!liberi.length) continue;
-    const l = liberi[0];
-    const larga = s.tipo === "bagno" ? 0.7 : s.tipo === "giorno" ? 1.8 : 1.2;
-    /* il tratto scoperto piu' lungo di quel lato */
-    const tratto = trattoLibero(S, s, l);
-    if (!tratto || tratto.a - tratto.da < Math.min(larga, 1) + 0.3) continue;
+    const larga = s.tipo === "bagno" ? 0.7 : s.tipo === "giorno" ? 1.8 : 1.2,
+      minima = s.tipo === "bagno" ? 0.7 : 1.0;
+    /* il lato col tratto libero piu' lungo, al netto della porta di casa */
+    const scelte = [];
+    for (const l of latiDi(s)) {
+      let tratto = trattoLibero(S, s, l);
+      if (!tratto) continue;
+      if (ingresso && ingresso.stanza === s.id && stessoMuro(ingresso, l)) {
+        const prima = { da: tratto.da, a: ingresso.centro - ingresso.larghezza / 2 - 0.3 },
+          dopo = { da: ingresso.centro + ingresso.larghezza / 2 + 0.3, a: tratto.a };
+        tratto = prima.a - prima.da >= dopo.a - dopo.da ? prima : dopo;
+      }
+      const disponibile = tratto.a - tratto.da - 0.3;
+      if (disponibile >= minima) scelte.push({ l, tratto, disponibile });
+    }
+    if (!scelte.length) continue;
+    scelte.sort((a, b) => b.disponibile - a.disponibile);
+    const { l, tratto, disponibile } = scelte[0];
     finestre.push({
       stanza: s.id,
       lato: l.lato,
       pos: l.pos,
       centro: decimo((tratto.da + tratto.a) / 2),
-      larghezza: Math.min(larga, decimo(tratto.a - tratto.da - 0.3)),
+      larghezza: Math.min(larga, decimo(disponibile)),
     });
-  }
-  const principale =
-    S.find((s) => s.tipo === "giorno") || S.find((s) => s.tipo === "corridoio") || S[0];
-  /* la porta di casa: sul primo muro esterno libero della stanza
-   * principale, in basso se si puo', lontano dalla sua finestra */
-  let ingresso = null;
-  if (principale) {
-    const p = principale,
-      finestra = finestre.find((f) => f.stanza === p.id);
-    const lati = [
-      { lato: "x", pos: p.y + p.profondita, da: p.x, a: p.x + p.larghezza },
-      { lato: "y", pos: p.x, da: p.y, a: p.y + p.profondita },
-      { lato: "y", pos: p.x + p.larghezza, da: p.y, a: p.y + p.profondita },
-      { lato: "x", pos: p.y, da: p.x, a: p.x + p.larghezza },
-    ];
-    for (const l of lati) {
-      const tratto = trattoLibero(S, p, l);
-      if (!tratto || tratto.a - tratto.da < 1.4) continue;
-      let centro = decimo((tratto.da + tratto.a) / 2);
-      const stessoMuro =
-        finestra && finestra.lato === l.lato && Math.abs(finestra.pos - l.pos) < 0.02;
-      if (stessoMuro) {
-        /* da una parte o dall'altra della finestra, dove c'e' piu' posto */
-        const prima = finestra.centro - finestra.larghezza / 2 - tratto.da,
-          dopo = tratto.a - (finestra.centro + finestra.larghezza / 2);
-        if (Math.max(prima, dopo) < 1.3) continue;
-        centro = decimo(prima >= dopo ? tratto.da + prima / 2 : tratto.a - dopo / 2);
-      }
-      ingresso = { stanza: p.id, lato: l.lato, pos: l.pos, centro, larghezza: 0.9 };
-      break;
-    }
   }
   return { finestre, ingresso };
 }

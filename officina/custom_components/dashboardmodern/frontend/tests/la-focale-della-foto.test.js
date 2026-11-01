@@ -98,9 +98,21 @@ test("senza EXIF, o con un file che non e' un JPEG, non si inventa niente", () =
   assert.equal(focaleDallaFoto(new Uint8Array([0xff, 0xd8, 0xff, 0xda, 0, 2, 0])), null);
   assert.equal(focaleDallaFoto(new Uint8Array(2)), null);
   assert.equal(focaleDallaFoto(null), null);
-  /* un EXIF troncato a meta' non fa saltare niente */
+  /* un EXIF troncato in qualunque punto non fa saltare niente: o il valore o
+   * null, mai un'eccezione (la revisione ne aveva trovate otto) */
   const b = jpegConExif();
-  for (const n of [24, 40, 60, 80]) assert.doesNotThrow(() => focaleDallaFoto(b.subarray(0, n)));
+  for (let n = 0; n <= b.length; n++)
+    assert.doesNotThrow(() => focaleDallaFoto(b.subarray(0, n)), `troncato a ${n}`);
+  /* e nemmeno un byte cambiato a caso */
+  let seme = 3;
+  for (let k = 0; k < 2000; k++) {
+    const c = new Uint8Array(b);
+    for (let j = 0; j < 1 + (k % 4); j++) {
+      seme = (seme * 1103515245 + 12345) % 2147483648;
+      c[seme % c.length] = (seme >> 8) & 255;
+    }
+    assert.doesNotThrow(() => focaleDallaFoto(c), `mutazione ${k}`);
+  }
   /* valori assurdi si scartano */
   assert.equal(focaleDallaFoto(jpegConExif({ f35: 0, focale: [0, 10] })).f35, null);
 });

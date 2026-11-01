@@ -5,6 +5,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { riconosciDaFoto } from "../src/core/pianta-da-foto.js";
 import {
+  MISURA_MASSIMA,
+  MISURA_MINIMA,
   MISURE_DI_SERIE,
   disponiLeStanze,
   distanzaDellaParete,
@@ -125,7 +127,14 @@ test("le stanze si dispongono in righe allineate, senza buchi, il giorno per pri
   /* le misure restano quelle dette (la profondita' si allinea alla riga) */
   assert.equal(byId[4].larghezza, 2.2);
   assert.deepEqual(disponiLeStanze([]), []);
-  assert.equal(disponiLeStanze([{ id: 9 }])[0].larghezza, 1.8, "mai sotto 1,8 m");
+  assert.equal(disponiLeStanze([{ id: 9 }])[0].larghezza, 1.5, "mai sotto 1,5 m");
+  /* misure non a decimi: i bordi coincidono lo stesso (3,25 → 3,3) */
+  const strette = disponiLeStanze([
+    { id: 1, larghezza: 2.25, profondita: 3.5, tipo: "giorno" },
+    { id: 2, larghezza: 2.25, profondita: 3.5, tipo: "cucina" },
+  ]);
+  assert.equal(strette[0].x + strette[0].larghezza, strette[1].x);
+  assert.equal(porteFraLeStanze(strette).length, 1);
 });
 
 test("le porte: ogni stanza si raggiunge dal giorno, cucina e giorno comunicano", () => {
@@ -201,4 +210,94 @@ test("una stanza sola: la casa e' quella, con finestra e ingresso", () => {
   assert.equal(stanzeRitrovate(casa, g.centri)[7], casa.stanze[0].id);
   assert.equal(casa.aperture.filter((a) => a.tipo === "finestra").length, 1);
   assert.equal(casa.aperture.filter((a) => a.tipo === "porta").length, 1);
+});
+
+/* Dalla revisione: la porta di casa e' obbligatoria. Prima si sceglieva la
+ * finestra della stanza principale e poi si cercava posto per la porta: con
+ * un corridoio stretto come principale, o un giorno in mezzo a una riga, la
+ * finestra si prendeva l'unico muro esterno e la casa usciva senza porta. */
+test("la porta di casa c'e' sempre: anche col corridoio per principale, o col giorno in mezzo", () => {
+  const senzaSoggiorno = disponiLeStanze([
+    { id: 1, larghezza: 3.6, profondita: 3.4, tipo: "cucina" },
+    { id: 2, larghezza: 1.8, profondita: 3.2, tipo: "corridoio" },
+    { id: 3, larghezza: 3.2, profondita: 3.6, tipo: "camera" },
+    { id: 4, larghezza: 3.2, profondita: 3.6, tipo: "camera" },
+    { id: 5, larghezza: 3, profondita: 3, tipo: "bagno" },
+  ]);
+  const a = finestreDelleStanze(senzaSoggiorno);
+  assert.ok(a.ingresso, "la porta sul corridoio");
+  assert.equal(a.ingresso.stanza, 2);
+  /* la finestra del corridoio si stringe per lasciarle il posto, o cede */
+  const fc = a.finestre.find((f) => f.stanza === 2);
+  if (fc && fc.lato === a.ingresso.lato && fc.pos === a.ingresso.pos)
+    assert.ok(Math.abs(fc.centro - a.ingresso.centro) >= fc.larghezza / 2 + 0.45 + 0.3 - 0.01);
+  const aMano = disponiLeStanze(
+    [
+      { id: 1, larghezza: 3.8, profondita: 3.6, tipo: "camera" },
+      { id: 2, larghezza: 2.4, profondita: 3.6, tipo: "giorno" },
+      { id: 3, larghezza: 3.8, profondita: 3.6, tipo: "camera" },
+      { id: 4, larghezza: 5, profondita: 3, tipo: "cucina" },
+      { id: 5, larghezza: 5, profondita: 3, tipo: "bagno" },
+    ],
+    { perTipo: false },
+  );
+  const b = finestreDelleStanze(aMano);
+  assert.ok(b.ingresso && b.ingresso.stanza === 2, JSON.stringify(b.ingresso));
+  for (const d of [senzaSoggiorno, aMano]) {
+    const g = grigliaDalleStanze(d),
+      casa = riconosciDaFoto(g);
+    assert.equal(casa.stanze.length, 5);
+    const fuori = (ap) => {
+      const i = Math.floor(ap.cy / casa.passo) * casa.W + Math.floor(ap.cx / casa.passo);
+      return [i - 12 * casa.W, i + 12 * casa.W, i - 12, i + 12].some((j) => casa.tipo[j] === -2);
+    };
+    assert.equal(casa.aperture.filter((ap) => ap.tipo === "porta" && fuori(ap)).length, 1);
+  }
+});
+
+test("centocinquanta case a caso: tutte con la porta di casa, e il riconoscitore le ritrova", () => {
+  let seme = 7;
+  const caso = () => {
+    seme = (seme * 1103515245 + 12345) % 2147483648;
+    return seme / 2147483648;
+  };
+  const tipi = ["giorno", "cucina", "camera", "bagno", "studio", "corridoio"];
+  for (let k = 0; k < 150; k++) {
+    const n = 1 + Math.floor(caso() * 8);
+    const stanze = Array.from({ length: n }, (_, i) => ({
+      id: i + 1,
+      larghezza: Math.round((MISURA_MINIMA + caso() * 7.5) * 10) / 10,
+      profondita: Math.round((MISURA_MINIMA + caso() * 7.5) * 10) / 10,
+      tipo: tipi[Math.floor(caso() * tipi.length)],
+    }));
+    const d = disponiLeStanze(stanze, { perTipo: caso() < 0.5 });
+    const { ingresso } = finestreDelleStanze(d);
+    assert.ok(ingresso, `caso ${k}: senza porta di casa ${JSON.stringify(stanze)}`);
+    /* ogni stanza si raggiunge: n-1 porte almeno, nessuna stanza isolata */
+    const porte = porteFraLeStanze(d);
+    if (n > 1) {
+      const raggiunte = new Set([d[0].id]);
+      let cresce = true;
+      while (cresce) {
+        cresce = false;
+        for (const p of porte)
+          if (raggiunte.has(p.stanze[0]) !== raggiunte.has(p.stanze[1])) {
+            p.stanze.forEach((id) => raggiunte.add(id));
+            cresce = true;
+          }
+      }
+      assert.equal(raggiunte.size, n, `caso ${k}: stanze isolate ${JSON.stringify(stanze)}`);
+    }
+    if (k % 5 === 0) {
+      const g = grigliaDalleStanze(d),
+        casa = riconosciDaFoto(g),
+        rit = stanzeRitrovate(casa, g.centri);
+      assert.equal(new Set(Object.values(rit)).size, n, `caso ${k}: ${JSON.stringify(rit)}`);
+      assert.ok(
+        Object.values(rit).every((v) => v > 0),
+        `caso ${k}`,
+      );
+    }
+  }
+  assert.ok(MISURA_MASSIMA >= 12, "un open space ci sta");
 });

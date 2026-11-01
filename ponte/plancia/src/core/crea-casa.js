@@ -120,6 +120,19 @@ export const ARREDI_CON_ENTITA = Object.freeze({
   forno: "forno",
 });
 
+/** A che altezza sta il dispositivo nato da un arredo: la lampada a stelo
+ * fa luce a un metro e mezzo, la presa del frigo sta a terra. */
+export const ALTEZZA_DA_ARREDO = Object.freeze({
+  stelo: 1.5,
+  frigo: 0.3,
+  microonde: 0.3,
+  tv: 1.1,
+  lavatrice: 0,
+  asciugatrice: 0,
+  lavastoviglie: 0,
+  forno: 0,
+});
+
 /* Dalle classi del riconoscitore alle cose della casa. Il riconoscitore e'
  * D-FINE addestrato su Objects365 (365 cose, fra cui armadi, comodini,
  * lavatrici, condizionatori); restano anche i nomi di COCO, per le prove e per
@@ -668,7 +681,11 @@ export function dispositiviDallaFoto(casa, stanza, foto) {
     .filter((d) => DISPOSITIVI_3D[d?.k])
     .map((d) => {
       const mont = DISPOSITIVI_3D[d.k].mont;
-      let p = posaDallaFoto(stanza, foto, d.box, { mont });
+      /* nato da un arredo (il tasto ⚡ sulla lampada a stelo, sul frigo):
+       * sta dove sta l'arredo, non dove starebbe un punto luce a soffitto */
+      let p = d.daArredo
+        ? posaDallaFoto(stanza, foto, d.box, { accostato: ACCOSTATI.has(d.arredo) })
+        : posaDallaFoto(stanza, foto, d.box, { mont });
       /* un sensore della finestra (o della porta) va sulla finestra vera, se ce
        * n'e' una li' vicino */
       if (mont === "finestra" || mont === "porta") {
@@ -682,7 +699,7 @@ export function dispositiviDallaFoto(casa, stanza, foto) {
         k: d.k,
         stanza: stanza.id,
         ...nellaStanza(casa, stanza.id, p.x, p.y),
-        h: ALTEZZA_DI_SERIE[d.k] ?? 2.3,
+        h: Number.isFinite(Number(d.h)) ? tra(Number(d.h), 0, 4) : (ALTEZZA_DI_SERIE[d.k] ?? 2.3),
         rot: p.rot,
         entity: entita(d.entity),
         nome: clean(d.nome).slice(0, 40),

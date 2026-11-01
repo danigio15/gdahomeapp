@@ -633,6 +633,12 @@ test("la casa dalle foto delle stanze: le stanze, le misure, la pianta, il salva
   await expect(crea.locator("[data-c3c-entitaper]")).toHaveCount(0);
   await expect(crea.locator(".c3c-disp")).toHaveCount(1);
   await expect(crea.locator(".c3c-disp")).toContainText(/Punto luce|Light/);
+  /* tolto il dispositivo, il ⚡ torna; e si rifa' */
+  await crea.locator("[data-c3c-togli-disp]").click();
+  await expect(crea.locator(".c3c-disp")).toHaveCount(0);
+  await expect(crea.locator("[data-c3c-entitaper]")).toHaveCount(1);
+  await crea.locator("[data-c3c-entitaper]").click();
+  await expect(crea.locator(".c3c-disp")).toHaveCount(1);
   /* poi si torna alla pianta */
   await crea.locator('[data-c3c="sfpianta"]').click();
   await expect(crea.locator("[data-c3c-verso]")).toHaveCount(0);
@@ -652,6 +658,18 @@ test("la casa dalle foto delle stanze: le stanze, le misure, la pianta, il salva
     },
   );
   await fotoDiretta(page, testInfo, "crea-dalle-foto-muri");
+  /* «Indietro» dai Muri torna all'elenco (non alla scala, che qui non c'e'):
+   * si cambia una misura e si rifa' la pianta, foto e nomi restano */
+  await crea.locator('[data-c3c="indietro"]').click();
+  await expect(crea.locator(".c3c-sf")).toHaveCount(3);
+  await expect(crea.locator(".c3c-sf-foto img")).toHaveCount(1);
+  await crea.locator('[data-c3c-sfmis="1:l"]').fill("6");
+  await expect(crea.locator(".c3c-pannello")).toContainText(/misure scritte da te/);
+  await crea.locator('[data-c3c="avanti"]').click();
+  await expect(crea.locator(".c3c-pannello")).toContainText(
+    /Trovati 3 ambienti, \d+ porte e \d+ finestre/,
+    { timeout: 30_000 },
+  );
   /* le stanze hanno i loro nomi e le loro aree (la tendina delle aree) */
   await crea.locator('[data-c3c="avanti"]').click();
   const nomi = await crea

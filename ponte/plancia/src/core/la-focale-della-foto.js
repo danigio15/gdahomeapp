@@ -29,7 +29,7 @@ export const FOCALE_DI_SERIE = 25;
 
 function ascii(vista, da, n) {
   let s = "";
-  for (let i = 0; i < n; i++) {
+  for (let i = 0; i < n && da + i < vista.byteLength; i++) {
     const c = vista.getUint8(da + i);
     if (!c) break;
     s += String.fromCharCode(c);
@@ -40,7 +40,7 @@ function ascii(vista, da, n) {
 /* Una tabella TIFF: torna la mappa tag → valore per i tag chiesti. */
 function leggiIfd(vista, base, offset, little, tag) {
   const out = {};
-  if (offset + 2 > vista.byteLength) return out;
+  if (!(offset >= 0) || base + offset + 2 > vista.byteLength) return out;
   const n = vista.getUint16(base + offset, little);
   for (let i = 0; i < n; i++) {
     const p = base + offset + 2 + i * 12;
