@@ -95,3 +95,19 @@ test("l'Agenda senza firma non bussa: passa al servizio", () => {
   /* E il servizio c'e' ancora, per chi non ha la porta HTTP. */
   assert.match(home, /service: "get_events"/);
 });
+
+/* «libredwg-web.wasm: HTTP 401 {"message":"senza credenziali"}», dal
+ * telefono, con la plancia aperta in Home Assistant. La plancia dell'add-on
+ * sta sotto `/api/hassio_ingress/<sessione>/…`: comincia per `/api/` ma la
+ * credenziale e' il biscotto dell'ingress, e il 401 ce lo davamo da soli. */
+test("i file dell'add-on dall'ingress escono: il biscotto della sessione basta", () => {
+  const motore =
+    "/api/hassio_ingress/AbC123_x/dashboardmodern_static/e4f1/legacy/vendor/libredwg/wasm/libredwg-web.wasm";
+  dentroIlPannello(() => {
+    assert.equal(bussaSenzaCredenziali(motore), false);
+    assert.equal(bussaSenzaCredenziali(`https://casa.ui.nabu.casa${motore}`), false);
+    /* L'API vera resta come prima. */
+    assert.equal(bussaSenzaCredenziali("/api/states"), true);
+    assert.equal(bussaSenzaCredenziali("/api/hassio/addons"), true);
+  });
+});

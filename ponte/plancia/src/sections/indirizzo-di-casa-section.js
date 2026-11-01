@@ -217,10 +217,22 @@ function haUnaCredenzialeNellIndirizzo(indirizzo) {
   }
 }
 
+/* L'add-on dentro Home Assistant: `/api/hassio_ingress/<sessione>/…`.
+ *
+ * Comincia per `/api/` ma non e' l'API: e' la porta dell'add-on, e la
+ * credenziale ce l'ha gia' il browser — il biscotto della sessione di
+ * ingress, che va da se' con ogni richiesta. Contarla fra quelle «senza
+ * credenziali» voleva dire darsi un 401 da soli: il motore dei DWG
+ * (`…/legacy/vendor/libredwg/wasm/libredwg-web.wasm`, chiesto con `fetch`)
+ * non arrivava mai, e sotto l'avviso c'era «HTTP 401 senza credenziali»
+ * senza che nessuno avesse bussato. */
+const DALL_INGRESS = /^(?:https?:\/\/[^/]*)?\/api\/hassio_ingress\//i;
+
 /** Se questa richiesta, dentro il pannello, puo' solo prendersi un 401. */
 export function bussaSenzaCredenziali(indirizzo) {
   if (root.__DASHBOARDMODERN_HOSTED__ !== true) return false;
   if (gettoneDiAccesso()) return false;
+  if (DALL_INGRESS.test(String(indirizzo ?? "").trim())) return false;
   return !haUnaCredenzialeNellIndirizzo(indirizzo);
 }
 
