@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-7CIJ3GDI.js";
+} from "../../chunk-GLWJMK43.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -157302,14 +157302,47 @@ async function usaPdf(file) {
     disegna14();
   }
 }
+async function scaricaIlMotore(dove, prendi = root.fetch?.bind(root)) {
+  let ultimo = null;
+  for (let volta = 0; volta < 2; volta++) {
+    let risposta;
+    try {
+      risposta = await prendi(dove, { credentials: "same-origin", cache: "no-store" });
+    } catch (errore) {
+      ultimo = new Error(`libredwg-web.wasm: ${perche5(errore) || "rete"}`);
+      continue;
+    }
+    if (!risposta.ok) {
+      let detto3 = "";
+      try {
+        detto3 = perche5(await risposta.text()).slice(0, 100);
+      } catch (_errore) {
+      }
+      ultimo = new Error(`libredwg-web.wasm: HTTP ${risposta.status}${detto3 ? ` ${detto3}` : ""}`);
+      if (risposta.status < 500) break;
+      continue;
+    }
+    const byte = new Uint8Array(await risposta.arrayBuffer());
+    if (byte.length < 8 || byte[0] !== 0 || byte[1] !== 97 || byte[2] !== 115 || byte[3] !== 109)
+      throw new Error(`libredwg-web.wasm: ${byte.length} byte, non e' WebAssembly`);
+    return byte;
+  }
+  throw ultimo;
+}
 var libreDwg = null;
 async function caricaLibreDwg() {
   if (!libreDwg)
-    libreDwg = import(
-      /* @vite-ignore */
-      `${LIBREDWG}dist/libredwg-web.js`
-    ).then(
-      (m) => m.LibreDwg.create(`${LIBREDWG}wasm`).then((lib) => ({ lib, tipo: m.Dwg_File_Type }))
+    libreDwg = Promise.all([
+      import(
+        /* @vite-ignore */
+        `${LIBREDWG}dist/libredwg-web.js`
+      ),
+      scaricaIlMotore(`${LIBREDWG}wasm/libredwg-web.wasm`)
+    ]).then(
+      ([m, wasmBinary]) => m.createModule({
+        wasmBinary,
+        locateFile: (nome) => `${LIBREDWG}wasm/${nome}`
+      }).then((modulo) => ({ lib: m.LibreDwg.createByWasmInstance(modulo), tipo: m.Dwg_File_Type }))
     );
   try {
     return await libreDwg;

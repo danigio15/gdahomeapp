@@ -1384,11 +1384,62 @@ async function usaPdf(file) {
   }
 }
 
+/* Il motore dei DWG, scaricato da noi: una volta sola, senza cache, e dato
+ * al lettore gia' in mano.
+ *
+ * Lasciato fare al lettore, il file lo chiedeva due volte: prima «in
+ * streaming», che vuole il tipo `application/wasm` — e il servitore dell'app
+ * sul telefono quel tipo non lo conosce — poi, rifiutata la prima, di nuovo
+ * tutto intero, con la cache del browser in mezzo che si era tenuta mezzo
+ * file e chiedeva «e' cambiato?». Dentro l'app finiva in «both async and
+ * sync fetching of the wasm failed», che non dice ne' cosa ne' perche'. Cosi'
+ * la strada e' una, e se non va si sa come: il codice e la risposta di chi
+ * l'ha data. */
+async function scaricaIlMotore(dove, prendi = root.fetch?.bind(root)) {
+  let ultimo = null;
+  for (let volta = 0; volta < 2; volta++) {
+    let risposta;
+    try {
+      risposta = await prendi(dove, { credentials: "same-origin", cache: "no-store" });
+    } catch (errore) {
+      ultimo = new Error(`libredwg-web.wasm: ${perche(errore) || "rete"}`);
+      continue;
+    }
+    if (!risposta.ok) {
+      let detto = "";
+      try {
+        detto = perche(await risposta.text()).slice(0, 100);
+      } catch (_errore) {
+        /* Senza corpo basta il codice. */
+      }
+      ultimo = new Error(`libredwg-web.wasm: HTTP ${risposta.status}${detto ? ` ${detto}` : ""}`);
+      /* Un «no» e' un no: chiederlo di nuovo non lo cambia. Solo chi non ha
+       * risposto in tempo (5xx) merita la seconda volta. */
+      if (risposta.status < 500) break;
+      continue;
+    }
+    const byte = new Uint8Array(await risposta.arrayBuffer());
+    /* «\0asm»: senza, e' una pagina d'errore col 200 davanti. */
+    if (byte.length < 8 || byte[0] !== 0 || byte[1] !== 0x61 || byte[2] !== 0x73 || byte[3] !== 0x6d)
+      throw new Error(`libredwg-web.wasm: ${byte.length} byte, non e' WebAssembly`);
+    return byte;
+  }
+  throw ultimo;
+}
+
 let libreDwg = null;
 async function caricaLibreDwg() {
   if (!libreDwg)
-    libreDwg = import(/* @vite-ignore */ `${LIBREDWG}dist/libredwg-web.js`).then((m) =>
-      m.LibreDwg.create(`${LIBREDWG}wasm`).then((lib) => ({ lib, tipo: m.Dwg_File_Type })),
+    libreDwg = Promise.all([
+      import(/* @vite-ignore */ `${LIBREDWG}dist/libredwg-web.js`),
+      scaricaIlMotore(`${LIBREDWG}wasm/libredwg-web.wasm`),
+    ]).then(([m, wasmBinary]) =>
+      m
+        .createModule({
+          wasmBinary,
+          locateFile: (nome) => `${LIBREDWG}wasm/${nome}`,
+        })
+        .then((modulo) => ({ lib: m.LibreDwg.createByWasmInstance(modulo), tipo: m.Dwg_File_Type })),
     );
   try {
     return await libreDwg;
