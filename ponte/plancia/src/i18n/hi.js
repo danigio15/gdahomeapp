@@ -7724,7 +7724,6 @@ export default Object.freeze({
   "No rooms indoors.": "अंदर कोई कमरा नहीं।",
   "Not an entity (domain.name)": "इकाई नहीं है (domain.name)",
   "One moment": "एक पल",
-  "Open in 3D": "3D में खोलें",
   "or type a name": "या कोई नाम टाइप करें",
   "or type it": "या टाइप करें",
   "or type the entity (e.g. light.living)": "या इकाई टाइप करें (जैसे light.living)",
@@ -7744,7 +7743,6 @@ export default Object.freeze({
   "Room photos": "कमरों की फ़ोटो",
   "Save and open the 3D home": "सहेजें और 3D घर खोलें",
   "Shoot from above, whole sheet, good light.": "ऊपर से फ़ोटो लें, पूरी शीट, अच्छी रोशनी में।",
-  "Show the 3D Home dashboard": "3D घर डैशबोर्ड दिखाएँ",
   "Something missing?": "कुछ छूट गया?",
   "Straightened by": "इतना सीधा किया:",
   "Straightening the floor plan…": "नक्शा सीधा किया जा रहा है…",
@@ -7833,5 +7831,4 @@ export default Object.freeze({
   "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "भूमि रिकॉर्ड का नक्शा: मैं इसका पैमाना 1:200 इस्तेमाल कर रहा हूँ। अगर माप सही न लगें, तो «पैमाना» पर लौटें और किसी ज्ञात लंबाई के दोनों सिरों पर टैप करें।",
   "Plan ${i + 1}": "नक्शा ${i + 1}",
   "The sheet has several plans: which one now?": "शीट में कई नक्शे हैं: अभी कौन-सा बनाएँगे?",
-  "Back to the dashboard": "डैशबोर्ड पर लौटें",
 });

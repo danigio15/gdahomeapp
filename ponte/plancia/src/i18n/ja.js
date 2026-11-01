@@ -7743,7 +7743,6 @@ export default Object.freeze({
   "No rooms indoors.": "屋内の部屋がありません。",
   "Not an entity (domain.name)": "エンティティではありません（domain.name）",
   "One moment": "少々お待ちください",
-  "Open in 3D": "3D で開く",
   "or type a name": "または名前を入力",
   "or type it": "または入力",
   "or type the entity (e.g. light.living)": "またはエンティティを入力（例: light.living）",
@@ -7763,7 +7762,6 @@ export default Object.freeze({
   "Room photos": "部屋の写真",
   "Save and open the 3D home": "保存して 3D ホームを開く",
   "Shoot from above, whole sheet, good light.": "真上から、用紙全体を、明るい場所で撮影してください。",
-  "Show the 3D Home dashboard": "3D ホームのダッシュボードを表示",
   "Something missing?": "足りないものはありますか？",
   "Straightened by": "補正角度",
   "Straightening the floor plan…": "間取り図を補正中…",
@@ -7852,5 +7850,4 @@ export default Object.freeze({
   "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "登記図面です。縮尺は図面どおり 1:200 を使います。寸法が合わない場合は「縮尺」に戻り、長さのわかる区間の両端をタップしてください。",
   "Plan ${i + 1}": "図面 ${i + 1}",
   "The sheet has several plans: which one now?": "用紙に複数の図面があります。どれを作りますか？",
-  "Back to the dashboard": "ダッシュボードに戻る",
 });

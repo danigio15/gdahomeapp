@@ -103,13 +103,10 @@ function corpoMarkup() {
   return `<div class="dm-c3-ed">
     <article class="ed-row dm-c3-ed-gruppo">
       <div class="dm-c3-ed-testa"><span>🏠</span><strong>${esc(t("Casa 3D", "3D Home"))}</strong><span class="dm-c3-ed-premium">PREMIUM</span></div>
-      <label class="dm-c3-ed-spunta"><input type="checkbox" data-dm-c3-attiva ${c.attiva ? "checked" : ""}><span>${esc(
-        t("Mostra la plancia Casa 3D", "Show the 3D Home dashboard"),
-      )}</span></label>
       <div class="dm-c3-ed-piani">${piani}</div>
       <div class="dm-c3-ed-tasti"><button type="button" class="ed-btn-add" data-dm-c3-crea>🏗️ ${esc(
         c.piani.length ? t("Aggiungi o rifai un piano", "Add or redo a floor") : t("Crea la tua casa", "Create your home"),
-      )}</button>${c.piani.length ? `<button type="button" class="ed-btn-add" data-dm-c3-apri>🧊 ${esc(t("Apri in 3D", "Open in 3D"))}</button>` : ""}</div>
+      )}</button></div>
       <p class="dm-c3-ed-nota">${esc(
         t("Le foto restano sul dispositivo da cui le carichi: si salvano solo muri, stanze, arredi, colori e dispositivi.", "Photos stay on the device you upload them from: only walls, rooms, furniture, colours and devices are saved."),
       )}</p>
@@ -184,24 +181,12 @@ function onClick(event) {
     root.__DM_CASA3D_CREA__?.();
     return;
   }
-  if (event.target.closest("[data-dm-c3-apri]")) {
-    event.preventDefault();
-    const c = casa();
-    if (!c.attiva) salva({ ...c, attiva: true });
-    root.chiudiEditor?.() ?? root.closeEditor?.();
-    root.__DM_CASA3D_RIDISEGNA__?.();
-  }
 }
 
 function onChange(event) {
   if (!nelCorpo(event)) return;
   const c = casa();
   const t0 = event.target;
-  if (t0.dataset.dmC3Attiva !== undefined) {
-    salva({ ...c, attiva: t0.checked });
-    ridisegna();
-    return;
-  }
   const chi = t0.dataset.dmC3Entita ?? t0.dataset.dmC3Mano;
   if (chi === undefined) return;
   const d = dispositivo(c, chi);
@@ -229,7 +214,6 @@ function installaLoStile() {
       #ed-body .dm-c3-ed-premium{margin-left:6px;font-size:9.5px;font-weight:900;letter-spacing:.08em;padding:2px 7px;border-radius:6px;color:#b45309;border:1px solid #f59e0b88;background:#f59e0b18}
       #ed-body .dm-c3-ed-conto{margin-left:auto;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:900;color:#047857;background:color-mix(in srgb,#10b981 14%,transparent)}
       #ed-body .dm-c3-ed-conto.manca{color:#b45309;background:color-mix(in srgb,#f59e0b 16%,transparent)}
-      #ed-body .dm-c3-ed-spunta{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700}
       #ed-body .dm-c3-ed-piani{display:flex;flex-wrap:wrap;gap:6px}
       #ed-body .dm-c3-ed-piano{padding:6px 10px;border-radius:999px;border:1px solid var(--card-border,#e2e8f0);font-size:12px;font-weight:700}
       #ed-body .dm-c3-ed-tasti{display:flex;flex-wrap:wrap;gap:8px}

@@ -7605,7 +7605,6 @@ export default Object.freeze({
   "No rooms indoors.": "没有室内房间。",
   "Not an entity (domain.name)": "不是实体（domain.name）",
   "One moment": "稍等",
-  "Open in 3D": "在 3D 中打开",
   "or type a name": "或输入名称",
   "or type it": "或手动输入",
   "or type the entity (e.g. light.living)": "或输入实体（例如 light.living）",
@@ -7625,7 +7624,6 @@ export default Object.freeze({
   "Room photos": "房间照片",
   "Save and open the 3D home": "保存并打开 3D 家",
   "Shoot from above, whole sheet, good light.": "从正上方拍摄，拍下整张纸，光线充足。",
-  "Show the 3D Home dashboard": "显示 3D 家仪表板",
   "Something missing?": "缺了什么？",
   "Straightened by": "已校正",
   "Straightening the floor plan…": "正在校正平面图…",
@@ -7714,5 +7712,4 @@ export default Object.freeze({
   "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "地籍平面图：使用其比例 1:200。如果尺寸不对，请返回「比例」并点按一段已知长度的两端。",
   "Plan ${i + 1}": "平面图 ${i + 1}",
   "The sheet has several plans: which one now?": "这张图纸上有多张平面图：现在做哪一张？",
-  "Back to the dashboard": "返回仪表板",
 });

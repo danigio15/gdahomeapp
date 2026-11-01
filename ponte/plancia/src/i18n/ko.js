@@ -7715,7 +7715,6 @@ export default Object.freeze({
   "No rooms indoors.": "실내에 방이 없습니다.",
   "Not an entity (domain.name)": "엔티티가 아닙니다(domain.name)",
   "One moment": "잠시만요",
-  "Open in 3D": "3D로 열기",
   "or type a name": "또는 이름 입력",
   "or type it": "또는 직접 입력",
   "or type the entity (e.g. light.living)": "또는 엔티티 입력(예: light.living)",
@@ -7735,7 +7734,6 @@ export default Object.freeze({
   "Room photos": "방 사진",
   "Save and open the 3D home": "저장하고 3D 홈 열기",
   "Shoot from above, whole sheet, good light.": "위에서, 종이 전체를, 밝은 곳에서 찍으세요.",
-  "Show the 3D Home dashboard": "3D 홈 대시보드 표시",
   "Something missing?": "빠진 게 있나요?",
   "Straightened by": "보정 각도",
   "Straightening the floor plan…": "평면도 보정 중…",
@@ -7824,5 +7822,4 @@ export default Object.freeze({
   "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "지적 도면입니다. 도면의 축척 1:200을 사용합니다. 치수가 맞지 않으면 «축척»으로 돌아가 아는 길이의 양 끝을 누르세요.",
   "Plan ${i + 1}": "도면 ${i + 1}",
   "The sheet has several plans: which one now?": "용지에 도면이 여러 개 있습니다. 지금 어떤 것을 만들까요?",
-  "Back to the dashboard": "대시보드로 돌아가기",
 });

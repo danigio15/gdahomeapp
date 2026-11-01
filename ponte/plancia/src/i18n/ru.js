@@ -7758,7 +7758,6 @@ export default Object.freeze({
   "No rooms indoors.": "Нет внутренних комнат.",
   "Not an entity (domain.name)": "Не сущность (domain.name)",
   "One moment": "Минутку",
-  "Open in 3D": "Открыть в 3D",
   "or type a name": "или введите название",
   "or type it": "или введите вручную",
   "or type the entity (e.g. light.living)": "или введите сущность (напр. light.living)",
@@ -7778,7 +7777,6 @@ export default Object.freeze({
   "Room photos": "Фото комнат",
   "Save and open the 3D home": "Сохранить и открыть 3D-дом",
   "Shoot from above, whole sheet, good light.": "Снимайте сверху, весь лист, при хорошем свете.",
-  "Show the 3D Home dashboard": "Показать панель «3D-дом»",
   "Something missing?": "Чего-то не хватает?",
   "Straightened by": "Выровнено на",
   "Straightening the floor plan…": "Выравниваем план…",
@@ -7867,5 +7865,4 @@ export default Object.freeze({
   "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "Кадастровый план: использую его масштаб, 1:200. Если размеры не сходятся, вернитесь к «Масштабу» и коснитесь обоих концов известной длины.",
   "Plan ${i + 1}": "План ${i + 1}",
   "The sheet has several plans: which one now?": "На листе несколько планов: какой делаете сейчас?",
-  "Back to the dashboard": "Вернуться к панели",
 });
