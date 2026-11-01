@@ -214,6 +214,8 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
+    /* Anche le plance possono essere cambiate mentre l'app era via. */
+    unawaited(widget.collegamento.rileggiLaPlancia());
     final servitore = _servitore;
     if (servitore == null) return;
     unawaited(() async {
@@ -331,6 +333,10 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
     if (!mounted) return;
     setState(_rimettiIlVelo);
     _riquadro.currentState?.ricarica();
+    /* E quale plancia aprire si richiede alla casa: una tolta dalla console
+     * non si riapre, e una aggiunta compare fra quelle da scegliere. Se e'
+     * cambiata, la pagina nuova arriva da se' (vedi `_pagina`). */
+    unawaited(widget.collegamento.rileggiLaPlancia());
   }
 
   /* La Config chiesta prima che la pagina fosse pronta: si apre appena

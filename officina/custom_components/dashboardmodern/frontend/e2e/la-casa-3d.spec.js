@@ -712,3 +712,97 @@ test("sulla casa la barra delle sezioni non c'e'", async ({ page }, testInfo) =>
   const dove = foto(testInfo, "casa3d-senza-la-barra");
   if (dove) await page.screenshot({ path: dove });
 });
+
+/* La visura della planimetria scaricata dal catasto: una scansione (la
+ * «Scala 1:200» sta nell'immagine), con due piante e i contorni delle altre
+ * unita' sullo stesso foglio. Il file e' di una persona vera: non sta nel
+ * repo, si passa con DM_PDF. */
+test("la visura del catasto scansionata: scala, scelta della pianta, stanze", async ({
+  page,
+}, testInfo) => {
+  test.skip(!process.env.DM_PDF || testInfo.project.name !== "desktop", "serve DM_PDF");
+  const crea = await apriLaProcedura(page, testInfo);
+  await crea.locator('[data-c3c-file="pianta"]').setInputFiles(process.env.DM_PDF);
+  const piante = crea.locator("[data-c3c-dwg]");
+  await expect(piante).toHaveCount(Number(process.env.DM_PDF_PIANTE || 2), { timeout: 60_000 });
+  await expect(crea).toContainText("Planimetria del catasto");
+  await fotoDiretta(page, testInfo, "crea-visura-scelta");
+  await piante.nth(Number(process.env.DM_PDF_PIANTA || 1)).click();
+  const trovati = crea.locator(".c3c-pannello");
+  await expect(trovati).toContainText(/Trovati \d+ ambienti/, { timeout: 120_000 });
+  const n = Number(/Trovati (\d+) ambienti/.exec(await trovati.innerText())[1]);
+  expect(n).toBeGreaterThanOrEqual(Number(process.env.DM_PDF_STANZE || 5));
+  await fotoDiretta(page, testInfo, "crea-visura-stanze");
+});
+
+/* «Adesso non riesco a tornare più indietro»: la Casa 3D accesa sulla plancia
+ * principale copriva tutto, e da li' non si usciva. «Torna alla plancia» la
+ * toglie per questa volta: tornano la plancia, la barra e il Config. */
+test("dalla Casa 3D si torna sempre alla plancia", async ({ page }, testInfo) => {
+  await page.addInitScript(() => {
+    window.__GDAHOME_PREMIUM__ = true;
+  });
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
+  await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
+  await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true, null, {
+    timeout: 60_000,
+  });
+  await page.evaluate(() => {
+    localStorage.setItem("cd_casa3d", JSON.stringify({ attiva: true, piani: [] }));
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
+  });
+  const casa = page.locator("#dm-casa3d");
+  await expect(casa.locator(".c3-da-creare h2")).toBeVisible({ timeout: 30_000 });
+  await casa.locator('[data-c3s="esci"]').click();
+  await expect(casa).toHaveCount(0);
+  await expect(page.locator("html")).not.toHaveClass(/dm-casa3d-acceso/);
+  /* E «Apri in 3D» la rimette. */
+  await page.evaluate(() => window.__DM_CASA3D_RIDISEGNA__());
+  await expect(page.locator("#dm-casa3d .c3-da-creare h2")).toBeVisible({ timeout: 10_000 });
+});
+
+/* «L'hamburger deve aprire la barra laterale»: dentro Home Assistant largo la
+ * plancia sta in un riquadro che comincia gia' dopo la barra. Il ☰ della Casa
+ * 3D apre la barra di Home Assistant e non sposta la casa: spostarla di tutta
+ * la barra scopriva la plancia sotto («sovrascrive la dashboard»). */
+test("il ☰ della Casa 3D apre la barra di Home Assistant senza scoprire la plancia", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Home Assistant largo");
+  await page.addInitScript(() => {
+    window.__GDAHOME_PREMIUM__ = true;
+  });
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
+  await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
+  await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true, null, {
+    timeout: 60_000,
+  });
+  await page.evaluate(() => {
+    localStorage.setItem("cd_casa3d", JSON.stringify({ attiva: true, piani: [] }));
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
+    /* Home Assistant attorno: la barra larga 256 px, e il riquadro della
+     * plancia che comincia dove lei finisce. */
+    window.__APERTO__ = [];
+    const ha = document.createElement("home-assistant");
+    ha.attachShadow({ mode: "open" });
+    const main = document.createElement("home-assistant-main");
+    main.attachShadow({ mode: "open" });
+    const barra = document.createElement("ha-sidebar");
+    barra.style.cssText = "position:fixed;left:0;top:0;bottom:0;width:256px";
+    main.shadowRoot.append(barra);
+    ha.shadowRoot.append(main);
+    main.addEventListener("hass-toggle-menu", (e) => window.__APERTO__.push(e.detail));
+    document.body.appendChild(ha);
+    window.documentoDiHomeAssistant = () => document;
+    Object.defineProperty(window, "frameElement", {
+      configurable: true,
+      get: () => ({ getBoundingClientRect: () => ({ left: 256 }) }),
+    });
+  });
+  const casa = page.locator("#dm-casa3d");
+  await expect(casa.locator(".c3-da-creare h2")).toBeVisible({ timeout: 30_000 });
+  await casa.locator('[data-c3s="menu"]').click();
+  await expect.poll(() => page.evaluate(() => window.__APERTO__)).toEqual([{ open: true }]);
+  await page.waitForTimeout(400);
+  expect(await casa.evaluate((n) => Math.round(n.getBoundingClientRect().left))).toBe(0);
+});

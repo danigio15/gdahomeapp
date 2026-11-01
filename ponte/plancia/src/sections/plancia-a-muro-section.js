@@ -4246,10 +4246,22 @@ export function apriLaBarraAccanto(
   } catch (_errore) {
     return false;
   }
+  /* Quanto la barra copre il pannello: la barra sta nella pagina di Home
+   * Assistant, il pannello nel riquadro della plancia, e il riquadro comincia
+   * gia' dopo la barra quando Home Assistant la tiene di lato. Spostare il
+   * pannello di tutta la larghezza della barra scopriva la plancia sotto —
+   * «sovrascrive la dashboard»: una striscia di plancia classica fra la barra
+   * e la Casa 3D. Si sposta solo di quello che la barra copre davvero. */
   const scosta = () => {
-    const destra = Math.round(barra?.getBoundingClientRect?.().right || 0);
-    state.accanto = destra > 0 ? destra : 256;
-    tela.style.setProperty("left", `${state.accanto}px`, "important");
+    const destra = barra?.getBoundingClientRect?.().right || 0;
+    let inizio = 0;
+    try {
+      inizio = root.frameElement?.getBoundingClientRect?.().left || 0;
+    } catch (_errore) {}
+    const copre = Math.round(destra > 0 ? destra - inizio : 256);
+    state.accanto = Math.max(0, copre);
+    if (state.accanto > 0) tela.style.setProperty("left", `${state.accanto}px`, "important");
+    else tela.style.removeProperty("left");
     rimisura(tela);
   };
   tela.dataset.muAccantoAlMenu = "true";

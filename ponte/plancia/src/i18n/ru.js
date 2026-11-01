@@ -7864,4 +7864,8 @@ export default Object.freeze({
   "No scale found on the PDF: tap both ends of a length you know.": "В PDF не найден масштаб: коснитесь обоих концов известного отрезка.",
   "This PDF can't be opened. Try a screenshot of the page.": "Этот PDF не открывается. Попробуйте снимок экрана страницы.",
   "The DWG reader didn't download: check the connection and try again.": "Программа чтения DWG не загрузилась: проверьте подключение и попробуйте снова.",
+  "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "Кадастровый план: использую его масштаб, 1:200. Если размеры не сходятся, вернитесь к «Масштабу» и коснитесь обоих концов известной длины.",
+  "Plan ${i + 1}": "План ${i + 1}",
+  "The sheet has several plans: which one now?": "На листе несколько планов: какой делаете сейчас?",
+  "Back to the dashboard": "Вернуться к панели",
 });

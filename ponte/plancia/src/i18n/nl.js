@@ -7881,4 +7881,8 @@ export default Object.freeze({
   "No scale found on the PDF: tap both ends of a length you know.": "Geen schaal gevonden in de pdf: tik op beide uiteinden van een lengte die je kent.",
   "This PDF can't be opened. Try a screenshot of the page.": "Deze pdf gaat niet open. Probeer een schermafbeelding van de pagina.",
   "The DWG reader didn't download: check the connection and try again.": "De DWG-lezer is niet gedownload: controleer de verbinding en probeer het opnieuw.",
+  "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "Kadasterplattegrond: ik gebruik de schaal ervan, 1:200. Kloppen de maten niet, ga dan terug naar «Schaal» en tik op beide uiteinden van een bekende lengte.",
+  "Plan ${i + 1}": "Plattegrond ${i + 1}",
+  "The sheet has several plans: which one now?": "Op het blad staan meerdere plattegronden: welke doe je nu?",
+  "Back to the dashboard": "Terug naar het dashboard",
 });

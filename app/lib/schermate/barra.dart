@@ -274,6 +274,12 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
   void apri() {
     _molla.forward();
     _rimanda(_daSola);
+    /* L'elenco delle plance si chiede di nuovo alla casa: le plance si
+     * aggiungono, si tolgono e cambiano chi le vede dalla console, mentre il
+     * telefono resta acceso. Prima l'elenco si leggeva solo collegandosi:
+     * un tablet a muro sempre acceso non vedeva la plancia nuova — niente
+     * freccine — finche' non gli si toglieva la corrente. */
+    unawaited(widget.collegamento?.rileggiLaPlancia() ?? Future<void>.value());
     /* Si riapre sempre **dall'inizio**.
      *
      * L'elenco tiene il punto dove si era arrivati a scorrere — se lo scrive

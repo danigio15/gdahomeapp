@@ -912,6 +912,52 @@ void main() {
     await ponte.spegni();
   });
 
+  /* «Si risolve togliendo corrente al tablet e riaccendendo»: dalla console
+   * si aggiunge una plancia, o se ne toglie una, e il tablet a muro — sempre
+   * acceso — non se ne accorgeva, perche' l'elenco si leggeva solo
+   * collegandosi. Il menu che si apre e la plancia che si ricarica ora lo
+   * richiedono ([Collegamento.rileggiLaPlancia]); qui si prova che la
+   * rilettura porta l'elenco nuovo, in tutti e due i versi. */
+  test(
+    'una plancia aggiunta o tolta dalla console si vede rileggendo',
+    () async {
+      final ponte = await PonteFinto.alza();
+      await archivio.aggiungi(
+        nome: 'Casa',
+        segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
+        inCasa: ponte.indirizzo,
+      );
+      collegamento = Collegamento(
+        archivio: archivio,
+        sonda: sondaChe({ponte.indirizzo}),
+      );
+      await collegamento.apri();
+      await _finoA(() => collegamento.pannelloLetto);
+      expect(collegamento.pannello!.piuDiUna, isFalse);
+
+      ponte.plance.add({
+        'profilo': 'plancia4',
+        'titolo': 'Plancia4',
+        'istanza': 'gdahome_plancia4',
+        'primaria': false,
+        'creata_il': 1,
+      });
+      await collegamento.rileggiLaPlancia();
+      expect(collegamento.pannello!.piuDiUna, isTrue);
+      expect(collegamento.plance.map((una) => una.titolo), [
+        'GdAHome',
+        'Plancia4',
+      ]);
+
+      ponte.plance.removeWhere((una) => una['profilo'] == 'plancia4');
+      await collegamento.rileggiLaPlancia();
+      expect(collegamento.pannello!.piuDiUna, isFalse);
+      await ponte.spegni();
+    },
+  );
+
   test('una casa senza plancia lo dice, e resta aperta', () async {
     final ponte = await PonteFinto.alza();
     ponte.planciaDelPonte = null;
