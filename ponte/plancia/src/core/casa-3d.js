@@ -38,6 +38,19 @@ export const CELLA = Object.freeze({ fuori: -2, muro: -3, davanzale: -4, porta: 
 
 /* I dispositivi che si mettono nella casa e a cosa si collegano. `domini`
  * e `classi` dicono quali entita' proporre; `tocco` dice cosa fa toccarlo. */
+function elettrodomestico(icona, nome, parole) {
+  return {
+    icona,
+    nome,
+    domini: ["sensor", "switch", "binary_sensor", "input_boolean", "select", "input_select"],
+    classi: [],
+    parole,
+    mont: "muro",
+    tocco: null,
+    elettrodomestico: true,
+  };
+}
+
 export const DISPOSITIVI_3D = Object.freeze({
   luce: {
     icona: "💡",
@@ -192,8 +205,33 @@ export const DISPOSITIVI_3D = Object.freeze({
     mont: "muro",
     tocco: null,
   },
+  /* «Asciugatrice e lavastoviglie non c'e' da poterle inserire»: gli
+   * elettrodomestici stanno a terra contro il muro e rispondono all'entita'
+   * che dice se lavorano — la presa che misura i watt, lo stato del
+   * programma, un interruttore. */
+  lavatrice: elettrodomestico(
+    "🫧",
+    ["Lavatrice", "Washing machine"],
+    ["lavatrice", "washer", "washing", "lavaggio"],
+  ),
+  asciugatrice: elettrodomestico(
+    "🌀",
+    ["Asciugatrice", "Dryer"],
+    ["asciugatrice", "dryer", "asciuga"],
+  ),
+  lavastoviglie: elettrodomestico(
+    "🍽️",
+    ["Lavastoviglie", "Dishwasher"],
+    ["lavastoviglie", "dishwasher", "lavapiatti"],
+  ),
+  forno: elettrodomestico("🔥", ["Forno", "Oven"], ["forno", "oven"]),
 });
 export const TIPI_DI_DISPOSITIVO = Object.freeze(Object.keys(DISPOSITIVI_3D));
+
+/** I tipi che sono elettrodomestici: a terra, col loro stato di lavoro. */
+export const ELETTRODOMESTICI_3D = Object.freeze(
+  TIPI_DI_DISPOSITIVO.filter((k) => DISPOSITIVI_3D[k].elettrodomestico),
+);
 
 const clean = (v) => String(v ?? "").trim();
 const testo = (v, quanto = 60) => clean(v).slice(0, quanto);
@@ -595,6 +633,23 @@ export function statoDelDispositivo(k, st, italiano = true) {
         disponibile: true,
       };
     }
+    case "lavatrice":
+    case "asciugatrice":
+    case "lavastoviglie":
+    case "forno": {
+      const fase = faseDellElettrodomestico(st);
+      return {
+        attivo: fase === "lavora",
+        testo:
+          fase === "lavora"
+            ? `${D.icona} ${L("in funzione", "running")}`
+            : fase === "finito"
+              ? `${D.icona} ${L("finito", "done")}`
+              : D.icona,
+        tono: fase === "lavora" ? "lavora" : fase === "finito" ? "ok" : "neutro",
+        disponibile: true,
+      };
+    }
     case "telecamera":
       return {
         attivo: true,
@@ -605,6 +660,29 @@ export function statoDelDispositivo(k, st, italiano = true) {
     default:
       return { attivo: ACCESO.has(s), testo: D.icona, tono: "neutro", disponibile: true };
   }
+}
+
+/* Le parole dello stato di un elettrodomestico (Home Connect, LG ThinQ,
+ * SmartThings, Miele, una presa coi watt). */
+const LAVORA =
+  /^(on|run|running|in ?funzione|in ?corso|active|washing|wash|rinse|rinsing|spin|spinning|drying|dry|heating|preheating|cooking|programm?ed|busy|delayed_?start)$/;
+const FINITO = /^(finished|finito|complete|completed|done|end|ended|programfinished|fine)$/;
+
+/** «lavora», «finito» o «fermo», da quello che dice l'entita'. */
+export function faseDellElettrodomestico(st) {
+  const s = clean(st?.state).toLowerCase();
+  const n = Number(s);
+  if (s !== "" && Number.isFinite(n)) {
+    const unita = clean(st?.attributes?.unit_of_measurement).toLowerCase();
+    /* una presa che misura: sopra i 5 W lavora */
+    if (unita === "w" || unita === "kw")
+      return n * (unita === "kw" ? 1000 : 1) > 5 ? "lavora" : "fermo";
+    /* i minuti che mancano */
+    return n > 0 ? "lavora" : "fermo";
+  }
+  if (LAVORA.test(s.replace(/\s+/g, " "))) return "lavora";
+  if (FINITO.test(s.replace(/[\s-]+/g, ""))) return "finito";
+  return "fermo";
 }
 
 /** Cosa fa un tocco sul dispositivo: il servizio da chiamare, o un'azione della pagina. */

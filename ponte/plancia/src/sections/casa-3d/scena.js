@@ -71,6 +71,7 @@ const TONI = {
   telecamera: "14,165,233",
   clima: "234,88,12",
   ok: "22,163,74",
+  lavora: "16,185,129",
   neutro: "100,116,139",
   spento: "71,85,105",
 };

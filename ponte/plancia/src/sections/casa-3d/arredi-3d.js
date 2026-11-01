@@ -66,7 +66,17 @@ export const CATALOGO_ARREDI = Object.freeze([
       ["wc", "🚽", "WC sospeso", "Toilet", 0.4, 0.55],
       ["bidet", "🚰", "Bidet", "Bidet", 0.4, 0.55],
       ["lavabo", "🪥", "Mobile lavabo", "Vanity unit", 0.9, 0.48],
+    ],
+  },
+  {
+    k: "elettrodomestici",
+    nome: ["Elettrodomestici", "Appliances"],
+    voci: [
       ["lavatrice", "🫧", "Lavatrice", "Washing machine", 0.62, 0.6],
+      ["asciugatrice", "🌀", "Asciugatrice", "Dryer", 0.62, 0.62],
+      ["lavastoviglie", "🍽️", "Lavastoviglie", "Dishwasher", 0.6, 0.6],
+      ["forno", "🔥", "Forno a colonna", "Oven column", 0.6, 0.6],
+      ["microonde", "📟", "Microonde", "Microwave", 0.5, 0.4],
     ],
   },
   {
@@ -116,6 +126,11 @@ const MODELLO_DEL_DISPOSITIVO = Object.freeze({
   tv: "televisore",
   altoparlante: "altoparlante",
   pannello: "pannello",
+  /* gli elettrodomestici: lo stesso modello dell'arredo, appoggiato al muro */
+  lavatrice: "el_lavatrice",
+  asciugatrice: "el_asciugatrice",
+  lavastoviglie: "el_lavastoviglie",
+  forno: "el_forno",
 });
 
 export const modelloDelDispositivo = (k) => MODELLO_DEL_DISPOSITIVO[k] || "";
@@ -189,6 +204,44 @@ export function arredo3D(THREE, k, tinta = "#64748b") {
     gambe(s, 0.42, 0.42, 0.45, legnoScuro, 0.015, 0.03);
     scatola(s, 0.42, 0.42, 0.04, legnoChiaro, 0, 0.5, -0.2);
     return s;
+  };
+  /* Gli elettrodomestici: bianchi, col frontale che li fa riconoscere. */
+  const elettrodomestico = (dove, tipo) => {
+    const smalto = M("#f8fafc", { roughness: 0.3 });
+    const scuro = M("#334155", { roughness: 0.1 });
+    const display = M("#0f172a", { emissive: "#22d3ee", emissiveIntensity: 0.25 });
+    const oblo = (r, y) => {
+      const o = new THREE.Mesh(new THREE.CircleGeometry(r, 28), scuro);
+      o.position.set(0, y, 0.301);
+      dove.add(o);
+      const anello = new THREE.Mesh(new THREE.TorusGeometry(r, 0.018, 8, 28), acciaio);
+      anello.position.set(0, y, 0.302);
+      dove.add(anello);
+    };
+    if (tipo === "lavatrice" || tipo === "asciugatrice") {
+      scatola(dove, 0.6, 0.85, 0.6, smalto);
+      oblo(0.2, 0.42);
+      scatola(dove, 0.5, 0.06, 0.01, M("#94a3b8"), 0, 0.74, 0.3);
+      scatola(dove, 0.12, 0.04, 0.01, display, 0.16, 0.75, 0.302);
+      /* l'asciugatrice ha il cassetto dell'acqua in alto a sinistra */
+      if (tipo === "asciugatrice") scatola(dove, 0.16, 0.05, 0.01, M("#cbd5e1"), -0.17, 0.75, 0.302);
+    } else if (tipo === "lavastoviglie") {
+      scatola(dove, 0.6, 0.82, 0.6, M("#e2e8f0", { roughness: 0.25, metalness: 0.3 }));
+      scatola(dove, 0.56, 0.08, 0.01, display, 0, 0.72, 0.301);
+      scatola(dove, 0.36, 0.025, 0.04, acciaio, 0, 0.66, 0.31);
+    } else if (tipo === "forno") {
+      /* a colonna: forno in mezzo, cassetti sotto e sopra */
+      scatola(dove, 0.6, 2.1, 0.6, laccato);
+      scatola(dove, 0.54, 0.5, 0.01, nero, 0, 0.85, 0.301);
+      scatola(dove, 0.4, 0.02, 0.03, acciaio, 0, 1.38, 0.31);
+      scatola(dove, 0.54, 0.06, 0.01, display, 0, 1.43, 0.301);
+    } else if (tipo === "microonde") {
+      /* su un mobiletto, all'altezza del piano */
+      scatola(dove, 0.5, 0.9, 0.4, laccato);
+      scatola(dove, 0.5, 0.3, 0.4, M("#1f2937", { roughness: 0.3 }), 0, 0.9);
+      scatola(dove, 0.34, 0.22, 0.01, nero, -0.06, 0.94, 0.201);
+      scatola(dove, 0.08, 0.2, 0.01, display, 0.18, 0.95, 0.201);
+    }
   };
   const chiave = MODELLO_DEL_DISPOSITIVO[k] || k;
   switch (chiave) {
@@ -376,12 +429,22 @@ export function arredo3D(THREE, k, tinta = "#64748b") {
       cilindro(g, 0.015, 0.2, acciaio, 0, 0.97, -0.15, 8);
       scatola(g, 0.8, 0.8, 0.02, M("#dbeafe", { metalness: 0.9, roughness: 0.05 }), 0, 1.3, -0.24);
       break;
-    case "lavatrice": {
-      scatola(g, 0.6, 0.85, 0.6, M("#f8fafc", { roughness: 0.3 }));
-      const oblo = new THREE.Mesh(new THREE.CircleGeometry(0.2, 28), M("#334155", { roughness: 0.1 }));
-      oblo.position.set(0, 0.42, 0.301);
-      g.add(oblo);
-      scatola(g, 0.5, 0.06, 0.01, M("#94a3b8"), 0, 0.74, 0.3);
+    case "lavatrice":
+    case "asciugatrice":
+    case "lavastoviglie":
+    case "forno":
+    case "microonde":
+      elettrodomestico(g, chiave);
+      break;
+    /* da dispositivo: l'origine e' sul muro, il corpo davanti */
+    case "el_lavatrice":
+    case "el_asciugatrice":
+    case "el_lavastoviglie":
+    case "el_forno": {
+      const e = new THREE.Group();
+      elettrodomestico(e, chiave.slice(3));
+      e.position.z = 0.31;
+      g.add(e);
       break;
     }
     /* ── studio ── */

@@ -148,6 +148,25 @@ const piano = (k, nome, livello, nomi, pre) => ({
             entity: "cover.camera",
           },
           { k: "clima", stanza: 3, x: 11.6, y: 5.2, rot: -Math.PI / 2, entity: "climate.camera" },
+          /* gli elettrodomestici della cucina, contro il muro di fondo */
+          {
+            k: "lavastoviglie",
+            stanza: 2,
+            x: 8.2,
+            y: 0.3,
+            h: 0,
+            rot: 0,
+            entity: "sensor.lavastoviglie_potenza",
+          },
+          {
+            k: "asciugatrice",
+            stanza: 2,
+            x: 11.2,
+            y: 0.3,
+            h: 0,
+            rot: 0,
+            entity: "sensor.asciugatrice_stato",
+          },
         ]),
   ],
 });
@@ -200,6 +219,14 @@ function stati(notte) {
     "cover.camera": s("cover.camera", "open", {
       current_position: 30,
       friendly_name: "Tapparella camera",
+    }),
+    "sensor.lavastoviglie_potenza": s("sensor.lavastoviglie_potenza", "1850", {
+      device_class: "power",
+      unit_of_measurement: "W",
+      friendly_name: "Lavastoviglie",
+    }),
+    "sensor.asciugatrice_stato": s("sensor.asciugatrice_stato", "finished", {
+      friendly_name: "Asciugatrice",
     }),
     "climate.camera": s("climate.camera", "heat", {
       current_temperature: 20.5,
@@ -340,6 +367,13 @@ test("la casa si apre nella plancia: esterno, i piani, i dispositivi coi loro st
     "true",
   );
   await expect(casa.locator(".c3-disp").filter({ hasText: "Finestra cucina" })).toHaveCount(1);
+  /* «Asciugatrice e lavastoviglie»: ci sono, e dicono cosa fanno */
+  await expect(casa.locator(".c3-disp").filter({ hasText: "Lavastoviglie" })).toContainText(
+    "in funzione",
+  );
+  await expect(casa.locator(".c3-disp").filter({ hasText: "Asciugatrice" })).toContainText(
+    "finito",
+  );
   await scatta(page, testInfo, "casa3d-piano-terra");
 
   /* Un tocco sulla luce della cucina arriva a Home Assistant. */
@@ -875,7 +909,11 @@ test("dal Config si modifica di nuovo la planimetria di un piano", async ({ page
   expect(terra.stanze.map((s) => s.nome).sort()).toEqual(["Camera", "Cucina", "Soggiorno"]);
   expect(terra.stanze.find((s) => s.nome === "Camera").pareti).toBe("#b7c4ae");
   expect(terra.arredi.length).toBe(8);
-  expect(terra.dispositivi.length).toBe(9);
+  expect(terra.dispositivi.length).toBe(11);
+  /* gli elettrodomestici restano, con la loro entita' */
+  expect(terra.dispositivi.find((d) => d.k === "lavastoviglie").entity).toBe(
+    "sensor.lavastoviglie_potenza",
+  );
   expect(terra.dispositivi.find((d) => d.k === "telecamera").entity).toBe("camera.soggiorno");
   const luce = terra.dispositivi.find((d) => d.entity === "light.cucina");
   expect(terra.stanze.find((s) => s.id === luce.stanza).nome).toBe("Cucina");

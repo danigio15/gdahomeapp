@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-C6PTG6LJ.js";
+} from "../../chunk-LNCXXPXZ.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -602,7 +602,7 @@ import {
   statoDelDispositivo,
   stessoFlusso,
   vuoleIlVivo
-} from "../../chunk-KSJQXP6T.js";
+} from "../../chunk-CCMUJEI3.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -154244,7 +154244,7 @@ async function avviaLaScena(admin) {
   state180.caricando = true;
   state180.guasto = "";
   try {
-    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-ON6JMV4F.js")]);
+    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-ZPZKML3H.js")]);
     const nodo3 = doc.getElementById(ID4);
     const posto = nodo3?.querySelector(".c3-posto");
     if (!posto) return;
@@ -154628,6 +154628,7 @@ function installaLoStile9() {
     ${C3} .c3-disp[data-tono="telecamera"]{--c:14,165,233}
     ${C3} .c3-disp[data-tono="clima"]{--c:234,88,12}
     ${C3} .c3-disp[data-tono="ok"]{--c:22,163,74}
+    ${C3} .c3-disp[data-tono="lavora"]{--c:16,185,129}
     ${C3} .c3-disp[data-attivo="true"]{background:rgba(var(--c),.12);border-color:rgba(var(--c),.45)}
     ${C3} .c3-disp-ic{display:grid;place-items:center;flex:0 0 auto;width:34px;height:34px;border-radius:50%;font-size:16px;background:rgba(var(--c),.16)}
     ${C3} .c3-disp-testo{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
@@ -155814,7 +155815,16 @@ var ARREDI_DELLE_FOTO = Object.freeze({
   wc: { icona: "🚽", nome: ["WC", "Toilet"] },
   lavabo: { icona: "🪥", nome: ["Lavabo", "Washbasin"] },
   lavatrice: { icona: "🫧", nome: ["Lavatrice", "Washing machine"] },
-  scrivania: { icona: "🖥️", nome: ["Scrivania", "Desk"] }
+  asciugatrice: { icona: "🌀", nome: ["Asciugatrice", "Dryer"] },
+  lavastoviglie: { icona: "🍽️", nome: ["Lavastoviglie", "Dishwasher"] },
+  forno: { icona: "🔥", nome: ["Forno", "Oven"] },
+  microonde: { icona: "📟", nome: ["Microonde", "Microwave"] },
+  scrivania: { icona: "🖥️", nome: ["Scrivania", "Desk"] },
+  bidet: { icona: "🚰", nome: ["Bidet", "Bidet"] },
+  culla: { icona: "👶", nome: ["Lettino", "Cot"] },
+  ufficio: { icona: "🪑", nome: ["Sedia da ufficio", "Office chair"] },
+  pianoforte: { icona: "🎹", nome: ["Pianoforte", "Piano"] },
+  cyclette: { icona: "🚴", nome: ["Cyclette", "Exercise bike"] }
 });
 var ACCOSTATI = /* @__PURE__ */ new Set([
   "tv",
@@ -155829,7 +155839,12 @@ var ACCOSTATI = /* @__PURE__ */ new Set([
   "lavabo",
   "wc",
   "vasca",
-  "cassettiera"
+  "cassettiera",
+  "lavatrice",
+  "asciugatrice",
+  "lavastoviglie",
+  "forno",
+  "microonde"
 ]);
 var DA_COCO = Object.freeze({
   couch: { arredo: "divano" },
@@ -155839,8 +155854,9 @@ var DA_COCO = Object.freeze({
   bed: { arredo: "matrimoniale" },
   "potted plant": { arredo: "pianta" },
   refrigerator: { arredo: "frigo" },
-  oven: { arredo: "cucina" },
-  microwave: { arredo: "cucina" },
+  oven: { dispositivo: "forno" },
+  microwave: { arredo: "microonde" },
+  toaster: { arredo: "cucina" },
   sink: { arredo: "cucina" },
   toilet: { arredo: "wc" },
   book: { arredo: "libreria" },
@@ -155856,15 +155872,16 @@ function sovrapposti(a, b2) {
   const dentro3 = Math.max(0, x1 - x0) * Math.max(0, y1 - y0);
   return dentro3 / Math.min(a[2] * a[3], b2[2] * b2[3]);
 }
-function oggettiDaCoco(rilevati, { soglia: soglia3 = 0.3 } = {}) {
+function oggettiDaCoco(rilevati, { soglia: soglia3 = 0.3, stanza: stanza2 = "" } = {}) {
   const arredi = [], dispositivi = [];
   const ordinati = elenco15(rilevati).map((d) => ({ classe: clean32(d?.class), box: riquadro(d?.bbox), score: Number(d?.score) || 0 })).filter((d) => d.box && d.score >= soglia3 && DA_COCO[d.classe]).sort((a, b2) => b2.score - a.score);
+  const bagno = /bagn|bath|wc|toilet|servizi/i.test(clean32(stanza2)) || ordinati.some((d) => d.classe === "toilet");
   const metti5 = (dove, k, d) => {
     if (dove.some((o) => o.k === k && sovrapposti(o.box, d.box) > 0.6)) return;
     dove.push({ k, box: d.box, score: tondo(d.score, 2) });
   };
   for (const d of ordinati) {
-    const m = DA_COCO[d.classe];
+    const m = bagno && d.classe === "sink" ? { arredo: "lavabo" } : DA_COCO[d.classe];
     if (m.arredo) metti5(arredi, m.arredo, d);
     if (m.dispositivo) metti5(dispositivi, m.dispositivo, d);
   }
@@ -156014,6 +156031,10 @@ var ALTEZZA_DI_SERIE = Object.freeze({
   termostato: 1.5,
   fumo: 2.92,
   acqua: 0,
+  lavatrice: 0,
+  asciugatrice: 0,
+  lavastoviglie: 0,
+  forno: 0,
   presa: 0.3,
   tv: 1.1,
   altoparlante: 1,
@@ -156698,30 +156719,7 @@ var COLORI_STANZE = [
   "#4ade80",
   "#e879f9"
 ];
-var ARREDI_A_MANO = [
-  "divano",
-  "poltrona",
-  "tavolino",
-  "tv",
-  "libreria",
-  "madia",
-  "pensile",
-  "quadro",
-  "camino",
-  "pianta",
-  "pranzo6",
-  "cucina",
-  "frigo",
-  "matrimoniale",
-  "singolo",
-  "armadio",
-  "scrivania",
-  "vasca",
-  "doccia",
-  "wc",
-  "lavabo",
-  "lavatrice"
-];
+var ARREDI_A_MANO = Object.keys(ARREDI_DELLE_FOTO);
 var TINTE2 = {
   facciata: ["#e9d4ae", "#dca37c", "#f1ebe0", "#c9a27a", "#b9c3c9"],
   persiane: ["#3f6b4e", "#8a6a4a", "#475569", "#e5e7eb", "#7c2d12"],
@@ -157793,7 +157791,10 @@ async function caricaLibreDwg() {
       ([m, wasmBinary]) => m.createModule({
         wasmBinary,
         locateFile: (nome) => `${LIBREDWG}wasm/${nome}`
-      }).then((modulo) => ({ lib: m.LibreDwg.createByWasmInstance(modulo), tipo: m.Dwg_File_Type }))
+      }).then((modulo) => ({
+        lib: m.LibreDwg.createByWasmInstance(modulo),
+        tipo: m.Dwg_File_Type
+      }))
     );
   try {
     return await libreDwg;
@@ -157952,7 +157953,13 @@ async function disegnaAMano() {
 function dwgScelta() {
   const S = state182.S;
   if (!S.dwg?.piani?.length) return "";
-  const domanda = S.dwg.foglio ? t("Nel foglio ci sono più piante: quale fai adesso?", "The sheet has several plans: which one now?") : t("Nel disegno ci sono più piani: quale fai adesso?", "The drawing has several floors: which one now?");
+  const domanda = S.dwg.foglio ? t(
+    "Nel foglio ci sono più piante: quale fai adesso?",
+    "The sheet has several plans: which one now?"
+  ) : t(
+    "Nel disegno ci sono più piani: quale fai adesso?",
+    "The drawing has several floors: which one now?"
+  );
   return `<div class="c3c-dwg"><b>${esc(domanda)}</b>
     <div class="c3c-dwg-piani">${S.dwg.piani.map(
     (p, i) => `<button type="button" class="c3c-dwg-piano" data-c3c-dwg="${i}"><img alt="" src="${p.anteprima}"><span>${esc(p.nome || t(`Piano ${i + 1}`, `Floor ${i + 1}`))}</span><small>${esc(numero62(p.larghezzaMetri, 1))} × ${esc(numero62(p.profonditaMetri, 1))} m</small></button>`
@@ -158057,6 +158064,32 @@ function apriVarco(x, y, largo) {
       barriera[i] = largo > 1 ? b2 === 0 ? 1 : 0 : 0;
     }
 }
+async function rilevaNeiRitagli(modello2, img) {
+  const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+  const tutti = [...await modello2.detect(img, 20, 0.3)];
+  if (!(w > 0 && h > 0)) return tutti;
+  const lw = Math.round(w * 0.6), lh = Math.round(h * 0.6);
+  for (const [x0, y0] of [
+    [0, 0],
+    [w - lw, 0],
+    [0, h - lh],
+    [w - lw, h - lh]
+  ]) {
+    try {
+      const tela4 = tela2d(lw, lh);
+      tela4.getContext("2d").drawImage(img, x0, y0, lw, lh, 0, 0, lw, lh);
+      for (const d of await modello2.detect(tela4, 20, 0.35)) {
+        const [bx, by, bw, bh] = d.bbox || [];
+        const taglio = 4;
+        const sulBordo = bx <= taglio && x0 > 0 || by <= taglio && y0 > 0 || bx + bw >= lw - taglio && x0 + lw < w || by + bh >= lh - taglio && y0 + lh < h;
+        if (sulBordo) continue;
+        tutti.push({ ...d, bbox: [bx + x0, by + y0, bw, bh] });
+      }
+    } catch (_errore) {
+    }
+  }
+  return tutti;
+}
 async function aggiungiFotoStanza(src) {
   const S = state182.S, stanza2 = S.sel;
   const img = await immagine2(src);
@@ -158081,7 +158114,9 @@ async function aggiungiFotoStanza(src) {
   const modello2 = await riconoscitore();
   if (modello2) {
     try {
-      const visti = oggettiDaCoco(await modello2.detect(img, 20, 0.3));
+      const visti = oggettiDaCoco(await rilevaNeiRitagli(modello2, img), {
+        stanza: nomeDi18(stanza2)
+      });
       for (const o of visti.arredi) {
         const [x, y, w, h] = o.box;
         F.oggetti.push({

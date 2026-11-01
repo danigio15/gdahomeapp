@@ -139,30 +139,10 @@ const COLORI_STANZE = [
   "#4ade80",
   "#e879f9",
 ];
-const ARREDI_A_MANO = [
-  "divano",
-  "poltrona",
-  "tavolino",
-  "tv",
-  "libreria",
-  "madia",
-  "pensile",
-  "quadro",
-  "camino",
-  "pianta",
-  "pranzo6",
-  "cucina",
-  "frigo",
-  "matrimoniale",
-  "singolo",
-  "armadio",
-  "scrivania",
-  "vasca",
-  "doccia",
-  "wc",
-  "lavabo",
-  "lavatrice",
-];
+/* Tutto il catalogo si puo' segnare a mano nella foto: «non e' possibile
+ * aggiungere manualmente gli elettrodomestici» — quello che il riconoscitore
+ * non vede (lavastoviglie, asciugatrice, armadi...) lo mette chi guarda. */
+const ARREDI_A_MANO = Object.keys(ARREDI_DELLE_FOTO);
 const TINTE = {
   facciata: ["#e9d4ae", "#dca37c", "#f1ebe0", "#c9a27a", "#b9c3c9"],
   persiane: ["#3f6b4e", "#8a6a4a", "#475569", "#e5e7eb", "#7c2d12"],
@@ -1415,7 +1395,9 @@ async function usaPdf(file) {
         await usaPlanimetria(tela);
         S.avviso = delCatasto ? avvisoDelCatasto() : "";
         disegna();
-        nodo()?.querySelector(".c3c-dwg")?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+        nodo()
+          ?.querySelector(".c3c-dwg")
+          ?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
         return;
       }
       await usaPlanimetria(piante.length === 1 ? ritaglioDellaPianta(tela, piante[0], mpp) : tela);
@@ -1522,7 +1504,13 @@ async function scaricaIlMotore(dove, prendi = root.fetch?.bind(root)) {
     }
     const byte = new Uint8Array(await risposta.arrayBuffer());
     /* «\0asm»: senza, e' una pagina d'errore col 200 davanti. */
-    if (byte.length < 8 || byte[0] !== 0 || byte[1] !== 0x61 || byte[2] !== 0x73 || byte[3] !== 0x6d)
+    if (
+      byte.length < 8 ||
+      byte[0] !== 0 ||
+      byte[1] !== 0x61 ||
+      byte[2] !== 0x73 ||
+      byte[3] !== 0x6d
+    )
       throw new Error(`libredwg-web.wasm: ${byte.length} byte, non e' WebAssembly`);
     return byte;
   }
@@ -1541,7 +1529,10 @@ async function caricaLibreDwg() {
           wasmBinary,
           locateFile: (nome) => `${LIBREDWG}wasm/${nome}`,
         })
-        .then((modulo) => ({ lib: m.LibreDwg.createByWasmInstance(modulo), tipo: m.Dwg_File_Type })),
+        .then((modulo) => ({
+          lib: m.LibreDwg.createByWasmInstance(modulo),
+          tipo: m.Dwg_File_Type,
+        })),
     );
   try {
     return await libreDwg;
@@ -1740,8 +1731,14 @@ function dwgScelta() {
   const S = state.S;
   if (!S.dwg?.piani?.length) return "";
   const domanda = S.dwg.foglio
-    ? t("Nel foglio ci sono più piante: quale fai adesso?", "The sheet has several plans: which one now?")
-    : t("Nel disegno ci sono più piani: quale fai adesso?", "The drawing has several floors: which one now?");
+    ? t(
+        "Nel foglio ci sono più piante: quale fai adesso?",
+        "The sheet has several plans: which one now?",
+      )
+    : t(
+        "Nel disegno ci sono più piani: quale fai adesso?",
+        "The drawing has several floors: which one now?",
+      );
   return `<div class="c3c-dwg"><b>${esc(domanda)}</b>
     <div class="c3c-dwg-piani">${S.dwg.piani
       .map(
@@ -1882,6 +1879,44 @@ function apriVarco(x, y, largo) {
     }
 }
 
+/* «Devi perfezionare la ricerca delle cose tramite le foto della stanza»: il
+ * riconoscitore guarda la foto rimpicciolita, e le cose piccole o lontane
+ * (un forno, un lavabo, una pianta in fondo) gli sfuggono. Si guarda anche
+ * in quattro ritagli che si sovrappongono, ognuno ingrandito: quello che si
+ * vede due volte resta uno solo (oggettiDaCoco). */
+async function rilevaNeiRitagli(modello, img) {
+  const w = img.naturalWidth || img.width,
+    h = img.naturalHeight || img.height;
+  const tutti = [...(await modello.detect(img, 20, 0.3))];
+  if (!(w > 0 && h > 0)) return tutti;
+  const lw = Math.round(w * 0.6),
+    lh = Math.round(h * 0.6);
+  for (const [x0, y0] of [
+    [0, 0],
+    [w - lw, 0],
+    [0, h - lh],
+    [w - lw, h - lh],
+  ]) {
+    try {
+      const tela = tela2d(lw, lh);
+      tela.getContext("2d").drawImage(img, x0, y0, lw, lh, 0, 0, lw, lh);
+      for (const d of await modello.detect(tela, 20, 0.35)) {
+        const [bx, by, bw, bh] = d.bbox || [];
+        /* tagliato dal bordo del ritaglio: lo vede gia' la foto intera */
+        const taglio = 4;
+        const sulBordo =
+          (bx <= taglio && x0 > 0) ||
+          (by <= taglio && y0 > 0) ||
+          (bx + bw >= lw - taglio && x0 + lw < w) ||
+          (by + bh >= lh - taglio && y0 + lh < h);
+        if (sulBordo) continue;
+        tutti.push({ ...d, bbox: [bx + x0, by + y0, bw, bh] });
+      }
+    } catch (_errore) {}
+  }
+  return tutti;
+}
+
 async function aggiungiFotoStanza(src) {
   const S = state.S,
     stanza = S.sel;
@@ -1907,7 +1942,9 @@ async function aggiungiFotoStanza(src) {
   const modello = await riconoscitore();
   if (modello) {
     try {
-      const visti = oggettiDaCoco(await modello.detect(img, 20, 0.3));
+      const visti = oggettiDaCoco(await rilevaNeiRitagli(modello, img), {
+        stanza: nomeDi(stanza),
+      });
       for (const o of visti.arredi) {
         const [x, y, w, h] = o.box;
         F.oggetti.push({
