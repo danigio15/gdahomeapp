@@ -124,6 +124,7 @@ export const DALLE_CLASSI = Object.freeze({
   desk: { arredo: "scrivania" },
   laptop: { arredo: "scrivania" },
   chair: { arredo: "sedia" },
+  stool: { arredo: "sgabello" },
   lamp: { arredo: "lampada" },
   carpet: { arredo: "tappeto" },
   "picture/frame": { arredo: "quadro" },
@@ -186,7 +187,12 @@ const unione = (a, b) => {
   const dentro = Math.max(0, x1 - x0) * Math.max(0, y1 - y0);
   return dentro / (area(a) + area(b) - dentro);
 };
-const allarga = (b, k) => [b[0] - b[2] * k, b[1] - b[3] * k, b[2] * (1 + 2 * k), b[3] * (1 + 2 * k)];
+const allarga = (b, k) => [
+  b[0] - b[2] * k,
+  b[1] - b[3] * k,
+  b[2] * (1 + 2 * k),
+  b[3] * (1 + 2 * k),
+];
 const dentroPer = (a, b) => {
   const x0 = Math.max(a[0], b[0]),
     y0 = Math.max(a[1], b[1]);
@@ -226,16 +232,13 @@ export function oggettiDallaFoto(rilevati, { soglia = 0.4, stanza = "", w = 0, h
       score: Number(d?.score) || 0,
     }))
     .filter(
-      (d) =>
-        d.box && DALLE_CLASSI[d.classe] && d.score >= Math.max(soglia, SOGLIE[d.classe] || 0),
+      (d) => d.box && DALLE_CLASSI[d.classe] && d.score >= Math.max(soglia, SOGLIE[d.classe] || 0),
     )
     .sort((a, b) => b.score - a.score)
     /* la stessa cosa vista come due cose diverse (un quadro e una TV nello
      * stesso riquadro): vale quella piu' sicura */
     .filter((d, i, tutti) =>
-      tutti
-        .slice(0, i)
-        .every((p) => p.classe === d.classe || unione(p.box, d.box) <= 0.7),
+      tutti.slice(0, i).every((p) => p.classe === d.classe || unione(p.box, d.box) <= 0.7),
     );
   const W = Number(w) > 0 ? Number(w) : Math.max(1, ...visti.map((d) => d.box[0] + d.box[2])),
     H = Number(h) > 0 ? Number(h) : Math.max(1, ...visti.map((d) => d.box[1] + d.box[3]));
@@ -243,12 +246,25 @@ export function oggettiDallaFoto(rilevati, { soglia = 0.4, stanza = "", w = 0, h
   const ci = (classe) => visti.filter((d) => d.classe === classe);
   if (tipo === "giorno" && (ci("toilet").length || ci("bathtub").length)) tipo = "bagno";
   if (tipo === "giorno" && ci("bed").length) tipo = "camera";
+  /* anche in un open space chiamato «Soggiorno»: dove ci sono il forno e i
+   * fuochi, la foto e' della cucina */
   if (
     tipo === "giorno" &&
-    (ci("gas stove").length || ci("induction cooker").length || ci("extractor").length)
+    (ci("gas stove").length ||
+      ci("induction cooker").length ||
+      ci("extractor").length ||
+      ci("oven").length ||
+      ci("microwave").length + ci("dishwasher").length + ci("refrigerator").length >= 2)
   )
     tipo = "cucina";
   const tavoli = visti.filter((d) => /dinn?ing table|desk|laptop/.test(d.classe));
+  const sgabelli = ci("stool");
+  /* in cucina il piano coi sgabelli attorno non e' una scrivania: e' l'isola
+   * (o la penisola) */
+  const isola = (t) =>
+    t.classe === "desk" &&
+    (tipo === "cucina" ||
+      sgabelli.filter((g) => dentroPer(g.box, allarga(t.box, 0.3)) > 0.3).length >= 2);
   const tv = visti.filter((d) => d.classe === "tv" || d.classe === "moniter/tv");
   const mobili = ci("cabinet/shelf");
   const sopraUnMobile = (b) =>
@@ -268,9 +284,25 @@ export function oggettiDallaFoto(rilevati, { soglia = 0.4, stanza = "", w = 0, h
   const inColonna = (a, b) =>
     Math.max(0, Math.min(a[0] + a[2], b[0] + b[2]) - Math.max(a[0], b[0])) >
     Math.min(a[2], b[2]) * 0.5;
+  /* ...e anche quello accanto, a destra o a sinistra (una colonna del
+   * forno, l'altro lato della L): la cucina si allarga fin li' */
+  const accanto = (a, b) => {
+    const spazio = Math.max(a[0], b[0]) - Math.min(a[0] + a[2], b[0] + b[2]);
+    return spazio < W * 0.06;
+  };
   const metti = (dove, k, d) => {
     if (dove.some((o) => o.k === k && sovrapposti(o.box, d.box) > 0.6)) return;
-    if (k === "cucina" && dove.some((o) => o.k === k && inColonna(o.box, d.box))) return;
+    const stessa =
+      k === "cucina" &&
+      dove.find((o) => o.k === k && (inColonna(o.box, d.box) || accanto(o.box, d.box)));
+    if (stessa) {
+      const x0 = Math.min(stessa.box[0], d.box[0]),
+        y0 = Math.min(stessa.box[1], d.box[1]),
+        x1 = Math.max(stessa.box[0] + stessa.box[2], d.box[0] + d.box[2]),
+        y1 = Math.max(stessa.box[1] + stessa.box[3], d.box[1] + d.box[3]);
+      stessa.box = [x0, y0, x1 - x0, y1 - y0];
+      return;
+    }
     dove.push({ k, box: d.box, score: tondo(d.score, 2) });
   };
   /* Il mobile: dove sta, quanto e' alto, cosa ci sta sopra. */
@@ -310,14 +342,23 @@ export function oggettiDallaFoto(rilevati, { soglia = 0.4, stanza = "", w = 0, h
       case "sedia": {
         /* le sedie del tavolo e della scrivania sono gia' col tavolo */
         const vicino = tavoli.find((t) => dentroPer(d.box, allarga(t.box, 0.35)) > 0.3);
-        if (vicino) k = /desk|laptop/.test(vicino.classe) ? "ufficio" : null;
-        else k = d.box[2] >= d.box[3] * 0.75 ? "poltrona" : null;
+        if (vicino) k = /desk|laptop/.test(vicino.classe) && !isola(vicino) ? "ufficio" : null;
+        /* in cucina una sedia da sola e' del tavolo, non una poltrona */
+        else k = tipo !== "cucina" && d.box[2] >= d.box[3] * 0.75 ? "poltrona" : null;
         break;
       }
+      case "sgabello":
+        /* gli sgabelli vanno con l'isola */
+        k = null;
+        break;
+      case "scrivania":
+        if (isola(d)) k = "isola";
+        break;
       case "lampada":
         /* appesa in alto e' un punto luce; lunga e a terra, una lampada a stelo */
         if (d.box[1] + d.box[3] < H * 0.4) {
-          metti(dispositivi, "luce", d);
+          /* piccola piccola, in alto sul muro, e' piu' spesso un sensore */
+          if (area(d.box) >= W * H * 0.004) metti(dispositivi, "luce", d);
           k = null;
         } else k = d.box[3] > d.box[2] * 2 && d.box[1] + d.box[3] > H * 0.6 ? "stelo" : null;
         break;
@@ -327,7 +368,11 @@ export function oggettiDallaFoto(rilevati, { soglia = 0.4, stanza = "", w = 0, h
       case "tv":
         /* sulla scrivania e' uno schermo del computer; sopra un mobile, il
          * mobile e' gia' il mobile TV */
-        if (tavoli.some((t) => /desk|laptop/.test(t.classe) && dentroPer(d.box, allarga(t.box, 0.2)) > 0.5))
+        if (
+          tavoli.some(
+            (t) => /desk|laptop/.test(t.classe) && dentroPer(d.box, allarga(t.box, 0.2)) > 0.5,
+          )
+        )
           continue;
         if (sopraUnMobile(d.box) || d.box[1] + d.box[3] < H * 0.55) k = null;
         break;
@@ -339,6 +384,24 @@ export function oggettiDallaFoto(rilevati, { soglia = 0.4, stanza = "", w = 0, h
     if (k) metti(arredi, k, d);
     if (m.dispositivo) metti(dispositivi, m.dispositivo, d);
   }
+  /* due pezzi di cucina che un terzo ha unito sono una cucina sola */
+  for (let i = 0; i < arredi.length; i++)
+    for (let j = arredi.length - 1; j > i; j--) {
+      const a = arredi[i],
+        b = arredi[j];
+      if (a.k !== "cucina" || b.k !== "cucina") continue;
+      if (!(inColonna(a.box, b.box) || accanto(a.box, b.box))) continue;
+      const x0 = Math.min(a.box[0], b.box[0]),
+        y0 = Math.min(a.box[1], b.box[1]);
+      a.box = [
+        x0,
+        y0,
+        Math.max(a.box[0] + a.box[2], b.box[0] + b.box[2]) - x0,
+        Math.max(a.box[1] + a.box[3], b.box[1] + b.box[3]) - y0,
+      ];
+      arredi.splice(j, 1);
+      j = arredi.length;
+    }
   return { arredi, dispositivi };
 }
 

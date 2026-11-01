@@ -536,3 +536,38 @@ test("dalle foto: quanto e' larga una cosa contro la parete", () => {
   assert.equal(c.piani[0].arredi[0].l, 3.6);
   assert.equal("l" in c.piani[0].arredi[1], false);
 });
+
+/* La cucina di Marco: il bancone con gli sgabelli e' l'isola, i pensili, la
+ * mensola e le colonne del forno sono una cucina sola, e il forno basta a
+ * dire che e' la cucina anche in un open space chiamato «Soggiorno». */
+test("dalle foto: la cucina con l'isola, gli sgabelli e le colonne", () => {
+  const foto = { w: 4000, h: 2252 };
+  const visti = [
+    { class: "Lamp", bbox: [296, 147, 691, 692], score: 0.95 },
+    { class: "Lamp", bbox: [2987, 590, 64, 105], score: 0.62 },
+    { class: "Stool", bbox: [550, 1890, 330, 362], score: 0.87 },
+    { class: "Stool", bbox: [1000, 1920, 360, 332], score: 0.84 },
+    { class: "Cabinet/shelf", bbox: [-1, 1338, 878, 191], score: 0.79 },
+    { class: "Desk", bbox: [82, 1727, 1649, 525], score: 0.78 },
+    { class: "Oven", bbox: [2138, 1600, 437, 396], score: 0.74 },
+    { class: "Chair", bbox: [0, 1780, 290, 472], score: 0.69 },
+    { class: "Microwave", bbox: [2136, 1199, 413, 307], score: 0.63 },
+    { class: "Cabinet/shelf", bbox: [2135, 861, 412, 367], score: 0.6 },
+    { class: "Cabinet/shelf", bbox: [1561, 1803, 583, 449], score: 0.58 },
+    { class: "Cabinet/shelf", bbox: [2133, 785, 1023, 1430], score: 0.56 },
+    { class: "Cabinet/shelf", bbox: [978, 974, 1163, 458], score: 0.5 },
+  ];
+  for (const stanza of ["Cucina", "Soggiorno"]) {
+    const r = oggettiDallaFoto(visti, { ...foto, stanza });
+    assert.deepEqual(
+      r.arredi.map((a) => a.k),
+      ["cucina", "isola", "microonde"],
+      stanza,
+    );
+    assert.deepEqual(
+      r.dispositivi.map((d) => d.k),
+      ["luce", "forno"],
+      stanza,
+    );
+  }
+});

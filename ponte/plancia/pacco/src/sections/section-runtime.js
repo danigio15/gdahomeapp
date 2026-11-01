@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-2VDLMWOR.js";
+} from "../../chunk-LAUESVPC.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -157096,6 +157096,7 @@ var DALLE_CLASSI = Object.freeze({
   desk: { arredo: "scrivania" },
   laptop: { arredo: "scrivania" },
   chair: { arredo: "sedia" },
+  stool: { arredo: "sgabello" },
   lamp: { arredo: "lampada" },
   carpet: { arredo: "tappeto" },
   "picture/frame": { arredo: "quadro" },
@@ -157148,7 +157149,12 @@ var unione = (a, b2) => {
   const dentro3 = Math.max(0, x1 - x0) * Math.max(0, y1 - y0);
   return dentro3 / (area(a) + area(b2) - dentro3);
 };
-var allarga2 = (b2, k) => [b2[0] - b2[2] * k, b2[1] - b2[3] * k, b2[2] * (1 + 2 * k), b2[3] * (1 + 2 * k)];
+var allarga2 = (b2, k) => [
+  b2[0] - b2[2] * k,
+  b2[1] - b2[3] * k,
+  b2[2] * (1 + 2 * k),
+  b2[3] * (1 + 2 * k)
+];
 var dentroPer = (a, b2) => {
   const x0 = Math.max(a[0], b2[0]), y0 = Math.max(a[1], b2[1]);
   const x1 = Math.min(a[0] + a[2], b2[0] + b2[2]), y1 = Math.min(a[1] + a[3], b2[1] + b2[3]);
@@ -157180,9 +157186,11 @@ function oggettiDallaFoto(rilevati, { soglia: soglia3 = 0.4, stanza: stanza2 = "
   const ci = (classe3) => visti.filter((d) => d.classe === classe3);
   if (tipo === "giorno" && (ci("toilet").length || ci("bathtub").length)) tipo = "bagno";
   if (tipo === "giorno" && ci("bed").length) tipo = "camera";
-  if (tipo === "giorno" && (ci("gas stove").length || ci("induction cooker").length || ci("extractor").length))
+  if (tipo === "giorno" && (ci("gas stove").length || ci("induction cooker").length || ci("extractor").length || ci("oven").length || ci("microwave").length + ci("dishwasher").length + ci("refrigerator").length >= 2))
     tipo = "cucina";
   const tavoli = visti.filter((d) => /dinn?ing table|desk|laptop/.test(d.classe));
+  const sgabelli = ci("stool");
+  const isola = (t2) => t2.classe === "desk" && (tipo === "cucina" || sgabelli.filter((g) => dentroPer(g.box, allarga2(t2.box, 0.3)) > 0.3).length >= 2);
   const tv = visti.filter((d) => d.classe === "tv" || d.classe === "moniter/tv");
   const mobili = ci("cabinet/shelf");
   const sopraUnMobile = (b2) => mobili.some((m) => {
@@ -157190,9 +157198,18 @@ function oggettiDallaFoto(rilevati, { soglia: soglia3 = 0.4, stanza: stanza2 = "
     return cx > m.box[0] && cx < m.box[0] + m.box[2] && sotto > m.box[1] - H7 * 0.12 && sotto < m.box[1] + m.box[3] * 0.4;
   });
   const inColonna = (a, b2) => Math.max(0, Math.min(a[0] + a[2], b2[0] + b2[2]) - Math.max(a[0], b2[0])) > Math.min(a[2], b2[2]) * 0.5;
+  const accanto = (a, b2) => {
+    const spazio = Math.max(a[0], b2[0]) - Math.min(a[0] + a[2], b2[0] + b2[2]);
+    return spazio < W2 * 0.06;
+  };
   const metti5 = (dove, k, d) => {
     if (dove.some((o) => o.k === k && sovrapposti(o.box, d.box) > 0.6)) return;
-    if (k === "cucina" && dove.some((o) => o.k === k && inColonna(o.box, d.box))) return;
+    const stessa = k === "cucina" && dove.find((o) => o.k === k && (inColonna(o.box, d.box) || accanto(o.box, d.box)));
+    if (stessa) {
+      const x0 = Math.min(stessa.box[0], d.box[0]), y0 = Math.min(stessa.box[1], d.box[1]), x1 = Math.max(stessa.box[0] + stessa.box[2], d.box[0] + d.box[2]), y1 = Math.max(stessa.box[1] + stessa.box[3], d.box[1] + d.box[3]);
+      stessa.box = [x0, y0, x1 - x0, y1 - y0];
+      return;
+    }
     dove.push({ k, box: d.box, score: tondo(d.score, 2) });
   };
   const mobile = (d) => {
@@ -157225,13 +157242,19 @@ function oggettiDallaFoto(rilevati, { soglia: soglia3 = 0.4, stanza: stanza2 = "
         break;
       case "sedia": {
         const vicino = tavoli.find((t2) => dentroPer(d.box, allarga2(t2.box, 0.35)) > 0.3);
-        if (vicino) k = /desk|laptop/.test(vicino.classe) ? "ufficio" : null;
-        else k = d.box[2] >= d.box[3] * 0.75 ? "poltrona" : null;
+        if (vicino) k = /desk|laptop/.test(vicino.classe) && !isola(vicino) ? "ufficio" : null;
+        else k = tipo !== "cucina" && d.box[2] >= d.box[3] * 0.75 ? "poltrona" : null;
         break;
       }
+      case "sgabello":
+        k = null;
+        break;
+      case "scrivania":
+        if (isola(d)) k = "isola";
+        break;
       case "lampada":
         if (d.box[1] + d.box[3] < H7 * 0.4) {
-          metti5(dispositivi, "luce", d);
+          if (area(d.box) >= W2 * H7 * 4e-3) metti5(dispositivi, "luce", d);
           k = null;
         } else k = d.box[3] > d.box[2] * 2 && d.box[1] + d.box[3] > H7 * 0.6 ? "stelo" : null;
         break;
@@ -157239,7 +157262,9 @@ function oggettiDallaFoto(rilevati, { soglia: soglia3 = 0.4, stanza: stanza2 = "
         k = area(d.box) >= W2 * H7 * 0.012 ? "quadro" : null;
         break;
       case "tv":
-        if (tavoli.some((t2) => /desk|laptop/.test(t2.classe) && dentroPer(d.box, allarga2(t2.box, 0.2)) > 0.5))
+        if (tavoli.some(
+          (t2) => /desk|laptop/.test(t2.classe) && dentroPer(d.box, allarga2(t2.box, 0.2)) > 0.5
+        ))
           continue;
         if (sopraUnMobile(d.box) || d.box[1] + d.box[3] < H7 * 0.55) k = null;
         break;
@@ -157251,6 +157276,21 @@ function oggettiDallaFoto(rilevati, { soglia: soglia3 = 0.4, stanza: stanza2 = "
     if (k) metti5(arredi, k, d);
     if (m.dispositivo) metti5(dispositivi, m.dispositivo, d);
   }
+  for (let i = 0; i < arredi.length; i++)
+    for (let j = arredi.length - 1; j > i; j--) {
+      const a = arredi[i], b2 = arredi[j];
+      if (a.k !== "cucina" || b2.k !== "cucina") continue;
+      if (!(inColonna(a.box, b2.box) || accanto(a.box, b2.box))) continue;
+      const x0 = Math.min(a.box[0], b2.box[0]), y0 = Math.min(a.box[1], b2.box[1]);
+      a.box = [
+        x0,
+        y0,
+        Math.max(a.box[0] + a.box[2], b2.box[0] + b2.box[2]) - x0,
+        Math.max(a.box[1] + a.box[3], b2.box[1] + b2.box[3]) - y0
+      ];
+      arredi.splice(j, 1);
+      j = arredi.length;
+    }
   return { arredi, dispositivi };
 }
 var LIVELLI2 = {
