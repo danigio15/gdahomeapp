@@ -685,3 +685,30 @@ test("se il motore dei DWG risponde di no, sotto c'e' il codice", async ({ page 
   /* Un no non si richiede. */
   expect(quante).toBe(1);
 });
+
+/* «La navbar qua non deve esserci proprio»: nell'app la barra stava a meta'
+ * sopra la casa, col fondo della pagina tagliato dietro. Sulla casa la barra
+ * non c'e' — ne' la maniglia, ne' il tasto della voce. */
+test("sulla casa la barra delle sezioni non c'e'", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "e' il telefono");
+  await page.addInitScript(() => {
+    window.__GDAHOME_PREMIUM__ = true;
+  });
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
+  await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
+  await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true, null, {
+    timeout: 60_000,
+  });
+  await page.evaluate(() => {
+    localStorage.setItem("cd_casa3d", JSON.stringify({ attiva: true, piani: [] }));
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
+  });
+  const casa = page.locator("#dm-casa3d");
+  await expect(casa.locator(".c3-da-creare h2")).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator("nav.tabs.bottom-nav-bar")).toBeHidden();
+  await expect(page.locator(".dm-assist-tasto")).toBeHidden();
+  await expect(page.locator(".bottom-nav-handle")).toBeHidden();
+  await page.waitForTimeout(800);
+  const dove = foto(testInfo, "casa3d-senza-la-barra");
+  if (dove) await page.screenshot({ path: dove });
+});

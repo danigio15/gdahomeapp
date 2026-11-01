@@ -765,6 +765,17 @@ function installaLoStile() {
     `
     html.dm-casa3d-acceso:not(:has(#editor-modal)),html.dm-casa3d-acceso:not(:has(#editor-modal)) body{overflow:hidden!important}
     html:has(#editor-modal) #${ID}{display:none!important}
+    /* Sulla casa la barra delle sezioni non c'e'.
+     *
+     * La casa e' un foglio che copre tutto, come il muro: si esce col ☰. Nel
+     * browser la barra ci finiva sotto e non si vedeva; nell'app sul telefono
+     * invece restava a meta' sopra, col fondo della pagina tagliato dietro
+     * («la navbar qua non deve esserci proprio»). Adesso se ne va — lei, la
+     * maniglia che la richiama e il tasto della voce — finche' la casa e'
+     * aperta, dappertutto. */
+    html.dm-casa3d-acceso nav.tabs.bottom-nav-bar,
+    html.dm-casa3d-acceso .bottom-nav-handle,
+    html.dm-casa3d-acceso .dm-assist-tasto{display:none!important}
     ${C3}{--c3-bg:#eef2f7;--c3-card:#fff;--c3-bordo:#e2e8f0;--c3-testo:#0a0e17;--c3-fioco:#64748b;--c3-morbido:#f8fafc;--c3-accento:#0ea5e9;
       --c3-ombra:0 1px 2px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.06);
       position:fixed;inset:0;z-index:2147483000;overflow:hidden;background:var(--c3-bg);color:var(--c3-testo);
@@ -871,7 +882,7 @@ function installaLoStile() {
     }
     @media(max-width:860px){
       ${C3}{overflow-y:auto;-webkit-overflow-scrolling:touch}
-      ${C3} .c3-pagina{height:auto;min-height:100%;padding:10px 10px 80px;gap:10px}
+      ${C3} .c3-pagina{height:auto;min-height:100%;padding:10px 10px calc(16px + var(--dm-fondo-di-sistema,0px));gap:10px}
       ${C3} .c3-testa{flex-wrap:wrap;gap:10px;padding:12px 14px;border-radius:20px}
       ${C3} .c3-testa-testo{flex:1 1 calc(100% - 70px)}
       ${C3} .c3-testa-testo h1{font-size:19px}
