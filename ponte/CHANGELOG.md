@@ -10,6 +10,15 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.28
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Plancia a muro sul 4 pollici, la Musica:** il nome del lettore si
+  legge intero (prima finiva sotto il tasto «Scegli»), il titolo e' piu'
+  grande e i tasti Scegli, Radio e Gruppo stanno in fila sotto, tutti dentro
+  lo schermo.
+
 ## 1.18.7.27
 
 _Solo Home Assistant: l'app sul telefono non cambia._

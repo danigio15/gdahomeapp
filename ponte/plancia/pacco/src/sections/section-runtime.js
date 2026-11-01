@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-YV6UVQC3.js";
+} from "../../chunk-VLZI2IF4.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -115508,6 +115508,17 @@ ${MURO} .mu-mp-gruppo{align-self:flex-start;display:flex;align-items:center;gap:
 ${MURO} .mu-mp-scegli{color:#fff;background:#a238ff;box-shadow:0 10px 24px -12px #a238ff}
 ${MURO}[data-compatto="1"] .mu-mp-scegli>span{display:none}
 ${MURO}[data-compatto="1"] .mu-mp-scegli{padding:0 16px}
+/* «Sul 4 pollici non si vede bene»: il nome del lettore finiva sotto il
+ * tasto «Scegli», «Radio» e «Gruppo» uscivano dallo schermo. Sul pannello
+ * piccolo la copertina e il nome stanno su una riga intera, e i tasti vanno
+ * sotto, in fila, solo icone. */
+${MURO}[data-compatto="1"] .mu-mp-testa{flex-wrap:wrap;gap:10px 12px}
+${MURO}[data-compatto="1"] .mu-mp-dici{flex:1 1 calc(100% - 96px)}
+${MURO}[data-compatto="1"] .mu-mp-testa>.mu-mp-gruppo,${MURO}[data-compatto="1"] .mu-mp-testa>.mu-tondo{align-self:center;height:48px;min-width:48px;padding:0 14px;justify-content:center}
+${MURO}[data-compatto="1"] .mu-mp-testa>.mu-mp-gruppo>span:last-child{display:none}
+${MURO}[data-compatto="1"] .mu-mp-testa>.mu-mp-gruppo.si>span:last-child{display:inline;font-size:13px}
+${MURO}[data-compatto="1"] .mu-mp-testa>.mu-tondo{width:48px;padding:0}
+${MURO}[data-compatto="1"] .mu-mp-dici .mu-et{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 ${MURO} .mu-mp-gruppo.si{color:#fff;background:var(--acc);box-shadow:0 10px 24px -10px var(--acc)}
 ${MURO} .mu-mp-gruppo-elenco{display:flex;flex-direction:column;gap:10px;max-height:52vh;overflow-y:auto}
 ${MURO} .mu-mp-gruppo-elenco .mu-mp-riga{text-align:left;width:100%}
