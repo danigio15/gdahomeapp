@@ -65,9 +65,14 @@ export function eAColpoDOcchio(configurazione, profilo) {
   }
 }
 
-/** Se la configurazione di questa plancia la fa partire con la Casa 3D. */
+/** Se la configurazione di questa plancia la fa partire con la Casa 3D.
+ *
+ * Mai la principale: la Casa 3D e' una plancia a se', e sulla principale non
+ * si accende (casa-3d-section.js). Fino alla 1.18.7.23 creare la casa dal
+ * Config della principale la diceva accesa li', e la console mostrava la
+ * principale «casa 3D» — «la principale che diventa da sola in 3D». */
 export function eCasa3D(configurazione, profilo) {
-  if (!configurazione) return false;
+  if (!configurazione || profilo === PROFILO_DI_ORIGINE) return false;
   try {
     const valori = configurazione.leggi(profilo)?.snapshot?.values || {};
     const grezza = valori[CHIAVE_CASA3D];

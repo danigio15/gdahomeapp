@@ -299,3 +299,23 @@ test("con la Casa 3D e una casa nella principale: la ritrova, accesa", () => {
     b.via();
   }
 });
+
+/* «La principale che diventa da sola in 3D»: fino alla 1.18.7.23 creare la
+ * casa dal Config della principale la diceva accesa lì. La Casa 3D è una
+ * plancia a sé: la principale non è mai «casa 3D», nemmeno in console. */
+test("la principale non è mai «casa 3D», anche col config che la dice accesa", () => {
+  const b = banco();
+  try {
+    const principale = b.configurazione.leggi("primary").snapshot.values;
+    b.configurazione.scrivi(
+      "primary",
+      { ...principale, cd_casa3d: JSON.stringify({ attiva: true, piani: [] }) },
+      { updated_at: 2 },
+    );
+    assert.equal(eCasa3D(b.configurazione, "primary"), false);
+    const elenco = conIlModello(b.plance.elenco(), b.configurazione);
+    assert.equal(elenco.find((una) => una.primaria).a_casa3d, false);
+  } finally {
+    b.via();
+  }
+});
