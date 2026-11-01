@@ -372,6 +372,15 @@ export function letturaDellAuto(entita, stati) {
     }
     return null;
   };
+  /* «Come fa a dire di no se ora sta al 46%?» evcc, quando non sa quanto
+   * e' carica l'auto (un'auto senza collegamento), dice 0%: uno zero di uno
+   * non vale se un altro sensore della batteria (quello dell'auto, lo stesso
+   * della pagina Auto) dice di piu'. */
+  const laBatteria = (elenco) => {
+    const valori = (elenco || []).map((id) => percentuale(di(id))).filter((v) => v !== null && v !== undefined);
+    if (!valori.length) return null;
+    return valori[0] === 0 ? valori.find((v) => v > 0) ?? 0 : valori[0];
+  };
   const modoStato = di(entita?.modo);
   const modo = modoStato && !MUTO.test(pulito(modoStato.state)) ? pulito(modoStato.state) : "";
   const opzioni = Array.isArray(modoStato?.attributes?.options)
@@ -397,7 +406,7 @@ export function letturaDellAuto(entita, stati) {
   return {
     modo,
     opzioni,
-    soc: primo(entita?.soc, percentuale),
+    soc: laBatteria(entita?.soc),
     limite: primo(entita?.limite, percentuale),
     collegata,
     kwh: primo(entita?.energia, kilowattora),

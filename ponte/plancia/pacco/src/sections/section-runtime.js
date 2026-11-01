@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-VLZI2IF4.js";
+} from "../../chunk-ZLMXI4KS.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -27859,6 +27859,11 @@ function letturaDellAuto(entita4, stati4) {
     }
     return null;
   };
+  const laBatteria = (elenco17) => {
+    const valori = (elenco17 || []).map((id) => percentuale2(di(id))).filter((v) => v !== null && v !== void 0);
+    if (!valori.length) return null;
+    return valori[0] === 0 ? valori.find((v) => v > 0) ?? 0 : valori[0];
+  };
   const modoStato = di(entita4?.modo);
   const modo = modoStato && !MUTO3.test(pulito23(modoStato.state)) ? pulito23(modoStato.state) : "";
   const opzioni2 = Array.isArray(modoStato?.attributes?.options) ? modoStato.attributes.options.map(pulito23).filter(Boolean) : [];
@@ -27882,7 +27887,7 @@ function letturaDellAuto(entita4, stati4) {
   return {
     modo,
     opzioni: opzioni2,
-    soc: primo(entita4?.soc, percentuale2),
+    soc: laBatteria(entita4?.soc),
     limite: primo(entita4?.limite, percentuale2),
     collegata,
     kwh: primo(entita4?.energia, kilowattora)
@@ -112498,10 +112503,12 @@ function lettoreGrande(l) {
         <div class="mu-osw mu-mp-titolo">${esc(titolo3)}</div>
         ${sotto ? `<div class="mu-sotto">${esc(sotto)}</div>` : ""}
       </div>
+      <div class="mu-mp-lato">
       ${bottoneDaScegliere(l)}
       ${bottoneDellaRadio(l)}
       ${bottoneDelGruppo(l)}
       ${l.puo.spegni && !l.spento ? tastoMusica(l, "spegni", "accendi", { etichetta: t("Spegni", "Turn off") }) : ""}
+      </div>
     </div>
     ${punto3 ? `<div class="mu-mp-tempo"><span data-mu-mp-ora>${esc(orologio(punto3.secondi))}</span><span class="mu-bar"><i data-mu-mp-avanza style="width:${(punto3.quota * 100).toFixed(1)}%"></i></span><span>${esc(orologio(punto3.durata))}</span></div>` : ""}
     <div class="mu-mp-tasti">
@@ -112515,7 +112522,7 @@ function lettoreGrande(l) {
       ${l.puo.volume && volume !== null ? `<div class="mu-bar mu-mp-cursore" data-mu-cursore="volume" data-mu-entita="${esc(l.entity)}"><i style="width:${volume}%"></i><u style="left:${volume}%"></u></div><b class="mu-mp-pct">${volume}%</b>` : `<span class="mu-spazio"></span>`}
       <button type="button" class="mu-tondo" data-mu-fa="mp" data-mu-cmd="alza" data-mu-entita="${esc(l.entity)}" aria-label="${esc(t("Alza", "Volume up"))}">+</button>
     </div>` : ""}
-    ${l.puo.sorgente && l.sorgenti.length && !l.spento ? `<div class="mu-mp-sorgenti">${l.sorgenti.slice(0, 8).map(
+    ${l.puo.sorgente && l.sorgenti.length && !l.spento ? `<div class="mu-mp-sorgenti mu-mp-preferiti">${l.sorgenti.slice(0, 8).map(
     (sorgente) => `<button type="button" class="${sorgente === l.sorgente ? "si" : ""}" data-mu-fa="mp-sorgente" data-mu-sorgente="${esc(sorgente)}" data-mu-entita="${esc(l.entity)}">${esc(sorgente)}</button>`
   ).join("")}</div>` : ""}
     ${comandiDelLettore(l)}
@@ -115503,22 +115510,41 @@ ${MURO} .mu-mp-arte-vuota{display:grid;place-items:center;background:color-mix(i
 ${MURO} .mu-mp-dici{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
 ${MURO} .mu-mp-titolo{font-size:40px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 ${MURO} .mu-mp-dici .mu-sotto{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-${MURO} .mu-mp-testa>.mu-tondo{align-self:flex-start}
+${MURO} .mu-mp-lato>.mu-tondo{align-self:flex-start}
 ${MURO} .mu-mp-gruppo{align-self:flex-start;display:flex;align-items:center;gap:8px;height:56px;padding:0 18px;border-radius:999px;font-weight:800;font-size:15px;white-space:nowrap;background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 12%,transparent)}
 ${MURO} .mu-mp-scegli{color:#fff;background:#a238ff;box-shadow:0 10px 24px -12px #a238ff}
 ${MURO}[data-compatto="1"] .mu-mp-scegli>span{display:none}
 ${MURO}[data-compatto="1"] .mu-mp-scegli{padding:0 16px}
 /* «Sul 4 pollici non si vede bene»: il nome del lettore finiva sotto il
- * tasto «Scegli», «Radio» e «Gruppo» uscivano dallo schermo. Sul pannello
- * piccolo la copertina e il nome stanno su una riga intera, e i tasti vanno
- * sotto, in fila, solo icone. */
-${MURO}[data-compatto="1"] .mu-mp-testa{flex-wrap:wrap;gap:10px 12px}
-${MURO}[data-compatto="1"] .mu-mp-dici{flex:1 1 calc(100% - 96px)}
-${MURO}[data-compatto="1"] .mu-mp-testa>.mu-mp-gruppo,${MURO}[data-compatto="1"] .mu-mp-testa>.mu-tondo{align-self:center;height:48px;min-width:48px;padding:0 14px;justify-content:center}
-${MURO}[data-compatto="1"] .mu-mp-testa>.mu-mp-gruppo>span:last-child{display:none}
-${MURO}[data-compatto="1"] .mu-mp-testa>.mu-mp-gruppo.si>span:last-child{display:inline;font-size:13px}
-${MURO}[data-compatto="1"] .mu-mp-testa>.mu-tondo{width:48px;padding:0}
-${MURO}[data-compatto="1"] .mu-mp-dici .mu-et{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ * tasto «Scegli» (il pallino viola), il Gruppo usciva dallo schermo e i
+ * preferiti non c'erano. Come ha chiesto Marco: Scegli, Radio e Gruppo in
+ * colonna sulla destra, solo icone; a sinistra la copertina e il nome, interi;
+ * sotto, i preferiti del lettore in una fila che scorre. */
+${MURO} .mu-mp-lato{display:contents}
+${MURO}[data-compatto="1"] .mu-mp-testa{align-items:flex-start;gap:12px}
+${MURO}[data-compatto="1"] .mu-mp-lato{display:flex;flex-direction:column;gap:6px;flex:none}
+${MURO}[data-compatto="1"] .mu-mp-lato>.mu-mp-gruppo,${MURO}[data-compatto="1"] .mu-mp-lato>.mu-tondo{align-self:auto;width:44px;height:44px;min-width:44px;padding:0;justify-content:center;border-radius:14px}
+${MURO}[data-compatto="1"] .mu-mp-lato>.mu-mp-gruppo>span:last-child{display:none}
+${MURO}[data-compatto="1"] .mu-mp-lato>.mu-mp-gruppo.si{position:relative}
+${MURO}[data-compatto="1"] .mu-mp-dici .mu-et{white-space:normal;line-height:1.25}
+${MURO}[data-compatto="1"] .mu-mp-dici .mu-mp-titolo{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.1}
+${MURO}[data-compatto="1"] .mu-mp-preferiti{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:6px;margin:0 -2px}
+${MURO}[data-compatto="1"] .mu-mp-preferiti::-webkit-scrollbar{display:none}
+${MURO}[data-compatto="1"] .mu-mp-preferiti button{flex:none;padding:8px 12px;font-size:13px;white-space:nowrap}
+${MURO}[data-compatto="1"] .mu-mp-tasti .mu-tondo.grande{width:70px;height:70px}
+${MURO}[data-compatto="1"] .mu-mp.mu-carta{gap:8px;padding:12px}
+${MURO}[data-compatto="1"] .mu-mp-lato{gap:4px}
+${MURO}[data-compatto="1"] .mu-mp-dici .mu-mp-titolo{font-size:21px}
+${MURO}[data-compatto="1"] .mu-mp-tasti .mu-tondo:not(.grande){width:52px;height:52px}
+${MURO}[data-compatto="1"] .mu-mp>*{order:6}
+${MURO}[data-compatto="1"] .mu-mp>.mu-mp-testa{order:1}
+${MURO}[data-compatto="1"] .mu-mp>.mu-mp-preferiti{order:2;flex:none;padding:2px}
+${MURO}[data-compatto="1"] .mu-mp>.mu-mp-tempo{order:3}
+${MURO}[data-compatto="1"] .mu-mp>.mu-mp-tasti{order:4}
+${MURO}[data-compatto="1"] .mu-mp>.mu-mp-volume{order:5}
+${MURO}[data-compatto="1"] .mu-mp-volume .mu-tondo{width:46px;height:46px}
+${MURO}[data-compatto="1"] .mu-mp-lato>.mu-mp-gruppo,${MURO}[data-compatto="1"] .mu-mp-lato>.mu-tondo{width:40px;height:40px;min-width:40px;border-radius:12px}
+${MURO}[data-compatto="1"] .mu-mp-arte{width:64px;height:64px}
 ${MURO} .mu-mp-gruppo.si{color:#fff;background:var(--acc);box-shadow:0 10px 24px -10px var(--acc)}
 ${MURO} .mu-mp-gruppo-elenco{display:flex;flex-direction:column;gap:10px;max-height:52vh;overflow-y:auto}
 ${MURO} .mu-mp-gruppo-elenco .mu-mp-riga{text-align:left;width:100%}
@@ -115550,7 +115576,7 @@ ${MURO} .mu-mp-onde b:nth-child(3){animation-delay:-.7s}
 @keyframes mu-onda{0%,100%{height:4px}50%{height:14px}}
 ${MURO}[data-verso="verticale"] .mu-musica{grid-template-columns:1fr;grid-template-rows:auto 1fr}
 ${MURO}[data-compatto="1"] .mu-musica{grid-template-columns:1fr}
-${MURO}[data-compatto="1"] .mu-mp-elenco,${MURO}[data-compatto="1"] .mu-mp-sorgenti{display:none}
+${MURO}[data-compatto="1"] .mu-mp-elenco,${MURO}[data-compatto="1"] .mu-mp-sorgenti:not(.mu-mp-preferiti){display:none}
 ${MURO}[data-compatto="1"] .mu-mp{padding:14px;gap:12px}
 ${MURO}[data-compatto="1"] .mu-mp-arte{width:72px;height:72px;border-radius:14px}
 ${MURO}[data-compatto="1"] .mu-mp-titolo{font-size:24px}

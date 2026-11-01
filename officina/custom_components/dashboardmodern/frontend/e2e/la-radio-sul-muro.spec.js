@@ -165,6 +165,8 @@ test("sul 4 pollici quadrato la testa del lettore sta tutta nello schermo", asyn
           ...STATI["media_player.sonos_salotto"].attributes,
           supported_features: 1 + 4 + 8 + 16 + 32 + 512 + 2048 + 4096 + 16384 + 131072 + 524288,
           volume_level: 0.21,
+          source: "Radio Deejay",
+          source_list: ["Radio Deejay", "RTL 102.5", "Playlist cena", "Radio 105"],
           media_title: "Una canzone col titolo lungo",
           media_artist: "Un artista",
           group_members: ["media_player.sonos_salotto"],
@@ -209,4 +211,18 @@ test("sul 4 pollici quadrato la testa del lettore sta tutta nello schermo", asyn
   });
   expect(misure.fuori, "tasti fuori dalla carta").toBe(0);
   expect(misure.sopra, "tasti sopra il nome del lettore").toBe(0);
+  /* Scegli, Radio e Gruppo in colonna, sulla destra */
+  const colonna = await carta.evaluate((c) => {
+    const b = [...c.querySelectorAll(".mu-mp-lato button")].map((x) => x.getBoundingClientRect());
+    const r = c.getBoundingClientRect();
+    return {
+      n: b.length,
+      stessaX: b.every((x) => Math.abs(x.left - b[0].left) < 2),
+      aDestra: b.every((x) => x.left > r.left + r.width * 0.7),
+    };
+  });
+  expect(colonna).toEqual({ n: 3, stessaX: true, aDestra: true });
+  /* i preferiti del lettore si vedono */
+  await expect(carta.locator(".mu-mp-preferiti button").first()).toBeVisible();
+  await expect(carta.locator(".mu-mp-preferiti")).toContainText("RTL 102.5");
 });

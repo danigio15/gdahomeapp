@@ -15,9 +15,13 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 _Solo Home Assistant: l'app sul telefono non cambia._
 
 - **Plancia a muro sul 4 pollici, la Musica:** il nome del lettore si
-  legge intero (prima finiva sotto il tasto «Scegli»), il titolo e' piu'
-  grande e i tasti Scegli, Radio e Gruppo stanno in fila sotto, tutti dentro
-  lo schermo.
+  legge intero (prima finiva sotto il tasto «Scegli»), Scegli, Radio e
+  Gruppo stanno in colonna sulla destra, tutti dentro lo schermo, e tornano i
+  preferiti del lettore, in una fila che scorre.
+- **Ricarica notturna, «Ci arriva?» con la batteria vera:** quando evcc non
+  sa quanto e' carica l'auto dice 0%, e il conto partiva da zero («No: alle
+  05:00 sara' al 40%» con l'auto al 46%). Ora vale la batteria dell'auto, la
+  stessa della pagina Auto.
 
 ## 1.18.7.27
 

@@ -671,3 +671,27 @@ test("le entita' si trovano anche nelle caselle delle auto", () => {
   assert.equal(risolvi("dm.ev_modalita_ricarica_evcc"), "select.evcc_garage_mode");
   assert.equal(risolvi("dm.ev_target_soc"), "");
 });
+
+/* «Come fa a dire di no se ora sta al 46%?» evcc, senza il collegamento con
+ * l'auto, dice 0%; la batteria vera la dice il sensore dell'auto. */
+test("uno 0% di evcc non copre la batteria vera dell'auto", () => {
+  const entita = {
+    soc: ["sensor.evcc_garage_vehicle_soc", "sensor.leapmotor_batteria"],
+    limite: [],
+    cavo: [],
+    stato: [],
+    energia: [],
+  };
+  const stati = {
+    "sensor.evcc_garage_vehicle_soc": { state: "0" },
+    "sensor.leapmotor_batteria": { state: "46" },
+  };
+  assert.equal(letturaDellAuto(entita, stati).soc, 46);
+  /* se evcc sa la batteria, vale evcc */
+  stati["sensor.evcc_garage_vehicle_soc"].state = "52";
+  assert.equal(letturaDellAuto(entita, stati).soc, 52);
+  /* e se tutti dicono zero, e' zero */
+  stati["sensor.evcc_garage_vehicle_soc"].state = "0";
+  stati["sensor.leapmotor_batteria"].state = "0";
+  assert.equal(letturaDellAuto(entita, stati).soc, 0);
+});
