@@ -7741,7 +7741,6 @@ export default Object.freeze({
   "No rooms indoors.": "İç mekânda oda yok.",
   "Not an entity (domain.name)": "Varlık değil (domain.name)",
   "One moment": "Bir dakika",
-  "Open in 3D": "3D'de aç",
   "or type a name": "veya bir ad yaz",
   "or type it": "veya yaz",
   "or type the entity (e.g. light.living)": "veya varlığı yaz (örn. light.living)",
@@ -7761,7 +7760,6 @@ export default Object.freeze({
   "Room photos": "Oda fotoğrafları",
   "Save and open the 3D home": "Kaydet ve 3D evi aç",
   "Shoot from above, whole sheet, good light.": "Yukarıdan çek, sayfanın tamamı, iyi ışıkta.",
-  "Show the 3D Home dashboard": "3D Ev panosunu göster",
   "Something missing?": "Eksik bir şey mi var?",
   "Straightened by": "Düzeltme:",
   "Straightening the floor plan…": "Kat planı düzeltiliyor…",
@@ -7850,5 +7848,4 @@ export default Object.freeze({
   "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "Tapu planı: ölçeğini kullanıyorum, 1:200. Ölçüler tutmazsa «Ölçek» adımına dönüp bildiğin bir uzunluğun iki ucuna dokun.",
   "Plan ${i + 1}": "${i + 1}. plan",
   "The sheet has several plans: which one now?": "Sayfada birden fazla plan var: şimdi hangisini yapıyorsun?",
-  "Back to the dashboard": "Panele dön",
 });

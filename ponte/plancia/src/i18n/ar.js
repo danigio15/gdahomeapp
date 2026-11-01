@@ -7688,7 +7688,6 @@ export default Object.freeze({
   "No rooms indoors.": "لا غرف في الداخل.",
   "Not an entity (domain.name)": "ليس كيانًا (domain.name)",
   "One moment": "لحظة",
-  "Open in 3D": "فتح في 3D",
   "or type a name": "أو اكتب اسمًا",
   "or type it": "أو اكتبه",
   "or type the entity (e.g. light.living)": "أو اكتب الكيان (مثلًا light.living)",
@@ -7708,7 +7707,6 @@ export default Object.freeze({
   "Room photos": "صور الغرف",
   "Save and open the 3D home": "حفظ وفتح المنزل 3D",
   "Shoot from above, whole sheet, good light.": "صوّر من الأعلى، الورقة كاملة، بإضاءة جيدة.",
-  "Show the 3D Home dashboard": "عرض لوحة المنزل 3D",
   "Something missing?": "هل ينقص شيء؟",
   "Straightened by": "تم التقويم بمقدار",
   "Straightening the floor plan…": "جارٍ تقويم المخطط…",
@@ -7797,5 +7795,4 @@ export default Object.freeze({
   "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "مخطط السجل العقاري: أستخدم مقياسه 1:200. إذا لم تكن المقاسات صحيحة، ارجع إلى «المقياس» واضغط على طرفي طول تعرفه.",
   "Plan ${i + 1}": "المخطط ${i + 1}",
   "The sheet has several plans: which one now?": "في الورقة عدة مخططات: أيها تعمل عليه الآن؟",
-  "Back to the dashboard": "العودة إلى لوحة التحكم",
 });

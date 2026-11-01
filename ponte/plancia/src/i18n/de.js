@@ -7803,7 +7803,6 @@ export default Object.freeze({
   "No rooms indoors.": "Keine Innenräume.",
   "Not an entity (domain.name)": "Keine Entität (domain.name)",
   "One moment": "Einen Moment",
-  "Open in 3D": "In 3D öffnen",
   "or type a name": "oder Namen eingeben",
   "or type it": "oder eintippen",
   "or type the entity (e.g. light.living)": "oder Entität eingeben (z. B. light.living)",
@@ -7823,7 +7822,6 @@ export default Object.freeze({
   "Room photos": "Raumfotos",
   "Save and open the 3D home": "Speichern und 3D-Zuhause öffnen",
   "Shoot from above, whole sheet, good light.": "Von oben fotografieren, ganzes Blatt, gutes Licht.",
-  "Show the 3D Home dashboard": "Dashboard 3D-Zuhause anzeigen",
   "Something missing?": "Fehlt etwas?",
   "Straightened by": "Ausgerichtet um",
   "Straightening the floor plan…": "Grundriss wird ausgerichtet…",
@@ -7912,5 +7910,4 @@ export default Object.freeze({
   "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "Katasterplan: Ich verwende seinen Maßstab, 1:200. Wenn die Maße nicht stimmen, geh zurück zu «Maßstab» und tippe auf beide Enden einer bekannten Länge.",
   "Plan ${i + 1}": "Grundriss ${i + 1}",
   "The sheet has several plans: which one now?": "Auf dem Blatt sind mehrere Pläne: Welchen machst du jetzt?",
-  "Back to the dashboard": "Zurück zum Dashboard",
 });

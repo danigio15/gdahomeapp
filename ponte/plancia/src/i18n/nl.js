@@ -7775,7 +7775,6 @@ export default Object.freeze({
   "No rooms indoors.": "Geen kamers binnen.",
   "Not an entity (domain.name)": "Geen entiteit (domain.name)",
   "One moment": "Even geduld",
-  "Open in 3D": "Openen in 3D",
   "or type a name": "of typ een naam",
   "or type it": "of typ hem in",
   "or type the entity (e.g. light.living)": "of typ de entiteit (bijv. light.living)",
@@ -7795,7 +7794,6 @@ export default Object.freeze({
   "Room photos": "Kamerfoto's",
   "Save and open the 3D home": "Opslaan en het 3D-huis openen",
   "Shoot from above, whole sheet, good light.": "Fotografeer van bovenaf, het hele vel, met goed licht.",
-  "Show the 3D Home dashboard": "Dashboard 3D-huis tonen",
   "Something missing?": "Ontbreekt er iets?",
   "Straightened by": "Rechtgezet met",
   "Straightening the floor plan…": "Plattegrond rechtzetten…",
@@ -7884,5 +7882,4 @@ export default Object.freeze({
   "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "Kadasterplattegrond: ik gebruik de schaal ervan, 1:200. Kloppen de maten niet, ga dan terug naar «Schaal» en tik op beide uiteinden van een bekende lengte.",
   "Plan ${i + 1}": "Plattegrond ${i + 1}",
   "The sheet has several plans: which one now?": "Op het blad staan meerdere plattegronden: welke doe je nu?",
-  "Back to the dashboard": "Terug naar het dashboard",
 });

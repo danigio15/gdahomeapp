@@ -7821,7 +7821,6 @@ export default Object.freeze({
   "No rooms indoors.": "Aucune pièce intérieure.",
   "Not an entity (domain.name)": "Pas une entité (domain.name)",
   "One moment": "Un instant",
-  "Open in 3D": "Ouvrir en 3D",
   "or type a name": "ou saisissez un nom",
   "or type it": "ou saisissez-la",
   "or type the entity (e.g. light.living)": "ou saisissez l’entité (ex. light.living)",
@@ -7841,7 +7840,6 @@ export default Object.freeze({
   "Room photos": "Photos des pièces",
   "Save and open the 3D home": "Enregistrer et ouvrir la maison 3D",
   "Shoot from above, whole sheet, good light.": "Photographiez d’en haut, la feuille entière, avec une bonne lumière.",
-  "Show the 3D Home dashboard": "Afficher le tableau de bord Maison 3D",
   "Something missing?": "Il manque quelque chose ?",
   "Straightened by": "Redressé de",
   "Straightening the floor plan…": "Redressement du plan…",
@@ -7930,5 +7928,4 @@ export default Object.freeze({
   "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "Plan cadastral : j'utilise son échelle, 1:200. Si les mesures ne correspondent pas, reviens à «Échelle» et touche les deux extrémités d'une longueur connue.",
   "Plan ${i + 1}": "Plan n° ${i + 1}",
   "The sheet has several plans: which one now?": "La feuille contient plusieurs plans : lequel fais-tu maintenant ?",
-  "Back to the dashboard": "Retour au tableau de bord",
 });

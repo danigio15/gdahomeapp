@@ -310,6 +310,14 @@ async function scatta(page, testInfo, nome) {
   await page.screenshot({ path: dove });
 }
 
+/* La Casa 3D è una plancia a sé (nasce dalla console come «Casa 3D»): sulla
+ * principale non si accende. Le prove la aprono sulla sua. */
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    if (!window.__DASHBOARDMODERN_PROFILE__) window.__DASHBOARDMODERN_PROFILE__ = "casa_3d";
+  });
+});
+
 test("la casa si apre nella plancia: esterno, i piani, i dispositivi coi loro stati", async ({
   page,
 }, testInfo) => {
@@ -735,10 +743,14 @@ test("la visura del catasto scansionata: scala, scelta della pianta, stanze", as
   await fotoDiretta(page, testInfo, "crea-visura-stanze");
 });
 
-/* «Adesso non riesco a tornare più indietro»: la Casa 3D accesa sulla plancia
- * principale copriva tutto, e da li' non si usciva. «Torna alla plancia» la
- * toglie per questa volta: tornano la plancia, la barra e il Config. */
-test("dalla Casa 3D si torna sempre alla plancia", async ({ page }, testInfo) => {
+/* «Ho attivato la plancia 3D per sbaglio sulla plancia che uso normale e
+ * adesso non mi fa più tornare indietro»: la Casa 3D è una plancia a sé, e
+ * sulla principale non si accende mai, anche se il suo config la dice accesa. */
+test("sulla plancia principale la Casa 3D non si accende", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "basta una misura");
+  await page.addInitScript(() => {
+    window.__DASHBOARDMODERN_PROFILE__ = "primary";
+  });
   await page.addInitScript(() => {
     window.__GDAHOME_PREMIUM__ = true;
   });
@@ -751,14 +763,9 @@ test("dalla Casa 3D si torna sempre alla plancia", async ({ page }, testInfo) =>
     localStorage.setItem("cd_casa3d", JSON.stringify({ attiva: true, piani: [] }));
     window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
   });
-  const casa = page.locator("#dm-casa3d");
-  await expect(casa.locator(".c3-da-creare h2")).toBeVisible({ timeout: 30_000 });
-  await casa.locator('[data-c3s="esci"]').click();
-  await expect(casa).toHaveCount(0);
+  await page.waitForTimeout(1500);
+  await expect(page.locator("#dm-casa3d")).toHaveCount(0);
   await expect(page.locator("html")).not.toHaveClass(/dm-casa3d-acceso/);
-  /* E «Apri in 3D» la rimette. */
-  await page.evaluate(() => window.__DM_CASA3D_RIDISEGNA__());
-  await expect(page.locator("#dm-casa3d .c3-da-creare h2")).toBeVisible({ timeout: 10_000 });
 });
 
 /* «L'hamburger deve aprire la barra laterale»: dentro Home Assistant largo la
