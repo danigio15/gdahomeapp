@@ -1,0 +1,21 @@
+LibreDWG nel browser (libredwg-web 0.8.2)
+=========================================
+
+Questa cartella contiene LibreDWG compilato per il browser, usato dalla
+procedura «Crea la tua casa» della Casa 3D per leggere i file DWG sul
+dispositivo di chi li carica. Il file non lascia il dispositivo.
+
+Licenza: GNU General Public License, versione 3 (vedi COPYING).
+Questi file sono distribuiti senza modifiche, cosi' come pubblicati.
+
+Codice sorgente:
+  - LibreDWG:       https://www.gnu.org/software/libredwg/
+                    https://git.savannah.gnu.org/git/libredwg.git
+  - libredwg-web:   https://github.com/mlightcad/libredwg-web (versione 0.8.2)
+  - pacchetto npm:  https://www.npmjs.com/package/@mlightcad/libredwg-web/v/0.8.2
+
+LibreDWG nel browser (libredwg-web 0.8.2) — English
+This folder contains LibreDWG compiled for the browser, used by the 3D Home
+«Create your home» wizard to read DWG files on the user's own device.
+License: GNU General Public License v3 (see COPYING). Unmodified files.
+Source code: see the links above.

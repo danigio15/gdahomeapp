@@ -393,3 +393,177 @@ test("senza casa la plancia resta Casa 3D e invita a crearla", async ({ page }, 
   await casa.locator('.c3-da-creare [data-c3s="crea"]').click();
   await expect(page.locator("#dm-c3c")).toBeVisible({ timeout: 20_000 });
 });
+
+/* La procedura «Crea la tua casa» aperta su una plancia Casa 3D vuota. */
+async function apriLaProcedura(page, testInfo) {
+  test.setTimeout(300_000);
+  await page.addInitScript(() => {
+    window.__GDAHOME_PREMIUM__ = true;
+  });
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
+  await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
+  await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true, null, {
+    timeout: 60_000,
+  });
+  await page.evaluate(() => {
+    localStorage.setItem("cd_casa3d", JSON.stringify({ attiva: true, piani: [] }));
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
+  });
+  await page.locator('#dm-casa3d .c3-da-creare [data-c3s="crea"]').click({ timeout: 30_000 });
+  const crea = page.locator("#dm-c3c");
+  await expect(crea).toBeVisible({ timeout: 20_000 });
+  return crea;
+}
+
+const fotoDiretta = async (page, testInfo, nome) => {
+  const dove = foto(testInfo, nome);
+  if (dove) await page.screenshot({ path: dove });
+};
+
+/* «Manca la possibilità di crearla direttamente sulla plancia se non ho
+ * nulla da caricare»: le misure del piano, un contorno di muri in scala, e
+ * le stanze si dividono col «Muro dritto». */
+test("senza planimetria la casa si disegna qui", async ({ page }, testInfo) => {
+  const crea = await apriLaProcedura(page, testInfo);
+  const fai = crea.locator('[data-c3c="amano"]');
+  await expect(fai).toBeDisabled();
+  await crea.locator('[data-c3c-mano="w"]').fill("12");
+  await crea.locator('[data-c3c-mano="h"]').fill("10");
+  await expect(fai).toBeEnabled();
+  await fotoDiretta(page, testInfo, "crea-a-mano-misure");
+  await fai.click();
+  await expect(crea.locator('[data-c3c-strumento="dritto"]')).toHaveClass(/si/, {
+    timeout: 30_000,
+  });
+  await expect(crea.locator(".c3c-pannello")).toContainText("Trovati 1 ambienti");
+  /* Un muro dritto a meta': le stanze diventano due. */
+  const tela = crea.locator(".c3c-tela");
+  const b = await tela.boundingBox();
+  await page.mouse.move(b.x + b.width * 0.5, b.y + b.height * 0.1);
+  await page.mouse.down();
+  await page.mouse.move(b.x + b.width * 0.52, b.y + b.height * 0.5, { steps: 4 });
+  await page.mouse.move(b.x + b.width * 0.51, b.y + b.height * 0.9, { steps: 4 });
+  await page.mouse.up();
+  await expect(crea.locator(".c3c-pannello")).toContainText("Trovati 2 ambienti", {
+    timeout: 20_000,
+  });
+  await fotoDiretta(page, testInfo, "crea-a-mano-muri");
+});
+
+/* Il DWG vero si prova solo col file a portata di mano (DM_DWG=percorso):
+ * le planimetrie vere non stanno nella repository. */
+test("un DWG coi piani affiancati: si sceglie il piano, scala e nomi dal disegno", async ({
+  page,
+}, testInfo) => {
+  test.skip(!process.env.DM_DWG, "serve DM_DWG col percorso di un file .dwg");
+  const crea = await apriLaProcedura(page, testInfo);
+  await crea.locator('[data-c3c-file="dwg"]').setInputFiles(process.env.DM_DWG);
+  const piani = crea.locator(".c3c-dwg-piano");
+  await expect(piani.first()).toBeVisible({ timeout: 120_000 });
+  await fotoDiretta(page, testInfo, "crea-dwg-piani");
+  await piani.nth(Number(process.env.DM_DWG_PIANO || 1)).click();
+  await expect(crea.locator('[data-c3c-strumento="dritto"]')).toBeVisible({ timeout: 60_000 });
+  /* Non basta arrivare ai muri: le stanze devono esserci (DM_DWG_STANZE, il
+   * minimo atteso per quel piano). */
+  const trovati = await crea.locator(".c3c-pannello").innerText();
+  const stanze = Number(/Trovati (\d+) ambienti/.exec(trovati)?.[1] || 0);
+  expect(stanze).toBeGreaterThanOrEqual(Number(process.env.DM_DWG_STANZE || 3));
+  await fotoDiretta(page, testInfo, "crea-dwg-muri");
+  await crea.locator('[data-c3c="avanti"]').click();
+  await fotoDiretta(page, testInfo, "crea-dwg-stanze");
+});
+
+/* «Ho provato a caricare un file pdf del catasto e quello non lo prende»: un
+ * PDF vettoriale come quello del catasto (A4, muri a doppia riga, «Scala
+ * 1:200» scritto sul foglio, la cornice, le scritte delle stanze). Si
+ * pretende che la scala si legga da sola e che escano le cinque stanze. */
+function catastoSvg() {
+  const mm = (m) => m * 5; // 1:200, in millimetri sul foglio
+  const ox = 45,
+    oy = 70;
+  const linee = [];
+  const riga = (x0, y0, x1, y1) =>
+    linee.push(
+      `<line x1="${ox + mm(x0)}" y1="${oy + mm(y0)}" x2="${ox + mm(x1)}" y2="${oy + mm(y1)}"/>`,
+    );
+  const muro = (x0, y0, x1, y1, s, varchi = []) => {
+    const orizz = y0 === y1;
+    let pezzi = [[orizz ? x0 : y0, orizz ? x1 : y1]];
+    for (const [v0, v1] of varchi)
+      pezzi = pezzi.flatMap(([a, b]) =>
+        v1 <= a || v0 >= b
+          ? [[a, b]]
+          : [...(v0 > a ? [[a, v0]] : []), ...(v1 < b ? [[v1, b]] : [])],
+      );
+    for (const [a, b] of pezzi)
+      if (orizz) {
+        riga(a, y0 - s / 2, b, y0 - s / 2);
+        riga(a, y0 + s / 2, b, y0 + s / 2);
+        riga(a, y0 - s / 2, a, y0 + s / 2);
+        riga(b, y0 - s / 2, b, y0 + s / 2);
+      } else {
+        riga(x0 - s / 2, a, x0 - s / 2, b);
+        riga(x0 + s / 2, a, x0 + s / 2, b);
+        riga(x0 - s / 2, a, x0 + s / 2, a);
+        riga(x0 - s / 2, b, x0 + s / 2, b);
+      }
+  };
+  const vetro = (x0, y0, x1, y1) => {
+    for (const k of [-0.08, 0.08])
+      y0 === y1 ? riga(x0, y0 + k, x1, y0 + k) : riga(x0 + k, y0, x0 + k, y1);
+  };
+  muro(0, 0, 12, 0, 0.3, [
+    [2, 3.4],
+    [8.5, 9.7],
+  ]);
+  muro(12, 0, 12, 10, 0.3, [[6.2, 7.4]]);
+  muro(0, 10, 12, 10, 0.3, [
+    [4.3, 5.3],
+    [8.5, 9.7],
+  ]);
+  muro(0, 0, 0, 10, 0.3, [
+    [2, 3.4],
+    [7.5, 8.3],
+  ]);
+  vetro(2, 0, 3.4, 0);
+  vetro(8.5, 0, 9.7, 0);
+  vetro(12, 6.2, 12, 7.4);
+  vetro(8.5, 10, 9.7, 10);
+  vetro(0, 2, 0, 3.4);
+  vetro(0, 7.5, 0, 8.3);
+  muro(7, 0, 7, 6, 0.12, [[1.5, 2.4]]);
+  muro(7, 4, 12, 4, 0.12, [[7.8, 8.6]]);
+  muro(7, 6, 7, 10, 0.12, [[7.5, 8.3]]);
+  muro(0, 6, 7, 6, 0.12, [[4.6, 5.4]]);
+  muro(3, 6, 3, 10, 0.12, [[7.6, 8.4]]);
+  const scritta = (x, y, s) =>
+    `<text x="${ox + mm(x)}" y="${oy + mm(y)}" font-size="2.2" font-family="Arial">${s}</text>`;
+  return `<!doctype html><html><head><style>@page{size:A4;margin:0}body{margin:0}</style></head><body>
+<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 210 297">
+<rect x="8" y="8" width="194" height="281" fill="none" stroke="#000" stroke-width="0.4"/>
+<text x="14" y="20" font-size="4" font-family="Arial">Catasto dei Fabbricati - Situazione al 01/11/2026</text>
+<text x="14" y="28" font-size="3" font-family="Arial">Planimetria di u.i.u. in Comune di Esempio - Via delle Prove civ. 1</text>
+<text x="150" y="40" font-size="3.5" font-family="Arial">Scala 1:200</text>
+<text x="80" y="62" font-size="3" font-family="Arial">PIANO TERRA</text>
+<g stroke="#000" stroke-width="0.18" fill="none">${linee.join("")}</g>
+${scritta(2.2, 3, "SOGGIORNO")}${scritta(8.6, 2, "CUCINA")}${scritta(8.6, 7, "CAMERA")}${scritta(0.6, 8, "BAGNO")}${scritta(4.2, 8.5, "DIS.")}
+<text x="14" y="280" font-size="2.5" font-family="Arial">Ultima planimetria in atti - Data presentazione: 01/11/2026</text>
+</svg></body></html>`;
+}
+
+test("il PDF del catasto: la scala dal foglio e le stanze", async ({ page, browser }, testInfo) => {
+  const altra = await browser.newPage();
+  await altra.setContent(catastoSvg());
+  const pdf = await altra.pdf({ format: "A4", printBackground: true });
+  await altra.close();
+  const crea = await apriLaProcedura(page, testInfo);
+  await crea.locator('[data-c3c-file="pianta"]').setInputFiles({
+    name: "planimetria-catastale.pdf",
+    mimeType: "application/pdf",
+    buffer: pdf,
+  });
+  await expect(crea.locator(".c3c-pannello")).toContainText("Trovati 5 ambienti", {
+    timeout: 120_000,
+  });
+  await fotoDiretta(page, testInfo, "crea-pdf-catasto");
+});
