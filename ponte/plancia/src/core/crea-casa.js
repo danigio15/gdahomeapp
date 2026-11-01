@@ -105,24 +105,95 @@ export const ACCOSTATI = new Set([
   "microonde",
 ]);
 
-/* Dalle classi di COCO-SSD alle cose della casa. Alcune sono due cose
- * insieme: la TV e' un mobile e un dispositivo da collegare. */
-export const DA_COCO = Object.freeze({
+/* Dalle classi del riconoscitore alle cose della casa. Il riconoscitore e'
+ * D-FINE addestrato su Objects365 (365 cose, fra cui armadi, comodini,
+ * lavatrici, condizionatori); restano anche i nomi di COCO, per le prove e per
+ * chi avesse ancora il vecchio. Il nome della classe si scrive in minuscolo.
+ * Qui c'e' solo la prima idea: il resto lo decide `oggettiDallaFoto`, che
+ * guarda la stanza, la forma e le cose vicine. */
+export const DALLE_CLASSI = Object.freeze({
   couch: { arredo: "divano" },
-  tv: { arredo: "tv", dispositivo: "tv" },
-  chair: { arredo: "poltrona" },
+  sofa: { arredo: "divano" },
+  bed: { arredo: "letto" },
+  nightstand: { arredo: "comodino" },
+  "cabinet/shelf": { arredo: "mobile" },
+  "coffee table": { arredo: "tavolino" },
+  "side table": { arredo: "laterale" },
+  "dinning table": { arredo: "pranzo6" },
   "dining table": { arredo: "pranzo6" },
-  bed: { arredo: "matrimoniale" },
+  desk: { arredo: "scrivania" },
+  laptop: { arredo: "scrivania" },
+  chair: { arredo: "sedia" },
+  lamp: { arredo: "lampada" },
+  carpet: { arredo: "tappeto" },
+  "picture/frame": { arredo: "quadro" },
   "potted plant": { arredo: "pianta" },
+  "moniter/tv": { arredo: "tv", dispositivo: "tv" },
+  tv: { arredo: "tv", dispositivo: "tv" },
   refrigerator: { arredo: "frigo" },
   oven: { dispositivo: "forno" },
   microwave: { arredo: "microonde" },
+  "gas stove": { arredo: "cucina" },
+  "induction cooker": { arredo: "cucina" },
+  extractor: { arredo: "cucina" },
   toaster: { arredo: "cucina" },
-  sink: { arredo: "cucina" },
+  dishwasher: { dispositivo: "lavastoviglie" },
+  "washing machine/drying machine": { dispositivo: "lavatrice" },
+  sink: { arredo: "lavello" },
   toilet: { arredo: "wc" },
-  book: { arredo: "libreria" },
-  laptop: { arredo: "scrivania" },
+  bathtub: { arredo: "vasca" },
+  showerhead: { arredo: "doccia" },
+  piano: { arredo: "pianoforte" },
+  "air conditioner": { dispositivo: "clima" },
+  "surveillance camera": { dispositivo: "telecamera" },
+  speaker: { dispositivo: "altoparlante" },
 });
+
+/* Le cose che, viste per sbaglio, cambiano tutta la stanza (un WC fa un
+ * bagno, e il mobile diventa un lavabo) vogliono un riconoscimento piu'
+ * sicuro delle altre. */
+const SOGLIE = Object.freeze({
+  toilet: 0.55,
+  bathtub: 0.5,
+  showerhead: 0.5,
+  bed: 0.45,
+  desk: 0.5,
+  "moniter/tv": 0.45,
+  "gas stove": 0.5,
+  "induction cooker": 0.5,
+  extractor: 0.5,
+  "surveillance camera": 0.45,
+  speaker: 0.5,
+});
+
+/* Il tipo della stanza, dal suo nome. */
+function tipoDiStanza(nome) {
+  const n = clean(nome).toLowerCase();
+  if (/bagn|bath|wc|toilet|servizi|lavanderia/.test(n)) return "bagno";
+  if (/cucin|kitchen|cottura/.test(n)) return "cucina";
+  if (/camer|letto|bed|notte|ospiti/.test(n)) return "camera";
+  if (/studio|ufficio|office|study/.test(n)) return "studio";
+  return "giorno";
+}
+
+const area = (b) => b[2] * b[3];
+/* quanto si coprono due riquadri, sul totale dei due (0 lontani, 1 uguali) */
+const unione = (a, b) => {
+  const x0 = Math.max(a[0], b[0]),
+    y0 = Math.max(a[1], b[1]);
+  const x1 = Math.min(a[0] + a[2], b[0] + b[2]),
+    y1 = Math.min(a[1] + a[3], b[1] + b[3]);
+  const dentro = Math.max(0, x1 - x0) * Math.max(0, y1 - y0);
+  return dentro / (area(a) + area(b) - dentro);
+};
+const allarga = (b, k) => [b[0] - b[2] * k, b[1] - b[3] * k, b[2] * (1 + 2 * k), b[3] * (1 + 2 * k)];
+const dentroPer = (a, b) => {
+  const x0 = Math.max(a[0], b[0]),
+    y0 = Math.max(a[1], b[1]);
+  const x1 = Math.min(a[0] + a[2], b[0] + b[2]),
+    y1 = Math.min(a[1] + a[3], b[1] + b[3]);
+  return (Math.max(0, x1 - x0) * Math.max(0, y1 - y0)) / area(a);
+};
 
 const riquadro = (b) => {
   const [x, y, w, h] = elenco(b).map(Number);
@@ -138,32 +209,141 @@ function sovrapposti(a, b) {
   return dentro / Math.min(a[2] * a[3], b[2] * b[3]);
 }
 
-/** Quello che COCO-SSD ha visto, nelle cose della casa: `{ arredi, dispositivi }`.
- * Due riquadri dello stesso tipo che si coprono quasi tutti sono una cosa sola
- * (i libri di una libreria, le sedie di un divano). */
-export function oggettiDaCoco(rilevati, { soglia = 0.3, stanza = "" } = {}) {
+/** Quello che il riconoscitore ha visto, nelle cose della casa:
+ * `{ arredi, dispositivi }`. `rilevati` sono `{ class, bbox: [x, y, w, h],
+ * score }`; `w` e `h` la foto. «Dalle foto non li riconosce bene e non e'
+ * fedele con quanto presente in casa»: il mobile si decide anche dalla stanza
+ * e dalla forma (alto in camera e' un armadio, basso una cassettiera; sotto
+ * la TV e' il mobile TV), le sedie del tavolo non diventano poltrone, una
+ * scatola dentro un mobile non e' un altro mobile. */
+export function oggettiDallaFoto(rilevati, { soglia = 0.4, stanza = "", w = 0, h = 0 } = {}) {
   const arredi = [],
     dispositivi = [];
-  const ordinati = elenco(rilevati)
-    .map((d) => ({ classe: clean(d?.class), box: riquadro(d?.bbox), score: Number(d?.score) || 0 }))
-    .filter((d) => d.box && d.score >= soglia && DA_COCO[d.classe])
-    .sort((a, b) => b.score - a.score);
-  /* Il lavandino del bagno e' un lavabo, non la cucina: lo dice il nome
-   * della stanza, o il WC nella stessa foto. */
-  const bagno =
-    /bagn|bath|wc|toilet|servizi/i.test(clean(stanza)) ||
-    ordinati.some((d) => d.classe === "toilet");
+  const visti = elenco(rilevati)
+    .map((d) => ({
+      classe: clean(d?.class).toLowerCase(),
+      box: riquadro(d?.bbox),
+      score: Number(d?.score) || 0,
+    }))
+    .filter(
+      (d) =>
+        d.box && DALLE_CLASSI[d.classe] && d.score >= Math.max(soglia, SOGLIE[d.classe] || 0),
+    )
+    .sort((a, b) => b.score - a.score)
+    /* la stessa cosa vista come due cose diverse (un quadro e una TV nello
+     * stesso riquadro): vale quella piu' sicura */
+    .filter((d, i, tutti) =>
+      tutti
+        .slice(0, i)
+        .every((p) => p.classe === d.classe || unione(p.box, d.box) <= 0.7),
+    );
+  const W = Number(w) > 0 ? Number(w) : Math.max(1, ...visti.map((d) => d.box[0] + d.box[2])),
+    H = Number(h) > 0 ? Number(h) : Math.max(1, ...visti.map((d) => d.box[1] + d.box[3]));
+  let tipo = tipoDiStanza(stanza);
+  const ci = (classe) => visti.filter((d) => d.classe === classe);
+  if (tipo === "giorno" && (ci("toilet").length || ci("bathtub").length)) tipo = "bagno";
+  if (tipo === "giorno" && ci("bed").length) tipo = "camera";
+  if (
+    tipo === "giorno" &&
+    (ci("gas stove").length || ci("induction cooker").length || ci("extractor").length)
+  )
+    tipo = "cucina";
+  const tavoli = visti.filter((d) => /dinn?ing table|desk|laptop/.test(d.classe));
+  const tv = visti.filter((d) => d.classe === "tv" || d.classe === "moniter/tv");
+  const mobili = ci("cabinet/shelf");
+  const sopraUnMobile = (b) =>
+    mobili.some((m) => {
+      const cx = b[0] + b[2] / 2,
+        sotto = b[1] + b[3];
+      return (
+        cx > m.box[0] &&
+        cx < m.box[0] + m.box[2] &&
+        sotto > m.box[1] - H * 0.12 &&
+        sotto < m.box[1] + m.box[3] * 0.4
+      );
+    });
+
+  /* la cucina e' una sola, coi pensili sopra: quello che le sta sopra o
+   * sotto e' la stessa cucina */
+  const inColonna = (a, b) =>
+    Math.max(0, Math.min(a[0] + a[2], b[0] + b[2]) - Math.max(a[0], b[0])) >
+    Math.min(a[2], b[2]) * 0.5;
   const metti = (dove, k, d) => {
     if (dove.some((o) => o.k === k && sovrapposti(o.box, d.box) > 0.6)) return;
+    if (k === "cucina" && dove.some((o) => o.k === k && inColonna(o.box, d.box))) return;
     dove.push({ k, box: d.box, score: tondo(d.score, 2) });
   };
-  for (const d of ordinati) {
-    const m = bagno && d.classe === "sink" ? { arredo: "lavabo" } : DA_COCO[d.classe];
-    if (m.arredo) metti(arredi, m.arredo, d);
+  /* Il mobile: dove sta, quanto e' alto, cosa ci sta sopra. */
+  const mobile = (d) => {
+    const [, y, bw, bh] = d.box;
+    if (y + bh < H * 0.45) return tipo === "cucina" ? "cucina" : "pensile";
+    if (tipo === "cucina") return "cucina";
+    if (tipo === "bagno") return "lavabo";
+    const alto = bh > bw * 1.25;
+    if (tipo === "camera") return alto ? "armadio" : "cassettiera";
+    if (!alto && tv.some((t) => sopraUnMobile(t.box) && dentroPer(t.box, allarga(d.box, 0.3)) > 0))
+      return "tv";
+    return alto ? "libreria" : "madia";
+  };
+  const giaVisti = [];
+  for (const d of visti) {
+    const m = DALLE_CLASSI[d.classe];
+    /* un pezzo dentro un mobile gia' visto (un'anta, una mensola) e' lo stesso mobile */
+    if (
+      d.classe === "cabinet/shelf" &&
+      giaVisti.some((g) => g.classe === "cabinet/shelf" && dentroPer(d.box, g.box) > 0.7)
+    )
+      continue;
+    giaVisti.push(d);
+    let k = m.arredo || null;
+    switch (k) {
+      case "letto":
+        k = /singol|bimb|ragazz|camerett/i.test(clean(stanza)) ? "singolo" : "matrimoniale";
+        break;
+      case "mobile":
+        /* una cornice, una scatola: un mobile e' piu' grande */
+        k = area(d.box) >= W * H * 0.015 ? mobile(d) : null;
+        break;
+      case "laterale":
+        k = tipo === "camera" ? "comodino" : "tavolino";
+        break;
+      case "sedia": {
+        /* le sedie del tavolo e della scrivania sono gia' col tavolo */
+        const vicino = tavoli.find((t) => dentroPer(d.box, allarga(t.box, 0.35)) > 0.3);
+        if (vicino) k = /desk|laptop/.test(vicino.classe) ? "ufficio" : null;
+        else k = d.box[2] >= d.box[3] * 0.75 ? "poltrona" : null;
+        break;
+      }
+      case "lampada":
+        /* appesa in alto e' un punto luce; lunga e a terra, una lampada a stelo */
+        if (d.box[1] + d.box[3] < H * 0.4) {
+          metti(dispositivi, "luce", d);
+          k = null;
+        } else k = d.box[3] > d.box[2] * 2 && d.box[1] + d.box[3] > H * 0.6 ? "stelo" : null;
+        break;
+      case "quadro":
+        k = area(d.box) >= W * H * 0.012 ? "quadro" : null;
+        break;
+      case "tv":
+        /* sulla scrivania e' uno schermo del computer; sopra un mobile, il
+         * mobile e' gia' il mobile TV */
+        if (tavoli.some((t) => /desk|laptop/.test(t.classe) && dentroPer(d.box, allarga(t.box, 0.2)) > 0.5))
+          continue;
+        if (sopraUnMobile(d.box) || d.box[1] + d.box[3] < H * 0.55) k = null;
+        break;
+      case "lavello":
+        k = tipo === "bagno" ? "lavabo" : "cucina";
+        break;
+      default:
+    }
+    if (k) metti(arredi, k, d);
     if (m.dispositivo) metti(dispositivi, m.dispositivo, d);
   }
   return { arredi, dispositivi };
 }
+
+/** Il nome di prima, per chi lo chiama ancora. */
+export const oggettiDaCoco = oggettiDallaFoto;
 
 /* ── i piani ─────────────────────────────────────────────────────────── */
 
@@ -334,18 +514,47 @@ export function nellaStanza(casa, id, x, y) {
   return { x: px, y: py };
 }
 
+/* Le cose lunghe contro la parete che si guarda: quanto sono larghe si
+ * vede nella foto, in proporzione alla parete. Con un limite, che la foto
+ * non prende sempre tutta la parete. */
+export const LARGHE_COME_NELLA_FOTO = Object.freeze({
+  divano: 2.2,
+  cucina: 3.0,
+  armadio: 2.2,
+  madia: 1.8,
+  libreria: 1.6,
+  tv: 1.9,
+  cassettiera: 1.1,
+  pensile: 1.6,
+});
+
+/** Quanto e' larga davvero una cosa vista nella foto, in metri; 0 se non si sa. */
+export function larghezzaDallaFoto(stanza, foto, o) {
+  const tipica = LARGHE_COME_NELLA_FOTO[o?.k],
+    b = riquadro(o?.box),
+    W = Number(foto?.w) || 0;
+  if (!tipica || !b || !(W > 0) || o?.manuale) return 0;
+  const r = riquadroDi(stanza),
+    verso = versoDi(foto?.verso),
+    parete = verso === "N" || verso === "S" ? r.x1 - r.x0 : r.y1 - r.y0;
+  if (!(parete > 0)) return 0;
+  return tondo(tra((b[2] / W) * parete, tipica * 0.6, Math.min(tipica * 1.6, parete)), 2);
+}
+
 /** Gli arredi di una foto, in metri dentro la stanza. */
 export function arrediDallaFoto(casa, stanza, foto) {
   return elenco(foto?.oggetti)
     .filter((o) => ARREDI_DELLE_FOTO[o?.k])
     .map((o) => {
       const p = posaDallaFoto(stanza, foto, o.box, { accostato: ACCOSTATI.has(o.k) });
+      const l = larghezzaDallaFoto(stanza, foto, o);
       return {
         k: o.k,
         stanza: stanza.id,
         ...nellaStanza(casa, stanza.id, p.x, p.y),
         rot: p.rot,
         tinta: colore(o.colore),
+        ...(l ? { l } : {}),
       };
     });
 }

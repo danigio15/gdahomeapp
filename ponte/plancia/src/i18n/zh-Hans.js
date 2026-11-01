@@ -7580,6 +7580,7 @@ export default Object.freeze({
   "With this length the outer walls would be ${cm} cm thick: check the length, in metres (10.92, not 1092).": "按此长度，外墙厚度将为 ${cm} 厘米：请检查长度，单位为米（10.92，而不是 1092）。",
   "Read as ${metri} metres.": "按 ${metri} 米读取。",
   "Scale found from the wall thickness: you can go on, or mark a length to be more precise.": "已根据墙体厚度得出比例：可以继续，或标记一段长度以更精确。",
+  "What it is": "这是什么",
   "Add or redo a floor": "添加或重做楼层",
   "Add photos of ${nome}": "添加 ${nome} 的照片",
   "Add photos of this room": "添加此房间的照片",

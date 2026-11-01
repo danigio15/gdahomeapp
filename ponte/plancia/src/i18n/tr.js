@@ -7716,6 +7716,7 @@ export default Object.freeze({
   "With this length the outer walls would be ${cm} cm thick: check the length, in metres (10.92, not 1092).": "Bu uzunlukla dış duvarlar ${cm} cm kalınlığında olurdu: uzunluğu metre cinsinden kontrol edin (1092 değil, 10,92).",
   "Read as ${metri} metres.": "${metri} metre olarak okundu.",
   "Scale found from the wall thickness: you can go on, or mark a length to be more precise.": "Ölçek duvar kalınlığından bulundu: devam edebilir veya daha hassas olmak için bir uzunluk işaretleyebilirsiniz.",
+  "What it is": "Bu ne",
   "Add or redo a floor": "Kat ekle veya yeniden yap",
   "Add photos of ${nome}": "${nome} fotoğraflarını ekle",
   "Add photos of this room": "Bu odanın fotoğraflarını ekle",

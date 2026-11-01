@@ -492,6 +492,54 @@ test("senza planimetria la casa si disegna qui", async ({ page }, testInfo) => {
   await fotoDiretta(page, testInfo, "crea-a-mano-muri");
 });
 
+/* «Dalle foto non li riconosce bene e non e' fedele con quanto presente in
+ * casa»: la foto vera di una stanza (non sta nel repo: DM_FOTO_STANZA, e in
+ * DM_FOTO_ATTESI le cose che ci devono essere, separate da virgole) passa
+ * dal riconoscitore vero, D-FINE su Objects365, nella pagina. */
+test("le foto delle stanze: il riconoscitore vero trova gli arredi", async ({ page }, testInfo) => {
+  test.skip(
+    !process.env.DM_FOTO_STANZA || testInfo.project.name !== "desktop",
+    "serve DM_FOTO_STANZA",
+  );
+  test.setTimeout(240_000);
+  const crea = await apriLaProcedura(page, testInfo);
+  await crea.locator('[data-c3c-mano="w"]').fill("8");
+  await crea.locator('[data-c3c-mano="h"]').fill("6");
+  await crea.locator('[data-c3c="amano"]').click();
+  await expect(crea.locator(".c3c-pannello")).toContainText("Trovati 1 ambienti", {
+    timeout: 30_000,
+  });
+  for (let i = 0; i < 4 && !(await crea.locator('[data-c3c="caricast"]').count()); i++)
+    await crea.locator('[data-c3c="avanti"]').click();
+  const prima = Date.now();
+  await crea.locator('[data-c3c-file="stanza"]').setInputFiles(process.env.DM_FOTO_STANZA);
+  await expect(crea.locator(".c3c-lavoro")).not.toHaveCount(0);
+  await expect(crea.locator(".c3c-lavoro")).toHaveCount(0, { timeout: 200_000 });
+  const trovati = await crea
+    .locator(".c3c-trovato .c3c-tipo")
+    .evaluateAll((els) => els.map((e) => e.options[e.selectedIndex].text));
+  const secondi = (Date.now() - prima) / 1000;
+  console.log(`riconosciuto in ${secondi} s:\n${trovati.join("\n")}`);
+  await expect(crea.locator(".c3c-pannello")).not.toContainText("non è disponibile");
+  for (const cosa of (process.env.DM_FOTO_ATTESI || "").split(",").filter(Boolean))
+    expect(trovati.join("\n"), trovati.join("\n")).toContain(cosa);
+  await fotoDiretta(page, testInfo, "crea-foto-stanza-vera");
+  /* fino in fondo: gli arredi della foto nella casa salvata, e nel 3D */
+  for (let i = 0; i < 8 && !(await crea.locator('[data-c3c="salva"]').count()); i++)
+    await crea.locator('[data-c3c="avanti"]').click();
+  await crea.locator('[data-c3c="salva"]').click();
+  await expect(crea).toBeHidden({ timeout: 20_000 });
+  const salvata = await page.evaluate(() => JSON.parse(localStorage.getItem("cd_casa3d")));
+  const arredi = salvata.piani[0].arredi;
+  expect(arredi.length).toBeGreaterThanOrEqual(trovati.length);
+  console.log(JSON.stringify(arredi.map((a) => [a.k, a.l || ""])));
+  await page.waitForTimeout(2500);
+  const piano = salvata.piani[0];
+  await page.locator(`#dm-casa3d [data-c3s="vista"][data-c3s-k="${piano.k}"]`).first().click();
+  await page.waitForTimeout(2500);
+  await fotoDiretta(page, testInfo, "casa3d-foto-stanza-vera");
+});
+
 /* Il DWG vero si prova solo col file a portata di mano (DM_DWG=percorso):
  * le planimetrie vere non stanno nella repository. */
 test("un DWG coi piani affiancati: si sceglie il piano, scala e nomi dal disegno", async ({

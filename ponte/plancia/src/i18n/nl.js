@@ -7750,6 +7750,7 @@ export default Object.freeze({
   "With this length the outer walls would be ${cm} cm thick: check the length, in metres (10.92, not 1092).": "Met deze lengte zouden de buitenmuren ${cm} cm dik zijn: controleer de lengte, in meters (10,92, niet 1092).",
   "Read as ${metri} metres.": "Gelezen als ${metri} meter.",
   "Scale found from the wall thickness: you can go on, or mark a length to be more precise.": "Schaal gevonden uit de muurdikte: je kunt doorgaan, of een lengte aangeven voor meer precisie.",
+  "What it is": "Wat het is",
   "Add or redo a floor": "Verdieping toevoegen of opnieuw maken",
   "Add photos of ${nome}": "Foto's van ${nome} toevoegen",
   "Add photos of this room": "Foto's van deze kamer toevoegen",

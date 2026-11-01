@@ -383,6 +383,8 @@ function arredoPulito(a) {
     rot: numero(a?.rot, -100, 100, 0),
     tinta: colore(a?.tinta),
     sotto: a?.sotto === true,
+    /* la larghezza vista nella foto, se diversa da quella del catalogo */
+    ...(Number(a?.l) > 0 ? { l: numero(a.l, 0.2, 8, 0) } : {}),
   };
 }
 

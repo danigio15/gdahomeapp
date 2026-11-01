@@ -7663,6 +7663,7 @@ export default Object.freeze({
   "With this length the outer walls would be ${cm} cm thick: check the length, in metres (10.92, not 1092).": "بهذا الطول ستكون سماكة الجدران الخارجية ${cm} سم: تحقق من الطول بالأمتار (10.92 وليس 1092).",
   "Read as ${metri} metres.": "قُرئ على أنه ${metri} متر.",
   "Scale found from the wall thickness: you can go on, or mark a length to be more precise.": "تم العثور على المقياس من سماكة الجدران: يمكنك المتابعة، أو تحديد طول لدقة أكبر.",
+  "What it is": "ما هو",
   "Add or redo a floor": "إضافة طابق أو إعادته",
   "Add photos of ${nome}": "إضافة صور لـ${nome}",
   "Add photos of this room": "إضافة صور لهذه الغرفة",

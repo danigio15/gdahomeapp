@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-M3IT2LJN.js";
+} from "../../chunk-2VDLMWOR.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -602,7 +602,7 @@ import {
   statoDelDispositivo,
   stessoFlusso,
   vuoleIlVivo
-} from "../../chunk-CCMUJEI3.js";
+} from "../../chunk-LQ7Q24TI.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -22352,11 +22352,11 @@ function renderSidebar(shell, models, counts, rooms2, labels) {
   if (nome) scriviTestoSeCambia(nome, counts.running === 1 ? labels.activeOne : labels.active);
   const spark2 = shell.querySelector("[data-dm-spark]");
   if (spark2) {
-    const { line, area } = filoDaZero(state18.spark, 100, 28);
+    const { line, area: area2 } = filoDaZero(state18.spark, 100, 28);
     const lineNode = spark2.querySelector(".dm-spark-line");
     const areaNode = spark2.querySelector(".dm-spark-area");
     if (lineNode && lineNode.getAttribute("d") !== line) lineNode.setAttribute("d", line);
-    if (areaNode && areaNode.getAttribute("d") !== area) areaNode.setAttribute("d", area);
+    if (areaNode && areaNode.getAttribute("d") !== area2) areaNode.setAttribute("d", area2);
   }
 }
 function renderToolbar(shell) {
@@ -23740,10 +23740,10 @@ function nelGruppo(id) {
   if (insieme.size < 2) insieme.clear();
 }
 function iniziaLaPressione(event) {
-  const area = event.target?.closest?.("[data-dm-area]");
-  if (!area) return;
+  const area2 = event.target?.closest?.("[data-dm-area]");
+  if (!area2) return;
   fermaLaPressione();
-  const id = clean(area.dataset.dmArea);
+  const id = clean(area2.dataset.dmArea);
   pressione = {
     x: event.clientX,
     y: event.clientY,
@@ -24242,24 +24242,24 @@ function onShellClick2(event) {
     if (sciogliIlGruppo()) renderSecurity();
     return;
   }
-  const area = target?.closest?.("[data-dm-area]");
-  if (area && Date.now() - premutaALungoIl < 1500) {
+  const area2 = target?.closest?.("[data-dm-area]");
+  if (area2 && Date.now() - premutaALungoIl < 1500) {
     premutaALungoIl = 0;
     event.preventDefault();
     return;
   }
-  if (area && insieme.size) {
+  if (area2 && insieme.size) {
     event.preventDefault();
-    nelGruppo(clean(area.dataset.dmArea));
+    nelGruppo(clean(area2.dataset.dmArea));
     try {
       renderSecurity();
     } catch (_error) {
     }
     return;
   }
-  if (area) {
+  if (area2) {
     event.preventDefault();
-    if (passaAllAreaAllarme(clean(area.dataset.dmArea))) {
+    if (passaAllAreaAllarme(clean(area2.dataset.dmArea))) {
       try {
         renderSecurity();
       } catch (_error) {
@@ -24466,11 +24466,11 @@ function installSecurityShowcaseSection() {
     doc.addEventListener("pointerup", fermaLaPressione, { passive: true });
     doc.addEventListener("pointercancel", fermaLaPressione, { passive: true });
     doc.addEventListener("contextmenu", (event) => {
-      const area = event.target?.closest?.("[data-dm-area]");
-      if (!area) return;
+      const area2 = event.target?.closest?.("[data-dm-area]");
+      if (!area2) return;
       event.preventDefault();
       fermaLaPressione();
-      pressioneLunga(clean(area.dataset.dmArea));
+      pressioneLunga(clean(area2.dataset.dmArea));
     });
     doc.addEventListener("keydown", onShellKeydown2);
     for (const eventName of [
@@ -47387,10 +47387,10 @@ function indexAt(clientX) {
   const canvas = chart?.canvas;
   if (!canvas) return 0;
   const rect = canvas.getBoundingClientRect();
-  const area = chart.chartArea;
+  const area2 = chart.chartArea;
   const view = currentWindow();
   const span = Math.max(1, view.max - view.min);
-  const ratio2 = (clientX - rect.left - area.left) / Math.max(1, area.right - area.left);
+  const ratio2 = (clientX - rect.left - area2.left) / Math.max(1, area2.right - area2.left);
   return view.min + Math.max(0, Math.min(1, ratio2)) * span;
 }
 function pointerDistance(points) {
@@ -47445,8 +47445,8 @@ function installGestures(canvas) {
     }
     if (gesture.kind === "pan" && state41.zoom) {
       event.preventDefault();
-      const area = state41.chart?.chartArea;
-      const width = Math.max(1, (area?.right || 1) - (area?.left || 0));
+      const area2 = state41.chart?.chartArea;
+      const width = Math.max(1, (area2?.right || 1) - (area2?.left || 0));
       const span = gesture.view.max - gesture.view.min;
       const shift = (gesture.x - points[0].x) / width * span;
       applyWindow({ min: gesture.view.min + shift, max: gesture.view.max + shift });
@@ -49299,8 +49299,8 @@ function guessApplianceType({ name, model: model2, manufacturer, entities = [] }
   }
   return "generico";
 }
-function roomForArea(area, rooms2 = []) {
-  const wanted = lower(area).normalize("NFKD").replaceAll(/[̀-ͯ]/g, "");
+function roomForArea(area2, rooms2 = []) {
+  const wanted = lower(area2).normalize("NFKD").replaceAll(/[̀-ͯ]/g, "");
   if (!wanted) return "";
   const found = rooms2.find(
     (room) => lower(room?.name).normalize("NFKD").replaceAll(/[̀-ͯ]/g, "") === wanted
@@ -54063,14 +54063,14 @@ function nomiDellaStanza(nome) {
 function trovaStanza(f, aree2 = []) {
   let migliore = "";
   let punti = 0;
-  for (const area of new Set(elenco6(aree2).map(pulito43).filter(Boolean))) {
-    for (const nome of nomiDellaStanza(area)) {
+  for (const area2 of new Set(elenco6(aree2).map(pulito43).filter(Boolean))) {
+    for (const nome of nomiDellaStanza(area2)) {
       const dove = nomeNellaFrase(nome, f);
       if (!dove.tutte) continue;
-      const valore3 = dove.parole * 10 + (nome === area ? 1 : 0);
+      const valore3 = dove.parole * 10 + (nome === area2 ? 1 : 0);
       if (valore3 > punti) {
         punti = valore3;
-        migliore = area;
+        migliore = area2;
       }
     }
   }
@@ -54517,11 +54517,11 @@ var media2 = (valori) => {
 };
 function stanzeDaHomeAssistant(entita4) {
   const perStanza = /* @__PURE__ */ new Map();
-  const aggiungi5 = (area, campo6, valore3, entity2) => {
-    if (!area || valore3 === null) return;
-    if (!perStanza.has(area))
-      perStanza.set(area, { stanza: area, t: [], u: [], tc: [], entity: "" });
-    const voce3 = perStanza.get(area);
+  const aggiungi5 = (area2, campo6, valore3, entity2) => {
+    if (!area2 || valore3 === null) return;
+    if (!perStanza.has(area2))
+      perStanza.set(area2, { stanza: area2, t: [], u: [], tc: [], entity: "" });
+    const voce3 = perStanza.get(area2);
     voce3[campo6].push(valore3);
     if (campo6 === "t" && !voce3.entity) voce3.entity = entity2;
   };
@@ -71132,11 +71132,11 @@ function spark(valori, { colore: colore2, alto = 46, secondo = null, id = "s", p
   const y = (v) => bordo2 + (alto - 2 * bordo2) * (1 - (v - basso) / (sopra - basso || 1));
   const x = (i, n) => i / (n - 1) * W2;
   const linea = (vv) => vv.map((v, i) => `${i ? "L" : "M"}${x(i, vv.length).toFixed(1)},${y(v).toFixed(1)}`).join("");
-  const area = `${linea(valori)}L${W2},${alto}L0,${alto}Z`;
+  const area2 = `${linea(valori)}L${W2},${alto}L0,${alto}Z`;
   return `<svg class="dm-meteo-spark" viewBox="0 0 ${W2} ${alto}" preserveAspectRatio="none" aria-hidden="true">
       <defs><linearGradient id="dm-meteo-g-${prefisso}${id}" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="${colore2}" stop-opacity=".28"/><stop offset="1" stop-color="${colore2}" stop-opacity="0"/></linearGradient></defs>
-      <path d="${area}" fill="url(#dm-meteo-g-${prefisso}${id})"/>
+      <path d="${area2}" fill="url(#dm-meteo-g-${prefisso}${id})"/>
       ${secondo && secondo.length > 1 ? `<path d="${linea(secondo)}" fill="none" stroke="${colore2}" stroke-opacity=".38" stroke-width="1.6" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>` : ""}
       <path d="${linea(valori)}" fill="none" stroke="${colore2}" stroke-width="2.2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
       <circle cx="${W2}" cy="${y(valori[valori.length - 1]).toFixed(1)}" r="3.2" fill="${colore2}"/>
@@ -100820,19 +100820,19 @@ function immagineDellaSezione() {
   return clean(lavatrice?.image || lavatrice?.image_url);
 }
 function vesteImmagine() {
-  const area = doc?.querySelector?.("#lavatrice-modal .lav-area-img");
-  if (!area) return false;
-  area.classList.remove("img-fallback");
-  if (area.querySelector("[data-dm-lav-veste]")) return false;
+  const area2 = doc?.querySelector?.("#lavatrice-modal .lav-area-img");
+  if (!area2) return false;
+  area2.classList.remove("img-fallback");
+  if (area2.querySelector("[data-dm-lav-veste]")) return false;
   const foto = immagineDellaSezione();
   const veste = doc.createElement("span");
   veste.dataset.dmLavVeste = "";
   veste.className = "dm-lav-veste";
   veste.innerHTML = foto ? `<img src="${esc(foto)}" alt="" loading="lazy">` : applianceHeroArtwork("lavatrice", 170, { chiave: "popup-lavatrice" });
-  const vecchia = area.querySelector("#img-lavatrice");
+  const vecchia = area2.querySelector("#img-lavatrice");
   if (vecchia) vecchia.style.display = "none";
-  area.classList.remove("img-fallback");
-  area.append(veste);
+  area2.classList.remove("img-fallback");
+  area2.append(veste);
   const testata5 = doc.querySelector("#lavatrice-modal .ev-waw-title .icon");
   if (testata5) testata5.style.display = "none";
   return true;
@@ -102835,10 +102835,10 @@ function normalizeEntry(raw) {
   const domain = id.slice(0, dot);
   const object = id.slice(dot + 1);
   const name = String(raw.name || attributes.friendly_name || id).trim() || id;
-  const area = String(raw.area || attributes.area || "").trim();
+  const area2 = String(raw.area || attributes.area || "").trim();
   const idFold = foldText(id);
   const nameFold = foldText(name);
-  const areaFold = area ? foldText(area) : "";
+  const areaFold = area2 ? foldText(area2) : "";
   const hay = `${idFold} ${nameFold} ${areaFold}`;
   const idTokens = tokenize(foldText(object));
   const nameTokens = tokenize(nameFold);
@@ -102853,7 +102853,7 @@ function normalizeEntry(raw) {
     dc: String(raw.dc || attributes.device_class || "").toLowerCase(),
     unit: String(raw.unit || attributes.unit_of_measurement || ""),
     sc: String(raw.sc || attributes.state_class || "").toLowerCase(),
-    area,
+    area: area2,
     state: state196,
     penalty,
     idFold,
@@ -103222,13 +103222,13 @@ function fieldHints(descriptor = {}) {
     if (keywords.length >= 6) break;
     if (!keywords.includes(word)) keywords.push(word);
   }
-  const area = foldText(descriptor.area || "");
+  const area2 = foldText(descriptor.area || "");
   return {
     domains,
     deviceClasses,
     units,
     keywords,
-    area,
+    area: area2,
     current: value.includes(".") ? value : "",
     empty: domains.size === 0 && deviceClasses.size === 0 && units.size === 0 && keywords.length === 0
   };
@@ -103498,14 +103498,14 @@ function ensureIndex({ refresh = false } = {}) {
   const areaOf = areaResolver();
   const enrich = (id) => {
     const live = states[id];
-    const area = areaOf(id);
-    if (!live) return area ? { area } : null;
+    const area2 = areaOf(id);
+    if (!live) return area2 ? { area: area2 } : null;
     return {
       dc: live.attributes?.device_class || "",
       unit: live.attributes?.unit_of_measurement || "",
       sc: live.attributes?.state_class || "",
       state: live.state,
-      area
+      area: area2
     };
   };
   state107.index = buildEntityIndex(entries, { enrich, version: signature4 });
@@ -104381,9 +104381,9 @@ function detectSlots(records, plans, { taken = /* @__PURE__ */ new Set(), postin
 }
 var TERMO = /termo|radiat|riscald|heat|valve|trv/i;
 var OPENING_CLASSES = /* @__PURE__ */ new Set(["door", "window", "opening", "garage_door"]);
-function withArea(name, area) {
-  if (!area) return name;
-  return foldText(name).includes(foldText(area)) ? name : `${area} - ${name}`;
+function withArea(name, area2) {
+  if (!area2) return name;
+  return foldText(name).includes(foldText(area2)) ? name : `${area2} - ${name}`;
 }
 function isTemperature(record2) {
   return record2.domain === "sensor" && (record2.dc === "temperature" || /temperatur/.test(record2.idFold)) && (record2.unit.includes("°") || record2.dc === "temperature");
@@ -104440,10 +104440,10 @@ function detectCategories(records, { maxLights = 300, maxRooms = 24, maxFallback
     if (!record2.area || byArea.has(record2.area)) continue;
     byArea.set(record2.area, record2);
   }
-  for (const [area, record2] of [...byArea.entries()].slice(0, maxRooms)) {
+  for (const [area2, record2] of [...byArea.entries()].slice(0, maxRooms)) {
     usedTemperature.add(record2.id);
-    const twin = humidities.find((humidity) => humidity.area === area);
-    const room = { name: area, icon: "🌡️", temp: record2.id };
+    const twin = humidities.find((humidity) => humidity.area === area2);
+    const room = { name: area2, icon: "🌡️", temp: record2.id };
     if (twin) room.hum = twin.id;
     rooms2.push(room);
   }
@@ -104608,7 +104608,7 @@ function loadRegistries(callback) {
 }
 function areaLookup(registries) {
   const areaName = /* @__PURE__ */ new Map();
-  for (const area of registries?.areas || []) areaName.set(area.area_id, clean(area.name));
+  for (const area2 of registries?.areas || []) areaName.set(area2.area_id, clean(area2.name));
   const deviceArea = /* @__PURE__ */ new Map();
   for (const device of registries?.devs || []) if (device.area_id) deviceArea.set(device.id, device.area_id);
   const entityArea = /* @__PURE__ */ new Map();
@@ -104685,14 +104685,14 @@ function buildIndex(live, meta, entityArea) {
   }
   const enrich = (id, entry) => {
     const current = live?.[id];
-    const area = entityArea.get(id) || entry?.area || "";
-    if (!current) return area ? { area } : null;
+    const area2 = entityArea.get(id) || entry?.area || "";
+    if (!current) return area2 ? { area: area2 } : null;
     return {
       dc: current.attributes?.device_class || entry?.dc || "",
       unit: current.attributes?.unit_of_measurement || entry?.unit || "",
       sc: current.attributes?.state_class || entry?.sc || "",
       state: current.state,
-      area
+      area: area2
     };
   };
   return buildEntityIndex(entries, { enrich, version: `autodetect|${entityArea.size}` });
@@ -111633,7 +111633,7 @@ function areeDellaPagina(pagina3) {
 function centraleDelMuro(pagina3) {
   return areeDellaPagina(pagina3)[0]?.entita || state123.fonte?.centrali?.[0] || "";
 }
-var nomeDellArea = (area, i = 0) => clean(area?.nome) || clean(stato2(area?.entita)?.attributes?.friendly_name) || `${t("Area", "Area")} ${i + 1}`;
+var nomeDellArea = (area2, i = 0) => clean(area2?.nome) || clean(stato2(area2?.entita)?.attributes?.friendly_name) || `${t("Area", "Area")} ${i + 1}`;
 function accentoDellAllarme(valore3) {
   if (valore3 === "triggered") return ACCENTI.allarme;
   if (valore3 === "disarmed") return "#10b981";
@@ -111668,18 +111668,18 @@ function riassuntoDelleAree(aree2) {
     suona
   };
 }
-function rigaDellArea(area, i) {
-  const s = stato2(area.entita);
+function rigaDellArea(area2, i) {
+  const s = stato2(area2.entita);
   const valore3 = String(s?.state || "");
   const modi = tastiDellArea(s);
   const attivo = alarmActiveMode(
     valore3,
     modi.map((m) => m.mode)
   );
-  return `<div class="mu-area${valore3 === "triggered" ? " grave" : ""}" style="--acc:${accentoDellAllarme(valore3)}" data-mu-area="${esc(area.entita)}">
-    <div class="mu-area-dice"><b class="mu-area-nome">${esc(nomeDellArea(area, i))}</b><span class="mu-area-stato"><i></i>${esc(parolaDellAllarme2(valore3))}</span></div>
+  return `<div class="mu-area${valore3 === "triggered" ? " grave" : ""}" style="--acc:${accentoDellAllarme(valore3)}" data-mu-area="${esc(area2.entita)}">
+    <div class="mu-area-dice"><b class="mu-area-nome">${esc(nomeDellArea(area2, i))}</b><span class="mu-area-stato"><i></i>${esc(parolaDellAllarme2(valore3))}</span></div>
     ${s ? `<div class="mu-seg mu-modi mu-modi-area">${modi.map(
-    (m) => `<button type="button" class="${m.mode === attivo ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}" data-mu-area="${esc(area.entita)}">${esc(m.label)}</button>`
+    (m) => `<button type="button" class="${m.mode === attivo ? "si" : ""}" data-mu-fa="allarme" data-mu-modo="${esc(m.mode)}" data-mu-area="${esc(area2.entita)}">${esc(m.label)}</button>`
   ).join("")}</div>` : ""}
   </div>`;
 }
@@ -114522,10 +114522,10 @@ function cambiaTemperatura(id, verso2, estremo = "") {
     700
   );
 }
-function allarme(modo, codice = "", area = "") {
+function allarme(modo, codice = "", area2 = "") {
   const pagina3 = state123.muro?.pagine?.[state123.pagina];
   const sue = areeDellaPagina(pagina3).map((a) => a.entita);
-  const centrale = area && sue.includes(area) ? area : centraleDelMuro(pagina3);
+  const centrale = area2 && sue.includes(area2) ? area2 : centraleDelMuro(pagina3);
   const s = stato2(centrale);
   const mio = modoSuMisura(modo);
   if (mio) {
@@ -124384,24 +124384,24 @@ function paroleDi2(p) {
   const cose = Array.isArray(prima.entita) ? prima.entita : prima.entita ? [prima.entita] : [];
   const cosa = cose.length === 1 ? nomeDi13(cose[0]) : "";
   const quante3 = cose.length;
-  const area = clean(d.area);
+  const area2 = clean(d.area);
   const nome = clean(d.nome);
   if (p.chiave === "movimentoLuce") {
     const luce2 = cosa;
     return {
       quando: t(
-        `Quando c'è movimento in ${area} di notte`,
-        `When there is motion in ${area} at night`
+        `Quando c'è movimento in ${area2} di notte`,
+        `When there is motion in ${area2} at night`
       ),
       allora: t(
         `accendi ${luce2} al 20%, spegni dopo 2 min`,
         `turn on ${luce2} at 20%, off after 2 min`
       ),
       perche: t(
-        `in ${area} ci sono un sensore di movimento e una luce.`,
-        `${area} has a motion sensor and a light.`
+        `in ${area2} ci sono un sensore di movimento e una luce.`,
+        `${area2} has a motion sensor and a light.`
       ),
-      nome: t(`Luce col movimento in ${area}`, `Motion light in ${area}`)
+      nome: t(`Luce col movimento in ${area2}`, `Motion light in ${area2}`)
     };
   }
   if (p.chiave === "finestraClima") {
@@ -124414,8 +124414,8 @@ function paroleDi2(p) {
         `turn off ${clima}, back on when you close it`
       ),
       perche: t(
-        `finestra e clima sono nella stessa stanza (${area}).`,
-        `the window and the climate are in the same room (${area}).`
+        `finestra e clima sono nella stessa stanza (${area2}).`,
+        `the window and the climate are in the same room (${area2}).`
       ),
       nome: t(`Clima spento con ${finestra6} aperta`, `Climate off with ${finestra6} open`)
     };
@@ -124424,18 +124424,18 @@ function paroleDi2(p) {
     const aspiratore = clean(d.aspiratore) || cosa;
     return {
       quando: t(
-        `Quando l'umidità in ${area} supera 70%`,
-        `When humidity in ${area} goes above 70%`
+        `Quando l'umidità in ${area2} supera 70%`,
+        `When humidity in ${area2} goes above 70%`
       ),
       allora: t(
         `accendi ${aspiratore}, spegnilo sotto 60%`,
         `turn on ${aspiratore}, off below 60%`
       ),
       perche: t(
-        `in ${area} ci sono un sensore di umidità e un aspiratore.`,
-        `${area} has a humidity sensor and an extractor fan.`
+        `in ${area2} ci sono un sensore di umidità e un aspiratore.`,
+        `${area2} has a humidity sensor and an extractor fan.`
       ),
-      nome: t(`Aspiratore con l'umidità in ${area}`, `Extractor fan with humidity in ${area}`)
+      nome: t(`Aspiratore con l'umidità in ${area2}`, `Extractor fan with humidity in ${area2}`)
     };
   }
   if (p.chiave === "elettrodomestico")
@@ -125903,7 +125903,7 @@ async function duplica(v = state132.scheda) {
   }
 }
 var duplicaInCasa = (v) => duplica(v);
-async function rinomina({ nome, area } = {}) {
+async function rinomina({ nome, area: area2 } = {}) {
   const v = state132.scheda;
   if (!v?.id) return;
   try {
@@ -125911,12 +125911,12 @@ async function rinomina({ nome, area } = {}) {
       type: "ponte/automazioni/rinomina",
       automazione_id: v.id,
       ...nome !== void 0 ? { nome } : {},
-      ...area !== void 0 ? { area } : {}
+      ...area2 !== void 0 ? { area: area2 } : {}
     });
     if (nome !== void 0) state132.scheda = { ...v, nome };
-    if (area !== void 0) {
-      const stanza2 = (state132.ponte?.aree || []).find((a) => a.id === area);
-      state132.scheda = { ...state132.scheda, areaId: area, area: stanza2?.nome || "" };
+    if (area2 !== void 0) {
+      const stanza2 = (state132.ponte?.aree || []).find((a) => a.id === area2);
+      state132.scheda = { ...state132.scheda, areaId: area2, area: stanza2?.nome || "" };
     }
     root.edToast?.(t("✓ Fatto", "✓ Done"));
     rileggiPresto();
@@ -129987,9 +129987,9 @@ async function creaDaDispositivo2({ device, entities, integration }) {
     index: robots.length
   });
   const stanze4 = readJson("cd_stanze", []);
-  const area = clean(device?.area);
+  const area2 = clean(device?.area);
   const stanza2 = (Array.isArray(stanze4) ? stanze4 : []).find(
-    (voce3) => clean(voce3?.name).toLowerCase() === area.toLowerCase()
+    (voce3) => clean(voce3?.name).toLowerCase() === area2.toLowerCase()
   );
   if (stanza2) nato.room = clean(stanza2.id) || clean(stanza2.name);
   if (!clean(nato.entity)) {
@@ -154484,7 +154484,7 @@ async function avviaLaScena(admin) {
   state180.caricando = true;
   state180.guasto = "";
   try {
-    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-WED5HTQH.js")]);
+    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-DKKNQCMT.js")]);
     const nodo3 = doc.getElementById(ID4);
     const posto = nodo3?.querySelector(".c3-posto");
     if (!posto) return;
@@ -155533,9 +155533,9 @@ function nucleoDeiMuri(g, w, h, r, carta = cartaDi(g)) {
   const soglia3 = carta * 0.72, nucleo = new Uint8Array(w * h);
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
-      const x0 = Math.max(0, x - r), x1 = Math.min(w, x + r + 1), y0 = Math.max(0, y - r), y1 = Math.min(h, y + r + 1), area = (x1 - x0) * (y1 - y0);
+      const x0 = Math.max(0, x - r), x1 = Math.min(w, x + r + 1), y0 = Math.max(0, y - r), y1 = Math.min(h, y + r + 1), area2 = (x1 - x0) * (y1 - y0);
       const a = y1 * (w + 1) + x1, b2 = y0 * (w + 1) + x1, c = y1 * (w + 1) + x0, d = y0 * (w + 1) + x0;
-      if ((I[a] - I[b2] - I[c] + I[d]) / area < soglia3 && (K[a] - K[b2] - K[c] + K[d]) / area <= 0.08)
+      if ((I[a] - I[b2] - I[c] + I[d]) / area2 < soglia3 && (K[a] - K[b2] - K[c] + K[d]) / area2 <= 0.08)
         nucleo[y * w + x] = 1;
     }
   return nucleo;
@@ -156375,9 +156375,9 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
     for (let i = 0; i < N; i++) if (vicino[i]) vetro[i] = soglie[i] = 0;
   }
   {
-    const unione = new Uint8Array(N);
-    for (let i = 0; i < N; i++) unione[i] = vetro[i] || soglie[i] ? 1 : 0;
-    for (const p of pezziDi(unione, W2, H7).pezzi) {
+    const unione2 = new Uint8Array(N);
+    for (let i = 0; i < N; i++) unione2[i] = vetro[i] || soglie[i] ? 1 : 0;
+    for (const p of pezziDi(unione2, W2, H7).pezzi) {
       if (Math.min(p.x1 - p.x0, p.y1 - p.y0) + 1 > spessoreMax) {
         for (const c of p.celle) vetro[c] = soglie[c] = 0;
         continue;
@@ -156854,8 +156854,8 @@ function rettangoloMassimo(m, W2, H7) {
       while (cima > 0 && alto[pila2[cima - 1]] >= h) {
         const hh = alto[pila2[--cima]];
         const sinistra = cima > 0 ? pila2[cima - 1] + 1 : 0;
-        const area = hh * (x - sinistra);
-        if (area > meglio.area) meglio = { area, x0: sinistra, x1: x - 1, y0: y - hh + 1, y1: y };
+        const area2 = hh * (x - sinistra);
+        if (area2 > meglio.area) meglio = { area: area2, x0: sinistra, x1: x - 1, y0: y - hh + 1, y1: y };
       }
       pila2[cima++] = x;
     }
@@ -157083,22 +157083,77 @@ var ACCOSTATI = /* @__PURE__ */ new Set([
   "forno",
   "microonde"
 ]);
-var DA_COCO = Object.freeze({
+var DALLE_CLASSI = Object.freeze({
   couch: { arredo: "divano" },
-  tv: { arredo: "tv", dispositivo: "tv" },
-  chair: { arredo: "poltrona" },
+  sofa: { arredo: "divano" },
+  bed: { arredo: "letto" },
+  nightstand: { arredo: "comodino" },
+  "cabinet/shelf": { arredo: "mobile" },
+  "coffee table": { arredo: "tavolino" },
+  "side table": { arredo: "laterale" },
+  "dinning table": { arredo: "pranzo6" },
   "dining table": { arredo: "pranzo6" },
-  bed: { arredo: "matrimoniale" },
+  desk: { arredo: "scrivania" },
+  laptop: { arredo: "scrivania" },
+  chair: { arredo: "sedia" },
+  lamp: { arredo: "lampada" },
+  carpet: { arredo: "tappeto" },
+  "picture/frame": { arredo: "quadro" },
   "potted plant": { arredo: "pianta" },
+  "moniter/tv": { arredo: "tv", dispositivo: "tv" },
+  tv: { arredo: "tv", dispositivo: "tv" },
   refrigerator: { arredo: "frigo" },
   oven: { dispositivo: "forno" },
   microwave: { arredo: "microonde" },
+  "gas stove": { arredo: "cucina" },
+  "induction cooker": { arredo: "cucina" },
+  extractor: { arredo: "cucina" },
   toaster: { arredo: "cucina" },
-  sink: { arredo: "cucina" },
+  dishwasher: { dispositivo: "lavastoviglie" },
+  "washing machine/drying machine": { dispositivo: "lavatrice" },
+  sink: { arredo: "lavello" },
   toilet: { arredo: "wc" },
-  book: { arredo: "libreria" },
-  laptop: { arredo: "scrivania" }
+  bathtub: { arredo: "vasca" },
+  showerhead: { arredo: "doccia" },
+  piano: { arredo: "pianoforte" },
+  "air conditioner": { dispositivo: "clima" },
+  "surveillance camera": { dispositivo: "telecamera" },
+  speaker: { dispositivo: "altoparlante" }
 });
+var SOGLIE2 = Object.freeze({
+  toilet: 0.55,
+  bathtub: 0.5,
+  showerhead: 0.5,
+  bed: 0.45,
+  desk: 0.5,
+  "moniter/tv": 0.45,
+  "gas stove": 0.5,
+  "induction cooker": 0.5,
+  extractor: 0.5,
+  "surveillance camera": 0.45,
+  speaker: 0.5
+});
+function tipoDiStanza(nome) {
+  const n = clean32(nome).toLowerCase();
+  if (/bagn|bath|wc|toilet|servizi|lavanderia/.test(n)) return "bagno";
+  if (/cucin|kitchen|cottura/.test(n)) return "cucina";
+  if (/camer|letto|bed|notte|ospiti/.test(n)) return "camera";
+  if (/studio|ufficio|office|study/.test(n)) return "studio";
+  return "giorno";
+}
+var area = (b2) => b2[2] * b2[3];
+var unione = (a, b2) => {
+  const x0 = Math.max(a[0], b2[0]), y0 = Math.max(a[1], b2[1]);
+  const x1 = Math.min(a[0] + a[2], b2[0] + b2[2]), y1 = Math.min(a[1] + a[3], b2[1] + b2[3]);
+  const dentro3 = Math.max(0, x1 - x0) * Math.max(0, y1 - y0);
+  return dentro3 / (area(a) + area(b2) - dentro3);
+};
+var allarga2 = (b2, k) => [b2[0] - b2[2] * k, b2[1] - b2[3] * k, b2[2] * (1 + 2 * k), b2[3] * (1 + 2 * k)];
+var dentroPer = (a, b2) => {
+  const x0 = Math.max(a[0], b2[0]), y0 = Math.max(a[1], b2[1]);
+  const x1 = Math.min(a[0] + a[2], b2[0] + b2[2]), y1 = Math.min(a[1] + a[3], b2[1] + b2[3]);
+  return Math.max(0, x1 - x0) * Math.max(0, y1 - y0) / area(a);
+};
 var riquadro = (b2) => {
   const [x, y, w, h] = elenco15(b2).map(Number);
   return [x, y, w, h].every(Number.isFinite) && w > 0 && h > 0 ? [x, y, w, h] : null;
@@ -157109,17 +157164,91 @@ function sovrapposti(a, b2) {
   const dentro3 = Math.max(0, x1 - x0) * Math.max(0, y1 - y0);
   return dentro3 / Math.min(a[2] * a[3], b2[2] * b2[3]);
 }
-function oggettiDaCoco(rilevati, { soglia: soglia3 = 0.3, stanza: stanza2 = "" } = {}) {
+function oggettiDallaFoto(rilevati, { soglia: soglia3 = 0.4, stanza: stanza2 = "", w = 0, h = 0 } = {}) {
   const arredi = [], dispositivi = [];
-  const ordinati = elenco15(rilevati).map((d) => ({ classe: clean32(d?.class), box: riquadro(d?.bbox), score: Number(d?.score) || 0 })).filter((d) => d.box && d.score >= soglia3 && DA_COCO[d.classe]).sort((a, b2) => b2.score - a.score);
-  const bagno = /bagn|bath|wc|toilet|servizi/i.test(clean32(stanza2)) || ordinati.some((d) => d.classe === "toilet");
+  const visti = elenco15(rilevati).map((d) => ({
+    classe: clean32(d?.class).toLowerCase(),
+    box: riquadro(d?.bbox),
+    score: Number(d?.score) || 0
+  })).filter(
+    (d) => d.box && DALLE_CLASSI[d.classe] && d.score >= Math.max(soglia3, SOGLIE2[d.classe] || 0)
+  ).sort((a, b2) => b2.score - a.score).filter(
+    (d, i, tutti) => tutti.slice(0, i).every((p) => p.classe === d.classe || unione(p.box, d.box) <= 0.7)
+  );
+  const W2 = Number(w) > 0 ? Number(w) : Math.max(1, ...visti.map((d) => d.box[0] + d.box[2])), H7 = Number(h) > 0 ? Number(h) : Math.max(1, ...visti.map((d) => d.box[1] + d.box[3]));
+  let tipo = tipoDiStanza(stanza2);
+  const ci = (classe3) => visti.filter((d) => d.classe === classe3);
+  if (tipo === "giorno" && (ci("toilet").length || ci("bathtub").length)) tipo = "bagno";
+  if (tipo === "giorno" && ci("bed").length) tipo = "camera";
+  if (tipo === "giorno" && (ci("gas stove").length || ci("induction cooker").length || ci("extractor").length))
+    tipo = "cucina";
+  const tavoli = visti.filter((d) => /dinn?ing table|desk|laptop/.test(d.classe));
+  const tv = visti.filter((d) => d.classe === "tv" || d.classe === "moniter/tv");
+  const mobili = ci("cabinet/shelf");
+  const sopraUnMobile = (b2) => mobili.some((m) => {
+    const cx = b2[0] + b2[2] / 2, sotto = b2[1] + b2[3];
+    return cx > m.box[0] && cx < m.box[0] + m.box[2] && sotto > m.box[1] - H7 * 0.12 && sotto < m.box[1] + m.box[3] * 0.4;
+  });
+  const inColonna = (a, b2) => Math.max(0, Math.min(a[0] + a[2], b2[0] + b2[2]) - Math.max(a[0], b2[0])) > Math.min(a[2], b2[2]) * 0.5;
   const metti5 = (dove, k, d) => {
     if (dove.some((o) => o.k === k && sovrapposti(o.box, d.box) > 0.6)) return;
+    if (k === "cucina" && dove.some((o) => o.k === k && inColonna(o.box, d.box))) return;
     dove.push({ k, box: d.box, score: tondo(d.score, 2) });
   };
-  for (const d of ordinati) {
-    const m = bagno && d.classe === "sink" ? { arredo: "lavabo" } : DA_COCO[d.classe];
-    if (m.arredo) metti5(arredi, m.arredo, d);
+  const mobile = (d) => {
+    const [, y, bw, bh] = d.box;
+    if (y + bh < H7 * 0.45) return tipo === "cucina" ? "cucina" : "pensile";
+    if (tipo === "cucina") return "cucina";
+    if (tipo === "bagno") return "lavabo";
+    const alto = bh > bw * 1.25;
+    if (tipo === "camera") return alto ? "armadio" : "cassettiera";
+    if (!alto && tv.some((t2) => sopraUnMobile(t2.box) && dentroPer(t2.box, allarga2(d.box, 0.3)) > 0))
+      return "tv";
+    return alto ? "libreria" : "madia";
+  };
+  const giaVisti = [];
+  for (const d of visti) {
+    const m = DALLE_CLASSI[d.classe];
+    if (d.classe === "cabinet/shelf" && giaVisti.some((g) => g.classe === "cabinet/shelf" && dentroPer(d.box, g.box) > 0.7))
+      continue;
+    giaVisti.push(d);
+    let k = m.arredo || null;
+    switch (k) {
+      case "letto":
+        k = /singol|bimb|ragazz|camerett/i.test(clean32(stanza2)) ? "singolo" : "matrimoniale";
+        break;
+      case "mobile":
+        k = area(d.box) >= W2 * H7 * 0.015 ? mobile(d) : null;
+        break;
+      case "laterale":
+        k = tipo === "camera" ? "comodino" : "tavolino";
+        break;
+      case "sedia": {
+        const vicino = tavoli.find((t2) => dentroPer(d.box, allarga2(t2.box, 0.35)) > 0.3);
+        if (vicino) k = /desk|laptop/.test(vicino.classe) ? "ufficio" : null;
+        else k = d.box[2] >= d.box[3] * 0.75 ? "poltrona" : null;
+        break;
+      }
+      case "lampada":
+        if (d.box[1] + d.box[3] < H7 * 0.4) {
+          metti5(dispositivi, "luce", d);
+          k = null;
+        } else k = d.box[3] > d.box[2] * 2 && d.box[1] + d.box[3] > H7 * 0.6 ? "stelo" : null;
+        break;
+      case "quadro":
+        k = area(d.box) >= W2 * H7 * 0.012 ? "quadro" : null;
+        break;
+      case "tv":
+        if (tavoli.some((t2) => /desk|laptop/.test(t2.classe) && dentroPer(d.box, allarga2(t2.box, 0.2)) > 0.5))
+          continue;
+        if (sopraUnMobile(d.box) || d.box[1] + d.box[3] < H7 * 0.55) k = null;
+        break;
+      case "lavello":
+        k = tipo === "bagno" ? "lavabo" : "cucina";
+        break;
+      default:
+    }
+    if (k) metti5(arredi, k, d);
     if (m.dispositivo) metti5(dispositivi, m.dispositivo, d);
   }
   return { arredi, dispositivi };
@@ -157163,13 +157292,13 @@ function areeDaiRegistri({ wiz = null, hass = null, ricordate = null } = {}) {
   for (const a of Object.values(hass?.areas || {}))
     if (clean32(a?.area_id) && clean32(a?.name)) aree2[clean32(a.area_id)] ||= clean32(a.name);
   for (const [id, riga5] of Object.entries(wiz?.entReg || {})) {
-    const area = clean32(riga5?.a) || clean32(wiz?.devArea?.[clean32(riga5?.d)]);
-    if (area) diEntita[id] = area;
+    const area2 = clean32(riga5?.a) || clean32(wiz?.devArea?.[clean32(riga5?.d)]);
+    if (area2) diEntita[id] = area2;
   }
   for (const [id, e] of Object.entries(hass?.entities || {})) {
     if (diEntita[id]) continue;
-    const area = clean32(e?.area_id) || clean32(hass?.devices?.[clean32(e?.device_id)]?.area_id);
-    if (area) diEntita[id] = area;
+    const area2 = clean32(e?.area_id) || clean32(hass?.devices?.[clean32(e?.device_id)]?.area_id);
+    if (area2) diEntita[id] = area2;
   }
   if (!Object.keys(aree2).length && ricordate && typeof ricordate === "object") {
     for (const [id, nome] of Object.entries(ricordate)) {
@@ -157243,15 +157372,34 @@ function nellaStanza(casa2, id, x, y) {
   }
   return { x: px, y: py };
 }
+var LARGHE_COME_NELLA_FOTO = Object.freeze({
+  divano: 2.2,
+  cucina: 3,
+  armadio: 2.2,
+  madia: 1.8,
+  libreria: 1.6,
+  tv: 1.9,
+  cassettiera: 1.1,
+  pensile: 1.6
+});
+function larghezzaDallaFoto(stanza2, foto, o) {
+  const tipica = LARGHE_COME_NELLA_FOTO[o?.k], b2 = riquadro(o?.box), W2 = Number(foto?.w) || 0;
+  if (!tipica || !b2 || !(W2 > 0) || o?.manuale) return 0;
+  const r = riquadroDi(stanza2), verso2 = versoDi(foto?.verso), parete = verso2 === "N" || verso2 === "S" ? r.x1 - r.x0 : r.y1 - r.y0;
+  if (!(parete > 0)) return 0;
+  return tondo(tra3(b2[2] / W2 * parete, tipica * 0.6, Math.min(tipica * 1.6, parete)), 2);
+}
 function arrediDallaFoto(casa2, stanza2, foto) {
   return elenco15(foto?.oggetti).filter((o) => ARREDI_DELLE_FOTO[o?.k]).map((o) => {
     const p = posaDallaFoto(stanza2, foto, o.box, { accostato: ACCOSTATI.has(o.k) });
+    const l = larghezzaDallaFoto(stanza2, foto, o);
     return {
       k: o.k,
       stanza: stanza2.id,
       ...nellaStanza(casa2, stanza2.id, p.x, p.y),
       rot: p.rot,
-      tinta: colore(o.colore)
+      tinta: colore(o.colore),
+      ...l ? { l } : {}
     };
   });
 }
@@ -158026,25 +158174,25 @@ function registri() {
     ricordate
   });
 }
-var TF = (() => {
+var ORT = (() => {
   try {
-    return new URL("../../legacy/vendor/riconoscere/tf.min.js", import.meta.url).href;
+    return new URL("../../legacy/vendor/riconoscere/ort.wasm.min.js", import.meta.url).href;
   } catch (_errore) {
-    return "../../legacy/vendor/riconoscere/tf.min.js";
-  }
-})();
-var COCO = (() => {
-  try {
-    return new URL("../../legacy/vendor/riconoscere/coco-ssd.min.js", import.meta.url).href;
-  } catch (_errore) {
-    return "../../legacy/vendor/riconoscere/coco-ssd.min.js";
+    return "../../legacy/vendor/riconoscere/ort.wasm.min.js";
   }
 })();
 var VENDOR = daiVendor(
   String(import.meta.url || ""),
   "riconoscere/",
-  TF.slice(0, TF.lastIndexOf("/") + 1)
+  ORT.slice(0, ORT.lastIndexOf("/") + 1)
 );
+var ORT_COLLA = (() => {
+  try {
+    return new URL("../../legacy/vendor/riconoscere/ort-wasm-simd-threaded.js", import.meta.url).href;
+  } catch (_errore) {
+    return "../../legacy/vendor/riconoscere/ort-wasm-simd-threaded.js";
+  }
+})();
 var PDFJS = (() => {
   try {
     return new URL("../../legacy/vendor/pdfjs/pdf.min.js", import.meta.url).href;
@@ -158083,6 +158231,37 @@ function copione(src, pronto) {
     doc.head.appendChild(s);
   });
 }
+var LATO = 640;
+function rilevatore2(ort, sessione, nomi2) {
+  return {
+    async detect(img, quanti3 = 60, soglia3 = 0.3) {
+      const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+      const tela4 = tela2d(LATO, LATO), g = tela4.getContext("2d", { willReadFrequently: true });
+      g.imageSmoothingEnabled = true;
+      g.imageSmoothingQuality = "high";
+      g.drawImage(img, 0, 0, LATO, LATO);
+      const px = g.getImageData(0, 0, LATO, LATO).data, n = LATO * LATO, dati = new Float32Array(3 * n);
+      for (let i = 0; i < n; i++) {
+        dati[i] = px[i * 4] / 255;
+        dati[n + i] = px[i * 4 + 1] / 255;
+        dati[2 * n + i] = px[i * 4 + 2] / 255;
+      }
+      const out = await sessione.run({
+        images: new ort.Tensor("float32", dati, [1, 3, LATO, LATO]),
+        orig_target_sizes: new ort.Tensor("int64", BigInt64Array.from([BigInt(w), BigInt(h)]), [1, 2])
+      });
+      const etichette = out.labels.data, riquadri = out.boxes.data, punti = out.scores.data, visti = [];
+      for (let i = 0; i < punti.length; i++) {
+        if (punti[i] < soglia3) continue;
+        const [x0, y0, x1, y1] = [0, 1, 2, 3].map((j) => riquadri[i * 4 + j]);
+        const nome = nomi2[Number(etichette[i]) - 1];
+        if (!nome || !(x1 > x0 && y1 > y0)) continue;
+        visti.push({ class: nome, score: punti[i], bbox: [x0, y0, x1 - x0, y1 - y0] });
+      }
+      return visti.sort((a, b2) => b2.score - a.score).slice(0, quanti3);
+    }
+  };
+}
 function riconoscitore() {
   if (state182.modello) return state182.modello;
   state182.modello = (async () => {
@@ -158092,12 +158271,29 @@ function riconoscitore() {
       disegnaIlPannello();
     }
     try {
-      if (!await copione(`${VENDOR}tf.min.js`, () => root.tf)) throw new Error("tf");
-      if (!await copione(`${VENDOR}coco-ssd.min.js`, () => root.cocoSsd))
-        throw new Error("coco-ssd");
-      const m = await root.cocoSsd.load({ modelUrl: `${VENDOR}model.json` });
+      if (!await copione(`${VENDOR}ort.wasm.min.js`, () => root.ort)) throw new Error("ort");
+      const ort = root.ort;
+      ort.env.wasm.numThreads = 1;
+      ort.env.wasm.wasmPaths = {
+        mjs: `${VENDOR}ort-wasm-simd-threaded.js`,
+        wasm: `${VENDOR}ort-wasm-simd-threaded.wasm`
+      };
+      const [nomi2, pesi] = await Promise.all([
+        fetch(`${VENDOR}obj365.json`).then((r) => {
+          if (!r.ok) throw new Error(`obj365 ${r.status}`);
+          return r.json();
+        }),
+        fetch(`${VENDOR}dfine-s-obj365.bin`).then((r) => {
+          if (!r.ok) throw new Error(`modello ${r.status}`);
+          return r.arrayBuffer();
+        })
+      ]);
+      const sessione = await ort.InferenceSession.create(new Uint8Array(pesi), {
+        executionProviders: ["wasm"],
+        graphOptimizationLevel: "all"
+      });
       if (state182.S) state182.S.riconoscitore = "pronto";
-      return m;
+      return rilevatore2(ort, sessione, nomi2);
     } catch (errore) {
       root.console?.warn?.("[DashboardModern] Casa 3D: riconoscimento non disponibile", errore);
       if (state182.S) state182.S.riconoscitore = "no";
@@ -158554,13 +158750,13 @@ function pMuri() {
 }
 function sceltaDellaStanza(s) {
   const S = state182.S, aree2 = Object.entries(S.registri.aree).sort((a, b2) => a[1].localeCompare(b2[1]));
-  const area = clean(S.aree[s.id]), nome = clean(S.nomi[s.id]);
+  const area2 = clean(S.aree[s.id]), nome = clean(S.nomi[s.id]);
   const voci4 = aree2.length ? aree2.map(
-    ([id, n]) => `<option value="a:${esc(id)}"${area === id ? " selected" : ""}>${esc(n)}</option>`
+    ([id, n]) => `<option value="a:${esc(id)}"${area2 === id ? " selected" : ""}>${esc(n)}</option>`
   ) : NOMI_DI_RIPIEGO.map(
-    (c) => `<option value="n:${esc(due3(c))}"${!area && nome === due3(c) ? " selected" : ""}>${esc(due3(c))}</option>`
+    (c) => `<option value="n:${esc(due3(c))}"${!area2 && nome === due3(c) ? " selected" : ""}>${esc(due3(c))}</option>`
   );
-  const libero = nome && !area && !(aree2.length ? false : NOMI_DI_RIPIEGO.some((c) => due3(c) === nome));
+  const libero = nome && !area2 && !(aree2.length ? false : NOMI_DI_RIPIEGO.some((c) => due3(c) === nome));
   return `<select class="c3c-in" data-c3c-area="${s.id}"><option value="">${esc(aree2.length ? t("— area di Home Assistant —", "— Home Assistant area —") : t("— scegli un nome —", "— pick a name —"))}</option>${voci4.join("")}</select>
     <input class="c3c-in" data-c3c-nome="${s.id}" value="${libero ? esc(nome) : ""}" placeholder="${esc(t("o scrivi un nome", "or type a name"))}" autocomplete="off">`;
 }
@@ -158664,7 +158860,8 @@ function pFotoStanze() {
     );
     const arredi = F.oggetti.map((o, i) => {
       const V = ARREDI_DELLE_FOTO[o.k];
-      return `<div class="c3c-trovato">${V?.icona || ""} ${esc(V ? due3(V.nome) : o.k)}${o.colore ? `<span class="c3c-col" style="background:${esc(o.colore)}"></span>` : ""}<em>${esc(o.manuale ? t("aggiunto da te", "added by you") : t(`riconosciuto ${Math.round(o.score * 100)}%`, `recognised ${Math.round(o.score * 100)}%`))}</em><button type="button" class="c3c-x" data-c3c-togli="${i}" aria-label="${esc(t("Togli", "Remove"))}">✕</button></div>`;
+      const tipi = `<select class="c3c-tipo" data-c3c-tipo="${i}" aria-label="${esc(t("Che cos'è", "What it is"))}">${ARREDI_A_MANO.map((k) => `<option value="${k}"${k === o.k ? " selected" : ""}>${ARREDI_DELLE_FOTO[k].icona} ${esc(due3(ARREDI_DELLE_FOTO[k].nome))}</option>`).join("")}</select>`;
+      return `<div class="c3c-trovato">${V ? tipi : esc(o.k)}${o.colore ? `<span class="c3c-col" style="background:${esc(o.colore)}"></span>` : ""}<em>${esc(o.manuale ? t("aggiunto da te", "added by you") : t(`riconosciuto ${Math.round(o.score * 100)}%`, `recognised ${Math.round(o.score * 100)}%`))}</em><button type="button" class="c3c-x" data-c3c-togli="${i}" aria-label="${esc(t("Togli", "Remove"))}">✕</button></div>`;
     }).join("");
     html += scheda7(
       `🛋️ <b>${esc(t("Arredi", "Furniture"))}</b>`,
@@ -159368,7 +159565,7 @@ function apriVarco(x, y, largo) {
 }
 async function rilevaNeiRitagli(modello2, img) {
   const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
-  const tutti = [...await modello2.detect(img, 20, 0.3)];
+  const tutti = [...await modello2.detect(img, 60, 0.3)];
   if (!(w > 0 && h > 0)) return tutti;
   const lw = Math.round(w * 0.6), lh = Math.round(h * 0.6);
   for (const [x0, y0] of [
@@ -159380,7 +159577,7 @@ async function rilevaNeiRitagli(modello2, img) {
     try {
       const tela4 = tela2d(lw, lh);
       tela4.getContext("2d").drawImage(img, x0, y0, lw, lh, 0, 0, lw, lh);
-      for (const d of await modello2.detect(tela4, 20, 0.35)) {
+      for (const d of await modello2.detect(tela4, 20, 0.5)) {
         const [bx, by, bw, bh] = d.bbox || [];
         const taglio = 4;
         const sulBordo = bx <= taglio && x0 > 0 || by <= taglio && y0 > 0 || bx + bw >= lw - taglio && x0 + lw < w || by + bh >= lh - taglio && y0 + lh < h;
@@ -159416,8 +159613,10 @@ async function aggiungiFotoStanza(src) {
   const modello2 = await riconoscitore();
   if (modello2) {
     try {
-      const visti = oggettiDaCoco(await rilevaNeiRitagli(modello2, img), {
-        stanza: nomeDi18(stanza2)
+      const visti = oggettiDallaFoto(await rilevaNeiRitagli(modello2, img), {
+        stanza: nomeDi18(stanza2),
+        w: F.w,
+        h: F.h
       });
       for (const o of visti.arredi) {
         const [x, y, w, h] = o.box;
@@ -159670,6 +159869,11 @@ function aggiornaLaScheda(ref, disp, aMano) {
 function alCambio5(ev) {
   const S = state182.S, e = ev.target, d = e.dataset;
   if (!S || !nodo2()?.contains(e)) return;
+  if (d.c3cTipo !== void 0) {
+    const o = (S.foto[S.sel] || [])[S.fotoSel]?.oggetti?.[Number(d.c3cTipo)];
+    if (o && ARREDI_DELLE_FOTO[e.value]) o.k = e.value;
+    return disegna14();
+  }
   if (d.c3cArea !== void 0) {
     const id = Number(d.c3cArea), v = clean(e.value);
     if (v.startsWith("a:")) {
@@ -159686,13 +159890,13 @@ function alCambio5(ev) {
   }
   if (d.c3cNome !== void 0) {
     const id = Number(d.c3cNome), v = clean(e.value).slice(0, 40);
-    const area = Object.entries(S.registri.aree).find(
+    const area2 = Object.entries(S.registri.aree).find(
       ([, n]) => n.toLowerCase() === v.toLowerCase()
     );
-    S.nomi[id] = area ? area[1] : v;
-    S.aree[id] = area ? area[0] : "";
+    S.nomi[id] = area2 ? area2[1] : v;
+    S.aree[id] = area2 ? area2[0] : "";
     const scelta3 = nodo2().querySelector(`[data-c3c-area="${id}"]`);
-    if (scelta3) scelta3.value = area ? `a:${area[0]}` : "";
+    if (scelta3) scelta3.value = area2 ? `a:${area2[0]}` : "";
     return disegnaLaTela();
   }
   if (d.c3cEnt !== void 0 || d.c3cMano !== void 0) {
@@ -160038,6 +160242,7 @@ function installaLoStile11() {
     ${Q} .c3c-miniature img.si{border-color:#38bdf8}
     ${Q} .c3c-trovato{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:10px;background:var(--c3c-s2);margin-bottom:5px;font-size:12px}
     ${Q} .c3c-col{width:16px;height:16px;border-radius:4px;border:1px solid rgba(255,255,255,.2);flex:none}
+    ${Q} .c3c-trovato .c3c-tipo{flex:1;min-width:0;max-width:62%;font:inherit;font-weight:600;color:inherit;background:transparent;border:1px solid var(--c3c-bordo);border-radius:8px;padding:4px 6px}
     ${Q} .c3c-trovato em{margin-left:auto;font-style:normal;font-size:10.5px;color:var(--c3c-fioco)}
     ${Q} .c3c-x{flex:none;padding:2px 7px;border-radius:100px;border:1px solid var(--c3c-bordo);background:var(--c3c-s3);font-size:11px;cursor:pointer}
     ${Q} .c3c-disp{padding:9px;border-radius:12px;background:var(--c3c-s2);border:1px solid var(--c3c-bordo);margin-bottom:7px}
@@ -160592,11 +160797,11 @@ var numero63 = (valore3) => {
 var CHIAVE_NODI = "cd_nodi";
 var NODI_MASSIMI = 8;
 var CAMPI_DEL_NODO = Object.freeze(["stato", "cpu", "ram", "disco", "temperatura"]);
-var SOGLIE2 = Object.freeze({
+var SOGLIE3 = Object.freeze({
   carico: Object.freeze({ alto: 70, critico: 90 }),
   temperatura: Object.freeze({ alto: 70, critico: 85 })
 });
-function livelloDella(valore3, soglie = SOGLIE2.carico) {
+function livelloDella(valore3, soglie = SOGLIE3.carico) {
   const n = numero63(valore3);
   if (n === null) return "";
   if (n >= soglie.critico) return "critico";
@@ -160662,7 +160867,7 @@ function misura7(entity2, states, soglie) {
     valore: valore3,
     unita: unita3,
     livello: livelloDella(
-      soglie === SOGLIE2.temperatura ? inCelsius2(valore3, unita3) : valore3,
+      soglie === SOGLIE3.temperatura ? inCelsius2(valore3, unita3) : valore3,
       soglie
     )
   };
@@ -160678,10 +160883,10 @@ function letturaDelNodo(nodo3 = {}, states = {}) {
      * diverse: la prima e' un problema di rete o di Home Assistant, la seconda
      * e' un nodo che qualcuno ha fermato. */
     muto: Boolean(clean33(nodo3.stato)) && nonRisponde3(statoDelNodo),
-    cpu: misura7(nodo3.cpu, states, SOGLIE2.carico),
-    ram: misura7(nodo3.ram, states, SOGLIE2.carico),
-    disco: misura7(nodo3.disco, states, SOGLIE2.carico),
-    temperatura: misura7(nodo3.temperatura, states, SOGLIE2.temperatura)
+    cpu: misura7(nodo3.cpu, states, SOGLIE3.carico),
+    ram: misura7(nodo3.ram, states, SOGLIE3.carico),
+    disco: misura7(nodo3.disco, states, SOGLIE3.carico),
+    temperatura: misura7(nodo3.temperatura, states, SOGLIE3.temperatura)
   };
 }
 function lettureDeiNodi(stored = [], states = {}) {
@@ -163427,9 +163632,9 @@ function creaDaDispositivo6({ device, entities, integration }) {
     return;
   }
   const stanze4 = readJson("cd_stanze", []);
-  const area = clean(device?.area);
+  const area2 = clean(device?.area);
   const stanza2 = (Array.isArray(stanze4) ? stanze4 : []).find(
-    (voce3) => clean(voce3?.name).toLowerCase() === area.toLowerCase()
+    (voce3) => clean(voce3?.name).toLowerCase() === area2.toLowerCase()
   );
   if (stanza2) nato.room_id = clean(stanza2.id) || clean(stanza2.name);
   state192.aperta = lista7.length;
@@ -164232,7 +164437,7 @@ function installIndirizzoDiCasa() {
   const originale = root.fetch;
   if (typeof originale !== "function" || originale.__dmIndirizzoDiCasa) return false;
   state194.installed = true;
-  const nostra = function fetch(risorsa, init) {
+  const nostra = function fetch2(risorsa, init) {
     if (typeof risorsa !== "string" || !versoLApi(risorsa))
       return originale.call(this, risorsa, init);
     const riparato = indirizzoRiparato(risorsa, baseDelDocumento(), hostDelDocumento()) || risorsa;

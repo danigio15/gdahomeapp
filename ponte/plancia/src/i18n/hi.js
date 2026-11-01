@@ -7699,6 +7699,7 @@ export default Object.freeze({
   "With this length the outer walls would be ${cm} cm thick: check the length, in metres (10.92, not 1092).": "इस लंबाई से बाहरी दीवारें ${cm} सेमी मोटी होंगी: लंबाई मीटर में जाँचें (10.92, 1092 नहीं)।",
   "Read as ${metri} metres.": "${metri} मीटर के रूप में पढ़ा गया।",
   "Scale found from the wall thickness: you can go on, or mark a length to be more precise.": "दीवारों की मोटाई से स्केल मिल गया: आप आगे बढ़ सकते हैं, या अधिक सटीकता के लिए कोई लंबाई चिह्नित करें।",
+  "What it is": "यह क्या है",
   "Add or redo a floor": "मंज़िल जोड़ें या दोबारा बनाएँ",
   "Add photos of ${nome}": "${nome} की फ़ोटो जोड़ें",
   "Add photos of this room": "इस कमरे की फ़ोटो जोड़ें",

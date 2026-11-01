@@ -7733,6 +7733,7 @@ export default Object.freeze({
   "With this length the outer walls would be ${cm} cm thick: check the length, in metres (10.92, not 1092).": "При такой длине наружные стены были бы толщиной ${cm} см: проверьте длину, в метрах (10,92, а не 1092).",
   "Read as ${metri} metres.": "Прочитано как ${metri} м.",
   "Scale found from the wall thickness: you can go on, or mark a length to be more precise.": "Масштаб найден по толщине стен: можно продолжить или отметить длину для большей точности.",
+  "What it is": "Что это",
   "Add or redo a floor": "Добавить или переделать этаж",
   "Add photos of ${nome}": "Добавить фото: ${nome}",
   "Add photos of this room": "Добавить фото этой комнаты",

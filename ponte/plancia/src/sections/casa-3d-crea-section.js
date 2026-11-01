@@ -37,7 +37,7 @@ import {
   areeDaiRegistri,
   dispositiviDallaFoto,
   entitaUsate,
-  oggettiDaCoco,
+  oggettiDallaFoto,
   pianoDaRiconoscimento,
   pianoDelLivello,
   posaDiRipiego,
@@ -228,26 +228,29 @@ function registri() {
  * versione (come le figure delle persone): impacchettati, i moduli stanno in
  * `pacco/` e un percorso relativo sbaglierebbe piano. Fuori dal ponte vale il
  * percorso dei sorgenti. */
-const TF = (() => {
+const ORT = (() => {
   try {
-    return new URL("../../legacy/vendor/riconoscere/tf.min.js", import.meta.url).href;
+    return new URL("../../legacy/vendor/riconoscere/ort.wasm.min.js", import.meta.url).href;
   } catch (_errore) {
-    return "../../legacy/vendor/riconoscere/tf.min.js";
-  }
-})();
-const COCO = (() => {
-  try {
-    return new URL("../../legacy/vendor/riconoscere/coco-ssd.min.js", import.meta.url).href;
-  } catch (_errore) {
-    return "../../legacy/vendor/riconoscere/coco-ssd.min.js";
+    return "../../legacy/vendor/riconoscere/ort.wasm.min.js";
   }
 })();
 const VENDOR = daiVendor(
   String(import.meta.url || ""),
   "riconoscere/",
-  TF.slice(0, TF.lastIndexOf("/") + 1),
+  ORT.slice(0, ORT.lastIndexOf("/") + 1),
 );
-void COCO;
+/* la colla fra ONNX Runtime e il suo .wasm: la carica ONNX Runtime stesso,
+ * dalla stessa cartella (qui la si nomina, perche' si sappia che serve) */
+const ORT_COLLA = (() => {
+  try {
+    return new URL("../../legacy/vendor/riconoscere/ort-wasm-simd-threaded.js", import.meta.url)
+      .href;
+  } catch (_errore) {
+    return "../../legacy/vendor/riconoscere/ort-wasm-simd-threaded.js";
+  }
+})();
+void ORT_COLLA;
 
 /* pdf.js (Apache-2.0, vedi legacy/vendor/pdfjs/LEGGIMI.txt): per il PDF del
  * catasto, solo quando si sceglie un PDF. */
@@ -295,6 +298,54 @@ function copione(src, pronto) {
   });
 }
 
+/* «Dalle foto non li riconosce bene e non e' fedele con quanto presente in
+ * casa»: COCO conosceva 80 cose, e di una casa solo divano, letto, tavolo,
+ * TV. Il riconoscitore ora e' D-FINE addestrato su Objects365 (365 cose:
+ * armadi e mensole, comodini, tavolini, lavatrici, condizionatori, quadri,
+ * telecamere...), girato da ONNX Runtime nella pagina: le foto restano qui.
+ * Sa la sua lezione su immagini quadrate da 640: la foto si stira cosi', e i
+ * riquadri tornano nelle misure della foto. */
+const LATO = 640;
+function rilevatore(ort, sessione, nomi) {
+  return {
+    async detect(img, quanti = 60, soglia = 0.3) {
+      const w = img.naturalWidth || img.width,
+        h = img.naturalHeight || img.height;
+      const tela = tela2d(LATO, LATO),
+        g = tela.getContext("2d", { willReadFrequently: true });
+      /* rimpicciolita bene, come quando ha imparato: col filtro basso un
+       * quadro grande gli sfuggiva */
+      g.imageSmoothingEnabled = true;
+      g.imageSmoothingQuality = "high";
+      g.drawImage(img, 0, 0, LATO, LATO);
+      const px = g.getImageData(0, 0, LATO, LATO).data,
+        n = LATO * LATO,
+        dati = new Float32Array(3 * n);
+      for (let i = 0; i < n; i++) {
+        dati[i] = px[i * 4] / 255;
+        dati[n + i] = px[i * 4 + 1] / 255;
+        dati[2 * n + i] = px[i * 4 + 2] / 255;
+      }
+      const out = await sessione.run({
+        images: new ort.Tensor("float32", dati, [1, 3, LATO, LATO]),
+        orig_target_sizes: new ort.Tensor("int64", BigInt64Array.from([BigInt(w), BigInt(h)]), [1, 2]),
+      });
+      const etichette = out.labels.data,
+        riquadri = out.boxes.data,
+        punti = out.scores.data,
+        visti = [];
+      for (let i = 0; i < punti.length; i++) {
+        if (punti[i] < soglia) continue;
+        const [x0, y0, x1, y1] = [0, 1, 2, 3].map((j) => riquadri[i * 4 + j]);
+        const nome = nomi[Number(etichette[i]) - 1];
+        if (!nome || !(x1 > x0 && y1 > y0)) continue;
+        visti.push({ class: nome, score: punti[i], bbox: [x0, y0, x1 - x0, y1 - y0] });
+      }
+      return visti.sort((a, b) => b.score - a.score).slice(0, quanti);
+    },
+  };
+}
+
 function riconoscitore() {
   if (state.modello) return state.modello;
   state.modello = (async () => {
@@ -304,12 +355,31 @@ function riconoscitore() {
       disegnaIlPannello();
     }
     try {
-      if (!(await copione(`${VENDOR}tf.min.js`, () => root.tf))) throw new Error("tf");
-      if (!(await copione(`${VENDOR}coco-ssd.min.js`, () => root.cocoSsd)))
-        throw new Error("coco-ssd");
-      const m = await root.cocoSsd.load({ modelUrl: `${VENDOR}model.json` });
+      if (!(await copione(`${VENDOR}ort.wasm.min.js`, () => root.ort))) throw new Error("ort");
+      const ort = root.ort;
+      /* un filo solo: i fili in parallelo vogliono una pagina «isolata», che
+       * dentro Home Assistant non c'e' */
+      ort.env.wasm.numThreads = 1;
+      ort.env.wasm.wasmPaths = {
+        mjs: `${VENDOR}ort-wasm-simd-threaded.js`,
+        wasm: `${VENDOR}ort-wasm-simd-threaded.wasm`,
+      };
+      const [nomi, pesi] = await Promise.all([
+        fetch(`${VENDOR}obj365.json`).then((r) => {
+          if (!r.ok) throw new Error(`obj365 ${r.status}`);
+          return r.json();
+        }),
+        fetch(`${VENDOR}dfine-s-obj365.bin`).then((r) => {
+          if (!r.ok) throw new Error(`modello ${r.status}`);
+          return r.arrayBuffer();
+        }),
+      ]);
+      const sessione = await ort.InferenceSession.create(new Uint8Array(pesi), {
+        executionProviders: ["wasm"],
+        graphOptimizationLevel: "all",
+      });
       if (state.S) state.S.riconoscitore = "pronto";
-      return m;
+      return rilevatore(ort, sessione, nomi);
     } catch (errore) {
       root.console?.warn?.("[DashboardModern] Casa 3D: riconoscimento non disponibile", errore);
       if (state.S) state.S.riconoscitore = "no";
@@ -1061,7 +1131,10 @@ function pFotoStanze() {
     const arredi = F.oggetti
       .map((o, i) => {
         const V = ARREDI_DELLE_FOTO[o.k];
-        return `<div class="c3c-trovato">${V?.icona || ""} ${esc(V ? due(V.nome) : o.k)}${o.colore ? `<span class="c3c-col" style="background:${esc(o.colore)}"></span>` : ""}<em>${esc(o.manuale ? t("aggiunto da te", "added by you") : t(`riconosciuto ${Math.round(o.score * 100)}%`, `recognised ${Math.round(o.score * 100)}%`))}</em><button type="button" class="c3c-x" data-c3c-togli="${i}" aria-label="${esc(t("Togli", "Remove"))}">✕</button></div>`;
+        /* «non e' fedele con quanto presente in casa»: se ha visto la cosa
+         * giusta col nome sbagliato, si cambia qui senza rifarla a mano */
+        const tipi = `<select class="c3c-tipo" data-c3c-tipo="${i}" aria-label="${esc(t("Che cos'è", "What it is"))}">${ARREDI_A_MANO.map((k) => `<option value="${k}"${k === o.k ? " selected" : ""}>${ARREDI_DELLE_FOTO[k].icona} ${esc(due(ARREDI_DELLE_FOTO[k].nome))}</option>`).join("")}</select>`;
+        return `<div class="c3c-trovato">${V ? tipi : esc(o.k)}${o.colore ? `<span class="c3c-col" style="background:${esc(o.colore)}"></span>` : ""}<em>${esc(o.manuale ? t("aggiunto da te", "added by you") : t(`riconosciuto ${Math.round(o.score * 100)}%`, `recognised ${Math.round(o.score * 100)}%`))}</em><button type="button" class="c3c-x" data-c3c-togli="${i}" aria-label="${esc(t("Togli", "Remove"))}">✕</button></div>`;
       })
       .join("");
     html += scheda(
@@ -1970,11 +2043,11 @@ function apriVarco(x, y, largo) {
  * riconoscitore guarda la foto rimpicciolita, e le cose piccole o lontane
  * (un forno, un lavabo, una pianta in fondo) gli sfuggono. Si guarda anche
  * in quattro ritagli che si sovrappongono, ognuno ingrandito: quello che si
- * vede due volte resta uno solo (oggettiDaCoco). */
+ * vede due volte resta uno solo (oggettiDallaFoto). */
 async function rilevaNeiRitagli(modello, img) {
   const w = img.naturalWidth || img.width,
     h = img.naturalHeight || img.height;
-  const tutti = [...(await modello.detect(img, 20, 0.3))];
+  const tutti = [...(await modello.detect(img, 60, 0.3))];
   if (!(w > 0 && h > 0)) return tutti;
   const lw = Math.round(w * 0.6),
     lh = Math.round(h * 0.6);
@@ -1987,7 +2060,8 @@ async function rilevaNeiRitagli(modello, img) {
     try {
       const tela = tela2d(lw, lh);
       tela.getContext("2d").drawImage(img, x0, y0, lw, lh, 0, 0, lw, lh);
-      for (const d of await modello.detect(tela, 20, 0.35)) {
+      /* nei ritagli ingranditi si inventa di piu': ci vuole piu' sicurezza */
+      for (const d of await modello.detect(tela, 20, 0.5)) {
         const [bx, by, bw, bh] = d.bbox || [];
         /* tagliato dal bordo del ritaglio: lo vede gia' la foto intera */
         const taglio = 4;
@@ -2029,8 +2103,10 @@ async function aggiungiFotoStanza(src) {
   const modello = await riconoscitore();
   if (modello) {
     try {
-      const visti = oggettiDaCoco(await rilevaNeiRitagli(modello, img), {
+      const visti = oggettiDallaFoto(await rilevaNeiRitagli(modello, img), {
         stanza: nomeDi(stanza),
+        w: F.w,
+        h: F.h,
       });
       for (const o of visti.arredi) {
         const [x, y, w, h] = o.box;
@@ -2325,6 +2401,11 @@ function alCambio(ev) {
     e = ev.target,
     d = e.dataset;
   if (!S || !nodo()?.contains(e)) return;
+  if (d.c3cTipo !== undefined) {
+    const o = (S.foto[S.sel] || [])[S.fotoSel]?.oggetti?.[Number(d.c3cTipo)];
+    if (o && ARREDI_DELLE_FOTO[e.value]) o.k = e.value;
+    return disegna();
+  }
   if (d.c3cArea !== undefined) {
     const id = Number(d.c3cArea),
       v = clean(e.value);
@@ -2750,6 +2831,7 @@ function installaLoStile() {
     ${Q} .c3c-miniature img.si{border-color:#38bdf8}
     ${Q} .c3c-trovato{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:10px;background:var(--c3c-s2);margin-bottom:5px;font-size:12px}
     ${Q} .c3c-col{width:16px;height:16px;border-radius:4px;border:1px solid rgba(255,255,255,.2);flex:none}
+    ${Q} .c3c-trovato .c3c-tipo{flex:1;min-width:0;max-width:62%;font:inherit;font-weight:600;color:inherit;background:transparent;border:1px solid var(--c3c-bordo);border-radius:8px;padding:4px 6px}
     ${Q} .c3c-trovato em{margin-left:auto;font-style:normal;font-size:10.5px;color:var(--c3c-fioco)}
     ${Q} .c3c-x{flex:none;padding:2px 7px;border-radius:100px;border:1px solid var(--c3c-bordo);background:var(--c3c-s3);font-size:11px;cursor:pointer}
     ${Q} .c3c-disp{padding:9px;border-radius:12px;background:var(--c3c-s2);border:1px solid var(--c3c-bordo);margin-bottom:7px}

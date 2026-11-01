@@ -7718,6 +7718,7 @@ export default Object.freeze({
   "With this length the outer walls would be ${cm} cm thick: check the length, in metres (10.92, not 1092).": "この長さだと外壁の厚さが ${cm} cm になります。長さをメートルで確認してください（1092 ではなく 10.92）。",
   "Read as ${metri} metres.": "${metri} メートルとして読み取りました。",
   "Scale found from the wall thickness: you can go on, or mark a length to be more precise.": "壁の厚さから縮尺を見つけました。このまま進むか、より正確にするため長さを指定できます。",
+  "What it is": "これは何か",
   "Add or redo a floor": "階を追加またはやり直す",
   "Add photos of ${nome}": "${nome} の写真を追加",
   "Add photos of this room": "この部屋の写真を追加",
