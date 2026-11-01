@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-YV6UVQC3.js";
+} from "../../chunk-M3IT2LJN.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -3484,6 +3484,7 @@ var SOURCE_INDEX = Object.freeze({
   "Con l'orario: chiaro di giorno, scuro la sera": "By the clock: light by day, dark in the evening",
   "Con la carica di adesso": "With the charge it has now",
   "Con questa la pagina prende il tasto: lo stato dice se lavora, questo la comanda.": "With this the page grows a switch: the state says whether it is working, this one commands it.",
+  "Con questa misura i muri esterni sarebbero spessi ${cm} cm: controlla la misura, in metri (10,92 e non 1092).": "With this length the outer walls would be ${cm} cm thick: check the length, in metres (10.92, not 1092).",
   "Con questi valori un ciclo solo può diventare tanti mini cicli.": "With these values one cycle can turn into many mini-cycles.",
   "Con un contatore totale configurato la dashboard ricava giorno, mese e anno da quello con Recorder, cosi' i numeri restano coerenti tra loro. Le entita' scritte nei campi di periodo restano salvate ma non vengono usate: svuotale, oppure togli il contatore totale se preferisci leggere i periodi direttamente.": "With a total meter configured the dashboard derives day, month and year from it through Recorder, so the numbers agree with each other. Entities written in the period fields stay saved but are not used: clear them, or remove the total meter if you would rather read the periods directly.",
   "Con una foto l'avatar non si vede: la foto vince.": "With a photo the avatar is not shown: the photo wins.",
@@ -5288,6 +5289,7 @@ var SOURCE_INDEX = Object.freeze({
   "Leggo lo storico dal Recorder…": "Reading the history from the Recorder…",
   "Leggo lo storico di Home Assistant…": "Reading Home Assistant history…",
   "Leggo…": "Reading…",
+  "Letta come ${metri} metri.": "Read as ${metri} metres.",
   "Lettere": "Letters",
   "Lettiera": "Litter box",
   "Lettiera da pulire": "Litter box needs cleaning",
@@ -7082,6 +7084,7 @@ var SOURCE_INDEX = Object.freeze({
   "Scadenza dell'offerta": "Offer expiry",
   "scaduta": "expired",
   "Scala della barra Potenza attuale. Vuoto = valore tipico per il tipo.": "Scale of the current power bar. Empty = typical value for the type.",
+  "Scala trovata dallo spessore dei muri: puoi andare avanti, o segnare una misura per essere più preciso.": "Scale found from the wall thickness: you can go on, or mark a length to be more precise.",
   "Scala: a": "Scale: to",
   "Scala: da": "Scale: from",
   "scalda da": "heating for",
@@ -27859,6 +27862,11 @@ function letturaDellAuto(entita4, stati4) {
     }
     return null;
   };
+  const laBatteria = (elenco17) => {
+    const valori = (elenco17 || []).map((id) => percentuale2(di(id))).filter((v) => v !== null && v !== void 0);
+    if (!valori.length) return null;
+    return valori[0] === 0 ? valori.find((v) => v > 0) ?? 0 : valori[0];
+  };
   const modoStato = di(entita4?.modo);
   const modo = modoStato && !MUTO3.test(pulito23(modoStato.state)) ? pulito23(modoStato.state) : "";
   const opzioni2 = Array.isArray(modoStato?.attributes?.options) ? modoStato.attributes.options.map(pulito23).filter(Boolean) : [];
@@ -27882,11 +27890,29 @@ function letturaDellAuto(entita4, stati4) {
   return {
     modo,
     opzioni: opzioni2,
-    soc: primo(entita4?.soc, percentuale2),
+    soc: laBatteria(entita4?.soc),
     limite: primo(entita4?.limite, percentuale2),
     collegata,
     kwh: primo(entita4?.energia, kilowattora)
   };
+}
+function potenzaMassimaDiEvcc(modo, stati4, { volt = 230 } = {}) {
+  const p = prefissoDiEvcc(modo);
+  if (!p) return null;
+  const tutti = typeof stati4 === "function" ? null : Object.keys(stati4 || {}).filter((id) => id.split(".")[1]?.startsWith(p));
+  if (!tutti || !tutti.length) return null;
+  const valore3 = (id) => {
+    const n = Number(String(stati4[id]?.state ?? "").replace(",", "."));
+    return Number.isFinite(n) ? n : null;
+  };
+  const coda = (id) => id.split(".")[1].slice(p.length);
+  const trova2 = (forma2) => tutti.filter((id) => forma2.test(coda(id)));
+  const ampere = trova2(/^max_?current$/).map(valore3).find((n) => n !== null && n > 0);
+  if (!ampere) return null;
+  const attive = trova2(/^phases_?active$/).map(valore3).find((n) => n === 1 || n === 2 || n === 3);
+  const impostate = trova2(/^phases(_?configured)?$/).map(valore3).find((n) => n === 1 || n === 3);
+  const fasi = attive || impostate || 1;
+  return { kw: Math.round(ampere * volt * fasi / 100) / 10, ampere, fasi };
 }
 var prezzoBuono = (valore3) => {
   const n = Number(pulito23(valore3).replace(",", "."));
@@ -27959,6 +27985,13 @@ function risolvi(rif) {
     return clean(root.resolveEntity?.(rif));
   } catch (_errore) {
     return "";
+  }
+}
+function laPotenzaDiEvcc() {
+  try {
+    return potenzaMassimaDiEvcc(entitaDellaRicarica(risolvi).modo, allStates());
+  } catch (_errore) {
+    return null;
   }
 }
 function laLettura() {
@@ -28242,7 +28275,7 @@ function scheletro() {
   <div class="dm-rn-riga dm-rn-riga-alta" data-rn="arrivaRiga">
     <div class="dm-rn-coppia"><span class="dm-rn-nome">${esc(t("Ci arriva?", "Will it get there?"))}</span><b class="dm-rn-valore" data-rn="arriva"></b></div>
     <small class="dm-rn-nota" data-rn="arrivaNota"></small>
-    <label class="dm-rn-kw"><span>${esc(t("Potenza della wallbox", "Wallbox power"))}</span><input class="dm-rn-kw-campo" data-rn="kw" type="number" inputmode="decimal" min="1" max="50" step="0.1" placeholder="${esc(t("automatica", "automatic"))}"><small>kW</small></label>
+    <label class="dm-rn-kw"><span>${esc(t("Potenza della wallbox", "Wallbox power"))}</span><input class="dm-rn-kw-campo" data-rn="kw" type="number" inputmode="decimal" min="1" max="50" step="0.1" placeholder="${esc(t("automatica", "automatic"))}"><small data-rn="kwUnita">kW</small><b class="dm-rn-kw-evcc" data-rn="kwEvcc" hidden></b></label>
   </div>
   <div class="dm-rn-riga">
     <span class="dm-rn-nome">${esc(t("Poi", "Then"))}</span>
@@ -28412,6 +28445,18 @@ function renderRicaricaDiNotte(adesso2 = Date.now()) {
   const fine = state20.ponte?.sessione?.fine ?? (fascia2.dentro ? fascia2.fine : prossimaFascia(imp, adesso2)?.fine ?? fascia2.fine);
   testo(q("ferma"), siFerma(lettura4.limite ?? state20.ponte?.auto?.limite ?? null, fine));
   const kwCampo = q("kw");
+  const daEvcc = laPotenzaDiEvcc();
+  for (const [pezzo3, nascosto] of [
+    [kwCampo, Boolean(daEvcc)],
+    [q("kwUnita"), Boolean(daEvcc)],
+    [q("kwEvcc"), !daEvcc]
+  ])
+    if (pezzo3 && pezzo3.hidden !== nascosto) pezzo3.hidden = nascosto;
+  if (daEvcc)
+    testo(
+      q("kwEvcc"),
+      `${formatNumber(daEvcc.kw, 1)} kW · evcc (${daEvcc.ampere} A${daEvcc.fasi > 1 ? ` × ${daEvcc.fasi}` : ""})`
+    );
   if (kwCampo && doc.activeElement !== kwCampo) {
     const scritto3 = imp.kw ? String(imp.kw) : "";
     if (kwCampo.value !== scritto3) kwCampo.value = scritto3;
@@ -28490,7 +28535,8 @@ function laRispostaCiArriva(imp, lettura4, adesso2) {
   const prossima = fascia2.dentro ? null : prossimaFascia(imp, adesso2);
   const inizio = fascia2.dentro ? adesso2 : prossima?.inizio;
   const fine = fascia2.dentro ? fascia2.fine : prossima?.fine;
-  const kw = imp.kw || potenzaVista();
+  const evcc = laPotenzaDiEvcc();
+  const kw = evcc?.kw || imp.kw || potenzaVista();
   let capacita = null;
   try {
     capacita = capacitaDellaBatteria(activeVehicle() || {}, allStates()) || null;
@@ -28730,6 +28776,7 @@ function stile() {
 .dm-rn-riga[data-tono="attenzione"] [data-rn="arriva"]{color:#dc2626}
 .dm-rn-kw{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--rn-dim)}
 .dm-rn-kw span{flex:1}
+.dm-rn-kw-evcc{font-size:13px;font-weight:800;color:var(--rn-text);font-variant-numeric:tabular-nums}
 .dm-rn-kw-campo{width:120px;padding:6px 10px;border-radius:10px;border:1px solid var(--rn-line);background:transparent;color:inherit;font:inherit;text-align:right}
 .dm-rn-seg{display:inline-flex;gap:2px;padding:3px;border-radius:12px;background:var(--rn-box);box-shadow:inset 0 0 0 1px var(--rn-line);
   flex-wrap:wrap;max-width:100%}
@@ -112498,10 +112545,12 @@ function lettoreGrande(l) {
         <div class="mu-osw mu-mp-titolo">${esc(titolo3)}</div>
         ${sotto ? `<div class="mu-sotto">${esc(sotto)}</div>` : ""}
       </div>
+      <div class="mu-mp-lato">
       ${bottoneDaScegliere(l)}
       ${bottoneDellaRadio(l)}
       ${bottoneDelGruppo(l)}
       ${l.puo.spegni && !l.spento ? tastoMusica(l, "spegni", "accendi", { etichetta: t("Spegni", "Turn off") }) : ""}
+      </div>
     </div>
     ${punto3 ? `<div class="mu-mp-tempo"><span data-mu-mp-ora>${esc(orologio(punto3.secondi))}</span><span class="mu-bar"><i data-mu-mp-avanza style="width:${(punto3.quota * 100).toFixed(1)}%"></i></span><span>${esc(orologio(punto3.durata))}</span></div>` : ""}
     <div class="mu-mp-tasti">
@@ -112515,7 +112564,7 @@ function lettoreGrande(l) {
       ${l.puo.volume && volume !== null ? `<div class="mu-bar mu-mp-cursore" data-mu-cursore="volume" data-mu-entita="${esc(l.entity)}"><i style="width:${volume}%"></i><u style="left:${volume}%"></u></div><b class="mu-mp-pct">${volume}%</b>` : `<span class="mu-spazio"></span>`}
       <button type="button" class="mu-tondo" data-mu-fa="mp" data-mu-cmd="alza" data-mu-entita="${esc(l.entity)}" aria-label="${esc(t("Alza", "Volume up"))}">+</button>
     </div>` : ""}
-    ${l.puo.sorgente && l.sorgenti.length && !l.spento ? `<div class="mu-mp-sorgenti">${l.sorgenti.slice(0, 8).map(
+    ${l.puo.sorgente && l.sorgenti.length && !l.spento ? `<div class="mu-mp-sorgenti mu-mp-preferiti">${l.sorgenti.slice(0, 8).map(
     (sorgente) => `<button type="button" class="${sorgente === l.sorgente ? "si" : ""}" data-mu-fa="mp-sorgente" data-mu-sorgente="${esc(sorgente)}" data-mu-entita="${esc(l.entity)}">${esc(sorgente)}</button>`
   ).join("")}</div>` : ""}
     ${comandiDelLettore(l)}
@@ -115503,11 +115552,41 @@ ${MURO} .mu-mp-arte-vuota{display:grid;place-items:center;background:color-mix(i
 ${MURO} .mu-mp-dici{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
 ${MURO} .mu-mp-titolo{font-size:40px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 ${MURO} .mu-mp-dici .mu-sotto{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-${MURO} .mu-mp-testa>.mu-tondo{align-self:flex-start}
+${MURO} .mu-mp-lato>.mu-tondo{align-self:flex-start}
 ${MURO} .mu-mp-gruppo{align-self:flex-start;display:flex;align-items:center;gap:8px;height:56px;padding:0 18px;border-radius:999px;font-weight:800;font-size:15px;white-space:nowrap;background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 12%,transparent)}
 ${MURO} .mu-mp-scegli{color:#fff;background:#a238ff;box-shadow:0 10px 24px -12px #a238ff}
 ${MURO}[data-compatto="1"] .mu-mp-scegli>span{display:none}
 ${MURO}[data-compatto="1"] .mu-mp-scegli{padding:0 16px}
+/* «Sul 4 pollici non si vede bene»: il nome del lettore finiva sotto il
+ * tasto «Scegli» (il pallino viola), il Gruppo usciva dallo schermo e i
+ * preferiti non c'erano. Come ha chiesto Marco: Scegli, Radio e Gruppo in
+ * colonna sulla destra, solo icone; a sinistra la copertina e il nome, interi;
+ * sotto, i preferiti del lettore in una fila che scorre. */
+${MURO} .mu-mp-lato{display:contents}
+${MURO}[data-compatto="1"] .mu-mp-testa{align-items:flex-start;gap:12px}
+${MURO}[data-compatto="1"] .mu-mp-lato{display:flex;flex-direction:column;gap:6px;flex:none}
+${MURO}[data-compatto="1"] .mu-mp-lato>.mu-mp-gruppo,${MURO}[data-compatto="1"] .mu-mp-lato>.mu-tondo{align-self:auto;width:44px;height:44px;min-width:44px;padding:0;justify-content:center;border-radius:14px}
+${MURO}[data-compatto="1"] .mu-mp-lato>.mu-mp-gruppo>span:last-child{display:none}
+${MURO}[data-compatto="1"] .mu-mp-lato>.mu-mp-gruppo.si{position:relative}
+${MURO}[data-compatto="1"] .mu-mp-dici .mu-et{white-space:normal;line-height:1.25}
+${MURO}[data-compatto="1"] .mu-mp-dici .mu-mp-titolo{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.1}
+${MURO}[data-compatto="1"] .mu-mp-preferiti{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:6px;margin:0 -2px}
+${MURO}[data-compatto="1"] .mu-mp-preferiti::-webkit-scrollbar{display:none}
+${MURO}[data-compatto="1"] .mu-mp-preferiti button{flex:none;padding:8px 12px;font-size:13px;white-space:nowrap}
+${MURO}[data-compatto="1"] .mu-mp-tasti .mu-tondo.grande{width:70px;height:70px}
+${MURO}[data-compatto="1"] .mu-mp.mu-carta{gap:8px;padding:12px}
+${MURO}[data-compatto="1"] .mu-mp-lato{gap:4px}
+${MURO}[data-compatto="1"] .mu-mp-dici .mu-mp-titolo{font-size:21px}
+${MURO}[data-compatto="1"] .mu-mp-tasti .mu-tondo:not(.grande){width:52px;height:52px}
+${MURO}[data-compatto="1"] .mu-mp>*{order:6}
+${MURO}[data-compatto="1"] .mu-mp>.mu-mp-testa{order:1}
+${MURO}[data-compatto="1"] .mu-mp>.mu-mp-preferiti{order:2;flex:none;padding:2px}
+${MURO}[data-compatto="1"] .mu-mp>.mu-mp-tempo{order:3}
+${MURO}[data-compatto="1"] .mu-mp>.mu-mp-tasti{order:4}
+${MURO}[data-compatto="1"] .mu-mp>.mu-mp-volume{order:5}
+${MURO}[data-compatto="1"] .mu-mp-volume .mu-tondo{width:46px;height:46px}
+${MURO}[data-compatto="1"] .mu-mp-lato>.mu-mp-gruppo,${MURO}[data-compatto="1"] .mu-mp-lato>.mu-tondo{width:40px;height:40px;min-width:40px;border-radius:12px}
+${MURO}[data-compatto="1"] .mu-mp-arte{width:64px;height:64px}
 ${MURO} .mu-mp-gruppo.si{color:#fff;background:var(--acc);box-shadow:0 10px 24px -10px var(--acc)}
 ${MURO} .mu-mp-gruppo-elenco{display:flex;flex-direction:column;gap:10px;max-height:52vh;overflow-y:auto}
 ${MURO} .mu-mp-gruppo-elenco .mu-mp-riga{text-align:left;width:100%}
@@ -115539,7 +115618,7 @@ ${MURO} .mu-mp-onde b:nth-child(3){animation-delay:-.7s}
 @keyframes mu-onda{0%,100%{height:4px}50%{height:14px}}
 ${MURO}[data-verso="verticale"] .mu-musica{grid-template-columns:1fr;grid-template-rows:auto 1fr}
 ${MURO}[data-compatto="1"] .mu-musica{grid-template-columns:1fr}
-${MURO}[data-compatto="1"] .mu-mp-elenco,${MURO}[data-compatto="1"] .mu-mp-sorgenti{display:none}
+${MURO}[data-compatto="1"] .mu-mp-elenco,${MURO}[data-compatto="1"] .mu-mp-sorgenti:not(.mu-mp-preferiti){display:none}
 ${MURO}[data-compatto="1"] .mu-mp{padding:14px;gap:12px}
 ${MURO}[data-compatto="1"] .mu-mp-arte{width:72px;height:72px;border-radius:14px}
 ${MURO}[data-compatto="1"] .mu-mp-titolo{font-size:24px}
@@ -155307,7 +155386,16 @@ function prospettiva(im) {
     const p = per3(T, [x, y, 1]);
     sposta3 = Math.max(sposta3, Math.hypot(p[0] / p[2] - x * (ow / w), p[1] / p[2] - y * (oh / h)));
   }
+  if (sposta3 > Math.max(w, h) / 6) return null;
   if (ow < w * 0.5 || oh < h * 0.5 || ow > w * 2 || oh > h * 2) return null;
+  const punto3 = (x, y) => {
+    const q = per3(T, [x, y, 1]);
+    return [q[0] / q[2], q[1] / q[2]];
+  };
+  const [ax, ay] = punto3(w / 2, h / 2), [bx, by] = punto3(w / 2 + 10, h / 2), [qx, qy] = punto3(w / 2, h / 2 + 10);
+  const lx = Math.hypot(bx - ax, by - ay), ly = Math.hypot(qx - ax, qy - ay);
+  if (!(lx > 0 && ly > 0) || lx / ly > 1.25 || ly / lx > 1.25) return null;
+  if (Math.abs(ow / oh - w / h) / (w / h) > 0.25) return null;
   return { T, larghezza: ow, altezza: oh, sposta: sposta3, righe: { oriz, vert } };
 }
 function raddrizza(im, { T, larghezza, altezza }) {
@@ -155451,6 +155539,42 @@ function nucleoDeiMuri(g, w, h, r, carta = cartaDi(g)) {
         nucleo[y * w + x] = 1;
     }
   return nucleo;
+}
+function scalaDaiMuri(im) {
+  const { width: w, height: h } = im;
+  const guess = 0.06 * 350 / Math.max(w, h);
+  const pieni = muriPieni(im, guess);
+  if (pieni.riempito < 0.62) return null;
+  const { ink } = pieni;
+  const conta2 = new Float64Array(400);
+  const corse2 = (n, m, at) => {
+    for (let a = 0; a < n; a++) {
+      let b2 = 0;
+      while (b2 < m) {
+        if (!ink[at(a, b2)]) {
+          b2++;
+          continue;
+        }
+        let e = b2;
+        while (e < m && ink[at(a, e)]) e++;
+        if (e - b2 < 400) conta2[e - b2]++;
+        b2 = e;
+      }
+    }
+  };
+  corse2(h, w, (a, b2) => a * w + b2);
+  corse2(w, h, (a, b2) => b2 * w + a);
+  const minimo = Math.max(18, Math.round(Math.max(w, h) / 110)), massimo = Math.round(Math.max(w, h) / 10);
+  let meglio = -1, alto = 0;
+  for (let L = minimo; L <= massimo && L < 398; L++) {
+    const v = conta2[L - 1] + conta2[L] + conta2[L + 1];
+    if (v > alto) {
+      alto = v;
+      meglio = L;
+    }
+  }
+  if (meglio < 0 || alto < 150) return null;
+  return { mpp: 0.42 / meglio, spessore: meglio };
 }
 var MURI_PIENI_MINIMO = 3;
 function integrale(g, W2, H7) {
@@ -158369,6 +158493,20 @@ function pPlanimetria() {
     )}<br>${esc(t("Scritte e quote non danno fastidio.", "Text and dimensions are fine."))}</div>${PRIVATO()}`
   ) + avanti(t("Avanti →", "Next →"), Boolean(S.dritta), false);
 }
+function notaDellaScala(S) {
+  const auto = S.mppMuri && S.mpp === S.mppMuri, cm = S.scalaAvviso, metri = S.metri ? numero62(S.centimetri ? S.metri / 100 : S.metri, 2) : "";
+  if (cm)
+    return nota(
+      `⚠️ ${esc(t(`Con questa misura i muri esterni sarebbero spessi ${cm} cm: controlla la misura, in metri (10,92 e non 1092).`, `With this length the outer walls would be ${cm} cm thick: check the length, in metres (10.92, not 1092).`))}`
+    );
+  if (S.centimetri)
+    return nota(esc(t(`Letta come ${metri} metri.`, `Read as ${metri} metres.`)));
+  if (auto)
+    return nota(
+      `✓ ${esc(t("Scala trovata dallo spessore dei muri: puoi andare avanti, o segnare una misura per essere più preciso.", "Scale found from the wall thickness: you can go on, or mark a length to be more precise."))}`
+    );
+  return "";
+}
 function pScala() {
   const S = state182.S;
   return scheda7(
@@ -158376,7 +158514,8 @@ function pScala() {
     `${nota(esc(t("Tocca i due estremi di una misura che conosci: una quota scritta, un muro, una porta (di solito 80 cm).", "Tap both ends of a length you know: a written dimension, a wall, a door (usually 80 cm).")))}
       ${nota(S.punti.length === 2 ? `✓ ${esc(t("Due punti scelti", "Two points chosen"))}` : esc(t(`Punti: ${S.punti.length} di 2`, `Points: ${S.punti.length} of 2`)))}
       <label class="c3c-metri"><input class="c3c-in" data-c3c-metri inputmode="decimal" value="${S.metri ? esc(numero62(S.metri, 2)) : ""}" placeholder="${esc(t("es. 4,20", "e.g. 4.20"))}"> <span>${esc(t("metri", "metres"))}</span></label>
-      ${S.mpp ? nota(esc(t(`1 metro = ${Math.round(1 / S.mpp)} pixel della foto`, `1 metre = ${Math.round(1 / S.mpp)} photo pixels`))) : ""}`
+      ${S.mpp ? nota(esc(t(`1 metro = ${Math.round(1 / S.mpp)} pixel della foto`, `1 metre = ${Math.round(1 / S.mpp)} photo pixels`))) : ""}
+      <div data-c3c="notaScala">${notaDellaScala(S)}</div>`
   ) + avanti(t("Riconosci i muri →", "Find the walls →"), Boolean(S.mpp));
 }
 function pMuri() {
@@ -158725,7 +158864,19 @@ async function usaPlanimetria(src) {
         S.prospettiva = true;
       }
     }
+    let muri = null;
+    if (typeof src === "string") {
+      try {
+        muri = scalaDaiMuri(dritta.getContext("2d").getImageData(0, 0, dritta.width, dritta.height));
+      } catch {
+        muri = null;
+      }
+    }
     Object.assign(S, {
+      mppMuri: muri?.mpp || null,
+      spessoreMuri: muri?.spessore || null,
+      scalaAvviso: null,
+      centimetri: false,
       img,
       dritta,
       vetri: null,
@@ -158733,7 +158884,7 @@ async function usaPlanimetria(src) {
       disegno: false,
       punti: [],
       metri: null,
-      mpp: null,
+      mpp: muri?.mpp || null,
       griglia: null,
       casa: null,
       nomi: {},
@@ -159161,10 +159312,25 @@ function ricalcola2() {
 }
 function aggiornaScala() {
   const S = state182.S;
-  if (S.punti.length === 2 && S.metri) {
-    const px = Math.hypot(S.punti[1][0] - S.punti[0][0], S.punti[1][1] - S.punti[0][1]);
-    S.mpp = px > 4 ? S.metri / px : null;
-  } else S.mpp = null;
+  const auto = S.mppMuri || null;
+  S.scalaAvviso = null;
+  S.centimetri = false;
+  const px = S.punti.length === 2 ? Math.hypot(S.punti[1][0] - S.punti[0][0], S.punti[1][1] - S.punti[0][1]) : 0;
+  if (px > 4 && S.metri) {
+    let f = S.metri >= 100 ? 0.01 : 1;
+    if (auto) {
+      const scarto = (g) => Math.abs(Math.log(S.metri * g / px / auto));
+      if (scarto(f) > Math.log(3)) {
+        for (const g of [1, 0.1, 0.01, 10, 100]) if (scarto(g) < scarto(f)) f = g;
+      }
+    }
+    S.centimetri = f !== 1;
+    S.mpp = S.metri * f / px;
+    if (auto && S.spessoreMuri) {
+      const r = S.mpp / auto;
+      if (r > 1.7 || r < 1 / 1.7) S.scalaAvviso = Math.round(S.spessoreMuri * S.mpp * 100);
+    }
+  } else S.mpp = auto;
   S.griglia = null;
 }
 function pennello(ev) {
@@ -159573,10 +159739,12 @@ function alScrivere(ev) {
   }
   if (!S || e.dataset.c3cMetri === void 0) return;
   const v = parseFloat(clean(e.value).replace(",", "."));
-  S.metri = v > 0 && v < 500 ? v : null;
+  S.metri = v > 0 && v < 5e3 ? v : null;
   aggiornaScala();
   const b2 = nodo2().querySelector("[data-c3c='avanti']");
   if (b2) b2.disabled = !S.mpp;
+  const n = nodo2().querySelector("[data-c3c='notaScala']");
+  if (n) n.innerHTML = notaDellaScala(S);
   disegnaLaTela();
 }
 var premuto = false;

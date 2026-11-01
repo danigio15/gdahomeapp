@@ -10,6 +10,29 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.28
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Casa 3D, la pianta da una foto:** la scala si trova da sola dallo
+  spessore dei muri esterni, e si può andare avanti senza segnare nessuna
+  misura. Una quota scritta in centimetri («1092») o con la virgola al
+  posto sbagliato si legge giusta (10,92 metri), e se la misura non torna
+  coi muri lo dice, invece di dare una casa a striscia con un solo ambiente.
+  Una foto troppo storta per essere raddrizzata resta com'è, senza
+  stirarla.
+- **Plancia a muro sul 4 pollici, la Musica:** il nome del lettore si
+  legge intero (prima finiva sotto il tasto «Scegli»), Scegli, Radio e
+  Gruppo stanno in colonna sulla destra, tutti dentro lo schermo, e tornano i
+  preferiti del lettore, in una fila che scorre.
+- **Ricarica notturna, «Ci arriva?» con la batteria vera:** quando evcc non
+  sa quanto e' carica l'auto dice 0%, e il conto partiva da zero («No: alle
+  05:00 sara' al 40%» con l'auto al 46%). Ora vale la batteria dell'auto, la
+  stessa della pagina Auto.
+- **Ricarica notturna, la potenza dalla wallbox di evcc:** il conto usa il
+  massimo impostato su evcc (la corrente massima per le fasi), senza niente
+  da scrivere; il campo a mano c'e' solo se evcc non lo dice.
+
 ## 1.18.7.27
 
 _Solo Home Assistant: l'app sul telefono non cambia._

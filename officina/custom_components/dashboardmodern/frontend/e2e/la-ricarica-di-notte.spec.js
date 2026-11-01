@@ -243,6 +243,32 @@ test("dice se l'auto arriva al limite entro la fine della fascia", async ({ page
   await fotografa(page, "ricarica-notte-non-ci-arriva", carta);
 });
 
+/* «Non mi deve far impostare a me il valore: deve considerare il massimo
+ * impostato su evcc; se non c'e' evcc, allora si mette a mano.» Con evcc che
+ * dice 16 A su una fase il campo non c'e': la potenza e' 3,7 kW. */
+test("la potenza della wallbox la prende dal massimo di evcc", async ({ page }, testInfo) => {
+  await avvia(page, testInfo, {
+    impostazioni: { attiva: true, da: "23:00", a: "05:00", kw: 7.4 },
+  });
+  const carta = await apriLaPaginaAuto(page);
+  await expect(carta.locator('[data-rn="kw"]')).toBeVisible();
+  await page.evaluate(() => {
+    const stati = eval("_RAW_STATES");
+    stati["number.evcc_garage_max_current"] = {
+      state: "16",
+      attributes: { unit_of_measurement: "A" },
+    };
+    stati["select.evcc_garage_phases_configured"] = { state: "1", attributes: {} };
+    window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed", { detail: {} }));
+  });
+  await expect(carta.locator('[data-rn="kw"]')).toBeHidden();
+  await expect(carta.locator('[data-rn="kwEvcc"]')).toHaveText("3,7 kW · evcc (16 A)");
+  /* a 3,7 kW in sei ore, dal 42%, non ci arriva: si ferma al 75% */
+  await expect(carta.locator('[data-rn="arriva"]')).toContainText("No: alle 05:00 sarà al 75%");
+  await expect(carta.locator('[data-rn="arrivaNota"]')).toContainText("a 3,7 kW");
+  await fotografa(page, "ricarica-notte-potenza-evcc", carta);
+});
+
 test("il prezzo: la F3, poi la tariffa unica, poi «Prezzo non impostato» senza rimandi", async ({
   page,
 }, testInfo) => {

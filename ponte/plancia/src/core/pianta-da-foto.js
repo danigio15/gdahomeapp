@@ -312,8 +312,26 @@ export function prospettiva(im) {
     const p = per3(T, [x, y, 1]);
     sposta = Math.max(sposta, Math.hypot(p[0] / p[2] - x * (ow / w), p[1] / p[2] - y * (oh / h)));
   }
+  if (sposta > Math.max(w, h) / 6) return null;
   /* troppo storta per crederci: le righe erano sbagliate */
   if (ow < w * 0.5 || oh < h * 0.5 || ow > w * 2 || oh > h * 2) return null;
+  /* Una foto del foglio presa un po' di sbieco cambia poco le proporzioni:
+   * nel mezzo della foto un quadretto resta quasi un quadretto. Se la
+   * correzione lo allunga o lo schiaccia di piu' di un quarto, o sposta gli
+   * angoli di piu' di un sesto della foto, le righe trovate erano altre (il
+   * bordo del tavolo, una quota): la foto si lascia com'e'. («La casa e'
+   * venuta una striscia lunga e stretta.») */
+  const punto = (x, y) => {
+    const q = per3(T, [x, y, 1]);
+    return [q[0] / q[2], q[1] / q[2]];
+  };
+  const [ax, ay] = punto(w / 2, h / 2),
+    [bx, by] = punto(w / 2 + 10, h / 2),
+    [qx, qy] = punto(w / 2, h / 2 + 10);
+  const lx = Math.hypot(bx - ax, by - ay),
+    ly = Math.hypot(qx - ax, qy - ay);
+  if (!(lx > 0 && ly > 0) || lx / ly > 1.25 || ly / lx > 1.25) return null;
+  if (Math.abs(ow / oh - w / h) / (w / h) > 0.25) return null;
   return { T, larghezza: ow, altezza: oh, sposta, righe: { oriz, vert } };
 }
 
@@ -544,6 +562,59 @@ function nucleoDeiMuri(g, w, h, r, carta = cartaDi(g)) {
         nucleo[y * w + x] = 1;
     }
   return nucleo;
+}
+
+/**
+ * La scala di una foto di pianta a muri pieni, dallo spessore dei muri.
+ *
+ * «Come e' possibile che continua a dare questo obbrobrio?» Con la quota
+ * segnata male (1092 scritto in centimetri, i due punti su un'altra misura)
+ * la casa esce dieci volte piu' grande o piu' piccola, e i muri si
+ * sbriciolano. I muri di fuori pero' li ha tutte le case, e sono spessi da
+ * 30 a 45 cm: nella foto sono le strisce piene piu' comuni fra le larghe.
+ * Lo spessore che conta e' quello del grigio col suo contorno, che nelle
+ * piante dell'architetto viene circa 42 cm.
+ *
+ * Torna `{ mpp, spessore }` (metri per pixel, spessore in pixel) o `null`.
+ */
+export function scalaDaiMuri(im) {
+  const { width: w, height: h } = im;
+  const guess = (0.06 * 350) / Math.max(w, h);
+  const pieni = muriPieni(im, guess);
+  if (pieni.riempito < 0.62) return null;
+  const { ink } = pieni;
+  const conta = new Float64Array(400);
+  const corse = (n, m, at) => {
+    for (let a = 0; a < n; a++) {
+      let b = 0;
+      while (b < m) {
+        if (!ink[at(a, b)]) {
+          b++;
+          continue;
+        }
+        let e = b;
+        while (e < m && ink[at(a, e)]) e++;
+        if (e - b < 400) conta[e - b]++;
+        b = e;
+      }
+    }
+  };
+  corse(h, w, (a, b) => a * w + b);
+  corse(w, h, (a, b) => b * w + a);
+  /* il picco piu' alto fra le strisce larghe (non le righe, non i tramezzi) */
+  const minimo = Math.max(18, Math.round(Math.max(w, h) / 110)),
+    massimo = Math.round(Math.max(w, h) / 10);
+  let meglio = -1,
+    alto = 0;
+  for (let L = minimo; L <= massimo && L < 398; L++) {
+    const v = conta[L - 1] + conta[L] + conta[L + 1];
+    if (v > alto) {
+      alto = v;
+      meglio = L;
+    }
+  }
+  if (meglio < 0 || alto < 150) return null;
+  return { mpp: 0.42 / meglio, spessore: meglio };
 }
 
 /** I m² di muro pieno oltre i quali la pianta e' «a muri pieni». */

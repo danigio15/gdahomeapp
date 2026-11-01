@@ -22,6 +22,7 @@ import {
   impostazioniPulite,
   laNotte,
   letturaDellAuto,
+  potenzaMassimaDiEvcc,
   modoPerEvcc,
   prefissoDiEvcc,
   prezzoDellaNotte,
@@ -670,4 +671,51 @@ test("le entita' si trovano anche nelle caselle delle auto", () => {
   });
   assert.equal(risolvi("dm.ev_modalita_ricarica_evcc"), "select.evcc_garage_mode");
   assert.equal(risolvi("dm.ev_target_soc"), "");
+});
+
+/* «Come fa a dire di no se ora sta al 46%?» evcc, senza il collegamento con
+ * l'auto, dice 0%; la batteria vera la dice il sensore dell'auto. */
+test("uno 0% di evcc non copre la batteria vera dell'auto", () => {
+  const entita = {
+    soc: ["sensor.evcc_garage_vehicle_soc", "sensor.leapmotor_batteria"],
+    limite: [],
+    cavo: [],
+    stato: [],
+    energia: [],
+  };
+  const stati = {
+    "sensor.evcc_garage_vehicle_soc": { state: "0" },
+    "sensor.leapmotor_batteria": { state: "46" },
+  };
+  assert.equal(letturaDellAuto(entita, stati).soc, 46);
+  /* se evcc sa la batteria, vale evcc */
+  stati["sensor.evcc_garage_vehicle_soc"].state = "52";
+  assert.equal(letturaDellAuto(entita, stati).soc, 52);
+  /* e se tutti dicono zero, e' zero */
+  stati["sensor.evcc_garage_vehicle_soc"].state = "0";
+  stati["sensor.leapmotor_batteria"].state = "0";
+  assert.equal(letturaDellAuto(entita, stati).soc, 0);
+});
+
+/* «Non mi deve far impostare a me il valore: deve considerare il massimo
+ * impostato su evcc; se non c'e' evcc, allora a mano.» */
+test("la potenza della wallbox e' il massimo impostato su evcc", () => {
+  const stati = {
+    "select.evcc_garage_mode": { state: "pv" },
+    "number.evcc_garage_max_current": { state: "16" },
+    "sensor.evcc_garage_phases_active": { state: "0" },
+    "select.evcc_garage_phases_configured": { state: "1" },
+  };
+  assert.deepEqual(potenzaMassimaDiEvcc("select.evcc_garage_mode", stati), {
+    kw: 3.7,
+    ampere: 16,
+    fasi: 1,
+  });
+  /* a tre fasi, quelle attive contano */
+  stati["sensor.evcc_garage_phases_active"].state = "3";
+  assert.equal(potenzaMassimaDiEvcc("select.evcc_garage_mode", stati).kw, 11);
+  /* senza evcc, o senza la corrente massima, si scrive a mano */
+  assert.equal(potenzaMassimaDiEvcc("select.wallbox_modo", stati), null);
+  delete stati["number.evcc_garage_max_current"];
+  assert.equal(potenzaMassimaDiEvcc("select.evcc_garage_mode", stati), null);
 });

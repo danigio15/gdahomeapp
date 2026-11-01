@@ -790,9 +790,9 @@ test("la foto della pianta dell'architetto: prospettiva, stanze, finestre e scal
     !process.env.DM_PIANTA_FOTO || testInfo.project.name !== "desktop",
     "serve DM_PIANTA_FOTO",
   );
-  const [x0, y, x1, metri] = (process.env.DM_PIANTA_QUOTA || "0.162,0.5,0.79,10.92")
-    .split(",")
-    .map(Number);
+  /* «auto»: nessuna misura, la scala viene dallo spessore dei muri */
+  const quota = process.env.DM_PIANTA_QUOTA || "0.162,0.5,0.79,10.92";
+  const [x0, y, x1, metri] = quota.split(",").map(Number);
   const crea = await apriLaProcedura(page, testInfo);
   await crea.locator('[data-c3c-file="pianta"]').setInputFiles(process.env.DM_PIANTA_FOTO);
   await expect(crea).toContainText(/prospettiva corretta|perspective corrected/, {
@@ -801,11 +801,15 @@ test("la foto della pianta dell'architetto: prospettiva, stanze, finestre e scal
   await fotoDiretta(page, testInfo, "crea-foto-raddrizzata");
   for (let i = 0; i < 4 && !(await crea.locator("[data-c3c-metri]").count()); i++)
     await crea.locator('[data-c3c="avanti"]').click();
-  const tela = crea.locator(".c3c-tela");
-  const b = await tela.boundingBox();
-  await page.mouse.click(b.x + b.width * x0, b.y + b.height * y);
-  await page.mouse.click(b.x + b.width * x1, b.y + b.height * y);
-  await crea.locator("[data-c3c-metri]").fill(String(metri));
+  await expect(crea).toContainText(/Scala trovata dallo spessore dei muri/);
+  if (quota !== "auto") {
+    const tela = crea.locator(".c3c-tela");
+    const b = await tela.boundingBox();
+    await page.mouse.click(b.x + b.width * x0, b.y + b.height * y);
+    await page.mouse.click(b.x + b.width * x1, b.y + b.height * y);
+    await crea.locator("[data-c3c-metri]").fill(String(metri));
+    await expect(crea).not.toContainText(/sarebbero spessi/);
+  }
   await crea.locator('[data-c3c="avanti"]').click();
   const trovati = crea.locator(".c3c-pannello");
   await expect(trovati).toContainText(/Trovati \d+ ambienti/, { timeout: 120_000 });
