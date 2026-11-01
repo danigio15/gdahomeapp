@@ -7710,4 +7710,5 @@ export default Object.freeze({
   "Opening the PDF…": "正在打开 PDF…",
   "No scale found on the PDF: tap both ends of a length you know.": "PDF 上没有找到比例尺：请点按一段已知长度的两端。",
   "This PDF can't be opened. Try a screenshot of the page.": "无法打开此 PDF。请尝试该页面的截图。",
+  "The DWG reader didn't download: check the connection and try again.": "DWG 读取器未能下载：请检查网络连接后重试。",
 });

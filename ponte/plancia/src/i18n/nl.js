@@ -7880,4 +7880,5 @@ export default Object.freeze({
   "Opening the PDF…": "Pdf openen…",
   "No scale found on the PDF: tap both ends of a length you know.": "Geen schaal gevonden in de pdf: tik op beide uiteinden van een lengte die je kent.",
   "This PDF can't be opened. Try a screenshot of the page.": "Deze pdf gaat niet open. Probeer een schermafbeelding van de pagina.",
+  "The DWG reader didn't download: check the connection and try again.": "De DWG-lezer is niet gedownload: controleer de verbinding en probeer het opnieuw.",
 });

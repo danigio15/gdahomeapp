@@ -7793,4 +7793,5 @@ export default Object.freeze({
   "Opening the PDF…": "جارٍ فتح ملف PDF…",
   "No scale found on the PDF: tap both ends of a length you know.": "لم أجد مقياسًا في ملف PDF: المس طرفي طول تعرفه.",
   "This PDF can't be opened. Try a screenshot of the page.": "لا يمكن فتح ملف PDF هذا. جرّب لقطة شاشة للصفحة.",
+  "The DWG reader didn't download: check the connection and try again.": "لم يتم تنزيل قارئ DWG: تحقق من الاتصال وحاول مرة أخرى.",
 });

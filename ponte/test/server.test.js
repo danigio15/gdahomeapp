@@ -10,6 +10,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { gunzipSync } from "node:zlib";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -391,6 +392,49 @@ test("abbinato dalla console, il telefono entra dal filo e parla con la casa", a
     assert.equal(stato.dispositivi[0].collegati, 1);
     assert.equal(stato.casa.viva, true);
     presa.close();
+  } finally {
+    await b.spegni();
+  }
+});
+
+/* «Questo DWG non si legge», dall'app, in casa e fuori: il motore dei DWG
+ * (LibreDWG, 10,8 MB) arriva al telefono per il filo, come ogni file della
+ * plancia. Intero, in base64 e nella busta cifrata, il messaggio passava i
+ * 16 MB che l'app accetta, e l'app chiudeva il filo. Qui si chiede davvero,
+ * dal telefono, e si pretende che arrivi intero e sotto quel tetto. */
+test("il motore dei DWG arriva al telefono per il filo, sotto il tetto dell'app", async () => {
+  const b = await banco();
+  try {
+    const { codice } = await (await prendi(`${b.consolle}/api/codice`, { method: "POST" })).json();
+    const { segno, chiave, dispositivo } = await abbinaSulFilo(b, codice, { nome: "Fold" });
+    const telefono = telefonoCifrato(`${b.filo}/casa`, {
+      chi: dispositivo.id,
+      chiave,
+      gzip: true,
+      lega: true,
+    });
+    await telefono.dentro;
+    await telefono.aspetta("auth_required");
+    telefono.manda({ type: "auth", access_token: segno });
+    await telefono.aspetta("auth_ok");
+
+    const { Plancia } = await import("../src/plancia.js");
+    const plancia = new Plancia();
+    const percorso = `${plancia.descrizione().base}/legacy/vendor/libredwg/wasm/libredwg-web.wasm`;
+    telefono.manda({ id: 41, type: "ponte/http", metodo: "GET", percorso });
+    const risposta = await telefono.aspetta((uno) => uno.id === 41);
+    assert.equal(risposta.success, true, JSON.stringify(risposta.error ?? {}));
+    const { result } = risposta;
+    assert.equal(result.stato, 200);
+    assert.equal(result.tipo, "application/wasm");
+    const arrivato = Buffer.from(result.corpo, "base64");
+    const motore = result.compresso === "gzip" ? gunzipSync(arrivato) : arrivato;
+    assert.deepEqual(motore, plancia.leggi(percorso).corpo, "il motore deve arrivare intero");
+    assert.ok(
+      telefono.piuGrande < 16 * 1024 * 1024,
+      `un messaggio da ${(telefono.piuGrande / 1e6).toFixed(1)} MB: l'app oltre i 16 chiude il filo`,
+    );
+    telefono.presa.close();
   } finally {
     await b.spegni();
   }

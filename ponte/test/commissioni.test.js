@@ -227,6 +227,28 @@ test("il testo viaggia compresso, le immagini e le cose piccole no", () => {
   assert.equal(senzaTipo.tipo, "application/octet-stream");
 });
 
+/* «Questo DWG non si legge», da fuori casa (5G): il motore dei DWG passa
+ * dal centralino, che a un telefono non tiene in coda piu' di 8 MB. Intero,
+ * in base64, erano 14 MB, e il centralino chiudeva il filo. Compresso deve
+ * starci largo. */
+test("il motore dei DWG viaggia compresso e ci sta nella coda del centralino", async () => {
+  const { Plancia } = await import("../src/plancia.js");
+  const { CODA_MASSIMA } = await import("../../centralino/src/centralino.js");
+  const plancia = new Plancia();
+  const base = plancia.descrizione().base;
+  const { stato, tipo, corpo } = plancia.leggi(
+    `${base}/legacy/vendor/libredwg/wasm/libredwg-web.wasm`,
+  );
+  assert.equal(stato, 200);
+  const pacco = impacchetta(stato, tipo, corpo);
+  assert.equal(pacco.compresso, "gzip");
+  assert.ok(
+    pacco.corpo.length < CODA_MASSIMA / 2,
+    `in viaggio ${(pacco.corpo.length / 1e6).toFixed(1)} MB: troppi per la coda del centralino`,
+  );
+  assert.deepEqual(gunzipSync(Buffer.from(pacco.corpo, "base64")), corpo);
+});
+
 test("non piu' di tante insieme: le altre aspettano il loro turno", async () => {
   let inCorso = 0;
   let massimo = 0;

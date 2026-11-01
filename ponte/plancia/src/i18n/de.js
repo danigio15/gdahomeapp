@@ -7908,4 +7908,5 @@ export default Object.freeze({
   "Opening the PDF…": "PDF wird geöffnet…",
   "No scale found on the PDF: tap both ends of a length you know.": "Kein Maßstab im PDF gefunden: tippe auf beide Enden einer bekannten Länge.",
   "This PDF can't be opened. Try a screenshot of the page.": "Dieses PDF lässt sich nicht öffnen. Versuche es mit einem Screenshot der Seite.",
+  "The DWG reader didn't download: check the connection and try again.": "Der DWG-Leser wurde nicht heruntergeladen: Prüfe die Verbindung und versuche es erneut.",
 });

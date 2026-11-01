@@ -7848,4 +7848,5 @@ export default Object.freeze({
   "Opening the PDF…": "PDFを開いています…",
   "No scale found on the PDF: tap both ends of a length you know.": "PDFに縮尺が見つかりません：長さが分かっている箇所の両端をタップしてください。",
   "This PDF can't be opened. Try a screenshot of the page.": "このPDFは開けません。ページのスクリーンショットでお試しください。",
+  "The DWG reader didn't download: check the connection and try again.": "DWG リーダーをダウンロードできませんでした。接続を確認してもう一度お試しください。",
 });

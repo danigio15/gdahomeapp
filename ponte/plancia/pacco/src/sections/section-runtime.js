@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-VORIU7V3.js";
+} from "../../chunk-LYVWOPFN.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -4601,6 +4601,7 @@ var SOURCE_INDEX = Object.freeze({
   "Il gruppo è facoltativo: le azioni con lo stesso gruppo stanno insieme in Home, sotto un titolo che dice quante sono accese e che si chiude con un tocco. Senza gruppi resta una fila sola.": "The group is optional: actions with the same group sit together on Home, under a title that says how many are on and closes with a tap. Without groups it stays a single row.",
   "Il gruppo è il popup aperto dal cerchio del flow. I figli sono le card interne, per esempio Forno, Frigorifero o Lavastoviglie.": "Groups are the popup opened from a flow circle. Their children are the cards shown inside, such as Oven, Fridge or Dishwasher.",
   "Il lettore che suona in grande, con la copertina, i tasti, il volume e le sorgenti; accanto gli altri, ognuno col suo play. Un tocco su un lettore lo porta in grande.": "The player that's playing, big, with cover, buttons, volume and sources; beside it the others, each with its own play. A tap on a player brings it up big.",
+  "Il lettore dei DWG non si è scaricato: controlla la connessione e riprova.": "The DWG reader didn't download: check the connection and try again.",
   "Il lettore non ha risposto.": "The player did not answer.",
   "Il logo viene associato automaticamente al marchio. Il modello sostituisce la vecchia icona auto generica.": "The logo is automatically associated with the brand. The model replaces the old generic car icon.",
   "Il massimo è": "The most you can have is",
@@ -28061,7 +28062,7 @@ function ilRacconto({ imp, ponte, assente, lettura: lettura4, prezzo, adesso: ad
       };
     }
     if (esito2.tipo === "finita") {
-      const perche5 = esito2.motivo === "limite" && Number.isFinite(esito2.soc) ? t(`${soc}% raggiunto`, `${soc}% reached`) : esito2.motivo === "staccata" ? t("Auto staccata", "Car unplugged") : esito2.motivo === "spenta" ? t("Spenta da te", "Turned off") : t("Fine della fascia", "End of the window");
+      const perche6 = esito2.motivo === "limite" && Number.isFinite(esito2.soc) ? t(`${soc}% raggiunto`, `${soc}% reached`) : esito2.motivo === "staccata" ? t("Auto staccata", "Car unplugged") : esito2.motivo === "spenta" ? t("Spenta da te", "Turned off") : t("Fine della fascia", "End of the window");
       const pezzi = [];
       if (Number.isFinite(esito2.kwh)) {
         const kwh5 = formatNumber(esito2.kwh, 1);
@@ -28077,7 +28078,7 @@ function ilRacconto({ imp, ponte, assente, lettura: lettura4, prezzo, adesso: ad
       }
       return {
         tono: "finita",
-        titolo: `${t(`Finita alle ${alle}`, `Finished at ${alle}`)} · ${perche5}`,
+        titolo: `${t(`Finita alle ${alle}`, `Finished at ${alle}`)} · ${perche6}`,
         sotto: pezzi.join(" · ")
       };
     }
@@ -31252,14 +31253,14 @@ function scriviLaSessione() {
   const muto2 = !grezzo2 || /^(unknown|unavailable|none)$/i.test(grezzo2);
   const kwh5 = muto2 ? null : inKilowattora(numero14(grezzo2), stato3?.attributes?.unit_of_measurement);
   const testo5 = kwh5 === null ? "—" : lEnergiaInParole(kwh5, { decimali: Math.abs(kwh5) < 10 ? 2 : 1 });
-  const perche5 = kwh5 !== null ? "" : stato3 ? t(
+  const perche6 = kwh5 !== null ? "" : stato3 ? t(
     "Il contatore della sessione non sta rispondendo.",
     "The session meter is not answering."
   ) : t("Nessun contatore della sessione.", "No session meter.");
   for (const casella7 of caselle2) {
     if (casella7.textContent !== testo5) casella7.textContent = testo5;
     const riga5 = casella7.closest(".lm-kpi-card,.lm-sess-kpi,.ev-popup-session-row") || casella7;
-    if (riga5.title !== perche5) riga5.title = perche5;
+    if (riga5.title !== perche6) riga5.title = perche6;
   }
 }
 function umanizzaCaselle() {
@@ -51582,9 +51583,9 @@ function ensureFloodEditorRows() {
 }
 function seNonEUnaSonda(id, states) {
   const suo2 = states?.[id];
-  const perche5 = !suo2 ? t("in Home Assistant non c'è", "not in Home Assistant") : isFloodSensor(id, suo2) ? "" : t("non è un sensore di allagamento", "not a flood sensor");
-  if (!perche5) return "";
-  return `<div class="ed-hint" data-dm-flood-dubbia="true">⚠️ ${esc(perche5)}</div>`;
+  const perche6 = !suo2 ? t("in Home Assistant non c'è", "not in Home Assistant") : isFloodSensor(id, suo2) ? "" : t("non è un sensore di allagamento", "not a flood sensor");
+  if (!perche6) return "";
+  return `<div class="ed-hint" data-dm-flood-dubbia="true">⚠️ ${esc(perche6)}</div>`;
 }
 function installFloodDeleteHandler() {
   if (state48.deleteBound) return false;
@@ -65379,14 +65380,14 @@ function punteggio(p) {
 function partitaGrande(r, seguito, adesso2) {
   const grande = partitaInGrande(r);
   if (!grande) return "";
-  const { partita: p, perche: perche5 } = grande;
+  const { partita: p, perche: perche6 } = grande;
   const lati = latiDellaPartita(p, r.squadra.id);
   const colore2 = clean(lati?.mia?.colore) || clean(r.squadra?.colore) || "#16a34a";
-  const stato3 = perche5 === "dal-vivo" ? `<span class="dm-sport-live" data-dm-sport-live><i aria-hidden="true"></i>${esc(
+  const stato3 = perche6 === "dal-vivo" ? `<span class="dm-sport-live" data-dm-sport-live><i aria-hidden="true"></i>${esc(
     p.intervallo ? t("Intervallo", "Half time") : `${t("In diretta", "Live")} · ${clean(p.minuto)}`
-  )}</span>` : perche5 === "prossima" ? `<span class="dm-sport-manca">${esc(mancaInParole(p.quando, adesso2))}</span>` : `<span class="dm-sport-esito" data-esito="${esc(p.esito || "")}">${esc(ESITI()[p.esito]?.nome || t("Finita", "Full time"))}</span>`;
-  const testa2 = perche5 === "prossima" ? t("Prossima partita", "Next match") : perche5 === "dal-vivo" ? t("Adesso", "Now") : t("Ultima partita", "Last match");
-  const dopo = perche5 === "dal-vivo" ? r.prossime?.[0] : perche5 === "prossima" ? r.prossime?.[1] : null;
+  )}</span>` : perche6 === "prossima" ? `<span class="dm-sport-manca">${esc(mancaInParole(p.quando, adesso2))}</span>` : `<span class="dm-sport-esito" data-esito="${esc(p.esito || "")}">${esc(ESITI()[p.esito]?.nome || t("Finita", "Full time"))}</span>`;
+  const testa2 = perche6 === "prossima" ? t("Prossima partita", "Next match") : perche6 === "dal-vivo" ? t("Adesso", "Now") : t("Ultima partita", "Last match");
+  const dopo = perche6 === "dal-vivo" ? r.prossime?.[0] : perche6 === "prossima" ? r.prossime?.[1] : null;
   return schedaMarkup7(
     "",
     `<div class="dm-sport-partita-testa"><span>${esc(testa2)}</span><span>${esc(p.competizione)}</span></div>
@@ -65405,7 +65406,7 @@ function partitaGrande(r, seguito, adesso2) {
     )}</small></div>` : ""}`,
     {
       classe: `dm-sport-partita${toccaLaPartita(p) ? " dm-sport-tocca" : ""}`,
-      attr: `style="--squadra:${esc(colore2)}" data-dm-sport-partita="${esc(perche5)}" ${toccaLaPartita(p)}`
+      attr: `style="--squadra:${esc(colore2)}" data-dm-sport-partita="${esc(perche6)}" ${toccaLaPartita(p)}`
     }
   );
 }
@@ -87599,10 +87600,10 @@ function riquadroDegliImpianti(panel2, plant, impianti2) {
       const riga5 = element("div", "dm-imp-riga");
       const testo5 = element("div", "dm-imp-riga-testo");
       testo5.append(element("b", "", clean(voce3.device.name)));
-      const perche5 = voce3.da === DA_CARICO ? t("suggerito: la stessa potenza è già un carico di", "suggested: the same power is already a load of") : voce3.da === DA_PIANO ? t("suggerito: il suo piano è coperto da", "suggested: its floor is covered by") : t("nessun impianto", "no plant");
+      const perche6 = voce3.da === DA_CARICO ? t("suggerito: la stessa potenza è già un carico di", "suggested: the same power is already a load of") : voce3.da === DA_PIANO ? t("suggerito: il suo piano è coperto da", "suggested: its floor is covered by") : t("nessun impianto", "no plant");
       const suggerito = impianti2.find((impianto) => clean(impianto.id) === voce3.id);
       testo5.append(
-        element("small", "", suggerito ? `${perche5} ${nome(suggerito)}` : perche5)
+        element("small", "", suggerito ? `${perche6} ${nome(suggerito)}` : perche6)
       );
       riga5.append(testo5);
       const scelte5 = element("div", "dm-imp-scelte");
@@ -112154,7 +112155,7 @@ function cardDato(c, i, s) {
     ${clean(c.sotto) ? `<div class="mu-dato-s">${esc(clean(c.sotto))}</div>` : ""}
   </div>`;
 }
-var vuoto3 = (i, perche5 = "") => `<div class="mu-carta mu-card mu-vuoto" data-mu-card="${i}"><span class="mu-et">${esc(perche5 || t("Posto libero", "Empty slot"))}</span></div>`;
+var vuoto3 = (i, perche6 = "") => `<div class="mu-carta mu-card mu-vuoto" data-mu-card="${i}"><span class="mu-et">${esc(perche6 || t("Posto libero", "Empty slot"))}</span></div>`;
 function cardDelPosto(c, i, zona = "", { scena: scena2 = false } = {}) {
   if (!c || c.tipo === "vuoto") return vuoto3(i);
   if (scena2) return c.entita ? cardEntita(c, i, true) : cardAzione(c, i, true);
@@ -124260,7 +124261,7 @@ function paroleDi2(p) {
   const accende = d.verso === "accende";
   const quando6 = d.festivi ? t(`Alle ${ora8} nel fine settimana`, `At ${ora8} at the weekend`) : t(`Alle ${ora8} nei giorni feriali`, `At ${ora8} on weekdays`);
   const allora = tapparella ? accende ? t(`apri ${nome}`, `open ${nome}`) : t(`chiudi ${nome}`, `close ${nome}`) : accende ? t(`accendi ${nome}`, `turn on ${nome}`) : t(`spegni ${nome}`, `turn off ${nome}`);
-  const perche5 = tapparella ? accende ? t(
+  const perche6 = tapparella ? accende ? t(
     `l'hai aperta quasi ogni giorno fra ${da} e ${fino}, nelle ultime ${settimane} settimane.`,
     `you opened it almost every day between ${da} and ${fino}, over the last ${settimane} weeks.`
   ) : t(
@@ -124273,7 +124274,7 @@ function paroleDi2(p) {
     `l'hai spenta quasi ogni giorno fra ${da} e ${fino}, nelle ultime ${settimane} settimane.`,
     `you turned it off almost every day between ${da} and ${fino}, over the last ${settimane} weeks.`
   );
-  return { quando: quando6, allora, perche: perche5, nome: `${nome} · ${ora8}` };
+  return { quando: quando6, allora, perche: perche6, nome: `${nome} · ${ora8}` };
 }
 var disegnoDellaProposta = (p) => p.chiave === "abitudineOrario" ? "automazioni" : clean(p.disegno) || "automazioni";
 var perche2 = (testo5) => `<div class="pro-perche"><b>${esc(t("Perché:", "Why:"))}</b> ${esc(testo5)}</div>`;
@@ -125081,7 +125082,7 @@ function complessa({ app }) {
     t("Solo se", "Only if"),
     r.soloSe
   )}${blocco3("a", "#16a34a", t("Allora", "Then do"), r.allora)}` : "";
-  const perche5 = !v?.modificabile ? t(
+  const perche6 = !v?.modificabile ? t(
     "Questa automazione sta in un file di Home Assistant: qui la accendi, la spegni e la esegui, e si cambia lì.",
     "This automation lives in a Home Assistant file: here you turn it on, off and run it, and it is changed there."
   ) : t(
@@ -125089,7 +125090,7 @@ function complessa({ app }) {
     "This automation uses advanced features (a choice between cases, a template, a blueprint…): here you can turn it on and off, run it, rename it and change its room. For the rest:"
   );
   const link = v?.id && !nellApp() ? `<a class="ha-apri" href="${esc(indirizzoInHA(v.id))}" target="_top" rel="noopener">${esc(t("Apri in Home Assistant ↗", "Open in Home Assistant ↗"))}</a>` : "";
-  return `${indietroDellaScheda(app)}${v ? testaDellaScheda(v) : ""}${corpo6}<div class="ha-av"><span class="i" aria-hidden="true">ℹ️</span><div>${esc(perche5)}${link ? `<br>${link}` : ""}</div></div>${state132.errore ? `<div class="au-errore" role="alert">${esc(state132.errore)}</div>` : ""}`;
+  return `${indietroDellaScheda(app)}${v ? testaDellaScheda(v) : ""}${corpo6}<div class="ha-av"><span class="i" aria-hidden="true">ℹ️</span><div>${esc(perche6)}${link ? `<br>${link}` : ""}</div></div>${state132.errore ? `<div class="au-errore" role="alert">${esc(state132.errore)}</div>` : ""}`;
 }
 var ID_DELLA_CONFERMA = "au-conferma";
 function apriLaConferma(v) {
@@ -127398,8 +127399,8 @@ async function salva21() {
     if (risposta?.viaggio) state133.bozza.id = risposta.viaggio.id;
     await carica();
   } catch (errore) {
-    const perche5 = clean(errore?.message);
-    state133.errore = perche5 === "premium-richiesto" ? t("Serve GdANav Premium.", "GdANav Premium is needed.") : perche5 === "troppi-viaggi" ? t("Hai già 50 viaggi: togline qualcuno.", "You already have 50 trips: remove some.") : t(
+    const perche6 = clean(errore?.message);
+    state133.errore = perche6 === "premium-richiesto" ? t("Serve GdANav Premium.", "GdANav Premium is needed.") : perche6 === "troppi-viaggi" ? t("Hai già 50 viaggi: togline qualcuno.", "You already have 50 trips: remove some.") : t(
       "Il viaggio non si è salvato: controlla la meta, il giorno e l'ora.",
       "The trip was not saved: check destination, day and time."
     );
@@ -133080,9 +133081,9 @@ function cosaCeInCasaMarkup() {
         "Can't read it: the GdAHome add-on must be running, and you must be an administrator."
       )
     )}</small></div>`;
-  const perche5 = PERCHE();
+  const perche6 = PERCHE();
   const righe3 = (casa2.cose || []).map((c) => {
-    const motivo = perche5[c.perche] || perche5[c.genere] || (c.tipo === "porta" ? t("Porta", "Door") : t("Luce", "Light"));
+    const motivo = perche6[c.perche] || perche6[c.genere] || (c.tipo === "porta" ? t("Porta", "Door") : t("Luce", "Light"));
     return `<div class="dm-people-casa-riga" data-person-casa="${esc(c.entita)}">
         <div class="dm-people-casa-nome"><b>${esc(c.nome || c.entita)}</b><small>${esc(motivo)}</small></div>
         <div class="dm-face-modes" role="radiogroup">${SCELTE3().map(
@@ -137327,11 +137328,11 @@ function rigaDellIntegrazione(v, riparazione = null) {
   const destra = riparazione ? `<button type="button" class="dv-tasto pieno" data-dv-ripara="${esc(riparazione.flow_id)}">${esc(t("Ripara", "Repair"))}</button>` : v.ricaricabile && !v.disattivata ? `<button type="button" class="dv-ric${inCorso2 ? " gira" : ""}" data-dv-ricarica="${esc(v.id)}" aria-label="${esc(
     t(`Ricarica ${v.titolo}`, `Reload ${v.titolo}`)
   )}" title="${esc(t("Ricarica", "Reload"))}">↻</button>` : "";
-  const perche5 = v.stato === "errore" && v.perche ? v.perche : "";
+  const perche6 = v.stato === "errore" && v.perche ? v.perche : "";
   return `<div class="aug-riga${v.disattivata ? " spenta" : ""}" style="--c:${VIOLA3}" data-dv-int-voce="${esc(v.id)}" role="button" tabindex="0">${logo2(
     v.titolo,
     v.dominio
-  )}<span class="aug-testo"><b class="aug-nome"><span>${esc(v.titolo)}</span>${v.stato === "ok" ? "" : `<em class="dv-pill ${tono}">${DA_GUARDARE.has(v.stato) ? "⚠ " : ""}${esc(parola)}</em>`}</b><small class="aug-fr">${esc(riparazione ? t("L'accesso va rifatto", "Sign-in needs to be redone") : perche5 || contoDi(v))}</small></span>${destra}</div>`;
+  )}<span class="aug-testo"><b class="aug-nome"><span>${esc(v.titolo)}</span>${v.stato === "ok" ? "" : `<em class="dv-pill ${tono}">${DA_GUARDARE.has(v.stato) ? "⚠ " : ""}${esc(parola)}</em>`}</b><small class="aug-fr">${esc(riparazione ? t("L'accesso va rifatto", "Sign-in needs to be redone") : perche6 || contoDi(v))}</small></span>${destra}</div>`;
 }
 function integrazioniHtml() {
   const integr = state153.integr || { voci: [], trovate: [], riparazioni: [] };
@@ -137621,7 +137622,7 @@ ${d.voce ? `<div class="tasti"><button type="button" class="esegui" data-dv-rica
 }
 function foglioDellIntegrazione(v) {
   const [parola, tono] = STATI2()[v.stato] || STATI2().errore;
-  const perche5 = v.perche || SPIEGA()[v.stato] || "";
+  const perche6 = v.perche || SPIEGA()[v.stato] || "";
   const suoi2 = (state153.casa?.dispositivi || []).filter((d) => d.voce === v.id);
   const nomi2 = suoi2.slice(0, 6).map((d) => d.nome);
   const resto = suoi2.length - nomi2.length;
@@ -137630,7 +137631,7 @@ function foglioDellIntegrazione(v) {
   const ricarica3 = v.ricaricabile && !v.disattivata ? `<button type="button" class="esegui" data-dv-ricarica="${esc(v.id)}"${inCorso2 ? " disabled" : ""}>↻ ${esc(inCorso2 ? t("Ricarico…", "Reloading…") : t("Ricarica", "Reload"))}</button>` : "";
   return `<div class="ad-foglio dv-f" role="dialog" aria-modal="true" aria-label="${esc(v.titolo)}" style="--c:${VIOLA3}"><div class="man"></div>
 <div class="su">${logo2(v.titolo, v.dominio).replace("dv-logo", "dv-logo grande")}<div><h4>${esc(v.titolo)}</h4><div class="dove">${esc(v.integrazione)}</div></div><em class="dv-pill ${tono}">${esc(parola)}</em></div>
-<div class="blk">${perche5 ? `<div class="riga s"><span>${esc(t("Perché", "Why"))}</span><div>${esc(perche5)}</div></div>` : ""}<div class="riga q"><span>${esc(t("Porta", "Brings"))}</span><div>${esc(contoDi({ ...v, integrazione: "" }))}</div></div>${nomi2.length ? `<div class="riga a"><span>${esc(t("Dispositivi", "Devices"))}</span><div>${esc(nomi2.join(", "))}${resto > 0 ? esc(t(` e altri ${resto}`, ` and ${resto} more`)) : ""}</div></div>` : ""}</div>
+<div class="blk">${perche6 ? `<div class="riga s"><span>${esc(t("Perché", "Why"))}</span><div>${esc(perche6)}</div></div>` : ""}<div class="riga q"><span>${esc(t("Porta", "Brings"))}</span><div>${esc(contoDi({ ...v, integrazione: "" }))}</div></div>${nomi2.length ? `<div class="riga a"><span>${esc(t("Dispositivi", "Devices"))}</span><div>${esc(nomi2.join(", "))}${resto > 0 ? esc(t(` e altri ${resto}`, ` and ${resto} more`)) : ""}</div></div>` : ""}</div>
 ${ricarica3 || opzioni2 ? `<div class="tasti">${ricarica3}${opzioni2}</div>` : ""}<div class="op-mod"><button type="button" data-dv-disattiva>${esc(
     v.disattivata ? t("Riattiva", "Enable") : t("Disattiva", "Disable")
   )}</button><button type="button" class="r" data-dv-elimina>${esc(t("Elimina", "Delete"))}</button></div></div>`;
@@ -147945,10 +147946,10 @@ function veloMarkup(riga5) {
 }
 function erroreMarkup(riga5) {
   if (!vivoPer(state167.errore, riga5.entity)) return "";
-  const perche5 = clean(state167.errore.testo);
+  const perche6 = clean(state167.errore.testo);
   return `<small class="dm-varco-errore" role="alert">⚠️<span>${esc(
     t("La centrale non ha accettato", "The alarm panel refused")
-  )}${perche5 ? `: ${esc(perche5)}` : ""}</span></small>`;
+  )}${perche6 ? `: ${esc(perche6)}` : ""}</span></small>`;
 }
 function rigaMarkup21(riga5, states = {}) {
   return `<article class="dm-varco" data-varco="${esc(riga5.stato || "muto")}"
@@ -156849,7 +156850,7 @@ function pPlanimetria() {
       )
     )}</span></button>
       ${S.lavoro ? `<div class="c3c-lavoro">⏳ ${esc(S.lavoro)}</div>` : ""}
-      ${S.avviso ? `<div class="c3c-lavoro">⚠️ ${esc(S.avviso)}</div>` : ""}
+      ${S.avviso ? `<div class="c3c-lavoro">⚠️ ${esc(S.avviso)}${S.dettaglio ? `<small class="c3c-dettaglio" translate="no">${esc(S.dettaglio)}</small>` : ""}</div>` : ""}
       ${dwgScelta()}
       ${S.dritta && !S.dwg ? nota(`✓ ${esc(t("Raddrizzata di", "Straightened by"))} ${esc(numero62(Math.abs(S.angolo)))}° · ${S.dritta.width}×${S.dritta.height} px`) : ""}`
   ) + scheda7(
@@ -157252,7 +157253,12 @@ async function caricaPdfjs() {
 }
 async function usaPdf(file) {
   const S = state182.S;
-  Object.assign(S, { dwg: null, avviso: "", lavoro: t("Apro il PDF…", "Opening the PDF…") });
+  Object.assign(S, {
+    dwg: null,
+    avviso: "",
+    dettaglio: "",
+    lavoro: t("Apro il PDF…", "Opening the PDF…")
+  });
   disegnaIlPannello();
   try {
     const [lib, dati] = await Promise.all([caricaPdfjs(), file.arrayBuffer()]);
@@ -157288,6 +157294,7 @@ async function usaPdf(file) {
   } catch (errore) {
     root.console?.warn?.("[DashboardModern] Casa 3D: PDF", errore);
     S.lavoro = "";
+    S.dettaglio = perche5(errore);
     S.avviso = t(
       "Questo PDF non si apre. Prova con una schermata della pagina.",
       "This PDF can't be opened. Try a screenshot of the page."
@@ -157311,16 +157318,35 @@ async function caricaLibreDwg() {
     throw errore;
   }
 }
+function perche5(errore) {
+  const testo5 = String(errore?.message || errore || "").replace(/\s+/g, " ").trim();
+  return testo5 ? testo5.slice(0, 160) : "";
+}
 async function usaDwg(file) {
   const S = state182.S;
   Object.assign(S, {
     dwg: null,
     avviso: "",
+    dettaglio: "",
     lavoro: t("Leggo il disegno DWG…", "Reading the DWG drawing…")
   });
   disegnaIlPannello();
+  let motore;
   try {
-    const [{ lib, tipo }, dati] = await Promise.all([caricaLibreDwg(), file.arrayBuffer()]);
+    motore = await caricaLibreDwg();
+  } catch (errore) {
+    root.console?.warn?.("[DashboardModern] Casa 3D: lettore DWG", errore);
+    S.lavoro = "";
+    S.dettaglio = perche5(errore);
+    S.avviso = t(
+      "Il lettore dei DWG non si è scaricato: controlla la connessione e riprova.",
+      "The DWG reader didn't download: check the connection and try again."
+    );
+    return disegna14();
+  }
+  try {
+    const { lib, tipo } = motore;
+    const dati = await file.arrayBuffer();
     const letto = lib.dwg_read_data(dati, tipo.DWG);
     if (!letto) throw new Error("dwg");
     let db;
@@ -157353,6 +157379,7 @@ async function usaDwg(file) {
   } catch (errore) {
     root.console?.warn?.("[DashboardModern] Casa 3D: DWG", errore);
     S.lavoro = "";
+    S.dettaglio = perche5(errore);
     S.avviso = t(
       "Questo DWG non si legge. Prova a salvarlo da AutoCAD in una versione più vecchia, o carica una foto.",
       "This DWG can't be read. Try saving it from AutoCAD as an older version, or upload a photo."
@@ -157408,7 +157435,7 @@ async function usaPianoDwg(p) {
 }
 function pronta(mpp, etichette = []) {
   const S = state182.S;
-  Object.assign(S, { mpp, etichette, avviso: "" });
+  Object.assign(S, { mpp, etichette, avviso: "", dettaglio: "" });
   S.passo = P11.scala;
   vaiAvanti();
 }
@@ -158084,6 +158111,7 @@ function installaLoStile11() {
     ${Q} .c3c-scheda{background:var(--c3c-vetro);border:1px solid var(--c3c-bordo);border-radius:20px;box-shadow:var(--c3c-ombra);padding:16px;flex:0 0 auto}
     ${Q} .c3c-titolo{font-family:'Oswald',system-ui,sans-serif;font-weight:500;font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--c3c-fioco);margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     ${Q} .c3c-titolo b{color:var(--c3c-testo);font-weight:500}
+    ${Q} .c3c-dettaglio{display:block;margin-top:6px;font-size:11px;font-weight:500;opacity:.75;word-break:break-word}
     ${Q} .c3c-piccolo{font-size:12px;color:var(--c3c-fioco);line-height:1.5;margin-top:8px}
     ${Q} .c3c-righe{line-height:1.8}
     ${Q} .c3c-spazio{margin:0 0 8px}

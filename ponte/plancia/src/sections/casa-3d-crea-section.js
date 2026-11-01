@@ -802,7 +802,7 @@ function pPlanimetria() {
         ),
       )}</span></button>
       ${S.lavoro ? `<div class="c3c-lavoro">⏳ ${esc(S.lavoro)}</div>` : ""}
-      ${S.avviso ? `<div class="c3c-lavoro">⚠️ ${esc(S.avviso)}</div>` : ""}
+      ${S.avviso ? `<div class="c3c-lavoro">⚠️ ${esc(S.avviso)}${S.dettaglio ? `<small class="c3c-dettaglio" translate="no">${esc(S.dettaglio)}</small>` : ""}</div>` : ""}
       ${dwgScelta()}
       ${S.dritta && !S.dwg ? nota(`✓ ${esc(t("Raddrizzata di", "Straightened by"))} ${esc(numero(Math.abs(S.angolo)))}° · ${S.dritta.width}×${S.dritta.height} px`) : ""}`,
     ) +
@@ -1333,7 +1333,12 @@ async function caricaPdfjs() {
  * quote da toccare. Senza scala si passa dai due punti, come per una foto. */
 async function usaPdf(file) {
   const S = state.S;
-  Object.assign(S, { dwg: null, avviso: "", lavoro: t("Apro il PDF…", "Opening the PDF…") });
+  Object.assign(S, {
+    dwg: null,
+    avviso: "",
+    dettaglio: "",
+    lavoro: t("Apro il PDF…", "Opening the PDF…"),
+  });
   disegnaIlPannello();
   try {
     const [lib, dati] = await Promise.all([caricaPdfjs(), file.arrayBuffer()]);
@@ -1370,6 +1375,7 @@ async function usaPdf(file) {
   } catch (errore) {
     root.console?.warn?.("[DashboardModern] Casa 3D: PDF", errore);
     S.lavoro = "";
+    S.dettaglio = perche(errore);
     S.avviso = t(
       "Questo PDF non si apre. Prova con una schermata della pagina.",
       "This PDF can't be opened. Try a screenshot of the page.",
@@ -1392,16 +1398,44 @@ async function caricaLibreDwg() {
   }
 }
 
+/* La causa vera di un guasto, in poche parole, sotto l'avviso: «Questo DWG
+ * non si legge» dal telefono e' stato a lungo un indovinello, perche' dal
+ * telefono la console non si vede. Cosi' chi lo vede lo puo' fotografare. */
+function perche(errore) {
+  const testo = String(errore?.message || errore || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return testo ? testo.slice(0, 160) : "";
+}
+
 async function usaDwg(file) {
   const S = state.S;
   Object.assign(S, {
     dwg: null,
     avviso: "",
+    dettaglio: "",
     lavoro: t("Leggo il disegno DWG…", "Reading the DWG drawing…"),
   });
   disegnaIlPannello();
+  /* Due guasti diversi, due messaggi diversi: se non arriva il lettore (11 MB,
+   * dalla rete) il disegno non c'entra, e dire «salvalo in una versione piu'
+   * vecchia» mandava a cercare il problema nel posto sbagliato. */
+  let motore;
   try {
-    const [{ lib, tipo }, dati] = await Promise.all([caricaLibreDwg(), file.arrayBuffer()]);
+    motore = await caricaLibreDwg();
+  } catch (errore) {
+    root.console?.warn?.("[DashboardModern] Casa 3D: lettore DWG", errore);
+    S.lavoro = "";
+    S.dettaglio = perche(errore);
+    S.avviso = t(
+      "Il lettore dei DWG non si è scaricato: controlla la connessione e riprova.",
+      "The DWG reader didn't download: check the connection and try again.",
+    );
+    return disegna();
+  }
+  try {
+    const { lib, tipo } = motore;
+    const dati = await file.arrayBuffer();
     const letto = lib.dwg_read_data(dati, tipo.DWG);
     if (!letto) throw new Error("dwg");
     let db;
@@ -1434,6 +1468,7 @@ async function usaDwg(file) {
   } catch (errore) {
     root.console?.warn?.("[DashboardModern] Casa 3D: DWG", errore);
     S.lavoro = "";
+    S.dettaglio = perche(errore);
     S.avviso = t(
       "Questo DWG non si legge. Prova a salvarlo da AutoCAD in una versione più vecchia, o carica una foto.",
       "This DWG can't be read. Try saving it from AutoCAD as an older version, or upload a photo.",
@@ -1507,7 +1542,7 @@ async function usaPianoDwg(p) {
 /* Dopo un disegno la scala e' gia' nota: si va dritti ai muri. */
 function pronta(mpp, etichette = []) {
   const S = state.S;
-  Object.assign(S, { mpp, etichette, avviso: "" });
+  Object.assign(S, { mpp, etichette, avviso: "", dettaglio: "" });
   S.passo = P.scala;
   vaiAvanti();
 }
@@ -2312,6 +2347,7 @@ function installaLoStile() {
     ${Q} .c3c-scheda{background:var(--c3c-vetro);border:1px solid var(--c3c-bordo);border-radius:20px;box-shadow:var(--c3c-ombra);padding:16px;flex:0 0 auto}
     ${Q} .c3c-titolo{font-family:'Oswald',system-ui,sans-serif;font-weight:500;font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--c3c-fioco);margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     ${Q} .c3c-titolo b{color:var(--c3c-testo);font-weight:500}
+    ${Q} .c3c-dettaglio{display:block;margin-top:6px;font-size:11px;font-weight:500;opacity:.75;word-break:break-word}
     ${Q} .c3c-piccolo{font-size:12px;color:var(--c3c-fioco);line-height:1.5;margin-top:8px}
     ${Q} .c3c-righe{line-height:1.8}
     ${Q} .c3c-spazio{margin:0 0 8px}

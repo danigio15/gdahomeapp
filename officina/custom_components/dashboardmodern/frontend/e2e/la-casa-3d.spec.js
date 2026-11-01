@@ -606,3 +606,20 @@ test("sul Fold aperto scorre tutta la pagina, non una striscia", async ({
   await expect(avanti).toBeInViewport();
   await fotoDiretta(page, testInfo, "crea-fold-in-fondo");
 });
+
+/* «Questo DWG non si legge», dal telefono: il disegno era buono, era il
+ * lettore (11 MB) che non arrivava. Ora i due guasti si dicono diversi, e
+ * sotto l'avviso c'e' la causa vera, da fotografare. */
+test("se il lettore dei DWG non arriva lo dice, con la causa sotto", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "basta una misura");
+  await page.route("**/libredwg/**", (via) => via.abort("connectionrefused"));
+  const crea = await apriLaProcedura(page, testInfo);
+  await crea.locator('[data-c3c-file="dwg"]').setInputFiles({
+    name: "pianta.dwg",
+    mimeType: "application/acad",
+    buffer: Buffer.from("AC1032 non importa"),
+  });
+  await expect(crea).toContainText("Il lettore dei DWG non si è scaricato", { timeout: 30_000 });
+  await expect(crea.locator(".c3c-dettaglio")).not.toBeEmpty();
+  await expect(crea).not.toContainText("Prova a salvarlo da AutoCAD");
+});
