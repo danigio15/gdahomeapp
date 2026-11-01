@@ -623,3 +623,92 @@ test("se il lettore dei DWG non arriva lo dice, con la causa sotto", async ({ pa
   await expect(crea.locator(".c3c-dettaglio")).not.toBeEmpty();
   await expect(crea).not.toContainText("Prova a salvarlo da AutoCAD");
 });
+
+/* Come lo da' l'app sul telefono: il motore col tipo che il suo servitore
+ * conosceva («application/octet-stream», non «application/wasm») e, la prima
+ * volta, un ponte che non risponde in tempo. Il lettore deve partire lo
+ * stesso: una seconda richiesta, e poi via. E la cache del browser fuori:
+ * era li' che il lettore di prima si perdeva. */
+test("il lettore dei DWG parte anche col tipo dell'app e un primo 503", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "basta una misura");
+  const chieste = [];
+  await page.route("**/libredwg/wasm/libredwg-web.wasm", async (via) => {
+    chieste.push(via.request().headers());
+    if (chieste.length === 1)
+      return via.fulfill({
+        status: 503,
+        contentType: "text/plain",
+        body: "il ponte non ha risposto",
+      });
+    const vera = await via.fetch();
+    return via.fulfill({
+      status: 200,
+      contentType: "application/octet-stream",
+      body: await vera.body(),
+    });
+  });
+  const crea = await apriLaProcedura(page, testInfo);
+  await crea.locator('[data-c3c-file="dwg"]').setInputFiles({
+    name: "pianta.dwg",
+    mimeType: "application/acad",
+    buffer: Buffer.from("AC1032 non importa"),
+  });
+  /* Il motore c'e': quello che non si legge adesso e' il disegno finto. */
+  await expect(crea).toContainText(
+    /Questo DWG non si legge|Nel disegno non ho trovato una pianta/,
+    {
+      timeout: 60_000,
+    },
+  );
+  await expect(crea).not.toContainText("Il lettore dei DWG non si è scaricato");
+  expect(chieste.length).toBe(2);
+  expect(chieste.every((h) => !h["if-none-match"])).toBe(true);
+});
+
+test("se il motore dei DWG risponde di no, sotto c'e' il codice", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "basta una misura");
+  let quante = 0;
+  await page.route("**/libredwg/wasm/libredwg-web.wasm", (via) => {
+    quante++;
+    return via.fulfill({ status: 404, contentType: "text/plain", body: "qui non c'è niente" });
+  });
+  const crea = await apriLaProcedura(page, testInfo);
+  await crea.locator('[data-c3c-file="dwg"]').setInputFiles({
+    name: "pianta.dwg",
+    mimeType: "application/acad",
+    buffer: Buffer.from("AC1032 non importa"),
+  });
+  await expect(crea).toContainText("Il lettore dei DWG non si è scaricato", { timeout: 30_000 });
+  await expect(crea.locator(".c3c-dettaglio")).toContainText("HTTP 404 qui non c'è niente");
+  /* Un no non si richiede. */
+  expect(quante).toBe(1);
+});
+
+/* «La navbar qua non deve esserci proprio»: nell'app la barra stava a meta'
+ * sopra la casa, col fondo della pagina tagliato dietro. Sulla casa la barra
+ * non c'e' — ne' la maniglia, ne' il tasto della voce. */
+test("sulla casa la barra delle sezioni non c'e'", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "e' il telefono");
+  await page.addInitScript(() => {
+    window.__GDAHOME_PREMIUM__ = true;
+  });
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
+  await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
+  await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true, null, {
+    timeout: 60_000,
+  });
+  await page.evaluate(() => {
+    localStorage.setItem("cd_casa3d", JSON.stringify({ attiva: true, piani: [] }));
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
+  });
+  const casa = page.locator("#dm-casa3d");
+  await expect(casa.locator(".c3-da-creare h2")).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator("nav.tabs.bottom-nav-bar")).toBeHidden();
+  await expect(page.locator(".dm-assist-tasto")).toBeHidden();
+  await expect(page.locator(".bottom-nav-handle")).toBeHidden();
+  await page.waitForTimeout(800);
+  const dove = foto(testInfo, "casa3d-senza-la-barra");
+  if (dove) await page.screenshot({ path: dove });
+});

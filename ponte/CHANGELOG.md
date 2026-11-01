@@ -10,6 +10,18 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.22
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Casa 3D, il DWG nell'app:** il lettore dei DWG si scarica una volta
+  sola, senza passare dalla cache, e parte anche nell'app sul telefono —
+  dove finiva in «both async and sync fetching of the wasm failed». Se
+  non arriva, sotto l'avviso c'è il codice della risposta.
+- **Casa 3D, niente barra in basso:** sulla pagina della casa la barra
+  delle sezioni e il tasto della voce non ci sono più (nell'app stavano a
+  metà sopra la pagina, tagliandone il fondo). Si esce col ☰.
+
 ## 1.18.7.21
 
 _Solo Home Assistant: l'app sul telefono non cambia._

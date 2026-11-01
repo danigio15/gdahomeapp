@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-7CIJ3GDI.js";
+} from "../../chunk-X25FNACS.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -154347,6 +154347,17 @@ function installaLoStile9() {
     `
     html.dm-casa3d-acceso:not(:has(#editor-modal)),html.dm-casa3d-acceso:not(:has(#editor-modal)) body{overflow:hidden!important}
     html:has(#editor-modal) #${ID4}{display:none!important}
+    /* Sulla casa la barra delle sezioni non c'e'.
+     *
+     * La casa e' un foglio che copre tutto, come il muro: si esce col ☰. Nel
+     * browser la barra ci finiva sotto e non si vedeva; nell'app sul telefono
+     * invece restava a meta' sopra, col fondo della pagina tagliato dietro
+     * («la navbar qua non deve esserci proprio»). Adesso se ne va — lei, la
+     * maniglia che la richiama e il tasto della voce — finche' la casa e'
+     * aperta, dappertutto. */
+    html.dm-casa3d-acceso nav.tabs.bottom-nav-bar,
+    html.dm-casa3d-acceso .bottom-nav-handle,
+    html.dm-casa3d-acceso .dm-assist-tasto{display:none!important}
     ${C3}{--c3-bg:#eef2f7;--c3-card:#fff;--c3-bordo:#e2e8f0;--c3-testo:#0a0e17;--c3-fioco:#64748b;--c3-morbido:#f8fafc;--c3-accento:#0ea5e9;
       --c3-ombra:0 1px 2px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.06);
       position:fixed;inset:0;z-index:2147483000;overflow:hidden;background:var(--c3-bg);color:var(--c3-testo);
@@ -154453,7 +154464,7 @@ function installaLoStile9() {
     }
     @media(max-width:860px){
       ${C3}{overflow-y:auto;-webkit-overflow-scrolling:touch}
-      ${C3} .c3-pagina{height:auto;min-height:100%;padding:10px 10px 80px;gap:10px}
+      ${C3} .c3-pagina{height:auto;min-height:100%;padding:10px 10px calc(16px + var(--dm-fondo-di-sistema,0px));gap:10px}
       ${C3} .c3-testa{flex-wrap:wrap;gap:10px;padding:12px 14px;border-radius:20px}
       ${C3} .c3-testa-testo{flex:1 1 calc(100% - 70px)}
       ${C3} .c3-testa-testo h1{font-size:19px}
@@ -157302,14 +157313,47 @@ async function usaPdf(file) {
     disegna14();
   }
 }
+async function scaricaIlMotore(dove, prendi = root.fetch?.bind(root)) {
+  let ultimo = null;
+  for (let volta = 0; volta < 2; volta++) {
+    let risposta;
+    try {
+      risposta = await prendi(dove, { credentials: "same-origin", cache: "no-store" });
+    } catch (errore) {
+      ultimo = new Error(`libredwg-web.wasm: ${perche5(errore) || "rete"}`);
+      continue;
+    }
+    if (!risposta.ok) {
+      let detto3 = "";
+      try {
+        detto3 = perche5(await risposta.text()).slice(0, 100);
+      } catch (_errore) {
+      }
+      ultimo = new Error(`libredwg-web.wasm: HTTP ${risposta.status}${detto3 ? ` ${detto3}` : ""}`);
+      if (risposta.status < 500) break;
+      continue;
+    }
+    const byte = new Uint8Array(await risposta.arrayBuffer());
+    if (byte.length < 8 || byte[0] !== 0 || byte[1] !== 97 || byte[2] !== 115 || byte[3] !== 109)
+      throw new Error(`libredwg-web.wasm: ${byte.length} byte, non e' WebAssembly`);
+    return byte;
+  }
+  throw ultimo;
+}
 var libreDwg = null;
 async function caricaLibreDwg() {
   if (!libreDwg)
-    libreDwg = import(
-      /* @vite-ignore */
-      `${LIBREDWG}dist/libredwg-web.js`
-    ).then(
-      (m) => m.LibreDwg.create(`${LIBREDWG}wasm`).then((lib) => ({ lib, tipo: m.Dwg_File_Type }))
+    libreDwg = Promise.all([
+      import(
+        /* @vite-ignore */
+        `${LIBREDWG}dist/libredwg-web.js`
+      ),
+      scaricaIlMotore(`${LIBREDWG}wasm/libredwg-web.wasm`)
+    ]).then(
+      ([m, wasmBinary]) => m.createModule({
+        wasmBinary,
+        locateFile: (nome) => `${LIBREDWG}wasm/${nome}`
+      }).then((modulo) => ({ lib: m.LibreDwg.createByWasmInstance(modulo), tipo: m.Dwg_File_Type }))
     );
   try {
     return await libreDwg;
