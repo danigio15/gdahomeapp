@@ -10,6 +10,16 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.21
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Casa 3D, il DWG dal telefono:** il lettore dei DWG ora viaggia
+  compresso (2,5 MB invece di 10,8), e da fuori casa non fa più cadere il
+  collegamento. Se il lettore non arriva lo dice («Il lettore dei DWG non
+  si è scaricato») invece di dare la colpa al disegno; e sotto ogni avviso
+  del DWG e del PDF c'è, in piccolo, la causa vera dell'errore.
+
 ## 1.18.7.20
 
 _Solo Home Assistant: l'app sul telefono non cambia._

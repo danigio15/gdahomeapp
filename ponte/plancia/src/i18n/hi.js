@@ -7829,4 +7829,5 @@ export default Object.freeze({
   "Opening the PDF…": "PDF खोल रहा हूँ…",
   "No scale found on the PDF: tap both ends of a length you know.": "PDF में पैमाना नहीं मिला: किसी ज्ञात लंबाई के दोनों सिरों पर टैप करें।",
   "This PDF can't be opened. Try a screenshot of the page.": "यह PDF नहीं खुल रहा। पेज का स्क्रीनशॉट आज़माएँ।",
+  "The DWG reader didn't download: check the connection and try again.": "DWG रीडर डाउनलोड नहीं हुआ: कनेक्शन जाँचें और फिर से कोशिश करें।",
 });

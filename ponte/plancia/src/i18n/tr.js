@@ -7846,4 +7846,5 @@ export default Object.freeze({
   "Opening the PDF…": "PDF açılıyor…",
   "No scale found on the PDF: tap both ends of a length you know.": "PDF'te ölçek bulunamadı: bildiğin bir uzunluğun iki ucuna dokun.",
   "This PDF can't be opened. Try a screenshot of the page.": "Bu PDF açılmıyor. Sayfanın ekran görüntüsünü dene.",
+  "The DWG reader didn't download: check the connection and try again.": "DWG okuyucu indirilemedi: bağlantıyı kontrol edip tekrar dene.",
 });

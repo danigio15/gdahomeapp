@@ -485,8 +485,13 @@ const UN_PACCO_PESA = 384 * 1024;
 
 /* Quello che vale la pena comprimere: testo. Un modulo JavaScript si riduce a
  * un quarto, e passa dal centralino, che e' la strada lenta. Un'immagine e'
- * gia' compressa, e la si lascia stare. */
-const DA_COMPRIMERE = /^(text\/|application\/(javascript|json|xml|x-javascript)|image\/svg)/i;
+ * gia' compressa, e la si lascia stare.
+ *
+ * E il WebAssembly: il motore dei DWG (LibreDWG) pesa 10,8 MB e compresso
+ * 2,5. Da fuori casa, intero, in base64 erano 14 MB in coda verso il
+ * telefono; il centralino oltre gli 8 chiude il filo («troppo indietro nel
+ * leggere») e sul telefono usciva «Questo DWG non si legge». */
+const DA_COMPRIMERE = /^(text\/|application\/(javascript|json|xml|x-javascript|wasm)|image\/svg)/i;
 const ALMENO = 512;
 
 /* Un percorso e' fatto di lettere, numeri e pochi segni. Niente `..`, niente

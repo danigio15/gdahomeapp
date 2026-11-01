@@ -84,6 +84,9 @@ export function telefonoCifrato(
 
   let quantiTelai = 0;
   let quantiCaratteri = 0;
+  /* Il messaggio piu' lungo ricomposto dai pezzi: l'app vera oltre i 16 MB
+   * chiude il filo (`interoMassimo` in `app/lib/ponte/stretta.dart`). */
+  let piuGrande = 0;
   presa.addEventListener("message", (evento) => {
     quantiTelai += 1;
     let testo = typeof evento.data === "string" ? evento.data : String(evento.data);
@@ -135,6 +138,7 @@ export function telefonoCifrato(
     }
     const intero = pezzi ? pezzi + testo : testo;
     pezzi = "";
+    if (intero.length > piuGrande) piuGrande = intero.length;
 
     try {
       detti.push(JSON.parse(busta.apri(intero)));
@@ -183,6 +187,9 @@ export function telefonoCifrato(
       ),
     get quantiTelai() {
       return quantiTelai;
+    },
+    get piuGrande() {
+      return piuGrande;
     },
     /* Quanto e' passato sul filo, in caratteri: e' quello che la
      * compressione deve far calare. */

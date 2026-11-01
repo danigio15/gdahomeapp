@@ -2951,6 +2951,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Il gruppo è facoltativo: le azioni con lo stesso gruppo stanno insieme in Home, sotto un titolo che dice quante sono accese e che si chiude con un tocco. Senza gruppi resta una fila sola.": "The group is optional: actions with the same group sit together on Home, under a title that says how many are on and closes with a tap. Without groups it stays a single row.",
   "Il gruppo è il popup aperto dal cerchio del flow. I figli sono le card interne, per esempio Forno, Frigorifero o Lavastoviglie.": "Groups are the popup opened from a flow circle. Their children are the cards shown inside, such as Oven, Fridge or Dishwasher.",
   "Il lettore che suona in grande, con la copertina, i tasti, il volume e le sorgenti; accanto gli altri, ognuno col suo play. Un tocco su un lettore lo porta in grande.": "The player that's playing, big, with cover, buttons, volume and sources; beside it the others, each with its own play. A tap on a player brings it up big.",
+  "Il lettore dei DWG non si è scaricato: controlla la connessione e riprova.": "The DWG reader didn't download: check the connection and try again.",
   "Il lettore non ha risposto.": "The player did not answer.",
   "Il logo viene associato automaticamente al marchio. Il modello sostituisce la vecchia icona auto generica.": "The logo is automatically associated with the brand. The model replaces the old generic car icon.",
   "Il massimo è": "The most you can have is",

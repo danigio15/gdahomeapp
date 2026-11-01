@@ -5687,6 +5687,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "The drawing that shows on the page and on the tile. They are GdAHome's own: the same on every phone.",
   "The drop is large: the system is asking for a lot of heat.",
   "The drop is small: the water is flowing but giving off little heat.",
+  "The DWG reader didn't download: check the connection and try again.",
   "The Echos do not answer: check Alexa Media Player in Home Assistant.",
   "The electric water heater, for whoever does not make hot water with the sun: the tile says where the water is and how far it is from the target. With a Home Assistant water_heater the first field is enough.",
   "The entities",
