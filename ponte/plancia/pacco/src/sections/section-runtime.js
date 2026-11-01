@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-C3L4H5N6.js";
+} from "../../chunk-QVPXU6IZ.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -153770,6 +153770,18 @@ function installOcchioEditor() {
 }
 senzaCadere(installOcchioEditor);
 
+// src/core/cartella-della-plancia.js
+function cartellaDellaPlancia(qui) {
+  const m = /^(.*\/dashboardmodern_static\/(?:[^/?#]+\/)?)(?:legacy|src|pacco)\//.exec(
+    String(qui || "")
+  );
+  return m ? m[1] : null;
+}
+function daiVendor(qui, percorso, riserva) {
+  const cartella2 = cartellaDellaPlancia(qui);
+  return cartella2 ? `${cartella2}legacy/vendor/${percorso}` : riserva;
+}
+
 // src/sections/casa-3d-section.js
 var KEY184 = "__DASHBOARDMODERN_CASA_3D__";
 var ID4 = "dm-casa3d";
@@ -153796,7 +153808,9 @@ function casa3dDiQui() {
 }
 function telecamereGuardabili(casa2, states) {
   const tutte = [];
-  for (const p of casa2.piani) for (const d of p.dispositivi) if (d.k === "telecamera" && d.entity) tutte.push({ entity: d.entity });
+  for (const p of casa2.piani)
+    for (const d of p.dispositivi)
+      if (d.k === "telecamera" && d.entity) tutte.push({ entity: d.entity });
   for (const d of casa2.esterno.telecamere) if (d.entity) tutte.push({ entity: d.entity });
   const visibili = telecamereVisibili(tutte, {
     config: readJson(CHIAVE_RISERVATE, {}),
@@ -153814,7 +153828,9 @@ function nomeDelDispositivo3(d, states) {
 var pianiDallAlto = (casa2) => casa2.piani.slice().sort((a, b2) => b2.livello - a.livello);
 function luciDelPiano(p, states) {
   const luci = p.dispositivi.filter((d) => d.k === "luce" && d.entity);
-  const accese = luci.filter((d) => statoDelDispositivo("luce", states[d.entity], italiano()).attivo);
+  const accese = luci.filter(
+    (d) => statoDelDispositivo("luce", states[d.entity], italiano()).attivo
+  );
   return { tutte: luci.length, accese: accese.length };
 }
 function temperaturaDelPiano(p, states) {
@@ -153835,7 +153851,9 @@ function testataMarkup2(casa2, admin) {
         <h1>${esc(p ? p.nome : nome)}</h1>
         <p>${esc(sotto)}</p>
       </div>
-      <div class="c3-pillole">${pillola2("esterno", `${casa2.tipo === "palazzo" ? "🏢" : "🏡"} ${t("Esterno", "Outside")}`)}${pianiDallAlto(casa2).map((x) => pillola2(x.k, x.nome)).join("")}</div>
+      <div class="c3-pillole">${pillola2("esterno", `${casa2.tipo === "palazzo" ? "🏢" : "🏡"} ${t("Esterno", "Outside")}`)}${pianiDallAlto(
+    casa2
+  ).map((x) => pillola2(x.k, x.nome)).join("")}</div>
       <span class="c3-spazio"></span>
       ${admin && casa2.piani.length ? `<button type="button" class="c3-tasto" data-c3s="arreda" aria-pressed="${state180.arreda}">🎨 ${esc(t("Arreda", "Furnish"))}</button>
              <button type="button" class="c3-tasto" data-c3s="crea">🏗️ ${esc(t("Crea / modifica la casa", "Create / edit the house"))}</button>` : ""}
@@ -153935,21 +153953,31 @@ function elencoMarkup4(casa2, states, guardabili) {
   };
   if (p) {
     const nomeStanza = new Map(p.stanze.map((s) => [s.id, s.nome]));
-    const ordinati = p.dispositivi.slice().sort((a, b2) => clean(nomeStanza.get(a.stanza)).localeCompare(clean(nomeStanza.get(b2.stanza))));
+    const ordinati = p.dispositivi.slice().sort(
+      (a, b2) => clean(nomeStanza.get(a.stanza)).localeCompare(clean(nomeStanza.get(b2.stanza)))
+    );
     for (const d of ordinati) righe3.push(riga5(d, nomeStanza.get(d.stanza) || ""));
   } else for (const d of casa2.esterno.telecamere) righe3.push(riga5(d, t("Esterno", "Outside")));
   const titolo3 = p ? `${t("Dispositivi", "Devices")} · ${p.nome}` : t("Telecamere fuori", "Outdoor cameras");
   return `<section class="c3-scheda c3-scheda-elenco">
       <h2>⚡ <b>${esc(titolo3)}</b></h2>
       ${righe3.length ? `<ul class="c3-elenco-righe">${righe3.join("")}</ul>` : `<p class="c3-nota">${esc(
-    p ? t("Nessun dispositivo in questo piano: si mettono con «Arreda».", "No devices on this floor: place them with «Furnish».") : t("Tocca un piano per vedere i suoi dispositivi.", "Tap a floor to see its devices.")
+    p ? t(
+      "Nessun dispositivo in questo piano: si mettono con «Arreda».",
+      "No devices on this floor: place them with «Furnish»."
+    ) : t(
+      "Tocca un piano per vedere i suoi dispositivi.",
+      "Tap a floor to see its devices."
+    )
   )}</p>`}
     </section>`;
 }
 function finestraMarkup2(casa2, states) {
   const f = state180.finestra;
   if (f?.tipo !== "telecamera") return "";
-  const d = [...casa2.piani.flatMap((p) => p.dispositivi), ...casa2.esterno.telecamere].find((x) => x.entity === f.entity);
+  const d = [...casa2.piani.flatMap((p) => p.dispositivi), ...casa2.esterno.telecamere].find(
+    (x) => x.entity === f.entity
+  );
   const nome = d ? nomeDelDispositivo3(d, states) : clean(states?.[f.entity]?.attributes?.friendly_name) || t("Telecamera", "Camera");
   return `<div class="c3-velo" data-c3s="velo">
       <section class="c3-finestra" role="dialog" aria-modal="true">
@@ -153968,7 +153996,9 @@ function accendiIlVideo2(sopra, casa2, states) {
     return;
   }
   const entity2 = posto.dataset.c3Video;
-  const d = [...casa2.piani.flatMap((p) => p.dispositivi), ...casa2.esterno.telecamere].find((x) => x.entity === entity2);
+  const d = [...casa2.piani.flatMap((p) => p.dispositivi), ...casa2.esterno.telecamere].find(
+    (x) => x.entity === entity2
+  );
   const nome = d ? nomeDelDispositivo3(d, states) : entity2;
   try {
     apri7({ entity: entity2, name: nome }, nome, posto);
@@ -154016,9 +154046,8 @@ function nomeDellArea2(id) {
   return clean(lexicalGlobal("WIZ")?.areaNames?.[id]);
 }
 var TRE = (() => {
-  const qui = String(import.meta.url || "");
-  const taglio = qui.indexOf("/dashboardmodern_static/");
-  if (taglio >= 0) return `${qui.slice(0, taglio)}/dashboardmodern_static/legacy/vendor/three.module.min.js`;
+  const servita = daiVendor(String(import.meta.url || ""), "three.module.min.js", null);
+  if (servita) return servita;
   try {
     return new URL("../../legacy/vendor/three.module.min.js", import.meta.url).href;
   } catch (_errore) {
@@ -154029,10 +154058,7 @@ async function avviaLaScena(admin) {
   state180.caricando = true;
   state180.guasto = "";
   try {
-    const [THREE, { creaScena }] = await Promise.all([
-      import(TRE),
-      import("../../scena-IZLBTXJA.js")
-    ]);
+    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-IZLBTXJA.js")]);
     const nodo3 = doc.getElementById(ID4);
     const posto = nodo3?.querySelector(".c3-posto");
     if (!posto) return;
@@ -154118,7 +154144,10 @@ function comanda4(azione) {
 function guarda2(entity2) {
   const casa2 = casa3dDiQui();
   if (!telecamereGuardabili(casa2, allStates() || {}).has(entity2)) {
-    avviso3(t("Telecamera riservata: non si vede adesso", "Private camera: not viewable now"), "male");
+    avviso3(
+      t("Telecamera riservata: non si vede adesso", "Private camera: not viewable now"),
+      "male"
+    );
     return;
   }
   apriFinestra3({ tipo: "telecamera", entity: entity2 });
@@ -154174,9 +154203,15 @@ function disegna13() {
   nodo3.dataset.arreda = String(state180.arreda);
   scriviSeCambia(nodo3.querySelector(".c3-testa-posto"), testataMarkup2(casa2, admin));
   const vuota2 = !casa2.piani.length;
-  scriviSeCambia(nodo3.querySelector(".c3-sinistra"), vuota2 ? "" : sinistraMarkup(casa2, states, admin));
+  scriviSeCambia(
+    nodo3.querySelector(".c3-sinistra"),
+    vuota2 ? "" : sinistraMarkup(casa2, states, admin)
+  );
   const guardabili = telecamereGuardabili(casa2, states);
-  scriviSeCambia(nodo3.querySelector(".c3-elenco"), vuota2 ? "" : elencoMarkup4(casa2, states, guardabili));
+  scriviSeCambia(
+    nodo3.querySelector(".c3-elenco"),
+    vuota2 ? "" : elencoMarkup4(casa2, states, guardabili)
+  );
   const firma2 = JSON.stringify(casa2);
   if (state180.scena && state180.firma !== firma2) spegniLaScena();
   if (state180.scena) state180.scena.aggiornaStati(states);
@@ -154258,7 +154293,11 @@ function alClic5(evento) {
   }
   if (cosa === "chiudi") return chiudi3();
   if (cosa === "menu") {
-    apriIlMenu2({ idTela: ID4, tasto: '[data-c3s="menu"]', rimisura: () => state180.scena?.ridimensiona() });
+    apriIlMenu2({
+      idTela: ID4,
+      tasto: '[data-c3s="menu"]',
+      rimisura: () => state180.scena?.ridimensiona()
+    });
     return;
   }
   if (cosa === "vista") {
@@ -154282,7 +154321,14 @@ function alClic5(evento) {
       } catch (errore) {
         root.console?.warn?.("[DashboardModern] casa 3d, crea", errore);
       }
-    } else avviso3(t("La procedura per creare la casa non c'è ancora", "The house wizard is not available yet"), "male");
+    } else
+      avviso3(
+        t(
+          "La procedura per creare la casa non c'è ancora",
+          "The house wizard is not available yet"
+        ),
+        "male"
+      );
     return;
   }
   if (cosa === "guarda") return guarda2(clean(el.dataset.c3sE));
@@ -156370,13 +156416,11 @@ var COCO = (() => {
     return "../../legacy/vendor/riconoscere/coco-ssd.min.js";
   }
 })();
-var VENDOR = (() => {
-  const qui = String(import.meta.url || "");
-  const taglio = qui.indexOf("/dashboardmodern_static/");
-  if (taglio >= 0)
-    return `${qui.slice(0, taglio)}/dashboardmodern_static/legacy/vendor/riconoscere/`;
-  return TF.slice(0, TF.lastIndexOf("/") + 1);
-})();
+var VENDOR = daiVendor(
+  String(import.meta.url || ""),
+  "riconoscere/",
+  TF.slice(0, TF.lastIndexOf("/") + 1)
+);
 var PDFJS = (() => {
   try {
     return new URL("../../legacy/vendor/pdfjs/pdf.min.js", import.meta.url).href;
@@ -156391,11 +156435,7 @@ var PDFJS_LAVORO = (() => {
     return "../../legacy/vendor/pdfjs/pdf.worker.min.js";
   }
 })();
-var daServire = (indirizzo, nome) => {
-  const qui = String(import.meta.url || "");
-  const taglio = qui.indexOf("/dashboardmodern_static/");
-  return taglio >= 0 ? `${qui.slice(0, taglio)}/dashboardmodern_static/legacy/vendor/pdfjs/${nome}` : indirizzo;
-};
+var daServire = (indirizzo, nome) => daiVendor(String(import.meta.url || ""), `pdfjs/${nome}`, indirizzo);
 var LIBREDWG_JS = (() => {
   try {
     return new URL("../../legacy/vendor/libredwg/dist/libredwg-web.js", import.meta.url).href;
@@ -156403,12 +156443,11 @@ var LIBREDWG_JS = (() => {
     return "../../legacy/vendor/libredwg/dist/libredwg-web.js";
   }
 })();
-var LIBREDWG = (() => {
-  const qui = String(import.meta.url || "");
-  const taglio = qui.indexOf("/dashboardmodern_static/");
-  if (taglio >= 0) return `${qui.slice(0, taglio)}/dashboardmodern_static/legacy/vendor/libredwg/`;
-  return LIBREDWG_JS.slice(0, LIBREDWG_JS.length - "dist/libredwg-web.js".length);
-})();
+var LIBREDWG = daiVendor(
+  String(import.meta.url || ""),
+  "libredwg/",
+  LIBREDWG_JS.slice(0, LIBREDWG_JS.length - "dist/libredwg-web.js".length)
+);
 function copione(src, pronto) {
   if (pronto()) return Promise.resolve(true);
   return new Promise((ok) => {
@@ -158142,8 +158181,22 @@ function installaLoStile11() {
     ${Q} .c3c-disp-pianta{position:absolute;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:14px;background:#fff;border:2px solid #f59e0b;box-shadow:0 2px 6px rgba(0,0,0,.35)}
     ${Q} .c3c-disp-pianta.si{border-color:#16a34a}
     ${Q} .c3c-disp-pianta.scelto{box-shadow:0 0 0 3px rgba(14,165,233,.8)}
+    /* Telefono, Fold aperto, schermo basso: scorre tutta la pagina. Prima la
+     * testata e il disegno stavano fermi e i dati scorrevano in una striscia
+     * di 150 px sotto («come faccio a vedere i dati, e' impossibile»). Il
+     * disegno resta grande; dentro il disegno il dito disegna, fuori scorre. */
+    @media (max-width:900px),(max-height:640px){
+      ${Q}{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+      ${Q} .c3c-pagina{height:auto;min-height:100%;grid-template-rows:auto auto auto}
+      ${Q} .c3c-palco{height:min(60vh,560px);min-height:280px}
+      ${Q} .c3c-pannello{overflow:visible;min-height:auto}
+    }
+    @media (max-height:640px) and (min-width:901px){
+      ${Q} .c3c-pagina{grid-template-rows:auto auto}
+      ${Q} .c3c-palco{height:max(320px,calc(100vh - 140px))}
+    }
     @media (max-width:900px){
-      ${Q} .c3c-pagina{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 46vh minmax(0,1fr);gap:12px;padding:12px}
+      ${Q} .c3c-pagina{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;gap:12px;padding:12px}
       ${Q} .c3c-testa{flex-wrap:wrap}
       ${Q} .c3c-testa-testo{flex:1 1 0}
       ${Q} .c3c-testa h1{font-size:21px}

@@ -71,6 +71,29 @@ test("la plancia vera portata dentro c'e', e ha la pagina in due lingue", () => 
   assert.match(licenza.tipo, /^text\/plain/);
 });
 
+/* «Questo DWG non si legge»: dal telefono il motore dei DWG (un `.wasm` da
+ * 11 MB) e il PDF del catasto passano di qui, e devono arrivare coi loro
+ * tipi. Nella prova al computer li dava un altro server, e non si vedeva. */
+test("il motore dei DWG e quello dei PDF arrivano al telefono", () => {
+  const plancia = new Plancia();
+  const base = plancia.descrizione().base;
+  const motore = plancia.leggi(`${base}/legacy/vendor/libredwg/wasm/libredwg-web.wasm`);
+  assert.equal(motore.stato, 200);
+  assert.equal(motore.tipo, "application/wasm");
+  assert.ok(motore.corpo.length > 1_000_000);
+  assert.deepEqual([...motore.corpo.subarray(0, 4)], [0, 0x61, 0x73, 0x6d], "comincia con \\0asm");
+  for (const file of [
+    "libredwg/dist/libredwg-web.js",
+    "libredwg/wasm/libredwg-web.js",
+    "pdfjs/pdf.min.js",
+    "pdfjs/pdf.worker.min.js",
+  ]) {
+    const letto = plancia.leggi(`${base}/legacy/vendor/${file}`);
+    assert.equal(letto.stato, 200, file);
+    assert.match(letto.tipo, /^text\/javascript/, file);
+  }
+});
+
 test("l'impronta dipende dal contenuto, e cambia quando cambia un file", () => {
   const cartella = planciaFinta();
   const prima = new Plancia({ cartella }).impronta;
