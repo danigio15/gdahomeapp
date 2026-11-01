@@ -7909,4 +7909,7 @@ export default Object.freeze({
   "No scale found on the PDF: tap both ends of a length you know.": "Kein Maßstab im PDF gefunden: tippe auf beide Enden einer bekannten Länge.",
   "This PDF can't be opened. Try a screenshot of the page.": "Dieses PDF lässt sich nicht öffnen. Versuche es mit einem Screenshot der Seite.",
   "The DWG reader didn't download: check the connection and try again.": "Der DWG-Leser wurde nicht heruntergeladen: Prüfe die Verbindung und versuche es erneut.",
+  "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "Katasterplan: Ich verwende seinen Maßstab, 1:200. Wenn die Maße nicht stimmen, geh zurück zu «Maßstab» und tippe auf beide Enden einer bekannten Länge.",
+  "Plan ${i + 1}": "Grundriss ${i + 1}",
+  "The sheet has several plans: which one now?": "Auf dem Blatt sind mehrere Pläne: Welchen machst du jetzt?",
 });

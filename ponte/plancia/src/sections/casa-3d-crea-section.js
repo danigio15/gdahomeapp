@@ -51,6 +51,12 @@ import {
   stimaInclinazione,
 } from "../core/pianta-da-foto.js";
 import {
+  BIANCO_ATTORNO,
+  pianteNelFoglio,
+  riquadroDellaPianta,
+  scalaDelCatasto,
+} from "../core/piante-nel-foglio.js";
+import {
   eNomeDiFuori,
   eNomeDiStanza,
   nomeDaScritta,
@@ -1352,21 +1358,65 @@ async function usaPdf(file) {
     g.fillStyle = "#fff";
     g.fillRect(0, 0, tela.width, tela.height);
     await pagina.render({ canvasContext: g, viewport: vista }).promise;
-    let scala = 0;
+    let scala = 0,
+      delCatasto = false;
     try {
       const testo = await pagina.getTextContent();
-      scala = scalaScritta(testo.items.map((i) => i.str).join(" "));
+      const parole = testo.items.map((i) => i.str).join(" ");
+      scala = scalaScritta(parole);
+      /* La visura del catasto e' una scansione: la «Scala 1:200» sta
+       * nell'immagine e non si legge, ma si sa (vedi piante-nel-foglio.js). */
+      if (!scala) {
+        scala = scalaDelCatasto(parole);
+        delCatasto = scala > 0;
+      }
     } catch (_errore) {}
     documento.destroy?.();
     S.lavoro = "";
-    await usaPlanimetria(tela);
     if (scala) {
       /* un punto PDF e' 1/72 di pollice: la larghezza del foglio in metri,
        * per la scala, sui pixel della tela */
-      const foglio = (uno.width / 72) * 0.0254 * scala;
-      S.daScala = scala;
-      return pronta(foglio / tela.width);
+      const mpp = ((uno.width / 72) * 0.0254 * scala) / tela.width;
+      S.daScala = Math.round(scala);
+      /* Le piante del foglio: una si ritaglia da sola (fuori le altre unita'
+       * e le scritte del foglio), piu' d'una si sceglie. */
+      const piante = pianteNelFoglio(
+        inchiostro(g.getImageData(0, 0, tela.width, tela.height)),
+        tela.width,
+        tela.height,
+        mpp,
+      );
+      if (piante.length > 1) {
+        S.dwg = {
+          foglio: true,
+          piani: piante.map((p, i) => {
+            const pezzo = ritaglioDellaPianta(tela, p, mpp);
+            return {
+              tela: pezzo,
+              mpp,
+              delCatasto,
+              nome: t(`Pianta ${i + 1}`, `Plan ${i + 1}`),
+              larghezzaMetri: p.larghezza,
+              profonditaMetri: p.profondita,
+              anteprima: miniatura(pezzo, 260).toDataURL("image/png"),
+            };
+          }),
+        };
+        await usaPlanimetria(tela);
+        S.avviso = delCatasto ? avvisoDelCatasto() : "";
+        disegna();
+        nodo()?.querySelector(".c3c-dwg")?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+        return;
+      }
+      await usaPlanimetria(piante.length === 1 ? ritaglioDellaPianta(tela, piante[0], mpp) : tela);
+      pronta(mpp);
+      if (delCatasto) {
+        S.avviso = avvisoDelCatasto();
+        disegna();
+      }
+      return;
     }
+    await usaPlanimetria(tela);
     S.avviso = t(
       "Sul PDF non ho trovato la scala: tocca i due capi di una misura che conosci.",
       "No scale found on the PDF: tap both ends of a length you know.",
@@ -1380,6 +1430,48 @@ async function usaPdf(file) {
       "Questo PDF non si apre. Prova con una schermata della pagina.",
       "This PDF can't be opened. Try a screenshot of the page.",
     );
+    disegna();
+  }
+}
+
+/* Una pianta del foglio, ritagliata con un metro di margine e un po' di
+ * bianco attorno (vedi BIANCO_ATTORNO in piante-nel-foglio.js). */
+function ritaglioDellaPianta(tela, pianta, mpp) {
+  const r = riquadroDellaPianta(pianta, tela.width, tela.height, mpp),
+    b = BIANCO_ATTORNO;
+  const pezzo = tela2d(r.larghezza + 2 * b, r.altezza + 2 * b),
+    g = pezzo.getContext("2d");
+  g.fillStyle = "#fff";
+  g.fillRect(0, 0, pezzo.width, pezzo.height);
+  g.drawImage(tela, r.x0, r.y0, r.larghezza, r.altezza, b, b, r.larghezza, r.altezza);
+  return pezzo;
+}
+
+function miniatura(tela, lato) {
+  const k = lato / Math.max(tela.width, tela.height),
+    m = tela2d(Math.max(1, Math.round(tela.width * k)), Math.max(1, Math.round(tela.height * k)));
+  m.getContext("2d").drawImage(tela, 0, 0, m.width, m.height);
+  return m;
+}
+
+/* La scala del catasto presa per buona: lo si dice, e si dice come
+ * correggerla. */
+function avvisoDelCatasto() {
+  return t(
+    "Planimetria del catasto: uso la sua scala, 1:200. Se le misure non tornano, torna alla «Scala» e tocca i due capi di una misura che conosci.",
+    "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.",
+  );
+}
+
+/* Una delle piante del foglio, scelta. */
+async function usaPiantaDelFoglio(p) {
+  const S = state.S;
+  if (!p) return;
+  S.dwg = null;
+  await usaPlanimetria(p.tela);
+  pronta(p.mpp);
+  if (p.delCatasto) {
+    S.avviso = avvisoDelCatasto();
     disegna();
   }
 }
@@ -1637,7 +1729,10 @@ async function disegnaAMano() {
 function dwgScelta() {
   const S = state.S;
   if (!S.dwg?.piani?.length) return "";
-  return `<div class="c3c-dwg"><b>${esc(t("Nel disegno ci sono più piani: quale fai adesso?", "The drawing has several floors: which one now?"))}</b>
+  const domanda = S.dwg.foglio
+    ? t("Nel foglio ci sono più piante: quale fai adesso?", "The sheet has several plans: which one now?")
+    : t("Nel disegno ci sono più piani: quale fai adesso?", "The drawing has several floors: which one now?");
+  return `<div class="c3c-dwg"><b>${esc(domanda)}</b>
     <div class="c3c-dwg-piani">${S.dwg.piani
       .map(
         (p, i) =>
@@ -1992,7 +2087,10 @@ async function alClic(ev) {
     S.aggiungi = null;
   }
   if (d.c3cLivello !== undefined) S.livello = Number(d.c3cLivello);
-  if (d.c3cDwg !== undefined && S.dwg) return usaPianoDwg(S.dwg.piani[Number(d.c3cDwg)]);
+  if (d.c3cDwg !== undefined && S.dwg)
+    return S.dwg.foglio
+      ? usaPiantaDelFoglio(S.dwg.piani[Number(d.c3cDwg)])
+      : usaPianoDwg(S.dwg.piani[Number(d.c3cDwg)]);
   if (d.c3cStrumento) S.strumento = d.c3cStrumento;
   if (d.c3cStanza && !ev.target.closest("select,input,[data-c3c-fuori]"))
     S.sel = Number(d.c3cStanza);

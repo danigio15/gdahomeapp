@@ -7847,4 +7847,7 @@ export default Object.freeze({
   "No scale found on the PDF: tap both ends of a length you know.": "PDF'te ölçek bulunamadı: bildiğin bir uzunluğun iki ucuna dokun.",
   "This PDF can't be opened. Try a screenshot of the page.": "Bu PDF açılmıyor. Sayfanın ekran görüntüsünü dene.",
   "The DWG reader didn't download: check the connection and try again.": "DWG okuyucu indirilemedi: bağlantıyı kontrol edip tekrar dene.",
+  "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "Tapu planı: ölçeğini kullanıyorum, 1:200. Ölçüler tutmazsa «Ölçek» adımına dönüp bildiğin bir uzunluğun iki ucuna dokun.",
+  "Plan ${i + 1}": "${i + 1}. plan",
+  "The sheet has several plans: which one now?": "Sayfada birden fazla plan var: şimdi hangisini yapıyorsun?",
 });

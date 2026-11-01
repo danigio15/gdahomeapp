@@ -7794,4 +7794,7 @@ export default Object.freeze({
   "No scale found on the PDF: tap both ends of a length you know.": "لم أجد مقياسًا في ملف PDF: المس طرفي طول تعرفه.",
   "This PDF can't be opened. Try a screenshot of the page.": "لا يمكن فتح ملف PDF هذا. جرّب لقطة شاشة للصفحة.",
   "The DWG reader didn't download: check the connection and try again.": "لم يتم تنزيل قارئ DWG: تحقق من الاتصال وحاول مرة أخرى.",
+  "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "مخطط السجل العقاري: أستخدم مقياسه 1:200. إذا لم تكن المقاسات صحيحة، ارجع إلى «المقياس» واضغط على طرفي طول تعرفه.",
+  "Plan ${i + 1}": "المخطط ${i + 1}",
+  "The sheet has several plans: which one now?": "في الورقة عدة مخططات: أيها تعمل عليه الآن؟",
 });

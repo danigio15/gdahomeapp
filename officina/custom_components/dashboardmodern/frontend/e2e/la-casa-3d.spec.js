@@ -712,3 +712,25 @@ test("sulla casa la barra delle sezioni non c'e'", async ({ page }, testInfo) =>
   const dove = foto(testInfo, "casa3d-senza-la-barra");
   if (dove) await page.screenshot({ path: dove });
 });
+
+/* La visura della planimetria scaricata dal catasto: una scansione (la
+ * «Scala 1:200» sta nell'immagine), con due piante e i contorni delle altre
+ * unita' sullo stesso foglio. Il file e' di una persona vera: non sta nel
+ * repo, si passa con DM_PDF. */
+test("la visura del catasto scansionata: scala, scelta della pianta, stanze", async ({
+  page,
+}, testInfo) => {
+  test.skip(!process.env.DM_PDF || testInfo.project.name !== "desktop", "serve DM_PDF");
+  const crea = await apriLaProcedura(page, testInfo);
+  await crea.locator('[data-c3c-file="pianta"]').setInputFiles(process.env.DM_PDF);
+  const piante = crea.locator("[data-c3c-dwg]");
+  await expect(piante).toHaveCount(Number(process.env.DM_PDF_PIANTE || 2), { timeout: 60_000 });
+  await expect(crea).toContainText("Planimetria del catasto");
+  await fotoDiretta(page, testInfo, "crea-visura-scelta");
+  await piante.nth(Number(process.env.DM_PDF_PIANTA || 1)).click();
+  const trovati = crea.locator(".c3c-pannello");
+  await expect(trovati).toContainText(/Trovati \d+ ambienti/, { timeout: 120_000 });
+  const n = Number(/Trovati (\d+) ambienti/.exec(await trovati.innerText())[1]);
+  expect(n).toBeGreaterThanOrEqual(Number(process.env.DM_PDF_STANZE || 5));
+  await fotoDiretta(page, testInfo, "crea-visura-stanze");
+});

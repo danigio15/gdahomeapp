@@ -7821,4 +7821,7 @@ export default Object.freeze({
   "No scale found on the PDF: tap both ends of a length you know.": "PDF에서 축척을 찾지 못했어요: 길이를 아는 부분의 양 끝을 탭하세요.",
   "This PDF can't be opened. Try a screenshot of the page.": "이 PDF를 열 수 없어요. 페이지 스크린샷으로 해 보세요.",
   "The DWG reader didn't download: check the connection and try again.": "DWG 리더를 다운로드하지 못했어요. 연결을 확인하고 다시 시도하세요.",
+  "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "지적 도면입니다. 도면의 축척 1:200을 사용합니다. 치수가 맞지 않으면 «축척»으로 돌아가 아는 길이의 양 끝을 누르세요.",
+  "Plan ${i + 1}": "도면 ${i + 1}",
+  "The sheet has several plans: which one now?": "용지에 도면이 여러 개 있습니다. 지금 어떤 것을 만들까요?",
 });

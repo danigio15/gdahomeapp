@@ -7711,4 +7711,7 @@ export default Object.freeze({
   "No scale found on the PDF: tap both ends of a length you know.": "PDF 上没有找到比例尺：请点按一段已知长度的两端。",
   "This PDF can't be opened. Try a screenshot of the page.": "无法打开此 PDF。请尝试该页面的截图。",
   "The DWG reader didn't download: check the connection and try again.": "DWG 读取器未能下载：请检查网络连接后重试。",
+  "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "地籍平面图：使用其比例 1:200。如果尺寸不对，请返回「比例」并点按一段已知长度的两端。",
+  "Plan ${i + 1}": "平面图 ${i + 1}",
+  "The sheet has several plans: which one now?": "这张图纸上有多张平面图：现在做哪一张？",
 });

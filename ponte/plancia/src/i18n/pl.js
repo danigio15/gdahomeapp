@@ -7869,4 +7869,7 @@ export default Object.freeze({
   "No scale found on the PDF: tap both ends of a length you know.": "Nie znalazłem skali w PDF: dotknij obu końców znanego odcinka.",
   "This PDF can't be opened. Try a screenshot of the page.": "Tego PDF nie da się otworzyć. Spróbuj zrzutu ekranu strony.",
   "The DWG reader didn't download: check the connection and try again.": "Czytnik DWG się nie pobrał: sprawdź połączenie i spróbuj ponownie.",
+  "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "Plan z katastru: używam jego skali, 1:200. Jeśli wymiary się nie zgadzają, wróć do «Skala» i dotknij obu końców znanej długości.",
+  "Plan ${i + 1}": "Rzut ${i + 1}",
+  "The sheet has several plans: which one now?": "Na arkuszu jest kilka planów: który robisz teraz?",
 });

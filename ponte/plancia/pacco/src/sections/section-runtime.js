@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-TJHRDZK2.js";
+} from "../../chunk-273RVXCX.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -5614,6 +5614,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nel dettaglio dell'apparecchio escono tutte le entità del dispositivo; qui sotto quelle che disegnano la card.": "The appliance detail shows every entity of the device; below, the ones that draw the card.",
   "Nel disegno ci sono più piani: quale fai adesso?": "The drawing has several floors: which one now?",
   "Nel disegno non ho trovato una pianta: muri e linee mancano o stanno in blocchi.": "No floor plan found in the drawing: walls and lines are missing or inside blocks.",
+  "Nel foglio ci sono più piante: quale fai adesso?": "The sheet has several plans: which one now?",
   "Nel frattempo si mostrano i valori istantanei.": "Instant values are shown meanwhile.",
   "Nel gruppo": "In the group",
   "nel menu (visibile agli admin)": "page in the menu (visible to admins)",
@@ -6266,6 +6267,7 @@ var SOURCE_INDEX = Object.freeze({
   "Piano cottura": "Cooktop",
   "Piano Terra": "Ground Floor",
   "pianta": "plant",
+  "Pianta ${i + 1}": "Plan ${i + 1}",
   "Pianta nuova": "New plant",
   "Pianta salvata": "Plant saved",
   "Pianta senza nome": "Unnamed plant",
@@ -6314,6 +6316,7 @@ var SOURCE_INDEX = Object.freeze({
   "Piumoni": "Duvets",
   "Plancia": "Dashboard",
   "Plancia non collegata.": "Dashboard not connected.",
+  "Planimetria del catasto: uso la sua scala, 1:200. Se le misure non tornano, torna alla «Scala» e tocca i due capi di una misura che conosci.": "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.",
   "Plastica": "Plastic",
   "Pneumatici": "Tyres",
   "Pneumatici a posto": "Tyres fine",
@@ -155996,6 +155999,92 @@ function scalaScritta(testo5) {
   return n >= 20 && n <= 2e3 ? n : 0;
 }
 
+// src/core/piante-nel-foglio.js
+var LATO_A = Object.freeze({ 0: 1189, 1: 841, 2: 594, 3: 420, 4: 297, 5: 210 });
+var SCALA_DEL_CATASTO = 200;
+function scalaDelCatasto(testo5) {
+  const t2 = String(testo5 || "").replace(/\s+/g, " ");
+  const acquisita = /formato\s+di\s+acquisizione\s*:?\s*A\s*([0-5])/i.exec(t2);
+  const stampata = /formato\s+(?:di\s+)?stampa(?:\s+richiesto)?\s*:?\s*A\s*([0-5])/i.exec(t2);
+  const delCatasto = /catasto|planimetria\s+in\s+atti/i.test(t2);
+  if (!acquisita && !delCatasto) return 0;
+  if (!acquisita || !stampata) return SCALA_DEL_CATASTO;
+  const da = LATO_A[acquisita[1]], a = LATO_A[stampata[1]];
+  return da && a ? SCALA_DEL_CATASTO * da / a : SCALA_DEL_CATASTO;
+}
+function pianteNelFoglio(ink, w, h, mpp) {
+  if (!ink || !(mpp > 0) || w < 10 || h < 10) return [];
+  const r = Math.max(1, Math.round(0.08 / mpp)), pieno = (2 * r + 1) ** 2;
+  const I = new Int32Array((w + 1) * (h + 1));
+  for (let y = 0; y < h; y++) {
+    let riga5 = 0;
+    for (let x = 0; x < w; x++) {
+      riga5 += ink[y * w + x] ? 1 : 0;
+      I[(y + 1) * (w + 1) + x + 1] = I[y * (w + 1) + x + 1] + riga5;
+    }
+  }
+  const quadrato = (x0, y0, x1, y1) => I[y1 * (w + 1) + x1] - I[y0 * (w + 1) + x1] - I[y1 * (w + 1) + x0] + I[y0 * (w + 1) + x0];
+  const c = Math.max(2, Math.round(0.25 / mpp)), CW = Math.ceil(w / c), CH = Math.ceil(h / c), spessa = new Uint8Array(CW * CH);
+  for (let y = r; y < h - r; y++)
+    for (let x = r; x < w - r; x++)
+      if (ink[y * w + x] && quadrato(x - r, y - r, x + r + 1, y + r + 1) === pieno)
+        spessa[Math.floor(y / c) * CW + Math.floor(x / c)] = 1;
+  const d = Math.max(1, Math.round(1 / (c * mpp))), vicina = new Uint8Array(CW * CH);
+  for (let y = 0; y < CH; y++)
+    for (let x = 0; x < CW; x++) {
+      if (!spessa[y * CW + x]) continue;
+      for (let dy = -d; dy <= d; dy++) {
+        const Y = y + dy;
+        if (Y < 0 || Y >= CH) continue;
+        for (let dx = -d; dx <= d; dx++) {
+          const X = x + dx;
+          if (X >= 0 && X < CW) vicina[Y * CW + X] = 1;
+        }
+      }
+    }
+  const visto = new Uint8Array(CW * CH), piante = [];
+  for (let s = 0; s < CW * CH; s++) {
+    if (!vicina[s] || visto[s]) continue;
+    const pila2 = [s];
+    visto[s] = 1;
+    let x0 = Infinity, y0 = Infinity, x1 = -1, y1 = -1, celle = 0;
+    while (pila2.length) {
+      const k = pila2.pop(), x = k % CW, y = (k - x) / CW;
+      if (spessa[k]) {
+        celle++;
+        if (x < x0) x0 = x;
+        if (x > x1) x1 = x;
+        if (y < y0) y0 = y;
+        if (y > y1) y1 = y;
+      }
+      for (const j of [x > 0 ? k - 1 : -1, x < CW - 1 ? k + 1 : -1, k - CW, k + CW])
+        if (j >= 0 && j < CW * CH && vicina[j] && !visto[j]) {
+          visto[j] = 1;
+          pila2.push(j);
+        }
+    }
+    if (x1 < 0) continue;
+    const larghezza = (x1 - x0 + 1) * c * mpp, profondita = (y1 - y0 + 1) * c * mpp;
+    if (Math.min(larghezza, profondita) < 3 || Math.max(larghezza, profondita) > 60) continue;
+    if (celle * c * mpp < 2 * (larghezza + profondita) * 0.6) continue;
+    piante.push({
+      x0: x0 * c,
+      y0: y0 * c,
+      x1: Math.min(w, (x1 + 1) * c),
+      y1: Math.min(h, (y1 + 1) * c),
+      larghezza,
+      profondita
+    });
+  }
+  return piante.sort((a, b2) => a.y0 - b2.y0 || a.x0 - b2.x0);
+}
+function riquadroDellaPianta(pianta, w, h, mpp) {
+  const m = Math.round(1 / mpp);
+  const x0 = Math.max(0, pianta.x0 - m), y0 = Math.max(0, pianta.y0 - m), x1 = Math.min(w, pianta.x1 + m), y1 = Math.min(h, pianta.y1 + m);
+  return { x0, y0, larghezza: x1 - x0, altezza: y1 - y0 };
+}
+var BIANCO_ATTORNO = 12;
+
 // src/core/pianta-da-dwg.js
 var STRATI_DA_SALTARE = /quot|dim|arred|furn|mobil|testi|text|cartig|retin|tratteg/i;
 var STRATI_DI_MURI = /tompagn|muri|muro|wall|murat|sezion|campit/i;
@@ -157283,20 +157372,59 @@ async function usaPdf(file) {
     g.fillStyle = "#fff";
     g.fillRect(0, 0, tela4.width, tela4.height);
     await pagina3.render({ canvasContext: g, viewport: vista2 }).promise;
-    let scala2 = 0;
+    let scala2 = 0, delCatasto = false;
     try {
       const testo5 = await pagina3.getTextContent();
-      scala2 = scalaScritta(testo5.items.map((i) => i.str).join(" "));
+      const parole4 = testo5.items.map((i) => i.str).join(" ");
+      scala2 = scalaScritta(parole4);
+      if (!scala2) {
+        scala2 = scalaDelCatasto(parole4);
+        delCatasto = scala2 > 0;
+      }
     } catch (_errore) {
     }
     documento.destroy?.();
     S.lavoro = "";
-    await usaPlanimetria(tela4);
     if (scala2) {
-      const foglio6 = uno.width / 72 * 0.0254 * scala2;
-      S.daScala = scala2;
-      return pronta(foglio6 / tela4.width);
+      const mpp = uno.width / 72 * 0.0254 * scala2 / tela4.width;
+      S.daScala = Math.round(scala2);
+      const piante = pianteNelFoglio(
+        inchiostro(g.getImageData(0, 0, tela4.width, tela4.height)),
+        tela4.width,
+        tela4.height,
+        mpp
+      );
+      if (piante.length > 1) {
+        S.dwg = {
+          foglio: true,
+          piani: piante.map((p, i) => {
+            const pezzo3 = ritaglioDellaPianta(tela4, p, mpp);
+            return {
+              tela: pezzo3,
+              mpp,
+              delCatasto,
+              nome: t(`Pianta ${i + 1}`, `Plan ${i + 1}`),
+              larghezzaMetri: p.larghezza,
+              profonditaMetri: p.profondita,
+              anteprima: miniatura(pezzo3, 260).toDataURL("image/png")
+            };
+          })
+        };
+        await usaPlanimetria(tela4);
+        S.avviso = delCatasto ? avvisoDelCatasto() : "";
+        disegna14();
+        nodo2()?.querySelector(".c3c-dwg")?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+        return;
+      }
+      await usaPlanimetria(piante.length === 1 ? ritaglioDellaPianta(tela4, piante[0], mpp) : tela4);
+      pronta(mpp);
+      if (delCatasto) {
+        S.avviso = avvisoDelCatasto();
+        disegna14();
+      }
+      return;
     }
+    await usaPlanimetria(tela4);
     S.avviso = t(
       "Sul PDF non ho trovato la scala: tocca i due capi di una misura che conosci.",
       "No scale found on the PDF: tap both ends of a length you know."
@@ -157310,6 +157438,36 @@ async function usaPdf(file) {
       "Questo PDF non si apre. Prova con una schermata della pagina.",
       "This PDF can't be opened. Try a screenshot of the page."
     );
+    disegna14();
+  }
+}
+function ritaglioDellaPianta(tela4, pianta, mpp) {
+  const r = riquadroDellaPianta(pianta, tela4.width, tela4.height, mpp), b2 = BIANCO_ATTORNO;
+  const pezzo3 = tela2d(r.larghezza + 2 * b2, r.altezza + 2 * b2), g = pezzo3.getContext("2d");
+  g.fillStyle = "#fff";
+  g.fillRect(0, 0, pezzo3.width, pezzo3.height);
+  g.drawImage(tela4, r.x0, r.y0, r.larghezza, r.altezza, b2, b2, r.larghezza, r.altezza);
+  return pezzo3;
+}
+function miniatura(tela4, lato) {
+  const k = lato / Math.max(tela4.width, tela4.height), m = tela2d(Math.max(1, Math.round(tela4.width * k)), Math.max(1, Math.round(tela4.height * k)));
+  m.getContext("2d").drawImage(tela4, 0, 0, m.width, m.height);
+  return m;
+}
+function avvisoDelCatasto() {
+  return t(
+    "Planimetria del catasto: uso la sua scala, 1:200. Se le misure non tornano, torna alla «Scala» e tocca i due capi di una misura che conosci.",
+    "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know."
+  );
+}
+async function usaPiantaDelFoglio(p) {
+  const S = state182.S;
+  if (!p) return;
+  S.dwg = null;
+  await usaPlanimetria(p.tela);
+  pronta(p.mpp);
+  if (p.delCatasto) {
+    S.avviso = avvisoDelCatasto();
     disegna14();
   }
 }
@@ -157512,7 +157670,8 @@ async function disegnaAMano() {
 function dwgScelta() {
   const S = state182.S;
   if (!S.dwg?.piani?.length) return "";
-  return `<div class="c3c-dwg"><b>${esc(t("Nel disegno ci sono più piani: quale fai adesso?", "The drawing has several floors: which one now?"))}</b>
+  const domanda = S.dwg.foglio ? t("Nel foglio ci sono più piante: quale fai adesso?", "The sheet has several plans: which one now?") : t("Nel disegno ci sono più piani: quale fai adesso?", "The drawing has several floors: which one now?");
+  return `<div class="c3c-dwg"><b>${esc(domanda)}</b>
     <div class="c3c-dwg-piani">${S.dwg.piani.map(
     (p, i) => `<button type="button" class="c3c-dwg-piano" data-c3c-dwg="${i}"><img alt="" src="${p.anteprima}"><span>${esc(p.nome || t(`Piano ${i + 1}`, `Floor ${i + 1}`))}</span><small>${esc(numero62(p.larghezzaMetri, 1))} × ${esc(numero62(p.profonditaMetri, 1))} m</small></button>`
   ).join("")}</div></div>`;
@@ -157812,7 +157971,8 @@ async function alClic6(ev) {
     S.aggiungi = null;
   }
   if (d.c3cLivello !== void 0) S.livello = Number(d.c3cLivello);
-  if (d.c3cDwg !== void 0 && S.dwg) return usaPianoDwg(S.dwg.piani[Number(d.c3cDwg)]);
+  if (d.c3cDwg !== void 0 && S.dwg)
+    return S.dwg.foglio ? usaPiantaDelFoglio(S.dwg.piani[Number(d.c3cDwg)]) : usaPianoDwg(S.dwg.piani[Number(d.c3cDwg)]);
   if (d.c3cStrumento) S.strumento = d.c3cStrumento;
   if (d.c3cStanza && !ev.target.closest("select,input,[data-c3c-fuori]"))
     S.sel = Number(d.c3cStanza);

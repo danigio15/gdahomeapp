@@ -7849,4 +7849,7 @@ export default Object.freeze({
   "No scale found on the PDF: tap both ends of a length you know.": "PDFに縮尺が見つかりません：長さが分かっている箇所の両端をタップしてください。",
   "This PDF can't be opened. Try a screenshot of the page.": "このPDFは開けません。ページのスクリーンショットでお試しください。",
   "The DWG reader didn't download: check the connection and try again.": "DWG リーダーをダウンロードできませんでした。接続を確認してもう一度お試しください。",
+  "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "登記図面です。縮尺は図面どおり 1:200 を使います。寸法が合わない場合は「縮尺」に戻り、長さのわかる区間の両端をタップしてください。",
+  "Plan ${i + 1}": "図面 ${i + 1}",
+  "The sheet has several plans: which one now?": "用紙に複数の図面があります。どれを作りますか？",
 });
