@@ -297,3 +297,43 @@ test("un disegno dal DWG: tramezzo che finisce vicino al muro, pezzo fra due por
   assert.ok(Math.abs(finestre[0].largo - 1.8) < 0.3, `finestra ${finestre[0].largo}`);
   assert.equal(casa.aperture.filter((a) => a.tipo === "porta").length, 3);
 });
+
+/* «No, foto: ho scattato le foto alle planimetrie dell'architetto.» Una
+ * foto grande (2400 pixel di lato) di una pianta coi muri campiti di grigio,
+ * larghi trenta pixel, sul tavolo scuro; una quota sottile corre dal bordo
+ * del foglio fino al muro. Prima il tavolo passava per la quota e si
+ * mangiava i muri, e il grigio largo si confrontava con se stesso: restavano
+ * i bordi, e nessuna stanza. */
+test("la foto grande della pianta dell'architetto: muri grigi pieni, una quota fino al bordo", () => {
+  const W = 1800,
+    H = 2400,
+    pxm = 110; // ~0,009 m per pixel, come una foto da 12 megapixel ridotta
+  const im = foglio(W, H);
+  for (let i = 0; i < W * H; i++) {
+    const p = i * 4;
+    im.data[p] = im.data[p + 1] = im.data[p + 2] = 198; // la carta un po' grigia della foto
+  }
+  rettangolo(im, 0, 0, W, 60, 45); // il tavolo sopra
+  rettangolo(im, 0, 0, 60, H, 45); // e a sinistra
+  const m = (v) => 300 + v * pxm,
+    grigio = 118,
+    sp = 0.28 * pxm;
+  // 8 x 6 m, due stanze divise a 4 m, una porta da 90 cm nel tramezzo
+  rettangolo(im, m(0), m(0), m(8), m(0) + sp, grigio);
+  rettangolo(im, m(0), m(6) - sp, m(8), m(6), grigio);
+  rettangolo(im, m(0), m(0), m(0) + sp, m(6), grigio);
+  rettangolo(im, m(8) - sp, m(0), m(8), m(6), grigio);
+  rettangolo(im, m(4) - sp / 2, m(0), m(4) + sp / 2, m(2.5), grigio);
+  rettangolo(im, m(4) - sp / 2, m(3.4), m(4) + sp / 2, m(6), grigio);
+  // la quota: una riga sottile e scura dal tavolo al muro di sopra
+  rettangolo(im, m(2), 0, m(2) + 3, m(0), 40);
+  rettangolo(im, 0, m(1), m(0), m(1) + 3, 40);
+  const ink = inchiostro(im);
+  /* il grigio del muro, anche in mezzo, e' inchiostro */
+  assert.equal(ink[Math.round(m(3)) + Math.round(m(0) + sp / 2) * W], 1, "il muro in mezzo");
+  assert.equal(ink[Math.round(m(8) - sp / 2) + Math.round(m(3)) * W], 1, "il muro di destra");
+  const casa = riconosciDaFoto(grigliaDeiMuri(ink, W, H, 1 / pxm));
+  const grandi = casa.stanze.filter((s) => s.area > 10).map((s) => Math.round(s.area));
+  assert.equal(grandi.length, 2, `due stanze: ${casa.stanze.map((s) => s.area.toFixed(1))}`);
+  for (const a of grandi) assert.ok(a >= 18 && a <= 24, `stanza di ${a} m²`);
+});

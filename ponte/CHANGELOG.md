@@ -31,6 +31,10 @@ _Solo Home Assistant: l'app sul telefono non cambia._
   «Attivato» e il tocco non mandava niente), il tocco manda il comando
   giusto, quello col PIN apre il tastierino, e il nome del modo acceso si
   legge anche sul tema scuro.
+- **Casa 3D, la foto della pianta dell'architetto:** con una foto grande i
+  muri campiti di grigio non si perdono piu' (si vedevano solo i bordi), e
+  una quota o una riga che arriva al bordo del foglio non fa piu' sparire i
+  muri come se fossero il tavolo sotto.
 
 ## 1.18.7.25
 

@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-BWSEYPET.js";
+} from "../../chunk-3VRI2PVX.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -154901,11 +154901,18 @@ function inchiostro(im) {
       I[(y + 1) * (w + 1) + x + 1] = I[y * (w + 1) + x + 1] + riga5;
     }
   }
+  const rf = Math.max(2, Math.round(Math.max(w, h) / 400));
+  const scuroLargo = (i) => {
+    const x = i % w, y = (i - x) / w;
+    const x0 = Math.max(0, x - rf), x1 = Math.min(w, x + rf + 1), y0 = Math.max(0, y - rf), y1 = Math.min(h, y + rf + 1);
+    const m = (I[y1 * (w + 1) + x1] - I[y0 * (w + 1) + x1] - I[y1 * (w + 1) + x0] + I[y0 * (w + 1) + x0]) / ((x1 - x0) * (y1 - y0));
+    return g[i] < 130 && m < 130;
+  };
   const fondo = new Uint8Array(w * h), pila2 = [];
   for (let x = 0; x < w; x++)
     for (const y of [0, h - 1]) {
       const i = y * w + x;
-      if (g[i] < 130 && !fondo[i]) {
+      if (scuroLargo(i) && !fondo[i]) {
         fondo[i] = 1;
         pila2.push(i);
       }
@@ -154913,7 +154920,7 @@ function inchiostro(im) {
   for (let y = 0; y < h; y++)
     for (const x of [0, w - 1]) {
       const i = y * w + x;
-      if (g[i] < 130 && !fondo[i]) {
+      if (scuroLargo(i) && !fondo[i]) {
         fondo[i] = 1;
         pila2.push(i);
       }
@@ -154921,12 +154928,12 @@ function inchiostro(im) {
   while (pila2.length) {
     const i = pila2.pop(), x = i % w;
     for (const j of [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, i - w, i + w])
-      if (j >= 0 && j < w * h && !fondo[j] && g[j] < 130) {
+      if (j >= 0 && j < w * h && !fondo[j] && scuroLargo(j)) {
         fondo[j] = 1;
         pila2.push(j);
       }
   }
-  const R = 31, out = new Uint8Array(w * h);
+  const R = Math.max(31, Math.round(Math.max(w, h) / 30)), out = new Uint8Array(w * h);
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       const x0 = Math.max(0, x - R), x1 = Math.min(w, x + R + 1), y0 = Math.max(0, y - R), y1 = Math.min(h, y + R + 1);
