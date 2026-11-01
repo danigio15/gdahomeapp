@@ -1,7 +1,7 @@
 /* La scheda «Casa 3D» nel Config.
  *
- * Chi amministra la plancia accende la casa in tre dimensioni, la crea dalle
- * foto (planimetria e stanze) e vede, dispositivo per dispositivo, a quale
+ * Solo nelle plance Casa 3D (mai nella principale). Chi amministra la crea
+ * dalle foto (planimetria e stanze) e vede, dispositivo per dispositivo, a quale
  * entita' di Home Assistant risponde: quelli senza entita' si collegano qui,
  * scegliendo dall'elenco gia' filtrato o scrivendola a mano.
  *
@@ -18,6 +18,7 @@ import {
 } from "../core/casa-3d.js";
 import { premiumDellaCasa } from "./plancia-a-muro-section.js";
 import { puoConfigurare } from "./la-config-e-di-chi-la-amministra-section.js";
+import { currentProfile } from "./config-persistence-section.js";
 import {
   allStates,
   clean,
@@ -96,7 +97,10 @@ function corpoMarkup() {
     )}</p></div>`;
   const piani = c.piani.length
     ? c.piani
-        .map((p) => `<span class="dm-c3-ed-piano">${esc(p.nome)} · ${p.stanze.length} ${esc(t("stanze", "rooms"))} · ${p.dispositivi.length} ${esc(t("dispositivi", "devices"))}</span>`)
+        .map(
+          (p) =>
+            `<span class="dm-c3-ed-piano"><span>${esc(p.nome)} · ${p.stanze.length} ${esc(t("stanze", "rooms"))} · ${p.dispositivi.length} ${esc(t("dispositivi", "devices"))}</span><button type="button" class="dm-c3-ed-modifica" data-dm-c3-modifica="${esc(p.k)}" title="${esc(t("Modifica la planimetria di questo piano", "Edit this floor's plan"))}">✏️ ${esc(t("Modifica", "Edit"))}</button></span>`,
+        )
         .join("")
     : `<p class="dm-c3-ed-nota">${esc(t("Ancora nessuna casa: creala dalla planimetria e dalle foto delle stanze.", "No home yet: create it from the floor plan and room photos."))}</p>`;
   const elenco = c.piani.flatMap((p) => p.dispositivi.map((d, i) => dispositivoMarkup(c, p, i, d, states))).join("");
@@ -117,9 +121,12 @@ function corpoMarkup() {
   </div>`;
 }
 
+/* La scheda c'e' solo nelle plance Casa 3D — come il «Colpo d'occhio» — e
+ * mai sulla principale: la Casa 3D e' una plancia a se', svincolata da lei.
+ * Una plancia Casa 3D nasce dalla console gia' accesa (plancia-nuova.js). */
 function serve() {
   try {
-    return puoConfigurare();
+    return puoConfigurare() && casa().attiva === true && currentProfile() !== "primary";
   } catch (_errore) {
     return false;
   }
@@ -144,22 +151,32 @@ function ridisegna() {
   ensureCasa3DEditor();
 }
 
+/* «Il config deve aprire quello 3D, non quello della plancia classica»: sulla
+ * plancia Casa 3D il Config e' solo la sua scheda — da ⚙, dal menu dell'app,
+ * da dovunque lo si apra. Le altre schede, l'albero e la ricerca non si
+ * vedono, come nel Config «solo muro» del pannello a muro. */
+const SOLO_CASA3D = "dm-solo-casa3d";
+
 export function ensureCasa3DEditorTab() {
+  const solo = serve();
+  doc?.documentElement?.classList?.toggle?.(SOLO_CASA3D, solo);
   const linguette = doc?.querySelector(".ed-tab")?.parentElement;
   if (!linguette) return false;
   const presente = linguette.querySelector(`.ed-tab[data-tab="${CASA3D_TAB}"]`);
-  if (!serve()) {
+  if (!solo) {
     presente?.remove();
     return false;
   }
-  if (presente) return false;
-  const linguetta = doc.createElement("button");
-  linguetta.className = "ed-tab";
-  linguetta.dataset.tab = CASA3D_TAB;
-  linguetta.textContent = `🏠 ${t("Casa 3D", "3D Home")}`;
-  linguetta.addEventListener("click", () => root.editorSwitch?.(CASA3D_TAB));
-  linguette.appendChild(linguetta);
-  return true;
+  if (!presente) {
+    const linguetta = doc.createElement("button");
+    linguetta.className = "ed-tab";
+    linguetta.dataset.tab = CASA3D_TAB;
+    linguetta.textContent = `🏠 ${t("Casa 3D", "3D Home")}`;
+    linguetta.addEventListener("click", () => root.editorSwitch?.(CASA3D_TAB));
+    linguette.appendChild(linguetta);
+  }
+  if (schedaAttiva() !== CASA3D_TAB) root.editorSwitch?.(CASA3D_TAB);
+  return !presente;
 }
 
 /* ── i gesti ──────────────────────────────────────────────────────────── */
@@ -176,6 +193,13 @@ function dispositivo(c, chi) {
 
 function onClick(event) {
   if (!nelCorpo(event)) return;
+  /* «Modifica»: la planimetria salvata si riapre nella procedura, dai muri */
+  const modifica = event.target.closest("[data-dm-c3-modifica]");
+  if (modifica) {
+    event.preventDefault();
+    root.__DM_CASA3D_CREA__?.({ piano: modifica.dataset.dmC3Modifica, modifica: true });
+    return;
+  }
   if (event.target.closest("[data-dm-c3-crea]")) {
     event.preventDefault();
     root.__DM_CASA3D_CREA__?.();
@@ -215,7 +239,8 @@ function installaLoStile() {
       #ed-body .dm-c3-ed-conto{margin-left:auto;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:900;color:#047857;background:color-mix(in srgb,#10b981 14%,transparent)}
       #ed-body .dm-c3-ed-conto.manca{color:#b45309;background:color-mix(in srgb,#f59e0b 16%,transparent)}
       #ed-body .dm-c3-ed-piani{display:flex;flex-wrap:wrap;gap:6px}
-      #ed-body .dm-c3-ed-piano{padding:6px 10px;border-radius:999px;border:1px solid var(--card-border,#e2e8f0);font-size:12px;font-weight:700}
+      #ed-body .dm-c3-ed-piano{display:inline-flex;align-items:center;gap:8px;padding:4px 4px 4px 10px;border-radius:999px;border:1px solid var(--card-border,#e2e8f0);font-size:12px;font-weight:700}
+      #ed-body .dm-c3-ed-modifica{border:0;border-radius:999px;padding:5px 10px;font:inherit;font-size:11.5px;font-weight:800;cursor:pointer;background:var(--accent,#0ea5e9);color:#fff}
       #ed-body .dm-c3-ed-tasti{display:flex;flex-wrap:wrap;gap:8px}
       #ed-body .dm-c3-ed-tasti .ed-btn-add{flex:1 1 180px}
       #ed-body .dm-c3-ed-nota{margin:2px;font-size:11.5px;font-weight:700;line-height:1.45;color:var(--text-dim,#64748b)}
@@ -228,6 +253,8 @@ function installaLoStile() {
       #ed-body .dm-c3-ed-dc small{font-size:11px;color:var(--text-dim,#64748b)}
       #ed-body .dm-c3-ed-chiuso{display:grid;justify-items:center;gap:10px;padding:40px 20px;text-align:center}
       #ed-body .dm-c3-ed-chiuso>span{font-size:44px}
+      html.dm-solo-casa3d #editor-modal .ed-tabs,html.dm-solo-casa3d #editor-modal #dm-alberatura-famiglie,html.dm-solo-casa3d #editor-modal .dm-cerca-config,html.dm-solo-casa3d #editor-modal .dm-alberatura-titolo-famiglia{display:none!important}
+      html.dm-solo-casa3d #editor-modal .ed-body,html.dm-solo-casa3d #editor-modal #ed-body{margin-left:0!important;max-width:none!important}
       @media(max-width:760px){#ed-body .dm-c3-ed-disp{grid-template-columns:auto minmax(0,1fr)}#ed-body .dm-c3-ed-disp select,#ed-body .dm-c3-ed-disp input{grid-column:1/-1}}
     `,
   );

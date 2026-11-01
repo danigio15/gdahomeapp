@@ -10,6 +10,33 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.26
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Casa 3D, una plancia aggiuntiva autonoma:** come il Colpo d'occhio, ha
+  il suo Config (la scheda Casa 3D c'e' solo li') e nella testata il ⚙ per
+  chi amministra. Nasce vuota e tutta sua, svincolata dalla principale:
+  la principale non ha piu' la scheda Casa 3D e la console non la segna mai
+  «casa 3D».
+- **Il Config della Casa 3D e' solo quello 3D:** da ⚙ o dal menu, sulla
+  plancia Casa 3D si apre la sua scheda, senza le schede della plancia
+  classica.
+- **La planimetria si modifica di nuovo:** nel Config ogni piano ha
+  «Modifica», che riapre la procedura dai muri con le stanze, i nomi, i
+  colori, gli arredi e i dispositivi di quel piano. Salvato, resta lui.
+- **Colpo d'occhio, l'antifurto come nella plancia:** i modi su misura
+  tengono la voce del select, il valore che dice «inserito» e il PIN. Se ne
+  accende uno solo (prima due modi sulla stessa entità erano tutti e due
+  «Attivato» e il tocco non mandava niente), il tocco manda il comando
+  giusto, quello col PIN apre il tastierino, e il nome del modo acceso si
+  legge anche sul tema scuro.
+- **Casa 3D, la foto della pianta dell'architetto:** con una foto grande i
+  muri campiti di grigio non si perdono piu' (si vedevano solo i bordi), e
+  una quota o una riga che arriva al bordo del foglio non fa piu' sparire i
+  muri come se fossero il tavolo sotto. Anche quando le quote arrivano fino
+  al bordo della foto (prima spariva tutta la casa).
+
 ## 1.18.7.25
 
 _Solo Home Assistant: l'app sul telefono non cambia._

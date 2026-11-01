@@ -41,6 +41,7 @@ import {
   pianoDaRiconoscimento,
   pianoDelLivello,
   posaDiRipiego,
+  riprendiIlPiano,
 } from "../core/crea-casa.js";
 import {
   PASSO,
@@ -197,6 +198,11 @@ function statoNuovo(salvata, livello = 0) {
     fotoSel: 0,
     aggiungi: null,
     manuali: [],
+    /* Un piano ripreso dal Config («Modifica»): i suoi arredi e i colori delle
+     * stanze, che senza le foto non si saprebbero piu'. */
+    ripreso: null,
+    arredi: [],
+    finiture: {},
     nuovo: { k: "luce", stanza: 0 },
     salvata,
     tipo: salvata.tipo,
@@ -701,8 +707,12 @@ function tuttiIDispositivi() {
     const s = stanzaDi(d.stanza);
     if (!s || S.fuori.has(s.id)) return;
     const chiave = `${s.id}:${d.k}`;
-    const p = posaDiRipiego(S.casa, s, d.k, contati[chiave] || 0);
-    contati[chiave] = (contati[chiave] || 0) + 1;
+    /* quelli di un piano ripreso sanno gia' dove stanno */
+    const p =
+      Number.isFinite(d.x) && Number.isFinite(d.y)
+        ? d
+        : posaDiRipiego(S.casa, s, d.k, contati[chiave] || 0);
+    if (p !== d) contati[chiave] = (contati[chiave] || 0) + 1;
     out.push({ ...d, ref: `m:${i}`, stanza: s.id, x: p.x, y: p.y, daFoto: false });
   });
   return out;
@@ -1808,8 +1818,13 @@ function ricalcola() {
       if (!giaViste.has(Number(id)) && eNomeDiFuori(nome)) fuori.add(Number(id));
     }
   }
-  Object.assign(S, { nomi, aree, fuori, foto });
+  const finiture = {};
+  for (const [da, a] of Object.entries(daA)) if (S.finiture?.[da]) finiture[a] = S.finiture[da];
+  Object.assign(S, { nomi, aree, fuori, foto, finiture });
   S.manuali = S.manuali.filter((d) => daA[d.stanza]).map((d) => ({ ...d, stanza: daA[d.stanza] }));
+  S.arredi = (S.arredi || [])
+    .filter((a) => daA[a.stanza])
+    .map((a) => ({ ...a, stanza: daA[a.stanza] }));
   if (S.sel && !S.casa.stanze.some((s) => s.id === S.sel)) S.sel = null;
 }
 
@@ -1959,7 +1974,13 @@ function pianoDiAdesso() {
     fuori: S.fuori,
     foto: fotoDerivate,
     dispositivi: S.manuali,
+    arredi: S.arredi,
+    finiture: S.finiture,
     livello: S.livello,
+    /* un piano ripreso tiene la sua chiave e il suo nome, se resta lui */
+    ...(S.ripreso && S.ripreso.livello === S.livello
+      ? { k: S.ripreso.k, nome: S.ripreso.nome }
+      : {}),
   });
 }
 
@@ -1971,13 +1992,14 @@ function salva() {
     return null;
   }
   const { foto: _foto, scelta: _scelta, ...esterno } = S.esterno;
-  /* Salvare la casa non la accende al posto della plancia: chi la crea dal
-   * Config della plancia principale vuole la casa, non perdere la plancia
-   * (« sovrascrive la dashboard »). Una plancia Casa 3D nasce gia' accesa
-   * (plancia-nuova.js), e il Config ha «Mostra la plancia Casa 3D» e «Apri in
-   * 3D» per chi la vuole li'. */
+  /* Salvare la casa non la accende: si accende solo nella plancia Casa 3D,
+   * che nasce gia' accesa dalla console (plancia-nuova.js). */
+  /* un piano ripreso e spostato a un altro livello prende il posto di prima */
+  const piani = (S.salvata?.piani || []).filter(
+    (p) => !S.ripreso || p.k !== S.ripreso.k || p.k === piano.k,
+  );
   const casa = casa3dPulita({
-    ...aggiungiPiano({ ...S.salvata, tipo: S.tipo, esterno }, piano),
+    ...aggiungiPiano({ ...S.salvata, piani, tipo: S.tipo, esterno }, piano),
     attiva: S.salvata?.attiva === true,
   });
   writeJsonIfChanged(CHIAVE_CASA3D, casa);
@@ -2415,11 +2437,55 @@ function alRidimensionare() {
   if (state.S) disegnaLaTela();
 }
 
+/* «Modifica» di un piano salvato: la procedura riparte dai muri, con le
+ * stanze, i nomi, le aree, gli arredi e i dispositivi di quel piano. La
+ * planimetria di partenza e' la pianta salvata, disegnata: tornando alla
+ * scala si vede quella. */
+function riprendi(dato) {
+  const S = state.S,
+    r = riprendiIlPiano(dato);
+  if (!r?.casa?.stanze?.length) return false;
+  const { W, H, muro, vetro } = r.griglia;
+  const tela = tela2d(W, H),
+    g = tela.getContext("2d"),
+    im = g.createImageData(W, H);
+  for (let i = 0; i < W * H; i++) {
+    const v = muro[i] ? 0 : vetro[i] ? 120 : 255;
+    im.data.set([v, v, v, 255], i * 4);
+  }
+  g.putImageData(im, 0, 0);
+  const m = Math.round(0.6 / PASSO);
+  Object.assign(S, {
+    passo: P.muri,
+    img: tela,
+    dritta: tela,
+    disegno: true,
+    mpp: PASSO,
+    punti: [
+      [m, m / 2],
+      [W - m, m / 2],
+    ],
+    metri: Math.round((W - 2 * m) * PASSO * 100) / 100,
+    griglia: r.griglia,
+    casa: r.casa,
+    nomi: r.nomi,
+    aree: r.aree,
+    finiture: r.finiture,
+    arredi: r.arredi,
+    manuali: r.dispositivi.map((d) => ({ ...d })),
+    ripreso: { k: dato.k, nome: dato.nome, livello: dato.livello },
+    livello: dato.livello,
+    strumento: "muro",
+  });
+  return true;
+}
+
 /**
  * Apre la procedura. `piano` (la chiave di un piano, o il piano stesso) dice
- * quale rifare; senza, si parte dal primo che manca.
+ * quale rifare; senza, si parte dal primo che manca. Con `modifica` il piano
+ * salvato si riprende com'e', per cambiarlo.
  */
-export function apriCreaCasa({ piano = null } = {}) {
+export function apriCreaCasa({ piano = null, modifica = false } = {}) {
   if (!doc?.body) return false;
   let admin = false;
   try {
@@ -2456,6 +2522,7 @@ export function apriCreaCasa({ piano = null } = {}) {
         disegna();
       }
     });
+  if (modifica && dato) riprendi(dato);
   montaLaTela();
   doc.documentElement.classList.add("dm-c3c-aperta");
   nodo().dataset.tema =

@@ -65,9 +65,14 @@ export function eAColpoDOcchio(configurazione, profilo) {
   }
 }
 
-/** Se la configurazione di questa plancia la fa partire con la Casa 3D. */
+/** Se la configurazione di questa plancia la fa partire con la Casa 3D.
+ *
+ * Mai la principale: la Casa 3D e' una plancia a se', e sulla principale non
+ * si accende (casa-3d-section.js). Fino alla 1.18.7.23 creare la casa dal
+ * Config della principale la diceva accesa li', e la console mostrava la
+ * principale «casa 3D» — «la principale che diventa da sola in 3D». */
 export function eCasa3D(configurazione, profilo) {
-  if (!configurazione) return false;
+  if (!configurazione || profilo === PROFILO_DI_ORIGINE) return false;
   try {
     const valori = configurazione.leggi(profilo)?.snapshot?.values || {};
     const grezza = valori[CHIAVE_CASA3D];
@@ -75,18 +80,6 @@ export function eCasa3D(configurazione, profilo) {
     return casa3dPulita(typeof grezza === "string" ? JSON.parse(grezza) : grezza).attiva === true;
   } catch (_errore) {
     return false;
-  }
-}
-
-/* La casa della principale: e' la stessa casa, e una plancia 3D nuova la
- * ritrova gia' fatta. Se la principale non l'ha ancora, nasce vuota e la si
- * crea dal suo Config. */
-function casaDellaPrincipale(configurazione) {
-  try {
-    const grezza = configurazione?.leggi(PROFILO_DI_ORIGINE)?.snapshot?.values?.[CHIAVE_CASA3D];
-    return casa3dPulita(typeof grezza === "string" ? JSON.parse(grezza) : grezza);
-  } catch (_errore) {
-    return casa3dPulita(null);
   }
 }
 
@@ -111,12 +104,10 @@ function muroDallaPrincipale(configurazione) {
 function configDiPartenza(configurazione, modello, partenza) {
   if (modello === "muro")
     return { [CHIAVE_MURO]: JSON.stringify(muroDallaPrincipale(configurazione)) };
-  if (modello === "casa3d") {
-    const casa = casaDellaPrincipale(configurazione);
-    return {
-      [CHIAVE_CASA3D]: JSON.stringify(casa3dPulita({ ...casa, attiva: true })),
-    };
-  }
+  /* La Casa 3D nasce vuota, tutta sua: svincolata dalla principale, la
+   * casa si crea dal suo Config o dal suo «Crea la tua casa». */
+  if (modello === "casa3d")
+    return { [CHIAVE_CASA3D]: JSON.stringify(casa3dPulita({ attiva: true })) };
   if (modello === "occhio")
     return {
       [CHIAVE_OCCHIO]: JSON.stringify(

@@ -25,8 +25,10 @@ import {
   PIANI_AL_MASSIMO,
   comprimiGriglia,
   entita,
+  espandiGriglia,
   ricampiona,
 } from "./casa-3d.js";
+import { PASSO, riconosciDaFoto } from "./pianta-da-foto.js";
 
 const clean = (v) => String(v ?? "").trim();
 const elenco = (v) => (Array.isArray(v) ? v : []);
@@ -466,6 +468,8 @@ export function pianoDaRiconoscimento({
   fuori = [],
   foto = {},
   dispositivi = [],
+  arredi: arrediGia = [],
+  finiture = {},
   livello = 0,
   nome = "",
   k = "",
@@ -517,8 +521,8 @@ export function pianoDaRiconoscimento({
       id: s.id,
       nome: nomeDi(s.id).slice(0, 40),
       area: clean(aree[s.id]).slice(0, 64),
-      pavimento: ultima ? pavimentoDalColore(ultima.pavimento) : null,
-      pareti: colore(ultima?.pareti),
+      pavimento: ultima ? pavimentoDalColore(ultima.pavimento) : finiture[s.id]?.pavimento || null,
+      pareti: colore(ultima?.pareti) || colore(finiture[s.id]?.pareti),
     };
   });
 
@@ -550,6 +554,10 @@ export function pianoDaRiconoscimento({
       posati.push(...dispositiviDallaFoto(vista, s, f).map(sposta));
     }
   }
+  /* gli arredi di un piano ripreso: le foto non ci sono piu', gli arredi si' */
+  for (const a of elenco(arrediGia))
+    if (idVivi.has(Number(a?.stanza)) && Number.isFinite(a?.x) && Number.isFinite(a?.y))
+      arredi.push(sposta({ ...a, stanza: Number(a.stanza) }));
   const contati = {};
   for (const d of elenco(dispositivi)) {
     const s = vive.find((v) => v.id === Number(d?.stanza));
@@ -570,8 +578,8 @@ export function pianoDaRiconoscimento({
         rot: p.rot,
         entity: entita(d.entity),
         nome: clean(d.nome).slice(0, 40),
-        da: "mano",
-        ...(d.k === "telecamera" ? { fov: 100 } : {}),
+        da: d.da === "foto" ? "foto" : "mano",
+        ...(d.k === "telecamera" ? { fov: Number(d.fov) || 100 } : {}),
       }),
     );
   }
@@ -589,5 +597,99 @@ export function pianoDaRiconoscimento({
     aperture,
     arredi,
     dispositivi: posati,
+  };
+}
+
+/**
+ * Un piano salvato, di nuovo nella procedura: «dare la possibilita' di
+ * modificare di nuovo la planimetria».
+ *
+ * La griglia salvata (a 5 cm) torna alla griglia dei muri della procedura (a
+ * 3 cm) con un margine di fuori attorno: muri, vetri e soglie delle porte come
+ * li avrebbe trovati il riconoscimento. Le stanze si riconoscono di nuovo e
+ * ognuna ritrova la sua (quella salvata che le sta sotto di piu'): nome, area,
+ * pavimento, pareti, dispositivi e arredi, spostati nelle nuove coordinate.
+ *
+ * Torna `{ griglia, casa, nomi, aree, finiture, dispositivi, arredi }`, o
+ * `null` se il piano non ha una griglia.
+ */
+export function riprendiIlPiano(piano, { margine = 0.6 } = {}) {
+  const W0 = Number(piano?.W) | 0,
+    H0 = Number(piano?.H) | 0;
+  if (!W0 || !H0 || !clean(piano?.griglia)) return null;
+  const passo0 = Number(piano.passo) > 0 ? Number(piano.passo) : PASSO_SALVATO;
+  const salvata = espandiGriglia(piano.griglia, W0 * H0);
+  const r = ricampiona({ W: W0, H: H0, passo: passo0, tipo: salvata }, PASSO);
+  const m = Math.max(2, Math.round(margine / PASSO)),
+    W = r.W + 2 * m,
+    H = r.H + 2 * m,
+    N = W * H;
+  const tipo = new Int16Array(N).fill(CELLA.fuori);
+  for (let y = 0; y < r.H; y++)
+    for (let x = 0; x < r.W; x++) tipo[(y + m) * W + x + m] = r.tipo[y * r.W + x];
+  const muro = new Uint8Array(N),
+    vetro = new Uint8Array(N),
+    soglia = new Uint8Array(N);
+  for (let i = 0; i < N; i++) {
+    if (tipo[i] === CELLA.muro) muro[i] = 1;
+    else if (tipo[i] === CELLA.davanzale) vetro[i] = 1;
+    else if (tipo[i] === CELLA.porta) soglia[i] = 1;
+  }
+  /* la barriera: muri, vetri e soglie, ispessiti di una cella come nel
+   * riconoscimento (una soglia storta lascia passaggi in diagonale) */
+  const barriera = new Uint8Array(N);
+  for (let i = 0; i < N; i++) if (muro[i] || vetro[i] || soglia[i]) barriera[i] = 1;
+  for (let y = 1; y < H - 1; y++)
+    for (let x = 1; x < W - 1; x++) {
+      const i = y * W + x;
+      if ((vetro[i] || soglia[i]) && !muro[i])
+        for (const j of [i - 1, i + 1, i - W, i + W]) barriera[j] = 1;
+    }
+  const griglia = { W, H, muro, barriera, vetro };
+  const casa = riconosciDaFoto(griglia);
+  /* ogni stanza nuova ritrova la sua: quella salvata che le sta sotto di piu' */
+  const conti = new Map();
+  for (let i = 0; i < N; i++) {
+    const nuova = casa.tipo[i],
+      vecchia = tipo[i];
+    if (nuova > 0 && vecchia > 0) {
+      const k = nuova * 256 + vecchia;
+      conti.set(k, (conti.get(k) || 0) + 1);
+    }
+  }
+  const migliore = new Map();
+  for (const [k, n] of conti) {
+    const nuova = Math.floor(k / 256),
+      vecchia = k % 256;
+    if (!migliore.has(nuova) || migliore.get(nuova).n < n) migliore.set(nuova, { vecchia, n });
+  }
+  const daA = new Map(); // id salvato -> id nuovo (la stanza piu' grande che lo prende)
+  for (const [nuova, { vecchia, n }] of migliore)
+    if (!daA.has(vecchia) || daA.get(vecchia).n < n) daA.set(vecchia, { nuova, n });
+  const nomi = {},
+    aree = {},
+    finiture = {};
+  for (const s of elenco(piano.stanze)) {
+    const id = daA.get(Number(s?.id))?.nuova;
+    if (!id) continue;
+    if (clean(s.nome)) nomi[id] = clean(s.nome);
+    if (clean(s.area)) aree[id] = clean(s.area);
+    if (s.pavimento || s.pareti)
+      finiture[id] = { pavimento: s.pavimento || null, pareti: colore(s.pareti) };
+  }
+  const dx = m * PASSO;
+  const sposta = (o) => {
+    const id = daA.get(Number(o?.stanza))?.nuova;
+    if (!id || !Number.isFinite(o?.x) || !Number.isFinite(o?.y)) return [];
+    return [{ ...o, stanza: id, x: tondo(o.x + dx), y: tondo(o.y + dx) }];
+  };
+  return {
+    griglia,
+    casa,
+    nomi,
+    aree,
+    finiture,
+    dispositivi: elenco(piano.dispositivi).flatMap(sposta),
+    arredi: elenco(piano.arredi).flatMap(sposta),
   };
 }

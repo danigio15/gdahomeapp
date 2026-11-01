@@ -197,6 +197,7 @@ async function boot(page, testInfo, { tema = "light", config = OCCHIO, premium =
               m.domain,
               m.service,
               m.service_data?.entity_id || m.target?.entity_id,
+              ...(m.service_data?.option ? [m.service_data.option] : []),
             ]);
             result = {};
           }
@@ -334,6 +335,73 @@ for (const tema of ["light", "dark"]) {
     await scatta(page, testInfo, `occhio-cancello-${tema}`);
   });
 }
+
+/* Il video del tablet: due modi sullo stesso select, «Totale notte» e
+ * «Totale sensori», erano tutti e due «Attivato» e il tocco non mandava
+ * niente. Ora se ne accende uno, il tocco sceglie la sua voce, e quello col
+ * PIN chiede il codice. */
+test("i modi su un select: uno solo acceso, il tocco sceglie la voce, il PIN si chiede", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "basta una misura");
+  const config = {
+    ...OCCHIO,
+    antifurto: {
+      modi: [
+        {
+          entita: "input_select.antifurto",
+          opzione: "Totale notte",
+          nome: "Totale notte",
+          disegno: "moon",
+          colore: "#2f2fff",
+          pin: "2468",
+        },
+        { entita: "input_select.antifurto", opzione: "Totale sensori", nome: "Totale sensori" },
+      ],
+    },
+  };
+  await boot(page, testInfo, { tema: "dark", config });
+  await page.evaluate(() => {
+    const stato = { state: "Totale notte", attributes: {} };
+    Object.assign(_RAW_STATES, { "input_select.antifurto": stato });
+    window.__HASS__.states["input_select.antifurto"] = stato;
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
+  });
+  const tela = page.locator("#dm-occhio");
+  await tela.locator('.oc-riquadro[data-tipo="antifurto"]').click();
+  await expect(tela.locator(".oc-modo")).toHaveCount(2);
+  await expect(tela.locator('.oc-modo[data-acceso="true"]')).toHaveCount(1);
+  await expect(tela.locator('.oc-modo[data-acceso="true"]')).toContainText("Totale notte");
+  /* il nome del modo acceso si legge: non e' blu pieno su blu notte */
+  const colore = await tela
+    .locator('.oc-modo[data-acceso="true"] strong')
+    .evaluate((el) => getComputedStyle(el).color);
+  expect(colore).not.toBe("rgb(47, 47, 255)");
+  await scatta(page, testInfo, "occhio-antifurto-select");
+  await tela.locator(".oc-modo", { hasText: "Totale sensori" }).click();
+  expect(await page.evaluate(() => window.__CHIAMATE.at(-1))).toEqual([
+    "input_select",
+    "select_option",
+    "input_select.antifurto",
+    "Totale sensori",
+  ]);
+  /* quello col PIN: il tastierino, il codice sbagliato non manda niente */
+  const prima = await page.evaluate(() => window.__CHIAMATE.length);
+  await tela.locator(".oc-modo", { hasText: "Totale notte" }).click();
+  await expect(tela.locator(".oc-cifre")).toBeVisible();
+  for (const k of ["1", "1", "1", "1", "✓"]) await tela.locator(`[data-oc-cifra="${k}"]`).click();
+  await expect(tela.locator(".oc-codice.sbagliato")).toBeVisible();
+  expect(await page.evaluate(() => window.__CHIAMATE.length)).toBe(prima);
+  await scatta(page, testInfo, "occhio-antifurto-pin");
+  for (const k of ["2", "4", "6", "8", "✓"]) await tela.locator(`[data-oc-cifra="${k}"]`).click();
+  expect(await page.evaluate(() => window.__CHIAMATE.at(-1))).toEqual([
+    "input_select",
+    "select_option",
+    "input_select.antifurto",
+    "Totale notte",
+  ]);
+  await expect(tela.locator(".oc-cifre")).toHaveCount(0);
+});
 
 test("le telecamere riservate non si vedono quando in casa c'e' qualcuno", async ({
   page,

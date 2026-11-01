@@ -813,3 +813,105 @@ test("il ☰ della Casa 3D apre la barra di Home Assistant senza scoprire la pla
   await page.waitForTimeout(400);
   expect(await casa.evaluate((n) => Math.round(n.getBoundingClientRect().left))).toBe(0);
 });
+
+/* «Deve funzionare come le altre plance aggiuntive, in maniera autonoma»: come
+ * il «Colpo d'occhio», chi amministra ha il ⚙ che apre il Config di questa
+ * plancia sulla scheda Casa 3D. */
+test("il ⚙ della Casa 3D apre il suo Config sulla scheda Casa 3D", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "basta una misura");
+  await boot(page, testInfo);
+  const casa = page.locator("#dm-casa3d");
+  /* dove si tocca: il ⚙ nella testata, accanto al ☰ */
+  const doveSta = foto(testInfo, "casa3d-dove-il-config");
+  if (doveSta) {
+    await casa
+      .locator('[data-c3s="config"]')
+      .evaluate((b) => (b.style.outline = "4px solid #ef4444"));
+    await page.screenshot({ path: doveSta });
+    await casa.locator('[data-c3s="config"]').evaluate((b) => (b.style.outline = ""));
+  }
+  await casa.locator('[data-c3s="config"]').click();
+  await expect(page.locator("#editor-modal")).toBeVisible({ timeout: 20_000 });
+  await expect(page.locator('#editor-modal .ed-tab[data-tab="casa3d"]')).toHaveClass(/active/, {
+    timeout: 10_000,
+  });
+  await expect(page.locator("#ed-body .dm-c3-ed")).toBeVisible();
+  /* Solo la Casa 3D: le schede della plancia classica non si vedono. */
+  await expect(page.locator("#editor-modal .ed-tabs")).toBeHidden();
+  const dove = foto(testInfo, "casa3d-config-solo");
+  if (dove) await page.screenshot({ path: dove });
+});
+
+/* «E ovviamente dare la possibilità di modificare di nuovo la planimetria»:
+ * dal Config, «Modifica» su un piano riapre la procedura dai muri con le sue
+ * stanze; salvato, il piano resta lui, con nomi, arredi e dispositivi. */
+test("dal Config si modifica di nuovo la planimetria di un piano", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "basta una misura");
+  await boot(page, testInfo);
+  await page.locator('#dm-casa3d [data-c3s="config"]').click();
+  await expect(page.locator("#ed-body .dm-c3-ed")).toBeVisible({ timeout: 20_000 });
+  const tasti = page.locator("#ed-body [data-dm-c3-modifica]");
+  await expect(tasti).toHaveCount(2);
+  await page.locator('#ed-body [data-dm-c3-modifica="terra"]').click();
+  const crea = page.locator("#dm-c3c");
+  await expect(crea).toBeVisible({ timeout: 20_000 });
+  await expect(crea.locator(".c3c-pillola.si")).toContainText(/Muri|Walls/, { timeout: 20_000 });
+  await expect(crea).toContainText(/Trovati 3 ambienti|Found 3 rooms/);
+  const dove = foto(testInfo, "casa3d-modifica-muri");
+  if (dove) await page.screenshot({ path: dove });
+  await crea.locator('[data-c3c="avanti"]').click();
+  for (const nome of ["Soggiorno", "Cucina", "Camera"])
+    await expect(crea.locator(".c3c-sopra")).toContainText(nome);
+  /* fino in fondo, e si salva */
+  for (let i = 0; i < 6 && !(await crea.locator('[data-c3c="salva"]').count()); i++)
+    await crea.locator('[data-c3c="avanti"]').click();
+  await crea.locator('[data-c3c="salva"]').click();
+  await expect(crea).toBeHidden({ timeout: 20_000 });
+  const salvata = await page.evaluate(() => JSON.parse(localStorage.getItem("cd_casa3d")));
+  expect(salvata.attiva).toBe(true);
+  expect(salvata.piani.map((p) => p.k)).toEqual(["terra", "primo"]);
+  const terra = salvata.piani.find((p) => p.k === "terra");
+  expect(terra.nome).toBe("Piano terra");
+  expect(terra.stanze.map((s) => s.nome).sort()).toEqual(["Camera", "Cucina", "Soggiorno"]);
+  expect(terra.stanze.find((s) => s.nome === "Camera").pareti).toBe("#b7c4ae");
+  expect(terra.arredi.length).toBe(8);
+  expect(terra.dispositivi.length).toBe(9);
+  expect(terra.dispositivi.find((d) => d.k === "telecamera").entity).toBe("camera.soggiorno");
+  const luce = terra.dispositivi.find((d) => d.entity === "light.cucina");
+  expect(terra.stanze.find((s) => s.id === luce.stanza).nome).toBe("Cucina");
+});
+
+/* Aperto da dovunque — il menu dell'app apre il Config com'è — sulla
+ * plancia Casa 3D il Config è solo il suo. */
+test("sulla plancia Casa 3D il Config aperto dal menu è solo quello 3D", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "basta una misura");
+  await boot(page, testInfo);
+  await page.evaluate(() => window.apriConfigEntita?.());
+  await expect(page.locator("#editor-modal")).toBeVisible({ timeout: 20_000 });
+  await expect(page.locator("#ed-body .dm-c3-ed")).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator("#editor-modal .ed-tabs")).toBeHidden();
+});
+
+/* E sulla principale la scheda Casa 3D non c'è: la Casa 3D è svincolata
+ * da lei, la si crea e la si configura solo nella sua plancia. */
+test("sulla plancia principale il Config non ha la scheda Casa 3D", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "basta una misura");
+  await page.addInitScript(() => {
+    window.__DASHBOARDMODERN_PROFILE__ = "primary";
+    window.__GDAHOME_PREMIUM__ = true;
+  });
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
+  await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
+  await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true, null, {
+    timeout: 60_000,
+  });
+  await page.evaluate(() => {
+    localStorage.setItem("cd_casa3d", JSON.stringify({ attiva: true, piani: [] }));
+    window.apriConfigEntita?.();
+  });
+  await expect(page.locator("#editor-modal")).toBeVisible({ timeout: 20_000 });
+  await page.waitForTimeout(800);
+  await expect(page.locator('#editor-modal .ed-tab[data-tab="casa3d"]')).toHaveCount(0);
+});
