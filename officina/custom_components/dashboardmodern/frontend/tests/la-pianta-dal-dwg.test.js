@@ -13,6 +13,7 @@ import {
   nomeDaScritta,
   pezziDelDisegno,
   pianiDelDisegno,
+  ruoloDelloStrato,
   scrittaPulita,
   spazioDelModello,
 } from "../src/core/pianta-da-dwg.js";
@@ -25,7 +26,13 @@ const linea = (x0, y0, x1, y1, layer = "MURI") => ({
   startPoint: { x: x0, y: y0 },
   endPoint: { x: x1, y: y1 },
 });
-const scritta = (text, x, y) => ({ type: "MTEXT", layer: "TESTI", ownerBlockRecordSoftId: MODELLO, text, insertionPoint: { x, y } });
+const scritta = (text, x, y) => ({
+  type: "MTEXT",
+  layer: "TESTI",
+  ownerBlockRecordSoftId: MODELLO,
+  text,
+  insertionPoint: { x, y },
+});
 
 /* Un piano in millimetri: un rettangolo con un tramezzo e qualche tratto. */
 function piano(ox, oy, w = 12000, h = 10000) {
@@ -36,13 +43,23 @@ function piano(ox, oy, w = 12000, h = 10000) {
     linea(ox, oy + h, ox, oy),
     linea(ox + w / 2, oy, ox + w / 2, oy + h),
   ];
-  for (let i = 1; i < 10; i++) e.push(linea(ox + 300, oy + i * 900, ox + 1200, oy + i * 900, "PROIEZIONE"));
+  for (let i = 1; i < 10; i++)
+    e.push(linea(ox + 300, oy + i * 900, ox + 1200, oy + i * 900, "PROIEZIONE"));
   e.push({
     type: "HATCH",
     layer: "CAMPITURE TOMPAGNI",
     ownerBlockRecordSoftId: MODELLO,
     solidFill: 1,
-    boundaryPaths: [{ vertices: [{ x: ox, y: oy }, { x: ox + w, y: oy }, { x: ox + w, y: oy + 300 }, { x: ox, y: oy + 300 }] }],
+    boundaryPaths: [
+      {
+        vertices: [
+          { x: ox, y: oy },
+          { x: ox + w, y: oy },
+          { x: ox + w, y: oy + 300 },
+          { x: ox, y: oy + 300 },
+        ],
+      },
+    ],
   });
   return e;
 }
@@ -50,7 +67,14 @@ function piano(ox, oy, w = 12000, h = 10000) {
 function disegno() {
   return {
     header: { INSUNITS: 4 },
-    tables: { BLOCK_RECORD: { entries: [{ name: "*Model_Space", handle: MODELLO }, { name: "*Paper_Space", handle: "D2" }] } },
+    tables: {
+      BLOCK_RECORD: {
+        entries: [
+          { name: "*Model_Space", handle: MODELLO },
+          { name: "*Paper_Space", handle: "D2" },
+        ],
+      },
+    },
     entities: [
       ...piano(0, 0),
       ...piano(15000, 0),
@@ -105,10 +129,7 @@ test("due piani affiancati escono separati, coi loro nomi e la scala", () => {
     assert.ok(Math.abs(p.larghezzaMetri - 12) < 0.01);
     assert.ok(Math.abs(p.profonditaMetri - 10) < 0.01);
   }
-  assert.deepEqual(
-    piani[0].scritte.map((s) => s.t).sort(),
-    ["12,40 mq", "CUCINA", "Soggiorno"],
-  );
+  assert.deepEqual(piani[0].scritte.map((s) => s.t).sort(), ["12,40 mq", "CUCINA", "Soggiorno"]);
   assert.deepEqual(
     piani[1].scritte.map((s) => s.t),
     ["CAMERA"],
@@ -130,4 +151,26 @@ test("i nomi delle stanze: le scritte giuste, scritte bene", () => {
   assert.ok(!eNomeDiStanza("h 2,70"));
   assert.ok(!eNomeDiStanza("x"));
   assert.equal(nomeDaScritta("SALA D'ATTESA"), "Sala d'attesa");
+});
+
+test("gli strati: muri, infissi, cose che muri non sono, e quelli che non dicono niente", () => {
+  for (const n of ["SEZIONE", "CAMPITURE TOMPAGNI", "MURI", "A-WALL", "muratura"])
+    assert.equal(ruoloDelloStrato(n), "muro", n);
+  for (const n of ["INFISSI", "finestre", "A-GLAZ"])
+    assert.equal(ruoloDelloStrato(n), "infisso", n);
+  /* le scale, le viste sotto e sopra il taglio, le porte aperte, lo strato 0 */
+  for (const n of ["VISTA", "VISTA 2 PROIEZIONE", "PORTE", "QUOTE", "0", "SCALE", "ascensore"])
+    assert.equal(ruoloDelloStrato(n), "altro", n);
+  /* «SANATORIA_DIFFORMI» nel disegno vero tiene proprio dei tramezzi */
+  assert.equal(ruoloDelloStrato("SANATORIA_DIFFORMI"), "forse");
+});
+
+test("le linee sanno il loro strato; con pochi muri nominati si disegna tutto", () => {
+  const piani = pianiDelDisegno(pezziDelDisegno(disegno()), { insunits: 4 });
+  assert.ok(piani[0].linee.some((l) => l.strato === "MURI"));
+  /* cinque linee sullo strato MURI sono poche per fidarsi dei nomi */
+  assert.equal(piani[0].soloMuri, false);
+  const tanti = disegno();
+  for (let i = 0; i < 6; i++) tanti.entities.push(linea(100 + i * 900, 200, 100 + i * 900, 9800));
+  assert.equal(pianiDelDisegno(pezziDelDisegno(tanti), { insunits: 4 })[0].soloMuri, true);
 });

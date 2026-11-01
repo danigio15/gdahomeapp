@@ -463,6 +463,11 @@ test("un DWG coi piani affiancati: si sceglie il piano, scala e nomi dal disegno
   await fotoDiretta(page, testInfo, "crea-dwg-piani");
   await piani.nth(Number(process.env.DM_DWG_PIANO || 1)).click();
   await expect(crea.locator('[data-c3c-strumento="dritto"]')).toBeVisible({ timeout: 60_000 });
+  /* Non basta arrivare ai muri: le stanze devono esserci (DM_DWG_STANZE, il
+   * minimo atteso per quel piano). */
+  const trovati = await crea.locator(".c3c-pannello").innerText();
+  const stanze = Number(/Trovati (\d+) ambienti/.exec(trovati)?.[1] || 0);
+  expect(stanze).toBeGreaterThanOrEqual(Number(process.env.DM_DWG_STANZE || 3));
   await fotoDiretta(page, testInfo, "crea-dwg-muri");
   await crea.locator('[data-c3c="avanti"]').click();
   await fotoDiretta(page, testInfo, "crea-dwg-stanze");

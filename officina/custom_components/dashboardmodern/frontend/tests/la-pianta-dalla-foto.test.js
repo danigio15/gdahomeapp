@@ -109,13 +109,26 @@ function catasto(pxm) {
     X = (v) => P(v + 15),
     Y = (v) => P(v + 12),
     riga = (x0, y0, x1, y1) =>
-      rettangolo(im, Math.min(X(x0), X(x1)), Math.min(Y(y0), Y(y1)), Math.max(X(x0), X(x1)) + 1, Math.max(Y(y0), Y(y1)) + 1, 30);
+      rettangolo(
+        im,
+        Math.min(X(x0), X(x1)),
+        Math.min(Y(y0), Y(y1)),
+        Math.max(X(x0), X(x1)) + 1,
+        Math.max(Y(y0), Y(y1)) + 1,
+        30,
+      );
   /* un muro a doppia riga, orizzontale o verticale, coi suoi varchi */
   const muro = (x0, y0, x1, y1, s, varchi = []) => {
     const orizz = y0 === y1;
-    let pezzi = [[orizz ? Math.min(x0, x1) : Math.min(y0, y1), orizz ? Math.max(x0, x1) : Math.max(y0, y1)]];
+    let pezzi = [
+      [orizz ? Math.min(x0, x1) : Math.min(y0, y1), orizz ? Math.max(x0, x1) : Math.max(y0, y1)],
+    ];
     for (const [v0, v1] of varchi)
-      pezzi = pezzi.flatMap(([a, b]) => (v1 <= a || v0 >= b ? [[a, b]] : [...(v0 > a ? [[a, v0]] : []), ...(v1 < b ? [[v1, b]] : [])]));
+      pezzi = pezzi.flatMap(([a, b]) =>
+        v1 <= a || v0 >= b
+          ? [[a, b]]
+          : [...(v0 > a ? [[a, v0]] : []), ...(v1 < b ? [[v1, b]] : [])],
+      );
     for (const [a, b] of pezzi)
       if (orizz) {
         riga(a, y0 - s / 2, b, y0 - s / 2);
@@ -130,14 +143,24 @@ function catasto(pxm) {
       }
   };
   const vetro = (x0, y0, x1, y1) => {
-    for (const k of [-0.08, 0.08]) y0 === y1 ? riga(x0, y0 + k, x1, y0 + k) : riga(x0 + k, y0, x0 + k, y1);
+    for (const k of [-0.08, 0.08])
+      y0 === y1 ? riga(x0, y0 + k, x1, y0 + k) : riga(x0 + k, y0, x0 + k, y1);
   };
   const E = 0.3,
     I = 0.12;
-  muro(0, 0, 12, 0, E, [[2, 3.4], [8.5, 9.7]]);
+  muro(0, 0, 12, 0, E, [
+    [2, 3.4],
+    [8.5, 9.7],
+  ]);
   muro(12, 0, 12, 10, E, [[6.2, 7.4]]);
-  muro(0, 10, 12, 10, E, [[4.3, 5.3], [8.5, 9.7]]); // il portone (4,3-5,3) senza soglia
-  muro(0, 0, 0, 10, E, [[2, 3.4], [7.5, 8.3]]);
+  muro(0, 10, 12, 10, E, [
+    [4.3, 5.3],
+    [8.5, 9.7],
+  ]); // il portone (4,3-5,3) senza soglia
+  muro(0, 0, 0, 10, E, [
+    [2, 3.4],
+    [7.5, 8.3],
+  ]);
   vetro(2, 0, 3.4, 0);
   vetro(8.5, 0, 9.7, 0);
   vetro(12, 6.2, 12, 7.4);
@@ -167,7 +190,8 @@ function catasto(pxm) {
   rettangolo(im, P(1), P(33), P(41), P(33) + 2, 30);
   rettangolo(im, P(1), P(1), P(1) + 2, P(33), 30);
   rettangolo(im, P(41), P(1), P(41) + 2, P(33), 30);
-  for (let k = 0; k < 40; k++) rettangolo(im, P(2 + k * 0.4), P(2.5), P(2.25 + k * 0.4), P(2.9), 30);
+  for (let k = 0; k < 40; k++)
+    rettangolo(im, P(2 + k * 0.4), P(2.5), P(2.25 + k * 0.4), P(2.9), 30);
   return im;
 }
 
@@ -179,7 +203,9 @@ for (const pxm of [20, 30]) {
     assert.equal(casa.stanze.length, 5, `stanze: ${aree.map((a) => a.toFixed(1))}`);
     /* bagno ~10, disimpegno ~14, cucina ~18, camera ~27, soggiorno ~39 */
     const attese = [10.3, 14.4, 17.9, 27.3, 38.9];
-    aree.forEach((a, i) => assert.ok(Math.abs(a - attese[i]) < attese[i] * 0.12, `area ${a} invece di ${attese[i]}`));
+    aree.forEach((a, i) =>
+      assert.ok(Math.abs(a - attese[i]) < attese[i] * 0.12, `area ${a} invece di ${attese[i]}`),
+    );
     const porte = casa.aperture.filter((a) => a.tipo === "porta"),
       finestre = casa.aperture.filter((a) => a.tipo === "finestra");
     assert.equal(porte.length, 6, `porte: ${porte.map((p) => p.largo.toFixed(1))}`); // cinque dentro e il portone
@@ -193,12 +219,22 @@ function ritaglia(im, x0, y0, x1, y1) {
   const w = x1 - x0,
     h = y1 - y0,
     data = new Uint8ClampedArray(w * h * 4);
-  for (let y = 0; y < h; y++) data.set(im.data.subarray(((y + y0) * im.width + x0) * 4, ((y + y0) * im.width + x1) * 4), y * w * 4);
+  for (let y = 0; y < h; y++)
+    data.set(
+      im.data.subarray(((y + y0) * im.width + x0) * 4, ((y + y0) * im.width + x1) * 4),
+      y * w * 4,
+    );
   return { width: w, height: h, data };
 }
 test("la casa ritagliata stretta: i muri di fuori non sono la cornice", () => {
   const pxm = 30,
-    im = ritaglia(catasto(pxm), Math.round(14.6 * pxm), Math.round(11.6 * pxm), Math.round(27.4 * pxm), Math.round(22.4 * pxm));
+    im = ritaglia(
+      catasto(pxm),
+      Math.round(14.6 * pxm),
+      Math.round(11.6 * pxm),
+      Math.round(27.4 * pxm),
+      Math.round(22.4 * pxm),
+    );
   const casa = riconosciDaFoto(grigliaDeiMuri(inchiostro(im), im.width, im.height, 1 / pxm));
   assert.equal(casa.stanze.length, 5, `stanze: ${casa.stanze.map((s) => s.area.toFixed(1))}`);
 });
@@ -214,4 +250,50 @@ test("un contorno solo, senza stanze dentro, e' una stanza", () => {
   const casa = riconosciDaFoto(grigliaDeiMuri(inchiostro(im), im.width, im.height, 1 / pxm));
   assert.equal(casa.stanze.length, 1);
   assert.ok(Math.abs(casa.stanze[0].area - 11.4 * 9.4) < 6, `area ${casa.stanze[0].area}`);
+});
+
+/* Dal DWG («Se faccio riconosci muri mi fa questo» col disegno vero): muri
+ * pieni (campiture), un tramezzo che finisce a 1 m dal muro di traverso (la
+ * porta, che nel DWG sta in un altro strato), un pezzo di muro da solo fra
+ * due aperture, e una finestra larga 1,8 m data dallo strato degli infissi. */
+function disegnoDwg(pxm) {
+  const W = Math.round(12 * pxm),
+    H = Math.round(9 * pxm),
+    im = foglio(W, H),
+    vetri = new Uint8Array(W * H),
+    P = (v) => (v + 0.6) * pxm,
+    pieno = (x0, y0, x1, y1) => rettangolo(im, P(x0), P(y0), P(x1), P(y1), 0);
+  const E = 0.3;
+  pieno(0, 0, 10.8, E); // sopra, con la finestra larga (6,5-8,3)
+  pieno(0, 7.5, 10.8, 7.8); // sotto
+  pieno(0, 0, E, 7.8); // sinistra
+  pieno(10.5, 0, 10.8, 7.8); // destra
+  // il tramezzo verticale a x=5: due porte e un pezzo da solo in mezzo
+  pieno(4.95, 0, 5.1, 2);
+  pieno(4.95, 2.9, 5.1, 4.6); // il pezzo da solo
+  pieno(4.95, 5.5, 5.1, 7.8);
+  // a destra un tramezzo orizzontale che finisce a 1 m dal muro di destra
+  pieno(5, 4, 9.5, 4.15);
+  // la finestra: il muro sopra s'interrompe, gli infissi dicono dov'e'
+  rettangolo(im, P(6.5), P(0) - 1, P(8.3), P(E) + 1, 245);
+  for (let y = Math.round(P(0.12)); y < Math.round(P(0.18)); y++)
+    for (let x = Math.round(P(6.5)); x < Math.round(P(8.3)); x++) vetri[y * W + x] = 1;
+  return { im, vetri };
+}
+test("un disegno dal DWG: tramezzo che finisce vicino al muro, pezzo fra due porte, finestra larga", () => {
+  const pxm = 60,
+    { im, vetri } = disegnoDwg(pxm);
+  const casa = riconosciDaFoto(
+    grigliaDeiMuri(inchiostro(im), im.width, im.height, 1 / pxm, { vetri, disegno: true }),
+  );
+  const aree = casa.stanze.map((s) => s.area).sort((a, b) => a - b);
+  assert.equal(casa.stanze.length, 3, `stanze: ${aree.map((a) => a.toFixed(1))}`);
+  const finestre = casa.aperture.filter((a) => a.tipo === "finestra");
+  assert.equal(
+    finestre.length,
+    1,
+    `aperture: ${casa.aperture.map((a) => a.tipo[0] + a.largo.toFixed(1))}`,
+  );
+  assert.ok(Math.abs(finestre[0].largo - 1.8) < 0.3, `finestra ${finestre[0].largo}`);
+  assert.equal(casa.aperture.filter((a) => a.tipo === "porta").length, 3);
 });

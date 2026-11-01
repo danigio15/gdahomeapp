@@ -15,6 +15,29 @@
 const STRATI_DA_SALTARE = /quot|dim|arred|furn|mobil|testi|text|cartig|retin|tratteg/i;
 /* Le campiture che sono muri anche se non sono piene. */
 const STRATI_DI_MURI = /tompagn|muri|muro|wall|murat|sezion|campit/i;
+/* Gli infissi: le righe del vetro, che fanno capire le finestre. */
+const STRATI_DI_INFISSI = /infiss|finestr|window|vetr|serrament|glaz/i;
+
+/* Gli strati che di sicuro non sono muri: le cose viste sotto o sopra il
+ * taglio (scale, rampe, sporti), le porte aperte, gli assi, i simboli. Lo
+ * strato «0» in un disegno ordinato tiene le crocette e le linee d'aiuto. */
+const STRATI_NON_MURI =
+  /vist|proiez|port|door|scal|stair|rampa|ascens|lift|assi\b|asse\b|axis|simbol|symbol|arred|furn|quot|dim|defpoints|^0$/i;
+
+/**
+ * Cosa disegna uno strato, dal nome: «muro» (i muri tagliati e le loro
+ * campiture), «infisso» (finestre), «altro» (viste, proiezioni, scale,
+ * porte aperte, assi, simboli) o «forse» (un nome che non dice niente, come
+ * «SANATORIA_DIFFORMI», che spesso tiene proprio dei tramezzi). Serve a non
+ * far diventare muri le righe fitte delle scale.
+ */
+export function ruoloDelloStrato(nome) {
+  const s = String(nome || "").trim();
+  if (STRATI_DI_MURI.test(s)) return "muro";
+  if (STRATI_DI_INFISSI.test(s)) return "infisso";
+  if (STRATI_NON_MURI.test(s)) return "altro";
+  return "forse";
+}
 const TIPI_CHE_NON_SONO_MURI = new Set([
   "DIMENSION",
   "MULTILEADER",
@@ -112,6 +135,9 @@ export function scrittaPulita(testo) {
     .trim();
 }
 
+/* Una linea porta con se' il suo strato (per capire se e' un muro). */
+const conStrato = (linea, strato) => Object.assign(linea, { strato });
+
 /**
  * Dal disegno letto da LibreDWG ai pezzi: linee (spezzate), piene (campiture
  * di muri) e scritte, in unita' del disegno, col nord in alto come nel CAD.
@@ -137,22 +163,22 @@ export function pezziDelDisegno(db) {
     if (e.type === "LINE") {
       const a = punto(e.startPoint),
         b = punto(e.endPoint);
-      if (a && b) linee.push([a, b]);
+      if (a && b) linee.push(conStrato([a, b], strato));
     } else if (e.type === "LWPOLYLINE" || e.type === "POLYLINE2D" || e.type === "POLYLINE") {
       const p = polilinea(e.vertices, Boolean(e.flag & 1) || e.closed === true);
-      if (p.length > 1) linee.push(p);
+      if (p.length > 1) linee.push(conStrato(p, strato));
     } else if (e.type === "ARC" && e.center && Number.isFinite(e.radius)) {
-      linee.push(arco(e.center, e.radius, e.startAngle || 0, e.endAngle || 0));
+      linee.push(conStrato(arco(e.center, e.radius, e.startAngle || 0, e.endAngle || 0), strato));
     } else if (e.type === "CIRCLE" && e.center && Number.isFinite(e.radius)) {
-      linee.push(arco(e.center, e.radius, 0, 2 * Math.PI - 1e-6));
+      linee.push(conStrato(arco(e.center, e.radius, 0, 2 * Math.PI - 1e-6), strato));
     } else if (e.type === "HATCH") {
       const piena =
         e.solidFill === 1 || e.solidFill === true || /^solid$/i.test(String(e.patternName || ""));
       if (!piena && !STRATI_DI_MURI.test(strato)) continue;
-      for (const c of contorni(e)) piene.push(c);
+      for (const c of contorni(e)) piene.push(conStrato(c, strato));
     } else if (e.type === "SOLID") {
       const v = [e.corner1, e.corner2, e.corner4, e.corner3].map(punto).filter(Boolean);
-      if (v.length >= 3) piene.push(v);
+      if (v.length >= 3) piene.push(conStrato(v, strato));
     }
   }
   return { linee, piene, scritte };
@@ -284,6 +310,7 @@ export function pianiDelDisegno(pezzi, { insunits = 0 } = {}) {
           Math.min(Math.abs(a.y - p.y0), Math.abs(a.y - p.y1)) -
           Math.min(Math.abs(b.y - p.y0), Math.abs(b.y - p.y1)),
       );
+    const linee = p.oggetti.filter((o) => o.k === "l").map((o) => o.p);
     const titolo =
       [...vicine, ...dentro].find((s) => /\b(pianta|piano|floor|level|plan)\b/i.test(s.t)) ||
       vicine.find((s) =>
@@ -299,9 +326,11 @@ export function pianiDelDisegno(pezzi, { insunits = 0 } = {}) {
       larghezzaMetri: larghezza * scala,
       profonditaMetri: (p.y1 - p.y0) * scala,
       nome: titolo ? titolo.t.slice(0, 40) : "",
-      linee: p.oggetti.filter((o) => o.k === "l").map((o) => o.p),
+      linee,
       piene: p.oggetti.filter((o) => o.k === "p").map((o) => o.p),
       scritte: dentro,
+      /* I muri hanno il loro strato: si disegnano solo muri e infissi. */
+      soloMuri: linee.filter((l) => ruoloDelloStrato(l.strato) === "muro").length >= 8,
     };
   });
 }

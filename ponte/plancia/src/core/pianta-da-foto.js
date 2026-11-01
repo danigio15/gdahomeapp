@@ -223,7 +223,7 @@ function pezziDi(g, W, H) {
  *   5. la barriera aggiunge le righe sottili attaccate ai muri (il vetro delle
  *      finestre, le soglie), che servono a capire dov'e' il fuori.
  */
-export function grigliaDeiMuri(ink, w, h, mpp) {
+export function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, disegno = false } = {}) {
   const lato = PASSO / mpp,
     W = Math.max(1, Math.floor(w / lato)),
     H = Math.max(1, Math.floor(h / lato)),
@@ -245,6 +245,25 @@ export function grigliaDeiMuri(ink, w, h, mpp) {
           }
       riga[cy * W + cx] = c;
     }
+  /* Gli infissi, quando il disegno li da' a parte (lo strato del DWG), nelle
+   * stesse celle. */
+  const celleVetri = new Uint8Array(W * H);
+  if (vetri)
+    for (let cy = 0; cy < H; cy++)
+      for (let cx = 0; cx < W; cx++) {
+        const x0 = Math.floor(cx * lato),
+          y0 = Math.floor(cy * lato),
+          x1 = Math.max(x0 + 1, Math.floor((cx + 1) * lato)),
+          y1 = Math.max(y0 + 1, Math.floor((cy + 1) * lato));
+        let c = 0;
+        for (let y = y0; y < y1 && y < h && !c; y++)
+          for (let x = x0; x < x1 && x < w; x++)
+            if (vetri[y * w + x]) {
+              c = 1;
+              break;
+            }
+        celleVetri[cy * W + cx] = c;
+      }
   /* Lo scuro che tocca il bordo e' il tavolo sotto il foglio, non un muro. */
   const fondo = new Uint8Array(W * H),
     coda = [];
@@ -327,8 +346,8 @@ export function grigliaDeiMuri(ink, w, h, mpp) {
   const corsaMuro = Math.round(0.45 / PASSO),
     pezzoMuro = Math.round(0.7 / PASSO);
   const sostegno = new Uint8Array(W * H);
+  const tracce = pezziDi(riga, W, H);
   {
-    const tracce = pezziDi(riga, W, H);
     for (let i = 0; i < W * H; i++) {
       const p = tracce.id[i] >= 0 ? tracce.pezzi[tracce.id[i]] : null;
       if (!p) continue;
@@ -380,7 +399,7 @@ export function grigliaDeiMuri(ink, w, h, mpp) {
       lh = p.y1 - p.y0 + 1,
       estensione = Math.max(lw, lh);
     if (estensione < minimo) continue;
-    if (grande(p) && cuore(p) < 0.03 && qualcosaDentro(p)) continue;
+    if (!disegno && grande(p) && cuore(p) < 0.03 && qualcosaDentro(p)) continue;
     const corsa = lw >= lh ? corsaO : corsaV;
     let riga0 = 0;
     for (const c of p.celle) if (corsa[c] > riga0) riga0 = corsa[c];
@@ -394,7 +413,10 @@ export function grigliaDeiMuri(ink, w, h, mpp) {
    *     una scritta: in una foto sfocata le lettere si toccano e sembrano una
    *     riga, ma un muro vero si appoggia sempre a un altro. */
   {
-    const rete = pezziDi(muro, W, H);
+    /* Un disegno (DWG, «Disegnala qui») ha solo muri: niente intestazioni,
+     * cornici o scritte da togliere, e un pezzo fra due finestre larghe e'
+     * muro anche se sta da solo. */
+    const rete = disegno ? { pezzi: [] } : pezziDi(muro, W, H);
     if (rete.pezzi.length > 1) {
       /* La rete piu' grande che non sia un anello vuoto: la cornice del
        * foglio e' un rettangolo lunghissimo senza niente dentro, la casa ha
@@ -411,16 +433,36 @@ export function grigliaDeiMuri(ink, w, h, mpp) {
       const tenuti = new Uint8Array(rete.pezzi.length);
       tenuti[maggiore] = 1;
       const porta = Math.round(1.3 / PASSO);
+      /* Una finestra larga piu' di una porta separa due pezzi dello stesso
+       * muro, ma le righe del vetro li tengono uniti: l'inchiostro (righe e
+       * infissi) che tocca un pezzo tenuto tiene anche gli altri pezzi che
+       * tocca. */
+      const unito = new Uint8Array(W * H);
+      for (let i = 0; i < W * H; i++) unito[i] = riga[i] || celleVetri[i] ? 1 : 0;
+      const legami = pezziDi(unito, W, H);
+      const tocca = (p) => {
+        const ids = new Set();
+        for (const c of p.celle) {
+          const x = c % W;
+          for (const j of [c, x > 0 ? c - 1 : -1, x < W - 1 ? c + 1 : -1, c - W, c + W])
+            if (j >= 0 && j < W * H && legami.id[j] >= 0) ids.add(legami.id[j]);
+        }
+        return ids;
+      };
+      const toccati = rete.pezzi.map(tocca);
       for (let giro = 0; giro < 6; giro++) {
-        const dentro = new Uint8Array(W * H);
+        const dentro = new Uint8Array(W * H),
+          legatiDentro = new Set();
         rete.pezzi.forEach((p, k) => {
-          if (tenuti[k]) for (const c of p.celle) dentro[c] = 1;
+          if (!tenuti[k]) return;
+          for (const c of p.celle) dentro[c] = 1;
+          for (const t of toccati[k]) legatiDentro.add(t);
         });
         const vicino = allarga(dentro, W, H, porta);
         let nuovi = 0;
         rete.pezzi.forEach((p, k) => {
           if (tenuti[k]) return;
-          if (p.celle.some((c) => vicino[c])) {
+          if (p.celle.some((c) => vicino[c]) || [...toccati[k]].some((t) => legatiDentro.has(t))) {
             tenuti[k] = 1;
             nuovi++;
           }
@@ -446,10 +488,45 @@ export function grigliaDeiMuri(ink, w, h, mpp) {
             }
           }
       }
+      /* Un pezzo di muro fra due porte sta in fila con lo stesso muro: oltre
+       * il varco (fino a 1,3 m), lungo il suo asse, c'e' un muro che corre
+       * nella stessa direzione. Una scritta in una stanza, oltre, trova al
+       * massimo la faccia di un muro di traverso, che in quella direzione e'
+       * solo spesso. */
+      const inFila = (p) => {
+        const lw = p.x1 - p.x0 + 1,
+          lh = p.y1 - p.y0 + 1,
+          oriz = lw >= lh;
+        const passo = oriz ? 1 : W,
+          largo = oriz ? W : 1;
+        const da = oriz ? p.y0 : p.x0,
+          a = oriz ? p.y1 : p.x1;
+        const corre = (i, d) => {
+          let n = 0;
+          for (let j = i; n < 200 && j >= 0 && j < W * H && muro[j]; j += d) n++;
+          return n;
+        };
+        for (const verso of [-1, 1]) {
+          let buone = 0;
+          for (let t = da; t <= a; t++) {
+            /* dal bordo del pezzo, lungo l'asse, attraverso il vuoto */
+            let i = oriz ? t * W + (verso < 0 ? p.x0 : p.x1) : (verso < 0 ? p.y0 : p.y1) * W + t;
+            while (i >= 0 && i < W * H && muro[i]) i += verso * passo;
+            let k = 0;
+            while (k <= porta && i >= 0 && i < W * H && !muro[i]) ((i += verso * passo), k++);
+            if (k > porta || i < 0 || i >= W * H) continue;
+            const lungo = corre(i, verso * passo),
+              spesso = corre(i, largo) + corre(i, -largo) - 1;
+            if (lungo > spesso) buone++;
+          }
+          if (buone * 2 >= a - da + 1) return true;
+        }
+        return false;
+      };
       const tre = Math.round(3 / PASSO);
       rete.pezzi.forEach((p, k) => {
         const corto = Math.max(p.x1 - p.x0, p.y1 - p.y0) + 1 < tre;
-        if (!tenuti[k] || (k !== maggiore && corto && !appoggio[k]))
+        if (!tenuti[k] || (k !== maggiore && corto && !appoggio[k] && !inFila(p)))
           for (const c of p.celle) muro[c] = 0;
       });
     }
@@ -533,8 +610,16 @@ export function grigliaDeiMuri(ink, w, h, mpp) {
       }
     }
   };
-  cercaVani(tO, tV, H, W, (y, x) => y * W + x);
-  cercaVani(tV, tO, W, H, (x, y) => y * W + x);
+  if (vetri) {
+    /* Il disegno dice da se' dove sono gli infissi (lo strato del DWG): non
+     * si indovina dallo spessore, che in un disegno vero cambia anche fra
+     * due tratti di muro pieno. */
+    const largo = allarga(celleVetri, W, H, 2);
+    for (let i = 0; i < W * H; i++) vetro[i] = largo[i] && !muro[i] ? 1 : 0;
+  } else {
+    cercaVani(tO, tV, H, W, (y, x) => y * W + x);
+    cercaVani(tV, tO, W, H, (x, y) => y * W + x);
+  }
   for (let i = 0; i < W * H; i++) if (vetro[i]) muro[i] = 0;
   /* 5. La barriera: i muri piu' le righe sottili che li toccano e sono lunghe
    *    almeno 18 cm. Le scritte volanti no. Non diventa muro nel 3D. */
@@ -567,7 +652,12 @@ export function grigliaDeiMuri(ink, w, h, mpp) {
    *    varco si chiude nella barriera (non nel muro: nel 3D resta una porta),
    *    e la porta si ritrova dove due stanze, o una stanza e il fuori, si
    *    toccano. Il muro deve continuare dritto per 20 cm da tutti e due i
-   *    lati, cosi' due muri che si incontrano ad angolo non si chiudono. */
+   *    lati, cosi' due muri che si incontrano ad angolo non si chiudono.
+   *    Oppure: un tramezzo che finisce a meno di 1,3 m da un muro di
+   *    traverso. Quel varco e' la porta (nel DWG la porta e' su un altro
+   *    strato; sul catasto non c'e'), e senza chiuderlo due stanze diventano
+   *    una. «Finisce» vuol dire che dietro corre per piu' di quanto e'
+   *    spesso: la faccia di un muro di fianco non e' una fine. */
   const varco = Math.round(1.3 / PASSO),
     tratto = Math.round(0.2 / PASSO);
   const soglie = new Uint8Array(W * H);
@@ -578,26 +668,47 @@ export function grigliaDeiMuri(ink, w, h, mpp) {
     }
     return true;
   };
-  for (let y = 0; y < H; y++)
+  /* quanto corre il muro da i, a passi di «passo», fino a «fino» celle */
+  const corre = (i, passo, fino) => {
+    let n = 0;
+    for (let j = i; n < fino && j >= 0 && j < W * H && muro[j]; j += passo) n++;
+    return n;
+  };
+  const lontano = 2 * spessoreMax;
+  /* la fine di un muro che corre lungo «passo»: dietro e' lungo almeno 20 cm
+   * e piu' di quanto e' spesso di traverso («largo») */
+  const fine = (i, passo, largo) => {
+    const dietro = corre(i, passo, lontano);
+    if (dietro < tratto) return false;
+    const spesso = corre(i, largo, lontano) + corre(i, -largo, lontano) - 1;
+    return spesso <= spessoreMax && spesso < dietro;
+  };
+  const chiudi = (a, b, passo, largo) => {
+    if (dritto(a, -passo) && dritto(b, passo)) return true;
+    return (
+      (fine(a, -passo, largo) && corre(b, passo, 2) >= 2) ||
+      (fine(b, passo, largo) && corre(a, -passo, 2) >= 2)
+    );
+  };
+
+  for (let y = 1; y < H - 1; y++)
     for (let x = 1; x < W - 1; x++) {
       const i = y * W + x;
       if (!muro[i - 1] || muro[i]) continue;
       let e = x;
       while (e < W && !muro[y * W + e] && e - x <= varco) e++;
       if (e >= W || e - x > varco || !muro[y * W + e]) continue;
-      if (x - tratto < 0 || e + tratto > W) continue;
-      if (!dritto(i - 1, -1) || !dritto(y * W + e, 1)) continue;
+      if (!chiudi(i - 1, y * W + e, 1, W)) continue;
       for (let q = x; q < e; q++) soglie[y * W + q] = 1;
     }
-  for (let x = 0; x < W; x++)
+  for (let x = 1; x < W - 1; x++)
     for (let y = 1; y < H - 1; y++) {
       const i = y * W + x;
       if (!muro[i - W] || muro[i]) continue;
       let e = y;
       while (e < H && !muro[e * W + x] && e - y <= varco) e++;
       if (e >= H || e - y > varco || !muro[e * W + x]) continue;
-      if (y - tratto < 0 || e + tratto > H) continue;
-      if (!dritto(i - W, -W) || !dritto(e * W + x, W)) continue;
+      if (!chiudi(i - W, e * W + x, W, 1)) continue;
       for (let q = y; q < e; q++) soglie[q * W + x] = 1;
     }
   for (let i = 0; i < W * H; i++) if (soglie[i]) barriera[i] = 1;
