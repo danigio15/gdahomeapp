@@ -58,6 +58,7 @@ test("di serie e' spenta, dalle 23 alle 5, Veloce, poi Spento, tutti i giorni, s
     poi: "off",
     giorni: [true, true, true, true, true, true, true],
     sotto: 100,
+    kw: 0,
   });
   const storte = impostazioniPulite(
     '{"attiva":true,"da":"25:00","poi":"smart","sotto":250,"giorni":[1]}',

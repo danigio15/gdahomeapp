@@ -70,6 +70,9 @@ export const IMPOSTAZIONI_DI_SERIE = Object.freeze({
   poi: "off",
   giorni: Object.freeze([true, true, true, true, true, true, true]),
   sotto: 100,
+  /* La potenza della wallbox in kW, per dire se ci si arriva: 0 = quella vista
+   * mentre carica. */
+  kw: 0,
 });
 
 /* Quanto si aspetta che evcc dica di aver cambiato modalita', prima di
@@ -124,6 +127,10 @@ export function impostazioniPulite(dato) {
     /* Fra il 5 e il 100: sotto il 5% non c'e' niente da decidere, e il 100
      * vuol dire «parte sempre». */
     sotto: Number.isFinite(sotto) ? Math.max(5, Math.min(100, sotto)) : IMPOSTAZIONI_DI_SERIE.sotto,
+    kw: (() => {
+      const k = Number(pulito(d.kw).replace(",", "."));
+      return Number.isFinite(k) && k >= 1 && k <= 50 ? Math.round(k * 10) / 10 : 0;
+    })(),
   };
 }
 
@@ -609,5 +616,47 @@ export function laNotte({ impostazioni, memoria, auto = {}, adesso, prezzo = nul
     },
     comando: stessoModo(modo, lettura.modo) ? null : { modo },
     perche: "parte",
+  };
+}
+
+/* ── ci arriva? ──────────────────────────────────────────────────────────── */
+
+/**
+ * «Se attivo la ricarica notturna mi devi dire se la vettura riesce ad
+ * arrivare alla percentuale che ho impostato.»
+ *
+ * Entrano la batteria adesso e il limite (in %), la capacita' della batteria
+ * (kWh), la potenza della ricarica (kW) e la finestra (`inizio`, `fine`, in
+ * millisecondi; se la ricarica e' gia' cominciata `inizio` e' adesso). Si
+ * conta un rendimento del 90%: dalla presa alla batteria qualcosa si perde.
+ *
+ * Torna `{ esito, alle, percentuale, minuti }`:
+ *   - "gia"     la batteria e' gia' al limite;
+ *   - "si"      ci arriva, `alle` e' quando;
+ *   - "no"      non ci arriva: alla fine sara' a `percentuale`, e per il
+ *               limite servirebbero `minuti`;
+ *   - "nonso"   manca qualcosa per dirlo (batteria, limite, potenza o capacita').
+ */
+export function ciArriva({ soc, limite, capacita, kw, inizio, fine, rendimento = 0.9 } = {}) {
+  const n = (v) => (v === null || v === undefined || v === "" ? null : Number(v));
+  const s = n(soc),
+    l = n(limite),
+    c = n(capacita),
+    p = n(kw),
+    a = n(inizio),
+    b = n(fine);
+  if (![s, l].every(Number.isFinite)) return { esito: "nonso" };
+  if (s >= l - 0.5) return { esito: "gia", percentuale: s };
+  if (![c, p, a, b].every(Number.isFinite) || c <= 0 || p <= 0 || b <= a) return { esito: "nonso" };
+  const kwhServono = ((l - s) / 100) * c;
+  const minuti = Math.ceil((kwhServono / (p * rendimento)) * 60);
+  const disponibili = (b - a) / 60000;
+  if (minuti <= disponibili) return { esito: "si", alle: a + minuti * 60000, minuti };
+  const arrivati = (p * rendimento * (disponibili / 60) * 100) / c;
+  return {
+    esito: "no",
+    percentuale: Math.min(l, Math.floor(s + arrivati)),
+    minuti,
+    alle: b,
   };
 }

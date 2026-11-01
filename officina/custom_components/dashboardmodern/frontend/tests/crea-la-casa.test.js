@@ -344,3 +344,35 @@ test("le aree e di chi sono le entita', dai registri del guscio o di Home Assist
   assert.equal(pavimentoDalColore("#eeeae3").tipo, "gres60");
   assert.equal(pavimentoDalColore("boh"), null);
 });
+
+/* «Devi perfezionare la ricerca delle cose tramite le foto della stanza»:
+ * il lavandino del bagno e' un lavabo, e il forno e' un elettrodomestico. */
+test("dalle foto: il lavandino del bagno e' un lavabo, il forno un elettrodomestico", () => {
+  const sink = { class: "sink", bbox: [100, 300, 200, 150], score: 0.8 };
+  assert.deepEqual(
+    oggettiDaCoco([sink], { stanza: "Bagno" }).arredi.map((a) => a.k),
+    ["lavabo"],
+  );
+  assert.deepEqual(
+    oggettiDaCoco([sink, { class: "toilet", bbox: [400, 300, 150, 200], score: 0.7 }]).arredi.map(
+      (a) => a.k,
+    ),
+    ["lavabo", "wc"],
+    "col WC nella foto anche senza il nome",
+  );
+  assert.deepEqual(
+    oggettiDaCoco([sink], { stanza: "Cucina" }).arredi.map((a) => a.k),
+    ["cucina"],
+  );
+  const forno = oggettiDaCoco([{ class: "oven", bbox: [0, 0, 100, 100], score: 0.6 }]);
+  assert.deepEqual(
+    forno.dispositivi.map((d) => d.k),
+    ["forno"],
+  );
+  /* la stessa cosa vista nella foto intera e in un ritaglio e' una sola */
+  const due = oggettiDaCoco([
+    { class: "couch", bbox: [100, 200, 600, 300], score: 0.8 },
+    { class: "couch", bbox: [120, 210, 560, 280], score: 0.6 },
+  ]);
+  assert.equal(due.arredi.length, 1);
+});

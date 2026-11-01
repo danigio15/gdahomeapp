@@ -44,9 +44,14 @@ import {
   riprendiIlPiano,
 } from "../core/crea-casa.js";
 import {
+  MURI_PIENI_MINIMO,
   PASSO,
+  grigliaDaMuriPieni,
   grigliaDeiMuri,
   inchiostro,
+  muriPieni,
+  prospettiva,
+  raddrizza,
   riconosciDaFoto,
   scalaScritta,
   stimaInclinazione,
@@ -139,30 +144,10 @@ const COLORI_STANZE = [
   "#4ade80",
   "#e879f9",
 ];
-const ARREDI_A_MANO = [
-  "divano",
-  "poltrona",
-  "tavolino",
-  "tv",
-  "libreria",
-  "madia",
-  "pensile",
-  "quadro",
-  "camino",
-  "pianta",
-  "pranzo6",
-  "cucina",
-  "frigo",
-  "matrimoniale",
-  "singolo",
-  "armadio",
-  "scrivania",
-  "vasca",
-  "doccia",
-  "wc",
-  "lavabo",
-  "lavatrice",
-];
+/* Tutto il catalogo si puo' segnare a mano nella foto: «non e' possibile
+ * aggiungere manualmente gli elettrodomestici» — quello che il riconoscitore
+ * non vede (lavastoviglie, asciugatrice, armadi...) lo mette chi guarda. */
+const ARREDI_A_MANO = Object.keys(ARREDI_DELLE_FOTO);
 const TINTE = {
   facciata: ["#e9d4ae", "#dca37c", "#f1ebe0", "#c9a27a", "#b9c3c9"],
   persiane: ["#3f6b4e", "#8a6a4a", "#475569", "#e5e7eb", "#7c2d12"],
@@ -820,7 +805,7 @@ function pPlanimetria() {
       ${S.lavoro ? `<div class="c3c-lavoro">⏳ ${esc(S.lavoro)}</div>` : ""}
       ${S.avviso ? `<div class="c3c-lavoro">⚠️ ${esc(S.avviso)}${S.dettaglio ? `<small class="c3c-dettaglio" translate="no">${esc(S.dettaglio)}</small>` : ""}</div>` : ""}
       ${dwgScelta()}
-      ${S.dritta && !S.dwg ? nota(`✓ ${esc(t("Raddrizzata di", "Straightened by"))} ${esc(numero(Math.abs(S.angolo)))}° · ${S.dritta.width}×${S.dritta.height} px`) : ""}`,
+      ${S.dritta && !S.dwg ? nota(`✓ ${esc(t("Raddrizzata di", "Straightened by"))} ${esc(numero(Math.abs(S.angolo)))}°${S.prospettiva ? ` · ${esc(t("prospettiva corretta", "perspective corrected"))}` : ""} · ${S.dritta.width}×${S.dritta.height} px`) : ""}`,
     ) +
     scheda(
       `✏️ <b>${esc(t("Non hai una planimetria?", "No floor plan?"))}</b>`,
@@ -1301,9 +1286,29 @@ async function usaPlanimetria(src) {
     r.translate(d.width / 2, d.height / 2);
     r.rotate((S.angolo * Math.PI) / 180);
     r.drawImage(img, -img.width / 2, -img.height / 2);
+    /* Il foglio fotografato di sbieco: i muri si raddrizzano anche in
+     * prospettiva, non solo girando la foto. */
+    let dritta = d;
+    S.prospettiva = false;
+    S.pianoDaFoto = typeof src === "string";
+    if (typeof src === "string") {
+      const dati = r.getImageData(0, 0, d.width, d.height),
+        p = prospettiva(dati);
+      if (p && p.sposta > Math.max(d.width, d.height) * 0.01) {
+        const nuova = raddrizza(dati, p),
+          t2 = tela2d(nuova.width, nuova.height);
+        t2.getContext("2d").putImageData(
+          new ImageData(nuova.data, nuova.width, nuova.height),
+          0,
+          0,
+        );
+        dritta = t2;
+        S.prospettiva = true;
+      }
+    }
     Object.assign(S, {
       img,
-      dritta: d,
+      dritta,
       vetri: null,
       porte: null,
       disegno: false,
@@ -1415,7 +1420,9 @@ async function usaPdf(file) {
         await usaPlanimetria(tela);
         S.avviso = delCatasto ? avvisoDelCatasto() : "";
         disegna();
-        nodo()?.querySelector(".c3c-dwg")?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+        nodo()
+          ?.querySelector(".c3c-dwg")
+          ?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
         return;
       }
       await usaPlanimetria(piante.length === 1 ? ritaglioDellaPianta(tela, piante[0], mpp) : tela);
@@ -1522,7 +1529,13 @@ async function scaricaIlMotore(dove, prendi = root.fetch?.bind(root)) {
     }
     const byte = new Uint8Array(await risposta.arrayBuffer());
     /* «\0asm»: senza, e' una pagina d'errore col 200 davanti. */
-    if (byte.length < 8 || byte[0] !== 0 || byte[1] !== 0x61 || byte[2] !== 0x73 || byte[3] !== 0x6d)
+    if (
+      byte.length < 8 ||
+      byte[0] !== 0 ||
+      byte[1] !== 0x61 ||
+      byte[2] !== 0x73 ||
+      byte[3] !== 0x6d
+    )
       throw new Error(`libredwg-web.wasm: ${byte.length} byte, non e' WebAssembly`);
     return byte;
   }
@@ -1541,7 +1554,10 @@ async function caricaLibreDwg() {
           wasmBinary,
           locateFile: (nome) => `${LIBREDWG}wasm/${nome}`,
         })
-        .then((modulo) => ({ lib: m.LibreDwg.createByWasmInstance(modulo), tipo: m.Dwg_File_Type })),
+        .then((modulo) => ({
+          lib: m.LibreDwg.createByWasmInstance(modulo),
+          tipo: m.Dwg_File_Type,
+        })),
     );
   try {
     return await libreDwg;
@@ -1740,8 +1756,14 @@ function dwgScelta() {
   const S = state.S;
   if (!S.dwg?.piani?.length) return "";
   const domanda = S.dwg.foglio
-    ? t("Nel foglio ci sono più piante: quale fai adesso?", "The sheet has several plans: which one now?")
-    : t("Nel disegno ci sono più piani: quale fai adesso?", "The drawing has several floors: which one now?");
+    ? t(
+        "Nel foglio ci sono più piante: quale fai adesso?",
+        "The sheet has several plans: which one now?",
+      )
+    : t(
+        "Nel disegno ci sono più piani: quale fai adesso?",
+        "The drawing has several floors: which one now?",
+      );
   return `<div class="c3c-dwg"><b>${esc(domanda)}</b>
     <div class="c3c-dwg-piani">${S.dwg.piani
       .map(
@@ -1763,11 +1785,21 @@ function riconosci() {
       for (let i = 0; i < m.length; i++) m[i] = d[i * 4 + 3] > 64 ? 1 : 0;
       return m;
     };
-    S.griglia = grigliaDeiMuri(inchiostro(im), im.width, im.height, S.mpp, {
-      vetri: mappa(S.vetri),
-      porte: mappa(S.porte),
-      disegno: S.disegno === true,
-    });
+    /* Una pianta a muri pieni (l'architetto, il catasto) si legge dai soli
+     * muri: le righe sottili attorno facevano stanze finte. */
+    /* Solo le foto: la scansione del catasto (un PDF) si legge a righe,
+     * come sempre. */
+    const pieni = S.disegno || !S.pianoDaFoto ? null : muriPieni(im, S.mpp);
+    /* A muri pieni i muri sono gia' puliti, e le righe sottili dicono porte,
+     * finestre, tramezzi e scale. */
+    S.griglia =
+      pieni && pieni.metri >= MURI_PIENI_MINIMO
+        ? grigliaDaMuriPieni(pieni.ink, pieni.linee, im.width, im.height, S.mpp)
+        : grigliaDeiMuri(inchiostro(im), im.width, im.height, S.mpp, {
+            vetri: mappa(S.vetri),
+            porte: mappa(S.porte),
+            disegno: S.disegno === true,
+          });
   }
   ricalcola();
 }
@@ -1882,6 +1914,44 @@ function apriVarco(x, y, largo) {
     }
 }
 
+/* «Devi perfezionare la ricerca delle cose tramite le foto della stanza»: il
+ * riconoscitore guarda la foto rimpicciolita, e le cose piccole o lontane
+ * (un forno, un lavabo, una pianta in fondo) gli sfuggono. Si guarda anche
+ * in quattro ritagli che si sovrappongono, ognuno ingrandito: quello che si
+ * vede due volte resta uno solo (oggettiDaCoco). */
+async function rilevaNeiRitagli(modello, img) {
+  const w = img.naturalWidth || img.width,
+    h = img.naturalHeight || img.height;
+  const tutti = [...(await modello.detect(img, 20, 0.3))];
+  if (!(w > 0 && h > 0)) return tutti;
+  const lw = Math.round(w * 0.6),
+    lh = Math.round(h * 0.6);
+  for (const [x0, y0] of [
+    [0, 0],
+    [w - lw, 0],
+    [0, h - lh],
+    [w - lw, h - lh],
+  ]) {
+    try {
+      const tela = tela2d(lw, lh);
+      tela.getContext("2d").drawImage(img, x0, y0, lw, lh, 0, 0, lw, lh);
+      for (const d of await modello.detect(tela, 20, 0.35)) {
+        const [bx, by, bw, bh] = d.bbox || [];
+        /* tagliato dal bordo del ritaglio: lo vede gia' la foto intera */
+        const taglio = 4;
+        const sulBordo =
+          (bx <= taglio && x0 > 0) ||
+          (by <= taglio && y0 > 0) ||
+          (bx + bw >= lw - taglio && x0 + lw < w) ||
+          (by + bh >= lh - taglio && y0 + lh < h);
+        if (sulBordo) continue;
+        tutti.push({ ...d, bbox: [bx + x0, by + y0, bw, bh] });
+      }
+    } catch (_errore) {}
+  }
+  return tutti;
+}
+
 async function aggiungiFotoStanza(src) {
   const S = state.S,
     stanza = S.sel;
@@ -1907,7 +1977,9 @@ async function aggiungiFotoStanza(src) {
   const modello = await riconoscitore();
   if (modello) {
     try {
-      const visti = oggettiDaCoco(await modello.detect(img, 20, 0.3));
+      const visti = oggettiDaCoco(await rilevaNeiRitagli(modello, img), {
+        stanza: nomeDi(stanza),
+      });
       for (const o of visti.arredi) {
         const [x, y, w, h] = o.box;
         F.oggetti.push({

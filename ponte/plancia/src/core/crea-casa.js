@@ -69,7 +69,17 @@ export const ARREDI_DELLE_FOTO = Object.freeze({
   wc: { icona: "🚽", nome: ["WC", "Toilet"] },
   lavabo: { icona: "🪥", nome: ["Lavabo", "Washbasin"] },
   lavatrice: { icona: "🫧", nome: ["Lavatrice", "Washing machine"] },
+  asciugatrice: { icona: "🌀", nome: ["Asciugatrice", "Dryer"] },
+  lavastoviglie: { icona: "🍽️", nome: ["Lavastoviglie", "Dishwasher"] },
+  forno: { icona: "🔥", nome: ["Forno", "Oven"] },
+  microonde: { icona: "📟", nome: ["Microonde", "Microwave"] },
   scrivania: { icona: "🖥️", nome: ["Scrivania", "Desk"] },
+  bidet: { icona: "🚰", nome: ["Bidet", "Bidet"] },
+  culla: { icona: "👶", nome: ["Lettino", "Cot"] },
+  ufficio: { icona: "🪑", nome: ["Sedia da ufficio", "Office chair"] },
+  pianoforte: { icona: "🎹", nome: ["Pianoforte", "Piano"] },
+  cyclette: { icona: "🚴", nome: ["Cyclette", "Exercise bike"] },
+  scala: { icona: "🪜", nome: ["Scala", "Staircase"] },
 });
 
 /* Quelli che stanno contro il muro che si guarda: la profondita' nella foto
@@ -88,6 +98,11 @@ export const ACCOSTATI = new Set([
   "wc",
   "vasca",
   "cassettiera",
+  "lavatrice",
+  "asciugatrice",
+  "lavastoviglie",
+  "forno",
+  "microonde",
 ]);
 
 /* Dalle classi di COCO-SSD alle cose della casa. Alcune sono due cose
@@ -100,8 +115,9 @@ export const DA_COCO = Object.freeze({
   bed: { arredo: "matrimoniale" },
   "potted plant": { arredo: "pianta" },
   refrigerator: { arredo: "frigo" },
-  oven: { arredo: "cucina" },
-  microwave: { arredo: "cucina" },
+  oven: { dispositivo: "forno" },
+  microwave: { arredo: "microonde" },
+  toaster: { arredo: "cucina" },
   sink: { arredo: "cucina" },
   toilet: { arredo: "wc" },
   book: { arredo: "libreria" },
@@ -125,19 +141,24 @@ function sovrapposti(a, b) {
 /** Quello che COCO-SSD ha visto, nelle cose della casa: `{ arredi, dispositivi }`.
  * Due riquadri dello stesso tipo che si coprono quasi tutti sono una cosa sola
  * (i libri di una libreria, le sedie di un divano). */
-export function oggettiDaCoco(rilevati, { soglia = 0.3 } = {}) {
+export function oggettiDaCoco(rilevati, { soglia = 0.3, stanza = "" } = {}) {
   const arredi = [],
     dispositivi = [];
   const ordinati = elenco(rilevati)
     .map((d) => ({ classe: clean(d?.class), box: riquadro(d?.bbox), score: Number(d?.score) || 0 }))
     .filter((d) => d.box && d.score >= soglia && DA_COCO[d.classe])
     .sort((a, b) => b.score - a.score);
+  /* Il lavandino del bagno e' un lavabo, non la cucina: lo dice il nome
+   * della stanza, o il WC nella stessa foto. */
+  const bagno =
+    /bagn|bath|wc|toilet|servizi/i.test(clean(stanza)) ||
+    ordinati.some((d) => d.classe === "toilet");
   const metti = (dove, k, d) => {
     if (dove.some((o) => o.k === k && sovrapposti(o.box, d.box) > 0.6)) return;
     dove.push({ k, box: d.box, score: tondo(d.score, 2) });
   };
   for (const d of ordinati) {
-    const m = DA_COCO[d.classe];
+    const m = bagno && d.classe === "sink" ? { arredo: "lavabo" } : DA_COCO[d.classe];
     if (m.arredo) metti(arredi, m.arredo, d);
     if (m.dispositivo) metti(dispositivi, m.dispositivo, d);
   }
@@ -343,6 +364,10 @@ export const ALTEZZA_DI_SERIE = Object.freeze({
   termostato: 1.5,
   fumo: 2.92,
   acqua: 0,
+  lavatrice: 0,
+  asciugatrice: 0,
+  lavastoviglie: 0,
+  forno: 0,
   presa: 0.3,
   tv: 1.1,
   altoparlante: 1.0,
@@ -553,6 +578,13 @@ export function pianoDaRiconoscimento({
       arredi.push(...arrediDallaFoto(vista, s, f).map(sposta));
       posati.push(...dispositiviDallaFoto(vista, s, f).map(sposta));
     }
+  }
+  /* le scale disegnate nella pianta: un arredo «scala» al loro posto */
+  for (const sc of elenco(casa.scale)) {
+    if (!idVivi.has(sc.stanza)) continue;
+    arredi.push(
+      sposta({ k: "scala", stanza: sc.stanza, x: tondo(sc.x), y: tondo(sc.y), rot: sc.rot || 0 }),
+    );
   }
   /* gli arredi di un piano ripreso: le foto non ci sono piu', gli arredi si' */
   for (const a of elenco(arrediGia))

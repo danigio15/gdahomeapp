@@ -148,6 +148,25 @@ const piano = (k, nome, livello, nomi, pre) => ({
             entity: "cover.camera",
           },
           { k: "clima", stanza: 3, x: 11.6, y: 5.2, rot: -Math.PI / 2, entity: "climate.camera" },
+          /* gli elettrodomestici della cucina, contro il muro di fondo */
+          {
+            k: "lavastoviglie",
+            stanza: 2,
+            x: 8.2,
+            y: 0.3,
+            h: 0,
+            rot: 0,
+            entity: "sensor.lavastoviglie_potenza",
+          },
+          {
+            k: "asciugatrice",
+            stanza: 2,
+            x: 11.2,
+            y: 0.3,
+            h: 0,
+            rot: 0,
+            entity: "sensor.asciugatrice_stato",
+          },
         ]),
   ],
 });
@@ -200,6 +219,14 @@ function stati(notte) {
     "cover.camera": s("cover.camera", "open", {
       current_position: 30,
       friendly_name: "Tapparella camera",
+    }),
+    "sensor.lavastoviglie_potenza": s("sensor.lavastoviglie_potenza", "1850", {
+      device_class: "power",
+      unit_of_measurement: "W",
+      friendly_name: "Lavastoviglie",
+    }),
+    "sensor.asciugatrice_stato": s("sensor.asciugatrice_stato", "finished", {
+      friendly_name: "Asciugatrice",
     }),
     "climate.camera": s("climate.camera", "heat", {
       current_temperature: 20.5,
@@ -340,6 +367,13 @@ test("la casa si apre nella plancia: esterno, i piani, i dispositivi coi loro st
     "true",
   );
   await expect(casa.locator(".c3-disp").filter({ hasText: "Finestra cucina" })).toHaveCount(1);
+  /* «Asciugatrice e lavastoviglie»: ci sono, e dicono cosa fanno */
+  await expect(casa.locator(".c3-disp").filter({ hasText: "Lavastoviglie" })).toContainText(
+    "in funzione",
+  );
+  await expect(casa.locator(".c3-disp").filter({ hasText: "Asciugatrice" })).toContainText(
+    "finito",
+  );
   await scatta(page, testInfo, "casa3d-piano-terra");
 
   /* Un tocco sulla luce della cucina arriva a Home Assistant. */
@@ -743,6 +777,59 @@ test("la visura del catasto scansionata: scala, scelta della pianta, stanze", as
   await fotoDiretta(page, testInfo, "crea-visura-stanze");
 });
 
+/* «Guarda attentamente la foto della planimetria: non c'entra nulla con
+ * quella che hai fatto.» La foto vera della pianta dell'architetto (di una
+ * persona vera: non sta nel repo, si passa con DM_PIANTA_FOTO): il foglio
+ * fotografato di sbieco si raddrizza, la quota segnata da muro a muro da' la
+ * scala, e le stanze sono quelle del disegno. I due capi della quota, in
+ * frazioni della foto raddrizzata, con DM_PIANTA_QUOTA="x0,y,x1,metri". */
+test("la foto della pianta dell'architetto: prospettiva, stanze, finestre e scala", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    !process.env.DM_PIANTA_FOTO || testInfo.project.name !== "desktop",
+    "serve DM_PIANTA_FOTO",
+  );
+  const [x0, y, x1, metri] = (process.env.DM_PIANTA_QUOTA || "0.162,0.5,0.79,10.92")
+    .split(",")
+    .map(Number);
+  const crea = await apriLaProcedura(page, testInfo);
+  await crea.locator('[data-c3c-file="pianta"]').setInputFiles(process.env.DM_PIANTA_FOTO);
+  await expect(crea).toContainText(/prospettiva corretta|perspective corrected/, {
+    timeout: 60_000,
+  });
+  await fotoDiretta(page, testInfo, "crea-foto-raddrizzata");
+  for (let i = 0; i < 4 && !(await crea.locator("[data-c3c-metri]").count()); i++)
+    await crea.locator('[data-c3c="avanti"]').click();
+  const tela = crea.locator(".c3c-tela");
+  const b = await tela.boundingBox();
+  await page.mouse.click(b.x + b.width * x0, b.y + b.height * y);
+  await page.mouse.click(b.x + b.width * x1, b.y + b.height * y);
+  await crea.locator("[data-c3c-metri]").fill(String(metri));
+  await crea.locator('[data-c3c="avanti"]').click();
+  const trovati = crea.locator(".c3c-pannello");
+  await expect(trovati).toContainText(/Trovati \d+ ambienti/, { timeout: 120_000 });
+  const testo = await trovati.innerText();
+  const n = Number(/Trovati (\d+) ambienti/.exec(testo)[1]);
+  expect(n, testo).toBeGreaterThanOrEqual(Number(process.env.DM_PIANTA_STANZE || 4));
+  const finestre = Number(/(\d+) finestr/.exec(testo)?.[1] || 0);
+  expect(finestre, testo).toBeGreaterThanOrEqual(Number(process.env.DM_PIANTA_FINESTRE || 4));
+  await fotoDiretta(page, testInfo, "crea-foto-stanze");
+  /* fino in fondo: nel 3D c'e' la scala disegnata nella pianta */
+  for (let i = 0; i < 8 && !(await crea.locator('[data-c3c="salva"]').count()); i++)
+    await crea.locator('[data-c3c="avanti"]').click();
+  await crea.locator('[data-c3c="salva"]').click();
+  await expect(crea).toBeHidden({ timeout: 20_000 });
+  const salvata = await page.evaluate(() => JSON.parse(localStorage.getItem("cd_casa3d")));
+  const piano = salvata.piani[0];
+  expect(piano.arredi.filter((a) => a.k === "scala").length).toBe(1);
+  await page.waitForTimeout(2500);
+  await fotoDiretta(page, testInfo, "casa3d-foto-architetto");
+  await page.locator(`#dm-casa3d [data-c3s="vista"][data-c3s-k="${piano.k}"]`).first().click();
+  await page.waitForTimeout(2500);
+  await fotoDiretta(page, testInfo, "casa3d-foto-architetto-dentro");
+});
+
 /* «Ho attivato la plancia 3D per sbaglio sulla plancia che uso normale e
  * adesso non mi fa più tornare indietro»: la Casa 3D è una plancia a sé, e
  * sulla principale non si accende mai, anche se il suo config la dice accesa. */
@@ -875,7 +962,11 @@ test("dal Config si modifica di nuovo la planimetria di un piano", async ({ page
   expect(terra.stanze.map((s) => s.nome).sort()).toEqual(["Camera", "Cucina", "Soggiorno"]);
   expect(terra.stanze.find((s) => s.nome === "Camera").pareti).toBe("#b7c4ae");
   expect(terra.arredi.length).toBe(8);
-  expect(terra.dispositivi.length).toBe(9);
+  expect(terra.dispositivi.length).toBe(11);
+  /* gli elettrodomestici restano, con la loro entita' */
+  expect(terra.dispositivi.find((d) => d.k === "lavastoviglie").entity).toBe(
+    "sensor.lavastoviglie_potenza",
+  );
   expect(terra.dispositivi.find((d) => d.k === "telecamera").entity).toBe("camera.soggiorno");
   const luce = terra.dispositivi.find((d) => d.entity === "light.cucina");
   expect(terra.stanze.find((s) => s.id === luce.stanza).nome).toBe("Cucina");
