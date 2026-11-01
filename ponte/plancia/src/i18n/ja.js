@@ -7852,4 +7852,5 @@ export default Object.freeze({
   "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "登記図面です。縮尺は図面どおり 1:200 を使います。寸法が合わない場合は「縮尺」に戻り、長さのわかる区間の両端をタップしてください。",
   "Plan ${i + 1}": "図面 ${i + 1}",
   "The sheet has several plans: which one now?": "用紙に複数の図面があります。どれを作りますか？",
+  "Back to the dashboard": "ダッシュボードに戻る",
 });

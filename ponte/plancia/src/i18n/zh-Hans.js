@@ -7714,4 +7714,5 @@ export default Object.freeze({
   "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "地籍平面图：使用其比例 1:200。如果尺寸不对，请返回「比例」并点按一段已知长度的两端。",
   "Plan ${i + 1}": "平面图 ${i + 1}",
   "The sheet has several plans: which one now?": "这张图纸上有多张平面图：现在做哪一张？",
+  "Back to the dashboard": "返回仪表板",
 });

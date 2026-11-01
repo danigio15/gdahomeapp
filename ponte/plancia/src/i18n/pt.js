@@ -7882,4 +7882,5 @@ export default Object.freeze({
   "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "Planta cadastral: uso a escala dela, 1:200. Se as medidas não baterem, volte a «Escala» e toque nas duas pontas de um comprimento que você conhece.",
   "Plan ${i + 1}": "Planta ${i + 1}",
   "The sheet has several plans: which one now?": "A folha tem várias plantas: qual você faz agora?",
+  "Back to the dashboard": "Voltar ao painel",
 });

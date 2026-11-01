@@ -7850,4 +7850,5 @@ export default Object.freeze({
   "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "Tapu planı: ölçeğini kullanıyorum, 1:200. Ölçüler tutmazsa «Ölçek» adımına dönüp bildiğin bir uzunluğun iki ucuna dokun.",
   "Plan ${i + 1}": "${i + 1}. plan",
   "The sheet has several plans: which one now?": "Sayfada birden fazla plan var: şimdi hangisini yapıyorsun?",
+  "Back to the dashboard": "Panele dön",
 });

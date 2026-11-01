@@ -160,6 +160,7 @@ function testataMarkup(casa, admin) {
              <button type="button" class="c3-tasto" data-c3s="crea">🏗️ ${esc(t("Crea / modifica la casa", "Create / edit the house"))}</button>`
           : ""
       }
+      <button type="button" class="c3-tasto c3-esci" data-c3s="esci">↩ ${esc(t("Torna alla plancia", "Back to the dashboard"))}</button>
       <span class="c3-ora">${esc(adesso)}</span>
     </div>`;
 }
@@ -696,6 +697,12 @@ function alClic(evento) {
     return;
   }
   if (cosa === "chiudi") return chiudi();
+  /* La via d'uscita, sempre. «Adesso non riesco a tornare piu' indietro»:
+   * la Casa 3D accesa sulla plancia principale copriva tutto — plancia,
+   * barra, Config — e cancellare la cronologia non serviva, perche' e' il
+   * config a dirla accesa. Si torna alla plancia per questa volta; dal suo
+   * Config la si spegne, o la si riapre con «Apri in 3D». */
+  if (cosa === "esci") return chiudiCasa3D();
   if (cosa === "menu") {
     apriIlMenu({
       idTela: ID,
@@ -900,6 +907,9 @@ export function installCasa3D() {
   if (!doc || state.installed) return false;
   state.installed = true;
   installaLoStile();
+  /* «Apri in 3D» nel Config, e la procedura dopo aver salvato: rimettono la
+   * Casa 3D anche se la si era lasciata con «Torna alla plancia». */
+  root.__DM_CASA3D_RIDISEGNA__ = apriCasa3D;
   for (const evento of [
     "dashboardmodern:legacy-ready",
     "dashboardmodern:states-ready",

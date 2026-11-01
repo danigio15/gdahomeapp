@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-273RVXCX.js";
+} from "../../chunk-YMCS4MYI.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -7957,6 +7957,7 @@ var SOURCE_INDEX = Object.freeze({
   "Tolti dall'avviso": "Removed from the warning",
   "Tondi": "Round",
   "Torna alla base": "Returning to dock",
+  "Torna alla plancia": "Back to the dashboard",
   "Torna il disegno di sempre.": "The usual drawing comes back.",
   "Torna sotto": "It drops below",
   "Tostapane": "Toaster",
@@ -113618,9 +113619,16 @@ function apriLaBarraAccanto(casa2, { idTela = ID2, tasto: tasto4 = '[data-mu-fa=
     return false;
   }
   const scosta = () => {
-    const destra = Math.round(barra3?.getBoundingClientRect?.().right || 0);
-    state123.accanto = destra > 0 ? destra : 256;
-    tela4.style.setProperty("left", `${state123.accanto}px`, "important");
+    const destra = barra3?.getBoundingClientRect?.().right || 0;
+    let inizio = 0;
+    try {
+      inizio = root.frameElement?.getBoundingClientRect?.().left || 0;
+    } catch (_errore) {
+    }
+    const copre = Math.round(destra > 0 ? destra - inizio : 256);
+    state123.accanto = Math.max(0, copre);
+    if (state123.accanto > 0) tela4.style.setProperty("left", `${state123.accanto}px`, "important");
+    else tela4.style.removeProperty("left");
     rimisura(tela4);
   };
   tela4.dataset.muAccantoAlMenu = "true";
@@ -153861,6 +153869,7 @@ function testataMarkup2(casa2, admin) {
       <span class="c3-spazio"></span>
       ${admin && casa2.piani.length ? `<button type="button" class="c3-tasto" data-c3s="arreda" aria-pressed="${state180.arreda}">🎨 ${esc(t("Arreda", "Furnish"))}</button>
              <button type="button" class="c3-tasto" data-c3s="crea">🏗️ ${esc(t("Crea / modifica la casa", "Create / edit the house"))}</button>` : ""}
+      <button type="button" class="c3-tasto c3-esci" data-c3s="esci">↩ ${esc(t("Torna alla plancia", "Back to the dashboard"))}</button>
       <span class="c3-ora">${esc(adesso2)}</span>
     </div>`;
 }
@@ -154296,6 +154305,7 @@ function alClic5(evento) {
     return;
   }
   if (cosa === "chiudi") return chiudi3();
+  if (cosa === "esci") return chiudiCasa3D();
   if (cosa === "menu") {
     apriIlMenu2({
       idTela: ID4,
@@ -154342,6 +154352,14 @@ function alClic5(evento) {
     vibra2();
     if (azione?.domain) comanda4(azione);
   }
+}
+function apriCasa3D() {
+  state180.nascosta = false;
+  ridisegna33();
+}
+function chiudiCasa3D() {
+  state180.nascosta = true;
+  togliLaTela3();
 }
 function installaLoStile9() {
   const C3 = `#${ID4}`;
@@ -154484,6 +154502,7 @@ function installCasa3D() {
   if (!doc || state180.installed) return false;
   state180.installed = true;
   installaLoStile9();
+  root.__DM_CASA3D_RIDISEGNA__ = apriCasa3D;
   for (const evento of [
     "dashboardmodern:legacy-ready",
     "dashboardmodern:states-ready",
@@ -157865,7 +157884,7 @@ function salva35() {
   const { foto: _foto, scelta: _scelta, ...esterno } = S.esterno;
   const casa2 = casa3dPulita({
     ...aggiungiPiano({ ...S.salvata, tipo: S.tipo, esterno }, piano2),
-    attiva: true
+    attiva: S.salvata?.attiva === true
   });
   writeJsonIfChanged(CHIAVE_CASA3D, casa2);
   S.salvata = casa2;

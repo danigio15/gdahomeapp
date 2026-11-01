@@ -6307,6 +6307,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Tolti dall'avviso": "Removed from the warning",
   "Tondi": "Round",
   "Torna alla base": "Returning to dock",
+  "Torna alla plancia": "Back to the dashboard",
   "Torna il disegno di sempre.": "The usual drawing comes back.",
   "Torna sotto": "It drops below",
   "Tostapane": "Toaster",

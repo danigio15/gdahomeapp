@@ -1256,6 +1256,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "Awning out",
   "Baby",
   "Back",
+  "Back to the dashboard",
   "Background",
   "Backup",
   "Bad",

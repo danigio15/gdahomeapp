@@ -1971,9 +1971,14 @@ function salva() {
     return null;
   }
   const { foto: _foto, scelta: _scelta, ...esterno } = S.esterno;
+  /* Salvare la casa non la accende al posto della plancia: chi la crea dal
+   * Config della plancia principale vuole la casa, non perdere la plancia
+   * (« sovrascrive la dashboard »). Una plancia Casa 3D nasce gia' accesa
+   * (plancia-nuova.js), e il Config ha «Mostra la plancia Casa 3D» e «Apri in
+   * 3D» per chi la vuole li'. */
   const casa = casa3dPulita({
     ...aggiungiPiano({ ...S.salvata, tipo: S.tipo, esterno }, piano),
-    attiva: true,
+    attiva: S.salvata?.attiva === true,
   });
   writeJsonIfChanged(CHIAVE_CASA3D, casa);
   S.salvata = casa;

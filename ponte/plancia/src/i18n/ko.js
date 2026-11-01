@@ -7824,4 +7824,5 @@ export default Object.freeze({
   "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "지적 도면입니다. 도면의 축척 1:200을 사용합니다. 치수가 맞지 않으면 «축척»으로 돌아가 아는 길이의 양 끝을 누르세요.",
   "Plan ${i + 1}": "도면 ${i + 1}",
   "The sheet has several plans: which one now?": "용지에 도면이 여러 개 있습니다. 지금 어떤 것을 만들까요?",
+  "Back to the dashboard": "대시보드로 돌아가기",
 });

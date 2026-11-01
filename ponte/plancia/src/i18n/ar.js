@@ -7797,4 +7797,5 @@ export default Object.freeze({
   "Land registry plan: I'm using its scale, 1:200. If sizes look wrong, go back to «Scale» and tap both ends of a length you know.": "مخطط السجل العقاري: أستخدم مقياسه 1:200. إذا لم تكن المقاسات صحيحة، ارجع إلى «المقياس» واضغط على طرفي طول تعرفه.",
   "Plan ${i + 1}": "المخطط ${i + 1}",
   "The sheet has several plans: which one now?": "في الورقة عدة مخططات: أيها تعمل عليه الآن؟",
+  "Back to the dashboard": "العودة إلى لوحة التحكم",
 });
