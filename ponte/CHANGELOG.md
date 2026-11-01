@@ -10,6 +10,16 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.26
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Casa 3D, una plancia aggiuntiva autonoma:** come il Colpo d'occhio, ha
+  il suo Config (la scheda Casa 3D c'e' solo li') e nella testata il ⚙ per
+  chi amministra. Nasce vuota e tutta sua, svincolata dalla principale:
+  la principale non ha piu' la scheda Casa 3D e la console non la segna mai
+  «casa 3D».
+
 ## 1.18.7.25
 
 _Solo Home Assistant: l'app sul telefono non cambia._
