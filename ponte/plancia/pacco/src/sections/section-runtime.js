@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-YMCS4MYI.js";
+} from "../../chunk-5RLPD3CY.js";
 import {
   CELLA,
   CHIAVE_CASA3D,

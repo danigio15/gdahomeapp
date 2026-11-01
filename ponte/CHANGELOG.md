@@ -10,6 +10,21 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.24
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Casa 3D, la visura del catasto:** la planimetria scaricata dal catasto
+  (una scansione, con piu' piante sullo stesso foglio) ora diventa una casa.
+  La scala 1:200 del catasto si prende dal foglio anche quando la scritta
+  non si legge; se sul foglio ci sono piu' piante si sceglie quale fare; le
+  altre unita' disegnate attorno restano fuori.
+- **Casa 3D, sempre una via d'uscita:** «↩ Torna alla plancia» nella
+  testata. Salvare la casa dal Config non la accende piu' al posto della
+  plancia (per vederla c'e' «Apri in 3D», che adesso funziona).
+- **Il ☰ della Casa 3D, del pannello a muro e del colpo d'occhio** apre la
+  barra laterale di Home Assistant senza scoprire la plancia sotto.
+
 ## 1.18.7.23
 
 _Solo Home Assistant: l'app sul telefono non cambia._
