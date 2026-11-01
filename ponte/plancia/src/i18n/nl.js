@@ -7729,6 +7729,8 @@ export default Object.freeze({
   "State to read": "Te lezen status",
   "Value when armed": "Waarde als ingeschakeld",
   "Option to pick": "Te kiezen optie",
+  "Driven today": "Vandaag gereden",
+  "Today's consumption": "Verbruik vandaag",
   "Add or redo a floor": "Verdieping toevoegen of opnieuw maken",
   "Add photos of ${nome}": "Foto's van ${nome} toevoegen",
   "Add photos of this room": "Foto's van deze kamer toevoegen",

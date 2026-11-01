@@ -7712,6 +7712,8 @@ export default Object.freeze({
   "State to read": "Читаемое состояние",
   "Value when armed": "Значение при постановке",
   "Option to pick": "Выбираемый вариант",
+  "Driven today": "Пройдено сегодня",
+  "Today's consumption": "Расход сегодня",
   "Add or redo a floor": "Добавить или переделать этаж",
   "Add photos of ${nome}": "Добавить фото: ${nome}",
   "Add photos of this room": "Добавить фото этой комнаты",

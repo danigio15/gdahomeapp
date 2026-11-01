@@ -7642,6 +7642,8 @@ export default Object.freeze({
   "State to read": "الحالة التي تُقرأ",
   "Value when armed": "القيمة عند التفعيل",
   "Option to pick": "الخيار المطلوب",
+  "Driven today": "المسافة اليوم",
+  "Today's consumption": "استهلاك اليوم",
   "Add or redo a floor": "إضافة طابق أو إعادته",
   "Add photos of ${nome}": "إضافة صور لـ${nome}",
   "Add photos of this room": "إضافة صور لهذه الغرفة",

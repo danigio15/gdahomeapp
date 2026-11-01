@@ -7559,6 +7559,8 @@ export default Object.freeze({
   "State to read": "读取的状态",
   "Value when armed": "布防时的值",
   "Option to pick": "要选择的选项",
+  "Driven today": "今日行驶",
+  "Today's consumption": "今日能耗",
   "Add or redo a floor": "添加或重做楼层",
   "Add photos of ${nome}": "添加 ${nome} 的照片",
   "Add photos of this room": "添加此房间的照片",

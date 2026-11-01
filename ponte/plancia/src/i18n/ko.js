@@ -7669,6 +7669,8 @@ export default Object.freeze({
   "State to read": "읽을 상태",
   "Value when armed": "경계 중일 때 값",
   "Option to pick": "선택할 항목",
+  "Driven today": "오늘 주행",
+  "Today's consumption": "오늘 소비",
   "Add or redo a floor": "층 추가 또는 다시 만들기",
   "Add photos of ${nome}": "${nome} 사진 추가",
   "Add photos of this room": "이 방의 사진 추가",

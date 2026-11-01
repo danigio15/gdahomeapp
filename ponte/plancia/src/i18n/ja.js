@@ -7697,6 +7697,8 @@ export default Object.freeze({
   "State to read": "読み取る状態",
   "Value when armed": "警戒中の値",
   "Option to pick": "選ぶ項目",
+  "Driven today": "今日の走行",
+  "Today's consumption": "今日の消費",
   "Add or redo a floor": "階を追加またはやり直す",
   "Add photos of ${nome}": "${nome} の写真を追加",
   "Add photos of this room": "この部屋の写真を追加",

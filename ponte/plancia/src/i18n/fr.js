@@ -7775,6 +7775,8 @@ export default Object.freeze({
   "State to read": "État à lire",
   "Value when armed": "Valeur quand activé",
   "Option to pick": "Option à choisir",
+  "Driven today": "Parcourus aujourd'hui",
+  "Today's consumption": "Consommation du jour",
   "Add or redo a floor": "Ajouter ou refaire un étage",
   "Add photos of ${nome}": "Ajouter des photos de ${nome}",
   "Add photos of this room": "Ajouter des photos de cette pièce",

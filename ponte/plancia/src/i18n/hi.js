@@ -7678,6 +7678,8 @@ export default Object.freeze({
   "State to read": "पढ़ने वाली स्थिति",
   "Value when armed": "सक्रिय होने पर मान",
   "Option to pick": "चुनने वाला विकल्प",
+  "Driven today": "आज चले",
+  "Today's consumption": "आज की खपत",
   "Add or redo a floor": "मंज़िल जोड़ें या दोबारा बनाएँ",
   "Add photos of ${nome}": "${nome} की फ़ोटो जोड़ें",
   "Add photos of this room": "इस कमरे की फ़ोटो जोड़ें",

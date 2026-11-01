@@ -7695,6 +7695,8 @@ export default Object.freeze({
   "State to read": "Okunacak durum",
   "Value when armed": "Kuruluyken değer",
   "Option to pick": "Seçilecek seçenek",
+  "Driven today": "Bugün gidilen",
+  "Today's consumption": "Bugünkü tüketim",
   "Add or redo a floor": "Kat ekle veya yeniden yap",
   "Add photos of ${nome}": "${nome} fotoğraflarını ekle",
   "Add photos of this room": "Bu odanın fotoğraflarını ekle",

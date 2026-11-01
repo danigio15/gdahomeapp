@@ -43,6 +43,7 @@ import {
   giorniDalleOre,
   kmAllaPercentuale,
   kmDeiGiorni,
+  kmDiOggi,
   laPercentuale,
   leScorciatoie,
   lePercentualiBasse,
@@ -63,12 +64,14 @@ import {
 import { prezzoDellaNotte } from "../core/ricarica-di-notte.js";
 import { codiceDellaRicarica, cavoDalloStato } from "../core/stato-della-ricarica.js";
 import { capacitaDellaBatteria, siRicarica, vehiclePhoto } from "../core/vehicle-model.js";
+import { domandaDellAvvio, righeDellaStoria } from "../core/quando-e-partito.js";
 import { activeVehicle, activeVehiclePhoto, profiles } from "./ev-section.js";
 import { datiMarkup, laViaDellAuto, motoreInPagina } from "./auto-termica-section.js";
 import { weeklySourcePlans } from "./energy-analysis-section.js";
 import { renderRicaricaDiNotte } from "./ricarica-di-notte-section.js";
 import {
   allStates,
+  chiediAHomeAssistant,
   clean,
   doc,
   esc,
@@ -102,6 +105,8 @@ const state = (root[KEY] ||= {
   tutte: false,
   storico: { chiave: "", stato: "vuoto", dati: null },
   km: { chiave: "", stato: "vuoto", dati: null },
+  /* Le righe del contachilometri da mezzanotte, per i km di oggi. */
+  oggiKm: { chiave: "", stato: "vuoto", righe: [], alle: 0 },
   /* La percentuale scelta adesso: si mostra finche' l'entita' non la conferma. */
   voluta: null,
   volutaAlle: 0,
@@ -833,7 +838,8 @@ function laUltima({ ricariche = [], ore = [], conRete } = {}) {
   const perOra = new Map(ore.map((o) => [o.inizio, o]));
   const colonneMinime = 8;
   const quante = Math.max(colonneMinime, Math.round((r.fine - r.inizio) / ORA) + 2);
-  const prima = r.inizio - ORA * Math.max(1, Math.floor((quante - Math.round((r.fine - r.inizio) / ORA)) / 2));
+  const prima =
+    r.inizio - ORA * Math.max(1, Math.floor((quante - Math.round((r.fine - r.inizio) / ORA)) / 2));
   const sue = Array.from({ length: quante }, (_, i) => {
     const inizio = prima + i * ORA;
     return perOra.get(inizio) || { inizio, kwh: 0, sole: null };
@@ -930,9 +936,23 @@ function pannelloViaggi(l) {
         <div class="dm-na-tessera"><span>${esc(t("Consumo", "Consumption"))}</span><b>${kwh(settimana.consumo)}<small>kWh/100 km</small></b></div>
       </div></section>`
     : "";
+  /* «In Energia di oggi deve mettere anche i km effettuati»: i km dal
+   * contachilometri, e con l'energia di oggi il consumo — sul totale, come gli
+   * «Ultimi 7 giorni», cosi' i due numeri si confrontano. */
+  const kmOggi = iKmDiOggi(l);
+  const consumoOggi =
+    kmOggi !== null && kmOggi >= 1 && oggi && oggi.totale > 0 ? (oggi.totale / kmOggi) * 100 : null;
+  const kmMarkup =
+    kmOggi === null
+      ? ""
+      : `<div class="dm-na-totali dm-na-oggi-km">
+        <div class="dm-na-tessera"><span>${esc(t("Percorsi oggi", "Driven today"))}</span><b>${intero(kmOggi)}<small>km</small></b></div>
+        ${consumoOggi === null ? "" : `<div class="dm-na-tessera"><span>${esc(t("Consumo di oggi", "Today's consumption"))}</span><b>${kwh(consumoOggi)}<small>kWh/100 km</small></b></div>`}
+      </div>`;
   const energia = oggi
     ? `<section class="dm-na-carta">
       <h3 class="dm-na-titolo"><span>🔋</span>${esc(t("Energia di oggi", "Energy today"))}<em>${kwh(oggi.totale)} kWh</em></h3>
+      ${kmMarkup}
       <div class="dm-na-parti">${oggi.parti.map((p) => `<i data-parte="${esc(p.parte)}" style="flex:${Math.max(0.02, p.quota).toFixed(3)}"></i>`).join("")}</div>
       <div class="dm-na-parti-voci">${oggi.parti
         .map((p) => {
@@ -945,7 +965,9 @@ function pannelloViaggi(l) {
           return `<span data-parte="${esc(p.parte)}"><i></i>${esc(nome)} <b>${kwh(p.kwh)} kWh</b></span>`;
         })
         .join("")}</div></section>`
-    : "";
+    : kmMarkup
+      ? `<section class="dm-na-carta"><h3 class="dm-na-titolo"><span>🛣️</span>${esc(t("Oggi", "Today"))}</h3>${kmMarkup}</section>`
+      : "";
   const ultimo = l.dati.ultimoViaggio;
   return `<section class="dm-na-carta dm-na-storico">
       <div class="dm-na-storico-testa"><h3 class="dm-na-titolo"><span>🛣️</span>${esc(t("Km percorsi", "Km driven"))}</h3>
@@ -1159,6 +1181,47 @@ function caricaLoStorico(l) {
     });
 }
 
+/* Il contachilometri da mezzanotte: la storia grezza di oggi, poche righe.
+ * Si chiede ogni cinque minuti; i km si contano col valore di adesso. */
+function caricaIKmDiOggi(l) {
+  const odo = l.lettore.entita("dm.ev_odometro");
+  if (!odo) return;
+  const mezzanotte = new Date().setHours(0, 0, 0, 0);
+  const chiave = `${odo}|${mezzanotte}`;
+  const s = state.oggiKm;
+  if (
+    s.chiave === chiave &&
+    (s.stato === "carico" ||
+      Date.now() - (s.alle || 0) < (s.stato === "errore" ? RIPROVA_MS : FRESCO_MS))
+  )
+    return;
+  state.oggiKm = { ...s, chiave, stato: "carico", alle: Date.now() };
+  const adesso = Date.now();
+  const ore = Math.max(0.1, (adesso - mezzanotte) / 3600000);
+  Promise.resolve()
+    .then(() => chiediAHomeAssistant(domandaDellAvvio(odo, adesso, ore)))
+    .then((risposta) => {
+      if (state.oggiKm.chiave !== chiave) return;
+      state.oggiKm = {
+        chiave,
+        stato: "pronto",
+        righe: righeDellaStoria(risposta, odo),
+        alle: Date.now(),
+      };
+      ridisegna();
+    })
+    .catch(() => {
+      if (state.oggiKm.chiave !== chiave) return;
+      state.oggiKm = { ...state.oggiKm, stato: "errore", alle: Date.now() };
+    });
+}
+
+/* I km di oggi, col contachilometri di adesso. */
+function iKmDiOggi(l) {
+  if (state.oggiKm.stato !== "pronto" && !state.oggiKm.righe.length) return null;
+  return kmDiOggi(state.oggiKm.righe, l.dati.odometro);
+}
+
 function caricaIKm(l) {
   const odo = l.lettore.entita("dm.ev_odometro");
   if (!odo) return;
@@ -1287,6 +1350,7 @@ export function renderLaNuovaAuto() {
     pannello = pannelloRicarica(l);
   } else if (aperta === "viaggi") {
     caricaIKm(l);
+    caricaIKmDiOggi(l);
     pannello = pannelloViaggi(l);
   } else pannello = pannelloStato(l);
   const html = `${garage(auto, indice)}${eroe(l, indice)}${linguette(l, aperta)}
@@ -1683,6 +1747,7 @@ function stile() {
   ${P} .dm-na-tessere,${P} .dm-na-totali{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:10px;margin-top:16px}
   ${P} .dm-na-totali{grid-template-columns:repeat(4,minmax(0,1fr));margin:0 0 16px}
   ${P} .dm-na-totali-tre{grid-template-columns:repeat(3,minmax(0,1fr))}
+  ${P} .dm-na-oggi-km{margin:2px 0 14px;grid-template-columns:repeat(2,minmax(0,1fr))}
   ${P} .dm-na-totali-due{grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
   ${P} .dm-na-tessera{display:grid;gap:4px;padding:11px 14px;border-radius:15px;background:var(--surface-2,#f8fafc);
     border:1px solid var(--card-border,#e8edf3);min-width:0}
