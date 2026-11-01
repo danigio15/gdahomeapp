@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-R7JU6OYJ.js";
+} from "../../chunk-ZWNKUGBL.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -10922,6 +10922,7 @@ function applyAnnual(bundle) {
 function applyDeviceRows(bundle) {
   const list = doc?.getElementById("ed-device-list");
   if (!list) return;
+  if (bundle.letti?.month !== false) togliLAvvisoDelGuscio(list, bundle.month);
   const { devices: devices3, values } = bundle.deviceMonth;
   const available = devices3.map((device) => values.get(device.history || device.entity)).filter((value) => Number.isFinite(value));
   const maximum = Math.max(1e-3, ...available);
@@ -10950,6 +10951,14 @@ function applyDeviceRows(bundle) {
     });
   });
   setText("ed-dev-total", kwh(total));
+}
+function togliLAvvisoDelGuscio(list, mese) {
+  const casa2 = Number(mese?.house), sole = Number(mese?.solar);
+  if (!(casa2 > 0 || sole > 0)) return;
+  for (const figlio of [...list?.children || []]) {
+    if (figlio.classList?.contains("ed-device-row")) continue;
+    if (/^\s*⚠️/.test(figlio.textContent || "")) figlio.remove();
+  }
 }
 function scriviLaQuota(row, quota) {
   const riga5 = row.querySelector(".ed-dev-name div");
@@ -11160,8 +11169,7 @@ function scriviLaStrada(ancora2, misurata) {
   return true;
 }
 function dimenticaLaStrada() {
-  for (const riga5 of doc?.querySelectorAll?.(".dm-ed-strada,.dm-ed-ammanco") || [])
-    riga5.remove();
+  for (const riga5 of doc?.querySelectorAll?.(".dm-ed-strada,.dm-ed-ammanco") || []) riga5.remove();
 }
 function scriviLAmmanco(bundle, source) {
   const titolo3 = doc?.getElementById("ed-dkpi-year-lbl");
@@ -11446,10 +11454,7 @@ async function eseguiIlRefresh(period, carico) {
     applyAtomicEnergyBundle(bundle);
     const { confermati, adesso: adesso2 } = confermaIMancanti(bundle.mancanti, state6.mancantiDiPrima);
     state6.mancantiDiPrima = adesso2;
-    segnaLaRagione(
-      ragioneDelPacchetto({ caduta: bundle.caduta, mancanti: confermati }),
-      true
-    );
+    segnaLaRagione(ragioneDelPacchetto({ caduta: bundle.caduta, mancanti: confermati }), true);
     root.dispatchEvent?.(new CustomEvent("dashboardmodern:period-bundle", { detail: bundle }));
     root.dispatchEvent?.(new CustomEvent("dashboardmodern:energy-stable", { detail: bundle }));
     return true;

@@ -21,7 +21,11 @@ import {
   cEIlFotovoltaico,
   siPuoDireLAutosufficienza,
 } from "../core/il-fotovoltaico-di-questa-casa.js";
-import { CHIAVE_FASCE, normalizzaLeFasce, prezzoMedioDelleFasce } from "../core/fasce-della-tariffa.js";
+import {
+  CHIAVE_FASCE,
+  normalizzaLeFasce,
+  prezzoMedioDelleFasce,
+} from "../core/fasce-della-tariffa.js";
 import { reconcileEnergyBundle } from "./energy-calculations-section.js";
 import {
   DEFAULT_EXPORT_RATE,
@@ -1134,6 +1138,7 @@ function applyAnnual(bundle) {
 function applyDeviceRows(bundle) {
   const list = doc?.getElementById("ed-device-list");
   if (!list) return;
+  if (bundle.letti?.month !== false) togliLAvvisoDelGuscio(list, bundle.month);
   const { devices, values } = bundle.deviceMonth;
   const available = devices
     .map((device) => values.get(device.history || device.entity))
@@ -1164,6 +1169,23 @@ function applyDeviceRows(bundle) {
     });
   });
   setText("ed-dev-total", kwh(total));
+}
+
+/* «Che significa sto messaggio»: in un mese passato il guscio prova a
+ * leggere produzione e consumi da se'; quando non ci riesce mette sopra i
+ * dispositivi l'avviso «Produzione e consumi principali non disponibili per
+ * questo mese...». Ma i numeri di quella pagina li scrivono i moduli, dal
+ * Recorder, e li hanno: l'avviso restava li' a contraddire la pagina (la
+ * ripartizione ☀️/🔌 delle righe, fatta proprio con quei consumi). Se il mese
+ * ha i suoi numeri, l'avviso del guscio se ne va. */
+export function togliLAvvisoDelGuscio(list, mese) {
+  const casa = Number(mese?.house),
+    sole = Number(mese?.solar);
+  if (!(casa > 0 || sole > 0)) return;
+  for (const figlio of [...(list?.children || [])]) {
+    if (figlio.classList?.contains("ed-device-row")) continue;
+    if (/^\s*⚠️/.test(figlio.textContent || "")) figlio.remove();
+  }
 }
 
 /* La riga di sotto — «☀️ tot kWh 🔌 tot kWh» — parla dello stesso numero.
@@ -1601,8 +1623,7 @@ function scriviLaStrada(ancora, misurata) {
  * Toglierle e non svuotarle: una riga vuota lascerebbe il suo spazio sotto le
  * tessere, e uno spazio che compare e sparisce fa ballare la card. */
 function dimenticaLaStrada() {
-  for (const riga of doc?.querySelectorAll?.(".dm-ed-strada,.dm-ed-ammanco") || [])
-    riga.remove();
+  for (const riga of doc?.querySelectorAll?.(".dm-ed-strada,.dm-ed-ammanco") || []) riga.remove();
 }
 
 /* La testa del contatore, detta sulla card.
@@ -2091,10 +2112,7 @@ async function eseguiIlRefresh(period, carico) {
     /* Non alla prima lettura: vedi `confermaIMancanti`. */
     const { confermati, adesso } = confermaIMancanti(bundle.mancanti, state.mancantiDiPrima);
     state.mancantiDiPrima = adesso;
-    segnaLaRagione(
-      ragioneDelPacchetto({ caduta: bundle.caduta, mancanti: confermati }),
-      true,
-    );
+    segnaLaRagione(ragioneDelPacchetto({ caduta: bundle.caduta, mancanti: confermati }), true);
     root.dispatchEvent?.(new CustomEvent("dashboardmodern:period-bundle", { detail: bundle }));
     root.dispatchEvent?.(new CustomEvent("dashboardmodern:energy-stable", { detail: bundle }));
     return true;
