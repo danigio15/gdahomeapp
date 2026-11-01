@@ -21,7 +21,10 @@ _Solo Home Assistant: l'app sul telefono non cambia._
   riquadro col nome di una stanza non la spezza in due.
 - **Porte, finestre e tramezzi dalla pianta:** il vetro disegnato nel vano
   fa la finestra, il vano vuoto la porta; i tramezzi sottili (anche a due
-  righe) chiudono il bagno e separano le camere.
+  righe) chiudono il bagno e separano le camere. Le stanzine (l'antibagno)
+  restano stanze, con le loro porte; verso il portico a piastrelle la
+  finestra e' una portafinestra; dove la pianta e' aperta (il corridoio
+  sotto la scala) non compare un muro.
 - **Le scale si riconoscono:** i gradini disegnati fra due muri diventano
   una scala nella Casa 3D, che sale verso il lato chiuso. La scala si puo'
   anche mettere a mano con «Arreda».

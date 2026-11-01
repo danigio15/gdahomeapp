@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-FFRGNBZF.js";
+} from "../../chunk-23HSHJIW.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -155917,24 +155917,55 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
   };
   let muro = celleDi(ink, 0.5);
   muro = stringi(allarga(muro, W2, H7, 1), W2, H7, 1);
+  {
+    const { pezzi } = pezziDi(muro, W2, H7), corto = 1.5 / PASSO, lontano = Math.round(3.2 / PASSO);
+    for (const p of pezzi) {
+      const lw = p.x1 - p.x0 + 1, lh = p.y1 - p.y0 + 1;
+      if (Math.max(lw, lh) >= corto) continue;
+      const oriz = lw >= lh;
+      const inFila = (verso2) => {
+        let fila2 = 0, tutte2 = 0;
+        for (let t2 = oriz ? p.y0 : p.x0; t2 <= (oriz ? p.y1 : p.x1); t2++) {
+          tutte2++;
+          for (let d = 1; d <= lontano; d++) {
+            const q = verso2 < 0 ? (oriz ? p.x0 : p.y0) - d : (oriz ? p.x1 : p.y1) + d;
+            if (q < 0 || q >= (oriz ? W2 : H7)) break;
+            const i = oriz ? t2 * W2 + q : q * W2 + t2;
+            if (muro[i]) {
+              fila2++;
+              break;
+            }
+          }
+        }
+        return fila2 >= tutte2 * 0.5;
+      };
+      if (!(inFila(-1) && inFila(1))) for (const c of p.celle) muro[c] = 0;
+    }
+  }
   const riga5 = celleDi(linee, 0.01);
   for (let i = 0; i < N; i++) if (muro[i]) riga5[i] = 0;
-  const appoggi = new Uint8Array(N);
-  for (const p of pezziDi(muro, W2, H7).pezzi)
-    if (Math.max(p.x1 - p.x0, p.y1 - p.y0) + 1 >= 0.6 / PASSO)
-      for (const c of p.celle) appoggi[c] = 1;
-  const vicinoAgliAppoggi = allarga(appoggi, W2, H7, Math.round(0.3 / PASSO));
-  const appoggiato = (p) => {
+  const attaccato = (p) => {
     const oriz = p.x1 - p.x0 >= p.y1 - p.y0;
-    const capo = (da, a) => p.celle.some((c) => {
-      const t2 = oriz ? c % W2 : c / W2 | 0;
-      return t2 >= da && t2 <= a && vicinoAgliAppoggi[c];
-    });
-    return oriz ? capo(p.x0, p.x0 + 2) || capo(p.x1 - 2, p.x1) : capo(p.y0, p.y0 + 2) || capo(p.y1 - 2, p.y1);
+    for (const verso2 of [-1, 1]) {
+      let si = 0, tutte2 = 0;
+      for (let t2 = oriz ? p.y0 : p.x0; t2 <= (oriz ? p.y1 : p.x1); t2++) {
+        tutte2++;
+        for (let d = 1; d <= 6; d++) {
+          const q = verso2 < 0 ? (oriz ? p.x0 : p.y0) - d : (oriz ? p.x1 : p.y1) + d;
+          if (q < 0 || q >= (oriz ? W2 : H7)) break;
+          if (muro[oriz ? t2 * W2 + q : q * W2 + t2]) {
+            si++;
+            break;
+          }
+        }
+      }
+      if (si >= tutte2 * 0.5) return true;
+    }
+    return false;
   };
   const vetroNelMuro = (p) => {
     const oriz = p.x1 - p.x0 >= p.y1 - p.y0;
-    const banda = oriz ? p.y1 - p.y0 + 1 : p.x1 - p.x0 + 1, mezzo = oriz ? p.y0 + p.y1 >> 1 : p.x0 + p.x1 >> 1;
+    const banda = oriz ? p.y1 - p.y0 + 1 : p.x1 - p.x0 + 1, mezzo2 = oriz ? p.y0 + p.y1 >> 1 : p.x0 + p.x1 >> 1;
     let accanto = 0;
     for (const [da, aa] of oriz ? [
       [p.x0 - 12, p.x0 - 1],
@@ -155944,7 +155975,7 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
       [p.y1 + 1, p.y1 + 12]
     ])
       for (let t2 = Math.max(0, da); t2 <= aa && t2 < (oriz ? W2 : H7); t2++) {
-        const i = oriz ? mezzo * W2 + t2 : t2 * W2 + mezzo;
+        const i = oriz ? mezzo2 * W2 + t2 : t2 * W2 + mezzo2;
         if (!muro[i]) continue;
         const passo = oriz ? W2 : 1;
         let n = 1;
@@ -156000,7 +156031,7 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
           if (muro[y * W2 + x]) m++;
         }
       const fuori = vetroNelMuro(p) ? Infinity : 0;
-      if (m < a * 0.2 || fuori > m * 0.3 || !appoggiato(p)) for (const c of p.celle) pieno[c] = 0;
+      if (m < a * 0.2 || fuori > m * 0.3 || !attaccato(p)) for (const c of p.celle) pieno[c] = 0;
     }
   }
   const corsa = (lungo) => {
@@ -156054,7 +156085,7 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
     const { pezzi } = pezziDi(tramezzo, W2, H7);
     for (const p of pezzi) {
       const lungo = Math.max(p.x1 - p.x0, p.y1 - p.y0) + 1, spesso = Math.min(p.x1 - p.x0, p.y1 - p.y0) + 1;
-      if (lungo < lungaT || spesso > dMax + 2 || !appoggiato(p) || vetroNelMuro(p))
+      if (lungo < lungaT || spesso > dMax + 2 || !attaccato(p) || vetroNelMuro(p))
         for (const c of p.celle) tramezzo[c] = 0;
     }
   }
@@ -156104,7 +156135,7 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
         catena.push(j);
         ultimo = q;
       }
-      if (catena.length < 5) continue;
+      if (catena.length < 3) continue;
       for (const j of catena) usata.add(j);
       const pezzi = catena.map((j) => centri[j]);
       const passi2 = pezzi.slice(1).map((q, i) => (q.a0 + q.a1) / 2 - (pezzi[i].a0 + pezzi[i].a1) / 2);
@@ -156119,18 +156150,35 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
           }
         return false;
       };
-      const fraMuri = pezzi.filter((q) => toccaMuro(q, false) && toccaMuro(q, true)).length;
-      if (fraMuri < pezzi.length * 0.7) continue;
+      const fraMuri = pezzi.filter((q) => toccaMuro(q, false) && toccaMuro(q, true)).length >= pezzi.length * 0.7;
       scale.push(
-        oriz ? { x0: b2, x1: e, y0: a0, y1: a1, oriz: false, gradini: pezzi.length, passo: medio2 } : { x0: a0, x1: a1, y0: b2, y1: e, oriz: true, gradini: pezzi.length, passo: medio2 }
+        oriz ? {
+          x0: b2,
+          x1: e,
+          y0: a0,
+          y1: a1,
+          oriz: false,
+          gradini: pezzi.length,
+          passo: medio2,
+          fraMuri
+        } : {
+          x0: a0,
+          x1: a1,
+          y0: b2,
+          y1: e,
+          oriz: true,
+          gradini: pezzi.length,
+          passo: medio2,
+          fraMuri
+        }
       );
     }
   }
-  const tutte = scale.filter(
-    (s) => !scale.some(
-      (t2) => t2 !== s && t2.oriz !== s.oriz && Math.min(s.x1, t2.x1) - Math.max(s.x0, t2.x0) > 0 && Math.min(s.y1, t2.y1) - Math.max(s.y0, t2.y0) > 0
-    )
+  const incrocia = (s) => scale.some(
+    (t2) => t2 !== s && t2.oriz !== s.oriz && Math.min(s.x1, t2.x1) - Math.max(s.x0, t2.x0) > 0 && Math.min(s.y1, t2.y1) - Math.max(s.y0, t2.y0) > 0
   );
+  const tutte = scale.filter((s) => s.fraMuri && s.gradini >= 5 && !incrocia(s));
+  const piastrelle = scale.filter(incrocia);
   const vere = [];
   for (const s of [...tutte].sort(
     (a, b2) => (b2.x1 - b2.x0) * (b2.y1 - b2.y0) - (a.x1 - a.x0) * (a.y1 - a.y0)
@@ -156158,7 +156206,7 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
     }
   }
   const vetro = new Uint8Array(N), soglie = new Uint8Array(N);
-  const spessoreMax = Math.round(0.7 / PASSO), varco = Math.round(1.3 / PASSO), varcoLargo = Math.round(4 / PASSO), vetroMax = Math.round(3 / PASSO), varcoUnLato = Math.round(1 / PASSO), tratto = Math.round(0.2 / PASSO);
+  const spessoreMax = Math.round(0.7 / PASSO), varco = Math.round(1.3 / PASSO), varcoLargo = Math.round(4 / PASSO), vetroMax = Math.round(3 / PASSO), varcoUnLato = Math.round(1 / PASSO), mezzo = Math.round(0.5 / PASSO), tratto = Math.round(0.2 / PASSO);
   const corre = (i, passo, fino) => {
     let n = 0;
     for (let j = i; n < fino && j >= 0 && j < N && muro[j]; j += passo) n++;
@@ -156192,7 +156240,7 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
         }
         if (fa && fb && k <= vetroMax && righe3 >= k * 0.5)
           for (let q = b2; q < e; q++) vetro[at(a, q)] = 1;
-        else if (k <= (fa && fb ? varco : varcoUnLato))
+        else if (fa && fb ? k <= varco : k <= varcoUnLato && (fa ? corre(i - passo, -passo, mezzo) : corre(j, passo, mezzo)) >= mezzo)
           for (let q = b2; q < e; q++) soglie[at(a, q)] = 1;
       }
   };
@@ -156206,6 +156254,10 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
     const unione = new Uint8Array(N);
     for (let i = 0; i < N; i++) unione[i] = vetro[i] || soglie[i] ? 1 : 0;
     for (const p of pezziDi(unione, W2, H7).pezzi) {
+      if (Math.min(p.x1 - p.x0, p.y1 - p.y0) + 1 > spessoreMax) {
+        for (const c of p.celle) vetro[c] = soglie[c] = 0;
+        continue;
+      }
       const n = p.celle.filter((c) => vetro[c]).length, tutto = n >= p.celle.length * 0.2;
       for (const c of p.celle) {
         vetro[c] = tutto ? 1 : 0;
@@ -156222,6 +156274,12 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
     barriera,
     vetro,
     pieni: true,
+    piastrelle: piastrelle.map((s) => ({
+      x0: s.x0 * PASSO,
+      x1: (s.x1 + 1) * PASSO,
+      y0: s.y0 * PASSO,
+      y1: (s.y1 + 1) * PASSO
+    })),
     scale: vere.map((s) => ({
       x0: s.x0 * PASSO,
       x1: (s.x1 + 1) * PASSO,
@@ -156232,7 +156290,7 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
     }))
   };
 }
-function riconosciDaFoto({ W: W2, H: H7, muro, barriera, vetro, pieni = false, scale = [] }, { fuori = /* @__PURE__ */ new Set(), squadra = true } = {}) {
+function riconosciDaFoto({ W: W2, H: H7, muro, barriera, vetro, pieni = false, scale = [], piastrelle = [] }, { fuori = /* @__PURE__ */ new Set(), squadra = true } = {}) {
   const N = W2 * H7, passo = PASSO, ostacolo = barriera || muro;
   const dist = new Int32Array(N).fill(1e9), coda = new Int32Array(N);
   let t2 = 0, k = 0;
@@ -156325,6 +156383,31 @@ function riconosciDaFoto({ W: W2, H: H7, muro, barriera, vetro, pieni = false, s
         }
     }
     cuori.push({ id: n, celle: pezzo3.length, bordo: bordo2 });
+  }
+  if (pieni) {
+    const s2 = Math.round(0.3 / passo), vista2 = new Uint8Array(N);
+    for (let i = 0; i < N; i++) {
+      if (lab[i] || vista2[i] || dist[i] < s2) continue;
+      const pezzo3 = [i];
+      vista2[i] = 1;
+      let accanto = false, bordo2 = false;
+      for (let q = 0; q < pezzo3.length; q++) {
+        const c = pezzo3[q], x = c % W2, y = c / W2 | 0;
+        if (x === 0 || y === 0 || x === W2 - 1 || y === H7 - 1) bordo2 = true;
+        for (const j of [x > 0 ? c - 1 : -1, x < W2 - 1 ? c + 1 : -1, c - W2, c + W2]) {
+          if (j < 0 || j >= N) continue;
+          if (lab[j]) accanto = true;
+          else if (!vista2[j] && dist[j] >= s2) {
+            vista2[j] = 1;
+            pezzo3.push(j);
+          }
+        }
+      }
+      if (accanto || bordo2 || pezzo3.length * passo * passo < 0.15) continue;
+      n++;
+      for (const c of pezzo3) lab[c] = n;
+      cuori.push({ id: n, celle: pezzo3.length, bordo: false });
+    }
   }
   const esterno = new Set(cuori.filter((c) => c.bordo || fuori.has(c.id)).map((c) => c.id));
   for (const fase of [0, 1]) {
@@ -156438,7 +156521,8 @@ function riconosciDaFoto({ W: W2, H: H7, muro, barriera, vetro, pieni = false, s
     tipo[i] = muro[i] ? -3 : !lab[i] ? -3 : esterno.has(lab[i]) ? -2 : idDi.get(radice3(lab[i])) || -2;
   const conta2 = /* @__PURE__ */ new Map();
   for (let i = 0; i < N; i++) if (tipo[i] > 0) conta2.set(tipo[i], (conta2.get(tipo[i]) || 0) + 1);
-  for (const s of stanze4) if ((conta2.get(s.id) || 0) * passo * passo < 1) s.via = true;
+  const nicchia = pieni ? 0.7 : 1;
+  for (const s of stanze4) if ((conta2.get(s.id) || 0) * passo * passo < nicchia) s.via = true;
   const aperture = [];
   const tipoDi2 = (lbl) => esterno.has(lbl) ? -2 : idDi.get(radice3(lbl)) || -2;
   for (const gr of gruppi2) {
@@ -156468,7 +156552,22 @@ function riconosciDaFoto({ W: W2, H: H7, muro, barriera, vetro, pieni = false, s
         const i = orizz ? p * W2 + q : q * W2 + p;
         if (!muro[i]) segna2.push(i);
       }
-    const portafinestra = finestra6 && gr.largo >= 1.8;
+    const sulPortico = () => {
+      const cx2 = ((x0 + x1) / 2 + 0.5) * passo, cy2 = ((y0 + y1) / 2 + 0.5) * passo, d = 0.6;
+      return piastrelle.some(
+        (q) => (orizz ? [
+          [cx2, cy2 + d],
+          [cx2, cy2 - d]
+        ] : [
+          [cx2 + d, cy2],
+          [cx2 - d, cy2]
+        ]).some(([x, y]) => {
+          const i = Math.floor(y / passo) * W2 + Math.floor(x / passo);
+          return tipo[i] === -2 && x >= q.x0 && x <= q.x1 && y >= q.y0 && y <= q.y1;
+        })
+      );
+    };
+    const portafinestra = finestra6 && (gr.largo >= 1.8 || sulPortico());
     for (const i of segna2) tipo[i] = finestra6 && !portafinestra ? -4 : -5;
     const cx = ((orizz ? (x0 + x1) / 2 : (p0 + p1) / 2) + 0.5) * passo, cy = ((orizz ? (p0 + p1) / 2 : (y0 + y1) / 2) + 0.5) * passo;
     let verso2 = 0;
@@ -156679,7 +156778,7 @@ function squadraLaCasa(tipo, W2, H7, stanze4) {
   }
   if (!rett.length) return;
   const max = Math.round(0.6 / PASSO);
-  const libera = (i, id) => tipo[i] === id || tipo[i] !== -3 && tipo[i] !== -4 && tipo[i] <= 0 && tipo[i] !== -2;
+  const libera = (i, id) => tipo[i] === id || tipo[i] !== -3 && tipo[i] !== -4 && tipo[i] !== -5 && tipo[i] <= 0 && tipo[i] !== -2;
   const striscia = (r, lato) => {
     let liberi = 0, tutti = 0;
     if (lato === "su" || lato === "giu") {
@@ -156731,6 +156830,25 @@ function squadraLaCasa(tipo, W2, H7, stanze4) {
         nuovo[i] = r.id;
         dipinto[i] = 1;
       }
+  }
+  {
+    const r = Math.max(2, Math.round(0.3 / PASSO));
+    for (const s of stanze4) {
+      const sua = new Uint8Array(N);
+      let ce = false;
+      for (let i = 0; i < N; i++)
+        if (dipinto[i] && nuovo[i] === s.id) {
+          sua[i] = 1;
+          ce = true;
+        }
+      if (!ce) continue;
+      const chiusa2 = stringi(allarga(sua, W2, H7, r), W2, H7, r);
+      for (let i = 0; i < N; i++)
+        if (chiusa2[i] && !dipinto[i] && tipo[i] === s.id) {
+          nuovo[i] = s.id;
+          dipinto[i] = 1;
+        }
+    }
   }
   const fino = Math.max(3, Math.round(0.3 / PASSO));
   const dist = new Int16Array(N).fill(32767);
