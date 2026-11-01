@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-X25FNACS.js";
+} from "../../chunk-4MEUKFIT.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -162393,9 +162393,11 @@ function haUnaCredenzialeNellIndirizzo(indirizzo) {
     return /[?&](authSig|token)=/.test(String(indirizzo));
   }
 }
+var DALL_INGRESS = /^(?:https?:\/\/[^/]*)?\/api\/hassio_ingress\//i;
 function bussaSenzaCredenziali(indirizzo) {
   if (root.__DASHBOARDMODERN_HOSTED__ !== true) return false;
   if (gettoneDiAccesso()) return false;
+  if (DALL_INGRESS.test(String(indirizzo ?? "").trim())) return false;
   return !haUnaCredenzialeNellIndirizzo(indirizzo);
 }
 function installIndirizzoDiCasa() {
