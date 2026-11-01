@@ -821,6 +821,15 @@ test("il ⚙ della Casa 3D apre il suo Config sulla scheda Casa 3D", async ({ pa
   test.skip(testInfo.project.name !== "desktop", "basta una misura");
   await boot(page, testInfo);
   const casa = page.locator("#dm-casa3d");
+  /* dove si tocca: il ⚙ nella testata, accanto al ☰ */
+  const doveSta = foto(testInfo, "casa3d-dove-il-config");
+  if (doveSta) {
+    await casa
+      .locator('[data-c3s="config"]')
+      .evaluate((b) => (b.style.outline = "4px solid #ef4444"));
+    await page.screenshot({ path: doveSta });
+    await casa.locator('[data-c3s="config"]').evaluate((b) => (b.style.outline = ""));
+  }
   await casa.locator('[data-c3s="config"]').click();
   await expect(page.locator("#editor-modal")).toBeVisible({ timeout: 20_000 });
   await expect(page.locator('#editor-modal .ed-tab[data-tab="casa3d"]')).toHaveClass(/active/, {
