@@ -17,6 +17,7 @@
  */
 
 import { vuoleIlVivo } from "./telecamera-dal-vivo.js";
+import { normalizzaIlCodice } from "./codice-a-tastierino.js";
 
 export const CHIAVE_OCCHIO = "cd_occhio";
 
@@ -107,6 +108,14 @@ export function modoPulito(grezzo = {}, indice = 0) {
     nome: testo(m.nome, 40),
     disegno: disegno(m.disegno, "security"),
     colore: colore(m.colore, COLORI_DEI_MODI[indice % COLORI_DEI_MODI.length]),
+    /* Come nella plancia principale (antifurto-su-misura.js): la voce da
+     * scegliere per un select, il valore dello stato che vuol dire
+     * «inserito» (di serie l'opzione), il codice da chiedere prima. Senza,
+     * due modi che leggono la stessa entita' si accendevano insieme e un
+     * tasto su un select non mandava niente. */
+    opzione: testo(m.opzione, 80),
+    valore: testo(m.valore, 80) || testo(m.opzione, 80),
+    pin: normalizzaIlCodice(m.pin),
   };
 }
 
@@ -231,6 +240,9 @@ function antifurtoDallaFonte(fonte = {}) {
           stato: m?.stato,
           nome: m?.nome,
           disegno: /^[a-z0-9_-]+$/i.test(clean(m?.icona)) ? m.icona : "",
+          opzione: m?.opzione,
+          valore: m?.valore,
+          pin: m?.pin,
         },
         i,
       ),
@@ -434,20 +446,55 @@ export function servizioPerAprire(id) {
   return null;
 }
 
-/** Il servizio che inserisce o disinserisce un modo su misura. */
+/**
+ * Il servizio che inserisce o disinserisce un modo su misura, coi suoi dati.
+ *
+ * Gli stessi della plancia principale (antifurto-su-misura.js): un select
+ * sceglie la sua voce, una centrale si inserisce. Un interruttore acceso si
+ * spegne, come prima: e' l'unico modo di disinserire un modo che e' solo un
+ * interruttore.
+ */
 export function servizioDelModo(modo, acceso) {
   const id = entita(modo?.entita);
   const d = dominio(id);
-  if (d === "switch" || d === "input_boolean")
-    return { domain: d, service: acceso ? "turn_off" : "turn_on" };
-  if (d === "button" || d === "input_button") return { domain: d, service: "press" };
-  if (d === "script" || d === "scene") return { domain: d, service: "turn_on" };
-  if (d === "automation") return { domain: d, service: "trigger" };
+  const data = { entity_id: id };
+  if (d === "switch" || d === "input_boolean" || d === "light")
+    return { domain: d, service: acceso ? "turn_off" : "turn_on", data };
+  if (d === "button" || d === "input_button") return { domain: d, service: "press", data };
+  if (d === "script" || d === "scene") return { domain: d, service: "turn_on", data };
+  if (d === "automation") return { domain: d, service: "trigger", data };
+  if (d === "select" || d === "input_select") {
+    const opzione = clean(modo?.opzione);
+    return opzione
+      ? { domain: d, service: "select_option", data: { ...data, option: opzione } }
+      : null;
+  }
+  if (d === "alarm_control_panel") return { domain: d, service: "alarm_arm_away", data };
   return null;
 }
 
-/** Se un modo e' inserito adesso. */
-export function modoInserito(modo, states = {}) {
+const MUTI_DELL_ANTIFURTO = new Set(["", "unavailable", "unknown", "none"]);
+
+/* Se lo stato di un modo, da solo, dice «inserito»: col valore scritto quello,
+ * senza la regola di Home Assistant. */
+function dettoInserito(modo, states) {
   const v = clean(states?.[modo?.stato || modo?.entita]?.state).toLowerCase();
+  if (MUTI_DELL_ANTIFURTO.has(v)) return false;
+  const atteso = clean(modo?.valore).toLowerCase();
+  if (atteso) return v === atteso;
   return v === "on" || v === "armed" || v.startsWith("armed_");
+}
+
+/**
+ * Se un modo e' inserito adesso.
+ *
+ * Con `modi` (tutti quelli del riquadro) ne e' acceso uno solo, il primo che
+ * dice di si': due modi che leggono la stessa centrale o lo stesso select non
+ * si accendono insieme — e' la regola della plancia principale.
+ */
+export function modoInserito(modo, states = {}, modi = null) {
+  if (!dettoInserito(modo, states)) return false;
+  if (!Array.isArray(modi)) return true;
+  const primo = modi.find((m) => dettoInserito(m, states));
+  return !primo || primo === modo;
 }

@@ -30,7 +30,11 @@ import {
 } from "../core/colpo-d-occhio.js";
 import { alarmActiveMode, alarmCodeNeeded, alarmModes } from "../core/alarm-panel.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
-import { giorniCheVengono, oggiFraMassimaEMinima, segnoDelTempo } from "../core/la-card-del-meteo.js";
+import {
+  giorniCheVengono,
+  oggiFraMassimaEMinima,
+  segnoDelTempo,
+} from "../core/la-card-del-meteo.js";
 import { istantaneaInViaggio, loadCameraFrame, sorvegliaIFlussi } from "./live-ui-section.js";
 import { chiediLeCapacita } from "./telecamera-capacita-section.js";
 import { apriIlMenu, premiumDellaCasa, premiumRicordato } from "./plancia-a-muro-section.js";
@@ -158,19 +162,32 @@ function meteoMarkup(occhio, states) {
   if (!m?.stato) return "";
   const a = m.stato.attributes || {};
   const p = previsioniDelMeteo(m.id, () => ridisegna());
-  const gradi = (v) => (v == null || v === "" || !Number.isFinite(Number(v)) ? "" : `${numero(v)}°`);
+  const gradi = (v) =>
+    v == null || v === "" || !Number.isFinite(Number(v)) ? "" : `${numero(v)}°`;
   const oggi = oggiFraMassimaEMinima(p.giornaliere);
   const misure = [];
   const misura = (v) => (v == null || v === "" || !Number.isFinite(Number(v)) ? null : Number(v));
   if (misura(a.humidity) !== null)
     misure.push(["💧", t("Umidità", "Humidity"), `${numero(a.humidity)}%`]);
   if (misura(a.wind_speed) !== null)
-    misure.push(["💨", t("Vento", "Wind"), `${numero(a.wind_speed)} ${clean(a.wind_speed_unit) || "km/h"}`]);
+    misure.push([
+      "💨",
+      t("Vento", "Wind"),
+      `${numero(a.wind_speed)} ${clean(a.wind_speed_unit) || "km/h"}`,
+    ]);
   if (misura(a.pressure) !== null)
-    misure.push(["🧭", t("Pressione", "Pressure"), `${numero(a.pressure)} ${clean(a.pressure_unit) || "hPa"}`]);
+    misure.push([
+      "🧭",
+      t("Pressione", "Pressure"),
+      `${numero(a.pressure)} ${clean(a.pressure_unit) || "hPa"}`,
+    ]);
   const tramonto = Date.parse(clean(states["sun.sun"]?.attributes?.next_setting));
   if (Number.isFinite(tramonto))
-    misure.push(["🌅", t("Tramonto", "Sunset"), ora(tramonto, { hour: "2-digit", minute: "2-digit" })]);
+    misure.push([
+      "🌅",
+      t("Tramonto", "Sunset"),
+      ora(tramonto, { hour: "2-digit", minute: "2-digit" }),
+    ]);
   const giorni = giorniCheVengono(p.giornaliere, 4);
   return `<button type="button" class="oc-meteo" data-oc="meteo">
       <span class="oc-meteo-capo">
@@ -230,7 +247,7 @@ function sottoDelRiquadro(r, occhio, states) {
   if (r.tipo === "antifurto") {
     const a = occhio.antifurto;
     if (a.modi.length) {
-      const accesi = a.modi.filter((m) => modoInserito(m, states));
+      const accesi = a.modi.filter((m) => modoInserito(m, states, a.modi));
       if (!accesi.length) return t("Disinserito", "Disarmed");
       if (accesi.length === 1) return accesi[0].nome || t("Inserito", "Armed");
       return t(`${accesi.length} modalità`, `${accesi.length} modes`);
@@ -271,7 +288,7 @@ function nomeDelRiquadro(r) {
 function riquadroAcceso(r, occhio, states) {
   if (r.tipo !== "antifurto") return false;
   const a = occhio.antifurto;
-  if (a.modi.some((m) => modoInserito(m, states))) return true;
+  if (a.modi.some((m) => modoInserito(m, states, a.modi))) return true;
   return clean(states?.[a.centrale]?.state).startsWith("armed");
 }
 
@@ -401,9 +418,7 @@ function energiaFinestra(occhio, states) {
 /* Watt o kilowatt come li scrive il flusso della plancia: 850 W, 5,35 kW. */
 function potenzaInParole(v) {
   if (v == null) return "—";
-  return Math.abs(v) >= 1000
-    ? `${numero(v / 1000, 2)} kW`
-    : `${numero(Math.round(v))} W`;
+  return Math.abs(v) >= 1000 ? `${numero(v / 1000, 2)} kW` : `${numero(Math.round(v))} W`;
 }
 
 function valoreDelNodo(v, f) {
@@ -472,7 +487,10 @@ function telecamereFinestra(occhio) {
       )}</span></div>
       <div class="oc-cam-griglia">${cam
         .map(
-          (c, i) => `<button type="button" class="oc-cam" data-oc="telecamera" data-oc-cam="${esc(c.entity)}">
+          (
+            c,
+            i,
+          ) => `<button type="button" class="oc-cam" data-oc="telecamera" data-oc-cam="${esc(c.entity)}">
             <img alt="" data-oc-foto="${esc(c.entity)}" data-oc-vivo="${c.vivo}">
             <span class="oc-cam-attesa" aria-hidden="true">${esc(t("In attesa del fotogramma", "Waiting for a frame"))}</span>
             <span class="oc-cam-su"><b>CAM ${String(i + 1).padStart(2, "0")} // ${esc(
@@ -509,7 +527,7 @@ function antifurtoFinestra(occhio, states) {
   if (a.modi.length) {
     tasti = a.modi
       .map((m, i) => {
-        const acceso = modoInserito(m, states);
+        const acceso = modoInserito(m, states, a.modi);
         return `<button type="button" class="oc-modo" data-oc="modo" data-oc-modo="${i}" data-acceso="${acceso}" style="--oc:${esc(m.colore)}">
           <span class="oc-modo-ic" aria-hidden="true">${segno(m.disegno, 38)}</span>
           <strong>${esc(m.nome || m.entita)}</strong>
@@ -552,6 +570,63 @@ function antifurtoFinestra(occhio, states) {
   return finestraMarkup(`${segno("security", 22)} ${esc(t("Antifurto", "Alarm"))}`, corpo);
 }
 
+/* Il PIN di un modo su misura: il tastierino, come quello della plancia
+ * principale. Il codice si confronta qui; giusto, il modo parte. */
+function codiceFinestra(occhio) {
+  const f = state.finestra;
+  const m = occhio.antifurto.modi[f?.modo];
+  if (!m) return "";
+  const punti = Array.from(
+    { length: Math.max(4, (f.scritto || "").length) },
+    (_x, i) => `<i class="${i < (f.scritto || "").length ? "si" : ""}"></i>`,
+  ).join("");
+  const tasti = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "✓"]
+    .map(
+      (k) =>
+        `<button type="button" class="oc-cifra${k === "✓" ? " ok" : ""}" data-oc="cifra" data-oc-cifra="${k}" aria-label="${esc(k === "⌫" ? t("Cancella", "Delete") : k === "✓" ? "OK" : k)}">${k}</button>`,
+    )
+    .join("");
+  return finestraMarkup(
+    `<button type="button" class="oc-indietro" data-oc="antifurto" aria-label="${esc(t("Indietro", "Back"))}">←</button>🔒 ${esc(m.nome || m.entita)}`,
+    `<div class="oc-codice${f.errore ? " sbagliato" : ""}"><p>${esc(f.errore ? t("Codice sbagliato", "Wrong code") : t("Scrivi il codice", "Enter the code"))}</p><div class="oc-punti">${punti}</div><div class="oc-cifre">${tasti}</div></div>`,
+  );
+}
+
+/* Un modo su misura premuto: col codice, se ne ha uno, prima il tastierino. */
+function premiIlModo(occhio, i, codice = null) {
+  const a = occhio.antifurto;
+  const m = a.modi[i];
+  if (!m) return;
+  if (m.pin && codice === null) return apriFinestra({ tipo: "codice", modo: i, scritto: "" });
+  if (m.pin && codice !== m.pin) {
+    state.finestra = { tipo: "codice", modo: i, scritto: "", errore: true };
+    vibra([60, 40, 60]);
+    return ridisegna();
+  }
+  const servizio = servizioDelModo(m, modoInserito(m, allStates(), a.modi));
+  if (!servizio) {
+    avviso(
+      t(
+        "Questo modo non sa cosa premere: guardalo nel Config",
+        "This mode has nothing to press: check it in the Config",
+      ),
+      "male",
+    );
+    return;
+  }
+  try {
+    chiamaServizio({ domain: servizio.domain, service: servizio.service, data: servizio.data });
+  } catch (_errore) {
+    avviso(t("⚠️ Non connesso", "⚠️ Not connected"), "male");
+    return;
+  }
+  vibra(30);
+  if (state.finestra?.tipo === "codice") state.finestra = { tipo: "antifurto" };
+  const chi = m.nome || m.entita;
+  avviso(t(`${chi}: comando inviato`, `${chi}: command sent`));
+  ridisegna();
+}
+
 function finestraDiAdesso(occhio, states) {
   const f = state.finestra;
   if (!f) return "";
@@ -560,6 +635,7 @@ function finestraDiAdesso(occhio, states) {
   if (f.tipo === "telecamere") return telecamereFinestra(occhio);
   if (f.tipo === "telecamera") return telecameraFinestra(occhio);
   if (f.tipo === "antifurto") return antifurtoFinestra(occhio, states);
+  if (f.tipo === "codice") return codiceFinestra(occhio);
   return "";
 }
 
@@ -905,17 +981,17 @@ function alClic(evento) {
     if (r.tipo === "apri") return apriIlCancello(r, el);
     return apriFinestra({ tipo: r.tipo });
   }
-  if (cosa === "modo") {
-    const m = occhio.antifurto.modi[Number(el.dataset.ocModo)];
-    const servizio = m && servizioDelModo(m, modoInserito(m, allStates()));
-    if (!servizio) return;
-    chiamaServizio({
-      domain: servizio.domain,
-      service: servizio.service,
-      data: { entity_id: m.entita },
-    });
-    vibra(30);
-    return;
+  if (cosa === "modo") return premiIlModo(occhio, Number(el.dataset.ocModo));
+  if (cosa === "antifurto") return apriFinestra({ tipo: "antifurto" });
+  if (cosa === "cifra") {
+    const f = state.finestra;
+    if (f?.tipo !== "codice") return;
+    const k = clean(el.dataset.ocCifra);
+    if (k === "✓") return premiIlModo(occhio, f.modo, f.scritto || "");
+    f.errore = false;
+    f.scritto = k === "⌫" ? (f.scritto || "").slice(0, -1) : `${f.scritto || ""}${k}`.slice(0, 8);
+    vibra(6);
+    return ridisegna();
   }
   if (cosa === "centrale") {
     const servizio = clean(el.dataset.ocServizio);
@@ -1133,6 +1209,18 @@ function installaLoStile() {
     ${P} .oc-video{min-height:200px}
 
     ${P} .oc-modi{display:flex;flex-direction:column;gap:16px}
+    ${P} .oc-codice{display:flex;flex-direction:column;align-items:center;gap:18px;padding:6px 0}
+    ${P} .oc-codice p{margin:0;font-size:15px;font-weight:800;color:var(--oc-fioco)}
+    ${P} .oc-codice.sbagliato p{color:#e11d48}
+    ${P} .oc-punti{display:flex;gap:12px}
+    ${P} .oc-punti i{width:14px;height:14px;border-radius:50%;border:2px solid var(--oc-fioco)}
+    ${P} .oc-punti i.si{background:var(--oc-testo);border-color:var(--oc-testo)}
+    ${P} .oc-codice.sbagliato .oc-punti i{border-color:#e11d48}
+    ${P} .oc-cifre{display:grid;grid-template-columns:repeat(3,72px);gap:12px}
+    ${P} .oc-cifra{height:72px;border-radius:50%;border:1px solid var(--oc-bordo);background:var(--oc-card);color:var(--oc-testo);
+      font:700 26px/1 'Inter',system-ui,sans-serif;cursor:pointer;box-shadow:var(--oc-ombra)}
+    ${P} .oc-cifra:active{transform:scale(.94)}
+    ${P} .oc-cifra.ok{background:#10b981;border-color:#10b981;color:#fff}
     ${P} .oc-modo{--oc:#64748b;display:flex;align-items:center;gap:22px;width:100%;min-height:130px;padding:30px 26px;border-radius:26px;cursor:pointer;
       text-align:left;background:var(--oc-card);border:3px solid var(--oc-bordo);box-shadow:var(--oc-ombra);transition:transform .3s,box-shadow .3s}
     ${P} .oc-modo:hover{transform:translateY(-3px);box-shadow:var(--oc-ombra-su)}
@@ -1146,7 +1234,9 @@ function installaLoStile() {
     ${P} .oc-modo[data-acceso="true"]{border-color:var(--oc);background:linear-gradient(135deg,var(--oc-card) 0%,color-mix(in srgb,var(--oc) 8%,var(--oc-card)) 100%);
       box-shadow:0 12px 32px color-mix(in srgb,var(--oc) 25%,transparent)}
     ${P} .oc-modo[data-acceso="true"] .oc-modo-ic{background:linear-gradient(135deg,var(--oc),color-mix(in srgb,var(--oc) 70%,transparent))}
-    ${P} .oc-modo[data-acceso="true"] strong{color:var(--oc)}
+    /* Il nome del modo acceso: il suo colore, ma schiarito o scurito verso il
+     * testo — un blu pieno su un fondo blu notte non si leggeva. */
+    ${P} .oc-modo[data-acceso="true"] strong{color:color-mix(in srgb,var(--oc) 45%,var(--oc-testo))}
     ${P} .oc-modo[data-acceso="true"] .oc-modo-stato{color:#fff;background:var(--oc);border-color:var(--oc)}
     ${P} .oc-modo[data-acceso="true"] .oc-modo-stato::before{background:#fff}
 

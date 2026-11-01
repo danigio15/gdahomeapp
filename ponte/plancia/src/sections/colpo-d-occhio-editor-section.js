@@ -53,7 +53,30 @@ const DOMINI = {
   energia: ["sensor"],
   camera: ["camera"],
   centrale: ["alarm_control_panel"],
-  modo: ["input_boolean", "switch", "script", "button", "input_button", "automation"],
+  modo: [
+    "input_boolean",
+    "switch",
+    "script",
+    "button",
+    "input_button",
+    "automation",
+    "scene",
+    "light",
+    "select",
+    "input_select",
+    "alarm_control_panel",
+  ],
+  /* Dove si legge se un modo e' inserito: come nella plancia principale. */
+  stato: [
+    "alarm_control_panel",
+    "input_select",
+    "select",
+    "switch",
+    "input_boolean",
+    "binary_sensor",
+    "sensor",
+    "light",
+  ],
   apri: ["switch", "button", "input_button", "lock", "cover", "script", "input_boolean"],
 };
 
@@ -223,6 +246,18 @@ function antifurtoMarkup(o) {
         <div class="dm-oc-ed-voce-corpo"><div class="dm-oc-ed-righe">
           ${campo(t("Entità che inserisce", "Entity that arms"), `antifurto.modi.${i}.entita`, m.entita, { elenco: "modo" })}
           ${campo(t("Nome", "Name"), `antifurto.modi.${i}.nome`, m.nome)}
+          ${
+            /^(input_)?select\./.test(m.entita)
+              ? campo(
+                  t("Voce da scegliere", "Option to pick"),
+                  `antifurto.modi.${i}.opzione`,
+                  m.opzione,
+                )
+              : ""
+          }
+          ${campo(t("Stato da leggere", "State to read"), `antifurto.modi.${i}.stato`, m.stato === m.entita ? "" : m.stato, { elenco: "stato", segnaposto: m.entita })}
+          ${campo(t("Valore quando è inserito", "Value when armed"), `antifurto.modi.${i}.valore`, m.valore === m.opzione ? "" : m.valore, { segnaposto: m.opzione || "on" })}
+          ${campo(t("PIN (facoltativo)", "PIN (optional)"), `antifurto.modi.${i}.pin`, m.pin, { segnaposto: "1234" })}
           <label class="dm-oc-ed-campo"><span class="dm-oc-ed-lbl">${esc(t("Disegno", "Icon"))}</span>
             <select class="ed-input" data-dm-oc-campo="antifurto.modi.${i}.disegno">${DISEGNI_DEI_MODI.map(
               (d) => `<option value="${d}" ${d === m.disegno ? "selected" : ""}>${esc(d)}</option>`,

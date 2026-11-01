@@ -220,8 +220,17 @@ test("aprire e i modi: il servizio giusto per ogni dominio, e niente per quelli 
   assert.equal(servizioPerAprire("sensor.porta"), null);
 
   const notte = { entita: "input_boolean.notte" };
-  assert.deepEqual(servizioDelModo(notte, false), { domain: "input_boolean", service: "turn_on" });
-  assert.deepEqual(servizioDelModo(notte, true), { domain: "input_boolean", service: "turn_off" });
+  const dati = { entity_id: "input_boolean.notte" };
+  assert.deepEqual(servizioDelModo(notte, false), {
+    domain: "input_boolean",
+    service: "turn_on",
+    data: dati,
+  });
+  assert.deepEqual(servizioDelModo(notte, true), {
+    domain: "input_boolean",
+    service: "turn_off",
+    data: dati,
+  });
   assert.equal(servizioDelModo({ entita: "sensor.x" }, false), null);
 
   assert.equal(modoInserito(notte, { "input_boolean.notte": s("on") }), true);
@@ -233,4 +242,59 @@ test("aprire e i modi: il servizio giusto per ogni dominio, e niente per quelli 
     ),
     true,
   );
+});
+
+/* Il video del tablet: «Totale notte» e «Totale sensori» tutti e due
+ * «Attivato», e il tocco non cambiava niente. Copiati dalla principale, i
+ * modi perdevano il valore che dice quale e' inserito, la voce del select e il
+ * PIN. */
+test("i modi su misura della principale: valore, voce del select, PIN, uno solo acceso", () => {
+  const o = occhioDiPartenza({
+    antifurto: {
+      suMisura: [
+        {
+          entita: "input_select.antifurto",
+          opzione: "Totale notte",
+          nome: "Totale notte",
+          pin: "1234",
+        },
+        { entita: "input_select.antifurto", opzione: "Totale sensori", nome: "Totale sensori" },
+      ],
+    },
+  });
+  const [notte, sensori] = o.antifurto.modi;
+  assert.equal(notte.valore, "Totale notte");
+  assert.equal(notte.pin, "1234");
+  assert.equal(sensori.pin, "");
+  const states = { "input_select.antifurto": s("Totale sensori") };
+  assert.equal(modoInserito(notte, states, o.antifurto.modi), false);
+  assert.equal(modoInserito(sensori, states, o.antifurto.modi), true);
+  assert.deepEqual(servizioDelModo(notte, false), {
+    domain: "input_select",
+    service: "select_option",
+    data: { entity_id: "input_select.antifurto", option: "Totale notte" },
+  });
+  /* due modi che leggono la stessa centrale inserita: se ne accende uno */
+  const centrale = [
+    { entita: "script.notte", stato: "alarm_control_panel.casa" },
+    { entita: "script.sensori", stato: "alarm_control_panel.casa" },
+  ];
+  const armata = { "alarm_control_panel.casa": s("armed_night") };
+  assert.deepEqual(
+    centrale.map((m) => modoInserito(m, armata, centrale)),
+    [true, false],
+  );
+  /* col valore scritto conta quello */
+  const conValore = [
+    { entita: "script.notte", stato: "alarm_control_panel.casa", valore: "armed_away" },
+    { entita: "script.sensori", stato: "alarm_control_panel.casa", valore: "armed_night" },
+  ];
+  assert.deepEqual(
+    conValore.map((m) => modoInserito(m, armata, conValore)),
+    [false, true],
+  );
+  /* e passa intero dalla pulizia */
+  const ripulito = occhioPulito(o);
+  assert.equal(ripulito.antifurto.modi[0].opzione, "Totale notte");
+  assert.equal(ripulito.antifurto.modi[0].pin, "1234");
 });

@@ -25,6 +25,12 @@ _Solo Home Assistant: l'app sul telefono non cambia._
 - **La planimetria si modifica di nuovo:** nel Config ogni piano ha
   «Modifica», che riapre la procedura dai muri con le stanze, i nomi, i
   colori, gli arredi e i dispositivi di quel piano. Salvato, resta lui.
+- **Colpo d'occhio, l'antifurto come nella plancia:** i modi su misura
+  tengono la voce del select, il valore che dice «inserito» e il PIN. Se ne
+  accende uno solo (prima due modi sulla stessa entità erano tutti e due
+  «Attivato» e il tocco non mandava niente), il tocco manda il comando
+  giusto, quello col PIN apre il tastierino, e il nome del modo acceso si
+  legge anche sul tema scuro.
 
 ## 1.18.7.25
 
