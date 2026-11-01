@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-KNPHQJAO.js";
+} from "../../chunk-Y7MJJ7RU.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -153776,7 +153776,17 @@ function onChange21(event) {
   if (casella7.type === "checkbox" || casella7.tagName === "SELECT" || casella7.type === "color")
     ridisegna32();
 }
+var SOLO_OCCHIO = "dm-solo-occhio";
+function soloOcchio() {
+  try {
+    return serve() && occhio().attiva === true && state179.premium !== false && currentProfile() !== "primary";
+  } catch (_errore) {
+    return false;
+  }
+}
 function ensureOcchioEditorTab() {
+  const solo = soloOcchio();
+  doc?.documentElement?.classList?.toggle?.(SOLO_OCCHIO, solo);
   const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
   if (!linguette4) return false;
   const presente = linguette4.querySelector(`.ed-tab[data-tab="${OCCHIO_TAB}"]`);
@@ -153784,6 +153794,7 @@ function ensureOcchioEditorTab() {
     presente?.remove();
     return false;
   }
+  if (solo && schedaAttiva19() !== OCCHIO_TAB) root.editorSwitch?.(OCCHIO_TAB);
   if (presente) return false;
   const linguetta4 = doc.createElement("button");
   linguetta4.className = "ed-tab";
@@ -153791,12 +153802,15 @@ function ensureOcchioEditorTab() {
   linguetta4.textContent = `👁️ ${t("Colpo d'occhio", "At a glance")}`;
   linguetta4.addEventListener("click", () => root.editorSwitch?.(OCCHIO_TAB));
   linguette4.prepend(linguetta4);
+  if (solo && schedaAttiva19() !== OCCHIO_TAB) root.editorSwitch?.(OCCHIO_TAB);
   return true;
 }
 function installaLoStile8() {
   installStyle(
     "dm-occhio-editor-style",
     `
+      html.dm-solo-occhio #editor-modal .ed-tabs,html.dm-solo-occhio #editor-modal #dm-alberatura-famiglie,html.dm-solo-occhio #editor-modal .dm-cerca-config,html.dm-solo-occhio #editor-modal .dm-alberatura-titolo-famiglia{display:none!important}
+      html.dm-solo-occhio #editor-modal .ed-body,html.dm-solo-occhio #editor-modal #ed-body{margin-left:0!important;max-width:none!important}
       #ed-body .dm-oc-ed-gruppo{display:block}
       #ed-body .dm-oc-ed-corpo{display:grid;gap:10px;padding-top:4px}
       #ed-body .dm-oc-ed-corpo>.dm-oc-ed-griglia{margin:0}

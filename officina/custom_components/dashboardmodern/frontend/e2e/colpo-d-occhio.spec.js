@@ -452,6 +452,36 @@ test("con GdAHome Base la plancia resta quella di sempre, e la scheda del Config
   }
 });
 
+/* «Anche il Config del Colpo d'occhio deve essere solo il suo»: come la Casa
+ * 3D, sulla sua plancia il Config — dal ⚙ o dal menu dell'app — e' solo la
+ * scheda Colpo d'occhio, senza le schede della plancia classica. */
+test("sulla plancia Colpo d'occhio il Config e' solo il suo", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "basta una misura");
+  await page.addInitScript(() => {
+    window.__DASHBOARDMODERN_PROFILE__ = "occhio_ingresso";
+  });
+  await boot(page, testInfo);
+  await page.locator('#dm-occhio [data-oc="config"]').click();
+  await expect(page.locator("#ed-body .dm-oc-ed")).toBeVisible({ timeout: 20_000 });
+  await expect(page.locator('.ed-tab[data-tab="occhio"]')).toHaveClass(/active/);
+  await expect(page.locator("#editor-modal .ed-tabs")).toBeHidden();
+  await expect(page.locator("#editor-modal .dm-cerca-config")).toBeHidden();
+  const dove = foto(testInfo, "occhio-config-solo");
+  if (dove) {
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: dove, animations: "disabled" });
+  }
+  /* chiuso e riaperto dal menu dell'app: sempre e solo il suo */
+  await page.evaluate(
+    () =>
+      window.closeEditor?.() ||
+      document.querySelector("#editor-modal .ed-close, #editor-modal [data-ed-close]")?.click(),
+  );
+  await page.evaluate(() => window.apriConfigEntita?.());
+  await expect(page.locator("#ed-body .dm-oc-ed")).toBeVisible({ timeout: 20_000 });
+  await expect(page.locator("#editor-modal .ed-tabs")).toBeHidden();
+});
+
 test("spenta, la plancia resta quella di sempre", async ({ page }, testInfo) => {
   await boot(page, testInfo);
   await page.evaluate(() => {
