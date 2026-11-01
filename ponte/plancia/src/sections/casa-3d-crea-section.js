@@ -42,7 +42,7 @@ import {
   pianoDelLivello,
   posaDiRipiego,
 } from "../core/crea-casa.js";
-import { PASSO, grigliaDeiMuri, inchiostro, riconosciDaFoto, stimaInclinazione } from "../core/pianta-da-foto.js";
+import { PASSO, grigliaDeiMuri, inchiostro, riconosciDaFoto, scalaScritta, stimaInclinazione } from "../core/pianta-da-foto.js";
 import { eNomeDiStanza, nomeDaScritta, pezziDelDisegno, pianiDelDisegno } from "../core/pianta-da-dwg.js";
 import { leStanzeRicordate } from "../core/le-stanze-di-home-assistant.js";
 import { premiumDellaCasa, premiumRicordato } from "./plancia-a-muro-section.js";
@@ -165,6 +165,28 @@ const VENDOR = (() => {
   return TF.slice(0, TF.lastIndexOf("/") + 1);
 })();
 void COCO;
+
+/* pdf.js (Apache-2.0, vedi legacy/vendor/pdfjs/LEGGIMI.txt): per il PDF del
+ * catasto, solo quando si sceglie un PDF. */
+const PDFJS = (() => {
+  try {
+    return new URL("../../legacy/vendor/pdfjs/pdf.min.js", import.meta.url).href;
+  } catch (_errore) {
+    return "../../legacy/vendor/pdfjs/pdf.min.js";
+  }
+})();
+const PDFJS_LAVORO = (() => {
+  try {
+    return new URL("../../legacy/vendor/pdfjs/pdf.worker.min.js", import.meta.url).href;
+  } catch (_errore) {
+    return "../../legacy/vendor/pdfjs/pdf.worker.min.js";
+  }
+})();
+const daServire = (indirizzo, nome) => {
+  const qui = String(import.meta.url || "");
+  const taglio = qui.indexOf("/dashboardmodern_static/");
+  return taglio >= 0 ? `${qui.slice(0, taglio)}/dashboardmodern_static/legacy/vendor/pdfjs/${nome}` : indirizzo;
+};
 
 /* LibreDWG (GPL-3, vedi legacy/vendor/libredwg/LEGGIMI.txt): si scarica solo
  * quando si sceglie un DWG, ed e' grosso (11 MB). Stessa strada del resto. */
@@ -559,8 +581,8 @@ function pPlanimetria() {
     ) +
     scheda(
       `🗺️ <b>${esc(t("La planimetria", "The floor plan"))}</b>`,
-      `<button type="button" class="c3c-carica" data-c3c="carica"><b>📄</b>${esc(t("Carica una foto della planimetria", "Upload a photo of the floor plan"))}<span class="c3c-piccolo">${esc(
-        t("va bene anche la foto col telefono della planimetria catastale (per un PDF, una schermata)", "a phone photo of the cadastral plan is fine too (for a PDF, a screenshot)"),
+      `<button type="button" class="c3c-carica" data-c3c="carica"><b>📄</b>${esc(t("Carica una foto o un PDF della planimetria", "Upload a photo or a PDF of the floor plan"))}<span class="c3c-piccolo">${esc(
+        t("il PDF del catasto va bene così com'è: la scala la leggo dal foglio", "the cadastral PDF is fine as it is: I read the scale from the sheet"),
       )}</span></button>
       <button type="button" class="c3c-carica" data-c3c="caricadwg"><b>📐</b>${esc(t("Carica il disegno DWG", "Upload the DWG drawing"))}<span class="c3c-piccolo">${esc(
         t("il file dell'architetto o del geometra: la scala e i nomi delle stanze li prendo dal disegno", "the architect's file: scale and room names come from the drawing"),
@@ -908,6 +930,66 @@ async function usaPlanimetria(src) {
 }
 
 /* ── dal disegno: DWG e «Disegnala qui» ─────────────────────────────── */
+
+let pdfjs = null;
+async function caricaPdfjs() {
+  if (!pdfjs)
+    pdfjs = import(/* @vite-ignore */ daServire(PDFJS, "pdf.min.js")).then((m) => {
+      m.GlobalWorkerOptions.workerSrc = daServire(PDFJS_LAVORO, "pdf.worker.min.js");
+      return m;
+    });
+  try {
+    return await pdfjs;
+  } catch (errore) {
+    pdfjs = null;
+    throw errore;
+  }
+}
+
+/* Il PDF della planimetria (il catasto lo da' cosi'): la prima pagina,
+ * disegnata nitida. Se sul foglio c'e' scritta la scala («Scala 1:200») la
+ * casa e' gia' in metri, e si va dritti ai muri: sul catasto non ci sono
+ * quote da toccare. Senza scala si passa dai due punti, come per una foto. */
+async function usaPdf(file) {
+  const S = state.S;
+  Object.assign(S, { dwg: null, avviso: "", lavoro: t("Apro il PDF…", "Opening the PDF…") });
+  disegnaIlPannello();
+  try {
+    const [lib, dati] = await Promise.all([caricaPdfjs(), file.arrayBuffer()]);
+    const documento = await lib.getDocument({ data: new Uint8Array(dati) }).promise;
+    const pagina = await documento.getPage(1);
+    const uno = pagina.getViewport({ scale: 1 });
+    const zoom = 2400 / Math.max(uno.width, uno.height);
+    const vista = pagina.getViewport({ scale: zoom });
+    const tela = tela2d(Math.round(vista.width), Math.round(vista.height));
+    const g = tela.getContext("2d");
+    g.fillStyle = "#fff";
+    g.fillRect(0, 0, tela.width, tela.height);
+    await pagina.render({ canvasContext: g, viewport: vista }).promise;
+    let scala = 0;
+    try {
+      const testo = await pagina.getTextContent();
+      scala = scalaScritta(testo.items.map((i) => i.str).join(" "));
+    } catch (_errore) {}
+    documento.destroy?.();
+    S.lavoro = "";
+    await usaPlanimetria(tela);
+    if (scala) {
+      /* un punto PDF e' 1/72 di pollice: la larghezza del foglio in metri,
+       * per la scala, sui pixel della tela */
+      const foglio = (uno.width / 72) * 0.0254 * scala;
+      S.daScala = scala;
+      return pronta(foglio / tela.width);
+    }
+    S.avviso = t("Sul PDF non ho trovato la scala: tocca i due capi di una misura che conosci.", "No scale found on the PDF: tap both ends of a length you know.");
+    disegna();
+  } catch (errore) {
+    root.console?.warn?.("[DashboardModern] Casa 3D: PDF", errore);
+    S.lavoro = "";
+    S.avviso = t("Questo PDF non si apre. Prova con una schermata della pagina.", "This PDF can't be opened. Try a screenshot of the page.");
+    disegna();
+  }
+}
 
 let libreDwg = null;
 async function caricaLibreDwg() {
@@ -1370,6 +1452,7 @@ async function alFile(e) {
   const S = state.S, quale = e.dataset.c3cFile, file = [...(e.files || [])];
   e.value = "";
   if (!file.length) return;
+  if (quale === "pianta" && (/\.pdf$/i.test(file[0].name || "") || file[0].type === "application/pdf")) return usaPdf(file[0]);
   if (quale === "pianta") return usaPlanimetria(await leggi(file[0]));
   if (quale === "dwg") return usaDwg(file[0]);
   if (quale === "stanza") {
@@ -1499,7 +1582,7 @@ function montaLaTela() {
       <div class="c3c-palco"><canvas class="c3c-tela"></canvas><div class="c3c-sopra"></div></div>
       <div class="c3c-pannello"></div>
     </div>
-    <input type="file" data-c3c-file="pianta" accept="image/*" hidden>
+    <input type="file" data-c3c-file="pianta" accept="image/*,.pdf,application/pdf" hidden>
     <input type="file" data-c3c-file="stanza" accept="image/*" multiple hidden>
     <input type="file" data-c3c-file="facciata" accept="image/*" hidden>
     <input type="file" data-c3c-file="dwg" accept=".dwg,image/vnd.dwg,application/acad,application/x-dwg" hidden>`;

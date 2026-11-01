@@ -1,0 +1,12 @@
+pdf.js (pdfjs-dist 4.10.38)
+===========================
+
+Mozilla pdf.js, usato dalla procedura «Crea la tua casa» della Casa 3D per
+aprire sul dispositivo il PDF della planimetria (per esempio quella del
+catasto). Il file non lascia il dispositivo.
+
+Licenza: Apache License 2.0 (vedi LICENSE). File senza modifiche, cosi' come
+pubblicati in pdfjs-dist; rinominati da .mjs a .js perche' il server li dia
+come JavaScript.
+
+Codice sorgente: https://github.com/mozilla/pdf.js (versione 4.10.38)

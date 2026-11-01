@@ -78,7 +78,9 @@ test("la planimetria storta si raddrizza", () => {
 test("dalla foto tornano due stanze, una porta fra loro e una finestra fuori", () => {
   let im = planimetria();
   const ang = stimaInclinazione(im);
-  im = ruota(im, -ang);
+  /* Si raddrizza come fa la procedura: si gira dell'angolo stimato (prima si
+   * girava dalla parte sbagliata e la pianta restava storta di 4°). */
+  im = ruota(im, ang);
   const griglia = grigliaDeiMuri(inchiostro(im), im.width, im.height, 1 / PXM);
   const casa = riconosciDaFoto(griglia);
   const aree = casa.stanze.map((s) => s.area).sort((a, b) => a - b);
@@ -93,4 +95,123 @@ test("dalla foto tornano due stanze, una porta fra loro e una finestra fuori", (
   assert.ok(Math.abs(finestre[0].largo - 1.2) < 0.3, `finestra ${finestre[0].largo}`);
   // le scritte non diventano muri: dentro la stanza a sinistra resta tutto stanza
   assert.equal(PASSO, 0.03);
+});
+
+/* «Se faccio Riconosci muri mi fa questo» (Trovati 0 ambienti, solo
+ * puntini): la planimetria del catasto disegna i muri con due righe sottili
+ * e il vuoto in mezzo, il portone e' un varco senza soglia, le finestre due
+ * righe sottili nel vano, e c'e' la cornice del foglio con l'intestazione.
+ * Una schermata ne fa 20-30 pixel per metro. Qui si disegna cosi', e si
+ * pretende la casa: cinque stanze, le porte, le finestre, il portone. */
+function catasto(pxm) {
+  const im = foglio(Math.round(42 * pxm), Math.round(34 * pxm)),
+    P = (v) => v * pxm,
+    X = (v) => P(v + 15),
+    Y = (v) => P(v + 12),
+    riga = (x0, y0, x1, y1) =>
+      rettangolo(im, Math.min(X(x0), X(x1)), Math.min(Y(y0), Y(y1)), Math.max(X(x0), X(x1)) + 1, Math.max(Y(y0), Y(y1)) + 1, 30);
+  /* un muro a doppia riga, orizzontale o verticale, coi suoi varchi */
+  const muro = (x0, y0, x1, y1, s, varchi = []) => {
+    const orizz = y0 === y1;
+    let pezzi = [[orizz ? Math.min(x0, x1) : Math.min(y0, y1), orizz ? Math.max(x0, x1) : Math.max(y0, y1)]];
+    for (const [v0, v1] of varchi)
+      pezzi = pezzi.flatMap(([a, b]) => (v1 <= a || v0 >= b ? [[a, b]] : [...(v0 > a ? [[a, v0]] : []), ...(v1 < b ? [[v1, b]] : [])]));
+    for (const [a, b] of pezzi)
+      if (orizz) {
+        riga(a, y0 - s / 2, b, y0 - s / 2);
+        riga(a, y0 + s / 2, b, y0 + s / 2);
+        riga(a, y0 - s / 2, a, y0 + s / 2);
+        riga(b, y0 - s / 2, b, y0 + s / 2);
+      } else {
+        riga(x0 - s / 2, a, x0 - s / 2, b);
+        riga(x0 + s / 2, a, x0 + s / 2, b);
+        riga(x0 - s / 2, a, x0 + s / 2, a);
+        riga(x0 - s / 2, b, x0 + s / 2, b);
+      }
+  };
+  const vetro = (x0, y0, x1, y1) => {
+    for (const k of [-0.08, 0.08]) y0 === y1 ? riga(x0, y0 + k, x1, y0 + k) : riga(x0 + k, y0, x0 + k, y1);
+  };
+  const E = 0.3,
+    I = 0.12;
+  muro(0, 0, 12, 0, E, [[2, 3.4], [8.5, 9.7]]);
+  muro(12, 0, 12, 10, E, [[6.2, 7.4]]);
+  muro(0, 10, 12, 10, E, [[4.3, 5.3], [8.5, 9.7]]); // il portone (4,3-5,3) senza soglia
+  muro(0, 0, 0, 10, E, [[2, 3.4], [7.5, 8.3]]);
+  vetro(2, 0, 3.4, 0);
+  vetro(8.5, 0, 9.7, 0);
+  vetro(12, 6.2, 12, 7.4);
+  vetro(8.5, 10, 9.7, 10);
+  vetro(0, 2, 0, 3.4);
+  vetro(0, 7.5, 0, 8.3);
+  muro(7, 0, 7, 6, I, [[1.5, 2.4]]);
+  muro(7, 4, 12, 4, I, [[7.8, 8.6]]);
+  muro(7, 6, 7, 10, I, [[7.5, 8.3]]);
+  muro(0, 6, 7, 6, I, [[4.6, 5.4]]);
+  muro(3, 6, 3, 10, I, [[7.6, 8.4]]);
+  /* le scritte: lettere da 30×40 cm, una accanto all'altra */
+  const scritta = (x, y, n) => {
+    for (let k = 0; k < n; k++) {
+      riga(x + k * 0.36, y, x + k * 0.36, y + 0.4);
+      riga(x + k * 0.36 + 0.25, y, x + k * 0.36 + 0.25, y + 0.4);
+      riga(x + k * 0.36, y, x + k * 0.36 + 0.25, y);
+    }
+  };
+  scritta(2.2, 3, 9); // SOGGIORNO
+  scritta(8.6, 2, 6); // CUCINA
+  scritta(8.6, 7, 6); // CAMERA
+  scritta(0.6, 8, 5); // BAGNO
+  scritta(4.2, 8.5, 4); // DIS.
+  /* la cornice e l'intestazione del foglio */
+  rettangolo(im, P(1), P(1), P(41), P(1) + 2, 30);
+  rettangolo(im, P(1), P(33), P(41), P(33) + 2, 30);
+  rettangolo(im, P(1), P(1), P(1) + 2, P(33), 30);
+  rettangolo(im, P(41), P(1), P(41) + 2, P(33), 30);
+  for (let k = 0; k < 40; k++) rettangolo(im, P(2 + k * 0.4), P(2.5), P(2.25 + k * 0.4), P(2.9), 30);
+  return im;
+}
+
+for (const pxm of [20, 30]) {
+  test(`la planimetria del catasto (${pxm} pixel per metro): muri a doppia riga, portone senza soglia`, () => {
+    const im = catasto(pxm);
+    const casa = riconosciDaFoto(grigliaDeiMuri(inchiostro(im), im.width, im.height, 1 / pxm));
+    const aree = casa.stanze.map((s) => s.area).sort((a, b) => a - b);
+    assert.equal(casa.stanze.length, 5, `stanze: ${aree.map((a) => a.toFixed(1))}`);
+    /* bagno ~10, disimpegno ~14, cucina ~18, camera ~27, soggiorno ~39 */
+    const attese = [10.3, 14.4, 17.9, 27.3, 38.9];
+    aree.forEach((a, i) => assert.ok(Math.abs(a - attese[i]) < attese[i] * 0.12, `area ${a} invece di ${attese[i]}`));
+    const porte = casa.aperture.filter((a) => a.tipo === "porta"),
+      finestre = casa.aperture.filter((a) => a.tipo === "finestra");
+    assert.equal(porte.length, 6, `porte: ${porte.map((p) => p.largo.toFixed(1))}`); // cinque dentro e il portone
+    assert.equal(finestre.length, 6, `finestre: ${finestre.map((p) => p.largo.toFixed(1))}`);
+  });
+}
+
+/* Una schermata ritagliata stretta attorno alla casa: i muri di fuori sono
+ * larghi quanto l'immagine, ma non sono la cornice del foglio. */
+function ritaglia(im, x0, y0, x1, y1) {
+  const w = x1 - x0,
+    h = y1 - y0,
+    data = new Uint8ClampedArray(w * h * 4);
+  for (let y = 0; y < h; y++) data.set(im.data.subarray(((y + y0) * im.width + x0) * 4, ((y + y0) * im.width + x1) * 4), y * w * 4);
+  return { width: w, height: h, data };
+}
+test("la casa ritagliata stretta: i muri di fuori non sono la cornice", () => {
+  const pxm = 30,
+    im = ritaglia(catasto(pxm), Math.round(14.6 * pxm), Math.round(11.6 * pxm), Math.round(27.4 * pxm), Math.round(22.4 * pxm));
+  const casa = riconosciDaFoto(grigliaDeiMuri(inchiostro(im), im.width, im.height, 1 / pxm));
+  assert.equal(casa.stanze.length, 5, `stanze: ${casa.stanze.map((s) => s.area.toFixed(1))}`);
+});
+test("un contorno solo, senza stanze dentro, e' una stanza", () => {
+  const pxm = 40,
+    im = foglio(Math.round(13.2 * pxm), Math.round(11.2 * pxm));
+  const s = 0.3 * pxm,
+    m = 0.6 * pxm;
+  rettangolo(im, m, m, im.width - m, m + s);
+  rettangolo(im, m, im.height - m - s, im.width - m, im.height - m);
+  rettangolo(im, m, m, m + s, im.height - m);
+  rettangolo(im, im.width - m - s, m, im.width - m, im.height - m);
+  const casa = riconosciDaFoto(grigliaDeiMuri(inchiostro(im), im.width, im.height, 1 / pxm));
+  assert.equal(casa.stanze.length, 1);
+  assert.ok(Math.abs(casa.stanze[0].area - 11.4 * 9.4) < 6, `area ${casa.stanze[0].area}`);
 });
