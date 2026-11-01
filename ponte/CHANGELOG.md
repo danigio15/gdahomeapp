@@ -10,6 +10,28 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.19
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Casa 3D, la planimetria del catasto:** «Riconosci muri» trovava zero
+  ambienti. I muri a doppia riga del catasto ora diventano muri veri, anche
+  in una schermata a bassa risoluzione o ritagliata stretta; le scritte non
+  diventano muri; il portone senza soglia non fa entrare il fuori; le
+  finestre si riconoscono dal vetro nel vano.
+- **Casa 3D, il PDF del catasto:** si carica direttamente. La prima pagina
+  si apre sul dispositivo e la scala («Scala 1:200») si legge dal foglio;
+  senza scala scritta si toccano i due capi di una misura.
+- **Casa 3D, il DWG:** si sceglie il piano fra quelli del disegno, e i muri
+  arrivano dagli strati giusti (viste, scale e quote restano fuori); le
+  finestre dallo strato degli infissi, i basculanti e i portoni dalle porte.
+  I nomi delle stanze arrivano dalle scritte del disegno, senza doppioni;
+  cortili, giardini e terrazzi nascono già «fuori».
+- **Casa 3D, senza planimetria:** la casa si disegna nella plancia: le
+  misure del piano, e le stanze si dividono col «Muro dritto».
+- **Energia:** nei mesi passati non compare più l'avviso «Produzione e
+  consumi principali non disponibili» quando i numeri del mese ci sono.
+
 ## 1.18.7.18
 
 _Solo Home Assistant: l'app sul telefono non cambia._
