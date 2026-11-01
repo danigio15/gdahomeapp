@@ -43,7 +43,7 @@ name: GdAHome
 #
 # Quello che non cambia: nel negozio «Aggiorna» compare **solo** se questo
 # numero si alza.
-version: "1.18.7.19"
+version: "1.18.7.20"
 # L'immagine gia' pronta (la costruisce .github/workflows/immagini-add-on.yml,
 # una per architettura, col numero della versione): Home Assistant la scarica
 # invece di costruirla in casa, e lo scaricamento ha la percentuale.

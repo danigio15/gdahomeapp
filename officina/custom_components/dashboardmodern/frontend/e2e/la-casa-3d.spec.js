@@ -567,3 +567,42 @@ test("il PDF del catasto: la scala dal foglio e le stanze", async ({ page, brows
   });
   await fotoDiretta(page, testInfo, "crea-pdf-catasto");
 });
+
+/* «Non è lavorabile così: tutta la parte di sopra bloccata e un piccolo
+ * riquadro sotto che scorre». Sul Fold aperto (e su un telefono) scorre tutta
+ * la pagina: il disegno resta grande e il pannello si legge fino in fondo. */
+test("sul Fold aperto scorre tutta la pagina, non una striscia", async ({
+  page,
+  browser,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "la misura del Fold la mette la prova");
+  const altra = await browser.newPage();
+  await altra.setContent(catastoSvg());
+  const pdf = await altra.pdf({ format: "A4", printBackground: true });
+  await altra.close();
+  await page.setViewportSize({ width: 884, height: 660 });
+  const crea = await apriLaProcedura(page, testInfo);
+  await crea.locator('[data-c3c-file="pianta"]').setInputFiles({
+    name: "planimetria-catastale.pdf",
+    mimeType: "application/pdf",
+    buffer: pdf,
+  });
+  await expect(crea.locator(".c3c-pannello")).toContainText("Trovati 5 ambienti", {
+    timeout: 120_000,
+  });
+  const misure = await crea.evaluate((el) => ({
+    scorre: el.scrollHeight > el.clientHeight + 40,
+    palco: el.querySelector(".c3c-palco").getBoundingClientRect().height,
+    pannelloScorreDaSe: (() => {
+      const p = el.querySelector(".c3c-pannello");
+      return p.scrollHeight > p.clientHeight + 4;
+    })(),
+  }));
+  expect(misure.scorre).toBe(true);
+  expect(misure.palco).toBeGreaterThanOrEqual(280);
+  expect(misure.pannelloScorreDaSe).toBe(false);
+  const avanti = crea.locator('[data-c3c="avanti"]');
+  await avanti.scrollIntoViewIfNeeded();
+  await expect(avanti).toBeInViewport();
+  await fotoDiretta(page, testInfo, "crea-fold-in-fondo");
+});

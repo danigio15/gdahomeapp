@@ -1626,9 +1626,10 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // suoi pezzi in `sections/casa-3d/` (la scena, gli arredi, le finiture).
   // three.js non conta: si legge solo quando la casa si apre.
   // 518 col DWG: `core/pianta-da-dwg.js` (dai pezzi del disegno ai piani).
+  // 519: `core/cartella-della-plancia.js` (i file di legacy/vendor con l'impronta).
   // LibreDWG non conta: si legge solo quando si sceglie un file DWG.
   assert.ok(
-    relative.length <= 518,
+    relative.length <= 519,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

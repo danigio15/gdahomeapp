@@ -10,6 +10,19 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.20
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Casa 3D, il DWG dall'app:** sul telefono usciva «Questo DWG non si
+  legge» con qualunque disegno. Il motore che legge i DWG non arrivava dal
+  ponte; ora arriva, e con lui il lettore dei PDF, il riconoscimento degli
+  arredi nelle foto e la vista 3D, che si chiedevano allo stesso modo.
+- **Casa 3D, «Crea la tua casa» su telefono e Fold:** scorre tutta la
+  pagina. Prima la parte di sopra restava ferma e i dati scorrevano in una
+  striscia piccola sotto il disegno; ora il disegno resta grande e il
+  pannello si legge fino in fondo.
+
 ## 1.18.7.19
 
 _Solo Home Assistant: l'app sul telefono non cambia._

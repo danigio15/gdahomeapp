@@ -60,6 +60,7 @@ import {
   pianiDelDisegno,
   ruoloDelloStrato,
 } from "../core/pianta-da-dwg.js";
+import { daiVendor } from "../core/cartella-della-plancia.js";
 import { leStanzeRicordate } from "../core/le-stanze-di-home-assistant.js";
 import { premiumDellaCasa, premiumRicordato } from "./plancia-a-muro-section.js";
 import { puoConfigurare } from "./la-config-e-di-chi-la-amministra-section.js";
@@ -243,13 +244,11 @@ const COCO = (() => {
     return "../../legacy/vendor/riconoscere/coco-ssd.min.js";
   }
 })();
-const VENDOR = (() => {
-  const qui = String(import.meta.url || "");
-  const taglio = qui.indexOf("/dashboardmodern_static/");
-  if (taglio >= 0)
-    return `${qui.slice(0, taglio)}/dashboardmodern_static/legacy/vendor/riconoscere/`;
-  return TF.slice(0, TF.lastIndexOf("/") + 1);
-})();
+const VENDOR = daiVendor(
+  String(import.meta.url || ""),
+  "riconoscere/",
+  TF.slice(0, TF.lastIndexOf("/") + 1),
+);
 void COCO;
 
 /* pdf.js (Apache-2.0, vedi legacy/vendor/pdfjs/LEGGIMI.txt): per il PDF del
@@ -268,13 +267,8 @@ const PDFJS_LAVORO = (() => {
     return "../../legacy/vendor/pdfjs/pdf.worker.min.js";
   }
 })();
-const daServire = (indirizzo, nome) => {
-  const qui = String(import.meta.url || "");
-  const taglio = qui.indexOf("/dashboardmodern_static/");
-  return taglio >= 0
-    ? `${qui.slice(0, taglio)}/dashboardmodern_static/legacy/vendor/pdfjs/${nome}`
-    : indirizzo;
-};
+const daServire = (indirizzo, nome) =>
+  daiVendor(String(import.meta.url || ""), `pdfjs/${nome}`, indirizzo);
 
 /* LibreDWG (GPL-3, vedi legacy/vendor/libredwg/LEGGIMI.txt): si scarica solo
  * quando si sceglie un DWG, ed e' grosso (11 MB). Stessa strada del resto. */
@@ -285,12 +279,11 @@ const LIBREDWG_JS = (() => {
     return "../../legacy/vendor/libredwg/dist/libredwg-web.js";
   }
 })();
-const LIBREDWG = (() => {
-  const qui = String(import.meta.url || "");
-  const taglio = qui.indexOf("/dashboardmodern_static/");
-  if (taglio >= 0) return `${qui.slice(0, taglio)}/dashboardmodern_static/legacy/vendor/libredwg/`;
-  return LIBREDWG_JS.slice(0, LIBREDWG_JS.length - "dist/libredwg-web.js".length);
-})();
+const LIBREDWG = daiVendor(
+  String(import.meta.url || ""),
+  "libredwg/",
+  LIBREDWG_JS.slice(0, LIBREDWG_JS.length - "dist/libredwg-web.js".length),
+);
 
 function copione(src, pronto) {
   if (pronto()) return Promise.resolve(true);
@@ -2416,8 +2409,22 @@ function installaLoStile() {
     ${Q} .c3c-disp-pianta{position:absolute;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:14px;background:#fff;border:2px solid #f59e0b;box-shadow:0 2px 6px rgba(0,0,0,.35)}
     ${Q} .c3c-disp-pianta.si{border-color:#16a34a}
     ${Q} .c3c-disp-pianta.scelto{box-shadow:0 0 0 3px rgba(14,165,233,.8)}
+    /* Telefono, Fold aperto, schermo basso: scorre tutta la pagina. Prima la
+     * testata e il disegno stavano fermi e i dati scorrevano in una striscia
+     * di 150 px sotto («come faccio a vedere i dati, e' impossibile»). Il
+     * disegno resta grande; dentro il disegno il dito disegna, fuori scorre. */
+    @media (max-width:900px),(max-height:640px){
+      ${Q}{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+      ${Q} .c3c-pagina{height:auto;min-height:100%;grid-template-rows:auto auto auto}
+      ${Q} .c3c-palco{height:min(60vh,560px);min-height:280px}
+      ${Q} .c3c-pannello{overflow:visible;min-height:auto}
+    }
+    @media (max-height:640px) and (min-width:901px){
+      ${Q} .c3c-pagina{grid-template-rows:auto auto}
+      ${Q} .c3c-palco{height:max(320px,calc(100vh - 140px))}
+    }
     @media (max-width:900px){
-      ${Q} .c3c-pagina{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 46vh minmax(0,1fr);gap:12px;padding:12px}
+      ${Q} .c3c-pagina{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;gap:12px;padding:12px}
       ${Q} .c3c-testa{flex-wrap:wrap}
       ${Q} .c3c-testa-testo{flex:1 1 0}
       ${Q} .c3c-testa h1{font-size:21px}

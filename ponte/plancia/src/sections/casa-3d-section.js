@@ -49,6 +49,7 @@ import {
   t,
   writeJsonIfChanged,
 } from "./shared.js";
+import { daiVendor } from "../core/cartella-della-plancia.js";
 
 const KEY = "__DASHBOARDMODERN_CASA_3D__";
 const ID = "dm-casa3d";
@@ -80,7 +81,9 @@ export function casa3dDiQui() {
  * casa (o non si sa), no — la stessa regola della plancia principale. */
 function telecamereGuardabili(casa, states) {
   const tutte = [];
-  for (const p of casa.piani) for (const d of p.dispositivi) if (d.k === "telecamera" && d.entity) tutte.push({ entity: d.entity });
+  for (const p of casa.piani)
+    for (const d of p.dispositivi)
+      if (d.k === "telecamera" && d.entity) tutte.push({ entity: d.entity });
   for (const d of casa.esterno.telecamere) if (d.entity) tutte.push({ entity: d.entity });
   const visibili = telecamereVisibili(tutte, {
     config: readJson(CHIAVE_RISERVATE, {}),
@@ -97,14 +100,20 @@ const italiano = () => !english();
 
 function nomeDelDispositivo(d, states) {
   const D = DISPOSITIVI_3D[d.k];
-  return d.nome || clean(states?.[d.entity]?.attributes?.friendly_name) || (D ? (italiano() ? D.nome[0] : D.nome[1]) : d.k);
+  return (
+    d.nome ||
+    clean(states?.[d.entity]?.attributes?.friendly_name) ||
+    (D ? (italiano() ? D.nome[0] : D.nome[1]) : d.k)
+  );
 }
 
 const pianiDallAlto = (casa) => casa.piani.slice().sort((a, b) => b.livello - a.livello);
 
 function luciDelPiano(p, states) {
   const luci = p.dispositivi.filter((d) => d.k === "luce" && d.entity);
-  const accese = luci.filter((d) => statoDelDispositivo("luce", states[d.entity], italiano()).attivo);
+  const accese = luci.filter(
+    (d) => statoDelDispositivo("luce", states[d.entity], italiano()).attivo,
+  );
   return { tutte: luci.length, accese: accese.length };
 }
 
@@ -139,7 +148,9 @@ function testataMarkup(casa, admin) {
         <h1>${esc(p ? p.nome : nome)}</h1>
         <p>${esc(sotto)}</p>
       </div>
-      <div class="c3-pillole">${pillola("esterno", `${casa.tipo === "palazzo" ? "🏢" : "🏡"} ${t("Esterno", "Outside")}`)}${pianiDallAlto(casa)
+      <div class="c3-pillole">${pillola("esterno", `${casa.tipo === "palazzo" ? "🏢" : "🏡"} ${t("Esterno", "Outside")}`)}${pianiDallAlto(
+        casa,
+      )
         .map((x) => pillola(x.k, x.nome))
         .join("")}</div>
       <span class="c3-spazio"></span>
@@ -190,7 +201,11 @@ function sinistraMarkup(casa, states, admin) {
         </button>`;
     })
     .join("");
-  let luciAccese = 0, luciTutte = 0, aperte = 0, movimento = 0, allarmi = 0;
+  let luciAccese = 0,
+    luciTutte = 0,
+    aperte = 0,
+    movimento = 0,
+    allarmi = 0;
   for (const p of casa.piani) {
     const l = luciDelPiano(p, states);
     luciAccese += l.accese;
@@ -246,7 +261,10 @@ function elencoMarkup(casa, states, guardabili) {
     const D = DISPOSITIVI_3D[d.k];
     if (!D) return "";
     const st = d.entity ? statoDelDispositivo(d.k, states[d.entity], italiano()) : null;
-    const testo = !d.entity ? t("da collegare", "not linked") : st.testo.replace(D.icona, "").trim() || (st.attivo ? t("attivo", "active") : t("a riposo", "idle"));
+    const testo = !d.entity
+      ? t("da collegare", "not linked")
+      : st.testo.replace(D.icona, "").trim() ||
+        (st.attivo ? t("attivo", "active") : t("a riposo", "idle"));
     let comando = "";
     if (d.k === "telecamera" && d.entity) {
       comando = guardabili.has(d.entity)
@@ -265,10 +283,16 @@ function elencoMarkup(casa, states, guardabili) {
   };
   if (p) {
     const nomeStanza = new Map(p.stanze.map((s) => [s.id, s.nome]));
-    const ordinati = p.dispositivi.slice().sort((a, b) => clean(nomeStanza.get(a.stanza)).localeCompare(clean(nomeStanza.get(b.stanza))));
+    const ordinati = p.dispositivi
+      .slice()
+      .sort((a, b) =>
+        clean(nomeStanza.get(a.stanza)).localeCompare(clean(nomeStanza.get(b.stanza))),
+      );
     for (const d of ordinati) righe.push(riga(d, nomeStanza.get(d.stanza) || ""));
   } else for (const d of casa.esterno.telecamere) righe.push(riga(d, t("Esterno", "Outside")));
-  const titolo = p ? `${t("Dispositivi", "Devices")} · ${p.nome}` : t("Telecamere fuori", "Outdoor cameras");
+  const titolo = p
+    ? `${t("Dispositivi", "Devices")} · ${p.nome}`
+    : t("Telecamere fuori", "Outdoor cameras");
   return `<section class="c3-scheda c3-scheda-elenco">
       <h2>⚡ <b>${esc(titolo)}</b></h2>
       ${
@@ -276,8 +300,14 @@ function elencoMarkup(casa, states, guardabili) {
           ? `<ul class="c3-elenco-righe">${righe.join("")}</ul>`
           : `<p class="c3-nota">${esc(
               p
-                ? t("Nessun dispositivo in questo piano: si mettono con «Arreda».", "No devices on this floor: place them with «Furnish».")
-                : t("Tocca un piano per vedere i suoi dispositivi.", "Tap a floor to see its devices."),
+                ? t(
+                    "Nessun dispositivo in questo piano: si mettono con «Arreda».",
+                    "No devices on this floor: place them with «Furnish».",
+                  )
+                : t(
+                    "Tocca un piano per vedere i suoi dispositivi.",
+                    "Tap a floor to see its devices.",
+                  ),
             )}</p>`
       }
     </section>`;
@@ -288,8 +318,12 @@ function elencoMarkup(casa, states, guardabili) {
 function finestraMarkup(casa, states) {
   const f = state.finestra;
   if (f?.tipo !== "telecamera") return "";
-  const d = [...casa.piani.flatMap((p) => p.dispositivi), ...casa.esterno.telecamere].find((x) => x.entity === f.entity);
-  const nome = d ? nomeDelDispositivo(d, states) : clean(states?.[f.entity]?.attributes?.friendly_name) || t("Telecamera", "Camera");
+  const d = [...casa.piani.flatMap((p) => p.dispositivi), ...casa.esterno.telecamere].find(
+    (x) => x.entity === f.entity,
+  );
+  const nome = d
+    ? nomeDelDispositivo(d, states)
+    : clean(states?.[f.entity]?.attributes?.friendly_name) || t("Telecamera", "Camera");
   return `<div class="c3-velo" data-c3s="velo">
       <section class="c3-finestra" role="dialog" aria-modal="true">
         <div class="c3-finestra-testa"><h3>📹 ${esc(nome)}</h3>
@@ -310,7 +344,9 @@ function accendiIlVideo(sopra, casa, states) {
     return;
   }
   const entity = posto.dataset.c3Video;
-  const d = [...casa.piani.flatMap((p) => p.dispositivi), ...casa.esterno.telecamere].find((x) => x.entity === entity);
+  const d = [...casa.piani.flatMap((p) => p.dispositivi), ...casa.esterno.telecamere].find(
+    (x) => x.entity === entity,
+  );
   const nome = d ? nomeDelDispositivo(d, states) : entity;
   try {
     apri({ entity, name: nome }, nome, posto);
@@ -381,9 +417,8 @@ function nomeDellArea(id) {
  * come per il riconoscimento delle foto: impacchettati, i moduli stanno in
  * `pacco/` e un percorso relativo sbaglierebbe piano. */
 const TRE = (() => {
-  const qui = String(import.meta.url || "");
-  const taglio = qui.indexOf("/dashboardmodern_static/");
-  if (taglio >= 0) return `${qui.slice(0, taglio)}/dashboardmodern_static/legacy/vendor/three.module.min.js`;
+  const servita = daiVendor(String(import.meta.url || ""), "three.module.min.js", null);
+  if (servita) return servita;
   try {
     return new URL("../../legacy/vendor/three.module.min.js", import.meta.url).href;
   } catch (_errore) {
@@ -395,10 +430,7 @@ async function avviaLaScena(admin) {
   state.caricando = true;
   state.guasto = "";
   try {
-    const [THREE, { creaScena }] = await Promise.all([
-      import(TRE),
-      import("./casa-3d/scena.js"),
-    ]);
+    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("./casa-3d/scena.js")]);
     const nodo = doc.getElementById(ID);
     const posto = nodo?.querySelector(".c3-posto");
     if (!posto) return;
@@ -492,7 +524,10 @@ function comanda(azione) {
 function guarda(entity) {
   const casa = casa3dDiQui();
   if (!telecamereGuardabili(casa, allStates() || {}).has(entity)) {
-    avviso(t("Telecamera riservata: non si vede adesso", "Private camera: not viewable now"), "male");
+    avviso(
+      t("Telecamera riservata: non si vede adesso", "Private camera: not viewable now"),
+      "male",
+    );
     return;
   }
   apriFinestra({ tipo: "telecamera", entity });
@@ -554,9 +589,15 @@ function disegna() {
   /* Una plancia Casa 3D appena nata non ha ancora la casa: niente scena,
    * niente schede, e al posto della casa l'invito a crearla. */
   const vuota = !casa.piani.length;
-  scriviSeCambia(nodo.querySelector(".c3-sinistra"), vuota ? "" : sinistraMarkup(casa, states, admin));
+  scriviSeCambia(
+    nodo.querySelector(".c3-sinistra"),
+    vuota ? "" : sinistraMarkup(casa, states, admin),
+  );
   const guardabili = telecamereGuardabili(casa, states);
-  scriviSeCambia(nodo.querySelector(".c3-elenco"), vuota ? "" : elencoMarkup(casa, states, guardabili));
+  scriviSeCambia(
+    nodo.querySelector(".c3-elenco"),
+    vuota ? "" : elencoMarkup(casa, states, guardabili),
+  );
   /* La scena: si costruisce una volta, si rifa' solo se la casa e' cambiata
    * da un'altra parte (la procedura «Crea», un altro dispositivo). */
   const firma = JSON.stringify(casa);
@@ -656,7 +697,11 @@ function alClic(evento) {
   }
   if (cosa === "chiudi") return chiudi();
   if (cosa === "menu") {
-    apriIlMenu({ idTela: ID, tasto: '[data-c3s="menu"]', rimisura: () => state.scena?.ridimensiona() });
+    apriIlMenu({
+      idTela: ID,
+      tasto: '[data-c3s="menu"]',
+      rimisura: () => state.scena?.ridimensiona(),
+    });
     return;
   }
   if (cosa === "vista") {
@@ -680,7 +725,14 @@ function alClic(evento) {
       } catch (errore) {
         root.console?.warn?.("[DashboardModern] casa 3d, crea", errore);
       }
-    } else avviso(t("La procedura per creare la casa non c'è ancora", "The house wizard is not available yet"), "male");
+    } else
+      avviso(
+        t(
+          "La procedura per creare la casa non c'è ancora",
+          "The house wizard is not available yet",
+        ),
+        "male",
+      );
     return;
   }
   if (cosa === "guarda") return guarda(clean(el.dataset.c3sE));
