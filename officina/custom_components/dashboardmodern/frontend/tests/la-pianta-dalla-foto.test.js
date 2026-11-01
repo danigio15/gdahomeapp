@@ -337,3 +337,28 @@ test("la foto grande della pianta dell'architetto: muri grigi pieni, una quota f
   assert.equal(grandi.length, 2, `due stanze: ${casa.stanze.map((s) => s.area.toFixed(1))}`);
   for (const a of grandi) assert.ok(a >= 18 && a <= 24, `stanza di ${a} m²`);
 });
+
+/* La stessa foto raddrizzata o ritagliata stretta: niente tavolo, ma le
+ * quote arrivano fino al bordo dell'immagine e toccano i muri. Il tavolo
+ * della griglia passava per la quota e portava via tutta la casa: nessuna
+ * stanza. */
+test("una quota dal bordo dell'immagine fino al muro non porta via la casa", () => {
+  const W = 1300,
+    H = 1100,
+    pxm = 110;
+  const im = foglio(W, H);
+  const m = (v) => 120 + v * pxm,
+    grigio = 118,
+    sp = 0.28 * pxm;
+  rettangolo(im, m(0), m(0), m(8), m(0) + sp, grigio);
+  rettangolo(im, m(0), m(6) - sp, m(8), m(6), grigio);
+  rettangolo(im, m(0), m(0), m(0) + sp, m(6), grigio);
+  rettangolo(im, m(8) - sp, m(0), m(8), m(6), grigio);
+  rettangolo(im, m(4) - sp / 2, m(0), m(4) + sp / 2, m(2.5), grigio);
+  rettangolo(im, m(4) - sp / 2, m(3.4), m(4) + sp / 2, m(6), grigio);
+  rettangolo(im, 0, m(1), m(0), m(1) + 3, 40); // dal bordo sinistro al muro
+  rettangolo(im, m(2), 0, m(2) + 3, m(0), 40); // dal bordo alto al muro
+  const casa = riconosciDaFoto(grigliaDeiMuri(inchiostro(im), W, H, 1 / pxm));
+  const grandi = casa.stanze.filter((s) => s.area > 10).map((s) => Math.round(s.area));
+  assert.equal(grandi.length, 2, `due stanze: ${casa.stanze.map((s) => s.area.toFixed(1))}`);
+});

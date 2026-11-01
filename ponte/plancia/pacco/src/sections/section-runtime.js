@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-3VRI2PVX.js";
+} from "../../chunk-KNPHQJAO.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -155038,9 +155038,10 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
     return celle;
   };
   const celleVetri = celleDi(vetri), cellePorte = celleDi(porte);
+  const largo = allarga(stringi(riga5, W2, H7, 2), W2, H7, 2);
   const fondo = new Uint8Array(W2 * H7), coda = [];
   const semina = (i) => {
-    if (riga5[i] && !fondo[i]) {
+    if (largo[i] && riga5[i] && !fondo[i]) {
       fondo[i] = 1;
       coda.push(i);
     }
@@ -155193,7 +155194,7 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
       }
       const inFila = (p) => {
         const lw = p.x1 - p.x0 + 1, lh = p.y1 - p.y0 + 1, oriz = lw >= lh;
-        const passo = oriz ? 1 : W2, largo = oriz ? W2 : 1;
+        const passo = oriz ? 1 : W2, largo2 = oriz ? W2 : 1;
         const da = oriz ? p.y0 : p.x0, a = oriz ? p.y1 : p.x1;
         const corre2 = (i, d) => {
           let n = 0;
@@ -155208,7 +155209,7 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
             let k = 0;
             while (k <= porta && i >= 0 && i < W2 * H7 && !muro[i]) i += verso2 * passo, k++;
             if (k > porta || i < 0 || i >= W2 * H7) continue;
-            const lungo = corre2(i, verso2 * passo), spesso = corre2(i, largo) + corre2(i, -largo) - 1;
+            const lungo = corre2(i, verso2 * passo), spesso = corre2(i, largo2) + corre2(i, -largo2) - 1;
             if (lungo > spesso) buone++;
           }
           if (buone * 2 >= a - da + 1) return true;
@@ -155289,8 +155290,8 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
     }
   };
   if (vetri) {
-    const largo = allarga(celleVetri, W2, H7, 2);
-    for (let i = 0; i < W2 * H7; i++) vetro[i] = largo[i] && !muro[i] ? 1 : 0;
+    const largo2 = allarga(celleVetri, W2, H7, 2);
+    for (let i = 0; i < W2 * H7; i++) vetro[i] = largo2[i] && !muro[i] ? 1 : 0;
   } else {
     cercaVani(tO, tV, H7, W2, (y, x) => y * W2 + x);
     cercaVani(tV, tO, W2, H7, (x, y) => y * W2 + x);
@@ -155334,15 +155335,15 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
     return n;
   };
   const lontano = 2 * spessoreMax;
-  const fine = (i, passo, largo) => {
+  const fine = (i, passo, largo2) => {
     const dietro = corre(i, passo, lontano);
     if (dietro < tratto) return false;
-    const spesso = corre(i, largo, lontano) + corre(i, -largo, lontano) - 1;
+    const spesso = corre(i, largo2, lontano) + corre(i, -largo2, lontano) - 1;
     return spesso <= spessoreMax && spesso < dietro;
   };
-  const chiudi5 = (a, b2, passo, largo) => {
+  const chiudi5 = (a, b2, passo, largo2) => {
     if (dritto(a, -passo) && dritto(b2, passo)) return true;
-    return fine(a, -passo, largo) && corre(b2, passo, 2) >= 2 || fine(b2, passo, largo) && corre(a, -passo, 2) >= 2;
+    return fine(a, -passo, largo2) && corre(b2, passo, 2) >= 2 || fine(b2, passo, largo2) && corre(a, -passo, 2) >= 2;
   };
   const varcoLargo = Math.round(4 / PASSO);
   const segnato = allarga(
@@ -155355,7 +155356,7 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
     for (let q = 0; q < k; q++) if (segnato[i + passo * q]) return true;
     return false;
   };
-  const apri7 = (a, b2, passo, largo, k) => k <= varco ? chiudi5(a, b2, passo, largo) : dritto(a, -passo) && dritto(b2, passo) && fino(a + passo, passo, k);
+  const apri7 = (a, b2, passo, largo2, k) => k <= varco ? chiudi5(a, b2, passo, largo2) : dritto(a, -passo) && dritto(b2, passo) && fino(a + passo, passo, k);
   for (let y = 1; y < H7 - 1; y++)
     for (let x = 1; x < W2 - 1; x++) {
       const i = y * W2 + x;

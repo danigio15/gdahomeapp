@@ -294,11 +294,14 @@ export function grigliaDeiMuri(
   };
   const celleVetri = celleDi(vetri),
     cellePorte = celleDi(porte);
-  /* Lo scuro che tocca il bordo e' il tavolo sotto il foglio, non un muro. */
+  /* Lo scuro che tocca il bordo e' il tavolo sotto il foglio, non un muro.
+   * Scuro largo (15 cm pieni), non una riga: una quota che arriva al bordo
+   * della foto e tocca i muri portava via tutta la casa. */
+  const largo = allarga(stringi(riga, W, H, 2), W, H, 2);
   const fondo = new Uint8Array(W * H),
     coda = [];
   const semina = (i) => {
-    if (riga[i] && !fondo[i]) {
+    if (largo[i] && riga[i] && !fondo[i]) {
       fondo[i] = 1;
       coda.push(i);
     }

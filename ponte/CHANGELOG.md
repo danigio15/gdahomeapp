@@ -34,7 +34,8 @@ _Solo Home Assistant: l'app sul telefono non cambia._
 - **Casa 3D, la foto della pianta dell'architetto:** con una foto grande i
   muri campiti di grigio non si perdono piu' (si vedevano solo i bordi), e
   una quota o una riga che arriva al bordo del foglio non fa piu' sparire i
-  muri come se fossero il tavolo sotto.
+  muri come se fossero il tavolo sotto. Anche quando le quote arrivano fino
+  al bordo della foto (prima spariva tutta la casa).
 
 ## 1.18.7.25
 
