@@ -14,6 +14,13 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
 _Solo Home Assistant: l'app sul telefono non cambia._
 
+- **Casa 3D, la pianta da una foto:** la scala si trova da sola dallo
+  spessore dei muri esterni, e si può andare avanti senza segnare nessuna
+  misura. Una quota scritta in centimetri («1092») o con la virgola al
+  posto sbagliato si legge giusta (10,92 metri), e se la misura non torna
+  coi muri lo dice, invece di dare una casa a striscia con un solo ambiente.
+  Una foto troppo storta per essere raddrizzata resta com'è, senza
+  stirarla.
 - **Plancia a muro sul 4 pollici, la Musica:** il nome del lettore si
   legge intero (prima finiva sotto il tasto «Scegli»), Scegli, Radio e
   Gruppo stanno in colonna sulla destra, tutti dentro lo schermo, e tornano i

@@ -53,6 +53,7 @@ import {
   prospettiva,
   raddrizza,
   riconosciDaFoto,
+  scalaDaiMuri,
   scalaScritta,
   stimaInclinazione,
 } from "../core/pianta-da-foto.js";
@@ -828,6 +829,23 @@ function pPlanimetria() {
   );
 }
 
+function notaDellaScala(S) {
+  const auto = S.mppMuri && S.mpp === S.mppMuri,
+    cm = S.scalaAvviso,
+    metri = S.metri ? numero(S.centimetri ? S.metri / 100 : S.metri, 2) : "";
+  if (cm)
+    return nota(
+      `⚠️ ${esc(t(`Con questa misura i muri esterni sarebbero spessi ${cm} cm: controlla la misura, in metri (10,92 e non 1092).`, `With this length the outer walls would be ${cm} cm thick: check the length, in metres (10.92, not 1092).`))}`,
+    );
+  if (S.centimetri)
+    return nota(esc(t(`Letta come ${metri} metri.`, `Read as ${metri} metres.`)));
+  if (auto)
+    return nota(
+      `✓ ${esc(t("Scala trovata dallo spessore dei muri: puoi andare avanti, o segnare una misura per essere più preciso.", "Scale found from the wall thickness: you can go on, or mark a length to be more precise."))}`,
+    );
+  return "";
+}
+
 function pScala() {
   const S = state.S;
   return (
@@ -836,7 +854,8 @@ function pScala() {
       `${nota(esc(t("Tocca i due estremi di una misura che conosci: una quota scritta, un muro, una porta (di solito 80 cm).", "Tap both ends of a length you know: a written dimension, a wall, a door (usually 80 cm).")))}
       ${nota(S.punti.length === 2 ? `✓ ${esc(t("Due punti scelti", "Two points chosen"))}` : esc(t(`Punti: ${S.punti.length} di 2`, `Points: ${S.punti.length} of 2`)))}
       <label class="c3c-metri"><input class="c3c-in" data-c3c-metri inputmode="decimal" value="${S.metri ? esc(numero(S.metri, 2)) : ""}" placeholder="${esc(t("es. 4,20", "e.g. 4.20"))}"> <span>${esc(t("metri", "metres"))}</span></label>
-      ${S.mpp ? nota(esc(t(`1 metro = ${Math.round(1 / S.mpp)} pixel della foto`, `1 metre = ${Math.round(1 / S.mpp)} photo pixels`))) : ""}`,
+      ${S.mpp ? nota(esc(t(`1 metro = ${Math.round(1 / S.mpp)} pixel della foto`, `1 metre = ${Math.round(1 / S.mpp)} photo pixels`))) : ""}
+      <div data-c3c="notaScala">${notaDellaScala(S)}</div>`,
     ) + avanti(t("Riconosci i muri →", "Find the walls →"), Boolean(S.mpp))
   );
 }
@@ -1306,7 +1325,21 @@ async function usaPlanimetria(src) {
         S.prospettiva = true;
       }
     }
+    /* La scala dallo spessore dei muri esterni (~42 cm): basta da sola, e
+     * fa da controllo alla misura scritta a mano. */
+    let muri = null;
+    if (typeof src === "string") {
+      try {
+        muri = scalaDaiMuri(dritta.getContext("2d").getImageData(0, 0, dritta.width, dritta.height));
+      } catch {
+        muri = null;
+      }
+    }
     Object.assign(S, {
+      mppMuri: muri?.mpp || null,
+      spessoreMuri: muri?.spessore || null,
+      scalaAvviso: null,
+      centimetri: false,
       img,
       dritta,
       vetri: null,
@@ -1314,7 +1347,7 @@ async function usaPlanimetria(src) {
       disegno: false,
       punti: [],
       metri: null,
-      mpp: null,
+      mpp: muri?.mpp || null,
       griglia: null,
       casa: null,
       nomi: {},
@@ -1862,10 +1895,29 @@ function ricalcola() {
 
 function aggiornaScala() {
   const S = state.S;
-  if (S.punti.length === 2 && S.metri) {
-    const px = Math.hypot(S.punti[1][0] - S.punti[0][0], S.punti[1][1] - S.punti[0][1]);
-    S.mpp = px > 4 ? S.metri / px : null;
-  } else S.mpp = null;
+  const auto = S.mppMuri || null;
+  S.scalaAvviso = null;
+  S.centimetri = false;
+  const px =
+    S.punti.length === 2
+      ? Math.hypot(S.punti[1][0] - S.punti[0][0], S.punti[1][1] - S.punti[0][1])
+      : 0;
+  if (px > 4 && S.metri) {
+    /* «1092» e' scritto in centimetri: nessuna casa misura cento metri. */
+    let f = S.metri >= 100 ? 0.01 : 1;
+    if (auto) {
+      const scarto = (g) => Math.abs(Math.log((S.metri * g) / px / auto));
+      /* una virgola dimenticata o di troppo: la misura che torna coi muri */
+      if (scarto(f) > Math.log(3))
+        for (const g of [1, 0.1, 0.01, 10, 100]) if (scarto(g) < scarto(f)) f = g;
+    }
+    S.centimetri = f !== 1;
+    S.mpp = (S.metri * f) / px;
+    if (auto && S.spessoreMuri) {
+      const r = S.mpp / auto;
+      if (r > 1.7 || r < 1 / 1.7) S.scalaAvviso = Math.round(S.spessoreMuri * S.mpp * 100);
+    }
+  } else S.mpp = auto;
   S.griglia = null;
 }
 
@@ -2355,10 +2407,12 @@ function alScrivere(ev) {
   }
   if (!S || e.dataset.c3cMetri === undefined) return;
   const v = parseFloat(clean(e.value).replace(",", "."));
-  S.metri = v > 0 && v < 500 ? v : null;
+  S.metri = v > 0 && v < 5000 ? v : null;
   aggiornaScala();
   const b = nodo().querySelector("[data-c3c='avanti']");
   if (b) b.disabled = !S.mpp;
+  const n = nodo().querySelector("[data-c3c='notaScala']");
+  if (n) n.innerHTML = notaDellaScala(S);
   disegnaLaTela();
 }
 
