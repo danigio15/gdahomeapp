@@ -10,6 +10,16 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.25
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Casa 3D, una plancia a se':** si vede solo sulla plancia creata dalla
+  console come «Casa 3D», e non prende mai il posto della plancia
+  principale. Chi l'aveva accesa li' per sbaglio ritrova la sua plancia.
+  Via «Torna alla plancia», e dal Config la spunta «Mostra la plancia Casa
+  3D» e «Apri in 3D»; in cima resta il ☰ per il menu laterale.
+
 ## 1.18.7.24
 
 _Solo Home Assistant: l'app sul telefono non cambia._
