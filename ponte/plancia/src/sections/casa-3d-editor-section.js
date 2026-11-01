@@ -148,22 +148,32 @@ function ridisegna() {
   ensureCasa3DEditor();
 }
 
+/* «Il config deve aprire quello 3D, non quello della plancia classica»: sulla
+ * plancia Casa 3D il Config e' solo la sua scheda — da ⚙, dal menu dell'app,
+ * da dovunque lo si apra. Le altre schede, l'albero e la ricerca non si
+ * vedono, come nel Config «solo muro» del pannello a muro. */
+const SOLO_CASA3D = "dm-solo-casa3d";
+
 export function ensureCasa3DEditorTab() {
+  const solo = serve();
+  doc?.documentElement?.classList?.toggle?.(SOLO_CASA3D, solo);
   const linguette = doc?.querySelector(".ed-tab")?.parentElement;
   if (!linguette) return false;
   const presente = linguette.querySelector(`.ed-tab[data-tab="${CASA3D_TAB}"]`);
-  if (!serve()) {
+  if (!solo) {
     presente?.remove();
     return false;
   }
-  if (presente) return false;
-  const linguetta = doc.createElement("button");
-  linguetta.className = "ed-tab";
-  linguetta.dataset.tab = CASA3D_TAB;
-  linguetta.textContent = `🏠 ${t("Casa 3D", "3D Home")}`;
-  linguetta.addEventListener("click", () => root.editorSwitch?.(CASA3D_TAB));
-  linguette.appendChild(linguetta);
-  return true;
+  if (!presente) {
+    const linguetta = doc.createElement("button");
+    linguetta.className = "ed-tab";
+    linguetta.dataset.tab = CASA3D_TAB;
+    linguetta.textContent = `🏠 ${t("Casa 3D", "3D Home")}`;
+    linguetta.addEventListener("click", () => root.editorSwitch?.(CASA3D_TAB));
+    linguette.appendChild(linguetta);
+  }
+  if (schedaAttiva() !== CASA3D_TAB) root.editorSwitch?.(CASA3D_TAB);
+  return !presente;
 }
 
 /* ── i gesti ──────────────────────────────────────────────────────────── */
@@ -232,6 +242,8 @@ function installaLoStile() {
       #ed-body .dm-c3-ed-dc small{font-size:11px;color:var(--text-dim,#64748b)}
       #ed-body .dm-c3-ed-chiuso{display:grid;justify-items:center;gap:10px;padding:40px 20px;text-align:center}
       #ed-body .dm-c3-ed-chiuso>span{font-size:44px}
+      html.dm-solo-casa3d #editor-modal .ed-tabs,html.dm-solo-casa3d #editor-modal #dm-alberatura-famiglie,html.dm-solo-casa3d #editor-modal .dm-cerca-config,html.dm-solo-casa3d #editor-modal .dm-alberatura-titolo-famiglia{display:none!important}
+      html.dm-solo-casa3d #editor-modal .ed-body,html.dm-solo-casa3d #editor-modal #ed-body{margin-left:0!important;max-width:none!important}
       @media(max-width:760px){#ed-body .dm-c3-ed-disp{grid-template-columns:auto minmax(0,1fr)}#ed-body .dm-c3-ed-disp select,#ed-body .dm-c3-ed-disp input{grid-column:1/-1}}
     `,
   );

@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-IPC6ONIQ.js";
+} from "../../chunk-K3RCSY3D.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -154632,22 +154632,27 @@ function ridisegna34() {
   if (body) delete body.dataset.dmCasa3dEditor;
   ensureCasa3DEditor();
 }
+var SOLO_CASA3D = "dm-solo-casa3d";
 function ensureCasa3DEditorTab() {
+  const solo = serve2();
+  doc?.documentElement?.classList?.toggle?.(SOLO_CASA3D, solo);
   const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
   if (!linguette4) return false;
   const presente = linguette4.querySelector(`.ed-tab[data-tab="${CASA3D_TAB}"]`);
-  if (!serve2()) {
+  if (!solo) {
     presente?.remove();
     return false;
   }
-  if (presente) return false;
-  const linguetta4 = doc.createElement("button");
-  linguetta4.className = "ed-tab";
-  linguetta4.dataset.tab = CASA3D_TAB;
-  linguetta4.textContent = `🏠 ${t("Casa 3D", "3D Home")}`;
-  linguetta4.addEventListener("click", () => root.editorSwitch?.(CASA3D_TAB));
-  linguette4.appendChild(linguetta4);
-  return true;
+  if (!presente) {
+    const linguetta4 = doc.createElement("button");
+    linguetta4.className = "ed-tab";
+    linguetta4.dataset.tab = CASA3D_TAB;
+    linguetta4.textContent = `🏠 ${t("Casa 3D", "3D Home")}`;
+    linguetta4.addEventListener("click", () => root.editorSwitch?.(CASA3D_TAB));
+    linguette4.appendChild(linguetta4);
+  }
+  if (schedaAttiva20() !== CASA3D_TAB) root.editorSwitch?.(CASA3D_TAB);
+  return !presente;
 }
 function nelCorpo4(event) {
   return Boolean(event.target?.closest?.("#ed-body .dm-c3-ed"));
@@ -154709,6 +154714,8 @@ function installaLoStile10() {
       #ed-body .dm-c3-ed-dc small{font-size:11px;color:var(--text-dim,#64748b)}
       #ed-body .dm-c3-ed-chiuso{display:grid;justify-items:center;gap:10px;padding:40px 20px;text-align:center}
       #ed-body .dm-c3-ed-chiuso>span{font-size:44px}
+      html.dm-solo-casa3d #editor-modal .ed-tabs,html.dm-solo-casa3d #editor-modal #dm-alberatura-famiglie,html.dm-solo-casa3d #editor-modal .dm-cerca-config,html.dm-solo-casa3d #editor-modal .dm-alberatura-titolo-famiglia{display:none!important}
+      html.dm-solo-casa3d #editor-modal .ed-body,html.dm-solo-casa3d #editor-modal #ed-body{margin-left:0!important;max-width:none!important}
       @media(max-width:760px){#ed-body .dm-c3-ed-disp{grid-template-columns:auto minmax(0,1fr)}#ed-body .dm-c3-ed-disp select,#ed-body .dm-c3-ed-disp input{grid-column:1/-1}}
     `
   );

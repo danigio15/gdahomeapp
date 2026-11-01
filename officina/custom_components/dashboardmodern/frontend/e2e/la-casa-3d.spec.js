@@ -827,6 +827,23 @@ test("il ⚙ della Casa 3D apre il suo Config sulla scheda Casa 3D", async ({ pa
     timeout: 10_000,
   });
   await expect(page.locator("#ed-body .dm-c3-ed")).toBeVisible();
+  /* Solo la Casa 3D: le schede della plancia classica non si vedono. */
+  await expect(page.locator("#editor-modal .ed-tabs")).toBeHidden();
+  const dove = foto(testInfo, "casa3d-config-solo");
+  if (dove) await page.screenshot({ path: dove });
+});
+
+/* Aperto da dovunque — il menu dell'app apre il Config com'è — sulla
+ * plancia Casa 3D il Config è solo il suo. */
+test("sulla plancia Casa 3D il Config aperto dal menu è solo quello 3D", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "basta una misura");
+  await boot(page, testInfo);
+  await page.evaluate(() => window.apriConfigEntita?.());
+  await expect(page.locator("#editor-modal")).toBeVisible({ timeout: 20_000 });
+  await expect(page.locator("#ed-body .dm-c3-ed")).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator("#editor-modal .ed-tabs")).toBeHidden();
 });
 
 /* E sulla principale la scheda Casa 3D non c'è: la Casa 3D è svincolata
