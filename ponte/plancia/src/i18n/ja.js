@@ -7690,6 +7690,7 @@ export default Object.freeze({
   "Add a device": "デバイスを追加",
   "Add a photo from outside": "外観の写真を追加",
   "Add another floor": "別の階を追加",
+  "Edit this floor's plan": "この階の間取り図を編集",
   "Add or redo a floor": "階を追加またはやり直す",
   "Add photos of ${nome}": "${nome} の写真を追加",
   "Add photos of this room": "この部屋の写真を追加",

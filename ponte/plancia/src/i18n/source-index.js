@@ -3878,6 +3878,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Modifica elettrodomestico": "Edit appliance",
   "Modifica Freddo / Caldo": "Edit Cool / Heat",
   "Modifica impegno": "Edit event",
+  "Modifica la planimetria di questo piano": "Edit this floor's plan",
   "Modifica luce": "Edit light",
   "Modifica manuale": "Edit by hand",
   "Modifica presa": "Edit socket",

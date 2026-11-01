@@ -7737,6 +7737,7 @@ export default Object.freeze({
   "Add a device": "Añadir un dispositivo",
   "Add a photo from outside": "Añadir una foto del exterior",
   "Add another floor": "Añadir otra planta",
+  "Edit this floor's plan": "Editar el plano de esta planta",
   "Add or redo a floor": "Añadir o rehacer una planta",
   "Add photos of ${nome}": "Añadir fotos de ${nome}",
   "Add photos of this room": "Añadir fotos de esta habitación",

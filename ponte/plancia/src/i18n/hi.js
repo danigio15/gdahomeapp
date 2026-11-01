@@ -7671,6 +7671,7 @@ export default Object.freeze({
   "Add a device": "डिवाइस जोड़ें",
   "Add a photo from outside": "बाहर की फ़ोटो जोड़ें",
   "Add another floor": "एक और मंज़िल जोड़ें",
+  "Edit this floor's plan": "इस मंज़िल का नक्शा बदलें",
   "Add or redo a floor": "मंज़िल जोड़ें या दोबारा बनाएँ",
   "Add photos of ${nome}": "${nome} की फ़ोटो जोड़ें",
   "Add photos of this room": "इस कमरे की फ़ोटो जोड़ें",

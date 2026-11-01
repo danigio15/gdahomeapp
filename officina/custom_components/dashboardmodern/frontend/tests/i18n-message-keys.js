@@ -2111,6 +2111,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "Edit room",
   "Edit shutter or curtain",
   "Edit socket",
+  "Edit this floor's plan",
   "Edit this vehicle",
   "Edit to-do",
   "Edit: ${nome}",

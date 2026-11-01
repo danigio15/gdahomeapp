@@ -19,6 +19,7 @@ import {
   pianoDaRiconoscimento,
   pianoDelLivello,
   posaDallaFoto,
+  riprendiIlPiano,
 } from "../src/core/crea-casa.js";
 
 /* 8×5 m dentro una griglia di 10×7 m: muri da 30 cm fuori, 12 cm dentro a 4 m
@@ -168,6 +169,86 @@ test("arredi e dispositivi dalle foto, e quelli aggiunti a mano, stanno nella lo
     "binary_sensor.fumo_camera",
     "light.salone",
   ]);
+});
+
+/* «Dare la possibilita' di modificare di nuovo la planimetria»: un piano
+ * salvato torna nella procedura con le stesse stanze, i nomi, le aree, i
+ * colori, gli arredi e i dispositivi; salvato di nuovo e' lo stesso piano. */
+test("un piano salvato si riprende e risalvato resta uguale", () => {
+  const casa = casaFinta();
+  const [a, b] = casa.stanze;
+  const prima = casa3dPulita({
+    piani: [
+      pianoDaRiconoscimento({
+        casa,
+        nomi: { [a.id]: "Salone", [b.id]: "Camera" },
+        aree: { [a.id]: "soggiorno" },
+        foto: {
+          [a.id]: [
+            {
+              verso: "N",
+              w: 1000,
+              h: 750,
+              pavimento: "#c19a6b",
+              pareti: "#f4f1ea",
+              oggetti: [{ k: "divano", box: [300, 450, 400, 250], colore: "#556677" }],
+              dispositivi: [{ k: "luce", box: [480, 40, 60, 40], entity: "light.salone" }],
+            },
+          ],
+        },
+        dispositivi: [{ k: "fumo", stanza: b.id, entity: "binary_sensor.fumo_camera" }],
+        livello: 1,
+      }),
+    ],
+  }).piani[0];
+  const r = riprendiIlPiano(prima);
+  assert.ok(r, "si riprende");
+  assert.equal(r.casa.stanze.length, 2, "le due stanze di nuovo");
+  assert.deepEqual(Object.values(r.nomi).sort(), ["Camera", "Salone"]);
+  const salone = Number(Object.keys(r.nomi).find((id) => r.nomi[id] === "Salone"));
+  assert.equal(r.aree[salone], "soggiorno");
+  assert.equal(r.finiture[salone].pareti, "#f4f1ea");
+  assert.equal(r.dispositivi.length, 2);
+  assert.ok(r.dispositivi.every((d) => r.casa.stanze.some((s) => s.id === d.stanza)));
+  assert.equal(r.arredi.length, 1);
+  /* risalvato: stesse stanze, stessi arredi e dispositivi nello stesso posto */
+  const dopo = casa3dPulita({
+    piani: [
+      pianoDaRiconoscimento({
+        casa: r.casa,
+        nomi: r.nomi,
+        aree: r.aree,
+        finiture: r.finiture,
+        arredi: r.arredi,
+        dispositivi: r.dispositivi,
+        livello: prima.livello,
+      }),
+    ],
+  }).piani[0];
+  assert.equal(dopo.k, prima.k);
+  assert.ok(Math.abs(dopo.W - prima.W) <= 2 && Math.abs(dopo.H - prima.H) <= 2, "stessa misura");
+  assert.deepEqual(
+    dopo.stanze.map((s) => [s.nome, s.area, s.pareti]).sort(),
+    prima.stanze.map((s) => [s.nome, s.area, s.pareti]).sort(),
+  );
+  assert.deepEqual(
+    dopo.stanze.find((s) => s.nome === "Salone").pavimento,
+    prima.stanze.find((s) => s.nome === "Salone").pavimento,
+  );
+  assert.equal(prima.stanze.find((s) => s.nome === "Salone").pavimento.tipo, "listoni");
+  assert.equal(dopo.aperture.length, prima.aperture.length, "porta e finestra");
+  for (const d of prima.dispositivi) {
+    const q = dopo.dispositivi.find((x) => x.k === d.k);
+    assert.equal(q.entity, d.entity);
+    assert.equal(q.da, d.da);
+    assert.ok(Math.hypot(q.x - d.x, q.y - d.y) < 0.15, `${d.k} allo stesso posto`);
+    assert.ok(stanzaNellaGriglia(dopo, q), `${d.k} nella sua stanza`);
+  }
+  assert.equal(dopo.arredi.length, 1);
+  assert.ok(
+    Math.hypot(dopo.arredi[0].x - prima.arredi[0].x, dopo.arredi[0].y - prima.arredi[0].y) < 0.15,
+  );
+  assert.equal(riprendiIlPiano({ W: 0 }), null);
 });
 
 test("la foto si legge lungo la parete che si guarda", () => {

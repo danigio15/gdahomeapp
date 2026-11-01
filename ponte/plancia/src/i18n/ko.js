@@ -7662,6 +7662,7 @@ export default Object.freeze({
   "Add a device": "기기 추가",
   "Add a photo from outside": "외부 사진 추가",
   "Add another floor": "층 하나 더 추가",
+  "Edit this floor's plan": "이 층의 평면도 편집",
   "Add or redo a floor": "층 추가 또는 다시 만들기",
   "Add photos of ${nome}": "${nome} 사진 추가",
   "Add photos of this room": "이 방의 사진 추가",

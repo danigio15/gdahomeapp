@@ -7552,6 +7552,7 @@ export default Object.freeze({
   "Add a device": "添加设备",
   "Add a photo from outside": "添加外观照片",
   "Add another floor": "再添加一层",
+  "Edit this floor's plan": "编辑这一层的平面图",
   "Add or redo a floor": "添加或重做楼层",
   "Add photos of ${nome}": "添加 ${nome} 的照片",
   "Add photos of this room": "添加此房间的照片",

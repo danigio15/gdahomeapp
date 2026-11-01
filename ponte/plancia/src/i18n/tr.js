@@ -7688,6 +7688,7 @@ export default Object.freeze({
   "Add a device": "Cihaz ekle",
   "Add a photo from outside": "Dışarıdan fotoğraf ekle",
   "Add another floor": "Başka bir kat ekle",
+  "Edit this floor's plan": "Bu katın planını düzenle",
   "Add or redo a floor": "Kat ekle veya yeniden yap",
   "Add photos of ${nome}": "${nome} fotoğraflarını ekle",
   "Add photos of this room": "Bu odanın fotoğraflarını ekle",

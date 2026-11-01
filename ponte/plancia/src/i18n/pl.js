@@ -7710,6 +7710,7 @@ export default Object.freeze({
   "Add a device": "Dodaj urządzenie",
   "Add a photo from outside": "Dodaj zdjęcie z zewnątrz",
   "Add another floor": "Dodaj kolejne piętro",
+  "Edit this floor's plan": "Edytuj rzut tego piętra",
   "Add or redo a floor": "Dodaj piętro lub utwórz je ponownie",
   "Add photos of ${nome}": "Dodaj zdjęcia: ${nome}",
   "Add photos of this room": "Dodaj zdjęcia tego pomieszczenia",

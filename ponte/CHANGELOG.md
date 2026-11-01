@@ -19,6 +19,12 @@ _Solo Home Assistant: l'app sul telefono non cambia._
   chi amministra. Nasce vuota e tutta sua, svincolata dalla principale:
   la principale non ha piu' la scheda Casa 3D e la console non la segna mai
   «casa 3D».
+- **Il Config della Casa 3D e' solo quello 3D:** da ⚙ o dal menu, sulla
+  plancia Casa 3D si apre la sua scheda, senza le schede della plancia
+  classica.
+- **La planimetria si modifica di nuovo:** nel Config ogni piano ha
+  «Modifica», che riapre la procedura dai muri con le stanze, i nomi, i
+  colori, gli arredi e i dispositivi di quel piano. Salvato, resta lui.
 
 ## 1.18.7.25
 

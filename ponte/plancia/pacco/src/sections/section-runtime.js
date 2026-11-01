@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-K3RCSY3D.js";
+} from "../../chunk-OYEYV5ST.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -582,6 +582,7 @@ import {
   entita,
   entitaCandidate,
   entitaProposta,
+  espandiGriglia,
   flussoDaIstantanea,
   flussoDellEnergia,
   flussoInPausa,
@@ -5528,6 +5529,7 @@ var SOURCE_INDEX = Object.freeze({
   "Modifica elettrodomestico": "Edit appliance",
   "Modifica Freddo / Caldo": "Edit Cool / Heat",
   "Modifica impegno": "Edit event",
+  "Modifica la planimetria di questo piano": "Edit this floor's plan",
   "Modifica luce": "Edit light",
   "Modifica manuale": "Edit by hand",
   "Modifica presa": "Edit socket",
@@ -154590,7 +154592,9 @@ function corpoMarkup20() {
     return `<div class="dm-c3-ed dm-c3-ed-chiuso"><span>🔒</span><b>${esc(t("Casa 3D", "3D Home"))}</b><p>${esc(
       t("La casa in tre dimensioni è una funzione Premium. La configurazione resta salvata.", "The 3D home is a Premium feature. Its configuration stays saved.")
     )}</p></div>`;
-  const piani = c.piani.length ? c.piani.map((p) => `<span class="dm-c3-ed-piano">${esc(p.nome)} · ${p.stanze.length} ${esc(t("stanze", "rooms"))} · ${p.dispositivi.length} ${esc(t("dispositivi", "devices"))}</span>`).join("") : `<p class="dm-c3-ed-nota">${esc(t("Ancora nessuna casa: creala dalla planimetria e dalle foto delle stanze.", "No home yet: create it from the floor plan and room photos."))}</p>`;
+  const piani = c.piani.length ? c.piani.map(
+    (p) => `<span class="dm-c3-ed-piano"><span>${esc(p.nome)} · ${p.stanze.length} ${esc(t("stanze", "rooms"))} · ${p.dispositivi.length} ${esc(t("dispositivi", "devices"))}</span><button type="button" class="dm-c3-ed-modifica" data-dm-c3-modifica="${esc(p.k)}" title="${esc(t("Modifica la planimetria di questo piano", "Edit this floor's plan"))}">✏️ ${esc(t("Modifica", "Edit"))}</button></span>`
+  ).join("") : `<p class="dm-c3-ed-nota">${esc(t("Ancora nessuna casa: creala dalla planimetria e dalle foto delle stanze.", "No home yet: create it from the floor plan and room photos."))}</p>`;
   const elenco17 = c.piani.flatMap((p) => p.dispositivi.map((d, i) => dispositivoMarkup(c, p, i, d, states))).join("");
   return `<div class="dm-c3-ed">
     <article class="ed-row dm-c3-ed-gruppo">
@@ -154664,6 +154668,12 @@ function dispositivo(c, chi) {
 }
 function onClick58(event) {
   if (!nelCorpo4(event)) return;
+  const modifica = event.target.closest("[data-dm-c3-modifica]");
+  if (modifica) {
+    event.preventDefault();
+    root.__DM_CASA3D_CREA__?.({ piano: modifica.dataset.dmC3Modifica, modifica: true });
+    return;
+  }
   if (event.target.closest("[data-dm-c3-crea]")) {
     event.preventDefault();
     root.__DM_CASA3D_CREA__?.();
@@ -154701,7 +154711,8 @@ function installaLoStile10() {
       #ed-body .dm-c3-ed-conto{margin-left:auto;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:900;color:#047857;background:color-mix(in srgb,#10b981 14%,transparent)}
       #ed-body .dm-c3-ed-conto.manca{color:#b45309;background:color-mix(in srgb,#f59e0b 16%,transparent)}
       #ed-body .dm-c3-ed-piani{display:flex;flex-wrap:wrap;gap:6px}
-      #ed-body .dm-c3-ed-piano{padding:6px 10px;border-radius:999px;border:1px solid var(--card-border,#e2e8f0);font-size:12px;font-weight:700}
+      #ed-body .dm-c3-ed-piano{display:inline-flex;align-items:center;gap:8px;padding:4px 4px 4px 10px;border-radius:999px;border:1px solid var(--card-border,#e2e8f0);font-size:12px;font-weight:700}
+      #ed-body .dm-c3-ed-modifica{border:0;border-radius:999px;padding:5px 10px;font:inherit;font-size:11.5px;font-weight:800;cursor:pointer;background:var(--accent,#0ea5e9);color:#fff}
       #ed-body .dm-c3-ed-tasti{display:flex;flex-wrap:wrap;gap:8px}
       #ed-body .dm-c3-ed-tasti .ed-btn-add{flex:1 1 180px}
       #ed-body .dm-c3-ed-nota{margin:2px;font-size:11.5px;font-weight:700;line-height:1.45;color:var(--text-dim,#64748b)}
@@ -154748,431 +154759,6 @@ function installCasa3DEditor() {
   return true;
 }
 senzaCadere(installCasa3DEditor);
-
-// src/core/crea-casa.js
-var clean32 = (v) => String(v ?? "").trim();
-var elenco15 = (v) => Array.isArray(v) ? v : [];
-var tra3 = (v, min, max) => Math.min(max, Math.max(min, v));
-var colore = (v) => /^#[0-9a-f]{6}$/i.test(clean32(v)) ? clean32(v).toLowerCase() : "";
-var tondo = (v, cifre3 = 3) => Math.round(v * 10 ** cifre3) / 10 ** cifre3;
-var ARREDI_DELLE_FOTO = Object.freeze({
-  divano: { icona: "🛋️", nome: ["Divano", "Sofa"] },
-  angolare: { icona: "🛋️", nome: ["Divano angolare", "Corner sofa"] },
-  poltrona: { icona: "💺", nome: ["Poltrona", "Armchair"] },
-  tavolino: { icona: "☕", nome: ["Tavolino", "Coffee table"] },
-  tv: { icona: "📺", nome: ["Mobile TV", "TV stand"] },
-  libreria: { icona: "📚", nome: ["Libreria", "Bookcase"] },
-  tappeto: { icona: "🟫", nome: ["Tappeto", "Rug"] },
-  stelo: { icona: "💡", nome: ["Lampada a stelo", "Floor lamp"] },
-  camino: { icona: "🔥", nome: ["Camino", "Fireplace"] },
-  pianta: { icona: "🪴", nome: ["Pianta", "Plant"] },
-  madia: { icona: "🗄️", nome: ["Madia", "Sideboard"] },
-  pensile: { icona: "🔲", nome: ["Pensile", "Wall cabinet"] },
-  quadro: { icona: "🖼️", nome: ["Quadro", "Painting"] },
-  pranzo6: { icona: "🍽️", nome: ["Tavolo da pranzo", "Dining table"] },
-  tondo4: { icona: "⭕", nome: ["Tavolo tondo", "Round table"] },
-  cucina: { icona: "🍳", nome: ["Cucina", "Kitchen"] },
-  isola: { icona: "🏝️", nome: ["Isola", "Kitchen island"] },
-  frigo: { icona: "🧊", nome: ["Frigorifero", "Fridge"] },
-  matrimoniale: { icona: "🛏️", nome: ["Letto matrimoniale", "Double bed"] },
-  singolo: { icona: "🛏️", nome: ["Letto singolo", "Single bed"] },
-  comodino: { icona: "🗄️", nome: ["Comodino", "Nightstand"] },
-  armadio: { icona: "🚪", nome: ["Armadio", "Wardrobe"] },
-  cassettiera: { icona: "🗃️", nome: ["Cassettiera", "Chest of drawers"] },
-  vasca: { icona: "🛁", nome: ["Vasca", "Bathtub"] },
-  doccia: { icona: "🚿", nome: ["Doccia", "Shower"] },
-  wc: { icona: "🚽", nome: ["WC", "Toilet"] },
-  lavabo: { icona: "🪥", nome: ["Lavabo", "Washbasin"] },
-  lavatrice: { icona: "🫧", nome: ["Lavatrice", "Washing machine"] },
-  scrivania: { icona: "🖥️", nome: ["Scrivania", "Desk"] }
-});
-var ACCOSTATI = /* @__PURE__ */ new Set([
-  "tv",
-  "libreria",
-  "cucina",
-  "armadio",
-  "madia",
-  "pensile",
-  "quadro",
-  "camino",
-  "frigo",
-  "lavabo",
-  "wc",
-  "vasca",
-  "cassettiera"
-]);
-var DA_COCO = Object.freeze({
-  couch: { arredo: "divano" },
-  tv: { arredo: "tv", dispositivo: "tv" },
-  chair: { arredo: "poltrona" },
-  "dining table": { arredo: "pranzo6" },
-  bed: { arredo: "matrimoniale" },
-  "potted plant": { arredo: "pianta" },
-  refrigerator: { arredo: "frigo" },
-  oven: { arredo: "cucina" },
-  microwave: { arredo: "cucina" },
-  sink: { arredo: "cucina" },
-  toilet: { arredo: "wc" },
-  book: { arredo: "libreria" },
-  laptop: { arredo: "scrivania" }
-});
-var riquadro = (b2) => {
-  const [x, y, w, h] = elenco15(b2).map(Number);
-  return [x, y, w, h].every(Number.isFinite) && w > 0 && h > 0 ? [x, y, w, h] : null;
-};
-function sovrapposti(a, b2) {
-  const x0 = Math.max(a[0], b2[0]), y0 = Math.max(a[1], b2[1]);
-  const x1 = Math.min(a[0] + a[2], b2[0] + b2[2]), y1 = Math.min(a[1] + a[3], b2[1] + b2[3]);
-  const dentro3 = Math.max(0, x1 - x0) * Math.max(0, y1 - y0);
-  return dentro3 / Math.min(a[2] * a[3], b2[2] * b2[3]);
-}
-function oggettiDaCoco(rilevati, { soglia: soglia3 = 0.3 } = {}) {
-  const arredi = [], dispositivi = [];
-  const ordinati = elenco15(rilevati).map((d) => ({ classe: clean32(d?.class), box: riquadro(d?.bbox), score: Number(d?.score) || 0 })).filter((d) => d.box && d.score >= soglia3 && DA_COCO[d.classe]).sort((a, b2) => b2.score - a.score);
-  const metti5 = (dove, k, d) => {
-    if (dove.some((o) => o.k === k && sovrapposti(o.box, d.box) > 0.6)) return;
-    dove.push({ k, box: d.box, score: tondo(d.score, 2) });
-  };
-  for (const d of ordinati) {
-    const m = DA_COCO[d.classe];
-    if (m.arredo) metti5(arredi, m.arredo, d);
-    if (m.dispositivo) metti5(dispositivi, m.dispositivo, d);
-  }
-  return { arredi, dispositivi };
-}
-var LIVELLI2 = {
-  "-2": ["interrato", "Interrato", "Basement"],
-  "-1": ["seminterrato", "Seminterrato", "Lower ground floor"],
-  0: ["terra", "Piano terra", "Ground floor"],
-  1: ["primo", "Primo piano", "First floor"],
-  2: ["secondo", "Secondo piano", "Second floor"],
-  3: ["terzo", "Terzo piano", "Third floor"],
-  4: ["quarto", "Quarto piano", "Fourth floor"],
-  5: ["quinto", "Quinto piano", "Fifth floor"]
-};
-function pianoDelLivello(livello) {
-  const n = tra3(Math.round(Number(livello) || 0), -3, 30);
-  const noto = LIVELLI2[n];
-  if (noto) return { k: noto[0], livello: n, nome: [noto[1], noto[2]] };
-  return n < 0 ? { k: `sotto${-n}`, livello: n, nome: [`Interrato ${-n}`, `Basement ${-n}`] } : { k: `piano${n}`, livello: n, nome: [`Piano ${n}`, `Floor ${n}`] };
-}
-function aggiungiPiano(casa2, piano2) {
-  const c = casa2 && typeof casa2 === "object" ? casa2 : {};
-  if (!piano2?.k) return { ...c, piani: elenco15(c.piani) };
-  const piani = elenco15(c.piani).filter((p) => p?.k !== piano2.k);
-  piani.push(piano2);
-  piani.sort((a, b2) => (Number(a?.livello) || 0) - (Number(b2?.livello) || 0));
-  return { ...c, piani: piani.slice(0, PIANI_AL_MASSIMO) };
-}
-function entitaUsate(casa2, tranne = null) {
-  const out = [];
-  for (const p of elenco15(casa2?.piani))
-    for (const d of elenco15(p?.dispositivi)) if (d !== tranne && d?.entity) out.push(d.entity);
-  for (const d of elenco15(casa2?.esterno?.telecamere))
-    if (d !== tranne && d?.entity) out.push(d.entity);
-  return out;
-}
-function areeDaiRegistri({ wiz = null, hass = null, ricordate = null } = {}) {
-  const aree2 = {}, diEntita = {};
-  for (const [id, nome] of Object.entries(wiz?.areaNames || {}))
-    if (clean32(id) && clean32(nome)) aree2[clean32(id)] = clean32(nome);
-  for (const a of Object.values(hass?.areas || {}))
-    if (clean32(a?.area_id) && clean32(a?.name)) aree2[clean32(a.area_id)] ||= clean32(a.name);
-  for (const [id, riga5] of Object.entries(wiz?.entReg || {})) {
-    const area = clean32(riga5?.a) || clean32(wiz?.devArea?.[clean32(riga5?.d)]);
-    if (area) diEntita[id] = area;
-  }
-  for (const [id, e] of Object.entries(hass?.entities || {})) {
-    if (diEntita[id]) continue;
-    const area = clean32(e?.area_id) || clean32(hass?.devices?.[clean32(e?.device_id)]?.area_id);
-    if (area) diEntita[id] = area;
-  }
-  if (!Object.keys(aree2).length && ricordate && typeof ricordate === "object") {
-    for (const [id, nome] of Object.entries(ricordate)) {
-      const n = clean32(nome);
-      if (!n) continue;
-      aree2[n] = n;
-      diEntita[id] = n;
-    }
-  }
-  return { aree: aree2, diEntita };
-}
-var ROT = { N: 0, S: Math.PI, E: -Math.PI / 2, O: Math.PI / 2 };
-function lungoLaParete(r, verso2, u, prof, margine) {
-  const X0 = r.x0 + margine, X1 = Math.max(X0, r.x1 - margine), Y0 = r.y0 + margine, Y1 = Math.max(Y0, r.y1 - margine);
-  switch (verso2) {
-    case "N":
-      return { x: X0 + u * (X1 - X0), y: Y0 + prof * (Y1 - Y0) };
-    case "S":
-      return { x: X1 - u * (X1 - X0), y: Y1 - prof * (Y1 - Y0) };
-    case "E":
-      return { x: X1 - prof * (X1 - X0), y: Y0 + u * (Y1 - Y0) };
-    default:
-      return { x: X0 + prof * (X1 - X0), y: Y1 - u * (Y1 - Y0) };
-  }
-}
-var riquadroDi = (s) => s?.riquadro || {
-  x0: (s?.sx || 0) - 2,
-  x1: (s?.sx || 0) + 2,
-  y0: (s?.sy || 0) - 2,
-  y1: (s?.sy || 0) + 2
-};
-var versoDi = (v) => ["N", "S", "E", "O"].includes(v) ? v : "N";
-function posaDallaFoto(stanza2, foto, box, { accostato = false, mont = "" } = {}) {
-  const b2 = riquadro(box);
-  const W2 = Number(foto?.w) || 1, H7 = Number(foto?.h) || 1, verso2 = versoDi(foto?.verso);
-  if (!b2) return { x: stanza2?.sx || 0, y: stanza2?.sy || 0, rot: ROT[verso2] };
-  let u = tra3((b2[0] + b2[2] / 2) / W2, 0, 1);
-  let prof, margine = 0.35;
-  if (mont === "soffitto") prof = tra3((0.5 - (b2[1] + b2[3] / 2) / H7) / 0.5, 0, 1);
-  else if (mont === "pavimento" || !mont && !accostato)
-    prof = tra3(((b2[1] + b2[3]) / H7 - 0.5) / 0.5, 0, 1);
-  else prof = 0;
-  if (mont && mont !== "soffitto" && mont !== "pavimento") margine = 0.08;
-  if (mont === "angolo") {
-    u = u < 0.5 ? 0 : 1;
-    margine = 0.15;
-  }
-  return { ...lungoLaParete(riquadroDi(stanza2), verso2, u, prof, margine), rot: ROT[verso2] };
-}
-function nellaStanza(casa2, id, x, y) {
-  const { W: W2, H: H7, passo, tipo } = casa2 || {};
-  if (!tipo || !W2 || !H7) return { x, y };
-  const cx = tra3(Math.floor(x / passo), 0, W2 - 1), cy = tra3(Math.floor(y / passo), 0, H7 - 1);
-  if (tipo[cy * W2 + cx] === id) return { x, y };
-  let meglio = -1, d = Infinity;
-  for (let i = 0; i < W2 * H7; i++) {
-    if (tipo[i] !== id) continue;
-    const q = (i % W2 - cx) ** 2 + ((i / W2 | 0) - cy) ** 2;
-    if (q < d) {
-      d = q;
-      meglio = i;
-    }
-  }
-  if (meglio < 0) return { x, y };
-  const s = elenco15(casa2.stanze).find((v) => v.id === id);
-  let px = (meglio % W2 + 0.5) * passo, py = ((meglio / W2 | 0) + 0.5) * passo;
-  if (s) {
-    const dx = s.sx - px, dy = s.sy - py, l = Math.hypot(dx, dy) || 1, k = Math.min(l, 0.12);
-    px += dx / l * k;
-    py += dy / l * k;
-  }
-  return { x: px, y: py };
-}
-function arrediDallaFoto(casa2, stanza2, foto) {
-  return elenco15(foto?.oggetti).filter((o) => ARREDI_DELLE_FOTO[o?.k]).map((o) => {
-    const p = posaDallaFoto(stanza2, foto, o.box, { accostato: ACCOSTATI.has(o.k) });
-    return {
-      k: o.k,
-      stanza: stanza2.id,
-      ...nellaStanza(casa2, stanza2.id, p.x, p.y),
-      rot: p.rot,
-      tinta: colore(o.colore)
-    };
-  });
-}
-var ALTEZZA_DI_SERIE = Object.freeze({
-  luce: 2.85,
-  telecamera: 2.5,
-  tapparella: 2.2,
-  finestra: 1.4,
-  porta: 2,
-  movimento: 2.25,
-  presenza: 2.9,
-  termometro: 1.5,
-  clima: 2.3,
-  termostato: 1.5,
-  fumo: 2.92,
-  acqua: 0,
-  presa: 0.3,
-  tv: 1.1,
-  altoparlante: 1,
-  antifurto: 2.3,
-  pannello: 1.2
-});
-function dispositiviDallaFoto(casa2, stanza2, foto) {
-  return elenco15(foto?.dispositivi).filter((d) => DISPOSITIVI_3D[d?.k]).map((d) => {
-    const mont = DISPOSITIVI_3D[d.k].mont;
-    let p = posaDallaFoto(stanza2, foto, d.box, { mont });
-    if (mont === "finestra" || mont === "porta") {
-      const vicina = elenco15(casa2?.aperture).filter((a) => a.stanza === stanza2.id && a.tipo === mont).map((a) => ({ a, d: Math.hypot(a.cx - p.x, a.cy - p.y) })).sort((a, b2) => a.d - b2.d)[0];
-      if (vicina && vicina.d < 2.5) p = { ...p, x: vicina.a.cx, y: vicina.a.cy };
-    }
-    return {
-      k: d.k,
-      stanza: stanza2.id,
-      ...nellaStanza(casa2, stanza2.id, p.x, p.y),
-      h: ALTEZZA_DI_SERIE[d.k] ?? 2.3,
-      rot: p.rot,
-      entity: entita(d.entity),
-      nome: clean32(d.nome).slice(0, 40),
-      da: "foto",
-      ...d.k === "telecamera" ? { fov: 100 } : {}
-    };
-  });
-}
-function posaDiRipiego(casa2, stanza2, k, quanti3 = 0) {
-  const mont = DISPOSITIVI_3D[k]?.mont || "muro";
-  const r = riquadroDi(stanza2), passo = 0.4 * quanti3;
-  let p;
-  if (mont === "finestra" || mont === "porta") {
-    const tipo = mont === "porta" ? "porta" : "finestra";
-    const sue = elenco15(casa2?.aperture).filter((a2) => a2.stanza === stanza2.id && a2.tipo === tipo);
-    const a = sue[quanti3 % Math.max(1, sue.length)];
-    if (a) p = { x: a.cx ?? a.x, y: a.cy ?? a.y, rot: 0 };
-  }
-  if (!p && mont === "angolo") {
-    const angoli = [
-      [r.x0 + 0.15, r.y0 + 0.15, Math.PI / 4],
-      [r.x1 - 0.15, r.y0 + 0.15, -Math.PI / 4],
-      [r.x1 - 0.15, r.y1 - 0.15, -3 * Math.PI / 4],
-      [r.x0 + 0.15, r.y1 - 0.15, 3 * Math.PI / 4]
-    ];
-    const [x, y, rot] = angoli[quanti3 % 4];
-    p = { x, y, rot };
-  }
-  if (!p && (mont === "muro" || mont === "finestra" || mont === "porta"))
-    p = { x: tra3(stanza2.sx + passo, r.x0 + 0.1, r.x1 - 0.1), y: r.y0 + 0.08, rot: 0 };
-  if (!p) p = { x: stanza2.sx + 0.7 + passo, y: stanza2.sy + 0.5, rot: 0 };
-  const dentro3 = nellaStanza(casa2, stanza2.id, p.x, p.y);
-  return { ...dentro3, rot: p.rot, h: ALTEZZA_DI_SERIE[k] ?? 2.3 };
-}
-function pavimentoDalColore(c) {
-  const hex = colore(c);
-  if (!hex) return null;
-  const n = parseInt(hex.slice(1), 16), r = n >> 16, g = n >> 8 & 255, b2 = n & 255;
-  const legno = r > g && g > b2 && r - b2 > 45 && r < 235;
-  return { tipo: legno ? "listoni" : "gres60", colore: hex };
-}
-function latiDelVarco(casa2, a) {
-  const { W: W2, H: H7, passo, tipo } = casa2;
-  const cx = Math.floor(a.cx / passo), cy = Math.floor(a.cy / passo), lati = [];
-  for (const segno5 of [-1, 1]) {
-    for (let d = 1; d < Math.round(0.6 / passo); d++) {
-      const x = a.orizz ? cx : cx + segno5 * d, y = a.orizz ? cy + segno5 * d : cy;
-      if (x < 0 || y < 0 || x >= W2 || y >= H7) break;
-      const v = tipo[y * W2 + x];
-      if (v > 0 || v === CELLA.fuori) {
-        lati.push(v);
-        break;
-      }
-    }
-  }
-  return lati;
-}
-function pianoDaRiconoscimento({
-  casa: casa2,
-  nomi: nomi2 = {},
-  aree: aree2 = {},
-  fuori = [],
-  foto = {},
-  dispositivi = [],
-  livello = 0,
-  nome = "",
-  k = ""
-} = {}) {
-  if (!casa2?.tipo || !casa2.W || !casa2.H) return null;
-  const { W: W2, H: H7, passo } = casa2;
-  const daFuori = new Set([...fuori].map(Number));
-  const vive = elenco15(casa2.stanze).filter((s) => !daFuori.has(s.id));
-  const idVivi = new Set(vive.map((s) => s.id));
-  const tipo = Int16Array.from(casa2.tipo, (v) => v > 0 && !idVivi.has(v) ? CELLA.fuori : v);
-  let x0 = W2, x1 = -1, y0 = H7, y1 = -1;
-  for (let i = 0; i < W2 * H7; i++) {
-    if (tipo[i] === CELLA.fuori) continue;
-    const x = i % W2, y = i / W2 | 0;
-    if (x < x0) x0 = x;
-    if (x > x1) x1 = x;
-    if (y < y0) y0 = y;
-    if (y > y1) y1 = y;
-  }
-  if (x1 < 0) return null;
-  const bordo2 = Math.round(0.5 / passo);
-  x0 = Math.max(0, x0 - bordo2);
-  y0 = Math.max(0, y0 - bordo2);
-  x1 = Math.min(W2 - 1, x1 + bordo2);
-  y1 = Math.min(H7 - 1, y1 + bordo2);
-  const Wr = x1 - x0 + 1, Hr = y1 - y0 + 1, tagliata = new Int16Array(Wr * Hr);
-  for (let y = 0; y < Hr; y++)
-    for (let x = 0; x < Wr; x++) tagliata[y * Wr + x] = tipo[(y + y0) * W2 + x + x0];
-  const ox = x0 * passo, oy = y0 * passo;
-  const salvata = ricampiona({ W: Wr, H: Hr, passo, tipo: tagliata }, PASSO_SALVATO);
-  const sposta3 = (p) => ({ ...p, x: tondo(p.x - ox), y: tondo(p.y - oy) });
-  const vista2 = { ...casa2, tipo };
-  const nomeDi19 = (id) => clean32(nomi2[id]) || vive.find((s) => s.id === id)?.nome || `Stanza ${id}`;
-  const stanze4 = vive.map((s) => {
-    const sue = elenco15(foto[s.id]);
-    const ultima = [...sue].reverse().find((f) => colore(f?.pavimento) || colore(f?.pareti));
-    return {
-      id: s.id,
-      nome: nomeDi19(s.id).slice(0, 40),
-      area: clean32(aree2[s.id]).slice(0, 64),
-      pavimento: ultima ? pavimentoDalColore(ultima.pavimento) : null,
-      pareti: colore(ultima?.pareti)
-    };
-  });
-  const aperture = elenco15(casa2.aperture).flatMap((a) => {
-    const lati = latiDelVarco(casa2, a);
-    const suFuori = lati.some((v) => daFuori.has(v)) || daFuori.has(a.stanza);
-    const stanza2 = idVivi.has(a.stanza) ? a.stanza : lati.find((v) => idVivi.has(v)) || 0;
-    if (!stanza2 && (suFuori || a.stanza)) return [];
-    return [
-      sposta3({
-        tipo: suFuori ? "finestra" : a.tipo,
-        x: a.cx,
-        y: a.cy,
-        largo: tondo(a.largo, 2),
-        orizz: a.orizz !== false,
-        verso: a.verso || 0,
-        portafinestra: a.portafinestra === true || suFuori && a.tipo === "porta",
-        stanza: stanza2 || 0
-      })
-    ];
-  });
-  const arredi = [], posati = [];
-  for (const s of vive) {
-    for (const f of elenco15(foto[s.id])) {
-      arredi.push(...arrediDallaFoto(vista2, s, f).map(sposta3));
-      posati.push(...dispositiviDallaFoto(vista2, s, f).map(sposta3));
-    }
-  }
-  const contati = {};
-  for (const d of elenco15(dispositivi)) {
-    const s = vive.find((v) => v.id === Number(d?.stanza));
-    if (!s || !DISPOSITIVI_3D[d?.k]) continue;
-    const chiave2 = `${s.id}:${d.k}`;
-    const p = Number.isFinite(d.x) && Number.isFinite(d.y) ? { x: d.x, y: d.y, rot: d.rot || 0, h: d.h ?? ALTEZZA_DI_SERIE[d.k] } : posaDiRipiego(vista2, s, d.k, contati[chiave2] || 0);
-    contati[chiave2] = (contati[chiave2] || 0) + 1;
-    posati.push(
-      sposta3({
-        k: d.k,
-        stanza: s.id,
-        x: p.x,
-        y: p.y,
-        h: p.h,
-        rot: p.rot,
-        entity: entita(d.entity),
-        nome: clean32(d.nome).slice(0, 40),
-        da: "mano",
-        ...d.k === "telecamera" ? { fov: 100 } : {}
-      })
-    );
-  }
-  const qualePiano = pianoDelLivello(livello);
-  return {
-    k: clean32(k) || qualePiano.k,
-    nome: clean32(nome) || qualePiano.nome[0],
-    livello: qualePiano.livello,
-    W: salvata.W,
-    H: salvata.H,
-    passo: PASSO_SALVATO,
-    griglia: comprimiGriglia(salvata.tipo),
-    stanze: stanze4,
-    aperture,
-    arredi,
-    dispositivi: posati
-  };
-}
 
 // src/core/pianta-da-foto.js
 var PASSO = 0.03;
@@ -156018,6 +155604,503 @@ function scalaScritta(testo5) {
   return n >= 20 && n <= 2e3 ? n : 0;
 }
 
+// src/core/crea-casa.js
+var clean32 = (v) => String(v ?? "").trim();
+var elenco15 = (v) => Array.isArray(v) ? v : [];
+var tra3 = (v, min, max) => Math.min(max, Math.max(min, v));
+var colore = (v) => /^#[0-9a-f]{6}$/i.test(clean32(v)) ? clean32(v).toLowerCase() : "";
+var tondo = (v, cifre3 = 3) => Math.round(v * 10 ** cifre3) / 10 ** cifre3;
+var ARREDI_DELLE_FOTO = Object.freeze({
+  divano: { icona: "🛋️", nome: ["Divano", "Sofa"] },
+  angolare: { icona: "🛋️", nome: ["Divano angolare", "Corner sofa"] },
+  poltrona: { icona: "💺", nome: ["Poltrona", "Armchair"] },
+  tavolino: { icona: "☕", nome: ["Tavolino", "Coffee table"] },
+  tv: { icona: "📺", nome: ["Mobile TV", "TV stand"] },
+  libreria: { icona: "📚", nome: ["Libreria", "Bookcase"] },
+  tappeto: { icona: "🟫", nome: ["Tappeto", "Rug"] },
+  stelo: { icona: "💡", nome: ["Lampada a stelo", "Floor lamp"] },
+  camino: { icona: "🔥", nome: ["Camino", "Fireplace"] },
+  pianta: { icona: "🪴", nome: ["Pianta", "Plant"] },
+  madia: { icona: "🗄️", nome: ["Madia", "Sideboard"] },
+  pensile: { icona: "🔲", nome: ["Pensile", "Wall cabinet"] },
+  quadro: { icona: "🖼️", nome: ["Quadro", "Painting"] },
+  pranzo6: { icona: "🍽️", nome: ["Tavolo da pranzo", "Dining table"] },
+  tondo4: { icona: "⭕", nome: ["Tavolo tondo", "Round table"] },
+  cucina: { icona: "🍳", nome: ["Cucina", "Kitchen"] },
+  isola: { icona: "🏝️", nome: ["Isola", "Kitchen island"] },
+  frigo: { icona: "🧊", nome: ["Frigorifero", "Fridge"] },
+  matrimoniale: { icona: "🛏️", nome: ["Letto matrimoniale", "Double bed"] },
+  singolo: { icona: "🛏️", nome: ["Letto singolo", "Single bed"] },
+  comodino: { icona: "🗄️", nome: ["Comodino", "Nightstand"] },
+  armadio: { icona: "🚪", nome: ["Armadio", "Wardrobe"] },
+  cassettiera: { icona: "🗃️", nome: ["Cassettiera", "Chest of drawers"] },
+  vasca: { icona: "🛁", nome: ["Vasca", "Bathtub"] },
+  doccia: { icona: "🚿", nome: ["Doccia", "Shower"] },
+  wc: { icona: "🚽", nome: ["WC", "Toilet"] },
+  lavabo: { icona: "🪥", nome: ["Lavabo", "Washbasin"] },
+  lavatrice: { icona: "🫧", nome: ["Lavatrice", "Washing machine"] },
+  scrivania: { icona: "🖥️", nome: ["Scrivania", "Desk"] }
+});
+var ACCOSTATI = /* @__PURE__ */ new Set([
+  "tv",
+  "libreria",
+  "cucina",
+  "armadio",
+  "madia",
+  "pensile",
+  "quadro",
+  "camino",
+  "frigo",
+  "lavabo",
+  "wc",
+  "vasca",
+  "cassettiera"
+]);
+var DA_COCO = Object.freeze({
+  couch: { arredo: "divano" },
+  tv: { arredo: "tv", dispositivo: "tv" },
+  chair: { arredo: "poltrona" },
+  "dining table": { arredo: "pranzo6" },
+  bed: { arredo: "matrimoniale" },
+  "potted plant": { arredo: "pianta" },
+  refrigerator: { arredo: "frigo" },
+  oven: { arredo: "cucina" },
+  microwave: { arredo: "cucina" },
+  sink: { arredo: "cucina" },
+  toilet: { arredo: "wc" },
+  book: { arredo: "libreria" },
+  laptop: { arredo: "scrivania" }
+});
+var riquadro = (b2) => {
+  const [x, y, w, h] = elenco15(b2).map(Number);
+  return [x, y, w, h].every(Number.isFinite) && w > 0 && h > 0 ? [x, y, w, h] : null;
+};
+function sovrapposti(a, b2) {
+  const x0 = Math.max(a[0], b2[0]), y0 = Math.max(a[1], b2[1]);
+  const x1 = Math.min(a[0] + a[2], b2[0] + b2[2]), y1 = Math.min(a[1] + a[3], b2[1] + b2[3]);
+  const dentro3 = Math.max(0, x1 - x0) * Math.max(0, y1 - y0);
+  return dentro3 / Math.min(a[2] * a[3], b2[2] * b2[3]);
+}
+function oggettiDaCoco(rilevati, { soglia: soglia3 = 0.3 } = {}) {
+  const arredi = [], dispositivi = [];
+  const ordinati = elenco15(rilevati).map((d) => ({ classe: clean32(d?.class), box: riquadro(d?.bbox), score: Number(d?.score) || 0 })).filter((d) => d.box && d.score >= soglia3 && DA_COCO[d.classe]).sort((a, b2) => b2.score - a.score);
+  const metti5 = (dove, k, d) => {
+    if (dove.some((o) => o.k === k && sovrapposti(o.box, d.box) > 0.6)) return;
+    dove.push({ k, box: d.box, score: tondo(d.score, 2) });
+  };
+  for (const d of ordinati) {
+    const m = DA_COCO[d.classe];
+    if (m.arredo) metti5(arredi, m.arredo, d);
+    if (m.dispositivo) metti5(dispositivi, m.dispositivo, d);
+  }
+  return { arredi, dispositivi };
+}
+var LIVELLI2 = {
+  "-2": ["interrato", "Interrato", "Basement"],
+  "-1": ["seminterrato", "Seminterrato", "Lower ground floor"],
+  0: ["terra", "Piano terra", "Ground floor"],
+  1: ["primo", "Primo piano", "First floor"],
+  2: ["secondo", "Secondo piano", "Second floor"],
+  3: ["terzo", "Terzo piano", "Third floor"],
+  4: ["quarto", "Quarto piano", "Fourth floor"],
+  5: ["quinto", "Quinto piano", "Fifth floor"]
+};
+function pianoDelLivello(livello) {
+  const n = tra3(Math.round(Number(livello) || 0), -3, 30);
+  const noto = LIVELLI2[n];
+  if (noto) return { k: noto[0], livello: n, nome: [noto[1], noto[2]] };
+  return n < 0 ? { k: `sotto${-n}`, livello: n, nome: [`Interrato ${-n}`, `Basement ${-n}`] } : { k: `piano${n}`, livello: n, nome: [`Piano ${n}`, `Floor ${n}`] };
+}
+function aggiungiPiano(casa2, piano2) {
+  const c = casa2 && typeof casa2 === "object" ? casa2 : {};
+  if (!piano2?.k) return { ...c, piani: elenco15(c.piani) };
+  const piani = elenco15(c.piani).filter((p) => p?.k !== piano2.k);
+  piani.push(piano2);
+  piani.sort((a, b2) => (Number(a?.livello) || 0) - (Number(b2?.livello) || 0));
+  return { ...c, piani: piani.slice(0, PIANI_AL_MASSIMO) };
+}
+function entitaUsate(casa2, tranne = null) {
+  const out = [];
+  for (const p of elenco15(casa2?.piani))
+    for (const d of elenco15(p?.dispositivi)) if (d !== tranne && d?.entity) out.push(d.entity);
+  for (const d of elenco15(casa2?.esterno?.telecamere))
+    if (d !== tranne && d?.entity) out.push(d.entity);
+  return out;
+}
+function areeDaiRegistri({ wiz = null, hass = null, ricordate = null } = {}) {
+  const aree2 = {}, diEntita = {};
+  for (const [id, nome] of Object.entries(wiz?.areaNames || {}))
+    if (clean32(id) && clean32(nome)) aree2[clean32(id)] = clean32(nome);
+  for (const a of Object.values(hass?.areas || {}))
+    if (clean32(a?.area_id) && clean32(a?.name)) aree2[clean32(a.area_id)] ||= clean32(a.name);
+  for (const [id, riga5] of Object.entries(wiz?.entReg || {})) {
+    const area = clean32(riga5?.a) || clean32(wiz?.devArea?.[clean32(riga5?.d)]);
+    if (area) diEntita[id] = area;
+  }
+  for (const [id, e] of Object.entries(hass?.entities || {})) {
+    if (diEntita[id]) continue;
+    const area = clean32(e?.area_id) || clean32(hass?.devices?.[clean32(e?.device_id)]?.area_id);
+    if (area) diEntita[id] = area;
+  }
+  if (!Object.keys(aree2).length && ricordate && typeof ricordate === "object") {
+    for (const [id, nome] of Object.entries(ricordate)) {
+      const n = clean32(nome);
+      if (!n) continue;
+      aree2[n] = n;
+      diEntita[id] = n;
+    }
+  }
+  return { aree: aree2, diEntita };
+}
+var ROT = { N: 0, S: Math.PI, E: -Math.PI / 2, O: Math.PI / 2 };
+function lungoLaParete(r, verso2, u, prof, margine) {
+  const X0 = r.x0 + margine, X1 = Math.max(X0, r.x1 - margine), Y0 = r.y0 + margine, Y1 = Math.max(Y0, r.y1 - margine);
+  switch (verso2) {
+    case "N":
+      return { x: X0 + u * (X1 - X0), y: Y0 + prof * (Y1 - Y0) };
+    case "S":
+      return { x: X1 - u * (X1 - X0), y: Y1 - prof * (Y1 - Y0) };
+    case "E":
+      return { x: X1 - prof * (X1 - X0), y: Y0 + u * (Y1 - Y0) };
+    default:
+      return { x: X0 + prof * (X1 - X0), y: Y1 - u * (Y1 - Y0) };
+  }
+}
+var riquadroDi = (s) => s?.riquadro || {
+  x0: (s?.sx || 0) - 2,
+  x1: (s?.sx || 0) + 2,
+  y0: (s?.sy || 0) - 2,
+  y1: (s?.sy || 0) + 2
+};
+var versoDi = (v) => ["N", "S", "E", "O"].includes(v) ? v : "N";
+function posaDallaFoto(stanza2, foto, box, { accostato = false, mont = "" } = {}) {
+  const b2 = riquadro(box);
+  const W2 = Number(foto?.w) || 1, H7 = Number(foto?.h) || 1, verso2 = versoDi(foto?.verso);
+  if (!b2) return { x: stanza2?.sx || 0, y: stanza2?.sy || 0, rot: ROT[verso2] };
+  let u = tra3((b2[0] + b2[2] / 2) / W2, 0, 1);
+  let prof, margine = 0.35;
+  if (mont === "soffitto") prof = tra3((0.5 - (b2[1] + b2[3] / 2) / H7) / 0.5, 0, 1);
+  else if (mont === "pavimento" || !mont && !accostato)
+    prof = tra3(((b2[1] + b2[3]) / H7 - 0.5) / 0.5, 0, 1);
+  else prof = 0;
+  if (mont && mont !== "soffitto" && mont !== "pavimento") margine = 0.08;
+  if (mont === "angolo") {
+    u = u < 0.5 ? 0 : 1;
+    margine = 0.15;
+  }
+  return { ...lungoLaParete(riquadroDi(stanza2), verso2, u, prof, margine), rot: ROT[verso2] };
+}
+function nellaStanza(casa2, id, x, y) {
+  const { W: W2, H: H7, passo, tipo } = casa2 || {};
+  if (!tipo || !W2 || !H7) return { x, y };
+  const cx = tra3(Math.floor(x / passo), 0, W2 - 1), cy = tra3(Math.floor(y / passo), 0, H7 - 1);
+  if (tipo[cy * W2 + cx] === id) return { x, y };
+  let meglio = -1, d = Infinity;
+  for (let i = 0; i < W2 * H7; i++) {
+    if (tipo[i] !== id) continue;
+    const q = (i % W2 - cx) ** 2 + ((i / W2 | 0) - cy) ** 2;
+    if (q < d) {
+      d = q;
+      meglio = i;
+    }
+  }
+  if (meglio < 0) return { x, y };
+  const s = elenco15(casa2.stanze).find((v) => v.id === id);
+  let px = (meglio % W2 + 0.5) * passo, py = ((meglio / W2 | 0) + 0.5) * passo;
+  if (s) {
+    const dx = s.sx - px, dy = s.sy - py, l = Math.hypot(dx, dy) || 1, k = Math.min(l, 0.12);
+    px += dx / l * k;
+    py += dy / l * k;
+  }
+  return { x: px, y: py };
+}
+function arrediDallaFoto(casa2, stanza2, foto) {
+  return elenco15(foto?.oggetti).filter((o) => ARREDI_DELLE_FOTO[o?.k]).map((o) => {
+    const p = posaDallaFoto(stanza2, foto, o.box, { accostato: ACCOSTATI.has(o.k) });
+    return {
+      k: o.k,
+      stanza: stanza2.id,
+      ...nellaStanza(casa2, stanza2.id, p.x, p.y),
+      rot: p.rot,
+      tinta: colore(o.colore)
+    };
+  });
+}
+var ALTEZZA_DI_SERIE = Object.freeze({
+  luce: 2.85,
+  telecamera: 2.5,
+  tapparella: 2.2,
+  finestra: 1.4,
+  porta: 2,
+  movimento: 2.25,
+  presenza: 2.9,
+  termometro: 1.5,
+  clima: 2.3,
+  termostato: 1.5,
+  fumo: 2.92,
+  acqua: 0,
+  presa: 0.3,
+  tv: 1.1,
+  altoparlante: 1,
+  antifurto: 2.3,
+  pannello: 1.2
+});
+function dispositiviDallaFoto(casa2, stanza2, foto) {
+  return elenco15(foto?.dispositivi).filter((d) => DISPOSITIVI_3D[d?.k]).map((d) => {
+    const mont = DISPOSITIVI_3D[d.k].mont;
+    let p = posaDallaFoto(stanza2, foto, d.box, { mont });
+    if (mont === "finestra" || mont === "porta") {
+      const vicina = elenco15(casa2?.aperture).filter((a) => a.stanza === stanza2.id && a.tipo === mont).map((a) => ({ a, d: Math.hypot(a.cx - p.x, a.cy - p.y) })).sort((a, b2) => a.d - b2.d)[0];
+      if (vicina && vicina.d < 2.5) p = { ...p, x: vicina.a.cx, y: vicina.a.cy };
+    }
+    return {
+      k: d.k,
+      stanza: stanza2.id,
+      ...nellaStanza(casa2, stanza2.id, p.x, p.y),
+      h: ALTEZZA_DI_SERIE[d.k] ?? 2.3,
+      rot: p.rot,
+      entity: entita(d.entity),
+      nome: clean32(d.nome).slice(0, 40),
+      da: "foto",
+      ...d.k === "telecamera" ? { fov: 100 } : {}
+    };
+  });
+}
+function posaDiRipiego(casa2, stanza2, k, quanti3 = 0) {
+  const mont = DISPOSITIVI_3D[k]?.mont || "muro";
+  const r = riquadroDi(stanza2), passo = 0.4 * quanti3;
+  let p;
+  if (mont === "finestra" || mont === "porta") {
+    const tipo = mont === "porta" ? "porta" : "finestra";
+    const sue = elenco15(casa2?.aperture).filter((a2) => a2.stanza === stanza2.id && a2.tipo === tipo);
+    const a = sue[quanti3 % Math.max(1, sue.length)];
+    if (a) p = { x: a.cx ?? a.x, y: a.cy ?? a.y, rot: 0 };
+  }
+  if (!p && mont === "angolo") {
+    const angoli = [
+      [r.x0 + 0.15, r.y0 + 0.15, Math.PI / 4],
+      [r.x1 - 0.15, r.y0 + 0.15, -Math.PI / 4],
+      [r.x1 - 0.15, r.y1 - 0.15, -3 * Math.PI / 4],
+      [r.x0 + 0.15, r.y1 - 0.15, 3 * Math.PI / 4]
+    ];
+    const [x, y, rot] = angoli[quanti3 % 4];
+    p = { x, y, rot };
+  }
+  if (!p && (mont === "muro" || mont === "finestra" || mont === "porta"))
+    p = { x: tra3(stanza2.sx + passo, r.x0 + 0.1, r.x1 - 0.1), y: r.y0 + 0.08, rot: 0 };
+  if (!p) p = { x: stanza2.sx + 0.7 + passo, y: stanza2.sy + 0.5, rot: 0 };
+  const dentro3 = nellaStanza(casa2, stanza2.id, p.x, p.y);
+  return { ...dentro3, rot: p.rot, h: ALTEZZA_DI_SERIE[k] ?? 2.3 };
+}
+function pavimentoDalColore(c) {
+  const hex = colore(c);
+  if (!hex) return null;
+  const n = parseInt(hex.slice(1), 16), r = n >> 16, g = n >> 8 & 255, b2 = n & 255;
+  const legno = r > g && g > b2 && r - b2 > 45 && r < 235;
+  return { tipo: legno ? "listoni" : "gres60", colore: hex };
+}
+function latiDelVarco(casa2, a) {
+  const { W: W2, H: H7, passo, tipo } = casa2;
+  const cx = Math.floor(a.cx / passo), cy = Math.floor(a.cy / passo), lati = [];
+  for (const segno5 of [-1, 1]) {
+    for (let d = 1; d < Math.round(0.6 / passo); d++) {
+      const x = a.orizz ? cx : cx + segno5 * d, y = a.orizz ? cy + segno5 * d : cy;
+      if (x < 0 || y < 0 || x >= W2 || y >= H7) break;
+      const v = tipo[y * W2 + x];
+      if (v > 0 || v === CELLA.fuori) {
+        lati.push(v);
+        break;
+      }
+    }
+  }
+  return lati;
+}
+function pianoDaRiconoscimento({
+  casa: casa2,
+  nomi: nomi2 = {},
+  aree: aree2 = {},
+  fuori = [],
+  foto = {},
+  dispositivi = [],
+  arredi: arrediGia = [],
+  finiture = {},
+  livello = 0,
+  nome = "",
+  k = ""
+} = {}) {
+  if (!casa2?.tipo || !casa2.W || !casa2.H) return null;
+  const { W: W2, H: H7, passo } = casa2;
+  const daFuori = new Set([...fuori].map(Number));
+  const vive = elenco15(casa2.stanze).filter((s) => !daFuori.has(s.id));
+  const idVivi = new Set(vive.map((s) => s.id));
+  const tipo = Int16Array.from(casa2.tipo, (v) => v > 0 && !idVivi.has(v) ? CELLA.fuori : v);
+  let x0 = W2, x1 = -1, y0 = H7, y1 = -1;
+  for (let i = 0; i < W2 * H7; i++) {
+    if (tipo[i] === CELLA.fuori) continue;
+    const x = i % W2, y = i / W2 | 0;
+    if (x < x0) x0 = x;
+    if (x > x1) x1 = x;
+    if (y < y0) y0 = y;
+    if (y > y1) y1 = y;
+  }
+  if (x1 < 0) return null;
+  const bordo2 = Math.round(0.5 / passo);
+  x0 = Math.max(0, x0 - bordo2);
+  y0 = Math.max(0, y0 - bordo2);
+  x1 = Math.min(W2 - 1, x1 + bordo2);
+  y1 = Math.min(H7 - 1, y1 + bordo2);
+  const Wr = x1 - x0 + 1, Hr = y1 - y0 + 1, tagliata = new Int16Array(Wr * Hr);
+  for (let y = 0; y < Hr; y++)
+    for (let x = 0; x < Wr; x++) tagliata[y * Wr + x] = tipo[(y + y0) * W2 + x + x0];
+  const ox = x0 * passo, oy = y0 * passo;
+  const salvata = ricampiona({ W: Wr, H: Hr, passo, tipo: tagliata }, PASSO_SALVATO);
+  const sposta3 = (p) => ({ ...p, x: tondo(p.x - ox), y: tondo(p.y - oy) });
+  const vista2 = { ...casa2, tipo };
+  const nomeDi19 = (id) => clean32(nomi2[id]) || vive.find((s) => s.id === id)?.nome || `Stanza ${id}`;
+  const stanze4 = vive.map((s) => {
+    const sue = elenco15(foto[s.id]);
+    const ultima = [...sue].reverse().find((f) => colore(f?.pavimento) || colore(f?.pareti));
+    return {
+      id: s.id,
+      nome: nomeDi19(s.id).slice(0, 40),
+      area: clean32(aree2[s.id]).slice(0, 64),
+      pavimento: ultima ? pavimentoDalColore(ultima.pavimento) : finiture[s.id]?.pavimento || null,
+      pareti: colore(ultima?.pareti) || colore(finiture[s.id]?.pareti)
+    };
+  });
+  const aperture = elenco15(casa2.aperture).flatMap((a) => {
+    const lati = latiDelVarco(casa2, a);
+    const suFuori = lati.some((v) => daFuori.has(v)) || daFuori.has(a.stanza);
+    const stanza2 = idVivi.has(a.stanza) ? a.stanza : lati.find((v) => idVivi.has(v)) || 0;
+    if (!stanza2 && (suFuori || a.stanza)) return [];
+    return [
+      sposta3({
+        tipo: suFuori ? "finestra" : a.tipo,
+        x: a.cx,
+        y: a.cy,
+        largo: tondo(a.largo, 2),
+        orizz: a.orizz !== false,
+        verso: a.verso || 0,
+        portafinestra: a.portafinestra === true || suFuori && a.tipo === "porta",
+        stanza: stanza2 || 0
+      })
+    ];
+  });
+  const arredi = [], posati = [];
+  for (const s of vive) {
+    for (const f of elenco15(foto[s.id])) {
+      arredi.push(...arrediDallaFoto(vista2, s, f).map(sposta3));
+      posati.push(...dispositiviDallaFoto(vista2, s, f).map(sposta3));
+    }
+  }
+  for (const a of elenco15(arrediGia))
+    if (idVivi.has(Number(a?.stanza)) && Number.isFinite(a?.x) && Number.isFinite(a?.y))
+      arredi.push(sposta3({ ...a, stanza: Number(a.stanza) }));
+  const contati = {};
+  for (const d of elenco15(dispositivi)) {
+    const s = vive.find((v) => v.id === Number(d?.stanza));
+    if (!s || !DISPOSITIVI_3D[d?.k]) continue;
+    const chiave2 = `${s.id}:${d.k}`;
+    const p = Number.isFinite(d.x) && Number.isFinite(d.y) ? { x: d.x, y: d.y, rot: d.rot || 0, h: d.h ?? ALTEZZA_DI_SERIE[d.k] } : posaDiRipiego(vista2, s, d.k, contati[chiave2] || 0);
+    contati[chiave2] = (contati[chiave2] || 0) + 1;
+    posati.push(
+      sposta3({
+        k: d.k,
+        stanza: s.id,
+        x: p.x,
+        y: p.y,
+        h: p.h,
+        rot: p.rot,
+        entity: entita(d.entity),
+        nome: clean32(d.nome).slice(0, 40),
+        da: d.da === "foto" ? "foto" : "mano",
+        ...d.k === "telecamera" ? { fov: Number(d.fov) || 100 } : {}
+      })
+    );
+  }
+  const qualePiano = pianoDelLivello(livello);
+  return {
+    k: clean32(k) || qualePiano.k,
+    nome: clean32(nome) || qualePiano.nome[0],
+    livello: qualePiano.livello,
+    W: salvata.W,
+    H: salvata.H,
+    passo: PASSO_SALVATO,
+    griglia: comprimiGriglia(salvata.tipo),
+    stanze: stanze4,
+    aperture,
+    arredi,
+    dispositivi: posati
+  };
+}
+function riprendiIlPiano(piano2, { margine = 0.6 } = {}) {
+  const W0 = Number(piano2?.W) | 0, H0 = Number(piano2?.H) | 0;
+  if (!W0 || !H0 || !clean32(piano2?.griglia)) return null;
+  const passo0 = Number(piano2.passo) > 0 ? Number(piano2.passo) : PASSO_SALVATO;
+  const salvata = espandiGriglia(piano2.griglia, W0 * H0);
+  const r = ricampiona({ W: W0, H: H0, passo: passo0, tipo: salvata }, PASSO);
+  const m = Math.max(2, Math.round(margine / PASSO)), W2 = r.W + 2 * m, H7 = r.H + 2 * m, N = W2 * H7;
+  const tipo = new Int16Array(N).fill(CELLA.fuori);
+  for (let y = 0; y < r.H; y++)
+    for (let x = 0; x < r.W; x++) tipo[(y + m) * W2 + x + m] = r.tipo[y * r.W + x];
+  const muro = new Uint8Array(N), vetro = new Uint8Array(N), soglia3 = new Uint8Array(N);
+  for (let i = 0; i < N; i++) {
+    if (tipo[i] === CELLA.muro) muro[i] = 1;
+    else if (tipo[i] === CELLA.davanzale) vetro[i] = 1;
+    else if (tipo[i] === CELLA.porta) soglia3[i] = 1;
+  }
+  const barriera = new Uint8Array(N);
+  for (let i = 0; i < N; i++) if (muro[i] || vetro[i] || soglia3[i]) barriera[i] = 1;
+  for (let y = 1; y < H7 - 1; y++)
+    for (let x = 1; x < W2 - 1; x++) {
+      const i = y * W2 + x;
+      if ((vetro[i] || soglia3[i]) && !muro[i])
+        for (const j of [i - 1, i + 1, i - W2, i + W2]) barriera[j] = 1;
+    }
+  const griglia3 = { W: W2, H: H7, muro, barriera, vetro };
+  const casa2 = riconosciDaFoto(griglia3);
+  const conti2 = /* @__PURE__ */ new Map();
+  for (let i = 0; i < N; i++) {
+    const nuova = casa2.tipo[i], vecchia = tipo[i];
+    if (nuova > 0 && vecchia > 0) {
+      const k = nuova * 256 + vecchia;
+      conti2.set(k, (conti2.get(k) || 0) + 1);
+    }
+  }
+  const migliore = /* @__PURE__ */ new Map();
+  for (const [k, n] of conti2) {
+    const nuova = Math.floor(k / 256), vecchia = k % 256;
+    if (!migliore.has(nuova) || migliore.get(nuova).n < n) migliore.set(nuova, { vecchia, n });
+  }
+  const daA = /* @__PURE__ */ new Map();
+  for (const [nuova, { vecchia, n }] of migliore)
+    if (!daA.has(vecchia) || daA.get(vecchia).n < n) daA.set(vecchia, { nuova, n });
+  const nomi2 = {}, aree2 = {}, finiture = {};
+  for (const s of elenco15(piano2.stanze)) {
+    const id = daA.get(Number(s?.id))?.nuova;
+    if (!id) continue;
+    if (clean32(s.nome)) nomi2[id] = clean32(s.nome);
+    if (clean32(s.area)) aree2[id] = clean32(s.area);
+    if (s.pavimento || s.pareti)
+      finiture[id] = { pavimento: s.pavimento || null, pareti: colore(s.pareti) };
+  }
+  const dx = m * PASSO;
+  const sposta3 = (o) => {
+    const id = daA.get(Number(o?.stanza))?.nuova;
+    if (!id || !Number.isFinite(o?.x) || !Number.isFinite(o?.y)) return [];
+    return [{ ...o, stanza: id, x: tondo(o.x + dx), y: tondo(o.y + dx) }];
+  };
+  return {
+    griglia: griglia3,
+    casa: casa2,
+    nomi: nomi2,
+    aree: aree2,
+    finiture,
+    dispositivi: elenco15(piano2.dispositivi).flatMap(sposta3),
+    arredi: elenco15(piano2.arredi).flatMap(sposta3)
+  };
+}
+
 // src/core/piante-nel-foglio.js
 var LATO_A = Object.freeze({ 0: 1189, 1: 841, 2: 594, 3: 420, 4: 297, 5: 210 });
 var SCALA_DEL_CATASTO = 200;
@@ -156495,6 +156578,11 @@ function statoNuovo(salvata, livello = 0) {
     fotoSel: 0,
     aggiungi: null,
     manuali: [],
+    /* Un piano ripreso dal Config («Modifica»): i suoi arredi e i colori delle
+     * stanze, che senza le foto non si saprebbero piu'. */
+    ripreso: null,
+    arredi: [],
+    finiture: {},
     nuovo: { k: "luce", stanza: 0 },
     salvata,
     tipo: salvata.tipo,
@@ -156885,8 +156973,8 @@ function tuttiIDispositivi() {
     const s = stanzaDi2(d.stanza);
     if (!s || S.fuori.has(s.id)) return;
     const chiave2 = `${s.id}:${d.k}`;
-    const p = posaDiRipiego(S.casa, s, d.k, contati[chiave2] || 0);
-    contati[chiave2] = (contati[chiave2] || 0) + 1;
+    const p = Number.isFinite(d.x) && Number.isFinite(d.y) ? d : posaDiRipiego(S.casa, s, d.k, contati[chiave2] || 0);
+    if (p !== d) contati[chiave2] = (contati[chiave2] || 0) + 1;
     out.push({ ...d, ref: `m:${i}`, stanza: s.id, x: p.x, y: p.y, daFoto: false });
   });
   return out;
@@ -157746,8 +157834,11 @@ function ricalcola2() {
       if (!giaViste.has(Number(id)) && eNomeDiFuori(nome)) fuori.add(Number(id));
     }
   }
-  Object.assign(S, { nomi: nomi2, aree: aree2, fuori, foto });
+  const finiture = {};
+  for (const [da, a] of Object.entries(daA)) if (S.finiture?.[da]) finiture[a] = S.finiture[da];
+  Object.assign(S, { nomi: nomi2, aree: aree2, fuori, foto, finiture });
   S.manuali = S.manuali.filter((d) => daA[d.stanza]).map((d) => ({ ...d, stanza: daA[d.stanza] }));
+  S.arredi = (S.arredi || []).filter((a) => daA[a.stanza]).map((a) => ({ ...a, stanza: daA[a.stanza] }));
   if (S.sel && !S.casa.stanze.some((s) => s.id === S.sel)) S.sel = null;
 }
 function aggiornaScala() {
@@ -157872,7 +157963,11 @@ function pianoDiAdesso() {
     fuori: S.fuori,
     foto: fotoDerivate,
     dispositivi: S.manuali,
-    livello: S.livello
+    arredi: S.arredi,
+    finiture: S.finiture,
+    livello: S.livello,
+    /* un piano ripreso tiene la sua chiave e il suo nome, se resta lui */
+    ...S.ripreso && S.ripreso.livello === S.livello ? { k: S.ripreso.k, nome: S.ripreso.nome } : {}
   });
 }
 function salva35() {
@@ -157882,8 +157977,11 @@ function salva35() {
     return null;
   }
   const { foto: _foto, scelta: _scelta, ...esterno } = S.esterno;
+  const piani = (S.salvata?.piani || []).filter(
+    (p) => !S.ripreso || p.k !== S.ripreso.k || p.k === piano2.k
+  );
   const casa2 = casa3dPulita({
-    ...aggiungiPiano({ ...S.salvata, tipo: S.tipo, esterno }, piano2),
+    ...aggiungiPiano({ ...S.salvata, piani, tipo: S.tipo, esterno }, piano2),
     attiva: S.salvata?.attiva === true
   });
   writeJsonIfChanged(CHIAVE_CASA3D, casa2);
@@ -158263,7 +158361,42 @@ function alTasto(ev) {
 function alRidimensionare() {
   if (state182.S) disegnaLaTela();
 }
-function apriCreaCasa({ piano: piano2 = null } = {}) {
+function riprendi(dato2) {
+  const S = state182.S, r = riprendiIlPiano(dato2);
+  if (!r?.casa?.stanze?.length) return false;
+  const { W: W2, H: H7, muro, vetro } = r.griglia;
+  const tela4 = tela2d(W2, H7), g = tela4.getContext("2d"), im = g.createImageData(W2, H7);
+  for (let i = 0; i < W2 * H7; i++) {
+    const v = muro[i] ? 0 : vetro[i] ? 120 : 255;
+    im.data.set([v, v, v, 255], i * 4);
+  }
+  g.putImageData(im, 0, 0);
+  const m = Math.round(0.6 / PASSO);
+  Object.assign(S, {
+    passo: P11.muri,
+    img: tela4,
+    dritta: tela4,
+    disegno: true,
+    mpp: PASSO,
+    punti: [
+      [m, m / 2],
+      [W2 - m, m / 2]
+    ],
+    metri: Math.round((W2 - 2 * m) * PASSO * 100) / 100,
+    griglia: r.griglia,
+    casa: r.casa,
+    nomi: r.nomi,
+    aree: r.aree,
+    finiture: r.finiture,
+    arredi: r.arredi,
+    manuali: r.dispositivi.map((d) => ({ ...d })),
+    ripreso: { k: dato2.k, nome: dato2.nome, livello: dato2.livello },
+    livello: dato2.livello,
+    strumento: "muro"
+  });
+  return true;
+}
+function apriCreaCasa({ piano: piano2 = null, modifica = false } = {}) {
   if (!doc?.body) return false;
   let admin = false;
   try {
@@ -158293,6 +158426,7 @@ function apriCreaCasa({ piano: piano2 = null } = {}) {
       disegna14();
     }
   });
+  if (modifica && dato2) riprendi(dato2);
   montaLaTela();
   doc.documentElement.classList.add("dm-c3c-aperta");
   nodo2().dataset.tema = doc.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
