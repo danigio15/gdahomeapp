@@ -105,6 +105,21 @@ export const ACCOSTATI = new Set([
   "microonde",
 ]);
 
+/** «Per ogni cosa individuata, le entita' di riferimento»: gli arredi che
+ * possono rispondere a un'entita' di Home Assistant, e come quale
+ * dispositivo. La lampada a stelo e' una luce, il frigorifero e il microonde
+ * stanno su una presa misurata, gli elettrodomestici sono se stessi. */
+export const ARREDI_CON_ENTITA = Object.freeze({
+  stelo: "luce",
+  frigo: "presa",
+  microonde: "presa",
+  tv: "tv",
+  lavatrice: "lavatrice",
+  asciugatrice: "asciugatrice",
+  lavastoviglie: "lavastoviglie",
+  forno: "forno",
+});
+
 /* Dalle classi del riconoscitore alle cose della casa. Il riconoscitore e'
  * D-FINE addestrato su Objects365 (365 cose, fra cui armadi, comodini,
  * lavatrici, condizionatori); restano anche i nomi di COCO, per le prove e per

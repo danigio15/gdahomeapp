@@ -10,6 +10,30 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.29
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Casa 3D, la pianta dalle foto delle stanze:** la terza strada, accanto
+  alla planimetria (foto, PDF, DWG) e al disegno a mano. Niente planimetria
+  e niente misure: si elencano le stanze (quelle di Home Assistant sono già
+  lì) e per ognuna si aggiungono le foto, intere, scattate dalla porta o
+  dalla parete opposta. Le misure vengono dalle cose di misura nota che il
+  riconoscitore vede (il forno da incasso è largo 60 cm, la lavastoviglie
+  60, il WC 37, il condizionatore 85, il comodino 50) e dalla focale che il
+  telefono scrive nella foto: due foto per stanza, una verso una parete e
+  una verso quella di fianco, danno larghezza e profondità; quello che non
+  torna si corregge a mano, e senza cose note restano le misure di serie del
+  tipo di stanza. Le stanze si dispongono da sole in una pianta compatta,
+  con le porte fra una stanza e l'altra, una finestra per stanza e la porta
+  di casa; da lì si passa dai Muri come con qualunque planimetria, con gli
+  arredi e i dispositivi delle foto già al loro posto. Si trascina una
+  stanza sopra un'altra per scambiarle di posto.
+- **Un'entità per ogni cosa riconosciuta:** accanto a una lampada a stelo,
+  un frigorifero, un microonde, una TV o un elettrodomestico visti nella foto
+  c'è il tasto ⚡, che ne fa un dispositivo da collegare a un'entità di Home
+  Assistant (la lampada una luce, frigo e microonde una presa).
+
 ## 1.18.7.28
 
 _Solo Home Assistant: l'app sul telefono non cambia._
