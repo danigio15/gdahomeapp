@@ -1283,7 +1283,11 @@ class Collegamento {
   ///
   /// Un errore qui non e' un errore della casa: la casa e' aperta e le entita'
   /// ci sono. Si segna che si e' chiesto, e la schermata dice quello che sa.
-  Future<void> _leggiLaPlancia(Filo filo, {String? profilo}) async {
+  Future<void> _leggiLaPlancia(
+    Filo filo, {
+    String? profilo,
+    bool tieniSeSbaglia = false,
+  }) async {
     /* Quella scelta l'ultima volta in **questa** casa. Chi ne ha una sola non
      * ha mai scelto niente, e qui non c'e' scritto niente: si chiede la
      * prima, ed e' la domanda di sempre. */
@@ -1306,7 +1310,10 @@ class Collegamento {
       if (_pannelloLetto) return;
     } on ErroreDelPonte {
       /* Un altro no: si segna che si e' chiesto, e la schermata dice quello
-       * che sa. */
+       * che sa. Ma una rilettura fatta per scrupolo — il menu che si apre,
+       * l'app che torna in primo piano — non toglie una plancia buona per un
+       * no di passaggio. */
+      if (tieniSeSbaglia && _pannelloLetto) return;
     }
     /* Una risposta arrivata su un filo che non c'e' piu' non vale.
      *
@@ -1327,7 +1334,7 @@ class Collegamento {
   Future<void> rileggiLaPlancia() async {
     final filo = _filo;
     if (filo == null || !filo.dentro) return;
-    await _leggiLaPlancia(filo);
+    await _leggiLaPlancia(filo, tieniSeSbaglia: true);
   }
 
   /// Apre un'altra plancia di questa casa.
