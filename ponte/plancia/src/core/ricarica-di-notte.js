@@ -377,9 +377,11 @@ export function letturaDellAuto(entita, stati) {
    * non vale se un altro sensore della batteria (quello dell'auto, lo stesso
    * della pagina Auto) dice di piu'. */
   const laBatteria = (elenco) => {
-    const valori = (elenco || []).map((id) => percentuale(di(id))).filter((v) => v !== null && v !== undefined);
+    const valori = (elenco || [])
+      .map((id) => percentuale(di(id)))
+      .filter((v) => v !== null && v !== undefined);
     if (!valori.length) return null;
-    return valori[0] === 0 ? valori.find((v) => v > 0) ?? 0 : valori[0];
+    return valori[0] === 0 ? (valori.find((v) => v > 0) ?? 0) : valori[0];
   };
   const modoStato = di(entita?.modo);
   const modo = modoStato && !MUTO.test(pulito(modoStato.state)) ? pulito(modoStato.state) : "";
@@ -411,6 +413,46 @@ export function letturaDellAuto(entita, stati) {
     collegata,
     kwh: primo(entita?.energia, kilowattora),
   };
+}
+
+/* ── la potenza della wallbox, da evcc ───────────────────────────────────── */
+
+/**
+ * «Non mi deve far impostare a me il valore: deve considerare il massimo
+ * impostato su evcc; se non c'e' evcc, allora si mette a mano.»
+ *
+ * La potenza piu' alta con cui evcc carica su questo punto di ricarica: la
+ * corrente massima (`number.evcc_<punto>_max_current`, o come la chiama
+ * l'integrazione) per le fasi (quelle attive, o quelle impostate, o una) per
+ * 230 V. Torna `{ kw, ampere, fasi }`, o `null` se evcc non c'e' o non lo
+ * dice.
+ */
+export function potenzaMassimaDiEvcc(modo, stati, { volt = 230 } = {}) {
+  const p = prefissoDiEvcc(modo);
+  if (!p) return null;
+  const tutti =
+    typeof stati === "function"
+      ? null
+      : Object.keys(stati || {}).filter((id) => id.split(".")[1]?.startsWith(p));
+  if (!tutti || !tutti.length) return null;
+  const valore = (id) => {
+    const n = Number(String(stati[id]?.state ?? "").replace(",", "."));
+    return Number.isFinite(n) ? n : null;
+  };
+  const coda = (id) => id.split(".")[1].slice(p.length);
+  const trova = (forma) => tutti.filter((id) => forma.test(coda(id)));
+  const ampere = trova(/^max_?current$/)
+    .map(valore)
+    .find((n) => n !== null && n > 0);
+  if (!ampere) return null;
+  const attive = trova(/^phases_?active$/)
+    .map(valore)
+    .find((n) => n === 1 || n === 2 || n === 3);
+  const impostate = trova(/^phases(_?configured)?$/)
+    .map(valore)
+    .find((n) => n === 1 || n === 3);
+  const fasi = attive || impostate || 1;
+  return { kw: Math.round((ampere * volt * fasi) / 100) / 10, ampere, fasi };
 }
 
 /* ── il prezzo ───────────────────────────────────────────────────────────── */

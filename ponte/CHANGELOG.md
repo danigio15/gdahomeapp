@@ -22,6 +22,9 @@ _Solo Home Assistant: l'app sul telefono non cambia._
   sa quanto e' carica l'auto dice 0%, e il conto partiva da zero («No: alle
   05:00 sara' al 40%» con l'auto al 46%). Ora vale la batteria dell'auto, la
   stessa della pagina Auto.
+- **Ricarica notturna, la potenza dalla wallbox di evcc:** il conto usa il
+  massimo impostato su evcc (la corrente massima per le fasi), senza niente
+  da scrivere; il campo a mano c'e' solo se evcc non lo dice.
 
 ## 1.18.7.27
 

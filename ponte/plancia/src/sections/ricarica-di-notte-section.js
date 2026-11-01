@@ -25,6 +25,7 @@ import { activeVehicle } from "./ev-section.js";
 import {
   CHIAVE_RICARICA_NOTTE,
   ciArriva,
+  potenzaMassimaDiEvcc,
   entitaDellaRicarica,
   fasciaDi,
   impostazioniPulite,
@@ -77,6 +78,15 @@ function risolvi(rif) {
     return clean(root.resolveEntity?.(rif));
   } catch (_errore) {
     return "";
+  }
+}
+
+/** La potenza massima impostata su evcc, se evcc c'e'. */
+function laPotenzaDiEvcc() {
+  try {
+    return potenzaMassimaDiEvcc(entitaDellaRicarica(risolvi).modo, allStates());
+  } catch (_errore) {
+    return null;
   }
 }
 
@@ -437,7 +447,7 @@ function scheletro() {
   <div class="dm-rn-riga dm-rn-riga-alta" data-rn="arrivaRiga">
     <div class="dm-rn-coppia"><span class="dm-rn-nome">${esc(t("Ci arriva?", "Will it get there?"))}</span><b class="dm-rn-valore" data-rn="arriva"></b></div>
     <small class="dm-rn-nota" data-rn="arrivaNota"></small>
-    <label class="dm-rn-kw"><span>${esc(t("Potenza della wallbox", "Wallbox power"))}</span><input class="dm-rn-kw-campo" data-rn="kw" type="number" inputmode="decimal" min="1" max="50" step="0.1" placeholder="${esc(t("automatica", "automatic"))}"><small>kW</small></label>
+    <label class="dm-rn-kw"><span>${esc(t("Potenza della wallbox", "Wallbox power"))}</span><input class="dm-rn-kw-campo" data-rn="kw" type="number" inputmode="decimal" min="1" max="50" step="0.1" placeholder="${esc(t("automatica", "automatic"))}"><small data-rn="kwUnita">kW</small><b class="dm-rn-kw-evcc" data-rn="kwEvcc" hidden></b></label>
   </div>
   <div class="dm-rn-riga">
     <span class="dm-rn-nome">${esc(t("Poi", "Then"))}</span>
@@ -646,6 +656,19 @@ export function renderRicaricaDiNotte(adesso = Date.now()) {
   /* «Mi devi dire se la vettura riesce ad arrivare alla percentuale che ho
    * impostato.» */
   const kwCampo = q("kw");
+  /* La potenza la dice evcc (il massimo impostato li'): niente da scrivere. */
+  const daEvcc = laPotenzaDiEvcc();
+  for (const [pezzo, nascosto] of [
+    [kwCampo, Boolean(daEvcc)],
+    [q("kwUnita"), Boolean(daEvcc)],
+    [q("kwEvcc"), !daEvcc],
+  ])
+    if (pezzo && pezzo.hidden !== nascosto) pezzo.hidden = nascosto;
+  if (daEvcc)
+    testo(
+      q("kwEvcc"),
+      `${formatNumber(daEvcc.kw, 1)} kW · evcc (${daEvcc.ampere} A${daEvcc.fasi > 1 ? ` × ${daEvcc.fasi}` : ""})`,
+    );
   if (kwCampo && doc.activeElement !== kwCampo) {
     const scritto = imp.kw ? String(imp.kw) : "";
     if (kwCampo.value !== scritto) kwCampo.value = scritto;
@@ -733,7 +756,8 @@ function laRispostaCiArriva(imp, lettura, adesso) {
   const prossima = fascia.dentro ? null : prossimaFascia(imp, adesso);
   const inizio = fascia.dentro ? adesso : prossima?.inizio;
   const fine = fascia.dentro ? fascia.fine : prossima?.fine;
-  const kw = imp.kw || potenzaVista();
+  const evcc = laPotenzaDiEvcc();
+  const kw = evcc?.kw || imp.kw || potenzaVista();
   let capacita = null;
   try {
     capacita = capacitaDellaBatteria(activeVehicle() || {}, allStates()) || null;
@@ -1006,6 +1030,7 @@ function stile() {
 .dm-rn-riga[data-tono="attenzione"] [data-rn="arriva"]{color:#dc2626}
 .dm-rn-kw{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--rn-dim)}
 .dm-rn-kw span{flex:1}
+.dm-rn-kw-evcc{font-size:13px;font-weight:800;color:var(--rn-text);font-variant-numeric:tabular-nums}
 .dm-rn-kw-campo{width:120px;padding:6px 10px;border-radius:10px;border:1px solid var(--rn-line);background:transparent;color:inherit;font:inherit;text-align:right}
 .dm-rn-seg{display:inline-flex;gap:2px;padding:3px;border-radius:12px;background:var(--rn-box);box-shadow:inset 0 0 0 1px var(--rn-line);
   flex-wrap:wrap;max-width:100%}

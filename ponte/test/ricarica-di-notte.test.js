@@ -22,6 +22,7 @@ import {
   impostazioniPulite,
   laNotte,
   letturaDellAuto,
+  potenzaMassimaDiEvcc,
   modoPerEvcc,
   prefissoDiEvcc,
   prezzoDellaNotte,
@@ -694,4 +695,27 @@ test("uno 0% di evcc non copre la batteria vera dell'auto", () => {
   stati["sensor.evcc_garage_vehicle_soc"].state = "0";
   stati["sensor.leapmotor_batteria"].state = "0";
   assert.equal(letturaDellAuto(entita, stati).soc, 0);
+});
+
+/* «Non mi deve far impostare a me il valore: deve considerare il massimo
+ * impostato su evcc; se non c'e' evcc, allora a mano.» */
+test("la potenza della wallbox e' il massimo impostato su evcc", () => {
+  const stati = {
+    "select.evcc_garage_mode": { state: "pv" },
+    "number.evcc_garage_max_current": { state: "16" },
+    "sensor.evcc_garage_phases_active": { state: "0" },
+    "select.evcc_garage_phases_configured": { state: "1" },
+  };
+  assert.deepEqual(potenzaMassimaDiEvcc("select.evcc_garage_mode", stati), {
+    kw: 3.7,
+    ampere: 16,
+    fasi: 1,
+  });
+  /* a tre fasi, quelle attive contano */
+  stati["sensor.evcc_garage_phases_active"].state = "3";
+  assert.equal(potenzaMassimaDiEvcc("select.evcc_garage_mode", stati).kw, 11);
+  /* senza evcc, o senza la corrente massima, si scrive a mano */
+  assert.equal(potenzaMassimaDiEvcc("select.wallbox_modo", stati), null);
+  delete stati["number.evcc_garage_max_current"];
+  assert.equal(potenzaMassimaDiEvcc("select.evcc_garage_mode", stati), null);
 });
