@@ -10,6 +10,32 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.8
+
+_App GdAHome e Home Assistant._
+
+L'app sul telefono raccoglie quello che è cambiato dalla 1.18.7; l'add-on è
+lo stesso della 1.18.7.30, col numero nuovo.
+
+- **Menu laterale fluido su Android:** «lo scroll del menu ha dei frame lag,
+  non scorre fluido». A menu aperto fino in fondo la plancia dietro esce dalla
+  scena (resta caricata), e il menu scorre senza scatti; torna com'era appena
+  il menu comincia a chiudersi.
+- **Plance nuove senza spegnere il tablet:** aprendo il menu, o tornando
+  all'app, l'elenco delle plance si chiede di nuovo alla casa. Un tablet a
+  muro sempre acceso vede subito la plancia aggiunta dalla console, e una
+  tolta non si riapre. Un no di passaggio della casa, durante questa
+  rilettura, non toglie la plancia che si sta guardando.
+- **Premium legato alla casa:** l'abbonamento comprato dall'app porta con sé
+  un'impronta della casa per cui si compra (non il suo nome), e il negozio la
+  ridice al quadro: chi conosce il numero di un acquisto altrui non se lo
+  porta sulla propria casa.
+- **Gettone più robusto:** rimettere indietro l'orologio del telefono non
+  allunga più un gettone già scaduto.
+- **Home Assistant:** tutto quello delle 1.18.7.17–1.18.7.30, qui sotto
+  (Casa 3D, pianta dalle foto, catasto e DWG, Colpo d'occhio, ricarica
+  notturna, Musica sul pannello da 4 pollici).
+
 ## 1.18.7.30
 
 _Solo Home Assistant: l'app sul telefono non cambia._
