@@ -1,8 +1,15 @@
 Riconoscere gli arredi nelle foto della Casa 3D, sul dispositivo.
 
-- tf.min.js: TensorFlow.js 4.22.0 (Apache License 2.0) — https://github.com/tensorflow/tfjs
-- coco-ssd.min.js: @tensorflow-models/coco-ssd 2.2.3 (Apache License 2.0) — https://github.com/tensorflow/tfjs-models
-- model.json e group1-shard*.bin: SSDLite MobileNet v2 addestrato su COCO, pubblicato
-  da TensorFlow.js (Apache License 2.0) — https://storage.googleapis.com/tfjs-models/savedmodel/ssdlite_mobilenet_v2/
+- ort.wasm.min.js, ort-wasm-simd-threaded.js (era .mjs), ort-wasm-simd-threaded.wasm:
+  ONNX Runtime Web 1.29.0 (MIT License, Copyright (c) Microsoft Corporation)
+  https://github.com/microsoft/onnxruntime
+- dfine-s-obj365.bin: D-FINE S addestrato su Objects365 (Apache License 2.0,
+  Copyright (c) 2024 The D-FINE Authors) — https://github.com/Peterande/D-FINE
+  Pesi originali dfine_s_obj365.pth, esportati in ONNX (opset 16) con lo script
+  del progetto (tools/deployment/export_onnx.py), semplificati con onnxsim e
+  con i pesi salvati a mezza precisione (si calcola a precisione piena): stessi
+  risultati, meta' dei byte. Si chiama .bin perche' il ponte lo serve come byte.
+- obj365.json: i nomi delle 365 classi di Objects365 (CC BY 4.0), nell'ordine
+  delle etichette del modello (etichetta 1 = primo nome).
 
 Le foto non lasciano mai il dispositivo: il modello gira nella pagina.

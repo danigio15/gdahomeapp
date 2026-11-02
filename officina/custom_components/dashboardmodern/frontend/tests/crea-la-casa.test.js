@@ -13,8 +13,11 @@ import { riconosciDaFoto } from "../src/core/pianta-da-foto.js";
 import {
   aggiungiPiano,
   areeDaiRegistri,
+  arrediDallaFoto,
+  dispositiviDallaFoto,
   entitaUsate,
-  oggettiDaCoco,
+  larghezzaDallaFoto,
+  oggettiDallaFoto,
   pavimentoDalColore,
   pianoDaRiconoscimento,
   pianoDelLivello,
@@ -303,8 +306,8 @@ test("i piani si accumulano, e uno con la stessa chiave si sostituisce", () => {
   assert.equal(pianoDelLivello(9).k, "piano9");
 });
 
-test("quello che vede COCO-SSD diventa arredi e dispositivi", () => {
-  const { arredi, dispositivi } = oggettiDaCoco([
+test("quello che vede il riconoscitore diventa arredi e dispositivi", () => {
+  const { arredi, dispositivi } = oggettiDallaFoto([
     { class: "couch", bbox: [10, 10, 200, 100], score: 0.9 },
     { class: "tv", bbox: [300, 50, 120, 70], score: 0.8 },
     { class: "chair", bbox: [500, 100, 60, 80], score: 0.7 },
@@ -350,29 +353,254 @@ test("le aree e di chi sono le entita', dai registri del guscio o di Home Assist
 test("dalle foto: il lavandino del bagno e' un lavabo, il forno un elettrodomestico", () => {
   const sink = { class: "sink", bbox: [100, 300, 200, 150], score: 0.8 };
   assert.deepEqual(
-    oggettiDaCoco([sink], { stanza: "Bagno" }).arredi.map((a) => a.k),
+    oggettiDallaFoto([sink], { stanza: "Bagno" }).arredi.map((a) => a.k),
     ["lavabo"],
   );
   assert.deepEqual(
-    oggettiDaCoco([sink, { class: "toilet", bbox: [400, 300, 150, 200], score: 0.7 }]).arredi.map(
-      (a) => a.k,
-    ),
+    oggettiDallaFoto([
+      sink,
+      { class: "toilet", bbox: [400, 300, 150, 200], score: 0.7 },
+    ]).arredi.map((a) => a.k),
     ["lavabo", "wc"],
     "col WC nella foto anche senza il nome",
   );
   assert.deepEqual(
-    oggettiDaCoco([sink], { stanza: "Cucina" }).arredi.map((a) => a.k),
+    oggettiDallaFoto([sink], { stanza: "Cucina" }).arredi.map((a) => a.k),
     ["cucina"],
   );
-  const forno = oggettiDaCoco([{ class: "oven", bbox: [0, 0, 100, 100], score: 0.6 }]);
+  const forno = oggettiDallaFoto([{ class: "oven", bbox: [0, 0, 100, 100], score: 0.6 }]);
   assert.deepEqual(
     forno.dispositivi.map((d) => d.k),
     ["forno"],
   );
   /* la stessa cosa vista nella foto intera e in un ritaglio e' una sola */
-  const due = oggettiDaCoco([
+  const due = oggettiDallaFoto([
     { class: "couch", bbox: [100, 200, 600, 300], score: 0.8 },
     { class: "couch", bbox: [120, 210, 560, 280], score: 0.6 },
   ]);
   assert.equal(due.arredi.length, 1);
+});
+
+/* «Dalle foto non li riconosce bene e non e' fedele con quanto presente in
+ * casa»: il riconoscitore di Objects365 dice «mobile», e il mobile giusto lo
+ * decidono la stanza e la forma. Foto da 1000×750. */
+test("dalle foto: il mobile giusto per la stanza e la forma", () => {
+  const foto = { w: 1000, h: 750 };
+  const k = (rilevati, stanza) =>
+    oggettiDallaFoto(rilevati, { ...foto, stanza }).arredi.map((a) => a.k);
+  const alto = { class: "Cabinet/shelf", bbox: [600, 100, 200, 600], score: 0.7 };
+  const basso = { class: "Cabinet/shelf", bbox: [100, 450, 400, 250], score: 0.7 };
+  const appeso = { class: "Cabinet/shelf", bbox: [100, 60, 400, 180], score: 0.7 };
+  assert.deepEqual(k([alto, basso], "Camera da letto"), ["armadio", "cassettiera"]);
+  assert.deepEqual(k([alto, basso], "Soggiorno"), ["libreria", "madia"]);
+  assert.deepEqual(k([basso, appeso], "Cucina"), ["cucina"], "in cucina i mobili sono la cucina");
+  assert.deepEqual(k([appeso], "Soggiorno"), ["pensile"]);
+  /* il letto dice che e' una camera anche se il nome non lo dice */
+  assert.deepEqual(
+    k([{ class: "Bed", bbox: [200, 350, 500, 380], score: 0.8 }, alto], "Stanza 2"),
+    ["matrimoniale", "armadio"],
+  );
+  assert.deepEqual(k([{ class: "Bed", bbox: [200, 350, 300, 380], score: 0.8 }], "Cameretta"), [
+    "singolo",
+  ]);
+  assert.deepEqual(k([{ class: "Nightstand", bbox: [50, 500, 120, 150], score: 0.6 }], "Camera"), [
+    "comodino",
+  ]);
+});
+
+test("dalle foto: la TV sopra il mobile, le sedie del tavolo, un'anta dentro un mobile", () => {
+  const foto = { w: 1000, h: 750, stanza: "Soggiorno" };
+  /* la TV appoggiata sul mobile: il mobile e' il mobile TV, e la TV un dispositivo */
+  const sala = oggettiDallaFoto(
+    [
+      { class: "Moniter/TV", bbox: [380, 280, 260, 160], score: 0.8 },
+      { class: "Cabinet/shelf", bbox: [300, 440, 420, 150], score: 0.6 },
+    ],
+    foto,
+  );
+  assert.deepEqual(
+    sala.arredi.map((a) => a.k),
+    ["tv"],
+  );
+  assert.deepEqual(
+    sala.dispositivi.map((d) => d.k),
+    ["tv"],
+  );
+  /* le sedie attorno al tavolo non sono poltrone */
+  const pranzo = oggettiDallaFoto(
+    [
+      { class: "Dinning Table", bbox: [300, 400, 400, 200], score: 0.8 },
+      { class: "Chair", bbox: [250, 380, 90, 220], score: 0.7 },
+      { class: "Chair", bbox: [660, 380, 90, 220], score: 0.7 },
+    ],
+    foto,
+  );
+  assert.deepEqual(
+    pranzo.arredi.map((a) => a.k),
+    ["pranzo6"],
+  );
+  /* la sedia della scrivania e' una sedia da ufficio; lo schermo sulla scrivania non e' una TV */
+  const studio = oggettiDallaFoto(
+    [
+      { class: "Desk", bbox: [300, 380, 400, 250], score: 0.8 },
+      { class: "Chair", bbox: [420, 450, 120, 250], score: 0.7 },
+      { class: "Moniter/TV", bbox: [420, 280, 150, 110], score: 0.7 },
+    ],
+    { ...foto, stanza: "Studio" },
+  );
+  assert.deepEqual(
+    studio.arredi.map((a) => a.k),
+    ["scrivania", "ufficio"],
+  );
+  assert.equal(studio.dispositivi.length, 0);
+  /* un'anta dentro l'armadio e' lo stesso armadio */
+  const armadio = oggettiDallaFoto(
+    [
+      { class: "Cabinet/shelf", bbox: [100, 50, 400, 650], score: 0.8 },
+      { class: "Cabinet/shelf", bbox: [120, 300, 150, 380], score: 0.6 },
+    ],
+    { ...foto, stanza: "Camera" },
+  );
+  assert.deepEqual(
+    armadio.arredi.map((a) => a.k),
+    ["armadio"],
+  );
+  /* lo stesso riquadro visto come quadro e come TV: vale il piu' sicuro */
+  const doppio = oggettiDallaFoto(
+    [
+      { class: "Moniter/TV", bbox: [600, 200, 200, 220], score: 0.58 },
+      { class: "Picture/Frame", bbox: [602, 198, 198, 224], score: 0.74 },
+    ],
+    foto,
+  );
+  assert.deepEqual(
+    doppio.arredi.map((a) => a.k),
+    ["quadro"],
+  );
+  assert.equal(doppio.dispositivi.length, 0);
+  /* condizionatore e telecamera diventano dispositivi; un quadrino non e' un quadro */
+  const altro = oggettiDallaFoto(
+    [
+      { class: "Air Conditioner", bbox: [100, 40, 300, 90], score: 0.85 },
+      { class: "Surveillance Camera", bbox: [900, 30, 40, 40], score: 0.5 },
+      { class: "Picture/Frame", bbox: [500, 150, 300, 220], score: 0.8 },
+      { class: "Picture/Frame", bbox: [100, 300, 40, 50], score: 0.6 },
+      { class: "Lamp", bbox: [450, 0, 80, 120], score: 0.5 },
+    ],
+    foto,
+  );
+  assert.deepEqual(
+    altro.arredi.map((a) => a.k),
+    ["quadro"],
+  );
+  assert.deepEqual(
+    altro.dispositivi.map((d) => d.k),
+    ["clima", "telecamera", "luce"],
+  );
+});
+
+/* la cucina lunga mezza foto, contro una parete di 6 metri, e' lunga circa 3
+ * metri; una TV da sola non diventa un mobile largo come la parete */
+test("dalle foto: quanto e' larga una cosa contro la parete", () => {
+  const stanza = { id: 1, sx: 3, sy: 2, riquadro: { x0: 0, x1: 6, y0: 0, y1: 4 } };
+  const foto = { w: 1000, h: 750, verso: "N" };
+  assert.equal(larghezzaDallaFoto(stanza, foto, { k: "cucina", box: [100, 300, 600, 300] }), 3.6);
+  assert.equal(
+    larghezzaDallaFoto(stanza, foto, { k: "madia", box: [100, 300, 50, 300] }),
+    1.08,
+    "non meno di poco piu' della meta' del tipico",
+  );
+  assert.equal(
+    larghezzaDallaFoto(stanza, { ...foto, verso: "E" }, { k: "armadio", box: [0, 0, 1000, 700] }),
+    3.52,
+    "guardando a est la parete e' di 4 metri, e non piu' di una volta e mezza il tipico",
+  );
+  assert.equal(larghezzaDallaFoto(stanza, foto, { k: "pianta", box: [0, 0, 100, 100] }), 0);
+  assert.equal(
+    larghezzaDallaFoto(stanza, foto, { k: "cucina", box: [0, 0, 500, 100], manuale: true }),
+    0,
+  );
+  /* e si salva */
+  const c = casa3dPulita({
+    piani: [
+      {
+        k: "terra",
+        W: 2,
+        H: 2,
+        griglia: "AAAA",
+        arredi: [
+          { k: "cucina", x: 1, y: 1, l: 3.6 },
+          { k: "madia", x: 2, y: 2 },
+        ],
+      },
+    ],
+  });
+  assert.equal(c.piani[0].arredi[0].l, 3.6);
+  assert.equal("l" in c.piani[0].arredi[1], false);
+});
+
+/* La cucina di Marco: il bancone con gli sgabelli e' l'isola, i pensili, la
+ * mensola e le colonne del forno sono una cucina sola, e il forno basta a
+ * dire che e' la cucina anche in un open space chiamato «Soggiorno». */
+test("dalle foto: la cucina con l'isola, gli sgabelli e le colonne", () => {
+  const foto = { w: 4000, h: 2252 };
+  const visti = [
+    { class: "Lamp", bbox: [296, 147, 691, 692], score: 0.95 },
+    { class: "Lamp", bbox: [2987, 590, 64, 105], score: 0.62 },
+    { class: "Stool", bbox: [550, 1890, 330, 362], score: 0.87 },
+    { class: "Stool", bbox: [1000, 1920, 360, 332], score: 0.84 },
+    { class: "Cabinet/shelf", bbox: [-1, 1338, 878, 191], score: 0.79 },
+    { class: "Desk", bbox: [82, 1727, 1649, 525], score: 0.78 },
+    { class: "Oven", bbox: [2138, 1600, 437, 396], score: 0.74 },
+    { class: "Chair", bbox: [0, 1780, 290, 472], score: 0.69 },
+    { class: "Microwave", bbox: [2136, 1199, 413, 307], score: 0.63 },
+    { class: "Cabinet/shelf", bbox: [2135, 861, 412, 367], score: 0.6 },
+    { class: "Cabinet/shelf", bbox: [1561, 1803, 583, 449], score: 0.58 },
+    { class: "Cabinet/shelf", bbox: [2133, 785, 1023, 1430], score: 0.56 },
+    { class: "Cabinet/shelf", bbox: [978, 974, 1163, 458], score: 0.5 },
+  ];
+  for (const stanza of ["Cucina", "Soggiorno"]) {
+    const r = oggettiDallaFoto(visti, { ...foto, stanza });
+    assert.deepEqual(
+      r.arredi.map((a) => a.k),
+      ["cucina", "isola", "microonde"],
+      stanza,
+    );
+    assert.deepEqual(
+      r.dispositivi.map((d) => d.k),
+      ["luce", "forno"],
+      stanza,
+    );
+  }
+});
+
+/* Dalla revisione: il dispositivo nato dal tasto ⚡ su un arredo (la lampada a
+ * stelo → luce) stava dove sta un punto luce a soffitto, a 2,85 m contro la
+ * parete, lontano dalla lampada. Deve stare dove sta l'arredo, alla sua altezza. */
+test("il dispositivo nato da un arredo sta dove sta l'arredo, alla sua altezza", () => {
+  const stanza = { id: 1, sx: 3, sy: 2, riquadro: { x0: 0, x1: 6, y0: 0, y1: 4 } };
+  const casa = {
+    W: 200,
+    H: 134,
+    passo: 0.03,
+    tipo: new Int16Array(200 * 134).fill(1),
+    stanze: [stanza],
+  };
+  const box = [3000, 1200, 300, 1500];
+  const foto = {
+    w: 4000,
+    h: 3000,
+    verso: "N",
+    oggetti: [{ k: "stelo", box }],
+    dispositivi: [
+      { k: "luce", box, daArredo: true, arredo: "stelo", h: 1.5, entity: "light.sala" },
+      { k: "luce", box: [1000, 1300, 300, 300], entity: "light.soffitto" },
+    ],
+  };
+  const [arredo] = arrediDallaFoto(casa, stanza, foto);
+  const [daArredo, aSoffitto] = dispositiviDallaFoto(casa, stanza, foto);
+  assert.ok(Math.abs(daArredo.x - arredo.x) < 0.01 && Math.abs(daArredo.y - arredo.y) < 0.01);
+  assert.equal(daArredo.h, 1.5);
+  assert.equal(aSoffitto.h, 2.85, "un punto luce vero resta a soffitto");
+  assert.ok(Math.abs(aSoffitto.y - arredo.y) > 0.5, "e non dove sta la lampada");
 });

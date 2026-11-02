@@ -6,6 +6,7 @@
  * motore 3D arrivi solo quando la casa c'e' (chi non ha la Casa 3D non lo
  * scarica), e che un tocco su una luce arrivi a Home Assistant.
  */
+import { deflateSync } from "node:zlib";
 import { expect, test } from "@playwright/test";
 import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
 import { casa3dPulita, comprimiGriglia } from "../src/core/casa-3d.js";
@@ -437,7 +438,55 @@ test("senza casa la plancia resta Casa 3D e invita a crearla", async ({ page }, 
 });
 
 /* La procedura «Crea la tua casa» aperta su una plancia Casa 3D vuota. */
-async function apriLaProcedura(page, testInfo) {
+/* Un PNG vero di una tinta sola: una «foto» di stanza senza niente dentro. */
+const TAVOLA_CRC = (() => {
+  const tavola = new Int32Array(256);
+  for (let i = 0; i < 256; i += 1) {
+    let valore = i;
+    for (let giro = 0; giro < 8; giro += 1)
+      valore = valore & 1 ? 0xedb88320 ^ (valore >>> 1) : valore >>> 1;
+    tavola[i] = valore;
+  }
+  return tavola;
+})();
+function crc32(buffer) {
+  let valore = -1;
+  for (const byte of buffer) valore = TAVOLA_CRC[(valore ^ byte) & 0xff] ^ (valore >>> 8);
+  return valore ^ -1;
+}
+function pngTinta(larghezza, altezza, colore = [180, 170, 150]) {
+  const righe = Buffer.concat(
+    Array.from({ length: altezza }, () =>
+      Buffer.concat([
+        Buffer.from([0]),
+        Buffer.from(Array.from({ length: larghezza }, () => colore).flat()),
+      ]),
+    ),
+  );
+  const pezzo = (nome, corpo) => {
+    const testa = Buffer.concat([Buffer.from(nome, "ascii"), corpo]);
+    const lunghezza = Buffer.alloc(4);
+    lunghezza.writeUInt32BE(corpo.length);
+    const firma = Buffer.alloc(4);
+    firma.writeUInt32BE(crc32(testa) >>> 0);
+    return Buffer.concat([lunghezza, testa, firma]);
+  };
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(larghezza, 0);
+  ihdr.writeUInt32BE(altezza, 4);
+  ihdr[8] = 8;
+  ihdr[9] = 2;
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    pezzo("IHDR", ihdr),
+    pezzo("IDAT", deflateSync(righe, { level: 9 })),
+    pezzo("IEND", Buffer.alloc(0)),
+  ]);
+}
+
+/* `aree`: le aree di Home Assistant che la procedura legge dal registro del
+ * guscio all'apertura ({ area_id: nome }). */
+async function apriLaProcedura(page, testInfo, { aree = null } = {}) {
   test.setTimeout(300_000);
   await page.addInitScript(() => {
     window.__GDAHOME_PREMIUM__ = true;
@@ -447,10 +496,12 @@ async function apriLaProcedura(page, testInfo) {
   await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true, null, {
     timeout: 60_000,
   });
-  await page.evaluate(() => {
+  await page.evaluate((aree) => {
     localStorage.setItem("cd_casa3d", JSON.stringify({ attiva: true, piani: [] }));
+    if (aree)
+      window.eval(`WIZ.areaNames = Object.assign(WIZ.areaNames || {}, ${JSON.stringify(aree)});`);
     window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
-  });
+  }, aree);
   await page.locator('#dm-casa3d .c3-da-creare [data-c3s="crea"]').click({ timeout: 30_000 });
   const crea = page.locator("#dm-c3c");
   await expect(crea).toBeVisible({ timeout: 20_000 });
@@ -490,6 +541,238 @@ test("senza planimetria la casa si disegna qui", async ({ page }, testInfo) => {
     timeout: 20_000,
   });
   await fotoDiretta(page, testInfo, "crea-a-mano-muri");
+});
+
+/* «Dalle foto non li riconosce bene e non e' fedele con quanto presente in
+ * casa»: la foto vera di una stanza (non sta nel repo: DM_FOTO_STANZA, e in
+ * DM_FOTO_ATTESI le cose che ci devono essere, separate da virgole) passa
+ * dal riconoscitore vero, D-FINE su Objects365, nella pagina. */
+test("le foto delle stanze: il riconoscitore vero trova gli arredi", async ({ page }, testInfo) => {
+  test.skip(
+    !process.env.DM_FOTO_STANZA || testInfo.project.name !== "desktop",
+    "serve DM_FOTO_STANZA",
+  );
+  test.setTimeout(240_000);
+  const crea = await apriLaProcedura(page, testInfo);
+  await crea.locator('[data-c3c-mano="w"]').fill("8");
+  await crea.locator('[data-c3c-mano="h"]').fill("6");
+  await crea.locator('[data-c3c="amano"]').click();
+  await expect(crea.locator(".c3c-pannello")).toContainText("Trovati 1 ambienti", {
+    timeout: 30_000,
+  });
+  for (let i = 0; i < 4 && !(await crea.locator('[data-c3c="caricast"]').count()); i++)
+    await crea.locator('[data-c3c="avanti"]').click();
+  const prima = Date.now();
+  await crea.locator('[data-c3c-file="stanza"]').setInputFiles(process.env.DM_FOTO_STANZA);
+  await expect(crea.locator(".c3c-lavoro")).not.toHaveCount(0);
+  await expect(crea.locator(".c3c-lavoro")).toHaveCount(0, { timeout: 200_000 });
+  const trovati = await crea
+    .locator(".c3c-trovato .c3c-tipo")
+    .evaluateAll((els) => els.map((e) => e.options[e.selectedIndex].text));
+  const secondi = (Date.now() - prima) / 1000;
+  console.log(`riconosciuto in ${secondi} s:\n${trovati.join("\n")}`);
+  await expect(crea.locator(".c3c-pannello")).not.toContainText("non è disponibile");
+  for (const cosa of (process.env.DM_FOTO_ATTESI || "").split(",").filter(Boolean))
+    expect(trovati.join("\n"), trovati.join("\n")).toContain(cosa);
+  await fotoDiretta(page, testInfo, "crea-foto-stanza-vera");
+  /* fino in fondo: gli arredi della foto nella casa salvata, e nel 3D */
+  for (let i = 0; i < 8 && !(await crea.locator('[data-c3c="salva"]').count()); i++)
+    await crea.locator('[data-c3c="avanti"]').click();
+  await crea.locator('[data-c3c="salva"]').click();
+  await expect(crea).toBeHidden({ timeout: 20_000 });
+  const salvata = await page.evaluate(() => JSON.parse(localStorage.getItem("cd_casa3d")));
+  const arredi = salvata.piani[0].arredi;
+  expect(arredi.length).toBeGreaterThanOrEqual(trovati.length);
+  console.log(JSON.stringify(arredi.map((a) => [a.k, a.l || ""])));
+  await page.waitForTimeout(2500);
+  const piano = salvata.piani[0];
+  await page.locator(`#dm-casa3d [data-c3s="vista"][data-c3s-k="${piano.k}"]`).first().click();
+  await page.waitForTimeout(2500);
+  await fotoDiretta(page, testInfo, "casa3d-foto-stanza-vera");
+});
+
+/* «Crea dalle foto delle stanze»: la terza strada, accanto alla planimetria
+ * e al DWG. Qui senza riconoscitore (le foto sono una tinta sola): le
+ * stanze prendono le misure di serie del loro tipo, si correggono a mano, e
+ * la pianta viene lo stesso, con porte fra le stanze, finestre e ingresso.
+ * Le foto restano attaccate alla stanza giusta fino al salvataggio. */
+test("la casa dalle foto delle stanze: le stanze, le misure, la pianta, il salvataggio", async ({
+  page,
+}, testInfo) => {
+  await page.route("**/riconoscere/**", (via) => via.abort("connectionrefused"));
+  const crea = await apriLaProcedura(page, testInfo, {
+    aree: { soggiorno: "Soggiorno", cucina: "Cucina", camera: "Camera da letto" },
+  });
+  await crea.locator('[data-c3c="dallefoto"]').click();
+  /* le stanze di Home Assistant, gia' li' */
+  await expect(crea.locator(".c3c-sf")).toHaveCount(3);
+  await expect(crea.locator("[data-c3c-sfnome]").nth(0)).toHaveValue("Soggiorno");
+  await expect(crea.locator('[data-c3c-sfmis="2:l"]')).toHaveValue("3,6");
+  await expect(crea.locator(".c3c-pannello")).toContainText(/misure di serie/);
+  await fotoDiretta(page, testInfo, "crea-dalle-foto-stanze");
+  /* una foto per la cucina: senza riconoscitore non ci vede niente, ma resta sua */
+  const [scelta] = await Promise.all([
+    page.waitForEvent("filechooser"),
+    crea.locator('[data-c3c="caricasf"][data-c3c-sfid="2"]').click(),
+  ]);
+  await scelta.setFiles({ name: "cucina.png", mimeType: "image/png", buffer: pngTinta(640, 480) });
+  await expect(crea.locator(".c3c-sf-foto img")).toHaveCount(1, { timeout: 60_000 });
+  /* senza riconoscitore resta l'avviso (.c3c-lavoro.no): il lavoro vero finisce */
+  await expect(crea.locator(".c3c-lavoro:not(.no)")).toHaveCount(0, { timeout: 60_000 });
+  /* la foto si vede, con la bussola */
+  await expect(crea.locator("[data-c3c-verso]")).toHaveCount(4);
+  /* «per ogni cosa individuata le entita'»: una lampada a stelo segnata a
+   * mano ha il tasto ⚡, che ne fa un punto luce da collegare */
+  await crea.locator('[data-c3c-agg="stelo"]').click();
+  const tela = crea.locator(".c3c-tela");
+  const bt = await tela.boundingBox();
+  await page.mouse.click(bt.x + bt.width * 0.5, bt.y + bt.height * 0.6);
+  await expect(crea.locator(".c3c-trovato")).toHaveCount(1);
+  await expect(crea.locator("[data-c3c-entitaper]")).toHaveCount(1);
+  await crea.locator("[data-c3c-entitaper]").click();
+  await expect(crea.locator("[data-c3c-entitaper]")).toHaveCount(0);
+  await expect(crea.locator(".c3c-disp")).toHaveCount(1);
+  await expect(crea.locator(".c3c-disp")).toContainText(/Punto luce|Light/);
+  /* tolto il dispositivo, il ⚡ torna; e si rifa' */
+  await crea.locator("[data-c3c-togli-disp]").click();
+  await expect(crea.locator(".c3c-disp")).toHaveCount(0);
+  await expect(crea.locator("[data-c3c-entitaper]")).toHaveCount(1);
+  await crea.locator("[data-c3c-entitaper]").click();
+  await expect(crea.locator(".c3c-disp")).toHaveCount(1);
+  /* poi si torna alla pianta */
+  await crea.locator('[data-c3c="sfpianta"]').click();
+  await expect(crea.locator("[data-c3c-verso]")).toHaveCount(0);
+  /* le misure a mano: la camera e' larga 4,2 */
+  await crea.locator('[data-c3c-sfmis="3:l"]').fill("4,2");
+  /* una stanza in piu', senza nome, e poi via */
+  await crea.locator('[data-c3c="sfnuova"]').click();
+  await expect(crea.locator(".c3c-sf")).toHaveCount(4);
+  await crea.locator('[data-c3c-sftogli="4"]').click();
+  await expect(crea.locator(".c3c-sf")).toHaveCount(3);
+  /* la pianta */
+  await crea.locator('[data-c3c="avanti"]').click();
+  await expect(crea.locator(".c3c-pannello")).toContainText(
+    /Trovati 3 ambienti, \d+ porte e \d+ finestre/,
+    {
+      timeout: 30_000,
+    },
+  );
+  await fotoDiretta(page, testInfo, "crea-dalle-foto-muri");
+  /* «Indietro» dai Muri torna all'elenco (non alla scala, che qui non c'e'):
+   * si cambia una misura e si rifa' la pianta, foto e nomi restano */
+  await crea.locator('[data-c3c="indietro"]').click();
+  await expect(crea.locator(".c3c-sf")).toHaveCount(3);
+  await expect(crea.locator(".c3c-sf-foto img")).toHaveCount(1);
+  await crea.locator('[data-c3c-sfmis="1:l"]').fill("6");
+  await expect(crea.locator(".c3c-pannello")).toContainText(/misure scritte da te/);
+  await crea.locator('[data-c3c="avanti"]').click();
+  await expect(crea.locator(".c3c-pannello")).toContainText(
+    /Trovati 3 ambienti, \d+ porte e \d+ finestre/,
+    { timeout: 30_000 },
+  );
+  /* le stanze hanno i loro nomi e le loro aree (la tendina delle aree) */
+  await crea.locator('[data-c3c="avanti"]').click();
+  const nomi = await crea
+    .locator("[data-c3c-area]")
+    .evaluateAll((els) => els.map((e) => e.options[e.selectedIndex].text));
+  expect(nomi.sort()).toEqual(["Camera da letto", "Cucina", "Soggiorno"]);
+  /* la foto e' rimasta alla cucina */
+  await crea.locator('[data-c3c="avanti"]').click();
+  await expect(crea.locator("[data-c3c-stanzaf]", { hasText: /Cucina · 1/ })).toHaveCount(1);
+  /* fino in fondo */
+  for (let i = 0; i < 8 && !(await crea.locator('[data-c3c="salva"]').count()); i++)
+    await crea.locator('[data-c3c="avanti"]').click();
+  await crea.locator('[data-c3c="salva"]').click();
+  await expect(crea).toBeHidden({ timeout: 20_000 });
+  const salvata = await page.evaluate(() => JSON.parse(localStorage.getItem("cd_casa3d")));
+  const piano = salvata.piani[0];
+  expect(piano.stanze.map((s) => s.nome).sort()).toEqual([
+    "Camera da letto",
+    "Cucina",
+    "Soggiorno",
+  ]);
+  expect(piano.stanze.find((s) => s.nome === "Cucina").area).toBe("cucina");
+  const porte = piano.aperture.filter((a) => a.tipo === "porta"),
+    finestre = piano.aperture.filter((a) => a.tipo === "finestra");
+  expect(porte.length, JSON.stringify(piano.aperture)).toBeGreaterThanOrEqual(3);
+  expect(finestre.length, JSON.stringify(piano.aperture)).toBeGreaterThanOrEqual(3);
+  /* la lampada della foto e' un arredo, e il punto luce fatto da lei un dispositivo */
+  expect(piano.arredi.map((a) => a.k)).toContain("stelo");
+  expect(piano.dispositivi.map((d) => d.k)).toContain("luce");
+  await page.waitForTimeout(2500);
+  await fotoDiretta(page, testInfo, "casa3d-dalle-foto");
+});
+
+/* La stessa strada con le foto vere delle stanze (non stanno nel repo:
+ * DM_FOTO_STANZE="Cucina=/percorso/cucina.jpg;Soggiorno=/percorso/sala.jpg"):
+ * il riconoscitore vero trova le cose di misura nota e le misure vengono
+ * dalle foto, con gli arredi al loro posto nella casa salvata. */
+test("la casa dalle foto vere delle stanze: le misure dalle cose di misura nota", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    !process.env.DM_FOTO_STANZE || testInfo.project.name !== "desktop",
+    "serve DM_FOTO_STANZE",
+  );
+  test.setTimeout(400_000);
+  const stanze = process.env.DM_FOTO_STANZE.split(";")
+    .map((v) => v.split("="))
+    .filter((v) => v.length === 2);
+  const crea = await apriLaProcedura(page, testInfo);
+  await crea.locator('[data-c3c="dallefoto"]').click();
+  await expect(crea.locator(".c3c-sf")).toHaveCount(1);
+  for (let i = 0; i < stanze.length; i++) {
+    if (i > 0) await crea.locator('[data-c3c="sfnuova"]').click();
+    const id = i + 1;
+    await crea.locator(`[data-c3c-sfnome="${id}"]`).fill(stanze[i][0]);
+    const [scelta] = await Promise.all([
+      page.waitForEvent("filechooser"),
+      crea.locator(`[data-c3c="caricasf"][data-c3c-sfid="${id}"]`).click(),
+    ]);
+    await scelta.setFiles(stanze[i][1]);
+    /* la foto arriva, il riconoscitore finisce (col modello gia' caldo fa
+     * in un attimo: non si aspetta di vederlo al lavoro) */
+    await expect(crea.locator(".c3c-sf-foto img")).toHaveCount(i + 1, { timeout: 60_000 });
+    await expect(crea.locator(".c3c-lavoro:not(.no)")).toHaveCount(0, { timeout: 240_000 });
+    await expect(crea.locator(".c3c-pannello")).not.toContainText(/non è disponibile/);
+    await crea.locator('[data-c3c="sfpianta"]').click();
+  }
+  const misure = await crea
+    .locator(".c3c-sf")
+    .evaluateAll((els) =>
+      els.map((e) => [
+        e.querySelector("[data-c3c-sfnome]").value,
+        e.querySelector("[data-c3c-sfmis$=':l']").value,
+        e.querySelector("[data-c3c-sfmis$=':p']").value,
+        e.querySelector(".c3c-sf-mis em").textContent,
+      ]),
+    );
+  console.log(JSON.stringify(misure));
+  expect(
+    misure.some((m) => /dalle foto/.test(m[3])),
+    JSON.stringify(misure),
+  ).toBe(true);
+  await fotoDiretta(page, testInfo, "crea-dalle-foto-vere");
+  await crea.locator('[data-c3c="avanti"]').click();
+  await expect(crea.locator(".c3c-pannello")).toContainText(
+    new RegExp(`Trovati ${stanze.length} ambienti`),
+    { timeout: 30_000 },
+  );
+  await fotoDiretta(page, testInfo, "crea-dalle-foto-vere-muri");
+  for (let i = 0; i < 8 && !(await crea.locator('[data-c3c="salva"]').count()); i++)
+    await crea.locator('[data-c3c="avanti"]').click();
+  await crea.locator('[data-c3c="salva"]').click();
+  await expect(crea).toBeHidden({ timeout: 20_000 });
+  const salvata = await page.evaluate(() => JSON.parse(localStorage.getItem("cd_casa3d")));
+  const piano = salvata.piani[0];
+  console.log(JSON.stringify(piano.arredi.map((a) => [a.k, a.stanza, a.l || ""])));
+  expect(piano.stanze.length).toBe(stanze.length);
+  expect(piano.arredi.length).toBeGreaterThan(0);
+  await page.waitForTimeout(2500);
+  await fotoDiretta(page, testInfo, "casa3d-dalle-foto-vere");
+  await page.locator(`#dm-casa3d [data-c3s="vista"][data-c3s-k="${piano.k}"]`).first().click();
+  await page.waitForTimeout(2500);
+  await fotoDiretta(page, testInfo, "casa3d-dalle-foto-vere-dentro");
 });
 
 /* Il DWG vero si prova solo col file a portata di mano (DM_DWG=percorso):

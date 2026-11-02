@@ -669,9 +669,11 @@ export function creaScena(THREE, opzioni = {}) {
   /* ── gli arredi ───────────────────────────────────────────────────── */
   const voceDi = (k) => VOCI_ARREDI[k] || { k, icona: "📦", nome: [k, k], w: 0.6, d: 0.6 };
   const quarto = (rot) => Math.abs(Math.round(rot / (Math.PI / 2))) % 2 === 1;
-  const ingombro = (k, rot) => {
-    const v = voceDi(k);
-    return quarto(rot) ? [v.d, v.w] : [v.w, v.d];
+  /* la larghezza vista nella foto (`l`) vince su quella del catalogo */
+  const ingombro = (k, rot, l = 0) => {
+    const v = voceDi(k),
+      w = l > 0 ? l : v.w;
+    return quarto(rot) ? [v.d, w] : [w, v.d];
   };
   const stanzaIn = (p, x, y) => {
     const cx = Math.floor(x / p.passo), cy = Math.floor(y / p.passo);
@@ -683,10 +685,11 @@ export function creaScena(THREE, opzioni = {}) {
     const s = p.stanze.find((x) => x.id === dati.stanza) || stanzaIn(p, dati.x, dati.y);
     const tinta = dati.tinta || TINTE_DI_PARTENZA[(s?.id || 0) % 4];
     const m = arredo3D(THREE, dati.k, tinta);
+    if (dati.l > 0) m.scale.x = dati.l / voceDi(dati.k).w;
     m.position.set(X(dati.x), 0, Z(dati.y));
     m.rotation.y = dati.rot || 0;
     p.arrediGr.add(m);
-    const [w, d] = ingombro(dati.k, dati.rot || 0);
+    const [w, d] = ingombro(dati.k, dati.rot || 0, dati.l);
     const A = { dati, k: dati.k, p, s, m, w, d, sotto: dati.sotto || ARREDI_SOTTO.includes(dati.k) };
     p.arredi.push(A);
     return A;
@@ -694,7 +697,7 @@ export function creaScena(THREE, opzioni = {}) {
   /* Ci sta? Tutta l'impronta dentro una stanza, e non sopra un altro mobile. */
   function ciSta(A, x, y, rot = A.dati.rot || 0) {
     const p = A.p;
-    const [w, d] = ingombro(A.k, rot);
+    const [w, d] = ingombro(A.k, rot, A.dati.l);
     const s = stanzaIn(p, x, y);
     if (!s) return null;
     for (let yy = y - d / 2; yy <= y + d / 2 + 1e-6; yy += p.passo)
@@ -712,7 +715,7 @@ export function creaScena(THREE, opzioni = {}) {
   function posa(A, x, y, rot = A.dati.rot || 0) {
     const s = ciSta(A, x, y, rot);
     if (!s) return false;
-    [A.w, A.d] = ingombro(A.k, rot);
+    [A.w, A.d] = ingombro(A.k, rot, A.dati.l);
     Object.assign(A.dati, { x: +x.toFixed(3), y: +y.toFixed(3), rot: +rot.toFixed(4), stanza: s.id });
     A.s = s;
     return true;
