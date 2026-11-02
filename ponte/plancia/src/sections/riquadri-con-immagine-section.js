@@ -19,11 +19,7 @@
  *
  * Le riquadri della Home in cima (le tessere) restano come sono: sono numeri
  * da leggere, non cose da accendere. */
-import {
-  GRUPPI_DISEGNI,
-  cercaDisegni,
-  disegnoDaRiquadro,
-} from "../core/disegni-da-riquadro.js";
+import { GRUPPI_DISEGNI, cercaDisegni, disegnoDaRiquadro } from "../core/disegni-da-riquadro.js";
 import {
   ZOOM_MASSIMO,
   ZOOM_MINIMO,
@@ -180,6 +176,10 @@ button.dm-rq{border:0;padding:0;margin:0;font:inherit;cursor:pointer;-webkit-tap
 #temp-grid .temp-card.dm-rq-fondo :where(.cp-name,.cp-temp-current,.cp-temp-current-lbl,.cp-temp-target .lbl,.cp-temp-target .val,.dm-temp-fuori-nota){color:#fff!important;-webkit-text-fill-color:#fff;opacity:1!important;text-shadow:0 1px 3px rgba(0,0,0,.7),0 0 1px rgba(0,0,0,.6)}
 #temp-grid .temp-card.dm-rq-fondo .cp-temp-current::after{color:rgba(255,255,255,.8)!important}
 #temp-grid .temp-card.dm-rq-fondo>.dm-rq-velo{background:linear-gradient(to bottom,rgba(4,9,20,.62) 0%,rgba(4,9,20,.48) 45%,rgba(4,9,20,.84) 100%)}
+/* E sulle stanze in Home (#348): il nome, i gradi, l'umidita' e la
+ * didascalia sono <i> e <small>, che la regola generale non prende. */
+.dm-stanza-plancia.dm-rq-fondo .dm-stanza-plancia-nome,.dm-stanza-plancia.dm-rq-fondo .dm-stanza-plancia-gradi,.dm-stanza-plancia.dm-rq-fondo .dm-stanza-plancia-grado,.dm-stanza-plancia.dm-rq-fondo .dm-stanza-plancia-umido,.dm-stanza-plancia.dm-rq-fondo .dm-stanza-plancia-didascalia{color:#fff!important;-webkit-text-fill-color:#fff;opacity:1!important;text-shadow:0 1px 3px rgba(0,0,0,.7),0 0 1px rgba(0,0,0,.6)}
+.dm-stanza-plancia.dm-rq-fondo>.dm-rq-velo{background:linear-gradient(to bottom,rgba(4,9,20,.62) 0%,rgba(4,9,20,.42) 45%,rgba(4,9,20,.82) 100%)}
 
 /* La vasca con la sua foto: il disegno della piscina lascia il posto alla
  * foto, e restano le scritte dello stato. */
@@ -503,7 +503,12 @@ async function apriLaFoto(file) {
   if (typeof root.createImageBitmap === "function") {
     try {
       const bitmap = await root.createImageBitmap(file);
-      return { sorgente: bitmap, w: bitmap.width, h: bitmap.height, chiudi: () => bitmap.close?.() };
+      return {
+        sorgente: bitmap,
+        w: bitmap.width,
+        h: bitmap.height,
+        chiudi: () => bitmap.close?.(),
+      };
     } catch (_errore) {
       /* Qualche formato il browser lo apre solo come <img>: si riprova. */
     }
@@ -863,7 +868,8 @@ const chiaveDelDispositivo = (i) => `dispositivo-${i}`;
 
 function pollicino(d) {
   const immagine = immaginePulita(d?.immagine);
-  if (immagine) return `<img src="${esc(srcDaMostrare(immagine))}" alt="" style="${esc(stileInLinea(immagine))}">`;
+  if (immagine)
+    return `<img src="${esc(srcDaMostrare(immagine))}" alt="" style="${esc(stileInLinea(immagine))}">`;
   return esc(clean(d?.icon) || "🔌");
 }
 
@@ -1001,7 +1007,8 @@ function vestiUnaCard(superficie, card, voce) {
   const dove = (superficie.dentro && card.querySelector(superficie.dentro)) || card;
   const firma = immagine ? JSON.stringify(immagine) : "";
   const posata = dove.querySelector(":scope > .dm-rq-img");
-  if ((dove.dataset.dmRqFondo || "") === firma && Boolean(posata) === Boolean(immagine)) return false;
+  if ((dove.dataset.dmRqFondo || "") === firma && Boolean(posata) === Boolean(immagine))
+    return false;
   dove.querySelectorAll(":scope > .dm-rq-img, :scope > .dm-rq-velo").forEach((n) => n.remove());
   if (!immagine) {
     dove.classList.remove("dm-rq-fondo");
@@ -1070,8 +1077,10 @@ function guardaLaPlancia() {
 const chiaveDellaCard = (superficie, k) => `card:${superficie}:${k}`;
 
 function pannelloDelleCard() {
-  const gruppi = SUPERFICI_DA_VESTIRE.map((superficie) => ({ superficie, voci: vociDi(superficie) }))
-    .filter((g) => g.voci.length);
+  const gruppi = SUPERFICI_DA_VESTIRE.map((superficie) => ({
+    superficie,
+    voci: vociDi(superficie),
+  })).filter((g) => g.voci.length);
   if (!gruppi.length) return "";
   const aperta = state.cardAperta || "";
   const lingua = activeLocale();
@@ -1079,7 +1088,10 @@ function pannelloDelleCard() {
     <div class="ed-intro">${esc(t("Ogni card della plancia può avere una foto o un disegno che la riempie: le luci, il clima, le tapparelle, le telecamere, le stanze, le azioni rapide. I comandi restano sopra, in chiaro; a muro la stessa immagine si vede nelle pagine che si riempiono da sole.", "Every dashboard card can have a photo or a drawing that fills it: lights, climate, blinds, cameras, rooms, quick actions. The controls stay on top, readable; on the wall the same image shows on the pages that fill themselves."))}</div>
     ${gruppi
       .map(
-        ({ superficie, voci }) => `<div class="dm-rq-sub-titolo">${esc(lingua === "it" ? superficie.nome.it : tr(superficie.nome.en))}</div>
+        ({
+          superficie,
+          voci,
+        }) => `<div class="dm-rq-sub-titolo">${esc(lingua === "it" ? superficie.nome.it : tr(superficie.nome.en))}</div>
     <div class="ed-list">${voci
       .map((voce, k) => {
         const chiave = chiaveDellaCard(superficie.chiave, k);
@@ -1147,7 +1159,12 @@ export async function mettiLImmagineAllaVoce(chiaveSuperficie, indice, immagine)
   if (superficie.forma === "mappa") {
     writeJsonIfChanged(
       CHIAVE_DELLE_IMMAGINI,
-      conLImmagineSciolta(readJson(CHIAVE_DELLE_IMMAGINI, {}), superficie.chiave, voce.chiave, pulita),
+      conLImmagineSciolta(
+        readJson(CHIAVE_DELLE_IMMAGINI, {}),
+        superficie.chiave,
+        voce.chiave,
+        pulita,
+      ),
     );
   } else if (superficie.sezione) {
     const store = dashboardStore();

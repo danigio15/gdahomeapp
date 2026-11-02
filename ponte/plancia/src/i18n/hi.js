@@ -934,7 +934,6 @@ export default Object.freeze({
   "Came from a dashboard: the reply goes back into it":
     "एक डैशबोर्ड से आई: जवाब उसी में वापस जाता है",
   Camera: "कैमरा",
-  "Camera RTSP address": "कैमरे का RTSP पता",
   "Camera added": "कैमरा जोड़ा गया",
   "Camera detections": "कैमरा पहचान",
   "Camera detections: a phone notification, with the frame.":
@@ -1756,7 +1755,6 @@ export default Object.freeze({
   Internet: "इंटरनेट",
   "Into the house": "घर में",
   Intrusion: "घुसपैठ",
-  "Invalid camera": "अमान्य कैमरा",
   "Invalid entity": "अमान्य इकाई",
   "Inverted percentages (100% = closed)": "उल्टे प्रतिशत (100% = बंद)",
   "Inverter AC temperature": "इन्वर्टर AC तापमान",
@@ -7735,6 +7733,8 @@ export default Object.freeze({
   "${nome}: arrived incomplete": "${nome}: अधूरा पहुँचा",
   "Delete this floor": "यह मंज़िल हटाएँ",
   'Delete the floor "${nome}"? Its rooms, furniture and devices are lost.': "मंज़िल \"${nome}\" हटाएँ? इसके कमरे, फ़र्नीचर और डिवाइस खो जाएँगे।",
+  "RTSP address (optional: the entity is enough if the camera is already in Home Assistant)": "RTSP पता (वैकल्पिक: अगर कैमरा पहले से Home Assistant में है तो एंटिटी काफ़ी है)",
+  "Pick the camera entity (camera.…) with 🔍: the RTSP address is not needed if the camera is already in Home Assistant.": "🔍 से कैमरा एंटिटी (camera.…) चुनें: अगर कैमरा पहले से Home Assistant में है तो RTSP पते की ज़रूरत नहीं।",
   "Add or redo a floor": "मंज़िल जोड़ें या दोबारा बनाएँ",
   "Add photos of ${nome}": "${nome} की फ़ोटो जोड़ें",
   "Add photos of this room": "इस कमरे की फ़ोटो जोड़ें",

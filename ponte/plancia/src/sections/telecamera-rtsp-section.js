@@ -151,7 +151,12 @@ function proponiIlNome() {
 
 function campoMarkup(valore) {
   return `<label class="dm-rtsp-etichetta" for="${CAMPO}">${esc(
-    t("Indirizzo RTSP della telecamera", "Camera RTSP address"),
+    /* #356: «mi chiede l'indirizzo rtsp». Non lo chiede: con l'entita' della
+     * telecamera gia' in Home Assistant (ONVIF, Reolink, Tapo) basta quella. */
+    t(
+      "Indirizzo RTSP (facoltativo: basta l'entità se la telecamera è già in Home Assistant)",
+      "RTSP address (optional: the entity is enough if the camera is already in Home Assistant)",
+    ),
   )}</label>
   <input id="${CAMPO}" class="ed-input mono dm-rtsp-input" value="${esc(valore)}"
     placeholder="rtsp://192.168.1.50:554/stream1" spellcheck="false" autocomplete="off">

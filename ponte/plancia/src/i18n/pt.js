@@ -938,7 +938,6 @@ export default Object.freeze({
   "Came from a dashboard: the reply goes back into it":
     "Chegou de um painel: a resposta volta para ele",
   Camera: "Câmara",
-  "Camera RTSP address": "Endereço RTSP da câmara",
   "Camera added": "Câmara adicionada",
   "Camera detections": "Deteções das câmaras",
   "Camera detections: a phone notification, with the frame.":
@@ -1768,7 +1767,6 @@ export default Object.freeze({
   Internet: "Internet",
   "Into the house": "Para dentro de casa",
   Intrusion: "Intrusão",
-  "Invalid camera": "Câmara inválida",
   "Invalid entity": "Entidade inválida",
   "Inverted percentages (100% = closed)": "Percentagens invertidas (100 % = fechada)",
   "Inverter AC temperature": "Temperatura AC do inversor",
@@ -7784,6 +7782,8 @@ export default Object.freeze({
   "${nome}: arrived incomplete": "${nome}: chegou incompleto",
   "Delete this floor": "Eliminar este piso",
   'Delete the floor "${nome}"? Its rooms, furniture and devices are lost.': "Eliminar o piso \"${nome}\"? As suas divisões, móveis e dispositivos perdem-se.",
+  "RTSP address (optional: the entity is enough if the camera is already in Home Assistant)": "Endereço RTSP (opcional: basta a entidade se a câmara já estiver no Home Assistant)",
+  "Pick the camera entity (camera.…) with 🔍: the RTSP address is not needed if the camera is already in Home Assistant.": "Escolhe a entidade da câmara (camera.…) com 🔍: o endereço RTSP não é preciso se a câmara já estiver no Home Assistant.",
   "Add or redo a floor": "Adicionar ou refazer um piso",
   "Add photos of ${nome}": "Adicionar fotos de ${nome}",
   "Add photos of this room": "Adicionar fotos desta divisão",
