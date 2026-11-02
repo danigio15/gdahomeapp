@@ -55,6 +55,8 @@ const PROPRIE = Object.freeze({
   robot: ["pulizia", "stanze", "comandi"],
   animali: ["ciotola", "lettiera", "acqua"],
   server: ["risorse", "rete"],
+  /* Lo Sport (#353): le squadre che si seguono, le partite, le classifiche. */
+  sport: ["squadre", "partite", "classifiche"],
   config: ["entita", "sezioni", "aspetto"],
 });
 
@@ -89,4 +91,35 @@ export function sezioniOfferte(voci) {
     fuori.push({ id, nome: pulito(voce?.nome) || id });
   }
   return fuori;
+}
+
+/* Quali voci della barra si offrono nella tendina (#353).
+ *
+ * «Manca nel feedback la sezione Sport da scegliere, e finisce in Config.»
+ * La tendina prendeva solo le voci che in quel momento si vedevano nella
+ * barra. Ma una sezione si raggiunge anche quando la sua voce non si vede: la
+ * barra del telefono sta nascosta finche' non la si tira su, nell'app c'e' il
+ * menu di lato, e lo Sport si apre dalla sua tessera in Home anche con la voce
+ * tolta dalla barra. Chi scrive la segnalazione dal Config si ritrovava cosi'
+ * a scegliere fra le poche voci rimaste, e la segnalazione finiva su Config.
+ *
+ * Adesso conta se la sezione c'e' per chi guarda, non se la sua voce e' a
+ * vista: la pagina da cui si scrive, una voce che si vede, una sezione che ha
+ * detto di avere qualcosa da mostrare (la tiene la plancia, `segnaContenuto`)
+ * o, con la barra intera nascosta, ogni voce che non e' spenta da sola. Resta
+ * fuori quella che la persona ha spento a mano: non la vuole, e non e' li'
+ * che succede il guaio. */
+export function voceDaOffrire({
+  attiva = false,
+  vista = false,
+  piena,
+  spenta = false,
+  barraNascosta = false,
+  nascosta = false,
+} = {}) {
+  if (attiva) return true;
+  if (vista) return true;
+  if (spenta) return false;
+  if (piena === true) return true;
+  return Boolean(barraNascosta) && !nascosta;
 }

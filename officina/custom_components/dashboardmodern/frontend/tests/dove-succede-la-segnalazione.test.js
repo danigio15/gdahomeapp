@@ -14,6 +14,7 @@ import {
   parteValida,
   partiDellaSezione,
   sezioniOfferte,
+  voceDaOffrire,
 } from "../src/core/dove-succede.js";
 
 const leggi = (percorso) => readFile(new URL(percorso, import.meta.url), "utf8");
@@ -88,4 +89,34 @@ test("il backend accetta le due chiavi e le scrive in cima", async () => {
   assert.match(client, /\*\*Dove:\*\* \{dove\}/);
   /* In cima e non anche sotto: una volta sola. */
   assert.match(client, /if valore and chiave not in DOVE_SUCCEDE/);
+});
+
+test("lo Sport si sceglie anche quando la sua voce non si vede nella barra (#353)", () => {
+  /* «Manca nel feedback la sezione Sport da scegliere, e finisce in Config.»
+   * Si scrive dal Config: la voce dello Sport non e' a vista (barra del
+   * telefono abbassata, o voce tolta dalla barra e Sport aperto dalla tessera
+   * in Home), ma la sezione ha qualcosa da mostrare. */
+  assert.equal(voceDaOffrire({ vista: false, piena: true }), true);
+  /* La pagina da cui si scrive c'e' sempre, e una voce a vista pure. */
+  assert.equal(voceDaOffrire({ attiva: true }), true);
+  assert.equal(voceDaOffrire({ vista: true }), true);
+  /* Con la barra intera nascosta valgono le voci che non sono spente da sole. */
+  assert.equal(voceDaOffrire({ barraNascosta: true }), true);
+  assert.equal(voceDaOffrire({ barraNascosta: true, nascosta: true }), false);
+  /* Una sezione senza niente da mostrare, con la barra a vista, no; e quella
+   * spenta a mano da chi guarda nemmeno se ha qualcosa. */
+  assert.equal(voceDaOffrire({ vista: false, piena: false }), false);
+  assert.equal(voceDaOffrire({ vista: false, piena: true, spenta: true }), false);
+  /* E lo Sport ha le sue parti, prima di quelle di tutti. */
+  assert.deepEqual(partiDellaSezione("sport").slice(0, 3), ["squadre", "partite", "classifiche"]);
+});
+
+test("la tendina guarda se la sezione c'e', non solo se la voce si vede", async () => {
+  const sorgente = await leggi("../src/sections/segnalazioni-section.js");
+  const barra = sorgente.slice(sorgente.indexOf("function sezioniDellaBarra"));
+  const corpo = barra.slice(0, barra.indexOf("\n}\n") + 3);
+  assert.match(corpo, /voceDaOffrire\(/);
+  assert.match(corpo, /contenutoNoto\(/);
+  for (const parte of ["squadre", "partite", "classifiche"])
+    assert.match(sorgente, new RegExp(`\\b${parte}: t\\(`), `manca il nome della parte ${parte}`);
 });

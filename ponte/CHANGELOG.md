@@ -10,6 +10,19 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.8.1
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Lo Sport si sceglie nelle segnalazioni (#353):** «manca nel feedback la
+  sezione Sport da scegliere, e finisce in Config». La tendina «Sezione»
+  prendeva solo le voci che in quel momento si vedevano nella barra: aperta
+  dalla Config dell'app, dove la barra in fondo se ne va, offriva soltanto la
+  Config. Adesso offre ogni sezione che c'è per chi guarda (Sport, Salute,
+  Energia…), anche con la sua voce nascosta, e lascia fuori quelle spente. Lo
+  Sport ha anche le sue voci in «Cosa»: le squadre seguite, le partite e i
+  risultati, le classifiche.
+
 ## 1.18.8
 
 _App GdAHome e Home Assistant._

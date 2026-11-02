@@ -20,8 +20,24 @@
  * anche per chi questo file non lo esegue affatto.
  */
 
-import { ALTRO, partiDellaSezione, parteValida, sezioniOfferte } from "../core/dove-succede.js";
-import { clean, doc, esc, installStyle, root, t, senzaCadere } from "./shared.js";
+import {
+  ALTRO,
+  partiDellaSezione,
+  parteValida,
+  sezioniOfferte,
+  voceDaOffrire,
+} from "../core/dove-succede.js";
+import {
+  clean,
+  contenutoNoto,
+  doc,
+  esc,
+  installStyle,
+  readJson,
+  root,
+  t,
+  senzaCadere,
+} from "./shared.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 
 const KEY = "__DASHBOARDMODERN_SEGNALAZIONI__";
@@ -1202,6 +1218,9 @@ function nomeDellaParte(id) {
     liste: t("Le liste delle cose da fare", "The to-do lists"),
     pulizia: t("La pulizia", "The cleaning"),
     stanze: t("Le stanze e le mappe", "The rooms and the maps"),
+    squadre: t("Le squadre seguite", "The teams you follow"),
+    partite: t("Le partite e i risultati", "The matches and the results"),
+    classifiche: t("Le classifiche", "The standings"),
     ciotola: t("La ciotola e il cibo", "The bowl and the food"),
     lettiera: t("La lettiera", "The litter box"),
     acqua: t("La fontanella", "The water fountain"),
@@ -1217,8 +1236,23 @@ function nomeDellaParte(id) {
 
 /** Le sezioni della barra, come le vede chi guarda. */
 function sezioniDellaBarra() {
+  const attiva = paginaAttiva();
+  const spente = readJson("cd_sections", {}) || {};
   const voci = [...(doc?.querySelectorAll?.(".tab[data-tab]") || [])]
-    .filter((tab) => tab.offsetParent !== null || tab.dataset.tab === paginaAttiva())
+    .filter((tab) => {
+      const id = clean(tab.dataset.tab);
+      const barra = tab.closest?.("nav");
+      return voceDaOffrire({
+        attiva: id === attiva,
+        vista: tab.offsetParent !== null,
+        piena: contenutoNoto(id),
+        spenta: spente?.[id] === false,
+        /* La barra e' fissa: il suo `offsetParent` e' sempre vuoto. Se si
+         * vede lo dicono i suoi rettangoli. */
+        barraNascosta: Boolean(barra) && !barra.getClientRects?.().length,
+        nascosta: root.getComputedStyle?.(tab)?.display === "none",
+      });
+    })
     .map((tab) => ({
       id: tab.dataset.tab,
       nome: clean(tab.textContent),

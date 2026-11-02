@@ -112,3 +112,45 @@ test("le due tendine dicono dove succede, e la scelta parte con la segnalazione"
   expect(inviata.diagnostics.funzione).not.toBe("report");
   expect(funzione).toBeTruthy();
 });
+
+/* «Manca nel feedback la sezione Sport da scegliere, e finisce in Config» (#353).
+ *
+ * Nell'app la Config si apre dal menu, e la barra in fondo se ne va
+ * (`gdahome-in-config`): con la barra nascosta nessuna voce «si vedeva», e la
+ * tendina offriva soltanto la Config. Le sezioni ci sono lo stesso, e si
+ * devono poter scegliere: lo Sport, l'Energia. Quelle spente da sole, come
+ * l'UPS che in questa casa non c'e', restano fuori. */
+test("con la barra nascosta dalla Config, lo Sport si sceglie lo stesso", async ({
+  page,
+}, testInfo) => {
+  test.setTimeout(90_000);
+  await avvia(page, testInfo);
+  await page.evaluate(() => {
+    localStorage.setItem("cd_sport", JSON.stringify({ seguiti: [{ tipo: "f1", preferito: "" }] }));
+    window.render?.();
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
+  });
+  await expect(page.locator('.tab[data-tab="sport"]')).toBeVisible({ timeout: 20_000 });
+  await page.locator('.tab[data-tab="config"]').first().click();
+  /* Quello che fa l'app quando si apre la Config dal suo menu. */
+  await page.evaluate(() => {
+    const foglio = document.createElement("style");
+    foglio.textContent =
+      "html body.gdahome-in-config nav.tabs.bottom-nav-bar{display:none!important}";
+    document.head.append(foglio);
+    document.body.classList.add("gdahome-in-config");
+  });
+  await expect(page.locator('.tab[data-tab="sport"]')).toBeHidden();
+  await page.locator("#dm-tkt-card").click();
+  await expect(page.locator("#dm-tkt-modal")).toHaveClass(/show/);
+  const offerte = await page
+    .locator("#dm-tkt-sezione option")
+    .evaluateAll((nodi) => nodi.map((n) => n.value).filter(Boolean));
+  expect(offerte).toContain("sport");
+  expect(offerte).toContain("energy");
+  expect(offerte).toContain("config");
+  expect(offerte).not.toContain("ups");
+  /* E lo Sport ha le sue parti. */
+  await page.locator("#dm-tkt-sezione").selectOption("sport");
+  await expect(page.locator("#dm-tkt-funzione option[value='squadre']")).toHaveCount(1);
+});
