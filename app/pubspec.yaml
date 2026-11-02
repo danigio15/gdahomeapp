@@ -50,7 +50,7 @@ dependencies:
   # Sono del sistema — il selettore delle foto di Android e di iOS — e per
   # una foto chiede gia' ridotta, cosi' ne parte qualche centinaio di
   # chilobyte e non dieci megabyte.
-  image_picker: ^1.1.2
+  image_picker: ^1.2.4
 
   # Il selettore dei file, per le caselle `<input type="file">` che non
   # chiedono una foto: il ripristino di un backup vuole un `.json`, e la
@@ -63,7 +63,7 @@ dependencies:
   # delle donazioni, il meteo di Windy, la mappa — e dentro il riquadro non
   # c'e' nessun posto dove aprirli. Si aprono nel browser del telefono, che e'
   # dove li aprirebbe la plancia in Home Assistant.
-  url_launcher: ^6.3.1
+  url_launcher: ^6.3.3
 
   # La cifratura fra l'app e il ponte: X25519, HKDF, AES-256-GCM.
   #
@@ -95,16 +95,16 @@ dependencies:
   # righe «Telefono Android» della stessa persona non si distinguono. Mai il
   # nome che il telefono ha avuto dal suo padrone: quello non si legge.
   device_info_plus: ^13.2.0
-  flutter_svg: ^2.3.0
+  flutter_svg: ^2.3.2
   webview_flutter_web: ^0.2.3+4
   webview_flutter_android: ^4.14.1
-  webview_flutter_wkwebview: ^3.26.1
+  webview_flutter_wkwebview: ^3.27.2
   path_provider: ^2.1.6
 
   # Il documento e il browser, per la versione web: il service worker che
   # serve la plancia, e i messaggi fra l'app e il riquadro. Sul telefono
   # questo pacchetto non entra in gioco.
-  web: ^1.1.0
+  web: ^1.1.2
 
   # gdahome Premium, comprato dal telefono: Google Play Billing su Android,
   # StoreKit sull'iPhone. Gli stessi pacchetti (e le stesse versioni) di
@@ -113,7 +113,7 @@ dependencies:
   # la controlla l'app: va alla casa, e dalla casa al quadro
   # (`docs/LICENZE.md`).
   in_app_purchase: ^3.3.1
-  in_app_purchase_android: ^0.5.3
+  in_app_purchase_android: ^0.5.5
   in_app_purchase_storekit: ^0.4.13
 
   # Il navigatore: gdanav, dentro l'app come una sua sezione (solo sul
@@ -140,7 +140,7 @@ dependencies:
   # stanno nella repository) l'app gira uguale, senza notifiche.
   firebase_core: ^4.15.0
   firebase_messaging: ^16.7.0
-  flutter_local_notifications: ^22.3.2
+  flutter_local_notifications: ^22.3.3
   health: ^13.3.2
 
 dev_dependencies:
