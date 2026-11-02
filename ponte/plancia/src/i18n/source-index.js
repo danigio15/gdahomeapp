@@ -5872,6 +5872,8 @@ export const SOURCE_INDEX = Object.freeze({
   "Solo per questa finestra: ferma a questa percentuale o sotto conta come chiusa. Vuota, vale la soglia di casa scritta in cima.": "For this window only: resting at this percentage or below counts as closed. Empty, the house threshold at the top applies.",
   "Solo per questa finestra: quando l'umidità della sua stanza supera questa quota, la card dice di aprirla per arieggiare. Vuota, vale la soglia di casa scritta in cima; zero spegne il consiglio su questa finestra.": "For this window only: when its room's humidity goes above this level, the card says to open it to air out. Empty, the house threshold at the top applies; zero turns the advice off on this window.",
   "Solo perimetro": "Perimeter only",
+  "Solo quando qualcosa è acceso": "Only while something is on",
+  "Solo quando uno è in funzione": "Only while one is running",
   "Solo sblocca": "Unlock only",
   "Solo se": "Only if",
   "Solo se hai già un helper che misura il periodo. Senza, il periodo viene dal contatore totale.": "Only if you already have a helper measuring the period. Without one, the period comes from the total meter.",

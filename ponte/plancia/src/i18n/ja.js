@@ -7757,6 +7757,8 @@ export default Object.freeze({
   "The teams you follow": "フォロー中のチーム",
   "The matches and the results": "試合と結果",
   "The standings": "順位表",
+  "Only while something is on": "何かがオンのときだけ",
+  "Only while one is running": "どれかが動作中のときだけ",
   "Add or redo a floor": "階を追加またはやり直す",
   "Add photos of ${nome}": "${nome} の写真を追加",
   "Add photos of this room": "この部屋の写真を追加",

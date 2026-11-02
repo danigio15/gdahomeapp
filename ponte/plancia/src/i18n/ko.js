@@ -7729,6 +7729,8 @@ export default Object.freeze({
   "The teams you follow": "팔로우하는 팀",
   "The matches and the results": "경기와 결과",
   "The standings": "순위표",
+  "Only while something is on": "무언가 켜져 있을 때만",
+  "Only while one is running": "하나라도 작동 중일 때만",
   "Add or redo a floor": "층 추가 또는 다시 만들기",
   "Add photos of ${nome}": "${nome} 사진 추가",
   "Add photos of this room": "이 방의 사진 추가",

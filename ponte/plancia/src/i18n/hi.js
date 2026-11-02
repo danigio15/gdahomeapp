@@ -7738,6 +7738,8 @@ export default Object.freeze({
   "The teams you follow": "आपकी फ़ॉलो की गई टीमें",
   "The matches and the results": "मैच और परिणाम",
   "The standings": "अंक तालिका",
+  "Only while something is on": "केवल तब जब कुछ चालू हो",
+  "Only while one is running": "केवल तब जब कोई चल रहा हो",
   "Add or redo a floor": "मंज़िल जोड़ें या दोबारा बनाएँ",
   "Add photos of ${nome}": "${nome} की फ़ोटो जोड़ें",
   "Add photos of this room": "इस कमरे की फ़ोटो जोड़ें",

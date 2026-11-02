@@ -7804,6 +7804,8 @@ export default Object.freeze({
   "The teams you follow": "Los equipos que sigues",
   "The matches and the results": "Los partidos y los resultados",
   "The standings": "Las clasificaciones",
+  "Only while something is on": "Solo cuando algo está encendido",
+  "Only while one is running": "Solo cuando uno está en marcha",
   "Add or redo a floor": "Añadir o rehacer una planta",
   "Add photos of ${nome}": "Añadir fotos de ${nome}",
   "Add photos of this room": "Añadir fotos de esta habitación",

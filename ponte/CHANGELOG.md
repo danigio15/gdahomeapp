@@ -22,6 +22,13 @@ _Solo Home Assistant: l'app sul telefono non cambia._
   Energia…), anche con la sua voce nascosta, e lascia fuori quelle spente. Lo
   Sport ha anche le sue voci in «Cosa»: le squadre seguite, le partite e i
   risultati, le classifiche.
+- **Tessere che si nascondono quando è tutto spento (#355):** «quando nessun
+  elettrodomestico è in moto il widget non si vede, recuperando spazio». In
+  Config › Tessere della Home, sulle righe di Luci, Prese ed Elettrodomestici
+  c'è «Solo quando qualcosa è acceso» («Solo quando uno è in funzione» per gli
+  elettrodomestici). Con la casella accesa la tessera sparisce dalla Home
+  quando è tutto spento e torna appena qualcosa si accende; le altre si
+  ricompattano. Di serie è spenta: la Home resta quella di sempre.
 
 ## 1.18.8
 

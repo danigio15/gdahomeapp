@@ -4165,6 +4165,8 @@ export const MESSAGE_KEYS = Object.freeze([
   "only used when there is no total meter: when there is one, it wins",
   "Only what matters",
   "Only where to look and the zoom are saved: the photo stays whole, and each tile shape crops it from there.",
+  "Only while one is running",
+  "Only while something is on",
   "Only with the soil below (%)",
   "ONNX Runtime didn't load",
   "open",

@@ -7789,6 +7789,8 @@ export default Object.freeze({
   "The teams you follow": "De teams die je volgt",
   "The matches and the results": "De wedstrijden en de uitslagen",
   "The standings": "De standen",
+  "Only while something is on": "Alleen als er iets aan staat",
+  "Only while one is running": "Alleen als er een draait",
   "Add or redo a floor": "Verdieping toevoegen of opnieuw maken",
   "Add photos of ${nome}": "Foto's van ${nome} toevoegen",
   "Add photos of this room": "Foto's van deze kamer toevoegen",

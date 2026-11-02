@@ -12,6 +12,7 @@
  * soltanto una tessera, e i widget di avviso, che si accendono da soli.
  */
 import { oggettoWidget } from "../core/oggetti-widget.js";
+import { TESSERE_A_SCOMPARSA } from "../core/tessere-a-scomparsa.js";
 import { normalizeAlertsEditor } from "./alerts-section.js";
 import { refreshFloodAlerts } from "./flood-alerts-section.js";
 import {
@@ -276,6 +277,20 @@ function sorgenteMarkup(key) {
     </select></label>`;
 }
 
+/* «Solo quando c'e' qualcosa acceso» (#355): la tessera delle Luci, delle
+ * Prese o degli Elettrodomestici sparisce dalla Home quando e' tutto spento,
+ * e torna appena qualcosa si accende. Spento di serie: chi non lo tocca vede
+ * la Home di sempre. */
+function soloAccesoMarkup(key) {
+  if (!TESSERE_A_SCOMPARSA.includes(key)) return "";
+  const acceso = widgetPreferences().soloAccese.includes(key);
+  const parola =
+    key === "elettrodomestici"
+      ? t("Solo quando uno è in funzione", "Only while one is running")
+      : t("Solo quando qualcosa è acceso", "Only while something is on");
+  return `<label class="dm-widget-solo-acceso"><input type="checkbox" data-widget-solo-acceso="${esc(key)}"${acceso ? " checked" : ""}><span>${esc(parola)}</span></label>`;
+}
+
 /* Gli avvisi personalizzati che si fanno vedere da soli (#445).
  *
  * «Ho un boolean che se attivo mi indica con un popup l'intervento del
@@ -314,7 +329,7 @@ function tessereMarkup() {
         index,
       ) => `<div class="ed-row dm-widget-pref" data-widget-key="${esc(key)}">
         <span class="dm-widget-pref-icon" aria-hidden="true">${oggettoWidget(key, icon, `pref-${key}`)}</span>
-        <span class="ed-row-main"><strong class="ed-row-new">${esc(label)}</strong>${sorgenteMarkup(key)}</span>
+        <span class="ed-row-main"><strong class="ed-row-new">${esc(label)}</strong>${sorgenteMarkup(key)}${soloAccesoMarkup(key)}</span>
         <button type="button" class="ed-del dm-widget-move" data-widget-up aria-label="${t("Più in alto", "Move up")}"${index === 0 ? " disabled" : ""}>▲</button>
         <button type="button" class="ed-del dm-widget-move" data-widget-down aria-label="${t("Più in basso", "Move down")}"${index === rows.length - 1 ? " disabled" : ""}>▼</button>
         <button type="button" class="dm-widget-shown" data-widget-shown data-on="${!hidden.has(key)}" aria-label="${t("Visibile in Home", "Shown on Home")}"><i></i></button>
@@ -590,6 +605,19 @@ function onClick(event) {
     return;
   }
 
+  /* Prima della riga: il clic sulla casella non deve diventare un clic sulla
+   * riga, che lo fermerebbe. */
+  const soloAcceso = event.target.closest("[data-widget-solo-acceso]");
+  if (soloAcceso) {
+    const chiave = clean(soloAcceso.dataset.widgetSoloAcceso);
+    const scelte = new Set(widgetPreferences().soloAccese);
+    if (soloAcceso.checked) scelte.add(chiave);
+    else scelte.delete(chiave);
+    scriviPreferenze({ soloAccese: [...scelte] });
+    return;
+  }
+  if (event.target.closest(".dm-widget-solo-acceso")) return;
+
   const rigaTessera = event.target.closest("[data-widget-key]");
   if (rigaTessera) {
     event.preventDefault();
@@ -738,6 +766,8 @@ function installStyles() {
       /* «Cosa mostra» sta su una riga sola accanto alla tendina, e la tendina
          e' larga quanto le serve: prima la scritta andava a capo in due
          righe strette e la tendina si prendeva tutta la riga. */
+      #ed-body .dm-widget-solo-acceso{display:flex;align-items:center;gap:8px;margin:6px 0 0;font-size:11px;font-weight:800;color:var(--text-dim,#64748b);cursor:pointer}
+      #ed-body .dm-widget-solo-acceso input{width:16px;height:16px;margin:0;flex:0 0 auto;accent-color:var(--accent,#3b82f6)}
       #ed-body .dm-widget-sorgente{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:6px 0 0;font-size:11px;font-weight:800;color:var(--text-dim,#64748b)}
       #ed-body .dm-widget-sorgente>span{flex:0 0 auto;white-space:nowrap}
       #ed-body .dm-widget-sorgente select{flex:0 1 320px;min-width:160px;max-width:100%;font-size:12px;padding:6px 8px}

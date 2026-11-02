@@ -7619,6 +7619,8 @@ export default Object.freeze({
   "The teams you follow": "关注的球队",
   "The matches and the results": "比赛与结果",
   "The standings": "积分榜",
+  "Only while something is on": "仅在有设备开启时",
+  "Only while one is running": "仅在有电器运行时",
   "Add or redo a floor": "添加或重做楼层",
   "Add photos of ${nome}": "添加 ${nome} 的照片",
   "Add photos of this room": "添加此房间的照片",

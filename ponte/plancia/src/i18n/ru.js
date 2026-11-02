@@ -7772,6 +7772,8 @@ export default Object.freeze({
   "The teams you follow": "Команды, за которыми вы следите",
   "The matches and the results": "Матчи и результаты",
   "The standings": "Турнирные таблицы",
+  "Only while something is on": "Только когда что-то включено",
+  "Only while one is running": "Только когда что-то работает",
   "Add or redo a floor": "Добавить или переделать этаж",
   "Add photos of ${nome}": "Добавить фото: ${nome}",
   "Add photos of this room": "Добавить фото этой комнаты",

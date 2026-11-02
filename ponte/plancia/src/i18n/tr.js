@@ -7755,6 +7755,8 @@ export default Object.freeze({
   "The teams you follow": "Takip ettiğin takımlar",
   "The matches and the results": "Maçlar ve sonuçlar",
   "The standings": "Puan durumları",
+  "Only while something is on": "Yalnızca bir şey açıkken",
+  "Only while one is running": "Yalnızca biri çalışırken",
   "Add or redo a floor": "Kat ekle veya yeniden yap",
   "Add photos of ${nome}": "${nome} fotoğraflarını ekle",
   "Add photos of this room": "Bu odanın fotoğraflarını ekle",

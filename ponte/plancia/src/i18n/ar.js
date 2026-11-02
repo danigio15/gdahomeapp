@@ -7702,6 +7702,8 @@ export default Object.freeze({
   "The teams you follow": "الفرق التي تتابعها",
   "The matches and the results": "المباريات والنتائج",
   "The standings": "الترتيب",
+  "Only while something is on": "فقط عندما يكون شيء ما قيد التشغيل",
+  "Only while one is running": "فقط عندما يعمل أحدها",
   "Add or redo a floor": "إضافة طابق أو إعادته",
   "Add photos of ${nome}": "إضافة صور لـ${nome}",
   "Add photos of this room": "إضافة صور لهذه الغرفة",
