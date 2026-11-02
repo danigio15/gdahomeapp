@@ -1358,15 +1358,12 @@ export function grigliaDeiMuri(
    * parapetto, non dai muri della casa. I tramezzi (sottili) e le righe
    * (anche quelle attaccate ai muri: il contorno del balcone) si
    * attraversano. */
-  let fuoriCasa = null,
-    muroSpesso = null;
+  let fuoriCasa = null;
   if (!disegno && !vetri) {
     const spessoMin = Math.round(0.2 / PASSO);
     fuoriCasa = new Uint8Array(W * H);
-    muroSpesso = new Uint8Array(W * H);
-    for (let i = 0; i < W * H; i++)
-      if (muro[i] && Math.min(tO[i], tV[i]) >= spessoMin) muroSpesso[i] = 1;
-    const chiuso = (i) => muroSpesso[i] || vetroDelVano[i] || soglie[i];
+    const chiuso = (i) =>
+      (muro[i] && Math.min(tO[i], tV[i]) >= spessoMin) || vetroDelVano[i] || soglie[i];
     const pila = [];
     const semina = (i) => {
       if (!fuoriCasa[i] && !chiuso(i)) {
@@ -1401,7 +1398,6 @@ export function grigliaDeiMuri(
     scale: scaleInMetri(vere),
     piastrelle: inMetri(piastrelle),
     fuoriCasa,
-    muroSpesso,
   };
 }
 
@@ -2097,18 +2093,7 @@ export function trovaLeScale(muro, corsaO, corsaV, W, H) {
 
 /** Dai muri alla casa, nella stessa forma che esce dal DWG (importa.js). */
 export function riconosciDaFoto(
-  {
-    W,
-    H,
-    muro,
-    barriera,
-    vetro,
-    pieni = false,
-    scale = [],
-    piastrelle = [],
-    fuoriCasa = null,
-    muroSpesso = null,
-  },
+  { W, H, muro, barriera, vetro, pieni = false, scale = [], piastrelle = [], fuoriCasa = null },
   { fuori = new Set(), squadra = true } = {},
 ) {
   const N = W * H,
@@ -2198,6 +2183,28 @@ export function riconosciDaFoto(
           cuori[0].celle++;
         }
     }
+  }
+  /* I balconi, le terrazze, i portici di una pianta disegnata a righe:
+   * quello che sta fuori dai muri di fuori (`fuoriCasa`: dal bordo ci si
+   * arriva senza attraversare un muro spesso, una soglia o un vetro) e'
+   * fuori, anche se un parapetto o il contorno lo chiudono. Se pero' il
+   * fuori entra in casa per meta' e piu' di quel che resta — un varco nei
+   * muri di fuori senza soglia — non e' un balcone, e' un buco nel muro: la
+   * regola non vale. */
+  if (fuoriCasa) {
+    let dentro = 0,
+      fuoriDentro = 0;
+    for (let i = 0; i < N; i++)
+      if (!ostacolo[i] && !lab[i]) {
+        dentro++;
+        if (fuoriCasa[i]) fuoriDentro++;
+      }
+    if (dentro && fuoriDentro < dentro * 0.5)
+      for (let i = 0; i < N; i++)
+        if (!ostacolo[i] && !lab[i] && fuoriCasa[i]) {
+          lab[i] = 1;
+          cuori[0].celle++;
+        }
   }
   // i cuori delle stanze: piu' di 50 cm dai muri e dalle righe (le porte fino a 1 m non li uniscono)
   const soglia = Math.round(0.5 / passo);
@@ -2297,54 +2304,6 @@ export function riconosciDaFoto(
         if (m2 !== l && c[0] > b[0] && c[1] < b[1] && c[2] > b[2] && c[3] < b[3]) dentro++;
       if (dentro >= 2) esterno.add(l);
     }
-  }
-  /* I balconi e le terrazze di una pianta disegnata a righe: una zona che
-   * sta fuori dai muri di fuori (`fuoriCasa`: dal bordo ci si arriva senza
-   * attraversare un muro spesso) e chiusa per meta' e piu' da righe sottili
-   * o da muretti (il parapetto, il contorno) e non dai muri spessi della
-   * casa e' fuori. Una stanza vera sta dentro i muri di fuori; e se i muri
-   * di fuori hanno un varco senza soglia e il fuori entra in casa, la regola
-   * non vale (meta' delle stanze «fuori» non e' un balcone: e' un buco nel
-   * muro). */
-  if (fuoriCasa) {
-    const spesso = muroSpesso || muro;
-    const conMuro = new Map(),
-      conRiga = new Map(),
-      celle = new Map(),
-      fuoriCelle = new Map();
-    let tutte = 0,
-      fuoriTutte = 0;
-    for (let i = 0; i < N; i++) {
-      const l = lab[i];
-      if (!l || esterno.has(l) || ostacolo[i]) continue;
-      celle.set(l, (celle.get(l) || 0) + 1);
-      tutte++;
-      if (fuoriCasa[i]) {
-        fuoriCelle.set(l, (fuoriCelle.get(l) || 0) + 1);
-        fuoriTutte++;
-      }
-      const x = i % W,
-        y = (i / W) | 0;
-      for (const j of [
-        x > 0 ? i - 1 : -1,
-        x < W - 1 ? i + 1 : -1,
-        y > 0 ? i - W : -1,
-        y < H - 1 ? i + W : -1,
-      ]) {
-        if (j < 0) continue;
-        if (spesso[j]) conMuro.set(l, (conMuro.get(l) || 0) + 1);
-        else if (ostacolo[j]) conRiga.set(l, (conRiga.get(l) || 0) + 1);
-      }
-    }
-    if (tutte && fuoriTutte < tutte * 0.5)
-      for (const c of cuori) {
-        if (esterno.has(c.id)) continue;
-        const n = celle.get(c.id) || 0,
-          f = fuoriCelle.get(c.id) || 0,
-          m = conMuro.get(c.id) || 0,
-          r = conRiga.get(c.id) || 0;
-        if (n && f >= n * 0.7 && m + r > 0 && r >= (m + r) * 0.5) esterno.add(c.id);
-      }
   }
   // unione: due stanze che si toccano su un fronte largo sono la stessa (open space)
   const padre = new Map();

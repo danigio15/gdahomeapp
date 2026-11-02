@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-47EGUSRD.js";
+} from "../../chunk-TEXZCU3L.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -156620,14 +156620,11 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
         for (const j of [i - 1, i + 1, i - W2, i + W2, i - W2 - 1, i - W2 + 1, i + W2 - 1, i + W2 + 1])
           spessa[j] = 1;
     }
-  let fuoriCasa = null, muroSpesso = null;
+  let fuoriCasa = null;
   if (!disegno8 && !vetri) {
     const spessoMin = Math.round(0.2 / PASSO);
     fuoriCasa = new Uint8Array(W2 * H7);
-    muroSpesso = new Uint8Array(W2 * H7);
-    for (let i = 0; i < W2 * H7; i++)
-      if (muro[i] && Math.min(tO[i], tV[i]) >= spessoMin) muroSpesso[i] = 1;
-    const chiuso = (i) => muroSpesso[i] || vetroDelVano[i] || soglie[i];
+    const chiuso = (i) => muro[i] && Math.min(tO[i], tV[i]) >= spessoMin || vetroDelVano[i] || soglie[i];
     const pila2 = [];
     const semina2 = (i) => {
       if (!fuoriCasa[i] && !chiuso(i)) {
@@ -156657,8 +156654,7 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
     vetro,
     scale: scaleInMetri(vere),
     piastrelle: inMetri(piastrelle),
-    fuoriCasa,
-    muroSpesso
+    fuoriCasa
   };
 }
 function grigliaDallaFoto(im, mpp, { vetri = null, porte = null, disegno: disegno8 = false, pianoDaFoto = true } = {}) {
@@ -157134,18 +157130,7 @@ function trovaLeScale(muro, corsaO, corsaV, W2, H7) {
     for (let y = s.y0; y <= s.y1; y++) for (let x = s.x0; x <= s.x1; x++) segnaScale[y * W2 + x] = 1;
   return { vere, piastrelle, segnaScale };
 }
-function riconosciDaFoto({
-  W: W2,
-  H: H7,
-  muro,
-  barriera,
-  vetro,
-  pieni = false,
-  scale = [],
-  piastrelle = [],
-  fuoriCasa = null,
-  muroSpesso = null
-}, { fuori = /* @__PURE__ */ new Set(), squadra = true } = {}) {
+function riconosciDaFoto({ W: W2, H: H7, muro, barriera, vetro, pieni = false, scale = [], piastrelle = [], fuoriCasa = null }, { fuori = /* @__PURE__ */ new Set(), squadra = true } = {}) {
   const N = W2 * H7, passo = PASSO, ostacolo = barriera || muro;
   const dist = new Int32Array(N).fill(1e9), coda = new Int32Array(N);
   let t2 = 0, k = 0;
@@ -157217,6 +157202,21 @@ function riconosciDaFoto({
         if (j >= 0 && j < N && !lab[j] && passaFuori(j)) {
           lab[j] = 1;
           pila2.push(j);
+          cuori[0].celle++;
+        }
+    }
+  }
+  if (fuoriCasa) {
+    let dentro3 = 0, fuoriDentro = 0;
+    for (let i = 0; i < N; i++)
+      if (!ostacolo[i] && !lab[i]) {
+        dentro3++;
+        if (fuoriCasa[i]) fuoriDentro++;
+      }
+    if (dentro3 && fuoriDentro < dentro3 * 0.5) {
+      for (let i = 0; i < N; i++)
+        if (!ostacolo[i] && !lab[i] && fuoriCasa[i]) {
+          lab[i] = 1;
           cuori[0].celle++;
         }
     }
@@ -157300,38 +157300,6 @@ function riconosciDaFoto({
         if (m2 !== l && c[0] > b2[0] && c[1] < b2[1] && c[2] > b2[2] && c[3] < b2[3]) dentro3++;
       if (dentro3 >= 2) esterno.add(l);
     }
-  }
-  if (fuoriCasa) {
-    const spesso = muroSpesso || muro;
-    const conMuro = /* @__PURE__ */ new Map(), conRiga = /* @__PURE__ */ new Map(), celle = /* @__PURE__ */ new Map(), fuoriCelle = /* @__PURE__ */ new Map();
-    let tutte = 0, fuoriTutte = 0;
-    for (let i = 0; i < N; i++) {
-      const l = lab[i];
-      if (!l || esterno.has(l) || ostacolo[i]) continue;
-      celle.set(l, (celle.get(l) || 0) + 1);
-      tutte++;
-      if (fuoriCasa[i]) {
-        fuoriCelle.set(l, (fuoriCelle.get(l) || 0) + 1);
-        fuoriTutte++;
-      }
-      const x = i % W2, y = i / W2 | 0;
-      for (const j of [
-        x > 0 ? i - 1 : -1,
-        x < W2 - 1 ? i + 1 : -1,
-        y > 0 ? i - W2 : -1,
-        y < H7 - 1 ? i + W2 : -1
-      ]) {
-        if (j < 0) continue;
-        if (spesso[j]) conMuro.set(l, (conMuro.get(l) || 0) + 1);
-        else if (ostacolo[j]) conRiga.set(l, (conRiga.get(l) || 0) + 1);
-      }
-    }
-    if (tutte && fuoriTutte < tutte * 0.5)
-      for (const c of cuori) {
-        if (esterno.has(c.id)) continue;
-        const n2 = celle.get(c.id) || 0, f = fuoriCelle.get(c.id) || 0, m = conMuro.get(c.id) || 0, r = conRiga.get(c.id) || 0;
-        if (n2 && f >= n2 * 0.7 && m + r > 0 && r >= (m + r) * 0.5) esterno.add(c.id);
-      }
   }
   const padre = /* @__PURE__ */ new Map();
   const radice3 = (a) => {
