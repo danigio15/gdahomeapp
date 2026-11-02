@@ -16,6 +16,7 @@ import {
   entita,
   entitaCandidate,
 } from "../core/casa-3d.js";
+import { togliPiano } from "../core/crea-casa.js";
 import { premiumDellaCasa } from "./plancia-a-muro-section.js";
 import { puoConfigurare } from "./la-config-e-di-chi-la-amministra-section.js";
 import { currentProfile } from "./config-persistence-section.js";
@@ -99,7 +100,7 @@ function corpoMarkup() {
     ? c.piani
         .map(
           (p) =>
-            `<span class="dm-c3-ed-piano"><span>${esc(p.nome)} · ${p.stanze.length} ${esc(t("stanze", "rooms"))} · ${p.dispositivi.length} ${esc(t("dispositivi", "devices"))}</span><button type="button" class="dm-c3-ed-modifica" data-dm-c3-modifica="${esc(p.k)}" title="${esc(t("Modifica la planimetria di questo piano", "Edit this floor's plan"))}">✏️ ${esc(t("Modifica", "Edit"))}</button></span>`,
+            `<span class="dm-c3-ed-piano"><span>${esc(p.nome)} · ${p.stanze.length} ${esc(t("stanze", "rooms"))} · ${p.dispositivi.length} ${esc(t("dispositivi", "devices"))}</span><button type="button" class="dm-c3-ed-modifica" data-dm-c3-modifica="${esc(p.k)}" title="${esc(t("Modifica la planimetria di questo piano", "Edit this floor's plan"))}">✏️ ${esc(t("Modifica", "Edit"))}</button><button type="button" class="dm-c3-ed-elimina" data-dm-c3-elimina="${esc(p.k)}" title="${esc(t("Elimina questo piano", "Delete this floor"))}" aria-label="${esc(t("Elimina questo piano", "Delete this floor"))}">🗑️</button></span>`,
         )
         .join("")
     : `<p class="dm-c3-ed-nota">${esc(t("Ancora nessuna casa: creala dalla planimetria e dalle foto delle stanze.", "No home yet: create it from the floor plan and room photos."))}</p>`;
@@ -205,6 +206,25 @@ function onClick(event) {
     root.__DM_CASA3D_CREA__?.();
     return;
   }
+  /* «Come faccio ad eliminare un piano fatto?»: 🗑️ sul piano, con la
+   * domanda prima, perche' con lui se ne vanno stanze, arredi e dispositivi.
+   * Gli altri piani restano; senza piani la scheda torna a «Crea la tua casa». */
+  const elimina = event.target.closest("[data-dm-c3-elimina]");
+  if (elimina) {
+    event.preventDefault();
+    const c = casa();
+    const k = clean(elimina.dataset.dmC3Elimina);
+    const p = c.piani.find((x) => x.k === k);
+    if (!p) return;
+    const nome = p.nome;
+    const domanda = t(
+      `Elimino il piano "${nome}"? Le sue stanze, gli arredi e i dispositivi si perdono.`,
+      `Delete the floor "${nome}"? Its rooms, furniture and devices are lost.`,
+    );
+    if (root.confirm && !root.confirm(domanda)) return;
+    salva(togliPiano(c, k));
+    ridisegna();
+  }
 }
 
 function onChange(event) {
@@ -240,6 +260,8 @@ function installaLoStile() {
       #ed-body .dm-c3-ed-conto.manca{color:#b45309;background:color-mix(in srgb,#f59e0b 16%,transparent)}
       #ed-body .dm-c3-ed-piani{display:flex;flex-wrap:wrap;gap:6px}
       #ed-body .dm-c3-ed-piano{display:inline-flex;align-items:center;gap:8px;padding:4px 4px 4px 10px;border-radius:999px;border:1px solid var(--card-border,#e2e8f0);font-size:12px;font-weight:700}
+      #ed-body .dm-c3-ed-elimina{border:1px solid var(--card-border,#e2e8f0);background:transparent;border-radius:999px;padding:3px 8px;cursor:pointer;font-size:13px;line-height:1}
+      #ed-body .dm-c3-ed-elimina:hover{border-color:#ef4444;background:color-mix(in srgb,#ef4444 12%,transparent)}
       #ed-body .dm-c3-ed-modifica{border:0;border-radius:999px;padding:5px 10px;font:inherit;font-size:11.5px;font-weight:800;cursor:pointer;background:var(--accent,#0ea5e9);color:#fff}
       #ed-body .dm-c3-ed-tasti{display:flex;flex-wrap:wrap;gap:8px}
       #ed-body .dm-c3-ed-tasti .ed-btn-add{flex:1 1 180px}

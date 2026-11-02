@@ -619,6 +619,11 @@ test("la casa dalle foto delle stanze: le stanze, le misure, la pianta, il salva
   await expect(crea.locator(".c3c-sf-foto img")).toHaveCount(1, { timeout: 60_000 });
   /* senza riconoscitore resta l'avviso (.c3c-lavoro.no): il lavoro vero finisce */
   await expect(crea.locator(".c3c-lavoro:not(.no)")).toHaveCount(0, { timeout: 60_000 });
+  /* e l'avviso dice che e' lo scarico che non e' andato, con la causa sotto
+   * (dal telefono la console non si vede) e «Riprova» */
+  await expect(crea.locator(".c3c-lavoro.no")).toContainText("non si è scaricato");
+  await expect(crea.locator(".c3c-lavoro.no .c3c-dettaglio")).not.toBeEmpty();
+  await expect(crea.locator('[data-c3c="riprovarr"]')).toHaveCount(1);
   /* la foto si vede, con la bussola */
   await expect(crea.locator("[data-c3c-verso]")).toHaveCount(4);
   /* «per ogni cosa individuata le entita'»: una lampada a stelo segnata a
@@ -701,6 +706,51 @@ test("la casa dalle foto delle stanze: le stanze, le misure, la pianta, il salva
   expect(piano.dispositivi.map((d) => d.k)).toContain("luce");
   await page.waitForTimeout(2500);
   await fotoDiretta(page, testInfo, "casa3d-dalle-foto");
+});
+
+/* «Ci ha messo un sacco di tempo per riconoscere gli oggetti e poi non e'
+ * riuscito», dal telefono: il modello (21,7 MB) non passava dal filo
+ * dell'app. Ora arriva a pezzi, con la clessidra che dice quanto manca, e
+ * gira in un lavoratore a parte; quando non arriva, «Riprova» lo richiede e
+ * riguarda le foto rimaste senza. Qui col modello vero (solo sul computer:
+ * e' pesante): prima la rete e' giu', poi torna. */
+test("«Riprova»: il riconoscitore arriva a pezzi, parte nel lavoratore e guarda la foto", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "il modello vero: solo sul computer");
+  test.setTimeout(240_000);
+  let giu = true;
+  await page.route("**/riconoscere/**", (via) =>
+    giu ? via.abort("connectionrefused") : via.continue(),
+  );
+  const chiesti = [];
+  page.on("request", (r) => {
+    if (r.url().includes("/riconoscere/")) chiesti.push(r.url().split("/").pop());
+  });
+  const crea = await apriLaProcedura(page, testInfo, { aree: { cucina: "Cucina" } });
+  await crea.locator('[data-c3c="dallefoto"]').click();
+  const [scelta] = await Promise.all([
+    page.waitForEvent("filechooser"),
+    crea.locator('[data-c3c="caricasf"][data-c3c-sfid="1"]').click(),
+  ]);
+  await scelta.setFiles({ name: "cucina.png", mimeType: "image/png", buffer: pngTinta(640, 480) });
+  await expect(crea.locator('[data-c3c="riprovarr"]')).toHaveCount(1, { timeout: 60_000 });
+  await expect(crea.locator(".c3c-lavoro.no")).toContainText("non si è scaricato");
+  await fotoDiretta(page, testInfo, "crea-riconoscitore-riprova");
+  /* la rete torna: «Riprova» scarica i pezzi, dicendo quanto manca */
+  giu = false;
+  chiesti.length = 0;
+  await crea.locator('[data-c3c="riprovarr"]').click();
+  await expect(crea.locator("[data-c3c-rr]")).toContainText(/di \d+ MB/, { timeout: 30_000 });
+  /* finito: niente clessidra e niente avviso, la foto e' stata guardata */
+  await expect(crea.locator(".c3c-lavoro")).toHaveCount(0, { timeout: 200_000 });
+  expect(chiesti).toContain("pezzi.json");
+  expect(chiesti.filter((n) => /\.\d+\.bin$/.test(n)).length).toBeGreaterThanOrEqual(2);
+  expect(chiesti.filter((n) => /\.\d+\.wasm$/.test(n)).length).toBeGreaterThanOrEqual(2);
+  /* il modello gira nel lavoratore: nella pagina ONNX Runtime non c'e' */
+  expect(page.workers().some((w) => w.url().includes("riconoscere-lavoratore"))).toBe(true);
+  expect(await page.evaluate(() => typeof window.ort)).toBe("undefined");
+  await fotoDiretta(page, testInfo, "crea-riconoscitore-riprovato");
 });
 
 /* La stessa strada con le foto vere delle stanze (non stanno nel repo:
@@ -1117,6 +1167,60 @@ test("la foto della pianta dell'architetto: prospettiva, stanze, finestre e scal
   await fotoDiretta(page, testInfo, "casa3d-foto-architetto-dentro");
 });
 
+/* «Hai fatto male la planimetria»: la pianta esportata da un CAD (non sta
+ * nel repo: DM_PIANTA_RIGHE), coi muri di fuori tratteggiati, i tramezzi a
+ * doppia riga, le porte ad arco, le finestre numerate, una scala e due
+ * balconi. Andava sulla strada dei muri pieni (una stanza, niente porte); ora
+ * si legge a righe: le stanze dei due appartamenti, le porte dagli archi, le
+ * finestre, la scala, e i balconi fuori. La quota, in frazioni della tela:
+ * DM_PIANTA_RIGHE_QUOTA="x0,y,x1,metri" (di serie quella di Andrea, 4 m). */
+test("la pianta disegnata a righe: stanze, porte, finestre, scala e balconi", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    !process.env.DM_PIANTA_RIGHE || testInfo.project.name !== "desktop",
+    "serve DM_PIANTA_RIGHE",
+  );
+  test.setTimeout(240_000);
+  const quota = process.env.DM_PIANTA_RIGHE_QUOTA || "0.565,0.496,0.751,4";
+  const [x0, y, x1, metri] = quota.split(",").map(Number);
+  const crea = await apriLaProcedura(page, testInfo);
+  await crea.locator('[data-c3c-file="pianta"]').setInputFiles(process.env.DM_PIANTA_RIGHE);
+  await expect(crea.locator(".c3c-lavoro")).toHaveCount(0, { timeout: 60_000 });
+  for (let i = 0; i < 4 && !(await crea.locator("[data-c3c-metri]").count()); i++)
+    await crea.locator('[data-c3c="avanti"]').click();
+  const tela = crea.locator(".c3c-tela");
+  const b = await tela.boundingBox();
+  await page.mouse.click(b.x + b.width * x0, b.y + b.height * y);
+  await page.mouse.click(b.x + b.width * x1, b.y + b.height * y);
+  await crea.locator("[data-c3c-metri]").fill(String(metri));
+  await crea.locator('[data-c3c="avanti"]').click();
+  const trovati = crea.locator(".c3c-pannello");
+  await expect(trovati).toContainText(/Trovati \d+ ambienti/, { timeout: 120_000 });
+  const testo = await trovati.innerText();
+  const n = Number(/Trovati (\d+) ambienti/.exec(testo)[1]),
+    porte = Number(/(\d+) porte/.exec(testo)?.[1] || 0),
+    finestre = Number(/(\d+) finestr/.exec(testo)?.[1] || 0);
+  console.log(`pianta a righe: ${n} ambienti, ${porte} porte, ${finestre} finestre`);
+  /* la pianta vera ha 12 ambienti; nella schermata di Andrea la riga della
+   * misura «4,00 m» spezza il soggiorno di App. n.4, e vengono 11 */
+  expect(n, testo).toBeGreaterThanOrEqual(Number(process.env.DM_PIANTA_RIGHE_STANZE || 11));
+  expect(porte, testo).toBeGreaterThanOrEqual(Number(process.env.DM_PIANTA_RIGHE_PORTE || 8));
+  expect(finestre, testo).toBeGreaterThanOrEqual(Number(process.env.DM_PIANTA_RIGHE_FINESTRE || 8));
+  await fotoDiretta(page, testInfo, "crea-pianta-a-righe-muri");
+  /* fino in fondo: la scala nel 3D, i balconi non sono stanze */
+  for (let i = 0; i < 8 && !(await crea.locator('[data-c3c="salva"]').count()); i++)
+    await crea.locator('[data-c3c="avanti"]').click();
+  await crea.locator('[data-c3c="salva"]').click();
+  await expect(crea).toBeHidden({ timeout: 20_000 });
+  const salvata = await page.evaluate(() => JSON.parse(localStorage.getItem("cd_casa3d")));
+  const piano = salvata.piani[0];
+  expect(piano.arredi.filter((a) => a.k === "scala").length).toBe(1);
+  expect(piano.stanze.length).toBe(n);
+  await page.waitForTimeout(2500);
+  await fotoDiretta(page, testInfo, "casa3d-pianta-a-righe");
+});
+
 /* «Ho attivato la plancia 3D per sbaglio sulla plancia che uso normale e
  * adesso non mi fa più tornare indietro»: la Casa 3D è una plancia a sé, e
  * sulla principale non si accende mai, anche se il suo config la dice accesa. */
@@ -1257,6 +1361,42 @@ test("dal Config si modifica di nuovo la planimetria di un piano", async ({ page
   expect(terra.dispositivi.find((d) => d.k === "telecamera").entity).toBe("camera.soggiorno");
   const luce = terra.dispositivi.find((d) => d.entity === "light.cucina");
   expect(terra.stanze.find((s) => s.id === luce.stanza).nome).toBe("Cucina");
+});
+
+/* «Come faccio ad eliminare un piano fatto?» (Enzo): 🗑️ sul piano nel
+ * Config, con la domanda prima. Il piano se ne va con le sue stanze e i suoi
+ * dispositivi, l'altro resta com'è; chi dice no non perde niente. */
+test("dal Config si elimina un piano già fatto", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "basta una misura");
+  await boot(page, testInfo);
+  await page.locator('#dm-casa3d [data-c3s="config"]').click();
+  await expect(page.locator("#ed-body .dm-c3-ed")).toBeVisible({ timeout: 20_000 });
+  const cestini = page.locator("#ed-body [data-dm-c3-elimina]");
+  await expect(cestini).toHaveCount(2);
+  /* no: resta tutto */
+  page.once("dialog", (d) => d.dismiss());
+  await page.locator('#ed-body [data-dm-c3-elimina="terra"]').click();
+  await expect(cestini).toHaveCount(2);
+  /* si': il piano terra se ne va, il primo resta con i suoi dispositivi */
+  const prima = await page.evaluate(() => JSON.parse(localStorage.getItem("cd_casa3d")));
+  const primoPrima = prima.piani.find((p) => p.k === "primo");
+  page.once("dialog", (d) => {
+    expect(d.message()).toMatch(/Piano terra/);
+    d.accept();
+  });
+  await page.locator('#ed-body [data-dm-c3-elimina="terra"]').click();
+  await expect(cestini).toHaveCount(1);
+  await expect(page.locator("#ed-body [data-dm-c3-modifica]")).toHaveCount(1);
+  const dove = foto(testInfo, "casa3d-config-piano-eliminato");
+  if (dove) await page.screenshot({ path: dove });
+  const dopo = await page.evaluate(() => JSON.parse(localStorage.getItem("cd_casa3d")));
+  expect(dopo.attiva).toBe(true);
+  expect(dopo.piani.map((p) => p.k)).toEqual(["primo"]);
+  expect(dopo.piani[0]).toEqual(primoPrima);
+  /* chiuso il Config, la vista 3D e' li' con un piano solo */
+  await page.locator("#editor-modal .ed-head-close", { hasText: "✕" }).click();
+  await expect(page.locator("#dm-casa3d")).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator("#dm-casa3d .c3-bollo")).toHaveCount(1);
 });
 
 /* Aperto da dovunque — il menu dell'app apre il Config com'è — sulla

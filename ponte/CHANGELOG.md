@@ -10,6 +10,55 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.30
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Casa 3D, il riconoscitore degli arredi sul telefono:** «ci ha messo un
+  sacco di tempo e poi non è riuscito». Il modello che riconosce gli arredi
+  nelle foto delle stanze (21,7 MB) non passava dal filo dell'app, che
+  chiude oltre i 16 MB a messaggio, e da fuori casa nemmeno dal centralino:
+  la stessa storia del lettore DWG. Ora arriva a pezzi da 3 MB, uno alla
+  volta, e la clessidra dice quanto manca («12 di 36 MB»): la prima volta
+  sono 36 MB, poi l'app li tiene. Il riconoscimento gira in un lavoratore a
+  parte, così la procedura resta libera e si tocca mentre guarda le foto. Se
+  il riconoscitore non arriva, sotto l'avviso c'è la causa vera e il tasto
+  «Riprova», che lo richiede e riguarda le foto rimaste senza.
+- **Casa 3D, la planimetria disegnata al computer:** «hai fatto male la
+  planimetria». Il disegno esportato da un CAD (muri di fuori tratteggiati,
+  tramezzi a doppia riga, porte ad arco, finestre numerate, la scala, i
+  balconi) passava per una pianta a muri pieni e ne uscivano una stanza e
+  nessuna porta. Ora la pianta sceglie da sola come leggersi, da quante
+  stanze ne vengono; sul disegno a righe gli archi delle porte diventano
+  porte (e non spezzano più le stanze in stanzine), le finestre si
+  riconoscono dal vetro disegnato nel muro, la scala dai gradini (il vano
+  resta una stanza, con la scala dentro) e i balconi, chiusi solo da un
+  parapetto fuori dai muri, restano fuori. Sulla pianta di prova: due
+  appartamenti, dodici ambienti, undici porte, tredici finestre, la scala.
+- **Casa 3D, il disimpegno con le quattro porte:** «ci sono 4 porte e tu
+  hai fatto un macello». Nel disegno a righe il riconoscitore prendeva per
+  porte due varchi che porte non sono: quello fra il capo di un tramezzo e il
+  pilastro in fila con lui, e quello fra due capi di muro visti di traverso.
+  Il disimpegno veniva spezzato in tre pezzi, con porte finte e un angolo
+  senza stanza. Ora due capi di muro in fila chiudono una porta solo se sono
+  lo stesso muro (stesso spessore, stessa faccia), un tramezzo che finisce
+  davanti a un altro muro solo se quel muro lo copre da tutte e due le parti,
+  e in un disegno che disegna le porte ad arco un varco senza arco è un
+  passaggio: le due parti sono la stessa stanza. Il disimpegno è una stanza
+  sola, con le sue cinque porte. E il quadrato nero davanti a una porta
+  «che non c'è»: era la rientranza di 90 cm dove l'anta si apre, troppo
+  piccola per la squadratura delle stanze, che la faceva muro; ora resta
+  pavimento. La porta stessa è profonda quanto il muro, non un blocco di 70
+  cm fra i due muri di fianco. La pianta si legge sempre a 2400 pixel di
+  lato: quella piccola (il PNG del CAD a 1200) si ingrandisce prima, perché
+  con meno di due pixel per cella le righe sottili e gli archi si perdevano
+  e la stessa pianta veniva diversa da un telefono all'altro.
+- **Casa 3D, eliminare un piano già fatto:** «come faccio ad eliminare un
+  piano fatto?». Non si poteva: nel Config accanto a ogni piano c'era solo
+  «Modifica». Ora c'è anche 🗑️, con la domanda prima: il piano se ne va con
+  le sue stanze, gli arredi e i dispositivi, gli altri piani restano; senza
+  piani la scheda torna a «Crea la tua casa».
+
 ## 1.18.7.29
 
 _Solo Home Assistant: l'app sul telefono non cambia._

@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-PCJOHV35.js";
+} from "../../chunk-6TEZOZKP.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -2132,9 +2132,11 @@ var SOURCE_INDEX = Object.freeze({
   "${nome} fa qualcosa": "${nome} does something",
   "${nome} ha finito": "${nome} has finished",
   "${nome} misura la potenza: si vede quando il ciclo finisce.": "${nome} measures power: you can tell when the cycle ends.",
+  "${nome}: arrivato a metà": "${nome}: arrived incomplete",
   "${nome}: ha finito": "${nome}: finished",
   "${nome}: i tasti li prende la TV stessa, il telecomando non serve.": "${nome}: the TV takes the keys itself, no remote needed.",
   "${nome}: le frecce, OK e gli altri tasti compaiono sotto la scheda, a TV accesa.": "${nome}: the arrows, OK and the other keys show under the card while the TV is on.",
+  "${nome}: nessuna risposta in ${s} s": "${nome}: no answer in ${s} s",
   "${nomeDelRiquadro(r)}: comando inviato": "${nomeDelRiquadro(r)}: command sent",
   "${nomi} spenti": "${nomi} off",
   "${nuove.length} persone importate": "${nuove.length} people imported",
@@ -4026,6 +4028,7 @@ var SOURCE_INDEX = Object.freeze({
   "Elimina il viaggio": "Delete trip",
   "Elimina luce": "Delete light",
   "Elimina questo impianto": "Delete this plant",
+  "Elimina questo piano": "Delete this floor",
   "Eliminare «${nome}»?": "Delete «${nome}»?",
   "Eliminare «${v.nome}»?": "Delete «${v.nome}»?",
   "Eliminare «${v.titolo}»?": "Delete «${v.titolo}»?",
@@ -4040,6 +4043,7 @@ var SOURCE_INDEX = Object.freeze({
   'Elimino "${nomeDi(people[index], index)}"?': 'Remove "${nomeDi(people[index], index)}"?',
   'Elimino "${nomeDi(pools[index], index)}"?': 'Remove "${nomeDi(pools[index], index)}"?',
   'Elimino "${nomeDi(robots[index], index)}"?': 'Remove "${nomeDi(robots[index], index)}"?',
+  'Elimino il piano "${nome}"? Le sue stanze, gli arredi e i dispositivi si perdono.': 'Delete the floor "${nome}"? Its rooms, furniture and devices are lost.',
   "Elimino questo viaggio?": "Delete this trip?",
   "Email o password non sono giuste.": "Email or password is wrong.",
   "Energia": "Energy",
@@ -4619,6 +4623,7 @@ var SOURCE_INDEX = Object.freeze({
   "Il gruppo decide dove l’avviso viene sorvegliato.": "The group decides where the alert is watched.",
   "Il gruppo è facoltativo: le azioni con lo stesso gruppo stanno insieme in Home, sotto un titolo che dice quante sono accese e che si chiude con un tocco. Senza gruppi resta una fila sola.": "The group is optional: actions with the same group sit together on Home, under a title that says how many are on and closes with a tap. Without groups it stays a single row.",
   "Il gruppo è il popup aperto dal cerchio del flow. I figli sono le card interne, per esempio Forno, Frigorifero o Lavastoviglie.": "Groups are the popup opened from a flow circle. Their children are the cards shown inside, such as Oven, Fridge or Dishwasher.",
+  "Il lavoratore del riconoscitore non parte": "The recognizer worker won't start",
   "Il lettore che suona in grande, con la copertina, i tasti, il volume e le sorgenti; accanto gli altri, ognuno col suo play. Un tocco su un lettore lo porta in grande.": "The player that's playing, big, with cover, buttons, volume and sources; beside it the others, each with its own play. A tap on a player brings it up big.",
   "Il lettore dei DWG non si è scaricato: controlla la connessione e riprova.": "The DWG reader didn't download: check the connection and try again.",
   "Il lettore non ha risposto.": "The player did not answer.",
@@ -4663,6 +4668,8 @@ var SOURCE_INDEX = Object.freeze({
   "Il resto arriva quando si gioca.": "The rest comes in when the match is played.",
   "Il resto del popup": "The rest of the popup",
   "Il riconoscimento automatico non è disponibile qui: segna tu arredi e dispositivi toccandoli nella foto.": "Automatic recognition isn't available here: mark furniture and devices by tapping them in the photo.",
+  "Il riconoscitore non ha risposto in ${s} s": "The recognizer didn't answer in ${s} s",
+  "Il riconoscitore non si è scaricato: controlla la connessione e riprova.": "The recognizer didn't download: check the connection and try again.",
   "Il rilevamento aggiunge solo ciò che manca: niente doppioni.": "Detection only adds what is missing: no duplicates.",
   "Il riquadro delle telecamere adesso non c'è. L'allarme e i varchi restano dove sono, e le telecamere configurate non sono state toccate.": "The camera panel is not there now. The alarm and the openings stay where they are, and the configured cameras have not been touched.",
   "Il rischio delle graminacee preso da sé: da 1, molto basso, a 4, alto. Chi è allergico a una sola famiglia vede l'allerta anche quando la media della giornata è tranquilla.": "The grass risk on its own: from 1, very low, to 4, high. Whoever is allergic to one family only still sees the alert when the day's average is quiet.",
@@ -4977,6 +4984,7 @@ var SOURCE_INDEX = Object.freeze({
   "L'azione del tasto in basso quando l'antifurto è spento": "The bottom button's action when the alarm is off",
   "L'editor delle entità": "The entity editor",
   "L'elenco dei fotogrammi del servizio non arriva: riprova fra un momento.": "The service's list of frames does not arrive: try again in a moment.",
+  "L'elenco dei pezzi non torna": "The list of pieces doesn't add up",
   "L'elenco diviso per tipo, come prima": "The list split by type, as before",
   "L'elenco e i salvataggi passano dall'add-on GdAHome: qui non c'è.": "The list and saving go through the GdAHome add-on: it is not here.",
   "L'elettrodomestico non è entrato nello store": "Appliance did not enter the store",
@@ -6124,6 +6132,7 @@ var SOURCE_INDEX = Object.freeze({
   "oltre il limite": "over the limit",
   "oltre la soglia di ${soglia}": "above the ${soglia} threshold",
   "omologazione": "rated",
+  "ONNX Runtime non si è caricato": "ONNX Runtime didn't load",
   "ONO": "WNW",
   "Operaio": "Worker",
   "Oppure": "Or",
@@ -7124,6 +7133,7 @@ var SOURCE_INDEX = Object.freeze({
   "Scaricata oggi": "Discharged today",
   "Scaricata questo mese": "Discharged this month",
   "Scarico e centrifuga": "Drain and spin",
+  "Scarico il riconoscitore… ${fatti} di ${totale} MB": "Downloading the recognizer… ${fatti} of ${totale} MB",
   "Scarsa": "Poor",
   "scattato": "triggered",
   "Scegli": "Choose",
@@ -10260,8 +10270,8 @@ function quotaSolareDelDispositivo({
   const frazioneDiRete = quotaRete / somma3;
   const grande = numero2(totale);
   const misurabile2 = coperto + scoperto;
-  const riferimento = grande != null && grande > 0 ? grande : misurabile2;
-  if (riferimento > 0 && coperto / riferimento < COPERTURA_MINIMA)
+  const riferimento2 = grande != null && grande > 0 ? grande : misurabile2;
+  if (riferimento2 > 0 && coperto / riferimento2 < COPERTURA_MINIMA)
     return { ...vuota2, coperto, secchielli: secchielli2 };
   const scala2 = grande != null && grande > 0 ? grande / somma3 : 1;
   return {
@@ -18096,9 +18106,9 @@ async function leggiGliSpegnimenti({ force = false } = {}) {
 async function programmaSpegnimento(entita4, minuti) {
   const id = clean(entita4);
   if (!id) return false;
-  const quanti3 = Math.max(0, Math.round(Number(minuti) || 0));
+  const quanti4 = Math.max(0, Math.round(Number(minuti) || 0));
   try {
-    if (!quanti3) {
+    if (!quanti4) {
       await chiediAHomeAssistant({ type: TIPO_TOGLI, entity_id: id }, 8e3);
       const resto = { ...state11.scadenze };
       delete resto[id];
@@ -18106,7 +18116,7 @@ async function programmaSpegnimento(entita4, minuti) {
       return true;
     }
     const risposta = await chiediAHomeAssistant(
-      { type: TIPO_METTI, entity_id: id, minuti: quanti3 },
+      { type: TIPO_METTI, entity_id: id, minuti: quanti4 },
       8e3
     );
     const scadenza = Number(risposta?.scadenza);
@@ -23916,14 +23926,14 @@ function syncZone(shell, labels) {
   return true;
 }
 function alarmStateObject() {
-  const riferimento = RIF_CENTRALE;
-  let risolto = riferimento;
+  const riferimento2 = RIF_CENTRALE;
+  let risolto = riferimento2;
   try {
-    risolto = clean(root.resolveEntity?.(riferimento)) || riferimento;
+    risolto = clean(root.resolveEntity?.(riferimento2)) || riferimento2;
   } catch (_error) {
   }
   const states = allStates();
-  const stato3 = states[risolto] || states[riferimento] || null;
+  const stato3 = states[risolto] || states[riferimento2] || null;
   return clean(stato3?.entity_id) === "dm.unmapped" ? null : stato3;
 }
 function modiSuMisura() {
@@ -25495,10 +25505,10 @@ function quandoTocca(punti, bersaglio, { adesso: adesso2 = Date.now(), orizzonte
   const linea = tendenza(punti);
   if (meta == null || !linea || linea.verso === "ferma") return null;
   const ultimo = linea.ultimo.valore;
-  const distanza3 = meta - ultimo;
-  if (distanza3 === 0) return adesso2;
-  if (Math.sign(distanza3) !== Math.sign(linea.perOra)) return null;
-  const ore = distanza3 / linea.perOra;
+  const distanza4 = meta - ultimo;
+  if (distanza4 === 0) return adesso2;
+  if (Math.sign(distanza4) !== Math.sign(linea.perOra)) return null;
+  const ore = distanza4 / linea.perOra;
   if (!Number.isFinite(ore) || ore <= 0 || ore > orizzonteOre) return null;
   return adesso2 + ore * ORA;
 }
@@ -25542,8 +25552,8 @@ function ilSolitoAQuestOra(punti, { adesso: adesso2 = Date.now(), larghezzaOre =
   const oraDi6 = (istante8) => new Date(istante8).getHours();
   const bersaglio = oraDi6(adesso2);
   const vicine = letture2.filter((l) => {
-    const distanza3 = Math.abs(oraDi6(l.quando) - bersaglio);
-    return Math.min(distanza3, 24 - distanza3) <= larghezzaOre;
+    const distanza4 = Math.abs(oraDi6(l.quando) - bersaglio);
+    return Math.min(distanza4, 24 - distanza4) <= larghezzaOre;
   });
   if (vicine.length < PUNTI_MINIMI) return null;
   const giorni = new Set(vicine.map((l) => new Date(l.quando).toDateString()));
@@ -25554,11 +25564,11 @@ function ilSolitoAQuestOra(punti, { adesso: adesso2 = Date.now(), larghezzaOre =
 function quantoInsolito(valore3, solito) {
   const v = numero9(valore3);
   if (v == null || !solito) return null;
-  const distanza3 = Math.abs(v - solito.centro);
-  if (solito.scarto > 0) return distanza3 / solito.scarto;
-  if (distanza3 === 0) return 0;
+  const distanza4 = Math.abs(v - solito.centro);
+  if (solito.scarto > 0) return distanza4 / solito.scarto;
+  if (distanza4 === 0) return 0;
   const scala2 = Math.abs(solito.centro) || 1;
-  return distanza3 / scala2 * 10;
+  return distanza4 / scala2 * 10;
 }
 function letturaNelTempo(punti, { adesso: adesso2 = Date.now(), bersaglio = null } = {}) {
   const letture2 = serie(punti);
@@ -25566,7 +25576,7 @@ function letturaNelTempo(punti, { adesso: adesso2 = Date.now(), bersaglio = null
   const adessoValore = letture2[letture2.length - 1].valore;
   const solito = ilSolito(letture2, { adesso: adesso2 });
   const abituale = ilSolitoAQuestOra(letture2, { adesso: adesso2 });
-  const riferimento = abituale || solito;
+  const riferimento2 = abituale || solito;
   return {
     valore: adessoValore,
     punti: letture2.length,
@@ -25574,7 +25584,7 @@ function letturaNelTempo(punti, { adesso: adesso2 = Date.now(), bersaglio = null
     tendenza: tendenza(letture2),
     solito,
     abituale,
-    insolito: riferimento ? quantoInsolito(adessoValore, riferimento) : null,
+    insolito: riferimento2 ? quantoInsolito(adessoValore, riferimento2) : null,
     arrivo: bersaglio == null ? null : quandoTocca(letture2, bersaglio, { adesso: adesso2 })
   };
 }
@@ -26282,18 +26292,18 @@ function puntiDelModello(tessera3, storia, tr, adesso2) {
   if (!lettura4) return { punti: [], tono: null };
   const punti = [];
   let tono = null;
-  const riferimento = lettura4.abituale || lettura4.solito;
+  const riferimento2 = lettura4.abituale || lettura4.solito;
   const conSolito = typeof forma2.solito === "function" ? forma2.solito(tessera3) !== false : true;
-  if (conSolito && lettura4.insolito != null && lettura4.insolito >= SOGLIE_INSOLITO.notevole && riferimento) {
-    const sopra = lettura4.valore > riferimento.centro;
+  if (conSolito && lettura4.insolito != null && lettura4.insolito >= SOGLIE_INSOLITO.notevole && riferimento2) {
+    const sopra = lettura4.valore > riferimento2.centro;
     const quando6 = lettura4.abituale ? tr("per quest'ora", "for this time of day") : tr("delle ultime ore", "over the last few hours");
     punti.push(
       sopra ? tr(
-        `Piu' alto del solito ${quando6}: ${scrivi6(lettura4.valore)} contro ${scrivi6(riferimento.centro)}`,
-        `Higher than usual ${quando6}: ${scrivi6(lettura4.valore)} against ${scrivi6(riferimento.centro)}`
+        `Piu' alto del solito ${quando6}: ${scrivi6(lettura4.valore)} contro ${scrivi6(riferimento2.centro)}`,
+        `Higher than usual ${quando6}: ${scrivi6(lettura4.valore)} against ${scrivi6(riferimento2.centro)}`
       ) : tr(
-        `Piu' basso del solito ${quando6}: ${scrivi6(lettura4.valore)} contro ${scrivi6(riferimento.centro)}`,
-        `Lower than usual ${quando6}: ${scrivi6(lettura4.valore)} against ${scrivi6(riferimento.centro)}`
+        `Piu' basso del solito ${quando6}: ${scrivi6(lettura4.valore)} contro ${scrivi6(riferimento2.centro)}`,
+        `Lower than usual ${quando6}: ${scrivi6(lettura4.valore)} against ${scrivi6(riferimento2.centro)}`
       )
     );
     if (lettura4.insolito >= SOGLIE_INSOLITO.forte && forma2.allarme?.(tessera3) !== false)
@@ -27634,12 +27644,12 @@ function comeStannoLeGomme(lettura4 = {}, forcella = FORCELLA_DELLE_GOMME) {
     };
   });
   const nellaForcella3 = ruote.map((voce3) => voce3.bar).filter((bar) => bar !== null && bar >= forcella.min && bar <= forcella.max);
-  const riferimento = nellaForcella3.length > 1 ? Math.max(...nellaForcella3) : null;
+  const riferimento2 = nellaForcella3.length > 1 ? Math.max(...nellaForcella3) : null;
   for (const voce3 of ruote) {
     if (voce3.bar === null) continue;
     if (voce3.bar < forcella.min) voce3.tono = "bassa";
     else if (voce3.bar > forcella.max) voce3.tono = "alta";
-    else if (riferimento !== null && riferimento - voce3.bar >= forcella.scarto - 1e-9)
+    else if (riferimento2 !== null && riferimento2 - voce3.bar >= forcella.scarto - 1e-9)
       voce3.tono = "bassa";
     else voce3.tono = "bene";
   }
@@ -28449,13 +28459,13 @@ function renderRicaricaDiNotte(adesso2 = Date.now()) {
   const da = minutiDi(imp.da);
   const a = minutiDi(imp.a);
   const pc = (m) => `${(m / 1440 * 100).toFixed(2)}%`;
-  const tratti2 = a > da ? [[da, a], null] : [
+  const tratti3 = a > da ? [[da, a], null] : [
     [da, 1440],
     [0, a]
   ];
   [q("tratto1"), q("tratto2")].forEach((nodo3, i) => {
     if (!nodo3) return;
-    const tratto = tratti2[i];
+    const tratto = tratti3[i];
     const stile7 = tratto ? `left:${pc(tratto[0])};width:${pc(tratto[1] - tratto[0])}` : "display:none";
     attributo(nodo3, "style", stile7);
   });
@@ -31030,8 +31040,8 @@ function senzaZeriInCoda(scritto3) {
   return scritto3.includes(".") ? scritto3.replace(/\.?0+$/, "") : scritto3;
 }
 function primoScalino(min, suo2, max, mio) {
-  const quanti3 = Math.round(mio / suo2);
-  for (let passi2 = 0; passi2 < quanti3; passi2 += 1) {
+  const quanti4 = Math.round(mio / suo2);
+  for (let passi2 = 0; passi2 < quanti4; passi2 += 1) {
     const valore3 = min + passi2 * suo2;
     if (valore3 > max + 1e-9) break;
     if (Math.abs(valore3 / mio - Math.round(valore3 / mio)) < 1e-9) return valore3;
@@ -31694,8 +31704,8 @@ function statoScaldabagno({ acceso: acceso6, temperatura, obiettivo: obiettivo2 
   return ora8 >= meta - TOLLERANZA ? "pronto" : "scalda";
 }
 function letturaScaldabagno(row = {}, states = {}, resolve = (value) => value) {
-  const leggi4 = (riferimento) => {
-    const chiave2 = clean12(riferimento);
+  const leggi4 = (riferimento2) => {
+    const chiave2 = clean12(riferimento2);
     if (!chiave2) return null;
     let entity2 = chiave2;
     try {
@@ -31717,8 +31727,8 @@ function letturaScaldabagno(row = {}, states = {}, resolve = (value) => value) {
   const potenza3 = numero16(leggi4(row.potenza)?.state);
   const energia = numero16(leggi4(row.energia)?.state);
   const base = numero16(attributi2.min_temp) ?? BASE_ACQUA;
-  const vera2 = (riferimento) => {
-    const chiave2 = clean12(riferimento);
+  const vera2 = (riferimento2) => {
+    const chiave2 = clean12(riferimento2);
     if (!chiave2) return "";
     try {
       return clean12(resolve(chiave2)) || chiave2;
@@ -31882,8 +31892,8 @@ function autonomiaInMinuti(stato3) {
 }
 function letturaUps(config, states = {}, resolve = (value) => value) {
   const dato2 = normalizzaUps(config);
-  const leggi4 = (riferimento) => {
-    const chiave2 = clean13(riferimento);
+  const leggi4 = (riferimento2) => {
+    const chiave2 = clean13(riferimento2);
     if (!chiave2) return null;
     let entity2 = chiave2;
     try {
@@ -32289,8 +32299,8 @@ function inCorso(evento, adesso2 = Date.now()) {
 function eventiDaQui(eventi, adesso2 = Date.now()) {
   return ordinaEventi(eventi).filter((evento) => evento.fine > adesso2);
 }
-function prossimiEventi(eventi, adesso2 = Date.now(), quanti3 = 2) {
-  return eventiDaQui(eventi, adesso2).slice(0, Math.max(0, quanti3));
+function prossimiEventi(eventi, adesso2 = Date.now(), quanti4 = 2) {
+  return eventiDaQui(eventi, adesso2).slice(0, Math.max(0, quanti4));
 }
 function scadenzaDaVoce(voce3, lista7) {
   const capo = istanteDi(voce3?.due);
@@ -32487,9 +32497,9 @@ function azioniDellEventoMarkup(evento, chiave2) {
   const puoiModificare = eventoModificabile(evento, capacita);
   const puoiCancellare = eventoCancellabile(evento, capacita);
   if (!puoiModificare && !puoiCancellare) return "";
-  const riferimento = esc(clean(chiave2));
-  return `<span class="dm-calm-azioni">${puoiModificare ? `<button type="button" class="dm-calm-tasto" data-dm-calm-modifica="${riferimento}"
-          title="${esc(t("Modifica", "Edit"))}" aria-label="${esc(t("Modifica", "Edit"))}">✏️</button>` : ""}${puoiCancellare ? `<button type="button" class="dm-calm-tasto" data-dm-calm-elimina="${riferimento}"
+  const riferimento2 = esc(clean(chiave2));
+  return `<span class="dm-calm-azioni">${puoiModificare ? `<button type="button" class="dm-calm-tasto" data-dm-calm-modifica="${riferimento2}"
+          title="${esc(t("Modifica", "Edit"))}" aria-label="${esc(t("Modifica", "Edit"))}">✏️</button>` : ""}${puoiCancellare ? `<button type="button" class="dm-calm-tasto" data-dm-calm-elimina="${riferimento2}"
           title="${esc(t("Elimina", "Delete"))}" aria-label="${esc(t("Elimina", "Delete"))}">🗑️</button>` : ""}</span>`;
 }
 function azioneDellaCosaMarkup(voce3, lista7) {
@@ -33042,7 +33052,7 @@ function leggiTerremoti(voce3, stati4) {
   const magnitudo = numero19(stati4.magnitudo?.state) ?? numero19(
     attributo2(principale, ["magnitude", "magnitudo", "mag", "last_magnitude", "max_magnitude"])
   );
-  const distanza3 = inChilometri(stati4.distanza?.state, stati4.distanza?.attributes?.unit_of_measurement) ?? (dominio7 === "geo_location" ? inChilometri(principale?.state, principale?.attributes?.unit_of_measurement) : inChilometri(attributo2(principale, ["distance", "distanza", "last_distance"]), null));
+  const distanza4 = inChilometri(stati4.distanza?.state, stati4.distanza?.attributes?.unit_of_measurement) ?? (dominio7 === "geo_location" ? inChilometri(principale?.state, principale?.attributes?.unit_of_measurement) : inChilometri(attributo2(principale, ["distance", "distanza", "last_distance"]), null));
   const luogo = pulito24(
     attributo2(principale, [
       "title",
@@ -33060,10 +33070,10 @@ function leggiTerremoti(voce3, stati4) {
     if (magnitudo >= 5) livello = "allarme";
     else if (magnitudo >= 4) livello = "attenzione";
     else if (magnitudo >= 3) livello = "nota";
-    if (distanza3 != null && distanza3 <= 30 && magnitudo >= 2.5)
+    if (distanza4 != null && distanza4 <= 30 && magnitudo >= 2.5)
       livello = piuAlto(livello, "attenzione");
   } else if (conteggio != null && conteggio > 0) livello = "nota";
-  return { livello, magnitudo, distanza: distanza3, luogo, quando: quando6, conteggio };
+  return { livello, magnitudo, distanza: distanza4, luogo, quando: quando6, conteggio };
 }
 var COLORI = Object.freeze([
   [/(^|\b)(4|red|ross[ao]|elevat[ao]|extreme)(\b|$)/, "allarme"],
@@ -33103,18 +33113,18 @@ function leggiMeteo(voce3, stati4) {
 var FULMINI_RECENTI_MS = 60 * 60 * 1e3;
 function leggiFulmini(voce3, stati4, adesso2) {
   const conteggio = numero19(stati4.entity?.state);
-  const distanza3 = inChilometri(stati4.distanza?.state, stati4.distanza?.attributes?.unit_of_measurement) ?? inChilometri(attributo2(stati4.entity, ["distance", "distanza"]), null);
+  const distanza4 = inChilometri(stati4.distanza?.state, stati4.distanza?.attributes?.unit_of_measurement) ?? inChilometri(attributo2(stati4.entity, ["distance", "distanza"]), null);
   const quando6 = daQuando(stati4.entity) ?? daQuando(stati4.distanza);
   const recente = quando6 == null || adesso2 - quando6 <= FULMINI_RECENTI_MS;
   let livello = "quiete";
   if (recente && conteggio != null && conteggio > 0) {
     livello = "nota";
-    if (distanza3 != null) {
-      if (distanza3 <= 5) livello = "allarme";
-      else if (distanza3 <= 15) livello = "attenzione";
+    if (distanza4 != null) {
+      if (distanza4 <= 5) livello = "allarme";
+      else if (distanza4 <= 15) livello = "attenzione";
     }
   }
-  return { livello, conteggio, distanza: distanza3, quando: quando6, recente };
+  return { livello, conteggio, distanza: distanza4, quando: quando6, recente };
 }
 var PAROLE_POLLINI = Object.freeze([
   [/very[_ ]?high|molto[_ ]alt[ao]|extreme|estrem[ao]/, "allarme"],
@@ -33365,8 +33375,8 @@ var LETTORI = Object.freeze({
 });
 function letturaAllerte(config, states = {}, resolve = (value) => value, adesso2 = Date.now()) {
   const dato2 = normalizzaAllerte(config);
-  const leggi4 = (riferimento) => {
-    const chiave2 = pulito24(riferimento);
+  const leggi4 = (riferimento2) => {
+    const chiave2 = pulito24(riferimento2);
     if (!chiave2) return null;
     let entity2 = chiave2;
     try {
@@ -33672,12 +33682,12 @@ function fraseDellAllerta(lettura4) {
       return lettura4.evento || parolaDelLivello(lettura4.livello);
     case "fulmini": {
       if (lettura4.livello === "quiete") return categoria.quiete;
-      const quanti3 = lettura4.conteggio === 1 ? t("1 fulmine", "1 strike") : t(`${lettura4.conteggio} fulmini`, `${lettura4.conteggio} strikes`);
+      const quanti4 = lettura4.conteggio === 1 ? t("1 fulmine", "1 strike") : t(`${lettura4.conteggio} fulmini`, `${lettura4.conteggio} strikes`);
       if (lettura4.distanza != null) {
         const km = formatNumber(lettura4.distanza, lettura4.distanza < 10 ? 1 : 0);
-        return `${quanti3} · ${t(`a ${km} km`, `${km} km away`)}`;
+        return `${quanti4} · ${t(`a ${km} km`, `${km} km away`)}`;
       }
-      return quanti3;
+      return quanti4;
     }
     case "pollini": {
       const peggiore = laPiuGrave(lettura4.voci || []);
@@ -34316,8 +34326,8 @@ function caselleDelTurno(turno, quando6) {
   if (!dato2.inizio) return -1;
   const partenza = leggiData(dato2.inizio);
   if (!partenza) return -1;
-  const distanza3 = giorniFra(partenza, quando6);
-  return (distanza3 % GIORNI_DEL_TURNO + GIORNI_DEL_TURNO) % GIORNI_DEL_TURNO;
+  const distanza4 = giorniFra(partenza, quando6);
+  return (distanza4 % GIORNI_DEL_TURNO + GIORNI_DEL_TURNO) % GIORNI_DEL_TURNO;
 }
 var GIORNI_VICINI = 7;
 function ritiriDalTurno(turno, adesso2 = Date.now()) {
@@ -34434,11 +34444,11 @@ function voceDellElenco(voce3) {
   const frase4 = pulito26(voce3);
   if (!frase4) return null;
   const pezzi = frase4.split(/[\s,;:]+/).filter(Boolean);
-  for (let quanti3 = 3; quanti3 >= 1; quanti3 -= 1)
-    for (let da = 0; da + quanti3 <= pezzi.length; da += 1) {
-      const data = leggiData(pezzi.slice(da, da + quanti3).join(" "));
+  for (let quanti4 = 3; quanti4 >= 1; quanti4 -= 1)
+    for (let da = 0; da + quanti4 <= pezzi.length; da += 1) {
+      const data = leggiData(pezzi.slice(da, da + quanti4).join(" "));
       if (!data) continue;
-      const resto = [...pezzi.slice(0, da), ...pezzi.slice(da + quanti3)].join(" ");
+      const resto = [...pezzi.slice(0, da), ...pezzi.slice(da + quanti4)].join(" ");
       return { data, frazioni: [resto || frase4] };
     }
   return null;
@@ -34581,11 +34591,11 @@ function leggiData(testo5, { giornoIntero = false, adesso: adesso2 = null } = {}
     if (mese < 0) return null;
     const giorno3 = +m[1];
     if (m[3]) return new Date(+m[3], mese, giorno3);
-    const riferimento = adesso2 === null || adesso2 === void 0 ? /* @__PURE__ */ new Date() : new Date(adesso2);
-    if (!Number.isFinite(riferimento.getTime())) return null;
-    const candidata = new Date(riferimento.getFullYear(), mese, giorno3);
-    if (candidata.getTime() < inizioDelGiorno(riferimento).getTime())
-      return new Date(riferimento.getFullYear() + 1, mese, giorno3);
+    const riferimento2 = adesso2 === null || adesso2 === void 0 ? /* @__PURE__ */ new Date() : new Date(adesso2);
+    if (!Number.isFinite(riferimento2.getTime())) return null;
+    const candidata = new Date(riferimento2.getFullYear(), mese, giorno3);
+    if (candidata.getTime() < inizioDelGiorno(riferimento2).getTime())
+      return new Date(riferimento2.getFullYear() + 1, mese, giorno3);
     return candidata;
   }
   return null;
@@ -34696,8 +34706,8 @@ function ilCalendarioRipeteUnaRiga(lettura4) {
 }
 function letturaRifiuti(config, states = {}, resolve = (value) => value, adesso2 = Date.now()) {
   const dato2 = normalizzaRifiuti(config);
-  const leggi4 = (riferimento) => {
-    const chiave2 = pulito26(riferimento);
+  const leggi4 = (riferimento2) => {
+    const chiave2 = pulito26(riferimento2);
     if (!chiave2) return null;
     let entity2 = chiave2;
     try {
@@ -36754,17 +36764,17 @@ function dentroOFuori(stato3) {
 function minutiDa(stato3, adesso2) {
   const valore3 = pulito29(stato3?.state);
   if (MUTI7.test(valore3)) return null;
-  const riferimento = Number(adesso2);
-  if (!Number.isFinite(riferimento) || riferimento <= 0) return null;
+  const riferimento2 = Number(adesso2);
+  if (!Number.isFinite(riferimento2) || riferimento2 <= 0) return null;
   if (/^-?\d+(?:[.,]\d+)?$/.test(valore3)) {
     const letto = numero24(valore3.replace(",", "."));
     if (letto === null) return null;
-    if (letto > 1e12) return Math.max(0, Math.round((riferimento - letto) / 6e4));
-    if (letto > 1e9) return Math.max(0, Math.round((riferimento - letto * 1e3) / 6e4));
+    if (letto > 1e12) return Math.max(0, Math.round((riferimento2 - letto) / 6e4));
+    if (letto > 1e9) return Math.max(0, Math.round((riferimento2 - letto * 1e3) / 6e4));
     return Math.max(0, Math.round(letto));
   }
   const istante8 = Date.parse(valore3);
-  if (Number.isFinite(istante8)) return Math.max(0, Math.round((riferimento - istante8) / 6e4));
+  if (Number.isFinite(istante8)) return Math.max(0, Math.round((riferimento2 - istante8) / 6e4));
   return null;
 }
 function lettura(campo6, entita4, states, adesso2) {
@@ -41565,9 +41575,9 @@ function testoLettura(voce3) {
   if (voce3.acceso !== null && voce3.acceso !== void 0)
     return voce3.acceso ? t("Da controllare", "Needs checking") : t("A posto", "All good");
   if (voce3.giorni && voce3.valore !== null) {
-    const quanti3 = Math.max(0, Math.round(voce3.valore));
-    if (quanti3 === 0) return t("Da sostituire", "Replace now");
-    return `${quanti3} ${quanti3 === 1 ? t("giorno", "day") : t("giorni", "days")}`;
+    const quanti4 = Math.max(0, Math.round(voce3.valore));
+    if (quanti4 === 0) return t("Da sostituire", "Replace now");
+    return `${quanti4} ${quanti4 === 1 ? t("giorno", "day") : t("giorni", "days")}`;
   }
   if (voce3.chiave === "porta" || voce3.chiave === "collare_posizione") {
     if (voce3.dentro === true) return t("In casa", "Inside");
@@ -42743,11 +42753,11 @@ function giorniInParole(giorni) {
 function oggiInParole(litri2) {
   if (litri2 === null || litri2 === void 0) return "—";
   if (Math.abs(litri2) < 1e3) {
-    const quanti4 = formatNumber(Math.round(litri2), 0);
-    return t(`${quanti4} litri oggi`, `${quanti4} litres today`);
+    const quanti5 = formatNumber(Math.round(litri2), 0);
+    return t(`${quanti5} litri oggi`, `${quanti5} litres today`);
   }
-  const quanti3 = formatNumber(litri2 / 1e3, cifreUtili(litri2 / 1e3, 1));
-  return t(`${quanti3} m³ oggi`, `${quanti3} m³ today`);
+  const quanti4 = formatNumber(litri2 / 1e3, cifreUtili(litri2 / 1e3, 1));
+  return t(`${quanti4} m³ oggi`, `${quanti4} m³ today`);
 }
 function scorreDaInParole(minuti) {
   const durata6 = quantoTempoInParole(minuti);
@@ -42760,8 +42770,8 @@ function meseScorsoInParole(quanto) {
   return t(`Il mese scorso ${quanto}`, `Last month ${quanto}`);
 }
 function gasInParole(metri) {
-  const quanti3 = formatNumber(metri, cifreUtili(metri, Math.abs(metri) < 100 ? 1 : 0));
-  return t(`${quanti3} m³ di gas`, `${quanti3} m³ of gas`);
+  const quanti4 = formatNumber(metri, cifreUtili(metri, Math.abs(metri) < 100 ? 1 : 0));
+  return t(`${quanti4} m³ di gas`, `${quanti4} m³ of gas`);
 }
 function rapporto(adesso2, prima) {
   if (adesso2 === null || adesso2 === void 0) return 0;
@@ -42807,10 +42817,10 @@ function testaDeiContatori(come2, adesso2 = Date.now()) {
     };
   }
   if (gas) {
-    const quanti3 = gas.oggi === null ? "" : formatNumber(gas.oggi, cifreUtili(gas.oggi, Math.abs(gas.oggi) < 100 ? 1 : 0));
+    const quanti4 = gas.oggi === null ? "" : formatNumber(gas.oggi, cifreUtili(gas.oggi, Math.abs(gas.oggi) < 100 ? 1 : 0));
     return {
       stato: gas.letto ? "bene" : "attesa",
-      grande: gas.oggi === null ? "—" : t(`${quanti3} m³ oggi`, `${quanti3} m³ today`),
+      grande: gas.oggi === null ? "—" : t(`${quanti4} m³ oggi`, `${quanti4} m³ today`),
       nomi: [t("Gas", "Gas"), gas.kwhOggi !== null ? kwhInParole(gas.kwhOggi) : ""].filter(Boolean).join(" · "),
       sotto: gas.ieri !== null ? ieriInParole(metriCubiInParole(gas.ieri)) : ""
     };
@@ -43566,8 +43576,8 @@ function oggiFraMassimaEMinima(previsioni, adesso2 = Date.now()) {
   if (!oggi || oggi.alta == null && oggi.bassa == null) return null;
   return { alta: oggi.alta, bassa: oggi.bassa };
 }
-function giorniCheVengono(previsioni, quanti3 = 4, adesso2 = Date.now()) {
-  return ordinate(previsioni).filter((riga5) => riga5.quando > adesso2 && !stessoGiorno2(riga5.quando, adesso2)).slice(0, Math.max(0, quanti3));
+function giorniCheVengono(previsioni, quanti4 = 4, adesso2 = Date.now()) {
+  return ordinate(previsioni).filter((riga5) => riga5.quando > adesso2 && !stessoGiorno2(riga5.quando, adesso2)).slice(0, Math.max(0, quanti4));
 }
 
 // src/sections/weather-in-masthead-section.js
@@ -44080,13 +44090,13 @@ var state37 = root[KEY41] ||= {
 var RIPOSO = 30 * 60 * 1e3;
 var RIPROVA = 60 * 1e3;
 function entitaDelMeteo(states = allStates()) {
-  for (const riferimento of ["dm.home_meteo", "dm.core_055"]) {
+  for (const riferimento2 of ["dm.home_meteo", "dm.core_055"]) {
     let risolta2 = "";
     try {
-      risolta2 = clean(root.resolveEntity?.(riferimento));
+      risolta2 = clean(root.resolveEntity?.(riferimento2));
     } catch (_errore) {
     }
-    if (risolta2 && risolta2 !== riferimento && states?.[risolta2]) return risolta2;
+    if (risolta2 && risolta2 !== riferimento2 && states?.[risolta2]) return risolta2;
   }
   return states?.["weather.home"] ? "weather.home" : "";
 }
@@ -45437,30 +45447,30 @@ function tipoInParole(tipo) {
   if (tipo === "huawei") return "Huawei LUNA2000";
   return "BMS";
 }
-function quantiPacchi(quanti3) {
-  return quanti3 === 1 ? t("1 pacco", "1 pack") : t(`${quanti3} pacchi`, `${quanti3} packs`);
+function quantiPacchi(quanti4) {
+  return quanti4 === 1 ? t("1 pacco", "1 pack") : t(`${quanti4} pacchi`, `${quanti4} packs`);
 }
 function quanteCelle(quante3) {
   return t(`${quante3} celle`, `${quante3} cells`);
 }
 function pacchiInParole(pacchi) {
-  const quanti3 = quantiPacchi(pacchi.length);
+  const quanti4 = quantiPacchi(pacchi.length);
   const tipi = new Set(pacchi.map((pacco) => pacco.tipo));
   const celle = new Set(pacchi.map((pacco) => pacco.celle.length));
-  if (tipi.size !== 1 || tipi.has("altro")) return quanti3;
+  if (tipi.size !== 1 || tipi.has("altro")) return quanti4;
   const [tipo] = tipi;
   const [numero64] = celle;
-  if (celle.size !== 1 || !numero64) return `${quanti3}${SPAZIO4}${tipoInParole(tipo)}`;
+  if (celle.size !== 1 || !numero64) return `${quanti4}${SPAZIO4}${tipoInParole(tipo)}`;
   return t(
-    `${quanti3} ${tipoInParole(tipo)} da ${numero64} celle`,
-    `${quanti3} of ${tipoInParole(tipo)}, ${numero64} cells each`
+    `${quanti4} ${tipoInParole(tipo)} da ${numero64} celle`,
+    `${quanti4} of ${tipoInParole(tipo)}, ${numero64} cells each`
   );
 }
 function deltaInParole(delta) {
   return `Δ${SPAZIO4}${cifre(delta, 0)}${SPAZIO4}mV`;
 }
-function quantiMuti(quanti3) {
-  return quanti3 === 1 ? t("1 non risponde", "1 not answering") : `${quanti3} ${t("non rispondono", "not answering")}`;
+function quantiMuti(quanti4) {
+  return quanti4 === 1 ? t("1 non risponde", "1 not answering") : `${quanti4} ${t("non rispondono", "not answering")}`;
 }
 function testaDellAccumulo(vista2) {
   const { come: come2, pacchi } = vista2;
@@ -48052,8 +48062,8 @@ function esitoDelGuasto(errore) {
   return "caduto";
 }
 function fraQuantoSiRiprova(tentativi) {
-  const quanti3 = Math.max(1, Number(tentativi) || 1);
-  return Math.min(12e4, 3e3 * 2 ** Math.min(quanti3 - 1, 6));
+  const quanti4 = Math.max(1, Number(tentativi) || 1);
+  return Math.min(12e4, 3e3 * 2 ** Math.min(quanti4 - 1, 6));
 }
 function creaLaMemoriaDeiLoghi({
   chiedi: chiedi9 = null,
@@ -50135,7 +50145,7 @@ function serverProxmox({ dispositivi = [], entita: entita4 = {}, states = {} } =
     if (tipo === "nodo") {
       const conto = l("updates_total");
       const ci = l("update_avail");
-      const quanti3 = conto?.valore ?? null;
+      const quanti4 = conto?.valore ?? null;
       nodi.push({
         id: clean23(dispositivo2.id),
         nome: nomeDelNodo(dispositivo2),
@@ -50162,8 +50172,8 @@ function serverProxmox({ dispositivi = [], entita: entita4 = {}, states = {} } =
         vmAccese: l("qemu_on")?.valore ?? null,
         ctAccesi: l("lxc_on")?.valore ?? null,
         aggiornamenti: {
-          quanti: quanti3,
-          ci: quanti3 != null ? quanti3 > 0 : ci ? ci.testo === "on" : null,
+          quanti: quanti4,
+          ci: quanti4 != null ? quanti4 > 0 : ci ? ci.testo === "on" : null,
           pacchetti: pacchettiDa(conto)
         },
         tasti: tasti(m, ["start_all", "stop_all", "reboot", "shutdown"]),
@@ -50609,8 +50619,8 @@ function aggiornamentiMarkup(n) {
     return `<div class="dm-px-agg" data-ci="false"><span class="dm-px-agg-ic" aria-hidden="true">✓</span><div><strong>${esc(
       t("Tutto aggiornato", "Up to date")
     )}</strong><small>${esc(t("Nessun pacchetto da aggiornare", "No packages to update"))}</small></div></div>`;
-  const quanti3 = a.quanti ?? a.pacchetti.length;
-  const titolo3 = quanti3 ? quanti3 === 1 ? t("1 aggiornamento da fare", "1 update to install") : t(`${quanti3} aggiornamenti da fare`, `${quanti3} updates to install`) : t("Aggiornamenti da fare", "Updates to install");
+  const quanti4 = a.quanti ?? a.pacchetti.length;
+  const titolo3 = quanti4 ? quanti4 === 1 ? t("1 aggiornamento da fare", "1 update to install") : t(`${quanti4} aggiornamenti da fare`, `${quanti4} updates to install`) : t("Aggiornamenti da fare", "Updates to install");
   const aperto2 = state45.aperti.has(n.id);
   return `<div class="dm-px-agg" data-ci="true">
       <span class="dm-px-agg-ic" aria-hidden="true">↑</span>
@@ -53431,15 +53441,15 @@ rilevatore("non-rispondono", "manutenzione", (c, o, l) => {
   ];
 });
 rilevatore("aggiornamenti", "manutenzione", (c, o, l) => {
-  const quanti3 = elenco5(c.aggiornamenti).length;
-  if (!quanti3) return [];
+  const quanti4 = elenco5(c.aggiornamenti).length;
+  if (!quanti4) return [];
   return [
     {
       urgenza: "idea",
       disegno: "refresh",
-      titolo: quanti3 === 1 ? pick("C'è un aggiornamento da installare", "There is an update to install", l) : pick(
-        `Ci sono ${quanti3} aggiornamenti da installare`,
-        `There are ${quanti3} updates to install`,
+      titolo: quanti4 === 1 ? pick("C'è un aggiornamento da installare", "There is an update to install", l) : pick(
+        `Ci sono ${quanti4} aggiornamenti da installare`,
+        `There are ${quanti4} updates to install`,
         l
       ),
       motivo: pick("Con calma, quando hai un minuto.", "No rush, when you have a minute.", l),
@@ -54915,15 +54925,15 @@ function giornoDetto(adesso2, ms, lingua9) {
   return GIORNI[lingua9 === "en" ? "en" : "it"][new Date(ms).getDay()];
 }
 var maiuscola2 = (testo5) => testo5 ? testo5[0].toUpperCase() + testo5.slice(1) : testo5;
-function elencoNomi(nomi2, lingua9, quanti3 = 4) {
+function elencoNomi(nomi2, lingua9, quanti4 = 4) {
   const voci4 = elenco8(nomi2).map(pulito45).filter(Boolean);
   const e = dire(lingua9, " e ", " and ");
-  if (voci4.length <= quanti3) {
+  if (voci4.length <= quanti4) {
     if (voci4.length <= 1) return voci4.join("");
     return `${voci4.slice(0, -1).join(", ")}${e}${voci4[voci4.length - 1]}`;
   }
-  const altre = voci4.length - (quanti3 - 1);
-  return `${voci4.slice(0, quanti3 - 1).join(", ")}${e}${dire(lingua9, `altre ${altre}`, `${altre} more`)}`;
+  const altre = voci4.length - (quanti4 - 1);
+  return `${voci4.slice(0, quanti4 - 1).join(", ")}${e}${dire(lingua9, `altre ${altre}`, `${altre} more`)}`;
 }
 var inStanza = (stanza2, lingua9) => stanza2 ? dire(lingua9, `in ${stanza2}`, `in ${stanza2}`) : "";
 var CONDIZIONI = {
@@ -54981,7 +54991,7 @@ function servizi(voci4) {
     dati: { entity_id: g.entita.length === 1 ? g.entita[0] : g.entita, ...g.dati }
   }));
 }
-function esempi(sapere = {}, lingua9 = "it", quanti3 = 6) {
+function esempi(sapere = {}, lingua9 = "it", quanti4 = 6) {
   const fuori = [];
   const l = lingua9;
   const luci = luciDellaCasa(sapere);
@@ -55014,7 +55024,7 @@ function esempi(sapere = {}, lingua9 = "it", quanti3 = 6) {
       dire(l, "Che tempo fa?", "What's the weather like?"),
       dire(l, "Ci sono aggiornamenti?", "Are there any updates?")
     );
-  return fuori.slice(0, quanti3);
+  return fuori.slice(0, quanti4);
 }
 function nonHoCapito(sapere = {}, lingua9 = "it", { senzaRisposta = false } = {}) {
   return {
@@ -55578,9 +55588,9 @@ function luciDette(accese, l, inUnaStanza) {
   }
   const stanze4 = [...perStanza.keys()].filter(Boolean);
   const perNome2 = (nomi2) => {
-    const quanti3 = /* @__PURE__ */ new Map();
-    for (const n of nomi2) quanti3.set(n, (quanti3.get(n) || 0) + 1);
-    return [...quanti3].map(([n, q]) => q > 1 ? `${n} (${q})` : n);
+    const quanti4 = /* @__PURE__ */ new Map();
+    for (const n of nomi2) quanti4.set(n, (quanti4.get(n) || 0) + 1);
+    return [...quanti4].map(([n, q]) => q > 1 ? `${n} (${q})` : n);
   };
   if (accese.length <= 4 || stanze4.length === 0)
     return elencoNomi(perNome2(accese.map((e) => pulito45(e.nome) || e.entity)), l, 5);
@@ -57497,12 +57507,12 @@ var URGENZE = () => ({
   idea: t("idea", "idea")
 });
 var scintilla = () => `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5l1.9 5.2 5.2 1.9-5.2 1.9L12 16.7l-1.9-5.2-5.2-1.9 5.2-1.9zM18.5 14l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9zM5.5 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg>`;
-function testaMarkup8(quanti3) {
+function testaMarkup8(quanti4) {
   return `<div class="dm-ass-testa">
     <span class="dm-ass-scintilla" aria-hidden="true">${scintilla()}</span>
     <strong>${esc(t("Assistente di casa", "House assistant"))}</strong>
-    ${quanti3 ? `<button type="button" class="dm-ass-conto" data-ass-fa="apri">${esc(
-    quanti3 === 1 ? t("1 cosa da fare", "1 thing to do") : t(`${quanti3} cose da fare`, `${quanti3} things to do`)
+    ${quanti4 ? `<button type="button" class="dm-ass-conto" data-ass-fa="apri">${esc(
+    quanti4 === 1 ? t("1 cosa da fare", "1 thing to do") : t(`${quanti4} cose da fare`, `${quanti4} things to do`)
   )}</button>` : ""}
   </div>`;
 }
@@ -60593,8 +60603,8 @@ function rigaMarkup6(dati, evento, primo, modo, adesso2) {
     const fine = orario2(evento.a);
     sotto = evento.inCorso ? t("ancora aperta", "still open") : t(`chiusa alle ${fine}`, `closed at ${fine}`);
   }
-  const riferimento = dati.famiglia === "varco" && !evento.inCorso ? evento.a : evento.da;
-  const fa = primo && modo !== "ieri" ? faTesto(adesso2 - riferimento) : "";
+  const riferimento2 = dati.famiglia === "varco" && !evento.inCorso ? evento.a : evento.da;
+  const fa = primo && modo !== "ieri" ? faTesto(adesso2 - riferimento2) : "";
   return `<li class="dm-ur-riga"><span class="dm-ur-ora">${esc(ora8)}</span><i class="dm-ur-punto" aria-hidden="true"></i>
     <div><b>${esc(grande)}</b><span>${esc(sotto)}</span></div><em>${esc(fa)}</em></li>`;
 }
@@ -61974,8 +61984,8 @@ function daQuanto6(istante8) {
   if (!Number.isFinite(istante8)) return "";
   return quantoTempoInParole((Date.now() - istante8) / 6e4);
 }
-function vera(riferimento) {
-  const chiave2 = clean(riferimento);
+function vera(riferimento2) {
+  const chiave2 = clean(riferimento2);
   if (!chiave2) return "";
   try {
     return clean(root.resolveEntity?.(chiave2)) || chiave2;
@@ -63629,11 +63639,11 @@ function settimanaDellAgenda(eventi, scadenze, adesso2) {
   const giorni = Array.from({ length: 7 }, (_, indice) => {
     const istante8 = giornoDaOggi(indice, adesso2);
     const chiave2 = chiaveDelGiorno2(istante8);
-    const quanti3 = Math.min(3, conto.get(chiave2) || 0);
+    const quanti4 = Math.min(3, conto.get(chiave2) || 0);
     return `<div class="dm-f-sv-giorno"${indice === 0 ? ' data-oggi="true"' : ""}>
         <small>${esc(giornoDellaSettimana3(istante8, "short").replace(/\.$/, "").toUpperCase())}</small>
         <span class="dm-f-sv-num">${new Date(istante8).getDate()}</span>
-        <i>${"<b></b>".repeat(quanti3)}</i>
+        <i>${"<b></b>".repeat(quanti4)}</i>
       </div>`;
   });
   return `<div class="dm-f-sv-settimana" aria-hidden="true">${giorni.join("")}</div>`;
@@ -65777,7 +65787,7 @@ function pilotaDelCuoreMarkup(r, seguito) {
       </div>
     </div>`;
 }
-function dalVivoMarkup(r, seguito, indice = 0, quanti3 = 10) {
+function dalVivoMarkup(r, seguito, indice = 0, quanti4 = 10) {
   const v = r.dalVivo;
   if (!v?.ordine?.length) return "";
   const nomi2 = SIGLE_DELLE_SESSIONI();
@@ -65792,8 +65802,8 @@ function dalVivoMarkup(r, seguito, indice = 0, quanti3 = 10) {
         <span class="dm-sport-g">${r.tipo === "f1" ? x.scuderiaId ? scuderia(x.scuderiaId, 16) : "" : esc(x.moto || "")}</span>
         <b>${esc(x.aiBox ? t("Ai box", "In pit") : x.distacco || "")}</b>
       </li>`;
-  const prime = v.ordine.slice(0, quanti3);
-  const suo2 = v.ordine.find((x) => mio(x) && x.posizione > quanti3);
+  const prime = v.ordine.slice(0, quanti4);
+  const suo2 = v.ordine.find((x) => mio(x) && x.posizione > quanti4);
   const titolo3 = `${sessione} · ${gp}`;
   return schedaMarkup7(
     "",
@@ -65801,7 +65811,7 @@ function dalVivoMarkup(r, seguito, indice = 0, quanti3 = 10) {
       t("In diretta", "Live")
     )}</span><span>${esc(giro)}</span></div>
       <div class="dm-sport-gp"><strong>${esc(sessione)}</strong><small>${esc(gp)}</small></div>
-      <ol class="dm-sport-classifica dm-sport-vivo">${prime.map(riga5).join("")}${suo2 ? `<li class="dm-sport-salto" aria-hidden="true">⋯</li>${riga5(suo2)}` : ""}</ol>${v.ordine.length > quanti3 ? `<span class="dm-sport-tutta dm-sport-tocca" ${tasto2({ tipo: "ordine", dove: `${indice}:` }, titolo3)}>${esc(
+      <ol class="dm-sport-classifica dm-sport-vivo">${prime.map(riga5).join("")}${suo2 ? `<li class="dm-sport-salto" aria-hidden="true">⋯</li>${riga5(suo2)}` : ""}</ol>${v.ordine.length > quanti4 ? `<span class="dm-sport-tutta dm-sport-tocca" ${tasto2({ tipo: "ordine", dove: `${indice}:` }, titolo3)}>${esc(
       t("Tutto l'ordine", "Full order")
     )} ›</span>` : ""}`,
     {
@@ -68804,7 +68814,7 @@ function trovaLaStazione(states, scelte5 = {}) {
     }
     return meglio > 0 ? vincente : null;
   };
-  const prendi = (chiave2, ammessa2) => {
+  const prendi2 = (chiave2, ammessa2) => {
     if (pulito49(scelte5?.[chiave2])) return;
     const vincente = migliore(chiave2, ammessa2);
     if (!vincente) return;
@@ -68812,7 +68822,7 @@ function trovaLaStazione(states, scelte5 = {}) {
     prese.add(vincente.entity);
   };
   for (const chiave2 of Object.keys(RICONOSCITORI))
-    if (!RICONOSCITORI[chiave2].debole) prendi(chiave2);
+    if (!RICONOSCITORI[chiave2].debole) prendi2(chiave2);
   const conto = /* @__PURE__ */ new Map();
   for (const entity2 of [...Object.values(trovate), ...Object.values(scelte5 || {})]) {
     const famiglia2 = famigliaDi2(entity2);
@@ -68821,7 +68831,7 @@ function trovaLaStazione(states, scelte5 = {}) {
   const famiglia = [...conto].sort((a, b2) => b2[1] - a[1])[0]?.[0] || "";
   const ammessa = (sensore2) => famiglia && famigliaDi2(sensore2.entity) === famiglia || DELLA_STAZIONE.test(sensore2.nome) && !DI_CASA.test(sensore2.nome);
   for (const chiave2 of Object.keys(RICONOSCITORI))
-    if (RICONOSCITORI[chiave2].debole) prendi(chiave2, ammessa);
+    if (RICONOSCITORI[chiave2].debole) prendi2(chiave2, ammessa);
   return trovate;
 }
 function letturaDi5(stato3) {
@@ -69453,10 +69463,10 @@ function daIndirizzoWindy(indirizzo) {
   return { lat, lon, zoom, strato };
 }
 var FOTOGRAMMI_ANIMATI = 6;
-function fotogrammiRainViewer(elenco18, quanti3 = FOTOGRAMMI_ANIMATI) {
+function fotogrammiRainViewer(elenco18, quanti4 = FOTOGRAMMI_ANIMATI) {
   const host2 = stringa(elenco18?.host);
   if (!host2) return [];
-  const tetto = Number(quanti3);
+  const tetto = Number(quanti4);
   const quanti_ = Number.isFinite(tetto) && tetto > 0 ? Math.floor(tetto) : FOTOGRAMMI_ANIMATI;
   const passati = Array.isArray(elenco18?.radar?.past) ? elenco18.radar.past : [];
   const puliti = passati.filter((voce3) => stringa(voce3?.path));
@@ -71888,8 +71898,8 @@ function ancoraInVolo(scheda9, adesso2 = Date.now()) {
   return da > 0 && adesso2 - da < IN_VOLO_MS;
 }
 var tentativiInFila = /* @__PURE__ */ new Map();
-function attesaDopoIFallimenti(quanti3) {
-  const n = Math.max(1, Number(quanti3) || 1);
+function attesaDopoIFallimenti(quanti4) {
+  const n = Math.max(1, Number(quanti4) || 1);
   return Math.min(RETRY_MS, 3e3 * 2 ** (n - 1));
 }
 function riprovaFra(chiave2, quanto, cosa) {
@@ -73370,7 +73380,7 @@ function messaggioModel(states) {
   const { tutti } = gliEcho(states);
   const persone4 = chiPuoRicevere(schedule22) || [];
   if (!tutti.length && !persone4.length) return null;
-  const quanti3 = [
+  const quanti4 = [
     tutti.length ? `🔊 ${tutti.length} Echo` : "",
     persone4.length ? `📱 ${persone4.length} ${persone4.length === 1 ? t("persona", "person") : t("persone", "people")}` : ""
   ].filter(Boolean).join(" · ");
@@ -73380,7 +73390,7 @@ function messaggioModel(states) {
     icon: "💬",
     label: t("Messaggio", "Message"),
     value: t("Scrivi", "Write"),
-    caption: quanti3,
+    caption: quanti4,
     ring: null
   };
 }
@@ -73405,16 +73415,16 @@ function autoAllaPresa(stato3) {
 var SPINA_NO = /(not[\s_-]*charging|dis[\s_-]*connect|un[\s_-]*plug|no[nt]?[\s_-]*(in[\s_-]*)?carica|no[nt]?[\s_-]*colleg|scolleg|staccat|no[\s_-]*vehicle|not[\s_-]*connect)/;
 var SPINA_SI = /(charging|carica|plug|connect|conness|colleg)/;
 function testimoniDellaRicarica(states, mappa2) {
-  const statoDi7 = (riferimento) => {
-    const propria = clean(mappa2?.[riferimento]);
-    const entity2 = propria || clean(root.resolveEntity?.(riferimento) || "");
-    if (!entity2 || entity2 === riferimento) return null;
+  const statoDi7 = (riferimento2) => {
+    const propria = clean(mappa2?.[riferimento2]);
+    const entity2 = propria || clean(root.resolveEntity?.(riferimento2) || "");
+    if (!entity2 || entity2 === riferimento2) return null;
     return stateOf(states, entity2);
   };
   const collegata = cavoDalloStato(statoDi7("dm.ev_cavo_collegato")?.state);
   let potenza3 = null;
-  for (const riferimento of ["dm.ev_potenza_wallbox", "dm.ev_charge_power"]) {
-    const letta2 = Number(statoDi7(riferimento)?.state);
+  for (const riferimento2 of ["dm.ev_potenza_wallbox", "dm.ev_charge_power"]) {
+    const letta2 = Number(statoDi7(riferimento2)?.state);
     if (Number.isFinite(letta2)) {
       potenza3 = letta2;
       break;
@@ -73429,8 +73439,8 @@ function ricaricaDellaVettura(states, mappa2, stato3) {
 }
 function letturaVettura(states, auto, fuori, indice, visti = /* @__PURE__ */ new Set()) {
   const mappa2 = auto?.ov || auto?.overrides || {};
-  const misura8 = (riferimento) => {
-    const entity2 = clean(mappa2[riferimento]);
+  const misura8 = (riferimento2) => {
+    const entity2 = clean(mappa2[riferimento2]);
     if (!entity2 || !widgetIncludes(entity2, fuori)) return null;
     if (!stateOf(states, entity2)) return null;
     visti.add(entity2);
@@ -73444,8 +73454,8 @@ function letturaVettura(states, auto, fuori, indice, visti = /* @__PURE__ */ new
     carica2 = serbatoio;
   }
   if (!carica2) {
-    for (const riferimento of RIF_BATTERIA_EV) {
-      carica2 = misura8(riferimento);
+    for (const riferimento2 of RIF_BATTERIA_EV) {
+      carica2 = misura8(riferimento2);
       if (carica2) break;
     }
   }
@@ -73457,8 +73467,8 @@ function letturaVettura(states, auto, fuori, indice, visti = /* @__PURE__ */ new
   const stato3 = misura8("dm.ev_stato_ricarica");
   if (!carica2 && !autonomia) return null;
   const percentuale5 = carica2?.value == null ? null : Math.max(0, Math.min(100, carica2.value));
-  const sbircia = (riferimento) => {
-    const entity2 = clean(mappa2[riferimento]);
+  const sbircia = (riferimento2) => {
+    const entity2 = clean(mappa2[riferimento2]);
     return entity2 && widgetIncludes(entity2, fuori) ? numOf(states, entity2) : null;
   };
   return {
@@ -73549,38 +73559,38 @@ var GLIFI_EV = Object.freeze([
   [/temperatura/, "🌡️"],
   [/solare/, "☀️"]
 ]);
-function glifoEv(riferimento) {
-  const dato2 = casellaDellAuto(riferimento);
+function glifoEv(riferimento2) {
+  const dato2 = casellaDellAuto(riferimento2);
   if (dato2) return dato2.glifo;
-  for (const [prova3, glifo2] of GLIFI_EV) if (prova3.test(riferimento)) return glifo2;
+  for (const [prova3, glifo2] of GLIFI_EV) if (prova3.test(riferimento2)) return glifo2;
   return "🚗";
 }
 var RIF_MOTORE = "dm.ev_motore";
 function altreCaselleEv(states, mappa2, fuori, visti) {
   const righe3 = [];
-  for (const riferimento of Object.keys(mappa2 || {}).sort()) {
-    if (!/^dm\.ev_/.test(riferimento)) continue;
-    const entity2 = clean(mappa2[riferimento]);
+  for (const riferimento2 of Object.keys(mappa2 || {}).sort()) {
+    if (!/^dm\.ev_/.test(riferimento2)) continue;
+    const entity2 = clean(mappa2[riferimento2]);
     if (!entity2 || visti.has(entity2) || !widgetIncludes(entity2, fuori)) continue;
-    const riga5 = rigaDaEntita(states, entity2, glifoEv(riferimento));
+    const riga5 = rigaDaEntita(states, entity2, glifoEv(riferimento2));
     if (!riga5) continue;
     visti.add(entity2);
-    const vestita2 = eDellaWallbox(riferimento) ? { ...riga5, diCasa: true } : riga5;
-    const conCasella = { ...vestita2, rif: riferimento };
-    righe3.push(riferimento === RIF_MOTORE ? { ...conCasella, ruolo: "motore" } : conCasella);
+    const vestita2 = eDellaWallbox(riferimento2) ? { ...riga5, diCasa: true } : riga5;
+    const conCasella = { ...vestita2, rif: riferimento2 };
+    righe3.push(riferimento2 === RIF_MOTORE ? { ...conCasella, ruolo: "motore" } : conCasella);
   }
   return righe3;
 }
 function letturaAttiva(states, fuori) {
   const visti = /* @__PURE__ */ new Set();
-  const misura8 = (riferimento) => {
-    const dato2 = refValue(states, riferimento, fuori);
+  const misura8 = (riferimento2) => {
+    const dato2 = refValue(states, riferimento2, fuori);
     if (dato2) visti.add(dato2.entity);
     return dato2;
   };
   let carica2 = null;
-  for (const riferimento of RIF_BATTERIA_EV) {
-    carica2 = misura8(riferimento);
+  for (const riferimento2 of RIF_BATTERIA_EV) {
+    carica2 = misura8(riferimento2);
     if (carica2) break;
   }
   const serbatoio = carica2 ? null : misura8("dm.ev_carburante");
@@ -81480,7 +81490,7 @@ function unitaDelModo(modo) {
     return true;
   });
 }
-function disegnoDellaStanza3(riferimento, nomeUnita) {
+function disegnoDellaStanza3(riferimento2, nomeUnita) {
   let stanze4 = [];
   try {
     stanze4 = root.cdRoomList?.() || [];
@@ -81490,7 +81500,7 @@ function disegnoDellaStanza3(riferimento, nomeUnita) {
   const cerca6 = (chiave2) => chiave2 ? stanze4.find(
     (voce3) => clean(voce3?.id) === chiave2 || clean(voce3?.name).toLowerCase() === chiave2.toLowerCase()
   ) : null;
-  const stanza2 = cerca6(clean(riferimento)) || cerca6(clean(nomeUnita));
+  const stanza2 = cerca6(clean(riferimento2)) || cerca6(clean(nomeUnita));
   const icona3 = clean(stanza2?.icon);
   if (!icona3) return "";
   try {
@@ -86471,9 +86481,9 @@ function numeroDellaBolla(testo5) {
   if (!Number.isFinite(valore3)) return null;
   return valore3 * SCALE_DEL_NUMERO[trovato[2].toLowerCase()];
 }
-function quotaDellAnello(valore3, riferimento) {
-  if (!(valore3 > 0) || !(riferimento > 0)) return 0;
-  return Math.min(1, Math.max(0.04, valore3 / riferimento));
+function quotaDellAnello(valore3, riferimento2) {
+  if (!(valore3 > 0) || !(riferimento2 > 0)) return 0;
+  return Math.min(1, Math.max(0.04, valore3 / riferimento2));
 }
 function numeroScrittoNellaBolla(bolla) {
   return bolla?.querySelector?.(".dm-flow-value") || [...bolla?.children || []].find((figlio) => figlio.tagName === "SPAN") || null;
@@ -88108,11 +88118,11 @@ async function pulisciIlTravasoUnaVolta() {
     state65.pulizia = null;
   }
   root.localStorage?.setItem(PULIZIA_TRAVASO_KEY, "1");
-  const quanti3 = puliti.filter((load, posto) => load !== carichi[posto]).length;
+  const quanti4 = puliti.filter((load, posto) => load !== carichi[posto]).length;
   root.edToast?.(
     t(
-      `🧹 ${quanti3} carichi ripuliti dal sensore dell'altro impianto`,
-      `🧹 ${quanti3} loads cleaned of the other plant's sensor`
+      `🧹 ${quanti4} carichi ripuliti dal sensore dell'altro impianto`,
+      `🧹 ${quanti4} loads cleaned of the other plant's sensor`
     )
   );
   try {
@@ -88766,10 +88776,10 @@ function elencoNascoste(scritto3) {
 function vociNascoste(apparecchio = {}) {
   return new Set(elencoNascoste(apparecchio?.[CAMPO_NASCOSTE]));
 }
-function soloQuelleViste(elenco18 = [], apparecchio = {}, prendi) {
+function soloQuelleViste(elenco18 = [], apparecchio = {}, prendi2) {
   const nascoste = vociNascoste(apparecchio);
   if (!nascoste.size) return Array.isArray(elenco18) ? [...elenco18] : [];
-  const identificativo2 = typeof prendi === "function" ? prendi : (voce3) => typeof voce3 === "string" ? voce3 : voce3?.entity || voce3?.entity_id;
+  const identificativo2 = typeof prendi2 === "function" ? prendi2 : (voce3) => typeof voce3 === "string" ? voce3 : voce3?.entity || voce3?.entity_id;
   return (Array.isArray(elenco18) ? elenco18 : []).filter(
     (voce3) => !nascoste.has(clean29(identificativo2(voce3)))
   );
@@ -91224,13 +91234,13 @@ function statiDi(tipo) {
     }
   };
 }
-function entitaDi2(riferimento) {
+function entitaDi2(riferimento2) {
   try {
-    const risolta2 = clean(root.resolveEntity?.(riferimento));
-    if (risolta2 && risolta2 !== riferimento) return risolta2;
+    const risolta2 = clean(root.resolveEntity?.(riferimento2));
+    if (risolta2 && risolta2 !== riferimento2) return risolta2;
   } catch (_error) {
   }
-  return riferimento;
+  return riferimento2;
 }
 function cambiDiStato(righe3, massimo = 30) {
   const cambi = [];
@@ -94315,14 +94325,14 @@ function vestiIVarchi() {
   installaLoStile5();
   const states = allStates();
   const girati2 = invertiti2();
-  let quanti3 = 0;
+  let quanti4 = 0;
   for (const riga5 of corpo6.querySelectorAll(".ed-row,.ed-slot")) {
-    if (vestiLaRiga(riga5, states, girati2)) quanti3 += 1;
+    if (vestiLaRiga(riga5, states, girati2)) quanti4 += 1;
   }
   for (const dettaglio of corpo6.querySelectorAll("details")) {
     vestiIlGruppo(dettaglio, states, girati2);
   }
-  return quanti3 > 0;
+  return quanti4 > 0;
 }
 function installVarchiInConfigurazioneSection() {
   if (!doc || state78.installed) return false;
@@ -95690,12 +95700,12 @@ function rigaMarkup8(camera, voci4, trovati) {
         aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span>
     </label>`;
   }).join("");
-  const quanti3 = TIPI_RILEVAMENTO.filter((tipo) => clean(voci4?.[tipo])).length;
+  const quanti4 = TIPI_RILEVAMENTO.filter((tipo) => clean(voci4?.[tipo])).length;
   const proposti = TIPI_RILEVAMENTO.filter((tipo) => trovati?.[tipo] && !clean(voci4?.[tipo]));
   return `<article class="ed-row dm-ril-row" data-dm-ril-riga="${esc(camera.entity)}">
     <div class="dm-ril-head">
       <strong class="ed-row-new">${esc(camera.name)}</strong>
-      <small class="ed-row-old mono">${esc(camera.entity)}${quanti3 ? ` · ${quanti3}` : ""}</small>
+      <small class="ed-row-old mono">${esc(camera.entity)}${quanti4 ? ` · ${quanti4}` : ""}</small>
       ${proposti.length ? `<button type="button" class="dm-ril-prendi" data-dm-ril-prendi="${esc(
     camera.entity
   )}">${esc(t("Prendi i suoi", "Take its own"))}</button>` : ""}
@@ -95809,10 +95819,10 @@ function onCambio2(event) {
 function onClick15(event) {
   const blocco3 = doc?.getElementById?.(BLOCK_ID3);
   if (!blocco3 || !blocco3.contains(event.target)) return;
-  const prendi = event.target.closest("[data-dm-ril-prendi]");
-  if (prendi) {
+  const prendi2 = event.target.closest("[data-dm-ril-prendi]");
+  if (prendi2) {
     event.preventDefault();
-    const camera = clean(prendi.dataset.dmRilPrendi);
+    const camera = clean(prendi2.dataset.dmRilPrendi);
     const trovati = sensoriDellaTelecamera(camera, allStates());
     const prossime = { ...scelte2() };
     prossime[camera] = { ...trovati, ...prossime[camera] || {} };
@@ -108283,9 +108293,9 @@ function quantoSiEMosso(partenza, arrivo) {
   return Math.hypot(x1 - x0, y1 - y0);
 }
 function stavaScorrendo(partenza, arrivo, scarto = SCARTO_DEL_TOCCO) {
-  const distanza3 = quantoSiEMosso(partenza, arrivo);
-  if (distanza3 === null) return false;
-  return distanza3 > Math.max(0, Number(scarto) || 0);
+  const distanza4 = quantoSiEMosso(partenza, arrivo);
+  if (distanza4 === null) return false;
+  return distanza4 > Math.max(0, Number(scarto) || 0);
 }
 function haScorsoDavvero(prima, adesso2) {
   if (!prima || !adesso2) return false;
@@ -108315,14 +108325,14 @@ var punto = (evento) => {
 };
 function scorrimentiSopra(nodo3) {
   const dove = { finestraX: root.scrollX ?? 0, finestraY: root.scrollY ?? 0 };
-  let quanti3 = 0;
-  for (let salita = nodo3; salita?.nodeType === 1 && quanti3 < 12; salita = salita.parentElement) {
+  let quanti4 = 0;
+  for (let salita = nodo3; salita?.nodeType === 1 && quanti4 < 12; salita = salita.parentElement) {
     const alto = salita.scrollHeight - salita.clientHeight;
     const largo = salita.scrollWidth - salita.clientWidth;
     if (alto <= 1 && largo <= 1) continue;
-    quanti3 += 1;
-    dove[`v${quanti3}`] = salita.scrollTop;
-    dove[`o${quanti3}`] = salita.scrollLeft;
+    quanti4 += 1;
+    dove[`v${quanti4}`] = salita.scrollTop;
+    dove[`o${quanti4}`] = salita.scrollLeft;
   }
   return dove;
 }
@@ -113377,8 +113387,8 @@ function paginaMixer(pagina3) {
     return griglia2({ ...pagina3, griglia: 4 }, [
       vuoto3(0, t("Scegli i canali nel config", "Choose the channels in the config"))
     ]);
-  const quanti3 = gruppi2.map((g) => `minmax(0,${g.canali.length}fr)`).join(" ");
-  const banchi = gruppi2.length ? `<div class="mu-mix-gruppi" style="grid-template-columns:${quanti3}">${gruppi2.map(
+  const quanti4 = gruppi2.map((g) => `minmax(0,${g.canali.length}fr)`).join(" ");
+  const banchi = gruppi2.length ? `<div class="mu-mix-gruppi" style="grid-template-columns:${quanti4}">${gruppi2.map(
     (g) => `<div class="mu-carta mu-mix-gruppo" style="--acc:${g.colore}"><div class="mu-mix-tit">${esc(g.nome || t("Canali", "Channels"))}</div><div class="mu-mix-canali">${g.canali.map(canaleDelMixer).join("")}</div></div>`
   ).join("")}</div>` : "";
   let totale = "";
@@ -114150,7 +114160,7 @@ async function guardaLeRevisioni() {
   const nuove = risposta?.revisioni;
   if (!nuove || typeof nuove !== "object") return false;
   const viste2 = state123.revisioni ||= {};
-  const cambiata = (profilo3) => Object.hasOwn(nuove, profilo3) && Object.hasOwn(viste2, profilo3) && Number(nuove[profilo3]) !== Number(viste2[profilo3]);
+  const cambiata = (profilo4) => Object.hasOwn(nuove, profilo4) && Object.hasOwn(viste2, profilo4) && Number(nuove[profilo4]) !== Number(viste2[profilo4]);
   const quiCambiata = cambiata(qui);
   const fonteCambiata = fonte !== qui && cambiata(fonte);
   Object.assign(viste2, nuove);
@@ -116747,11 +116757,11 @@ ${MURO}[data-verso="verticale"] .mu-reg-coppie{grid-template-columns:repeat(auto
 }
 var EVENTO_DELLA_CONFIGURAZIONE = "dashboardmodern_config";
 var orecchio = { id: 0, socket: null, gestore: null, controllato: 0 };
-function eCambiataLaFonte(messaggio, profilo3) {
+function eCambiataLaFonte(messaggio, profilo4) {
   if (messaggio?.type !== "event") return false;
   const evento = messaggio.event;
   if (evento?.event_type !== EVENTO_DELLA_CONFIGURAZIONE) return false;
-  return clean(evento?.data?.profile || "primary") === clean(profilo3 || "primary");
+  return clean(evento?.data?.profile || "primary") === clean(profilo4 || "primary");
 }
 function ascoltaLaFonte() {
   const socket = lexicalGlobal("ws");
@@ -117081,10 +117091,10 @@ function postoMarkup(i, lista7, k, c, posti = 6) {
       ${immagineDelPosto(via, c, lista7)}` : ""}`}
     </div></div>`;
 }
-function postiMarkup(i, lista7, posti, quanti3 = 6) {
+function postiMarkup(i, lista7, posti, quanti4 = 6) {
   return `<div class="mu-ed-posti">${Array.from(
-    { length: quanti3 },
-    (_, k) => postoMarkup(i, lista7, k, posti[k], quanti3)
+    { length: quanti4 },
+    (_, k) => postoMarkup(i, lista7, k, posti[k], quanti4)
   ).join("")}</div>`;
 }
 var MODELLI2 = () => [
@@ -117198,8 +117208,8 @@ function paginaMarkup(p, i, tutte) {
   const via = `pagine.${i}`;
   let dentro3 = "";
   if (p.modello === "stanza") {
-    const quanti3 = postiDellaPagina(p);
-    const comandi = p.scelti ? p.comandi : comandiProposti2(f, p.stanza, quanti3);
+    const quanti4 = postiDellaPagina(p);
+    const comandi = p.scelti ? p.comandi : comandiProposti2(f, p.stanza, quanti4);
     dentro3 = `${riga4(
       t("Stanza", "Room"),
       t(
@@ -117225,7 +117235,7 @@ function paginaMarkup(p, i, tutte) {
         t("I comandi seguono la stanza", "Controls follow the room")
       )
     )}
-    ${p.scelti ? postiMarkup(i, "comandi", comandi, quanti3) : `<div class="mu-ed-posti">${Array.from({ length: quanti3 }, (_, k) => {
+    ${p.scelti ? postiMarkup(i, "comandi", comandi, quanti4) : `<div class="mu-ed-posti">${Array.from({ length: quanti4 }, (_, k) => {
       const c = comandi[k];
       return `<div class="mu-ed-posto"><div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span><span class="mu-ed-proposto">${c ? esc(c.azione ? `⚡ ${c.azione}` : nomeDi10(c.entita)) : esc(t("Posto libero", "Empty slot"))}</span></div></div>`;
     }).join("")}</div>`}
@@ -119635,11 +119645,11 @@ var scheda = costruisciSchedaDichiarata({
       "Finché non scegli l'entità questa batteria non si vede: né nella pagina, né nel conto di quante sono da cambiare.",
       "Until you pick the entity this battery is nowhere: not on the page, not in the count of how many need replacing."
     ),
-    importa: (quanti3) => t(
-      `Prendi le ${quanti3} batterie che Home Assistant ha trovato`,
-      `Take the ${quanti3} batteries Home Assistant found`
+    importa: (quanti4) => t(
+      `Prendi le ${quanti4} batterie che Home Assistant ha trovato`,
+      `Take the ${quanti4} batteries Home Assistant found`
     ),
-    presi: (quanti3) => t(`🔋 ${quanti3} batterie aggiunte`, `🔋 ${quanti3} batteries added`),
+    presi: (quanti4) => t(`🔋 ${quanti4} batterie aggiunte`, `🔋 ${quanti4} batteries added`),
     notaImporta: t(
       "Le mette qui come righe, una volta sola: da lì in poi sono tue — le rinomini, gli dai il disegno, e quelle che elimini non tornano più.",
       "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back."
@@ -120027,8 +120037,8 @@ function paroleDelSerramento(model2) {
   }
 }
 var ENTITA_UMIDITA_FUORI = "dm.home_meteo_umidita";
-function misura6(riferimento, states) {
-  const entity2 = clean(riferimento);
+function misura6(riferimento2, states) {
+  const entity2 = clean(riferimento2);
   if (!entity2) return null;
   const risolto = clean(root.resolveEntity?.(entity2) || entity2);
   const stato3 = states?.[risolto] ?? states?.[entity2];
@@ -122580,7 +122590,7 @@ function cronoProssimo(crono2, adesso2) {
   }
   return null;
 }
-function prossimiEventi2(automazioni, adesso2, statoDi7 = null, quanti3 = 3) {
+function prossimiEventi2(automazioni, adesso2, statoDi7 = null, quanti4 = 3) {
   const fuori = [];
   for (const a of automazioni || []) {
     if (!eAttivaAdesso(a, adesso2)) continue;
@@ -122599,7 +122609,7 @@ function prossimiEventi2(automazioni, adesso2, statoDi7 = null, quanti3 = 3) {
     const alle = prossimoIstante(a.quando, adesso2, statoDi7);
     if (alle !== null) fuori.push({ id: a.id, alle });
   }
-  return fuori.sort((x, y) => x.alle - y.alle).slice(0, quanti3);
+  return fuori.sort((x, y) => x.alle - y.alle).slice(0, quanti4);
 }
 function prossimoDelPianificatore(a, adesso2) {
   const minuti = [];
@@ -123522,8 +123532,8 @@ function iniziali2() {
 }
 function giorniDetti3(giorni) {
   const g = Array.isArray(giorni) ? giorni : [];
-  const quanti3 = g.filter(Boolean).length;
-  if (quanti3 === 7) return "";
+  const quanti4 = g.filter(Boolean).length;
+  if (quanti4 === 7) return "";
   const nomi2 = iniziali2();
   if (g.slice(0, 5).every(Boolean) && !g[5] && !g[6]) return `${nomi2[0].corto}–${nomi2[4].corto}`;
   if (!g.slice(0, 5).some(Boolean) && g[5] && g[6]) return `${nomi2[5].corto}–${nomi2[6].corto}`;
@@ -123892,7 +123902,7 @@ function tuttiIGruppi(elenco18, { per = "categoria", apri: apri7 = true } = {}) 
 function tastiDeiGruppiHtml(elenco18, { per = "categoria", cerca: cerca6 = "" } = {}) {
   const chiavi2 = chiaviDeiGruppi(elenco18, per);
   const aperti = new Set(gruppiAperti());
-  const quanti3 = chiavi2.filter((k) => aperti.has(k)).length;
+  const quanti4 = chiavi2.filter((k) => aperti.has(k)).length;
   const nascosti = Boolean(clean(cerca6)) || !chiavi2.length;
   const tasto4 = (fai2, segno5, nome, spento) => `<button type="button" class="aug-tutto" data-aug-tutti="${fai2}"${spento ? " disabled" : ""} title="${esc(
     nome
@@ -123903,8 +123913,8 @@ function tastiDeiGruppiHtml(elenco18, { per = "categoria", cerca: cerca6 = "" } 
     "apri",
     "⊞",
     t("Espandi tutto", "Expand all"),
-    quanti3 === chiavi2.length
-  )}${tasto4("chiudi", "⊟", t("Ritrai tutto", "Collapse all"), quanti3 === 0)}</span>`;
+    quanti4 === chiavi2.length
+  )}${tasto4("chiudi", "⊟", t("Ritrai tutto", "Collapse all"), quanti4 === 0)}</span>`;
 }
 function rifaiITastiDeiGruppi(dove, elenco18, opzioni2) {
   const vecchi = dove?.querySelector?.("[data-aug-tasti]");
@@ -128426,7 +128436,7 @@ function ensureStriscia() {
     return;
   }
   if (!paginaVisibile("page-energy")) return;
-  const { peggiore: verdetto, quanti: quanti3 } = verdettiDellaSoglia();
+  const { peggiore: verdetto, quanti: quanti4 } = verdettiDellaSoglia();
   let striscia = disegnata;
   if (verdetto.livello === LIVELLO_QUIETE) {
     striscia?.remove();
@@ -128440,7 +128450,7 @@ function ensureStriscia() {
   }
   const livello = verdetto.livello === LIVELLO_AMBRA ? "ambra" : "rossa";
   if (striscia.dataset.livello !== livello) striscia.dataset.livello = livello;
-  const quale = quanti3 > 1 && verdetto.nome ? `${verdetto.nome} · ` : `${t("Sovraccarico", "Overload")} · `;
+  const quale = quanti4 > 1 && verdetto.nome ? `${verdetto.nome} · ` : `${t("Sovraccarico", "Overload")} · `;
   const testo5 = `⚠️ ${quale}${nomeDellaSorgente(verdetto.sorgente)} ${formatWatts3(
     verdetto.watt
   )} ${t("oltre", "over")} ${formatWatts3(verdetto.limite)}`;
@@ -128465,7 +128475,7 @@ function ensureAllertaInHome() {
     gia?.remove();
     return;
   }
-  const { peggiore: verdetto, quanti: quanti3 } = verdettiDellaSoglia();
+  const { peggiore: verdetto, quanti: quanti4 } = verdettiDellaSoglia();
   if (verdetto.livello === LIVELLO_QUIETE) {
     gia?.remove();
     return;
@@ -128483,7 +128493,7 @@ function ensureAllertaInHome() {
       }
     });
   }
-  const dove = quanti3 > 1 && verdetto.nome ? `${verdetto.nome} · ${nomeDellaSorgente(verdetto.sorgente)}` : nomeDellaSorgente(verdetto.sorgente);
+  const dove = quanti4 > 1 && verdetto.nome ? `${verdetto.nome} · ${nomeDellaSorgente(verdetto.sorgente)}` : nomeDellaSorgente(verdetto.sorgente);
   const misura8 = `${formatWatts3(verdetto.watt)} / ${formatWatts3(verdetto.limite)}`;
   const firma2 = `${verdetto.sorgente}|${dove}|${misura8}`;
   if (allerta.dataset.firma !== firma2) {
@@ -129167,7 +129177,7 @@ function legaLAutoAlDispositivo({ entities = [], states = {} } = {}) {
   );
   const libere = new Set(elenco18.map((voce3) => clean30(voce3.entity_id)));
   const mappa2 = {};
-  const prendi = (ref, domanda, { ancheImpostazioni = false } = {}) => {
+  const prendi2 = (ref, domanda, { ancheImpostazioni = false } = {}) => {
     if (mappa2[ref]) return false;
     for (const voce3 of elenco18) {
       const id = clean30(voce3.entity_id);
@@ -129182,89 +129192,89 @@ function legaLAutoAlDispositivo({ entities = [], states = {} } = {}) {
   const chiave2 = (voce3) => clean30(voce3?.translation_key);
   for (const [nome2, ref] of CHIAVI_DI_GDAAUTO) {
     const sua = (voce3) => eDiGdaauto(voce3) && chiave2(voce3) === nome2;
-    prendi(ref, (voce3) => sua(voce3) && dominio4(voce3) === "lock", { ancheImpostazioni: true });
-    prendi(ref, sua, { ancheImpostazioni: true });
+    prendi2(ref, (voce3) => sua(voce3) && dominio4(voce3) === "lock", { ancheImpostazioni: true });
+    prendi2(ref, sua, { ancheImpostazioni: true });
   }
   for (const voce3 of elenco18) if (eDiGdaauto(voce3)) libere.delete(clean30(voce3.entity_id));
   const conClasse = (nome2) => (voce3) => classe2(voce3, states) === nome2;
   const conParola = (chiave3, dom) => (voce3) => (!dom || dominio4(voce3) === dom) && PAROLE6[chiave3].test(parole2(voce3, states));
   const percentuale5 = (voce3) => unita2(voce3, states) === "%";
-  const distanza3 = (voce3) => conClasse("distance")(voce3) || UNITA_DI_DISTANZA.test(unita2(voce3, states));
+  const distanza4 = (voce3) => conClasse("distance")(voce3) || UNITA_DI_DISTANZA.test(unita2(voce3, states));
   const gradi12 = (voce3) => conClasse("temperature")(voce3) || /°\s?[cf]$/i.test(unita2(voce3, states));
   const nome = (voce3) => clean30(voce3?.name);
-  prendi("dm.ev_posizione", (voce3) => dominio4(voce3) === "device_tracker");
+  prendi2("dm.ev_posizione", (voce3) => dominio4(voce3) === "device_tracker");
   const diServizio = (voce3) => PAROLE6.batteriaServizio.test(parole2(voce3, states)) || /\b(car battery level|lv batt\w*|low voltage)\b/i.test(nome(voce3));
-  prendi("dm.ev_batteria_servizio", (voce3) => percentuale5(voce3) && diServizio(voce3));
-  prendi(
+  prendi2("dm.ev_batteria_servizio", (voce3) => percentuale5(voce3) && diServizio(voce3));
+  prendi2(
     "dm.ev_batteria_servizio",
     (voce3) => (conClasse("voltage")(voce3) || /^m?v$/i.test(unita2(voce3, states))) && PAROLE6.batteriaServizio.test(parole2(voce3, states))
   );
-  prendi(
+  prendi2(
     "dm.ev_batteria_auto",
     (voce3) => conClasse("battery")(voce3) && dominio4(voce3) === "sensor" && !diServizio(voce3) && !conParola("target")(voce3)
   );
-  prendi(
+  prendi2(
     "dm.ev_batteria_auto",
     (voce3) => percentuale5(voce3) && conParola("batteria")(voce3) && !conParola("target")(voce3)
   );
-  prendi(
+  prendi2(
     "dm.ev_carburante",
     (voce3) => percentuale5(voce3) && PAROLE6.carburante.test(parole2(voce3, states)) && !conParola("adblue")(voce3)
   );
   const unAutonomia = (voce3) => dominio4(voce3) === "sensor" && conParola("autonomia")(voce3) && !conParola("adblue")(voce3);
   const qualificata = (voce3) => conParola("autonomiaNominale")(voce3) || conParola("autonomiaCarburante")(voce3) || conParola("autonomiaTotale")(voce3) || conParola("autonomiaAlLimite")(voce3);
-  prendi(
+  prendi2(
     "dm.ev_autonomia_al_limite_di_carica",
-    (voce3) => unAutonomia(voce3) && distanza3(voce3) && conParola("autonomiaAlLimite")(voce3)
+    (voce3) => unAutonomia(voce3) && distanza4(voce3) && conParola("autonomiaAlLimite")(voce3)
   );
-  prendi(
+  prendi2(
     "dm.ev_autonomia_nominale",
-    (voce3) => unAutonomia(voce3) && distanza3(voce3) && conParola("autonomiaNominale")(voce3)
+    (voce3) => unAutonomia(voce3) && distanza4(voce3) && conParola("autonomiaNominale")(voce3)
   );
-  prendi(
+  prendi2(
     "dm.ev_autonomia_carburante",
-    (voce3) => unAutonomia(voce3) && distanza3(voce3) && conParola("autonomiaCarburante")(voce3)
+    (voce3) => unAutonomia(voce3) && distanza4(voce3) && conParola("autonomiaCarburante")(voce3)
   );
-  prendi(
+  prendi2(
     "dm.ev_autonomia_totale",
-    (voce3) => unAutonomia(voce3) && distanza3(voce3) && conParola("autonomiaTotale")(voce3)
+    (voce3) => unAutonomia(voce3) && distanza4(voce3) && conParola("autonomiaTotale")(voce3)
   );
-  prendi(
+  prendi2(
     "dm.ev_autonomia",
     (voce3) => conClasse("distance")(voce3) && unAutonomia(voce3) && !qualificata(voce3)
   );
-  prendi("dm.ev_autonomia", (voce3) => unAutonomia(voce3) && !qualificata(voce3));
-  prendi("dm.ev_odometro", conParola("odometro", "sensor"));
+  prendi2("dm.ev_autonomia", (voce3) => unAutonomia(voce3) && !qualificata(voce3));
+  prendi2("dm.ev_odometro", conParola("odometro", "sensor"));
   const unConsumo = (voce3) => conParola("consumo")(voce3) || UNITA_DEL_CONSUMO.test(unita2(voce3, states));
-  prendi(
+  prendi2(
     "dm.ev_ultimo_viaggio",
-    (voce3) => conParola("ultimoViaggio", "sensor")(voce3) && !unConsumo(voce3) && (distanza3(voce3) || !unita2(voce3, states))
+    (voce3) => conParola("ultimoViaggio", "sensor")(voce3) && !unConsumo(voce3) && (distanza4(voce3) || !unita2(voce3, states))
   );
-  prendi(
+  prendi2(
     "dm.ev_consumo_medio",
     (voce3) => dominio4(voce3) === "sensor" && UNITA_DEL_CONSUMO.test(unita2(voce3, states)) && !conParola("ultimoViaggio")(voce3)
   );
-  prendi(
+  prendi2(
     "dm.ev_carburante_totale",
     (voce3) => conParola("carburanteTotale", "sensor")(voce3) && !conParola("ultimoViaggio")(voce3) && (UNITA_DI_VOLUME.test(unita2(voce3, states)) || !unita2(voce3, states))
   );
   const inKwh2 = (voce3) => conClasse("energy_storage")(voce3) || UNITA_DI_ENERGIA.test(unita2(voce3, states));
-  prendi(
+  prendi2(
     "dm.ev_capacita_batteria",
     (voce3) => dominio4(voce3) === "sensor" && inKwh2(voce3) && conParola("capacita")(voce3)
   );
-  prendi(
+  prendi2(
     "dm.ev_energia_residua",
     (voce3) => dominio4(voce3) === "sensor" && inKwh2(voce3) && conParola("energiaResidua")(voce3)
   );
   const nuda = (voce3) => !/\bbatter/i.test(clean30(voce3?.name));
   const lettera = (voce3) => eUnaLettera(states?.[clean30(voce3?.entity_id)]?.state);
   const apertura = (voce3) => ["door", "window", "opening", "lock", "garage_door"].includes(classe2(voce3, states));
-  prendi(
+  prendi2(
     "dm.ev_cavo_collegato",
     (voce3) => dominio4(voce3) === "binary_sensor" && conClasse("plug")(voce3)
   );
-  prendi(
+  prendi2(
     "dm.ev_cavo_collegato",
     (voce3) => parlaDelCavo(parole2(voce3, states)) && !apertura(voce3) && (dominio4(voce3) === "binary_sensor" || lettera(voce3))
   );
@@ -129308,69 +129318,69 @@ function legaLAutoAlDispositivo({ entities = [], states = {} } = {}) {
   ]);
   const ALTRO_DALLO_STATO = /\b(sched\w*|programmat\w*|timer|start\w*|inizio|end|fine|stop\w*|time|tempo|remaining|rimanent\w*|left|until|limit\w*|current|corrente|power|potenza|energy|energia|cost\w*|rate|rapid\w*|fast|speed|veloc\w*|lock\w*)\b/i;
   const unoStato = (voce3) => conParola("ricarica")(voce3) && !NON_STATI.has(dominio4(voce3)) && !unita2(voce3, states) && !CLASSI_DA_MISURA.has(classe2(voce3, states)) && !ALTRO_DALLO_STATO.test(parole2(voce3, states));
-  prendi(
+  prendi2(
     "dm.ev_stato_ricarica",
     (voce3) => dominio4(voce3) === "binary_sensor" && conClasse("battery_charging")(voce3)
   );
-  prendi(
+  prendi2(
     "dm.ev_stato_ricarica",
     (voce3) => unoStato(voce3) && nuda(voce3) && dominio4(voce3) !== "sensor"
   );
-  prendi("dm.ev_stato_ricarica", (voce3) => unoStato(voce3) && nuda(voce3));
-  prendi("dm.ev_stato_ricarica", (voce3) => unoStato(voce3) && dominio4(voce3) !== "sensor");
-  prendi("dm.ev_stato_ricarica", (voce3) => unoStato(voce3) && dominio4(voce3) === "sensor");
-  prendi(
+  prendi2("dm.ev_stato_ricarica", (voce3) => unoStato(voce3) && nuda(voce3));
+  prendi2("dm.ev_stato_ricarica", (voce3) => unoStato(voce3) && dominio4(voce3) !== "sensor");
+  prendi2("dm.ev_stato_ricarica", (voce3) => unoStato(voce3) && dominio4(voce3) === "sensor");
+  prendi2(
     "dm.ev_potenza_ricarica",
     (voce3) => conClasse("power")(voce3) && conParola("potenza")(voce3)
   );
-  prendi("dm.ev_potenza_ricarica", conParola("potenza", "sensor"));
-  prendi(
+  prendi2("dm.ev_potenza_ricarica", conParola("potenza", "sensor"));
+  prendi2(
     "dm.ev_tempo_ricarica",
     (voce3) => dominio4(voce3) === "sensor" && (conClasse("duration")(voce3) || UNITA_DI_TEMPO.test(unita2(voce3, states))) && /\b(charg\w*|ricaric\w*|carica|lade\w*|recharge)\b/i.test(parole2(voce3, states)) && conParola("rimanente")(voce3)
   );
   const comandabile = (voce3) => ["select", "input_select", "number", "input_number"].includes(dominio4(voce3));
   const parlaDiCarica = (voce3) => /\b(soc|charg\w*|carica|limit\w*|ladeziel|ladelimit)\b/i.test(parole2(voce3, states));
   const corrente2 = (voce3) => /^m?a$/i.test(unita2(voce3, states)) || conClasse("current")(voce3) || /\b(corrente|current|ampere|amps?|strom|courant)\b/i.test(parole2(voce3, states));
-  prendi(
+  prendi2(
     "dm.ev_target_soc",
     (voce3) => comandabile(voce3) && conParola("target")(voce3) && !corrente2(voce3) && (percentuale5(voce3) || parlaDiCarica(voce3))
   );
-  prendi(
+  prendi2(
     "dm.ev_target_soc",
     (voce3) => percentuale5(voce3) && conParola("target")(voce3) && !corrente2(voce3)
   );
   const delCavo = (voce3) => /\b(cable|cavo|kabel|charg\w*|ricaric\w*|port|presa)\b/i.test(parole2(voce3, states));
-  prendi("dm.ev_portiere", (voce3) => dominio4(voce3) === "lock" && !delCavo(voce3));
-  prendi("dm.ev_portiere", (voce3) => dominio4(voce3) === "lock");
-  prendi("dm.ev_portiere", (voce3) => classe2(voce3, states) === "lock");
-  prendi("dm.ev_portiere", conParola("serratura"));
-  prendi("dm.ev_portiere", (voce3) => classe2(voce3, states) === "door");
-  prendi("dm.ev_portiere", conParola("portiere"));
-  prendi("dm.ev_finestrini", (voce3) => classe2(voce3, states) === "window");
-  prendi(
+  prendi2("dm.ev_portiere", (voce3) => dominio4(voce3) === "lock" && !delCavo(voce3));
+  prendi2("dm.ev_portiere", (voce3) => dominio4(voce3) === "lock");
+  prendi2("dm.ev_portiere", (voce3) => classe2(voce3, states) === "lock");
+  prendi2("dm.ev_portiere", conParola("serratura"));
+  prendi2("dm.ev_portiere", (voce3) => classe2(voce3, states) === "door");
+  prendi2("dm.ev_portiere", conParola("portiere"));
+  prendi2("dm.ev_finestrini", (voce3) => classe2(voce3, states) === "window");
+  prendi2(
     "dm.ev_finestrini",
     (voce3) => conParola("finestrini")(voce3) && !["switch", "button"].includes(dominio4(voce3)) && !/\b(heat\w*|riscald\w*|beheiz\w*|defrost\w*|sbrin\w*|d[ée]givr\w*)\b/i.test(
       parole2(voce3, states)
     )
   );
-  prendi("dm.ev_bagagliaio", conParola("bagagliaio"));
-  prendi("dm.ev_cofano", conParola("cofano"));
-  prendi("dm.ev_allarme", conParola("allarme"));
-  prendi(
+  prendi2("dm.ev_bagagliaio", conParola("bagagliaio"));
+  prendi2("dm.ev_cofano", conParola("cofano"));
+  prendi2("dm.ev_allarme", conParola("allarme"));
+  prendi2(
     "dm.ev_motore",
     (voce3) => conParola("motore")(voce3) && dominio4(voce3) !== "button" && !unita2(voce3, states) && !gradi12(voce3)
   );
-  prendi("dm.ev_temperatura_olio", (voce3) => gradi12(voce3) && conParola("olio")(voce3));
-  prendi("dm.ev_temperatura_esterna", (voce3) => gradi12(voce3) && conParola("esterna")(voce3));
-  prendi("dm.ev_temperatura_interna", (voce3) => gradi12(voce3) && conParola("interna")(voce3));
-  prendi(
+  prendi2("dm.ev_temperatura_olio", (voce3) => gradi12(voce3) && conParola("olio")(voce3));
+  prendi2("dm.ev_temperatura_esterna", (voce3) => gradi12(voce3) && conParola("esterna")(voce3));
+  prendi2("dm.ev_temperatura_interna", (voce3) => gradi12(voce3) && conParola("interna")(voce3));
+  prendi2(
     "dm.ev_temperatura_batteria",
     (voce3) => gradi12(voce3) && /\b(batter\w*|pack|hv|akku|bms|cell\w*)\b/i.test(parole2(voce3, states)) && !diServizio(voce3)
   );
   const unaGomma = (voce3) => PAROLE6.pneumatici.test(parole2(voce3, states)) && !gradi12(voce3) && !["battery", "voltage", "signal_strength"].includes(classe2(voce3, states)) && !/^(%|m?v)$/i.test(unita2(voce3, states)) && !/\b(temperatur\w*|temp|batter\w*)\b/i.test(parole2(voce3, states));
   for (const [ref, ruota] of RUOTE3)
-    prendi(ref, (voce3) => unaGomma(voce3) && ruota.test(parole2(voce3, states)));
-  prendi("dm.ev_pneumatici", unaGomma);
+    prendi2(ref, (voce3) => unaGomma(voce3) && ruota.test(parole2(voce3, states)));
+  prendi2("dm.ev_pneumatici", unaGomma);
   if (!mappa2["dm.ev_autonomia"] && !mappa2["dm.ev_batteria_auto"] && mappa2["dm.ev_autonomia_carburante"]) {
     mappa2["dm.ev_autonomia"] = mappa2["dm.ev_autonomia_carburante"];
     delete mappa2["dm.ev_autonomia_carburante"];
@@ -129689,7 +129699,7 @@ var CERCHI = Object.freeze([
 ]);
 function collegaICerchiAlloStorico() {
   if (!doc) return 0;
-  let quanti3 = 0;
+  let quanti4 = 0;
   for (const cerchio of CERCHI) {
     const nodo3 = doc.getElementById(cerchio.id);
     if (!nodo3) continue;
@@ -129699,9 +129709,9 @@ function collegaICerchiAlloStorico() {
     nodo3.setAttribute("title", `${t("Apri lo storico", "Open the history")} — ${cerchio.nome()}`);
     nodo3.setAttribute("role", "button");
     nodo3.setAttribute("tabindex", "0");
-    quanti3 += 1;
+    quanti4 += 1;
   }
-  return quanti3;
+  return quanti4;
 }
 function apri5(nodo3, event) {
   const cerchio = CERCHI.find((voce3) => voce3.id === nodo3.id);
@@ -131869,7 +131879,7 @@ function applicaBarba(telaTesta, op, donatrice) {
 function tintaIride(telaTesta, occhi, [tr, tg, tb]) {
   const lato = AVATAR_LATO;
   const pennello2 = telaTesta.getContext("2d");
-  const riferimento = (tr + tg + tb) / 3 || 1;
+  const riferimento2 = (tr + tg + tb) / 3 || 1;
   for (const occhio2 of occhi || []) {
     const x0 = Math.max(0, Math.round(occhio2.cx - occhio2.w * 0.55));
     const y0 = Math.max(0, Math.round(occhio2.cy - occhio2.h * 0.75));
@@ -131882,7 +131892,7 @@ function tintaIride(telaTesta, occhi, [tr, tg, tb]) {
       if (dati[i + 3] < 200) continue;
       const m = Math.max(dati[i], dati[i + 1], dati[i + 2]);
       if (m > 200 || m < 45) continue;
-      const k = (dati[i] + dati[i + 1] + dati[i + 2]) / 3 / riferimento;
+      const k = (dati[i] + dati[i + 1] + dati[i + 2]) / 3 / riferimento2;
       dati[i] += (Math.min(255, tr * k) - dati[i]) * 0.55;
       dati[i + 1] += (Math.min(255, tg * k) - dati[i + 1]) * 0.55;
       dati[i + 2] += (Math.min(255, tb * k) - dati[i + 2]) * 0.55;
@@ -137701,20 +137711,20 @@ function integrazioniHtml() {
     ];
     const guasta = x.sue.some((v) => v.stato === "errore");
     const spenta = x.sue.every((v) => v.disattivata);
-    const quanti3 = x.suoi.length;
+    const quanti4 = x.suoi.length;
     const entita5 = x.sue.reduce((n, v) => n + (v.entita || 0), 0);
     gruppi2.push(
       gruppoHtml({
         chiave: chiave2,
         titolo: x.nome,
         sotto: [
-          quanti3 === 1 ? t("1 dispositivo", "1 device") : quanti3 ? t(`${quanti3} dispositivi`, `${quanti3} devices`) : entita5 === 1 ? t("1 entità", "1 entity") : entita5 ? t(`${entita5} entità`, `${entita5} entities`) : t("nessun dispositivo", "no devices"),
+          quanti4 === 1 ? t("1 dispositivo", "1 device") : quanti4 ? t(`${quanti4} dispositivi`, `${quanti4} devices`) : entita5 === 1 ? t("1 entità", "1 entity") : entita5 ? t(`${entita5} entità`, `${entita5} entities`) : t("nessun dispositivo", "no devices"),
           x.sue.length > 1 ? t(`${x.sue.length} voci`, `${x.sue.length} entries`) : "",
           guasta ? t("da guardare", "to check") : ferme.length === 1 ? t("1 non risponde", "1 unreachable") : ferme.length ? t(`${ferme.length} non rispondono`, `${ferme.length} unreachable`) : spenta ? t("disattivata", "disabled") : ""
         ].filter(Boolean).join(" · "),
         colore: guasta ? "#dc2626" : ferme.length ? "#d97706" : VIOLA3,
         classe: guasta ? "dv-guasta" : ferme.length ? "dv-ferma" : "",
-        conta: quanti3 || x.sue.length,
+        conta: quanti4 || x.sue.length,
         righe: righe3,
         chiuso: !clean(state153.cerca) && !state153.aperte.includes(chiave2),
         segno: guasta || ferme.length ? `<span class="dv-logo-box">${logo2(x.nome, x.dominio)}<i class="dv-allerta${guasta ? " r" : ""}" title="${esc(
@@ -148771,11 +148781,11 @@ var scheda2 = costruisciSchedaDichiarata({
       "Finché non scegli l'entità questo varco non si vede: né nella pagina, né nel conto di quanti sono aperti adesso.",
       "Until you pick the entity this opening is nowhere: not on the page, not in the count of how many are open right now."
     ),
-    importa: (quanti3) => t(
-      `Prendi i ${quanti3} contatti che Home Assistant ha trovato`,
-      `Take the ${quanti3} contacts Home Assistant found`
+    importa: (quanti4) => t(
+      `Prendi i ${quanti4} contatti che Home Assistant ha trovato`,
+      `Take the ${quanti4} contacts Home Assistant found`
     ),
-    presi: (quanti3) => t(`🚪 ${quanti3} varchi aggiunti`, `🚪 ${quanti3} openings added`),
+    presi: (quanti4) => t(`🚪 ${quanti4} varchi aggiunti`, `🚪 ${quanti4} openings added`),
     notaImporta: t(
       "Li mette qui come righe, una volta sola: da lì in poi sono tue — le rinomini, gli dai il disegno, e quelle che elimini non tornano più.",
       "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back."
@@ -149156,11 +149166,11 @@ var scheda3 = costruisciSchedaDichiarata({
       "Finché non scegli l'entità questo rilevatore non si vede: né nella pagina, né nel conto delle stanze occupate.",
       "Until you pick the entity this detector is nowhere: not on the page, not in the count of occupied rooms."
     ),
-    importa: (quanti3) => t(
-      `Prendi gli ${quanti3} rilevatori che Home Assistant ha trovato`,
-      `Take the ${quanti3} detectors Home Assistant found`
+    importa: (quanti4) => t(
+      `Prendi gli ${quanti4} rilevatori che Home Assistant ha trovato`,
+      `Take the ${quanti4} detectors Home Assistant found`
     ),
-    presi: (quanti3) => t(`👁️ ${quanti3} rilevatori aggiunti`, `👁️ ${quanti3} detectors added`),
+    presi: (quanti4) => t(`👁️ ${quanti4} rilevatori aggiunti`, `👁️ ${quanti4} detectors added`),
     notaImporta: t(
       "Li mette qui come righe, una volta sola: da lì in poi sono tuoi — li rinomini, gli dai il disegno, e quelli che elimini non tornano più.",
       "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back."
@@ -150201,11 +150211,11 @@ var scheda4 = costruisciSchedaDichiarata({
       "Finché non scegli l'entità questo contatore non si vede: né nella pagina, né nella tessera in Home.",
       "Until you pick the entity this meter is nowhere: not on the page, not on the Home tile."
     ),
-    importa: (quanti3) => t(
-      `Prendi i ${quanti3} contatori che Home Assistant ha trovato`,
-      `Take the ${quanti3} meters Home Assistant found`
+    importa: (quanti4) => t(
+      `Prendi i ${quanti4} contatori che Home Assistant ha trovato`,
+      `Take the ${quanti4} meters Home Assistant found`
     ),
-    presi: (quanti3) => t(`💧 ${quanti3} contatori aggiunti`, `💧 ${quanti3} meters added`),
+    presi: (quanti4) => t(`💧 ${quanti4} contatori aggiunti`, `💧 ${quanti4} meters added`),
     notaImporta: t(
       "Li mette qui come righe, una volta sola: da lì in poi sono tue — le rinomini, gli dai il disegno, e quelle che elimini non tornano più.",
       "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back."
@@ -151060,7 +151070,7 @@ function sceltaDelPreferito(seguito, indice) {
 }
 var legheDi = (sport) => sport === "hockey" ? LEGHE_HOCKEY : CAMPIONATI;
 var legaDiSerie = (sport) => sport === "hockey" ? "nhl" : "ita.1";
-function seguitoMarkup(seguito, indice, quanti3) {
+function seguitoMarkup(seguito, indice, quanti4) {
   const disegno8 = seguito.tipo === "calcio" ? "sport" : seguito.tipo;
   const nome = diSquadra(seguito.tipo) ? seguito.nome || t("Squadra", "Team") : nomeDelTipo(seguito.tipo);
   const sotto = seguito.tipo === "calcio" ? `${CAMPIONATI[seguito.campionato] || ""} · ${t("tutte le competizioni", "all competitions")}` : seguito.tipo === "hockey" ? `${LEGHE_HOCKEY[seguito.campionato] || ""} · ${t("partite e classifica", "games and standings")}` : t("Prossimo gran premio, ultima gara, classifiche", "Next grand prix, last race, standings");
@@ -151068,7 +151078,7 @@ function seguitoMarkup(seguito, indice, quanti3) {
       <div class="dm-sport-ed-frecce">
         <button type="button" class="ed-del" data-dm-sport-su="${indice}" ${indice === 0 ? "disabled" : ""}
           aria-label="${esc(t("Sposta su", "Move up"))}">▲</button>
-        <button type="button" class="ed-del" data-dm-sport-giu="${indice}" ${indice === quanti3 - 1 ? "disabled" : ""}
+        <button type="button" class="ed-del" data-dm-sport-giu="${indice}" ${indice === quanti4 - 1 ? "disabled" : ""}
           aria-label="${esc(t("Sposta giù", "Move down"))}">▼</button>
       </div>
       <span class="dm-sport-ed-ic" aria-hidden="true">${oggettoWidget(disegno8, "", `sport-ed-v-${indice}`)}</span>
@@ -152601,11 +152611,11 @@ var scheda6 = costruisciSchedaDichiarata({
       "Finché non scegli lo stato di carica questo pacco non si vede: né in Energia, né nella tessera in Home.",
       "Until you pick the state of charge this pack is nowhere: not in Energy, not on the Home tile."
     ),
-    importa: (quanti3) => t(
-      `Prendi i ${quanti3} pacchi che Home Assistant ha trovato`,
-      `Take the ${quanti3} packs Home Assistant found`
+    importa: (quanti4) => t(
+      `Prendi i ${quanti4} pacchi che Home Assistant ha trovato`,
+      `Take the ${quanti4} packs Home Assistant found`
     ),
-    presi: (quanti3) => t(`${quanti3} pacchi aggiunti`, `${quanti3} packs added`),
+    presi: (quanti4) => t(`${quanti4} pacchi aggiunti`, `${quanti4} packs added`),
     notaImporta: t(
       "Riconosce i BMS JK, JBD e Daly e le batterie Huawei LUNA2000 dai nomi delle loro entità e li raggruppa per prefisso. Li mette qui come righe, una volta sola: da lì in poi sono tuoi.",
       "It recognises JK, JBD and Daly BMS and Huawei LUNA2000 batteries from their entity names and groups them by prefix. It puts them here as rows, once: from then on they are yours."
@@ -153811,10 +153821,10 @@ var NOMI_DEI_TIPI = () => ({
   antifurto: t("Antifurto", "Alarm"),
   apri: t("Cancello o porta", "Gate or door")
 });
-function frecce2(dove, i, quanti3) {
+function frecce2(dove, i, quanti4) {
   return `<span class="dm-oc-ed-frecce">
     <button type="button" class="ed-del" data-dm-oc-su="${dove}:${i}" ${i === 0 ? "disabled" : ""} aria-label="${esc(t("Su", "Up"))}">↑</button>
-    <button type="button" class="ed-del" data-dm-oc-giu="${dove}:${i}" ${i === quanti3 - 1 ? "disabled" : ""} aria-label="${esc(t("Giù", "Down"))}">↓</button>
+    <button type="button" class="ed-del" data-dm-oc-giu="${dove}:${i}" ${i === quanti4 - 1 ? "disabled" : ""} aria-label="${esc(t("Giù", "Down"))}">↓</button>
     <button type="button" class="ed-del" data-dm-oc-togli="${dove}:${i}" aria-label="${esc(t("Togli", "Remove"))}">✕</button>
   </span>`;
 }
@@ -154976,223 +154986,505 @@ function installCasa3D() {
 }
 senzaCadere(installCasa3D);
 
-// src/sections/casa-3d-editor-section.js
-var KEY185 = "__DASHBOARDMODERN_CASA3D_EDITOR__";
-var state181 = root[KEY185] ||= { installed: false, premium: null, chiedendo: false };
-var CASA3D_TAB = "casa3d";
-function schedaAttiva20() {
-  return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
-}
-function casa() {
-  return casa3dPulita(readJson(CHIAVE_CASA3D, null));
-}
-function salva34(nuova) {
-  writeJsonIfChanged(CHIAVE_CASA3D, casa3dPulita(nuova));
-  root.__DM_CASA3D_RIDISEGNA__?.();
-}
-function chiediLaLicenza4() {
-  if (state181.chiedendo) return;
-  state181.chiedendo = true;
-  premiumDellaCasa().then((premium2) => {
-    state181.premium = premium2 === true;
-    ridisegna34();
-  }).catch(() => {
-  }).finally(() => {
-    state181.chiedendo = false;
-  });
-}
-function dispositivoMarkup(c, p, i, d, states) {
-  const D = DISPOSITIVI_3D[d.k];
-  const stanza2 = p.stanze.find((s) => s.id === d.stanza);
-  const usate2 = [];
-  for (const q of c.piani) for (const e of q.dispositivi) if (e !== d && e.entity) usate2.push(e.entity);
-  const candidate = entitaCandidate(d.k, { stanza: stanza2?.nome || "", area: stanza2?.area || "", states, usate: usate2 }).slice(0, 40);
-  const ha = d.entity && !candidate.some((x) => x.entity === d.entity);
-  const voci4 = [
-    `<option value="">${esc(t("— nessuna per ora —", "— none yet —"))}</option>`,
-    ...ha ? [`<option value="${esc(d.entity)}" selected>${esc(d.entity)}</option>`] : [],
-    ...candidate.map((x) => `<option value="${esc(x.entity)}"${x.entity === d.entity ? " selected" : ""}>${esc(x.nome)} · ${esc(x.entity)}</option>`)
-  ].join("");
-  return `<div class="dm-c3-ed-disp${d.entity ? "" : " manca"}">
-    <span class="dm-c3-ed-ic">${D.icona}</span>
-    <div class="dm-c3-ed-dc"><strong>${esc(d.nome || t(...D.nome))}</strong><small>${esc(p.nome)} · ${esc(stanza2?.nome || t("stanza ?", "room ?"))}${d.da === "foto" ? ` · ${esc(t("dalla foto", "from photo"))}` : ""}</small></div>
-    <select class="ed-input" data-dm-c3-entita="${esc(p.k)}:${i}">${voci4}</select>
-    <input class="ed-input mono" data-dm-c3-mano="${esc(p.k)}:${i}" placeholder="${esc(t("o scrivila a mano", "or type it"))}" value="${ha ? esc(d.entity) : ""}" spellcheck="false" autocomplete="off">
-  </div>`;
-}
-function corpoMarkup20() {
-  const c = casa(), states = allStates() || {}, conti2 = contaCollegati(c);
-  if (state181.premium === false)
-    return `<div class="dm-c3-ed dm-c3-ed-chiuso"><span>🔒</span><b>${esc(t("Casa 3D", "3D Home"))}</b><p>${esc(
-      t("La casa in tre dimensioni è una funzione Premium. La configurazione resta salvata.", "The 3D home is a Premium feature. Its configuration stays saved.")
-    )}</p></div>`;
-  const piani = c.piani.length ? c.piani.map(
-    (p) => `<span class="dm-c3-ed-piano"><span>${esc(p.nome)} · ${p.stanze.length} ${esc(t("stanze", "rooms"))} · ${p.dispositivi.length} ${esc(t("dispositivi", "devices"))}</span><button type="button" class="dm-c3-ed-modifica" data-dm-c3-modifica="${esc(p.k)}" title="${esc(t("Modifica la planimetria di questo piano", "Edit this floor's plan"))}">✏️ ${esc(t("Modifica", "Edit"))}</button></span>`
-  ).join("") : `<p class="dm-c3-ed-nota">${esc(t("Ancora nessuna casa: creala dalla planimetria e dalle foto delle stanze.", "No home yet: create it from the floor plan and room photos."))}</p>`;
-  const elenco18 = c.piani.flatMap((p) => p.dispositivi.map((d, i) => dispositivoMarkup(c, p, i, d, states))).join("");
-  return `<div class="dm-c3-ed">
-    <article class="ed-row dm-c3-ed-gruppo">
-      <div class="dm-c3-ed-testa"><span>🏠</span><strong>${esc(t("Casa 3D", "3D Home"))}</strong><span class="dm-c3-ed-premium">PREMIUM</span></div>
-      <div class="dm-c3-ed-piani">${piani}</div>
-      <div class="dm-c3-ed-tasti"><button type="button" class="ed-btn-add" data-dm-c3-crea>🏗️ ${esc(
-    c.piani.length ? t("Aggiungi o rifai un piano", "Add or redo a floor") : t("Crea la tua casa", "Create your home")
-  )}</button></div>
-      <p class="dm-c3-ed-nota">${esc(
-    t("Le foto restano sul dispositivo da cui le carichi: si salvano solo muri, stanze, arredi, colori e dispositivi.", "Photos stay on the device you upload them from: only walls, rooms, furniture, colours and devices are saved.")
-  )}</p>
-    </article>
-    ${elenco18 ? `<article class="ed-row dm-c3-ed-gruppo"><div class="dm-c3-ed-testa"><span>🔗</span><strong>${esc(t("Dispositivi e entità", "Devices and entities"))}</strong><span class="dm-c3-ed-conto${conti2.mancano ? " manca" : ""}">${conti2.collegati}/${conti2.tutti}</span></div>
-      <p class="dm-c3-ed-nota">${esc(t("Ogni luce, telecamera, finestra o sensore della casa risponde a un'entità: sceglila dall'elenco (già filtrato per tipo e stanza) o scrivila a mano.", "Each light, camera, window or sensor answers to an entity: pick it from the list (already filtered by type and room) or type it."))}</p>
-      <div class="dm-c3-ed-elenco">${elenco18}</div></article>` : ""}
-  </div>`;
-}
-function serve2() {
-  try {
-    return puoConfigurare() && casa().attiva === true && currentProfile() !== "primary";
-  } catch (_errore) {
-    return false;
+// src/core/archi-delle-porte.js
+var RAGGIO_MIN = 0.55;
+var RAGGIO_MAX = 1.35;
+var PEZZO_MIN = 0.36;
+var PEZZO_MAX = 1.45;
+var CORSA_RIGA = 0.6;
+var VICINO_AL_MURO = 0.12;
+var SPESSORE_MAX = 0.7;
+function integrale(g, W2, H7) {
+  const I = new Int32Array((W2 + 1) * (H7 + 1));
+  for (let y = 0; y < H7; y++) {
+    let riga5 = 0;
+    for (let x = 0; x < W2; x++) {
+      riga5 += g[y * W2 + x];
+      I[(y + 1) * (W2 + 1) + x + 1] = I[y * (W2 + 1) + x + 1] + riga5;
+    }
   }
+  return I;
 }
-function ensureCasa3DEditor() {
-  const body = doc?.getElementById("ed-body");
-  if (!body || schedaAttiva20() !== CASA3D_TAB) return false;
-  if (state181.premium === null) chiediLaLicenza4();
-  const firma2 = `${state181.premium}:${JSON.stringify(casa())}:${Object.keys(allStates() || {}).length}`;
-  if (body.dataset.dmCasa3dEditor === firma2 && body.querySelector(".dm-c3-ed")) return true;
-  if (body.querySelector(".dm-c3-ed") && body.contains(doc.activeElement) && doc.activeElement?.dataset?.dmC3Mano !== void 0) return true;
-  body.dataset.dmCasa3dEditor = firma2;
-  body.innerHTML = corpoMarkup20();
-  body.dataset.renderer = "casa3d";
-  return true;
+function quanti2(I, W2, H7, x, y, r) {
+  const x0 = Math.max(0, x - r), x1 = Math.min(W2, x + r + 1), y0 = Math.max(0, y - r), y1 = Math.min(H7, y + r + 1);
+  return {
+    n: I[y1 * (W2 + 1) + x1] - I[y0 * (W2 + 1) + x1] - I[y1 * (W2 + 1) + x0] + I[y0 * (W2 + 1) + x0],
+    area: (x1 - x0) * (y1 - y0)
+  };
 }
-function ridisegna34() {
-  const body = doc?.getElementById("ed-body");
-  if (body) delete body.dataset.dmCasa3dEditor;
-  ensureCasa3DEditor();
-}
-var SOLO_CASA3D = "dm-solo-casa3d";
-function ensureCasa3DEditorTab() {
-  const solo = serve2();
-  doc?.documentElement?.classList?.toggle?.(SOLO_CASA3D, solo);
-  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette4) return false;
-  const presente = linguette4.querySelector(`.ed-tab[data-tab="${CASA3D_TAB}"]`);
-  if (!solo) {
-    presente?.remove();
-    return false;
+function pezziDi(g, W2, H7, tolleranza2 = 0) {
+  const id = new Int32Array(W2 * H7).fill(-1), pezzi = [], r = tolleranza2 + 1;
+  for (let i = 0; i < W2 * H7; i++) {
+    if (!g[i] || id[i] >= 0) continue;
+    const k = pezzi.length, celle = [i];
+    id[i] = k;
+    let x0 = W2, x1 = 0, y0 = H7, y1 = 0;
+    for (let t2 = 0; t2 < celle.length; t2++) {
+      const c = celle[t2], x = c % W2, y = c / W2 | 0;
+      if (x < x0) x0 = x;
+      if (x > x1) x1 = x;
+      if (y < y0) y0 = y;
+      if (y > y1) y1 = y;
+      for (let dy = -r; dy <= r; dy++) {
+        const yy = y + dy;
+        if (yy < 0 || yy >= H7) continue;
+        for (let dx = -r; dx <= r; dx++) {
+          const xx = x + dx;
+          if (xx < 0 || xx >= W2) continue;
+          const j = yy * W2 + xx;
+          if (g[j] && id[j] < 0) {
+            id[j] = k;
+            celle.push(j);
+          }
+        }
+      }
+    }
+    pezzi.push({ celle, x0, x1, y0, y1 });
   }
-  if (!presente) {
-    const linguetta4 = doc.createElement("button");
-    linguetta4.className = "ed-tab";
-    linguetta4.dataset.tab = CASA3D_TAB;
-    linguetta4.textContent = `🏠 ${t("Casa 3D", "3D Home")}`;
-    linguetta4.addEventListener("click", () => root.editorSwitch?.(CASA3D_TAB));
-    linguette4.appendChild(linguetta4);
+  return { id, pezzi };
+}
+function senzaCorse(riga5, W2, H7, lunga) {
+  const out = new Uint8Array(W2 * H7);
+  for (let i = 0; i < W2 * H7; i++) out[i] = riga5[i] ? 1 : 0;
+  for (let y = 0; y < H7; y++) {
+    let x = 0;
+    while (x < W2) {
+      if (!riga5[y * W2 + x]) {
+        x++;
+        continue;
+      }
+      let e = x;
+      while (e < W2 && riga5[y * W2 + e]) e++;
+      if (e - x >= lunga) for (let q = x; q < e; q++) out[y * W2 + q] = 0;
+      x = e;
+    }
   }
-  if (schedaAttiva20() !== CASA3D_TAB) root.editorSwitch?.(CASA3D_TAB);
-  return !presente;
-}
-function nelCorpo4(event) {
-  return Boolean(event.target?.closest?.("#ed-body .dm-c3-ed"));
-}
-function dispositivo(c, chi) {
-  const [k, i] = clean(chi).split(":");
-  const p = c.piani.find((x) => x.k === k);
-  return p?.dispositivi?.[Number(i)] || null;
-}
-function onClick58(event) {
-  if (!nelCorpo4(event)) return;
-  const modifica = event.target.closest("[data-dm-c3-modifica]");
-  if (modifica) {
-    event.preventDefault();
-    root.__DM_CASA3D_CREA__?.({ piano: modifica.dataset.dmC3Modifica, modifica: true });
-    return;
+  for (let x = 0; x < W2; x++) {
+    let y = 0;
+    while (y < H7) {
+      if (!riga5[y * W2 + x]) {
+        y++;
+        continue;
+      }
+      let e = y;
+      while (e < H7 && riga5[e * W2 + x]) e++;
+      if (e - y >= lunga) for (let q = y; q < e; q++) out[q * W2 + x] = 0;
+      y = e;
+    }
   }
-  if (event.target.closest("[data-dm-c3-crea]")) {
-    event.preventDefault();
-    root.__DM_CASA3D_CREA__?.();
-    return;
-  }
+  return out;
 }
-function onChange22(event) {
-  if (!nelCorpo4(event)) return;
-  const c = casa();
-  const t0 = event.target;
-  const chi = t0.dataset.dmC3Entita ?? t0.dataset.dmC3Mano;
-  if (chi === void 0) return;
-  const d = dispositivo(c, chi);
-  if (!d) return;
-  const valore3 = clean(t0.value);
-  if (t0.dataset.dmC3Mano !== void 0 && valore3 && !entita(valore3)) {
-    t0.setCustomValidity?.(t("Non è un'entità (dominio.nome)", "Not an entity (domain.name)"));
-    t0.reportValidity?.();
-    return;
+function cerchioDi(celle, W2) {
+  const n = celle.length;
+  if (n < 5) return null;
+  let mx = 0, my = 0;
+  for (const c of celle) {
+    mx += c % W2;
+    my += c / W2 | 0;
   }
-  t0.setCustomValidity?.("");
-  d.entity = entita(valore3);
-  salva34(c);
-  ridisegna34();
+  mx /= n;
+  my /= n;
+  let suu = 0, svv = 0, suv = 0, suuu = 0, svvv = 0, suvv = 0, svuu = 0;
+  for (const c of celle) {
+    const u = c % W2 - mx, v = (c / W2 | 0) - my;
+    suu += u * u;
+    svv += v * v;
+    suv += u * v;
+    suuu += u * u * u;
+    svvv += v * v * v;
+    suvv += u * v * v;
+    svuu += v * u * u;
+  }
+  const det = suu * svv - suv * suv;
+  if (Math.abs(det) < 1e-6) return null;
+  const b1 = (suuu + suvv) / 2, b2 = (svvv + svuu) / 2;
+  const uc = (b1 * svv - b2 * suv) / det, vc = (b2 * suu - b1 * suv) / det;
+  const raggio = Math.sqrt(uc * uc + vc * vc + (suu + svv) / n);
+  return { cx: uc + mx, cy: vc + my, raggio };
 }
-function installaLoStile10() {
-  installStyle(
-    "dm-casa3d-editor-style",
-    `
-      #ed-body .dm-c3-ed{display:grid;gap:14px}
-      #ed-body .dm-c3-ed-gruppo{display:grid;gap:10px}
-      #ed-body .dm-c3-ed-testa{display:flex;align-items:center;gap:10px;font-size:15px}
-      #ed-body .dm-c3-ed-testa>span:first-child{font-size:22px}
-      #ed-body .dm-c3-ed-premium{margin-left:6px;font-size:9.5px;font-weight:900;letter-spacing:.08em;padding:2px 7px;border-radius:6px;color:#b45309;border:1px solid #f59e0b88;background:#f59e0b18}
-      #ed-body .dm-c3-ed-conto{margin-left:auto;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:900;color:#047857;background:color-mix(in srgb,#10b981 14%,transparent)}
-      #ed-body .dm-c3-ed-conto.manca{color:#b45309;background:color-mix(in srgb,#f59e0b 16%,transparent)}
-      #ed-body .dm-c3-ed-piani{display:flex;flex-wrap:wrap;gap:6px}
-      #ed-body .dm-c3-ed-piano{display:inline-flex;align-items:center;gap:8px;padding:4px 4px 4px 10px;border-radius:999px;border:1px solid var(--card-border,#e2e8f0);font-size:12px;font-weight:700}
-      #ed-body .dm-c3-ed-modifica{border:0;border-radius:999px;padding:5px 10px;font:inherit;font-size:11.5px;font-weight:800;cursor:pointer;background:var(--accent,#0ea5e9);color:#fff}
-      #ed-body .dm-c3-ed-tasti{display:flex;flex-wrap:wrap;gap:8px}
-      #ed-body .dm-c3-ed-tasti .ed-btn-add{flex:1 1 180px}
-      #ed-body .dm-c3-ed-nota{margin:2px;font-size:11.5px;font-weight:700;line-height:1.45;color:var(--text-dim,#64748b)}
-      #ed-body .dm-c3-ed-elenco{display:grid;gap:8px}
-      #ed-body .dm-c3-ed-disp{display:grid;grid-template-columns:auto minmax(120px,1fr) minmax(180px,1.4fr) minmax(140px,1fr);align-items:center;gap:10px;padding:10px;border-radius:14px;border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff)}
-      #ed-body .dm-c3-ed-disp.manca{border-color:#f59e0b88}
-      #ed-body .dm-c3-ed-ic{font-size:22px}
-      #ed-body .dm-c3-ed-dc{display:grid;min-width:0}
-      #ed-body .dm-c3-ed-dc strong{font-size:13px}
-      #ed-body .dm-c3-ed-dc small{font-size:11px;color:var(--text-dim,#64748b)}
-      #ed-body .dm-c3-ed-chiuso{display:grid;justify-items:center;gap:10px;padding:40px 20px;text-align:center}
-      #ed-body .dm-c3-ed-chiuso>span{font-size:44px}
-      html.dm-solo-casa3d #editor-modal .ed-tabs,html.dm-solo-casa3d #editor-modal #dm-alberatura-famiglie,html.dm-solo-casa3d #editor-modal .dm-cerca-config,html.dm-solo-casa3d #editor-modal .dm-alberatura-titolo-famiglia{display:none!important}
-      html.dm-solo-casa3d #editor-modal .ed-body,html.dm-solo-casa3d #editor-modal #ed-body{margin-left:0!important;max-width:none!important}
-      @media(max-width:760px){#ed-body .dm-c3-ed-disp{grid-template-columns:auto minmax(0,1fr)}#ed-body .dm-c3-ed-disp select,#ed-body .dm-c3-ed-disp input{grid-column:1/-1}}
-    `
+function sulCerchio(celle, W2, cerchio, tolleranza2) {
+  const dentro3 = [];
+  for (const c of celle) {
+    const dx = c % W2 - cerchio.cx, dy = (c / W2 | 0) - cerchio.cy;
+    if (Math.abs(Math.sqrt(dx * dx + dy * dy) - cerchio.raggio) <= tolleranza2) dentro3.push(c);
+  }
+  return dentro3;
+}
+function arcoDi(celle, W2, rMin, rMax) {
+  let cerchio = cerchioDi(celle, W2);
+  if (!cerchio) return null;
+  const vicine = sulCerchio(celle, W2, cerchio, 3);
+  if (vicine.length < celle.length * 0.5) return null;
+  cerchio = cerchioDi(vicine, W2) || cerchio;
+  if (cerchio.raggio < rMin || cerchio.raggio > rMax) return null;
+  const sull = sulCerchio(celle, W2, cerchio, 1.6);
+  if (sull.length < celle.length * 0.72) return null;
+  if (sull.length < Math.PI * cerchio.raggio / 2 / 1.5) return null;
+  const quadranti = [0, 0, 0, 0], angoli = [];
+  for (const c of sull) {
+    const dx = c % W2 - cerchio.cx, dy = (c / W2 | 0) - cerchio.cy;
+    quadranti[(dx >= 0 ? 0 : 1) + (dy >= 0 ? 0 : 2)]++;
+    angoli.push(Math.atan2(dy, dx));
+  }
+  let q = 0;
+  for (let k = 1; k < 4; k++) if (quadranti[k] > quadranti[q]) q = k;
+  if (quadranti[q] < sull.length * 0.85) return null;
+  const sx = q & 1 ? -1 : 1, sy = q & 2 ? -1 : 1;
+  const fasce = new Uint8Array(6);
+  let aMin = 10, aMax = -10;
+  for (const a of angoli) {
+    let g = Math.abs(a) * 180 / Math.PI;
+    if (g > 90) g = 180 - g;
+    if (g < aMin) aMin = g;
+    if (g > aMax) aMax = g;
+    fasce[Math.min(5, g / 15 | 0)] = 1;
+  }
+  let piene = 0;
+  for (const f of fasce) piene += f;
+  if (aMax - aMin < 50 || piene < 4) return null;
+  return { cerchio, sx, sy, celle: sull, angolo: [aMin, aMax] };
+}
+function archiDellePorte(riga5, muro, W2, H7, passo) {
+  const celle = new Uint8Array(W2 * H7), archi = [];
+  if (!W2 || !H7 || !riga5 || riga5.length < W2 * H7) return { archi, celle };
+  const rMin = RAGGIO_MIN / passo, rMax = RAGGIO_MAX / passo, pezzoMin = Math.round(PEZZO_MIN / passo), pezzoMax = Math.round(PEZZO_MAX / passo), corsaRiga = Math.round(CORSA_RIGA / passo), vicino = Math.max(2, Math.round(VICINO_AL_MURO / passo)), spessoreMax = Math.round(SPESSORE_MAX / passo);
+  const muroC = muro && muro.length >= W2 * H7 ? muro : new Uint8Array(W2 * H7);
+  const M = integrale(muroC, W2, H7);
+  const muroVicino = (x, y, r) => {
+    x = Math.round(x);
+    y = Math.round(y);
+    if (x < 0 || y < 0 || x >= W2 || y >= H7) return false;
+    return quanti2(M, W2, H7, x, y, r).n > 0;
+  };
+  const muroIn = (x, y) => x >= 0 && y >= 0 && x < W2 && y < H7 && muroC[y * W2 + x] === 1;
+  const sottile = senzaCorse(riga5, W2, H7, corsaRiga);
+  const { pezzi } = pezziDi(sottile, W2, H7, 1);
+  for (const p of pezzi) {
+    const lw = p.x1 - p.x0 + 1, lh = p.y1 - p.y0 + 1, lato = Math.max(lw, lh);
+    if (lato < pezzoMin || lato > pezzoMax * 2) continue;
+    let gruppi2 = [];
+    const rapporto2 = lw / lh;
+    if (rapporto2 >= 1.5 || rapporto2 <= 1 / 1.5) {
+      const oriz = lw > lh, meta = oriz ? (p.x0 + p.x1) / 2 : (p.y0 + p.y1) / 2;
+      const a = [], b2 = [];
+      for (const c of p.celle) ((oriz ? c % W2 : c / W2 | 0) < meta ? a : b2).push(c);
+      gruppi2.push({ celle: a, oriz, meta }, { celle: b2, oriz, meta });
+    }
+    if (lato <= pezzoMax) {
+      const intero4 = arcoDi(p.celle, W2, rMin, rMax);
+      if (intero4) gruppi2 = [{ celle: p.celle, meta: null }];
+    }
+    for (const g of gruppi2) {
+      const arco4 = arcoDi(g.celle, W2, rMin, rMax);
+      if (!arco4) continue;
+      const { cerchio, sx, sy } = arco4;
+      const r = Math.round(cerchio.raggio), cx = Math.round(cerchio.cx), cy = Math.round(cerchio.cy);
+      if (!muroVicino(cx, cy, vicino)) continue;
+      const capoSulMuro = (x, y, lungoX) => muroVicino(x, y, vicino) || g.meta !== null && g.oriz === lungoX && Math.abs((lungoX ? x : y) - g.meta) <= vicino;
+      let meglio = null;
+      for (const lungoX of [true, false]) {
+        const ux2 = lungoX ? sx : 0, uy2 = lungoX ? 0 : sy, vx2 = lungoX ? 0 : sx, vy2 = lungoX ? sy : 0;
+        if (!capoSulMuro(cx + ux2 * r, cy + uy2 * r, lungoX)) continue;
+        let liberi = 0, totale = 0;
+        for (let t2 = vicino + 1; t2 <= r - vicino - 1; t2++) {
+          totale++;
+          let libero = true;
+          for (let k = 1; k <= vicino + 1 && libero; k++)
+            if (muroIn(cx + ux2 * t2 - vx2 * k, cy + uy2 * t2 - vy2 * k)) libero = false;
+          if (libero) liberi++;
+        }
+        let anta = 0;
+        for (let t2 = 3; t2 < r; t2++)
+          for (let k = -1; k <= 1; k++) {
+            const x = cx + vx2 * t2 + ux2 * k, y = cy + vy2 * t2 + uy2 * k;
+            if (x >= 0 && y >= 0 && x < W2 && y < H7 && riga5[y * W2 + x] && !muroC[y * W2 + x]) {
+              anta++;
+              break;
+            }
+          }
+        const varco = totale ? liberi / totale : 0, conAnta = anta >= r * 0.35;
+        if (varco < 0.6 && !conAnta) continue;
+        const punti = (conAnta ? 2 : 0) + varco;
+        if (!meglio || punti > meglio.punti) meglio = { ux: ux2, uy: uy2, vx: vx2, vy: vy2, punti };
+      }
+      if (!meglio) continue;
+      const { ux, uy, vx, vy } = meglio;
+      const sezioni2 = [];
+      for (let s = 1; s <= vicino + 2; s++) {
+        for (const d of [-s, r + s]) {
+          const px = cx + ux * d, py = cy + uy * d;
+          let v0 = 0, v1 = 0, trovata2 = false;
+          for (let v = -vicino; v <= vicino && !trovata2; v++) {
+            if (!muroIn(px + vx * v, py + vy * v)) continue;
+            trovata2 = true;
+            v0 = v;
+            while (v0 > -spessoreMax && muroIn(px + vx * (v0 - 1), py + vy * (v0 - 1))) v0--;
+            v1 = v;
+            while (v1 < vicino && muroIn(px + vx * (v1 + 1), py + vy * (v1 + 1))) v1++;
+          }
+          if (trovata2) sezioni2.push([v0, v1]);
+        }
+      }
+      const mediana2 = (k) => {
+        const v = sezioni2.map((s) => s[k]).sort((a, b2) => a - b2);
+        return v.length ? v[v.length >> 1] : 0;
+      };
+      const dietro = Math.min(0, mediana2(0)), davanti = Math.max(0, mediana2(1));
+      const dentro3 = (x, y) => [Math.max(0, Math.min(W2 - 1, x)), Math.max(0, Math.min(H7 - 1, y))];
+      const [ax0, ay0] = dentro3(cx + vx * dietro, cy + vy * dietro), [ax1, ay1] = dentro3(cx + ux * r + vx * davanti, cy + uy * r + vy * davanti);
+      const [bx0, by0] = dentro3(cx, cy), [bx1, by1] = dentro3(cx + sx * r, cy + sy * r);
+      archi.push({
+        x0: Math.min(bx0, bx1),
+        y0: Math.min(by0, by1),
+        x1: Math.max(bx0, bx1),
+        y1: Math.max(by0, by1),
+        raggio: r,
+        cerniera: [bx0, by0],
+        apertura: {
+          x0: Math.min(ax0, ax1),
+          y0: Math.min(ay0, ay1),
+          x1: Math.max(ax0, ax1),
+          y1: Math.max(ay0, ay1)
+        }
+      });
+      for (const c of arco4.celle) celle[c] = 1;
+      for (let t2 = 1; t2 <= r; t2++)
+        for (let k = -1; k <= 1; k++) {
+          const x = cx + vx * t2 + ux * k, y = cy + vy * t2 + uy * k;
+          if (x >= 0 && y >= 0 && x < W2 && y < H7 && riga5[y * W2 + x] && !muroC[y * W2 + x])
+            celle[y * W2 + x] = 1;
+        }
+    }
+  }
+  return { archi, celle };
+}
+
+// src/core/finestre-nei-muri.js
+var SPESSORE_MAX_M = 0.7;
+var SPESSORE_MIN_M = 0.09;
+var VANO_MIN_M = 0.4;
+var VANO_MAX_M = 3.2;
+var CAMBIO_MINIMO = 1;
+var CAMBIO_MASSIMO = 2.5;
+function soglieDiInchiostro(tN) {
+  const cambio = Math.max(CAMBIO_MINIMO, Math.min(CAMBIO_MASSIMO, tN / 7));
+  return { cambio, stesso: cambio * 0.6 };
+}
+var RIFERIMENTO_MINIMO = 6;
+var RIFERIMENTO_GLOBALE_MINIMO = 20;
+function finestreNeiMuri(riga5, muro, W2, H7, passo) {
+  const vetro = new Uint8Array(W2 * H7), finestre = [];
+  if (!W2 || !H7 || !passo) return { vetro, finestre };
+  const soglie = {
+    spessoreMax: Math.round(SPESSORE_MAX_M / passo),
+    spessoreMin: Math.max(2, Math.round(SPESSORE_MIN_M / passo)),
+    vanoMin: Math.round(VANO_MIN_M / passo),
+    vanoMax: Math.round(VANO_MAX_M / passo)
+  };
+  const versi = [
+    { at: (p, o) => o * W2 + p, nA: W2, nC: H7, oriz: true },
+    { at: (p, o) => p * W2 + o, nA: H7, nC: W2, oriz: false }
+  ];
+  const candidati = [], muriPerSpessore = /* @__PURE__ */ new Map();
+  for (const verso2 of versi)
+    for (const tratto of tratti2(muro, verso2.at, verso2.nA, verso2.nC, soglie)) {
+      const esito2 = candidatiDelTratto(riga5, verso2, tratto, soglie);
+      if (!esito2) continue;
+      for (const c of esito2.candidati) candidati.push({ ...c, verso: verso2, tratto: esito2 });
+      if (!muriPerSpessore.has(esito2.tN)) muriPerSpessore.set(esito2.tN, []);
+      muriPerSpessore.get(esito2.tN).push(...esito2.muri);
+    }
+  const globali = /* @__PURE__ */ new Map();
+  for (const [tN, muri] of muriPerSpessore)
+    globali.set(tN, riferimento(muri, tN, RIFERIMENTO_GLOBALE_MINIMO));
+  for (const c of candidati) {
+    const { tratto, verso: verso2 } = c, tN = tratto.tN, { cambio } = soglieDiInchiostro(tN), locale3 = riferimento(tratto.muri, tN, RIFERIMENTO_MINIMO), globale = globali.get(tN);
+    if (!locale3 && !globale) continue;
+    if (locale3 && distanza3(c.profilo, locale3) < cambio) continue;
+    if (globale && distanza3(c.profilo, globale) < cambio) continue;
+    const posizioni = tratto.posizioni, p0 = posizioni[c.a - 1].p, p1 = posizioni[c.b + 1].p;
+    let c0 = verso2.nC, c1 = 0;
+    for (let i = c.a - 1; i <= c.b + 1; i++) {
+      const q = posizioni[i];
+      if (q.c0 < c0) c0 = q.c0;
+      if (q.c0 + tN - 1 > c1) c1 = q.c0 + tN - 1;
+      for (let o = 0; o < tN && q.c0 + o < verso2.nC; o++) {
+        const j = verso2.at(q.p, q.c0 + o);
+        if (muro[j]) vetro[j] = 1;
+      }
+    }
+    c1 = Math.min(c1, verso2.nC - 1);
+    const largo = (p1 - p0 + 1) * passo;
+    finestre.push(
+      verso2.oriz ? { x0: p0, y0: c0, x1: p1, y1: c1, oriz: true, largo } : { x0: c0, y0: p0, x1: c1, y1: p1, oriz: false, largo }
+    );
+  }
+  finestre.sort((a, b2) => a.y0 - b2.y0 || a.x0 - b2.x0);
+  return { vetro, finestre };
+}
+function corseDiTraverso(muro, at, p, nC) {
+  const corse2 = [];
+  let o = 0;
+  while (o < nC) {
+    if (!muro[at(p, o)]) {
+      o++;
+      continue;
+    }
+    let e = o;
+    while (e < nC && muro[at(p, e)]) e++;
+    corse2.push({ c0: o, c1: e });
+    o = e;
+  }
+  return corse2;
+}
+function tratti2(muro, at, nA, nC, { spessoreMax, spessoreMin }) {
+  const fatti = [];
+  let aperte = [];
+  for (let p = 0; p < nA; p++) {
+    const prese = /* @__PURE__ */ new Set(), prossime = [];
+    for (const corsa of corseDiTraverso(muro, at, p, nC)) {
+      const t2 = corsa.c1 - corsa.c0;
+      if (t2 < spessoreMin) continue;
+      let meglio = null, comeFascia = false, sovrapposto2 = 0;
+      for (const catena of aperte) {
+        if (prese.has(catena)) continue;
+        const f = catena.fascia, tf = f.c1 - f.c0, s = Math.min(corsa.c1, f.c1) - Math.max(corsa.c0, f.c0);
+        if (s <= 0) continue;
+        const stessa = Math.abs(corsa.c0 - f.c0) <= 2 && Math.abs(corsa.c1 - f.c1) <= 2, contiene = s >= 0.9 * tf && t2 <= 3 * tf && catena.anomale < spessoreMax;
+        if ((stessa || contiene) && s > sovrapposto2) {
+          sovrapposto2 = s;
+          meglio = catena;
+          comeFascia = stessa;
+        }
+      }
+      if (meglio) {
+        prese.add(meglio);
+        if (comeFascia) {
+          meglio.fascia = corsa;
+          meglio.anomale = 0;
+        } else meglio.anomale++;
+        meglio.posizioni.push({ p, c0: meglio.fascia.c0, c1: meglio.fascia.c1, t: t2 });
+        prossime.push(meglio);
+      } else if (t2 <= spessoreMax) {
+        prossime.push({
+          fascia: corsa,
+          anomale: 0,
+          posizioni: [{ p, c0: corsa.c0, c1: corsa.c1, t: t2 }]
+        });
+      }
+    }
+    for (const catena of aperte) if (!prese.has(catena)) fatti.push(catena.posizioni);
+    aperte = prossime;
+  }
+  for (const catena of aperte) fatti.push(catena.posizioni);
+  return fatti;
+}
+function mediana(valori) {
+  const v = valori.slice().sort((a, b2) => a - b2);
+  return v.length ? v[v.length >> 1] : 0;
+}
+function profilo3(campioni, tN) {
+  const f = new Float64Array(tN);
+  if (!campioni.length) return f;
+  for (const s of campioni) for (let o = 0; o < tN; o++) f[o] += s[o];
+  for (let o = 0; o < tN; o++) f[o] /= campioni.length;
+  return f;
+}
+function distanza3(fa, fb) {
+  let d = 0;
+  for (let o = 0; o < fa.length; o++) d += Math.abs(fa[o] - fb[o]);
+  return d;
+}
+function riferimento(segmenti, tN, minimo) {
+  const { stesso: stesso2 } = soglieDiInchiostro(tN), famiglie2 = [];
+  for (const seg of segmenti.slice().sort((a, b2) => b2.campioni.length - a.campioni.length)) {
+    const fam = famiglie2.find((f) => distanza3(f.seme, seg.profilo) <= stesso2);
+    if (fam) fam.segmenti.push(seg);
+    else famiglie2.push({ seme: seg.profilo, segmenti: [seg] });
+  }
+  let meglio = null, n = 0;
+  for (const fam of famiglie2) {
+    const k = fam.segmenti.reduce((a, s) => a + s.campioni.length, 0);
+    if (k > n) {
+      n = k;
+      meglio = fam;
+    }
+  }
+  if (!meglio || n < minimo) return null;
+  return profilo3(
+    meglio.segmenti.flatMap((s) => s.campioni),
+    tN
   );
 }
-function installCasa3DEditor() {
-  if (!doc || state181.installed) return false;
-  state181.installed = true;
-  installaLoStile10();
-  doc.addEventListener("click", onClick58);
-  doc.addEventListener("change", onChange22);
-  wrapFunction("apriConfigEntita", "__dmCasa3dEditor", () => {
-    ensureCasa3DEditorTab();
-    ensureCasa3DEditor();
+function candidatiDelTratto(riga5, { at, nC }, posizioni, soglie) {
+  const { spessoreMax, spessoreMin, vanoMin, vanoMax } = soglie;
+  if (posizioni.length < vanoMin + 2) return null;
+  const tN = mediana(posizioni.filter((q) => q.t <= spessoreMax).map((q) => q.t));
+  if (tN < spessoreMin) return null;
+  const { stesso: stesso2 } = soglieDiInchiostro(tN);
+  const bordo2 = tN >= 8 ? 2 : 1, cuore0 = bordo2, cuore1 = tN - 1 - bordo2;
+  if (cuore1 < cuore0) return null;
+  const campioni = posizioni.map((q) => {
+    const s = new Uint8Array(tN);
+    for (let o = 0; o < tN && q.c0 + o < nC; o++) s[o] = riga5[at(q.p, q.c0 + o)];
+    return s;
   });
-  onEditorRedraw("__dmCasa3dEditor", () => {
-    root.queueMicrotask?.(() => {
-      ensureCasa3DEditorTab();
-      ensureCasa3DEditor();
-    });
+  const pieno = campioni.map((s) => {
+    let n = 0;
+    for (let o = 0; o < tN; o++) n += s[o];
+    return n >= 0.8 * tN;
   });
-  for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:editor-rendered"])
-    root.addEventListener?.(evento, () => {
-      root.queueMicrotask?.(() => {
-        ensureCasa3DEditorTab();
-        ensureCasa3DEditor();
-      });
-    });
-  ensureCasa3DEditorTab();
-  ensureCasa3DEditor();
-  return true;
+  const cuore = campioni.map((s) => {
+    let n = 0;
+    for (let o = cuore0; o <= cuore1; o++) n += s[o];
+    return n;
+  });
+  const segmenti = [];
+  let k = 0;
+  while (k < posizioni.length) {
+    if (pieno[k]) {
+      k++;
+      continue;
+    }
+    let e = k;
+    while (e < posizioni.length && !pieno[e]) e++;
+    const campioniDi = [];
+    for (let i = k; i < e; i++) campioniDi.push(campioni[i]);
+    segmenti.push({ a: k, b: e - 1, campioni: campioniDi, profilo: profilo3(campioniDi, tN) });
+    k = e;
+  }
+  const uniti = [];
+  for (const seg of segmenti) {
+    const ultimo = uniti[uniti.length - 1];
+    if (ultimo && seg.a - ultimo.b - 1 <= 3 && distanza3(ultimo.profilo, seg.profilo) <= stesso2) {
+      ultimo.b = seg.b;
+      ultimo.campioni.push(...seg.campioni);
+      ultimo.profilo = profilo3(ultimo.campioni, tN);
+    } else uniti.push(seg);
+  }
+  const candidati = [], muri = [];
+  for (const seg of uniti) {
+    if (candidato(seg, posizioni, cuore, cuore0, cuore1, vanoMin, vanoMax)) candidati.push(seg);
+    else muri.push(seg);
+  }
+  return { tN, posizioni, candidati, muri };
 }
-senzaCadere(installCasa3DEditor);
+function candidato(seg, posizioni, cuore, cuore0, cuore1, vanoMin, vanoMax) {
+  const lungo = seg.b - seg.a + 1;
+  if (lungo < vanoMin || lungo > vanoMax) return false;
+  if (seg.a === 0 || seg.b === posizioni.length - 1) return false;
+  if (posizioni[seg.a - 1].p !== posizioni[seg.a].p - 1) return false;
+  if (posizioni[seg.b + 1].p !== posizioni[seg.b].p + 1) return false;
+  let corre = false;
+  for (let o = cuore0; o <= cuore1 && !corre; o++) if (seg.profilo[o] >= 0.8) corre = true;
+  if (!corre) return false;
+  const valori = [];
+  for (let i = seg.a; i <= seg.b; i++) if (cuore[i] <= cuore1 - cuore0) valori.push(cuore[i]);
+  const m = mediana(valori);
+  let costanti = 0;
+  for (const v of valori) if (Math.abs(v - m) <= 1) costanti++;
+  return costanti >= 0.8 * valori.length;
+}
 
 // src/core/pianta-da-foto.js
 var PASSO = 0.03;
@@ -155299,9 +155591,9 @@ function inversa(m) {
 function prospettiva(im) {
   const { width: w, height: h } = im;
   let punti = bordiDeiMuri(im);
-  const quanti3 = punti.length / 2;
-  if (quanti3 < 200) return null;
-  const salto = Math.max(1, Math.round(quanti3 / 6e4));
+  const quanti4 = punti.length / 2;
+  if (quanti4 < 200) return null;
+  const salto = Math.max(1, Math.round(quanti4 / 6e4));
   const cx = w / 2, cy = h / 2, sc = Math.max(w, h) / 2;
   const passoA = 0.2, largo = 16, nA = Math.round(2 * largo / passoA) + 1, rMax = Math.ceil(Math.hypot(w, h) / 2), nR = 2 * rMax + 1;
   const famiglie2 = [];
@@ -155603,7 +155895,7 @@ function scalaDaiMuri(im) {
   return { mpp: 0.42 / meglio, spessore: meglio };
 }
 var MURI_PIENI_MINIMO = 3;
-function integrale(g, W2, H7) {
+function integrale2(g, W2, H7) {
   const I = new Int32Array((W2 + 1) * (H7 + 1));
   for (let y = 0; y < H7; y++) {
     let riga5 = 0;
@@ -155614,7 +155906,7 @@ function integrale(g, W2, H7) {
   }
   return I;
 }
-function quanti2(I, W2, H7, x, y, r) {
+function quanti3(I, W2, H7, x, y, r) {
   const x0 = Math.max(0, x - r), x1 = Math.min(W2, x + r + 1), y0 = Math.max(0, y - r), y1 = Math.min(H7, y + r + 1);
   return {
     n: I[y1 * (W2 + 1) + x1] - I[y0 * (W2 + 1) + x1] - I[y1 * (W2 + 1) + x0] + I[y0 * (W2 + 1) + x0],
@@ -155623,22 +155915,22 @@ function quanti2(I, W2, H7, x, y, r) {
 }
 function allarga(g, W2, H7, r) {
   if (r <= 0) return g.slice();
-  const I = integrale(g, W2, H7), out = new Uint8Array(W2 * H7);
+  const I = integrale2(g, W2, H7), out = new Uint8Array(W2 * H7);
   for (let y = 0; y < H7; y++)
-    for (let x = 0; x < W2; x++) out[y * W2 + x] = quanti2(I, W2, H7, x, y, r).n > 0 ? 1 : 0;
+    for (let x = 0; x < W2; x++) out[y * W2 + x] = quanti3(I, W2, H7, x, y, r).n > 0 ? 1 : 0;
   return out;
 }
 function stringi(g, W2, H7, r) {
   if (r <= 0) return g.slice();
-  const I = integrale(g, W2, H7), out = new Uint8Array(W2 * H7);
+  const I = integrale2(g, W2, H7), out = new Uint8Array(W2 * H7);
   for (let y = 0; y < H7; y++)
     for (let x = 0; x < W2; x++) {
-      const q = quanti2(I, W2, H7, x, y, r);
+      const q = quanti3(I, W2, H7, x, y, r);
       out[y * W2 + x] = q.n === q.area ? 1 : 0;
     }
   return out;
 }
-function pezziDi(g, W2, H7) {
+function pezziDi2(g, W2, H7) {
   const id = new Int32Array(W2 * H7).fill(-1), pezzi = [];
   for (let i = 0; i < W2 * H7; i++) {
     if (!g[i] || id[i] >= 0) continue;
@@ -155721,6 +156013,27 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
   }
   for (let i = 0; i < W2 * H7; i++) if (fondo[i]) riga5[i] = 0;
   const r = Math.max(1, Math.round(0.2 / PASSO));
+  const chiusaProvvisoria = stringi(allarga(riga5, W2, H7, r), W2, H7, r);
+  const { vere, piastrelle, segnaScale } = (() => {
+    const { corsaO: corsaO2, corsaV: corsaV2 } = corseDelleRighe(riga5, W2, H7);
+    const scale = trovaLeScale(chiusaProvvisoria, corsaO2, corsaV2, W2, H7);
+    const lunga = Math.round(0.5 / PASSO);
+    for (const s of scale.vere) {
+      const diTraverso2 = s.oriz ? corsaO2 : corsaV2;
+      const sullOrlo = (x, y) => s.oriz ? y <= s.y0 + 2 || y >= s.y1 - 2 : x <= s.x0 + 2 || x >= s.x1 - 2;
+      for (let y = s.y0; y <= s.y1; y++)
+        for (let x = s.x0; x <= s.x1; x++) {
+          const i = y * W2 + x;
+          if (diTraverso2[i] >= lunga && sullOrlo(x, y)) scale.segnaScale[i] = 0;
+        }
+    }
+    return scale;
+  })();
+  for (let i = 0; i < W2 * H7; i++) if (segnaScale[i]) riga5[i] = 0;
+  const archi = disegno8 || vetri ? { archi: [] } : archiDellePorte(riga5, chiusaProvvisoria, W2, H7, PASSO);
+  if (archi.celle) {
+    for (let i = 0; i < W2 * H7; i++) if (archi.celle[i]) riga5[i] = 0;
+  }
   const chiusa2 = stringi(allarga(riga5, W2, H7, r), W2, H7, r);
   for (let i = 0; i < W2 * H7; i++) if (riga5[i]) chiusa2[i] = 1;
   const spessi = allarga(stringi(chiusa2, W2, H7, 1), W2, H7, 1);
@@ -155754,7 +156067,7 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
   }
   const corsaMuro = Math.round(0.45 / PASSO), pezzoMuro = Math.round(0.7 / PASSO);
   const sostegno = new Uint8Array(W2 * H7);
-  const tracce = pezziDi(riga5, W2, H7);
+  const tracce = pezziDi2(riga5, W2, H7);
   {
     for (let i = 0; i < W2 * H7; i++) {
       const p = tracce.id[i] >= 0 ? tracce.pezzi[tracce.id[i]] : null;
@@ -155774,7 +156087,7 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
     }
     return n / p.celle.length;
   };
-  const { pezzi } = pezziDi(spessi, W2, H7);
+  const { pezzi } = pezziDi2(spessi, W2, H7);
   const muro = new Uint8Array(W2 * H7), minimo = 0.4 / PASSO, metro2 = 1 / PASSO;
   const grande = (p) => p.x1 - p.x0 + 1 >= W2 * 0.85 || p.y1 - p.y0 + 1 >= H7 * 0.85;
   const qualcosaDentro = (p) => pezzi.some(
@@ -155791,7 +156104,7 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
     for (const c of p.celle) muro[c] = 1;
   }
   {
-    const rete = disegno8 ? { pezzi: [] } : pezziDi(muro, W2, H7);
+    const rete = disegno8 ? { pezzi: [] } : pezziDi2(muro, W2, H7);
     if (rete.pezzi.length > 1) {
       let maggiore = -1;
       rete.pezzi.forEach((p, k) => {
@@ -155807,7 +156120,7 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
       const porta = Math.round(1.3 / PASSO);
       const unito3 = new Uint8Array(W2 * H7);
       for (let i = 0; i < W2 * H7; i++) unito3[i] = riga5[i] || celleVetri[i] ? 1 : 0;
-      const legami = pezziDi(unito3, W2, H7);
+      const legami = pezziDi2(unito3, W2, H7);
       const tocca2 = (p) => {
         const ids = /* @__PURE__ */ new Set();
         for (const c of p.celle) {
@@ -155915,7 +156228,7 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
   const vetro = new Uint8Array(W2 * H7);
   const cercaVani = (lungo, corto, n, m, at) => {
     for (let a = 0; a < n; a++) {
-      const tratti2 = [];
+      const tratti3 = [];
       let b2 = 0;
       while (b2 < m) {
         if (!muro[at(a, b2)]) {
@@ -155924,12 +156237,12 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
         }
         let e = b2;
         while (e < m && muro[at(a, e)]) e++;
-        const ultimo = tratti2[tratti2.length - 1];
+        const ultimo = tratti3[tratti3.length - 1];
         if (ultimo && b2 - ultimo.e <= 3) ultimo.pezzi.push([b2, e]), ultimo.e = e;
-        else tratti2.push({ e, pezzi: [[b2, e]] });
+        else tratti3.push({ e, pezzi: [[b2, e]] });
         b2 = e;
       }
-      for (const t2 of tratti2) {
+      for (const t2 of tratti3) {
         const celle = [];
         for (const [p0, p1] of t2.pezzi) for (let q = p0; q < p1; q++) celle.push(q);
         let k = 0;
@@ -155957,13 +156270,51 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
     cercaVani(tV, tO, W2, H7, (x, y) => y * W2 + x);
   }
   for (let i = 0; i < W2 * H7; i++) if (vetro[i]) muro[i] = 0;
+  if (!vetri) {
+    const { vetro: trovate, finestre } = finestreNeiMuri(riga5, muro, W2, H7, PASSO);
+    for (let i = 0; i < W2 * H7; i++)
+      if (trovate[i] && muro[i]) {
+        vetro[i] = 1;
+        muro[i] = 0;
+      }
+    const poco = Math.round(0.2 / PASSO);
+    for (const f of finestre) {
+      const lungo = f.oriz ? [f.x0, f.x1] : [f.y0, f.y1], capi = f.oriz ? [f.y0, f.y1] : [f.x0, f.x1];
+      for (let p = lungo[0]; p <= lungo[1]; p++)
+        for (const [capo, verso2] of [
+          [capi[0] - 1, -1],
+          [capi[1] + 1, 1]
+        ]) {
+          const celle = [];
+          for (let q = capo, k = 0; k <= poco && q >= 0 && q < (f.oriz ? H7 : W2); q += verso2, k++) {
+            const i = f.oriz ? q * W2 + p : p * W2 + q;
+            if (!muro[i]) break;
+            celle.push(i);
+          }
+          if (celle.length > poco) continue;
+          for (const i of celle) {
+            vetro[i] = 1;
+            muro[i] = 0;
+          }
+        }
+    }
+  }
+  const vetroDelVano = vetro.slice();
   const barriera = muro.slice();
   for (let i = 0; i < W2 * H7; i++) if (vetro[i]) barriera[i] = 1;
   const resto = new Uint8Array(W2 * H7);
   for (let i = 0; i < W2 * H7; i++) if (riga5[i] && !muro[i]) resto[i] = 1;
-  const altri = pezziDi(resto, W2, H7);
+  const { corsaO: rO, corsaV: rV } = corseDritte(resto, W2, H7);
+  const dritta = (p) => {
+    const corsa = Math.round(0.24 / PASSO);
+    let n = 0;
+    for (const c of p.celle) if (rO[c] >= corsa || rV[c] >= corsa) n++;
+    return n >= p.celle.length * 0.8;
+  };
+  const altri = pezziDi2(resto, W2, H7);
   for (const p of altri.pezzi) {
     if (Math.max(p.x1 - p.x0, p.y1 - p.y0) < 6) continue;
+    if (!dritta(p)) continue;
     let tocca2 = false;
     for (const c of p.celle) {
       const x = c % W2;
@@ -156001,9 +156352,20 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
     const spesso = corre(i, largo2, lontano) + corre(i, -largo2, lontano) - 1;
     return spesso <= spessoreMax && spesso < dietro;
   };
+  const dietroIlVarco = (i, passo) => i + passo * (Math.min(corre(i, passo, lontano), 2 * tratto) - 1);
+  const stessoMuro2 = (a, b2, passo, largo2) => {
+    if (!dritto(a, -passo) || !dritto(b2, passo)) return false;
+    const qa = dietroIlVarco(a, -passo), qb = dietroIlVarco(b2, passo);
+    const sa = corre(qa, largo2, lontano), ga = corre(qa, -largo2, lontano), sb = corre(qb, largo2, lontano), gb = corre(qb, -largo2, lontano);
+    const ta = sa + ga - 1, tb = sb + gb - 1;
+    if (ta > spessoreMax || tb > spessoreMax) return false;
+    if (Math.abs(ta - tb) > Math.max(2, Math.round(0.3 * Math.max(ta, tb)))) return false;
+    return Math.abs(sa - sb) <= 2 || Math.abs(ga - gb) <= 2;
+  };
+  const diTraverso = (a, b2, largo2) => corre(a, largo2, lontano) >= Math.min(lontano, corre(b2, largo2, lontano) + tratto) && corre(a, -largo2, lontano) >= Math.min(lontano, corre(b2, -largo2, lontano) + tratto);
   const chiudi5 = (a, b2, passo, largo2) => {
-    if (dritto(a, -passo) && dritto(b2, passo)) return true;
-    return fine(a, -passo, largo2) && corre(b2, passo, 2) >= 2 || fine(b2, passo, largo2) && corre(a, -passo, 2) >= 2;
+    if (stessoMuro2(a, b2, passo, largo2)) return true;
+    return fine(a, -passo, largo2) && corre(b2, passo, 2) >= 2 && diTraverso(b2, a, largo2) || fine(b2, passo, largo2) && corre(a, -passo, 2) >= 2 && diTraverso(a, b2, largo2);
   };
   const varcoLargo = Math.round(4 / PASSO);
   const segnato = allarga(
@@ -156037,6 +156399,14 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
       if (!apri7(i - W2, e * W2 + x, W2, 1, e - y)) continue;
       for (let q = y; q < e; q++) soglie[q * W2 + x] = 1;
     }
+  for (const a of archi.archi || [])
+    for (let y = Math.max(0, a.apertura.y0); y <= Math.min(H7 - 1, a.apertura.y1); y++)
+      for (let x = Math.max(0, a.apertura.x0); x <= Math.min(W2 - 1, a.apertura.x1); x++)
+        if (!muro[y * W2 + x]) soglie[y * W2 + x] = 1;
+  if (vere.length) {
+    const vicino2 = allarga(segnaScale, W2, H7, Math.round(0.3 / PASSO));
+    for (let i = 0; i < W2 * H7; i++) if (vicino2[i]) soglie[i] = 0;
+  }
   for (let i = 0; i < W2 * H7; i++) if (soglie[i]) barriera[i] = 1;
   const spessa = barriera.slice();
   for (let y = 1; y < H7 - 1; y++)
@@ -156046,7 +156416,59 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
         for (const j of [i - 1, i + 1, i - W2, i + W2, i - W2 - 1, i - W2 + 1, i + W2 - 1, i + W2 + 1])
           spessa[j] = 1;
     }
-  return { W: W2, H: H7, muro, barriera: spessa, vetro };
+  let fuoriCasa = null;
+  if (!disegno8 && !vetri) {
+    const spessoMin = Math.round(0.2 / PASSO);
+    fuoriCasa = new Uint8Array(W2 * H7);
+    const chiuso = (i) => muro[i] && Math.min(tO[i], tV[i]) >= spessoMin || vetroDelVano[i] || soglie[i];
+    const pila2 = [];
+    const semina2 = (i) => {
+      if (!fuoriCasa[i] && !chiuso(i)) {
+        fuoriCasa[i] = 1;
+        pila2.push(i);
+      }
+    };
+    for (let x = 0; x < W2; x++) {
+      semina2(x);
+      semina2((H7 - 1) * W2 + x);
+    }
+    for (let y = 0; y < H7; y++) {
+      semina2(y * W2);
+      semina2(y * W2 + W2 - 1);
+    }
+    while (pila2.length) {
+      const i = pila2.pop(), x = i % W2;
+      for (const j of [x > 0 ? i - 1 : -1, x < W2 - 1 ? i + 1 : -1, i - W2, i + W2])
+        if (j >= 0 && j < W2 * H7) semina2(j);
+    }
+  }
+  return {
+    W: W2,
+    H: H7,
+    muro,
+    barriera: spessa,
+    vetro,
+    scale: scaleInMetri(vere),
+    piastrelle: inMetri(piastrelle),
+    fuoriCasa,
+    soglie,
+    archi: archi.archi || []
+  };
+}
+function grigliaDallaFoto(im, mpp, { vetri = null, porte = null, disegno: disegno8 = false, pianoDaFoto = true } = {}) {
+  const { width: w, height: h } = im;
+  const aRighe = () => Object.assign(grigliaDeiMuri(inchiostro(im), w, h, mpp, { vetri, porte, disegno: disegno8 }), {
+    strada: "righe"
+  });
+  const pieni = disegno8 || !pianoDaFoto ? null : muriPieni(im, mpp);
+  if (!pieni || pieni.metri < MURI_PIENI_MINIMO) return aRighe();
+  const aPieni = Object.assign(grigliaDaMuriPieni(pieni.ink, pieni.linee, w, h, mpp), {
+    strada: "pieni"
+  });
+  const stanze4 = (g) => riconosciDaFoto(g).stanze.filter((s) => s.area >= 2).length;
+  const np = stanze4(aPieni);
+  const righe3 = aRighe();
+  return np >= stanze4(righe3) * 0.75 ? aPieni : righe3;
 }
 function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
   const lato = PASSO / mpp, W2 = Math.max(1, Math.floor(w / lato)), H7 = Math.max(1, Math.floor(h / lato)), N = W2 * H7;
@@ -156068,15 +156490,15 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
   let muro = celleDi(ink, 0.5);
   muro = stringi(allarga(muro, W2, H7, 1), W2, H7, 1);
   {
-    const { pezzi } = pezziDi(muro, W2, H7), corto = 1.5 / PASSO, lontano = Math.round(3.2 / PASSO);
+    const { pezzi } = pezziDi2(muro, W2, H7), corto = 1.5 / PASSO, lontano = Math.round(3.2 / PASSO);
     for (const p of pezzi) {
       const lw = p.x1 - p.x0 + 1, lh = p.y1 - p.y0 + 1;
       if (Math.max(lw, lh) >= corto) continue;
       const oriz = lw >= lh;
       const inFila = (verso2) => {
-        let fila2 = 0, tutte2 = 0;
+        let fila2 = 0, tutte = 0;
         for (let t2 = oriz ? p.y0 : p.x0; t2 <= (oriz ? p.y1 : p.x1); t2++) {
-          tutte2++;
+          tutte++;
           for (let d = 1; d <= lontano; d++) {
             const q = verso2 < 0 ? (oriz ? p.x0 : p.y0) - d : (oriz ? p.x1 : p.y1) + d;
             if (q < 0 || q >= (oriz ? W2 : H7)) break;
@@ -156087,7 +156509,7 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
             }
           }
         }
-        return fila2 >= tutte2 * 0.5;
+        return fila2 >= tutte * 0.5;
       };
       if (!(inFila(-1) && inFila(1))) for (const c of p.celle) muro[c] = 0;
     }
@@ -156097,9 +156519,9 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
   const attaccato = (p) => {
     const oriz = p.x1 - p.x0 >= p.y1 - p.y0;
     for (const verso2 of [-1, 1]) {
-      let si = 0, tutte2 = 0;
+      let si = 0, tutte = 0;
       for (let t2 = oriz ? p.y0 : p.x0; t2 <= (oriz ? p.y1 : p.x1); t2++) {
-        tutte2++;
+        tutte++;
         for (let d = 1; d <= 6; d++) {
           const q = verso2 < 0 ? (oriz ? p.x0 : p.y0) - d : (oriz ? p.x1 : p.y1) + d;
           if (q < 0 || q >= (oriz ? W2 : H7)) break;
@@ -156109,7 +156531,7 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
           }
         }
       }
-      if (si >= tutte2 * 0.5) return true;
+      if (si >= tutte * 0.5) return true;
     }
     return false;
   };
@@ -156172,7 +156594,7 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
     }
     for (let i = 0; i < N; i++) if (muro[i]) pieno[i] = 0;
     const oltre = Math.round(0.5 / PASSO);
-    for (const p of pezziDi(pieno, W2, H7).pezzi) {
+    for (const p of pezziDi2(pieno, W2, H7).pezzi) {
       const oriz = p.x1 - p.x0 >= p.y1 - p.y0, x0 = Math.max(0, p.x0 - (oriz ? oltre : 0)), x1 = Math.min(W2 - 1, p.x1 + (oriz ? oltre : 0)), y0 = Math.max(0, p.y0 - (oriz ? 0 : oltre)), y1 = Math.min(H7 - 1, p.y1 + (oriz ? 0 : oltre));
       let m = 0, a = 0;
       for (let y = y0; y <= y1; y++)
@@ -156184,29 +156606,7 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
       if (m < a * 0.2 || fuori > m * 0.3 || !attaccato(p)) for (const c of p.celle) pieno[c] = 0;
     }
   }
-  const corsa = (lungo) => {
-    const out = new Int32Array(N);
-    const n = lungo ? H7 : W2, m = lungo ? W2 : H7, at = lungo ? (a, b2) => a * W2 + b2 : (a, b2) => b2 * W2 + a;
-    for (let a = 0; a < n; a++) {
-      let b2 = 0;
-      while (b2 < m) {
-        const vicino = (q) => riga5[at(a, q)] || a > 0 && riga5[at(a - 1, q)] || a < n - 1 && riga5[at(a + 1, q)];
-        if (!riga5[at(a, b2)]) {
-          b2++;
-          continue;
-        }
-        let e = b2, buco = 0;
-        while (e < m && (vicino(e) || buco < 2 && e + 1 < m && vicino(e + 1))) {
-          buco = vicino(e) ? 0 : buco + 1;
-          e++;
-        }
-        for (let q = b2; q < e; q++) if (riga5[at(a, q)]) out[at(a, q)] = e - b2;
-        b2 = e;
-      }
-    }
-    return out;
-  };
-  const corsaO = corsa(true), corsaV = corsa(false);
+  const { corsaO, corsaV } = corseDelleRighe(riga5, W2, H7);
   const tramezzo = new Uint8Array(N);
   const lungaT = Math.round(0.9 / PASSO), dMin = 2, dMax = Math.round(0.4 / PASSO);
   const cercaDoppie = (oriz) => {
@@ -156232,121 +156632,21 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
   cercaDoppie(true);
   cercaDoppie(false);
   {
-    const { pezzi } = pezziDi(tramezzo, W2, H7);
+    const { pezzi } = pezziDi2(tramezzo, W2, H7);
     for (const p of pezzi) {
       const lungo = Math.max(p.x1 - p.x0, p.y1 - p.y0) + 1, spesso = Math.min(p.x1 - p.x0, p.y1 - p.y0) + 1;
       if (lungo < lungaT || spesso > dMax + 2 || !attaccato(p) || vetroNelMuro(p))
         for (const c of p.celle) tramezzo[c] = 0;
     }
   }
-  const scale = [];
-  const gradino = Math.round(0.6 / PASSO), pMin = Math.round(0.18 / PASSO), pMax = Math.round(0.4 / PASSO);
-  const segnaScale = new Uint8Array(N);
-  for (const oriz of [true, false]) {
-    const c = oriz ? corsaO : corsaV;
-    const n = oriz ? H7 : W2, m = oriz ? W2 : H7, at = oriz ? (a, b2) => a * W2 + b2 : (a, b2) => b2 * W2 + a;
-    const file = [];
-    for (let a = 0; a < n; a++) {
-      const tratti2 = [];
-      let b2 = 0;
-      while (b2 < m) {
-        if (c[at(a, b2)] >= gradino && c[at(a, b2)] < Math.round(2.2 / PASSO)) {
-          let e = b2;
-          while (e < m && (c[at(a, e)] >= gradino || e + 1 < m && c[at(a, e + 1)] >= gradino))
-            e++;
-          tratti2.push([b2, e]);
-          b2 = e;
-        } else b2++;
-      }
-      file.push(tratti2);
-    }
-    const centri = [];
-    for (let a = 0; a < n; a++)
-      for (const [b2, e] of file[a]) {
-        const ultimo = centri.find(
-          (q) => a - q.a1 <= 1 && Math.min(e, q.e) - Math.max(b2, q.b) > (e - b2) * 0.6
-        );
-        if (ultimo)
-          ultimo.a1 = a, ultimo.b = Math.min(ultimo.b, b2), ultimo.e = Math.max(ultimo.e, e);
-        else centri.push({ a0: a, a1: a, b: b2, e });
-      }
-    centri.sort((p, q) => p.a0 - q.a0);
-    const usata = /* @__PURE__ */ new Set();
-    for (let k = 0; k < centri.length; k++) {
-      if (usata.has(k)) continue;
-      const catena = [k];
-      let ultimo = centri[k];
-      for (let j = k + 1; j < centri.length; j++) {
-        const q = centri[j], dist = (q.a0 + q.a1) / 2 - (ultimo.a0 + ultimo.a1) / 2;
-        if (dist < pMin) continue;
-        if (dist > pMax) break;
-        const sovrapposti3 = Math.min(q.e, ultimo.e) - Math.max(q.b, ultimo.b);
-        if (sovrapposti3 < Math.min(q.e - q.b, ultimo.e - ultimo.b) * 0.7) continue;
-        catena.push(j);
-        ultimo = q;
-      }
-      if (catena.length < 3) continue;
-      for (const j of catena) usata.add(j);
-      const pezzi = catena.map((j) => centri[j]);
-      const passi2 = pezzi.slice(1).map((q, i) => (q.a0 + q.a1) / 2 - (pezzi[i].a0 + pezzi[i].a1) / 2);
-      const medio2 = passi2.reduce((a, b3) => a + b3, 0) / passi2.length;
-      if (passi2.some((p) => Math.abs(p - medio2) > Math.max(2, medio2 * 0.3))) continue;
-      const b2 = Math.min(...pezzi.map((q) => q.b)), e = Math.max(...pezzi.map((q) => q.e)), a0 = pezzi[0].a0, a1 = pezzi[pezzi.length - 1].a1;
-      const toccaMuro = (q, capo) => {
-        for (let a = q.a0; a <= q.a1; a++)
-          for (let d = 0; d <= Math.round(0.25 / PASSO); d++) {
-            const bb = capo ? q.e + d : q.b - d;
-            if (bb >= 0 && bb < m && muro[at(a, bb)]) return true;
-          }
-        return false;
-      };
-      const fraMuri = pezzi.filter((q) => toccaMuro(q, false) && toccaMuro(q, true)).length >= pezzi.length * 0.7;
-      scale.push(
-        oriz ? {
-          x0: b2,
-          x1: e,
-          y0: a0,
-          y1: a1,
-          oriz: false,
-          gradini: pezzi.length,
-          passo: medio2,
-          fraMuri
-        } : {
-          x0: a0,
-          x1: a1,
-          y0: b2,
-          y1: e,
-          oriz: true,
-          gradini: pezzi.length,
-          passo: medio2,
-          fraMuri
-        }
-      );
-    }
-  }
-  const incrocia = (s) => scale.some(
-    (t2) => t2 !== s && t2.oriz !== s.oriz && Math.min(s.x1, t2.x1) - Math.max(s.x0, t2.x0) > 0 && Math.min(s.y1, t2.y1) - Math.max(s.y0, t2.y0) > 0
-  );
-  const tutte = scale.filter((s) => s.fraMuri && s.gradini >= 5 && !incrocia(s));
-  const piastrelle = scale.filter(incrocia);
-  const vere = [];
-  for (const s of [...tutte].sort(
-    (a, b2) => (b2.x1 - b2.x0) * (b2.y1 - b2.y0) - (a.x1 - a.x0) * (a.y1 - a.y0)
-  )) {
-    const sopra = vere.some(
-      (t2) => Math.min(s.x1, t2.x1) - Math.max(s.x0, t2.x0) > 0 && Math.min(s.y1, t2.y1) - Math.max(s.y0, t2.y0) > 0
-    );
-    if (!sopra) vere.push(s);
-  }
-  for (const s of vere)
-    for (let y = s.y0; y <= s.y1; y++) for (let x = s.x0; x <= s.x1; x++) segnaScale[y * W2 + x] = 1;
+  const { vere, piastrelle, segnaScale } = trovaLeScale(muro, corsaO, corsaV, W2, H7);
   for (let i = 0; i < N; i++) if ((tramezzo[i] || pieno[i]) && !segnaScale[i]) muro[i] = 1;
   {
-    const { pezzi } = pezziDi(muro, W2, H7), minimo = 0.8 / PASSO;
+    const { pezzi } = pezziDi2(muro, W2, H7), minimo = 0.8 / PASSO;
     for (const p of pezzi)
       if (Math.max(p.x1 - p.x0, p.y1 - p.y0) + 1 < minimo || p.x0 === 0 || p.y0 === 0 || p.x1 === W2 - 1 || p.y1 === H7 - 1)
         for (const c of p.celle) muro[c] = 0;
-    const unita3 = pezziDi(allarga(muro, W2, H7, Math.round(0.8 / PASSO)), W2, H7);
+    const unita3 = pezziDi2(allarga(muro, W2, H7, Math.round(0.8 / PASSO)), W2, H7);
     if (unita3.pezzi.length > 1) {
       let k = 0;
       unita3.pezzi.forEach((p, i) => {
@@ -156403,7 +156703,7 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
   {
     const unione2 = new Uint8Array(N);
     for (let i = 0; i < N; i++) unione2[i] = vetro[i] || soglie[i] ? 1 : 0;
-    for (const p of pezziDi(unione2, W2, H7).pezzi) {
+    for (const p of pezziDi2(unione2, W2, H7).pezzi) {
       if (Math.min(p.x1 - p.x0, p.y1 - p.y0) + 1 > spessoreMax) {
         for (const c of p.celle) vetro[c] = soglie[c] = 0;
         continue;
@@ -156424,23 +156724,223 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
     barriera,
     vetro,
     pieni: true,
-    piastrelle: piastrelle.map((s) => ({
-      x0: s.x0 * PASSO,
-      x1: (s.x1 + 1) * PASSO,
-      y0: s.y0 * PASSO,
-      y1: (s.y1 + 1) * PASSO
-    })),
-    scale: vere.map((s) => ({
-      x0: s.x0 * PASSO,
-      x1: (s.x1 + 1) * PASSO,
-      y0: s.y0 * PASSO,
-      y1: (s.y1 + 1) * PASSO,
-      oriz: s.oriz,
-      gradini: s.gradini
-    }))
+    piastrelle: inMetri(piastrelle),
+    scale: scaleInMetri(vere)
   };
 }
-function riconosciDaFoto({ W: W2, H: H7, muro, barriera, vetro, pieni = false, scale = [], piastrelle = [] }, { fuori = /* @__PURE__ */ new Set(), squadra = true } = {}) {
+var inMetri = (riquadri) => riquadri.map((s) => ({
+  x0: s.x0 * PASSO,
+  x1: (s.x1 + 1) * PASSO,
+  y0: s.y0 * PASSO,
+  y1: (s.y1 + 1) * PASSO
+}));
+var scaleInMetri = (vere) => vere.map((s) => ({ ...inMetri([s])[0], oriz: s.oriz, gradini: s.gradini }));
+function corseDritte(g, W2, H7) {
+  const corsaO = new Int32Array(W2 * H7), corsaV = new Int32Array(W2 * H7);
+  for (let y = 0; y < H7; y++) {
+    let x = 0;
+    while (x < W2) {
+      if (!g[y * W2 + x]) {
+        x++;
+        continue;
+      }
+      let e = x;
+      while (e < W2 && g[y * W2 + e]) e++;
+      for (let q = x; q < e; q++) corsaO[y * W2 + q] = e - x;
+      x = e;
+    }
+  }
+  for (let x = 0; x < W2; x++) {
+    let y = 0;
+    while (y < H7) {
+      if (!g[y * W2 + x]) {
+        y++;
+        continue;
+      }
+      let e = y;
+      while (e < H7 && g[e * W2 + x]) e++;
+      for (let q = y; q < e; q++) corsaV[q * W2 + x] = e - y;
+      y = e;
+    }
+  }
+  return { corsaO, corsaV };
+}
+function corseDelleRighe(riga5, W2, H7) {
+  const N = W2 * H7;
+  const corsa = (lungo) => {
+    const out = new Int32Array(N);
+    const n = lungo ? H7 : W2, m = lungo ? W2 : H7, at = lungo ? (a, b2) => a * W2 + b2 : (a, b2) => b2 * W2 + a;
+    for (let a = 0; a < n; a++) {
+      let b2 = 0;
+      while (b2 < m) {
+        const vicino = (q) => riga5[at(a, q)] || a > 0 && riga5[at(a - 1, q)] || a < n - 1 && riga5[at(a + 1, q)];
+        if (!riga5[at(a, b2)]) {
+          b2++;
+          continue;
+        }
+        let e = b2, buco = 0;
+        while (e < m && (vicino(e) || buco < 2 && e + 1 < m && vicino(e + 1))) {
+          buco = vicino(e) ? 0 : buco + 1;
+          e++;
+        }
+        for (let q = b2; q < e; q++) if (riga5[at(a, q)]) out[at(a, q)] = e - b2;
+        b2 = e;
+      }
+    }
+    return out;
+  };
+  return { corsaO: corsa(true), corsaV: corsa(false) };
+}
+function trovaLeScale(muro, corsaO, corsaV, W2, H7) {
+  const N = W2 * H7;
+  const scale = [];
+  const gradino = Math.round(0.6 / PASSO), gradinoMax = Math.round(3 / PASSO), pMin = Math.round(0.18 / PASSO), pMax = Math.round(0.4 / PASSO);
+  const segnaScale = new Uint8Array(N);
+  for (const oriz of [true, false]) {
+    const c = oriz ? corsaO : corsaV;
+    const n = oriz ? H7 : W2, m = oriz ? W2 : H7, at = oriz ? (a, b2) => a * W2 + b2 : (a, b2) => b2 * W2 + a;
+    const file = [];
+    for (let a = 0; a < n; a++) {
+      const tratti3 = [];
+      let b2 = 0;
+      while (b2 < m) {
+        if (c[at(a, b2)] >= gradino && c[at(a, b2)] < gradinoMax) {
+          let e = b2;
+          while (e < m && (c[at(a, e)] >= gradino || e + 1 < m && c[at(a, e + 1)] >= gradino))
+            e++;
+          if (e - b2 >= gradino) tratti3.push([b2, e]);
+          b2 = e;
+        } else b2++;
+      }
+      file.push(tratti3);
+    }
+    const centri = [];
+    for (let a = 0; a < n; a++)
+      for (const [b2, e] of file[a]) {
+        const ultimo = centri.find(
+          (q) => a - q.a1 <= 1 && Math.min(e, q.e) - Math.max(b2, q.b) > (e - b2) * 0.6
+        );
+        if (ultimo)
+          ultimo.a1 = a, ultimo.b = Math.min(ultimo.b, b2), ultimo.e = Math.max(ultimo.e, e);
+        else centri.push({ a0: a, a1: a, b: b2, e });
+      }
+    centri.sort((p, q) => p.a0 - q.a0);
+    const doppia = /* @__PURE__ */ new Set();
+    for (let k = 0; k < centri.length; k++)
+      for (let j = k + 1; j < centri.length; j++) {
+        const p = centri[k], q = centri[j], dist = (q.a0 + q.a1) / 2 - (p.a0 + p.a1) / 2;
+        if (dist >= pMin) break;
+        if (dist < 2) continue;
+        const sovrapposti3 = Math.min(q.e, p.e) - Math.max(q.b, p.b);
+        if (sovrapposti3 >= Math.max(q.e - q.b, p.e - p.b) * 0.7) {
+          doppia.add(k);
+          doppia.add(j);
+        }
+      }
+    const usata = /* @__PURE__ */ new Set();
+    for (let k = 0; k < centri.length; k++) {
+      if (usata.has(k) || doppia.has(k)) continue;
+      const catena = [k];
+      let ultimo = centri[k];
+      for (let j = k + 1; j < centri.length; j++) {
+        const q = centri[j], dist = (q.a0 + q.a1) / 2 - (ultimo.a0 + ultimo.a1) / 2;
+        if (dist < pMin || doppia.has(j)) continue;
+        if (dist > pMax) break;
+        const sovrapposti3 = Math.min(q.e, ultimo.e) - Math.max(q.b, ultimo.b);
+        if (sovrapposti3 < Math.min(q.e - q.b, ultimo.e - ultimo.b) * 0.7) continue;
+        catena.push(j);
+        ultimo = q;
+      }
+      if (catena.length < 3) continue;
+      for (const j of catena) usata.add(j);
+      const mezzo = (valori) => [...valori].sort((p, q) => p - q)[valori.length >> 1];
+      const pezzi = catena.map((j) => centri[j]);
+      const passi2 = pezzi.slice(1).map((q, i) => (q.a0 + q.a1) / 2 - (pezzi[i].a0 + pezzi[i].a1) / 2);
+      const medio2 = passi2.reduce((a, b3) => a + b3, 0) / passi2.length;
+      if (passi2.some((p) => Math.abs(p - medio2) > Math.max(2, medio2 * 0.3))) continue;
+      const appoggiato = (valori, verso2) => {
+        for (const v of [...valori].sort((p, q) => (p - q) * verso2))
+          if (valori.filter((x) => Math.abs(x - v) <= 2).length >= 2) return v;
+        return mezzo(valori);
+      };
+      let b2 = appoggiato(
+        pezzi.map((q) => q.b),
+        1
+      ), e = appoggiato(
+        pezzi.map((q) => q.e),
+        -1
+      );
+      const a0 = pezzi[0].a0, a1 = pezzi[pezzi.length - 1].a1;
+      const oltre = [0.8, 1.2, 1.6].map((d) => Math.round(d / PASSO));
+      const eMuro = (bb) => {
+        const sopra = oltre.every((d) => a0 - d >= 0 && muro[at(a0 - d, bb)]), sotto = oltre.every((d) => a1 + d < n && muro[at(a1 + d, bb)]);
+        return sopra || sotto;
+      };
+      while (b2 < e - gradino && eMuro(b2)) b2++;
+      while (e > b2 + gradino && eMuro(e - 1)) e--;
+      const toccaMuro = (q, capo) => {
+        for (let a = q.a0; a <= q.a1; a++)
+          for (let d = 0; d <= Math.round(0.25 / PASSO); d++) {
+            const bb = capo ? e + d : b2 - 1 - d;
+            if (bb >= 0 && bb < m && muro[at(a, bb)]) return true;
+          }
+        return false;
+      };
+      const fraMuri = pezzi.filter((q) => toccaMuro(q, false) && toccaMuro(q, true)).length >= pezzi.length * 0.7;
+      scale.push(
+        oriz ? {
+          x0: b2,
+          x1: e,
+          y0: a0,
+          y1: a1,
+          oriz: false,
+          gradini: pezzi.length,
+          passo: medio2,
+          fraMuri
+        } : {
+          x0: a0,
+          x1: a1,
+          y0: b2,
+          y1: e,
+          oriz: true,
+          gradini: pezzi.length,
+          passo: medio2,
+          fraMuri
+        }
+      );
+    }
+  }
+  const incrocia = (s) => scale.some(
+    (t2) => t2 !== s && t2.oriz !== s.oriz && Math.min(s.x1, t2.x1) - Math.max(s.x0, t2.x0) > 0 && Math.min(s.y1, t2.y1) - Math.max(s.y0, t2.y0) > 0
+  );
+  const tutte = scale.filter((s) => s.fraMuri && s.gradini >= 5 && !incrocia(s));
+  const piastrelle = scale.filter(incrocia);
+  const vere = [];
+  for (const s of [...tutte].sort(
+    (a, b2) => (b2.x1 - b2.x0) * (b2.y1 - b2.y0) - (a.x1 - a.x0) * (a.y1 - a.y0)
+  )) {
+    const sopra = vere.some(
+      (t2) => Math.min(s.x1, t2.x1) - Math.max(s.x0, t2.x0) > 0 && Math.min(s.y1, t2.y1) - Math.max(s.y0, t2.y0) > 0
+    );
+    if (!sopra) vere.push(s);
+  }
+  for (const s of vere)
+    for (let y = s.y0; y <= s.y1; y++) for (let x = s.x0; x <= s.x1; x++) segnaScale[y * W2 + x] = 1;
+  return { vere, piastrelle, segnaScale };
+}
+function riconosciDaFoto({
+  W: W2,
+  H: H7,
+  muro,
+  barriera,
+  vetro,
+  pieni = false,
+  scale = [],
+  piastrelle = [],
+  fuoriCasa = null,
+  soglie = null,
+  archi = []
+}, { fuori = /* @__PURE__ */ new Set(), squadra = true } = {}) {
   const N = W2 * H7, passo = PASSO, ostacolo = barriera || muro;
   const dist = new Int32Array(N).fill(1e9), coda = new Int32Array(N);
   let t2 = 0, k = 0;
@@ -156512,6 +157012,21 @@ function riconosciDaFoto({ W: W2, H: H7, muro, barriera, vetro, pieni = false, s
         if (j >= 0 && j < N && !lab[j] && passaFuori(j)) {
           lab[j] = 1;
           pila2.push(j);
+          cuori[0].celle++;
+        }
+    }
+  }
+  if (fuoriCasa) {
+    let dentro3 = 0, fuoriDentro = 0;
+    for (let i = 0; i < N; i++)
+      if (!ostacolo[i] && !lab[i]) {
+        dentro3++;
+        if (fuoriCasa[i]) fuoriDentro++;
+      }
+    if (dentro3 && fuoriDentro < dentro3 * 0.5) {
+      for (let i = 0; i < N; i++)
+        if (!ostacolo[i] && !lab[i] && fuoriCasa[i]) {
+          lab[i] = 1;
           cuori[0].celle++;
         }
     }
@@ -156597,6 +157112,15 @@ function riconosciDaFoto({ W: W2, H: H7, muro, barriera, vetro, pieni = false, s
     }
   }
   const padre = /* @__PURE__ */ new Map();
+  const porteDisegnate = !!soglie && archi.length >= 3;
+  const conSoglia = (celle) => {
+    for (const c of celle)
+      for (const d of [0, 1, -1, W2, -W2, 2, -2, 2 * W2, -2 * W2]) {
+        const j = c + d;
+        if (j >= 0 && j < N && soglie[j]) return true;
+      }
+    return false;
+  };
   const radice3 = (a) => {
     while (padre.has(a)) a = padre.get(a);
     return a;
@@ -156655,6 +157179,10 @@ function riconosciDaFoto({ W: W2, H: H7, muro, barriera, vetro, pieni = false, s
       const ra = radice3(gr.a), rb = radice3(gr.b);
       if (ra !== rb) padre.set(rb, ra);
       gr.unito = true;
+    } else if (porteDisegnate && !ea && !eb && !conSoglia(gr.celle)) {
+      const ra = radice3(gr.a), rb = radice3(gr.b);
+      if (ra !== rb) padre.set(rb, ra);
+      gr.unito = true;
     }
   }
   const tipo = new Int16Array(N), idDi = /* @__PURE__ */ new Map(), stanze4 = [];
@@ -156687,8 +157215,18 @@ function riconosciDaFoto({ W: W2, H: H7, muro, barriera, vetro, pieni = false, s
     const centro2 = orizz ? Math.round((y0 + y1) / 2) : Math.round((x0 + x1) / 2);
     if (!fianchi(centro2)) continue;
     let p0 = centro2, p1 = centro2;
-    while (fianchi(p0 - 1) && centro2 - p0 < 20) p0--;
-    while (fianchi(p1 + 1) && p1 - centro2 < 20) p1++;
+    const mezzo = orizz ? Math.round((x0 + x1) / 2) : Math.round((y0 + y1) / 2);
+    const soglia4 = (p) => {
+      const i = orizz ? p * W2 + mezzo : mezzo * W2 + p;
+      return i >= 0 && i < N && barriera[i] && !muro[i];
+    };
+    if (barriera && barriera !== muro && soglia4(centro2)) {
+      while (soglia4(p0 - 1) && centro2 - p0 < 20) p0--;
+      while (soglia4(p1 + 1) && p1 - centro2 < 20) p1++;
+    } else {
+      while (fianchi(p0 - 1) && centro2 - p0 < 20) p0--;
+      while (fianchi(p1 + 1) && p1 - centro2 < 20) p1++;
+    }
     let conVetro = !vetro;
     for (let p = p0; p <= p1 && !conVetro; p++)
       for (let q = orizz ? x0 : y0; q <= (orizz ? x1 : y1); q++)
@@ -156980,6 +157518,33 @@ function squadraLaCasa(tipo, W2, H7, stanze4) {
         nuovo[i] = r.id;
         dipinto[i] = 1;
       }
+  }
+  {
+    const visto = new Uint8Array(N);
+    for (let i0 = 0; i0 < N; i0++) {
+      const id = tipo[i0];
+      if (id <= 0 || dipinto[i0] || visto[i0]) continue;
+      const pezzo3 = [i0];
+      visto[i0] = 1;
+      let stanza2 = false, porta = false;
+      for (let q = 0; q < pezzo3.length; q++) {
+        const c = pezzo3[q], x = c % W2;
+        for (const j of [x > 0 ? c - 1 : -1, x < W2 - 1 ? c + 1 : -1, c - W2, c + W2]) {
+          if (j < 0 || j >= N) continue;
+          if (tipo[j] === id && dipinto[j]) stanza2 = true;
+          else if (tipo[j] === -5 || tipo[j] === -4) porta = true;
+          else if (tipo[j] === id && !visto[j]) {
+            visto[j] = 1;
+            pezzo3.push(j);
+          }
+        }
+      }
+      if (stanza2 && porta)
+        for (const c of pezzo3) {
+          nuovo[c] = id;
+          dipinto[c] = 1;
+        }
+    }
   }
   {
     const r = Math.max(2, Math.round(0.3 / PASSO));
@@ -157363,6 +157928,11 @@ function aggiungiPiano(casa2, piano2) {
   piani.sort((a, b2) => (Number(a?.livello) || 0) - (Number(b2?.livello) || 0));
   return { ...c, piani: piani.slice(0, PIANI_AL_MASSIMO) };
 }
+function togliPiano(casa2, k) {
+  const c = casa2 && typeof casa2 === "object" ? casa2 : {};
+  const chiave2 = clean32(k);
+  return { ...c, piani: elenco15(c.piani).filter((p) => p?.k !== chiave2) };
+}
 function entitaUsate(casa2, tranne = null) {
   const out = [];
   for (const p of elenco15(casa2?.piani))
@@ -157533,14 +158103,14 @@ function dispositiviDallaFoto(casa2, stanza2, foto) {
     };
   });
 }
-function posaDiRipiego(casa2, stanza2, k, quanti3 = 0) {
+function posaDiRipiego(casa2, stanza2, k, quanti4 = 0) {
   const mont = DISPOSITIVI_3D[k]?.mont || "muro";
-  const r = riquadroDi(stanza2), passo = 0.4 * quanti3;
+  const r = riquadroDi(stanza2), passo = 0.4 * quanti4;
   let p;
   if (mont === "finestra" || mont === "porta") {
     const tipo = mont === "porta" ? "porta" : "finestra";
     const sue = elenco15(casa2?.aperture).filter((a2) => a2.stanza === stanza2.id && a2.tipo === tipo);
-    const a = sue[quanti3 % Math.max(1, sue.length)];
+    const a = sue[quanti4 % Math.max(1, sue.length)];
     if (a) p = { x: a.cx ?? a.x, y: a.cy ?? a.y, rot: 0 };
   }
   if (!p && mont === "angolo") {
@@ -157550,7 +158120,7 @@ function posaDiRipiego(casa2, stanza2, k, quanti3 = 0) {
       [r.x1 - 0.15, r.y1 - 0.15, -3 * Math.PI / 4],
       [r.x0 + 0.15, r.y1 - 0.15, 3 * Math.PI / 4]
     ];
-    const [x, y, rot] = angoli[quanti3 % 4];
+    const [x, y, rot] = angoli[quanti4 % 4];
     p = { x, y, rot };
   }
   if (!p && (mont === "muro" || mont === "finestra" || mont === "porta"))
@@ -157774,6 +158344,242 @@ function riprendiIlPiano(piano2, { margine = 0.6 } = {}) {
   };
 }
 
+// src/sections/casa-3d-editor-section.js
+var KEY185 = "__DASHBOARDMODERN_CASA3D_EDITOR__";
+var state181 = root[KEY185] ||= { installed: false, premium: null, chiedendo: false };
+var CASA3D_TAB = "casa3d";
+function schedaAttiva20() {
+  return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
+}
+function casa() {
+  return casa3dPulita(readJson(CHIAVE_CASA3D, null));
+}
+function salva34(nuova) {
+  writeJsonIfChanged(CHIAVE_CASA3D, casa3dPulita(nuova));
+  root.__DM_CASA3D_RIDISEGNA__?.();
+}
+function chiediLaLicenza4() {
+  if (state181.chiedendo) return;
+  state181.chiedendo = true;
+  premiumDellaCasa().then((premium2) => {
+    state181.premium = premium2 === true;
+    ridisegna34();
+  }).catch(() => {
+  }).finally(() => {
+    state181.chiedendo = false;
+  });
+}
+function dispositivoMarkup(c, p, i, d, states) {
+  const D = DISPOSITIVI_3D[d.k];
+  const stanza2 = p.stanze.find((s) => s.id === d.stanza);
+  const usate2 = [];
+  for (const q of c.piani) for (const e of q.dispositivi) if (e !== d && e.entity) usate2.push(e.entity);
+  const candidate = entitaCandidate(d.k, { stanza: stanza2?.nome || "", area: stanza2?.area || "", states, usate: usate2 }).slice(0, 40);
+  const ha = d.entity && !candidate.some((x) => x.entity === d.entity);
+  const voci4 = [
+    `<option value="">${esc(t("— nessuna per ora —", "— none yet —"))}</option>`,
+    ...ha ? [`<option value="${esc(d.entity)}" selected>${esc(d.entity)}</option>`] : [],
+    ...candidate.map((x) => `<option value="${esc(x.entity)}"${x.entity === d.entity ? " selected" : ""}>${esc(x.nome)} · ${esc(x.entity)}</option>`)
+  ].join("");
+  return `<div class="dm-c3-ed-disp${d.entity ? "" : " manca"}">
+    <span class="dm-c3-ed-ic">${D.icona}</span>
+    <div class="dm-c3-ed-dc"><strong>${esc(d.nome || t(...D.nome))}</strong><small>${esc(p.nome)} · ${esc(stanza2?.nome || t("stanza ?", "room ?"))}${d.da === "foto" ? ` · ${esc(t("dalla foto", "from photo"))}` : ""}</small></div>
+    <select class="ed-input" data-dm-c3-entita="${esc(p.k)}:${i}">${voci4}</select>
+    <input class="ed-input mono" data-dm-c3-mano="${esc(p.k)}:${i}" placeholder="${esc(t("o scrivila a mano", "or type it"))}" value="${ha ? esc(d.entity) : ""}" spellcheck="false" autocomplete="off">
+  </div>`;
+}
+function corpoMarkup20() {
+  const c = casa(), states = allStates() || {}, conti2 = contaCollegati(c);
+  if (state181.premium === false)
+    return `<div class="dm-c3-ed dm-c3-ed-chiuso"><span>🔒</span><b>${esc(t("Casa 3D", "3D Home"))}</b><p>${esc(
+      t("La casa in tre dimensioni è una funzione Premium. La configurazione resta salvata.", "The 3D home is a Premium feature. Its configuration stays saved.")
+    )}</p></div>`;
+  const piani = c.piani.length ? c.piani.map(
+    (p) => `<span class="dm-c3-ed-piano"><span>${esc(p.nome)} · ${p.stanze.length} ${esc(t("stanze", "rooms"))} · ${p.dispositivi.length} ${esc(t("dispositivi", "devices"))}</span><button type="button" class="dm-c3-ed-modifica" data-dm-c3-modifica="${esc(p.k)}" title="${esc(t("Modifica la planimetria di questo piano", "Edit this floor's plan"))}">✏️ ${esc(t("Modifica", "Edit"))}</button><button type="button" class="dm-c3-ed-elimina" data-dm-c3-elimina="${esc(p.k)}" title="${esc(t("Elimina questo piano", "Delete this floor"))}" aria-label="${esc(t("Elimina questo piano", "Delete this floor"))}">🗑️</button></span>`
+  ).join("") : `<p class="dm-c3-ed-nota">${esc(t("Ancora nessuna casa: creala dalla planimetria e dalle foto delle stanze.", "No home yet: create it from the floor plan and room photos."))}</p>`;
+  const elenco18 = c.piani.flatMap((p) => p.dispositivi.map((d, i) => dispositivoMarkup(c, p, i, d, states))).join("");
+  return `<div class="dm-c3-ed">
+    <article class="ed-row dm-c3-ed-gruppo">
+      <div class="dm-c3-ed-testa"><span>🏠</span><strong>${esc(t("Casa 3D", "3D Home"))}</strong><span class="dm-c3-ed-premium">PREMIUM</span></div>
+      <div class="dm-c3-ed-piani">${piani}</div>
+      <div class="dm-c3-ed-tasti"><button type="button" class="ed-btn-add" data-dm-c3-crea>🏗️ ${esc(
+    c.piani.length ? t("Aggiungi o rifai un piano", "Add or redo a floor") : t("Crea la tua casa", "Create your home")
+  )}</button></div>
+      <p class="dm-c3-ed-nota">${esc(
+    t("Le foto restano sul dispositivo da cui le carichi: si salvano solo muri, stanze, arredi, colori e dispositivi.", "Photos stay on the device you upload them from: only walls, rooms, furniture, colours and devices are saved.")
+  )}</p>
+    </article>
+    ${elenco18 ? `<article class="ed-row dm-c3-ed-gruppo"><div class="dm-c3-ed-testa"><span>🔗</span><strong>${esc(t("Dispositivi e entità", "Devices and entities"))}</strong><span class="dm-c3-ed-conto${conti2.mancano ? " manca" : ""}">${conti2.collegati}/${conti2.tutti}</span></div>
+      <p class="dm-c3-ed-nota">${esc(t("Ogni luce, telecamera, finestra o sensore della casa risponde a un'entità: sceglila dall'elenco (già filtrato per tipo e stanza) o scrivila a mano.", "Each light, camera, window or sensor answers to an entity: pick it from the list (already filtered by type and room) or type it."))}</p>
+      <div class="dm-c3-ed-elenco">${elenco18}</div></article>` : ""}
+  </div>`;
+}
+function serve2() {
+  try {
+    return puoConfigurare() && casa().attiva === true && currentProfile() !== "primary";
+  } catch (_errore) {
+    return false;
+  }
+}
+function ensureCasa3DEditor() {
+  const body = doc?.getElementById("ed-body");
+  if (!body || schedaAttiva20() !== CASA3D_TAB) return false;
+  if (state181.premium === null) chiediLaLicenza4();
+  const firma2 = `${state181.premium}:${JSON.stringify(casa())}:${Object.keys(allStates() || {}).length}`;
+  if (body.dataset.dmCasa3dEditor === firma2 && body.querySelector(".dm-c3-ed")) return true;
+  if (body.querySelector(".dm-c3-ed") && body.contains(doc.activeElement) && doc.activeElement?.dataset?.dmC3Mano !== void 0) return true;
+  body.dataset.dmCasa3dEditor = firma2;
+  body.innerHTML = corpoMarkup20();
+  body.dataset.renderer = "casa3d";
+  return true;
+}
+function ridisegna34() {
+  const body = doc?.getElementById("ed-body");
+  if (body) delete body.dataset.dmCasa3dEditor;
+  ensureCasa3DEditor();
+}
+var SOLO_CASA3D = "dm-solo-casa3d";
+function ensureCasa3DEditorTab() {
+  const solo = serve2();
+  doc?.documentElement?.classList?.toggle?.(SOLO_CASA3D, solo);
+  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette4) return false;
+  const presente = linguette4.querySelector(`.ed-tab[data-tab="${CASA3D_TAB}"]`);
+  if (!solo) {
+    presente?.remove();
+    return false;
+  }
+  if (!presente) {
+    const linguetta4 = doc.createElement("button");
+    linguetta4.className = "ed-tab";
+    linguetta4.dataset.tab = CASA3D_TAB;
+    linguetta4.textContent = `🏠 ${t("Casa 3D", "3D Home")}`;
+    linguetta4.addEventListener("click", () => root.editorSwitch?.(CASA3D_TAB));
+    linguette4.appendChild(linguetta4);
+  }
+  if (schedaAttiva20() !== CASA3D_TAB) root.editorSwitch?.(CASA3D_TAB);
+  return !presente;
+}
+function nelCorpo4(event) {
+  return Boolean(event.target?.closest?.("#ed-body .dm-c3-ed"));
+}
+function dispositivo(c, chi) {
+  const [k, i] = clean(chi).split(":");
+  const p = c.piani.find((x) => x.k === k);
+  return p?.dispositivi?.[Number(i)] || null;
+}
+function onClick58(event) {
+  if (!nelCorpo4(event)) return;
+  const modifica = event.target.closest("[data-dm-c3-modifica]");
+  if (modifica) {
+    event.preventDefault();
+    root.__DM_CASA3D_CREA__?.({ piano: modifica.dataset.dmC3Modifica, modifica: true });
+    return;
+  }
+  if (event.target.closest("[data-dm-c3-crea]")) {
+    event.preventDefault();
+    root.__DM_CASA3D_CREA__?.();
+    return;
+  }
+  const elimina6 = event.target.closest("[data-dm-c3-elimina]");
+  if (elimina6) {
+    event.preventDefault();
+    const c = casa();
+    const k = clean(elimina6.dataset.dmC3Elimina);
+    const p = c.piani.find((x) => x.k === k);
+    if (!p) return;
+    const nome = p.nome;
+    const domanda = t(
+      `Elimino il piano "${nome}"? Le sue stanze, gli arredi e i dispositivi si perdono.`,
+      `Delete the floor "${nome}"? Its rooms, furniture and devices are lost.`
+    );
+    if (root.confirm && !root.confirm(domanda)) return;
+    salva34(togliPiano(c, k));
+    ridisegna34();
+  }
+}
+function onChange22(event) {
+  if (!nelCorpo4(event)) return;
+  const c = casa();
+  const t0 = event.target;
+  const chi = t0.dataset.dmC3Entita ?? t0.dataset.dmC3Mano;
+  if (chi === void 0) return;
+  const d = dispositivo(c, chi);
+  if (!d) return;
+  const valore3 = clean(t0.value);
+  if (t0.dataset.dmC3Mano !== void 0 && valore3 && !entita(valore3)) {
+    t0.setCustomValidity?.(t("Non è un'entità (dominio.nome)", "Not an entity (domain.name)"));
+    t0.reportValidity?.();
+    return;
+  }
+  t0.setCustomValidity?.("");
+  d.entity = entita(valore3);
+  salva34(c);
+  ridisegna34();
+}
+function installaLoStile10() {
+  installStyle(
+    "dm-casa3d-editor-style",
+    `
+      #ed-body .dm-c3-ed{display:grid;gap:14px}
+      #ed-body .dm-c3-ed-gruppo{display:grid;gap:10px}
+      #ed-body .dm-c3-ed-testa{display:flex;align-items:center;gap:10px;font-size:15px}
+      #ed-body .dm-c3-ed-testa>span:first-child{font-size:22px}
+      #ed-body .dm-c3-ed-premium{margin-left:6px;font-size:9.5px;font-weight:900;letter-spacing:.08em;padding:2px 7px;border-radius:6px;color:#b45309;border:1px solid #f59e0b88;background:#f59e0b18}
+      #ed-body .dm-c3-ed-conto{margin-left:auto;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:900;color:#047857;background:color-mix(in srgb,#10b981 14%,transparent)}
+      #ed-body .dm-c3-ed-conto.manca{color:#b45309;background:color-mix(in srgb,#f59e0b 16%,transparent)}
+      #ed-body .dm-c3-ed-piani{display:flex;flex-wrap:wrap;gap:6px}
+      #ed-body .dm-c3-ed-piano{display:inline-flex;align-items:center;gap:8px;padding:4px 4px 4px 10px;border-radius:999px;border:1px solid var(--card-border,#e2e8f0);font-size:12px;font-weight:700}
+      #ed-body .dm-c3-ed-elimina{border:1px solid var(--card-border,#e2e8f0);background:transparent;border-radius:999px;padding:3px 8px;cursor:pointer;font-size:13px;line-height:1}
+      #ed-body .dm-c3-ed-elimina:hover{border-color:#ef4444;background:color-mix(in srgb,#ef4444 12%,transparent)}
+      #ed-body .dm-c3-ed-modifica{border:0;border-radius:999px;padding:5px 10px;font:inherit;font-size:11.5px;font-weight:800;cursor:pointer;background:var(--accent,#0ea5e9);color:#fff}
+      #ed-body .dm-c3-ed-tasti{display:flex;flex-wrap:wrap;gap:8px}
+      #ed-body .dm-c3-ed-tasti .ed-btn-add{flex:1 1 180px}
+      #ed-body .dm-c3-ed-nota{margin:2px;font-size:11.5px;font-weight:700;line-height:1.45;color:var(--text-dim,#64748b)}
+      #ed-body .dm-c3-ed-elenco{display:grid;gap:8px}
+      #ed-body .dm-c3-ed-disp{display:grid;grid-template-columns:auto minmax(120px,1fr) minmax(180px,1.4fr) minmax(140px,1fr);align-items:center;gap:10px;padding:10px;border-radius:14px;border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff)}
+      #ed-body .dm-c3-ed-disp.manca{border-color:#f59e0b88}
+      #ed-body .dm-c3-ed-ic{font-size:22px}
+      #ed-body .dm-c3-ed-dc{display:grid;min-width:0}
+      #ed-body .dm-c3-ed-dc strong{font-size:13px}
+      #ed-body .dm-c3-ed-dc small{font-size:11px;color:var(--text-dim,#64748b)}
+      #ed-body .dm-c3-ed-chiuso{display:grid;justify-items:center;gap:10px;padding:40px 20px;text-align:center}
+      #ed-body .dm-c3-ed-chiuso>span{font-size:44px}
+      html.dm-solo-casa3d #editor-modal .ed-tabs,html.dm-solo-casa3d #editor-modal #dm-alberatura-famiglie,html.dm-solo-casa3d #editor-modal .dm-cerca-config,html.dm-solo-casa3d #editor-modal .dm-alberatura-titolo-famiglia{display:none!important}
+      html.dm-solo-casa3d #editor-modal .ed-body,html.dm-solo-casa3d #editor-modal #ed-body{margin-left:0!important;max-width:none!important}
+      @media(max-width:760px){#ed-body .dm-c3-ed-disp{grid-template-columns:auto minmax(0,1fr)}#ed-body .dm-c3-ed-disp select,#ed-body .dm-c3-ed-disp input{grid-column:1/-1}}
+    `
+  );
+}
+function installCasa3DEditor() {
+  if (!doc || state181.installed) return false;
+  state181.installed = true;
+  installaLoStile10();
+  doc.addEventListener("click", onClick58);
+  doc.addEventListener("change", onChange22);
+  wrapFunction("apriConfigEntita", "__dmCasa3dEditor", () => {
+    ensureCasa3DEditorTab();
+    ensureCasa3DEditor();
+  });
+  onEditorRedraw("__dmCasa3dEditor", () => {
+    root.queueMicrotask?.(() => {
+      ensureCasa3DEditorTab();
+      ensureCasa3DEditor();
+    });
+  });
+  for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:editor-rendered"])
+    root.addEventListener?.(evento, () => {
+      root.queueMicrotask?.(() => {
+        ensureCasa3DEditorTab();
+        ensureCasa3DEditor();
+      });
+    });
+  ensureCasa3DEditorTab();
+  ensureCasa3DEditor();
+  return true;
+}
+senzaCadere(installCasa3DEditor);
+
 // src/core/la-focale-della-foto.js
 var SOI = 65496;
 var APP1 = 65505;
@@ -157804,8 +158610,8 @@ function leggiIfd(vista2, base, offset, little, tag) {
     if (p + 12 > vista2.byteLength) break;
     const t2 = vista2.getUint16(p, little);
     if (!tag.has(t2)) continue;
-    const tipo = vista2.getUint16(p + 2, little), quanti3 = vista2.getUint32(p + 4, little);
-    const dove = quanti3 * (tipo === 3 ? 2 : tipo === 2 || tipo === 1 ? 1 : tipo === 4 ? 4 : 8) > 4;
+    const tipo = vista2.getUint16(p + 2, little), quanti4 = vista2.getUint32(p + 4, little);
+    const dove = quanti4 * (tipo === 3 ? 2 : tipo === 2 || tipo === 1 ? 1 : tipo === 4 ? 4 : 8) > 4;
     const v = dove ? base + vista2.getUint32(p + 8, little) : p + 8;
     if (v < 0 || v + 4 > vista2.byteLength) continue;
     if (tipo === 3) out[t2] = vista2.getUint16(v, little);
@@ -157813,7 +158619,7 @@ function leggiIfd(vista2, base, offset, little, tag) {
     else if (tipo === 5 && v + 8 <= vista2.byteLength) {
       const num4 = vista2.getUint32(v, little), den = vista2.getUint32(v + 4, little);
       out[t2] = den ? num4 / den : null;
-    } else if (tipo === 2) out[t2] = ascii(vista2, v, Math.min(quanti3, 64));
+    } else if (tipo === 2) out[t2] = ascii(vista2, v, Math.min(quanti4, 64));
   }
   return out;
 }
@@ -157938,10 +158744,10 @@ function distanzaDellaParete(visti, { w, h, f35 = null } = {}) {
     peso: x.nota.peso * x.score,
     classe: x.classe
   }));
-  const distanza3 = medianaPesata2(stime);
-  if (distanza3 === null) return null;
+  const distanza4 = medianaPesata2(stime);
+  if (distanza4 === null) return null;
   return {
-    distanza: tra4(distanza3, 1, 12),
+    distanza: tra4(distanza4, 1, 12),
     f,
     riferimenti: [...new Set(stime.map((s) => s.classe))],
     peso: stime.reduce((s, x) => s + x.peso, 0)
@@ -158761,7 +159567,13 @@ function statoNuovo(salvata, livello = 0) {
      * tornare indietro con «Le altre strade»; e quante foto sta ancora
      * guardando il riconoscitore */
     primaDelleFoto: null,
-    fotoInCorso: 0
+    fotoInCorso: 0,
+    /* il riconoscitore: quanto e' arrivato ({fatti, totale} in byte) mentre
+     * si scarica, e perche' non e' disponibile (la causa, e se e' lo
+     * scarico che non e' riuscito) */
+    caricamento: null,
+    perche: "",
+    nonScaricato: false
   };
 }
 function registri() {
@@ -158794,6 +159606,17 @@ var ORT_COLLA = (() => {
   } catch (_errore) {
     return "../../legacy/vendor/riconoscere/ort-wasm-simd-threaded.js";
   }
+})();
+var LAVORATORE = (() => {
+  try {
+    return new URL("../../legacy/riconoscere-lavoratore.js", import.meta.url).href;
+  } catch (_errore) {
+    return "../../legacy/riconoscere-lavoratore.js";
+  }
+})();
+var LAVORATORE_SERVITO = (() => {
+  const cartella2 = cartellaDellaPlancia(String(import.meta.url || ""));
+  return cartella2 ? `${cartella2}legacy/riconoscere-lavoratore.js` : LAVORATORE;
 })();
 var PDFJS = (() => {
   try {
@@ -158834,35 +159657,242 @@ function copione(src, pronto) {
   });
 }
 var LATO = 640;
-function rilevatore2(ort, sessione, nomi2) {
+function tensoreDellaFoto(img) {
+  const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+  const tela4 = tela2d(LATO, LATO), g = tela4.getContext("2d", { willReadFrequently: true });
+  g.imageSmoothingEnabled = true;
+  g.imageSmoothingQuality = "high";
+  g.drawImage(img, 0, 0, LATO, LATO);
+  const px = g.getImageData(0, 0, LATO, LATO).data, n = LATO * LATO, dati = new Float32Array(3 * n);
+  for (let i = 0; i < n; i++) {
+    dati[i] = px[i * 4] / 255;
+    dati[n + i] = px[i * 4 + 1] / 255;
+    dati[2 * n + i] = px[i * 4 + 2] / 255;
+  }
+  return { dati, w, h };
+}
+function vistiDa({ etichette, riquadri, punti }, nomi2, quanti4, soglia3) {
+  const visti = [];
+  for (let i = 0; i < punti.length; i++) {
+    if (punti[i] < soglia3) continue;
+    const [x0, y0, x1, y1] = [0, 1, 2, 3].map((j) => riquadri[i * 4 + j]);
+    const nome = nomi2[Number(etichette[i]) - 1];
+    if (!nome || !(x1 > x0 && y1 > y0)) continue;
+    visti.push({ class: nome, score: punti[i], bbox: [x0, y0, x1 - x0, y1 - y0] });
+  }
+  return visti.sort((a, b2) => b2.score - a.score).slice(0, quanti4);
+}
+function rilevatore2(gira, nomi2) {
   return {
-    async detect(img, quanti3 = 60, soglia3 = 0.3) {
-      const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
-      const tela4 = tela2d(LATO, LATO), g = tela4.getContext("2d", { willReadFrequently: true });
-      g.imageSmoothingEnabled = true;
-      g.imageSmoothingQuality = "high";
-      g.drawImage(img, 0, 0, LATO, LATO);
-      const px = g.getImageData(0, 0, LATO, LATO).data, n = LATO * LATO, dati = new Float32Array(3 * n);
-      for (let i = 0; i < n; i++) {
-        dati[i] = px[i * 4] / 255;
-        dati[n + i] = px[i * 4 + 1] / 255;
-        dati[2 * n + i] = px[i * 4 + 2] / 255;
-      }
-      const out = await sessione.run({
-        images: new ort.Tensor("float32", dati, [1, 3, LATO, LATO]),
-        orig_target_sizes: new ort.Tensor("int64", BigInt64Array.from([BigInt(w), BigInt(h)]), [1, 2])
-      });
-      const etichette = out.labels.data, riquadri = out.boxes.data, punti = out.scores.data, visti = [];
-      for (let i = 0; i < punti.length; i++) {
-        if (punti[i] < soglia3) continue;
-        const [x0, y0, x1, y1] = [0, 1, 2, 3].map((j) => riquadri[i * 4 + j]);
-        const nome = nomi2[Number(etichette[i]) - 1];
-        if (!nome || !(x1 > x0 && y1 > y0)) continue;
-        visti.push({ class: nome, score: punti[i], bbox: [x0, y0, x1 - x0, y1 - y0] });
-      }
-      return visti.sort((a, b2) => b2.score - a.score).slice(0, quanti3);
+    async detect(img, quanti4 = 60, soglia3 = 0.3) {
+      const { dati, w, h } = tensoreDellaFoto(img);
+      return vistiDa(await gira(dati, w, h), nomi2, quanti4, soglia3);
     }
   };
+}
+async function rilevatoreInPagina(file) {
+  if (!await copione(`${VENDOR}ort.wasm.min.js`, () => root.ort))
+    throw new Error(t("ONNX Runtime non si è caricato", "ONNX Runtime didn't load"));
+  const ort = root.ort;
+  ort.env.wasm.numThreads = 1;
+  ort.env.wasm.wasmPaths = {
+    mjs: `${VENDOR}ort-wasm-simd-threaded.js`,
+    wasm: `${VENDOR}ort-wasm-simd-threaded.wasm`
+  };
+  ort.env.wasm.wasmBinary = file.motore;
+  const sessione = await ort.InferenceSession.create(new Uint8Array(file.pesi), {
+    executionProviders: ["wasm"],
+    graphOptimizationLevel: "all"
+  });
+  return rilevatore2(async (dati, w, h) => {
+    const out = await sessione.run({
+      images: new ort.Tensor("float32", dati, [1, 3, LATO, LATO]),
+      orig_target_sizes: new ort.Tensor(
+        "int64",
+        BigInt64Array.from([BigInt(w), BigInt(h)]),
+        [1, 2]
+      )
+    });
+    return { etichette: out.labels.data, riquadri: out.boxes.data, punti: out.scores.data };
+  }, file.nomi);
+}
+var ATTESA_PREPARAZIONE = 18e4;
+var ATTESA_FOTO = 12e4;
+function rilevatoreNelLavoratore(file, quandoMuore) {
+  if (typeof root.Worker !== "function") return Promise.resolve(null);
+  let lavoratore;
+  try {
+    lavoratore = new root.Worker(LAVORATORE_SERVITO);
+  } catch (_errore) {
+    return Promise.resolve(null);
+  }
+  let prossimo = 1, haParlato = false, pronto = false, morto = null;
+  const attese = /* @__PURE__ */ new Map();
+  const muore = (errore) => {
+    if (morto) return;
+    morto = errore;
+    for (const a of attese.values()) {
+      clearTimeout(a.orologio);
+      a.no(errore);
+    }
+    attese.clear();
+    try {
+      lavoratore.terminate();
+    } catch (_errore) {
+    }
+    if (pronto) quandoMuore(errore);
+  };
+  lavoratore.onmessage = (ev) => {
+    haParlato = true;
+    const m = ev.data || {}, a = attese.get(m.id);
+    if (!a) return;
+    attese.delete(m.id);
+    clearTimeout(a.orologio);
+    if (m.tipo === "errore") a.no(new Error(m.perche || "riconoscitore"));
+    else a.ok(m);
+  };
+  lavoratore.onerror = (ev) => {
+    ev?.preventDefault?.();
+    muore(
+      new Error(
+        ev?.message || t("Il lavoratore del riconoscitore non parte", "The recognizer worker won't start")
+      )
+    );
+  };
+  const chiedi9 = (messaggio, entro, trasferisci) => new Promise((ok, no) => {
+    if (morto) return no(morto);
+    const id = prossimo++;
+    const orologio5 = setTimeout(() => {
+      attese.delete(id);
+      const s = Math.round(entro / 1e3);
+      muore(
+        new Error(
+          t(
+            `Il riconoscitore non ha risposto in ${s} s`,
+            `The recognizer didn't answer in ${s} s`
+          )
+        )
+      );
+      no(morto);
+    }, entro);
+    attese.set(id, { ok, no, orologio: orologio5 });
+    try {
+      lavoratore.postMessage({ ...messaggio, id }, trasferisci || []);
+    } catch (errore) {
+      attese.delete(id);
+      clearTimeout(orologio5);
+      no(errore);
+    }
+  });
+  return chiedi9(
+    {
+      tipo: "carica",
+      ort: `${VENDOR}ort.wasm.min.js`,
+      colla: `${VENDOR}ort-wasm-simd-threaded.js`,
+      wasm: `${VENDOR}ort-wasm-simd-threaded.wasm`,
+      motore: file.motore,
+      pesi: file.pesi
+    },
+    ATTESA_PREPARAZIONE
+  ).then(
+    () => {
+      pronto = true;
+      return rilevatore2(
+        (dati, w, h) => chiedi9({ tipo: "rileva", dati, lato: LATO, w, h }, ATTESA_FOTO, [dati.buffer]),
+        file.nomi
+      );
+    },
+    (errore) => {
+      muore(errore);
+      if (!haParlato) return null;
+      throw errore;
+    }
+  );
+}
+var UN_MEGA = 1024 * 1024;
+var ATTESA_PEZZO = 9e4;
+async function prendi(url, { json: json2 = false } = {}) {
+  const nome = url.slice(url.lastIndexOf("/") + 1);
+  let ultimo = null;
+  for (let giro = 0; giro < 2; giro++) {
+    const ctrl = typeof root.AbortController === "function" ? new root.AbortController() : null;
+    const orologio5 = ctrl ? setTimeout(() => ctrl.abort(), ATTESA_PEZZO) : 0;
+    try {
+      const r = await fetch(url, ctrl ? { signal: ctrl.signal } : void 0);
+      if (!r.ok) {
+        ultimo = new Error(`${nome}: HTTP ${r.status}`);
+        if (r.status === 404) break;
+        continue;
+      }
+      return json2 ? await r.json() : await r.arrayBuffer();
+    } catch (errore) {
+      const s = ATTESA_PEZZO / 1e3;
+      ultimo = ctrl?.signal?.aborted ? new Error(t(`${nome}: nessuna risposta in ${s} s`, `${nome}: no answer in ${s} s`)) : errore;
+    } finally {
+      clearTimeout(orologio5);
+    }
+  }
+  throw ultimo || new Error(nome);
+}
+async function scaricaIlRiconoscitore() {
+  const elenco18 = await prendi(`${VENDOR}pezzi.json`, { json: true });
+  if (!Array.isArray(elenco18?.wasm?.pezzi) || !Array.isArray(elenco18?.modello?.pezzi))
+    throw new Error(t("L'elenco dei pezzi non torna", "The list of pieces doesn't add up"));
+  const nomi2 = await prendi(`${VENDOR}obj365.json`, { json: true });
+  const totale = (Number(elenco18.modello.byte) || 0) + (Number(elenco18.wasm.byte) || 0);
+  let fatti = 0;
+  avanzamento(fatti, totale);
+  const intero4 = async (parte) => {
+    const tutto = new Uint8Array(Number(parte.byte) || 0);
+    let a = 0;
+    const aMeta = (nome) => new Error(t(`${nome}: arrivato a metà`, `${nome}: arrived incomplete`));
+    for (const nome of parte.pezzi) {
+      const b2 = new Uint8Array(await prendi(`${VENDOR}${nome}`));
+      if (a + b2.length > tutto.length) throw aMeta(nome);
+      tutto.set(b2, a);
+      a += b2.length;
+      fatti += b2.length;
+      avanzamento(fatti, totale);
+    }
+    if (a !== tutto.length) throw aMeta(parte.pezzi[parte.pezzi.length - 1] || "?");
+    return tutto.buffer;
+  };
+  const motore = await intero4(elenco18.wasm);
+  const pesi = await intero4(elenco18.modello);
+  return { nomi: nomi2, motore, pesi };
+}
+function avanzamento(fatti, totale) {
+  const S = state182.S;
+  if (!S) return;
+  S.caricamento = totale > 0 ? { fatti, totale } : null;
+  const n = nodo2()?.querySelector("[data-c3c-rr]");
+  if (n) n.textContent = testoDelCaricamento();
+  else disegnaIlPannello();
+}
+function testoDelCaricamento() {
+  const c = state182.S?.caricamento;
+  if (!c)
+    return t(
+      "Preparo il riconoscimento degli oggetti, sul dispositivo…",
+      "Getting object recognition ready, on this device…"
+    );
+  const fatti = Math.floor(c.fatti / UN_MEGA), totale = Math.ceil(c.totale / UN_MEGA);
+  return t(
+    `Scarico il riconoscitore… ${fatti} di ${totale} MB`,
+    `Downloading the recognizer… ${fatti} of ${totale} MB`
+  );
+}
+function nonDisponibile(errore, nonScaricato) {
+  root.console?.warn?.("[DashboardModern] Casa 3D: riconoscimento non disponibile", errore);
+  const S = state182.S;
+  if (S) {
+    S.riconoscitore = "no";
+    S.perche = perche5(errore);
+    S.nonScaricato = nonScaricato === true;
+    S.caricamento = null;
+  }
+  state182.modello = null;
+  return null;
 }
 function riconoscitore() {
   if (state182.modello) return state182.modello;
@@ -158870,37 +159900,29 @@ function riconoscitore() {
     const S = state182.S;
     if (S) {
       S.riconoscitore = "carica";
+      S.perche = "";
+      S.nonScaricato = false;
+      S.caricamento = null;
       disegnaIlPannello();
     }
+    let file;
     try {
-      if (!await copione(`${VENDOR}ort.wasm.min.js`, () => root.ort)) throw new Error("ort");
-      const ort = root.ort;
-      ort.env.wasm.numThreads = 1;
-      ort.env.wasm.wasmPaths = {
-        mjs: `${VENDOR}ort-wasm-simd-threaded.js`,
-        wasm: `${VENDOR}ort-wasm-simd-threaded.wasm`
-      };
-      const [nomi2, pesi] = await Promise.all([
-        fetch(`${VENDOR}obj365.json`).then((r) => {
-          if (!r.ok) throw new Error(`obj365 ${r.status}`);
-          return r.json();
-        }),
-        fetch(`${VENDOR}dfine-s-obj365.bin`).then((r) => {
-          if (!r.ok) throw new Error(`modello ${r.status}`);
-          return r.arrayBuffer();
-        })
-      ]);
-      const sessione = await ort.InferenceSession.create(new Uint8Array(pesi), {
-        executionProviders: ["wasm"],
-        graphOptimizationLevel: "all"
-      });
-      if (state182.S) state182.S.riconoscitore = "pronto";
-      return rilevatore2(ort, sessione, nomi2);
+      file = await scaricaIlRiconoscitore();
     } catch (errore) {
-      root.console?.warn?.("[DashboardModern] Casa 3D: riconoscimento non disponibile", errore);
-      if (state182.S) state182.S.riconoscitore = "no";
-      state182.modello = null;
-      return null;
+      return nonDisponibile(errore, true);
+    }
+    try {
+      avanzamento(0, 0);
+      let modello2 = await rilevatoreNelLavoratore(file, (errore) => nonDisponibile(errore, false));
+      if (!modello2) modello2 = await rilevatoreInPagina(file);
+      file.motore = file.pesi = null;
+      if (state182.S) {
+        state182.S.riconoscitore = "pronto";
+        state182.S.caricamento = null;
+      }
+      return modello2;
+    } catch (errore) {
+      return nonDisponibile(errore, false);
     }
   })();
   return state182.modello;
@@ -159304,8 +160326,7 @@ function notaDellaScala(S) {
     return nota(
       `⚠️ ${esc(t(`Con questa misura i muri esterni sarebbero spessi ${cm} cm: controlla la misura, in metri (10,92 e non 1092).`, `With this length the outer walls would be ${cm} cm thick: check the length, in metres (10.92, not 1092).`))}`
     );
-  if (S.centimetri)
-    return nota(esc(t(`Letta come ${metri} metri.`, `Read as ${metri} metres.`)));
+  if (S.centimetri) return nota(esc(t(`Letta come ${metri} metri.`, `Read as ${metri} metres.`)));
   if (auto)
     return nota(
       `✓ ${esc(t("Scala trovata dallo spessore dei muri: puoi andare avanti, o segnare una misura per essere più preciso.", "Scale found from the wall thickness: you can go on, or mark a length to be more precise."))}`
@@ -159425,11 +160446,19 @@ function contoMarkup() {
   return `<span class="c3c-conto${c.mancano ? " manca" : ""}">${esc(t(`${c.collegati} collegati · ${c.mancano} mancanti`, `${c.collegati} linked · ${c.mancano} missing`))}</span>`;
 }
 function statoDelRiconoscitore() {
-  const r = state182.S.riconoscitore;
+  const S = state182.S, r = S.riconoscitore;
   if (r === "carica")
-    return `<div class="c3c-lavoro">⏳ ${esc(t("Preparo il riconoscimento degli oggetti, sul dispositivo…", "Getting object recognition ready, on this device…"))}</div>`;
+    return `<div class="c3c-lavoro">⏳ <span data-c3c-rr>${esc(testoDelCaricamento())}</span></div>`;
   if (r === "no")
-    return `<div class="c3c-lavoro no">${esc(t("Il riconoscimento automatico non è disponibile qui: segna tu arredi e dispositivi toccandoli nella foto.", "Automatic recognition isn't available here: mark furniture and devices by tapping them in the photo."))}</div>`;
+    return `<div class="c3c-lavoro no">${esc(
+      S.nonScaricato ? t(
+        "Il riconoscitore non si è scaricato: controlla la connessione e riprova.",
+        "The recognizer didn't download: check the connection and try again."
+      ) : t(
+        "Il riconoscimento automatico non è disponibile qui: segna tu arredi e dispositivi toccandoli nella foto.",
+        "Automatic recognition isn't available here: mark furniture and devices by tapping them in the photo."
+      )
+    )}${S.perche ? `<small class="c3c-dettaglio" translate="no">${esc(S.perche)}</small>` : ""}<button type="button" class="c3c-btn c3c-riprova" data-c3c="riprovarr">↻ ${esc(t("Riprova", "Try again"))}</button></div>`;
   return "";
 }
 function pFotoStanze() {
@@ -159664,7 +160693,10 @@ function pStanzeDalleFoto() {
   const righe3 = S.stanzeFoto.map((r, i) => {
     const foto = S.foto[r.id] || [];
     const rif = r.riferimenti.map((k) => MISURE_NOTE[k]?.nome ? due3(MISURE_NOTE[k].nome) : k).join(", ");
-    const comeMai = r.aMano ? t("misure scritte da te", "sizes you typed") : r.da === "foto" ? t(`dalle foto (${rif})`, `from the photos (${rif})`) : t("misure di serie: correggile se le sai", "standard sizes: adjust them if you know them");
+    const comeMai = r.aMano ? t("misure scritte da te", "sizes you typed") : r.da === "foto" ? t(`dalle foto (${rif})`, `from the photos (${rif})`) : t(
+      "misure di serie: correggile se le sai",
+      "standard sizes: adjust them if you know them"
+    );
     const miniature = foto.map(
       (f, k) => `<img src="${f.src}" alt="" class="${S.vistaFoto && r.id === S.sel && k === S.fotoSel ? "si" : ""}" data-c3c-sffoto="${r.id}:${k}">`
     ).join("");
@@ -159714,7 +160746,8 @@ function disegnaPiantaDalleFoto() {
   const S = state182.S, sopra = pezzo2(".c3c-sopra");
   const d = disposteDiAdesso();
   S.sfDisposte = d;
-  if (!d.length) return vuota(t("Aggiungi le stanze e le loro foto", "Add the rooms and their photos"));
+  if (!d.length)
+    return vuota(t("Aggiungi le stanze e le loro foto", "Add the rooms and their photos"));
   const x1 = Math.max(...d.map((r) => r.x + r.larghezza)), y1 = Math.max(...d.map((r) => r.y + r.profondita));
   const U = SF_UNITA, M = SF_MARGINE;
   const g = adatta((x1 + 2 * M) * U, (y1 + 2 * M) * U), s = state182.vista.s;
@@ -159723,7 +160756,8 @@ function disegnaPiantaDalleFoto() {
   g.fillRect(0, 0, (x1 + 2 * M) * U, (y1 + 2 * M) * U);
   const X = (m) => (m + M) * U, Y = (m) => (m + M) * U;
   g.fillStyle = "#334155";
-  for (const r of d) g.fillRect(X(r.x) - 15, Y(r.y) - 15, r.larghezza * U + 30, r.profondita * U + 30);
+  for (const r of d)
+    g.fillRect(X(r.x) - 15, Y(r.y) - 15, r.larghezza * U + 30, r.profondita * U + 30);
   for (const r of d) {
     g.globalAlpha = r.id === S.sel ? 0.95 : 0.7;
     g.fillStyle = COLORI_STANZE[r.id % COLORI_STANZE.length];
@@ -159779,7 +160813,13 @@ function creaLaPiantaDalleFoto() {
   );
   const g = grigliaDalleStanze(disposte);
   if (!g) return;
-  const casa2 = riconosciDaFoto({ W: g.W, H: g.H, muro: g.muro, barriera: g.barriera, vetro: g.vetro });
+  const casa2 = riconosciDaFoto({
+    W: g.W,
+    H: g.H,
+    muro: g.muro,
+    barriera: g.barriera,
+    vetro: g.vetro
+  });
   const tela4 = tela2d(g.W, g.H), ctx = tela4.getContext("2d"), im = ctx.createImageData(g.W, g.H);
   for (let i = 0; i < g.W * g.H; i++) {
     const v = g.muro[i] ? 0 : g.vetro[i] ? 120 : 255;
@@ -159983,7 +161023,14 @@ async function usaPlanimetria(src) {
   try {
     let img = typeof src === "string" ? await immagine2(src) : src;
     const lato = Math.max(img.width, img.height);
-    if (lato > 2400) {
+    if (lato !== 2400 && typeof src === "string") {
+      const k = 2400 / lato, c = tela2d(Math.round(img.width * k), Math.round(img.height * k));
+      const q2 = c.getContext("2d");
+      q2.imageSmoothingEnabled = true;
+      q2.imageSmoothingQuality = "high";
+      q2.drawImage(img, 0, 0, c.width, c.height);
+      img = c;
+    } else if (lato > 2400) {
       const k = 2400 / lato, c = tela2d(Math.round(img.width * k), Math.round(img.height * k));
       c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
       img = c;
@@ -160016,7 +161063,9 @@ async function usaPlanimetria(src) {
     let muri = null;
     if (typeof src === "string") {
       try {
-        muri = scalaDaiMuri(dritta.getContext("2d").getImageData(0, 0, dritta.width, dritta.height));
+        muri = scalaDaiMuri(
+          dritta.getContext("2d").getImageData(0, 0, dritta.width, dritta.height)
+        );
       } catch {
         muri = null;
       }
@@ -160186,12 +161235,12 @@ async function usaPiantaDelFoglio(p) {
     disegna14();
   }
 }
-async function scaricaIlMotore(dove, prendi = root.fetch?.bind(root)) {
+async function scaricaIlMotore(dove, prendi2 = root.fetch?.bind(root)) {
   let ultimo = null;
   for (let volta = 0; volta < 2; volta++) {
     let risposta;
     try {
-      risposta = await prendi(dove, { credentials: "same-origin", cache: "no-store" });
+      risposta = await prendi2(dove, { credentials: "same-origin", cache: "no-store" });
     } catch (errore) {
       ultimo = new Error(`libredwg-web.wasm: ${perche5(errore) || "rete"}`);
       continue;
@@ -160410,11 +161459,11 @@ function riconosci() {
       for (let i = 0; i < m.length; i++) m[i] = d[i * 4 + 3] > 64 ? 1 : 0;
       return m;
     };
-    const pieni = S.disegno || !S.pianoDaFoto ? null : muriPieni(im, S.mpp);
-    S.griglia = pieni && pieni.metri >= MURI_PIENI_MINIMO ? grigliaDaMuriPieni(pieni.ink, pieni.linee, im.width, im.height, S.mpp) : grigliaDeiMuri(inchiostro(im), im.width, im.height, S.mpp, {
+    S.griglia = grigliaDallaFoto(im, S.mpp, {
       vetri: mappa2(S.vetri),
       porte: mappa2(S.porte),
-      disegno: S.disegno === true
+      disegno: S.disegno === true,
+      pianoDaFoto: S.pianoDaFoto === true
     });
   }
   ricalcola2();
@@ -160526,20 +161575,81 @@ async function rilevaNeiRitagli(modello2, img) {
     [0, h - lh],
     [w - lw, h - lh]
   ]) {
+    let tela4;
     try {
-      const tela4 = tela2d(lw, lh);
+      tela4 = tela2d(lw, lh);
       tela4.getContext("2d").drawImage(img, x0, y0, lw, lh, 0, 0, lw, lh);
-      for (const d of await modello2.detect(tela4, 20, 0.5)) {
-        const [bx, by, bw, bh] = d.bbox || [];
-        const taglio = 4;
-        const sulBordo = bx <= taglio && x0 > 0 || by <= taglio && y0 > 0 || bx + bw >= lw - taglio && x0 + lw < w || by + bh >= lh - taglio && y0 + lh < h;
-        if (sulBordo) continue;
-        tutti.push({ ...d, bbox: [bx + x0, by + y0, bw, bh] });
-      }
     } catch (_errore) {
+      continue;
+    }
+    for (const d of await modello2.detect(tela4, 20, 0.5)) {
+      const [bx, by, bw, bh] = d.bbox || [];
+      const taglio = 4;
+      const sulBordo = bx <= taglio && x0 > 0 || by <= taglio && y0 > 0 || bx + bw >= lw - taglio && x0 + lw < w || by + bh >= lh - taglio && y0 + lh < h;
+      if (sulBordo) continue;
+      tutti.push({ ...d, bbox: [bx + x0, by + y0, bw, bh] });
     }
   }
   return tutti;
+}
+async function riconosciNellaFoto(F, stanza2) {
+  const S = state182.S;
+  S.fotoInCorso++;
+  S.lavoro = t(
+    "Cerco arredi e dispositivi nella foto…",
+    "Looking for furniture and devices in the photo…"
+  );
+  disegna14();
+  const modello2 = await riconoscitore();
+  if (modello2) {
+    try {
+      F.grezzi = await rilevaNeiRitagli(modello2, F.img);
+      const visti = oggettiDallaFoto(F.grezzi, {
+        stanza: nomeDi18(stanza2),
+        w: F.w,
+        h: F.h
+      });
+      for (const o of visti.arredi) {
+        const [x, y, w, h] = o.box;
+        F.oggetti.push({
+          ...o,
+          colore: coloreZona(F.img, x + w * 0.3, y + h * 0.3, x + w * 0.7, y + h * 0.7)
+        });
+      }
+      for (const d of visti.dispositivi)
+        F.dispositivi.push({ ...d, entity: proponi(d.k, stanza2, null) });
+      F.riconosciuta = true;
+    } catch (errore) {
+      root.console?.warn?.("[DashboardModern] Casa 3D: riconoscimento", errore);
+      nonDisponibile(errore, false);
+    }
+  }
+  S.fotoInCorso = Math.max(0, S.fotoInCorso - 1);
+  if (!S.fotoInCorso) S.lavoro = "";
+  if (state182.S === S) {
+    if (S.fonte === "stanzeFoto" && S.passo === P11.planimetria) aggiornaLeMisure(stanza2);
+    disegna14();
+  }
+}
+async function riprovaIlRiconoscimento() {
+  const S = state182.S;
+  if (!S || S.riconoscitore === "carica") return;
+  state182.modello = null;
+  S.riconoscitore = "fermo";
+  S.perche = "";
+  S.nonScaricato = false;
+  const daGuardare = [];
+  for (const [id, foto] of Object.entries(S.foto))
+    for (const F of foto || []) if (F?.img && !F.riconosciuta) daGuardare.push([id, F]);
+  if (!daGuardare.length) {
+    await riconoscitore();
+    if (state182.S === S) disegna14();
+    return;
+  }
+  for (const [id, F] of daGuardare) {
+    if (state182.S !== S) return;
+    await riconosciNellaFoto(F, isNaN(Number(id)) ? id : Number(id));
+  }
 }
 async function aggiungiFotoStanza(src, f35 = null, stanza2 = state182.S.sel) {
   const S = state182.S;
@@ -160555,7 +161665,8 @@ async function aggiungiFotoStanza(src, f35 = null, stanza2 = state182.S.sel) {
     /* la focale (mm equivalenti) e i riquadri grezzi: per le misure della
      * stanza dalle cose di misura nota */
     f35,
-    grezzi: []
+    grezzi: [],
+    riconosciuta: false
   };
   F.pavimento = coloreZona(img, F.w * 0.2, F.h * 0.82, F.w * 0.8, F.h * 0.95);
   F.pareti = coloreZona(img, F.w * 0.25, F.h * 0.12, F.w * 0.75, F.h * 0.3);
@@ -160565,40 +161676,7 @@ async function aggiungiFotoStanza(src, f35 = null, stanza2 = state182.S.sel) {
     S.vistaFoto = true;
   }
   S.fotoSel = S.foto[stanza2].length - 1;
-  S.fotoInCorso++;
-  S.lavoro = t(
-    "Cerco arredi e dispositivi nella foto…",
-    "Looking for furniture and devices in the photo…"
-  );
-  disegna14();
-  const modello2 = await riconoscitore();
-  if (modello2) {
-    try {
-      F.grezzi = await rilevaNeiRitagli(modello2, img);
-      const visti = oggettiDallaFoto(F.grezzi, {
-        stanza: nomeDi18(stanza2),
-        w: F.w,
-        h: F.h
-      });
-      for (const o of visti.arredi) {
-        const [x, y, w, h] = o.box;
-        F.oggetti.push({
-          ...o,
-          colore: coloreZona(img, x + w * 0.3, y + h * 0.3, x + w * 0.7, y + h * 0.7)
-        });
-      }
-      for (const d of visti.dispositivi)
-        F.dispositivi.push({ ...d, entity: proponi(d.k, stanza2, null) });
-    } catch (errore) {
-      root.console?.warn?.("[DashboardModern] Casa 3D: riconoscimento", errore);
-    }
-  }
-  S.fotoInCorso = Math.max(0, S.fotoInCorso - 1);
-  if (!S.fotoInCorso) S.lavoro = "";
-  if (state182.S === S) {
-    if (S.fonte === "stanzeFoto" && S.passo === P11.planimetria) aggiornaLeMisure(stanza2);
-    disegna14();
-  }
+  await riconosciNellaFoto(F, stanza2);
 }
 function segnaNellaFoto(x, y) {
   const S = state182.S, F = (S.foto[S.sel] || [])[S.fotoSel], A2 = S.aggiungi;
@@ -160745,6 +161823,8 @@ async function alClic6(ev) {
       return n.querySelector("[data-c3c-file='stanza']").click();
     case "caricast":
       return n.querySelector("[data-c3c-file='stanza']").click();
+    case "riprovarr":
+      return riprovaIlRiconoscimento();
     case "caricaf":
       return n.querySelector("[data-c3c-file='facciata']").click();
     case "indietro":
@@ -161310,6 +162390,7 @@ function installaLoStile11() {
     ${Q} .c3c-privato{margin-top:12px;padding:9px 11px;border-radius:12px;font-size:11.5px;line-height:1.45;color:var(--c3c-fioco);background:rgba(22,163,74,.10);border:1px solid rgba(22,163,74,.35)}
     ${Q} .c3c-lavoro{margin-top:10px;padding:8px 11px;border-radius:12px;font-size:12px;font-weight:700;background:rgba(var(--c3c-accento-rgb),.12);color:var(--c3c-accento)}
     ${Q} .c3c-lavoro.no{background:rgba(245,158,11,.12);color:#f59e0b}
+    ${Q} .c3c-lavoro .c3c-riprova{display:inline-flex;margin-top:8px}
     ${Q} .c3c-carica{display:block;width:100%;border:2px dashed var(--c3c-bordo);border-radius:18px;padding:22px;text-align:center;cursor:pointer;background:var(--c3c-s2);font-weight:700;font-size:13px}
     ${Q} .c3c-carica b{display:block;font-size:30px;margin-bottom:6px}
     ${Q} .c3c-carica+.c3c-carica{margin-top:10px}
@@ -161713,11 +162794,11 @@ var scheda8 = costruisciSchedaDichiarata({
       "Finché non scegli l'entità questa macchina non si vede: né nella pagina, né nel conto di quante sono giù.",
       "Until you pick the entity this machine is nowhere: not on the page, not in the count of how many are down."
     ),
-    importa: (quanti3) => t(
-      `Prendi le ${quanti3} che Home Assistant ha trovato`,
-      `Take the ${quanti3} Home Assistant found`
+    importa: (quanti4) => t(
+      `Prendi le ${quanti4} che Home Assistant ha trovato`,
+      `Take the ${quanti4} Home Assistant found`
     ),
-    presi: (quanti3) => t(`🖥️ ${quanti3} righe aggiunte`, `🖥️ ${quanti3} rows added`),
+    presi: (quanti4) => t(`🖥️ ${quanti4} righe aggiunte`, `🖥️ ${quanti4} rows added`),
     notaImporta: t(
       "Le mette qui come righe, una volta sola: da lì in poi sono tue — le rinomini, gli dai il disegno, e quelle che elimini non tornano più.",
       "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back."
@@ -165630,16 +166711,16 @@ function leStanze2() {
     return [];
   }
 }
-function ilPianoDellaStanza(riferimento, stanze4 = leStanze2()) {
-  return clean(stanzaDalRiferimento(riferimento, stanze4)?.floor);
+function ilPianoDellaStanza(riferimento2, stanze4 = leStanze2()) {
+  return clean(stanzaDalRiferimento(riferimento2, stanze4)?.floor);
 }
 function insegnaIlPiano() {
   const originale = root.cdRoomFloorOf;
   if (typeof originale !== "function" || originale.__dmStanzePerNome) return false;
-  const nostra = function cdRoomFloorOf(riferimento) {
+  const nostra = function cdRoomFloorOf(riferimento2) {
     const stanze4 = leStanze2();
-    if (!stanze4.length) return originale.call(this, riferimento);
-    return ilPianoDellaStanza(riferimento, stanze4);
+    if (!stanze4.length) return originale.call(this, riferimento2);
+    return ilPianoDellaStanza(riferimento2, stanze4);
   };
   nostra.__dmStanzePerNome = true;
   nostra.__dmPrevious = originale;

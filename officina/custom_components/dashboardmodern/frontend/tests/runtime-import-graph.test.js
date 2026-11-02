@@ -1633,8 +1633,11 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // (la focale dall'EXIF) e `core/stanze-dalle-foto.js` (misure, disposizione
   // e griglia delle stanze). ONNX Runtime e il modello non contano: si
   // leggono solo quando arriva una foto.
+  // 524 con la pianta disegnata al computer: `core/archi-delle-porte.js` (gli
+  // archi delle porte) e `core/finestre-nei-muri.js` (le finestre dal vetro
+  // disegnato nel muro).
   assert.ok(
-    relative.length <= 522,
+    relative.length <= 524,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

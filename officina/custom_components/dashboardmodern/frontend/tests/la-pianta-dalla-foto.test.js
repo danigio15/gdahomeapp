@@ -8,6 +8,7 @@ import test from "node:test";
 import {
   PASSO,
   grigliaDaMuriPieni,
+  grigliaDallaFoto,
   grigliaDeiMuri,
   inchiostro,
   muriPieni,
@@ -558,4 +559,225 @@ test("la pianta fotografata di sbieco si raddrizza e torna la stessa casa", () =
       area = (r.x1 - r.x0 + PASSO) * (r.y1 - r.y0 + PASSO);
     assert.ok(s.area / area > 0.9, `stanza ${s.id} squadrata: ${(s.area / area).toFixed(2)}`);
   }
+});
+
+/* «Hai fatto male la planimetria»: la pianta esportata da un CAD. I muri di
+ * fuori sono tratteggiati (qui: campiti di grigio chiaro, come li vede una
+ * foto del disegno), i tramezzi a doppia riga sottile, le porte hanno
+ * l'arco e l'anta, le finestre due righe nel vano fra due stipiti, c'e' una
+ * scala coi gradini, un balcone chiuso da una riga sola fuori dal muro, e
+ * una scritta. Il tratteggio passava per muro pieno e la pianta andava sulla
+ * strada dei muri pieni, dove le righe non contano: una stanza su quattro. */
+function disegnoCad(pxm, { disimpegno = false } = {}) {
+  const im = foglio(Math.round(14 * pxm), Math.round(12 * pxm)),
+    P = (v) => v * pxm,
+    X = (v) => P(v + 2),
+    Y = (v) => P(v + 1.5);
+  const riga = (x0, y0, x1, y1, v = 30) =>
+    rettangolo(
+      im,
+      Math.min(X(x0), X(x1)),
+      Math.min(Y(y0), Y(y1)),
+      Math.max(X(x0), X(x1)) + 1,
+      Math.max(Y(y0), Y(y1)) + 1,
+      v,
+    );
+  const pieno = (x0, y0, x1, y1, v) => rettangolo(im, X(x0), Y(y0), X(x1), Y(y1), v);
+  /* i muri di fuori: 30 cm, grigio chiaro (il tratteggio) coi bordi scuri,
+   * coi vani delle finestre vuoti e il portone aperto */
+  const E = 0.3;
+  const muroFuori = (x0, y0, x1, y1, vani = []) => {
+    const orizz = y0 === y1;
+    let pezzi = [[orizz ? x0 : y0, orizz ? x1 : y1]];
+    for (const [v0, v1] of vani)
+      pezzi = pezzi.flatMap(([a, b]) =>
+        v1 <= a || v0 >= b
+          ? [[a, b]]
+          : [...(v0 > a ? [[a, v0]] : []), ...(v1 < b ? [[v1, b]] : [])],
+      );
+    for (const [a, b] of pezzi) {
+      if (orizz) {
+        pieno(a, y0, b, y0 + E, 170);
+        riga(a, y0, b, y0);
+        riga(a, y0 + E, b, y0 + E);
+      } else {
+        pieno(x0, a, x0 + E, b, 170);
+        riga(x0, a, x0, b);
+        riga(x0 + E, a, x0 + E, b);
+      }
+    }
+  };
+  /* la finestra: due stipiti di traverso e due righe del vetro lungo il vano */
+  const finestra = (x0, y0, x1, y1) => {
+    if (y0 === y1) {
+      riga(x0, y0, x0, y0 + E);
+      riga(x1, y0, x1, y0 + E);
+      riga(x0, y0 + 0.1, x1, y0 + 0.1);
+      riga(x0, y0 + 0.2, x1, y0 + 0.2);
+    } else {
+      riga(x0, y0, x0 + E, y0);
+      riga(x0, y1, x0 + E, y1);
+      riga(x0 + 0.1, y0, x0 + 0.1, y1);
+      riga(x0 + 0.2, y0, x0 + 0.2, y1);
+    }
+  };
+  muroFuori(0, 0, 10, 0, [[1.2, 2.4]]);
+  finestra(1.2, 0, 2.4, 0);
+  muroFuori(0, 7.7, 10, 7.7, [[2, 2.9]]); // il portone, senza soglia
+  muroFuori(0, 0, 0, 8);
+  muroFuori(9.7, 0, 9.7, 8, [[5, 6.2]]);
+  finestra(9.7, 5, 9.7, 6.2);
+  /* i tramezzi a doppia riga (12 cm), coi varchi delle porte */
+  const tramezzo = (x0, y0, x1, y1, varchi = []) => {
+    const orizz = y0 === y1,
+      s = 0.12;
+    let pezzi = [[orizz ? x0 : y0, orizz ? x1 : y1]];
+    for (const [v0, v1] of varchi)
+      pezzi = pezzi.flatMap(([a, b]) =>
+        v1 <= a || v0 >= b
+          ? [[a, b]]
+          : [...(v0 > a ? [[a, v0]] : []), ...(v1 < b ? [[v1, b]] : [])],
+      );
+    for (const [a, b] of pezzi)
+      if (orizz) {
+        riga(a, y0, b, y0);
+        riga(a, y0 + s, b, y0 + s);
+        riga(a, y0, a, y0 + s);
+        riga(b, y0, b, y0 + s);
+      } else {
+        riga(x0, a, x0, b);
+        riga(x0 + s, a, x0 + s, b);
+        riga(x0, a, x0 + s, a);
+        riga(x0, b, x0 + s, b);
+      }
+  };
+  tramezzo(4.94, 0.3, 4.94, 7.7, [[1.5, 2.4]]);
+  tramezzo(5.06, 3.94, 9.7, 3.94, [[6.4, 7.3]]);
+  tramezzo(7.94, 4.06, 7.94, 7.7, [[6.8, 7.6]]);
+  /* le porte: l'anta e l'arco di un quarto di cerchio dalla cerniera */
+  const arco = (cx, cy, r, da, a) => {
+    for (let t = da; t <= a; t += 0.01) {
+      const x = X(cx + r * Math.cos(t)),
+        y = Y(cy + r * Math.sin(t));
+      rettangolo(im, x, y, x + 2, y + 2, 30);
+    }
+  };
+  riga(5.06, 2.4, 5.96, 2.4);
+  arco(5.06, 2.4, 0.9, -Math.PI / 2, 0); // porta nel tramezzo verticale, apre a destra in su
+  riga(6.4, 4.06, 6.4, 4.96);
+  arco(6.4, 4.06, 0.9, 0, Math.PI / 2); // porta nel tramezzo orizzontale, apre in giu'
+  riga(8.06, 7.6, 8.86, 7.6);
+  arco(8.06, 7.6, 0.8, -Math.PI / 2, 0); // la porta del vano scala, sotto i gradini
+  /* Il disimpegno (la pianta di Andrea): nel salone un muro a L che finisce
+   * in uno spigolo davanti a un pilastro di 40 cm in fila col suo tratto
+   * verticale, a 78 cm. Fra i due capi non c'e' una porta (nessun arco): il
+   * disimpegno in basso a sinistra e' parte del salone. */
+  if (disimpegno) {
+    tramezzo(3.6, 4, 3.6, 5.5);
+    tramezzo(0.3, 5.5, 3.72, 5.5);
+    riga(3.54, 6.4, 3.54, 7.7);
+    riga(3.94, 6.4, 3.94, 7.7);
+    riga(3.54, 6.4, 3.94, 6.4);
+  }
+  /* la scala: i gradini da un muro all'altro del vano, a passo di 28 cm */
+  for (let k = 0; k < 10; k++) riga(8.06, 4.2 + k * 0.28, 9.7, 4.2 + k * 0.28);
+  riga(8.9, 4.2, 8.9, 6.9);
+  /* il balcone: una riga sola, attaccata al muro di fuori */
+  riga(6, 8, 6, 9.2);
+  riga(9, 8, 9, 9.2);
+  riga(6, 9.2, 9, 9.2);
+  /* la scritta «SALONE» e la quota sotto il disegno */
+  for (let k = 0; k < 6; k++) {
+    riga(1 + k * 0.36, 3, 1 + k * 0.36, 3.4);
+    riga(1.25 + k * 0.36, 3, 1.25 + k * 0.36, 3.4);
+    riga(1 + k * 0.36, 3, 1.25 + k * 0.36, 3);
+  }
+  riga(0, 9.8, 10, 9.8);
+  return im;
+}
+
+test("il disegno del CAD va sulla strada delle righe: le stanze, le porte dagli archi, la scala, il balcone fuori", () => {
+  const pxm = 50,
+    im = disegnoCad(pxm),
+    mpp = 1 / pxm;
+  /* il tratteggio dei muri di fuori passa per muro pieno: oltre la soglia */
+  const pieni = muriPieni(im, mpp);
+  assert.ok(pieni.metri >= MURI_PIENI_MINIMO, `muri pieni: ${pieni.metri.toFixed(1)} m²`);
+  /* ma sulla strada dei muri pieni le stanze non vengono (i tramezzi sono righe) */
+  const aPieni = riconosciDaFoto(
+    grigliaDaMuriPieni(pieni.ink, pieni.linee, im.width, im.height, mpp),
+  );
+  const g = grigliaDallaFoto(im, mpp);
+  assert.equal(
+    g.strada,
+    "righe",
+    `strada: ${g.strada} (a muri pieni ${aPieni.stanze.length} stanze)`,
+  );
+  const casa = riconosciDaFoto(g);
+  const aree = casa.stanze.map((s) => s.area).sort((a, b) => a - b);
+  /* quattro stanze: il salone (34), la camera (17), il bagno (10), il vano
+   * scala (6); il balcone no */
+  assert.equal(casa.stanze.length, 4, `stanze: ${aree.map((a) => a.toFixed(1))}`);
+  const attese = [5.9, 10.5, 16.7, 34.3];
+  aree.forEach((a, i) =>
+    assert.ok(
+      Math.abs(a - attese[i]) < attese[i] * 0.2,
+      `area ${a.toFixed(1)} invece di ${attese[i]}`,
+    ),
+  );
+  assert.ok(
+    aPieni.stanze.length < casa.stanze.length * 0.75,
+    `a muri pieni ${aPieni.stanze.length} stanze`,
+  );
+  /* le porte: tre con l'arco e il portone; gli archi non spezzano le stanze */
+  const porte = casa.aperture.filter((a) => a.tipo === "porta"),
+    finestre = casa.aperture.filter((a) => a.tipo === "finestra");
+  assert.equal(porte.length, 4, `porte: ${porte.map((p) => p.largo.toFixed(2))}`);
+  assert.equal(finestre.length, 2, `finestre: ${finestre.map((p) => p.largo.toFixed(2))}`);
+  /* la scala, nel vano scala */
+  assert.equal(g.scale.length, 1, "la scala dai gradini");
+  assert.equal(casa.scale.length, 1, "la scala nella casa");
+  assert.ok(casa.scale[0].gradini >= 8, `gradini ${casa.scale[0].gradini}`);
+});
+
+test("nel CAD un varco senza arco fra lo spigolo di un muro e un pilastro in fila e' un passaggio, non una porta", () => {
+  const pxm = 50,
+    im = disegnoCad(pxm, { disimpegno: true }),
+    g = grigliaDallaFoto(im, 1 / pxm);
+  assert.equal(g.strada, "righe");
+  assert.ok(g.archi.length >= 3, `archi: ${g.archi.length}`);
+  const W = g.W;
+  const cella = (x, y) => Math.round((y + 1.5) / PASSO) * W + Math.round((x + 2) / PASSO);
+  /* fra i due capi (x 3,6, y 5,6-6,4) niente soglia: non e' una porta */
+  assert.equal(g.soglie[cella(3.65, 6)], 0, "nessuna soglia nel passaggio");
+  const casa = riconosciDaFoto(g);
+  /* sempre quattro stanze: il disimpegno sta col salone */
+  const aree = casa.stanze.map((s) => s.area).sort((a, b) => a - b);
+  assert.equal(casa.stanze.length, 4, `stanze: ${aree.map((a) => a.toFixed(1))}`);
+  assert.equal(
+    casa.tipo[cella(1.3, 6.6)],
+    casa.tipo[cella(1.3, 1.5)],
+    "il disimpegno e' il salone",
+  );
+  assert.ok(aree[3] > 30, `il salone: ${aree[3].toFixed(1)} m²`);
+  /* e le porte restano quelle con l'arco, piu' il portone */
+  const porte = casa.aperture.filter((a) => a.tipo === "porta");
+  assert.equal(porte.length, 4, `porte: ${porte.map((p) => p.largo.toFixed(2))}`);
+});
+
+test("in un disegno a righe il balcone, fuori dai muri di fuori, non e' una stanza; dentro lo e'", () => {
+  const pxm = 50,
+    im = disegnoCad(pxm),
+    g = grigliaDallaFoto(im, 1 / pxm);
+  assert.ok(g.fuoriCasa, "la mappa di quel che sta fuori dai muri di fuori");
+  const W = g.W;
+  /* il balcone (6-9 × 8-9.2 m, dal centro del disegno) sta fuori */
+  const cella = (x, y) => Math.round((y + 1.5) / PASSO) * W + Math.round((x + 2) / PASSO);
+  assert.equal(g.fuoriCasa[cella(7.5, 8.6)], 1, "il balcone e' fuori dai muri");
+  /* il salone e il vano scala no */
+  assert.equal(g.fuoriCasa[cella(2.5, 5)], 0, "il salone e' dentro");
+  assert.equal(g.fuoriCasa[cella(8.8, 5.5)], 0, "il vano scala e' dentro");
+  const casa = riconosciDaFoto(g);
+  assert.equal(casa.tipo[cella(7.5, 8.6)], -2, "il balcone e' fuori");
+  assert.ok(casa.tipo[cella(2.5, 5)] > 0, "il salone e' una stanza");
 });
