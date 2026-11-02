@@ -15,7 +15,7 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 _App GdAHome e Home Assistant._
 
 L'app sul telefono raccoglie quello che è cambiato dalla 1.18.7; l'add-on è
-lo stesso della 1.18.7.30, col numero nuovo.
+quello della 1.18.7.30 con quattro correzioni.
 
 - **Menu laterale fluido su Android:** «lo scroll del menu ha dei frame lag,
   non scorre fluido». A menu aperto fino in fondo la plancia dietro esce dalla
@@ -32,6 +32,26 @@ lo stesso della 1.18.7.30, col numero nuovo.
   porta sulla propria casa.
 - **Gettone più robusto:** rimettere indietro l'orologio del telefono non
   allunga più un gettone già scaduto.
+- **Colpo d'occhio, il popup delle telecamere:** «quando apro le telecamere
+  ogni secondo si aprono e si chiude il popup». L'orologio dentro il popup
+  cambia ogni secondo, e al primo aggiornamento della casa la pagina lo
+  prendeva per qualcuno che aveva riscritto il popup: lo rifaceva da capo,
+  con l'animazione d'apertura. Ora il popup resta aperto e fermo.
+- **L'umidità dell'Aqara T1 (#352):** al posto dell'umidità compariva la
+  batteria. Il sensore si chiama «temperature and humidity sensor», e anche
+  la sua batteria e la sua pressione hanno «humidity» nel nome. Ora
+  l'umidità la dice la classe del sensore; il nome conta solo per un sensore
+  senza classe e in percentuale, e mai per una batteria. Vale per le stanze
+  trovate da qui in avanti: chi l'ha già sbagliata la cambia una volta in
+  Config › Temperatura.
+- **La foto delle stanze in Home (#348):** la foto messa a una stanza si
+  vedeva nella pagina Stanze e nella Temperatura, ma non sulla stessa stanza
+  nel blocco della Home. Ora c'è anche lì, col nome e i gradi chiari sopra.
+- **Telecamere con la sola entità (#356):** una telecamera ONVIF già in Home
+  Assistant si aggiunge con la sola entità. Senza nome vale quello che ha in
+  Home Assistant, l'entità si prende anche da un testo incollato col nome
+  accanto, e invece di «Telecamera non valida» l'avviso dice cosa manca. Il
+  campo dell'indirizzo RTSP è segnato come facoltativo.
 - **Home Assistant:** tutto quello delle 1.18.7.17–1.18.7.30, qui sotto
   (Casa 3D, pianta dalle foto, catasto e DWG, Colpo d'occhio, ricarica
   notturna, Musica sul pannello da 4 pollici).
