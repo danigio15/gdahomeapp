@@ -769,13 +769,29 @@ function avviaIlBattito() {
       /* Nessuno guarda: la scheda del browser e' dietro, o c'e' il Config. */
       if (doc.hidden || editorAperto()) return;
       const adesso = new Date().toLocaleTimeString(lingua(), { hour12: false });
-      for (const el of nodo.querySelectorAll("[data-oc-orologio]")) el.textContent = adesso;
+      aggiornaGliOrologi(nodo, adesso);
       if (giri % 2 === 0 && nodo.querySelector("img[data-oc-foto]")) {
         sorvegliaIFlussi();
         aggiornaLeTelecamere();
       }
       if (giri % 20 === 0) ridisegna();
     }, 1000) || 0;
+}
+
+/* Gli orologi della testata e delle telecamere si scrivono ogni secondo.
+ * `scriviSeCambia` si ricorda il testo che ha scritto per accorgersi di chi
+ * riscrive la pagina al posto suo: un orologio che cambia sembrava uno di
+ * quelli, e al primo stato nuovo della casa il popup delle telecamere si
+ * riscriveva da capo — si chiudeva e si riapriva, con l'animazione, a ogni
+ * aggiornamento. Il testo degli orologi e' nostro: se prima del battito il
+ * pezzo era com'era stato scritto, dopo lo e' ancora. */
+function aggiornaGliOrologi(nodo, adesso) {
+  const pezzi = [...nodo.querySelectorAll(".oc-pagina,.oc-sopra")].map((pezzo) => ({
+    pezzo,
+    intatto: pezzo.dataset.dmScritto !== undefined && pezzo.textContent === pezzo.dataset.dmTesto,
+  }));
+  for (const el of nodo.querySelectorAll("[data-oc-orologio]")) el.textContent = adesso;
+  for (const { pezzo, intatto } of pezzi) if (intatto) pezzo.dataset.dmTesto = pezzo.textContent;
 }
 
 /* ── le telecamere della griglia ──────────────────────────────────────── */
