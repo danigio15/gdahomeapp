@@ -7812,6 +7812,8 @@ export default Object.freeze({
   "${nome}: no answer in ${s} s": "${nome}: keine Antwort in ${s} s",
   "The list of pieces doesn't add up": "Die Liste der Teile stimmt nicht",
   "${nome}: arrived incomplete": "${nome}: unvollständig angekommen",
+  "Delete this floor": "Dieses Stockwerk löschen",
+  'Delete the floor "${nome}"? Its rooms, furniture and devices are lost.': "Stockwerk „${nome}“ löschen? Seine Räume, Möbel und Geräte gehen verloren.",
   "Add or redo a floor": "Stockwerk hinzufügen oder neu erstellen",
   "Add photos of ${nome}": "Fotos von ${nome} hinzufügen",
   "Add photos of this room": "Fotos dieses Raums hinzufügen",

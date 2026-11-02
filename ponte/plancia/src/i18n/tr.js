@@ -7750,6 +7750,8 @@ export default Object.freeze({
   "${nome}: no answer in ${s} s": "${nome}: ${s} sn içinde yanıt yok",
   "The list of pieces doesn't add up": "Parça listesi tutmuyor",
   "${nome}: arrived incomplete": "${nome}: eksik geldi",
+  "Delete this floor": "Bu katı sil",
+  'Delete the floor "${nome}"? Its rooms, furniture and devices are lost.': "\"${nome}\" katı silinsin mi? Odaları, mobilyaları ve cihazları kaybolur.",
   "Add or redo a floor": "Kat ekle veya yeniden yap",
   "Add photos of ${nome}": "${nome} fotoğraflarını ekle",
   "Add photos of this room": "Bu odanın fotoğraflarını ekle",

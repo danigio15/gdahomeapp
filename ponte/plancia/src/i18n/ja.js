@@ -7752,6 +7752,8 @@ export default Object.freeze({
   "${nome}: no answer in ${s} s": "${nome}: ${s} 秒以内に応答なし",
   "The list of pieces doesn't add up": "分割ファイルの一覧が合いません",
   "${nome}: arrived incomplete": "${nome}: 不完全なまま届きました",
+  "Delete this floor": "この階を削除",
+  'Delete the floor "${nome}"? Its rooms, furniture and devices are lost.': "階「${nome}」を削除しますか？その部屋、家具、デバイスは失われます。",
   "Add or redo a floor": "階を追加またはやり直す",
   "Add photos of ${nome}": "${nome} の写真を追加",
   "Add photos of this room": "この部屋の写真を追加",

@@ -7697,6 +7697,8 @@ export default Object.freeze({
   "${nome}: no answer in ${s} s": "${nome}: لا استجابة خلال ${s} ث",
   "The list of pieces doesn't add up": "قائمة الأجزاء غير متطابقة",
   "${nome}: arrived incomplete": "${nome}: وصل ناقصًا",
+  "Delete this floor": "احذف هذا الطابق",
+  'Delete the floor "${nome}"? Its rooms, furniture and devices are lost.': "أحذف الطابق \"${nome}\"؟ ستُفقد غرفه وأثاثه وأجهزته.",
   "Add or redo a floor": "إضافة طابق أو إعادته",
   "Add photos of ${nome}": "إضافة صور لـ${nome}",
   "Add photos of this room": "إضافة صور لهذه الغرفة",

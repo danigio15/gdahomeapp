@@ -1202,7 +1202,9 @@ test("la pianta disegnata a righe: stanze, porte, finestre, scala e balconi", as
     porte = Number(/(\d+) porte/.exec(testo)?.[1] || 0),
     finestre = Number(/(\d+) finestr/.exec(testo)?.[1] || 0);
   console.log(`pianta a righe: ${n} ambienti, ${porte} porte, ${finestre} finestre`);
-  expect(n, testo).toBeGreaterThanOrEqual(Number(process.env.DM_PIANTA_RIGHE_STANZE || 12));
+  /* la pianta vera ha 12 ambienti; nella schermata di Andrea la riga della
+   * misura «4,00 m» spezza il soggiorno di App. n.4, e vengono 11 */
+  expect(n, testo).toBeGreaterThanOrEqual(Number(process.env.DM_PIANTA_RIGHE_STANZE || 11));
   expect(porte, testo).toBeGreaterThanOrEqual(Number(process.env.DM_PIANTA_RIGHE_PORTE || 8));
   expect(finestre, testo).toBeGreaterThanOrEqual(Number(process.env.DM_PIANTA_RIGHE_FINESTRE || 8));
   await fotoDiretta(page, testInfo, "crea-pianta-a-righe-muri");
@@ -1359,6 +1361,42 @@ test("dal Config si modifica di nuovo la planimetria di un piano", async ({ page
   expect(terra.dispositivi.find((d) => d.k === "telecamera").entity).toBe("camera.soggiorno");
   const luce = terra.dispositivi.find((d) => d.entity === "light.cucina");
   expect(terra.stanze.find((s) => s.id === luce.stanza).nome).toBe("Cucina");
+});
+
+/* «Come faccio ad eliminare un piano fatto?» (Enzo): 🗑️ sul piano nel
+ * Config, con la domanda prima. Il piano se ne va con le sue stanze e i suoi
+ * dispositivi, l'altro resta com'è; chi dice no non perde niente. */
+test("dal Config si elimina un piano già fatto", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "basta una misura");
+  await boot(page, testInfo);
+  await page.locator('#dm-casa3d [data-c3s="config"]').click();
+  await expect(page.locator("#ed-body .dm-c3-ed")).toBeVisible({ timeout: 20_000 });
+  const cestini = page.locator("#ed-body [data-dm-c3-elimina]");
+  await expect(cestini).toHaveCount(2);
+  /* no: resta tutto */
+  page.once("dialog", (d) => d.dismiss());
+  await page.locator('#ed-body [data-dm-c3-elimina="terra"]').click();
+  await expect(cestini).toHaveCount(2);
+  /* si': il piano terra se ne va, il primo resta con i suoi dispositivi */
+  const prima = await page.evaluate(() => JSON.parse(localStorage.getItem("cd_casa3d")));
+  const primoPrima = prima.piani.find((p) => p.k === "primo");
+  page.once("dialog", (d) => {
+    expect(d.message()).toMatch(/Piano terra/);
+    d.accept();
+  });
+  await page.locator('#ed-body [data-dm-c3-elimina="terra"]').click();
+  await expect(cestini).toHaveCount(1);
+  await expect(page.locator("#ed-body [data-dm-c3-modifica]")).toHaveCount(1);
+  const dove = foto(testInfo, "casa3d-config-piano-eliminato");
+  if (dove) await page.screenshot({ path: dove });
+  const dopo = await page.evaluate(() => JSON.parse(localStorage.getItem("cd_casa3d")));
+  expect(dopo.attiva).toBe(true);
+  expect(dopo.piani.map((p) => p.k)).toEqual(["primo"]);
+  expect(dopo.piani[0]).toEqual(primoPrima);
+  /* chiuso il Config, la vista 3D e' li' con un piano solo */
+  await page.locator("#editor-modal .ed-head-close", { hasText: "✕" }).click();
+  await expect(page.locator("#dm-casa3d")).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator("#dm-casa3d .c3-bollo")).toHaveCount(1);
 });
 
 /* Aperto da dovunque — il menu dell'app apre il Config com'è — sulla

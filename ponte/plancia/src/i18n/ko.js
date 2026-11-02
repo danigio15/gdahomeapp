@@ -7724,6 +7724,8 @@ export default Object.freeze({
   "${nome}: no answer in ${s} s": "${nome}: ${s}초 안에 응답 없음",
   "The list of pieces doesn't add up": "조각 목록이 맞지 않습니다",
   "${nome}: arrived incomplete": "${nome}: 불완전하게 도착했습니다",
+  "Delete this floor": "이 층 삭제",
+  'Delete the floor "${nome}"? Its rooms, furniture and devices are lost.': "\"${nome}\" 층을 삭제할까요? 그 층의 방, 가구, 기기가 사라집니다.",
   "Add or redo a floor": "층 추가 또는 다시 만들기",
   "Add photos of ${nome}": "${nome} 사진 추가",
   "Add photos of this room": "이 방의 사진 추가",

@@ -7733,6 +7733,8 @@ export default Object.freeze({
   "${nome}: no answer in ${s} s": "${nome}: ${s} सेकंड में कोई जवाब नहीं",
   "The list of pieces doesn't add up": "टुकड़ों की सूची मेल नहीं खाती",
   "${nome}: arrived incomplete": "${nome}: अधूरा पहुँचा",
+  "Delete this floor": "यह मंज़िल हटाएँ",
+  'Delete the floor "${nome}"? Its rooms, furniture and devices are lost.': "मंज़िल \"${nome}\" हटाएँ? इसके कमरे, फ़र्नीचर और डिवाइस खो जाएँगे।",
   "Add or redo a floor": "मंज़िल जोड़ें या दोबारा बनाएँ",
   "Add photos of ${nome}": "${nome} की फ़ोटो जोड़ें",
   "Add photos of this room": "इस कमरे की फ़ोटो जोड़ें",

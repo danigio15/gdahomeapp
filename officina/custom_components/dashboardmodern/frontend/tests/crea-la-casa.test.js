@@ -12,6 +12,7 @@ import { CELLA, casa3dPulita, espandiGriglia } from "../src/core/casa-3d.js";
 import { riconosciDaFoto } from "../src/core/pianta-da-foto.js";
 import {
   aggiungiPiano,
+  togliPiano,
   areeDaiRegistri,
   arrediDallaFoto,
   dispositiviDallaFoto,
@@ -304,6 +305,31 @@ test("i piani si accumulano, e uno con la stessa chiave si sostituisce", () => {
   assert.equal(c.piani.find((p) => p.k === "primo").nome, "Primo piano rifatto");
   assert.deepEqual(pianoDelLivello(1).nome, ["Primo piano", "First floor"]);
   assert.equal(pianoDelLivello(9).k, "piano9");
+});
+
+test("un piano gia' fatto si toglie, gli altri restano come sono", () => {
+  const casa = casaFinta();
+  let c = aggiungiPiano({ tipo: "villa", attiva: true }, pianoDaRiconoscimento({ casa, livello: 0 }));
+  c = aggiungiPiano(c, pianoDaRiconoscimento({ casa, livello: 1 }));
+  const primo = c.piani.find((p) => p.k === "primo");
+  const senza = togliPiano(c, "terra");
+  assert.deepEqual(
+    senza.piani.map((p) => p.k),
+    ["primo"],
+  );
+  assert.equal(senza.piani[0], primo, "il piano che resta e' proprio lui");
+  assert.equal(senza.tipo, "villa");
+  assert.equal(senza.attiva, true);
+  /* la casa di partenza non si tocca */
+  assert.equal(c.piani.length, 2);
+  /* una chiave che non c'e', o niente: nessun cambiamento */
+  assert.deepEqual(togliPiano(c, "piano9").piani, c.piani);
+  assert.deepEqual(togliPiano(c, "").piani, c.piani);
+  assert.deepEqual(togliPiano(null, "terra"), { piani: [] });
+  /* senza piani la casa resta accesa: la scheda torna a «Crea la tua casa» */
+  const vuota = togliPiano(senza, "primo");
+  assert.deepEqual(vuota.piani, []);
+  assert.equal(vuota.attiva, true);
 });
 
 test("quello che vede il riconoscitore diventa arredi e dispositivi", () => {

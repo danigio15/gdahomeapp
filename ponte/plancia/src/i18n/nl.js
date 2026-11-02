@@ -7784,6 +7784,8 @@ export default Object.freeze({
   "${nome}: no answer in ${s} s": "${nome}: geen antwoord binnen ${s} s",
   "The list of pieces doesn't add up": "De lijst met delen klopt niet",
   "${nome}: arrived incomplete": "${nome}: onvolledig aangekomen",
+  "Delete this floor": "Deze verdieping verwijderen",
+  'Delete the floor "${nome}"? Its rooms, furniture and devices are lost.': "Verdieping \"${nome}\" verwijderen? De kamers, meubels en apparaten gaan verloren.",
   "Add or redo a floor": "Verdieping toevoegen of opnieuw maken",
   "Add photos of ${nome}": "Foto's van ${nome} toevoegen",
   "Add photos of this room": "Foto's van deze kamer toevoegen",

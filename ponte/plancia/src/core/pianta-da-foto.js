@@ -1290,11 +1290,43 @@ export function grigliaDeiMuri(
     const spesso = corre(i, largo, lontano) + corre(i, -largo, lontano) - 1;
     return spesso <= spessoreMax && spesso < dietro;
   };
+  /* Lo stesso muro da tutte e due le parti del varco: dritto per 20 cm, e
+   * misurato 40 cm dietro al varco (lontano dalla spalla di un tramezzo che
+   * si innesta proprio sullo stipite) ha lo stesso spessore e almeno una
+   * faccia in comune. Il capo di un tramezzo di 20 cm visto di traverso e'
+   * «dritto» per 20 cm ma di traverso corre per metri: non e' un muro che
+   * corre lungo il varco. E un muro di 18 cm che finisce in uno spigolo
+   * davanti a un pilastro di 40 cm in fila con lui non e' lo stesso muro:
+   * fra i due capi c'e' un passaggio (il disimpegno che si allarga), non una
+   * porta. */
+  const dietroIlVarco = (i, passo) =>
+    i + passo * (Math.min(corre(i, passo, lontano), 2 * tratto) - 1);
+  const stessoMuro = (a, b, passo, largo) => {
+    if (!dritto(a, -passo) || !dritto(b, passo)) return false;
+    const qa = dietroIlVarco(a, -passo),
+      qb = dietroIlVarco(b, passo);
+    const sa = corre(qa, largo, lontano),
+      ga = corre(qa, -largo, lontano),
+      sb = corre(qb, largo, lontano),
+      gb = corre(qb, -largo, lontano);
+    const ta = sa + ga - 1,
+      tb = sb + gb - 1;
+    if (ta > spessoreMax || tb > spessoreMax) return false;
+    if (Math.abs(ta - tb) > Math.max(2, Math.round(0.3 * Math.max(ta, tb)))) return false;
+    return Math.abs(sa - sb) <= 2 || Math.abs(ga - gb) <= 2;
+  };
+  /* Il muro «a» sta di traverso davanti al capo «b» di un tramezzo: lungo
+   * «largo» copre tutto il capo e sporge di 20 cm da tutte e due le parti.
+   * Davanti allo spigolo di un altro muro (che finisce li' anche lui) il
+   * tramezzo non fa una porta: il varco fra i due capi e' un passaggio. */
+  const diTraverso = (a, b, largo) =>
+    corre(a, largo, lontano) >= Math.min(lontano, corre(b, largo, lontano) + tratto) &&
+    corre(a, -largo, lontano) >= Math.min(lontano, corre(b, -largo, lontano) + tratto);
   const chiudi = (a, b, passo, largo) => {
-    if (dritto(a, -passo) && dritto(b, passo)) return true;
+    if (stessoMuro(a, b, passo, largo)) return true;
     return (
-      (fine(a, -passo, largo) && corre(b, passo, 2) >= 2) ||
-      (fine(b, passo, largo) && corre(a, -passo, 2) >= 2)
+      (fine(a, -passo, largo) && corre(b, passo, 2) >= 2 && diTraverso(b, a, largo)) ||
+      (fine(b, passo, largo) && corre(a, -passo, 2) >= 2 && diTraverso(a, b, largo))
     );
   };
 
@@ -1404,6 +1436,8 @@ export function grigliaDeiMuri(
     scale: scaleInMetri(vere),
     piastrelle: inMetri(piastrelle),
     fuoriCasa,
+    soglie,
+    archi: archi.archi || [],
   };
 }
 
@@ -2099,7 +2133,19 @@ export function trovaLeScale(muro, corsaO, corsaV, W, H) {
 
 /** Dai muri alla casa, nella stessa forma che esce dal DWG (importa.js). */
 export function riconosciDaFoto(
-  { W, H, muro, barriera, vetro, pieni = false, scale = [], piastrelle = [], fuoriCasa = null },
+  {
+    W,
+    H,
+    muro,
+    barriera,
+    vetro,
+    pieni = false,
+    scale = [],
+    piastrelle = [],
+    fuoriCasa = null,
+    soglie = null,
+    archi = [],
+  },
   { fuori = new Set(), squadra = true } = {},
 ) {
   const N = W * H,
@@ -2313,6 +2359,19 @@ export function riconosciDaFoto(
   }
   // unione: due stanze che si toccano su un fronte largo sono la stessa (open space)
   const padre = new Map();
+  /* Un disegno che disegna le porte (gli archi del CAD): un fronte fra due
+   * stanze senza una soglia (ne' un arco, ne' un varco in un muro) e' un
+   * passaggio aperto, non una porta. Nel catasto e nella foto le porte non
+   * sono disegnate: ogni fronte stretto resta una porta. */
+  const porteDisegnate = !!soglie && archi.length >= 3;
+  const conSoglia = (celle) => {
+    for (const c of celle)
+      for (const d of [0, 1, -1, W, -W, 2, -2, 2 * W, -2 * W]) {
+        const j = c + d;
+        if (j >= 0 && j < N && soglie[j]) return true;
+      }
+    return false;
+  };
   const radice = (a) => {
     while (padre.has(a)) a = padre.get(a);
     return a;
@@ -2375,6 +2434,13 @@ export function riconosciDaFoto(
     const ea = esterno.has(gr.a),
       eb = esterno.has(gr.b);
     if (gr.largo > 2.6 && ea === eb) {
+      const ra = radice(gr.a),
+        rb = radice(gr.b);
+      if (ra !== rb) padre.set(rb, ra);
+      gr.unito = true;
+    } else if (porteDisegnate && !ea && !eb && !conSoglia(gr.celle)) {
+      /* il disimpegno che si allarga fra il capo di un muro e il pilastro
+       * di fronte: un varco senza porta, le due parti sono la stessa stanza */
       const ra = radice(gr.a),
         rb = radice(gr.b);
       if (ra !== rb) padre.set(rb, ra);

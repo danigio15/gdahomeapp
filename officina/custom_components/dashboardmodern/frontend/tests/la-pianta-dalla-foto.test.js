@@ -568,7 +568,7 @@ test("la pianta fotografata di sbieco si raddrizza e torna la stessa casa", () =
  * scala coi gradini, un balcone chiuso da una riga sola fuori dal muro, e
  * una scritta. Il tratteggio passava per muro pieno e la pianta andava sulla
  * strada dei muri pieni, dove le righe non contano: una stanza su quattro. */
-function disegnoCad(pxm) {
+function disegnoCad(pxm, { disimpegno = false } = {}) {
   const im = foglio(Math.round(14 * pxm), Math.round(12 * pxm)),
     P = (v) => v * pxm,
     X = (v) => P(v + 2),
@@ -668,6 +668,17 @@ function disegnoCad(pxm) {
   arco(6.4, 4.06, 0.9, 0, Math.PI / 2); // porta nel tramezzo orizzontale, apre in giu'
   riga(8.06, 7.6, 8.86, 7.6);
   arco(8.06, 7.6, 0.8, -Math.PI / 2, 0); // la porta del vano scala, sotto i gradini
+  /* Il disimpegno (la pianta di Andrea): nel salone un muro a L che finisce
+   * in uno spigolo davanti a un pilastro di 40 cm in fila col suo tratto
+   * verticale, a 78 cm. Fra i due capi non c'e' una porta (nessun arco): il
+   * disimpegno in basso a sinistra e' parte del salone. */
+  if (disimpegno) {
+    tramezzo(3.6, 4, 3.6, 5.5);
+    tramezzo(0.3, 5.5, 3.72, 5.5);
+    riga(3.54, 6.4, 3.54, 7.7);
+    riga(3.94, 6.4, 3.94, 7.7);
+    riga(3.54, 6.4, 3.94, 6.4);
+  }
   /* la scala: i gradini da un muro all'altro del vano, a passo di 28 cm */
   for (let k = 0; k < 10; k++) riga(8.06, 4.2 + k * 0.28, 9.7, 4.2 + k * 0.28);
   riga(8.9, 4.2, 8.9, 6.9);
@@ -727,6 +738,31 @@ test("il disegno del CAD va sulla strada delle righe: le stanze, le porte dagli 
   assert.equal(g.scale.length, 1, "la scala dai gradini");
   assert.equal(casa.scale.length, 1, "la scala nella casa");
   assert.ok(casa.scale[0].gradini >= 8, `gradini ${casa.scale[0].gradini}`);
+});
+
+test("nel CAD un varco senza arco fra lo spigolo di un muro e un pilastro in fila e' un passaggio, non una porta", () => {
+  const pxm = 50,
+    im = disegnoCad(pxm, { disimpegno: true }),
+    g = grigliaDallaFoto(im, 1 / pxm);
+  assert.equal(g.strada, "righe");
+  assert.ok(g.archi.length >= 3, `archi: ${g.archi.length}`);
+  const W = g.W;
+  const cella = (x, y) => Math.round((y + 1.5) / PASSO) * W + Math.round((x + 2) / PASSO);
+  /* fra i due capi (x 3,6, y 5,6-6,4) niente soglia: non e' una porta */
+  assert.equal(g.soglie[cella(3.65, 6)], 0, "nessuna soglia nel passaggio");
+  const casa = riconosciDaFoto(g);
+  /* sempre quattro stanze: il disimpegno sta col salone */
+  const aree = casa.stanze.map((s) => s.area).sort((a, b) => a - b);
+  assert.equal(casa.stanze.length, 4, `stanze: ${aree.map((a) => a.toFixed(1))}`);
+  assert.equal(
+    casa.tipo[cella(1.3, 6.6)],
+    casa.tipo[cella(1.3, 1.5)],
+    "il disimpegno e' il salone",
+  );
+  assert.ok(aree[3] > 30, `il salone: ${aree[3].toFixed(1)} m²`);
+  /* e le porte restano quelle con l'arco, piu' il portone */
+  const porte = casa.aperture.filter((a) => a.tipo === "porta");
+  assert.equal(porte.length, 4, `porte: ${porte.map((p) => p.largo.toFixed(2))}`);
 });
 
 test("in un disegno a righe il balcone, fuori dai muri di fuori, non e' una stanza; dentro lo e'", () => {

@@ -7767,6 +7767,8 @@ export default Object.freeze({
   "${nome}: no answer in ${s} s": "${nome}: нет ответа за ${s} с",
   "The list of pieces doesn't add up": "Список частей не сходится",
   "${nome}: arrived incomplete": "${nome}: пришёл неполным",
+  "Delete this floor": "Удалить этот этаж",
+  'Delete the floor "${nome}"? Its rooms, furniture and devices are lost.': "Удалить этаж «${nome}»? Его комнаты, мебель и устройства будут потеряны.",
   "Add or redo a floor": "Добавить или переделать этаж",
   "Add photos of ${nome}": "Добавить фото: ${nome}",
   "Add photos of this room": "Добавить фото этой комнаты",

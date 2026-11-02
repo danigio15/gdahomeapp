@@ -7614,6 +7614,8 @@ export default Object.freeze({
   "${nome}: no answer in ${s} s": "${nome}：${s} 秒内无响应",
   "The list of pieces doesn't add up": "分块列表不一致",
   "${nome}: arrived incomplete": "${nome}：接收不完整",
+  "Delete this floor": "删除此楼层",
+  'Delete the floor "${nome}"? Its rooms, furniture and devices are lost.': "删除楼层\"${nome}\"？其房间、家具和设备将丢失。",
   "Add or redo a floor": "添加或重做楼层",
   "Add photos of ${nome}": "添加 ${nome} 的照片",
   "Add photos of this room": "添加此房间的照片",

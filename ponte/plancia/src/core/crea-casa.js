@@ -469,6 +469,15 @@ export function aggiungiPiano(casa, piano) {
   return { ...c, piani: piani.slice(0, PIANI_AL_MASSIMO) };
 }
 
+/** La casa senza quel piano («come faccio ad eliminare un piano fatto?»):
+ * stanze, arredi e dispositivi di quel piano se ne vanno con lui, gli altri
+ * piani restano come sono. Una chiave che non c'e' non cambia niente. */
+export function togliPiano(casa, k) {
+  const c = casa && typeof casa === "object" ? casa : {};
+  const chiave = clean(k);
+  return { ...c, piani: elenco(c.piani).filter((p) => p?.k !== chiave) };
+}
+
 /** Le entita' gia' date a un dispositivo della casa (tranne `tranne`). */
 export function entitaUsate(casa, tranne = null) {
   const out = [];

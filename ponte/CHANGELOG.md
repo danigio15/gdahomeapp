@@ -34,7 +34,23 @@ _Solo Home Assistant: l'app sul telefono non cambia._
   riconoscono dal vetro disegnato nel muro, la scala dai gradini (il vano
   resta una stanza, con la scala dentro) e i balconi, chiusi solo da un
   parapetto fuori dai muri, restano fuori. Sulla pianta di prova: due
-  appartamenti, quattordici stanze, dieci porte, dieci finestre, la scala.
+  appartamenti, dodici ambienti, undici porte, tredici finestre, la scala.
+- **Casa 3D, il disimpegno con le quattro porte:** «ci sono 4 porte e tu
+  hai fatto un macello». Nel disegno a righe il riconoscitore prendeva per
+  porte due varchi che porte non sono: quello fra il capo di un tramezzo e il
+  pilastro in fila con lui, e quello fra due capi di muro visti di traverso.
+  Il disimpegno veniva spezzato in tre pezzi, con porte finte e un angolo
+  senza stanza. Ora due capi di muro in fila chiudono una porta solo se sono
+  lo stesso muro (stesso spessore, stessa faccia), un tramezzo che finisce
+  davanti a un altro muro solo se quel muro lo copre da tutte e due le parti,
+  e in un disegno che disegna le porte ad arco un varco senza arco è un
+  passaggio: le due parti sono la stessa stanza. Il disimpegno è una stanza
+  sola, con le sue cinque porte.
+- **Casa 3D, eliminare un piano già fatto:** «come faccio ad eliminare un
+  piano fatto?». Non si poteva: nel Config accanto a ogni piano c'era solo
+  «Modifica». Ora c'è anche 🗑️, con la domanda prima: il piano se ne va con
+  le sue stanze, gli arredi e i dispositivi, gli altri piani restano; senza
+  piani la scheda torna a «Crea la tua casa».
 
 ## 1.18.7.29
 
