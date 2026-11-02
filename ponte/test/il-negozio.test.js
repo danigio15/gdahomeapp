@@ -204,6 +204,7 @@ function negozioFinto({
   rompiLaPista = "",
   revisioneAMano = false,
   soloLaConsegna = false,
+  inRevisione = "",
 } = {}) {
   const fatte = [];
   const prendi = async (dove, opzioni = {}) => {
@@ -251,9 +252,33 @@ function negozioFinto({
       });
     /* Com'e' andata la 1.14.0: dopo un rifiuto il negozio non manda piu' da
      * solo in revisione, e lo dice cosi'. */
+    /* La consegna che manderebbe in revisione: senza `changesNotSentForReview`. */
+    const consegnaInRevisione =
+      /:commit(\?|$)/.test(via) && !via.includes("changesNotSentForReview");
+    /* Una revisione gia' in corso nel Play Console, come la produzione rimasta
+     * li' dal 21 ottobre 2026. «sempre»: il negozio rifiuta anche la consegna
+     * senza revisione. */
     if (
-      (revisioneAMano && (via.endsWith(":commit") || via.endsWith(":validate"))) ||
-      (soloLaConsegna && via.endsWith(":commit"))
+      /:commit(\?|$)/.test(via) &&
+      (inRevisione === "sempre" || (inRevisione && consegnaInRevisione))
+    )
+      return risposta(400, {
+        error: {
+          code: 400,
+          message: "Precondition check failed.",
+          status: "FAILED_PRECONDITION",
+          details: [
+            {
+              "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+              reason: "CHANGES_ALREADY_IN_REVIEW",
+              domain: "androidpublisher.googleapis.com",
+            },
+          ],
+        },
+      });
+    if (
+      (revisioneAMano && (consegnaInRevisione || via.endsWith(":validate"))) ||
+      (soloLaConsegna && consegnaInRevisione)
     )
       return risposta(400, {
         error: {
@@ -307,7 +332,7 @@ test("il giro intero: apre, carica, mette sulla pista, chiede, consegna", async 
     `POST /upload/androidpublisher/v3/applications/${COME_SI_CHIAMA}/edits/modifica-1/bundles?uploadType=media`,
     `PATCH ${app}/edits/modifica-1/tracks/internal`,
     `POST ${app}/edits/modifica-1:validate`,
-    `POST ${app}/edits/modifica-1:commit`,
+    `POST ${app}/edits/modifica-1:commit?changesInReviewBehavior=ERROR_IF_IN_REVIEW`,
     /* La riguardata: una modifica nuova, perche' quella consegnata non c'e'
      * piu', e poi buttata. */
     `POST ${app}/edits`,
@@ -655,12 +680,12 @@ test("quando il negozio non manda da solo in revisione, si consegna lo stesso e 
   const chiamate = negozio.fatte.filter((una) => /:(validate|commit)/.test(una));
   assert.deepEqual(chiamate, [
     `POST ${app}/edits/modifica-1:validate`,
-    `POST ${app}/edits/modifica-1:commit?changesNotSentForReview=true`,
+    `POST ${app}/edits/modifica-1:commit?changesNotSentForReview=true&changesInReviewBehavior=ERROR_IF_IN_REVIEW`,
   ]);
   assert.ok(!negozio.fatte.some((una) => una.includes(":validate?")));
   /* Il primo cestino viene dopo la consegna: quella e' la riguardata. */
   const consegnata = negozio.fatte.indexOf(
-    `POST ${app}/edits/modifica-1:commit?changesNotSentForReview=true`,
+    `POST ${app}/edits/modifica-1:commit?changesNotSentForReview=true&changesInReviewBehavior=ERROR_IF_IN_REVIEW`,
   );
   assert.ok(negozio.fatte.indexOf(`DELETE ${app}/edits/modifica-1`) > consegnata);
   assert.ok(
@@ -686,8 +711,60 @@ test("se rifiuta solo la consegna, il controllo resta com'e' e si riconsegna", a
     negozio.fatte.filter((una) => /:(validate|commit)/.test(una)),
     [
       `POST ${app}/edits/modifica-1:validate`,
-      `POST ${app}/edits/modifica-1:commit`,
-      `POST ${app}/edits/modifica-1:commit?changesNotSentForReview=true`,
+      `POST ${app}/edits/modifica-1:commit?changesInReviewBehavior=ERROR_IF_IN_REVIEW`,
+      `POST ${app}/edits/modifica-1:commit?changesNotSentForReview=true&changesInReviewBehavior=ERROR_IF_IN_REVIEW`,
     ],
   );
+});
+
+test("nessuna consegna annulla una revisione gia' in corso", async (t) => {
+  /* Il `commit` senza parametri ritira le modifiche in revisione e rimanda
+   * tutto in fondo alla coda. Nel novembre 2026 la produzione era in
+   * revisione da 12 giorni: ogni consegna deve dire ERROR_IF_IN_REVIEW. */
+  const negozio = negozioFinto({ inRevisione: "si" });
+  const detto = [];
+  const esito = await porta({
+    pacco: unPacco(t),
+    piste: ["internal"],
+    novita: NOVITA,
+    segreto: JSON.stringify(credenzialeFinto()),
+    prendi: negozio.prendi,
+    dillo: (riga) => detto.push(riga),
+    aspetta: async () => {},
+  });
+  assert.equal(esito.pubblicato, true);
+  const consegne = negozio.fatte.filter((una) => una.includes(":commit"));
+  assert.ok(consegne.length > 0);
+  for (const una of consegne)
+    assert.match(
+      una,
+      /changesInReviewBehavior=ERROR_IF_IN_REVIEW/,
+      `${una} annullerebbe la revisione`,
+    );
+  /* La revisione in corso resta dov'e': la nostra si consegna senza revisione. */
+  assert.match(consegne.at(-1), /changesNotSentForReview=true/);
+  assert.ok(detto.some((riga) => /revisione in corso/.test(riga)));
+  assert.ok(detto.some((riga) => /Invia per revisione/.test(riga)));
+});
+
+test("se il negozio rifiuta anche senza revisione, ci si ferma e la modifica si butta", async (t) => {
+  const negozio = negozioFinto({ inRevisione: "sempre" });
+  await assert.rejects(
+    porta({
+      pacco: unPacco(t),
+      piste: ["internal"],
+      novita: NOVITA,
+      segreto: JSON.stringify(credenzialeFinto()),
+      prendi: negozio.prendi,
+      dillo: () => {},
+      aspetta: async () => {},
+    }),
+    /revisione in corso.*per non annullarla.*CHANGES_ALREADY_IN_REVIEW/,
+  );
+  const app = `/androidpublisher/v3/applications/${COME_SI_CHIAMA}`;
+  /* Due tentativi, entrambi col divieto di annullare, e poi il cestino. */
+  const consegne = negozio.fatte.filter((una) => una.includes(":commit"));
+  assert.equal(consegne.length, 2);
+  for (const una of consegne) assert.match(una, /ERROR_IF_IN_REVIEW/);
+  assert.equal(negozio.fatte.at(-1), `DELETE ${app}/edits/modifica-1`);
 });
