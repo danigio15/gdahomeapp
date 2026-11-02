@@ -430,7 +430,11 @@ async function rilevatoreInPagina(file) {
   return rilevatore(async (dati, w, h) => {
     const out = await sessione.run({
       images: new ort.Tensor("float32", dati, [1, 3, LATO, LATO]),
-      orig_target_sizes: new ort.Tensor("int64", BigInt64Array.from([BigInt(w), BigInt(h)]), [1, 2]),
+      orig_target_sizes: new ort.Tensor(
+        "int64",
+        BigInt64Array.from([BigInt(w), BigInt(h)]),
+        [1, 2],
+      ),
     });
     return { etichette: out.labels.data, riquadri: out.boxes.data, punti: out.scores.data };
   }, file.nomi);
@@ -503,7 +507,10 @@ function rilevatoreNelLavoratore(file, quandoMuore) {
         const s = Math.round(entro / 1000);
         muore(
           new Error(
-            t(`Il riconoscitore non ha risposto in ${s} s`, `The recognizer didn't answer in ${s} s`),
+            t(
+              `Il riconoscitore non ha risposto in ${s} s`,
+              `The recognizer didn't answer in ${s} s`,
+            ),
           ),
         );
         no(morto);
@@ -531,7 +538,8 @@ function rilevatoreNelLavoratore(file, quandoMuore) {
     () => {
       pronto = true;
       return rilevatore(
-        (dati, w, h) => chiedi({ tipo: "rileva", dati, lato: LATO, w, h }, ATTESA_FOTO, [dati.buffer]),
+        (dati, w, h) =>
+          chiedi({ tipo: "rileva", dati, lato: LATO, w, h }, ATTESA_FOTO, [dati.buffer]),
         file.nomi,
       );
     },
@@ -599,8 +607,7 @@ async function scaricaIlRiconoscitore() {
   const intero = async (parte) => {
     const tutto = new Uint8Array(Number(parte.byte) || 0);
     let a = 0;
-    const aMeta = (nome) =>
-      new Error(t(`${nome}: arrivato a metà`, `${nome}: arrived incomplete`));
+    const aMeta = (nome) => new Error(t(`${nome}: arrivato a metà`, `${nome}: arrived incomplete`));
     for (const nome of parte.pezzi) {
       const b = new Uint8Array(await prendi(`${VENDOR}${nome}`));
       if (a + b.length > tutto.length) throw aMeta(nome);
@@ -1219,8 +1226,7 @@ function notaDellaScala(S) {
     return nota(
       `⚠️ ${esc(t(`Con questa misura i muri esterni sarebbero spessi ${cm} cm: controlla la misura, in metri (10,92 e non 1092).`, `With this length the outer walls would be ${cm} cm thick: check the length, in metres (10.92, not 1092).`))}`,
     );
-  if (S.centimetri)
-    return nota(esc(t(`Letta come ${metri} metri.`, `Read as ${metri} metres.`)));
+  if (S.centimetri) return nota(esc(t(`Letta come ${metri} metri.`, `Read as ${metri} metres.`)));
   if (auto)
     return nota(
       `✓ ${esc(t("Scala trovata dallo spessore dei muri: puoi andare avanti, o segnare una misura per essere più preciso.", "Scale found from the wall thickness: you can go on, or mark a length to be more precise."))}`,
@@ -1439,7 +1445,6 @@ function pFotoStanze() {
   return html + avanti();
 }
 
-
 /* Le schede di una foto: verso, arredi, dispositivi, cosa manca, colori.
  * Le usa il passo «Foto stanze» e la strada «Dalle foto delle stanze». */
 function schedeDellaFoto(sid, F, nome) {
@@ -1554,7 +1559,8 @@ function stanzaDalleFoto(nome, area = "") {
 /* Si entra nella strada: le stanze di Home Assistant come punto di partenza. */
 /* Le aree di Home Assistant che non sono stanze della casa: il giardino, il
  * garage, la cantina. Non vanno nella pianta. */
-const NON_E_UNA_STANZA = /garage|\bbox\b|cantin|soffitt|rimess|magazzin|basement|attic|shed|cellar|outdoor|driveway|vialetto|piscin|pool/i;
+const NON_E_UNA_STANZA =
+  /garage|\bbox\b|cantin|soffitt|rimess|magazzin|basement|attic|shed|cellar|outdoor|driveway|vialetto|piscin|pool/i;
 
 /* Si entra nella strada: le stanze di Home Assistant come punto di partenza.
  * Quello che c'era prima (foto, nomi, aree di un'altra strada) si mette da
@@ -1730,7 +1736,10 @@ function pStanzeDalleFoto() {
         ? t("misure scritte da te", "sizes you typed")
         : r.da === "foto"
           ? t(`dalle foto (${rif})`, `from the photos (${rif})`)
-          : t("misure di serie: correggile se le sai", "standard sizes: adjust them if you know them");
+          : t(
+              "misure di serie: correggile se le sai",
+              "standard sizes: adjust them if you know them",
+            );
       const miniature = foto
         .map(
           (f, k) =>
@@ -1792,7 +1801,8 @@ function disegnaPiantaDalleFoto() {
     sopra = pezzo(".c3c-sopra");
   const d = disposteDiAdesso();
   S.sfDisposte = d;
-  if (!d.length) return vuota(t("Aggiungi le stanze e le loro foto", "Add the rooms and their photos"));
+  if (!d.length)
+    return vuota(t("Aggiungi le stanze e le loro foto", "Add the rooms and their photos"));
   const x1 = Math.max(...d.map((r) => r.x + r.larghezza)),
     y1 = Math.max(...d.map((r) => r.y + r.profondita));
   const U = SF_UNITA,
@@ -1806,7 +1816,8 @@ function disegnaPiantaDalleFoto() {
     Y = (m) => (m + M) * U;
   /* il muro esterno, un po' piu' largo delle stanze */
   g.fillStyle = "#334155";
-  for (const r of d) g.fillRect(X(r.x) - 15, Y(r.y) - 15, r.larghezza * U + 30, r.profondita * U + 30);
+  for (const r of d)
+    g.fillRect(X(r.x) - 15, Y(r.y) - 15, r.larghezza * U + 30, r.profondita * U + 30);
   for (const r of d) {
     g.globalAlpha = r.id === S.sel ? 0.95 : 0.7;
     g.fillStyle = COLORI_STANZE[r.id % COLORI_STANZE.length];
@@ -1873,7 +1884,13 @@ function creaLaPiantaDalleFoto() {
   );
   const g = grigliaDalleStanze(disposte);
   if (!g) return;
-  const casa = riconosciDaFoto({ W: g.W, H: g.H, muro: g.muro, barriera: g.barriera, vetro: g.vetro });
+  const casa = riconosciDaFoto({
+    W: g.W,
+    H: g.H,
+    muro: g.muro,
+    barriera: g.barriera,
+    vetro: g.vetro,
+  });
   /* la tela della pianta, come per un piano ripreso: un pixel per cella */
   const tela = tela2d(g.W, g.H),
     ctx = tela.getContext("2d"),
@@ -2129,8 +2146,21 @@ async function usaPlanimetria(src) {
   await new Promise((ok) => setTimeout(ok, 30));
   try {
     let img = typeof src === "string" ? await immagine(src) : src;
+    /* Il lato lungo a 2400 pixel: una foto enorme si rimpicciolisce, e una
+     * pianta piccola (il PNG esportato dal CAD a 1200 pixel) si ingrandisce,
+     * perche' con meno di due pixel per cella da 3 cm le righe sottili, gli
+     * archi delle porte e il vetro delle finestre si perdono, e la stessa
+     * pianta veniva diversa da quella provata. */
     const lato = Math.max(img.width, img.height);
-    if (lato > 2400) {
+    if (lato !== 2400 && typeof src === "string") {
+      const k = 2400 / lato,
+        c = tela2d(Math.round(img.width * k), Math.round(img.height * k));
+      const q = c.getContext("2d");
+      q.imageSmoothingEnabled = true;
+      q.imageSmoothingQuality = "high";
+      q.drawImage(img, 0, 0, c.width, c.height);
+      img = c;
+    } else if (lato > 2400) {
       const k = 2400 / lato,
         c = tela2d(Math.round(img.width * k), Math.round(img.height * k));
       c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
@@ -2175,7 +2205,9 @@ async function usaPlanimetria(src) {
     let muri = null;
     if (typeof src === "string") {
       try {
-        muri = scalaDaiMuri(dritta.getContext("2d").getImageData(0, 0, dritta.width, dritta.height));
+        muri = scalaDaiMuri(
+          dritta.getContext("2d").getImageData(0, 0, dritta.width, dritta.height),
+        );
       } catch {
         muri = null;
       }
@@ -3123,9 +3155,7 @@ async function alClic(ev) {
       /* dalle foto delle stanze non c'e' il passo della scala: dai Muri si
        * torna all'elenco delle stanze */
       S.passo =
-        S.fonte === "stanzeFoto" && S.passo === P.muri
-          ? P.planimetria
-          : Math.max(0, S.passo - 1);
+        S.fonte === "stanzeFoto" && S.passo === P.muri ? P.planimetria : Math.max(0, S.passo - 1);
       S.aggiungi = null;
       break;
     case "avanti":

@@ -45,7 +45,14 @@ _Solo Home Assistant: l'app sul telefono non cambia._
   davanti a un altro muro solo se quel muro lo copre da tutte e due le parti,
   e in un disegno che disegna le porte ad arco un varco senza arco è un
   passaggio: le due parti sono la stessa stanza. Il disimpegno è una stanza
-  sola, con le sue cinque porte.
+  sola, con le sue cinque porte. E il quadrato nero davanti a una porta
+  «che non c'è»: era la rientranza di 90 cm dove l'anta si apre, troppo
+  piccola per la squadratura delle stanze, che la faceva muro; ora resta
+  pavimento. La porta stessa è profonda quanto il muro, non un blocco di 70
+  cm fra i due muri di fianco. La pianta si legge sempre a 2400 pixel di
+  lato: quella piccola (il PNG del CAD a 1200) si ingrandisce prima, perché
+  con meno di due pixel per cella le righe sottili e gli archi si perdevano
+  e la stessa pianta veniva diversa da un telefono all'altro.
 - **Casa 3D, eliminare un piano già fatto:** «come faccio ad eliminare un
   piano fatto?». Non si poteva: nel Config accanto a ogni piano c'era solo
   «Modifica». Ora c'è anche 🗑️, con la domanda prima: il piano se ne va con

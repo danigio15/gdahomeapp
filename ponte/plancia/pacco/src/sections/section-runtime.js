@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-N6T5HHWX.js";
+} from "../../chunk-6TEZOZKP.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -157215,8 +157215,18 @@ function riconosciDaFoto({
     const centro2 = orizz ? Math.round((y0 + y1) / 2) : Math.round((x0 + x1) / 2);
     if (!fianchi(centro2)) continue;
     let p0 = centro2, p1 = centro2;
-    while (fianchi(p0 - 1) && centro2 - p0 < 20) p0--;
-    while (fianchi(p1 + 1) && p1 - centro2 < 20) p1++;
+    const mezzo = orizz ? Math.round((x0 + x1) / 2) : Math.round((y0 + y1) / 2);
+    const soglia4 = (p) => {
+      const i = orizz ? p * W2 + mezzo : mezzo * W2 + p;
+      return i >= 0 && i < N && barriera[i] && !muro[i];
+    };
+    if (barriera && barriera !== muro && soglia4(centro2)) {
+      while (soglia4(p0 - 1) && centro2 - p0 < 20) p0--;
+      while (soglia4(p1 + 1) && p1 - centro2 < 20) p1++;
+    } else {
+      while (fianchi(p0 - 1) && centro2 - p0 < 20) p0--;
+      while (fianchi(p1 + 1) && p1 - centro2 < 20) p1++;
+    }
     let conVetro = !vetro;
     for (let p = p0; p <= p1 && !conVetro; p++)
       for (let q = orizz ? x0 : y0; q <= (orizz ? x1 : y1); q++)
@@ -157508,6 +157518,33 @@ function squadraLaCasa(tipo, W2, H7, stanze4) {
         nuovo[i] = r.id;
         dipinto[i] = 1;
       }
+  }
+  {
+    const visto = new Uint8Array(N);
+    for (let i0 = 0; i0 < N; i0++) {
+      const id = tipo[i0];
+      if (id <= 0 || dipinto[i0] || visto[i0]) continue;
+      const pezzo3 = [i0];
+      visto[i0] = 1;
+      let stanza2 = false, porta = false;
+      for (let q = 0; q < pezzo3.length; q++) {
+        const c = pezzo3[q], x = c % W2;
+        for (const j of [x > 0 ? c - 1 : -1, x < W2 - 1 ? c + 1 : -1, c - W2, c + W2]) {
+          if (j < 0 || j >= N) continue;
+          if (tipo[j] === id && dipinto[j]) stanza2 = true;
+          else if (tipo[j] === -5 || tipo[j] === -4) porta = true;
+          else if (tipo[j] === id && !visto[j]) {
+            visto[j] = 1;
+            pezzo3.push(j);
+          }
+        }
+      }
+      if (stanza2 && porta)
+        for (const c of pezzo3) {
+          nuovo[c] = id;
+          dipinto[c] = 1;
+        }
+    }
   }
   {
     const r = Math.max(2, Math.round(0.3 / PASSO));
@@ -159670,7 +159707,11 @@ async function rilevatoreInPagina(file) {
   return rilevatore2(async (dati, w, h) => {
     const out = await sessione.run({
       images: new ort.Tensor("float32", dati, [1, 3, LATO, LATO]),
-      orig_target_sizes: new ort.Tensor("int64", BigInt64Array.from([BigInt(w), BigInt(h)]), [1, 2])
+      orig_target_sizes: new ort.Tensor(
+        "int64",
+        BigInt64Array.from([BigInt(w), BigInt(h)]),
+        [1, 2]
+      )
     });
     return { etichette: out.labels.data, riquadri: out.boxes.data, punti: out.scores.data };
   }, file.nomi);
@@ -159726,7 +159767,10 @@ function rilevatoreNelLavoratore(file, quandoMuore) {
       const s = Math.round(entro / 1e3);
       muore(
         new Error(
-          t(`Il riconoscitore non ha risposto in ${s} s`, `The recognizer didn't answer in ${s} s`)
+          t(
+            `Il riconoscitore non ha risposto in ${s} s`,
+            `The recognizer didn't answer in ${s} s`
+          )
         )
       );
       no(morto);
@@ -160282,8 +160326,7 @@ function notaDellaScala(S) {
     return nota(
       `⚠️ ${esc(t(`Con questa misura i muri esterni sarebbero spessi ${cm} cm: controlla la misura, in metri (10,92 e non 1092).`, `With this length the outer walls would be ${cm} cm thick: check the length, in metres (10.92, not 1092).`))}`
     );
-  if (S.centimetri)
-    return nota(esc(t(`Letta come ${metri} metri.`, `Read as ${metri} metres.`)));
+  if (S.centimetri) return nota(esc(t(`Letta come ${metri} metri.`, `Read as ${metri} metres.`)));
   if (auto)
     return nota(
       `✓ ${esc(t("Scala trovata dallo spessore dei muri: puoi andare avanti, o segnare una misura per essere più preciso.", "Scale found from the wall thickness: you can go on, or mark a length to be more precise."))}`
@@ -160650,7 +160693,10 @@ function pStanzeDalleFoto() {
   const righe3 = S.stanzeFoto.map((r, i) => {
     const foto = S.foto[r.id] || [];
     const rif = r.riferimenti.map((k) => MISURE_NOTE[k]?.nome ? due3(MISURE_NOTE[k].nome) : k).join(", ");
-    const comeMai = r.aMano ? t("misure scritte da te", "sizes you typed") : r.da === "foto" ? t(`dalle foto (${rif})`, `from the photos (${rif})`) : t("misure di serie: correggile se le sai", "standard sizes: adjust them if you know them");
+    const comeMai = r.aMano ? t("misure scritte da te", "sizes you typed") : r.da === "foto" ? t(`dalle foto (${rif})`, `from the photos (${rif})`) : t(
+      "misure di serie: correggile se le sai",
+      "standard sizes: adjust them if you know them"
+    );
     const miniature = foto.map(
       (f, k) => `<img src="${f.src}" alt="" class="${S.vistaFoto && r.id === S.sel && k === S.fotoSel ? "si" : ""}" data-c3c-sffoto="${r.id}:${k}">`
     ).join("");
@@ -160700,7 +160746,8 @@ function disegnaPiantaDalleFoto() {
   const S = state182.S, sopra = pezzo2(".c3c-sopra");
   const d = disposteDiAdesso();
   S.sfDisposte = d;
-  if (!d.length) return vuota(t("Aggiungi le stanze e le loro foto", "Add the rooms and their photos"));
+  if (!d.length)
+    return vuota(t("Aggiungi le stanze e le loro foto", "Add the rooms and their photos"));
   const x1 = Math.max(...d.map((r) => r.x + r.larghezza)), y1 = Math.max(...d.map((r) => r.y + r.profondita));
   const U = SF_UNITA, M = SF_MARGINE;
   const g = adatta((x1 + 2 * M) * U, (y1 + 2 * M) * U), s = state182.vista.s;
@@ -160709,7 +160756,8 @@ function disegnaPiantaDalleFoto() {
   g.fillRect(0, 0, (x1 + 2 * M) * U, (y1 + 2 * M) * U);
   const X = (m) => (m + M) * U, Y = (m) => (m + M) * U;
   g.fillStyle = "#334155";
-  for (const r of d) g.fillRect(X(r.x) - 15, Y(r.y) - 15, r.larghezza * U + 30, r.profondita * U + 30);
+  for (const r of d)
+    g.fillRect(X(r.x) - 15, Y(r.y) - 15, r.larghezza * U + 30, r.profondita * U + 30);
   for (const r of d) {
     g.globalAlpha = r.id === S.sel ? 0.95 : 0.7;
     g.fillStyle = COLORI_STANZE[r.id % COLORI_STANZE.length];
@@ -160765,7 +160813,13 @@ function creaLaPiantaDalleFoto() {
   );
   const g = grigliaDalleStanze(disposte);
   if (!g) return;
-  const casa2 = riconosciDaFoto({ W: g.W, H: g.H, muro: g.muro, barriera: g.barriera, vetro: g.vetro });
+  const casa2 = riconosciDaFoto({
+    W: g.W,
+    H: g.H,
+    muro: g.muro,
+    barriera: g.barriera,
+    vetro: g.vetro
+  });
   const tela4 = tela2d(g.W, g.H), ctx = tela4.getContext("2d"), im = ctx.createImageData(g.W, g.H);
   for (let i = 0; i < g.W * g.H; i++) {
     const v = g.muro[i] ? 0 : g.vetro[i] ? 120 : 255;
@@ -160969,7 +161023,14 @@ async function usaPlanimetria(src) {
   try {
     let img = typeof src === "string" ? await immagine2(src) : src;
     const lato = Math.max(img.width, img.height);
-    if (lato > 2400) {
+    if (lato !== 2400 && typeof src === "string") {
+      const k = 2400 / lato, c = tela2d(Math.round(img.width * k), Math.round(img.height * k));
+      const q2 = c.getContext("2d");
+      q2.imageSmoothingEnabled = true;
+      q2.imageSmoothingQuality = "high";
+      q2.drawImage(img, 0, 0, c.width, c.height);
+      img = c;
+    } else if (lato > 2400) {
       const k = 2400 / lato, c = tela2d(Math.round(img.width * k), Math.round(img.height * k));
       c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
       img = c;
@@ -161002,7 +161063,9 @@ async function usaPlanimetria(src) {
     let muri = null;
     if (typeof src === "string") {
       try {
-        muri = scalaDaiMuri(dritta.getContext("2d").getImageData(0, 0, dritta.width, dritta.height));
+        muri = scalaDaiMuri(
+          dritta.getContext("2d").getImageData(0, 0, dritta.width, dritta.height)
+        );
       } catch {
         muri = null;
       }

@@ -2498,8 +2498,24 @@ export function riconosciDaFoto(
     if (!fianchi(centro)) continue; // non e' un varco in un muro
     let p0 = centro,
       p1 = centro;
-    while (fianchi(p0 - 1) && centro - p0 < 20) p0--;
-    while (fianchi(p1 + 1) && p1 - centro < 20) p1++;
+    /* Quanto e' profondo il varco: quanto il muro in cui sta. Dove il varco
+     * e' una soglia (l'arco del CAD, il varco chiuso fra due tratti di muro)
+     * la barriera lo dice; altrimenti si cammina di traverso finche' ai due
+     * capi c'e' ancora muro — ma non oltre 20 cm da dove il muro del varco
+     * finisce, perche' ai due capi di una porta in fondo a un corridoio i
+     * muri di fianco corrono per metri, e la porta veniva un blocco di 70 cm. */
+    const mezzo = orizz ? Math.round((x0 + x1) / 2) : Math.round((y0 + y1) / 2);
+    const soglia = (p) => {
+      const i = orizz ? p * W + mezzo : mezzo * W + p;
+      return i >= 0 && i < N && barriera[i] && !muro[i];
+    };
+    if (barriera && barriera !== muro && soglia(centro)) {
+      while (soglia(p0 - 1) && centro - p0 < 20) p0--;
+      while (soglia(p1 + 1) && p1 - centro < 20) p1++;
+    } else {
+      while (fianchi(p0 - 1) && centro - p0 < 20) p0--;
+      while (fianchi(p1 + 1) && p1 - centro < 20) p1++;
+    }
     /* Verso il fuori e' una finestra se nel varco c'e' il vetro; un varco
      * vuoto e' una porta (il portone). Senza la mappa del vetro (una
      * griglia di prima) vale la regola di prima: verso il fuori, finestra. */
@@ -2865,6 +2881,40 @@ export function squadraLaCasa(tipo, W, H, stanze) {
         nuovo[i] = r.id;
         dipinto[i] = 1;
       }
+  }
+  /* La rientranza di una porta (il vano di 90 x 90 cm fra due muri di
+   * fianco, in fondo al quale la porta si apre): troppo piccola per un
+   * rettangolo, diventava un quadrato di muro davanti alla porta. Un pezzo
+   * di stanza avanzato che tocca la stanza dipinta e una sua porta o
+   * finestra e' pavimento, e resta stanza. */
+  {
+    const visto = new Uint8Array(N);
+    for (let i0 = 0; i0 < N; i0++) {
+      const id = tipo[i0];
+      if (id <= 0 || dipinto[i0] || visto[i0]) continue;
+      const pezzo = [i0];
+      visto[i0] = 1;
+      let stanza = false,
+        porta = false;
+      for (let q = 0; q < pezzo.length; q++) {
+        const c = pezzo[q],
+          x = c % W;
+        for (const j of [x > 0 ? c - 1 : -1, x < W - 1 ? c + 1 : -1, c - W, c + W]) {
+          if (j < 0 || j >= N) continue;
+          if (tipo[j] === id && dipinto[j]) stanza = true;
+          else if (tipo[j] === -5 || tipo[j] === -4) porta = true;
+          else if (tipo[j] === id && !visto[j]) {
+            visto[j] = 1;
+            pezzo.push(j);
+          }
+        }
+      }
+      if (stanza && porta)
+        for (const c of pezzo) {
+          nuovo[c] = id;
+          dipinto[c] = 1;
+        }
+    }
   }
   /* Fra due rettangoli della stessa stanza (il corridoio che si apre nel
    * soggiorno) resta uno spiraglio: era stanza e stanza resta, non diventa
