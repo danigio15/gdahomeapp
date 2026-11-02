@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-6TEZOZKP.js";
+} from "../../chunk-NMNZPU4W.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -4863,7 +4863,7 @@ var SOURCE_INDEX = Object.freeze({
   "Indifferenziato": "General waste",
   "Indirizzo della pagina": "Page address",
   "indirizzo non valido": "invalid address",
-  "Indirizzo RTSP della telecamera": "Camera RTSP address",
+  "Indirizzo RTSP (facoltativo: basta l'entità se la telecamera è già in Home Assistant)": "RTSP address (optional: the entity is enough if the camera is already in Home Assistant)",
   "Inferriata": "Grate",
   "Inferriata aperta": "Grate open",
   "Inferriata chiusa": "Grate closed",
@@ -7175,6 +7175,7 @@ var SOURCE_INDEX = Object.freeze({
   "Scegli l'elettrodomestico": "Choose the appliance",
   "Scegli l'entità del clima: è quella che comincia per climate.": "Choose the climate entity: it is the one starting with climate.",
   "Scegli l'entità del prezzo: il valore si aggiornerà da solo.": "Pick the price entity: the value will update by itself.",
+  "Scegli l'entità della telecamera (camera.…) con 🔍: l'indirizzo RTSP non serve se la telecamera è già in Home Assistant.": "Pick the camera entity (camera.…) with 🔍: the RTSP address is not needed if the camera is already in Home Assistant.",
   "Scegli l'entità meteo in ⚙️ Config › A muro › Altre impostazioni › Meteo, oppure aggiungi un'integrazione meteo in Home Assistant.": "Choose the weather entity in ⚙️ Config › On the wall › More settings › Weather, or add a weather integration in Home Assistant.",
   "Scegli l'entità meteo in Altre impostazioni › Meteo, o aggiungi un'integrazione meteo in Home Assistant": "Choose the weather entity in More settings › Weather, or add a weather integration in Home Assistant",
   "Scegli l’icona": "Pick the icon",
@@ -7824,7 +7825,6 @@ var SOURCE_INDEX = Object.freeze({
   "Telecamera": "Camera",
   "Telecamera aggiunta": "Camera added",
   "Telecamera con comandi": "Camera with controls",
-  "Telecamera non valida": "Invalid camera",
   "Telecamera riservata: non si vede adesso": "Private camera: not viewable now",
   "Telecamere": "Cameras",
   "Telecamere e allarme": "Cameras and alarm",
@@ -99968,7 +99968,12 @@ function proponiIlNome2() {
 }
 function campoMarkup3(valore3) {
   return `<label class="dm-rtsp-etichetta" for="${CAMPO}">${esc(
-    t("Indirizzo RTSP della telecamera", "Camera RTSP address")
+    /* #356: «mi chiede l'indirizzo rtsp». Non lo chiede: con l'entita' della
+     * telecamera gia' in Home Assistant (ONVIF, Reolink, Tapo) basta quella. */
+    t(
+      "Indirizzo RTSP (facoltativo: basta l'entità se la telecamera è già in Home Assistant)",
+      "RTSP address (optional: the entity is enough if the camera is already in Home Assistant)"
+    )
   )}</label>
   <input id="${CAMPO}" class="ed-input mono dm-rtsp-input" value="${esc(valore3)}"
     placeholder="rtsp://192.168.1.50:554/stream1" spellcheck="false" autocomplete="off">
@@ -104425,7 +104430,13 @@ function isTemperature(record2) {
   return record2.domain === "sensor" && (record2.dc === "temperature" || /temperatur/.test(record2.idFold)) && (record2.unit.includes("°") || record2.dc === "temperature");
 }
 function isHumidity(record2) {
-  return record2.domain === "sensor" && (record2.dc === "humidity" || /umidit|humidity/.test(record2.idFold));
+  if (record2.domain !== "sensor") return false;
+  if (record2.dc === "humidity") return true;
+  if (record2.dc) return false;
+  return /umidit|humidity/.test(record2.idFold) && record2.unit === "%" && !/batter|pila|signal|segnale|linkquality|rssi/.test(record2.idFold);
+}
+function umiditaPrima(a, b2) {
+  return (b2.dc === "humidity") - (a.dc === "humidity");
 }
 function detectCategories(records, { maxLights = 300, maxRooms = 24, maxFallbackRooms = 14 } = {}) {
   const lights = {};
@@ -104469,6 +104480,7 @@ function detectCategories(records, { maxLights = 300, maxRooms = 24, maxFallback
         break;
     }
   }
+  humidities.sort(umiditaPrima);
   const rooms2 = [];
   const usedTemperature = /* @__PURE__ */ new Set();
   const byArea = /* @__PURE__ */ new Map();
@@ -153217,13 +153229,21 @@ function avviaIlBattito2() {
     }
     if (doc.hidden || editorAperto2()) return;
     const adesso2 = (/* @__PURE__ */ new Date()).toLocaleTimeString(lingua7(), { hour12: false });
-    for (const el of nodo3.querySelectorAll("[data-oc-orologio]")) el.textContent = adesso2;
+    aggiornaGliOrologi(nodo3, adesso2);
     if (giri % 2 === 0 && nodo3.querySelector("img[data-oc-foto]")) {
       sorvegliaIFlussi();
       aggiornaLeTelecamere();
     }
     if (giri % 20 === 0) ridisegna31();
   }, 1e3) || 0;
+}
+function aggiornaGliOrologi(nodo3, adesso2) {
+  const pezzi = [...nodo3.querySelectorAll(".oc-pagina,.oc-sopra")].map((pezzo3) => ({
+    pezzo: pezzo3,
+    intatto: pezzo3.dataset.dmScritto !== void 0 && pezzo3.textContent === pezzo3.dataset.dmTesto
+  }));
+  for (const el of nodo3.querySelectorAll("[data-oc-orologio]")) el.textContent = adesso2;
+  for (const { pezzo: pezzo3, intatto } of pezzi) if (intatto) pezzo3.dataset.dmTesto = pezzo3.textContent;
 }
 var PASSO_DELLE_TELECAMERE_MS = 4e3;
 var RIPROVA_LA_TELECAMERA_MS = 2e3;

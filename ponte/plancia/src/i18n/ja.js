@@ -937,7 +937,6 @@ export default Object.freeze({
   "Came from a dashboard: the reply goes back into it":
     "ダッシュボードから届いたもの: 返信はそこに戻ります",
   Camera: "カメラ",
-  "Camera RTSP address": "カメラの RTSP アドレス",
   "Camera added": "カメラを追加しました",
   "Camera detections": "カメラの検知",
   "Camera detections: a phone notification, with the frame.":
@@ -1761,7 +1760,6 @@ export default Object.freeze({
   Internet: "インターネット",
   "Into the house": "家の中へ",
   Intrusion: "侵入",
-  "Invalid camera": "カメラが正しくありません",
   "Invalid entity": "エンティティが正しくありません",
   "Inverted percentages (100% = closed)": "反転パーセント（100% = 閉）",
   "Inverter AC temperature": "インバーターAC温度",
@@ -7754,6 +7752,8 @@ export default Object.freeze({
   "${nome}: arrived incomplete": "${nome}: 不完全なまま届きました",
   "Delete this floor": "この階を削除",
   'Delete the floor "${nome}"? Its rooms, furniture and devices are lost.': "階「${nome}」を削除しますか？その部屋、家具、デバイスは失われます。",
+  "RTSP address (optional: the entity is enough if the camera is already in Home Assistant)": "RTSP アドレス（任意：カメラがすでに Home Assistant にあればエンティティだけで十分）",
+  "Pick the camera entity (camera.…) with 🔍: the RTSP address is not needed if the camera is already in Home Assistant.": "🔍 でカメラのエンティティ（camera.…）を選んでください。カメラがすでに Home Assistant にあれば RTSP アドレスは不要です。",
   "Add or redo a floor": "階を追加またはやり直す",
   "Add photos of ${nome}": "${nome} の写真を追加",
   "Add photos of this room": "この部屋の写真を追加",

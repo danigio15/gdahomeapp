@@ -941,7 +941,6 @@ export default Object.freeze({
   "Came from a dashboard: the reply goes back into it":
     "Gekomen vanaf een dashboard: het antwoord gaat daarheen terug",
   Camera: "Camera",
-  "Camera RTSP address": "RTSP-adres van de camera",
   "Camera added": "Camera toegevoegd",
   "Camera detections": "Camerawaarnemingen",
   "Camera detections: a phone notification, with the frame.":
@@ -1769,7 +1768,6 @@ export default Object.freeze({
   Internet: "Internet",
   "Into the house": "Het huis in",
   Intrusion: "Inbraak",
-  "Invalid camera": "Ongeldige camera",
   "Invalid entity": "Ongeldige entiteit",
   "Inverted percentages (100% = closed)": "Omgekeerde percentages (100% = dicht)",
   "Inverter AC temperature": "AC-temperatuur omvormer",
@@ -7786,6 +7784,8 @@ export default Object.freeze({
   "${nome}: arrived incomplete": "${nome}: onvolledig aangekomen",
   "Delete this floor": "Deze verdieping verwijderen",
   'Delete the floor "${nome}"? Its rooms, furniture and devices are lost.': "Verdieping \"${nome}\" verwijderen? De kamers, meubels en apparaten gaan verloren.",
+  "RTSP address (optional: the entity is enough if the camera is already in Home Assistant)": "RTSP-adres (optioneel: de entiteit volstaat als de camera al in Home Assistant staat)",
+  "Pick the camera entity (camera.…) with 🔍: the RTSP address is not needed if the camera is already in Home Assistant.": "Kies de camera-entiteit (camera.…) met 🔍: het RTSP-adres is niet nodig als de camera al in Home Assistant staat.",
   "Add or redo a floor": "Verdieping toevoegen of opnieuw maken",
   "Add photos of ${nome}": "Foto's van ${nome} toevoegen",
   "Add photos of this room": "Foto's van deze kamer toevoegen",

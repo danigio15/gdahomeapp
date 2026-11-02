@@ -122,3 +122,40 @@ test("modificare una stanza nel wizard non la duplica, e la filiera morta e' mor
   /* renderVideoHls era la seconda filiera video mai chiamata: rimossa. */
   expect(esito.filieraMorta).toBe("undefined");
 });
+
+/* #356: «non riesco ad integrare le telecamere onvif, mi chiede l'indirizzo
+ * rtsp, e se metto solo l'entità della telecamera mi dice camera non valida».
+ * L'indirizzo RTSP non serve: basta l'entità. Senza nome vale quello che la
+ * telecamera ha in Home Assistant, e l'avviso dice cosa manca davvero. */
+test("una telecamera ONVIF si aggiunge con la sola entità", async ({ page }, testInfo) => {
+  test.setTimeout(150_000);
+  await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
+  const esito = await page.evaluate(async () => {
+    ["ed-cam-name", "ed-cam-ent", "ed-cam-stream"].forEach((id) => {
+      const el = document.createElement("input");
+      el.id = id;
+      document.body.append(el);
+    });
+    window.eval(
+      '_RAW_STATES["camera.ip_camera_mainstream"] = { entity_id: "camera.ip_camera_mainstream", state: "idle", attributes: { friendly_name: "Cancello ONVIF" } };',
+    );
+    const avvisi = [];
+    window.alert = (testo) => avvisi.push(String(testo));
+    /* senza entita': l'avviso dice di sceglierla, e non parla di «non valida» */
+    window.edAddCamera();
+    /* solo l'entita', col nome di Home Assistant accanto come la incolla chi
+     * la copia dall'elenco */
+    document.getElementById("ed-cam-ent").value = "camera.ip_camera_mainstream · Cancello ONVIF";
+    window.edAddCamera();
+    await new Promise((r) => setTimeout(r, 300));
+    return { avvisi, cams: JSON.parse(window.localStorage.getItem("cd_cameras")) };
+  });
+  expect(esito.avvisi).toHaveLength(1);
+  expect(esito.avvisi[0]).toMatch(/camera\.|entit/i);
+  expect(esito.avvisi[0]).not.toMatch(/non valida|invalid/i);
+  const nuova = esito.cams.find((c) => c.entity === "camera.ip_camera_mainstream");
+  expect(nuova, JSON.stringify(esito.cams)).toBeTruthy();
+  expect(nuova.name).toBe("Cancello ONVIF");
+  expect(esito.cams).toHaveLength(2);
+});

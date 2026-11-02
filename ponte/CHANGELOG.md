@@ -10,6 +10,52 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.8
+
+_App GdAHome e Home Assistant._
+
+L'app sul telefono raccoglie quello che è cambiato dalla 1.18.7; l'add-on è
+quello della 1.18.7.30 con quattro correzioni.
+
+- **Menu laterale fluido su Android:** «lo scroll del menu ha dei frame lag,
+  non scorre fluido». A menu aperto fino in fondo la plancia dietro esce dalla
+  scena (resta caricata), e il menu scorre senza scatti; torna com'era appena
+  il menu comincia a chiudersi.
+- **Plance nuove senza spegnere il tablet:** aprendo il menu, o tornando
+  all'app, l'elenco delle plance si chiede di nuovo alla casa. Un tablet a
+  muro sempre acceso vede subito la plancia aggiunta dalla console, e una
+  tolta non si riapre. Un no di passaggio della casa, durante questa
+  rilettura, non toglie la plancia che si sta guardando.
+- **Premium legato alla casa:** l'abbonamento comprato dall'app porta con sé
+  un'impronta della casa per cui si compra (non il suo nome), e il negozio la
+  ridice al quadro: chi conosce il numero di un acquisto altrui non se lo
+  porta sulla propria casa.
+- **Gettone più robusto:** rimettere indietro l'orologio del telefono non
+  allunga più un gettone già scaduto.
+- **Colpo d'occhio, il popup delle telecamere:** «quando apro le telecamere
+  ogni secondo si aprono e si chiude il popup». L'orologio dentro il popup
+  cambia ogni secondo, e al primo aggiornamento della casa la pagina lo
+  prendeva per qualcuno che aveva riscritto il popup: lo rifaceva da capo,
+  con l'animazione d'apertura. Ora il popup resta aperto e fermo.
+- **L'umidità dell'Aqara T1 (#352):** al posto dell'umidità compariva la
+  batteria. Il sensore si chiama «temperature and humidity sensor», e anche
+  la sua batteria e la sua pressione hanno «humidity» nel nome. Ora
+  l'umidità la dice la classe del sensore; il nome conta solo per un sensore
+  senza classe e in percentuale, e mai per una batteria. Vale per le stanze
+  trovate da qui in avanti: chi l'ha già sbagliata la cambia una volta in
+  Config › Temperatura.
+- **La foto delle stanze in Home (#348):** la foto messa a una stanza si
+  vedeva nella pagina Stanze e nella Temperatura, ma non sulla stessa stanza
+  nel blocco della Home. Ora c'è anche lì, col nome e i gradi chiari sopra.
+- **Telecamere con la sola entità (#356):** una telecamera ONVIF già in Home
+  Assistant si aggiunge con la sola entità. Senza nome vale quello che ha in
+  Home Assistant, l'entità si prende anche da un testo incollato col nome
+  accanto, e invece di «Telecamera non valida» l'avviso dice cosa manca. Il
+  campo dell'indirizzo RTSP è segnato come facoltativo.
+- **Home Assistant:** tutto quello delle 1.18.7.17–1.18.7.30, qui sotto
+  (Casa 3D, pianta dalle foto, catasto e DWG, Colpo d'occhio, ricarica
+  notturna, Musica sul pannello da 4 pollici).
+
 ## 1.18.7.30
 
 _Solo Home Assistant: l'app sul telefono non cambia._

@@ -3075,6 +3075,10 @@ function wzAutoDetect() {
     }
 
     // — Rooms: temperatura + umidità gemella
+    // #352: humidity is what the device class says; the name only counts for a sensor
+    // with no class and in %, because the Aqara T1 («temperature and humidity sensor»)
+    // has «humidity» in the name of its battery and pressure too.
+    const wzUmidita = h => h.id.startsWith('sensor.') && (h.dc === 'humidity' || (!h.dc && /umidit|humidity/i.test(h.id) && (h.unit || '') === '%' && !/batter|pila|signal|segnale|linkquality|rssi/i.test(h.id)));
     if (!(WIZ.stanze || []).length) {
         const temps = M.filter(e => e.id.startsWith('sensor.') && (e.dc === 'temperature' || /temperatur/i.test(e.id)) && (e.unit || '').includes('°'));
         // v290: prima le AREE ufficiali di HA — una stanza per area, col suo sensore
@@ -3084,7 +3088,7 @@ function wzAutoDetect() {
         WIZ.stanze = Object.entries(byArea).slice(0, 14).map(([areaName, e]) => {
             used.add(e.id);
             const r = { name: areaName, icon: '🌡️', temp: e.id };
-            const hums = M.filter(h => h.id.startsWith('sensor.') && (h.dc === 'humidity' || /umidit|humidity/i.test(h.id)) && wzAreaOf(h.id) === areaName);
+            const hums = M.filter(h => wzUmidita(h) && wzAreaOf(h.id) === areaName).sort((a, b) => (b.dc === 'humidity') - (a.dc === 'humidity'));
             if (hums.length) r.hum = hums[0].id;
             return r;
         });
@@ -3092,7 +3096,7 @@ function wzAutoDetect() {
         temps.filter(e => !used.has(e.id) && !wzAreaOf(e.id)).slice(0, Math.max(0, 14 - WIZ.stanze.length)).forEach(e => {
             const r = { name: e.name.replace(/temperatura|temperature|sensore?/gi, '').trim() || e.name, icon: '🌡️', temp: e.id };
             const base = e.id.replace(/_?temperatur[ae]?/i, '');
-            const hum = M.find(h => h.id.startsWith('sensor.') && (h.dc === 'humidity' || /umidit|humidity/i.test(h.id)) && h.id.replace(/_?(umidita|humidity)/i, '') === base);
+            const hum = M.find(h => wzUmidita(h) && h.id.replace(/_?(umidita|humidity)/i, '') === base);
             if (hum) r.hum = hum.id;
             WIZ.stanze.push(r);
         });
@@ -4063,7 +4067,7 @@ function edDelClima(i) {
 let _dmCameraEditIndex=null;
 function edEditCamera(i){ var c=getCameras()[i]; if(!c)return; _dmCameraEditIndex=i; document.getElementById('ed-cam-name').value=c.name||''; document.getElementById('ed-cam-ent').value=c.entity||''; document.getElementById('ed-cam-stream').value=c.stream||''; var room=document.getElementById('ed-cam-room'); if(room) room.value=c.room_id||c.room||''; }
 function dmSaveCameras(cams){ var store=globalThis.DashboardModernModules&&DashboardModernModules.store; if(store) return store.replaceSection('cameras',cams).catch(function(e){ alert('Camera save failed: '+e.message); }); localStorage.setItem('cd_cameras',JSON.stringify(cams)); try{cdMarkDirty();cdSyncPush();}catch(e){} var grid=document.getElementById('cam-grid'); if(grid)grid._sig=''; buildCamCards(); refreshCameras(); try{render();}catch(e){} }
-function edAddCamera() { const name=(document.getElementById('ed-cam-name').value||'').trim(), ent=(document.getElementById('ed-cam-ent').value||'').trim(), stream=(document.getElementById('ed-cam-stream').value||'').trim(); if(!name||!/^camera\.[a-z0-9_]+$/i.test(ent)){alert('Invalid camera');return;} const cams=getCameras().slice(); /* La riga in modifica non si ricostruisce da zero: i campi che il form non conosce (la stanza del registro, un flag storico) restano suoi. */ const precedente=(_dmCameraEditIndex!=null&&cams[_dmCameraEditIndex])||{}; const nuova=Object.assign({},precedente,{id:precedente.id||('camera_'+Date.now().toString(36)),name:name,entity:ent,stream:stream,room_id:(document.getElementById('ed-cam-room')||{}).value||''}); if(_dmCameraEditIndex==null)cams.push(nuova);else cams[_dmCameraEditIndex]=nuova; _dmCameraEditIndex=null; dmSaveCameras(cams); if(!globalThis.DashboardModernModules) editorSwitch('sezioni'); edToast('Camera added'); }
+function edAddCamera() { /* #356: basta l’entità (ONVIF, Reolink, Tapo…). L’entità si prende anche da dentro un testo incollato col nome accanto, e senza nome vale quello che la telecamera ha in Home Assistant; l’avviso dice cosa manca. */ const nomeEl=document.getElementById('ed-cam-name'), entEl=document.getElementById('ed-cam-ent'); const trovata=String(entEl.value||'').trim().toLowerCase().match(/camera\.[a-z0-9_]+/); const ent=trovata?trovata[0]:'', stream=(document.getElementById('ed-cam-stream').value||'').trim(); if(!ent){alert('Pick the camera entity (camera.…) with 🔍: the RTSP address is not needed if the camera is already in Home Assistant.');try{entEl.focus();}catch(e){}return;} entEl.value=ent; let name=(nomeEl.value||'').trim(); if(!name){ const st=(typeof _RAW_STATES!=='undefined'&&_RAW_STATES&&_RAW_STATES[ent])||null; name=String((st&&st.attributes&&st.attributes.friendly_name)||ent.slice(7).replace(/_/g,' ')).trim(); nomeEl.value=name; } const cams=getCameras().slice(); /* La riga in modifica non si ricostruisce da zero: i campi che il form non conosce (la stanza del registro, un flag storico) restano suoi. */ const precedente=(_dmCameraEditIndex!=null&&cams[_dmCameraEditIndex])||{}; const nuova=Object.assign({},precedente,{id:precedente.id||('camera_'+Date.now().toString(36)),name:name,entity:ent,stream:stream,room_id:(document.getElementById('ed-cam-room')||{}).value||''}); if(_dmCameraEditIndex==null)cams.push(nuova);else cams[_dmCameraEditIndex]=nuova; _dmCameraEditIndex=null; dmSaveCameras(cams); if(!globalThis.DashboardModernModules) editorSwitch('sezioni'); edToast('Camera added'); }
 function edDelCamera(i) { const cams=getCameras().slice(); cams.splice(i,1); _dmCameraEditIndex=null; dmSaveCameras(cams); if(!globalThis.DashboardModernModules) editorSwitch('sezioni'); }
 
 function edSetSlot(input) {

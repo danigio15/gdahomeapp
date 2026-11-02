@@ -426,6 +426,43 @@ test("le telecamere riservate non si vedono quando in casa c'e' qualcuno", async
   await expect(tela.locator('.oc-cam[data-oc-cam="camera.ingresso"]')).toHaveCount(0);
 });
 
+/* «Quando apro le telecamere ogni secondo si aprono e si chiude il popup.»
+ * L'orologio dentro il popup cambia ogni secondo, e al primo stato nuovo della
+ * casa la pagina credeva che qualcuno avesse riscritto il popup al posto suo:
+ * lo riscriveva da capo, con l'animazione d'apertura. Il popup deve restare
+ * lo stesso nodo mentre l'orologio corre e la casa cambia. */
+test("il popup delle telecamere resta aperto mentre l'orologio corre e la casa cambia", async ({
+  page,
+}, testInfo) => {
+  await boot(page, testInfo);
+  const tela = page.locator("#dm-occhio");
+  await tela.locator('.oc-riquadro[data-tipo="telecamere"]').click();
+  await expect(tela.locator(".oc-cam").first()).toBeVisible({ timeout: 10_000 });
+  await page.evaluate(() => {
+    window.__finestra = document.querySelector("#dm-occhio .oc-finestra");
+  });
+  for (let giro = 0; giro < 4; giro += 1) {
+    /* un secondo d'orologio, poi un sensore della casa che cambia */
+    await page.waitForTimeout(1100);
+    await page.evaluate((giro) => {
+      const stato = {
+        entity_id: "sensor.prova_battito",
+        state: String(giro),
+        attributes: {},
+      };
+      _RAW_STATES["sensor.prova_battito"] = stato;
+      window.__HASS__.states["sensor.prova_battito"] = stato;
+      window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
+    }, giro);
+  }
+  await page.waitForTimeout(400);
+  const stessa = await page.evaluate(
+    () => window.__finestra === document.querySelector("#dm-occhio .oc-finestra"),
+  );
+  expect(stessa, "il popup e' stato riscritto da capo").toBe(true);
+  await expect(tela.locator("[data-oc-orologio]").first()).not.toHaveText("");
+});
+
 test("con GdAHome Base la plancia resta quella di sempre, e la scheda del Config e' chiusa", async ({
   page,
 }, testInfo) => {

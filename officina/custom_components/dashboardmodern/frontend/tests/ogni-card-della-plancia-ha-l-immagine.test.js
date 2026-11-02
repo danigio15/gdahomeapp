@@ -113,6 +113,20 @@ test("ogni card trova la sua voce", () => {
   }
 });
 
+test("#348: la stanza in Home prende la foto della stanza, come le Stanze e la Temperatura", () => {
+  const stanze = SUPERFICI_DA_VESTIRE.find((s) => s.chiave === "stanze");
+  assert.ok(stanze.pagine.includes("page-home"), "la Home e' fra le pagine guardate");
+  const voci = [{ id: "cucina" }, { id: "soggiorno", immagine: IMMAGINE }];
+  const inHome = {
+    getAttribute: (nome) => (nome === "data-dm-stanza-plancia" ? "soggiorno" : null),
+  };
+  assert.deepEqual(voceDellaCard(stanze, voci, inHome)?.immagine, IMMAGINE);
+  assert.ok(
+    stanze.selettore.split(",").includes(".dm-stanza-plancia[data-dm-stanza-plancia]"),
+    "il selettore prende la tessera della Home",
+  );
+});
+
 test("le immagini sciolte: solo «superficie:card» e immagini di casa", () => {
   assert.equal(CHIAVE_DELLE_IMMAGINI, "cd_immagini_riquadri");
   const pulite = immaginiSciolte({
