@@ -29,6 +29,13 @@ _Solo Home Assistant: l'app sul telefono non cambia._
   elettrodomestici). Con la casella accesa la tessera sparisce dalla Home
   quando è tutto spento e torna appena qualcosa si accende; le altre si
   ricompattano. Di serie è spenta: la Home resta quella di sempre.
+- **Musica: «Cerca e ascolta» anche fuori dagli Echo (#347):** il riquadro
+  in cima alla pagina Musica, che sugli Echo faceva già suonare un brano o
+  una playlist per nome, adesso c'è anche sugli altri lettori. Su quelli che
+  sanno cercare (Music Assistant) si scrive cosa ascoltare e si apre la
+  libreria già sui risultati; su quelli che sanno solo sfogliare (Sonos) c'è
+  «Sfoglia la libreria». Toccare un lettore nella finestra della Musica in
+  Home apre già la sua scheda, come per gli elettrodomestici.
 
 ## 1.18.8
 

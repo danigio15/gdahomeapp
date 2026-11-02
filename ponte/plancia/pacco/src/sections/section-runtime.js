@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-RIQVFXGV.js";
+} from "../../chunk-D2B3BCZM.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -5249,6 +5249,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le persone": "The people",
   "Le persone di casa: dove sono, da quanto tempo, e la batteria del telefono. Ogni persona ha la sua card in cima alla Home, con una foto vera o un avatar. Le frecce cambiano l'ordine in cui compaiono; l'interruttore la toglie dalla Home senza cancellarla.": "The people of the house: where they are, for how long, and their phone battery. Each person gets a card at the top of Home, with a real photo or an avatar. The arrows change the order they appear in; the switch takes one off Home without deleting them.",
   "Le piante di casa, una per riga: il sensore dell'umidità della terra, il nome, il disegno, e se c'è la temperatura. La pagina Piante dice quali sono da innaffiare, quali aspettano la pioggia e quando toccherà alle altre.": "The plants at home, one per row: the soil moisture sensor, the name, the drawing, and the temperature if there is one. The Plant care page says which need watering, which are waiting for rain and when the others will be due.",
+  "Le playlist, gli artisti e le radio di questo lettore": "This player's playlists, artists and stations",
   "Le porte e le finestre": "The doors and the windows",
   "Le prese di casa: la TV del salotto, quella della camera, il Firestick, il modem. Si accendono e si spengono come le luci, ma stanno per conto loro — cosi' «spegni tutte le luci» non spegne il modem.": "The sockets around the house: the living-room TV, the bedroom one, the Firestick, the modem. They switch on and off like lights, but they live on their own — so «turn all lights off» does not turn off the modem.",
   "Le proposte nascono in casa: l'add-on guarda i tuoi dispositivi e la loro storia, niente esce di casa.": "Suggestions are born at home: the add-on looks at your devices and their history, nothing leaves the home.",
@@ -6792,6 +6793,7 @@ var SOURCE_INDEX = Object.freeze({
   "Questo è l'impianto principale e non si può eliminare: è quello che la plancia ha sempre letto.": "This is the main plant and cannot be removed: it is the one the dashboard has always read.",
   "Questo è l'indirizzo di una PAGINA, non dei quadratini della mappa: aprendolo si apre un sito, e un sito non si può disegnare qui dentro. Serve l'indirizzo con cui quel servizio pubblica le tessere, che ha {z}/{x}/{y} al posto dei numeri. Se non ce l'hai, scegli un servizio dalla tendina qui sopra.": "This is the address of a PAGE, not of the map tiles: opening it opens a website, and a website cannot be drawn in here. What is needed is the address that service publishes its tiles at, the one with {z}/{x}/{y} standing in for the numbers. If you do not have it, pick a service from the list above.",
   "questo impegno": "this event",
+  "Questo lettore non sa cercare.": "This player cannot search.",
   "questo menu non dice le sue voci": "this menu does not list its options",
   "Questo mese": "This month",
   "Questo meteo non dà previsioni": "This weather gives no forecast",
@@ -7419,6 +7421,7 @@ var SOURCE_INDEX = Object.freeze({
   "Sezioni mie": "My sections",
   "Sezioni precedenti": "Previous sections",
   "Sezioni successive": "Next sections",
+  "Sfoglia la libreria": "Browse the library",
   "Sfoglia le cartelle di Home Assistant": "Browse the Home Assistant folders",
   "Sfondo": "Background",
   "sì": "yes",
@@ -46425,6 +46428,12 @@ function apriLoSfoglio(entity2) {
   suo2.nonMostrate = 0;
   suo2.testo = "";
   chiediLaCartella();
+  return true;
+}
+function cercaSulLettore(entity2, testo5) {
+  if (!apriLoSfoglio(entity2)) return false;
+  const cercato = clean(testo5);
+  if (cercato && letturaDiUnLettore(entity2)?.puo?.trova === true) cerca(cercato);
   return true;
 }
 function chiudiLoSfoglio() {
@@ -110609,7 +110618,7 @@ function riquadroMarkup() {
     </div>`;
   return `${testa2}
     <div class="dm-radio-dove"><span>${esc(t("Suona su", "Play on"))}</span><div class="dm-radio-fila">${lettoriMarkup}</div></div>
-    ${dove?.echo ? cercaSullEchoMarkup() : ""}
+    ${dove?.echo ? cercaSullEchoMarkup() : cercaSulLettoreMarkup(dove)}
     ${pronte}
     ${stazioni ? `<div class="dm-radio-griglia">${stazioni}</div>` : `<p class="dm-radio-vuoto">${esc(
     t(
@@ -110645,6 +110654,45 @@ function cercaSullEchoMarkup() {
     (uno, indice) => `<button type="button" class="dm-radio-pa" data-dm-radio-preferito="${indice}">▶ ${esc(uno.cosa)} <small>${esc(nomeDi19(uno.servizio))}</small></button>`
   ).join("")}</div>` : ""}
     </div>`;
+}
+function cercaSulLettoreMarkup(dove) {
+  if (!dove?.entita) return "";
+  const puo = letturaDiUnLettore(dove.entita)?.puo || {};
+  if (!puo.sfoglia) return "";
+  const sfoglia = `<button type="button" class="dm-radio-pa" data-dm-radio-sfoglia>📚 ${esc(
+    t("Sfoglia la libreria", "Browse the library")
+  )}</button>`;
+  if (!puo.trova)
+    return `<div class="dm-radio-cerca" data-dm-radio-cerca-lettore>
+      <div class="dm-radio-cerca-testa"><b>🎵 ${esc(t("Scegli cosa ascoltare", "Choose what to play"))}</b><small>${esc(
+      t("Le playlist, gli artisti e le radio di questo lettore", "This player's playlists, artists and stations")
+    )}</small></div>
+      <div class="dm-radio-fila">${sfoglia}</div>
+    </div>`;
+  return `<div class="dm-radio-cerca" data-dm-radio-cerca-lettore>
+      <div class="dm-radio-cerca-testa"><b>🎵 ${esc(t("Cerca e ascolta", "Search and play"))}</b><small>${esc(
+    t("Un artista, un brano, un album o una playlist", "An artist, a song, an album or a playlist")
+  )}</small></div>
+      <div class="dm-radio-cerca-riga">
+        <input class="dm-radio-cerca-campo" data-dm-radio-cosa value="${esc(state122.cosa)}" maxlength="${CERCA_AL_PIU}" enterkeyhint="search" aria-label="${esc(
+    t("Cosa ascoltare", "What to play")
+  )}" placeholder="${esc(t("Vasco Rossi, Albachiara, Top 50 Italia…", "Coldplay, Yellow, Today's Top Hits…"))}">
+        <button type="button" class="dm-radio-cerca-suona" data-dm-radio-cerca-trova>🔍 ${esc(t("Cerca", "Search"))}</button>
+      </div>
+      <div class="dm-radio-fila">${sfoglia}</div>
+    </div>`;
+}
+function cercaDove(dove, cosa) {
+  if (dove?.echo) {
+    suonaSullEcho(dove, state122.servizio, cosa);
+    return;
+  }
+  if (dove && cercaSulLettore(dove.entita, cosa)) {
+    root.navigator?.vibrate?.(8);
+    state122.esito = "";
+    return;
+  }
+  state122.esito = t("Questo lettore non sa cercare.", "This player cannot search.");
 }
 function suonaSullEcho(dove, servizio3, cosa) {
   const chiamata = dove?.echo && chiamataPerSuonare({ echo: [dove.entita], servizio: servizio3, cosa }, allStates() || {});
@@ -110686,6 +110734,11 @@ function sulRiquadro(evento) {
     state122.servizio = servizioPulito(d.dmRadioServizio);
   } else if ("dmRadioCercaSuona" in d) {
     suonaSullEcho(doveSuona(lettori2), state122.servizio, state122.cosa);
+  } else if ("dmRadioCercaTrova" in d) {
+    cercaDove(doveSuona(lettori2), state122.cosa);
+  } else if ("dmRadioSfoglia" in d) {
+    const dove = doveSuona(lettori2);
+    if (dove) cercaSulLettore(dove.entita, "");
   } else if ("dmRadioPreferito" in d) {
     const uno = normalizzaAlexa(readJson(CHIAVE_ALEXA, null)).musica.filter(
       (x) => x.servizio !== "TUNEIN"
@@ -111137,7 +111190,7 @@ function installaLaRadio() {
       return;
     evento.preventDefault();
     state122.cosa = String(evento.target.value || "").slice(0, CERCA_AL_PIU);
-    suonaSullEcho(doveSuona(iLettori()), state122.servizio, state122.cosa);
+    cercaDove(doveSuona(iLettori()), state122.cosa);
     evento.target.blur?.();
     state122.firma = "";
     ridisegnaLaRadio();

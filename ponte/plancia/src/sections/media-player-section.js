@@ -890,6 +890,19 @@ export function apriLoSfoglio(entity) {
   return true;
 }
 
+/* Apre la finestra gia' sui risultati di una ricerca (#347).
+ *
+ * Dalla pagina Musica si scrive cosa ascoltare senza aprire prima la
+ * libreria: la finestra si apre e cerca subito. Su un lettore che sa
+ * sfogliare ma non cercare si apre la libreria, che e' il meglio che sa fare;
+ * senza testo pure. Torna «false» se il lettore non ha niente da aprire. */
+export function cercaSulLettore(entity, testo) {
+  if (!apriLoSfoglio(entity)) return false;
+  const cercato = clean(testo);
+  if (cercato && letturaDiUnLettore(entity)?.puo?.trova === true) cerca(cercato);
+  return true;
+}
+
 /** Richiude la finestra. Torna «false» se non era aperta. */
 export function chiudiLoSfoglio() {
   if (!state.sfoglia?.entity) return false;
