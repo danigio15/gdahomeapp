@@ -10,6 +10,21 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.7.30
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Casa 3D, il riconoscitore degli arredi sul telefono:** «ci ha messo un
+  sacco di tempo e poi non è riuscito». Il modello che riconosce gli arredi
+  nelle foto delle stanze (21,7 MB) non passava dal filo dell'app, che
+  chiude oltre i 16 MB a messaggio, e da fuori casa nemmeno dal centralino:
+  la stessa storia del lettore DWG. Ora arriva a pezzi da 3 MB, uno alla
+  volta, e la clessidra dice quanto manca («12 di 36 MB»): la prima volta
+  sono 36 MB, poi l'app li tiene. Il riconoscimento gira in un lavoratore a
+  parte, così la procedura resta libera e si tocca mentre guarda le foto. Se
+  il riconoscitore non arriva, sotto l'avviso c'è la causa vera e il tasto
+  «Riprova», che lo richiede e riguarda le foto rimaste senza.
+
 ## 1.18.7.29
 
 _Solo Home Assistant: l'app sul telefono non cambia._
