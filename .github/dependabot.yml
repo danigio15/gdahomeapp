@@ -42,6 +42,11 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      # Playwright resta dov'e': le prove nel browser usano il Chromium di
+      # quella versione, e le prove delle richieste non le fanno girare — il
+      # verde non direbbe niente (#367). Si aggiorna a mano, col browser giusto.
+      - dependency-name: "playwright"
+      - dependency-name: "@playwright/test"
     groups:
       npm:
         patterns: ["*"]
