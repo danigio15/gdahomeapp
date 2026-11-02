@@ -1167,6 +1167,58 @@ test("la foto della pianta dell'architetto: prospettiva, stanze, finestre e scal
   await fotoDiretta(page, testInfo, "casa3d-foto-architetto-dentro");
 });
 
+/* «Hai fatto male la planimetria»: la pianta esportata da un CAD (non sta
+ * nel repo: DM_PIANTA_RIGHE), coi muri di fuori tratteggiati, i tramezzi a
+ * doppia riga, le porte ad arco, le finestre numerate, una scala e due
+ * balconi. Andava sulla strada dei muri pieni (una stanza, niente porte); ora
+ * si legge a righe: le stanze dei due appartamenti, le porte dagli archi, le
+ * finestre, la scala, e i balconi fuori. La quota, in frazioni della tela:
+ * DM_PIANTA_RIGHE_QUOTA="x0,y,x1,metri" (di serie quella di Andrea, 4 m). */
+test("la pianta disegnata a righe: stanze, porte, finestre, scala e balconi", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    !process.env.DM_PIANTA_RIGHE || testInfo.project.name !== "desktop",
+    "serve DM_PIANTA_RIGHE",
+  );
+  test.setTimeout(240_000);
+  const quota = process.env.DM_PIANTA_RIGHE_QUOTA || "0.565,0.496,0.751,4";
+  const [x0, y, x1, metri] = quota.split(",").map(Number);
+  const crea = await apriLaProcedura(page, testInfo);
+  await crea.locator('[data-c3c-file="pianta"]').setInputFiles(process.env.DM_PIANTA_RIGHE);
+  await expect(crea.locator(".c3c-lavoro")).toHaveCount(0, { timeout: 60_000 });
+  for (let i = 0; i < 4 && !(await crea.locator("[data-c3c-metri]").count()); i++)
+    await crea.locator('[data-c3c="avanti"]').click();
+  const tela = crea.locator(".c3c-tela");
+  const b = await tela.boundingBox();
+  await page.mouse.click(b.x + b.width * x0, b.y + b.height * y);
+  await page.mouse.click(b.x + b.width * x1, b.y + b.height * y);
+  await crea.locator("[data-c3c-metri]").fill(String(metri));
+  await crea.locator('[data-c3c="avanti"]').click();
+  const trovati = crea.locator(".c3c-pannello");
+  await expect(trovati).toContainText(/Trovati \d+ ambienti/, { timeout: 120_000 });
+  const testo = await trovati.innerText();
+  const n = Number(/Trovati (\d+) ambienti/.exec(testo)[1]),
+    porte = Number(/(\d+) porte/.exec(testo)?.[1] || 0),
+    finestre = Number(/(\d+) finestr/.exec(testo)?.[1] || 0);
+  console.log(`pianta a righe: ${n} ambienti, ${porte} porte, ${finestre} finestre`);
+  expect(n, testo).toBeGreaterThanOrEqual(Number(process.env.DM_PIANTA_RIGHE_STANZE || 12));
+  expect(porte, testo).toBeGreaterThanOrEqual(Number(process.env.DM_PIANTA_RIGHE_PORTE || 8));
+  expect(finestre, testo).toBeGreaterThanOrEqual(Number(process.env.DM_PIANTA_RIGHE_FINESTRE || 8));
+  await fotoDiretta(page, testInfo, "crea-pianta-a-righe-muri");
+  /* fino in fondo: la scala nel 3D, i balconi non sono stanze */
+  for (let i = 0; i < 8 && !(await crea.locator('[data-c3c="salva"]').count()); i++)
+    await crea.locator('[data-c3c="avanti"]').click();
+  await crea.locator('[data-c3c="salva"]').click();
+  await expect(crea).toBeHidden({ timeout: 20_000 });
+  const salvata = await page.evaluate(() => JSON.parse(localStorage.getItem("cd_casa3d")));
+  const piano = salvata.piani[0];
+  expect(piano.arredi.filter((a) => a.k === "scala").length).toBe(1);
+  expect(piano.stanze.length).toBe(n);
+  await page.waitForTimeout(2500);
+  await fotoDiretta(page, testInfo, "casa3d-pianta-a-righe");
+});
+
 /* «Ho attivato la plancia 3D per sbaglio sulla plancia che uso normale e
  * adesso non mi fa più tornare indietro»: la Casa 3D è una plancia a sé, e
  * sulla principale non si accende mai, anche se il suo config la dice accesa. */

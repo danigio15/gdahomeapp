@@ -24,6 +24,17 @@ _Solo Home Assistant: l'app sul telefono non cambia._
   parte, così la procedura resta libera e si tocca mentre guarda le foto. Se
   il riconoscitore non arriva, sotto l'avviso c'è la causa vera e il tasto
   «Riprova», che lo richiede e riguarda le foto rimaste senza.
+- **Casa 3D, la planimetria disegnata al computer:** «hai fatto male la
+  planimetria». Il disegno esportato da un CAD (muri di fuori tratteggiati,
+  tramezzi a doppia riga, porte ad arco, finestre numerate, la scala, i
+  balconi) passava per una pianta a muri pieni e ne uscivano una stanza e
+  nessuna porta. Ora la pianta sceglie da sola come leggersi, da quante
+  stanze ne vengono; sul disegno a righe gli archi delle porte diventano
+  porte (e non spezzano più le stanze in stanzine), le finestre si
+  riconoscono dal vetro disegnato nel muro, la scala dai gradini (il vano
+  resta una stanza, con la scala dentro) e i balconi, chiusi solo da un
+  parapetto fuori dai muri, restano fuori. Sulla pianta di prova: due
+  appartamenti, quattordici stanze, dieci porte, dieci finestre, la scala.
 
 ## 1.18.7.29
 

@@ -20,6 +20,9 @@
  *      la' c'e' il fuori e' una finestra, altrimenti una porta.
  */
 
+import { archiDellePorte } from "./archi-delle-porte.js";
+import { finestreNeiMuri } from "./finestre-nei-muri.js";
+
 export const PASSO = 0.03;
 
 /** Quanti gradi e' storta: l'angolo che rende piu' netti i profili delle righe e delle colonne. */
@@ -798,9 +801,36 @@ export function grigliaDeiMuri(
       if (j >= 0 && j < W * H) semina(j);
   }
   for (let i = 0; i < W * H; i++) if (fondo[i]) riga[i] = 0;
+  const r = Math.max(1, Math.round(0.2 / PASSO));
+  /* Le scale, prima di chiudere: i gradini sono righe parallele a passo di
+   * 20-40 cm, e la chiusura (che riempie fino a 40 cm) le fondeva in un
+   * blocco di muro grande quanto il vano. Si cercano sulle righe grezze, con
+   * una chiusura provvisoria per sapere dove sono i muri del vano, e le loro
+   * celle si tolgono: il vano resta una stanza, con la scala dentro. */
+  const { vere, piastrelle, segnaScale } = (() => {
+    const { corsaO, corsaV } = corseDelleRighe(riga, W, H);
+    const scale = trovaLeScale(stringi(allarga(riga, W, H, r), W, H, r), corsaO, corsaV, W, H);
+    /* via i gradini, non la riga lunga di traverso sull'orlo della scala:
+     * e' la riga del tramezzo che le fa da sponda, che corre per tutta la
+     * sua altezza; tolta anche lei, il tramezzo restava a una riga sola e
+     * spariva (e il vano scala si univa alla stanza accanto). Quella in
+     * mezzo (il cordolo fra le due rampe) va via come i gradini. */
+    const lunga = Math.round(0.5 / PASSO);
+    for (const s of scale.vere) {
+      const diTraverso = s.oriz ? corsaO : corsaV;
+      const sullOrlo = (x, y) =>
+        s.oriz ? y <= s.y0 + 2 || y >= s.y1 - 2 : x <= s.x0 + 2 || x >= s.x1 - 2;
+      for (let y = s.y0; y <= s.y1; y++)
+        for (let x = s.x0; x <= s.x1; x++) {
+          const i = y * W + x;
+          if (diTraverso[i] >= lunga && sullOrlo(x, y)) scale.segnaScale[i] = 0;
+        }
+    }
+    return scale;
+  })();
+  for (let i = 0; i < W * H; i++) if (segnaScale[i]) riga[i] = 0;
   /* 2. La chiusura: si allarga e si stringe di 20 cm. Una riga sottile dopo
    *    la chiusura resta sottile; due righe vicine diventano un muro pieno. */
-  const r = Math.max(1, Math.round(0.2 / PASSO));
   const chiusa = stringi(allarga(riga, W, H, r), W, H, r);
   for (let i = 0; i < W * H; i++) if (riga[i]) chiusa[i] = 1;
   /* 3. Via le cose sottili: si consuma di una cella e si ricresce. */
@@ -1131,15 +1161,76 @@ export function grigliaDeiMuri(
     cercaVani(tV, tO, W, H, (x, y) => y * W + x);
   }
   for (let i = 0; i < W * H; i++) if (vetro[i]) muro[i] = 0;
+  /* 4c. Le finestre disegnate (il CAD): nel vano il riempimento del muro
+   *     cambia e corrono le righe del vetro; la chiusura le aveva riempite
+   *     come il resto del muro, e lo spessore non le tradiva. */
+  if (!vetri) {
+    const { vetro: trovate, finestre } = finestreNeiMuri(riga, muro, W, H, PASSO);
+    for (let i = 0; i < W * H; i++)
+      if (trovate[i] && muro[i]) {
+        vetro[i] = 1;
+        muro[i] = 0;
+      }
+    /* La finestra prende tutto lo spessore del muro: il simbolo sporge dal
+     * muro e la sua fascia lasciava la riga interna del muro fra il vetro
+     * e la stanza, e la finestra non toccava la stanza (niente apertura).
+     * Si va di traverso fin dove il muro finisce, se finisce entro 20 cm:
+     * oltre e' un muro di traverso, che resta. */
+    const poco = Math.round(0.2 / PASSO);
+    for (const f of finestre) {
+      const lungo = f.oriz ? [f.x0, f.x1] : [f.y0, f.y1],
+        capi = f.oriz ? [f.y0, f.y1] : [f.x0, f.x1];
+      for (let p = lungo[0]; p <= lungo[1]; p++)
+        for (const [capo, verso] of [
+          [capi[0] - 1, -1],
+          [capi[1] + 1, 1],
+        ]) {
+          const celle = [];
+          for (let q = capo, k = 0; k <= poco && q >= 0 && q < (f.oriz ? H : W); q += verso, k++) {
+            const i = f.oriz ? q * W + p : p * W + q;
+            if (!muro[i]) break;
+            celle.push(i);
+          }
+          if (celle.length > poco) continue;
+          for (const i of celle) {
+            vetro[i] = 1;
+            muro[i] = 0;
+          }
+        }
+    }
+  }
+  /* il vetro nel vano del muro (una finestra vera), prima che le righe
+   * attaccate ai muri si aggiungano: serve a dire dov'e' chiusa la casa */
+  const vetroDelVano = vetro.slice();
   /* 5. La barriera: i muri piu' le righe sottili che li toccano e sono lunghe
    *    almeno 18 cm. Le scritte volanti no. Non diventa muro nel 3D. */
   const barriera = muro.slice();
   for (let i = 0; i < W * H; i++) if (vetro[i]) barriera[i] = 1;
   const resto = new Uint8Array(W * H);
   for (let i = 0; i < W * H; i++) if (riga[i] && !muro[i]) resto[i] = 1;
+  /* Una riga e' dritta se quasi tutte le sue celle corrono per almeno 24 cm
+   * in orizzontale o in verticale, senza tolleranze: l'arco di una porta
+   * (anche spesso tre celle) e' dritto solo ai capi, il simbolo di un
+   * sanitario, una quota di sbieco mai. */
+  const { corsaO: rO, corsaV: rV } = corseDritte(resto, W, H);
+  const dritta = (p) => {
+    const corsa = Math.round(0.24 / PASSO);
+    let n = 0;
+    for (const c of p.celle) if (rO[c] >= corsa || rV[c] >= corsa) n++;
+    return n >= p.celle.length * 0.8;
+  };
+  /* Gli archi delle porte (il CAD, il catasto): l'arco e l'anta non fanno
+   * barriera, e il varco fra la cerniera e il capo dell'arco e' una porta,
+   * anche dove il muro non corre dritto dai due lati. */
+  const archi = disegno || vetri ? [] : archiDellePorte(riga, muro, W, H, PASSO);
+  if (archi.celle) for (let i = 0; i < W * H; i++) if (archi.celle[i]) resto[i] = 0;
   const altri = pezziDi(resto, W, H);
   for (const p of altri.pezzi) {
     if (Math.max(p.x1 - p.x0, p.y1 - p.y0) < 6) continue;
+    /* «Hai fatto male la planimetria»: l'arco di una porta tocca il muro, e
+     * come barriera spezzava la stanza in stanzine finte attorno a ogni
+     * porta. Solo le righe dritte (il vetro, una soglia) fanno barriera. */
+    if (!dritta(p)) continue;
     let tocca = false;
     for (const c of p.celle) {
       const x = c % W;
@@ -1240,6 +1331,15 @@ export function grigliaDeiMuri(
       if (!apri(i - W, e * W + x, W, 1, e - y)) continue;
       for (let q = y; q < e; q++) soglie[q * W + x] = 1;
     }
+  for (const a of archi.archi || [])
+    for (let y = Math.max(0, a.apertura.y0); y <= Math.min(H - 1, a.apertura.y1); y++)
+      for (let x = Math.max(0, a.apertura.x0); x <= Math.min(W - 1, a.apertura.x1); x++)
+        if (!muro[y * W + x]) soglie[y * W + x] = 1;
+  /* ai piedi e in cima a una scala non c'e' una porta: il vano resta aperto */
+  if (vere.length) {
+    const vicino = allarga(segnaScale, W, H, Math.round(0.3 / PASSO));
+    for (let i = 0; i < W * H; i++) if (vicino[i]) soglie[i] = 0;
+  }
   for (let i = 0; i < W * H; i++) if (soglie[i]) barriera[i] = 1;
   /* Le righe si ispessiscono di una cella: una riga storta lascia passaggi
    * in diagonale. */
@@ -1251,10 +1351,93 @@ export function grigliaDeiMuri(
         for (const j of [i - 1, i + 1, i - W, i + W, i - W - 1, i - W + 1, i + W - 1, i + W + 1])
           spessa[j] = 1;
     }
+  /* Fuori dai muri di fuori: le celle che dal bordo si raggiungono senza
+   * attraversare un muro spesso (20 cm e oltre: quelli di fuori), una soglia o
+   * il vetro di una finestra. In una pianta disegnata a righe un balcone, una
+   * terrazza, un portico stanno li': chiusi da righe sottili o da un
+   * parapetto, non dai muri della casa. I tramezzi (sottili) e le righe
+   * (anche quelle attaccate ai muri: il contorno del balcone) si
+   * attraversano. */
+  let fuoriCasa = null,
+    muroSpesso = null;
+  if (!disegno && !vetri) {
+    const spessoMin = Math.round(0.2 / PASSO);
+    fuoriCasa = new Uint8Array(W * H);
+    muroSpesso = new Uint8Array(W * H);
+    for (let i = 0; i < W * H; i++)
+      if (muro[i] && Math.min(tO[i], tV[i]) >= spessoMin) muroSpesso[i] = 1;
+    const chiuso = (i) => muroSpesso[i] || vetroDelVano[i] || soglie[i];
+    const pila = [];
+    const semina = (i) => {
+      if (!fuoriCasa[i] && !chiuso(i)) {
+        fuoriCasa[i] = 1;
+        pila.push(i);
+      }
+    };
+    for (let x = 0; x < W; x++) {
+      semina(x);
+      semina((H - 1) * W + x);
+    }
+    for (let y = 0; y < H; y++) {
+      semina(y * W);
+      semina(y * W + W - 1);
+    }
+    while (pila.length) {
+      const i = pila.pop(),
+        x = i % W;
+      for (const j of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i - W, i + W])
+        if (j >= 0 && j < W * H) semina(j);
+    }
+  }
   /* vetro: dove la barriera e' inchiostro sottile (il vetro, le righe di una
    * finestra), e non una soglia vuota: verso il fuori, un varco col vetro e'
    * una finestra, uno senza niente e' una porta. */
-  return { W, H, muro, barriera: spessa, vetro };
+  return {
+    W,
+    H,
+    muro,
+    barriera: spessa,
+    vetro,
+    scale: scaleInMetri(vere),
+    piastrelle: inMetri(piastrelle),
+    fuoriCasa,
+    muroSpesso,
+  };
+}
+
+/**
+ * La griglia dei muri dall'immagine della pianta: a muri pieni
+ * (l'architetto, il progetto fotografato) o a righe (il CAD, la scansione del
+ * catasto), quella che fa le stanze.
+ *
+ * «Hai fatto male la planimetria»: un disegno esportato dal CAD ha i muri di
+ * fuori tratteggiati e i tramezzi a doppia riga. Il tratteggio passava per
+ * muro pieno — tre o quattro metri quadri, quanto basta per la soglia — e la
+ * pianta andava sulla strada dei muri pieni, dove le righe sottili non
+ * contano: una stanza su venti, nessuna porta. Qui si provano tutte e due le
+ * strade e si tiene quella dei muri pieni solo se fa almeno tre quarti delle
+ * stanze dell'altra: una pianta a muri pieni davvero le fa tutte (e legge
+ * meglio finestre e scale), un tratteggio quasi nessuna.
+ */
+export function grigliaDallaFoto(
+  im,
+  mpp,
+  { vetri = null, porte = null, disegno = false, pianoDaFoto = true } = {},
+) {
+  const { width: w, height: h } = im;
+  const aRighe = () =>
+    Object.assign(grigliaDeiMuri(inchiostro(im), w, h, mpp, { vetri, porte, disegno }), {
+      strada: "righe",
+    });
+  const pieni = disegno || !pianoDaFoto ? null : muriPieni(im, mpp);
+  if (!pieni || pieni.metri < MURI_PIENI_MINIMO) return aRighe();
+  const aPieni = Object.assign(grigliaDaMuriPieni(pieni.ink, pieni.linee, w, h, mpp), {
+    strada: "pieni",
+  });
+  const stanze = (g) => riconosciDaFoto(g).stanze.filter((s) => s.area >= 2).length;
+  const np = stanze(aPieni);
+  const righe = aRighe();
+  return np >= stanze(righe) * 0.75 ? aPieni : righe;
 }
 
 /**
@@ -1453,36 +1636,7 @@ export function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
       if (m < a * 0.2 || fuori > m * 0.3 || !attaccato(p)) for (const c of p.celle) pieno[c] = 0;
     }
   }
-  /* le corse delle righe, in orizzontale e in verticale (con un buco di una
-   * cella: una riga fotografata non e' mai perfetta) */
-  const corsa = (lungo) => {
-    const out = new Int32Array(N);
-    const n = lungo ? H : W,
-      m = lungo ? W : H,
-      at = lungo ? (a, b) => a * W + b : (a, b) => b * W + a;
-    for (let a = 0; a < n; a++) {
-      let b = 0;
-      while (b < m) {
-        const vicino = (q) =>
-          riga[at(a, q)] || (a > 0 && riga[at(a - 1, q)]) || (a < n - 1 && riga[at(a + 1, q)]);
-        if (!riga[at(a, b)]) {
-          b++;
-          continue;
-        }
-        let e = b,
-          buco = 0;
-        while (e < m && (vicino(e) || (buco < 2 && e + 1 < m && vicino(e + 1)))) {
-          buco = vicino(e) ? 0 : buco + 1;
-          e++;
-        }
-        for (let q = b; q < e; q++) if (riga[at(a, q)]) out[at(a, q)] = e - b;
-        b = e;
-      }
-    }
-    return out;
-  };
-  const corsaO = corsa(true),
-    corsaV = corsa(false);
+  const { corsaO, corsaV } = corseDelleRighe(riga, W, H);
   /* 2. i tramezzi a doppia riga */
   const tramezzo = new Uint8Array(N);
   const lungaT = Math.round(0.9 / PASSO),
@@ -1525,139 +1679,8 @@ export function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
         for (const c of p.celle) tramezzo[c] = 0;
     }
   }
-  /* 4. le scale: righe parallele lunghe almeno 60 cm a passo di 20-40 cm */
-  const scale = [];
-  const gradino = Math.round(0.6 / PASSO),
-    pMin = Math.round(0.18 / PASSO),
-    pMax = Math.round(0.4 / PASSO);
-  const segnaScale = new Uint8Array(N);
-  for (const oriz of [true, false]) {
-    const c = oriz ? corsaO : corsaV;
-    /* le righe lunghe, una per fila, coi loro capi */
-    const n = oriz ? H : W,
-      m = oriz ? W : H,
-      at = oriz ? (a, b) => a * W + b : (a, b) => b * W + a;
-    const file = [];
-    for (let a = 0; a < n; a++) {
-      const tratti = [];
-      let b = 0;
-      while (b < m) {
-        if (c[at(a, b)] >= gradino && c[at(a, b)] < Math.round(2.2 / PASSO)) {
-          let e = b;
-          while (e < m && (c[at(a, e)] >= gradino || (e + 1 < m && c[at(a, e + 1)] >= gradino)))
-            e++;
-          tratti.push([b, e]);
-          b = e;
-        } else b++;
-      }
-      file.push(tratti);
-    }
-    /* una fila per riga: le file vicine sono la stessa riga, spessa */
-    const centri = [];
-    for (let a = 0; a < n; a++)
-      for (const [b, e] of file[a]) {
-        const ultimo = centri.find(
-          (q) => a - q.a1 <= 1 && Math.min(e, q.e) - Math.max(b, q.b) > (e - b) * 0.6,
-        );
-        if (ultimo)
-          ((ultimo.a1 = a), (ultimo.b = Math.min(ultimo.b, b)), (ultimo.e = Math.max(ultimo.e, e)));
-        else centri.push({ a0: a, a1: a, b, e });
-      }
-    centri.sort((p, q) => p.a0 - q.a0);
-    /* catene di righe a passo regolare che si sovrappongono */
-    const usata = new Set();
-    for (let k = 0; k < centri.length; k++) {
-      if (usata.has(k)) continue;
-      const catena = [k];
-      let ultimo = centri[k];
-      for (let j = k + 1; j < centri.length; j++) {
-        const q = centri[j],
-          dist = (q.a0 + q.a1) / 2 - (ultimo.a0 + ultimo.a1) / 2;
-        if (dist < pMin) continue;
-        if (dist > pMax) break;
-        const sovrapposti = Math.min(q.e, ultimo.e) - Math.max(q.b, ultimo.b);
-        if (sovrapposti < Math.min(q.e - q.b, ultimo.e - ultimo.b) * 0.7) continue;
-        catena.push(j);
-        ultimo = q;
-      }
-      if (catena.length < 3) continue;
-      for (const j of catena) usata.add(j);
-      const pezzi = catena.map((j) => centri[j]);
-      const passi = pezzi
-        .slice(1)
-        .map((q, i) => (q.a0 + q.a1) / 2 - (pezzi[i].a0 + pezzi[i].a1) / 2);
-      const medio = passi.reduce((a, b) => a + b, 0) / passi.length;
-      /* regolare: i gradini sono tutti uguali (le piastrelle pure, ma
-       * vanno in tutte e due le direzioni: si guarda sotto) */
-      if (passi.some((p) => Math.abs(p - medio) > Math.max(2, medio * 0.3))) continue;
-      const b = Math.min(...pezzi.map((q) => q.b)),
-        e = Math.max(...pezzi.map((q) => q.e)),
-        a0 = pezzi[0].a0,
-        a1 = pezzi[pezzi.length - 1].a1;
-      /* una scala sta fra due muri: i gradini vanno da un muro all'altro.
-       * Le righe di una scritta, di un riquadro, dell'albero no. */
-      const toccaMuro = (q, capo) => {
-        for (let a = q.a0; a <= q.a1; a++)
-          for (let d = 0; d <= Math.round(0.25 / PASSO); d++) {
-            const bb = capo ? q.e + d : q.b - d;
-            if (bb >= 0 && bb < m && muro[at(a, bb)]) return true;
-          }
-        return false;
-      };
-      const fraMuri =
-        pezzi.filter((q) => toccaMuro(q, false) && toccaMuro(q, true)).length >= pezzi.length * 0.7;
-      scale.push(
-        oriz
-          ? {
-              x0: b,
-              x1: e,
-              y0: a0,
-              y1: a1,
-              oriz: false,
-              gradini: pezzi.length,
-              passo: medio,
-              fraMuri,
-            }
-          : {
-              x0: a0,
-              x1: a1,
-              y0: b,
-              y1: e,
-              oriz: true,
-              gradini: pezzi.length,
-              passo: medio,
-              fraMuri,
-            },
-      );
-    }
-  }
-  /* Le piastrelle sono un reticolo: righe a passo regolare in tutte e due
-   * le direzioni nello stesso posto. Una scala ha i gradini in una sola. */
-  const incrocia = (s) =>
-    scale.some(
-      (t) =>
-        t !== s &&
-        t.oriz !== s.oriz &&
-        Math.min(s.x1, t.x1) - Math.max(s.x0, t.x0) > 0 &&
-        Math.min(s.y1, t.y1) - Math.max(s.y0, t.y0) > 0,
-    );
-  const tutte = scale.filter((s) => s.fraMuri && s.gradini >= 5 && !incrocia(s));
-  /* le piastrelle: il pavimento di un portico, di una loggia */
-  const piastrelle = scale.filter(incrocia);
-  /* la stessa scala trovata piu' volte: si tiene la piu' grande */
-  const vere = [];
-  for (const s of [...tutte].sort(
-    (a, b) => (b.x1 - b.x0) * (b.y1 - b.y0) - (a.x1 - a.x0) * (a.y1 - a.y0),
-  )) {
-    const sopra = vere.some(
-      (t) =>
-        Math.min(s.x1, t.x1) - Math.max(s.x0, t.x0) > 0 &&
-        Math.min(s.y1, t.y1) - Math.max(s.y0, t.y0) > 0,
-    );
-    if (!sopra) vere.push(s);
-  }
-  for (const s of vere)
-    for (let y = s.y0; y <= s.y1; y++) for (let x = s.x0; x <= s.x1; x++) segnaScale[y * W + x] = 1;
+  /* 4. le scale */
+  const { vere, piastrelle, segnaScale } = trovaLeScale(muro, corsaO, corsaV, W, H);
   for (let i = 0; i < N; i++) if ((tramezzo[i] || pieno[i]) && !segnaScale[i]) muro[i] = 1;
   /* via i pezzetti sotto gli 80 cm (il lavello, il frigo, un simbolo
    * disegnati scuri) e lo scuro che tocca il bordo della foto (il tavolo
@@ -1787,26 +1810,305 @@ export function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
     barriera,
     vetro,
     pieni: true,
-    piastrelle: piastrelle.map((s) => ({
-      x0: s.x0 * PASSO,
-      x1: (s.x1 + 1) * PASSO,
-      y0: s.y0 * PASSO,
-      y1: (s.y1 + 1) * PASSO,
-    })),
-    scale: vere.map((s) => ({
-      x0: s.x0 * PASSO,
-      x1: (s.x1 + 1) * PASSO,
-      y0: s.y0 * PASSO,
-      y1: (s.y1 + 1) * PASSO,
-      oriz: s.oriz,
-      gradini: s.gradini,
-    })),
+    piastrelle: inMetri(piastrelle),
+    scale: scaleInMetri(vere),
   };
+}
+
+/* Le scale e le piastrelle trovate nella griglia, in metri. */
+const inMetri = (riquadri) =>
+  riquadri.map((s) => ({
+    x0: s.x0 * PASSO,
+    x1: (s.x1 + 1) * PASSO,
+    y0: s.y0 * PASSO,
+    y1: (s.y1 + 1) * PASSO,
+  }));
+const scaleInMetri = (vere) =>
+  vere.map((s) => ({ ...inMetri([s])[0], oriz: s.oriz, gradini: s.gradini }));
+
+/* Le corse senza tolleranze: quante celle piene in fila, in orizzontale e in
+ * verticale, per ogni cella piena. */
+function corseDritte(g, W, H) {
+  const corsaO = new Int32Array(W * H),
+    corsaV = new Int32Array(W * H);
+  for (let y = 0; y < H; y++) {
+    let x = 0;
+    while (x < W) {
+      if (!g[y * W + x]) {
+        x++;
+        continue;
+      }
+      let e = x;
+      while (e < W && g[y * W + e]) e++;
+      for (let q = x; q < e; q++) corsaO[y * W + q] = e - x;
+      x = e;
+    }
+  }
+  for (let x = 0; x < W; x++) {
+    let y = 0;
+    while (y < H) {
+      if (!g[y * W + x]) {
+        y++;
+        continue;
+      }
+      let e = y;
+      while (e < H && g[e * W + x]) e++;
+      for (let q = y; q < e; q++) corsaV[q * W + x] = e - y;
+      y = e;
+    }
+  }
+  return { corsaO, corsaV };
+}
+
+/* Le corse delle righe, in orizzontale e in verticale (con un buco di una
+ * cella: una riga fotografata non e' mai perfetta). */
+export function corseDelleRighe(riga, W, H) {
+  const N = W * H;
+  const corsa = (lungo) => {
+    const out = new Int32Array(N);
+    const n = lungo ? H : W,
+      m = lungo ? W : H,
+      at = lungo ? (a, b) => a * W + b : (a, b) => b * W + a;
+    for (let a = 0; a < n; a++) {
+      let b = 0;
+      while (b < m) {
+        const vicino = (q) =>
+          riga[at(a, q)] || (a > 0 && riga[at(a - 1, q)]) || (a < n - 1 && riga[at(a + 1, q)]);
+        if (!riga[at(a, b)]) {
+          b++;
+          continue;
+        }
+        let e = b,
+          buco = 0;
+        while (e < m && (vicino(e) || (buco < 2 && e + 1 < m && vicino(e + 1)))) {
+          buco = vicino(e) ? 0 : buco + 1;
+          e++;
+        }
+        for (let q = b; q < e; q++) if (riga[at(a, q)]) out[at(a, q)] = e - b;
+        b = e;
+      }
+    }
+    return out;
+  };
+  return { corsaO: corsa(true), corsaV: corsa(false) };
+}
+
+/* Le scale: righe parallele lunghe almeno 60 cm a passo di 20-40 cm (i
+ * gradini), fra due muri. Le piastrelle sono un reticolo (righe a passo
+ * regolare in tutte e due le direzioni nello stesso posto): il pavimento di
+ * un portico. Torna `{ vere, piastrelle, segnaScale }`: le scale (in celle,
+ * coi gradini e il verso), le piastrelle, e le celle delle scale. Vale per
+ * le piante a muri pieni e per quelle a righe. */
+export function trovaLeScale(muro, corsaO, corsaV, W, H) {
+  const N = W * H;
+  const scale = [];
+  /* un gradino e' lungo da 60 cm a 3 m: le due rampe di una scala a
+   * doppia rampa stanno in un vano da 2,2-2,4 m, e i gradini del disegno
+   * attraversano tutto il vano */
+  const gradino = Math.round(0.6 / PASSO),
+    gradinoMax = Math.round(3 / PASSO),
+    pMin = Math.round(0.18 / PASSO),
+    pMax = Math.round(0.4 / PASSO);
+  const segnaScale = new Uint8Array(N);
+  for (const oriz of [true, false]) {
+    const c = oriz ? corsaO : corsaV;
+    /* le righe lunghe, una per fila, coi loro capi */
+    const n = oriz ? H : W,
+      m = oriz ? W : H,
+      at = oriz ? (a, b) => a * W + b : (a, b) => b * W + a;
+    const file = [];
+    for (let a = 0; a < n; a++) {
+      const tratti = [];
+      let b = 0;
+      while (b < m) {
+        if (c[at(a, b)] >= gradino && c[at(a, b)] < gradinoMax) {
+          let e = b;
+          while (e < m && (c[at(a, e)] >= gradino || (e + 1 < m && c[at(a, e + 1)] >= gradino)))
+            e++;
+          /* un gradino e' lungo almeno quanto la sua corsa: la cella di una
+           * riga di traverso accanto a un gradino eredita la corsa lunga
+           * (le corse tollerano la fila accanto) ma e' un puntino, e messa
+           * in fila coi gradini faceva una scala finta larga una cella */
+          if (e - b >= gradino) tratti.push([b, e]);
+          b = e;
+        } else b++;
+      }
+      file.push(tratti);
+    }
+    /* una fila per riga: le file vicine sono la stessa riga, spessa */
+    const centri = [];
+    for (let a = 0; a < n; a++)
+      for (const [b, e] of file[a]) {
+        const ultimo = centri.find(
+          (q) => a - q.a1 <= 1 && Math.min(e, q.e) - Math.max(b, q.b) > (e - b) * 0.6,
+        );
+        if (ultimo)
+          ((ultimo.a1 = a), (ultimo.b = Math.min(ultimo.b, b)), (ultimo.e = Math.max(ultimo.e, e)));
+        else centri.push({ a0: a, a1: a, b, e });
+      }
+    centri.sort((p, q) => p.a0 - q.a0);
+    /* Una riga con la gemella parallela a 6-15 cm, lunga uguale, e' un
+     * tramezzo a doppia riga, non un gradino: il pezzo di tramezzo accanto
+     * alla porta del vano scala, in fila coi gradini e a passo giusto,
+     * entrava nella scala e il suo muro se ne andava con lei. */
+    const doppia = new Set();
+    for (let k = 0; k < centri.length; k++)
+      for (let j = k + 1; j < centri.length; j++) {
+        const p = centri[k],
+          q = centri[j],
+          dist = (q.a0 + q.a1) / 2 - (p.a0 + p.a1) / 2;
+        if (dist >= pMin) break;
+        if (dist < 2) continue;
+        const sovrapposti = Math.min(q.e, p.e) - Math.max(q.b, p.b);
+        if (sovrapposti >= Math.max(q.e - q.b, p.e - p.b) * 0.7) {
+          doppia.add(k);
+          doppia.add(j);
+        }
+      }
+    /* catene di righe a passo regolare che si sovrappongono */
+    const usata = new Set();
+    for (let k = 0; k < centri.length; k++) {
+      if (usata.has(k) || doppia.has(k)) continue;
+      const catena = [k];
+      let ultimo = centri[k];
+      for (let j = k + 1; j < centri.length; j++) {
+        const q = centri[j],
+          dist = (q.a0 + q.a1) / 2 - (ultimo.a0 + ultimo.a1) / 2;
+        if (dist < pMin || doppia.has(j)) continue;
+        if (dist > pMax) break;
+        const sovrapposti = Math.min(q.e, ultimo.e) - Math.max(q.b, ultimo.b);
+        if (sovrapposti < Math.min(q.e - q.b, ultimo.e - ultimo.b) * 0.7) continue;
+        catena.push(j);
+        ultimo = q;
+      }
+      if (catena.length < 3) continue;
+      for (const j of catena) usata.add(j);
+      const mezzo = (valori) => [...valori].sort((p, q) => p - q)[valori.length >> 1];
+      const pezzi = catena.map((j) => centri[j]);
+      const passi = pezzi
+        .slice(1)
+        .map((q, i) => (q.a0 + q.a1) / 2 - (pezzi[i].a0 + pezzi[i].a1) / 2);
+      const medio = passi.reduce((a, b) => a + b, 0) / passi.length;
+      /* regolare: i gradini sono tutti uguali (le piastrelle pure, ma
+       * vanno in tutte e due le direzioni: si guarda sotto) */
+      if (passi.some((p) => Math.abs(p - medio) > Math.max(2, medio * 0.3))) continue;
+      /* i capi della scala: quelli di mezzo fra i gradini, non i piu'
+       * larghi. Un gradino che tocca un muro tratteggiato o pieno corre
+       * dentro l'inchiostro del muro, e col riquadro preso dal piu' largo la
+       * scala si portava via il muro (e le due stanze accanto diventavano
+       * una). Poi i capi si ritirano fin dove il muro finisce: un muro
+       * continua oltre la scala (a un metro di la' dei gradini e' ancora
+       * muro), il vano della scala no. */
+      /* Il capo piu' esterno su cui almeno due gradini sono d'accordo: una
+       * scala a due rampe ha i gradini della rampa alta che attraversano
+       * tutto il vano e quelli della rampa bassa a meta', e il capo «di
+       * mezzo» tagliava la rampa alta; un gradino solo che corre dentro il
+       * muro accanto non conta. */
+      const appoggiato = (valori, verso) => {
+        for (const v of [...valori].sort((p, q) => (p - q) * verso))
+          if (valori.filter((x) => Math.abs(x - v) <= 2).length >= 2) return v;
+        return mezzo(valori);
+      };
+      let b = appoggiato(
+          pezzi.map((q) => q.b),
+          1,
+        ),
+        e = appoggiato(
+          pezzi.map((q) => q.e),
+          -1,
+        );
+      const a0 = pezzi[0].a0,
+        a1 = pezzi[pezzi.length - 1].a1;
+      /* a 0,8, 1,2 e 1,6 m oltre i gradini: un muro c'e' a tutte e tre le
+       * distanze; la chiusura attorno all'arco della porta del vano, o un
+       * pianerottolo chiuso, non arriva cosi' lontano */
+      const oltre = [0.8, 1.2, 1.6].map((d) => Math.round(d / PASSO));
+      const eMuro = (bb) => {
+        const sopra = oltre.every((d) => a0 - d >= 0 && muro[at(a0 - d, bb)]),
+          sotto = oltre.every((d) => a1 + d < n && muro[at(a1 + d, bb)]);
+        return sopra || sotto;
+      };
+      while (b < e - gradino && eMuro(b)) b++;
+      while (e > b + gradino && eMuro(e - 1)) e--;
+      /* una scala sta fra due muri: i gradini vanno da un muro all'altro.
+       * Le righe di una scritta, di un riquadro, dell'albero no. */
+      const toccaMuro = (q, capo) => {
+        for (let a = q.a0; a <= q.a1; a++)
+          for (let d = 0; d <= Math.round(0.25 / PASSO); d++) {
+            const bb = capo ? e + d : b - 1 - d;
+            if (bb >= 0 && bb < m && muro[at(a, bb)]) return true;
+          }
+        return false;
+      };
+      const fraMuri =
+        pezzi.filter((q) => toccaMuro(q, false) && toccaMuro(q, true)).length >= pezzi.length * 0.7;
+      scale.push(
+        oriz
+          ? {
+              x0: b,
+              x1: e,
+              y0: a0,
+              y1: a1,
+              oriz: false,
+              gradini: pezzi.length,
+              passo: medio,
+              fraMuri,
+            }
+          : {
+              x0: a0,
+              x1: a1,
+              y0: b,
+              y1: e,
+              oriz: true,
+              gradini: pezzi.length,
+              passo: medio,
+              fraMuri,
+            },
+      );
+    }
+  }
+  const incrocia = (s) =>
+    scale.some(
+      (t) =>
+        t !== s &&
+        t.oriz !== s.oriz &&
+        Math.min(s.x1, t.x1) - Math.max(s.x0, t.x0) > 0 &&
+        Math.min(s.y1, t.y1) - Math.max(s.y0, t.y0) > 0,
+    );
+  const tutte = scale.filter((s) => s.fraMuri && s.gradini >= 5 && !incrocia(s));
+  /* le piastrelle: il pavimento di un portico, di una loggia */
+  const piastrelle = scale.filter(incrocia);
+  /* la stessa scala trovata piu' volte: si tiene la piu' grande */
+  const vere = [];
+  for (const s of [...tutte].sort(
+    (a, b) => (b.x1 - b.x0) * (b.y1 - b.y0) - (a.x1 - a.x0) * (a.y1 - a.y0),
+  )) {
+    const sopra = vere.some(
+      (t) =>
+        Math.min(s.x1, t.x1) - Math.max(s.x0, t.x0) > 0 &&
+        Math.min(s.y1, t.y1) - Math.max(s.y0, t.y0) > 0,
+    );
+    if (!sopra) vere.push(s);
+  }
+  for (const s of vere)
+    for (let y = s.y0; y <= s.y1; y++) for (let x = s.x0; x <= s.x1; x++) segnaScale[y * W + x] = 1;
+  return { vere, piastrelle, segnaScale };
 }
 
 /** Dai muri alla casa, nella stessa forma che esce dal DWG (importa.js). */
 export function riconosciDaFoto(
-  { W, H, muro, barriera, vetro, pieni = false, scale = [], piastrelle = [] },
+  {
+    W,
+    H,
+    muro,
+    barriera,
+    vetro,
+    pieni = false,
+    scale = [],
+    piastrelle = [],
+    fuoriCasa = null,
+    muroSpesso = null,
+  },
   { fuori = new Set(), squadra = true } = {},
 ) {
   const N = W * H,
@@ -1995,6 +2297,54 @@ export function riconosciDaFoto(
         if (m2 !== l && c[0] > b[0] && c[1] < b[1] && c[2] > b[2] && c[3] < b[3]) dentro++;
       if (dentro >= 2) esterno.add(l);
     }
+  }
+  /* I balconi e le terrazze di una pianta disegnata a righe: una zona che
+   * sta fuori dai muri di fuori (`fuoriCasa`: dal bordo ci si arriva senza
+   * attraversare un muro spesso) e chiusa per meta' e piu' da righe sottili
+   * o da muretti (il parapetto, il contorno) e non dai muri spessi della
+   * casa e' fuori. Una stanza vera sta dentro i muri di fuori; e se i muri
+   * di fuori hanno un varco senza soglia e il fuori entra in casa, la regola
+   * non vale (meta' delle stanze «fuori» non e' un balcone: e' un buco nel
+   * muro). */
+  if (fuoriCasa) {
+    const spesso = muroSpesso || muro;
+    const conMuro = new Map(),
+      conRiga = new Map(),
+      celle = new Map(),
+      fuoriCelle = new Map();
+    let tutte = 0,
+      fuoriTutte = 0;
+    for (let i = 0; i < N; i++) {
+      const l = lab[i];
+      if (!l || esterno.has(l) || ostacolo[i]) continue;
+      celle.set(l, (celle.get(l) || 0) + 1);
+      tutte++;
+      if (fuoriCasa[i]) {
+        fuoriCelle.set(l, (fuoriCelle.get(l) || 0) + 1);
+        fuoriTutte++;
+      }
+      const x = i % W,
+        y = (i / W) | 0;
+      for (const j of [
+        x > 0 ? i - 1 : -1,
+        x < W - 1 ? i + 1 : -1,
+        y > 0 ? i - W : -1,
+        y < H - 1 ? i + W : -1,
+      ]) {
+        if (j < 0) continue;
+        if (spesso[j]) conMuro.set(l, (conMuro.get(l) || 0) + 1);
+        else if (ostacolo[j]) conRiga.set(l, (conRiga.get(l) || 0) + 1);
+      }
+    }
+    if (tutte && fuoriTutte < tutte * 0.5)
+      for (const c of cuori) {
+        if (esterno.has(c.id)) continue;
+        const n = celle.get(c.id) || 0,
+          f = fuoriCelle.get(c.id) || 0,
+          m = conMuro.get(c.id) || 0,
+          r = conRiga.get(c.id) || 0;
+        if (n && f >= n * 0.7 && m + r > 0 && r >= (m + r) * 0.5) esterno.add(c.id);
+      }
   }
   // unione: due stanze che si toccano su un fronte largo sono la stessa (open space)
   const padre = new Map();

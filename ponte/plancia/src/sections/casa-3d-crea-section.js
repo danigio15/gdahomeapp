@@ -49,12 +49,9 @@ import {
   riprendiIlPiano,
 } from "../core/crea-casa.js";
 import {
-  MURI_PIENI_MINIMO,
   PASSO,
-  grigliaDaMuriPieni,
-  grigliaDeiMuri,
+  grigliaDallaFoto,
   inchiostro,
-  muriPieni,
   prospettiva,
   raddrizza,
   riconosciDaFoto,
@@ -2666,21 +2663,16 @@ function riconosci() {
       for (let i = 0; i < m.length; i++) m[i] = d[i * 4 + 3] > 64 ? 1 : 0;
       return m;
     };
-    /* Una pianta a muri pieni (l'architetto, il catasto) si legge dai soli
-     * muri: le righe sottili attorno facevano stanze finte. */
-    /* Solo le foto: la scansione del catasto (un PDF) si legge a righe,
-     * come sempre. */
-    const pieni = S.disegno || !S.pianoDaFoto ? null : muriPieni(im, S.mpp);
-    /* A muri pieni i muri sono gia' puliti, e le righe sottili dicono porte,
-     * finestre, tramezzi e scale. */
-    S.griglia =
-      pieni && pieni.metri >= MURI_PIENI_MINIMO
-        ? grigliaDaMuriPieni(pieni.ink, pieni.linee, im.width, im.height, S.mpp)
-        : grigliaDeiMuri(inchiostro(im), im.width, im.height, S.mpp, {
-            vetri: mappa(S.vetri),
-            porte: mappa(S.porte),
-            disegno: S.disegno === true,
-          });
+    /* Una pianta a muri pieni (l'architetto, il progetto fotografato) si
+     * legge dai soli muri; una a righe (il CAD, la scansione del catasto)
+     * dalle righe: la strada la sceglie la pianta, da quante stanze ne
+     * vengono (grigliaDallaFoto). Un disegno (DWG) e' gia' a righe pulite. */
+    S.griglia = grigliaDallaFoto(im, S.mpp, {
+      vetri: mappa(S.vetri),
+      porte: mappa(S.porte),
+      disegno: S.disegno === true,
+      pianoDaFoto: S.pianoDaFoto === true,
+    });
   }
   ricalcola();
 }
