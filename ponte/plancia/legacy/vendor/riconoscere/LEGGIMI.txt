@@ -1,9 +1,9 @@
 Riconoscere gli arredi nelle foto della Casa 3D, sul dispositivo.
 
-- ort.wasm.min.js, ort-wasm-simd-threaded.js (era .mjs), ort-wasm-simd-threaded.wasm:
+- ort.wasm.min.js, ort-wasm-simd-threaded.js (era .mjs), ort-wasm-simd-threaded.N.wasm:
   ONNX Runtime Web 1.29.0 (MIT License, Copyright (c) Microsoft Corporation)
   https://github.com/microsoft/onnxruntime
-- dfine-s-obj365.bin: D-FINE S addestrato su Objects365 (Apache License 2.0,
+- dfine-s-obj365.N.bin: D-FINE S addestrato su Objects365 (Apache License 2.0,
   Copyright (c) 2024 The D-FINE Authors) — https://github.com/Peterande/D-FINE
   Pesi originali dfine_s_obj365.pth, esportati in ONNX (opset 16) con lo script
   del progetto (tools/deployment/export_onnx.py), semplificati con onnxsim e
@@ -11,5 +11,10 @@ Riconoscere gli arredi nelle foto della Casa 3D, sul dispositivo.
   risultati, meta' dei byte. Si chiama .bin perche' il ponte lo serve come byte.
 - obj365.json: i nomi delle 365 classi di Objects365 (CC BY 4.0), nell'ordine
   delle etichette del modello (etichetta 1 = primo nome).
+- pezzi.json: il modello (21,7 MB) e il WebAssembly (14 MB) stanno a pezzi da
+  3 MB, messi in fila dalla pagina (strumenti/spezza-il-riconoscitore.mjs):
+  nell'app i file passano dal filo cifrato uno per messaggio, e l'app oltre i
+  16 MB chiude il filo; il centralino, da fuori casa, oltre gli 8 in coda.
 
-Le foto non lasciano mai il dispositivo: il modello gira nella pagina.
+Le foto non lasciano mai il dispositivo: il modello gira in un lavoratore
+della pagina (legacy/riconoscere-lavoratore.js), o nella pagina stessa.

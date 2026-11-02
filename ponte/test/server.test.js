@@ -440,6 +440,69 @@ test("il motore dei DWG arriva al telefono per il filo, sotto il tetto dell'app"
   }
 });
 
+/* Il riconoscitore degli arredi (ONNX Runtime, 14 MB, e D-FINE, 21,7 MB)
+ * arriva al telefono per lo stesso filo. Il modello intero, in base64 e nella
+ * busta, passava i 16 MB che l'app accetta — e il centralino, da fuori casa,
+ * chiude il filo oltre gli 8 in coda: «ci ha messo un sacco di tempo e poi
+ * non e' riuscito». Percio' viaggia a pezzi (strumenti/spezza-il-
+ * riconoscitore.mjs): qui si chiedono tutti dal telefono, uno alla volta come
+ * fa la pagina, e si pretende che tornino interi, che nessun messaggio passi
+ * i 4 MB (la meta' di quello che il centralino tiene) e che il WebAssembly
+ * viaggi compresso. */
+test("il riconoscitore degli arredi arriva al telefono a pezzi, ognuno sotto la coda del centralino", async () => {
+  const b = await banco();
+  try {
+    const { codice } = await (await prendi(`${b.consolle}/api/codice`, { method: "POST" })).json();
+    const { segno, chiave, dispositivo } = await abbinaSulFilo(b, codice, { nome: "Fold" });
+    const telefono = telefonoCifrato(`${b.filo}/casa`, {
+      chi: dispositivo.id,
+      chiave,
+      gzip: true,
+      lega: true,
+    });
+    await telefono.dentro;
+    await telefono.aspetta("auth_required");
+    telefono.manda({ type: "auth", access_token: segno });
+    await telefono.aspetta("auth_ok");
+
+    const { Plancia } = await import("../src/plancia.js");
+    const plancia = new Plancia();
+    const base = `${plancia.descrizione().base}/legacy/vendor/riconoscere`;
+    const elenco = JSON.parse(plancia.leggi(`${base}/pezzi.json`).corpo.toString("utf8"));
+    let id = 50;
+    for (const [cosa, compresso] of [
+      ["wasm", true],
+      ["modello", false],
+    ]) {
+      const parte = elenco[cosa];
+      assert.ok(parte.pezzi.length > 1, cosa);
+      let arrivati = 0;
+      for (const nome of parte.pezzi) {
+        const mio = ++id;
+        const percorso = `${base}/${nome}`;
+        telefono.manda({ id: mio, type: "ponte/http", metodo: "GET", percorso });
+        const risposta = await telefono.aspetta((uno) => uno.id === mio);
+        assert.equal(risposta.success, true, JSON.stringify(risposta.error ?? {}));
+        const { result } = risposta;
+        assert.equal(result.stato, 200, nome);
+        assert.equal(result.compresso === "gzip", compresso, `${nome}: compresso?`);
+        const corpo = Buffer.from(result.corpo, "base64");
+        const pezzo = result.compresso === "gzip" ? gunzipSync(corpo) : corpo;
+        assert.deepEqual(pezzo, plancia.leggi(percorso).corpo, `${nome} deve arrivare intero`);
+        arrivati += pezzo.length;
+      }
+      assert.equal(arrivati, parte.byte, `${cosa}: i pezzi non fanno il file intero`);
+    }
+    assert.ok(
+      telefono.piuGrande < 4 * 1024 * 1024,
+      `un messaggio da ${(telefono.piuGrande / 1e6).toFixed(1)} MB: il centralino oltre gli 8 in coda chiude il filo`,
+    );
+    telefono.presa.close();
+  } finally {
+    await b.spegni();
+  }
+});
+
 test("una salita su una via che non e' /casa non diventa un filo", async () => {
   const b = await banco();
   try {

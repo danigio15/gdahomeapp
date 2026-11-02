@@ -92,7 +92,7 @@ import {
   pianiDelDisegno,
   ruoloDelloStrato,
 } from "../core/pianta-da-dwg.js";
-import { daiVendor } from "../core/cartella-della-plancia.js";
+import { cartellaDellaPlancia, daiVendor } from "../core/cartella-della-plancia.js";
 import { leStanzeRicordate } from "../core/le-stanze-di-home-assistant.js";
 import { premiumDellaCasa, premiumRicordato } from "./plancia-a-muro-section.js";
 import { puoConfigurare } from "./la-config-e-di-chi-la-amministra-section.js";
@@ -237,6 +237,12 @@ function statoNuovo(salvata, livello = 0) {
      * guardando il riconoscitore */
     primaDelleFoto: null,
     fotoInCorso: 0,
+    /* il riconoscitore: quanto e' arrivato ({fatti, totale} in byte) mentre
+     * si scarica, e perche' non e' disponibile (la causa, e se e' lo
+     * scarico che non e' riuscito) */
+    caricamento: null,
+    perche: "",
+    nonScaricato: false,
   };
 }
 
@@ -255,10 +261,10 @@ function registri() {
 
 /* ── il riconoscitore, quando serve ──────────────────────────────────────
  *
- * TensorFlow.js e COCO-SSD stanno in `legacy/vendor/riconoscere/`: venti
- * mega fra codice e modello, che si leggono solo la prima volta che qualcuno
- * aggiunge la foto di una stanza. Se non arrivano, la procedura va avanti lo
- * stesso: gli oggetti si segnano a mano. */
+ * ONNX Runtime e D-FINE stanno in `legacy/vendor/riconoscere/`: trentasei
+ * mega fra codice, WebAssembly e modello, che si leggono solo la prima volta
+ * che qualcuno aggiunge la foto di una stanza. Se non arrivano, la procedura
+ * va avanti lo stesso: gli oggetti si segnano a mano. */
 /* Servita dal ponte la cartella si ricava dal nostro indirizzo, senza la
  * versione (come le figure delle persone): impacchettati, i moduli stanno in
  * `pacco/` e un percorso relativo sbaglierebbe piano. Fuori dal ponte vale il
@@ -286,6 +292,19 @@ const ORT_COLLA = (() => {
   }
 })();
 void ORT_COLLA;
+/* Il lavoratore in cui gira il modello (legacy/riconoscere-lavoratore.js):
+ * sta accanto ai vendor, e si prende dalla stessa cartella della plancia. */
+const LAVORATORE = (() => {
+  try {
+    return new URL("../../legacy/riconoscere-lavoratore.js", import.meta.url).href;
+  } catch (_errore) {
+    return "../../legacy/riconoscere-lavoratore.js";
+  }
+})();
+const LAVORATORE_SERVITO = (() => {
+  const cartella = cartellaDellaPlancia(String(import.meta.url || ""));
+  return cartella ? `${cartella}legacy/riconoscere-lavoratore.js` : LAVORATORE;
+})();
 
 /* pdf.js (Apache-2.0, vedi legacy/vendor/pdfjs/LEGGIMI.txt): per il PDF del
  * catasto, solo quando si sceglie un PDF. */
@@ -337,48 +356,310 @@ function copione(src, pronto) {
  * casa»: COCO conosceva 80 cose, e di una casa solo divano, letto, tavolo,
  * TV. Il riconoscitore ora e' D-FINE addestrato su Objects365 (365 cose:
  * armadi e mensole, comodini, tavolini, lavatrici, condizionatori, quadri,
- * telecamere...), girato da ONNX Runtime nella pagina: le foto restano qui.
- * Sa la sua lezione su immagini quadrate da 640: la foto si stira cosi', e i
- * riquadri tornano nelle misure della foto. */
+ * telecamere...), girato da ONNX Runtime sul dispositivo: le foto restano
+ * qui. Sa la sua lezione su immagini quadrate da 640: la foto si stira cosi',
+ * e i riquadri tornano nelle misure della foto. */
 const LATO = 640;
-function rilevatore(ort, sessione, nomi) {
+
+/* La foto come la vuole il modello: 640×640, un numero fra 0 e 1 per pixel e
+ * per colore, i tre colori uno dopo l'altro. Si prepara nella pagina (il
+ * lavoratore non ha la tela) e pesa cinque mega: si passa, non si copia. */
+function tensoreDellaFoto(img) {
+  const w = img.naturalWidth || img.width,
+    h = img.naturalHeight || img.height;
+  const tela = tela2d(LATO, LATO),
+    g = tela.getContext("2d", { willReadFrequently: true });
+  /* rimpicciolita bene, come quando ha imparato: col filtro basso un
+   * quadro grande gli sfuggiva */
+  g.imageSmoothingEnabled = true;
+  g.imageSmoothingQuality = "high";
+  g.drawImage(img, 0, 0, LATO, LATO);
+  const px = g.getImageData(0, 0, LATO, LATO).data,
+    n = LATO * LATO,
+    dati = new Float32Array(3 * n);
+  for (let i = 0; i < n; i++) {
+    dati[i] = px[i * 4] / 255;
+    dati[n + i] = px[i * 4 + 1] / 255;
+    dati[2 * n + i] = px[i * 4 + 2] / 255;
+  }
+  return { dati, w, h };
+}
+
+/* Da quello che esce dal modello (etichette, riquadri x0 y0 x1 y1 nelle
+ * misure della foto, punteggi) alle cose viste, le piu' sicure prima. */
+function vistiDa({ etichette, riquadri, punti }, nomi, quanti, soglia) {
+  const visti = [];
+  for (let i = 0; i < punti.length; i++) {
+    if (punti[i] < soglia) continue;
+    const [x0, y0, x1, y1] = [0, 1, 2, 3].map((j) => riquadri[i * 4 + j]);
+    const nome = nomi[Number(etichette[i]) - 1];
+    if (!nome || !(x1 > x0 && y1 > y0)) continue;
+    visti.push({ class: nome, score: punti[i], bbox: [x0, y0, x1 - x0, y1 - y0] });
+  }
+  return visti.sort((a, b) => b.score - a.score).slice(0, quanti);
+}
+
+/* Un rilevatore: `gira(dati, w, h)` fa girare il modello — nel lavoratore o
+ * nella pagina — e torna etichette, riquadri e punti. */
+function rilevatore(gira, nomi) {
   return {
     async detect(img, quanti = 60, soglia = 0.3) {
-      const w = img.naturalWidth || img.width,
-        h = img.naturalHeight || img.height;
-      const tela = tela2d(LATO, LATO),
-        g = tela.getContext("2d", { willReadFrequently: true });
-      /* rimpicciolita bene, come quando ha imparato: col filtro basso un
-       * quadro grande gli sfuggiva */
-      g.imageSmoothingEnabled = true;
-      g.imageSmoothingQuality = "high";
-      g.drawImage(img, 0, 0, LATO, LATO);
-      const px = g.getImageData(0, 0, LATO, LATO).data,
-        n = LATO * LATO,
-        dati = new Float32Array(3 * n);
-      for (let i = 0; i < n; i++) {
-        dati[i] = px[i * 4] / 255;
-        dati[n + i] = px[i * 4 + 1] / 255;
-        dati[2 * n + i] = px[i * 4 + 2] / 255;
-      }
-      const out = await sessione.run({
-        images: new ort.Tensor("float32", dati, [1, 3, LATO, LATO]),
-        orig_target_sizes: new ort.Tensor("int64", BigInt64Array.from([BigInt(w), BigInt(h)]), [1, 2]),
-      });
-      const etichette = out.labels.data,
-        riquadri = out.boxes.data,
-        punti = out.scores.data,
-        visti = [];
-      for (let i = 0; i < punti.length; i++) {
-        if (punti[i] < soglia) continue;
-        const [x0, y0, x1, y1] = [0, 1, 2, 3].map((j) => riquadri[i * 4 + j]);
-        const nome = nomi[Number(etichette[i]) - 1];
-        if (!nome || !(x1 > x0 && y1 > y0)) continue;
-        visti.push({ class: nome, score: punti[i], bbox: [x0, y0, x1 - x0, y1 - y0] });
-      }
-      return visti.sort((a, b) => b.score - a.score).slice(0, quanti);
+      const { dati, w, h } = tensoreDellaFoto(img);
+      return vistiDa(await gira(dati, w, h), nomi, quanti, soglia);
     },
   };
+}
+
+/* ONNX Runtime nella pagina: la riserva, se il lavoratore non parte. Il
+ * WebAssembly gli si da' gia' in mano (`wasmBinary`): nell'app il `.wasm`
+ * chiesto da lui arrivava col tipo sbagliato, e lo chiedeva due volte — la
+ * stessa cosa successa col motore dei DWG. */
+async function rilevatoreInPagina(file) {
+  if (!(await copione(`${VENDOR}ort.wasm.min.js`, () => root.ort)))
+    throw new Error(t("ONNX Runtime non si è caricato", "ONNX Runtime didn't load"));
+  const ort = root.ort;
+  /* un filo solo: i fili in parallelo vogliono una pagina «isolata», che
+   * dentro Home Assistant e nell'app non c'e' */
+  ort.env.wasm.numThreads = 1;
+  ort.env.wasm.wasmPaths = {
+    mjs: `${VENDOR}ort-wasm-simd-threaded.js`,
+    wasm: `${VENDOR}ort-wasm-simd-threaded.wasm`,
+  };
+  ort.env.wasm.wasmBinary = file.motore;
+  const sessione = await ort.InferenceSession.create(new Uint8Array(file.pesi), {
+    executionProviders: ["wasm"],
+    graphOptimizationLevel: "all",
+  });
+  return rilevatore(async (dati, w, h) => {
+    const out = await sessione.run({
+      images: new ort.Tensor("float32", dati, [1, 3, LATO, LATO]),
+      orig_target_sizes: new ort.Tensor("int64", BigInt64Array.from([BigInt(w), BigInt(h)]), [1, 2]),
+    });
+    return { etichette: out.labels.data, riquadri: out.boxes.data, punti: out.scores.data };
+  }, file.nomi);
+}
+
+/* Quanto si aspetta il lavoratore: a preparare il modello (un telefono lento
+ * ci mette dieci secondi, e il WebAssembly si compila li') e a guardare una
+ * foto. Passato il tempo e' fermo, e si chiude: un lavoratore muto non si
+ * distingue da uno che sta ancora pensando, e qui non si resta appesi. */
+const ATTESA_PREPARAZIONE = 180_000;
+const ATTESA_FOTO = 120_000;
+
+/* Il modello in un lavoratore a parte: la pagina resta libera, la clessidra
+ * gira e si puo' toccare. Nella pagina, sul telefono, un riconoscimento da
+ * secondi teneva fermo tutto, e il WebView a un certo punto si arrendeva.
+ * Torna null se il lavoratore non parte (allora si prova nella pagina);
+ * `quandoMuore` si chiama se muore dopo, mentre lavora. */
+function rilevatoreNelLavoratore(file, quandoMuore) {
+  if (typeof root.Worker !== "function") return Promise.resolve(null);
+  let lavoratore;
+  try {
+    lavoratore = new root.Worker(LAVORATORE_SERVITO);
+  } catch (_errore) {
+    return Promise.resolve(null);
+  }
+  let prossimo = 1,
+    haParlato = false,
+    pronto = false,
+    morto = null;
+  const attese = new Map();
+  const muore = (errore) => {
+    if (morto) return;
+    morto = errore;
+    for (const a of attese.values()) {
+      clearTimeout(a.orologio);
+      a.no(errore);
+    }
+    attese.clear();
+    try {
+      lavoratore.terminate();
+    } catch (_errore) {}
+    /* morto mentre guardava una foto: non c'e' piu', e si dice */
+    if (pronto) quandoMuore(errore);
+  };
+  lavoratore.onmessage = (ev) => {
+    haParlato = true;
+    const m = ev.data || {},
+      a = attese.get(m.id);
+    if (!a) return;
+    attese.delete(m.id);
+    clearTimeout(a.orologio);
+    if (m.tipo === "errore") a.no(new Error(m.perche || "riconoscitore"));
+    else a.ok(m);
+  };
+  lavoratore.onerror = (ev) => {
+    ev?.preventDefault?.();
+    muore(
+      new Error(
+        ev?.message ||
+          t("Il lavoratore del riconoscitore non parte", "The recognizer worker won't start"),
+      ),
+    );
+  };
+  const chiedi = (messaggio, entro, trasferisci) =>
+    new Promise((ok, no) => {
+      if (morto) return no(morto);
+      const id = prossimo++;
+      const orologio = setTimeout(() => {
+        attese.delete(id);
+        const s = Math.round(entro / 1000);
+        muore(
+          new Error(
+            t(`Il riconoscitore non ha risposto in ${s} s`, `The recognizer didn't answer in ${s} s`),
+          ),
+        );
+        no(morto);
+      }, entro);
+      attese.set(id, { ok, no, orologio });
+      try {
+        lavoratore.postMessage({ ...messaggio, id }, trasferisci || []);
+      } catch (errore) {
+        attese.delete(id);
+        clearTimeout(orologio);
+        no(errore);
+      }
+    });
+  return chiedi(
+    {
+      tipo: "carica",
+      ort: `${VENDOR}ort.wasm.min.js`,
+      colla: `${VENDOR}ort-wasm-simd-threaded.js`,
+      wasm: `${VENDOR}ort-wasm-simd-threaded.wasm`,
+      motore: file.motore,
+      pesi: file.pesi,
+    },
+    ATTESA_PREPARAZIONE,
+  ).then(
+    () => {
+      pronto = true;
+      return rilevatore(
+        (dati, w, h) => chiedi({ tipo: "rileva", dati, lato: LATO, w, h }, ATTESA_FOTO, [dati.buffer]),
+        file.nomi,
+      );
+    },
+    (errore) => {
+      muore(errore);
+      /* mai partito (lo script non e' arrivato): si prova nella pagina.
+       * Partito e poi rotto mentre preparava il modello: nella pagina
+       * andrebbe uguale, e si dice perche' */
+      if (!haParlato) return null;
+      throw errore;
+    },
+  );
+}
+
+const UN_MEGA = 1024 * 1024;
+/* quanto si aspetta un pezzo: tre mega, che da fuori casa, dal centralino,
+ * sono un minuto buono */
+const ATTESA_PEZZO = 90_000;
+
+/* Un file del riconoscitore, con una seconda prova se la prima non va (il
+ * filo dell'app cade e si rialza) e un tempo massimo: senza, un pezzo che non
+ * arriva mai teneva la clessidra a girare per sempre. */
+async function prendi(url, { json = false } = {}) {
+  const nome = url.slice(url.lastIndexOf("/") + 1);
+  let ultimo = null;
+  for (let giro = 0; giro < 2; giro++) {
+    const ctrl = typeof root.AbortController === "function" ? new root.AbortController() : null;
+    const orologio = ctrl ? setTimeout(() => ctrl.abort(), ATTESA_PEZZO) : 0;
+    try {
+      const r = await fetch(url, ctrl ? { signal: ctrl.signal } : undefined);
+      if (!r.ok) {
+        ultimo = new Error(`${nome}: HTTP ${r.status}`);
+        /* un 404 e' un 404 anche la seconda volta */
+        if (r.status === 404) break;
+        continue;
+      }
+      return json ? await r.json() : await r.arrayBuffer();
+    } catch (errore) {
+      const s = ATTESA_PEZZO / 1000;
+      ultimo = ctrl?.signal?.aborted
+        ? new Error(t(`${nome}: nessuna risposta in ${s} s`, `${nome}: no answer in ${s} s`))
+        : errore;
+    } finally {
+      clearTimeout(orologio);
+    }
+  }
+  throw ultimo || new Error(nome);
+}
+
+/* I file del riconoscitore, a pezzi (`pezzi.json`, fatto da
+ * strumenti/spezza-il-riconoscitore.mjs). Nell'app i file della plancia
+ * passano dal filo cifrato uno per messaggio, e l'app oltre i 16 MB a
+ * messaggio chiude il filo; il centralino, da fuori casa, oltre gli 8 in coda.
+ * Il modello intero (21,7 MB) non arrivava mai: «ci ha messo un sacco di
+ * tempo e poi non e' riuscito». A pezzi da tre mega passa, uno alla volta, e
+ * si dice quanto manca. */
+async function scaricaIlRiconoscitore() {
+  const elenco = await prendi(`${VENDOR}pezzi.json`, { json: true });
+  if (!Array.isArray(elenco?.wasm?.pezzi) || !Array.isArray(elenco?.modello?.pezzi))
+    throw new Error(t("L'elenco dei pezzi non torna", "The list of pieces doesn't add up"));
+  const nomi = await prendi(`${VENDOR}obj365.json`, { json: true });
+  const totale = (Number(elenco.modello.byte) || 0) + (Number(elenco.wasm.byte) || 0);
+  let fatti = 0;
+  avanzamento(fatti, totale);
+  const intero = async (parte) => {
+    const tutto = new Uint8Array(Number(parte.byte) || 0);
+    let a = 0;
+    const aMeta = (nome) =>
+      new Error(t(`${nome}: arrivato a metà`, `${nome}: arrived incomplete`));
+    for (const nome of parte.pezzi) {
+      const b = new Uint8Array(await prendi(`${VENDOR}${nome}`));
+      if (a + b.length > tutto.length) throw aMeta(nome);
+      tutto.set(b, a);
+      a += b.length;
+      fatti += b.length;
+      avanzamento(fatti, totale);
+    }
+    if (a !== tutto.length) throw aMeta(parte.pezzi[parte.pezzi.length - 1] || "?");
+    return tutto.buffer;
+  };
+  const motore = await intero(elenco.wasm);
+  const pesi = await intero(elenco.modello);
+  return { nomi, motore, pesi };
+}
+
+/* Quanto e' arrivato, scritto nel pannello senza ridisegnarlo tutto: chi sta
+ * scrivendo una misura non perde il campo. */
+function avanzamento(fatti, totale) {
+  const S = state.S;
+  if (!S) return;
+  S.caricamento = totale > 0 ? { fatti, totale } : null;
+  const n = nodo()?.querySelector("[data-c3c-rr]");
+  if (n) n.textContent = testoDelCaricamento();
+  else disegnaIlPannello();
+}
+
+function testoDelCaricamento() {
+  const c = state.S?.caricamento;
+  if (!c)
+    return t(
+      "Preparo il riconoscimento degli oggetti, sul dispositivo…",
+      "Getting object recognition ready, on this device…",
+    );
+  const fatti = Math.floor(c.fatti / UN_MEGA),
+    totale = Math.ceil(c.totale / UN_MEGA);
+  return t(
+    `Scarico il riconoscitore… ${fatti} di ${totale} MB`,
+    `Downloading the recognizer… ${fatti} of ${totale} MB`,
+  );
+}
+
+/* Il riconoscitore non c'e': si dice perche', sotto l'avviso, e si lascia
+ * «Riprova». Dal telefono la console non si vede, e «non e' disponibile qui»
+ * senza una causa era un indovinello. */
+function nonDisponibile(errore, nonScaricato) {
+  root.console?.warn?.("[DashboardModern] Casa 3D: riconoscimento non disponibile", errore);
+  const S = state.S;
+  if (S) {
+    S.riconoscitore = "no";
+    S.perche = perche(errore);
+    S.nonScaricato = nonScaricato === true;
+    S.caricamento = null;
+  }
+  state.modello = null;
+  return null;
 }
 
 function riconoscitore() {
@@ -387,39 +668,30 @@ function riconoscitore() {
     const S = state.S;
     if (S) {
       S.riconoscitore = "carica";
+      S.perche = "";
+      S.nonScaricato = false;
+      S.caricamento = null;
       disegnaIlPannello();
     }
+    let file;
     try {
-      if (!(await copione(`${VENDOR}ort.wasm.min.js`, () => root.ort))) throw new Error("ort");
-      const ort = root.ort;
-      /* un filo solo: i fili in parallelo vogliono una pagina «isolata», che
-       * dentro Home Assistant non c'e' */
-      ort.env.wasm.numThreads = 1;
-      ort.env.wasm.wasmPaths = {
-        mjs: `${VENDOR}ort-wasm-simd-threaded.js`,
-        wasm: `${VENDOR}ort-wasm-simd-threaded.wasm`,
-      };
-      const [nomi, pesi] = await Promise.all([
-        fetch(`${VENDOR}obj365.json`).then((r) => {
-          if (!r.ok) throw new Error(`obj365 ${r.status}`);
-          return r.json();
-        }),
-        fetch(`${VENDOR}dfine-s-obj365.bin`).then((r) => {
-          if (!r.ok) throw new Error(`modello ${r.status}`);
-          return r.arrayBuffer();
-        }),
-      ]);
-      const sessione = await ort.InferenceSession.create(new Uint8Array(pesi), {
-        executionProviders: ["wasm"],
-        graphOptimizationLevel: "all",
-      });
-      if (state.S) state.S.riconoscitore = "pronto";
-      return rilevatore(ort, sessione, nomi);
+      file = await scaricaIlRiconoscitore();
     } catch (errore) {
-      root.console?.warn?.("[DashboardModern] Casa 3D: riconoscimento non disponibile", errore);
-      if (state.S) state.S.riconoscitore = "no";
-      state.modello = null;
-      return null;
+      return nonDisponibile(errore, true);
+    }
+    try {
+      /* scaricato: ora «Preparo…», finche' il modello non e' in piedi */
+      avanzamento(0, 0);
+      let modello = await rilevatoreNelLavoratore(file, (errore) => nonDisponibile(errore, false));
+      if (!modello) modello = await rilevatoreInPagina(file);
+      file.motore = file.pesi = null;
+      if (state.S) {
+        state.S.riconoscitore = "pronto";
+        state.S.caricamento = null;
+      }
+      return modello;
+    } catch (errore) {
+      return nonDisponibile(errore, false);
     }
   })();
   return state.modello;
@@ -1114,11 +1386,22 @@ function contoMarkup() {
 }
 
 function statoDelRiconoscitore() {
-  const r = state.S.riconoscitore;
+  const S = state.S,
+    r = S.riconoscitore;
   if (r === "carica")
-    return `<div class="c3c-lavoro">⏳ ${esc(t("Preparo il riconoscimento degli oggetti, sul dispositivo…", "Getting object recognition ready, on this device…"))}</div>`;
+    return `<div class="c3c-lavoro">⏳ <span data-c3c-rr>${esc(testoDelCaricamento())}</span></div>`;
   if (r === "no")
-    return `<div class="c3c-lavoro no">${esc(t("Il riconoscimento automatico non è disponibile qui: segna tu arredi e dispositivi toccandoli nella foto.", "Automatic recognition isn't available here: mark furniture and devices by tapping them in the photo."))}</div>`;
+    return `<div class="c3c-lavoro no">${esc(
+      S.nonScaricato
+        ? t(
+            "Il riconoscitore non si è scaricato: controlla la connessione e riprova.",
+            "The recognizer didn't download: check the connection and try again.",
+          )
+        : t(
+            "Il riconoscimento automatico non è disponibile qui: segna tu arredi e dispositivi toccandoli nella foto.",
+            "Automatic recognition isn't available here: mark furniture and devices by tapping them in the photo.",
+          ),
+    )}${S.perche ? `<small class="c3c-dettaglio" translate="no">${esc(S.perche)}</small>` : ""}<button type="button" class="c3c-btn c3c-riprova" data-c3c="riprovarr">↻ ${esc(t("Riprova", "Try again"))}</button></div>`;
   return "";
 }
 
@@ -2549,25 +2832,98 @@ async function rilevaNeiRitagli(modello, img) {
     [0, h - lh],
     [w - lw, h - lh],
   ]) {
+    /* il ritaglio: se la tela non si fa (una foto enorme, poca memoria) si
+     * salta questo e si tengono gli altri. Il riconoscitore invece, se si
+     * rompe, lo dice fino in fondo: e' lui che non c'e' piu' */
+    let tela;
     try {
-      const tela = tela2d(lw, lh);
+      tela = tela2d(lw, lh);
       tela.getContext("2d").drawImage(img, x0, y0, lw, lh, 0, 0, lw, lh);
-      /* nei ritagli ingranditi si inventa di piu': ci vuole piu' sicurezza */
-      for (const d of await modello.detect(tela, 20, 0.5)) {
-        const [bx, by, bw, bh] = d.bbox || [];
-        /* tagliato dal bordo del ritaglio: lo vede gia' la foto intera */
-        const taglio = 4;
-        const sulBordo =
-          (bx <= taglio && x0 > 0) ||
-          (by <= taglio && y0 > 0) ||
-          (bx + bw >= lw - taglio && x0 + lw < w) ||
-          (by + bh >= lh - taglio && y0 + lh < h);
-        if (sulBordo) continue;
-        tutti.push({ ...d, bbox: [bx + x0, by + y0, bw, bh] });
-      }
-    } catch (_errore) {}
+    } catch (_errore) {
+      continue;
+    }
+    /* nei ritagli ingranditi si inventa di piu': ci vuole piu' sicurezza */
+    for (const d of await modello.detect(tela, 20, 0.5)) {
+      const [bx, by, bw, bh] = d.bbox || [];
+      /* tagliato dal bordo del ritaglio: lo vede gia' la foto intera */
+      const taglio = 4;
+      const sulBordo =
+        (bx <= taglio && x0 > 0) ||
+        (by <= taglio && y0 > 0) ||
+        (bx + bw >= lw - taglio && x0 + lw < w) ||
+        (by + bh >= lh - taglio && y0 + lh < h);
+      if (sulBordo) continue;
+      tutti.push({ ...d, bbox: [bx + x0, by + y0, bw, bh] });
+    }
   }
   return tutti;
+}
+
+/* Il riconoscitore guarda una foto: arredi (col colore) e dispositivi (con
+ * l'entita' proposta). `F.riconosciuta` dice che l'ha guardata; se il
+ * riconoscitore non c'era, «Riprova» ripassa le foto che non lo sono. */
+async function riconosciNellaFoto(F, stanza) {
+  const S = state.S;
+  S.fotoInCorso++;
+  S.lavoro = t(
+    "Cerco arredi e dispositivi nella foto…",
+    "Looking for furniture and devices in the photo…",
+  );
+  disegna();
+  const modello = await riconoscitore();
+  if (modello) {
+    try {
+      F.grezzi = await rilevaNeiRitagli(modello, F.img);
+      const visti = oggettiDallaFoto(F.grezzi, {
+        stanza: nomeDi(stanza),
+        w: F.w,
+        h: F.h,
+      });
+      for (const o of visti.arredi) {
+        const [x, y, w, h] = o.box;
+        F.oggetti.push({
+          ...o,
+          colore: coloreZona(F.img, x + w * 0.3, y + h * 0.3, x + w * 0.7, y + h * 0.7),
+        });
+      }
+      for (const d of visti.dispositivi)
+        F.dispositivi.push({ ...d, entity: proponi(d.k, stanza, null) });
+      F.riconosciuta = true;
+    } catch (errore) {
+      root.console?.warn?.("[DashboardModern] Casa 3D: riconoscimento", errore);
+      nonDisponibile(errore, false);
+    }
+  }
+  S.fotoInCorso = Math.max(0, S.fotoInCorso - 1);
+  if (!S.fotoInCorso) S.lavoro = "";
+  if (state.S === S) {
+    if (S.fonte === "stanzeFoto" && S.passo === P.planimetria) aggiornaLeMisure(stanza);
+    disegna();
+  }
+}
+
+/* «Riprova»: il riconoscitore si rifa' da capo, e le foto che non ha
+ * guardato si riguardano, una dopo l'altra. */
+async function riprovaIlRiconoscimento() {
+  const S = state.S;
+  if (!S || S.riconoscitore === "carica") return;
+  state.modello = null;
+  S.riconoscitore = "fermo";
+  S.perche = "";
+  S.nonScaricato = false;
+  const daGuardare = [];
+  for (const [id, foto] of Object.entries(S.foto))
+    for (const F of foto || []) if (F?.img && !F.riconosciuta) daGuardare.push([id, F]);
+  if (!daGuardare.length) {
+    /* niente da riguardare: si prepara lo stesso, per la prossima foto */
+    await riconoscitore();
+    if (state.S === S) disegna();
+    return;
+  }
+  for (const [id, F] of daGuardare) {
+    if (state.S !== S) return;
+    await riconosciNellaFoto(F, isNaN(Number(id)) ? id : Number(id));
+  }
 }
 
 async function aggiungiFotoStanza(src, f35 = null, stanza = state.S.sel) {
@@ -2585,6 +2941,7 @@ async function aggiungiFotoStanza(src, f35 = null, stanza = state.S.sel) {
      * stanza dalle cose di misura nota */
     f35,
     grezzi: [],
+    riconosciuta: false,
   };
   F.pavimento = coloreZona(img, F.w * 0.2, F.h * 0.82, F.w * 0.8, F.h * 0.95);
   F.pareti = coloreZona(img, F.w * 0.25, F.h * 0.12, F.w * 0.75, F.h * 0.3);
@@ -2594,40 +2951,7 @@ async function aggiungiFotoStanza(src, f35 = null, stanza = state.S.sel) {
     S.vistaFoto = true;
   }
   S.fotoSel = S.foto[stanza].length - 1;
-  S.fotoInCorso++;
-  S.lavoro = t(
-    "Cerco arredi e dispositivi nella foto…",
-    "Looking for furniture and devices in the photo…",
-  );
-  disegna();
-  const modello = await riconoscitore();
-  if (modello) {
-    try {
-      F.grezzi = await rilevaNeiRitagli(modello, img);
-      const visti = oggettiDallaFoto(F.grezzi, {
-        stanza: nomeDi(stanza),
-        w: F.w,
-        h: F.h,
-      });
-      for (const o of visti.arredi) {
-        const [x, y, w, h] = o.box;
-        F.oggetti.push({
-          ...o,
-          colore: coloreZona(img, x + w * 0.3, y + h * 0.3, x + w * 0.7, y + h * 0.7),
-        });
-      }
-      for (const d of visti.dispositivi)
-        F.dispositivi.push({ ...d, entity: proponi(d.k, stanza, null) });
-    } catch (errore) {
-      root.console?.warn?.("[DashboardModern] Casa 3D: riconoscimento", errore);
-    }
-  }
-  S.fotoInCorso = Math.max(0, S.fotoInCorso - 1);
-  if (!S.fotoInCorso) S.lavoro = "";
-  if (state.S === S) {
-    if (S.fonte === "stanzeFoto" && S.passo === P.planimetria) aggiornaLeMisure(stanza);
-    disegna();
-  }
+  await riconosciNellaFoto(F, stanza);
 }
 
 function segnaNellaFoto(x, y) {
@@ -2799,6 +3123,8 @@ async function alClic(ev) {
       return n.querySelector("[data-c3c-file='stanza']").click();
     case "caricast":
       return n.querySelector("[data-c3c-file='stanza']").click();
+    case "riprovarr":
+      return riprovaIlRiconoscimento();
     case "caricaf":
       return n.querySelector("[data-c3c-file='facciata']").click();
     case "indietro":
@@ -3457,6 +3783,7 @@ function installaLoStile() {
     ${Q} .c3c-privato{margin-top:12px;padding:9px 11px;border-radius:12px;font-size:11.5px;line-height:1.45;color:var(--c3c-fioco);background:rgba(22,163,74,.10);border:1px solid rgba(22,163,74,.35)}
     ${Q} .c3c-lavoro{margin-top:10px;padding:8px 11px;border-radius:12px;font-size:12px;font-weight:700;background:rgba(var(--c3c-accento-rgb),.12);color:var(--c3c-accento)}
     ${Q} .c3c-lavoro.no{background:rgba(245,158,11,.12);color:#f59e0b}
+    ${Q} .c3c-lavoro .c3c-riprova{display:inline-flex;margin-top:8px}
     ${Q} .c3c-carica{display:block;width:100%;border:2px dashed var(--c3c-bordo);border-radius:18px;padding:22px;text-align:center;cursor:pointer;background:var(--c3c-s2);font-weight:700;font-size:13px}
     ${Q} .c3c-carica b{display:block;font-size:30px;margin-bottom:6px}
     ${Q} .c3c-carica+.c3c-carica{margin-top:10px}

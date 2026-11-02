@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-PCJOHV35.js";
+} from "../../chunk-LNZTBTW3.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -2132,9 +2132,11 @@ var SOURCE_INDEX = Object.freeze({
   "${nome} fa qualcosa": "${nome} does something",
   "${nome} ha finito": "${nome} has finished",
   "${nome} misura la potenza: si vede quando il ciclo finisce.": "${nome} measures power: you can tell when the cycle ends.",
+  "${nome}: arrivato a metà": "${nome}: arrived incomplete",
   "${nome}: ha finito": "${nome}: finished",
   "${nome}: i tasti li prende la TV stessa, il telecomando non serve.": "${nome}: the TV takes the keys itself, no remote needed.",
   "${nome}: le frecce, OK e gli altri tasti compaiono sotto la scheda, a TV accesa.": "${nome}: the arrows, OK and the other keys show under the card while the TV is on.",
+  "${nome}: nessuna risposta in ${s} s": "${nome}: no answer in ${s} s",
   "${nomeDelRiquadro(r)}: comando inviato": "${nomeDelRiquadro(r)}: command sent",
   "${nomi} spenti": "${nomi} off",
   "${nuove.length} persone importate": "${nuove.length} people imported",
@@ -4619,6 +4621,7 @@ var SOURCE_INDEX = Object.freeze({
   "Il gruppo decide dove l’avviso viene sorvegliato.": "The group decides where the alert is watched.",
   "Il gruppo è facoltativo: le azioni con lo stesso gruppo stanno insieme in Home, sotto un titolo che dice quante sono accese e che si chiude con un tocco. Senza gruppi resta una fila sola.": "The group is optional: actions with the same group sit together on Home, under a title that says how many are on and closes with a tap. Without groups it stays a single row.",
   "Il gruppo è il popup aperto dal cerchio del flow. I figli sono le card interne, per esempio Forno, Frigorifero o Lavastoviglie.": "Groups are the popup opened from a flow circle. Their children are the cards shown inside, such as Oven, Fridge or Dishwasher.",
+  "Il lavoratore del riconoscitore non parte": "The recognizer worker won't start",
   "Il lettore che suona in grande, con la copertina, i tasti, il volume e le sorgenti; accanto gli altri, ognuno col suo play. Un tocco su un lettore lo porta in grande.": "The player that's playing, big, with cover, buttons, volume and sources; beside it the others, each with its own play. A tap on a player brings it up big.",
   "Il lettore dei DWG non si è scaricato: controlla la connessione e riprova.": "The DWG reader didn't download: check the connection and try again.",
   "Il lettore non ha risposto.": "The player did not answer.",
@@ -4663,6 +4666,8 @@ var SOURCE_INDEX = Object.freeze({
   "Il resto arriva quando si gioca.": "The rest comes in when the match is played.",
   "Il resto del popup": "The rest of the popup",
   "Il riconoscimento automatico non è disponibile qui: segna tu arredi e dispositivi toccandoli nella foto.": "Automatic recognition isn't available here: mark furniture and devices by tapping them in the photo.",
+  "Il riconoscitore non ha risposto in ${s} s": "The recognizer didn't answer in ${s} s",
+  "Il riconoscitore non si è scaricato: controlla la connessione e riprova.": "The recognizer didn't download: check the connection and try again.",
   "Il rilevamento aggiunge solo ciò che manca: niente doppioni.": "Detection only adds what is missing: no duplicates.",
   "Il riquadro delle telecamere adesso non c'è. L'allarme e i varchi restano dove sono, e le telecamere configurate non sono state toccate.": "The camera panel is not there now. The alarm and the openings stay where they are, and the configured cameras have not been touched.",
   "Il rischio delle graminacee preso da sé: da 1, molto basso, a 4, alto. Chi è allergico a una sola famiglia vede l'allerta anche quando la media della giornata è tranquilla.": "The grass risk on its own: from 1, very low, to 4, high. Whoever is allergic to one family only still sees the alert when the day's average is quiet.",
@@ -4977,6 +4982,7 @@ var SOURCE_INDEX = Object.freeze({
   "L'azione del tasto in basso quando l'antifurto è spento": "The bottom button's action when the alarm is off",
   "L'editor delle entità": "The entity editor",
   "L'elenco dei fotogrammi del servizio non arriva: riprova fra un momento.": "The service's list of frames does not arrive: try again in a moment.",
+  "L'elenco dei pezzi non torna": "The list of pieces doesn't add up",
   "L'elenco diviso per tipo, come prima": "The list split by type, as before",
   "L'elenco e i salvataggi passano dall'add-on GdAHome: qui non c'è.": "The list and saving go through the GdAHome add-on: it is not here.",
   "L'elettrodomestico non è entrato nello store": "Appliance did not enter the store",
@@ -6124,6 +6130,7 @@ var SOURCE_INDEX = Object.freeze({
   "oltre il limite": "over the limit",
   "oltre la soglia di ${soglia}": "above the ${soglia} threshold",
   "omologazione": "rated",
+  "ONNX Runtime non si è caricato": "ONNX Runtime didn't load",
   "ONO": "WNW",
   "Operaio": "Worker",
   "Oppure": "Or",
@@ -7124,6 +7131,7 @@ var SOURCE_INDEX = Object.freeze({
   "Scaricata oggi": "Discharged today",
   "Scaricata questo mese": "Discharged this month",
   "Scarico e centrifuga": "Drain and spin",
+  "Scarico il riconoscitore… ${fatti} di ${totale} MB": "Downloading the recognizer… ${fatti} of ${totale} MB",
   "Scarsa": "Poor",
   "scattato": "triggered",
   "Scegli": "Choose",
@@ -68804,7 +68812,7 @@ function trovaLaStazione(states, scelte5 = {}) {
     }
     return meglio > 0 ? vincente : null;
   };
-  const prendi = (chiave2, ammessa2) => {
+  const prendi2 = (chiave2, ammessa2) => {
     if (pulito49(scelte5?.[chiave2])) return;
     const vincente = migliore(chiave2, ammessa2);
     if (!vincente) return;
@@ -68812,7 +68820,7 @@ function trovaLaStazione(states, scelte5 = {}) {
     prese.add(vincente.entity);
   };
   for (const chiave2 of Object.keys(RICONOSCITORI))
-    if (!RICONOSCITORI[chiave2].debole) prendi(chiave2);
+    if (!RICONOSCITORI[chiave2].debole) prendi2(chiave2);
   const conto = /* @__PURE__ */ new Map();
   for (const entity2 of [...Object.values(trovate), ...Object.values(scelte5 || {})]) {
     const famiglia2 = famigliaDi2(entity2);
@@ -68821,7 +68829,7 @@ function trovaLaStazione(states, scelte5 = {}) {
   const famiglia = [...conto].sort((a, b2) => b2[1] - a[1])[0]?.[0] || "";
   const ammessa = (sensore2) => famiglia && famigliaDi2(sensore2.entity) === famiglia || DELLA_STAZIONE.test(sensore2.nome) && !DI_CASA.test(sensore2.nome);
   for (const chiave2 of Object.keys(RICONOSCITORI))
-    if (RICONOSCITORI[chiave2].debole) prendi(chiave2, ammessa);
+    if (RICONOSCITORI[chiave2].debole) prendi2(chiave2, ammessa);
   return trovate;
 }
 function letturaDi5(stato3) {
@@ -88766,10 +88774,10 @@ function elencoNascoste(scritto3) {
 function vociNascoste(apparecchio = {}) {
   return new Set(elencoNascoste(apparecchio?.[CAMPO_NASCOSTE]));
 }
-function soloQuelleViste(elenco18 = [], apparecchio = {}, prendi) {
+function soloQuelleViste(elenco18 = [], apparecchio = {}, prendi2) {
   const nascoste = vociNascoste(apparecchio);
   if (!nascoste.size) return Array.isArray(elenco18) ? [...elenco18] : [];
-  const identificativo2 = typeof prendi === "function" ? prendi : (voce3) => typeof voce3 === "string" ? voce3 : voce3?.entity || voce3?.entity_id;
+  const identificativo2 = typeof prendi2 === "function" ? prendi2 : (voce3) => typeof voce3 === "string" ? voce3 : voce3?.entity || voce3?.entity_id;
   return (Array.isArray(elenco18) ? elenco18 : []).filter(
     (voce3) => !nascoste.has(clean29(identificativo2(voce3)))
   );
@@ -95809,10 +95817,10 @@ function onCambio2(event) {
 function onClick15(event) {
   const blocco3 = doc?.getElementById?.(BLOCK_ID3);
   if (!blocco3 || !blocco3.contains(event.target)) return;
-  const prendi = event.target.closest("[data-dm-ril-prendi]");
-  if (prendi) {
+  const prendi2 = event.target.closest("[data-dm-ril-prendi]");
+  if (prendi2) {
     event.preventDefault();
-    const camera = clean(prendi.dataset.dmRilPrendi);
+    const camera = clean(prendi2.dataset.dmRilPrendi);
     const trovati = sensoriDellaTelecamera(camera, allStates());
     const prossime = { ...scelte2() };
     prossime[camera] = { ...trovati, ...prossime[camera] || {} };
@@ -129167,7 +129175,7 @@ function legaLAutoAlDispositivo({ entities = [], states = {} } = {}) {
   );
   const libere = new Set(elenco18.map((voce3) => clean30(voce3.entity_id)));
   const mappa2 = {};
-  const prendi = (ref, domanda, { ancheImpostazioni = false } = {}) => {
+  const prendi2 = (ref, domanda, { ancheImpostazioni = false } = {}) => {
     if (mappa2[ref]) return false;
     for (const voce3 of elenco18) {
       const id = clean30(voce3.entity_id);
@@ -129182,8 +129190,8 @@ function legaLAutoAlDispositivo({ entities = [], states = {} } = {}) {
   const chiave2 = (voce3) => clean30(voce3?.translation_key);
   for (const [nome2, ref] of CHIAVI_DI_GDAAUTO) {
     const sua = (voce3) => eDiGdaauto(voce3) && chiave2(voce3) === nome2;
-    prendi(ref, (voce3) => sua(voce3) && dominio4(voce3) === "lock", { ancheImpostazioni: true });
-    prendi(ref, sua, { ancheImpostazioni: true });
+    prendi2(ref, (voce3) => sua(voce3) && dominio4(voce3) === "lock", { ancheImpostazioni: true });
+    prendi2(ref, sua, { ancheImpostazioni: true });
   }
   for (const voce3 of elenco18) if (eDiGdaauto(voce3)) libere.delete(clean30(voce3.entity_id));
   const conClasse = (nome2) => (voce3) => classe2(voce3, states) === nome2;
@@ -129192,79 +129200,79 @@ function legaLAutoAlDispositivo({ entities = [], states = {} } = {}) {
   const distanza3 = (voce3) => conClasse("distance")(voce3) || UNITA_DI_DISTANZA.test(unita2(voce3, states));
   const gradi12 = (voce3) => conClasse("temperature")(voce3) || /°\s?[cf]$/i.test(unita2(voce3, states));
   const nome = (voce3) => clean30(voce3?.name);
-  prendi("dm.ev_posizione", (voce3) => dominio4(voce3) === "device_tracker");
+  prendi2("dm.ev_posizione", (voce3) => dominio4(voce3) === "device_tracker");
   const diServizio = (voce3) => PAROLE6.batteriaServizio.test(parole2(voce3, states)) || /\b(car battery level|lv batt\w*|low voltage)\b/i.test(nome(voce3));
-  prendi("dm.ev_batteria_servizio", (voce3) => percentuale5(voce3) && diServizio(voce3));
-  prendi(
+  prendi2("dm.ev_batteria_servizio", (voce3) => percentuale5(voce3) && diServizio(voce3));
+  prendi2(
     "dm.ev_batteria_servizio",
     (voce3) => (conClasse("voltage")(voce3) || /^m?v$/i.test(unita2(voce3, states))) && PAROLE6.batteriaServizio.test(parole2(voce3, states))
   );
-  prendi(
+  prendi2(
     "dm.ev_batteria_auto",
     (voce3) => conClasse("battery")(voce3) && dominio4(voce3) === "sensor" && !diServizio(voce3) && !conParola("target")(voce3)
   );
-  prendi(
+  prendi2(
     "dm.ev_batteria_auto",
     (voce3) => percentuale5(voce3) && conParola("batteria")(voce3) && !conParola("target")(voce3)
   );
-  prendi(
+  prendi2(
     "dm.ev_carburante",
     (voce3) => percentuale5(voce3) && PAROLE6.carburante.test(parole2(voce3, states)) && !conParola("adblue")(voce3)
   );
   const unAutonomia = (voce3) => dominio4(voce3) === "sensor" && conParola("autonomia")(voce3) && !conParola("adblue")(voce3);
   const qualificata = (voce3) => conParola("autonomiaNominale")(voce3) || conParola("autonomiaCarburante")(voce3) || conParola("autonomiaTotale")(voce3) || conParola("autonomiaAlLimite")(voce3);
-  prendi(
+  prendi2(
     "dm.ev_autonomia_al_limite_di_carica",
     (voce3) => unAutonomia(voce3) && distanza3(voce3) && conParola("autonomiaAlLimite")(voce3)
   );
-  prendi(
+  prendi2(
     "dm.ev_autonomia_nominale",
     (voce3) => unAutonomia(voce3) && distanza3(voce3) && conParola("autonomiaNominale")(voce3)
   );
-  prendi(
+  prendi2(
     "dm.ev_autonomia_carburante",
     (voce3) => unAutonomia(voce3) && distanza3(voce3) && conParola("autonomiaCarburante")(voce3)
   );
-  prendi(
+  prendi2(
     "dm.ev_autonomia_totale",
     (voce3) => unAutonomia(voce3) && distanza3(voce3) && conParola("autonomiaTotale")(voce3)
   );
-  prendi(
+  prendi2(
     "dm.ev_autonomia",
     (voce3) => conClasse("distance")(voce3) && unAutonomia(voce3) && !qualificata(voce3)
   );
-  prendi("dm.ev_autonomia", (voce3) => unAutonomia(voce3) && !qualificata(voce3));
-  prendi("dm.ev_odometro", conParola("odometro", "sensor"));
+  prendi2("dm.ev_autonomia", (voce3) => unAutonomia(voce3) && !qualificata(voce3));
+  prendi2("dm.ev_odometro", conParola("odometro", "sensor"));
   const unConsumo = (voce3) => conParola("consumo")(voce3) || UNITA_DEL_CONSUMO.test(unita2(voce3, states));
-  prendi(
+  prendi2(
     "dm.ev_ultimo_viaggio",
     (voce3) => conParola("ultimoViaggio", "sensor")(voce3) && !unConsumo(voce3) && (distanza3(voce3) || !unita2(voce3, states))
   );
-  prendi(
+  prendi2(
     "dm.ev_consumo_medio",
     (voce3) => dominio4(voce3) === "sensor" && UNITA_DEL_CONSUMO.test(unita2(voce3, states)) && !conParola("ultimoViaggio")(voce3)
   );
-  prendi(
+  prendi2(
     "dm.ev_carburante_totale",
     (voce3) => conParola("carburanteTotale", "sensor")(voce3) && !conParola("ultimoViaggio")(voce3) && (UNITA_DI_VOLUME.test(unita2(voce3, states)) || !unita2(voce3, states))
   );
   const inKwh2 = (voce3) => conClasse("energy_storage")(voce3) || UNITA_DI_ENERGIA.test(unita2(voce3, states));
-  prendi(
+  prendi2(
     "dm.ev_capacita_batteria",
     (voce3) => dominio4(voce3) === "sensor" && inKwh2(voce3) && conParola("capacita")(voce3)
   );
-  prendi(
+  prendi2(
     "dm.ev_energia_residua",
     (voce3) => dominio4(voce3) === "sensor" && inKwh2(voce3) && conParola("energiaResidua")(voce3)
   );
   const nuda = (voce3) => !/\bbatter/i.test(clean30(voce3?.name));
   const lettera = (voce3) => eUnaLettera(states?.[clean30(voce3?.entity_id)]?.state);
   const apertura = (voce3) => ["door", "window", "opening", "lock", "garage_door"].includes(classe2(voce3, states));
-  prendi(
+  prendi2(
     "dm.ev_cavo_collegato",
     (voce3) => dominio4(voce3) === "binary_sensor" && conClasse("plug")(voce3)
   );
-  prendi(
+  prendi2(
     "dm.ev_cavo_collegato",
     (voce3) => parlaDelCavo(parole2(voce3, states)) && !apertura(voce3) && (dominio4(voce3) === "binary_sensor" || lettera(voce3))
   );
@@ -129308,69 +129316,69 @@ function legaLAutoAlDispositivo({ entities = [], states = {} } = {}) {
   ]);
   const ALTRO_DALLO_STATO = /\b(sched\w*|programmat\w*|timer|start\w*|inizio|end|fine|stop\w*|time|tempo|remaining|rimanent\w*|left|until|limit\w*|current|corrente|power|potenza|energy|energia|cost\w*|rate|rapid\w*|fast|speed|veloc\w*|lock\w*)\b/i;
   const unoStato = (voce3) => conParola("ricarica")(voce3) && !NON_STATI.has(dominio4(voce3)) && !unita2(voce3, states) && !CLASSI_DA_MISURA.has(classe2(voce3, states)) && !ALTRO_DALLO_STATO.test(parole2(voce3, states));
-  prendi(
+  prendi2(
     "dm.ev_stato_ricarica",
     (voce3) => dominio4(voce3) === "binary_sensor" && conClasse("battery_charging")(voce3)
   );
-  prendi(
+  prendi2(
     "dm.ev_stato_ricarica",
     (voce3) => unoStato(voce3) && nuda(voce3) && dominio4(voce3) !== "sensor"
   );
-  prendi("dm.ev_stato_ricarica", (voce3) => unoStato(voce3) && nuda(voce3));
-  prendi("dm.ev_stato_ricarica", (voce3) => unoStato(voce3) && dominio4(voce3) !== "sensor");
-  prendi("dm.ev_stato_ricarica", (voce3) => unoStato(voce3) && dominio4(voce3) === "sensor");
-  prendi(
+  prendi2("dm.ev_stato_ricarica", (voce3) => unoStato(voce3) && nuda(voce3));
+  prendi2("dm.ev_stato_ricarica", (voce3) => unoStato(voce3) && dominio4(voce3) !== "sensor");
+  prendi2("dm.ev_stato_ricarica", (voce3) => unoStato(voce3) && dominio4(voce3) === "sensor");
+  prendi2(
     "dm.ev_potenza_ricarica",
     (voce3) => conClasse("power")(voce3) && conParola("potenza")(voce3)
   );
-  prendi("dm.ev_potenza_ricarica", conParola("potenza", "sensor"));
-  prendi(
+  prendi2("dm.ev_potenza_ricarica", conParola("potenza", "sensor"));
+  prendi2(
     "dm.ev_tempo_ricarica",
     (voce3) => dominio4(voce3) === "sensor" && (conClasse("duration")(voce3) || UNITA_DI_TEMPO.test(unita2(voce3, states))) && /\b(charg\w*|ricaric\w*|carica|lade\w*|recharge)\b/i.test(parole2(voce3, states)) && conParola("rimanente")(voce3)
   );
   const comandabile = (voce3) => ["select", "input_select", "number", "input_number"].includes(dominio4(voce3));
   const parlaDiCarica = (voce3) => /\b(soc|charg\w*|carica|limit\w*|ladeziel|ladelimit)\b/i.test(parole2(voce3, states));
   const corrente2 = (voce3) => /^m?a$/i.test(unita2(voce3, states)) || conClasse("current")(voce3) || /\b(corrente|current|ampere|amps?|strom|courant)\b/i.test(parole2(voce3, states));
-  prendi(
+  prendi2(
     "dm.ev_target_soc",
     (voce3) => comandabile(voce3) && conParola("target")(voce3) && !corrente2(voce3) && (percentuale5(voce3) || parlaDiCarica(voce3))
   );
-  prendi(
+  prendi2(
     "dm.ev_target_soc",
     (voce3) => percentuale5(voce3) && conParola("target")(voce3) && !corrente2(voce3)
   );
   const delCavo = (voce3) => /\b(cable|cavo|kabel|charg\w*|ricaric\w*|port|presa)\b/i.test(parole2(voce3, states));
-  prendi("dm.ev_portiere", (voce3) => dominio4(voce3) === "lock" && !delCavo(voce3));
-  prendi("dm.ev_portiere", (voce3) => dominio4(voce3) === "lock");
-  prendi("dm.ev_portiere", (voce3) => classe2(voce3, states) === "lock");
-  prendi("dm.ev_portiere", conParola("serratura"));
-  prendi("dm.ev_portiere", (voce3) => classe2(voce3, states) === "door");
-  prendi("dm.ev_portiere", conParola("portiere"));
-  prendi("dm.ev_finestrini", (voce3) => classe2(voce3, states) === "window");
-  prendi(
+  prendi2("dm.ev_portiere", (voce3) => dominio4(voce3) === "lock" && !delCavo(voce3));
+  prendi2("dm.ev_portiere", (voce3) => dominio4(voce3) === "lock");
+  prendi2("dm.ev_portiere", (voce3) => classe2(voce3, states) === "lock");
+  prendi2("dm.ev_portiere", conParola("serratura"));
+  prendi2("dm.ev_portiere", (voce3) => classe2(voce3, states) === "door");
+  prendi2("dm.ev_portiere", conParola("portiere"));
+  prendi2("dm.ev_finestrini", (voce3) => classe2(voce3, states) === "window");
+  prendi2(
     "dm.ev_finestrini",
     (voce3) => conParola("finestrini")(voce3) && !["switch", "button"].includes(dominio4(voce3)) && !/\b(heat\w*|riscald\w*|beheiz\w*|defrost\w*|sbrin\w*|d[ée]givr\w*)\b/i.test(
       parole2(voce3, states)
     )
   );
-  prendi("dm.ev_bagagliaio", conParola("bagagliaio"));
-  prendi("dm.ev_cofano", conParola("cofano"));
-  prendi("dm.ev_allarme", conParola("allarme"));
-  prendi(
+  prendi2("dm.ev_bagagliaio", conParola("bagagliaio"));
+  prendi2("dm.ev_cofano", conParola("cofano"));
+  prendi2("dm.ev_allarme", conParola("allarme"));
+  prendi2(
     "dm.ev_motore",
     (voce3) => conParola("motore")(voce3) && dominio4(voce3) !== "button" && !unita2(voce3, states) && !gradi12(voce3)
   );
-  prendi("dm.ev_temperatura_olio", (voce3) => gradi12(voce3) && conParola("olio")(voce3));
-  prendi("dm.ev_temperatura_esterna", (voce3) => gradi12(voce3) && conParola("esterna")(voce3));
-  prendi("dm.ev_temperatura_interna", (voce3) => gradi12(voce3) && conParola("interna")(voce3));
-  prendi(
+  prendi2("dm.ev_temperatura_olio", (voce3) => gradi12(voce3) && conParola("olio")(voce3));
+  prendi2("dm.ev_temperatura_esterna", (voce3) => gradi12(voce3) && conParola("esterna")(voce3));
+  prendi2("dm.ev_temperatura_interna", (voce3) => gradi12(voce3) && conParola("interna")(voce3));
+  prendi2(
     "dm.ev_temperatura_batteria",
     (voce3) => gradi12(voce3) && /\b(batter\w*|pack|hv|akku|bms|cell\w*)\b/i.test(parole2(voce3, states)) && !diServizio(voce3)
   );
   const unaGomma = (voce3) => PAROLE6.pneumatici.test(parole2(voce3, states)) && !gradi12(voce3) && !["battery", "voltage", "signal_strength"].includes(classe2(voce3, states)) && !/^(%|m?v)$/i.test(unita2(voce3, states)) && !/\b(temperatur\w*|temp|batter\w*)\b/i.test(parole2(voce3, states));
   for (const [ref, ruota] of RUOTE3)
-    prendi(ref, (voce3) => unaGomma(voce3) && ruota.test(parole2(voce3, states)));
-  prendi("dm.ev_pneumatici", unaGomma);
+    prendi2(ref, (voce3) => unaGomma(voce3) && ruota.test(parole2(voce3, states)));
+  prendi2("dm.ev_pneumatici", unaGomma);
   if (!mappa2["dm.ev_autonomia"] && !mappa2["dm.ev_batteria_auto"] && mappa2["dm.ev_autonomia_carburante"]) {
     mappa2["dm.ev_autonomia"] = mappa2["dm.ev_autonomia_carburante"];
     delete mappa2["dm.ev_autonomia_carburante"];
@@ -158761,7 +158769,13 @@ function statoNuovo(salvata, livello = 0) {
      * tornare indietro con «Le altre strade»; e quante foto sta ancora
      * guardando il riconoscitore */
     primaDelleFoto: null,
-    fotoInCorso: 0
+    fotoInCorso: 0,
+    /* il riconoscitore: quanto e' arrivato ({fatti, totale} in byte) mentre
+     * si scarica, e perche' non e' disponibile (la causa, e se e' lo
+     * scarico che non e' riuscito) */
+    caricamento: null,
+    perche: "",
+    nonScaricato: false
   };
 }
 function registri() {
@@ -158794,6 +158808,17 @@ var ORT_COLLA = (() => {
   } catch (_errore) {
     return "../../legacy/vendor/riconoscere/ort-wasm-simd-threaded.js";
   }
+})();
+var LAVORATORE = (() => {
+  try {
+    return new URL("../../legacy/riconoscere-lavoratore.js", import.meta.url).href;
+  } catch (_errore) {
+    return "../../legacy/riconoscere-lavoratore.js";
+  }
+})();
+var LAVORATORE_SERVITO = (() => {
+  const cartella2 = cartellaDellaPlancia(String(import.meta.url || ""));
+  return cartella2 ? `${cartella2}legacy/riconoscere-lavoratore.js` : LAVORATORE;
 })();
 var PDFJS = (() => {
   try {
@@ -158834,35 +158859,235 @@ function copione(src, pronto) {
   });
 }
 var LATO = 640;
-function rilevatore2(ort, sessione, nomi2) {
+function tensoreDellaFoto(img) {
+  const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+  const tela4 = tela2d(LATO, LATO), g = tela4.getContext("2d", { willReadFrequently: true });
+  g.imageSmoothingEnabled = true;
+  g.imageSmoothingQuality = "high";
+  g.drawImage(img, 0, 0, LATO, LATO);
+  const px = g.getImageData(0, 0, LATO, LATO).data, n = LATO * LATO, dati = new Float32Array(3 * n);
+  for (let i = 0; i < n; i++) {
+    dati[i] = px[i * 4] / 255;
+    dati[n + i] = px[i * 4 + 1] / 255;
+    dati[2 * n + i] = px[i * 4 + 2] / 255;
+  }
+  return { dati, w, h };
+}
+function vistiDa({ etichette, riquadri, punti }, nomi2, quanti3, soglia3) {
+  const visti = [];
+  for (let i = 0; i < punti.length; i++) {
+    if (punti[i] < soglia3) continue;
+    const [x0, y0, x1, y1] = [0, 1, 2, 3].map((j) => riquadri[i * 4 + j]);
+    const nome = nomi2[Number(etichette[i]) - 1];
+    if (!nome || !(x1 > x0 && y1 > y0)) continue;
+    visti.push({ class: nome, score: punti[i], bbox: [x0, y0, x1 - x0, y1 - y0] });
+  }
+  return visti.sort((a, b2) => b2.score - a.score).slice(0, quanti3);
+}
+function rilevatore2(gira, nomi2) {
   return {
     async detect(img, quanti3 = 60, soglia3 = 0.3) {
-      const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
-      const tela4 = tela2d(LATO, LATO), g = tela4.getContext("2d", { willReadFrequently: true });
-      g.imageSmoothingEnabled = true;
-      g.imageSmoothingQuality = "high";
-      g.drawImage(img, 0, 0, LATO, LATO);
-      const px = g.getImageData(0, 0, LATO, LATO).data, n = LATO * LATO, dati = new Float32Array(3 * n);
-      for (let i = 0; i < n; i++) {
-        dati[i] = px[i * 4] / 255;
-        dati[n + i] = px[i * 4 + 1] / 255;
-        dati[2 * n + i] = px[i * 4 + 2] / 255;
-      }
-      const out = await sessione.run({
-        images: new ort.Tensor("float32", dati, [1, 3, LATO, LATO]),
-        orig_target_sizes: new ort.Tensor("int64", BigInt64Array.from([BigInt(w), BigInt(h)]), [1, 2])
-      });
-      const etichette = out.labels.data, riquadri = out.boxes.data, punti = out.scores.data, visti = [];
-      for (let i = 0; i < punti.length; i++) {
-        if (punti[i] < soglia3) continue;
-        const [x0, y0, x1, y1] = [0, 1, 2, 3].map((j) => riquadri[i * 4 + j]);
-        const nome = nomi2[Number(etichette[i]) - 1];
-        if (!nome || !(x1 > x0 && y1 > y0)) continue;
-        visti.push({ class: nome, score: punti[i], bbox: [x0, y0, x1 - x0, y1 - y0] });
-      }
-      return visti.sort((a, b2) => b2.score - a.score).slice(0, quanti3);
+      const { dati, w, h } = tensoreDellaFoto(img);
+      return vistiDa(await gira(dati, w, h), nomi2, quanti3, soglia3);
     }
   };
+}
+async function rilevatoreInPagina(file) {
+  if (!await copione(`${VENDOR}ort.wasm.min.js`, () => root.ort))
+    throw new Error(t("ONNX Runtime non si è caricato", "ONNX Runtime didn't load"));
+  const ort = root.ort;
+  ort.env.wasm.numThreads = 1;
+  ort.env.wasm.wasmPaths = {
+    mjs: `${VENDOR}ort-wasm-simd-threaded.js`,
+    wasm: `${VENDOR}ort-wasm-simd-threaded.wasm`
+  };
+  ort.env.wasm.wasmBinary = file.motore;
+  const sessione = await ort.InferenceSession.create(new Uint8Array(file.pesi), {
+    executionProviders: ["wasm"],
+    graphOptimizationLevel: "all"
+  });
+  return rilevatore2(async (dati, w, h) => {
+    const out = await sessione.run({
+      images: new ort.Tensor("float32", dati, [1, 3, LATO, LATO]),
+      orig_target_sizes: new ort.Tensor("int64", BigInt64Array.from([BigInt(w), BigInt(h)]), [1, 2])
+    });
+    return { etichette: out.labels.data, riquadri: out.boxes.data, punti: out.scores.data };
+  }, file.nomi);
+}
+var ATTESA_PREPARAZIONE = 18e4;
+var ATTESA_FOTO = 12e4;
+function rilevatoreNelLavoratore(file, quandoMuore) {
+  if (typeof root.Worker !== "function") return Promise.resolve(null);
+  let lavoratore;
+  try {
+    lavoratore = new root.Worker(LAVORATORE_SERVITO);
+  } catch (_errore) {
+    return Promise.resolve(null);
+  }
+  let prossimo = 1, haParlato = false, pronto = false, morto = null;
+  const attese = /* @__PURE__ */ new Map();
+  const muore = (errore) => {
+    if (morto) return;
+    morto = errore;
+    for (const a of attese.values()) {
+      clearTimeout(a.orologio);
+      a.no(errore);
+    }
+    attese.clear();
+    try {
+      lavoratore.terminate();
+    } catch (_errore) {
+    }
+    if (pronto) quandoMuore(errore);
+  };
+  lavoratore.onmessage = (ev) => {
+    haParlato = true;
+    const m = ev.data || {}, a = attese.get(m.id);
+    if (!a) return;
+    attese.delete(m.id);
+    clearTimeout(a.orologio);
+    if (m.tipo === "errore") a.no(new Error(m.perche || "riconoscitore"));
+    else a.ok(m);
+  };
+  lavoratore.onerror = (ev) => {
+    ev?.preventDefault?.();
+    muore(
+      new Error(
+        ev?.message || t("Il lavoratore del riconoscitore non parte", "The recognizer worker won't start")
+      )
+    );
+  };
+  const chiedi9 = (messaggio, entro, trasferisci) => new Promise((ok, no) => {
+    if (morto) return no(morto);
+    const id = prossimo++;
+    const orologio5 = setTimeout(() => {
+      attese.delete(id);
+      const s = Math.round(entro / 1e3);
+      muore(
+        new Error(
+          t(`Il riconoscitore non ha risposto in ${s} s`, `The recognizer didn't answer in ${s} s`)
+        )
+      );
+      no(morto);
+    }, entro);
+    attese.set(id, { ok, no, orologio: orologio5 });
+    try {
+      lavoratore.postMessage({ ...messaggio, id }, trasferisci || []);
+    } catch (errore) {
+      attese.delete(id);
+      clearTimeout(orologio5);
+      no(errore);
+    }
+  });
+  return chiedi9(
+    {
+      tipo: "carica",
+      ort: `${VENDOR}ort.wasm.min.js`,
+      colla: `${VENDOR}ort-wasm-simd-threaded.js`,
+      wasm: `${VENDOR}ort-wasm-simd-threaded.wasm`,
+      motore: file.motore,
+      pesi: file.pesi
+    },
+    ATTESA_PREPARAZIONE
+  ).then(
+    () => {
+      pronto = true;
+      return rilevatore2(
+        (dati, w, h) => chiedi9({ tipo: "rileva", dati, lato: LATO, w, h }, ATTESA_FOTO, [dati.buffer]),
+        file.nomi
+      );
+    },
+    (errore) => {
+      muore(errore);
+      if (!haParlato) return null;
+      throw errore;
+    }
+  );
+}
+var UN_MEGA = 1024 * 1024;
+var ATTESA_PEZZO = 9e4;
+async function prendi(url, { json: json2 = false } = {}) {
+  const nome = url.slice(url.lastIndexOf("/") + 1);
+  let ultimo = null;
+  for (let giro = 0; giro < 2; giro++) {
+    const ctrl = typeof root.AbortController === "function" ? new root.AbortController() : null;
+    const orologio5 = ctrl ? setTimeout(() => ctrl.abort(), ATTESA_PEZZO) : 0;
+    try {
+      const r = await fetch(url, ctrl ? { signal: ctrl.signal } : void 0);
+      if (!r.ok) {
+        ultimo = new Error(`${nome}: HTTP ${r.status}`);
+        if (r.status === 404) break;
+        continue;
+      }
+      return json2 ? await r.json() : await r.arrayBuffer();
+    } catch (errore) {
+      const s = ATTESA_PEZZO / 1e3;
+      ultimo = ctrl?.signal?.aborted ? new Error(t(`${nome}: nessuna risposta in ${s} s`, `${nome}: no answer in ${s} s`)) : errore;
+    } finally {
+      clearTimeout(orologio5);
+    }
+  }
+  throw ultimo || new Error(nome);
+}
+async function scaricaIlRiconoscitore() {
+  const elenco18 = await prendi(`${VENDOR}pezzi.json`, { json: true });
+  if (!Array.isArray(elenco18?.wasm?.pezzi) || !Array.isArray(elenco18?.modello?.pezzi))
+    throw new Error(t("L'elenco dei pezzi non torna", "The list of pieces doesn't add up"));
+  const nomi2 = await prendi(`${VENDOR}obj365.json`, { json: true });
+  const totale = (Number(elenco18.modello.byte) || 0) + (Number(elenco18.wasm.byte) || 0);
+  let fatti = 0;
+  avanzamento(fatti, totale);
+  const intero4 = async (parte) => {
+    const tutto = new Uint8Array(Number(parte.byte) || 0);
+    let a = 0;
+    const aMeta = (nome) => new Error(t(`${nome}: arrivato a metà`, `${nome}: arrived incomplete`));
+    for (const nome of parte.pezzi) {
+      const b2 = new Uint8Array(await prendi(`${VENDOR}${nome}`));
+      if (a + b2.length > tutto.length) throw aMeta(nome);
+      tutto.set(b2, a);
+      a += b2.length;
+      fatti += b2.length;
+      avanzamento(fatti, totale);
+    }
+    if (a !== tutto.length) throw aMeta(parte.pezzi[parte.pezzi.length - 1] || "?");
+    return tutto.buffer;
+  };
+  const motore = await intero4(elenco18.wasm);
+  const pesi = await intero4(elenco18.modello);
+  return { nomi: nomi2, motore, pesi };
+}
+function avanzamento(fatti, totale) {
+  const S = state182.S;
+  if (!S) return;
+  S.caricamento = totale > 0 ? { fatti, totale } : null;
+  const n = nodo2()?.querySelector("[data-c3c-rr]");
+  if (n) n.textContent = testoDelCaricamento();
+  else disegnaIlPannello();
+}
+function testoDelCaricamento() {
+  const c = state182.S?.caricamento;
+  if (!c)
+    return t(
+      "Preparo il riconoscimento degli oggetti, sul dispositivo…",
+      "Getting object recognition ready, on this device…"
+    );
+  const fatti = Math.floor(c.fatti / UN_MEGA), totale = Math.ceil(c.totale / UN_MEGA);
+  return t(
+    `Scarico il riconoscitore… ${fatti} di ${totale} MB`,
+    `Downloading the recognizer… ${fatti} of ${totale} MB`
+  );
+}
+function nonDisponibile(errore, nonScaricato) {
+  root.console?.warn?.("[DashboardModern] Casa 3D: riconoscimento non disponibile", errore);
+  const S = state182.S;
+  if (S) {
+    S.riconoscitore = "no";
+    S.perche = perche5(errore);
+    S.nonScaricato = nonScaricato === true;
+    S.caricamento = null;
+  }
+  state182.modello = null;
+  return null;
 }
 function riconoscitore() {
   if (state182.modello) return state182.modello;
@@ -158870,37 +159095,29 @@ function riconoscitore() {
     const S = state182.S;
     if (S) {
       S.riconoscitore = "carica";
+      S.perche = "";
+      S.nonScaricato = false;
+      S.caricamento = null;
       disegnaIlPannello();
     }
+    let file;
     try {
-      if (!await copione(`${VENDOR}ort.wasm.min.js`, () => root.ort)) throw new Error("ort");
-      const ort = root.ort;
-      ort.env.wasm.numThreads = 1;
-      ort.env.wasm.wasmPaths = {
-        mjs: `${VENDOR}ort-wasm-simd-threaded.js`,
-        wasm: `${VENDOR}ort-wasm-simd-threaded.wasm`
-      };
-      const [nomi2, pesi] = await Promise.all([
-        fetch(`${VENDOR}obj365.json`).then((r) => {
-          if (!r.ok) throw new Error(`obj365 ${r.status}`);
-          return r.json();
-        }),
-        fetch(`${VENDOR}dfine-s-obj365.bin`).then((r) => {
-          if (!r.ok) throw new Error(`modello ${r.status}`);
-          return r.arrayBuffer();
-        })
-      ]);
-      const sessione = await ort.InferenceSession.create(new Uint8Array(pesi), {
-        executionProviders: ["wasm"],
-        graphOptimizationLevel: "all"
-      });
-      if (state182.S) state182.S.riconoscitore = "pronto";
-      return rilevatore2(ort, sessione, nomi2);
+      file = await scaricaIlRiconoscitore();
     } catch (errore) {
-      root.console?.warn?.("[DashboardModern] Casa 3D: riconoscimento non disponibile", errore);
-      if (state182.S) state182.S.riconoscitore = "no";
-      state182.modello = null;
-      return null;
+      return nonDisponibile(errore, true);
+    }
+    try {
+      avanzamento(0, 0);
+      let modello2 = await rilevatoreNelLavoratore(file, (errore) => nonDisponibile(errore, false));
+      if (!modello2) modello2 = await rilevatoreInPagina(file);
+      file.motore = file.pesi = null;
+      if (state182.S) {
+        state182.S.riconoscitore = "pronto";
+        state182.S.caricamento = null;
+      }
+      return modello2;
+    } catch (errore) {
+      return nonDisponibile(errore, false);
     }
   })();
   return state182.modello;
@@ -159425,11 +159642,19 @@ function contoMarkup() {
   return `<span class="c3c-conto${c.mancano ? " manca" : ""}">${esc(t(`${c.collegati} collegati · ${c.mancano} mancanti`, `${c.collegati} linked · ${c.mancano} missing`))}</span>`;
 }
 function statoDelRiconoscitore() {
-  const r = state182.S.riconoscitore;
+  const S = state182.S, r = S.riconoscitore;
   if (r === "carica")
-    return `<div class="c3c-lavoro">⏳ ${esc(t("Preparo il riconoscimento degli oggetti, sul dispositivo…", "Getting object recognition ready, on this device…"))}</div>`;
+    return `<div class="c3c-lavoro">⏳ <span data-c3c-rr>${esc(testoDelCaricamento())}</span></div>`;
   if (r === "no")
-    return `<div class="c3c-lavoro no">${esc(t("Il riconoscimento automatico non è disponibile qui: segna tu arredi e dispositivi toccandoli nella foto.", "Automatic recognition isn't available here: mark furniture and devices by tapping them in the photo."))}</div>`;
+    return `<div class="c3c-lavoro no">${esc(
+      S.nonScaricato ? t(
+        "Il riconoscitore non si è scaricato: controlla la connessione e riprova.",
+        "The recognizer didn't download: check the connection and try again."
+      ) : t(
+        "Il riconoscimento automatico non è disponibile qui: segna tu arredi e dispositivi toccandoli nella foto.",
+        "Automatic recognition isn't available here: mark furniture and devices by tapping them in the photo."
+      )
+    )}${S.perche ? `<small class="c3c-dettaglio" translate="no">${esc(S.perche)}</small>` : ""}<button type="button" class="c3c-btn c3c-riprova" data-c3c="riprovarr">↻ ${esc(t("Riprova", "Try again"))}</button></div>`;
   return "";
 }
 function pFotoStanze() {
@@ -160186,12 +160411,12 @@ async function usaPiantaDelFoglio(p) {
     disegna14();
   }
 }
-async function scaricaIlMotore(dove, prendi = root.fetch?.bind(root)) {
+async function scaricaIlMotore(dove, prendi2 = root.fetch?.bind(root)) {
   let ultimo = null;
   for (let volta = 0; volta < 2; volta++) {
     let risposta;
     try {
-      risposta = await prendi(dove, { credentials: "same-origin", cache: "no-store" });
+      risposta = await prendi2(dove, { credentials: "same-origin", cache: "no-store" });
     } catch (errore) {
       ultimo = new Error(`libredwg-web.wasm: ${perche5(errore) || "rete"}`);
       continue;
@@ -160526,20 +160751,81 @@ async function rilevaNeiRitagli(modello2, img) {
     [0, h - lh],
     [w - lw, h - lh]
   ]) {
+    let tela4;
     try {
-      const tela4 = tela2d(lw, lh);
+      tela4 = tela2d(lw, lh);
       tela4.getContext("2d").drawImage(img, x0, y0, lw, lh, 0, 0, lw, lh);
-      for (const d of await modello2.detect(tela4, 20, 0.5)) {
-        const [bx, by, bw, bh] = d.bbox || [];
-        const taglio = 4;
-        const sulBordo = bx <= taglio && x0 > 0 || by <= taglio && y0 > 0 || bx + bw >= lw - taglio && x0 + lw < w || by + bh >= lh - taglio && y0 + lh < h;
-        if (sulBordo) continue;
-        tutti.push({ ...d, bbox: [bx + x0, by + y0, bw, bh] });
-      }
     } catch (_errore) {
+      continue;
+    }
+    for (const d of await modello2.detect(tela4, 20, 0.5)) {
+      const [bx, by, bw, bh] = d.bbox || [];
+      const taglio = 4;
+      const sulBordo = bx <= taglio && x0 > 0 || by <= taglio && y0 > 0 || bx + bw >= lw - taglio && x0 + lw < w || by + bh >= lh - taglio && y0 + lh < h;
+      if (sulBordo) continue;
+      tutti.push({ ...d, bbox: [bx + x0, by + y0, bw, bh] });
     }
   }
   return tutti;
+}
+async function riconosciNellaFoto(F, stanza2) {
+  const S = state182.S;
+  S.fotoInCorso++;
+  S.lavoro = t(
+    "Cerco arredi e dispositivi nella foto…",
+    "Looking for furniture and devices in the photo…"
+  );
+  disegna14();
+  const modello2 = await riconoscitore();
+  if (modello2) {
+    try {
+      F.grezzi = await rilevaNeiRitagli(modello2, F.img);
+      const visti = oggettiDallaFoto(F.grezzi, {
+        stanza: nomeDi18(stanza2),
+        w: F.w,
+        h: F.h
+      });
+      for (const o of visti.arredi) {
+        const [x, y, w, h] = o.box;
+        F.oggetti.push({
+          ...o,
+          colore: coloreZona(F.img, x + w * 0.3, y + h * 0.3, x + w * 0.7, y + h * 0.7)
+        });
+      }
+      for (const d of visti.dispositivi)
+        F.dispositivi.push({ ...d, entity: proponi(d.k, stanza2, null) });
+      F.riconosciuta = true;
+    } catch (errore) {
+      root.console?.warn?.("[DashboardModern] Casa 3D: riconoscimento", errore);
+      nonDisponibile(errore, false);
+    }
+  }
+  S.fotoInCorso = Math.max(0, S.fotoInCorso - 1);
+  if (!S.fotoInCorso) S.lavoro = "";
+  if (state182.S === S) {
+    if (S.fonte === "stanzeFoto" && S.passo === P11.planimetria) aggiornaLeMisure(stanza2);
+    disegna14();
+  }
+}
+async function riprovaIlRiconoscimento() {
+  const S = state182.S;
+  if (!S || S.riconoscitore === "carica") return;
+  state182.modello = null;
+  S.riconoscitore = "fermo";
+  S.perche = "";
+  S.nonScaricato = false;
+  const daGuardare = [];
+  for (const [id, foto] of Object.entries(S.foto))
+    for (const F of foto || []) if (F?.img && !F.riconosciuta) daGuardare.push([id, F]);
+  if (!daGuardare.length) {
+    await riconoscitore();
+    if (state182.S === S) disegna14();
+    return;
+  }
+  for (const [id, F] of daGuardare) {
+    if (state182.S !== S) return;
+    await riconosciNellaFoto(F, isNaN(Number(id)) ? id : Number(id));
+  }
 }
 async function aggiungiFotoStanza(src, f35 = null, stanza2 = state182.S.sel) {
   const S = state182.S;
@@ -160555,7 +160841,8 @@ async function aggiungiFotoStanza(src, f35 = null, stanza2 = state182.S.sel) {
     /* la focale (mm equivalenti) e i riquadri grezzi: per le misure della
      * stanza dalle cose di misura nota */
     f35,
-    grezzi: []
+    grezzi: [],
+    riconosciuta: false
   };
   F.pavimento = coloreZona(img, F.w * 0.2, F.h * 0.82, F.w * 0.8, F.h * 0.95);
   F.pareti = coloreZona(img, F.w * 0.25, F.h * 0.12, F.w * 0.75, F.h * 0.3);
@@ -160565,40 +160852,7 @@ async function aggiungiFotoStanza(src, f35 = null, stanza2 = state182.S.sel) {
     S.vistaFoto = true;
   }
   S.fotoSel = S.foto[stanza2].length - 1;
-  S.fotoInCorso++;
-  S.lavoro = t(
-    "Cerco arredi e dispositivi nella foto…",
-    "Looking for furniture and devices in the photo…"
-  );
-  disegna14();
-  const modello2 = await riconoscitore();
-  if (modello2) {
-    try {
-      F.grezzi = await rilevaNeiRitagli(modello2, img);
-      const visti = oggettiDallaFoto(F.grezzi, {
-        stanza: nomeDi18(stanza2),
-        w: F.w,
-        h: F.h
-      });
-      for (const o of visti.arredi) {
-        const [x, y, w, h] = o.box;
-        F.oggetti.push({
-          ...o,
-          colore: coloreZona(img, x + w * 0.3, y + h * 0.3, x + w * 0.7, y + h * 0.7)
-        });
-      }
-      for (const d of visti.dispositivi)
-        F.dispositivi.push({ ...d, entity: proponi(d.k, stanza2, null) });
-    } catch (errore) {
-      root.console?.warn?.("[DashboardModern] Casa 3D: riconoscimento", errore);
-    }
-  }
-  S.fotoInCorso = Math.max(0, S.fotoInCorso - 1);
-  if (!S.fotoInCorso) S.lavoro = "";
-  if (state182.S === S) {
-    if (S.fonte === "stanzeFoto" && S.passo === P11.planimetria) aggiornaLeMisure(stanza2);
-    disegna14();
-  }
+  await riconosciNellaFoto(F, stanza2);
 }
 function segnaNellaFoto(x, y) {
   const S = state182.S, F = (S.foto[S.sel] || [])[S.fotoSel], A2 = S.aggiungi;
@@ -160745,6 +160999,8 @@ async function alClic6(ev) {
       return n.querySelector("[data-c3c-file='stanza']").click();
     case "caricast":
       return n.querySelector("[data-c3c-file='stanza']").click();
+    case "riprovarr":
+      return riprovaIlRiconoscimento();
     case "caricaf":
       return n.querySelector("[data-c3c-file='facciata']").click();
     case "indietro":
@@ -161310,6 +161566,7 @@ function installaLoStile11() {
     ${Q} .c3c-privato{margin-top:12px;padding:9px 11px;border-radius:12px;font-size:11.5px;line-height:1.45;color:var(--c3c-fioco);background:rgba(22,163,74,.10);border:1px solid rgba(22,163,74,.35)}
     ${Q} .c3c-lavoro{margin-top:10px;padding:8px 11px;border-radius:12px;font-size:12px;font-weight:700;background:rgba(var(--c3c-accento-rgb),.12);color:var(--c3c-accento)}
     ${Q} .c3c-lavoro.no{background:rgba(245,158,11,.12);color:#f59e0b}
+    ${Q} .c3c-lavoro .c3c-riprova{display:inline-flex;margin-top:8px}
     ${Q} .c3c-carica{display:block;width:100%;border:2px dashed var(--c3c-bordo);border-radius:18px;padding:22px;text-align:center;cursor:pointer;background:var(--c3c-s2);font-weight:700;font-size:13px}
     ${Q} .c3c-carica b{display:block;font-size:30px;margin-bottom:6px}
     ${Q} .c3c-carica+.c3c-carica{margin-top:10px}

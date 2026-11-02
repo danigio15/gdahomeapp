@@ -1,0 +1,25 @@
+{
+  "unPezzo": 3145728,
+  "modello": {
+    "byte": 21688094,
+    "pezzi": [
+      "dfine-s-obj365.1.bin",
+      "dfine-s-obj365.2.bin",
+      "dfine-s-obj365.3.bin",
+      "dfine-s-obj365.4.bin",
+      "dfine-s-obj365.5.bin",
+      "dfine-s-obj365.6.bin",
+      "dfine-s-obj365.7.bin"
+    ]
+  },
+  "wasm": {
+    "byte": 13961845,
+    "pezzi": [
+      "ort-wasm-simd-threaded.1.wasm",
+      "ort-wasm-simd-threaded.2.wasm",
+      "ort-wasm-simd-threaded.3.wasm",
+      "ort-wasm-simd-threaded.4.wasm",
+      "ort-wasm-simd-threaded.5.wasm"
+    ]
+  }
+}

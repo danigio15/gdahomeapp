@@ -619,6 +619,11 @@ test("la casa dalle foto delle stanze: le stanze, le misure, la pianta, il salva
   await expect(crea.locator(".c3c-sf-foto img")).toHaveCount(1, { timeout: 60_000 });
   /* senza riconoscitore resta l'avviso (.c3c-lavoro.no): il lavoro vero finisce */
   await expect(crea.locator(".c3c-lavoro:not(.no)")).toHaveCount(0, { timeout: 60_000 });
+  /* e l'avviso dice che e' lo scarico che non e' andato, con la causa sotto
+   * (dal telefono la console non si vede) e «Riprova» */
+  await expect(crea.locator(".c3c-lavoro.no")).toContainText("non si è scaricato");
+  await expect(crea.locator(".c3c-lavoro.no .c3c-dettaglio")).not.toBeEmpty();
+  await expect(crea.locator('[data-c3c="riprovarr"]')).toHaveCount(1);
   /* la foto si vede, con la bussola */
   await expect(crea.locator("[data-c3c-verso]")).toHaveCount(4);
   /* «per ogni cosa individuata le entita'»: una lampada a stelo segnata a
@@ -701,6 +706,51 @@ test("la casa dalle foto delle stanze: le stanze, le misure, la pianta, il salva
   expect(piano.dispositivi.map((d) => d.k)).toContain("luce");
   await page.waitForTimeout(2500);
   await fotoDiretta(page, testInfo, "casa3d-dalle-foto");
+});
+
+/* «Ci ha messo un sacco di tempo per riconoscere gli oggetti e poi non e'
+ * riuscito», dal telefono: il modello (21,7 MB) non passava dal filo
+ * dell'app. Ora arriva a pezzi, con la clessidra che dice quanto manca, e
+ * gira in un lavoratore a parte; quando non arriva, «Riprova» lo richiede e
+ * riguarda le foto rimaste senza. Qui col modello vero (solo sul computer:
+ * e' pesante): prima la rete e' giu', poi torna. */
+test("«Riprova»: il riconoscitore arriva a pezzi, parte nel lavoratore e guarda la foto", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "il modello vero: solo sul computer");
+  test.setTimeout(240_000);
+  let giu = true;
+  await page.route("**/riconoscere/**", (via) =>
+    giu ? via.abort("connectionrefused") : via.continue(),
+  );
+  const chiesti = [];
+  page.on("request", (r) => {
+    if (r.url().includes("/riconoscere/")) chiesti.push(r.url().split("/").pop());
+  });
+  const crea = await apriLaProcedura(page, testInfo, { aree: { cucina: "Cucina" } });
+  await crea.locator('[data-c3c="dallefoto"]').click();
+  const [scelta] = await Promise.all([
+    page.waitForEvent("filechooser"),
+    crea.locator('[data-c3c="caricasf"][data-c3c-sfid="1"]').click(),
+  ]);
+  await scelta.setFiles({ name: "cucina.png", mimeType: "image/png", buffer: pngTinta(640, 480) });
+  await expect(crea.locator('[data-c3c="riprovarr"]')).toHaveCount(1, { timeout: 60_000 });
+  await expect(crea.locator(".c3c-lavoro.no")).toContainText("non si è scaricato");
+  await fotoDiretta(page, testInfo, "crea-riconoscitore-riprova");
+  /* la rete torna: «Riprova» scarica i pezzi, dicendo quanto manca */
+  giu = false;
+  chiesti.length = 0;
+  await crea.locator('[data-c3c="riprovarr"]').click();
+  await expect(crea.locator("[data-c3c-rr]")).toContainText(/di \d+ MB/, { timeout: 30_000 });
+  /* finito: niente clessidra e niente avviso, la foto e' stata guardata */
+  await expect(crea.locator(".c3c-lavoro")).toHaveCount(0, { timeout: 200_000 });
+  expect(chiesti).toContain("pezzi.json");
+  expect(chiesti.filter((n) => /\.\d+\.bin$/.test(n)).length).toBeGreaterThanOrEqual(2);
+  expect(chiesti.filter((n) => /\.\d+\.wasm$/.test(n)).length).toBeGreaterThanOrEqual(2);
+  /* il modello gira nel lavoratore: nella pagina ONNX Runtime non c'e' */
+  expect(page.workers().some((w) => w.url().includes("riconoscere-lavoratore"))).toBe(true);
+  expect(await page.evaluate(() => typeof window.ort)).toBe("undefined");
+  await fotoDiretta(page, testInfo, "crea-riconoscitore-riprovato");
 });
 
 /* La stessa strada con le foto vere delle stanze (non stanno nel repo:
