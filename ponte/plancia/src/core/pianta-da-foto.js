@@ -807,9 +807,10 @@ export function grigliaDeiMuri(
    * blocco di muro grande quanto il vano. Si cercano sulle righe grezze, con
    * una chiusura provvisoria per sapere dove sono i muri del vano, e le loro
    * celle si tolgono: il vano resta una stanza, con la scala dentro. */
+  const chiusaProvvisoria = stringi(allarga(riga, W, H, r), W, H, r);
   const { vere, piastrelle, segnaScale } = (() => {
     const { corsaO, corsaV } = corseDelleRighe(riga, W, H);
-    const scale = trovaLeScale(stringi(allarga(riga, W, H, r), W, H, r), corsaO, corsaV, W, H);
+    const scale = trovaLeScale(chiusaProvvisoria, corsaO, corsaV, W, H);
     /* via i gradini, non la riga lunga di traverso sull'orlo della scala:
      * e' la riga del tramezzo che le fa da sponda, che corre per tutta la
      * sua altezza; tolta anche lei, il tramezzo restava a una riga sola e
@@ -829,6 +830,16 @@ export function grigliaDeiMuri(
     return scale;
   })();
   for (let i = 0; i < W * H; i++) if (segnaScale[i]) riga[i] = 0;
+  /* Gli archi delle porte (il CAD, il catasto), prima di chiudere: fra
+   * l'arco, l'anta e il muro la chiusura riempiva un quarto di disco, e
+   * accanto a ogni porta restava un blocco di muro finto («dove c'e'
+   * l'apertura delle porte c'e' tutto quel nero»). Si cercano sulle righe
+   * grezze, con la chiusura provvisoria per sapere dove sono i muri, e le
+   * loro celle si tolgono; il varco fra la cerniera e il capo dell'arco
+   * diventa una porta piu' sotto. */
+  const archi =
+    disegno || vetri ? { archi: [] } : archiDellePorte(riga, chiusaProvvisoria, W, H, PASSO);
+  if (archi.celle) for (let i = 0; i < W * H; i++) if (archi.celle[i]) riga[i] = 0;
   /* 2. La chiusura: si allarga e si stringe di 20 cm. Una riga sottile dopo
    *    la chiusura resta sottile; due righe vicine diventano un muro pieno. */
   const chiusa = stringi(allarga(riga, W, H, r), W, H, r);
@@ -1219,11 +1230,6 @@ export function grigliaDeiMuri(
     for (const c of p.celle) if (rO[c] >= corsa || rV[c] >= corsa) n++;
     return n >= p.celle.length * 0.8;
   };
-  /* Gli archi delle porte (il CAD, il catasto): l'arco e l'anta non fanno
-   * barriera, e il varco fra la cerniera e il capo dell'arco e' una porta,
-   * anche dove il muro non corre dritto dai due lati. */
-  const archi = disegno || vetri ? [] : archiDellePorte(riga, muro, W, H, PASSO);
-  if (archi.celle) for (let i = 0; i < W * H; i++) if (archi.celle[i]) resto[i] = 0;
   const altri = pezziDi(resto, W, H);
   for (const p of altri.pezzi) {
     if (Math.max(p.x1 - p.x0, p.y1 - p.y0) < 6) continue;

@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-TEXZCU3L.js";
+} from "../../chunk-XP7VO4VY.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -156229,9 +156229,10 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
   }
   for (let i = 0; i < W2 * H7; i++) if (fondo[i]) riga5[i] = 0;
   const r = Math.max(1, Math.round(0.2 / PASSO));
+  const chiusaProvvisoria = stringi(allarga(riga5, W2, H7, r), W2, H7, r);
   const { vere, piastrelle, segnaScale } = (() => {
     const { corsaO: corsaO2, corsaV: corsaV2 } = corseDelleRighe(riga5, W2, H7);
-    const scale = trovaLeScale(stringi(allarga(riga5, W2, H7, r), W2, H7, r), corsaO2, corsaV2, W2, H7);
+    const scale = trovaLeScale(chiusaProvvisoria, corsaO2, corsaV2, W2, H7);
     const lunga = Math.round(0.5 / PASSO);
     for (const s of scale.vere) {
       const diTraverso = s.oriz ? corsaO2 : corsaV2;
@@ -156245,6 +156246,10 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
     return scale;
   })();
   for (let i = 0; i < W2 * H7; i++) if (segnaScale[i]) riga5[i] = 0;
+  const archi = disegno8 || vetri ? { archi: [] } : archiDellePorte(riga5, chiusaProvvisoria, W2, H7, PASSO);
+  if (archi.celle) {
+    for (let i = 0; i < W2 * H7; i++) if (archi.celle[i]) riga5[i] = 0;
+  }
   const chiusa2 = stringi(allarga(riga5, W2, H7, r), W2, H7, r);
   for (let i = 0; i < W2 * H7; i++) if (riga5[i]) chiusa2[i] = 1;
   const spessi = allarga(stringi(chiusa2, W2, H7, 1), W2, H7, 1);
@@ -156522,10 +156527,6 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
     for (const c of p.celle) if (rO[c] >= corsa || rV[c] >= corsa) n++;
     return n >= p.celle.length * 0.8;
   };
-  const archi = disegno8 || vetri ? [] : archiDellePorte(riga5, muro, W2, H7, PASSO);
-  if (archi.celle) {
-    for (let i = 0; i < W2 * H7; i++) if (archi.celle[i]) resto[i] = 0;
-  }
   const altri = pezziDi2(resto, W2, H7);
   for (const p of altri.pezzi) {
     if (Math.max(p.x1 - p.x0, p.y1 - p.y0) < 6) continue;
