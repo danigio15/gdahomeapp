@@ -879,6 +879,7 @@ function installaLoStile() {
     ${C3} .c3-disp[data-tono="telecamera"]{--c:14,165,233}
     ${C3} .c3-disp[data-tono="clima"]{--c:234,88,12}
     ${C3} .c3-disp[data-tono="ok"]{--c:22,163,74}
+    ${C3} .c3-disp[data-tono="lavora"]{--c:16,185,129}
     ${C3} .c3-disp[data-attivo="true"]{background:rgba(var(--c),.12);border-color:rgba(var(--c),.45)}
     ${C3} .c3-disp-ic{display:grid;place-items:center;flex:0 0 auto;width:34px;height:34px;border-radius:50%;font-size:16px;background:rgba(var(--c),.16)}
     ${C3} .c3-disp-testo{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}

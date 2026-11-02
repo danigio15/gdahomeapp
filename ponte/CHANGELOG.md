@@ -10,6 +10,176 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.8
+
+_App GdAHome e Home Assistant._
+
+L'app sul telefono raccoglie quello che è cambiato dalla 1.18.7; l'add-on è
+quello della 1.18.7.30 con quattro correzioni.
+
+- **Menu laterale fluido su Android:** «lo scroll del menu ha dei frame lag,
+  non scorre fluido». A menu aperto fino in fondo la plancia dietro esce dalla
+  scena (resta caricata), e il menu scorre senza scatti; torna com'era appena
+  il menu comincia a chiudersi.
+- **Plance nuove senza spegnere il tablet:** aprendo il menu, o tornando
+  all'app, l'elenco delle plance si chiede di nuovo alla casa. Un tablet a
+  muro sempre acceso vede subito la plancia aggiunta dalla console, e una
+  tolta non si riapre. Un no di passaggio della casa, durante questa
+  rilettura, non toglie la plancia che si sta guardando.
+- **Premium legato alla casa:** l'abbonamento comprato dall'app porta con sé
+  un'impronta della casa per cui si compra (non il suo nome), e il negozio la
+  ridice al quadro: chi conosce il numero di un acquisto altrui non se lo
+  porta sulla propria casa.
+- **Gettone più robusto:** rimettere indietro l'orologio del telefono non
+  allunga più un gettone già scaduto.
+- **Colpo d'occhio, il popup delle telecamere:** «quando apro le telecamere
+  ogni secondo si aprono e si chiude il popup». L'orologio dentro il popup
+  cambia ogni secondo, e al primo aggiornamento della casa la pagina lo
+  prendeva per qualcuno che aveva riscritto il popup: lo rifaceva da capo,
+  con l'animazione d'apertura. Ora il popup resta aperto e fermo.
+- **L'umidità dell'Aqara T1 (#352):** al posto dell'umidità compariva la
+  batteria. Il sensore si chiama «temperature and humidity sensor», e anche
+  la sua batteria e la sua pressione hanno «humidity» nel nome. Ora
+  l'umidità la dice la classe del sensore; il nome conta solo per un sensore
+  senza classe e in percentuale, e mai per una batteria. Vale per le stanze
+  trovate da qui in avanti: chi l'ha già sbagliata la cambia una volta in
+  Config › Temperatura.
+- **La foto delle stanze in Home (#348):** la foto messa a una stanza si
+  vedeva nella pagina Stanze e nella Temperatura, ma non sulla stessa stanza
+  nel blocco della Home. Ora c'è anche lì, col nome e i gradi chiari sopra.
+- **Telecamere con la sola entità (#356):** una telecamera ONVIF già in Home
+  Assistant si aggiunge con la sola entità. Senza nome vale quello che ha in
+  Home Assistant, l'entità si prende anche da un testo incollato col nome
+  accanto, e invece di «Telecamera non valida» l'avviso dice cosa manca. Il
+  campo dell'indirizzo RTSP è segnato come facoltativo.
+- **Home Assistant:** tutto quello delle 1.18.7.17–1.18.7.30, qui sotto
+  (Casa 3D, pianta dalle foto, catasto e DWG, Colpo d'occhio, ricarica
+  notturna, Musica sul pannello da 4 pollici).
+
+## 1.18.7.30
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Casa 3D, il riconoscitore degli arredi sul telefono:** «ci ha messo un
+  sacco di tempo e poi non è riuscito». Il modello che riconosce gli arredi
+  nelle foto delle stanze (21,7 MB) non passava dal filo dell'app, che
+  chiude oltre i 16 MB a messaggio, e da fuori casa nemmeno dal centralino:
+  la stessa storia del lettore DWG. Ora arriva a pezzi da 3 MB, uno alla
+  volta, e la clessidra dice quanto manca («12 di 36 MB»): la prima volta
+  sono 36 MB, poi l'app li tiene. Il riconoscimento gira in un lavoratore a
+  parte, così la procedura resta libera e si tocca mentre guarda le foto. Se
+  il riconoscitore non arriva, sotto l'avviso c'è la causa vera e il tasto
+  «Riprova», che lo richiede e riguarda le foto rimaste senza.
+- **Casa 3D, la planimetria disegnata al computer:** «hai fatto male la
+  planimetria». Il disegno esportato da un CAD (muri di fuori tratteggiati,
+  tramezzi a doppia riga, porte ad arco, finestre numerate, la scala, i
+  balconi) passava per una pianta a muri pieni e ne uscivano una stanza e
+  nessuna porta. Ora la pianta sceglie da sola come leggersi, da quante
+  stanze ne vengono; sul disegno a righe gli archi delle porte diventano
+  porte (e non spezzano più le stanze in stanzine), le finestre si
+  riconoscono dal vetro disegnato nel muro, la scala dai gradini (il vano
+  resta una stanza, con la scala dentro) e i balconi, chiusi solo da un
+  parapetto fuori dai muri, restano fuori. Sulla pianta di prova: due
+  appartamenti, dodici ambienti, undici porte, tredici finestre, la scala.
+- **Casa 3D, il disimpegno con le quattro porte:** «ci sono 4 porte e tu
+  hai fatto un macello». Nel disegno a righe il riconoscitore prendeva per
+  porte due varchi che porte non sono: quello fra il capo di un tramezzo e il
+  pilastro in fila con lui, e quello fra due capi di muro visti di traverso.
+  Il disimpegno veniva spezzato in tre pezzi, con porte finte e un angolo
+  senza stanza. Ora due capi di muro in fila chiudono una porta solo se sono
+  lo stesso muro (stesso spessore, stessa faccia), un tramezzo che finisce
+  davanti a un altro muro solo se quel muro lo copre da tutte e due le parti,
+  e in un disegno che disegna le porte ad arco un varco senza arco è un
+  passaggio: le due parti sono la stessa stanza. Il disimpegno è una stanza
+  sola, con le sue cinque porte. E il quadrato nero davanti a una porta
+  «che non c'è»: era la rientranza di 90 cm dove l'anta si apre, troppo
+  piccola per la squadratura delle stanze, che la faceva muro; ora resta
+  pavimento. La porta stessa è profonda quanto il muro, non un blocco di 70
+  cm fra i due muri di fianco. La pianta si legge sempre a 2400 pixel di
+  lato: quella piccola (il PNG del CAD a 1200) si ingrandisce prima, perché
+  con meno di due pixel per cella le righe sottili e gli archi si perdevano
+  e la stessa pianta veniva diversa da un telefono all'altro.
+- **Casa 3D, eliminare un piano già fatto:** «come faccio ad eliminare un
+  piano fatto?». Non si poteva: nel Config accanto a ogni piano c'era solo
+  «Modifica». Ora c'è anche 🗑️, con la domanda prima: il piano se ne va con
+  le sue stanze, gli arredi e i dispositivi, gli altri piani restano; senza
+  piani la scheda torna a «Crea la tua casa».
+
+## 1.18.7.29
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Casa 3D, la pianta dalle foto delle stanze:** la terza strada, accanto
+  alla planimetria (foto, PDF, DWG) e al disegno a mano. Niente planimetria
+  e niente misure: si elencano le stanze (quelle di Home Assistant sono già
+  lì) e per ognuna si aggiungono le foto, intere, scattate dalla porta o
+  dalla parete opposta. Le misure vengono dalle cose di misura nota che il
+  riconoscitore vede (il forno da incasso è largo 60 cm, la lavastoviglie
+  60, il WC 37, il condizionatore 85, il comodino 50) e dalla focale che il
+  telefono scrive nella foto: due foto per stanza, una verso una parete e
+  una verso quella di fianco, danno larghezza e profondità; quello che non
+  torna si corregge a mano, e senza cose note restano le misure di serie del
+  tipo di stanza. Le stanze si dispongono da sole in una pianta compatta,
+  con le porte fra una stanza e l'altra, una finestra per stanza e la porta
+  di casa; da lì si passa dai Muri come con qualunque planimetria, con gli
+  arredi e i dispositivi delle foto già al loro posto. Si trascina una
+  stanza sopra un'altra per scambiarle di posto.
+- **Un'entità per ogni cosa riconosciuta:** accanto a una lampada a stelo,
+  un frigorifero, un microonde, una TV o un elettrodomestico visti nella foto
+  c'è il tasto ⚡, che ne fa un dispositivo da collegare a un'entità di Home
+  Assistant (la lampada una luce, frigo e microonde una presa).
+
+## 1.18.7.28
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Casa 3D, la pianta da una foto:** la scala si trova da sola dallo
+  spessore dei muri esterni, e si può andare avanti senza segnare nessuna
+  misura. Una quota scritta in centimetri («1092») o con la virgola al
+  posto sbagliato si legge giusta (10,92 metri), e se la misura non torna
+  coi muri lo dice, invece di dare una casa a striscia con un solo ambiente.
+  Una foto troppo storta per essere raddrizzata resta com'è, senza
+  stirarla.
+- **Plancia a muro sul 4 pollici, la Musica:** il nome del lettore si
+  legge intero (prima finiva sotto il tasto «Scegli»), Scegli, Radio e
+  Gruppo stanno in colonna sulla destra, tutti dentro lo schermo, e tornano i
+  preferiti del lettore, in una fila che scorre.
+- **Ricarica notturna, «Ci arriva?» con la batteria vera:** quando evcc non
+  sa quanto e' carica l'auto dice 0%, e il conto partiva da zero («No: alle
+  05:00 sara' al 40%» con l'auto al 46%). Ora vale la batteria dell'auto, la
+  stessa della pagina Auto.
+- **Ricarica notturna, la potenza dalla wallbox di evcc:** il conto usa il
+  massimo impostato su evcc (la corrente massima per le fasi), senza niente
+  da scrivere; il campo a mano c'e' solo se evcc non lo dice.
+
+## 1.18.7.27
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **La foto della pianta dell'architetto coincide con la casa:** il foglio
+  fotografato di sbieco si raddrizza anche in prospettiva (non solo
+  girandolo), e i muri si leggono solo dove il grigio e' pieno. Sanitari,
+  scale, piastrelle, scritte, quote e l'albero non diventano piu' muri; il
+  riquadro col nome di una stanza non la spezza in due.
+- **Porte, finestre e tramezzi dalla pianta:** il vetro disegnato nel vano
+  fa la finestra, il vano vuoto la porta; i tramezzi sottili (anche a due
+  righe) chiudono il bagno e separano le camere. Le stanzine (l'antibagno)
+  restano stanze, con le loro porte; verso il portico a piastrelle la
+  finestra e' una portafinestra; dove la pianta e' aperta (il corridoio
+  sotto la scala) non compare un muro.
+- **Le scale si riconoscono:** i gradini disegnati fra due muri diventano
+  una scala nella Casa 3D, che sale verso il lato chiuso. La scala si puo'
+  anche mettere a mano con «Arreda».
+- **Elettrodomestici a mano nella Casa 3D:** lavatrice, asciugatrice,
+  lavastoviglie e forno si inseriscono a mano e mostrano quando lavorano;
+  le foto delle stanze riconoscono piu' cose.
+- **Ricarica notturna, «Ci arriva?»:** dice se l'auto arriva alla
+  percentuale impostata entro la fine della fascia, e a che ora; se non ci
+  arriva, a quanto sara'. La potenza della wallbox si legge mentre carica o
+  si scrive una volta.
+- **Auto, Energia di oggi:** i km percorsi oggi e il consumo di oggi.
+- **Colpo d'occhio:** il Config della sua plancia e' solo il suo.
+
 ## 1.18.7.26
 
 _Solo Home Assistant: l'app sul telefono non cambia._

@@ -73,14 +73,16 @@ export const SUPERFICI_CON_IMMAGINE = Object.freeze([
   }),
   Object.freeze({
     chiave: "stanze",
-    pagine: Object.freeze(["page-stanze", "page-temp"]),
+    pagine: Object.freeze(["page-stanze", "page-temp", "page-home"]),
     nome: Object.freeze({ it: "Stanze", en: "Rooms" }),
     sezione: "rooms",
     chiaveDellaVoce: "id",
-    /* La stessa stanza e' due card: la tessera delle Stanze e quella della
-     * Temperatura. L'immagine e' una, della stanza. */
-    selettore: ".dm-stanze-tessera[data-dm-stanza],.temp-card[data-room-id]",
-    attributi: Object.freeze(["data-dm-stanza", "data-room-id"]),
+    /* La stessa stanza e' tre card: la tessera delle Stanze, quella della
+     * Temperatura e quella delle stanze in Home (#348: «le stanze nella home
+     * non hanno l'immagine di sfondo»). L'immagine e' una, della stanza. */
+    selettore:
+      ".dm-stanze-tessera[data-dm-stanza],.temp-card[data-room-id],.dm-stanza-plancia[data-dm-stanza-plancia]",
+    attributi: Object.freeze(["data-dm-stanza", "data-room-id", "data-dm-stanza-plancia"]),
   }),
   Object.freeze({
     chiave: "elettrodomestici",

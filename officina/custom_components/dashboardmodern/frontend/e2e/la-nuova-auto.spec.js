@@ -280,6 +280,15 @@ async function avvia(page, testInfo, { tema = "dark", nuova = true, attiva = "0"
             risultato = Object.fromEntries(
               messaggio.entity_ids.map((id) => {
                 const base = Number(elenco.find((uno) => uno.entity_id === id)?.state) || 0;
+                /* Il contachilometri sale: a mezzanotte segnava 57 km in meno. */
+                if (id.includes("odometro"))
+                  return [
+                    id,
+                    [
+                      { s: String(base - 57), lu: da / 1000 },
+                      { s: String(base), lu: a / 1000 - 60 },
+                    ],
+                  ];
                 const righe = [];
                 for (let t = da, i = 0; t <= a; t += passo, i += 1)
                   righe.push({
@@ -590,6 +599,9 @@ test("viaggi e stato dell'auto", async ({ page }, testInfo) => {
   await pagina.locator('[data-na-linguetta="viaggi"]').click();
   await expect(pagina.locator(".dm-na-storico .dm-na-colonna")).toHaveCount(7);
   await expect(pagina).toContainText("Energia di oggi");
+  /* «In Energia di oggi deve mettere anche i km effettuati» */
+  await expect(pagina.locator(".dm-na-oggi-km")).toContainText("Percorsi oggi");
+  await expect(pagina.locator(".dm-na-oggi-km")).toContainText("57");
   await nienteSborda(page);
   await foto(page, `viaggi-dark-${testInfo.project.name}`);
   await pagina.locator('[data-na-linguetta="stato"]').click();

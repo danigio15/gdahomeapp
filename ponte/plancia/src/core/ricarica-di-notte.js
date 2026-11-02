@@ -70,6 +70,9 @@ export const IMPOSTAZIONI_DI_SERIE = Object.freeze({
   poi: "off",
   giorni: Object.freeze([true, true, true, true, true, true, true]),
   sotto: 100,
+  /* La potenza della wallbox in kW, per dire se ci si arriva: 0 = quella vista
+   * mentre carica. */
+  kw: 0,
 });
 
 /* Quanto si aspetta che evcc dica di aver cambiato modalita', prima di
@@ -124,6 +127,10 @@ export function impostazioniPulite(dato) {
     /* Fra il 5 e il 100: sotto il 5% non c'e' niente da decidere, e il 100
      * vuol dire «parte sempre». */
     sotto: Number.isFinite(sotto) ? Math.max(5, Math.min(100, sotto)) : IMPOSTAZIONI_DI_SERIE.sotto,
+    kw: (() => {
+      const k = Number(pulito(d.kw).replace(",", "."));
+      return Number.isFinite(k) && k >= 1 && k <= 50 ? Math.round(k * 10) / 10 : 0;
+    })(),
   };
 }
 
@@ -365,6 +372,17 @@ export function letturaDellAuto(entita, stati) {
     }
     return null;
   };
+  /* «Come fa a dire di no se ora sta al 46%?» evcc, quando non sa quanto
+   * e' carica l'auto (un'auto senza collegamento), dice 0%: uno zero di uno
+   * non vale se un altro sensore della batteria (quello dell'auto, lo stesso
+   * della pagina Auto) dice di piu'. */
+  const laBatteria = (elenco) => {
+    const valori = (elenco || [])
+      .map((id) => percentuale(di(id)))
+      .filter((v) => v !== null && v !== undefined);
+    if (!valori.length) return null;
+    return valori[0] === 0 ? (valori.find((v) => v > 0) ?? 0) : valori[0];
+  };
   const modoStato = di(entita?.modo);
   const modo = modoStato && !MUTO.test(pulito(modoStato.state)) ? pulito(modoStato.state) : "";
   const opzioni = Array.isArray(modoStato?.attributes?.options)
@@ -390,11 +408,51 @@ export function letturaDellAuto(entita, stati) {
   return {
     modo,
     opzioni,
-    soc: primo(entita?.soc, percentuale),
+    soc: laBatteria(entita?.soc),
     limite: primo(entita?.limite, percentuale),
     collegata,
     kwh: primo(entita?.energia, kilowattora),
   };
+}
+
+/* ── la potenza della wallbox, da evcc ───────────────────────────────────── */
+
+/**
+ * «Non mi deve far impostare a me il valore: deve considerare il massimo
+ * impostato su evcc; se non c'e' evcc, allora si mette a mano.»
+ *
+ * La potenza piu' alta con cui evcc carica su questo punto di ricarica: la
+ * corrente massima (`number.evcc_<punto>_max_current`, o come la chiama
+ * l'integrazione) per le fasi (quelle attive, o quelle impostate, o una) per
+ * 230 V. Torna `{ kw, ampere, fasi }`, o `null` se evcc non c'e' o non lo
+ * dice.
+ */
+export function potenzaMassimaDiEvcc(modo, stati, { volt = 230 } = {}) {
+  const p = prefissoDiEvcc(modo);
+  if (!p) return null;
+  const tutti =
+    typeof stati === "function"
+      ? null
+      : Object.keys(stati || {}).filter((id) => id.split(".")[1]?.startsWith(p));
+  if (!tutti || !tutti.length) return null;
+  const valore = (id) => {
+    const n = Number(String(stati[id]?.state ?? "").replace(",", "."));
+    return Number.isFinite(n) ? n : null;
+  };
+  const coda = (id) => id.split(".")[1].slice(p.length);
+  const trova = (forma) => tutti.filter((id) => forma.test(coda(id)));
+  const ampere = trova(/^max_?current$/)
+    .map(valore)
+    .find((n) => n !== null && n > 0);
+  if (!ampere) return null;
+  const attive = trova(/^phases_?active$/)
+    .map(valore)
+    .find((n) => n === 1 || n === 2 || n === 3);
+  const impostate = trova(/^phases(_?configured)?$/)
+    .map(valore)
+    .find((n) => n === 1 || n === 3);
+  const fasi = attive || impostate || 1;
+  return { kw: Math.round((ampere * volt * fasi) / 100) / 10, ampere, fasi };
 }
 
 /* ── il prezzo ───────────────────────────────────────────────────────────── */
@@ -609,5 +667,47 @@ export function laNotte({ impostazioni, memoria, auto = {}, adesso, prezzo = nul
     },
     comando: stessoModo(modo, lettura.modo) ? null : { modo },
     perche: "parte",
+  };
+}
+
+/* ── ci arriva? ──────────────────────────────────────────────────────────── */
+
+/**
+ * «Se attivo la ricarica notturna mi devi dire se la vettura riesce ad
+ * arrivare alla percentuale che ho impostato.»
+ *
+ * Entrano la batteria adesso e il limite (in %), la capacita' della batteria
+ * (kWh), la potenza della ricarica (kW) e la finestra (`inizio`, `fine`, in
+ * millisecondi; se la ricarica e' gia' cominciata `inizio` e' adesso). Si
+ * conta un rendimento del 90%: dalla presa alla batteria qualcosa si perde.
+ *
+ * Torna `{ esito, alle, percentuale, minuti }`:
+ *   - "gia"     la batteria e' gia' al limite;
+ *   - "si"      ci arriva, `alle` e' quando;
+ *   - "no"      non ci arriva: alla fine sara' a `percentuale`, e per il
+ *               limite servirebbero `minuti`;
+ *   - "nonso"   manca qualcosa per dirlo (batteria, limite, potenza o capacita').
+ */
+export function ciArriva({ soc, limite, capacita, kw, inizio, fine, rendimento = 0.9 } = {}) {
+  const n = (v) => (v === null || v === undefined || v === "" ? null : Number(v));
+  const s = n(soc),
+    l = n(limite),
+    c = n(capacita),
+    p = n(kw),
+    a = n(inizio),
+    b = n(fine);
+  if (![s, l].every(Number.isFinite)) return { esito: "nonso" };
+  if (s >= l - 0.5) return { esito: "gia", percentuale: s };
+  if (![c, p, a, b].every(Number.isFinite) || c <= 0 || p <= 0 || b <= a) return { esito: "nonso" };
+  const kwhServono = ((l - s) / 100) * c;
+  const minuti = Math.ceil((kwhServono / (p * rendimento)) * 60);
+  const disponibili = (b - a) / 60000;
+  if (minuti <= disponibili) return { esito: "si", alle: a + minuti * 60000, minuti };
+  const arrivati = (p * rendimento * (disponibili / 60) * 100) / c;
+  return {
+    esito: "no",
+    percentuale: Math.min(l, Math.floor(s + arrivati)),
+    minuti,
+    alle: b,
   };
 }

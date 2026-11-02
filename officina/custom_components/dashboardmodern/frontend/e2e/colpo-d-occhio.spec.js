@@ -426,6 +426,43 @@ test("le telecamere riservate non si vedono quando in casa c'e' qualcuno", async
   await expect(tela.locator('.oc-cam[data-oc-cam="camera.ingresso"]')).toHaveCount(0);
 });
 
+/* «Quando apro le telecamere ogni secondo si aprono e si chiude il popup.»
+ * L'orologio dentro il popup cambia ogni secondo, e al primo stato nuovo della
+ * casa la pagina credeva che qualcuno avesse riscritto il popup al posto suo:
+ * lo riscriveva da capo, con l'animazione d'apertura. Il popup deve restare
+ * lo stesso nodo mentre l'orologio corre e la casa cambia. */
+test("il popup delle telecamere resta aperto mentre l'orologio corre e la casa cambia", async ({
+  page,
+}, testInfo) => {
+  await boot(page, testInfo);
+  const tela = page.locator("#dm-occhio");
+  await tela.locator('.oc-riquadro[data-tipo="telecamere"]').click();
+  await expect(tela.locator(".oc-cam").first()).toBeVisible({ timeout: 10_000 });
+  await page.evaluate(() => {
+    window.__finestra = document.querySelector("#dm-occhio .oc-finestra");
+  });
+  for (let giro = 0; giro < 4; giro += 1) {
+    /* un secondo d'orologio, poi un sensore della casa che cambia */
+    await page.waitForTimeout(1100);
+    await page.evaluate((giro) => {
+      const stato = {
+        entity_id: "sensor.prova_battito",
+        state: String(giro),
+        attributes: {},
+      };
+      _RAW_STATES["sensor.prova_battito"] = stato;
+      window.__HASS__.states["sensor.prova_battito"] = stato;
+      window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
+    }, giro);
+  }
+  await page.waitForTimeout(400);
+  const stessa = await page.evaluate(
+    () => window.__finestra === document.querySelector("#dm-occhio .oc-finestra"),
+  );
+  expect(stessa, "il popup e' stato riscritto da capo").toBe(true);
+  await expect(tela.locator("[data-oc-orologio]").first()).not.toHaveText("");
+});
+
 test("con GdAHome Base la plancia resta quella di sempre, e la scheda del Config e' chiusa", async ({
   page,
 }, testInfo) => {
@@ -450,6 +487,36 @@ test("con GdAHome Base la plancia resta quella di sempre, e la scheda del Config
     await page.waitForTimeout(300);
     await page.locator("#editor-modal").screenshot({ path: dove, animations: "disabled" });
   }
+});
+
+/* «Anche il Config del Colpo d'occhio deve essere solo il suo»: come la Casa
+ * 3D, sulla sua plancia il Config — dal ⚙ o dal menu dell'app — e' solo la
+ * scheda Colpo d'occhio, senza le schede della plancia classica. */
+test("sulla plancia Colpo d'occhio il Config e' solo il suo", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "basta una misura");
+  await page.addInitScript(() => {
+    window.__DASHBOARDMODERN_PROFILE__ = "occhio_ingresso";
+  });
+  await boot(page, testInfo);
+  await page.locator('#dm-occhio [data-oc="config"]').click();
+  await expect(page.locator("#ed-body .dm-oc-ed")).toBeVisible({ timeout: 20_000 });
+  await expect(page.locator('.ed-tab[data-tab="occhio"]')).toHaveClass(/active/);
+  await expect(page.locator("#editor-modal .ed-tabs")).toBeHidden();
+  await expect(page.locator("#editor-modal .dm-cerca-config")).toBeHidden();
+  const dove = foto(testInfo, "occhio-config-solo");
+  if (dove) {
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: dove, animations: "disabled" });
+  }
+  /* chiuso e riaperto dal menu dell'app: sempre e solo il suo */
+  await page.evaluate(
+    () =>
+      window.closeEditor?.() ||
+      document.querySelector("#editor-modal .ed-close, #editor-modal [data-ed-close]")?.click(),
+  );
+  await page.evaluate(() => window.apriConfigEntita?.());
+  await expect(page.locator("#ed-body .dm-oc-ed")).toBeVisible({ timeout: 20_000 });
+  await expect(page.locator("#editor-modal .ed-tabs")).toBeHidden();
 });
 
 test("spenta, la plancia resta quella di sempre", async ({ page }, testInfo) => {

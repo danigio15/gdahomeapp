@@ -16,6 +16,8 @@ import {
   espandiGriglia,
   ricampiona,
   statoDelDispositivo,
+  faseDellElettrodomestico,
+  ELETTRODOMESTICI_3D,
 } from "../src/core/casa-3d.js";
 
 function griglia(W, H) {
@@ -230,4 +232,30 @@ test("si conta quanti dispositivi sono collegati", () => {
   });
   assert.deepEqual(contaCollegati(c), { tutti: 3, collegati: 1, mancano: 2 });
   assert.equal(dispositivoPulito({ k: "telecamera", fov: 500 }).fov, 180);
+});
+
+/* «Asciugatrice e lavastoviglie mi sembra che non c'e' da poter inserire» */
+test("gli elettrodomestici: si inseriscono e dicono se lavorano", () => {
+  assert.deepEqual([...ELETTRODOMESTICI_3D].sort(), [
+    "asciugatrice",
+    "forno",
+    "lavastoviglie",
+    "lavatrice",
+  ]);
+  const st = (state, attributes = {}) => ({ state, attributes });
+  assert.equal(faseDellElettrodomestico(st("1250", { unit_of_measurement: "W" })), "lavora");
+  assert.equal(faseDellElettrodomestico(st("2", { unit_of_measurement: "W" })), "fermo");
+  assert.equal(faseDellElettrodomestico(st("Running")), "lavora");
+  assert.equal(faseDellElettrodomestico(st("in funzione")), "lavora");
+  assert.equal(faseDellElettrodomestico(st("Program finished")), "finito");
+  assert.equal(faseDellElettrodomestico(st("off")), "fermo");
+  assert.equal(faseDellElettrodomestico(st("35", { unit_of_measurement: "min" })), "lavora");
+  const lavora = statoDelDispositivo("asciugatrice", st("on"));
+  assert.equal(lavora.attivo, true);
+  assert.match(lavora.testo, /in funzione/);
+  assert.equal(statoDelDispositivo("lavastoviglie", st("finished")).tono, "ok");
+  assert.equal(
+    statoDelDispositivo("lavastoviglie", st("finished"), false).testo.includes("done"),
+    true,
+  );
 });

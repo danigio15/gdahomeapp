@@ -1629,8 +1629,15 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 519: `core/cartella-della-plancia.js` (i file di legacy/vendor con l'impronta).
   // 520: `core/piante-nel-foglio.js` (le piante e la scala del foglio del catasto).
   // LibreDWG non conta: si legge solo quando si sceglie un file DWG.
+  // 522 con la pianta dalle foto delle stanze: `core/la-focale-della-foto.js`
+  // (la focale dall'EXIF) e `core/stanze-dalle-foto.js` (misure, disposizione
+  // e griglia delle stanze). ONNX Runtime e il modello non contano: si
+  // leggono solo quando arriva una foto.
+  // 524 con la pianta disegnata al computer: `core/archi-delle-porte.js` (gli
+  // archi delle porte) e `core/finestre-nei-muri.js` (le finestre dal vetro
+  // disegnato nel muro).
   assert.ok(
-    relative.length <= 520,
+    relative.length <= 524,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

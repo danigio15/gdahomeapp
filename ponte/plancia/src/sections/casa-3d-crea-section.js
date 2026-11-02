@@ -3,12 +3,15 @@
  * Dalla foto della planimetria e dalle foto delle stanze alla casa in tre
  * dimensioni, un passo per volta, come nel prototipo approvato:
  *
- *   1. Planimetria — la foto (anche storta: si raddrizza da sola) e il piano;
+ *   1. Planimetria — la foto (anche storta: si raddrizza da sola), il PDF, il
+ *      DWG, le misure a mano, o le foto delle stanze (che fanno la pianta da
+ *      sole), e il piano;
  *   2. Scala — due punti di una misura nota;
  *   3. Muri — riconosciuti, e ritoccati a mano (muro, gomma, porta, finestra);
  *   4. Stanze — i nomi, dalle aree di Home Assistant o scritti a mano;
  *   5. Foto stanze — gli arredi e i dispositivi riconosciuti sul dispositivo
- *      (COCO-SSD), o segnati a mano, con il verso e i colori della foto;
+ *      (D-FINE su Objects365), o segnati a mano, con il verso e i colori
+ *      della foto, e per ognuno l'entita' di Home Assistant;
  *   6. Dispositivi — ognuno con la sua entita', e quelli da aggiungere senza foto;
  *   7. Esterno — villa o palazzo, piani, tetto, i colori della facciata;
  *   8. Casa 3D — si salva, e si apre; o si aggiunge un altro piano.
@@ -32,12 +35,14 @@ import {
   entitaProposta,
 } from "../core/casa-3d.js";
 import {
+  ALTEZZA_DA_ARREDO,
+  ARREDI_CON_ENTITA,
   ARREDI_DELLE_FOTO,
   aggiungiPiano,
   areeDaiRegistri,
   dispositiviDallaFoto,
   entitaUsate,
-  oggettiDaCoco,
+  oggettiDallaFoto,
   pianoDaRiconoscimento,
   pianoDelLivello,
   posaDiRipiego,
@@ -45,12 +50,29 @@ import {
 } from "../core/crea-casa.js";
 import {
   PASSO,
-  grigliaDeiMuri,
+  grigliaDallaFoto,
   inchiostro,
+  prospettiva,
+  raddrizza,
   riconosciDaFoto,
+  scalaDaiMuri,
   scalaScritta,
   stimaInclinazione,
 } from "../core/pianta-da-foto.js";
+import { focaleDallaFoto } from "../core/la-focale-della-foto.js";
+import {
+  MISURA_MASSIMA,
+  MISURA_MINIMA,
+  MISURE_DI_SERIE,
+  MISURE_NOTE,
+  disponiLeStanze,
+  finestreDelleStanze,
+  grigliaDalleStanze,
+  misureDellaStanza,
+  porteFraLeStanze,
+  stanzeRitrovate,
+  tipoDellaStanza,
+} from "../core/stanze-dalle-foto.js";
 import {
   BIANCO_ATTORNO,
   pianteNelFoglio,
@@ -67,7 +89,7 @@ import {
   pianiDelDisegno,
   ruoloDelloStrato,
 } from "../core/pianta-da-dwg.js";
-import { daiVendor } from "../core/cartella-della-plancia.js";
+import { cartellaDellaPlancia, daiVendor } from "../core/cartella-della-plancia.js";
 import { leStanzeRicordate } from "../core/le-stanze-di-home-assistant.js";
 import { premiumDellaCasa, premiumRicordato } from "./plancia-a-muro-section.js";
 import { puoConfigurare } from "./la-config-e-di-chi-la-amministra-section.js";
@@ -139,30 +161,10 @@ const COLORI_STANZE = [
   "#4ade80",
   "#e879f9",
 ];
-const ARREDI_A_MANO = [
-  "divano",
-  "poltrona",
-  "tavolino",
-  "tv",
-  "libreria",
-  "madia",
-  "pensile",
-  "quadro",
-  "camino",
-  "pianta",
-  "pranzo6",
-  "cucina",
-  "frigo",
-  "matrimoniale",
-  "singolo",
-  "armadio",
-  "scrivania",
-  "vasca",
-  "doccia",
-  "wc",
-  "lavabo",
-  "lavatrice",
-];
+/* Tutto il catalogo si puo' segnare a mano nella foto: «non e' possibile
+ * aggiungere manualmente gli elettrodomestici» — quello che il riconoscitore
+ * non vede (lavastoviglie, asciugatrice, armadi...) lo mette chi guarda. */
+const ARREDI_A_MANO = Object.keys(ARREDI_DELLE_FOTO);
 const TINTE = {
   facciata: ["#e9d4ae", "#dca37c", "#f1ebe0", "#c9a27a", "#b9c3c9"],
   persiane: ["#3f6b4e", "#8a6a4a", "#475569", "#e5e7eb", "#7c2d12"],
@@ -216,6 +218,28 @@ function statoNuovo(salvata, livello = 0) {
     /* «Disegnala qui»: le misure del contorno, in metri. */
     aMano: { w: "", h: "" },
     inizio: null,
+    /* «Dalle foto delle stanze»: la terza strada. Le stanze elencate (con
+     * nome, area, tipo e misure), le loro foto con un id provvisorio finche'
+     * la pianta non c'e', e la vista (pianta o foto) sulla tela. */
+    fonte: "",
+    stanzeFoto: [],
+    prossimaStanza: 1,
+    fotoDelleStanze: {},
+    vistaFoto: false,
+    sfOrdinata: false,
+    sfTrascino: null,
+    sfDisposte: [],
+    /* foto, nomi e aree di prima di entrare nella strada delle foto, per
+     * tornare indietro con «Le altre strade»; e quante foto sta ancora
+     * guardando il riconoscitore */
+    primaDelleFoto: null,
+    fotoInCorso: 0,
+    /* il riconoscitore: quanto e' arrivato ({fatti, totale} in byte) mentre
+     * si scarica, e perche' non e' disponibile (la causa, e se e' lo
+     * scarico che non e' riuscito) */
+    caricamento: null,
+    perche: "",
+    nonScaricato: false,
   };
 }
 
@@ -234,34 +258,50 @@ function registri() {
 
 /* ── il riconoscitore, quando serve ──────────────────────────────────────
  *
- * TensorFlow.js e COCO-SSD stanno in `legacy/vendor/riconoscere/`: venti
- * mega fra codice e modello, che si leggono solo la prima volta che qualcuno
- * aggiunge la foto di una stanza. Se non arrivano, la procedura va avanti lo
- * stesso: gli oggetti si segnano a mano. */
+ * ONNX Runtime e D-FINE stanno in `legacy/vendor/riconoscere/`: trentasei
+ * mega fra codice, WebAssembly e modello, che si leggono solo la prima volta
+ * che qualcuno aggiunge la foto di una stanza. Se non arrivano, la procedura
+ * va avanti lo stesso: gli oggetti si segnano a mano. */
 /* Servita dal ponte la cartella si ricava dal nostro indirizzo, senza la
  * versione (come le figure delle persone): impacchettati, i moduli stanno in
  * `pacco/` e un percorso relativo sbaglierebbe piano. Fuori dal ponte vale il
  * percorso dei sorgenti. */
-const TF = (() => {
+const ORT = (() => {
   try {
-    return new URL("../../legacy/vendor/riconoscere/tf.min.js", import.meta.url).href;
+    return new URL("../../legacy/vendor/riconoscere/ort.wasm.min.js", import.meta.url).href;
   } catch (_errore) {
-    return "../../legacy/vendor/riconoscere/tf.min.js";
-  }
-})();
-const COCO = (() => {
-  try {
-    return new URL("../../legacy/vendor/riconoscere/coco-ssd.min.js", import.meta.url).href;
-  } catch (_errore) {
-    return "../../legacy/vendor/riconoscere/coco-ssd.min.js";
+    return "../../legacy/vendor/riconoscere/ort.wasm.min.js";
   }
 })();
 const VENDOR = daiVendor(
   String(import.meta.url || ""),
   "riconoscere/",
-  TF.slice(0, TF.lastIndexOf("/") + 1),
+  ORT.slice(0, ORT.lastIndexOf("/") + 1),
 );
-void COCO;
+/* la colla fra ONNX Runtime e il suo .wasm: la carica ONNX Runtime stesso,
+ * dalla stessa cartella (qui la si nomina, perche' si sappia che serve) */
+const ORT_COLLA = (() => {
+  try {
+    return new URL("../../legacy/vendor/riconoscere/ort-wasm-simd-threaded.js", import.meta.url)
+      .href;
+  } catch (_errore) {
+    return "../../legacy/vendor/riconoscere/ort-wasm-simd-threaded.js";
+  }
+})();
+void ORT_COLLA;
+/* Il lavoratore in cui gira il modello (legacy/riconoscere-lavoratore.js):
+ * sta accanto ai vendor, e si prende dalla stessa cartella della plancia. */
+const LAVORATORE = (() => {
+  try {
+    return new URL("../../legacy/riconoscere-lavoratore.js", import.meta.url).href;
+  } catch (_errore) {
+    return "../../legacy/riconoscere-lavoratore.js";
+  }
+})();
+const LAVORATORE_SERVITO = (() => {
+  const cartella = cartellaDellaPlancia(String(import.meta.url || ""));
+  return cartella ? `${cartella}legacy/riconoscere-lavoratore.js` : LAVORATORE;
+})();
 
 /* pdf.js (Apache-2.0, vedi legacy/vendor/pdfjs/LEGGIMI.txt): per il PDF del
  * catasto, solo quando si sceglie un PDF. */
@@ -309,26 +349,353 @@ function copione(src, pronto) {
   });
 }
 
+/* «Dalle foto non li riconosce bene e non e' fedele con quanto presente in
+ * casa»: COCO conosceva 80 cose, e di una casa solo divano, letto, tavolo,
+ * TV. Il riconoscitore ora e' D-FINE addestrato su Objects365 (365 cose:
+ * armadi e mensole, comodini, tavolini, lavatrici, condizionatori, quadri,
+ * telecamere...), girato da ONNX Runtime sul dispositivo: le foto restano
+ * qui. Sa la sua lezione su immagini quadrate da 640: la foto si stira cosi',
+ * e i riquadri tornano nelle misure della foto. */
+const LATO = 640;
+
+/* La foto come la vuole il modello: 640×640, un numero fra 0 e 1 per pixel e
+ * per colore, i tre colori uno dopo l'altro. Si prepara nella pagina (il
+ * lavoratore non ha la tela) e pesa cinque mega: si passa, non si copia. */
+function tensoreDellaFoto(img) {
+  const w = img.naturalWidth || img.width,
+    h = img.naturalHeight || img.height;
+  const tela = tela2d(LATO, LATO),
+    g = tela.getContext("2d", { willReadFrequently: true });
+  /* rimpicciolita bene, come quando ha imparato: col filtro basso un
+   * quadro grande gli sfuggiva */
+  g.imageSmoothingEnabled = true;
+  g.imageSmoothingQuality = "high";
+  g.drawImage(img, 0, 0, LATO, LATO);
+  const px = g.getImageData(0, 0, LATO, LATO).data,
+    n = LATO * LATO,
+    dati = new Float32Array(3 * n);
+  for (let i = 0; i < n; i++) {
+    dati[i] = px[i * 4] / 255;
+    dati[n + i] = px[i * 4 + 1] / 255;
+    dati[2 * n + i] = px[i * 4 + 2] / 255;
+  }
+  return { dati, w, h };
+}
+
+/* Da quello che esce dal modello (etichette, riquadri x0 y0 x1 y1 nelle
+ * misure della foto, punteggi) alle cose viste, le piu' sicure prima. */
+function vistiDa({ etichette, riquadri, punti }, nomi, quanti, soglia) {
+  const visti = [];
+  for (let i = 0; i < punti.length; i++) {
+    if (punti[i] < soglia) continue;
+    const [x0, y0, x1, y1] = [0, 1, 2, 3].map((j) => riquadri[i * 4 + j]);
+    const nome = nomi[Number(etichette[i]) - 1];
+    if (!nome || !(x1 > x0 && y1 > y0)) continue;
+    visti.push({ class: nome, score: punti[i], bbox: [x0, y0, x1 - x0, y1 - y0] });
+  }
+  return visti.sort((a, b) => b.score - a.score).slice(0, quanti);
+}
+
+/* Un rilevatore: `gira(dati, w, h)` fa girare il modello — nel lavoratore o
+ * nella pagina — e torna etichette, riquadri e punti. */
+function rilevatore(gira, nomi) {
+  return {
+    async detect(img, quanti = 60, soglia = 0.3) {
+      const { dati, w, h } = tensoreDellaFoto(img);
+      return vistiDa(await gira(dati, w, h), nomi, quanti, soglia);
+    },
+  };
+}
+
+/* ONNX Runtime nella pagina: la riserva, se il lavoratore non parte. Il
+ * WebAssembly gli si da' gia' in mano (`wasmBinary`): nell'app il `.wasm`
+ * chiesto da lui arrivava col tipo sbagliato, e lo chiedeva due volte — la
+ * stessa cosa successa col motore dei DWG. */
+async function rilevatoreInPagina(file) {
+  if (!(await copione(`${VENDOR}ort.wasm.min.js`, () => root.ort)))
+    throw new Error(t("ONNX Runtime non si è caricato", "ONNX Runtime didn't load"));
+  const ort = root.ort;
+  /* un filo solo: i fili in parallelo vogliono una pagina «isolata», che
+   * dentro Home Assistant e nell'app non c'e' */
+  ort.env.wasm.numThreads = 1;
+  ort.env.wasm.wasmPaths = {
+    mjs: `${VENDOR}ort-wasm-simd-threaded.js`,
+    wasm: `${VENDOR}ort-wasm-simd-threaded.wasm`,
+  };
+  ort.env.wasm.wasmBinary = file.motore;
+  const sessione = await ort.InferenceSession.create(new Uint8Array(file.pesi), {
+    executionProviders: ["wasm"],
+    graphOptimizationLevel: "all",
+  });
+  return rilevatore(async (dati, w, h) => {
+    const out = await sessione.run({
+      images: new ort.Tensor("float32", dati, [1, 3, LATO, LATO]),
+      orig_target_sizes: new ort.Tensor(
+        "int64",
+        BigInt64Array.from([BigInt(w), BigInt(h)]),
+        [1, 2],
+      ),
+    });
+    return { etichette: out.labels.data, riquadri: out.boxes.data, punti: out.scores.data };
+  }, file.nomi);
+}
+
+/* Quanto si aspetta il lavoratore: a preparare il modello (un telefono lento
+ * ci mette dieci secondi, e il WebAssembly si compila li') e a guardare una
+ * foto. Passato il tempo e' fermo, e si chiude: un lavoratore muto non si
+ * distingue da uno che sta ancora pensando, e qui non si resta appesi. */
+const ATTESA_PREPARAZIONE = 180_000;
+const ATTESA_FOTO = 120_000;
+
+/* Il modello in un lavoratore a parte: la pagina resta libera, la clessidra
+ * gira e si puo' toccare. Nella pagina, sul telefono, un riconoscimento da
+ * secondi teneva fermo tutto, e il WebView a un certo punto si arrendeva.
+ * Torna null se il lavoratore non parte (allora si prova nella pagina);
+ * `quandoMuore` si chiama se muore dopo, mentre lavora. */
+function rilevatoreNelLavoratore(file, quandoMuore) {
+  if (typeof root.Worker !== "function") return Promise.resolve(null);
+  let lavoratore;
+  try {
+    lavoratore = new root.Worker(LAVORATORE_SERVITO);
+  } catch (_errore) {
+    return Promise.resolve(null);
+  }
+  let prossimo = 1,
+    haParlato = false,
+    pronto = false,
+    morto = null;
+  const attese = new Map();
+  const muore = (errore) => {
+    if (morto) return;
+    morto = errore;
+    for (const a of attese.values()) {
+      clearTimeout(a.orologio);
+      a.no(errore);
+    }
+    attese.clear();
+    try {
+      lavoratore.terminate();
+    } catch (_errore) {}
+    /* morto mentre guardava una foto: non c'e' piu', e si dice */
+    if (pronto) quandoMuore(errore);
+  };
+  lavoratore.onmessage = (ev) => {
+    haParlato = true;
+    const m = ev.data || {},
+      a = attese.get(m.id);
+    if (!a) return;
+    attese.delete(m.id);
+    clearTimeout(a.orologio);
+    if (m.tipo === "errore") a.no(new Error(m.perche || "riconoscitore"));
+    else a.ok(m);
+  };
+  lavoratore.onerror = (ev) => {
+    ev?.preventDefault?.();
+    muore(
+      new Error(
+        ev?.message ||
+          t("Il lavoratore del riconoscitore non parte", "The recognizer worker won't start"),
+      ),
+    );
+  };
+  const chiedi = (messaggio, entro, trasferisci) =>
+    new Promise((ok, no) => {
+      if (morto) return no(morto);
+      const id = prossimo++;
+      const orologio = setTimeout(() => {
+        attese.delete(id);
+        const s = Math.round(entro / 1000);
+        muore(
+          new Error(
+            t(
+              `Il riconoscitore non ha risposto in ${s} s`,
+              `The recognizer didn't answer in ${s} s`,
+            ),
+          ),
+        );
+        no(morto);
+      }, entro);
+      attese.set(id, { ok, no, orologio });
+      try {
+        lavoratore.postMessage({ ...messaggio, id }, trasferisci || []);
+      } catch (errore) {
+        attese.delete(id);
+        clearTimeout(orologio);
+        no(errore);
+      }
+    });
+  return chiedi(
+    {
+      tipo: "carica",
+      ort: `${VENDOR}ort.wasm.min.js`,
+      colla: `${VENDOR}ort-wasm-simd-threaded.js`,
+      wasm: `${VENDOR}ort-wasm-simd-threaded.wasm`,
+      motore: file.motore,
+      pesi: file.pesi,
+    },
+    ATTESA_PREPARAZIONE,
+  ).then(
+    () => {
+      pronto = true;
+      return rilevatore(
+        (dati, w, h) =>
+          chiedi({ tipo: "rileva", dati, lato: LATO, w, h }, ATTESA_FOTO, [dati.buffer]),
+        file.nomi,
+      );
+    },
+    (errore) => {
+      muore(errore);
+      /* mai partito (lo script non e' arrivato): si prova nella pagina.
+       * Partito e poi rotto mentre preparava il modello: nella pagina
+       * andrebbe uguale, e si dice perche' */
+      if (!haParlato) return null;
+      throw errore;
+    },
+  );
+}
+
+const UN_MEGA = 1024 * 1024;
+/* quanto si aspetta un pezzo: tre mega, che da fuori casa, dal centralino,
+ * sono un minuto buono */
+const ATTESA_PEZZO = 90_000;
+
+/* Un file del riconoscitore, con una seconda prova se la prima non va (il
+ * filo dell'app cade e si rialza) e un tempo massimo: senza, un pezzo che non
+ * arriva mai teneva la clessidra a girare per sempre. */
+async function prendi(url, { json = false } = {}) {
+  const nome = url.slice(url.lastIndexOf("/") + 1);
+  let ultimo = null;
+  for (let giro = 0; giro < 2; giro++) {
+    const ctrl = typeof root.AbortController === "function" ? new root.AbortController() : null;
+    const orologio = ctrl ? setTimeout(() => ctrl.abort(), ATTESA_PEZZO) : 0;
+    try {
+      const r = await fetch(url, ctrl ? { signal: ctrl.signal } : undefined);
+      if (!r.ok) {
+        ultimo = new Error(`${nome}: HTTP ${r.status}`);
+        /* un 404 e' un 404 anche la seconda volta */
+        if (r.status === 404) break;
+        continue;
+      }
+      return json ? await r.json() : await r.arrayBuffer();
+    } catch (errore) {
+      const s = ATTESA_PEZZO / 1000;
+      ultimo = ctrl?.signal?.aborted
+        ? new Error(t(`${nome}: nessuna risposta in ${s} s`, `${nome}: no answer in ${s} s`))
+        : errore;
+    } finally {
+      clearTimeout(orologio);
+    }
+  }
+  throw ultimo || new Error(nome);
+}
+
+/* I file del riconoscitore, a pezzi (`pezzi.json`, fatto da
+ * strumenti/spezza-il-riconoscitore.mjs). Nell'app i file della plancia
+ * passano dal filo cifrato uno per messaggio, e l'app oltre i 16 MB a
+ * messaggio chiude il filo; il centralino, da fuori casa, oltre gli 8 in coda.
+ * Il modello intero (21,7 MB) non arrivava mai: «ci ha messo un sacco di
+ * tempo e poi non e' riuscito». A pezzi da tre mega passa, uno alla volta, e
+ * si dice quanto manca. */
+async function scaricaIlRiconoscitore() {
+  const elenco = await prendi(`${VENDOR}pezzi.json`, { json: true });
+  if (!Array.isArray(elenco?.wasm?.pezzi) || !Array.isArray(elenco?.modello?.pezzi))
+    throw new Error(t("L'elenco dei pezzi non torna", "The list of pieces doesn't add up"));
+  const nomi = await prendi(`${VENDOR}obj365.json`, { json: true });
+  const totale = (Number(elenco.modello.byte) || 0) + (Number(elenco.wasm.byte) || 0);
+  let fatti = 0;
+  avanzamento(fatti, totale);
+  const intero = async (parte) => {
+    const tutto = new Uint8Array(Number(parte.byte) || 0);
+    let a = 0;
+    const aMeta = (nome) => new Error(t(`${nome}: arrivato a metà`, `${nome}: arrived incomplete`));
+    for (const nome of parte.pezzi) {
+      const b = new Uint8Array(await prendi(`${VENDOR}${nome}`));
+      if (a + b.length > tutto.length) throw aMeta(nome);
+      tutto.set(b, a);
+      a += b.length;
+      fatti += b.length;
+      avanzamento(fatti, totale);
+    }
+    if (a !== tutto.length) throw aMeta(parte.pezzi[parte.pezzi.length - 1] || "?");
+    return tutto.buffer;
+  };
+  const motore = await intero(elenco.wasm);
+  const pesi = await intero(elenco.modello);
+  return { nomi, motore, pesi };
+}
+
+/* Quanto e' arrivato, scritto nel pannello senza ridisegnarlo tutto: chi sta
+ * scrivendo una misura non perde il campo. */
+function avanzamento(fatti, totale) {
+  const S = state.S;
+  if (!S) return;
+  S.caricamento = totale > 0 ? { fatti, totale } : null;
+  const n = nodo()?.querySelector("[data-c3c-rr]");
+  if (n) n.textContent = testoDelCaricamento();
+  else disegnaIlPannello();
+}
+
+function testoDelCaricamento() {
+  const c = state.S?.caricamento;
+  if (!c)
+    return t(
+      "Preparo il riconoscimento degli oggetti, sul dispositivo…",
+      "Getting object recognition ready, on this device…",
+    );
+  const fatti = Math.floor(c.fatti / UN_MEGA),
+    totale = Math.ceil(c.totale / UN_MEGA);
+  return t(
+    `Scarico il riconoscitore… ${fatti} di ${totale} MB`,
+    `Downloading the recognizer… ${fatti} of ${totale} MB`,
+  );
+}
+
+/* Il riconoscitore non c'e': si dice perche', sotto l'avviso, e si lascia
+ * «Riprova». Dal telefono la console non si vede, e «non e' disponibile qui»
+ * senza una causa era un indovinello. */
+function nonDisponibile(errore, nonScaricato) {
+  root.console?.warn?.("[DashboardModern] Casa 3D: riconoscimento non disponibile", errore);
+  const S = state.S;
+  if (S) {
+    S.riconoscitore = "no";
+    S.perche = perche(errore);
+    S.nonScaricato = nonScaricato === true;
+    S.caricamento = null;
+  }
+  state.modello = null;
+  return null;
+}
+
 function riconoscitore() {
   if (state.modello) return state.modello;
   state.modello = (async () => {
     const S = state.S;
     if (S) {
       S.riconoscitore = "carica";
+      S.perche = "";
+      S.nonScaricato = false;
+      S.caricamento = null;
       disegnaIlPannello();
     }
+    let file;
     try {
-      if (!(await copione(`${VENDOR}tf.min.js`, () => root.tf))) throw new Error("tf");
-      if (!(await copione(`${VENDOR}coco-ssd.min.js`, () => root.cocoSsd)))
-        throw new Error("coco-ssd");
-      const m = await root.cocoSsd.load({ modelUrl: `${VENDOR}model.json` });
-      if (state.S) state.S.riconoscitore = "pronto";
-      return m;
+      file = await scaricaIlRiconoscitore();
     } catch (errore) {
-      root.console?.warn?.("[DashboardModern] Casa 3D: riconoscimento non disponibile", errore);
-      if (state.S) state.S.riconoscitore = "no";
-      state.modello = null;
-      return null;
+      return nonDisponibile(errore, true);
+    }
+    try {
+      /* scaricato: ora «Preparo…», finche' il modello non e' in piedi */
+      avanzamento(0, 0);
+      let modello = await rilevatoreNelLavoratore(file, (errore) => nonDisponibile(errore, false));
+      if (!modello) modello = await rilevatoreInPagina(file);
+      file.motore = file.pesi = null;
+      if (state.S) {
+        state.S.riconoscitore = "pronto";
+        state.S.caricamento = null;
+      }
+      return modello;
+    } catch (errore) {
+      return nonDisponibile(errore, false);
     }
   })();
   return state.modello;
@@ -450,6 +817,8 @@ function disegnaLaTela() {
   if (!S || !sopra) return;
   sopra.innerHTML = "";
   if (S.premium !== true) return vuota("");
+  if (S.passo === P.planimetria && S.fonte === "stanzeFoto")
+    return S.vistaFoto && fotoScelta() ? disegnaFotoStanza() : disegnaPiantaDalleFoto();
   if (S.passo <= P.scala) {
     if (S.dwg) return vuota(t("Scegli il piano del disegno", "Choose the floor from the drawing"));
     if (!S.dritta) return vuota(t("Carica la planimetria", "Upload the floor plan"));
@@ -772,6 +1141,7 @@ const PRIVATO = () =>
 function pPlanimetria() {
   const S = state.S,
     fatti = new Map(S.salvata.piani.map((p) => [p.k, p]));
+  if (S.fonte === "stanzeFoto") return pStanzeDalleFoto();
   const livelli = LIVELLI.map((n) => {
     const L = pianoDelLivello(n),
       gia = fatti.has(L.k);
@@ -820,7 +1190,7 @@ function pPlanimetria() {
       ${S.lavoro ? `<div class="c3c-lavoro">⏳ ${esc(S.lavoro)}</div>` : ""}
       ${S.avviso ? `<div class="c3c-lavoro">⚠️ ${esc(S.avviso)}${S.dettaglio ? `<small class="c3c-dettaglio" translate="no">${esc(S.dettaglio)}</small>` : ""}</div>` : ""}
       ${dwgScelta()}
-      ${S.dritta && !S.dwg ? nota(`✓ ${esc(t("Raddrizzata di", "Straightened by"))} ${esc(numero(Math.abs(S.angolo)))}° · ${S.dritta.width}×${S.dritta.height} px`) : ""}`,
+      ${S.dritta && !S.dwg ? nota(`✓ ${esc(t("Raddrizzata di", "Straightened by"))} ${esc(numero(Math.abs(S.angolo)))}°${S.prospettiva ? ` · ${esc(t("prospettiva corretta", "perspective corrected"))}` : ""} · ${S.dritta.width}×${S.dritta.height} px`) : ""}`,
     ) +
     scheda(
       `✏️ <b>${esc(t("Non hai una planimetria?", "No floor plan?"))}</b>`,
@@ -829,6 +1199,11 @@ function pPlanimetria() {
       <span aria-hidden="true">×</span>
       <label class="c3c-metri"><input class="c3c-in" data-c3c-mano="h" inputmode="decimal" value="${esc(S.aMano.h)}" placeholder="${esc(t("profondità, es. 10", "depth, e.g. 10"))}"> <span>m</span></label></div>
       <button type="button" class="c3c-carica c3c-carica-piccola" data-c3c="amano"${misureAMano() ? "" : " disabled"}><b>✏️</b>${esc(t("Disegnala qui", "Draw it here"))}</button>`,
+    ) +
+    scheda(
+      `📷 <b>${esc(t("Crea dalle foto delle stanze", "Create from room photos"))}</b>`,
+      `${nota(esc(t("Niente planimetria e niente misure: fotografa ogni stanza intera e la pianta viene da sé, con gli arredi e i dispositivi visti nelle foto.", "No floor plan and no measurements: photograph each room whole and the plan comes by itself, with the furniture and devices seen in the photos.")))}
+      <button type="button" class="c3c-carica" data-c3c="dallefoto"><b>📷</b>${esc(t("Dalle foto delle stanze", "From room photos"))}<span class="c3c-piccolo">${esc(t("le misure dalle cose di misura nota (forno, WC, condizionatore...); ogni stanza si corregge a mano", "sizes from things of known size (oven, toilet, air conditioner...); each room can be adjusted by hand"))}</span></button>`,
     ) +
     scheda(
       `💡 <b>${esc(t("Consigli", "Tips"))}</b>`,
@@ -843,6 +1218,22 @@ function pPlanimetria() {
   );
 }
 
+function notaDellaScala(S) {
+  const auto = S.mppMuri && S.mpp === S.mppMuri,
+    cm = S.scalaAvviso,
+    metri = S.metri ? numero(S.centimetri ? S.metri / 100 : S.metri, 2) : "";
+  if (cm)
+    return nota(
+      `⚠️ ${esc(t(`Con questa misura i muri esterni sarebbero spessi ${cm} cm: controlla la misura, in metri (10,92 e non 1092).`, `With this length the outer walls would be ${cm} cm thick: check the length, in metres (10.92, not 1092).`))}`,
+    );
+  if (S.centimetri) return nota(esc(t(`Letta come ${metri} metri.`, `Read as ${metri} metres.`)));
+  if (auto)
+    return nota(
+      `✓ ${esc(t("Scala trovata dallo spessore dei muri: puoi andare avanti, o segnare una misura per essere più preciso.", "Scale found from the wall thickness: you can go on, or mark a length to be more precise."))}`,
+    );
+  return "";
+}
+
 function pScala() {
   const S = state.S;
   return (
@@ -851,7 +1242,8 @@ function pScala() {
       `${nota(esc(t("Tocca i due estremi di una misura che conosci: una quota scritta, un muro, una porta (di solito 80 cm).", "Tap both ends of a length you know: a written dimension, a wall, a door (usually 80 cm).")))}
       ${nota(S.punti.length === 2 ? `✓ ${esc(t("Due punti scelti", "Two points chosen"))}` : esc(t(`Punti: ${S.punti.length} di 2`, `Points: ${S.punti.length} of 2`)))}
       <label class="c3c-metri"><input class="c3c-in" data-c3c-metri inputmode="decimal" value="${S.metri ? esc(numero(S.metri, 2)) : ""}" placeholder="${esc(t("es. 4,20", "e.g. 4.20"))}"> <span>${esc(t("metri", "metres"))}</span></label>
-      ${S.mpp ? nota(esc(t(`1 metro = ${Math.round(1 / S.mpp)} pixel della foto`, `1 metre = ${Math.round(1 / S.mpp)} photo pixels`))) : ""}`,
+      ${S.mpp ? nota(esc(t(`1 metro = ${Math.round(1 / S.mpp)} pixel della foto`, `1 metre = ${Math.round(1 / S.mpp)} photo pixels`))) : ""}
+      <div data-c3c="notaScala">${notaDellaScala(S)}</div>`,
     ) + avanti(t("Riconosci i muri →", "Find the walls →"), Boolean(S.mpp))
   );
 }
@@ -997,11 +1389,22 @@ function contoMarkup() {
 }
 
 function statoDelRiconoscitore() {
-  const r = state.S.riconoscitore;
+  const S = state.S,
+    r = S.riconoscitore;
   if (r === "carica")
-    return `<div class="c3c-lavoro">⏳ ${esc(t("Preparo il riconoscimento degli oggetti, sul dispositivo…", "Getting object recognition ready, on this device…"))}</div>`;
+    return `<div class="c3c-lavoro">⏳ <span data-c3c-rr>${esc(testoDelCaricamento())}</span></div>`;
   if (r === "no")
-    return `<div class="c3c-lavoro no">${esc(t("Il riconoscimento automatico non è disponibile qui: segna tu arredi e dispositivi toccandoli nella foto.", "Automatic recognition isn't available here: mark furniture and devices by tapping them in the photo."))}</div>`;
+    return `<div class="c3c-lavoro no">${esc(
+      S.nonScaricato
+        ? t(
+            "Il riconoscitore non si è scaricato: controlla la connessione e riprova.",
+            "The recognizer didn't download: check the connection and try again.",
+          )
+        : t(
+            "Il riconoscimento automatico non è disponibile qui: segna tu arredi e dispositivi toccandoli nella foto.",
+            "Automatic recognition isn't available here: mark furniture and devices by tapping them in the photo.",
+          ),
+    )}${S.perche ? `<small class="c3c-dettaglio" translate="no">${esc(S.perche)}</small>` : ""}<button type="button" class="c3c-btn c3c-riprova" data-c3c="riprovarr">↻ ${esc(t("Riprova", "Try again"))}</button></div>`;
   return "";
 }
 
@@ -1038,72 +1441,535 @@ function pFotoStanze() {
     ${foto.length ? `<div class="c3c-miniature">${foto.map((f, i) => `<img src="${f.src}" alt="" class="${i === S.fotoSel ? "si" : ""}" data-c3c-fotosel="${i}">`).join("")}</div>` : ""}
     ${PRIVATO()}`,
   );
-  if (F) {
-    const frecce = { N: "↑", S: "↓", E: "→", O: "←" };
-    html += scheda(
-      `🧭 <b>${esc(t("Verso dove guardavi?", "Which way were you facing?"))}</b>`,
-      `<div class="c3c-bussola">${["", "N", "", "O", "c", "E", "", "S", ""]
-        .map((d) =>
-          d === "c"
-            ? `<span class="c">${esc(nome)}</span>`
-            : d
-              ? `<button type="button" class="${F.verso === d ? "si" : ""}" data-c3c-verso="${d}" aria-label="${d}">${frecce[d]}</button>`
-              : "<i></i>",
-        )
-        .join(
-          "",
-        )}</div>${nota(esc(t("la parete che si vede di fronte nella foto (in alto nella pianta = ↑)", "the wall you see straight ahead in the photo (top of the plan = ↑)")))}`,
-    );
-    const arredi = F.oggetti
-      .map((o, i) => {
-        const V = ARREDI_DELLE_FOTO[o.k];
-        return `<div class="c3c-trovato">${V?.icona || ""} ${esc(V ? due(V.nome) : o.k)}${o.colore ? `<span class="c3c-col" style="background:${esc(o.colore)}"></span>` : ""}<em>${esc(o.manuale ? t("aggiunto da te", "added by you") : t(`riconosciuto ${Math.round(o.score * 100)}%`, `recognised ${Math.round(o.score * 100)}%`))}</em><button type="button" class="c3c-x" data-c3c-togli="${i}" aria-label="${esc(t("Togli", "Remove"))}">✕</button></div>`;
-      })
-      .join("");
-    html += scheda(
-      `🛋️ <b>${esc(t("Arredi", "Furniture"))}</b>`,
-      arredi || nota(esc(t("Nessun arredo in questa foto.", "No furniture in this photo."))),
-    );
-    const disp = F.dispositivi
-      .map((d, i) =>
-        dispositivoMarkup(
-          d,
-          `f:${s.id}:${S.fotoSel}:${i}`,
-          s.id,
-          d.manuale
-            ? t("segnato da te", "marked by you")
-            : t(
-                `riconosciuto ${Math.round((d.score || 0) * 100)}%`,
-                `recognised ${Math.round((d.score || 0) * 100)}%`,
-              ),
-        ),
+  if (F) html += schedeDellaFoto(s.id, F, nome);
+  return html + avanti();
+}
+
+/* Le schede di una foto: verso, arredi, dispositivi, cosa manca, colori.
+ * Le usa il passo «Foto stanze» e la strada «Dalle foto delle stanze». */
+function schedeDellaFoto(sid, F, nome) {
+  const S = state.S;
+  let html = "";
+  const frecce = { N: "↑", S: "↓", E: "→", O: "←" };
+  html += scheda(
+    `🧭 <b>${esc(t("Verso dove guardavi?", "Which way were you facing?"))}</b>`,
+    `<div class="c3c-bussola">${["", "N", "", "O", "c", "E", "", "S", ""]
+      .map((d) =>
+        d === "c"
+          ? `<span class="c">${esc(nome)}</span>`
+          : d
+            ? `<button type="button" class="${F.verso === d ? "si" : ""}" data-c3c-verso="${d}" aria-label="${d}">${frecce[d]}</button>`
+            : "<i></i>",
       )
-      .join("");
+      .join(
+        "",
+      )}</div>${nota(esc(t("la parete che si vede di fronte nella foto (in alto nella pianta = ↑)", "the wall you see straight ahead in the photo (top of the plan = ↑)")))}`,
+  );
+  const arredi = F.oggetti
+    .map((o, i) => {
+      const V = ARREDI_DELLE_FOTO[o.k];
+      /* «non e' fedele con quanto presente in casa»: se ha visto la cosa
+       * giusta col nome sbagliato, si cambia qui senza rifarla a mano */
+      const tipi = `<select class="c3c-tipo" data-c3c-tipo="${i}" aria-label="${esc(t("Che cos'è", "What it is"))}">${ARREDI_A_MANO.map((k) => `<option value="${k}"${k === o.k ? " selected" : ""}>${ARREDI_DELLE_FOTO[k].icona} ${esc(due(ARREDI_DELLE_FOTO[k].nome))}</option>`).join("")}</select>`;
+      return `<div class="c3c-trovato">${V ? tipi : esc(o.k)}${o.colore ? `<span class="c3c-col" style="background:${esc(o.colore)}"></span>` : ""}<em>${esc(o.manuale ? t("aggiunto da te", "added by you") : t(`riconosciuto ${Math.round(o.score * 100)}%`, `recognised ${Math.round(o.score * 100)}%`))}</em>${ARREDI_CON_ENTITA[o.k] && !haGiaUnDispositivo(F, o) ? `<button type="button" class="c3c-ent" data-c3c-entitaper="${i}" aria-label="${esc(t("Collega un'entità di Home Assistant", "Link a Home Assistant entity"))}" title="${esc(t("Collega un'entità di Home Assistant", "Link a Home Assistant entity"))}">⚡</button>` : ""}<button type="button" class="c3c-x" data-c3c-togli="${i}" aria-label="${esc(t("Togli", "Remove"))}">✕</button></div>`;
+    })
+    .join("");
+  html += scheda(
+    `🛋️ <b>${esc(t("Arredi", "Furniture"))}</b>`,
+    arredi || nota(esc(t("Nessun arredo in questa foto.", "No furniture in this photo."))),
+  );
+  const disp = F.dispositivi
+    .map((d, i) =>
+      dispositivoMarkup(
+        d,
+        `f:${sid}:${S.fotoSel}:${i}`,
+        sid,
+        d.manuale
+          ? t("segnato da te", "marked by you")
+          : t(
+              `riconosciuto ${Math.round((d.score || 0) * 100)}%`,
+              `recognised ${Math.round((d.score || 0) * 100)}%`,
+            ),
+      ),
+    )
+    .join("");
+  html += scheda(
+    `🔌 <b>${esc(t("Dispositivi nella foto", "Devices in the photo"))}</b>${contoMarkup()}`,
+    `${disp || nota(esc(t("Nessun dispositivo segnato in questa foto.", "No device marked in this photo.")))}
+    ${nota(esc(t("Ogni dispositivo risponde a un'entità di Home Assistant: scegli dall'elenco (già filtrato per tipo e stanza), scrivila a mano, o lasciala per dopo.", "Each device answers to a Home Assistant entity: pick it from the list (already filtered by type and room), type it, or leave it for later.")))}`,
+  );
+  const aggiungi = S.aggiungi;
+  const quale = aggiungi
+    ? aggiungi.tipo === "arredo"
+      ? due(ARREDI_DELLE_FOTO[aggiungi.k].nome)
+      : due(DISPOSITIVI_3D[aggiungi.k].nome)
+    : "";
+  html += scheda(
+    `➕ <b>${esc(t("Manca qualcosa?", "Something missing?"))}</b>`,
+    `<div class="c3c-piccolo c3c-spazio">${aggiungi ? `${esc(t("Tocca nella foto dove sta:", "Tap where it is in the photo:"))} <b>${esc(quale)}</b>` : esc(t("Scegli cosa e toccalo nella foto.", "Pick what, then tap it in the photo."))}</div>
+    <div class="c3c-sotto">${esc(t("Dispositivi", "Devices"))}</div>
+    <div>${TIPI_DI_DISPOSITIVO.map((k) => `<button type="button" class="c3c-ch${aggiungi?.tipo === "disp" && aggiungi.k === k ? " si" : ""}" data-c3c-aggd="${k}">${DISPOSITIVI_3D[k].icona} ${esc(due(DISPOSITIVI_3D[k].nome))}</button>`).join("")}</div>
+    <div class="c3c-sotto">${esc(t("Arredi", "Furniture"))}</div>
+    <div>${ARREDI_A_MANO.map((k) => `<button type="button" class="c3c-ch${aggiungi?.tipo === "arredo" && aggiungi.k === k ? " si" : ""}" data-c3c-agg="${k}">${ARREDI_DELLE_FOTO[k].icona} ${esc(due(ARREDI_DELLE_FOTO[k].nome))}</button>`).join("")}</div>`,
+  );
+  html += scheda(
+    `🎨 <b>${esc(t("Colori dalla foto", "Colours from the photo"))}</b>`,
+    `<div class="c3c-tinte"><span><i style="background:${esc(F.pavimento)}"></i>${esc(t("Pavimento", "Floor"))}</span><span><i style="background:${esc(F.pareti)}"></i>${esc(t("Pareti", "Walls"))}</span></div>`,
+  );
+  return html;
+}
+
+/* ── la pianta dalle foto delle stanze ───────────────────────────────────
+ *
+ * «Sviluppa la possibilita' di creare la planimetria in base alle foto che
+ * si fanno delle stanze»: la terza strada, accanto alla planimetria (foto,
+ * PDF, DWG) e al disegno a mano. Si elencano le stanze (quelle di Home
+ * Assistant, se ci sono), si aggiungono le foto di ognuna, e dalle cose di
+ * misura nota che il riconoscitore vede (il forno, il WC, il
+ * condizionatore...) escono larghezza e profondita'. Le stanze si
+ * dispongono da sole in una pianta con porte e finestre (core/
+ * stanze-dalle-foto.js), che poi passa dai Muri come tutte le altre: li' si
+ * ritocca, e arredi e dispositivi delle foto arrivano nel 3D. Finche' la
+ * pianta non c'e', le stanze hanno un id provvisorio e le foto stanno in
+ * S.fotoDelleStanze; alla creazione si ritrovano per posizione. */
+
+const SF_MARGINE = 0.8; // metri di fuori attorno alla pianta disegnata
+const SF_UNITA = 100; // la tela della pianta e' in centimetri
+
+function stanzaDalleFoto(nome, area = "") {
+  const S = state.S,
+    tipo = tipoDellaStanza(nome),
+    serie = MISURE_DI_SERIE[tipo];
+  const id = S.prossimaStanza++;
+  S.nomi[id] = nome;
+  S.aree[id] = area;
+  return {
+    id,
+    nome,
+    area,
+    tipo,
+    larghezza: serie[0],
+    profondita: serie[1],
+    da: "serie",
+    riferimenti: [],
+    aMano: false,
+  };
+}
+
+/* Si entra nella strada: le stanze di Home Assistant come punto di partenza. */
+/* Le aree di Home Assistant che non sono stanze della casa: il giardino, il
+ * garage, la cantina. Non vanno nella pianta. */
+const NON_E_UNA_STANZA =
+  /garage|\bbox\b|cantin|soffitt|rimess|magazzin|basement|attic|shed|cellar|outdoor|driveway|vialetto|piscin|pool/i;
+
+/* Si entra nella strada: le stanze di Home Assistant come punto di partenza.
+ * Quello che c'era prima (foto, nomi, aree di un'altra strada) si mette da
+ * parte, per «Le altre strade». */
+function entraNelleFoto() {
+  const S = state.S;
+  S.fonte = "stanzeFoto";
+  S.vistaFoto = false;
+  S.avviso = "";
+  S.dettaglio = "";
+  if (S.foto !== S.fotoDelleStanze && !S.primaDelleFoto)
+    S.primaDelleFoto = { foto: S.foto, nomi: S.nomi, aree: S.aree };
+  S.foto = S.fotoDelleStanze;
+  S.nomi = {};
+  S.aree = {};
+  if (!S.stanzeFoto.length) {
+    const aree = Object.entries(S.registri?.aree || {})
+      .filter(([, nome]) => !eNomeDiFuori(nome) && !NON_E_UNA_STANZA.test(nome))
+      .slice(0, 12);
+    if (aree.length) for (const [id, nome] of aree) S.stanzeFoto.push(stanzaDalleFoto(nome, id));
+    else S.stanzeFoto.push(stanzaDalleFoto(t("Soggiorno", "Living room")));
+  } else
+    for (const r of S.stanzeFoto) {
+      S.nomi[r.id] = r.nome;
+      S.aree[r.id] = r.area;
+    }
+  S.sel = S.stanzeFoto[0]?.id ?? null;
+  S.fotoSel = 0;
+}
+
+/* «Le altre strade»: si lascia la strada delle foto. Se la pianta era gia'
+ * stata creata dalle foto si butta (si sceglie un'altra fonte), e tornano
+ * foto, nomi e aree di prima. */
+function esciDalleFoto() {
+  const S = state.S;
+  S.fonte = "";
+  S.vistaFoto = false;
+  const prima = S.primaDelleFoto;
+  S.primaDelleFoto = null;
+  if (S.casa && S.foto !== S.fotoDelleStanze) {
+    /* la pianta dalle foto: via, insieme alle sue mappe */
+    Object.assign(S, {
+      img: null,
+      dritta: null,
+      griglia: null,
+      casa: null,
+      mpp: null,
+      punti: [],
+      metri: null,
+    });
+  }
+  Object.assign(S, prima || { foto: {}, nomi: {}, aree: {} });
+  if (S.foto === S.fotoDelleStanze) S.foto = {};
+  S.sel = null;
+}
+
+/* Tornando al passo 0 dopo la pianta: le foto e i nomi provvisori. */
+function rimettiLeFotoProvvisorie() {
+  const S = state.S;
+  if (S.foto === S.fotoDelleStanze) return;
+  S.foto = S.fotoDelleStanze;
+  S.nomi = {};
+  S.aree = {};
+  for (const r of S.stanzeFoto) {
+    S.nomi[r.id] = r.nome;
+    S.aree[r.id] = r.area;
+  }
+  S.vistaFoto = false;
+  S.sel = S.stanzeFoto[0]?.id ?? null;
+  S.fotoSel = 0;
+}
+
+const fotoScelta = () => (state.S.foto[state.S.sel] || [])[state.S.fotoSel] || null;
+
+/* Un oggetto tolto o cambiato di tipo non deve piu' dettare le misure: i
+ * riquadri grezzi del riconoscitore che gli stanno sopra si scartano. */
+function scartaDaiGrezzi(F, box) {
+  if (!F?.grezzi?.length || !box) return;
+  const copre = (b) => {
+    const x0 = Math.max(b[0], box[0]),
+      y0 = Math.max(b[1], box[1]),
+      x1 = Math.min(b[0] + b[2], box[0] + box[2]),
+      y1 = Math.min(b[1] + b[3], box[1] + box[3]);
+    const dentro = Math.max(0, x1 - x0) * Math.max(0, y1 - y0);
+    return dentro / Math.min(b[2] * b[3], box[2] * box[3]) > 0.6;
+  };
+  F.grezzi = F.grezzi.filter((d) => !(Array.isArray(d?.bbox) && copre(d.bbox)));
+}
+
+/* L'arredo ha gia' il suo dispositivo (dal tasto ⚡, o nato insieme a lui
+ * come la TV): il ⚡ non si mostra. */
+function haGiaUnDispositivo(F, o) {
+  const k = ARREDI_CON_ENTITA[o?.k];
+  if (!k || !F) return false;
+  const [x, y, w, h] = o.box;
+  return (F.dispositivi || []).some((d) => {
+    if (d.k !== k || !Array.isArray(d.box)) return false;
+    const [dx, dy, dw, dh] = d.box;
+    const x0 = Math.max(x, dx),
+      y0 = Math.max(y, dy),
+      x1 = Math.min(x + w, dx + dw),
+      y1 = Math.min(y + h, dy + dh);
+    return (Math.max(0, x1 - x0) * Math.max(0, y1 - y0)) / Math.min(w * h, dw * dh) > 0.6;
+  });
+}
+
+/* Le misure di una stanza dalle sue foto, se non le ha scritte l'utente. */
+function aggiornaLeMisure(id) {
+  const S = state.S,
+    r = S.stanzeFoto.find((x) => x.id === id);
+  if (!r || r.aMano) return;
+  const foto = (S.fotoDelleStanze[id] || []).map((F) => ({
+    verso: F.verso,
+    visti: F.grezzi || [],
+    w: F.w,
+    h: F.h,
+    f35: F.f35,
+  }));
+  const m = misureDellaStanza(foto, r.tipo);
+  Object.assign(r, {
+    larghezza: m.larghezza,
+    profondita: m.profondita,
+    da: m.da,
+    riferimenti: m.riferimenti,
+  });
+}
+
+function disposteDiAdesso() {
+  const S = state.S;
+  return disponiLeStanze(
+    S.stanzeFoto.map((r) => ({
+      id: r.id,
+      larghezza: r.larghezza,
+      profondita: r.profondita,
+      tipo: r.tipo,
+    })),
+    { perTipo: !S.sfOrdinata },
+  );
+}
+
+/* L'ordine in cui le stanze si vedono nella pianta (per righe): quando
+ * l'utente le sposta a mano, l'elenco prende quell'ordine e lo tiene. */
+function fissaLOrdine() {
+  const S = state.S;
+  if (S.sfOrdinata) return;
+  const mostrate = [...disposteDiAdesso()].sort((a, b) => a.y - b.y || a.x - b.x).map((r) => r.id);
+  S.stanzeFoto.sort((a, b) => mostrate.indexOf(a.id) - mostrate.indexOf(b.id));
+  S.sfOrdinata = true;
+}
+
+function spostaLaStanza(id, di) {
+  const S = state.S;
+  fissaLOrdine();
+  const i = S.stanzeFoto.findIndex((r) => r.id === id),
+    j = i + di;
+  if (i < 0 || j < 0 || j >= S.stanzeFoto.length) return;
+  [S.stanzeFoto[i], S.stanzeFoto[j]] = [S.stanzeFoto[j], S.stanzeFoto[i]];
+}
+
+function pStanzeDalleFoto() {
+  const S = state.S;
+  rimettiLeFotoProvvisorie();
+  /* l'elenco nell'ordine della pianta, cosi' le frecce fanno quel che si vede */
+  if (S.stanzeFoto.length > 1) fissaLOrdine();
+  const aree = Object.values(S.registri?.aree || {});
+  const righe = S.stanzeFoto
+    .map((r, i) => {
+      const foto = S.foto[r.id] || [];
+      const rif = r.riferimenti
+        .map((k) => (MISURE_NOTE[k]?.nome ? due(MISURE_NOTE[k].nome) : k))
+        .join(", ");
+      const comeMai = r.aMano
+        ? t("misure scritte da te", "sizes you typed")
+        : r.da === "foto"
+          ? t(`dalle foto (${rif})`, `from the photos (${rif})`)
+          : t(
+              "misure di serie: correggile se le sai",
+              "standard sizes: adjust them if you know them",
+            );
+      const miniature = foto
+        .map(
+          (f, k) =>
+            `<img src="${f.src}" alt="" class="${S.vistaFoto && r.id === S.sel && k === S.fotoSel ? "si" : ""}" data-c3c-sffoto="${r.id}:${k}">`,
+        )
+        .join("");
+      return `<div class="c3c-sf${r.id === S.sel ? " si" : ""}">
+        <div class="c3c-sf-testa"><span class="c3c-sf-pallino" style="background:${COLORI_STANZE[r.id % COLORI_STANZE.length]}"></span>
+          <input class="c3c-in" data-c3c-sfnome="${r.id}" list="c3c-aree" value="${esc(r.nome)}" placeholder="${esc(t("nome della stanza", "room name"))}" aria-label="${esc(t("Nome della stanza", "Room name"))}">
+          <button type="button" class="c3c-sf-b" data-c3c-sfsu="${r.id}"${i === 0 ? " disabled" : ""} aria-label="${esc(t("Più su", "Move up"))}">↑</button>
+          <button type="button" class="c3c-sf-b" data-c3c-sfgiu="${r.id}"${i === S.stanzeFoto.length - 1 ? " disabled" : ""} aria-label="${esc(t("Più giù", "Move down"))}">↓</button>
+          <button type="button" class="c3c-x" data-c3c-sftogli="${r.id}" aria-label="${esc(t("Togli", "Remove"))}">✕</button>
+        </div>
+        <div class="c3c-sf-mis">
+          <label class="c3c-metri"><input class="c3c-in" data-c3c-sfmis="${r.id}:l" inputmode="decimal" value="${esc(numero(r.larghezza, 1))}" aria-label="${esc(t("larghezza", "width"))}"> <span>m</span></label>
+          <span aria-hidden="true">×</span>
+          <label class="c3c-metri"><input class="c3c-in" data-c3c-sfmis="${r.id}:p" inputmode="decimal" value="${esc(numero(r.profondita, 1))}" aria-label="${esc(t("profondità", "depth"))}"> <span>m</span></label>
+          <em>${esc(comeMai)}</em>
+        </div>
+        <div class="c3c-sf-foto">
+          <button type="button" class="c3c-ch" data-c3c="caricasf" data-c3c-sfid="${r.id}">📷 ${esc(foto.length ? t("Altre foto", "More photos") : t("Aggiungi le foto", "Add photos"))}</button>
+          ${miniature}
+        </div>
+      </div>`;
+    })
+    .join("");
+  let html = scheda(
+    `📷 <b>${esc(t("Le stanze dalle foto", "The rooms from photos"))}</b>`,
+    `${nota(esc(t("Fotografa ogni stanza intera, dalla porta o dalla parete opposta, con tutta la parete di fronte nell'inquadratura. Le misure vengono dalle cose di misura nota (forno, lavastoviglie, WC, condizionatore, comodino...): due foto per stanza, una verso una parete e una verso quella di fianco, le danno tutte e due. Quello che non torna si corregge qui.", "Photograph each room whole, from the door or the opposite wall, with the whole facing wall in the frame. Sizes come from things of known size (oven, dishwasher, toilet, air conditioner, nightstand...): two photos per room, one towards a wall and one towards the wall beside it, give both. Anything off can be adjusted here.")))}
+    ${S.lavoro ? `<div class="c3c-lavoro">⏳ ${esc(S.lavoro)}</div>` : ""}
+    ${S.avviso ? `<div class="c3c-lavoro">⚠️ ${esc(S.avviso)}</div>` : ""}
+    ${statoDelRiconoscitore()}
+    <datalist id="c3c-aree">${aree.map((n) => `<option value="${esc(n)}">`).join("")}</datalist>
+    ${righe}
+    <div class="c3c-riga-btn c3c-sf-azioni"><button type="button" class="c3c-btn" data-c3c="sfnuova">➕ ${esc(t("Aggiungi una stanza", "Add a room"))}</button><button type="button" class="c3c-btn" data-c3c="sfvia">↩ ${esc(t("Le altre strade", "The other ways"))}</button></div>
+    ${PRIVATO()}`,
+  );
+  const F = S.vistaFoto ? fotoScelta() : null;
+  if (F) {
+    const r = S.stanzeFoto.find((x) => x.id === S.sel),
+      chi = (r && r.nome) || nomeDi(S.sel);
     html += scheda(
-      `🔌 <b>${esc(t("Dispositivi nella foto", "Devices in the photo"))}</b>${contoMarkup()}`,
-      `${disp || nota(esc(t("Nessun dispositivo segnato in questa foto.", "No device marked in this photo.")))}
-      ${nota(esc(t("Ogni dispositivo risponde a un'entità di Home Assistant: scegli dall'elenco (già filtrato per tipo e stanza), scrivila a mano, o lasciala per dopo.", "Each device answers to a Home Assistant entity: pick it from the list (already filtered by type and room), type it, or leave it for later.")))}`,
+      `🖼️ <b>${esc(t(`La foto di ${chi}`, `The photo of ${chi}`))}</b>`,
+      `${nota(esc(t("Il verso dice dove sta, nella pianta, la parete che si vede: da li' le misure e il posto degli arredi.", "The direction says where the wall you see sits in the plan: sizes and furniture places come from it.")))}
+      <button type="button" class="c3c-btn" data-c3c="sfpianta">🗺️ ${esc(t("Torna alla pianta", "Back to the plan"))}</button>`,
     );
-    const aggiungi = S.aggiungi;
-    const quale = aggiungi
-      ? aggiungi.tipo === "arredo"
-        ? due(ARREDI_DELLE_FOTO[aggiungi.k].nome)
-        : due(DISPOSITIVI_3D[aggiungi.k].nome)
-      : "";
-    html += scheda(
-      `➕ <b>${esc(t("Manca qualcosa?", "Something missing?"))}</b>`,
-      `<div class="c3c-piccolo c3c-spazio">${aggiungi ? `${esc(t("Tocca nella foto dove sta:", "Tap where it is in the photo:"))} <b>${esc(quale)}</b>` : esc(t("Scegli cosa e toccalo nella foto.", "Pick what, then tap it in the photo."))}</div>
-      <div class="c3c-sotto">${esc(t("Dispositivi", "Devices"))}</div>
-      <div>${TIPI_DI_DISPOSITIVO.map((k) => `<button type="button" class="c3c-ch${aggiungi?.tipo === "disp" && aggiungi.k === k ? " si" : ""}" data-c3c-aggd="${k}">${DISPOSITIVI_3D[k].icona} ${esc(due(DISPOSITIVI_3D[k].nome))}</button>`).join("")}</div>
-      <div class="c3c-sotto">${esc(t("Arredi", "Furniture"))}</div>
-      <div>${ARREDI_A_MANO.map((k) => `<button type="button" class="c3c-ch${aggiungi?.tipo === "arredo" && aggiungi.k === k ? " si" : ""}" data-c3c-agg="${k}">${ARREDI_DELLE_FOTO[k].icona} ${esc(due(ARREDI_DELLE_FOTO[k].nome))}</button>`).join("")}</div>`,
-    );
-    html += scheda(
-      `🎨 <b>${esc(t("Colori dalla foto", "Colours from the photo"))}</b>`,
-      `<div class="c3c-tinte"><span><i style="background:${esc(F.pavimento)}"></i>${esc(t("Pavimento", "Floor"))}</span><span><i style="background:${esc(F.pareti)}"></i>${esc(t("Pareti", "Walls"))}</span></div>`,
+    html += schedeDellaFoto(S.sel, F, chi);
+  }
+  return (
+    html +
+    avanti(t("Crea la pianta →", "Create the plan →"), S.stanzeFoto.length > 0 && !S.lavoro, false)
+  );
+}
+
+/* La pianta in anteprima: i rettangoli delle stanze come si disporranno,
+ * con porte, finestre e ingresso. La tela e' in centimetri. */
+function disegnaPiantaDalleFoto() {
+  const S = state.S,
+    sopra = pezzo(".c3c-sopra");
+  const d = disposteDiAdesso();
+  S.sfDisposte = d;
+  if (!d.length)
+    return vuota(t("Aggiungi le stanze e le loro foto", "Add the rooms and their photos"));
+  const x1 = Math.max(...d.map((r) => r.x + r.larghezza)),
+    y1 = Math.max(...d.map((r) => r.y + r.profondita));
+  const U = SF_UNITA,
+    M = SF_MARGINE;
+  const g = adatta((x1 + 2 * M) * U, (y1 + 2 * M) * U),
+    s = state.vista.s;
+  g.setTransform(s, 0, 0, s, 0, 0);
+  g.fillStyle = "#0f172a";
+  g.fillRect(0, 0, (x1 + 2 * M) * U, (y1 + 2 * M) * U);
+  const X = (m) => (m + M) * U,
+    Y = (m) => (m + M) * U;
+  /* il muro esterno, un po' piu' largo delle stanze */
+  g.fillStyle = "#334155";
+  for (const r of d)
+    g.fillRect(X(r.x) - 15, Y(r.y) - 15, r.larghezza * U + 30, r.profondita * U + 30);
+  for (const r of d) {
+    g.globalAlpha = r.id === S.sel ? 0.95 : 0.7;
+    g.fillStyle = COLORI_STANZE[r.id % COLORI_STANZE.length];
+    g.fillRect(X(r.x), Y(r.y), r.larghezza * U, r.profondita * U);
+    g.globalAlpha = 1;
+    g.strokeStyle = "#0f172a";
+    g.lineWidth = 10;
+    g.strokeRect(X(r.x), Y(r.y), r.larghezza * U, r.profondita * U);
+    if (r.id === S.sfTrascino) {
+      g.strokeStyle = "#fff";
+      g.setLineDash([12, 8]);
+      g.lineWidth = 6;
+      g.strokeRect(X(r.x) + 6, Y(r.y) + 6, r.larghezza * U - 12, r.profondita * U - 12);
+      g.setLineDash([]);
+    }
+  }
+  const segno = (v, colore) => {
+    g.fillStyle = colore;
+    const mezzo = (v.larghezza * U) / 2;
+    if (v.lato === "x") g.fillRect(X(v.centro) - mezzo, Y(v.pos) - 9, mezzo * 2, 18);
+    else g.fillRect(X(v.pos) - 9, Y(v.centro) - mezzo, 18, mezzo * 2);
+  };
+  for (const p of porteFraLeStanze(d)) segno(p, "#22c55e");
+  const { finestre, ingresso } = finestreDelleStanze(d);
+  for (const f of finestre) segno(f, "#38bdf8");
+  if (ingresso) segno(ingresso, "#22c55e");
+  for (const r of d) {
+    const nome = S.stanzeFoto.find((x) => x.id === r.id)?.nome || nomeDi(r.id),
+      [px, py] = aSchermo(X(r.x + r.larghezza / 2), Y(r.y + r.profondita / 2));
+    sopra.insertAdjacentHTML(
+      "beforeend",
+      `<div class="c3c-nome-st" style="left:${px}px;top:${py}px">${esc(nome)}<i>${esc(numero(r.larghezza, 1))}×${esc(numero(r.profondita, 1))} m</i></div>`,
     );
   }
-  return html + avanti();
+}
+
+/* Quale stanza disposta sta sotto un punto della tela (in centimetri). */
+function stanzaDispostaSotto(x, y) {
+  const S = state.S,
+    mx = x / SF_UNITA - SF_MARGINE,
+    my = y / SF_UNITA - SF_MARGINE;
+  return (
+    (S.sfDisposte || []).find(
+      (r) => mx >= r.x && mx <= r.x + r.larghezza && my >= r.y && my <= r.y + r.profondita,
+    ) || null
+  );
+}
+
+/* «Crea la pianta»: dalle stanze disposte alla griglia dei muri, e da li'
+ * ai Muri come con qualunque planimetria. Nomi, aree e foto passano dagli
+ * id provvisori a quelli delle stanze riconosciute, per posizione. */
+function creaLaPiantaDalleFoto() {
+  const S = state.S;
+  const stanze = S.stanzeFoto.filter((r) => r.larghezza > 0 && r.profondita > 0);
+  if (!stanze.length) return;
+  const disposte = disponiLeStanze(
+    stanze.map((r) => ({
+      id: r.id,
+      larghezza: r.larghezza,
+      profondita: r.profondita,
+      tipo: r.tipo,
+    })),
+    { perTipo: !S.sfOrdinata },
+  );
+  const g = grigliaDalleStanze(disposte);
+  if (!g) return;
+  const casa = riconosciDaFoto({
+    W: g.W,
+    H: g.H,
+    muro: g.muro,
+    barriera: g.barriera,
+    vetro: g.vetro,
+  });
+  /* la tela della pianta, come per un piano ripreso: un pixel per cella */
+  const tela = tela2d(g.W, g.H),
+    ctx = tela.getContext("2d"),
+    im = ctx.createImageData(g.W, g.H);
+  for (let i = 0; i < g.W * g.H; i++) {
+    const v = g.muro[i] ? 0 : g.vetro[i] ? 120 : 255;
+    im.data.set([v, v, v, 255], i * 4);
+  }
+  ctx.putImageData(im, 0, 0);
+  const ritrovate = stanzeRitrovate(casa, g.centri);
+  const nomi = {},
+    aree = {},
+    foto = {},
+    perse = [];
+  for (const r of stanze) {
+    const id = ritrovate[r.id];
+    if (!id) {
+      perse.push(r.nome);
+      continue;
+    }
+    nomi[id] = r.nome;
+    aree[id] = r.area || "";
+    /* lo stesso array: una foto aggiunta dopo, al passo «Foto stanze», resta
+     * della stanza anche tornando qui a rifare la pianta */
+    foto[id] = S.fotoDelleStanze[r.id] ||= [];
+  }
+  const avvisi = [];
+  if (perse.length)
+    avvisi.push(
+      t(
+        `Non sono riuscito a fare: ${perse.join(", ")}. Controlla le misure.`,
+        `Could not build: ${perse.join(", ")}. Check the sizes.`,
+      ),
+    );
+  if (!g.ingresso)
+    avvisi.push(
+      t(
+        "Non ho trovato un muro per la porta di casa: aprila tu con lo strumento «Porta».",
+        "No wall found for the front door: open one with the «Door» tool.",
+      ),
+    );
+  const m = Math.round(0.6 / PASSO);
+  Object.assign(S, {
+    passo: P.muri,
+    img: tela,
+    dritta: tela,
+    disegno: true,
+    pianoDaFoto: false,
+    prospettiva: false,
+    angolo: 0,
+    dwg: null,
+    vetri: null,
+    porte: null,
+    mpp: PASSO,
+    mppMuri: null,
+    scalaAvviso: null,
+    centimetri: false,
+    punti: [
+      [m, m / 2],
+      [g.W - m, m / 2],
+    ],
+    metri: Math.round((g.W - 2 * m) * PASSO * 100) / 100,
+    griglia: { W: g.W, H: g.H, muro: g.muro, barriera: g.barriera, vetro: g.vetro },
+    casa,
+    nomi,
+    aree,
+    foto,
+    fuori: new Set(),
+    manuali: [],
+    arredi: [],
+    finiture: {},
+    etichette: [],
+    strumento: "muro",
+    sel: null,
+    vistaFoto: false,
+    lavoro: "",
+    dettaglio: "",
+    avviso: avvisi.join(" "),
+  });
 }
 
 function pDispositivi() {
@@ -1280,8 +2146,21 @@ async function usaPlanimetria(src) {
   await new Promise((ok) => setTimeout(ok, 30));
   try {
     let img = typeof src === "string" ? await immagine(src) : src;
+    /* Il lato lungo a 2400 pixel: una foto enorme si rimpicciolisce, e una
+     * pianta piccola (il PNG esportato dal CAD a 1200 pixel) si ingrandisce,
+     * perche' con meno di due pixel per cella da 3 cm le righe sottili, gli
+     * archi delle porte e il vetro delle finestre si perdono, e la stessa
+     * pianta veniva diversa da quella provata. */
     const lato = Math.max(img.width, img.height);
-    if (lato > 2400) {
+    if (lato !== 2400 && typeof src === "string") {
+      const k = 2400 / lato,
+        c = tela2d(Math.round(img.width * k), Math.round(img.height * k));
+      const q = c.getContext("2d");
+      q.imageSmoothingEnabled = true;
+      q.imageSmoothingQuality = "high";
+      q.drawImage(img, 0, 0, c.width, c.height);
+      img = c;
+    } else if (lato > 2400) {
       const k = 2400 / lato,
         c = tela2d(Math.round(img.width * k), Math.round(img.height * k));
       c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
@@ -1301,15 +2180,51 @@ async function usaPlanimetria(src) {
     r.translate(d.width / 2, d.height / 2);
     r.rotate((S.angolo * Math.PI) / 180);
     r.drawImage(img, -img.width / 2, -img.height / 2);
+    /* Il foglio fotografato di sbieco: i muri si raddrizzano anche in
+     * prospettiva, non solo girando la foto. */
+    let dritta = d;
+    S.prospettiva = false;
+    S.pianoDaFoto = typeof src === "string";
+    if (typeof src === "string") {
+      const dati = r.getImageData(0, 0, d.width, d.height),
+        p = prospettiva(dati);
+      if (p && p.sposta > Math.max(d.width, d.height) * 0.01) {
+        const nuova = raddrizza(dati, p),
+          t2 = tela2d(nuova.width, nuova.height);
+        t2.getContext("2d").putImageData(
+          new ImageData(nuova.data, nuova.width, nuova.height),
+          0,
+          0,
+        );
+        dritta = t2;
+        S.prospettiva = true;
+      }
+    }
+    /* La scala dallo spessore dei muri esterni (~42 cm): basta da sola, e
+     * fa da controllo alla misura scritta a mano. */
+    let muri = null;
+    if (typeof src === "string") {
+      try {
+        muri = scalaDaiMuri(
+          dritta.getContext("2d").getImageData(0, 0, dritta.width, dritta.height),
+        );
+      } catch {
+        muri = null;
+      }
+    }
     Object.assign(S, {
+      mppMuri: muri?.mpp || null,
+      spessoreMuri: muri?.spessore || null,
+      scalaAvviso: null,
+      centimetri: false,
       img,
-      dritta: d,
+      dritta,
       vetri: null,
       porte: null,
       disegno: false,
       punti: [],
       metri: null,
-      mpp: null,
+      mpp: muri?.mpp || null,
       griglia: null,
       casa: null,
       nomi: {},
@@ -1415,7 +2330,9 @@ async function usaPdf(file) {
         await usaPlanimetria(tela);
         S.avviso = delCatasto ? avvisoDelCatasto() : "";
         disegna();
-        nodo()?.querySelector(".c3c-dwg")?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+        nodo()
+          ?.querySelector(".c3c-dwg")
+          ?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
         return;
       }
       await usaPlanimetria(piante.length === 1 ? ritaglioDellaPianta(tela, piante[0], mpp) : tela);
@@ -1522,7 +2439,13 @@ async function scaricaIlMotore(dove, prendi = root.fetch?.bind(root)) {
     }
     const byte = new Uint8Array(await risposta.arrayBuffer());
     /* «\0asm»: senza, e' una pagina d'errore col 200 davanti. */
-    if (byte.length < 8 || byte[0] !== 0 || byte[1] !== 0x61 || byte[2] !== 0x73 || byte[3] !== 0x6d)
+    if (
+      byte.length < 8 ||
+      byte[0] !== 0 ||
+      byte[1] !== 0x61 ||
+      byte[2] !== 0x73 ||
+      byte[3] !== 0x6d
+    )
       throw new Error(`libredwg-web.wasm: ${byte.length} byte, non e' WebAssembly`);
     return byte;
   }
@@ -1541,7 +2464,10 @@ async function caricaLibreDwg() {
           wasmBinary,
           locateFile: (nome) => `${LIBREDWG}wasm/${nome}`,
         })
-        .then((modulo) => ({ lib: m.LibreDwg.createByWasmInstance(modulo), tipo: m.Dwg_File_Type })),
+        .then((modulo) => ({
+          lib: m.LibreDwg.createByWasmInstance(modulo),
+          tipo: m.Dwg_File_Type,
+        })),
     );
   try {
     return await libreDwg;
@@ -1740,8 +2666,14 @@ function dwgScelta() {
   const S = state.S;
   if (!S.dwg?.piani?.length) return "";
   const domanda = S.dwg.foglio
-    ? t("Nel foglio ci sono più piante: quale fai adesso?", "The sheet has several plans: which one now?")
-    : t("Nel disegno ci sono più piani: quale fai adesso?", "The drawing has several floors: which one now?");
+    ? t(
+        "Nel foglio ci sono più piante: quale fai adesso?",
+        "The sheet has several plans: which one now?",
+      )
+    : t(
+        "Nel disegno ci sono più piani: quale fai adesso?",
+        "The drawing has several floors: which one now?",
+      );
   return `<div class="c3c-dwg"><b>${esc(domanda)}</b>
     <div class="c3c-dwg-piani">${S.dwg.piani
       .map(
@@ -1763,10 +2695,15 @@ function riconosci() {
       for (let i = 0; i < m.length; i++) m[i] = d[i * 4 + 3] > 64 ? 1 : 0;
       return m;
     };
-    S.griglia = grigliaDeiMuri(inchiostro(im), im.width, im.height, S.mpp, {
+    /* Una pianta a muri pieni (l'architetto, il progetto fotografato) si
+     * legge dai soli muri; una a righe (il CAD, la scansione del catasto)
+     * dalle righe: la strada la sceglie la pianta, da quante stanze ne
+     * vengono (grigliaDallaFoto). Un disegno (DWG) e' gia' a righe pulite. */
+    S.griglia = grigliaDallaFoto(im, S.mpp, {
       vetri: mappa(S.vetri),
       porte: mappa(S.porte),
       disegno: S.disegno === true,
+      pianoDaFoto: S.pianoDaFoto === true,
     });
   }
   ricalcola();
@@ -1830,10 +2767,29 @@ function ricalcola() {
 
 function aggiornaScala() {
   const S = state.S;
-  if (S.punti.length === 2 && S.metri) {
-    const px = Math.hypot(S.punti[1][0] - S.punti[0][0], S.punti[1][1] - S.punti[0][1]);
-    S.mpp = px > 4 ? S.metri / px : null;
-  } else S.mpp = null;
+  const auto = S.mppMuri || null;
+  S.scalaAvviso = null;
+  S.centimetri = false;
+  const px =
+    S.punti.length === 2
+      ? Math.hypot(S.punti[1][0] - S.punti[0][0], S.punti[1][1] - S.punti[0][1])
+      : 0;
+  if (px > 4 && S.metri) {
+    /* «1092» e' scritto in centimetri: nessuna casa misura cento metri. */
+    let f = S.metri >= 100 ? 0.01 : 1;
+    if (auto) {
+      const scarto = (g) => Math.abs(Math.log((S.metri * g) / px / auto));
+      /* una virgola dimenticata o di troppo: la misura che torna coi muri */
+      if (scarto(f) > Math.log(3))
+        for (const g of [1, 0.1, 0.01, 10, 100]) if (scarto(g) < scarto(f)) f = g;
+    }
+    S.centimetri = f !== 1;
+    S.mpp = (S.metri * f) / px;
+    if (auto && S.spessoreMuri) {
+      const r = S.mpp / auto;
+      if (r > 1.7 || r < 1 / 1.7) S.scalaAvviso = Math.round(S.spessoreMuri * S.mpp * 100);
+    }
+  } else S.mpp = auto;
   S.griglia = null;
 }
 
@@ -1882,9 +2838,120 @@ function apriVarco(x, y, largo) {
     }
 }
 
-async function aggiungiFotoStanza(src) {
-  const S = state.S,
-    stanza = S.sel;
+/* «Devi perfezionare la ricerca delle cose tramite le foto della stanza»: il
+ * riconoscitore guarda la foto rimpicciolita, e le cose piccole o lontane
+ * (un forno, un lavabo, una pianta in fondo) gli sfuggono. Si guarda anche
+ * in quattro ritagli che si sovrappongono, ognuno ingrandito: quello che si
+ * vede due volte resta uno solo (oggettiDallaFoto). */
+async function rilevaNeiRitagli(modello, img) {
+  const w = img.naturalWidth || img.width,
+    h = img.naturalHeight || img.height;
+  const tutti = [...(await modello.detect(img, 60, 0.3))];
+  if (!(w > 0 && h > 0)) return tutti;
+  const lw = Math.round(w * 0.6),
+    lh = Math.round(h * 0.6);
+  for (const [x0, y0] of [
+    [0, 0],
+    [w - lw, 0],
+    [0, h - lh],
+    [w - lw, h - lh],
+  ]) {
+    /* il ritaglio: se la tela non si fa (una foto enorme, poca memoria) si
+     * salta questo e si tengono gli altri. Il riconoscitore invece, se si
+     * rompe, lo dice fino in fondo: e' lui che non c'e' piu' */
+    let tela;
+    try {
+      tela = tela2d(lw, lh);
+      tela.getContext("2d").drawImage(img, x0, y0, lw, lh, 0, 0, lw, lh);
+    } catch (_errore) {
+      continue;
+    }
+    /* nei ritagli ingranditi si inventa di piu': ci vuole piu' sicurezza */
+    for (const d of await modello.detect(tela, 20, 0.5)) {
+      const [bx, by, bw, bh] = d.bbox || [];
+      /* tagliato dal bordo del ritaglio: lo vede gia' la foto intera */
+      const taglio = 4;
+      const sulBordo =
+        (bx <= taglio && x0 > 0) ||
+        (by <= taglio && y0 > 0) ||
+        (bx + bw >= lw - taglio && x0 + lw < w) ||
+        (by + bh >= lh - taglio && y0 + lh < h);
+      if (sulBordo) continue;
+      tutti.push({ ...d, bbox: [bx + x0, by + y0, bw, bh] });
+    }
+  }
+  return tutti;
+}
+
+/* Il riconoscitore guarda una foto: arredi (col colore) e dispositivi (con
+ * l'entita' proposta). `F.riconosciuta` dice che l'ha guardata; se il
+ * riconoscitore non c'era, «Riprova» ripassa le foto che non lo sono. */
+async function riconosciNellaFoto(F, stanza) {
+  const S = state.S;
+  S.fotoInCorso++;
+  S.lavoro = t(
+    "Cerco arredi e dispositivi nella foto…",
+    "Looking for furniture and devices in the photo…",
+  );
+  disegna();
+  const modello = await riconoscitore();
+  if (modello) {
+    try {
+      F.grezzi = await rilevaNeiRitagli(modello, F.img);
+      const visti = oggettiDallaFoto(F.grezzi, {
+        stanza: nomeDi(stanza),
+        w: F.w,
+        h: F.h,
+      });
+      for (const o of visti.arredi) {
+        const [x, y, w, h] = o.box;
+        F.oggetti.push({
+          ...o,
+          colore: coloreZona(F.img, x + w * 0.3, y + h * 0.3, x + w * 0.7, y + h * 0.7),
+        });
+      }
+      for (const d of visti.dispositivi)
+        F.dispositivi.push({ ...d, entity: proponi(d.k, stanza, null) });
+      F.riconosciuta = true;
+    } catch (errore) {
+      root.console?.warn?.("[DashboardModern] Casa 3D: riconoscimento", errore);
+      nonDisponibile(errore, false);
+    }
+  }
+  S.fotoInCorso = Math.max(0, S.fotoInCorso - 1);
+  if (!S.fotoInCorso) S.lavoro = "";
+  if (state.S === S) {
+    if (S.fonte === "stanzeFoto" && S.passo === P.planimetria) aggiornaLeMisure(stanza);
+    disegna();
+  }
+}
+
+/* «Riprova»: il riconoscitore si rifa' da capo, e le foto che non ha
+ * guardato si riguardano, una dopo l'altra. */
+async function riprovaIlRiconoscimento() {
+  const S = state.S;
+  if (!S || S.riconoscitore === "carica") return;
+  state.modello = null;
+  S.riconoscitore = "fermo";
+  S.perche = "";
+  S.nonScaricato = false;
+  const daGuardare = [];
+  for (const [id, foto] of Object.entries(S.foto))
+    for (const F of foto || []) if (F?.img && !F.riconosciuta) daGuardare.push([id, F]);
+  if (!daGuardare.length) {
+    /* niente da riguardare: si prepara lo stesso, per la prossima foto */
+    await riconoscitore();
+    if (state.S === S) disegna();
+    return;
+  }
+  for (const [id, F] of daGuardare) {
+    if (state.S !== S) return;
+    await riconosciNellaFoto(F, isNaN(Number(id)) ? id : Number(id));
+  }
+}
+
+async function aggiungiFotoStanza(src, f35 = null, stanza = state.S.sel) {
+  const S = state.S;
   const img = await immagine(src);
   const F = {
     src,
@@ -1894,35 +2961,21 @@ async function aggiungiFotoStanza(src) {
     oggetti: [],
     dispositivi: [],
     verso: "N",
+    /* la focale (mm equivalenti) e i riquadri grezzi: per le misure della
+     * stanza dalle cose di misura nota */
+    f35,
+    grezzi: [],
+    riconosciuta: false,
   };
   F.pavimento = coloreZona(img, F.w * 0.2, F.h * 0.82, F.w * 0.8, F.h * 0.95);
   F.pareti = coloreZona(img, F.w * 0.25, F.h * 0.12, F.w * 0.75, F.h * 0.3);
   (S.foto[stanza] ||= []).push(F);
-  S.fotoSel = S.foto[stanza].length - 1;
-  S.lavoro = t(
-    "Cerco arredi e dispositivi nella foto…",
-    "Looking for furniture and devices in the photo…",
-  );
-  disegna();
-  const modello = await riconoscitore();
-  if (modello) {
-    try {
-      const visti = oggettiDaCoco(await modello.detect(img, 20, 0.3));
-      for (const o of visti.arredi) {
-        const [x, y, w, h] = o.box;
-        F.oggetti.push({
-          ...o,
-          colore: coloreZona(img, x + w * 0.3, y + h * 0.3, x + w * 0.7, y + h * 0.7),
-        });
-      }
-      for (const d of visti.dispositivi)
-        F.dispositivi.push({ ...d, entity: proponi(d.k, stanza, null) });
-    } catch (errore) {
-      root.console?.warn?.("[DashboardModern] Casa 3D: riconoscimento", errore);
-    }
+  if (S.fonte === "stanzeFoto" && S.passo === P.planimetria) {
+    S.sel = stanza;
+    S.vistaFoto = true;
   }
-  S.lavoro = "";
-  if (state.S === S) disegna();
+  S.fotoSel = S.foto[stanza].length - 1;
+  await riconosciNellaFoto(F, stanza);
 }
 
 function segnaNellaFoto(x, y) {
@@ -2061,7 +3114,7 @@ function vaiAvanti() {
 async function alClic(ev) {
   const S = state.S;
   if (!S) return;
-  const b = ev.target.closest("button,[data-c3c-fotosel],[data-c3c-stanza]");
+  const b = ev.target.closest("button,[data-c3c-fotosel],[data-c3c-stanza],[data-c3c-sffoto]");
   if (!b || !nodo()?.contains(b)) return;
   const d = b.dataset,
     n = nodo();
@@ -2074,16 +3127,40 @@ async function alClic(ev) {
       return n.querySelector("[data-c3c-file='dwg']").click();
     case "amano":
       return disegnaAMano();
+    case "dallefoto":
+      entraNelleFoto();
+      break;
+    case "sfnuova":
+      S.stanzeFoto.push(stanzaDalleFoto(""));
+      S.sel = S.stanzeFoto[S.stanzeFoto.length - 1].id;
+      S.vistaFoto = false;
+      break;
+    case "sfvia":
+      esciDalleFoto();
+      break;
+    case "sfpianta":
+      S.vistaFoto = false;
+      break;
+    case "caricasf":
+      S.sel = Number(d.c3cSfid);
+      S.fotoSel = 0;
+      return n.querySelector("[data-c3c-file='stanza']").click();
     case "caricast":
       return n.querySelector("[data-c3c-file='stanza']").click();
+    case "riprovarr":
+      return riprovaIlRiconoscimento();
     case "caricaf":
       return n.querySelector("[data-c3c-file='facciata']").click();
     case "indietro":
-      S.passo = Math.max(0, S.passo - 1);
+      /* dalle foto delle stanze non c'e' il passo della scala: dai Muri si
+       * torna all'elenco delle stanze */
+      S.passo =
+        S.fonte === "stanzeFoto" && S.passo === P.muri ? P.planimetria : Math.max(0, S.passo - 1);
       S.aggiungi = null;
       break;
     case "avanti":
-      vaiAvanti();
+      if (S.passo === P.planimetria && S.fonte === "stanzeFoto") creaLaPiantaDalleFoto();
+      else vaiAvanti();
       break;
     case "nuovo": {
       const k = TIPI_DI_DISPOSITIVO.includes(S.nuovo.k) ? S.nuovo.k : "luce";
@@ -2111,6 +3188,7 @@ async function alClic(ev) {
   }
   if (d.c3cP !== undefined && Number(d.c3cP) <= S.passo) {
     S.passo = Number(d.c3cP);
+    if (S.fonte === "stanzeFoto" && S.passo === P.scala) S.passo = P.planimetria;
     S.aggiungi = null;
   }
   if (d.c3cLivello !== undefined) S.livello = Number(d.c3cLivello);
@@ -2133,7 +3211,46 @@ async function alClic(ev) {
     S.aggiungi = null;
   }
   if (d.c3cFotosel !== undefined) S.fotoSel = Number(d.c3cFotosel);
-  if (d.c3cVerso) S.foto[S.sel][S.fotoSel].verso = d.c3cVerso;
+  if (d.c3cSffoto) {
+    const [id, k] = d.c3cSffoto.split(":").map(Number);
+    S.sel = id;
+    S.fotoSel = k;
+    S.vistaFoto = true;
+    S.aggiungi = null;
+  }
+  if (d.c3cSftogli) {
+    const id = Number(d.c3cSftogli);
+    S.stanzeFoto = S.stanzeFoto.filter((r) => r.id !== id);
+    delete S.fotoDelleStanze[id];
+    if (S.sel === id) {
+      S.sel = S.stanzeFoto[0]?.id ?? null;
+      S.vistaFoto = false;
+    }
+  }
+  if (d.c3cSfsu) spostaLaStanza(Number(d.c3cSfsu), -1);
+  if (d.c3cSfgiu) spostaLaStanza(Number(d.c3cSfgiu), 1);
+  if (d.c3cVerso) {
+    S.foto[S.sel][S.fotoSel].verso = d.c3cVerso;
+    if (S.fonte === "stanzeFoto" && S.passo === P.planimetria) aggiornaLeMisure(S.sel);
+  }
+  if (d.c3cEntitaper !== undefined) {
+    const F = fotoScelta(),
+      o = F?.oggetti[Number(d.c3cEntitaper)],
+      k = o && ARREDI_CON_ENTITA[o.k];
+    if (k && !haGiaUnDispositivo(F, o)) {
+      F.dispositivi.push({
+        k,
+        box: o.box,
+        score: o.score,
+        manuale: true,
+        daArredo: true,
+        arredo: o.k,
+        h: ALTEZZA_DA_ARREDO[o.k] ?? 1.2,
+      });
+      F.dispositivi[F.dispositivi.length - 1].entity = proponi(k, S.sel, null);
+      S.selDisp = `f:${S.sel}:${S.fotoSel}:${F.dispositivi.length - 1}`;
+    }
+  }
   if (d.c3cAgg)
     S.aggiungi =
       S.aggiungi?.k === d.c3cAgg && S.aggiungi.tipo === "arredo"
@@ -2144,7 +3261,14 @@ async function alClic(ev) {
       S.aggiungi?.k === d.c3cAggd && S.aggiungi.tipo === "disp"
         ? null
         : { tipo: "disp", k: d.c3cAggd };
-  if (d.c3cTogli !== undefined) S.foto[S.sel][S.fotoSel].oggetti.splice(Number(d.c3cTogli), 1);
+  if (d.c3cTogli !== undefined) {
+    const F = fotoScelta(),
+      via = F?.oggetti.splice(Number(d.c3cTogli), 1)[0];
+    if (via && S.fonte === "stanzeFoto" && S.passo === P.planimetria) {
+      scartaDaiGrezzi(F, via.box);
+      aggiornaLeMisure(S.sel);
+    }
+  }
   if (d.c3cTogliDisp) togli(d.c3cTogliDisp);
   if (d.c3cTipo) S.tipo = d.c3cTipo === "palazzo" ? "palazzo" : "villa";
   if (d.c3cPiani) {
@@ -2201,6 +3325,19 @@ function alCambio(ev) {
     e = ev.target,
     d = e.dataset;
   if (!S || !nodo()?.contains(e)) return;
+  if (d.c3cTipo !== undefined) {
+    const F = fotoScelta(),
+      o = F?.oggetti?.[Number(d.c3cTipo)];
+    if (o && ARREDI_DELLE_FOTO[e.value] && o.k !== e.value) {
+      o.k = e.value;
+      /* non era quello che il riconoscitore credeva: non detta piu' le misure */
+      if (S.fonte === "stanzeFoto" && S.passo === P.planimetria) {
+        scartaDaiGrezzi(F, o.box);
+        aggiornaLeMisure(S.sel);
+      }
+    }
+    return disegna();
+  }
   if (d.c3cArea !== undefined) {
     const id = Number(d.c3cArea),
       v = clean(e.value);
@@ -2263,7 +3400,28 @@ async function alFile(e) {
   if (quale === "pianta") return usaPlanimetria(await leggi(file[0]));
   if (quale === "dwg") return usaDwg(file[0]);
   if (quale === "stanza") {
-    for (const f of file) if (state.S === S) await aggiungiFotoStanza(await leggi(f));
+    /* la stanza e' quella di quando si e' premuto il tasto: nel frattempo
+     * (il riconoscimento dura secondi) si puo' toccare altro */
+    const stanza = S.sel;
+    for (const f of file) {
+      if (state.S !== S) break;
+      /* la focale dall'EXIF, per le misure dalle foto: i byte, non il dataURL */
+      let f35 = null;
+      try {
+        f35 = focaleDallaFoto(await f.slice(0, 512 * 1024).arrayBuffer())?.f35 ?? null;
+      } catch (_errore) {
+        f35 = null;
+      }
+      try {
+        await aggiungiFotoStanza(await leggi(f), f35, stanza);
+      } catch (errore) {
+        root.console?.warn?.("[DashboardModern] Casa 3D: foto", errore);
+        if (state.S !== S) break;
+        const nome = f.name || "?";
+        S.avviso = t(`Foto non leggibile: ${nome}`, `Photo not readable: ${nome}`);
+        disegna();
+      }
+    }
     return;
   }
   if (quale === "facciata") {
@@ -2275,6 +3433,43 @@ async function alFile(e) {
 function alScrivere(ev) {
   const S = state.S,
     e = ev.target;
+  if (S && e.dataset.c3cSfnome !== undefined) {
+    const r = S.stanzeFoto.find((x) => x.id === Number(e.dataset.c3cSfnome));
+    if (!r) return;
+    r.nome = clean(e.value).slice(0, 40);
+    S.nomi[r.id] = r.nome;
+    const area = Object.entries(S.registri?.aree || {}).find(
+      ([, nome]) => nome.toLowerCase() === r.nome.toLowerCase(),
+    );
+    r.area = area ? area[0] : "";
+    S.aree[r.id] = r.area;
+    const tipo = tipoDellaStanza(r.nome);
+    if (tipo !== r.tipo) {
+      r.tipo = tipo;
+      if (!r.aMano && r.da === "serie") {
+        [r.larghezza, r.profondita] = MISURE_DI_SERIE[tipo];
+        const n = nodo();
+        const l = n?.querySelector(`[data-c3c-sfmis="${r.id}:l"]`),
+          p = n?.querySelector(`[data-c3c-sfmis="${r.id}:p"]`);
+        if (l) l.value = numero(r.larghezza, 1);
+        if (p) p.value = numero(r.profondita, 1);
+      }
+    }
+    return disegnaLaTela();
+  }
+  if (S && e.dataset.c3cSfmis !== undefined) {
+    const [id, quale] = e.dataset.c3cSfmis.split(":"),
+      r = S.stanzeFoto.find((x) => x.id === Number(id)),
+      v = parseFloat(clean(e.value).replace(",", "."));
+    if (!r) return;
+    if (v >= MISURA_MINIMA && v <= MISURA_MASSIMA) {
+      r[quale === "l" ? "larghezza" : "profondita"] = Math.round(v * 10) / 10;
+      r.aMano = true;
+      e.classList.remove("no");
+      disegnaLaTela();
+    } else e.classList.add("no");
+    return;
+  }
   if (S && e.dataset.c3cMano) {
     S.aMano[e.dataset.c3cMano] = clean(e.value);
     const b = nodo().querySelector("[data-c3c='amano']");
@@ -2283,10 +3478,12 @@ function alScrivere(ev) {
   }
   if (!S || e.dataset.c3cMetri === undefined) return;
   const v = parseFloat(clean(e.value).replace(",", "."));
-  S.metri = v > 0 && v < 500 ? v : null;
+  S.metri = v > 0 && v < 5000 ? v : null;
   aggiornaScala();
   const b = nodo().querySelector("[data-c3c='avanti']");
   if (b) b.disabled = !S.mpp;
+  const n = nodo().querySelector("[data-c3c='notaScala']");
+  if (n) n.innerHTML = notaDellaScala(S);
   disegnaLaTela();
 }
 
@@ -2296,6 +3493,22 @@ function giu(ev) {
   const S = state.S;
   if (!S || S.premium !== true) return;
   const [x, y] = daSchermo(ev);
+  if (S.passo === P.planimetria && S.fonte === "stanzeFoto") {
+    if (S.vistaFoto) {
+      if (S.aggiungi && fotoScelta()) {
+        segnaNellaFoto(x, y);
+        disegna();
+      }
+      return;
+    }
+    /* si prende una stanza e la si lascia su un'altra: si scambiano */
+    const r = stanzaDispostaSotto(x, y);
+    if (!r) return;
+    S.sfTrascino = r.id;
+    premuto = true;
+    pezzo(".c3c-tela").setPointerCapture?.(ev.pointerId);
+    return disegnaLaTela();
+  }
   if (S.passo === P.muri && (S.strumento === "porta" || S.strumento === "finestra")) {
     apriVarco(x, y, S.strumento === "porta" ? 0.8 : 1.2);
     ricalcola();
@@ -2345,6 +3558,19 @@ function su(ev) {
   if (!premuto) return;
   premuto = false;
   const S = state.S;
+  if (S?.passo === P.planimetria && S.fonte === "stanzeFoto" && S.sfTrascino) {
+    const da = S.sfTrascino;
+    S.sfTrascino = null;
+    const r = ev && pezzo(".c3c-tela") ? stanzaDispostaSotto(...daSchermo(ev)) : null;
+    if (r && r.id !== da) {
+      fissaLOrdine();
+      const i = S.stanzeFoto.findIndex((x) => x.id === da),
+        j = S.stanzeFoto.findIndex((x) => x.id === r.id);
+      if (i >= 0 && j >= 0) [S.stanzeFoto[i], S.stanzeFoto[j]] = [S.stanzeFoto[j], S.stanzeFoto[i]];
+    }
+    S.sel = r ? r.id : da;
+    return disegna();
+  }
   if (S?.passo !== P.muri) return;
   if (S.strumento === "dritto" && S.inizio && ev && pezzo(".c3c-tela")) {
     const [x, y] = daSchermo(ev);
@@ -2413,7 +3639,9 @@ function montaLaTela() {
 
 function chiudi(salvato = false) {
   const S = state.S;
-  if (!salvato && S && S.passo > 0 && S.premium === true) {
+  const conFoto =
+    S?.fonte === "stanzeFoto" && Object.values(S.fotoDelleStanze).some((f) => f?.length);
+  if (!salvato && S && (S.passo > 0 || conFoto) && S.premium === true) {
     const ok = root.confirm?.(
       t(
         "Chiudere? Quello che non hai salvato si perde (le foto non si salvano mai).",
@@ -2577,6 +3805,7 @@ function installaLoStile() {
     ${Q} .c3c-privato{margin-top:12px;padding:9px 11px;border-radius:12px;font-size:11.5px;line-height:1.45;color:var(--c3c-fioco);background:rgba(22,163,74,.10);border:1px solid rgba(22,163,74,.35)}
     ${Q} .c3c-lavoro{margin-top:10px;padding:8px 11px;border-radius:12px;font-size:12px;font-weight:700;background:rgba(var(--c3c-accento-rgb),.12);color:var(--c3c-accento)}
     ${Q} .c3c-lavoro.no{background:rgba(245,158,11,.12);color:#f59e0b}
+    ${Q} .c3c-lavoro .c3c-riprova{display:inline-flex;margin-top:8px}
     ${Q} .c3c-carica{display:block;width:100%;border:2px dashed var(--c3c-bordo);border-radius:18px;padding:22px;text-align:center;cursor:pointer;background:var(--c3c-s2);font-weight:700;font-size:13px}
     ${Q} .c3c-carica b{display:block;font-size:30px;margin-bottom:6px}
     ${Q} .c3c-carica+.c3c-carica{margin-top:10px}
@@ -2624,6 +3853,7 @@ function installaLoStile() {
     ${Q} .c3c-miniature img.si{border-color:#38bdf8}
     ${Q} .c3c-trovato{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:10px;background:var(--c3c-s2);margin-bottom:5px;font-size:12px}
     ${Q} .c3c-col{width:16px;height:16px;border-radius:4px;border:1px solid rgba(255,255,255,.2);flex:none}
+    ${Q} .c3c-trovato .c3c-tipo{flex:1;min-width:0;max-width:62%;font:inherit;font-weight:600;color:inherit;background:transparent;border:1px solid var(--c3c-bordo);border-radius:8px;padding:4px 6px}
     ${Q} .c3c-trovato em{margin-left:auto;font-style:normal;font-size:10.5px;color:var(--c3c-fioco)}
     ${Q} .c3c-x{flex:none;padding:2px 7px;border-radius:100px;border:1px solid var(--c3c-bordo);background:var(--c3c-s3);font-size:11px;cursor:pointer}
     ${Q} .c3c-disp{padding:9px;border-radius:12px;background:var(--c3c-s2);border:1px solid var(--c3c-bordo);margin-bottom:7px}
@@ -2646,6 +3876,21 @@ function installaLoStile() {
     ${Q} .c3c-bussola button{display:flex;align-items:center;justify-content:center;border-radius:10px;background:var(--c3c-s2);border:1px solid var(--c3c-bordo);cursor:pointer;font-size:16px}
     ${Q} .c3c-bussola button.si{background:#0ea5e9;color:#fff}
     ${Q} .c3c-bussola .c{display:flex;align-items:center;justify-content:center;text-align:center;font-size:10px;color:var(--c3c-fioco);overflow:hidden}
+    ${Q} .c3c-sf{border:1px solid var(--c3c-bordo);border-radius:12px;padding:8px 10px;margin:0 0 8px;background:var(--c3c-s2)}
+    ${Q} .c3c-sf.si{border-color:#38bdf8;box-shadow:0 0 0 2px rgba(56,189,248,.22)}
+    ${Q} .c3c-sf-testa{display:flex;align-items:center;gap:6px}
+    ${Q} .c3c-sf-testa .c3c-in{flex:1;min-width:0;font-weight:700}
+    ${Q} .c3c-sf-pallino{width:12px;height:12px;border-radius:50%;flex:none}
+    ${Q} .c3c-sf-b{width:28px;height:28px;border-radius:8px;border:1px solid var(--c3c-bordo);background:var(--c3c-s3);color:inherit;cursor:pointer;flex:none}
+    ${Q} .c3c-sf-b:disabled{opacity:.35;cursor:default}
+    ${Q} .c3c-sf-mis{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px}
+    ${Q} .c3c-sf-mis .c3c-metri .c3c-in{width:62px}
+    ${Q} .c3c-sf-mis em{font-style:normal;font-size:11px;color:var(--c3c-fioco);flex-basis:100%}
+    ${Q} .c3c-sf-foto{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px}
+    ${Q} .c3c-sf-foto img{width:46px;height:46px;object-fit:cover;border-radius:8px;border:2px solid transparent;cursor:pointer}
+    ${Q} .c3c-sf-foto img.si{border-color:#38bdf8}
+    ${Q} .c3c-sf-azioni{justify-content:flex-start}
+    ${Q} .c3c-ent{width:26px;height:26px;border-radius:8px;border:1px solid #f59e0b;background:rgba(245,158,11,.12);cursor:pointer;flex:none;font-size:13px}
     ${Q} .c3c-tinte{display:flex;gap:6px;flex-wrap:wrap}
     ${Q} .c3c-tinte>span,${Q} .c3c-tinte>button{display:flex;align-items:center;gap:6px;padding:5px 9px;border-radius:100px;background:var(--c3c-s2);border:1px solid var(--c3c-bordo);font-size:11.5px;cursor:pointer}
     ${Q} .c3c-tinte i{width:14px;height:14px;border-radius:50%;border:1px solid rgba(255,255,255,.25)}

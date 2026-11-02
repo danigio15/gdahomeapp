@@ -4,6 +4,7 @@
  * lettore in grande: sull'Echo per nome (TuneIn), sugli altri da Radio
  * Browser. */
 import { expect, test } from "@playwright/test";
+import { RADIO_PRONTE } from "../src/core/radio.js";
 import { apriLaCasaAMuro } from "./helpers/casa-a-muro.js";
 
 const STATI = {
@@ -110,7 +111,8 @@ test("sul muro, la pagina Musica ha la radio: sull'Echo e sul Sonos", async ({
   await radio.click();
   const finestra = muro.locator(".mu-fin-radio");
   await expect(finestra).toBeVisible();
-  await expect(finestra.locator(".mu-radio-st")).toHaveCount(20);
+  /* le radio pronte, tutte (nessuna preferita in questa casa) */
+  await expect(finestra.locator(".mu-radio-st")).toHaveCount(RADIO_PRONTE.length);
   await page.waitForTimeout(300);
   await page.screenshot({ path: testInfo.outputPath("muro-radio.png") });
   await finestra.locator('.mu-radio-st[data-mu-radio="RTL 102.5"]').click();
@@ -139,4 +141,88 @@ test("sul muro, la pagina Musica ha la radio: sull'Echo e sul Sonos", async ({
   await muro.locator('[data-mu-fa="mp-radio"]').first().click();
   await page.waitForTimeout(300);
   await page.screenshot({ path: testInfo.outputPath("muro-radio-4-pollici.png") });
+});
+
+/* «Riesci a ottimizzare la plancia a muro su dispositivi da 4 pollici? Non
+ * si vede bene.» Sul pannello quadrato da 480 il nome del lettore finiva
+ * sotto il tasto «Scegli» e «Radio» e «Gruppo» uscivano dallo schermo. Ora i
+ * tasti vanno su una riga loro, solo icone, tutti dentro la carta, e il nome
+ * del lettore si legge intero. */
+test("sul 4 pollici quadrato la testa del lettore sta tutta nello schermo", async ({
+  page,
+}, testInfo) => {
+  test.setTimeout(150_000);
+  await page.setViewportSize({ width: 480, height: 480 });
+  await fingiHomeAssistant(page);
+  await apriLaCasaAMuro(page, testInfo, {
+    muro: { attiva: true, pagine: [{ id: "m1", modello: "musica" }] },
+    stati: {
+      ...STATI,
+      "media_player.sonos_salotto": {
+        ...STATI["media_player.sonos_salotto"],
+        state: "playing",
+        attributes: {
+          ...STATI["media_player.sonos_salotto"].attributes,
+          supported_features: 1 + 4 + 8 + 16 + 32 + 512 + 2048 + 4096 + 16384 + 131072 + 524288,
+          volume_level: 0.21,
+          source: "Radio Deejay",
+          source_list: ["Radio Deejay", "RTL 102.5", "Playlist cena", "Radio 105"],
+          media_title: "Una canzone col titolo lungo",
+          media_artist: "Un artista",
+          group_members: ["media_player.sonos_salotto"],
+        },
+      },
+      "media_player.sonos_cucina": {
+        entity_id: "media_player.sonos_cucina",
+        state: "idle",
+        attributes: { friendly_name: "Sonos Cucina", supported_features: 1 + 4 + 16384 + 524288 },
+      },
+    },
+    caselle: {
+      cd_media_player: [
+        { id: "mp1", entity: "media_player.sonos_salotto", nome: "Salotto" },
+        { id: "mp3", entity: "media_player.sonos_cucina", nome: "Cucina" },
+      ],
+    },
+  });
+  const muro = page.locator("#dm-muro");
+  const carta = muro.locator(".mu-mp").first();
+  await expect(carta).toBeVisible();
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: testInfo.outputPath("muro-musica-4-pollici.png") });
+  const misure = await carta.evaluate((c) => {
+    const r = c.getBoundingClientRect();
+    const fuori = [...c.querySelectorAll(".mu-mp-testa button")]
+      .map((b) => b.getBoundingClientRect())
+      .filter((b) => b.right > r.right + 1 || b.left < r.left - 1 || b.bottom > r.bottom + 1);
+    const et = c.querySelector(".mu-mp-dici .mu-et").getBoundingClientRect();
+    const sopra = [...c.querySelectorAll(".mu-mp-testa button")]
+      .map((b) => b.getBoundingClientRect())
+      .filter(
+        (b) => b.left < et.right && b.right > et.left && b.top < et.bottom && b.bottom > et.top,
+      );
+    return {
+      fuori: fuori.length,
+      sopra: sopra.length,
+      righeEt: Math.round(
+        et.height / parseFloat(getComputedStyle(c.querySelector(".mu-et")).lineHeight || "16"),
+      ),
+    };
+  });
+  expect(misure.fuori, "tasti fuori dalla carta").toBe(0);
+  expect(misure.sopra, "tasti sopra il nome del lettore").toBe(0);
+  /* Scegli, Radio e Gruppo in colonna, sulla destra */
+  const colonna = await carta.evaluate((c) => {
+    const b = [...c.querySelectorAll(".mu-mp-lato button")].map((x) => x.getBoundingClientRect());
+    const r = c.getBoundingClientRect();
+    return {
+      n: b.length,
+      stessaX: b.every((x) => Math.abs(x.left - b[0].left) < 2),
+      aDestra: b.every((x) => x.left > r.left + r.width * 0.7),
+    };
+  });
+  expect(colonna).toEqual({ n: 3, stessaX: true, aDestra: true });
+  /* i preferiti del lettore si vedono */
+  await expect(carta.locator(".mu-mp-preferiti button").first()).toBeVisible();
+  await expect(carta.locator(".mu-mp-preferiti")).toContainText("RTL 102.5");
 });

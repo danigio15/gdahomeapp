@@ -26,6 +26,7 @@ import {
 } from "../core/colpo-d-occhio.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
 import { premiumDellaCasa } from "./plancia-a-muro-section.js";
+import { currentProfile } from "./config-persistence-section.js";
 import {
   allStates,
   clean,
@@ -490,7 +491,28 @@ function onChange(event) {
     ridisegna();
 }
 
+/* «Anche il Config del Colpo d'occhio deve essere solo il suo»: come la Casa
+ * 3D, sulla plancia a colpo d'occhio accesa il Config e' solo la sua scheda —
+ * da ⚙, dal menu dell'app, da dovunque. Spenta, o con GdAHome Base, la plancia
+ * e' una plancia normale e il Config resta quello di sempre. */
+const SOLO_OCCHIO = "dm-solo-occhio";
+
+function soloOcchio() {
+  try {
+    return (
+      serve() &&
+      occhio().attiva === true &&
+      state.premium !== false &&
+      currentProfile() !== "primary"
+    );
+  } catch (_errore) {
+    return false;
+  }
+}
+
 export function ensureOcchioEditorTab() {
+  const solo = soloOcchio();
+  doc?.documentElement?.classList?.toggle?.(SOLO_OCCHIO, solo);
   const linguette = doc?.querySelector(".ed-tab")?.parentElement;
   if (!linguette) return false;
   const presente = linguette.querySelector(`.ed-tab[data-tab="${OCCHIO_TAB}"]`);
@@ -498,6 +520,7 @@ export function ensureOcchioEditorTab() {
     presente?.remove();
     return false;
   }
+  if (solo && schedaAttiva() !== OCCHIO_TAB) root.editorSwitch?.(OCCHIO_TAB);
   if (presente) return false;
   const linguetta = doc.createElement("button");
   linguetta.className = "ed-tab";
@@ -505,6 +528,7 @@ export function ensureOcchioEditorTab() {
   linguetta.textContent = `👁️ ${t("Colpo d'occhio", "At a glance")}`;
   linguetta.addEventListener("click", () => root.editorSwitch?.(OCCHIO_TAB));
   linguette.prepend(linguetta);
+  if (solo && schedaAttiva() !== OCCHIO_TAB) root.editorSwitch?.(OCCHIO_TAB);
   return true;
 }
 
@@ -512,6 +536,8 @@ function installaLoStile() {
   installStyle(
     "dm-occhio-editor-style",
     `
+      html.dm-solo-occhio #editor-modal .ed-tabs,html.dm-solo-occhio #editor-modal #dm-alberatura-famiglie,html.dm-solo-occhio #editor-modal .dm-cerca-config,html.dm-solo-occhio #editor-modal .dm-alberatura-titolo-famiglia{display:none!important}
+      html.dm-solo-occhio #editor-modal .ed-body,html.dm-solo-occhio #editor-modal #ed-body{margin-left:0!important;max-width:none!important}
       #ed-body .dm-oc-ed-gruppo{display:block}
       #ed-body .dm-oc-ed-corpo{display:grid;gap:10px;padding-top:4px}
       #ed-body .dm-oc-ed-corpo>.dm-oc-ed-griglia{margin:0}

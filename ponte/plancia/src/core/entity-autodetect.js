@@ -678,11 +678,24 @@ function isTemperature(record) {
   );
 }
 
+/* L'umidita': la classe lo dice. Il nome basta solo a un sensore senza classe
+ * e in percentuale: il sensore Aqara T1 si chiama «temperature and humidity
+ * sensor», e anche la sua batteria, la sua pressione e il suo segnale hanno
+ * «humidity» nel nome (#352). */
 function isHumidity(record) {
+  if (record.domain !== "sensor") return false;
+  if (record.dc === "humidity") return true;
+  if (record.dc) return false;
   return (
-    record.domain === "sensor" &&
-    (record.dc === "humidity" || /umidit|humidity/.test(record.idFold))
+    /umidit|humidity/.test(record.idFold) &&
+    record.unit === "%" &&
+    !/batter|pila|signal|segnale|linkquality|rssi/.test(record.idFold)
   );
+}
+
+/* Fra piu' umidita' possibili, prima quella con la classe giusta. */
+function umiditaPrima(a, b) {
+  return (b.dc === "humidity") - (a.dc === "humidity");
 }
 
 /**
@@ -752,6 +765,7 @@ export function detectCategories(
     }
   }
 
+  humidities.sort(umiditaPrima);
   const rooms = [];
   const usedTemperature = new Set();
   const byArea = new Map();

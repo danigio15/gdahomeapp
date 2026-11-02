@@ -7,10 +7,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { buildEntityIndex } from "../src/core/entity-search-index.js";
 import { areaLookup } from "../src/sections/entity-autodetect-section.js";
-import {
-  CHIAVE_DELLE_STANZE,
-  dimenticaLeStanze,
-} from "../src/core/le-stanze-di-home-assistant.js";
+import { CHIAVE_DELLE_STANZE, dimenticaLeStanze } from "../src/core/le-stanze-di-home-assistant.js";
 import {
   buildPostings,
   detectCategories,
@@ -213,6 +210,37 @@ test("rooms come from the Home Assistant areas, with the humidity twin of each",
   assert.equal(mansarda.hum, "sensor.mansarda_umidita");
 });
 
+test("#352: the Aqara T1 battery is not the room's humidity, even if its name says «humidity»", () => {
+  /* The T1 is a «temperature and humidity sensor», and its battery, pressure
+   * and signal carry those words too. Ordered by id, the battery came first. */
+  const t1 = "sensor.aqara_temperature_and_humidity_sensor_t1";
+  const built = buildEntityIndex(
+    [
+      sensor(`${t1}_battery`, "T1 Batteria", { dc: "battery", unit: "%", area: "Studio" }),
+      sensor(`${t1}_humidity`, "T1 Umidità", { dc: "humidity", unit: "%", area: "Studio" }),
+      sensor(`${t1}_pressure`, "T1 Pressione", { dc: "pressure", unit: "hPa", area: "Studio" }),
+      sensor(`${t1}_temperature`, "T1 Temperatura", {
+        dc: "temperature",
+        unit: "°C",
+        area: "Studio",
+      }),
+      /* a sensor with no class: the name still counts, but only in % and not
+       * for a battery */
+      sensor("sensor.cantina_umidita_batteria", "Batteria cantina", { unit: "%" }),
+      sensor("sensor.cantina_umidita", "Umidità cantina", { unit: "%" }),
+      sensor("sensor.cantina_temperatura", "Temperatura cantina", { unit: "°C" }),
+    ],
+    { version: "aqara-t1" },
+  );
+  const { rooms, groups } = detectCategories(built.records);
+  const studio = rooms.find((room) => room.name === "Studio");
+  assert.equal(studio.temp, `${t1}_temperature`);
+  assert.equal(studio.hum, `${t1}_humidity`);
+  const cantina = rooms.find((room) => room.temp === "sensor.cantina_temperatura");
+  assert.equal(cantina.hum, "sensor.cantina_umidita");
+  assert.ok(groups.batt.includes(`${t1}_battery`), "the battery is still a battery");
+});
+
 test("lights, climate units and cameras carry their area in the name", () => {
   const { lights, climate, cameras } = detectCategories(index().records);
   assert.equal(lights["light.cucina"], "Luce cucina");
@@ -405,8 +433,14 @@ test("the Huawei Solar battery fills the Energy battery slots by its own names",
     [
       s("battery_state_of_capacity", "Battery State of capacity", { dc: "battery", unit: "%" }),
       s("battery_1_state_of_capacity", "Battery 1 State of capacity", { dc: "battery", unit: "%" }),
-      s("battery_charge_discharge_power", "Battery Charge/Discharge power", { dc: "power", unit: "W" }),
-      s("battery_1_charge_discharge_power", "Battery 1 Charge/Discharge power", { dc: "power", unit: "W" }),
+      s("battery_charge_discharge_power", "Battery Charge/Discharge power", {
+        dc: "power",
+        unit: "W",
+      }),
+      s("battery_1_charge_discharge_power", "Battery 1 Charge/Discharge power", {
+        dc: "power",
+        unit: "W",
+      }),
       s("battery_day_charge", "Battery Day charge", energia),
       s("battery_day_discharge", "Battery Day discharge", energia),
       s("battery_1_total_charge", "Battery 1 Total charge", energia),
@@ -442,5 +476,8 @@ test("the Huawei Solar battery fills the Energy battery slots by its own names",
     { version: `huawei-due${Math.random()}` },
   ).records;
   const dubbio = detectSlots(due, plans.slice(0, 1));
-  assert.equal(dubbio.assignments.find((item) => item.score === 99), undefined);
+  assert.equal(
+    dubbio.assignments.find((item) => item.score === 99),
+    undefined,
+  );
 });

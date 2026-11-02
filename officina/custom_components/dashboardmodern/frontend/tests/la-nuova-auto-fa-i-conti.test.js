@@ -13,6 +13,7 @@ import {
   giorniDalleOre,
   kmAllaPercentuale,
   kmDeiGiorni,
+  kmDiOggi,
   laPercentuale,
   leScorciatoie,
   lePercentualiBasse,
@@ -190,4 +191,18 @@ test("un sensore si legge e non si scrive", () => {
 test("i km all'obiettivo seguono l'autonomia di adesso", () => {
   assert.equal(kmAllaPercentuale(262, 68, 80), 308);
   assert.equal(kmAllaPercentuale(262, 0, 80), null);
+});
+
+test("i km di oggi: il contachilometri di adesso meno quello di mezzanotte", () => {
+  const righe = [
+    { stato: "unavailable", quando: 1 },
+    { stato: "18183", quando: 2 },
+    { stato: "18200", quando: 3 },
+  ];
+  assert.equal(kmDiOggi(righe, 18240), 57);
+  assert.equal(kmDiOggi(righe, "18240.5"), 57.5);
+  assert.equal(kmDiOggi([], 18240), null, "senza storia non si sa");
+  assert.equal(kmDiOggi(righe, null), null);
+  assert.equal(kmDiOggi([{ stato: "18300", quando: 1 }], 18240), null, "non torna indietro");
+  assert.equal(kmDiOggi([{ stato: "100", quando: 1 }], 18240), null, "un contachilometri nuovo");
 });

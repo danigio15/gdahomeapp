@@ -301,6 +301,28 @@ export function kmDeiGiorni(righe = [], inizio, fine) {
   return giorni;
 }
 
+/**
+ * I km di oggi: «in Energia di oggi deve mettere anche i km effettuati».
+ *
+ * `righe` sono le righe della storia del contachilometri da mezzanotte, con lo
+ * stato al bordo (`righeDellaStoria` di quando-e-partito.js): la prima che e'
+ * un numero e' il contachilometri a mezzanotte. I km sono quello di adesso
+ * meno quello. `null` se non si sa: niente storia, un numero che torna
+ * indietro, o un salto da contachilometri nuovo (piu' di 2000 km).
+ */
+export function kmDiOggi(righe = [], adesso = null) {
+  const ora = numero(adesso);
+  if (ora === null) return null;
+  const elenco = (Array.isArray(righe) ? righe : [])
+    .filter((r) => Number.isFinite(r?.quando))
+    .sort((a, b) => a.quando - b.quando);
+  const prima = elenco.map((r) => numero(r?.stato)).find((n) => n !== null && n !== undefined);
+  if (prima === undefined || prima === null) return null;
+  const km = ora - prima;
+  if (km < 0 || km > 2000) return null;
+  return km;
+}
+
 /* ── fino a che percentuale ──────────────────────────────────────────────── */
 
 /**

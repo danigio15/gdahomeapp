@@ -249,7 +249,15 @@ async function chiedi(prendi, dove, { metodo = "GET", gettone, corpo, tipo } = {
      * numero da solo manderebbe a cercare dalla parte sbagliata. */
     let perche = testo.slice(0, 400);
     try {
-      perche = JSON.parse(testo)?.error?.message || perche;
+      const errore = JSON.parse(testo)?.error;
+      perche = errore?.message || perche;
+      /* Il motivo in codice (`CHANGES_ALREADY_IN_REVIEW`) Google lo mette nei
+       * dettagli, non nella frase: senza, una revisione in corso non si
+       * riconoscerebbe. */
+      const codici = [...(errore?.details || []), ...(errore?.errors || [])]
+        .map((uno) => uno?.reason)
+        .filter((uno) => typeof uno === "string" && uno && !perche.includes(uno));
+      if (codici.length) perche += ` [${[...new Set(codici)].join(", ")}]`;
     } catch (_errore) {
       /* Non era JSON: si tiene il testo. */
     }
@@ -280,7 +288,23 @@ async function chiedi(prendi, dove, { metodo = "GET", gettone, corpo, tipo } = {
  * revisione si manda dal Play Console, col tasto «Invia per revisione». Detto
  * nel registro, perche' senza quel tasto non arriva a nessuno. */
 export const DA_MANDARE_A_MANO = /changesNotSentForReview/;
-const SENZA_REVISIONE = "?changesNotSentForReview=true";
+
+/* E la consegna non deve MAI annullare una revisione gia' in corso.
+ *
+ * Senza dire niente, il `commit` fa «CANCEL_IN_REVIEW_AND_SUBMIT»: se nel Play
+ * Console ci sono modifiche in revisione, le **ritira** e rimanda tutto da
+ * capo, in fondo alla coda. Nel novembre 2026 la produzione era in revisione
+ * da 12 giorni: un caricamento sul test interno l'avrebbe fatta ripartire da
+ * zero senza che nessuno se ne accorgesse. Ci ha salvato solo la
+ * pubblicazione gestita, che rifiuta il primo tentativo. Quindi lo si dice
+ * sempre, a ogni consegna: «ERROR_IF_IN_REVIEW», cioe' se c'e' una revisione
+ * in corso il negozio si ferma e risponde «CHANGES_ALREADY_IN_REVIEW». Allora
+ * si consegna senza mandare in revisione: la revisione in corso resta dov'e',
+ * e la nostra si manda a mano quando si vuole. */
+const NON_ANNULLARE = "changesInReviewBehavior=ERROR_IF_IN_REVIEW";
+const CON_REVISIONE = `?${NON_ANNULLARE}`;
+const SENZA_REVISIONE = `?changesNotSentForReview=true&${NON_ANNULLARE}`;
+export const GIA_IN_REVISIONE = /CHANGES_ALREADY_IN_REVIEW|already in review|changes in review/i;
 
 /** Il controllo del negozio, prima di consegnare. `come` si porta al passo dopo. */
 async function controlla(prendi, quale, gettone, come) {
@@ -294,14 +318,36 @@ async function controlla(prendi, quale, gettone, come) {
 }
 
 async function consegna(prendi, quale, gettone, dillo = () => {}, come = { aMano: false }) {
-  const consegnaCosi = (piu = "") =>
-    chiedi(prendi, perApp(`/edits/${quale}:commit${piu}`), { metodo: "POST", gettone });
+  const consegnaCosi = async (piu) => {
+    try {
+      return await chiedi(prendi, perApp(`/edits/${quale}:commit${piu}`), {
+        metodo: "POST",
+        gettone,
+      });
+    } catch (errore) {
+      /* Anche senza mandare in revisione il negozio puo' rifiutare perche' una
+       * revisione e' in corso: allora ci si ferma, e la modifica si butta. Mai
+       * riprovare in un modo che la annulli. */
+      if (piu === SENZA_REVISIONE && GIA_IN_REVISIONE.test(errore?.message || ""))
+        throw new Error(
+          "nel Play Console c'e' una revisione in corso e, per non annullarla, la versione " +
+            `non e' stata consegnata (${errore.message})`,
+        );
+      throw errore;
+    }
+  };
   if (come.aMano) await consegnaCosi(SENZA_REVISIONE);
   else {
     try {
-      await consegnaCosi();
+      await consegnaCosi(CON_REVISIONE);
     } catch (errore) {
-      if (!DA_MANDARE_A_MANO.test(errore?.message || "")) throw errore;
+      const perche = errore?.message || "";
+      if (!DA_MANDARE_A_MANO.test(perche) && !GIA_IN_REVISIONE.test(perche)) throw errore;
+      if (GIA_IN_REVISIONE.test(perche))
+        dillo(
+          "nel Play Console c'e' una revisione in corso: non si tocca, la versione si consegna " +
+            "senza mandarla in revisione",
+        );
       come.aMano = true;
       await consegnaCosi(SENZA_REVISIONE);
     }
