@@ -261,8 +261,12 @@ test("agenda: il prossimo impegno in cima, la settimana, e le cose da fare coi l
   };
   const markup = disegna("agenda", widget);
   const scritto = testo(markup);
+  /* la prova usa l'ora vera: dopo le dieci di sera l'impegno fra due ore
+   * cade domani, e la finestra lo dice (passava di giorno, cadeva la notte) */
+  const oggi = new Date(evento.fine).getDate() === new Date(adesso).getDate();
   assert.match(scritto, /Il prossimo/);
-  assert.match(scritto, /fra (1|2) or/);
+  if (oggi) assert.match(scritto, /fra (1|2) or/);
+  else assert.match(scritto, /Domani/);
   assert.match(scritto, /📍 Studio Bianchi/);
   assert.equal((markup.match(/class="dm-f-sv-giorno"/g) || []).length, 7);
   assert.equal((markup.match(/data-oggi="true"/g) || []).length, 1);
@@ -272,7 +276,7 @@ test("agenda: il prossimo impegno in cima, la settimana, e le cose da fare coi l
   assert.match(markup, /data-dm-todo-new="l1"\s+value="Lat"/);
   assert.match(markup, /data-dm-todo-add="l1"/);
   assert.ok(prima(markup, "Dentista", "Pane"));
-  assert.match(finestraDi("agenda").sottotitolo(widget), /^1 impegno oggi · 1 da fare$/);
+  if (oggi) assert.match(finestraDi("agenda").sottotitolo(widget), /^1 impegno oggi · 1 da fare$/);
 });
 
 test("agenda: senza calendari solo le liste, senza eroe ne' settimana", () => {
