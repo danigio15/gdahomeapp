@@ -10,6 +10,37 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.9.1
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Il report del clima anche sui mesi passati:** «recupera anche dati
+  storici altrimenti non ha senso». Il luglio scorso diceva «Nessun dato in
+  questo periodo»: Home Assistant tiene la storia dettagliata di solito dieci
+  giorni, e il report leggeva solo quella. Adesso le fonti sono tre, giorno
+  per giorno e in quest'ordine:
+  - **l'archivio di GdAHome**: ogni ora l'add-on riassume i giorni chiusi che
+    la storia ha ancora (alla prima accensione tutti quelli che trova) e li
+    tiene in `/data/clima-storico.json` — tre anni di giorni, sessanta di ore
+    per ora. È lo stesso conto del report: ore di richiesta, accesa, comfort,
+    valvola, temperatura, caldaia con le accensioni;
+  - **la storia** di Home Assistant, per i giorni che ha;
+  - **le statistiche a lungo termine**, che Home Assistant tiene per sempre
+    ma solo dei sensori numerici: la temperatura dal sensore della stanza,
+    l'apertura della valvola, i watt della presa del climatizzatore e i
+    numeri della caldaia (watt, ore di funzionamento, gas o energia). Lì non
+    c'è `hvac_action`: le ore di richiesta sono **stimate** dalla valvola
+    aperta o dai watt, e il report lo scrive accanto alla stanza («dalla
+    valvola», «dai consumi») e in fondo. Le accensioni della caldaia da una
+    media d'ora non si contano («accensioni non note»), al loro posto c'è
+    quanto ha consumato. Una stanza senza valvola né watt dice «richiesta non
+    nota» e la sua temperatura; una pompa di calore conosciuta solo dai watt
+    raffresca da maggio a settembre e scalda gli altri mesi, e il report lo
+    dice.
+  Quando nessuna fonte sa niente il report spiega perché e cosa serve, e che
+  da adesso quei periodi restano. Una stanza la cui richiesta si sa solo per
+  alcuni giorni del periodo porta «dati parziali».
+
 ## 1.18.9
 
 _App GdAHome e Home Assistant._

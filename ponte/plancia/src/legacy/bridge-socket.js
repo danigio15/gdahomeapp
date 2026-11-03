@@ -132,6 +132,10 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
    * lo decide il ponte (`commissioni.js`). */
   "ponte/muro/fonte",
   "ponte/muro/codice",
+  /* Lo storico del clima: i giorni che il ponte ha messo da parte per il
+   * report del clima. Sola lettura, solo chi e' entrato, lo decide il ponte
+   * (`storico-del-clima.js`). */
+  "ponte/clima/storico",
   // Le segnalazioni. Stessa ragione dell'upload, e una in piu': la chiave del
   // manutentore sta nelle opzioni del config entry e la chiamata verso il
   // relay la fa il backend, quindi qui passa la domanda e non il segreto.

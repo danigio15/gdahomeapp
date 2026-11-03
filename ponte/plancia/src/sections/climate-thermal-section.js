@@ -312,6 +312,10 @@ export function climateUnits() {
         room: unitRoom(unit, rooms),
         /* La valvola termostatica (#300): l'entita' a parte, se c'e'. */
         valvola: clean(unit?.valvola),
+        /* I watt della presa sotto il climatizzatore (#490): il report del
+         * clima li legge anche per i mesi che la storia non ha piu'. */
+        consumo: clean(unit?.consumo),
+        soglia_consumo: unit?.soglia_consumo ?? null,
         /* La modalita' del riscaldamento (#362), quanto resta accesa (#364) e
          * i mesi in cui si vede (#365). Tre dati dell'unita', letti dove sono
          * scritti: la card non deve andarseli a cercare da sola. */

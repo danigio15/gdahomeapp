@@ -1,0 +1,206 @@
+/* Lo storico del clima, messo da parte dalla casa (`storico-del-clima.js`).
+ *
+ * Quello che deve restare vero: alla prima accensione si recuperano i giorni
+ * chiusi che la storia ha ancora, e si scrivono in `/data`; al giro dopo non
+ * si richiede niente di gia' scritto; un giorno senza storia si ricorda come
+ * vuoto e non si scrive; se la casa non risponde non si segna niente; i
+ * giorni troppo vecchi se ne vanno e quelli oltre i sessanta perdono le ore;
+ * alla plancia si risponde solo a chi ha un nome, coi giorni chiesti.
+ */
+
+import assert from "node:assert/strict";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import test from "node:test";
+
+import {
+  COMANDO_DELLO_STORICO,
+  FILE_DELLO_STORICO,
+  GIORNI_DA_RECUPERARE,
+  StoricoDelClima,
+} from "../src/storico-del-clima.js";
+import { Commissioni } from "../src/commissioni.js";
+import { chiaveDelGiorno } from "../plancia/src/core/storico-del-clima.js";
+
+const H = 3_600_000;
+/* Martedi' 3 novembre 2026, a mezzogiorno, nell'ora della casa. */
+const ADESSO = new Date(2026, 10, 3, 12).getTime();
+const giornoFa = (n) => new Date(2026, 10, 3 - n).getTime();
+
+const CONFIGURAZIONE = {
+  leggi: () => ({
+    snapshot: {
+      values: {
+        cd_clima_units: JSON.stringify([
+          { entity: "climate.sala", type: "termo", name: "Sala" },
+          { entity: "climate.split", type: "clima", name: "Split" },
+        ]),
+        cd_caldaia: JSON.stringify({ name: "Caldaia", stato: "switch.caldaia" }),
+      },
+    },
+  }),
+};
+
+/* Una casa che ha la storia degli ultimi `tiene` giorni: ogni giorno la sala
+ * chiede dalle 6 alle 8 e la caldaia lavora uguale. */
+function casaFinta({ tiene = 10, muta = false } = {}) {
+  const domande = [];
+  const limite = giornoFa(tiene);
+  return {
+    domande,
+    async chiedi(comando) {
+      domande.push(comando);
+      if (muta) throw new Error("Home Assistant non ha risposto in tempo");
+      const [entity] = comando.entity_ids;
+      const da = Math.max(Date.parse(comando.start_time), limite);
+      const a = Date.parse(comando.end_time);
+      const righe = [];
+      for (let g = new Date(da).setHours(0, 0, 0, 0); g < a; g += 24 * H) {
+        if (g < limite) continue;
+        if (entity === "climate.sala") {
+          righe.push({
+            s: "heat",
+            a: { hvac_action: "idle", current_temperature: 18, temperature: 17 },
+            lu: g / 1000,
+          });
+          righe.push({
+            s: "heat",
+            a: { hvac_action: "heating", current_temperature: 18, temperature: 21 },
+            lu: (g + 6 * H) / 1000,
+          });
+          righe.push({
+            s: "heat",
+            a: { hvac_action: "idle", current_temperature: 21, temperature: 21 },
+            lu: (g + 8 * H) / 1000,
+          });
+        }
+        if (entity === "switch.caldaia") {
+          righe.push({ s: "off", a: {}, lu: g / 1000 });
+          righe.push({ s: "on", a: {}, lu: (g + 6 * H) / 1000 });
+          righe.push({ s: "off", a: {}, lu: (g + 8 * H) / 1000 });
+        }
+      }
+      return { [entity]: righe.filter((r) => r.lu * 1000 >= da && r.lu * 1000 < a) };
+    },
+  };
+}
+
+const nuovo = (opzioni = {}) =>
+  new StoricoDelClima({
+    cartella: mkdtempSync(join(tmpdir(), "storico-clima-")),
+    configurazione: CONFIGURAZIONE,
+    adesso: () => ADESSO,
+    ogni: () => null,
+    fra: () => null,
+    ...opzioni,
+  });
+
+test("alla prima accensione si recuperano i giorni che la storia ha ancora", async () => {
+  const casa = casaFinta({ tiene: 10 });
+  const storico = nuovo({ casa });
+  assert.equal(storico.giorniDaRiassumere().length, GIORNI_DA_RECUPERARE);
+  const esito = await storico.battito();
+  assert.equal(esito.scritti, 10, "i dieci giorni chiusi che la storia ha");
+  const ieri = storico.giorni[chiaveDelGiorno(giornoFa(1))];
+  assert.equal(ieri.caldo.fonte, "storia");
+  assert.equal(ieri.caldo.stanze["climate.sala"].r, 120);
+  assert.equal(ieri.caldo.generatori["switch.caldaia"].ms, 120);
+  assert.equal(ieri.caldo.generatori["switch.caldaia"].acc, 1);
+  assert.equal(ieri.freddo, undefined, "lo split non ha storia: il Raffrescamento non c'e'");
+  assert.equal(storico.giorni[chiaveDelGiorno(ADESSO)], undefined, "oggi non e' chiuso");
+  /* Sul disco, dove sopravvive a un riavvio. */
+  const suDisco = JSON.parse(readFileSync(storico.archivio.percorso, "utf8"));
+  assert.equal(Object.keys(suDisco.giorni).length, 10);
+  assert.ok(storico.archivio.percorso.endsWith(FILE_DELLO_STORICO));
+  /* La storia si chiede a pezzi, una domanda per entita' e per pezzo. */
+  assert.ok(
+    casa.domande.every(
+      (d) => d.type === "history/history_during_period" && d.no_attributes === false,
+    ),
+  );
+
+  /* Al giro dopo non si richiede niente: i dieci ci sono, gli altri venti
+   * erano vuoti. */
+  const prima = casa.domande.length;
+  assert.deepEqual(await storico.battito(), { scritti: 0 });
+  assert.equal(casa.domande.length, prima);
+
+  /* Dopo un riavvio i giorni scritti restano, e i vuoti si riprovano. */
+  const riacceso = new StoricoDelClima({
+    cartella: join(storico.archivio.percorso, ".."),
+    configurazione: CONFIGURAZIONE,
+    casa,
+    adesso: () => ADESSO,
+    ogni: () => null,
+    fra: () => null,
+  });
+  assert.equal(Object.keys(riacceso.giorni).length, 10);
+  assert.equal(riacceso.giorniDaRiassumere().length, GIORNI_DA_RECUPERARE - 10);
+});
+
+test("se la casa non risponde non si segna niente, e al giro dopo si riprova", async () => {
+  const storico = nuovo({ casa: casaFinta({ muta: true }) });
+  assert.deepEqual(await storico.battito(), { scritti: 0 });
+  assert.equal(storico.giorniDaRiassumere().length, GIORNI_DA_RECUPERARE);
+});
+
+test("i giorni troppo vecchi se ne vanno, e quelli oltre i sessanta perdono le ore", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "storico-clima-"));
+  const vecchio = (o) => ({
+    caldo: {
+      fonte: "storia",
+      stanze: { "climate.sala": { r: 60, o } },
+      generatori: {},
+      stima: { ms: 60, o },
+    },
+  });
+  writeFileSync(
+    join(cartella, FILE_DELLO_STORICO),
+    JSON.stringify({
+      versione: 1,
+      giorni: {
+        [chiaveDelGiorno(giornoFa(80))]: vecchio([60]),
+        [chiaveDelGiorno(giornoFa(1200))]: vecchio([60]),
+      },
+    }),
+  );
+  const storico = new StoricoDelClima({
+    cartella,
+    configurazione: CONFIGURAZIONE,
+    casa: casaFinta({ tiene: 2 }),
+    adesso: () => ADESSO,
+    ogni: () => null,
+    fra: () => null,
+  });
+  await storico.battito();
+  const giorni = storico.giorni;
+  assert.equal(giorni[chiaveDelGiorno(giornoFa(1200))], undefined);
+  assert.equal(giorni[chiaveDelGiorno(giornoFa(80))].caldo.stanze["climate.sala"].o, null);
+  assert.equal(giorni[chiaveDelGiorno(giornoFa(80))].caldo.stanze["climate.sala"].r, 60);
+  assert.equal(giorni[chiaveDelGiorno(giornoFa(1))].caldo.stanze["climate.sala"].o.length, 24);
+});
+
+test("alla plancia si risponde solo a chi ha un nome, coi giorni chiesti", async () => {
+  const storico = nuovo({ casa: casaFinta({ tiene: 5 }) });
+  await storico.battito();
+  const da = chiaveDelGiorno(giornoFa(3));
+  const a = chiaveDelGiorno(giornoFa(2));
+  const chiesto = { id: 7, type: COMANDO_DELLO_STORICO, da, a };
+  assert.equal(storico.rispondi(chiesto).error.code, "unauthorized");
+  const risposta = storico.rispondi(chiesto, { utente: "anna" });
+  assert.equal(risposta.success, true);
+  assert.deepEqual(Object.keys(risposta.result.giorni).sort(), [da, a]);
+  assert.equal(risposta.result.primo, chiaveDelGiorno(giornoFa(5)));
+  assert.equal(risposta.result.ultimo, chiaveDelGiorno(giornoFa(1)));
+  assert.equal(
+    storico.rispondi({ ...chiesto, da: "ieri" }, { utente: "anna" }).error.code,
+    "invalid_format",
+  );
+
+  /* E passa dalle commissioni del ponte, come la ricarica di notte. */
+  const commissioni = new Commissioni({ storicoDelClima: storico });
+  const dalPonte = await commissioni.rispondi(chiesto, { chiChiede: "anna" });
+  assert.equal(dalPonte.success, true);
+  assert.deepEqual(Object.keys(dalPonte.result.giorni).sort(), [da, a]);
+});

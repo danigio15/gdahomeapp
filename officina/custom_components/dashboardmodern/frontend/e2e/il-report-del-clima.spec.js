@@ -12,12 +12,14 @@ import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
 
 test.use({ deviceScaleFactor: 2 });
 
+/* Ogni stanza ha il suo sensore di temperatura: e' la temperatura che le
+ * statistiche a lungo termine conservano anche dopo la storia. */
 const STANZE = [
-  { id: "room-sala", name: "Sala", icon: "🛋️", metadata: {} },
-  { id: "room-cucina", name: "Cucina", icon: "🍳", metadata: {} },
-  { id: "room-camera", name: "Camera", icon: "🛏️", metadata: {} },
-  { id: "room-bagno", name: "Bagno", icon: "🛁", metadata: {} },
-  { id: "room-studio", name: "Studio", icon: "💻", metadata: {} },
+  { id: "room-sala", name: "Sala", icon: "🛋️", temp: "sensor.t_sala", metadata: {} },
+  { id: "room-cucina", name: "Cucina", icon: "🍳", temp: "sensor.t_cucina", metadata: {} },
+  { id: "room-camera", name: "Camera", icon: "🛏️", temp: "sensor.t_camera", metadata: {} },
+  { id: "room-bagno", name: "Bagno", icon: "🛁", temp: "sensor.t_bagno", metadata: {} },
+  { id: "room-studio", name: "Studio", icon: "💻", temp: "sensor.t_studio", metadata: {} },
 ];
 
 const seme = () => ({
@@ -64,6 +66,7 @@ const seme = () => ({
         entity: "climate.studio",
         room: "room-studio",
         type: "pompa",
+        consumo: "sensor.pompa_w",
       },
       {
         id: "c6",
@@ -71,6 +74,8 @@ const seme = () => ({
         entity: "climate.split_sala",
         room: "room-sala",
         type: "clima",
+        consumo: "sensor.split_w",
+        soglia_consumo: 30,
       },
     ],
     ev: [],
@@ -83,19 +88,29 @@ const seme = () => ({
   visibility: { clima: true },
 });
 
-async function avvia(page, testInfo, { caldaia = true, tema = "light" } = {}) {
+/* `storiaCorta`: quanti giorni di storia ha Home Assistant (zero: tutti).
+ * `archivio`: le chiavi dei giorni che il ponte ha messo da parte.
+ * `statistiche`: da quando Home Assistant ha le statistiche a lungo termine
+ * (zero: niente statistiche). `caldaia`: true per l'interruttore, «potenza»
+ * per una caldaia che si conosce dai watt. */
+async function avvia(
+  page,
+  testInfo,
+  { caldaia = true, tema = "light", storiaCorta = 0, archivio = [], statistiche = 0 } = {},
+) {
   test.setTimeout(180_000);
   await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, seme());
   await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true);
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
   await page.evaluate(
-    ({ caldaia, tema }) => {
+    async ({ caldaia, tema, storiaCorta, archivio, statistiche }) => {
       document.documentElement.setAttribute("data-theme", tema);
+      const caldaiaEntita = caldaia === "potenza" ? "sensor.caldaia_potenza" : "switch.caldaia";
       if (caldaia)
         window.localStorage.setItem(
           "cd_caldaia",
-          JSON.stringify({ name: "Caldaia", stato: "switch.caldaia" }),
+          JSON.stringify({ name: "Caldaia", stato: caldaiaEntita }),
         );
       else window.localStorage.removeItem("cd_caldaia");
       const H = 3_600_000;
@@ -253,7 +268,8 @@ async function avvia(page, testInfo, { caldaia = true, tema = "light" } = {}) {
         return righe;
       };
       const storia = (entity, da, a) => {
-        if (entity === "switch.caldaia") return righeDellaCaldaia(da, a);
+        if (entity === "switch.caldaia" || entity === "sensor.caldaia_potenza")
+          return righeDellaCaldaia(da, a);
         if (entity === "sensor.valvola_camera") return righeDellaValvola(da, a);
         if (entity === "climate.split_sala") return righeDelloSplit(da, a);
         if (STANZE[entity]) return righeDelClima(entity, da, a);
@@ -267,7 +283,122 @@ async function avvia(page, testInfo, { caldaia = true, tema = "light" } = {}) {
         const tutte = prima ? [{ ...prima, t: da }, ...dentro] : dentro;
         return tutte.map((r) => ({ s: r.s, a: r.a, lu: r.t / 1000 }));
       };
+      /* La storia che Home Assistant ha ancora: con `storiaCorta` solo gli
+       * ultimi giorni, come col Recorder di serie. */
+      const limiteDellaStoria = storiaCorta ? Date.now() - storiaCorta * 24 * H : -Infinity;
+      const storiaRimasta = (entity, da, a) =>
+        storia(entity, da, a).filter((r) => r.t >= limiteDellaStoria);
+
+      /* L'archivio del ponte: lo stesso conto della plancia, fatto sulla
+       * storia intera dei giorni che il ponte ha visto. */
+      const REPORT = await import("/src/core/report-del-clima.js");
+      const STORICO = await import("/src/core/storico-del-clima.js");
+      const unitaDelPonte = [
+        { entity: "climate.sala", zone: "caldo" },
+        { entity: "climate.cucina", zone: "caldo" },
+        { entity: "climate.camera", zone: "caldo", valvola: "sensor.valvola_camera" },
+        { entity: "climate.bagno", zone: "caldo" },
+        { entity: "climate.studio", zone: "freddo" },
+        { entity: "climate.studio", zone: "caldo" },
+        { entity: "climate.split_sala", zone: "freddo" },
+      ];
+      const caldaieDelPonte = caldaia ? [{ nome: "Caldaia", entity: caldaiaEntita }] : [];
+      const giornoDellArchivio = (chiave) => {
+        const inizio = STORICO.inizioDellaChiave(chiave);
+        const fine = new Date(inizio).setDate(new Date(inizio).getDate() + 1);
+        const storie = {};
+        for (const id of [
+          ...new Set([
+            ...unitaDelPonte.map((u) => u.entity),
+            "sensor.valvola_camera",
+            ...caldaieDelPonte.map((g) => g.entity),
+          ]),
+        ])
+          storie[id] = REPORT.righeDellaStoria(
+            { [id]: comprimi(storia(id, inizio, fine), inizio, fine) },
+            id,
+          );
+        const fuori = {};
+        for (const impianto of ["caldo", "freddo"]) {
+          const record = STORICO.riassuntoDelGiorno({
+            impianto,
+            unita: unitaDelPonte,
+            storie,
+            generatori: caldaieDelPonte,
+            giorno: { inizio, fine },
+            adesso: Date.now(),
+          });
+          if (record) fuori[impianto] = record;
+        }
+        return fuori;
+      };
+
+      /* Le statistiche a lungo termine: medie e massimi d'ora, da quando il
+       * Recorder le compila. D'inverno i termosifoni, la valvola e la caldaia;
+       * d'estate lo split e la pompa di calore che raffresca. */
+      const inverno = (t) => [0, 1, 2, 3, 10, 11].includes(new Date(t).getMonth());
+      const estate = (t) => [5, 6, 7, 8].includes(new Date(t).getMonth());
+      const dentro = (t, finestre) =>
+        finestre.reduce(
+          (somma, [i, f]) => somma + Math.max(0, Math.min(f, t + H) - Math.max(i, t)),
+          0,
+        ) / H;
+      const STANZA_DEL_SENSORE = {
+        "sensor.t_sala": "climate.sala",
+        "sensor.t_cucina": "climate.cucina",
+        "sensor.t_camera": "climate.camera",
+        "sensor.t_bagno": "climate.bagno",
+        "sensor.t_studio": "climate.studio",
+      };
+      const oraDelleStatistiche = (id, t) => {
+        const giorno = new Date(t).setHours(0, 0, 0, 0);
+        if (STANZA_DEL_SENSORE[id]) {
+          const s = STANZE[STANZA_DEL_SENSORE[id]];
+          const base = estate(t) ? 26 : inverno(t) ? 19.6 : 22;
+          const voluto = estate(t) ? 25 : 20.8;
+          const caldo = dentro(t, finestre(STANZA_DEL_SENSORE[id], giorno));
+          const valore = base + caldo * (voluto - base) + caso(t, s.sale) * 0.6;
+          return { mean: Math.round(valore * 10) / 10, max: valore + 0.3, min: valore - 0.3 };
+        }
+        if (id === "sensor.valvola_camera") {
+          if (!inverno(t)) return { mean: 0, max: 0, min: 0 };
+          const quota = dentro(t, finestre("climate.camera", giorno));
+          const aperta = 60 + Math.round(caso(t, 3) * 30);
+          return { mean: Math.round(quota * aperta), max: quota ? aperta : 0, min: 0 };
+        }
+        if (id === "sensor.split_w") {
+          const r = caso(giorno, 11);
+          const finestra =
+            estate(t) && r >= 0.3 ? [[giorno + 13 * H, giorno + (15 + r * 2) * H]] : [];
+          const quota = dentro(t, finestra);
+          return { mean: 6 + quota * 880, max: quota ? 900 : 8, min: 5 };
+        }
+        if (id === "sensor.pompa_w") {
+          if (!estate(t) && !inverno(t)) return { mean: 0, max: 0, min: 0 };
+          const quota = dentro(t, finestre("climate.studio", giorno));
+          return { mean: quota * 1.1, max: quota ? 1.2 : 0, min: 0 };
+        }
+        if (id === "sensor.caldaia_potenza") {
+          if (!inverno(t)) return { mean: 2, max: 3, min: 2 };
+          const pezzi = Object.keys(STANZE)
+            .filter((e) => e !== "climate.studio")
+            .flatMap((e) => finestre(e, giorno));
+          const quota = Math.min(1, dentro(t, pezzi));
+          /* Il bruciatore, quando va, sta fra 15 e 18 kW. */
+          return { mean: 2 + quota * 16500, max: quota ? 18000 : 3, min: 2 };
+        }
+        return null;
+      };
+      const UNITA = {
+        "sensor.split_w": "W",
+        "sensor.pompa_w": "kW",
+        "sensor.caldaia_potenza": "W",
+        "sensor.valvola_camera": "%",
+      };
+
       window.__DOMANDE_DEL_REPORT__ = [];
+      window.__DOMANDE_DELLE_STATISTICHE__ = [];
+      window.__DOMANDE_DEL_PONTE__ = [];
       const broker = window.DashboardModernEnergyService.broker;
       const prima = broker.request.bind(broker);
       broker.request = async (domanda, ...resto) => {
@@ -276,8 +407,31 @@ async function avvia(page, testInfo, { caldaia = true, tema = "light" } = {}) {
           const da = Date.parse(domanda.start_time);
           const a = Date.parse(domanda.end_time);
           return Object.fromEntries(
-            domanda.entity_ids.map((id) => [id, comprimi(storia(id, da, a), da, a)]),
+            domanda.entity_ids.map((id) => [id, comprimi(storiaRimasta(id, da, a), da, a)]),
           );
+        }
+        if (domanda?.type === "ponte/clima/storico") {
+          window.__DOMANDE_DEL_PONTE__.push(domanda);
+          const giorni = {};
+          for (const chiave of archivio)
+            if (chiave >= domanda.da && chiave <= domanda.a)
+              giorni[chiave] = giornoDellArchivio(chiave);
+          return { giorni, primo: archivio[0] || null, ultimo: archivio.at(-1) || null };
+        }
+        if (domanda?.type === "recorder/statistics_during_period" && domanda.period === "hour") {
+          window.__DOMANDE_DELLE_STATISTICHE__.push(domanda);
+          const da = Math.max(Date.parse(domanda.start_time), statistiche || Infinity);
+          const a = Date.parse(domanda.end_time);
+          const fuori = {};
+          for (const id of domanda.statistic_ids) {
+            const ore = [];
+            for (let t = new Date(da).setMinutes(0, 0, 0); t < a; t += H) {
+              const voce = oraDelleStatistiche(id, t);
+              if (voce) ore.push({ start: t, end: t + H, ...voce });
+            }
+            if (ore.length) fuori[id] = ore;
+          }
+          return fuori;
         }
         return prima(domanda, ...resto);
       };
@@ -313,9 +467,12 @@ async function avvia(page, testInfo, { caldaia = true, tema = "light" } = {}) {
           attributes: { unit_of_measurement: "%" },
         },
       });
+      for (const [id, unita] of Object.entries(UNITA))
+        if (!grezzi[id])
+          grezzi[id] = { entity_id: id, state: "0", attributes: { unit_of_measurement: unita } };
       /* Senza caldaia non c'e' nemmeno la sua entita': lo Stato termico la
        * riconoscerebbe dal nome anche senza configurazione. */
-      if (caldaia)
+      if (caldaia === true)
         grezzi["switch.caldaia"] = {
           entity_id: "switch.caldaia",
           state: "off",
@@ -323,7 +480,7 @@ async function avvia(page, testInfo, { caldaia = true, tema = "light" } = {}) {
         };
       window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
     },
-    { caldaia, tema },
+    { caldaia, tema, storiaCorta, archivio, statistiche },
   );
   await page
     .locator('.tab[data-tab="clima"]')
@@ -474,6 +631,172 @@ for (const [schermo, misura] of [
       );
       expect(domande).not.toContain("switch.caldaia");
       await foto(page, `03-riscaldamento-mese-senza-caldaia-stima-${schermo}-${luce}`);
+    });
+  }
+}
+
+/* ── lo storico: i mesi che la storia ha gia' dimenticato ─────────────────
+ *
+ * «Recupera anche dati storici altrimenti non ha senso.» Qui Home Assistant
+ * tiene dieci giorni di storia, come di serie; il resto viene dall'archivio
+ * del ponte e dalle statistiche a lungo termine. */
+
+const due = (n) => String(n).padStart(2, "0");
+const chiave = (d) => `${d.getFullYear()}-${due(d.getMonth() + 1)}-${due(d.getDate())}`;
+const OGGI = new Date();
+/* L'ultimo luglio e l'ultimo gennaio passati, qualunque sia il giorno in cui
+ * la prova gira. */
+const ANNO_DI_LUGLIO = OGGI.getMonth() > 6 ? OGGI.getFullYear() : OGGI.getFullYear() - 1;
+const ANNO_DI_GENNAIO = OGGI.getMonth() > 1 ? OGGI.getFullYear() : OGGI.getFullYear() - 1;
+const LUGLIO = new Date(ANNO_DI_LUGLIO, 6, 15);
+const GENNAIO = new Date(ANNO_DI_GENNAIO, 0, 20);
+/* La settimana di febbraio: da lunedi' a mercoledi' dalle statistiche, da
+ * giovedi' a domenica dall'archivio del ponte. */
+const FEBBRAIO = new Date(ANNO_DI_GENNAIO, 1, 10);
+const LUNEDI = new Date(FEBBRAIO);
+LUNEDI.setDate(LUNEDI.getDate() - ((LUNEDI.getDay() + 6) % 7));
+const ARCHIVIO_DI_FEBBRAIO = [3, 4, 5, 6].map((n) => {
+  const d = new Date(LUNEDI);
+  d.setDate(d.getDate() + n);
+  return chiave(d);
+});
+/* Le statistiche cominciano un anno e mezzo prima dell'ultimo luglio: due
+ * luglio fa non c'e' niente da nessuna parte. */
+const STATISTICHE_DA = new Date(ANNO_DI_LUGLIO - 1, 0, 1).getTime();
+
+/* Il periodo si sceglie scrivendo il giorno nel report e premendo la vista:
+ * tornare indietro di quaranta settimane a colpi di freccia non prova niente. */
+async function vaiA(page, { impianto, vista, giorno, vuoto = false }) {
+  await page.locator(`#dm-rcl [data-dm-rcl-impianto="${impianto}"]`).click();
+  await page.evaluate((quando) => {
+    window.__DASHBOARDMODERN_REPORT_DEL_CLIMA__.giorno = quando;
+  }, giorno.getTime());
+  await page.locator(`#dm-rcl [data-dm-rcl-vista="${vista}"]`).click();
+  if (vuoto) await expect(page.locator("#dm-rcl .dm-rcl-vuoto")).toBeVisible({ timeout: 15_000 });
+  else await attendiIlReport(page);
+}
+
+const ultimo = (page) => page.evaluate(() => window.__DM_REPORT_CLIMA_ULTIMO__);
+
+for (const [schermo, misura] of [
+  ["telefono", TELEFONO],
+  ["computer", COMPUTER],
+]) {
+  for (const tema of ["light", "dark"]) {
+    const luce = tema === "light" ? "chiaro" : "scuro";
+
+    test(`lo storico dalle statistiche: luglio, un inverno, un giorno, niente (${schermo}, ${luce})`, async ({
+      page,
+    }, testInfo) => {
+      await page.setViewportSize(misura);
+      const tasto = await avvia(page, testInfo, {
+        tema,
+        caldaia: "potenza",
+        storiaCorta: 10,
+        statistiche: STATISTICHE_DA,
+      });
+      await tasto.click();
+      await attendiIlReport(page);
+
+      /* Luglio: il Raffrescamento dai watt dello split e della pompa. */
+      await vaiA(page, { impianto: "freddo", vista: "mese", giorno: LUGLIO });
+      let report = await ultimo(page);
+      expect(report.fonti.statistiche).toBe(31);
+      expect(report.fonti.storia).toBe(0);
+      await expect(page.locator("#dm-rcl [data-dm-rcl-statistiche]")).toContainText(
+        "statistiche orarie",
+      );
+      await expect(page.locator("#dm-rcl [data-dm-rcl-statistiche]")).toContainText(
+        "decide la stagione",
+      );
+      const split = page.locator('#dm-rcl [data-dm-rcl-stanza="climate.split_sala"]');
+      await expect(split.locator("[data-dm-rcl-richiesta]")).toContainText("dai consumi");
+      await expect(split.locator("[data-dm-rcl-kwh]")).toContainText("kWh");
+      await expect(split.locator("[data-dm-rcl-temperatura]")).toContainText("°");
+      await expect(split.locator('[data-dm-rcl-segno="stima"]')).toBeVisible();
+      await foto(page, `01-raffrescamento-luglio-dalle-statistiche-${schermo}-${luce}`);
+
+      /* Gennaio: i termosifoni con la valvola, la caldaia dai watt. */
+      await vaiA(page, { impianto: "caldo", vista: "mese", giorno: GENNAIO });
+      report = await ultimo(page);
+      expect(report.fonti.statistiche).toBe(31);
+      expect(report.stima).toBe(false);
+      expect(report.totali.accensioni).toBe(null);
+      const generatore = page.locator('#dm-rcl [data-dm-rcl-tessera="generatore"]');
+      await expect(generatore).not.toHaveAttribute("data-stima");
+      await expect(generatore).toContainText("kWh");
+      await expect(
+        page.locator('#dm-rcl [data-dm-rcl-stanza="climate.camera"] [data-dm-rcl-richiesta]'),
+      ).toContainText("dalla valvola");
+      /* Una stanza senza valvola ne' watt: la richiesta non si sa, la
+       * temperatura si'. */
+      const sala = page.locator('#dm-rcl [data-dm-rcl-stanza="climate.sala"]');
+      await expect(sala.locator("[data-dm-rcl-richiesta]")).toHaveText("richiesta non nota");
+      await expect(sala.locator("[data-dm-rcl-temperatura]")).toContainText("°");
+      await foto(page, `02-riscaldamento-gennaio-dalle-statistiche-${schermo}-${luce}`);
+
+      /* Un giorno di gennaio, ora per ora dalle statistiche. */
+      await vaiA(page, { impianto: "caldo", vista: "giorno", giorno: GENNAIO });
+      report = await ultimo(page);
+      expect(report.fonti.statistiche).toBe(1);
+      expect(report.secchielli.filter((s) => s.ms > 0).length).toBeGreaterThan(2);
+      await expect(page.locator("#dm-rcl .dm-rcl-col")).toHaveCount(report.secchielli.length);
+      await foto(page, `04-riscaldamento-giorno-dalle-statistiche-${schermo}-${luce}`);
+
+      /* Due anni fa: prima delle statistiche, prima di tutto. */
+      await vaiA(page, {
+        impianto: "freddo",
+        vista: "mese",
+        giorno: new Date(ANNO_DI_LUGLIO - 2, 6, 15),
+        vuoto: true,
+      });
+      await expect(page.locator("#dm-rcl .dm-rcl-vuoto")).toContainText(
+        "Home Assistant tiene la storia dettagliata solo pochi giorni",
+      );
+      await expect(page.locator("#dm-rcl .dm-rcl-vuoto")).toContainText(
+        "Da oggi GdAHome mette da parte",
+      );
+      await foto(page, `05-nessuna-fonte-${schermo}-${luce}`);
+    });
+
+    test(`lo storico: una settimana dall'archivio del ponte e dalle statistiche (${schermo}, ${luce})`, async ({
+      page,
+    }, testInfo) => {
+      await page.setViewportSize(misura);
+      const tasto = await avvia(page, testInfo, {
+        tema,
+        caldaia: "potenza",
+        storiaCorta: 10,
+        statistiche: STATISTICHE_DA,
+        archivio: ARCHIVIO_DI_FEBBRAIO,
+      });
+      await tasto.click();
+      await attendiIlReport(page);
+      await vaiA(page, { impianto: "caldo", vista: "settimana", giorno: FEBBRAIO });
+      const report = await ultimo(page);
+      expect(report.fonti).toEqual({ archivio: 4, storia: 0, statistiche: 3, nessuna: 0 });
+      /* L'archivio si chiede al ponte coi giorni della settimana. */
+      const chieste = await page.evaluate(() => window.__DOMANDE_DEL_PONTE__.at(-1));
+      expect(chieste.da).toBe(chiave(LUNEDI));
+      /* La storia non c'e' piu', le statistiche si chiedono solo per i giorni
+       * che l'archivio non ha. */
+      const statistiche = await page.evaluate(() => window.__DOMANDE_DELLE_STATISTICHE__.at(-1));
+      expect(Date.parse(statistiche.start_time)).toBe(LUNEDI.getTime());
+      const giovedi = new Date(LUNEDI);
+      giovedi.setDate(giovedi.getDate() + 3);
+      expect(Date.parse(statistiche.end_time)).toBe(giovedi.getTime());
+      await expect(page.locator("#dm-rcl .dm-rcl-nota").last()).toContainText(
+        "4 giorni dall'archivio di GdAHome",
+      );
+      await expect(page.locator("#dm-rcl [data-dm-rcl-statistiche]")).toContainText(
+        "3 giorni dalle statistiche orarie",
+      );
+      /* La Sala la sa l'archivio: la richiesta c'e', anche se di tre giorni
+       * su sette. */
+      await expect(
+        page.locator('#dm-rcl [data-dm-rcl-stanza="climate.sala"] [data-dm-rcl-richiesta]'),
+      ).toHaveText(/^\d+ h( \d+ min)? di richiesta$/);
+      await foto(page, `03-riscaldamento-settimana-archivio-e-statistiche-${schermo}-${luce}`);
     });
   }
 }

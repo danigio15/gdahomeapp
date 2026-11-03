@@ -20,15 +20,25 @@ import {
   inOre,
   oreScritte,
   periodoDelReport,
-  reportDellImpianto,
   righeDellaStoria,
   spostaIlPeriodo,
   unitaDellImpianto,
 } from "../core/report-del-clima.js";
 import { normalizzaCaldaie } from "../core/impianti-termici.js";
+import { temperatureEntries } from "../core/room-overview.js";
+import {
+  CASELLE_CHE_LAVORANO,
+  GIORNI_CON_LE_ORE,
+  domandaStatisticheDelClima,
+  giorniDelPeriodo,
+  oreDelleStatistiche,
+  reportDaiGiorni,
+  riassuntoDalleStatistiche,
+  riassuntoDelGiorno,
+} from "../core/storico-del-clima.js";
 import { climateUnits } from "./climate-thermal-section.js";
 import { statiDelleCaldaie } from "./termico-del-caldo-section.js";
-import { clean, doc, esc, installStyle, locale, root, t } from "./shared.js";
+import { allStates, clean, doc, esc, installStyle, locale, root, section, t } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_REPORT_DEL_CLIMA__";
 const STYLE_ID = "dm-report-clima-style";
@@ -62,26 +72,60 @@ const risolvi = (entity) => {
 export function caldaieDelReport() {
   const viste = new Set();
   const fuori = [];
-  const aggiungi = (nome, entity) => {
+  const aggiungi = (nome, entity, statistiche = []) => {
     const vera = risolvi(entity);
     if (!vera || viste.has(vera)) return;
     viste.add(vera);
-    fuori.push({ nome: clean(nome) || t("Caldaia", "Boiler"), entity: vera });
+    fuori.push({
+      nome: clean(nome) || t("Caldaia", "Boiler"),
+      entity: vera,
+      /* Per i giorni che la storia non ha piu': le caselle numeriche della
+       * caldaia hanno statistiche (la modulazione, i watt, le ore), lo stato
+       * acceso/spento no. */
+      statistiche: [...new Set([vera, ...statistiche.map(risolvi).filter(Boolean)])],
+    });
   };
   let righe = [];
   try {
     righe = normalizzaCaldaie(root.cdCfg?.("cd_caldaia"));
   } catch (_errore) {}
-  for (const riga of righe) aggiungi(riga.name, riga.stato || riga.fiamma || riga.modulazione);
+  for (const riga of righe)
+    aggiungi(
+      riga.name,
+      riga.stato || riga.fiamma || riga.modulazione,
+      CASELLE_CHE_LAVORANO.map((campo) => riga[campo]).filter(Boolean),
+    );
   try {
     for (const caldaia of statiDelleCaldaie()) aggiungi(caldaia.nome, caldaia.entity);
   } catch (_errore) {}
   return fuori;
 }
 
+/* Il sensore di temperatura della stanza di un'unita': per i giorni vecchi e'
+ * l'unica temperatura che Home Assistant ha conservato — un `climate` non ha
+ * statistiche, un sensore con `state_class` si'. */
+function sensoreDellaStanza(unita, stanze) {
+  const nome = clean(unita?.room).toLowerCase();
+  if (!nome) return "";
+  const stanza = stanze.find(
+    (r) => clean(r?.name).toLowerCase() === nome || clean(r?.id).toLowerCase() === nome,
+  );
+  return stanza ? risolvi(temperatureEntries(stanza).find((e) => clean(e.temp))?.temp) : "";
+}
+
 function unitaDelReport() {
+  let stanze = [];
   try {
-    return climateUnits().map((u) => ({ ...u, entity: risolvi(u.entity), valvola: risolvi(u.valvola) }));
+    stanze = section("rooms", []) || [];
+  } catch (_errore) {}
+  try {
+    return climateUnits().map((u) => ({
+      ...u,
+      entity: risolvi(u.entity),
+      valvola: risolvi(u.valvola),
+      consumo: risolvi(u.consumo),
+      temperatura: sensoreDellaStanza(u, Array.isArray(stanze) ? stanze : []),
+    }));
   } catch (_errore) {
     return [];
   }
@@ -118,6 +162,52 @@ async function storiaDi(entity, periodo) {
   return righe;
 }
 
+/* L'archivio del ponte: i giorni che ha messo da parte, per chiave. Chi apre
+ * la plancia fuori dal ponte (o con un ponte vecchio) non ce l'ha: si va
+ * avanti con la storia e le statistiche, senza dirlo come un errore. */
+async function archivioDelPonte(giorni) {
+  const chiusi = giorni.filter((g) => g.chiuso);
+  if (!chiusi.length) return {};
+  const da = chiusi[0].chiave;
+  const a = chiusi.at(-1).chiave;
+  const chiave = `archivio|${da}|${a}`;
+  if (state.cache.has(chiave)) return state.cache.get(chiave);
+  const b = broker();
+  if (!b?.request) return {};
+  try {
+    const risposta = await b.request({ type: "ponte/clima/storico", da, a }, 6_000);
+    const dentro = risposta?.giorni && typeof risposta.giorni === "object" ? risposta.giorni : {};
+    state.cache.set(chiave, dentro);
+    return dentro;
+  } catch (_errore) {
+    return {};
+  }
+}
+
+/* Le statistiche a lungo termine, un'ora alla volta, di tutte le entita'
+ * insieme: una domanda sola al Recorder. */
+async function statisticheDi(ids, da, a) {
+  if (!ids.length || a <= da) return {};
+  const chiave = `statistiche|${ids.join(",")}|${da}|${a}`;
+  if (state.cache.has(chiave)) return state.cache.get(chiave);
+  const b = broker();
+  if (!b?.request) throw new Error("broker");
+  const risposta = await b.request(domandaStatisticheDelClima(ids, da, a), 30_000);
+  const serie = Object.fromEntries(ids.map((id) => [id, oreDelleStatistiche(risposta, id)]));
+  state.cache.set(chiave, serie);
+  return serie;
+}
+
+/* L'unita' di misura di una statistica, da come l'entita' si presenta adesso:
+ * e' quella con cui Home Assistant la compila. */
+function unitaDi(id) {
+  try {
+    return clean(allStates()?.[id]?.attributes?.unit_of_measurement);
+  } catch (_errore) {
+    return "";
+  }
+}
+
 /* ── le parole ────────────────────────────────────────────────────────── */
 
 const nomeDellImpianto = (id) =>
@@ -151,9 +241,14 @@ const gradi = (valore) =>
 
 const percento = (valore) => (valore === null || valore === undefined ? "—" : `${Math.round(valore)}%`);
 
-const ore = (ms) => oreScritte(ms);
+/* «—» quando non si sa: zero sarebbe una misura. */
+const ore = (ms) => (ms === null || ms === undefined ? "—" : oreScritte(ms));
 
-const accensioniDette = (n) => t(`${n} accensioni`, `${n} starts`);
+const accensioniDette = (n) =>
+  n === null || n === undefined ? t("accensioni non note", "starts unknown") : t(`${n} accensioni`, `${n} starts`);
+
+const numeroDetto = (valore, cifre = 1) =>
+  valore.toLocaleString(locale(), { minimumFractionDigits: 0, maximumFractionDigits: cifre });
 
 /* ── il disegno ───────────────────────────────────────────────────────── */
 
@@ -203,10 +298,10 @@ function graficoMarkup(report) {
 }
 
 function stanzeMarkup(report) {
-  const massimo = Math.max(1, ...report.stanze.map((s) => s.msRichiesta));
+  const massimo = Math.max(1, ...report.stanze.map((s) => s.msRichiesta || 0));
   return report.stanze
     .map((s, i) => {
-      const quota = (s.msRichiesta / massimo) * 100;
+      const quota = ((s.msRichiesta || 0) / massimo) * 100;
       const acceso = ore(s.msAccesa);
       const aperta = percento(s.valvola);
       const durata = ore(s.msRichiesta);
@@ -221,24 +316,43 @@ function stanzeMarkup(report) {
       /* La stanza accanto al nome, se il nome non la dice gia'. */
       const nome =
         s.stanza && !s.nome.toLowerCase().includes(s.stanza.toLowerCase()) ? `${s.nome} · ${s.stanza}` : s.nome;
+      /* «dati parziali» anche quando la richiesta si sa solo per alcuni giorni
+       * del periodo: gli altri vengono dalle statistiche e non la dicono. */
+      const parziali = s.datiScarsi || s.richiestaParziale;
       const segni = [
-        s.datiScarsi
+        parziali
           ? `<em class="dm-rcl-segno" data-dm-rcl-segno="dati">${esc(t("dati parziali", "partial data"))}</em>`
           : "",
-        s.richiestaStimata && !s.datiScarsi
+        s.richiestaStimata && !parziali
           ? `<em class="dm-rcl-segno" data-dm-rcl-segno="stima">${esc(t("stima", "estimate"))}</em>`
           : "",
       ].join("");
+      /* Da dove viene la richiesta, quando non e' la storia: la valvola, i
+       * watt, o — per una pompa di calore conosciuta solo dai watt — la
+       * stagione. Senza nessuna delle tre, la richiesta non si sa. */
+      const richiestaDetta =
+        s.msRichiesta === null
+          ? t("richiesta non nota", "demand unknown")
+          : s.stimaDa?.includes("valvola")
+            ? t(`${durata} di richiesta, dalla valvola`, `${durata} of demand, from the valve`)
+            : s.stimaDa?.length
+              ? t(`${durata} di richiesta, dai consumi`, `${durata} of demand, from the power draw`)
+              : t(`${durata} di richiesta`, `${durata} of demand`);
+      const kwh =
+        s.kwh === null || s.kwh === undefined
+          ? ""
+          : `<span data-dm-rcl-kwh>⚡ ${esc(`${numeroDetto(s.kwh)} kWh`)}</span>`;
       return `<li class="dm-rcl-stanza" data-dm-rcl-stanza="${esc(s.entity)}">
         <span class="dm-rcl-pos">${i + 1}</span>
         <div class="dm-rcl-stanza-corpo">
           <div class="dm-rcl-stanza-testa"><b>${esc(nome)}</b>${segni}<strong>${esc(ore(s.msRichiesta))}</strong></div>
           <div class="dm-rcl-stanza-barra"><i style="width:${quota.toFixed(1)}%"></i></div>
           <div class="dm-rcl-stanza-dati">
-            <span data-dm-rcl-richiesta>${esc(t(`${durata} di richiesta`, `${durata} of demand`))}</span>
-            <span>⏻ ${esc(t(`accesa ${acceso}`, `on ${acceso}`))}</span>
+            <span data-dm-rcl-richiesta>${esc(richiestaDetta)}</span>
+            ${s.msAccesa === null ? "" : `<span>⏻ ${esc(t(`accesa ${acceso}`, `on ${acceso}`))}</span>`}
             ${s.valvola === null ? "" : `<span data-dm-rcl-valvola>🔧 ${esc(t(`valvola ${aperta}`, `valve ${aperta}`))}</span>`}
             <span data-dm-rcl-temperatura>🌡️ ${esc(temperatura)}</span>
+            ${kwh}
           </div>
         </div>
       </li>`;
@@ -251,7 +365,7 @@ function generatoriMarkup(report) {
   return `<ul class="dm-rcl-generatori">${report.generatori
     .map(
       (g) =>
-        `<li><span>🔥 ${esc(g.nome)}</span><b>${esc(ore(g.ms))}</b><small>${esc(accensioniDette(g.accensioni))}</small></li>`,
+        `<li><span>🔥 ${esc(g.nome)}</span><b>${esc(ore(g.ms))}</b><small>${esc(g.accensioni === null && g.consumo !== null ? `${numeroDetto(g.consumo)} ${g.unitaConsumo}` : accensioniDette(g.accensioni))}</small></li>`,
     )
     .join("")}</ul>`;
 }
@@ -272,26 +386,121 @@ function nascosteDette(quante) {
       );
 }
 
-function notaMarkup(report) {
-  const fonte = [
-    t(
-      "Dalla storia di Home Assistant: ogni stato vale fino al successivo, e i momenti senza dati non contano.",
-      "From the Home Assistant history: each state lasts until the next one, and moments without data do not count.",
-    ),
-    report.impianto === "freddo"
+/* Da dove vengono i numeri: una riga per fonte, solo per quelle usate. Un
+ * giorno solo si dice al singolare: «1 giorni» non lo scrive nessuno. */
+function fontiDette(report) {
+  const f = report.fonti || {};
+  const archivio = f.archivio || 0;
+  const righe = [];
+  if (archivio === 1)
+    righe.push(
+      t(
+        "Un giorno dall'archivio di GdAHome, che ogni notte mette da parte il giorno prima.",
+        "One day from the GdAHome archive, which sets the previous day aside every night.",
+      ),
+    );
+  else if (archivio)
+    righe.push(
+      t(
+        `${archivio} giorni dall'archivio di GdAHome, che ogni notte mette da parte il giorno prima.`,
+        `${archivio} days from the GdAHome archive, which sets the previous day aside every night.`,
+      ),
+    );
+  if (f.storia || archivio)
+    righe.push(
+      t(
+        "Dalla storia di Home Assistant: ogni stato vale fino al successivo, e i momenti senza dati non contano.",
+        "From the Home Assistant history: each state lasts until the next one, and moments without data do not count.",
+      ),
+    );
+  return righe;
+}
+
+function notaStatistiche(report) {
+  const statistiche = report.fonti?.statistiche || 0;
+  if (!statistiche) return "";
+  const stagione = report.stanze.some((s) => s.stimaDa?.includes("stagione"));
+  const testo = [
+    statistiche === 1
       ? t(
-          "In comfort: le ore accese con l'obiettivo sotto quello ridotto della stanza.",
-          "In comfort: the hours on with a target below the room's setback.",
+          "Un giorno dalle statistiche orarie di Home Assistant, perché la storia dettagliata non c'è più.",
+          "One day from the Home Assistant hourly statistics, because the detailed history is gone.",
         )
       : t(
-          "In comfort: le ore accese con l'obiettivo sopra quello ridotto della stanza (la notte abbassata non conta).",
-          "In comfort: the hours on with a target above the room's setback (the lowered night does not count).",
+          `${statistiche} giorni dalle statistiche orarie di Home Assistant, perché la storia dettagliata non c'è più.`,
+          `${statistiche} days from the Home Assistant hourly statistics, because the detailed history is gone.`,
         ),
-    nascosteDette(report.nascoste),
+    report.impianto === "freddo"
+      ? t(
+          "Le ore di richiesta sono stimate dai watt della presa, e il comfort non si conosce.",
+          "The hours of demand are estimated from the plug's watts, and the comfort is unknown.",
+        )
+      : t(
+          "Le ore di richiesta sono stimate dalla valvola aperta o dai watt della presa, le accensioni della caldaia non si possono contare e il comfort non si conosce.",
+          "The hours of demand are estimated from the open valve or from the plug's watts, the boiler starts cannot be counted and the comfort is unknown.",
+        ),
+    stagione
+      ? t(
+          "Per le pompe di calore conosciute solo dai watt decide la stagione: da maggio a settembre raffrescano.",
+          "For heat pumps known only from their watts the season decides: from May to September they cool.",
+        )
+      : "",
   ]
     .filter(Boolean)
     .join(" ");
-  if (!report.stima) return `<p class="dm-rcl-nota">${esc(fonte)}</p>`;
+  return `<p class="dm-rcl-nota" data-dm-rcl-statistiche>ⓘ ${esc(testo)}</p>`;
+}
+
+function notaMarkup(report) {
+  const f = report.fonti || {};
+  const nessuna = f.nessuna || 0;
+  const senzaCaldaia = report.giorniSenzaCaldaia || 0;
+  const giorniConLeOre = GIORNI_CON_LE_ORE;
+  const fonte = [
+    ...fontiDette(report),
+    f.storia || f.archivio
+      ? report.impianto === "freddo"
+        ? t(
+            "In comfort: le ore accese con l'obiettivo sotto quello ridotto della stanza.",
+            "In comfort: the hours on with a target below the room's setback.",
+          )
+        : t(
+            "In comfort: le ore accese con l'obiettivo sopra quello ridotto della stanza (la notte abbassata non conta).",
+            "In comfort: the hours on with a target above the room's setback (the lowered night does not count).",
+          )
+      : "",
+    nascosteDette(report.nascoste),
+    nessuna === 1
+      ? t("Un giorno senza nessun dato: non conta.", "One day without any data: it does not count.")
+      : nessuna
+        ? t(
+            `${nessuna} giorni senza nessun dato: non contano.`,
+            `${nessuna} days without any data: they do not count.`,
+          )
+        : "",
+    senzaCaldaia === 1
+      ? t(
+          "Un giorno senza dati della caldaia: il suo tempo è quello degli altri giorni.",
+          "One day without boiler data: its time is that of the other days.",
+        )
+      : senzaCaldaia
+        ? t(
+            `${senzaCaldaia} giorni senza dati della caldaia: il suo tempo è quello degli altri giorni.`,
+            `${senzaCaldaia} days without boiler data: its time is that of the other days.`,
+          )
+        : "",
+    report.oreMancanti
+      ? t(
+          `Ora per ora si conserva solo per gli ultimi ${giorniConLeOre} giorni: di questo giorno restano i totali.`,
+          `Hour by hour is kept only for the last ${giorniConLeOre} days: for this day only the totals remain.`,
+        )
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const statistiche = notaStatistiche(report);
+  const base = `${statistiche}${fonte ? `<p class="dm-rcl-nota">${esc(fonte)}</p>` : ""}`;
+  if (!report.stima) return base;
   const stima =
     report.impianto === "freddo"
       ? t(
@@ -302,12 +511,22 @@ function notaMarkup(report) {
           "Nessuna caldaia con una storia: il tempo è una stima, acceso quando almeno una stanza chiede calore. La caldaia si configura in Config › Gestione termica.",
           "No boiler with a history: the time is an estimate, on whenever at least one room asks for heat. Set the boiler up in Config › Thermal management.",
         );
-  return `<p class="dm-rcl-nota" data-dm-rcl-stima>ⓘ ${esc(stima)}</p><p class="dm-rcl-nota">${esc(fonte)}</p>`;
+  return `<p class="dm-rcl-nota" data-dm-rcl-stima>ⓘ ${esc(stima)}</p>${base}`;
+}
+
+/* Il vuoto vero: nessuna fonte sa niente di questo periodo. Si dice perche',
+ * e che da adesso non succede piu'. */
+function vuotoMarkup() {
+  return `<div class="dm-rcl-vuoto"><span aria-hidden="true">📭</span><b>${esc(t("Nessun dato in questo periodo", "No data in this period"))}</b><small>${esc(
+    t(
+      "Home Assistant tiene la storia dettagliata solo pochi giorni (di serie 10), e per questi termostati non ci sono statistiche a lungo termine: per i mesi passati servono un sensore di temperatura nella stanza, la valvola o i watt della presa. Da oggi GdAHome mette da parte ogni notte il riassunto del clima, e questi periodi resteranno.",
+      "Home Assistant keeps the detailed history only a few days (10 by default), and these thermostats have no long-term statistics: past months need a temperature sensor in the room, the valve or the plug's watts. From today GdAHome sets the climate summary aside every night, and these periods will stay.",
+    ),
+  )}</small></div>`;
 }
 
 function contenutoMarkup(report) {
-  if (report.vuoto)
-    return `<div class="dm-rcl-vuoto"><span aria-hidden="true">📭</span><b>${esc(t("Nessun dato in questo periodo", "No data in this period"))}</b><small>${esc(t("Home Assistant non ha registrato niente di questi termostati: prova un altro periodo.", "Home Assistant recorded nothing for these thermostats: try another period."))}</small></div>`;
+  if (report.vuoto) return vuotoMarkup();
   const tot = report.totali;
   const valvole = report.stanze.filter((s) => s.valvola !== null).length;
   const quante = report.stanze.length;
@@ -321,8 +540,14 @@ function contenutoMarkup(report) {
         ? t("Caldaie", "Boilers")
         : report.generatori[0]?.nome || t("Caldaia", "Boiler")
       : t("Impianto", "System");
+  /* Sotto la caldaia le accensioni; dalle statistiche non si contano, e al
+   * loro posto va quello che la caldaia ha consumato, se lo dice. */
+  const sottoGeneratore =
+    tot.accensioni === null && tot.consumo
+      ? `${numeroDetto(tot.consumo.valore)} ${tot.consumo.unita}`
+      : accensioniDette(tot.accensioni);
   return `<div class="dm-rcl-tessere">
-      ${tessera(caldo ? "🔥" : "❄️", titoloGeneratore, ore(tot.msGeneratore), accensioniDette(tot.accensioni), `data-dm-rcl-tessera="generatore"${report.stima ? " data-stima" : ""}`)}
+      ${tessera(caldo ? "🔥" : "❄️", titoloGeneratore, ore(tot.msGeneratore), sottoGeneratore, `data-dm-rcl-tessera="generatore"${report.stima ? " data-stima" : ""}`)}
       ${tessera("⏱️", t("Richiesta stanze", "Room demand"), ore(tot.msRichiesta), t(`${quante} stanze`, `${quante} rooms`), 'data-dm-rcl-tessera="richiesta"')}
       ${
         inComfort
@@ -377,6 +602,76 @@ function velo() {
   return nodo;
 }
 
+/* I giorni del periodo, ognuno dalla prima fonte che lo sa: l'archivio del
+ * ponte, poi la storia, poi le statistiche (`core/storico-del-clima.js`). */
+async function giorniDelReport({ impianto, unita, generatori, periodo }) {
+  const adesso = Date.now();
+  const giorni = giorniDelPeriodo(periodo).map((g) => ({ ...g, record: null }));
+  const archivio = await archivioDelPonte(giorni);
+  for (const g of giorni) {
+    const record = g.chiuso ? archivio?.[g.chiave]?.[impianto] : null;
+    if (record) g.record = { ...record, fonte: "archivio" };
+  }
+  let errori = 0;
+  let domande = 0;
+
+  const mancanti = giorni.filter((g) => !g.record);
+  if (mancanti.length) {
+    const delReport = unitaDellImpianto(impianto, unita);
+    const entita = [
+      ...new Set([
+        ...delReport.map((u) => u.entity),
+        ...delReport.map((u) => u.valvola).filter(Boolean),
+        ...generatori.map((g) => g.entity),
+      ]),
+    ];
+    const tratto = { ...periodo, inizio: mancanti[0].inizio };
+    const storie = {};
+    domande += entita.length;
+    await Promise.all(
+      entita.map(async (entity) => {
+        try {
+          storie[entity] = await storiaDi(entity, tratto);
+        } catch (_errore) {
+          errori += 1;
+        }
+      }),
+    );
+    for (const g of mancanti)
+      g.record = riassuntoDelGiorno({ impianto, unita, storie, generatori, giorno: g, adesso });
+  }
+
+  const ancora = giorni.filter((g) => !g.record);
+  if (ancora.length) {
+    const delReport = unitaDellImpianto(impianto, unita);
+    const ids = [
+      ...new Set(
+        [
+          ...delReport.flatMap((u) => [u.temperatura, u.valvola, u.consumo, u.entity]),
+          ...generatori.flatMap((g) => g.statistiche || [g.entity]),
+        ].filter(Boolean),
+      ),
+    ].sort();
+    domande += 1;
+    try {
+      const serie = await statisticheDi(ids, ancora[0].inizio, ancora.at(-1).fine);
+      for (const g of ancora)
+        g.record = riassuntoDalleStatistiche({
+          impianto,
+          unita,
+          generatori,
+          serie,
+          unitaDi,
+          giorno: g,
+          adesso,
+        });
+    } catch (_errore) {
+      errori += 1;
+    }
+  }
+  return { giorni, errori, domande };
+}
+
 async function disegna() {
   const nodo = velo();
   const unita = unitaDelReport();
@@ -388,32 +683,19 @@ async function disegna() {
   const corpo = nodo.querySelector("[data-dm-rcl-corpo]");
   const giro = ++state.giro;
   corpo.innerHTML = `<div class="dm-rcl-carica"><span class="dm-rcl-spin"></span>${esc(t("Leggo la storia…", "Reading the history…"))}</div>`;
-  const delReport = unitaDellImpianto(state.impianto, unita);
   const generatori = state.impianto === "caldo" ? caldaieDelReport() : [];
-  const entita = [
-    ...new Set([
-      ...delReport.map((u) => u.entity),
-      ...delReport.map((u) => u.valvola).filter(Boolean),
-      ...generatori.map((g) => g.entity),
-    ]),
-  ];
-  const storie = {};
-  let errori = 0;
-  await Promise.all(
-    entita.map(async (entity) => {
-      try {
-        storie[entity] = await storiaDi(entity, periodo);
-      } catch (_errore) {
-        errori += 1;
-      }
-    }),
-  );
+  const { giorni, errori, domande } = await giorniDelReport({
+    impianto: state.impianto,
+    unita,
+    generatori,
+    periodo,
+  });
   if (giro !== state.giro || !state.aperto) return;
-  if (errori && errori === entita.length) {
+  if (errori && errori === domande && !giorni.some((g) => g.record)) {
     corpo.innerHTML = `<div class="dm-rcl-vuoto"><span aria-hidden="true">⚠️</span><b>${esc(t("La storia non risponde", "The history does not answer"))}</b><small>${esc(t("Home Assistant non ha mandato la storia di questi termostati. Riprova fra poco.", "Home Assistant did not send the history of these thermostats. Try again shortly."))}</small></div>`;
     return;
   }
-  const report = reportDellImpianto({ impianto: state.impianto, unita, storie, generatori, periodo });
+  const report = reportDaiGiorni({ impianto: state.impianto, unita, generatori, periodo, giorni });
   corpo.innerHTML = contenutoMarkup(report);
   root.__DM_REPORT_CLIMA_ULTIMO__ = report;
 }
@@ -561,6 +843,13 @@ html[data-theme="dark"] .dm-rcl-segno[data-dm-rcl-segno="dati"]{color:#facc15}
   .dm-rcl-foglio{width:100%;max-height:none;height:100%;border-radius:0;border:0;padding:max(14px,env(safe-area-inset-top)) 14px max(20px,env(safe-area-inset-bottom))}
   .dm-rcl-tessere{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   .dm-rcl-tessera b{font-size:18px}
+  /* Sul telefono il segno («stima», «dati parziali») va sotto il nome: accanto
+   * gli toglieva lo spazio e «Termosifone Sala» diventava «Termosifone …». */
+  .dm-rcl-stanza-testa{flex-wrap:wrap;row-gap:4px}
+  .dm-rcl-stanza-testa b{flex:1 1 0;order:1}
+  .dm-rcl-stanza-testa strong{order:1}
+  .dm-rcl-stanza-testa:has(.dm-rcl-segno)::after{content:"";order:2;flex-basis:100%;height:0}
+  .dm-rcl-segno{order:3}
   .dm-rcl-grafico{height:130px;gap:2px}
   .dm-rcl-grafico[data-colonne="24"] .dm-rcl-col small,.dm-rcl-grafico[data-colonne="31"] .dm-rcl-col small{font-size:9px}
 }
