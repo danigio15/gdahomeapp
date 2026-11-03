@@ -20,9 +20,13 @@ _Solo Home Assistant: l'app sul telefono non cambia._
   Clima c'è «📊 Report»: Riscaldamento e Raffrescamento, per giorno (ora per
   ora), settimana o mese (giorno per giorno) con le frecce per tornare
   indietro. In alto le ore della caldaia e le sue accensioni, le ore di
-  richiesta di tutte le stanze, la temperatura media con l'obiettivo e la
-  valvola media; poi il grafico e le stanze in fila per ore di richiesta, con
-  quanto sono rimaste accese, la valvola e la temperatura. I numeri vengono
+  richiesta di tutte le stanze, la temperatura in comfort con l'obiettivo in
+  comfort — le ore accese con l'obiettivo sopra quello ridotto, così la notte
+  abbassata non fa sembrare la casa troppo calda — e la valvola media; poi il
+  grafico e le stanze in fila per ore di richiesta, con quanto sono rimaste
+  accese, la valvola e la temperatura. Le unità che nel periodo non hanno mai
+  lavorato per quell'impianto (la pompa di calore che ha solo raffrescato, nel
+  Riscaldamento) non sono in elenco, e il report dice quante. I numeri vengono
   dalla storia di Home Assistant: la richiesta da `hvac_action`, la valvola
   dalla sua entità (la casella «Valvola» dell'unità) o dagli attributi del
   termostato, la caldaia dalla Gestione termica — con due caldaie si vedono

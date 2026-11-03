@@ -156,12 +156,17 @@ async function avvia(page, testInfo, { caldaia = true, tema = "light" } = {}) {
           });
           for (const [inizio, fine] of finestre(entity, giorno)) {
             const valvola = 45 + Math.round(caso(inizio, s.sale) * 45);
+            /* La fascia di comfort: scalda, arriva, si ferma, riparte un poco
+             * e alla fine torna alla temperatura ridotta. */
+            const al = (quota) => inizio + (fine - inizio) * quota;
             righe.push({ t: inizio, s: "heat", a: attr("heating", base, voluto, valvola) });
+            righe.push({ t: al(0.25), s: "heat", a: attr("idle", voluto, voluto, 0) });
             righe.push({
-              t: (inizio + fine) / 2,
+              t: al(0.6),
               s: "heat",
-              a: attr("heating", (base + voluto) / 2, voluto, Math.round(valvola * 0.7)),
+              a: attr("heating", voluto - 0.3, voluto, Math.round(valvola * 0.6)),
             });
+            righe.push({ t: al(0.8), s: "heat", a: attr("idle", voluto + 0.1, voluto, 0) });
             righe.push({ t: fine, s: "heat", a: attr("idle", voluto - 0.2, 17, 0) });
           }
           if (entity === "climate.studio") {
@@ -387,10 +392,25 @@ for (const [schermo, misura] of [
       await attendiIlReport(page);
       await expect(page.locator("#dm-rcl")).toHaveAttribute("data-dm-rcl-zona", "caldo");
 
-      /* Il mese scorso, intero: quattro termosifoni e la pompa di calore. */
+      /* Il mese scorso, intero: i quattro termosifoni. La pompa di calore ha
+       * solo raffrescato, e nel Riscaldamento non c'e'. */
       await scegli(page, { vista: "mese", indietro: 1 });
       const stanze = page.locator("#dm-rcl .dm-rcl-stanza");
-      await expect(stanze).toHaveCount(5);
+      await expect(stanze).toHaveCount(4);
+      await expect(page.locator('#dm-rcl [data-dm-rcl-stanza="climate.studio"]')).toHaveCount(0);
+      await expect(page.locator("#dm-rcl .dm-rcl-nota").last()).toContainText(
+        "Un'unità non ha mai lavorato",
+      );
+      /* Sotto la barra il valore della richiesta, e la temperatura confrontata
+       * con l'obiettivo nelle stesse ore di comfort. */
+      const sala = page.locator('#dm-rcl [data-dm-rcl-stanza="climate.sala"]');
+      await expect(sala.locator("[data-dm-rcl-richiesta]")).toHaveText(
+        /^\d+ h( \d+ min)? di richiesta$/,
+      );
+      await expect(sala.locator("[data-dm-rcl-temperatura]")).toContainText(/su 21,0° in comfort/);
+      await expect(page.locator('#dm-rcl [data-dm-rcl-tessera="temperatura"]')).toContainText(
+        "obiettivo in comfort",
+      );
       const generatore = page.locator('#dm-rcl [data-dm-rcl-tessera="generatore"]');
       await expect(generatore).toContainText("Caldaia");
       await expect(generatore).not.toHaveAttribute("data-stima");

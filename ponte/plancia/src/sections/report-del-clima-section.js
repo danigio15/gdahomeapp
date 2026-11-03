@@ -204,14 +204,20 @@ function graficoMarkup(report) {
 
 function stanzeMarkup(report) {
   const massimo = Math.max(1, ...report.stanze.map((s) => s.msRichiesta));
-  const chiede =
-    report.impianto === "freddo" ? t("chiesto fresco", "asked for cooling") : t("chiesto calore", "asked for heat");
   return report.stanze
     .map((s, i) => {
       const quota = (s.msRichiesta / massimo) * 100;
       const acceso = ore(s.msAccesa);
       const aperta = percento(s.valvola);
-      const obiettivo = gradi(s.obiettivo);
+      const durata = ore(s.msRichiesta);
+      const ambiente = gradi(s.ambienteComfort);
+      const obiettivo = gradi(s.obiettivoComfort);
+      /* La temperatura e l'obiettivo delle stesse ore, quelle di comfort; senza
+       * comfort (mai accesa) solo la temperatura del periodo. */
+      const temperatura =
+        s.obiettivoComfort === null || s.ambienteComfort === null
+          ? gradi(s.ambiente)
+          : t(`${ambiente} su ${obiettivo} in comfort`, `${ambiente} for ${obiettivo} in comfort`);
       /* La stanza accanto al nome, se il nome non la dice gia'. */
       const nome =
         s.stanza && !s.nome.toLowerCase().includes(s.stanza.toLowerCase()) ? `${s.nome} · ${s.stanza}` : s.nome;
@@ -229,10 +235,10 @@ function stanzeMarkup(report) {
           <div class="dm-rcl-stanza-testa"><b>${esc(nome)}</b>${segni}<strong>${esc(ore(s.msRichiesta))}</strong></div>
           <div class="dm-rcl-stanza-barra"><i style="width:${quota.toFixed(1)}%"></i></div>
           <div class="dm-rcl-stanza-dati">
-            <span>${esc(chiede)}</span>
+            <span data-dm-rcl-richiesta>${esc(t(`${durata} di richiesta`, `${durata} of demand`))}</span>
             <span>⏻ ${esc(t(`accesa ${acceso}`, `on ${acceso}`))}</span>
             ${s.valvola === null ? "" : `<span data-dm-rcl-valvola>🔧 ${esc(t(`valvola ${aperta}`, `valve ${aperta}`))}</span>`}
-            <span>🌡️ ${esc(gradi(s.ambiente))}${s.obiettivo === null ? "" : ` · ${esc(t(`obiettivo ${obiettivo}`, `target ${obiettivo}`))}`}</span>
+            <span data-dm-rcl-temperatura>🌡️ ${esc(temperatura)}</span>
           </div>
         </div>
       </li>`;
@@ -250,11 +256,41 @@ function generatoriMarkup(report) {
     .join("")}</ul>`;
 }
 
+/* Le unita' che nel periodo non hanno mai lavorato per questo impianto non
+ * stanno in elenco: si dice quante, perche' contarle e non trovarle sarebbe
+ * peggio. */
+function nascosteDette(quante) {
+  if (!quante) return "";
+  return quante === 1
+    ? t(
+        "Un'unità non ha mai lavorato per questo impianto nel periodo e non è in elenco.",
+        "One unit never worked for this system in the period and is not listed.",
+      )
+    : t(
+        `${quante} unità non hanno mai lavorato per questo impianto nel periodo e non sono in elenco.`,
+        `${quante} units never worked for this system in the period and are not listed.`,
+      );
+}
+
 function notaMarkup(report) {
-  const fonte = t(
-    "Dalla storia di Home Assistant: ogni stato vale fino al successivo, e i momenti senza dati non contano.",
-    "From the Home Assistant history: each state lasts until the next one, and moments without data do not count.",
-  );
+  const fonte = [
+    t(
+      "Dalla storia di Home Assistant: ogni stato vale fino al successivo, e i momenti senza dati non contano.",
+      "From the Home Assistant history: each state lasts until the next one, and moments without data do not count.",
+    ),
+    report.impianto === "freddo"
+      ? t(
+          "In comfort: le ore accese con l'obiettivo sotto quello ridotto della stanza.",
+          "In comfort: the hours on with a target below the room's setback.",
+        )
+      : t(
+          "In comfort: le ore accese con l'obiettivo sopra quello ridotto della stanza (la notte abbassata non conta).",
+          "In comfort: the hours on with a target above the room's setback (the lowered night does not count).",
+        ),
+    nascosteDette(report.nascoste),
+  ]
+    .filter(Boolean)
+    .join(" ");
   if (!report.stima) return `<p class="dm-rcl-nota">${esc(fonte)}</p>`;
   const stima =
     report.impianto === "freddo"
@@ -275,7 +311,8 @@ function contenutoMarkup(report) {
   const tot = report.totali;
   const valvole = report.stanze.filter((s) => s.valvola !== null).length;
   const quante = report.stanze.length;
-  const obiettivo = gradi(tot.obiettivo);
+  const obiettivo = gradi(tot.obiettivoComfort);
+  const inComfort = tot.ambienteComfort !== null && tot.obiettivoComfort !== null;
   const caldo = report.impianto !== "freddo";
   const titoloGeneratore = report.stima
     ? t("Impianto (stima)", "System (estimate)")
@@ -287,7 +324,11 @@ function contenutoMarkup(report) {
   return `<div class="dm-rcl-tessere">
       ${tessera(caldo ? "🔥" : "❄️", titoloGeneratore, ore(tot.msGeneratore), accensioniDette(tot.accensioni), `data-dm-rcl-tessera="generatore"${report.stima ? " data-stima" : ""}`)}
       ${tessera("⏱️", t("Richiesta stanze", "Room demand"), ore(tot.msRichiesta), t(`${quante} stanze`, `${quante} rooms`), 'data-dm-rcl-tessera="richiesta"')}
-      ${tessera("🌡️", t("Temperatura media", "Average temperature"), gradi(tot.ambiente), tot.obiettivo === null ? "" : t(`obiettivo ${obiettivo}`, `target ${obiettivo}`), 'data-dm-rcl-tessera="temperatura"')}
+      ${
+        inComfort
+          ? tessera("🌡️", t("Temperatura in comfort", "Comfort temperature"), gradi(tot.ambienteComfort), t(`obiettivo in comfort ${obiettivo}`, `comfort target ${obiettivo}`), 'data-dm-rcl-tessera="temperatura"')
+          : tessera("🌡️", t("Temperatura media", "Average temperature"), gradi(tot.ambiente), "", 'data-dm-rcl-tessera="temperatura"')
+      }
       ${tessera("🔧", t("Valvola media", "Average valve"), percento(tot.valvola), valvole ? t(`${valvole} valvole`, `${valvole} valves`) : t("nessuna valvola", "no valve"), 'data-dm-rcl-tessera="valvola"')}
     </div>
     ${generatoriMarkup(report)}

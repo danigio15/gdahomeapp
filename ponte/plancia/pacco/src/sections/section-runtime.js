@@ -563,7 +563,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-FAJNTATL.js";
+} from "../../chunk-NIQ4XUNC.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -2034,6 +2034,7 @@ var SOURCE_INDEX = Object.freeze({
   "${allarmi} in allarme": "${allarmi} alarming",
   "${alLimite} (limite di evcc) o alle ${fine}": "at ${limite}% (evcc limit) or at ${fine}",
   "${alzate} tapparelle alzate": "${alzate} shutters up",
+  "${ambiente} su ${obiettivo} in comfort": "${ambiente} for ${obiettivo} in comfort",
   "${aperte} finestre o porte aperte": "${aperte} windows or doors open",
   "${appliance.name} aggiunto dall'integrazione": "${appliance.name} added from the integration",
   "${appliance.name} aggiunto: ${quante} caselle compilate dall'integrazione": "${appliance.name} added: ${quante} fields filled from the integration",
@@ -2087,6 +2088,7 @@ var SOURCE_INDEX = Object.freeze({
   "${daFare} da fare": "${daFare} to do",
   "${daSistemare} da sistemare": "${daSistemare} to fix",
   "${due(L.nome)}: pronto": "${due(L.nome)}: ready",
+  "${durata} di richiesta": "${durata} of demand",
   "${entita} entità": "${entita} entities",
   "${esclusioni.esclusi} esclusi": "${esclusioni.esclusi} bypassed",
   "${f.name} è aperto": "${f.name} is open",
@@ -2175,6 +2177,7 @@ var SOURCE_INDEX = Object.freeze({
   "${quante} sezioni": "${quante} sections",
   "${quante} stanno bene": "${quante} doing well",
   "${quante} stanze": "${quante} rooms",
+  "${quante} unità non hanno mai lavorato per questo impianto nel periodo e non sono in elenco.": "${quante} units never worked for this system in the period and are not listed.",
   "${quante} valori fuori norma": "${quante} readings out of range",
   "${quanti} ${tipoInParole(tipo)} da ${numero} celle": "${quanti} of ${tipoInParole(tipo)}, ${numero} cells each",
   "${quanti} aggiornamenti da fare": "${quanti} updates to install",
@@ -3316,8 +3319,6 @@ var SOURCE_INDEX = Object.freeze({
   "Chiedo a Home Assistant cosa sa aggiungere…": "Asking Home Assistant what it can add…",
   "Chiedo a Home Assistant di che integrazione è…": "Asking Home Assistant which integration it is…",
   "Chiedo a Home Assistant…": "Asking Home Assistant…",
-  "chiesto calore": "asked for heat",
-  "chiesto fresco": "asked for cooling",
   "Chiudere? Quello che non hai salvato si perde (le foto non si salvano mai).": "Close? Anything not saved is lost (photos are never saved).",
   "chiudi": "close",
   "Chiudi": "Close",
@@ -4819,6 +4820,8 @@ var SOURCE_INDEX = Object.freeze({
   "in certi giorni": "on certain days",
   "In che ordine si vedono in Home. Le prime due — la striscia col menù e il riquadro col meteo — finché stanno in cima restano sopra la pagina, dove sono sempre state; spostandole più in basso scendono in pagina insieme agli altri blocchi. La striscia col menù scende solo qui: sulle altre pagine torna in alto da sola, o l'hamburger sparirebbe. Dentro ogni blocco l'ordine si fa dove si configura quel blocco: le persone nella loro scheda, le tessere in Widget, le azioni rapide nella loro.": "The order they appear in on Home. The first two — the strip with the menu and the weather box — stay above the page as long as they are on top, where they have always been; move them further down and they come into the page with the other blocks. The menu strip only comes down here: on the other pages it goes back up by itself, or the hamburger would disappear. Inside each block the order is set where that block is configured: people in their own tab, tiles in Widgets, quick actions in theirs.",
   "In chiusura": "Closing",
+  "In comfort: le ore accese con l'obiettivo sopra quello ridotto della stanza (la notte abbassata non conta).": "In comfort: the hours on with a target above the room's setback (the lowered night does not count).",
+  "In comfort: le ore accese con l'obiettivo sotto quello ridotto della stanza.": "In comfort: the hours on with a target below the room's setback.",
   "in corso": "ongoing",
   "In corso": "Installing",
   "in corso ${resta}": "running ${resta}",
@@ -6125,9 +6128,9 @@ var SOURCE_INDEX = Object.freeze({
   "o scrivila a mano": "or type it",
   "o tutti fuori": "or everyone out",
   "obiettivo": "target",
-  "obiettivo ${obiettivo}": "target ${obiettivo}",
   "Obiettivo dei passi": "Steps goal",
   "Obiettivo di ${numeroBello(obiettivo)} raggiunto": "${numeroBello(obiettivo)} goal reached",
+  "obiettivo in comfort ${obiettivo}": "comfort target ${obiettivo}",
   "Occhiali": "Glasses",
   "occupato": "occupied",
   "Occupato": "Occupied",
@@ -8336,6 +8339,7 @@ var SOURCE_INDEX = Object.freeze({
   "Un'entità, o il numero scritto sull'etichetta del pacco con la sua unità. Con la capacità di ogni pacco la carica di tutto l'accumulo si pesa sull'energia, e la pagina dice fra quanto è piena o vuota.": "An entity, or the number printed on the pack label with its unit. With every pack's capacity the overall charge is weighted by energy, and the page says when it will be full or empty.",
   "Un'idea, una cosa che manca, un modo migliore": "An idea, something missing, a better way",
   "un'integrazione": "an integration",
+  "Un'unità non ha mai lavorato per questo impianto nel periodo e non è in elenco.": "One unit never worked for this system in the period and is not listed.",
   "Una batteria la dichiara Home Assistant da sé — un sensore in percentuale — e compare qui senza configurare niente.": "Home Assistant declares a battery itself — a sensor in percent — and it appears here with nothing to configure.",
   "Una caldaia a gas, a pellet o a legna: mandata, ritorno, pressione, combustione.": "A gas, pellet or wood boiler: flow, return, pressure, combustion.",
   "Una condizione": "A condition",
@@ -114846,6 +114850,29 @@ function valvolaAl(righe3, momento) {
   }
   return trovata2;
 }
+var SCARTO_DEL_RIDOTTO = 0.5;
+function comfortDelleRighe(impianto, righe3, inizio, fine) {
+  const obiettivi = [];
+  const elenco18 = Array.isArray(righe3) ? righe3 : [];
+  for (let i = 0; i < elenco18.length; i += 1) {
+    const da = Math.max(inizio, elenco18[i].t);
+    const a = Math.min(fine, i + 1 < elenco18.length ? elenco18[i + 1].t : fine);
+    if (a <= da || accesaPer(impianto, elenco18[i]) !== true) continue;
+    const obiettivo2 = obiettivoDellaRiga(impianto, elenco18[i]);
+    if (obiettivo2 !== null) obiettivi.push(obiettivo2);
+  }
+  if (!obiettivi.length) return () => false;
+  const minimo = Math.min(...obiettivi);
+  const massimo = Math.max(...obiettivi);
+  const piatto2 = massimo - minimo < SCARTO_DEL_RIDOTTO;
+  return (riga5) => {
+    if (accesaPer(impianto, riga5) !== true) return false;
+    const obiettivo2 = obiettivoDellaRiga(impianto, riga5);
+    if (obiettivo2 === null) return false;
+    if (piatto2) return true;
+    return impianto === "freddo" ? obiettivo2 <= massimo - SCARTO_DEL_RIDOTTO : obiettivo2 >= minimo + SCARTO_DEL_RIDOTTO;
+  };
+}
 function reportDellImpianto({ impianto = "caldo", unita: unita3 = [], storie = {}, generatori = [], periodo }) {
   const { inizio, fine, secchielli: secchielli2 } = periodo;
   const lungo = Math.max(0, fine - inizio);
@@ -114863,6 +114890,7 @@ function reportDellImpianto({ impianto = "caldo", unita: unita3 = [], storie = {
     const senzaAzione = righe3.length > 0 && !righe3.some((riga5) => pulito65(riga5.a?.hvac_action));
     const valvola = righeValvola.length ? mediaNelTempo(righeValvola, inizio, fine, valvolaDallEntita) : mediaNelTempo(righe3, inizio, fine, valvolaDellaRiga);
     const coperto = durata6(accesa3.noti);
+    const inComfort = comfortDelleRighe(impianto, righe3, inizio, fine);
     return {
       entity: u.entity,
       nome: pulito65(u.name) || u.entity,
@@ -114872,12 +114900,15 @@ function reportDellImpianto({ impianto = "caldo", unita: unita3 = [], storie = {
       perSecchiello: durataNeiSecchielli(richiesta.veri, secchielli2),
       intervalli: richiesta.veri,
       ambiente: mediaNelTempo(righe3, inizio, fine, ambienteDellaRiga),
-      obiettivo: mediaNelTempo(
+      /* La stanza e il suo obiettivo nelle stesse ore: quelle di comfort. */
+      msComfort: durata6(intervalliDove(righe3, inizio, fine, (riga5) => inComfort(riga5)).veri),
+      ambienteComfort: mediaNelTempo(righe3, inizio, fine, ambienteDellaRiga, inComfort),
+      obiettivoComfort: mediaNelTempo(
         righe3,
         inizio,
         fine,
         (riga5) => obiettivoDellaRiga(impianto, riga5),
-        (riga5) => accesaPer(impianto, riga5) === true
+        inComfort
       ),
       valvola,
       valvolaDa: valvola === null ? null : righeValvola.length ? "entita" : "attributo",
@@ -114887,6 +114918,9 @@ function reportDellImpianto({ impianto = "caldo", unita: unita3 = [], storie = {
     };
   });
   stanze4.sort((x, y) => y.msRichiesta - x.msRichiesta || x.nome.localeCompare(y.nome));
+  const mute = (s) => s.copertura > 0 && s.msRichiesta === 0 && s.msAccesa === 0;
+  const nascoste = stanze4.filter(mute).length;
+  const visibili = stanze4.filter((s) => !mute(s));
   const misurati = (generatori || []).map((g) => {
     const righe3 = storie[pulito65(g.entity)] || [];
     if (!righe3.length) return null;
@@ -114905,7 +114939,7 @@ function reportDellImpianto({ impianto = "caldo", unita: unita3 = [], storie = {
       stima: false
     };
   }).filter(Boolean);
-  const unione2 = unisci(stanze4.flatMap((s) => s.intervalli));
+  const unione2 = unisci(visibili.flatMap((s) => s.intervalli));
   const stima = {
     nome: "",
     entity: "",
@@ -114922,20 +114956,24 @@ function reportDellImpianto({ impianto = "caldo", unita: unita3 = [], storie = {
     const buoni = valori.filter((v) => v !== null && v !== void 0);
     return buoni.length ? buoni.reduce((s, v) => s + v, 0) / buoni.length : null;
   };
-  const conDati = stanze4.filter((s) => s.copertura > 0);
+  const conDati = visibili.filter((s) => s.copertura > 0);
   return {
     impianto,
     periodo,
-    stanze: stanze4.map(({ intervalli: _intervalli, ...resto }) => resto),
+    stanze: visibili.map(({ intervalli: _intervalli, ...resto }) => resto),
+    nascoste,
     generatori: generatoriDelReport,
     stima: !misurati.length,
     secchielli: secchielli2.map((s, i) => ({ ...s, ms: perSecchiello[i] })),
     totali: {
       msGeneratore: generatoriDelReport.reduce((s, g) => s + g.ms, 0),
       accensioni: generatoriDelReport.reduce((s, g) => s + g.accensioni, 0),
-      msRichiesta: stanze4.reduce((s, x) => s + x.msRichiesta, 0),
+      msRichiesta: visibili.reduce((s, x) => s + x.msRichiesta, 0),
       ambiente: media3(conDati.map((s) => s.ambiente)),
-      obiettivo: media3(conDati.map((s) => s.obiettivo)),
+      /* Il riquadro confronta le stesse ore: la media delle stanze nelle loro
+       * ore di comfort, e l'obiettivo di quelle ore. */
+      ambienteComfort: media3(conDati.map((s) => s.ambienteComfort)),
+      obiettivoComfort: media3(conDati.map((s) => s.obiettivoComfort)),
       valvola: media3(conDati.map((s) => s.valvola))
     },
     vuoto: !conDati.length && !misurati.some((g) => g.ms > 0)
@@ -115079,12 +115117,14 @@ function graficoMarkup2(report) {
 }
 function stanzeMarkup2(report) {
   const massimo = Math.max(1, ...report.stanze.map((s) => s.msRichiesta));
-  const chiede = report.impianto === "freddo" ? t("chiesto fresco", "asked for cooling") : t("chiesto calore", "asked for heat");
   return report.stanze.map((s, i) => {
     const quota = s.msRichiesta / massimo * 100;
     const acceso6 = ore(s.msAccesa);
     const aperta2 = percento7(s.valvola);
-    const obiettivo2 = gradi11(s.obiettivo);
+    const durata7 = ore(s.msRichiesta);
+    const ambiente = gradi11(s.ambienteComfort);
+    const obiettivo2 = gradi11(s.obiettivoComfort);
+    const temperatura = s.obiettivoComfort === null || s.ambienteComfort === null ? gradi11(s.ambiente) : t(`${ambiente} su ${obiettivo2} in comfort`, `${ambiente} for ${obiettivo2} in comfort`);
     const nome = s.stanza && !s.nome.toLowerCase().includes(s.stanza.toLowerCase()) ? `${s.nome} · ${s.stanza}` : s.nome;
     const segni = [
       s.datiScarsi ? `<em class="dm-rcl-segno" data-dm-rcl-segno="dati">${esc(t("dati parziali", "partial data"))}</em>` : "",
@@ -115096,10 +115136,10 @@ function stanzeMarkup2(report) {
           <div class="dm-rcl-stanza-testa"><b>${esc(nome)}</b>${segni}<strong>${esc(ore(s.msRichiesta))}</strong></div>
           <div class="dm-rcl-stanza-barra"><i style="width:${quota.toFixed(1)}%"></i></div>
           <div class="dm-rcl-stanza-dati">
-            <span>${esc(chiede)}</span>
+            <span data-dm-rcl-richiesta>${esc(t(`${durata7} di richiesta`, `${durata7} of demand`))}</span>
             <span>⏻ ${esc(t(`accesa ${acceso6}`, `on ${acceso6}`))}</span>
             ${s.valvola === null ? "" : `<span data-dm-rcl-valvola>🔧 ${esc(t(`valvola ${aperta2}`, `valve ${aperta2}`))}</span>`}
-            <span>🌡️ ${esc(gradi11(s.ambiente))}${s.obiettivo === null ? "" : ` · ${esc(t(`obiettivo ${obiettivo2}`, `target ${obiettivo2}`))}`}</span>
+            <span data-dm-rcl-temperatura>🌡️ ${esc(temperatura)}</span>
           </div>
         </div>
       </li>`;
@@ -115111,11 +115151,31 @@ function generatoriMarkup(report) {
     (g) => `<li><span>🔥 ${esc(g.nome)}</span><b>${esc(ore(g.ms))}</b><small>${esc(accensioniDette(g.accensioni))}</small></li>`
   ).join("")}</ul>`;
 }
-function notaMarkup3(report) {
-  const fonte = t(
-    "Dalla storia di Home Assistant: ogni stato vale fino al successivo, e i momenti senza dati non contano.",
-    "From the Home Assistant history: each state lasts until the next one, and moments without data do not count."
+function nascosteDette(quante3) {
+  if (!quante3) return "";
+  return quante3 === 1 ? t(
+    "Un'unità non ha mai lavorato per questo impianto nel periodo e non è in elenco.",
+    "One unit never worked for this system in the period and is not listed."
+  ) : t(
+    `${quante3} unità non hanno mai lavorato per questo impianto nel periodo e non sono in elenco.`,
+    `${quante3} units never worked for this system in the period and are not listed.`
   );
+}
+function notaMarkup3(report) {
+  const fonte = [
+    t(
+      "Dalla storia di Home Assistant: ogni stato vale fino al successivo, e i momenti senza dati non contano.",
+      "From the Home Assistant history: each state lasts until the next one, and moments without data do not count."
+    ),
+    report.impianto === "freddo" ? t(
+      "In comfort: le ore accese con l'obiettivo sotto quello ridotto della stanza.",
+      "In comfort: the hours on with a target below the room's setback."
+    ) : t(
+      "In comfort: le ore accese con l'obiettivo sopra quello ridotto della stanza (la notte abbassata non conta).",
+      "In comfort: the hours on with a target above the room's setback (the lowered night does not count)."
+    ),
+    nascosteDette(report.nascoste)
+  ].filter(Boolean).join(" ");
   if (!report.stima) return `<p class="dm-rcl-nota">${esc(fonte)}</p>`;
   const stima = report.impianto === "freddo" ? t(
     "Il tempo dell'impianto è una stima: è acceso quando almeno una stanza chiede fresco.",
@@ -115132,13 +115192,14 @@ function contenutoMarkup(report) {
   const tot = report.totali;
   const valvole = report.stanze.filter((s) => s.valvola !== null).length;
   const quante3 = report.stanze.length;
-  const obiettivo2 = gradi11(tot.obiettivo);
+  const obiettivo2 = gradi11(tot.obiettivoComfort);
+  const inComfort = tot.ambienteComfort !== null && tot.obiettivoComfort !== null;
   const caldo = report.impianto !== "freddo";
   const titoloGeneratore = report.stima ? t("Impianto (stima)", "System (estimate)") : caldo ? report.generatori.length > 1 ? t("Caldaie", "Boilers") : report.generatori[0]?.nome || t("Caldaia", "Boiler") : t("Impianto", "System");
   return `<div class="dm-rcl-tessere">
       ${tessera3(caldo ? "🔥" : "❄️", titoloGeneratore, ore(tot.msGeneratore), accensioniDette(tot.accensioni), `data-dm-rcl-tessera="generatore"${report.stima ? " data-stima" : ""}`)}
       ${tessera3("⏱️", t("Richiesta stanze", "Room demand"), ore(tot.msRichiesta), t(`${quante3} stanze`, `${quante3} rooms`), 'data-dm-rcl-tessera="richiesta"')}
-      ${tessera3("🌡️", t("Temperatura media", "Average temperature"), gradi11(tot.ambiente), tot.obiettivo === null ? "" : t(`obiettivo ${obiettivo2}`, `target ${obiettivo2}`), 'data-dm-rcl-tessera="temperatura"')}
+      ${inComfort ? tessera3("🌡️", t("Temperatura in comfort", "Comfort temperature"), gradi11(tot.ambienteComfort), t(`obiettivo in comfort ${obiettivo2}`, `comfort target ${obiettivo2}`), 'data-dm-rcl-tessera="temperatura"') : tessera3("🌡️", t("Temperatura media", "Average temperature"), gradi11(tot.ambiente), "", 'data-dm-rcl-tessera="temperatura"')}
       ${tessera3("🔧", t("Valvola media", "Average valve"), percento7(tot.valvola), valvole ? t(`${valvole} valvole`, `${valvole} valves`) : t("nessuna valvola", "no valve"), 'data-dm-rcl-tessera="valvola"')}
     </div>
     ${generatoriMarkup(report)}

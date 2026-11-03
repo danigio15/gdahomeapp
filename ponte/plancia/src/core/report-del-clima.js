@@ -206,7 +206,7 @@ export function accensioni(intervalli, inizio, tolleranza = PAUSA_CHE_NON_SPEGNE
  *
  * Una media delle righe direbbe la temperatura delle ore in cui il sensore
  * parla tanto, non quella della stanza. `dove` restringe la media al tempo in
- * cui la riga lo merita — l'obiettivo conta solo quando la stanza e' accesa.
+ * cui la riga lo merita — l'obiettivo conta solo nelle ore di comfort.
  */
 export function mediaNelTempo(righe, inizio, fine, leggi, dove = () => true) {
   let somma = 0;
@@ -363,6 +363,46 @@ function valvolaAl(righe, momento) {
   return trovata;
 }
 
+/* ── il comfort ───────────────────────────────────────────────────────
+ *
+ * L'obiettivo medio di tutte le ore accese mescolava il giorno e la notte:
+ * una stanza a 21° di giorno e 17° di notte faceva «obiettivo 17,7°» accanto
+ * a una temperatura di 20,9°, e sembrava una casa troppo calda. Il confronto
+ * giusto e' fra la stanza e il suo obiettivo quando la si vuole calda.
+ *
+ * Il comfort e' il tempo in cui la stanza e' accesa con un obiettivo sopra
+ * quello ridotto — il piu' basso che ha tenuto nel periodo, per il freddo il
+ * piu' alto. Un termostato che non abbassa mai (tutti gli obiettivi entro
+ * mezzo grado) e' in comfort tutto il tempo che e' acceso. Non serve sapere
+ * il programma: lo dice la storia. */
+export const SCARTO_DEL_RIDOTTO = 0.5;
+
+/** Il predicato «questa riga e' in comfort», per le righe di una stanza. */
+export function comfortDelleRighe(impianto, righe, inizio, fine) {
+  const obiettivi = [];
+  const elenco = Array.isArray(righe) ? righe : [];
+  for (let i = 0; i < elenco.length; i += 1) {
+    const da = Math.max(inizio, elenco[i].t);
+    const a = Math.min(fine, i + 1 < elenco.length ? elenco[i + 1].t : fine);
+    if (a <= da || accesaPer(impianto, elenco[i]) !== true) continue;
+    const obiettivo = obiettivoDellaRiga(impianto, elenco[i]);
+    if (obiettivo !== null) obiettivi.push(obiettivo);
+  }
+  if (!obiettivi.length) return () => false;
+  const minimo = Math.min(...obiettivi);
+  const massimo = Math.max(...obiettivi);
+  const piatto = massimo - minimo < SCARTO_DEL_RIDOTTO;
+  return (riga) => {
+    if (accesaPer(impianto, riga) !== true) return false;
+    const obiettivo = obiettivoDellaRiga(impianto, riga);
+    if (obiettivo === null) return false;
+    if (piatto) return true;
+    return impianto === "freddo"
+      ? obiettivo <= massimo - SCARTO_DEL_RIDOTTO
+      : obiettivo >= minimo + SCARTO_DEL_RIDOTTO;
+  };
+}
+
 /**
  * Il report di un impianto in un periodo.
  *
@@ -388,6 +428,7 @@ export function reportDellImpianto({ impianto = "caldo", unita = [], storie = {}
       ? mediaNelTempo(righeValvola, inizio, fine, valvolaDallEntita)
       : mediaNelTempo(righe, inizio, fine, valvolaDellaRiga);
     const coperto = durata(accesa.noti);
+    const inComfort = comfortDelleRighe(impianto, righe, inizio, fine);
     return {
       entity: u.entity,
       nome: pulito(u.name) || u.entity,
@@ -397,12 +438,15 @@ export function reportDellImpianto({ impianto = "caldo", unita = [], storie = {}
       perSecchiello: durataNeiSecchielli(richiesta.veri, secchielli),
       intervalli: richiesta.veri,
       ambiente: mediaNelTempo(righe, inizio, fine, ambienteDellaRiga),
-      obiettivo: mediaNelTempo(
+      /* La stanza e il suo obiettivo nelle stesse ore: quelle di comfort. */
+      msComfort: durata(intervalliDove(righe, inizio, fine, (riga) => inComfort(riga)).veri),
+      ambienteComfort: mediaNelTempo(righe, inizio, fine, ambienteDellaRiga, inComfort),
+      obiettivoComfort: mediaNelTempo(
         righe,
         inizio,
         fine,
         (riga) => obiettivoDellaRiga(impianto, riga),
-        (riga) => accesaPer(impianto, riga) === true,
+        inComfort,
       ),
       valvola,
       valvolaDa: valvola === null ? null : righeValvola.length ? "entita" : "attributo",
@@ -412,6 +456,14 @@ export function reportDellImpianto({ impianto = "caldo", unita = [], storie = {}
     };
   });
   stanze.sort((x, y) => y.msRichiesta - x.msRichiesta || x.nome.localeCompare(y.nome));
+  /* Un'unita' che nel periodo non ha mai lavorato per questo impianto non e'
+   * di questo report: la pompa di calore che ha solo raffrescato non sta fra
+   * le stanze del Riscaldamento con «0 min». Resta quella di cui non si sa
+   * niente — porta «dati parziali» — e resta il termosifone acceso che non ha
+   * chiesto: anche quello e' un'informazione. */
+  const mute = (s) => s.copertura > 0 && s.msRichiesta === 0 && s.msAccesa === 0;
+  const nascoste = stanze.filter(mute).length;
+  const visibili = stanze.filter((s) => !mute(s));
 
   const misurati = (generatori || [])
     .map((g) => {
@@ -432,7 +484,7 @@ export function reportDellImpianto({ impianto = "caldo", unita = [], storie = {}
     .filter(Boolean);
 
   /* La stima: l'impianto lavora quando almeno una stanza chiede. */
-  const unione = unisci(stanze.flatMap((s) => s.intervalli));
+  const unione = unisci(visibili.flatMap((s) => s.intervalli));
   const stima = {
     nome: "",
     entity: "",
@@ -450,20 +502,24 @@ export function reportDellImpianto({ impianto = "caldo", unita = [], storie = {}
     const buoni = valori.filter((v) => v !== null && v !== undefined);
     return buoni.length ? buoni.reduce((s, v) => s + v, 0) / buoni.length : null;
   };
-  const conDati = stanze.filter((s) => s.copertura > 0);
+  const conDati = visibili.filter((s) => s.copertura > 0);
   return {
     impianto,
     periodo,
-    stanze: stanze.map(({ intervalli: _intervalli, ...resto }) => resto),
+    stanze: visibili.map(({ intervalli: _intervalli, ...resto }) => resto),
+    nascoste,
     generatori: generatoriDelReport,
     stima: !misurati.length,
     secchielli: secchielli.map((s, i) => ({ ...s, ms: perSecchiello[i] })),
     totali: {
       msGeneratore: generatoriDelReport.reduce((s, g) => s + g.ms, 0),
       accensioni: generatoriDelReport.reduce((s, g) => s + g.accensioni, 0),
-      msRichiesta: stanze.reduce((s, x) => s + x.msRichiesta, 0),
+      msRichiesta: visibili.reduce((s, x) => s + x.msRichiesta, 0),
       ambiente: media(conDati.map((s) => s.ambiente)),
-      obiettivo: media(conDati.map((s) => s.obiettivo)),
+      /* Il riquadro confronta le stesse ore: la media delle stanze nelle loro
+       * ore di comfort, e l'obiettivo di quelle ore. */
+      ambienteComfort: media(conDati.map((s) => s.ambienteComfort)),
+      obiettivoComfort: media(conDati.map((s) => s.obiettivoComfort)),
       valvola: media(conDati.map((s) => s.valvola)),
     },
     vuoto: !conDati.length && !misurati.some((g) => g.ms > 0),

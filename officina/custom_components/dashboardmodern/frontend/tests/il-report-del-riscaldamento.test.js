@@ -299,8 +299,14 @@ test("il report di un giorno con la caldaia configurata", () => {
   /* Quella della Camera dall'entita': 80% per un'ora su 24. */
   assert.equal(Math.round(camera.valvola * 100) / 100, 3.33);
   assert.equal(camera.valvolaDa, "entita");
-  /* L'obiettivo conta solo da accesa: la Camera spenta non ha 19 per 12 ore. */
-  assert.equal(camera.obiettivo, 19);
+  /* La Camera non abbassa mai: in comfort tutto il tempo che e' accesa. */
+  assert.equal(camera.msComfort, 12 * H);
+  assert.equal(camera.obiettivoComfort, 19);
+  /* La Sala tiene 20° fino alle 6 e poi 21°: il comfort comincia alle 6, e
+   * la sua temperatura si confronta con 21, non con la media di 20 e 21. */
+  assert.equal(sala.msComfort, 18 * H);
+  assert.equal(sala.obiettivoComfort, 21);
+  assert.equal(Math.round(sala.ambienteComfort * 100) / 100, 20.14);
   /* La caldaia: 3 h 10 + 4 h, due accensioni. */
   assert.equal(report.totali.msGeneratore, 7 * H + 10 * M);
   assert.equal(report.totali.accensioni, 2);
@@ -356,4 +362,71 @@ test("i secchielli seguono il calendario locale", () => {
     ),
     [H, 30 * M],
   );
+});
+
+test("il comfort: la notte abbassata non entra nell'obiettivo", () => {
+  const periodo = periodoDelReport("giorno", new Date(2026, 0, 14), new Date(2026, 0, 20));
+  const g = periodo.inizio;
+  const riga = (ore, temperatura, corrente) => ({
+    t: g + ore * H,
+    s: "heat",
+    a: { hvac_action: "idle", temperature: temperatura, current_temperature: corrente },
+  });
+  /* 17° di notte (0-6 e 22-24), 21° di giorno, la stanza a 20,5° di giorno. */
+  const righe = [riga(0, 17, 18), riga(6, 21, 20.5), riga(22, 17, 19)];
+  const report = reportDellImpianto({
+    impianto: "caldo",
+    unita: [{ entity: "climate.sala", name: "Sala", zone: "caldo" }],
+    storie: { "climate.sala": righe },
+    periodo,
+  });
+  const [sala] = report.stanze;
+  assert.equal(sala.msComfort, 16 * H);
+  assert.equal(sala.obiettivoComfort, 21);
+  assert.equal(sala.ambienteComfort, 20.5);
+  assert.equal(report.totali.obiettivoComfort, 21);
+  assert.equal(report.totali.ambienteComfort, 20.5);
+  /* Per il freddo il ridotto e' il piu' alto: 28° quando non c'e' nessuno. */
+  const freddo = reportDellImpianto({
+    impianto: "freddo",
+    unita: [{ entity: "climate.split", name: "Split", zone: "freddo" }],
+    storie: {
+      "climate.split": [
+        { t: g, s: "cool", a: { temperature: 28, current_temperature: 27 } },
+        { t: g + 12 * H, s: "cool", a: { temperature: 24, current_temperature: 24.5 } },
+      ],
+    },
+    periodo,
+  });
+  assert.equal(freddo.stanze[0].obiettivoComfort, 24);
+  assert.equal(freddo.stanze[0].msComfort, 12 * H);
+});
+
+test("le unita' che non hanno mai lavorato per l'impianto non sono in elenco", () => {
+  const periodo = periodoDelReport("giorno", new Date(2026, 0, 14), new Date(2026, 0, 20));
+  const g = periodo.inizio;
+  const report = reportDellImpianto({
+    impianto: "caldo",
+    unita: [
+      { entity: "climate.pdc", name: "Pompa", zone: "caldo" },
+      { entity: "climate.sala", name: "Sala", zone: "caldo" },
+      { entity: "climate.muto", name: "Muto", zone: "caldo" },
+    ],
+    storie: {
+      /* La pompa ha solo raffrescato: 0 richiesta, 0 accesa in caldo. */
+      "climate.pdc": [{ t: g, s: "cool", a: { hvac_action: "cooling", current_temperature: 26 } }],
+      /* Il termosifone acceso che non ha mai chiesto resta. */
+      "climate.sala": [
+        { t: g, s: "heat", a: { hvac_action: "idle", temperature: 20, current_temperature: 21 } },
+      ],
+    },
+    periodo,
+  });
+  assert.deepEqual(
+    report.stanze.map((s) => s.entity),
+    ["climate.muto", "climate.sala"],
+  );
+  assert.equal(report.nascoste, 1);
+  /* La temperatura della pompa non entra nella media del riscaldamento. */
+  assert.equal(report.totali.ambiente, 21);
 });
