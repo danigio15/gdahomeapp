@@ -1234,6 +1234,12 @@ export function costruisciIlServer({
             }
           : null,
         segnalazioni: detto?.segnalazioni === true,
+        /* I telefoni delle case accese per versione dell'app, sommati dal
+         * tramite (`centralino/src/telefoni.js`): li legge
+         * `versioni-delle-app.js`, che li pulisce lui. Un tramite di prima
+         * non li dice. */
+        versioniApp:
+          detto?.versioni_app && typeof detto.versioni_app === "object" ? detto.versioni_app : null,
         chat: numero(detto?.chat?.linee),
         console: detto?.chat?.console === true,
         posta: detto?.posta === true,
@@ -2235,9 +2241,14 @@ export function costruisciIlServer({
        * lui. */
       json(risposta, {
         ...licenze.abbonamenti(),
-        /* Le versioni dell'app sui telefoni, dai rapporti delle case: solo
-         * quanti per versione, mai quali telefoni. */
-        versioniDelleApp: leVersioniDelleApp(case_.elenco(TUTTE), ultime.tutte()),
+        /* Le versioni dell'app sui telefoni, dai rapporti delle case e dal
+         * tramite, che le sente da tutte le case accese anche col rapporto
+         * spento: solo quanti per versione, mai quali telefoni. */
+        versioniDelleApp: leVersioniDelleApp(
+          case_.elenco(TUTTE),
+          ultime.tutte(),
+          (await iNumeriDelTramite())?.versioniApp ?? null,
+        ),
         ultimeDellApp: ultime.tutte(),
         avvisi: {
           apple: "/v1/negozi/apple",

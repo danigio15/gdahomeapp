@@ -689,7 +689,7 @@ function lePlance(plance, configurazione, { conRevisione = false } = {}) {
  * e versione — niente nomi, modelli o di chi e':
  * al quadro serve sapere chi e' rimasto indietro, non chi e'. Un telefono che
  * non l'ha mai detta conta sotto una versione vuota. */
-function iTelefoni(dispositivi, adesso) {
+export function iTelefoni(dispositivi, adesso) {
   const elenco = typeof dispositivi.elenco === "function" ? dispositivi.elenco() : [];
   const settimana = adesso() - 7 * 24 * 60 * 60 * 1000;
   const visti = elenco.filter((uno) => Number(uno.vistoIl || 0) >= settimana);

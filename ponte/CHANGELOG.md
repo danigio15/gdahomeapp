@@ -10,6 +10,21 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.9.2
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Le versioni dell'app arrivano da tutte le case accese:** «continuo a non
+  vedere le app installate dagli utenti». Il quadro le sapeva solo dal
+  rapporto, che parte spento: su 178 case accese contava sei telefoni.
+  Adesso l'add-on dice anche al tramite — appena collegato e poi ogni ora —
+  quanti telefoni ha visto nella settimana per negozio e versione dell'app.
+  Solo numeri, senza nomi, modelli o identificativi; il tramite li tiene in
+  memoria e al quadro passa solo la somma di tutte le case, e una casa col
+  rapporto acceso non si conta due volte. Nella gestione il riquadro
+  «Versione non detta» dice quante case accese hanno ancora l'add-on di
+  prima. L'informativa lo scrive.
+
 ## 1.18.9.1
 
 _Solo Home Assistant: l'app sul telefono non cambia._

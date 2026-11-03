@@ -309,6 +309,13 @@ void main() {
        * un telefono, quindi valgono uno tutti e due. */
         expect(salute['collegamenti'], 1);
         expect(salute['app'], 1);
+        /* E una cosa in piu', e sono numeri: quanti telefoni la casa ha visto
+         * nella settimana per versione dell'app, sommati su tutte le case
+         * (`centralino/src/telefoni.js`). Quale casa non c'e', il segno
+         * nemmeno. */
+        final versioni = salute['versioni_app'] as Map<String, dynamic>;
+        expect(versioni['case'], 1);
+        expect(versioni.toString(), isNot(contains(collegamento.casa!.segno)));
         expect(
           salute.toString(),
           isNot(contains(collegamento.casa!.segno)),

@@ -7221,7 +7221,7 @@
             ${
               N.versioni.length
                 ? `<ul class="elenco">${N.versioni.map(rigaVersione(N)).join("")}</ul>`
-                : `<div class="vuoto"><b>Ancora nessuna versione</b> Arriva col prossimo rapporto delle case.</div>`
+                : `<div class="vuoto"><b>Ancora nessuna versione</b> Arriva dalle case accese, ogni ora.</div>`
             }
             ${/* già HTML */ lUltima(chiave)}
           </div>`;
@@ -7290,21 +7290,39 @@
           </li>`;
         };
         const tuttiITelefoni = V.telefoni + MUTE.telefoni;
-        const leMute = MUTE.telefoni
-          ? `<section class="scheda" data-senza-versioni>
-              <p class="servizio-titolo">Versione non detta: add-on prima della 1.18.7.14</p>
-              <p class="minuta">${testo(plurale(MUTE.telefoni, "telefono", "telefoni"))} in ${testo(MUTE.case.length === 1 ? "1 casa" : `${numero(MUTE.case.length)} case`)} che dicono solo quanti telefoni hanno: le versioni dell'app arrivano dall'add-on 1.18.7.14. Quando la casa aggiorna l'add-on, i suoi telefoni passano nei negozi qui sopra.</p>
-              <ul class="elenco si-tocca">${MUTE.case.map(rigaMuta).join("")}</ul>
+        /* Le case accese che al tramite non dicono niente: un numero solo,
+         * il tramite non dice quali. `null` se il tramite non risponde. */
+        const ACCESE_MUTE = Number.isInteger(MUTE.caseAccese) ? MUTE.caseAccese : 0;
+        const FONTI = V.fonti || { dalTramite: null, colRapporto: V.case.length };
+        const leMute =
+          MUTE.telefoni || ACCESE_MUTE
+            ? `<section class="scheda" data-senza-versioni>
+              <p class="servizio-titolo">Versione non detta: add-on da aggiornare</p>
+              ${
+                ACCESE_MUTE
+                  ? `<p class="minuta">${testo(ACCESE_MUTE === 1 ? "1 casa accesa ha" : `${numero(ACCESE_MUTE)} case accese hanno`)} un add-on che le versioni dell'app non le sa ancora dire: arrivano dall'add-on 1.18.9.2, anche col rapporto spento. Quando la casa aggiorna l'add-on, i suoi telefoni passano nei negozi qui sopra.</p>`
+                  : ""
+              }
+              ${
+                MUTE.telefoni
+                  ? `<p class="minuta">Col rapporto: ${testo(plurale(MUTE.telefoni, "telefono", "telefoni"))} in ${testo(MUTE.case.length === 1 ? "1 casa" : `${numero(MUTE.case.length)} case`)} con l'add-on prima della 1.18.7.14, che dice solo quanti telefoni ha.</p>
+                     <ul class="elenco si-tocca">${MUTE.case.map(rigaMuta).join("")}</ul>`
+                  : ""
+              }
             </section>`
-          : "";
+            : "";
+        const daDove =
+          FONTI.dalTramite === null
+            ? ""
+            : ` Da ${FONTI.dalTramite === 1 ? "1 casa accesa" : `${numero(FONTI.dalTramite)} case accese`} attraverso il tramite${FONTI.colRapporto ? ` e ${FONTI.colRapporto === 1 ? "1 casa" : `${numero(FONTI.colRapporto)} case`} col rapporto` : ""}, ognuna una volta sola.`;
         const leVersioni = `
           <div class="capo-sezione le-versioni">
             <div>
               <h2>Versioni dell'app sui telefoni</h2>
               <p>${testo(
                 tuttiITelefoni
-                  ? `${plurale(tuttiITelefoni, "telefono visto", "telefoni visti")} negli ultimi 7 giorni${MUTE.telefoni ? `, di cui ${numero(MUTE.telefoni)} in case che la versione non la dicono` : ""}. Negozio per negozio, da ogni casa arriva solo quanti telefoni per versione, senza nomi né modelli.`
-                  : "Le case dicono le versioni nel loro rapporto dalla GdAHome 1.18.7.14: contano i telefoni visti negli ultimi 7 giorni, senza nomi né modelli.",
+                  ? `${plurale(tuttiITelefoni, "telefono visto", "telefoni visti")} negli ultimi 7 giorni${MUTE.telefoni ? `, di cui ${numero(MUTE.telefoni)} in case che la versione non la dicono` : ""}.${testo(daDove)} Negozio per negozio, da ogni casa arriva solo quanti telefoni per versione, senza nomi né modelli.`
+                  : "Le case accese dicono le versioni ogni ora dall'add-on 1.18.9.2, anche col rapporto spento: contano i telefoni visti negli ultimi 7 giorni, senza nomi né modelli.",
               )}</p>
             </div>
           </div>

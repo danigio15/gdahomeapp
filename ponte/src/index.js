@@ -57,6 +57,7 @@ import { Fornitori } from "./fornitori.js";
 import { IlCorpoDalTelefono } from "./il-corpo-dal-telefono.js";
 import { RicaricaDiNotte } from "./ricarica-di-notte.js";
 import { StoricoDelClima } from "./storico-del-clima.js";
+import { TelefoniAlTramite } from "./telefoni-al-tramite.js";
 import { Automazioni } from "./automazioni.js";
 import { Integrazioni } from "./integrazioni.js";
 import { Aiutanti } from "./aiutanti.js";
@@ -494,6 +495,15 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registro,
   });
   chiamata.alGettoneMorto = (telefono) => notifiche.gettoneMorto(telefono);
+  /* Quanti telefoni per versione dell'app, detto al tramite ogni ora: solo
+   * numeri, e arriva al quadro anche col rapporto spento
+   * (`telefoni-al-tramite.js`). Col rapporto acceso verso il quadro di
+   * gdahome i telefoni li conta gia' lui, e il centralino non li somma. */
+  const telefoniAlTramite = new TelefoniAlTramite({
+    chiamata,
+    dispositivi,
+    rapporto: () => postino.acceso && postino.dove === QUADRO_DI_DIFETTO,
+  });
   ponte.notifiche = notifiche;
   /* La Salute dal telefono: le misure che l'app legge da Apple Salute o da
    * Health Connect, scritte come sensori di Home Assistant. Solo dai telefoni
@@ -722,6 +732,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   registro.info(`${dispositivi.quanti()} dispositivi abbinati`);
 
   chiamata.avvia();
+  telefoniAlTramite.parti();
   void notifiche.parti();
   viaggi.parti();
   ricaricaDiNotte.parti();
@@ -808,6 +819,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     for (const una of leVoci) una.ferma();
     clearInterval(giro);
     clearInterval(spazzino);
+    telefoniAlTramite.ferma();
     chiamata.spegni();
     notifiche.ferma();
     viaggi.ferma();

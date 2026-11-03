@@ -48,7 +48,7 @@ const dallaPiuNuova = (una, altra) =>
  * sembrava tutto, e quelle case sparivano. `{ telefoni, case }`, le case con
  * quanti telefoni e la versione dell'add-on, da quella con piu' telefoni.
  */
-export function leVersioniDelleApp(tutte = [], ultime = {}) {
+export function leVersioniDelleApp(tutte = [], ultime = {}, dalTramite = null) {
   const perNegozio = Object.fromEntries(NEGOZI.map((n) => [n, new Map()]));
   const perCasa = [];
   const muteCase = [];
@@ -90,10 +90,29 @@ export function leVersioniDelleApp(tutte = [], ultime = {}) {
     });
   }
 
+  /* E quelle che le case dicono al tramite (`centralino/src/telefoni.js`):
+   * gia' sommate di la', senza sapere quali case. Le case che mandano il
+   * rapporto il tramite non le somma — i loro telefoni sono gia' qui sopra,
+   * casa per casa — e cosi' ogni casa si conta una volta sola. */
+  const tramite = leVersioniDalTramite(dalTramite);
+  for (const v of tramite?.versioni ?? []) {
+    const mappa = perNegozio[v.negozio];
+    const chiave = `${v.versione}|${v.costruzione}`;
+    const gia = mappa.get(chiave) || {
+      versione: v.versione,
+      costruzione: v.costruzione,
+      telefoni: 0,
+      case: new Set(),
+    };
+    gia.telefoni += v.telefoni;
+    gia.caseDalTramite = (gia.caseDalTramite || 0) + v.case;
+    mappa.set(chiave, gia);
+  }
+
   const negozi = {};
   for (const negozio of NEGOZI) {
     const versioni = [...perNegozio[negozio].values()]
-      .map((v) => ({ ...v, case: v.case.size }))
+      .map(({ caseDalTramite = 0, ...v }) => ({ ...v, case: v.case.size + caseDalTramite }))
       .sort(dallaPiuNuova);
     negozi[negozio] = {
       versioni,
@@ -128,6 +147,47 @@ export function leVersioniDelleApp(tutte = [], ultime = {}) {
   const senzaVersioni = {
     telefoni: muteCase.reduce((somma, una) => somma + una.telefoni, 0),
     case: muteCase,
+    /* Le case accese adesso che al tramite non dicono niente: l'add-on e' di
+     * prima e non lo sa fare. Sono un numero e basta — il tramite non dice
+     * quali — e comprendono anche quelle dell'elenco qui sopra che sono
+     * accese. `null`: il tramite non risponde, o e' di prima. */
+    caseAccese: tramite ? tramite.mute : null,
   };
-  return { negozi, case: case_, telefoni, senzaVersioni };
+  return {
+    negozi,
+    case: case_,
+    telefoni,
+    senzaVersioni,
+    /* Da dove arrivano: quante case dal tramite (senza rapporto) e quante
+     * col rapporto. `null` se il tramite non le dice. */
+    fonti: {
+      dalTramite: tramite ? tramite.case - tramite.colRapporto : null,
+      colRapporto: perCasa.length,
+    },
+  };
+}
+
+/**
+ * Quello che il tramite dice sotto `versioni_app`, pulito: niente di piu' di
+ * numeri e versioni, e `null` se la forma non torna o non c'e'.
+ */
+export function leVersioniDalTramite(detto) {
+  if (!detto || typeof detto !== "object") return null;
+  const intero = (cosa) => (Number.isSafeInteger(cosa) && cosa >= 0 ? cosa : null);
+  const case_ = intero(detto.case);
+  const colRapporto = intero(detto.col_rapporto ?? detto.colRapporto);
+  const mute = intero(detto.mute);
+  const visti = intero(detto.visti7gg);
+  if (case_ === null || colRapporto === null || mute === null || visti === null) return null;
+  const versioni = (Array.isArray(detto.versioni) ? detto.versioni : [])
+    .slice(0, 300)
+    .map((una) => ({
+      negozio: ilNegozio(una?.negozio),
+      versione: typeof una?.versione === "string" ? una.versione.slice(0, 40) : "",
+      costruzione: intero(una?.costruzione) ?? 0,
+      telefoni: intero(una?.telefoni) ?? 0,
+      case: intero(una?.case) ?? 0,
+    }))
+    .filter((una) => una.telefoni > 0);
+  return { case: case_, colRapporto, mute, visti7gg: visti, versioni };
 }

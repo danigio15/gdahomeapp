@@ -12,7 +12,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { laFormaDel } from "../src/forma-del-rapporto.js";
-import { leVersioniDelleApp } from "../src/versioni-delle-app.js";
+import { leVersioniDalTramite, leVersioniDelleApp } from "../src/versioni-delle-app.js";
 
 const QUI = dirname(fileURLToPath(import.meta.url));
 const GESTORE = readFileSync(join(QUI, "..", "gestore", "index.html"), "utf8");
@@ -100,7 +100,7 @@ test("senza nessun numero di costruzione nessuno e' «indietro»", () => {
 test("la gestione le chiede con gli abbonamenti, e la pagina le scrive negozio per negozio senza fidarsi", () => {
   assert.match(
     SERVER,
-    /versioniDelleApp: leVersioniDelleApp\(case_\.elenco\(TUTTE\), ultime\.tutte\(\)\)/,
+    /versioniDelleApp: leVersioniDelleApp\(\s*case_\.elenco\(TUTTE\),\s*ultime\.tutte\(\),\s*\(await iNumeriDelTramite\(\)\)\?\.versioniApp \?\? null,?\s*\)/,
   );
   assert.match(GESTORE, /Versioni dell'app sui telefoni/);
   assert.match(GESTORE, /unNegozio\("apple"\)/);
@@ -152,6 +152,8 @@ test("i telefoni delle case che la versione non la dicono si contano a parte", (
       { casa: "casa_3", nome: "Mare", telefoni: 4, ponte: "1.18.6" },
       { casa: "casa_2", nome: "Centro", telefoni: 2, ponte: "1.18.7.10" },
     ],
+    /* Senza il tramite le case accese mute non si sanno. */
+    caseAccese: null,
   });
   /* Le case che non dicono le versioni non finiscono fra quelle «per casa». */
   assert.deepEqual(
@@ -167,4 +169,69 @@ test("la pagina scrive i telefoni senza versione, e il totale li comprende", () 
   assert.match(GESTORE, /const tuttiITelefoni = V\.telefoni \+ MUTE\.telefoni/);
   /* Anche qui quello che arriva da una casa passa da `testo(…)`. */
   assert.match(GESTORE, /add-on \$\{testo\(una\.ponte\)\}/);
+});
+
+/* «Continuo a non vedere le app installate dagli utenti.» Il rapporto parte
+ * spento: le versioni arrivano anche dal tramite, che le sente da tutte le
+ * case accese gia' sommate (`centralino/src/telefoni.js`). Le case col
+ * rapporto il tramite non le somma: ogni casa una volta sola. */
+test("le versioni dal tramite si aggiungono a quelle dei rapporti, una casa una volta", () => {
+  const V = leVersioniDelleApp(
+    [
+      casa("casa_1", "Villa", [
+        { negozio: "apple", versione: "1.18.8", costruzione: 1180800, quanti: 1 },
+      ]),
+    ],
+    {},
+    {
+      case: 120,
+      col_rapporto: 1,
+      mute: 57,
+      visti7gg: 160,
+      versioni: [
+        { negozio: "apple", versione: "1.18.8", costruzione: 1180800, telefoni: 70, case: 52 },
+        { negozio: "apple", versione: "1.18.7", costruzione: 1180716, telefoni: 21, case: 18 },
+        { negozio: "google", versione: "1.18.8", costruzione: 1180800, telefoni: 48, case: 40 },
+        { negozio: "google", versione: "1.16.12", costruzione: 1161200, telefoni: 12, case: 11 },
+        { negozio: "", versione: "", costruzione: 0, telefoni: 9, case: 8 },
+      ],
+    },
+  );
+  assert.equal(V.negozi.apple.telefoni, 92);
+  assert.deepEqual(
+    V.negozi.apple.versioni.map((v) => [v.versione, v.telefoni, v.case]),
+    [
+      ["1.18.8", 71, 53],
+      ["1.18.7", 21, 18],
+    ],
+  );
+  assert.equal(V.negozi.google.telefoni, 60);
+  assert.equal(V.negozi.altro.telefoni, 9);
+  assert.equal(V.telefoni, 161);
+  assert.equal(V.senzaVersioni.caseAccese, 57);
+  assert.deepEqual(V.fonti, { dalTramite: 119, colRapporto: 1 });
+  /* Casa per casa restano solo quelle del rapporto: il tramite non dice quali. */
+  assert.deepEqual(
+    V.case.map((una) => una.nome),
+    ["Villa"],
+  );
+});
+
+test("dal tramite si prende solo la forma giusta", () => {
+  for (const storto of [null, "tanti", { case: -1, col_rapporto: 0, mute: 0, visti7gg: 0 }, {}])
+    assert.equal(leVersioniDalTramite(storto), null);
+  const pulito = leVersioniDalTramite({
+    case: 2,
+    col_rapporto: 0,
+    mute: 0,
+    visti7gg: 3,
+    versioni: [
+      { negozio: VELENO, versione: VELENO.repeat(5), costruzione: "x", telefoni: 3, case: 2 },
+      { negozio: "apple", versione: "1.18.8", costruzione: 1180800, telefoni: 0, case: 0 },
+    ],
+  });
+  assert.equal(pulito.versioni.length, 1);
+  assert.equal(pulito.versioni[0].negozio, "altro");
+  assert.equal(pulito.versioni[0].versione.length <= 40, true);
+  assert.equal(pulito.versioni[0].costruzione, 0);
 });

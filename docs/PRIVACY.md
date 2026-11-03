@@ -33,11 +33,16 @@ Niente di tutto questo viene mandato da nessuna parte.
 
 Da fuori casa l'app non può bussare direttamente a Home Assistant, quindi
 passa da un **centralino**: un punto d'incontro dove l'add-on è già in attesa.
-Due cose vanno dette con precisione:
+Tre cose vanno dette con precisione:
 
 - quello che passa è **cifrato fra il telefono e l'add-on**: il centralino
   instrada e non può leggere niente di quello che gira;
-- il centralino tiene in piedi il collegamento e non conserva il contenuto.
+- il centralino tiene in piedi il collegamento e non conserva il contenuto;
+- l'add-on gli dice anche, ogni ora, **quanti telefoni** ha visto nella
+  settimana per ogni versione dell'app (per esempio «2 iPhone con la
+  1.18.8»): solo numeri, senza nomi, modelli o identificativi. Li tiene in
+  memoria e a GdAHome fa vedere solo la somma di tutte le case, per sapere chi
+  deve aggiornare l'app.
 
 Il centralino di GdAHome è `tramite.gdahome.org`. Chi vuole, se ne accende uno
 suo — è nel codice, ed è gratis.
