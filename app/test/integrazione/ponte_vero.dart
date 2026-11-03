@@ -146,7 +146,19 @@ class PonteVero {
     while (DateTime.now().isBefore(fine)) {
       try {
         final risposta = await _chiedi('http://$indirizzo/salute');
-        if (risposta['vivo'] == true) return;
+        /* Vivo vuol dire anche la console: il ponte apre la porta dell'app
+         * e subito dopo quella della console, e su una macchina lenta la
+         * prima domanda alla console arrivava in quell'istante — «Connection
+         * refused» sul codice di abbinamento. Si aspetta che ascolti. */
+        if (risposta['vivo'] == true) {
+          final presa = await Socket.connect(
+            '127.0.0.1',
+            portaDellaConsole,
+            timeout: const Duration(milliseconds: 500),
+          );
+          presa.destroy();
+          return;
+        }
       } catch (_) {
         /* Non e' ancora su. */
       }
