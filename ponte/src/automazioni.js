@@ -75,7 +75,10 @@ import {
 import {
   EVENTO_AVVISA,
   categoriaDi,
+  climiComandati,
   dallaHomeAssistant,
+  eUnProgrammaDellaPlancia,
+  firmaStabile,
   idBuono,
   inHomeAssistant,
   nuovoIdHA,
@@ -641,6 +644,10 @@ export class Automazioni {
         riassunto,
         origine: origineDi(config),
         modello: modello ? { ...modello, attiva } : null,
+        /* I termostati che comanda, e se e' un programma della plancia: la
+         * finestra del programma li conta anche quando non li sa leggere. */
+        climi: climiComandati(config),
+        programma: eUnProgrammaDellaPlancia(config),
         /* Si modifica dalla plancia solo se Home Assistant ne da' la
          * configurazione: una scritta in un pacchetto YAML si guarda e basta. */
         /* Finche' la porta REST non l'ha detto, vale quello che si sa: c'e'
@@ -671,6 +678,10 @@ export class Automazioni {
       /* Chi puo' scrivere: chi amministra Home Assistant, con Premium. */
       puoScrivere: amministra === true && this.sbloccato,
       adesso: this.adesso(),
+      /* Il fuso di Home Assistant: le fasce le conta lui, col suo orologio, e
+       * la finestra del programma deve dire le stesse ore anche da un
+       * telefono in un altro fuso. */
+      fuso: await this._fuso(),
       automazioni,
       aree: Object.entries(nomi)
         .map(([id, nome]) => ({ id, nome }))
@@ -680,6 +691,19 @@ export class Automazioni {
       categorie: Object.values(categorie).sort((a, b) => a.nome.localeCompare(b.nome)),
       rimasteNellaPlancia: this.rimasteNellaPlancia().length,
     };
+  }
+
+  async _fuso() {
+    if (this._fusoDiCasa) return this._fusoDiCasa;
+    try {
+      const config = await this.casa?.chiedi?.({ type: "get_config" });
+      const fuso = String(config?.time_zone || "").trim();
+      if (/^[A-Za-z_]+(\/[A-Za-z0-9_+-]+)*$/.test(fuso) && fuso.length <= 64)
+        this._fusoDiCasa = fuso;
+    } catch (_errore) {
+      /* Senza, la plancia usa il suo. */
+    }
+    return this._fusoDiCasa || "";
   }
 
   /* ── scrivere in Home Assistant ───────────────────────────────────── */
@@ -699,8 +723,13 @@ export class Automazioni {
     return "";
   }
 
-  /** Salva un'automazione della plancia come automazione di Home Assistant. */
-  async salva({ automazione, id = "" } = {}) {
+  /**
+   * Salva un'automazione della plancia come automazione di Home Assistant.
+   * `sovrascrivi`: un programma della plancia che qualcuno ha toccato in Home
+   * Assistant — e la plancia non sa piu' leggere — si rimpiazza solo se chi
+   * salva lo chiede, e solo se e' nostro: quello di un altro non si tocca.
+   */
+  async salva({ automazione, id = "", sovrascrivi = false } = {}) {
     const esistente = idBuono(id) ? String(id).trim() : "";
     const a = automazionePulita({
       ...(automazione && typeof automazione === "object" ? automazione : {}),
@@ -720,15 +749,20 @@ export class Automazioni {
         };
       if (prima) {
         /* Una complessa non si sovrascrive con l'editor della plancia: ne
-         * perderebbe un pezzo senza dirlo. */
+         * perderebbe un pezzo senza dirlo. Salvo un programma nostro, e solo
+         * se chi salva l'ha chiesto sapendolo. */
         const stati = this.stati();
-        if (
-          !dallaHomeAssistant(prima, {
-            statoDi: (x) => stati[x] ?? null,
-            azioni: this._azioni(),
-            stati,
-          })
-        )
+        const siLegge = dallaHomeAssistant(prima, {
+          statoDi: (x) => stati[x] ?? null,
+          azioni: this._azioni(),
+          stati,
+        });
+        const nostroDaRifare =
+          sovrascrivi === true &&
+          a.tipo === "crono" &&
+          eUnProgrammaDellaPlancia(prima) &&
+          origineDi(prima) === "gdahome";
+        if (!siLegge && !nostroDaRifare)
           return {
             errore: "complessa",
             perche: "questa automazione si modifica in Home Assistant",
@@ -745,13 +779,16 @@ export class Automazioni {
      * file e ricarica l'automazione per conto suo, un attimo dopo. Chi
      * rileggeva subito trovava ancora quella di prima, e la teneva per
      * trenta secondi. Si aspetta di vederla com'e' stata scritta. */
-    const entita = await this._aspettaLaRicarica(a.id, config);
+    const { entita, confermata } = await this._aspettaLaRicarica(a.id, config);
     /* «Anche il target non cambia»: un cronotermostato decide solo a ogni
      * inizio e fine fascia. Salvato alle 20 in mezzo a una fascia, i gradi
      * restavano quelli di prima fino al cambio dopo. Lo si fa decidere
-     * subito: le sue azioni guardano la fascia di adesso (e le finestre). */
+     * subito: le sue azioni guardano la fascia di adesso (e le finestre).
+     * Ma solo se Home Assistant ha davvero quella appena scritta: far
+     * scattare quella di prima rimetterebbe i gradi vecchi, e la finestra
+     * direbbe «aggiornato» coi gradi nuovi. */
     let applicato = false;
-    if (a.tipo === "crono" && a.attiva !== false && entita) {
+    if (a.tipo === "crono" && a.attiva !== false && entita && confermata) {
       try {
         await this.casa.chiedi({
           type: "call_service",
@@ -765,35 +802,50 @@ export class Automazioni {
         this.registro.debug?.(`il programma non si applica subito: ${errore?.message || errore}`);
       }
     }
-    return { id: a.id, alias: config.alias, entity_id: entita, applicato };
+    return { id: a.id, alias: config.alias, entity_id: entita, applicato, confermata };
   }
 
-  /* L'entita' dell'automazione `id`, quando Home Assistant ha ricaricato la
-   * configurazione appena scritta; "" se non arriva in qualche secondo (un
-   * Home Assistant lento: il salvataggio c'e' lo stesso). */
+  /* L'entita' dell'automazione `id` e se Home Assistant ha caricato davvero
+   * la configurazione appena scritta: `{entita, confermata}`.
+   *
+   * - la stessa (chiavi in qualunque ordine, come torna da `automations.yaml`):
+   *   confermata;
+   * - «not_found» mentre la toglie e la rimette, o quella di prima: si aspetta,
+   *   al piu' `volte × ogni`;
+   * - un Home Assistant che `automation/config` non lo conosce: non lo sapra'
+   *   mai, inutile aspettare — salvata, non confermata;
+   * - finita l'attesa senza vederla: salvata, non confermata. Chi ha salvato
+   *   lo sa, e nessuno fa scattare quella vecchia. */
   async _aspettaLaRicarica(id, scritta, { volte = 20, ogni = 250 } = {}) {
-    const voluta = JSON.stringify(scritta?.variables ?? scritta?.triggers ?? null);
+    const parte = (c) =>
+      firmaStabile({
+        variables: c?.variables ?? null,
+        triggers: c?.triggers ?? c?.trigger ?? null,
+        conditions: c?.conditions ?? c?.condition ?? null,
+        actions: c?.actions ?? c?.action ?? null,
+      });
+    const voluta = parte(scritta);
     for (let i = 0; i < volte; i += 1) {
       const entita = this._entitaDi(id);
       if (entita && typeof this.casa?.chiedi === "function") {
-        let letta;
+        let letta = null;
         try {
           letta = (await this.casa.chiedi({ type: "automation/config", entity_id: entita }))
             ?.config;
-        } catch (_errore) {
-          letta = undefined;
+        } catch (errore) {
+          if (String(errore?.code || "") === "unknown_command")
+            return { entita, confermata: false };
+          letta = null;
         }
-        /* Un Home Assistant che non sa dirlo: ci si fida della scrittura. */
-        if (letta === undefined || letta === null) return entita;
-        if (JSON.stringify(letta.variables ?? letta.triggers ?? null) === voluta) {
+        if (letta && typeof letta === "object" && parte(letta) === voluta) {
           this._dalFilo.set(id, { il: this.adesso(), config: letta });
-          return entita;
+          return { entita, confermata: true };
         }
       }
       await this._aspetta(ogni);
     }
     this._dimentica(id);
-    return this._entitaDi(id);
+    return { entita: this._entitaDi(id), confermata: false };
   }
 
   async elimina({ id = "" } = {}) {
@@ -1031,7 +1083,11 @@ export class Automazioni {
       if (tipo === COMANDO_DELLO_STATO) return si(id, await this.stato({ amministra }));
       const fatto =
         tipo === COMANDO_DEL_SALVA
-          ? await this.salva({ automazione: detto.automazione, id: detto.automazione_id })
+          ? await this.salva({
+              automazione: detto.automazione,
+              id: detto.automazione_id,
+              sovrascrivi: detto.sovrascrivi === true,
+            })
           : tipo === COMANDO_DELL_ELIMINA
             ? await this.elimina({ id: detto.automazione_id })
             : tipo === COMANDO_DEL_RINOMINA

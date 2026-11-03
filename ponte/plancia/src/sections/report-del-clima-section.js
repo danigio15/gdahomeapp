@@ -34,6 +34,7 @@ import {
   oreDelleStatistiche,
   reportDaiGiorni,
   riassuntoDalleStatistiche,
+  unitaDelleStatistiche,
   riassuntoDelGiorno,
 } from "../core/storico-del-clima.js";
 import { conIlConsumoTrovato } from "../core/consumo-trovato-del-clima.js";
@@ -211,11 +212,12 @@ async function statisticheDi(ids, da, a) {
   return serie;
 }
 
-/* L'unita' di misura di una statistica, da come l'entita' si presenta adesso:
- * e' quella con cui Home Assistant la compila. */
+/* L'unita' in cui arrivano le statistiche di un'entita': la domanda le
+ * chiede gia' in W e kWh (`domandaStatisticheDelClima`), e dall'unita' di
+ * adesso si capisce solo di che specie sono. */
 function unitaDi(id) {
   try {
-    return clean(allStates()?.[id]?.attributes?.unit_of_measurement);
+    return unitaDelleStatistiche(clean(allStates()?.[id]?.attributes?.unit_of_measurement));
   } catch (_errore) {
     return "";
   }
@@ -535,6 +537,23 @@ function notaStatistiche(report) {
   return `<p class="dm-rcl-nota" data-dm-rcl-statistiche>ⓘ ${esc(testo)}</p>`;
 }
 
+/* Un sensore di tutta la macchina (piu' zone sullo stesso dispositivo): non
+ * e' di nessuna stanza, e non si divide inventando. Lo si dice. */
+function condivisiDetti() {
+  let sensori = [];
+  try {
+    sensori = [...new Set(unitaDelReport().map((u) => clean(u.consumoCondiviso)).filter(Boolean))];
+  } catch (_errore) {
+    sensori = [];
+  }
+  if (!sensori.length) return "";
+  const quali = sensori.join(", ");
+  return t(
+    `${quali} misura tutta la macchina, non una stanza sola: il report non lo divide fra le zone, e per quelle stanze le ore restano «non note».`,
+    `${quali} measures the whole machine, not a single room: the report does not split it between zones, and for those rooms the hours stay "unknown".`,
+  );
+}
+
 function notaMarkup(report) {
   const f = report.fonti || {};
   const nessuna = f.nessuna || 0;
@@ -554,6 +573,7 @@ function notaMarkup(report) {
           )
       : "",
     nascosteDette(report.nascoste),
+    condivisiDetti(),
     nessuna === 1
       ? t("Un giorno senza nessun dato: non conta.", "One day without any data: it does not count.")
       : nessuna

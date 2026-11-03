@@ -118,6 +118,12 @@ List<Duration> scaliniFinoA(Duration finestra) => [
 /// non cancella quella di ieri.
 const notteFinoA = Duration(days: 3);
 
+/// Sveglio piu' di cosi' fra due tratti, e sono due sonni diversi.
+const risveglioFinoA = Duration(hours: 2);
+
+/// Un sonno piu' corto di cosi' e' un pisolino, non la notte.
+const notteAlmeno = Duration(hours: 3);
+
 /// Le misure accese di serie: quelle che quasi ogni orologio ha.
 const misureDiSerie = {
   MisuraDelCorpo.passi,
@@ -239,11 +245,15 @@ Lettura? lUltimo(Iterable<Campione> campioni) {
 /// numero (97). Qui sempre come numero.
 double comePercentuale(double valore) => valore <= 1.0 ? valore * 100 : valore;
 
-/// L'ultima notte di sonno, in minuti: la notte e' quella dell'ultimo tratto
-/// finito, dalle 18 del giorno prima; i tratti si sommano senza contare due
-/// volte quelli che si sovrappongono — un iPhone e un orologio scrivono la
-/// stessa notte due volte. Stanotte, se c'e'; se l'orologio stanotte era a
-/// caricare, quella prima, fino a [notteFinoA] indietro.
+/// L'ultima notte di sonno, in minuti. I tratti si mettono in fila e si
+/// uniscono in «sonni»: fra un tratto e l'altro al piu' [risveglioFinoA]
+/// sveglio, e quelli che si sovrappongono non si contano due volte — un
+/// iPhone e un orologio scrivono la stessa notte due volte. La notte e'
+/// l'ultimo sonno lungo almeno [notteAlmeno]: un pisolino, anche della
+/// sera, non e' «l'ultima notte». Chi lavora di notte dorme di giorno, e
+/// vale lo stesso. Se di sonni lunghi non ce ne sono, l'ultimo che c'e'.
+/// Stanotte, se c'e'; se l'orologio stanotte era a caricare, quella
+/// prima, fino a [notteFinoA] indietro.
 Lettura? ilSonnoDiStanotte(Iterable<Campione> tratti, DateTime adesso) {
   final buoni = [
     for (final t in tratti)
@@ -251,26 +261,31 @@ Lettura? ilSonnoDiStanotte(Iterable<Campione> tratti, DateTime adesso) {
           !t.a.isAfter(adesso) &&
           adesso.difference(t.a) <= notteFinoA)
         t,
-  ];
-  if (buoni.isEmpty) return null;
-  final fine = buoni.map((t) => t.a).reduce((x, y) => y.isAfter(x) ? y : x);
-  final daSera = fine.hour >= 18
-      ? DateTime(fine.year, fine.month, fine.day, 18)
-      : DateTime(fine.year, fine.month, fine.day - 1, 18);
-  final validi = [
-    for (final t in buoni)
-      if (t.a.isAfter(daSera)) t,
   ]..sort((x, y) => x.da.compareTo(y.da));
-  if (validi.isEmpty) return null;
+  if (buoni.isEmpty) return null;
+  final sonni = <({double minuti, DateTime fine})>[];
   var minuti = 0.0;
   DateTime? finoA;
-  for (final t in validi) {
+  for (final t in buoni) {
+    if (finoA != null && t.da.difference(finoA) > risveglioFinoA) {
+      sonni.add((minuti: minuti, fine: finoA));
+      minuti = 0;
+      finoA = null;
+    }
     final da = finoA != null && t.da.isBefore(finoA) ? finoA : t.da;
     if (t.a.isAfter(da)) minuti += t.a.difference(da).inSeconds / 60;
     if (finoA == null || t.a.isAfter(finoA)) finoA = t.a;
   }
-  if (minuti < 1) return null;
-  return Lettura(minuti.roundToDouble(), finoA!);
+  sonni.add((minuti: minuti, fine: finoA!));
+  final lunghi = [
+    for (final s in sonni)
+      if (s.minuti >= notteAlmeno.inMinutes) s,
+  ];
+  final notte = (lunghi.isEmpty ? sonni : lunghi).reduce(
+    (x, y) => y.fine.isAfter(x.fine) ? y : x,
+  );
+  if (notte.minuti < 1) return null;
+  return Lettura(notte.minuti.roundToDouble(), notte.fine);
 }
 
 /// Quello che va al ponte: `{passi: {valore, quando}, …}`, solo le misure

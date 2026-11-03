@@ -7314,7 +7314,7 @@
         const daDove =
           FONTI.dalTramite === null
             ? ""
-            : ` Da ${FONTI.dalTramite === 1 ? "1 casa accesa" : `${numero(FONTI.dalTramite)} case accese`} attraverso il tramite${FONTI.colRapporto ? ` e ${FONTI.colRapporto === 1 ? "1 casa" : `${numero(FONTI.colRapporto)} case`} col rapporto` : ""}, ognuna una volta sola.`;
+            : ` Da ${FONTI.dalTramite === 1 ? "1 casa accesa" : `${numero(FONTI.dalTramite)} case accese`} attraverso il tramite${FONTI.colRapporto ? ` e ${FONTI.colRapporto === 1 ? "1 casa" : `${numero(FONTI.colRapporto)} case`} col rapporto dell'ultima settimana` : ""}.${FONTI.colRapporto ? " Una casa che ha spento il rapporto in questi giorni può comparire in tutte e due, fino a sette giorni." : ""}`;
         const leVersioni = `
           <div class="capo-sezione le-versioni">
             <div>

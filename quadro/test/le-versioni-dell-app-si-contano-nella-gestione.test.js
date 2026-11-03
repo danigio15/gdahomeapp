@@ -235,3 +235,61 @@ test("dal tramite si prende solo la forma giusta", () => {
   assert.equal(pulito.versioni[0].versione.length <= 40, true);
   assert.equal(pulito.versioni[0].costruzione, 0);
 });
+
+test("un rapporto di piu' di una settimana fa non si conta: la casa ora la dice il tramite", () => {
+  const ADESSO = Date.UTC(2026, 10, 3, 12);
+  const GIORNO = 24 * 3600 * 1000;
+  const V = leVersioniDelleApp(
+    [
+      {
+        ...casa("casa_1", "Villa", [
+          { negozio: "apple", versione: "1.18.8", costruzione: 1180800, quanti: 2 },
+        ]),
+        vistaIl: ADESSO - 2 * GIORNO,
+      },
+      /* Ha spento il rapporto dieci giorni fa: il quadro tiene l'ultimo,
+       * ma i suoi telefoni adesso li somma il tramite. */
+      {
+        ...casa("casa_2", "Baita", [
+          { negozio: "apple", versione: "1.18.7", costruzione: 1180714, quanti: 3 },
+        ]),
+        vistaIl: ADESSO - 10 * GIORNO,
+      },
+      {
+        casa: "casa_3",
+        nome: "Vecchia",
+        vistaIl: ADESSO - 30 * GIORNO,
+        carta: { telefoni: { visti7gg: 4 }, ponte: "1.18.7.10" },
+      },
+    ],
+    {},
+    {
+      case: 2,
+      col_rapporto: 1,
+      mute: 0,
+      visti7gg: 5,
+      versioni: [
+        { negozio: "apple", versione: "1.18.7", costruzione: 1180714, telefoni: 3, case: 1 },
+      ],
+    },
+    ADESSO,
+  );
+  assert.deepEqual(
+    V.negozi.apple.versioni.map((v) => [v.versione, v.telefoni, v.case]),
+    [
+      ["1.18.8", 2, 1],
+      ["1.18.7", 3, 1],
+    ],
+  );
+  assert.deepEqual(
+    V.case.map((una) => una.nome),
+    ["Villa"],
+  );
+  assert.equal(V.senzaVersioni.telefoni, 0);
+  assert.deepEqual(V.fonti, { dalTramite: 1, colRapporto: 1 });
+});
+
+test("la gestione non promette quello che non sa: niente «ognuna una volta sola»", () => {
+  assert.doesNotMatch(GESTORE, /ognuna una volta sola/);
+  assert.match(GESTORE, /dell'ultima settimana/);
+});

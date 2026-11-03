@@ -9,7 +9,11 @@
  *    noto», mai «0 min», e il grafico non e' una fila di barre vuote;
  *  - **potenza**: ogni split ha il suo sensore di potenza sullo stesso
  *    dispositivo, e il report lo trova da solo — ore e kWh per stanza;
- *  - **energia**: lo stesso con un contatore in kWh — ore con consumo e kWh.
+ *  - **energia**: lo stesso con un contatore in kWh — ore con consumo e kWh;
+ *  - **condiviso**: Camera da Letto e Cameretta sono due zone dello stesso
+ *    multisplit, un dispositivo solo con un sensore di potenza solo. Quei
+ *    watt sono della macchina, non di una stanza: non si danno a tutte e
+ *    due (sarebbero il doppio), e la nota lo dice.
  *
  * E la scheda dell'unita' nel Config, che mostra il sensore trovato.
  * Con DM_FOTO le fotografie: telefono e computer, chiaro e scuro.
@@ -61,7 +65,7 @@ const OGGI = new Date();
 /* L'ultimo giugno passato, qualunque sia il giorno in cui la prova gira. */
 const GIUGNO = new Date(OGGI.getMonth() > 5 ? OGGI.getFullYear() : OGGI.getFullYear() - 1, 5, 15);
 
-/* `consumi`: «nessuno», «potenza» o «energia». */
+/* `consumi`: «nessuno», «potenza», «energia» o «condiviso». */
 async function avvia(page, testInfo, { tema = "light", consumi = "nessuno" } = {}) {
   test.setTimeout(180_000);
   await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
@@ -81,6 +85,13 @@ async function avvia(page, testInfo, { tema = "light", consumi = "nessuno" } = {
         di[`sensor.split_${s.id}_temperatura_esterna`] = `dev-${s.id}`;
         if (consumi === "potenza") di[`sensor.split_${s.id}_power`] = `dev-${s.id}`;
         if (consumi === "energia") di[`sensor.split_${s.id}_energy`] = `dev-${s.id}`;
+        if (consumi === "condiviso" && !["camera", "cameretta"].includes(s.id))
+          di[`sensor.split_${s.id}_power`] = `dev-${s.id}`;
+      }
+      if (consumi === "condiviso") {
+        di["climate.split_camera"] = "dev-multi";
+        di["climate.split_cameretta"] = "dev-multi";
+        di["sensor.multisplit_power"] = "dev-multi";
       }
       window.localStorage.setItem(
         "dm_dispositivi_di_home_assistant",
@@ -195,6 +206,13 @@ async function avvia(page, testInfo, { tema = "light", consumi = "nessuno" } = {
           `${s.nome} Energy`,
         );
       }
+      grezzi["sensor.multisplit_power"] = sensore(
+        "sensor.multisplit_power",
+        "W",
+        "power",
+        "measurement",
+        "Multisplit Power",
+      );
       grezzi["sensor.lavatrice_potenza"] = sensore(
         "sensor.lavatrice_potenza",
         "W",
@@ -304,6 +322,28 @@ for (const [schermo, misura] of [
         );
       });
     }
+
+    test(`due zone dello stesso multisplit: il sensore comune non si divide (${schermo}, ${luce})`, async ({
+      page,
+    }, testInfo) => {
+      await page.setViewportSize(misura);
+      const tasto = await avvia(page, testInfo, { tema, consumi: "condiviso" });
+      await giugno(page, tasto);
+      const report = await ultimo(page);
+      /* Il sensore della macchina non si chiede per le stanze. */
+      expect(JSON.stringify(report)).not.toContain("multisplit");
+      for (const id of ["climate.split_camera", "climate.split_cameretta"])
+        await expect(
+          page.locator(`#dm-rcl [data-dm-rcl-stanza="${id}"] [data-dm-rcl-richiesta]`),
+        ).toHaveText("richiesta non nota");
+      await expect(
+        page.locator('#dm-rcl [data-dm-rcl-stanza="climate.split_salone"] [data-dm-rcl-richiesta]'),
+      ).toContainText("dai consumi del climatizzatore");
+      await expect(page.locator("#dm-rcl")).toContainText(
+        "sensor.multisplit_power misura tutta la macchina",
+      );
+      await foto(page, `05-due-zone-sensore-condiviso-${schermo}-${luce}`);
+    });
 
     test(`la scheda dell'unita' mostra il sensore trovato (${schermo}, ${luce})`, async ({
       page,

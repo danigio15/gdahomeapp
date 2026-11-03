@@ -14,7 +14,11 @@ la versione non si fa. Al rilascio: le righe vanno nel CHANGELOG del ponte
   Si cerca a scalini (un giorno, una settimana, la finestra) per non chiedere
   migliaia di battiti a un Apple Watch.
 - **Il sonno è l'ultima notte**, fino a 3 giorni indietro: un orologio rimasto
-  a caricare stanotte non fa sparire quella di ieri.
+  a caricare stanotte non fa sparire quella di ieri. E un pisolino non è la
+  notte: i tratti si uniscono in sonni (al più due ore sveglio fra uno e
+  l'altro) e vale l'ultimo lungo almeno tre ore. Prima un pisolino dalle 17:30
+  alle 18:30 diventava «l'ultima notte» di un'ora al posto delle otto vere;
+  chi lavora di notte e dorme di giorno conta lo stesso.
 - **La data accanto al valore** quando non è di oggi: «73 bpm · 1 nov»,
   «ieri», come nella plancia.
 - **Una misura scelta che non arriva lo dice** sotto la riga, con dove
@@ -29,7 +33,7 @@ la versione non si fa. Al rilascio: le righe vanno nel CHANGELOG del ponte
 ## Testi per i negozi
 
 it-IT:
-Salute più precisa: battito, ossigeno, pressione e peso si leggono anche se l'ultima misura è di qualche giorno fa, con la data accanto; il sonno è l'ultima notte registrata. Se una misura non arriva l'app dice dove controllare i permessi, e se la casa non accetta le misure lo spiega.
+Salute più precisa: battito, ossigeno, pressione e peso si leggono anche se l'ultima misura è di qualche giorno fa, con la data accanto; il sonno è l'ultima notte registrata, senza confonderla con un pisolino. Se una misura non arriva l'app dice dove controllare i permessi, e se la casa non accetta le misure lo spiega.
 
 en-US:
-More accurate Health: heart rate, blood oxygen, blood pressure and weight are read even when the latest reading is a few days old, with its date shown; sleep is the last recorded night. If a reading doesn't arrive the app says where to check permissions, and if your home doesn't accept readings it explains why.
+More accurate Health: heart rate, blood oxygen, blood pressure and weight are read even when the latest reading is a few days old, with its date shown; sleep is the last recorded night, not a nap. If a reading doesn't arrive the app says where to check permissions, and if your home doesn't accept readings it explains why.

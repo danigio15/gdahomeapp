@@ -137,3 +137,19 @@ test("la scheda ha le due caselle, e non salva quelle vuote", () => {
   /* Lo zero resta: è una soglia scritta. Solo la casella vuota se ne va. */
   assert.match(editor, /if \(list\[index\]\.soglia_consumo === ""\) delete list\[index\]\.soglia_consumo;/);
 });
+
+test("un contatore di energia non dice mai «acceso»: i suoi kWh non sono watt", () => {
+  /* «Usa questo» proponeva anche un contatore in kWh per la casella dei watt:
+   * con 1534,2 kWh e una soglia di 20 W la card diceva sempre «acceso». */
+  const unita = { entity: "climate.salone", consumo: "sensor.split_salone_energy", soglia_consumo: 20 };
+  const contatore = (uom) => ({
+    "sensor.split_salone_energy": {
+      state: "1534.2",
+      attributes: { unit_of_measurement: uom, device_class: "energy" },
+    },
+  });
+  for (const uom of ["kWh", "Wh", "MWh"]) {
+    assert.equal(wattDellUnita(unita, contatore(uom)), null, uom);
+    assert.equal(accesoPerIlConsumo(unita, contatore(uom)), null, uom);
+  }
+});

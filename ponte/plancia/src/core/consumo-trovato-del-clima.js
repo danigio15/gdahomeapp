@@ -20,6 +20,12 @@
  *    non tiene le medie d'ora, e un sensore che non ha passato non serve al
  *    report: la potenza vuole `measurement`, l'energia `total` o
  *    `total_increasing`;
+ *  - **un sensore per piu' zone non e' di nessuna.** Una pompa di calore a
+ *    due zone, un multi-split, un Airzone: piu' `climate` sullo stesso
+ *    dispositivo e un sensore solo. Preso da ogni zona, ogni stanza mostrava
+ *    le ore di tutta la macchina e i kWh si sommavano N volte. Si trova lo
+ *    stesso — segnato `condiviso`, con le sue zone — ma a nessuna stanza si
+ *    attacca: il report lo dice, invece di inventare la divisione;
  *  - **prima la potenza, poi l'energia.** Dai watt si sa quanto di ogni ora
  *    e' stato acceso (media e massimo); dall'energia solo se in quell'ora ha
  *    consumato. Fra due della stessa specie vince quello che nel nome dice
@@ -102,7 +108,14 @@ export function consumoDelDispositivo(entity, { di = {}, stato = () => null } = 
   }
   candidati.sort((x, y) => y.peso - x.peso || x.entity.localeCompare(y.entity));
   const scelto = candidati[0];
-  return scelto ? { entity: scelto.entity, tipo: scelto.tipo } : null;
+  if (!scelto) return null;
+  const zone = Object.entries(di || {})
+    .filter(([altra, dispositivo]) => altra.startsWith("climate.") && pulito(dispositivo) === suo)
+    .map(([altra]) => altra)
+    .sort();
+  return zone.length > 1
+    ? { entity: scelto.entity, tipo: scelto.tipo, condiviso: true, zone }
+    : { entity: scelto.entity, tipo: scelto.tipo };
 }
 
 /**
@@ -118,6 +131,21 @@ export function conIlConsumoTrovato(unita = [], { di = {}, stato = () => null } 
     if (pulito(u?.consumo)) return u;
     const trovato = consumoDelDispositivo(u?.entity, { di, stato });
     if (!trovato) return u;
+    /* Di tutta la macchina, non di questa stanza: si segna e basta. */
+    if (trovato.condiviso) return { ...u, consumoCondiviso: trovato.entity };
     return { ...u, consumo: trovato.entity, consumoTrovato: true, consumoTipo: trovato.tipo };
   });
+}
+
+/**
+ * Cosa fare nella scheda con il consumo trovato: `"usa"` (proporre «Usa
+ * questo» per la casella dei watt), `"energia"` (e' un contatore: il report
+ * lo usa, la casella dei watt no — letto come watt direbbe «acceso» per
+ * sempre), `"condiviso"` (e' di tutta la macchina, non di questa unita'), o
+ * `""` se non c'e'.
+ */
+export function cosaFareColTrovato(trovato) {
+  if (!trovato?.entity) return "";
+  if (trovato.condiviso) return "condiviso";
+  return trovato.tipo === "potenza" ? "usa" : "energia";
 }

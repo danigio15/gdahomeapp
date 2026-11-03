@@ -77,6 +77,45 @@ void main() {
       expect(sonno.quando, DateTime(2026, 11, 2, 6, 30));
     });
 
+    test("il pisolino della sera non e' «l'ultima notte»", () {
+      final tratti = [
+        Campione(
+          0,
+          DateTime(2026, 11, 2, 23, 30),
+          DateTime(2026, 11, 3, 7, 30),
+        ),
+        Campione(
+          0,
+          DateTime(2026, 11, 3, 17, 30),
+          DateTime(2026, 11, 3, 18, 30),
+        ),
+      ];
+      final sonno = ilSonnoDiStanotte(tratti, adesso)!;
+      expect(sonno.valore, 8 * 60);
+      expect(sonno.quando, DateTime(2026, 11, 3, 7, 30));
+    });
+
+    test("la notte coi risvegli resta una notte sola", () {
+      final tratti = [
+        Campione(0, DateTime(2026, 11, 2, 23), DateTime(2026, 11, 3, 2)),
+        /* Sveglio un'ora e mezza, poi di nuovo a dormire. */
+        Campione(0, DateTime(2026, 11, 3, 3, 30), DateTime(2026, 11, 3, 7)),
+        /* Il pisolino dopo pranzo. */
+        Campione(0, DateTime(2026, 11, 3, 14), DateTime(2026, 11, 3, 14, 40)),
+      ];
+      final sonno = ilSonnoDiStanotte(tratti, adesso)!;
+      expect(sonno.valore, 3 * 60 + 3 * 60 + 30);
+      expect(sonno.quando, DateTime(2026, 11, 3, 7));
+    });
+
+    test('chi lavora di notte dorme di giorno: vale il sonno lungo', () {
+      final tratti = [
+        Campione(0, DateTime(2026, 11, 3, 8), DateTime(2026, 11, 3, 15)),
+      ];
+      final sonno = ilSonnoDiStanotte(tratti, adesso)!;
+      expect(sonno.valore, 7 * 60);
+    });
+
     test('oltre tre giorni non e\' piu\' «l\'ultima notte»', () {
       final tratti = [
         Campione(0, DateTime(2026, 10, 29, 23), DateTime(2026, 10, 30, 7)),

@@ -21,12 +21,15 @@ import test from "node:test";
 import {
   conIlConsumoTrovato,
   consumoDelDispositivo,
+  cosaFareColTrovato,
   tipoDelConsumo,
 } from "../src/core/consumo-trovato-del-clima.js";
 import { periodoDelReport, stanzaNelPeriodo } from "../src/core/report-del-clima.js";
 import {
   SOGLIA_WH_DELL_ORA,
+  domandaStatisticheDelClima,
   giorniDelPeriodo,
+  unitaDelleStatistiche,
   reportDaiGiorni,
   riassuntoDalleStatistiche,
   riassuntoDelGiorno,
@@ -265,4 +268,63 @@ test("nella storia uno split senza hvac_action conta le ore coi suoi watt", () =
   const altra = stanzaNelPeriodo("freddo", u, conAzione, periodo);
   assert.equal(altra.msRichiesta, 6 * H);
   assert.equal(altra.richiestaDa, null);
+});
+
+test("una pompa di calore a due zone: il suo sensore e' di tutta la macchina, non di ogni stanza", () => {
+  /* Un dispositivo con due `climate` e un sensore di potenza solo: ogni zona
+   * prendeva lo stesso sensore, ogni stanza mostrava le ore di tutta la
+   * macchina, e i kWh si sommavano due volte. */
+  const di = {
+    "climate.zona_1": "dev-pdc",
+    "climate.zona_2": "dev-pdc",
+    "sensor.pdc_power": "dev-pdc",
+  };
+  const stati = { "sensor.pdc_power": stato("W", "power", "measurement", "PdC Power") };
+  const leggiQui = (id) => stati[id] || null;
+  const trovato = consumoDelDispositivo("climate.zona_1", { di, stato: leggiQui });
+  assert.equal(trovato.entity, "sensor.pdc_power");
+  assert.equal(trovato.condiviso, true);
+  assert.deepEqual(trovato.zone, ["climate.zona_1", "climate.zona_2"]);
+  const unita = conIlConsumoTrovato(
+    [
+      { entity: "climate.zona_1", zone: "caldo" },
+      { entity: "climate.zona_2", zone: "caldo" },
+    ],
+    { di, stato: leggiQui },
+  );
+  /* Nessuna stanza lo prende come suo: si dice, non si somma. */
+  assert.equal(unita[0].consumo, undefined);
+  assert.equal(unita[1].consumo, undefined);
+  assert.equal(unita[0].consumoCondiviso, "sensor.pdc_power");
+  assert.equal(unita[1].consumoCondiviso, "sensor.pdc_power");
+});
+
+test("«Usa questo» solo per un sensore di potenza tutto suo: la casella vuole i watt", () => {
+  assert.equal(cosaFareColTrovato({ entity: "sensor.a", tipo: "potenza" }), "usa");
+  /* Un contatore di energia il report lo usa, ma nella casella dei watt no. */
+  assert.equal(cosaFareColTrovato({ entity: "sensor.a", tipo: "energia" }), "energia");
+  /* Uno di tutta la macchina non e' di questa unita'. */
+  assert.equal(
+    cosaFareColTrovato({ entity: "sensor.a", tipo: "potenza", condiviso: true, zone: ["x", "y"] }),
+    "condiviso",
+  );
+  assert.equal(cosaFareColTrovato(null), "");
+});
+
+test("le statistiche si chiedono in W e kWh: l'unita' mostrata adesso non conta", () => {
+  /* Chi ha cambiato l'unita' mostrata da W a kW: le statistiche di prima
+   * restavano in W, e moltiplicate per mille ogni ora risultava accesa. Si
+   * chiedono a Home Assistant gia' convertite. */
+  const domanda = domandaStatisticheDelClima(["sensor.a"], 0, 3_600_000);
+  assert.deepEqual(domanda.units, { power: "W", energy: "kWh" });
+  assert.equal(unitaDelleStatistiche("kW"), "W");
+  assert.equal(unitaDelleStatistiche("W"), "W");
+  /* milli e mega non si confondono: sono comunque kWh. */
+  assert.equal(unitaDelleStatistiche("mWh"), "kWh");
+  assert.equal(unitaDelleStatistiche("MWh"), "kWh");
+  assert.equal(unitaDelleStatistiche("Wh"), "kWh");
+  /* Il resto resta com'e'. */
+  assert.equal(unitaDelleStatistiche("°C"), "°C");
+  assert.equal(unitaDelleStatistiche("m³"), "m³");
+  assert.equal(unitaDelleStatistiche("h"), "h");
 });

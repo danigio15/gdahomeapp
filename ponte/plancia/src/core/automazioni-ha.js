@@ -1270,6 +1270,59 @@ export function categoriaDi(config, statoDi = null) {
   return "altre";
 }
 
+/**
+ * I termostati che un'automazione comanda: i `climate.*` che compaiono nelle
+ * sue azioni (e nel programma, se e' un cronotermostato). Serve anche quando
+ * la plancia non la sa leggere: «due programmi si contendono il termostato
+ * senza che nessuno lo dica» — una scritta a mano che alza la Sala alle 7 la
+ * finestra del programma la deve contare lo stesso.
+ */
+export function climiComandati(config) {
+  if (!eOggetto(config)) return [];
+  const trovati = new Set();
+  /* Gli id stanno sotto `entity_id` (nel target, nei dati, o da soli): il
+   * nome di un servizio — `climate.set_temperature` — no. */
+  const prendi = (x) => {
+    for (const v of Array.isArray(x) ? x : [x])
+      for (const pezzo of typeof v === "string" ? v.split(",") : [])
+        if (/^climate\.[a-z0-9_]+$/.test(pezzo.trim())) trovati.add(pezzo.trim());
+  };
+  const cerca = (x) => {
+    if (Array.isArray(x)) for (const y of x) cerca(y);
+    else if (eOggetto(x))
+      for (const [chiave, y] of Object.entries(x)) {
+        if (chiave === "entity_id") prendi(y);
+        else cerca(y);
+      }
+  };
+  cerca(config.actions ?? config.action);
+  prendi(config.variables?.[VARIABILE_DEL_CRONO]?.termostati);
+  return [...trovati].sort();
+}
+
+/** Se e' un cronotermostato della plancia, anche quando non si legge piu'. */
+export const eUnProgrammaDellaPlancia = (config) =>
+  eOggetto(config) && eOggetto(config.variables?.[VARIABILE_DEL_CRONO]);
+
+/**
+ * La stessa configurazione, comunque Home Assistant la rilegga: le chiavi in
+ * ordine. `automations.yaml` torna indietro coi valori di prima, ma l'ordine
+ * delle chiavi non e' una promessa.
+ */
+export function firmaStabile(valore) {
+  const ordina = (x) =>
+    Array.isArray(x)
+      ? x.map(ordina)
+      : eOggetto(x)
+        ? Object.fromEntries(
+            Object.keys(x)
+              .sort()
+              .map((k) => [k, ordina(x[k])]),
+          )
+        : x;
+  return JSON.stringify(ordina(valore ?? null));
+}
+
 /** Da dove viene: «gdahome» (nata dalla plancia), «blueprint», o niente. */
 export function origineDi(config) {
   if (!eOggetto(config)) return "";

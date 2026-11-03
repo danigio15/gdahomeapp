@@ -19,7 +19,7 @@ import { CHIAVE_PIANI, iPianiDellaCasa } from "../core/i-piani-della-casa.js";
 import { stanzaAllAperto } from "../core/room-overview.js";
 import { immagineAccesa } from "../core/disegno-automatico-della-stanza.js";
 import { iDodiciMesi, normalizzaIMesi } from "../core/stagione-del-clima.js";
-import { consumoDelDispositivo } from "../core/consumo-trovato-del-clima.js";
+import { consumoDelDispositivo, cosaFareColTrovato } from "../core/consumo-trovato-del-clima.js";
 import { iDispositiviRicordati } from "../core/i-dispositivi-di-home-assistant.js";
 import {
   quickClimateFieldsMarkup,
@@ -364,12 +364,29 @@ function consumoTrovatoMarkup(item) {
   } catch (_errore) {
     trovato = null;
   }
-  if (!trovato) return "";
-  const cosa = trovato.tipo === "energia" ? t("energia", "energy") : t("potenza", "power");
+  const cosa = cosaFareColTrovato(trovato);
+  if (!cosa) return "";
+  /* «Usa questo» solo per un sensore di potenza tutto suo: la casella vuole
+   * i watt. Un contatore di energia e un sensore di tutta la macchina si
+   * dicono, e basta. */
+  if (cosa === "condiviso")
+    return `<span class="dm-consumo-trovato" data-dm-consumo-condiviso="${esc(trovato.entity)}"><span>${esc(
+      t(
+        `Sul climatizzatore c'è ${trovato.entity}, ma è di tutta la macchina (${trovato.zone.length} zone): il report non lo divide fra le stanze. Se ogni zona ha la sua presa, scrivila qui.`,
+        `The air conditioner has ${trovato.entity}, but it covers the whole machine (${trovato.zone.length} zones): the report does not split it between rooms. If each zone has its own plug, write it here.`,
+      ),
+    )}</span></span>`;
+  if (cosa === "energia")
+    return `<span class="dm-consumo-trovato" data-dm-consumo-energia="${esc(trovato.entity)}"><span>${esc(
+      t(
+        `Trovato sul climatizzatore: ${trovato.entity} (energia, kWh). Il report del clima lo usa già per le ore dei mesi passati; questa casella invece vuole un sensore in watt.`,
+        `Found on the air conditioner: ${trovato.entity} (energy, kWh). The climate report already uses it for past months' hours; this box needs a sensor in watts instead.`,
+      ),
+    )}</span></span>`;
   return `<span class="dm-consumo-trovato" data-dm-consumo-trovato="${esc(trovato.entity)}"><span>${esc(
     t(
-      `Trovato sul climatizzatore: ${trovato.entity} (${cosa}). Il report del clima lo usa già per le ore dei mesi passati.`,
-      `Found on the air conditioner: ${trovato.entity} (${cosa}). The climate report already uses it for past months' hours.`,
+      `Trovato sul climatizzatore: ${trovato.entity} (potenza). Il report del clima lo usa già per le ore dei mesi passati.`,
+      `Found on the air conditioner: ${trovato.entity} (power). The climate report already uses it for past months' hours.`,
     ),
   )}</span><button type="button" class="ed-btn" data-usa-consumo>${esc(t("Usa questo", "Use this"))}</button></span>`;
 }

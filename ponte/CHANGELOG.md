@@ -26,20 +26,40 @@ _Solo Home Assistant: l'app sul telefono non cambia._
   quello appena salvato resta in vista finché la casa non lo conferma. Il
   ponte, dopo aver scritto, aspetta che Home Assistant abbia ricaricato
   l'automazione (prima rileggeva quella vecchia e la teneva trenta secondi)
-  e la fa decidere subito: il termostato prende i gradi della fascia di
-  adesso, non solo al prossimo cambio. Lo stesso quando si riaccende
+  e, **solo quando Home Assistant ha davvero quella appena scritta**, la fa
+  decidere subito: il termostato prende i gradi della fascia di adesso, non
+  solo al prossimo cambio. Se Home Assistant non l'ha ancora ricaricata non
+  scatta niente (farebbe scattare quella vecchia) e la finestra non dice
+  «aggiornato»: dice che è salvato, che i gradi cambiano al prossimo cambio
+  di fascia, e rilegge da sola poco dopo. Lo stesso quando si riaccende
   «Programma attivo». Sotto il tasto un riquadro dice com'è andata: salvato
-  e quanti gradi valgono adesso, oppure perché non si è salvato (le modifiche
-  restano). Se fra le Automazioni ci sono altri programmi per lo stesso
-  termostato, la finestra lo dice: cambiano i gradi anche loro.
+  e quanti gradi valgono adesso (con l'ora di Home Assistant, anche da un
+  telefono in un altro fuso), che c'è una finestra aperta e il termostato
+  resta spento, oppure perché non si è salvato (le modifiche restano).
+  - Se la casa non risponde la finestra non resta su «Leggo…»: dice perché,
+    ha «Riprova» e riprova da sola dopo qualche secondo.
+  - Un programma della plancia che qualcuno ha toccato in Home Assistant, e
+    che quindi qui non si legge più, non viene mostrato come il programma di
+    serie: la finestra lo dice e lo si può rifare da qui, sopra quello, con
+    lo stesso id. Se a comandare il termostato è un'automazione di qualcun
+    altro, si avvisa prima di crearne una seconda.
+  - Altri programmi per lo stesso termostato fra le Automazioni, anche
+    quelli che non si leggono: la finestra li conta («un altro programma»,
+    «altri 2 programmi») — cambiano i gradi anche loro.
+  - Chiudendo la finestra con modifiche non salvate la prima volta avvisa
+    «Hai modifiche non salvate», la seconda le scarta: riaprendo si vede
+    quello che ha Home Assistant, non una bozza dimenticata.
 - **Le versioni dell'app arrivano da tutte le case accese:** «continuo a non
   vedere le app installate dagli utenti». Il quadro le sapeva solo dal
   rapporto, che parte spento: su 178 case accese contava sei telefoni.
   Adesso l'add-on dice anche al tramite — appena collegato e poi ogni ora —
   quanti telefoni ha visto nella settimana per negozio e versione dell'app.
   Solo numeri, senza nomi, modelli o identificativi; il tramite li tiene in
-  memoria e al quadro passa solo la somma di tutte le case, e una casa col
-  rapporto acceso non si conta due volte. Nella gestione il riquadro
+  memoria e al quadro passa solo la somma di tutte le case. Una casa col
+  rapporto acceso la conta il rapporto e non il tramite; un rapporto più
+  vecchio di una settimana non si conta più (la casa che l'ha spento la
+  somma il tramite). Nella settimana in cui una casa lo spegne può
+  comparire in tutte e due, e la gestione lo scrive. Nella gestione il riquadro
   «Versione non detta» dice quante case accese hanno ancora l'add-on di
   prima. L'informativa lo scrive.
 - **Report del clima: i climatizzatori senza valvola né presa.** «Continua a
@@ -62,8 +82,19 @@ _Solo Home Assistant: l'app sul telefono non cambia._
   - **Nella storia recente** uno split che non dice `hvac_action` conta le
     ore coi suoi watt, invece di confrontare la stanza con l'obiettivo; e il
     ponte mette da parte ogni notte quelle ore vere, coi consumi trovati.
+  - **Due zone dello stesso multisplit** con un solo sensore sul dispositivo:
+    quei watt sono della macchina, non di una stanza. Non si danno a tutte
+    e due (sarebbero il doppio): per quelle stanze le ore restano «non
+    note», e la nota del report dice quale sensore e perché.
+  - **Le statistiche si chiedono già in W e in kWh**: chi ha un sensore in
+    kW, o in MWh, ha i numeri giusti e non mille volte tanto.
+  - **I giorni già messi da parte** dalla 1.18.9.1 si rifanno col conto
+    nuovo finché la storia di Home Assistant li ha; quelli più vecchi
+    restano com'erano, segnati col conto con cui sono nati.
   - **Nella scheda dell'unità** (Config › Clima) il sensore trovato si vede
-    sotto «Entità consumo», con «Usa questo» per scriverlo.
+    sotto «Entità consumo»; «Usa questo» c'è solo per un sensore di potenza
+    di quella zona. Un contatore di energia (kWh) qui non va — la casella
+    vuole i watt, e un contatore non dice mai «acceso» — e lo si dice.
   - Quando non c'è proprio niente, la nota dice cosa serve per le ore dei
     mesi passati: un sensore di consumo del climatizzatore o una presa smart.
 

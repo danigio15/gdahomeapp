@@ -21,7 +21,7 @@ import {
   StoricoDelClima,
 } from "../src/storico-del-clima.js";
 import { Commissioni } from "../src/commissioni.js";
-import { chiaveDelGiorno } from "../plancia/src/core/storico-del-clima.js";
+import { CONTO_DEL_RIASSUNTO, chiaveDelGiorno } from "../plancia/src/core/storico-del-clima.js";
 
 const H = 3_600_000;
 /* Martedi' 3 novembre 2026, a mezzogiorno, nell'ora della casa. */
@@ -270,4 +270,55 @@ test("lo split senza hvac_action: le ore dai watt del suo dispositivo", async ()
   assert.equal(ieri.freddo.stanze["climate.split"].r, 180);
   assert.equal(ieri.freddo.stanze["climate.split"].sv, "dispositivo");
   assert.ok(ieri.freddo.stanze["climate.split"].kwh > 2.5);
+});
+
+test("i giorni fatti col conto della 1.18.9.1 si rifanno finche' la storia li ha, gli altri restano", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "storico-clima-"));
+  /* L'archivio come lo lasciava la 1.18.9.1: niente `conto`, e per lo
+   * split un'ora inventata confrontando la stanza con l'obiettivo. */
+  const vecchio = (r) => ({
+    caldo: {
+      fonte: "storia",
+      stanze: {
+        "climate.sala": { r, a: r, n: 1440, o: [], t: null, ob: [], v: null, vd: null, s: false },
+      },
+      generatori: {},
+      stima: { ms: r, acc: 1, o: [] },
+    },
+  });
+  writeFileSync(
+    join(cartella, FILE_DELLO_STORICO),
+    JSON.stringify({
+      versione: 1,
+      giorni: {
+        [chiaveDelGiorno(giornoFa(2))]: vecchio(999),
+        /* Questo la storia non l'ha piu': resta com'era. */
+        [chiaveDelGiorno(giornoFa(20))]: vecchio(555),
+      },
+    }),
+  );
+  const casa = casaFinta({ tiene: 10 });
+  const storico = new StoricoDelClima({
+    cartella,
+    configurazione: CONFIGURAZIONE,
+    casa,
+    adesso: () => ADESSO,
+    ogni: () => null,
+    fra: () => null,
+  });
+  const daFare = storico.giorniDaRiassumere().map((g) => g.chiave);
+  assert.ok(daFare.includes(chiaveDelGiorno(giornoFa(2))), "il giorno vecchio si rifa'");
+  assert.ok(daFare.includes(chiaveDelGiorno(giornoFa(20))), "anche questo, se la storia l'ha");
+  await storico.battito();
+  const rifatto = storico.giorni[chiaveDelGiorno(giornoFa(2))];
+  assert.equal(rifatto.caldo.stanze["climate.sala"].r, 120, "il conto nuovo");
+  assert.equal(rifatto.caldo.conto, CONTO_DEL_RIASSUNTO);
+  const rimasto = storico.giorni[chiaveDelGiorno(giornoFa(20))];
+  assert.equal(rimasto.caldo.stanze["climate.sala"].r, 555, "senza storia non si butta");
+  assert.equal(rimasto.caldo.conto, undefined, "e resta segnato col conto di prima");
+  /* Al giro dopo niente da rifare: quello vecchio senza storia non si
+   * richiede a ogni ora. */
+  const prima = casa.domande.length;
+  assert.deepEqual(await storico.battito(), { scritti: 0 });
+  assert.equal(casa.domande.length, prima);
 });

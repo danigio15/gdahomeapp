@@ -207,6 +207,24 @@ const media = (valore, pesoMs) =>
 const ore = (secchielli) => secchielli.map((ms) => minuti(ms));
 
 /**
+ * Il conto con cui e' fatto un riassunto. 1 (o niente) e' quello della
+ * 1.18.9.1: uno split senza `hvac_action` contava le ore confrontando la
+ * stanza con l'obiettivo, e i consumi trovati sul dispositivo non c'erano.
+ * Dal 2 conta coi watt. Il ponte rifa' i giorni col conto vecchio finche'
+ * la storia di Home Assistant li ha ancora; quelli che non ha restano,
+ * segnati col conto con cui sono nati.
+ */
+export const CONTO_DEL_RIASSUNTO = 2;
+
+/** Il conto di un giorno dell'archivio: il piu' vecchio dei suoi impianti. */
+export function contoDelGiorno(giorno) {
+  const conti = Object.values(giorno || {})
+    .filter((record) => record && typeof record === "object")
+    .map((record) => (Number.isInteger(record.conto) ? record.conto : 1));
+  return conti.length ? Math.min(...conti) : 1;
+}
+
+/**
  * Il riassunto di un giorno di un impianto, dalla storia: `null` se quel
  * giorno la storia non dice niente.
  *
@@ -269,6 +287,7 @@ export function riassuntoDelGiorno({
   const unione = unisci(intervalli);
   return {
     fonte: "storia",
+    conto: CONTO_DEL_RIASSUNTO,
     stanze,
     generatori: caldaie,
     stima: {
@@ -281,6 +300,12 @@ export function riassuntoDelGiorno({
 
 /* ── le statistiche a lungo termine ───────────────────────────────────── */
 
+/* Le statistiche si chiedono gia' convertite: la potenza in W, l'energia in
+ * kWh. Home Assistant le tiene nell'unita' con cui sono nate, e chi poi
+ * cambia l'unita' mostrata (W → kW) ha statistiche in W e uno stato in kW:
+ * moltiplicate per mille ogni ora risultava accesa. */
+export const UNITA_DELLE_STATISTICHE = Object.freeze({ power: "W", energy: "kWh" });
+
 /** La domanda: un'ora alla volta, per tutte le entita' insieme. */
 export function domandaStatisticheDelClima(ids, da, a) {
   return {
@@ -290,7 +315,21 @@ export function domandaStatisticheDelClima(ids, da, a) {
     statistic_ids: [...new Set((ids || []).map(pulito).filter(Boolean))],
     period: "hour",
     types: ["mean", "max", "min", "change", "state"],
+    units: { ...UNITA_DELLE_STATISTICHE },
   };
+}
+
+/**
+ * L'unita' in cui arrivano le statistiche di un'entita' che adesso si
+ * mostra in `unita`: W per ogni potenza, kWh per ogni energia (milli o mega
+ * che sia: «mWh» e «MWh» non sono la stessa cosa, ma arrivano comunque in
+ * kWh), il resto com'e'.
+ */
+export function unitaDelleStatistiche(unita) {
+  const u = pulito(unita);
+  if (/^[mkMG]?W$/.test(u)) return UNITA_DELLE_STATISTICHE.power;
+  if (/^[mkMG]?Wh$/.test(u)) return UNITA_DELLE_STATISTICHE.energy;
+  return u;
 }
 
 const numero = (valore) => {

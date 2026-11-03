@@ -28,6 +28,17 @@ const pulita = (una) => ({
   quanti: Number.isInteger(una?.quanti) && una.quanti > 0 ? una.quanti : 0,
 });
 
+/** Fin quando vale l'ultimo rapporto di una casa: una settimana, come i
+ * telefoni «visti nella settimana» che ci sono dentro. */
+export const RAPPORTO_VALE = 7 * 24 * 3600 * 1000;
+
+/* Quando il rapporto e' arrivato, in millisecondi; senza data si tiene,
+ * come prima. */
+const rapportoScaduto = (vistaIl, adesso) => {
+  const il = typeof vistaIl === "number" ? vistaIl : Date.parse(vistaIl ?? "");
+  return Number.isFinite(il) && adesso - il > RAPPORTO_VALE;
+};
+
 const dallaPiuNuova = (una, altra) =>
   altra.costruzione - una.costruzione ||
   altra.versione.localeCompare(una.versione, "it", { numeric: true });
@@ -47,12 +58,25 @@ const dallaPiuNuova = (una, altra) =>
  * «Mancano tutti quelli che hanno la 1.18.7»: senza questa riga il totale
  * sembrava tutto, e quelle case sparivano. `{ telefoni, case }`, le case con
  * quanti telefoni e la versione dell'add-on, da quella con piu' telefoni.
+ *
+ * Un rapporto arrivato piu' di [RAPPORTO_VALE] fa non si conta: il quadro
+ * tiene l'ultimo che ha avuto anche quando la casa il rapporto lo spegne, e
+ * da allora i suoi telefoni li somma il tramite. Contarli anche qui li
+ * contava due volte, per sempre. Resta una settimana in cui una casa che lo
+ * ha appena spento puo' stare in tutte e due: il tramite non dice quali
+ * case somma, e la gestione lo scrive.
  */
-export function leVersioniDelleApp(tutte = [], ultime = {}, dalTramite = null) {
+export function leVersioniDelleApp(
+  tutte = [],
+  ultime = {},
+  dalTramite = null,
+  adesso = Date.now(),
+) {
   const perNegozio = Object.fromEntries(NEGOZI.map((n) => [n, new Map()]));
   const perCasa = [];
   const muteCase = [];
   for (const una of tutte) {
+    if (rapportoScaduto(una?.vistaIl, adesso)) continue;
     const dette = (Array.isArray(una?.carta?.telefoni?.versioni) ? una.carta.telefoni.versioni : [])
       .map(pulita)
       .filter((v) => v.quanti > 0);
@@ -93,7 +117,8 @@ export function leVersioniDelleApp(tutte = [], ultime = {}, dalTramite = null) {
   /* E quelle che le case dicono al tramite (`centralino/src/telefoni.js`):
    * gia' sommate di la', senza sapere quali case. Le case che mandano il
    * rapporto il tramite non le somma — i loro telefoni sono gia' qui sopra,
-   * casa per casa — e cosi' ogni casa si conta una volta sola. */
+   * casa per casa. Una casa che il rapporto l'ha appena spento la somma il
+   * tramite e qui resta fino a una settimana: vedi `RAPPORTO_VALE`. */
   const tramite = leVersioniDalTramite(dalTramite);
   for (const v of tramite?.versioni ?? []) {
     const mappa = perNegozio[v.negozio];

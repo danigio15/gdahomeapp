@@ -720,3 +720,174 @@ test("il programma salvato si rilegge com'e' stato scritto, e si applica subito"
   assert.equal(sospeso.applicato, false);
   assert.deepEqual(servizi, []);
 });
+
+/* ── il programma: si applica solo quando Home Assistant l'ha davvero ricaricato ── */
+
+const CRONO_DELLA_SALA = {
+  termostati: ["climate.sala"],
+  fuori: 17,
+  programma: {
+    feriali: [
+      { da: 390, a: 510, gradi: 21 },
+      { da: 1020, a: 1350, gradi: 20.5 },
+    ],
+    festivi: [{ da: 480, a: 1380, gradi: 20.5 }],
+  },
+};
+const CRONO_NUOVO = {
+  ...CRONO_DELLA_SALA,
+  programma: {
+    ...CRONO_DELLA_SALA.programma,
+    feriali: [
+      { da: 390, a: 510, gradi: 21 },
+      { da: 1200, a: 1350, gradi: 20.5 },
+    ],
+  },
+};
+
+/* Una casa il cui Home Assistant, dopo il salvataggio, risponde come gli dice
+ * `rispondi(volta)`: la configurazione vecchia, la nuova, o un errore. */
+function casaDelProgramma(rispondi) {
+  const vecchia = inHomeAssistant(
+    { id: "p1", nome: "Programma Sala", tipo: "crono", crono: CRONO_DELLA_SALA },
+    { stati: STATI },
+  );
+  const c = unaCasa({ configurazioni: { p1: vecchia } });
+  let volta = 0;
+  const servizi = [];
+  c.ponte.casa.chiedi = async (m) => {
+    if (m.type === "automation/config") {
+      volta += 1;
+      return rispondi(volta, { vecchia, nuova: c.salvate.p1 });
+    }
+    if (m.type === "call_service") servizi.push(m);
+    return null;
+  };
+  const salva = (attiva = true) =>
+    c.ponte.salva({
+      id: "p1",
+      automazione: { id: "p1", nome: "Programma Sala", attiva, tipo: "crono", crono: CRONO_NUOVO },
+    });
+  return { c, servizi, salva, volte: () => volta };
+}
+
+const errore = (code) => Object.assign(new Error(code), { code });
+
+test("il programma: Home Assistant che non lo ricarica mai non fa scattare niente", async () => {
+  /* Un Raspberry lento: per tutta l'attesa Home Assistant da' quello di
+   * prima. Salvato si', ma nessuno deve dire «il termostato e' aggiornato». */
+  const p = casaDelProgramma((_v, { vecchia }) => ({ config: structuredClone(vecchia) }));
+  const fatto = await p.salva();
+  assert.equal(fatto.confermata, false);
+  assert.equal(fatto.applicato, false);
+  assert.deepEqual(p.servizi, [], "nessun automation.trigger su quella vecchia");
+});
+
+test("il programma: «not found» mentre Home Assistant ricarica si aspetta, poi si applica", async () => {
+  const p = casaDelProgramma((v, { nuova }) => {
+    if (v <= 2) throw errore("not_found");
+    return { config: structuredClone(nuova) };
+  });
+  const fatto = await p.salva();
+  assert.equal(fatto.confermata, true);
+  assert.equal(fatto.applicato, true);
+  assert.equal(p.volte(), 3);
+  assert.deepEqual(
+    p.servizi.map((s) => [s.domain, s.service, s.target.entity_id]),
+    [["automation", "trigger", "automation.p1"]],
+  );
+});
+
+test("il programma: un Home Assistant che non sa dire la configurazione non conferma", async () => {
+  const p = casaDelProgramma(() => {
+    throw errore("unknown_command");
+  });
+  const fatto = await p.salva();
+  assert.equal(fatto.confermata, false);
+  assert.equal(fatto.applicato, false);
+  assert.equal(p.volte(), 1, "inutile chiedere ancora");
+  assert.deepEqual(p.servizi, []);
+});
+
+test("il programma: rilette dal file YAML, le chiavi in altro ordine sono la stessa cosa", async () => {
+  /* Home Assistant rilegge `automations.yaml`: l'ordine delle chiavi non e'
+   * per forza quello scritto. */
+  const alRovescio = (x) =>
+    Array.isArray(x)
+      ? x.map(alRovescio)
+      : x && typeof x === "object"
+        ? Object.fromEntries(
+            Object.entries(x)
+              .reverse()
+              .map(([k, v]) => [k, alRovescio(v)]),
+          )
+        : x;
+  const p = casaDelProgramma((_v, { nuova }) => ({ config: alRovescio(structuredClone(nuova)) }));
+  const fatto = await p.salva();
+  assert.equal(fatto.confermata, true);
+  assert.equal(fatto.applicato, true);
+});
+
+test("un programma toccato a mano in Home Assistant: si vede di chi e', e si sostituisce solo se e' nostro e lo si chiede", async () => {
+  const nostro = inHomeAssistant(
+    { id: "p9", nome: "Programma Sala", tipo: "crono", crono: CRONO_DELLA_SALA },
+    { stati: STATI },
+  );
+  /* Qualcuno ci ha aggiunto un'azione in Home Assistant: non e' piu' un
+   * programma che la plancia sa leggere. */
+  const toccato = { ...nostro, actions: [...nostro.actions, { action: "light.turn_on" }] };
+  const altrui = {
+    id: "z1",
+    alias: "Termostato a modo mio",
+    triggers: [{ trigger: "template", value_template: "{{ now().hour == 7 }}" }],
+    actions: [
+      {
+        action: "climate.set_temperature",
+        target: { entity_id: "climate.sala" },
+        data: { temperature: "{{ 20 }}" },
+      },
+    ],
+  };
+  const c = unaCasa({ configurazioni: { p9: toccato, z1: altrui } });
+  const elenco = await c.ponte.elencoDiCasa();
+  const p9 = elenco.find((v) => v.id === "p9");
+  const z1 = elenco.find((v) => v.id === "z1");
+  assert.equal(p9.modello, null);
+  assert.deepEqual(p9.climi, ["climate.sala"]);
+  assert.equal(p9.programma, true, "e' un programma della plancia, anche se non si legge piu'");
+  assert.equal(z1.modello, null);
+  assert.deepEqual(z1.climi, ["climate.sala"]);
+  assert.equal(z1.programma, false);
+  const nuovo = {
+    id: "p9",
+    nome: "Programma Sala",
+    attiva: true,
+    tipo: "crono",
+    crono: CRONO_NUOVO,
+  };
+  /* Senza chiederlo, no: si perderebbe l'azione aggiunta senza dirlo. */
+  assert.equal((await c.ponte.salva({ id: "p9", automazione: nuovo })).errore, "complessa");
+  /* Chiesto, e nostro: si', sopra quello, con lo stesso id. */
+  const fatto = await c.ponte.salva({ id: "p9", automazione: nuovo, sovrascrivi: true });
+  assert.equal(fatto.id, "p9");
+  assert.ok(c.salvate.p9.variables);
+  assert.equal(c.salvate.p9.actions.length, nostro.actions.length);
+  /* Quello di un altro non si sovrascrive mai dalla plancia. */
+  const suo = await c.ponte.salva({
+    id: "z1",
+    automazione: { ...nuovo, id: "z1" },
+    sovrascrivi: true,
+  });
+  assert.equal(suo.errore, "complessa");
+});
+
+test("lo stato dice il fuso orario di Home Assistant, per contare le fasce come lui", async () => {
+  const c = unaCasa();
+  c.ponte.casa.chiedi = async (m) => {
+    if (m.type === "get_config") return { time_zone: "Europe/Rome" };
+    if (m.type === "config/area_registry/list") return [];
+    return null;
+  };
+  const stato = await c.ponte.stato({ amministra: true });
+  assert.equal(stato.fuso, "Europe/Rome");
+});

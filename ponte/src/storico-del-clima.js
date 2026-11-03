@@ -7,7 +7,8 @@
  * quello che la plancia non puo': ogni ora guarda se c'e' un giorno chiuso
  * che non ha ancora riassunto e, finche' la storia ce l'ha, lo riassume e lo
  * mette in `/data/clima-storico.json`. Alla prima accensione recupera tutti i
- * giorni che la storia ha ancora.
+ * giorni che la storia ha ancora, e rifa' quelli fatti con un conto di prima
+ * (`CONTO_DEL_RIASSUNTO`) finche' la storia li ha.
  *
  * Il conto e' quello della plancia (`plancia/src/core/storico-del-clima.js`,
  * `riassuntoDelGiorno`): una regola sola, cosi' il giorno messo da parte dice
@@ -36,8 +37,10 @@ import { risolutoreDalla } from "./ricarica-di-notte.js";
 import { IMPIANTI_DEL_CLIMA, righeDellaStoria } from "../plancia/src/core/report-del-clima.js";
 import { conIlConsumoTrovato } from "../plancia/src/core/consumo-trovato-del-clima.js";
 import {
+  CONTO_DEL_RIASSUNTO,
   caldaieDallaConfigurazione,
   chiaveDelGiorno,
+  contoDelGiorno,
   giorniFra,
   potaLArchivio,
   riassuntoDelGiorno,
@@ -183,7 +186,9 @@ export class StoricoDelClima {
     this._battito = null;
   }
 
-  /** I giorni chiusi degli ultimi trenta che non sono ancora nell'archivio. */
+  /** I giorni chiusi degli ultimi trenta che non sono ancora nell'archivio,
+   * o che ci sono col conto di prima (`CONTO_DEL_RIASSUNTO`): quelli si
+   * rifanno, `rifai` vero. */
   giorniDaRiassumere() {
     const oggi = new Date(this.adesso());
     const fuori = [];
@@ -199,8 +204,10 @@ export class StoricoDelClima {
         oggi.getDate() - indietro + 1,
       ).getTime();
       const chiave = chiaveDelGiorno(inizio);
-      if (this.giorni[chiave] || this._vuoti.has(chiave)) continue;
-      fuori.push({ chiave, inizio, fine, chiuso: true });
+      if (this._vuoti.has(chiave)) continue;
+      const gia = this.giorni[chiave];
+      if (gia && contoDelGiorno(gia) >= CONTO_DEL_RIASSUNTO) continue;
+      fuori.push({ chiave, inizio, fine, chiuso: true, rifai: Boolean(gia) });
     }
     return fuori;
   }
@@ -247,6 +254,8 @@ export class StoricoDelClima {
             });
             if (record) riassunti[impianto] = record;
           }
+          /* Senza storia un giorno col conto di prima resta com'e': meglio
+           * quello di niente. Si segna, per non richiederlo a ogni ora. */
           if (!Object.keys(riassunti).length) {
             this._vuoti.add(giorno.chiave);
             continue;

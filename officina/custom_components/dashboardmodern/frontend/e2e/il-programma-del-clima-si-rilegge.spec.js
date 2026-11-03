@@ -49,7 +49,16 @@ const DOVE = process.env.DM_FOTO_PRG || "";
 async function avvia(
   page,
   testInfo,
-  { ritardo = 1500, rifiuta = "", tema = "", salvato = SALVATO } = {},
+  {
+    ritardo = 1500,
+    rifiuta = "",
+    tema = "",
+    salvato = SALVATO,
+    ricarica = true,
+    rifiutaStato = false,
+    illeggibile = false,
+    finestraAperta = false,
+  } = {},
 ) {
   test.setTimeout(150_000);
   await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
@@ -59,7 +68,16 @@ async function avvia(
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
   await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true);
   await page.evaluate(
-    async ({ tema, ritardo, rifiuta, salvato }) => {
+    async ({
+      tema,
+      ritardo,
+      rifiuta,
+      salvato,
+      ricarica,
+      rifiutaStato,
+      illeggibile,
+      finestraAperta,
+    }) => {
       if (tema) document.documentElement.setAttribute("data-theme", tema);
       const HA = await import("/src/core/automazioni-ha.js");
       const grezzi = window.eval("_RAW_STATES");
@@ -77,25 +95,54 @@ async function avvia(
           target_temp_step: 0.5,
         },
       };
-      const casa = { config: {}, comandi: [], ritardo };
+      /* `ricarica`: se Home Assistant ricarica l'automazione appena scritta
+       * (il ponte lo dice con `confermata`). Se no, la casa continua a dire
+       * quella di prima, e nessuno la fa scattare. */
+      const casa = { config: {}, comandi: [], ritardo, ricarica, rifiutaStato };
+      grezzi["binary_sensor.finestra_sala"] = {
+        entity_id: "binary_sensor.finestra_sala",
+        state: finestraAperta ? "on" : "off",
+        attributes: { friendly_name: "Finestra sala", device_class: "window" },
+      };
       if (salvato)
         casa.config.p1 = HA.inHomeAssistant(
           { id: "p1", nome: "Programma Sala", attiva: true, tipo: "crono", crono: salvato },
           { stati: grezzi },
         );
       window.__CASA__ = casa;
-      const elenco = () =>
-        Object.entries(casa.config).map(([id, config]) => ({
+      const elenco = () => [
+        ...Object.entries(casa.config).map(([id, config]) => ({
           entity_id: `automation.${id}`,
           id,
           nome: config.alias,
           attiva: true,
           modello: HA.dallaHomeAssistant(config, { stati: grezzi }),
           modificabile: true,
+          climi: ["climate.sala"],
+          programma: true,
           config,
-        }));
+        })),
+        /* Il programma della sala toccato a mano in Home Assistant: e'
+         * nostro, comanda la sala, ma la plancia non lo sa piu' leggere. */
+        ...(illeggibile && !casa.config.p7
+          ? [
+              {
+                entity_id: "automation.p7",
+                id: "p7",
+                nome: "Programma Sala",
+                attiva: true,
+                modello: null,
+                modificabile: true,
+                climi: ["climate.sala"],
+                programma: true,
+              },
+            ]
+          : []),
+      ];
       const risposta = (m) => {
         casa.comandi.push(m);
+        if (m.type === "ponte/automazioni/stato" && casa.rifiutaStato)
+          return { errore: "ponte_automazioni" };
         if (m.type === "ponte/automazioni/stato")
           return {
             premium: true,
@@ -107,7 +154,17 @@ async function avvia(
         if (m.type === "ponte/automazioni/salva") {
           if (casa.rifiuta) return { errore: casa.rifiuta };
           const id = m.automazione_id || "p9";
-          casa.config[id] = HA.inHomeAssistant({ ...m.automazione, id }, { stati: grezzi });
+          const scritta = HA.inHomeAssistant({ ...m.automazione, id }, { stati: grezzi });
+          casa.scritte = { ...(casa.scritte || {}), [id]: scritta };
+          if (!casa.ricarica)
+            return {
+              id,
+              alias: scritta.alias,
+              entity_id: `automation.${id}`,
+              applicato: false,
+              confermata: false,
+            };
+          casa.config[id] = scritta;
           /* Il ponte fa decidere subito il programma: i gradi di adesso. */
           grezzi["climate.sala"].attributes.temperature = window.__GRADI_ADESSO__?.(m) ?? 19;
           return {
@@ -115,6 +172,7 @@ async function avvia(
             alias: casa.config[id].alias,
             entity_id: `automation.${id}`,
             applicato: true,
+            confermata: true,
           };
         }
         return { proposte: [], giorni: 21, abitudiniPronte: true };
@@ -151,7 +209,7 @@ async function avvia(
       const { gradiAlle, cronoPulito } = await import("/src/core/automazioni.js");
       window.__GRADI_ADESSO__ = (m) => gradiAlle(cronoPulito(m.automazione.crono), Date.now());
     },
-    { tema, ritardo, rifiuta, salvato },
+    { tema, ritardo, rifiuta, salvato, ricarica, rifiutaStato, illeggibile, finestraAperta },
   );
   await page.waitForTimeout(300);
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
@@ -214,6 +272,60 @@ test("salvato, resta com'e' quando la casa rilegge, e il termostato prende subit
   await expect(programma.locator(".dm-prg-fuori").first()).toContainText("21");
 });
 
+/* Il programma del video: la sera dalle 17:00 alle 22:30. */
+const DEL_VIDEO = {
+  termostati: ["climate.sala"],
+  fuori: 17,
+  programma: {
+    feriali: [
+      { da: 390, a: 510, gradi: 21 },
+      { da: 1020, a: 1350, gradi: 20.5 },
+    ],
+    festivi: [{ da: 480, a: 1380, gradi: 20.5 }],
+  },
+};
+
+test("la sera dalle 17 alle 20, come nel video: ricaricata la pagina parte alle 20, stesso programma", async ({
+  page,
+}, testInfo) => {
+  let programma = await avvia(page, testInfo, { ritardo: 200, salvato: DEL_VIDEO });
+  await expect.poll(() => orari(programma), { timeout: 10_000 }).toEqual([390, 510, 1020, 1350]);
+  await programma.locator('[data-dm-prg-ora="1:da"]').selectOption("1200");
+  await programma.locator("[data-dm-prg-salva]").click();
+  await expect(programma.locator(".dm-prg-esito")).toContainText(/termostato è stato aggiornato/);
+  const [salvata] = await salvate(page);
+  expect(salvata.automazione_id).toBe("p1");
+  const crono = await page.evaluate(() => window.__CASA__.scritte.p1.variables.gdahome_crono);
+  /* La seconda partenza della plancia: la pagina ricaricata legge da Home
+   * Assistant quello che il ponte ha scritto (la catena vera e' in
+   * `ponte/test/il-programma-del-clima-col-ponte-vero.test.js`). */
+  programma = await avvia(page, testInfo, { ritardo: 600, salvato: crono });
+  await expect(programma).toContainText(/Leggo il programma/);
+  await expect.poll(() => orari(programma), { timeout: 10_000 }).toEqual([390, 510, 1200, 1350]);
+  /* Uno solo, lo stesso: nessun «altro programma» accanto. */
+  expect(await page.evaluate(() => Object.keys(window.__CASA__.config))).toEqual(["p1"]);
+  await expect(programma).not.toContainText(/altr[oi] (programm|\d)/);
+});
+
+test("salvato ma non ancora ricaricato da Home Assistant: non dice «aggiornato», e le modifiche restano", async ({
+  page,
+}, testInfo) => {
+  const programma = await avvia(page, testInfo, { ritardo: 200, ricarica: false });
+  await expect.poll(() => orari(programma), { timeout: 10_000 }).toEqual([390, 510, 1020, 1140]);
+  await programma.locator('[data-dm-prg-ora="1:a"]').selectOption("1200");
+  await programma.locator("[data-dm-prg-salva]").click();
+  const esito = programma.locator(".dm-prg-esito");
+  await expect(esito).toContainText(/non l'ha ancora ricaricato/);
+  await expect(esito).not.toContainText(/aggiornato/);
+  /* La casa rilegge e dice ancora quella di prima: si tiene quella salvata. */
+  await page.evaluate(async () => {
+    const { chiediAllaCasa } = await import("/src/sections/automazioni-section.js");
+    await chiediAllaCasa({ forza: true });
+  });
+  await page.waitForTimeout(600);
+  expect(await orari(programma)).toEqual([390, 510, 1020, 1200]);
+});
+
 test("se Home Assistant non salva, lo dice e le modifiche restano", async ({ page }, testInfo) => {
   const programma = await avvia(page, testInfo, { ritardo: 200, rifiuta: "ponte_automazioni" });
   await expect.poll(() => orari(programma), { timeout: 10_000 }).toEqual([390, 510, 1020, 1140]);
@@ -221,6 +333,53 @@ test("se Home Assistant non salva, lo dice e le modifiche restano", async ({ pag
   await programma.locator("[data-dm-prg-salva]").click();
   await expect(programma.locator(".dm-prg-errore")).toContainText(/Non salvato/);
   await expect(programma.locator(".dm-prg-fuori").first()).toContainText("22,5");
+});
+
+test("la casa non risponde: lo dice, «Riprova» rilegge, e il programma arriva", async ({
+  page,
+}, testInfo) => {
+  const programma = await avvia(page, testInfo, { ritardo: 200, rifiutaStato: true });
+  await expect(programma.locator("[data-dm-prg-riprova]")).toBeVisible({ timeout: 10_000 });
+  await expect(programma).toContainText(/Non riesco a leggere il programma/);
+  await expect(programma).not.toContainText(/Leggo il programma/);
+  await expect(programma.locator("[data-dm-prg-salva]")).toHaveCount(0);
+  await page.evaluate(() => (window.__CASA__.rifiutaStato = false));
+  await programma.locator("[data-dm-prg-riprova]").click();
+  await expect.poll(() => orari(programma), { timeout: 10_000 }).toEqual([390, 510, 1020, 1140]);
+});
+
+test("un programma della sala che non si legge piu': niente programma di serie, si sceglie", async ({
+  page,
+}, testInfo) => {
+  const programma = await avvia(page, testInfo, { ritardo: 200, salvato: null, illeggibile: true });
+  await expect(programma).toContainText(/qui non si legge più/, {
+    timeout: 10_000,
+  });
+  /* Il programma di serie non si mostra come se fosse quello vero. */
+  await expect(programma.locator("select.dm-prg-ora")).toHaveCount(0);
+  await expect(programma.locator("[data-dm-prg-salva]")).toHaveCount(0);
+  await programma.locator('[data-dm-prg-scelta="rifai"]').click();
+  await expect(programma).toContainText(/viene sostituito da questo/);
+  await programma.locator("[data-dm-prg-salva]").click();
+  await expect.poll(async () => (await salvate(page)).length).toBe(1);
+  const [salvata] = await salvate(page);
+  /* Sopra quello, con lo stesso id: non un secondo programma accanto. */
+  expect(salvata.automazione_id).toBe("p7");
+  expect(salvata.sovrascrivi).toBe(true);
+});
+
+test("salvato con la finestra aperta: lo dice, e non promette i gradi", async ({
+  page,
+}, testInfo) => {
+  const programma = await avvia(page, testInfo, {
+    ritardo: 200,
+    finestraAperta: true,
+    salvato: { ...SALVATO, finestre: ["binary_sensor.finestra_sala"], finestraSpegne: true },
+  });
+  await expect.poll(() => orari(programma), { timeout: 10_000 }).toEqual([390, 510, 1020, 1140]);
+  await programma.locator('[data-dm-prg-fuori="0.5"]').click();
+  await programma.locator("[data-dm-prg-salva]").click();
+  await expect(programma.locator(".dm-prg-esito")).toContainText(/finestra aperta/);
 });
 
 test.describe("le foto", () => {
@@ -273,6 +432,44 @@ test.describe("le foto", () => {
         await programma.locator("[data-dm-prg-salva]").click();
         await expect(programma.locator(".dm-prg-errore")).toBeVisible();
         await scatta(`03-programma-errore-${suf}`);
+        /* 05: salvato, Home Assistant non l'ha ancora ricaricato. */
+        programma = await avvia(page, testInfo, { ritardo: 300, tema, ricarica: false });
+        await expect
+          .poll(() => orari(programma), { timeout: 10_000 })
+          .toEqual([390, 510, 1020, 1140]);
+        await programma.locator('[data-dm-prg-ora="1:a"]').selectOption("1200");
+        await programma.locator("[data-dm-prg-salva]").click();
+        await expect(programma.locator(".dm-prg-esito")).toContainText(/non l'ha ancora/);
+        await scatta(`05-programma-salvato-non-ricaricato-${suf}`);
+        /* 06: salvato con la finestra aperta. */
+        programma = await avvia(page, testInfo, {
+          ritardo: 300,
+          tema,
+          finestraAperta: true,
+          salvato: { ...SALVATO, finestre: ["binary_sensor.finestra_sala"], finestraSpegne: true },
+        });
+        await expect
+          .poll(() => orari(programma), { timeout: 10_000 })
+          .toEqual([390, 510, 1020, 1140]);
+        await programma.locator('[data-dm-prg-fuori="0.5"]').click();
+        await programma.locator("[data-dm-prg-salva]").click();
+        await expect(programma.locator(".dm-prg-esito")).toContainText(/finestra aperta/);
+        await scatta(`06-programma-finestra-aperta-${suf}`);
+        /* 07: la casa non risponde, «Riprova». */
+        programma = await avvia(page, testInfo, { ritardo: 300, tema, rifiutaStato: true });
+        await expect(programma.locator("[data-dm-prg-riprova]")).toBeVisible({ timeout: 10_000 });
+        await scatta(`07-programma-non-letto-riprova-${suf}`);
+        /* 08: il programma della sala toccato in Home Assistant. */
+        programma = await avvia(page, testInfo, {
+          ritardo: 300,
+          tema,
+          salvato: null,
+          illeggibile: true,
+        });
+        await expect(programma.locator('[data-dm-prg-scelta="rifai"]')).toBeVisible({
+          timeout: 10_000,
+        });
+        await scatta(`08-programma-illeggibile-${suf}`);
       }
   });
 });

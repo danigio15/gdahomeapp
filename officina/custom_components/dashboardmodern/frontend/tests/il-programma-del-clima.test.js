@@ -22,9 +22,14 @@ import {
   bozzaDalCrono,
   fasciaNuova,
   firmaDelProgramma,
+  altriDetti,
+  automazioniCheLoComandano,
+  esitoDelSalvataggio,
   programmaDelTermostato,
+  programmaIlleggibile,
   programmiDelTermostato,
 } from "../src/sections/programma-del-clima-section.js";
+import { orologioNelFuso } from "../src/core/automazioni.js";
 
 /* Lunedi' 2 novembre 2026 e sabato 7, ore locali. */
 const lun = (h, m = 0) => new Date(2026, 10, 2, h, m).getTime();
@@ -228,6 +233,9 @@ test("la bozza segue il programma di Home Assistant finche' non la si tocca", ()
     }),
     "tieni",
   );
+  /* Passato il minuto, si lascia andare solo se e' arrivato un elenco
+   * chiesto DOPO il salvataggio: una richiesta persa (la casa occupata con
+   * le proposte) non riporta in vista quello di prima. */
   assert.equal(
     bozzaDaTenere({
       bozzaDa: "nuova",
@@ -235,6 +243,18 @@ test("la bozza segue il programma di Home Assistant finche' non la si tocca", ()
       appenaSalvato: appena,
       firma: vera,
       adesso: 70000,
+      elencoIl: 500,
+    }),
+    "tieni",
+  );
+  assert.equal(
+    bozzaDaTenere({
+      bozzaDa: "nuova",
+      toccata: false,
+      appenaSalvato: appena,
+      firma: vera,
+      adesso: 70000,
+      elencoIl: 1500,
     }),
     "rifai",
   );
@@ -254,4 +274,78 @@ test("piu' programmi per lo stesso termostato si contano, e vince quello a fasce
   const elenco = [due(false), due(true)];
   assert.equal(programmiDelTermostato(elenco, "climate.sala").length, 2);
   assert.equal(programmaDelTermostato(elenco, "climate.sala").id, "a");
+});
+
+test("le ore delle fasce sono quelle di Home Assistant, non del telefono", () => {
+  /* Un telefono a New York guarda una casa a Roma: alle 20 di Roma la fascia
+   * delle 17–22:30 c'e', anche se il telefono dice le 14. */
+  const istante = Date.UTC(2026, 10, 2, 19, 0); // 20:00 a Roma (CET)
+  const muro = new Date(orologioNelFuso(istante, "Europe/Rome"));
+  assert.equal(muro.getHours(), 20);
+  assert.equal(muro.getMinutes(), 0);
+  assert.equal(muro.getDay(), 1);
+  assert.equal(gradiAlle(crono(), orologioNelFuso(istante, "Europe/Rome")), 20.5);
+  /* Senza fuso, l'orologio di chi guarda. */
+  assert.equal(orologioNelFuso(istante, ""), istante);
+  assert.equal(orologioNelFuso(istante, "Non/Esiste"), istante);
+});
+
+test("quanti altri programmi: «un altro», «altri 2»", () => {
+  assert.equal(altriDetti(0), "");
+  assert.match(altriDetti(1), /un altro programma/);
+  assert.match(altriDetti(2), /altri 2 programmi/);
+});
+
+test("le automazioni che comandano il termostato, anche quelle che non si leggono", () => {
+  const leggibile = {
+    id: "p1",
+    modello: { tipo: "crono", crono: cronoPulito({ termostati: ["climate.sala"], programma: PROGRAMMA }) },
+    climi: ["climate.sala"],
+  };
+  const toccato = { id: "p9", nome: "Programma Sala", modello: null, climi: ["climate.sala"], programma: true };
+  const altrui = { id: "z1", nome: "A modo mio", modello: null, climi: ["climate.sala"], programma: false };
+  const lontano = { id: "z2", nome: "Studio", modello: null, climi: ["climate.studio"], programma: false };
+  const elenco = [leggibile, toccato, altrui, lontano];
+  assert.deepEqual(
+    automazioniCheLoComandano(elenco, "climate.sala").map((v) => v.id),
+    ["p9", "z1"],
+  );
+  /* Il nostro toccato a mano vince sull'altrui; senza il leggibile e' lui
+   * il programma del termostato. */
+  assert.equal(programmaIlleggibile(elenco, "climate.sala").id, "p9");
+  assert.equal(programmaIlleggibile([altrui], "climate.sala"), null);
+});
+
+test("l'esito del salvataggio dice solo quello che e' successo davvero", () => {
+  const c = cronoPulito({ termostati: ["climate.sala"], programma: PROGRAMMA, fuori: 17 });
+  const alle20 = lun(20, 5);
+  const fatto = (x) => esitoDelSalvataggio({ crono: c, attiva: true, adesso: alle20, stati: {}, ...x });
+  assert.match(fatto({ fatto: { applicato: true, confermata: true } }), /aggiornato/);
+  assert.match(fatto({ fatto: { applicato: true, confermata: true } }), /20[,.]5°/);
+  /* Home Assistant non l'ha ancora ricaricato: niente «aggiornato». */
+  const nonConfermata = fatto({ fatto: { applicato: false, confermata: false } });
+  assert.doesNotMatch(nonConfermata, /aggiornato/);
+  assert.match(nonConfermata, /non l'ha ancora ricaricato/);
+  /* Una finestra aperta: il termostato resta spento, e lo si dice. */
+  const conFinestra = cronoPulito({
+    termostati: ["climate.sala"],
+    programma: PROGRAMMA,
+    fuori: 17,
+    finestre: ["binary_sensor.finestra"],
+    finestraSpegne: true,
+  });
+  const aperta = esitoDelSalvataggio({
+    fatto: { applicato: true, confermata: true },
+    crono: conFinestra,
+    attiva: true,
+    adesso: alle20,
+    stati: { "binary_sensor.finestra": { state: "on", attributes: {} } },
+  });
+  assert.match(aperta, /finestra aperta/);
+  assert.doesNotMatch(aperta, /Adesso vale/);
+  /* Sospeso: i gradi non cambiano. */
+  assert.match(
+    esitoDelSalvataggio({ fatto: { confermata: true }, crono: c, attiva: false, adesso: alle20 }),
+    /sospeso/,
+  );
 });
