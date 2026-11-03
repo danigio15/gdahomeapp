@@ -200,3 +200,24 @@ test("e' di GdAHome Premium: senza, niente misure; spegnere si puo' sempre", asy
   );
   assert.equal(ok.success, true);
 });
+
+test("un no si legge nel registro dell'add-on, una volta sola e senza nomi", async () => {
+  const { corpo, righe } = prepara();
+  const senzaUtente = { id: "tel-x", utente: "" };
+  for (let i = 0; i < 3; i++)
+    await corpo.rispondi(
+      { id: i, type: SALUTE_MISURE, misure: MISURE },
+      { dispositivo: senzaUtente },
+    );
+  corpo.licenze = { attive: true, premium: false };
+  for (let i = 0; i < 3; i++)
+    await corpo.rispondi(
+      { id: i, type: SALUTE_MISURE, persona: "Marco", misure: MISURE },
+      { dispositivo: MARCO },
+    );
+  assert.deepEqual(righe, [
+    "salute: misure di un telefono rifiutate, non e' intestato a un utente di Home Assistant (va riabbinato)",
+    "salute: misure di un telefono rifiutate, la casa non ha GdAHome Premium",
+  ]);
+  assert.ok(righe.every((r) => !/marco|tel-/i.test(r)));
+});

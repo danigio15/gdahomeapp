@@ -241,6 +241,18 @@ export class IlCorpoDalTelefono {
     }
   }
 
+  /* Un no lo deve poter leggere chi assiste la casa: «non vanno nella
+   * plancia» e nel registro dell'add-on niente diceva perche'. Una riga sola
+   * per telefono e per motivo, finche' il ponte non riparte — l'app ritenta
+   * ogni quarto d'ora — e mai un nome o un valore. */
+  _diUnNo(telefono, motivo, perche) {
+    const chiave = `${telefono}:${motivo}`;
+    this._noDetti ||= new Set();
+    if (this._noDetti.has(chiave)) return;
+    this._noDetti.add(chiave);
+    this.registro.attenzione(`salute: misure di un telefono rifiutate, ${perche}`);
+  }
+
   riconosce(tipo) {
     return typeof tipo === "string" && tipo.startsWith(PREFISSO);
   }
@@ -250,12 +262,18 @@ export class IlCorpoDalTelefono {
   async rispondi(detto, { dispositivo = null } = {}) {
     const id = detto?.id ?? null;
     const telefono = String(dispositivo?.id || "");
-    if (!telefono || !String(dispositivo?.utente || "").trim())
+    if (!telefono || !String(dispositivo?.utente || "").trim()) {
+      this._diUnNo(
+        telefono,
+        "senza-utente",
+        "non e' intestato a un utente di Home Assistant (va riabbinato)",
+      );
       return no(
         id,
         "unauthorized",
         "la salute la manda solo un telefono intestato a chi e' entrato",
       );
+    }
     switch (detto?.type) {
       case SALUTE_STATO: {
         const voce = this.telefoni[telefono];
@@ -268,8 +286,10 @@ export class IlCorpoDalTelefono {
         });
       }
       case SALUTE_MISURE: {
-        if (!this.sbloccato)
+        if (!this.sbloccato) {
+          this._diUnNo(telefono, "premium", "la casa non ha GdAHome Premium");
           return no(id, "premium-richiesto", "la salute dal telefono e' di GdAHome Premium");
+        }
         const misure = misurePulite(detto.misure, this.adesso());
         const persona =
           personaPulita(detto.persona) || personaPulita(dispositivo?.proprietario) || "GdAHome";

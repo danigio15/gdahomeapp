@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-RTIHGC74.js";
+} from "../../chunk-YVUYGN3X.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -56994,7 +56994,7 @@ RISPOSTE.rifiuti = (c, s) => {
     return {
       testo: dire(l, "Non ho il calendario dei rifiuti.", "There's no waste collection schedule.")
     };
-  const giorniDi2 = (r) => r.giorni ?? (r.quando === "oggi" ? 0 : r.quando === "domani" ? 1 : null);
+  const giorniDi3 = (r) => r.giorni ?? (r.quando === "oggi" ? 0 : r.quando === "domani" ? 1 : null);
   const giorno3 = c.quando?.giorno;
   const stasera = c.quando?.sera;
   let quel = null;
@@ -57005,25 +57005,25 @@ RISPOSTE.rifiuti = (c, s) => {
   if (nominati.length && quel === null)
     return {
       testo: `${nominati.map((r) => {
-        const g = giorniDi2(r);
+        const g = giorniDi3(r);
         if (g === null || g < 0)
           return dire(l, `${r.nome}: non so quando passa`, `${r.nome}: I don't know when`);
         const quando7 = giornoDetto(s.adesso, s.adesso + g * GIORNO2, l);
         return dire(l, `${r.nome} passa ${quando7}`, `${r.nome} is collected ${quando7}`);
       }).join(
         ". "
-      )}.${nominati.some((r) => giorniDi2(r) === 1) ? dire(l, " Stasera portala fuori.", " Put it out tonight.") : ""}`
+      )}.${nominati.some((r) => giorniDi3(r) === 1) ? dire(l, " Stasera portala fuori.", " Put it out tonight.") : ""}`
     };
   if (quel !== null) {
-    const voci4 = righe3.filter((r) => giorniDi2(r) === quel);
+    const voci4 = righe3.filter((r) => giorniDi3(r) === quel);
     const quando7 = giornoDetto(s.adesso, s.adesso + quel * GIORNO2, l);
     if (!voci4.length) {
-      const prossimo = righe3.filter((r) => giorniDi2(r) !== null && giorniDi2(r) >= 0).sort((a, b2) => giorniDi2(a) - giorniDi2(b2))[0];
+      const prossimo = righe3.filter((r) => giorniDi3(r) !== null && giorniDi3(r) >= 0).sort((a, b2) => giorniDi3(a) - giorniDi3(b2))[0];
       return {
         testo: dire(
           l,
-          `${maiuscola2(quando7)} non passa niente.${prossimo ? ` Il prossimo ritiro: ${prossimo.nome}, ${giornoDetto(s.adesso, s.adesso + giorniDi2(prossimo) * GIORNO2, l)}.` : ""}`,
-          `No collection ${quando7}.${prossimo ? ` Next: ${prossimo.nome}, ${giornoDetto(s.adesso, s.adesso + giorniDi2(prossimo) * GIORNO2, l)}.` : ""}`
+          `${maiuscola2(quando7)} non passa niente.${prossimo ? ` Il prossimo ritiro: ${prossimo.nome}, ${giornoDetto(s.adesso, s.adesso + giorniDi3(prossimo) * GIORNO2, l)}.` : ""}`,
+          `No collection ${quando7}.${prossimo ? ` Next: ${prossimo.nome}, ${giornoDetto(s.adesso, s.adesso + giorniDi3(prossimo) * GIORNO2, l)}.` : ""}`
         )
       };
     }
@@ -57040,7 +57040,7 @@ RISPOSTE.rifiuti = (c, s) => {
       )
     };
   }
-  const ordinati = righe3.filter((r) => giorniDi2(r) !== null && giorniDi2(r) >= 0).sort((a, b2) => giorniDi2(a) - giorniDi2(b2));
+  const ordinati = righe3.filter((r) => giorniDi3(r) !== null && giorniDi3(r) >= 0).sort((a, b2) => giorniDi3(a) - giorniDi3(b2));
   if (!ordinati.length)
     return {
       testo: dire(
@@ -57055,21 +57055,21 @@ RISPOSTE.rifiuti = (c, s) => {
         )}.`
       )
     };
-  const primo = giorniDi2(ordinati[0]);
-  const stessi = ordinati.filter((r) => giorniDi2(r) === primo);
+  const primo = giorniDi3(ordinati[0]);
+  const stessi = ordinati.filter((r) => giorniDi3(r) === primo);
   const quando6 = giornoDetto(s.adesso, s.adesso + primo * GIORNO2, l);
-  const poi = ordinati.find((r) => giorniDi2(r) > primo);
+  const poi = ordinati.find((r) => giorniDi3(r) > primo);
   return {
     testo: dire(
       l,
       `Il prossimo ritiro è ${quando6}: ${elencoNomi(
         stessi.map((r) => r.nome),
         l
-      )}.${poi ? ` Poi ${poi.nome}, ${giornoDetto(s.adesso, s.adesso + giorniDi2(poi) * GIORNO2, l)}.` : ""}`,
+      )}.${poi ? ` Poi ${poi.nome}, ${giornoDetto(s.adesso, s.adesso + giorniDi3(poi) * GIORNO2, l)}.` : ""}`,
       `Next collection ${quando6}: ${elencoNomi(
         stessi.map((r) => r.nome),
         l
-      )}.${poi ? ` Then ${poi.nome}, ${giornoDetto(s.adesso, s.adesso + giorniDi2(poi) * GIORNO2, l)}.` : ""}`
+      )}.${poi ? ` Then ${poi.nome}, ${giornoDetto(s.adesso, s.adesso + giorniDi3(poi) * GIORNO2, l)}.` : ""}`
     )
   };
 };
@@ -67261,7 +67261,7 @@ var MISURE5 = Object.freeze([
   }
 ]);
 var MISURE_SALUTE = Object.freeze(MISURE5.map((m) => m.chiave));
-var PAROLE_DELLE_MISURE = /\b(health connect|withings|garmin connect|garmin|fitbit|resting heart rate|heart rate|heart pulse|resting|blood pressure|systolic|diastolic|blood oxygen|oxygen saturation|spo2|body fat|fat ratio|fat percentage|total sleep time|sleep duration|sleep time|sleep|total steps|daily steps|steps today|steps|step count|weight|body mass|calories burned|active calories|total calories|calories|energy burned|today|daily|oggi|giornalieri|passi|peso|battito cardiaco|battito|frequenza cardiaca|pressione|sistolica|diastolica|sonno|ossigeno|saturazione|calorie|massa grassa|grasso|burned|bruciate|active|attive|sensor)\b/gi;
+var PAROLE_DELLE_MISURE = /\b(health connect|apple health|healthkit|health|withings|garmin connect|garmin|fitbit|resting heart rate|heart rate|heart pulse|resting|blood pressure|systolic|diastolic|blood oxygen|oxygen saturation|spo2|body fat|fat ratio|fat percentage|total sleep time|sleep duration|sleep time|sleep|total steps|daily steps|steps today|steps|step count|weight|body mass|calories burned|active calories|total calories|calories|energy burned|today|daily|oggi|giornalieri|passi|peso|battito cardiaco|battito|frequenza cardiaca|pressione|sistolica|diastolica|sonno|ossigeno|saturazione|calorie|massa grassa|grasso|burned|bruciate|active|attive|sensor)\b/gi;
 function chiDalNome(nome) {
   return clean25(
     String(nome).replace(PAROLE_DELLE_MISURE, " ").replace(/[_·:()-]+/g, " ").replace(/\s+/g, " ")
@@ -67365,9 +67365,54 @@ function personeDellaSalute(states = {}, config = {}) {
     if (entity2 === "-" || !states?.[entity2]) continue;
     metti5(entity2, states[entity2], chiave2);
   }
+  unisciITelefoni(persone4, states);
   return [...persone4.values()].map((p) => ({ ...p, nome: nomi2[p.chi] || p.chi })).filter((p) => Object.keys(p.misure).length).sort(
     (a, b2) => Object.keys(b2.misure).length - Object.keys(a.misure).length || a.chi.localeCompare(b2.chi)
   );
+}
+var minuscolo11 = (v) => clean25(v).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+function padroneDelTelefono(nome) {
+  const n = minuscolo11(nome);
+  const di = n.match(/^.+?\s+(?:di|de|del|della|von|van|of)\s+(.+)$/);
+  if (di) return di[1].trim();
+  const s = n.match(/^(.+?)['’]s\s+\S/);
+  return s ? s[1].trim() : "";
+}
+function stessaPersona2(padrone, chi) {
+  const p = minuscolo11(padrone);
+  const c = minuscolo11(chi);
+  if (!p || !c) return false;
+  return p === c || p.startsWith(`${c} `) || c.startsWith(`${p} `);
+}
+function unisciITelefoni(persone4, states) {
+  const diGdahome = [...persone4.values()].filter(
+    (p) => Object.values(p.misure).some((m) => clean25(states?.[m.entity]?.attributes?.gdahome_persona))
+  );
+  if (!diGdahome.length) return;
+  for (const [chi, altra] of [...persone4]) {
+    if (diGdahome.includes(altra)) continue;
+    const padrone = padroneDelTelefono(chi);
+    const sua = diGdahome.find((p) => stessaPersona2(padrone, p.chi));
+    if (!sua) continue;
+    for (const [chiave2, lettura4] of Object.entries(altra.misure)) {
+      const gia = sua.misure[chiave2];
+      if (!gia) sua.misure[chiave2] = lettura4;
+      else gia.altre = [...gia.altre || [], lettura4];
+    }
+    persone4.delete(chi);
+  }
+}
+function giorniUniti(principali = [], altri = [], classe3 = "") {
+  const somma3 = /^total/.test(clean25(classe3));
+  const perGiorno = new Map(principali.map((g) => [g.inizio, { ...g }]));
+  for (const lista7 of altri) {
+    for (const g of lista7 || []) {
+      const gia = perGiorno.get(g.inizio);
+      if (!gia) perGiorno.set(g.inizio, { ...g });
+      else if (somma3 && g.valore > gia.valore) gia.valore = g.valore;
+    }
+  }
+  return [...perGiorno.values()].sort((a, b2) => a.inizio - b2.inizio);
 }
 function durataSonno(minuti2) {
   const m = numero44(minuti2);
@@ -67776,12 +67821,19 @@ function anelloMarkup2(quota) {
 function storicoDi(misura8) {
   return misura8 ? state54.storico[misura8.entity]?.righe : void 0;
 }
-function settimanaPassiMarkup(misura8, obiettivo2) {
-  if (!misura8?.statistiche) return "";
+function giorniDi(misura8) {
   const righe3 = storicoDi(misura8);
-  if (!Array.isArray(righe3))
+  if (misura8?.statistiche && !Array.isArray(righe3)) return null;
+  const altri = (misura8?.altre || []).filter((a) => a.statistiche).map((a) => giorniDalleStatistiche(storicoDi(a) || [], a.classe));
+  return giorniUniti(giorniDalleStatistiche(righe3 || [], misura8?.classe), altri, misura8?.classe);
+}
+var conStorico = (misura8) => Boolean(misura8?.statistiche || misura8?.altre?.some((a) => a.statistiche));
+function settimanaPassiMarkup(misura8, obiettivo2) {
+  if (!conStorico(misura8)) return "";
+  const tutti = giorniDi(misura8);
+  if (!tutti)
     return `<div class="dm-salute-giorni dm-salute-attesa">${esc(t("Carico i giorni…", "Loading the days…"))}</div>`;
-  const giorni = giorniDalleStatistiche(righe3, misura8.classe).slice(-7);
+  const giorni = tutti.slice(-7);
   if (!giorni.length) return "";
   const oggi = /* @__PURE__ */ new Date();
   oggi.setHours(0, 0, 0, 0);
@@ -67801,10 +67853,9 @@ function settimanaPassiMarkup(misura8, obiettivo2) {
   </div>`;
 }
 function meseDelPesoMarkup(misura8) {
-  if (!misura8?.statistiche) return "";
-  const righe3 = storicoDi(misura8);
-  if (!Array.isArray(righe3)) return `<div class="dm-salute-linea dm-salute-attesa">${esc(t("Carico il mese…", "Loading the month…"))}</div>`;
-  const giorni = giorniDalleStatistiche(righe3, misura8.classe);
+  if (!conStorico(misura8)) return "";
+  const giorni = giorniDi(misura8);
+  if (!giorni) return `<div class="dm-salute-linea dm-salute-attesa">${esc(t("Carico il mese…", "Loading the month…"))}</div>`;
   if (giorni.length < 2) return "";
   const valori = giorni.map((g) => g.valore);
   const minimo = Math.min(...valori);
@@ -68039,8 +68090,10 @@ function dipingi10(vista2) {
     if (vista2.strava.statistiche.sport[sport]) void chiediLeSettimaneStrava(vista2.strava, sport, state54.settimane, schedule20);
   } else {
     const persona = personaScelta(vista2);
-    void chiediLoStorico(persona?.misure.passi, 7, ["change", "max", "state"]);
-    void chiediLoStorico(persona?.misure.peso, 30, ["mean", "max", "state"]);
+    for (const m of [persona?.misure.passi, ...persona?.misure.passi?.altre || []])
+      void chiediLoStorico(m, 7, ["change", "max", "state"]);
+    for (const m of [persona?.misure.peso, ...persona?.misure.peso?.altre || []])
+      void chiediLoStorico(m, 30, ["mean", "max", "state"]);
   }
   scriviSeCambia(dove, paginaSaluteMarkup(vista2));
 }
@@ -101216,7 +101269,7 @@ function minutiDi2(testo5) {
   const [h, m] = scritto3.split(":").map(Number);
   return h * 60 + m;
 }
-function giorniDi(valore3) {
+function giorniDi2(valore3) {
   return Array.isArray(valore3) && valore3.length === 7 ? valore3.map((g) => g === true) : [true, true, true, true, true, true, true];
 }
 function leggiJson2(valore3) {
@@ -101250,7 +101303,7 @@ function quandoPulito(dato2) {
       ore: ore3.length || sole ? ore3 : ["07:00"],
       sole,
       scarto: intero2(d.scarto, -180, 180, 0),
-      giorni: giorniDi(d.giorni)
+      giorni: giorniDi2(d.giorni)
     };
   }
   if (tipo === "apertura")
@@ -101340,7 +101393,7 @@ function condizionePulita(dato2) {
   const tipo = d.tipo;
   if (tipo === "notte") return { tipo, da: ora5(d.da), a: ora5(d.a) };
   if (tipo === "fascia") return { tipo, da: ora5(d.da, "08:00"), a: ora5(d.a, "20:00") };
-  if (tipo === "giorni") return { tipo, giorni: giorniDi(d.giorni) };
+  if (tipo === "giorni") return { tipo, giorni: giorniDi2(d.giorni) };
   if (tipo === "casa") return { tipo, chi: d.chi === "nessuno" ? "nessuno" : "qualcuno" };
   if (tipo === "stato") {
     const entita5 = entitaDi3(d.entita);
@@ -101554,7 +101607,7 @@ function routinePulita(dato2) {
   }
   passi2.sort((x, y) => x.ora.localeCompare(y.ora));
   return {
-    giorni: giorniDi(d.giorni),
+    giorni: giorniDi2(d.giorni),
     periodo: periodoPulito(d.periodo),
     passi: passi2.slice(0, PASSI_AL_MASSIMO)
   };
@@ -122252,7 +122305,7 @@ if (doc?.readyState === "loading") {
 
 // src/core/azione-accesa.js
 var pulito67 = (valore3) => String(valore3 ?? "").trim();
-var minuscolo11 = (valore3) => pulito67(valore3).toLowerCase();
+var minuscolo12 = (valore3) => pulito67(valore3).toLowerCase();
 var ACCESI5 = /* @__PURE__ */ new Set(["on", "open", "opening", "playing", "cleaning", "heat", "cool", "auto"]);
 var MUTI16 = /* @__PURE__ */ new Set(["", "unavailable", "unknown", "none"]);
 var SENZA_STATO = /* @__PURE__ */ new Set(["scene", "script_run", "service", "url", "navigate"]);
@@ -122261,18 +122314,18 @@ function entitaDellAzione(azione) {
   if (!azione || typeof azione !== "object") return "";
   const entity2 = pulito67(azione.entity || azione.entity_id);
   if (pulito67(azione.option) && E_UN_MENU2.test(entity2)) return entity2;
-  const tipo = minuscolo11(azione.type);
+  const tipo = minuscolo12(azione.type);
   if (SENZA_STATO.has(tipo)) return "";
   return entity2;
 }
 function azioneAccesa(azione, states = {}, risolvi5 = null) {
   if (!azione || typeof azione !== "object") return null;
-  if (minuscolo11(azione.type) === "luci_group") {
+  if (minuscolo12(azione.type) === "luci_group") {
     const luci = Array.isArray(azione.lights) ? azione.lights.map(pulito67).filter(Boolean) : [];
     if (!luci.length) return null;
     let vive = 0;
     for (const luce2 of luci) {
-      const stato4 = minuscolo11(states?.[risolta(luce2, risolvi5)]?.state);
+      const stato4 = minuscolo12(states?.[risolta(luce2, risolvi5)]?.state);
       if (MUTI16.has(stato4)) continue;
       vive += 1;
       if (ACCESI5.has(stato4)) return true;
@@ -122281,9 +122334,9 @@ function azioneAccesa(azione, states = {}, risolvi5 = null) {
   }
   const entity2 = entitaDellAzione(azione);
   if (!entity2) return null;
-  const stato3 = minuscolo11(states?.[risolta(entity2, risolvi5)]?.state);
+  const stato3 = minuscolo12(states?.[risolta(entity2, risolvi5)]?.state);
   if (MUTI16.has(stato3)) return null;
-  const voce3 = minuscolo11(azione.option);
+  const voce3 = minuscolo12(azione.option);
   if (voce3 && E_UN_MENU2.test(entity2)) return stato3 === voce3;
   return ACCESI5.has(stato3);
 }

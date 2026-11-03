@@ -40,6 +40,21 @@ _Solo Home Assistant: l'app sul telefono non cambia._
   Quando nessuna fonte sa niente il report spiega perché e cosa serve, e che
   da adesso quei periodi restano. Una stanza la cui richiesta si sa solo per
   alcuni giorni del periodo porta «dati parziali».
+- **Salute: le misure dell'app e quelle del telefono sono una persona
+  sola.** «Ora va tutto con il nuovo aggiornamento, però non vanno nella
+  plancia.» Sullo stesso iPhone scrivevano in due: GdAHome con le misure di
+  Apple Salute («Marco Steps», «Marco Heart rate»…) e l'app di Home Assistant
+  col contapassi («iPhone di marco Steps», e i sensori con «Health» nel
+  nome). La pagina Salute ne faceva tre persone, e la prima che si vedeva
+  non era quella con le misure dell'app. Adesso un telefono che porta il
+  nome di chi manda le misure con GdAHome («iPhone di Marco», «Pixel 8 di
+  Marco», «Marco's iPhone») entra nella sua scheda: per ogni misura vale
+  quella di GdAHome, le altre arrivano dal telefono, e i giorni passati dei
+  passi e del peso li dà il sensore che li ha.
+- **Salute: un no del ponte si legge nel registro dell'add-on.** Se un
+  telefono manda le misure e la casa le rifiuta — il telefono non è intestato
+  a un utente di Home Assistant, o la casa non ha GdAHome Premium — il
+  registro lo dice una volta, senza nomi né valori.
 
 ## 1.18.9
 
