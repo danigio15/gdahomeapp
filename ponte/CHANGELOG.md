@@ -26,6 +26,10 @@ _Solo Home Assistant: l'app sul telefono non cambia._
   quel termostato c'era già un cronotermostato, si apre quello e diventa a
   fasce. Senza Premium si vede ma non si modifica. I cronotermostati di
   prima, a due temperature, non cambiano.
+- **Il termostato in pausa dice quanti gradi aspetta:** nella finestra Clima
+  della Home, un termostato acceso ma fermo («In pausa») non scriveva più la
+  temperatura voluta. Adesso la riga dice «19,5° → 21°» (o la coppia caldo –
+  freddo), che è proprio il perché è fermo.
 - **Lo Sport si sceglie nelle segnalazioni (#353):** «manca nel feedback la
   sezione Sport da scegliere, e finisce in Config». La tendina «Sezione»
   prendeva solo le voci che in quel momento si vedevano nella barra: aperta

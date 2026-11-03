@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-VZZEUD6T.js";
+} from "../../chunk-VTMLDDFV.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -76643,7 +76643,8 @@ function climateDetail(widget) {
          <span class="dm-w-name">${esc(row.name)}<small>${esc(sotto)}</small></span>
          <span class="dm-w-clima-gradi">
            <b>${row.ambient == null ? "--" : `${formatNumber(row.ambient, 1)}°`}</b>
-           ${row.on && row.obiettivi?.doppio ? `<small data-dm-w-coppia>→ ${esc(gradiDellaCoppia(row.obiettivi))}</small>` : row.on && row.target != null ? `<small>→ ${formatNumber(row.target, 1)}°</small>` : ""}
+           ${/* Anche in pausa: «19,5° → 21°» dice perche' e' fermo. */
+      (row.on || row.acceso) && row.obiettivi?.doppio ? `<small data-dm-w-coppia>→ ${esc(gradiDellaCoppia(row.obiettivi))}</small>` : (row.on || row.acceso) && row.target != null ? `<small>→ ${formatNumber(row.target, 1)}°</small>` : ""}
          </span>
          ${pannello ? `<button type="button" class="dm-w-more" data-dm-w-more="${esc(row.entity)}"
                   aria-expanded="${Boolean(aperto2)}"

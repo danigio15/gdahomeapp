@@ -7784,9 +7784,10 @@ function climateDetail(widget) {
          <span class="dm-w-clima-gradi">
            <b>${row.ambient == null ? "--" : `${formatNumber(row.ambient, 1)}°`}</b>
            ${
-             row.on && row.obiettivi?.doppio
+             /* Anche in pausa: «19,5° → 21°» dice perche' e' fermo. */
+             (row.on || row.acceso) && row.obiettivi?.doppio
                ? `<small data-dm-w-coppia>→ ${esc(gradiDellaCoppia(row.obiettivi))}</small>`
-               : row.on && row.target != null
+               : (row.on || row.acceso) && row.target != null
                  ? `<small>→ ${formatNumber(row.target, 1)}°</small>`
                  : ""
            }
