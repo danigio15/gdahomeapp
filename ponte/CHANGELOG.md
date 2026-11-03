@@ -10,6 +10,58 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.9
+
+_App GdAHome e Home Assistant._
+
+- **App per iPhone: la Salute chiede davvero il permesso.** «Il telefono non
+  ha dato il permesso di leggere la salute», e GdAHome non compariva fra le
+  Fonti di Salute. Non era il telefono: l'app della 1.18.8 sull'App Store era
+  firmata senza il permesso di Apple per HealthKit — la costruzione per il
+  negozio, accendendo CarPlay, ne sostituiva i permessi invece di
+  aggiungerlo. Adesso CarPlay si aggiunge agli altri, e la costruzione si
+  ferma se nella firma manca la Salute. Con l'app nuova l'interruttore «Manda
+  le misure alla casa» fa comparire la richiesta dell'iPhone.
+- **Navigatore: il traffico allunga l'arrivo.** Il tempo di percorrenza e l'ora
+  d'arrivo contano il ritardo delle code; a lato della guida la striscia del
+  traffico con i minuti di ogni coda e il punto in cui si è. Su CarPlay il
+  ritardo «+N min» sotto il tachimetro, arancio o rosso come sul telefono.
+
+- **Il report del riscaldamento e del raffrescamento:** «report
+  giornaliero/mensile sulle varie stanze di quanto sono state accese, con che
+  media di apertura valvola, quanto è stata accesa la caldaia». Nella pagina
+  Clima c'è «📊 Report»: Riscaldamento e Raffrescamento, per giorno (ora per
+  ora), settimana o mese (giorno per giorno) con le frecce per tornare
+  indietro. In alto le ore della caldaia e le sue accensioni, le ore di
+  richiesta di tutte le stanze, la temperatura in comfort con l'obiettivo in
+  comfort — le ore accese con l'obiettivo sopra quello ridotto, così la notte
+  abbassata non fa sembrare la casa troppo calda — e la valvola media; poi il
+  grafico e le stanze in fila per ore di richiesta, con quanto sono rimaste
+  accese, la valvola e la temperatura. Le unità che nel periodo non hanno mai
+  lavorato per quell'impianto (la pompa di calore che ha solo raffrescato, nel
+  Riscaldamento) non sono in elenco, e il report dice quante. I numeri vengono
+  dalla storia di Home Assistant: la richiesta da `hvac_action`, la valvola
+  dalla sua entità (la casella «Valvola» dell'unità) o dagli attributi del
+  termostato, la caldaia dalla Gestione termica — con due caldaie si vedono
+  tutte e due. Senza una caldaia il tempo dell'impianto è una stima (acceso
+  quando almeno una stanza chiede) e il report lo scrive. Una stanza di cui
+  Home Assistant ha registrato poco porta «dati parziali».
+- **Ogni stanza ha il suo interruttore «Immagine», e il disegno del suo
+  nome:** «perché le altre stanze non esce l'immagine nei riquadri? Esce solo
+  l'ingresso». In Config › Home › Immagini dei riquadri › Stanze ogni stanza
+  ha l'interruttore accanto a «🖼️ Immagine» (lo stesso sta nella scheda della
+  stanza, in Config › Stanze). Acceso: l'immagine scelta a mano, se c'è,
+  altrimenti il disegno del catalogo che il nome dice — «Cucina» la cucina,
+  «Bagno piccolo» il bagno, «Cameretta» la cameretta, «Multimedia» il
+  soggiorno, «Balcone cucina» il terrazzo — e, se il nome non basta, quello
+  che dice l'icona; un nome che non si capisce resta col riquadro di sempre.
+  Spento: nessuna immagine, né in Home né nelle Stanze, nella Temperatura o a
+  muro; quella scelta a mano resta salvata e torna quando si riaccende. Di
+  partenza è acceso solo dove un'immagine era già stata scelta:
+  all'aggiornamento la Home non cambia. La riga dice cosa si vede: «Foto»,
+  «Disegno», «Disegno automatico» o «Spenta». Il disegno automatico non si
+  scrive nella configurazione, l'interruttore sì, addosso alla stanza.
+
 ## 1.18.8.1
 
 _Solo Home Assistant: l'app sul telefono non cambia._

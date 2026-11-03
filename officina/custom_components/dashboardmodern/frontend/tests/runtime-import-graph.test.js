@@ -1640,8 +1640,13 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // nascondono quando e' tutto spento.
   // 526 con `sections/programma-del-clima-section.js`: il programma orario
   // del termostato, nella sua finestra.
+  // 528 con il report del clima: `core/report-del-clima.js` (i conti delle
+  // ore, delle valvole e della caldaia) e `sections/report-del-clima-section.js`
+  // (il foglio che li disegna).
+  // 529 con `core/disegno-automatico-della-stanza.js`: il disegno che il nome
+  // dice, per le stanze a cui un'immagine non e' stata scelta.
   assert.ok(
-    relative.length <= 526,
+    relative.length <= 529,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

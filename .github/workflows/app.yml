@@ -664,10 +664,20 @@ jobs:
       # CarPlay si accende solo quando Apple ha concesso il permesso
       # (variabile GDAHOME_CARPLAY = si, vedi docs/IPHONE.md): prima, con
       # quel permesso scritto dentro, la firma non passerebbe.
+      #
+      # Il permesso si **aggiunge** a quelli che l'app ha gia', non li
+      # sostituisce. Fino alla 1.18.8 qui si copiava RunnerCarPlay.entitlements
+      # sopra Runner.entitlements, e con lui se ne andava HealthKit: l'app
+      # sull'App Store non poteva chiedere di leggere Salute, non compariva
+      # fra le sue Fonti e diceva «il telefono non ha dato il permesso».
       - name: CarPlay
         if: vars.GDAHOME_CARPLAY == 'si'
         working-directory: app
-        run: cp ios/Runner/RunnerCarPlay.entitlements ios/Runner/Runner.entitlements
+        run: |
+          permessi=ios/Runner/Runner.entitlements
+          /usr/libexec/PlistBuddy -c "Add :com.apple.developer.carplay-maps bool true" "$permessi" 2>/dev/null ||
+            /usr/libexec/PlistBuddy -c "Set :com.apple.developer.carplay-maps true" "$permessi"
+          cat "$permessi"
 
       # Il permesso delle notifiche nella firma: `aps-environment`, che vuole
       # la capacita' «Push Notifications» sull'identificativo dell'app — la
@@ -782,6 +792,9 @@ jobs:
           fi
           codesign --force --sign - --entitlements ios/Runner/Runner.entitlements "$app"
           codesign -d --entitlements - "$app" | tee build/permessi.txt
+          # La Salute c'e' sempre: senza, l'app non puo' chiedere di leggere
+          # Salute di iPhone (e' successo con la 1.18.8).
+          grep -q com.apple.developer.healthkit build/permessi.txt
           if [ "$CARPLAY" = "si" ]; then grep -q com.apple.developer.carplay-maps build/permessi.txt; fi
           if [ "$NOTIFICHE" = "si" ]; then grep -q aps-environment build/permessi.txt; fi
 

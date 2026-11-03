@@ -79,6 +79,7 @@ import { installClimateThermalSection } from "./climate-thermal-section.js";
 import { installTermicoDelCaldo } from "./termico-del-caldo-section.js";
 import { installPopupClimaDistingue } from "./il-popup-del-clima-distingue-section.js";
 import { installProgrammaDelClima } from "./programma-del-clima-section.js";
+import { installReportDelClima } from "./report-del-clima-section.js";
 import { installPopupAutoRacconta } from "./il-popup-dell-auto-racconta-section.js";
 import { installPopupLavatrice } from "./il-popup-della-lavatrice-section.js";
 import { installNavigationSection } from "./navigation-section.js";
@@ -1018,6 +1019,9 @@ export function installSectionRuntime() {
     /* Il programma orario nella finestra del termostato: dopo chi ci mette
      * il pannello, cosi' finisce sotto Spegni / Accendi. */
     senzaCadere(installProgrammaDelClima);
+    /* Il report del riscaldamento e del raffrescamento: un tasto nella
+     * testata del Clima, dopo chi la disegna. */
+    senzaCadere(installReportDelClima);
     /* Il popup dell'Auto: l'ora di fine carica accanto al tempo che manca,
      * la frase d'analisi, i codici del cavo in parole. */
     senzaCadere(installPopupAutoRacconta);

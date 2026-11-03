@@ -197,6 +197,7 @@ const copy = () => ({
   ambient: t("Ambiente medio", "Average room"),
   allOn: t("Accendi tutto", "Turn all on"),
   allOff: t("Spegni tutto", "Turn all off"),
+  report: t("Report", "Report"),
   target: t("Target", "Target"),
   room: t("Ambiente", "Room"),
   off: t("Spento", "Off"),
@@ -539,6 +540,11 @@ function skeletonMarkup(labels) {
         <span class="dm-cl-bulk-div" aria-hidden="true"></span>
         <button type="button" data-dm-cl-bulk="off">${ICONS.power}${esc(labels.allOff)}</button>
       </div>
+      <!-- Il report del riscaldamento e del raffrescamento: lo apre
+           report-del-clima-section.js, che ascolta il tocco su tutta la pagina. -->
+      <button type="button" class="dm-cl-report" data-dm-rcl-apri hidden>
+        <span aria-hidden="true">📊</span><span>${esc(labels.report)}</span>
+      </button>
     </div>
   </div>
 
@@ -1460,6 +1466,9 @@ function paintSummary(shell, units, states, labels) {
       }
     });
   }
+  /* Il report si apre solo se c'e' qualcosa da raccontare. */
+  const reportEl = shell.querySelector("[data-dm-rcl-apri]");
+  if (reportEl) reportEl.hidden = !units.length;
   const subtitle = shell.querySelector("[data-dm-cl-sub]");
   if (subtitle) {
     const family =
@@ -2521,6 +2530,14 @@ function climateCss() {
 .dm-cl-kpi span{font-size:9px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--dm-cl-dim)}
 .dm-cl-kpi b{font-size:19px;font-weight:800;letter-spacing:-.4px;font-variant-numeric:tabular-nums}
 .dm-cl-kpi b small{font-size:12px;font-weight:700;color:var(--dm-cl-dim);letter-spacing:0}
+.dm-cl-report{
+  display:inline-flex;align-items:center;gap:8px;padding:11px 16px;border:1px solid var(--dm-cl-line);
+  border-radius:16px;background:var(--dm-cl-card);box-shadow:var(--dm-cl-shadow);color:var(--dm-cl-text);
+  font:inherit;font-size:12px;font-weight:800;letter-spacing:.4px;cursor:pointer;transition:color .25s ease
+}
+.dm-cl-report[hidden]{display:none}
+.dm-cl-shell .dm-cl-report span{font-size:12px;font-weight:800;line-height:1}
+.dm-cl-report:hover{color:rgb(var(--dm-cl-zone))}
 .dm-cl-bulk{
   display:flex;align-items:stretch;border:1px solid var(--dm-cl-line);border-radius:16px;
   background:var(--dm-cl-card);box-shadow:var(--dm-cl-shadow);overflow:hidden

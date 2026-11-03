@@ -21,6 +21,11 @@
  * da leggere, non cose da accendere. */
 import { GRUPPI_DISEGNI, cercaDisegni, disegnoDaRiquadro } from "../core/disegni-da-riquadro.js";
 import {
+  immagineAccesa,
+  immagineDellaStanza,
+  statoDellImmagine,
+} from "../core/disegno-automatico-della-stanza.js";
+import {
   ZOOM_MASSIMO,
   ZOOM_MINIMO,
   chiaveDelDisegno,
@@ -62,6 +67,7 @@ import {
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_RIQUADRI_CON_IMMAGINE__";
+
 const state = (root[KEY] ||= { installed: false, blocchi: new Map(), misure: new Map() });
 
 export const EVENTO_IMMAGINE = "dm-rqi-cambia";
@@ -288,6 +294,18 @@ html[data-theme="dark"] .dev-card.on:not(.dm-rq) .dev-pwr{background:rgba(14,165
 .dm-rq-dispositivi .dm-rq-pollicino img{width:100%;height:100%;object-fit:cover;display:block}
 .dm-rq-dispositivi .dm-rq-apri{flex:none;height:34px;padding:0 12px;border-radius:11px;border:1px solid var(--divider-color,#dbe4ee);background:var(--card-bg,#fff);color:inherit;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer}
 .dm-rq-dispositivi .dm-rq-apri[aria-expanded="true"]{border-color:#0ea5e9;color:#0369a1}
+/* Sul telefono, con l'interruttore accanto, il tasto dice solo 🖼️: il nome
+ * della stanza ha bisogno di quel posto per leggersi intero. */
+@media (max-width:600px){.dm-rq-card-pannello .dm-rq-apri{padding:0 10px}.dm-rq-card-pannello .dm-rq-apri-testo{display:none}}
+#ed-body .dm-rq-dispositivi .dm-rq-riga .ed-row-main{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:1px;min-width:0;flex:1 1 auto}
+#ed-body .dm-rq-dispositivi .dm-rq-riga .ed-row-new,#ed-body .dm-rq-dispositivi .dm-rq-riga .ed-row-old{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ed-body .dm-rq-card-pannello .dm-rq-mostra{display:inline-flex;align-items:center;flex:none;margin:0 2px 0 0;cursor:pointer}
+#ed-body .dm-rq-card-pannello .dm-rq-mostra input{appearance:none;-webkit-appearance:none;position:relative;width:40px!important;height:24px!important;margin:0;padding:0!important;border:0!important;border-radius:999px!important;background:#94a3b8!important;transition:background .15s;cursor:pointer}
+#ed-body .dm-rq-card-pannello .dm-rq-mostra input::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .15s}
+#ed-body .dm-rq-card-pannello .dm-rq-mostra input:checked{background:#0ea5e9!important}
+#ed-body .dm-rq-card-pannello .dm-rq-mostra input:checked::after{transform:translateX(16px)}
+#ed-body .dm-rq-card-pannello .dm-rq-mostra input:focus-visible{outline:3px solid color-mix(in srgb,var(--accent,#3b82f6) 35%,transparent);outline-offset:2px}
+#ed-body .dm-rq-card-pannello .dm-rq-riga[data-dm-rq-stato="spenta"] .dm-rq-pollicino{filter:grayscale(1);opacity:.55}
 .dm-rq-card-pannello .dm-rq-sub-titolo{margin:16px 2px 6px;font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim,#64748b)}
 `;
 
@@ -1031,10 +1049,16 @@ export function vestiLeCardDellaPlancia(radice = doc) {
     if (!card.length) continue;
     const voci =
       superficie.forma === "mappa" ? readJson(CHIAVE_DELLE_IMMAGINI, {}) : vociDi(superficie);
+    const stanze = superficie.chiave === "stanze";
     card.forEach((c, indice) => {
       /* Una card del muro o una gia' col vestito proprio non si tocca. */
       if (c.closest("#dm-muro") || c.classList.contains("dm-rq")) return;
-      if (vestiUnaCard(superficie, c, voceDellaCard(superficie, voci, c, indice))) toccate += 1;
+      let voce = voceDellaCard(superficie, voci, c, indice);
+      /* Una stanza col suo interruttore «Immagine»: acceso, la sua immagine o
+       * il disegno che il nome dice (calcolato qui, mai scritto); spento,
+       * niente (`disegno-automatico-della-stanza.js`). */
+      if (stanze) voce = { immagine: immagineDellaStanza(voce) };
+      if (vestiUnaCard(superficie, c, voce)) toccate += 1;
     });
   }
   return toccate;
@@ -1097,10 +1121,25 @@ function pannelloDelleCard() {
         const chiave = chiaveDellaCard(superficie.chiave, k);
         const nome = nomeDellaVoce(voce, `#${k + 1}`);
         const immagine = immaginePulita(voce?.immagine);
-        return `<div class="ed-row dm-rq-riga" data-dm-rq-card="${esc(chiave)}">
-        <span class="dm-rq-pollicino" aria-hidden="true">${pollicino({ ...voce, icon: voce?.icon || "🖼️" })}</span>
-        <span class="ed-row-main"><strong class="ed-row-new">${esc(nome)}</strong><small class="ed-row-old">${esc(immagine ? (chiaveDelDisegno(immagine) ? t("Disegno", "Drawing") : t("Foto", "Photo")) : t("Senza immagine", "No image"))}</small></span>
-        <button type="button" class="dm-rq-apri" data-dm-rq-apri-card="${esc(chiave)}" aria-expanded="${aperta === chiave}">🖼️ ${esc(t("Immagine", "Image"))}</button>
+        /* Una stanza ha il suo interruttore «Immagine», e la riga dice cosa
+         * si vede: la foto, il disegno scelto, il disegno del nome, niente. */
+        const stanza = superficie.chiave === "stanze";
+        const stato = stanza ? statoDellImmagine(voce) : immagine ? "" : "nessuna";
+        const vista = stanza
+          ? { ...voce, immagine: immagineDellaStanza(voce) || immagine }
+          : voce;
+        const detto = {
+          spenta: t("Spenta", "Off"),
+          automatico: t("Disegno automatico", "Automatic drawing"),
+          nessuna: t("Senza immagine", "No image"),
+        }[stato] || (chiaveDelDisegno(immagine) ? t("Disegno", "Drawing") : t("Foto", "Photo"));
+        const interruttore = stanza
+          ? `<label class="dm-rq-mostra" title="${esc(t("Immagine", "Image"))}"><input type="checkbox" role="switch" data-dm-rq-mostra="${k}" aria-label="${esc(`${t("Immagine", "Image")} · ${nome}`)}"${immagineAccesa(voce) ? " checked" : ""}></label>`
+          : "";
+        return `<div class="ed-row dm-rq-riga" data-dm-rq-card="${esc(chiave)}"${stato ? ` data-dm-rq-stato="${stato}"` : ""}>
+        <span class="dm-rq-pollicino" aria-hidden="true">${pollicino({ ...vista, icon: voce?.icon || "🖼️" })}</span>
+        <span class="ed-row-main"><strong class="ed-row-new">${esc(nome)}</strong><small class="ed-row-old">${esc(detto)}</small></span>
+        ${interruttore}<button type="button" class="dm-rq-apri" data-dm-rq-apri-card="${esc(chiave)}" aria-expanded="${aperta === chiave}" aria-label="${esc(`${t("Immagine", "Image")} · ${nome}`)}">🖼️<span class="dm-rq-apri-testo"> ${esc(t("Immagine", "Image"))}</span></button>
       </div>${aperta === chiave ? bloccoImmagineMarkup({ chiave, immagine, nome, accento: ACCENTO_DEI_DISPOSITIVI, anteprima: { stato: "", acceso: false, destra: "", comandi: "", classi: "dm-rq-lettura" } }) : ""}`;
       })
       .join("")}</div>`,
@@ -1108,9 +1147,29 @@ function pannelloDelleCard() {
       .join("")}`;
 }
 
+/** L'interruttore «Immagine» di una stanza, scritto addosso a lei. */
+export async function accendiLImmagineDellaStanza(indice, acceso) {
+  const voce = vociDi(superficieConImmagine("stanze"))[indice];
+  const store = dashboardStore();
+  if (!voce?.id || !store?.updateItem) return false;
+  await store.updateItem("rooms", voce.id, { mostraImmagine: acceso === true });
+  vestiLeCardDellaPlancia();
+  return true;
+}
+
+function onCambiaLInterruttore(evento) {
+  const campo = evento.target;
+  if (!campo?.matches?.("[data-dm-rq-card-pannello] [data-dm-rq-mostra]")) return;
+  accendiLImmagineDellaStanza(Number(campo.dataset.dmRqMostra), campo.checked)
+    .catch(() => false)
+    .finally(() => ensurePannelloDelleCard());
+}
+
 function firmaDelleCard() {
   return `${state.cardAperta || ""}|${JSON.stringify(
-    SUPERFICI_DA_VESTIRE.map((s) => vociDi(s).map((v) => [nomeDellaVoce(v), v?.immagine])),
+    SUPERFICI_DA_VESTIRE.map((s) =>
+      vociDi(s).map((v) => [nomeDellaVoce(v), v?.icon, v?.immagine, v?.mostraImmagine]),
+    ),
   )}`;
 }
 
@@ -1169,7 +1228,12 @@ export async function mettiLImmagineAllaVoce(chiaveSuperficie, indice, immagine)
   } else if (superficie.sezione) {
     const store = dashboardStore();
     if (!store?.updateItem || !voce.id) return false;
-    await store.updateItem(superficie.sezione, voce.id, { immagine: pulita });
+    /* Un'immagine scelta per una stanza si vede: chi la sceglie la vuole
+     * vedere, anche se l'interruttore era spento. */
+    await store.updateItem(superficie.sezione, voce.id, {
+      immagine: pulita,
+      ...(superficie.chiave === "stanze" && pulita ? { mostraImmagine: true } : {}),
+    });
   } else {
     const nuove = voci.map((v) => ({ ...v }));
     if (pulita) nuove[indice].immagine = pulita;
@@ -1211,6 +1275,7 @@ export function installRiquadriConImmagine() {
   doc.addEventListener("click", onClickDelPannello);
   doc.addEventListener(EVENTO_IMMAGINE, onCambiaDispositivo);
   doc.addEventListener("click", onClickDelleCard);
+  doc.addEventListener("change", onCambiaLInterruttore);
   doc.addEventListener(EVENTO_IMMAGINE, onCambiaCard);
   /* I Dispositivi: dopo che il guscio ha fatto la griglia, e dopo ogni suo
    * aggiornamento (che rimette la classe `on`, e basta). */

@@ -17,6 +17,7 @@ import {
 } from "../core/spegnimento-programmato.js";
 import { CHIAVE_PIANI, iPianiDellaCasa } from "../core/i-piani-della-casa.js";
 import { stanzaAllAperto } from "../core/room-overview.js";
+import { immagineAccesa } from "../core/disegno-automatico-della-stanza.js";
 import { iDodiciMesi, normalizzaIMesi } from "../core/stagione-del-clima.js";
 import {
   quickClimateFieldsMarkup,
@@ -655,7 +656,8 @@ function openRoomEditor(item, index) {
     `<label class="ed-slot"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><input class="ed-input" name="name" value="${esc(item.name)}" required></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Icona", "Icon")}</span><span class="dm-unified-icon-row"><span class="dm-unified-icon-preview" data-room-icon-preview aria-hidden="true">${iconMarkup(initialIcon, "🏠", 36)}</span><input class="ed-input" name="icon" value="${esc(initialIcon)}"></span><small>${t("L’anteprima usa lo stesso renderer dell’icona stanza nella dashboard.", "The preview uses the same room-icon renderer as the dashboard.")}</small></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Piano", "Floor")}</span>${tendinaDeiPiani(item.floor)}<small>${t("I piani si creano e si ordinano qui sopra, nella scheda Stanze.", "Floors are created and ordered above, in the Rooms tab.")}</small></label>
-     <div class="ed-slot"><span class="ed-slot-lbl">${t("All'aperto", "Outdoors")}</span><label class="dm-stanza-aperto"><input type="checkbox" name="outdoor"${stanzaAllAperto(item) ? " checked" : ""}><span>${t("Balcone, terrazzo, giardino. Temperatura e umidità si vedono come sempre, ma l'assistente non propone di scaldare, rinfrescare o arieggiare, e la stanza non entra nella media della casa.", "Balcony, terrace, garden. Temperature and humidity show as always, but the assistant does not suggest heating, cooling or airing it out, and the room does not count in the home average.")}</span></label></div>`,
+     <div class="ed-slot"><span class="ed-slot-lbl">${t("All'aperto", "Outdoors")}</span><label class="dm-stanza-aperto"><input type="checkbox" name="outdoor"${stanzaAllAperto(item) ? " checked" : ""}><span>${t("Balcone, terrazzo, giardino. Temperatura e umidità si vedono come sempre, ma l'assistente non propone di scaldare, rinfrescare o arieggiare, e la stanza non entra nella media della casa.", "Balcony, terrace, garden. Temperature and humidity show as always, but the assistant does not suggest heating, cooling or airing it out, and the room does not count in the home average.")}</span></label></div>
+     <div class="ed-slot"><span class="ed-slot-lbl">${t("Immagine", "Image")}</span><label class="dm-stanza-aperto"><input type="checkbox" name="mostraImmagine"${immagineAccesa(item) ? " checked" : ""}><span>${t("Il riquadro della stanza mostra la sua immagine. Senza una scelta a mano, il disegno che il nome dice: «Cucina» la cucina, «Bagno» il bagno.", "The room tile shows its image. Without one chosen by hand, the drawing its name suggests: «Kitchen» the kitchen, «Bathroom» the bathroom.")}</span></label></div>`,
     "🏠",
   );
   const preview = form.querySelector("[data-room-icon-preview]");
@@ -681,6 +683,11 @@ function openRoomEditor(item, index) {
      * chiave — una stanza che non e' all'aperto e' una stanza come prima. */
     if (form.elements.outdoor?.checked) list[index].outdoor = true;
     else delete list[index].outdoor;
+    /* L'interruttore «Immagine»: si scrive solo se e' cambiato — una stanza
+     * salvata senza toccarlo resta «come prima» (`immagineAccesa`). */
+    const mostra = form.elements.mostraImmagine?.checked === true;
+    if (form.elements.mostraImmagine && mostra !== immagineAccesa(item))
+      list[index].mostraImmagine = mostra;
     persist("room", list);
     close();
     root.editorSwitch?.(currentTab("room"));

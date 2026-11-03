@@ -31,6 +31,7 @@ import { ingressiScritti } from "./le-zone-della-centrale.js";
 import { spicchioDelVento, vistaDelMeteoDa } from "./la-pagina-meteo.js";
 import { genereDelComando, partiDelComando } from "./comandi-accanto.js";
 import { immaginePulita } from "./immagine-del-riquadro.js";
+import { immagineDellaStanza } from "./disegno-automatico-della-stanza.js";
 import { lettoriConfigurati } from "./media-player.js";
 import { isDerivedEntity, powerPairSource, signedSource } from "./signed-energy.js";
 import { isCharging, nomeDellaPersona, personViewModel } from "./person-model.js";
@@ -1796,7 +1797,9 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
          * altre sonde della stanza, oltre alla prima. */
         outdoor: stanzaAllAperto(s),
         sonde: unici(temperatureEntries(s).map((e) => entita(e.temp))),
-        ...conImmagine(s),
+        /* Come nella plancia: col suo interruttore «Immagine» acceso, la sua
+         * immagine o il disegno che il nome dice; spento, niente. */
+        ...conImmagine({ immagine: immagineDellaStanza(s) }),
       })),
     luci: dispositivi("lights"),
     clima: climaColTipo(dispositivi("climate"), altro.climaUnita),
