@@ -24,6 +24,8 @@ import {
   firmaDelProgramma,
   altriDetti,
   automazioniCheLoComandano,
+  automazioniCheLoToccano,
+  toccanoDetto,
   esitoDelSalvataggio,
   programmaDelTermostato,
   programmaIlleggibile,
@@ -303,7 +305,14 @@ test("le automazioni che comandano il termostato, anche quelle che non si leggon
     climi: ["climate.sala"],
   };
   const toccato = { id: "p9", nome: "Programma Sala", modello: null, climi: ["climate.sala"], programma: true };
-  const altrui = { id: "z1", nome: "A modo mio", modello: null, climi: ["climate.sala"], programma: false };
+  const altrui = {
+    id: "z1",
+    nome: "A modo mio",
+    modello: null,
+    climi: ["climate.sala"],
+    climiAOrario: ["climate.sala"],
+    programma: false,
+  };
   const lontano = { id: "z2", nome: "Studio", modello: null, climi: ["climate.studio"], programma: false };
   const elenco = [leggibile, toccato, altrui, lontano];
   assert.deepEqual(
@@ -314,6 +323,32 @@ test("le automazioni che comandano il termostato, anche quelle che non si leggon
    * il programma del termostato. */
   assert.equal(programmaIlleggibile(elenco, "climate.sala").id, "p9");
   assert.equal(programmaIlleggibile([altrui], "climate.sala"), null);
+});
+
+test("chi spegne il termostato non e' un altro programma: una nota, mai un blocco", () => {
+  /* «Esco di casa → spegni», «alle 23 spegni gli split», un termostato in
+   * una condizione: lo toccano (`climi`), ma non lo programmano
+   * (`climiAOrario` vuoto). */
+  const esco = { id: "e1", nome: "Esco di casa", modello: null, climi: ["climate.sala"], climiAOrario: [] };
+  const alle23 = { id: "e2", nome: "Spegni tutto alle 23", modello: null, climi: ["climate.sala"], climiAOrario: [] };
+  const programma = {
+    id: "e3",
+    nome: "Mattina calda",
+    modello: null,
+    climi: ["climate.sala"],
+    climiAOrario: ["climate.sala"],
+  };
+  assert.deepEqual(automazioniCheLoComandano([esco, alle23], "climate.sala"), []);
+  assert.deepEqual(
+    automazioniCheLoToccano([esco, alle23, programma], "climate.sala").map((v) => v.id),
+    ["e1", "e2"],
+  );
+  assert.deepEqual(
+    automazioniCheLoComandano([esco, alle23, programma], "climate.sala").map((v) => v.id),
+    ["e3"],
+  );
+  assert.match(toccanoDetto(2), /altre 2 automazioni toccano/);
+  assert.doesNotMatch(toccanoDetto(1), /togli/i);
 });
 
 test("l'esito del salvataggio dice solo quello che e' successo davvero", () => {

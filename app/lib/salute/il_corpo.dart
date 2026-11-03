@@ -266,12 +266,24 @@ Lettura? ilSonnoDiStanotte(Iterable<Campione> tratti, DateTime adesso) {
   final sonni = <({double minuti, DateTime fine})>[];
   var minuti = 0.0;
   DateTime? finoA;
+  DateTime? notteDelSonno;
   for (final t in buoni) {
-    if (finoA != null && t.da.difference(finoA) > risveglioFinoA) {
+    final notteDelTratto = laNotteDi(t.da);
+    /* Un risveglio di notte (sveglio dalle 2 alle 4:30) non spezza la
+     * notte: due tratti cominciati nella stessa notte — dalle 18 alle 12
+     * del giorno dopo — sono un sonno solo, qualunque sia il buco. Il
+     * pisolino delle 17:30 comincia prima: resta a parte. */
+    final stessaNotte =
+        notteDelTratto != null && notteDelTratto == notteDelSonno;
+    if (finoA != null &&
+        t.da.difference(finoA) > risveglioFinoA &&
+        !stessaNotte) {
       sonni.add((minuti: minuti, fine: finoA));
       minuti = 0;
       finoA = null;
+      notteDelSonno = null;
     }
+    notteDelSonno ??= notteDelTratto;
     final da = finoA != null && t.da.isBefore(finoA) ? finoA : t.da;
     if (t.a.isAfter(da)) minuti += t.a.difference(da).inSeconds / 60;
     if (finoA == null || t.a.isAfter(finoA)) finoA = t.a;
@@ -286,6 +298,19 @@ Lettura? ilSonnoDiStanotte(Iterable<Campione> tratti, DateTime adesso) {
   );
   if (notte.minuti < 1) return null;
   return Lettura(notte.minuti.roundToDouble(), notte.fine);
+}
+
+/// La notte in cui comincia un tratto di sonno: dalle 18 alle 12 del giorno
+/// dopo vale la data della sera; dalle 12 alle 18 nessuna notte (e' un
+/// sonno di giorno: un pisolino, o chi lavora di notte).
+DateTime? laNotteDi(DateTime quando) {
+  if (quando.hour >= 18) {
+    return DateTime(quando.year, quando.month, quando.day);
+  }
+  if (quando.hour < 12) {
+    return DateTime(quando.year, quando.month, quando.day - 1);
+  }
+  return null;
 }
 
 /// Quello che va al ponte: `{passi: {valore, quando}, …}`, solo le misure

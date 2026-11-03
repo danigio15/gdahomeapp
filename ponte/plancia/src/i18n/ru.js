@@ -8052,4 +8052,6 @@ export default Object.freeze({
   "There is another schedule for this thermostat in Automations: it changes the temperature too. Remove it there.": "В автоматизациях есть ещё одно расписание для этого термостата: оно тоже меняет температуру. Удалите его там.",
   "to redo": "нужно переделать",
   "You have unsaved changes to the schedule: save them, or close again to discard them.": "У вас есть несохранённые изменения расписания: сохраните их или закройте ещё раз, чтобы отменить.",
+  "Another automation also touches this thermostat (for example it turns it off): the schedule sets the temperature, it does its own part.": "Ещё одна автоматизация тоже управляет этим термостатом (например, выключает его): расписание задаёт температуру, а она делает своё.",
+  "${quanti} other automations also touch this thermostat (for example they turn it off): the schedule sets the temperature, they do their own part.": "Ещё ${quanti} автоматизаций тоже управляют этим термостатом (например, выключают его): расписание задаёт температуру, а они делают своё.",
 });

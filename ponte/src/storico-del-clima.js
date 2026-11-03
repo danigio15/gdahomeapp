@@ -63,6 +63,9 @@ export const GIORNI_DA_RECUPERARE = 30;
  * righe, e un Recorder su una scheda SD non le manda in un minuto. */
 export const GIORNI_PER_DOMANDA = 3;
 const ATTESA_DELLA_STORIA = 60_000;
+/* La storia che comincia piu' di cosi' dopo l'inizio di un giorno quel giorno
+ * l'ha solo a meta'. */
+const MARGINE_DELLA_STORIA = 5 * 60_000;
 
 export const COMANDO_DELLO_STORICO = "ponte/clima/storico";
 export const FILE_DELLO_STORICO = "clima-storico.json";
@@ -106,10 +109,32 @@ export class StoricoDelClima {
     this._battito = null;
     this._primo = null;
     this._inCorso = false;
-    /* I giorni che la storia non aveva: non si richiedono a ogni ora. Si
-     * dimenticano a un riavvio, che e' quando una storia allungata potrebbe
-     * averli. */
-    this._vuoti = new Set();
+    /* I giorni che la storia non aveva (o che aveva a meta'): non si
+     * richiedono a ogni ora, e nemmeno a ogni riavvio — si ricordano anche
+     * nell'archivio. Escono da soli quando escono dai trenta giorni. */
+    const scritti = this.archivio.dati?.vuoti;
+    this._vuoti = new Set(
+      Array.isArray(scritti) ? scritti.filter((c) => typeof c === "string" && CHIAVE.test(c)) : [],
+    );
+  }
+
+  /* I vuoti da ricordare: solo quelli dentro i giorni che si guardano. */
+  _vuotiDaScrivere() {
+    const tenuti = new Set(this.giorniDaGuardare());
+    return [...this._vuoti].filter((c) => tenuti.has(c)).sort();
+  }
+
+  /** Le chiavi dei giorni chiusi degli ultimi trenta. */
+  giorniDaGuardare() {
+    const oggi = new Date(this.adesso());
+    const fuori = [];
+    for (let indietro = GIORNI_DA_RECUPERARE; indietro >= 1; indietro -= 1)
+      fuori.push(
+        chiaveDelGiorno(
+          new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate() - indietro).getTime(),
+        ),
+      );
+    return fuori;
   }
 
   get giorni() {
@@ -234,6 +259,7 @@ export class StoricoDelClima {
       ];
       if (!entita.length) return { scritti: 0 };
       let scritti = 0;
+      let nuoviVuoti = 0;
       const adesso = this.adesso();
       for (let i = 0; i < giorni.length; i += GIORNI_PER_DOMANDA) {
         const pezzo = giorni.slice(i, i + GIORNI_PER_DOMANDA);
@@ -241,7 +267,22 @@ export class StoricoDelClima {
         /* Se la casa non ha risposto a niente non si sa niente: non si
          * segnano vuoti giorni che magari ci sono. */
         if (!storie) continue;
+        /* Da quando la storia c'e' davvero: chi ha `include_start_time_state`
+         * comincia all'inizio del pezzo; la prima riga dopo vuol dire che il
+         * Recorder l'ha gia' potata fin li'. */
+        const prime = Object.values(storie)
+          .map((righe) => (Array.isArray(righe) ? righe[0]?.t : undefined))
+          .filter((t) => Number.isFinite(t));
+        const storiaDa = prime.length ? Math.min(...prime) : Infinity;
         for (const giorno of pezzo) {
+          /* Un giorno da rifare che la storia ha solo a meta' (il piu' vecchio
+           * che ha): il conto nuovo sarebbe peggio di quello di prima. Resta,
+           * e non si richiede piu'. */
+          if (giorno.rifai && storiaDa > giorno.inizio + MARGINE_DELLA_STORIA) {
+            this._vuoti.add(giorno.chiave);
+            nuoviVuoti += 1;
+            continue;
+          }
           const riassunti = {};
           for (const impianto of IMPIANTI_DEL_CLIMA) {
             const record = riassuntoDelGiorno({
@@ -258,19 +299,25 @@ export class StoricoDelClima {
            * quello di niente. Si segna, per non richiederlo a ogni ora. */
           if (!Object.keys(riassunti).length) {
             this._vuoti.add(giorno.chiave);
+            nuoviVuoti += 1;
             continue;
           }
-          this.giorni[giorno.chiave] = riassunti;
+          /* Rifacendo un giorno si sostituiscono solo gli impianti rifatti:
+           * quello che la storia oggi non dice resta com'era. */
+          this.giorni[giorno.chiave] = giorno.rifai
+            ? { ...(this.giorni[giorno.chiave] || {}), ...riassunti }
+            : riassunti;
           scritti += 1;
         }
       }
-      if (scritti) {
+      if (scritti || nuoviVuoti) {
         this.archivio.dati = {
           versione: 1,
           giorni: potaLArchivio(this.giorni, adesso),
+          vuoti: this._vuotiDaScrivere(),
         };
         this._salva();
-        this.registro.info(`storico del clima: ${scritti} giorni messi da parte`);
+        if (scritti) this.registro.info(`storico del clima: ${scritti} giorni messi da parte`);
       }
       return { scritti };
     } finally {

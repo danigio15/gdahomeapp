@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-T2MS2Z4C.js";
+} from "../../chunk-7LCB7BXY.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -2691,8 +2691,10 @@ var SOURCE_INDEX = Object.freeze({
   "Analizzo ${index.size} entità…": "Analysing ${index.size} entities…",
   "Anche a schermo spento: si accende al massimo e il citofono prende tutto lo schermo, come una chiamata.": "Even with the screen off: it turns on at full brightness and the intercom takes the whole screen, like a call.",
   "anche alba e tramonto": "sunrise and sunset too",
+  "Anche altre ${quanti} automazioni toccano questo termostato (per esempio lo spengono): il programma decide i gradi, loro fanno la loro parte.": "${quanti} other automations also touch this thermostat (for example they turn it off): the schedule sets the temperature, they do their own part.",
   "anche senza sole": "even without sun",
   "Anche un tocco sullo schermo vale come «qualcuno vicino».": "A touch on the screen also counts as “someone nearby”.",
+  "Anche un'altra automazione tocca questo termostato (per esempio lo spegne): il programma decide i gradi, lei fa la sua parte.": "Another automation also touches this thermostat (for example it turns it off): the schedule sets the temperature, it does its own part.",
   "ancora aperta": "still open",
   "Ancora nessun dispositivo: segnali nelle foto delle stanze, o aggiungili qui sotto.": "No devices yet: mark them in the room photos, or add them below.",
   "Ancora nessuna casa: creala dalla planimetria e dalle foto delle stanze.": "No home yet: create it from the floor plan and room photos.",
@@ -72761,8 +72763,24 @@ function rigaClima(states, unit) {
     /* Che macchina e', non solo cosa sta facendo adesso: un termosifone
      * spento resta un termosifone, e il fiocco di neve sopra un
      * radiatore era il disegno di un'altra casa. */
-    tipo: canonicalClimateType(unit?.type)
+    tipo: canonicalClimateType(unit?.type),
+    /* Quanto e' aperta la valvola (#300): «qui sarebbe carino avere le % di
+     * apertura valvola». La stessa lettura della card del Clima e del report
+     * — la casella «Valvola» dell'unita', o gli attributi del termostato —
+     * e una cosa sola in piu': chi ha scelto un'entita' che adesso non
+     * risponde legge «—», non niente, perche' la valvola c'e'. `null` quando
+     * l'unita' una valvola non ce l'ha. */
+    valvola: valvolaDellUnita(states, unit, attributi2)
   };
+}
+function valvolaDellUnita(states, unit, attributi2) {
+  const entita4 = clean(unit?.valvola);
+  const lettura4 = letturaValvola({
+    stato: entita4 ? stateOf(states, entita4) : null,
+    attributi: attributi2
+  });
+  if (lettura4) return lettura4.aperta;
+  return entita4 ? "—" : null;
 }
 function climateModel(states) {
   let units = [];
@@ -76783,10 +76801,12 @@ function climateDetail(widget) {
     const pannello = climatePanel(row);
     const aperto2 = pannello && state58.aperti.has(row.entity);
     const stanza2 = clean(row.stanza) === clean(row.name) ? "" : clean(row.stanza);
+    const aperta2 = row.valvola === null || row.valvola === void 0 ? "" : typeof row.valvola === "number" ? `${row.valvola}%` : "—";
     const sotto = [stanza2, parola(row)].filter(Boolean).join(" · ");
+    const valvola = aperta2 ? `${sotto ? " · " : ""}<span class="dm-w-valvola" data-dm-w-valvola="${esc(aperta2)}" style="white-space:nowrap">${esc(t(`valvola ${aperta2}`, `valve ${aperta2}`))}</span>` : "";
     return rowShell(
       `<span class="dm-w-glyph dm-w-clima-ic" data-on="${row.on}" aria-hidden="true">${climateGlyph(row.mode || "", row.tipo, row.azione)}</span>
-         <span class="dm-w-name">${esc(row.name)}<small>${esc(sotto)}</small></span>
+         <span class="dm-w-name">${esc(row.name)}<small>${esc(sotto)}${valvola}</small></span>
          <span class="dm-w-clima-gradi">
            <b>${row.ambient == null ? "--" : `${formatNumber(row.ambient, 1)}°`}</b>
            ${/* Anche in pausa: «19,5° → 21°» dice perche' e' fermo. */
@@ -79436,6 +79456,14 @@ html[data-theme="dark"] .dm-w-panel-row[data-dm-w-obiettivo="alto"] .dm-w-steppe
   font-size:11.5px;font-weight:800;color:var(--text-dim,#64748b)}
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda="freddo"] .dm-w-power[data-on="true"]{background:#0ea5e9}
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda="caldo"] .dm-w-power[data-on="true"]{background:#f97316}
+/* Al buio le schede accese restano del loro colore, ma scuro: col fondo
+   chiaro del giorno il nome e i gradi, che al buio sono bianchi, sparivano. */
+html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda="caldo"]{
+  background:linear-gradient(150deg,color-mix(in srgb,#f97316 24%,#0f172a),color-mix(in srgb,#f97316 12%,#0f172a))!important}
+html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda="freddo"]{
+  background:linear-gradient(150deg,color-mix(in srgb,#0ea5e9 24%,#0f172a),color-mix(in srgb,#0ea5e9 12%,#0f172a))!important}
+html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda="caldo"] .dm-w-clima-ic{
+  background:color-mix(in srgb,#f97316 30%,#0f172a)!important}
 /* Gli aggiornamenti: il marchio, il nome, da che versione a che versione, e
    il tasto per installare a portata di pollice. */
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-aggs{display:grid;gap:9px}
@@ -110940,7 +110968,7 @@ var state107 = root[KEY111] ||= {
    * forzata arrivata a domanda in corso, e il perche' dell'ultima lettura
    * andata male. */
   elencoIl: 0,
-  ancoraUnaVolta: false,
+  ancoraUnaVolta: null,
   erroreLettura: "",
   /* La tendina del QUANDO aperta. */
   tendina: false,
@@ -111071,9 +111099,12 @@ var leFormeDiCasa = () => [
   ...automazioniDiCasa().map((v) => v.modello).filter(Boolean)
 ];
 var puoScrivere = () => state107.ponte?.puoScrivere === true;
-async function chiediAllaCasa3({ forza = false } = {}) {
+async function chiediAllaCasa3({ forza = false, soloElenco = false } = {}) {
   if (state107.chiedendo) {
-    if (forza) state107.ancoraUnaVolta = true;
+    if (forza)
+      state107.ancoraUnaVolta = {
+        soloElenco: soloElenco && (state107.ancoraUnaVolta?.soloElenco ?? true)
+      };
     return;
   }
   const adesso2 = Date.now();
@@ -111081,7 +111112,7 @@ async function chiediAllaCasa3({ forza = false } = {}) {
   state107.chiedendo = true;
   state107.chiestoIl = adesso2;
   try {
-    state107.premium = await premiumDellaCasa({ forza });
+    state107.premium = await premiumDellaCasa({ forza: forza && !soloElenco });
   } catch (_errore) {
     state107.premium = state107.premium === true;
   }
@@ -111098,7 +111129,7 @@ async function chiediAllaCasa3({ forza = false } = {}) {
     state107.erroreLettura = state107.assente ? "" : detto3 || "?";
   }
   try {
-    if (!state107.assente) {
+    if (!state107.assente && !soloElenco) {
       ridisegnaTutto();
       state107.proposte = await chiediAHomeAssistant({ type: "ponte/automazioni/proposte" }, 15e3);
     }
@@ -111108,8 +111139,9 @@ async function chiediAllaCasa3({ forza = false } = {}) {
   }
   ridisegnaTutto();
   if (state107.ancoraUnaVolta) {
-    state107.ancoraUnaVolta = false;
-    void chiediAllaCasa3({ forza: true });
+    const ancora2 = state107.ancoraUnaVolta;
+    state107.ancoraUnaVolta = null;
+    void chiediAllaCasa3({ forza: true, soloElenco: ancora2.soloElenco === true });
   }
 }
 var ascoltatori = /* @__PURE__ */ new Set();
@@ -114493,7 +114525,23 @@ function programmiDelTermostato(elenco18, entita4) {
 }
 function automazioniCheLoComandano(elenco18, entita4) {
   return (Array.isArray(elenco18) ? elenco18 : []).filter(
-    (v) => !(v?.modello?.tipo === "crono") && Array.isArray(v?.climi) && v.climi.includes(entita4)
+    (v) => !(v?.modello?.tipo === "crono") && (v?.programma === true && Array.isArray(v?.climi) && v.climi.includes(entita4) || Array.isArray(v?.climiAOrario) && v.climiAOrario.includes(entita4))
+  );
+}
+function automazioniCheLoToccano(elenco18, entita4) {
+  const programmano = new Set(automazioniCheLoComandano(elenco18, entita4));
+  return (Array.isArray(elenco18) ? elenco18 : []).filter(
+    (v) => !programmano.has(v) && !(v?.modello?.tipo === "crono" && v.modello.crono?.termostati?.includes(entita4)) && Array.isArray(v?.climi) && v.climi.includes(entita4)
+  );
+}
+function toccanoDetto(quanti4) {
+  if (!(quanti4 > 0)) return "";
+  return quanti4 === 1 ? t(
+    "Anche un'altra automazione tocca questo termostato (per esempio lo spegne): il programma decide i gradi, lei fa la sua parte.",
+    "Another automation also touches this thermostat (for example it turns it off): the schedule sets the temperature, it does its own part."
+  ) : t(
+    `Anche altre ${quanti4} automazioni toccano questo termostato (per esempio lo spengono): il programma decide i gradi, loro fanno la loro parte.`,
+    `${quanti4} other automations also touch this thermostat (for example they turn it off): the schedule sets the temperature, they do their own part.`
   );
 }
 function programmaIlleggibile(elenco18, entita4) {
@@ -114687,9 +114735,10 @@ function programmaMarkup() {
   const voce3 = voceDi2(state108.entita);
   const elenco18 = automazioniDiCasa();
   const comandano = automazioniCheLoComandano(elenco18, state108.entita);
+  const toccano = automazioniCheLoToccano(elenco18, state108.entita).length;
   const illeggibile = voce3 ? null : programmaIlleggibile(elenco18, state108.entita);
   const altri = programmiDelTermostato(elenco18, state108.entita).length - (voce3 ? 1 : 0) + comandano.length - (illeggibile ? 1 : 0);
-  const blocco3 = !voce3 && (illeggibile || comandano.length) && !state108.scelta;
+  const blocco3 = !voce3 && !state108.appenaSalvato && (illeggibile || comandano.length) && !state108.scelta;
   if (blocco3) {
     const testa3 = `<button type="button" class="dm-prg-testa" data-dm-prg-apri aria-expanded="${state108.aperto}"><span class="dm-prg-tit">🗓️ ${esc(t("Programma", "Schedule"))}</span><span class="dm-prg-stato">${esc(illeggibile ? t("da rifare", "to redo") : t("c'è già chi lo comanda", "already controlled"))}</span><span class="dm-prg-freccia" aria-hidden="true">▾</span></button>`;
     const nome = clean((illeggibile || comandano[0])?.nome) || "?";
@@ -114722,10 +114771,11 @@ ${barraMarkup4(giornata, b2.fuori)}
 <div class="dm-prg-fuori"><span>${esc(t("Fuori dalle fasce", "Outside the slots"))}</span><span class="dm-prg-gradi"><button type="button" data-dm-prg-fuori="-0.5" aria-label="−">−</button><b>${esc(gradiDetti(b2.fuori))}</b><button type="button" data-dm-prg-fuori="0.5" aria-label="+">+</button></span></div>
 ${voce3 ? `<div class="dm-prg-fuori"><span>${esc(t("Programma attivo", "Schedule active"))}</span><button type="button" class="dm-prg-int" role="switch" aria-checked="${voce3.attiva !== false}" data-dm-prg-attivo aria-label="${esc(t("Programma attivo", "Schedule active"))}"><i></i></button></div>` : ""}
 ${altri > 0 ? `<p class="dm-prg-nota">${esc(altriDetti(altri))}</p>` : ""}
+${toccano > 0 ? `<p class="dm-prg-nota dm-prg-tocca">${esc(toccanoDetto(toccano))}</p>` : ""}
 ${!voce3 && illeggibile && state108.scelta === "rifai" ? `<p class="dm-prg-nota">${esc(sostituitoDetto(clean(illeggibile.nome)))}</p>` : ""}
 ${state108.avvisoChiusura ? `<p class="dm-prg-errore" role="alert">${esc(t("Hai modifiche non salvate al programma: salvale, oppure chiudi di nuovo per scartarle.", "You have unsaved changes to the schedule: save them, or close again to discard them."))}</p>` : ""}
 ${state108.errore ? `<p class="dm-prg-errore" role="alert">${esc(state108.errore)}</p>` : ""}
-${state108.esito ? `<p class="dm-prg-esito" role="status">${esc(state108.esito)}</p>` : ""}
+${state108.esito ? `<p class="dm-prg-esito${state108.esitoInAttesa ? " dm-prg-esito-attesa" : ""}" role="status">${esc(state108.esito)}</p>` : ""}
 ${sbloccato && !puoScrivere2() && casa().ponte ? `<p class="dm-prg-nota">${esc(t("Solo chi amministra Home Assistant può salvarlo.", "Only a Home Assistant administrator can save it."))}</p>` : ""}
 <button type="button" class="dm-prg-salva" data-dm-prg-salva${state108.salvando || casa().ponte && !puoScrivere2() ? " disabled" : ""}>${esc(
     state108.salvando ? t("Salvo…", "Saving…") : state108.salvato ? t("✓ Salvato in Home Assistant", "✓ Saved in Home Assistant") : t("💾 Salva il programma", "💾 Save the schedule")
@@ -114759,7 +114809,7 @@ function disegna8() {
   if (!casaHaRisposto() && clean(casa().erroreLettura) && !state108.riprova)
     state108.riprova = root.setTimeout?.(() => {
       state108.riprova = null;
-      void chiediAllaCasa3({ forza: true });
+      void chiediAllaCasa3({ forza: true, soloElenco: true });
     }, 5e3);
   nodo3.dataset.dmPrg = state108.entita;
   scriviSeCambia(nodo3, programmaMarkup());
@@ -114782,6 +114832,7 @@ function apri4(entita4) {
     state108.giorno = "feriali";
     state108.errore = "";
     state108.esito = "";
+    state108.esitoInAttesa = false;
     state108.salvato = false;
     state108.scelta = "";
   } else if (state108.toccata) {
@@ -114807,6 +114858,7 @@ function cambia(fai2) {
   state108.salvato = false;
   state108.errore = "";
   state108.esito = "";
+  state108.esitoInAttesa = false;
   state108.avvisoChiusura = false;
   disegna8();
 }
@@ -114815,13 +114867,16 @@ async function salva19() {
   const b2 = laBozza();
   const voce3 = voceDi2(state108.entita);
   const sopra = !voce3 && state108.scelta === "rifai" ? programmaIlleggibile(automazioniDiCasa(), state108.entita) : null;
+  const appena = !voce3 && state108.appenaSalvato?.entita === state108.entita ? state108.appenaSalvato : null;
   const stanza2 = nomeDellaStanza();
   const crono2 = cronoPulito({
     ...b2,
     termostati: b2.termostati.length ? b2.termostati : [state108.entita]
   });
   const automazione = {
-    id: voce3?.modello?.id || voce3?.id || sopra?.id || nuovoId(),
+    /* Risalvando prima che l'elenco della casa lo dica, si riusa l'id
+     * appena salvato: mai un secondo programma accanto. */
+    id: voce3?.modello?.id || voce3?.id || sopra?.id || appena?.id || nuovoId(),
     nome: voce3?.nome || sopra?.nome || t(`Programma ${stanza2}`, `Schedule ${stanza2}`).slice(0, 60),
     attiva: voce3 ? voce3.attiva !== false : sopra ? sopra.attiva !== false : true,
     tipo: "crono",
@@ -114836,7 +114891,7 @@ async function salva19() {
       {
         type: "ponte/automazioni/salva",
         automazione,
-        automazione_id: voce3?.id || sopra?.id || "",
+        automazione_id: voce3?.id || sopra?.id || appena?.id || "",
         ...sopra ? { sovrascrivi: true } : {}
       },
       25e3
@@ -114847,10 +114902,13 @@ async function salva19() {
     state108.toccata = false;
     state108.appenaSalvato = {
       firma: firmaDelProgramma({ id: fatto2?.id || automazione.id, modello: { crono: crono2 } }),
-      il: Date.now()
+      il: Date.now(),
+      id: fatto2?.id || automazione.id,
+      entita: state108.entita
     };
     state108.bozzaDa = state108.appenaSalvato.firma;
     state108.scelta = "";
+    state108.esitoInAttesa = fatto2?.confermata === false;
     state108.esito = esitoDelSalvataggio({
       fatto: fatto2,
       crono: crono2,
@@ -114867,6 +114925,7 @@ async function salva19() {
   } catch (errore) {
     const no = clean(errore?.message) || "?";
     state108.esito = "";
+    state108.esitoInAttesa = false;
     state108.errore = clean(errore?.code) === "unauthorized" ? t(
       "Non salvato: il programma lo salva solo chi amministra Home Assistant. Le modifiche restano qui finché non chiudi la finestra.",
       "Not saved: only a Home Assistant administrator can save the schedule. Your changes stay here until you close the window."
@@ -114895,7 +114954,7 @@ function suClick(evento) {
     return;
   }
   if (d.dmPrgRiprova !== void 0) {
-    void chiediAllaCasa3({ forza: true });
+    void chiediAllaCasa3({ forza: true, soloElenco: true });
     return;
   }
   if (!premium()) return;
@@ -115000,6 +115059,7 @@ var STILE15 = `
 .dm-prg-vuoto,.dm-prg-nota{margin:0;font-size:12px;color:var(--text-dim,#64748b)}
 .dm-prg-errore{margin:0;padding:8px 10px;border-radius:10px;font-size:12px;font-weight:700;color:#dc2626;background:rgba(220,38,38,.10)}
 .dm-prg-esito{margin:0;padding:8px 10px;border-radius:10px;font-size:12px;font-weight:700;color:#15803d;background:rgba(34,197,94,.12)}
+.dm-prg-esito.dm-prg-esito-attesa{color:#d97706;background:rgba(245,158,11,.14);box-shadow:inset 3px 0 0 #f59e0b}
 .dm-prg-velato{position:relative}
 .dm-prg-velato>.dm-prg-corpo{filter:blur(2px);opacity:.55;pointer-events:none}
 .dm-prg-velo{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px;text-align:center;background:color-mix(in srgb,var(--card-bg,#fff) 70%,transparent)}
@@ -115036,6 +115096,8 @@ function avvolgiLaChiusura() {
     }
     if (state108.toccata) scartaLeModifiche();
     state108.avvisoChiusura = false;
+    if (state108.riprova) root.clearTimeout?.(state108.riprova);
+    state108.riprova = null;
     return originale.apply(this, argomenti);
   }
   Object.assign(avvolto, originale);

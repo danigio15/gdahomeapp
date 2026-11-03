@@ -8069,4 +8069,6 @@ export default Object.freeze({
   "There is another schedule for this thermostat in Automations: it changes the temperature too. Remove it there.": "Er is nog een schema voor deze thermostaat in Automatiseringen: ook dat verandert de temperatuur. Verwijder het daar.",
   "to redo": "opnieuw te maken",
   "You have unsaved changes to the schedule: save them, or close again to discard them.": "Je hebt niet-opgeslagen wijzigingen in het schema: sla ze op, of sluit nogmaals om ze te verwerpen.",
+  "Another automation also touches this thermostat (for example it turns it off): the schedule sets the temperature, it does its own part.": "Ook een andere automatisering bedient deze thermostaat (bijvoorbeeld door hem uit te zetten): het schema bepaalt de temperatuur, zij doet haar deel.",
+  "${quanti} other automations also touch this thermostat (for example they turn it off): the schedule sets the temperature, they do their own part.": "Ook ${quanti} andere automatiseringen bedienen deze thermostaat (bijvoorbeeld door hem uit te zetten): het schema bepaalt de temperatuur, zij doen hun deel.",
 });

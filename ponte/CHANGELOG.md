@@ -51,10 +51,18 @@ _Solo Home Assistant: l'app sul telefono non cambia._
     che quindi qui non si legge più, non viene mostrato come il programma di
     serie: la finestra lo dice e lo si può rifare da qui, sopra quello, con
     lo stesso id. Se a comandare il termostato è un'automazione di qualcun
-    altro, si avvisa prima di crearne una seconda.
+    altro, si avvisa prima di crearne una seconda. Dopo «Crea comunque» o
+    «Rifallo da qui» l'avviso non torna mentre la casa rilegge, e i
+    salvataggi seguenti scrivono sullo stesso programma, non su un altro.
   - Altri programmi per lo stesso termostato fra le Automazioni, anche
     quelli che non si leggono: la finestra li conta («un altro programma»,
-    «altri 2 programmi») — cambiano i gradi anche loro.
+    «altri 2 programmi») — cambiano i gradi anche loro. Conta come programma
+    solo un'automazione che a un orario dà gradi o modo al termostato; una
+    che lo tocca e basta (per esempio «spegni tutto alle 23») ha solo una
+    nota discreta, non blocca e non va tolta.
+  - Il nuovo tentativo dopo una lettura andata male rilegge solo l'elenco,
+    senza rifare le proposte; e a finestra chiusa non parte più. L'ora di
+    Home Assistant non fa aspettare l'elenco più di tre secondi.
   - Chiudendo la finestra con modifiche non salvate la prima volta avvisa
     «Hai modifiche non salvate», la seconda le scarta: riaprendo si vede
     quello che ha Home Assistant, non una bozza dimenticata.
@@ -99,7 +107,10 @@ _Solo Home Assistant: l'app sul telefono non cambia._
     kW, o in MWh, ha i numeri giusti e non mille volte tanto.
   - **I giorni già messi da parte** dalla 1.18.9.1 si rifanno col conto
     nuovo finché la storia di Home Assistant li ha; quelli più vecchi
-    restano com'erano, segnati col conto con cui sono nati.
+    restano com'erano, segnati col conto con cui sono nati. Rifacendo un
+    giorno si cambiano solo gli impianti rifatti (gli altri restano), il
+    giorno che la storia ha solo a metà non si rifà, e i giorni senza niente
+    si ricordano anche dopo un riavvio.
   - **Nella scheda dell'unità** (Config › Clima) il sensore trovato si vede
     sotto «Entità consumo»; «Usa questo» c'è solo per un sensore di potenza
     di quella zona. Un contatore di energia (kWh) qui non va — la casella

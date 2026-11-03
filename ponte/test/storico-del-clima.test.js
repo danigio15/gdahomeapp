@@ -44,9 +44,10 @@ const CONFIGURAZIONE = {
 
 /* Una casa che ha la storia degli ultimi `tiene` giorni: ogni giorno la sala
  * chiede dalle 6 alle 8 e la caldaia lavora uguale. */
-function casaFinta({ tiene = 10, muta = false } = {}) {
+function casaFinta({ tiene = 10, muta = false, taglio = 0 } = {}) {
   const domande = [];
-  const limite = giornoFa(tiene);
+  /* `taglio`: il Recorder ha potato fin dentro il giorno piu' vecchio. */
+  const limite = giornoFa(tiene) + taglio * H;
   return {
     domande,
     async chiedi(comando) {
@@ -57,7 +58,7 @@ function casaFinta({ tiene = 10, muta = false } = {}) {
       const a = Date.parse(comando.end_time);
       const righe = [];
       for (let g = new Date(da).setHours(0, 0, 0, 0); g < a; g += 24 * H) {
-        if (g < limite) continue;
+        if (g + 24 * H <= limite) continue;
         if (entity === "climate.sala") {
           righe.push({
             s: "heat",
@@ -126,7 +127,9 @@ test("alla prima accensione si recuperano i giorni che la storia ha ancora", asy
   assert.deepEqual(await storico.battito(), { scritti: 0 });
   assert.equal(casa.domande.length, prima);
 
-  /* Dopo un riavvio i giorni scritti restano, e i vuoti si riprovano. */
+  /* Dopo un riavvio i giorni scritti restano, e i vuoti non si richiedono:
+   * si ricordano anche loro (prima, a ogni riavvio, venti domande alla storia
+   * per giorni che non c'erano). */
   const riacceso = new StoricoDelClima({
     cartella: join(storico.archivio.percorso, ".."),
     configurazione: CONFIGURAZIONE,
@@ -136,7 +139,8 @@ test("alla prima accensione si recuperano i giorni che la storia ha ancora", asy
     fra: () => null,
   });
   assert.equal(Object.keys(riacceso.giorni).length, 10);
-  assert.equal(riacceso.giorniDaRiassumere().length, GIORNI_DA_RECUPERARE - 10);
+  assert.equal(riacceso.giorniDaRiassumere().length, 0);
+  assert.equal(JSON.parse(readFileSync(storico.archivio.percorso, "utf8")).vuoti.length, 20);
 });
 
 test("se la casa non risponde non si segna niente, e al giro dopo si riprova", async () => {
@@ -320,5 +324,94 @@ test("i giorni fatti col conto della 1.18.9.1 si rifanno finche' la storia li ha
    * richiede a ogni ora. */
   const prima = casa.domande.length;
   assert.deepEqual(await storico.battito(), { scritti: 0 });
+  assert.equal(casa.domande.length, prima);
+});
+
+test("rifacendo un giorno si tengono gli impianti che la storia oggi non dice", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "storico-clima-"));
+  const chiave = chiaveDelGiorno(giornoFa(2));
+  writeFileSync(
+    join(cartella, FILE_DELLO_STORICO),
+    JSON.stringify({
+      versione: 1,
+      giorni: {
+        [chiave]: {
+          caldo: { fonte: "storia", stanze: {}, generatori: {}, stima: { ms: 0, acc: 0, o: [] } },
+          /* Il fresco di quel giorno: la storia di oggi non lo racconta. */
+          freddo: {
+            fonte: "storia",
+            stanze: { "climate.split": { r: 77 } },
+            generatori: {},
+            stima: null,
+          },
+        },
+      },
+    }),
+  );
+  const storico = new StoricoDelClima({
+    cartella,
+    configurazione: CONFIGURAZIONE,
+    casa: casaFinta({ tiene: 10 }),
+    adesso: () => ADESSO,
+    ogni: () => null,
+    fra: () => null,
+  });
+  await storico.battito();
+  const giorno = storico.giorni[chiave];
+  assert.equal(giorno.caldo.conto, CONTO_DEL_RIASSUNTO, "il caldo e' rifatto");
+  assert.equal(giorno.freddo?.stanze?.["climate.split"]?.r, 77, "il freddo resta com'era");
+});
+
+test("il giorno piu' vecchio che la storia ha solo a meta' non si rifa', e non si richiede piu'", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "storico-clima-"));
+  const vecchio = {
+    caldo: {
+      fonte: "storia",
+      stanze: {
+        "climate.sala": {
+          r: 333,
+          a: 333,
+          n: 1440,
+          o: [],
+          t: null,
+          ob: [],
+          v: null,
+          vd: null,
+          s: false,
+        },
+      },
+      generatori: {},
+      stima: { ms: 333, acc: 1, o: [] },
+    },
+  };
+  const tagliato = chiaveDelGiorno(giornoFa(10));
+  writeFileSync(
+    join(cartella, FILE_DELLO_STORICO),
+    JSON.stringify({ versione: 1, giorni: { [tagliato]: vecchio } }),
+  );
+  /* Il Recorder ha potato fino alle 7 di quel giorno. */
+  const casa = casaFinta({ tiene: 10, taglio: 7 });
+  const crea = () =>
+    new StoricoDelClima({
+      cartella,
+      configurazione: CONFIGURAZIONE,
+      casa,
+      adesso: () => ADESSO,
+      ogni: () => null,
+      fra: () => null,
+    });
+  const storico = crea();
+  await storico.battito();
+  assert.equal(
+    storico.giorni[tagliato].caldo.stanze["climate.sala"].r,
+    333,
+    "resta quello di prima",
+  );
+  /* Dopo un riavvio i giorni gia' provati non si richiedono: ne' quello
+   * tagliato ne' quelli che la storia non ha. */
+  const prima = casa.domande.length;
+  const dopo = crea();
+  assert.deepEqual(dopo.giorniDaRiassumere(), []);
+  assert.deepEqual(await dopo.battito(), { scritti: 0 });
   assert.equal(casa.domande.length, prima);
 });

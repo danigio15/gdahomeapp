@@ -118,7 +118,7 @@ const state = (root[KEY] ||= {
    * forzata arrivata a domanda in corso, e il perche' dell'ultima lettura
    * andata male. */
   elencoIl: 0,
-  ancoraUnaVolta: false,
+  ancoraUnaVolta: null,
   erroreLettura: "",
   /* La tendina del QUANDO aperta. */
   tendina: false,
@@ -314,13 +314,20 @@ const puoScrivere = () => state.ponte?.puoScrivere === true;
 
 /* ── la casa ─────────────────────────────────────────────────────────────── */
 
-export async function chiediAllaCasa({ forza = false } = {}) {
+export async function chiediAllaCasa({ forza = false, soloElenco = false } = {}) {
   /* Una richiesta forzata — dopo un salvataggio — mentre un'altra e' in
    * corso non si perde: si rifa' quando quella finisce. Prima tornava
    * indietro e basta, e se la casa stava leggendo le proposte (fino a 15
-   * secondi) la rilettura del programma salvato non partiva mai. */
+   * secondi) la rilettura del programma salvato non partiva mai.
+   *
+   * `soloElenco`: chi deve solo rileggere le automazioni (la finestra del
+   * programma che riprova dopo un errore) non rifa' le proposte e non
+   * richiede il Premium da capo. */
   if (state.chiedendo) {
-    if (forza) state.ancoraUnaVolta = true;
+    if (forza)
+      state.ancoraUnaVolta = {
+        soloElenco: soloElenco && (state.ancoraUnaVolta?.soloElenco ?? true),
+      };
     return;
   }
   const adesso = Date.now();
@@ -328,7 +335,7 @@ export async function chiediAllaCasa({ forza = false } = {}) {
   state.chiedendo = true;
   state.chiestoIl = adesso;
   try {
-    state.premium = await premiumDellaCasa({ forza });
+    state.premium = await premiumDellaCasa({ forza: forza && !soloElenco });
   } catch (_errore) {
     state.premium = state.premium === true;
   }
@@ -353,7 +360,7 @@ export async function chiediAllaCasa({ forza = false } = {}) {
   /* Le proposte: la prima volta del giorno la casa legge la storia, e puo'
    * metterci qualche secondo. Senza add-on non ce ne sono. */
   try {
-    if (!state.assente) {
+    if (!state.assente && !soloElenco) {
       ridisegnaTutto();
       state.proposte = await chiediAHomeAssistant({ type: "ponte/automazioni/proposte" }, 15000);
     }
@@ -365,8 +372,9 @@ export async function chiediAllaCasa({ forza = false } = {}) {
   }
   ridisegnaTutto();
   if (state.ancoraUnaVolta) {
-    state.ancoraUnaVolta = false;
-    void chiediAllaCasa({ forza: true });
+    const ancora = state.ancoraUnaVolta;
+    state.ancoraUnaVolta = null;
+    void chiediAllaCasa({ forza: true, soloElenco: ancora.soloElenco === true });
   }
 }
 

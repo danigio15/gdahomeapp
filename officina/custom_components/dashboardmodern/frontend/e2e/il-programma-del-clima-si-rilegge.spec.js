@@ -58,6 +58,8 @@ async function avvia(
     rifiutaStato = false,
     illeggibile = false,
     finestraAperta = false,
+    altrui = false,
+    spegne = false,
   } = {},
 ) {
   test.setTimeout(150_000);
@@ -77,6 +79,8 @@ async function avvia(
       rifiutaStato,
       illeggibile,
       finestraAperta,
+      altrui,
+      spegne,
     }) => {
       if (tema) document.documentElement.setAttribute("data-theme", tema);
       const HA = await import("/src/core/automazioni-ha.js");
@@ -138,6 +142,38 @@ async function avvia(
               },
             ]
           : []),
+        /* Un programma di chi abita: alle 6:30 21 gradi. Programma la sala. */
+        ...(altrui
+          ? [
+              {
+                entity_id: "automation.z1",
+                id: "z1",
+                nome: "Mattina calda",
+                attiva: true,
+                modello: null,
+                modificabile: true,
+                climi: ["climate.sala"],
+                climiAOrario: ["climate.sala"],
+                programma: false,
+              },
+            ]
+          : []),
+        /* «Spegni tutto alle 23»: tocca la sala, non la programma. */
+        ...(spegne
+          ? [
+              {
+                entity_id: "automation.z2",
+                id: "z2",
+                nome: "Spegni tutto alle 23",
+                attiva: true,
+                modello: null,
+                modificabile: true,
+                climi: ["climate.sala"],
+                climiAOrario: [],
+                programma: false,
+              },
+            ]
+          : []),
       ];
       const risposta = (m) => {
         casa.comandi.push(m);
@@ -153,7 +189,7 @@ async function avvia(
           };
         if (m.type === "ponte/automazioni/salva") {
           if (casa.rifiuta) return { errore: casa.rifiuta };
-          const id = m.automazione_id || "p9";
+          const id = m.automazione_id || m.automazione?.id || "p9";
           const scritta = HA.inHomeAssistant({ ...m.automazione, id }, { stati: grezzi });
           casa.scritte = { ...(casa.scritte || {}), [id]: scritta };
           if (!casa.ricarica)
@@ -209,7 +245,18 @@ async function avvia(
       const { gradiAlle, cronoPulito } = await import("/src/core/automazioni.js");
       window.__GRADI_ADESSO__ = (m) => gradiAlle(cronoPulito(m.automazione.crono), Date.now());
     },
-    { tema, ritardo, rifiuta, salvato, ricarica, rifiutaStato, illeggibile, finestraAperta },
+    {
+      tema,
+      ritardo,
+      rifiuta,
+      salvato,
+      ricarica,
+      rifiutaStato,
+      illeggibile,
+      finestraAperta,
+      altrui,
+      spegne,
+    },
   );
   await page.waitForTimeout(300);
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
@@ -345,9 +392,33 @@ test("la casa non risponde: lo dice, «Riprova» rilegge, e il programma arriva"
   await expect(programma).toContainText(/Non riesco a leggere il programma/);
   await expect(programma).not.toContainText(/Leggo il programma/);
   await expect(programma.locator("[data-dm-prg-salva]")).toHaveCount(0);
+  const proposte = () =>
+    page.evaluate(
+      () => window.__CASA__.comandi.filter((m) => m.type === "ponte/automazioni/proposte").length,
+    );
+  const propostePrima = await proposte();
   await page.evaluate(() => (window.__CASA__.rifiutaStato = false));
   await programma.locator("[data-dm-prg-riprova]").click();
   await expect.poll(() => orari(programma), { timeout: 10_000 }).toEqual([390, 510, 1020, 1140]);
+  /* Riprovare rilegge solo l'elenco: le proposte non c'entrano. */
+  expect(await proposte()).toBe(propostePrima);
+});
+
+test("chiusa la finestra mentre la casa non risponde, il nuovo tentativo non parte piu'", async ({
+  page,
+}, testInfo) => {
+  const programma = await avvia(page, testInfo, { ritardo: 200, rifiutaStato: true });
+  await expect(programma.locator("[data-dm-prg-riprova]")).toBeVisible({ timeout: 10_000 });
+  const stato = () =>
+    page.evaluate(
+      () => window.__CASA__.comandi.filter((m) => m.type === "ponte/automazioni/stato").length,
+    );
+  await page.evaluate(() =>
+    window.chiudiClimaPopup?.({ target: document.getElementById("clima-popup-overlay") }),
+  );
+  const dopo = await stato();
+  await page.waitForTimeout(6500);
+  expect(await stato()).toBe(dopo);
 });
 
 test("un programma della sala che non si legge piu': niente programma di serie, si sceglie", async ({
@@ -368,6 +439,51 @@ test("un programma della sala che non si legge piu': niente programma di serie, 
   /* Sopra quello, con lo stesso id: non un secondo programma accanto. */
   expect(salvata.automazione_id).toBe("p7");
   expect(salvata.sovrascrivi).toBe(true);
+});
+
+test("«Crea comunque»: dopo il salvataggio si vede l'esito, l'avviso non torna, e risalvando e' lo stesso programma", async ({
+  page,
+}, testInfo) => {
+  /* La casa non ha ancora ricaricato: l'elenco non lo dice ancora. */
+  const programma = await avvia(page, testInfo, {
+    ritardo: 200,
+    salvato: null,
+    altrui: true,
+    ricarica: false,
+  });
+  const crea = programma.locator('[data-dm-prg-scelta="nuovo"]');
+  await expect(crea).toBeVisible({ timeout: 10_000 });
+  await crea.click();
+  await programma.locator("[data-dm-prg-salva]").click();
+  await expect(programma.locator(".dm-prg-esito")).toBeVisible({ timeout: 10_000 });
+  await expect(crea).toHaveCount(0);
+  /* La casa rilegge e non lo dice ancora: si resta sul programma salvato. */
+  await page.evaluate(async () => {
+    const { chiediAllaCasa } = await import("/src/sections/automazioni-section.js");
+    await chiediAllaCasa({ forza: true });
+  });
+  await page.waitForTimeout(600);
+  await expect(crea).toHaveCount(0);
+  await expect(programma.locator("[data-dm-prg-salva]")).toBeVisible();
+  /* Si cambia ancora e si risalva: lo stesso id, non un secondo programma. */
+  await programma.locator("[data-dm-prg-fuori]").last().click();
+  await programma.locator("[data-dm-prg-salva]").click();
+  await expect.poll(async () => (await salvate(page)).length, { timeout: 10_000 }).toBe(2);
+  const [prima, seconda] = await salvate(page);
+  expect(prima.automazione_id).toBe("");
+  expect(seconda.automazione_id).toBe(prima.automazione.id);
+  expect(seconda.automazione.id).toBe(prima.automazione.id);
+});
+
+test("«Spegni tutto alle 23» tocca la sala ma non la blocca: il programma si apre, con una nota", async ({
+  page,
+}, testInfo) => {
+  const programma = await avvia(page, testInfo, { ritardo: 200, spegne: true });
+  await expect.poll(() => orari(programma), { timeout: 10_000 }).toEqual([390, 510, 1020, 1140]);
+  await expect(programma.locator("[data-dm-prg-scelta]")).toHaveCount(0);
+  await expect(programma.locator(".dm-prg-tocca")).toContainText(/un'altra automazione tocca/);
+  await expect(programma).not.toContainText(/Toglil/);
+  await expect(programma.locator("[data-dm-prg-salva]")).toBeVisible();
 });
 
 test("salvato con la finestra aperta: lo dice, e non promette i gradi", async ({
@@ -472,6 +588,16 @@ test.describe("le foto", () => {
           timeout: 10_000,
         });
         await scatta(`08-programma-illeggibile-${suf}`);
+        /* 09: «Spegni tutto alle 23» tocca la sala ma non blocca il programma. */
+        programma = await avvia(page, testInfo, { ritardo: 300, tema, spegne: true });
+        await expect
+          .poll(() => orari(programma), { timeout: 10_000 })
+          .toEqual([390, 510, 1020, 1140]);
+        await expect(programma.locator(".dm-prg-tocca")).toBeVisible();
+        await page.waitForTimeout(400);
+        await programma.locator(".dm-prg-tocca").scrollIntoViewIfNeeded();
+        await page.waitForTimeout(200);
+        await finestra.screenshot({ path: `${DOVE}/09-programma-spegni-alle-23-${suf}.png` });
       }
   });
 });

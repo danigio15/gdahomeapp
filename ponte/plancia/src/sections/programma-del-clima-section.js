@@ -96,18 +96,52 @@ export function programmiDelTermostato(elenco, entita) {
 }
 
 /**
- * Le automazioni che comandano `entita` ma la plancia non le sa leggere come
- * programma: un programma nostro toccato a mano in Home Assistant, o una
- * scritta da chi abita. «Due programmi si contendono il termostato senza che
- * nessuno lo dica»: la finestra le conta, e non fa finta che non ci siano.
+ * Le automazioni che programmano `entita` ma la plancia non le sa leggere
+ * come programma: un programma nostro toccato a mano in Home Assistant, o
+ * uno scritto da chi abita che ne imposta gradi o modo a un orario. «Due
+ * programmi si contendono il termostato senza che nessuno lo dica»: la
+ * finestra le conta, e non fa finta che non ci siano.
+ *
+ * Solo quelle: «esco di casa → spegni», «alle 23 spegni gli split», un
+ * termostato in una condizione lo toccano ma non sono un altro programma —
+ * non bloccano la finestra e nessuno invita a toglierle
+ * (`automazioniCheLoToccano`).
  */
 export function automazioniCheLoComandano(elenco, entita) {
   return (Array.isArray(elenco) ? elenco : []).filter(
     (v) =>
       !(v?.modello?.tipo === "crono") &&
+      ((v?.programma === true && Array.isArray(v?.climi) && v.climi.includes(entita)) ||
+        (Array.isArray(v?.climiAOrario) && v.climiAOrario.includes(entita))),
+  );
+}
+
+/** Le altre automazioni che toccano `entita` senza programmarlo: si dicono
+ * con una nota, e basta. */
+export function automazioniCheLoToccano(elenco, entita) {
+  const programmano = new Set(automazioniCheLoComandano(elenco, entita));
+  return (Array.isArray(elenco) ? elenco : []).filter(
+    (v) =>
+      !programmano.has(v) &&
+      !(v?.modello?.tipo === "crono" && v.modello.crono?.termostati?.includes(entita)) &&
       Array.isArray(v?.climi) &&
       v.climi.includes(entita),
   );
+}
+
+/** «Anche un'altra automazione tocca questo termostato», senza chiedere
+ * niente: spegnerlo quando esci non e' un programma. */
+export function toccanoDetto(quanti) {
+  if (!(quanti > 0)) return "";
+  return quanti === 1
+    ? t(
+        "Anche un'altra automazione tocca questo termostato (per esempio lo spegne): il programma decide i gradi, lei fa la sua parte.",
+        "Another automation also touches this thermostat (for example it turns it off): the schedule sets the temperature, it does its own part.",
+      )
+    : t(
+        `Anche altre ${quanti} automazioni toccano questo termostato (per esempio lo spengono): il programma decide i gradi, loro fanno la loro parte.`,
+        `${quanti} other automations also touch this thermostat (for example they turn it off): the schedule sets the temperature, they do their own part.`,
+      );
 }
 
 /** Il programma della plancia per `entita` che non si legge piu', se c'e'. */
@@ -385,6 +419,7 @@ export function programmaMarkup() {
   const voce = voceDi(state.entita);
   const elenco = automazioniDiCasa();
   const comandano = automazioniCheLoComandano(elenco, state.entita);
+  const toccano = automazioniCheLoToccano(elenco, state.entita).length;
   const illeggibile = voce ? null : programmaIlleggibile(elenco, state.entita);
   const altri =
     programmiDelTermostato(elenco, state.entita).length -
@@ -393,7 +428,11 @@ export function programmaMarkup() {
     (illeggibile ? 1 : 0);
   /* Senza un programma che si legge, ma con qualcuno che comanda gia' questo
    * termostato: non si mostra il programma di serie come se fosse il suo. */
-  const blocco = !voce && (illeggibile || comandano.length) && !state.scelta;
+  /* Appena salvato («Crea comunque», «Rifallo da qui»), finche' l'elenco
+   * della casa non lo dice anche lui: si resta sul programma salvato, col
+   * suo esito — non si torna all'avviso di prima. */
+  const blocco =
+    !voce && !state.appenaSalvato && (illeggibile || comandano.length) && !state.scelta;
   if (blocco) {
     const testa = `<button type="button" class="dm-prg-testa" data-dm-prg-apri aria-expanded="${state.aperto}"><span class="dm-prg-tit">🗓️ ${esc(t("Programma", "Schedule"))}</span><span class="dm-prg-stato">${esc(illeggibile ? t("da rifare", "to redo") : t("c'è già chi lo comanda", "already controlled"))}</span><span class="dm-prg-freccia" aria-hidden="true">▾</span></button>`;
     const nome = clean((illeggibile || comandano[0])?.nome) || "?";
@@ -446,6 +485,7 @@ ${
     : ""
 }
 ${altri > 0 ? `<p class="dm-prg-nota">${esc(altriDetti(altri))}</p>` : ""}
+${toccano > 0 ? `<p class="dm-prg-nota dm-prg-tocca">${esc(toccanoDetto(toccano))}</p>` : ""}
 ${
   !voce && illeggibile && state.scelta === "rifai"
     ? `<p class="dm-prg-nota">${esc(sostituitoDetto(clean(illeggibile.nome)))}</p>`
@@ -501,7 +541,8 @@ export function disegna() {
   if (!casaHaRisposto() && clean(casa().erroreLettura) && !state.riprova)
     state.riprova = root.setTimeout?.(() => {
       state.riprova = null;
-      void chiediAllaCasa({ forza: true });
+      /* Solo l'elenco: le proposte e il Premium non c'entrano col programma. */
+      void chiediAllaCasa({ forza: true, soloElenco: true });
     }, 5000);
   nodo.dataset.dmPrg = state.entita;
   scriviSeCambia(nodo, programmaMarkup());
@@ -570,13 +611,16 @@ async function salva() {
    * stesso id — mai un secondo programma accanto. */
   const sopra =
     !voce && state.scelta === "rifai" ? programmaIlleggibile(automazioniDiCasa(), state.entita) : null;
+  const appena = !voce && state.appenaSalvato?.entita === state.entita ? state.appenaSalvato : null;
   const stanza = nomeDellaStanza();
   const crono = cronoPulito({
     ...b,
     termostati: b.termostati.length ? b.termostati : [state.entita],
   });
   const automazione = {
-    id: voce?.modello?.id || voce?.id || sopra?.id || nuovoId(),
+    /* Risalvando prima che l'elenco della casa lo dica, si riusa l'id
+     * appena salvato: mai un secondo programma accanto. */
+    id: voce?.modello?.id || voce?.id || sopra?.id || appena?.id || nuovoId(),
     nome:
       voce?.nome || sopra?.nome || t(`Programma ${stanza}`, `Schedule ${stanza}`).slice(0, 60),
     attiva: voce ? voce.attiva !== false : sopra ? sopra.attiva !== false : true,
@@ -592,7 +636,7 @@ async function salva() {
       {
         type: "ponte/automazioni/salva",
         automazione,
-        automazione_id: voce?.id || sopra?.id || "",
+        automazione_id: voce?.id || sopra?.id || appena?.id || "",
         ...(sopra ? { sovrascrivi: true } : {}),
       },
       25000,
@@ -606,6 +650,8 @@ async function salva() {
     state.appenaSalvato = {
       firma: firmaDelProgramma({ id: fatto?.id || automazione.id, modello: { crono } }),
       il: Date.now(),
+      id: fatto?.id || automazione.id,
+      entita: state.entita,
     };
     state.bozzaDa = state.appenaSalvato.firma;
     state.scelta = "";
@@ -663,7 +709,7 @@ function suClick(evento) {
     return;
   }
   if (d.dmPrgRiprova !== undefined) {
-    void chiediAllaCasa({ forza: true });
+    void chiediAllaCasa({ forza: true, soloElenco: true });
     return;
   }
   if (!premium()) return;
@@ -826,6 +872,9 @@ function avvolgiLaChiusura() {
     }
     if (state.toccata) scartaLeModifiche();
     state.avvisoChiusura = false;
+    /* Chiusa la finestra, nessuno aspetta piu' la rilettura. */
+    if (state.riprova) root.clearTimeout?.(state.riprova);
+    state.riprova = null;
     return originale.apply(this, argomenti);
   }
   Object.assign(avvolto, originale);

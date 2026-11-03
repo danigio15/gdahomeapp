@@ -7899,4 +7899,6 @@ export default Object.freeze({
   "There is another schedule for this thermostat in Automations: it changes the temperature too. Remove it there.": "自动化中还有另一个此温控器的计划：它也会改变温度。请在那里删除。",
   "to redo": "需要重做",
   "You have unsaved changes to the schedule: save them, or close again to discard them.": "计划有未保存的更改：请保存，或再次关闭以放弃更改。",
+  "Another automation also touches this thermostat (for example it turns it off): the schedule sets the temperature, it does its own part.": "另一个自动化也会操作这个温控器（例如关闭它）：温度由日程决定，它做自己的事。",
+  "${quanti} other automations also touch this thermostat (for example they turn it off): the schedule sets the temperature, they do their own part.": "另有 ${quanti} 个自动化也会操作这个温控器（例如关闭它）：温度由日程决定，它们做自己的事。",
 });

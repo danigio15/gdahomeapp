@@ -8009,4 +8009,6 @@ export default Object.freeze({
   "There is another schedule for this thermostat in Automations: it changes the temperature too. Remove it there.": "자동화에 이 온도조절기의 다른 일정이 하나 있습니다: 그것도 온도를 바꿉니다. 그곳에서 제거하세요.",
   "to redo": "다시 만들어야 함",
   "You have unsaved changes to the schedule: save them, or close again to discard them.": "일정에 저장하지 않은 변경 내용이 있습니다: 저장하거나, 버리려면 다시 닫으세요.",
+  "Another automation also touches this thermostat (for example it turns it off): the schedule sets the temperature, it does its own part.": "다른 자동화도 이 온도조절기를 다룹니다(예: 끄기): 온도는 일정이 정하고, 그 자동화는 자기 역할을 합니다.",
+  "${quanti} other automations also touch this thermostat (for example they turn it off): the schedule sets the temperature, they do their own part.": "다른 자동화 ${quanti}개도 이 온도조절기를 다룹니다(예: 끄기): 온도는 일정이 정하고, 각 자동화는 자기 역할을 합니다.",
 });

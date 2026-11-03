@@ -8018,4 +8018,6 @@ export default Object.freeze({
   "There is another schedule for this thermostat in Automations: it changes the temperature too. Remove it there.": "ऑटोमेशन में इस थर्मोस्टैट का एक और शेड्यूल है: वह भी तापमान बदलता है। उसे वहाँ हटाएँ।",
   "to redo": "फिर से बनाना है",
   "You have unsaved changes to the schedule: save them, or close again to discard them.": "शेड्यूल में बिना सहेजे बदलाव हैं: उन्हें सहेजें, या छोड़ने के लिए फिर से बंद करें।",
+  "Another automation also touches this thermostat (for example it turns it off): the schedule sets the temperature, it does its own part.": "एक और ऑटोमेशन भी इस थर्मोस्टेट को चलाता है (जैसे इसे बंद करता है): तापमान शेड्यूल तय करता है, वह अपना काम करता है।",
+  "${quanti} other automations also touch this thermostat (for example they turn it off): the schedule sets the temperature, they do their own part.": "${quanti} और ऑटोमेशन भी इस थर्मोस्टेट को चलाते हैं (जैसे इसे बंद करते हैं): तापमान शेड्यूल तय करता है, वे अपना काम करते हैं।",
 });

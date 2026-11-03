@@ -108,6 +108,16 @@ void main() {
       expect(sonno.quando, DateTime(2026, 11, 3, 7));
     });
 
+    test("sveglio due ore e mezza di notte: resta la notte intera", () {
+      final tratti = [
+        Campione(0, DateTime(2026, 11, 2, 23), DateTime(2026, 11, 3, 2)),
+        Campione(0, DateTime(2026, 11, 3, 4, 30), DateTime(2026, 11, 3, 7)),
+      ];
+      final sonno = ilSonnoDiStanotte(tratti, adesso)!;
+      expect(sonno.valore, 3 * 60 + 2 * 60 + 30);
+      expect(sonno.quando, DateTime(2026, 11, 3, 7));
+    });
+
     test('chi lavora di notte dorme di giorno: vale il sonno lungo', () {
       final tratti = [
         Campione(0, DateTime(2026, 11, 3, 8), DateTime(2026, 11, 3, 15)),

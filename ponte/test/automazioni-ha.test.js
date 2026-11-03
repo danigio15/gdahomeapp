@@ -20,13 +20,14 @@ import {
   DESCRIZIONE_GDAHOME,
   EVENTO_AVVISA,
   categoriaDi,
+  climiProgrammati,
   dallaHomeAssistant,
   inHomeAssistant,
   normalizzata,
   origineDi,
   secondiDi,
 } from "../plancia/src/core/automazioni-ha.js";
-import { Automazioni } from "../src/automazioni.js";
+import { Automazioni, FUSO_ASPETTA } from "../src/automazioni.js";
 import { Commissioni } from "../src/commissioni.js";
 
 const STATI = {
@@ -828,6 +829,48 @@ test("il programma: rilette dal file YAML, le chiavi in altro ordine sono la ste
   assert.equal(fatto.applicato, true);
 });
 
+test("il programma: Home Assistant che riscrive trigger e azioni a modo suo conferma lo stesso", async () => {
+  /* Home Assistant normalizza: «08:30» → «08:30:00», `platform` → `trigger`,
+   * un `entity_id` da solo → in elenco, `mode: single` aggiunto. Le fasce
+   * stanno nelle `variables`: se quelle sono le stesse, e' la nuova. */
+  const aModoSuo = (c) => {
+    const x = structuredClone(c);
+    x.mode = "single";
+    const normalizza = (y) =>
+      Array.isArray(y)
+        ? y.map(normalizza)
+        : y && typeof y === "object"
+          ? Object.fromEntries(
+              Object.entries(y).map(([k, v]) => [
+                k,
+                k === "at" && typeof v === "string" && /^\d\d:\d\d$/.test(v)
+                  ? `${v}:00`
+                  : k === "entity_id" && typeof v === "string"
+                    ? [v]
+                    : normalizza(v),
+              ]),
+            )
+          : y;
+    x.triggers = normalizza(x.triggers ?? x.trigger ?? []);
+    x.actions = normalizza(x.actions ?? x.action ?? []);
+    x.triggers = [...x.triggers, { trigger: "homeassistant", event: "start" }];
+    return x;
+  };
+  const p = casaDelProgramma((_v, { nuova }) => ({ config: aModoSuo(nuova) }));
+  const fatto = await p.salva();
+  assert.equal(fatto.confermata, true);
+  assert.equal(fatto.applicato, true);
+});
+
+test("il programma: variabili diverse (quella di prima) non confermano, anche con trigger uguali", async () => {
+  const p = casaDelProgramma((_v, { vecchia, nuova }) => ({
+    config: { ...structuredClone(nuova), variables: structuredClone(vecchia.variables) },
+  }));
+  const fatto = await p.salva();
+  assert.equal(fatto.confermata, false);
+  assert.deepEqual(p.servizi, []);
+});
+
 test("un programma toccato a mano in Home Assistant: si vede di chi e', e si sostituisce solo se e' nostro e lo si chiede", async () => {
   const nostro = inHomeAssistant(
     { id: "p9", nome: "Programma Sala", tipo: "crono", crono: CRONO_DELLA_SALA },
@@ -890,4 +933,108 @@ test("lo stato dice il fuso orario di Home Assistant, per contare le fasce come 
   };
   const stato = await c.ponte.stato({ amministra: true });
   assert.equal(stato.fuso, "Europe/Rome");
+});
+
+test("il fuso che non risponde non fa aspettare l'elenco, e un no si ricorda", async () => {
+  const c = unaCasa();
+  let chiesto = 0;
+  c.ponte.casa.chiedi = (m) => {
+    if (m.type === "get_config") {
+      chiesto += 1;
+      return new Promise(() => {}); /* non risponde mai */
+    }
+    if (m.type === "config/area_registry/list") return Promise.resolve([]);
+    return Promise.resolve(null);
+  };
+  const prima = Date.now();
+  const stato = await c.ponte.stato({ amministra: true });
+  const durata = Date.now() - prima;
+  assert.equal(stato.fuso, "");
+  assert.ok(durata < FUSO_ASPETTA + 1500, `l'elenco ha aspettato ${durata} ms`);
+  /* Subito dopo: non lo si richiede, e l'elenco non aspetta piu'. */
+  const di_nuovo = Date.now();
+  await c.ponte.stato({ amministra: true });
+  assert.ok(Date.now() - di_nuovo < 1000);
+  assert.equal(chiesto, 1);
+});
+
+test("quali automazioni programmano un termostato: gradi o modo a un orario, non chi lo spegne", () => {
+  const sala = { entity_id: "climate.sala" };
+  /* Alle 6:30 21 gradi: e' un altro programma. */
+  assert.deepEqual(
+    climiProgrammati({
+      triggers: [{ trigger: "time", at: "06:30:00" }],
+      actions: [{ action: "climate.set_temperature", target: sala, data: { temperature: 21 } }],
+    }),
+    ["climate.sala"],
+  );
+  /* Anche dentro un `choose`, col vecchio `platform` e il vecchio `service`. */
+  assert.deepEqual(
+    climiProgrammati({
+      trigger: [{ platform: "time_pattern", minutes: "/30" }],
+      action: [
+        {
+          choose: [
+            {
+              conditions: [{ condition: "state", entity_id: "climate.studio", state: "heat" }],
+              sequence: [
+                {
+                  service: "climate.set_hvac_mode",
+                  entity_id: "climate.sala",
+                  data: { hvac_mode: "heat" },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    }),
+    ["climate.sala"],
+    "il termostato nella condizione non conta",
+  );
+  /* «Esco di casa → spegni»: non a orario. */
+  assert.deepEqual(
+    climiProgrammati({
+      triggers: [{ trigger: "state", entity_id: "person.marco", to: "not_home" }],
+      actions: [{ action: "climate.set_temperature", target: sala, data: { temperature: 16 } }],
+    }),
+    [],
+  );
+  /* «Alle 23 spegni gli split»: a orario, ma spegne e basta. */
+  assert.deepEqual(
+    climiProgrammati({
+      triggers: [{ trigger: "time", at: "23:00:00" }],
+      actions: [{ action: "climate.turn_off", target: sala }],
+    }),
+    [],
+  );
+  /* Un termostato solo in un `if`: no. */
+  assert.deepEqual(
+    climiProgrammati({
+      triggers: [{ trigger: "time", at: "07:00:00" }],
+      actions: [
+        {
+          if: [{ condition: "state", entity_id: "climate.sala", state: "off" }],
+          then: [{ action: "light.turn_on", target: { entity_id: "light.cucina" } }],
+        },
+      ],
+    }),
+    [],
+  );
+});
+
+test("l'elenco dice quali termostati un'automazione programma", async () => {
+  const c = unaCasa({
+    configurazioni: {
+      z1: {
+        id: "z1",
+        alias: "Spegni tutto alle 23",
+        triggers: [{ trigger: "time", at: "23:00:00" }],
+        actions: [{ action: "climate.turn_off", target: { entity_id: "climate.sala" } }],
+      },
+    },
+  });
+  const z1 = (await c.ponte.elencoDiCasa()).find((v) => v.id === "z1");
+  assert.deepEqual(z1.climi, ["climate.sala"]);
+  assert.deepEqual(z1.climiAOrario, []);
 });

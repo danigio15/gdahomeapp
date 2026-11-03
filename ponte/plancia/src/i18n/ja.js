@@ -8037,4 +8037,6 @@ export default Object.freeze({
   "There is another schedule for this thermostat in Automations: it changes the temperature too. Remove it there.": "オートメーションにこのサーモスタットのスケジュールがもう 1 件あります：それも温度を変えます。そちらで削除してください。",
   "to redo": "作り直しが必要",
   "You have unsaved changes to the schedule: save them, or close again to discard them.": "スケジュールに未保存の変更があります：保存するか、もう一度閉じて破棄してください。",
+  "Another automation also touches this thermostat (for example it turns it off): the schedule sets the temperature, it does its own part.": "別のオートメーションもこのサーモスタットを操作しています（たとえば電源を切るなど）：温度はスケジュールが決め、そのオートメーションは自分の役割を果たします。",
+  "${quanti} other automations also touch this thermostat (for example they turn it off): the schedule sets the temperature, they do their own part.": "ほかに${quanti}件のオートメーションもこのサーモスタットを操作しています（たとえば電源を切るなど）：温度はスケジュールが決め、それぞれが自分の役割を果たします。",
 });

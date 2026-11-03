@@ -76,6 +76,7 @@ import {
   EVENTO_AVVISA,
   categoriaDi,
   climiComandati,
+  climiProgrammati,
   dallaHomeAssistant,
   eUnProgrammaDellaPlancia,
   firmaStabile,
@@ -133,6 +134,10 @@ const SCARTATE_AL_MASSIMO = 300;
  * quando si apre e dopo ogni salvataggio, e una casa con cento automazioni
  * non deve fare cento domande ogni volta. Si leggono sei per volta. */
 const CONFIG_DURA = 30_000;
+/* Il fuso di Home Assistant: quanto lo si aspetta, e dopo un no quando lo si
+ * richiede. */
+export const FUSO_ASPETTA = 3_000;
+const FUSO_RIPROVA = 5 * MINUTO;
 const INSIEME = 6;
 /* «Gli aiutanti li legge in 4 secondi, le automazioni no: sono rimasto
  * aperto 5-6 minuti, ne ho un centinaio.» La configurazione di ognuna si
@@ -647,6 +652,9 @@ export class Automazioni {
         /* I termostati che comanda, e se e' un programma della plancia: la
          * finestra del programma li conta anche quando non li sa leggere. */
         climi: climiComandati(config),
+        /* Di quelli, i termostati che «programma»: gradi o modo a orario.
+         * Solo loro sono un altro programma; gli altri lo toccano e basta. */
+        climiAOrario: climiProgrammati(config),
         programma: eUnProgrammaDellaPlancia(config),
         /* Si modifica dalla plancia solo se Home Assistant ne da' la
          * configurazione: una scritta in un pacchetto YAML si guarda e basta. */
@@ -670,6 +678,9 @@ export class Automazioni {
   }
 
   async stato({ amministra = false } = {}) {
+    /* Il fuso si chiede insieme al resto, non dopo: e non fa mai aspettare
+     * l'elenco (al piu' pochi secondi, e un no si ricorda). */
+    const fuso = this._fuso();
     const nomi = await this._nomiDelleAree();
     const automazioni = await this.elencoDiCasa({ conConfig: amministra === true });
     const categorie = await this._categorieHa();
@@ -681,7 +692,7 @@ export class Automazioni {
       /* Il fuso di Home Assistant: le fasce le conta lui, col suo orologio, e
        * la finestra del programma deve dire le stesse ore anche da un
        * telefono in un altro fuso. */
-      fuso: await this._fuso(),
+      fuso: await fuso,
       automazioni,
       aree: Object.entries(nomi)
         .map(([id, nome]) => ({ id, nome }))
@@ -693,16 +704,30 @@ export class Automazioni {
     };
   }
 
+  /* Il fuso di Home Assistant. Una domanda che non risponde non deve far
+   * aspettare l'elenco delle automazioni (prima fino a venti secondi): al piu'
+   * `FUSO_ASPETTA`, e un no si ricorda per `FUSO_RIPROVA` — nel frattempo la
+   * plancia usa il suo. */
   async _fuso() {
     if (this._fusoDiCasa) return this._fusoDiCasa;
+    if (this._fusoNo && this.adesso() - this._fusoNo < FUSO_RIPROVA) return "";
+    let tempo = null;
     try {
-      const config = await this.casa?.chiedi?.({ type: "get_config" });
+      const config = await Promise.race([
+        Promise.resolve(this.casa?.chiedi?.({ type: "get_config" })),
+        new Promise((_risolvi, rifiuta) => {
+          tempo = setTimeout(() => rifiuta(new Error("timeout")), FUSO_ASPETTA);
+        }),
+      ]);
       const fuso = String(config?.time_zone || "").trim();
       if (/^[A-Za-z_]+(\/[A-Za-z0-9_+-]+)*$/.test(fuso) && fuso.length <= 64)
         this._fusoDiCasa = fuso;
     } catch (_errore) {
       /* Senza, la plancia usa il suo. */
+    } finally {
+      clearTimeout(tempo);
     }
+    if (!this._fusoDiCasa) this._fusoNo = this.adesso();
     return this._fusoDiCasa || "";
   }
 
@@ -817,13 +842,25 @@ export class Automazioni {
    * - finita l'attesa senza vederla: salvata, non confermata. Chi ha salvato
    *   lo sa, e nessuno fa scattare quella vecchia. */
   async _aspettaLaRicarica(id, scritta, { volte = 20, ogni = 250 } = {}) {
+    /* Il programma sta tutto nelle `variables`: quelle bastano a dire che
+     * Home Assistant ha la versione nuova. Trigger, condizioni e azioni Home
+     * Assistant li puo' riscrivere a modo suo («08:30» → «08:30:00», un
+     * `entity_id` da solo → in elenco, `platform` → `trigger`): confrontarli
+     * voleva dire non vederla confermata mai, e il termostato non decideva.
+     * Solo un'automazione senza `variables` si confronta tutta. */
+    const conVariabili =
+      scritta?.variables &&
+      typeof scritta.variables === "object" &&
+      !Array.isArray(scritta.variables);
     const parte = (c) =>
-      firmaStabile({
-        variables: c?.variables ?? null,
-        triggers: c?.triggers ?? c?.trigger ?? null,
-        conditions: c?.conditions ?? c?.condition ?? null,
-        actions: c?.actions ?? c?.action ?? null,
-      });
+      conVariabili
+        ? firmaStabile(c?.variables ?? null)
+        : firmaStabile({
+            variables: c?.variables ?? null,
+            triggers: c?.triggers ?? c?.trigger ?? null,
+            conditions: c?.conditions ?? c?.condition ?? null,
+            actions: c?.actions ?? c?.action ?? null,
+          });
     const voluta = parte(scritta);
     for (let i = 0; i < volte; i += 1) {
       const entita = this._entitaDi(id);

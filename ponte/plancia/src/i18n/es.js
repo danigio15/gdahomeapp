@@ -8084,4 +8084,6 @@ export default Object.freeze({
   "There is another schedule for this thermostat in Automations: it changes the temperature too. Remove it there.": "Hay otro programa para este termostato en Automatizaciones: también cambia la temperatura. Quítalo allí.",
   "to redo": "por rehacer",
   "You have unsaved changes to the schedule: save them, or close again to discard them.": "Tienes cambios sin guardar en el programa: guárdalos, o cierra otra vez para descartarlos.",
+  "Another automation also touches this thermostat (for example it turns it off): the schedule sets the temperature, it does its own part.": "Otra automatización también actúa sobre este termostato (por ejemplo, lo apaga): la programación fija la temperatura y ella hace su parte.",
+  "${quanti} other automations also touch this thermostat (for example they turn it off): the schedule sets the temperature, they do their own part.": "Otras ${quanti} automatizaciones también actúan sobre este termostato (por ejemplo, lo apagan): la programación fija la temperatura y ellas hacen su parte.",
 });

@@ -7982,4 +7982,6 @@ export default Object.freeze({
   "There is another schedule for this thermostat in Automations: it changes the temperature too. Remove it there.": "يوجد جدول آخر لهذا الثرموستات في الأتمتة: هو أيضًا يغيّر الحرارة. احذفه هناك.",
   "to redo": "يجب إعادة إنشائه",
   "You have unsaved changes to the schedule: save them, or close again to discard them.": "لديك تعديلات غير محفوظة على الجدول: احفظها، أو أغلق مرة أخرى لتجاهلها.",
+  "Another automation also touches this thermostat (for example it turns it off): the schedule sets the temperature, it does its own part.": "هناك أتمتة أخرى تتحكم أيضًا في هذا الترموستات (مثلًا تطفئه): الجدول يحدد درجة الحرارة، وهي تؤدي دورها.",
+  "${quanti} other automations also touch this thermostat (for example they turn it off): the schedule sets the temperature, they do their own part.": "هناك ${quanti} أتمتة أخرى تتحكم أيضًا في هذا الترموستات (مثلًا تطفئه): الجدول يحدد درجة الحرارة، وهي تؤدي دورها.",
 });
