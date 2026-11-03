@@ -18,6 +18,7 @@
  * markup si rifa' solo quando cambia la struttura — i valori si aggiornano al
  * loro posto, cosi' l'apertura di una tessera non riparte mai da sola.
  */
+import { soloAcceseValide, tesseraDaMostrare } from "../core/tessere-a-scomparsa.js";
 import { vehiclePhoto } from "../core/vehicle-model.js";
 import {
   normalizeTodoLists,
@@ -5872,7 +5873,9 @@ export function widgetPreferences() {
    * finche' non lo si accende: una finestra che si apre da sola e' una cosa
    * che si chiede, non che si subisce. */
   const avvisiInPopup = stored?.avvisiInPopup === true;
-  return { hidden, order, excluded, compatto, sorgenti, avvisiInPopup };
+  /* Le tessere che si mostrano solo quando c'e' qualcosa acceso (#355). */
+  const soloAccese = soloAcceseValide(stored?.soloAccese);
+  return { hidden, order, excluded, compatto, sorgenti, avvisiInPopup, soloAccese };
 }
 
 /** L'entita' scelta per una tessera che riassume, o «» per la media. */
@@ -5933,7 +5936,11 @@ export function applyWidgetPreferences(models, preferences = widgetPreferences()
     if (nome === "assistenza") return -1;
     return preferences.order.length + models.indexOf(widget);
   };
-  return models.filter((widget) => !hidden.has(chiave(widget))).sort((a, b) => rank(a) - rank(b));
+  const soloAccese = soloAcceseValide(preferences.soloAccese);
+  return models
+    .filter((widget) => !hidden.has(chiave(widget)))
+    .filter((widget) => tesseraDaMostrare(widget, soloAccese))
+    .sort((a, b) => rank(a) - rank(b));
 }
 
 /* Le sezioni canoniche che dicono «questa plancia e' stata configurata». */
@@ -7777,9 +7784,10 @@ function climateDetail(widget) {
          <span class="dm-w-clima-gradi">
            <b>${row.ambient == null ? "--" : `${formatNumber(row.ambient, 1)}°`}</b>
            ${
-             row.on && row.obiettivi?.doppio
+             /* Anche in pausa: «19,5° → 21°» dice perche' e' fermo. */
+             (row.on || row.acceso) && row.obiettivi?.doppio
                ? `<small data-dm-w-coppia>→ ${esc(gradiDellaCoppia(row.obiettivi))}</small>`
-               : row.on && row.target != null
+               : (row.on || row.acceso) && row.target != null
                  ? `<small>→ ${formatNumber(row.target, 1)}°</small>`
                  : ""
            }

@@ -13,7 +13,7 @@
  */
 import { registraFinestra } from "../finestre-dei-widget.js";
 import { allStates, chiediAHomeAssistant, clean, doc, esc, readJson, root, t } from "../shared.js";
-import { altoparlantiAlexa, normalizzaAlexa, CHIAVE_ALEXA } from "../../core/alexa-annunci.js";
+import { echoPerLeNotifiche, normalizzaAlexa, CHIAVE_ALEXA } from "../../core/alexa-annunci.js";
 import {
   MESSAGGIO_AL_PIU,
   MESSAGGIO_CHI,
@@ -94,13 +94,22 @@ function salvaLeScelte() {
 
 /** Gli Echo di casa, e quelli scelti (di serie: quelli delle notifiche, o tutti). */
 export function gliEcho(states = allStates() || {}) {
-  const tutti = altoparlantiAlexa(states);
+  /* Anche quelli di Alexa Devices (#376): per loro si sceglie l'Echo, e il
+   * ponte usa la voce che va col modo del messaggio. */
+  const tutti = echoPerLeNotifiche(states);
   const ci = new Set(tutti.map((uno) => uno.entita));
+  /* Un Echo di Alexa Devices scelto nelle notifiche con la voce
+   * dell'annuncio e' lo stesso Echo. */
+  const comeEcho = new Map();
+  for (const uno of tutti)
+    for (const voce of Object.values(uno.voci || {})) if (voce) comeEcho.set(voce, uno.entita);
   const scelte = leScelte();
   let scelti = (scelte.echo || []).filter((uno) => ci.has(uno));
   if (!scelte.echo) {
     const delleNotifiche = normalizzaAlexa(readJson(CHIAVE_ALEXA, null)).altoparlanti;
-    scelti = delleNotifiche.filter((uno) => ci.has(uno));
+    scelti = [...new Set(delleNotifiche.map((uno) => comeEcho.get(uno) || uno))].filter((uno) =>
+      ci.has(uno),
+    );
     if (!scelti.length) scelti = tutti.filter((uno) => !uno.spento).map((uno) => uno.entita);
   }
   return { tutti, scelti };
@@ -174,7 +183,10 @@ function corpo() {
    * sente nessuno»: a che volume lo dicono gli Echo. Dopo, ognuno torna al
    * suo. */
   const icona = (v) => (v >= 100 ? "📢" : v >= 70 ? "🔊" : v >= 50 ? "🔉" : "🔈");
-  const volume = echoAcceso
+  /* Il volume lo regolano solo gli Echo di Alexa Media Player: con soli
+   * Echo di Alexa Devices la riga non c'e'. */
+  const volume =
+    echoAcceso && tutti.some((uno) => uno.fonte !== "devices")
     ? `<div class="dm-msg-riga"><span>${esc(t("Volume degli Echo", "Echo volume"))}</span><div class="dm-msg-fila">${pastiglia(
         scelte.volume === null,
         'data-dm-msg-volume=""',

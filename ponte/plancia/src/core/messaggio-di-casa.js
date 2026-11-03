@@ -3,8 +3,9 @@
  * «Una card nella Home per inviare messaggi istantanei.» Si scrive una frase
  * — o si tocca una di quelle pronte, «A tavola!» — e la si manda:
  *
- * - agli Echo scelti, che la dicono subito (Alexa Media Player,
- *   `notify.alexa_media`, come le notifiche dette dagli Echo);
+ * - agli Echo scelti, che la dicono subito (Alexa Media Player con
+ *   `notify.alexa_media`, o Alexa Devices con `notify.send_message`, come le
+ *   notifiche dette dagli Echo);
  * - ai telefoni di famiglia con l'app GdAHome, come una notifica che dice
  *   chi l'ha scritta: a tutti, o solo a chi si sceglie.
  *
@@ -31,7 +32,9 @@ export const MESSAGGIO_AL_PIU = 200;
 const ECHO_AL_PIU = 12;
 const PERSONE_AL_PIU = 30;
 
-const LETTORE = /^media_player\.[a-z0-9_]{1,120}$/;
+/* Un Echo: un lettore di Alexa Media Player o un'entita' di notifica di
+ * Alexa Devices (#376). */
+const LETTORE = /^(media_player|notify)\.[a-z0-9_]{1,120}$/;
 const UTENTE = /^[A-Za-z0-9_-]{1,64}$/;
 
 /** La frase: una riga sola o poche, corta, senza caratteri di controllo. */

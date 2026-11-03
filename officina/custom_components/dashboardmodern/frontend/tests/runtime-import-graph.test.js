@@ -1636,8 +1636,12 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 524 con la pianta disegnata al computer: `core/archi-delle-porte.js` (gli
   // archi delle porte) e `core/finestre-nei-muri.js` (le finestre dal vetro
   // disegnato nel muro).
+  // 525 con `core/tessere-a-scomparsa.js` (#355): le tessere della Home che si
+  // nascondono quando e' tutto spento.
+  // 526 con `sections/programma-del-clima-section.js`: il programma orario
+  // del termostato, nella sua finestra.
   assert.ok(
-    relative.length <= 524,
+    relative.length <= 526,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

@@ -432,6 +432,54 @@ test.describe("Deezer nella Musica", () => {
         },
       ]);
   });
+
+  /* «Nelle impostazioni posso richiamare brani o playlist: sarebbe possibile
+   * avere tale box nella sua sezione?» (#347). Sugli Echo il riquadro c'era;
+   * sugli altri lettori adesso c'e' anche li', in cima alla pagina Musica:
+   * su chi sa cercare il campo apre la libreria gia' sui risultati. */
+  test("dalla pagina Musica si cerca un brano su Music Assistant, senza aprire prima la libreria", async ({
+    page,
+  }, testInfo) => {
+    await apriLaMusica(page, testInfo, [
+      { id: "mp2", entity: "media_player.ma_salotto", nome: "Salotto" },
+    ]);
+    const riquadro = page.locator("#page-media [data-dm-radio-cerca-lettore]");
+    await expect(riquadro).toBeVisible({ timeout: 15_000 });
+    await riquadro.locator("[data-dm-radio-cosa]").fill("Miles Davis");
+    await riquadro.locator("[data-dm-radio-cerca-trova]").click();
+    const finestra = page.locator("#dm-sf-popup");
+    await expect(finestra).toBeVisible();
+    await expect(finestra.locator(".dm-sf-nome")).toHaveText([
+      /Kind of Blue/,
+      /Miles Davis/,
+      /So What/,
+      /Blue in Green/,
+    ]);
+    await expect(finestra.locator(".dm-sf-dove strong")).toHaveText("«Miles Davis»");
+    const cercate = await page.evaluate(() =>
+      window.__DOMANDE__
+        .filter((d) => d.type === "media_player/search_media")
+        .map((d) => [d.entity_id, d.search_query]),
+    );
+    expect(cercate).toEqual([["media_player.ma_salotto", "Miles Davis"]]);
+    await foto(page, "musica-cerca-dalla-pagina");
+  });
+
+  test("su Sonos, che non cerca, il riquadro apre la libreria", async ({ page }, testInfo) => {
+    await apriLaMusica(page, testInfo, [
+      { id: "mp1", entity: "media_player.sonos_salotto", nome: "Salotto" },
+    ]);
+    const riquadro = page.locator("#page-media [data-dm-radio-cerca-lettore]");
+    await expect(riquadro).toBeVisible({ timeout: 15_000 });
+    await expect(riquadro.locator("[data-dm-radio-cosa]")).toHaveCount(0);
+    await riquadro.locator("[data-dm-radio-sfoglia]").click();
+    const finestra = page.locator("#dm-sf-popup");
+    await expect(finestra).toBeVisible();
+    await expect(finestra.locator(".dm-sf-nome")).toHaveText([
+      "Preferiti di Sonos",
+      "Libreria e cartelle di casa",
+    ]);
+  });
 });
 
 test("dal pannello a muro: «Scegli» apre la stessa finestra, sopra il pannello", async ({

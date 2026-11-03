@@ -37,7 +37,12 @@ import {
 } from "../core/alexa-musica.js";
 import { CHIAVE_ALEXA, normalizzaAlexa } from "../core/alexa-annunci.js";
 import { lettoriConfigurati } from "../core/media-player.js";
-import { CHIAVE_MEDIA, PAGINA_MEDIA } from "./media-player-section.js";
+import {
+  CHIAVE_MEDIA,
+  PAGINA_MEDIA,
+  cercaSulLettore,
+  letturaDiUnLettore,
+} from "./media-player-section.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
 import { logoDellaRadioMarkup, mettiILoghiDelleRadio } from "./loghi-delle-radio.js";
 import {
@@ -264,7 +269,7 @@ function riquadroMarkup() {
     </div>`;
   return `${testa}
     <div class="dm-radio-dove"><span>${esc(t("Suona su", "Play on"))}</span><div class="dm-radio-fila">${lettoriMarkup}</div></div>
-    ${dove?.echo ? cercaSullEchoMarkup() : ""}
+    ${dove?.echo ? cercaSullEchoMarkup() : cercaSulLettoreMarkup(dove)}
     ${pronte}
     ${
       stazioni
@@ -322,6 +327,56 @@ function cercaSullEchoMarkup() {
     </div>`;
 }
 
+/* «Cerca e ascolta» sugli altri lettori (#347).
+ *
+ * Music Assistant, Sonos, Spotify: un brano per nome non lo prendono come gli
+ * Echo, ma molti sanno cercare nella loro libreria e tutti quelli che la
+ * sanno elencare si sfogliano. Il campo qui sopra la pagina apre la finestra
+ * della libreria gia' sui risultati; su chi non sa cercare c'e' solo il tasto
+ * per sfogliare. Un lettore che non sa nemmeno elencare non ha il riquadro. */
+function cercaSulLettoreMarkup(dove) {
+  if (!dove?.entita) return "";
+  const puo = letturaDiUnLettore(dove.entita)?.puo || {};
+  if (!puo.sfoglia) return "";
+  const sfoglia = `<button type="button" class="dm-radio-pa" data-dm-radio-sfoglia>📚 ${esc(
+    t("Sfoglia la libreria", "Browse the library"),
+  )}</button>`;
+  if (!puo.trova)
+    return `<div class="dm-radio-cerca" data-dm-radio-cerca-lettore>
+      <div class="dm-radio-cerca-testa"><b>🎵 ${esc(t("Scegli cosa ascoltare", "Choose what to play"))}</b><small>${esc(
+        t("Le playlist, gli artisti e le radio di questo lettore", "This player's playlists, artists and stations"),
+      )}</small></div>
+      <div class="dm-radio-fila">${sfoglia}</div>
+    </div>`;
+  return `<div class="dm-radio-cerca" data-dm-radio-cerca-lettore>
+      <div class="dm-radio-cerca-testa"><b>🎵 ${esc(t("Cerca e ascolta", "Search and play"))}</b><small>${esc(
+        t("Un artista, un brano, un album o una playlist", "An artist, a song, an album or a playlist"),
+      )}</small></div>
+      <div class="dm-radio-cerca-riga">
+        <input class="dm-radio-cerca-campo" data-dm-radio-cosa value="${esc(state.cosa)}" maxlength="${CERCA_AL_PIU}" enterkeyhint="search" aria-label="${esc(
+          t("Cosa ascoltare", "What to play"),
+        )}" placeholder="${esc(t("Vasco Rossi, Albachiara, Top 50 Italia…", "Coldplay, Yellow, Today's Top Hits…"))}">
+        <button type="button" class="dm-radio-cerca-suona" data-dm-radio-cerca-trova>🔍 ${esc(t("Cerca", "Search"))}</button>
+      </div>
+      <div class="dm-radio-fila">${sfoglia}</div>
+    </div>`;
+}
+
+/* Quello che si e' scritto nel campo, sul lettore scelto: suona sull'Echo,
+ * cerca nella libreria degli altri. */
+function cercaDove(dove, cosa) {
+  if (dove?.echo) {
+    suonaSullEcho(dove, state.servizio, cosa);
+    return;
+  }
+  if (dove && cercaSulLettore(dove.entita, cosa)) {
+    root.navigator?.vibrate?.(8);
+    state.esito = "";
+    return;
+  }
+  state.esito = t("Questo lettore non sa cercare.", "This player cannot search.");
+}
+
 /* Fa suonare sull'Echo scelto quello che si e' cercato. */
 function suonaSullEcho(dove, servizio, cosa) {
   const chiamata =
@@ -370,6 +425,11 @@ function sulRiquadro(evento) {
     state.servizio = servizioPulito(d.dmRadioServizio);
   } else if ("dmRadioCercaSuona" in d) {
     suonaSullEcho(doveSuona(lettori), state.servizio, state.cosa);
+  } else if ("dmRadioCercaTrova" in d) {
+    cercaDove(doveSuona(lettori), state.cosa);
+  } else if ("dmRadioSfoglia" in d) {
+    const dove = doveSuona(lettori);
+    if (dove) cercaSulLettore(dove.entita, "");
   } else if ("dmRadioPreferito" in d) {
     const uno = normalizzaAlexa(readJson(CHIAVE_ALEXA, null)).musica.filter(
       (x) => x.servizio !== "TUNEIN",
@@ -890,13 +950,14 @@ export function installaLaRadio() {
   stili();
   doc.addEventListener("click", suUnClic);
   doc.addEventListener("input", suUnaParola);
-  /* Invio nel campo «Cerca e ascolta» suona, come il tasto ▶. */
+  /* Invio nel campo «Cerca e ascolta» suona, come il tasto ▶ (sugli Echo), o
+   * cerca nella libreria (sugli altri lettori). */
   doc.addEventListener("keydown", (evento) => {
     if (evento.key !== "Enter" || !evento.target?.matches?.("[data-dm-radio] [data-dm-radio-cosa]"))
       return;
     evento.preventDefault();
     state.cosa = String(evento.target.value || "").slice(0, CERCA_AL_PIU);
-    suonaSullEcho(doveSuona(iLettori()), state.servizio, state.cosa);
+    cercaDove(doveSuona(iLettori()), state.cosa);
     evento.target.blur?.();
     state.firma = "";
     ridisegnaLaRadio();

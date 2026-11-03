@@ -239,3 +239,45 @@ test("senza volume, o con uno inventato, il volume non si tocca", async () => {
     rmSync(banco.cartella, { recursive: true, force: true });
   }
 });
+
+/* «Non ho Alexa Media Player» (#376): il messaggio arriva anche agli Echo di
+ * Alexa Devices, con la voce che va col modo scelto, e il volume non si tocca. */
+test("agli Echo di Alexa Devices il messaggio arriva con la voce del modo scelto", async () => {
+  const banco = unBanco();
+  const notifica = (entity_id, friendly_name) =>
+    banco.notifiche.sentinella.stati.set(entity_id, {
+      state: "unknown",
+      attributes: { friendly_name },
+    });
+  notifica("notify.echo_studio_speak", "Echo Studio Speak");
+  notifica("notify.echo_studio_announce", "Echo Studio Announce");
+  notifica("notify.telegram", "Telegram");
+  try {
+    const annuncio = await banco.commissioni.rispondi(
+      MANDA({ echo: ["notify.echo_studio_speak", "notify.telegram"], telefoni: false, volume: 70 }),
+      { chiChiede: "u_marco" },
+    );
+    assert.equal(annuncio.result.echo, 1);
+    assert.deepEqual(banco.chiamate, [
+      {
+        type: "call_service",
+        domain: "notify",
+        service: "send_message",
+        service_data: {
+          entity_id: ["notify.echo_studio_announce"],
+          message: "Messaggio da Marco: A tavola!",
+        },
+      },
+    ]);
+    banco.chiamate.length = 0;
+    const voce = await banco.commissioni.rispondi(
+      MANDA({ echo: ["notify.echo_studio_announce"], telefoni: false, modo: "voce" }),
+      { chiChiede: "u_giulia" },
+    );
+    assert.equal(voce.result.echo, 1);
+    assert.deepEqual(banco.chiamate[0].service_data.entity_id, ["notify.echo_studio_speak"]);
+    assert.ok(!banco.chiamate.some((una) => una.domain === "media_player"));
+  } finally {
+    rmSync(banco.cartella, { recursive: true, force: true });
+  }
+});

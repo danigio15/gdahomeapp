@@ -597,17 +597,79 @@ export const CRONO_DI_SERIE = Object.freeze({
   finestraSpegne: true,
 });
 
+/* ── il programma del clima ────────────────────────────────────────────────
+ *
+ * «Quando apri il clima ti scegli gli orari delle fasce e le temperature.»
+ * Il cronotermostato di prima aveva due temperature sole — in casa e fuori —
+ * e le fasce dicevano soltanto quando valeva la prima. Il programma da' a
+ * ogni fascia la sua: 6:30–8:30 a 21°, 17–22:30 a 20,5°, e fuori dalle fasce
+ * una temperatura sola. Le giornate tipo restano due, feriali e festivi.
+ *
+ *   programma: { feriali: [{da, a, gradi}], festivi: [{da, a, gradi}] }
+ *
+ * C'e' solo nei cronotermostati che l'hanno: quelli salvati prima restano
+ * identici, campo per campo. */
+export const FASCE_DEL_PROGRAMMA = 8;
+const gradiPuliti = (v, ripiego) => fra(Math.round((numero(v) ?? ripiego) * 2) / 2, 5, 30);
+
+/** Le fasce di una giornata del programma: mezz'ore, in ordine, senza sovrapporsi. */
+export function giornataDelProgramma(valore) {
+  const grezze = [];
+  for (const f of Array.isArray(valore) ? valore : []) {
+    if (!f || typeof f !== "object") continue;
+    const da = fra(Math.round(Number(f.da) / 30) * 30, 0, 1440);
+    const a = fra(Math.round(Number(f.a) / 30) * 30, 0, 1440);
+    if (!Number.isFinite(da) || !Number.isFinite(a) || a <= da) continue;
+    grezze.push({ da, a, gradi: gradiPuliti(f.gradi, CRONO_DI_SERIE.inCasa) });
+  }
+  grezze.sort((x, y) => x.da - y.da || x.a - y.a);
+  const fuori = [];
+  for (const f of grezze) {
+    const prima = fuori[fuori.length - 1];
+    /* Una fascia che entra nella precedente comincia dove quella finisce:
+     * vince chi comincia prima, e nessuna mezz'ora ha due temperature. */
+    const da = prima ? Math.max(f.da, prima.a) : f.da;
+    if (f.a <= da) continue;
+    /* Due fasce attaccate con gli stessi gradi sono una fascia sola. */
+    if (prima && prima.a === da && prima.gradi === f.gradi) prima.a = f.a;
+    else fuori.push({ da, a: f.a, gradi: f.gradi });
+  }
+  return fuori.slice(0, FASCE_DEL_PROGRAMMA);
+}
+
+/** Il programma ripulito, o `null` se non c'e'. */
+export function programmaPulito(valore) {
+  if (!valore || typeof valore !== "object" || Array.isArray(valore)) return null;
+  return {
+    feriali: giornataDelProgramma(valore.feriali),
+    festivi: giornataDelProgramma(valore.festivi),
+  };
+}
+
+export const PROGRAMMA_DI_SERIE = Object.freeze({
+  feriali: Object.freeze([
+    Object.freeze({ da: 390, a: 510, gradi: 21 }),
+    Object.freeze({ da: 1020, a: 1350, gradi: 20.5 }),
+  ]),
+  festivi: Object.freeze([Object.freeze({ da: 480, a: 1380, gradi: 20.5 })]),
+});
+
 export function cronoPulito(dato) {
   const d = dato && typeof dato === "object" ? dato : {};
-  const gradi = (v, ripiego) => fra(Math.round((numero(v) ?? ripiego) * 2) / 2, 5, 30);
+  const programma = programmaPulito(d.programma);
+  const fasceDi = (giorno) => programma[giorno].map((f) => [f.da, f.a]);
   return {
     termostati: elencoDiEntita(d.termostati, DOMINI.clima, TERMOSTATI_AL_MASSIMO),
-    inCasa: gradi(d.inCasa, CRONO_DI_SERIE.inCasa),
-    fuori: gradi(d.fuori, CRONO_DI_SERIE.fuori),
-    feriali: fascePulite(d.feriali ?? CRONO_DI_SERIE.feriali),
-    festivi: fascePulite(d.festivi ?? CRONO_DI_SERIE.festivi),
+    inCasa: gradiPuliti(d.inCasa, CRONO_DI_SERIE.inCasa),
+    fuori: gradiPuliti(d.fuori, CRONO_DI_SERIE.fuori),
+    /* Col programma le fasce si leggono da li': dicono quando si e' «in
+     * fascia», e chi le guarda — il racconto, il prossimo passaggio — non
+     * deve sapere del programma per non sbagliare. */
+    feriali: fascePulite(programma ? fasceDi("feriali") : (d.feriali ?? CRONO_DI_SERIE.feriali)),
+    festivi: fascePulite(programma ? fasceDi("festivi") : (d.festivi ?? CRONO_DI_SERIE.festivi)),
     finestre: elencoDiEntita(d.finestre, DOMINI.finestre),
     finestraSpegne: d.finestraSpegne !== false,
+    ...(programma ? { programma } : {}),
   };
 }
 
@@ -1445,11 +1507,25 @@ export function cronoInFascia(crono, adesso) {
   return fasceDelGiorno(crono, adesso).some(([da, a]) => m >= da && m < a);
 }
 
+/** Le fasce del programma per il giorno di `istante`. */
+export const giornataDiOggi = (crono, istante) =>
+  giornoDellaSettimana(istante) >= 5 ? crono.programma.festivi : crono.programma.feriali;
+
+/** I gradi che il cronotermostato vuole a `istante`, finestre a parte. */
+export function gradiAlle(crono, istante) {
+  if (crono.programma) {
+    const m = minutiDelGiorno(istante);
+    const fascia = giornataDiOggi(crono, istante).find((f) => m >= f.da && m < f.a);
+    return fascia ? fascia.gradi : crono.fuori;
+  }
+  return cronoInFascia(crono, istante) ? crono.inCasa : crono.fuori;
+}
+
 /** La temperatura voluta adesso, o «spento» con la finestra aperta. */
 export function cronoVoluto(crono, { adesso, stati = {} }) {
   const aperta = crono.finestraSpegne && crono.finestre.some((id) => acceso(stati[id] || null));
   if (aperta) return "spento";
-  return cronoInFascia(crono, adesso) ? crono.inCasa : crono.fuori;
+  return gradiAlle(crono, adesso);
 }
 
 /**
@@ -1493,6 +1569,23 @@ export function cronoDecide(crono, { adesso, stati = {}, traccia = {} } = {}) {
 /** Il prossimo passaggio del cronotermostato dopo `adesso`: `{alle, voluto}`. */
 export function cronoProssimo(crono, adesso) {
   const c = cronoPulito(crono);
+  if (c.programma) {
+    /* Ogni inizio e fine fascia, nell'ordine; conta solo dove i gradi
+     * cambiano davvero: due fasce attaccate a 21° e 20,5° sono un passaggio,
+     * la fine di una fascia a 17° con fuori a 17° no. */
+    for (let i = 0; i <= 7; i += 1) {
+      const giorno = alleOre(adesso, i, 12 * 60);
+      const stacchi = [...new Set(giornataDiOggi(c, giorno).flatMap((f) => [f.da, f.a]))]
+        .map((m) => (m >= 1440 ? alleOre(giorno, 1, 0) : alleOre(giorno, 0, m)))
+        .filter((alle) => alle > adesso)
+        .sort((x, y) => x - y);
+      for (const alle of stacchi) {
+        const voluto = gradiAlle(c, alle);
+        if (voluto !== gradiAlle(c, alle - MINUTO)) return { alle, voluto };
+      }
+    }
+    return null;
+  }
   for (let i = 0; i <= 7; i += 1) {
     const giorno = alleOre(adesso, i, 12 * 60);
     const stacchi = fasceDelGiorno(c, giorno)

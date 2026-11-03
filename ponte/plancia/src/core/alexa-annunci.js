@@ -5,11 +5,19 @@
  * mani occupate non le sente. Qui si decide se una notifica la dice anche un
  * Echo, quale, e con che parole.
  *
- * Gli Echo li fa parlare Home Assistant con l'integrazione Alexa Media Player
- * (si installa da HACS): il servizio e' `notify.alexa_media`, con gli Echo
- * come destinatari e il tipo «announce» (il suono, poi la voce) o «tts» (la
- * voce e basta). Senza quell'integrazione gli Echo in Home Assistant non ci
- * sono, e la scelta non si offre.
+ * Gli Echo li fa parlare Home Assistant, con una di due integrazioni:
+ *
+ * - Alexa Media Player (si installa da HACS): il servizio e'
+ *   `notify.alexa_media`, con gli Echo (`media_player.*`) come destinatari e il
+ *   tipo «announce» (il suono, poi la voce) o «tts» (la voce e basta);
+ * - Alexa Devices, quella che Home Assistant ha di suo (#376: «non ho AMP e
+ *   non vorrei metterla»): ogni Echo ha due entita' di notifica, «parla» e
+ *   «annuncio» (`notify.<echo>_speak`, `notify.<echo>_announce`), e si
+ *   chiamano con `notify.send_message`. Fra gli altoparlanti si tiene
+ *   l'entita' scelta: e' li' che sta se quell'Echo parla o annuncia.
+ *
+ * Senza nessuna delle due gli Echo in Home Assistant non ci sono, e la scelta
+ * non si offre.
  *
  * E' una scelta della casa e non del telefono: gli Echo stanno in casa, e
  * dicono la stessa cosa a chiunque ci sia. Sta nella plancia principale
@@ -78,6 +86,13 @@ export const PAROLE_AL_PIU = 280;
 
 const ORARIO = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const LETTORE = /^media_player\.[a-z0-9_]{1,120}$/;
+const NOTIFICA = /^notify\.[a-z0-9_]{1,120}$/;
+/* Un altoparlante: un Echo di Alexa Media Player o un'entita' di notifica di
+ * Alexa Devices. */
+const ECHO = /^(media_player|notify)\.[a-z0-9_]{1,120}$/;
+
+/** Se un altoparlante salvato e' di Alexa Devices (un'entita' `notify.*`). */
+export const diAlexaDevices = (entita) => NOTIFICA.test(String(entita ?? ""));
 
 /** La scelta com'e' scritta, ripulita: quello che non si capisce torna di serie. */
 export function normalizzaAlexa(grezzo) {
@@ -102,7 +117,7 @@ export function normalizzaAlexa(grezzo) {
     ...new Set(
       (Array.isArray(valore.altoparlanti) ? valore.altoparlanti : [])
         .map((uno) => String(uno ?? "").trim())
-        .filter((uno) => LETTORE.test(uno)),
+        .filter((uno) => ECHO.test(uno)),
     ),
   ].slice(0, ALTOPARLANTI_AL_PIU);
   const categorie = Array.isArray(valore.categorie)
@@ -194,7 +209,7 @@ export function paroleDaDire(titolo, testo, lingua = "it") {
     : insieme;
 }
 
-/** La chiamata a Home Assistant che fa parlare gli Echo scelti. */
+/** La chiamata ad Alexa Media Player che fa parlare i suoi Echo scelti. */
 export function chiamataAlexa(conf, parole, altoparlanti = conf.altoparlanti) {
   return {
     type: "call_service",
@@ -206,6 +221,141 @@ export function chiamataAlexa(conf, parole, altoparlanti = conf.altoparlanti) {
       data: { type: conf.modo === "voce" ? "tts" : "announce" },
     },
   };
+}
+
+/**
+ * Le chiamate che fanno parlare gli Echo scelti, di qualunque integrazione:
+ * una per quelli di Alexa Media Player (come sempre), una per quelli di Alexa
+ * Devices (`notify.send_message` sulle loro entita', che dicono gia' da sole
+ * se parlano o annunciano). Vuota se non c'e' nessuno a cui dirlo.
+ */
+export function chiamateAlexa(conf, parole, altoparlanti = conf.altoparlanti) {
+  const tutti = (Array.isArray(altoparlanti) ? altoparlanti : []).map((uno) =>
+    String(uno ?? "").trim(),
+  );
+  const amp = tutti.filter((uno) => LETTORE.test(uno));
+  const devices = [...new Set(tutti.filter((uno) => NOTIFICA.test(uno)))];
+  const chiamate = [];
+  if (amp.length) chiamate.push(chiamataAlexa(conf, parole, amp));
+  if (devices.length)
+    chiamate.push({
+      type: "call_service",
+      domain: "notify",
+      service: "send_message",
+      service_data: { entity_id: devices, message: parole },
+    });
+  return chiamate;
+}
+
+/* ─── Gli Echo di Alexa Devices ─────────────────────────────────────────
+ *
+ * Home Assistant li da' come entita' di notifica, due per Echo: «parla» e
+ * «annuncio». Il registro direbbe di che integrazione sono, ma la plancia il
+ * registro non lo chiede (#553): si riconoscono dal nome. L'id finisce con la
+ * parola della voce — `_speak`, `_announce`, o tradotta se Home Assistant ha
+ * fatto l'id nella sua lingua — e lo stesso il nome che si legge. Le due di
+ * uno stesso Echo hanno lo stesso inizio, e lo si usa per tenerle insieme. */
+const PAROLE_DELLE_VOCI = Object.freeze({
+  parla: ["speak", "parla", "parlare", "sprechen", "hablar", "parler", "spreken", "falar"],
+  annuncio: [
+    "announce",
+    "announcement",
+    "annuncio",
+    "annuncia",
+    "annunciare",
+    "ankundigen",
+    "ankuendigen",
+    "anunciar",
+    "annoncer",
+    "aankondigen",
+  ],
+});
+
+const senzaSegni = (testo) =>
+  String(testo ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+/** Di che voce e' un'entita' di notifica, e l'inizio comune: `null` se non e' di un Echo. */
+export function voceDiAlexaDevices(stato) {
+  const entita = String(stato?.entity_id ?? "");
+  if (!NOTIFICA.test(entita)) return null;
+  const oggetto = entita.slice("notify.".length);
+  const nome = String(stato?.attributes?.friendly_name ?? "").trim();
+  const parole = senzaSegni(nome)
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
+  for (const [voce, elenco] of Object.entries(PAROLE_DELLE_VOCI)) {
+    for (const parola of elenco) {
+      if (oggetto.endsWith(`_${parola}`)) {
+        const base = oggetto.slice(0, -parola.length - 1);
+        const ultima = parole.at(-1);
+        const leggibile =
+          ultima === parola || elenco.includes(ultima)
+            ? nome.split(/\s+/).slice(0, -1).join(" ")
+            : nome;
+        return { voce, base, nome: leggibile || base.replace(/_/g, " ") };
+      }
+    }
+    if (parole.length > 1 && elenco.includes(parole.at(-1)))
+      return { voce, base: oggetto, nome: nome.split(/\s+/).slice(0, -1).join(" ") };
+  }
+  return null;
+}
+
+/**
+ * Gli Echo di Alexa Devices, uno per Echo: il nome, l'entita' che parla e
+ * quella che annuncia (se ci sono), e se e' spento. Ordinati per nome.
+ */
+export function echoDiAlexaDevices(stati) {
+  const tutti = Array.isArray(stati) ? stati : Object.values(stati || {});
+  const perEcho = new Map();
+  for (const stato of tutti) {
+    const trovata = voceDiAlexaDevices(stato);
+    if (!trovata) continue;
+    const uno = perEcho.get(trovata.base) || {
+      base: trovata.base,
+      nome: trovata.nome,
+      voci: {},
+      spento: true,
+    };
+    uno.voci[trovata.voce] ??= stato.entity_id;
+    if (stato.state !== "unavailable") uno.spento = false;
+    if (!uno.nome) uno.nome = trovata.nome;
+    perEcho.set(trovata.base, uno);
+  }
+  return [...perEcho.values()]
+    .map((uno) => ({
+      entita: uno.voci.parla || uno.voci.annuncio,
+      nome: String(uno.nome || uno.base).trim(),
+      spento: uno.spento,
+      fonte: "devices",
+      voci: { parla: uno.voci.parla || "", annuncio: uno.voci.annuncio || "" },
+    }))
+    .sort((uno, due) => uno.nome.localeCompare(due.nome, "it"));
+}
+
+/**
+ * Tutti gli Echo che possono dire le notifiche: quelli di Alexa Media Player
+ * e quelli di Alexa Devices. Ognuno ha `fonte` («amp» o «devices»); quelli di
+ * Alexa Devices hanno anche `voci`, le loro due entita'.
+ */
+export function echoPerLeNotifiche(stati) {
+  return [
+    ...altoparlantiAlexa(stati).map((uno) => ({ ...uno, fonte: "amp" })),
+    ...echoDiAlexaDevices(stati),
+  ].sort((uno, due) => uno.nome.localeCompare(due.nome, "it"));
+}
+
+/** Tutte le entita' che sono davvero un Echo che parla: per controllare cio' che arriva. */
+export function entitaDegliEcho(echo) {
+  const fuori = new Set();
+  for (const uno of Array.isArray(echo) ? echo : []) {
+    if (uno?.entita) fuori.add(uno.entita);
+    for (const voce of Object.values(uno?.voci || {})) if (voce) fuori.add(voce);
+  }
+  return fuori;
 }
 
 /**
@@ -277,7 +427,7 @@ export function avvisoPulito(grezzo, indice = 0) {
     ...new Set(
       (Array.isArray(grezzo.altoparlanti) ? grezzo.altoparlanti : [])
         .map((uno) => String(uno ?? "").trim())
-        .filter((uno) => LETTORE.test(uno)),
+        .filter((uno) => ECHO.test(uno)),
     ),
   ].slice(0, ALTOPARLANTI_AL_PIU);
   const base = { id, attivo: grezzo.attivo !== false, frase, quando, altoparlanti };

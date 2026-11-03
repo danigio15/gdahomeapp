@@ -563,10 +563,20 @@ const TEMPLATE_DEL_CRONO =
   "{% set f = c.festivi if now().weekday() >= 5 else c.feriali %}" +
   "{% set ns = namespace(si=false) %}{% for x in f %}{% if x[0] <= m < x[1] %}{% set ns.si = true %}{% endif %}{% endfor %}" +
   "{{ c.inCasa if ns.si else c.fuori }}";
+/* Col programma ogni fascia porta i suoi gradi: si cerca quella di adesso, e
+ * fuori dalle fasce vale `fuori`. */
+const TEMPLATE_DEL_PROGRAMMA =
+  `{% set c = ${VARIABILE_DEL_CRONO} %}{% set m = now().hour * 60 + now().minute %}` +
+  "{% set f = c.programma.festivi if now().weekday() >= 5 else c.programma.feriali %}" +
+  "{% set ns = namespace(g=c.fuori) %}{% for x in f %}{% if x.da <= m < x.a %}{% set ns.g = x.gradi %}{% endif %}{% endfor %}" +
+  "{{ ns.g }}";
 
 function cronoInHA(c) {
   const ore = new Set();
-  for (const [da, a] of [...c.feriali, ...c.festivi]) {
+  const fasce = c.programma
+    ? [...c.programma.feriali, ...c.programma.festivi].map((f) => [f.da, f.a])
+    : [...c.feriali, ...c.festivi];
+  for (const [da, a] of fasce) {
     ore.add(da % 1440);
     ore.add(a % 1440);
   }
@@ -583,7 +593,7 @@ function cronoInHA(c) {
     {
       action: "climate.set_temperature",
       target: termostati,
-      data: { temperature: TEMPLATE_DEL_CRONO },
+      data: { temperature: c.programma ? TEMPLATE_DEL_PROGRAMMA : TEMPLATE_DEL_CRONO },
     },
   ];
   return {

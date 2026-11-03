@@ -5,10 +5,12 @@
  * le dicono anche gli Echo di casa, quali Echo, quali famiglie di notifiche,
  * quando stare zitti e come parlare. La regola sta in `core/alexa-annunci.js`,
  * e a far parlare gli Echo e' il ponte (`notifiche.js`, `_dilloAdAlexa`),
- * con Home Assistant e l'integrazione Alexa Media Player.
+ * con Home Assistant e l'integrazione Alexa Media Player o Alexa Devices,
+ * quella che Home Assistant ha di suo (#376). Gli Echo di Alexa Devices
+ * dicono, uno per uno, se parlano o annunciano.
  *
- * Senza quell'integrazione gli Echo in Home Assistant non ci sono: la scheda
- * lo dice, e spiega dove si installa, invece di offrire una scelta vuota. Il
+ * Senza nessuna delle due gli Echo in Home Assistant non ci sono: la scheda
+ * lo dice, e spiega dove si trovano, invece di offrire una scelta vuota. Il
  * tasto «Prova» chiede al ponte una frase sugli Echo scelti — lo fa solo chi
  * amministra, e il ponte risponde solo «fatto» o no.
  *
@@ -28,6 +30,7 @@ import {
   FRASE_AL_PIU,
   altoparlantiAlexa,
   avvisoPulito,
+  echoPerLeNotifiche,
   normalizzaAlexa,
 } from "../core/alexa-annunci.js";
 import {
@@ -171,23 +174,79 @@ const riga = (
     ${destra ? `<div class="mu-ed-dx">${destra}</div>` : ""}
   </div>`;
 
+/* Se un Echo e' fra quelli scelti: per Alexa Devices vale l'una o l'altra
+ * delle sue due voci. */
+const sceltoIn = (lista, uno) =>
+  uno.fonte === "devices"
+    ? Object.values(uno.voci).some((voce) => voce && lista.includes(voce))
+    : lista.includes(uno.entita);
+
+/* L'entita' con cui un Echo entra in una lista: per Alexa Devices quella gia'
+ * scelta nelle notifiche, se c'e', se no quella che parla. */
+const entitaPer = (config, uno) =>
+  uno.fonte === "devices"
+    ? Object.values(uno.voci).find((voce) => voce && config.altoparlanti.includes(voce)) ||
+      uno.entita
+    : uno.entita;
+
+/* Da quale integrazione viene: lo si scrive solo se in casa ce ne sono due,
+ * o se e' Alexa Devices. */
+const fonteDetta = (uno, echo) =>
+  uno.fonte === "devices"
+    ? " <small>Alexa Devices</small>"
+    : echo.some((altro) => altro.fonte === "devices")
+      ? " <small>Media Player</small>"
+      : "";
+
 function echoMarkup(config, echo) {
   if (!echo.length)
     return `<div class="mu-ed-riga"><div class="mu-ed-testo"><b>${esc(t("Nessun Echo in Home Assistant", "No Echo in Home Assistant"))}</b><small class="mu-ed-avviso">${esc(
       t(
-        "Installa l'integrazione «Alexa Media Player» da HACS e accedi con il tuo account Amazon: gli Echo compaiono qui da soli.",
-        "Install the «Alexa Media Player» integration from HACS and sign in with your Amazon account: the Echos show up here by themselves.",
+        "Aggiungi in Home Assistant l'integrazione «Alexa Devices», oppure «Alexa Media Player» da HACS, e accedi con il tuo account Amazon: gli Echo compaiono qui da soli.",
+        "Add the «Alexa Devices» integration in Home Assistant, or «Alexa Media Player» from HACS, and sign in with your Amazon account: the Echos show up here by themselves.",
       ),
     )}</small></div></div>`;
+  /* Per ogni Echo di Alexa Devices scelto, come lo dice: parlando o con
+   * l'annuncio. Ha senso solo se ha tutte e due le voci. */
+  const voci = echo
+    .filter(
+      (uno) =>
+        uno.fonte === "devices" &&
+        uno.voci.parla &&
+        uno.voci.annuncio &&
+        sceltoIn(config.altoparlanti, uno),
+    )
+    .map((uno) => {
+      const adesso = config.altoparlanti.includes(uno.voci.annuncio) ? "annuncio" : "parla";
+      return `<div class="dm-alexa-voce"><span>🔊 ${esc(uno.nome)}</span><div class="mu-ed-seg">${[
+        ["parla", t("Parla", "Speak")],
+        ["annuncio", t("Annuncio", "Announcement")],
+      ]
+        .map(
+          ([id, nome]) =>
+            `<button type="button" class="${adesso === id ? "si" : ""}" data-dm-alexa-voce="${esc(uno.voci[id])}">${esc(nome)}</button>`,
+        )
+        .join("")}</div></div>`;
+    })
+    .join("");
   return `<div class="mu-ed-riga"><div class="mu-ed-testo"><b>${esc(t("Quali Echo", "Which Echos"))}</b><small>${esc(
     t("Tocca un Echo per sceglierlo.", "Tap an Echo to choose it."),
   )}</small><div class="dm-alexa-echo">${echo
     .slice(0, ALTOPARLANTI_AL_PIU * 2)
     .map((uno) => {
-      const scelto = config.altoparlanti.includes(uno.entita);
-      return `<button type="button" class="dm-alexa-pastiglia" aria-pressed="${scelto}" data-dm-alexa-echo="${esc(uno.entita)}">🔊 ${esc(uno.nome)}${uno.spento ? ` <small>${esc(t("spento", "offline"))}</small>` : ""}</button>`;
+      const scelto = sceltoIn(config.altoparlanti, uno);
+      return `<button type="button" class="dm-alexa-pastiglia" aria-pressed="${scelto}" data-dm-alexa-echo="${esc(uno.entita)}">🔊 ${esc(uno.nome)}${fonteDetta(uno, echo)}${uno.spento ? ` <small>${esc(t("spento", "offline"))}</small>` : ""}</button>`;
     })
-    .join("")}</div></div></div>`;
+    .join("")}</div>${
+    voci
+      ? `<small>${esc(
+          t(
+            "Alexa Devices: scegli se ogni Echo parla o fa l'annuncio, col suono prima.",
+            "Alexa Devices: choose whether each Echo speaks or makes an announcement, with a chime first.",
+          ),
+        )}</small><div class="dm-alexa-voci">${voci}</div>`
+      : ""
+  }</div></div>`;
 }
 
 /* ─── Gli avvisi personalizzati ───────────────────────────────────────
@@ -274,9 +333,9 @@ function bozzaMarkup(bozza, echo) {
           )}</span><div class="dm-alexa-echo">${echo
             .map((uno) =>
               pastiglia(
-                bozza.altoparlanti.includes(uno.entita),
-                `data-dm-av-echo="${esc(uno.entita)}"`,
-                `🔊 ${esc(uno.nome)}`,
+                sceltoIn(bozza.altoparlanti, uno),
+                `data-dm-av-echo="${esc(entitaPer(configurazione(), uno))}"`,
+                `🔊 ${esc(uno.nome)}${fonteDetta(uno, echo)}`,
               ),
             )
             .join("")}</div></div>`
@@ -328,7 +387,7 @@ function avvisiMarkup(config, echo) {
  * scrivono lo stesso, ma lo si dice: non li direbbe nessuno. */
 function corpoDegliAvvisi() {
   const config = configurazione();
-  const echo = altoparlantiAlexa(allStates() || {});
+  const echo = echoPerLeNotifiche(allStates() || {});
   const spenta =
     !config.attivo || !config.altoparlanti.length
       ? `<div class="mu-ed-blocco"><div class="mu-ed-riga"><div class="mu-ed-testo"><b>${esc(
@@ -763,7 +822,10 @@ function corpoMarkup() {
   if (schedaAttiva() === ALEXA_AVVISI_TAB) return corpoDegliAvvisi();
   if (schedaAttiva() === ALEXA_MUSICA_TAB) return corpoDellaMusica();
   const config = configurazione();
-  const echo = altoparlantiAlexa(allStates() || {});
+  const echo = echoPerLeNotifiche(allStates() || {});
+  /* «Annuncio o voce» e' una scelta di Alexa Media Player: gli Echo di
+   * Alexa Devices la dicono uno per uno, sopra. */
+  const conAmp = !echo.length || echo.some((uno) => uno.fonte === "amp");
   const dis = config.attivo ? "" : " dm-alexa-spento";
   return `<div class="mu-ed dm-alexa-ed" data-dm-alexa-ed>
     <div class="mu-ed-blocco">
@@ -815,7 +877,9 @@ function corpoMarkup() {
             </div>`
           : ""
       }
-      ${riga(
+      ${
+        conAmp
+          ? riga(
         esc(t("Come lo dice", "How it says it")),
         esc(
           t(
@@ -832,7 +896,9 @@ function corpoMarkup() {
               `<button type="button" class="${config.modo === id ? "si" : ""}" data-dm-alexa-modo="${id}">${esc(nome)}</button>`,
           )
           .join("")}</div>`,
-      )}
+      )
+          : ""
+      }
       ${
         echo.length
           ? riga(
@@ -928,8 +994,8 @@ async function prova({ frase = "", altoparlanti = null } = {}) {
     state.esito = /amministra/.test(clean(errore?.message))
       ? t("La prova la fa solo chi amministra la casa.", "Only home admins can run the test.")
       : t(
-          "Gli Echo non rispondono: controlla Alexa Media Player in Home Assistant.",
-          "The Echos do not answer: check Alexa Media Player in Home Assistant.",
+          "Gli Echo non rispondono: controlla Alexa Devices o Alexa Media Player in Home Assistant.",
+          "The Echos do not answer: check Alexa Devices or Alexa Media Player in Home Assistant.",
         );
   } finally {
     state.provando = false;
@@ -949,8 +1015,25 @@ function onClick(evento) {
   if ("dmAlexaAttivo" in d) salva({ attivo: !config.attivo });
   else if ("dmAlexaEcho" in d) {
     const entita = clean(d.dmAlexaEcho);
-    const altri = config.altoparlanti.filter((uno) => uno !== entita);
-    salva({ altoparlanti: config.altoparlanti.includes(entita) ? altri : [...altri, entita] });
+    /* Un Echo di Alexa Devices ha due entita': toccarlo lo toglie tutto,
+     * qualunque delle due fosse scelta. */
+    const uno = echoPerLeNotifiche(allStates() || {}).find((echo) => echo.entita === entita);
+    const sue = new Set([entita, ...Object.values(uno?.voci || {}).filter(Boolean)]);
+    const altri = config.altoparlanti.filter((voce) => !sue.has(voce));
+    const scelto = config.altoparlanti.some((voce) => sue.has(voce));
+    salva({ altoparlanti: scelto ? altri : [...altri, entita] });
+  } else if ("dmAlexaVoce" in d) {
+    /* Parla o annuncio, per un Echo di Alexa Devices: si scambia la sua
+     * entita' fra gli scelti, al suo posto. */
+    const voce = clean(d.dmAlexaVoce);
+    const uno = echoPerLeNotifiche(allStates() || {}).find((echo) =>
+      Object.values(echo.voci || {}).includes(voce),
+    );
+    if (!uno) return;
+    const sue = new Set(Object.values(uno.voci).filter(Boolean));
+    salva({
+      altoparlanti: config.altoparlanti.map((scelta) => (sue.has(scelta) ? voce : scelta)),
+    });
   } else if ("dmAlexaCategoria" in d) {
     const id = clean(d.dmAlexaCategoria);
     const altre = config.categorie.filter((una) => una !== id);
@@ -1034,8 +1117,12 @@ function suUnAvviso(d, config, evento) {
   }
   if ("dmAvEcho" in d) {
     const entita = clean(d.dmAvEcho);
-    bozza.altoparlanti = bozza.altoparlanti.includes(entita)
-      ? bozza.altoparlanti.filter((uno) => uno !== entita)
+    const uno = echoPerLeNotifiche(allStates() || {}).find(
+      (echo) => echo.entita === entita || Object.values(echo.voci || {}).includes(entita),
+    );
+    const sue = new Set([entita, ...Object.values(uno?.voci || {}).filter(Boolean)]);
+    bozza.altoparlanti = bozza.altoparlanti.some((voce) => sue.has(voce))
+      ? bozza.altoparlanti.filter((voce) => !sue.has(voce))
       : [...bozza.altoparlanti, entita];
     return fatto();
   }
@@ -1157,6 +1244,9 @@ export function installAlexaEditor() {
       background:color-mix(in srgb,#0ea5e9 12%,transparent);box-shadow:inset 0 0 0 1px #0ea5e999}
     html[data-theme="dark"] #ed-body .dm-alexa-pastiglia[aria-pressed="true"]{color:#7dd3fc}
     #ed-body .dm-alexa-pastiglia small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b)}
+    #ed-body .dm-alexa-voci{display:grid;gap:8px;margin-top:8px}
+    #ed-body .dm-alexa-voce{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;
+      font-size:12.5px;font-weight:800}
     #ed-body .dm-alexa-ore{gap:10px 18px;font-size:13px;font-weight:750}
     #ed-body .dm-alexa-ore label{display:inline-flex;align-items:center;gap:8px}
     #ed-body .dm-alexa-ore .ed-input{margin:0;width:124px;min-width:0}

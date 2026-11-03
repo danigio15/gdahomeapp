@@ -310,3 +310,85 @@ test("la prova di un avviso dice la sua frase", async () => {
     rmSync(banco.cartella, { recursive: true, force: true });
   }
 });
+
+/* ─── Alexa Devices (#376) ─────────────────────────────────────────────
+ *
+ * «Non ho Alexa Media Player e non vorrei metterla»: gli Echo di Alexa
+ * Devices, l'integrazione che Home Assistant ha di suo, parlano con
+ * `notify.send_message` sulle loro entita'. */
+const PARLA = "notify.echo_studio_speak";
+const ANNUNCIO = "notify.echo_dot_announce";
+
+test("con Alexa Devices l'Echo dice la notifica con notify.send_message", async () => {
+  const banco = unBanco({ alexa: accesa({ altoparlanti: [PARLA] }) });
+  try {
+    assert.equal(await banco.notifiche._dilloAdAlexa(campanello()), true);
+    assert.deepEqual(banco.dette(), [
+      {
+        type: "call_service",
+        domain: "notify",
+        service: "send_message",
+        service_data: { entity_id: [PARLA], message: "Suonano alla porta. Ingresso" },
+      },
+    ]);
+  } finally {
+    rmSync(banco.cartella, { recursive: true, force: true });
+  }
+});
+
+test("Echo di tutte e due le integrazioni: una chiamata per ciascuna", async () => {
+  const banco = unBanco({ alexa: accesa({ altoparlanti: [ECHO, ANNUNCIO, PARLA] }) });
+  try {
+    assert.equal(await banco.notifiche._dilloAdAlexa(campanello()), true);
+    const dette = banco.dette();
+    assert.deepEqual(
+      dette.map((una) => una.service),
+      ["alexa_media", "send_message"],
+    );
+    assert.deepEqual(dette[0].service_data.target, [ECHO]);
+    assert.deepEqual(dette[1].service_data.entity_id, [ANNUNCIO, PARLA]);
+  } finally {
+    rmSync(banco.cartella, { recursive: true, force: true });
+  }
+});
+
+test("se Alexa Media Player non risponde, gli Echo di Alexa Devices parlano lo stesso", async () => {
+  const banco = unBanco({ alexa: accesa({ altoparlanti: [ECHO, PARLA] }) });
+  const prima = banco.notifiche.casa.chiedi;
+  banco.notifiche.casa.chiedi = async (comando) => {
+    if (comando.service === "alexa_media") throw new Error("Service notify.alexa_media not found");
+    return prima(comando);
+  };
+  try {
+    assert.equal(await banco.notifiche._dilloAdAlexa(campanello()), true);
+    assert.deepEqual(
+      banco.dette().map((una) => una.service),
+      ["send_message"],
+    );
+  } finally {
+    rmSync(banco.cartella, { recursive: true, force: true });
+  }
+});
+
+test("un avviso personalizzato e la prova arrivano anche agli Echo di Alexa Devices", async () => {
+  const banco = unBanco({
+    alexa: accesa({
+      altoparlanti: [PARLA],
+      avvisi: [{ id: "a_1", frase: "È ora di andare", quando: "orario", ora: "12:00" }],
+    }),
+    ora: alle(12, 1),
+  });
+  try {
+    assert.equal(await banco.notifiche._gliAvvisiDiAlexa(), 1);
+    assert.deepEqual(banco.dette()[0].service_data, {
+      entity_id: [PARLA],
+      message: "È ora di andare",
+    });
+    const prova = await banco.notifiche.provaAlexa({ id: 1, altoparlanti: [ANNUNCIO] });
+    assert.equal(prova.success, true);
+    assert.equal(banco.dette()[1].service, "send_message");
+    assert.deepEqual(banco.dette()[1].service_data.entity_id, [ANNUNCIO]);
+  } finally {
+    rmSync(banco.cartella, { recursive: true, force: true });
+  }
+});
