@@ -14,6 +14,15 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
 _Solo Home Assistant: l'app sul telefono non cambia._
 
+- **La valvola nella finestra del Clima della Home:** «qui sarebbe carino
+  avere le % di apertura valvola». Ogni riga della finestra che si apre dalla
+  tessera Clima dice quanto è aperta la valvola accanto allo stato («Scalda ·
+  valvola 64%»), con la stessa lettura della card del Clima e del report: la
+  casella «Valvola» dell'unità, o gli attributi del termostato. Senza valvola
+  la riga resta com'era; con una casella che non risponde dice «valvola —».
+  Si aggiorna mentre la finestra è aperta. E al buio le schede accese della
+  finestra non sono più chiare con le scritte bianche sopra: restano arancio
+  o azzurre, ma scure, e il nome e i gradi si leggono.
 - **Il programma del clima si salva e si rilegge com'è, e decide subito:**
   «sembra che non salva il programma», «se ricarichi la pagina ti cambia
   l'orario», «anche il target non cambia». La finestra del termostato si
