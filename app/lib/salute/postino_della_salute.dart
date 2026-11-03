@@ -16,6 +16,7 @@ library;
 import 'dart:async';
 
 import '../casa/dispensa/dispensa.dart';
+import '../ponte/errori.dart';
 import '../ponte/filo.dart';
 import 'il_corpo.dart';
 import 'lettore.dart';
@@ -43,14 +44,23 @@ class PostinoDellaSalute {
   bool _caricate = false;
   bool _mandando = false;
   Map<MisuraDelCorpo, Lettura> _ultimeLette = const {};
-  String? _ultimoGuasto;
+  bool _letto = false;
+  GuastoDellaSalute? _ultimoGuasto;
   Timer? _giro;
 
   ScelteDellaSalute get scelte => _scelte;
   Map<MisuraDelCorpo, Lettura> get ultimeLette => _ultimeLette;
 
-  /// L'ultimo «non ha funzionato», per la pagina. `null` se e' andata.
-  String? get ultimoGuasto => _ultimoGuasto;
+  /// Se Salute o Health Connect sono gia' stati letti almeno una volta: solo
+  /// dopo una lettura una misura senza valore vuol dire «non ce l'ha».
+  bool get letto => _letto;
+
+  /// Adesso, per chi scrive «1 nov» accanto a una misura vecchia.
+  DateTime get adesso => _adesso();
+
+  /// Perche' l'ultimo invio non e' andato, per la pagina. `null` se e'
+  /// andato, o se non si e' ancora provato.
+  GuastoDellaSalute? get ultimoGuasto => _ultimoGuasto;
   Stream<void> get cambiamenti => _cambiamenti.stream;
 
   Future<ScelteDellaSalute> carica() async {
@@ -71,7 +81,9 @@ class PostinoDellaSalute {
     if (!_cambiamenti.isClosed) _cambiamenti.add(null);
   }
 
-  /// Accende: chiede il permesso al sistema e manda subito.
+  /// Accende: chiede il permesso al sistema e manda subito. `false` solo se
+  /// il sistema non ha risposto al permesso; se e' la casa a dire di no
+  /// resta acceso — riprovera' — e il perche' sta in [ultimoGuasto].
   Future<bool> accendi(Filo? filo, ScelteDellaSalute scelte) async {
     await carica();
     _daSpegnere = false;
@@ -99,6 +111,8 @@ class PostinoDellaSalute {
     await carica();
     await _salva(_scelte.con(acceso: false));
     _ultimeLette = const {};
+    _letto = false;
+    _ultimoGuasto = null;
     _daSpegnere = true;
     await _diglieloAllaCasa(filo);
     _avvisa();
@@ -147,6 +161,8 @@ class PostinoDellaSalute {
     try {
       final lette = await lettore.leggi(_scelte.misure, adesso: _adesso());
       _ultimeLette = lette;
+      _letto = true;
+      _avvisa();
       await filo.risultato({
         'type': 'ponte/salute/misure',
         if (_scelte.persona.isNotEmpty) 'persona': _scelte.persona,
@@ -155,8 +171,12 @@ class PostinoDellaSalute {
       _ultimoGuasto = null;
       await _salva(_scelte.con(ultimoInvio: _adesso()));
       return lette.length;
-    } catch (errore) {
-      _ultimoGuasto = '$errore';
+    } on ComandoRifiutato catch (no) {
+      _ultimoGuasto = GuastoDellaSalute.daCodice(no.codice);
+      _avvisa();
+      return null;
+    } catch (_) {
+      _ultimoGuasto = GuastoDellaSalute.casaNonRisponde;
       _avvisa();
       return null;
     } finally {
