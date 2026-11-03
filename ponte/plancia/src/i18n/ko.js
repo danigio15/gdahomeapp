@@ -6898,6 +6898,8 @@ export default Object.freeze({
   "It stays at home, in the add-on": "집 안, 애드온에 그대로 남습니다",
   "No drawing by that name.": "그 이름의 그림이 없습니다.",
   "No image": "이미지 없음",
+  "Automatic drawing": "자동 그림",
+  "Automatic drawing for rooms without an image": "이미지가 없는 방에 자동 그림 사용",
   "Only where to look and the zoom are saved: the photo stays whole, and each tile shape crops it from there.":
     "볼 위치와 확대만 저장됩니다. 사진은 그대로 남고, 타일 모양마다 거기서부터 잘라냅니다.",
   Others: "기타",

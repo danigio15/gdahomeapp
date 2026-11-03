@@ -6970,6 +6970,8 @@ export default Object.freeze({
   "It stays at home, in the add-on": "Se queda en casa, en el complemento",
   "No drawing by that name.": "Ningún dibujo con ese nombre.",
   "No image": "Sin imagen",
+  "Automatic drawing": "Dibujo automático",
+  "Automatic drawing for rooms without an image": "Dibujo automático para las habitaciones sin imagen",
   "Only where to look and the zoom are saved: the photo stays whole, and each tile shape crops it from there.":
     "Solo se guardan el punto de interés y el zoom: la foto queda entera, y cada forma de recuadro la recorta desde ahí.",
   Others: "Otros",

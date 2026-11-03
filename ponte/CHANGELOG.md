@@ -33,6 +33,17 @@ _Solo Home Assistant: l'app sul telefono non cambia._
   tutte e due. Senza una caldaia il tempo dell'impianto è una stima (acceso
   quando almeno una stanza chiede) e il report lo scrive. Una stanza di cui
   Home Assistant ha registrato poco porta «dati parziali».
+- **Le stanze senza immagine hanno il disegno del loro nome:** «perché le
+  altre stanze non esce l'immagine nei riquadri? Esce solo l'ingresso». Una
+  stanza a cui non si è scelta un'immagine prende il disegno del catalogo che
+  il suo nome dice — «Cucina» la cucina, «Bagno piccolo» il bagno, «Balcone
+  cucina» il terrazzo, «Cameretta» la cameretta, «Multimedia» il soggiorno —
+  in Home, nella pagina Stanze, nella Temperatura e a muro. Quando il nome non
+  basta guarda l'icona della stanza; un nome che non si capisce resta col
+  riquadro di sempre. L'immagine scelta a mano vince sempre, e il disegno
+  automatico non si scrive nella configurazione. Si spegne da Config › Home ›
+  Immagini dei riquadri › Stanze, «Disegno automatico per le stanze senza
+  immagine»; lì ogni stanza dice se il suo è «Disegno automatico».
 
 ## 1.18.8.1
 

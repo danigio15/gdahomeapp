@@ -6797,6 +6797,8 @@ export default Object.freeze({
   "It stays at home, in the add-on": "留在家里，存在加载项中",
   "No drawing by that name.": "没有这个名字的插图。",
   "No image": "无图片",
+  "Automatic drawing": "自动插图",
+  "Automatic drawing for rooms without an image": "没有图片的房间使用自动插图",
   "Only where to look and the zoom are saved: the photo stays whole, and each tile shape crops it from there.":
     "只保存观看位置和缩放：照片保持完整，每种卡片形状都从那里裁切。",
   Others: "其他",

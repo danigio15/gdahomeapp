@@ -6943,6 +6943,8 @@ export default Object.freeze({
   "It stays at home, in the add-on": "Остаётся дома, в дополнении",
   "No drawing by that name.": "Нет рисунка с таким названием.",
   "No image": "Без изображения",
+  "Automatic drawing": "Автоматический рисунок",
+  "Automatic drawing for rooms without an image": "Автоматический рисунок для комнат без изображения",
   "Only where to look and the zoom are saved: the photo stays whole, and each tile shape crops it from there.":
     "Сохраняются только точка обзора и масштаб: фото остаётся целым, и каждая форма плитки обрезает его оттуда.",
   Others: "Другие",

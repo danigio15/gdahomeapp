@@ -207,6 +207,7 @@ import {
   decorateEntityFields,
   derivedEnergyStates,
   detectLocale,
+  disegniDelleStanzeAccesi,
   disegnoDelCatalogo,
   disegnoDiCasa,
   disegnoGiaNellaCasella,
@@ -284,6 +285,7 @@ import {
   ilSempreEInVigore,
   ilTastoCentrale,
   ilValoreDelSempreAcceso,
+  immagineDellaStanza,
   immaginePulita,
   impiantiScelti,
   impiantiSolari,
@@ -563,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-NIQ4XUNC.js";
+} from "../../chunk-XPTOX3WE.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -3899,6 +3901,8 @@ var SOURCE_INDEX = Object.freeze({
   "Disegnala qui: scrivi le misure esterne del piano, poi dividi le stanze col «Muro dritto».": "Draw it here: enter the floor's outer size, then split the rooms with the «Straight wall».",
   "Disegno": "Drawing",
   "Disegno (se non c'è immagine)": "Drawing (when there is no image)",
+  "Disegno automatico": "Automatic drawing",
+  "Disegno automatico per le stanze senza immagine": "Automatic drawing for rooms without an image",
   "Disinserimento Antifurto": "Disarm Alarm",
   "Disinserimento…": "Disarming…",
   "Disinserisci": "Disarm",
@@ -103658,7 +103662,8 @@ function fonteDaiValori(valori = {}) {
     varchi: json(valori.cd_varchi, {}),
     invertiti: json(valori.cd_stati_invertiti, []),
     rapidoGlobale: json(valori.cd_clima_rapido, null),
-    rapidoPerUnita: json(valori.cd_clima_rapido_unita, {})
+    rapidoPerUnita: json(valori.cd_clima_rapido_unita, {}),
+    disegniDelleStanze: disegniDelleStanzeAccesi(json(valori.cd_widgets, {}))
   });
 }
 function climaColTipo(sezione2, unita3) {
@@ -103733,7 +103738,9 @@ function fonteDalleSezioni(sezioni2 = {}, altro = {}) {
        * altre sonde della stanza, oltre alla prima. */
       outdoor: stanzaAllAperto(s),
       sonde: unici(temperatureEntries(s).map((e) => entita3(e.temp))),
-      ...conImmagine(s)
+      /* Come nella plancia: la sua immagine, o il disegno che il nome dice
+       * finche' l'interruttore della Home e' acceso. */
+      ...conImmagine({ immagine: immagineDellaStanza(s, altro.disegniDelleStanze !== false) })
     })),
     luci: dispositivi("lights"),
     clima: climaColTipo(dispositivi("climate"), altro.climaUnita),
@@ -105125,7 +105132,8 @@ function fonteDiQui() {
       varchi: readJson("cd_varchi", {}),
       invertiti: readJson("cd_stati_invertiti", []),
       rapidoGlobale: readJson("cd_clima_rapido", null),
-      rapidoPerUnita: readJson("cd_clima_rapido_unita", {})
+      rapidoPerUnita: readJson("cd_clima_rapido_unita", {}),
+      disegniDelleStanze: disegniDelleStanzeAccesi(readJson("cd_widgets", {}))
     }
   );
 }

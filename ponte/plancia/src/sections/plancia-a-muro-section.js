@@ -29,6 +29,7 @@ import {
   obiettivoDaMuovere,
 } from "../core/i-due-obiettivi-del-clima.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
+import { disegniDelleStanzeAccesi } from "../core/disegno-automatico-della-stanza.js";
 import {
   classeDelFondo,
   fondoMarkup,
@@ -366,6 +367,7 @@ function fonteDiQui() {
       invertiti: readJson("cd_stati_invertiti", []),
       rapidoGlobale: readJson("cd_clima_rapido", null),
       rapidoPerUnita: readJson("cd_clima_rapido_unita", {}),
+      disegniDelleStanze: disegniDelleStanzeAccesi(readJson("cd_widgets", {})),
     },
   );
 }

@@ -2244,6 +2244,8 @@ export const SOURCE_INDEX = Object.freeze({
   "Disegnala qui: scrivi le misure esterne del piano, poi dividi le stanze col «Muro dritto».": "Draw it here: enter the floor's outer size, then split the rooms with the «Straight wall».",
   "Disegno": "Drawing",
   "Disegno (se non c'è immagine)": "Drawing (when there is no image)",
+  "Disegno automatico": "Automatic drawing",
+  "Disegno automatico per le stanze senza immagine": "Automatic drawing for rooms without an image",
   "Disinserimento Antifurto": "Disarm Alarm",
   "Disinserimento…": "Disarming…",
   "Disinserisci": "Disarm",

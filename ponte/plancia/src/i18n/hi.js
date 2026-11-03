@@ -6907,6 +6907,8 @@ export default Object.freeze({
   "It stays at home, in the add-on": "यह घर में, ऐड-ऑन में ही रहती है",
   "No drawing by that name.": "इस नाम का कोई चित्र नहीं।",
   "No image": "कोई छवि नहीं",
+  "Automatic drawing": "स्वचालित चित्र",
+  "Automatic drawing for rooms without an image": "बिना छवि वाले कमरों के लिए स्वचालित चित्र",
   "Only where to look and the zoom are saved: the photo stays whole, and each tile shape crops it from there.":
     "केवल देखने की जगह और ज़ूम सहेजे जाते हैं: फ़ोटो पूरी रहती है, और हर टाइल का आकार उसे वहीं से काटता है।",
   Others: "अन्य",

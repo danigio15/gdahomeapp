@@ -6958,6 +6958,8 @@ export default Object.freeze({
   "It stays at home, in the add-on": "Het blijft thuis, in de add-on",
   "No drawing by that name.": "Geen tekening met die naam.",
   "No image": "Geen afbeelding",
+  "Automatic drawing": "Automatische tekening",
+  "Automatic drawing for rooms without an image": "Automatische tekening voor kamers zonder afbeelding",
   "Only where to look and the zoom are saved: the photo stays whole, and each tile shape crops it from there.":
     "Alleen het kijkpunt en de zoom worden bewaard: de foto blijft heel, en elke tegelvorm snijdt hem vanaf daar bij.",
   Others: "Overige",

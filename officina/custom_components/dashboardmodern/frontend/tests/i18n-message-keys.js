@@ -1246,6 +1246,8 @@ export const MESSAGE_KEYS = Object.freeze([
   "automatic",
   "Automatic",
   "Automatic circles from rooms",
+  "Automatic drawing",
+  "Automatic drawing for rooms without an image",
   "Automatic duration: temperature / 2",
   "Automatic follows how the tablet is mounted",
   "Automatic hours (temperature / 2)",

@@ -6873,6 +6873,8 @@ export default Object.freeze({
   "It stays at home, in the add-on": "تبقى في المنزل، داخل الإضافة",
   "No drawing by that name.": "لا يوجد رسم بهذا الاسم.",
   "No image": "بلا صورة",
+  "Automatic drawing": "رسم تلقائي",
+  "Automatic drawing for rooms without an image": "رسم تلقائي للغرف التي ليس لها صورة",
   "Only where to look and the zoom are saved: the photo stays whole, and each tile shape crops it from there.":
     "يُحفظ فقط موضع النظر والتكبير: تبقى الصورة كاملة، وكل شكل من أشكال المربع يقصّها من هناك.",
   Others: "أخرى",

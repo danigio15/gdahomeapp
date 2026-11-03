@@ -6925,6 +6925,8 @@ export default Object.freeze({
   "It stays at home, in the add-on": "家の中、アドオンに保存されます",
   "No drawing by that name.": "その名前のイラストはありません。",
   "No image": "画像なし",
+  "Automatic drawing": "自動イラスト",
+  "Automatic drawing for rooms without an image": "画像のない部屋に自動イラストを使う",
   "Only where to look and the zoom are saved: the photo stays whole, and each tile shape crops it from there.":
     "保存されるのは見る位置とズームだけです。写真はそのまま残り、タイルの形ごとにそこから切り取られます。",
   Others: "その他",

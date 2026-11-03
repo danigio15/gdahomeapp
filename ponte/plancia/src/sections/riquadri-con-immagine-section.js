@@ -21,6 +21,11 @@
  * da leggere, non cose da accendere. */
 import { GRUPPI_DISEGNI, cercaDisegni, disegnoDaRiquadro } from "../core/disegni-da-riquadro.js";
 import {
+  disegniDelleStanzeAccesi,
+  haIlDisegnoAutomatico,
+  immagineDellaStanza,
+} from "../core/disegno-automatico-della-stanza.js";
+import {
   ZOOM_MASSIMO,
   ZOOM_MINIMO,
   chiaveDelDisegno,
@@ -62,6 +67,10 @@ import {
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_RIQUADRI_CON_IMMAGINE__";
+/* Dove sta l'interruttore del disegno automatico delle stanze: fra le scelte
+ * della Home (`core/disegno-automatico-della-stanza.js`). */
+const CHIAVE_DELLA_HOME = "cd_widgets";
+const disegniAccesi = () => disegniDelleStanzeAccesi(readJson(CHIAVE_DELLA_HOME, {}));
 const state = (root[KEY] ||= { installed: false, blocchi: new Map(), misure: new Map() });
 
 export const EVENTO_IMMAGINE = "dm-rqi-cambia";
@@ -288,6 +297,10 @@ html[data-theme="dark"] .dev-card.on:not(.dm-rq) .dev-pwr{background:rgba(14,165
 .dm-rq-dispositivi .dm-rq-pollicino img{width:100%;height:100%;object-fit:cover;display:block}
 .dm-rq-dispositivi .dm-rq-apri{flex:none;height:34px;padding:0 12px;border-radius:11px;border:1px solid var(--divider-color,#dbe4ee);background:var(--card-bg,#fff);color:inherit;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer}
 .dm-rq-dispositivi .dm-rq-apri[aria-expanded="true"]{border-color:#0ea5e9;color:#0369a1}
+#ed-body .dm-rq-dispositivi .dm-rq-riga .ed-row-main{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:1px;min-width:0;flex:1 1 auto}
+#ed-body .dm-rq-dispositivi .dm-rq-riga .ed-row-new,#ed-body .dm-rq-dispositivi .dm-rq-riga .ed-row-old{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dm-rq-card-pannello .dm-rq-auto{display:flex;align-items:center;gap:8px;margin:2px 2px 8px;font-size:12px;font-weight:800;color:var(--text-dim,#64748b);cursor:pointer}
+.dm-rq-card-pannello .dm-rq-auto input{width:16px;height:16px;margin:0;flex:0 0 auto;accent-color:var(--accent,#3b82f6)}
 .dm-rq-card-pannello .dm-rq-sub-titolo{margin:16px 2px 6px;font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim,#64748b)}
 `;
 
@@ -1031,10 +1044,20 @@ export function vestiLeCardDellaPlancia(radice = doc) {
     if (!card.length) continue;
     const voci =
       superficie.forma === "mappa" ? readJson(CHIAVE_DELLE_IMMAGINI, {}) : vociDi(superficie);
+    const stanze = superficie.chiave === "stanze";
+    const acceso = stanze && disegniAccesi();
     card.forEach((c, indice) => {
       /* Una card del muro o una gia' col vestito proprio non si tocca. */
       if (c.closest("#dm-muro") || c.classList.contains("dm-rq")) return;
-      if (vestiUnaCard(superficie, c, voceDellaCard(superficie, voci, c, indice))) toccate += 1;
+      let voce = voceDellaCard(superficie, voci, c, indice);
+      /* Una stanza senza immagine prende il disegno che il suo nome dice
+       * (`disegno-automatico-della-stanza.js`): calcolato qui, mai scritto.
+       * Una card che nell'elenco non c'e' si riconosce dal nome che porta. */
+      if (stanze)
+        voce = {
+          immagine: immagineDellaStanza(voce || { name: nomeDellaCard(c, "") }, acceso),
+        };
+      if (vestiUnaCard(superficie, c, voce)) toccate += 1;
     });
   }
   return toccate;
@@ -1092,14 +1115,27 @@ function pannelloDelleCard() {
           superficie,
           voci,
         }) => `<div class="dm-rq-sub-titolo">${esc(lingua === "it" ? superficie.nome.it : tr(superficie.nome.en))}</div>
+    ${superficie.chiave === "stanze" ? interruttoreDelleStanze() : ""}
     <div class="ed-list">${voci
       .map((voce, k) => {
         const chiave = chiaveDellaCard(superficie.chiave, k);
         const nome = nomeDellaVoce(voce, `#${k + 1}`);
         const immagine = immaginePulita(voce?.immagine);
-        return `<div class="ed-row dm-rq-riga" data-dm-rq-card="${esc(chiave)}">
-        <span class="dm-rq-pollicino" aria-hidden="true">${pollicino({ ...voce, icon: voce?.icon || "🖼️" })}</span>
-        <span class="ed-row-main"><strong class="ed-row-new">${esc(nome)}</strong><small class="ed-row-old">${esc(immagine ? (chiaveDelDisegno(immagine) ? t("Disegno", "Drawing") : t("Foto", "Photo")) : t("Senza immagine", "No image"))}</small></span>
+        /* Una stanza col disegno automatico: la riga lo mostra e lo dice,
+         * cosi' chi guarda sa da dove viene e che si puo' cambiare. */
+        const automatico =
+          superficie.chiave === "stanze" && haIlDisegnoAutomatico(voce, disegniAccesi());
+        const vista = automatico ? { ...voce, immagine: immagineDellaStanza(voce) } : voce;
+        const detto = immagine
+          ? chiaveDelDisegno(immagine)
+            ? t("Disegno", "Drawing")
+            : t("Foto", "Photo")
+          : automatico
+            ? t("Disegno automatico", "Automatic drawing")
+            : t("Senza immagine", "No image");
+        return `<div class="ed-row dm-rq-riga" data-dm-rq-card="${esc(chiave)}"${automatico ? ' data-dm-rq-automatico="true"' : ""}>
+        <span class="dm-rq-pollicino" aria-hidden="true">${pollicino({ ...vista, icon: voce?.icon || "🖼️" })}</span>
+        <span class="ed-row-main"><strong class="ed-row-new">${esc(nome)}</strong><small class="ed-row-old">${esc(detto)}</small></span>
         <button type="button" class="dm-rq-apri" data-dm-rq-apri-card="${esc(chiave)}" aria-expanded="${aperta === chiave}">🖼️ ${esc(t("Immagine", "Image"))}</button>
       </div>${aperta === chiave ? bloccoImmagineMarkup({ chiave, immagine, nome, accento: ACCENTO_DEI_DISPOSITIVI, anteprima: { stato: "", acceso: false, destra: "", comandi: "", classi: "dm-rq-lettura" } }) : ""}`;
       })
@@ -1108,8 +1144,23 @@ function pannelloDelleCard() {
       .join("")}`;
 }
 
+/* L'interruttore del disegno automatico, in cima alle Stanze. */
+function interruttoreDelleStanze() {
+  return `<label class="dm-rq-auto"><input type="checkbox" data-dm-rq-disegni-stanze${disegniAccesi() ? " checked" : ""}><span>${esc(t("Disegno automatico per le stanze senza immagine", "Automatic drawing for rooms without an image"))}</span></label>`;
+}
+
+function onCambiaLInterruttore(evento) {
+  const campo = evento.target;
+  if (!campo?.matches?.("[data-dm-rq-card-pannello] [data-dm-rq-disegni-stanze]")) return;
+  const scelte = readJson(CHIAVE_DELLA_HOME, {});
+  const base = scelte && typeof scelte === "object" && !Array.isArray(scelte) ? scelte : {};
+  writeJsonIfChanged(CHIAVE_DELLA_HOME, { ...base, disegniDelleStanze: campo.checked === true });
+  vestiLeCardDellaPlancia();
+  ensurePannelloDelleCard();
+}
+
 function firmaDelleCard() {
-  return `${state.cardAperta || ""}|${JSON.stringify(
+  return `${state.cardAperta || ""}|${disegniAccesi()}|${JSON.stringify(
     SUPERFICI_DA_VESTIRE.map((s) => vociDi(s).map((v) => [nomeDellaVoce(v), v?.immagine])),
   )}`;
 }
@@ -1211,6 +1262,7 @@ export function installRiquadriConImmagine() {
   doc.addEventListener("click", onClickDelPannello);
   doc.addEventListener(EVENTO_IMMAGINE, onCambiaDispositivo);
   doc.addEventListener("click", onClickDelleCard);
+  doc.addEventListener("change", onCambiaLInterruttore);
   doc.addEventListener(EVENTO_IMMAGINE, onCambiaCard);
   /* I Dispositivi: dopo che il guscio ha fatto la griglia, e dopo ogni suo
    * aggiornamento (che rimette la classe `on`, e basta). */

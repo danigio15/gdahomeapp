@@ -6923,6 +6923,8 @@ export default Object.freeze({
   "It stays at home, in the add-on": "Evde, eklentide kalır",
   "No drawing by that name.": "Bu adla bir çizim yok.",
   "No image": "Görsel yok",
+  "Automatic drawing": "Otomatik çizim",
+  "Automatic drawing for rooms without an image": "Görseli olmayan odalar için otomatik çizim",
   "Only where to look and the zoom are saved: the photo stays whole, and each tile shape crops it from there.":
     "Yalnızca bakılacak nokta ve yakınlaştırma kaydedilir: fotoğraf bütün kalır ve her kutu biçimi onu oradan kırpar.",
   Others: "Diğerleri",
