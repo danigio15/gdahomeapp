@@ -86,7 +86,9 @@ export function migrateRooms(input = []) {
         ...(immaginePulita(room.immagine) ? { immagine: immaginePulita(room.immagine) } : {}),
         /* L'interruttore «Immagine» della stanza: un si' o un no, e solo se
          * qualcuno l'ha toccato — non scritto vuol dire «come prima». */
-        ...(typeof room.mostraImmagine === "boolean" ? { mostraImmagine: room.mostraImmagine } : {}),
+        ...(typeof room.mostraImmagine === "boolean"
+          ? { mostraImmagine: room.mostraImmagine }
+          : {}),
       },
       (({ mostraImmagine: _interruttore, ...resto }) => resto)(senzaImmagine(room)),
       "rooms",

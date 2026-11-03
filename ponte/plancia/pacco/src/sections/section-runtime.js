@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-K65ZWVSK.js";
+} from "../../chunk-POLDCRMU.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -114879,7 +114879,13 @@ function comfortDelleRighe(impianto, righe3, inizio, fine) {
     return impianto === "freddo" ? obiettivo2 <= massimo - SCARTO_DEL_RIDOTTO : obiettivo2 >= minimo + SCARTO_DEL_RIDOTTO;
   };
 }
-function reportDellImpianto({ impianto = "caldo", unita: unita3 = [], storie = {}, generatori = [], periodo }) {
+function reportDellImpianto({
+  impianto = "caldo",
+  unita: unita3 = [],
+  storie = {},
+  generatori = [],
+  periodo
+}) {
   const { inizio, fine, secchielli: secchielli2 } = periodo;
   const lungo = Math.max(0, fine - inizio);
   const stanze4 = unitaDellImpianto(impianto, unita3).map((u) => {

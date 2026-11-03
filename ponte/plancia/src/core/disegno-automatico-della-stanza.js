@@ -100,7 +100,8 @@ export const REGOLE_DELLE_STANZE = Object.freeze([
   }),
   Object.freeze({
     disegno: "ingresso",
-    parole: /\s(ingress|corridoi|disimpegn|atrio|androne|entrata|hall|hallway|entrance|entry|foyer|corridor)\w*/,
+    parole:
+      /\s(ingress|corridoi|disimpegn|atrio|androne|entrata|hall|hallway|entrance|entry|foyer|corridor)\w*/,
   }),
   Object.freeze({
     disegno: "soggiorno",

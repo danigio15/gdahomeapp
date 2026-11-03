@@ -162,9 +162,7 @@ export function intervalliDove(righe, inizio, fine, vale) {
 
 /** Gli intervalli fusi: quelli che si toccano o si sovrappongono diventano uno. */
 export function unisci(intervalli, tolleranza = 0) {
-  const ordinati = [...(intervalli || [])]
-    .filter(([da, a]) => a > da)
-    .sort((x, y) => x[0] - y[0]);
+  const ordinati = [...(intervalli || [])].filter(([da, a]) => a > da).sort((x, y) => x[0] - y[0]);
   const fuori = [];
   for (const [da, a] of ordinati) {
     const ultimo = fuori.at(-1);
@@ -411,7 +409,13 @@ export function comfortDelleRighe(impianto, righe, inizio, fine) {
  * una storia, il tempo dell'impianto e' la stima: l'unione delle richieste di
  * tutte le stanze.
  */
-export function reportDellImpianto({ impianto = "caldo", unita = [], storie = {}, generatori = [], periodo }) {
+export function reportDellImpianto({
+  impianto = "caldo",
+  unita = [],
+  storie = {},
+  generatori = [],
+  periodo,
+}) {
   const { inizio, fine, secchielli } = periodo;
   const lungo = Math.max(0, fine - inizio);
   const stanze = unitaDellImpianto(impianto, unita).map((u) => {
@@ -537,4 +541,4 @@ export function oreScritte(ms) {
   return resto ? `${ore} h ${resto} min` : `${ore} h`;
 }
 
-export const inOre = (ms) => (Math.max(0, Number(ms) || 0) / ORA);
+export const inOre = (ms) => Math.max(0, Number(ms) || 0) / ORA;
