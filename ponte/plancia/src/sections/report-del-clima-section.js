@@ -36,6 +36,8 @@ import {
   riassuntoDalleStatistiche,
   riassuntoDelGiorno,
 } from "../core/storico-del-clima.js";
+import { conIlConsumoTrovato } from "../core/consumo-trovato-del-clima.js";
+import { iDispositiviRicordati } from "../core/i-dispositivi-di-home-assistant.js";
 import { climateUnits } from "./climate-thermal-section.js";
 import { statiDelleCaldaie } from "./termico-del-caldo-section.js";
 import { allStates, clean, doc, esc, installStyle, locale, root, section, t } from "./shared.js";
@@ -113,19 +115,30 @@ function sensoreDellaStanza(unita, stanze) {
   return stanza ? risolvi(temperatureEntries(stanza).find((e) => clean(e.temp))?.temp) : "";
 }
 
+/* Le unita' del report, coi loro sensori. Chi non ha scritto la presa nella
+ * scheda e non ha la valvola prende i consumi che il climatizzatore stesso
+ * pubblica, dal suo dispositivo (`core/consumo-trovato-del-clima.js`): sono
+ * quelli che le statistiche conservano per i mesi passati. */
 function unitaDelReport() {
   let stanze = [];
   try {
     stanze = section("rooms", []) || [];
   } catch (_errore) {}
   try {
-    return climateUnits().map((u) => ({
+    const unita = climateUnits().map((u) => ({
       ...u,
       entity: risolvi(u.entity),
       valvola: risolvi(u.valvola),
       consumo: risolvi(u.consumo),
       temperatura: sensoreDellaStanza(u, Array.isArray(stanze) ? stanze : []),
     }));
+    let di = {};
+    let stati = {};
+    try {
+      di = iDispositiviRicordati().di || {};
+      stati = allStates() || {};
+    } catch (_errore) {}
+    return conIlConsumoTrovato(unita, { di, stato: (id) => stati[id] || null });
   } catch (_errore) {
     return [];
   }
@@ -269,7 +282,29 @@ function etichettaDelSecchiello(periodo, secchiello, indice) {
   return giorno === 1 || giorno % 5 === 0 ? String(giorno) : "";
 }
 
+/* Il grafico quando nessuna fonte sa le ore dell'impianto: barre vuote
+ * sembrerebbero «spento ogni giorno». Si dice invece che non si sa, e cosa
+ * servirebbe per saperlo. */
+function graficoIgnotoMarkup(report) {
+  const freddo = report.impianto === "freddo";
+  return `<div class="dm-rcl-grafico-box" data-dm-rcl-grafico-ignoto>
+    <div class="dm-rcl-grafico-testa"><b>${esc(freddo ? t("Impianto acceso", "System on") : t("Caldaia accesa", "Boiler on"))}</b><span>${esc(t("non noto", "unknown"))}</span></div>
+    <div class="dm-rcl-ignoto"><span aria-hidden="true">❔</span><p>${esc(
+      freddo
+        ? t(
+            "Per questo periodo Home Assistant non ha dati sull'accensione dei climatizzatori: né la storia, né statistiche di consumo.",
+            "For this period Home Assistant has no data on when the air conditioners ran: no history and no power statistics.",
+          )
+        : t(
+            "Per questo periodo Home Assistant non ha dati sull'accensione dell'impianto: né la storia, né statistiche di valvole, consumi o caldaia.",
+            "For this period Home Assistant has no data on when the system ran: no history and no valve, power or boiler statistics.",
+          ),
+    )}</p></div>
+  </div>`;
+}
+
 function graficoMarkup(report) {
+  if (report.totali?.msGeneratore === null) return graficoIgnotoMarkup(report);
   const { periodo, secchielli } = report;
   const massimo = Math.max(1, ...secchielli.map((s) => s.ms));
   const adesso = Date.now();
@@ -283,7 +318,9 @@ function graficoMarkup(report) {
         periodo.vista === "giorno"
           ? `${String(quando.getHours()).padStart(2, "0")}:00`
           : quando.toLocaleDateString(locale(), { weekday: "short", day: "numeric", month: "short" });
-      return `<div class="dm-rcl-col" data-futuro="${s.inizio > adesso}" title="${esc(`${detto}: ${ore(s.ms)}`)}">
+      /* Una colonna che nessuna fonte sa non e' zero: si disegna tratteggiata. */
+      const ignota = s.noto === false && s.inizio <= adesso;
+      return `<div class="dm-rcl-col" data-futuro="${s.inizio > adesso}"${ignota ? " data-ignota" : ""} title="${esc(`${detto}: ${ignota ? t("non noto", "unknown") : ore(s.ms)}`)}">
         <div class="dm-rcl-barra"><i style="height:${altezza.toFixed(1)}%"></i></div>
         <small>${esc(etichettaDelSecchiello(periodo, s, i))}</small>
       </div>`;
@@ -335,7 +372,12 @@ function stanzeMarkup(report) {
           ? t("richiesta non nota", "demand unknown")
           : s.stimaDa?.includes("valvola")
             ? t(`${durata} di richiesta, dalla valvola`, `${durata} of demand, from the valve`)
-            : s.stimaDa?.length
+            : s.stimaDa?.includes("dispositivo")
+              ? t(
+                  `${durata} di richiesta, dai consumi del climatizzatore`,
+                  `${durata} of demand, from the air conditioner's power draw`,
+                )
+              : s.stimaDa?.length
               ? t(`${durata} di richiesta, dai consumi`, `${durata} of demand, from the power draw`)
               : t(`${durata} di richiesta`, `${durata} of demand`);
       const kwh =
@@ -416,6 +458,56 @@ function fontiDette(report) {
   return righe;
 }
 
+/* Da cosa sono stimate le ore nei giorni delle statistiche — o, se non c'e'
+ * niente da cui stimarle, che cosa servirebbe. Solo quello che e' vero per
+ * questo report: «dai watt della presa» detto a chi la presa non ce l'ha
+ * era il contrario di un aiuto. */
+function fontiDellaStima(report) {
+  const da = new Set(report.stanze.flatMap((s) => s.stimaDa || []));
+  const freddo = report.impianto === "freddo";
+  const parti = [];
+  if (da.has("valvola")) parti.push(t("dalla valvola aperta", "from the open valve"));
+  if (da.has("consumo") || da.has("stagione"))
+    parti.push(t("dai watt della presa", "from the plug's watts"));
+  if (da.has("dispositivo"))
+    parti.push(
+      t(
+        "dai consumi che il climatizzatore stesso pubblica in Home Assistant",
+        "from the power draw the air conditioner itself publishes in Home Assistant",
+      ),
+    );
+  const ignote = report.stanze.filter((s) => s.msRichiesta === null).length;
+  const frasi = [];
+  const fonti = parti.join(", ");
+  if (parti.length)
+    frasi.push(
+      t(
+        `Le ore di richiesta sono stimate ${fonti}, e il comfort non si conosce.`,
+        `The hours of demand are estimated ${fonti}, and the comfort is unknown.`,
+      ),
+    );
+  if (!freddo)
+    frasi.push(
+      t(
+        "Le accensioni della caldaia, dalle statistiche, non si possono contare.",
+        "The boiler starts cannot be counted from the statistics.",
+      ),
+    );
+  if (ignote)
+    frasi.push(
+      freddo
+        ? t(
+            "Per le stanze con «richiesta non nota» Home Assistant ha conservato solo la temperatura: le ore dei mesi passati si possono avere solo da un sensore di consumo del climatizzatore, o da una presa smart da indicare nella sua scheda (Config › Clima). Da adesso GdAHome conserva ogni giorno le ore vere.",
+            "For the rooms with «demand unknown» Home Assistant only kept the temperature: past months' hours can only come from an air conditioner power sensor, or from a smart plug set in its card (Config › Climate). From now on GdAHome keeps the real hours every day.",
+          )
+        : t(
+            "Per le stanze con «richiesta non nota» Home Assistant ha conservato solo la temperatura: le ore dei mesi passati si possono avere solo da una valvola, da un sensore di consumo o da una presa smart da indicare nella scheda dell'unità (Config › Clima). Da adesso GdAHome conserva ogni giorno le ore vere.",
+            "For the rooms with «demand unknown» Home Assistant only kept the temperature: past months' hours can only come from a valve, a power sensor or a smart plug set in the unit's card (Config › Climate). From now on GdAHome keeps the real hours every day.",
+          ),
+    );
+  return frasi.join(" ");
+}
+
 function notaStatistiche(report) {
   const statistiche = report.fonti?.statistiche || 0;
   if (!statistiche) return "";
@@ -430,15 +522,7 @@ function notaStatistiche(report) {
           `${statistiche} giorni dalle statistiche orarie di Home Assistant, perché la storia dettagliata non c'è più.`,
           `${statistiche} days from the Home Assistant hourly statistics, because the detailed history is gone.`,
         ),
-    report.impianto === "freddo"
-      ? t(
-          "Le ore di richiesta sono stimate dai watt della presa, e il comfort non si conosce.",
-          "The hours of demand are estimated from the plug's watts, and the comfort is unknown.",
-        )
-      : t(
-          "Le ore di richiesta sono stimate dalla valvola aperta o dai watt della presa, le accensioni della caldaia non si possono contare e il comfort non si conosce.",
-          "The hours of demand are estimated from the open valve or from the plug's watts, the boiler starts cannot be counted and the comfort is unknown.",
-        ),
+    fontiDellaStima(report),
     stagione
       ? t(
           "Per le pompe di calore conosciute solo dai watt decide la stagione: da maggio a settembre raffrescano.",
@@ -500,7 +584,8 @@ function notaMarkup(report) {
     .join(" ");
   const statistiche = notaStatistiche(report);
   const base = `${statistiche}${fonte ? `<p class="dm-rcl-nota">${esc(fonte)}</p>` : ""}`;
-  if (!report.stima) return base;
+  /* Una stima che non c'e' non si spiega: il grafico dice gia' «non noto». */
+  if (!report.stima || report.totali?.msGeneratore === null) return base;
   const stima =
     report.impianto === "freddo"
       ? t(
@@ -533,8 +618,11 @@ function contenutoMarkup(report) {
   const obiettivo = gradi(tot.obiettivoComfort);
   const inComfort = tot.ambienteComfort !== null && tot.obiettivoComfort !== null;
   const caldo = report.impianto !== "freddo";
-  const titoloGeneratore = report.stima
-    ? t("Impianto (stima)", "System (estimate)")
+  const ignoto = tot.msGeneratore === null;
+  const titoloGeneratore = ignoto
+    ? t("Impianto", "System")
+    : report.stima
+      ? t("Impianto (stima)", "System (estimate)")
     : caldo
       ? report.generatori.length > 1
         ? t("Caldaie", "Boilers")
@@ -543,11 +631,15 @@ function contenutoMarkup(report) {
   /* Sotto la caldaia le accensioni; dalle statistiche non si contano, e al
    * loro posto va quello che la caldaia ha consumato, se lo dice. */
   const sottoGeneratore =
-    tot.accensioni === null && tot.consumo
-      ? `${numeroDetto(tot.consumo.valore)} ${tot.consumo.unita}`
-      : accensioniDette(tot.accensioni);
+    tot.msGeneratore === null
+      ? t("non noto", "unknown")
+      : tot.accensioni === null && tot.consumo
+        ? `${numeroDetto(tot.consumo.valore)} ${tot.consumo.unita}`
+        : tot.accensioni === null && tot.kwhStanze !== null && report.stima
+          ? `${numeroDetto(tot.kwhStanze)} kWh`
+          : accensioniDette(tot.accensioni);
   return `<div class="dm-rcl-tessere">
-      ${tessera(caldo ? "🔥" : "❄️", titoloGeneratore, ore(tot.msGeneratore), sottoGeneratore, `data-dm-rcl-tessera="generatore"${report.stima ? " data-stima" : ""}`)}
+      ${tessera(caldo ? "🔥" : "❄️", titoloGeneratore, ore(tot.msGeneratore), sottoGeneratore, `data-dm-rcl-tessera="generatore"${report.stima && !ignoto ? " data-stima" : ""}${ignoto ? " data-ignoto" : ""}`)}
       ${tessera("⏱️", t("Richiesta stanze", "Room demand"), ore(tot.msRichiesta), t(`${quante} stanze`, `${quante} rooms`), 'data-dm-rcl-tessera="richiesta"')}
       ${
         inComfort
@@ -622,6 +714,8 @@ async function giorniDelReport({ impianto, unita, generatori, periodo }) {
       ...new Set([
         ...delReport.map((u) => u.entity),
         ...delReport.map((u) => u.valvola).filter(Boolean),
+        /* I watt: per gli split che non dicono `hvac_action`. */
+        ...delReport.map((u) => u.consumo).filter(Boolean),
         ...generatori.map((g) => g.entity),
       ]),
     ];
@@ -813,6 +907,11 @@ html[data-theme="dark"] .dm-rcl-velo[data-dm-rcl-zona="freddo"]{--rcl-c:56,189,2
 .dm-rcl-barra{flex:1;display:flex;align-items:flex-end;border-radius:6px;background:var(--rcl-sunk)}
 .dm-rcl-barra i{display:block;width:100%;border-radius:6px;background:linear-gradient(180deg,rgba(var(--rcl-c),1),rgba(var(--rcl-c),.7))}
 .dm-rcl-col[data-futuro="true"] .dm-rcl-barra{opacity:.4}
+.dm-rcl-col[data-ignota] .dm-rcl-barra{background:repeating-linear-gradient(135deg,var(--rcl-sunk) 0 5px,transparent 5px 9px);opacity:.8}
+.dm-rcl-ignoto{display:flex;align-items:center;gap:12px;margin-top:10px;padding:18px 14px;border-radius:14px;background:repeating-linear-gradient(135deg,var(--rcl-soft) 0 8px,transparent 8px 14px);border:1px dashed var(--rcl-line)}
+.dm-rcl-ignoto span{font-size:22px}
+.dm-rcl-ignoto p{margin:0;font-size:12.5px;line-height:1.45;font-weight:700;color:var(--rcl-dim)}
+.dm-rcl-tessera[data-ignoto]{background:var(--rcl-soft);border-color:var(--rcl-line)}
 .dm-rcl-col small{height:16px;margin-top:4px;text-align:center;font-size:10px;font-weight:700;color:var(--rcl-dim);white-space:nowrap;overflow:visible}
 .dm-rcl-sezione{display:flex;align-items:baseline;gap:8px;margin:18px 2px 8px}
 .dm-rcl-sezione b{font-size:15px;font-weight:800}

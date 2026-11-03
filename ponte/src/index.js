@@ -548,6 +548,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     casa,
     configurazione,
     stati: (id) => notifiche.sentinella?.stati?.get(id) ?? null,
+    /* Di che dispositivo e' ogni entita': per trovare i watt che uno split
+     * pubblica da se' (`plancia/src/core/consumo-trovato-del-clima.js`). */
+    registri,
     registro,
   });
   commissioni.storicoDelClima = storicoDelClima;

@@ -34,6 +34,7 @@ import { Archivio } from "./archivio.js";
 import { PROFILO_PRINCIPALE } from "./configurazione.js";
 import { risolutoreDalla } from "./ricarica-di-notte.js";
 import { IMPIANTI_DEL_CLIMA, righeDellaStoria } from "../plancia/src/core/report-del-clima.js";
+import { conIlConsumoTrovato } from "../plancia/src/core/consumo-trovato-del-clima.js";
 import {
   caldaieDallaConfigurazione,
   chiaveDelGiorno,
@@ -73,6 +74,9 @@ export class StoricoDelClima {
     configurazione = null,
     /* Lo stato di un'entita', dallo specchio della casa: `{ state, attributes }`. */
     stati = () => null,
+    /* I registri di Home Assistant (`registri.js`): di che dispositivo e'
+     * ogni entita'. Senza, i watt si prendono solo dalla scheda. */
+    registri = null,
     registro = null,
     adesso = () => Date.now(),
     ogni = (quanto, cosa) => setInterval(cosa, quanto),
@@ -90,6 +94,7 @@ export class StoricoDelClima {
     this.casa = casa;
     this.configurazione = configurazione;
     this.stati = stati;
+    this.registri = registri;
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
     this.adesso = adesso;
     this._ogni = ogni;
@@ -117,6 +122,22 @@ export class StoricoDelClima {
     } catch (_errore) {
       return {};
     }
+  }
+
+  /**
+   * Le unita' col consumo trovato sul loro dispositivo, per quelle che nella
+   * scheda non l'hanno: uno split che non dice `hvac_action` racconta le sue
+   * ore coi watt, e quel giorno resta nell'archivio cosi'.
+   */
+  async conIlConsumo(unita) {
+    if (!this.registri?.leMappe) return unita;
+    let di = {};
+    try {
+      di = (await this.registri.leMappe())?.di || {};
+    } catch (_errore) {
+      return unita;
+    }
+    return conIlConsumoTrovato(unita, { di, stato: (id) => this.stati(id) });
   }
 
   /** Le unita' e le caldaie, lette adesso dalla configurazione. */
@@ -193,11 +214,14 @@ export class StoricoDelClima {
     try {
       const giorni = this.giorniDaRiassumere();
       if (!giorni.length) return { scritti: 0 };
-      const { unita, generatori } = this.impianto();
+      const { unita: scritte, generatori } = this.impianto();
+      const unita = await this.conIlConsumo(scritte);
       const entita = [
         ...new Set([
           ...unita.map((u) => u.entity),
           ...unita.map((u) => u.valvola).filter(Boolean),
+          /* I watt, per i giorni senza `hvac_action`. */
+          ...unita.map((u) => u.consumo).filter(Boolean),
           ...generatori.map((g) => g.entity),
         ]),
       ];

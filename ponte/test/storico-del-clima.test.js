@@ -204,3 +204,70 @@ test("alla plancia si risponde solo a chi ha un nome, coi giorni chiesti", async
   assert.equal(dalPonte.success, true);
   assert.deepEqual(Object.keys(dalPonte.result.giorni).sort(), [da, a]);
 });
+
+/* «Continua a non funzionare, i dati storici non mi da il valore.» Uno split
+ * che non dice `hvac_action` ma pubblica i suoi watt sul suo dispositivo: il
+ * ponte li trova dai registri e mette da parte le ore vere. */
+test("lo split senza hvac_action: le ore dai watt del suo dispositivo", async () => {
+  const domande = [];
+  const casa = {
+    async chiedi(comando) {
+      domande.push(comando);
+      const [entity] = comando.entity_ids;
+      const da = Math.max(Date.parse(comando.start_time), giornoFa(2));
+      const a = Date.parse(comando.end_time);
+      const righe = [];
+      for (let g = new Date(da).setHours(0, 0, 0, 0); g < a; g += 24 * H) {
+        if (entity === "climate.split") {
+          righe.push({ s: "off", a: { current_temperature: 27 }, lu: g / 1000 });
+          righe.push({
+            s: "cool",
+            a: { current_temperature: 27, temperature: 28 },
+            lu: (g + 13 * H) / 1000,
+          });
+          righe.push({ s: "off", a: { current_temperature: 26 }, lu: (g + 19 * H) / 1000 });
+        }
+        if (entity === "sensor.split_power") {
+          righe.push({ s: "4", a: { unit_of_measurement: "W" }, lu: g / 1000 });
+          righe.push({ s: "850", a: { unit_of_measurement: "W" }, lu: (g + 14 * H) / 1000 });
+          righe.push({ s: "5", a: { unit_of_measurement: "W" }, lu: (g + 17 * H) / 1000 });
+        }
+      }
+      return { [entity]: righe.filter((r) => r.lu * 1000 >= da && r.lu * 1000 < a) };
+    },
+  };
+  const registri = {
+    async leMappe() {
+      return {
+        di: {
+          "climate.split": "dev-split",
+          "sensor.split_power": "dev-split",
+          "sensor.lavatrice_power": "dev-lavatrice",
+        },
+        nomi: {},
+      };
+    },
+  };
+  const STATI = {
+    "sensor.split_power": {
+      state: "4",
+      attributes: { unit_of_measurement: "W", device_class: "power", state_class: "measurement" },
+    },
+    "sensor.lavatrice_power": {
+      state: "0",
+      attributes: { unit_of_measurement: "W", device_class: "power", state_class: "measurement" },
+    },
+  };
+  const storico = nuovo({ casa, registri, stati: (id) => STATI[id] || null });
+  const esito = await storico.battito();
+  assert.equal(esito.scritti, 2);
+  const chieste = new Set(domande.map((d) => d.entity_ids[0]));
+  assert.ok(chieste.has("sensor.split_power"), "i watt dello split si chiedono");
+  assert.ok(!chieste.has("sensor.lavatrice_power"), "quelli di un altro dispositivo no");
+  const ieri = storico.giorni[chiaveDelGiorno(giornoFa(1))];
+  /* Senza i watt la stanza (27) sotto l'obiettivo (28) non chiederebbe
+   * niente; coi watt sono tre ore vere, e si dice da dove vengono. */
+  assert.equal(ieri.freddo.stanze["climate.split"].r, 180);
+  assert.equal(ieri.freddo.stanze["climate.split"].sv, "dispositivo");
+  assert.ok(ieri.freddo.stanze["climate.split"].kwh > 2.5);
+});

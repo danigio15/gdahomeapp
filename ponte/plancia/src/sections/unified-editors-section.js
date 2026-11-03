@@ -19,6 +19,8 @@ import { CHIAVE_PIANI, iPianiDellaCasa } from "../core/i-piani-della-casa.js";
 import { stanzaAllAperto } from "../core/room-overview.js";
 import { immagineAccesa } from "../core/disegno-automatico-della-stanza.js";
 import { iDodiciMesi, normalizzaIMesi } from "../core/stagione-del-clima.js";
+import { consumoDelDispositivo } from "../core/consumo-trovato-del-clima.js";
+import { iDispositiviRicordati } from "../core/i-dispositivi-di-home-assistant.js";
 import {
   quickClimateFieldsMarkup,
   salvaQuickClimateDaCampi,
@@ -26,6 +28,7 @@ import {
 import { accompagnaMenuAzione } from "./il-popup-della-lavatrice-section.js";
 import {
   activeLocale,
+  allStates,
   clean,
   doc,
   esc,
@@ -344,6 +347,33 @@ function mesiMarkup(mesi) {
     .join("")}</div>`;
 }
 
+/* Il consumo che il climatizzatore pubblica da se', se la casella e' vuota:
+ * il report del clima lo usa gia' per le ore dei mesi passati, e qui si dice
+ * quale, con un tasto per scriverlo (e servirsene anche nella card, con la
+ * soglia). Chi ne vuole un altro scrive il suo, e vince quello. */
+function consumoTrovatoMarkup(item) {
+  if (clean(item?.consumo)) return "";
+  let trovato = null;
+  try {
+    const entity = clean(root.resolveEntity?.(clean(item?.entity))) || clean(item?.entity);
+    const stati = allStates() || {};
+    trovato = consumoDelDispositivo(entity, {
+      di: iDispositiviRicordati().di || {},
+      stato: (id) => stati[id] || null,
+    });
+  } catch (_errore) {
+    trovato = null;
+  }
+  if (!trovato) return "";
+  const cosa = trovato.tipo === "energia" ? t("energia", "energy") : t("potenza", "power");
+  return `<span class="dm-consumo-trovato" data-dm-consumo-trovato="${esc(trovato.entity)}"><span>${esc(
+    t(
+      `Trovato sul climatizzatore: ${trovato.entity} (${cosa}). Il report del clima lo usa già per le ore dei mesi passati.`,
+      `Found on the air conditioner: ${trovato.entity} (${cosa}). The climate report already uses it for past months' hours.`,
+    ),
+  )}</span><button type="button" class="ed-btn" data-usa-consumo>${esc(t("Usa questo", "Use this"))}</button></span>`;
+}
+
 function openClimateEditor(item, index) {
   const selectedType = canonicalClimateType(item.type);
   const { form, close } = modalShell(
@@ -355,7 +385,7 @@ function openClimateEditor(item, index) {
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Stanza", "Room")}</span><select class="ed-input" name="room">${roomsOptions(item.room || item.room_id)}</select></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Valvola TRV (posizione %)", "TRV valve (position %)")}</span><span class="ed-form-row"><input class="ed-input mono" name="valvola" value="${esc(clean(item.valvola))}" placeholder="sensor.trv_valve_position"><button type="button" class="dm-entity-picker" data-pick-valvola>🔍</button></span><small>${t("Il sensore o il number con la posizione della valvola termostatica, da 0 a 100: la card mostra quanto è aperta e quanto chiusa. Se l'unità climate espone già valve_position, non serve.", "The sensor or number with the thermostatic valve position, 0 to 100: the card shows how open and how closed it is. If the climate entity already exposes valve_position, you do not need it.")}</small></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Entità della modalità (In casa / Fuori / Vacanza)", "Mode entity (Home / Away / Holiday)")}</span><span class="ed-form-row"><input class="ed-input mono" name="modo" value="${esc(clean(item.modo))}" placeholder="select.tado_home_mode" data-domain="select input_select sensor climate"><button type="button" class="dm-entity-picker" data-pick-modo>🔍</button></span><small>${t("I termostati smart espongono la modalità del riscaldamento su un'entità a parte: TADO ha In casa e Fuori, altri aggiungono Vacanza o Boost. La card la mostra, e se l'entità è un select o un input_select la si cambia da lì.", "Smart thermostats publish the heating mode on a separate entity: TADO has Home and Away, others add Holiday or Boost. The card shows it, and if the entity is a select or an input_select you can change it right there.")}</small></label>
-     <label class="ed-slot"><span class="ed-slot-lbl">${t("Entit\u00e0 consumo (presa)", "Power entity (smart plug)")}</span><span class="ed-form-row"><input class="ed-input mono" name="consumo" value="${esc(clean(item.consumo))}" placeholder="sensor.presa_condizionatore_potenza" data-domain="sensor number input_number"><button type="button" class="dm-entity-picker" data-pick-consumo>\ud83d\udd0d</button></span><small>${t("Il sensore in watt della presa sotto cui sta l'unit\u00e0. Con la soglia qui sotto \u00e8 lui a dire se \u00e8 accesa: un climatizzatore comandato da una presa lo sa meglio del suo termostato.", "The watt sensor of the plug the unit sits under. With the threshold below, it is the one that says whether the unit is running: an air conditioner driven by a plug knows it better than its own thermostat.")}</small></label>
+     <label class="ed-slot"><span class="ed-slot-lbl">${t("Entit\u00e0 consumo (presa)", "Power entity (smart plug)")}</span><span class="ed-form-row"><input class="ed-input mono" name="consumo" value="${esc(clean(item.consumo))}" placeholder="sensor.presa_condizionatore_potenza" data-domain="sensor number input_number"><button type="button" class="dm-entity-picker" data-pick-consumo>\ud83d\udd0d</button></span>${consumoTrovatoMarkup(item)}<small>${t("Il sensore in watt della presa sotto cui sta l'unit\u00e0. Con la soglia qui sotto \u00e8 lui a dire se \u00e8 accesa: un climatizzatore comandato da una presa lo sa meglio del suo termostato.", "The watt sensor of the plug the unit sits under. With the threshold below, it is the one that says whether the unit is running: an air conditioner driven by a plug knows it better than its own thermostat.")}</small></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Soglia acceso (W)", "On threshold (W)")}</span><input class="ed-input" type="number" min="0" step="1" name="soglia_consumo" value="${esc(item.soglia_consumo ?? "")}" placeholder="${t("es. 20", "e.g. 20")}"><small>${t("Da questi watt in su l'unit\u00e0 \u00e8 accesa, sotto \u00e8 spenta. \u00abIl condizionatore da spento mi d\u00e0 7 W\u00bb: con 20 scritto qui, quei 7 W restano spento. Vuoto = decide lo stato dell'entit\u00e0, come prima.", "From these watts up the unit is on, below it is off. “My air conditioner draws 7 W while off”: with 20 written here, those 7 W stay off. Empty = the entity state decides, as before.")}</small></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Spegnimento automatico", "Automatic switch-off")}</span><select class="ed-input" name="minuti">${durateOpzioni(item.minuti)}</select><small>${t("Quanto resta accesa dal momento dell'accensione. Il conto alla rovescia lo tiene Home Assistant, non questa pagina: si può chiudere la plancia e l'unità si spegne lo stesso. Sulla card resta modificabile ogni volta.", "How long it stays on from the moment you switch it on. Home Assistant keeps the countdown, not this page: you can close the dashboard and the unit still switches off. On the card you can change it every time.")}</small></label>
      <div class="ed-slot"><span class="ed-slot-lbl">${t("Mesi in cui mostrarla", "Months to show it")}</span><small>${t("Un condizionatore da maggio a settembre, i termosifoni da ottobre ad aprile: fuori da quei mesi la card non compare. Nessun mese acceso vuol dire tutto l'anno. Un'unità accesa si vede sempre, anche fuori stagione.", "An air conditioner from May to September, radiators from October to April: outside those months the card does not appear. No month lit means all year. A unit that is on always shows, even out of season.")}</small>${mesiMarkup(item.mesi)}</div>
@@ -372,6 +402,12 @@ function openClimateEditor(item, index) {
   form
     .querySelector("[data-pick-consumo]")
     ?.addEventListener("click", () => root.wzPickEntity?.(form.elements.consumo));
+  form.querySelector("[data-usa-consumo]")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    const trovato = event.currentTarget.closest("[data-dm-consumo-trovato]");
+    if (form.elements.consumo && trovato) form.elements.consumo.value = trovato.dataset.dmConsumoTrovato;
+    trovato?.remove();
+  });
   /* Le pastiglie dei mesi si accendono e si spengono: e' un insieme, non una
    * scelta sola, e un condizionatore puo' benissimo saltare agosto. */
   form.addEventListener("click", (event) => {
@@ -720,7 +756,12 @@ function installStyles() {
 .dm-stanza-aperto{display:flex!important;align-items:flex-start!important;gap:11px!important;margin-top:6px!important;padding:11px 14px!important;border:1px solid var(--divider-color,#dbe4ee)!important;border-radius:14px!important;background:var(--secondary-background-color,#f6f8fb)!important;cursor:pointer!important}
 .dm-stanza-aperto:has(input:checked){border-color:color-mix(in srgb,var(--success-color,#10b981) 38%,transparent)!important;background:color-mix(in srgb,var(--success-color,#10b981) 8%,var(--card-background-color,#fff))!important}
 .dm-stanza-aperto input{flex:0 0 auto!important;width:20px!important;height:20px!important;margin:1px 0 0!important;accent-color:#059669!important;cursor:pointer!important}
-.dm-stanza-aperto span{font-size:11.5px!important;font-weight:700!important;line-height:1.45!important;color:var(--secondary-text-color,#64748b)!important}`;
+.dm-stanza-aperto span{font-size:11.5px!important;font-weight:700!important;line-height:1.45!important;color:var(--secondary-text-color,#64748b)!important}
+/* Il consumo trovato sul climatizzatore: un suggerimento, non una scelta
+ * fatta. Si legge e si accetta con un tasto. */
+.dm-consumo-trovato{display:flex!important;align-items:center!important;gap:10px!important;margin:8px 0 4px!important;padding:10px 12px!important;border:1px dashed color-mix(in srgb,#0ea5e9 45%,transparent)!important;border-radius:12px!important;background:color-mix(in srgb,#0ea5e9 7%,var(--card-background-color,#fff))!important}
+.dm-consumo-trovato>span{flex:1 1 auto!important;min-width:0!important;font-size:11.5px!important;font-weight:700!important;line-height:1.45!important;color:var(--secondary-text-color,#64748b)!important;overflow-wrap:anywhere!important}
+.dm-consumo-trovato button{flex:0 0 auto!important;padding:7px 12px!important;border:0!important;border-radius:10px!important;background:linear-gradient(135deg,#0ea5e9,#0369a1)!important;color:#fff!important;font-size:12px!important;font-weight:800!important;cursor:pointer!important}`;
   doc.head.append(style);
 }
 

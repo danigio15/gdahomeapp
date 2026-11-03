@@ -24,6 +24,30 @@ _Solo Home Assistant: l'app sul telefono non cambia._
   rapporto acceso non si conta due volte. Nella gestione il riquadro
   «Versione non detta» dice quante case accese hanno ancora l'add-on di
   prima. L'informativa lo scrive.
+- **Report del clima: i climatizzatori senza valvola né presa.** «Continua a
+  non funzionare, i dati storici non mi da il valore»: quattro split, giugno,
+  «Impianto 0 min» e barre vuote, come se non avessero mai lavorato.
+  - **«Non noto» non è zero.** Quando nessuna fonte sa le ore (né l'archivio,
+    né la storia, né le statistiche di valvole, consumi o caldaia) la tessera
+    dell'impianto dice «—» e «non noto», e al posto delle barre vuote c'è un
+    riquadro che lo spiega; nei periodi misti le colonne dei giorni che non
+    si sanno sono tratteggiate.
+  - **I consumi del climatizzatore si trovano da soli.** Molti split
+    pubblicano la loro potenza o la loro energia sullo stesso dispositivo
+    del `climate`, e Home Assistant ne tiene le statistiche per sempre. Il
+    report li prende dal registro dei dispositivi — solo quelli dello stesso
+    dispositivo e con le statistiche, prima la potenza poi l'energia — e ne
+    ricava le ore e i kWh di ogni stanza, segnati «dai consumi del
+    climatizzatore». La presa scritta nella scheda vince sempre.
+  - **Dall'energia, non solo dai watt.** Un contatore in kWh dà le ore con
+    consumo (sopra i 30 Wh in un'ora) e i kWh del periodo.
+  - **Nella storia recente** uno split che non dice `hvac_action` conta le
+    ore coi suoi watt, invece di confrontare la stanza con l'obiettivo; e il
+    ponte mette da parte ogni notte quelle ore vere, coi consumi trovati.
+  - **Nella scheda dell'unità** (Config › Clima) il sensore trovato si vede
+    sotto «Entità consumo», con «Usa questo» per scriverlo.
+  - Quando non c'è proprio niente, la nota dice cosa serve per le ore dei
+    mesi passati: un sensore di consumo del climatizzatore o una presa smart.
 
 ## 1.18.9.1
 
