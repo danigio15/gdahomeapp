@@ -21,6 +21,12 @@
  * sa se il segno di un telefono e' buono: lo passa alla casa, che lo verifica
  * lei. Non guarda dentro ai messaggi: sono byte, e li sposta.
  *
+ * Conta le case e i collegamenti, e **una cosa sola in piu'**: quanti
+ * telefoni ogni casa ha visto nella settimana per versione dell'app, che la
+ * casa gli dice lei in chiaro, accanto ai messaggi (`telefoni.js`). Sono
+ * numeri senza nomi ne' identificativi, restano in memoria, e se ne dice
+ * fuori solo la somma di tutte le case.
+ *
  * L'unica cosa che difende e' che una casa non possa spacciarsi per un'altra —
  * perche' se ci riuscisse raccoglierebbe i segni dei telefoni che bussano — e
  * per quello c'e' `case.js`.
@@ -72,6 +78,7 @@ import { CHIAVE_PUBBLICA_LICENZE } from "./chiave-licenze.js";
 import { valeFino, verificaGettone } from "./gettone.js";
 import { ilModoDelleLicenze } from "./modo-delle-licenze.js";
 import { CHIUSURA } from "./presa.js";
+import { iTelefoniDelleCase, iTelefoniDetti } from "./telefoni.js";
 
 /* Quanti telefoni insieme puo' avere una casa. Oltre non e' una famiglia. */
 const TELEFONI_PER_CASA = 20;
@@ -376,6 +383,12 @@ export class Centralino {
 
   quantiDalWeb() {
     return this._quantiCosi("web");
+  }
+
+  /* I telefoni delle case collegate, per negozio e versione dell'app: solo
+   * numeri, sommati su tutte le case (`telefoni.js`). */
+  iTelefoni() {
+    return iTelefoniDelleCase(this.collegate.values());
   }
 
   /* Quante delle case collegate adesso sanno dire la loro licenza.
@@ -787,6 +800,10 @@ class CasaCollegata {
      * Premium»: e' «il suo add-on sa che le licenze esistono». Vedi
      * `quantePronteAllaLicenza`. */
     this.dicelaLicenza = false;
+    /* Quanti telefoni ha visto nella settimana, per versione dell'app, come
+     * l'ha detto lei (`telefoni.js`). `null` finche' non lo dice: un add-on
+     * di prima non lo dice mai. */
+    this.telefoni = null;
     /* Le ricevute girate alla casa che aspettano la sua risposta, per numero. */
     this._ricevute = new Map();
     this._prossimaRicevuta = 1;
@@ -882,6 +899,14 @@ class CasaCollegata {
       case "foto":
         this._unaFoto(detto);
         return;
+      /* Quanti telefoni, per versione dell'app (`telefoni.js`). Detto storto,
+       * si tiene quello di prima: una riga sbagliata non cancella un conto
+       * buono. */
+      case "telefoni": {
+        const detti = iTelefoniDetti(detto);
+        if (detti) this.telefoni = detti;
+        return;
+      }
       default:
         /* Il contratto chiama il campo `tipo`: una casa scritta leggendo solo
          * quello manda `tipo` e basta, e va capita lo stesso. */

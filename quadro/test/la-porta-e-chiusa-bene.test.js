@@ -496,6 +496,8 @@ test("la gestione vede anche i numeri del tramite, presi uno per uno", async () 
       web: 3,
       licenze: { modo: "impone", senza_premium: 118, da_aggiornare: 4 },
       segnalazioni: true,
+      /* Questo tramite i telefoni per versione non li dice. */
+      versioniApp: null,
       chat: 5,
       console: true,
       posta: false,

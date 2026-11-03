@@ -141,31 +141,44 @@ class LettoreDelTelefono implements LettoreDellaSalute {
       case MisuraDelCorpo.sonno:
         final tratti = await _campioni(
           tipi,
-          mezzanotte.subtract(const Duration(hours: 30)),
+          mezzanotte.subtract(notteFinoA + const Duration(hours: 6)),
           ora,
         );
         return ilSonnoDiStanotte(tratti, ora);
       case MisuraDelCorpo.battito:
-      case MisuraDelCorpo.ossigeno:
-        final ultimo = lUltimo(
-          await _campioni(tipi, ora.subtract(const Duration(days: 2)), ora),
-        );
-        if (ultimo == null || misura != MisuraDelCorpo.ossigeno) return ultimo;
-        return Lettura(comePercentuale(ultimo.valore), ultimo.quando);
       case MisuraDelCorpo.battitoRiposo:
-        return lUltimo(
-          await _campioni(tipi, ora.subtract(const Duration(days: 7)), ora),
-        );
+      case MisuraDelCorpo.ossigeno:
       case MisuraDelCorpo.peso:
       case MisuraDelCorpo.grasso:
       case MisuraDelCorpo.sistolica:
       case MisuraDelCorpo.diastolica:
-        final ultimo = lUltimo(
-          await _campioni(tipi, ora.subtract(const Duration(days: 45)), ora),
+        final ultimo = await _lUltimoEntro(
+          tipi,
+          ora,
+          finestraDellUltimo(misura)!,
         );
-        if (ultimo == null || misura != MisuraDelCorpo.grasso) return ultimo;
-        return Lettura(comePercentuale(ultimo.valore), ultimo.quando);
+        if (ultimo == null) return null;
+        final percentuale =
+            misura == MisuraDelCorpo.ossigeno ||
+            misura == MisuraDelCorpo.grasso;
+        return percentuale
+            ? Lettura(comePercentuale(ultimo.valore), ultimo.quando)
+            : ultimo;
     }
+  }
+
+  /* L'ultimo valore, cercato a scalini: l'ultimo giorno, la settimana, la
+   * finestra intera (`scaliniFinoA`). Ci si ferma al primo che ne ha. */
+  Future<Lettura?> _lUltimoEntro(
+    List<HealthDataType> tipi,
+    DateTime ora,
+    Duration finestra,
+  ) async {
+    for (final scalino in scaliniFinoA(finestra)) {
+      final ultimo = lUltimo(await _campioni(tipi, ora.subtract(scalino), ora));
+      if (ultimo != null) return ultimo;
+    }
+    return null;
   }
 
   @override

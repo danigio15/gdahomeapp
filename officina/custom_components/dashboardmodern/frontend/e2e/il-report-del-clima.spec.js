@@ -426,7 +426,10 @@ async function avvia(
           for (const id of domanda.statistic_ids) {
             const ore = [];
             for (let t = new Date(da).setMinutes(0, 0, 0); t < a; t += H) {
-              const voce = oraDelleStatistiche(id, t);
+              let voce = oraDelleStatistiche(id, t);
+              /* Come Home Assistant: se la domanda chiede i watt, i kW li converte lui. */
+              if (voce && UNITA[id] === "kW" && domanda.units?.power === "W")
+                voce = Object.fromEntries(Object.entries(voce).map(([k, v]) => [k, v * 1000]));
               if (voce) ore.push({ start: t, end: t + H, ...voce });
             }
             if (ore.length) fuori[id] = ore;

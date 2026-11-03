@@ -106,7 +106,10 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
           en: "The phone didn't allow reading health data.",
         ),
       );
+      return;
     }
+    final guasto = _postino.ultimoGuasto;
+    if (guasto != null) _avviso(guasto.spiegazione);
   });
 
   Future<void> _cambiaMisura(MisuraDelCorpo misura, bool si) => _lavora(() {
@@ -125,10 +128,8 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
     final quante = await _postino.manda(widget.collegamento.filo, subito: true);
     _avviso(
       quante == null
-          ? inLingua(
-              it: 'La casa non risponde: riprovo da solo fra poco.',
-              en: "Your home isn't answering: I'll retry shortly.",
-            )
+          ? (_postino.ultimoGuasto ?? GuastoDellaSalute.casaNonRisponde)
+                .spiegazione
           : inLingua(
               it: 'Mandate $quante misure alla casa.',
               en: 'Sent $quante readings to your home.',
@@ -264,8 +265,15 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                subtitle: Text(_quando(scelte, lette.length)),
+                subtitle: Text(
+                  _quando(scelte, lette.length),
+                  style: _rifiutata(scelte)
+                      ? TextStyle(color: colori.error)
+                      : null,
+                ),
               ),
+              if (scelte.acceso && _postino.ultimoGuasto != null)
+                _ilGuasto(context, _postino.ultimoGuasto!),
             ],
           ),
         ),
@@ -316,7 +324,17 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
                       ? null
                       : (si) => _cambiaMisura(misura, si == true),
                   title: Text(misura.titolo),
-                  subtitle: Text(_riga(misura, lette[misura])),
+                  subtitle: _sottoLaMisura(
+                    context,
+                    misura,
+                    lette[misura],
+                    manca:
+                        scelte.acceso &&
+                        _postino.letto &&
+                        scelte.misure.contains(misura) &&
+                        lette[misura] == null,
+                    iPhone: dove == DoveSiLegge.appleSalute,
+                  ),
                   secondary: _segno(misura),
                 ),
             ],
@@ -362,11 +380,89 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
     );
   }
 
+  /* La casa ha detto di no per un motivo suo: non e' «riprovo fra poco». */
+  bool _rifiutata(ScelteDellaSalute scelte) =>
+      scelte.acceso &&
+      switch (_postino.ultimoGuasto) {
+        GuastoDellaSalute.premiumRichiesto ||
+        GuastoDellaSalute.telefonoNonIntestato ||
+        GuastoDellaSalute.altro => true,
+        GuastoDellaSalute.casaNonRisponde || null => false,
+      };
+
+  Widget _ilGuasto(BuildContext context, GuastoDellaSalute guasto) {
+    final colori = Theme.of(context).colorScheme;
+    final grave = guasto != GuastoDellaSalute.casaNonRisponde;
+    return Container(
+      key: const Key('salute-guasto'),
+      margin: const EdgeInsets.only(top: 6),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: (grave ? colori.errorContainer : colori.surfaceContainerHighest)
+            .withValues(alpha: .7),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            grave ? Icons.block_rounded : Icons.wifi_off_rounded,
+            color: grave ? colori.error : colori.onSurfaceVariant,
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              guasto.spiegazione,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: grave
+                    ? colori.onErrorContainer
+                    : colori.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sottoLaMisura(
+    BuildContext context,
+    MisuraDelCorpo misura,
+    Lettura? lettura, {
+    required bool manca,
+    required bool iPhone,
+  }) {
+    final riga = Text(_riga(misura, lettura));
+    if (!manca) return riga;
+    final colori = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        riga,
+        const SizedBox(height: 2),
+        Text(
+          nessunValore(misura, iPhone: iPhone),
+          key: Key('salute-manca-${misura.name}'),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: colori.tertiary),
+        ),
+      ],
+    );
+  }
+
   String _quando(ScelteDellaSalute scelte, int quante) {
     if (!scelte.acceso) {
       return inLingua(
         it: 'Spento: la casa non riceve niente.',
         en: 'Off: your home receives nothing.',
+      );
+    }
+    if (_rifiutata(scelte)) {
+      return inLingua(
+        it: 'Acceso, ma la casa non accetta le misure.',
+        en: "On, but your home doesn't accept the readings.",
       );
     }
     final ultimo = scelte.ultimoInvio;
@@ -401,14 +497,16 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
       MisuraDelCorpo.battito ||
       MisuraDelCorpo.battitoRiposo => '${_numero(v)} bpm',
       MisuraDelCorpo.peso => '${_numero(v, cifre: 1)} kg',
-      MisuraDelCorpo.grasso || MisuraDelCorpo.ossigeno => '${_numero(v)}%',
+      MisuraDelCorpo.grasso => '${_numero(v, cifre: 1)}%',
+      MisuraDelCorpo.ossigeno => '${_numero(v)}%',
       MisuraDelCorpo.sistolica ||
       MisuraDelCorpo.diastolica => '${_numero(v)} mmHg',
       MisuraDelCorpo.sonno =>
         '${v ~/ 60} h ${(v % 60).round().toString().padLeft(2, '0')}',
       MisuraDelCorpo.calorie => '${_numero(v)} kcal',
     };
-    return '${misura.comeSiLegge} · $valore';
+    final giorno = quandoSeNonOggi(lettura.quando, _postino.adesso);
+    return '${misura.comeSiLegge} · $valore${giorno == null ? '' : ' · $giorno'}';
   }
 
   /* Un'icona colorata per misura: le emoji ogni telefono le disegna a modo

@@ -1648,8 +1648,10 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 530 con `core/storico-del-clima.js`: il report del clima anche sui mesi
   // che la storia di Home Assistant ha gia' dimenticato (l'archivio del ponte
   // e le statistiche a lungo termine).
+  // 531 con `core/consumo-trovato-del-clima.js`: i watt che uno split pubblica
+  // da se', trovati sul suo dispositivo per le ore dei mesi passati.
   assert.ok(
-    relative.length <= 530,
+    relative.length <= 531,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

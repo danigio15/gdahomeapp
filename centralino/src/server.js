@@ -218,6 +218,10 @@ export function costruisciIlServer({
         collegamenti: centralino.quantiCollegamenti(),
         app: centralino.quanteAppAperte(),
         web: centralino.quantiDalWeb?.() ?? null,
+        /* I telefoni delle case collegate per negozio e versione dell'app,
+         * sommati: quante case li dicono, quante li mandano gia' col rapporto
+         * e quante non sanno dirli (`telefoni.js`). Mai casa per casa. */
+        versioni_app: centralino.iTelefoni?.() ?? null,
         /* Quante di quelle case sanno dire la loro licenza: il numero da
          * guardare prima di scrivere qui la chiave delle licenze. Finche' e'
          * sotto `case`, accendere toglie l'accesso da fuori alla differenza

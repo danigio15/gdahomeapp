@@ -1,15 +1,23 @@
 /// Il telefono e la casa finti per le prove della Salute.
 library;
 
+import 'package:gdahome/ponte/errori.dart';
 import 'package:gdahome/ponte/filo.dart';
 import 'package:gdahome/salute/il_corpo.dart';
 import 'package:gdahome/salute/lettore.dart';
 
 /// Un iPhone con Apple Salute piena: l'Apple Watch di Marco.
 class LettoreFinto implements LettoreDellaSalute {
-  LettoreFinto({this.permesso = true, this.dove_ = DoveSiLegge.appleSalute});
+  LettoreFinto({
+    this.permesso = true,
+    this.dove_ = DoveSiLegge.appleSalute,
+    Map<MisuraDelCorpo, Lettura>? lette,
+  }) : lette = lette ?? tutte;
 
   bool permesso;
+
+  /// Quello che Salute ha da dare: di serie [tutte].
+  final Map<MisuraDelCorpo, Lettura> lette;
   final DoveSiLegge dove_;
   final chiesti = <Set<MisuraDelCorpo>>[];
   int letture = 0;
@@ -46,7 +54,7 @@ class LettoreFinto implements LettoreDellaSalute {
   }) async {
     letture++;
     return {
-      for (final e in tutte.entries)
+      for (final e in lette.entries)
         if (misure.contains(e.key)) e.key: e.value,
     };
   }
@@ -57,9 +65,16 @@ class LettoreFinto implements LettoreDellaSalute {
 
 /// Il filo con la casa: ricorda quello che gli si manda.
 class FiloFinto implements Filo {
-  FiloFinto({this.aperto = true});
+  FiloFinto({this.aperto = true, this.rifiuta, this.cade = false});
 
   bool aperto;
+
+  /// Il codice con cui la casa dice di no (`premium-richiesto`,
+  /// `unauthorized`), o `null` se dice di si'.
+  String? rifiuta;
+
+  /// La casa che non risponde.
+  bool cade;
   final mandati = <Map<String, dynamic>>[];
 
   @override
@@ -71,6 +86,9 @@ class FiloFinto implements Filo {
     Duration? entro,
   }) async {
     mandati.add(comando);
+    if (cade) throw const FiloCaduto('Home Assistant non ha risposto in tempo');
+    final no = rifiuta;
+    if (no != null) throw ComandoRifiutato('no', codice: no);
     return {'scritte': []};
   }
 

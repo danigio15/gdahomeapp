@@ -472,6 +472,56 @@ export function comfortDegliObiettivi(impianto, obiettivi) {
   };
 }
 
+/* Le parti comuni di due elenchi di intervalli gia' fusi. */
+export function interseca(primi, secondi) {
+  const fuori = [];
+  for (const [da1, a1] of primi || [])
+    for (const [da2, a2] of secondi || []) {
+      const da = Math.max(da1, da2);
+      const a = Math.min(a1, a2);
+      if (a > da) fuori.push([da, a]);
+    }
+  return unisci(fuori);
+}
+
+/* I watt di una riga del sensore di potenza; `null` se non dice un numero. */
+function wattDellaRiga(riga) {
+  const valore = numero(riga?.s);
+  if (valore === null) return null;
+  return pulito(riga?.a?.unit_of_measurement).toLowerCase() === "kw" ? valore * 1000 : valore;
+}
+
+/**
+ * Quando un'unita' ha lavorato secondo i suoi watt, nel periodo: gli
+ * intervalli sopra la soglia, quelli in cui il sensore ha parlato, e i kWh.
+ * `null` se l'unita' non ha un sensore di potenza con una storia — un
+ * contatore di energia nella storia dice solo un totale che cresce, e per
+ * quello ci sono le statistiche (`core/storico-del-clima.js`).
+ */
+export function consumoNelPeriodo(u, storie, inizio, fine) {
+  const id = pulito(u?.consumo);
+  const righe = id ? storie[id] || [] : [];
+  if (!righe.length) return null;
+  const unita = pulito(
+    righe.find((r) => r.a?.unit_of_measurement)?.a?.unit_of_measurement,
+  ).toLowerCase();
+  if (unita && unita !== "w" && unita !== "kw") return null;
+  if (!righe.some((r) => wattDellaRiga(r) !== null)) return null;
+  const soglia = numero(u?.soglia_consumo) ?? SOGLIA_WATT_DEL_GENERATORE;
+  const lavora = intervalliDove(righe, inizio, fine, (riga) => {
+    const watt = wattDellaRiga(riga);
+    return watt === null ? null : watt >= soglia;
+  });
+  const energia = mediaEPeso(righe, inizio, fine, wattDellaRiga);
+  return {
+    veri: lavora.veri,
+    noti: lavora.noti,
+    kwh: energia.peso
+      ? Math.round(((energia.media * energia.peso) / ORA / 1000) * 100) / 100
+      : null,
+  };
+}
+
 /**
  * Il report di un impianto in un periodo.
  *
@@ -494,11 +544,20 @@ export function stanzaNelPeriodo(impianto, u, storie, periodo) {
   const righeValvola = pulito(u.valvola) ? storie[pulito(u.valvola)] || [] : [];
   const valvolaIn = (riga) =>
     righeValvola.length ? valvolaAl(righeValvola, riga.t) : valvolaDellaRiga(riga);
-  const richiesta = intervalliDove(righe, inizio, fine, (riga) =>
-    chiedePer(impianto, riga, valvolaIn(riga)),
-  );
-  const accesa = intervalliDove(righe, inizio, fine, (riga) => accesaPer(impianto, riga));
   const senzaAzione = righe.length > 0 && !righe.some((riga) => pulito(riga.a?.hvac_action));
+  const accesa = intervalliDove(righe, inizio, fine, (riga) => accesaPer(impianto, riga));
+  /* I watt, quando il climatizzatore non dice `hvac_action`: uno split che
+   * non lo pubblica sa solo «acceso in cool», e il confronto fra la stanza e
+   * l'obiettivo e' una stima debole. La sua potenza — dalla presa scritta
+   * nella scheda, o dal suo stesso dispositivo — dice quando ha lavorato
+   * davvero. Solo nelle ore in cui l'unita' e' accesa per questo impianto:
+   * i watt di una pompa di calore non dicono se scaldava o raffrescava. */
+  const consumo = senzaAzione || !righe.length ? consumoNelPeriodo(u, storie, inizio, fine) : null;
+  const richiesta = consumo
+    ? righe.length
+      ? { veri: interseca(consumo.veri, accesa.veri), noti: consumo.noti }
+      : consumo
+    : intervalliDove(righe, inizio, fine, (riga) => chiedePer(impianto, riga, valvolaIn(riga)));
   const valvola = righeValvola.length
     ? mediaEPeso(righeValvola, inizio, fine, valvolaDallEntita)
     : mediaEPeso(righe, inizio, fine, valvolaDellaRiga);
@@ -519,7 +578,9 @@ export function stanzaNelPeriodo(impianto, u, storie, periodo) {
     nome: pulito(u.name) || u.entity,
     stanza: pulito(u.room),
     msRichiesta: durata(richiesta.veri),
-    msAccesa: durata(accesa.veri),
+    /* Dai watt «accesa» e' quando lavora: il climatizzatore in cool che non
+     * consuma e' fermo, non acceso. */
+    msAccesa: consumo ? durata(richiesta.veri) : durata(accesa.veri),
     perSecchiello: durataNeiSecchielli(richiesta.veri, secchielli),
     intervalli: richiesta.veri,
     ambiente: ambiente.media,
@@ -528,8 +589,11 @@ export function stanzaNelPeriodo(impianto, u, storie, periodo) {
     obiettivoComfort: obiettivoComfort.media,
     valvola: valvola.media,
     valvolaDa: valvola.media === null ? null : righeValvola.length ? "entita" : "attributo",
-    richiestaStimata: senzaAzione,
-    msNoti: coperto,
+    richiestaStimata: senzaAzione || Boolean(consumo),
+    /* Da dove viene la richiesta quando non e' `hvac_action`. */
+    richiestaDa: consumo ? (u.consumoTrovato ? "dispositivo" : "consumo") : null,
+    kwh: consumo ? consumo.kwh : null,
+    msNoti: consumo && !righe.length ? durata(consumo.noti) : coperto,
     obiettivi: obiettiviDelleRighe(impianto, righe, inizio, fine),
     pesi: {
       ambiente: ambiente.peso,

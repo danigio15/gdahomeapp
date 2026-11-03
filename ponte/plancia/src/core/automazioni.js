@@ -288,6 +288,46 @@ function leggiJson(valore) {
   }
 }
 
+/**
+ * L'ora «sul muro» di casa: `istante` letto nel fuso `fuso` (quello di Home
+ * Assistant, che conta le fasce col suo orologio), tornato come istante del
+ * fuso di chi guarda, cosi' `getHours()` e `getDay()` dicono le ore di casa.
+ * Un telefono a New York che guarda una casa a Roma alle 20 di Roma deve
+ * vedere la fascia delle 20, non quella delle 14. Senza fuso, o con uno che
+ * non esiste, resta l'istante com'e'.
+ */
+export function orologioNelFuso(istante, fuso) {
+  if (!fuso) return istante;
+  try {
+    const parti = Object.fromEntries(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: fuso,
+        hourCycle: "h23",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      })
+        .formatToParts(new Date(istante))
+        .map((p) => [p.type, p.value]),
+    );
+    const muro = new Date(
+      Number(parti.year),
+      Number(parti.month) - 1,
+      Number(parti.day),
+      Number(parti.hour) % 24,
+      Number(parti.minute),
+      Number(parti.second),
+      new Date(istante).getMilliseconds(),
+    ).getTime();
+    return Number.isFinite(muro) ? muro : istante;
+  } catch (_errore) {
+    return istante;
+  }
+}
+
 /** Lunedi' 0, domenica 6: l'ordine dei tasti L M M G V S D. */
 export const giornoDellaSettimana = (istante) => (new Date(istante).getDay() + 6) % 7;
 

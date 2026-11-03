@@ -154,10 +154,18 @@ export function unitaDallaConfigurazione(
     if (!grezza || grezza.startsWith("humidifier.")) return [];
     const entity = vera(grezza);
     const valvola = pulito(unit?.valvola) ? vera(unit.valvola) : "";
+    /* La presa scritta nella scheda (#490), e i watt oltre i quali e' accesa:
+     * per gli split che non dicono `hvac_action` sono loro a dire le ore. */
+    const consumo = pulito(unit?.consumo) ? vera(unit.consumo) : "";
+    const soglia = unit?.soglia_consumo;
     return zoneDellUnita(unit, attributiDi(entity)).map((zone) => ({
       entity,
       name: pulito(unit?.name) || entity,
       valvola,
+      ...(consumo ? { consumo } : {}),
+      ...(soglia !== null && soglia !== undefined && pulito(soglia) !== ""
+        ? { soglia_consumo: soglia }
+        : {}),
       zone,
     }));
   });
@@ -197,6 +205,24 @@ const centesimi = (n) => Math.round(n * 100) / 100;
 const media = (valore, pesoMs) =>
   valore === null || valore === undefined || !pesoMs ? null : [centesimi(valore), minuti(pesoMs)];
 const ore = (secchielli) => secchielli.map((ms) => minuti(ms));
+
+/**
+ * Il conto con cui e' fatto un riassunto. 1 (o niente) e' quello della
+ * 1.18.9.1: uno split senza `hvac_action` contava le ore confrontando la
+ * stanza con l'obiettivo, e i consumi trovati sul dispositivo non c'erano.
+ * Dal 2 conta coi watt. Il ponte rifa' i giorni col conto vecchio finche'
+ * la storia di Home Assistant li ha ancora; quelli che non ha restano,
+ * segnati col conto con cui sono nati.
+ */
+export const CONTO_DEL_RIASSUNTO = 2;
+
+/** Il conto di un giorno dell'archivio: il piu' vecchio dei suoi impianti. */
+export function contoDelGiorno(giorno) {
+  const conti = Object.values(giorno || {})
+    .filter((record) => record && typeof record === "object")
+    .map((record) => (Number.isInteger(record.conto) ? record.conto : 1));
+  return conti.length ? Math.min(...conti) : 1;
+}
 
 /**
  * Il riassunto di un giorno di un impianto, dalla storia: `null` se quel
@@ -239,6 +265,10 @@ export function riassuntoDelGiorno({
       v: media(s.valvola, s.pesi.valvola),
       vd: s.valvolaDa,
       s: s.richiestaStimata,
+      /* Quando la richiesta l'hanno detta i watt: da dove, e quanto hanno
+       * consumato. Senza, i campi non ci sono (archivi di prima uguali). */
+      ...(s.richiestaDa ? { sv: s.richiestaDa } : {}),
+      ...(s.kwh !== null && s.kwh !== undefined ? { kwh: s.kwh } : {}),
     };
   }
   const caldaie = {};
@@ -257,6 +287,7 @@ export function riassuntoDelGiorno({
   const unione = unisci(intervalli);
   return {
     fonte: "storia",
+    conto: CONTO_DEL_RIASSUNTO,
     stanze,
     generatori: caldaie,
     stima: {
@@ -269,6 +300,12 @@ export function riassuntoDelGiorno({
 
 /* ── le statistiche a lungo termine ───────────────────────────────────── */
 
+/* Le statistiche si chiedono gia' convertite: la potenza in W, l'energia in
+ * kWh. Home Assistant le tiene nell'unita' con cui sono nate, e chi poi
+ * cambia l'unita' mostrata (W → kW) ha statistiche in W e uno stato in kW:
+ * moltiplicate per mille ogni ora risultava accesa. */
+export const UNITA_DELLE_STATISTICHE = Object.freeze({ power: "W", energy: "kWh" });
+
 /** La domanda: un'ora alla volta, per tutte le entita' insieme. */
 export function domandaStatisticheDelClima(ids, da, a) {
   return {
@@ -278,7 +315,21 @@ export function domandaStatisticheDelClima(ids, da, a) {
     statistic_ids: [...new Set((ids || []).map(pulito).filter(Boolean))],
     period: "hour",
     types: ["mean", "max", "min", "change", "state"],
+    units: { ...UNITA_DELLE_STATISTICHE },
   };
+}
+
+/**
+ * L'unita' in cui arrivano le statistiche di un'entita' che adesso si
+ * mostra in `unita`: W per ogni potenza, kWh per ogni energia (milli o mega
+ * che sia: «mWh» e «MWh» non sono la stessa cosa, ma arrivano comunque in
+ * kWh), il resto com'e'.
+ */
+export function unitaDelleStatistiche(unita) {
+  const u = pulito(unita);
+  if (/^[mkMG]?W$/.test(u)) return UNITA_DELLE_STATISTICHE.power;
+  if (/^[mkMG]?Wh$/.test(u)) return UNITA_DELLE_STATISTICHE.energy;
+  return u;
 }
 
 const numero = (valore) => {
@@ -340,6 +391,11 @@ export function quotaDellOra(voce, soglia) {
 }
 
 const UNITA_MILLE = Object.freeze({ kw: 1000 });
+/* L'energia di un contatore, in kWh. */
+const UNITA_IN_KWH = Object.freeze({ wh: 0.001, kwh: 1, mwh: 1000 });
+/* Sotto questi wattora in un'ora il climatizzatore e' in attesa, non lavora:
+ * uno split spento ne consuma pochi, uno che raffresca centinaia. */
+export const SOGLIA_WH_DELL_ORA = 30;
 
 /** Che cosa misura il numero di una caldaia, dalla sua unita'. */
 export function tipoDellaMisura(unitaDiMisura) {
@@ -400,7 +456,13 @@ export function riassuntoDalleStatistiche({
     const climaStessa = nelGiorno(u.entity);
     const valvola = pulito(u.valvola) && impianto !== "freddo" ? nelGiorno(u.valvola) : null;
     const consumo = pulito(u.consumo) ? nelGiorno(u.consumo) : null;
-    const scala = UNITA_MILLE[pulito(unitaDi(u.consumo)).toLowerCase()] || 1;
+    /* Potenza (W, kW) o energia (Wh, kWh): dalla potenza si sa quanto di
+     * ogni ora ha lavorato, dall'energia solo se in quell'ora ha consumato. */
+    const unitaDelConsumo = pulito(unitaDi(u.consumo)).toLowerCase();
+    const comeEnergia = pulito(u.consumo) && tipoDellaMisura(unitaDelConsumo) === "energia";
+    const scala = comeEnergia
+      ? (UNITA_IN_KWH[unitaDelConsumo] ?? 1)
+      : UNITA_MILLE[unitaDelConsumo] || 1;
     const soglia = numero(u.soglia_consumo) ?? SOGLIA_WATT_DEL_GENERATORE;
     const haValvola = valvola?.some(Boolean);
     const haConsumo = consumo?.some(Boolean);
@@ -432,10 +494,17 @@ export function riassuntoDalleStatistiche({
         }
       }
     } else if (consumoDiQuesto) {
-      fonte = doppia ? "stagione" : "consumo";
+      fonte = doppia ? "stagione" : u.consumoTrovato ? "dispositivo" : "consumo";
       for (let i = 0; i < lunghezza; i += 1) {
         const voce = consumo[i];
         if (!voce || !durataDi(i)) continue;
+        if (comeEnergia) {
+          /* Un'ora con piu' di qualche decina di wattora e' un'ora di
+           * lavoro: e' tutto quello che un contatore d'ora sa dire. */
+          const wh = Math.max(0, voce.change ?? 0) * scala * 1000;
+          perOra[i] = wh >= SOGLIA_WH_DELL_ORA ? durataDi(i) : 0;
+          continue;
+        }
         const inWatt = {
           mean: voce.mean === null ? null : voce.mean * scala,
           max: voce.max === null ? null : voce.max * scala,
@@ -446,9 +515,12 @@ export function riassuntoDalleStatistiche({
     let kwh = null;
     if (haConsumo && consumoDiQuesto) {
       kwh = 0;
-      for (let i = 0; i < lunghezza; i += 1)
-        if (consumo[i]?.mean !== null && consumo[i])
+      for (let i = 0; i < lunghezza; i += 1) {
+        if (!consumo[i]) continue;
+        if (comeEnergia) kwh += Math.max(0, consumo[i].change ?? 0) * scala;
+        else if (consumo[i].mean !== null)
           kwh += (consumo[i].mean * scala * durataDi(i)) / ORA / 1000;
+      }
       kwh = centesimi(kwh);
     }
     if (!peso && !fonte) continue;
@@ -457,7 +529,7 @@ export function riassuntoDalleStatistiche({
     stanze[u.entity] = {
       r: richiesta === null ? null : minuti(richiesta),
       /* Dai watt si sa anche quanto e' rimasta accesa; dalla valvola no. */
-      a: fonte === "consumo" || fonte === "stagione" ? minuti(richiesta) : null,
+      a: fonte && fonte !== "valvola" ? minuti(richiesta) : null,
       n: 0,
       o: fonte ? ore(perOra) : null,
       t: peso ? [centesimi(somma / peso), minuti(peso)] : null,
@@ -530,7 +602,11 @@ export function riassuntoDalleStatistiche({
     fonte: "statistiche",
     stanze,
     generatori: caldaie,
-    stima: { ms: minuti(stimaOre.reduce((s, x) => s + x, 0)), acc: null, o: ore(stimaOre) },
+    /* Senza nessuna stanza che sappia le sue ore la stima dell'impianto non
+     * c'e': zero vorrebbe dire «spento tutto il giorno», ed e' «non so». */
+    stima: quoteStanze.length
+      ? { ms: minuti(stimaOre.reduce((s, x) => s + x, 0)), acc: null, o: ore(stimaOre) }
+      : null,
   };
 }
 
@@ -788,19 +864,22 @@ export function reportDaiGiorni({
   let stimaMs = 0;
   let stimaAcc = 0;
   let stimaAccNote = true;
+  let stimaNota = false;
   for (const g of giorni) {
     const x = g.record?.stima;
     if (!x) continue;
+    stimaNota = true;
     stimaMs += (x.ms || 0) * MINUTO;
     if (x.acc === null || x.acc === undefined) stimaAccNote = false;
     else stimaAcc += x.acc;
     riempi(stimaSecchielli, g, indiceDelGiorno(g), x.ms, x.o);
   }
+  /* Nessun giorno che sappia le ore dell'impianto: «non so», non zero. */
   const stima = {
     nome: "",
     entity: "",
-    ms: stimaMs,
-    accensioni: stimaAccNote ? stimaAcc : null,
+    ms: stimaNota ? stimaMs : null,
+    accensioni: stimaNota && stimaAccNote ? stimaAcc : null,
     perSecchiello: stimaSecchielli,
     stima: true,
   };
@@ -808,6 +887,27 @@ export function reportDaiGiorni({
   const perSecchiello = secchielli.map((_, i) =>
     generatoriDelReport.reduce((somma, g) => somma + g.perSecchiello[i], 0),
   );
+  /* Quali colonne del grafico si sanno: zero misurato e «non so» si
+   * disegnano diversi. Un giorno si sa se una caldaia l'ha detto o, senza
+   * caldaie, se c'e' la stima; nel giorno ora per ora serve anche l'ora. */
+  const giornoNoto = (g) =>
+    misurate.length
+      ? misurate.some((m) => g.record?.generatori?.[m.entity])
+      : Boolean(g.record?.stima);
+  const oreNote = (g) =>
+    misurate.length
+      ? misurate.some((m) => Array.isArray(g.record?.generatori?.[m.entity]?.o))
+      : Array.isArray(g.record?.stima?.o);
+  const noti = secchielli.map(() => false);
+  for (const g of giorni) {
+    if (!giornoNoto(g)) continue;
+    if (perOra) {
+      if (oreNote(g)) noti.fill(true);
+    } else {
+      const i = indiceDelGiorno(g);
+      if (i >= 0 && i < noti.length) noti[i] = true;
+    }
+  }
   const mediaSemplice = (valori) => {
     const buoni = valori.filter((v) => v !== null && v !== undefined);
     return buoni.length ? buoni.reduce((s, v) => s + v, 0) / buoni.length : null;
@@ -824,9 +924,11 @@ export function reportDaiGiorni({
     nascoste,
     generatori: generatoriDelReport,
     stima: !misurate.length,
-    secchielli: secchielli.map((s, i) => ({ ...s, ms: perSecchiello[i] })),
+    secchielli: secchielli.map((s, i) => ({ ...s, ms: perSecchiello[i], noto: noti[i] })),
     totali: {
-      msGeneratore: generatoriDelReport.reduce((s, g) => s + g.ms, 0),
+      msGeneratore: generatoriDelReport.some((g) => g.ms !== null)
+        ? generatoriDelReport.reduce((s, g) => s + (g.ms || 0), 0)
+        : null,
       accensioni: accensioniNote ? generatoriDelReport.reduce((s, g) => s + g.accensioni, 0) : null,
       msRichiesta: richieste.length ? richieste.reduce((s, x) => s + x.msRichiesta, 0) : null,
       ambiente: mediaSemplice(conDati.map((s) => s.ambiente)),

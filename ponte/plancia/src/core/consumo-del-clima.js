@@ -29,6 +29,10 @@ const clean = (valore) => String(valore ?? "").trim();
  * che riportano kW — non va letto come se fossero watt, o mille volte meno
  * corrente sembrerebbe mille volte meno di niente. */
 const MILLE = Object.freeze({ kw: 1000, kilowatt: 1000 });
+/* Un contatore di energia non e' una potenza: i suoi kWh salgono e basta, e
+ * letti come watt 1534 kWh sopra una soglia di 20 W direbbero «acceso» per
+ * sempre. Da un contatore non si dice niente. */
+const ENERGIA = /^(m|k|g)?wh$/i;
 
 /** L'entità del consumo di questa unità, o "". */
 export function entitaDelConsumo(unita) {
@@ -59,6 +63,8 @@ export function wattDellUnita(unita, states = {}) {
   const valore = Number(grezzo.replace(",", "."));
   if (!Number.isFinite(valore)) return null;
   const unitaDiMisura = clean(stato.attributes?.unit_of_measurement).toLowerCase();
+  if (ENERGIA.test(unitaDiMisura) || clean(stato.attributes?.device_class) === "energy")
+    return null;
   return valore * (MILLE[unitaDiMisura] || 1);
 }
 

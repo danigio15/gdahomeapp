@@ -40,6 +40,7 @@ import {
 import { createApplianceViewModel, onRunHoldExpiry } from "../core/appliance-view-model.js";
 import { applianceVisualKey, canonicalClimateType, climaScalda } from "../core/device-model.js";
 import { climaInFunzione } from "../core/il-termostato.js";
+import { letturaValvola } from "../core/valvola-trv.js";
 import { applianceArtwork, applianceGlyph } from "../core/appliance-artwork.js";
 import { applianceCardModel } from "../core/appliance-card-view-model.js";
 import { applianceModelById, buildCardMarkup, cardLabels } from "./appliance-showcase-section.js";
@@ -1252,7 +1253,24 @@ function rigaClima(states, unit) {
      * spento resta un termosifone, e il fiocco di neve sopra un
      * radiatore era il disegno di un'altra casa. */
     tipo: canonicalClimateType(unit?.type),
+    /* Quanto e' aperta la valvola (#300): «qui sarebbe carino avere le % di
+     * apertura valvola». La stessa lettura della card del Clima e del report
+     * — la casella «Valvola» dell'unita', o gli attributi del termostato —
+     * e una cosa sola in piu': chi ha scelto un'entita' che adesso non
+     * risponde legge «—», non niente, perche' la valvola c'e'. `null` quando
+     * l'unita' una valvola non ce l'ha. */
+    valvola: valvolaDellUnita(states, unit, attributi),
   };
+}
+
+export function valvolaDellUnita(states, unit, attributi) {
+  const entita = clean(unit?.valvola);
+  const lettura = letturaValvola({
+    stato: entita ? stateOf(states, entita) : null,
+    attributi,
+  });
+  if (lettura) return lettura.aperta;
+  return entita ? "—" : null;
 }
 
 function climateModel(states) {
@@ -7776,11 +7794,22 @@ function climateDetail(widget) {
       const pannello = climatePanel(row);
       const aperto = pannello && state.aperti.has(row.entity);
       const stanza = clean(row.stanza) === clean(row.name) ? "" : clean(row.stanza);
+      const aperta =
+        row.valvola === null || row.valvola === undefined
+          ? ""
+          : typeof row.valvola === "number"
+            ? `${row.valvola}%`
+            : "—";
       const sotto = [stanza, parola(row)].filter(Boolean).join(" · ");
+      /* «valvola 64%» non si spezza: sul telefono andava a capo fra la parola
+       * e il numero. Se manca il posto scende intera sulla riga sotto. */
+      const valvola = aperta
+        ? `${sotto ? " · " : ""}<span class="dm-w-valvola" data-dm-w-valvola="${esc(aperta)}" style="white-space:nowrap">${esc(t(`valvola ${aperta}`, `valve ${aperta}`))}</span>`
+        : "";
       return (
         rowShell(
           `<span class="dm-w-glyph dm-w-clima-ic" data-on="${row.on}" aria-hidden="true">${climateGlyph(row.mode || "", row.tipo, row.azione)}</span>
-         <span class="dm-w-name">${esc(row.name)}<small>${esc(sotto)}</small></span>
+         <span class="dm-w-name">${esc(row.name)}<small>${esc(sotto)}${valvola}</small></span>
          <span class="dm-w-clima-gradi">
            <b>${row.ambient == null ? "--" : `${formatNumber(row.ambient, 1)}°`}</b>
            ${
@@ -11703,6 +11732,14 @@ html[data-theme="dark"] .dm-w-panel-row[data-dm-w-obiettivo="alto"] .dm-w-steppe
   font-size:11.5px;font-weight:800;color:var(--text-dim,#64748b)}
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda="freddo"] .dm-w-power[data-on="true"]{background:#0ea5e9}
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda="caldo"] .dm-w-power[data-on="true"]{background:#f97316}
+/* Al buio le schede accese restano del loro colore, ma scuro: col fondo
+   chiaro del giorno il nome e i gradi, che al buio sono bianchi, sparivano. */
+html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda="caldo"]{
+  background:linear-gradient(150deg,color-mix(in srgb,#f97316 24%,#0f172a),color-mix(in srgb,#f97316 12%,#0f172a))!important}
+html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda="freddo"]{
+  background:linear-gradient(150deg,color-mix(in srgb,#0ea5e9 24%,#0f172a),color-mix(in srgb,#0ea5e9 12%,#0f172a))!important}
+html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-clima-scheda="caldo"] .dm-w-clima-ic{
+  background:color-mix(in srgb,#f97316 30%,#0f172a)!important}
 /* Gli aggiornamenti: il marchio, il nome, da che versione a che versione, e
    il tasto per installare a portata di pollice. */
 :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-aggs{display:grid;gap:9px}

@@ -263,7 +263,7 @@ test("agenda: il prossimo impegno in cima, la settimana, e le cose da fare coi l
   const scritto = testo(markup);
   /* la prova usa l'ora vera: dopo le dieci di sera l'impegno fra due ore
    * cade domani, e la finestra lo dice (passava di giorno, cadeva la notte) */
-  const oggi = new Date(evento.fine).getDate() === new Date(adesso).getDate();
+  const oggi = new Date(evento.inizio).getDate() === new Date(adesso).getDate();
   assert.match(scritto, /Il prossimo/);
   if (oggi) assert.match(scritto, /fra (1|2) or/);
   else assert.match(scritto, /Domani/);

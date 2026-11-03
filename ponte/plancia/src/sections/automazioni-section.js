@@ -114,6 +114,12 @@ const state = (root[KEY] ||= {
   ponte: null,
   assente: false,
   chiestoIl: 0,
+  /* Quando e' partita la domanda dell'ultimo elenco arrivato, una richiesta
+   * forzata arrivata a domanda in corso, e il perche' dell'ultima lettura
+   * andata male. */
+  elencoIl: 0,
+  ancoraUnaVolta: null,
+  erroreLettura: "",
   /* La tendina del QUANDO aperta. */
   tendina: false,
   tendinaAltro: false,
@@ -308,31 +314,53 @@ const puoScrivere = () => state.ponte?.puoScrivere === true;
 
 /* ── la casa ─────────────────────────────────────────────────────────────── */
 
-export async function chiediAllaCasa({ forza = false } = {}) {
-  if (state.chiedendo) return;
+export async function chiediAllaCasa({ forza = false, soloElenco = false } = {}) {
+  /* Una richiesta forzata — dopo un salvataggio — mentre un'altra e' in
+   * corso non si perde: si rifa' quando quella finisce. Prima tornava
+   * indietro e basta, e se la casa stava leggendo le proposte (fino a 15
+   * secondi) la rilettura del programma salvato non partiva mai.
+   *
+   * `soloElenco`: chi deve solo rileggere le automazioni (la finestra del
+   * programma che riprova dopo un errore) non rifa' le proposte e non
+   * richiede il Premium da capo. */
+  if (state.chiedendo) {
+    if (forza)
+      state.ancoraUnaVolta = {
+        soloElenco: soloElenco && (state.ancoraUnaVolta?.soloElenco ?? true),
+      };
+    return;
+  }
   const adesso = Date.now();
   if (!forza && adesso - state.chiestoIl < VALE) return;
   state.chiedendo = true;
   state.chiestoIl = adesso;
   try {
-    state.premium = await premiumDellaCasa({ forza });
+    state.premium = await premiumDellaCasa({ forza: forza && !soloElenco });
   } catch (_errore) {
     state.premium = state.premium === true;
   }
   try {
+    const chiesto = Date.now();
     state.ponte = await chiediAHomeAssistant({ type: "ponte/automazioni/stato" }, 25000);
+    /* Quando e' partita la domanda di questo elenco: chi ha appena salvato
+     * sa cosi' se l'elenco e' di dopo il salvataggio o di prima. */
+    state.elencoIl = chiesto;
     state.assente = false;
+    state.erroreLettura = "";
   } catch (errore) {
     /* «Non conosco»: questa plancia non sta dietro all'add-on, e l'elenco
      * non lo legge nessuno. Un filo non ancora aperto si riprova. */
     const detto = clean(errore?.message);
     state.assente = /non conosco|unknown/i.test(detto);
     if (detto === "socket") state.chiestoIl = adesso - VALE + 4000;
+    /* Il perche', per chi aspetta l'elenco (la finestra del programma):
+     * meglio «non riesco a leggerlo, riprovo» che «leggo…» per sempre. */
+    state.erroreLettura = state.assente ? "" : detto || "?";
   }
   /* Le proposte: la prima volta del giorno la casa legge la storia, e puo'
    * metterci qualche secondo. Senza add-on non ce ne sono. */
   try {
-    if (!state.assente) {
+    if (!state.assente && !soloElenco) {
       ridisegnaTutto();
       state.proposte = await chiediAHomeAssistant({ type: "ponte/automazioni/proposte" }, 15000);
     }
@@ -343,6 +371,11 @@ export async function chiediAllaCasa({ forza = false } = {}) {
     state.chiedendo = false;
   }
   ridisegnaTutto();
+  if (state.ancoraUnaVolta) {
+    const ancora = state.ancoraUnaVolta;
+    state.ancoraUnaVolta = null;
+    void chiediAllaCasa({ forza: true, soloElenco: ancora.soloElenco === true });
+  }
 }
 
 /* Chi ridisegna quando la casa risponde: questa pagina, e la sezione della

@@ -175,6 +175,27 @@ export class Chiamata {
     this.attesaDelleSpinte = attesaDelleSpinte;
     /* Chi sente che un gettone non vale piu': `notifiche.js`. */
     this.alGettoneMorto = null;
+    /* Quanti telefoni per versione dell'app, per il centralino
+     * (`telefoni-al-tramite.js`). `null`: nessuno l'ha ancora detto. */
+    this._telefoni = null;
+  }
+
+  /* ─── I telefoni, per versione dell'app ───────────────────────────────
+   *
+   *     casa → centralino   {t: "telefoni", visti7gg, versioni, rapporto}
+   *
+   * Solo quanti, per negozio e versione: lo stesso conto del rapporto, senza
+   * nomi ne' identificativi (`telefoni-al-tramite.js`). Si ridice a ogni
+   * entrata: il centralino lo tiene in memoria, e uno che si riavvia lo
+   * perde. Un centralino di ieri non lo conosce e lo lascia cadere. */
+  diITelefoni(conto) {
+    this._telefoni = conto ?? null;
+    if (this.dentro) this._mandaITelefoni();
+  }
+
+  _mandaITelefoni() {
+    if (!this._telefoni) return;
+    this._manda({ t: "telefoni", ...this._telefoni });
   }
 
   /* ─── Le notifiche ─────────────────────────────────────────────────────
@@ -433,6 +454,9 @@ export class Chiamata {
       /* E i gettoni delle notifiche: un centralino che si riavvia li ha sul
        * disco, ma un telefono staccato mentre il filo era giu' no. */
       this._mandaIGettoni();
+      /* E quanti telefoni per versione dell'app: un centralino che si
+       * riavvia li ha persi. */
+      this._mandaITelefoni();
       /* E le notifiche partite mentre il filo era giu', dopo i gettoni:
        * sono gli indirizzi a cui il centralino le consegna. */
       this._mandaLeSpinteInAttesa();

@@ -1270,6 +1270,115 @@ export function categoriaDi(config, statoDi = null) {
   return "altre";
 }
 
+/**
+ * I termostati che un'automazione comanda: i `climate.*` che compaiono nelle
+ * sue azioni (e nel programma, se e' un cronotermostato). Serve anche quando
+ * la plancia non la sa leggere: «due programmi si contendono il termostato
+ * senza che nessuno lo dica» — una scritta a mano che alza la Sala alle 7 la
+ * finestra del programma la deve contare lo stesso.
+ */
+export function climiComandati(config) {
+  if (!eOggetto(config)) return [];
+  const trovati = new Set();
+  /* Gli id stanno sotto `entity_id` (nel target, nei dati, o da soli): il
+   * nome di un servizio — `climate.set_temperature` — no. */
+  const prendi = (x) => {
+    for (const v of Array.isArray(x) ? x : [x])
+      for (const pezzo of typeof v === "string" ? v.split(",") : [])
+        if (/^climate\.[a-z0-9_]+$/.test(pezzo.trim())) trovati.add(pezzo.trim());
+  };
+  const cerca = (x) => {
+    if (Array.isArray(x)) for (const y of x) cerca(y);
+    else if (eOggetto(x))
+      for (const [chiave, y] of Object.entries(x)) {
+        if (chiave === "entity_id") prendi(y);
+        else cerca(y);
+      }
+  };
+  cerca(config.actions ?? config.action);
+  prendi(config.variables?.[VARIABILE_DEL_CRONO]?.termostati);
+  return [...trovati].sort();
+}
+
+/**
+ * I termostati che un'automazione «programma»: ne imposta i gradi o il modo
+ * (`climate.set_temperature`, `climate.set_hvac_mode`) e parte a un orario
+ * (`time`, `time_pattern`). Sono loro a litigare con un programma della
+ * plancia. «Esco di casa → spegni», «alle 23 spegni gli split»
+ * (`climate.turn_off`), un termostato citato in una condizione: lo toccano,
+ * ma non sono un altro programma.
+ */
+export function climiProgrammati(config) {
+  if (!eOggetto(config)) return [];
+  const comeLista = (x) => (Array.isArray(x) ? x : x == null ? [] : [x]);
+  const aOrario = comeLista(config.triggers ?? config.trigger).some((t) =>
+    ["time", "time_pattern"].includes(String(t?.trigger ?? t?.platform ?? "")),
+  );
+  if (!aOrario) return [];
+  const servizi = new Set(["climate.set_temperature", "climate.set_hvac_mode"]);
+  const trovati = new Set();
+  const prendi = (x) => {
+    for (const v of comeLista(x))
+      for (const pezzo of typeof v === "string" ? v.split(",") : [])
+        if (/^climate\.[a-z0-9_]+$/.test(pezzo.trim())) trovati.add(pezzo.trim());
+  };
+  const dentroEntita = (x) => {
+    if (Array.isArray(x)) for (const y of x) dentroEntita(y);
+    else if (eOggetto(x))
+      for (const [chiave, y] of Object.entries(x)) {
+        if (chiave === "entity_id") prendi(y);
+        else dentroEntita(y);
+      }
+  };
+  /* Le azioni, anche dentro `choose`, `if`/`then`/`else`, `sequence`,
+   * `parallel`, `repeat`: un'azione che imposta il clima prende gli
+   * `entity_id` del suo `target` e dei suoi `data`. Le condizioni no. */
+  const cerca = (x) => {
+    if (Array.isArray(x)) {
+      for (const y of x) cerca(y);
+      return;
+    }
+    if (!eOggetto(x)) return;
+    const servizio = String(x.action ?? x.service ?? "");
+    if (servizi.has(servizio)) {
+      dentroEntita(x.target);
+      dentroEntita(x.data);
+      dentroEntita(x.data_template);
+      if ("entity_id" in x) prendi(x.entity_id);
+    }
+    for (const [chiave, y] of Object.entries(x)) {
+      if (chiave === "conditions" || chiave === "condition" || chiave === "if") continue;
+      if (chiave === "target" || chiave === "data" || chiave === "data_template") continue;
+      if (Array.isArray(y) || eOggetto(y)) cerca(y);
+    }
+  };
+  cerca(config.actions ?? config.action);
+  return [...trovati].sort();
+}
+
+/** Se e' un cronotermostato della plancia, anche quando non si legge piu'. */
+export const eUnProgrammaDellaPlancia = (config) =>
+  eOggetto(config) && eOggetto(config.variables?.[VARIABILE_DEL_CRONO]);
+
+/**
+ * La stessa configurazione, comunque Home Assistant la rilegga: le chiavi in
+ * ordine. `automations.yaml` torna indietro coi valori di prima, ma l'ordine
+ * delle chiavi non e' una promessa.
+ */
+export function firmaStabile(valore) {
+  const ordina = (x) =>
+    Array.isArray(x)
+      ? x.map(ordina)
+      : eOggetto(x)
+        ? Object.fromEntries(
+            Object.keys(x)
+              .sort()
+              .map((k) => [k, ordina(x[k])]),
+          )
+        : x;
+  return JSON.stringify(ordina(valore ?? null));
+}
+
 /** Da dove viene: «gdahome» (nata dalla plancia), «blueprint», o niente. */
 export function origineDi(config) {
   if (!eOggetto(config)) return "";

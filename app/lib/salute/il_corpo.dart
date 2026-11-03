@@ -71,10 +71,58 @@ enum MisuraDelCorpo {
       en: 'the latest reading',
     ),
     MisuraDelCorpo.ossigeno => inLingua(it: "l'ultimo", en: 'the latest'),
-    MisuraDelCorpo.sonno => inLingua(it: 'stanotte', en: 'last night'),
+    MisuraDelCorpo.sonno => inLingua(it: "l'ultima notte", en: 'last night'),
     MisuraDelCorpo.calorie => inLingua(it: 'quelle di oggi', en: "today's"),
   };
 }
+
+/// Fin dove si guarda indietro per «l'ultimo» valore di una misura.
+///
+/// «In Salute il battito c'e', 73 il 1° novembre, ma l'app non lo vede»: il
+/// battito si cercava solo negli ultimi due giorni, l'ossigeno anche, e un
+/// orologio lasciato sul comodino un fine settimana bastava a farli sparire.
+/// L'ultimo valore resta l'ultimo anche se ha qualche giorno: la data si
+/// scrive accanto, nell'app e nella plancia, e chi legge decide.
+///
+/// Il tetto e' quello del ponte: una misura piu' vecchia di 45 giorni il
+/// ponte non la scrive (`VECCHIA` in `ponte/src/il-corpo-dal-telefono.js`),
+/// e cercarla piu' indietro vorrebbe dire mandarla per farla buttare.
+const limiteDelPonte = Duration(days: 45);
+
+/// Per misura: quanto indietro, al massimo. Passi e calorie sono «di oggi»,
+/// il sonno e' «l'ultima notte» (`ilSonnoDiStanotte`).
+Duration? finestraDellUltimo(MisuraDelCorpo misura) => switch (misura) {
+  MisuraDelCorpo.battito ||
+  MisuraDelCorpo.battitoRiposo ||
+  MisuraDelCorpo.ossigeno => const Duration(days: 30),
+  MisuraDelCorpo.peso ||
+  MisuraDelCorpo.grasso ||
+  MisuraDelCorpo.sistolica ||
+  MisuraDelCorpo.diastolica => limiteDelPonte,
+  MisuraDelCorpo.passi ||
+  MisuraDelCorpo.calorie ||
+  MisuraDelCorpo.sonno => null,
+};
+
+/// Gli scalini con cui si cerca: prima l'ultimo giorno, poi la settimana,
+/// poi tutta la finestra. Un Apple Watch scrive un battito ogni pochi minuti:
+/// chiedere trenta giorni di battiti per tenerne uno sarebbe chiederne
+/// migliaia, e quasi sempre basta il primo scalino.
+List<Duration> scaliniFinoA(Duration finestra) => [
+  for (final d in const [Duration(days: 1), Duration(days: 7)])
+    if (d < finestra) d,
+  finestra,
+];
+
+/// Fin dove si cerca l'ultima notte: un orologio rimasto a caricare stanotte
+/// non cancella quella di ieri.
+const notteFinoA = Duration(days: 3);
+
+/// Sveglio piu' di cosi' fra due tratti, e sono due sonni diversi.
+const risveglioFinoA = Duration(hours: 2);
+
+/// Un sonno piu' corto di cosi' e' un pisolino, non la notte.
+const notteAlmeno = Duration(hours: 3);
 
 /// Le misure accese di serie: quelle che quasi ogni orologio ha.
 const misureDiSerie = {
@@ -197,25 +245,72 @@ Lettura? lUltimo(Iterable<Campione> campioni) {
 /// numero (97). Qui sempre come numero.
 double comePercentuale(double valore) => valore <= 1.0 ? valore * 100 : valore;
 
-/// Il sonno di stanotte, in minuti: i tratti di sonno finiti dopo le 18 di
-/// ieri, sommati senza contare due volte quelli che si sovrappongono — un
-/// iPhone e un orologio scrivono la stessa notte due volte.
+/// L'ultima notte di sonno, in minuti. I tratti si mettono in fila e si
+/// uniscono in «sonni»: fra un tratto e l'altro al piu' [risveglioFinoA]
+/// sveglio, e quelli che si sovrappongono non si contano due volte — un
+/// iPhone e un orologio scrivono la stessa notte due volte. La notte e'
+/// l'ultimo sonno lungo almeno [notteAlmeno]: un pisolino, anche della
+/// sera, non e' «l'ultima notte». Chi lavora di notte dorme di giorno, e
+/// vale lo stesso. Se di sonni lunghi non ce ne sono, l'ultimo che c'e'.
+/// Stanotte, se c'e'; se l'orologio stanotte era a caricare, quella
+/// prima, fino a [notteFinoA] indietro.
 Lettura? ilSonnoDiStanotte(Iterable<Campione> tratti, DateTime adesso) {
-  final daIeri = DateTime(adesso.year, adesso.month, adesso.day - 1, 18);
-  final validi = [
+  final buoni = [
     for (final t in tratti)
-      if (t.a.isAfter(daIeri) && t.a.isAfter(t.da)) t,
+      if (t.a.isAfter(t.da) &&
+          !t.a.isAfter(adesso) &&
+          adesso.difference(t.a) <= notteFinoA)
+        t,
   ]..sort((x, y) => x.da.compareTo(y.da));
-  if (validi.isEmpty) return null;
+  if (buoni.isEmpty) return null;
+  final sonni = <({double minuti, DateTime fine})>[];
   var minuti = 0.0;
   DateTime? finoA;
-  for (final t in validi) {
+  DateTime? notteDelSonno;
+  for (final t in buoni) {
+    final notteDelTratto = laNotteDi(t.da);
+    /* Un risveglio di notte (sveglio dalle 2 alle 4:30) non spezza la
+     * notte: due tratti cominciati nella stessa notte — dalle 18 alle 12
+     * del giorno dopo — sono un sonno solo, qualunque sia il buco. Il
+     * pisolino delle 17:30 comincia prima: resta a parte. */
+    final stessaNotte =
+        notteDelTratto != null && notteDelTratto == notteDelSonno;
+    if (finoA != null &&
+        t.da.difference(finoA) > risveglioFinoA &&
+        !stessaNotte) {
+      sonni.add((minuti: minuti, fine: finoA));
+      minuti = 0;
+      finoA = null;
+      notteDelSonno = null;
+    }
+    notteDelSonno ??= notteDelTratto;
     final da = finoA != null && t.da.isBefore(finoA) ? finoA : t.da;
     if (t.a.isAfter(da)) minuti += t.a.difference(da).inSeconds / 60;
     if (finoA == null || t.a.isAfter(finoA)) finoA = t.a;
   }
-  if (minuti < 1) return null;
-  return Lettura(minuti.roundToDouble(), finoA!);
+  sonni.add((minuti: minuti, fine: finoA!));
+  final lunghi = [
+    for (final s in sonni)
+      if (s.minuti >= notteAlmeno.inMinutes) s,
+  ];
+  final notte = (lunghi.isEmpty ? sonni : lunghi).reduce(
+    (x, y) => y.fine.isAfter(x.fine) ? y : x,
+  );
+  if (notte.minuti < 1) return null;
+  return Lettura(notte.minuti.roundToDouble(), notte.fine);
+}
+
+/// La notte in cui comincia un tratto di sonno: dalle 18 alle 12 del giorno
+/// dopo vale la data della sera; dalle 12 alle 18 nessuna notte (e' un
+/// sonno di giorno: un pisolino, o chi lavora di notte).
+DateTime? laNotteDi(DateTime quando) {
+  if (quando.hour >= 18) {
+    return DateTime(quando.year, quando.month, quando.day);
+  }
+  if (quando.hour < 12) {
+    return DateTime(quando.year, quando.month, quando.day - 1);
+  }
+  return null;
 }
 
 /// Quello che va al ponte: `{passi: {valore, quando}, …}`, solo le misure
@@ -227,3 +322,120 @@ Map<String, Object> perIlPonte(
   for (final MapEntry(key: misura, value: lettura) in lette.entries)
     if (scelte.contains(misura)) misura.name: lettura.inJson(),
 };
+
+/// Quando, se non e' oggi: «1 nov» in italiano, «Nov 1» in inglese; ieri e'
+/// «ieri». Oggi niente: «l'ultimo · 73 bpm» basta. Come la plancia, che
+/// accanto a una misura vecchia scrive il giorno.
+String? quandoSeNonOggi(DateTime quando, DateTime adesso) {
+  final giorno = DateTime(quando.year, quando.month, quando.day);
+  final oggi = DateTime(adesso.year, adesso.month, adesso.day);
+  final indietro = oggi.difference(giorno).inDays;
+  if (indietro <= 0) return null;
+  if (indietro == 1) return inLingua(it: 'ieri', en: 'yesterday');
+  const mesi = [
+    ('gen', 'Jan'),
+    ('feb', 'Feb'),
+    ('mar', 'Mar'),
+    ('apr', 'Apr'),
+    ('mag', 'May'),
+    ('giu', 'Jun'),
+    ('lug', 'Jul'),
+    ('ago', 'Aug'),
+    ('set', 'Sep'),
+    ('ott', 'Oct'),
+    ('nov', 'Nov'),
+    ('dic', 'Dec'),
+  ];
+  final (it, en) = mesi[quando.month - 1];
+  return inLingua(it: '${quando.day} $it', en: '$en ${quando.day}');
+}
+
+/// Perche' l'ultimo invio alla casa non e' andato. La casa dice di no per
+/// due motivi suoi (`ponte/src/il-corpo-dal-telefono.js`), e poi c'e' la
+/// casa che non risponde.
+enum GuastoDellaSalute {
+  /// La casa non ha GdAHome Premium: `premium-richiesto`.
+  premiumRichiesto,
+
+  /// Il telefono non e' intestato a un utente di Home Assistant:
+  /// `unauthorized`. Va riabbinato.
+  telefonoNonIntestato,
+
+  /// Il filo e' caduto, o la casa non ha risposto in tempo.
+  casaNonRisponde,
+
+  /// Un altro no della casa.
+  altro;
+
+  /// Da un codice di rifiuto della casa. `null`: non era un rifiuto.
+  static GuastoDellaSalute daCodice(String? codice) => switch (codice) {
+    'premium-richiesto' => GuastoDellaSalute.premiumRichiesto,
+    'unauthorized' => GuastoDellaSalute.telefonoNonIntestato,
+    _ => GuastoDellaSalute.altro,
+  };
+
+  /// Cosa dire, in una riga che si capisce senza sapere cos'e' un ponte.
+  String get spiegazione => switch (this) {
+    GuastoDellaSalute.premiumRichiesto => inLingua(
+      it:
+          'La casa non accetta le misure: la salute dal telefono è di '
+          'GdAHome Premium, e questa casa non ce l\'ha.',
+      en:
+          "Your home doesn't accept the readings: health from the phone is "
+          "part of GdAHome Premium, and this home doesn't have it.",
+    ),
+    GuastoDellaSalute.telefonoNonIntestato => inLingua(
+      it:
+          'La casa non accetta le misure: questo telefono non è intestato a '
+          'un utente di Home Assistant. Abbinalo di nuovo entrando col tuo '
+          'utente.',
+      en:
+          "Your home doesn't accept the readings: this phone isn't linked to a "
+          'Home Assistant user. Pair it again, signing in as yourself.',
+    ),
+    GuastoDellaSalute.casaNonRisponde => inLingua(
+      it: 'La casa non risponde: riprovo da solo fra poco.',
+      en: "Your home isn't answering: I'll retry shortly.",
+    ),
+    GuastoDellaSalute.altro => inLingua(
+      it: 'La casa ha rifiutato le misure. Riprovo da solo fra poco.',
+      en: 'Your home refused the readings. I\'ll retry shortly.',
+    ),
+  };
+}
+
+/// Sotto una misura scelta che Salute o Health Connect non hanno dato.
+/// Apple non dice mai se il permesso di leggere c'e': una misura negata e
+/// una che non c'e' sembrano uguali, e allora si dicono tutte e due.
+String nessunValore(MisuraDelCorpo misura, {required bool iPhone}) {
+  final finestra = finestraDellUltimo(misura);
+  final quando = switch (misura) {
+    MisuraDelCorpo.passi ||
+    MisuraDelCorpo.calorie => inLingua(it: 'oggi', en: 'today'),
+    MisuraDelCorpo.sonno => inLingua(
+      it: 'nelle ultime notti',
+      en: 'for the last few nights',
+    ),
+    _ => inLingua(
+      it: 'negli ultimi ${finestra!.inDays} giorni',
+      en: 'in the last ${finestra.inDays} days',
+    ),
+  };
+  return iPhone
+      ? inLingua(
+          it:
+              'Salute non ne ha $quando. Se in Salute c\'è, controlla in '
+              'Impostazioni › Salute › Accesso ai dati e dispositivi › GdAHome.',
+          en:
+              "Health has none $quando. If Health has it, check Settings › "
+              'Health › Data Access & Devices › GdAHome.',
+        )
+      : inLingua(
+          it:
+              'Health Connect non ne ha $quando. Se c\'è, controlla in Health '
+              'Connect › Autorizzazioni app › GdAHome.',
+          en:
+              "Health Connect has none $quando. If it's there, check Health "
+              'Connect › App permissions › GdAHome.',
+        );
+}
