@@ -7271,13 +7271,39 @@
           </li>`;
         };
         const altri = V.negozi?.altro || VUOTO_NEGOZIO;
+        /* «Mancano tutti quelli che hanno la 1.18.7»: i telefoni delle case
+         * con l'add-on di prima della 1.18.7.14, che dicono solo quanti sono.
+         * Si contano a parte, cosi' il totale torna e si sa a chi chiedere di
+         * aggiornare l'add-on. */
+        const MUTE = V.senzaVersioni || { telefoni: 0, case: [] };
+        const rigaMuta = (una) => {
+          const di = CONTI.tutte.find((c) => c.matricola === una.casa)?.chi || "";
+          return `
+          <li data-apri-casa="${testo(una.casa)}" data-di="${testo(di)}" role="button" tabindex="0">
+            <span class="tondino">${LE_ICONE["telefono"]}</span>
+            <span class="riga-testo">
+              <b>${testo(CONTI.nomi.get(una.casa) || una.nome || "Casa senza nome · " + String(una.casa).slice(5, 13))}</b>
+              <span>${testo(plurale(una.telefoni, "telefono", "telefoni"))}${una.ponte ? ` · add-on ${testo(una.ponte)}` : ""}</span>
+            </span>
+            <span class="pastiglia guardare">add-on da aggiornare</span>
+            <span class="freccina">${LE_ICONE["freccia"]}</span>
+          </li>`;
+        };
+        const tuttiITelefoni = V.telefoni + MUTE.telefoni;
+        const leMute = MUTE.telefoni
+          ? `<section class="scheda" data-senza-versioni>
+              <p class="servizio-titolo">Versione non detta: add-on prima della 1.18.7.14</p>
+              <p class="minuta">${testo(plurale(MUTE.telefoni, "telefono", "telefoni"))} in ${testo(MUTE.case.length === 1 ? "1 casa" : `${numero(MUTE.case.length)} case`)} che dicono solo quanti telefoni hanno: le versioni dell'app arrivano dall'add-on 1.18.7.14. Quando la casa aggiorna l'add-on, i suoi telefoni passano nei negozi qui sopra.</p>
+              <ul class="elenco si-tocca">${MUTE.case.map(rigaMuta).join("")}</ul>
+            </section>`
+          : "";
         const leVersioni = `
           <div class="capo-sezione le-versioni">
             <div>
               <h2>Versioni dell'app sui telefoni</h2>
               <p>${testo(
-                V.telefoni
-                  ? `${plurale(V.telefoni, "telefono visto", "telefoni visti")} negli ultimi 7 giorni, negozio per negozio. Da ogni casa arriva solo quanti telefoni per versione, senza nomi né modelli.`
+                tuttiITelefoni
+                  ? `${plurale(tuttiITelefoni, "telefono visto", "telefoni visti")} negli ultimi 7 giorni${MUTE.telefoni ? `, di cui ${numero(MUTE.telefoni)} in case che la versione non la dicono` : ""}. Negozio per negozio, da ogni casa arriva solo quanti telefoni per versione, senza nomi né modelli.`
                   : "Le case dicono le versioni nel loro rapporto dalla GdAHome 1.18.7.14: contano i telefoni visti negli ultimi 7 giorni, senza nomi né modelli.",
               )}</p>
             </div>
@@ -7306,7 +7332,8 @@
             </section>`
               : ""
           }
-          <p class="minuta" style="margin: 10px 2px 0">Il numero fra parentesi lo dice l'app dalla prossima versione: quelle di adesso compaiono come «numero non detto».</p>`;
+          ${/* già HTML */ leMute}
+          <p class="minuta" style="margin: 10px 2px 0">Il numero fra parentesi lo dice l'app dalla 1.18.8: le app di prima compaiono come «numero non detto».</p>`;
 
         return `${/* già HTML */ testa}
           ${

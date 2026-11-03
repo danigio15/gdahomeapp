@@ -122,3 +122,49 @@ test("l'ultima scritta come pubblicata conta come la piu' nuova del suo negozio"
   assert.equal(V.case[0].indietro, true);
   assert.equal(V.negozi.google.piuNuova, 0);
 });
+
+/* «Mancano tutti quelli che hanno la 1.18.7»: le case con l'add-on di prima
+ * della 1.18.7.14 dicono solo quanti telefoni hanno visto, non con quale
+ * versione. Non spariscono: si contano a parte, con l'add-on che hanno. */
+test("i telefoni delle case che la versione non la dicono si contano a parte", () => {
+  const V = leVersioniDelleApp([
+    casa("casa_1", "Villa", [
+      { negozio: "apple", versione: "1.18.8", costruzione: 1180800, quanti: 1 },
+    ]),
+    {
+      casa: "casa_2",
+      nome: "Centro",
+      carta: { ponte: "1.18.7.10", telefoni: { abbinati: 3, visti7gg: 2 } },
+    },
+    {
+      casa: "casa_3",
+      nome: "Mare",
+      carta: { ponte: "1.18.6", telefoni: { abbinati: 5, visti7gg: 4, versioni: [] } },
+    },
+    /* Nessun telefono visto in settimana: non c'e' niente da dire. */
+    { casa: "casa_4", nome: "Monti", carta: { ponte: "1.17.0", telefoni: { visti7gg: 0 } } },
+    { casa: "casa_5", nome: "Senza carta", carta: null },
+  ]);
+  assert.equal(V.telefoni, 1);
+  assert.deepEqual(V.senzaVersioni, {
+    telefoni: 6,
+    case: [
+      { casa: "casa_3", nome: "Mare", telefoni: 4, ponte: "1.18.6" },
+      { casa: "casa_2", nome: "Centro", telefoni: 2, ponte: "1.18.7.10" },
+    ],
+  });
+  /* Le case che non dicono le versioni non finiscono fra quelle «per casa». */
+  assert.deepEqual(
+    V.case.map((una) => una.nome),
+    ["Villa"],
+  );
+});
+
+test("la pagina scrive i telefoni senza versione, e il totale li comprende", () => {
+  assert.match(GESTORE, /V\.senzaVersioni/);
+  assert.match(GESTORE, /data-senza-versioni/);
+  assert.match(GESTORE, /add-on prima della 1\.18\.7\.14/);
+  assert.match(GESTORE, /const tuttiITelefoni = V\.telefoni \+ MUTE\.telefoni/);
+  /* Anche qui quello che arriva da una casa passa da `testo(…)`. */
+  assert.match(GESTORE, /add-on \$\{testo\(una\.ponte\)\}/);
+});

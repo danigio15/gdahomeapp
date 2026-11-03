@@ -35,21 +35,38 @@ const dallaPiuNuova = (una, altra) =>
 /**
  * Da tutte le case (come `Case.elenco(TUTTE)` le veste) alle versioni.
  *
- * Torna `{ negozi, case, telefoni }`. `negozi.apple`, `negozi.google` e
+ * Torna `{ negozi, case, telefoni, senzaVersioni }`. `negozi.apple`, `negozi.google` e
  * `negozi.altro` hanno ognuno `{ versioni, telefoni, piuNuova }`, le versioni
  * dalla piu' nuova con `telefoni` e `case`. `case` sono solo quelle che ne
  * hanno detta almeno una, con le loro versioni (ognuna col suo negozio) e un
  * `indietro` vero se c'e' un telefono con una costruzione piu' vecchia della
  * piu' nuova vista nel suo negozio.
+ *
+ * E `senzaVersioni`: i telefoni visti nella settimana in case che le versioni
+ * non le dicono — l'add-on di prima della 1.18.7.14 manda solo quanti sono.
+ * «Mancano tutti quelli che hanno la 1.18.7»: senza questa riga il totale
+ * sembrava tutto, e quelle case sparivano. `{ telefoni, case }`, le case con
+ * quanti telefoni e la versione dell'add-on, da quella con piu' telefoni.
  */
 export function leVersioniDelleApp(tutte = [], ultime = {}) {
   const perNegozio = Object.fromEntries(NEGOZI.map((n) => [n, new Map()]));
   const perCasa = [];
+  const muteCase = [];
   for (const una of tutte) {
     const dette = (Array.isArray(una?.carta?.telefoni?.versioni) ? una.carta.telefoni.versioni : [])
       .map(pulita)
       .filter((v) => v.quanti > 0);
-    if (!dette.length) continue;
+    if (!dette.length) {
+      const visti = Number(una?.carta?.telefoni?.visti7gg);
+      if (Number.isInteger(visti) && visti > 0)
+        muteCase.push({
+          casa: una.casa,
+          nome: una.nome,
+          telefoni: visti,
+          ponte: typeof una?.carta?.ponte === "string" ? una.carta.ponte.slice(0, 40) : "",
+        });
+      continue;
+    }
     for (const v of dette) {
       const mappa = perNegozio[v.negozio];
       const chiave = `${v.versione}|${v.costruzione}`;
@@ -103,5 +120,14 @@ export function leVersioniDelleApp(tutte = [], ultime = {}) {
         String(una.nome || una.casa).localeCompare(String(altra.nome || altra.casa), "it"),
     );
   const telefoni = NEGOZI.reduce((somma, n) => somma + negozi[n].telefoni, 0);
-  return { negozi, case: case_, telefoni };
+  muteCase.sort(
+    (una, altra) =>
+      altra.telefoni - una.telefoni ||
+      String(una.nome || una.casa).localeCompare(String(altra.nome || altra.casa), "it"),
+  );
+  const senzaVersioni = {
+    telefoni: muteCase.reduce((somma, una) => somma + una.telefoni, 0),
+    case: muteCase,
+  };
+  return { negozi, case: case_, telefoni, senzaVersioni };
 }
