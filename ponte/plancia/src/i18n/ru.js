@@ -6944,7 +6944,7 @@ export default Object.freeze({
   "No drawing by that name.": "Нет рисунка с таким названием.",
   "No image": "Без изображения",
   "Automatic drawing": "Автоматический рисунок",
-  "Automatic drawing for rooms without an image": "Автоматический рисунок для комнат без изображения",
+  "The room tile shows its image. Without one chosen by hand, the drawing its name suggests: «Kitchen» the kitchen, «Bathroom» the bathroom.": "Плитка комнаты показывает её изображение. Если оно не выбрано вручную — рисунок по названию: «Kitchen» — кухня, «Bathroom» — ванная.",
   "Only where to look and the zoom are saved: the photo stays whole, and each tile shape crops it from there.":
     "Сохраняются только точка обзора и масштаб: фото остаётся целым, и каждая форма плитки обрезает его оттуда.",
   Others: "Другие",

@@ -31,10 +31,7 @@ import { ingressiScritti } from "./le-zone-della-centrale.js";
 import { spicchioDelVento, vistaDelMeteoDa } from "./la-pagina-meteo.js";
 import { genereDelComando, partiDelComando } from "./comandi-accanto.js";
 import { immaginePulita } from "./immagine-del-riquadro.js";
-import {
-  disegniDelleStanzeAccesi,
-  immagineDellaStanza,
-} from "./disegno-automatico-della-stanza.js";
+import { immagineDellaStanza } from "./disegno-automatico-della-stanza.js";
 import { lettoriConfigurati } from "./media-player.js";
 import { isDerivedEntity, powerPairSource, signedSource } from "./signed-energy.js";
 import { isCharging, nomeDellaPersona, personViewModel } from "./person-model.js";
@@ -1696,7 +1693,6 @@ export function fonteDaiValori(valori = {}) {
     invertiti: json(valori.cd_stati_invertiti, []),
     rapidoGlobale: json(valori.cd_clima_rapido, null),
     rapidoPerUnita: json(valori.cd_clima_rapido_unita, {}),
-    disegniDelleStanze: disegniDelleStanzeAccesi(json(valori.cd_widgets, {})),
   });
 }
 
@@ -1801,9 +1797,9 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
          * altre sonde della stanza, oltre alla prima. */
         outdoor: stanzaAllAperto(s),
         sonde: unici(temperatureEntries(s).map((e) => entita(e.temp))),
-        /* Come nella plancia: la sua immagine, o il disegno che il nome dice
-         * finche' l'interruttore della Home e' acceso. */
-        ...conImmagine({ immagine: immagineDellaStanza(s, altro.disegniDelleStanze !== false) }),
+        /* Come nella plancia: col suo interruttore «Immagine» acceso, la sua
+         * immagine o il disegno che il nome dice; spento, niente. */
+        ...conImmagine({ immagine: immagineDellaStanza(s) }),
       })),
     luci: dispositivi("lights"),
     clima: climaColTipo(dispositivi("climate"), altro.climaUnita),

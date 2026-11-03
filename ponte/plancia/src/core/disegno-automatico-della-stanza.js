@@ -9,15 +9,19 @@
  * bagno, «Balcone cucina» e' un balcone, non una cucina.
  *
  * Le regole:
- * - l'immagine scelta a mano vince sempre;
+ * - ogni stanza ha il suo interruttore «Immagine», addosso alla stanza come
+ *   la sua immagine (`mostraImmagine: true|false`), cosi' viaggia con lei
+ *   fino al muro. Non scritto vuol dire «come prima»: acceso se la stanza ha
+ *   un'immagine scelta a mano, spento se non ce l'ha — all'aggiornamento
+ *   nessuno vede cambiare la sua Home;
+ * - acceso: l'immagine scelta a mano, se c'e'; altrimenti il disegno che il
+ *   nome dice. Spento: niente immagine da nessuna parte, ma quella scelta a
+ *   mano resta salvata e torna quando si riaccende;
  * - il disegno automatico non si scrive in configurazione: si calcola quando
- *   si disegna. Cambiare nome alla stanza cambia il disegno, togliere
- *   l'interruttore lo toglie, e nessuna immagine «vera» viene mai sporcata;
+ *   si disegna. Cambiare nome alla stanza cambia il disegno, e nessuna
+ *   immagine «vera» viene mai sporcata;
  * - un nome che non si capisce («Zona Pippo») resta senza: il riquadro di
- *   sempre e' meglio di un disegno sbagliato;
- * - l'interruttore e' uno per tutta la casa, in `cd_widgets.disegniDelleStanze`
- *   (acceso se non c'e': spento solo con `false`). Sta li' perche' le scelte
- *   della Home viaggiano gia' col ponte, col ripristino e fino al muro.
+ *   sempre e' meglio di un disegno sbagliato.
  *
  * Tutto puro: si prova senza browser. */
 
@@ -157,24 +161,36 @@ export function disegnoAutomaticoDellaStanza(stanza) {
   return chiave && disegnoDaRiquadro(chiave) ? chiave : "";
 }
 
-/** L'interruttore: acceso finche' non lo si spegne (`false`). */
-export function disegniDelleStanzeAccesi(preferenze) {
-  return !(preferenze && typeof preferenze === "object" && preferenze.disegniDelleStanze === false);
+/**
+ * Se l'immagine della stanza si mostra: quello che dice il suo interruttore,
+ * o — se non l'ha mai toccato nessuno — si' solo per chi un'immagine se
+ * l'era gia' scelta.
+ */
+export function immagineAccesa(stanza) {
+  if (typeof stanza?.mostraImmagine === "boolean") return stanza.mostraImmagine;
+  return Boolean(immaginePulita(stanza?.immagine));
 }
 
 /**
- * L'immagine con cui si disegna la stanza: la sua, se l'ha; altrimenti, con
- * l'interruttore acceso, il disegno che le si addice; altrimenti `null`.
+ * L'immagine con cui si disegna la stanza, o `null`: spenta niente; accesa
+ * la sua, se l'ha, altrimenti il disegno che le si addice.
  */
-export function immagineDellaStanza(stanza, acceso = true) {
+export function immagineDellaStanza(stanza) {
+  if (!immagineAccesa(stanza)) return null;
   const propria = immaginePulita(stanza?.immagine);
   if (propria) return propria;
-  if (!acceso) return null;
   const chiave = disegnoAutomaticoDellaStanza(stanza);
   return chiave ? immaginePulita({ src: `disegno:${chiave}` }) : null;
 }
 
-/** Se l'immagine della stanza e' quella automatica (per la riga del config). */
-export function haIlDisegnoAutomatico(stanza, acceso = true) {
-  return !immaginePulita(stanza?.immagine) && acceso && Boolean(disegnoAutomaticoDellaStanza(stanza));
+/**
+ * Cosa dice la riga della stanza nel config: «foto» o «disegno» (scelti a
+ * mano), «automatico» (acceso, il disegno del nome), «spenta», o «nessuna»
+ * (acceso, ma niente da mostrare: un nome che non si capisce).
+ */
+export function statoDellImmagine(stanza) {
+  if (!immagineAccesa(stanza)) return "spenta";
+  const propria = immaginePulita(stanza?.immagine);
+  if (propria) return propria.src.startsWith("disegno:") ? "disegno" : "foto";
+  return disegnoAutomaticoDellaStanza(stanza) ? "automatico" : "nessuna";
 }

@@ -6874,7 +6874,7 @@ export default Object.freeze({
   "No drawing by that name.": "لا يوجد رسم بهذا الاسم.",
   "No image": "بلا صورة",
   "Automatic drawing": "رسم تلقائي",
-  "Automatic drawing for rooms without an image": "رسم تلقائي للغرف التي ليس لها صورة",
+  "The room tile shows its image. Without one chosen by hand, the drawing its name suggests: «Kitchen» the kitchen, «Bathroom» the bathroom.": "تعرض بطاقة الغرفة صورتها. إن لم تُختر صورة يدويًا، يظهر الرسم الذي يوحي به الاسم: «Kitchen» المطبخ، «Bathroom» الحمّام.",
   "Only where to look and the zoom are saved: the photo stays whole, and each tile shape crops it from there.":
     "يُحفظ فقط موضع النظر والتكبير: تبقى الصورة كاملة، وكل شكل من أشكال المربع يقصّها من هناك.",
   Others: "أخرى",

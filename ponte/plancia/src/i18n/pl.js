@@ -6947,7 +6947,7 @@ export default Object.freeze({
   "No drawing by that name.": "Brak rysunku o tej nazwie.",
   "No image": "Bez obrazu",
   "Automatic drawing": "Rysunek automatyczny",
-  "Automatic drawing for rooms without an image": "Rysunek automatyczny dla pomieszczeń bez obrazu",
+  "The room tile shows its image. Without one chosen by hand, the drawing its name suggests: «Kitchen» the kitchen, «Bathroom» the bathroom.": "Kafelek pomieszczenia pokazuje jego obraz. Bez obrazu wybranego ręcznie — rysunek, który podpowiada nazwa: «Kitchen» kuchnia, «Bathroom» łazienka.",
   "Only where to look and the zoom are saved: the photo stays whole, and each tile shape crops it from there.":
     "Zapisuje się tylko punkt widzenia i powiększenie: zdjęcie zostaje całe, a każdy kształt kafelka przycina je od tego miejsca.",
   Others: "Inne",

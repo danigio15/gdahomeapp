@@ -6798,7 +6798,7 @@ export default Object.freeze({
   "No drawing by that name.": "没有这个名字的插图。",
   "No image": "无图片",
   "Automatic drawing": "自动插图",
-  "Automatic drawing for rooms without an image": "没有图片的房间使用自动插图",
+  "The room tile shows its image. Without one chosen by hand, the drawing its name suggests: «Kitchen» the kitchen, «Bathroom» the bathroom.": "房间卡片显示它的图片。没有手动选择图片时，显示名称对应的插图：«Kitchen» 厨房，«Bathroom» 浴室。",
   "Only where to look and the zoom are saved: the photo stays whole, and each tile shape crops it from there.":
     "只保存观看位置和缩放：照片保持完整，每种卡片形状都从那里裁切。",
   Others: "其他",

@@ -84,8 +84,11 @@ export function migrateRooms(input = []) {
         ...(room.outdoor !== undefined ? { outdoor: stanzaAllAperto(room) } : {}),
         /* L'immagine della stanza («Riquadri con l'immagine»): solo pulita. */
         ...(immaginePulita(room.immagine) ? { immagine: immaginePulita(room.immagine) } : {}),
+        /* L'interruttore «Immagine» della stanza: un si' o un no, e solo se
+         * qualcuno l'ha toccato — non scritto vuol dire «come prima». */
+        ...(typeof room.mostraImmagine === "boolean" ? { mostraImmagine: room.mostraImmagine } : {}),
       },
-      senzaImmagine(room),
+      (({ mostraImmagine: _interruttore, ...resto }) => resto)(senzaImmagine(room)),
       "rooms",
     );
   });

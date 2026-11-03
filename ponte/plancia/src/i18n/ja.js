@@ -6926,7 +6926,7 @@ export default Object.freeze({
   "No drawing by that name.": "その名前のイラストはありません。",
   "No image": "画像なし",
   "Automatic drawing": "自動イラスト",
-  "Automatic drawing for rooms without an image": "画像のない部屋に自動イラストを使う",
+  "The room tile shows its image. Without one chosen by hand, the drawing its name suggests: «Kitchen» the kitchen, «Bathroom» the bathroom.": "部屋のタイルに画像を表示します。手動で選んだ画像がなければ、名前に合ったイラスト：«Kitchen» はキッチン、«Bathroom» はバスルーム。",
   "Only where to look and the zoom are saved: the photo stays whole, and each tile shape crops it from there.":
     "保存されるのは見る位置とズームだけです。写真はそのまま残り、タイルの形ごとにそこから切り取られます。",
   Others: "その他",

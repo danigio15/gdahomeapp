@@ -6924,7 +6924,7 @@ export default Object.freeze({
   "No drawing by that name.": "Bu adla bir çizim yok.",
   "No image": "Görsel yok",
   "Automatic drawing": "Otomatik çizim",
-  "Automatic drawing for rooms without an image": "Görseli olmayan odalar için otomatik çizim",
+  "The room tile shows its image. Without one chosen by hand, the drawing its name suggests: «Kitchen» the kitchen, «Bathroom» the bathroom.": "Oda kutucuğu görselini gösterir. Elle seçilmiş bir görsel yoksa adının çağrıştırdığı çizim: «Kitchen» mutfak, «Bathroom» banyo.",
   "Only where to look and the zoom are saved: the photo stays whole, and each tile shape crops it from there.":
     "Yalnızca bakılacak nokta ve yakınlaştırma kaydedilir: fotoğraf bütün kalır ve her kutu biçimi onu oradan kırpar.",
   Others: "Diğerleri",

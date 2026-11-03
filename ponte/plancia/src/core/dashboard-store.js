@@ -146,15 +146,24 @@ export function legacyLights(value) {
  * `id`, o stessa entita' — invece di perderla al primo salvataggio. */
 export function conLeImmaginiDiPrima(nuovo, prima) {
   if (!Array.isArray(nuovo) || !Array.isArray(prima)) return nuovo;
-  const conImmagine = prima.filter((voce) => voce?.immagine);
+  /* Con l'immagine viaggia il suo interruttore (`mostraImmagine`, delle
+   * stanze): stessa ragione, stesso rimedio. */
+  const conImmagine = prima.filter(
+    (voce) => voce?.immagine || typeof voce?.mostraImmagine === "boolean",
+  );
   if (!conImmagine.length) return nuovo;
   return nuovo.map((voce) => {
-    if (!voce || typeof voce !== "object" || voce.immagine) return voce;
+    if (!voce || typeof voce !== "object") return voce;
     const stessa = conImmagine.find(
       (vecchia) =>
         (voce.id && vecchia.id === voce.id) || (voce.entity && vecchia.entity === voce.entity),
     );
-    return stessa ? { ...voce, immagine: stessa.immagine } : voce;
+    if (!stessa) return voce;
+    const fuori = { ...voce };
+    if (!fuori.immagine && stessa.immagine) fuori.immagine = stessa.immagine;
+    if (typeof fuori.mostraImmagine !== "boolean" && typeof stessa.mostraImmagine === "boolean")
+      fuori.mostraImmagine = stessa.mostraImmagine;
+    return fuori;
   });
 }
 

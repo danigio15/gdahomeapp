@@ -6908,7 +6908,7 @@ export default Object.freeze({
   "No drawing by that name.": "इस नाम का कोई चित्र नहीं।",
   "No image": "कोई छवि नहीं",
   "Automatic drawing": "स्वचालित चित्र",
-  "Automatic drawing for rooms without an image": "बिना छवि वाले कमरों के लिए स्वचालित चित्र",
+  "The room tile shows its image. Without one chosen by hand, the drawing its name suggests: «Kitchen» the kitchen, «Bathroom» the bathroom.": "कमरे की टाइल उसकी छवि दिखाती है। हाथ से चुनी गई छवि न हो तो नाम से सुझाया चित्र: «Kitchen» रसोई, «Bathroom» बाथरूम।",
   "Only where to look and the zoom are saved: the photo stays whole, and each tile shape crops it from there.":
     "केवल देखने की जगह और ज़ूम सहेजे जाते हैं: फ़ोटो पूरी रहती है, और हर टाइल का आकार उसे वहीं से काटता है।",
   Others: "अन्य",

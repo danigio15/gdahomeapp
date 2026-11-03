@@ -33,17 +33,21 @@ _Solo Home Assistant: l'app sul telefono non cambia._
   tutte e due. Senza una caldaia il tempo dell'impianto è una stima (acceso
   quando almeno una stanza chiede) e il report lo scrive. Una stanza di cui
   Home Assistant ha registrato poco porta «dati parziali».
-- **Le stanze senza immagine hanno il disegno del loro nome:** «perché le
-  altre stanze non esce l'immagine nei riquadri? Esce solo l'ingresso». Una
-  stanza a cui non si è scelta un'immagine prende il disegno del catalogo che
-  il suo nome dice — «Cucina» la cucina, «Bagno piccolo» il bagno, «Balcone
-  cucina» il terrazzo, «Cameretta» la cameretta, «Multimedia» il soggiorno —
-  in Home, nella pagina Stanze, nella Temperatura e a muro. Quando il nome non
-  basta guarda l'icona della stanza; un nome che non si capisce resta col
-  riquadro di sempre. L'immagine scelta a mano vince sempre, e il disegno
-  automatico non si scrive nella configurazione. Si spegne da Config › Home ›
-  Immagini dei riquadri › Stanze, «Disegno automatico per le stanze senza
-  immagine»; lì ogni stanza dice se il suo è «Disegno automatico».
+- **Ogni stanza ha il suo interruttore «Immagine», e il disegno del suo
+  nome:** «perché le altre stanze non esce l'immagine nei riquadri? Esce solo
+  l'ingresso». In Config › Home › Immagini dei riquadri › Stanze ogni stanza
+  ha l'interruttore accanto a «🖼️ Immagine» (lo stesso sta nella scheda della
+  stanza, in Config › Stanze). Acceso: l'immagine scelta a mano, se c'è,
+  altrimenti il disegno del catalogo che il nome dice — «Cucina» la cucina,
+  «Bagno piccolo» il bagno, «Cameretta» la cameretta, «Multimedia» il
+  soggiorno, «Balcone cucina» il terrazzo — e, se il nome non basta, quello
+  che dice l'icona; un nome che non si capisce resta col riquadro di sempre.
+  Spento: nessuna immagine, né in Home né nelle Stanze, nella Temperatura o a
+  muro; quella scelta a mano resta salvata e torna quando si riaccende. Di
+  partenza è acceso solo dove un'immagine era già stata scelta:
+  all'aggiornamento la Home non cambia. La riga dice cosa si vede: «Foto»,
+  «Disegno», «Disegno automatico» o «Spenta». Il disegno automatico non si
+  scrive nella configurazione, l'interruttore sì, addosso alla stanza.
 
 ## 1.18.8.1
 

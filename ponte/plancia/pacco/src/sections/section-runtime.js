@@ -207,7 +207,6 @@ import {
   decorateEntityFields,
   derivedEnergyStates,
   detectLocale,
-  disegniDelleStanzeAccesi,
   disegnoDelCatalogo,
   disegnoDiCasa,
   disegnoGiaNellaCasella,
@@ -285,6 +284,7 @@ import {
   ilSempreEInVigore,
   ilTastoCentrale,
   ilValoreDelSempreAcceso,
+  immagineAccesa,
   immagineDellaStanza,
   immaginePulita,
   impiantiScelti,
@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-XPTOX3WE.js";
+} from "../../chunk-W2CBY57M.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -3902,7 +3902,6 @@ var SOURCE_INDEX = Object.freeze({
   "Disegno": "Drawing",
   "Disegno (se non c'è immagine)": "Drawing (when there is no image)",
   "Disegno automatico": "Automatic drawing",
-  "Disegno automatico per le stanze senza immagine": "Automatic drawing for rooms without an image",
   "Disinserimento Antifurto": "Disarm Alarm",
   "Disinserimento…": "Disarming…",
   "Disinserisci": "Disarm",
@@ -4698,6 +4697,7 @@ var SOURCE_INDEX = Object.freeze({
   "Il riconoscitore non ha risposto in ${s} s": "The recognizer didn't answer in ${s} s",
   "Il riconoscitore non si è scaricato: controlla la connessione e riprova.": "The recognizer didn't download: check the connection and try again.",
   "Il rilevamento aggiunge solo ciò che manca: niente doppioni.": "Detection only adds what is missing: no duplicates.",
+  "Il riquadro della stanza mostra la sua immagine. Senza una scelta a mano, il disegno che il nome dice: «Cucina» la cucina, «Bagno» il bagno.": "The room tile shows its image. Without one chosen by hand, the drawing its name suggests: «Kitchen» the kitchen, «Bathroom» the bathroom.",
   "Il riquadro delle telecamere adesso non c'è. L'allarme e i varchi restano dove sono, e le telecamere configurate non sono state toccate.": "The camera panel is not there now. The alarm and the openings stay where they are, and the configured cameras have not been touched.",
   "Il rischio delle graminacee preso da sé: da 1, molto basso, a 4, alto. Chi è allergico a una sola famiglia vede l'allerta anche quando la media della giornata è tranquilla.": "The grass risk on its own: from 1, very low, to 4, high. Whoever is allergic to one family only still sees the alert when the day's average is quiet.",
   "Il ritiro di oggi a quest'ora è già passato: da qui in poi la pagina e la tessera in Home dicono quello di domani, cioè cosa mettere fuori stasera.": "By this time today's collection has already gone: from then on the page and the Home tile show tomorrow's, which is what to put out tonight.",
@@ -103662,8 +103662,7 @@ function fonteDaiValori(valori = {}) {
     varchi: json(valori.cd_varchi, {}),
     invertiti: json(valori.cd_stati_invertiti, []),
     rapidoGlobale: json(valori.cd_clima_rapido, null),
-    rapidoPerUnita: json(valori.cd_clima_rapido_unita, {}),
-    disegniDelleStanze: disegniDelleStanzeAccesi(json(valori.cd_widgets, {}))
+    rapidoPerUnita: json(valori.cd_clima_rapido_unita, {})
   });
 }
 function climaColTipo(sezione2, unita3) {
@@ -103738,9 +103737,9 @@ function fonteDalleSezioni(sezioni2 = {}, altro = {}) {
        * altre sonde della stanza, oltre alla prima. */
       outdoor: stanzaAllAperto(s),
       sonde: unici(temperatureEntries(s).map((e) => entita3(e.temp))),
-      /* Come nella plancia: la sua immagine, o il disegno che il nome dice
-       * finche' l'interruttore della Home e' acceso. */
-      ...conImmagine({ immagine: immagineDellaStanza(s, altro.disegniDelleStanze !== false) })
+      /* Come nella plancia: col suo interruttore «Immagine» acceso, la sua
+       * immagine o il disegno che il nome dice; spento, niente. */
+      ...conImmagine({ immagine: immagineDellaStanza(s) })
     })),
     luci: dispositivi("lights"),
     clima: climaColTipo(dispositivi("climate"), altro.climaUnita),
@@ -105132,8 +105131,7 @@ function fonteDiQui() {
       varchi: readJson("cd_varchi", {}),
       invertiti: readJson("cd_stati_invertiti", []),
       rapidoGlobale: readJson("cd_clima_rapido", null),
-      rapidoPerUnita: readJson("cd_clima_rapido_unita", {}),
-      disegniDelleStanze: disegniDelleStanzeAccesi(readJson("cd_widgets", {}))
+      rapidoPerUnita: readJson("cd_clima_rapido_unita", {})
     }
   );
 }
@@ -117400,7 +117398,8 @@ function openRoomEditor(item, index) {
     `<label class="ed-slot"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><input class="ed-input" name="name" value="${esc(item.name)}" required></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Icona", "Icon")}</span><span class="dm-unified-icon-row"><span class="dm-unified-icon-preview" data-room-icon-preview aria-hidden="true">${iconMarkup(initialIcon, "🏠", 36)}</span><input class="ed-input" name="icon" value="${esc(initialIcon)}"></span><small>${t("L’anteprima usa lo stesso renderer dell’icona stanza nella dashboard.", "The preview uses the same room-icon renderer as the dashboard.")}</small></label>
      <label class="ed-slot"><span class="ed-slot-lbl">${t("Piano", "Floor")}</span>${tendinaDeiPiani(item.floor)}<small>${t("I piani si creano e si ordinano qui sopra, nella scheda Stanze.", "Floors are created and ordered above, in the Rooms tab.")}</small></label>
-     <div class="ed-slot"><span class="ed-slot-lbl">${t("All'aperto", "Outdoors")}</span><label class="dm-stanza-aperto"><input type="checkbox" name="outdoor"${stanzaAllAperto(item) ? " checked" : ""}><span>${t("Balcone, terrazzo, giardino. Temperatura e umidità si vedono come sempre, ma l'assistente non propone di scaldare, rinfrescare o arieggiare, e la stanza non entra nella media della casa.", "Balcony, terrace, garden. Temperature and humidity show as always, but the assistant does not suggest heating, cooling or airing it out, and the room does not count in the home average.")}</span></label></div>`,
+     <div class="ed-slot"><span class="ed-slot-lbl">${t("All'aperto", "Outdoors")}</span><label class="dm-stanza-aperto"><input type="checkbox" name="outdoor"${stanzaAllAperto(item) ? " checked" : ""}><span>${t("Balcone, terrazzo, giardino. Temperatura e umidità si vedono come sempre, ma l'assistente non propone di scaldare, rinfrescare o arieggiare, e la stanza non entra nella media della casa.", "Balcony, terrace, garden. Temperature and humidity show as always, but the assistant does not suggest heating, cooling or airing it out, and the room does not count in the home average.")}</span></label></div>
+     <div class="ed-slot"><span class="ed-slot-lbl">${t("Immagine", "Image")}</span><label class="dm-stanza-aperto"><input type="checkbox" name="mostraImmagine"${immagineAccesa(item) ? " checked" : ""}><span>${t("Il riquadro della stanza mostra la sua immagine. Senza una scelta a mano, il disegno che il nome dice: «Cucina» la cucina, «Bagno» il bagno.", "The room tile shows its image. Without one chosen by hand, the drawing its name suggests: «Kitchen» the kitchen, «Bathroom» the bathroom.")}</span></label></div>`,
     "🏠"
   );
   const preview2 = form.querySelector("[data-room-icon-preview]");
@@ -117424,6 +117423,9 @@ function openRoomEditor(item, index) {
     if (!list[index].floor) delete list[index].floor;
     if (form.elements.outdoor?.checked) list[index].outdoor = true;
     else delete list[index].outdoor;
+    const mostra3 = form.elements.mostraImmagine?.checked === true;
+    if (form.elements.mostraImmagine && mostra3 !== immagineAccesa(item))
+      list[index].mostraImmagine = mostra3;
     persist2("room", list);
     close();
     root.editorSwitch?.(currentTab("room"));

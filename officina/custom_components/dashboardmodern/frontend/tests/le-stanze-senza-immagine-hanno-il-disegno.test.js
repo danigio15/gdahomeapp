@@ -11,11 +11,13 @@ import test from "node:test";
 import { disegnoDaRiquadro } from "../src/core/disegni-da-riquadro.js";
 import {
   DISEGNI_AUTOMATICI,
-  disegniDelleStanzeAccesi,
   disegnoAutomaticoDellaStanza,
-  haIlDisegnoAutomatico,
+  immagineAccesa,
   immagineDellaStanza,
+  statoDellImmagine,
 } from "../src/core/disegno-automatico-della-stanza.js";
+import { conLeImmaginiDiPrima } from "../src/core/dashboard-store.js";
+import { normalizeSection } from "../src/core/migrations.js";
 import { fonteDaiValori } from "../src/core/plancia-a-muro.js";
 
 const disegno = (name, icon) => disegnoAutomaticoDellaStanza({ name, icon });
@@ -93,70 +95,104 @@ test("quando il nome tace, parla l'icona; la casa generica no", () => {
   assert.equal(disegno("Bagno", "mdi:bed"), "bagno");
 });
 
-test("l'immagine scelta a mano vince sempre", () => {
-  const propria = { src: "disegno:ingresso", fuoco: [40, 60], zoom: 1.2 };
-  const stanza = { name: "Cucina", immagine: propria };
-  assert.deepEqual(immagineDellaStanza(stanza), {
-    src: "disegno:ingresso",
-    fuoco: [40, 60],
-    zoom: 1.2,
-  });
-  assert.deepEqual(immagineDellaStanza(stanza, false), immagineDellaStanza(stanza));
-  assert.equal(haIlDisegnoAutomatico(stanza), false);
+test("di partenza: accesa solo chi un'immagine se l'era scelta", () => {
+  /* All'aggiornamento nessuno vede cambiare la sua Home. */
+  assert.equal(immagineAccesa({ name: "Cucina" }), false);
+  assert.equal(immagineDellaStanza({ name: "Cucina" }), null);
+  assert.equal(statoDellImmagine({ name: "Cucina" }), "spenta");
+  const ingresso = { name: "Ingresso", immagine: { src: "disegno:ingresso" } };
+  assert.equal(immagineAccesa(ingresso), true);
+  assert.equal(immagineDellaStanza(ingresso).src, "disegno:ingresso");
+  assert.equal(statoDellImmagine(ingresso), "disegno");
+  assert.equal(
+    statoDellImmagine({ name: "Cucina", immagine: { src: "/local/cucina.jpg" } }),
+    "foto",
+  );
 });
 
-test("senza immagine: il disegno del nome, col fuoco del catalogo", () => {
-  const immagine = immagineDellaStanza({ name: "Cucina" });
+test("accesa senza immagine: il disegno del nome, col fuoco del catalogo", () => {
+  const cucina = { name: "Cucina", mostraImmagine: true };
+  const immagine = immagineDellaStanza(cucina);
   assert.equal(immagine.src, "disegno:stanza-cucina");
   assert.deepEqual(immagine.fuoco, disegnoDaRiquadro("stanza-cucina").fuoco);
   assert.equal(immagine.zoom, 1);
-  assert.equal(haIlDisegnoAutomatico({ name: "Cucina" }), true);
-  assert.equal(immagineDellaStanza({ name: "Zona Pippo" }), null);
-  assert.equal(haIlDisegnoAutomatico({ name: "Zona Pippo" }), false);
+  assert.equal(statoDellImmagine(cucina), "automatico");
+  /* Accesa, ma un nome che non si capisce: niente, e la riga lo dice. */
+  const pippo = { name: "Zona Pippo", mostraImmagine: true };
+  assert.equal(immagineDellaStanza(pippo), null);
+  assert.equal(statoDellImmagine(pippo), "nessuna");
 });
 
-test("l'interruttore: acceso di serie, spento solo con false", () => {
-  assert.equal(disegniDelleStanzeAccesi(undefined), true);
-  assert.equal(disegniDelleStanzeAccesi({}), true);
-  assert.equal(disegniDelleStanzeAccesi({ disegniDelleStanze: true }), true);
-  assert.equal(disegniDelleStanzeAccesi({ disegniDelleStanze: "no" }), true);
-  assert.equal(disegniDelleStanzeAccesi({ disegniDelleStanze: false }), false);
-  assert.equal(immagineDellaStanza({ name: "Cucina" }, false), null);
-  assert.equal(haIlDisegnoAutomatico({ name: "Cucina" }, false), false);
+test("accesa con l'immagine a mano: vince lei; spenta: niente, ma resta salvata", () => {
+  const propria = { src: "disegno:ingresso", fuoco: [40, 60], zoom: 1.2 };
+  const accesa = { name: "Cucina", immagine: propria, mostraImmagine: true };
+  assert.deepEqual(immagineDellaStanza(accesa), propria);
+  const spenta = { ...accesa, mostraImmagine: false };
+  assert.equal(immagineDellaStanza(spenta), null);
+  assert.equal(statoDellImmagine(spenta), "spenta");
+  assert.deepEqual(spenta.immagine, propria);
+  /* Riaccesa, torna la sua — non il disegno del nome. */
+  assert.deepEqual(immagineDellaStanza({ ...spenta, mostraImmagine: true }), propria);
 });
 
-test("il muro fa lo stesso, e segue l'interruttore della Home", () => {
+test("solo un vero si' o no conta come interruttore", () => {
+  assert.equal(immagineAccesa({ name: "Cucina", mostraImmagine: "si" }), false);
+  assert.equal(immagineAccesa({ name: "Cucina", mostraImmagine: 1 }), false);
+  assert.equal(immagineAccesa(null), false);
+});
+
+test("l'interruttore resta addosso alla stanza: normalizzazione e riscrittura", () => {
+  const [accesa, spenta, mai, sporca] = normalizeSection("rooms", [
+    { id: "a", name: "Cucina", mostraImmagine: true },
+    { id: "b", name: "Bagno", mostraImmagine: false },
+    { id: "c", name: "Camera" },
+    { id: "d", name: "Studio", mostraImmagine: "si" },
+  ]);
+  assert.equal(accesa.mostraImmagine, true);
+  assert.equal(spenta.mostraImmagine, false);
+  assert.equal("mostraImmagine" in mai, false);
+  assert.equal("mostraImmagine" in sporca, false);
+  /* Un editor che riscrive la stanza senza conoscerlo non lo perde. */
+  const riscritte = conLeImmaginiDiPrima(
+    [
+      { id: "a", name: "Cucina" },
+      { id: "b", name: "Bagno", mostraImmagine: true },
+    ],
+    [accesa, spenta],
+  );
+  assert.equal(riscritte[0].mostraImmagine, true);
+  assert.equal(riscritte[1].mostraImmagine, true);
+});
+
+test("il muro fa lo stesso: segue l'interruttore di ogni stanza", () => {
   const stato = {
     sections: {
       rooms: [
-        { id: "cucina", name: "Cucina", temp: "sensor.t" },
-        { id: "pippo", name: "Zona Pippo", temp: "sensor.t" },
+        { id: "cucina", name: "Cucina", temp: "sensor.t", mostraImmagine: true },
+        { id: "bagno", name: "Bagno", temp: "sensor.t" },
+        { id: "pippo", name: "Zona Pippo", temp: "sensor.t", mostraImmagine: true },
         {
           id: "ingresso",
           name: "Ingresso",
           temp: "sensor.t",
           immagine: { src: "disegno:portone" },
         },
+        {
+          id: "studio",
+          name: "Studio",
+          temp: "sensor.t",
+          immagine: { src: "disegno:portone" },
+          mostraImmagine: false,
+        },
       ],
     },
   };
-  const valori = (widgets) => ({
-    dm_dashboard_state: JSON.stringify(stato),
-    ...(widgets ? { cd_widgets: JSON.stringify(widgets) } : {}),
-  });
-  const acceso = Object.fromEntries(
-    fonteDaiValori(valori()).stanze.map((s) => [s.id, s.immagine?.src]),
-  );
-  assert.deepEqual(acceso, {
+  const fonte = fonteDaiValori({ dm_dashboard_state: JSON.stringify(stato) });
+  assert.deepEqual(Object.fromEntries(fonte.stanze.map((s) => [s.id, s.immagine?.src])), {
     cucina: "disegno:stanza-cucina",
+    bagno: undefined,
     pippo: undefined,
     ingresso: "disegno:portone",
+    studio: undefined,
   });
-  const spento = Object.fromEntries(
-    fonteDaiValori(valori({ disegniDelleStanze: false })).stanze.map((s) => [
-      s.id,
-      s.immagine?.src,
-    ]),
-  );
-  assert.deepEqual(spento, { cucina: undefined, pippo: undefined, ingresso: "disegno:portone" });
 });

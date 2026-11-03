@@ -6959,7 +6959,7 @@ export default Object.freeze({
   "No drawing by that name.": "Geen tekening met die naam.",
   "No image": "Geen afbeelding",
   "Automatic drawing": "Automatische tekening",
-  "Automatic drawing for rooms without an image": "Automatische tekening voor kamers zonder afbeelding",
+  "The room tile shows its image. Without one chosen by hand, the drawing its name suggests: «Kitchen» the kitchen, «Bathroom» the bathroom.": "De kamertegel toont zijn afbeelding. Zonder een met de hand gekozen afbeelding de tekening die de naam doet denken: «Kitchen» de keuken, «Bathroom» de badkamer.",
   "Only where to look and the zoom are saved: the photo stays whole, and each tile shape crops it from there.":
     "Alleen het kijkpunt en de zoom worden bewaard: de foto blijft heel, en elke tegelvorm snijdt hem vanaf daar bij.",
   Others: "Overige",
