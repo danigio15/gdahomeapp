@@ -92,11 +92,12 @@ import { chiaveBuona, Filmati, idBuono } from "./i-filmati.js";
 import {
   CHIAVE_ALEXA,
   avvisiDaDire,
-  chiamataAlexa,
+  chiamateAlexa,
   daDire,
+  echoPerLeNotifiche,
+  entitaDegliEcho,
   normalizzaAlexa,
   paroleDaDire,
-  altoparlantiAlexa,
 } from "../plancia/src/core/alexa-annunci.js";
 import {
   attesaPerIlVolume,
@@ -1426,13 +1427,35 @@ export class Notifiche {
       }
       if (!parole) return false;
       this._alexaDette.push({ chiave, quando: ora });
-      await this.casa.chiedi(chiamataAlexa(conf, parole));
+      await this._fallDireAgliEcho(conf, parole);
       this.registro.debug?.(`alexa: «${evento.tipo}» su ${conf.altoparlanti.length} Echo`);
       return true;
     } catch (errore) {
       this.registro.attenzione?.(`alexa non parla: ${errore?.message || errore}`);
       return false;
     }
+  }
+
+  /* Le chiamate a Home Assistant per gli Echo scelti: una per Alexa Media
+   * Player e una per Alexa Devices (#376), se ci sono Echo di tutte e due.
+   * Una che non parte non ferma l'altra; se non ne parte nessuna, l'errore
+   * torna a chi ha chiesto. */
+  async _fallDireAgliEcho(conf, parole, altoparlanti = conf.altoparlanti) {
+    let primoErrore = null;
+    let partite = 0;
+    for (const chiamata of chiamateAlexa(conf, parole, altoparlanti)) {
+      try {
+        await this.casa.chiedi(chiamata);
+        partite += 1;
+      } catch (errore) {
+        primoErrore ??= errore;
+        this.registro.attenzione?.(
+          `gli Echo di ${chiamata.service === "send_message" ? "alexa devices" : "alexa media player"} non parlano: ${errore?.message || errore}`,
+        );
+      }
+    }
+    if (!partite && primoErrore) throw primoErrore;
+    return partite;
   }
 
   /* Come si racconta un evento a tutta la casa, dalle scelte dei telefoni.
@@ -1479,7 +1502,7 @@ export class Notifiche {
         const parole = paroleDaDire(avviso.frase, "");
         if (!parole) continue;
         try {
-          await this.casa.chiedi(chiamataAlexa(conf, parole, altoparlanti));
+          await this._fallDireAgliEcho(conf, parole, altoparlanti);
           detti += 1;
         } catch (errore) {
           this.registro.attenzione?.(`alexa non dice un avviso: ${errore?.message || errore}`);
@@ -1515,7 +1538,7 @@ export class Notifiche {
         ? "GdAHome test. From now on your notifications can be heard here too."
         : "Prova di GdAHome. Da adesso le notifiche si sentono anche qui.");
     try {
-      await this.casa.chiedi(chiamataAlexa({ ...conf, modo }, parole, altoparlanti));
+      await this._fallDireAgliEcho({ ...conf, modo }, parole, altoparlanti);
       return { id, type: "result", success: true, result: { fatto: true } };
     } catch (errore) {
       return no("home_assistant", String(errore?.message || errore).slice(0, 200));
@@ -1585,20 +1608,39 @@ export class Notifiche {
         entity_id,
         ...stato,
       }));
-      const veri = new Set(altoparlantiAlexa(stati).map((uno) => uno.entita));
-      const echo = messaggio.echo.filter((uno) => veri.has(uno));
+      const tutti = echoPerLeNotifiche(stati);
+      const veri = entitaDegliEcho(tutti);
+      /* Un Echo di Alexa Devices (#376) dice il messaggio con la voce del
+       * modo scelto: «annuncio» col suono, «voce» parlando e basta. */
+      const voceDi = new Map();
+      for (const uno of tutti)
+        if (uno.fonte === "devices")
+          for (const entita of Object.values(uno.voci).filter(Boolean))
+            voceDi.set(
+              entita,
+              (messaggio.modo === "voce" ? uno.voci.parla : uno.voci.annuncio) || entita,
+            );
+      const echo = [
+        ...new Set(
+          messaggio.echo.filter((uno) => veri.has(uno)).map((uno) => voceDi.get(uno) || uno),
+        ),
+      ];
       if (echo.length) {
         const { lingua } = this._alexa();
         /* Il volume scelto, se c'e': prima si alza, poi si dice, e dopo il
-         * tempo di dirlo si rimette quello che ogni Echo aveva. */
-        const prima = messaggio.volume ? await this._alzaIlVolume(echo, messaggio.volume) : null;
+         * tempo di dirlo si rimette quello che ogni Echo aveva. Il volume
+         * lo regolano solo i lettori: gli Echo di Alexa Devices restano
+         * com'erano. */
+        const lettori = echo.filter((uno) => uno.startsWith("media_player."));
+        const prima =
+          messaggio.volume && lettori.length
+            ? await this._alzaIlVolume(lettori, messaggio.volume)
+            : null;
         try {
-          await this.casa.chiedi(
-            chiamataAlexa(
-              { modo: messaggio.modo },
-              paroleDaDire(fraseDegliEcho(messaggio.testo, nome, lingua), ""),
-              echo,
-            ),
+          await this._fallDireAgliEcho(
+            { modo: messaggio.modo },
+            paroleDaDire(fraseDegliEcho(messaggio.testo, nome, lingua), ""),
+            echo,
           );
           risultato.echo = echo.length;
         } catch (errore) {

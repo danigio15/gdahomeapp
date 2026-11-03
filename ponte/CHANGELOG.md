@@ -36,6 +36,13 @@ _Solo Home Assistant: l'app sul telefono non cambia._
   libreria già sui risultati; su quelli che sanno solo sfogliare (Sonos) c'è
   «Sfoglia la libreria». Toccare un lettore nella finestra della Musica in
   Home apre già la sua scheda, come per gli elettrodomestici.
+- **Gli Echo parlano anche con Alexa Devices (#376):** «non ho Alexa Media
+  Player e non vorrei metterla». Gli Echo dell'integrazione Alexa Devices,
+  quella che Home Assistant ha di suo, compaiono da soli in Config › Alexa
+  accanto a quelli di Alexa Media Player, e dicono le notifiche, gli avvisi
+  personalizzati e i messaggi della card «Messaggio». Per ognuno si sceglie
+  se parla o fa l'annuncio, col suono prima. Spostare la musica sugli Echo e
+  sfogliarne la libreria restano di Alexa Media Player.
 
 ## 1.18.8
 

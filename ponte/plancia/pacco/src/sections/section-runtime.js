@@ -562,7 +562,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-D2B3BCZM.js";
+} from "../../chunk-ABXJJACR.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -2469,6 +2469,7 @@ var SOURCE_INDEX = Object.freeze({
   "Aggiungi i tuoi elettrodomestici (lavatrice, lavastoviglie, forno, microonde…). Puoi collegare": "Add your appliances (washing machine, dishwasher, oven, microwave…). You can link",
   "Aggiungi impianto": "Add plant",
   "Aggiungi impianto solare": "Add solar plant",
+  "Aggiungi in Home Assistant l'integrazione «Alexa Devices», oppure «Alexa Media Player» da HACS, e accedi con il tuo account Amazon: gli Echo compaiono qui da soli.": "Add the «Alexa Devices» integration in Home Assistant, or «Alexa Media Player» from HACS, and sign in with your Amazon account: the Echos show up here by themselves.",
   "Aggiungi l'integrazione «Radio Browser» in Home Assistant (Impostazioni › Dispositivi e servizi › Aggiungi integrazione): è gratuita e porta migliaia di radio.": "Add the «Radio Browser» integration in Home Assistant (Settings › Devices & services › Add integration): it is free and brings thousands of stations.",
   "Aggiungi le foto": "Add photos",
   "Aggiungi le foto di questa stanza": "Add photos of this room",
@@ -2570,6 +2571,7 @@ var SOURCE_INDEX = Object.freeze({
   "Alette": "Swing",
   "Alette orizzontali": "Horizontal swing",
   "Alette verticali": "Vertical swing",
+  "Alexa Devices: scegli se ogni Echo parla o fa l'annuncio, col suono prima.": "Alexa Devices: choose whether each Echo speaks or makes an announcement, with a chime first.",
   "Alexa non parla ancora": "Alexa is not speaking yet",
   "Alimentazione": "Power supply",
   "all'alba": "at sunrise",
@@ -4419,7 +4421,7 @@ var SOURCE_INDEX = Object.freeze({
   "Gli altri in cucina": "The rest of the kitchen",
   "Gli animali di casa: una scheda per ognuno, con la sua foto e quello che lo riguarda — la ciotola, la lettiera, l'acqua, la porta col microchip, il collare. Anche gli acquari e i terrari, quanti ne hai: ognuno con le sue entità.": "The pets of the house: one card each, with its photo and what concerns it — the bowl, the litter box, the water, the microchip door, the collar. Aquariums and terrariums too, as many as you have: each with its own entities.",
   "Gli avvisi personalizzati accesi e l'antifurto che suona compaiono anche a schermo spento": "Active custom alerts and a triggered alarm show even on the rest screen",
-  "Gli Echo non rispondono: controlla Alexa Media Player in Home Assistant.": "The Echos do not answer: check Alexa Media Player in Home Assistant.",
+  "Gli Echo non rispondono: controlla Alexa Devices o Alexa Media Player in Home Assistant.": "The Echos do not answer: check Alexa Devices or Alexa Media Player in Home Assistant.",
   "Gli elettrodomestici della casa diventano cerchi per stanza nel flusso. Ognuno va nel flusso del suo contatore: finché non lo dici, non compare in nessuno.": "The house appliances become per-room circles in the flow. Each one goes in its meter's flow: until you say which, it shows up in none.",
   "Gli elettrodomestici di quella stanza entrano nel cerchio da soli, anche quelli configurati domani; chi sta già in un altro cerchio non si conta due volte.": "The appliances of that room join the circle on their own, future ones included; anything already inside another circle is not counted twice.",
   "Gli eventi": "The events",
@@ -4915,7 +4917,6 @@ var SOURCE_INDEX = Object.freeze({
   "Inserito vacanza": "Armed vacation",
   "insieme": "together",
   "Installa": "Install",
-  "Installa l'integrazione «Alexa Media Player» da HACS e accedi con il tuo account Amazon: gli Echo compaiono qui da soli.": "Install the «Alexa Media Player» integration from HACS and sign in with your Amazon account: the Echos show up here by themselves.",
   "Installa questo aggiornamento": "Install this update",
   "Installate": "Installed",
   "Integrazione": "Integration",
@@ -68284,6 +68285,8 @@ var ALEXA_DI_SERIE = Object.freeze({
 var ALTOPARLANTI_AL_PIU = 12;
 var ORARIO = /^([01]\d|2[0-3]):([0-5]\d)$/;
 var LETTORE2 = /^media_player\.[a-z0-9_]{1,120}$/;
+var NOTIFICA = /^notify\.[a-z0-9_]{1,120}$/;
+var ECHO = /^(media_player|notify)\.[a-z0-9_]{1,120}$/;
 function normalizzaAlexa(grezzo2) {
   let valore3 = grezzo2;
   if (typeof valore3 === "string") {
@@ -68304,7 +68307,7 @@ function normalizzaAlexa(grezzo2) {
     };
   const altoparlanti = [
     ...new Set(
-      (Array.isArray(valore3.altoparlanti) ? valore3.altoparlanti : []).map((uno) => String(uno ?? "").trim()).filter((uno) => LETTORE2.test(uno))
+      (Array.isArray(valore3.altoparlanti) ? valore3.altoparlanti : []).map((uno) => String(uno ?? "").trim()).filter((uno) => ECHO.test(uno))
     )
   ].slice(0, ALTOPARLANTI_AL_PIU);
   const categorie = Array.isArray(valore3.categorie) ? [...new Set(valore3.categorie.map(String).filter((uno) => ID_DELLE_CATEGORIE.has(uno)))] : [...ALEXA_DI_SERIE.categorie];
@@ -68324,6 +68327,73 @@ function orarioDelSilenzio(silenzio) {
   const a = String(silenzio?.a ?? "");
   if (ORARIO.test(da) && ORARIO.test(a) && da !== a) return { da, a };
   return { ...ALEXA_DI_SERIE.silenzio };
+}
+var PAROLE_DELLE_VOCI = Object.freeze({
+  parla: ["speak", "parla", "parlare", "sprechen", "hablar", "parler", "spreken", "falar"],
+  annuncio: [
+    "announce",
+    "announcement",
+    "annuncio",
+    "annuncia",
+    "annunciare",
+    "ankundigen",
+    "ankuendigen",
+    "anunciar",
+    "annoncer",
+    "aankondigen"
+  ]
+});
+var senzaSegni = (testo5) => String(testo5 ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+function voceDiAlexaDevices(stato3) {
+  const entita4 = String(stato3?.entity_id ?? "");
+  if (!NOTIFICA.test(entita4)) return null;
+  const oggetto3 = entita4.slice("notify.".length);
+  const nome = String(stato3?.attributes?.friendly_name ?? "").trim();
+  const parole4 = senzaSegni(nome).split(/[^a-z0-9]+/).filter(Boolean);
+  for (const [voce3, elenco18] of Object.entries(PAROLE_DELLE_VOCI)) {
+    for (const parola of elenco18) {
+      if (oggetto3.endsWith(`_${parola}`)) {
+        const base = oggetto3.slice(0, -parola.length - 1);
+        const ultima = parole4.at(-1);
+        const leggibile = ultima === parola || elenco18.includes(ultima) ? nome.split(/\s+/).slice(0, -1).join(" ") : nome;
+        return { voce: voce3, base, nome: leggibile || base.replace(/_/g, " ") };
+      }
+    }
+    if (parole4.length > 1 && elenco18.includes(parole4.at(-1)))
+      return { voce: voce3, base: oggetto3, nome: nome.split(/\s+/).slice(0, -1).join(" ") };
+  }
+  return null;
+}
+function echoDiAlexaDevices(stati4) {
+  const tutti = Array.isArray(stati4) ? stati4 : Object.values(stati4 || {});
+  const perEcho = /* @__PURE__ */ new Map();
+  for (const stato3 of tutti) {
+    const trovata2 = voceDiAlexaDevices(stato3);
+    if (!trovata2) continue;
+    const uno = perEcho.get(trovata2.base) || {
+      base: trovata2.base,
+      nome: trovata2.nome,
+      voci: {},
+      spento: true
+    };
+    uno.voci[trovata2.voce] ??= stato3.entity_id;
+    if (stato3.state !== "unavailable") uno.spento = false;
+    if (!uno.nome) uno.nome = trovata2.nome;
+    perEcho.set(trovata2.base, uno);
+  }
+  return [...perEcho.values()].map((uno) => ({
+    entita: uno.voci.parla || uno.voci.annuncio,
+    nome: String(uno.nome || uno.base).trim(),
+    spento: uno.spento,
+    fonte: "devices",
+    voci: { parla: uno.voci.parla || "", annuncio: uno.voci.annuncio || "" }
+  })).sort((uno, due4) => uno.nome.localeCompare(due4.nome, "it"));
+}
+function echoPerLeNotifiche(stati4) {
+  return [
+    ...altoparlantiAlexa(stati4).map((uno) => ({ ...uno, fonte: "amp" })),
+    ...echoDiAlexaDevices(stati4)
+  ].sort((uno, due4) => uno.nome.localeCompare(due4.nome, "it"));
 }
 function altoparlantiAlexa(stati4) {
   const tutti = Array.isArray(stati4) ? stati4 : Object.values(stati4 || {});
@@ -68354,7 +68424,7 @@ function avvisoPulito(grezzo2, indice = 0) {
   const id = /^a_[a-z0-9]{1,16}$/.test(String(grezzo2.id || "")) ? grezzo2.id : `a_${indice}`;
   const altoparlanti = [
     ...new Set(
-      (Array.isArray(grezzo2.altoparlanti) ? grezzo2.altoparlanti : []).map((uno) => String(uno ?? "").trim()).filter((uno) => LETTORE2.test(uno))
+      (Array.isArray(grezzo2.altoparlanti) ? grezzo2.altoparlanti : []).map((uno) => String(uno ?? "").trim()).filter((uno) => ECHO.test(uno))
     )
   ].slice(0, ALTOPARLANTI_AL_PIU);
   const base = { id, attivo: grezzo2.attivo !== false, frase: frase4, quando: quando6, altoparlanti };
@@ -68460,13 +68530,18 @@ function salvaLeScelte() {
   }
 }
 function gliEcho(states = allStates() || {}) {
-  const tutti = altoparlantiAlexa(states);
+  const tutti = echoPerLeNotifiche(states);
   const ci = new Set(tutti.map((uno) => uno.entita));
+  const comeEcho = /* @__PURE__ */ new Map();
+  for (const uno of tutti)
+    for (const voce3 of Object.values(uno.voci || {})) if (voce3) comeEcho.set(voce3, uno.entita);
   const scelte5 = leScelte();
   let scelti = (scelte5.echo || []).filter((uno) => ci.has(uno));
   if (!scelte5.echo) {
     const delleNotifiche = normalizzaAlexa(readJson(CHIAVE_ALEXA, null)).altoparlanti;
-    scelti = delleNotifiche.filter((uno) => ci.has(uno));
+    scelti = [...new Set(delleNotifiche.map((uno) => comeEcho.get(uno) || uno))].filter(
+      (uno) => ci.has(uno)
+    );
     if (!scelti.length) scelti = tutti.filter((uno) => !uno.spento).map((uno) => uno.entita);
   }
   return { tutti, scelti };
@@ -68517,7 +68592,7 @@ function corpo() {
     )
   ).join("")}</div></div>` : "";
   const icona3 = (v) => v >= 100 ? "📢" : v >= 70 ? "🔊" : v >= 50 ? "🔉" : "🔈";
-  const volume = echoAcceso ? `<div class="dm-msg-riga"><span>${esc(t("Volume degli Echo", "Echo volume"))}</span><div class="dm-msg-fila">${pastiglia2(
+  const volume = echoAcceso && tutti.some((uno) => uno.fonte !== "devices") ? `<div class="dm-msg-riga"><span>${esc(t("Volume degli Echo", "Echo volume"))}</span><div class="dm-msg-fila">${pastiglia2(
     scelte5.volume === null,
     'data-dm-msg-volume=""',
     esc(t("Com'è", "As is"))
@@ -98502,20 +98577,39 @@ var riga2 = (titolo3, sotto, destra, corta = false) => `<div class="mu-ed-riga${
     <div class="mu-ed-testo"><b>${titolo3}</b>${sotto ? `<small>${sotto}</small>` : ""}</div>
     ${destra ? `<div class="mu-ed-dx">${destra}</div>` : ""}
   </div>`;
+var sceltoIn = (lista7, uno) => uno.fonte === "devices" ? Object.values(uno.voci).some((voce3) => voce3 && lista7.includes(voce3)) : lista7.includes(uno.entita);
+var entitaPer = (config, uno) => uno.fonte === "devices" ? Object.values(uno.voci).find((voce3) => voce3 && config.altoparlanti.includes(voce3)) || uno.entita : uno.entita;
+var fonteDetta = (uno, echo) => uno.fonte === "devices" ? " <small>Alexa Devices</small>" : echo.some((altro) => altro.fonte === "devices") ? " <small>Media Player</small>" : "";
 function echoMarkup(config, echo) {
   if (!echo.length)
     return `<div class="mu-ed-riga"><div class="mu-ed-testo"><b>${esc(t("Nessun Echo in Home Assistant", "No Echo in Home Assistant"))}</b><small class="mu-ed-avviso">${esc(
       t(
-        "Installa l'integrazione «Alexa Media Player» da HACS e accedi con il tuo account Amazon: gli Echo compaiono qui da soli.",
-        "Install the «Alexa Media Player» integration from HACS and sign in with your Amazon account: the Echos show up here by themselves."
+        "Aggiungi in Home Assistant l'integrazione «Alexa Devices», oppure «Alexa Media Player» da HACS, e accedi con il tuo account Amazon: gli Echo compaiono qui da soli.",
+        "Add the «Alexa Devices» integration in Home Assistant, or «Alexa Media Player» from HACS, and sign in with your Amazon account: the Echos show up here by themselves."
       )
     )}</small></div></div>`;
+  const voci4 = echo.filter(
+    (uno) => uno.fonte === "devices" && uno.voci.parla && uno.voci.annuncio && sceltoIn(config.altoparlanti, uno)
+  ).map((uno) => {
+    const adesso2 = config.altoparlanti.includes(uno.voci.annuncio) ? "annuncio" : "parla";
+    return `<div class="dm-alexa-voce"><span>🔊 ${esc(uno.nome)}</span><div class="mu-ed-seg">${[
+      ["parla", t("Parla", "Speak")],
+      ["annuncio", t("Annuncio", "Announcement")]
+    ].map(
+      ([id, nome]) => `<button type="button" class="${adesso2 === id ? "si" : ""}" data-dm-alexa-voce="${esc(uno.voci[id])}">${esc(nome)}</button>`
+    ).join("")}</div></div>`;
+  }).join("");
   return `<div class="mu-ed-riga"><div class="mu-ed-testo"><b>${esc(t("Quali Echo", "Which Echos"))}</b><small>${esc(
     t("Tocca un Echo per sceglierlo.", "Tap an Echo to choose it.")
   )}</small><div class="dm-alexa-echo">${echo.slice(0, ALTOPARLANTI_AL_PIU * 2).map((uno) => {
-    const scelto = config.altoparlanti.includes(uno.entita);
-    return `<button type="button" class="dm-alexa-pastiglia" aria-pressed="${scelto}" data-dm-alexa-echo="${esc(uno.entita)}">🔊 ${esc(uno.nome)}${uno.spento ? ` <small>${esc(t("spento", "offline"))}</small>` : ""}</button>`;
-  }).join("")}</div></div></div>`;
+    const scelto = sceltoIn(config.altoparlanti, uno);
+    return `<button type="button" class="dm-alexa-pastiglia" aria-pressed="${scelto}" data-dm-alexa-echo="${esc(uno.entita)}">🔊 ${esc(uno.nome)}${fonteDetta(uno, echo)}${uno.spento ? ` <small>${esc(t("spento", "offline"))}</small>` : ""}</button>`;
+  }).join("")}</div>${voci4 ? `<small>${esc(
+    t(
+      "Alexa Devices: scegli se ogni Echo parla o fa l'annuncio, col suono prima.",
+      "Alexa Devices: choose whether each Echo speaks or makes an announcement, with a chime first."
+    )
+  )}</small><div class="dm-alexa-voci">${voci4}</div>` : ""}</div></div>`;
 }
 var nomeDi7 = (entita4) => clean(allStates()?.[entita4]?.attributes?.friendly_name) || entita4;
 function giorniDetti(giorni) {
@@ -98575,9 +98669,9 @@ function bozzaMarkup(bozza3, echo) {
     )
   )}</span><div class="dm-alexa-echo">${echo.map(
     (uno) => pastiglia5(
-      bozza3.altoparlanti.includes(uno.entita),
-      `data-dm-av-echo="${esc(uno.entita)}"`,
-      `🔊 ${esc(uno.nome)}`
+      sceltoIn(bozza3.altoparlanti, uno),
+      `data-dm-av-echo="${esc(entitaPer(configurazione13(), uno))}"`,
+      `🔊 ${esc(uno.nome)}${fonteDetta(uno, echo)}`
     )
   ).join("")}</div></div>` : ""}
     ${state95.erroreAvviso ? `<small class="mu-ed-avviso">${esc(state95.erroreAvviso)}</small>` : ""}
@@ -98614,7 +98708,7 @@ function avvisiMarkup2(config, echo) {
 }
 function corpoDegliAvvisi() {
   const config = configurazione13();
-  const echo = altoparlantiAlexa(allStates() || {});
+  const echo = echoPerLeNotifiche(allStates() || {});
   const spenta = !config.attivo || !config.altoparlanti.length ? `<div class="mu-ed-blocco"><div class="mu-ed-riga"><div class="mu-ed-testo"><b>${esc(
     t("Alexa non parla ancora", "Alexa is not speaking yet")
   )}</b><small class="mu-ed-avviso">${esc(
@@ -98946,7 +99040,8 @@ function corpoMarkup5() {
   if (schedaAttiva3() === ALEXA_AVVISI_TAB) return corpoDegliAvvisi();
   if (schedaAttiva3() === ALEXA_MUSICA_TAB) return corpoDellaMusica();
   const config = configurazione13();
-  const echo = altoparlantiAlexa(allStates() || {});
+  const echo = echoPerLeNotifiche(allStates() || {});
+  const conAmp = !echo.length || echo.some((uno) => uno.fonte === "amp");
   const dis = config.attivo ? "" : " dm-alexa-spento";
   return `<div class="mu-ed dm-alexa-ed" data-dm-alexa-ed>
     <div class="mu-ed-blocco">
@@ -98994,7 +99089,7 @@ function corpoMarkup5() {
               <label>${esc(t("Dalle", "From"))} <input type="time" class="ed-input" data-dm-alexa-da value="${esc(config.silenzio.da)}"></label>
               <label>${esc(t("alle", "to"))} <input type="time" class="ed-input" data-dm-alexa-a value="${esc(config.silenzio.a)}"></label>
             </div>` : ""}
-      ${riga2(
+      ${conAmp ? riga2(
     esc(t("Come lo dice", "How it says it")),
     esc(
       t(
@@ -99008,7 +99103,7 @@ function corpoMarkup5() {
     ].map(
       ([id, nome]) => `<button type="button" class="${config.modo === id ? "si" : ""}" data-dm-alexa-modo="${id}">${esc(nome)}</button>`
     ).join("")}</div>`
-  )}
+  ) : ""}
       ${echo.length ? riga2(
     esc(t("Prova", "Test")),
     state95.esito ? esc(state95.esito) : esc(t("Una frase sugli Echo scelti.", "A sentence on the chosen Echos.")),
@@ -99085,8 +99180,8 @@ async function prova2({ frase: frase4 = "", altoparlanti = null } = {}) {
     state95.esito = t("✓ Inviato: dovresti sentirlo adesso.", "✓ Sent: you should hear it now.");
   } catch (errore) {
     state95.esito = /amministra/.test(clean(errore?.message)) ? t("La prova la fa solo chi amministra la casa.", "Only home admins can run the test.") : t(
-      "Gli Echo non rispondono: controlla Alexa Media Player in Home Assistant.",
-      "The Echos do not answer: check Alexa Media Player in Home Assistant."
+      "Gli Echo non rispondono: controlla Alexa Devices o Alexa Media Player in Home Assistant.",
+      "The Echos do not answer: check Alexa Devices or Alexa Media Player in Home Assistant."
     );
   } finally {
     state95.provando = false;
@@ -99105,8 +99200,21 @@ function onClick19(evento) {
   if ("dmAlexaAttivo" in d) salva14({ attivo: !config.attivo });
   else if ("dmAlexaEcho" in d) {
     const entita4 = clean(d.dmAlexaEcho);
-    const altri = config.altoparlanti.filter((uno) => uno !== entita4);
-    salva14({ altoparlanti: config.altoparlanti.includes(entita4) ? altri : [...altri, entita4] });
+    const uno = echoPerLeNotifiche(allStates() || {}).find((echo) => echo.entita === entita4);
+    const sue = /* @__PURE__ */ new Set([entita4, ...Object.values(uno?.voci || {}).filter(Boolean)]);
+    const altri = config.altoparlanti.filter((voce3) => !sue.has(voce3));
+    const scelto = config.altoparlanti.some((voce3) => sue.has(voce3));
+    salva14({ altoparlanti: scelto ? altri : [...altri, entita4] });
+  } else if ("dmAlexaVoce" in d) {
+    const voce3 = clean(d.dmAlexaVoce);
+    const uno = echoPerLeNotifiche(allStates() || {}).find(
+      (echo) => Object.values(echo.voci || {}).includes(voce3)
+    );
+    if (!uno) return;
+    const sue = new Set(Object.values(uno.voci).filter(Boolean));
+    salva14({
+      altoparlanti: config.altoparlanti.map((scelta3) => sue.has(scelta3) ? voce3 : scelta3)
+    });
   } else if ("dmAlexaCategoria" in d) {
     const id = clean(d.dmAlexaCategoria);
     const altre = config.categorie.filter((una) => una !== id);
@@ -99186,7 +99294,11 @@ function suUnAvviso(d, config, evento) {
   }
   if ("dmAvEcho" in d) {
     const entita4 = clean(d.dmAvEcho);
-    bozza3.altoparlanti = bozza3.altoparlanti.includes(entita4) ? bozza3.altoparlanti.filter((uno) => uno !== entita4) : [...bozza3.altoparlanti, entita4];
+    const uno = echoPerLeNotifiche(allStates() || {}).find(
+      (echo) => echo.entita === entita4 || Object.values(echo.voci || {}).includes(entita4)
+    );
+    const sue = /* @__PURE__ */ new Set([entita4, ...Object.values(uno?.voci || {}).filter(Boolean)]);
+    bozza3.altoparlanti = bozza3.altoparlanti.some((voce3) => sue.has(voce3)) ? bozza3.altoparlanti.filter((voce3) => !sue.has(voce3)) : [...bozza3.altoparlanti, entita4];
     return fatto2();
   }
   if ("dmAvAnnulla" in d) {
@@ -99291,6 +99403,9 @@ function installAlexaEditor() {
       background:color-mix(in srgb,#0ea5e9 12%,transparent);box-shadow:inset 0 0 0 1px #0ea5e999}
     html[data-theme="dark"] #ed-body .dm-alexa-pastiglia[aria-pressed="true"]{color:#7dd3fc}
     #ed-body .dm-alexa-pastiglia small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b)}
+    #ed-body .dm-alexa-voci{display:grid;gap:8px;margin-top:8px}
+    #ed-body .dm-alexa-voce{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;
+      font-size:12.5px;font-weight:800}
     #ed-body .dm-alexa-ore{gap:10px 18px;font-size:13px;font-weight:750}
     #ed-body .dm-alexa-ore label{display:inline-flex;align-items:center;gap:8px}
     #ed-body .dm-alexa-ore .ed-input{margin:0;width:124px;min-width:0}
@@ -137019,7 +137134,7 @@ function mostra2(passo) {
   disegna10();
 }
 var obbligo = (c) => c.obbligatorio ? ' <i class="pg-obb" aria-hidden="true">*</i>' : "";
-function entitaPer(c) {
+function entitaPer2(c) {
   let stati4 = {};
   try {
     stati4 = allStates() || {};
@@ -137054,7 +137169,7 @@ function campoHtml(c, errori, valori = state152.valori, mancanti = state152.manc
       (o) => `<label><input type="checkbox" data-pg-scelta="${esc(c.nome)}" value="${esc(o.valore)}"${[].concat(v ?? []).map(String).includes(String(o.valore)) ? " checked" : ""}><span>${esc(o.etichetta)}</span></label>`
     ).join("")}</span>`;
   else if (c.tipo === "entita")
-    dentro3 = `<select ${attr}${c.multiplo ? ' multiple size="5"' : ""}>${opzioniHtml(entitaPer(c), v, c.multiplo ? "" : "—")}</select>`;
+    dentro3 = `<select ${attr}${c.multiplo ? ' multiple size="5"' : ""}>${opzioniHtml(entitaPer2(c), v, c.multiplo ? "" : "—")}</select>`;
   else if (c.tipo === "ora") dentro3 = `<input type="time" ${attr} value="${esc(v ?? "")}">`;
   else if (c.tipo === "durata")
     dentro3 = `<input type="text" inputmode="numeric" ${attr} value="${esc(v ?? "")}" placeholder="0:30:00">`;
