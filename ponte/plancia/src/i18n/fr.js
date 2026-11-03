@@ -8092,4 +8092,12 @@ export default Object.freeze({
   "The hours of demand are estimated ${fonti}, and the comfort is unknown.": "Les heures de demande sont estimées ${fonti}, et le confort n'est pas connu.",
   "unknown": "inconnu",
   "Use this": "Utiliser celui-ci",
+  "reading…": "lecture…",
+  "Reading the schedule from Home Assistant…": "Lecture du programme depuis Home Assistant…",
+  "There are ${altri} other schedules for this thermostat in Automations: they change the temperature too. Remove them there.": "Il y a ${altri} autres programmes pour ce thermostat dans les Automatisations : ils changent aussi la température. Supprime-les là-bas.",
+  "Saved in Home Assistant. ${adesso} applies now: the thermostat has been updated.": "Enregistré dans Home Assistant. ${adesso} s'applique maintenant : le thermostat a été mis à jour.",
+  "Saved in Home Assistant. ${adesso} applies now: the thermostat updates at the next slot change.": "Enregistré dans Home Assistant. ${adesso} s'applique maintenant : le thermostat se met à jour au prochain changement de plage.",
+  "Saved in Home Assistant. The schedule is paused: the temperature does not change.": "Enregistré dans Home Assistant. Le programme est en pause : la température ne change pas.",
+  "Not saved: only a Home Assistant administrator can save the schedule. Your changes stay here until you close.": "Non enregistré : seul un administrateur de Home Assistant peut enregistrer le programme. Tes modifications restent ici jusqu'à la fermeture.",
+  "Not saved: ${no}. Your changes stay here: try again.": "Non enregistré : ${no}. Tes modifications restent ici : réessaie.",
 });

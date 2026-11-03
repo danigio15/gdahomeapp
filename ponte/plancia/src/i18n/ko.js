@@ -7986,4 +7986,12 @@ export default Object.freeze({
   "The hours of demand are estimated ${fonti}, and the comfort is unknown.": "요청 시간은 ${fonti} 추정했으며, 쾌적도는 알 수 없습니다.",
   "unknown": "알 수 없음",
   "Use this": "이것 사용",
+  "reading…": "읽는 중…",
+  "Reading the schedule from Home Assistant…": "Home Assistant에서 일정을 읽는 중…",
+  "There are ${altri} other schedules for this thermostat in Automations: they change the temperature too. Remove them there.": "자동화에 이 온도 조절기의 일정이 ${altri}개 더 있습니다. 이 일정들도 온도를 바꿉니다. 거기서 삭제하세요.",
+  "Saved in Home Assistant. ${adesso} applies now: the thermostat has been updated.": "Home Assistant에 저장했습니다. 지금은 ${adesso}이(가) 적용됩니다: 온도 조절기를 업데이트했습니다.",
+  "Saved in Home Assistant. ${adesso} applies now: the thermostat updates at the next slot change.": "Home Assistant에 저장했습니다. 지금은 ${adesso}이(가) 적용됩니다: 온도 조절기는 다음 시간대 변경 때 업데이트됩니다.",
+  "Saved in Home Assistant. The schedule is paused: the temperature does not change.": "Home Assistant에 저장했습니다. 일정이 일시 중지되어 있어 온도는 바뀌지 않습니다.",
+  "Not saved: only a Home Assistant administrator can save the schedule. Your changes stay here until you close.": "저장되지 않음: 일정은 Home Assistant 관리자만 저장할 수 있습니다. 변경 내용은 닫을 때까지 여기에 남습니다.",
+  "Not saved: ${no}. Your changes stay here: try again.": "저장되지 않음: ${no}. 변경 내용은 여기에 남아 있습니다: 다시 시도하세요.",
 });

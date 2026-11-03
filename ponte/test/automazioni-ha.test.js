@@ -388,6 +388,7 @@ function unaCasa({ premium = true, configurazioni = {} } = {}) {
     notifiche: { consegna: async (e) => avvisi.push(e) },
     licenze: { attive: true, premium },
     ogni: () => null,
+    aspetta: async () => {},
   });
   return {
     ponte,
@@ -644,4 +645,78 @@ test("il Pianificatore: una routine e un calendario a fasce si salvano come auto
   /* Rilette da Home Assistant, sono di nuovo una routine e un calendario. */
   assert.equal(dallaHomeAssistant(scritta).tipo, "routine");
   assert.equal(dallaHomeAssistant(c.salvate[fasce.id]).tipo, "fasce");
+});
+
+test("il programma salvato si rilegge com'e' stato scritto, e si applica subito", async () => {
+  /* «Se ricarichi la pagina ti cambia l'orario», «anche il target non
+   * cambia»: Home Assistant ricarica l'automazione un attimo dopo averla
+   * scritta, e un cronotermostato decide solo ai cambi di fascia. */
+  const crono = {
+    termostati: ["climate.sala"],
+    fuori: 17,
+    programma: {
+      feriali: [
+        { da: 390, a: 510, gradi: 21 },
+        { da: 1020, a: 1350, gradi: 20.5 },
+      ],
+      festivi: [{ da: 480, a: 1380, gradi: 20.5 }],
+    },
+  };
+  const vecchia = inHomeAssistant(
+    { id: "p1", nome: "Programma Sala", tipo: "crono", crono },
+    { stati: STATI },
+  );
+  const c = unaCasa({ configurazioni: { p1: vecchia } });
+  /* Home Assistant: la prima volta che si chiede risponde ancora con quella
+   * di prima, la seconda con quella appena scritta. */
+  let letture = 0;
+  const servizi = [];
+  c.ponte.casa.chiedi = async (m) => {
+    if (m.type === "automation/config") {
+      letture += 1;
+      return { config: structuredClone(letture === 1 ? vecchia : c.salvate.p1) };
+    }
+    if (m.type === "call_service") {
+      servizi.push(m);
+      return null;
+    }
+    return null;
+  };
+  const nuovo = {
+    ...crono,
+    fuori: 22,
+    programma: {
+      ...crono.programma,
+      feriali: [
+        { da: 390, a: 510, gradi: 21 },
+        { da: 1020, a: 1140, gradi: 20.5 },
+      ],
+    },
+  };
+  const fatto = await c.ponte.salva({
+    id: "p1",
+    automazione: { id: "p1", nome: "Programma Sala", attiva: true, tipo: "crono", crono: nuovo },
+  });
+  assert.equal(fatto.id, "p1");
+  assert.equal(fatto.entity_id, "automation.p1");
+  assert.equal(letture, 2, "si aspetta che Home Assistant la ricarichi");
+  assert.equal(fatto.applicato, true);
+  assert.deepEqual(
+    servizi.map((s) => [s.domain, s.service, s.target.entity_id]),
+    [["automation", "trigger", "automation.p1"]],
+  );
+  /* L'elenco di dopo la legge nuova, non quella di prima. */
+  const elenco = await c.ponte.elencoDiCasa();
+  const voce = elenco.find((v) => v.id === "p1");
+  assert.equal(voce.modello.crono.fuori, 22);
+  assert.deepEqual(voce.modello.crono.programma.feriali[1], { da: 1020, a: 1140, gradi: 20.5 });
+
+  /* Un programma sospeso si salva e basta: niente gradi cambiati. */
+  servizi.length = 0;
+  const sospeso = await c.ponte.salva({
+    id: "p1",
+    automazione: { id: "p1", nome: "Programma Sala", attiva: false, tipo: "crono", crono: nuovo },
+  });
+  assert.equal(sospeso.applicato, false);
+  assert.deepEqual(servizi, []);
 });

@@ -7876,4 +7876,12 @@ export default Object.freeze({
   "The hours of demand are estimated ${fonti}, and the comfort is unknown.": "需求时长是${fonti}估算的，舒适度未知。",
   "unknown": "未知",
   "Use this": "使用这个",
+  "reading…": "读取中…",
+  "Reading the schedule from Home Assistant…": "正在从 Home Assistant 读取日程…",
+  "There are ${altri} other schedules for this thermostat in Automations: they change the temperature too. Remove them there.": "自动化中还有 ${altri} 个此温控器的日程：它们也会改变温度。请在那里删除。",
+  "Saved in Home Assistant. ${adesso} applies now: the thermostat has been updated.": "已保存到 Home Assistant。现在适用 ${adesso}：温控器已更新。",
+  "Saved in Home Assistant. ${adesso} applies now: the thermostat updates at the next slot change.": "已保存到 Home Assistant。现在适用 ${adesso}：温控器将在下一个时段切换时更新。",
+  "Saved in Home Assistant. The schedule is paused: the temperature does not change.": "已保存到 Home Assistant。日程已暂停：温度不变。",
+  "Not saved: only a Home Assistant administrator can save the schedule. Your changes stay here until you close.": "未保存：只有 Home Assistant 管理员可以保存日程。你的修改会保留在这里，直到关闭。",
+  "Not saved: ${no}. Your changes stay here: try again.": "未保存：${no}。你的修改仍在这里：请重试。",
 });

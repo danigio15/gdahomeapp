@@ -25,6 +25,7 @@ import {
   cronoProssimo,
   cronoPulito,
   giornataDelProgramma,
+  gradiAlle,
   nuovoId,
 } from "../core/automazioni.js";
 import {
@@ -37,6 +38,7 @@ import {
 } from "./automazioni-section.js";
 import { climateUnits } from "./climate-thermal-section.js";
 import {
+  chiamaServizio,
   chiediAHomeAssistant,
   clean,
   doc,
@@ -59,6 +61,13 @@ const state = (root[KEY] ||= {
   salvando: false,
   errore: "",
   salvato: false,
+  /* Da dove viene la bozza (la firma del programma di Home Assistant che
+   * l'ha fatta), se chi guarda l'ha toccata, e quello appena salvato che
+   * l'elenco della casa non dice ancora. */
+  bozzaDa: "",
+  toccata: false,
+  appenaSalvato: null,
+  esito: "",
 });
 
 const GRADI_FUORI = 17;
@@ -66,19 +75,55 @@ const GRADI_NUOVA = 20;
 
 /* ── il modello della finestra (puro) ─────────────────────────────────── */
 
-/** L'automazione che fa da programma a `entita`: prima quella a fasce, poi un cronotermostato qualunque. */
-export function programmaDelTermostato(elenco, entita) {
+/** Le automazioni che fanno da programma a `entita`: prima quelle a fasce, poi i cronotermostati. */
+export function programmiDelTermostato(elenco, entita) {
   const suoi = (Array.isArray(elenco) ? elenco : []).filter(
     (v) => v?.modello?.tipo === "crono" && v.modello.crono?.termostati?.includes(entita),
   );
-  return suoi.find((v) => v.modello.crono.programma) || suoi[0] || null;
+  return [
+    ...suoi.filter((v) => v.modello.crono.programma),
+    ...suoi.filter((v) => !v.modello.crono.programma),
+  ];
+}
+
+/** L'automazione che fa da programma a `entita`: prima quella a fasce, poi un cronotermostato qualunque. */
+export function programmaDelTermostato(elenco, entita) {
+  return programmiDelTermostato(elenco, entita)[0] || null;
+}
+
+/** La firma di un programma: cambia quando cambia quello che Home Assistant ha. */
+export function firmaDelProgramma(voce) {
+  if (!voce) return "nessuno";
+  const c = cronoPulito(voce.modello?.crono || {});
+  return JSON.stringify([
+    voce.id || voce.modello?.id || "",
+    c.fuori,
+    c.programma || [c.feriali, c.festivi, c.inCasa],
+  ]);
+}
+
+/**
+ * Da dove si prende la bozza adesso. «Se ricarichi la pagina ti cambia
+ * l'orario»: la finestra si apriva prima che la casa avesse risposto, la
+ * bozza nasceva dal programma di serie e restava quella anche dopo, quando
+ * il programma vero arrivava. Adesso una bozza non toccata segue sempre
+ * quello che Home Assistant dice; una toccata resta di chi la sta scrivendo;
+ * e quella appena salvata vale finche' l'elenco non la conferma.
+ */
+export function bozzaDaTenere({ bozzaDa, toccata, appenaSalvato, firma, adesso = Date.now() }) {
+  if (toccata) return "tieni";
+  if (appenaSalvato && appenaSalvato.firma !== firma && adesso - appenaSalvato.il < 60000)
+    return "tieni";
+  return bozzaDa === firma ? "tieni" : "rifai";
 }
 
 /* Un cronotermostato di prima diventa programma: le sue fasce con i gradi
  * «in casa», e fuori i suoi gradi di fuori. Cosi' aprendolo qui non cambia
  * niente finche' non si tocca. */
 export function bozzaDalCrono(crono, entita) {
-  const c = cronoPulito(crono || { termostati: [entita], programma: PROGRAMMA_DI_SERIE, fuori: GRADI_FUORI });
+  const c = cronoPulito(
+    crono || { termostati: [entita], programma: PROGRAMMA_DI_SERIE, fuori: GRADI_FUORI },
+  );
   const programma = c.programma || {
     feriali: c.feriali.map(([da, a]) => ({ da, a, gradi: c.inCasa })),
     festivi: c.festivi.map(([da, a]) => ({ da, a, gradi: c.inCasa })),
@@ -130,15 +175,32 @@ function voceDi(entita) {
   return programmaDelTermostato(automazioniDiCasa(), entita);
 }
 
+/* La casa ha gia' risposto con le sue automazioni? Prima no: si aspetta,
+ * invece di mostrare (e lasciar salvare) il programma di serie. */
+const casaHaRisposto = () => Boolean(casa().ponte) || casa().assente === true;
+
 function nomeDellaStanza() {
   const unita = climateUnits().find((u) => u.entity === state.entita);
   return clean(unita?.room) || clean(unita?.name) || state.entita;
 }
 
 function laBozza() {
-  if (state.bozza && state.bozza.__entita === state.entita) return state.bozza;
   const voce = voceDi(state.entita);
+  const firma = firmaDelProgramma(voce);
+  if (state.appenaSalvato && state.appenaSalvato.firma === firma) state.appenaSalvato = null;
+  if (
+    state.bozza &&
+    state.bozza.__entita === state.entita &&
+    bozzaDaTenere({
+      bozzaDa: state.bozzaDa,
+      toccata: state.toccata,
+      appenaSalvato: state.appenaSalvato,
+      firma,
+    }) === "tieni"
+  )
+    return state.bozza;
   state.bozza = { ...bozzaDalCrono(voce?.modello?.crono, state.entita), __entita: state.entita };
+  state.bozzaDa = firma;
   return state.bozza;
 }
 
@@ -187,15 +249,21 @@ function prossimoDetto(crono) {
 }
 
 function statoDetto(voce, bozza) {
-  if (casa().assente)
-    return t("serve l'add-on GdAHome", "needs the GdAHome add-on");
+  if (casa().assente) return t("serve l'add-on GdAHome", "needs the GdAHome add-on");
   if (!voce) return t("non c'è ancora", "not set yet");
   if (voce.attiva === false) return t("sospeso", "paused");
   return prossimoDetto(bozza) || t("attivo", "active");
 }
 
 export function programmaMarkup() {
+  if (!casaHaRisposto()) {
+    const testa = `<button type="button" class="dm-prg-testa" data-dm-prg-apri aria-expanded="${state.aperto}"><span class="dm-prg-tit">🗓️ ${esc(t("Programma", "Schedule"))}</span><span class="dm-prg-stato">${esc(t("leggo…", "reading…"))}</span><span class="dm-prg-freccia" aria-hidden="true">▾</span></button>`;
+    return state.aperto
+      ? `${testa}<div class="dm-prg-corpo"><p class="dm-prg-nota">${esc(t("Leggo il programma da Home Assistant…", "Reading the schedule from Home Assistant…"))}</p></div>`
+      : testa;
+  }
   const voce = voceDi(state.entita);
+  const altri = programmiDelTermostato(automazioniDiCasa(), state.entita).length - 1;
   const b = laBozza();
   const giornata = b.programma[state.giorno];
   const sbloccato = premium() && !casa().assente;
@@ -228,7 +296,18 @@ ${
     ? `<div class="dm-prg-fuori"><span>${esc(t("Programma attivo", "Schedule active"))}</span><button type="button" class="dm-prg-int" role="switch" aria-checked="${voce.attiva !== false}" data-dm-prg-attivo aria-label="${esc(t("Programma attivo", "Schedule active"))}"><i></i></button></div>`
     : ""
 }
-${state.errore ? `<p class="dm-prg-errore">${esc(state.errore)}</p>` : ""}
+${
+  altri > 0
+    ? `<p class="dm-prg-nota">${esc(
+        t(
+          `Ci sono altri ${altri} programmi per questo termostato fra le Automazioni: cambiano i gradi anche loro. Toglili lì.`,
+          `There are ${altri} other schedules for this thermostat in Automations: they change the temperature too. Remove them there.`,
+        ),
+      )}</p>`
+    : ""
+}
+${state.errore ? `<p class="dm-prg-errore" role="alert">${esc(state.errore)}</p>` : ""}
+${state.esito ? `<p class="dm-prg-esito" role="status">${esc(state.esito)}</p>` : ""}
 ${
   sbloccato && !puoScrivere() && casa().ponte
     ? `<p class="dm-prg-nota">${esc(t("Solo chi amministra Home Assistant può salvarlo.", "Only a Home Assistant administrator can save it."))}</p>`
@@ -288,9 +367,13 @@ function apri(entita) {
   if (chi !== state.entita) {
     state.entita = chi;
     state.bozza = null;
+    state.bozzaDa = "";
+    state.toccata = false;
+    state.appenaSalvato = null;
     state.aperto = false;
     state.giorno = "feriali";
     state.errore = "";
+    state.esito = "";
     state.salvato = false;
   }
   disegna();
@@ -300,20 +383,26 @@ function apri(entita) {
 /* ── i tocchi ─────────────────────────────────────────────────────────── */
 
 function cambia(fai) {
+  if (!casaHaRisposto()) return;
   const b = laBozza();
   fai(b);
   b.programma[state.giorno] = giornataDelProgramma(b.programma[state.giorno]);
+  state.toccata = true;
   state.salvato = false;
   state.errore = "";
+  state.esito = "";
   disegna();
 }
 
 async function salva() {
-  if (state.salvando || !premium()) return;
+  if (state.salvando || !premium() || !casaHaRisposto()) return;
   const b = laBozza();
   const voce = voceDi(state.entita);
   const stanza = nomeDellaStanza();
-  const crono = cronoPulito({ ...b, termostati: b.termostati.length ? b.termostati : [state.entita] });
+  const crono = cronoPulito({
+    ...b,
+    termostati: b.termostati.length ? b.termostati : [state.entita],
+  });
   const automazione = {
     id: voce?.modello?.id || voce?.id || nuovoId(),
     nome: voce?.nome || t(`Programma ${stanza}`, `Schedule ${stanza}`).slice(0, 60),
@@ -325,20 +414,55 @@ async function salva() {
   state.errore = "";
   disegna();
   try {
-    await chiediAHomeAssistant(
+    const fatto = await chiediAHomeAssistant(
       { type: "ponte/automazioni/salva", automazione, automazione_id: voce?.id || "" },
       25000,
     );
     state.salvato = true;
-    root.edToast?.(t("💾 Programma salvato in Home Assistant", "💾 Schedule saved in Home Assistant"));
+    /* Quello salvato resta in vista finche' l'elenco della casa non lo dice
+     * anche lui: niente piu' «torna quello di prima» per un attimo. */
+    const salvato = { ...b, ...crono };
+    state.bozza = { ...salvato, __entita: state.entita };
+    state.toccata = false;
+    state.appenaSalvato = {
+      firma: firmaDelProgramma({ id: fatto?.id || automazione.id, modello: { crono } }),
+      il: Date.now(),
+    };
+    state.bozzaDa = state.appenaSalvato.firma;
+    const adesso = gradiDetti(gradiAlle(crono, Date.now()));
+    state.esito =
+      fatto?.applicato === true
+        ? t(
+            `Salvato in Home Assistant. Adesso vale ${adesso}: il termostato è stato aggiornato.`,
+            `Saved in Home Assistant. ${adesso} applies now: the thermostat has been updated.`,
+          )
+        : automazione.attiva
+          ? t(
+              `Salvato in Home Assistant. Adesso vale ${adesso}: il termostato si aggiorna al prossimo cambio di fascia.`,
+              `Saved in Home Assistant. ${adesso} applies now: the thermostat updates at the next slot change.`,
+            )
+          : t(
+              "Salvato in Home Assistant. Il programma è sospeso: i gradi non cambiano.",
+              "Saved in Home Assistant. The schedule is paused: the temperature does not change.",
+            );
+    root.edToast?.(
+      t("💾 Programma salvato in Home Assistant", "💾 Schedule saved in Home Assistant"),
+    );
     void chiediAllaCasa({ forza: true });
     root.setTimeout?.(() => void chiediAllaCasa({ forza: true }), 2500);
   } catch (errore) {
     const no = clean(errore?.message) || "?";
-    state.errore = t(
-      `Home Assistant non l'ha salvato: ${no}`,
-      `Home Assistant did not save it: ${no}`,
-    );
+    state.esito = "";
+    state.errore =
+      clean(errore?.code) === "unauthorized"
+        ? t(
+            "Non salvato: il programma lo salva solo chi amministra Home Assistant. Le modifiche restano qui finché non chiudi.",
+            "Not saved: only a Home Assistant administrator can save the schedule. Your changes stay here until you close.",
+          )
+        : t(
+            `Non salvato: ${no}. Le modifiche restano qui: riprova.`,
+            `Not saved: ${no}. Your changes stay here: try again.`,
+          );
   } finally {
     state.salvando = false;
     disegna();
@@ -387,7 +511,22 @@ function suClick(evento) {
     });
   if (d.dmPrgAttivo !== undefined) {
     const voce = voceDi(state.entita);
-    if (voce) alternaInCasa(voce);
+    if (voce) {
+      const accesa = voce.attiva === false;
+      alternaInCasa(voce, accesa);
+      /* Riacceso, decide subito: i gradi della fascia di adesso, senza
+       * aspettare il prossimo cambio. */
+      if (accesa && voce.entity_id)
+        root.setTimeout?.(
+          () =>
+            chiamaServizio({
+              domain: "automation",
+              service: "trigger",
+              data: { entity_id: voce.entity_id, skip_condition: true },
+            }),
+          600,
+        );
+    }
     root.setTimeout?.(disegna, 50);
     return;
   }
@@ -452,7 +591,8 @@ const STILE = `
 .dm-prg-salva{all:unset;text-align:center;padding:11px 0;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer;background:linear-gradient(135deg,#f97316,#ef4444);color:#fff}
 .dm-prg-salva[disabled]{opacity:.55;cursor:default}
 .dm-prg-vuoto,.dm-prg-nota{margin:0;font-size:12px;color:var(--text-dim,#64748b)}
-.dm-prg-errore{margin:0;font-size:12px;font-weight:700;color:#dc2626}
+.dm-prg-errore{margin:0;padding:8px 10px;border-radius:10px;font-size:12px;font-weight:700;color:#dc2626;background:rgba(220,38,38,.10)}
+.dm-prg-esito{margin:0;padding:8px 10px;border-radius:10px;font-size:12px;font-weight:700;color:#15803d;background:rgba(34,197,94,.12)}
 .dm-prg-velato{position:relative}
 .dm-prg-velato>.dm-prg-corpo{filter:blur(2px);opacity:.55;pointer-events:none}
 .dm-prg-velo{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px;text-align:center;background:color-mix(in srgb,var(--card-bg,#fff) 70%,transparent)}

@@ -8014,4 +8014,12 @@ export default Object.freeze({
   "The hours of demand are estimated ${fonti}, and the comfort is unknown.": "要求時間は${fonti}推定したもので、快適性は不明です。",
   "unknown": "不明",
   "Use this": "これを使う",
+  "reading…": "読み込み中…",
+  "Reading the schedule from Home Assistant…": "Home Assistant からスケジュールを読み込んでいます…",
+  "There are ${altri} other schedules for this thermostat in Automations: they change the temperature too. Remove them there.": "オートメーションにこのサーモスタット用のスケジュールがほかに ${altri} 件あります。これらも温度を変更します。そちらで削除してください。",
+  "Saved in Home Assistant. ${adesso} applies now: the thermostat has been updated.": "Home Assistant に保存しました。現在は ${adesso} です：サーモスタットを更新しました。",
+  "Saved in Home Assistant. ${adesso} applies now: the thermostat updates at the next slot change.": "Home Assistant に保存しました。現在は ${adesso} です：サーモスタットは次の時間帯の切り替えで更新されます。",
+  "Saved in Home Assistant. The schedule is paused: the temperature does not change.": "Home Assistant に保存しました。スケジュールは一時停止中です：温度は変わりません。",
+  "Not saved: only a Home Assistant administrator can save the schedule. Your changes stay here until you close.": "保存されませんでした：スケジュールを保存できるのは Home Assistant の管理者だけです。変更は閉じるまでここに残ります。",
+  "Not saved: ${no}. Your changes stay here: try again.": "保存されませんでした：${no}。変更はここに残っています：もう一度お試しください。",
 });

@@ -8029,4 +8029,12 @@ export default Object.freeze({
   "The hours of demand are estimated ${fonti}, and the comfort is unknown.": "Часы запроса оценены ${fonti}, а комфорт неизвестен.",
   "unknown": "неизвестно",
   "Use this": "Использовать этот",
+  "reading…": "читаю…",
+  "Reading the schedule from Home Assistant…": "Читаю расписание из Home Assistant…",
+  "There are ${altri} other schedules for this thermostat in Automations: they change the temperature too. Remove them there.": "В автоматизациях есть ещё ${altri} расписаний для этого термостата: они тоже меняют температуру. Удалите их там.",
+  "Saved in Home Assistant. ${adesso} applies now: the thermostat has been updated.": "Сохранено в Home Assistant. Сейчас действует ${adesso}: термостат обновлён.",
+  "Saved in Home Assistant. ${adesso} applies now: the thermostat updates at the next slot change.": "Сохранено в Home Assistant. Сейчас действует ${adesso}: термостат обновится при следующей смене интервала.",
+  "Saved in Home Assistant. The schedule is paused: the temperature does not change.": "Сохранено в Home Assistant. Расписание приостановлено: температура не меняется.",
+  "Not saved: only a Home Assistant administrator can save the schedule. Your changes stay here until you close.": "Не сохранено: сохранить расписание может только администратор Home Assistant. Изменения останутся здесь, пока вы не закроете окно.",
+  "Not saved: ${no}. Your changes stay here: try again.": "Не сохранено: ${no}. Изменения остаются здесь: попробуйте ещё раз.",
 });

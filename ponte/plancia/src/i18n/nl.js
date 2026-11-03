@@ -8046,4 +8046,12 @@ export default Object.freeze({
   "The hours of demand are estimated ${fonti}, and the comfort is unknown.": "De vraaguren zijn geschat ${fonti}, en het comfort is onbekend.",
   "unknown": "onbekend",
   "Use this": "Deze gebruiken",
+  "reading…": "lezen…",
+  "Reading the schedule from Home Assistant…": "Het schema wordt uit Home Assistant gelezen…",
+  "There are ${altri} other schedules for this thermostat in Automations: they change the temperature too. Remove them there.": "Er zijn nog ${altri} schema's voor deze thermostaat bij Automatiseringen: die veranderen de temperatuur ook. Verwijder ze daar.",
+  "Saved in Home Assistant. ${adesso} applies now: the thermostat has been updated.": "Opgeslagen in Home Assistant. Nu geldt ${adesso}: de thermostaat is bijgewerkt.",
+  "Saved in Home Assistant. ${adesso} applies now: the thermostat updates at the next slot change.": "Opgeslagen in Home Assistant. Nu geldt ${adesso}: de thermostaat past zich aan bij de volgende tijdblokwissel.",
+  "Saved in Home Assistant. The schedule is paused: the temperature does not change.": "Opgeslagen in Home Assistant. Het schema is gepauzeerd: de temperatuur verandert niet.",
+  "Not saved: only a Home Assistant administrator can save the schedule. Your changes stay here until you close.": "Niet opgeslagen: alleen een Home Assistant-beheerder kan het schema opslaan. Je wijzigingen blijven hier tot je sluit.",
+  "Not saved: ${no}. Your changes stay here: try again.": "Niet opgeslagen: ${no}. Je wijzigingen blijven hier: probeer het opnieuw.",
 });

@@ -8012,4 +8012,12 @@ export default Object.freeze({
   "The hours of demand are estimated ${fonti}, and the comfort is unknown.": "Talep saatleri ${fonti} tahmin edildi ve konfor bilinmiyor.",
   "unknown": "bilinmiyor",
   "Use this": "Bunu kullan",
+  "reading…": "okunuyor…",
+  "Reading the schedule from Home Assistant…": "Program Home Assistant'tan okunuyor…",
+  "There are ${altri} other schedules for this thermostat in Automations: they change the temperature too. Remove them there.": "Otomasyonlarda bu termostat için ${altri} program daha var: onlar da sıcaklığı değiştirir. Onları orada kaldır.",
+  "Saved in Home Assistant. ${adesso} applies now: the thermostat has been updated.": "Home Assistant'a kaydedildi. Şimdi ${adesso} geçerli: termostat güncellendi.",
+  "Saved in Home Assistant. ${adesso} applies now: the thermostat updates at the next slot change.": "Home Assistant'a kaydedildi. Şimdi ${adesso} geçerli: termostat bir sonraki aralık değişiminde güncellenir.",
+  "Saved in Home Assistant. The schedule is paused: the temperature does not change.": "Home Assistant'a kaydedildi. Program duraklatıldı: sıcaklık değişmiyor.",
+  "Not saved: only a Home Assistant administrator can save the schedule. Your changes stay here until you close.": "Kaydedilmedi: programı yalnızca bir Home Assistant yöneticisi kaydedebilir. Değişikliklerin kapatana kadar burada kalır.",
+  "Not saved: ${no}. Your changes stay here: try again.": "Kaydedilmedi: ${no}. Değişikliklerin burada kalıyor: tekrar dene.",
 });

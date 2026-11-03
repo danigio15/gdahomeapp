@@ -14,6 +14,24 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
 _Solo Home Assistant: l'app sul telefono non cambia._
 
+- **Il programma del clima si salva e si rilegge com'è, e decide subito:**
+  «sembra che non salva il programma», «se ricarichi la pagina ti cambia
+  l'orario», «anche il target non cambia». La finestra del termostato si
+  apriva prima che la casa avesse risposto con le sue automazioni: il
+  programma nasceva da quello di serie (06:30–08:30 21°, 17:00–22:30 20,5°,
+  fuori 17°) e restava quello anche quando arrivava il programma vero, che
+  così sembrava perso — e chi salvava salvava sopra quello di serie. Adesso
+  la finestra aspetta la casa («Leggo il programma da Home Assistant…»),
+  mostra sempre quello che Home Assistant ha finché non lo si tocca, e
+  quello appena salvato resta in vista finché la casa non lo conferma. Il
+  ponte, dopo aver scritto, aspetta che Home Assistant abbia ricaricato
+  l'automazione (prima rileggeva quella vecchia e la teneva trenta secondi)
+  e la fa decidere subito: il termostato prende i gradi della fascia di
+  adesso, non solo al prossimo cambio. Lo stesso quando si riaccende
+  «Programma attivo». Sotto il tasto un riquadro dice com'è andata: salvato
+  e quanti gradi valgono adesso, oppure perché non si è salvato (le modifiche
+  restano). Se fra le Automazioni ci sono altri programmi per lo stesso
+  termostato, la finestra lo dice: cambiano i gradi anche loro.
 - **Le versioni dell'app arrivano da tutte le case accese:** «continuo a non
   vedere le app installate dagli utenti». Il quadro le sapeva solo dal
   rapporto, che parte spento: su 178 case accese contava sei telefoni.

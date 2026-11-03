@@ -252,7 +252,11 @@ export class Automazioni {
     adesso = () => Date.now(),
     ogni = (quanto, cosa) => setInterval(cosa, quanto),
     smetti = (segno) => clearInterval(segno),
+    /* Quanto aspettare fra un'occhiata e l'altra mentre Home Assistant
+     * ricarica un'automazione appena salvata (nelle prove: subito). */
+    aspetta = (ms) => new Promise((fatto) => setTimeout(fatto, ms)),
   } = {}) {
+    this._aspetta = aspetta;
     this._suDisco = Boolean(cartella);
     this.archivio = new Archivio(
       cartella ? join(cartella, "automazioni.json") : "",
@@ -737,7 +741,59 @@ export class Automazioni {
     await this._api("POST", `config/automation/config/${encodeURIComponent(a.id)}`, config);
     this._dimentica(a.id);
     this.registro.info(`automazione «${config.alias}» salvata in Home Assistant`);
-    return { id: a.id, alias: config.alias };
+    /* «Se ricarichi la pagina ti cambia l'orario»: Home Assistant scrive il
+     * file e ricarica l'automazione per conto suo, un attimo dopo. Chi
+     * rileggeva subito trovava ancora quella di prima, e la teneva per
+     * trenta secondi. Si aspetta di vederla com'e' stata scritta. */
+    const entita = await this._aspettaLaRicarica(a.id, config);
+    /* «Anche il target non cambia»: un cronotermostato decide solo a ogni
+     * inizio e fine fascia. Salvato alle 20 in mezzo a una fascia, i gradi
+     * restavano quelli di prima fino al cambio dopo. Lo si fa decidere
+     * subito: le sue azioni guardano la fascia di adesso (e le finestre). */
+    let applicato = false;
+    if (a.tipo === "crono" && a.attiva !== false && entita) {
+      try {
+        await this.casa.chiedi({
+          type: "call_service",
+          domain: "automation",
+          service: "trigger",
+          target: { entity_id: entita },
+          service_data: { skip_condition: true },
+        });
+        applicato = true;
+      } catch (errore) {
+        this.registro.debug?.(`il programma non si applica subito: ${errore?.message || errore}`);
+      }
+    }
+    return { id: a.id, alias: config.alias, entity_id: entita, applicato };
+  }
+
+  /* L'entita' dell'automazione `id`, quando Home Assistant ha ricaricato la
+   * configurazione appena scritta; "" se non arriva in qualche secondo (un
+   * Home Assistant lento: il salvataggio c'e' lo stesso). */
+  async _aspettaLaRicarica(id, scritta, { volte = 20, ogni = 250 } = {}) {
+    const voluta = JSON.stringify(scritta?.variables ?? scritta?.triggers ?? null);
+    for (let i = 0; i < volte; i += 1) {
+      const entita = this._entitaDi(id);
+      if (entita && typeof this.casa?.chiedi === "function") {
+        let letta;
+        try {
+          letta = (await this.casa.chiedi({ type: "automation/config", entity_id: entita }))
+            ?.config;
+        } catch (_errore) {
+          letta = undefined;
+        }
+        /* Un Home Assistant che non sa dirlo: ci si fida della scrittura. */
+        if (letta === undefined || letta === null) return entita;
+        if (JSON.stringify(letta.variables ?? letta.triggers ?? null) === voluta) {
+          this._dalFilo.set(id, { il: this.adesso(), config: letta });
+          return entita;
+        }
+      }
+      await this._aspetta(ogni);
+    }
+    this._dimentica(id);
+    return this._entitaDi(id);
   }
 
   async elimina({ id = "" } = {}) {

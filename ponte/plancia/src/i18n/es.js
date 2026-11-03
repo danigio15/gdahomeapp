@@ -8061,4 +8061,12 @@ export default Object.freeze({
   "The hours of demand are estimated ${fonti}, and the comfort is unknown.": "Las horas de demanda se estiman ${fonti}, y el confort no se conoce.",
   "unknown": "desconocido",
   "Use this": "Usar este",
+  "reading…": "leyendo…",
+  "Reading the schedule from Home Assistant…": "Leyendo la programación desde Home Assistant…",
+  "There are ${altri} other schedules for this thermostat in Automations: they change the temperature too. Remove them there.": "Hay ${altri} programaciones más para este termostato en Automatizaciones: también cambian la temperatura. Elimínalas allí.",
+  "Saved in Home Assistant. ${adesso} applies now: the thermostat has been updated.": "Guardado en Home Assistant. Ahora se aplican ${adesso}: el termostato se ha actualizado.",
+  "Saved in Home Assistant. ${adesso} applies now: the thermostat updates at the next slot change.": "Guardado en Home Assistant. Ahora se aplican ${adesso}: el termostato se actualiza en el próximo cambio de franja.",
+  "Saved in Home Assistant. The schedule is paused: the temperature does not change.": "Guardado en Home Assistant. La programación está en pausa: la temperatura no cambia.",
+  "Not saved: only a Home Assistant administrator can save the schedule. Your changes stay here until you close.": "No guardado: solo un administrador de Home Assistant puede guardar la programación. Tus cambios se quedan aquí hasta que cierres.",
+  "Not saved: ${no}. Your changes stay here: try again.": "No guardado: ${no}. Tus cambios se quedan aquí: inténtalo de nuevo.",
 });

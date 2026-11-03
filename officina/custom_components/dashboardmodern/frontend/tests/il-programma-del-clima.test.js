@@ -18,9 +18,12 @@ import {
 } from "../src/core/automazioni.js";
 import { dallaHomeAssistant, inHomeAssistant } from "../src/core/automazioni-ha.js";
 import {
+  bozzaDaTenere,
   bozzaDalCrono,
   fasciaNuova,
+  firmaDelProgramma,
   programmaDelTermostato,
+  programmiDelTermostato,
 } from "../src/sections/programma-del-clima-section.js";
 
 /* Lunedi' 2 novembre 2026 e sabato 7, ore locali. */
@@ -35,8 +38,7 @@ const PROGRAMMA = {
   ],
   festivi: [{ da: 480, a: 1380, gradi: 20 }],
 };
-const crono = () =>
-  cronoPulito({ termostati: ["climate.sala"], programma: PROGRAMMA, fuori: 17 });
+const crono = () => cronoPulito({ termostati: ["climate.sala"], programma: PROGRAMMA, fuori: 17 });
 
 test("ogni fascia vale i suoi gradi, fuori dalle fasce vale fuori", () => {
   const c = crono();
@@ -77,7 +79,13 @@ test("il prossimo cambio salta i confini che non cambiano i gradi", () => {
   const piatto = cronoPulito({
     termostati: ["climate.sala"],
     fuori: 17,
-    programma: { feriali: [{ da: 0, a: 360, gradi: 17 }, { da: 360, a: 480, gradi: 21 }], festivi: [] },
+    programma: {
+      feriali: [
+        { da: 0, a: 360, gradi: 17 },
+        { da: 360, a: 480, gradi: 21 },
+      ],
+      festivi: [],
+    },
   });
   assert.deepEqual(cronoProssimo(piatto, lun(1)), { alle: lun(6), voluto: 21 });
 });
@@ -132,7 +140,13 @@ test("i cronotermostati di prima restano identici, campo per campo", () => {
 
 test("in Home Assistant il programma porta i suoi orari e torna indietro uguale", () => {
   const c = crono();
-  const ha = inHomeAssistant({ id: "p1", nome: "Programma Sala", attiva: true, tipo: "crono", crono: c });
+  const ha = inHomeAssistant({
+    id: "p1",
+    nome: "Programma Sala",
+    attiva: true,
+    tipo: "crono",
+    crono: c,
+  });
   const orari = ha.triggers.find((x) => x.trigger === "time").at;
   assert.deepEqual(orari, ["06:30:00", "08:00:00", "08:30:00", "17:00:00", "22:30:00", "23:00:00"]);
   assert.match(JSON.stringify(ha.actions), /c\.programma\.festivi if now\(\)\.weekday\(\) >= 5/);
@@ -159,7 +173,10 @@ test("un cronotermostato di prima diventa programma senza cambiare niente", () =
     termostati: ["climate.sala"],
     inCasa: 21,
     fuori: 18,
-    feriali: [[360, 480], [1020, 1320]],
+    feriali: [
+      [360, 480],
+      [1020, 1320],
+    ],
     festivi: [[480, 1320]],
   });
   const b = bozzaDalCrono(vecchio, "climate.sala");
@@ -180,4 +197,61 @@ test("una fascia nuova va dopo l'ultima, o nel primo buco", () => {
   assert.deepEqual(fasciaNuova([{ da: 390, a: 510, gradi: 21 }]), { da: 510, a: 630, gradi: 20 });
   assert.deepEqual(fasciaNuova([{ da: 1320, a: 1440, gradi: 21 }]), { da: 0, a: 120, gradi: 20 });
   assert.equal(fasciaNuova([{ da: 0, a: 1440, gradi: 21 }]), null);
+});
+
+test("la bozza segue il programma di Home Assistant finche' non la si tocca", () => {
+  /* «Se ricarichi la pagina ti cambia l'orario»: la finestra apriva prima
+   * della risposta della casa, la bozza nasceva dal programma di serie e
+   * restava quella. Adesso una bozza non toccata si rifa' quando cambia
+   * quello che Home Assistant dice. */
+  const salvato = {
+    id: "p1",
+    modello: { tipo: "crono", crono: crono() },
+  };
+  const diSerie = firmaDelProgramma(null);
+  const vera = firmaDelProgramma(salvato);
+  assert.notEqual(diSerie, vera);
+  assert.equal(bozzaDaTenere({ bozzaDa: diSerie, toccata: false, firma: vera }), "rifai");
+  assert.equal(bozzaDaTenere({ bozzaDa: vera, toccata: false, firma: vera }), "tieni");
+  /* Chi la sta scrivendo non se la vede cambiare sotto le mani. */
+  assert.equal(bozzaDaTenere({ bozzaDa: diSerie, toccata: true, firma: vera }), "tieni");
+  /* Quella appena salvata vale finche' l'elenco non la conferma (un
+   * minuto al massimo): niente «torna quello di prima» per un attimo. */
+  const appena = { firma: "nuova", il: 1000 };
+  assert.equal(
+    bozzaDaTenere({
+      bozzaDa: "nuova",
+      toccata: false,
+      appenaSalvato: appena,
+      firma: vera,
+      adesso: 2000,
+    }),
+    "tieni",
+  );
+  assert.equal(
+    bozzaDaTenere({
+      bozzaDa: "nuova",
+      toccata: false,
+      appenaSalvato: appena,
+      firma: vera,
+      adesso: 70000,
+    }),
+    "rifai",
+  );
+});
+
+test("piu' programmi per lo stesso termostato si contano, e vince quello a fasce", () => {
+  const due = (programma) => ({
+    id: programma ? "a" : "b",
+    modello: {
+      tipo: "crono",
+      crono: cronoPulito({
+        termostati: ["climate.sala"],
+        ...(programma ? { programma: PROGRAMMA } : {}),
+      }),
+    },
+  });
+  const elenco = [due(false), due(true)];
+  assert.equal(programmiDelTermostato(elenco, "climate.sala").length, 2);
+  assert.equal(programmaDelTermostato(elenco, "climate.sala").id, "a");
 });

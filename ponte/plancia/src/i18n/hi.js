@@ -7995,4 +7995,12 @@ export default Object.freeze({
   "The hours of demand are estimated ${fonti}, and the comfort is unknown.": "मांग के घंटे ${fonti} अनुमानित हैं, और आराम ज्ञात नहीं है।",
   "unknown": "अज्ञात",
   "Use this": "इसे उपयोग करें",
+  "reading…": "पढ़ रहा है…",
+  "Reading the schedule from Home Assistant…": "Home Assistant से शेड्यूल पढ़ रहा है…",
+  "There are ${altri} other schedules for this thermostat in Automations: they change the temperature too. Remove them there.": "ऑटोमेशन में इस थर्मोस्टेट के लिए ${altri} और शेड्यूल हैं: वे भी तापमान बदलते हैं। उन्हें वहीं हटाएँ।",
+  "Saved in Home Assistant. ${adesso} applies now: the thermostat has been updated.": "Home Assistant में सहेजा गया। अभी ${adesso} लागू है: थर्मोस्टेट अपडेट हो गया।",
+  "Saved in Home Assistant. ${adesso} applies now: the thermostat updates at the next slot change.": "Home Assistant में सहेजा गया। अभी ${adesso} लागू है: थर्मोस्टेट अगले स्लॉट बदलाव पर अपडेट होगा।",
+  "Saved in Home Assistant. The schedule is paused: the temperature does not change.": "Home Assistant में सहेजा गया। शेड्यूल रुका हुआ है: तापमान नहीं बदलता।",
+  "Not saved: only a Home Assistant administrator can save the schedule. Your changes stay here until you close.": "सहेजा नहीं गया: शेड्यूल केवल Home Assistant व्यवस्थापक ही सहेज सकता है। आपके बदलाव बंद करने तक यहीं रहेंगे।",
+  "Not saved: ${no}. Your changes stay here: try again.": "सहेजा नहीं गया: ${no}। आपके बदलाव यहीं हैं: फिर से कोशिश करें।",
 });

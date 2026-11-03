@@ -7959,4 +7959,12 @@ export default Object.freeze({
   "The hours of demand are estimated ${fonti}, and the comfort is unknown.": "ساعات الطلب مقدّرة ${fonti}، والراحة غير معروفة.",
   "unknown": "غير معروف",
   "Use this": "استخدم هذا",
+  "reading…": "جارٍ القراءة…",
+  "Reading the schedule from Home Assistant…": "جارٍ قراءة الجدول من Home Assistant…",
+  "There are ${altri} other schedules for this thermostat in Automations: they change the temperature too. Remove them there.": "هناك ${altri} جداول أخرى لهذا الثرموستات في الأتمتة: وهي أيضًا تغيّر درجة الحرارة. احذفها من هناك.",
+  "Saved in Home Assistant. ${adesso} applies now: the thermostat has been updated.": "تم الحفظ في Home Assistant. الآن تُطبَّق ${adesso}: تم تحديث الثرموستات.",
+  "Saved in Home Assistant. ${adesso} applies now: the thermostat updates at the next slot change.": "تم الحفظ في Home Assistant. الآن تُطبَّق ${adesso}: يتحدّث الثرموستات عند تغيير الفترة التالي.",
+  "Saved in Home Assistant. The schedule is paused: the temperature does not change.": "تم الحفظ في Home Assistant. الجدول متوقف مؤقتًا: درجة الحرارة لا تتغير.",
+  "Not saved: only a Home Assistant administrator can save the schedule. Your changes stay here until you close.": "لم يُحفظ: فقط مسؤول Home Assistant يمكنه حفظ الجدول. تبقى تغييراتك هنا حتى تغلق.",
+  "Not saved: ${no}. Your changes stay here: try again.": "لم يُحفظ: ${no}. تبقى تغييراتك هنا: حاول مرة أخرى.",
 });
