@@ -317,6 +317,8 @@ test("salvato ma non ancora ricaricato da Home Assistant: non dice «aggiornato�
   const esito = programma.locator(".dm-prg-esito");
   await expect(esito).toContainText(/non l'ha ancora ricaricato/);
   await expect(esito).not.toContainText(/aggiornato/);
+  /* Non e' il verde del «fatto»: e' un'attesa. */
+  await expect(esito).toHaveClass(/dm-prg-esito-attesa/);
   /* La casa rilegge e dice ancora quella di prima: si tiene quella salvata. */
   await page.evaluate(async () => {
     const { chiediAllaCasa } = await import("/src/sections/automazioni-section.js");

@@ -453,7 +453,7 @@ ${
 }
 ${state.avvisoChiusura ? `<p class="dm-prg-errore" role="alert">${esc(t("Hai modifiche non salvate al programma: salvale, oppure chiudi di nuovo per scartarle.", "You have unsaved changes to the schedule: save them, or close again to discard them."))}</p>` : ""}
 ${state.errore ? `<p class="dm-prg-errore" role="alert">${esc(state.errore)}</p>` : ""}
-${state.esito ? `<p class="dm-prg-esito" role="status">${esc(state.esito)}</p>` : ""}
+${state.esito ? `<p class="dm-prg-esito${state.esitoInAttesa ? " dm-prg-esito-attesa" : ""}" role="status">${esc(state.esito)}</p>` : ""}
 ${
   sbloccato && !puoScrivere() && casa().ponte
     ? `<p class="dm-prg-nota">${esc(t("Solo chi amministra Home Assistant può salvarlo.", "Only a Home Assistant administrator can save it."))}</p>`
@@ -525,6 +525,7 @@ function apri(entita) {
     state.giorno = "feriali";
     state.errore = "";
     state.esito = "";
+    state.esitoInAttesa = false;
     state.salvato = false;
     state.scelta = "";
   } else if (state.toccata) {
@@ -556,6 +557,7 @@ function cambia(fai) {
   state.salvato = false;
   state.errore = "";
   state.esito = "";
+  state.esitoInAttesa = false;
   state.avvisoChiusura = false;
   disegna();
 }
@@ -607,6 +609,9 @@ async function salva() {
     };
     state.bozzaDa = state.appenaSalvato.firma;
     state.scelta = "";
+    /* «Salvato, ma Home Assistant non l'ha ancora ricaricato» non e' un
+     * successo pieno: si dice in ambra, non nel verde del «fatto». */
+    state.esitoInAttesa = fatto?.confermata === false;
     state.esito = esitoDelSalvataggio({
       fatto,
       crono,
@@ -625,6 +630,7 @@ async function salva() {
   } catch (errore) {
     const no = clean(errore?.message) || "?";
     state.esito = "";
+    state.esitoInAttesa = false;
     state.errore =
       clean(errore?.code) === "unauthorized"
         ? t(
@@ -774,6 +780,7 @@ const STILE = `
 .dm-prg-vuoto,.dm-prg-nota{margin:0;font-size:12px;color:var(--text-dim,#64748b)}
 .dm-prg-errore{margin:0;padding:8px 10px;border-radius:10px;font-size:12px;font-weight:700;color:#dc2626;background:rgba(220,38,38,.10)}
 .dm-prg-esito{margin:0;padding:8px 10px;border-radius:10px;font-size:12px;font-weight:700;color:#15803d;background:rgba(34,197,94,.12)}
+.dm-prg-esito.dm-prg-esito-attesa{color:#d97706;background:rgba(245,158,11,.14);box-shadow:inset 3px 0 0 #f59e0b}
 .dm-prg-velato{position:relative}
 .dm-prg-velato>.dm-prg-corpo{filter:blur(2px);opacity:.55;pointer-events:none}
 .dm-prg-velo{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px;text-align:center;background:color-mix(in srgb,var(--card-bg,#fff) 70%,transparent)}
