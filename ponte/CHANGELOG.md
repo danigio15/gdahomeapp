@@ -10,6 +10,26 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.8.2
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Il report del riscaldamento e del raffrescamento:** «report
+  giornaliero/mensile sulle varie stanze di quanto sono state accese, con che
+  media di apertura valvola, quanto è stata accesa la caldaia». Nella pagina
+  Clima c'è «📊 Report»: Riscaldamento e Raffrescamento, per giorno (ora per
+  ora), settimana o mese (giorno per giorno) con le frecce per tornare
+  indietro. In alto le ore della caldaia e le sue accensioni, le ore di
+  richiesta di tutte le stanze, la temperatura media con l'obiettivo e la
+  valvola media; poi il grafico e le stanze in fila per ore di richiesta, con
+  quanto sono rimaste accese, la valvola e la temperatura. I numeri vengono
+  dalla storia di Home Assistant: la richiesta da `hvac_action`, la valvola
+  dalla sua entità (la casella «Valvola» dell'unità) o dagli attributi del
+  termostato, la caldaia dalla Gestione termica — con due caldaie si vedono
+  tutte e due. Senza una caldaia il tempo dell'impianto è una stima (acceso
+  quando almeno una stanza chiede) e il report lo scrive. Una stanza di cui
+  Home Assistant ha registrato poco porta «dati parziali».
+
 ## 1.18.8.1
 
 _Solo Home Assistant: l'app sul telefono non cambia._
