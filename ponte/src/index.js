@@ -56,6 +56,7 @@ import { Viaggi } from "./viaggi.js";
 import { Fornitori } from "./fornitori.js";
 import { IlCorpoDalTelefono } from "./il-corpo-dal-telefono.js";
 import { RicaricaDiNotte } from "./ricarica-di-notte.js";
+import { StoricoDelClima } from "./storico-del-clima.js";
 import { Automazioni } from "./automazioni.js";
 import { Integrazioni } from "./integrazioni.js";
 import { Aiutanti } from "./aiutanti.js";
@@ -529,6 +530,17 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registro,
   });
   commissioni.ricaricaDiNotte = ricaricaDiNotte;
+  /* Lo storico del clima: ogni ora il ponte riassume i giorni chiusi che la
+   * storia di Home Assistant ha ancora, e li tiene per il report del clima
+   * anche quando la storia li ha dimenticati (`storico-del-clima.js`). */
+  const storicoDelClima = new StoricoDelClima({
+    cartella: opzioni.cartella,
+    casa,
+    configurazione,
+    stati: (id) => notifiche.sentinella?.stati?.get(id) ?? null,
+    registro,
+  });
+  commissioni.storicoDelClima = storicoDelClima;
   /* Le automazioni: le esegue Home Assistant, che le ha fra le sue. Qui
    * l'elenco per la plancia, i salvataggi con l'API di Home Assistant, le
    * proposte, e gli avvisi «sul telefono» che le automazioni mandano con
@@ -713,6 +725,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   void notifiche.parti();
   viaggi.parti();
   ricaricaDiNotte.parti();
+  storicoDelClima.parti();
   automazioni.parti();
   postino.parti();
   /* Separata dal rapporto, e non per caso: il rapporto resta spento di serie,
@@ -801,6 +814,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     fornitori.ferma();
     ilCorpo.ferma();
     ricaricaDiNotte.ferma();
+    storicoDelClima.ferma();
     automazioni.ferma();
     postino.ferma();
     licenze.ferma();
@@ -825,6 +839,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     notifiche,
     viaggi,
     ricaricaDiNotte,
+    storicoDelClima,
     automazioni,
     ritorno,
     registro,

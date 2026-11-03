@@ -631,6 +631,7 @@ export class Commissioni {
     /* La ricarica di notte (`ricarica-di-notte.js`): nasce dopo, come i
      * viaggi, perche' legge la casa dallo specchio delle notifiche. */
     ricaricaDiNotte = null,
+    storicoDelClima = null,
     /* Le automazioni (`automazioni.js`): nascono dopo per la stessa ragione,
      * leggono la casa dallo specchio delle notifiche. */
     automazioni = null,
@@ -706,6 +707,7 @@ export class Commissioni {
     this.fornitori = fornitori;
     /* E la ricarica di notte, che nasce dopo per la stessa ragione. */
     this.ricaricaDiNotte = ricaricaDiNotte;
+    this.storicoDelClima = storicoDelClima;
     this.automazioni = automazioni;
     this.zigbee = zigbee;
     this.registri = registri;
@@ -966,6 +968,13 @@ export class Commissioni {
     if (tipo === "ponte/ricarica-notte/stato") {
       if (!this.ricaricaDiNotte) return no(id, "unknown_command", `non conosco ${tipo}`);
       return this.ricaricaDiNotte.rispondi(detto, { utente: chiChiede });
+    }
+    /* Lo storico del clima (`storico-del-clima.js`): i giorni che il ponte ha
+     * messo da parte per il report del clima, in sola lettura e solo a chi
+     * ha un nome sul filo. */
+    if (tipo === "ponte/clima/storico") {
+      if (!this.storicoDelClima) return no(id, "unknown_command", `non conosco ${tipo}`);
+      return this.storicoDelClima.rispondi(detto, { utente: chiChiede });
     }
     /* Le automazioni (`automazioni.js`): le esegue Home Assistant, e queste
      * sono le domande della plancia su di loro. Tutte rispondono **solo a chi

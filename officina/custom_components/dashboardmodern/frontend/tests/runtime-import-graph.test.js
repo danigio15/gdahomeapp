@@ -1645,8 +1645,11 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // (il foglio che li disegna).
   // 529 con `core/disegno-automatico-della-stanza.js`: il disegno che il nome
   // dice, per le stanze a cui un'immagine non e' stata scelta.
+  // 530 con `core/storico-del-clima.js`: il report del clima anche sui mesi
+  // che la storia di Home Assistant ha gia' dimenticato (l'archivio del ponte
+  // e le statistiche a lungo termine).
   assert.ok(
-    relative.length <= 529,
+    relative.length <= 530,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

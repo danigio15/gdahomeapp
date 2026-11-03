@@ -23,6 +23,7 @@ import {
   durataSonno,
   fasciaPressione,
   giorniDalleStatistiche,
+  giorniUniti,
   personeDellaSalute,
 } from "../core/salute.js";
 import { registraTitoloDiPagina } from "./page-masthead-section.js";
@@ -183,13 +184,29 @@ function storicoDi(misura) {
   return misura ? state.storico[misura.entity]?.righe : undefined;
 }
 
+/* I giorni di una misura, coi sensori che le stanno dietro (`altre`, lo
+ * stesso telefono visto dall'app di Home Assistant): `null` finche' il
+ * principale non e' arrivato. */
+function giorniDi(misura) {
+  const righe = storicoDi(misura);
+  if (misura?.statistiche && !Array.isArray(righe)) return null;
+  const altri = (misura?.altre || [])
+    .filter((a) => a.statistiche)
+    .map((a) => giorniDalleStatistiche(storicoDi(a) || [], a.classe));
+  return giorniUniti(giorniDalleStatistiche(righe || [], misura?.classe), altri, misura?.classe);
+}
+
+/* Lo storico c'e' se ce l'ha il sensore o uno di quelli dietro. */
+const conStorico = (misura) =>
+  Boolean(misura?.statistiche || misura?.altre?.some((a) => a.statistiche));
+
 /* Gli ultimi sette giorni dei passi: oggi a destra, la linea dell'obiettivo. */
 function settimanaPassiMarkup(misura, obiettivo) {
-  if (!misura?.statistiche) return "";
-  const righe = storicoDi(misura);
-  if (!Array.isArray(righe))
+  if (!conStorico(misura)) return "";
+  const tutti = giorniDi(misura);
+  if (!tutti)
     return `<div class="dm-salute-giorni dm-salute-attesa">${esc(t("Carico i giorni…", "Loading the days…"))}</div>`;
-  const giorni = giorniDalleStatistiche(righe, misura.classe).slice(-7);
+  const giorni = tutti.slice(-7);
   if (!giorni.length) return "";
   /* Oggi si legge dal sensore: le statistiche dell'ultimo giorno arrivano
    * all'ora piena. */
@@ -215,10 +232,9 @@ function settimanaPassiMarkup(misura, obiettivo) {
 
 /* Il peso dell'ultimo mese: una linea, il primo e l'ultimo valore. */
 function meseDelPesoMarkup(misura) {
-  if (!misura?.statistiche) return "";
-  const righe = storicoDi(misura);
-  if (!Array.isArray(righe)) return `<div class="dm-salute-linea dm-salute-attesa">${esc(t("Carico il mese…", "Loading the month…"))}</div>`;
-  const giorni = giorniDalleStatistiche(righe, misura.classe);
+  if (!conStorico(misura)) return "";
+  const giorni = giorniDi(misura);
+  if (!giorni) return `<div class="dm-salute-linea dm-salute-attesa">${esc(t("Carico il mese…", "Loading the month…"))}</div>`;
   if (giorni.length < 2) return "";
   const valori = giorni.map((g) => g.valore);
   const minimo = Math.min(...valori);
@@ -490,8 +506,10 @@ function dipingi(vista) {
     if (vista.strava.statistiche.sport[sport]) void chiediLeSettimaneStrava(vista.strava, sport, state.settimane, schedule);
   } else {
     const persona = personaScelta(vista);
-    void chiediLoStorico(persona?.misure.passi, 7, ["change", "max", "state"]);
-    void chiediLoStorico(persona?.misure.peso, 30, ["mean", "max", "state"]);
+    for (const m of [persona?.misure.passi, ...(persona?.misure.passi?.altre || [])])
+      void chiediLoStorico(m, 7, ["change", "max", "state"]);
+    for (const m of [persona?.misure.peso, ...(persona?.misure.peso?.altre || [])])
+      void chiediLoStorico(m, 30, ["mean", "max", "state"]);
   }
   scriviSeCambia(dove, paginaSaluteMarkup(vista));
 }

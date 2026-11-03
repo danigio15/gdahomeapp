@@ -100,7 +100,7 @@ export const MISURE_SALUTE = Object.freeze(MISURE.map((m) => m.chiave));
 /* Le parole che dicono la misura, o da dove viene: tolte dal nome, resta chi.
  * «Pixel 8 Resting heart rate» → «Pixel 8»; «Withings Mario Weight» → «Mario». */
 const PAROLE_DELLE_MISURE =
-  /\b(health connect|withings|garmin connect|garmin|fitbit|resting heart rate|heart rate|heart pulse|resting|blood pressure|systolic|diastolic|blood oxygen|oxygen saturation|spo2|body fat|fat ratio|fat percentage|total sleep time|sleep duration|sleep time|sleep|total steps|daily steps|steps today|steps|step count|weight|body mass|calories burned|active calories|total calories|calories|energy burned|today|daily|oggi|giornalieri|passi|peso|battito cardiaco|battito|frequenza cardiaca|pressione|sistolica|diastolica|sonno|ossigeno|saturazione|calorie|massa grassa|grasso|burned|bruciate|active|attive|sensor)\b/gi;
+  /\b(health connect|apple health|healthkit|health|withings|garmin connect|garmin|fitbit|resting heart rate|heart rate|heart pulse|resting|blood pressure|systolic|diastolic|blood oxygen|oxygen saturation|spo2|body fat|fat ratio|fat percentage|total sleep time|sleep duration|sleep time|sleep|total steps|daily steps|steps today|steps|step count|weight|body mass|calories burned|active calories|total calories|calories|energy burned|today|daily|oggi|giornalieri|passi|peso|battito cardiaco|battito|frequenza cardiaca|pressione|sistolica|diastolica|sonno|ossigeno|saturazione|calorie|massa grassa|grasso|burned|bruciate|active|attive|sensor)\b/gi;
 
 function chiDalNome(nome) {
   return clean(
@@ -232,6 +232,7 @@ export function personeDellaSalute(states = {}, config = {}) {
     if (entity === "-" || !states?.[entity]) continue;
     metti(entity, states[entity], chiave);
   }
+  unisciITelefoni(persone, states);
   return [...persone.values()]
     .map((p) => ({ ...p, nome: nomi[p.chi] || p.chi }))
     .filter((p) => Object.keys(p.misure).length)
@@ -239,6 +240,78 @@ export function personeDellaSalute(states = {}, config = {}) {
       (a, b) =>
         Object.keys(b.misure).length - Object.keys(a.misure).length || a.chi.localeCompare(b.chi),
     );
+}
+
+/* ── lo stesso telefono, una persona sola ─────────────────────────────────
+ *
+ * «Però non vanno nella plancia» (Marco, iPhone): l'app GdAHome manda le
+ * misure di Apple Salute e il ponte le scrive come «Marco Steps», «Marco
+ * Heart rate»…; ma sullo stesso iPhone c'e' anche l'app di Home Assistant,
+ * che scrive «iPhone di marco Steps» dal contapassi. La pagina ne faceva due
+ * persone — «Marco» e «iPhone di marco», e una terza per i sensori con
+ * «Health» nel nome — e quella che si vedeva per prima non era la sua.
+ *
+ * Una persona che ha le misure di GdAHome (`gdahome_persona`) si prende
+ * quelle di un telefono che porta il suo nome: «iPhone di Marco», «Pixel 8 di
+ * Marco», «Marco's iPhone». Per ogni misura vince quella di GdAHome — i passi
+ * di Apple Salute contano anche l'orologio, il contapassi del telefono no —
+ * e quelle del telefono restano dietro (`altre`) per lo storico: un sensore
+ * appena nato non ha ancora i giorni passati, il contapassi si'. Le misure che
+ * GdAHome non manda arrivano dal telefono. */
+const minuscolo = (v) => clean(v).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+
+/** Di chi e' un telefono, dal suo nome: «iPhone di Marco» → «marco». */
+export function padroneDelTelefono(nome) {
+  const n = minuscolo(nome);
+  const di = n.match(/^.+?\s+(?:di|de|del|della|von|van|of)\s+(.+)$/);
+  if (di) return di[1].trim();
+  const s = n.match(/^(.+?)['’]s\s+\S/);
+  return s ? s[1].trim() : "";
+}
+
+function stessaPersona(padrone, chi) {
+  const p = minuscolo(padrone);
+  const c = minuscolo(chi);
+  if (!p || !c) return false;
+  return p === c || p.startsWith(`${c} `) || c.startsWith(`${p} `);
+}
+
+function unisciITelefoni(persone, states) {
+  const diGdahome = [...persone.values()].filter((p) =>
+    Object.values(p.misure).some((m) => clean(states?.[m.entity]?.attributes?.gdahome_persona)),
+  );
+  if (!diGdahome.length) return;
+  for (const [chi, altra] of [...persone]) {
+    if (diGdahome.includes(altra)) continue;
+    const padrone = padroneDelTelefono(chi);
+    const sua = diGdahome.find((p) => stessaPersona(padrone, p.chi));
+    if (!sua) continue;
+    for (const [chiave, lettura] of Object.entries(altra.misure)) {
+      const gia = sua.misure[chiave];
+      if (!gia) sua.misure[chiave] = lettura;
+      else gia.altre = [...(gia.altre || []), lettura];
+    }
+    persone.delete(chi);
+  }
+}
+
+/**
+ * I giorni di una misura con quelli dei sensori che le stanno dietro
+ * (`altre`): per un contatore (i passi) il piu' alto del giorno — Apple
+ * Salute conta piu' del contapassi —, per una misura (il peso) quella del
+ * sensore principale, e gli altri solo nei giorni in cui lui non c'e'.
+ */
+export function giorniUniti(principali = [], altri = [], classe = "") {
+  const somma = /^total/.test(clean(classe));
+  const perGiorno = new Map(principali.map((g) => [g.inizio, { ...g }]));
+  for (const lista of altri) {
+    for (const g of lista || []) {
+      const gia = perGiorno.get(g.inizio);
+      if (!gia) perGiorno.set(g.inizio, { ...g });
+      else if (somma && g.valore > gia.valore) gia.valore = g.valore;
+    }
+  }
+  return [...perGiorno.values()].sort((a, b) => a.inizio - b.inizio);
 }
 
 /** «7 h 32» da minuti. */
