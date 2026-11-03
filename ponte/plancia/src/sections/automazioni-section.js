@@ -657,6 +657,13 @@ export function fraseDellAzione(a) {
 export const fraseDellAllora = (allora) => eDetti(allora.map(fraseDellAzione));
 
 function fraseDelCrono(c) {
+  if (c.programma) {
+    const n = c.programma.feriali.length + c.programma.festivi.length;
+    return t(
+      `programma a fasce (${n}) · fuori dalle fasce ${c.fuori}°`,
+      `time-slot schedule (${n}) · outside the slots ${c.fuori}°`,
+    );
+  }
   return t(
     `${c.inCasa}° in casa · ${c.fuori}° di notte e fuori`,
     `${c.inCasa}° at home · ${c.fuori}° at night and away`,
@@ -3168,7 +3175,18 @@ function crono({ app }) {
       ? `<small class="au-nota-in">${esc(t(`ora ${oraLetta}°`, `now ${oraLetta}°`))}${fa && nomiDelleAzioni[fa] ? ` · ${esc(nomiDelleAzioni[fa])}` : ""}</small>`
       : ""
   }</div></div>
-<div class="au-blocco au-s"><div class="au-et">${esc(t("Temperature", "Temperatures"))}</div><div class="au-temp">
+${
+    c.programma
+      ? `<div class="au-blocco au-s"><div class="au-et">${esc(t("Programma", "Schedule"))}</div><p class="au-nota-in">${esc(
+          t(
+            "Le fasce e le loro temperature si cambiano dalla finestra del clima, alla voce 🗓️ Programma.",
+            "The slots and their temperatures are changed from the climate window, under 🗓️ Schedule.",
+          ),
+        )}</p></div>
+<div class="au-blocco au-a"><div class="au-rf">${sel("crono.finestre.0", finestra, opzioni("finestra"), { vuota: t("🪟 nessuna finestra", "🪟 no window"), cerca: true })} <span class="au-o">→ ${esc(
+          t("si spegne, riparte quando la chiudi", "turns off, restarts when you close it"),
+        )}</span><button type="button" class="au-int au-int-dx" role="switch" aria-checked="${c.finestraSpegne}" data-au-finestra aria-label="${esc(t("Finestra aperta, si spegne", "Window open, turns off"))}"><i></i></button></div></div>`
+      : `<div class="au-blocco au-s"><div class="au-et">${esc(t("Temperature", "Temperatures"))}</div><div class="au-temp">
 <div class="c"><div><small>${esc(t("IN CASA", "AT HOME"))}</small><b>${esc(String(c.inCasa).replace(".", ","))}°</b></div><span class="pm"><button type="button" data-au-gradi="inCasa" data-au-passo="-0.5" aria-label="−">−</button><button type="button" data-au-gradi="inCasa" data-au-passo="0.5" aria-label="+">+</button></span></div>
 <div class="e"><div><small>${esc(t("NOTTE / FUORI", "NIGHT / AWAY"))}</small><b>${esc(String(c.fuori).replace(".", ","))}°</b></div><span class="pm"><button type="button" data-au-gradi="fuori" data-au-passo="-0.5" aria-label="−">−</button><button type="button" data-au-gradi="fuori" data-au-passo="0.5" aria-label="+">+</button></span></div></div></div>
 <div class="au-blocco au-a"><div class="au-et">${esc(t("Quando serve il caldo", "When heating is needed"))} <small>· ${esc(t("trascina sulle barre", "drag on the bars"))}</small></div>
@@ -3176,7 +3194,8 @@ function crono({ app }) {
 <div class="au-giorno"><small>${esc(`${giorni[5].corto} – ${giorni[6].corto}`)}</small>${barra("crono.festivi", c.festivi)}</div>
 <div class="au-rf">${sel("crono.finestre.0", finestra, opzioni("finestra"), { vuota: t("🪟 nessuna finestra", "🪟 no window"), cerca: true })} <span class="au-o">→ ${esc(
     t("si spegne, riparte quando la chiudi", "turns off, restarts when you close it"),
-  )}</span><button type="button" class="au-int au-int-dx" role="switch" aria-checked="${c.finestraSpegne}" data-au-finestra aria-label="${esc(t("Finestra aperta, si spegne", "Window open, turns off"))}"><i></i></button></div></div>
+  )}</span><button type="button" class="au-int au-int-dx" role="switch" aria-checked="${c.finestraSpegne}" data-au-finestra aria-label="${esc(t("Finestra aperta, si spegne", "Window open, turns off"))}"><i></i></button></div></div>`
+  }
 <div class="au-leggi" data-au-leggi>${esc(t("Si legge così:", "It reads:"))} ${esc(siLeggeCosi(automazionePulita(b)))}</div>
 ${piedeDelSalva(automazionePulita(b))}`;
 }

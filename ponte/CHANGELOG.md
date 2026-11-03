@@ -14,6 +14,18 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
 _Solo Home Assistant: l'app sul telefono non cambia._
 
+- **Il programma orario del clima, nella sua finestra (Premium):** «quando
+  apri il termostato ti scegli gli orari delle fasce e le temperature».
+  Nella finestra del termostato, sotto Spegni / Accendi, c'è «🗓️ Programma»:
+  la giornata come una barra di 24 ore con le fasce colorate dai loro gradi
+  e il prossimo cambio («alle 17:00 → 20,5°»). Ogni fascia ha la sua
+  temperatura, a mezze ore e mezzi gradi; c'è la temperatura fuori dalle
+  fasce, Lun – Ven e Sab – Dom con «Copia da Lun – Ven», e l'interruttore
+  per sospenderlo. Si salva in Home Assistant come cronotermostato
+  «Programma <stanza>», lo esegue lui e si ritrova nelle Automazioni; se per
+  quel termostato c'era già un cronotermostato, si apre quello e diventa a
+  fasce. Senza Premium si vede ma non si modifica. I cronotermostati di
+  prima, a due temperature, non cambiano.
 - **Lo Sport si sceglie nelle segnalazioni (#353):** «manca nel feedback la
   sezione Sport da scegliere, e finisce in Config». La tendina «Sezione»
   prendeva solo le voci che in quel momento si vedevano nella barra: aperta
