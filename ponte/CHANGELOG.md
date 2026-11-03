@@ -12,7 +12,34 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
 ## 1.18.9.2
 
-_Solo Home Assistant: l'app sul telefono non cambia._
+_App GdAHome e Home Assistant._
+
+**Nell'app** (Salute: l'ultimo valore, la data, e la casa che dice di no):
+
+- **Battito, ossigeno e battito a riposo si cercano per 30 giorni**, non più
+  2 o 7: «in Salute il battito c'è, 73 il 1° novembre, ma l'app non lo vede».
+  Pressione, peso e massa grassa restano a 45 giorni, il tetto oltre cui il
+  ponte non scrive una misura (`VECCHIA` in `ponte/src/il-corpo-dal-telefono.js`).
+  Si cerca a scalini (un giorno, una settimana, la finestra) per non chiedere
+  migliaia di battiti a un Apple Watch.
+- **Il sonno è l'ultima notte**, fino a 3 giorni indietro: un orologio rimasto
+  a caricare stanotte non fa sparire quella di ieri. E un pisolino non è la
+  notte: i tratti della stessa notte si uniscono, anche con un risveglio
+  lungo, e vale l'ultimo sonno di almeno tre ore. Prima un pisolino dalle 17:30
+  alle 18:30 diventava «l'ultima notte» di un'ora al posto delle otto vere;
+  chi lavora di notte e dorme di giorno conta lo stesso.
+- **La data accanto al valore** quando non è di oggi: «73 bpm · 1 nov»,
+  «ieri», come nella plancia.
+- **Una misura scelta che non arriva lo dice** sotto la riga, con dove
+  guardare: Impostazioni › Salute › Accesso ai dati e dispositivi › GdAHome
+  (Health Connect › Autorizzazioni app su Android). Apple non dice mai se il
+  permesso di lettura c'è: si dicono tutte e due le possibilità.
+- **La casa che non accetta le misure si vede**: senza GdAHome Premium, o col
+  telefono non intestato a un utente di Home Assistant, la pagina lo scrive
+  sotto l'interruttore («Acceso, ma la casa non accetta le misure») con il
+  perché; prima l'errore si perdeva.
+
+**In Home Assistant:**
 
 - **La valvola nella finestra del Clima della Home:** «qui sarebbe carino
   avere le % di apertura valvola». Ogni riga della finestra che si apre dalla

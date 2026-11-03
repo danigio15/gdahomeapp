@@ -10,7 +10,12 @@ import { expect, test } from "@playwright/test";
 import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
 
 const CLIMI = [
-  { id: "cl0", name: "Soggiorno", entity: "climate.soggiorno", valvola: "sensor.valvola_soggiorno" },
+  {
+    id: "cl0",
+    name: "Soggiorno",
+    entity: "climate.soggiorno",
+    valvola: "sensor.valvola_soggiorno",
+  },
   { id: "cl1", name: "Cucina", entity: "climate.cucina" },
   { id: "cl2", name: "Studio", entity: "climate.studio" },
   { id: "cl3", name: "Bagnetto", entity: "climate.bagnetto", valvola: "sensor.valvola_bagnetto" },
