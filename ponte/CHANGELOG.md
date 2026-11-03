@@ -10,9 +10,22 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
-## 1.18.8.2
+## 1.18.9
 
-_Solo Home Assistant: l'app sul telefono non cambia._
+_App GdAHome e Home Assistant._
+
+- **App per iPhone: la Salute chiede davvero il permesso.** «Il telefono non
+  ha dato il permesso di leggere la salute», e GdAHome non compariva fra le
+  Fonti di Salute. Non era il telefono: l'app della 1.18.8 sull'App Store era
+  firmata senza il permesso di Apple per HealthKit — la costruzione per il
+  negozio, accendendo CarPlay, ne sostituiva i permessi invece di
+  aggiungerlo. Adesso CarPlay si aggiunge agli altri, e la costruzione si
+  ferma se nella firma manca la Salute. Con l'app nuova l'interruttore «Manda
+  le misure alla casa» fa comparire la richiesta dell'iPhone.
+- **Navigatore: il traffico allunga l'arrivo.** Il tempo di percorrenza e l'ora
+  d'arrivo contano il ritardo delle code; a lato della guida la striscia del
+  traffico con i minuti di ogni coda e il punto in cui si è. Su CarPlay il
+  ritardo «+N min» sotto il tachimetro, arancio o rosso come sul telefono.
 
 - **Il report del riscaldamento e del raffrescamento:** «report
   giornaliero/mensile sulle varie stanze di quanto sono state accese, con che
