@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-HDVRIQKW.js";
+} from "../../chunk-ID77UIU2.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -13066,7 +13066,7 @@ var STILE_RIORDINA = `
     box-shadow:0 18px 36px -14px rgba(15,23,42,.45),0 0 0 2px var(--accent,#3b82f6)!important;
     background:var(--card-bg,#fff)}
   [data-dm-riordina] [data-dm-presa="true"] [data-dm-maniglia]{cursor:grabbing;color:var(--accent,#3b82f6)}
-  html[data-dm-trascinando="true"],html[data-dm-trascinando="true"] *{cursor:grabbing!important}
+  html[data-dm-trascinando="true"],html[data-dm-trascinando="true"] *{cursor:grabbing!important;user-select:none!important;-webkit-user-select:none!important}
   [data-dm-riordina="griglia"]{position:relative}
   [data-dm-riordina="griglia"] [data-dm-riordina-riga]{transition:transform .2s cubic-bezier(.2,.8,.2,1)}
   [data-dm-riordina="griglia"] [data-dm-presa="true"]{
@@ -156894,7 +156894,7 @@ function mettiITasti() {
   if (state177.modifica && !state177.modifica.pagina.classList.contains("active")) annulla2();
 }
 var STILE19 = `
-html[data-dm-modifica] [data-dm-disp-barra-sezioni] > .tab[data-dm-riordina-riga]{cursor:grab;outline:2px dashed color-mix(in srgb,#0ea5e9 70%,transparent);outline-offset:-4px;border-radius:14px;touch-action:none}
+html[data-dm-modifica] [data-dm-disp-barra-sezioni] > .tab[data-dm-riordina-riga]{cursor:grab;outline:2px dashed color-mix(in srgb,#0ea5e9 70%,transparent);outline-offset:-4px;border-radius:14px;touch-action:none;user-select:none;-webkit-user-select:none}
 html[data-dm-modifica] [data-dm-disp-barra-sezioni] > .tab[data-dm-presa]{cursor:grabbing;box-shadow:0 10px 24px rgba(2,132,199,.35);transform:scale(1.04)}
 
 ${STILE_RIORDINA}

@@ -464,7 +464,7 @@ export const STILE_RIORDINA = `
     box-shadow:0 18px 36px -14px rgba(15,23,42,.45),0 0 0 2px var(--accent,#3b82f6)!important;
     background:var(--card-bg,#fff)}
   [data-dm-riordina] [data-dm-presa="true"] [data-dm-maniglia]{cursor:grabbing;color:var(--accent,#3b82f6)}
-  html[data-dm-trascinando="true"],html[data-dm-trascinando="true"] *{cursor:grabbing!important}
+  html[data-dm-trascinando="true"],html[data-dm-trascinando="true"] *{cursor:grabbing!important;user-select:none!important;-webkit-user-select:none!important}
   [data-dm-riordina="griglia"]{position:relative}
   [data-dm-riordina="griglia"] [data-dm-riordina-riga]{transition:transform .2s cubic-bezier(.2,.8,.2,1)}
   [data-dm-riordina="griglia"] [data-dm-presa="true"]{
