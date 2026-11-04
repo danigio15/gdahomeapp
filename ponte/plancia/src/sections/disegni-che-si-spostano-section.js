@@ -212,18 +212,23 @@ function etichettaDellaVariante(variante) {
     : t("🖥 Disegno del computer", "🖥 Computer drawing");
 }
 
-function stratoMarkup(voce, foto) {
+/* L'etichetta della variante e «↺ Ripristina il disegno». Sul computer sta
+ * in basso a destra dentro il disegno; sul telefono il disegno e' pieno fino
+ * in fondo, e la stessa riga galleggia sopra la barra della modifica. */
+function testaMarkup(voce, foto) {
   const altra =
     foto.variante === "telefono"
       ? t("Sul computer resta com'è", "The computer keeps its own")
       : t("Sul telefono resta com'è", "The phone keeps its own");
   const toccato = Object.keys(posizioniInUso(voce.id, foto.variante)).length > 0;
-  let html = `<div class="dm-dis-testa">
-    <span class="dm-dis-variante" title="${esc(altra)}">${esc(etichettaDellaVariante(foto.variante))}</span>
-    <button type="button" class="dm-dis-ripristina" data-dm-disegno-ripristina${toccato ? "" : " disabled"}>${esc(
+  return `<span class="dm-dis-variante" title="${esc(altra)}">${esc(etichettaDellaVariante(foto.variante))}</span>
+    <button type="button" class="dm-dis-ripristina" data-dm-disegno-ripristina="${esc(voce.id)}"${toccato ? "" : " disabled"}>${esc(
       t("↺ Ripristina il disegno", "↺ Reset drawing"),
-    )}</button>
-  </div><div class="dm-dis-guide" aria-hidden="true"></div>`;
+    )}</button>`;
+}
+
+function stratoMarkup(voce, foto) {
+  let html = `<div class="dm-dis-testa">${testaMarkup(voce, foto)}</div><div class="dm-dis-guide" aria-hidden="true"></div>`;
   const px = (v, lato) => ((v * foto.box[lato]) / 100).toFixed(1);
   for (const nodo of foto.nodi) {
     const c = foto.centri.get(nodo.id);
@@ -277,6 +282,31 @@ function rifaiGliStrati() {
     if (fuoco && strato?.contains?.(doc.activeElement) !== true)
       nuovo.querySelector(`[data-dm-disegno-nodo="${fuoco}"]`)?.focus?.({ preventScroll: true });
   }
+  rifaiLaTesta();
+}
+
+/* La riga che galleggia sul telefono: fuori dalle pagine (le pagine non si
+ * contano un figlio in piu'), e se ne va con la modifica. */
+function rifaiLaTesta() {
+  let testa = doc.querySelector("body > [data-dm-disegno-testa]");
+  const righe = state.pagina
+    ? vociDellaPagina(state.pagina)
+        .map((voce) => [voce, fotografia(voce)])
+        .filter(([, foto]) => foto)
+    : [];
+  if (!righe.length) {
+    testa?.remove();
+    return;
+  }
+  if (!testa) {
+    testa = doc.createElement("div");
+    testa.setAttribute("data-dm-disegno-testa", "");
+    testa.setAttribute("data-dm-non-trascinare", "");
+    doc.body.append(testa);
+  }
+  testa.innerHTML = righe
+    .map(([voce, foto]) => `<div class="dm-dis-testa-riga">${testaMarkup(voce, foto)}</div>`)
+    .join("");
 }
 
 /* Durante uno spostamento si muovono solo la maniglia (con la sua ombra) e le
@@ -295,8 +325,10 @@ function muoviNelloStrato(strato, nodoId, punto, ingombro, guide = []) {
           `<i class="dm-dis-guida" data-asse="${g.asse}" style="${g.asse === "x" ? "left" : "top"}:${pc(g.valore)}"></i>`,
       )
       .join("");
-  const ripristina = strato.querySelector("[data-dm-disegno-ripristina]");
-  if (ripristina) ripristina.disabled = false;
+  for (const ripristina of doc.querySelectorAll(
+    `[data-dm-disegno-ripristina="${strato.getAttribute("data-dm-disegno-strato")}"]`,
+  ))
+    ripristina.disabled = false;
 }
 
 /* ── il puntatore ───────────────────────────────────────────────────────── */
@@ -440,13 +472,12 @@ function onTasto(event) {
 
 function onClick(event) {
   const bersaglio = event.target;
-  if (!bersaglio?.closest?.("[data-dm-disegno-strato]")) return;
+  if (!bersaglio?.closest?.("[data-dm-disegno-strato],[data-dm-disegno-testa]")) return;
   event.preventDefault();
   event.stopPropagation();
-  if (!bersaglio.closest("[data-dm-disegno-ripristina]")) return;
-  const strato = bersaglio.closest("[data-dm-disegno-strato]");
-  const voce = state.registro.get(strato.getAttribute("data-dm-disegno-strato"));
-  if (voce) ripristinaIlDisegno(voce);
+  const tasto = bersaglio.closest("[data-dm-disegno-ripristina]");
+  const voce = state.registro.get(tasto?.getAttribute("data-dm-disegno-ripristina"));
+  if (voce && !tasto.disabled) ripristinaIlDisegno(voce);
 }
 
 /* ── lo stile ───────────────────────────────────────────────────────────── */
@@ -456,10 +487,20 @@ const STILE = `
 [data-dm-disegno-in-modifica]{outline:2px dashed color-mix(in srgb,#0ea5e9 55%,transparent);outline-offset:4px;border-radius:12px}
 .dm-dis-testa{position:absolute;right:6px;bottom:6px;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;align-items:center;pointer-events:none;max-width:calc(100% - 12px)}
 .dm-dis-testa > *{pointer-events:auto}
-.dm-dis-variante{display:inline-flex;align-items:center;min-height:30px;padding:0 12px;border-radius:999px;font:700 12.5px/1 inherit;
+[data-dm-disegno-testa]{display:none}
+@media (max-width:600px){
+  .dm-dis-testa{display:none}
+  [data-dm-disegno-testa]{display:flex;flex-direction:column;align-items:center;gap:6px;position:fixed;left:50%;transform:translateX(-50%);
+    bottom:calc(172px + env(safe-area-inset-bottom,0px));z-index:9989;max-width:calc(100vw - 24px)}
+  .dm-dis-testa-riga{display:flex;gap:6px;align-items:center;padding:4px;border-radius:999px;
+    background:color-mix(in srgb,var(--card-bg,#fff) 88%,transparent);box-shadow:0 6px 18px rgba(15,23,42,.22);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+  html[data-dm-disegno-trascinando] [data-dm-disegno-testa]{opacity:0;pointer-events:none}
+}
+.dm-dis-variante{display:inline-flex;align-items:center;min-height:30px;padding:0 12px;border-radius:999px;font-weight:700;font-size:12.5px;line-height:1;font-family:inherit;
   background:color-mix(in srgb,#0ea5e9 14%,var(--card-bg,#fff));color:color-mix(in srgb,#0369a1 80%,var(--text,#0f172a));
   border:1px solid color-mix(in srgb,#0ea5e9 40%,transparent);white-space:nowrap}
-.dm-dis-ripristina{min-height:30px;padding:0 12px;border-radius:999px;font:600 12.5px/1 inherit;cursor:pointer;white-space:nowrap;
+.dm-dis-ripristina{min-height:30px;padding:0 12px;border-radius:999px;font-weight:600;font-size:12.5px;line-height:1;font-family:inherit;cursor:pointer;white-space:nowrap;
   background:var(--card-bg,#fff);color:inherit;border:1px solid color-mix(in srgb,var(--text,#0f172a) 16%,transparent)}
 .dm-dis-ripristina[disabled]{opacity:.45;cursor:default}
 .dm-dis-ombra{position:absolute;display:block;border-radius:10px;pointer-events:none;opacity:0;transition:opacity .15s ease;
@@ -468,7 +509,7 @@ const STILE = `
 .dm-dis-maniglia > span{position:relative}
 .dm-dis-maniglia{position:absolute;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:999px;pointer-events:auto;cursor:grab;
   display:grid;place-items:center;padding:0;touch-action:none;user-select:none;-webkit-user-select:none;
-  background:var(--accent,#2563eb);color:#fff;border:2px solid #fff;font:700 17px/1 inherit;
+  background:var(--accent,#2563eb);color:#fff;border:2px solid #fff;font-weight:700;font-size:17px;line-height:1;font-family:inherit;
   box-shadow:0 4px 14px rgba(15,23,42,.28),0 0 0 4px color-mix(in srgb,var(--accent,#2563eb) 22%,transparent)}
 .dm-dis-maniglia:hover{filter:brightness(1.08)}
 .dm-dis-maniglia:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}

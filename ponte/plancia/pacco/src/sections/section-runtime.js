@@ -567,7 +567,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-73MVBNFP.js";
+} from "../../chunk-NAOWTSTW.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -149340,15 +149340,16 @@ var pc = (n) => `${Number(n).toFixed(3)}%`;
 function etichettaDellaVariante(variante) {
   return variante === "telefono" ? t("📱 Disegno del telefono", "📱 Phone drawing") : t("🖥 Disegno del computer", "🖥 Computer drawing");
 }
-function stratoMarkup(voce3, foto) {
+function testaMarkup12(voce3, foto) {
   const altra = foto.variante === "telefono" ? t("Sul computer resta com'è", "The computer keeps its own") : t("Sul telefono resta com'è", "The phone keeps its own");
   const toccato = Object.keys(posizioniInUso(voce3.id, foto.variante)).length > 0;
-  let html = `<div class="dm-dis-testa">
-    <span class="dm-dis-variante" title="${esc(altra)}">${esc(etichettaDellaVariante(foto.variante))}</span>
-    <button type="button" class="dm-dis-ripristina" data-dm-disegno-ripristina${toccato ? "" : " disabled"}>${esc(
+  return `<span class="dm-dis-variante" title="${esc(altra)}">${esc(etichettaDellaVariante(foto.variante))}</span>
+    <button type="button" class="dm-dis-ripristina" data-dm-disegno-ripristina="${esc(voce3.id)}"${toccato ? "" : " disabled"}>${esc(
     t("↺ Ripristina il disegno", "↺ Reset drawing")
-  )}</button>
-  </div><div class="dm-dis-guide" aria-hidden="true"></div>`;
+  )}</button>`;
+}
+function stratoMarkup(voce3, foto) {
+  let html = `<div class="dm-dis-testa">${testaMarkup12(voce3, foto)}</div><div class="dm-dis-guide" aria-hidden="true"></div>`;
   const px = (v, lato) => (v * foto.box[lato] / 100).toFixed(1);
   for (const nodo3 of foto.nodi) {
     const c = foto.centri.get(nodo3.id);
@@ -149397,6 +149398,22 @@ function rifaiGliStrati() {
     if (fuoco && strato?.contains?.(doc.activeElement) !== true)
       nuovo.querySelector(`[data-dm-disegno-nodo="${fuoco}"]`)?.focus?.({ preventScroll: true });
   }
+  rifaiLaTesta();
+}
+function rifaiLaTesta() {
+  let testa2 = doc.querySelector("body > [data-dm-disegno-testa]");
+  const righe4 = state164.pagina ? vociDellaPagina(state164.pagina).map((voce3) => [voce3, fotografia(voce3)]).filter(([, foto]) => foto) : [];
+  if (!righe4.length) {
+    testa2?.remove();
+    return;
+  }
+  if (!testa2) {
+    testa2 = doc.createElement("div");
+    testa2.setAttribute("data-dm-disegno-testa", "");
+    testa2.setAttribute("data-dm-non-trascinare", "");
+    doc.body.append(testa2);
+  }
+  testa2.innerHTML = righe4.map(([voce3, foto]) => `<div class="dm-dis-testa-riga">${testaMarkup12(voce3, foto)}</div>`).join("");
 }
 function muoviNelloStrato(strato, nodoId, punto3, ingombro, guide = []) {
   const maniglia2 = strato.querySelector(`[data-dm-disegno-nodo="${nodoId}"]`);
@@ -149409,8 +149426,10 @@ function muoviNelloStrato(strato, nodoId, punto3, ingombro, guide = []) {
     contenitore5.innerHTML = guide.map(
       (g) => `<i class="dm-dis-guida" data-asse="${g.asse}" style="${g.asse === "x" ? "left" : "top"}:${pc(g.valore)}"></i>`
     ).join("");
-  const ripristina3 = strato.querySelector("[data-dm-disegno-ripristina]");
-  if (ripristina3) ripristina3.disabled = false;
+  for (const ripristina3 of doc.querySelectorAll(
+    `[data-dm-disegno-ripristina="${strato.getAttribute("data-dm-disegno-strato")}"]`
+  ))
+    ripristina3.disabled = false;
 }
 var SOGLIA_PX = 3;
 function annullaLaPresa2({ rimetti: rimetti2 = true } = {}) {
@@ -149533,23 +149552,32 @@ function onTasto(event) {
 }
 function onClick49(event) {
   const bersaglio = event.target;
-  if (!bersaglio?.closest?.("[data-dm-disegno-strato]")) return;
+  if (!bersaglio?.closest?.("[data-dm-disegno-strato],[data-dm-disegno-testa]")) return;
   event.preventDefault();
   event.stopPropagation();
-  if (!bersaglio.closest("[data-dm-disegno-ripristina]")) return;
-  const strato = bersaglio.closest("[data-dm-disegno-strato]");
-  const voce3 = state164.registro.get(strato.getAttribute("data-dm-disegno-strato"));
-  if (voce3) ripristinaIlDisegno(voce3);
+  const tasto5 = bersaglio.closest("[data-dm-disegno-ripristina]");
+  const voce3 = state164.registro.get(tasto5?.getAttribute("data-dm-disegno-ripristina"));
+  if (voce3 && !tasto5.disabled) ripristinaIlDisegno(voce3);
 }
 var STILE20 = `
 [data-dm-disegno-strato]{position:absolute;inset:0;z-index:30;pointer-events:none}
 [data-dm-disegno-in-modifica]{outline:2px dashed color-mix(in srgb,#0ea5e9 55%,transparent);outline-offset:4px;border-radius:12px}
 .dm-dis-testa{position:absolute;right:6px;bottom:6px;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;align-items:center;pointer-events:none;max-width:calc(100% - 12px)}
 .dm-dis-testa > *{pointer-events:auto}
-.dm-dis-variante{display:inline-flex;align-items:center;min-height:30px;padding:0 12px;border-radius:999px;font:700 12.5px/1 inherit;
+[data-dm-disegno-testa]{display:none}
+@media (max-width:600px){
+  .dm-dis-testa{display:none}
+  [data-dm-disegno-testa]{display:flex;flex-direction:column;align-items:center;gap:6px;position:fixed;left:50%;transform:translateX(-50%);
+    bottom:calc(172px + env(safe-area-inset-bottom,0px));z-index:9989;max-width:calc(100vw - 24px)}
+  .dm-dis-testa-riga{display:flex;gap:6px;align-items:center;padding:4px;border-radius:999px;
+    background:color-mix(in srgb,var(--card-bg,#fff) 88%,transparent);box-shadow:0 6px 18px rgba(15,23,42,.22);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+  html[data-dm-disegno-trascinando] [data-dm-disegno-testa]{opacity:0;pointer-events:none}
+}
+.dm-dis-variante{display:inline-flex;align-items:center;min-height:30px;padding:0 12px;border-radius:999px;font-weight:700;font-size:12.5px;line-height:1;font-family:inherit;
   background:color-mix(in srgb,#0ea5e9 14%,var(--card-bg,#fff));color:color-mix(in srgb,#0369a1 80%,var(--text,#0f172a));
   border:1px solid color-mix(in srgb,#0ea5e9 40%,transparent);white-space:nowrap}
-.dm-dis-ripristina{min-height:30px;padding:0 12px;border-radius:999px;font:600 12.5px/1 inherit;cursor:pointer;white-space:nowrap;
+.dm-dis-ripristina{min-height:30px;padding:0 12px;border-radius:999px;font-weight:600;font-size:12.5px;line-height:1;font-family:inherit;cursor:pointer;white-space:nowrap;
   background:var(--card-bg,#fff);color:inherit;border:1px solid color-mix(in srgb,var(--text,#0f172a) 16%,transparent)}
 .dm-dis-ripristina[disabled]{opacity:.45;cursor:default}
 .dm-dis-ombra{position:absolute;display:block;border-radius:10px;pointer-events:none;opacity:0;transition:opacity .15s ease;
@@ -149558,7 +149586,7 @@ var STILE20 = `
 .dm-dis-maniglia > span{position:relative}
 .dm-dis-maniglia{position:absolute;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:999px;pointer-events:auto;cursor:grab;
   display:grid;place-items:center;padding:0;touch-action:none;user-select:none;-webkit-user-select:none;
-  background:var(--accent,#2563eb);color:#fff;border:2px solid #fff;font:700 17px/1 inherit;
+  background:var(--accent,#2563eb);color:#fff;border:2px solid #fff;font-weight:700;font-size:17px;line-height:1;font-family:inherit;
   box-shadow:0 4px 14px rgba(15,23,42,.28),0 0 0 4px color-mix(in srgb,var(--accent,#2563eb) 22%,transparent)}
 .dm-dis-maniglia:hover{filter:brightness(1.08)}
 .dm-dis-maniglia:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
@@ -156114,7 +156142,7 @@ function vuotoMarkup12() {
   )}</span>
   </div>`;
 }
-function testaMarkup12(conto, esclusioni) {
+function testaMarkup13(conto, esclusioni) {
   const stato3 = conto.aperti ? "aperti" : conto.totale ? "chiusi" : "vuoto";
   const sotto = [
     conto.chiusi ? conto.chiusi === 1 ? t("1 chiuso", "1 closed") : t(`${conto.chiusi} chiusi`, `${conto.chiusi} closed`) : "",
@@ -156161,7 +156189,7 @@ function dipingi16() {
   ]);
   if (state173.firma !== firma2 || !dove3.firstElementChild) {
     state173.firma = firma2;
-    dove3.innerHTML = `${testaMarkup12(conto, esclusioni)}
+    dove3.innerHTML = `${testaMarkup13(conto, esclusioni)}
       <div class="dm-varchi-elenco">${righe4.map((riga5) => rigaMarkup21(riga5, states)).join("")}</div>`;
   }
   svegliamiQuandoCambia(righe4);
@@ -156750,7 +156778,7 @@ function ultimoMovimentoTesto(righe4) {
   if (quando6 == null) return "";
   return `${t("Ultimo movimento", "Last movement")} · ${quantoTempoInParole(Math.max(0, (Date.now() - quando6) / 6e4))}`;
 }
-function testaMarkup13(conto, righe4) {
+function testaMarkup14(conto, righe4) {
   const stato3 = conto.attivi ? "attivi" : conto.totale ? "liberi" : "vuoto";
   const sotto = [
     conto.liberi ? conto.liberi === 1 ? t("1 libera", "1 free") : t(`${conto.liberi} libere`, `${conto.liberi} free`) : "",
@@ -156786,7 +156814,7 @@ function dipingi17() {
   ]);
   if (state174.firma !== firma2 || !dove3.firstElementChild) {
     state174.firma = firma2;
-    dove3.innerHTML = `${testaMarkup13(conto, righe4)}
+    dove3.innerHTML = `${testaMarkup14(conto, righe4)}
       <div class="dm-presenza-elenco">${righe4.map(rigaMarkup22).join("")}</div>`;
   }
   svegliamiQuandoCambia2(righe4);
@@ -157476,7 +157504,7 @@ function vuotoMarkup14() {
     <strong>${esc(t("Nessuna stampante configurata", "No printer configured"))}</strong>
   </div>`;
 }
-function testaMarkup14(riassunto4) {
+function testaMarkup15(riassunto4) {
   const sotto = [
     riassunto4.quante === 1 ? t("1 stampante", "1 printer") : t(`${riassunto4.quante} stampanti`, `${riassunto4.quante} printers`),
     riassunto4.mute.length ? riassunto4.mute.length === 1 ? t("1 non risponde", "1 not answering") : t(`${riassunto4.mute.length} non rispondono`, `${riassunto4.mute.length} not answering`) : ""
@@ -157504,7 +157532,7 @@ function dipingi18() {
   const firma2 = JSON.stringify([letture2, t("Pronta", "Ready")]);
   if (state176.firma !== firma2 || !dove3.firstElementChild) {
     state176.firma = firma2;
-    dove3.innerHTML = `${testaMarkup14(riassunto4)}
+    dove3.innerHTML = `${testaMarkup15(riassunto4)}
       <div class="dm-stampanti-elenco">${letture2.map(cartaMarkup).join("")}</div>`;
   }
 }

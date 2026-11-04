@@ -138,7 +138,7 @@ test("sul computer il collettore si trascina, i tubi lo seguono, Salva lo tiene"
   test.skip(testInfo.project.name !== "desktop", "il computer");
   await apri(page, testInfo);
   await entra(page);
-  await expect(page.locator(".dm-dis-variante")).toContainText("computer");
+  await expect(page.locator(".dm-dis-variante").first()).toContainText("computer");
   /* Dentro il disegno non c'e' un elenco da riordinare: solo le maniglie. */
   await expect(page.locator("#page-boiler .dm-st-plant [data-dm-disp-voce]")).toHaveCount(0);
   for (const nodo of ["collettore", "accumulo", "pompa", "valvola"])
@@ -249,7 +249,7 @@ test("Annulla rimette tutto; «↺ Ripristina il disegno» rimette i tubi fatti 
 
   /* ↺ Ripristina il disegno, e Salva: i tubi tornano quelli di prima, lettera per lettera. */
   await entra(page);
-  await page.locator("[data-dm-disegno-ripristina]").click();
+  await page.locator(".dm-dis-testa [data-dm-disegno-ripristina]").click();
   await expect.poll(() => tubo(page, "flow-sol-hot")).toBe(A_MANO.computer["flow-sol-hot"]);
   expect(await tubo(page, "flow-sol-cold")).toBe(A_MANO.computer["flow-sol-cold"]);
   expect(await trasla(page, "tank")).toBeNull();
@@ -267,7 +267,7 @@ test("sul telefono la scelta e' del telefono: il computer resta com'era", async 
   expect(await tubo(page, "flow-sol-cold")).toBe(A_MANO.telefono["flow-sol-cold"]);
   await page.locator("#page-boiler [data-dm-disp-tasto]").scrollIntoViewIfNeeded();
   await entra(page);
-  await expect(page.locator(".dm-dis-variante")).toContainText("telefono");
+  await expect(page.locator(".dm-dis-variante").first()).toContainText("telefono");
   await page.locator('[data-dm-disegno-nodo="pompa"]').scrollIntoViewIfNeeded();
   await trascina(page, "pompa", 60, -30);
   await expect.poll(() => tubo(page, "flow-sol-cold")).not.toBe(A_MANO.telefono["flow-sol-cold"]);
