@@ -194,3 +194,104 @@ test("in Home il tasto ✏️ porta all'anteprima delle tessere nel Config", asy
   await tasto.click();
   await expect(page.locator('[data-dm-anteprima="home"]').first()).toBeVisible({ timeout: 15_000 });
 });
+
+/* Piu' voci nella barra: le sezioni che si mostrano anche senza niente
+ * dentro, oltre all'Auto. */
+const SEME_BARRA = {
+  ...SEME,
+  visibility: { home: true, ev: true, energy: true, security: true, server: true, temp: true },
+};
+
+/* La barra in basso: in modifica anche le sue voci si spostano, col mouse e
+ * dalla tastiera. L'ordine si scrive dove l'ha sempre scritto il Config con le
+ * frecce, `cd_navbar_order`, e Config resta l'ultima. */
+test("in modifica la barra delle sezioni si riordina e resta cosi'", async ({ page }, testInfo) => {
+  test.setTimeout(150_000);
+  await pontefinto(page);
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME_BARRA);
+  await lAuto(page);
+  await clickBottomTab(page, "ev", testInfo);
+  const ordine = () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll("nav.tabs .tab[data-tab]")]
+        .filter((t) => getComputedStyle(t).display !== "none")
+        .map((t) => t.dataset.tab),
+    );
+  const prima = await ordine();
+  expect(prima.length).toBeGreaterThanOrEqual(3);
+  await page.locator("#page-ev [data-dm-disp-tasto]").click();
+  await expect(page.locator("nav.tabs [data-dm-disp-barra-sezioni]")).toHaveCount(1);
+  const mobili = prima.filter((k) => k !== "config");
+  await expect(page.locator('nav.tabs .tab[data-tab="config"]')).not.toHaveAttribute(
+    "data-dm-riordina-riga",
+    /./,
+  );
+
+  /* Dalla tastiera la prima va un posto avanti. */
+  await page.locator(`nav.tabs .tab[data-tab="${mobili[0]}"]`).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect
+    .poll(ordine)
+    .toEqual(prima.map((k) => (k === mobili[0] ? mobili[1] : k === mobili[1] ? mobili[0] : k)));
+  /* Un tocco sulla voce in modifica non cambia pagina. */
+  await page.locator(`nav.tabs .tab[data-tab="${mobili[1]}"]`).click();
+  await expect(page.locator("html")).toHaveAttribute("data-dm-modifica", "ev");
+  await expect(page.locator(".dm-disp-conta")).toContainText("1 modifica");
+
+  await page.locator('[data-dm-disp-azione="salva"]').click();
+  const scritto = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("cd_navbar_order") || "[]"),
+  );
+  expect(scritto.at(-1)).toBe("config");
+  expect(scritto.indexOf(mobili[0])).toBeGreaterThan(scritto.indexOf(mobili[1]));
+  await expect(page.locator("[data-dm-disp-barra-sezioni]")).toHaveCount(0);
+
+  await page.reload();
+  await lAuto(page);
+  /* L'ordine salvato lo rimette la plancia appena partita. */
+  await expect
+    .poll(async () => {
+      const dopo = await ordine();
+      return dopo.indexOf(mobili[0]) > dopo.indexOf(mobili[1]) && dopo.at(-1) === "config";
+    })
+    .toBe(true);
+});
+
+test("Annulla rimette la barra delle sezioni com'era", async ({ page }, testInfo) => {
+  test.setTimeout(120_000);
+  await pontefinto(page);
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME_BARRA);
+  await lAuto(page);
+  await clickBottomTab(page, "ev", testInfo);
+  const ordine = () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll("nav.tabs .tab[data-tab]")].map((t) => t.dataset.tab),
+    );
+  const prima = await ordine();
+  await page.locator("#page-ev [data-dm-disp-tasto]").click();
+  const prima_mobile = await page
+    .locator("nav.tabs .tab[data-dm-riordina-riga]")
+    .first()
+    .getAttribute("data-tab");
+  await page.locator(`nav.tabs .tab[data-tab="${prima_mobile}"]`).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(ordine).not.toEqual(prima);
+  /* E col mouse: la voce presa e portata due posti piu' in la'. */
+  const mosse = await ordine();
+  const voci = page.locator("nav.tabs .tab[data-dm-riordina-riga]");
+  const da = await voci.nth(0).boundingBox();
+  const a = await voci.nth(2).boundingBox();
+  await page.mouse.move(da.x + da.width / 2, da.y + da.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(350);
+  for (let i = 1; i <= 12; i += 1)
+    await page.mouse.move(
+      da.x + da.width / 2 + ((a.x + a.width * 0.75 - da.x - da.width / 2) * i) / 12,
+      da.y + da.height / 2,
+    );
+  await page.mouse.up();
+  await expect.poll(ordine).not.toEqual(mosse);
+  await page.locator('[data-dm-disp-azione="annulla"]').click();
+  await expect.poll(ordine).toEqual(prima);
+  expect(await page.evaluate(() => localStorage.getItem("cd_navbar_order"))).toBeNull();
+});

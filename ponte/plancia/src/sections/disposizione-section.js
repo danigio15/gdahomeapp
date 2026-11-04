@@ -459,8 +459,12 @@ function inCoda() {
 
 /* ── la modalita' modifica ──────────────────────────────────────────────── */
 
+function contaLaBarra() {
+  return state.modifica?.barra ? 1 : 0;
+}
+
 function conta() {
-  return state.modifica ? state.modifica.cambiate.size : 0;
+  return state.modifica ? state.modifica.cambiate.size + contaLaBarra() : 0;
 }
 
 function sceltaInMano(elenco) {
@@ -578,6 +582,88 @@ function segnaPerLaModifica(pagina) {
   }
 }
 
+/* ── la barra delle sezioni ────────────────────────────────────────────
+ *
+ * In modifica anche le voci della barra in basso si trascinano: l'ordine
+ * e' quello di sempre, `cd_navbar_order`, lo stesso che il Config cambia con
+ * le frecce. Config resta l'ultima, e una voce nascosta non si sposta. */
+function laBarraDelleSezioni() {
+  /* Le voci non sono figlie di `nav.tabs`: le tiene la striscia che scorre
+   * (`.dm-nav-scroll`), ed e' lei che si riordina. */
+  return doc.querySelector("nav.tabs .tab[data-tab]")?.parentElement || null;
+}
+
+function vociDellaBarra(barra = laBarraDelleSezioni()) {
+  return [...(barra?.querySelectorAll?.(":scope > .tab[data-tab]") || [])];
+}
+
+function nascostaNellaBarra(voce) {
+  if (voce.style.display === "none") return true;
+  try {
+    return root.getComputedStyle?.(voce)?.display === "none";
+  } catch (_errore) {
+    return false;
+  }
+}
+
+/* Le voci rimesse nell'ordine dato, ognuna in uno dei posti che le voci
+ * occupano adesso: quello che sta in mezzo (le frecce) resta dov'e'. */
+function mettiLeVoci(barra, posti, nuove) {
+  const segni = posti.map((voce) => {
+    const segno = doc.createComment("");
+    voce.replaceWith(segno);
+    return segno;
+  });
+  segni.forEach((segno, i) => segno.replaceWith(nuove[i]));
+}
+
+function segnaLaBarra(si) {
+  const barra = laBarraDelleSezioni();
+  if (!barra) return;
+  if (!si) {
+    barra.removeAttribute("data-dm-riordina");
+    barra.removeAttribute("data-dm-disp-barra-sezioni");
+    for (const voce of vociDellaBarra(barra))
+      for (const nome of ["data-dm-riordina-riga", "data-dm-maniglia", "data-dm-tieni"]) voce.removeAttribute(nome);
+    return;
+  }
+  barra.setAttribute("data-dm-riordina", "griglia");
+  barra.setAttribute("data-dm-disp-barra-sezioni", "");
+  for (const voce of vociDellaBarra(barra)) {
+    if (voce.dataset.tab === "config" || nascostaNellaBarra(voce)) continue;
+    voce.setAttribute("data-dm-riordina-riga", voce.dataset.tab);
+    voce.setAttribute("data-dm-maniglia", "");
+    voce.setAttribute("data-dm-tieni", "");
+  }
+}
+
+function ordineDellaBarra() {
+  return vociDellaBarra().map((voce) => voce.dataset.tab);
+}
+
+function onRiordinaLaBarra(event) {
+  const m = state.modifica;
+  const barra = laBarraDelleSezioni();
+  if (!m || !barra || event.target !== barra) return false;
+  /* Le voci che si spostano, nell'ordine di prima. Col dito la griglia ha gia'
+   * messo la voce al suo posto; dalla tastiera no: l'ordine si tiene qui e la
+   * barra si rimette uguale in tutti e due i casi. */
+  const mobili = m.mobili || [];
+  const { da, a } = event.detail || {};
+  if (!Number.isInteger(da) || !Number.isInteger(a) || !mobili[da] || a < 0 || a >= mobili.length) return true;
+  const nuove = [...mobili];
+  nuove.splice(a, 0, ...nuove.splice(da, 1));
+  m.mobili = nuove;
+  mettiLeVoci(
+    barra,
+    vociDellaBarra(barra).filter((voce) => voce.hasAttribute("data-dm-riordina-riga")),
+    nuove,
+  );
+  m.barra = ordineDellaBarra();
+  disegnaLaBarra();
+  return true;
+}
+
 function barraMarkup() {
   const n = conta();
   /* Una vista con un riquadro solo (il flusso dell'Energia): si dice, invece
@@ -620,9 +706,12 @@ function disegnaLaBarra() {
 export function entraInModifica(pagina = paginaAttiva()) {
   if (!pagina || !puoConfigurare()) return;
   esciDallaModifica();
-  state.modifica = { pagina, bozze: new Map(), cambiate: new Set() };
+  state.modifica = { pagina, bozze: new Map(), cambiate: new Set(), barra: null };
   doc.documentElement.setAttribute("data-dm-modifica", nomeDellaPagina(pagina));
   applicaLaDisposizione(pagina);
+  segnaLaBarra(true);
+  state.modifica.vociDiPrima = vociDellaBarra();
+  state.modifica.mobili = state.modifica.vociDiPrima.filter((voce) => voce.hasAttribute("data-dm-riordina-riga"));
   disegnaLaBarra();
 }
 
@@ -631,6 +720,7 @@ export function esciDallaModifica() {
   if (!m) return;
   state.modifica = null;
   doc.documentElement.removeAttribute("data-dm-modifica");
+  segnaLaBarra(false);
   state.occupato = true;
   try {
     for (const vecchio of m.pagina.querySelectorAll("[data-dm-disp-ctrl]")) vecchio.remove();
@@ -666,6 +756,7 @@ function cambiaLaBozza(elenco, muta) {
 }
 
 function onRiordina(event) {
+  if (onRiordinaLaBarra(event)) return;
   const elenco = elencoDi(event.target);
   if (!elenco) return;
   const { da, a } = event.detail || {};
@@ -685,14 +776,32 @@ function salva() {
     tutta = conLaScelta(tutta, elenco.chiave, m.bozze.get(elenco.chiave), serie);
   }
   writeJsonIfChanged(CHIAVE_DISPOSIZIONE, tutta);
+  if (m.barra) {
+    /* Config in fondo, come vuole chi applica l'ordine. */
+    const ordine = [...m.barra.filter((k) => k !== "config"), "config"];
+    writeJsonIfChanged("cd_navbar_order", ordine);
+    try {
+      root.cdMarkDirty?.();
+      root.cdSyncPush?.();
+    } catch (_errore) {}
+  }
   esciDallaModifica();
   applicaLaDisposizione();
+  if (m.barra) root.cdApplyNavOrder?.();
 }
 
 function annulla() {
   const m = state.modifica;
   if (!m) return;
   esciDallaModifica();
+  if (m.barra) {
+    /* La barra com'era quando si e' entrati: senza un ordine salvato chi lo
+     * applica non tocca niente, quindi si rimette da qui. */
+    const barra = laBarraDelleSezioni();
+    const prima = (m.vociDiPrima || []).filter((voce) => voce.parentElement === barra);
+    if (barra && prima.length) mettiLeVoci(barra, vociDellaBarra(barra).filter((voce) => prima.includes(voce)), prima);
+    root.cdApplyNavOrder?.();
+  }
   /* La pagina torna come la vuole la scelta salvata: chi era stato spostato
    * nella bozza torna al suo posto. */
   for (const elenco of elenchiDellaPagina(m.pagina)) applicaAlContenitore(elenco, salvata()[elenco.chiave] || {});
@@ -733,6 +842,12 @@ function onClick(event) {
   if (azione === "annulla") return annulla();
   if (azione === "ripristina") return ripristina();
   if (!state.modifica) return;
+  if (bersaglio?.closest?.("[data-dm-disp-barra-sezioni] .tab")) {
+    /* In modifica la barra si riordina, non si cambia pagina. */
+    event.preventDefault();
+    event.stopPropagation();
+    return;
+  }
   const pagina = state.modifica.pagina;
   if (!pagina.contains(bersaglio)) return;
   /* In modifica la pagina non si comanda: un tocco su una luce non la
@@ -760,7 +875,9 @@ function onClick(event) {
  * delle carte (una luce si regola trascinando), e passato a chi trascina. */
 function onPuntatore(event) {
   if (!state.modifica) return;
-  const dentro = state.modifica.pagina.contains(event.target);
+  const dentro =
+    state.modifica.pagina.contains(event.target) ||
+    Boolean(event.target?.closest?.("[data-dm-disp-barra-sezioni] [data-dm-riordina-riga]"));
   if (event.type === "pointerdown") {
     if (!dentro || event.target.closest?.("[data-dm-non-trascinare],[data-dm-disp-barra]")) return;
     prendiIlPuntatore.giu(event);
@@ -836,6 +953,9 @@ function mettiITasti() {
 /* ── installare ─────────────────────────────────────────────────────────── */
 
 const STILE = `
+html[data-dm-modifica] [data-dm-disp-barra-sezioni] > .tab[data-dm-riordina-riga]{cursor:grab;outline:2px dashed color-mix(in srgb,#0ea5e9 70%,transparent);outline-offset:-4px;border-radius:14px;touch-action:none}
+html[data-dm-modifica] [data-dm-disp-barra-sezioni] > .tab[data-dm-presa]{cursor:grabbing;box-shadow:0 10px 24px rgba(2,132,199,.35);transform:scale(1.04)}
+
 ${STILE_RIORDINA}
 [data-dm-nascosto]{display:none!important}
 /* In modifica un nascosto si vede sbiadito, ma la sua etichetta no: si deve

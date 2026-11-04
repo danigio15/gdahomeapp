@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-Z6RQE5TX.js";
+} from "../../chunk-YZB4ZWEV.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -156434,8 +156434,11 @@ function inCoda5() {
     mettiITasti();
   }, 60);
 }
+function contaLaBarra() {
+  return state177.modifica?.barra ? 1 : 0;
+}
 function conta2() {
-  return state177.modifica ? state177.modifica.cambiate.size : 0;
+  return state177.modifica ? state177.modifica.cambiate.size + contaLaBarra() : 0;
 }
 function sceltaInMano(elenco18) {
   const m = state177.modifica;
@@ -156528,6 +156531,69 @@ function segnaPerLaModifica(pagina3) {
     }
   }
 }
+function laBarraDelleSezioni() {
+  return doc.querySelector("nav.tabs .tab[data-tab]")?.parentElement || null;
+}
+function vociDellaBarra(barra3 = laBarraDelleSezioni()) {
+  return [...barra3?.querySelectorAll?.(":scope > .tab[data-tab]") || []];
+}
+function nascostaNellaBarra(voce3) {
+  if (voce3.style.display === "none") return true;
+  try {
+    return root.getComputedStyle?.(voce3)?.display === "none";
+  } catch (_errore) {
+    return false;
+  }
+}
+function mettiLeVoci(barra3, posti, nuove) {
+  const segni = posti.map((voce3) => {
+    const segno5 = doc.createComment("");
+    voce3.replaceWith(segno5);
+    return segno5;
+  });
+  segni.forEach((segno5, i) => segno5.replaceWith(nuove[i]));
+}
+function segnaLaBarra(si) {
+  const barra3 = laBarraDelleSezioni();
+  if (!barra3) return;
+  if (!si) {
+    barra3.removeAttribute("data-dm-riordina");
+    barra3.removeAttribute("data-dm-disp-barra-sezioni");
+    for (const voce3 of vociDellaBarra(barra3))
+      for (const nome of ["data-dm-riordina-riga", "data-dm-maniglia", "data-dm-tieni"]) voce3.removeAttribute(nome);
+    return;
+  }
+  barra3.setAttribute("data-dm-riordina", "griglia");
+  barra3.setAttribute("data-dm-disp-barra-sezioni", "");
+  for (const voce3 of vociDellaBarra(barra3)) {
+    if (voce3.dataset.tab === "config" || nascostaNellaBarra(voce3)) continue;
+    voce3.setAttribute("data-dm-riordina-riga", voce3.dataset.tab);
+    voce3.setAttribute("data-dm-maniglia", "");
+    voce3.setAttribute("data-dm-tieni", "");
+  }
+}
+function ordineDellaBarra() {
+  return vociDellaBarra().map((voce3) => voce3.dataset.tab);
+}
+function onRiordinaLaBarra(event) {
+  const m = state177.modifica;
+  const barra3 = laBarraDelleSezioni();
+  if (!m || !barra3 || event.target !== barra3) return false;
+  const mobili = m.mobili || [];
+  const { da, a } = event.detail || {};
+  if (!Number.isInteger(da) || !Number.isInteger(a) || !mobili[da] || a < 0 || a >= mobili.length) return true;
+  const nuove = [...mobili];
+  nuove.splice(a, 0, ...nuove.splice(da, 1));
+  m.mobili = nuove;
+  mettiLeVoci(
+    barra3,
+    vociDellaBarra(barra3).filter((voce3) => voce3.hasAttribute("data-dm-riordina-riga")),
+    nuove
+  );
+  m.barra = ordineDellaBarra();
+  disegnaLaBarra();
+  return true;
+}
 function barraMarkup5() {
   const n = conta2();
   const niente = n === 0 && !state177.modifica?.pagina?.querySelector?.("[data-dm-disp-elenco]");
@@ -156560,9 +156626,12 @@ function disegnaLaBarra() {
 function entraInModifica(pagina3 = paginaAttiva2()) {
   if (!pagina3 || !puoConfigurare()) return;
   esciDallaModifica();
-  state177.modifica = { pagina: pagina3, bozze: /* @__PURE__ */ new Map(), cambiate: /* @__PURE__ */ new Set() };
+  state177.modifica = { pagina: pagina3, bozze: /* @__PURE__ */ new Map(), cambiate: /* @__PURE__ */ new Set(), barra: null };
   doc.documentElement.setAttribute("data-dm-modifica", nomeDellaPagina(pagina3));
   applicaLaDisposizione(pagina3);
+  segnaLaBarra(true);
+  state177.modifica.vociDiPrima = vociDellaBarra();
+  state177.modifica.mobili = state177.modifica.vociDiPrima.filter((voce3) => voce3.hasAttribute("data-dm-riordina-riga"));
   disegnaLaBarra();
 }
 function esciDallaModifica() {
@@ -156570,6 +156639,7 @@ function esciDallaModifica() {
   if (!m) return;
   state177.modifica = null;
   doc.documentElement.removeAttribute("data-dm-modifica");
+  segnaLaBarra(false);
   state177.occupato = true;
   try {
     for (const vecchio of m.pagina.querySelectorAll("[data-dm-disp-ctrl]")) vecchio.remove();
@@ -156602,6 +156672,7 @@ function cambiaLaBozza(elenco18, muta) {
   disegnaLaBarra();
 }
 function onRiordina3(event) {
+  if (onRiordinaLaBarra(event)) return;
   const elenco18 = elencoDi(event.target);
   if (!elenco18) return;
   const { da, a } = event.detail || {};
@@ -156620,13 +156691,29 @@ function salva33() {
     tutta = conLaScelta(tutta, elenco18.chiave, m.bozze.get(elenco18.chiave), serie2);
   }
   writeJsonIfChanged(CHIAVE_DISPOSIZIONE, tutta);
+  if (m.barra) {
+    const ordine = [...m.barra.filter((k) => k !== "config"), "config"];
+    writeJsonIfChanged("cd_navbar_order", ordine);
+    try {
+      root.cdMarkDirty?.();
+      root.cdSyncPush?.();
+    } catch (_errore) {
+    }
+  }
   esciDallaModifica();
   applicaLaDisposizione();
+  if (m.barra) root.cdApplyNavOrder?.();
 }
 function annulla2() {
   const m = state177.modifica;
   if (!m) return;
   esciDallaModifica();
+  if (m.barra) {
+    const barra3 = laBarraDelleSezioni();
+    const prima = (m.vociDiPrima || []).filter((voce3) => voce3.parentElement === barra3);
+    if (barra3 && prima.length) mettiLeVoci(barra3, vociDellaBarra(barra3).filter((voce3) => prima.includes(voce3)), prima);
+    root.cdApplyNavOrder?.();
+  }
   for (const elenco18 of elenchiDellaPagina(m.pagina)) applicaAlContenitore(elenco18, salvata2()[elenco18.chiave] || {});
 }
 function ripristina() {
@@ -156660,6 +156747,11 @@ function onClick57(event) {
   if (azione === "annulla") return annulla2();
   if (azione === "ripristina") return ripristina();
   if (!state177.modifica) return;
+  if (bersaglio?.closest?.("[data-dm-disp-barra-sezioni] .tab")) {
+    event.preventDefault();
+    event.stopPropagation();
+    return;
+  }
   const pagina3 = state177.modifica.pagina;
   if (!pagina3.contains(bersaglio)) return;
   const occhio2 = bersaglio.closest("[data-dm-disp-occhio]");
@@ -156682,7 +156774,7 @@ function onClick57(event) {
 }
 function onPuntatore(event) {
   if (!state177.modifica) return;
-  const dentro3 = state177.modifica.pagina.contains(event.target);
+  const dentro3 = state177.modifica.pagina.contains(event.target) || Boolean(event.target?.closest?.("[data-dm-disp-barra-sezioni] [data-dm-riordina-riga]"));
   if (event.type === "pointerdown") {
     if (!dentro3 || event.target.closest?.("[data-dm-non-trascinare],[data-dm-disp-barra]")) return;
     prendiIlPuntatore.giu(event);
@@ -156741,6 +156833,9 @@ function mettiITasti() {
   if (state177.modifica && !state177.modifica.pagina.classList.contains("active")) annulla2();
 }
 var STILE19 = `
+html[data-dm-modifica] [data-dm-disp-barra-sezioni] > .tab[data-dm-riordina-riga]{cursor:grab;outline:2px dashed color-mix(in srgb,#0ea5e9 70%,transparent);outline-offset:-4px;border-radius:14px;touch-action:none}
+html[data-dm-modifica] [data-dm-disp-barra-sezioni] > .tab[data-dm-presa]{cursor:grabbing;box-shadow:0 10px 24px rgba(2,132,199,.35);transform:scale(1.04)}
+
 ${STILE_RIORDINA}
 [data-dm-nascosto]{display:none!important}
 /* In modifica un nascosto si vede sbiadito, ma la sua etichetta no: si deve
