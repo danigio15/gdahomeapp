@@ -128,13 +128,56 @@ function piazzaIlFantasma(presa) {
   const { fantasma, riferimento, rettangolo0 } = presa;
   if (!fantasma || !riferimento) return;
   const k = presa.scala || 1;
+  const s = (presa.riduzione || 1) * 1.05;
   const base = riferimento.getBoundingClientRect();
-  const sinistra = rettangolo0.left + (presa.x - presa.x0) - base.left;
-  const alto = rettangolo0.top + (presa.y - presa.y0) - base.top;
+  /* Dove sarebbe la voce intera, spostata col dito, e dove si vede davvero:
+   * rimpicciolita attorno al dito, il punto preso resta sotto il dito. */
+  let sinistraSchermo = rettangolo0.left + (presa.x - presa.x0);
+  let altoSchermo = rettangolo0.top + (presa.y - presa.y0);
+  /* E dentro in altezza: un riquadro preso vicino al fondo non finisce sotto
+   * il bordo dello schermo. */
+  const oy = presa.y0 - rettangolo0.top;
+  const vh = root.innerHeight || doc.documentElement.clientHeight || 0;
+  const visibileAlta = (rettangolo0.height || 0) * s;
+  if (vh && visibileAlta && visibileAlta < vh - 2 * MARGINE_FANTASMA) {
+    const su = altoSchermo + oy * (1 - s);
+    if (su + visibileAlta > vh - MARGINE_FANTASMA) altoSchermo -= su + visibileAlta - (vh - MARGINE_FANTASMA);
+    const giu = altoSchermo + oy * (1 - s);
+    if (giu < MARGINE_FANTASMA) altoSchermo += MARGINE_FANTASMA - giu;
+  }
+  const ox = presa.x0 - rettangolo0.left;
+  const visibileSinistra = sinistraSchermo + ox * (1 - s);
+  const visibileLarga = (rettangolo0.width || 0) * s;
+  /* Dentro lo schermo: un riquadro largo (l'Antifurto sul telefono) usciva a
+   * destra. Si sposta quanto basta per restare fra i bordi. */
+  const vw = root.innerWidth || doc.documentElement.clientWidth || 0;
+  if (vw && visibileLarga) {
+    if (visibileSinistra + visibileLarga > vw - MARGINE_FANTASMA)
+      sinistraSchermo -= visibileSinistra + visibileLarga - (vw - MARGINE_FANTASMA);
+    const dopo = sinistraSchermo + ox * (1 - s);
+    if (dopo < MARGINE_FANTASMA) sinistraSchermo += MARGINE_FANTASMA - dopo;
+  }
+  const sinistra = sinistraSchermo - base.left;
+  const alto = altoSchermo - base.top;
   fantasma.style.left = `${sinistra / k + (riferimento.scrollLeft || 0)}px`;
   fantasma.style.top = `${alto / k + (riferimento.scrollTop || 0)}px`;
-  fantasma.style.transform = "rotate(-2deg) scale(1.05)";
+  fantasma.style.transformOrigin = `${ox / k}px ${oy / k}px`;
+  fantasma.style.transform = `rotate(-2deg) scale(${+s.toFixed(3)})`;
 }
+
+/** Quanto rimpicciolire il fantasma perche' stia nello schermo: largo al piu'
+ * lo schermo (meno i margini), alto al piu' il 40% dello schermo. Mai sotto
+ * `RIDUZIONE_MINIMA`, che sotto non si legge piu'. */
+export function riduzioneDelFantasma(larga, alta, schermoLargo, schermoAlto) {
+  let s = 1;
+  if (larga > 0 && schermoLargo > 0) s = Math.min(s, (schermoLargo - 2 * MARGINE_FANTASMA) / (larga * 1.05));
+  if (alta > 0 && schermoAlto > 0) s = Math.min(s, (schermoAlto * ALTO_FANTASMA) / alta);
+  return Math.max(RIDUZIONE_MINIMA, Math.min(1, +s.toFixed(3)));
+}
+
+const MARGINE_FANTASMA = 8;
+const ALTO_FANTASMA = 0.4;
+const RIDUZIONE_MINIMA = 0.35;
 
 /* Quello che sta incollato in cima a chi scorre e copre le prime righe: la
  * barra «Cerca in tutta la configurazione…» del Config. Sul telefono copriva
@@ -282,7 +325,13 @@ function parti(presa) {
     const k = scalaDi(riferimento);
     presa.scala = k;
     Object.assign(fantasma.style, { width: `${r.width / k}px`, height: `${r.height / k}px` });
-    presa.rettangolo0 = { left: r.left, top: r.top };
+    presa.rettangolo0 = { left: r.left, top: r.top, width: r.width, height: r.height };
+    presa.riduzione = riduzioneDelFantasma(
+      r.width,
+      r.height,
+      root.innerWidth || doc.documentElement.clientWidth || 0,
+      root.innerHeight || doc.documentElement.clientHeight || 0,
+    );
     /* Una fila che scorre di lato (la barra delle sezioni) scorre di lato
      * anche mentre si trascina; e se sta ferma sullo schermo (`fixed`) la
      * pagina sotto non deve scorrere. */

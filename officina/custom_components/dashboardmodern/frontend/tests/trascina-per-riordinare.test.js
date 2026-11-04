@@ -10,6 +10,7 @@ import test from "node:test";
 
 import {
   doveCade,
+  riduzioneDelFantasma,
   scorrimentoAlBordo,
   spostaNellaLista,
 } from "../src/sections/trascina-per-riordinare.js";
@@ -113,4 +114,20 @@ test("una voce nata mentre la bozza era in mano entra al suo posto, una sparita 
     ordine: ["meteo", "nuova", "luci"],
     nascoste: [],
   });
+});
+
+test("il fantasma sta nello schermo: largo al piu' lo schermo, alto al piu' il 40%", () => {
+  assert.equal(riduzioneDelFantasma(200, 100, 390, 844), 1, "una tessera piccola non si tocca");
+  const largo = riduzioneDelFantasma(740, 200, 390, 844);
+  assert.ok(
+    740 * 1.05 * largo <= 390 - 16 + 0.5,
+    "l'Antifurto largo come lo schermo ci sta di lato",
+  );
+  const alto = riduzioneDelFantasma(360, 700, 390, 844);
+  assert.ok(700 * alto <= 844 * 0.4 + 0.5, "un riquadro altissimo si rimpicciolisce al 40%");
+  assert.equal(
+    riduzioneDelFantasma(5000, 5000, 390, 844),
+    0.35,
+    "mai cosi' piccolo da non leggersi",
+  );
 });

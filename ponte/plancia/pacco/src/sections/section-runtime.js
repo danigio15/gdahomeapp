@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-DD6BLXJG.js";
+} from "../../chunk-2IRHQ365.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -12793,13 +12793,45 @@ function piazzaIlFantasma(presa) {
   const { fantasma, riferimento: riferimento2, rettangolo0 } = presa;
   if (!fantasma || !riferimento2) return;
   const k = presa.scala || 1;
+  const s = (presa.riduzione || 1) * 1.05;
   const base = riferimento2.getBoundingClientRect();
-  const sinistra = rettangolo0.left + (presa.x - presa.x0) - base.left;
-  const alto = rettangolo0.top + (presa.y - presa.y0) - base.top;
+  let sinistraSchermo = rettangolo0.left + (presa.x - presa.x0);
+  let altoSchermo = rettangolo0.top + (presa.y - presa.y0);
+  const oy = presa.y0 - rettangolo0.top;
+  const vh = root.innerHeight || doc.documentElement.clientHeight || 0;
+  const visibileAlta = (rettangolo0.height || 0) * s;
+  if (vh && visibileAlta && visibileAlta < vh - 2 * MARGINE_FANTASMA) {
+    const su2 = altoSchermo + oy * (1 - s);
+    if (su2 + visibileAlta > vh - MARGINE_FANTASMA) altoSchermo -= su2 + visibileAlta - (vh - MARGINE_FANTASMA);
+    const giu2 = altoSchermo + oy * (1 - s);
+    if (giu2 < MARGINE_FANTASMA) altoSchermo += MARGINE_FANTASMA - giu2;
+  }
+  const ox = presa.x0 - rettangolo0.left;
+  const visibileSinistra = sinistraSchermo + ox * (1 - s);
+  const visibileLarga = (rettangolo0.width || 0) * s;
+  const vw = root.innerWidth || doc.documentElement.clientWidth || 0;
+  if (vw && visibileLarga) {
+    if (visibileSinistra + visibileLarga > vw - MARGINE_FANTASMA)
+      sinistraSchermo -= visibileSinistra + visibileLarga - (vw - MARGINE_FANTASMA);
+    const dopo = sinistraSchermo + ox * (1 - s);
+    if (dopo < MARGINE_FANTASMA) sinistraSchermo += MARGINE_FANTASMA - dopo;
+  }
+  const sinistra = sinistraSchermo - base.left;
+  const alto = altoSchermo - base.top;
   fantasma.style.left = `${sinistra / k + (riferimento2.scrollLeft || 0)}px`;
   fantasma.style.top = `${alto / k + (riferimento2.scrollTop || 0)}px`;
-  fantasma.style.transform = "rotate(-2deg) scale(1.05)";
+  fantasma.style.transformOrigin = `${ox / k}px ${oy / k}px`;
+  fantasma.style.transform = `rotate(-2deg) scale(${+s.toFixed(3)})`;
 }
+function riduzioneDelFantasma(larga, alta, schermoLargo, schermoAlto) {
+  let s = 1;
+  if (larga > 0 && schermoLargo > 0) s = Math.min(s, (schermoLargo - 2 * MARGINE_FANTASMA) / (larga * 1.05));
+  if (alta > 0 && schermoAlto > 0) s = Math.min(s, schermoAlto * ALTO_FANTASMA / alta);
+  return Math.max(RIDUZIONE_MINIMA, Math.min(1, +s.toFixed(3)));
+}
+var MARGINE_FANTASMA = 8;
+var ALTO_FANTASMA = 0.4;
+var RIDUZIONE_MINIMA = 0.35;
 var INCOLLATI_IN_CIMA = ".dm-cerca-config";
 function copertoInCima(scroller, alto) {
   let fino = alto;
@@ -12914,7 +12946,13 @@ function parti(presa) {
     const k = scalaDi(riferimento2);
     presa.scala = k;
     Object.assign(fantasma.style, { width: `${r.width / k}px`, height: `${r.height / k}px` });
-    presa.rettangolo0 = { left: r.left, top: r.top };
+    presa.rettangolo0 = { left: r.left, top: r.top, width: r.width, height: r.height };
+    presa.riduzione = riduzioneDelFantasma(
+      r.width,
+      r.height,
+      root.innerWidth || doc.documentElement.clientWidth || 0,
+      root.innerHeight || doc.documentElement.clientHeight || 0
+    );
     presa.diLato = chiScorreDiLato(presa.lista);
     presa.ferma = dentroUnaCosaFerma(presa.lista);
     presa.unaFila = rect.every((q) => Math.abs(q.top - rect[0].top) < 6);
@@ -157145,7 +157183,7 @@ html[data-dm-modifica] [data-dm-disp-tipo="voci"]>[data-dm-disp-voce]{height:aut
 /* Mentre una voce e' in mano la barra si fa da parte, e la voce passa sopra
  * a tutto: si deve vedere dove la si lascia. */
 html[data-dm-trascinando] [data-dm-disp-barra]{opacity:0;pointer-events:none}
-html[data-dm-modifica] [data-dm-riordina="griglia"] [data-dm-fantasma="true"]{z-index:9995!important}
+html[data-dm-modifica] [data-dm-riordina="griglia"] [data-dm-fantasma="true"]{z-index:9995!important;background:var(--card-bg,#fff)!important;border-radius:22px;opacity:1!important}
 html[data-dm-modifica] [data-dm-riordina="griglia"] [data-dm-fantasma="true"]>[data-dm-disp-ctrl]{width:auto!important;height:auto!important;opacity:1!important}
 .dm-disp-barra-dentro{display:flex;gap:8px;align-items:center;flex-wrap:nowrap;justify-content:center;padding:8px 10px;border-radius:20px;
   background:var(--card-bg,#fff);color:var(--text,#0f172a);box-shadow:0 18px 40px -16px rgba(15,23,42,.55);

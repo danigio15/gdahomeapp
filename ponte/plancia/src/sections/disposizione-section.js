@@ -1193,7 +1193,7 @@ html[data-dm-modifica] [data-dm-disp-tipo="voci"]>[data-dm-disp-voce]{height:aut
 /* Mentre una voce e' in mano la barra si fa da parte, e la voce passa sopra
  * a tutto: si deve vedere dove la si lascia. */
 html[data-dm-trascinando] [data-dm-disp-barra]{opacity:0;pointer-events:none}
-html[data-dm-modifica] [data-dm-riordina="griglia"] [data-dm-fantasma="true"]{z-index:9995!important}
+html[data-dm-modifica] [data-dm-riordina="griglia"] [data-dm-fantasma="true"]{z-index:9995!important;background:var(--card-bg,#fff)!important;border-radius:22px;opacity:1!important}
 html[data-dm-modifica] [data-dm-riordina="griglia"] [data-dm-fantasma="true"]>[data-dm-disp-ctrl]{width:auto!important;height:auto!important;opacity:1!important}
 .dm-disp-barra-dentro{display:flex;gap:8px;align-items:center;flex-wrap:nowrap;justify-content:center;padding:8px 10px;border-radius:20px;
   background:var(--card-bg,#fff);color:var(--text,#0f172a);box-shadow:0 18px 40px -16px rgba(15,23,42,.55);
