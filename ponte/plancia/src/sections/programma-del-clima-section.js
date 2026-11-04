@@ -371,9 +371,9 @@ function fasceMarkup(giornata) {
   return giornata
     .map(
       (f, i) => `<div class="dm-prg-fascia" style="--g:${coloreDeiGradi(f.gradi)}">
-  <span class="dm-prg-orari">${orarioMarkup(i, "da", f.da, 0, 1410)}<span>–</span>${orarioMarkup(i, "a", f.a, 30, 1440)}</span>
-  <span class="dm-prg-gradi"><button type="button" data-dm-prg-gradi="${i}:-0.5" aria-label="−">−</button><b>${esc(gradiDetti(f.gradi))}</b><button type="button" data-dm-prg-gradi="${i}:0.5" aria-label="+">+</button></span>
-  <button type="button" class="dm-prg-via" data-dm-prg-via="${i}" aria-label="${esc(t("Togli la fascia", "Remove the slot"))}">🗑</button>
+  <span class="dm-prg-orari">${orarioMarkup(i, "da", f.da, 0, 1410)}<span class="dm-prg-trattino" aria-hidden="true">–</span>${orarioMarkup(i, "a", f.a, 30, 1440)}</span>
+  <span class="dm-prg-destra"><span class="dm-prg-gradi"><button type="button" data-dm-prg-gradi="${i}:-0.5" aria-label="−">−</button><b>${esc(gradiDetti(f.gradi))}</b><button type="button" data-dm-prg-gradi="${i}:0.5" aria-label="+">+</button></span>
+  <button type="button" class="dm-prg-via" data-dm-prg-via="${i}" aria-label="${esc(t("Togli la fascia", "Remove the slot"))}">🗑</button></span>
 </div>`,
     )
     .join("");
@@ -858,8 +858,14 @@ const STILE = `
 .dm-prg-barra i b{font-size:10px;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45);white-space:nowrap;overflow:hidden}
 .dm-prg-ore{display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:var(--text-dim,#64748b);margin-top:-6px}
 .dm-prg-fasce{display:flex;flex-direction:column;gap:6px}
-.dm-prg-fascia{display:flex;align-items:center;gap:4px;padding:6px 6px;border-radius:12px;background:var(--card-bg,rgba(255,255,255,.6));border-left:4px solid var(--g)}
-.dm-prg-orari{display:flex;align-items:center;gap:3px;flex:1 1 auto;min-width:0}
+/* La fascia su uno schermo stretto: gli orari non si stringono sotto la loro
+ * misura (prima i select uscivano dalla riga e il secondo finiva sotto il
+ * «−» dei gradi, a 360 e meno); se non ci sta tutto, gradi e cestino vanno
+ * insieme sulla riga sotto, a destra. */
+.dm-prg-fascia{display:flex;flex-wrap:wrap;align-items:center;gap:6px 4px;padding:6px 6px;border-radius:12px;background:var(--card-bg,rgba(255,255,255,.6));border-left:4px solid var(--g)}
+.dm-prg-orari{display:flex;align-items:center;gap:3px;flex:1 0 auto}
+.dm-prg-trattino{flex:0 0 auto;margin:0 2px;opacity:.7}
+.dm-prg-destra{display:flex;align-items:center;gap:4px;margin-left:auto}
 .dm-prg-ora{font:inherit;font-size:12px;font-weight:700;padding:5px 2px;width:66px;flex:0 0 66px;border-radius:8px;border:1px solid var(--card-border,rgba(148,163,184,.4));background:transparent;color:var(--text,inherit);min-width:0}
 .dm-prg-gradi{display:flex;align-items:center;gap:4px}
 .dm-prg-gradi b{min-width:38px;text-align:center;font-size:14px;font-weight:800;color:var(--text,inherit)}

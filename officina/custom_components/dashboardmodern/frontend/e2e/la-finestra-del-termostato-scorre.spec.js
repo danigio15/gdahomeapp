@@ -114,12 +114,55 @@ const eSottoIlDito = (pagina, selettore) =>
       : `coperto da ${sopra?.tagName}.${String(sopra?.className || "").slice(0, 40)}`;
   }, selettore);
 
+/* Le fasce del Programma su uno schermo stretto: in ogni riga i due orari, il
+ * trattino fra loro, i gradi e il cestino non si coprono a vicenda e restano
+ * dentro la riga. A 360 il secondo orario finiva sotto il «−» dei gradi.
+ * Torna l'elenco di quello che si copre (vuoto se va bene). */
+const fasceCheSiCoprono = (pagina) =>
+  pagina.evaluate(() => {
+    const guai = [];
+    const righe = document.querySelectorAll("#clima-popup-overlay .dm-prg-fascia");
+    if (!righe.length) return ["nessuna fascia"];
+    righe.forEach((riga, n) => {
+      const pezzi = [
+        ["dalle", riga.querySelector('select[data-dm-prg-ora$=":da"]')],
+        ["trattino", riga.querySelector(".dm-prg-orari > span")],
+        ["alle", riga.querySelector('select[data-dm-prg-ora$=":a"]')],
+        ...[...riga.querySelectorAll("[data-dm-prg-gradi]")].map((b, i) => [`gradi${i}`, b]),
+        ["valore", riga.querySelector(".dm-prg-gradi b")],
+        ["cestino", riga.querySelector("[data-dm-prg-via]")],
+      ];
+      const fuori = riga.getBoundingClientRect();
+      const r = pezzi.map(([nome, el]) => [nome, el?.getBoundingClientRect()]);
+      for (const [nome, q] of r) {
+        if (!q) {
+          guai.push(`riga ${n}: manca ${nome}`);
+          continue;
+        }
+        if (q.left < fuori.left - 0.5 || q.right > fuori.right + 0.5)
+          guai.push(`riga ${n}: ${nome} esce dalla riga`);
+      }
+      for (let i = 0; i < r.length; i += 1)
+        for (let j = i + 1; j < r.length; j += 1) {
+          const [a, qa] = r[i];
+          const [b, qb] = r[j];
+          if (!qa || !qb) continue;
+          const largo = Math.min(qa.right, qb.right) - Math.max(qa.left, qb.left);
+          const alto = Math.min(qa.bottom, qb.bottom) - Math.max(qa.top, qb.top);
+          if (largo > 0.5 && alto > 0.5) guai.push(`riga ${n}: ${a} copre ${b}`);
+        }
+    });
+    return guai;
+  });
+
 const TELEFONI = [
   { nome: "390x844", width: 390, height: 844 },
   { nome: "360x740", width: 360, height: 740 },
   /* Bassi: e' qui che il fondo finiva dietro la barra. */
   { nome: "390x540", width: 390, height: 540, basso: true },
   { nome: "360x600", width: 360, height: 600, basso: true },
+  /* Stretto: le fasce del Programma devono restare leggibili. */
+  { nome: "320x640", width: 320, height: 640, basso: true, stretto: true },
 ];
 
 for (const tel of TELEFONI) {
@@ -162,6 +205,8 @@ for (const tel of TELEFONI) {
         await expect(salva).toHaveCount(1, { timeout: 15_000 });
         /* Il Programma aperto e' stato portato in vista. */
         expect(await eSottoIlDito(page, "#clima-popup-overlay [data-dm-prg-apri]")).toBe("si");
+        /* Le fasce si leggono: niente si copre, niente esce dalla riga. */
+        expect(await fasceCheSiCoprono(page)).toEqual([]);
         /* La finestra scorre (non il resto della pagina) fino a «Salva». */
         const scorre = await finestra.evaluate((f) => f.scrollHeight > f.clientHeight + 1);
         if (tel.basso) expect(scorre).toBe(true);
@@ -170,7 +215,9 @@ for (const tel of TELEFONI) {
         expect(await eSottoIlDito(page, "#clima-popup-overlay [data-dm-prg-salva]")).toBe("si");
         if (DOVE)
           await page.screenshot({
-            path: `${DOVE}/02-in-fondo-col-programma-${tel.nome}-${tema}.png`,
+            path: tel.stretto
+              ? `${DOVE}/03-fasce-${tel.nome}-${tema}.png`
+              : `${DOVE}/02-in-fondo-col-programma-${tel.nome}-${tema}.png`,
           });
       });
     }

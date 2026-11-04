@@ -23,6 +23,10 @@ _Solo Home Assistant: l'app sul telefono non cambia._
   in cima), quello che non ci sta scorre dentro di lei senza trascinare la
   pagina, e aprendo il Programma la finestra lo porta in vista: «Salva il
   programma» si raggiunge sempre.
+- **Le fasce del Programma si leggono anche su un telefono stretto**: a 360
+  punti e meno il secondo orario finiva sotto il «−» dei gradi. Gli orari
+  non si stringono più sotto la loro misura e, se la riga non basta, gradi e
+  cestino scendono insieme sulla riga sotto.
 
 ## 1.18.9.2
 
