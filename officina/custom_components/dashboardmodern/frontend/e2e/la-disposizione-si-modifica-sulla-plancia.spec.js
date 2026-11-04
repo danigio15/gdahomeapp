@@ -295,3 +295,65 @@ test("Annulla rimette la barra delle sezioni com'era", async ({ page }, testInfo
   await expect.poll(ordine).toEqual(prima);
   expect(await page.evaluate(() => localStorage.getItem("cd_navbar_order"))).toBeNull();
 });
+
+/* Sul telefono la barra delle sezioni scorre di lato, e le voci stanno in una
+ * striscia senza scatola (`display:contents`): il fantasma si misurava su di
+ * lei, finiva fuori dallo schermo, e intanto la pagina scorreva da sola perche'
+ * il dito sta sempre vicino al bordo in basso. Col dito vero — tenere premuto,
+ * poi trascinare — la voce si sposta e la pagina resta ferma. */
+test("sul telefono una voce della barra si trascina col dito", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "il dito c'e' solo sul telefono");
+  test.setTimeout(150_000);
+  await pontefinto(page);
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME_BARRA);
+  await lAuto(page);
+  await clickBottomTab(page, "ev", testInfo);
+  const ordine = () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll("nav.tabs .tab[data-tab]")]
+        .filter((t) => getComputedStyle(t).display !== "none")
+        .map((t) => t.dataset.tab),
+    );
+  await page.locator("#page-ev [data-dm-disp-tasto]").click();
+  await expect(page.locator("nav.tabs [data-dm-disp-barra-sezioni]")).toHaveCount(1);
+  const larghezza = page.viewportSize().width;
+  const voci = page.locator("nav.tabs .tab[data-dm-riordina-riga]");
+  const scatole = [];
+  for (let i = 0; i < (await voci.count()); i += 1) {
+    const b = await voci.nth(i).boundingBox();
+    if (b && b.x >= 0 && b.x + b.width <= larghezza)
+      scatole.push({ b, tab: await voci.nth(i).getAttribute("data-tab") });
+  }
+  expect(scatole.length).toBeGreaterThanOrEqual(3);
+  const [presa, , arrivo] = scatole;
+  const prima = await ordine();
+  const scrollPrima = await page.evaluate(() => window.scrollY);
+  const dito = await page.context().newCDPSession(page);
+  const punto = (x, y) => [{ x, y, id: 1 }];
+  const x0 = presa.b.x + presa.b.width / 2;
+  const y0 = presa.b.y + presa.b.height / 2;
+  const x1 = arrivo.b.x + arrivo.b.width * 0.75;
+  await dito.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: punto(x0, y0) });
+  /* Tenere premuto un attimo: un dito che scorre subito scorre la barra. */
+  await page.waitForTimeout(450);
+  for (let i = 1; i <= 12; i += 1) {
+    await dito.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: punto(x0 + ((x1 - x0) * i) / 12, y0),
+    });
+    await page.waitForTimeout(16);
+  }
+  /* Il fantasma e' sotto il dito, dentro lo schermo. */
+  const fantasma = await page.locator("nav.tabs [data-dm-fantasma]").boundingBox();
+  expect(fantasma).not.toBeNull();
+  expect(fantasma.x).toBeGreaterThan(0);
+  expect(fantasma.x + fantasma.width).toBeLessThan(larghezza + 1);
+  expect(Math.abs(fantasma.x + fantasma.width / 2 - x1)).toBeLessThan(fantasma.width);
+  await dito.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  /* La pagina sotto non e' scesa da sola. */
+  expect(Math.abs((await page.evaluate(() => window.scrollY)) - scrollPrima)).toBeLessThan(4);
+  const dopo = await ordine();
+  expect(dopo).not.toEqual(prima);
+  expect(dopo.indexOf(presa.tab)).toBeGreaterThan(prima.indexOf(presa.tab));
+  await expect(page.locator(".dm-disp-conta")).toContainText("1 modifica");
+});

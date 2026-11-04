@@ -82,6 +82,60 @@ function chiScorre(elemento) {
   return doc.scrollingElement || doc.documentElement;
 }
 
+/* Chi scorre di lato: il primo antenato (o la fila stessa) che scorre davvero
+ * in orizzontale. La barra delle sezioni sul telefono. */
+function chiScorreDiLato(elemento) {
+  for (let nodo = elemento; nodo && nodo !== doc.body; nodo = nodo.parentElement) {
+    const stile = root.getComputedStyle?.(nodo);
+    if (!stile) break;
+    if (/(auto|scroll)/.test(stile.overflowX) && nodo.scrollWidth > nodo.clientWidth + 1) return nodo;
+  }
+  return null;
+}
+
+/* Una cosa ferma sullo schermo — `position:fixed`, la barra in basso — non si
+ * avvicina scorrendo la pagina: li' la pagina non deve scorrere da sola. */
+function dentroUnaCosaFerma(elemento) {
+  for (let nodo = elemento; nodo && nodo !== doc.documentElement; nodo = nodo.parentElement) {
+    if (root.getComputedStyle?.(nodo)?.position === "fixed") return true;
+  }
+  return false;
+}
+
+/* Dove una voce STA, non dove si vede: mentre scivola verso il posto nuovo il
+ * suo disegno e' spostato dalla trasformazione dell'animazione, e chiedere a
+ * lui faceva rimbalzare il posto d'arrivo avanti e indietro. Si toglie la
+ * traslazione in corso (in unita' della pagina: per la scala della griglia). */
+function postoDi(voce, k = 1) {
+  const r = voce.getBoundingClientRect();
+  let dx = 0;
+  let dy = 0;
+  try {
+    const t = root.getComputedStyle?.(voce)?.transform;
+    if (t && t !== "none" && root.DOMMatrixReadOnly) {
+      const m = new root.DOMMatrixReadOnly(t);
+      dx = m.m41 * k;
+      dy = m.m42 * k;
+    }
+  } catch (_errore) {}
+  return { left: r.left - dx, top: r.top - dy, right: r.right - dx, bottom: r.bottom - dy };
+}
+
+/* Il fantasma sotto il dito: la sua posizione si ricalcola ogni volta dal
+ * riferimento com'e' adesso, cosi' resta sotto il dito anche se intanto la
+ * pagina o la fila sono scorse. */
+function piazzaIlFantasma(presa) {
+  const { fantasma, riferimento, rettangolo0 } = presa;
+  if (!fantasma || !riferimento) return;
+  const k = presa.scala || 1;
+  const base = riferimento.getBoundingClientRect();
+  const sinistra = rettangolo0.left + (presa.x - presa.x0) - base.left;
+  const alto = rettangolo0.top + (presa.y - presa.y0) - base.top;
+  fantasma.style.left = `${sinistra / k + (riferimento.scrollLeft || 0)}px`;
+  fantasma.style.top = `${alto / k + (riferimento.scrollTop || 0)}px`;
+  fantasma.style.transform = "rotate(-2deg) scale(1.05)";
+}
+
 /* Quello che sta incollato in cima a chi scorre e copre le prime righe: la
  * barra «Cerca in tutta la configurazione…» del Config. Sul telefono copriva
  * la testa dell'anteprima, e il trascinamento non scorreva finche' il dito
@@ -204,13 +258,13 @@ function parti(presa) {
   for (const r of presa.tutte) if (r !== presa.riga) r.dataset.dmFaPosto = "true";
   doc.documentElement.dataset.dmTrascinando = "true";
   if (presa.griglia) {
-    /* Il fantasma sta dentro la griglia, posato in assoluto: cosi' porta gli
-     * stessi stili della voce vera, qualunque sia il foglio che la veste. */
-    const base = presa.lista.getBoundingClientRect();
-    /* Una griglia rimpicciolita (l'anteprima «Telefono» su uno schermo
-     * stretto): le misure della pagina si riportano a quelle della griglia. */
-    const k = scalaDi(presa.lista, base);
-    presa.scala = k;
+    /* Il fantasma sta dentro la griglia: cosi' porta gli stessi stili della
+     * voce vera, qualunque sia il foglio che la veste. E' posato in assoluto,
+     * e il suo riferimento e' quello che il browser gli da' davvero
+     * (`offsetParent`): la griglia stessa, di solito, ma non sempre — la barra
+     * delle sezioni sul telefono ha le voci in una striscia `display:contents`,
+     * che non ha una scatola, e li' il riferimento e' la barra. Misurare la
+     * striscia dava zero, e il fantasma finiva fuori dallo schermo. */
     const r = rect[da];
     const fantasma = presa.riga.cloneNode(true);
     fantasma.removeAttribute("data-dm-riordina-riga");
@@ -218,26 +272,46 @@ function parti(presa) {
     fantasma.removeAttribute("id");
     fantasma.dataset.dmFantasma = "true";
     fantasma.setAttribute("aria-hidden", "true");
-    Object.assign(fantasma.style, {
-      position: "absolute",
-      left: `${(r.left - base.left) / k + presa.lista.scrollLeft}px`,
-      top: `${(r.top - base.top) / k + presa.lista.scrollTop}px`,
-      width: `${r.width / k}px`,
-      height: `${r.height / k}px`,
-      margin: "0",
-      pointerEvents: "none",
-    });
+    Object.assign(fantasma.style, { position: "absolute", left: "0px", top: "0px", margin: "0", pointerEvents: "none" });
     presa.lista.append(fantasma);
     presa.fantasma = fantasma;
-    presa.fantasma0 = { left: r.left - base.left, top: r.top - base.top };
+    const riferimento = fantasma.offsetParent || doc.documentElement;
+    presa.riferimento = riferimento;
+    /* Una griglia rimpicciolita (l'anteprima «Telefono» su uno schermo
+     * stretto): le misure della pagina si riportano a quelle della griglia. */
+    const k = scalaDi(riferimento);
+    presa.scala = k;
+    Object.assign(fantasma.style, { width: `${r.width / k}px`, height: `${r.height / k}px` });
+    presa.rettangolo0 = { left: r.left, top: r.top };
+    /* Una fila che scorre di lato (la barra delle sezioni) scorre di lato
+     * anche mentre si trascina; e se sta ferma sullo schermo (`fixed`) la
+     * pagina sotto non deve scorrere. */
+    presa.diLato = chiScorreDiLato(presa.lista);
+    presa.ferma = dentroUnaCosaFerma(presa.lista);
+    /* Una fila sola: conta solo dove sta il dito di lato, un dito che sale un
+     * po' sopra la barra trascina lo stesso. */
+    presa.unaFila = rect.every((q) => Math.abs(q.top - rect[0].top) < 6);
+    piazzaIlFantasma(presa);
   }
   const scorri = () => {
     if (state.presa !== presa) return;
-    const { alto, basso } = bordiDi(presa.scroller);
-    const passo = scorrimentoAlBordo(presa.y, alto, basso);
-    if (passo) {
-      presa.scroller.scrollTop += passo;
-      disegna(presa);
+    /* Ogni fotogramma il fantasma torna sotto il dito: la fila puo' essere
+     * scorsa da sola (il browser che tiene in vista la voce spostata). */
+    if (presa.griglia) piazzaIlFantasma(presa);
+    if (presa.diLato) {
+      const r = presa.diLato.getBoundingClientRect();
+      const passo = scorrimentoAlBordo(presa.x, r.left, r.right);
+      if (passo) {
+        presa.diLato.scrollLeft += passo;
+        disegna(presa);
+      }
+    } else if (!presa.ferma) {
+      const { alto, basso } = bordiDi(presa.scroller);
+      const passo = scorrimentoAlBordo(presa.y, alto, basso);
+      if (passo) {
+        presa.scroller.scrollTop += passo;
+        disegna(presa);
+      }
     }
     presa.giro = root.requestAnimationFrame?.(scorri) || 0;
   };
@@ -264,27 +338,18 @@ function scivola(voci, sposta) {
 }
 
 function disegnaGriglia(presa) {
-  const { lista, riga, fantasma } = presa;
-  const scorso = presa.scroller.scrollTop - presa.scroll0;
+  const { lista, riga } = presa;
   /* Il fantasma e' la voce sollevata: segue il puntatore, un filo piu' grande
    * e appena girata, con l'ombra di una cosa tenuta in mano. */
+  piazzaIlFantasma(presa);
   const k = presa.scala || 1;
-  fantasma.style.transform = `translate(${(presa.x - presa.x0) / k}px,${(presa.y - presa.y0 + scorso) / k}px) rotate(-2deg) scale(1.05)`;
   const voci = righe(lista);
-  /* Si guarda dove le voci STANNO, non dove si vedono: mentre scivolano verso
-   * il posto nuovo il loro disegno e' ancora a meta' strada, e chiedere a lui
-   * faceva rimbalzare il posto d'arrivo avanti e indietro. */
-  const base = lista.getBoundingClientRect();
-  const x = (presa.x - base.left) / k + lista.scrollLeft;
-  const y = (presa.y - base.top) / k + lista.scrollTop;
-  const sopra = voci.find(
-    (v) =>
-      v !== riga &&
-      x >= v.offsetLeft &&
-      x <= v.offsetLeft + v.offsetWidth &&
-      y >= v.offsetTop &&
-      y <= v.offsetTop + v.offsetHeight,
-  );
+  const sopra = voci.find((v) => {
+    if (v === riga) return false;
+    const p = postoDi(v, k);
+    const diLato = presa.x >= p.left && presa.x <= p.right;
+    return presa.unaFila ? diLato : diLato && presa.y >= p.top && presa.y <= p.bottom;
+  });
   if (!sopra) return;
   const qui = voci.indexOf(riga);
   const la = voci.indexOf(sopra);

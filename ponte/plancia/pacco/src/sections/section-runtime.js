@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-ID77UIU2.js";
+} from "../../chunk-JARN3J4W.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -12752,6 +12752,46 @@ function chiScorre(elemento) {
   }
   return doc.scrollingElement || doc.documentElement;
 }
+function chiScorreDiLato(elemento) {
+  for (let nodo3 = elemento; nodo3 && nodo3 !== doc.body; nodo3 = nodo3.parentElement) {
+    const stile7 = root.getComputedStyle?.(nodo3);
+    if (!stile7) break;
+    if (/(auto|scroll)/.test(stile7.overflowX) && nodo3.scrollWidth > nodo3.clientWidth + 1) return nodo3;
+  }
+  return null;
+}
+function dentroUnaCosaFerma(elemento) {
+  for (let nodo3 = elemento; nodo3 && nodo3 !== doc.documentElement; nodo3 = nodo3.parentElement) {
+    if (root.getComputedStyle?.(nodo3)?.position === "fixed") return true;
+  }
+  return false;
+}
+function postoDi(voce3, k = 1) {
+  const r = voce3.getBoundingClientRect();
+  let dx = 0;
+  let dy = 0;
+  try {
+    const t2 = root.getComputedStyle?.(voce3)?.transform;
+    if (t2 && t2 !== "none" && root.DOMMatrixReadOnly) {
+      const m = new root.DOMMatrixReadOnly(t2);
+      dx = m.m41 * k;
+      dy = m.m42 * k;
+    }
+  } catch (_errore) {
+  }
+  return { left: r.left - dx, top: r.top - dy, right: r.right - dx, bottom: r.bottom - dy };
+}
+function piazzaIlFantasma(presa) {
+  const { fantasma, riferimento: riferimento2, rettangolo0 } = presa;
+  if (!fantasma || !riferimento2) return;
+  const k = presa.scala || 1;
+  const base = riferimento2.getBoundingClientRect();
+  const sinistra = rettangolo0.left + (presa.x - presa.x0) - base.left;
+  const alto = rettangolo0.top + (presa.y - presa.y0) - base.top;
+  fantasma.style.left = `${sinistra / k + (riferimento2.scrollLeft || 0)}px`;
+  fantasma.style.top = `${alto / k + (riferimento2.scrollTop || 0)}px`;
+  fantasma.style.transform = "rotate(-2deg) scale(1.05)";
+}
 var INCOLLATI_IN_CIMA = ".dm-cerca-config";
 function copertoInCima(scroller, alto) {
   let fino = alto;
@@ -12851,9 +12891,6 @@ function parti(presa) {
   for (const r of presa.tutte) if (r !== presa.riga) r.dataset.dmFaPosto = "true";
   doc.documentElement.dataset.dmTrascinando = "true";
   if (presa.griglia) {
-    const base = presa.lista.getBoundingClientRect();
-    const k = scalaDi(presa.lista, base);
-    presa.scala = k;
     const r = rect[da];
     const fantasma = presa.riga.cloneNode(true);
     fantasma.removeAttribute("data-dm-riordina-riga");
@@ -12861,26 +12898,37 @@ function parti(presa) {
     fantasma.removeAttribute("id");
     fantasma.dataset.dmFantasma = "true";
     fantasma.setAttribute("aria-hidden", "true");
-    Object.assign(fantasma.style, {
-      position: "absolute",
-      left: `${(r.left - base.left) / k + presa.lista.scrollLeft}px`,
-      top: `${(r.top - base.top) / k + presa.lista.scrollTop}px`,
-      width: `${r.width / k}px`,
-      height: `${r.height / k}px`,
-      margin: "0",
-      pointerEvents: "none"
-    });
+    Object.assign(fantasma.style, { position: "absolute", left: "0px", top: "0px", margin: "0", pointerEvents: "none" });
     presa.lista.append(fantasma);
     presa.fantasma = fantasma;
-    presa.fantasma0 = { left: r.left - base.left, top: r.top - base.top };
+    const riferimento2 = fantasma.offsetParent || doc.documentElement;
+    presa.riferimento = riferimento2;
+    const k = scalaDi(riferimento2);
+    presa.scala = k;
+    Object.assign(fantasma.style, { width: `${r.width / k}px`, height: `${r.height / k}px` });
+    presa.rettangolo0 = { left: r.left, top: r.top };
+    presa.diLato = chiScorreDiLato(presa.lista);
+    presa.ferma = dentroUnaCosaFerma(presa.lista);
+    presa.unaFila = rect.every((q) => Math.abs(q.top - rect[0].top) < 6);
+    piazzaIlFantasma(presa);
   }
   const scorri = () => {
     if (state10.presa !== presa) return;
-    const { alto, basso } = bordiDi(presa.scroller);
-    const passo = scorrimentoAlBordo(presa.y, alto, basso);
-    if (passo) {
-      presa.scroller.scrollTop += passo;
-      disegna2(presa);
+    if (presa.griglia) piazzaIlFantasma(presa);
+    if (presa.diLato) {
+      const r = presa.diLato.getBoundingClientRect();
+      const passo = scorrimentoAlBordo(presa.x, r.left, r.right);
+      if (passo) {
+        presa.diLato.scrollLeft += passo;
+        disegna2(presa);
+      }
+    } else if (!presa.ferma) {
+      const { alto, basso } = bordiDi(presa.scroller);
+      const passo = scorrimentoAlBordo(presa.y, alto, basso);
+      if (passo) {
+        presa.scroller.scrollTop += passo;
+        disegna2(presa);
+      }
     }
     presa.giro = root.requestAnimationFrame?.(scorri) || 0;
   };
@@ -12903,17 +12951,16 @@ function scivola(voci4, sposta3) {
   }
 }
 function disegnaGriglia(presa) {
-  const { lista: lista7, riga: riga5, fantasma } = presa;
-  const scorso = presa.scroller.scrollTop - presa.scroll0;
+  const { lista: lista7, riga: riga5 } = presa;
+  piazzaIlFantasma(presa);
   const k = presa.scala || 1;
-  fantasma.style.transform = `translate(${(presa.x - presa.x0) / k}px,${(presa.y - presa.y0 + scorso) / k}px) rotate(-2deg) scale(1.05)`;
   const voci4 = righe(lista7);
-  const base = lista7.getBoundingClientRect();
-  const x = (presa.x - base.left) / k + lista7.scrollLeft;
-  const y = (presa.y - base.top) / k + lista7.scrollTop;
-  const sopra = voci4.find(
-    (v) => v !== riga5 && x >= v.offsetLeft && x <= v.offsetLeft + v.offsetWidth && y >= v.offsetTop && y <= v.offsetTop + v.offsetHeight
-  );
+  const sopra = voci4.find((v) => {
+    if (v === riga5) return false;
+    const p = postoDi(v, k);
+    const diLato = presa.x >= p.left && presa.x <= p.right;
+    return presa.unaFila ? diLato : diLato && presa.y >= p.top && presa.y <= p.bottom;
+  });
   if (!sopra) return;
   const qui = voci4.indexOf(riga5);
   const la = voci4.indexOf(sopra);
@@ -72902,7 +72949,7 @@ var DISEGNI3 = Object.freeze({
   ore: oreMarkup,
   giorni: giorniMarkup
 });
-function postoDi(dove, blocco3) {
+function postoDi2(dove, blocco3) {
   let posto = dove.querySelector(`:scope > [data-dm-meteo-posto="${blocco3}"]`);
   if (posto) return posto;
   posto = doc.createElement("div");
@@ -72938,7 +72985,7 @@ function dipingi11() {
     for (const posto of dove.children) posto.hidden = true;
     return;
   }
-  const radar = postoDi(dove, "radar");
+  const radar = postoDi2(dove, "radar");
   scriviSeCambia(
     radar.querySelector(".dm-meteo-radar-testa"),
     titoloMarkup("radar", t("Radar pioggia", "Rain radar"), sottotitoloDelRadar())
@@ -72954,7 +73001,7 @@ function impagina(dove, vista2, mostraRadar) {
   const blocchi = blocchiDellaVista(vista2, { radar: mostraRadar });
   const ordine = [];
   for (const blocco3 of blocchi) {
-    const posto = postoDi(dove, blocco3);
+    const posto = postoDi2(dove, blocco3);
     if (blocco3 !== "radar") scriviSeCambia(posto, DISEGNI3[blocco3](vista2));
     posto.hidden = false;
     ordine.push(posto);
@@ -156895,7 +156942,12 @@ function mettiITasti() {
 }
 var STILE19 = `
 html[data-dm-modifica] [data-dm-disp-barra-sezioni] > .tab[data-dm-riordina-riga]{cursor:grab;outline:2px dashed color-mix(in srgb,#0ea5e9 70%,transparent);outline-offset:-4px;border-radius:14px;touch-action:none;user-select:none;-webkit-user-select:none}
-html[data-dm-modifica] [data-dm-disp-barra-sezioni] > .tab[data-dm-presa]{cursor:grabbing;box-shadow:0 10px 24px rgba(2,132,199,.35);transform:scale(1.04)}
+/* La voce presa della barra: le voci della barra non hanno fondo (stanno
+ * sulla pillola), e una voce sollevata senza fondo si confondeva con quella
+ * sotto. */
+html[data-dm-modifica] [data-dm-disp-barra-sezioni] > [data-dm-fantasma]{background:var(--card-bg,#fff)!important;border-radius:16px;z-index:30;opacity:1!important}
+html[data-dm-modifica] [data-dm-disp-barra-sezioni] > .tab[data-dm-presa]{cursor:grabbing;background:color-mix(in srgb,#0ea5e9 12%,transparent)!important;box-shadow:none!important}
+html[data-dm-modifica] [data-dm-disp-barra-sezioni] > .tab[data-dm-presa] > *{opacity:0!important}
 
 ${STILE_RIORDINA}
 [data-dm-nascosto]{display:none!important}

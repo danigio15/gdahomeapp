@@ -956,7 +956,12 @@ function mettiITasti() {
 
 const STILE = `
 html[data-dm-modifica] [data-dm-disp-barra-sezioni] > .tab[data-dm-riordina-riga]{cursor:grab;outline:2px dashed color-mix(in srgb,#0ea5e9 70%,transparent);outline-offset:-4px;border-radius:14px;touch-action:none;user-select:none;-webkit-user-select:none}
-html[data-dm-modifica] [data-dm-disp-barra-sezioni] > .tab[data-dm-presa]{cursor:grabbing;box-shadow:0 10px 24px rgba(2,132,199,.35);transform:scale(1.04)}
+/* La voce presa della barra: le voci della barra non hanno fondo (stanno
+ * sulla pillola), e una voce sollevata senza fondo si confondeva con quella
+ * sotto. */
+html[data-dm-modifica] [data-dm-disp-barra-sezioni] > [data-dm-fantasma]{background:var(--card-bg,#fff)!important;border-radius:16px;z-index:30;opacity:1!important}
+html[data-dm-modifica] [data-dm-disp-barra-sezioni] > .tab[data-dm-presa]{cursor:grabbing;background:color-mix(in srgb,#0ea5e9 12%,transparent)!important;box-shadow:none!important}
+html[data-dm-modifica] [data-dm-disp-barra-sezioni] > .tab[data-dm-presa] > *{opacity:0!important}
 
 ${STILE_RIORDINA}
 [data-dm-nascosto]{display:none!important}
