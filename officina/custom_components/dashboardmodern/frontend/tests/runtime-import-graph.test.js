@@ -1655,8 +1655,12 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 534 con l'anteprima modificabile del Config (#379): `core/anteprima-
   // modificabile.js` (la bozza) e `sections/anteprima-modificabile-section.js`
   // (il riquadro con le voci vere, Salva, Annulla e Ripristina).
+  // 536 con la disposizione delle sezioni (#379): `core/disposizione.js` (la
+  // casella `cd_disposizione` e i suoi conti) e `sections/disposizione-
+  // section.js` (il tasto ✏️ sulle pagine e la disposizione rimessa a ogni
+  // ridisegno).
   assert.ok(
-    relative.length <= 534,
+    relative.length <= 536,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
@@ -1873,7 +1877,11 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // il clima, le tapparelle, le stanze… le disegnano il guscio e le sue
   // sezioni, ognuna a modo suo e senza un nome comune da avvolgere, e la foto
   // va rimessa sotto ogni card appena rifatta.
-  assert.ok(observers.length <= 14, `too many production observers: ${observers.length}`);
+  // Il quindicesimo e' della disposizione delle sezioni (#379), e guarda le
+  // pagine una per una (`section.page`), mai il documento: la disposizione
+  // salvata va rimessa dopo ogni ridisegno di una sezione, e le sezioni sono
+  // decine, ognuna col suo modo di disegnare e nessun nome comune da avvolgere.
+  assert.ok(observers.length <= 15, `too many production observers: ${observers.length}`);
   for (const [file, source] of observers) {
     assert.doesNotMatch(
       source,

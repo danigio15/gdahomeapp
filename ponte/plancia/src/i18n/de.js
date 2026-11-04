@@ -8157,4 +8157,11 @@ export default Object.freeze({
   "demand from the air conditioner's power draw": "Bedarf laut Verbrauch des Klimageräts",
   "demand from the thermostat": "Bedarf laut Thermostat",
   "current": "aktuell",
+  "${n} changes": "${n} Änderungen",
+  "1 change": "1 Änderung",
+  "Box": "Feld",
+  "Drag boxes and items where you want them": "Ziehe Felder und Elemente dorthin, wo du sie willst",
+  "Edit layout": "Anordnung bearbeiten",
+  "Full width: ${voce.nome}": "Volle Breite: ${voce.nome}",
+  "Move ${voce.nome}": "${voce.nome} verschieben",
 });

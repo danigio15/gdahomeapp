@@ -8129,4 +8129,11 @@ export default Object.freeze({
   "demand from the air conditioner's power draw": "vraag volgens het verbruik van de airco",
   "demand from the thermostat": "vraag volgens de thermostaat",
   "current": "actueel",
+  "${n} changes": "${n} wijzigingen",
+  "1 change": "1 wijziging",
+  "Box": "Vak",
+  "Drag boxes and items where you want them": "Sleep vakken en items waar je ze wilt",
+  "Edit layout": "Indeling bewerken",
+  "Full width: ${voce.nome}": "Volle breedte: ${voce.nome}",
+  "Move ${voce.nome}": "${voce.nome} verplaatsen",
 });

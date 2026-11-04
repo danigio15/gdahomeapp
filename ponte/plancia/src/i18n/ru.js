@@ -8112,4 +8112,11 @@ export default Object.freeze({
   "demand from the air conditioner's power draw": "запрос по потреблению кондиционера",
   "demand from the thermostat": "запрос по термостату",
   "current": "сейчас",
+  "${n} changes": "Изменений: ${n}",
+  "1 change": "1 изменение",
+  "Box": "Блок",
+  "Drag boxes and items where you want them": "Перетащите блоки и элементы куда нужно",
+  "Edit layout": "Изменить расположение",
+  "Full width: ${voce.nome}": "Во всю ширину: ${voce.nome}",
+  "Move ${voce.nome}": "Переместить ${voce.nome}",
 });

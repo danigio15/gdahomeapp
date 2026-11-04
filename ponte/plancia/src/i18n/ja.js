@@ -8097,4 +8097,11 @@ export default Object.freeze({
   "demand from the air conditioner's power draw": "エアコンの消費電力からの要求",
   "demand from the thermostat": "サーモスタットからの要求",
   "current": "現在",
+  "${n} changes": "${n} 件の変更",
+  "1 change": "1 件の変更",
+  "Box": "ボックス",
+  "Drag boxes and items where you want them": "ボックスや項目を好きな場所へドラッグ",
+  "Edit layout": "レイアウトを編集",
+  "Full width: ${voce.nome}": "全幅: ${voce.nome}",
+  "Move ${voce.nome}": "${voce.nome} を移動",
 });

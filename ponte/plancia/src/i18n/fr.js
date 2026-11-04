@@ -8175,4 +8175,11 @@ export default Object.freeze({
   "demand from the air conditioner's power draw": "demande d'après la consommation du climatiseur",
   "demand from the thermostat": "demande d'après le thermostat",
   "current": "actuelle",
+  "${n} changes": "${n} modifications",
+  "1 change": "1 modification",
+  "Box": "Encadré",
+  "Drag boxes and items where you want them": "Fais glisser encadrés et éléments où tu veux",
+  "Edit layout": "Modifier la disposition",
+  "Full width: ${voce.nome}": "Pleine largeur : ${voce.nome}",
+  "Move ${voce.nome}": "Déplacer ${voce.nome}",
 });

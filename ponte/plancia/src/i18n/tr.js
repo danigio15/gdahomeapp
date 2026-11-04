@@ -8095,4 +8095,11 @@ export default Object.freeze({
   "demand from the air conditioner's power draw": "klimanın tüketiminden gelen talep",
   "demand from the thermostat": "termostattan gelen talep",
   "current": "şu an",
+  "${n} changes": "${n} değişiklik",
+  "1 change": "1 değişiklik",
+  "Box": "Kutu",
+  "Drag boxes and items where you want them": "Kutuları ve öğeleri istediğin yere sürükle",
+  "Edit layout": "Yerleşimi düzenle",
+  "Full width: ${voce.nome}": "Tam genişlik: ${voce.nome}",
+  "Move ${voce.nome}": "${voce.nome} taşı",
 });

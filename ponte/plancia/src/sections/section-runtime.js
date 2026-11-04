@@ -185,6 +185,7 @@ import { installPianteEditor } from "./piante-editor-section.js";
 import { installMeteo } from "./meteo-section.js";
 import { installMeteoEditor } from "./meteo-editor-section.js";
 import { installSport } from "./sport-section.js";
+import { installDisposizione } from "./disposizione-section.js";
 import { installSalute } from "./salute-section.js";
 import { installSaluteEditor } from "./salute-editor-section.js";
 import { installSportEditor } from "./sport-editor-section.js";
@@ -1275,6 +1276,9 @@ export function installSectionRuntime() {
     /* Lo sport: la pagina e la sua scheda. I risultati li porta il ponte. */
     senzaCadere(installSport);
     senzaCadere(installSportEditor);
+    /* La disposizione delle sezioni (#379): il tasto ✏️ in testa alle pagine
+     * e le scelte salvate rimesse sulla pagina a ogni ridisegno. */
+    senzaCadere(installDisposizione);
     /* La Salute (#227), con Strava dentro (#344): la pagina compare da sola
      * coi sensori del corpo o di `ha_strava`; la sua scheda subito dopo. */
     senzaCadere(installSalute);

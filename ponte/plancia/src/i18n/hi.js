@@ -8078,4 +8078,11 @@ export default Object.freeze({
   "demand from the air conditioner's power draw": "एयर कंडीशनर की खपत से मांग",
   "demand from the thermostat": "थर्मोस्टैट से मांग",
   "current": "वर्तमान",
+  "${n} changes": "${n} बदलाव",
+  "1 change": "1 बदलाव",
+  "Box": "बॉक्स",
+  "Drag boxes and items where you want them": "बॉक्स और आइटम जहाँ चाहें वहाँ खींचें",
+  "Edit layout": "लेआउट बदलें",
+  "Full width: ${voce.nome}": "पूरी चौड़ाई: ${voce.nome}",
+  "Move ${voce.nome}": "${voce.nome} खिसकाएँ",
 });

@@ -7959,4 +7959,11 @@ export default Object.freeze({
   "demand from the air conditioner's power draw": "来自空调耗电的需求",
   "demand from the thermostat": "来自温控器的需求",
   "current": "当前",
+  "${n} changes": "${n} 处更改",
+  "1 change": "1 处更改",
+  "Box": "方框",
+  "Drag boxes and items where you want them": "把方框和项目拖到你想要的位置",
+  "Edit layout": "编辑布局",
+  "Full width: ${voce.nome}": "全宽：${voce.nome}",
+  "Move ${voce.nome}": "移动 ${voce.nome}",
 });

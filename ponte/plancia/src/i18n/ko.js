@@ -8069,4 +8069,11 @@ export default Object.freeze({
   "demand from the air conditioner's power draw": "에어컨 소비 전력 기준 요청",
   "demand from the thermostat": "온도 조절기 기준 요청",
   "current": "현재",
+  "${n} changes": "${n}개 변경",
+  "1 change": "1개 변경",
+  "Box": "상자",
+  "Drag boxes and items where you want them": "상자와 항목을 원하는 곳으로 끌어 놓으세요",
+  "Edit layout": "배치 편집",
+  "Full width: ${voce.nome}": "전체 너비: ${voce.nome}",
+  "Move ${voce.nome}": "${voce.nome} 이동",
 });

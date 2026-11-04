@@ -8042,4 +8042,11 @@ export default Object.freeze({
   "demand from the air conditioner's power draw": "الطلب من استهلاك المكيف",
   "demand from the thermostat": "الطلب من منظم الحرارة",
   "current": "حالية",
+  "${n} changes": "${n} تعديلات",
+  "1 change": "تعديل واحد",
+  "Box": "مربع",
+  "Drag boxes and items where you want them": "اسحب المربعات والعناصر إلى حيث تريد",
+  "Edit layout": "تعديل التخطيط",
+  "Full width: ${voce.nome}": "عرض كامل: ${voce.nome}",
+  "Move ${voce.nome}": "نقل ${voce.nome}",
 });
