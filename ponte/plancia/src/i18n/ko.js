@@ -1994,6 +1994,7 @@ export default Object.freeze({
   Motion: "움직임",
   "Motion · Free rooms · Last seen": "움직임 · 빈 방 · 마지막 감지",
   "Move down": "아래로",
+  "Move ${label}: drag, or use the up and down arrows": "${label} 이동: 끌어서 옮기거나 위아래 화살표를 사용하세요",
   "Move up": "위로",
   Movement: "움직임",
   "Movement for": "움직인 지",

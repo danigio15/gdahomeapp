@@ -2005,6 +2005,7 @@ export default Object.freeze({
   Motion: "Beweging",
   "Motion · Free rooms · Last seen": "Beweging · Vrije kamers · Laatst gezien",
   "Move down": "Omlaag",
+  "Move ${label}: drag, or use the up and down arrows": "${label} verplaatsen: slepen, of gebruik de pijlen omhoog en omlaag",
   "Move up": "Omhoog",
   Movement: "Beweging",
   "Movement for": "Beweging sinds",

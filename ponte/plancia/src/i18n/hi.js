@@ -1992,6 +1992,7 @@ export default Object.freeze({
   Motion: "गति",
   "Motion · Free rooms · Last seen": "गति · खाली कमरे · अंतिम गतिविधि",
   "Move down": "नीचे ले जाएँ",
+  "Move ${label}: drag, or use the up and down arrows": "${label} को खिसकाएँ: खींचें, या ऊपर और नीचे के तीरों का उपयोग करें",
   "Move up": "ऊपर ले जाएँ",
   Movement: "हलचल",
   "Movement for": "इतने समय से हलचल",

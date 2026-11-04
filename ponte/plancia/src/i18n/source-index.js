@@ -6096,6 +6096,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Spesa stimata": "Estimated cost",
   "Sport": "Sports",
   "Sportello aperto": "Flap opened",
+  "Sposta ${label}: trascina, o usa le frecce su e giù": "Move ${label}: drag, or use the up and down arrows",
   "Sposta giù": "Move down",
   "Sposta su": "Move up",
   "Spunta le luci che questo popup deve mostrare.": "Tick the lights this popup should show.",

@@ -1650,8 +1650,10 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // e le statistiche a lungo termine).
   // 531 con `core/consumo-trovato-del-clima.js`: i watt che uno split pubblica
   // da se', trovati sul suo dispositivo per le ore dei mesi passati.
+  // 532 con `sections/trascina-per-riordinare.js`: le righe che si spostano
+  // trascinandole dalla maniglia, col mouse e col dito (#379).
   assert.ok(
-    relative.length <= 531,
+    relative.length <= 532,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

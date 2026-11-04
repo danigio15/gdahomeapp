@@ -2011,6 +2011,7 @@ export default Object.freeze({
   Motion: "Bewegung",
   "Motion · Free rooms · Last seen": "Bewegung · Freie Räume · Zuletzt gesehen",
   "Move down": "Nach unten",
+  "Move ${label}: drag, or use the up and down arrows": "${label} verschieben: ziehen oder die Pfeiltasten nach oben und unten verwenden",
   "Move up": "Nach oben",
   Movement: "Bewegung",
   "Movement for": "Bewegung seit",

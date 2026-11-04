@@ -1984,6 +1984,7 @@ export default Object.freeze({
   Motion: "حركة",
   "Motion · Free rooms · Last seen": "الحركة · الغرف الفارغة · آخر مرور",
   "Move down": "تحريك لأسفل",
+  "Move ${label}: drag, or use the up and down arrows": "نقل ${label}: اسحب، أو استخدم السهمين لأعلى ولأسفل",
   "Move up": "تحريك لأعلى",
   Movement: "حركة",
   "Movement for": "حركة منذ",

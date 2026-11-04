@@ -2005,6 +2005,7 @@ export default Object.freeze({
   Motion: "Движение",
   "Motion · Free rooms · Last seen": "Движение · Свободные комнаты · Последний раз",
   "Move down": "Вниз",
+  "Move ${label}: drag, or use the up and down arrows": "Переместить ${label}: перетащите или используйте стрелки вверх и вниз",
   "Move up": "Вверх",
   Movement: "Движение",
   "Movement for": "Движение уже",

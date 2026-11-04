@@ -14,6 +14,7 @@
 import { oggettoWidget } from "../core/oggetti-widget.js";
 import { TESSERE_A_SCOMPARSA } from "../core/tessere-a-scomparsa.js";
 import { normalizeAlertsEditor } from "./alerts-section.js";
+import { STILE_RIORDINA, spostaNellaLista } from "./trascina-per-riordinare.js";
 import { refreshFloodAlerts } from "./flood-alerts-section.js";
 import {
   EVIDENZA_CONFIG_KEY,
@@ -322,12 +323,15 @@ function tessereMarkup() {
   )}</div>
   ${compattoMarkup()}
   ${avvisiInPopupMarkup()}
-  <div class="ed-list dm-widget-pref-list">${rows
+  <div class="ed-list dm-widget-pref-list" data-dm-riordina>${rows
     .map(
       (
         [key, icon, label],
         index,
-      ) => `<div class="ed-row dm-widget-pref" data-widget-key="${esc(key)}">
+      ) => `<div class="ed-row dm-widget-pref" data-widget-key="${esc(key)}" data-dm-riordina-riga="${esc(key)}">
+        <button type="button" class="dm-widget-handle" data-dm-maniglia aria-label="${esc(
+          t(`Sposta ${label}: trascina, o usa le frecce su e giù`, `Move ${label}: drag, or use the up and down arrows`),
+        )}" title="${t("Trascina per spostare", "Drag to move")}">⠿</button>
         <span class="dm-widget-pref-icon" aria-hidden="true">${oggettoWidget(key, icon, `pref-${key}`)}</span>
         <span class="ed-row-main"><strong class="ed-row-new">${esc(label)}</strong>${sorgenteMarkup(key)}${soloAccesoMarkup(key)}</span>
         <button type="button" class="ed-del dm-widget-move" data-widget-up aria-label="${t("Più in alto", "Move up")}"${index === 0 ? " disabled" : ""}>▲</button>
@@ -586,6 +590,19 @@ function onChange(event) {
   scriviPreferenze({ sorgenti });
 }
 
+/* Una tessera trascinata dalla maniglia, o spostata con le frecce sulla
+ * maniglia (#379): l'ordine si salva come quello delle frecce ▲▼, nella
+ * stessa chiave, e la scheda si ridisegna. */
+function onRiordina(event) {
+  const lista = event.target;
+  if (!lista?.classList?.contains("dm-widget-pref-list")) return;
+  const { da, a } = event.detail || {};
+  const { hidden, rows } = tessereOrdinate();
+  if (!Number.isInteger(da) || !Number.isInteger(a) || !rows[da]) return;
+  salvaTessere(spostaNellaLista(rows, da, a), hidden);
+  ridisegna();
+}
+
 function onClick(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || activeTab() !== TODO_EDITOR_TAB || !body.contains(event.target)) return;
@@ -803,6 +820,7 @@ function installStyles() {
       #ed-body .dm-widget-pref-icon{font-size:17px;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex:0 0 24px}
       #ed-body .dm-widget-pref-icon .dm-oggetto{width:24px;height:24px;display:block}
       #ed-body .dm-widget-move[disabled]{opacity:.3;pointer-events:none}
+      ${STILE_RIORDINA}
       #ed-body .dm-widget-shown{
         flex:0 0 40px;width:40px;height:23px;position:relative;border:0;border-radius:999px;cursor:pointer;
         background:color-mix(in srgb,var(--text-dim,#94a3b8) 32%,transparent);transition:background .25s ease}
@@ -841,6 +859,7 @@ export function installTodoEditorSection() {
   ensureTodoEditorTab();
   doc.addEventListener("click", onClick);
   doc.addEventListener("change", onChange);
+  doc.addEventListener("dm-riordina", onRiordina);
   onEditorRedraw("__dmTodoEditor", () => {
     root.queueMicrotask?.(() => {
       ensureTodoEditorTab();

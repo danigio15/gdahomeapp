@@ -3590,6 +3590,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "Motion now",
   "Motorcycle",
   "Move",
+  "Move ${label}: drag, or use the up and down arrows",
   "Move down",
   "Move up",
   "Movement",

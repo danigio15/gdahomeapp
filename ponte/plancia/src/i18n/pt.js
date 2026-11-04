@@ -2005,6 +2005,7 @@ export default Object.freeze({
   Motion: "Movimento",
   "Motion · Free rooms · Last seen": "Movimento · Quartos livres · Última vez",
   "Move down": "Descer",
+  "Move ${label}: drag, or use the up and down arrows": "Mover ${label}: arraste ou use as setas para cima e para baixo",
   "Move up": "Subir",
   Movement: "Movimento",
   "Movement for": "Movimento há",

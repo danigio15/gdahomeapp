@@ -1997,6 +1997,7 @@ export default Object.freeze({
   Motion: "動き",
   "Motion · Free rooms · Last seen": "動き · 空き部屋 · 最後の検知",
   "Move down": "下へ移動",
+  "Move ${label}: drag, or use the up and down arrows": "${label} を移動: ドラッグするか、上下の矢印キーを使います",
   "Move up": "上へ移動",
   Movement: "動き",
   "Movement for": "動きがあってから",

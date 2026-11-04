@@ -2017,6 +2017,7 @@ export default Object.freeze({
   Motion: "Mouvement",
   "Motion · Free rooms · Last seen": "Mouvement · Pièces libres · Dernier passage",
   "Move down": "Descendre",
+  "Move ${label}: drag, or use the up and down arrows": "Déplacer ${label} : faites glisser, ou utilisez les flèches haut et bas",
   "Move up": "Monter",
   Movement: "Mouvement",
   "Movement for": "Mouvement depuis",

@@ -1999,6 +1999,7 @@ export default Object.freeze({
   Motion: "Hareket",
   "Motion · Free rooms · Last seen": "Hareket · Boş odalar · Son görülme",
   "Move down": "Aşağı taşı",
+  "Move ${label}: drag, or use the up and down arrows": "${label} öğesini taşı: sürükleyin veya yukarı ve aşağı oklarını kullanın",
   "Move up": "Yukarı taşı",
   Movement: "Hareket",
   "Movement for": "Şu süredir hareket:",

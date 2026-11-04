@@ -1969,6 +1969,7 @@ export default Object.freeze({
   Motion: "移动",
   "Motion · Free rooms · Last seen": "移动 · 空闲房间 · 最后检测",
   "Move down": "下移",
+  "Move ${label}: drag, or use the up and down arrows": "移动 ${label}：拖动，或使用上下方向键",
   "Move up": "上移",
   Movement: "有动静",
   "Movement for": "有动静已",
