@@ -1219,6 +1219,11 @@ function rigaClima(states, unit) {
      * il modello si limita a portarli in riga invece di farli cercare a
      * chi disegna. */
     modi: elenco(attributi.hvac_modes),
+    /* I preset (`preset_modes`): Eco, Notte, Fuori casa… Non sono modalita'
+     * — Home Assistant li comanda con un servizio suo — e nella finestra
+     * stanno su una riga a parte. */
+    presets: elenco(attributi.preset_modes),
+    preset: clean(attributi.preset_mode),
     ventole: elenco(attributi.fan_modes),
     ventola: clean(attributi.fan_mode),
     /* Le alette (#475): «oltre la modalita temperature etc... poter
@@ -7765,6 +7770,286 @@ export function climatePanelMarkup(entity) {
   return riga ? climatePanel(riga, true) : "";
 }
 
+/* ── La finestra del termostato ───────────────────────────────────────────
+ *
+ * «Graficamente riesci a fare meglio?» La finestra della pagina Clima aveva
+ * l'obiettivo scritto due volte (grande in cima e di nuovo nel pannello), le
+ * modalita' di Home Assistant e i preset mescolati in pastiglie col nome
+ * grezzo («sleep»), due bottoni Spegni/Accendi che dicevano quello che la
+ * modalita' «Spento» gia' dice, e l'ambiente e l'umidita' scritti piccoli in
+ * fondo. Qui la finestra si costruisce con una gerarchia:
+ *
+ *   1. adesso: come sta la stanza (stato colorato, gradi, umidita');
+ *   2. l'obiettivo, grande, col meno e il piu' — la cosa che si tocca di piu';
+ *   3. la modalita', un controllo a segmenti con le sole modalita' dichiarate;
+ *   4. poi preset, ventola e alette, se l'unita' li ha.
+ *
+ * Le funzioni qui sotto sono pure: dicono parole, toni e cosa mostrare, e il
+ * disegno le usa. */
+
+const ORDINE_DEI_MODI = ["off", "heat", "cool", "heat_cool", "auto", "dry", "fan_only"];
+
+/** I modi nell'ordine della finestra: Spento per primo, poi quelli noti, poi
+ * quelli che l'integrazione inventa («sleep» fra le `hvac_modes`). */
+export function modiInOrdine(modi) {
+  const noti = ORDINE_DEI_MODI.filter((m) => modi.includes(m));
+  return [...noti, ...modi.filter((m) => !ORDINE_DEI_MODI.includes(m))];
+}
+
+const conLaMaiuscola = (testo) => {
+  const pulito = clean(testo).replace(/_/g, " ");
+  return pulito ? pulito[0].toLocaleUpperCase() + pulito.slice(1) : pulito;
+};
+
+const NOMI_BREVI_DEL_MODO = () => ({
+  off: t("Spento", "Off"),
+  heat: t("Caldo", "Heat"),
+  cool: t("Freddo", "Cool"),
+  heat_cool: t("Caldo e freddo", "Heat & cool"),
+  auto: t("Auto", "Auto"),
+  dry: t("Deumidifica", "Dry"),
+  fan_only: t("Ventola", "Fan"),
+  sleep: t("Notte", "Sleep"),
+  eco: t("Eco", "Eco"),
+});
+
+const NOMI_DEI_PRESET = () => ({
+  none: t("Nessuno", "None"),
+  eco: t("Eco", "Eco"),
+  away: t("Fuori casa", "Away"),
+  boost: t("Boost", "Boost"),
+  comfort: t("Comfort", "Comfort"),
+  home: t("In casa", "Home"),
+  sleep: t("Notte", "Sleep"),
+  activity: t("Attività", "Activity"),
+});
+
+const NOMI_DELLE_VENTOLE = () => ({
+  auto: t("Auto", "Auto"),
+  low: t("Bassa", "Low"),
+  medium: t("Media", "Medium"),
+  middle: t("Media", "Medium"),
+  mid: t("Media", "Medium"),
+  high: t("Alta", "High"),
+  quiet: t("Silenziosa", "Quiet"),
+  silence: t("Silenziosa", "Quiet"),
+  turbo: t("Turbo", "Turbo"),
+  top: t("Massima", "Max"),
+  diffuse: t("Diffusa", "Diffuse"),
+  focus: t("Mirata", "Focus"),
+  on: t("Accesa", "On"),
+  off: t("Spenta", "Off"),
+});
+
+const NOMI_DELLE_ALETTE = () => ({
+  off: t("Ferme", "Fixed"),
+  on: t("In movimento", "Swinging"),
+  auto: t("Auto", "Auto"),
+  vertical: t("Verticali", "Vertical"),
+  horizontal: t("Orizzontali", "Horizontal"),
+  both: t("Entrambe", "Both"),
+});
+
+const parolaDa = (tabella) => (chiave) =>
+  tabella()[clean(chiave).toLowerCase()] || conLaMaiuscola(chiave);
+/** Il nome breve di un modo, di un preset, di una velocita', di un'aletta. */
+export const nomeDelModo = parolaDa(NOMI_BREVI_DEL_MODO);
+export const nomeDelPreset = parolaDa(NOMI_DEI_PRESET);
+export const nomeDellaVentola = parolaDa(NOMI_DELLE_VENTOLE);
+export const nomeDellAletta = parolaDa(NOMI_DELLE_ALETTE);
+
+/** Il tono (il colore) di un modo: caldo, freddo, spento, e gli altri. */
+export function tonoDelModo(modo, tipo = "") {
+  const m = clean(modo).toLowerCase();
+  if (m === "off" || !m) return "spento";
+  if (m === "heat") return "caldo";
+  if (m === "cool") return "freddo";
+  if (m === "heat_cool" || m === "auto") return "auto";
+  if (m === "dry") return "secco";
+  if (m === "fan_only") return "ventola";
+  if (m === "sleep" || m === "night") return "notte";
+  /* Un modo che non si conosce prende il colore della macchina: un
+   * termosifone in «comfort» scalda. */
+  return tipo === "clima" ? "freddo" : tipo ? "caldo" : "auto";
+}
+
+/** Cosa sta facendo adesso: la parola e il tono della pastiglia in cima. */
+export function statoDellaFinestra(riga) {
+  const azione = clean(riga?.azione).toLowerCase();
+  const modo = clean(riga?.mode).toLowerCase();
+  const acceso = Boolean(riga?.acceso || riga?.on);
+  if (!acceso || azione === "off") return { verso: "spento", tono: "spento", parola: t("Spento", "Off") };
+  const dalModo = tonoDelModo(modo, riga?.tipo);
+  if (azione === "heating") return { verso: "caldo", tono: "caldo", parola: t("Scalda", "Heating") };
+  if (azione === "cooling") return { verso: "freddo", tono: "freddo", parola: t("Raffresca", "Cooling") };
+  if (azione === "drying") return { verso: "secco", tono: "secco", parola: t("Deumidifica", "Drying") };
+  if (azione === "fan") return { verso: "ventola", tono: "ventola", parola: t("Ventila", "Fan") };
+  if (azione === "idle")
+    return { verso: "attesa", tono: dalModo, parola: t("In attesa", "Idle") };
+  /* Senza `hvac_action` si dice il modo, non un'azione che non si sa. */
+  if (modo === "heat") return { verso: "caldo", tono: "caldo", parola: t("Riscaldamento", "Heating") };
+  if (modo === "cool") return { verso: "freddo", tono: "freddo", parola: t("Raffrescamento", "Cooling") };
+  return { verso: "acceso", tono: dalModo, parola: nomeDelModo(modo) || t("Acceso", "On") };
+}
+
+/** I bottoni di accensione del guscio: via se la modalita' Spento c'e' gia'
+ * fra i segmenti, altrimenti uno solo — quello che serve adesso. */
+export function potenzaDellaFinestra(riga) {
+  const modi = riga?.modi || [];
+  if (modi.includes("off") && modi.some((m) => m !== "off")) return "via";
+  return riga?.acceso ? "spegni" : "accendi";
+}
+
+const GLIFI_DEL_MODO = Object.freeze({
+  spento: '<path d="M12 3.5v7.5"/><path d="M6.6 7a7.5 7.5 0 1 0 10.8 0"/>',
+  caldo:
+    '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4.1 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+  freddo:
+    '<path d="M12 2.8v18.4M4 7.4l16 9.2M4 16.6l16-9.2"/><path d="M9.4 4.6 12 6.2l2.6-1.6M9.4 19.4 12 17.8l2.6 1.6"/>',
+  auto: '<path d="M19.4 13.5A7.6 7.6 0 0 1 6 17.3M4.6 10.5A7.6 7.6 0 0 1 18 6.7"/><path d="M18.4 3v4h-4M5.6 21v-4h4"/>',
+  secco: '<path d="M12 3.4s6.2 6.6 6.2 10.8a6.2 6.2 0 0 1-12.4 0C5.8 10 12 3.4 12 3.4z"/>',
+  ventola:
+    '<circle cx="12" cy="12" r="1.7"/><path d="M12 10.3C11.4 6 12.6 3 15.4 3.3c2.5.3 2.4 3.6-1.9 6.4M13.7 12c4.3-.6 7.3.6 7 3.4-.3 2.5-3.6 2.4-6.4-1.9M12 13.7c.6 4.3-.6 7.3-3.4 7-2.5-.3-2.4-3.6 1.9-6.4M10.3 12C6 12.6 3 11.4 3.3 8.6c.3-2.5 3.6-2.4 6.4 1.9"/>',
+  notte: '<path d="M20 14.6A8.2 8.2 0 1 1 9.4 4a6.6 6.6 0 0 0 10.6 10.6z"/>',
+});
+
+export function glifoDelModo(tono) {
+  return `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${GLIFI_DEL_MODO[tono] || GLIFI_DEL_MODO.auto}</svg>`;
+}
+
+const GLIFO_GOCCIA =
+  '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.4s6.2 6.6 6.2 10.8a6.2 6.2 0 0 1-12.4 0C5.8 10 12 3.4 12 3.4z"/></svg>';
+const GLIFO_TERMOMETRO =
+  '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13.5V5a2 2 0 1 1 4 0v8.5a4 4 0 1 1-4 0z"/></svg>';
+const GLIFO_VALVOLA =
+  '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6M20 9v6M4 12h16M12 12V6M9 6h6"/></svg>';
+
+function chipDellaFinestra(voce, scelta, campo, nome, entity) {
+  return `<button type="button" class="dm-w-chip dm-cpf-chip" ${campo}="${esc(voce)}"
+               data-dm-w-target="${esc(entity)}" data-on="${voce === scelta}" aria-pressed="${voce === scelta}">${esc(nome(voce))}</button>`;
+}
+
+function chipsDellaFinestra(etichetta, voci, scelta, campo, nome, entity, prima = "") {
+  if (!voci?.length && !prima) return "";
+  return `<div class="dm-w-panel-row dm-cpf-riga">
+      <span class="dm-w-panel-lbl">${esc(etichetta)}</span>
+      <div class="dm-w-chips dm-cpf-chips">${prima}${(voci || [])
+        .map((voce) => chipDellaFinestra(voce, scelta, campo, nome, entity))
+        .join("")}</div>
+    </div>`;
+}
+
+/** La riga «adesso» in cima alla finestra: lo stato e le misure. */
+export function oraDellaFinestraMarkup(riga) {
+  const stato = statoDellaFinestra(riga);
+  const misure = [
+    riga.ambient == null
+      ? ""
+      : `<span class="dm-cpf-misura" data-dm-cpf-ambiente>${GLIFO_TERMOMETRO}<b>${esc(`${formatNumber(riga.ambient, 1)}°`)}</b><small>${esc(t("in stanza", "in the room"))}</small></span>`,
+    riga.umidita == null
+      ? ""
+      : `<span class="dm-cpf-misura" data-dm-cpf-umidita>${GLIFO_GOCCIA}<b>${esc(`${Math.round(riga.umidita)}%`)}</b><small>${esc(t("umidità", "humidity"))}</small></span>`,
+    riga.valvola === null || riga.valvola === undefined
+      ? ""
+      : `<span class="dm-cpf-misura" data-dm-cpf-valvola>${GLIFO_VALVOLA}<b>${esc(typeof riga.valvola === "number" ? `${riga.valvola}%` : "—")}</b><small>${esc(t("valvola", "valve"))}</small></span>`,
+  ].join("");
+  return `<span class="dm-cpf-stato" data-dm-cpf-verso="${stato.verso}" data-tono="${stato.tono}"><i aria-hidden="true"></i>${esc(stato.parola)}</span>${misure ? `<span class="dm-cpf-misure">${misure}</span>` : ""}`;
+}
+
+/* Quante colonne per i segmenti: tutti in fila fino a quattro, poi due righe
+ * pari (sei modalita' fanno tre e tre, non quattro e due). */
+export function colonneDeiModi(quanti) {
+  if (quanti <= 4) return Math.max(1, quanti);
+  if (quanti <= 6) return 3;
+  return 4;
+}
+
+/* Le modalita' che Home Assistant conosce stanno nel segmentato; quelle che
+ * l'integrazione aggiunge di suo fra le `hvac_modes` («sleep», «eco»…) sono
+ * preset nei fatti — una variante, non un modo di funzionare — e stanno con i
+ * preset. Si comandano sempre col servizio delle modalita'. */
+export const modiDelSegmentato = (modi) => modiInOrdine(modi || []).filter((m) => ORDINE_DEI_MODI.includes(m));
+export const modiComePreset = (modi) => (modi || []).filter((m) => !ORDINE_DEI_MODI.includes(m));
+
+function modiDellaFinestraMarkup(riga) {
+  const modi = modiDelSegmentato(riga.modi);
+  if (!modi.length) return "";
+  const corrente = clean(riga.mode).toLowerCase();
+  const bottoni = modi
+    .map((modo) => {
+      const tono = tonoDelModo(modo, riga.tipo);
+      const scelto = modo === corrente;
+      return `<button type="button" class="dm-cpf-modo" data-dm-w-mode="${esc(modo)}" data-dm-w-target="${esc(riga.entity)}"
+          data-on="${scelto}" aria-pressed="${scelto}" data-tono="${tono}">${glifoDelModo(tono)}<span>${esc(nomeDelModo(modo))}</span></button>`;
+    })
+    .join("");
+  return `<div class="dm-w-panel-row dm-cpf-riga dm-cpf-riga-modi">
+      <span class="dm-w-panel-lbl">${esc(t("Modalità", "Mode"))}</span>
+      <div class="dm-cpf-modi" role="group" aria-label="${esc(t("Modalità", "Mode"))}" style="--colonne:${colonneDeiModi(modi.length)}">${bottoni}</div>
+    </div>`;
+}
+
+/** Tutto quello che la finestra del termostato mostra di un'entita'. */
+export function climaDellaFinestra(entity) {
+  const chiave = clean(entity);
+  if (!chiave) return null;
+  let unita = [];
+  try {
+    unita = readClimateUnits();
+  } catch (_error) {
+    return null;
+  }
+  const riga = unita
+    .map((voce) => rigaClima(allStates(), voce))
+    .find((voce) => voce && voce.entity === chiave);
+  if (!riga) return null;
+  /* Il preset «none» in un elenco di uno solo non e' una scelta. */
+  const presets = riga.presets.length > 1 ? riga.presets : [];
+  const pannello = [
+    riga.obiettivi?.doppio ? obiettiviDoppiMarkup(riga) : "",
+    modiDellaFinestraMarkup(riga),
+    chipsDellaFinestra(
+      t("Preset", "Preset"),
+      presets,
+      riga.preset,
+      "data-dm-w-preset",
+      nomeDelPreset,
+      riga.entity,
+      modiComePreset(riga.modi)
+        .map((modo) => chipDellaFinestra(modo, clean(riga.mode).toLowerCase(), "data-dm-w-mode", nomeDelModo, riga.entity))
+        .join(""),
+    ),
+    chipsDellaFinestra(t("Ventola", "Fan"), riga.ventole, riga.ventola, "data-dm-w-fan", nomeDellaVentola, riga.entity),
+    chipsDellaFinestra(
+      riga.alette?.length && riga.aletteOrizzontali?.length ? t("Alette verticali", "Vertical swing") : t("Alette", "Swing"),
+      riga.alette,
+      riga.aletta,
+      "data-dm-w-swing",
+      nomeDellAletta,
+      riga.entity,
+    ),
+    chipsDellaFinestra(
+      t("Alette orizzontali", "Horizontal swing"),
+      riga.aletteOrizzontali,
+      riga.alettaOrizzontale,
+      "data-dm-w-swing-h",
+      nomeDellAletta,
+      riga.entity,
+    ),
+  ].join("");
+  const stato = statoDellaFinestra(riga);
+  return {
+    riga,
+    ora: oraDellaFinestraMarkup(riga),
+    pannello: pannello
+      ? `<div class="dm-w-panel dm-w-panel-solo dm-cpf" data-dm-w-panel="${esc(riga.entity)}">${pannello}</div>`
+      : "",
+    tono: stato.verso === "spento" ? tonoDelModo(riga.modi?.find((m) => m !== "off") || "", riga.tipo) : stato.tono,
+    acceso: stato.verso !== "spento",
+    potenza: potenzaDellaFinestra(riga),
+  };
+}
+
 function climateDetail(widget) {
   /* Come le luci: niente verdetto, caselle e pillole sopra — l'elenco che si
    * comanda, con le unita' accese in cima. Ogni scheda dice dove sta, quanti
@@ -10707,6 +10992,16 @@ function onClick(event) {
     callHa("climate", "set_fan_mode", {
       entity_id: clean(ventola.dataset.dmWTarget),
       fan_mode: clean(ventola.dataset.dmWFan),
+    });
+    root.setTimeout?.(schedule, 500);
+    return;
+  }
+  const preset = event.target?.closest?.("[data-dm-w-preset]");
+  if (preset) {
+    event.preventDefault();
+    callHa("climate", "set_preset_mode", {
+      entity_id: clean(preset.dataset.dmWTarget),
+      preset_mode: clean(preset.dataset.dmWPreset),
     });
     root.setTimeout?.(schedule, 500);
     return;

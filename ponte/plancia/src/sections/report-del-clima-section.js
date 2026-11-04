@@ -260,7 +260,16 @@ const percento = (valore) => (valore === null || valore === undefined ? "—" : 
 const ore = (ms) => (ms === null || ms === undefined ? "—" : oreScritte(ms));
 
 const accensioniDette = (n) =>
-  n === null || n === undefined ? t("accensioni non note", "starts unknown") : t(`${n} accensioni`, `${n} starts`);
+  n === null || n === undefined
+    ? t("accensioni non note", "starts unknown")
+    : n === 1
+      ? t("1 accensione", "1 start")
+      : t(`${n} accensioni`, `${n} starts`);
+
+/* «1 stanze», «1 valvole»: un numero solo si dice al singolare. */
+const stanzeDette = (n) => (n === 1 ? t("1 stanza", "1 room") : t(`${n} stanze`, `${n} rooms`));
+const valvoleDette = (n) =>
+  n === 0 ? t("nessuna valvola", "no valve") : n === 1 ? t("1 valvola", "1 valve") : t(`${n} valvole`, `${n} valves`);
 
 const numeroDetto = (valore, cifre = 1) =>
   valore.toLocaleString(locale(), { minimumFractionDigits: 0, maximumFractionDigits: cifre });
@@ -330,9 +339,40 @@ function graficoMarkup(report) {
     .join("");
   const picco =
     periodo.vista === "giorno" ? `${Math.round(massimo / 60_000)} min` : `${(inOre(massimo)).toLocaleString(locale(), { maximumFractionDigits: 1 })} h`;
+  /* Un grafico vuoto deve dire perche' e' vuoto: a righe grigie, senza una
+   * parola, sembrava rotto. Si contano le colonne passate: quelle che nessuna
+   * fonte sa (a righe) e quelle che si sanno e sono zero. */
+  const passate = secchielli.filter((s) => s.inizio <= adesso);
+  const ignote = passate.filter((s) => s.noto === false).length;
+  const accese = passate.filter((s) => s.noto !== false && s.ms > 0).length;
+  const avviso =
+    passate.length && ignote === passate.length
+      ? t("Nessun dato per questo periodo: le colonne a righe non sono zero, non si sanno.", "No data for this period: the striped columns are not zero, they are unknown.")
+      : !accese && passate.length
+        ? report.impianto === "freddo"
+          ? t("Nessuna accensione in questo periodo.", "Nothing ran in this period.")
+          : t("La caldaia non si è mai accesa in questo periodo.", "The boiler never ran in this period.")
+        : "";
+  const n = ignote;
+  const senzaDati =
+    periodo.vista === "giorno"
+      ? n === 1
+        ? t("1 ora senza dati", "1 hour without data")
+        : t(`${n} ore senza dati`, `${n} hours without data`)
+      : n === 1
+        ? t("1 giorno senza dati", "1 day without data")
+        : t(`${n} giorni senza dati`, `${n} days without data`);
+  const legenda =
+    ignote && ignote < passate.length
+      ? `<p class="dm-rcl-legenda"><i aria-hidden="true"></i>${esc(senzaDati)}</p>`
+      : "";
   return `<div class="dm-rcl-grafico-box">
-    <div class="dm-rcl-grafico-testa"><b>${esc(report.stima ? t("Impianto acceso (stima)", "System on (estimate)") : report.impianto === "freddo" ? t("Impianto acceso", "System on") : t("Caldaia accesa", "Boiler on"))}</b><span>${esc(scala)} · max ${esc(picco)}</span></div>
-    <div class="dm-rcl-grafico" data-passo="${periodo.passo}" data-colonne="${secchielli.length}">${colonne}</div>
+    <div class="dm-rcl-grafico-testa"><b>${esc(report.stima ? t("Impianto acceso (stima)", "System on (estimate)") : report.impianto === "freddo" ? t("Impianto acceso", "System on") : t("Caldaia accesa", "Boiler on"))}</b><span>${esc(scala)}${accese ? ` · max ${esc(picco)}` : ""}</span></div>
+    <div class="dm-rcl-grafico-area">
+      <div class="dm-rcl-grafico" data-passo="${periodo.passo}" data-colonne="${secchielli.length}">${colonne}</div>
+      ${avviso ? `<p class="dm-rcl-grafico-vuoto" data-dm-rcl-grafico-vuoto>${esc(avviso)}</p>` : ""}
+    </div>
+    ${legenda}
   </div>`;
 }
 
@@ -392,7 +432,7 @@ function stanzeMarkup(report) {
           <div class="dm-rcl-stanza-testa"><b>${esc(nome)}</b>${segni}<strong>${esc(ore(s.msRichiesta))}</strong></div>
           <div class="dm-rcl-stanza-barra"><i style="width:${quota.toFixed(1)}%"></i></div>
           <div class="dm-rcl-stanza-dati">
-            <span data-dm-rcl-richiesta>${esc(richiestaDetta)}</span>
+            <span data-dm-rcl-richiesta${s.msRichiesta === null ? " data-ignota" : ""}>${esc(richiestaDetta)}</span>
             ${s.msAccesa === null ? "" : `<span>⏻ ${esc(t(`accesa ${acceso}`, `on ${acceso}`))}</span>`}
             ${s.valvola === null ? "" : `<span data-dm-rcl-valvola>🔧 ${esc(t(`valvola ${aperta}`, `valve ${aperta}`))}</span>`}
             <span data-dm-rcl-temperatura>🌡️ ${esc(temperatura)}</span>
@@ -514,7 +554,7 @@ function notaStatistiche(report) {
   const statistiche = report.fonti?.statistiche || 0;
   if (!statistiche) return "";
   const stagione = report.stanze.some((s) => s.stimaDa?.includes("stagione"));
-  const testo = [
+  const frasi = [
     statistiche === 1
       ? t(
           "Un giorno dalle statistiche orarie di Home Assistant, perché la storia dettagliata non c'è più.",
@@ -531,10 +571,9 @@ function notaStatistiche(report) {
           "For heat pumps known only from their watts the season decides: from May to September they cool.",
         )
       : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-  return `<p class="dm-rcl-nota" data-dm-rcl-statistiche>ⓘ ${esc(testo)}</p>`;
+  ].filter(Boolean);
+  const testo = frasi.map((frase) => `<span>${esc(frase)}</span>`).join(" ");
+  return `<p class="dm-rcl-nota" data-dm-rcl-statistiche>${testo}</p>`;
 }
 
 /* Un sensore di tutta la macchina (piu' zone sullo stesso dispositivo): non
@@ -601,9 +640,15 @@ function notaMarkup(report) {
       : "",
   ]
     .filter(Boolean)
+    .map((frase) => `<span>${esc(frase)}</span>`)
     .join(" ");
   const statistiche = notaStatistiche(report);
-  const base = `${statistiche}${fonte ? `<p class="dm-rcl-nota">${esc(fonte)}</p>` : ""}`;
+  /* La nota lunga, a scomparsa: «Come si calcola», una frase per riga. Chi
+   * vuole sapere da dove vengono i numeri la apre; gli altri vedono i numeri. */
+  const base =
+    statistiche || fonte
+      ? `<details class="dm-rcl-come"><summary>${esc(t("Come si calcola", "How it's calculated"))}</summary>${statistiche}${fonte ? `<p class="dm-rcl-nota">${fonte}</p>` : ""}</details>`
+      : "";
   /* Una stima che non c'e' non si spiega: il grafico dice gia' «non noto». */
   if (!report.stima || report.totali?.msGeneratore === null) return base;
   const stima =
@@ -616,7 +661,7 @@ function notaMarkup(report) {
           "Nessuna caldaia con una storia: il tempo è una stima, acceso quando almeno una stanza chiede calore. La caldaia si configura in Config › Gestione termica.",
           "No boiler with a history: the time is an estimate, on whenever at least one room asks for heat. Set the boiler up in Config › Thermal management.",
         );
-  return `<p class="dm-rcl-nota" data-dm-rcl-stima>ⓘ ${esc(stima)}</p>${base}`;
+  return `<p class="dm-rcl-nota" data-dm-rcl-stima>${esc(stima)}</p>${base}`;
 }
 
 /* Il vuoto vero: nessuna fonte sa niente di questo periodo. Si dice perche',
@@ -630,7 +675,8 @@ function vuotoMarkup() {
   )}</small></div>`;
 }
 
-function contenutoMarkup(report) {
+/** Il corpo del report per un report gia' fatto: lo usa il disegno, e le prove. */
+export function contenutoMarkup(report) {
   if (report.vuoto) return vuotoMarkup();
   const tot = report.totali;
   const valvole = report.stanze.filter((s) => s.valvola !== null).length;
@@ -660,13 +706,13 @@ function contenutoMarkup(report) {
           : accensioniDette(tot.accensioni);
   return `<div class="dm-rcl-tessere">
       ${tessera(caldo ? "🔥" : "❄️", titoloGeneratore, ore(tot.msGeneratore), sottoGeneratore, `data-dm-rcl-tessera="generatore"${report.stima && !ignoto ? " data-stima" : ""}${ignoto ? " data-ignoto" : ""}`)}
-      ${tessera("⏱️", t("Richiesta stanze", "Room demand"), ore(tot.msRichiesta), t(`${quante} stanze`, `${quante} rooms`), 'data-dm-rcl-tessera="richiesta"')}
+      ${tessera("⏱️", t("Richiesta stanze", "Room demand"), ore(tot.msRichiesta), stanzeDette(quante), 'data-dm-rcl-tessera="richiesta"')}
       ${
         inComfort
           ? tessera("🌡️", t("Temperatura in comfort", "Comfort temperature"), gradi(tot.ambienteComfort), t(`obiettivo in comfort ${obiettivo}`, `comfort target ${obiettivo}`), 'data-dm-rcl-tessera="temperatura"')
-          : tessera("🌡️", t("Temperatura media", "Average temperature"), gradi(tot.ambiente), "", 'data-dm-rcl-tessera="temperatura"')
+          : tessera("🌡️", t("Temperatura media", "Average temperature"), gradi(tot.ambiente), t("nel periodo", "over the period"), 'data-dm-rcl-tessera="temperatura"')
       }
-      ${tessera("🔧", t("Valvola media", "Average valve"), percento(tot.valvola), valvole ? t(`${valvole} valvole`, `${valvole} valves`) : t("nessuna valvola", "no valve"), 'data-dm-rcl-tessera="valvola"')}
+      ${tessera("🔧", t("Valvola media", "Average valve"), percento(tot.valvola), valvoleDette(valvole), 'data-dm-rcl-tessera="valvola"')}
     </div>
     ${generatoriMarkup(report)}
     ${graficoMarkup(report)}
@@ -675,24 +721,26 @@ function contenutoMarkup(report) {
     ${notaMarkup(report)}`;
 }
 
+/* La testata della scheda: il titolo, l'impianto, il periodo. Niente X: il
+ * report non e' piu' una finestra sopra la pagina ma una linguetta della
+ * pagina Clima, come il Report nell'Energia — si torna alle stanze con le
+ * linguette accanto. */
 function testataMarkup(impianti, periodo) {
   const linguette = impianti
     .map(
       (id) =>
-        `<button type="button" data-dm-rcl-impianto="${id}" aria-pressed="${id === state.impianto}">${id === "freddo" ? "❄️" : "🔥"} ${esc(nomeDellImpianto(id))}</button>`,
+        `<button type="button" data-dm-rcl-impianto="${id}" aria-pressed="${id === state.impianto}"><span aria-hidden="true">${id === "freddo" ? "❄️" : "🔥"}</span>${esc(nomeDellImpianto(id))}</button>`,
     )
     .join("");
   const viste = VISTE_DEL_REPORT.map(
     (v) => `<button type="button" data-dm-rcl-vista="${v}" aria-pressed="${v === state.vista}">${esc(nomeDellaVista(v))}</button>`,
   ).join("");
   return `<div class="dm-rcl-testa">
-      <span class="dm-rcl-ic" aria-hidden="true">📊</span>
-      <div><h2 id="dm-rcl-titolo">${esc(t("Report del clima", "Climate report"))}</h2><p>${esc(nomeDellImpianto(state.impianto))}</p></div>
-      <button type="button" class="dm-rcl-chiudi" data-dm-rcl-chiudi aria-label="${esc(t("Chiudi", "Close"))}">✕</button>
+      <div class="dm-rcl-titoli"><h2 id="dm-rcl-titolo">${esc(t("Report del clima", "Climate report"))}</h2><p>${esc(t("Quanto hanno lavorato l'impianto e le stanze", "How long the system and the rooms ran"))}</p></div>
+      ${impianti.length > 1 ? `<div class="dm-rcl-impianti" role="group" aria-label="${esc(t("Impianto", "System"))}">${linguette}</div>` : ""}
     </div>
-    ${impianti.length > 1 ? `<div class="dm-rcl-impianti" role="tablist">${linguette}</div>` : ""}
     <div class="dm-rcl-periodo">
-      <div class="dm-rcl-viste">${viste}</div>
+      <div class="dm-rcl-viste" role="group" aria-label="${esc(t("Periodo", "Period"))}">${viste}</div>
       <div class="dm-rcl-naviga">
         <button type="button" data-dm-rcl-sposta="-1" aria-label="${esc(t("Periodo prima", "Previous period"))}">‹</button>
         <b data-dm-rcl-quando>${esc(titoloDelPeriodo(periodo))}</b>
@@ -701,15 +749,20 @@ function testataMarkup(impianti, periodo) {
     </div>`;
 }
 
+/* Il posto della scheda: dentro la pagina Clima, sotto le linguette. La
+ * pagina la ridisegna chi la possiede, e la scheda ci si rimette da sola. */
 function velo() {
+  const posto = doc.querySelector("#page-clima [data-dm-rcl-posto]");
   let nodo = doc.getElementById("dm-rcl");
+  if (nodo && posto && nodo.parentElement !== posto) posto.appendChild(nodo);
   if (nodo) return nodo;
-  nodo = doc.createElement("div");
+  nodo = doc.createElement("section");
   nodo.id = "dm-rcl";
-  nodo.className = "dm-rcl-velo";
+  nodo.className = "dm-rcl-scheda";
   nodo.hidden = true;
-  nodo.innerHTML = `<section class="dm-rcl-foglio" role="dialog" aria-modal="true" aria-labelledby="dm-rcl-titolo"><div data-dm-rcl-testa></div><div class="dm-rcl-corpo" data-dm-rcl-corpo></div></section>`;
-  doc.body.appendChild(nodo);
+  nodo.setAttribute("aria-labelledby", "dm-rcl-titolo");
+  nodo.innerHTML = `<div class="dm-rcl-foglio"><div class="dm-rcl-barra-testa" data-dm-rcl-testa></div><div class="dm-rcl-corpo" data-dm-rcl-corpo></div></div>`;
+  (posto || doc.body).appendChild(nodo);
   nodo.addEventListener("click", tocco);
   return nodo;
 }
@@ -816,7 +869,7 @@ async function disegna() {
 
 function tocco(evento) {
   const bersaglio = evento.target;
-  if (bersaglio === evento.currentTarget || bersaglio.closest?.("[data-dm-rcl-chiudi]")) {
+  if (bersaglio.closest?.("[data-dm-rcl-chiudi]")) {
     chiudiIlReport();
     return;
   }
@@ -845,6 +898,18 @@ function tasto(evento) {
   if (evento.key === "Escape" && state.aperto) chiudiIlReport();
 }
 
+/* La pagina Clima sa che il report e' aperto: nasconde le stanze e i
+ * comandi di tutta la casa, e la linguetta Report e' quella premuta. */
+function segnaLaPagina(aperto) {
+  const guscio = doc.querySelector("#page-clima .dm-cl-shell");
+  if (guscio) {
+    if (aperto) guscio.setAttribute("data-dm-rcl-aperto", "");
+    else guscio.removeAttribute("data-dm-rcl-aperto");
+  }
+  for (const linguetta of doc.querySelectorAll("#page-clima [data-dm-rcl-apri]"))
+    linguetta.setAttribute("aria-pressed", String(aperto));
+}
+
 /** Apre il report: dell'impianto che la pagina sta mostrando, di serie. */
 export function apriIlReportDelClima(impianto = "") {
   const zonaVista = doc.querySelector(".clima-zone-freddo.show") ? "freddo" : "caldo";
@@ -853,9 +918,8 @@ export function apriIlReportDelClima(impianto = "") {
   state.aperto = true;
   const nodo = velo();
   nodo.hidden = false;
-  doc.documentElement.classList.add("dm-rcl-aperto");
+  segnaLaPagina(true);
   disegna();
-  nodo.querySelector(".dm-rcl-chiudi")?.focus?.({ preventScroll: true });
   return true;
 }
 
@@ -864,104 +928,134 @@ export function chiudiIlReport() {
   state.giro += 1;
   const nodo = doc.getElementById("dm-rcl");
   if (nodo) nodo.hidden = true;
-  doc.documentElement.classList.remove("dm-rcl-aperto");
+  segnaLaPagina(false);
 }
 
 const CSS = `
-html.dm-rcl-aperto{overflow:hidden}
-.dm-rcl-velo{
+/* Il report come scheda della pagina Clima: niente velo, niente finestra.
+ * Le card sono quelle della pagina (lo stesso fondo, bordo, ombra e raggio
+ * della pagina Clima e del Report dell'Energia), e i colori quelli
+ * dell'impianto: arancio il riscaldamento, azzurro il raffrescamento. */
+.dm-rcl-scheda{
   --rcl-card:var(--card-bg,#fff);--rcl-soft:var(--surface-2,#f7f9fc);--rcl-sunk:var(--surface-3,#eef2f8);
   --rcl-line:var(--card-border,#e6ecf3);--rcl-text:var(--text,#0f172a);--rcl-dim:var(--text-dim,#64748b);
-  --rcl-c:234,88,12;
-  position:fixed;inset:0;z-index:10050;display:flex;align-items:center;justify-content:center;
-  padding:24px;background:rgba(15,23,42,.42);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)
+  --rcl-shadow:0 4px 20px rgba(15,23,42,.06),0 1px 4px rgba(15,23,42,.04);
+  --rcl-c:234,88,12;color:var(--rcl-text)
 }
-.dm-rcl-velo[hidden]{display:none}
-.dm-rcl-velo[data-dm-rcl-zona="freddo"]{--rcl-c:14,165,233}
-html[data-theme="dark"] .dm-rcl-velo{
+.dm-rcl-scheda[hidden]{display:none}
+.dm-rcl-scheda[data-dm-rcl-zona="freddo"]{--rcl-c:2,132,199}
+html[data-theme="dark"] .dm-rcl-scheda{
   --rcl-card:var(--card-bg,#151b26);--rcl-soft:var(--surface-2,#1b2230);--rcl-sunk:var(--surface-3,#232c3d);
   --rcl-line:var(--card-border,#2a3445);--rcl-text:var(--text,#e8edf5);--rcl-dim:var(--text-dim,#94a3b8);
-  --rcl-c:251,146,60;background:rgba(0,0,0,.6)
+  --rcl-shadow:0 4px 20px rgba(0,0,0,.38),0 1px 4px rgba(0,0,0,.26);--rcl-c:251,146,60
 }
-html[data-theme="dark"] .dm-rcl-velo[data-dm-rcl-zona="freddo"]{--rcl-c:56,189,248}
-.dm-rcl-foglio{
-  width:min(760px,100%);max-height:min(900px,100%);overflow:auto;overscroll-behavior:contain;
-  background:var(--rcl-card);color:var(--rcl-text);border:1px solid var(--rcl-line);border-radius:24px;
-  box-shadow:0 30px 80px rgba(15,23,42,.28);padding:18px 20px 22px;box-sizing:border-box
-}
-.dm-rcl-testa{display:flex;align-items:center;gap:12px}
-.dm-rcl-ic{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;font-size:20px;background:rgba(var(--rcl-c),.14)}
-.dm-rcl-testa div{flex:1;min-width:0}
-.dm-rcl-testa h2{margin:0;padding:0;border:0;font-family:inherit;font-size:18px;font-weight:800;letter-spacing:-.3px;text-transform:none;color:var(--rcl-text)}
-.dm-rcl-testa p{margin:1px 0 0;font-size:12px;font-weight:700;color:rgb(var(--rcl-c))}
-.dm-rcl-chiudi{width:36px;height:36px;border-radius:12px;border:1px solid var(--rcl-line);background:var(--rcl-soft);color:var(--rcl-dim);font-size:15px;cursor:pointer}
+html[data-theme="dark"] .dm-rcl-scheda[data-dm-rcl-zona="freddo"]{--rcl-c:56,189,248}
+.dm-rcl-scheda button{font:inherit}
+.dm-rcl-foglio{display:flex;flex-direction:column;gap:14px}
+.dm-rcl-carta,.dm-rcl-barra-testa,.dm-rcl-tessera,.dm-rcl-grafico-box,.dm-rcl-elenco,.dm-rcl-come,.dm-rcl-carica,.dm-rcl-vuoto{
+  background:var(--rcl-card);border:1px solid var(--rcl-line);border-radius:22px;box-shadow:var(--rcl-shadow)}
+
+/* La testata: titolo e impianto, poi il periodo. */
+.dm-rcl-barra-testa{display:flex;flex-direction:column;gap:14px;padding:16px 18px}
+.dm-rcl-testa{display:flex;align-items:center;justify-content:space-between;gap:12px 16px;flex-wrap:wrap}
+.dm-rcl-titoli{min-width:0}
+.dm-rcl-titoli h2{margin:0;padding:0;border:0;font-family:"Oswald",system-ui,sans-serif;font-size:22px;font-weight:700;letter-spacing:.6px;text-transform:none;color:var(--rcl-text)}
+.dm-rcl-titoli p{margin:2px 0 0;font-size:12.5px;font-weight:600;color:var(--rcl-dim)}
 .dm-rcl-impianti,.dm-rcl-viste{display:flex;gap:4px;padding:4px;border-radius:14px;background:var(--rcl-sunk)}
-.dm-rcl-impianti{margin-top:14px}
-.dm-rcl-impianti button,.dm-rcl-viste button{flex:1;border:0;border-radius:10px;padding:9px 10px;background:transparent;color:var(--rcl-dim);font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+.dm-rcl-impianti{flex:0 1 auto}
+.dm-rcl-impianti button,.dm-rcl-viste button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;border:0;border-radius:11px;padding:0 14px;background:transparent;color:var(--rcl-dim);font-size:13px;font-weight:750;cursor:pointer;white-space:nowrap}
 .dm-rcl-impianti button[aria-pressed="true"],.dm-rcl-viste button[aria-pressed="true"]{background:var(--rcl-card);color:var(--rcl-text);box-shadow:0 1px 4px rgba(15,23,42,.12)}
 .dm-rcl-impianti button[aria-pressed="true"]{color:rgb(var(--rcl-c))}
-.dm-rcl-periodo{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:10px}
-.dm-rcl-periodo .dm-rcl-viste{flex:1 1 260px}
-.dm-rcl-naviga{display:flex;align-items:center;gap:6px;flex:1 1 260px}
-.dm-rcl-naviga b{flex:1;text-align:center;font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dm-rcl-naviga button{width:36px;height:36px;border-radius:12px;border:1px solid var(--rcl-line);background:var(--rcl-soft);color:var(--rcl-text);font-size:18px;font-weight:800;cursor:pointer}
+.dm-rcl-scheda :is(button):focus-visible{outline:2px solid rgb(var(--rcl-c));outline-offset:2px}
+.dm-rcl-periodo{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.dm-rcl-periodo .dm-rcl-viste{flex:1 1 280px}
+.dm-rcl-naviga{display:flex;align-items:center;gap:8px;flex:1 1 280px}
+.dm-rcl-naviga b{flex:1;text-align:center;font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dm-rcl-naviga button{width:44px;height:44px;flex:0 0 44px;border-radius:14px;border:1px solid var(--rcl-line);background:var(--rcl-soft);color:var(--rcl-text);font-size:20px;font-weight:800;cursor:pointer}
 .dm-rcl-naviga button:disabled{opacity:.35;cursor:default}
-.dm-rcl-corpo{margin-top:14px}
-.dm-rcl-tessere{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-.dm-rcl-tessera{display:flex;flex-direction:column;gap:2px;padding:12px 13px;border-radius:16px;border:1px solid var(--rcl-line);background:var(--rcl-soft);min-width:0}
-.dm-rcl-tessera[data-dm-rcl-tessera="generatore"]{background:rgba(var(--rcl-c),.1);border-color:rgba(var(--rcl-c),.3)}
-.dm-rcl-t-et{display:flex;align-items:flex-start;gap:5px;font-size:10px;line-height:1.3;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--rcl-dim)}
-.dm-rcl-t-et i{font-style:normal;font-size:13px}
-.dm-rcl-tessera b{font-size:20px;font-weight:800;letter-spacing:-.4px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.dm-rcl-tessera small{font-size:11px;font-weight:700;color:var(--rcl-dim)}
-.dm-rcl-generatori{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
-.dm-rcl-generatori li{display:flex;align-items:baseline;gap:10px;padding:8px 12px;border-radius:12px;background:var(--rcl-soft);font-size:13px}
+.dm-rcl-corpo{display:flex;flex-direction:column;gap:14px}
+
+/* I numeri in alto: quattro card, due per riga sul telefono. */
+.dm-rcl-tessere{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.dm-rcl-tessera{display:flex;flex-direction:column;gap:4px;padding:14px 16px;min-width:0}
+.dm-rcl-tessera[data-dm-rcl-tessera="generatore"]{background:linear-gradient(180deg,rgba(var(--rcl-c),.12),rgba(var(--rcl-c),.04)),var(--rcl-card);border-color:rgba(var(--rcl-c),.32)}
+.dm-rcl-t-et{display:flex;align-items:center;gap:6px;font-size:12.5px;line-height:1.3;font-weight:700;letter-spacing:0;text-transform:none;color:var(--rcl-dim)}
+.dm-rcl-t-et i{font-style:normal;font-size:14px}
+.dm-rcl-tessera b{font-size:24px;font-weight:800;letter-spacing:-.5px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dm-rcl-tessera small{font-size:12px;font-weight:650;color:var(--rcl-dim)}
+.dm-rcl-tessera[data-ignoto]{background:var(--rcl-card);border-color:var(--rcl-line)}
+.dm-rcl-generatori{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.dm-rcl-generatori li{display:flex;align-items:baseline;gap:10px;padding:12px 16px;border-radius:16px;background:var(--rcl-card);border:1px solid var(--rcl-line);font-size:13.5px}
 .dm-rcl-generatori li span{flex:1;font-weight:700}
-.dm-rcl-generatori li small{color:var(--rcl-dim);font-weight:700}
-.dm-rcl-grafico-box{margin-top:14px;padding:12px 14px 8px;border-radius:18px;border:1px solid var(--rcl-line)}
-.dm-rcl-grafico-testa{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px;font-size:12px}
-.dm-rcl-grafico-testa b{font-weight:800}
-.dm-rcl-grafico-testa span{color:var(--rcl-dim);font-weight:700}
-.dm-rcl-grafico{display:flex;align-items:stretch;gap:3px;height:150px;margin-top:10px}
+.dm-rcl-generatori li small{color:var(--rcl-dim);font-weight:650}
+
+/* Il grafico. Vuoto, dice perche'. */
+.dm-rcl-grafico-box{padding:16px 18px 12px}
+.dm-rcl-grafico-testa{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px;font-size:12.5px}
+.dm-rcl-grafico-testa b{font-size:15px;font-weight:800}
+.dm-rcl-grafico-testa span{color:var(--rcl-dim);font-weight:650}
+.dm-rcl-grafico-area{position:relative;margin-top:12px}
+.dm-rcl-grafico{display:flex;align-items:stretch;gap:3px;height:170px}
 .dm-rcl-col{flex:1;display:flex;flex-direction:column;align-items:stretch;min-width:0}
-.dm-rcl-barra{flex:1;display:flex;align-items:flex-end;border-radius:6px;background:var(--rcl-sunk)}
-.dm-rcl-barra i{display:block;width:100%;border-radius:6px;background:linear-gradient(180deg,rgba(var(--rcl-c),1),rgba(var(--rcl-c),.7))}
-.dm-rcl-col[data-futuro="true"] .dm-rcl-barra{opacity:.4}
-.dm-rcl-col[data-ignota] .dm-rcl-barra{background:repeating-linear-gradient(135deg,var(--rcl-sunk) 0 5px,transparent 5px 9px);opacity:.8}
-.dm-rcl-ignoto{display:flex;align-items:center;gap:12px;margin-top:10px;padding:18px 14px;border-radius:14px;background:repeating-linear-gradient(135deg,var(--rcl-soft) 0 8px,transparent 8px 14px);border:1px dashed var(--rcl-line)}
+.dm-rcl-barra{flex:1;display:flex;align-items:flex-end;border-radius:6px;background:var(--rcl-soft)}
+.dm-rcl-barra i{display:block;width:100%;border-radius:6px;background:linear-gradient(180deg,rgba(var(--rcl-c),1),rgba(var(--rcl-c),.72))}
+.dm-rcl-col[data-futuro="true"] .dm-rcl-barra{opacity:.45}
+.dm-rcl-col[data-ignota] .dm-rcl-barra{background:repeating-linear-gradient(135deg,var(--rcl-sunk) 0 4px,transparent 4px 8px);box-shadow:inset 0 0 0 1px var(--rcl-line)}
+.dm-rcl-col small{height:16px;margin-top:6px;text-align:center;font-size:11px;font-weight:650;color:var(--rcl-dim);white-space:nowrap;overflow:visible}
+.dm-rcl-grafico-vuoto{position:absolute;left:50%;top:calc(50% - 11px);transform:translate(-50%,-50%);max-width:calc(100% - 24px);margin:0;padding:10px 14px;border-radius:14px;background:var(--rcl-card);border:1px solid var(--rcl-line);box-shadow:var(--rcl-shadow);font-size:13px;font-weight:700;line-height:1.4;text-align:center;color:var(--rcl-text)}
+.dm-rcl-legenda{display:flex;align-items:center;gap:8px;margin:10px 0 0;font-size:12px;font-weight:650;color:var(--rcl-dim)}
+.dm-rcl-legenda i{width:16px;height:12px;border-radius:4px;background:repeating-linear-gradient(135deg,var(--rcl-sunk) 0 3px,transparent 3px 6px);box-shadow:inset 0 0 0 1px var(--rcl-line)}
+.dm-rcl-ignoto{display:flex;align-items:center;gap:12px;margin-top:12px;padding:18px 16px;border-radius:16px;background:var(--rcl-soft);border:1px dashed var(--rcl-line)}
 .dm-rcl-ignoto span{font-size:22px}
-.dm-rcl-ignoto p{margin:0;font-size:12.5px;line-height:1.45;font-weight:700;color:var(--rcl-dim)}
-.dm-rcl-tessera[data-ignoto]{background:var(--rcl-soft);border-color:var(--rcl-line)}
-.dm-rcl-col small{height:16px;margin-top:4px;text-align:center;font-size:10px;font-weight:700;color:var(--rcl-dim);white-space:nowrap;overflow:visible}
-.dm-rcl-sezione{display:flex;align-items:baseline;gap:8px;margin:18px 2px 8px}
-.dm-rcl-sezione b{font-size:15px;font-weight:800}
-.dm-rcl-sezione span{font-size:12px;color:var(--rcl-dim);font-weight:700}
-.dm-rcl-stanze{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-.dm-rcl-stanza{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:16px;border:1px solid var(--rcl-line);background:var(--rcl-card)}
-.dm-rcl-pos{display:grid;place-items:center;flex:none;width:26px;height:26px;border-radius:9px;background:rgba(var(--rcl-c),.14);color:rgb(var(--rcl-c));font-size:12px;font-weight:800}
+.dm-rcl-ignoto p{margin:0;font-size:13px;line-height:1.5;font-weight:650;color:var(--rcl-dim)}
+
+/* Le stanze: una card sola, una riga per stanza. */
+.dm-rcl-sezione{display:flex;align-items:baseline;gap:8px;margin:6px 4px -4px}
+.dm-rcl-sezione b{font-size:16px;font-weight:800}
+.dm-rcl-sezione span{font-size:12.5px;color:var(--rcl-dim);font-weight:650}
+.dm-rcl-stanze{list-style:none;margin:0;padding:4px 0;display:block;background:var(--rcl-card);border:1px solid var(--rcl-line);border-radius:22px;box-shadow:var(--rcl-shadow)}
+.dm-rcl-stanza{display:flex;gap:12px;align-items:flex-start;padding:14px 16px}
+.dm-rcl-stanza + .dm-rcl-stanza{border-top:1px solid var(--rcl-line)}
+.dm-rcl-pos{display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:10px;background:rgba(var(--rcl-c),.14);color:rgb(var(--rcl-c));font-size:12.5px;font-weight:800}
 .dm-rcl-stanza-corpo{flex:1;min-width:0}
 .dm-rcl-stanza-testa{display:flex;align-items:center;gap:8px}
-.dm-rcl-stanza-testa b{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dm-rcl-stanza-testa b{font-size:14.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dm-rcl-stanza-testa strong{margin-left:auto;font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
-.dm-rcl-segno{flex:none;font-style:normal;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:2px 7px;border-radius:999px;background:var(--rcl-sunk);color:var(--rcl-dim)}
+.dm-rcl-segno{flex:none;font-style:normal;font-size:11px;font-weight:750;padding:2px 8px;border-radius:999px;background:var(--rcl-sunk);color:var(--rcl-dim)}
 .dm-rcl-segno[data-dm-rcl-segno="dati"]{background:rgba(234,179,8,.18);color:#a16207}
 html[data-theme="dark"] .dm-rcl-segno[data-dm-rcl-segno="dati"]{color:#facc15}
-.dm-rcl-stanza-barra{height:8px;margin:8px 0;border-radius:999px;background:var(--rcl-sunk);overflow:hidden}
+.dm-rcl-stanza-barra{height:8px;margin:9px 0;border-radius:999px;background:var(--rcl-soft);overflow:hidden}
 .dm-rcl-stanza-barra i{display:block;height:100%;border-radius:999px;background:rgb(var(--rcl-c))}
-.dm-rcl-stanza-dati{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;font-weight:700;color:var(--rcl-dim)}
-.dm-rcl-stanza-dati span:first-child{color:rgb(var(--rcl-c))}
-.dm-rcl-nota{margin:12px 2px 0;font-size:11.5px;line-height:1.45;color:var(--rcl-dim)}
-.dm-rcl-nota[data-dm-rcl-stima]{padding:10px 12px;border-radius:12px;background:rgba(var(--rcl-c),.08);color:var(--rcl-text);font-weight:600}
-.dm-rcl-carica,.dm-rcl-vuoto{display:flex;flex-direction:column;align-items:center;gap:8px;padding:48px 16px;text-align:center;color:var(--rcl-dim);font-size:13px;font-weight:700}
+.dm-rcl-stanza-dati{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;font-weight:650;color:var(--rcl-dim)}
+.dm-rcl-stanza-dati span:first-child{color:rgb(var(--rcl-c));font-weight:750}
+.dm-rcl-stanza-dati span[data-ignota]{color:var(--rcl-dim);font-weight:650}
+
+/* In fondo: la stima, se c'e', in vista; il resto a scomparsa. */
+.dm-rcl-nota{margin:0;font-size:13px;line-height:1.5;color:var(--rcl-dim)}
+.dm-rcl-nota[data-dm-rcl-stima]{padding:12px 14px;border-radius:16px;background:rgba(var(--rcl-c),.09);border:1px solid rgba(var(--rcl-c),.22);color:var(--rcl-text);font-weight:600}
+.dm-rcl-come{padding:0;overflow:hidden}
+.dm-rcl-come summary{display:flex;align-items:center;gap:8px;min-height:48px;padding:0 16px;cursor:pointer;list-style:none;font-size:14px;font-weight:800;color:var(--rcl-text)}
+.dm-rcl-come summary::-webkit-details-marker{display:none}
+.dm-rcl-come summary::before{content:"";width:8px;height:8px;margin-right:4px;border-right:2px solid var(--rcl-dim);border-bottom:2px solid var(--rcl-dim);transform:rotate(-45deg);transition:transform .2s}
+.dm-rcl-come[open] summary::before{transform:rotate(45deg)}
+.dm-rcl-come .dm-rcl-nota{padding:0 16px 14px}
+.dm-rcl-come .dm-rcl-nota span{display:block;position:relative;padding-left:14px;margin-top:6px;max-width:68ch}
+.dm-rcl-come .dm-rcl-nota span::before{content:"";position:absolute;left:2px;top:.62em;width:5px;height:5px;border-radius:50%;background:var(--rcl-dim);opacity:.6}
+
+.dm-rcl-carica,.dm-rcl-vuoto{display:flex;flex-direction:column;align-items:center;gap:8px;padding:48px 18px;text-align:center;color:var(--rcl-dim);font-size:13px;font-weight:650;line-height:1.5}
 .dm-rcl-vuoto span{font-size:30px}
-.dm-rcl-vuoto b{color:var(--rcl-text);font-size:15px}
+.dm-rcl-vuoto b{color:var(--rcl-text);font-size:16px}
+.dm-rcl-vuoto small{max-width:62ch;font-size:13px}
 .dm-rcl-spin{width:26px;height:26px;border-radius:50%;border:3px solid var(--rcl-sunk);border-top-color:rgb(var(--rcl-c));animation:dm-rcl-gira .8s linear infinite}
 @keyframes dm-rcl-gira{to{transform:rotate(360deg)}}
 @media (max-width:640px){
-  .dm-rcl-velo{padding:0;align-items:stretch}
-  .dm-rcl-foglio{width:100%;max-height:none;height:100%;border-radius:0;border:0;padding:max(14px,env(safe-area-inset-top)) 14px max(20px,env(safe-area-inset-bottom))}
-  .dm-rcl-tessere{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-  .dm-rcl-tessera b{font-size:18px}
+  .dm-rcl-barra-testa{padding:14px}
+  .dm-rcl-impianti{flex:1 1 100%}
+  .dm-rcl-tessere{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .dm-rcl-tessera{padding:12px 14px}
+  .dm-rcl-tessera b{font-size:20px}
+  .dm-rcl-grafico-box{padding:14px 14px 10px}
+  .dm-rcl-stanza{padding:12px 14px}
   /* Sul telefono il segno («stima», «dati parziali») va sotto il nome: accanto
    * gli toglieva lo spazio e «Termosifone Sala» diventava «Termosifone …». */
   .dm-rcl-stanza-testa{flex-wrap:wrap;row-gap:4px}
@@ -969,8 +1063,8 @@ html[data-theme="dark"] .dm-rcl-segno[data-dm-rcl-segno="dati"]{color:#facc15}
   .dm-rcl-stanza-testa strong{order:1}
   .dm-rcl-stanza-testa:has(.dm-rcl-segno)::after{content:"";order:2;flex-basis:100%;height:0}
   .dm-rcl-segno{order:3}
-  .dm-rcl-grafico{height:130px;gap:2px}
-  .dm-rcl-grafico[data-colonne="24"] .dm-rcl-col small,.dm-rcl-grafico[data-colonne="31"] .dm-rcl-col small{font-size:9px}
+  .dm-rcl-grafico{height:140px;gap:2px}
+  .dm-rcl-grafico[data-colonne="24"] .dm-rcl-col small,.dm-rcl-grafico[data-colonne="31"] .dm-rcl-col small{font-size:9.5px}
 }
 `;
 
@@ -980,7 +1074,22 @@ export function installReportDelClima() {
   installStyle(STYLE_ID, CSS);
   root.apriIlReportDelClima = apriIlReportDelClima;
   doc.addEventListener("click", (evento) => {
-    if (evento.target?.closest?.("[data-dm-rcl-apri]")) apriIlReportDelClima();
+    if (evento.target?.closest?.("[data-dm-rcl-apri]")) {
+      apriIlReportDelClima();
+      return;
+    }
+    /* Una linguetta delle stanze (Freddo, Caldo, Termostato) torna alle
+     * stanze: il report si chiude come si lascia una linguetta. */
+    if (state.aperto && evento.target?.closest?.("#page-clima .clima-page-mode-btn[data-dm-cl-zone]"))
+      chiudiIlReport();
+  });
+  /* La pagina si ridisegna: la scheda aperta resta al suo posto. */
+  root.addEventListener?.("dashboardmodern:state-changed", () => {
+    if (!state.aperto) return;
+    const nodo = doc.getElementById("dm-rcl");
+    const posto = doc.querySelector("#page-clima [data-dm-rcl-posto]");
+    if (nodo && posto && nodo.parentElement !== posto) posto.appendChild(nodo);
+    segnaLaPagina(true);
   });
   doc.addEventListener("keydown", tasto);
   return true;

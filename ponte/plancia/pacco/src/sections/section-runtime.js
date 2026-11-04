@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-KRR6X7BG.js";
+} from "../../chunk-XQ2HTHDL.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -1895,7 +1895,6 @@ var SOURCE_INDEX = Object.freeze({
   "💾 Programma salvato in Home Assistant": "💾 Schedule saved in Home Assistant",
   "💾 Rifiuti salvati": "💾 Waste saved",
   "💾 Robot salvato": "💾 Robot saved",
-  "💾 Salva il programma": "💾 Save the schedule",
   "💾 Salva modifiche": "💾 Save changes",
   "💾 Salva organizzazione luci": "💾 Save lights layout",
   "💾 Salva sezione": "💾 Save section",
@@ -2136,11 +2135,15 @@ var SOURCE_INDEX = Object.freeze({
   "${n} automazioni della versione di prova sono ferme": "${n} automations from the trial version are idle",
   "${n} automazioni pensate per la tua casa. «Crea» le apre già compilate: le controlli e le salvi. «No, grazie» non le ripropone più.": "${n} automations designed for your home. «Create» opens them already filled in: you check them and save. «No, thanks» never suggests them again.",
   "${n} fonti non rispondono": "${n} sources not responding",
+  "${n} giorni senza dati": "${n} days without data",
   "${n} in un'ora": "${n} in one hour",
+  "${n} ore senza dati": "${n} hours without data",
   "${n} proposte per la tua casa": "${n} suggestions for your home",
   "${n} risposte nuove": "${n} new replies",
   "${n} soste": "${n} stops",
+  "${n} stanze": "${n} rooms",
   "${n} telecamere · dal vivo": "${n} cameras · live",
+  "${n} valvole": "${n} valves",
   "${n}, da Home Assistant": "${n}, from Home Assistant",
   "${nessuna} giorni senza nessun dato: non contano.": "${nessuna} days without any data: they do not count.",
   "${nome} fa qualcosa": "${nome} does something",
@@ -2184,7 +2187,6 @@ var SOURCE_INDEX = Object.freeze({
   "${quante} oggi": "${quante} today",
   "${quante} sezioni": "${quante} sections",
   "${quante} stanno bene": "${quante} doing well",
-  "${quante} stanze": "${quante} rooms",
   "${quante} unità non hanno mai lavorato per questo impianto nel periodo e non sono in elenco.": "${quante} units never worked for this system in the period and are not listed.",
   "${quante} valori fuori norma": "${quante} readings out of range",
   "${quanti} ${tipoInParole(tipo)} da ${numero} celle": "${quanti} of ${tipoInParole(tipo)}, ${numero} cells each",
@@ -2240,7 +2242,6 @@ var SOURCE_INDEX = Object.freeze({
   "${value} unità": "${value} units",
   "${valvola.aperta}% aperta": "${valvola.aperta}% open",
   "${valvola.chiusa}% chiusa": "${valvola.chiusa}% closed",
-  "${valvole} valvole": "${valvole} valves",
   "${vive.length} stanze · ${S.casa.aperture.length} porte e finestre": "${vive.length} rooms · ${S.casa.aperture.length} doors and windows",
   "${voci.length} voci": "${voci.length} entries",
   "${volte} volte": "${volte} times",
@@ -2248,6 +2249,7 @@ var SOURCE_INDEX = Object.freeze({
   "${x.sue.length} voci · Gestisci": "${x.sue.length} entries · Manage",
   "0% = schermo nero, come «Di notte schermo nero»": "0% = black screen, like “Black screen at night”",
   "1 · Di che si tratta": "1 · What is it about",
+  "1 accensione": "1 start",
   "1 accesa": "1 on",
   "1 acceso · tocca per spegnere": "1 on · tap to turn off",
   "1 aggiornamento da fare": "1 update to install",
@@ -2279,6 +2281,7 @@ var SOURCE_INDEX = Object.freeze({
   "1 fonte": "1 source",
   "1 fonte non risponde": "1 source not responding",
   "1 fulmine": "1 strike",
+  "1 giorno senza dati": "1 day without data",
   "1 in movimento": "1 moving",
   "1 in riproduzione": "1 playing",
   "1 libera": "1 free",
@@ -2291,6 +2294,7 @@ var SOURCE_INDEX = Object.freeze({
   "1 nuova": "1 new",
   "1 ora": "1 hour",
   "1 Ora": "1 hour",
+  "1 ora senza dati": "1 hour without data",
   "1 pacco": "1 pack",
   "1 piano": "1 floor",
   "1 proposta per la tua casa": "1 suggestion for your home",
@@ -2306,6 +2310,7 @@ var SOURCE_INDEX = Object.freeze({
   "1 tapparella alzata": "1 shutter up",
   "1 telefono": "1 phone",
   "1 unità": "1 unit",
+  "1 valvola": "1 valve",
   "1 voce": "1 entry",
   "1 voce · Gestisci": "1 entry · Manage",
   "1 volo in zona": "1 flight in the area",
@@ -2900,6 +2905,7 @@ var SOURCE_INDEX = Object.freeze({
   "Attive": "Active",
   "attività": "activities",
   "Attività": "Activity",
+  "Attivo · ${prossimo}": "Active · ${prossimo}",
   "Attributi da mostrare": "Attributes to show",
   "Attributo": "Attribute",
   "aut.": "og",
@@ -3077,7 +3083,7 @@ var SOURCE_INDEX = Object.freeze({
   "Bypass chiuso": "Bypass closed",
   "C'è 1 telecamera configurata che adesso non si vede qui.": "There is 1 configured camera that is not shown here now.",
   "C'è ancora qualcosa di aperto": "Something is still open",
-  "c'è già chi lo comanda": "already controlled",
+  "C'è già chi lo comanda": "Already controlled",
   "c'è movimento": "there is motion",
   "C'è posta": "Mail inside",
   "C'è posta in cassetta": "Mail in the box",
@@ -3101,6 +3107,7 @@ var SOURCE_INDEX = Object.freeze({
   "Caldaie accese": "Boilers on",
   "Caldo": "Heat",
   "Caldo · Freddo": "Heating · Cooling",
+  "Caldo e freddo": "Heat & cool",
   "Caldo soffocante": "Sweltering",
   "Calendari": "Calendars",
   "Calendari a fasce": "Time-slot calendars",
@@ -3493,6 +3500,7 @@ var SOURCE_INDEX = Object.freeze({
   "Come lo dice": "How it says it",
   "come prima": "as before",
   "Come prima": "As before",
+  "Come si calcola": "How it's calculated",
   "Come si chiama per te: è questo che si legge nella pagina.": "What you call it: this is what the page reads.",
   "Come si chiama per te. È questo che si legge nella pagina, non «Contact 4B».": "What you call it. This is what the page reads, not “Contact 4B”.",
   "Come si divide il costo reale": "How the real cost breaks down",
@@ -3782,7 +3790,7 @@ var SOURCE_INDEX = Object.freeze({
   "da ricomprare": "time to buy more",
   "Da ricomprare": "Time to buy more",
   "Da ricomprare sotto": "Buy more below",
-  "da rifare": "to redo",
+  "Da rifare": "To redo",
   "da rifare adesso": "due now",
   "Da sapere": "Good to know",
   "Da scegliere": "To set up",
@@ -3905,6 +3913,7 @@ var SOURCE_INDEX = Object.freeze({
   "Dicembre": "December",
   "Difetti": "Bugs",
   "Differenza pannello–boiler": "Panel–boiler gap",
+  "Diffusa": "Diffuse",
   "Dimentica quello che ha imparato": "Forget what it has learned",
   "Din don": "Ding dong",
   "Direzione": "Direction",
@@ -4193,6 +4202,7 @@ var SOURCE_INDEX = Object.freeze({
   "Entity non valida": "Invalid entity",
   "Entra": "Air in",
   "Entra in manutenzione": "Enter maintenance",
+  "Entrambe": "Both",
   "Entrato": "Subbed on",
   "Erbacce": "Weed",
   "Erbacce (facoltativo)": "Weed (optional)",
@@ -4286,6 +4296,7 @@ var SOURCE_INDEX = Object.freeze({
   "Ferma a casa · non in carica": "Parked at home · not charging",
   "Ferma l'irrigazione": "Stop watering",
   "Ferma tutto": "Stop all",
+  "Ferme": "Fixed",
   "Ferme da oltre un mese:": "Stuck for over a month:",
   "ferme per ora": "stopped for now",
   "Fermo": "Still",
@@ -4872,6 +4883,7 @@ var SOURCE_INDEX = Object.freeze({
   "In linea": "Talking",
   "In marcia": "Driving",
   "in meno di una tariffa unica": "less than a single rate",
+  "In movimento": "Swinging",
   "In onda": "On air",
   "In orario": "On time",
   "In ordine": "In order",
@@ -5082,6 +5094,7 @@ var SOURCE_INDEX = Object.freeze({
   "La % di umidità del terreno compare nella card del programma.": "The soil moisture % appears on the schedule card.",
   "La batteria è al ${socR}%, sopra la soglia del ${soglia}%.": "The battery is at ${socR}%, above the ${soglia}% threshold.",
   "La batteria non risponde": "The battery is not answering",
+  "La caldaia non si è mai accesa in questo periodo.": "The boiler never ran in this period.",
   "La card e il popup offrono sempre la tendina con tutte le percentuali: 0 = chiusa, 100 = aperta. Qui scegli quella di casa — 5 chiude quasi tutto lasciando passare un po' d'aria — e nella tendina compare con la stella. Vuoto = nessuna preferita.": "The card and the popup always offer the dropdown with every percentage: 0 = closed, 100 = open. Here you pick your usual one — 5 closes almost fully while letting some air through — and it shows up starred in the dropdown. Empty = no favorite.",
   "La card resta In funzione per questi minuti dopo l'ultima potenza sopra soglia: copre l'asciugatura a 0 W della lavastoviglie e le pause del ciclo.": "The card stays Running for these minutes after the last power reading above the threshold: it covers the dishwasher's 0 W drying phase and mid-cycle pauses.",
   "La cartella config/www non esiste ancora: creala e mettici dentro le foto.": "The config/www folder does not exist yet: create it and put the photos in there.",
@@ -5382,7 +5395,6 @@ var SOURCE_INDEX = Object.freeze({
   "Leggo le integrazioni di Home Assistant…": "Reading Home Assistant integrations…",
   "Leggo lo storico dal Recorder…": "Reading the history from the Recorder…",
   "Leggo lo storico di Home Assistant…": "Reading Home Assistant history…",
-  "leggo…": "reading…",
   "Leggo…": "Reading…",
   "Letta come ${metri} metri.": "Read as ${metri} metres.",
   "Lettere": "Letters",
@@ -5602,6 +5614,7 @@ var SOURCE_INDEX = Object.freeze({
   "Minuti di questa corsa": "Minutes for this run",
   "minuti fa": "minutes ago",
   "minuti per ora": "minutes per hour",
+  "Mirata": "Focus",
   "misura": "reading",
   "misura l'umidità": "it measures humidity",
   "misura la temperatura": "it measures temperature",
@@ -5728,6 +5741,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nel frattempo si mostrano i valori istantanei.": "Instant values are shown meanwhile.",
   "Nel gruppo": "In the group",
   "nel menu (visibile agli admin)": "page in the menu (visible to admins)",
+  "nel periodo": "over the period",
   "Nel widget": "In the widget",
   "Nella fascia scelta il riposo spegne anche l'orologio": "In the chosen hours rest turns off the clock too",
   "nella norma": "in range",
@@ -5771,6 +5785,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nessun dato in questo periodo": "No data in this period",
   "Nessun dato orario": "No hourly data",
   "Nessun dato per questo periodo": "No data for this period",
+  "Nessun dato per questo periodo: le colonne a righe non sono zero, non si sanno.": "No data for this period: the striped columns are not zero, they are unknown.",
   "Nessun dato registrato": "No recorded data",
   "Nessun dato storico trovato in questo periodo": "No history found in this period",
   "Nessun disagio": "No discomfort",
@@ -5833,6 +5848,7 @@ var SOURCE_INDEX = Object.freeze({
   "Nessun viaggio ancora. Premi «Nuovo viaggio» per il primo.": "No trips yet. Press “New trip” for the first one.",
   "nessuna": "none",
   "nessuna a un orario": "none on a schedule",
+  "Nessuna accensione in questo periodo.": "Nothing ran in this period.",
   "Nessuna allerta configurata": "No alert configured",
   "Nessuna altra piscina": "No other pool",
   "Nessuna apertura configurata": "No opening configured",
@@ -6031,9 +6047,9 @@ var SOURCE_INDEX = Object.freeze({
   "Non ancora collegato": "Not linked yet",
   "Non ancora segnata": "Not logged yet",
   "Non arriva. Controlla l'indirizzo, e che il servizio si lasci leggere da qui.": "It does not arrive. Check the address, and that the service lets this page read it.",
+  "Non attivo": "Not active",
   "non avvisa più": "no longer warns",
   "Non avvisarmi più per questo": "Stop warning me about this",
-  "non c'è ancora": "not set yet",
   "non c'è in Home Assistant": "is not in Home Assistant",
   "Non c'è in Home Assistant": "Not in Home Assistant",
   "Non c'è nessuno in casa, ma ${accese.length} luci sono accese": "Nobody is home, but ${accese.length} lights are on",
@@ -6077,7 +6093,7 @@ var SOURCE_INDEX = Object.freeze({
   "Non l'ha ricevuto nessuno: i telefoni scelti hanno spento le notifiche o non hanno l'app.": "Nobody received it: the chosen phones have notifications off or no app.",
   "Non leggo il limite di evcc.": "I can't read the evcc limit.",
   "Non leggo la batteria dell'auto.": "I can't read the car's battery.",
-  "non letto": "not read",
+  "Non letto": "Not read",
   "Non lo so": "I do not know",
   "non noto": "unknown",
   "Non pagata": "Unpaid",
@@ -6245,6 +6261,7 @@ var SOURCE_INDEX = Object.freeze({
   "Orientamento": "Orientation",
   "Orientamento, tema, meteo, riposo, notte, luminosità, PIN": "Orientation, theme, weather, rest, night, brightness, PIN",
   "Orizzontale": "Landscape",
+  "Orizzontali": "Horizontal",
   "OSO": "WSW",
   "Ossigeno": "Blood oxygen",
   "Ossigeno residuo (%)": "Residual oxygen (%)",
@@ -6829,6 +6846,7 @@ var SOURCE_INDEX = Object.freeze({
   "Quanto entra nella batteria": "What goes into the battery",
   "Quanto esce dalla batteria": "What comes out of the battery",
   "Quanto gli chiedi": "How much you ask of it",
+  "Quanto hanno lavorato l'impianto e le stanze": "How long the system and the rooms ran",
   "Quanto parla": "How much it says",
   "Quanto resta accesa": "How long it stays on",
   "Quanto resta accesa dal momento dell'accensione. Il conto alla rovescia lo tiene Home Assistant, non questa pagina: si può chiudere la plancia e l'unità si spegne lo stesso. Sulla card resta modificabile ogni volta.": "How long it stays on from the moment you switch it on. Home Assistant keeps the countdown, not this page: you can close the dashboard and the unit still switches off. On the card you can change it every time.",
@@ -7165,6 +7183,7 @@ var SOURCE_INDEX = Object.freeze({
   "Salva entità": "Save entity",
   "Salva foto": "Save photos",
   "Salva il nuovo veicolo": "Save the new vehicle",
+  "Salva il programma": "Save the schedule",
   "Salva il tasto": "Save the button",
   "Salva il viaggio": "Save trip",
   "Salva impianto": "Save plant",
@@ -7484,7 +7503,7 @@ var SOURCE_INDEX = Object.freeze({
   "Serve almeno una persona nella sezione Persone: è da lì che si sa se in casa c'è qualcuno. Finché non ce n'è nessuna, una telecamera spuntata resterebbe nascosta sempre — e per questo la spunta è spenta.": "At least one person is needed in the People section: that is where “is anybody home” is answered. While there is none, a ticked camera would stay hidden forever — which is why the tick is off.",
   "Serve GdANav Premium.": "GdANav Premium is needed.",
   "serve kWh": "it needs kWh",
-  "serve l'add-on GdAHome": "needs the GdAHome add-on",
+  "Serve l'add-on GdAHome": "Needs the GdAHome add-on",
   "Serve l'add-on GdAHome aggiornato: questa pagina passa da lì.": "This page needs the up-to-date GdAHome add-on.",
   "Serve l'add-on: è la casa a farla partire": "Needs the add-on: the home starts it",
   "Serve riavviare Home Assistant.": "Home Assistant needs a restart.",
@@ -8037,6 +8056,7 @@ var SOURCE_INDEX = Object.freeze({
   "Termica": "Thermal",
   "Termica (benzina, diesel, GPL)": "Combustion (petrol, diesel, LPG)",
   "Termica: la pagina mostra il serbatoio, le portiere e il motore al posto della ricarica. Ibrida: tutti e due. Le caselle del carburante stanno qui sotto, fra le entità dell'auto.": "Combustion: the page shows the tank, the doors and the engine instead of charging. Hybrid: both. The fuel fields are below, among the car's entities.",
+  "Termosifone": "Radiator",
   "Termosifoni": "Radiators",
   "Termosifoni fuori stagione": "Radiators out of season",
   "Termostati": "Thermostats",
@@ -8200,6 +8220,7 @@ var SOURCE_INDEX = Object.freeze({
   "Tutte cariche": "All charged",
   "Tutte in piedi · ${conto.su}": "All up · ${conto.su}",
   "tutte insieme": "all together",
+  "tutte le altre ore": "all the other hours",
   "Tutte le automazioni di Home Assistant, a gruppi": "All of Home Assistant's automations, in groups",
   "Tutte le automazioni di Home Assistant, a gruppi: le crei, le modifichi, le accendi e le spegni. Le esegue Home Assistant, anche con la plancia e l'app chiuse.": "All of Home Assistant's automations, in groups: you create them, edit them, turn them on and off. Home Assistant runs them, even with the dashboard and the app closed.",
   "tutte le competizioni": "all competitions",
@@ -8482,6 +8503,7 @@ var SOURCE_INDEX = Object.freeze({
   "Vale su ogni tablet che apre questa plancia": "Applies to every tablet that opens this dashboard",
   "valore": "value",
   "Valore quando è inserito": "Value when armed",
+  "valvola": "valve",
   "Valvola": "Valve",
   "Valvola (valve) o interruttore (switch); vuota usa valve.chiave_solare_termico": "Valve (valve) or switch (switch); empty uses valve.chiave_solare_termico",
   "valvola ${aperta}": "valve ${aperta}",
@@ -8545,6 +8567,7 @@ var SOURCE_INDEX = Object.freeze({
   "verso la casa": "to the house",
   "verso le ${ora}": "around ${ora}",
   "Verticale": "Portrait",
+  "Verticali": "Vertical",
   "Vestito": "Outfit",
   "Vetro": "Glass",
   "Via Roma 12": "12 Main Street",
@@ -72845,6 +72868,11 @@ function rigaClima(states, unit) {
      * il modello si limita a portarli in riga invece di farli cercare a
      * chi disegna. */
     modi: elenco18(attributi2.hvac_modes),
+    /* I preset (`preset_modes`): Eco, Notte, Fuori casa… Non sono modalita'
+     * — Home Assistant li comanda con un servizio suo — e nella finestra
+     * stanno su una riga a parte. */
+    presets: elenco18(attributi2.preset_modes),
+    preset: clean(attributi2.preset_mode),
     ventole: elenco18(attributi2.fan_modes),
     ventola: clean(attributi2.fan_mode),
     /* Le alette (#475): «oltre la modalita temperature etc... poter
@@ -76879,18 +76907,205 @@ function gradiDellaCoppia(obiettivi) {
     return `${gradi13(obiettivi.basso)}–${gradi13(obiettivi.alto)}°`;
   return obiettiviScritti(obiettivi, (valore3) => formatNumber(valore3, 1));
 }
-function climatePanelMarkup(entity2) {
+var ORDINE_DEI_MODI = ["off", "heat", "cool", "heat_cool", "auto", "dry", "fan_only"];
+function modiInOrdine(modi) {
+  const noti = ORDINE_DEI_MODI.filter((m) => modi.includes(m));
+  return [...noti, ...modi.filter((m) => !ORDINE_DEI_MODI.includes(m))];
+}
+var conLaMaiuscola = (testo5) => {
+  const pulito76 = clean(testo5).replace(/_/g, " ");
+  return pulito76 ? pulito76[0].toLocaleUpperCase() + pulito76.slice(1) : pulito76;
+};
+var NOMI_BREVI_DEL_MODO = () => ({
+  off: t("Spento", "Off"),
+  heat: t("Caldo", "Heat"),
+  cool: t("Freddo", "Cool"),
+  heat_cool: t("Caldo e freddo", "Heat & cool"),
+  auto: t("Auto", "Auto"),
+  dry: t("Deumidifica", "Dry"),
+  fan_only: t("Ventola", "Fan"),
+  sleep: t("Notte", "Sleep"),
+  eco: t("Eco", "Eco")
+});
+var NOMI_DEI_PRESET = () => ({
+  none: t("Nessuno", "None"),
+  eco: t("Eco", "Eco"),
+  away: t("Fuori casa", "Away"),
+  boost: t("Boost", "Boost"),
+  comfort: t("Comfort", "Comfort"),
+  home: t("In casa", "Home"),
+  sleep: t("Notte", "Sleep"),
+  activity: t("Attività", "Activity")
+});
+var NOMI_DELLE_VENTOLE = () => ({
+  auto: t("Auto", "Auto"),
+  low: t("Bassa", "Low"),
+  medium: t("Media", "Medium"),
+  middle: t("Media", "Medium"),
+  mid: t("Media", "Medium"),
+  high: t("Alta", "High"),
+  quiet: t("Silenziosa", "Quiet"),
+  silence: t("Silenziosa", "Quiet"),
+  turbo: t("Turbo", "Turbo"),
+  top: t("Massima", "Max"),
+  diffuse: t("Diffusa", "Diffuse"),
+  focus: t("Mirata", "Focus"),
+  on: t("Accesa", "On"),
+  off: t("Spenta", "Off")
+});
+var NOMI_DELLE_ALETTE = () => ({
+  off: t("Ferme", "Fixed"),
+  on: t("In movimento", "Swinging"),
+  auto: t("Auto", "Auto"),
+  vertical: t("Verticali", "Vertical"),
+  horizontal: t("Orizzontali", "Horizontal"),
+  both: t("Entrambe", "Both")
+});
+var parolaDa = (tabella) => (chiave2) => tabella()[clean(chiave2).toLowerCase()] || conLaMaiuscola(chiave2);
+var nomeDelModo3 = parolaDa(NOMI_BREVI_DEL_MODO);
+var nomeDelPreset = parolaDa(NOMI_DEI_PRESET);
+var nomeDellaVentola = parolaDa(NOMI_DELLE_VENTOLE);
+var nomeDellAletta = parolaDa(NOMI_DELLE_ALETTE);
+function tonoDelModo(modo, tipo = "") {
+  const m = clean(modo).toLowerCase();
+  if (m === "off" || !m) return "spento";
+  if (m === "heat") return "caldo";
+  if (m === "cool") return "freddo";
+  if (m === "heat_cool" || m === "auto") return "auto";
+  if (m === "dry") return "secco";
+  if (m === "fan_only") return "ventola";
+  if (m === "sleep" || m === "night") return "notte";
+  return tipo === "clima" ? "freddo" : tipo ? "caldo" : "auto";
+}
+function statoDellaFinestra(riga5) {
+  const azione = clean(riga5?.azione).toLowerCase();
+  const modo = clean(riga5?.mode).toLowerCase();
+  const acceso7 = Boolean(riga5?.acceso || riga5?.on);
+  if (!acceso7 || azione === "off") return { verso: "spento", tono: "spento", parola: t("Spento", "Off") };
+  const dalModo = tonoDelModo(modo, riga5?.tipo);
+  if (azione === "heating") return { verso: "caldo", tono: "caldo", parola: t("Scalda", "Heating") };
+  if (azione === "cooling") return { verso: "freddo", tono: "freddo", parola: t("Raffresca", "Cooling") };
+  if (azione === "drying") return { verso: "secco", tono: "secco", parola: t("Deumidifica", "Drying") };
+  if (azione === "fan") return { verso: "ventola", tono: "ventola", parola: t("Ventila", "Fan") };
+  if (azione === "idle")
+    return { verso: "attesa", tono: dalModo, parola: t("In attesa", "Idle") };
+  if (modo === "heat") return { verso: "caldo", tono: "caldo", parola: t("Riscaldamento", "Heating") };
+  if (modo === "cool") return { verso: "freddo", tono: "freddo", parola: t("Raffrescamento", "Cooling") };
+  return { verso: "acceso", tono: dalModo, parola: nomeDelModo3(modo) || t("Acceso", "On") };
+}
+function potenzaDellaFinestra(riga5) {
+  const modi = riga5?.modi || [];
+  if (modi.includes("off") && modi.some((m) => m !== "off")) return "via";
+  return riga5?.acceso ? "spegni" : "accendi";
+}
+var GLIFI_DEL_MODO = Object.freeze({
+  spento: '<path d="M12 3.5v7.5"/><path d="M6.6 7a7.5 7.5 0 1 0 10.8 0"/>',
+  caldo: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4.1 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+  freddo: '<path d="M12 2.8v18.4M4 7.4l16 9.2M4 16.6l16-9.2"/><path d="M9.4 4.6 12 6.2l2.6-1.6M9.4 19.4 12 17.8l2.6 1.6"/>',
+  auto: '<path d="M19.4 13.5A7.6 7.6 0 0 1 6 17.3M4.6 10.5A7.6 7.6 0 0 1 18 6.7"/><path d="M18.4 3v4h-4M5.6 21v-4h4"/>',
+  secco: '<path d="M12 3.4s6.2 6.6 6.2 10.8a6.2 6.2 0 0 1-12.4 0C5.8 10 12 3.4 12 3.4z"/>',
+  ventola: '<circle cx="12" cy="12" r="1.7"/><path d="M12 10.3C11.4 6 12.6 3 15.4 3.3c2.5.3 2.4 3.6-1.9 6.4M13.7 12c4.3-.6 7.3.6 7 3.4-.3 2.5-3.6 2.4-6.4-1.9M12 13.7c.6 4.3-.6 7.3-3.4 7-2.5-.3-2.4-3.6 1.9-6.4M10.3 12C6 12.6 3 11.4 3.3 8.6c.3-2.5 3.6-2.4 6.4 1.9"/>',
+  notte: '<path d="M20 14.6A8.2 8.2 0 1 1 9.4 4a6.6 6.6 0 0 0 10.6 10.6z"/>'
+});
+function glifoDelModo2(tono) {
+  return `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${GLIFI_DEL_MODO[tono] || GLIFI_DEL_MODO.auto}</svg>`;
+}
+var GLIFO_GOCCIA = '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.4s6.2 6.6 6.2 10.8a6.2 6.2 0 0 1-12.4 0C5.8 10 12 3.4 12 3.4z"/></svg>';
+var GLIFO_TERMOMETRO = '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13.5V5a2 2 0 1 1 4 0v8.5a4 4 0 1 1-4 0z"/></svg>';
+var GLIFO_VALVOLA = '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6M20 9v6M4 12h16M12 12V6M9 6h6"/></svg>';
+function chipDellaFinestra(voce3, scelta3, campo6, nome, entity2) {
+  return `<button type="button" class="dm-w-chip dm-cpf-chip" ${campo6}="${esc(voce3)}"
+               data-dm-w-target="${esc(entity2)}" data-on="${voce3 === scelta3}" aria-pressed="${voce3 === scelta3}">${esc(nome(voce3))}</button>`;
+}
+function chipsDellaFinestra(etichetta3, voci4, scelta3, campo6, nome, entity2, prima = "") {
+  if (!voci4?.length && !prima) return "";
+  return `<div class="dm-w-panel-row dm-cpf-riga">
+      <span class="dm-w-panel-lbl">${esc(etichetta3)}</span>
+      <div class="dm-w-chips dm-cpf-chips">${prima}${(voci4 || []).map((voce3) => chipDellaFinestra(voce3, scelta3, campo6, nome, entity2)).join("")}</div>
+    </div>`;
+}
+function oraDellaFinestraMarkup(riga5) {
+  const stato3 = statoDellaFinestra(riga5);
+  const misure = [
+    riga5.ambient == null ? "" : `<span class="dm-cpf-misura" data-dm-cpf-ambiente>${GLIFO_TERMOMETRO}<b>${esc(`${formatNumber(riga5.ambient, 1)}°`)}</b><small>${esc(t("in stanza", "in the room"))}</small></span>`,
+    riga5.umidita == null ? "" : `<span class="dm-cpf-misura" data-dm-cpf-umidita>${GLIFO_GOCCIA}<b>${esc(`${Math.round(riga5.umidita)}%`)}</b><small>${esc(t("umidità", "humidity"))}</small></span>`,
+    riga5.valvola === null || riga5.valvola === void 0 ? "" : `<span class="dm-cpf-misura" data-dm-cpf-valvola>${GLIFO_VALVOLA}<b>${esc(typeof riga5.valvola === "number" ? `${riga5.valvola}%` : "—")}</b><small>${esc(t("valvola", "valve"))}</small></span>`
+  ].join("");
+  return `<span class="dm-cpf-stato" data-dm-cpf-verso="${stato3.verso}" data-tono="${stato3.tono}"><i aria-hidden="true"></i>${esc(stato3.parola)}</span>${misure ? `<span class="dm-cpf-misure">${misure}</span>` : ""}`;
+}
+function colonneDeiModi(quanti4) {
+  if (quanti4 <= 4) return Math.max(1, quanti4);
+  if (quanti4 <= 6) return 3;
+  return 4;
+}
+var modiDelSegmentato = (modi) => modiInOrdine(modi || []).filter((m) => ORDINE_DEI_MODI.includes(m));
+var modiComePreset = (modi) => (modi || []).filter((m) => !ORDINE_DEI_MODI.includes(m));
+function modiDellaFinestraMarkup(riga5) {
+  const modi = modiDelSegmentato(riga5.modi);
+  if (!modi.length) return "";
+  const corrente2 = clean(riga5.mode).toLowerCase();
+  const bottoni = modi.map((modo) => {
+    const tono = tonoDelModo(modo, riga5.tipo);
+    const scelto = modo === corrente2;
+    return `<button type="button" class="dm-cpf-modo" data-dm-w-mode="${esc(modo)}" data-dm-w-target="${esc(riga5.entity)}"
+          data-on="${scelto}" aria-pressed="${scelto}" data-tono="${tono}">${glifoDelModo2(tono)}<span>${esc(nomeDelModo3(modo))}</span></button>`;
+  }).join("");
+  return `<div class="dm-w-panel-row dm-cpf-riga dm-cpf-riga-modi">
+      <span class="dm-w-panel-lbl">${esc(t("Modalità", "Mode"))}</span>
+      <div class="dm-cpf-modi" role="group" aria-label="${esc(t("Modalità", "Mode"))}" style="--colonne:${colonneDeiModi(modi.length)}">${bottoni}</div>
+    </div>`;
+}
+function climaDellaFinestra(entity2) {
   const chiave2 = clean(entity2);
-  if (!chiave2) return "";
+  if (!chiave2) return null;
   let unita3 = [];
   try {
     unita3 = readClimateUnits();
   } catch (_error) {
-    return "";
+    return null;
   }
-  const states = allStates();
-  const riga5 = unita3.map((voce3) => rigaClima(states, voce3)).find((voce3) => voce3 && voce3.entity === chiave2);
-  return riga5 ? climatePanel(riga5, true) : "";
+  const riga5 = unita3.map((voce3) => rigaClima(allStates(), voce3)).find((voce3) => voce3 && voce3.entity === chiave2);
+  if (!riga5) return null;
+  const presets = riga5.presets.length > 1 ? riga5.presets : [];
+  const pannello = [
+    riga5.obiettivi?.doppio ? obiettiviDoppiMarkup(riga5) : "",
+    modiDellaFinestraMarkup(riga5),
+    chipsDellaFinestra(
+      t("Preset", "Preset"),
+      presets,
+      riga5.preset,
+      "data-dm-w-preset",
+      nomeDelPreset,
+      riga5.entity,
+      modiComePreset(riga5.modi).map((modo) => chipDellaFinestra(modo, clean(riga5.mode).toLowerCase(), "data-dm-w-mode", nomeDelModo3, riga5.entity)).join("")
+    ),
+    chipsDellaFinestra(t("Ventola", "Fan"), riga5.ventole, riga5.ventola, "data-dm-w-fan", nomeDellaVentola, riga5.entity),
+    chipsDellaFinestra(
+      riga5.alette?.length && riga5.aletteOrizzontali?.length ? t("Alette verticali", "Vertical swing") : t("Alette", "Swing"),
+      riga5.alette,
+      riga5.aletta,
+      "data-dm-w-swing",
+      nomeDellAletta,
+      riga5.entity
+    ),
+    chipsDellaFinestra(
+      t("Alette orizzontali", "Horizontal swing"),
+      riga5.aletteOrizzontali,
+      riga5.alettaOrizzontale,
+      "data-dm-w-swing-h",
+      nomeDellAletta,
+      riga5.entity
+    )
+  ].join("");
+  const stato3 = statoDellaFinestra(riga5);
+  return {
+    riga: riga5,
+    ora: oraDellaFinestraMarkup(riga5),
+    pannello: pannello ? `<div class="dm-w-panel dm-w-panel-solo dm-cpf" data-dm-w-panel="${esc(riga5.entity)}">${pannello}</div>` : "",
+    tono: stato3.verso === "spento" ? tonoDelModo(riga5.modi?.find((m) => m !== "off") || "", riga5.tipo) : stato3.tono,
+    acceso: stato3.verso !== "spento",
+    potenza: potenzaDellaFinestra(riga5)
+  };
 }
 function climateDetail(widget) {
   const righe3 = inOrdineFermo("clima", widget.rows, (row) => clean(row.entity), accesePrima);
@@ -78592,6 +78807,16 @@ function onClick9(event) {
     callHa("climate", "set_fan_mode", {
       entity_id: clean(ventola2.dataset.dmWTarget),
       fan_mode: clean(ventola2.dataset.dmWFan)
+    });
+    root.setTimeout?.(schedule22, 500);
+    return;
+  }
+  const preset2 = event.target?.closest?.("[data-dm-w-preset]");
+  if (preset2) {
+    event.preventDefault();
+    callHa("climate", "set_preset_mode", {
+      entity_id: clean(preset2.dataset.dmWTarget),
+      preset_mode: clean(preset2.dataset.dmWPreset)
     });
     root.setTimeout?.(schedule22, 500);
     return;
@@ -80606,6 +80831,7 @@ var ICONS3 = Object.freeze({
   power: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><path d="M12 2v10"/></svg>',
   minus: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>',
   plus: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg>',
+  report: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 20h16"/><path d="M7 16v-5M12 16V6M17 16v-8"/></svg>',
   sliders: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 8h16M4 16h16"/><circle cx="9.5" cy="8" r="2.6"/><circle cx="15" cy="16" r="2.6"/></svg>'
 });
 var FAN_LABELS = Object.freeze({
@@ -80896,11 +81122,6 @@ function skeletonMarkup3(labels) {
         <span class="dm-cl-bulk-div" aria-hidden="true"></span>
         <button type="button" data-dm-cl-bulk="off">${ICONS3.power}${esc(labels.allOff)}</button>
       </div>
-      <!-- Il report del riscaldamento e del raffrescamento: lo apre
-           report-del-clima-section.js, che ascolta il tocco su tutta la pagina. -->
-      <button type="button" class="dm-cl-report" data-dm-rcl-apri hidden>
-        <span aria-hidden="true">📊</span><span>${esc(labels.report)}</span>
-      </button>
     </div>
   </div>
 
@@ -80908,7 +81129,15 @@ function skeletonMarkup3(labels) {
     ${zoneButton("freddo", labels)}
     ${zoneButton("caldo", labels)}
     ${zoneButton("termostato", labels)}
+    <!-- Il report: una linguetta della pagina, come il Report dell'Energia.
+         Lo apre report-del-clima-section.js, che ascolta il tocco su tutta
+         la pagina, e si disegna nel posto qui sotto. -->
+    <button type="button" class="clima-page-mode-btn dm-cl-tab dm-cl-tab-report" data-dm-rcl-apri aria-pressed="false" aria-label="${esc(labels.report)}" hidden>
+      <span class="icon dm-cl-tab-ic">${ICONS3.report}</span>
+      <span class="dm-cl-tab-tx">${esc(labels.report)}</span>
+    </button>
   </div>
+  <div data-dm-rcl-posto></div>
 
   <div class="clima-zone clima-zone-freddo show">
     <div class="dm-cl-grid" id="clima-grid-freddo"></div>
@@ -81442,21 +81671,21 @@ function paintValvola(card2, unit, reading) {
   riga5.dataset.dmAperta = String(valvola.aperta);
 }
 function paintSpark(card2, unit, reading) {
-  const svg2 = card2.querySelector("[data-dm-cl-spark]");
-  if (!svg2) return;
+  const svg3 = card2.querySelector("[data-dm-cl-spark]");
+  if (!svg3) return;
   const changed = pushSample(unit.entity, reading.ambient);
   const series = state59.history.get(unit.entity) || [];
   const path = filoFraMinimoEMassimo(series);
   if (!path) {
-    svg2.hidden = true;
+    svg3.hidden = true;
     return;
   }
-  svg2.hidden = false;
-  if (!changed && svg2.dataset.dmClDrawn === String(series.length)) return;
-  svg2.dataset.dmClDrawn = String(series.length);
-  svg2.querySelector(".dm-cl-spark-area")?.setAttribute("d", path.area);
-  svg2.querySelector(".dm-cl-spark-line")?.setAttribute("d", path.line);
-  const end = svg2.querySelector(".dm-cl-spark-end");
+  svg3.hidden = false;
+  if (!changed && svg3.dataset.dmClDrawn === String(series.length)) return;
+  svg3.dataset.dmClDrawn = String(series.length);
+  svg3.querySelector(".dm-cl-spark-area")?.setAttribute("d", path.area);
+  svg3.querySelector(".dm-cl-spark-line")?.setAttribute("d", path.line);
+  const end = svg3.querySelector(".dm-cl-spark-end");
   if (end) {
     end.setAttribute("cx", path.end[0].toFixed(1));
     end.setAttribute("cy", path.end[1].toFixed(1));
@@ -82042,25 +82271,78 @@ function pannelloNellaFinestra(entity2) {
   gradiNellaFinestra(entity2);
   const modalita2 = doc.getElementById("cp-mode-section");
   const ventola2 = doc.getElementById("cp-fan-section");
-  const markup7 = climatePanelMarkup(entity2);
+  const info = climaDellaFinestra(entity2);
+  const markup7 = info?.pannello || "";
   let ospite4 = finestra6.querySelector("[data-dm-cl-panel]");
-  if (!markup7) {
+  if (!info) {
     ospite4?.remove();
+    finestra6.querySelector("[data-dm-cpf-ora]")?.remove();
+    for (const chiave2 of ["dmCpf", "dmCpfTono", "dmCpfAcceso", "dmCpfPotenza"]) delete finestra6.dataset[chiave2];
     for (const nodo3 of [modalita2, ventola2]) nodo3?.style?.removeProperty("display");
     return false;
   }
   for (const nodo3 of [modalita2, ventola2]) nodo3?.style?.setProperty("display", "none", "important");
-  if (!ospite4) {
-    ospite4 = doc.createElement("div");
-    ospite4.setAttribute("data-dm-cl-panel", "");
-    (modalita2 || ventola2)?.before(ospite4);
-    if (!ospite4.isConnected) finestra6.append(ospite4);
-  }
-  scriviSeCambia(ospite4, markup7);
+  if (markup7) {
+    if (!ospite4) {
+      ospite4 = doc.createElement("div");
+      ospite4.setAttribute("data-dm-cl-panel", "");
+      (modalita2 || ventola2)?.before(ospite4);
+      if (!ospite4.isConnected) finestra6.append(ospite4);
+    }
+    scriviSeCambia(ospite4, markup7);
+  } else ospite4?.remove();
+  vestiLaFinestra(finestra6, info);
   intestazioneDellaFinestra(entity2);
   return true;
 }
-var ICONE_CLIMA2 = Object.freeze({ termo: "🔥", pompa: "♨️", clima: "❄️" });
+var GLIFO_MENO = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg>';
+var GLIFO_PIU = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M12 5v14"/></svg>';
+function vestiLaFinestra(finestra6, info) {
+  const insegna2 = (chiave2, valore3) => {
+    if (finestra6.dataset[chiave2] !== valore3) finestra6.dataset[chiave2] = valore3;
+  };
+  insegna2("dmCpf", "1");
+  insegna2("dmCpfTono", info.tono);
+  insegna2("dmCpfAcceso", String(info.acceso));
+  insegna2("dmCpfPotenza", info.potenza);
+  const gradi13 = finestra6.querySelector(".clima-temp-display");
+  if (gradi13) {
+    let ora8 = gradi13.querySelector("[data-dm-cpf-ora]");
+    if (!ora8) {
+      ora8 = doc.createElement("div");
+      ora8.className = "dm-cpf-ora";
+      ora8.setAttribute("data-dm-cpf-ora", "");
+      gradi13.prepend(ora8);
+    }
+    scriviSeCambia(ora8, info.ora);
+    const bottoni = gradi13.querySelectorAll(".clima-temp-btn");
+    bottoni.forEach((bottone, i) => {
+      if (bottone.dataset.dmCpfGlifo) return;
+      bottone.dataset.dmCpfGlifo = "1";
+      bottone.innerHTML = i === 0 ? GLIFO_MENO : GLIFO_PIU;
+      bottone.setAttribute("aria-label", i === 0 ? t("Abbassa", "Lower") : t("Alza", "Raise"));
+    });
+    const sotto = gradi13.querySelector(".clima-temp-unit");
+    const parola = t("Obiettivo", "Target");
+    if (sotto && sotto.textContent !== parola) sotto.textContent = parola;
+  }
+  const acceso7 = doc.getElementById("cp-btn-on");
+  const spegni3 = doc.getElementById("cp-btn-off");
+  if (acceso7 && !acceso7.dataset.dmCpfGlifo) {
+    acceso7.dataset.dmCpfGlifo = "1";
+    acceso7.innerHTML = `${GLIFO_ACCENDI}<span>${esc(t("Accendi", "Turn on"))}</span>`;
+  }
+  if (spegni3 && !spegni3.dataset.dmCpfGlifo) {
+    spegni3.dataset.dmCpfGlifo = "1";
+    spegni3.innerHTML = `${GLIFO_ACCENDI}<span>${esc(t("Spegni", "Turn off"))}</span>`;
+  }
+}
+var GLIFO_ACCENDI = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M12 3.5v7.5"/><path d="M6.6 7a7.5 7.5 0 1 0 10.8 0"/></svg>';
+var NOMI_DEL_TIPO = () => ({
+  termo: t("Termosifone", "Radiator"),
+  pompa: t("Pompa di calore", "Heat pump"),
+  clima: t("Condizionatore", "Air conditioner")
+});
 function intestazioneDellaFinestra(entity2) {
   const chiave2 = clean(entity2);
   const grezza = readClimateUnits().find(
@@ -82070,9 +82352,12 @@ function intestazioneDellaFinestra(entity2) {
   if (!unita3) return false;
   const nome = doc?.getElementById?.("cp-name");
   const stanza2 = doc?.getElementById?.("cp-room");
-  const glifo2 = ICONE_CLIMA2[canonicalClimateType(grezza?.type)] || "🌡️";
-  if (nome && clean(unita3.name)) nome.textContent = unita3.name;
-  if (stanza2) stanza2.textContent = `${glifo2} ${clean(unita3.room) || t("Clima", "Climate")}`;
+  const tipo = NOMI_DEL_TIPO()[canonicalClimateType(grezza?.type)] || t("Clima", "Climate");
+  const nomeScritto = clean(unita3.name);
+  if (nome && nomeScritto) nome.textContent = nomeScritto;
+  const luogo = clean(unita3.room);
+  const nelNome = (parola) => Boolean(parola) && nomeScritto.toLowerCase().includes(parola.toLowerCase());
+  if (stanza2) stanza2.textContent = [nelNome(luogo) ? "" : luogo, nelNome(tipo) ? "" : tipo].filter(Boolean).join(" · ");
   return true;
 }
 function installPannelloDellaFinestra() {
@@ -82252,14 +82537,6 @@ function climateCss() {
 .dm-cl-kpi span{font-size:9px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--dm-cl-dim)}
 .dm-cl-kpi b{font-size:19px;font-weight:800;letter-spacing:-.4px;font-variant-numeric:tabular-nums}
 .dm-cl-kpi b small{font-size:12px;font-weight:700;color:var(--dm-cl-dim);letter-spacing:0}
-.dm-cl-report{
-  display:inline-flex;align-items:center;gap:8px;padding:11px 16px;border:1px solid var(--dm-cl-line);
-  border-radius:16px;background:var(--dm-cl-card);box-shadow:var(--dm-cl-shadow);color:var(--dm-cl-text);
-  font:inherit;font-size:12px;font-weight:800;letter-spacing:.4px;cursor:pointer;transition:color .25s ease
-}
-.dm-cl-report[hidden]{display:none}
-.dm-cl-shell .dm-cl-report span{font-size:12px;font-weight:800;line-height:1}
-.dm-cl-report:hover{color:rgb(var(--dm-cl-zone))}
 .dm-cl-bulk{
   display:flex;align-items:stretch;border:1px solid var(--dm-cl-line);border-radius:16px;
   background:var(--dm-cl-card);box-shadow:var(--dm-cl-shadow);overflow:hidden
@@ -82300,8 +82577,17 @@ function climateCss() {
    vuota in mezzo a due piene — il tasto vuoto restava li'. */
 #page-clima .dm-cl-shell .clima-page-mode-btn[data-dm-cl-empty="true"],
 #page-clima .dm-cl-shell .clima-page-mode-switch.dm-cl-switch .clima-page-mode-btn[data-dm-cl-empty="true"]{display:none!important}
-#page-clima .dm-cl-shell[data-dm-cl-zones="1"] .clima-page-mode-switch,
+#page-clima .dm-cl-shell[data-dm-cl-zones="1"]:not(:has(.dm-cl-tab-report:not([hidden]))) .clima-page-mode-switch,
 #page-clima .dm-cl-shell[data-dm-cl-zones="0"] .clima-page-mode-switch{display:none!important}
+/* La linguetta Report: accanto alle zone, come il Report nell'Energia. Quando
+ * il report e' aperto e' lei la premuta, e la pagina mostra solo la scheda. */
+#page-clima .dm-cl-shell .clima-page-mode-switch.dm-cl-switch .dm-cl-tab-report[hidden]{display:none!important}
+#page-clima .dm-cl-shell .clima-page-mode-switch.dm-cl-switch .dm-cl-tab-report[aria-pressed="true"]{
+  background:var(--dm-cl-text)!important;color:var(--dm-cl-card)!important;box-shadow:0 8px 20px rgba(15,23,42,.22)!important}
+#page-clima .dm-cl-shell[data-dm-rcl-aperto] .clima-page-mode-switch .clima-page-mode-btn:is(#clima-page-mode-freddo,#clima-page-mode-caldo,#clima-page-mode-termostato){
+  background:transparent!important;color:var(--dm-cl-dim)!important;box-shadow:none!important}
+#page-clima .dm-cl-shell[data-dm-rcl-aperto] .clima-page-mode-btn[data-dm-cl-zone] .dm-cl-tab-count{background:var(--dm-cl-sunk)!important;color:var(--dm-cl-dim)!important}
+#page-clima .dm-cl-shell[data-dm-rcl-aperto] :is(.clima-zone,.dm-cl-summary,[data-dm-vmc-posto],[data-dm-deum-posto]){display:none!important}
 .dm-cl-tab-count{
   padding:2px 8px;border-radius:999px;background:var(--dm-cl-sunk);color:var(--dm-cl-dim);
   font-size:10px;font-weight:800;letter-spacing:.4px;font-variant-numeric:tabular-nums
@@ -82560,6 +82846,12 @@ html[data-theme="dark"] .dm-cl-knob{box-shadow:0 3px 8px rgba(0,0,0,.45)}
   #page-clima .dm-cl-shell[data-dm-cl-zones="3"] .clima-page-mode-switch.dm-cl-switch .clima-page-mode-btn{padding:11px 4px!important;gap:5px!important;font-size:10.5px!important;letter-spacing:.3px!important;min-width:0!important}
   #page-clima .dm-cl-shell[data-dm-cl-zones="3"] .clima-page-mode-switch.dm-cl-switch .clima-page-mode-btn .dm-cl-tab-ic{display:none!important}
   #page-clima .dm-cl-shell[data-dm-cl-zones="3"] .dm-cl-tab-count{padding:1px 6px}
+  /* Con tre zone e il Report le linguette sono quattro: il Report resta col
+   * suo disegno e lascia il nome (lo dice l'etichetta per chi non vede). */
+  #page-clima .dm-cl-shell[data-dm-cl-zones="3"] .clima-page-mode-switch.dm-cl-switch .dm-cl-tab-report .dm-cl-tab-ic{display:inline-flex!important}
+  #page-clima .dm-cl-shell[data-dm-cl-zones="3"] .clima-page-mode-switch.dm-cl-switch .dm-cl-tab-report .dm-cl-tab-tx{display:none!important}
+  #page-clima .dm-cl-shell[data-dm-cl-zones="3"] .clima-page-mode-switch.dm-cl-switch{grid-auto-columns:minmax(0,1fr)!important}
+  #page-clima .dm-cl-shell[data-dm-cl-zones="3"] .clima-page-mode-switch.dm-cl-switch .dm-cl-tab-report{max-width:56px!important}
   .dm-cl-summary{width:100%}
   .dm-cl-bulk{flex:1 1 auto}
   .dm-cl-bulk button{flex:1 1 auto;justify-content:center;padding:11px 10px}
@@ -82580,6 +82872,140 @@ html[data-theme="dark"] #cp-temp-val .dm-cl-cp-obj{color:#fb923c}
 html[data-theme="dark"] #cp-temp-val .dm-cl-cp-obj[data-dm-cl-obj="alto"]{color:#38bdf8}
 #cp-temp-val .dm-cl-cp-tra{font-size:.6em;color:var(--text-dim,#64748b)}
 .clima-popup[data-dm-cl-doppio="entrambi"] .clima-temp-btn{visibility:hidden;pointer-events:none}
+
+/* ── La finestra del termostato, rifatta ─────────────────────────────────
+ *
+ * Una gerarchia sola: in cima la stanza e il nome; poi il riquadro dei gradi,
+ * con la riga «adesso» (cosa sta facendo, i gradi in stanza, l'umidita') e
+ * l'obiettivo grande col meno e il piu'; poi la modalita' a segmenti; poi i
+ * preset, la ventola, le alette; in fondo il Programma. Un colore solo per
+ * volta, quello di cosa l'unita' fa: arancio il caldo, azzurro il freddo,
+ * grigio lo spento. Bersagli di almeno 44 punti sotto il dito. */
+#clima-popup-overlay .clima-popup[data-dm-cpf]{
+  --cpf-acc:#ea580c;--cpf-testo:var(--text,#0f172a);--cpf-dim:var(--text-dim,#64748b);
+  --cpf-linea:var(--card-border,#e5eaf1);--cpf-fondo:var(--card-bg,#fff);--cpf-tenue:var(--surface-2,#f5f7fa);
+  padding:20px 18px 18px;border-radius:28px;max-width:480px}
+#clima-popup-overlay .clima-popup[data-dm-cpf] :is([data-tono],[data-dm-cpf-tono]){--tono:var(--cpf-acc)}
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="caldo"],#clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="caldo"]{--cpf-acc:#ea580c;--tono:#ea580c}
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="freddo"],#clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="freddo"]{--cpf-acc:#0284c7;--tono:#0284c7}
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="spento"],#clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="spento"]{--cpf-acc:#64748b;--tono:#64748b}
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="auto"],#clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="auto"]{--cpf-acc:#7c3aed;--tono:#7c3aed}
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="secco"],#clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="secco"]{--cpf-acc:#0f766e;--tono:#0f766e}
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="ventola"],#clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="ventola"]{--cpf-acc:#0e7490;--tono:#0e7490}
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="notte"],#clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="notte"]{--cpf-acc:#4f46e5;--tono:#4f46e5}
+html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="caldo"],html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="caldo"]{--cpf-acc:#fb923c;--tono:#fb923c}
+html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="freddo"],html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="freddo"]{--cpf-acc:#38bdf8;--tono:#38bdf8}
+html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="spento"],html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="spento"]{--cpf-acc:#94a3b8;--tono:#94a3b8}
+html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="auto"],html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="auto"]{--cpf-acc:#a78bfa;--tono:#a78bfa}
+html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="secco"],html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="secco"]{--cpf-acc:#2dd4bf;--tono:#2dd4bf}
+html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="ventola"],html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="ventola"]{--cpf-acc:#22d3ee;--tono:#22d3ee}
+html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="notte"],html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="notte"]{--cpf-acc:#818cf8;--tono:#818cf8}
+
+/* La testa: la stanza piccola, il nome grande, e la X che non li tocca. */
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-popup-close{
+  top:14px;right:14px;width:44px;height:44px;border-radius:14px;font-size:15px;
+  background:var(--cpf-tenue);border:1px solid var(--cpf-linea);color:var(--cpf-dim)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] #cp-room{
+  margin:2px 56px 2px 2px;font-size:12.5px;font-weight:700;letter-spacing:0;text-transform:none;
+  color:var(--cpf-dim);gap:0;min-height:16px}
+#clima-popup-overlay .clima-popup[data-dm-cpf] #cp-room:empty{min-height:8px;margin-bottom:0}
+#clima-popup-overlay .clima-popup[data-dm-cpf] #cp-name{
+  margin:0 56px 16px 2px;font-size:26px;line-height:1.15;letter-spacing:.2px;overflow-wrap:anywhere}
+
+/* Il riquadro dei gradi. */
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-display{
+  display:grid;grid-template-columns:56px minmax(0,1fr) 56px;
+  grid-template-areas:"ora ora ora" "meno val piu";align-items:center;gap:16px 8px;
+  margin:0 0 18px;padding:14px 14px 18px;border-radius:24px;
+  border:1px solid color-mix(in srgb,var(--cpf-acc) 22%,var(--cpf-linea));
+  background:linear-gradient(180deg,color-mix(in srgb,var(--cpf-acc) 10%,var(--cpf-fondo)),color-mix(in srgb,var(--cpf-acc) 3%,var(--cpf-fondo)))}
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-acceso="false"] .clima-temp-display{
+  border-color:var(--cpf-linea);background:var(--cpf-tenue)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-ora{
+  grid-area:ora;display:flex;align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap;min-width:0}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-btn{
+  width:56px;height:56px;border-radius:18px;border:1px solid var(--cpf-linea);background:var(--cpf-fondo);
+  color:var(--cpf-testo);box-shadow:0 2px 6px rgba(15,23,42,.07);font-size:0}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-btn:first-of-type{grid-area:meno}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-btn:last-of-type{grid-area:piu}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-btn:hover{
+  border-color:color-mix(in srgb,var(--cpf-acc) 55%,var(--cpf-linea));background:var(--cpf-fondo);color:var(--cpf-acc);transform:none}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-btn:active{transform:scale(.95)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-btn:focus-visible{outline:2px solid var(--cpf-acc);outline-offset:2px}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-center{grid-area:val;text-align:center;min-width:0}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-val{
+  font-size:64px;line-height:.95;font-variant-numeric:tabular-nums;color:var(--cpf-testo)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-unit{
+  margin-top:6px;font-size:12.5px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--cpf-dim)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] #cp-temp-curr{display:none}
+
+/* «Adesso»: lo stato colorato a sinistra, le misure a destra. */
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-stato{
+  display:inline-flex;align-items:center;gap:7px;min-height:30px;padding:0 12px 0 10px;border-radius:999px;
+  font-size:13px;font-weight:800;color:var(--tono);background:color-mix(in srgb,var(--tono) 14%,transparent);white-space:nowrap}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-stato i{
+  width:8px;height:8px;border-radius:50%;background:var(--tono);box-shadow:0 0 0 3px color-mix(in srgb,var(--tono) 22%,transparent)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-stato:is([data-dm-cpf-verso="spento"],[data-dm-cpf-verso="attesa"]){
+  color:var(--cpf-dim);background:color-mix(in srgb,var(--cpf-dim) 12%,transparent)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-stato[data-dm-cpf-verso="spento"] i{background:var(--cpf-dim);box-shadow:none}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-stato[data-dm-cpf-verso="attesa"] i{background:transparent;box-shadow:inset 0 0 0 2px var(--tono)}
+@media (prefers-reduced-motion:no-preference){
+  #clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-stato:is([data-dm-cpf-verso="caldo"],[data-dm-cpf-verso="freddo"],[data-dm-cpf-verso="secco"],[data-dm-cpf-verso="ventola"]) i{animation:dm-cpf-respira 2.4s ease-in-out infinite}
+}
+@keyframes dm-cpf-respira{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--tono) 8%,transparent)}}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-misure{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-misura{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;color:var(--cpf-dim)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-misura b{font-size:15px;font-weight:800;color:var(--cpf-testo);font-variant-numeric:tabular-nums}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-misura small{font-size:11.5px;font-weight:600}
+
+/* Il pannello sotto: niente card dentro la card, solo righe ben spaziate. */
+#clima-popup-overlay .clima-popup[data-dm-cpf] [data-dm-cl-panel]{margin:0 0 4px}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-w-panel.dm-cpf{
+  display:flex;flex-direction:column;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;gap:16px}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf .dm-w-panel-row{flex-direction:column;align-items:stretch;gap:8px}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf .dm-w-panel-lbl{
+  flex:none;margin:0 2px;font-size:12.5px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--cpf-dim)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-modi{
+  display:grid;grid-template-columns:repeat(var(--colonne,3),minmax(0,1fr));grid-auto-rows:58px;gap:4px;padding:4px;border-radius:18px;
+  background:var(--cpf-tenue);border:1px solid var(--cpf-linea)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-modo{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;height:58px;padding:6px 4px;
+  border:0;border-radius:14px;background:transparent;color:var(--cpf-dim);font:inherit;font-size:12px;font-weight:750;
+  line-height:1.15;text-align:center;cursor:pointer;transition:background .15s ease,color .15s ease,box-shadow .15s ease}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-modo span{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-modo:hover{color:var(--cpf-testo)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-modo[data-on="true"]{
+  color:var(--tono);background:var(--cpf-fondo);
+  box-shadow:0 1px 3px rgba(15,23,42,.10),inset 0 0 0 1.5px color-mix(in srgb,var(--tono) 55%,transparent)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-modo:focus-visible,
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-chip:focus-visible{outline:2px solid var(--cpf-acc);outline-offset:2px}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-chips{gap:6px}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-chip{
+  min-height:44px;padding:0 15px;border-radius:14px;border:1px solid var(--cpf-linea);background:var(--cpf-fondo);
+  color:var(--cpf-testo);font-size:13px;font-weight:700;box-shadow:none}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-chip[data-on="true"]{
+  color:var(--cpf-acc);border-color:color-mix(in srgb,var(--cpf-acc) 60%,transparent);
+  background:color-mix(in srgb,var(--cpf-acc) 12%,var(--cpf-fondo));box-shadow:none}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf .dm-w-stepper{align-self:flex-start;padding:3px;border-radius:14px}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf .dm-w-stepper button{width:44px;height:40px;border-radius:11px;font-size:18px}
+
+/* I due bottoni di accensione del guscio: via quando c'e' la modalita'
+ * Spento fra i segmenti; altrimenti uno solo, quello che serve. */
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-power-row{margin:16px 0 0;gap:0}
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-potenza="via"] .clima-power-row{display:none}
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-potenza="accendi"] #cp-btn-off,
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-potenza="spegni"] #cp-btn-on{display:none}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-pwr-btn{
+  min-height:48px;padding:0 16px;border-radius:16px;border:1px solid var(--cpf-linea);background:var(--cpf-fondo);
+  color:var(--cpf-testo);font-size:14.5px;font-weight:800;letter-spacing:0;text-transform:none;box-shadow:none;opacity:1!important;transform:none}
+#clima-popup-overlay .clima-popup[data-dm-cpf] #cp-btn-on{background:var(--cpf-acc);border-color:transparent;color:#fff}
+html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf] #cp-btn-on{color:#0b1220}
+@media (max-width:380px){
+  #clima-popup-overlay .clima-popup[data-dm-cpf]{padding:18px 14px 16px}
+  #clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-display{grid-template-columns:52px minmax(0,1fr) 52px;padding:12px 12px 16px}
+  #clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-btn{width:52px;height:52px}
+  #clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-val{font-size:56px}
+}
 
 /* La ventilazione meccanica vive in questa pagina, quindi il suo vestito entra
  * nello stesso foglio: due fogli per una pagina sola sarebbero due posti in cui
@@ -82698,7 +83124,7 @@ var nomeBlocco = (blocco3) => {
   return voce3 ? t(voce3[0], voce3[1]) : blocco3.key;
 };
 var iconaBlocco = (blocco3) => BLOCK_LABELS[blocco3.key]?.[2] || "•";
-var ICONE_CLIMA3 = Object.freeze({ termo: "🔥", pompa: "♨️", clima: "❄️" });
+var ICONE_CLIMA2 = Object.freeze({ termo: "🔥", pompa: "♨️", clima: "❄️" });
 var UN_GLIFO = /[^\u0000-\u007f]/;
 var segnoScelto = (item) => {
   const scritta = clean(item?.emoji_icon) || clean(item?.icon);
@@ -82777,7 +83203,7 @@ function glifoDellaVoce(item) {
 function iconaVoce(item, blocco3) {
   const propria = segnoScelto(item);
   if (propria) return propria;
-  if (blocco3.key === "clima") return ICONE_CLIMA3[canonicalClimateType(item?.type)] || "❄️";
+  if (blocco3.key === "clima") return ICONE_CLIMA2[canonicalClimateType(item?.type)] || "❄️";
   if (blocco3.key === "elettrodomestici")
     return applianceGlyph(item?.visual_key) || applianceGlyph(item?.device_type) || applianceGlyph(item?.type) || applianceGlyph(item?.name) || iconaBlocco(blocco3);
   if (blocco3.key === "altro") return glifoDellaVoce(item) || iconaBlocco(blocco3);
@@ -86572,14 +86998,14 @@ function ensureBubble(stage, node, period, scale) {
   bindNodeClick(element5, node, period);
   return element5;
 }
-function ensureArc(svg2, node, variant) {
-  if (!svg2) return null;
-  let path = svg2.querySelector(`[data-dm-flow-arc="${cssEscape(node.id)}"]`);
+function ensureArc(svg3, node, variant) {
+  if (!svg3) return null;
+  let path = svg3.querySelector(`[data-dm-flow-arc="${cssEscape(node.id)}"]`);
   if (!path) {
     path = doc.createElementNS(SVG_NS, "path");
     path.dataset.dmFlowArc = node.id;
     path.classList.add("flow-line", "dm-flow-arc");
-    svg2.append(path);
+    svg3.append(path);
   }
   const geometry = variant === "mobile" ? node.mobile : node.desktop;
   if (path.getAttribute("d") !== geometry.path) path.setAttribute("d", geometry.path);
@@ -114762,10 +115188,15 @@ function fasciaNuova(giornata) {
 }
 function coloreDeiGradi2(gradi13) {
   const p = Math.max(0, Math.min(1, (Number(gradi13) - 16) / 7));
-  return `color-mix(in oklab, #f97316 ${Math.round(p * 100)}%, #38bdf8)`;
+  return `color-mix(in oklab, #ea580c ${Math.round(p * 100)}%, #fcd34d)`;
 }
 var oraDetta2 = (minuti2) => `${String(Math.floor(minuti2 / 60)).padStart(2, "0")}:${String(minuti2 % 60).padStart(2, "0")}`;
 var gradiDetti = (g) => `${Number(g).toLocaleString(locale(), { maximumFractionDigits: 1 })}°`;
+var svg2 = (corpo6, misura8 = 18) => `<svg viewBox="0 0 24 24" width="${misura8}" height="${misura8}" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${corpo6}</svg>`;
+var GLIFO_CALENDARIO = svg2('<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>', 20);
+var GLIFO_CESTINO = svg2('<path d="M4.5 7h15M9.5 7V4.8h5V7M6.5 7l.8 12.2a1.8 1.8 0 0 0 1.8 1.6h5.8a1.8 1.8 0 0 0 1.8-1.6L17.5 7M10 11v6M14 11v6"/>');
+var GLIFO_GIU2 = svg2('<path d="m6 9 6 6 6-6"/>');
+var GLIFO_PIU2 = svg2('<path d="M12 5v14M5 12h14"/>', 16);
 var fusoDiCasa = () => clean(root.__HASS__?.config?.time_zone) || clean(root.hass?.config?.time_zone) || clean(casa().ponte?.fuso);
 var oraDiCasa = () => orologioNelFuso(Date.now(), fusoDiCasa());
 var casa = () => statoDelleAutomazioni();
@@ -114795,11 +115226,21 @@ function laBozza() {
   state108.bozzaDa = firma2;
   return state108.bozza;
 }
+function adessoSullaBarra() {
+  const ora8 = new Date(oraDiCasa());
+  const festivo = ora8.getDay() === 0 || ora8.getDay() === 6;
+  if (state108.giorno === "festivi" !== festivo) return null;
+  return ora8.getHours() * 60 + ora8.getMinutes();
+}
 function barraMarkup4(giornata, fuori) {
-  const pezzi = giornata.map(
-    (f) => `<i style="left:${f.da / 1440 * 100}%;width:${(f.a - f.da) / 1440 * 100}%;--g:${coloreDeiGradi2(f.gradi)}" title="${esc(`${oraDetta2(f.da)}–${oraDetta2(f.a)} · ${gradiDetti(f.gradi)}`)}"><b>${esc(gradiDetti(f.gradi))}</b></i>`
-  ).join("");
-  return `<div class="dm-prg-barra" style="--fuori:${coloreDeiGradi2(fuori)}">${pezzi}</div><div class="dm-prg-ore"><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div>`;
+  const pezzi = giornata.map((f) => {
+    const largo = (f.a - f.da) / 1440;
+    return `<i style="left:${f.da / 1440 * 100}%;width:${largo * 100}%;--g:${coloreDeiGradi2(f.gradi)}" title="${esc(`${oraDetta2(f.da)}–${oraDetta2(f.a)} · ${gradiDetti(f.gradi)}`)}">${largo >= 0.07 ? `<b>${esc(gradiDetti(f.gradi))}</b>` : ""}</i>`;
+  }).join("");
+  const adesso2 = adessoSullaBarra();
+  const segno5 = adesso2 === null ? "" : `<span class="dm-prg-adesso" style="left:${adesso2 / 1440 * 100}%" title="${esc(`${t("Adesso", "Now")} · ${oraDetta2(adesso2)}`)}"></span>`;
+  const ore3 = [0, 6, 12, 18, 24].map((h) => `<span style="left:${h / 24 * 100}%">${h}</span>`).join("");
+  return `<div class="dm-prg-scala"><div class="dm-prg-barra" style="--fuori:${coloreDeiGradi2(fuori)}">${pezzi}${segno5}</div><div class="dm-prg-ore" aria-hidden="true">${ore3}</div></div>`;
 }
 function orarioMarkup(i, chi, valore3, minimo, massimo) {
   const opzioni2 = [];
@@ -114814,7 +115255,7 @@ function fasceMarkup(giornata) {
     (f, i) => `<div class="dm-prg-fascia" style="--g:${coloreDeiGradi2(f.gradi)}">
   <span class="dm-prg-orari">${orarioMarkup(i, "da", f.da, 0, 1410)}<span class="dm-prg-trattino" aria-hidden="true">–</span>${orarioMarkup(i, "a", f.a, 30, 1440)}</span>
   <span class="dm-prg-destra"><span class="dm-prg-gradi"><button type="button" data-dm-prg-gradi="${i}:-0.5" aria-label="−">−</button><b>${esc(gradiDetti(f.gradi))}</b><button type="button" data-dm-prg-gradi="${i}:0.5" aria-label="+">+</button></span>
-  <button type="button" class="dm-prg-via" data-dm-prg-via="${i}" aria-label="${esc(t("Togli la fascia", "Remove the slot"))}">🗑</button></span>
+  <button type="button" class="dm-prg-via" data-dm-prg-via="${i}" aria-label="${esc(t("Togli la fascia", "Remove the slot"))}" title="${esc(t("Togli la fascia", "Remove the slot"))}">${GLIFO_CESTINO}</button></span>
 </div>`
   ).join("");
 }
@@ -114830,15 +115271,24 @@ function prossimoDetto(crono2) {
   return stessoGiorno6 ? t(`alle ${ora8} → ${gradi13}`, `at ${ora8} → ${gradi13}`) : t(`domani alle ${ora8} → ${gradi13}`, `tomorrow at ${ora8} → ${gradi13}`);
 }
 function statoDetto(voce3, bozza3) {
-  if (casa().assente) return t("serve l'add-on GdAHome", "needs the GdAHome add-on");
-  if (!voce3) return t("non c'è ancora", "not set yet");
-  if (voce3.attiva === false) return t("sospeso", "paused");
-  return prossimoDetto(bozza3) || t("attivo", "active");
+  if (casa().assente) return { testo: t("Serve l'add-on GdAHome", "Needs the GdAHome add-on"), tono: "spento" };
+  if (!voce3) return { testo: t("Non attivo", "Not active"), tono: "spento" };
+  if (voce3.attiva === false) return { testo: t("Sospeso", "Paused"), tono: "sospeso" };
+  const prossimo = prossimoDetto(bozza3);
+  return {
+    testo: prossimo ? t(`Attivo · ${prossimo}`, `Active · ${prossimo}`) : t("Attivo", "Active"),
+    tono: "attivo"
+  };
+}
+function testaMarkup10(stato3) {
+  return `<button type="button" class="dm-prg-testa" data-dm-prg-apri aria-expanded="${state108.aperto}"><span class="dm-prg-ic" aria-hidden="true">${GLIFO_CALENDARIO}</span><span class="dm-prg-tit">${esc(t("Programma", "Schedule"))}</span><span class="dm-prg-stato" data-tono="${stato3.tono}">${esc(stato3.testo)}</span><span class="dm-prg-freccia" aria-hidden="true">${GLIFO_GIU2}</span></button>`;
 }
 function programmaMarkup() {
   if (!casaHaRisposto()) {
     const guasto = clean(casa().erroreLettura);
-    const testa3 = `<button type="button" class="dm-prg-testa" data-dm-prg-apri aria-expanded="${state108.aperto}"><span class="dm-prg-tit">🗓️ ${esc(t("Programma", "Schedule"))}</span><span class="dm-prg-stato">${esc(guasto ? t("non letto", "not read") : t("leggo…", "reading…"))}</span><span class="dm-prg-freccia" aria-hidden="true">▾</span></button>`;
+    const testa3 = testaMarkup10(
+      guasto ? { testo: t("Non letto", "Not read"), tono: "errore" } : { testo: t("Leggo…", "Reading…"), tono: "spento" }
+    );
     if (!state108.aperto) return testa3;
     return guasto ? `${testa3}<div class="dm-prg-corpo"><p class="dm-prg-errore" role="alert">${esc(
       t(
@@ -114855,7 +115305,10 @@ function programmaMarkup() {
   const altri = programmiDelTermostato(elenco18, state108.entita).length - (voce3 ? 1 : 0) + comandano.length - (illeggibile ? 1 : 0);
   const blocco3 = !voce3 && !state108.appenaSalvato && (illeggibile || comandano.length) && !state108.scelta;
   if (blocco3) {
-    const testa3 = `<button type="button" class="dm-prg-testa" data-dm-prg-apri aria-expanded="${state108.aperto}"><span class="dm-prg-tit">🗓️ ${esc(t("Programma", "Schedule"))}</span><span class="dm-prg-stato">${esc(illeggibile ? t("da rifare", "to redo") : t("c'è già chi lo comanda", "already controlled"))}</span><span class="dm-prg-freccia" aria-hidden="true">▾</span></button>`;
+    const testa3 = testaMarkup10({
+      testo: illeggibile ? t("Da rifare", "To redo") : t("C'è già chi lo comanda", "Already controlled"),
+      tono: "sospeso"
+    });
     const nome = clean((illeggibile || comandano[0])?.nome) || "?";
     const testo5 = illeggibile ? t(
       `Il programma «${nome}» di questo termostato è stato cambiato in Home Assistant e qui non si legge più. Per non perderne un pezzo senza dirlo, la plancia non te lo mostra: puoi rifarlo da qui (sostituisce quello di Home Assistant) o lasciarlo com'è e modificarlo lì.`,
@@ -114871,7 +115324,7 @@ function programmaMarkup() {
   const b2 = laBozza();
   const giornata = b2.programma[state108.giorno];
   const sbloccato = premium() && !casa().assente;
-  const testa2 = `<button type="button" class="dm-prg-testa" data-dm-prg-apri aria-expanded="${state108.aperto}"><span class="dm-prg-tit">🗓️ ${esc(t("Programma", "Schedule"))}</span><span class="dm-prg-stato">${esc(statoDetto(voce3, b2))}</span><span class="dm-prg-freccia" aria-hidden="true">▾</span></button>`;
+  const testa2 = testaMarkup10(statoDetto(voce3, b2));
   if (!state108.aperto) return testa2;
   const giorni = `<div class="dm-prg-giorni" role="tablist">${[
     ["feriali", t("Lun – Ven", "Mon – Fri")],
@@ -114882,8 +115335,8 @@ function programmaMarkup() {
   const corpo6 = `${giorni}
 ${barraMarkup4(giornata, b2.fuori)}
 <div class="dm-prg-fasce">${fasceMarkup(giornata)}</div>
-<div class="dm-prg-azioni">${giornata.length < FASCE_DEL_PROGRAMMA && fasciaNuova(giornata) ? `<button type="button" class="dm-prg-pill" data-dm-prg-aggiungi>＋ ${esc(t("Aggiungi fascia", "Add slot"))}</button>` : ""}${state108.giorno === "festivi" ? `<button type="button" class="dm-prg-pill" data-dm-prg-copia>⧉ ${esc(t("Copia da Lun – Ven", "Copy from Mon – Fri"))}</button>` : ""}</div>
-<div class="dm-prg-fuori"><span>${esc(t("Fuori dalle fasce", "Outside the slots"))}</span><span class="dm-prg-gradi"><button type="button" data-dm-prg-fuori="-0.5" aria-label="−">−</button><b>${esc(gradiDetti(b2.fuori))}</b><button type="button" data-dm-prg-fuori="0.5" aria-label="+">+</button></span></div>
+<div class="dm-prg-azioni">${giornata.length < FASCE_DEL_PROGRAMMA && fasciaNuova(giornata) ? `<button type="button" class="dm-prg-pill dm-prg-aggiungi" data-dm-prg-aggiungi>${GLIFO_PIU2}${esc(t("Aggiungi fascia", "Add slot"))}</button>` : ""}${state108.giorno === "festivi" ? `<button type="button" class="dm-prg-pill dm-prg-copia" data-dm-prg-copia>${esc(t("Copia da Lun – Ven", "Copy from Mon – Fri"))}</button>` : ""}</div>
+<div class="dm-prg-fuori"><span>${esc(t("Fuori dalle fasce", "Outside the slots"))}<small>${esc(t("tutte le altre ore", "all the other hours"))}</small></span><span class="dm-prg-gradi"><button type="button" data-dm-prg-fuori="-0.5" aria-label="−">−</button><b>${esc(gradiDetti(b2.fuori))}</b><button type="button" data-dm-prg-fuori="0.5" aria-label="+">+</button></span></div>
 ${voce3 ? `<div class="dm-prg-fuori"><span>${esc(t("Programma attivo", "Schedule active"))}</span><button type="button" class="dm-prg-int" role="switch" aria-checked="${voce3.attiva !== false}" data-dm-prg-attivo aria-label="${esc(t("Programma attivo", "Schedule active"))}"><i></i></button></div>` : ""}
 ${altri > 0 ? `<p class="dm-prg-nota">${esc(altriDetti(altri))}</p>` : ""}
 ${toccano > 0 ? `<p class="dm-prg-nota dm-prg-tocca">${esc(toccanoDetto(toccano))}</p>` : ""}
@@ -114893,7 +115346,7 @@ ${state108.errore ? `<p class="dm-prg-errore" role="alert">${esc(state108.errore
 ${state108.esito ? `<p class="dm-prg-esito${state108.esitoInAttesa ? " dm-prg-esito-attesa" : ""}" role="status">${esc(state108.esito)}</p>` : ""}
 ${sbloccato && !puoScrivere2() && casa().ponte ? `<p class="dm-prg-nota">${esc(t("Solo chi amministra Home Assistant può salvarlo.", "Only a Home Assistant administrator can save it."))}</p>` : ""}
 <button type="button" class="dm-prg-salva" data-dm-prg-salva${state108.salvando || casa().ponte && !puoScrivere2() ? " disabled" : ""}>${esc(
-    state108.salvando ? t("Salvo…", "Saving…") : state108.salvato ? t("✓ Salvato in Home Assistant", "✓ Saved in Home Assistant") : t("💾 Salva il programma", "💾 Save the schedule")
+    state108.salvando ? t("Salvo…", "Saving…") : state108.salvato ? t("✓ Salvato in Home Assistant", "✓ Saved in Home Assistant") : t("Salva il programma", "Save the schedule")
   )}</button>`;
   if (sbloccato) return `${testa2}<div class="dm-prg-corpo">${corpo6}</div>`;
   return `${testa2}<div class="dm-prg-velato"><div class="dm-prg-corpo" aria-hidden="true" inert>${corpo6}</div><div class="dm-prg-velo">${casa().assente ? `<p>${esc(t("Il programma lo esegue Home Assistant: serve l'add-on GdAHome.", "Home Assistant runs the schedule: it needs the GdAHome add-on."))}</p>` : `<span class="dm-prg-prem">✨ PREMIUM</span><p>${esc(
@@ -115170,47 +115623,93 @@ var STILE15 = `
 #clima-popup-overlay{z-index:10000;--dm-clima-su:max(10px,env(safe-area-inset-top),var(--dm-cima-libera,0px));--dm-clima-giu:max(10px,env(safe-area-inset-bottom),calc(var(--dm-clima-barra,0px) + 8px))}
 #clima-popup-overlay.show{padding:var(--dm-clima-su) 10px var(--dm-clima-giu);overscroll-behavior:contain}
 #clima-popup-overlay .clima-popup{max-height:calc(100vh - 20px);max-height:calc(100dvh - var(--dm-clima-su) - var(--dm-clima-giu));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
-.clima-popup .dm-prg{margin:14px 0 4px;border-radius:16px;background:rgba(148,163,184,.10);border:1px solid var(--card-border,rgba(148,163,184,.25));overflow:hidden}
-.dm-prg-testa{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;width:100%;padding:12px 14px;cursor:pointer;color:var(--text,inherit)}
-.dm-prg-tit{font-weight:800;font-size:14px}
-.dm-prg-stato{flex:1;text-align:right;font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
-.dm-prg-freccia{transition:transform .2s;color:var(--text-dim,#64748b)}
+/* Il Programma: una card della finestra come le altre, con la testa che dice
+ * in una pastiglia se il programma lavora, la barra delle 24 ore con il segno
+ * di adesso, le fasce in righe ariose e «Salva» ben visibile. I colori delle
+ * fasce vengono dai loro gradi (dall'azzurro dei 16° all'arancio dei 23°). */
+.clima-popup .dm-prg{
+  --prg-testo:var(--text,#0f172a);--prg-dim:var(--text-dim,#64748b);--prg-linea:var(--card-border,#e5eaf1);
+  --prg-fondo:var(--card-bg,#fff);--prg-tenue:var(--surface-2,#f5f7fa);--prg-acc:#ea580c;
+  margin:18px 0 2px;border-radius:22px;background:var(--prg-tenue);border:1px solid var(--prg-linea);overflow:hidden}
+html[data-theme="dark"] .clima-popup .dm-prg{--prg-acc:#fb923c}
+.dm-prg-testa{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;width:100%;min-height:56px;padding:8px 14px;cursor:pointer;color:var(--prg-testo)}
+.dm-prg-testa:focus-visible{outline:2px solid var(--prg-acc);outline-offset:-2px;border-radius:22px}
+.dm-prg-ic{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border-radius:11px;background:var(--prg-fondo);border:1px solid var(--prg-linea);color:var(--prg-dim)}
+.dm-prg-tit{font-weight:800;font-size:15px}
+.dm-prg-stato{margin-left:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:750;color:var(--prg-dim);background:color-mix(in srgb,var(--prg-dim) 12%,transparent)}
+.dm-prg-stato[data-tono="attivo"]{color:#15803d;background:rgba(34,197,94,.14)}
+.dm-prg-stato[data-tono="sospeso"]{color:#b45309;background:rgba(245,158,11,.16)}
+.dm-prg-stato[data-tono="errore"]{color:#dc2626;background:rgba(220,38,38,.12)}
+html[data-theme="dark"] .dm-prg-stato[data-tono="attivo"]{color:#4ade80}
+html[data-theme="dark"] .dm-prg-stato[data-tono="sospeso"]{color:#fbbf24}
+html[data-theme="dark"] .dm-prg-stato[data-tono="errore"]{color:#f87171}
+.dm-prg-freccia{display:grid;place-items:center;flex:0 0 auto;transition:transform .2s;color:var(--prg-dim)}
 .dm-prg-testa[aria-expanded="true"] .dm-prg-freccia{transform:rotate(180deg)}
-.dm-prg-corpo{padding:0 14px 14px;display:flex;flex-direction:column;gap:10px}
-.dm-prg-giorni{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:4px;border-radius:12px;background:rgba(148,163,184,.14)}
-.dm-prg-giorni button{all:unset;text-align:center;padding:8px 0;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;color:var(--text-dim,#64748b)}
-.dm-prg-giorni button[aria-selected="true"]{background:var(--card-bg,#fff);color:var(--text,#0f172a);box-shadow:0 1px 4px rgba(15,23,42,.12)}
-.dm-prg-barra{position:relative;height:34px;border-radius:10px;background:color-mix(in srgb,var(--fuori) 22%,transparent);overflow:hidden}
-.dm-prg-barra i{position:absolute;top:0;bottom:0;background:var(--g);display:flex;align-items:center;justify-content:center;border-left:1px solid rgba(255,255,255,.55)}
-.dm-prg-barra i b{font-size:10px;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45);white-space:nowrap;overflow:hidden}
-.dm-prg-ore{display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:var(--text-dim,#64748b);margin-top:-6px}
-.dm-prg-fasce{display:flex;flex-direction:column;gap:6px}
+.dm-prg-corpo{padding:2px 14px 14px;display:flex;flex-direction:column;gap:12px}
+.dm-prg-giorni{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:color-mix(in srgb,var(--prg-dim) 12%,transparent)}
+.dm-prg-giorni button{all:unset;text-align:center;min-height:38px;display:grid;place-items:center;border-radius:11px;font-size:13px;font-weight:750;cursor:pointer;color:var(--prg-dim)}
+.dm-prg-giorni button[aria-selected="true"]{background:var(--prg-fondo);color:var(--prg-testo);box-shadow:0 1px 3px rgba(15,23,42,.12)}
+.dm-prg-giorni button:focus-visible{outline:2px solid var(--prg-acc);outline-offset:1px}
+.dm-prg-scala{padding:2px 0 0}
+.dm-prg-barra{position:relative;height:40px;border-radius:12px;background:color-mix(in srgb,var(--fuori) 16%,var(--prg-fondo));box-shadow:inset 0 0 0 1px var(--prg-linea);overflow:hidden}
+.dm-prg-barra i{position:absolute;top:4px;bottom:4px;margin-left:1px;border-radius:8px;background:var(--g);display:flex;align-items:center;justify-content:center;font-style:normal;box-shadow:inset 0 0 0 1px rgba(124,45,18,.12)}
+.dm-prg-barra i b{font-size:11.5px;font-weight:800;font-style:normal;color:#431407;white-space:nowrap;overflow:hidden;padding:0 4px;font-variant-numeric:tabular-nums}
+.dm-prg-adesso{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--prg-testo);opacity:.75;z-index:1}
+.dm-prg-adesso::before{content:"";position:absolute;top:-1px;left:50%;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:var(--prg-testo)}
+.dm-prg-ore{position:relative;height:16px;margin-top:5px;font-size:11px;font-weight:700;color:var(--prg-dim);font-variant-numeric:tabular-nums}
+.dm-prg-ore span{position:absolute;top:0;transform:translateX(-50%)}
+.dm-prg-ore span:first-child{transform:none}
+.dm-prg-ore span:last-child{transform:translateX(-100%)}
+.dm-prg-fasce{display:flex;flex-direction:column;gap:8px;container-type:inline-size}
 /* La fascia su uno schermo stretto: gli orari non si stringono sotto la loro
  * misura (prima i select uscivano dalla riga e il secondo finiva sotto il
  * «−» dei gradi, a 360 e meno); se non ci sta tutto, gradi e cestino vanno
  * insieme sulla riga sotto, a destra. */
-.dm-prg-fascia{display:flex;flex-wrap:wrap;align-items:center;gap:6px 4px;padding:6px 6px;border-radius:12px;background:var(--card-bg,rgba(255,255,255,.6));border-left:4px solid var(--g)}
-.dm-prg-orari{display:flex;align-items:center;gap:3px;flex:1 0 auto}
-.dm-prg-trattino{flex:0 0 auto;margin:0 2px;opacity:.7}
+.dm-prg-fascia{display:flex;flex-wrap:wrap;align-items:center;gap:8px 6px;padding:8px 8px 8px 12px;border-radius:16px;background:var(--prg-fondo);border:1px solid var(--prg-linea);box-shadow:inset 4px 0 0 var(--g)}
+.dm-prg-orari{display:flex;align-items:center;gap:4px;flex:1 0 auto}
+.dm-prg-trattino{flex:0 0 auto;margin:0 2px;color:var(--prg-dim)}
 .dm-prg-destra{display:flex;align-items:center;gap:4px;margin-left:auto}
-.dm-prg-ora{font:inherit;font-size:12px;font-weight:700;padding:5px 2px;width:66px;flex:0 0 66px;border-radius:8px;border:1px solid var(--card-border,rgba(148,163,184,.4));background:transparent;color:var(--text,inherit);min-width:0}
-.dm-prg-gradi{display:flex;align-items:center;gap:4px}
-.dm-prg-gradi b{min-width:38px;text-align:center;font-size:14px;font-weight:800;color:var(--text,inherit)}
-.dm-prg-gradi button,.dm-prg-via{all:unset;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;cursor:pointer;font-weight:800;background:rgba(148,163,184,.18);color:var(--text,inherit)}
-.dm-prg-via{background:transparent;font-size:14px}
-.dm-prg-azioni{display:flex;flex-wrap:wrap;gap:6px}
-.dm-prg-pill{all:unset;padding:7px 12px;border-radius:999px;font-size:12px;font-weight:800;cursor:pointer;background:rgba(14,165,233,.14);color:#0284c7}
-.dm-prg-fuori{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:700;color:var(--text,inherit)}
-.dm-prg-int{all:unset;width:44px;height:26px;border-radius:999px;background:rgba(148,163,184,.4);position:relative;cursor:pointer}
-.dm-prg-int i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s}
+.dm-prg-ora{font:inherit;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;padding:0 4px;height:40px;width:74px;flex:0 0 74px;border-radius:11px;border:1px solid var(--prg-linea);background:var(--prg-tenue);color:var(--prg-testo);min-width:0;text-align:center}
+.dm-prg-ora:focus-visible{outline:2px solid var(--prg-acc);outline-offset:1px}
+.dm-prg-gradi{display:flex;align-items:center;gap:2px;padding:2px;border-radius:12px;background:var(--prg-tenue);border:1px solid var(--prg-linea)}
+.dm-prg-gradi b{min-width:46px;text-align:center;font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--prg-testo)}
+.dm-prg-gradi button,.dm-prg-via{all:unset;box-sizing:border-box;width:38px;height:36px;border-radius:10px;display:grid;place-items:center;cursor:pointer;font-weight:800;font-size:17px;color:var(--prg-testo)}
+.dm-prg-gradi button:hover{background:var(--prg-fondo)}
+.dm-prg-via{width:40px;height:40px;color:var(--prg-dim)}
+.dm-prg-via:hover{color:#dc2626;background:rgba(220,38,38,.08)}
+.dm-prg-gradi button:focus-visible,.dm-prg-via:focus-visible,.dm-prg-pill:focus-visible,.dm-prg-salva:focus-visible{outline:2px solid var(--prg-acc);outline-offset:2px}
+/* Dove la riga non tiene tutto (il telefono), la fascia si dispone su due
+ * righe per scelta e non per caso: in alto gli orari e il cestino, sotto i
+ * gradi, larghi quanto la fascia — un bersaglio comodo per il pollice. */
+@container (max-width:370px){
+  .dm-prg-fascia{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"orari via" "gradi gradi";gap:8px 6px}
+  .dm-prg-destra{display:contents}
+  .dm-prg-orari{grid-area:orari}
+  .dm-prg-via{grid-area:via;justify-self:end}
+  .dm-prg-fascia .dm-prg-gradi{grid-area:gradi;justify-content:space-between}
+  .dm-prg-fascia .dm-prg-gradi button{width:56px;height:38px}
+}
+.dm-prg-azioni{display:flex;flex-wrap:wrap;gap:8px}
+.dm-prg-pill{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 14px;border-radius:14px;font-size:13px;font-weight:750;cursor:pointer;background:var(--prg-fondo);border:1px solid var(--prg-linea);color:var(--prg-testo)}
+.dm-prg-aggiungi{flex:1 1 auto;border-style:dashed;color:var(--prg-dim)}
+.dm-prg-aggiungi:hover{color:var(--prg-testo);border-color:var(--prg-dim)}
+.dm-prg-fuori{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 8px 10px 12px;border-radius:16px;background:var(--prg-fondo);border:1px solid var(--prg-linea);font-size:14px;font-weight:750;color:var(--prg-testo)}
+.dm-prg-fuori > span:first-child{display:flex;flex-direction:column;gap:1px;min-width:0}
+.dm-prg-fuori small{font-size:11.5px;font-weight:600;color:var(--prg-dim)}
+.dm-prg-int{all:unset;flex:0 0 auto;width:48px;height:28px;border-radius:999px;background:rgba(148,163,184,.45);position:relative;cursor:pointer}
+.dm-prg-int i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .2s}
 .dm-prg-int[aria-checked="true"]{background:#22c55e}
-.dm-prg-int[aria-checked="true"] i{left:21px}
-.dm-prg-salva{all:unset;text-align:center;padding:11px 0;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer;background:linear-gradient(135deg,#f97316,#ef4444);color:#fff}
-.dm-prg-salva[disabled]{opacity:.55;cursor:default}
-.dm-prg-vuoto,.dm-prg-nota{margin:0;font-size:12px;color:var(--text-dim,#64748b)}
-.dm-prg-errore{margin:0;padding:8px 10px;border-radius:10px;font-size:12px;font-weight:700;color:#dc2626;background:rgba(220,38,38,.10)}
-.dm-prg-esito{margin:0;padding:8px 10px;border-radius:10px;font-size:12px;font-weight:700;color:#15803d;background:rgba(34,197,94,.12)}
-.dm-prg-esito.dm-prg-esito-attesa{color:#d97706;background:rgba(245,158,11,.14);box-shadow:inset 3px 0 0 #f59e0b}
+.dm-prg-int[aria-checked="true"] i{left:23px}
+.dm-prg-salva{all:unset;box-sizing:border-box;display:grid;place-items:center;min-height:50px;border-radius:16px;font-weight:800;font-size:15px;cursor:pointer;background:var(--prg-acc);color:#fff;box-shadow:0 8px 18px -10px color-mix(in srgb,var(--prg-acc) 90%,transparent)}
+html[data-theme="dark"] .dm-prg-salva{color:#1b0f06}
+.dm-prg-salva[disabled]{opacity:.5;cursor:default;box-shadow:none}
+.dm-prg-vuoto,.dm-prg-nota{margin:0;font-size:12.5px;line-height:1.45;color:var(--prg-dim)}
+.dm-prg-errore{margin:0;padding:10px 12px;border-radius:12px;font-size:12.5px;line-height:1.45;font-weight:700;color:#dc2626;background:rgba(220,38,38,.10)}
+.dm-prg-esito{margin:0;padding:10px 12px;border-radius:12px;font-size:12.5px;line-height:1.45;font-weight:700;color:#15803d;background:rgba(34,197,94,.12)}
+.dm-prg-esito.dm-prg-esito-attesa{color:#b45309;background:rgba(245,158,11,.14);box-shadow:inset 3px 0 0 #f59e0b}
+html[data-theme="dark"] .dm-prg-errore{color:#f87171}
+html[data-theme="dark"] .dm-prg-esito{color:#4ade80}
+html[data-theme="dark"] .dm-prg-esito.dm-prg-esito-attesa{color:#fbbf24}
 .dm-prg-velato{position:relative}
 .dm-prg-velato>.dm-prg-corpo{filter:blur(2px);opacity:.55;pointer-events:none}
 .dm-prg-velo{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px;text-align:center;background:color-mix(in srgb,var(--card-bg,#fff) 70%,transparent)}
@@ -116481,7 +116980,9 @@ function dataDelPeriodo(periodo) {
 var gradi11 = (valore3) => valore3 === null || valore3 === void 0 ? "—" : `${valore3.toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 })}°`;
 var percento7 = (valore3) => valore3 === null || valore3 === void 0 ? "—" : `${Math.round(valore3)}%`;
 var ore2 = (ms) => ms === null || ms === void 0 ? "—" : oreScritte(ms);
-var accensioniDette = (n) => n === null || n === void 0 ? t("accensioni non note", "starts unknown") : t(`${n} accensioni`, `${n} starts`);
+var accensioniDette = (n) => n === null || n === void 0 ? t("accensioni non note", "starts unknown") : n === 1 ? t("1 accensione", "1 start") : t(`${n} accensioni`, `${n} starts`);
+var stanzeDette = (n) => n === 1 ? t("1 stanza", "1 room") : t(`${n} stanze`, `${n} rooms`);
+var valvoleDette = (n) => n === 0 ? t("nessuna valvola", "no valve") : n === 1 ? t("1 valvola", "1 valve") : t(`${n} valvole`, `${n} valves`);
 var numeroDetto = (valore3, cifre3 = 1) => valore3.toLocaleString(locale(), { minimumFractionDigits: 0, maximumFractionDigits: cifre3 });
 function tessera3(icona3, etichetta3, valore3, sotto = "", extra = "") {
   return `<div class="dm-rcl-tessera" ${extra}>
@@ -116530,9 +117031,20 @@ function graficoMarkup2(report) {
       </div>`;
   }).join("");
   const picco = periodo.vista === "giorno" ? `${Math.round(massimo / 6e4)} min` : `${inOre(massimo).toLocaleString(locale(), { maximumFractionDigits: 1 })} h`;
+  const passate = secchielli2.filter((s) => s.inizio <= adesso2);
+  const ignote = passate.filter((s) => s.noto === false).length;
+  const accese = passate.filter((s) => s.noto !== false && s.ms > 0).length;
+  const avviso4 = passate.length && ignote === passate.length ? t("Nessun dato per questo periodo: le colonne a righe non sono zero, non si sanno.", "No data for this period: the striped columns are not zero, they are unknown.") : !accese && passate.length ? report.impianto === "freddo" ? t("Nessuna accensione in questo periodo.", "Nothing ran in this period.") : t("La caldaia non si è mai accesa in questo periodo.", "The boiler never ran in this period.") : "";
+  const n = ignote;
+  const senzaDati = periodo.vista === "giorno" ? n === 1 ? t("1 ora senza dati", "1 hour without data") : t(`${n} ore senza dati`, `${n} hours without data`) : n === 1 ? t("1 giorno senza dati", "1 day without data") : t(`${n} giorni senza dati`, `${n} days without data`);
+  const legenda = ignote && ignote < passate.length ? `<p class="dm-rcl-legenda"><i aria-hidden="true"></i>${esc(senzaDati)}</p>` : "";
   return `<div class="dm-rcl-grafico-box">
-    <div class="dm-rcl-grafico-testa"><b>${esc(report.stima ? t("Impianto acceso (stima)", "System on (estimate)") : report.impianto === "freddo" ? t("Impianto acceso", "System on") : t("Caldaia accesa", "Boiler on"))}</b><span>${esc(scala2)} · max ${esc(picco)}</span></div>
-    <div class="dm-rcl-grafico" data-passo="${periodo.passo}" data-colonne="${secchielli2.length}">${colonne}</div>
+    <div class="dm-rcl-grafico-testa"><b>${esc(report.stima ? t("Impianto acceso (stima)", "System on (estimate)") : report.impianto === "freddo" ? t("Impianto acceso", "System on") : t("Caldaia accesa", "Boiler on"))}</b><span>${esc(scala2)}${accese ? ` · max ${esc(picco)}` : ""}</span></div>
+    <div class="dm-rcl-grafico-area">
+      <div class="dm-rcl-grafico" data-passo="${periodo.passo}" data-colonne="${secchielli2.length}">${colonne}</div>
+      ${avviso4 ? `<p class="dm-rcl-grafico-vuoto" data-dm-rcl-grafico-vuoto>${esc(avviso4)}</p>` : ""}
+    </div>
+    ${legenda}
   </div>`;
 }
 function stanzeMarkup2(report) {
@@ -116562,7 +117074,7 @@ function stanzeMarkup2(report) {
           <div class="dm-rcl-stanza-testa"><b>${esc(nome)}</b>${segni}<strong>${esc(ore2(s.msRichiesta))}</strong></div>
           <div class="dm-rcl-stanza-barra"><i style="width:${quota.toFixed(1)}%"></i></div>
           <div class="dm-rcl-stanza-dati">
-            <span data-dm-rcl-richiesta>${esc(richiestaDetta)}</span>
+            <span data-dm-rcl-richiesta${s.msRichiesta === null ? " data-ignota" : ""}>${esc(richiestaDetta)}</span>
             ${s.msAccesa === null ? "" : `<span>⏻ ${esc(t(`accesa ${acceso7}`, `on ${acceso7}`))}</span>`}
             ${s.valvola === null ? "" : `<span data-dm-rcl-valvola>🔧 ${esc(t(`valvola ${aperta2}`, `valve ${aperta2}`))}</span>`}
             <span data-dm-rcl-temperatura>🌡️ ${esc(temperatura)}</span>
@@ -116662,7 +117174,7 @@ function notaStatistiche(report) {
   const statistiche = report.fonti?.statistiche || 0;
   if (!statistiche) return "";
   const stagione = report.stanze.some((s) => s.stimaDa?.includes("stagione"));
-  const testo5 = [
+  const frasi = [
     statistiche === 1 ? t(
       "Un giorno dalle statistiche orarie di Home Assistant, perché la storia dettagliata non c'è più.",
       "One day from the Home Assistant hourly statistics, because the detailed history is gone."
@@ -116675,8 +117187,9 @@ function notaStatistiche(report) {
       "Per le pompe di calore conosciute solo dai watt decide la stagione: da maggio a settembre raffrescano.",
       "For heat pumps known only from their watts the season decides: from May to September they cool."
     ) : ""
-  ].filter(Boolean).join(" ");
-  return `<p class="dm-rcl-nota" data-dm-rcl-statistiche>ⓘ ${esc(testo5)}</p>`;
+  ].filter(Boolean);
+  const testo5 = frasi.map((frase4) => `<span>${esc(frase4)}</span>`).join(" ");
+  return `<p class="dm-rcl-nota" data-dm-rcl-statistiche>${testo5}</p>`;
 }
 function condivisiDetti() {
   let sensori = [];
@@ -116723,9 +117236,9 @@ function notaMarkup3(report) {
       `Ora per ora si conserva solo per gli ultimi ${giorniConLeOre} giorni: di questo giorno restano i totali.`,
       `Hour by hour is kept only for the last ${giorniConLeOre} days: for this day only the totals remain.`
     ) : ""
-  ].filter(Boolean).join(" ");
+  ].filter(Boolean).map((frase4) => `<span>${esc(frase4)}</span>`).join(" ");
   const statistiche = notaStatistiche(report);
-  const base = `${statistiche}${fonte ? `<p class="dm-rcl-nota">${esc(fonte)}</p>` : ""}`;
+  const base = statistiche || fonte ? `<details class="dm-rcl-come"><summary>${esc(t("Come si calcola", "How it's calculated"))}</summary>${statistiche}${fonte ? `<p class="dm-rcl-nota">${fonte}</p>` : ""}</details>` : "";
   if (!report.stima || report.totali?.msGeneratore === null) return base;
   const stima = report.impianto === "freddo" ? t(
     "Il tempo dell'impianto è una stima: è acceso quando almeno una stanza chiede fresco.",
@@ -116734,7 +117247,7 @@ function notaMarkup3(report) {
     "Nessuna caldaia con una storia: il tempo è una stima, acceso quando almeno una stanza chiede calore. La caldaia si configura in Config › Gestione termica.",
     "No boiler with a history: the time is an estimate, on whenever at least one room asks for heat. Set the boiler up in Config › Thermal management."
   );
-  return `<p class="dm-rcl-nota" data-dm-rcl-stima>ⓘ ${esc(stima)}</p>${base}`;
+  return `<p class="dm-rcl-nota" data-dm-rcl-stima>${esc(stima)}</p>${base}`;
 }
 function vuotoMarkup8() {
   return `<div class="dm-rcl-vuoto"><span aria-hidden="true">📭</span><b>${esc(t("Nessun dato in questo periodo", "No data in this period"))}</b><small>${esc(
@@ -116757,9 +117270,9 @@ function contenutoMarkup(report) {
   const sottoGeneratore = tot.msGeneratore === null ? t("non noto", "unknown") : tot.accensioni === null && tot.consumo ? `${numeroDetto(tot.consumo.valore)} ${tot.consumo.unita}` : tot.accensioni === null && tot.kwhStanze !== null && report.stima ? `${numeroDetto(tot.kwhStanze)} kWh` : accensioniDette(tot.accensioni);
   return `<div class="dm-rcl-tessere">
       ${tessera3(caldo ? "🔥" : "❄️", titoloGeneratore, ore2(tot.msGeneratore), sottoGeneratore, `data-dm-rcl-tessera="generatore"${report.stima && !ignoto ? " data-stima" : ""}${ignoto ? " data-ignoto" : ""}`)}
-      ${tessera3("⏱️", t("Richiesta stanze", "Room demand"), ore2(tot.msRichiesta), t(`${quante3} stanze`, `${quante3} rooms`), 'data-dm-rcl-tessera="richiesta"')}
-      ${inComfort ? tessera3("🌡️", t("Temperatura in comfort", "Comfort temperature"), gradi11(tot.ambienteComfort), t(`obiettivo in comfort ${obiettivo2}`, `comfort target ${obiettivo2}`), 'data-dm-rcl-tessera="temperatura"') : tessera3("🌡️", t("Temperatura media", "Average temperature"), gradi11(tot.ambiente), "", 'data-dm-rcl-tessera="temperatura"')}
-      ${tessera3("🔧", t("Valvola media", "Average valve"), percento7(tot.valvola), valvole ? t(`${valvole} valvole`, `${valvole} valves`) : t("nessuna valvola", "no valve"), 'data-dm-rcl-tessera="valvola"')}
+      ${tessera3("⏱️", t("Richiesta stanze", "Room demand"), ore2(tot.msRichiesta), stanzeDette(quante3), 'data-dm-rcl-tessera="richiesta"')}
+      ${inComfort ? tessera3("🌡️", t("Temperatura in comfort", "Comfort temperature"), gradi11(tot.ambienteComfort), t(`obiettivo in comfort ${obiettivo2}`, `comfort target ${obiettivo2}`), 'data-dm-rcl-tessera="temperatura"') : tessera3("🌡️", t("Temperatura media", "Average temperature"), gradi11(tot.ambiente), t("nel periodo", "over the period"), 'data-dm-rcl-tessera="temperatura"')}
+      ${tessera3("🔧", t("Valvola media", "Average valve"), percento7(tot.valvola), valvoleDette(valvole), 'data-dm-rcl-tessera="valvola"')}
     </div>
     ${generatoriMarkup(report)}
     ${graficoMarkup2(report)}
@@ -116769,19 +117282,17 @@ function contenutoMarkup(report) {
 }
 function testataMarkup(impianti2, periodo) {
   const linguette4 = impianti2.map(
-    (id) => `<button type="button" data-dm-rcl-impianto="${id}" aria-pressed="${id === state109.impianto}">${id === "freddo" ? "❄️" : "🔥"} ${esc(nomeDellImpianto(id))}</button>`
+    (id) => `<button type="button" data-dm-rcl-impianto="${id}" aria-pressed="${id === state109.impianto}"><span aria-hidden="true">${id === "freddo" ? "❄️" : "🔥"}</span>${esc(nomeDellImpianto(id))}</button>`
   ).join("");
   const viste2 = VISTE_DEL_REPORT.map(
     (v) => `<button type="button" data-dm-rcl-vista="${v}" aria-pressed="${v === state109.vista}">${esc(nomeDellaVista2(v))}</button>`
   ).join("");
   return `<div class="dm-rcl-testa">
-      <span class="dm-rcl-ic" aria-hidden="true">📊</span>
-      <div><h2 id="dm-rcl-titolo">${esc(t("Report del clima", "Climate report"))}</h2><p>${esc(nomeDellImpianto(state109.impianto))}</p></div>
-      <button type="button" class="dm-rcl-chiudi" data-dm-rcl-chiudi aria-label="${esc(t("Chiudi", "Close"))}">✕</button>
+      <div class="dm-rcl-titoli"><h2 id="dm-rcl-titolo">${esc(t("Report del clima", "Climate report"))}</h2><p>${esc(t("Quanto hanno lavorato l'impianto e le stanze", "How long the system and the rooms ran"))}</p></div>
+      ${impianti2.length > 1 ? `<div class="dm-rcl-impianti" role="group" aria-label="${esc(t("Impianto", "System"))}">${linguette4}</div>` : ""}
     </div>
-    ${impianti2.length > 1 ? `<div class="dm-rcl-impianti" role="tablist">${linguette4}</div>` : ""}
     <div class="dm-rcl-periodo">
-      <div class="dm-rcl-viste">${viste2}</div>
+      <div class="dm-rcl-viste" role="group" aria-label="${esc(t("Periodo", "Period"))}">${viste2}</div>
       <div class="dm-rcl-naviga">
         <button type="button" data-dm-rcl-sposta="-1" aria-label="${esc(t("Periodo prima", "Previous period"))}">‹</button>
         <b data-dm-rcl-quando>${esc(titoloDelPeriodo(periodo))}</b>
@@ -116790,14 +117301,17 @@ function testataMarkup(impianti2, periodo) {
     </div>`;
 }
 function velo4() {
+  const posto = doc.querySelector("#page-clima [data-dm-rcl-posto]");
   let nodo3 = doc.getElementById("dm-rcl");
+  if (nodo3 && posto && nodo3.parentElement !== posto) posto.appendChild(nodo3);
   if (nodo3) return nodo3;
-  nodo3 = doc.createElement("div");
+  nodo3 = doc.createElement("section");
   nodo3.id = "dm-rcl";
-  nodo3.className = "dm-rcl-velo";
+  nodo3.className = "dm-rcl-scheda";
   nodo3.hidden = true;
-  nodo3.innerHTML = `<section class="dm-rcl-foglio" role="dialog" aria-modal="true" aria-labelledby="dm-rcl-titolo"><div data-dm-rcl-testa></div><div class="dm-rcl-corpo" data-dm-rcl-corpo></div></section>`;
-  doc.body.appendChild(nodo3);
+  nodo3.setAttribute("aria-labelledby", "dm-rcl-titolo");
+  nodo3.innerHTML = `<div class="dm-rcl-foglio"><div class="dm-rcl-barra-testa" data-dm-rcl-testa></div><div class="dm-rcl-corpo" data-dm-rcl-corpo></div></div>`;
+  (posto || doc.body).appendChild(nodo3);
   nodo3.addEventListener("click", tocco2);
   return nodo3;
 }
@@ -116897,7 +117411,7 @@ async function disegna9() {
 }
 function tocco2(evento) {
   const bersaglio = evento.target;
-  if (bersaglio === evento.currentTarget || bersaglio.closest?.("[data-dm-rcl-chiudi]")) {
+  if (bersaglio.closest?.("[data-dm-rcl-chiudi]")) {
     chiudiIlReport();
     return;
   }
@@ -116922,6 +117436,15 @@ function tocco2(evento) {
 function tasto3(evento) {
   if (evento.key === "Escape" && state109.aperto) chiudiIlReport();
 }
+function segnaLaPagina2(aperto2) {
+  const guscio3 = doc.querySelector("#page-clima .dm-cl-shell");
+  if (guscio3) {
+    if (aperto2) guscio3.setAttribute("data-dm-rcl-aperto", "");
+    else guscio3.removeAttribute("data-dm-rcl-aperto");
+  }
+  for (const linguetta4 of doc.querySelectorAll("#page-clima [data-dm-rcl-apri]"))
+    linguetta4.setAttribute("aria-pressed", String(aperto2));
+}
 function apriIlReportDelClima(impianto = "") {
   const zonaVista = doc.querySelector(".clima-zone-freddo.show") ? "freddo" : "caldo";
   const scelto = clean(impianto) || zonaVista;
@@ -116929,9 +117452,8 @@ function apriIlReportDelClima(impianto = "") {
   state109.aperto = true;
   const nodo3 = velo4();
   nodo3.hidden = false;
-  doc.documentElement.classList.add("dm-rcl-aperto");
+  segnaLaPagina2(true);
   disegna9();
-  nodo3.querySelector(".dm-rcl-chiudi")?.focus?.({ preventScroll: true });
   return true;
 }
 function chiudiIlReport() {
@@ -116939,103 +117461,133 @@ function chiudiIlReport() {
   state109.giro += 1;
   const nodo3 = doc.getElementById("dm-rcl");
   if (nodo3) nodo3.hidden = true;
-  doc.documentElement.classList.remove("dm-rcl-aperto");
+  segnaLaPagina2(false);
 }
 var CSS2 = `
-html.dm-rcl-aperto{overflow:hidden}
-.dm-rcl-velo{
+/* Il report come scheda della pagina Clima: niente velo, niente finestra.
+ * Le card sono quelle della pagina (lo stesso fondo, bordo, ombra e raggio
+ * della pagina Clima e del Report dell'Energia), e i colori quelli
+ * dell'impianto: arancio il riscaldamento, azzurro il raffrescamento. */
+.dm-rcl-scheda{
   --rcl-card:var(--card-bg,#fff);--rcl-soft:var(--surface-2,#f7f9fc);--rcl-sunk:var(--surface-3,#eef2f8);
   --rcl-line:var(--card-border,#e6ecf3);--rcl-text:var(--text,#0f172a);--rcl-dim:var(--text-dim,#64748b);
-  --rcl-c:234,88,12;
-  position:fixed;inset:0;z-index:10050;display:flex;align-items:center;justify-content:center;
-  padding:24px;background:rgba(15,23,42,.42);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)
+  --rcl-shadow:0 4px 20px rgba(15,23,42,.06),0 1px 4px rgba(15,23,42,.04);
+  --rcl-c:234,88,12;color:var(--rcl-text)
 }
-.dm-rcl-velo[hidden]{display:none}
-.dm-rcl-velo[data-dm-rcl-zona="freddo"]{--rcl-c:14,165,233}
-html[data-theme="dark"] .dm-rcl-velo{
+.dm-rcl-scheda[hidden]{display:none}
+.dm-rcl-scheda[data-dm-rcl-zona="freddo"]{--rcl-c:2,132,199}
+html[data-theme="dark"] .dm-rcl-scheda{
   --rcl-card:var(--card-bg,#151b26);--rcl-soft:var(--surface-2,#1b2230);--rcl-sunk:var(--surface-3,#232c3d);
   --rcl-line:var(--card-border,#2a3445);--rcl-text:var(--text,#e8edf5);--rcl-dim:var(--text-dim,#94a3b8);
-  --rcl-c:251,146,60;background:rgba(0,0,0,.6)
+  --rcl-shadow:0 4px 20px rgba(0,0,0,.38),0 1px 4px rgba(0,0,0,.26);--rcl-c:251,146,60
 }
-html[data-theme="dark"] .dm-rcl-velo[data-dm-rcl-zona="freddo"]{--rcl-c:56,189,248}
-.dm-rcl-foglio{
-  width:min(760px,100%);max-height:min(900px,100%);overflow:auto;overscroll-behavior:contain;
-  background:var(--rcl-card);color:var(--rcl-text);border:1px solid var(--rcl-line);border-radius:24px;
-  box-shadow:0 30px 80px rgba(15,23,42,.28);padding:18px 20px 22px;box-sizing:border-box
-}
-.dm-rcl-testa{display:flex;align-items:center;gap:12px}
-.dm-rcl-ic{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;font-size:20px;background:rgba(var(--rcl-c),.14)}
-.dm-rcl-testa div{flex:1;min-width:0}
-.dm-rcl-testa h2{margin:0;padding:0;border:0;font-family:inherit;font-size:18px;font-weight:800;letter-spacing:-.3px;text-transform:none;color:var(--rcl-text)}
-.dm-rcl-testa p{margin:1px 0 0;font-size:12px;font-weight:700;color:rgb(var(--rcl-c))}
-.dm-rcl-chiudi{width:36px;height:36px;border-radius:12px;border:1px solid var(--rcl-line);background:var(--rcl-soft);color:var(--rcl-dim);font-size:15px;cursor:pointer}
+html[data-theme="dark"] .dm-rcl-scheda[data-dm-rcl-zona="freddo"]{--rcl-c:56,189,248}
+.dm-rcl-scheda button{font:inherit}
+.dm-rcl-foglio{display:flex;flex-direction:column;gap:14px}
+.dm-rcl-carta,.dm-rcl-barra-testa,.dm-rcl-tessera,.dm-rcl-grafico-box,.dm-rcl-elenco,.dm-rcl-come,.dm-rcl-carica,.dm-rcl-vuoto{
+  background:var(--rcl-card);border:1px solid var(--rcl-line);border-radius:22px;box-shadow:var(--rcl-shadow)}
+
+/* La testata: titolo e impianto, poi il periodo. */
+.dm-rcl-barra-testa{display:flex;flex-direction:column;gap:14px;padding:16px 18px}
+.dm-rcl-testa{display:flex;align-items:center;justify-content:space-between;gap:12px 16px;flex-wrap:wrap}
+.dm-rcl-titoli{min-width:0}
+.dm-rcl-titoli h2{margin:0;padding:0;border:0;font-family:"Oswald",system-ui,sans-serif;font-size:22px;font-weight:700;letter-spacing:.6px;text-transform:none;color:var(--rcl-text)}
+.dm-rcl-titoli p{margin:2px 0 0;font-size:12.5px;font-weight:600;color:var(--rcl-dim)}
 .dm-rcl-impianti,.dm-rcl-viste{display:flex;gap:4px;padding:4px;border-radius:14px;background:var(--rcl-sunk)}
-.dm-rcl-impianti{margin-top:14px}
-.dm-rcl-impianti button,.dm-rcl-viste button{flex:1;border:0;border-radius:10px;padding:9px 10px;background:transparent;color:var(--rcl-dim);font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+.dm-rcl-impianti{flex:0 1 auto}
+.dm-rcl-impianti button,.dm-rcl-viste button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;border:0;border-radius:11px;padding:0 14px;background:transparent;color:var(--rcl-dim);font-size:13px;font-weight:750;cursor:pointer;white-space:nowrap}
 .dm-rcl-impianti button[aria-pressed="true"],.dm-rcl-viste button[aria-pressed="true"]{background:var(--rcl-card);color:var(--rcl-text);box-shadow:0 1px 4px rgba(15,23,42,.12)}
 .dm-rcl-impianti button[aria-pressed="true"]{color:rgb(var(--rcl-c))}
-.dm-rcl-periodo{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:10px}
-.dm-rcl-periodo .dm-rcl-viste{flex:1 1 260px}
-.dm-rcl-naviga{display:flex;align-items:center;gap:6px;flex:1 1 260px}
-.dm-rcl-naviga b{flex:1;text-align:center;font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dm-rcl-naviga button{width:36px;height:36px;border-radius:12px;border:1px solid var(--rcl-line);background:var(--rcl-soft);color:var(--rcl-text);font-size:18px;font-weight:800;cursor:pointer}
+.dm-rcl-scheda :is(button):focus-visible{outline:2px solid rgb(var(--rcl-c));outline-offset:2px}
+.dm-rcl-periodo{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.dm-rcl-periodo .dm-rcl-viste{flex:1 1 280px}
+.dm-rcl-naviga{display:flex;align-items:center;gap:8px;flex:1 1 280px}
+.dm-rcl-naviga b{flex:1;text-align:center;font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dm-rcl-naviga button{width:44px;height:44px;flex:0 0 44px;border-radius:14px;border:1px solid var(--rcl-line);background:var(--rcl-soft);color:var(--rcl-text);font-size:20px;font-weight:800;cursor:pointer}
 .dm-rcl-naviga button:disabled{opacity:.35;cursor:default}
-.dm-rcl-corpo{margin-top:14px}
-.dm-rcl-tessere{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-.dm-rcl-tessera{display:flex;flex-direction:column;gap:2px;padding:12px 13px;border-radius:16px;border:1px solid var(--rcl-line);background:var(--rcl-soft);min-width:0}
-.dm-rcl-tessera[data-dm-rcl-tessera="generatore"]{background:rgba(var(--rcl-c),.1);border-color:rgba(var(--rcl-c),.3)}
-.dm-rcl-t-et{display:flex;align-items:flex-start;gap:5px;font-size:10px;line-height:1.3;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--rcl-dim)}
-.dm-rcl-t-et i{font-style:normal;font-size:13px}
-.dm-rcl-tessera b{font-size:20px;font-weight:800;letter-spacing:-.4px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.dm-rcl-tessera small{font-size:11px;font-weight:700;color:var(--rcl-dim)}
-.dm-rcl-generatori{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
-.dm-rcl-generatori li{display:flex;align-items:baseline;gap:10px;padding:8px 12px;border-radius:12px;background:var(--rcl-soft);font-size:13px}
+.dm-rcl-corpo{display:flex;flex-direction:column;gap:14px}
+
+/* I numeri in alto: quattro card, due per riga sul telefono. */
+.dm-rcl-tessere{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.dm-rcl-tessera{display:flex;flex-direction:column;gap:4px;padding:14px 16px;min-width:0}
+.dm-rcl-tessera[data-dm-rcl-tessera="generatore"]{background:linear-gradient(180deg,rgba(var(--rcl-c),.12),rgba(var(--rcl-c),.04)),var(--rcl-card);border-color:rgba(var(--rcl-c),.32)}
+.dm-rcl-t-et{display:flex;align-items:center;gap:6px;font-size:12.5px;line-height:1.3;font-weight:700;letter-spacing:0;text-transform:none;color:var(--rcl-dim)}
+.dm-rcl-t-et i{font-style:normal;font-size:14px}
+.dm-rcl-tessera b{font-size:24px;font-weight:800;letter-spacing:-.5px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dm-rcl-tessera small{font-size:12px;font-weight:650;color:var(--rcl-dim)}
+.dm-rcl-tessera[data-ignoto]{background:var(--rcl-card);border-color:var(--rcl-line)}
+.dm-rcl-generatori{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.dm-rcl-generatori li{display:flex;align-items:baseline;gap:10px;padding:12px 16px;border-radius:16px;background:var(--rcl-card);border:1px solid var(--rcl-line);font-size:13.5px}
 .dm-rcl-generatori li span{flex:1;font-weight:700}
-.dm-rcl-generatori li small{color:var(--rcl-dim);font-weight:700}
-.dm-rcl-grafico-box{margin-top:14px;padding:12px 14px 8px;border-radius:18px;border:1px solid var(--rcl-line)}
-.dm-rcl-grafico-testa{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px;font-size:12px}
-.dm-rcl-grafico-testa b{font-weight:800}
-.dm-rcl-grafico-testa span{color:var(--rcl-dim);font-weight:700}
-.dm-rcl-grafico{display:flex;align-items:stretch;gap:3px;height:150px;margin-top:10px}
+.dm-rcl-generatori li small{color:var(--rcl-dim);font-weight:650}
+
+/* Il grafico. Vuoto, dice perche'. */
+.dm-rcl-grafico-box{padding:16px 18px 12px}
+.dm-rcl-grafico-testa{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px;font-size:12.5px}
+.dm-rcl-grafico-testa b{font-size:15px;font-weight:800}
+.dm-rcl-grafico-testa span{color:var(--rcl-dim);font-weight:650}
+.dm-rcl-grafico-area{position:relative;margin-top:12px}
+.dm-rcl-grafico{display:flex;align-items:stretch;gap:3px;height:170px}
 .dm-rcl-col{flex:1;display:flex;flex-direction:column;align-items:stretch;min-width:0}
-.dm-rcl-barra{flex:1;display:flex;align-items:flex-end;border-radius:6px;background:var(--rcl-sunk)}
-.dm-rcl-barra i{display:block;width:100%;border-radius:6px;background:linear-gradient(180deg,rgba(var(--rcl-c),1),rgba(var(--rcl-c),.7))}
-.dm-rcl-col[data-futuro="true"] .dm-rcl-barra{opacity:.4}
-.dm-rcl-col[data-ignota] .dm-rcl-barra{background:repeating-linear-gradient(135deg,var(--rcl-sunk) 0 5px,transparent 5px 9px);opacity:.8}
-.dm-rcl-ignoto{display:flex;align-items:center;gap:12px;margin-top:10px;padding:18px 14px;border-radius:14px;background:repeating-linear-gradient(135deg,var(--rcl-soft) 0 8px,transparent 8px 14px);border:1px dashed var(--rcl-line)}
+.dm-rcl-barra{flex:1;display:flex;align-items:flex-end;border-radius:6px;background:var(--rcl-soft)}
+.dm-rcl-barra i{display:block;width:100%;border-radius:6px;background:linear-gradient(180deg,rgba(var(--rcl-c),1),rgba(var(--rcl-c),.72))}
+.dm-rcl-col[data-futuro="true"] .dm-rcl-barra{opacity:.45}
+.dm-rcl-col[data-ignota] .dm-rcl-barra{background:repeating-linear-gradient(135deg,var(--rcl-sunk) 0 4px,transparent 4px 8px);box-shadow:inset 0 0 0 1px var(--rcl-line)}
+.dm-rcl-col small{height:16px;margin-top:6px;text-align:center;font-size:11px;font-weight:650;color:var(--rcl-dim);white-space:nowrap;overflow:visible}
+.dm-rcl-grafico-vuoto{position:absolute;left:50%;top:calc(50% - 11px);transform:translate(-50%,-50%);max-width:calc(100% - 24px);margin:0;padding:10px 14px;border-radius:14px;background:var(--rcl-card);border:1px solid var(--rcl-line);box-shadow:var(--rcl-shadow);font-size:13px;font-weight:700;line-height:1.4;text-align:center;color:var(--rcl-text)}
+.dm-rcl-legenda{display:flex;align-items:center;gap:8px;margin:10px 0 0;font-size:12px;font-weight:650;color:var(--rcl-dim)}
+.dm-rcl-legenda i{width:16px;height:12px;border-radius:4px;background:repeating-linear-gradient(135deg,var(--rcl-sunk) 0 3px,transparent 3px 6px);box-shadow:inset 0 0 0 1px var(--rcl-line)}
+.dm-rcl-ignoto{display:flex;align-items:center;gap:12px;margin-top:12px;padding:18px 16px;border-radius:16px;background:var(--rcl-soft);border:1px dashed var(--rcl-line)}
 .dm-rcl-ignoto span{font-size:22px}
-.dm-rcl-ignoto p{margin:0;font-size:12.5px;line-height:1.45;font-weight:700;color:var(--rcl-dim)}
-.dm-rcl-tessera[data-ignoto]{background:var(--rcl-soft);border-color:var(--rcl-line)}
-.dm-rcl-col small{height:16px;margin-top:4px;text-align:center;font-size:10px;font-weight:700;color:var(--rcl-dim);white-space:nowrap;overflow:visible}
-.dm-rcl-sezione{display:flex;align-items:baseline;gap:8px;margin:18px 2px 8px}
-.dm-rcl-sezione b{font-size:15px;font-weight:800}
-.dm-rcl-sezione span{font-size:12px;color:var(--rcl-dim);font-weight:700}
-.dm-rcl-stanze{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-.dm-rcl-stanza{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:16px;border:1px solid var(--rcl-line);background:var(--rcl-card)}
-.dm-rcl-pos{display:grid;place-items:center;flex:none;width:26px;height:26px;border-radius:9px;background:rgba(var(--rcl-c),.14);color:rgb(var(--rcl-c));font-size:12px;font-weight:800}
+.dm-rcl-ignoto p{margin:0;font-size:13px;line-height:1.5;font-weight:650;color:var(--rcl-dim)}
+
+/* Le stanze: una card sola, una riga per stanza. */
+.dm-rcl-sezione{display:flex;align-items:baseline;gap:8px;margin:6px 4px -4px}
+.dm-rcl-sezione b{font-size:16px;font-weight:800}
+.dm-rcl-sezione span{font-size:12.5px;color:var(--rcl-dim);font-weight:650}
+.dm-rcl-stanze{list-style:none;margin:0;padding:4px 0;display:block;background:var(--rcl-card);border:1px solid var(--rcl-line);border-radius:22px;box-shadow:var(--rcl-shadow)}
+.dm-rcl-stanza{display:flex;gap:12px;align-items:flex-start;padding:14px 16px}
+.dm-rcl-stanza + .dm-rcl-stanza{border-top:1px solid var(--rcl-line)}
+.dm-rcl-pos{display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:10px;background:rgba(var(--rcl-c),.14);color:rgb(var(--rcl-c));font-size:12.5px;font-weight:800}
 .dm-rcl-stanza-corpo{flex:1;min-width:0}
 .dm-rcl-stanza-testa{display:flex;align-items:center;gap:8px}
-.dm-rcl-stanza-testa b{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dm-rcl-stanza-testa b{font-size:14.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dm-rcl-stanza-testa strong{margin-left:auto;font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
-.dm-rcl-segno{flex:none;font-style:normal;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:2px 7px;border-radius:999px;background:var(--rcl-sunk);color:var(--rcl-dim)}
+.dm-rcl-segno{flex:none;font-style:normal;font-size:11px;font-weight:750;padding:2px 8px;border-radius:999px;background:var(--rcl-sunk);color:var(--rcl-dim)}
 .dm-rcl-segno[data-dm-rcl-segno="dati"]{background:rgba(234,179,8,.18);color:#a16207}
 html[data-theme="dark"] .dm-rcl-segno[data-dm-rcl-segno="dati"]{color:#facc15}
-.dm-rcl-stanza-barra{height:8px;margin:8px 0;border-radius:999px;background:var(--rcl-sunk);overflow:hidden}
+.dm-rcl-stanza-barra{height:8px;margin:9px 0;border-radius:999px;background:var(--rcl-soft);overflow:hidden}
 .dm-rcl-stanza-barra i{display:block;height:100%;border-radius:999px;background:rgb(var(--rcl-c))}
-.dm-rcl-stanza-dati{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;font-weight:700;color:var(--rcl-dim)}
-.dm-rcl-stanza-dati span:first-child{color:rgb(var(--rcl-c))}
-.dm-rcl-nota{margin:12px 2px 0;font-size:11.5px;line-height:1.45;color:var(--rcl-dim)}
-.dm-rcl-nota[data-dm-rcl-stima]{padding:10px 12px;border-radius:12px;background:rgba(var(--rcl-c),.08);color:var(--rcl-text);font-weight:600}
-.dm-rcl-carica,.dm-rcl-vuoto{display:flex;flex-direction:column;align-items:center;gap:8px;padding:48px 16px;text-align:center;color:var(--rcl-dim);font-size:13px;font-weight:700}
+.dm-rcl-stanza-dati{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;font-weight:650;color:var(--rcl-dim)}
+.dm-rcl-stanza-dati span:first-child{color:rgb(var(--rcl-c));font-weight:750}
+.dm-rcl-stanza-dati span[data-ignota]{color:var(--rcl-dim);font-weight:650}
+
+/* In fondo: la stima, se c'e', in vista; il resto a scomparsa. */
+.dm-rcl-nota{margin:0;font-size:13px;line-height:1.5;color:var(--rcl-dim)}
+.dm-rcl-nota[data-dm-rcl-stima]{padding:12px 14px;border-radius:16px;background:rgba(var(--rcl-c),.09);border:1px solid rgba(var(--rcl-c),.22);color:var(--rcl-text);font-weight:600}
+.dm-rcl-come{padding:0;overflow:hidden}
+.dm-rcl-come summary{display:flex;align-items:center;gap:8px;min-height:48px;padding:0 16px;cursor:pointer;list-style:none;font-size:14px;font-weight:800;color:var(--rcl-text)}
+.dm-rcl-come summary::-webkit-details-marker{display:none}
+.dm-rcl-come summary::before{content:"";width:8px;height:8px;margin-right:4px;border-right:2px solid var(--rcl-dim);border-bottom:2px solid var(--rcl-dim);transform:rotate(-45deg);transition:transform .2s}
+.dm-rcl-come[open] summary::before{transform:rotate(45deg)}
+.dm-rcl-come .dm-rcl-nota{padding:0 16px 14px}
+.dm-rcl-come .dm-rcl-nota span{display:block;position:relative;padding-left:14px;margin-top:6px;max-width:68ch}
+.dm-rcl-come .dm-rcl-nota span::before{content:"";position:absolute;left:2px;top:.62em;width:5px;height:5px;border-radius:50%;background:var(--rcl-dim);opacity:.6}
+
+.dm-rcl-carica,.dm-rcl-vuoto{display:flex;flex-direction:column;align-items:center;gap:8px;padding:48px 18px;text-align:center;color:var(--rcl-dim);font-size:13px;font-weight:650;line-height:1.5}
 .dm-rcl-vuoto span{font-size:30px}
-.dm-rcl-vuoto b{color:var(--rcl-text);font-size:15px}
+.dm-rcl-vuoto b{color:var(--rcl-text);font-size:16px}
+.dm-rcl-vuoto small{max-width:62ch;font-size:13px}
 .dm-rcl-spin{width:26px;height:26px;border-radius:50%;border:3px solid var(--rcl-sunk);border-top-color:rgb(var(--rcl-c));animation:dm-rcl-gira .8s linear infinite}
 @keyframes dm-rcl-gira{to{transform:rotate(360deg)}}
 @media (max-width:640px){
-  .dm-rcl-velo{padding:0;align-items:stretch}
-  .dm-rcl-foglio{width:100%;max-height:none;height:100%;border-radius:0;border:0;padding:max(14px,env(safe-area-inset-top)) 14px max(20px,env(safe-area-inset-bottom))}
-  .dm-rcl-tessere{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-  .dm-rcl-tessera b{font-size:18px}
+  .dm-rcl-barra-testa{padding:14px}
+  .dm-rcl-impianti{flex:1 1 100%}
+  .dm-rcl-tessere{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .dm-rcl-tessera{padding:12px 14px}
+  .dm-rcl-tessera b{font-size:20px}
+  .dm-rcl-grafico-box{padding:14px 14px 10px}
+  .dm-rcl-stanza{padding:12px 14px}
   /* Sul telefono il segno («stima», «dati parziali») va sotto il nome: accanto
    * gli toglieva lo spazio e «Termosifone Sala» diventava «Termosifone …». */
   .dm-rcl-stanza-testa{flex-wrap:wrap;row-gap:4px}
@@ -117043,8 +117595,8 @@ html[data-theme="dark"] .dm-rcl-segno[data-dm-rcl-segno="dati"]{color:#facc15}
   .dm-rcl-stanza-testa strong{order:1}
   .dm-rcl-stanza-testa:has(.dm-rcl-segno)::after{content:"";order:2;flex-basis:100%;height:0}
   .dm-rcl-segno{order:3}
-  .dm-rcl-grafico{height:130px;gap:2px}
-  .dm-rcl-grafico[data-colonne="24"] .dm-rcl-col small,.dm-rcl-grafico[data-colonne="31"] .dm-rcl-col small{font-size:9px}
+  .dm-rcl-grafico{height:140px;gap:2px}
+  .dm-rcl-grafico[data-colonne="24"] .dm-rcl-col small,.dm-rcl-grafico[data-colonne="31"] .dm-rcl-col small{font-size:9.5px}
 }
 `;
 function installReportDelClima() {
@@ -117053,7 +117605,19 @@ function installReportDelClima() {
   installStyle(STYLE_ID22, CSS2);
   root.apriIlReportDelClima = apriIlReportDelClima;
   doc.addEventListener("click", (evento) => {
-    if (evento.target?.closest?.("[data-dm-rcl-apri]")) apriIlReportDelClima();
+    if (evento.target?.closest?.("[data-dm-rcl-apri]")) {
+      apriIlReportDelClima();
+      return;
+    }
+    if (state109.aperto && evento.target?.closest?.("#page-clima .clima-page-mode-btn[data-dm-cl-zone]"))
+      chiudiIlReport();
+  });
+  root.addEventListener?.("dashboardmodern:state-changed", () => {
+    if (!state109.aperto) return;
+    const nodo3 = doc.getElementById("dm-rcl");
+    const posto = doc.querySelector("#page-clima [data-dm-rcl-posto]");
+    if (nodo3 && posto && nodo3.parentElement !== posto) posto.appendChild(nodo3);
+    segnaLaPagina2(true);
   });
   doc.addEventListener("keydown", tasto3);
   return true;
@@ -127027,7 +127591,7 @@ function vuotoMarkup9() {
   )}</span>
   </div>`;
 }
-function testaMarkup10(conto, soglia3) {
+function testaMarkup11(conto, soglia3) {
   const stato3 = conto.scariche ? "scariche" : conto.quante ? "cariche" : "vuoto";
   const sotto = [
     conto.minima ? `${conto.minima.name} ${Math.round(conto.minima.level)}%` : "",
@@ -127061,7 +127625,7 @@ function dipingi13() {
   ).join(",")}`;
   if (state129.firma === firma2) return;
   state129.firma = firma2;
-  dove.innerHTML = `${testaMarkup10(conto, soglia3)}
+  dove.innerHTML = `${testaMarkup11(conto, soglia3)}
     <div class="dm-batt-elenco">${righe3.map((riga5) => rigaMarkup14(riga5, states)).join("")}</div>`;
 }
 function schedule29() {
@@ -146190,29 +146754,29 @@ function frontMarkup(L) {
   }
   return collector + tank + tap + leads;
 }
-function svgGroup(svg2, cls, where) {
-  let group = svg2.querySelector(`:scope > g.${cls}`);
+function svgGroup(svg3, cls, where) {
+  let group = svg3.querySelector(`:scope > g.${cls}`);
   if (!group) {
     group = doc.createElementNS(SVG_NS2, "g");
     group.setAttribute("class", cls);
-    if (where === "start") svg2.prepend(group);
-    else svg2.append(group);
+    if (where === "start") svg3.prepend(group);
+    else svg3.append(group);
   }
   return group;
 }
-function drawArt(svg2, layout) {
-  const defs2 = svgGroup(svg2, "dm-st-defs", "start");
+function drawArt(svg3, layout) {
+  const defs2 = svgGroup(svg3, "dm-st-defs", "start");
   if (!defs2.firstChild) {
     const node = doc.createElementNS(SVG_NS2, "defs");
     node.innerHTML = defsMarkup();
     defs2.append(node);
   }
-  const back = svgGroup(svg2, "dm-st-back", "start");
+  const back = svgGroup(svg3, "dm-st-back", "start");
   if (back.previousElementSibling !== defs2) defs2.after(back);
-  const front = svgGroup(svg2, "dm-st-front", "end");
-  if (svg2.lastElementChild !== front) svg2.append(front);
-  if (svg2.dataset.dmStLayout === layout.name && front.firstChild) return;
-  svg2.dataset.dmStLayout = layout.name;
+  const front = svgGroup(svg3, "dm-st-front", "end");
+  if (svg3.lastElementChild !== front) svg3.append(front);
+  if (svg3.dataset.dmStLayout === layout.name && front.firstChild) return;
+  svg3.dataset.dmStLayout = layout.name;
   back.innerHTML = backMarkup(layout);
   front.innerHTML = frontMarkup(layout);
 }
@@ -146349,13 +146913,13 @@ function pressureGauge() {
     card2.style.setProperty("--dm-st-gauge", colour);
 }
 function routePipes(layout) {
-  const svg2 = doc.querySelector("#page-boiler .syn-svg");
-  if (!svg2) return;
+  const svg3 = doc.querySelector("#page-boiler .syn-svg");
+  if (!svg3) return;
   const box2 = `0 0 ${layout.w} ${layout.h}`;
-  if (svg2.getAttribute("viewBox") !== box2) svg2.setAttribute("viewBox", box2);
-  if (svg2.getAttribute("preserveAspectRatio") !== "none")
-    svg2.setAttribute("preserveAspectRatio", "none");
-  drawArt(svg2, layout);
+  if (svg3.getAttribute("viewBox") !== box2) svg3.setAttribute("viewBox", box2);
+  if (svg3.getAttribute("preserveAspectRatio") !== "none")
+    svg3.setAttribute("preserveAspectRatio", "none");
+  drawArt(svg3, layout);
   for (const [id, route] of Object.entries(layout.routes)) {
     const flow = doc.getElementById(id);
     if (!flow) continue;
@@ -151540,7 +152104,7 @@ function vuotoMarkup12() {
   )}</span>
   </div>`;
 }
-function testaMarkup11(conto, esclusioni) {
+function testaMarkup12(conto, esclusioni) {
   const stato3 = conto.aperti ? "aperti" : conto.totale ? "chiusi" : "vuoto";
   const sotto = [
     conto.chiusi ? conto.chiusi === 1 ? t("1 chiuso", "1 closed") : t(`${conto.chiusi} chiusi`, `${conto.chiusi} closed`) : "",
@@ -151587,7 +152151,7 @@ function dipingi16() {
   ]);
   if (state169.firma !== firma2 || !dove.firstElementChild) {
     state169.firma = firma2;
-    dove.innerHTML = `${testaMarkup11(conto, esclusioni)}
+    dove.innerHTML = `${testaMarkup12(conto, esclusioni)}
       <div class="dm-varchi-elenco">${righe3.map((riga5) => rigaMarkup21(riga5, states)).join("")}</div>`;
   }
   svegliamiQuandoCambia(righe3);
@@ -152176,7 +152740,7 @@ function ultimoMovimentoTesto(righe3) {
   if (quando6 == null) return "";
   return `${t("Ultimo movimento", "Last movement")} · ${quantoTempoInParole(Math.max(0, (Date.now() - quando6) / 6e4))}`;
 }
-function testaMarkup12(conto, righe3) {
+function testaMarkup13(conto, righe3) {
   const stato3 = conto.attivi ? "attivi" : conto.totale ? "liberi" : "vuoto";
   const sotto = [
     conto.liberi ? conto.liberi === 1 ? t("1 libera", "1 free") : t(`${conto.liberi} libere`, `${conto.liberi} free`) : "",
@@ -152212,7 +152776,7 @@ function dipingi17() {
   ]);
   if (state170.firma !== firma2 || !dove.firstElementChild) {
     state170.firma = firma2;
-    dove.innerHTML = `${testaMarkup12(conto, righe3)}
+    dove.innerHTML = `${testaMarkup13(conto, righe3)}
       <div class="dm-presenza-elenco">${righe3.map(rigaMarkup22).join("")}</div>`;
   }
   svegliamiQuandoCambia2(righe3);
@@ -152902,7 +153466,7 @@ function vuotoMarkup14() {
     <strong>${esc(t("Nessuna stampante configurata", "No printer configured"))}</strong>
   </div>`;
 }
-function testaMarkup13(riassunto4) {
+function testaMarkup14(riassunto4) {
   const sotto = [
     riassunto4.quante === 1 ? t("1 stampante", "1 printer") : t(`${riassunto4.quante} stampanti`, `${riassunto4.quante} printers`),
     riassunto4.mute.length ? riassunto4.mute.length === 1 ? t("1 non risponde", "1 not answering") : t(`${riassunto4.mute.length} non rispondono`, `${riassunto4.mute.length} not answering`) : ""
@@ -152930,7 +153494,7 @@ function dipingi18() {
   const firma2 = JSON.stringify([letture2, t("Pronta", "Ready")]);
   if (state172.firma !== firma2 || !dove.firstElementChild) {
     state172.firma = firma2;
-    dove.innerHTML = `${testaMarkup13(riassunto4)}
+    dove.innerHTML = `${testaMarkup14(riassunto4)}
       <div class="dm-stampanti-elenco">${letture2.map(cartaMarkup).join("")}</div>`;
   }
 }

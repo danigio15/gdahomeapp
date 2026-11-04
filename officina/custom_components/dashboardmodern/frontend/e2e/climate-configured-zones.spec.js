@@ -29,6 +29,7 @@ async function tabs(page) {
       // it was marked, not by whether the hidden switch lets it paint.
       freddo: shell?.querySelector('[data-dm-cl-zone="freddo"]')?.dataset.dmClEmpty !== "true",
       caldo: shell?.querySelector('[data-dm-cl-zone="caldo"]')?.dataset.dmClEmpty !== "true",
+      report: seen(shell?.querySelector(".dm-cl-tab-report")),
       cards: shell?.querySelectorAll(".clima-zone.show .dm-cl-card").length || 0,
       zone: shell?.dataset.dmClZone || "",
     };
@@ -48,12 +49,23 @@ async function open(page, testInfo, climate) {
   );
   await page.waitForTimeout(900);
 }
-test("only cooling configured: no Caldo tab, no switch", async ({ page }, testInfo) => {
+/* With one zone the switch used to go entirely. The Climate report is now a tab
+ * of the page, like the Report of the Energy page: the switch stays, with the
+ * one zone and the Report, and the empty zone still has no tab. */
+test("only cooling configured: no Caldo tab, the switch only for the Report", async ({
+  page,
+}, testInfo) => {
   test.setTimeout(90_000);
   await open(page, testInfo, [{ entity: "climate.salone", name: "Salone", type: "clima" }]);
   await expect
     .poll(() => tabs(page))
-    .toMatchObject({ freddo: true, caldo: false, switchVisible: false, zone: "freddo" });
+    .toMatchObject({
+      freddo: true,
+      caldo: false,
+      switchVisible: true,
+      report: true,
+      zone: "freddo",
+    });
   expect((await tabs(page)).cards, "the visible zone is not empty").toBeGreaterThan(0);
 });
 test("only heating configured: opens on Caldo", async ({ page }, testInfo) => {
@@ -61,7 +73,13 @@ test("only heating configured: opens on Caldo", async ({ page }, testInfo) => {
   await open(page, testInfo, [{ entity: "climate.termo", name: "Termo", type: "termo" }]);
   await expect
     .poll(() => tabs(page))
-    .toMatchObject({ freddo: false, caldo: true, switchVisible: false, zone: "caldo" });
+    .toMatchObject({
+      freddo: false,
+      caldo: true,
+      switchVisible: true,
+      report: true,
+      zone: "caldo",
+    });
   expect((await tabs(page)).cards, "the visible zone is not empty").toBeGreaterThan(0);
 });
 test("both configured: both tabs and the switch", async ({ page }, testInfo) => {

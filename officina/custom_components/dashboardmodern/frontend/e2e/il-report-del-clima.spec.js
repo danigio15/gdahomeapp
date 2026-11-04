@@ -494,8 +494,6 @@ async function avvia(
   return tasto;
 }
 
-const foglio = (page) => page.locator("#dm-rcl .dm-rcl-foglio");
-
 async function attendiIlReport(page) {
   await expect(page.locator("#dm-rcl .dm-rcl-tessere")).toBeVisible({ timeout: 15_000 });
 }
@@ -511,21 +509,19 @@ async function scegli(page, { impianto = "", vista = "", indietro = 0 } = {}) {
   await attendiIlReport(page);
 }
 
-/* La foto del foglio intero: sul telefono il foglio e' alto quanto lo
+/* La foto della pagina intera, col report aperto: sul telefono e' alta piu' dello
  * schermo e scorre, e la foto lo vuole tutto. */
 async function foto(page, nome) {
   if (!process.env.DM_FOTO) return;
   await page.waitForTimeout(250);
+  /* Il report e' una scheda della pagina Clima: la foto prende la scheda
+   * intera, anche la parte sotto lo schermo. */
   await page.addStyleTag({
-    content:
-      "#dm-rcl{position:absolute!important;inset:0 auto auto 0!important;width:100%!important;min-height:100vh}#dm-rcl .dm-rcl-foglio{max-height:none!important;height:auto!important;overflow:visible!important}",
+    content: "nav.tabs.bottom-nav-bar,.dm-assist-tasto{visibility:hidden!important}",
   });
-  await foglio(page).screenshot({ path: `${process.env.DM_FOTO}/${nome}.png` });
-  await page.evaluate(() =>
-    document
-      .querySelectorAll("style")
-      .forEach((s) => s.textContent.startsWith("#dm-rcl{position:absolute") && s.remove()),
-  );
+  await page
+    .locator("#page-clima .dm-cl-shell")
+    .screenshot({ path: `${process.env.DM_FOTO}/${nome}.png` });
 }
 
 const TELEFONO = { width: 390, height: 844 };

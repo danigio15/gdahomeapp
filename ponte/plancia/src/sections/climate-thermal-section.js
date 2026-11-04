@@ -90,7 +90,7 @@ import {
   scadenzaDi,
 } from "./spegnimento-programmato-section.js";
 import { statiDelleCaldaie } from "./termico-del-caldo-section.js";
-import { climatePanelMarkup } from "./home-widgets-section.js";
+import { climaDellaFinestra } from "./home-widgets-section.js";
 import {
   activeLocale,
   allStates,
@@ -154,6 +154,8 @@ const ICONS = Object.freeze({
   minus:
     '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>',
   plus: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg>',
+  report:
+    '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 20h16"/><path d="M7 16v-5M12 16V6M17 16v-8"/></svg>',
   sliders:
     '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 8h16M4 16h16"/><circle cx="9.5" cy="8" r="2.6"/><circle cx="15" cy="16" r="2.6"/></svg>',
 });
@@ -544,11 +546,6 @@ function skeletonMarkup(labels) {
         <span class="dm-cl-bulk-div" aria-hidden="true"></span>
         <button type="button" data-dm-cl-bulk="off">${ICONS.power}${esc(labels.allOff)}</button>
       </div>
-      <!-- Il report del riscaldamento e del raffrescamento: lo apre
-           report-del-clima-section.js, che ascolta il tocco su tutta la pagina. -->
-      <button type="button" class="dm-cl-report" data-dm-rcl-apri hidden>
-        <span aria-hidden="true">📊</span><span>${esc(labels.report)}</span>
-      </button>
     </div>
   </div>
 
@@ -556,7 +553,15 @@ function skeletonMarkup(labels) {
     ${zoneButton("freddo", labels)}
     ${zoneButton("caldo", labels)}
     ${zoneButton("termostato", labels)}
+    <!-- Il report: una linguetta della pagina, come il Report dell'Energia.
+         Lo apre report-del-clima-section.js, che ascolta il tocco su tutta
+         la pagina, e si disegna nel posto qui sotto. -->
+    <button type="button" class="clima-page-mode-btn dm-cl-tab dm-cl-tab-report" data-dm-rcl-apri aria-pressed="false" aria-label="${esc(labels.report)}" hidden>
+      <span class="icon dm-cl-tab-ic">${ICONS.report}</span>
+      <span class="dm-cl-tab-tx">${esc(labels.report)}</span>
+    </button>
   </div>
+  <div data-dm-rcl-posto></div>
 
   <div class="clima-zone clima-zone-freddo show">
     <div class="dm-cl-grid" id="clima-grid-freddo"></div>
@@ -2268,28 +2273,87 @@ function pannelloNellaFinestra(entity) {
   gradiNellaFinestra(entity);
   const modalita = doc.getElementById("cp-mode-section");
   const ventola = doc.getElementById("cp-fan-section");
-  const markup = climatePanelMarkup(entity);
+  const info = climaDellaFinestra(entity);
+  const markup = info?.pannello || "";
   let ospite = finestra.querySelector("[data-dm-cl-panel]");
   /* Si scrive `display`, non `hidden`: le due sezioni del guscio se lo
    * scrivono da sole a ogni apertura, in linea, e una regola in linea batte
    * l'attributo. */
-  if (!markup) {
+  if (!info) {
     ospite?.remove();
+    finestra.querySelector("[data-dm-cpf-ora]")?.remove();
+    for (const chiave of ["dmCpf", "dmCpfTono", "dmCpfAcceso", "dmCpfPotenza"]) delete finestra.dataset[chiave];
     /* Senza pannello si torna a quello che c'era: e' meglio di niente. */
     for (const nodo of [modalita, ventola]) nodo?.style?.removeProperty("display");
     return false;
   }
   for (const nodo of [modalita, ventola]) nodo?.style?.setProperty("display", "none", "important");
-  if (!ospite) {
-    ospite = doc.createElement("div");
-    ospite.setAttribute("data-dm-cl-panel", "");
-    (modalita || ventola)?.before(ospite);
-    if (!ospite.isConnected) finestra.append(ospite);
-  }
-  scriviSeCambia(ospite, markup);
+  if (markup) {
+    if (!ospite) {
+      ospite = doc.createElement("div");
+      ospite.setAttribute("data-dm-cl-panel", "");
+      (modalita || ventola)?.before(ospite);
+      if (!ospite.isConnected) finestra.append(ospite);
+    }
+    scriviSeCambia(ospite, markup);
+  } else ospite?.remove();
+  vestiLaFinestra(finestra, info);
   intestazioneDellaFinestra(entity);
   return true;
 }
+
+/* Il guscio della finestra, vestito: la riga «adesso» in cima al riquadro dei
+ * gradi, l'obiettivo che si chiama «Obiettivo», il meno e il piu' disegnati
+ * invece delle due emoji, e i due bottoni di accensione solo quando servono.
+ * Il colore lo decide quello che l'unita' sta facendo (`data-dm-cpf-tono`). */
+const GLIFO_MENO =
+  '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg>';
+const GLIFO_PIU =
+  '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M12 5v14"/></svg>';
+
+function vestiLaFinestra(finestra, info) {
+  const insegna = (chiave, valore) => {
+    if (finestra.dataset[chiave] !== valore) finestra.dataset[chiave] = valore;
+  };
+  insegna("dmCpf", "1");
+  insegna("dmCpfTono", info.tono);
+  insegna("dmCpfAcceso", String(info.acceso));
+  insegna("dmCpfPotenza", info.potenza);
+  const gradi = finestra.querySelector(".clima-temp-display");
+  if (gradi) {
+    let ora = gradi.querySelector("[data-dm-cpf-ora]");
+    if (!ora) {
+      ora = doc.createElement("div");
+      ora.className = "dm-cpf-ora";
+      ora.setAttribute("data-dm-cpf-ora", "");
+      gradi.prepend(ora);
+    }
+    scriviSeCambia(ora, info.ora);
+    const bottoni = gradi.querySelectorAll(".clima-temp-btn");
+    bottoni.forEach((bottone, i) => {
+      if (bottone.dataset.dmCpfGlifo) return;
+      bottone.dataset.dmCpfGlifo = "1";
+      bottone.innerHTML = i === 0 ? GLIFO_MENO : GLIFO_PIU;
+      bottone.setAttribute("aria-label", i === 0 ? t("Abbassa", "Lower") : t("Alza", "Raise"));
+    });
+    const sotto = gradi.querySelector(".clima-temp-unit");
+    const parola = t("Obiettivo", "Target");
+    if (sotto && sotto.textContent !== parola) sotto.textContent = parola;
+  }
+  const acceso = doc.getElementById("cp-btn-on");
+  const spegni = doc.getElementById("cp-btn-off");
+  if (acceso && !acceso.dataset.dmCpfGlifo) {
+    acceso.dataset.dmCpfGlifo = "1";
+    acceso.innerHTML = `${GLIFO_ACCENDI}<span>${esc(t("Accendi", "Turn on"))}</span>`;
+  }
+  if (spegni && !spegni.dataset.dmCpfGlifo) {
+    spegni.dataset.dmCpfGlifo = "1";
+    spegni.innerHTML = `${GLIFO_ACCENDI}<span>${esc(t("Spegni", "Turn off"))}</span>`;
+  }
+}
+
+const GLIFO_ACCENDI =
+  '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M12 3.5v7.5"/><path d="M6.6 7a7.5 7.5 0 1 0 10.8 0"/></svg>';
 
 /* E il nome in cima alla finestra e' quello che si e' scelto.
  *
@@ -2298,7 +2362,14 @@ function pannelloNellaFinestra(entity) {
  * simili; per tutte le altre resta il pezzo dopo il punto dell'entita'. In una
  * casa qualunque vuol dire aprire «Pompa Salone» e leggere «pompa». Il nome
  * vero e la stanza stanno nella configurazione, che e' dove li si e' scritti. */
-const ICONE_CLIMA = Object.freeze({ termo: "🔥", pompa: "♨️", clima: "❄️" });
+/* Sopra il nome, piccolo: la stanza e che macchina e'. La stanza solo se il
+ * nome non la dice gia' — «Salone» sopra «Salone» era la stessa parola due
+ * volte. */
+const NOMI_DEL_TIPO = () => ({
+  termo: t("Termosifone", "Radiator"),
+  pompa: t("Pompa di calore", "Heat pump"),
+  clima: t("Condizionatore", "Air conditioner"),
+});
 
 function intestazioneDellaFinestra(entity) {
   const chiave = clean(entity);
@@ -2309,9 +2380,14 @@ function intestazioneDellaFinestra(entity) {
   if (!unita) return false;
   const nome = doc?.getElementById?.("cp-name");
   const stanza = doc?.getElementById?.("cp-room");
-  const glifo = ICONE_CLIMA[canonicalClimateType(grezza?.type)] || "🌡️";
-  if (nome && clean(unita.name)) nome.textContent = unita.name;
-  if (stanza) stanza.textContent = `${glifo} ${clean(unita.room) || t("Clima", "Climate")}`;
+  const tipo = NOMI_DEL_TIPO()[canonicalClimateType(grezza?.type)] || t("Clima", "Climate");
+  const nomeScritto = clean(unita.name);
+  if (nome && nomeScritto) nome.textContent = nomeScritto;
+  const luogo = clean(unita.room);
+  const nelNome = (parola) => Boolean(parola) && nomeScritto.toLowerCase().includes(parola.toLowerCase());
+  /* Solo quello che il nome non dice gia': «Condizionatore Camera» non ha
+   * bisogno di «Camera · Condizionatore» sopra di se'. */
+  if (stanza) stanza.textContent = [nelNome(luogo) ? "" : luogo, nelNome(tipo) ? "" : tipo].filter(Boolean).join(" · ");
   return true;
 }
 
@@ -2534,14 +2610,6 @@ function climateCss() {
 .dm-cl-kpi span{font-size:9px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--dm-cl-dim)}
 .dm-cl-kpi b{font-size:19px;font-weight:800;letter-spacing:-.4px;font-variant-numeric:tabular-nums}
 .dm-cl-kpi b small{font-size:12px;font-weight:700;color:var(--dm-cl-dim);letter-spacing:0}
-.dm-cl-report{
-  display:inline-flex;align-items:center;gap:8px;padding:11px 16px;border:1px solid var(--dm-cl-line);
-  border-radius:16px;background:var(--dm-cl-card);box-shadow:var(--dm-cl-shadow);color:var(--dm-cl-text);
-  font:inherit;font-size:12px;font-weight:800;letter-spacing:.4px;cursor:pointer;transition:color .25s ease
-}
-.dm-cl-report[hidden]{display:none}
-.dm-cl-shell .dm-cl-report span{font-size:12px;font-weight:800;line-height:1}
-.dm-cl-report:hover{color:rgb(var(--dm-cl-zone))}
 .dm-cl-bulk{
   display:flex;align-items:stretch;border:1px solid var(--dm-cl-line);border-radius:16px;
   background:var(--dm-cl-card);box-shadow:var(--dm-cl-shadow);overflow:hidden
@@ -2582,8 +2650,17 @@ function climateCss() {
    vuota in mezzo a due piene — il tasto vuoto restava li'. */
 #page-clima .dm-cl-shell .clima-page-mode-btn[data-dm-cl-empty="true"],
 #page-clima .dm-cl-shell .clima-page-mode-switch.dm-cl-switch .clima-page-mode-btn[data-dm-cl-empty="true"]{display:none!important}
-#page-clima .dm-cl-shell[data-dm-cl-zones="1"] .clima-page-mode-switch,
+#page-clima .dm-cl-shell[data-dm-cl-zones="1"]:not(:has(.dm-cl-tab-report:not([hidden]))) .clima-page-mode-switch,
 #page-clima .dm-cl-shell[data-dm-cl-zones="0"] .clima-page-mode-switch{display:none!important}
+/* La linguetta Report: accanto alle zone, come il Report nell'Energia. Quando
+ * il report e' aperto e' lei la premuta, e la pagina mostra solo la scheda. */
+#page-clima .dm-cl-shell .clima-page-mode-switch.dm-cl-switch .dm-cl-tab-report[hidden]{display:none!important}
+#page-clima .dm-cl-shell .clima-page-mode-switch.dm-cl-switch .dm-cl-tab-report[aria-pressed="true"]{
+  background:var(--dm-cl-text)!important;color:var(--dm-cl-card)!important;box-shadow:0 8px 20px rgba(15,23,42,.22)!important}
+#page-clima .dm-cl-shell[data-dm-rcl-aperto] .clima-page-mode-switch .clima-page-mode-btn:is(#clima-page-mode-freddo,#clima-page-mode-caldo,#clima-page-mode-termostato){
+  background:transparent!important;color:var(--dm-cl-dim)!important;box-shadow:none!important}
+#page-clima .dm-cl-shell[data-dm-rcl-aperto] .clima-page-mode-btn[data-dm-cl-zone] .dm-cl-tab-count{background:var(--dm-cl-sunk)!important;color:var(--dm-cl-dim)!important}
+#page-clima .dm-cl-shell[data-dm-rcl-aperto] :is(.clima-zone,.dm-cl-summary,[data-dm-vmc-posto],[data-dm-deum-posto]){display:none!important}
 .dm-cl-tab-count{
   padding:2px 8px;border-radius:999px;background:var(--dm-cl-sunk);color:var(--dm-cl-dim);
   font-size:10px;font-weight:800;letter-spacing:.4px;font-variant-numeric:tabular-nums
@@ -2842,6 +2919,12 @@ html[data-theme="dark"] .dm-cl-knob{box-shadow:0 3px 8px rgba(0,0,0,.45)}
   #page-clima .dm-cl-shell[data-dm-cl-zones="3"] .clima-page-mode-switch.dm-cl-switch .clima-page-mode-btn{padding:11px 4px!important;gap:5px!important;font-size:10.5px!important;letter-spacing:.3px!important;min-width:0!important}
   #page-clima .dm-cl-shell[data-dm-cl-zones="3"] .clima-page-mode-switch.dm-cl-switch .clima-page-mode-btn .dm-cl-tab-ic{display:none!important}
   #page-clima .dm-cl-shell[data-dm-cl-zones="3"] .dm-cl-tab-count{padding:1px 6px}
+  /* Con tre zone e il Report le linguette sono quattro: il Report resta col
+   * suo disegno e lascia il nome (lo dice l'etichetta per chi non vede). */
+  #page-clima .dm-cl-shell[data-dm-cl-zones="3"] .clima-page-mode-switch.dm-cl-switch .dm-cl-tab-report .dm-cl-tab-ic{display:inline-flex!important}
+  #page-clima .dm-cl-shell[data-dm-cl-zones="3"] .clima-page-mode-switch.dm-cl-switch .dm-cl-tab-report .dm-cl-tab-tx{display:none!important}
+  #page-clima .dm-cl-shell[data-dm-cl-zones="3"] .clima-page-mode-switch.dm-cl-switch{grid-auto-columns:minmax(0,1fr)!important}
+  #page-clima .dm-cl-shell[data-dm-cl-zones="3"] .clima-page-mode-switch.dm-cl-switch .dm-cl-tab-report{max-width:56px!important}
   .dm-cl-summary{width:100%}
   .dm-cl-bulk{flex:1 1 auto}
   .dm-cl-bulk button{flex:1 1 auto;justify-content:center;padding:11px 10px}
@@ -2862,6 +2945,140 @@ html[data-theme="dark"] #cp-temp-val .dm-cl-cp-obj{color:#fb923c}
 html[data-theme="dark"] #cp-temp-val .dm-cl-cp-obj[data-dm-cl-obj="alto"]{color:#38bdf8}
 #cp-temp-val .dm-cl-cp-tra{font-size:.6em;color:var(--text-dim,#64748b)}
 .clima-popup[data-dm-cl-doppio="entrambi"] .clima-temp-btn{visibility:hidden;pointer-events:none}
+
+/* ── La finestra del termostato, rifatta ─────────────────────────────────
+ *
+ * Una gerarchia sola: in cima la stanza e il nome; poi il riquadro dei gradi,
+ * con la riga «adesso» (cosa sta facendo, i gradi in stanza, l'umidita') e
+ * l'obiettivo grande col meno e il piu'; poi la modalita' a segmenti; poi i
+ * preset, la ventola, le alette; in fondo il Programma. Un colore solo per
+ * volta, quello di cosa l'unita' fa: arancio il caldo, azzurro il freddo,
+ * grigio lo spento. Bersagli di almeno 44 punti sotto il dito. */
+#clima-popup-overlay .clima-popup[data-dm-cpf]{
+  --cpf-acc:#ea580c;--cpf-testo:var(--text,#0f172a);--cpf-dim:var(--text-dim,#64748b);
+  --cpf-linea:var(--card-border,#e5eaf1);--cpf-fondo:var(--card-bg,#fff);--cpf-tenue:var(--surface-2,#f5f7fa);
+  padding:20px 18px 18px;border-radius:28px;max-width:480px}
+#clima-popup-overlay .clima-popup[data-dm-cpf] :is([data-tono],[data-dm-cpf-tono]){--tono:var(--cpf-acc)}
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="caldo"],#clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="caldo"]{--cpf-acc:#ea580c;--tono:#ea580c}
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="freddo"],#clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="freddo"]{--cpf-acc:#0284c7;--tono:#0284c7}
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="spento"],#clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="spento"]{--cpf-acc:#64748b;--tono:#64748b}
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="auto"],#clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="auto"]{--cpf-acc:#7c3aed;--tono:#7c3aed}
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="secco"],#clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="secco"]{--cpf-acc:#0f766e;--tono:#0f766e}
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="ventola"],#clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="ventola"]{--cpf-acc:#0e7490;--tono:#0e7490}
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="notte"],#clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="notte"]{--cpf-acc:#4f46e5;--tono:#4f46e5}
+html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="caldo"],html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="caldo"]{--cpf-acc:#fb923c;--tono:#fb923c}
+html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="freddo"],html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="freddo"]{--cpf-acc:#38bdf8;--tono:#38bdf8}
+html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="spento"],html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="spento"]{--cpf-acc:#94a3b8;--tono:#94a3b8}
+html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="auto"],html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="auto"]{--cpf-acc:#a78bfa;--tono:#a78bfa}
+html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="secco"],html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="secco"]{--cpf-acc:#2dd4bf;--tono:#2dd4bf}
+html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="ventola"],html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="ventola"]{--cpf-acc:#22d3ee;--tono:#22d3ee}
+html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-tono="notte"],html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf] [data-tono="notte"]{--cpf-acc:#818cf8;--tono:#818cf8}
+
+/* La testa: la stanza piccola, il nome grande, e la X che non li tocca. */
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-popup-close{
+  top:14px;right:14px;width:44px;height:44px;border-radius:14px;font-size:15px;
+  background:var(--cpf-tenue);border:1px solid var(--cpf-linea);color:var(--cpf-dim)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] #cp-room{
+  margin:2px 56px 2px 2px;font-size:12.5px;font-weight:700;letter-spacing:0;text-transform:none;
+  color:var(--cpf-dim);gap:0;min-height:16px}
+#clima-popup-overlay .clima-popup[data-dm-cpf] #cp-room:empty{min-height:8px;margin-bottom:0}
+#clima-popup-overlay .clima-popup[data-dm-cpf] #cp-name{
+  margin:0 56px 16px 2px;font-size:26px;line-height:1.15;letter-spacing:.2px;overflow-wrap:anywhere}
+
+/* Il riquadro dei gradi. */
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-display{
+  display:grid;grid-template-columns:56px minmax(0,1fr) 56px;
+  grid-template-areas:"ora ora ora" "meno val piu";align-items:center;gap:16px 8px;
+  margin:0 0 18px;padding:14px 14px 18px;border-radius:24px;
+  border:1px solid color-mix(in srgb,var(--cpf-acc) 22%,var(--cpf-linea));
+  background:linear-gradient(180deg,color-mix(in srgb,var(--cpf-acc) 10%,var(--cpf-fondo)),color-mix(in srgb,var(--cpf-acc) 3%,var(--cpf-fondo)))}
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-acceso="false"] .clima-temp-display{
+  border-color:var(--cpf-linea);background:var(--cpf-tenue)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-ora{
+  grid-area:ora;display:flex;align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap;min-width:0}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-btn{
+  width:56px;height:56px;border-radius:18px;border:1px solid var(--cpf-linea);background:var(--cpf-fondo);
+  color:var(--cpf-testo);box-shadow:0 2px 6px rgba(15,23,42,.07);font-size:0}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-btn:first-of-type{grid-area:meno}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-btn:last-of-type{grid-area:piu}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-btn:hover{
+  border-color:color-mix(in srgb,var(--cpf-acc) 55%,var(--cpf-linea));background:var(--cpf-fondo);color:var(--cpf-acc);transform:none}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-btn:active{transform:scale(.95)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-btn:focus-visible{outline:2px solid var(--cpf-acc);outline-offset:2px}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-center{grid-area:val;text-align:center;min-width:0}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-val{
+  font-size:64px;line-height:.95;font-variant-numeric:tabular-nums;color:var(--cpf-testo)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-unit{
+  margin-top:6px;font-size:12.5px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--cpf-dim)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] #cp-temp-curr{display:none}
+
+/* «Adesso»: lo stato colorato a sinistra, le misure a destra. */
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-stato{
+  display:inline-flex;align-items:center;gap:7px;min-height:30px;padding:0 12px 0 10px;border-radius:999px;
+  font-size:13px;font-weight:800;color:var(--tono);background:color-mix(in srgb,var(--tono) 14%,transparent);white-space:nowrap}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-stato i{
+  width:8px;height:8px;border-radius:50%;background:var(--tono);box-shadow:0 0 0 3px color-mix(in srgb,var(--tono) 22%,transparent)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-stato:is([data-dm-cpf-verso="spento"],[data-dm-cpf-verso="attesa"]){
+  color:var(--cpf-dim);background:color-mix(in srgb,var(--cpf-dim) 12%,transparent)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-stato[data-dm-cpf-verso="spento"] i{background:var(--cpf-dim);box-shadow:none}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-stato[data-dm-cpf-verso="attesa"] i{background:transparent;box-shadow:inset 0 0 0 2px var(--tono)}
+@media (prefers-reduced-motion:no-preference){
+  #clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-stato:is([data-dm-cpf-verso="caldo"],[data-dm-cpf-verso="freddo"],[data-dm-cpf-verso="secco"],[data-dm-cpf-verso="ventola"]) i{animation:dm-cpf-respira 2.4s ease-in-out infinite}
+}
+@keyframes dm-cpf-respira{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--tono) 8%,transparent)}}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-misure{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-misura{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;color:var(--cpf-dim)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-misura b{font-size:15px;font-weight:800;color:var(--cpf-testo);font-variant-numeric:tabular-nums}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-misura small{font-size:11.5px;font-weight:600}
+
+/* Il pannello sotto: niente card dentro la card, solo righe ben spaziate. */
+#clima-popup-overlay .clima-popup[data-dm-cpf] [data-dm-cl-panel]{margin:0 0 4px}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-w-panel.dm-cpf{
+  display:flex;flex-direction:column;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;gap:16px}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf .dm-w-panel-row{flex-direction:column;align-items:stretch;gap:8px}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf .dm-w-panel-lbl{
+  flex:none;margin:0 2px;font-size:12.5px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--cpf-dim)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-modi{
+  display:grid;grid-template-columns:repeat(var(--colonne,3),minmax(0,1fr));grid-auto-rows:58px;gap:4px;padding:4px;border-radius:18px;
+  background:var(--cpf-tenue);border:1px solid var(--cpf-linea)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-modo{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;height:58px;padding:6px 4px;
+  border:0;border-radius:14px;background:transparent;color:var(--cpf-dim);font:inherit;font-size:12px;font-weight:750;
+  line-height:1.15;text-align:center;cursor:pointer;transition:background .15s ease,color .15s ease,box-shadow .15s ease}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-modo span{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-modo:hover{color:var(--cpf-testo)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-modo[data-on="true"]{
+  color:var(--tono);background:var(--cpf-fondo);
+  box-shadow:0 1px 3px rgba(15,23,42,.10),inset 0 0 0 1.5px color-mix(in srgb,var(--tono) 55%,transparent)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-modo:focus-visible,
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-chip:focus-visible{outline:2px solid var(--cpf-acc);outline-offset:2px}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-chips{gap:6px}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-chip{
+  min-height:44px;padding:0 15px;border-radius:14px;border:1px solid var(--cpf-linea);background:var(--cpf-fondo);
+  color:var(--cpf-testo);font-size:13px;font-weight:700;box-shadow:none}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-chip[data-on="true"]{
+  color:var(--cpf-acc);border-color:color-mix(in srgb,var(--cpf-acc) 60%,transparent);
+  background:color-mix(in srgb,var(--cpf-acc) 12%,var(--cpf-fondo));box-shadow:none}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf .dm-w-stepper{align-self:flex-start;padding:3px;border-radius:14px}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf .dm-w-stepper button{width:44px;height:40px;border-radius:11px;font-size:18px}
+
+/* I due bottoni di accensione del guscio: via quando c'e' la modalita'
+ * Spento fra i segmenti; altrimenti uno solo, quello che serve. */
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-power-row{margin:16px 0 0;gap:0}
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-potenza="via"] .clima-power-row{display:none}
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-potenza="accendi"] #cp-btn-off,
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-potenza="spegni"] #cp-btn-on{display:none}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .clima-pwr-btn{
+  min-height:48px;padding:0 16px;border-radius:16px;border:1px solid var(--cpf-linea);background:var(--cpf-fondo);
+  color:var(--cpf-testo);font-size:14.5px;font-weight:800;letter-spacing:0;text-transform:none;box-shadow:none;opacity:1!important;transform:none}
+#clima-popup-overlay .clima-popup[data-dm-cpf] #cp-btn-on{background:var(--cpf-acc);border-color:transparent;color:#fff}
+html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf] #cp-btn-on{color:#0b1220}
+@media (max-width:380px){
+  #clima-popup-overlay .clima-popup[data-dm-cpf]{padding:18px 14px 16px}
+  #clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-display{grid-template-columns:52px minmax(0,1fr) 52px;padding:12px 12px 16px}
+  #clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-btn{width:52px;height:52px}
+  #clima-popup-overlay .clima-popup[data-dm-cpf] .clima-temp-val{font-size:56px}
+}
 
 /* La ventilazione meccanica vive in questa pagina, quindi il suo vestito entra
  * nello stesso foglio: due fogli per una pagina sola sarebbero due posti in cui

@@ -127,7 +127,7 @@ test("dalla finestra del termostato si fa il programma a fasce e si salva in Hom
   page,
 }, testInfo) => {
   const programma = await avvia(page, testInfo);
-  await expect(programma.locator(".dm-prg-stato")).toHaveText(/non c'è ancora/);
+  await expect(programma.locator(".dm-prg-stato")).toHaveText(/Non attivo/);
   await programma.locator("[data-dm-prg-apri]").click();
   /* Il programma di serie: due fasce nei feriali. */
   await expect(programma.locator(".dm-prg-fascia")).toHaveCount(2);
@@ -166,7 +166,7 @@ test("dalla finestra del termostato si fa il programma a fasce e si salva in Hom
 
   /* La finestra rilegge quello che Home Assistant ha: adesso il programma
    * c'e', e salvando di nuovo si aggiorna lo stesso. */
-  await expect(programma.locator(".dm-prg-stato")).not.toHaveText(/non c'è ancora/, {
+  await expect(programma.locator(".dm-prg-stato")).not.toHaveText(/Non attivo/, {
     timeout: 10_000,
   });
   await expect(programma.locator("[data-dm-prg-attivo]")).toBeVisible();
