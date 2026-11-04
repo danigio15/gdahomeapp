@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-PS2YCZJC.js";
+} from "../../chunk-VTG2MOGU.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -13052,6 +13052,13 @@ var STILE_RIORDINA = `
   .dm-riordina-voce{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   @media (prefers-reduced-motion:reduce){[data-dm-riordina] [data-dm-fa-posto="true"],[data-dm-riordina="griglia"] [data-dm-riordina-riga]{transition:none}}
 `;
+var prendiIlPuntatore = Object.freeze({
+  giu: (event) => onPointerDown(event),
+  muovi: (event) => onPointerMove(event),
+  su: (event) => onPointerUp(event),
+  annulla: (event) => onPointerCancel(event),
+  inMano: () => Boolean(state10.presa)
+});
 function installTrascinaPerRiordinare() {
   if (!doc || state10.installed) return;
   state10.installed = true;
@@ -156131,6 +156138,14 @@ function titoloDi2(el) {
   const testo5 = String(testa2?.textContent || "").replace(/\s+/g, " ").trim();
   return /[a-zà-ü]{3,}/i.test(testo5) ? testo5.replace(/[\d.,:%°]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 48) : "";
 }
+function testoBreve2(el) {
+  for (const parte of el.querySelectorAll?.("small,label,span,div,p") || []) {
+    if (parte.children.length) continue;
+    const testo5 = String(parte.textContent || "").replace(/\s+/g, " ").trim();
+    if (/^[^\d]*[a-zà-ü]{3,}[^\d]*$/i.test(testo5) && testo5.length <= 28) return testo5;
+  }
+  return "";
+}
 function idDellElemento(el, titolo3 = "") {
   const attributi2 = [...el.attributes || []].filter((a) => !/^(style|class|aria-|data-dm-(disp|riordina|nascosto|misura|maniglia|tieni|presa|fa-posto))/.test(a.name)).map((a) => `${a.name}=${a.value}`).join(" ");
   const dati = [...el.attributes || []].filter((a) => /^data-/.test(a.name) && DATI_CHE_NOMINANO.test(a.name.slice(5)) && !/^data-dm-disp/.test(a.name)).map((a) => a.value);
@@ -156160,7 +156175,7 @@ function vociDi(contenitore5) {
   const unici2 = idUnici(voci4.map((v) => v.id));
   voci4.forEach((voce3, i) => {
     voce3.id = unici2[i];
-    if (!voce3.nome) voce3.nome = t("Riquadro", "Box");
+    if (!voce3.nome) voce3.nome = testoBreve2(voce3.el) || t("Riquadro", "Box");
   });
   return voci4;
 }
@@ -156339,6 +156354,7 @@ function segnaPerLaModifica(pagina3) {
   for (const vecchio of pagina3.querySelectorAll("[data-dm-disp-ctrl]")) vecchio.remove();
   for (const el of pagina3.querySelectorAll("[data-dm-disp-elenco]")) {
     el.removeAttribute("data-dm-disp-elenco");
+    el.removeAttribute("data-dm-disp-tipo");
     el.removeAttribute("data-dm-riordina");
   }
   for (const el of pagina3.querySelectorAll("[data-dm-disp-voce]")) {
@@ -156349,6 +156365,7 @@ function segnaPerLaModifica(pagina3) {
     if (voci4.length < 2) continue;
     const scelta3 = sceltaInMano(elenco18);
     elenco18.contenitore.setAttribute("data-dm-disp-elenco", elenco18.chiave);
+    elenco18.contenitore.setAttribute("data-dm-disp-tipo", elenco18.riquadri ? "riquadri" : "voci");
     elenco18.contenitore.setAttribute("data-dm-riordina", "griglia");
     for (const voce3 of voci4) {
       voce3.el.setAttribute("data-dm-disp-voce", voce3.id);
@@ -156370,7 +156387,7 @@ function segnaPerLaModifica(pagina3) {
 function barraMarkup5() {
   const n = conta2();
   return `<div class="dm-disp-barra-dentro">
-    <span class="dm-disp-conta">${esc(
+    <span class="dm-disp-conta"${n === 0 ? " data-vuota" : ""}>${esc(
     n === 0 ? t("Trascina riquadri ed elementi dove li vuoi", "Drag boxes and items where you want them") : n === 1 ? t("1 modifica", "1 change") : t(`${n} modifiche`, `${n} changes`)
   )}</span>
     <button type="button" data-dm-disp-azione="annulla">${esc(t("Annulla", "Cancel"))}</button>
@@ -156413,6 +156430,7 @@ function esciDallaModifica() {
     for (const vecchio of m.pagina.querySelectorAll("[data-dm-disp-ctrl]")) vecchio.remove();
     for (const el of m.pagina.querySelectorAll("[data-dm-disp-elenco]")) {
       el.removeAttribute("data-dm-disp-elenco");
+      el.removeAttribute("data-dm-disp-tipo");
       el.removeAttribute("data-dm-riordina");
     }
     for (const el of m.pagina.querySelectorAll("[data-dm-disp-voce]")) togliISegni(el);
@@ -156512,6 +156530,21 @@ function onClick57(event) {
     else scelta3.misure[id] = "larga";
   });
 }
+function onPuntatore(event) {
+  if (!state177.modifica) return;
+  const dentro3 = state177.modifica.pagina.contains(event.target);
+  if (event.type === "pointerdown") {
+    if (!dentro3 || event.target.closest?.("[data-dm-non-trascinare],[data-dm-disp-barra]")) return;
+    prendiIlPuntatore.giu(event);
+    event.stopPropagation();
+    return;
+  }
+  if (!prendiIlPuntatore.inMano()) return;
+  if (event.type === "pointermove") prendiIlPuntatore.muovi(event);
+  else if (event.type === "pointerup") prendiIlPuntatore.su(event);
+  else prendiIlPuntatore.annulla(event);
+  event.stopPropagation();
+}
 function onKeyDown2(event) {
   if (event.key === "Escape" && state177.modifica && !doc.documentElement.hasAttribute("data-dm-trascinando")) annulla2();
 }
@@ -156554,17 +156587,26 @@ html[data-dm-modifica] .dm-disp-tasto{background:var(--accent,#2563eb);color:#ff
 html[data-dm-modifica] [data-dm-disp-voce]{position:relative;outline:2px dashed color-mix(in srgb,var(--accent,#2563eb) 55%,transparent);
   outline-offset:2px;border-radius:16px}
 html[data-dm-modifica] [data-dm-disp-elenco]>[data-dm-disp-voce]{cursor:grab}
-[data-dm-disp-ctrl]{position:absolute;top:6px;right:6px;z-index:6;display:flex;gap:6px;align-items:center}
-[data-dm-disp-ctrl="riquadro"]{left:6px;justify-content:space-between}
+/* I riquadri: la barra coi tasti sta in cima al riquadro, dentro (molte
+ * carte tagliano quello che esce), e il contenuto scende di quanto serve. */
+html[data-dm-modifica] [data-dm-disp-tipo="riquadri"]>[data-dm-disp-voce]{padding-top:52px!important}
+[data-dm-disp-ctrl]{position:absolute;z-index:6;display:flex;gap:6px;align-items:center}
+[data-dm-disp-ctrl="riquadro"]{top:8px;left:8px;right:8px;height:36px}
+[data-dm-disp-ctrl="voce"]{top:6px;right:6px}
 [data-dm-disp-ctrl] button{height:36px;min-width:36px;border-radius:12px;border:1px solid color-mix(in srgb,var(--text,#0f172a) 14%,transparent);
   background:var(--card-bg,#fff);color:var(--text,#0f172a);font:600 13px/1 inherit;cursor:pointer;
   box-shadow:0 4px 12px -8px rgba(15,23,42,.5);display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 10px}
-[data-dm-disp-ctrl] .dm-disp-maniglia{margin-right:auto;cursor:grab;touch-action:none;max-width:70%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-[data-dm-disp-ctrl] .dm-disp-maniglia span{overflow:hidden;text-overflow:ellipsis}
+[data-dm-disp-ctrl="voce"] button{height:30px;min-width:30px;border-radius:999px;padding:0;font-size:13px}
+[data-dm-disp-ctrl] .dm-disp-maniglia[data-dm-maniglia]{margin:0 auto 0 0;cursor:grab;touch-action:none;
+  width:auto;height:36px;flex:0 1 auto;max-width:min(78%,320px);
+  background:var(--accent,#2563eb);border-color:transparent;color:#fff;padding:0 14px 0 10px;font-size:13px}
+[data-dm-disp-ctrl] .dm-disp-maniglia[data-dm-maniglia]:hover{background:var(--accent,#2563eb);color:#fff;filter:brightness(1.08)}
+[data-dm-disp-ctrl] .dm-disp-maniglia span{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 [data-dm-disp-ctrl] button[aria-pressed="true"].dm-disp-larga{background:var(--accent,#2563eb);color:#fff}
-[data-dm-disp-barra]{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:9990;
+/* La barra sta sopra la barra delle sezioni, non sopra le voci. */
+[data-dm-disp-barra]{position:fixed;left:50%;bottom:calc(104px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:9990;
   max-width:calc(100vw - 24px)}
-.dm-disp-barra-dentro{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;padding:10px 12px;border-radius:20px;
+.dm-disp-barra-dentro{display:flex;gap:8px;align-items:center;flex-wrap:nowrap;justify-content:center;padding:8px 10px;border-radius:20px;
   background:var(--card-bg,#fff);color:var(--text,#0f172a);box-shadow:0 18px 40px -16px rgba(15,23,42,.55);
   border:1px solid color-mix(in srgb,var(--text,#0f172a) 12%,transparent)}
 .dm-disp-barra-dentro .dm-disp-conta{font:600 14px/1.2 inherit;padding:0 6px}
@@ -156572,12 +156614,20 @@ html[data-dm-modifica] [data-dm-disp-elenco]>[data-dm-disp-voce]{cursor:grab}
   background:transparent;color:inherit;font:600 14px/1 inherit;cursor:pointer}
 .dm-disp-barra-dentro .dm-disp-salva{background:var(--accent,#2563eb);border-color:transparent;color:#fff}
 .dm-disp-barra-dentro .dm-disp-salva[disabled]{opacity:.45;cursor:default}
+@media (max-width:560px){
+  .dm-disp-barra-dentro{gap:6px;padding:6px 8px}
+  .dm-disp-barra-dentro .dm-disp-conta{font-size:13px;max-width:96px;white-space:normal}
+  .dm-disp-barra-dentro .dm-disp-conta[data-vuota]{display:none}
+  .dm-disp-barra-dentro button{padding:0 12px;font-size:13px}
+}
 `;
 function installDisposizione() {
   if (!doc?.body || state177.installed) return;
   state177.installed = true;
   installStyle("dm-disposizione-style", STILE19);
   doc.addEventListener("click", onClick57, true);
+  for (const tipo of ["pointerdown", "pointermove", "pointerup", "pointercancel"])
+    doc.addEventListener(tipo, onPuntatore, { capture: true, passive: false });
   doc.addEventListener("keydown", onKeyDown2);
   doc.addEventListener("dm-riordina", onRiordina3);
   if (root.MutationObserver) {

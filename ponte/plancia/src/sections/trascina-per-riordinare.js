@@ -468,6 +468,19 @@ export const STILE_RIORDINA = `
   @media (prefers-reduced-motion:reduce){[data-dm-riordina] [data-dm-fa-posto="true"],[data-dm-riordina="griglia"] [data-dm-riordina-riga]{transition:none}}
 `;
 
+/* Chi deve prendere il puntatore prima che lo vedano altri — la modalita'
+ * modifica della plancia, dove una carta ha i suoi gesti (la luminosita' di
+ * una luce si regola trascinando) — chiama questi direttamente, in cattura,
+ * e ferma l'evento: cosi' il gesto della carta non parte e qui non arriva
+ * due volte. */
+export const prendiIlPuntatore = Object.freeze({
+  giu: (event) => onPointerDown(event),
+  muovi: (event) => onPointerMove(event),
+  su: (event) => onPointerUp(event),
+  annulla: (event) => onPointerCancel(event),
+  inMano: () => Boolean(state.presa),
+});
+
 export function installTrascinaPerRiordinare() {
   if (!doc || state.installed) return;
   state.installed = true;

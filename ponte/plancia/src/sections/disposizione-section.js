@@ -37,7 +37,7 @@ import {
   idUnici,
 } from "../core/disposizione.js";
 import { puoConfigurare } from "./la-config-e-di-chi-la-amministra-section.js";
-import { STILE_RIORDINA } from "./trascina-per-riordinare.js";
+import { STILE_RIORDINA, prendiIlPuntatore } from "./trascina-per-riordinare.js";
 import { doc, esc, installStyle, readJson, root, senzaCadere, t, writeJsonIfChanged } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_DISPOSIZIONE__";
@@ -110,6 +110,17 @@ function titoloDi(el) {
   return /[a-zà-ü]{3,}/i.test(testo) ? testo.replace(/[\d.,:%°]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 48) : "";
 }
 
+/* Un nome di ripiego per la maniglia: la prima scritta corta fatta di
+ * parole («Autonomia»), non di numeri. */
+function testoBreve(el) {
+  for (const parte of el.querySelectorAll?.("small,label,span,div,p") || []) {
+    if (parte.children.length) continue;
+    const testo = String(parte.textContent || "").replace(/\s+/g, " ").trim();
+    if (/^[^\d]*[a-zà-ü]{3,}[^\d]*$/i.test(testo) && testo.length <= 28) return testo;
+  }
+  return "";
+}
+
 function idDellElemento(el, titolo = "") {
   const attributi = [...(el.attributes || [])]
     .filter((a) => !/^(style|class|aria-|data-dm-(disp|riordina|nascosto|misura|maniglia|tieni|presa|fa-posto))/.test(a.name))
@@ -148,7 +159,7 @@ function vociDi(contenitore) {
   const unici = idUnici(voci.map((v) => v.id));
   voci.forEach((voce, i) => {
     voce.id = unici[i];
-    if (!voce.nome) voce.nome = t("Riquadro", "Box");
+    if (!voce.nome) voce.nome = testoBreve(voce.el) || t("Riquadro", "Box");
   });
   return voci;
 }
@@ -388,6 +399,7 @@ function segnaPerLaModifica(pagina) {
   for (const vecchio of pagina.querySelectorAll("[data-dm-disp-ctrl]")) vecchio.remove();
   for (const el of pagina.querySelectorAll("[data-dm-disp-elenco]")) {
     el.removeAttribute("data-dm-disp-elenco");
+    el.removeAttribute("data-dm-disp-tipo");
     el.removeAttribute("data-dm-riordina");
   }
   for (const el of pagina.querySelectorAll("[data-dm-disp-voce]")) {
@@ -398,6 +410,7 @@ function segnaPerLaModifica(pagina) {
     if (voci.length < 2) continue;
     const scelta = sceltaInMano(elenco);
     elenco.contenitore.setAttribute("data-dm-disp-elenco", elenco.chiave);
+    elenco.contenitore.setAttribute("data-dm-disp-tipo", elenco.riquadri ? "riquadri" : "voci");
     elenco.contenitore.setAttribute("data-dm-riordina", "griglia");
     for (const voce of voci) {
       voce.el.setAttribute("data-dm-disp-voce", voce.id);
@@ -421,7 +434,7 @@ function segnaPerLaModifica(pagina) {
 function barraMarkup() {
   const n = conta();
   return `<div class="dm-disp-barra-dentro">
-    <span class="dm-disp-conta">${esc(
+    <span class="dm-disp-conta"${n === 0 ? " data-vuota" : ""}>${esc(
       n === 0
         ? t("Trascina riquadri ed elementi dove li vuoi", "Drag boxes and items where you want them")
         : n === 1
@@ -471,6 +484,7 @@ export function esciDallaModifica() {
     for (const vecchio of m.pagina.querySelectorAll("[data-dm-disp-ctrl]")) vecchio.remove();
     for (const el of m.pagina.querySelectorAll("[data-dm-disp-elenco]")) {
       el.removeAttribute("data-dm-disp-elenco");
+      el.removeAttribute("data-dm-disp-tipo");
       el.removeAttribute("data-dm-riordina");
     }
     for (const el of m.pagina.querySelectorAll("[data-dm-disp-voce]")) togliISegni(el);
@@ -583,6 +597,24 @@ function onClick(event) {
   });
 }
 
+/* In modifica il puntatore e' nostro: preso in cattura, prima dei gesti
+ * delle carte (una luce si regola trascinando), e passato a chi trascina. */
+function onPuntatore(event) {
+  if (!state.modifica) return;
+  const dentro = state.modifica.pagina.contains(event.target);
+  if (event.type === "pointerdown") {
+    if (!dentro || event.target.closest?.("[data-dm-non-trascinare],[data-dm-disp-barra]")) return;
+    prendiIlPuntatore.giu(event);
+    event.stopPropagation();
+    return;
+  }
+  if (!prendiIlPuntatore.inMano()) return;
+  if (event.type === "pointermove") prendiIlPuntatore.muovi(event);
+  else if (event.type === "pointerup") prendiIlPuntatore.su(event);
+  else prendiIlPuntatore.annulla(event);
+  event.stopPropagation();
+}
+
 function onKeyDown(event) {
   if (event.key === "Escape" && state.modifica && !doc.documentElement.hasAttribute("data-dm-trascinando")) annulla();
 }
@@ -638,17 +670,26 @@ html[data-dm-modifica] .dm-disp-tasto{background:var(--accent,#2563eb);color:#ff
 html[data-dm-modifica] [data-dm-disp-voce]{position:relative;outline:2px dashed color-mix(in srgb,var(--accent,#2563eb) 55%,transparent);
   outline-offset:2px;border-radius:16px}
 html[data-dm-modifica] [data-dm-disp-elenco]>[data-dm-disp-voce]{cursor:grab}
-[data-dm-disp-ctrl]{position:absolute;top:6px;right:6px;z-index:6;display:flex;gap:6px;align-items:center}
-[data-dm-disp-ctrl="riquadro"]{left:6px;justify-content:space-between}
+/* I riquadri: la barra coi tasti sta in cima al riquadro, dentro (molte
+ * carte tagliano quello che esce), e il contenuto scende di quanto serve. */
+html[data-dm-modifica] [data-dm-disp-tipo="riquadri"]>[data-dm-disp-voce]{padding-top:52px!important}
+[data-dm-disp-ctrl]{position:absolute;z-index:6;display:flex;gap:6px;align-items:center}
+[data-dm-disp-ctrl="riquadro"]{top:8px;left:8px;right:8px;height:36px}
+[data-dm-disp-ctrl="voce"]{top:6px;right:6px}
 [data-dm-disp-ctrl] button{height:36px;min-width:36px;border-radius:12px;border:1px solid color-mix(in srgb,var(--text,#0f172a) 14%,transparent);
   background:var(--card-bg,#fff);color:var(--text,#0f172a);font:600 13px/1 inherit;cursor:pointer;
   box-shadow:0 4px 12px -8px rgba(15,23,42,.5);display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 10px}
-[data-dm-disp-ctrl] .dm-disp-maniglia{margin-right:auto;cursor:grab;touch-action:none;max-width:70%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-[data-dm-disp-ctrl] .dm-disp-maniglia span{overflow:hidden;text-overflow:ellipsis}
+[data-dm-disp-ctrl="voce"] button{height:30px;min-width:30px;border-radius:999px;padding:0;font-size:13px}
+[data-dm-disp-ctrl] .dm-disp-maniglia[data-dm-maniglia]{margin:0 auto 0 0;cursor:grab;touch-action:none;
+  width:auto;height:36px;flex:0 1 auto;max-width:min(78%,320px);
+  background:var(--accent,#2563eb);border-color:transparent;color:#fff;padding:0 14px 0 10px;font-size:13px}
+[data-dm-disp-ctrl] .dm-disp-maniglia[data-dm-maniglia]:hover{background:var(--accent,#2563eb);color:#fff;filter:brightness(1.08)}
+[data-dm-disp-ctrl] .dm-disp-maniglia span{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 [data-dm-disp-ctrl] button[aria-pressed="true"].dm-disp-larga{background:var(--accent,#2563eb);color:#fff}
-[data-dm-disp-barra]{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:9990;
+/* La barra sta sopra la barra delle sezioni, non sopra le voci. */
+[data-dm-disp-barra]{position:fixed;left:50%;bottom:calc(104px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:9990;
   max-width:calc(100vw - 24px)}
-.dm-disp-barra-dentro{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;padding:10px 12px;border-radius:20px;
+.dm-disp-barra-dentro{display:flex;gap:8px;align-items:center;flex-wrap:nowrap;justify-content:center;padding:8px 10px;border-radius:20px;
   background:var(--card-bg,#fff);color:var(--text,#0f172a);box-shadow:0 18px 40px -16px rgba(15,23,42,.55);
   border:1px solid color-mix(in srgb,var(--text,#0f172a) 12%,transparent)}
 .dm-disp-barra-dentro .dm-disp-conta{font:600 14px/1.2 inherit;padding:0 6px}
@@ -656,6 +697,12 @@ html[data-dm-modifica] [data-dm-disp-elenco]>[data-dm-disp-voce]{cursor:grab}
   background:transparent;color:inherit;font:600 14px/1 inherit;cursor:pointer}
 .dm-disp-barra-dentro .dm-disp-salva{background:var(--accent,#2563eb);border-color:transparent;color:#fff}
 .dm-disp-barra-dentro .dm-disp-salva[disabled]{opacity:.45;cursor:default}
+@media (max-width:560px){
+  .dm-disp-barra-dentro{gap:6px;padding:6px 8px}
+  .dm-disp-barra-dentro .dm-disp-conta{font-size:13px;max-width:96px;white-space:normal}
+  .dm-disp-barra-dentro .dm-disp-conta[data-vuota]{display:none}
+  .dm-disp-barra-dentro button{padding:0 12px;font-size:13px}
+}
 `;
 
 export function installDisposizione() {
@@ -663,6 +710,8 @@ export function installDisposizione() {
   state.installed = true;
   installStyle("dm-disposizione-style", STILE);
   doc.addEventListener("click", onClick, true);
+  for (const tipo of ["pointerdown", "pointermove", "pointerup", "pointercancel"])
+    doc.addEventListener(tipo, onPuntatore, { capture: true, passive: false });
   doc.addEventListener("keydown", onKeyDown);
   doc.addEventListener("dm-riordina", onRiordina);
   if (root.MutationObserver) {
