@@ -8073,4 +8073,12 @@ export default Object.freeze({
   "Saved layouts": "التخطيطات المحفوظة",
   "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "الصفحات التي غيّرتها بـ ✏️ — ترتيب الكتل والمخفية منها. «إعادة الضبط» تعيدها كما كانت.",
   "Slot": "الخانة",
+  "Details": "التفاصيل",
+  "Doors and windows": "الأبواب والنوافذ",
+  "Legend": "مفتاح الرموز",
+  "Presence sensors": "حساسات الحضور",
+  "Quality and filtration": "الجودة والترشيح",
+  "Smoke detectors": "كاشفات الدخان",
+  "Virtual machines": "الأجهزة الافتراضية",
+  "Windows summary": "ملخص النوافذ",
 });

@@ -8100,4 +8100,12 @@ export default Object.freeze({
   "Saved layouts": "저장한 배치",
   "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "✏️로 변경한 페이지 — 블록 순서와 숨긴 블록. «초기화»하면 원래대로 돌아갑니다.",
   "Slot": "칸",
+  "Details": "세부 정보",
+  "Doors and windows": "문과 창문",
+  "Legend": "범례",
+  "Presence sensors": "재실 센서",
+  "Quality and filtration": "수질과 여과",
+  "Smoke detectors": "연기 감지기",
+  "Virtual machines": "가상 머신",
+  "Windows summary": "창문 요약",
 });

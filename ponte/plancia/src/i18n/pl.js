@@ -8148,4 +8148,12 @@ export default Object.freeze({
   "Saved layouts": "Zapisane układy",
   "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "strony zmienione przez ✏️ — kolejność bloków i ukryte. «Resetuj» przywraca je do stanu początkowego.",
   "Slot": "Miejsce",
+  "Details": "Szczegóły",
+  "Doors and windows": "Drzwi i okna",
+  "Legend": "Legenda",
+  "Presence sensors": "Czujniki obecności",
+  "Quality and filtration": "Jakość i filtracja",
+  "Smoke detectors": "Czujniki dymu",
+  "Virtual machines": "Maszyny wirtualne",
+  "Windows summary": "Podsumowanie okien",
 });

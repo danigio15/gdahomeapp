@@ -8109,4 +8109,12 @@ export default Object.freeze({
   "Saved layouts": "सहेजे गए लेआउट",
   "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "✏️ से बदले गए पेज — ब्लॉकों का क्रम और छिपे हुए। «रीसेट» उन्हें पहले जैसा कर देता है।",
   "Slot": "स्थान",
+  "Details": "विवरण",
+  "Doors and windows": "दरवाज़े और खिड़कियाँ",
+  "Legend": "संकेत-सूची",
+  "Presence sensors": "उपस्थिति सेंसर",
+  "Quality and filtration": "गुणवत्ता और निस्यंदन",
+  "Smoke detectors": "धुआँ संसूचक",
+  "Virtual machines": "वर्चुअल मशीनें",
+  "Windows summary": "खिड़कियों का सारांश",
 });

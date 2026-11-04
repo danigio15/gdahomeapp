@@ -8160,4 +8160,12 @@ export default Object.freeze({
   "Saved layouts": "Opgeslagen indelingen",
   "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "de pagina's gewijzigd met ✏️ — de volgorde van de blokken en de verborgen. «Herstellen» zet ze terug zoals ze waren.",
   "Slot": "Plek",
+  "Details": "Bijzonderheden",
+  "Doors and windows": "Deuren en ramen",
+  "Legend": "Legenda",
+  "Presence sensors": "Aanwezigheidssensoren",
+  "Quality and filtration": "Kwaliteit en filtratie",
+  "Smoke detectors": "Rookmelders",
+  "Virtual machines": "Virtuele machines",
+  "Windows summary": "Overzicht ramen",
 });

@@ -87,14 +87,18 @@ function visibile(el) {
 
 /* La testata di una pagina, o di un suo involucro («dm-cl-mast»): sta in cima
  * e non si sposta. */
-const TESTATA = /(^|[-_\s])(page-)?mast($|[-_\s])|back-home-btn|sub-tabs/;
+const TESTATA = /(^|[-_\s])(page-)?mast($|[-_\s])|back-home-btn|sub-tabs|dm-stanze-indice-testa/;
 function eTestata(el) {
   return TESTATA.test(typeof el?.className === "string" ? el.className : "");
 }
 
 /* Un titolo: un'intestazione, o una riga bassa che fa da testa al gruppo
  * che segue (la stanza sopra le sue luci). */
-const RIGA_DI_TESTA = /(^|[-_])(room|stanza|group|gruppo|head|header|testa|titolo|title)($|[-_])/i;
+/* Anche le linguette che scelgono cosa c'e' sotto (Freddo/Caldo/Report del
+ * Clima, le schede dell'Auto) stanno attaccate a quello che scelgono: un
+ * riquadro di linguette da solo, spostato lontano dal suo pannello, non vuol
+ * dire niente. */
+const RIGA_DI_TESTA = /(^|[-_])(room|stanza|group|gruppo|head|header|testa|titolo|title|linguette|tabs|switch)($|[-_])/i;
 function eTitolo(el) {
   if (el?.matches?.(TITOLO)) return true;
   const classi = typeof el?.className === "string" ? el.className : "";
@@ -142,10 +146,11 @@ const COSA_DALLE_CLASSI = [
 /* Un nome di ripiego per la maniglia: la prima scritta corta fatta di
  * parole («Autonomia»), non di numeri. */
 function testoBreve(el) {
-  for (const parte of el.querySelectorAll?.("small,label,span,div,p") || []) {
+  for (const parte of el.querySelectorAll?.("strong,small,label,span,div,p") || []) {
     if (parte.children.length || dentroUnaFila(parte, el)) continue;
     const testo = String(parte.textContent || "").replace(/\s+/g, " ").trim();
-    if (/^[^\d]*[a-zà-ü]{3,}[^\d]*$/i.test(testo) && testo.length <= 28) return testo;
+    /* Parole, non misure: «Batteria telefono Persona 3» si', «9 %» no. */
+    if (/[a-zà-ü]{3,}/i.test(testo) && !/^[\d.,]|[%°]/.test(testo) && testo.length <= 40) return testo;
   }
   return "";
 }
@@ -192,7 +197,8 @@ function vociDi(contenitore) {
     if (!voce.nome) voce.nome = nomeDiRipiego(voce.el, contenitore, i);
     /* «Luci» dentro la pagina Luci non dice quale riquadro: e' il riepilogo. */
     const pagina = titoloDellaPagina(contenitore);
-    if (pagina && voce.nome.toLowerCase() === pagina.toLowerCase()) voce.nome = t(`Riepilogo ${pagina}`, `${pagina} summary`);
+    if (pagina && !voce.el.hasAttribute("data-dm-disp-nome") && voce.nome.toLowerCase() === pagina.toLowerCase())
+      voce.nome = t(`Riepilogo ${pagina}`, `${pagina} summary`);
   });
   return voci;
 }
@@ -222,7 +228,9 @@ function titoloDellaPagina(el) {
  * ultimo «Riquadro N». */
 function nomeDiRipiego(el, contenitore, i) {
   const dato = el.getAttribute?.("aria-label") || el.getAttribute?.("title") || el.getAttribute?.("data-title") || "";
-  if (/[a-zà-ü]{3,}/i.test(dato)) return dato.trim().slice(0, 48);
+  /* «Ultime 24 ore · Finestra cucina»: il nome e' l'ultimo pezzo. */
+  const ultimo = dato.split(" · ").pop().trim();
+  if (/[a-zà-ü]{3,}/i.test(ultimo)) return ultimo.slice(0, 48);
   const classi = typeof el.className === "string" ? el.className : "";
   const pagina = titoloDellaPagina(contenitore);
   if (/(^|[-_\s])(hero|summary|riepilogo|overview)($|[-_\s])/i.test(classi) && pagina)
@@ -323,6 +331,83 @@ const DICHIARATI = Object.freeze([
   ["energy", ".ed-fin-grid", "conti", "Conti", "Money"],
   ["energy", ".ed-auto-row", "autosufficienza", "Autosufficienza", "Self-sufficiency"],
   ["energy", ".ed-chart-card", "andamento", "Andamento giornaliero", "Daily trend"],
+  ["ev", ".dm-na-eroe", "auto", "La mia auto", "My car"],
+  ["ev", ".dm-na-pannello", "dettagli", "Dettagli", "Details"],
+  ["appliances-main", ".dm-appl-side", "consumi", "Consumi", "Consumption"],
+  ["appliances-main", ".dm-appl-main", "elettrodomestici", "Elettrodomestici", "Appliances"],
+  ["temp", "#temp-grid", "stanze", "Stanze", "Rooms"],
+  ["temp", "#dm-temperature-trend", "andamento", "Andamento", "Trend"],
+  ["meteo", ".dm-meteo-posto", "adesso", "Adesso", "Now"],
+  ["media", ".dm-radio", "radio", "Radio", "Radio"],
+  ["media", ".dm-mp-wrap", "lettori", "Lettori", "Players"],
+  ["tapparelle", ".dm-tapp-hero", "riepilogo", "Riepilogo finestre", "Windows summary"],
+  ["varchi", ".dm-varchi-testa", "adesso", "In questo momento", "Right now"],
+  ["varchi", ".dm-varchi-elenco", "elenco", "Porte e finestre", "Doors and windows"],
+  ["presenza", ".dm-presenza-testa", "adesso", "In questo momento", "Right now"],
+  ["presenza", ".dm-presenza-elenco", "elenco", "Sensori di presenza", "Presence sensors"],
+  ["batterie", ".dm-batt-testa", "adesso", "In questo momento", "Right now"],
+  ["batterie", ".dm-batt-elenco", "elenco", "Batterie", "Batteries"],
+  ["piscina", ".dm-pool-stage", "vasca", "Piscina", "Pool"],
+  ["piscina", ".dm-pool-tiles", "comandi", "Comandi", "Controls"],
+  ["piscina", ".dm-pool-cards", "schede", "Qualità e filtrazione", "Quality and filtration"],
+  ["robot", ".dm-robot-map", "mappa", "Mappa", "Map"],
+  ["robot", ".dm-robot-meta", "stato", "Stato", "State"],
+  ["robot", ".dm-robot-actions", "comandi", "Comandi", "Controls"],
+  ["security", "#alarm-stage", "antifurto", "Antifurto", "Alarm"],
+  ["security", ".dm-sec-smoke", "fumo", "Rilevatori di fumo", "Smoke detectors"],
+  ["security", ".dm-sec-cctv", "telecamere", "Telecamere", "Cameras"],
+  ["server", ".dm-srvx-shell", "server", "Server", "Servers"],
+  ["server", "#dm-macchine-fasce", "macchine", "Macchine virtuali", "Virtual machines"],
+  ["calendario", ".dm-calp-fascia", "giorni", "Giorni", "Days"],
+  ["calendario", ".dm-calp-legenda", "legenda", "Legenda", "Legend"],
+  ["calendario", ".dm-calp-nuovo-riga", "nuovo", "Nuovo evento", "New event"],
+  ["calendario", ".dm-calp-agenda", "agenda", "Agenda", "Calendar"],
+  ["calendario", ".dm-calp-cose", "da-fare", "Da fare", "To do"],
+  ["gdanav", ".dm-gn-capo", "nuovo", "Nuovo viaggio", "New trip"],
+  ["gdanav", ".dm-gn-griglia", "viaggi", "Viaggi", "Trips"],
+  ["automazioni", ".ad-kpi", "numeri", "Numeri", "Figures"],
+]);
+
+/* Dove stanno i riquadri, quando non e' il primo involucro che si trova
+ * scendendo: la Sicurezza ha l'antifurto, il fumo e le telecamere dentro un
+ * guscio solo, e il Meteo un involucro con un figlio solo per volta. */
+const CONTENITORI_DICHIARATI = Object.freeze([
+  ["security", ".dm-sec-shell"],
+  ["meteo", "#meteo-wrap"],
+]);
+
+/* Riquadri e voci il cui id o nome si legge dalla pagina: i piani delle
+ * Stanze («Piano terra», senza «3 accese» accanto, che cambia), i lettori
+ * della Musica (la stanza, non il brano che suona). */
+const DICHIARATI_DALLA_PAGINA = Object.freeze([
+  [
+    "stanze",
+    ".dm-stanze-indice-griglia",
+    (el) => {
+      const testa = el.previousElementSibling;
+      if (!testa?.matches?.(".dm-stanze-piano")) return null;
+      const nome = String(testa.querySelector?.("span")?.textContent || "")
+        .replace(/[^\p{L}\p{N}\s'-]/gu, "")
+        .trim();
+      return nome ? { id: idDellaVoce({ titolo: nome }), nome } : null;
+    },
+  ],
+  [
+    "tapparelle",
+    ".dm-tapp-card",
+    (el) => {
+      const nome = String(el.querySelector?.(".tapp-name")?.textContent || "").trim();
+      return nome ? { nome } : null;
+    },
+  ],
+  [
+    "media",
+    ".dm-mp-card",
+    (el) => {
+      const dove = String(el.querySelector?.(".dm-mp-dove")?.textContent || "").split(" · ")[0].trim();
+      return dove ? { nome: dove } : null;
+    },
+  ],
 ]);
 
 function marcaIDichiarati(pagina, nome) {
@@ -331,6 +416,18 @@ function marcaIDichiarati(pagina, nome) {
     for (const el of pagina.querySelectorAll?.(dove) || []) {
       if (!el.hasAttribute("data-dm-blocco")) el.setAttribute("data-dm-blocco", id);
       if (!el.hasAttribute("data-dm-disp-nome")) el.setAttribute("data-dm-disp-nome", t(it, en));
+    }
+  }
+  for (const [di, dove] of CONTENITORI_DICHIARATI) {
+    if (di !== nome || pagina.querySelector?.(`[data-dm-disposizione="${nome}"]`)) continue;
+    pagina.querySelector?.(dove)?.setAttribute("data-dm-disposizione", nome);
+  }
+  for (const [di, dove, leggi] of DICHIARATI_DALLA_PAGINA) {
+    if (di !== nome) continue;
+    for (const el of pagina.querySelectorAll?.(dove) || []) {
+      const letto = leggi(el);
+      if (letto?.id) el.setAttribute("data-dm-blocco", letto.id);
+      if (letto?.nome) el.setAttribute("data-dm-disp-nome", letto.nome);
     }
   }
 }

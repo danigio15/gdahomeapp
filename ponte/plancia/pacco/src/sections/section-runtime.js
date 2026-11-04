@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-JARN3J4W.js";
+} from "../../chunk-2ZMM5KNI.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -3891,6 +3891,7 @@ var SOURCE_INDEX = Object.freeze({
   "Descrizione": "Description",
   "Destinazione": "Destination",
   "Destra": "Right",
+  "Dettagli": "Details",
   "DETTAGLI": "DETAILS",
   "Deumidifica": "Drying",
   "Deumidificatore": "Dehumidifier",
@@ -5398,6 +5399,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le voci del Report mensile in Energia → Analisi: nome, icona ed entità (kWh mese) a tua scelta.": "The monthly Report entries in Energy → Analysis: name, icon and entity (monthly kWh) of your choice.",
   "Le zone": "The zones",
   "Le zone · tocca per avviare": "Zones · tap to start",
+  "Legenda": "Legend",
   "legge": "reads",
   "leggera → forte": "light → heavy",
   "Leggermente caldo": "Slightly warm",
@@ -5521,6 +5523,7 @@ var SOURCE_INDEX = Object.freeze({
   "macchine": "machines",
   "Macchine e container": "Machines and containers",
   "Macchine e rete": "Machines and network",
+  "Macchine virtuali": "Virtual machines",
   "Maggio": "May",
   "Maggiore di…": "Greater than…",
   "Magnitudo (facoltativa)": "Magnitude (optional)",
@@ -6558,6 +6561,7 @@ var SOURCE_INDEX = Object.freeze({
   "porte aperte": "doors open",
   "Porte aperte": "Open doors",
   "Porte e cancelli": "Doors and gates",
+  "Porte e finestre": "Doors and windows",
   "Portiere (bloccate/aperte)": "Doors (locked/open)",
   "Portiere aperte": "Doors open",
   "Portiere bloccate": "Doors locked",
@@ -6822,6 +6826,7 @@ var SOURCE_INDEX = Object.freeze({
   "Qualità acqua": "Water quality",
   "Qualità dell'acqua · Filtrazione · Riscaldamento": "Water quality · Filtration · Heating",
   "Qualità dell'aria": "Air quality",
+  "Qualità e filtrazione": "Quality and filtration",
   "qualsiasi": "any",
   "qualsiasi, da → a": "any, from → to",
   "Qualunque entità di Home Assistant: la tessera ne mostra lo stato, con l'unità quando c'è.": "Any Home Assistant entity: the tile shows its state, with the unit when there is one.",
@@ -7085,6 +7090,7 @@ var SOURCE_INDEX = Object.freeze({
   "Rientro": "I'm home",
   "Riepilogo ${pagina}": "${pagina} summary",
   "Riepilogo dell'anno": "Year summary",
+  "Riepilogo finestre": "Windows summary",
   "Riepilogo luci": "Lights summary",
   "Riepilogo:": "Summary:",
   "Rifai questo piano": "Redo this floor",
@@ -7107,6 +7113,7 @@ var SOURCE_INDEX = Object.freeze({
   "Rilevatore nuovo": "New detector",
   "Rilevatore salvato": "Detector saved",
   "Rilevatore senza nome": "Unnamed detector",
+  "Rilevatori di fumo": "Smoke detectors",
   "Rilevatori fumo e gas": "Smoke & gas detectors",
   "rilevazione": "detection",
   "rilevazioni": "detections",
@@ -7517,6 +7524,7 @@ var SOURCE_INDEX = Object.freeze({
   "Sensori della scheda Temperature di Energia: inverter, batteria e ventola. Ogni campo si salva appena lo cambi.": "Sensors for the Energy Temperatures tab: inverter, battery and fan. Every field saves as soon as you change it.",
   "Sensori della stanza": "Room sensors",
   "Sensori di periodo (facoltativi)": "Period sensors (optional)",
+  "Sensori di presenza": "Presence sensors",
   "sensori fatti in casa": "home-made sensors",
   "Sensori stanza per stanza · Comfort · Umidità": "Room by room sensors · Comfort · Humidity",
   "Senza categoria": "Uncategorized",
@@ -156274,11 +156282,11 @@ function visibile(el) {
   const r = el.getBoundingClientRect?.();
   return Boolean(r && r.width > 0 && r.height > 0);
 }
-var TESTATA = /(^|[-_\s])(page-)?mast($|[-_\s])|back-home-btn|sub-tabs/;
+var TESTATA = /(^|[-_\s])(page-)?mast($|[-_\s])|back-home-btn|sub-tabs|dm-stanze-indice-testa/;
 function eTestata(el) {
   return TESTATA.test(typeof el?.className === "string" ? el.className : "");
 }
-var RIGA_DI_TESTA = /(^|[-_])(room|stanza|group|gruppo|head|header|testa|titolo|title)($|[-_])/i;
+var RIGA_DI_TESTA = /(^|[-_])(room|stanza|group|gruppo|head|header|testa|titolo|title|linguette|tabs|switch)($|[-_])/i;
 function eTitolo(el) {
   if (el?.matches?.(TITOLO3)) return true;
   const classi = typeof el?.className === "string" ? el.className : "";
@@ -156310,10 +156318,10 @@ var COSA_DALLE_CLASSI = [
   [/session|sessione/i, () => t("Sessione", "Session")]
 ];
 function testoBreve2(el) {
-  for (const parte of el.querySelectorAll?.("small,label,span,div,p") || []) {
+  for (const parte of el.querySelectorAll?.("strong,small,label,span,div,p") || []) {
     if (parte.children.length || dentroUnaFila(parte, el)) continue;
     const testo5 = String(parte.textContent || "").replace(/\s+/g, " ").trim();
-    if (/^[^\d]*[a-zà-ü]{3,}[^\d]*$/i.test(testo5) && testo5.length <= 28) return testo5;
+    if (/[a-zà-ü]{3,}/i.test(testo5) && !/^[\d.,]|[%°]/.test(testo5) && testo5.length <= 40) return testo5;
   }
   return "";
 }
@@ -156349,7 +156357,8 @@ function vociDi(contenitore5) {
     voce3.vuoto = eVuoto(voce3.el);
     if (!voce3.nome) voce3.nome = nomeDiRipiego(voce3.el, contenitore5, i);
     const pagina3 = titoloDellaPagina5(contenitore5);
-    if (pagina3 && voce3.nome.toLowerCase() === pagina3.toLowerCase()) voce3.nome = t(`Riepilogo ${pagina3}`, `${pagina3} summary`);
+    if (pagina3 && !voce3.el.hasAttribute("data-dm-disp-nome") && voce3.nome.toLowerCase() === pagina3.toLowerCase())
+      voce3.nome = t(`Riepilogo ${pagina3}`, `${pagina3} summary`);
   });
   return voci4;
 }
@@ -156366,7 +156375,8 @@ function titoloDellaPagina5(el) {
 }
 function nomeDiRipiego(el, contenitore5, i) {
   const dato2 = el.getAttribute?.("aria-label") || el.getAttribute?.("title") || el.getAttribute?.("data-title") || "";
-  if (/[a-zà-ü]{3,}/i.test(dato2)) return dato2.trim().slice(0, 48);
+  const ultimo = dato2.split(" · ").pop().trim();
+  if (/[a-zà-ü]{3,}/i.test(ultimo)) return ultimo.slice(0, 48);
   const classi = typeof el.className === "string" ? el.className : "";
   const pagina3 = titoloDellaPagina5(contenitore5);
   if (/(^|[-_\s])(hero|summary|riepilogo|overview)($|[-_\s])/i.test(classi) && pagina3)
@@ -156438,7 +156448,74 @@ var DICHIARATI = Object.freeze([
   ["energy", "#ed-year-summary", "anno", "Riepilogo dell'anno", "Year summary"],
   ["energy", ".ed-fin-grid", "conti", "Conti", "Money"],
   ["energy", ".ed-auto-row", "autosufficienza", "Autosufficienza", "Self-sufficiency"],
-  ["energy", ".ed-chart-card", "andamento", "Andamento giornaliero", "Daily trend"]
+  ["energy", ".ed-chart-card", "andamento", "Andamento giornaliero", "Daily trend"],
+  ["ev", ".dm-na-eroe", "auto", "La mia auto", "My car"],
+  ["ev", ".dm-na-pannello", "dettagli", "Dettagli", "Details"],
+  ["appliances-main", ".dm-appl-side", "consumi", "Consumi", "Consumption"],
+  ["appliances-main", ".dm-appl-main", "elettrodomestici", "Elettrodomestici", "Appliances"],
+  ["temp", "#temp-grid", "stanze", "Stanze", "Rooms"],
+  ["temp", "#dm-temperature-trend", "andamento", "Andamento", "Trend"],
+  ["meteo", ".dm-meteo-posto", "adesso", "Adesso", "Now"],
+  ["media", ".dm-radio", "radio", "Radio", "Radio"],
+  ["media", ".dm-mp-wrap", "lettori", "Lettori", "Players"],
+  ["tapparelle", ".dm-tapp-hero", "riepilogo", "Riepilogo finestre", "Windows summary"],
+  ["varchi", ".dm-varchi-testa", "adesso", "In questo momento", "Right now"],
+  ["varchi", ".dm-varchi-elenco", "elenco", "Porte e finestre", "Doors and windows"],
+  ["presenza", ".dm-presenza-testa", "adesso", "In questo momento", "Right now"],
+  ["presenza", ".dm-presenza-elenco", "elenco", "Sensori di presenza", "Presence sensors"],
+  ["batterie", ".dm-batt-testa", "adesso", "In questo momento", "Right now"],
+  ["batterie", ".dm-batt-elenco", "elenco", "Batterie", "Batteries"],
+  ["piscina", ".dm-pool-stage", "vasca", "Piscina", "Pool"],
+  ["piscina", ".dm-pool-tiles", "comandi", "Comandi", "Controls"],
+  ["piscina", ".dm-pool-cards", "schede", "Qualità e filtrazione", "Quality and filtration"],
+  ["robot", ".dm-robot-map", "mappa", "Mappa", "Map"],
+  ["robot", ".dm-robot-meta", "stato", "Stato", "State"],
+  ["robot", ".dm-robot-actions", "comandi", "Comandi", "Controls"],
+  ["security", "#alarm-stage", "antifurto", "Antifurto", "Alarm"],
+  ["security", ".dm-sec-smoke", "fumo", "Rilevatori di fumo", "Smoke detectors"],
+  ["security", ".dm-sec-cctv", "telecamere", "Telecamere", "Cameras"],
+  ["server", ".dm-srvx-shell", "server", "Server", "Servers"],
+  ["server", "#dm-macchine-fasce", "macchine", "Macchine virtuali", "Virtual machines"],
+  ["calendario", ".dm-calp-fascia", "giorni", "Giorni", "Days"],
+  ["calendario", ".dm-calp-legenda", "legenda", "Legenda", "Legend"],
+  ["calendario", ".dm-calp-nuovo-riga", "nuovo", "Nuovo evento", "New event"],
+  ["calendario", ".dm-calp-agenda", "agenda", "Agenda", "Calendar"],
+  ["calendario", ".dm-calp-cose", "da-fare", "Da fare", "To do"],
+  ["gdanav", ".dm-gn-capo", "nuovo", "Nuovo viaggio", "New trip"],
+  ["gdanav", ".dm-gn-griglia", "viaggi", "Viaggi", "Trips"],
+  ["automazioni", ".ad-kpi", "numeri", "Numeri", "Figures"]
+]);
+var CONTENITORI_DICHIARATI = Object.freeze([
+  ["security", ".dm-sec-shell"],
+  ["meteo", "#meteo-wrap"]
+]);
+var DICHIARATI_DALLA_PAGINA = Object.freeze([
+  [
+    "stanze",
+    ".dm-stanze-indice-griglia",
+    (el) => {
+      const testa2 = el.previousElementSibling;
+      if (!testa2?.matches?.(".dm-stanze-piano")) return null;
+      const nome = String(testa2.querySelector?.("span")?.textContent || "").replace(/[^\p{L}\p{N}\s'-]/gu, "").trim();
+      return nome ? { id: idDellaVoce({ titolo: nome }), nome } : null;
+    }
+  ],
+  [
+    "tapparelle",
+    ".dm-tapp-card",
+    (el) => {
+      const nome = String(el.querySelector?.(".tapp-name")?.textContent || "").trim();
+      return nome ? { nome } : null;
+    }
+  ],
+  [
+    "media",
+    ".dm-mp-card",
+    (el) => {
+      const dove = String(el.querySelector?.(".dm-mp-dove")?.textContent || "").split(" · ")[0].trim();
+      return dove ? { nome: dove } : null;
+    }
+  ]
 ]);
 function marcaIDichiarati(pagina3, nome) {
   for (const [di, dove, id, it, en] of DICHIARATI) {
@@ -156446,6 +156523,18 @@ function marcaIDichiarati(pagina3, nome) {
     for (const el of pagina3.querySelectorAll?.(dove) || []) {
       if (!el.hasAttribute("data-dm-blocco")) el.setAttribute("data-dm-blocco", id);
       if (!el.hasAttribute("data-dm-disp-nome")) el.setAttribute("data-dm-disp-nome", t(it, en));
+    }
+  }
+  for (const [di, dove] of CONTENITORI_DICHIARATI) {
+    if (di !== nome || pagina3.querySelector?.(`[data-dm-disposizione="${nome}"]`)) continue;
+    pagina3.querySelector?.(dove)?.setAttribute("data-dm-disposizione", nome);
+  }
+  for (const [di, dove, leggi4] of DICHIARATI_DALLA_PAGINA) {
+    if (di !== nome) continue;
+    for (const el of pagina3.querySelectorAll?.(dove) || []) {
+      const letto = leggi4(el);
+      if (letto?.id) el.setAttribute("data-dm-blocco", letto.id);
+      if (letto?.nome) el.setAttribute("data-dm-disp-nome", letto.nome);
     }
   }
 }

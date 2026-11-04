@@ -7990,4 +7990,12 @@ export default Object.freeze({
   "Saved layouts": "已保存的布局",
   "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "用 ✏️ 更改过的页面——区块的顺序和隐藏的区块。「重置」会恢复原样。",
   "Slot": "位置",
+  "Details": "详情",
+  "Doors and windows": "门窗",
+  "Legend": "图例",
+  "Presence sensors": "人体存在传感器",
+  "Quality and filtration": "水质与过滤",
+  "Smoke detectors": "烟雾探测器",
+  "Virtual machines": "虚拟机",
+  "Windows summary": "窗户概览",
 });

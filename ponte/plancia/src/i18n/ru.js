@@ -8143,4 +8143,12 @@ export default Object.freeze({
   "Saved layouts": "Сохранённые раскладки",
   "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "страницы, изменённые через ✏️, — порядок блоков и скрытые. «Сбросить» вернёт всё как было.",
   "Slot": "Место",
+  "Details": "Подробности",
+  "Doors and windows": "Двери и окна",
+  "Legend": "Легенда",
+  "Presence sensors": "Датчики присутствия",
+  "Quality and filtration": "Качество и фильтрация",
+  "Smoke detectors": "Датчики дыма",
+  "Virtual machines": "Виртуальные машины",
+  "Windows summary": "Сводка по окнам",
 });

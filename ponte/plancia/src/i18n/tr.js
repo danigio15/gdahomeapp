@@ -8126,4 +8126,12 @@ export default Object.freeze({
   "Saved layouts": "Kaydedilen düzenler",
   "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "✏️ ile değiştirilen sayfalar — blokların sırası ve gizlenenler. «Sıfırla» onları eski hâline getirir.",
   "Slot": "Yuva",
+  "Details": "Ayrıntılar",
+  "Doors and windows": "Kapılar ve pencereler",
+  "Legend": "Açıklama",
+  "Presence sensors": "Varlık sensörleri",
+  "Quality and filtration": "Kalite ve filtreleme",
+  "Smoke detectors": "Duman dedektörleri",
+  "Virtual machines": "Sanal makineler",
+  "Windows summary": "Pencere özeti",
 });

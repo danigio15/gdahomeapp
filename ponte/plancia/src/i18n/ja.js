@@ -8128,4 +8128,12 @@ export default Object.freeze({
   "Saved layouts": "保存したレイアウト",
   "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "✏️ で変更したページ — ブロックの順番と非表示のもの。「リセット」で元に戻ります。",
   "Slot": "枠",
+  "Details": "詳細",
+  "Doors and windows": "ドアと窓",
+  "Legend": "凡例",
+  "Presence sensors": "在室センサー",
+  "Quality and filtration": "水質とろ過",
+  "Smoke detectors": "煙感知器",
+  "Virtual machines": "仮想マシン",
+  "Windows summary": "窓の概要",
 });
