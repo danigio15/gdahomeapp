@@ -7983,4 +7983,10 @@ export default Object.freeze({
   "Temperatures": "温度",
   "Battery": "电池",
   "Controls": "控制",
+  "Changed lists": "已更改的列表",
+  "drag, or use the up and down arrows": "拖动，或使用上下方向键",
+  "Hidden blocks": "隐藏的区块",
+  "No page changed: they are all as they came.": "没有更改任何页面：都是默认状态。",
+  "Saved layouts": "已保存的布局",
+  "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "用 ✏️ 更改过的页面——区块的顺序和隐藏的区块。「重置」会恢复原样。",
 });

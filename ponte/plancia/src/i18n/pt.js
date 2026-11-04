@@ -8151,4 +8151,10 @@ export default Object.freeze({
   "Temperatures": "Temperaturas",
   "Battery": "Bateria",
   "Controls": "Controlos",
+  "Changed lists": "Listas alteradas",
+  "drag, or use the up and down arrows": "arraste, ou use as setas para cima e para baixo",
+  "Hidden blocks": "Blocos ocultos",
+  "No page changed: they are all as they came.": "Nenhuma página alterada: estão todas como vieram.",
+  "Saved layouts": "Disposições guardadas",
+  "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "as páginas alteradas com ✏️ — a ordem dos blocos e os ocultos. «Repor» deixa-as como estavam.",
 });

@@ -20,6 +20,8 @@ import {
   idUnici,
   ordineConLaScelta,
   sceltaPulita,
+  paginaDellElenco,
+  pagineCambiate,
   senzaLaPagina,
   senzaLaScelta,
 } from "../src/core/disposizione.js";
@@ -138,4 +140,37 @@ test("un'entita' si riconosce solo se e' di un dominio vero", () => {
 
 test("gli id uguali si distinguono col numero", () => {
   assert.deepEqual(idUnici([".tile", ".tile", "a", ".tile"]), [".tile", ".tile·2", "a", ".tile·3"]);
+});
+
+/* Il Config elenca le pagine cambiate, ognuna col suo «Ripristina»: una
+ * pagina e' tutte le chiavi che cominciano col suo nome, qualunque sia il
+ * segno che le divide (un elenco dentro un blocco, una vista, un elenco
+ * dentro una carta). */
+test("le pagine cambiate si contano, e ripristinarne una toglie tutte le sue chiavi", () => {
+  assert.equal(paginaDellElenco("ev"), "ev");
+  assert.equal(paginaDellElenco("luci:zona-cucina"), "luci");
+  assert.equal(paginaDellElenco("energy@oggi"), "energy");
+  assert.equal(paginaDellElenco("security/telecamere"), "security");
+  const tutta = {
+    ev: { ordine: ["batteria", "auto"], nascosti: ["sessione"] },
+    "luci:zona-cucina": { ordine: ["light.b", "light.a"] },
+    luci: { nascosti: ["riepilogo", "zona-sala"] },
+    "energy@oggi": { ordine: ["conti", "numeri"] },
+    "security/telecamere": { ordine: ["camera.b", "camera.a"] },
+    rotta: "niente",
+  };
+  assert.deepEqual(pagineCambiate(tutta), [
+    { pagina: "ev", elenchi: 1, nascosti: 1 },
+    { pagina: "luci", elenchi: 2, nascosti: 2 },
+    { pagina: "energy", elenchi: 1, nascosti: 0 },
+    { pagina: "security", elenchi: 1, nascosti: 0 },
+  ]);
+  assert.deepEqual(Object.keys(senzaLaPagina(tutta, "energy")).sort(), [
+    "ev",
+    "luci",
+    "luci:zona-cucina",
+    "security/telecamere",
+  ]);
+  assert.deepEqual(Object.keys(senzaLaPagina(tutta, "security")).includes("security/telecamere"), false);
+  assert.deepEqual(pagineCambiate(null), []);
 });

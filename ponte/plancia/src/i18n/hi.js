@@ -8102,4 +8102,10 @@ export default Object.freeze({
   "Temperatures": "तापमान",
   "Battery": "बैटरी",
   "Controls": "नियंत्रण",
+  "Changed lists": "बदली गई सूचियाँ",
+  "drag, or use the up and down arrows": "खींचें, या ऊपर और नीचे के तीर इस्तेमाल करें",
+  "Hidden blocks": "छिपे हुए ब्लॉक",
+  "No page changed: they are all as they came.": "कोई पेज नहीं बदला: सब पहले जैसे हैं।",
+  "Saved layouts": "सहेजे गए लेआउट",
+  "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "✏️ से बदले गए पेज — ब्लॉकों का क्रम और छिपे हुए। «रीसेट» उन्हें पहले जैसा कर देता है।",
 });

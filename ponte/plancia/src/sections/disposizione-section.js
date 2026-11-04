@@ -295,7 +295,9 @@ function elenchiDentro(riquadro, prefisso, fuori, profondita = 0) {
     if (!visibile(figlio) || figlio.matches(NOSTRI)) continue;
     if (eUnElenco(figlio) || figlio.hasAttribute("data-dm-disposizione")) {
       const quale = figlio.getAttribute("data-dm-disposizione") || idDellElemento(figlio, "") || "elenco";
-      fuori.push({ chiave: `${prefisso}>${quale}`, contenitore: figlio, riquadri: false });
+      /* `/` e non `>`: una chiave con `>` non passa da `disposizionePulita`, e
+       * la scelta di questi elenchi si perdeva al salvataggio. */
+      fuori.push({ chiave: `${prefisso}/${quale}`, contenitore: figlio, riquadri: false });
       continue; /* dentro una carta non si cercano altri elenchi */
     }
     elenchiDentro(figlio, prefisso, fuori, profondita + 1);

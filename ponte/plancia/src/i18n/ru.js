@@ -8136,4 +8136,10 @@ export default Object.freeze({
   "Temperatures": "Температуры",
   "Battery": "Батарея",
   "Controls": "Управление",
+  "Changed lists": "Изменённые списки",
+  "drag, or use the up and down arrows": "перетащите или используйте стрелки вверх и вниз",
+  "Hidden blocks": "Скрытые блоки",
+  "No page changed: they are all as they came.": "Ни одна страница не изменена: все как по умолчанию.",
+  "Saved layouts": "Сохранённые раскладки",
+  "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "страницы, изменённые через ✏️, — порядок блоков и скрытые. «Сбросить» вернёт всё как было.",
 });

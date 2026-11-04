@@ -8121,4 +8121,10 @@ export default Object.freeze({
   "Temperatures": "温度",
   "Battery": "バッテリー",
   "Controls": "操作",
+  "Changed lists": "変更したリスト",
+  "drag, or use the up and down arrows": "ドラッグするか、上下の矢印キーを使います",
+  "Hidden blocks": "非表示のブロック",
+  "No page changed: they are all as they came.": "変更したページはありません：すべて初期状態です。",
+  "Saved layouts": "保存したレイアウト",
+  "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "✏️ で変更したページ — ブロックの順番と非表示のもの。「リセット」で元に戻ります。",
 });

@@ -8066,4 +8066,10 @@ export default Object.freeze({
   "Temperatures": "درجات الحرارة",
   "Battery": "البطارية",
   "Controls": "عناصر التحكم",
+  "Changed lists": "القوائم المعدّلة",
+  "drag, or use the up and down arrows": "اسحب، أو استخدم الأسهم لأعلى ولأسفل",
+  "Hidden blocks": "الكتل المخفية",
+  "No page changed: they are all as they came.": "لم تتغير أي صفحة: كلها كما جاءت.",
+  "Saved layouts": "التخطيطات المحفوظة",
+  "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "الصفحات التي غيّرتها بـ ✏️ — ترتيب الكتل والمخفية منها. «إعادة الضبط» تعيدها كما كانت.",
 });

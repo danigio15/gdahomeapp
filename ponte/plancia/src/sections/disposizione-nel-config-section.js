@@ -1,0 +1,209 @@
+/* La disposizione nel Config (#379).
+ *
+ * Due cose che sulla plancia si fanno col ✏️ e che il Config deve poter fare
+ * anche lui, nella scheda Impostazioni:
+ *
+ * - l'«Ordine navbar», che aveva solo le frecce ▲▼: adesso ogni riga ha la sua
+ *   maniglia e si trascina, col dito, col mouse o dalle frecce della
+ *   tastiera. L'ordine si scrive nella stessa casella delle frecce,
+ *   `cd_navbar_order`, e Config resta l'ultima;
+ * - le «Disposizioni salvate»: le pagine cambiate col ✏️, ognuna col suo
+ *   «Ripristina», e uno per tutte. Senza, una pagina nascosta per sbaglio si
+ *   poteva rimettere solo tornando su quella pagina — e un riquadro nascosto,
+ *   da fuori della modifica, non si vede.
+ */
+import { CHIAVE_DISPOSIZIONE, pagineCambiate, senzaLaPagina } from "../core/disposizione.js";
+import { spostaNellaLista } from "./trascina-per-riordinare.js";
+import { doc, esc, installStyle, onEditorRedraw, readJson, root, t, writeJsonIfChanged } from "./shared.js";
+
+const state = { installed: false };
+
+const CONFIG = "config";
+
+/* ── l'ordine della barra ───────────────────────────────────────────────── */
+
+function laChiaveDellaRiga(riga, chiavi) {
+  const scritta = riga.getAttribute("data-section-key");
+  if (scritta) return scritta;
+  const i = Number.parseInt(riga.querySelector("[data-i]")?.getAttribute("data-i") ?? "", 10);
+  return Number.isInteger(i) ? chiavi[i] : null;
+}
+
+function chiaviDellaBarra() {
+  try {
+    const chiavi = root.cdNavKeys?.();
+    if (Array.isArray(chiavi)) return chiavi.map(String);
+  } catch (_errore) {}
+  return [...doc.querySelectorAll(".tab[data-tab]")].map((voce) => voce.dataset.tab);
+}
+
+/** Le righe dell'«Ordine navbar» messe in un elenco che si trascina. Le
+ * frecce restano: chi le usa da anni le ritrova dove erano. */
+function lOrdineSiTrascina(corpo) {
+  if (corpo.querySelector("[data-dm-ordine-barra]")) return corpo.querySelector("[data-dm-ordine-barra]");
+  const righe = [...corpo.querySelectorAll('[onclick="edNavMove(this)"]')]
+    .map((freccia) => freccia.closest(".ed-row"))
+    .filter((riga, i, tutte) => riga && tutte.indexOf(riga) === i);
+  if (righe.length < 2) return null;
+  const chiavi = chiaviDellaBarra();
+  const elenco = doc.createElement("div");
+  elenco.className = "dm-ordine-barra";
+  elenco.setAttribute("data-dm-ordine-barra", "");
+  elenco.setAttribute("data-dm-riordina", "");
+  righe[0].before(elenco);
+  for (const riga of righe) {
+    const chiave = laChiaveDellaRiga(riga, chiavi);
+    elenco.append(riga);
+    /* Config non si sposta: chi applica l'ordine la rimette in fondo. */
+    if (!chiave || chiave === CONFIG) continue;
+    riga.setAttribute("data-dm-riordina-riga", chiave);
+    const nome = riga.querySelector(".ed-row-new")?.textContent?.trim() || chiave;
+    const maniglia = doc.createElement("button");
+    maniglia.type = "button";
+    maniglia.className = "dm-ordine-barra-maniglia";
+    maniglia.setAttribute("data-dm-maniglia", "");
+    maniglia.setAttribute("aria-label", `${nome}: ${t("trascina, o usa le frecce su e giù", "drag, or use the up and down arrows")}`);
+    maniglia.title = t("Trascina per spostare", "Drag to move");
+    maniglia.textContent = "⠿";
+    riga.prepend(maniglia);
+  }
+  return elenco;
+}
+
+function onRiordina(event) {
+  const elenco = event.target;
+  if (!elenco?.hasAttribute?.("data-dm-ordine-barra")) return;
+  const { da, a } = event.detail || {};
+  const mobili = [...elenco.children]
+    .filter((riga) => riga.hasAttribute("data-dm-riordina-riga"))
+    .map((riga) => riga.getAttribute("data-dm-riordina-riga"));
+  if (!Number.isInteger(da) || !Number.isInteger(a) || !mobili[da]) return;
+  const nuove = spostaNellaLista(mobili, da, a);
+  /* Le voci che l'elenco non ha (Config, le sezioni nate dopo) restano in
+   * coda come le mette chi applica l'ordine. */
+  const resto = chiaviDellaBarra().filter((chiave) => !nuove.includes(chiave) && chiave !== CONFIG);
+  writeJsonIfChanged("cd_navbar_order", [...nuove, ...resto, CONFIG]);
+  try {
+    root.cdApplyNavOrder?.();
+  } catch (_errore) {}
+  const chiave = mobili[da];
+  try {
+    root.editorSwitch?.("visib");
+  } catch (_errore) {}
+  /* Dopo il ridisegno il fuoco torna sulla maniglia di chi si e' spostato,
+   * cosi' dalla tastiera si continua a premere la freccia. */
+  root.queueMicrotask?.(() => {
+    sistema();
+    const css = root.CSS?.escape ? root.CSS.escape(chiave) : chiave;
+    doc.querySelector(`[data-dm-ordine-barra] > [data-dm-riordina-riga="${css}"] [data-dm-maniglia]`)?.focus?.();
+  });
+}
+
+/* ── le disposizioni salvate ────────────────────────────────────────────── */
+
+function nomeDellaPagina(pagina) {
+  const css = root.CSS?.escape ? root.CSS.escape(pagina) : pagina;
+  const voce = doc.querySelector(`.tab[data-tab="${css}"]`);
+  return voce?.querySelector(".text")?.textContent?.trim() || voce?.textContent?.trim() || pagina;
+}
+
+function markupDelleSalvate() {
+  const pagine = pagineCambiate(readJson(CHIAVE_DISPOSIZIONE, {}));
+  const righe = pagine
+    .map(
+      ({ pagina, elenchi, nascosti }) => `<div class="ed-row dm-disp-salvata" data-dm-disp-salvata="${esc(pagina)}">
+        <div class="ed-row-main"><div class="ed-row-new">${esc(nomeDellaPagina(pagina))}</div>
+        <div class="dm-disp-salvata-cosa">${t("Elenchi cambiati", "Changed lists")}: ${elenchi}${
+          nascosti ? ` · ${t("Riquadri nascosti", "Hidden blocks")}: ${nascosti}` : ""
+        }</div></div>
+        <button type="button" class="ed-btn-add dm-disp-salvata-tasto" data-dm-disp-ripristina="${esc(pagina)}">↺ ${t("Ripristina", "Reset")}</button>
+      </div>`,
+    )
+    .join("");
+  return `<div class="ed-intro" style="margin-top:18px;"><b>${t("Disposizioni salvate", "Saved layouts")}</b>: ${t(
+    "le pagine cambiate col ✏️ — l'ordine dei riquadri e quelli nascosti. «Ripristina» la rimette com'era.",
+    "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.",
+  )}</div>${
+    righe
+      ? `${righe}${
+          pagine.length > 1
+            ? `<button type="button" class="ed-btn-add dm-disp-salvata-tutte" data-dm-disp-ripristina-tutte>↺ ${t("Ripristina tutte", "Reset all")}</button>`
+            : ""
+        }`
+      : `<div class="dm-disp-salvata-vuota">${t("Nessuna pagina cambiata: sono tutte come di serie.", "No page changed: they are all as they came.")}</div>`
+  }`;
+}
+
+function leSalvate(corpo, dopo) {
+  let blocco = corpo.querySelector("[data-dm-disp-salvate]");
+  if (!blocco) {
+    blocco = doc.createElement("div");
+    blocco.setAttribute("data-dm-disp-salvate", "");
+    dopo.after(blocco);
+  }
+  const html = markupDelleSalvate();
+  if (blocco.__dmHtml !== html) {
+    blocco.innerHTML = html;
+    blocco.__dmHtml = html;
+  }
+}
+
+function rimettiLaPagina(pagina) {
+  const pagine = pagina ? [pagina] : pagineCambiate(readJson(CHIAVE_DISPOSIZIONE, {})).map((p) => p.pagina);
+  let tutta = readJson(CHIAVE_DISPOSIZIONE, {});
+  for (const una of pagine) tutta = senzaLaPagina(tutta, una);
+  writeJsonIfChanged(CHIAVE_DISPOSIZIONE, tutta);
+  /* La pagina si rimette subito, anche se non e' quella davanti. */
+  for (const una of pagine) {
+    try {
+      root.dmDisposizione?.applicaLaDisposizione?.(doc.getElementById(`page-${una}`));
+    } catch (_errore) {}
+  }
+  sistema();
+}
+
+function onClick(event) {
+  const tasto = event.target?.closest?.("[data-dm-disp-ripristina],[data-dm-disp-ripristina-tutte]");
+  if (!tasto || !tasto.closest("#ed-body")) return;
+  event.preventDefault();
+  event.stopPropagation();
+  rimettiLaPagina(tasto.getAttribute("data-dm-disp-ripristina") || null);
+}
+
+/* ── installare ─────────────────────────────────────────────────────────── */
+
+function sistema() {
+  const corpo = doc?.getElementById("ed-body");
+  if (!corpo) return;
+  const elenco = lOrdineSiTrascina(corpo);
+  if (elenco) leSalvate(corpo, elenco);
+}
+
+const STILE = `
+  .dm-ordine-barra{display:flex;flex-direction:column;gap:inherit}
+  .dm-ordine-barra>.ed-row{display:flex}
+  .dm-ordine-barra-maniglia{flex:0 0 32px;width:32px;height:40px;margin:-4px 2px -4px -6px;padding:0;border:0;border-radius:10px;
+    background:transparent;color:var(--text-dim,#94a3b8);font-size:18px;line-height:1;cursor:grab;
+    display:inline-flex;align-items:center;justify-content:center;touch-action:none;user-select:none;-webkit-user-select:none}
+  .dm-ordine-barra-maniglia:hover{color:var(--text,#0f172a);background:color-mix(in srgb,var(--text-dim,#94a3b8) 14%,transparent)}
+  .dm-ordine-barra-maniglia:focus-visible{outline:2px solid var(--accent,#3b82f6);outline-offset:1px}
+  .dm-disp-salvata{align-items:center;gap:10px}
+  .dm-disp-salvata-cosa{font-size:12px;color:var(--text-dim,#64748b);margin-top:2px}
+  .dm-disp-salvata-tasto{width:auto!important;margin:0!important;padding:8px 14px!important;white-space:nowrap;flex:0 0 auto}
+  .dm-disp-salvata-tutte{width:100%;margin-top:8px}
+  .dm-disp-salvata-vuota{font-size:13px;color:var(--text-dim,#64748b);padding:6px 2px}
+`;
+
+export function installDisposizioneNelConfig() {
+  if (!doc || state.installed) return;
+  state.installed = true;
+  installStyle("dm-disposizione-nel-config-style", STILE);
+  doc.addEventListener("dm-riordina", onRiordina);
+  doc.addEventListener("click", onClick, true);
+  const presto = () => onEditorRedraw("__dmDisposizioneNelConfig", sistema);
+  presto();
+  root.addEventListener?.("dashboardmodern:legacy-ready", presto);
+  root.addEventListener?.("storage", (event) => {
+    if (event.key === CHIAVE_DISPOSIZIONE) sistema();
+  });
+}

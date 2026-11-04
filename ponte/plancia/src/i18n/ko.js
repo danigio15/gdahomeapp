@@ -8093,4 +8093,10 @@ export default Object.freeze({
   "Temperatures": "온도",
   "Battery": "배터리",
   "Controls": "제어",
+  "Changed lists": "변경한 목록",
+  "drag, or use the up and down arrows": "끌거나 위아래 화살표를 사용하세요",
+  "Hidden blocks": "숨긴 블록",
+  "No page changed: they are all as they came.": "변경한 페이지가 없습니다: 모두 기본 상태입니다.",
+  "Saved layouts": "저장한 배치",
+  "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "✏️로 변경한 페이지 — 블록 순서와 숨긴 블록. «초기화»하면 원래대로 돌아갑니다.",
 });

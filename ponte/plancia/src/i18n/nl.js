@@ -8153,4 +8153,10 @@ export default Object.freeze({
   "Temperatures": "Temperaturen",
   "Battery": "Batterij",
   "Controls": "Bediening",
+  "Changed lists": "Gewijzigde lijsten",
+  "drag, or use the up and down arrows": "sleep, of gebruik de pijltjes omhoog en omlaag",
+  "Hidden blocks": "Verborgen blokken",
+  "No page changed: they are all as they came.": "Geen pagina gewijzigd: alles is zoals het kwam.",
+  "Saved layouts": "Opgeslagen indelingen",
+  "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "de pagina's gewijzigd met ✏️ — de volgorde van de blokken en de verborgen. «Herstellen» zet ze terug zoals ze waren.",
 });

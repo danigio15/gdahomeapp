@@ -1659,8 +1659,10 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // casella `cd_disposizione` e i suoi conti) e `sections/disposizione-
   // section.js` (il tasto ✏️ sulle pagine e la disposizione rimessa a ogni
   // ridisegno).
+  // 537 con `sections/disposizione-nel-config-section.js`: l'«Ordine navbar»
+  // del Config che si trascina e le «Disposizioni salvate» con «Ripristina».
   assert.ok(
-    relative.length <= 536,
+    relative.length <= 537,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

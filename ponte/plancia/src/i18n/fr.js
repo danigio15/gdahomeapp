@@ -8199,4 +8199,10 @@ export default Object.freeze({
   "Temperatures": "Températures",
   "Battery": "Batterie",
   "Controls": "Commandes",
+  "Changed lists": "Listes modifiées",
+  "drag, or use the up and down arrows": "faites glisser, ou utilisez les flèches haut et bas",
+  "Hidden blocks": "Blocs masqués",
+  "No page changed: they are all as they came.": "Aucune page modifiée : elles sont toutes d'origine.",
+  "Saved layouts": "Dispositions enregistrées",
+  "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "les pages modifiées avec ✏️ — l'ordre des blocs et ceux masqués. «Réinitialiser» les remet comme avant.",
 });

@@ -166,13 +166,36 @@ export function senzaLaScelta(tutta, elenco) {
   return fuori;
 }
 
+/** La pagina di un elenco: la chiave comincia sempre col suo nome, poi
+ * `:` (un elenco dentro un blocco), `@` (una vista della pagina) o `/` (un
+ * elenco dentro una carta). */
+export function paginaDellElenco(elenco) {
+  return String(elenco || "").split(/[:@/>]/)[0];
+}
+
 /** La casella senza tutte le scelte di una pagina (l'elenco dei blocchi e
  * quelli dentro): «Ripristina la pagina». */
 export function senzaLaPagina(tutta, pagina) {
   const fuori = disposizionePulita(tutta);
   for (const elenco of Object.keys(fuori))
-    if (elenco === pagina || elenco.startsWith(`${pagina}:`)) delete fuori[elenco];
+    if (paginaDellElenco(elenco) === pagina) delete fuori[elenco];
   return fuori;
+}
+
+/** Le pagine che hanno una disposizione salvata, nell'ordine in cui
+ * compaiono, con quanti elenchi sono cambiati e quante voci sono nascoste:
+ * l'elenco «Disposizioni salvate» del Config. */
+export function pagineCambiate(tutta) {
+  const pagine = new Map();
+  for (const [elenco, scelta] of Object.entries(disposizionePulita(tutta))) {
+    const pagina = paginaDellElenco(elenco);
+    if (!pagina) continue;
+    const riga = pagine.get(pagina) || { pagina, elenchi: 0, nascosti: 0 };
+    riga.elenchi += 1;
+    riga.nascosti += scelta.nascosti?.length || 0;
+    pagine.set(pagina, riga);
+  }
+  return [...pagine.values()];
 }
 
 /* ── gli id delle voci ──────────────────────────────────────────────────── */
