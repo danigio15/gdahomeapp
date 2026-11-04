@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-FUPOWOQ7.js";
+} from "../../chunk-UNQG5YEW.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -12830,8 +12830,8 @@ function piazzaIlFantasma(presa) {
   const alto = altoSchermo - base.top;
   fantasma.style.left = `${sinistra / k + (riferimento2.scrollLeft || 0)}px`;
   fantasma.style.top = `${alto / k + (riferimento2.scrollTop || 0)}px`;
-  fantasma.style.transformOrigin = `${ox / k}px ${oy / k}px`;
-  fantasma.style.transform = `rotate(-2deg) scale(${+s.toFixed(3)})`;
+  fantasma.style.setProperty("transform-origin", `${ox / k}px ${oy / k}px`, "important");
+  fantasma.style.setProperty("transform", `rotate(-2deg) scale(${+s.toFixed(3)})`, "important");
 }
 function riduzioneDelFantasma(larga, alta, schermoLargo, schermoAlto) {
   let s = 1;
@@ -156981,7 +156981,8 @@ function onRiordinaLaBarra(event) {
 }
 function barraMarkup5() {
   const n = conta2();
-  const niente = n === 0 && !state177.modifica?.pagina?.querySelector?.("[data-dm-disp-elenco]");
+  const pagina3 = state177.modifica?.pagina;
+  const niente = n === 0 && !pagina3?.matches?.("[data-dm-disp-elenco]") && !pagina3?.querySelector?.("[data-dm-disp-elenco]");
   return `<div class="dm-disp-barra-dentro">
     <span class="dm-disp-conta"${n === 0 ? " data-vuota" : ""}>${esc(
     niente ? t("In questa vista non c'è niente da spostare", "Nothing to move in this view") : n === 0 ? t("Trascina riquadri ed elementi dove li vuoi", "Drag boxes and items where you want them") : n === 1 ? t("1 modifica", "1 change") : t(`${n} modifiche`, `${n} changes`)

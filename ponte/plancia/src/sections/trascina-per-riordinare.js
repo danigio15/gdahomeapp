@@ -161,8 +161,11 @@ function piazzaIlFantasma(presa) {
   const alto = altoSchermo - base.top;
   fantasma.style.left = `${sinistra / k + (riferimento.scrollLeft || 0)}px`;
   fantasma.style.top = `${alto / k + (riferimento.scrollTop || 0)}px`;
-  fantasma.style.transformOrigin = `${ox / k}px ${oy / k}px`;
-  fantasma.style.transform = `rotate(-2deg) scale(${+s.toFixed(3)})`;
+  /* Con `important`: la vista del flusso dell'Energia ha il suo
+   * `transform` nel foglio di stile, e vinceva — il fantasma restava a
+   * grandezza piena, alto due schermi. */
+  fantasma.style.setProperty("transform-origin", `${ox / k}px ${oy / k}px`, "important");
+  fantasma.style.setProperty("transform", `rotate(-2deg) scale(${+s.toFixed(3)})`, "important");
 }
 
 /** Quanto rimpicciolire il fantasma perche' stia nello schermo: largo al piu'

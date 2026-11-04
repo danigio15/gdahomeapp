@@ -922,7 +922,12 @@ function barraMarkup() {
   const n = conta();
   /* Una vista con un riquadro solo (il flusso dell'Energia): si dice, invece
    * di lasciare a cercare cosa trascinare. */
-  const niente = n === 0 && !state.modifica?.pagina?.querySelector?.("[data-dm-disp-elenco]");
+  /* La pagina stessa puo' essere l'elenco (l'Energia: la vista e «Le tue
+   * entita'» sono figlie della pagina), e `querySelector` non guarda chi lo
+   * chiama: diceva «niente da spostare» sopra due riquadri con la maniglia. */
+  const pagina = state.modifica?.pagina;
+  const niente =
+    n === 0 && !pagina?.matches?.("[data-dm-disp-elenco]") && !pagina?.querySelector?.("[data-dm-disp-elenco]");
   return `<div class="dm-disp-barra-dentro">
     <span class="dm-disp-conta"${n === 0 ? " data-vuota" : ""}>${esc(
       niente
