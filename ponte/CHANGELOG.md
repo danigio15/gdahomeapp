@@ -10,10 +10,36 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
-## 1.18.9.3
+## 1.18.10
 
-_Solo Home Assistant: l'app sul telefono non cambia._
+_App GdAHome e Home Assistant._
 
+**Nell'app** (Salute: più misure, il sonno, e le misure anche ad app chiusa):
+
+- **Le misure vanno a casa anche ad app chiusa**: «Salute non prende i dati»
+  quando GdAHome non era aperta. Su iPhone, quando Apple Salute ha un dato
+  nuovo, l'iPhone sveglia l'app per qualche secondo e lei lo manda alla casa
+  (i tempi li decide iOS, di solito circa una volta l'ora; a telefono
+  bloccato si aspetta lo sblocco). Su Android un giro ogni mezz'ora, con la
+  rete, se Health Connect permette la lettura in background. Nella schermata
+  Salute c'è l'interruttore «Manda anche ad app chiusa», acceso di serie, e
+  l'ora dell'ultimo invio. Una lettura vuota non cancella mai le misure già
+  in casa, e il lucchetto col volto resta: se l'app si è svegliata da sola,
+  lo chiede quando la apri.
+- **Il sonno dall'Apple Watch si legge**: si chiedeva solo «addormentato»
+  senza fase, e il Watch scrive le fasi (essenziale, profondo, REM): una
+  notte col Watch non arrivava mai. Senza Watch vale il «a letto» degli orari
+  di Riposo, come in Salute.
+- **Misure nuove, di oggi**: distanza a piedi, piani saliti, minuti di
+  esercizio e ore in piedi (iPhone), calorie a riposo. Accese di serie; il
+  permesso si chiede una volta.
+
+**In Home Assistant:**
+
+- **La pagina Salute ha l'Attività**: Movimento, Esercizio e In piedi coi
+  colori dell'Apple Watch, le calorie a riposo e il totale; sotto i passi la
+  distanza e i piani. Il ponte scrive i cinque sensori nuovi. In fondo alla
+  pagina si legge «Apple Salute o Health Connect», non solo Health Connect.
 - **La finestra del termostato scorre sul telefono, e il suo fondo resta
   sopra la barra in basso**: «non c'è lo scroll, non vedo le cose sotto». La
   finestra (gradi, modalità, Spegni/Accendi, il Programma) era alta l'88%
