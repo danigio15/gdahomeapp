@@ -135,16 +135,17 @@ jobs:
           # 21 e non 17: la mappa del navigatore (MapLibre, dentro gdanav) si
           # compila solo da Java 21 in su.
           java-version: "21"
-      # Memoria in piu' per Gradle: la macchina di GitHub ha 7 GB, e durante
-      # R8 sparisce a meta' del pacchetto senza lasciare registro (finita la
-      # memoria). Uno swap da 8 GB la tiene in piedi; piu' lento, ma arriva.
-      - name: Lo swap per Gradle
+      # Spazio su disco per la costruzione Android: l'NDK, Gradle e R8 ne
+      # vogliono tanto, e la macchina di GitHub arriva quasi piena. Senza, il
+      # passo del pacchetto moriva a meta' senza lasciare registro (il runner
+      # non riesce piu' a scrivere). Si tolgono gli strumenti che qui non
+      # servono; l'SDK di Android (/usr/local/lib/android/sdk) resta.
+      - name: Spazio su disco per Android
         run: |
-          sudo fallocate -l 8G /swapfile2
-          sudo chmod 600 /swapfile2
-          sudo mkswap /swapfile2
-          sudo swapon /swapfile2
-          free -h
+          df -h /
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost /opt/hostedtoolcache/CodeQL /usr/local/lib/node_modules "$AGENT_TOOLSDIRECTORY"/PyPy 2>/dev/null || true
+          sudo docker image prune -af >/dev/null 2>&1 || true
+          df -h /
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
