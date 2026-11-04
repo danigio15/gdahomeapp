@@ -1251,6 +1251,9 @@ const ALTRI_NOMI = Object.freeze({
    * socchiusa che era dei Varchi, le finestre la finestra aperta. */
   porteAperte: "varchi",
   finestreAperte: "finestra",
+  /* La tessera «Messaggio» (#138, a Echo e telefoni): la busta della posta.
+   * Era l'unica dell'elenco del Config senza disegno. */
+  messaggio: "posta",
 });
 
 const nomeDelDisegno = (chiave) => {

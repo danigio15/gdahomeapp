@@ -50,7 +50,10 @@ test("a configurazione vuota le voci in barra sono Home e Config", async ({ page
       .map((tab) => tab.dataset.tab),
   );
   console.log("VISIBILI:", JSON.stringify(visibili));
-  expect(visibili.sort()).toEqual(["config", "home"]);
+  /* GdANav non e' una sezione della casa: e' il pianificatore dei viaggi
+   * dell'app gdanav, e serve anche senza un'entita' configurata (il primo
+   * viaggio si crea da li'). Resta, come Config. */
+  expect(visibili.filter((voce) => voce !== "gdanav").sort()).toEqual(["config", "home"]);
 
   /* E la strada del ritorno: «dopo aver fatto salva e inserito le entita' la
    * sezione non passa automaticamente in visibile». Da qui — tutto spento —

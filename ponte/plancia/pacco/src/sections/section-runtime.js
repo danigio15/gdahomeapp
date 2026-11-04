@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-QVTEXUXZ.js";
+} from "../../chunk-O2HG4JBL.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -141067,7 +141067,22 @@ function ensureLaLinguetta() {
   }
   if (config && config.previousElementSibling !== tab) config.before(tab);
   else if (!config && tab.parentElement !== nav) nav.append(tab);
+  vediSeServe(tab);
   return tab;
+}
+function ciSonoAutomazioni() {
+  try {
+    if ((automazioniDiCasa?.() || []).length > 0) return true;
+  } catch (_errore) {
+  }
+  return Object.keys(allStates() || {}).some((id) => id.startsWith("automation."));
+}
+function vediSeServe(tab) {
+  const sezioni2 = readJson("cd_sections", {});
+  const accesa3 = !(sezioni2 && typeof sezioni2 === "object" && sezioni2[AUTOMAZIONI_CASA_TAB] === false);
+  const serve3 = segnaContenuto(AUTOMAZIONI_CASA_TAB, ciSonoAutomazioni()) && accesa3;
+  if (serve3) tab.style.removeProperty("display");
+  else tab.style.setProperty("display", "none", "important");
 }
 function insegnaLaVisibilita2() {
   const prima = root.cdNavVisMap;
@@ -141684,6 +141699,10 @@ function installAutomazioniCasaSection() {
     },
     true
   );
+  wrapFunction("cdApplyNavVis", "__dmAutomazioniCasaVis", () => {
+    const tab = doc.querySelector(`nav.tabs .tab[data-tab="${AUTOMAZIONI_CASA_TAB}"]`);
+    if (tab) vediSeServe(tab);
+  });
   piuTardi();
   return true;
 }

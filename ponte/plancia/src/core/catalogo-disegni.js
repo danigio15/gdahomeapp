@@ -669,9 +669,12 @@ export function chiaviDaProvare(kind, token, voce = null) {
     const nome = pulito(valore);
     if (nome && !nomi.includes(nome)) nomi.push(nome);
   };
+  /* Per le stanze il disegno della stanza viene prima del simbolo: «garage»
+   * da solo e' anche il basculante dei Varchi (#74), e la stanza Garage
+   * usciva col portone al posto della casa col garage. */
+  if (kind === "room" && voce?.id) aggiungi(`room-${voce.id}`);
   aggiungi(token);
   if (voce?.id) {
-    if (kind === "room") aggiungi(`room-${voce.id}`);
     aggiungi(voce.id);
     aggiungi(voce.mdi);
   }
