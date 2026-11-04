@@ -82,11 +82,26 @@ function chiScorre(elemento) {
   return doc.scrollingElement || doc.documentElement;
 }
 
+/* Quello che sta incollato in cima a chi scorre e copre le prime righe: la
+ * barra «Cerca in tutta la configurazione…» del Config. Sul telefono copriva
+ * la testa dell'anteprima, e il trascinamento non scorreva finche' il dito
+ * non arrivava sotto di lei. */
+const INCOLLATI_IN_CIMA = ".dm-cerca-config";
+
+function copertoInCima(scroller, alto) {
+  let fino = alto;
+  for (const barra of scroller?.querySelectorAll?.(INCOLLATI_IN_CIMA) || []) {
+    const r = barra.getBoundingClientRect?.();
+    if (r && r.height > 0 && r.top <= alto + 2) fino = Math.max(fino, r.bottom);
+  }
+  return fino;
+}
+
 function bordiDi(scroller) {
   if (scroller === doc.scrollingElement || scroller === doc.documentElement)
-    return { alto: 0, basso: root.innerHeight || 0 };
+    return { alto: copertoInCima(doc, 0), basso: root.innerHeight || 0 };
   const r = scroller.getBoundingClientRect();
-  return { alto: r.top, basso: r.bottom };
+  return { alto: copertoInCima(scroller, r.top), basso: r.bottom };
 }
 
 function annuncia(lista, testo) {

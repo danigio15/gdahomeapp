@@ -251,7 +251,7 @@ export function pageCardMarkup(view) {
    * lucchetto che dice perche'. Il rifiuto vero non e' qui: `lightCommand`
    * non costruisce nemmeno il comando, cosi' non c'e' modo di aggirarlo. */
   const bloccata = view.comandabile === false;
-  return `<article class="dm-lucip-card ${view.on ? "is-on" : ""}" data-dm-lucip="${esc(view.id)}" data-dm-lucip-available="${view.available}" data-dm-lucip-comandabile="${!bloccata}" style="--dm-light-color:${esc(color)};--dm-light-segno:${esc(coloreDelSegno(color))};--dm-light-ink:${readableInk(color)};--dm-light-level:${view.on ? Math.max(12, level) : 0}%">
+  return `<article class="dm-lucip-card ${view.on ? "is-on" : ""}" data-dm-lucip="${esc(view.id)}" data-dm-disp-nome="${esc(view.name)}" data-dm-lucip-available="${view.available}" data-dm-lucip-comandabile="${!bloccata}" style="--dm-light-color:${esc(color)};--dm-light-segno:${esc(coloreDelSegno(color))};--dm-light-ink:${readableInk(color)};--dm-light-level:${view.on ? Math.max(12, level) : 0}%">
     <span class="dm-lucip-glow" aria-hidden="true"></span>
     ${
       /* Il corpo della tessera **non accende piu'**.
@@ -308,7 +308,18 @@ function roomMarkup(group) {
       <span class="dm-lucip-room-count" data-on="${summary.on > 0}">${summary.on}/${summary.total}</span>
       <button type="button" class="dm-lucip-room-btn" data-dm-lucip-room="${action}" data-dm-lucip-room-name="${esc(group.room)}">${label}</button>
     </div>
-    <div class="dm-lucip-grid">${group.views.map((view) => pageCardMarkup(view)).join("")}</div>`;
+    <div class="dm-lucip-grid" data-dm-blocco="zona-${esc(slugDellaZona(group.room))}" data-dm-disp-nome="${esc(group.room)}">${group.views.map((view) => pageCardMarkup(view)).join("")}</div>`;
+}
+
+/* L'id della zona nella disposizione (#379): il nome della zona, non la
+ * scritta in maiuscolo, cosi' non cambia se cambia la lingua. */
+function slugDellaZona(nome) {
+  return String(nome || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "") || "zona";
 }
 
 /** L'intera pagina per un insieme di gruppi, asseribile senza un browser. */

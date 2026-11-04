@@ -25,9 +25,9 @@ test("sull'Auto i riquadri si trascinano, si salvano e restano dopo aver ricaric
   await lAuto(page);
   await clickBottomTab(page, "ev", testInfo);
   await expect(page.locator("#page-ev [data-dm-disp-tasto]")).toBeVisible();
-  await expect.poll(() => riquadri(page)).toContain("#lm-hero-card");
+  await expect.poll(() => riquadri(page)).toContain("auto");
   const prima = await riquadri(page);
-  expect(prima[0]).toBe("#lm-hero-card");
+  expect(prima[0]).toBe("auto");
 
   await page.locator("#page-ev [data-dm-disp-tasto]").click();
   await expect(page.locator("html")).toHaveAttribute("data-dm-modifica", "ev");
@@ -54,13 +54,13 @@ test("sull'Auto i riquadri si trascinano, si salvano e restano dopo aver ricaric
   for (let i = 1; i <= 14; i += 1)
     await page.mouse.move(a.x + a.width / 2, a.y + ((b.y + b.height - a.y) * i) / 14);
   await page.mouse.up();
-  await expect.poll(async () => (await riquadri(page)).indexOf("#lm-hero-card")).toBeGreaterThan(0);
+  await expect.poll(async () => (await riquadri(page)).indexOf("auto")).toBeGreaterThan(0);
   /* E dalla tastiera, fino in fondo. */
   for (let i = 0; i < prima.length; i += 1) {
     await page.locator("#lm-hero-card [data-dm-disp-ctrl] .dm-disp-maniglia").focus();
     await page.keyboard.press("ArrowDown");
   }
-  await expect.poll(async () => (await riquadri(page)).at(-1)).toBe("#lm-hero-card");
+  await expect.poll(async () => (await riquadri(page)).at(-1)).toBe("auto");
   await expect(page.locator(".dm-disp-conta")).toContainText("1 modifica");
 
   /* In modifica un tocco non comanda niente: si nasconde un riquadro. */
@@ -75,14 +75,14 @@ test("sull'Auto i riquadri si trascinano, si salvano e restano dopo aver ricaric
   const scritta = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("cd_disposizione") || "{}"),
   );
-  expect(scritta.ev.ordine.at(-1)).toBe("#lm-hero-card");
+  expect(scritta.ev.ordine.at(-1)).toBe("auto");
   expect(scritta.ev.nascosti).toEqual([prima[1]]);
   await expect(page.locator(`#page-ev [data-dm-nascosto]`).first()).toBeHidden();
 
   await page.reload();
   await lAuto(page);
   await clickBottomTab(page, "ev", testInfo);
-  await expect.poll(async () => (await riquadri(page)).at(-1)).toBe("#lm-hero-card");
+  await expect.poll(async () => (await riquadri(page)).at(-1)).toBe("auto");
 
   /* Ripristina, Salva: la pagina com'era e niente scritto. */
   await page.locator("#page-ev [data-dm-disp-tasto]").click();
@@ -106,7 +106,7 @@ test("Annulla rimette tutto com'era e non scrive niente", async ({ page }, testI
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
   await lAuto(page);
   await clickBottomTab(page, "ev", testInfo);
-  await expect.poll(() => riquadri(page)).toContain("#lm-hero-card");
+  await expect.poll(() => riquadri(page)).toContain("auto");
   const prima = await riquadri(page);
   await page.locator("#page-ev [data-dm-disp-tasto]").click();
   await page.locator(`#page-ev [data-dm-disp-voce="${prima[0]}"] [data-dm-disp-occhio]`).click();

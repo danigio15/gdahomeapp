@@ -461,7 +461,7 @@ function installStyles() {
   installStyle(
     "dm-anteprima-style",
     `
-.dm-anteprima{margin:0 0 18px;border-radius:22px;border:1px solid var(--card-border,#e2e8f0);
+.dm-anteprima{scroll-margin-top:84px;margin:0 0 18px;border-radius:22px;border:1px solid var(--card-border,#e2e8f0);
   background:var(--surface-2,#f8fafc);overflow:hidden}
 .dm-anteprima .dm-ant-testa{display:flex;flex-direction:row;flex-wrap:wrap;align-items:flex-start;justify-content:flex-start;
   gap:8px 12px;margin:0;padding:14px 16px 10px;text-align:left;

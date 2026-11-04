@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-O2HG4JBL.js";
+} from "../../chunk-Z6RQE5TX.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -2712,6 +2712,7 @@ var SOURCE_INDEX = Object.freeze({
   "Ancora niente di chiuso.": "Nothing closed yet.",
   "Ancora niente: aggiungi una squadra o un campionato qui sotto.": "Nothing yet: add a team or a championship below.",
   "Andamento": "Trend",
+  "Andamento giornaliero": "Daily trend",
   "Animale": "Pet",
   "Animali": "Pets",
   "anni": "years",
@@ -3633,6 +3634,7 @@ var SOURCE_INDEX = Object.freeze({
   "Contatori · Oggi e il mese": "Meters · Today and this month",
   "contatto": "contact",
   "Conteggio dei fulmini": "Lightning count",
+  "Conti": "Money",
   "Continuo": "Continuous",
   "Controlla e salva: finché non la salvi in Home Assistant non parte niente.": "Check and save: nothing runs until you save it in Home Assistant.",
   "Controlla le proposte negli accordion: puoi correggere o rimuovere tutto liberamente.": "Review the proposals in the accordions: you can freely edit or remove anything.",
@@ -6177,6 +6179,8 @@ var SOURCE_INDEX = Object.freeze({
   "Notte nella fascia di «Di notte schermo nero», anche con l'interruttore spento": "Night in the hours of “Black screen at night”, even with its switch off",
   "Novembre": "November",
   "Numeri": "Figures",
+  "Numeri del periodo": "Period figures",
+  "Numeri della sessione": "Session figures",
   "Numeri grandi, dal vivo. Vuoti, si prendono dalla sezione Energia della plancia di origine, col verso che ha lì.": "Big live numbers. Left empty, they come from the source dashboard's Energy section, with its direction.",
   "Numero": "Number",
   "Nuoto": "Swim",
@@ -7075,6 +7079,8 @@ var SOURCE_INDEX = Object.freeze({
   "Riempio io così": "This is what I will write",
   "Rientro": "I'm home",
   "Riepilogo ${pagina}": "${pagina} summary",
+  "Riepilogo dell'anno": "Year summary",
+  "Riepilogo luci": "Lights summary",
   "Riepilogo:": "Summary:",
   "Rifai questo piano": "Redo this floor",
   "Rifallo da qui": "Redo it here",
@@ -7368,6 +7374,7 @@ var SOURCE_INDEX = Object.freeze({
   "Scene": "Scenes",
   "Scene della stanza": "Room scenes",
   "Schema": "Diagram",
+  "Schema dell'impianto": "System diagram",
   "Schermata iniziale della TV": "TV home screen",
   "Scienziato": "Scientist",
   "Sciogli il gruppo": "Ungroup all",
@@ -7568,6 +7575,7 @@ var SOURCE_INDEX = Object.freeze({
   "Servizio radar": "Radar service",
   "servono solo se non c'è un contatore totale: quando c'è, comanda lui": "only used when there is no total meter: when there is one, it wins",
   "Sessione": "Session",
+  "Sessione di ricarica": "Charging session",
   "Sessioni": "Sessions",
   "Sett. Scorsa": "Last week",
   "Settembre": "September",
@@ -12736,11 +12744,20 @@ function chiScorre(elemento) {
   }
   return doc.scrollingElement || doc.documentElement;
 }
+var INCOLLATI_IN_CIMA = ".dm-cerca-config";
+function copertoInCima(scroller, alto) {
+  let fino = alto;
+  for (const barra3 of scroller?.querySelectorAll?.(INCOLLATI_IN_CIMA) || []) {
+    const r = barra3.getBoundingClientRect?.();
+    if (r && r.height > 0 && r.top <= alto + 2) fino = Math.max(fino, r.bottom);
+  }
+  return fino;
+}
 function bordiDi(scroller) {
   if (scroller === doc.scrollingElement || scroller === doc.documentElement)
-    return { alto: 0, basso: root.innerHeight || 0 };
+    return { alto: copertoInCima(doc, 0), basso: root.innerHeight || 0 };
   const r = scroller.getBoundingClientRect();
-  return { alto: r.top, basso: r.bottom };
+  return { alto: copertoInCima(scroller, r.top), basso: r.bottom };
 }
 function annuncia(lista7, testo5) {
   let voce3 = lista7.parentElement?.querySelector?.(":scope > .dm-riordina-voce");
@@ -13390,7 +13407,7 @@ function installStyles4() {
   installStyle(
     "dm-anteprima-style",
     `
-.dm-anteprima{margin:0 0 18px;border-radius:22px;border:1px solid var(--card-border,#e2e8f0);
+.dm-anteprima{scroll-margin-top:84px;margin:0 0 18px;border-radius:22px;border:1px solid var(--card-border,#e2e8f0);
   background:var(--surface-2,#f8fafc);overflow:hidden}
 .dm-anteprima .dm-ant-testa{display:flex;flex-direction:row;flex-wrap:wrap;align-items:flex-start;justify-content:flex-start;
   gap:8px 12px;margin:0;padding:14px 16px 10px;text-align:left;
@@ -156160,6 +156177,8 @@ function eTitolo(el) {
   return RIGA_DI_TESTA.test(classi.split(/\s+/)[0] || "") && (el.getBoundingClientRect?.().height || 0) < 64;
 }
 function titoloDi2(el) {
+  const dichiarato = String(el.getAttribute?.("data-dm-disp-nome") || "").trim();
+  if (dichiarato) return dichiarato.slice(0, 48);
   const testa2 = el.matches?.(TITOLO3) ? el : [...el.querySelectorAll?.(`${TITOLO3},[class*='title'],[class*='titolo'],[class*='name'],[class*='nome'],summary`) || []].find(
     (uno) => !dentroUnaFila(uno, el)
   );
@@ -156209,7 +156228,7 @@ function vociDi(contenitore5) {
     const el = figli[i];
     if (eTitolo(el) && figli[i + 1] && !eTitolo(figli[i + 1])) {
       const dopo = figli[i + 1];
-      const nome = titoloDi2(el);
+      const nome = (dopo.getAttribute?.("data-dm-disp-nome") || "").trim() || titoloDi2(el);
       voci4.push({ id: idDellElemento(dopo, nome), nome, el: dopo, insieme: [el, dopo] });
       i += 1;
       continue;
@@ -156298,9 +156317,34 @@ function elenchiDentro(riquadro2, prefisso, fuori, profondita = 0) {
     elenchiDentro(figlio, prefisso, fuori, profondita + 1);
   }
 }
+var DICHIARATI = Object.freeze([
+  ["ev", "#lm-hero-card", "auto", "La mia auto", "My car"],
+  ["ev", ".dm-evv-power", "batteria", "Batteria", "Battery"],
+  ["ev", ".dm-termica", "temperature", "Temperature", "Temperatures"],
+  ["ev", "#lm-session-card,.lm-session-card", "sessione", "Sessione di ricarica", "Charging session"],
+  ["ev", ".lm-session-grid", "sessione-numeri", "Numeri della sessione", "Session figures"],
+  ["boiler", ".synoptic-stage", "schema", "Schema dell'impianto", "System diagram"],
+  ["boiler", ".b-controls-grid", "comandi", "Comandi", "Controls"],
+  ["luci", ".dm-lucip-hero", "riepilogo", "Riepilogo luci", "Lights summary"],
+  ["energy", ".ed-kpi-banner", "numeri", "Numeri del periodo", "Period figures"],
+  ["energy", "#ed-year-summary", "anno", "Riepilogo dell'anno", "Year summary"],
+  ["energy", ".ed-fin-grid", "conti", "Conti", "Money"],
+  ["energy", ".ed-auto-row", "autosufficienza", "Autosufficienza", "Self-sufficiency"],
+  ["energy", ".ed-chart-card", "andamento", "Andamento giornaliero", "Daily trend"]
+]);
+function marcaIDichiarati(pagina3, nome) {
+  for (const [di, dove, id, it, en] of DICHIARATI) {
+    if (di !== nome) continue;
+    for (const el of pagina3.querySelectorAll?.(dove) || []) {
+      if (!el.hasAttribute("data-dm-blocco")) el.setAttribute("data-dm-blocco", id);
+      if (!el.hasAttribute("data-dm-disp-nome")) el.setAttribute("data-dm-disp-nome", t(it, en));
+    }
+  }
+}
 function elenchiDellaPagina(pagina3) {
   const nome = nomeDellaPagina(pagina3);
   if (!nome || PAGINE_DA_SALTARE.has(nome)) return [];
+  marcaIDichiarati(pagina3, nome);
   const fuori = [];
   const trovato = contenitoreDeiRiquadri(pagina3);
   if (!trovato) return fuori;
@@ -156792,7 +156836,10 @@ root.dmDisposizione = {
   esciDallaModifica,
   applicaLaDisposizione: () => applicaLaDisposizione(),
   giri: () => state177.giri || 0,
-  elenchi: () => elenchiDellaPagina(paginaAttiva2()).map((e) => ({ chiave: e.chiave, voci: vociDi(e.contenitore).map((v) => v.id) }))
+  elenchi: () => elenchiDellaPagina(paginaAttiva2()).map((e) => {
+    const voci4 = vociDi(e.contenitore);
+    return { chiave: e.chiave, voci: voci4.map((v) => v.id), nomi: voci4.map((v) => v.nome) };
+  })
 };
 senzaCadere(installDisposizione);
 

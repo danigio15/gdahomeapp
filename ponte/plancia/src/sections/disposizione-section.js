@@ -104,6 +104,8 @@ function eTitolo(el) {
 /* Il titolo scritto di una voce: un'intestazione o un «titolo», mai un
  * valore — «67 %» cambia da un minuto all'altro, «Ricarica» no. */
 function titoloDi(el) {
+  const dichiarato = String(el.getAttribute?.("data-dm-disp-nome") || "").trim();
+  if (dichiarato) return dichiarato.slice(0, 48);
   const testa = el.matches?.(TITOLO)
     ? el
     : [...(el.querySelectorAll?.(`${TITOLO},[class*='title'],[class*='titolo'],[class*='name'],[class*='nome'],summary`) || [])].find(
@@ -176,7 +178,7 @@ function vociDi(contenitore) {
     const el = figli[i];
     if (eTitolo(el) && figli[i + 1] && !eTitolo(figli[i + 1])) {
       const dopo = figli[i + 1];
-      const nome = titoloDi(el);
+      const nome = (dopo.getAttribute?.("data-dm-disp-nome") || "").trim() || titoloDi(el);
       voci.push({ id: idDellElemento(dopo, nome), nome, el: dopo, insieme: [el, dopo] });
       i += 1;
       continue;
@@ -300,10 +302,42 @@ function elenchiDentro(riquadro, prefisso, fuori, profondita = 0) {
   }
 }
 
+/* I riquadri dichiarati, pagina per pagina: un id che non cambia se cambia
+ * il titolo (o la lingua) e un nome tradotto. Il riconoscimento automatico
+ * resta il ripiego per tutto quello che qui non c'e'. Prima gli id venivano
+ * dal titolo scritto — «sessione-ricarica» — e in inglese la stessa carta
+ * avrebbe avuto un altro id, e perso il suo posto. */
+const DICHIARATI = Object.freeze([
+  ["ev", "#lm-hero-card", "auto", "La mia auto", "My car"],
+  ["ev", ".dm-evv-power", "batteria", "Batteria", "Battery"],
+  ["ev", ".dm-termica", "temperature", "Temperature", "Temperatures"],
+  ["ev", "#lm-session-card,.lm-session-card", "sessione", "Sessione di ricarica", "Charging session"],
+  ["ev", ".lm-session-grid", "sessione-numeri", "Numeri della sessione", "Session figures"],
+  ["boiler", ".synoptic-stage", "schema", "Schema dell'impianto", "System diagram"],
+  ["boiler", ".b-controls-grid", "comandi", "Comandi", "Controls"],
+  ["luci", ".dm-lucip-hero", "riepilogo", "Riepilogo luci", "Lights summary"],
+  ["energy", ".ed-kpi-banner", "numeri", "Numeri del periodo", "Period figures"],
+  ["energy", "#ed-year-summary", "anno", "Riepilogo dell'anno", "Year summary"],
+  ["energy", ".ed-fin-grid", "conti", "Conti", "Money"],
+  ["energy", ".ed-auto-row", "autosufficienza", "Autosufficienza", "Self-sufficiency"],
+  ["energy", ".ed-chart-card", "andamento", "Andamento giornaliero", "Daily trend"],
+]);
+
+function marcaIDichiarati(pagina, nome) {
+  for (const [di, dove, id, it, en] of DICHIARATI) {
+    if (di !== nome) continue;
+    for (const el of pagina.querySelectorAll?.(dove) || []) {
+      if (!el.hasAttribute("data-dm-blocco")) el.setAttribute("data-dm-blocco", id);
+      if (!el.hasAttribute("data-dm-disp-nome")) el.setAttribute("data-dm-disp-nome", t(it, en));
+    }
+  }
+}
+
 /** Tutto quello che si riordina in una pagina: i riquadri e gli elenchi. */
 export function elenchiDellaPagina(pagina) {
   const nome = nomeDellaPagina(pagina);
   if (!nome || PAGINE_DA_SALTARE.has(nome)) return [];
+  marcaIDichiarati(pagina, nome);
   const fuori = [];
   const trovato = contenitoreDeiRiquadri(pagina);
   if (!trovato) return fuori;
@@ -900,7 +934,11 @@ root.dmDisposizione = {
   esciDallaModifica,
   applicaLaDisposizione: () => applicaLaDisposizione(),
   giri: () => state.giri || 0,
-  elenchi: () => elenchiDellaPagina(paginaAttiva()).map((e) => ({ chiave: e.chiave, voci: vociDi(e.contenitore).map((v) => v.id) })),
+  elenchi: () =>
+    elenchiDellaPagina(paginaAttiva()).map((e) => {
+      const voci = vociDi(e.contenitore);
+      return { chiave: e.chiave, voci: voci.map((v) => v.id), nomi: voci.map((v) => v.nome) };
+    }),
 };
 
 senzaCadere(installDisposizione);
