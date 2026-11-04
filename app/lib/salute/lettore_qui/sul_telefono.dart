@@ -19,8 +19,28 @@ LettoreDellaSalute lettoreDiQuestoSistema() =>
     ? LettoreDelTelefono()
     : const LettoreCheNonCE();
 
-/// I tipi da chiedere per ogni misura. Il sonno: su iPhone i tratti
-/// «addormentato», su Android le sessioni di sonno.
+/// Il sonno su iPhone, dormito davvero.
+///
+/// «Salute continua a non prendere i dati»: si chiedeva soltanto
+/// `SLEEP_ASLEEP`, che in HealthKit e' «addormentato, senza fase». Da
+/// watchOS 9 l'Apple Watch non lo scrive piu': scrive le fasi — essenziale
+/// (`SLEEP_LIGHT`), profondo, REM — e il pacchetto `health` filtra per
+/// valore, quindi di una notte col Watch non arrivava niente. Si chiedono
+/// tutte: le app vecchie e le bilance-materasso scrivono ancora la prima.
+const sonnoDormitoSuIPhone = [
+  HealthDataType.SLEEP_ASLEEP,
+  HealthDataType.SLEEP_LIGHT,
+  HealthDataType.SLEEP_DEEP,
+  HealthDataType.SLEEP_REM,
+];
+
+/// Un iPhone senza Watch scrive solo «a letto», dagli orari di Riposo: e'
+/// quello che Salute stessa mostra come sonno, e si usa se di dormito non
+/// c'e' niente.
+const sonnoALettoSuIPhone = [HealthDataType.SLEEP_IN_BED];
+
+/// I tipi da chiedere per ogni misura. Il sonno: su iPhone le fasi del
+/// dormito e il «a letto», su Android le sessioni di sonno.
 List<HealthDataType> tipiDi(MisuraDelCorpo misura, {required bool iPhone}) =>
     switch (misura) {
       MisuraDelCorpo.passi => [HealthDataType.STEPS],
@@ -31,9 +51,10 @@ List<HealthDataType> tipiDi(MisuraDelCorpo misura, {required bool iPhone}) =>
       MisuraDelCorpo.sistolica => [HealthDataType.BLOOD_PRESSURE_SYSTOLIC],
       MisuraDelCorpo.diastolica => [HealthDataType.BLOOD_PRESSURE_DIASTOLIC],
       MisuraDelCorpo.ossigeno => [HealthDataType.BLOOD_OXYGEN],
-      MisuraDelCorpo.sonno => [
-        iPhone ? HealthDataType.SLEEP_ASLEEP : HealthDataType.SLEEP_SESSION,
-      ],
+      MisuraDelCorpo.sonno =>
+        iPhone
+            ? [...sonnoDormitoSuIPhone, ...sonnoALettoSuIPhone]
+            : [HealthDataType.SLEEP_SESSION],
       MisuraDelCorpo.calorie => [HealthDataType.ACTIVE_ENERGY_BURNED],
     };
 
@@ -139,12 +160,19 @@ class LettoreDelTelefono implements LettoreDellaSalute {
         final somma = tratti.fold<double>(0, (s, c) => s + c.valore);
         return Lettura(somma.roundToDouble(), ora);
       case MisuraDelCorpo.sonno:
-        final tratti = await _campioni(
-          tipi,
-          mezzanotte.subtract(notteFinoA + const Duration(hours: 6)),
-          ora,
-        );
-        return ilSonnoDiStanotte(tratti, ora);
+        final da = mezzanotte.subtract(notteFinoA + const Duration(hours: 6));
+        if (!_iPhone) {
+          return ilSonnoDiStanotte(await _campioni(tipi, da, ora), ora);
+        }
+        /* Ogni tipo per conto suo: uno che non risponde non porta via gli
+         * altri. Le fasi della stessa notte si uniscono in
+         * `ilSonnoDiStanotte`, senza contare due volte. */
+        Future<List<Campione>> dei(List<HealthDataType> quali) async => [
+          for (final tipo in quali)
+            ...await _campioni([tipo], da, ora).catchError((_) => <Campione>[]),
+        ];
+        return ilSonnoDiStanotte(await dei(sonnoDormitoSuIPhone), ora) ??
+            ilSonnoDiStanotte(await dei(sonnoALettoSuIPhone), ora);
       case MisuraDelCorpo.battito:
       case MisuraDelCorpo.battitoRiposo:
       case MisuraDelCorpo.ossigeno:
