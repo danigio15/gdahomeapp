@@ -80,15 +80,23 @@ Future<void> saluteAdAppChiusa() async {
     for (final quale in WidgetsBinding.instance.platformDispatcher.locales)
       quale.languageCode,
   ]);
+  /* L'archivio delle case si rilegge prima di ogni scrittura: l'app puo'
+   * essere aperta in un altro motore, e una copia vecchia di qui non deve
+   * riscrivere sopra una casa appena aggiunta o tolta. */
   final collegamento = Collegamento(
-    archivio: ArchivioDelleCase(const CassaforteDelSistema()),
+    archivio: ArchivioDelleCase(
+      const CassaforteDelSistema(),
+      rileggePrimaDiScrivere: true,
+    ),
   );
   SvegliaDellaSalute(
     postino: PostinoDellaSalute(lettore: lettoreDiQuestoSistema())
       ..sbloccata = () {
         final licenza = collegamento.licenza;
         return !licenza.controlliAccesi || licenza.premium;
-      },
+      }
+      /* Nessuno schermo: nessun permesso da chiedere. */
+      ..siPuoChiedere = (() => false),
     laCasa: () => collegamento,
     condiviso: false,
   ).accendi();
@@ -104,19 +112,42 @@ PostinoDellaSalute postinoDellaSaluteDellApp() => PostinoDellaSalute.istanza ??=
         final licenza = ilFiloConLaCasa().licenza;
         return !licenza.controlliAccesi || licenza.premium;
       }
-      ..davanti = appDavanti;
+      ..davanti = appDavanti
+      ..siPuoChiedere = () =>
+          WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
 
-/// Se l'app sta davanti a qualcuno: lo stato dell'app quando si sa, e
-/// quando non si sa ancora (appena partita) lo si chiede al telefono
-/// (`siStaDavanti`).
-Future<bool> appDavanti() async {
-  final stato = WidgetsBinding.instance.lifecycleState;
-  if (stato == AppLifecycleState.resumed ||
-      stato == AppLifecycleState.inactive) {
-    return true;
+/// Se l'app sta davanti a qualcuno.
+///
+/// `resumed` si'; `paused`, `hidden`, `detached` no. In mezzo — `inactive`,
+/// o nessuno stato ancora — non basta lo stato di Flutter:
+/// - **sull'iPhone** `inactive` arriva anche a un'app svegliata da Salute in
+///   background, se iOS le collega la scena: lo si chiede al telefono
+///   (`siStaDavanti`, una scena del telefono in primo piano);
+/// - **su Android** senza stato vuol dire nessuna activity — il motore di
+///   Android Auto — e allora nessuno davanti; `inactive` e' l'app aperta con
+///   sopra una finestra del sistema, e qualcuno c'e'.
+Future<bool> appDavanti() =>
+    statoDavanti(WidgetsBinding.instance.lifecycleState, android: _android);
+
+bool get _android => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
+/// [appDavanti], con lo stato e il telefono passati da fuori per le prove.
+Future<bool> statoDavanti(
+  AppLifecycleState? stato, {
+  required bool android,
+  Future<bool> Function() chiediAlTelefono = siStaDavanti,
+}) async {
+  switch (stato) {
+    case AppLifecycleState.resumed:
+      return true;
+    case AppLifecycleState.paused ||
+        AppLifecycleState.hidden ||
+        AppLifecycleState.detached:
+      return false;
+    case AppLifecycleState.inactive || null:
+      if (android) return stato == AppLifecycleState.inactive;
+      return chiediAlTelefono();
   }
-  if (stato != null) return false;
-  return siStaDavanti();
 }
 
 Future<void> main() async {

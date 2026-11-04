@@ -33,9 +33,11 @@ import kotlinx.coroutines.withTimeoutOrNull
  * Dart, che legge Health Connect e manda alla casa col filo di sempre; il
  * quarto d'ora fra un invio e l'altro lo tiene lui.
  *
- * Il Dart che risponde e':
- * - quello dell'app, se e' acceso (la versione col navigatore in auto lo
- *   tiene nella cache);
+ * Il Dart che risponde e', nell'ordine:
+ * - quello dell'app aperta ([MOTORE_DELL_APP], lo mette `MainActivity`
+ *   finche' c'e'): accenderne un altro accanto vorrebbe dire due fili con
+ *   la casa e due copie dell'archivio delle case;
+ * - quello del navigatore in auto, se e' acceso;
  * - altrimenti un motore senza schermo acceso apposta, che parte da
  *   `saluteAdAppChiusa` in `lib/main.dart` e si spegne finito il giro.
  *
@@ -57,6 +59,9 @@ class LaSaluteAdAppChiusa(
     companion object {
         /** Lo stesso nome di `canaleDellaSveglia` in `ad_app_chiusa.dart`. */
         const val CANALE = "gdahome/salute/sveglia"
+
+        /** Il nome del motore dell'activity nella cache, finche' l'app e' aperta. */
+        const val MOTORE_DELL_APP = "gdahome-motore-dell-app"
 
         private const val LAVORO = "gdahome-salute-ad-app-chiusa"
         private const val DA_DOVE_SI_PARTE = "saluteAdAppChiusa"
@@ -111,7 +116,8 @@ class LaSaluteAdAppChiusa(
 
         private suspend fun sveglia(context: Context): String? =
             withContext(Dispatchers.Main) {
-                val dellApp = FlutterEngineCache.getInstance().get(IlNavigatoreInAuto.MOTORE)
+                val cache = FlutterEngineCache.getInstance()
+                val dellApp = cache.get(MOTORE_DELL_APP) ?: cache.get(IlNavigatoreInAuto.MOTORE)
                 if (dellApp != null) {
                     return@withContext withTimeoutOrNull(QUANTO_ASPETTA_LA_CASA) {
                         chiama(MethodChannel(dellApp.dartExecutor.binaryMessenger, CANALE))

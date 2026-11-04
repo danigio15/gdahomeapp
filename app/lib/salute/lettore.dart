@@ -49,4 +49,10 @@ abstract interface class LettoreDellaSalute {
   /// chiede con l'app davanti; dove non c'e' o non serve — l'iPhone, il
   /// browser — torna subito. `true` se si potra' leggere ad app chiusa.
   Future<bool> chiediIlPermessoDaChiusa();
+
+  /// Se adesso si potrebbe leggere ad app chiusa, **senza chiedere niente**.
+  /// Su Android: Health Connect lo conosce e il permesso c'e'. Sull'iPhone
+  /// si': lo decide Salute, che sveglia l'app solo con il permesso di
+  /// lettura. Nel browser no.
+  Future<bool> puoLeggereDaChiusa();
 }

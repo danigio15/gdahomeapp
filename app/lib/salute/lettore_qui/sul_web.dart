@@ -26,4 +26,7 @@ class LettoreCheNonCE implements LettoreDellaSalute {
 
   @override
   Future<bool> chiediIlPermessoDaChiusa() async => false;
+
+  @override
+  Future<bool> puoLeggereDaChiusa() async => false;
 }

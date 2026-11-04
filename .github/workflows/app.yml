@@ -770,11 +770,12 @@ jobs:
       # resterebbe fuori. Qui l'app si firma «per finta» (ad hoc) col
       # permesso dentro; la firma vera la rimette l'esportazione, che lo
       # tiene perché il profilo di Apple ce l'ha. Lo stesso vale per il
-      # permesso delle notifiche (`aps-environment`), quando c'è Firebase.
-      - name: I permessi nell'archivio (CarPlay, notifiche)
-        if: >-
-          steps.chiavi.outputs.ci-sono == 'si' &&
-          (vars.GDAHOME_CARPLAY == 'si' || steps.firebase.outputs.c-e == 'si')
+      # permesso delle notifiche (`aps-environment`), quando c'è Firebase, e
+      # per quelli della Salute (HealthKit e la sveglia ad app chiusa), che
+      # ci vanno **sempre**: per questo il passo gira anche senza CarPlay e
+      # senza Firebase.
+      - name: I permessi nell'archivio (Salute, CarPlay, notifiche)
+        if: steps.chiavi.outputs.ci-sono == 'si'
         working-directory: app
         env:
           CARPLAY: ${{ vars.GDAHOME_CARPLAY }}

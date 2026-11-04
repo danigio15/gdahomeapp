@@ -42,6 +42,19 @@ import gdanav_app
    * su Android il sistema non la fotografa. Sull'iPhone l'istantanea delle
    * app recenti la fa il sistema quando l'app se ne va, e la copre la scena
    * (`SceneDelegate`) con un velo nativo, che arriva sempre in tempo. */
+  /* Una persona davanti al telefono: una scena **del telefono** in primo
+   * piano (attiva, o che si sta attivando all'apertura). Non basta
+   * `applicationState`: con CarPlay acceso l'app e' «attiva» per la scena
+   * dell'auto anche col telefono in tasca, e un'app svegliata da Salute puo'
+   * avere la scena collegata ma in background. */
+  static func unaPersonaDavanti() -> Bool {
+    UIApplication.shared.connectedScenes.contains { scena in
+      scena.session.role == .windowApplication &&
+        (scena.activationState == .foregroundActive ||
+          scena.activationState == .foregroundInactive)
+    }
+  }
+
   private func collegaLaFinestra() {
     let canale = FlutterMethodChannel(name: "gdahome/finestra", binaryMessenger: motore.binaryMessenger)
     canale.setMethodCallHandler { chiamata, risposta in
@@ -58,7 +71,7 @@ import gdanav_app
         /* Se l'app e' partita senza nessuno davanti (la sveglia di Salute,
          * `LaSaluteAdAppChiusa.swift`): il lucchetto allora non chiede il
          * volto adesso, ma quando l'app torna davanti (`main.dart`). */
-        risposta(UIApplication.shared.applicationState != .background)
+        risposta(AppDelegate.unaPersonaDavanti())
       } else if chiamata.method == "acceso" {
         /* Il campanello del tablet a muro (`lib/casa/lo_schermo.dart`): lo
          * schermo non si spegne da solo finche' il pannello lo chiede. */

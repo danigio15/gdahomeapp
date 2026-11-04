@@ -48,8 +48,11 @@ Future<bool> permessoDelMicrofono() async {
 
 /// Se l'app sta davanti a qualcuno, o e' partita da sola senza schermo — la
 /// sveglia di Salute (`salute/ad_app_chiusa.dart`). Sull'iPhone lo dice il
-/// sistema (`applicationState`); dove non si sa — Android, il browser, le
-/// prove — si risponde «davanti», cioe' come prima.
+/// sistema: una scena del telefono in primo piano (`AppDelegate`, non basta
+/// `applicationState`, che con CarPlay e' «attiva» col telefono in tasca);
+/// dove non si sa — Android, il browser, le prove — si risponde «davanti»,
+/// cioe' come prima. Su Android chi deve saperlo guarda lo stato di Flutter
+/// (`statoDavanti` in `main.dart`).
 Future<bool> siStaDavanti() async {
   if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) return true;
   try {

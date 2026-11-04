@@ -221,6 +221,8 @@ class ScelteDellaSalute {
     this.adAppChiusa = true,
     this.ultimoDaChiusa = false,
     this.chiestoDaChiusa = false,
+    this.tentatoDaChiusa,
+    this.rifiutataDaChiusa = false,
   });
 
   final bool acceso;
@@ -238,6 +240,16 @@ class ScelteDellaSalute {
   /// Android e' un permesso a parte di Health Connect, e si chiede una volta
   /// sola, con l'app davanti. Su iPhone non serve.
   final bool chiestoDaChiusa;
+
+  /// L'ultima sveglia ad app chiusa che ha provato davvero — letto Salute,
+  /// o cercato la casa — com'e' andata e' andata. Il freno delle sveglie
+  /// ([prossimaSvegliaUtile]): senza, una casa spenta o un permesso tolto
+  /// costavano un motore acceso e un filo aperto a ogni giro.
+  final DateTime? tentatoDaChiusa;
+
+  /// Se l'ultima sveglia ad app chiusa la casa l'ha rifiutata (niente
+  /// Premium, telefono non intestato): allora si riprova di rado.
+  final bool rifiutataDaChiusa;
 
   /// Il nome con cui la casa la chiama: «Marco». Vuoto, il ponte usa quello
   /// di «Di chi è questo telefono?».
@@ -263,6 +275,8 @@ class ScelteDellaSalute {
     bool? adAppChiusa,
     bool? ultimoDaChiusa,
     bool? chiestoDaChiusa,
+    DateTime? tentatoDaChiusa,
+    bool? rifiutataDaChiusa,
   }) => ScelteDellaSalute(
     acceso: acceso ?? this.acceso,
     persona: persona ?? this.persona,
@@ -272,7 +286,25 @@ class ScelteDellaSalute {
     adAppChiusa: adAppChiusa ?? this.adAppChiusa,
     ultimoDaChiusa: ultimoDaChiusa ?? this.ultimoDaChiusa,
     chiestoDaChiusa: chiestoDaChiusa ?? this.chiestoDaChiusa,
+    tentatoDaChiusa: tentatoDaChiusa ?? this.tentatoDaChiusa,
+    rifiutataDaChiusa: rifiutataDaChiusa ?? this.rifiutataDaChiusa,
   );
+
+  /// Da quando una sveglia ad app chiusa torna a valere la pena: un quarto
+  /// d'ora dopo l'ultimo invio e dopo l'ultimo tentativo, sei ore dopo un
+  /// «no» della casa. `null`: subito.
+  DateTime? prossimaSvegliaUtile({
+    required Duration quartoDOra,
+    required Duration dopoUnNo,
+  }) {
+    DateTime? piuTardi(DateTime? a, DateTime? b) =>
+        a == null ? b : (b == null || a.isAfter(b) ? a : b);
+    final tentato = tentatoDaChiusa;
+    return piuTardi(
+      ultimoInvio?.add(quartoDOra),
+      tentato?.add(rifiutataDaChiusa ? dopoUnNo : quartoDOra),
+    );
+  }
 
   /// Dopo aver chiesto il permesso: tutte viste.
   ScelteDellaSalute tutteViste() => con(viste: {...MisuraDelCorpo.values});
@@ -286,6 +318,9 @@ class ScelteDellaSalute {
     'chiusa': adAppChiusa,
     if (ultimoDaChiusa) 'ultimoDaChiusa': true,
     if (chiestoDaChiusa) 'chiestoDaChiusa': true,
+    if (tentatoDaChiusa != null)
+      'tentato': tentatoDaChiusa!.millisecondsSinceEpoch,
+    if (rifiutataDaChiusa) 'rifiutata': true,
   };
 
   String get comeSiScrive => jsonEncode(inJson());
@@ -315,6 +350,7 @@ class ScelteDellaSalute {
         ? misureDiSerie
         : {...scelte, ...misureDiSerie.difference(viste)};
     final ultimo = letto['ultimo'];
+    final tentato = letto['tentato'];
     return ScelteDellaSalute(
       acceso: letto['acceso'] == true,
       persona: personaPulita('${letto['persona'] ?? ''}'),
@@ -327,6 +363,10 @@ class ScelteDellaSalute {
       adAppChiusa: letto['chiusa'] != false,
       ultimoDaChiusa: letto['ultimoDaChiusa'] == true,
       chiestoDaChiusa: letto['chiestoDaChiusa'] == true,
+      tentatoDaChiusa: tentato is int
+          ? DateTime.fromMillisecondsSinceEpoch(tentato)
+          : null,
+      rifiutataDaChiusa: letto['rifiutata'] == true,
     );
   }
 }

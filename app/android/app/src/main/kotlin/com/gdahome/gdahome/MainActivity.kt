@@ -18,6 +18,7 @@ import com.gdahome.gdahome.orologio.IlTramiteDellOrologio
 import com.gdahome.gdahome.salute.LaSaluteAdAppChiusa
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.embedding.engine.FlutterEngineCache
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.flutter.plugin.common.MethodChannel
@@ -80,8 +81,11 @@ class MainActivity : FlutterFragmentActivity() {
         /* L'orologio Wear OS. Nella versione col navigatore in auto l'ha gia'
          * collegato `IlNavigatoreInAuto`; rifarlo non fa danni. */
         IlTramiteDellOrologio.collega(flutterEngine.dartExecutor.binaryMessenger, this)
-        /* La salute ad app chiusa: il Dart accende e spegne il giro. */
+        /* La salute ad app chiusa: il Dart accende e spegne il giro. E il
+         * giro, se trova l'app aperta, sveglia questo motore invece di
+         * accenderne un altro accanto (`LaSaluteAdAppChiusa.sveglia`). */
         LaSaluteAdAppChiusa.collega(flutterEngine.dartExecutor.binaryMessenger, this)
+        FlutterEngineCache.getInstance().put(LaSaluteAdAppChiusa.MOTORE_DELL_APP, flutterEngine)
         val canale = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, FINESTRA)
         canaleDellaFinestra = canale
         canale
@@ -322,6 +326,10 @@ class MainActivity : FlutterFragmentActivity() {
         accordaISensori()
         canaleDellaFinestra = null
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, FINESTRA).setMethodCallHandler(null)
+        val cache = FlutterEngineCache.getInstance()
+        if (cache.get(LaSaluteAdAppChiusa.MOTORE_DELL_APP) === flutterEngine) {
+            cache.remove(LaSaluteAdAppChiusa.MOTORE_DELL_APP)
+        }
         super.cleanUpFlutterEngine(flutterEngine)
     }
 

@@ -296,6 +296,20 @@ class LettoreDelTelefono implements LettoreDellaSalute {
     }
   }
 
+  /* Senza chiedere: per decidere se accendere il giro di Android. Chi ha
+   * detto di no non deve pagare un motore acceso ogni mezz'ora per niente. */
+  @override
+  Future<bool> puoLeggereDaChiusa() async {
+    if (_iPhone) return true;
+    try {
+      await _preparati();
+      return await _health.isHealthDataInBackgroundAvailable() &&
+          await _health.isHealthDataInBackgroundAuthorized();
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
   Future<void> installaHealthConnect() async {
     if (_iPhone) return;

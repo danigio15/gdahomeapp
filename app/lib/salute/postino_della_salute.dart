@@ -24,6 +24,10 @@ import 'lettore.dart';
 /// Ogni quanto si manda, al massimo.
 const ogniQuanto = Duration(minutes: 15);
 
+/// Dopo un «no» della casa ad app chiusa (niente Premium, telefono non
+/// intestato) si riprova di rado: la risposta non cambia in un quarto d'ora.
+const dopoUnNo = Duration(hours: 6);
+
 /// Com'e' finita una sveglia ad app chiusa ([PostinoDellaSalute.mandaDaChiusa]).
 enum ComeEAndataDaChiusa {
   /// Mandata alla casa.
@@ -169,6 +173,13 @@ class PostinoDellaSalute {
   /// [mandaDaChiusa], che sa come comportarsi. Lo mette `main.dart`.
   Future<bool> Function() davanti = () async => true;
 
+  /// Se adesso si puo' chiedere un permesso al sistema: l'app davanti e
+  /// pronta (`resumed`). Un motore partito senza schermo — quello di Android
+  /// Auto, la sveglia di Salute — non mostrerebbe niente, e il permesso
+  /// risulterebbe chiesto senza che nessuno l'abbia visto. Lo mette
+  /// `main.dart`.
+  bool Function() siPuoChiedere = () => true;
+
   /// Manda, se e' ora: acceso, filo aperto, e un quarto d'ora dall'ultima.
   Future<void> forseManda(Filo? filo) async {
     await carica();
@@ -196,15 +207,18 @@ class PostinoDellaSalute {
       /* Le misure nuove dell'app, accese da sole: il permesso non c'e'
        * ancora, e senza Salute le tace. Si chiede una volta, qui, con l'app
        * davanti. */
+      /* Solo se la domanda si vede: segnarla «chiesta» senza che sia
+       * apparsa vorrebbe dire non chiederla mai piu'. */
+      final siChiede = siPuoChiedere();
       final daChiedere = _scelte.daChiedere;
-      if (daChiedere.isNotEmpty) {
+      if (daChiedere.isNotEmpty && siChiede) {
         await lettore.chiediIlPermesso(daChiedere);
         await _salva(_scelte.tutteViste());
       }
       /* Il permesso di leggere ad app chiusa (Android), una volta sola e
        * con l'app davanti: anche chi aveva acceso la Salute prima che ci
        * fosse lo trova chiesto qui, al primo invio. */
-      if (_scelte.adAppChiusa && !_scelte.chiestoDaChiusa) {
+      if (_scelte.adAppChiusa && !_scelte.chiestoDaChiusa && siChiede) {
         await lettore.chiediIlPermessoDaChiusa();
         await _salva(_scelte.con(chiestoDaChiusa: true));
       }
@@ -223,7 +237,13 @@ class PostinoDellaSalute {
         'misure': perIlPonte(lette, _scelte.misure),
       });
       _ultimoGuasto = null;
-      await _salva(_scelte.con(ultimoInvio: _adesso(), ultimoDaChiusa: false));
+      await _salva(
+        _scelte.con(
+          ultimoInvio: _adesso(),
+          ultimoDaChiusa: false,
+          rifiutataDaChiusa: false,
+        ),
+      );
       return lette.length;
     } on ComandoRifiutato catch (no) {
       _ultimoGuasto = GuastoDellaSalute.daCodice(no.codice);
@@ -238,10 +258,27 @@ class PostinoDellaSalute {
     }
   }
 
+  /// Se una sveglia ad app chiusa adesso sarebbe troppo presto: un quarto
+  /// d'ora dall'ultimo invio e dall'ultimo tentativo, [dopoUnNo] da un «no»
+  /// della casa ([ScelteDellaSalute.prossimaSvegliaUtile]).
+  bool get prestoDaChiusa {
+    final prossima = _scelte.prossimaSvegliaUtile(
+      quartoDOra: ogniQuanto,
+      dopoUnNo: dopoUnNo,
+    );
+    return prossima != null && _adesso().isBefore(prossima);
+  }
+
   /// Ad app chiusa: il telefono ha svegliato l'app per un dato nuovo in
   /// Salute (iPhone) o per il giro di Android, e nessuno sta guardando.
   ///
-  /// Come [forseManda], con tre differenze:
+  /// Come [forseManda], con queste differenze:
+  /// - **prima si legge, poi si cerca la casa**: [apriIlFilo] si chiama solo
+  ///   se Salute ha dato qualcosa. Una lettura vuota — il permesso tolto,
+  ///   Health Connect che non risponde — non costa ne' rete ne' centralino;
+  /// - **un freno anche quando va male**: ogni tentativo si segna
+  ///   ([ScelteDellaSalute.tentatoDaChiusa]) e vale come un invio per il
+  ///   quarto d'ora; dopo un «no» della casa si aspetta [dopoUnNo];
   /// - **niente permessi da chiedere**: non c'e' nessuno a cui chiederli.
   ///   Una misura accesa ma ancora senza permesso ([ScelteDellaSalute.daChiedere])
   ///   aspetta l'app aperta;
@@ -250,25 +287,25 @@ class PostinoDellaSalute {
   ///   andata storta in tasca non deve cancellare i sensori in Home
   ///   Assistant. A toglierle ci pensa l'invio ad app aperta, che manda
   ///   l'elenco intero.
-  Future<ComeEAndataDaChiusa> mandaDaChiusa(Filo? filo) async {
+  Future<ComeEAndataDaChiusa> mandaDaChiusaAprendo(
+    Future<Filo?> Function() apriIlFilo,
+  ) async {
     await carica();
     if (!_scelte.acceso || !_scelte.adAppChiusa || !sbloccata()) {
       return ComeEAndataDaChiusa.spenta;
     }
-    final ultimo = _scelte.ultimoInvio;
-    if (_mandando ||
-        (ultimo != null && _adesso().difference(ultimo) < ogniQuanto)) {
-      return ComeEAndataDaChiusa.presto;
-    }
-    if (filo == null || !filo.dentro) return ComeEAndataDaChiusa.senzaCasa;
+    if (_mandando || prestoDaChiusa) return ComeEAndataDaChiusa.presto;
     _mandando = true;
+    var come = ComeEAndataDaChiusa.senzaCasa;
     try {
       final misure = _scelte.misure.difference(_scelte.daChiedere);
       final lette = await lettore.leggi(misure, adesso: _adesso());
-      if (lette.isEmpty) return ComeEAndataDaChiusa.vuota;
+      if (lette.isEmpty) return come = ComeEAndataDaChiusa.vuota;
       _ultimeLette = lette;
       _letto = true;
       _avvisa();
+      final filo = await apriIlFilo();
+      if (filo == null || !filo.dentro) return come;
       await filo.risultato({
         'type': 'ponte/salute/misure',
         if (_scelte.persona.isNotEmpty) 'persona': _scelte.persona,
@@ -277,17 +314,30 @@ class PostinoDellaSalute {
       });
       _ultimoGuasto = null;
       await _salva(_scelte.con(ultimoInvio: _adesso(), ultimoDaChiusa: true));
-      return ComeEAndataDaChiusa.mandata;
+      return come = ComeEAndataDaChiusa.mandata;
     } on ComandoRifiutato catch (no) {
       _ultimoGuasto = GuastoDellaSalute.daCodice(no.codice);
       _avvisa();
-      return ComeEAndataDaChiusa.rifiutata;
+      return come = ComeEAndataDaChiusa.rifiutata;
     } catch (_) {
-      return ComeEAndataDaChiusa.senzaCasa;
+      return come = ComeEAndataDaChiusa.senzaCasa;
     } finally {
+      /* Il tentativo, com'e' andato e' andato: e' il freno delle sveglie. */
+      try {
+        await _salva(
+          _scelte.con(
+            tentatoDaChiusa: _adesso(),
+            rifiutataDaChiusa: come == ComeEAndataDaChiusa.rifiutata,
+          ),
+        );
+      } catch (_) {}
       _mandando = false;
     }
   }
+
+  /// [mandaDaChiusaAprendo] con un filo gia' in mano.
+  Future<ComeEAndataDaChiusa> mandaDaChiusa(Filo? filo) =>
+      mandaDaChiusaAprendo(() async => filo);
 
   /// Accende o spegne l'invio ad app chiusa.
   Future<void> cambiaAdAppChiusa(bool si) async {

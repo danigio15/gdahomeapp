@@ -63,36 +63,41 @@ Future<ComeEAndataDaChiusa> svegliaDellaSalute({
 }) async {
   final scelte = await postino.carica();
   if (!scelte.acceso || !scelte.adAppChiusa) return ComeEAndataDaChiusa.spenta;
-  /* Prima di aprire il filo: una sveglia dentro il quarto d'ora non costa
-   * niente, ne' alla batteria ne' al centralino. */
-  final ultimo = scelte.ultimoInvio;
-  if (ultimo != null && postino.adesso.difference(ultimo) < ogniQuanto) {
-    return ComeEAndataDaChiusa.presto;
-  }
+  /* Prima di tutto il resto: una sveglia dentro il quarto d'ora — dall'ultimo
+   * invio o dall'ultimo tentativo, andato bene o male — non costa niente, ne'
+   * alla batteria ne' al centralino. */
+  if (postino.prestoDaChiusa) return ComeEAndataDaChiusa.presto;
   if (!leggibile) return ComeEAndataDaChiusa.bloccato;
   Collegamento? collegamento;
   try {
-    collegamento = laCasa();
-    if (!collegamento.archivio.aperto) await collegamento.archivio.apri();
-    if (condiviso && collegamento.aRiposo) collegamento.sveglia();
-    /* Su un filo gia' aperto `apri` non fa niente; su uno che dorme o che
-     * si sta ricollegando lo rimette in piedi. */
-    await collegamento.apri().timeout(entro);
-    return await postino.mandaDaChiusa(collegamento.filo).timeout(entro);
+    /* Il filo si apre solo dopo aver letto qualcosa da mandare
+     * ([PostinoDellaSalute.mandaDaChiusaAprendo]). */
+    return await postino
+        .mandaDaChiusaAprendo(() async {
+          final casa = collegamento = laCasa();
+          if (!casa.archivio.aperto) await casa.archivio.apri();
+          if (condiviso && casa.aRiposo) casa.sveglia();
+          /* Su un filo gia' aperto `apri` non fa niente; su uno che dorme o
+           * che si sta ricollegando lo rimette in piedi. */
+          await casa.apri().timeout(entro);
+          return casa.filo;
+        })
+        .timeout(entro * 2);
   } on TimeoutException {
     return ComeEAndataDaChiusa.senzaCasa;
   } catch (_) {
     return ComeEAndataDaChiusa.senzaCasa;
   } finally {
-    if (collegamento != null) {
+    final casa = collegamento;
+    if (casa != null) {
       if (!condiviso) {
-        await collegamento.chiudi().catchError((Object _) {});
+        await casa.chiudi().catchError((Object _) {});
       } else if (puoRiposare?.call() ?? false) {
         /* Il filo dell'app torna a riposo, come quando l'app si lascia: da
          * fuori casa ogni messaggio della casa e' una richiesta al
          * centralino, e nessuno sta guardando. Al ritorno dell'app si
          * risveglia da solo (`main.dart`). */
-        await collegamento.riposa().catchError((Object _) {});
+        await casa.riposa().catchError((Object _) {});
       }
     }
   }
@@ -101,13 +106,18 @@ Future<ComeEAndataDaChiusa> svegliaDellaSalute({
 /// Cosa dire alla parte nativa: osservare questi tipi (iPhone) o accendere
 /// il giro (Android), oppure spegnere tutto. `null` per spegnere.
 ///
-/// Si osserva solo con la salute accesa e l'invio ad app chiusa acceso. Il
-/// Premium della casa no: all'avvio la licenza non si sa ancora, e spegnere
-/// le sveglie per un «non lo so» vorrebbe dire perderle. Senza Premium la
-/// sveglia finisce subito, senza leggere e senza aprire il filo
-/// ([PostinoDellaSalute.mandaDaChiusa]).
-List<String>? cosaOsservare(ScelteDellaSalute scelte) {
-  if (!scelte.acceso || !scelte.adAppChiusa) return null;
+/// Si osserva solo con la salute accesa, l'invio ad app chiusa acceso e il
+/// telefono che lo permette ([puoLeggere], `LettoreDellaSalute.puoLeggereDaChiusa`):
+/// su Android chi ha negato la lettura in background non deve pagare un
+/// motore acceso ogni mezz'ora per leggere niente. Il Premium della casa no:
+/// all'avvio la licenza non si sa ancora, e spegnere le sveglie per un «non
+/// lo so» vorrebbe dire perderle. Senza Premium la casa dice di no, e le
+/// sveglie si fanno rade ([dopoUnNo]).
+List<String>? cosaOsservare(
+  ScelteDellaSalute scelte, {
+  bool puoLeggere = true,
+}) {
+  if (!scelte.acceso || !scelte.adAppChiusa || !puoLeggere) return null;
   final tipi = daOsservareSuIPhone(scelte.misure).toList()..sort();
   return tipi;
 }
@@ -164,7 +174,13 @@ class SvegliaDellaSalute {
 
   Future<void> _allinea() async {
     final scelte = await postino.carica();
-    final tipi = cosaOsservare(scelte);
+    var puoLeggere = false;
+    if (scelte.acceso && scelte.adAppChiusa) {
+      try {
+        puoLeggere = await postino.lettore.puoLeggereDaChiusa();
+      } catch (_) {}
+    }
+    final tipi = cosaOsservare(scelte, puoLeggere: puoLeggere);
     final detto = tipi == null ? '' : tipi.join(',');
     if (detto == _detto) return;
     _detto = detto;
