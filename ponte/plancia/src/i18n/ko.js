@@ -8124,4 +8124,9 @@ export default Object.freeze({
   "Measurements": "측정값",
   "Where the data comes from": "데이터 출처",
   "The cards": "카드",
+  "Edit layout: drag, or use Tab and the arrow keys to move. Esc to leave.": "배치 편집: 드래그하거나 Tab과 화살표 키로 옮기세요. 나가려면 Esc.",
+  "There are unsaved changes: press Esc again to leave without saving them.": "저장하지 않은 변경 사항이 있습니다: 저장하지 않고 나가려면 Esc를 한 번 더 누르세요.",
+  "Esc again to leave without saving": "저장하지 않고 나가려면 Esc 한 번 더",
+  "moving": "이동 중",
+  "position": "위치",
 });

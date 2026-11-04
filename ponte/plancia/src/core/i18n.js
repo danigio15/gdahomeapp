@@ -344,9 +344,37 @@ export function catalogSize(code) {
   return catalog ? catalog.exact.size + catalog.patterns.length : 0;
 }
 
+/**
+ * The English key a translated string came from: the reverse of `translate`,
+ * for exact entries only. Things that must stay the same in every language —
+ * the id of a box built from its written title — use it to go back to the
+ * pivot. Built once per catalog size, so a catalog that grows rebuilds it.
+ */
+const reverseIndex = new Map();
+export function reverseLookup(text, locale = getLocale()) {
+  const source = typeof text === "string" ? text.trim() : "";
+  if (!source) return null;
+  for (const code of localeChain(locale)) {
+    if (code === DEFAULT_LOCALE) break;
+    const catalog = catalogs.get(code);
+    if (!catalog) continue;
+    let index = reverseIndex.get(code);
+    if (!index || index.size !== catalog.exact.size) {
+      const map = new Map();
+      for (const [key, value] of catalog.exact) if (!map.has(value)) map.set(value, key);
+      index = { size: catalog.exact.size, map };
+      reverseIndex.set(code, index);
+    }
+    const hit = index.map.get(source);
+    if (hit) return hit;
+  }
+  return null;
+}
+
 /** Test seam: drop every registered catalog. */
 export function resetCatalogs() {
   catalogs.clear();
+  reverseIndex.clear();
   pendingLoads.clear();
 }
 

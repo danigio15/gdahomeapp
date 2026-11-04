@@ -60,13 +60,32 @@ export function sceltaPulita(scelta) {
 export function disposizionePulita(tutta) {
   const fuori = {};
   if (!tutta || typeof tutta !== "object" || Array.isArray(tutta)) return fuori;
-  for (const [elenco, scelta] of Object.entries(tutta)) {
-    if (!ID_BUONO.test(elenco)) continue;
+  /* Le ultime scritte sono in fondo: col tetto si tengono quelle. */
+  const voci = Object.entries(tutta).filter(([elenco]) => ID_BUONO.test(elenco));
+  for (const [elenco, scelta] of voci.slice(-TETTO_ELENCHI)) {
     const pulito = sceltaPulita(scelta);
+    pulito.ordine = pulito.ordine.slice(0, TETTO_VOCI);
+    pulito.nascosti = pulito.nascosti.slice(0, TETTO_VOCI);
     if (pulito.ordine.length || pulito.nascosti.length || Object.keys(pulito.misure).length)
       fuori[elenco] = pulito;
   }
   return fuori;
+}
+
+/** Una chiave o un id che sta nel limite: uno troppo lungo (un elenco dentro
+ * una carta dentro una vista…) prima veniva scartato in silenzio al
+ * salvataggio, e la pagina diceva «salvato». Ora si accorcia, sempre allo
+ * stesso modo: l'inizio leggibile (la pagina resta in testa) e un'impronta
+ * del resto. */
+export function chiaveCorta(testo, massimo = 160) {
+  const scritto = String(testo ?? "").replace(/[\s"<>]+/g, "-");
+  if (scritto.length <= massimo) return scritto;
+  let h = 2166136261;
+  for (let i = 0; i < scritto.length; i += 1) {
+    h ^= scritto.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return `${scritto.slice(0, massimo - 10)}~${h.toString(36).padStart(7, "0").slice(0, 9)}`;
 }
 
 /** L'ordine in cui vanno le voci che la pagina ha adesso (`diSerie`, nel loro
@@ -97,6 +116,47 @@ export function ordineConLaScelta(diSerie, scelta) {
   });
   return fila;
 }
+
+/** L'ordine di serie di un contenitore quando le sue voci cambiano.
+ *
+ * Il primo ordine di serie si legge dalla pagina, prima che la disposizione
+ * la tocchi. Dopo, la pagina e' gia' in fila come vuole la scelta, e
+ * rileggerla dal DOM metterebbe l'ordine dell'utente al posto di quello di
+ * serie: «Ripristina» non ripristinava, e un Salva della stessa fila
+ * cancellava la scelta. Allora le voci che c'erano restano dove erano di
+ * serie, e una voce nuova si infila secondo le sue vicine nella pagina: in
+ * fondo se e' in fondo, in cima se e' in cima, se no dopo quella che le sta
+ * subito prima. */
+export function serieAggiornata(vecchia, nellaPagina) {
+  const ora = pulita(nellaPagina);
+  const ci = new Set(ora);
+  const fila = pulita(vecchia).filter((id) => ci.has(id));
+  const messe = new Set(fila);
+  ora.forEach((id, i) => {
+    if (messe.has(id)) return;
+    /* In fondo alla pagina (il caso di quasi tutte: un riquadro che si
+     * aggiunge dopo) va in fondo; in cima va in cima; in mezzo, dopo quella
+     * che gli sta prima. */
+    const inFondo = ora.slice(i + 1).every((altro) => !messe.has(altro));
+    let dopo = inFondo ? fila.length - 1 : -1;
+    for (let j = i - 1; j >= 0 && !inFondo; j -= 1) {
+      const k = fila.indexOf(ora[j]);
+      if (k >= 0) {
+        dopo = k;
+        break;
+      }
+    }
+    fila.splice(dopo + 1, 0, id);
+    messe.add(id);
+  });
+  return fila;
+}
+
+/** Il tetto della casella: oltre, si tengono le scelte piu' recenti. Una
+ * plancia vera ne ha qualche decina; mille vuol dire spazzatura che si
+ * accumula (voci sparite da anni), e la casella viaggia col ponte. */
+export const TETTO_ELENCHI = 300;
+export const TETTO_VOCI = 200;
 
 /** Come stanno le voci: in fila, con chi non si vede e chi sta largo. */
 export function disposizioneDelleVoci(diSerie, scelta) {
@@ -155,8 +215,10 @@ export function conLaScelta(tutta, elenco, scelta, diSerie = null) {
     for (const [id, misura] of Object.entries(prima.misure))
       if (!ora.has(id) && !(id in pulito.misure)) pulito.misure[id] = misura;
   }
+  /* In fondo: e' la piu' recente, ed e' l'ultima che il tetto taglia. */
+  delete fuori[elenco];
   fuori[elenco] = pulito;
-  return fuori;
+  return disposizionePulita(fuori);
 }
 
 /** La casella senza la scelta di un elenco: «Ripristina». */

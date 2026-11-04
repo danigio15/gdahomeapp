@@ -8097,4 +8097,9 @@ export default Object.freeze({
   "Measurements": "القياسات",
   "Where the data comes from": "مصدر البيانات",
   "The cards": "البطاقات",
+  "Edit layout: drag, or use Tab and the arrow keys to move. Esc to leave.": "تعديل التخطيط: اسحب، أو استخدم Tab والأسهم للنقل. Esc للخروج.",
+  "There are unsaved changes: press Esc again to leave without saving them.": "توجد تغييرات غير محفوظة: اضغط Esc مرة أخرى للخروج دون حفظها.",
+  "Esc again to leave without saving": "Esc مرة أخرى للخروج دون حفظ",
+  "moving": "قيد النقل",
+  "position": "الموضع",
 });

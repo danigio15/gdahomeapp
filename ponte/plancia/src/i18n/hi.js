@@ -8133,4 +8133,9 @@ export default Object.freeze({
   "Measurements": "माप",
   "Where the data comes from": "डेटा कहाँ से आता है",
   "The cards": "कार्ड",
+  "Edit layout: drag, or use Tab and the arrow keys to move. Esc to leave.": "लेआउट बदलें: खींचें, या खिसकाने के लिए Tab और तीर कुंजियाँ इस्तेमाल करें। बाहर निकलने के लिए Esc।",
+  "There are unsaved changes: press Esc again to leave without saving them.": "कुछ बदलाव सहेजे नहीं गए हैं: बिना सहेजे बाहर निकलने के लिए फिर से Esc दबाएँ।",
+  "Esc again to leave without saving": "बिना सहेजे बाहर निकलने के लिए फिर से Esc",
+  "moving": "खिसकाया जा रहा है",
+  "position": "स्थान",
 });

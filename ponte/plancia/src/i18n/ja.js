@@ -8152,4 +8152,9 @@ export default Object.freeze({
   "Measurements": "測定値",
   "Where the data comes from": "データの出どころ",
   "The cards": "カード",
+  "Edit layout: drag, or use Tab and the arrow keys to move. Esc to leave.": "レイアウトの編集：ドラッグするか、Tab と矢印キーで移動します。Esc で終了。",
+  "There are unsaved changes: press Esc again to leave without saving them.": "保存されていない変更があります：保存せずに終了するにはもう一度 Esc を押してください。",
+  "Esc again to leave without saving": "保存せずに終了するにはもう一度 Esc",
+  "moving": "移動中",
+  "position": "位置",
 });

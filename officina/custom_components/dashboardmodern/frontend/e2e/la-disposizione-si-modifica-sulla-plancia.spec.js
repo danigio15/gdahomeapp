@@ -189,7 +189,7 @@ test("in Home il tasto ✏️ porta all'anteprima delle tessere nel Config", asy
   await pontefinto(page);
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
   await page.locator("#setup-wizard").evaluateAll((n) => n.forEach((x) => x.remove()));
-  const tasto = page.locator('#page-home [data-dm-disp-tasto="home"]');
+  const tasto = page.locator('header [data-dm-disp-tasto="home"]');
   await expect(tasto).toBeVisible();
   await tasto.click();
   await expect(page.locator('[data-dm-anteprima="home"]').first()).toBeVisible({ timeout: 15_000 });

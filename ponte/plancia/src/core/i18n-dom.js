@@ -13,7 +13,15 @@
  * from the source rather than from an already translated string.
  */
 
-import { DEFAULT_LOCALE, SOURCE_LOCALE, getLocale, onLocaleChange, translate } from "./i18n.js";
+import {
+  DEFAULT_LOCALE,
+  SOURCE_LOCALE,
+  getLocale,
+  onLocaleChange,
+  resolveLocale,
+  reverseLookup,
+  translate,
+} from "./i18n.js";
 import { pivotKey } from "../i18n/source-index.js";
 
 /*
@@ -98,6 +106,21 @@ export function translateSource(text, locale = getLocale()) {
     if (head !== back[1]) return `${head}${back[2]}`;
   }
   return source;
+}
+
+/**
+ * The English pivot of a string read back from the page, whatever the
+ * language it is painted in: Italian through the source index, the other
+ * languages through their catalog. Unknown text comes back as it is (a name
+ * the user wrote — «Portone» — is the same in every language anyway).
+ */
+export function sourceOf(text, locale = getLocale()) {
+  const source = typeof text === "string" ? text.trim() : "";
+  if (!source) return source;
+  const code = resolveLocale(locale);
+  if (code === DEFAULT_LOCALE) return source;
+  if (code === SOURCE_LOCALE) return pivotKey(source) || source;
+  return reverseLookup(source, code) || pivotKey(source) || source;
 }
 
 function resolveWhole(source, locale) {

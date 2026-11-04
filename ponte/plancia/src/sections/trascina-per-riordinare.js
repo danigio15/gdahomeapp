@@ -17,7 +17,7 @@
  * `{ da, a }` e il resto — salvare, ridisegnare — lo fa lui. Il modulo non sa
  * niente di tessere: e' fatto per servire anche altrove.
  */
-import { doc, root, senzaCadere } from "./shared.js";
+import { doc, root, senzaCadere, t } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_TRASCINA_PER_RIORDINARE__";
 const state = (root[KEY] ||= { installed: false, presa: null });
@@ -216,6 +216,45 @@ function annuncia(lista, testo) {
   voce.textContent = testo;
 }
 
+/* Quello che si dice a chi non vede: il nome della voce (chi usa il modulo
+ * lo scrive in `data-dm-riordina-nome`) e dove sta adesso. Prima diceva solo
+ * «2 / 8», e solo dalla tastiera. */
+function dove(riga, i, quante, inMovimento = false) {
+  const nome = String(riga?.getAttribute?.("data-dm-riordina-nome") || "").trim();
+  const posto = `${i + 1} / ${quante}`;
+  const stato = inMovimento ? `${t("in movimento", "moving")}, ${posto}` : `${t("posizione", "position")} ${posto}`;
+  return nome ? `${nome}: ${stato}` : stato;
+}
+
+/* Il fantasma e' una copia della voce: niente id doppi nel documento, e
+ * niente telecamere che si aprono una seconda volta mentre si trascina — al
+ * loro posto il fotogramma di adesso, fermo. */
+const IN_DIRETTA = "video,iframe,canvas,img[src*='stream'],img[src*='mjpeg']";
+function fermaIlFantasma(vera, copia) {
+  for (const el of copia.querySelectorAll("[id]")) el.removeAttribute("id");
+  const vere = [...vera.querySelectorAll(IN_DIRETTA)];
+  [...copia.querySelectorAll(IN_DIRETTA)].forEach((el, i) => {
+    if (el.tagName === "IMG") el.removeAttribute("src");
+    else if (el.tagName === "VIDEO" || el.tagName === "IFRAME") {
+      el.removeAttribute("src");
+      for (const fonte of el.querySelectorAll("source")) fonte.remove();
+    }
+    const fonte = vere[i];
+    const r = fonte?.getBoundingClientRect?.();
+    const ferma = doc.createElement("canvas");
+    ferma.width = Math.max(1, Math.round(r?.width || 1));
+    ferma.height = Math.max(1, Math.round(r?.height || 1));
+    ferma.className = typeof el.className === "string" ? el.className : "";
+    ferma.style.cssText = el.style.cssText;
+    try {
+      if (fonte && fonte.tagName !== "IFRAME") ferma.getContext("2d")?.drawImage(fonte, 0, 0, ferma.width, ferma.height);
+    } catch (_error) {
+      /* un fotogramma che non si puo' copiare: resta il riquadro vuoto */
+    }
+    el.replaceWith(ferma);
+  });
+}
+
 function cadi(lista, da, a) {
   if (da === a) return;
   lista.dispatchEvent(new root.CustomEvent("dm-riordina", { bubbles: true, detail: { da, a } }));
@@ -301,6 +340,7 @@ function parti(presa) {
   presa.passo = rect[da].height + gap;
   presa.lista.dataset.dmTrascinando = "true";
   presa.riga.dataset.dmPresa = "true";
+  annuncia(presa.lista, dove(presa.riga, da, presa.tutte.length, true));
   for (const r of presa.tutte) if (r !== presa.riga) r.dataset.dmFaPosto = "true";
   doc.documentElement.dataset.dmTrascinando = "true";
   if (presa.griglia) {
@@ -313,6 +353,7 @@ function parti(presa) {
      * striscia dava zero, e il fantasma finiva fuori dallo schermo. */
     const r = rect[da];
     const fantasma = presa.riga.cloneNode(true);
+    fermaIlFantasma(presa.riga, fantasma);
     fantasma.removeAttribute("data-dm-riordina-riga");
     fantasma.removeAttribute("data-dm-presa");
     fantasma.removeAttribute("id");
@@ -505,6 +546,7 @@ function onPointerUp(event) {
   doc.addEventListener("click", ferma, { capture: true, once: true });
   root.setTimeout?.(() => doc.removeEventListener("click", ferma, { capture: true }), 0);
   cadi(lista, da, a);
+  if (lista.isConnected) annuncia(lista, dove(presa.riga, a, presa.tutte.length));
 }
 
 function onPointerCancel(event) {
@@ -558,7 +600,7 @@ function onKeyDown(event) {
   const esc = (testo) => (root.CSS?.escape ? root.CSS.escape(testo) : testo);
   const classi = [...lista.classList].map((c) => `.${esc(c)}`).join("");
   cadi(lista, da, a);
-  annuncia(lista, `${a + 1} / ${tutte.length}`);
+  annuncia(lista, dove(riga, a, tutte.length));
   root.queueMicrotask?.(() => {
     const nuova = doc.querySelector?.(`${classi}[data-dm-riordina] > [data-dm-riordina-riga="${esc(chiave)}"]`);
     const fuoco = nuova?.matches?.("[data-dm-maniglia]") ? nuova : nuova?.querySelector?.("[data-dm-maniglia]");

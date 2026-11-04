@@ -8014,4 +8014,9 @@ export default Object.freeze({
   "Measurements": "测量",
   "Where the data comes from": "数据来源",
   "The cards": "卡片",
+  "Edit layout: drag, or use Tab and the arrow keys to move. Esc to leave.": "编辑布局：拖动，或用 Tab 和方向键移动。按 Esc 退出。",
+  "There are unsaved changes: press Esc again to leave without saving them.": "有未保存的更改：再按一次 Esc 将不保存直接退出。",
+  "Esc again to leave without saving": "再按 Esc 不保存退出",
+  "moving": "正在移动",
+  "position": "位置",
 });

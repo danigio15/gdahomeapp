@@ -8167,4 +8167,9 @@ export default Object.freeze({
   "Measurements": "Измерения",
   "Where the data comes from": "Откуда берутся данные",
   "The cards": "Карточки",
+  "Edit layout: drag, or use Tab and the arrow keys to move. Esc to leave.": "Изменение расположения: перетаскивайте или используйте Tab и стрелки. Esc — выйти.",
+  "There are unsaved changes: press Esc again to leave without saving them.": "Есть несохранённые изменения: нажмите Esc ещё раз, чтобы выйти без сохранения.",
+  "Esc again to leave without saving": "Ещё раз Esc — выйти без сохранения",
+  "moving": "перемещается",
+  "position": "позиция",
 });

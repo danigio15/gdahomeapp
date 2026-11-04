@@ -8199,4 +8199,9 @@ export default Object.freeze({
   "Measurements": "Mediciones",
   "Where the data comes from": "De dónde vienen los datos",
   "The cards": "Las tarjetas",
+  "Edit layout: drag, or use Tab and the arrow keys to move. Esc to leave.": "Editar disposición: arrastra, o usa Tab y las flechas para mover. Esc para salir.",
+  "There are unsaved changes: press Esc again to leave without saving them.": "Hay cambios sin guardar: pulsa Esc otra vez para salir sin guardarlos.",
+  "Esc again to leave without saving": "Esc otra vez para salir sin guardar",
+  "moving": "moviendo",
+  "position": "posición",
 });

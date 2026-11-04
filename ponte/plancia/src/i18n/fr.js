@@ -8230,4 +8230,9 @@ export default Object.freeze({
   "Measurements": "Mesures",
   "Where the data comes from": "D'où viennent les données",
   "The cards": "Les cartes",
+  "Edit layout: drag, or use Tab and the arrow keys to move. Esc to leave.": "Modifier la disposition : faites glisser, ou utilisez Tab et les flèches pour déplacer. Échap pour quitter.",
+  "There are unsaved changes: press Esc again to leave without saving them.": "Des modifications ne sont pas enregistrées : appuyez de nouveau sur Échap pour quitter sans les enregistrer.",
+  "Esc again to leave without saving": "Échap encore pour quitter sans enregistrer",
+  "moving": "en déplacement",
+  "position": "place",
 });

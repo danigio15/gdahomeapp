@@ -8150,4 +8150,9 @@ export default Object.freeze({
   "Measurements": "Ölçümler",
   "Where the data comes from": "Verilerin kaynağı",
   "The cards": "Kartlar",
+  "Edit layout: drag, or use Tab and the arrow keys to move. Esc to leave.": "Düzeni düzenle: sürükleyin ya da taşımak için Tab ve ok tuşlarını kullanın. Çıkmak için Esc.",
+  "There are unsaved changes: press Esc again to leave without saving them.": "Kaydedilmemiş değişiklikler var: kaydetmeden çıkmak için Esc tuşuna yeniden basın.",
+  "Esc again to leave without saving": "Kaydetmeden çıkmak için yine Esc",
+  "moving": "taşınıyor",
+  "position": "konum",
 });

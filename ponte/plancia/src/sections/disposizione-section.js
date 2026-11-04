@@ -30,12 +30,16 @@
  */
 import {
   CHIAVE_DISPOSIZIONE,
+  chiaveCorta,
   conLaScelta,
   disposizioneDelleVoci,
   disposizionePulita,
   idDellaVoce,
   idUnici,
+  paginaDellElenco,
+  serieAggiornata,
 } from "../core/disposizione.js";
+import { sourceOf } from "../core/i18n-dom.js";
 import { puoConfigurare } from "./la-config-e-di-chi-la-amministra-section.js";
 import { STILE_RIORDINA, prendiIlPuntatore } from "./trascina-per-riordinare.js";
 import { doc, esc, installStyle, readJson, root, senzaCadere, t, writeJsonIfChanged } from "./shared.js";
@@ -169,20 +173,31 @@ function testoBreve(el) {
   return "";
 }
 
+/* Il titolo con cui si fa un id, uguale in ogni lingua: «Temperatura» e
+ * «Temperatur» sono la stessa riga. Prima un cambio di lingua cambiava gli id
+ * fatti dai titoli, e la disposizione salvata non si ritrovava piu'. Il nome
+ * mostrato resta quello scritto. */
+function titoloPerLId(testo) {
+  return sourceOf(String(testo || "").trim());
+}
+
 function idDellElemento(el, titolo = "") {
   const attributi = [...(el.attributes || [])]
     .filter((a) => !/^(style|class|aria-|data-dm-(disp|riordina|nascosto|misura|maniglia|tieni|presa|fa-posto))/.test(a.name))
     .map((a) => `${a.name}=${a.value}`)
     .join(" ");
   const dati = [...(el.attributes || [])]
-    .filter((a) => /^data-/.test(a.name) && DATI_CHE_NOMINANO.test(a.name.slice(5)) && !/^data-dm-disp/.test(a.name))
+    .filter(
+      (a) =>
+        /^data-/.test(a.name) && DATI_CHE_NOMINANO.test(a.name.slice(5)) && !/^data-dm-(disp|riordina)/.test(a.name),
+    )
     .map((a) => a.value);
   return idDellaVoce({
     dichiarato: el.getAttribute?.("data-dm-blocco") || "",
     id: el.id || "",
     attributi,
     dati,
-    titolo: titolo || titoloDi(el),
+    titolo: titoloPerLId(titolo || titoloDi(el)),
     classi: typeof el.className === "string" ? el.className : "",
   });
 }
@@ -206,7 +221,7 @@ function vociDi(contenitore) {
   }
   const unici = idUnici(voci.map((v) => v.id));
   voci.forEach((voce, i) => {
-    voce.id = unici[i];
+    voce.id = chiaveCorta(unici[i]);
     voce.vuoto = eVuoto(voce.el);
     if (!voce.nome) voce.nome = nomeDiRipiego(voce.el, contenitore, i);
     /* «Luci» dentro la pagina Luci non dice quale riquadro: e' il riepilogo. */
@@ -459,7 +474,7 @@ const DICHIARATI_DALLA_PAGINA = Object.freeze([
       const nome = String(testa.querySelector?.("span")?.textContent || "")
         .replace(/[^\p{L}\p{N}\s'-]/gu, "")
         .trim();
-      return nome ? { id: idDellaVoce({ titolo: nome }), nome } : null;
+      return nome ? { id: idDellaVoce({ titolo: titoloPerLId(nome) }), nome } : null;
     },
   ],
   [
@@ -499,7 +514,8 @@ const DICHIARATI_DALLA_PAGINA = Object.freeze([
        * parola, senza il numero accanto («Al 80%» resta lo stesso all'85). */
       const entita = el.getAttribute?.("data-dm-storico");
       const parola = nome.replace(/[\d.,:%°]+/g, " ").trim();
-      const id = entita ? "" : el.getAttribute?.("data-tipo") || (parola ? idDellaVoce({ titolo: parola }) : "");
+      const id =
+        entita ? "" : el.getAttribute?.("data-tipo") || (parola ? idDellaVoce({ titolo: titoloPerLId(parola) }) : "");
       return { id, nome };
     },
   ],
@@ -603,13 +619,23 @@ export function elenchiDellaPagina(pagina) {
     if (eUnElenco(voce.el)) fuori.push({ chiave: `${chiave}:${voce.id}`, contenitore: voce.el, riquadri: false });
     else elenchiDentro(voce.el, `${chiave}:${voce.id}`, fuori);
   }
-  /* Due elenchi con la stessa chiave nello stesso riquadro si distinguono. */
+  /* Due elenchi con la stessa chiave nello stesso riquadro si distinguono.
+   * Una chiave troppo lunga si accorcia (sempre uguale): prima il salvataggio
+   * la scartava in silenzio. */
   const unici = idUnici(fuori.map((e) => e.chiave));
-  fuori.forEach((e, i) => (e.chiave = unici[i]));
+  fuori.forEach((e, i) => (e.chiave = chiaveCorta(unici[i])));
   return fuori;
 }
 
 /* ── applicare ──────────────────────────────────────────────────────────── */
+
+/* Le viste che si scelgono con le linguette (l'Energia: Report, Flusso,
+ * Giornaliera…) si spostano ma non si spengono: spenta, la sua linguetta
+ * apriva una pagina bianca. */
+const VISTA_DA_LINGUETTA = "[id^='view-']";
+function siPuoNascondere(el) {
+  return !el?.matches?.(VISTA_DA_LINGUETTA);
+}
 
 /* Nascosto davvero: con lo stile scritto addosso, che vince anche sulle
  * regole delle pagine che dicono `display:…!important`. In modifica si vede,
@@ -628,33 +654,43 @@ function nascondi(el, si) {
 function applicaAlContenitore(elenco, scelta) {
   const { contenitore } = elenco;
   const voci = vociDi(contenitore);
-  if (voci.length < 2) return;
+  if (voci.length < 2) return false;
   const perId = new Map(voci.map((v) => [v.id, v]));
-  /* L'ordine di serie: quello in cui la pagina le ha messe l'ultima volta che
-   * le ha disegnate. Se l'insieme e' cambiato, ha ridisegnato: si rilegge. */
-  const firma = voci
-    .map((v) => v.id)
-    .sort()
-    .join("|");
+  /* L'ordine di serie. La prima volta e' quello in cui la pagina le ha
+   * messe. Quando l'insieme cambia (una voce arriva dopo), non si rilegge dal
+   * DOM se la disposizione l'ha gia' riordinato: la fila che si vede e' quella
+   * dell'utente, e diventerebbe «di serie» — «Ripristina» non ripristinava,
+   * e un Salva uguale cancellava la scelta. Le voci nuove si infilano accanto
+   * a quelle che hanno vicino. */
+  const attuale = voci.map((v) => v.id);
+  const firma = [...attuale].sort().join("|");
   if (contenitore.__dmDispFirma !== firma) {
     contenitore.__dmDispFirma = firma;
-    contenitore.__dmDispSerie = voci.map((v) => v.id);
+    contenitore.__dmDispSerie =
+      contenitore.__dmDispRiordinato && Array.isArray(contenitore.__dmDispSerie)
+        ? serieAggiornata(contenitore.__dmDispSerie, attuale)
+        : attuale;
   }
   const serie = contenitore.__dmDispSerie.filter((id) => perId.has(id));
   const disposte = disposizioneDelleVoci(serie, scelta);
-  const attuale = voci.map((v) => v.id);
   const voluto = disposte.map((d) => d.id);
   if (attuale.join("|") !== voluto.join("|")) {
     /* In fondo, nell'ordine voluto: chi non e' una voce (un figlio nascosto
      * dalla pagina) resta davanti, dov'era. */
     for (const id of voluto) for (const el of perId.get(id).insieme) contenitore.appendChild(el);
-  }
+    contenitore.__dmDispRiordinato = voluto.join("|") !== serie.join("|");
+  } else if (voluto.join("|") === serie.join("|")) contenitore.__dmDispRiordinato = false;
+  /* La pagina ha qualcosa di nostro addosso: quando la scelta sparisce
+   * (Ripristina dal Config, un altro dispositivo) va rimessa com'era. */
+  const pagina = contenitore.closest?.("section.page");
+  if (pagina) pagina.__dmDispToccata = true;
   for (const d of disposte) {
     const voce = perId.get(d.id);
-    for (const el of voce.insieme) nascondi(el, d.nascosto);
+    for (const el of voce.insieme) nascondi(el, d.nascosto && siPuoNascondere(voce.el));
     if (d.misura === "larga") voce.el.setAttribute("data-dm-misura", "larga");
     else voce.el.removeAttribute("data-dm-misura");
   }
+  return true;
 }
 
 function paginaAttiva() {
@@ -665,22 +701,39 @@ function paginaAttiva() {
  * si guarda. */
 export function applicaLaDisposizione(pagina = paginaAttiva()) {
   if (!pagina || state.occupato) return;
-  /* Mentre una voce e' in mano non si rimette in fila niente. */
-  if (doc.documentElement.hasAttribute("data-dm-trascinando")) return inCoda();
+  /* Mentre una voce e' in mano non si rimette in fila niente: si riguarda
+   * dopo. Ma solo se in mano c'e' davvero qualcosa — un segno rimasto appeso
+   * senza nessuno che trascina faceva riprovare ogni 60 ms, per sempre. */
+  if (doc.documentElement.hasAttribute("data-dm-trascinando")) {
+    if (prendiIlPuntatore.inMano()) return inCoda();
+    doc.documentElement.removeAttribute("data-dm-trascinando");
+  }
   const tutta = salvata();
   const nome = nomeDellaPagina(pagina);
   const inModifica = state.modifica?.pagina === pagina;
-  const ce = inModifica || Object.keys(tutta).some((k) => k === nome || k.startsWith(`${nome}:`));
-  if (!ce) return;
+  /* Ogni chiave della pagina: anche le «viste» (`ev@dm-na`, la nuova Auto),
+   * che prima non si riconoscevano e la disposizione non tornava. */
+  const salvataQui = Object.keys(tutta).some((k) => paginaDellElenco(k) === nome);
+  /* Una pagina che la disposizione aveva toccato e che adesso non ha piu'
+   * una scelta (Ripristina, un altro dispositivo, una bozza annullata): si
+   * rimette di serie. */
+  const toccata = Boolean(pagina.__dmDispToccata);
+  if (!inModifica && !salvataQui && !toccata) return;
   state.occupato = true;
   state.giri = (state.giri || 0) + 1;
   try {
+    let rimessi = 0;
     for (const elenco of elenchiDellaPagina(pagina)) {
       const scelta = inModifica && state.modifica.bozze.has(elenco.chiave)
         ? state.modifica.bozze.get(elenco.chiave)
         : tutta[elenco.chiave];
-      if (scelta || inModifica) applicaAlContenitore(elenco, scelta || {});
+      if ((scelta || inModifica || toccata) && applicaAlContenitore(elenco, scelta || {})) rimessi += 1;
     }
+    /* Rimessa di serie davvero (la pagina si vede, le voci ci sono): non
+     * c'e' piu' niente da rimettere. Se la pagina non si vede, le sue voci
+     * non si trovano (o se ne trova una sola, quella spenta): si aspetta il
+     * giro in cui torna davanti. */
+    if (!inModifica && !salvataQui && rimessi) pagina.__dmDispToccata = false;
     if (inModifica) segnaPerLaModifica(pagina);
   } finally {
     state.osservatore?.takeRecords?.();
@@ -708,7 +761,32 @@ function inCoda() {
     osservaLePagine();
     applicaLaDisposizione();
     mettiITasti();
+    rinfrescaLaBarra();
   }, 60);
+}
+
+/* Quello che cambia e conta: la pagina che si guarda, o una pagina che si
+ * accende o si spegne (si e' cambiata pagina). Le pagine dietro si
+ * ridisegnano a ogni stato di Home Assistant, e guardarle costava un giro
+ * intero ogni volta. E le nostre cose non contano: la voce che annuncia uno
+ * spostamento, i tasti della modifica, il fantasma — rifare i tasti perche'
+ * sono cambiati i tasti toglieva il fuoco a chi usa la tastiera, e lo
+ * spostamento seguente non partiva piu'. */
+const NOSTRI_IN_PAGINA = `${NOSTRI},.dm-riordina-voce,[data-dm-fantasma]`;
+function cambiamentoCheConta(mutazione, attiva) {
+  const bersaglio = mutazione.target?.nodeType === 1 ? mutazione.target : mutazione.target?.parentElement;
+  if (!bersaglio) return false;
+  if (bersaglio.closest?.(NOSTRI_IN_PAGINA)) return false;
+  if (mutazione.type === "attributes") return bersaglio.matches?.("section.page") || Boolean(attiva?.contains(bersaglio));
+  if (!attiva?.contains(bersaglio)) return false;
+  const nodi = [...mutazione.addedNodes, ...mutazione.removedNodes];
+  return !nodi.length || !nodi.every((n) => n.nodeType === 1 && n.matches?.(NOSTRI_IN_PAGINA));
+}
+
+function onMutazioni(mutazioni) {
+  if (state.occupato || state.coda) return;
+  const attiva = state.modifica?.pagina || paginaAttiva();
+  if (mutazioni.some((m) => cambiamentoCheConta(m, attiva))) inCoda();
 }
 
 /* ── la modalita' modifica ──────────────────────────────────────────────── */
@@ -748,9 +826,12 @@ function controlliMarkup(voce, elenco, scelta) {
         t(`Sposta ${voce.nome}`, `Move ${voce.nome}`),
       )}">⠿ <span>${nome}</span>${nota}</button>`
     : `<span class="dm-disp-segno" aria-hidden="true">⠿</span>${nota}`;
+  const occhio = siPuoNascondere(voce.el)
+    ? `<button type="button" class="dm-disp-occhio" data-dm-non-trascinare data-dm-disp-occhio
+      aria-pressed="${!nascosto}" aria-label="${esc(nascosto ? t(`Mostra ${voce.nome}`, `Show ${voce.nome}`) : t(`Nascondi ${voce.nome}`, `Hide ${voce.nome}`))}">${nascosto ? "🙈" : "👁"}</button>`
+    : "";
   return `${testa}
-    <button type="button" class="dm-disp-occhio" data-dm-non-trascinare data-dm-disp-occhio
-      aria-pressed="${!nascosto}" aria-label="${esc(nascosto ? t(`Mostra ${voce.nome}`, `Show ${voce.nome}`) : t(`Nascondi ${voce.nome}`, `Hide ${voce.nome}`))}">${nascosto ? "🙈" : "👁"}</button>${
+    ${occhio}${
       griglia && elenco.riquadri
         ? `<button type="button" class="dm-disp-larga" data-dm-non-trascinare data-dm-disp-larga aria-pressed="${larga}"
       aria-label="${esc(t(`Larghezza piena: ${voce.nome}`, `Full width: ${voce.nome}`))}">↔</button>`
@@ -766,6 +847,7 @@ function togliISegni(el) {
     "data-dm-riordina-riga",
     "data-dm-maniglia",
     "data-dm-tieni",
+    "data-dm-riordina-nome",
   ])
     el.removeAttribute(nome);
   lasciaSu(el);
@@ -795,25 +877,94 @@ function lasciaSu(el) {
   else el.style.removeProperty("padding-top");
 }
 
-function segnaPerLaModifica(pagina) {
+/* Dove sta il fuoco della tastiera, detto con gli id: la voce, e quale dei
+ * suoi tasti. Dopo un ridisegno gli elementi sono altri, gli id gli stessi. */
+function fuocoNellaPagina(pagina) {
+  const qui = doc.activeElement;
+  if (!qui || qui === doc.body || !pagina.contains(qui)) return null;
+  const voce = qui.closest?.("[data-dm-disp-voce]");
+  const elenco = voce?.parentElement?.getAttribute?.("data-dm-disp-elenco");
+  if (!voce || !elenco) return null;
+  const cosa =
+    qui === voce
+      ? "voce"
+      : qui.matches("[data-dm-disp-occhio]")
+        ? "occhio"
+        : qui.matches("[data-dm-disp-larga]")
+          ? "larga"
+          : qui.matches("[data-dm-maniglia]")
+            ? "maniglia"
+            : "";
+  return cosa ? { elenco, id: voce.getAttribute("data-dm-disp-voce"), cosa } : null;
+}
+
+function rimettiIlFuoco(pagina, fuoco) {
+  if (!fuoco) return;
+  const qui = doc.activeElement;
+  if (qui && qui !== doc.body && qui.isConnected && pagina.contains(qui)) return;
+  const voce = [...pagina.querySelectorAll("[data-dm-disp-voce]")].find(
+    (el) =>
+      el.getAttribute("data-dm-disp-voce") === fuoco.id &&
+      el.parentElement?.getAttribute?.("data-dm-disp-elenco") === fuoco.elenco,
+  );
+  if (!voce) return;
+  const dove = {
+    voce: () => voce,
+    maniglia: () => voce.querySelector(":scope > [data-dm-disp-ctrl] [data-dm-maniglia]") || voce,
+    occhio: () => voce.querySelector(":scope > [data-dm-disp-ctrl] [data-dm-disp-occhio]"),
+    larga: () => voce.querySelector(":scope > [data-dm-disp-ctrl] [data-dm-disp-larga]"),
+  }[fuoco.cosa]?.();
+  dove?.focus?.({ preventScroll: true });
+}
+
+function togliLaModifica(pagina) {
   for (const vecchio of pagina.querySelectorAll("[data-dm-disp-ctrl]")) vecchio.remove();
   for (const el of pagina.querySelectorAll("[data-dm-disp-elenco]")) {
     el.removeAttribute("data-dm-disp-elenco");
     el.removeAttribute("data-dm-disp-tipo");
     el.removeAttribute("data-dm-riordina");
   }
-  for (const el of pagina.querySelectorAll("[data-dm-disp-voce],[data-dm-disp-titolo]")) {
-    togliISegni(el);
-  }
+  for (const el of pagina.querySelectorAll("[data-dm-disp-voce],[data-dm-disp-titolo]")) togliISegni(el);
+}
+
+function segnaPerLaModifica(pagina) {
+  const elenchi = [];
   for (const elenco of elenchiDellaPagina(pagina)) {
     const voci = vociDi(elenco.contenitore);
-    if (voci.length < 2) continue;
-    const scelta = sceltaInMano(elenco);
+    if (voci.length >= 2) elenchi.push({ elenco, voci, scelta: sceltaInMano(elenco) });
+  }
+  /* Se non e' cambiato niente non si rifa' niente. La pagina che si
+   * aggiorna (una luce che si accende) passava di qui una o due volte al
+   * secondo: i tasti rifatti ogni volta, e il fuoco della tastiera perso. */
+  const firma = JSON.stringify(
+    elenchi.map(({ elenco, voci, scelta }) => [
+      elenco.chiave,
+      elenco.riquadri,
+      voci.map((v) => [v.id, v.nome, v.vuoto]),
+      scelta,
+    ]),
+  );
+  const intatta =
+    pagina.__dmDispFirmaModifica === firma &&
+    elenchi.every(
+      ({ elenco, voci }) =>
+        elenco.contenitore.getAttribute("data-dm-disp-elenco") === elenco.chiave &&
+        voci.every(
+          (v) => v.el.getAttribute("data-dm-disp-voce") === v.id && v.el.querySelector(":scope > [data-dm-disp-ctrl]"),
+        ),
+    );
+  if (intatta) return;
+  pagina.__dmDispFirmaModifica = firma;
+  const fuoco = fuocoNellaPagina(pagina);
+  togliLaModifica(pagina);
+  for (const { elenco, voci, scelta } of elenchi) {
     elenco.contenitore.setAttribute("data-dm-disp-elenco", elenco.chiave);
     elenco.contenitore.setAttribute("data-dm-disp-tipo", elenco.riquadri ? "riquadri" : "voci");
     elenco.contenitore.setAttribute("data-dm-riordina", "griglia");
     for (const voce of voci) {
       voce.el.setAttribute("data-dm-disp-voce", voce.id);
+      /* Il nome, per chi non vede: «Batteria: posizione 2 / 5». */
+      voce.el.setAttribute("data-dm-riordina-nome", voce.nome);
       /* Il titolo attaccato si sposta con lei, ma in modifica non si vede: il
        * suo nome e' gia' sull'etichetta, due volte sarebbe rumore. */
       for (const el of voce.insieme) if (el !== voce.el) el.setAttribute("data-dm-disp-titolo", "");
@@ -834,6 +985,7 @@ function segnaPerLaModifica(pagina) {
       spingiGiu(voce.el, elenco.riquadri ? 52 : 40);
     }
   }
+  rimettiIlFuoco(pagina, fuoco);
 }
 
 /* ── la barra delle sezioni ────────────────────────────────────────────
@@ -875,10 +1027,12 @@ function segnaLaBarra(si) {
   const barra = laBarraDelleSezioni();
   if (!barra) return;
   if (!si) {
+    barra.parentElement?.querySelector?.(":scope > .dm-riordina-voce")?.remove();
     barra.removeAttribute("data-dm-riordina");
     barra.removeAttribute("data-dm-disp-barra-sezioni");
     for (const voce of vociDellaBarra(barra))
-      for (const nome of ["data-dm-riordina-riga", "data-dm-maniglia", "data-dm-tieni"]) voce.removeAttribute(nome);
+      for (const nome of ["data-dm-riordina-riga", "data-dm-maniglia", "data-dm-tieni", "data-dm-riordina-nome"])
+        voce.removeAttribute(nome);
     return;
   }
   barra.setAttribute("data-dm-riordina", "griglia");
@@ -888,6 +1042,7 @@ function segnaLaBarra(si) {
     voce.setAttribute("data-dm-riordina-riga", voce.dataset.tab);
     voce.setAttribute("data-dm-maniglia", "");
     voce.setAttribute("data-dm-tieni", "");
+    voce.setAttribute("data-dm-riordina-nome", String(voce.textContent || "").replace(/\s+/g, " ").trim());
   }
 }
 
@@ -930,7 +1085,9 @@ function barraMarkup() {
     n === 0 && !pagina?.matches?.("[data-dm-disp-elenco]") && !pagina?.querySelector?.("[data-dm-disp-elenco]");
   return `<div class="dm-disp-barra-dentro">
     <span class="dm-disp-conta"${n === 0 ? " data-vuota" : ""}>${esc(
-      niente
+      n && state.modifica?.escDopo && Date.now() - state.modifica.escDopo < ESC_DI_NUOVO_MS
+        ? t("Esc di nuovo per uscire senza salvare", "Esc again to leave without saving")
+        : niente
         ? t("In questa vista non c'è niente da spostare", "Nothing to move in this view")
         : n === 0
         ? t("Trascina riquadri ed elementi dove li vuoi", "Drag boxes and items where you want them")
@@ -962,16 +1119,39 @@ function disegnaLaBarra() {
   barra.innerHTML = barraMarkup();
 }
 
+/* Quello che si dice a chi non vede: si entra in modifica, si esce. Sta
+ * fuori dalle pagine (nessuna pagina si conta un figlio in piu') e se ne va
+ * con la modifica. */
+function annuncia(testo) {
+  let voce = doc.querySelector("[data-dm-disp-annuncio]");
+  if (!voce) {
+    voce = doc.createElement("div");
+    voce.setAttribute("data-dm-disp-annuncio", "");
+    voce.setAttribute("role", "status");
+    voce.setAttribute("aria-live", "polite");
+    voce.className = "dm-riordina-voce";
+    doc.body.appendChild(voce);
+  }
+  voce.textContent = testo;
+}
+
 export function entraInModifica(pagina = paginaAttiva()) {
   if (!pagina || !puoConfigurare()) return;
   esciDallaModifica();
   state.modifica = { pagina, bozze: new Map(), cambiate: new Set(), barra: null };
+  delete pagina.__dmDispFirmaModifica;
   doc.documentElement.setAttribute("data-dm-modifica", nomeDellaPagina(pagina));
   applicaLaDisposizione(pagina);
   segnaLaBarra(true);
   state.modifica.vociDiPrima = vociDellaBarra();
   state.modifica.mobili = state.modifica.vociDiPrima.filter((voce) => voce.hasAttribute("data-dm-riordina-riga"));
   disegnaLaBarra();
+  annuncia(
+    t(
+      "Modifica disposizione: trascina, o usa Tab e le frecce per spostare. Esc per uscire.",
+      "Edit layout: drag, or use Tab and the arrow keys to move. Esc to leave.",
+    ),
+  );
 }
 
 export function esciDallaModifica() {
@@ -982,17 +1162,19 @@ export function esciDallaModifica() {
   segnaLaBarra(false);
   state.occupato = true;
   try {
-    for (const vecchio of m.pagina.querySelectorAll("[data-dm-disp-ctrl]")) vecchio.remove();
-    for (const el of m.pagina.querySelectorAll("[data-dm-disp-elenco]")) {
-      el.removeAttribute("data-dm-disp-elenco");
-      el.removeAttribute("data-dm-disp-tipo");
-      el.removeAttribute("data-dm-riordina");
-    }
-    for (const el of m.pagina.querySelectorAll("[data-dm-disp-voce],[data-dm-disp-titolo]")) togliISegni(el);
+    /* Le voci che annunciavano gli spostamenti stanno accanto agli elenchi:
+     * se ne vanno con loro. */
+    for (const el of m.pagina.querySelectorAll("[data-dm-disp-elenco]"))
+      el.parentElement?.querySelector?.(":scope > .dm-riordina-voce")?.remove();
+    if (m.pagina.matches("[data-dm-disp-elenco]"))
+      m.pagina.parentElement?.querySelector?.(":scope > .dm-riordina-voce")?.remove();
+    togliLaModifica(m.pagina);
+    delete m.pagina.__dmDispFirmaModifica;
   } finally {
     state.osservatore?.takeRecords?.();
     state.occupato = false;
   }
+  doc.querySelector("[data-dm-disp-annuncio]")?.remove();
   disegnaLaBarra();
 }
 
@@ -1028,6 +1210,9 @@ function onRiordina(event) {
 function salva() {
   const m = state.modifica;
   if (!m) return;
+  /* Il permesso si riguarda al momento di scrivere: puo' essere cambiato
+   * (o arrivato tardi) mentre la modifica era aperta. */
+  if (!puoConfigurare()) return annulla();
   let tutta = salvata();
   for (const elenco of elenchiDellaPagina(m.pagina)) {
     if (!m.bozze.has(elenco.chiave)) continue;
@@ -1062,8 +1247,11 @@ function annulla() {
     root.cdApplyNavOrder?.();
   }
   /* La pagina torna come la vuole la scelta salvata: chi era stato spostato
-   * nella bozza torna al suo posto. */
-  for (const elenco of elenchiDellaPagina(m.pagina)) applicaAlContenitore(elenco, salvata()[elenco.chiave] || {});
+   * o spento nella bozza torna al suo posto. Se la pagina adesso non si vede
+   * (si e' cambiata pagina con la modifica aperta), i suoi elenchi non si
+   * trovano: resta segnata, e si rimette appena torna davanti. */
+  m.pagina.__dmDispToccata = true;
+  applicaLaDisposizione(m.pagina);
 }
 
 function ripristina() {
@@ -1092,7 +1280,10 @@ function onClick(event) {
       root.queueMicrotask?.(() => root.editorSwitch?.("todo"));
       return;
     }
-    if (state.modifica) esciDallaModifica();
+    /* ✏️ ripremuto chiude la modifica come «Annulla»: quello che non si e'
+     * salvato torna com'era. Prima restava sulla pagina, e alla ricarica
+     * spariva: sembrava salvato e non lo era. */
+    if (state.modifica) annulla();
     else entraInModifica(tasto.closest(".page"));
     return;
   }
@@ -1139,6 +1330,7 @@ function onPuntatore(event) {
     Boolean(event.target?.closest?.("[data-dm-disp-barra-sezioni] [data-dm-riordina-riga]"));
   if (event.type === "pointerdown") {
     if (!dentro || event.target.closest?.("[data-dm-non-trascinare],[data-dm-disp-barra]")) return;
+    if (event.target.closest?.("[data-dm-disp-barra-sezioni]")) rinfrescaLaBarra();
     prendiIlPuntatore.giu(event);
     event.stopPropagation();
     return;
@@ -1150,8 +1342,35 @@ function onPuntatore(event) {
   event.stopPropagation();
 }
 
+/* Le finestre che si chiudono con Esc: un Esc per loro non e' per noi. */
+const FINESTRE = "dialog[open],[aria-modal='true'],[role='dialog'],.modal-wrapper,.modal-card";
+function altraFinestraAperta(event) {
+  if (event.target?.closest?.(FINESTRE)) return true;
+  for (const el of doc.querySelectorAll(FINESTRE)) {
+    if (el.closest(NOSTRI)) continue;
+    const stile = root.getComputedStyle?.(el);
+    if (!stile || stile.display === "none" || stile.visibility === "hidden") continue;
+    const r = el.getBoundingClientRect?.();
+    if (r && r.width > 0 && r.height > 0) return true;
+  }
+  return false;
+}
+
+/* Esc esce. Con delle modifiche, la prima volta lo dice e la seconda esce:
+ * un tasto premuto per sbaglio non butta via mezz'ora di lavoro. */
+const ESC_DI_NUOVO_MS = 4000;
 function onKeyDown(event) {
-  if (event.key === "Escape" && state.modifica && !doc.documentElement.hasAttribute("data-dm-trascinando")) annulla();
+  const m = state.modifica;
+  if (event.key !== "Escape" || !m || event.defaultPrevented) return;
+  if (doc.documentElement.hasAttribute("data-dm-trascinando") || altraFinestraAperta(event)) return;
+  const adesso = Date.now();
+  if (conta() && !(m.escDopo && adesso - m.escDopo < ESC_DI_NUOVO_MS)) {
+    m.escDopo = adesso;
+    disegnaLaBarra();
+    annuncia(t("Ci sono modifiche non salvate: premi di nuovo Esc per uscire senza salvarle.", "There are unsaved changes: press Esc again to leave without saving them."));
+    return;
+  }
+  annulla();
 }
 
 /* ── il tasto ✏️ in testa alle pagine ───────────────────────────────────── */
@@ -1171,47 +1390,94 @@ function vestiIlTasto(tasto) {
   tasto.innerHTML = `<span aria-hidden="true">✏️</span><span class="dm-disp-tasto-parola">${esc(t("Modifica", "Edit"))}</span>`;
 }
 
+/* In Home il tasto sta nella testata, accanto all'ingranaggio: sopra la
+ * pagina copriva la striscia della casa, ed essendo il primo figlio della
+ * Home rompeva chi guarda il primo titolo. Si vede solo quando la Home e'
+ * davanti. */
 function tastoInHome(si) {
-  const casa = doc.getElementById("page-home");
-  const ce = casa?.querySelector(":scope > [data-dm-disp-tasto]");
-  if (!casa || !si) return ce?.remove();
+  const ingranaggio = doc.getElementById("dm-editor-entry");
+  const testata = ingranaggio?.parentElement || doc.querySelector("body > header");
+  let tasto = doc.querySelector("[data-dm-disp-tasto='home']");
+  if (!si || !testata) return tasto?.remove();
+  if (!tasto) {
+    tasto = doc.createElement("button");
+    tasto.type = "button";
+    tasto.className = "dm-disp-tasto-home";
+    tasto.setAttribute("data-dm-disp-tasto", "home");
+    vestiIlTasto(tasto);
+  }
+  if (ingranaggio ? tasto.nextElementSibling !== ingranaggio : tasto.parentElement !== testata)
+    ingranaggio ? ingranaggio.before(tasto) : testata.appendChild(tasto);
+  const inCasa = Boolean(doc.getElementById("page-home")?.classList.contains("active"));
+  if (tasto.hidden === inCasa) tasto.hidden = !inCasa;
+}
+
+function mettiIlTasto(pagina) {
+  const testata = testataPerIlTasto(pagina);
+  if (!testata) return;
+  const nome = nomeDellaPagina(pagina);
+  /* Un tasto solo per pagina. Il Clima disegna la sua testata dopo: nel
+   * frattempo il tasto finiva sulla striscia del riepilogo, e arrivata la
+   * testata vera ne nasceva un secondo. Quello rimasto indietro se ne va. */
+  for (const vecchio of pagina.querySelectorAll("[data-dm-disp-tasto]"))
+    if (vecchio.parentElement !== testata) vecchio.remove();
+  const ce = testata.querySelector(":scope > [data-dm-disp-tasto]");
+  if (PAGINE_DA_SALTARE.has(nome)) return ce?.remove();
   if (ce) return;
   const tasto = doc.createElement("button");
   tasto.type = "button";
-  tasto.className = "dm-disp-tasto dm-disp-tasto-home";
-  tasto.setAttribute("data-dm-disp-tasto", "home");
+  tasto.setAttribute("data-dm-disp-tasto", "");
+  tasto.className = "dm-disp-tasto";
   vestiIlTasto(tasto);
-  casa.prepend(tasto);
+  testata.appendChild(tasto);
 }
 
+/* Solo la pagina che si guarda: le altre lo prendono quando tornano davanti
+ * (cambiare pagina passa di qui). Prima si misuravano tutte e trentasette a
+ * ogni aggiornamento. */
 function mettiITasti() {
   const si = puoConfigurare();
   tastoInHome(si);
-  for (const pagina of doc.querySelectorAll("section.page[id^='page-']")) {
-    const testata = testataPerIlTasto(pagina);
-    if (!testata) continue;
-    const nome = nomeDellaPagina(pagina);
-    /* Un tasto solo per pagina. Il Clima disegna la sua testata dopo: nel
-     * frattempo il tasto finiva sulla striscia del riepilogo, e arrivata la
-     * testata vera ne nasceva un secondo. Quello rimasto indietro se ne va. */
-    for (const vecchio of pagina.querySelectorAll("[data-dm-disp-tasto]"))
-      if (vecchio.parentElement !== testata && vecchio.getAttribute("data-dm-disp-tasto") !== "home") vecchio.remove();
-    const ce = testata.querySelector(":scope > [data-dm-disp-tasto]");
-    if (!si || PAGINE_DA_SALTARE.has(nome)) {
-      ce?.remove();
-      continue;
-    }
-    if (ce) continue;
-    const tasto = doc.createElement("button");
-    tasto.type = "button";
-    tasto.setAttribute("data-dm-disp-tasto", "");
-    tasto.className = "dm-disp-tasto";
-    vestiIlTasto(tasto);
-    testata.appendChild(tasto);
+  if (!si) for (const vecchio of doc.querySelectorAll("section.page [data-dm-disp-tasto]")) vecchio.remove();
+  else {
+    const pagina = paginaAttiva();
+    if (pagina) mettiIlTasto(pagina);
   }
-  /* Si cambia pagina con la modifica aperta: la modifica si chiude, senza
-   * salvare — quello che non si e' salvato non si e' voluto. */
-  if (state.modifica && !state.modifica.pagina.classList.contains("active")) annulla();
+  /* Si cambia pagina con la modifica aperta, o il permesso se ne va: la
+   * modifica si chiude, senza salvare — quello che non si e' salvato non si
+   * e' voluto. */
+  if (state.modifica && (!si || !state.modifica.pagina.classList.contains("active"))) annulla();
+}
+
+/* La barra delle sezioni ridisegnata mentre la modifica e' aperta (un'altra
+ * sezione che compare, l'ordine riapplicato): le voci tenute da parte non
+ * sono piu' quelle nel documento, e spostarle le avrebbe raddoppiate. Si
+ * riprendono quelle vere, nell'ordine che la modifica aveva gia' dato. */
+function rinfrescaLaBarra() {
+  const m = state.modifica;
+  if (!m) return;
+  const barra = laBarraDelleSezioni();
+  const ora = vociDellaBarra(barra);
+  const segnate = ora.filter((voce) => voce.hasAttribute("data-dm-riordina-riga"));
+  const vecchie = m.mobili || [];
+  if (vecchie.every((voce) => voce.isConnected && voce.parentElement === barra) && segnate.length === vecchie.length)
+    return;
+  const perNome = (lista) => new Map(lista.map((voce) => [voce.dataset.tab, voce]));
+  const prima = (m.vociDiPrima || []).map((voce) => voce.dataset.tab);
+  segnaLaBarra(true);
+  const nuove = vociDellaBarra(barra);
+  const mobili = nuove.filter((voce) => voce.hasAttribute("data-dm-riordina-riga"));
+  if (m.barra) {
+    const posto = new Map(m.barra.map((nome, i) => [nome, i]));
+    const ordinate = [...mobili].sort(
+      (a, b) => (posto.get(a.dataset.tab) ?? 1e9) - (posto.get(b.dataset.tab) ?? 1e9),
+    );
+    mettiLeVoci(barra, mobili, ordinate);
+    m.mobili = ordinate;
+    m.barra = ordineDellaBarra();
+  } else m.mobili = mobili;
+  const adesso = perNome(nuove);
+  m.vociDiPrima = [...prima.map((nome) => adesso.get(nome)).filter(Boolean), ...nuove.filter((v) => !prima.includes(v.dataset.tab))];
 }
 
 /* ── installare ─────────────────────────────────────────────────────────── */
@@ -1237,8 +1503,15 @@ html[data-dm-modifica] [data-dm-disp-vuoto]{min-height:56px}
 html[data-dm-modifica] section.page.active{padding-bottom:calc(220px + env(safe-area-inset-bottom,0px))!important}
 [data-dm-misura="larga"]{grid-column:1/-1!important}
 .dm-page-mast{position:relative}
-#page-home{position:relative}
-.dm-disp-tasto-home{top:0;right:4px}
+/* Il ✏️ della Home, nella testata accanto all'ingranaggio e vestito come
+ * lui: la parola «Modifica» li' non ci sta. */
+html body header>.dm-disp-tasto-home{display:inline-flex!important;align-items:center;justify-content:center;flex:0 0 auto!important;
+  width:40px;height:40px;margin-left:10px;padding:0;border:1px solid var(--divider-color,rgba(15,23,42,.12));border-radius:14px;
+  background:var(--card-bg,#fff);color:var(--text,#0f172a);font-size:18px;line-height:1;cursor:pointer;box-shadow:0 8px 18px -14px rgba(15,23,42,.6)}
+html body header>.dm-disp-tasto-home[hidden]{display:none!important}
+html body header>.dm-disp-tasto-home:hover{border-color:var(--info-color,#0ea5e9)}
+html body header>.dm-disp-tasto-home .dm-disp-tasto-parola{display:none!important}
+@media(max-width:520px){html body header>.dm-disp-tasto-home{width:34px;height:34px;margin-left:6px;font-size:16px}}
 .dm-disp-tasto{position:absolute;top:12px;right:12px;z-index:3;min-width:40px;height:40px;border-radius:14px;padding:0 10px;
   border:1px solid color-mix(in srgb,var(--text,#0f172a) 12%,transparent);background:var(--card-bg,#fff);color:var(--text,#0f172a);
   display:inline-flex;align-items:center;justify-content:center;gap:8px;
@@ -1304,12 +1577,12 @@ export function installDisposizione() {
   doc.addEventListener("click", onClick, true);
   for (const tipo of ["pointerdown", "pointermove", "pointerup", "pointercancel"])
     doc.addEventListener(tipo, onPuntatore, { capture: true, passive: false });
-  doc.addEventListener("keydown", onKeyDown);
+  /* In cattura: una finestra aperta sopra la modifica si vede ancora aperta
+   * qui, prima che il suo Esc la chiuda. */
+  doc.addEventListener("keydown", onKeyDown, true);
   doc.addEventListener("dm-riordina", onRiordina);
   if (root.MutationObserver) {
-    state.osservatore = new root.MutationObserver(() => {
-      if (!state.occupato) inCoda();
-    });
+    state.osservatore = new root.MutationObserver(onMutazioni);
     osservaLePagine();
   }
   root.addEventListener?.("storage", inCoda);
@@ -1321,7 +1594,7 @@ export function installDisposizione() {
 root.dmDisposizione = {
   entraInModifica: () => entraInModifica(),
   esciDallaModifica,
-  applicaLaDisposizione: () => applicaLaDisposizione(),
+  applicaLaDisposizione: (pagina) => applicaLaDisposizione(pagina || undefined),
   giri: () => state.giri || 0,
   elenchi: () =>
     elenchiDellaPagina(paginaAttiva()).map((e) => {

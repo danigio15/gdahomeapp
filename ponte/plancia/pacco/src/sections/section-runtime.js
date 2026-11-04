@@ -451,9 +451,11 @@ import {
   reportIconForDevice,
   resetLocale,
   resolveEntity,
+  resolveLocale,
   resolveRate,
   resolveVehicleAsset,
   restyleOnLocaleChange,
+  reverseLookup,
   ricordaIDispositivi,
   ricordaLeStanze,
   riepilogoBatterie,
@@ -565,7 +567,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-UNQG5YEW.js";
+} from "../../chunk-P7DM2B4Z.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -3379,6 +3381,7 @@ var SOURCE_INDEX = Object.freeze({
   "Ci sono ${quante} telecamere configurate che adesso non si vedono qui.": "There are ${quante} configured cameras that are not shown here now.",
   "Ci sono ${quanti} aggiornamenti da installare": "There are ${quanti} updates to install",
   "Ci sono altri ${quanti} programmi per questo termostato fra le Automazioni: cambiano i gradi anche loro. Toglili lì.": "There are ${quanti} other schedules for this thermostat in Automations: they change the temperature too. Remove them there.",
+  "Ci sono modifiche non salvate: premi di nuovo Esc per uscire senza salvarle.": "There are unsaved changes: press Esc again to leave without saving them.",
   "Ci sono solo le modalità che la centrale accetta davvero. Toglierne una la nasconde dalla sezione e non cambia niente di quello che la centrale sa fare; lo sblocco resta sempre.": "Only the modes the panel actually accepts are listed. Removing one hides it from the section and changes nothing about what the panel can do; disarm always stays.",
   "Ciano": "Cyan",
   "Cibo": "Food",
@@ -4237,6 +4240,7 @@ var SOURCE_INDEX = Object.freeze({
   "es. 4,20": "e.g. 4.20",
   "Es. Cucina": "e.g. Kitchen",
   "es. Luci, Tapparelle": "e.g. Lights, Shutters",
+  "Esc di nuovo per uscire senza salvare": "Esc again to leave without saving",
   "esce di casa": "leaves home",
   "Esce più corrente di quanta ne entra: di solito è il verso di un sensore al contrario.": "More power is going out than coming in: usually a sensor's direction is reversed.",
   "Esci dalla manutenzione": "Exit maintenance",
@@ -4908,6 +4912,7 @@ var SOURCE_INDEX = Object.freeze({
   "In linea": "Talking",
   "In marcia": "Driving",
   "in meno di una tariffa unica": "less than a single rate",
+  "in movimento": "moving",
   "In movimento": "Swinging",
   "In onda": "On air",
   "In orario": "On time",
@@ -5685,6 +5690,7 @@ var SOURCE_INDEX = Object.freeze({
   "Modifica carico": "Edit load",
   "Modifica cosa da fare": "Edit to-do",
   "Modifica disposizione": "Edit layout",
+  "Modifica disposizione: trascina, o usa Tab e le frecce per spostare. Esc per uscire.": "Edit layout: drag, or use Tab and the arrow keys to move. Esc to leave.",
   "Modifica elettrodomestico": "Edit appliance",
   "Modifica Freddo / Caldo": "Edit Cool / Heat",
   "Modifica impegno": "Edit event",
@@ -6584,6 +6590,7 @@ var SOURCE_INDEX = Object.freeze({
   "Positiva in carica (JK, JBD, Daly)": "Positive when charging (JK, JBD, Daly)",
   "Positivo si preleva, negativo si cede": "Positive is drawn, negative is fed in",
   "Positivo si scarica, negativo si carica": "Positive discharges, negative charges",
+  "posizione": "position",
   "Posizione": "Location",
   "Posizione (device_tracker)": "Location (device_tracker)",
   "Posizione (indirizzo)": "Location (address)",
@@ -8777,6 +8784,14 @@ function translateSource(text, locale3 = getLocale()) {
     if (head !== back[1]) return `${head}${back[2]}`;
   }
   return source;
+}
+function sourceOf(text, locale3 = getLocale()) {
+  const source = typeof text === "string" ? text.trim() : "";
+  if (!source) return source;
+  const code = resolveLocale(locale3);
+  if (code === DEFAULT_LOCALE) return source;
+  if (code === SOURCE_LOCALE) return pivotKey(source) || source;
+  return reverseLookup(source, code) || pivotKey(source) || source;
 }
 function resolveWhole(source, locale3) {
   if (locale3 === DEFAULT_LOCALE) {
@@ -12868,6 +12883,36 @@ function annuncia(lista7, testo5) {
   }
   voce3.textContent = testo5;
 }
+function dove(riga5, i, quante3, inMovimento = false) {
+  const nome = String(riga5?.getAttribute?.("data-dm-riordina-nome") || "").trim();
+  const posto = `${i + 1} / ${quante3}`;
+  const stato3 = inMovimento ? `${t("in movimento", "moving")}, ${posto}` : `${t("posizione", "position")} ${posto}`;
+  return nome ? `${nome}: ${stato3}` : stato3;
+}
+var IN_DIRETTA = "video,iframe,canvas,img[src*='stream'],img[src*='mjpeg']";
+function fermaIlFantasma(vera2, copia2) {
+  for (const el of copia2.querySelectorAll("[id]")) el.removeAttribute("id");
+  const vere = [...vera2.querySelectorAll(IN_DIRETTA)];
+  [...copia2.querySelectorAll(IN_DIRETTA)].forEach((el, i) => {
+    if (el.tagName === "IMG") el.removeAttribute("src");
+    else if (el.tagName === "VIDEO" || el.tagName === "IFRAME") {
+      el.removeAttribute("src");
+      for (const fonte2 of el.querySelectorAll("source")) fonte2.remove();
+    }
+    const fonte = vere[i];
+    const r = fonte?.getBoundingClientRect?.();
+    const ferma3 = doc.createElement("canvas");
+    ferma3.width = Math.max(1, Math.round(r?.width || 1));
+    ferma3.height = Math.max(1, Math.round(r?.height || 1));
+    ferma3.className = typeof el.className === "string" ? el.className : "";
+    ferma3.style.cssText = el.style.cssText;
+    try {
+      if (fonte && fonte.tagName !== "IFRAME") ferma3.getContext("2d")?.drawImage(fonte, 0, 0, ferma3.width, ferma3.height);
+    } catch (_error) {
+    }
+    el.replaceWith(ferma3);
+  });
+}
 function cadi(lista7, da, a) {
   if (da === a) return;
   lista7.dispatchEvent(new root.CustomEvent("dm-riordina", { bubbles: true, detail: { da, a } }));
@@ -12938,11 +12983,13 @@ function parti(presa) {
   presa.passo = rect[da].height + gap;
   presa.lista.dataset.dmTrascinando = "true";
   presa.riga.dataset.dmPresa = "true";
+  annuncia(presa.lista, dove(presa.riga, da, presa.tutte.length, true));
   for (const r of presa.tutte) if (r !== presa.riga) r.dataset.dmFaPosto = "true";
   doc.documentElement.dataset.dmTrascinando = "true";
   if (presa.griglia) {
     const r = rect[da];
     const fantasma = presa.riga.cloneNode(true);
+    fermaIlFantasma(presa.riga, fantasma);
     fantasma.removeAttribute("data-dm-riordina-riga");
     fantasma.removeAttribute("data-dm-presa");
     fantasma.removeAttribute("id");
@@ -13110,6 +13157,7 @@ function onPointerUp(event) {
   doc.addEventListener("click", ferma3, { capture: true, once: true });
   root.setTimeout?.(() => doc.removeEventListener("click", ferma3, { capture: true }), 0);
   cadi(lista7, da, a);
+  if (lista7.isConnected) annuncia(lista7, dove(presa.riga, a, presa.tutte.length));
 }
 function onPointerCancel(event) {
   const presa = state10.presa;
@@ -13147,7 +13195,7 @@ function onKeyDown(event) {
   const esc2 = (testo5) => root.CSS?.escape ? root.CSS.escape(testo5) : testo5;
   const classi = [...lista7.classList].map((c) => `.${esc2(c)}`).join("");
   cadi(lista7, da, a);
-  annuncia(lista7, `${a + 1} / ${tutte.length}`);
+  annuncia(lista7, dove(riga5, a, tutte.length));
   root.queueMicrotask?.(() => {
     const nuova = doc.querySelector?.(`${classi}[data-dm-riordina] > [data-dm-riordina-riga="${esc2(chiave2)}"]`);
     const fuoco = nuova?.matches?.("[data-dm-maniglia]") ? nuova : nuova?.querySelector?.("[data-dm-maniglia]");
@@ -18408,11 +18456,11 @@ function stanzeSenzaPiano(stanze4 = []) {
 function spostaIlPiano(salvati, nome, verso2) {
   const nomi2 = nomiDeiPiani(salvati);
   const quale = pulito9(nome);
-  const dove = nomi2.indexOf(quale);
+  const dove2 = nomi2.indexOf(quale);
   const passo = Number(verso2) < 0 ? -1 : 1;
-  const meta = dove + passo;
-  if (dove < 0 || meta < 0 || meta >= nomi2.length) return nomi2;
-  nomi2[dove] = nomi2[meta];
+  const meta = dove2 + passo;
+  if (dove2 < 0 || meta < 0 || meta >= nomi2.length) return nomi2;
+  nomi2[dove2] = nomi2[meta];
   nomi2[meta] = quale;
   return nomi2;
 }
@@ -18425,11 +18473,11 @@ function rinominaIlPiano(salvati, stanze4, segni, vecchio, nuovo) {
   const prima = pulito9(vecchio);
   const dopo = pulito9(nuovo);
   if (!dopo) return { errore: NOME_VUOTO };
-  const dove = nomi2.indexOf(prima);
-  if (dove < 0 && !elenco(stanze4).some((stanza2) => pulito9(stanza2?.floor) === prima))
+  const dove2 = nomi2.indexOf(prima);
+  if (dove2 < 0 && !elenco(stanze4).some((stanza2) => pulito9(stanza2?.floor) === prima))
     return { errore: PIANO_SCONOSCIUTO };
   if (dopo !== prima && nomi2.includes(dopo)) return { errore: NOME_GIA_PRESO };
-  const fuori = dove < 0 ? [...nomi2, dopo] : nomi2.map((nome) => nome === prima ? dopo : nome);
+  const fuori = dove2 < 0 ? [...nomi2, dopo] : nomi2.map((nome) => nome === prima ? dopo : nome);
   const spostate = elenco(stanze4).map(
     (stanza2) => pulito9(stanza2?.floor) === prima ? { ...stanza2, floor: dopo } : stanza2
   );
@@ -18479,8 +18527,8 @@ function segnaIlPiano(segni, nome, segno5) {
 }
 function ordinaLeStanzePerPiano(stanze4, salvati) {
   const dichiarati = nomiDeiPiani(salvati);
-  const dove = new Map(dichiarati.map((nome, indice) => [nome, indice]));
-  const conosciuti = new Map(dove);
+  const dove2 = new Map(dichiarati.map((nome, indice) => [nome, indice]));
+  const conosciuti = new Map(dove2);
   const posto = (stanza2) => {
     const piano2 = pulito9(stanza2?.floor);
     if (!piano2) return Number.MAX_SAFE_INTEGER;
@@ -19012,8 +19060,8 @@ function chiamataDelModo(lettura4, valore3) {
 function prossimoModo(lettura4) {
   const scelte5 = lettura4?.scelte || [];
   if (!lettura4?.cambiabile || scelte5.length < 2) return "";
-  const dove = scelte5.findIndex((voce3) => voce3.attuale);
-  return scelte5[(dove + 1) % scelte5.length]?.valore || "";
+  const dove2 = scelte5.findIndex((voce3) => voce3.attuale);
+  return scelte5[(dove2 + 1) % scelte5.length]?.valore || "";
 }
 
 // src/core/spegnimento-programmato.js
@@ -19358,8 +19406,8 @@ function chiamaClima(entity2, service, data) {
 }
 function modalitaRichiesta(entity2, zona) {
   const id = clean(entity2);
-  const dove = clean(zona).toLowerCase();
-  if (!id || dove !== "caldo" && dove !== "freddo") return "";
+  const dove2 = clean(zona).toLowerCase();
+  if (!id || dove2 !== "caldo" && dove2 !== "freddo") return "";
   let unita3 = [];
   try {
     unita3 = readClimateUnits();
@@ -19370,13 +19418,13 @@ function modalitaRichiesta(entity2, zona) {
     (voce3) => clean(voce3?.entity || voce3?.entity_id || voce3?.entities?.[0]) === id
   );
   if (!trovata2 || canonicalClimateType(trovata2.type) !== "pompa") return "";
-  return dove === "caldo" ? "heat" : "cool";
+  return dove2 === "caldo" ? "heat" : "cool";
 }
 function modalitaDiZona(zona) {
-  const dove = clean(zona).toLowerCase();
-  if (dove === "caldo") return "heat";
-  if (dove === "freddo") return "cool";
-  if (dove === "termostato") return "heat_cool";
+  const dove2 = clean(zona).toLowerCase();
+  if (dove2 === "caldo") return "heat";
+  if (dove2 === "freddo") return "cool";
+  if (dove2 === "termostato") return "heat_cool";
   return "";
 }
 function commutaClima(entity2, acceso7, zona = "") {
@@ -22669,14 +22717,14 @@ function paginaDellaCottura(vista2 = vistaDellaCucina()) {
 }
 var VIVO = /<([a-z]+)([^>]*?)data-dm-cot-vivo="([a-z]+)"([^>]*)>[\s\S]*?<\/\1>/g;
 var forma = (markup7) => String(markup7).replace(VIVO, (_tutto, tag, _prima, nome) => `<${tag} vivo="${nome}"/>`);
-function scriviLaCottura(dove, markup7) {
-  if (!dove) return false;
+function scriviLaCottura(dove2, markup7) {
+  if (!dove2) return false;
   const sagoma = forma(markup7);
-  if (dove.__dmCotMarkup === markup7) return false;
-  if (dove.__dmCotForma === sagoma && dove.firstElementChild) {
+  if (dove2.__dmCotMarkup === markup7) return false;
+  if (dove2.__dmCotForma === sagoma && dove2.firstElementChild) {
     const nuovo = doc.createElement("div");
     nuovo.innerHTML = markup7;
-    const vecchi = dove.querySelectorAll("[data-dm-cot-vivo]");
+    const vecchi = dove2.querySelectorAll("[data-dm-cot-vivo]");
     const freschi = nuovo.querySelectorAll("[data-dm-cot-vivo]");
     if (vecchi.length === freschi.length) {
       freschi.forEach((fresco, posto) => {
@@ -22689,13 +22737,13 @@ function scriviLaCottura(dove, markup7) {
         if (!fresco.querySelector("[data-dm-cot-vivo]") && vecchio.innerHTML !== fresco.innerHTML)
           vecchio.innerHTML = fresco.innerHTML;
       });
-      dove.__dmCotMarkup = markup7;
+      dove2.__dmCotMarkup = markup7;
       return true;
     }
   }
-  dove.innerHTML = markup7;
-  dove.__dmCotMarkup = markup7;
-  dove.__dmCotForma = sagoma;
+  dove2.innerHTML = markup7;
+  dove2.__dmCotMarkup = markup7;
+  dove2.__dmCotForma = sagoma;
   return true;
 }
 function chiama3(azione) {
@@ -22779,11 +22827,11 @@ function tesseraDellaCottura(vista2 = vistaDellaCucina()) {
   };
 }
 function ticchetta() {
-  const dove = doc?.querySelector?.("#page-appliances-main.active [data-dm-cottura]");
-  const visibile2 = Boolean(dove && dove.offsetParent !== null && doc.visibilityState !== "hidden");
+  const dove2 = doc?.querySelector?.("#page-appliances-main.active [data-dm-cottura]");
+  const visibile2 = Boolean(dove2 && dove2.offsetParent !== null && doc.visibilityState !== "hidden");
   if (!visibile2) return fermaLOrologio();
   const vista2 = vistaDellaCucina();
-  scriviLaCottura(dove, paginaDellaCottura(vista2));
+  scriviLaCottura(dove2, paginaDellaCottura(vista2));
   if (!vista2.voci.some(
     (voce3) => voce3.lettura.fase === "cottura" || voce3.lettura.fase === "preriscaldamento"
   ))
@@ -27948,16 +27996,16 @@ var TONO_DEL_GRADO = Object.freeze({
 function fraseDellAria(giudizio, locale3 = "it") {
   if (!giudizio?.peggiore) return "";
   const { peggiore, quante: quante3 } = giudizio;
-  const dove = clean8(peggiore.name);
+  const dove2 = clean8(peggiore.name);
   const quanto = valoreScritto(peggiore, locale3);
   const misura8 = `${peggiore.misura} ${quanto}${peggiore.unita ? ` ${peggiore.unita}` : ""}`;
   const testa2 = quante3 > 1 ? pick(
-    `Fra ${quante3} misure, la peggiore e' ${misura8}${dove ? ` (${dove})` : ""}.`,
-    `Of ${quante3} readings, the worst is ${misura8}${dove ? ` (${dove})` : ""}.`,
+    `Fra ${quante3} misure, la peggiore e' ${misura8}${dove2 ? ` (${dove2})` : ""}.`,
+    `Of ${quante3} readings, the worst is ${misura8}${dove2 ? ` (${dove2})` : ""}.`,
     locale3
   ) : pick(
-    `${misura8}${dove ? ` (${dove})` : ""}.`,
-    `${misura8}${dove ? ` (${dove})` : ""}.`,
+    `${misura8}${dove2 ? ` (${dove2})` : ""}.`,
+    `${misura8}${dove2 ? ` (${dove2})` : ""}.`,
     locale3
   );
   if (peggiore.classe === "carbon_dioxide" && (peggiore.grado === "scarsa" || peggiore.grado === "cattiva"))
@@ -35184,21 +35232,21 @@ function vuotoMarkup() {
 }
 function dipingi2() {
   const pagina3 = ensureAllertePage();
-  const dove = pagina3?.querySelector?.("#allerte-wrap");
-  if (!dove) return;
+  const dove2 = pagina3?.querySelector?.("#allerte-wrap");
+  if (!dove2) return;
   if (!paginaVisibile(ALLERTE_PAGE_ID)) return;
   if (!allerteConfigurate()) {
     if (state29.firma !== "vuoto") {
       state29.firma = "vuoto";
-      dove.innerHTML = vuotoMarkup();
+      dove2.innerHTML = vuotoMarkup();
     }
     return;
   }
   const letture2 = lettureAllerte();
   const firma2 = JSON.stringify(letture2);
-  if (state29.firma === firma2 && dove.firstElementChild) return;
+  if (state29.firma === firma2 && dove2.firstElementChild) return;
   state29.firma = firma2;
-  dove.innerHTML = `${riassuntoMarkup(letture2)}<div class="dm-allerte-griglia">${letture2.map(tesseraMarkup).join("")}</div>`;
+  dove2.innerHTML = `${riassuntoMarkup(letture2)}<div class="dm-allerte-griglia">${letture2.map(tesseraMarkup).join("")}</div>`;
 }
 function schedule5() {
   if (state29.frame) return;
@@ -36474,13 +36522,13 @@ function dipingi3() {
   const letture2 = ingressoInPlancia();
   accendiLaVoce2(letture2);
   const pagina3 = ensureCitofonoPage();
-  const dove = pagina3?.querySelector?.("#citofono-wrap");
-  if (!dove) return;
+  const dove2 = pagina3?.querySelector?.("#citofono-wrap");
+  if (!dove2) return;
   if (!paginaVisibile(CITOFONO_PAGE_ID)) return;
   if (!ceQualcosaDaMostrare2(letture2)) {
     if (state30.firma !== "vuoto") {
       state30.firma = "vuoto";
-      dove.innerHTML = vuotoMarkup2();
+      dove2.innerHTML = vuotoMarkup2();
     }
     return;
   }
@@ -36491,9 +36539,9 @@ function dipingi3() {
     letture2.cassette.map((voce3) => [daQuandoTesto(voce3.arrivata), daQuandoTesto(voce3.ritirata)]),
     t("Apri", "Open")
   ]);
-  if (state30.firma === firma2 && dove.firstElementChild) return;
+  if (state30.firma === firma2 && dove2.firstElementChild) return;
   state30.firma = firma2;
-  dove.innerHTML = `${testaMarkup3(riassunto4)}
+  dove2.innerHTML = `${testaMarkup3(riassunto4)}
     ${fascia(t("Citofono", "Intercom"), letture2.citofoni.map(citofonoMarkup))}
     ${fascia(t("Cassetta della posta", "Mailbox"), letture2.cassette.map(cassettaMarkup))}`;
 }
@@ -36891,21 +36939,21 @@ function vuotoMarkup3() {
 }
 function dipingi4() {
   const pagina3 = ensureRifiutiPage();
-  const dove = pagina3?.querySelector?.("#rifiuti-wrap");
-  if (!dove) return;
+  const dove2 = pagina3?.querySelector?.("#rifiuti-wrap");
+  if (!dove2) return;
   if (!paginaVisibile(RIFIUTI_PAGE_ID)) return;
   if (!rifiutiInPlancia()) {
     if (state31.firma !== "vuoto") {
       state31.firma = "vuoto";
-      dove.innerHTML = vuotoMarkup3();
+      dove2.innerHTML = vuotoMarkup3();
     }
     return;
   }
   const lettura4 = letturaDeiRifiuti();
   const firma2 = JSON.stringify([lettura4, locale()]);
-  if (state31.firma === firma2 && dove.firstElementChild) return;
+  if (state31.firma === firma2 && dove2.firstElementChild) return;
   state31.firma = firma2;
-  dove.innerHTML = `${prossimoMarkup(lettura4)}
+  dove2.innerHTML = `${prossimoMarkup(lettura4)}
     <div class="dm-rifiuti-elenco" data-dm-in-ordine>${lettura4.righe.map(rigaMarkup).join("")}${calendarioMarkup(lettura4.calendario)}</div>`;
 }
 function schedule7() {
@@ -43458,8 +43506,8 @@ function consumiDallaRisposta(risposta, entity2, adesso2) {
   const mese = chiaveDelMese(adesso2);
   const meseScorso = chiaveDelMese(primoDelMese(adesso2) - GIORNO_MS3 / 2);
   const somme = { oggi: null, ieri: null, mese: null, meseScorso: null };
-  const aggiungi5 = (dove, valore3) => {
-    somme[dove] = (somme[dove] ?? 0) + valore3;
+  const aggiungi5 = (dove2, valore3) => {
+    somme[dove2] = (somme[dove2] ?? 0) + valore3;
   };
   for (const { quando: quando6, voce: voce3 } of elenco18) {
     const cambio = numero28(voce3.change);
@@ -44339,13 +44387,13 @@ function tesseraDeiContatori(vista2) {
 }
 function dipingi5() {
   const pagina3 = ensureContatoriPage();
-  const dove = pagina3?.querySelector?.("#contatori-wrap");
-  if (!dove) return;
+  const dove2 = pagina3?.querySelector?.("#contatori-wrap");
+  if (!dove2) return;
   if (!paginaVisibile(CONTATORI_PAGE_ID)) return;
   const markup7 = paginaDeiContatori(vistaDeiContatori());
-  if (state37.firma === markup7 && dove.firstElementChild) return;
+  if (state37.firma === markup7 && dove2.firstElementChild) return;
   state37.firma = markup7;
-  dove.innerHTML = markup7;
+  dove2.innerHTML = markup7;
 }
 function schedule11() {
   if (state37.frame) return;
@@ -46001,13 +46049,13 @@ function tesseraDellePiante(vista2) {
 }
 function dipingi6() {
   const pagina3 = ensurePiantePage();
-  const dove = pagina3?.querySelector?.("#piante-wrap");
-  if (!dove) return;
+  const dove2 = pagina3?.querySelector?.("#piante-wrap");
+  if (!dove2) return;
   if (!paginaVisibile(PIANTE_PAGE_ID)) return;
   const markup7 = paginaDellePiante(vistaDellePiante());
-  if (state40.firma === markup7 && dove.firstElementChild) return;
+  if (state40.firma === markup7 && dove2.firstElementChild) return;
   state40.firma = markup7;
-  dove.innerHTML = markup7;
+  dove2.innerHTML = markup7;
 }
 function schedule12() {
   if (state40.frame) return;
@@ -46630,10 +46678,10 @@ function versoInParole(verso2) {
   if (verso2 === "riposo") return t("A riposo", "Idle");
   return t("Nessuna lettura", "No reading");
 }
-function daDoveInParole(dove) {
-  if (dove === "solare") return t("dal fotovoltaico", "from solar");
-  if (dove === "rete") return t("dalla rete", "from the grid");
-  if (dove === "casa") return t("verso la casa", "to the house");
+function daDoveInParole(dove2) {
+  if (dove2 === "solare") return t("dal fotovoltaico", "from solar");
+  if (dove2 === "rete") return t("dalla rete", "from the grid");
+  if (dove2 === "casa") return t("verso la casa", "to the house");
   return "";
 }
 function fineInParole2(verso2, minuti2) {
@@ -46888,9 +46936,9 @@ function avvisiAppenaAccesi(prima, adesso2) {
 var pulito35 = (valore3) => String(valore3 ?? "").trim();
 var DOMANDA_SFOGLIA = "media_player/browse_media";
 function laDomandaPerSfogliare(entity2, { id = "", tipo = "" } = {}) {
-  const dove = pulito35(entity2);
-  if (!dove.includes(".")) return null;
-  const domanda2 = { type: DOMANDA_SFOGLIA, entity_id: dove };
+  const dove2 = pulito35(entity2);
+  if (!dove2.includes(".")) return null;
+  const domanda2 = { type: DOMANDA_SFOGLIA, entity_id: dove2 };
   const cercato = pulito35(id);
   const genere = pulito35(tipo);
   if (cercato || genere) {
@@ -46949,20 +46997,20 @@ function laCartella(risposta) {
 var DOMANDA_CERCA = "media_player/search_media";
 var LETTERE_PER_CERCARE = 2;
 function laDomandaPerCercare(entity2, testo5) {
-  const dove = pulito35(entity2);
+  const dove2 = pulito35(entity2);
   const cercato = pulito35(testo5).replace(/\s+/g, " ").slice(0, 120);
-  if (!dove.includes(".") || cercato.length < LETTERE_PER_CERCARE) return null;
-  return { type: DOMANDA_CERCA, entity_id: dove, search_query: cercato };
+  if (!dove2.includes(".") || cercato.length < LETTERE_PER_CERCARE) return null;
+  return { type: DOMANDA_CERCA, entity_id: dove2, search_query: cercato };
 }
 function iRisultati(risposta, testo5 = "") {
   const voci4 = Array.isArray(risposta?.result) ? risposta.result : Array.isArray(risposta) ? risposta : [];
   return laCartella({ children: voci4, title: pulito35(testo5) });
 }
 function ilComandoPerSuonare(entity2, voce3, come2 = "subito") {
-  const dove = pulito35(entity2);
+  const dove2 = pulito35(entity2);
   const id = pulito35(voce3?.id);
-  if (!dove.includes(".") || !id || voce3?.suonabile !== true) return null;
-  const dati = { entity_id: dove, media_content_id: id, media_content_type: pulito35(voce3?.tipo) };
+  if (!dove2.includes(".") || !id || voce3?.suonabile !== true) return null;
+  const dati = { entity_id: dove2, media_content_id: id, media_content_type: pulito35(voce3?.tipo) };
   if (come2 === "coda") dati.enqueue = "add";
   return { domain: "media_player", service: "play_media", data: dati };
 }
@@ -46980,9 +47028,9 @@ function ilFiloDopo(filo, voce3) {
 }
 function ilFiloFinoA(filo, indice) {
   const passi2 = Array.isArray(filo) ? filo : [];
-  const dove = Number(indice);
-  if (!Number.isInteger(dove) || dove < 0 || dove >= passi2.length) return passi2;
-  return passi2.slice(0, dove + 1);
+  const dove2 = Number(indice);
+  if (!Number.isInteger(dove2) || dove2 < 0 || dove2 >= passi2.length) return passi2;
+  return passi2.slice(0, dove2 + 1);
 }
 function ilPassoDiAdesso(filo) {
   const passi2 = Array.isArray(filo) ? filo : [];
@@ -47412,21 +47460,21 @@ function batti(righe4) {
   }, 1e3);
 }
 function avanzaIlTempo() {
-  const dove = [
+  const dove2 = [
     doc?.querySelector?.(`#${PAGINA_MEDIA} .dm-mp-wrap`),
     doc?.getElementById?.(POPUP_ID2)
   ].filter(Boolean);
-  if (!dove.length) return;
-  for (const riga5 of letture()) avanzaLaBarra(dove, riga5);
+  if (!dove2.length) return;
+  for (const riga5 of letture()) avanzaLaBarra(dove2, riga5);
   if (state42.aperto) {
     const aperta2 = letturaDiUnLettore(state42.aperto);
-    if (aperta2) avanzaLaBarra(dove, aperta2);
+    if (aperta2) avanzaLaBarra(dove2, aperta2);
   }
 }
-function avanzaLaBarra(dove, riga5) {
+function avanzaLaBarra(dove2, riga5) {
   const punto3 = posizioneOra(riga5);
   if (!punto3) return;
-  for (const nodo3 of dove) {
+  for (const nodo3 of dove2) {
     const card2 = nodo3.querySelector(`[data-dm-mp-card="${CSS.escape(riga5.entity)}"]`);
     if (!card2) continue;
     const ora8 = card2.querySelector("[data-dm-mp-ora]");
@@ -47640,8 +47688,8 @@ async function chiediLaCartella() {
     suo2.voci = cartella2.voci;
     suo2.nonMostrate = cartella2.nonMostrate;
     suo2.errore = "";
-    const dove = ilPassoDiAdesso(suo2.filo);
-    if (cartella2.titolo && !dove.cerca) dove.titolo = nomeDiUnPosto(dove, cartella2.titolo);
+    const dove2 = ilPassoDiAdesso(suo2.filo);
+    if (cartella2.titolo && !dove2.cerca) dove2.titolo = nomeDiUnPosto(dove2, cartella2.titolo);
   }
   disegnaLoSfoglio();
   return true;
@@ -47690,9 +47738,9 @@ function nomeDiUnPosto(passo, titolo3) {
 function voceMarkup(voce3, indice, puoAccodare) {
   const segno5 = segnoDellaVoce(voce3);
   const fondo = fondoDellaMiniatura(voce3.miniatura);
-  const dove = voce3.sfogliabile ? "apri" : "suona";
+  const dove2 = voce3.sfogliabile ? "apri" : "suona";
   return `<div class="dm-sf-voce">
-    <button type="button" class="dm-sf-riga" data-dm-sf="${dove}" data-dm-sf-voce="${indice}">
+    <button type="button" class="dm-sf-riga" data-dm-sf="${dove2}" data-dm-sf-voce="${indice}">
       <span class="dm-sf-mini"${fondo ? ` style="background-image:url(${fondo})"` : ""}>${segno5}</span>
       <span class="dm-sf-nome">${esc(nomeDiUnPosto(voce3, voce3.titolo))}${voce3.deezer ? `<em class="dm-sf-deezer">Deezer</em>` : ""}</span>
       ${voce3.sfogliabile ? `<span class="dm-sf-freccia" aria-hidden="true">›</span>` : ""}
@@ -49238,10 +49286,10 @@ var I_MARCHI = /^https:\/\/brands\.home-assistant\.io\/[A-Za-z0-9_./-]+\.(?:png|
 var ICONA_DI_UN_ADDON = /^\/api\/hassio\/addons\/[a-z0-9_-]+\/(?:icon|logo)$/;
 function indirizzoDiretto(foto, { colPonte = false } = {}) {
   if (colPonte) return "";
-  const dove = pulito38(foto);
-  if (!dove || dove.includes("..")) return "";
-  if (ICONA_DI_UN_ADDON.test(dove)) return dove;
-  if (I_MARCHI.test(dove)) return dove;
+  const dove2 = pulito38(foto);
+  if (!dove2 || dove2.includes("..")) return "";
+  if (ICONA_DI_UN_ADDON.test(dove2)) return dove2;
+  if (I_MARCHI.test(dove2)) return dove2;
   return "";
 }
 var STATI_DEL_NO = /* @__PURE__ */ new Set([403, 404, 410]);
@@ -51977,21 +52025,21 @@ function proxmoxMarkup(server, { admin = false, miniPc = null } = {}) {
 function ensureDove() {
   const pagina3 = doc?.getElementById(PAGINA);
   if (!pagina3) return null;
-  let dove = pagina3.querySelector(`#${DOVE_ID}`);
-  if (!dove) {
-    dove = doc.createElement("div");
-    dove.id = DOVE_ID;
-    dove.className = "dm-px-wrap";
+  let dove2 = pagina3.querySelector(`#${DOVE_ID}`);
+  if (!dove2) {
+    dove2 = doc.createElement("div");
+    dove2.id = DOVE_ID;
+    dove2.className = "dm-px-wrap";
   }
   const fasce = pagina3.querySelector("#dm-macchine-fasce");
-  if (fasce && dove.nextElementSibling !== fasce) fasce.before(dove);
-  else if (!fasce && !dove.parentElement) pagina3.append(dove);
-  return dove;
+  if (fasce && dove2.nextElementSibling !== fasce) fasce.before(dove2);
+  else if (!fasce && !dove2.parentElement) pagina3.append(dove2);
+  return dove2;
 }
 function dipingi7() {
   if (!paginaVisibile(PAGINA)) return;
-  const dove = ensureDove();
-  if (!dove) return;
+  const dove2 = ensureDove();
+  if (!dove2) return;
   const server = proxmoxInPlancia();
   const admin = (() => {
     try {
@@ -52012,8 +52060,8 @@ function dipingi7() {
   ]);
   if (firma2 === state47.firma) return;
   state47.firma = firma2;
-  dove.innerHTML = proxmoxMarkup(server, { admin, miniPc });
-  dove.hidden = !server.nodi.length;
+  dove2.innerHTML = proxmoxMarkup(server, { admin, miniPc });
+  dove2.hidden = !server.nodi.length;
 }
 function schedule14() {
   if (state47.frame) return;
@@ -52305,17 +52353,17 @@ function fasciaMarkup(titolo3, righe4) {
 function ensureFasce() {
   const pagina3 = doc?.getElementById(SERVER_PAGE_ID);
   if (!pagina3) return null;
-  let dove = pagina3.querySelector(`#${FASCE_ID}`);
-  if (dove) return dove;
-  dove = doc.createElement("div");
-  dove.id = FASCE_ID;
-  dove.className = "dm-macchine-wrap";
-  pagina3.append(dove);
-  return dove;
+  let dove2 = pagina3.querySelector(`#${FASCE_ID}`);
+  if (dove2) return dove2;
+  dove2 = doc.createElement("div");
+  dove2.id = FASCE_ID;
+  dove2.className = "dm-macchine-wrap";
+  pagina3.append(dove2);
+  return dove2;
 }
 function dipingi8() {
-  const dove = ensureFasce();
-  if (!dove) return;
+  const dove2 = ensureFasce();
+  if (!dove2) return;
   if (!paginaVisibile(SERVER_PAGE_ID)) return;
   const candidate = candidateDaChiedere(allStates());
   imparaDiChiSono(candidate);
@@ -52323,7 +52371,7 @@ function dipingi8() {
   const firma2 = JSON.stringify([elenchi, t("Acceso", "Running")]);
   if (state48.firma === firma2) return;
   state48.firma = firma2;
-  dove.innerHTML = `${fasciaMarkup(t("Macchine e container", "Machines and containers"), elenchi.macchine)}
+  dove2.innerHTML = `${fasciaMarkup(t("Macchine e container", "Machines and containers"), elenchi.macchine)}
     ${fasciaMarkup(t("Rete", "Network"), elenchi.rete)}`;
 }
 function schedule15() {
@@ -55308,9 +55356,9 @@ function trovaStanza(f, aree2 = []) {
   let punti = 0;
   for (const area2 of new Set(elenco6(aree2).map(pulito44).filter(Boolean))) {
     for (const nome of nomiDellaStanza(area2)) {
-      const dove = nomeNellaFrase(nome, f);
-      if (!dove.tutte) continue;
-      const valore3 = dove.parole * 10 + (nome === area2 ? 1 : 0);
+      const dove2 = nomeNellaFrase(nome, f);
+      if (!dove2.tutte) continue;
+      const valore3 = dove2.parole * 10 + (nome === area2 ? 1 : 0);
       if (valore3 > punti) {
         punti = valore3;
         migliore = area2;
@@ -55323,9 +55371,9 @@ function trovaPersona(f, persone4 = []) {
   let migliore = null;
   let punti = 0;
   for (const persona of elenco6(persone4)) {
-    const dove = nomeNellaFrase(persona.nome || persona.name, f);
-    if (dove.tutte && dove.parole > punti) {
-      punti = dove.parole;
+    const dove2 = nomeNellaFrase(persona.nome || persona.name, f);
+    if (dove2.tutte && dove2.parole > punti) {
+      punti = dove2.parole;
       migliore = persona;
     }
   }
@@ -55695,12 +55743,12 @@ function migliorePerNome(f, voci4 = [], stanza2 = "") {
   for (const voce3 of elenco6(voci4)) {
     const nome = pulito44(voce3.nome || voce3.name);
     if (!nome) continue;
-    const dove = nomeNellaFrase(nome, f, stanzaParole);
-    if (!dove.tutte || !dove.parole) continue;
+    const dove2 = nomeNellaFrase(nome, f, stanzaParole);
+    if (!dove2.tutte || !dove2.parole) continue;
     if (stanza2 && voce3.area && pulito44(voce3.area).toLowerCase() !== stanza2.toLowerCase()) {
-      if (dove.parole < 2) continue;
+      if (dove2.parole < 2) continue;
     }
-    const valore3 = dove.parole * 10 + (stanza2 && voce3.area === stanza2 ? 5 : 0);
+    const valore3 = dove2.parole * 10 + (stanza2 && voce3.area === stanza2 ? 5 : 0);
     if (valore3 > punti) {
       punti = valore3;
       migliore = voce3;
@@ -56290,11 +56338,11 @@ function quandoPersona(p, l, adesso2) {
       `${p.nome} è in casa ${quando6} (${fa}).`,
       `${p.nome} has been home ${quando6} (${fa}).`
     );
-  const dove = p.zona ? dire(l, ` (zona ${p.zona})`, ` (at ${p.zona})`) : "";
+  const dove2 = p.zona ? dire(l, ` (zona ${p.zona})`, ` (at ${p.zona})`) : "";
   return dire(
     l,
-    `${p.nome} è fuori casa ${quando6}${dove}, ${fa}.`,
-    `${p.nome} has been away ${quando6}${dove}, ${fa}.`
+    `${p.nome} è fuori casa ${quando6}${dove2}, ${fa}.`,
+    `${p.nome} has been away ${quando6}${dove2}, ${fa}.`
   );
 }
 var RISPOSTE = {};
@@ -56818,7 +56866,7 @@ RISPOSTE.luci = (c, s) => {
   const l = c.lingua;
   let luci = luciDellaCasa(s);
   if (c.stanza) luci = luci.filter((e) => stessaStanza2(e.area, c.stanza));
-  const dove = c.stanza ? ` ${inStanza(c.stanza, l)}` : "";
+  const dove2 = c.stanza ? ` ${inStanza(c.stanza, l)}` : "";
   if (!luci.length)
     return {
       testo: c.stanza ? dire(
@@ -56833,17 +56881,17 @@ RISPOSTE.luci = (c, s) => {
     return {
       testo: quali.length ? dire(
         l,
-        `Sono spente ${quali.length} luci${dove}: ${elencoNomi(
+        `Sono spente ${quali.length} luci${dove2}: ${elencoNomi(
           quali.map((e) => e.nome),
           l,
           5
         )}.`,
-        `${quali.length} lights are off${dove}: ${elencoNomi(
+        `${quali.length} lights are off${dove2}: ${elencoNomi(
           quali.map((e) => e.nome),
           l,
           5
         )}.`
-      ) : dire(l, `Sono tutte accese${dove}.`, `They're all on${dove}.`),
+      ) : dire(l, `Sono tutte accese${dove2}.`, `They're all on${dove2}.`),
       soggetto: quali.map((e) => e.entity)
     };
   }
@@ -56857,11 +56905,11 @@ RISPOSTE.luci = (c, s) => {
   const testo5 = accese.length === 1 ? dire(
     l,
     `${c.stanza ? `In ${c.stanza} è` : "È"} accesa una luce: ${nomi2}.`,
-    `One light is on${dove}: ${nomi2}.`
+    `One light is on${dove2}: ${nomi2}.`
   ) : dire(
     l,
     `${c.stanza ? `In ${c.stanza} sono` : "Sono"} accese ${accese.length} luci: ${nomi2}.`,
-    `${accese.length} lights are on${dove}: ${nomi2}.`
+    `${accese.length} lights are on${dove2}: ${nomi2}.`
   );
   const comandabili = accese.filter((e) => e.comandabile);
   const stanzeAccese = c.stanza ? [] : [...new Set(comandabili.map((e) => pulito46(e.area)).filter(Boolean))];
@@ -57007,10 +57055,10 @@ RISPOSTE.aperture = (c, s) => {
       )
     };
   const aperti = contatti.filter((e) => e.stato === "on");
-  const dove = c.stanza ? ` ${inStanza(c.stanza, l)}` : "";
+  const dove2 = c.stanza ? ` ${inStanza(c.stanza, l)}` : "";
   if (!aperti.length) {
     const cosa = vuoleFinestre && !vuolePorte ? dire(l, "Le finestre sono tutte chiuse", "All windows are closed") : vuolePorte && !vuoleFinestre ? dire(l, "Le porte sono tutte chiuse", "All doors are closed") : dire(l, "Porte e finestre sono tutte chiuse", "All doors and windows are closed");
-    return { testo: `${cosa}${dove}.${cancelliDetti}` };
+    return { testo: `${cosa}${dove2}.${cancelliDetti}` };
   }
   const finestre = aperti.filter(eFinestra).length;
   const porte = aperti.length - finestre;
@@ -57026,8 +57074,8 @@ RISPOSTE.aperture = (c, s) => {
   return {
     testo: dire(
       l,
-      `${una ? "C'è" : "Ci sono"} ${conto}${dove}: ${nomi2}.${cancelliDetti}`,
-      `There ${una ? "is" : "are"} ${conto}${dove}: ${nomi2}.${cancelliDetti}`
+      `${una ? "C'è" : "Ci sono"} ${conto}${dove2}: ${nomi2}.${cancelliDetti}`,
+      `There ${una ? "is" : "are"} ${conto}${dove2}: ${nomi2}.${cancelliDetti}`
     ),
     soggetto: aperti.map((e) => e.entity)
   };
@@ -57049,10 +57097,10 @@ RISPOSTE.tapparelle = (c, s) => {
   const aperte = tapparelle.filter(
     (e) => ["open", "opening"].includes(e.stato) || (numero39(e.attributi?.current_position) ?? 0) > 0
   );
-  const dove = c.stanza ? ` ${inStanza(c.stanza, l)}` : "";
+  const dove2 = c.stanza ? ` ${inStanza(c.stanza, l)}` : "";
   if (!aperte.length)
     return {
-      testo: dire(l, `Le tapparelle sono tutte chiuse${dove}.`, `All blinds are closed${dove}.`),
+      testo: dire(l, `Le tapparelle sono tutte chiuse${dove2}.`, `All blinds are closed${dove2}.`),
       soggetto: tapparelle.map((e) => e.entity)
     };
   const nomi2 = elencoNomi(
@@ -57065,10 +57113,10 @@ RISPOSTE.tapparelle = (c, s) => {
   );
   const comandabili = aperte.filter((e) => e.comandabile);
   return {
-    testo: aperte.length === 1 ? dire(l, `È aperta ${nomi2}${dove}.`, `${nomi2} is open${dove}.`) : dire(
+    testo: aperte.length === 1 ? dire(l, `È aperta ${nomi2}${dove2}.`, `${nomi2} is open${dove2}.`) : dire(
       l,
-      `Sono aperte ${aperte.length} tapparelle${dove}: ${nomi2}.`,
-      `${aperte.length} blinds are open${dove}: ${nomi2}.`
+      `Sono aperte ${aperte.length} tapparelle${dove2}: ${nomi2}.`,
+      `${aperte.length} blinds are open${dove2}: ${nomi2}.`
     ),
     soggetto: aperte.map((e) => e.entity),
     chips: comandabili.length ? [
@@ -57194,13 +57242,13 @@ function perNome(c, voci4) {
     let migliori = [];
     let punti = 0;
     for (const voce3 of voci4) {
-      const dove = nomeNellaFrase(voce3.nome, f, trascurare);
-      if (!dove.tutte || !dove.parole) continue;
+      const dove2 = nomeNellaFrase(voce3.nome, f, trascurare);
+      if (!dove2.tutte || !dove2.parole) continue;
       if (c.stanza && voce3.area && !stessaStanza2(voce3.area, c.stanza)) continue;
-      if (dove.parole > punti) {
-        punti = dove.parole;
+      if (dove2.parole > punti) {
+        punti = dove2.parole;
         migliori = [voce3];
-      } else if (dove.parole === punti) migliori.push(voce3);
+      } else if (dove2.parole === punti) migliori.push(voce3);
     }
     return migliori;
   };
@@ -57415,7 +57463,7 @@ RISPOSTE.comando = (c, s, m) => {
     };
   }
   const tutti = scelta3.bersagli || [];
-  const dove = c.stanza ? ` ${inStanza(c.stanza, l)}` : "";
+  const dove2 = c.stanza ? ` ${inStanza(c.stanza, l)}` : "";
   if (!tutti.length)
     return {
       testo: c.stanza ? dire(
@@ -57446,14 +57494,14 @@ RISPOSTE.comando = (c, s, m) => {
             tutti.map((e) => e.dominio),
             l
           )
-        )}${dove}: sono già ${stato3}.`,
+        )}${dove2}: sono già ${stato3}.`,
         `${maiuscola2(
           quante(
             tutti.length,
             tutti.map((e) => e.dominio),
             l
           )
-        )}${dove}: already ${en[3]}.`
+        )}${dove2}: already ${en[3]}.`
       ),
       soggetto: tutti.map((e) => e.entity)
     };
@@ -57468,7 +57516,7 @@ RISPOSTE.comando = (c, s, m) => {
     voci4.length,
     voci4.map((e) => e.dominio),
     l
-  )}${dove} (${elencoNomi(
+  )}${dove2} (${elencoNomi(
     voci4.map((e) => e.nome),
     l,
     4
@@ -59917,10 +59965,10 @@ function disegnaUnAuto(vettura, righe4, conNome) {
   const posizione = daRif("dm.ev_posizione");
   const contachilometri = daRif("dm.ev_odometro");
   const dallaCarica = daRif("dm.ev_km_dall_ultima_ricarica");
-  const dove = [];
+  const dove2 = [];
   if (posizione) {
     const aCasa = /^home$/i.test(clean(posizione.stato));
-    dove.push(
+    dove2.push(
       casella(
         t("Posizione", "Location"),
         esc(posizione.value),
@@ -59930,7 +59978,7 @@ function disegnaUnAuto(vettura, righe4, conNome) {
     );
   }
   if (contachilometri)
-    dove.push(
+    dove2.push(
       casella(
         t("Contachilometri", "Odometer"),
         esc(contachilometri.value),
@@ -59938,7 +59986,7 @@ function disegnaUnAuto(vettura, righe4, conNome) {
         "gauge"
       )
     );
-  else if (dallaCarica) dove.push(casella(nomeSenzaAuto(dallaCarica), esc(dallaCarica.value)));
+  else if (dallaCarica) dove2.push(casella(nomeSenzaAuto(dallaCarica), esc(dallaCarica.value)));
   const ruote = {};
   for (const riga5 of righe4) {
     if (numero41(riga5.raw) == null) continue;
@@ -59964,7 +60012,7 @@ function disegnaUnAuto(vettura, righe4, conNome) {
   const altreMarkup = altre.length ? `${titoletto(t("Le altre letture", "Other readings"))}<div class="dm-f-ev-due">${altre.map((riga5) => casella(nomeSenzaAuto(riga5), esc(valoreDellaRiga(riga5)))).join("")}</div>` : "";
   return `<div class="dm-f-ev-auto"${conNome ? ` data-auto="${esc(vettura.nome)}"` : ""}>
     ${eroe2}
-    ${dove.length ? `${titoletto(t("Dov'è e quanto ha fatto", "Where it is and how far it went"))}<div class="dm-f-ev-due">${dove.join("")}</div>` : ""}
+    ${dove2.length ? `${titoletto(t("Dov'è e quanto ha fatto", "Where it is and how far it went"))}<div class="dm-f-ev-due">${dove2.join("")}</div>` : ""}
     ${gomme}
     ${altreMarkup}
   </div>`;
@@ -60710,7 +60758,7 @@ function statoDellaCassa(riga5) {
   return [stato3, cosa].filter(Boolean).join(" · ");
 }
 function eroeMedia(riga5) {
-  const dove = [riga5.nome, riga5.sorgente || riga5.applicazione].filter(Boolean).join(" · ");
+  const dove2 = [riga5.nome, riga5.sorgente || riga5.applicazione].filter(Boolean).join(" · ");
   const sotto = [riga5.artista, riga5.album].filter(Boolean).join(" · ");
   const punto3 = posizioneOra(riga5);
   const centro2 = ilTastoCentrale(riga5);
@@ -60719,7 +60767,7 @@ function eroeMedia(riga5) {
     <div class="dm-f-media-testa">
       ${riga5.copertina ? `<img class="dm-f-media-arte" src="${esc(riga5.copertina)}" alt="" aria-hidden="true">` : `<span class="dm-f-media-arte" aria-hidden="true">${riga5.icona ? esc(riga5.icona) : "🎵"}</span>`}
       <span class="dm-f-media-cosa">
-        <small>${esc(dove)}</small>
+        <small>${esc(dove2)}</small>
         <b>${esc(riga5.titolo || riga5.sorgente || riga5.applicazione || statoDellaCassa(riga5))}</b>
         ${sotto ? `<em>${esc(sotto)}</em>` : ""}
       </span>
@@ -62728,11 +62776,11 @@ function disegnaFumo(widget, states) {
   const riga5 = (voce3) => {
     const segno5 = voce3.classe === "carbon_monoxide" ? "♨️" : voce3.classe === "gas" ? "🔥" : "💨";
     const come2 = voce3.on ? t("Allarme", "Alarm") : voce3.muto ? t("Non risponde", "Not answering") : t("Tranquillo", "Quiet");
-    const dove = voce3.stanza && !voce3.name.toLocaleLowerCase().includes(voce3.stanza.toLocaleLowerCase()) ? voce3.stanza : "";
+    const dove2 = voce3.stanza && !voce3.name.toLocaleLowerCase().includes(voce3.stanza.toLocaleLowerCase()) ? voce3.stanza : "";
     const pila2 = voce3.pila == null ? "" : `<span class="dm-f-${k}-pila"${voce3.pila <= 20 ? ' data-bassa="true"' : ""}>${voce3.pila <= 20 ? "🪫" : "🔋"} ${voce3.pila}%</span>`;
     return `<div class="dm-f-${k}-ril" data-come="${voce3.on ? "allarme" : voce3.muto ? "muto" : "quiete"}">
         <span class="dm-f-${k}-ic" aria-hidden="true">${segno5}</span>
-        <div class="dm-f-${k}-nome"><b>${esc(voce3.name)}</b><span>${esc(come2)}${dove ? ` · ${esc(dove)}` : ""}</span></div>
+        <div class="dm-f-${k}-nome"><b>${esc(voce3.name)}</b><span>${esc(come2)}${dove2 ? ` · ${esc(dove2)}` : ""}</span></div>
         ${pila2}
       </div>`;
   };
@@ -63538,10 +63586,10 @@ function unPacco(pacco) {
   </article>`;
 }
 function avvisoDelPacco(pacco) {
-  const dove = pacco.minima && pacco.massima ? `${t("Cella più bassa", "Lowest cell")} ${pacco.minima.numero}, ${t("più alta", "highest")} ${pacco.massima.numero}: Δ ${formatNumber(pacco.delta, 0)} mV. ` : `Δ ${formatNumber(pacco.delta, 0)} mV. `;
+  const dove2 = pacco.minima && pacco.massima ? `${t("Cella più bassa", "Lowest cell")} ${pacco.minima.numero}, ${t("più alta", "highest")} ${pacco.massima.numero}: Δ ${formatNumber(pacco.delta, 0)} mV. ` : `Δ ${formatNumber(pacco.delta, 0)} mV. `;
   return `<div class="dm-f-imp-avviso" data-dm-f-avviso><span aria-hidden="true">⚠️</span><div>
     <b>${esc(`${pacco.name}: ${t("celle sbilanciate", "cells out of balance")}`)}</b>
-    ${esc(dove)} ${esc(
+    ${esc(dove2)} ${esc(
     t(
       "Il BMS dovrebbe pareggiarle a fine carica: se resta così controlla il bilanciatore.",
       "The BMS should even them out at the end of the charge: if it stays like this, check the balancer."
@@ -64334,15 +64382,15 @@ function scalaDellAria(lettura4) {
   if (soglie.length !== 3 || soglie.some((s) => !Number.isFinite(s) || s <= 0)) return "";
   const punti = [0, soglie[0], soglie[1], soglie[2], soglie[2] * 1.5];
   const posti = [0, 40, 55, 75, 100];
-  const dove = (valore3) => {
+  const dove2 = (valore3) => {
     if (!(valore3 > 0)) return 0;
     for (let i = 1; i < punti.length; i += 1)
       if (valore3 <= punti[i])
         return posti[i - 1] + (valore3 - punti[i - 1]) / (punti[i] - punti[i - 1]) * (posti[i] - posti[i - 1]);
     return 100;
   };
-  const [uno, due5, tre] = soglie.map((s) => dove(s).toFixed(1));
-  const x = Math.max(2, Math.min(98, dove(Number(lettura4.confronto) || 0)));
+  const [uno, due5, tre] = soglie.map((s) => dove2(s).toFixed(1));
+  const x = Math.max(2, Math.min(98, dove2(Number(lettura4.confronto) || 0)));
   const stessaUnita = clean(lettura4.unita).toLowerCase() === clean(lettura4.unitaDiRiferimento).toLowerCase();
   const tacca = (valore3, posto, coda = "") => `<span style="left:${posto}%">${esc(formatNumber(valore3, valore3 < 10 ? 1 : 0))}${coda ? ` ${esc(coda)}` : ""}</span>`;
   return `<div class="dm-f-aria-scala" aria-hidden="true"
@@ -64357,11 +64405,11 @@ function finestraAria(widget) {
   const copertina2 = widget.copertina || widget.peggiore || letture2[0];
   if (!copertina2) return "";
   const stanzaDi3 = (lettura4) => clean(stanzaDiHomeAssistant(lettura4.entity));
-  const dove = stanzaDi3(copertina2) || clean(copertina2.name);
+  const dove2 = stanzaDi3(copertina2) || clean(copertina2.name);
   const numeroGrande = valoreScritto(copertina2, locale());
   const consiglio = consiglioDellAria(widget.peggiore || copertina2);
   const eroe2 = `<section class="dm-f-sv-eroe dm-f-aria-eroe">
-      <small>${esc([richiestaDelGrado(widget.grado || copertina2.grado), dove].filter(Boolean).join(" · "))}</small>
+      <small>${esc([richiestaDelGrado(widget.grado || copertina2.grado), dove2].filter(Boolean).join(" · "))}</small>
       <div class="dm-f-aria-su">
         <span class="dm-f-sv-num dm-f-sv-grande">${esc(numeroGrande)}</span>
         <span class="dm-f-aria-u">${esc(
@@ -66386,9 +66434,9 @@ function normalizzaSport(grezza) {
 }
 function spostaIlSeguito(seguiti, indice, verso2) {
   const elenco18 = [...seguiti || []];
-  const dove = indice + verso2;
-  if (indice < 0 || indice >= elenco18.length || dove < 0 || dove >= elenco18.length) return elenco18;
-  [elenco18[indice], elenco18[dove]] = [elenco18[dove], elenco18[indice]];
+  const dove2 = indice + verso2;
+  if (indice < 0 || indice >= elenco18.length || dove2 < 0 || dove2 >= elenco18.length) return elenco18;
+  [elenco18[indice], elenco18[dove2]] = [elenco18[dove2], elenco18[indice]];
   return elenco18;
 }
 function domandaDelleScelte(config) {
@@ -66408,18 +66456,18 @@ function partitaInGrande(calcio) {
 function righeAttorno(classifica, id, { primi = 3, accanto = 1 } = {}) {
   const tabella = Array.isArray(classifica) ? classifica : [];
   if (!tabella.length) return [];
-  const dove = tabella.findIndex((r) => r.id === String(id));
+  const dove2 = tabella.findIndex((r) => r.id === String(id));
   const indici = /* @__PURE__ */ new Set();
   for (let i = 0; i < Math.min(primi, tabella.length); i += 1) indici.add(i);
-  if (dove >= 0) {
-    for (let i = dove - accanto; i <= dove + accanto; i += 1)
+  if (dove2 >= 0) {
+    for (let i = dove2 - accanto; i <= dove2 + accanto; i += 1)
       if (i >= 0 && i < tabella.length) indici.add(i);
   }
   const scelti = [...indici].sort((a, b2) => a - b2);
   const righe4 = [];
   scelti.forEach((i, k) => {
     if (k > 0 && i - scelti[k - 1] > 1) righe4.push({ salto: true });
-    righe4.push({ ...tabella[i], mia: i === dove });
+    righe4.push({ ...tabella[i], mia: i === dove2 });
   });
   return righe4;
 }
@@ -66811,11 +66859,11 @@ function scuderia(id, misura8 = 18) {
 function squadraDi(r, x, misura8 = 16) {
   return r.tipo === "f1" ? `${scuderia(x.scuderiaId, misura8)}${esc(x.scuderia)}` : esc(x.moto);
 }
-function titoloDelBlocco(chiave2, titolo3, sotto = "", dove = "pagina") {
+function titoloDelBlocco(chiave2, titolo3, sotto = "", dove2 = "pagina") {
   return `<h3 class="dm-sport-titolo"><span class="dm-sport-titolo-ic" aria-hidden="true">${oggettoWidget(
     chiave2,
     "",
-    `sport-t-${dove}-${chiave2}`
+    `sport-t-${dove2}-${chiave2}`
   )}</span><span>${esc(titolo3)}</span>${sotto ? `<small>${sotto}</small>` : ""}</h3>`;
 }
 function schedaMarkup7(titolo3, corpo6, { classe: classe3 = "", attr = "" } = {}) {
@@ -66899,7 +66947,7 @@ function ultimeMarkup(r, titolo3 = t("Ultime partite", "Last matches")) {
   );
 }
 var zonaDellaRiga = (x) => /^#[0-9a-f]{6}$/i.test(clean(x?.zona?.colore)) ? ` style="--zona:${x.zona.colore}" title="${esc(ZONE()[x.zona.chiave] || "")}"` : "";
-function classificaMarkup(r, { titolo: titolo3 = "", dove = "" } = {}) {
+function classificaMarkup(r, { titolo: titolo3 = "", dove: dove2 = "" } = {}) {
   const righe4 = righeAttorno(r.classifica, r.squadra.id, { primi: 5, accanto: 1 });
   if (!righe4.length) return "";
   const nome = titolo3 || r.campionato?.nome || t("Classifica", "Table");
@@ -66920,7 +66968,7 @@ function classificaMarkup(r, { titolo: titolo3 = "", dove = "" } = {}) {
     )} ›</span>`,
     {
       classe: "dm-sport-tocca",
-      attr: tasto2({ tipo: "tabella", dove }, nome)
+      attr: tasto2({ tipo: "tabella", dove: dove2 }, nome)
     }
   );
 }
@@ -67384,8 +67432,8 @@ function pilotiMarkup(r, preferito = "") {
       </li>`
   ).join("")}</ol></div>`;
 }
-function tabellaDa(dove) {
-  const [i, lega] = clean(dove).split(":");
+function tabellaDa(dove2) {
+  const [i, lega] = clean(dove2).split(":");
   const r = state55.dati.risultati[Number(i)];
   if (!r || r.errore) return "";
   if (!diSquadra(r.tipo)) return pilotiMarkup(r, preferitoDi(r.tipo));
@@ -67660,10 +67708,10 @@ function accendiLaVoce6(config) {
 }
 function dipingi9() {
   const pagina3 = ensureSportPage();
-  const dove = pagina3?.querySelector?.("#sport-wrap");
-  if (!dove || !paginaVisibile(SPORT_PAGE_ID)) return;
+  const dove2 = pagina3?.querySelector?.("#sport-wrap");
+  if (!dove2 || !paginaVisibile(SPORT_PAGE_ID)) return;
   const minuto = Math.floor(Date.now() / 6e4) * 6e4;
-  scriviSeCambia(dove, paginaDelloSportMarkup(risultatiDelloSport(), minuto));
+  scriviSeCambia(dove2, paginaDelloSportMarkup(risultatiDelloSport(), minuto));
 }
 function battito() {
   if (state55.sveglia || !paginaVisibile(SPORT_PAGE_ID)) return;
@@ -69270,8 +69318,8 @@ function accendiLaVoce7(vista2) {
 }
 function dipingi10(vista2) {
   const pagina3 = ensurePagina3();
-  const dove = pagina3?.querySelector?.("#salute-wrap");
-  if (!dove || !paginaVisibile(SALUTE_PAGE_ID)) return;
+  const dove2 = pagina3?.querySelector?.("#salute-wrap");
+  if (!dove2 || !paginaVisibile(SALUTE_PAGE_ID)) return;
   if (vistaScelta(vista2) === "strava") {
     const sport = sportScelto(vista2.strava, state56.sport);
     if (vista2.strava.statistiche.sport[sport]) void chiediLeSettimaneStrava(vista2.strava, sport, state56.settimane, schedule20);
@@ -69282,7 +69330,7 @@ function dipingi10(vista2) {
     for (const m of [persona?.misure.peso, ...persona?.misure.peso?.altre || []])
       void chiediLoStorico(m, 30, ["mean", "max", "state"]);
   }
-  scriviSeCambia(dove, paginaSaluteMarkup(vista2));
+  scriviSeCambia(dove2, paginaSaluteMarkup(vista2));
 }
 function schedule20() {
   if (state56.frame) return;
@@ -69501,13 +69549,13 @@ var DA_DOVE = [
 function letturaDi4(stato3) {
   const a = stato3?.attributes || {};
   const app = pulito49(a.app_name || a.source);
-  const dove = `${app} ${pulito49(a.media_content_id)}`;
+  const dove2 = `${app} ${pulito49(a.media_content_id)}`;
   const tipo = pulito49(a.media_content_type).toLowerCase();
   const titolo3 = pulito49(a.media_title);
   const artista = pulito49(a.media_artist || a.media_album_artist);
   const canale = pulito49(a.media_channel);
-  const radio = Boolean(canale) || tipo === "channel" || tipo === "radio" || !artista && /tune\s*in|radio/i.test(dove);
-  const trovato = DA_DOVE.find(([prova3]) => prova3.test(dove));
+  const radio = Boolean(canale) || tipo === "channel" || tipo === "radio" || !artista && /tune\s*in|radio/i.test(dove2);
+  const trovato = DA_DOVE.find(([prova3]) => prova3.test(dove2));
   return {
     entita: stato3.entity_id,
     nome: pulito49(a.friendly_name) || stato3.entity_id,
@@ -70626,23 +70674,23 @@ function metriPerPixel(lat, zoom) {
 function zoomPerRaggio(lat, raggioKm, latoPx) {
   const raggio = numero46(raggioKm);
   const lato = numero46(latoPx);
-  const dove = latitudine(lat);
-  if (!raggio || raggio <= 0 || !lato || lato <= 0 || dove === null) return ZOOM_MINIMO;
+  const dove2 = latitudine(lat);
+  if (!raggio || raggio <= 0 || !lato || lato <= 0 || dove2 === null) return ZOOM_MINIMO;
   const metriVoluti = raggio * 2e3;
   const ideale = Math.log2(
-    METRI_PER_PIXEL_ZERO * Math.cos(dove * Math.PI / 180) * lato / metriVoluti
+    METRI_PER_PIXEL_ZERO * Math.cos(dove2 * Math.PI / 180) * lato / metriVoluti
   );
   return Math.max(ZOOM_MINIMO, Math.min(ZOOM_MASSIMO, Math.floor(ideale)));
 }
 function finestraDiTessere(lat, lon, opzioni2 = {}) {
-  const dove = latitudine(lat);
+  const dove2 = latitudine(lat);
   const quanto = longitudine(lon);
-  if (dove === null || quanto === null) return null;
+  if (dove2 === null || quanto === null) return null;
   const lato = Math.max(64, numero46(opzioni2.latoPx) || 320);
   const alto = Math.max(64, numero46(opzioni2.altoPx) || lato);
   const tessera4 = numero46(opzioni2.lato) || LATO_TESSERA;
-  const zoom = numero46(opzioni2.zoom) === null ? zoomPerRaggio(dove, numero46(opzioni2.raggioKm) || 30, Math.min(lato, alto)) : Math.max(ZOOM_MINIMO, Math.min(ZOOM_MASSIMO, Math.round(numero46(opzioni2.zoom))));
-  const centro2 = tesseraDelPunto(dove, quanto, zoom);
+  const zoom = numero46(opzioni2.zoom) === null ? zoomPerRaggio(dove2, numero46(opzioni2.raggioKm) || 30, Math.min(lato, alto)) : Math.max(ZOOM_MINIMO, Math.min(ZOOM_MASSIMO, Math.round(numero46(opzioni2.zoom))));
+  const centro2 = tesseraDelPunto(dove2, quanto, zoom);
   const centroPx = { x: centro2.x * tessera4, y: centro2.y * tessera4 };
   const origine = { x: centroPx.x - lato / 2, y: centroPx.y - alto / 2 };
   const primaX = Math.floor(origine.x / tessera4);
@@ -70665,7 +70713,7 @@ function finestraDiTessere(lat, lon, opzioni2 = {}) {
       });
     }
   }
-  return { zoom, lato, alto, tessera: tessera4, tessere: tessere2, metriPerPixel: metriPerPixel(dove, zoom) };
+  return { zoom, lato, alto, tessera: tessera4, tessere: tessere2, metriPerPixel: metriPerPixel(dove2, zoom) };
 }
 function zoomDellaPioggia(config = {}, servizio3 = "") {
   const scritto3 = numero46(config?.zoomPioggia);
@@ -70824,9 +70872,9 @@ function stratoWindy(parola2) {
   return STRATI_WINDY.includes(detta) ? detta : "radar";
 }
 function indirizzoWindy({ lat, lon, zoom, strato } = {}) {
-  const dove = latitudine(lat);
+  const dove2 = latitudine(lat);
   const quanto = longitudine(lon);
-  if (dove === null || quanto === null) return "";
+  if (dove2 === null || quanto === null) return "";
   const overlay = stratoWindy(strato);
   const parametri = new URLSearchParams({
     type: "map",
@@ -70838,7 +70886,7 @@ function indirizzoWindy({ lat, lon, zoom, strato } = {}) {
     overlay,
     product: overlay === "radar" ? "radar" : "ecmwf",
     level: "surface",
-    lat: dove.toFixed(4),
+    lat: dove2.toFixed(4),
     lon: quanto.toFixed(4)
   });
   return `${ORIGINE_WINDY}${PAGINA_WINDY}?${parametri}`;
@@ -71298,14 +71346,14 @@ function scriviLaNota(nodo3, scelto, luogo, finestraTessere, finestraPioggia) {
 }
 function daTessere(scelto, nodo3) {
   const quadro = nodo3.querySelector(".dm-radar-quadro");
-  const dove = nodo3.querySelector(".dm-radar-tessere");
-  if (!quadro || !dove) return;
+  const dove2 = nodo3.querySelector(".dm-radar-tessere");
+  if (!quadro || !dove2) return;
   const luogo = luogoDelRadar(scelto, allStates(), casaNota());
   scriviLaNota(nodo3, scelto, luogo, null, null);
   if (!luogo) {
     nodo3.dataset.dmRadar = chiediLaCasa() ? "attesa" : "muto";
-    dove.replaceChildren();
-    dove.dataset.dmFirma = "";
+    dove2.replaceChildren();
+    dove2.dataset.dmFirma = "";
     return;
   }
   const misure = misureDelQuadro(quadro);
@@ -71323,8 +71371,8 @@ function daTessere(scelto, nodo3) {
   if (!modello2) {
     scriviLaNota(nodo3, scelto, luogo, finestraTessere, null);
     nodo3.dataset.dmRadar = inArrivo(scelto) ? "attesa" : "muto";
-    dove.replaceChildren();
-    dove.dataset.dmFirma = "";
+    dove2.replaceChildren();
+    dove2.dataset.dmFirma = "";
     return;
   }
   const finestraPioggia = finestraDellaPioggia(
@@ -71357,11 +71405,11 @@ function daTessere(scelto, nodo3) {
     }
     if (persi >= attesi) {
       nodo3.dataset.dmRadar = "muto";
-      dove.dataset.dmFirma = "";
+      dove2.dataset.dmFirma = "";
     }
   };
-  if (dove.dataset.dmFirma !== firma2) {
-    dove.dataset.dmFirma = firma2;
+  if (dove2.dataset.dmFirma !== firma2) {
+    dove2.dataset.dmFirma = firma2;
     const pezzi = [];
     let attesiPioggia = 0;
     const stendi = (strato, dentro3, dellaPioggia) => {
@@ -71405,23 +71453,23 @@ function daTessere(scelto, nodo3) {
       strato.replaceChildren(...dentro3);
       pezzi.push(strato);
     }
-    dove.replaceChildren(...pezzi);
+    dove2.replaceChildren(...pezzi);
     state58.posto = Math.max(0, modelli2.length - 1);
     attesi = attesiPioggia;
     arrivati = 0;
     persi = 0;
     nodo3.dataset.dmRadar = attesi ? "attesa" : "muto";
-    if (!attesi) dove.dataset.dmFirma = "";
+    if (!attesi) dove2.dataset.dmFirma = "";
   }
   scriviLaNota(nodo3, scelto, luogo, finestraTessere, finestraPioggia);
 }
 var CORNICE = "dm-radar-windy";
 function togliLaCornice(nodo3) {
-  const dove = nodo3?.querySelector?.(".dm-radar-tessere");
-  const cornice = dove?.querySelector?.(`.${CORNICE}`);
+  const dove2 = nodo3?.querySelector?.(".dm-radar-tessere");
+  const cornice = dove2?.querySelector?.(`.${CORNICE}`);
   if (!cornice) return;
   cornice.remove();
-  if (String(dove.dataset.dmFirma || "").startsWith("windy:")) dove.dataset.dmFirma = "";
+  if (String(dove2.dataset.dmFirma || "").startsWith("windy:")) dove2.dataset.dmFirma = "";
 }
 function vistaWindy(scelto, latoPx = 320, altoPx = ALTEZZA_MINIMA) {
   const detto3 = scelto?.windy || {};
@@ -71433,8 +71481,8 @@ function vistaWindy(scelto, latoPx = 320, altoPx = ALTEZZA_MINIMA) {
 }
 function daWindy(scelto, nodo3) {
   const quadro = nodo3.querySelector(".dm-radar-quadro");
-  const dove = nodo3.querySelector(".dm-radar-tessere");
-  if (!quadro || !dove) return;
+  const dove2 = nodo3.querySelector(".dm-radar-tessere");
+  if (!quadro || !dove2) return;
   delete nodo3.dataset.dmFondo;
   scriviTestoSeCambia(nodo3.querySelector("[data-dm-radar-firma-fondo]"), "");
   const nota2 = nodo3.querySelector(".dm-radar-nota");
@@ -71460,7 +71508,7 @@ function daWindy(scelto, nodo3) {
     return;
   }
   const firma2 = `windy:${src}`;
-  if (dove.dataset.dmFirma === firma2 && dove.querySelector(`.${CORNICE}`)) return;
+  if (dove2.dataset.dmFirma === firma2 && dove2.querySelector(`.${CORNICE}`)) return;
   const cornice = doc.createElement("iframe");
   cornice.className = CORNICE;
   cornice.setAttribute("sandbox", SANDBOX_WINDY);
@@ -71475,8 +71523,8 @@ function daWindy(scelto, nodo3) {
     { once: true }
   );
   cornice.src = src;
-  dove.replaceChildren(cornice);
-  dove.dataset.dmFirma = firma2;
+  dove2.replaceChildren(cornice);
+  dove2.dataset.dmFirma = firma2;
   nodo3.dataset.dmRadar = "attesa";
 }
 function disegnaRadar() {
@@ -73019,8 +73067,8 @@ var DISEGNI3 = Object.freeze({
   ore: oreMarkup,
   giorni: giorniMarkup
 });
-function postoDi2(dove, blocco3) {
-  let posto = dove.querySelector(`:scope > [data-dm-meteo-posto="${blocco3}"]`);
+function postoDi2(dove2, blocco3) {
+  let posto = dove2.querySelector(`:scope > [data-dm-meteo-posto="${blocco3}"]`);
   if (posto) return posto;
   posto = doc.createElement("div");
   posto.className = "dm-meteo-posto";
@@ -73030,7 +73078,7 @@ function postoDi2(dove, blocco3) {
         <div class="dm-meteo-radar-testa"></div>
         <div class="dm-meteo-scheda dm-meteo-radar-scheda"><div class="dm-meteo-radar-posto"></div></div>
       </section>`;
-  dove.append(posto);
+  dove2.append(posto);
   return posto;
 }
 function radarDellaPagina(posto, { forza = false } = {}) {
@@ -73043,8 +73091,8 @@ function radarDellaPagina(posto, { forza = false } = {}) {
 }
 function dipingi11() {
   const pagina3 = ensureMeteoPage();
-  const dove = pagina3?.querySelector?.("#meteo-wrap");
-  if (!dove || !paginaVisibile(METEO_PAGE_ID)) {
+  const dove2 = pagina3?.querySelector?.("#meteo-wrap");
+  if (!dove2 || !paginaVisibile(METEO_PAGE_ID)) {
     state59.inVista = false;
     return;
   }
@@ -73052,41 +73100,41 @@ function dipingi11() {
   state59.inVista = true;
   const vista2 = vistaDelMeteo();
   if (!vista2) {
-    for (const posto of dove.children) posto.hidden = true;
+    for (const posto of dove2.children) posto.hidden = true;
     return;
   }
-  const radar = postoDi2(dove, "radar");
+  const radar = postoDi2(dove2, "radar");
   scriviSeCambia(
     radar.querySelector(".dm-meteo-radar-testa"),
     titoloMarkup("radar", t("Radar pioggia", "Rain radar"), sottotitoloDelRadar())
   );
   const previsto = Boolean(radarScelto()) || Boolean(radar.querySelector(".dm-radar-blocco[data-dm-modo]"));
-  impagina(dove, vista2, previsto);
+  impagina(dove2, vista2, previsto);
   const mostraRadar = radarDellaPagina(radar.querySelector(".dm-meteo-radar-posto"), {
     forza: appenaArrivati
   });
-  if (mostraRadar !== previsto) impagina(dove, vista2, mostraRadar);
+  if (mostraRadar !== previsto) impagina(dove2, vista2, mostraRadar);
 }
-function impagina(dove, vista2, mostraRadar) {
+function impagina(dove2, vista2, mostraRadar) {
   const blocchi = blocchiDellaVista(vista2, { radar: mostraRadar });
   const ordine = [];
   for (const blocco3 of blocchi) {
-    const posto = postoDi2(dove, blocco3);
+    const posto = postoDi2(dove2, blocco3);
     if (blocco3 !== "radar") scriviSeCambia(posto, DISEGNI3[blocco3](vista2));
     posto.hidden = false;
     ordine.push(posto);
   }
-  for (const posto of dove.children) if (!ordine.includes(posto)) posto.hidden = true;
+  for (const posto of dove2.children) if (!ordine.includes(posto)) posto.hidden = true;
   let prima = null;
   for (const posto of ordine) {
-    const atteso = prima ? prima.nextElementSibling : dove.firstElementChild;
-    if (atteso !== posto) dove.insertBefore(posto, prima ? prima.nextElementSibling : dove.firstElementChild);
+    const atteso = prima ? prima.nextElementSibling : dove2.firstElementChild;
+    if (atteso !== posto) dove2.insertBefore(posto, prima ? prima.nextElementSibling : dove2.firstElementChild);
     prima = posto;
   }
   const iGiorni = blocchi.indexOf("giorni");
   const ilRadar = blocchi.indexOf("radar");
-  dove.dataset.dmMeteoCoppia = String(iGiorni >= 0 && ilRadar >= 0 && Math.abs(iGiorni - ilRadar) === 1);
-  dove.dataset.dmMeteoBlocchi = blocchi.join(" ");
+  dove2.dataset.dmMeteoCoppia = String(iGiorni >= 0 && ilRadar >= 0 && Math.abs(iGiorni - ilRadar) === 1);
+  dove2.dataset.dmMeteoBlocchi = blocchi.join(" ");
 }
 function leggiSeServe() {
   if (!serveLeggere4()) return;
@@ -73779,8 +73827,8 @@ function calendarioModel() {
     if (inCorso(evento, adesso2)) return `${t("Adesso", "Now")} · ${titolo3}`;
     const giorno3 = chiaveDelGiorno2(evento.inizio);
     const quando6 = evento.tuttoIlGiorno ? "" : orarioDi(evento.inizio, lingua9);
-    const dove = giorno3 === oggi ? quando6 : `${etichettaDelGiorno(giorno3, adesso2, parole5, lingua9)}${quando6 ? ` ${quando6}` : ""}`;
-    return dove ? `${dove} · ${titolo3}` : titolo3;
+    const dove2 = giorno3 === oggi ? quando6 : `${etichettaDelGiorno(giorno3, adesso2, parole5, lingua9)}${quando6 ? ` ${quando6}` : ""}`;
+    return dove2 ? `${dove2} · ${titolo3}` : titolo3;
   };
   const didascalia = () => {
     if (!primi.length)
@@ -74112,9 +74160,9 @@ function coversModel(states) {
   const didascalia = () => {
     if (daArieggiare.length) {
       const prima = daArieggiare[0];
-      const dove = prima.stanza || prima.nome;
+      const dove2 = prima.stanza || prima.nome;
       const quante3 = daArieggiare.length > 1 ? ` · +${daArieggiare.length - 1}` : "";
-      return `${t("Arieggia", "Air out")}: ${dove} ${Math.round(prima.esito.dentro)}%${quante3}`;
+      return `${t("Arieggia", "Air out")}: ${dove2} ${Math.round(prima.esito.dentro)}%${quante3}`;
     }
     if (soloMotori) return nomiAccesi(alzate, () => true, t("Tutte abbassate", "All down"));
     const stanzeAperte = [...new Set(aperte.map((riga5) => clean(riga5.stanza || riga5.name)))].filter(Boolean).join(", ");
@@ -74552,9 +74600,9 @@ function sovraccaricoDellaTessera(rows, house) {
 }
 function paroleDelSovraccarico(verdetto) {
   if (verdetto.livello === LIVELLO_QUIETE) return "";
-  const dove = verdetto.sorgente === SORGENTE_RETE ? t("dalla rete", "from the grid") : t("in casa", "at home");
+  const dove2 = verdetto.sorgente === SORGENTE_RETE ? t("dalla rete", "from the grid") : t("in casa", "at home");
   const quale = clean(verdetto.nome) ? ` · ${clean(verdetto.nome)}` : "";
-  return `⚠️ ${t("Sovraccarico", "Overload")} ${dove}${quale} · ${formatWatts(verdetto.watt)} / ${formatWatts(verdetto.limite)}`;
+  return `⚠️ ${t("Sovraccarico", "Overload")} ${dove2}${quale} · ${formatWatts(verdetto.watt)} / ${formatWatts(verdetto.limite)}`;
 }
 function tesseraEnergia(rows, house, today, { key = "energia", label, impianto = "", oggi, verdetto: dato2 } = {}) {
   if (house == null && !rows.length) return null;
@@ -77612,10 +77660,10 @@ function fallaEntrare(nodo3, spazioBase, corpoMinimo) {
     } else break;
   }
 }
-function sistemaLeScritte(dove = doc) {
-  for (const nome of dove?.querySelectorAll?.("[data-dm-tile-label]") || [])
+function sistemaLeScritte(dove2 = doc) {
+  for (const nome of dove2?.querySelectorAll?.("[data-dm-tile-label]") || [])
     fallaEntrare(nome, 0.11, 6.7);
-  for (const titolo3 of dove?.querySelectorAll?.("[data-dm-titolo]") || [])
+  for (const titolo3 of dove2?.querySelectorAll?.("[data-dm-titolo]") || [])
     fallaEntrare(titolo3, 0.09, 15);
 }
 function tesseraAccesa(widget) {
@@ -82458,9 +82506,9 @@ function laCardDelClima(entity2, { stanza: stanza2 = true } = {}) {
     copy3()
   );
 }
-function dipingiLeCardDelClima(dove) {
-  if (!dove?.querySelectorAll) return 0;
-  const carte = dove.querySelectorAll("[data-dm-cl]");
+function dipingiLeCardDelClima(dove2) {
+  if (!dove2?.querySelectorAll) return 0;
+  const carte = dove2.querySelectorAll("[data-dm-cl]");
   if (!carte.length) return 0;
   let unita3 = [];
   try {
@@ -82694,9 +82742,9 @@ function muoviLEstremo(entity2, estremo, verso2) {
 function ridipingiIlTermostato(entita4) {
   try {
     const carte = doc?.querySelectorAll?.("[data-dm-cl]") || [];
-    const dove = /* @__PURE__ */ new Set();
-    for (const card2 of carte) if (card2.dataset.dmCl === entita4) dove.add(card2.parentElement);
-    for (const genitore of dove) dipingiLeCardDelClima(genitore);
+    const dove2 = /* @__PURE__ */ new Set();
+    for (const card2 of carte) if (card2.dataset.dmCl === entita4) dove2.add(card2.parentElement);
+    for (const genitore of dove2) dipingiLeCardDelClima(genitore);
   } catch (_error) {
   }
 }
@@ -84272,17 +84320,17 @@ var CHIAVE_AZIONI_RAPIDE = "cd_quick_actions";
 function assignedItems(mappa2 = readJson(ROOM_ASSIGN_KEY, {}), states = allStates(), azioni2 = readJson(CHIAVE_AZIONI_RAPIDE, [])) {
   const stanze4 = /* @__PURE__ */ new Map();
   const vestito2 = /* @__PURE__ */ new Map();
-  const dove = (entity2, stanza2) => {
+  const dove2 = (entity2, stanza2) => {
     const id = clean(entity2);
     const room_id = clean(stanza2);
     if (id && room_id && !stanze4.has(id)) stanze4.set(id, room_id);
   };
   if (mappa2 && typeof mappa2 === "object")
-    for (const [entity2, room] of Object.entries(mappa2)) dove(entity2, room);
+    for (const [entity2, room] of Object.entries(mappa2)) dove2(entity2, room);
   for (const voce3 of entitaMie(readJson(CHIAVE_ENTITA_MIE, []))) {
     const id = clean(voce3.entity);
     if (!id) continue;
-    dove(id, voce3.room_id);
+    dove2(id, voce3.room_id);
     if (!vestito2.has(id))
       vestito2.set(id, { nome: clean(voce3.nome), icona: clean(voce3.icona) });
   }
@@ -84633,8 +84681,8 @@ function rowMarkup(item, blocco3, states, aperture = aperturePerEntita(), sotto 
       t("Scegli", "Choose")
     )} ${esc(nomeVoce(item, states))}"><span aria-hidden="true">⋮</span></button>`
   ) : blocco3.tab ? `<span class="dm-stanze-vai" aria-hidden="true">›</span>` : "";
-  const dove = blocco3.tab ? ` data-dm-stanza-vai="${esc(blocco3.tab)}" role="button" tabindex="0"` : "";
-  return `<article class="dm-stanze-card dm-stanze-voce" data-dm-stanza-entita="${esc(entity2)}"${dove}>
+  const dove2 = blocco3.tab ? ` data-dm-stanza-vai="${esc(blocco3.tab)}" role="button" tabindex="0"` : "";
+  return `<article class="dm-stanze-card dm-stanze-voce" data-dm-stanza-entita="${esc(entity2)}"${dove2}>
     <div class="dm-stanze-card-row">
       <span class="dm-stanze-orb">${segnoDaDisegnare(item, blocco3)}</span>
       <span class="dm-stanze-title"><b>${esc(nomeVoce(item, states))}</b><s data-dm-stanza-stato="${esc(entity2)}" data-dm-stanza-blocco="${esc(blocco3.key)}">${esc(statoVoce(item, states, blocco3.key))}</s></span>
@@ -86340,7 +86388,7 @@ function applicaLOrdineDeiBlocchi(pagina3 = laHomeSiGuarda()) {
   const figli = [...pagina3.children];
   const posizione = (pezzi) => figli.indexOf(pezzi[0]);
   const posizioni = gruppi2.map(posizione);
-  if (posizioni.every((dove, indice) => indice === 0 || dove > posizioni[indice - 1])) return false;
+  if (posizioni.every((dove2, indice) => indice === 0 || dove2 > posizioni[indice - 1])) return false;
   const miei = new Set(gruppi2.flat());
   const pastiglie = doc.getElementById("dashboard-pills-row");
   let dopo = pastiglie?.parentElement === pagina3 ? pastiglie : figli.filter((nodo3) => !miei.has(nodo3)).pop() || null;
@@ -88317,19 +88365,19 @@ function comeSiamoMessi() {
 function quanteInFila(nodes, stretto) {
   const perFila = /* @__PURE__ */ new Map();
   for (const nodo3 of nodes) {
-    const dove = stretto ? nodo3.mobile?.top : nodo3.desktop?.top;
-    perFila.set(dove, (perFila.get(dove) || 0) + 1);
+    const dove2 = stretto ? nodo3.mobile?.top : nodo3.desktop?.top;
+    perFila.set(dove2, (perFila.get(dove2) || 0) + 1);
   }
   return perFila.size ? Math.max(...perFila.values()) : 1;
 }
 function passoPiuStretto(nodes, stretto) {
   const perFila = /* @__PURE__ */ new Map();
   for (const nodo3 of nodes) {
-    const dove = stretto ? nodo3.mobile : nodo3.desktop;
-    if (!dove) continue;
-    const fila2 = perFila.get(dove.top) || [];
-    fila2.push(Number(dove.left));
-    perFila.set(dove.top, fila2);
+    const dove2 = stretto ? nodo3.mobile : nodo3.desktop;
+    if (!dove2) continue;
+    const fila2 = perFila.get(dove2.top) || [];
+    fila2.push(Number(dove2.left));
+    perFila.set(dove2.top, fila2);
   }
   let passo = 0;
   for (const fila2 of perFila.values()) {
@@ -92078,16 +92126,16 @@ function laVoceDaScrivere(quale, voce3 = {}, dentro3 = {}, daImportare = []) {
       icon: pulito53(voce3.icona) || suo2.icona,
       room_id: stanza2
     };
-    const dove2 = prese.findIndex((riga5) => pulito53(riga5?.entity) === entita4);
-    if (dove2 >= 0) prese[dove2] = { ...prese[dove2], ...nuova2 };
+    const dove3 = prese.findIndex((riga5) => pulito53(riga5?.entity) === entita4);
+    if (dove3 >= 0) prese[dove3] = { ...prese[dove3], ...nuova2 };
     else prese.push(nuova2);
     return { cd_prese: prese };
   }
   if (suo2.chiave === "clima") {
     const unita3 = Array.isArray(dentro3.cd_clima_units) ? [...dentro3.cd_clima_units] : [];
     const nuova2 = { name: nome, entity: entita4, type: "clima" };
-    const dove2 = unita3.findIndex((riga5) => pulito53(riga5?.entity) === entita4);
-    if (dove2 >= 0) unita3[dove2] = { ...unita3[dove2], ...nuova2 };
+    const dove3 = unita3.findIndex((riga5) => pulito53(riga5?.entity) === entita4);
+    if (dove3 >= 0) unita3[dove3] = { ...unita3[dove3], ...nuova2 };
     else unita3.push(nuova2);
     return { cd_clima_units: unita3 };
   }
@@ -92095,15 +92143,15 @@ function laVoceDaScrivere(quale, voce3 = {}, dentro3 = {}, daImportare = []) {
     const tapparelle = Array.isArray(dentro3.cd_tapparelle) ? [...dentro3.cd_tapparelle] : [];
     const eUnContatto2 = dominioDi6(entita4) === "binary_sensor";
     const nuova2 = eUnContatto2 ? { contact: entita4, name: nome, room_id: stanza2 } : { entity: entita4, name: nome, room_id: stanza2 };
-    const dove2 = tapparelle.findIndex(
+    const dove3 = tapparelle.findIndex(
       (riga5) => pulito53(riga5?.entity) === entita4 || pulito53(riga5?.contact) === entita4
     );
-    if (dove2 >= 0 && eUnContatto2 && pulito53(tapparelle[dove2]?.entity) === entita4) {
-      const { entity: _vecchia, ...resto } = tapparelle[dove2];
-      tapparelle[dove2] = { ...resto, ...nuova2 };
+    if (dove3 >= 0 && eUnContatto2 && pulito53(tapparelle[dove3]?.entity) === entita4) {
+      const { entity: _vecchia, ...resto } = tapparelle[dove3];
+      tapparelle[dove3] = { ...resto, ...nuova2 };
       return { cd_tapparelle: tapparelle };
     }
-    if (dove2 >= 0) tapparelle[dove2] = { ...tapparelle[dove2], ...nuova2 };
+    if (dove3 >= 0) tapparelle[dove3] = { ...tapparelle[dove3], ...nuova2 };
     else tapparelle.push(nuova2);
     return { cd_tapparelle: tapparelle };
   }
@@ -92118,18 +92166,18 @@ function laVoceDaScrivere(quale, voce3 = {}, dentro3 = {}, daImportare = []) {
       );
       return { [cassetto]: conLeRighe(dato2, [...trovate, riga5]) };
     }
-    const dove2 = gia.findIndex((una) => pulito53(una?.entity) === entita4);
+    const dove3 = gia.findIndex((una) => pulito53(una?.entity) === entita4);
     const righe4 = [...gia];
-    if (dove2 >= 0) righe4[dove2] = { ...righe4[dove2], ...riga5, icon: riga5.icon || righe4[dove2].icon };
+    if (dove3 >= 0) righe4[dove3] = { ...righe4[dove3], ...riga5, icon: riga5.icon || righe4[dove3].icon };
     else righe4.push(riga5);
     return { [cassetto]: { ...dato2, righe: righe4 } };
   }
   if (suo2.chiave === "temp") {
     if (!stanza2) return null;
     const stanze4 = Array.isArray(dentro3.cd_stanze) ? [...dentro3.cd_stanze] : [];
-    const dove2 = stanze4.findIndex((una) => pulito53(una?.id) === stanza2);
-    if (dove2 < 0) return null;
-    const sua = { ...stanze4[dove2] };
+    const dove3 = stanze4.findIndex((una) => pulito53(una?.id) === stanza2);
+    if (dove3 < 0) return null;
+    const sua = { ...stanze4[dove3] };
     const umidita = pulito53(voce3.classe || voce3.device_class).toLowerCase() === "humidity";
     const casella7 = umidita ? "hum" : "temp";
     if (!pulito53(sua[casella7])) {
@@ -92145,7 +92193,7 @@ function laVoceDaScrivere(quale, voce3 = {}, dentro3 = {}, daImportare = []) {
       else extra.push(riga5);
       sua.metadata = { ...sua.metadata || {}, temperature_entries: extra };
     }
-    stanze4[dove2] = sua;
+    stanze4[dove3] = sua;
     return { cd_stanze: stanze4 };
   }
   const mie = Array.isArray(dentro3.cd_entita_mie) ? [...dentro3.cd_entita_mie] : [];
@@ -92159,8 +92207,8 @@ function laVoceDaScrivere(quale, voce3 = {}, dentro3 = {}, daImportare = []) {
     sezione: pulito53(voce3.dove) || "home",
     room_id: stanza2
   };
-  const dove = mie.findIndex((riga5) => pulito53(riga5?.entity) === entita4);
-  if (dove >= 0) mie[dove] = { ...mie[dove], ...nuova };
+  const dove2 = mie.findIndex((riga5) => pulito53(riga5?.entity) === entita4);
+  if (dove2 >= 0) mie[dove2] = { ...mie[dove2], ...nuova };
   else mie.push(nuova);
   return { cd_entita_mie: mie };
 }
@@ -92299,15 +92347,15 @@ function ilFoglietto(voce3 = {}, scelta3 = "", { stanze: stanze4 = "" } = {}) {
 }
 function disegna5() {
   if (!doc || !state71.voce) return false;
-  let dove = doc.getElementById(ID);
-  if (!dove) {
-    dove = doc.createElement("div");
-    dove.id = ID;
-    dove.className = "dm-dove";
-    doc.body.append(dove);
+  let dove2 = doc.getElementById(ID);
+  if (!dove2) {
+    dove2 = doc.createElement("div");
+    dove2.id = ID;
+    dove2.className = "dm-dove";
+    doc.body.append(dove2);
   }
   const scelto = clean(state71.voce.stanza_id);
-  dove.innerHTML = ilFoglietto(state71.voce, state71.scelta, {
+  dove2.innerHTML = ilFoglietto(state71.voce, state71.scelta, {
     stanze: roomOptionsMarkup(scelto, t("— Nessuna stanza —", "— No room —"))
   });
   return true;
@@ -92626,20 +92674,20 @@ function intitolaIGruppi(corpo6, stanze4, piani, ripetuti) {
       }
     }
     if (intitolare) riga5.querySelector(".ed-row-old")?.remove();
-    const dove = riga5.querySelector(".ed-row-main") || riga5;
-    dove.querySelector(".dm-piano-doppio")?.remove();
-    dove.querySelector(".dm-stanza-fuori")?.remove();
+    const dove2 = riga5.querySelector(".ed-row-main") || riga5;
+    dove2.querySelector(".dm-piano-doppio")?.remove();
+    dove2.querySelector(".dm-stanza-fuori")?.remove();
     if (stanza2 && stanzaAllAperto(stanza2)) {
       const fuori = doc.createElement("span");
       fuori.className = "dm-stanza-fuori";
       fuori.textContent = `🌿 ${t("All'aperto", "Outdoors")}`;
-      dove.append(fuori);
+      dove2.append(fuori);
     }
     if (!stanza2 || !ripetuti.has(clean(stanza2.name).toLowerCase())) return;
     const avviso4 = doc.createElement("span");
     avviso4.className = "dm-piano-doppio";
     avviso4.textContent = `⚠️ ${t("stesso nome di un'altra stanza", "same name as another room")}`;
-    dove.append(avviso4);
+    dove2.append(avviso4);
   });
   return true;
 }
@@ -95889,10 +95937,10 @@ function cammina(dentro3, ago, pezzi, chiave2, uscita, profondita) {
     aggiungi2(uscita, chiave2, pezzi.slice(0, -1), pezzi.at(-1) ?? "", testo5);
 }
 function aggiungi2(uscita, chiave2, pezzi, campo6, testo5) {
-  const dove = strada(pezzi);
-  const firma2 = `${chiave2}|${dove}|${campo6}|${testo5}`;
+  const dove2 = strada(pezzi);
+  const firma2 = `${chiave2}|${dove2}|${campo6}|${testo5}`;
   if (uscita.some((voce3) => voce3.firma === firma2)) return;
-  uscita.push({ firma: firma2, chiave: chiave2, percorso: pezzi.slice(), dove, campo: String(campo6 ?? ""), testo: testo5 });
+  uscita.push({ firma: firma2, chiave: chiave2, percorso: pezzi.slice(), dove: dove2, campo: String(campo6 ?? ""), testo: testo5 });
 }
 function cercaNelConfig(parola2, magazzino2 = {}) {
   const ago = appiattisci(parola2);
@@ -95932,7 +95980,7 @@ var RAFFREDDAMENTO = Object.freeze({
   en: "Temperatures & cooling"
 });
 var FLUSSI = Object.freeze({ it: "Flussi ed entità", en: "Flows & entities" });
-var casella4 = (id, it, en, scheda9, pannello, dove) => Object.freeze({ id, it, en, scheda: scheda9, pannello, dove });
+var casella4 = (id, it, en, scheda9, pannello, dove2) => Object.freeze({ id, it, en, scheda: scheda9, pannello, dove: dove2 });
 function leCaselleDellEnergia(gruppi2 = ENERGY_GROUPS) {
   const fuori = [];
   const viste2 = /* @__PURE__ */ new Set();
@@ -95984,10 +96032,10 @@ function cercaFraLeCaselle(parola2, caselle2 = [], lingua9 = "it") {
   if (ago.length < 2) return [];
   const quale = lingua9 === "en" ? "en" : "it";
   return caselle2.map((una) => {
-    const dove = [una[quale], una.it, una.en, una.dove].map(appiattisci2);
-    const primo = dove.findIndex((testo5) => testo5.includes(ago));
+    const dove2 = [una[quale], una.it, una.en, una.dove].map(appiattisci2);
+    const primo = dove2.findIndex((testo5) => testo5.includes(ago));
     if (primo < 0) return null;
-    const daCapo = dove.some((testo5) => testo5.startsWith(ago));
+    const daCapo = dove2.some((testo5) => testo5.startsWith(ago));
     return { casella: una, peso: (daCapo ? 0 : 10) + primo };
   }).filter(Boolean).sort((uno, altro) => uno.peso - altro.peso).map((uno) => uno.casella);
 }
@@ -96187,13 +96235,13 @@ function mietiDalGuscio() {
   staccato.innerHTML = disegno8;
   const fuori = [];
   for (const fisarmonica of staccato.querySelectorAll("details.ed-acc")) {
-    const dove = clean(fisarmonica.querySelector("summary")?.firstChild?.textContent);
+    const dove2 = clean(fisarmonica.querySelector("summary")?.firstChild?.textContent);
     for (const slot of fisarmonica.querySelectorAll(".ed-slot")) {
       const ref = clean(slot.querySelector("input[data-ref]")?.dataset?.ref);
       const nome = clean(
         slot.querySelector(".wz-lbl-edit")?.getAttribute?.("value") || slot.querySelector(".ed-slot-lbl")?.textContent
       );
-      if (ref && nome) fuori.push({ ref, nome, dove });
+      if (ref && nome) fuori.push({ ref, nome, dove: dove2 });
     }
   }
   state79.raccolte = fuori;
@@ -96237,11 +96285,11 @@ function apriLaCasella(una) {
 }
 var escSenzaTagliare = (valore3) => String(valore3 ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
 function conLaParolaAccesa(testo5, parola2) {
-  const dove = testo5.toLowerCase().indexOf(parola2.toLowerCase());
-  if (dove < 0) return escSenzaTagliare(testo5);
-  return `${escSenzaTagliare(testo5.slice(0, dove))}<mark>${escSenzaTagliare(
-    testo5.slice(dove, dove + parola2.length)
-  )}</mark>${escSenzaTagliare(testo5.slice(dove + parola2.length))}`;
+  const dove2 = testo5.toLowerCase().indexOf(parola2.toLowerCase());
+  if (dove2 < 0) return escSenzaTagliare(testo5);
+  return `${escSenzaTagliare(testo5.slice(0, dove2))}<mark>${escSenzaTagliare(
+    testo5.slice(dove2, dove2 + parola2.length)
+  )}</mark>${escSenzaTagliare(testo5.slice(dove2 + parola2.length))}`;
 }
 function disegnaGliEsiti(contenitore5, parola2) {
   contenitore5.textContent = "";
@@ -96277,8 +96325,8 @@ function disegnaGliEsiti(contenitore5, parola2) {
     const strada2 = clean(esito2.dove).split(" · ").filter(
       (pezzo3, indice, tutti) => pezzo3 && pezzo3 !== "sections" && !(indice === tutti.indexOf("sections") + 1 && tutti.includes("sections"))
     ).join(" · ");
-    const dove = [nome, strada2, esito2.campo].filter(Boolean).join(" · ");
-    riga5.innerHTML = `<span class="${BARRA}-dove">${esc(dove)}</span><span class="${BARRA}-testo">${conLaParolaAccesa(
+    const dove2 = [nome, strada2, esito2.campo].filter(Boolean).join(" · ");
+    riga5.innerHTML = `<span class="${BARRA}-dove">${esc(dove2)}</span><span class="${BARRA}-testo">${conLaParolaAccesa(
       esito2.testo,
       clean(parola2)
     )}</span>`;
@@ -96304,8 +96352,8 @@ function disegnaGliEsiti(contenitore5, parola2) {
     riga5.className = `${BARRA}-esito ${BARRA}-casella`;
     riga5.dataset.salta = "si";
     riga5.dataset.casella = una.id;
-    const dove = [nome, stessoNome(nome, una.dove) ? "" : una.dove].filter(Boolean).join(" · ");
-    riga5.innerHTML = `<span class="${BARRA}-dove">${esc(dove)}</span><span class="${BARRA}-testo">${conLaParolaAccesa(
+    const dove2 = [nome, stessoNome(nome, una.dove) ? "" : una.dove].filter(Boolean).join(" · ");
+    riga5.innerHTML = `<span class="${BARRA}-dove">${esc(dove2)}</span><span class="${BARRA}-testo">${conLaParolaAccesa(
       t(una.it, una.en),
       clean(parola2)
     )}</span>`;
@@ -96953,10 +97001,10 @@ function disegnaLeIconeDegliAvvisi() {
   let quante3 = 0;
   const passa = (radice3, caselle2, nomi2) => {
     if (!radice3) return;
-    for (const dove of caselle2)
-      for (const casella7 of radice3.querySelectorAll(dove)) if (disegnaIlNomeMdi(casella7)) quante3 += 1;
-    for (const dove of nomi2)
-      for (const riga5 of radice3.querySelectorAll(dove)) if (disegnaIlNomeInTesta(riga5)) quante3 += 1;
+    for (const dove2 of caselle2)
+      for (const casella7 of radice3.querySelectorAll(dove2)) if (disegnaIlNomeMdi(casella7)) quante3 += 1;
+    for (const dove2 of nomi2)
+      for (const riga5 of radice3.querySelectorAll(dove2)) if (disegnaIlNomeInTesta(riga5)) quante3 += 1;
   };
   passa(doc, CASELLE_DELL_ICONA, NOMI_CON_L_ICONA_IN_TESTA);
   passa(doc, CASELLE_DELL_AVVISO, NOMI_DELL_AVVISO);
@@ -100015,10 +100063,10 @@ function normalizzaRadio(grezzo2) {
   return { preferite };
 }
 function domandaDelleRadio(posto = "") {
-  const dove = pulito58(posto);
+  const dove2 = pulito58(posto);
   return {
     type: "media_source/browse_media",
-    media_content_id: dove ? `${RADICE_RADIO}/${dove}` : RADICE_RADIO
+    media_content_id: dove2 ? `${RADICE_RADIO}/${dove2}` : RADICE_RADIO
   };
 }
 function stazioniDellaRisposta(risposta) {
@@ -100197,16 +100245,16 @@ function apriLaFamiglia(chiave2) {
     return;
   }
   const attiva2 = schedaAttiva2();
-  const dove = ids.includes(attiva2) ? attiva2 : inOrdine(ids)[0];
+  const dove2 = ids.includes(attiva2) ? attiva2 : inOrdine(ids)[0];
   state96.famiglia = chiave2;
-  if (dove !== attiva2) {
+  if (dove2 !== attiva2) {
     try {
-      root.editorSwitch?.(dove);
+      root.editorSwitch?.(dove2);
     } catch (_error) {
     }
   }
   applicaIlFiltro();
-  const bottone = dentro3.querySelector(`:scope > .ed-tab[data-tab="${CSS.escape(dove)}"]`);
+  const bottone = dentro3.querySelector(`:scope > .ed-tab[data-tab="${CSS.escape(dove2)}"]`);
   try {
     bottone?.scrollIntoView?.({ block: "nearest", inline: "start", behavior: "smooth" });
   } catch (_error) {
@@ -101524,13 +101572,13 @@ function cosaMancaAlClima({ nome, entita: entita4, proposto } = {}) {
   return "";
 }
 function avvisa2(quale) {
-  const dove = quale === "entita" ? CAMPO_ENTITA : CAMPO_NOME;
+  const dove2 = quale === "entita" ? CAMPO_ENTITA : CAMPO_NOME;
   const detto3 = quale === "entita" ? t(
     "Scegli l'entità del clima: è quella che comincia per climate.",
     "Choose the climate entity: it is the one starting with climate."
   ) : t("Dai un nome all'unità: è quello che si legge sulla card.", "Name the unit: it is what the card shows.");
   try {
-    campo2(dove)?.focus?.();
+    campo2(dove2)?.focus?.();
   } catch (_errore) {
   }
   if (typeof root.edToast === "function") root.edToast(`⚠️ ${detto3}`);
@@ -102473,8 +102521,8 @@ function ensureAreeEditor() {
   if (!blocco3) {
     blocco3 = doc.createElement("div");
     blocco3.className = BLOCCO2;
-    const dove = accordion?.querySelector?.(".ed-acc-body") || accordion || body;
-    dove.append(blocco3);
+    const dove2 = accordion?.querySelector?.(".ed-acc-body") || accordion || body;
+    dove2.append(blocco3);
   }
   const firma2 = JSON.stringify([state102.aperto, centrali()]);
   if (blocco3.dataset.dmFirma === firma2) return true;
@@ -102680,9 +102728,9 @@ function disegnaOrologio() {
   const firma2 = `${ora8}|${data}|${giorno3}`;
   if (state103.firma === firma2) return true;
   state103.firma = firma2;
-  const dove = quadrante.querySelector(".dm-orologio-ora");
+  const dove2 = quadrante.querySelector(".dm-orologio-ora");
   const quando6 = quadrante.querySelector(".dm-orologio-data");
-  if (dove) dove.textContent = ora8;
+  if (dove2) dove2.textContent = ora8;
   if (quando6) quando6.textContent = data;
   const esteso = quadrante.querySelector(".dm-orologio-giorno");
   if (esteso) esteso.textContent = giorno3;
@@ -102802,13 +102850,13 @@ function campoMarkup4(acceso7) {
   </label>`;
 }
 function metti2() {
-  const dove = ancora();
-  if (!dove) return false;
+  const dove2 = ancora();
+  if (!dove2) return false;
   if (doc?.getElementById?.(CAMPO2)) return false;
   const casella7 = doc.createElement("div");
   casella7.className = "dm-vivo-casella";
   casella7.innerHTML = campoMarkup4(vuoleIlVivo(telecameraDelForm() || {}));
-  dove.after(casella7);
+  dove2.after(casella7);
   return true;
 }
 function rileggi2() {
@@ -102910,12 +102958,12 @@ function decora(tipo) {
     const entity2 = entitaDellaRiga2(riga5);
     const stato3 = allStates()?.[entity2];
     const da = daQuanto2(stato3?.last_changed);
-    const dove = riga5.querySelector(".d-state");
-    if (da && dove && !dove.querySelector(".dm-clpd-da")) {
+    const dove2 = riga5.querySelector(".d-state");
+    if (da && dove2 && !dove2.querySelector(".dm-clpd-da")) {
       const nodo3 = doc.createElement("span");
       nodo3.className = "dm-clpd-da";
       nodo3.textContent = ` · ${t(`acceso da ${da}`, `on for ${da}`)}`;
-      dove.append(nodo3);
+      dove2.append(nodo3);
     }
     (scaldaAdesso(stato3) ? caldo : freddo).push(riga5);
   }
@@ -105989,9 +106037,9 @@ function dentroLaFascia(muro, adesso2) {
   return da < a ? qui >= da && qui < a : qui >= da || qui < a;
 }
 function notteDalSole(sole, adesso2 = /* @__PURE__ */ new Date()) {
-  const dove = String(sole?.state || "");
-  if (dove === "above_horizon") return false;
-  if (dove !== "below_horizon") return null;
+  const dove2 = String(sole?.state || "");
+  if (dove2 === "above_horizon") return false;
+  if (dove2 !== "below_horizon") return null;
   const prossimo = Date.parse(sole?.attributes?.next_setting || "");
   if (!Number.isFinite(prossimo)) return true;
   const tramonto = prossimo - 24 * 60 * 60 * 1e3;
@@ -106351,7 +106399,7 @@ function riquadroMarkup() {
   const stati4 = allStates() || {};
   const preferite = leRadioDiCasa();
   const lettori2 = iLettori(stati4);
-  const dove = doveSuona(lettori2);
+  const dove2 = doveSuona(lettori2);
   const testa2 = `<div class="dm-radio-testa">
       <span class="dm-radio-ic" aria-hidden="true">📻</span>
       <div><b>${esc(t("Radio", "Radio"))}</b><small>${esc(
@@ -106359,11 +106407,11 @@ function riquadroMarkup() {
   )}</small></div>
     </div>`;
   const lettoriMarkup = lettori2.map(
-    (uno) => `<button type="button" class="dm-radio-pa" aria-pressed="${uno.entita === dove?.entita}" data-dm-radio-dove="${esc(uno.entita)}">${uno.echo ? "🔊" : "🎵"} ${esc(uno.nome)}</button>`
+    (uno) => `<button type="button" class="dm-radio-pa" aria-pressed="${uno.entita === dove2?.entita}" data-dm-radio-dove="${esc(uno.entita)}">${uno.echo ? "🔊" : "🎵"} ${esc(uno.nome)}</button>`
   ).join("");
   const stazioni = preferite.map((una, indice) => {
-    const suona = dove && chiamataDellaRadio(una, dove.entita, { echo: dove.echo });
-    const onda2 = dove && inOnda(una, dove, stati4);
+    const suona = dove2 && chiamataDellaRadio(una, dove2.entita, { echo: dove2.echo });
+    const onda2 = dove2 && inOnda(una, dove2, stati4);
     return `<button type="button" class="dm-radio-st${onda2 ? " in-onda" : ""}" data-dm-radio-suona="${indice}"${suona ? "" : ` aria-disabled="true"`}>
         ${logoMarkup(una, "dm-radio-logo")}
         <b>${esc(una.nome)}</b>
@@ -106375,7 +106423,7 @@ function riquadroMarkup() {
   const aperte = state107.tendina === true;
   if (aperte) chiediLeRadioDelPaese();
   const pronte = `<div class="dm-radio-pronte${aperte ? " aperte" : ""}">
-      <button type="button" class="dm-radio-pronte-apri" data-dm-radio-tendina aria-expanded="${aperte}"${dove ? "" : " disabled"}>
+      <button type="button" class="dm-radio-pronte-apri" data-dm-radio-tendina aria-expanded="${aperte}"${dove2 ? "" : " disabled"}>
         <span class="dm-radio-pronte-ic" aria-hidden="true">🇮🇹</span>
         <span class="dm-radio-pronte-tx"><b>${esc(t("Radio italiane", "Italian stations"))}</b><small>${esc(
     aperte ? t("Tocca una radio per ascoltarla", "Tap a station to listen") : `${RADIO_PRONTE.length} ${t("pronte · tocca per scegliere", "ready · tap to choose")}`
@@ -106383,7 +106431,7 @@ function riquadroMarkup() {
         <i aria-hidden="true">${aperte ? "▴" : "▾"}</i>
       </button>
       ${aperte ? `<div class="dm-radio-pronte-elenco">${RADIO_PRONTE.map((una, indice) => {
-    const onda2 = dove && inOnda(una, dove, stati4);
+    const onda2 = dove2 && inOnda(una, dove2, stati4);
     const logo3 = stazioneDalNome(state107.delPaese || [], una.nome)?.logo || "";
     return `<button type="button" class="dm-radio-pr${onda2 ? " in-onda" : ""}" data-dm-radio-pronta="${indice}" style="--pr:${esc(una.colore)}">
                 ${logoDellaRadioMarkup(logo3, "dm-radio-pr-sigla", { dentro: esc(una.sigla) })}
@@ -106394,7 +106442,7 @@ function riquadroMarkup() {
     </div>`;
   return `${testa2}
     <div class="dm-radio-dove"><span>${esc(t("Suona su", "Play on"))}</span><div class="dm-radio-fila">${lettoriMarkup}</div></div>
-    ${dove?.echo ? cercaSullEchoMarkup() : cercaSulLettoreMarkup(dove)}
+    ${dove2?.echo ? cercaSullEchoMarkup() : cercaSulLettoreMarkup(dove2)}
     ${pronte}
     ${stazioni ? `<div class="dm-radio-griglia">${stazioni}</div>` : `<p class="dm-radio-vuoto">${esc(
     t(
@@ -106403,7 +106451,7 @@ function riquadroMarkup() {
     )
   )}</p>`}
     <div class="dm-radio-piede">
-      <button type="button" class="dm-radio-ferma" data-dm-radio-ferma${dove ? "" : " disabled"}>⏹ ${esc(t("Ferma", "Stop"))}</button>
+      <button type="button" class="dm-radio-ferma" data-dm-radio-ferma${dove2 ? "" : " disabled"}>⏹ ${esc(t("Ferma", "Stop"))}</button>
       ${state107.esito ? `<small>${esc(state107.esito)}</small>` : ""}
     </div>`;
 }
@@ -106431,9 +106479,9 @@ function cercaSullEchoMarkup() {
   ).join("")}</div>` : ""}
     </div>`;
 }
-function cercaSulLettoreMarkup(dove) {
-  if (!dove?.entita) return "";
-  const puo = letturaDiUnLettore(dove.entita)?.puo || {};
+function cercaSulLettoreMarkup(dove2) {
+  if (!dove2?.entita) return "";
+  const puo = letturaDiUnLettore(dove2.entita)?.puo || {};
   if (!puo.sfoglia) return "";
   const sfoglia = `<button type="button" class="dm-radio-pa" data-dm-radio-sfoglia>📚 ${esc(
     t("Sfoglia la libreria", "Browse the library")
@@ -106458,27 +106506,27 @@ function cercaSulLettoreMarkup(dove) {
       <div class="dm-radio-fila">${sfoglia}</div>
     </div>`;
 }
-function cercaDove(dove, cosa) {
-  if (dove?.echo) {
-    suonaSullEcho(dove, state107.servizio, cosa);
+function cercaDove(dove2, cosa) {
+  if (dove2?.echo) {
+    suonaSullEcho(dove2, state107.servizio, cosa);
     return;
   }
-  if (dove && cercaSulLettore(dove.entita, cosa)) {
+  if (dove2 && cercaSulLettore(dove2.entita, cosa)) {
     root.navigator?.vibrate?.(8);
     state107.esito = "";
     return;
   }
   state107.esito = t("Questo lettore non sa cercare.", "This player cannot search.");
 }
-function suonaSullEcho(dove, servizio3, cosa) {
-  const chiamata = dove?.echo && chiamataPerSuonare({ echo: [dove.entita], servizio: servizio3, cosa }, allStates() || {});
+function suonaSullEcho(dove2, servizio3, cosa) {
+  const chiamata = dove2?.echo && chiamataPerSuonare({ echo: [dove2.entita], servizio: servizio3, cosa }, allStates() || {});
   if (!chiamata) {
     state107.esito = t("Scrivi cosa ascoltare.", "Write what to play.");
     return;
   }
   chiamaServizio(chiamata);
   root.navigator?.vibrate?.(8);
-  state107.esito = `▶ ${cosaPulita(cosa)} · ${dove.nome}`;
+  state107.esito = `▶ ${cosaPulita(cosa)} · ${dove2.nome}`;
 }
 function ridisegnaLaRadio() {
   const pagina3 = doc?.getElementById?.(PAGINA_MEDIA);
@@ -106513,8 +106561,8 @@ function sulRiquadro(evento) {
   } else if ("dmRadioCercaTrova" in d) {
     cercaDove(doveSuona(lettori2), state107.cosa);
   } else if ("dmRadioSfoglia" in d) {
-    const dove = doveSuona(lettori2);
-    if (dove) cercaSulLettore(dove.entita, "");
+    const dove2 = doveSuona(lettori2);
+    if (dove2) cercaSulLettore(dove2.entita, "");
   } else if ("dmRadioPreferito" in d) {
     const uno = normalizzaAlexa(readJson(CHIAVE_ALEXA, null)).musica.filter(
       (x) => x.servizio !== "TUNEIN"
@@ -106522,8 +106570,8 @@ function sulRiquadro(evento) {
     if (uno) suonaSullEcho(doveSuona(lettori2), uno.servizio, uno.cosa);
   } else if ("dmRadioSuona" in d) {
     const una = leRadioDiCasa()[Number(d.dmRadioSuona)];
-    const dove = doveSuona(lettori2);
-    const chiamata = una && dove && chiamataDellaRadio(una, dove.entita, { echo: dove.echo });
+    const dove2 = doveSuona(lettori2);
+    const chiamata = una && dove2 && chiamataDellaRadio(una, dove2.entita, { echo: dove2.echo });
     if (!chiamata)
       state107.esito = t(
         "Questa radio si ascolta solo sugli Echo: scegli un Echo.",
@@ -106532,7 +106580,7 @@ function sulRiquadro(evento) {
     else {
       chiamaServizio(chiamata);
       root.navigator?.vibrate?.(8);
-      state107.esito = `▶ ${una.nome} · ${dove.nome}`;
+      state107.esito = `▶ ${una.nome} · ${dove2.nome}`;
     }
   } else if ("dmRadioTendina" in d) {
     state107.tendina = !state107.tendina;
@@ -106541,8 +106589,8 @@ function sulRiquadro(evento) {
     state107.tendina = false;
     if (una) suonaUnaPronta(una.nome);
   } else if ("dmRadioFerma" in d) {
-    const dove = doveSuona(lettori2);
-    const chiamata = dove && chiamataPerFermare(dove.entita);
+    const dove2 = doveSuona(lettori2);
+    const chiamata = dove2 && chiamataPerFermare(dove2.entita);
     if (chiamata) chiamaServizio(chiamata);
     state107.esito = "";
   } else return false;
@@ -106615,10 +106663,10 @@ async function suonaLaRadioSu(entita4, nome) {
   return true;
 }
 async function suonaUnaPronta(nome) {
-  const dove = doveSuona(iLettori());
-  if (!dove || !nome) return;
+  const dove2 = doveSuona(iLettori());
+  if (!dove2 || !nome) return;
   let stazione = { nome };
-  if (!dove.echo) {
+  if (!dove2.echo) {
     try {
       if (!state107.delPaese)
         state107.delPaese = stazioniDellaRisposta(
@@ -106629,11 +106677,11 @@ async function suonaUnaPronta(nome) {
     }
     stazione = stazioneDalNome(state107.delPaese || [], nome);
   }
-  const chiamata = stazione && chiamataDellaRadio(stazione, dove.entita, { echo: dove.echo });
+  const chiamata = stazione && chiamataDellaRadio(stazione, dove2.entita, { echo: dove2.echo });
   if (chiamata) {
     chiamaServizio(chiamata);
     root.navigator?.vibrate?.(8);
-    state107.esito = `▶ ${nome} · ${dove.nome}`;
+    state107.esito = `▶ ${nome} · ${dove2.nome}`;
   } else
     state107.esito = state107.delPaese ? t(
       "Questa radio su questo lettore non la trovo: prova un Echo, o aggiungila dal Config.",
@@ -107170,7 +107218,7 @@ var nomeDi10 = (id, scelto = "", fonte = state108.fonte) => {
   return nomeDellaPersonaDelMuro(id, fonte, allStates() || {}) || clean(ha.friendly_name) || id;
 };
 var progressivo = 0;
-var disegno = (chiave2, misura8, dove) => oggettoWidget(chiave2, "", `muro-${dove || progressivo++}`).replace(
+var disegno = (chiave2, misura8, dove2) => oggettoWidget(chiave2, "", `muro-${dove2 || progressivo++}`).replace(
   'class="dm-oggetto"',
   `class="dm-oggetto" style="width:${misura8}px;height:${misura8}px"`
 );
@@ -107968,11 +108016,11 @@ function rapidoDi(id, zona) {
   const pagina3 = state108.muro?.pagine?.[state108.pagina];
   if (pagina3?.modello === "clima" && pagina3.accensione === "ultima") return null;
   const r = state108.fonte?.rapido || {};
-  const dove = zona || zonaDiQui(id);
-  const preset2 = quickClimatePresetOf(id, dove, r.perUnita || {}, r.globale);
+  const dove2 = zona || zonaDiQui(id);
+  const preset2 = quickClimatePresetOf(id, dove2, r.perUnita || {}, r.globale);
   const modi = (attributi(id).hvac_modes || []).filter((m) => m && m !== "off");
   if (!preset2?.mode || !modi.length || modi.includes(preset2.mode)) return preset2;
-  const voluto = dove === "caldo" ? "heat" : "cool";
+  const voluto = dove2 === "caldo" ? "heat" : "cool";
   return { ...preset2, mode: modi.includes(voluto) ? voluto : modi[0] };
 }
 function pastigliaRapida(id, preset2, on) {
@@ -108034,9 +108082,9 @@ function cardClimaComeLaPlancia({ c, i, id, a, s, on, azione, faccia, zona, rapi
   const stanza2 = numero52(a.current_temperature);
   const basso = numero52(a.min_temp) ?? 7;
   const alto = Math.max(basso + 1, numero52(a.max_temp) ?? 35);
-  const dove = (v) => Math.max(0, Math.min(100, (v - basso) / (alto - basso) * 100));
-  const pallino = voluta === null ? null : dove(voluta);
-  const segno5 = stanza2 === null ? null : dove(stanza2);
+  const dove2 = (v) => Math.max(0, Math.min(100, (v - basso) / (alto - basso) * 100));
+  const pallino = voluta === null ? null : dove2(voluta);
+  const segno5 = stanza2 === null ? null : dove2(stanza2);
   const stato3 = on ? azione || PAROLE_DEL_CLIMA()[s] || s : t("Spento", "Off");
   const numeroGrande = stanza2 === null ? "—" : esc(decimale2(stanza2));
   const scala2 = `<div class="mu-cp-scala" aria-hidden="true">
@@ -108144,7 +108192,7 @@ function tessera2({
   attiva: attiva2,
   grande,
   dati = "",
-  dove,
+  dove: dove2,
   classi = "",
   destra = "",
   conStato = false,
@@ -108167,7 +108215,7 @@ function tessera2({
   const parola2 = destra || conStato ? `<span class="mu-stato ${statoAcceso ? "" : "spento"}">${esc(etichetta3)}</span>` : `<span class="mu-et">${esc(etichetta3)}</span>`;
   const pastiglia5 = !destra && !conStato && attiva2 ? `<span class="mu-pasti">${esc(t("attiva", "active"))}</span>` : "";
   return `<button type="button" class="mu-carta mu-card mu-fam mu-tessera ${classi} ${attiva2 ? "mu-accesa" : ""} ${grande ? "grande" : ""}" style="--acc:${accento}" ${dati}>
-    <div class="mu-riga1"><span class="mu-chip" style="--c:${grande ? 84 : 54}px">${disegno(chiave2, grande ? 50 : 32, dove)}</span>${parola2}${pastiglia5}${destra}</div>
+    <div class="mu-riga1"><span class="mu-chip" style="--c:${grande ? 84 : 54}px">${disegno(chiave2, grande ? 50 : 32, dove2)}</span>${parola2}${pastiglia5}${destra}</div>
     <div class="mu-osw mu-fam-nome">${esc(titolo3)}</div><div class="mu-sotto">${esc(sotto)}</div></button>`;
 }
 function cardAzione(c, i, grande = false) {
@@ -110163,9 +110211,9 @@ function mettiLaPillola(nodo3) {
   const testa2 = tela4?.querySelector?.(".mu-testa");
   let sopra = 16;
   if (testa2) {
-    let dove = 0;
-    for (let n = testa2; n && n !== tela4; n = n.offsetParent) dove += n.offsetTop;
-    sopra = Math.round(dove + testa2.offsetHeight + 12);
+    let dove2 = 0;
+    for (let n = testa2; n && n !== tela4; n = n.offsetParent) dove2 += n.offsetTop;
+    sopra = Math.round(dove2 + testa2.offsetHeight + 12);
   }
   luce.sopra = sopra;
   const pillola2 = tela4?.querySelector?.(".mu-luce-pillola");
@@ -113049,11 +113097,11 @@ function fraseDelQuando(q) {
     return q.verso === "chiude" ? t(`Quando ${chi2} si chiude`, `When ${chi2} closes`) : t(`Quando ${chi2} si apre`, `When ${chi2} opens`);
   }
   if (q.tipo === "movimento") {
-    const dove = q.entita.length ? nomi2(q.entita) : "…";
+    const dove2 = q.entita.length ? nomi2(q.entita) : "…";
     return q.verso === "no" ? t(
-      `Quando non c'è movimento in ${dove} da ${q.minuti} min`,
-      `When there is no motion in ${dove} for ${q.minuti} min`
-    ) : t(`Quando c'è movimento in ${dove}`, `When there is motion in ${dove}`);
+      `Quando non c'è movimento in ${dove2} da ${q.minuti} min`,
+      `When there is no motion in ${dove2} for ${q.minuti} min`
+    ) : t(`Quando c'è movimento in ${dove2}`, `When there is motion in ${dove2}`);
   }
   if (q.tipo === "valore") {
     const chi2 = q.entita ? nomeDi11(q.entita) : "…";
@@ -113405,8 +113453,8 @@ function tastiDeiGruppiHtml(elenco18, { per = "categoria", cerca: cerca6 = "" } 
     quanti4 === chiavi2.length
   )}${tasto5("chiudi", "⊟", t("Ritrai tutto", "Collapse all"), quanti4 === 0)}</span>`;
 }
-function rifaiITastiDeiGruppi(dove, elenco18, opzioni2) {
-  const vecchi = dove?.querySelector?.("[data-aug-tasti]");
+function rifaiITastiDeiGruppi(dove2, elenco18, opzioni2) {
+  const vecchi = dove2?.querySelector?.("[data-aug-tasti]");
   if (vecchi) vecchi.outerHTML = tastiDeiGruppiHtml(elenco18, opzioni2);
 }
 function scelteDelRaggruppa(per, attributo3, classe3 = "") {
@@ -113672,7 +113720,7 @@ function riassuntoDi(config) {
   };
 }
 var disegni = 0;
-var disegno2 = (chiave2, dove = "") => oggettoWidget(chiave2, "", `au-${dove || chiave2}-${disegni++ % 64}`);
+var disegno2 = (chiave2, dove2 = "") => oggettoWidget(chiave2, "", `au-${dove2 || chiave2}-${disegni++ % 64}`);
 var QUANDO_DELLA_TENDINA = () => [
   [
     "orario",
@@ -115108,9 +115156,9 @@ function campoAttivo() {
   const quale = d.auTesto !== void 0 ? `[data-au-testo="${CSS.escape(d.auTesto)}"]` : d.auCerca !== void 0 ? "[data-au-cerca]" : d.auRinomina !== void 0 ? "[data-au-rinomina]" : d.aucCerca !== void 0 ? "[data-auc-cerca]" : "";
   return quale ? { quale, cursore: attivo.selectionStart ?? null } : null;
 }
-function rimettiIlCampo(dove, campo6) {
+function rimettiIlCampo(dove2, campo6) {
   if (!campo6) return;
-  const nuovo = dove.querySelector(campo6.quale);
+  const nuovo = dove2.querySelector(campo6.quale);
   nuovo?.focus?.();
   if (campo6.cursore !== null) {
     try {
@@ -115120,26 +115168,26 @@ function rimettiIlCampo(dove, campo6) {
   }
 }
 function ridisegna11() {
-  const dove = contenitore2();
-  if (!dove) return false;
-  if (doc.getElementById("cd-entpick") && dove.querySelector("[data-au-cerca-di]")) return true;
+  const dove2 = contenitore2();
+  if (!dove2) return false;
+  if (doc.getElementById("cd-entpick") && dove2.querySelector("[data-au-cerca-di]")) return true;
   const app = state109.inApp;
   if (Date.now() - state109.chiestoIl > VALE && !state109.chiedendo) void chiediAllaCasa3();
   const html = paginaHtml({ app });
-  if (dove.dataset.auScritto !== html || !dove.firstElementChild) {
+  if (dove2.dataset.auScritto !== html || !dove2.firstElementChild) {
     const campo6 = campoAttivo();
-    if (app) dove.innerHTML = html;
+    if (app) dove2.innerHTML = html;
     else {
-      dove.querySelectorAll(":scope > .au, :scope > :not(.dm-alberatura-titolo)").forEach((n) => n.remove());
-      dove.insertAdjacentHTML("beforeend", html);
+      dove2.querySelectorAll(":scope > .au, :scope > :not(.dm-alberatura-titolo)").forEach((n) => n.remove());
+      dove2.insertAdjacentHTML("beforeend", html);
     }
-    dove.dataset.auScritto = html;
-    dove.dataset.renderer = AUTOMAZIONI_TAB;
-    rimettiIlCampo(dove, campo6);
+    dove2.dataset.auScritto = html;
+    dove2.dataset.renderer = AUTOMAZIONI_TAB;
+    rimettiIlCampo(dove2, campo6);
   }
   if (!app) {
     ensureTitoloDellaSezione();
-    const nome = dove.querySelector(":scope > .dm-alberatura-titolo .dm-alberatura-titolo-nome");
+    const nome = dove2.querySelector(":scope > .dm-alberatura-titolo .dm-alberatura-titolo-nome");
     const voluto = titoloDellaVista();
     if (nome && nome.textContent !== voluto) nome.textContent = voluto;
     doc.documentElement.classList.add("au-su");
@@ -115239,14 +115287,14 @@ function metti3(via, valore3) {
     state109.bozza = b2;
     return;
   }
-  let dove = b2;
+  let dove2 = b2;
   for (const p of pezzi) {
-    dove = dove?.[Number.isInteger(+p) ? +p : p];
-    if (dove === void 0) return;
+    dove2 = dove2?.[Number.isInteger(+p) ? +p : p];
+    if (dove2 === void 0) return;
   }
-  if (!dove) return;
+  if (!dove2) return;
   if (ultimo === "+") {
-    if (valore3 && Array.isArray(dove) && !dove.includes(valore3)) dove.push(valore3);
+    if (valore3 && Array.isArray(dove2) && !dove2.includes(valore3)) dove2.push(valore3);
   } else if (ultimo === "tipo" && pezzi[0] === "soloSe") {
     b2.soloSe[+pezzi[1]] = nuovaCondizione(valore3);
   } else if (ultimo === "tipo" && pezzi.at(-2) === "allora") {
@@ -115258,12 +115306,12 @@ function metti3(via, valore3) {
     if (NUMERI3.test(`.${ultimo}`))
       v = valore3 === "" ? "" : Number(String(valore3).replace(",", "."));
     if (ultimo === "non") v = valore3 === "si";
-    if (Array.isArray(dove) && v === "") dove.splice(chiave2, 1);
-    else dove[chiave2] = v;
+    if (Array.isArray(dove2) && v === "") dove2.splice(chiave2, 1);
+    else dove2[chiave2] = v;
     if (via === "quando.verso" && b2.quando.tipo === "persone" && v === "tuttiFuori")
       b2.quando.chi = [];
-    if (/^(quando|soloSe\.\d+)\.entita$/.test(via) && dove.attributo !== void 0)
-      dove.attributo = "";
+    if (/^(quando|soloSe\.\d+)\.entita$/.test(via) && dove2.attributo !== void 0)
+      dove2.attributo = "";
   }
   state109.bozza = b2;
   state109.errore = "";
@@ -115482,8 +115530,8 @@ async function converti() {
   ridisegna11();
 }
 function dentroDiNoi(event) {
-  const dove = contenitore2();
-  return dove && dove.contains(event.target) && event.target.closest?.(".au") ? dove : null;
+  const dove2 = contenitore2();
+  return dove2 && dove2.contains(event.target) && event.target.closest?.(".au") ? dove2 : null;
 }
 function toccoSopra(event) {
   const chiudi5 = event.target.closest?.("[data-au-store-chiudi]");
@@ -115509,8 +115557,8 @@ function toccoSopra(event) {
 }
 function onClick26(event) {
   if (toccoSopra(event)) return;
-  const dove = dentroDiNoi(event);
-  if (!dove) {
+  const dove2 = dentroDiNoi(event);
+  if (!dove2) {
     if (state109.tendina) {
       state109.tendina = false;
       ridisegna11();
@@ -115605,11 +115653,11 @@ function onClick26(event) {
       Math.min(30, Math.round((Number(c[d.auGradi]) + Number(d.auPasso)) * 2) / 2)
     );
   } else if (d.auPeriodo) {
-    const dove2 = d.auPeriodo.split(".").reduce((x, p) => x?.[p], state109.bozza);
-    if (dove2)
-      dove2.periodo = d.auSi === "si" ? dove2.periodo || {
-        da: dove2 === state109.bozza.fasce ? "10-15" : "10-01",
-        a: dove2 === state109.bozza.fasce ? "04-15" : "03-31"
+    const dove3 = d.auPeriodo.split(".").reduce((x, p) => x?.[p], state109.bozza);
+    if (dove3)
+      dove3.periodo = d.auSi === "si" ? dove3.periodo || {
+        da: dove3 === state109.bozza.fasce ? "10-15" : "10-01",
+        a: dove3 === state109.bozza.fasce ? "04-15" : "03-31"
       } : null;
   } else if (d.auFuori) state109.bozza.fasce.fuori = d.auFuori === "lascia" ? "lascia" : "spegni";
   else if (d.auCopia) {
@@ -115674,9 +115722,9 @@ function onInput6(event) {
   if (!via || !state109.bozza) return;
   const pezzi = via.split(".");
   const ultimo = pezzi.pop();
-  const dove = pezzi.reduce((x, p) => x?.[Number.isInteger(+p) ? +p : p], state109.bozza);
-  if (!dove) return;
-  dove[ultimo] = event.target.value;
+  const dove2 = pezzi.reduce((x, p) => x?.[Number.isInteger(+p) ? +p : p], state109.bozza);
+  if (!dove2) return;
+  dove2[ultimo] = event.target.value;
   const leggi4 = contenitore2()?.querySelector?.("[data-au-leggi]");
   const pulita3 = pulitaDallaBozza(state109.bozza);
   if (leggi4)
@@ -115709,27 +115757,27 @@ function mezzoraSotto(event) {
 function fasceDellaBarra(via) {
   const pezzi = via.split(".");
   const ultimo = pezzi.pop();
-  const dove = pezzi.reduce((x, p) => x?.[Number.isInteger(+p) ? +p : p], state109.bozza);
+  const dove2 = pezzi.reduce((x, p) => x?.[Number.isInteger(+p) ? +p : p], state109.bozza);
   const chiave2 = Number.isInteger(+ultimo) ? +ultimo : ultimo;
-  return dove && Array.isArray(dove[chiave2]) ? { dove, chiave: chiave2 } : null;
+  return dove2 && Array.isArray(dove2[chiave2]) ? { dove: dove2, chiave: chiave2 } : null;
 }
 function dipingi12(via, i, si, barraEl) {
-  const dove = fasceDellaBarra(via);
-  if (!dove) return;
-  const mezzore = mezzoreDelleFasce(dove.dove[dove.chiave]);
+  const dove2 = fasceDellaBarra(via);
+  if (!dove2) return;
+  const mezzore = mezzoreDelleFasce(dove2.dove[dove2.chiave]);
   if (mezzore[i] === si) return;
   mezzore[i] = si;
-  dove.dove[dove.chiave] = fasceDalleMezzore(mezzore);
+  dove2.dove[dove2.chiave] = fasceDalleMezzore(mezzore);
   barraEl.children[i]?.classList?.toggle("si", si);
 }
 function onPointerDown3(event) {
   if (!dentroDiNoi(event) || !state109.bozza) return;
   const sotto = mezzoraSotto(event);
   if (!sotto) return;
-  const dove = fasceDellaBarra(sotto.via);
-  if (!dove) return;
+  const dove2 = fasceDellaBarra(sotto.via);
+  if (!dove2) return;
   event.preventDefault();
-  const si = !mezzoreDelleFasce(dove.dove[dove.chiave])[sotto.i];
+  const si = !mezzoreDelleFasce(dove2.dove[dove2.chiave])[sotto.i];
   state109.trascina = { via: sotto.via, si, barraEl: sotto.barraEl };
   try {
     sotto.barraEl.setPointerCapture?.(event.pointerId);
@@ -115865,9 +115913,9 @@ function chiudiLaPagina() {
 function tornaDalleAutomazioni() {
   if (!state109.inApp) return false;
   chiudiLaPagina();
-  const dove = linguetta2(state109.doveEra || "home") || linguetta2("home");
+  const dove2 = linguetta2(state109.doveEra || "home") || linguetta2("home");
   try {
-    dove?.click?.();
+    dove2?.click?.();
   } catch (_errore) {
   }
   if (!doc.querySelector(".page.active")) doc.getElementById("page-home")?.classList?.add("active");
@@ -117205,14 +117253,14 @@ var PAUSA_CHE_NON_SPEGNE = 6e4;
 function accensioni2(intervalli, inizio, tolleranza2 = PAUSA_CHE_NON_SPEGNE) {
   return unisci(intervalli, tolleranza2).filter(([da]) => da > inizio).length;
 }
-function mediaEPeso(righe4, inizio, fine, leggi4, dove = () => true) {
+function mediaEPeso(righe4, inizio, fine, leggi4, dove2 = () => true) {
   let somma3 = 0;
   let peso = 0;
   const elenco18 = Array.isArray(righe4) ? righe4 : [];
   for (let i = 0; i < elenco18.length; i += 1) {
     const da = Math.max(inizio, elenco18[i].t);
     const a = Math.min(fine, i + 1 < elenco18.length ? elenco18[i + 1].t : fine);
-    if (a <= da || !dove(elenco18[i])) continue;
+    if (a <= da || !dove2(elenco18[i])) continue;
     const valore3 = leggi4(elenco18[i]);
     if (valore3 === null || valore3 === void 0 || !Number.isFinite(valore3)) continue;
     somma3 += valore3 * (a - da);
@@ -120277,11 +120325,11 @@ function filtraDopo(nome) {
 }
 function insetDi(documento, lato = "bottom") {
   try {
-    const dove = documento?.body || documento?.documentElement;
-    if (!dove) return 0;
+    const dove2 = documento?.body || documento?.documentElement;
+    if (!dove2) return 0;
     const sonda = documento.createElement("div");
     sonda.style.cssText = `position:fixed;left:0;${lato}:0;width:0;height:env(safe-area-inset-${lato},0px);pointer-events:none;visibility:hidden`;
-    dove.append(sonda);
+    dove2.append(sonda);
     const alto = sonda.getBoundingClientRect().height;
     sonda.remove();
     return alto;
@@ -120291,9 +120339,9 @@ function insetDi(documento, lato = "bottom") {
 }
 function giaLasciatoSotto(cima) {
   try {
-    const dove = laCorniceNellaCima(root);
-    if (!dove || !cima?.documentElement) return 0;
-    return Math.max(0, cima.documentElement.clientHeight - dove.sotto);
+    const dove2 = laCorniceNellaCima(root);
+    if (!dove2 || !cima?.documentElement) return 0;
+    return Math.max(0, cima.documentElement.clientHeight - dove2.sotto);
   } catch (_error) {
     return 0;
   }
@@ -120323,8 +120371,8 @@ function misuraIlFondoDiSistema() {
   return valore3;
 }
 function giaLasciatoSopra() {
-  const dove = laCorniceNellaCima(root);
-  return dove ? Math.max(0, dove.sopra) : 0;
+  const dove2 = laCorniceNellaCima(root);
+  return dove2 ? Math.max(0, dove2.sopra) : 0;
 }
 var CIMA_DI_SISTEMA = "--dm-cima-di-sistema";
 function misuraLaCimaDiSistema() {
@@ -126563,17 +126611,17 @@ var punto = (evento) => {
   return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : null;
 };
 function scorrimentiSopra(nodo3) {
-  const dove = { finestraX: root.scrollX ?? 0, finestraY: root.scrollY ?? 0 };
+  const dove2 = { finestraX: root.scrollX ?? 0, finestraY: root.scrollY ?? 0 };
   let quanti4 = 0;
   for (let salita = nodo3; salita?.nodeType === 1 && quanti4 < 12; salita = salita.parentElement) {
     const alto = salita.scrollHeight - salita.clientHeight;
     const largo = salita.scrollWidth - salita.clientWidth;
     if (alto <= 1 && largo <= 1) continue;
     quanti4 += 1;
-    dove[`v${quanti4}`] = salita.scrollTop;
-    dove[`o${quanti4}`] = salita.scrollLeft;
+    dove2[`v${quanti4}`] = salita.scrollTop;
+    dove2[`o${quanti4}`] = salita.scrollLeft;
   }
-  return dove;
+  return dove2;
 }
 function segnaLaPartenza(evento) {
   if (evento?.isPrimary === false) return;
@@ -126868,7 +126916,7 @@ var schedaAttiva9 = () => clean(doc?.querySelector?.(".ed-tab.active")?.dataset?
 var bozza = () => state129.bozza ||= muroPulito(readJson(CHIAVE_MURO, null));
 var salvato = () => muroPulito(readJson(CHIAVE_MURO, null));
 var bozzaSporca = () => Boolean(state129.bozza) && JSON.stringify(muroPulito(state129.bozza)) !== JSON.stringify(salvato());
-var disegno3 = (chiave2, misura8, dove) => oggettoWidget(chiave2, "", `muro-ed-${dove}`).replace(
+var disegno3 = (chiave2, misura8, dove2) => oggettoWidget(chiave2, "", `muro-ed-${dove2}`).replace(
   'class="dm-oggetto"',
   `class="dm-oggetto" style="width:${misura8}px;height:${misura8}px"`
 );
@@ -128084,17 +128132,17 @@ function metti4(via, valore3) {
       return;
     }
   }
-  let dove = m;
+  let dove2 = m;
   const crea = REGIA.test(via);
   pezzi.slice(0, -1).forEach((pezzo3, n) => {
     const chiave2 = Number.isInteger(+pezzo3) ? +pezzo3 : pezzo3;
-    if (crea && dove && dove[chiave2] == null)
-      dove[chiave2] = Number.isInteger(+pezzi[n + 1]) ? [] : {};
-    dove = dove?.[chiave2];
+    if (crea && dove2 && dove2[chiave2] == null)
+      dove2[chiave2] = Number.isInteger(+pezzi[n + 1]) ? [] : {};
+    dove2 = dove2?.[chiave2];
   });
-  if (!dove) return;
+  if (!dove2) return;
   const ultimo = pezzi.at(-1);
-  dove[ultimo] = typeof dove[ultimo] === "number" && String(valore3).trim() !== "" ? Number(valore3) : valore3;
+  dove2[ultimo] = typeof dove2[ultimo] === "number" && String(valore3).trim() !== "" ? Number(valore3) : valore3;
   if (via === "risveglio.entita" && valore3) m.risveglio.attivo = true;
   if (via === "fonte") state129.fonte = null;
   state129.bozza = muroPulito(m);
@@ -128106,7 +128154,7 @@ function togliVoce(via) {
   const indice = Number(pezzi.pop());
   const m = structuredClone(bozza());
   const elenco18 = pezzi.reduce(
-    (dove, pezzo3) => dove?.[Number.isInteger(+pezzo3) ? +pezzo3 : pezzo3],
+    (dove2, pezzo3) => dove2?.[Number.isInteger(+pezzo3) ? +pezzo3 : pezzo3],
     m
   );
   if (!Array.isArray(elenco18) || !Number.isInteger(indice)) return;
@@ -128115,13 +128163,13 @@ function togliVoce(via) {
 }
 function aggiungiVoce(via) {
   const m = structuredClone(bozza());
-  const elenco18 = via.split(".").reduce((dove, pezzo3) => dove?.[Number.isInteger(+pezzo3) ? +pezzo3 : pezzo3], m);
+  const elenco18 = via.split(".").reduce((dove2, pezzo3) => dove2?.[Number.isInteger(+pezzo3) ? +pezzo3 : pezzo3], m);
   if (!Array.isArray(elenco18)) return;
   elenco18.push({ nome: "", colore: "", canali: [] });
   state129.bozza = muroPulito(m);
 }
 function leggiDalPercorso(via) {
-  return via.split(".").reduce((dove, pezzo3) => dove?.[Number.isInteger(+pezzo3) ? +pezzo3 : pezzo3], bozza());
+  return via.split(".").reduce((dove2, pezzo3) => dove2?.[Number.isInteger(+pezzo3) ? +pezzo3 : pezzo3], bozza());
 }
 function sposta2(elenco18, da, a) {
   if (a < 0 || a >= elenco18.length) return elenco18;
@@ -128978,14 +129026,14 @@ function testaMarkup11(conto, soglia3) {
 }
 function dipingi13() {
   const pagina3 = ensureBatteriePage();
-  const dove = pagina3?.querySelector?.("#batterie-wrap");
-  if (!dove) return;
+  const dove2 = pagina3?.querySelector?.("#batterie-wrap");
+  if (!dove2) return;
   if (!paginaVisibile(BATTERIE_PAGE_ID)) return;
   const righe4 = batterieInPlancia();
   if (!righe4.length) {
     if (state131.firma !== "vuoto") {
       state131.firma = "vuoto";
-      dove.innerHTML = vuotoMarkup9();
+      dove2.innerHTML = vuotoMarkup9();
     }
     return;
   }
@@ -128997,7 +129045,7 @@ function dipingi13() {
   ).join(",")}`;
   if (state131.firma === firma2) return;
   state131.firma = firma2;
-  dove.innerHTML = `${testaMarkup11(conto, soglia3)}
+  dove2.innerHTML = `${testaMarkup11(conto, soglia3)}
     <div class="dm-batt-elenco">${righe4.map((riga5) => rigaMarkup14(riga5, states)).join("")}</div>`;
 }
 function schedule29() {
@@ -133635,9 +133683,9 @@ function ensureAllertaInHome() {
       }
     });
   }
-  const dove = quanti4 > 1 && verdetto.nome ? `${verdetto.nome} · ${nomeDellaSorgente(verdetto.sorgente)}` : nomeDellaSorgente(verdetto.sorgente);
+  const dove2 = quanti4 > 1 && verdetto.nome ? `${verdetto.nome} · ${nomeDellaSorgente(verdetto.sorgente)}` : nomeDellaSorgente(verdetto.sorgente);
   const misura8 = `${formatWatts3(verdetto.watt)} / ${formatWatts3(verdetto.limite)}`;
-  const firma2 = `${verdetto.sorgente}|${dove}|${misura8}`;
+  const firma2 = `${verdetto.sorgente}|${dove2}|${misura8}`;
   if (allerta.dataset.firma !== firma2) {
     allerta.dataset.firma = firma2;
     allerta.innerHTML = `<span class="dm-casa-chip" aria-hidden="true">${disegnoDellaSorgente(
@@ -133647,7 +133695,7 @@ function ensureAllertaInHome() {
         <b class="dm-casa-testa">${esc(misura8)}</b>
         <small class="dm-casa-coda"><span class="dm-soglia-nastro">${esc(
       t("Sovraccarico", "Overload")
-    )} · ${esc(dove)}</span></small>
+    )} · ${esc(dove2)}</span></small>
       </span>`;
     allerta.title = t("Tocca per aprire l'Energia", "Tap to open Energy");
   }
@@ -133922,7 +133970,7 @@ function tendina3(entity2, scelta3) {
   select.innerHTML = roomOptionsMarkup(scelta3, t("Nessuna stanza", "No room"));
   return select;
 }
-function attacca(contenitore5, entity2, mappa2, dove) {
+function attacca(contenitore5, entity2, mappa2, dove2) {
   let select = contenitore5.querySelector(`:scope [${ASSIGN_ATTRIBUTE}]`);
   const scelta3 = clean(mappa2[entity2]);
   if (select) {
@@ -133933,7 +133981,7 @@ function attacca(contenitore5, entity2, mappa2, dove) {
     return false;
   }
   select = tendina3(entity2, scelta3);
-  dove(select);
+  dove2(select);
   return true;
 }
 function entityOfRow(row) {
@@ -140318,7 +140366,7 @@ function entitiesOfSlot(slot) {
   );
   return ENTITY_RE3.test(value) ? [value] : [];
 }
-function attacca2(contenitore5, entities, fuori, tessera4, dove) {
+function attacca2(contenitore5, entities, fuori, tessera4, dove2) {
   const dentro3 = entities.some((entity2) => !fuori.has(entity2));
   let button = contenitore5.querySelector(`:scope [${CHOICE_ATTRIBUTE}]`);
   if (button) {
@@ -140329,7 +140377,7 @@ function attacca2(contenitore5, entities, fuori, tessera4, dove) {
     return false;
   }
   button = interruttore3(entities, dentro3, tessera4);
-  dove(button);
+  dove2(button);
   return true;
 }
 function ensureEntityChoices() {
@@ -141281,7 +141329,7 @@ var DEL_PIANIFICATORE = /* @__PURE__ */ new Set(["routine", "fasce"]);
 var delPianificatore = (v) => DEL_PIANIFICATORE.has(v?.modello?.tipo);
 var leAutomazioni = () => automazioniDiCasa().filter((v) => !delPianificatore(v));
 var ilPianificatore = () => automazioniDiCasa().filter(delPianificatore);
-var orologio4 = (dove) => oggettoWidget("automazioni", "", `auc-${dove}`);
+var orologio4 = (dove2) => oggettoWidget("automazioni", "", `auc-${dove2}`);
 var disegni2 = 0;
 var disegno4 = (chiave2) => oggettoWidget(chiave2, "", `auc-${chiave2}-${disegni2++ % 96}`);
 function testata4({ app }) {
@@ -141528,10 +141576,10 @@ function htmlDelFoglio(v) {
   const puo = st.ponte?.puoScrivere && v.modificabile;
   const fu = ultimaVoltaDi(v);
   const categoriaHa = categorieDiCasa().find((c) => c.id === clean(v.categoriaHa))?.nome || "";
-  const dove = [categoriaHa === nomeCat ? "" : categoriaHa, `${emoji} ${nomeCat}`, clean(v.area)].filter(Boolean).join(" · ");
+  const dove2 = [categoriaHa === nomeCat ? "" : categoriaHa, `${emoji} ${nomeCat}`, clean(v.area)].filter(Boolean).join(" · ");
   const modifica = puo ? `<button type="button" class="modifica" data-auc-modifica>✏️ ${esc(t("Modifica", "Edit"))}</button>` : "";
   return `<div class="ad-foglio" role="dialog" aria-modal="true" aria-label="${esc(v.nome)}" style="--c:${colore2}"><div class="man"></div>
-<div class="su"><span class="orb">${disegno4(oggetto3)}</span><div><h4>${esc(v.nome)}</h4><div class="dove">${esc(dove)}</div></div><button type="button" class="led" aria-pressed="${v.attiva}" data-auc-led="${esc(
+<div class="su"><span class="orb">${disegno4(oggetto3)}</span><div><h4>${esc(v.nome)}</h4><div class="dove">${esc(dove2)}</div></div><button type="button" class="led" aria-pressed="${v.attiva}" data-auc-led="${esc(
     v.entity_id
   )}" aria-label="${esc(t("Attiva o spenta", "On or off"))}"></button></div>
 <div class="blk">${bloccoDelFoglio(v)}</div>
@@ -141559,13 +141607,13 @@ function chiudiIlFoglio() {
   doc?.getElementById?.(ID_DEL_FOGLIO)?.remove();
 }
 var laSezioneSiVede = () => doc?.getElementById?.(ID_DELLA_SEZIONE)?.classList?.contains("active");
-function conIlCampo(dove, scrivi6) {
+function conIlCampo(dove2, scrivi6) {
   const attivo = doc.activeElement;
   const cercava = Boolean(attivo?.matches?.("[data-auc-cerca]"));
   const cursore2 = cercava ? attivo.selectionStart : null;
   scrivi6();
   if (cercava) {
-    const campo6 = dove.querySelector("[data-auc-cerca]");
+    const campo6 = dove2.querySelector("[data-auc-cerca]");
     campo6?.focus?.();
     if (cursore2 !== null) {
       try {
@@ -141999,15 +142047,15 @@ function campiDelPasso(passo) {
         leggi4(voce3.schema, nome);
         continue;
       }
-      const dove = sezione2 ? `step.${step}.sections.${sezione2}.` : `step.${step}.`;
+      const dove2 = sezione2 ? `step.${step}.sections.${sezione2}.` : `step.${step}.`;
       const g = genereDelCampo(voce3);
       const campo6 = {
         nome,
         sezione: sezione2,
         tipo: g.tipo,
         obbligatorio: voce3.required === true,
-        etichetta: pulito71(parole5[`${dove}data.${nome}`]) || nomeLeggibile3(nome),
-        aiuto: testoDelPasso(parole5[`${dove}data_description.${nome}`], passo?.segnaposti),
+        etichetta: pulito71(parole5[`${dove2}data.${nome}`]) || nomeLeggibile3(nome),
+        aiuto: testoDelPasso(parole5[`${dove2}data_description.${nome}`], passo?.segnaposti),
         valore: g.tipo === "costante" ? g.valore : valoreDiPartenza(voce3)
       };
       if (g.tipo === "numero") {
@@ -142625,9 +142673,9 @@ function apriAPienoSchermo(id, quale) {
 function tornaDaPienoSchermo(id) {
   if (!doc?.getElementById?.(id)) return false;
   doc.getElementById(id).remove();
-  const dove = linguetta3(doveEra[id] || "home") || linguetta3("home");
+  const dove2 = linguetta3(doveEra[id] || "home") || linguetta3("home");
   try {
-    dove?.click?.();
+    dove2?.click?.();
   } catch (_errore) {
   }
   if (!doc.querySelector(".page.active")) doc.getElementById("page-home")?.classList?.add("active");
@@ -145378,10 +145426,10 @@ function pastiglieDellAuto(lettura4) {
     fuori.push({ tono: "", testo: `✋ ${t("Freno tirato", "Handbrake on")}` });
   if (d.posizione || d.coordinate) {
     const via = d.posizione === "casa" ? "" : posizioneScritta(d.coordinate, laViaDellAuto(d.coordinate));
-    const dove = d.posizione === "casa" ? t("A casa", "At home") : via || (d.posizione === "fuori" || !d.posizione ? t("Fuori casa", "Away") : d.posizione);
+    const dove2 = d.posizione === "casa" ? t("A casa", "At home") : via || (d.posizione === "fuori" || !d.posizione ? t("Fuori casa", "Away") : d.posizione);
     fuori.push({
       tono: "",
-      testo: `📍 ${dove}`,
+      testo: `📍 ${dove2}`,
       link: d.posizione === "casa" ? "" : linkDellaMappa(d.coordinate)
     });
   }
@@ -149176,8 +149224,8 @@ function scenaStufa(lettura4) {
     ["computer", "M 300 248 C 430 248 470 300 550 300"],
     ["telefono", "M 300 216 C 450 216 640 228 750 228"]
   ].map(
-    ([dove, strada2]) => `<path class="dm-it-aria-scia dm-it-aria-${dove}" d="${strada2}"/>
-          <path class="dm-it-aria-calda dm-it-aria-${dove}" d="${strada2}"/>`
+    ([dove2, strada2]) => `<path class="dm-it-aria-scia dm-it-aria-${dove2}" d="${strada2}"/>
+          <path class="dm-it-aria-calda dm-it-aria-${dove2}" d="${strada2}"/>`
   ).join("");
   return `${allarmeDellaStufaMarkup(lettura4)}<div class="dm-it-scena" data-dm-it-scena="stufa"
       data-acceso="${lettura4.acceso === true}" data-brucia="${lettura4.brucia === true}"
@@ -151478,12 +151526,12 @@ function vuotoMarkup10() {
 }
 function dipingi14() {
   const pagina3 = ensureUpsPage();
-  const dove = pagina3?.querySelector?.("#ups-wrap");
-  if (!dove) return;
+  const dove2 = pagina3?.querySelector?.("#ups-wrap");
+  if (!dove2) return;
   if (!upsConfigurato()) {
     if (state166.firma !== "vuoto") {
       state166.firma = "vuoto";
-      dove.innerHTML = vuotoMarkup10();
+      dove2.innerHTML = vuotoMarkup10();
     }
     return;
   }
@@ -151494,9 +151542,9 @@ function dipingi14() {
     da: daQuandoUps(gruppo2, allStates(), risolvi4())
   }));
   const firma2 = JSON.stringify(scene);
-  if (state166.firma === firma2 && dove.firstElementChild) return;
+  if (state166.firma === firma2 && dove2.firstElementChild) return;
   state166.firma = firma2;
-  dove.innerHTML = scene.map(
+  dove2.innerHTML = scene.map(
     (voce3) => `${elenco18.length > 1 ? `<h3 class="dm-ups-titolo">${esc(voce3.nome)}</h3>` : ""}<div class="dm-ups-stage">${scena(voce3.dato, voce3.da)}</div>`
   ).join("");
 }
@@ -151987,16 +152035,16 @@ function chiGuardaMarkup() {
 }
 function dipingi15() {
   const pagina3 = ensureCalendarioPage();
-  const dove = pagina3?.querySelector?.("#calendario-wrap");
-  if (!dove) return;
+  const dove2 = pagina3?.querySelector?.("#calendario-wrap");
+  if (!dove2) return;
   const chiGuarda2 = chiGuardaMarkup();
   const calendari = calendariConTinta();
   if (!calendari.length) {
     const soleCose = bloccoDaFareMarkup();
     const firmaVuota = `${chiGuarda2}${soleCose ? `cose:${soleCose}` : "vuoto"}`;
-    if (state167.firma === firmaVuota && dove.firstElementChild) return;
+    if (state167.firma === firmaVuota && dove2.firstElementChild) return;
     state167.firma = firmaVuota;
-    dove.innerHTML = chiGuarda2 + (soleCose ? `<section class="dm-calp-cose">
+    dove2.innerHTML = chiGuarda2 + (soleCose ? `<section class="dm-calp-cose">
           <h3 class="dm-calp-titolo">✅ ${esc(t("Da fare", "To-do"))}</h3>
           ${soleCose}
         </section>` : vuotoMarkup11());
@@ -152032,7 +152080,7 @@ function dipingi15() {
     scadenze.map((voce3) => [voce3.uid, voce3.inizio, voce3.summary]),
     chiaveDelGiorno2(adesso2)
   ]);
-  if (state167.firma === firma2 && dove.firstElementChild) return;
+  if (state167.firma === firma2 && dove2.firstElementChild) return;
   state167.firma = firma2;
   const ritardoMarkup = arretrati.length && !state167.giorno ? `<section class="dm-calp-giorno" data-dm-ritardo="true">
           <h3 class="dm-calp-titolo">⚠️ ${esc(paroleDelCalendario3().inRitardo)}</h3>
@@ -152056,7 +152104,7 @@ function dipingi15() {
   dichiaraCalendari(calendari);
   const modulo = moduloMarkup(calendari, listeConNome());
   const nuovo = bozzaAperta2() ? "" : tastoNuovoMarkup(calendari, state167.giorno);
-  dove.innerHTML = `${chiGuarda2}${fasciaMarkup4(giorni, adesso2, lingua9, calendari)}${legenda}
+  dove2.innerHTML = `${chiGuarda2}${fasciaMarkup4(giorni, adesso2, lingua9, calendari)}${legenda}
     ${state167.giorno ? `<button type="button" class="dm-calp-tutto" data-dm-calp-tutto>↩ ${esc(
     t("Tutti i giorni", "All days")
   )}</button>` : ""}
@@ -153206,7 +153254,7 @@ function apriLaTendinaDelGiorno(indice) {
   fatto2.textContent = t("Fatto", "Done");
   fatto2.addEventListener("click", () => {
     const giorni = turno.giorni.map(
-      (giorno3, dove) => dove === indice ? [...scelti] : giorno3.slice()
+      (giorno3, dove2) => dove2 === indice ? [...scelti] : giorno3.slice()
     );
     state170.bozza = { ...bozza2(), turno: { inizio: inizioScritto() || turno.inizio, giorni } };
     chiudiIlFoglioDiScelta();
@@ -153678,14 +153726,14 @@ function testaMarkup12(conto, esclusioni) {
 }
 function dipingi16() {
   const pagina3 = ensureVarchiPage();
-  const dove = pagina3?.querySelector?.("#varchi-wrap");
-  if (!dove) return;
+  const dove2 = pagina3?.querySelector?.("#varchi-wrap");
+  if (!dove2) return;
   if (!paginaVisibile(VARCHI_PAGE_ID)) return;
   const righe4 = varchiInPlancia();
   if (!righe4.length) {
     if (state171.firma !== "vuoto") {
       state171.firma = "vuoto";
-      dove.innerHTML = vuotoMarkup12();
+      dove2.innerHTML = vuotoMarkup12();
     }
     return;
   }
@@ -153703,9 +153751,9 @@ function dipingi16() {
     veli,
     t("Aperto", "Open")
   ]);
-  if (state171.firma !== firma2 || !dove.firstElementChild) {
+  if (state171.firma !== firma2 || !dove2.firstElementChild) {
     state171.firma = firma2;
-    dove.innerHTML = `${testaMarkup12(conto, esclusioni)}
+    dove2.innerHTML = `${testaMarkup12(conto, esclusioni)}
       <div class="dm-varchi-elenco">${righe4.map((riga5) => rigaMarkup21(riga5, states)).join("")}</div>`;
   }
   svegliamiQuandoCambia(righe4);
@@ -154310,14 +154358,14 @@ function testaMarkup13(conto, righe4) {
 }
 function dipingi17() {
   const pagina3 = ensurePresenzaPage();
-  const dove = pagina3?.querySelector?.("#presenza-wrap");
-  if (!dove) return;
+  const dove2 = pagina3?.querySelector?.("#presenza-wrap");
+  if (!dove2) return;
   if (!paginaVisibile(PRESENZA_PAGE_ID)) return;
   const righe4 = presenzaInPlancia();
   if (!righe4.length) {
     if (state172.firma !== "vuoto") {
       state172.firma = "vuoto";
-      dove.innerHTML = vuotoMarkup13();
+      dove2.innerHTML = vuotoMarkup13();
     }
     return;
   }
@@ -154328,9 +154376,9 @@ function dipingi17() {
     ultimoMovimentoTesto(righe4),
     t("Occupato", "Occupied")
   ]);
-  if (state172.firma !== firma2 || !dove.firstElementChild) {
+  if (state172.firma !== firma2 || !dove2.firstElementChild) {
     state172.firma = firma2;
-    dove.innerHTML = `${testaMarkup13(conto, righe4)}
+    dove2.innerHTML = `${testaMarkup13(conto, righe4)}
       <div class="dm-presenza-elenco">${righe4.map(rigaMarkup22).join("")}</div>`;
   }
   svegliamiQuandoCambia2(righe4);
@@ -155033,22 +155081,22 @@ function testaMarkup14(riassunto4) {
 }
 function dipingi18() {
   const pagina3 = ensureStampantiPage();
-  const dove = pagina3?.querySelector?.("#stampanti-wrap");
-  if (!dove) return;
+  const dove2 = pagina3?.querySelector?.("#stampanti-wrap");
+  if (!dove2) return;
   if (!paginaVisibile(STAMPANTI_PAGE_ID)) return;
   const letture2 = stampantiInPlancia();
   if (!letture2.length) {
     if (state174.firma !== "vuoto") {
       state174.firma = "vuoto";
-      dove.innerHTML = vuotoMarkup14();
+      dove2.innerHTML = vuotoMarkup14();
     }
     return;
   }
   const riassunto4 = riassuntoDelleStampanti(letture2);
   const firma2 = JSON.stringify([letture2, t("Pronta", "Ready")]);
-  if (state174.firma !== firma2 || !dove.firstElementChild) {
+  if (state174.firma !== firma2 || !dove2.firstElementChild) {
     state174.firma = firma2;
-    dove.innerHTML = `${testaMarkup14(riassunto4)}
+    dove2.innerHTML = `${testaMarkup14(riassunto4)}
       <div class="dm-stampanti-elenco">${letture2.map(cartaMarkup).join("")}</div>`;
   }
 }
@@ -156146,13 +156194,25 @@ function sceltaPulita(scelta3) {
 function disposizionePulita(tutta) {
   const fuori = {};
   if (!tutta || typeof tutta !== "object" || Array.isArray(tutta)) return fuori;
-  for (const [elenco18, scelta3] of Object.entries(tutta)) {
-    if (!ID_BUONO2.test(elenco18)) continue;
+  const voci4 = Object.entries(tutta).filter(([elenco18]) => ID_BUONO2.test(elenco18));
+  for (const [elenco18, scelta3] of voci4.slice(-TETTO_ELENCHI)) {
     const pulito76 = sceltaPulita(scelta3);
+    pulito76.ordine = pulito76.ordine.slice(0, TETTO_VOCI);
+    pulito76.nascosti = pulito76.nascosti.slice(0, TETTO_VOCI);
     if (pulito76.ordine.length || pulito76.nascosti.length || Object.keys(pulito76.misure).length)
       fuori[elenco18] = pulito76;
   }
   return fuori;
+}
+function chiaveCorta(testo5, massimo = 160) {
+  const scritto3 = String(testo5 ?? "").replace(/[\s"<>]+/g, "-");
+  if (scritto3.length <= massimo) return scritto3;
+  let h = 2166136261;
+  for (let i = 0; i < scritto3.length; i += 1) {
+    h ^= scritto3.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return `${scritto3.slice(0, massimo - 10)}~${h.toString(36).padStart(7, "0").slice(0, 9)}`;
 }
 function ordineConLaScelta(diSerie, scelta3) {
   const voci4 = pulita2(diSerie);
@@ -156175,6 +156235,29 @@ function ordineConLaScelta(diSerie, scelta3) {
   });
   return fila2;
 }
+function serieAggiornata(vecchia, nellaPagina) {
+  const ora8 = pulita2(nellaPagina);
+  const ci = new Set(ora8);
+  const fila2 = pulita2(vecchia).filter((id) => ci.has(id));
+  const messe = new Set(fila2);
+  ora8.forEach((id, i) => {
+    if (messe.has(id)) return;
+    const inFondo = ora8.slice(i + 1).every((altro) => !messe.has(altro));
+    let dopo = inFondo ? fila2.length - 1 : -1;
+    for (let j = i - 1; j >= 0 && !inFondo; j -= 1) {
+      const k = fila2.indexOf(ora8[j]);
+      if (k >= 0) {
+        dopo = k;
+        break;
+      }
+    }
+    fila2.splice(dopo + 1, 0, id);
+    messe.add(id);
+  });
+  return fila2;
+}
+var TETTO_ELENCHI = 300;
+var TETTO_VOCI = 200;
 function disposizioneDelleVoci(diSerie, scelta3) {
   const pulito76 = sceltaPulita(scelta3);
   const nascosti = new Set(pulito76.nascosti);
@@ -156219,8 +156302,9 @@ function conLaScelta(tutta, elenco18, scelta3, diSerie = null) {
     for (const [id, misura8] of Object.entries(prima.misure))
       if (!ora8.has(id) && !(id in pulito76.misure)) pulito76.misure[id] = misura8;
   }
+  delete fuori[elenco18];
   fuori[elenco18] = pulito76;
-  return fuori;
+  return disposizionePulita(fuori);
 }
 function paginaDellElenco(elenco18) {
   return String(elenco18 || "").split(/[:@/>]/)[0];
@@ -156398,15 +156482,20 @@ function testoBreve2(el) {
   }
   return "";
 }
+function titoloPerLId(testo5) {
+  return sourceOf(String(testo5 || "").trim());
+}
 function idDellElemento(el, titolo3 = "") {
   const attributi2 = [...el.attributes || []].filter((a) => !/^(style|class|aria-|data-dm-(disp|riordina|nascosto|misura|maniglia|tieni|presa|fa-posto))/.test(a.name)).map((a) => `${a.name}=${a.value}`).join(" ");
-  const dati = [...el.attributes || []].filter((a) => /^data-/.test(a.name) && DATI_CHE_NOMINANO.test(a.name.slice(5)) && !/^data-dm-disp/.test(a.name)).map((a) => a.value);
+  const dati = [...el.attributes || []].filter(
+    (a) => /^data-/.test(a.name) && DATI_CHE_NOMINANO.test(a.name.slice(5)) && !/^data-dm-(disp|riordina)/.test(a.name)
+  ).map((a) => a.value);
   return idDellaVoce({
     dichiarato: el.getAttribute?.("data-dm-blocco") || "",
     id: el.id || "",
     attributi: attributi2,
     dati,
-    titolo: titolo3 || titoloDi2(el),
+    titolo: titoloPerLId(titolo3 || titoloDi2(el)),
     classi: typeof el.className === "string" ? el.className : ""
   });
 }
@@ -156426,7 +156515,7 @@ function vociDi(contenitore5) {
   }
   const unici2 = idUnici(voci4.map((v) => v.id));
   voci4.forEach((voce3, i) => {
-    voce3.id = unici2[i];
+    voce3.id = chiaveCorta(unici2[i]);
     voce3.vuoto = eVuoto(voce3.el);
     if (!voce3.nome) voce3.nome = nomeDiRipiego(voce3.el, contenitore5, i);
     const pagina3 = titoloDellaPagina5(contenitore5);
@@ -156609,7 +156698,7 @@ var DICHIARATI_DALLA_PAGINA = Object.freeze([
       const testa2 = el.previousElementSibling;
       if (!testa2?.matches?.(".dm-stanze-piano")) return null;
       const nome = String(testa2.querySelector?.("span")?.textContent || "").replace(/[^\p{L}\p{N}\s'-]/gu, "").trim();
-      return nome ? { id: idDellaVoce({ titolo: nome }), nome } : null;
+      return nome ? { id: idDellaVoce({ titolo: titoloPerLId(nome) }), nome } : null;
     }
   ],
   [
@@ -156645,7 +156734,7 @@ var DICHIARATI_DALLA_PAGINA = Object.freeze([
       const nome = senzaFigure(el.querySelector?.(":scope > span")?.textContent);
       const entita4 = el.getAttribute?.("data-dm-storico");
       const parola2 = nome.replace(/[\d.,:%°]+/g, " ").trim();
-      const id = entita4 ? "" : el.getAttribute?.("data-tipo") || (parola2 ? idDellaVoce({ titolo: parola2 }) : "");
+      const id = entita4 ? "" : el.getAttribute?.("data-tipo") || (parola2 ? idDellaVoce({ titolo: titoloPerLId(parola2) }) : "");
       return { id, nome };
     }
   ],
@@ -156698,28 +156787,28 @@ var DICHIARATI_DALLA_PAGINA = Object.freeze([
     "media",
     ".dm-mp-card",
     (el) => {
-      const dove = String(el.querySelector?.(".dm-mp-dove")?.textContent || "").split(" · ")[0].trim();
-      return dove ? { nome: dove } : null;
+      const dove2 = String(el.querySelector?.(".dm-mp-dove")?.textContent || "").split(" · ")[0].trim();
+      return dove2 ? { nome: dove2 } : null;
     }
   ]
 ]);
 function marcaIDichiarati(pagina3, nome) {
-  for (const [di, dove, id, it, en] of DICHIARATI) {
+  for (const [di, dove2, id, it, en] of DICHIARATI) {
     if (di !== nome) continue;
-    for (const el of pagina3.querySelectorAll?.(dove) || []) {
+    for (const el of pagina3.querySelectorAll?.(dove2) || []) {
       if (id && !el.hasAttribute("data-dm-blocco")) el.setAttribute("data-dm-blocco", id);
       if (it && !el.hasAttribute("data-dm-disp-nome")) el.setAttribute("data-dm-disp-nome", t(it, en));
     }
   }
-  for (const [di, dove, su2] of CONTENITORI_DICHIARATI) {
+  for (const [di, dove2, su2] of CONTENITORI_DICHIARATI) {
     if (di !== nome || pagina3.getAttribute?.("data-dm-disposizione") === nome) continue;
     if (pagina3.querySelector?.(`[data-dm-disposizione="${nome}"]`)) continue;
-    const trovato = dove === ":scope" ? pagina3 : pagina3.querySelector?.(dove);
+    const trovato = dove2 === ":scope" ? pagina3 : pagina3.querySelector?.(dove2);
     (su2 ? trovato?.parentElement : trovato)?.setAttribute?.("data-dm-disposizione", nome);
   }
-  for (const [di, dove, leggi4] of DICHIARATI_DALLA_PAGINA) {
+  for (const [di, dove2, leggi4] of DICHIARATI_DALLA_PAGINA) {
     if (di !== nome) continue;
-    for (const el of pagina3.querySelectorAll?.(dove) || []) {
+    for (const el of pagina3.querySelectorAll?.(dove2) || []) {
       const letto = leggi4(el);
       if (letto?.id) el.setAttribute("data-dm-blocco", letto.id);
       if (letto?.nome) el.setAttribute("data-dm-disp-nome", letto.nome);
@@ -156740,8 +156829,12 @@ function elenchiDellaPagina(pagina3) {
     else elenchiDentro(voce3.el, `${chiave2}:${voce3.id}`, fuori);
   }
   const unici2 = idUnici(fuori.map((e) => e.chiave));
-  fuori.forEach((e, i) => e.chiave = unici2[i]);
+  fuori.forEach((e, i) => e.chiave = chiaveCorta(unici2[i]));
   return fuori;
+}
+var VISTA_DA_LINGUETTA = "[id^='view-']";
+function siPuoNascondere(el) {
+  return !el?.matches?.(VISTA_DA_LINGUETTA);
 }
 function nascondi(el, si) {
   if (si) {
@@ -156756,45 +156849,55 @@ function nascondi(el, si) {
 function applicaAlContenitore(elenco18, scelta3) {
   const { contenitore: contenitore5 } = elenco18;
   const voci4 = vociDi(contenitore5);
-  if (voci4.length < 2) return;
+  if (voci4.length < 2) return false;
   const perId2 = new Map(voci4.map((v) => [v.id, v]));
-  const firma2 = voci4.map((v) => v.id).sort().join("|");
+  const attuale = voci4.map((v) => v.id);
+  const firma2 = [...attuale].sort().join("|");
   if (contenitore5.__dmDispFirma !== firma2) {
     contenitore5.__dmDispFirma = firma2;
-    contenitore5.__dmDispSerie = voci4.map((v) => v.id);
+    contenitore5.__dmDispSerie = contenitore5.__dmDispRiordinato && Array.isArray(contenitore5.__dmDispSerie) ? serieAggiornata(contenitore5.__dmDispSerie, attuale) : attuale;
   }
   const serie2 = contenitore5.__dmDispSerie.filter((id) => perId2.has(id));
   const disposte = disposizioneDelleVoci(serie2, scelta3);
-  const attuale = voci4.map((v) => v.id);
   const voluto = disposte.map((d) => d.id);
   if (attuale.join("|") !== voluto.join("|")) {
     for (const id of voluto) for (const el of perId2.get(id).insieme) contenitore5.appendChild(el);
-  }
+    contenitore5.__dmDispRiordinato = voluto.join("|") !== serie2.join("|");
+  } else if (voluto.join("|") === serie2.join("|")) contenitore5.__dmDispRiordinato = false;
+  const pagina3 = contenitore5.closest?.("section.page");
+  if (pagina3) pagina3.__dmDispToccata = true;
   for (const d of disposte) {
     const voce3 = perId2.get(d.id);
-    for (const el of voce3.insieme) nascondi(el, d.nascosto);
+    for (const el of voce3.insieme) nascondi(el, d.nascosto && siPuoNascondere(voce3.el));
     if (d.misura === "larga") voce3.el.setAttribute("data-dm-misura", "larga");
     else voce3.el.removeAttribute("data-dm-misura");
   }
+  return true;
 }
 function paginaAttiva2() {
   return doc?.querySelector?.("section.page.active[id^='page-'], .page.active[id^='page-']") || null;
 }
 function applicaLaDisposizione(pagina3 = paginaAttiva2()) {
   if (!pagina3 || state177.occupato) return;
-  if (doc.documentElement.hasAttribute("data-dm-trascinando")) return inCoda5();
+  if (doc.documentElement.hasAttribute("data-dm-trascinando")) {
+    if (prendiIlPuntatore.inMano()) return inCoda5();
+    doc.documentElement.removeAttribute("data-dm-trascinando");
+  }
   const tutta = salvata2();
   const nome = nomeDellaPagina(pagina3);
   const inModifica = state177.modifica?.pagina === pagina3;
-  const ce = inModifica || Object.keys(tutta).some((k) => k === nome || k.startsWith(`${nome}:`));
-  if (!ce) return;
+  const salvataQui = Object.keys(tutta).some((k) => paginaDellElenco(k) === nome);
+  const toccata = Boolean(pagina3.__dmDispToccata);
+  if (!inModifica && !salvataQui && !toccata) return;
   state177.occupato = true;
   state177.giri = (state177.giri || 0) + 1;
   try {
+    let rimessi = 0;
     for (const elenco18 of elenchiDellaPagina(pagina3)) {
       const scelta3 = inModifica && state177.modifica.bozze.has(elenco18.chiave) ? state177.modifica.bozze.get(elenco18.chiave) : tutta[elenco18.chiave];
-      if (scelta3 || inModifica) applicaAlContenitore(elenco18, scelta3 || {});
+      if ((scelta3 || inModifica || toccata) && applicaAlContenitore(elenco18, scelta3 || {})) rimessi += 1;
     }
+    if (!inModifica && !salvataQui && rimessi) pagina3.__dmDispToccata = false;
     if (inModifica) segnaPerLaModifica(pagina3);
   } finally {
     state177.osservatore?.takeRecords?.();
@@ -156817,7 +156920,23 @@ function inCoda5() {
     osservaLePagine2();
     applicaLaDisposizione();
     mettiITasti();
+    rinfrescaLaBarra();
   }, 60);
+}
+var NOSTRI_IN_PAGINA = `${NOSTRI},.dm-riordina-voce,[data-dm-fantasma]`;
+function cambiamentoCheConta(mutazione, attiva2) {
+  const bersaglio = mutazione.target?.nodeType === 1 ? mutazione.target : mutazione.target?.parentElement;
+  if (!bersaglio) return false;
+  if (bersaglio.closest?.(NOSTRI_IN_PAGINA)) return false;
+  if (mutazione.type === "attributes") return bersaglio.matches?.("section.page") || Boolean(attiva2?.contains(bersaglio));
+  if (!attiva2?.contains(bersaglio)) return false;
+  const nodi = [...mutazione.addedNodes, ...mutazione.removedNodes];
+  return !nodi.length || !nodi.every((n) => n.nodeType === 1 && n.matches?.(NOSTRI_IN_PAGINA));
+}
+function onMutazioni(mutazioni) {
+  if (state177.occupato || state177.coda) return;
+  const attiva2 = state177.modifica?.pagina || paginaAttiva2();
+  if (mutazioni.some((m) => cambiamentoCheConta(m, attiva2))) inCoda5();
 }
 function contaLaBarra() {
   return state177.modifica?.barra ? 1 : 0;
@@ -156844,9 +156963,10 @@ function controlliMarkup(voce3, elenco18, scelta3) {
   const testa2 = elenco18.riquadri ? `<button type="button" class="dm-disp-maniglia" data-dm-maniglia data-dm-tieni aria-label="${esc(
     t(`Sposta ${voce3.nome}`, `Move ${voce3.nome}`)
   )}">⠿ <span>${nome}</span>${nota2}</button>` : `<span class="dm-disp-segno" aria-hidden="true">⠿</span>${nota2}`;
+  const occhio2 = siPuoNascondere(voce3.el) ? `<button type="button" class="dm-disp-occhio" data-dm-non-trascinare data-dm-disp-occhio
+      aria-pressed="${!nascosto}" aria-label="${esc(nascosto ? t(`Mostra ${voce3.nome}`, `Show ${voce3.nome}`) : t(`Nascondi ${voce3.nome}`, `Hide ${voce3.nome}`))}">${nascosto ? "🙈" : "👁"}</button>` : "";
   return `${testa2}
-    <button type="button" class="dm-disp-occhio" data-dm-non-trascinare data-dm-disp-occhio
-      aria-pressed="${!nascosto}" aria-label="${esc(nascosto ? t(`Mostra ${voce3.nome}`, `Show ${voce3.nome}`) : t(`Nascondi ${voce3.nome}`, `Hide ${voce3.nome}`))}">${nascosto ? "🙈" : "👁"}</button>${griglia3 && elenco18.riquadri ? `<button type="button" class="dm-disp-larga" data-dm-non-trascinare data-dm-disp-larga aria-pressed="${larga}"
+    ${occhio2}${griglia3 && elenco18.riquadri ? `<button type="button" class="dm-disp-larga" data-dm-non-trascinare data-dm-disp-larga aria-pressed="${larga}"
       aria-label="${esc(t(`Larghezza piena: ${voce3.nome}`, `Full width: ${voce3.nome}`))}">↔</button>` : ""}`;
 }
 function togliISegni(el) {
@@ -156856,7 +156976,8 @@ function togliISegni(el) {
     "data-dm-disp-vuoto",
     "data-dm-riordina-riga",
     "data-dm-maniglia",
-    "data-dm-tieni"
+    "data-dm-tieni",
+    "data-dm-riordina-nome"
   ])
     el.removeAttribute(nome);
   lasciaSu(el);
@@ -156879,25 +157000,70 @@ function lasciaSu(el) {
   if (prima[0]) el.style.setProperty("padding-top", prima[0], prima[1]);
   else el.style.removeProperty("padding-top");
 }
-function segnaPerLaModifica(pagina3) {
+function fuocoNellaPagina(pagina3) {
+  const qui = doc.activeElement;
+  if (!qui || qui === doc.body || !pagina3.contains(qui)) return null;
+  const voce3 = qui.closest?.("[data-dm-disp-voce]");
+  const elenco18 = voce3?.parentElement?.getAttribute?.("data-dm-disp-elenco");
+  if (!voce3 || !elenco18) return null;
+  const cosa = qui === voce3 ? "voce" : qui.matches("[data-dm-disp-occhio]") ? "occhio" : qui.matches("[data-dm-disp-larga]") ? "larga" : qui.matches("[data-dm-maniglia]") ? "maniglia" : "";
+  return cosa ? { elenco: elenco18, id: voce3.getAttribute("data-dm-disp-voce"), cosa } : null;
+}
+function rimettiIlFuoco(pagina3, fuoco) {
+  if (!fuoco) return;
+  const qui = doc.activeElement;
+  if (qui && qui !== doc.body && qui.isConnected && pagina3.contains(qui)) return;
+  const voce3 = [...pagina3.querySelectorAll("[data-dm-disp-voce]")].find(
+    (el) => el.getAttribute("data-dm-disp-voce") === fuoco.id && el.parentElement?.getAttribute?.("data-dm-disp-elenco") === fuoco.elenco
+  );
+  if (!voce3) return;
+  const dove2 = {
+    voce: () => voce3,
+    maniglia: () => voce3.querySelector(":scope > [data-dm-disp-ctrl] [data-dm-maniglia]") || voce3,
+    occhio: () => voce3.querySelector(":scope > [data-dm-disp-ctrl] [data-dm-disp-occhio]"),
+    larga: () => voce3.querySelector(":scope > [data-dm-disp-ctrl] [data-dm-disp-larga]")
+  }[fuoco.cosa]?.();
+  dove2?.focus?.({ preventScroll: true });
+}
+function togliLaModifica(pagina3) {
   for (const vecchio of pagina3.querySelectorAll("[data-dm-disp-ctrl]")) vecchio.remove();
   for (const el of pagina3.querySelectorAll("[data-dm-disp-elenco]")) {
     el.removeAttribute("data-dm-disp-elenco");
     el.removeAttribute("data-dm-disp-tipo");
     el.removeAttribute("data-dm-riordina");
   }
-  for (const el of pagina3.querySelectorAll("[data-dm-disp-voce],[data-dm-disp-titolo]")) {
-    togliISegni(el);
-  }
+  for (const el of pagina3.querySelectorAll("[data-dm-disp-voce],[data-dm-disp-titolo]")) togliISegni(el);
+}
+function segnaPerLaModifica(pagina3) {
+  const elenchi = [];
   for (const elenco18 of elenchiDellaPagina(pagina3)) {
     const voci4 = vociDi(elenco18.contenitore);
-    if (voci4.length < 2) continue;
-    const scelta3 = sceltaInMano(elenco18);
+    if (voci4.length >= 2) elenchi.push({ elenco: elenco18, voci: voci4, scelta: sceltaInMano(elenco18) });
+  }
+  const firma2 = JSON.stringify(
+    elenchi.map(({ elenco: elenco18, voci: voci4, scelta: scelta3 }) => [
+      elenco18.chiave,
+      elenco18.riquadri,
+      voci4.map((v) => [v.id, v.nome, v.vuoto]),
+      scelta3
+    ])
+  );
+  const intatta = pagina3.__dmDispFirmaModifica === firma2 && elenchi.every(
+    ({ elenco: elenco18, voci: voci4 }) => elenco18.contenitore.getAttribute("data-dm-disp-elenco") === elenco18.chiave && voci4.every(
+      (v) => v.el.getAttribute("data-dm-disp-voce") === v.id && v.el.querySelector(":scope > [data-dm-disp-ctrl]")
+    )
+  );
+  if (intatta) return;
+  pagina3.__dmDispFirmaModifica = firma2;
+  const fuoco = fuocoNellaPagina(pagina3);
+  togliLaModifica(pagina3);
+  for (const { elenco: elenco18, voci: voci4, scelta: scelta3 } of elenchi) {
     elenco18.contenitore.setAttribute("data-dm-disp-elenco", elenco18.chiave);
     elenco18.contenitore.setAttribute("data-dm-disp-tipo", elenco18.riquadri ? "riquadri" : "voci");
     elenco18.contenitore.setAttribute("data-dm-riordina", "griglia");
     for (const voce3 of voci4) {
       voce3.el.setAttribute("data-dm-disp-voce", voce3.id);
+      voce3.el.setAttribute("data-dm-riordina-nome", voce3.nome);
       for (const el of voce3.insieme) if (el !== voce3.el) el.setAttribute("data-dm-disp-titolo", "");
       if (voce3.vuoto) voce3.el.setAttribute("data-dm-disp-vuoto", "");
       voce3.el.setAttribute("data-dm-riordina-riga", voce3.id);
@@ -156915,6 +157081,7 @@ function segnaPerLaModifica(pagina3) {
       spingiGiu(voce3.el, elenco18.riquadri ? 52 : 40);
     }
   }
+  rimettiIlFuoco(pagina3, fuoco);
 }
 function laBarraDelleSezioni() {
   return doc.querySelector("nav.tabs .tab[data-tab]")?.parentElement || null;
@@ -156942,10 +157109,12 @@ function segnaLaBarra(si) {
   const barra3 = laBarraDelleSezioni();
   if (!barra3) return;
   if (!si) {
+    barra3.parentElement?.querySelector?.(":scope > .dm-riordina-voce")?.remove();
     barra3.removeAttribute("data-dm-riordina");
     barra3.removeAttribute("data-dm-disp-barra-sezioni");
     for (const voce3 of vociDellaBarra(barra3))
-      for (const nome of ["data-dm-riordina-riga", "data-dm-maniglia", "data-dm-tieni"]) voce3.removeAttribute(nome);
+      for (const nome of ["data-dm-riordina-riga", "data-dm-maniglia", "data-dm-tieni", "data-dm-riordina-nome"])
+        voce3.removeAttribute(nome);
     return;
   }
   barra3.setAttribute("data-dm-riordina", "griglia");
@@ -156955,6 +157124,7 @@ function segnaLaBarra(si) {
     voce3.setAttribute("data-dm-riordina-riga", voce3.dataset.tab);
     voce3.setAttribute("data-dm-maniglia", "");
     voce3.setAttribute("data-dm-tieni", "");
+    voce3.setAttribute("data-dm-riordina-nome", String(voce3.textContent || "").replace(/\s+/g, " ").trim());
   }
 }
 function ordineDellaBarra() {
@@ -156985,7 +157155,7 @@ function barraMarkup5() {
   const niente = n === 0 && !pagina3?.matches?.("[data-dm-disp-elenco]") && !pagina3?.querySelector?.("[data-dm-disp-elenco]");
   return `<div class="dm-disp-barra-dentro">
     <span class="dm-disp-conta"${n === 0 ? " data-vuota" : ""}>${esc(
-    niente ? t("In questa vista non c'è niente da spostare", "Nothing to move in this view") : n === 0 ? t("Trascina riquadri ed elementi dove li vuoi", "Drag boxes and items where you want them") : n === 1 ? t("1 modifica", "1 change") : t(`${n} modifiche`, `${n} changes`)
+    n && state177.modifica?.escDopo && Date.now() - state177.modifica.escDopo < ESC_DI_NUOVO_MS ? t("Esc di nuovo per uscire senza salvare", "Esc again to leave without saving") : niente ? t("In questa vista non c'è niente da spostare", "Nothing to move in this view") : n === 0 ? t("Trascina riquadri ed elementi dove li vuoi", "Drag boxes and items where you want them") : n === 1 ? t("1 modifica", "1 change") : t(`${n} modifiche`, `${n} changes`)
   )}</span>
     <button type="button" data-dm-disp-azione="annulla">${esc(t("Annulla", "Cancel"))}</button>
     <button type="button" data-dm-disp-azione="ripristina">${esc(t("Ripristina", "Reset"))}</button>
@@ -157009,16 +157179,35 @@ function disegnaLaBarra() {
   }
   barra3.innerHTML = barraMarkup5();
 }
+function annuncia6(testo5) {
+  let voce3 = doc.querySelector("[data-dm-disp-annuncio]");
+  if (!voce3) {
+    voce3 = doc.createElement("div");
+    voce3.setAttribute("data-dm-disp-annuncio", "");
+    voce3.setAttribute("role", "status");
+    voce3.setAttribute("aria-live", "polite");
+    voce3.className = "dm-riordina-voce";
+    doc.body.appendChild(voce3);
+  }
+  voce3.textContent = testo5;
+}
 function entraInModifica(pagina3 = paginaAttiva2()) {
   if (!pagina3 || !puoConfigurare()) return;
   esciDallaModifica();
   state177.modifica = { pagina: pagina3, bozze: /* @__PURE__ */ new Map(), cambiate: /* @__PURE__ */ new Set(), barra: null };
+  delete pagina3.__dmDispFirmaModifica;
   doc.documentElement.setAttribute("data-dm-modifica", nomeDellaPagina(pagina3));
   applicaLaDisposizione(pagina3);
   segnaLaBarra(true);
   state177.modifica.vociDiPrima = vociDellaBarra();
   state177.modifica.mobili = state177.modifica.vociDiPrima.filter((voce3) => voce3.hasAttribute("data-dm-riordina-riga"));
   disegnaLaBarra();
+  annuncia6(
+    t(
+      "Modifica disposizione: trascina, o usa Tab e le frecce per spostare. Esc per uscire.",
+      "Edit layout: drag, or use Tab and the arrow keys to move. Esc to leave."
+    )
+  );
 }
 function esciDallaModifica() {
   const m = state177.modifica;
@@ -157028,17 +157217,17 @@ function esciDallaModifica() {
   segnaLaBarra(false);
   state177.occupato = true;
   try {
-    for (const vecchio of m.pagina.querySelectorAll("[data-dm-disp-ctrl]")) vecchio.remove();
-    for (const el of m.pagina.querySelectorAll("[data-dm-disp-elenco]")) {
-      el.removeAttribute("data-dm-disp-elenco");
-      el.removeAttribute("data-dm-disp-tipo");
-      el.removeAttribute("data-dm-riordina");
-    }
-    for (const el of m.pagina.querySelectorAll("[data-dm-disp-voce],[data-dm-disp-titolo]")) togliISegni(el);
+    for (const el of m.pagina.querySelectorAll("[data-dm-disp-elenco]"))
+      el.parentElement?.querySelector?.(":scope > .dm-riordina-voce")?.remove();
+    if (m.pagina.matches("[data-dm-disp-elenco]"))
+      m.pagina.parentElement?.querySelector?.(":scope > .dm-riordina-voce")?.remove();
+    togliLaModifica(m.pagina);
+    delete m.pagina.__dmDispFirmaModifica;
   } finally {
     state177.osservatore?.takeRecords?.();
     state177.occupato = false;
   }
+  doc.querySelector("[data-dm-disp-annuncio]")?.remove();
   disegnaLaBarra();
 }
 function elencoDi(contenitore5) {
@@ -157070,6 +157259,7 @@ function onRiordina4(event) {
 function salva33() {
   const m = state177.modifica;
   if (!m) return;
+  if (!puoConfigurare()) return annulla2();
   let tutta = salvata2();
   for (const elenco18 of elenchiDellaPagina(m.pagina)) {
     if (!m.bozze.has(elenco18.chiave)) continue;
@@ -157100,7 +157290,8 @@ function annulla2() {
     if (barra3 && prima.length) mettiLeVoci(barra3, vociDellaBarra(barra3).filter((voce3) => prima.includes(voce3)), prima);
     root.cdApplyNavOrder?.();
   }
-  for (const elenco18 of elenchiDellaPagina(m.pagina)) applicaAlContenitore(elenco18, salvata2()[elenco18.chiave] || {});
+  m.pagina.__dmDispToccata = true;
+  applicaLaDisposizione(m.pagina);
 }
 function ripristina() {
   const m = state177.modifica;
@@ -157124,7 +157315,7 @@ function onClick57(event) {
       root.queueMicrotask?.(() => root.editorSwitch?.("todo"));
       return;
     }
-    if (state177.modifica) esciDallaModifica();
+    if (state177.modifica) annulla2();
     else entraInModifica(tasto5.closest(".page"));
     return;
   }
@@ -157163,6 +157354,7 @@ function onPuntatore(event) {
   const dentro3 = state177.modifica.pagina.contains(event.target) || Boolean(event.target?.closest?.("[data-dm-disp-barra-sezioni] [data-dm-riordina-riga]"));
   if (event.type === "pointerdown") {
     if (!dentro3 || event.target.closest?.("[data-dm-non-trascinare],[data-dm-disp-barra]")) return;
+    if (event.target.closest?.("[data-dm-disp-barra-sezioni]")) rinfrescaLaBarra();
     prendiIlPuntatore.giu(event);
     event.stopPropagation();
     return;
@@ -157173,8 +157365,31 @@ function onPuntatore(event) {
   else prendiIlPuntatore.annulla(event);
   event.stopPropagation();
 }
+var FINESTRE3 = "dialog[open],[aria-modal='true'],[role='dialog'],.modal-wrapper,.modal-card";
+function altraFinestraAperta(event) {
+  if (event.target?.closest?.(FINESTRE3)) return true;
+  for (const el of doc.querySelectorAll(FINESTRE3)) {
+    if (el.closest(NOSTRI)) continue;
+    const stile7 = root.getComputedStyle?.(el);
+    if (!stile7 || stile7.display === "none" || stile7.visibility === "hidden") continue;
+    const r = el.getBoundingClientRect?.();
+    if (r && r.width > 0 && r.height > 0) return true;
+  }
+  return false;
+}
+var ESC_DI_NUOVO_MS = 4e3;
 function onKeyDown2(event) {
-  if (event.key === "Escape" && state177.modifica && !doc.documentElement.hasAttribute("data-dm-trascinando")) annulla2();
+  const m = state177.modifica;
+  if (event.key !== "Escape" || !m || event.defaultPrevented) return;
+  if (doc.documentElement.hasAttribute("data-dm-trascinando") || altraFinestraAperta(event)) return;
+  const adesso2 = Date.now();
+  if (conta2() && !(m.escDopo && adesso2 - m.escDopo < ESC_DI_NUOVO_MS)) {
+    m.escDopo = adesso2;
+    disegnaLaBarra();
+    annuncia6(t("Ci sono modifiche non salvate: premi di nuovo Esc per uscire senza salvarle.", "There are unsaved changes: press Esc again to leave without saving them."));
+    return;
+  }
+  annulla2();
 }
 function testataPerIlTasto(pagina3) {
   return pagina3.querySelector(":scope > .dm-page-mast") || [...pagina3.querySelectorAll("[class*='mast']")].find((el) => eTestata(el) && visibile(el)) || null;
@@ -157185,40 +157400,73 @@ function vestiIlTasto(tasto5) {
   tasto5.innerHTML = `<span aria-hidden="true">✏️</span><span class="dm-disp-tasto-parola">${esc(t("Modifica", "Edit"))}</span>`;
 }
 function tastoInHome(si) {
-  const casa3 = doc.getElementById("page-home");
-  const ce = casa3?.querySelector(":scope > [data-dm-disp-tasto]");
-  if (!casa3 || !si) return ce?.remove();
+  const ingranaggio = doc.getElementById("dm-editor-entry");
+  const testata5 = ingranaggio?.parentElement || doc.querySelector("body > header");
+  let tasto5 = doc.querySelector("[data-dm-disp-tasto='home']");
+  if (!si || !testata5) return tasto5?.remove();
+  if (!tasto5) {
+    tasto5 = doc.createElement("button");
+    tasto5.type = "button";
+    tasto5.className = "dm-disp-tasto-home";
+    tasto5.setAttribute("data-dm-disp-tasto", "home");
+    vestiIlTasto(tasto5);
+  }
+  if (ingranaggio ? tasto5.nextElementSibling !== ingranaggio : tasto5.parentElement !== testata5)
+    ingranaggio ? ingranaggio.before(tasto5) : testata5.appendChild(tasto5);
+  const inCasa = Boolean(doc.getElementById("page-home")?.classList.contains("active"));
+  if (tasto5.hidden === inCasa) tasto5.hidden = !inCasa;
+}
+function mettiIlTasto(pagina3) {
+  const testata5 = testataPerIlTasto(pagina3);
+  if (!testata5) return;
+  const nome = nomeDellaPagina(pagina3);
+  for (const vecchio of pagina3.querySelectorAll("[data-dm-disp-tasto]"))
+    if (vecchio.parentElement !== testata5) vecchio.remove();
+  const ce = testata5.querySelector(":scope > [data-dm-disp-tasto]");
+  if (PAGINE_DA_SALTARE.has(nome)) return ce?.remove();
   if (ce) return;
   const tasto5 = doc.createElement("button");
   tasto5.type = "button";
-  tasto5.className = "dm-disp-tasto dm-disp-tasto-home";
-  tasto5.setAttribute("data-dm-disp-tasto", "home");
+  tasto5.setAttribute("data-dm-disp-tasto", "");
+  tasto5.className = "dm-disp-tasto";
   vestiIlTasto(tasto5);
-  casa3.prepend(tasto5);
+  testata5.appendChild(tasto5);
 }
 function mettiITasti() {
   const si = puoConfigurare();
   tastoInHome(si);
-  for (const pagina3 of doc.querySelectorAll("section.page[id^='page-']")) {
-    const testata5 = testataPerIlTasto(pagina3);
-    if (!testata5) continue;
-    const nome = nomeDellaPagina(pagina3);
-    for (const vecchio of pagina3.querySelectorAll("[data-dm-disp-tasto]"))
-      if (vecchio.parentElement !== testata5 && vecchio.getAttribute("data-dm-disp-tasto") !== "home") vecchio.remove();
-    const ce = testata5.querySelector(":scope > [data-dm-disp-tasto]");
-    if (!si || PAGINE_DA_SALTARE.has(nome)) {
-      ce?.remove();
-      continue;
-    }
-    if (ce) continue;
-    const tasto5 = doc.createElement("button");
-    tasto5.type = "button";
-    tasto5.setAttribute("data-dm-disp-tasto", "");
-    tasto5.className = "dm-disp-tasto";
-    vestiIlTasto(tasto5);
-    testata5.appendChild(tasto5);
+  if (!si) for (const vecchio of doc.querySelectorAll("section.page [data-dm-disp-tasto]")) vecchio.remove();
+  else {
+    const pagina3 = paginaAttiva2();
+    if (pagina3) mettiIlTasto(pagina3);
   }
-  if (state177.modifica && !state177.modifica.pagina.classList.contains("active")) annulla2();
+  if (state177.modifica && (!si || !state177.modifica.pagina.classList.contains("active"))) annulla2();
+}
+function rinfrescaLaBarra() {
+  const m = state177.modifica;
+  if (!m) return;
+  const barra3 = laBarraDelleSezioni();
+  const ora8 = vociDellaBarra(barra3);
+  const segnate = ora8.filter((voce3) => voce3.hasAttribute("data-dm-riordina-riga"));
+  const vecchie = m.mobili || [];
+  if (vecchie.every((voce3) => voce3.isConnected && voce3.parentElement === barra3) && segnate.length === vecchie.length)
+    return;
+  const perNome2 = (lista7) => new Map(lista7.map((voce3) => [voce3.dataset.tab, voce3]));
+  const prima = (m.vociDiPrima || []).map((voce3) => voce3.dataset.tab);
+  segnaLaBarra(true);
+  const nuove = vociDellaBarra(barra3);
+  const mobili = nuove.filter((voce3) => voce3.hasAttribute("data-dm-riordina-riga"));
+  if (m.barra) {
+    const posto = new Map(m.barra.map((nome, i) => [nome, i]));
+    const ordinate3 = [...mobili].sort(
+      (a, b2) => (posto.get(a.dataset.tab) ?? 1e9) - (posto.get(b2.dataset.tab) ?? 1e9)
+    );
+    mettiLeVoci(barra3, mobili, ordinate3);
+    m.mobili = ordinate3;
+    m.barra = ordineDellaBarra();
+  } else m.mobili = mobili;
+  const adesso2 = perNome2(nuove);
+  m.vociDiPrima = [...prima.map((nome) => adesso2.get(nome)).filter(Boolean), ...nuove.filter((v) => !prima.includes(v.dataset.tab))];
 }
 var STILE19 = `
 html[data-dm-modifica] [data-dm-disp-barra-sezioni] > .tab[data-dm-riordina-riga]{cursor:grab;outline:2px dashed color-mix(in srgb,#0ea5e9 70%,transparent);outline-offset:-4px;border-radius:14px;touch-action:none;user-select:none;-webkit-user-select:none}
@@ -157241,8 +157489,15 @@ html[data-dm-modifica] [data-dm-disp-vuoto]{min-height:56px}
 html[data-dm-modifica] section.page.active{padding-bottom:calc(220px + env(safe-area-inset-bottom,0px))!important}
 [data-dm-misura="larga"]{grid-column:1/-1!important}
 .dm-page-mast{position:relative}
-#page-home{position:relative}
-.dm-disp-tasto-home{top:0;right:4px}
+/* Il ✏️ della Home, nella testata accanto all'ingranaggio e vestito come
+ * lui: la parola «Modifica» li' non ci sta. */
+html body header>.dm-disp-tasto-home{display:inline-flex!important;align-items:center;justify-content:center;flex:0 0 auto!important;
+  width:40px;height:40px;margin-left:10px;padding:0;border:1px solid var(--divider-color,rgba(15,23,42,.12));border-radius:14px;
+  background:var(--card-bg,#fff);color:var(--text,#0f172a);font-size:18px;line-height:1;cursor:pointer;box-shadow:0 8px 18px -14px rgba(15,23,42,.6)}
+html body header>.dm-disp-tasto-home[hidden]{display:none!important}
+html body header>.dm-disp-tasto-home:hover{border-color:var(--info-color,#0ea5e9)}
+html body header>.dm-disp-tasto-home .dm-disp-tasto-parola{display:none!important}
+@media(max-width:520px){html body header>.dm-disp-tasto-home{width:34px;height:34px;margin-left:6px;font-size:16px}}
 .dm-disp-tasto{position:absolute;top:12px;right:12px;z-index:3;min-width:40px;height:40px;border-radius:14px;padding:0 10px;
   border:1px solid color-mix(in srgb,var(--text,#0f172a) 12%,transparent);background:var(--card-bg,#fff);color:var(--text,#0f172a);
   display:inline-flex;align-items:center;justify-content:center;gap:8px;
@@ -157307,12 +157562,10 @@ function installDisposizione() {
   doc.addEventListener("click", onClick57, true);
   for (const tipo of ["pointerdown", "pointermove", "pointerup", "pointercancel"])
     doc.addEventListener(tipo, onPuntatore, { capture: true, passive: false });
-  doc.addEventListener("keydown", onKeyDown2);
+  doc.addEventListener("keydown", onKeyDown2, true);
   doc.addEventListener("dm-riordina", onRiordina4);
   if (root.MutationObserver) {
-    state177.osservatore = new root.MutationObserver(() => {
-      if (!state177.occupato) inCoda5();
-    });
+    state177.osservatore = new root.MutationObserver(onMutazioni);
     osservaLePagine2();
   }
   root.addEventListener?.("storage", inCoda5);
@@ -157322,7 +157575,7 @@ function installDisposizione() {
 root.dmDisposizione = {
   entraInModifica: () => entraInModifica(),
   esciDallaModifica,
-  applicaLaDisposizione: () => applicaLaDisposizione(),
+  applicaLaDisposizione: (pagina3) => applicaLaDisposizione(pagina3 || void 0),
   giri: () => state177.giri || 0,
   elenchi: () => elenchiDellaPagina(paginaAttiva2()).map((e) => {
     const voci4 = vociDi(e.contenitore);
@@ -158156,12 +158409,12 @@ function vistaDiAdesso() {
   return vistaDellAccumulo(void 0, { casa: casa3 });
 }
 function dipingi19() {
-  const dove = laVista()?.querySelector?.("#accumulo-wrap");
-  if (!dove || !siVede2()) return;
+  const dove2 = laVista()?.querySelector?.("#accumulo-wrap");
+  if (!dove2 || !siVede2()) return;
   const markup7 = paginaDellAccumulo(vistaDiAdesso());
-  if (state181.firma === markup7 && dove.firstElementChild) return;
+  if (state181.firma === markup7 && dove2.firstElementChild) return;
   state181.firma = markup7;
-  dove.innerHTML = markup7;
+  dove2.innerHTML = markup7;
 }
 function schedule44() {
   if (state181.frame) return;
@@ -158580,12 +158833,12 @@ function siVede3() {
   );
 }
 function dipingi20(bolletta = laBolletta(allStates() || {}, salvate())) {
-  const dove = laVista2()?.querySelector?.("#bollette-wrap");
-  if (!dove || !siVede3()) return;
+  const dove2 = laVista2()?.querySelector?.("#bollette-wrap");
+  if (!dove2 || !siVede3()) return;
   const markup7 = paginaDelleBollette(bolletta);
-  if (state182.firma === markup7 && dove.firstElementChild) return;
+  if (state182.firma === markup7 && dove2.firstElementChild) return;
   state182.firma = markup7;
-  dove.innerHTML = markup7;
+  dove2.innerHTML = markup7;
 }
 function ensureScheda2() {
   const editor3 = doc?.querySelector?.(
@@ -160540,17 +160793,17 @@ var NOMI_DEI_TIPI = () => ({
   antifurto: t("Antifurto", "Alarm"),
   apri: t("Cancello o porta", "Gate or door")
 });
-function elencoMarkup4(dove, voci4) {
-  return `<div class="dm-oc-ed-elenco" data-dm-riordina data-dm-oc-elenco="${esc(dove)}">${voci4}</div>`;
+function elencoMarkup4(dove2, voci4) {
+  return `<div class="dm-oc-ed-elenco" data-dm-riordina data-dm-oc-elenco="${esc(dove2)}">${voci4}</div>`;
 }
-function frecce2(dove, i, quanti4) {
+function frecce2(dove2, i, quanti4) {
   return `<span class="dm-oc-ed-frecce">
     <button type="button" class="ed-del dm-oc-ed-maniglia" data-dm-maniglia aria-label="${esc(
     `${i + 1}: ${t("trascina, o usa le frecce su e giù", "drag, or use the up and down arrows")}`
   )}" title="${esc(t("Trascina per spostare", "Drag to move"))}">⠿</button>
-    <button type="button" class="ed-del" data-dm-oc-su="${dove}:${i}" ${i === 0 ? "disabled" : ""} aria-label="${esc(t("Su", "Up"))}">↑</button>
-    <button type="button" class="ed-del" data-dm-oc-giu="${dove}:${i}" ${i === quanti4 - 1 ? "disabled" : ""} aria-label="${esc(t("Giù", "Down"))}">↓</button>
-    <button type="button" class="ed-del" data-dm-oc-togli="${dove}:${i}" aria-label="${esc(t("Togli", "Remove"))}">✕</button>
+    <button type="button" class="ed-del" data-dm-oc-su="${dove2}:${i}" ${i === 0 ? "disabled" : ""} aria-label="${esc(t("Su", "Up"))}">↑</button>
+    <button type="button" class="ed-del" data-dm-oc-giu="${dove2}:${i}" ${i === quanti4 - 1 ? "disabled" : ""} aria-label="${esc(t("Giù", "Down"))}">↓</button>
+    <button type="button" class="ed-del" data-dm-oc-togli="${dove2}:${i}" aria-label="${esc(t("Togli", "Remove"))}">✕</button>
   </span>`;
 }
 function riquadriMarkup2(o) {
@@ -160739,33 +160992,33 @@ function nelCorpo3(event) {
 }
 function scrivi5(config, percorso, valore3) {
   const pezzi = percorso.split(".");
-  let dove = config;
+  let dove2 = config;
   for (const [i, pezzo3] of pezzi.entries()) {
     if (i === pezzi.length - 1) {
-      dove[pezzo3] = valore3;
+      dove2[pezzo3] = valore3;
       return;
     }
-    if (dove[pezzo3] == null || typeof dove[pezzo3] !== "object")
-      dove[pezzo3] = /^\d+$/.test(pezzi[i + 1]) ? [] : {};
-    dove = dove[pezzo3];
+    if (dove2[pezzo3] == null || typeof dove2[pezzo3] !== "object")
+      dove2[pezzo3] = /^\d+$/.test(pezzi[i + 1]) ? [] : {};
+    dove2 = dove2[pezzo3];
   }
 }
-function leggiElenco(config, dove) {
-  return dove.split(".").reduce((x, k) => x?.[k], config);
+function leggiElenco(config, dove2) {
+  return dove2.split(".").reduce((x, k) => x?.[k], config);
 }
 function onRiordina6(event) {
-  const dove = event.target?.getAttribute?.("data-dm-oc-elenco");
-  if (!dove) return;
+  const dove2 = event.target?.getAttribute?.("data-dm-oc-elenco");
+  if (!dove2) return;
   const { da, a } = event.detail || {};
   const config = occhio();
-  const elenco18 = leggiElenco(config, dove);
+  const elenco18 = leggiElenco(config, dove2);
   if (!Array.isArray(elenco18) || !Number.isInteger(da) || !Number.isInteger(a) || !elenco18[da]) return;
   const nuovo = spostaNellaLista(elenco18, da, a);
   elenco18.splice(0, elenco18.length, ...nuovo);
   salva35(config);
   ridisegna32();
   root.setTimeout?.(() => {
-    const css11 = root.CSS?.escape ? root.CSS.escape(dove) : dove;
+    const css11 = root.CSS?.escape ? root.CSS.escape(dove2) : dove2;
     doc.querySelector(`[data-dm-oc-elenco="${css11}"] > [data-dm-riordina-riga="${a}"] [data-dm-maniglia]`)?.focus?.();
   }, 0);
 }
@@ -160783,8 +161036,8 @@ function onClick60(event) {
   const bottone = event.target.closest("[data-dm-oc-su],[data-dm-oc-giu],[data-dm-oc-togli]");
   if (bottone) {
     event.preventDefault();
-    const [dove, quale] = (bottone.dataset.dmOcSu || bottone.dataset.dmOcGiu || bottone.dataset.dmOcTogli).split(":");
-    const elenco18 = leggiElenco(config, dove);
+    const [dove2, quale] = (bottone.dataset.dmOcSu || bottone.dataset.dmOcGiu || bottone.dataset.dmOcTogli).split(":");
+    const elenco18 = leggiElenco(config, dove2);
     const i = Number(quale);
     if (!Array.isArray(elenco18) || !elenco18[i]) return;
     if (bottone.dataset.dmOcTogli !== void 0) elenco18.splice(i, 1);
@@ -160808,9 +161061,9 @@ function onClick60(event) {
   const nuova = event.target.closest("[data-dm-oc-nuova]");
   if (nuova) {
     event.preventDefault();
-    const dove = clean(nuova.dataset.dmOcNuova);
-    const elenco18 = leggiElenco(config, dove);
-    if (dove === "telecamere") {
+    const dove2 = clean(nuova.dataset.dmOcNuova);
+    const elenco18 = leggiElenco(config, dove2);
+    if (dove2 === "telecamere") {
       const libera = elencoDi2("camera").find(
         (id) => !config.telecamere.some((c) => c.entity === id)
       );
@@ -161137,7 +161390,7 @@ function segnoDelComando(azione) {
 function elencoMarkup5(casa3, states, guardabili) {
   const p = casa3.piani.find((x) => x.k === state186.vista);
   const righe4 = [];
-  const riga5 = (d, dove, segnoPiano) => {
+  const riga5 = (d, dove2, segnoPiano) => {
     const D = DISPOSITIVI_3D[d.k];
     if (!D) return "";
     const st = d.entity ? statoDelDispositivo(d.k, states[d.entity], italiano()) : null;
@@ -161152,7 +161405,7 @@ function elencoMarkup5(casa3, states, guardabili) {
     }
     return `<li class="c3-disp" data-tono="${esc(st?.tono || "spento")}" data-attivo="${Boolean(st?.attivo)}">
         <span class="c3-disp-ic" aria-hidden="true">${D.icona}</span>
-        <span class="c3-disp-testo"><b>${esc(nomeDelDispositivo3(d, states))}</b><small>${esc(dove ? `${dove} · ${testo5}` : testo5)}</small></span>
+        <span class="c3-disp-testo"><b>${esc(nomeDelDispositivo3(d, states))}</b><small>${esc(dove2 ? `${dove2} · ${testo5}` : testo5)}</small></span>
         ${segnoPiano || comando2}
       </li>`;
   };
@@ -162354,14 +162607,14 @@ function prospettiva(im) {
     const minimo = Math.max(30, Math.round(Math.max(w, h) * 0.07 / salto));
     const righe4 = [];
     for (let giro = 0; giro < 14; giro++) {
-      let m = 0, dove = -1;
+      let m = 0, dove2 = -1;
       for (let i = 0; i < acc.length; i++)
         if (acc[i] > m) {
           m = acc[i];
-          dove = i;
+          dove2 = i;
         }
       if (m < minimo) break;
-      const a = Math.floor(dove / nR), r = dove % nR - rMax;
+      const a = Math.floor(dove2 / nR), r = dove2 % nR - rMax;
       righe4.push({ t: base - largo + a * passoA, r, voti: m });
       for (let da = -15; da <= 15; da++)
         for (let dr = -12; dr <= 12; dr++) {
@@ -164025,8 +164278,8 @@ function riconosciDaFoto({
         for (const j of [i - 1, i + 1, i - W2, i + W2])
           if (tipo[j] > 0 && tipo[j] !== s.id) vicini.set(tipo[j], (vicini.get(tipo[j]) || 0) + 1);
       }
-    const dove = [...vicini].sort((a, b2) => b2[1] - a[1])[0]?.[0] || -3;
-    for (let i = 0; i < N; i++) if (tipo[i] === s.id) tipo[i] = dove;
+    const dove2 = [...vicini].sort((a, b2) => b2[1] - a[1])[0]?.[0] || -3;
+    for (let i = 0; i < N; i++) if (tipo[i] === s.id) tipo[i] = dove2;
   }
   const vive = stanze4.filter((s) => !s.via);
   if (squadra) squadraLaCasa(tipo, W2, H7, vive);
@@ -164556,15 +164809,15 @@ function oggettiDallaFoto(rilevati, { soglia: soglia3 = 0.4, stanza: stanza2 = "
     const spazio = Math.max(a[0], b2[0]) - Math.min(a[0] + a[2], b2[0] + b2[2]);
     return spazio < W2 * 0.06;
   };
-  const metti5 = (dove, k, d) => {
-    if (dove.some((o) => o.k === k && sovrapposti(o.box, d.box) > 0.6)) return;
-    const stessa = k === "cucina" && dove.find((o) => o.k === k && (inColonna(o.box, d.box) || accanto(o.box, d.box)));
+  const metti5 = (dove2, k, d) => {
+    if (dove2.some((o) => o.k === k && sovrapposti(o.box, d.box) > 0.6)) return;
+    const stessa = k === "cucina" && dove2.find((o) => o.k === k && (inColonna(o.box, d.box) || accanto(o.box, d.box)));
     if (stessa) {
       const x0 = Math.min(stessa.box[0], d.box[0]), y0 = Math.min(stessa.box[1], d.box[1]), x1 = Math.max(stessa.box[0] + stessa.box[2], d.box[0] + d.box[2]), y1 = Math.max(stessa.box[1] + stessa.box[3], d.box[1] + d.box[3]);
       stessa.box = [x0, y0, x1 - x0, y1 - y0];
       return;
     }
-    dove.push({ k, box: d.box, score: tondo(d.score, 2) });
+    dove2.push({ k, box: d.box, score: tondo(d.score, 2) });
   };
   const mobile = (d) => {
     const [, y, bw, bh] = d.box;
@@ -165354,8 +165607,8 @@ function leggiIfd(vista2, base, offset, little, tag) {
     const t2 = vista2.getUint16(p, little);
     if (!tag.has(t2)) continue;
     const tipo = vista2.getUint16(p + 2, little), quanti4 = vista2.getUint32(p + 4, little);
-    const dove = quanti4 * (tipo === 3 ? 2 : tipo === 2 || tipo === 1 ? 1 : tipo === 4 ? 4 : 8) > 4;
-    const v = dove ? base + vista2.getUint32(p + 8, little) : p + 8;
+    const dove2 = quanti4 * (tipo === 3 ? 2 : tipo === 2 || tipo === 1 ? 1 : tipo === 4 ? 4 : 8) > 4;
+    const v = dove2 ? base + vista2.getUint32(p + 8, little) : p + 8;
     if (v < 0 || v + 4 > vista2.byteLength) continue;
     if (tipo === 3) out[t2] = vista2.getUint16(v, little);
     else if (tipo === 4) out[t2] = vista2.getUint32(v, little);
@@ -165730,9 +165983,9 @@ function grigliaDalleStanze(disposte) {
   const N = W2 * H7;
   const muro = new Uint8Array(N), barriera = new Uint8Array(N), vetro = new Uint8Array(N), dentro3 = new Uint8Array(N);
   const c = (m2) => Math.round(m2 / PASSO);
-  const riempi = (dove, ax, ay, bx, by, v = 1) => {
+  const riempi = (dove2, ax, ay, bx, by, v = 1) => {
     for (let y = Math.max(0, ay); y < Math.min(H7, by); y++)
-      for (let x = Math.max(0, ax); x < Math.min(W2, bx); x++) dove[y * W2 + x] = v;
+      for (let x = Math.max(0, ax); x < Math.min(W2, bx); x++) dove2[y * W2 + x] = v;
   };
   const m = Math.max(1, Math.round(c(MURO_INTERNO) / 2)), spE = c(MURO_ESTERNO);
   for (const s of S) {
@@ -167978,12 +168231,12 @@ async function usaPiantaDelFoglio(p) {
     disegna17();
   }
 }
-async function scaricaIlMotore(dove, prendi2 = root.fetch?.bind(root)) {
+async function scaricaIlMotore(dove2, prendi2 = root.fetch?.bind(root)) {
   let ultimo = null;
   for (let volta = 0; volta < 2; volta++) {
     let risposta;
     try {
-      risposta = await prendi2(dove, { credentials: "same-origin", cache: "no-store" });
+      risposta = await prendi2(dove2, { credentials: "same-origin", cache: "no-store" });
     } catch (errore) {
       ultimo = new Error(`libredwg-web.wasm: ${perche5(errore) || "rete"}`);
       continue;
@@ -169963,13 +170216,13 @@ function ospite3() {
   if (!pagina3) return null;
   const gia = pagina3.querySelector(`#${FASCIA_ID}`);
   if (gia) return gia;
-  const dove = doc.createElement("div");
-  dove.id = FASCIA_ID;
-  dove.className = "dm-nodi-wrap";
+  const dove2 = doc.createElement("div");
+  dove2.id = FASCIA_ID;
+  dove2.className = "dm-nodi-wrap";
   const macchine = pagina3.querySelector("#dm-macchine-fasce");
-  if (macchine) pagina3.insertBefore(dove, macchine);
-  else pagina3.append(dove);
-  return dove;
+  if (macchine) pagina3.insertBefore(dove2, macchine);
+  else pagina3.append(dove2);
+  return dove2;
 }
 function dipingi21() {
   const letture2 = lettureDeiNodiOra();
@@ -169981,12 +170234,12 @@ function dipingi21() {
     return;
   }
   if (!pagina3.classList.contains("active")) return;
-  const dove = ospite3();
-  if (!dove) return;
+  const dove2 = ospite3();
+  if (!dove2) return;
   const firma2 = JSON.stringify([letture2, t("Altri nodi", "Other nodes")]);
   if (state190.firma === firma2) return;
   state190.firma = firma2;
-  dove.innerHTML = fasciaMarkup11(letture2);
+  dove2.innerHTML = fasciaMarkup11(letture2);
 }
 function schedule47() {
   if (state190.frame) return;
@@ -171017,14 +171270,14 @@ function dipingi22() {
     const pagina3 = ensurePagina4(sezione2);
     if (!pagina3) continue;
     pagina3.dataset.dmMia = sezione2.id;
-    const dove = pagina3.querySelector(".dm-mia-wrap");
-    if (!dove) continue;
+    const dove2 = pagina3.querySelector(".dm-mia-wrap");
+    if (!dove2) continue;
     const letture2 = lettureDellaSezione2(sezione2, states, resolve);
     annunciaLaPagina(sezione2, indice, letture2);
     const firma2 = JSON.stringify([sezione2.titolo, sezione2.icona, sezione2.formato, letture2]);
     if (state194.firme.get(sezione2.id) === firma2) continue;
     state194.firme.set(sezione2.id, firma2);
-    dove.innerHTML = paginaMarkup3(letture2, sezione2.formato);
+    dove2.innerHTML = paginaMarkup3(letture2, sezione2.formato);
   }
 }
 async function chiamaHa2(dominio7, servizio3, payload) {
@@ -172169,13 +172422,13 @@ function onClick67(event) {
   if (event.target.closest("[data-mia-ent-add]")) {
     event.preventDefault();
     const lista7 = voci3().slice();
-    const dove = clean(doc?.querySelector?.(".page.active")?.id).replace(/^page-/, "");
+    const dove2 = clean(doc?.querySelector?.(".page.active")?.id).replace(/^page-/, "");
     lista7.push({
       id: `mia-${Date.now().toString(36)}`,
       entity: "",
       nome: "",
       icona: "⭐",
-      sezione: dove && dove !== "config" ? dove : "",
+      sezione: dove2 && dove2 !== "config" ? dove2 : "",
       room_id: ""
     });
     state197.aperta = lista7.length - 1;
@@ -172393,10 +172646,10 @@ function telecomandoMarkup2(voce3, indice) {
   const states = allStates();
   const scelto = clean(voce3?.telecomando);
   const presi = new Set(
-    lettori().filter((_altro, dove) => dove !== indice).map((altro) => clean(altro?.telecomando)).filter(Boolean)
+    lettori().filter((_altro, dove2) => dove2 !== indice).map((altro) => clean(altro?.telecomando)).filter(Boolean)
   );
   const proposte = [telecomandoGemello(voce3?.entity, states), ...telecomandiInCasa(states)].filter(
-    (entity2, dove, tutte) => entity2 && entity2 !== scelto && !presi.has(entity2) && tutte.indexOf(entity2) === dove
+    (entity2, dove2, tutte) => entity2 && entity2 !== scelto && !presi.has(entity2) && tutte.indexOf(entity2) === dove2
   ).slice(0, 6);
   const nome = (entity2) => clean(states?.[entity2]?.attributes?.friendly_name) || entity2;
   const id = `dm-mp-ed-${indice}-telecomando`;

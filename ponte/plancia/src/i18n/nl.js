@@ -8184,4 +8184,9 @@ export default Object.freeze({
   "Measurements": "Metingen",
   "Where the data comes from": "Waar de gegevens vandaan komen",
   "The cards": "De kaarten",
+  "Edit layout: drag, or use Tab and the arrow keys to move. Esc to leave.": "Indeling bewerken: sleep, of gebruik Tab en de pijltjestoetsen om te verplaatsen. Esc om te stoppen.",
+  "There are unsaved changes: press Esc again to leave without saving them.": "Er zijn niet-opgeslagen wijzigingen: druk nogmaals op Esc om te stoppen zonder ze op te slaan.",
+  "Esc again to leave without saving": "Nogmaals Esc om te stoppen zonder opslaan",
+  "moving": "wordt verplaatst",
+  "position": "positie",
 });
