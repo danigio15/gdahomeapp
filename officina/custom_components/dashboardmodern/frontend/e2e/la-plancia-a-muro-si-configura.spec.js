@@ -166,3 +166,47 @@ test.describe("la scheda a muro", () => {
     await expect(page.locator("#dm-muro")).toHaveCount(0);
   });
 });
+
+/* #379: le pagine e i posti si trascinano dalla loro maniglia (qui dalla
+ * tastiera), come le frecce ▲▼ che restano. */
+test("pagine e posti del muro si spostano dalla maniglia", async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await apriLaCasaAMuro(page, testInfo, {
+    muro: {
+      attiva: true,
+      pagine: [
+        { id: "p1", modello: "stanza", stanza: "Soggiorno" },
+        { id: "p2", modello: "scene" },
+      ],
+    },
+  });
+  await apriLaScheda(page);
+  const body = page.locator("#ed-body");
+  await body.locator('[data-mu-ed-alterna="pagine.0.segue"]').click();
+  const entita = (k) => body.locator(`[data-mu-ed-campo="pagine.0.comandi.${k}.entita"]`);
+  await expect(entita(0)).toHaveValue("light.soggiorno");
+  await body
+    .locator('[data-mu-ed-elenco="0.comandi"] > [data-dm-riordina-riga="0"] [data-dm-maniglia]')
+    .focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(entita(1)).toHaveValue("light.soggiorno");
+  await expect(
+    body.locator(
+      '[data-mu-ed-elenco="0.comandi"] > [data-dm-riordina-riga="1"] [data-dm-maniglia]',
+    ),
+  ).toBeFocused();
+  /* La pagina aperta, portata giu', resta aperta al suo posto nuovo. */
+  await body
+    .locator(
+      '[data-mu-ed-elenco="pagine"] > [data-dm-riordina-riga="0"] > .mu-ed-pagina-testa [data-dm-maniglia]',
+    )
+    .focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(
+    body.locator('[data-mu-ed-pagina="1"] [data-mu-ed-campo="pagine.1.stanza"]'),
+  ).toHaveValue("Soggiorno");
+  await body.locator("[data-dm-save-all]").click();
+  const muro = await salvato(page);
+  expect(muro.pagine.map((p) => p.modello)).toEqual(["scene", "stanza"]);
+  expect(muro.pagine[1].comandi[1].entita).toBe("light.soggiorno");
+});

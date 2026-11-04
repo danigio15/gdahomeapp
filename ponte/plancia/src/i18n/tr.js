@@ -8125,4 +8125,5 @@ export default Object.freeze({
   "No page changed: they are all as they came.": "Değiştirilen sayfa yok: hepsi ilk hâlinde.",
   "Saved layouts": "Kaydedilen düzenler",
   "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "✏️ ile değiştirilen sayfalar — blokların sırası ve gizlenenler. «Sıfırla» onları eski hâline getirir.",
+  "Slot": "Yuva",
 });

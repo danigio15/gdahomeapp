@@ -8072,4 +8072,5 @@ export default Object.freeze({
   "No page changed: they are all as they came.": "لم تتغير أي صفحة: كلها كما جاءت.",
   "Saved layouts": "التخطيطات المحفوظة",
   "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "الصفحات التي غيّرتها بـ ✏️ — ترتيب الكتل والمخفية منها. «إعادة الضبط» تعيدها كما كانت.",
+  "Slot": "الخانة",
 });

@@ -8205,4 +8205,5 @@ export default Object.freeze({
   "No page changed: they are all as they came.": "Aucune page modifiée : elles sont toutes d'origine.",
   "Saved layouts": "Dispositions enregistrées",
   "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "les pages modifiées avec ✏️ — l'ordre des blocs et ceux masqués. «Réinitialiser» les remet comme avant.",
+  "Slot": "Emplacement",
 });

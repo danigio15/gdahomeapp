@@ -8099,4 +8099,5 @@ export default Object.freeze({
   "No page changed: they are all as they came.": "변경한 페이지가 없습니다: 모두 기본 상태입니다.",
   "Saved layouts": "저장한 배치",
   "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "✏️로 변경한 페이지 — 블록 순서와 숨긴 블록. «초기화»하면 원래대로 돌아갑니다.",
+  "Slot": "칸",
 });

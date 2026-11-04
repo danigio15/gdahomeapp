@@ -5407,6 +5407,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "Slight discomfort",
   "Slightly cool",
   "Slightly warm",
+  "Slot",
   "Slots of your own: in each one any Home Assistant entity — a light, a socket, a lock, a sensor — or a dashboard action, with the name and drawing you want.",
   "Slow the fan down",
   "Small",

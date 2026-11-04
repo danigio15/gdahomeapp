@@ -25,6 +25,7 @@ import {
   occhioPulito,
 } from "../core/colpo-d-occhio.js";
 import { disegnoDelCatalogo } from "../core/catalogo-disegni.js";
+import { spostaNellaLista } from "./trascina-per-riordinare.js";
 import { premiumDellaCasa } from "./plancia-a-muro-section.js";
 import { currentProfile } from "./config-persistence-section.js";
 import {
@@ -151,8 +152,16 @@ const NOMI_DEI_TIPI = () => ({
   apri: t("Cancello o porta", "Gate or door"),
 });
 
+/* Le voci si trascinano anche dalla maniglia (#379): le frecce restano. */
+function elencoMarkup(dove, voci) {
+  return `<div class="dm-oc-ed-elenco" data-dm-riordina data-dm-oc-elenco="${esc(dove)}">${voci}</div>`;
+}
+
 function frecce(dove, i, quanti) {
   return `<span class="dm-oc-ed-frecce">
+    <button type="button" class="ed-del dm-oc-ed-maniglia" data-dm-maniglia aria-label="${esc(
+      `${i + 1}: ${t("trascina, o usa le frecce su e giù", "drag, or use the up and down arrows")}`,
+    )}" title="${esc(t("Trascina per spostare", "Drag to move"))}">⠿</button>
     <button type="button" class="ed-del" data-dm-oc-su="${dove}:${i}" ${i === 0 ? "disabled" : ""} aria-label="${esc(t("Su", "Up"))}">↑</button>
     <button type="button" class="ed-del" data-dm-oc-giu="${dove}:${i}" ${i === quanti - 1 ? "disabled" : ""} aria-label="${esc(t("Giù", "Down"))}">↓</button>
     <button type="button" class="ed-del" data-dm-oc-togli="${dove}:${i}" aria-label="${esc(t("Togli", "Remove"))}">✕</button>
@@ -163,7 +172,7 @@ function riquadriMarkup(o) {
   const nomi = NOMI_DEI_TIPI();
   const voci = o.riquadri
     .map(
-      (r, i) => `<div class="dm-oc-ed-voce">
+      (r, i) => `<div class="dm-oc-ed-voce" data-dm-riordina-riga="${i}">
         <span class="dm-oc-ed-colore" style="--c:${esc(r.colore)}">${disegnoDelCatalogo(r.disegno, 24) || ""}</span>
         <div class="dm-oc-ed-voce-corpo">
           <strong>${esc(nomi[r.tipo])}</strong>
@@ -183,7 +192,7 @@ function riquadriMarkup(o) {
     )
     .join("");
   const pieno = o.riquadri.length >= RIQUADRI_AL_MASSIMO;
-  return `${voci || `<p class="dm-oc-ed-nota">${esc(t("Nessun riquadro.", "No tiles."))}</p>`}
+  return `${voci ? elencoMarkup("riquadri", voci) : `<p class="dm-oc-ed-nota">${esc(t("Nessun riquadro.", "No tiles."))}</p>`}
     <div class="dm-oc-ed-tasti">${TIPI_DI_RIQUADRO.map(
       (tipo) =>
         `<button type="button" class="ed-btn-add" data-dm-oc-aggiungi="${tipo}" ${pieno ? "disabled" : ""}>+ ${esc(nomi[tipo])}</button>`,
@@ -219,7 +228,7 @@ function energiaMarkup(o) {
 function telecamereMarkup(o) {
   const voci = o.telecamere
     .map(
-      (c, i) => `<div class="dm-oc-ed-voce dm-oc-ed-voce-corta">
+      (c, i) => `<div class="dm-oc-ed-voce dm-oc-ed-voce-corta" data-dm-riordina-riga="${i}">
         <div class="dm-oc-ed-righe">
           ${campo(t("Telecamera", "Camera"), `telecamere.${i}.entity`, c.entity, { elenco: "camera" })}
           ${campo(t("Nome", "Name"), `telecamere.${i}.nome`, c.nome)}
@@ -231,7 +240,7 @@ function telecamereMarkup(o) {
     )
     .join("");
   const pieno = o.telecamere.length >= TELECAMERE_AL_MASSIMO;
-  return `${voci}
+  return `${voci ? elencoMarkup("telecamere", voci) : ""}
     <div class="dm-oc-ed-tasti">
       <button type="button" class="ed-btn-add" data-dm-oc-nuova="telecamere" ${pieno ? "disabled" : ""}>+ ${esc(t("Telecamera", "Camera"))}</button>
       <button type="button" class="ed-btn-add" data-dm-oc-tutte ${pieno ? "disabled" : ""}>${esc(t("Prendi tutte quelle di casa", "Take all of the home's"))}</button>
@@ -242,7 +251,7 @@ function antifurtoMarkup(o) {
   const a = o.antifurto;
   const voci = a.modi
     .map(
-      (m, i) => `<div class="dm-oc-ed-voce">
+      (m, i) => `<div class="dm-oc-ed-voce" data-dm-riordina-riga="${i}">
         <span class="dm-oc-ed-colore" style="--c:${esc(m.colore)}">${disegnoDelCatalogo(m.disegno, 24) || ""}</span>
         <div class="dm-oc-ed-voce-corpo"><div class="dm-oc-ed-righe">
           ${campo(t("Entità che inserisce", "Entity that arms"), `antifurto.modi.${i}.entita`, m.entita, { elenco: "modo" })}
@@ -276,7 +285,7 @@ function antifurtoMarkup(o) {
     { elenco: "centrale" },
   )}
     <p class="dm-oc-ed-sotto">${esc(t("Modi su misura: un tasto grande per ognuno", "Custom modes: one big button each"))}</p>
-    ${voci}
+    ${voci ? elencoMarkup("antifurto.modi", voci) : ""}
     <div class="dm-oc-ed-tasti"><button type="button" class="ed-btn-add" data-dm-oc-nuova="antifurto.modi" ${
       a.modi.length >= MODI_AL_MASSIMO ? "disabled" : ""
     }>+ ${esc(t("Modo", "Mode"))}</button></div>`;
@@ -403,6 +412,28 @@ function scrivi(config, percorso, valore) {
 
 function leggiElenco(config, dove) {
   return dove.split(".").reduce((x, k) => x?.[k], config);
+}
+
+/* Una voce trascinata dalla maniglia: come le frecce, da un posto a un
+ * altro qualunque. */
+function onRiordina(event) {
+  const dove = event.target?.getAttribute?.("data-dm-oc-elenco");
+  if (!dove) return;
+  const { da, a } = event.detail || {};
+  const config = occhio();
+  const elenco = leggiElenco(config, dove);
+  if (!Array.isArray(elenco) || !Number.isInteger(da) || !Number.isInteger(a) || !elenco[da]) return;
+  const nuovo = spostaNellaLista(elenco, da, a);
+  elenco.splice(0, elenco.length, ...nuovo);
+  salva(config);
+  ridisegna();
+  /* Dalla tastiera si continua a premere: il fuoco torna sulla maniglia. */
+  root.setTimeout?.(() => {
+    const css = root.CSS?.escape ? root.CSS.escape(dove) : dove;
+    doc
+      .querySelector(`[data-dm-oc-elenco="${css}"] > [data-dm-riordina-riga="${a}"] [data-dm-maniglia]`)
+      ?.focus?.();
+  }, 0);
 }
 
 function onClick(event) {
@@ -568,6 +599,7 @@ function installaLoStile() {
       #ed-body .dm-oc-ed-colore{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--c)}
       #ed-body .dm-oc-ed-colore svg{width:24px;height:24px}
       #ed-body .dm-oc-ed-frecce{display:flex;gap:4px}
+      #ed-body .dm-oc-ed-maniglia{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;font-size:16px}
       #ed-body .dm-oc-ed-frecce .ed-del[disabled]{opacity:.25;cursor:default}
       #ed-body .dm-oc-ed-tasti{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
       #ed-body .dm-oc-ed-tasti .ed-btn-add{flex:1 1 160px}
@@ -600,6 +632,7 @@ export function installOcchioEditor() {
   state.installed = true;
   installaLoStile();
   doc.addEventListener("click", onClick);
+  doc.addEventListener("dm-riordina", onRiordina);
   doc.addEventListener("change", onChange);
   wrapFunction("apriConfigEntita", "__dmOcchioEditor", () => {
     ensureOcchioEditorTab();

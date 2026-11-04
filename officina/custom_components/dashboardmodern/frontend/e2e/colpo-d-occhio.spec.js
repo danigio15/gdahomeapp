@@ -647,3 +647,25 @@ test("due telecamere riempiono la finestra, senza una colonna vuota", async ({
   expect(Math.abs(griglia.x + griglia.width - (ultima.x + ultima.width))).toBeLessThan(2);
   await scatta(page, testInfo, "occhio-due-telecamere");
 });
+
+/* #379: i riquadri si spostano anche dalla maniglia, non solo dalle frecce. */
+test("nel Config i riquadri del colpo d'occhio si spostano dalla maniglia", async ({
+  page,
+}, testInfo) => {
+  await boot(page, testInfo);
+  await page.locator('#dm-occhio [data-oc="config"]').click();
+  const corpo = page.locator("#ed-body .dm-oc-ed");
+  await expect(corpo).toBeVisible({ timeout: 20_000 });
+  const tipi = () =>
+    page.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("cd_occhio") || "{}").riquadri?.map((r) => r.tipo) || [],
+    );
+  const prima = await tipi();
+  expect(prima.length).toBeGreaterThan(1);
+  await corpo
+    .locator('[data-dm-oc-elenco="riquadri"] > [data-dm-riordina-riga="0"] [data-dm-maniglia]')
+    .focus();
+  await page.keyboard.press("ArrowDown");
+  await expect.poll(tipi).toEqual([prima[1], prima[0], ...prima.slice(2)]);
+});

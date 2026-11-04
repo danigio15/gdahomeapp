@@ -8108,4 +8108,5 @@ export default Object.freeze({
   "No page changed: they are all as they came.": "कोई पेज नहीं बदला: सब पहले जैसे हैं।",
   "Saved layouts": "सहेजे गए लेआउट",
   "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "✏️ से बदले गए पेज — ब्लॉकों का क्रम और छिपे हुए। «रीसेट» उन्हें पहले जैसा कर देता है।",
+  "Slot": "स्थान",
 });

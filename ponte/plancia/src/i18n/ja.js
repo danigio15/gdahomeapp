@@ -8127,4 +8127,5 @@ export default Object.freeze({
   "No page changed: they are all as they came.": "変更したページはありません：すべて初期状態です。",
   "Saved layouts": "保存したレイアウト",
   "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "✏️ で変更したページ — ブロックの順番と非表示のもの。「リセット」で元に戻ります。",
+  "Slot": "枠",
 });

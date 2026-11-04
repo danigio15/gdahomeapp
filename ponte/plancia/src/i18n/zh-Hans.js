@@ -7989,4 +7989,5 @@ export default Object.freeze({
   "No page changed: they are all as they came.": "没有更改任何页面：都是默认状态。",
   "Saved layouts": "已保存的布局",
   "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "用 ✏️ 更改过的页面——区块的顺序和隐藏的区块。「重置」会恢复原样。",
+  "Slot": "位置",
 });

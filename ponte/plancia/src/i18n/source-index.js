@@ -4931,6 +4931,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Posteriore destro": "Rear right",
   "Posteriore sinistro": "Rear left",
   "Posti tutti tuoi: in ognuno un'entità qualunque di Home Assistant — una luce, una presa, una serratura, un sensore — o un'azione della plancia, col nome e il disegno che vuoi.": "Slots of your own: in each one any Home Assistant entity — a light, a socket, a lock, a sensor — or a dashboard action, with the name and drawing you want.",
+  "Posto": "Slot",
   "Posto libero": "Empty slot",
   "posto sconosciuto": "place unknown",
   "potenza": "power",

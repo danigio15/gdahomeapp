@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-SNE5NWXZ.js";
+} from "../../chunk-HDVRIQKW.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -6588,6 +6588,7 @@ var SOURCE_INDEX = Object.freeze({
   "Posteriore destro": "Rear right",
   "Posteriore sinistro": "Rear left",
   "Posti tutti tuoi: in ognuno un'entità qualunque di Home Assistant — una luce, una presa, una serratura, un sensore — o un'azione della plancia, col nome e il disegno che vuoi.": "Slots of your own: in each one any Home Assistant entity — a light, a socket, a lock, a sensor — or a dashboard action, with the name and drawing you want.",
+  "Posto": "Slot",
   "Posto libero": "Empty slot",
   "posto sconosciuto": "place unknown",
   "potenza": "power",
@@ -12787,19 +12788,19 @@ function onPointerDown(event) {
   if (state10.presa) return;
   if (event.pointerType === "mouse" && event.button !== 0) return;
   if (event.target?.closest?.("[data-dm-non-trascinare]")) return;
-  const maniglia = event.target?.closest?.("[data-dm-maniglia]");
-  const riga5 = maniglia?.closest?.("[data-dm-riordina-riga]");
+  const maniglia2 = event.target?.closest?.("[data-dm-maniglia]");
+  const riga5 = maniglia2?.closest?.("[data-dm-riordina-riga]");
   const lista7 = riga5?.parentElement;
   if (!lista7?.hasAttribute?.("data-dm-riordina")) return;
   const tutte = righe(lista7);
   const da = tutte.indexOf(riga5);
   if (da < 0 || tutte.length < 2) return;
-  const tieni = event.pointerType !== "mouse" && maniglia.hasAttribute("data-dm-tieni");
+  const tieni = event.pointerType !== "mouse" && maniglia2.hasAttribute("data-dm-tieni");
   if (!tieni) event.preventDefault();
   const scroller = chiScorre(lista7);
   const presa = {
     id: event.pointerId,
-    maniglia,
+    maniglia: maniglia2,
     riga: riga5,
     lista: lista7,
     tutte,
@@ -12826,7 +12827,7 @@ function onPointerDown(event) {
       if (state10.presa !== presa) return;
       presa.pronto = true;
       try {
-        maniglia.setPointerCapture?.(event.pointerId);
+        maniglia2.setPointerCapture?.(event.pointerId);
       } catch (_error) {
       }
       root.navigator?.vibrate?.(12);
@@ -12835,7 +12836,7 @@ function onPointerDown(event) {
     }, TIENI_MS);
   } else {
     try {
-      maniglia.setPointerCapture?.(event.pointerId);
+      maniglia2.setPointerCapture?.(event.pointerId);
     } catch (_error) {
     }
   }
@@ -13028,8 +13029,8 @@ function onKeyDown(event) {
   }
   const verso2 = AVANTI[event.key];
   if (!verso2) return;
-  const maniglia = event.target?.closest?.("[data-dm-maniglia]");
-  const riga5 = maniglia?.closest?.("[data-dm-riordina-riga]");
+  const maniglia2 = event.target?.closest?.("[data-dm-maniglia]");
+  const riga5 = maniglia2?.closest?.("[data-dm-riordina-riga]");
   const lista7 = riga5?.parentElement;
   if (!lista7?.hasAttribute?.("data-dm-riordina")) return;
   if (!eGriglia(lista7) && (event.key === "ArrowLeft" || event.key === "ArrowRight")) return;
@@ -126921,8 +126922,8 @@ function postoMarkup(i, lista7, k, c, posti = 6) {
   const azioni2 = azioniUsabili();
   const descrizione = due5 ? `${clean(inCorso2?.nome || c?.nome) || nomeDi12(inCorso2?.entita || c?.entita || "") || t("Due tasti", "Two buttons")} · ON / OFF` : !pieno ? t("Posto libero", "Empty slot") : c.azione ? `⚡ ${c.azione}` : `${nomeDi12(c.entita)} · ${c.entita}`;
   const tipo = lista7 === "comandi" ? `<label class="mu-ed-voce"><span>${esc(t("Tipo", "Type"))}</span>${tendina2(`${via}.tipo`, due5 ? "duetasti" : "", TIPI_DEL_POSTO(), null)}</label>` : "";
-  return `<div class="mu-ed-posto${pieno || due5 ? " pieno" : ""}" data-mu-ed-posto="${esc(via)}">
-    <div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span>
+  return `<div class="mu-ed-posto${pieno || due5 ? " pieno" : ""}" data-mu-ed-posto="${esc(via)}" data-dm-riordina-riga="${k}">
+    <div class="mu-ed-posto-testa">${maniglia(`${t("Posto", "Slot")} ${k + 1}`)}<span class="mu-ed-num">${k + 1}</span>
       <span class="mu-ed-frecce"><button type="button" data-mu-ed-posto-su="${i}.${k}" data-mu-ed-lista="${lista7}"${k === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-posto-giu="${i}.${k}" data-mu-ed-lista="${lista7}"${k === posti - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>
       <b class="mu-ed-cosa">${esc(descrizione)}</b>
       ${pieno || due5 ? `<button type="button" class="mu-ed-svuota" data-mu-ed-svuota="${esc(via)}" aria-label="${esc(t("Svuota il posto", "Clear the slot"))}">✕</button>` : ""}</div>
@@ -126935,8 +126936,13 @@ function postoMarkup(i, lista7, k, c, posti = 6) {
       ${immagineDelPosto(via, c, lista7)}` : ""}`}
     </div></div>`;
 }
+function maniglia(nome) {
+  return `<button type="button" class="mu-ed-maniglia" data-dm-maniglia aria-label="${esc(
+    `${nome}: ${t("trascina, o usa le frecce su e giù", "drag, or use the up and down arrows")}`
+  )}" title="${esc(t("Trascina per spostare", "Drag to move"))}">⠿</button>`;
+}
 function postiMarkup(i, lista7, posti, quanti4 = 6) {
-  return `<div class="mu-ed-posti">${Array.from(
+  return `<div class="mu-ed-posti" data-dm-riordina data-mu-ed-elenco="${i}.${lista7}">${Array.from(
     { length: quanti4 },
     (_, k) => postoMarkup(i, lista7, k, posti[k], quanti4)
   ).join("")}</div>`;
@@ -127284,13 +127290,13 @@ function paginaMarkup(p, i, tutte) {
   }
   const nomeDiSerie = p.modello === "stanza" && clean(p.stanza) || NOME_DEL_MODELLO(p.modello);
   const aperta2 = state129.aperta === i;
-  const testa2 = `<div class="mu-ed-pagina-testa">
+  const testa2 = `<div class="mu-ed-pagina-testa">${maniglia(clean(p.titolo) || nomeDiSerie)}
       <button type="button" class="mu-ed-apri" data-mu-ed-apri="${i}" aria-expanded="${aperta2}">${disegno3(clean(p.disegno) || DISEGNO_DI_SERIE[p.modello], 26, `pag-${i}`)}<span class="mu-ed-apri-tx"><b>${esc(clean(p.titolo) || nomeDiSerie)}</b><small>${esc(t("Pagina", "Page"))} ${i + 1} · ${esc(NOME_DEL_MODELLO(p.modello))}</small></span><span class="mu-ed-freccia" aria-hidden="true">${aperta2 ? "▾" : "▸"}</span></button>
       <span class="mu-ed-frecce"><button type="button" data-mu-ed-pagina-su="${i}"${i === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-pagina-giu="${i}"${i === tutte - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>
       ${tutte < PAGINE_AL_MASSIMO ? `<button type="button" class="mu-ed-copia" data-mu-ed-copia="${i}" aria-label="${esc(t("Duplica la pagina", "Duplicate page"))}" title="${esc(t("Duplica", "Duplicate"))}">⧉</button>` : ""}
       <button type="button" class="mu-ed-svuota" data-mu-ed-togli="${i}" aria-label="${esc(t("Togli la pagina", "Remove page"))}">🗑</button></div>`;
-  if (!aperta2) return `<div class="mu-ed-pagina chiusa" data-mu-ed-pagina="${i}">${testa2}</div>`;
-  return `<div class="mu-ed-pagina" data-mu-ed-pagina="${i}">${testa2}
+  if (!aperta2) return `<div class="mu-ed-pagina chiusa" data-mu-ed-pagina="${i}" data-dm-riordina-riga="${i}">${testa2}</div>`;
+  return `<div class="mu-ed-pagina" data-mu-ed-pagina="${i}" data-dm-riordina-riga="${i}">${testa2}
     ${riga4(t("Nome sul tablet", "Name on the tablet"), t("Si legge sulla linguetta in alto", "Shown on the tab at the top"), campo3(`${via}.titolo`, p.titolo, nomeDiSerie))}
     ${riga4(t("Icona", "Icon"), "", tendina2(`${via}.disegno`, p.disegno, DISEGNI4(), null))}
     ${riga4(t("Tipo di pagina", "Page type"), "", tendina2(`${via}.modello`, p.modello, MODELLI3(), null))}
@@ -127639,7 +127645,7 @@ function corpoMarkup9() {
   ) : ""}
   </div>
   <div class="ed-sec-title">${esc(t("Le pagine di questo tablet", "This tablet's pages"))}</div>
-  ${state129.fonte ? m.pagine.map((p, i) => paginaMarkup(p, i, m.pagine.length)).join("") || `<div class="mu-ed-nota">${esc(t("Ancora nessuna pagina: aggiungine una qui sotto.", "No pages yet: add one below."))}</div>` : `<div class="mu-ed-nota">${esc(t("Leggo la plancia di origine…", "Reading the source dashboard…"))}</div>`}
+  ${state129.fonte ? (m.pagine.length ? `<div class="mu-ed-pagine" data-dm-riordina data-mu-ed-elenco="pagine">${m.pagine.map((p, i) => paginaMarkup(p, i, m.pagine.length)).join("")}</div>` : "") || `<div class="mu-ed-nota">${esc(t("Ancora nessuna pagina: aggiungine una qui sotto.", "No pages yet: add one below."))}</div>` : `<div class="mu-ed-nota">${esc(t("Leggo la plancia di origine…", "Reading the source dashboard…"))}</div>`}
   ${m.pagine.length < PAGINE_AL_MASSIMO ? `<div class="mu-ed-aggiungi"><span>＋ ${esc(t("Aggiungi una pagina", "Add a page"))}</span>${MODELLI3().map(
     ([v, testo5]) => `<button type="button" class="ed-btn-add" data-mu-ed-nuova="${v}">${esc(testo5)}</button>`
   ).join("")}</div>` : ""}
@@ -128000,6 +128006,44 @@ function sposta2(elenco18, da, a) {
   copia2.splice(a, 0, preso);
   return copia2;
 }
+function spostaLaPagina(da, a) {
+  const m = structuredClone(bozza());
+  if (!m.pagine[da] || a < 0 || a >= m.pagine.length) return;
+  m.pagine = sposta2(m.pagine, da, a);
+  state129.dueTasti = {};
+  const aperta2 = state129.aperta;
+  if (aperta2 === da) state129.aperta = a;
+  else if (da < aperta2 && a >= aperta2) state129.aperta = aperta2 - 1;
+  else if (da > aperta2 && a <= aperta2) state129.aperta = aperta2 + 1;
+  state129.bozza = muroPulito(m);
+}
+function spostaIlPosto(i, quale, da, a) {
+  const m = structuredClone(bozza());
+  const p = m.pagine[i];
+  if (!p) return;
+  const lista7 = quale === "scene" ? "scene" : "comandi";
+  state129.dueTasti = {};
+  const posti = Array.from({ length: postiDellaPagina(p) }, (_, n) => p[lista7][n] || { tipo: "vuoto" });
+  p[lista7] = sposta2(posti, da, a);
+  if (lista7 === "comandi") p.scelti = true;
+  state129.bozza = muroPulito(m);
+}
+function onRiordina2(event) {
+  const elenco18 = event.target?.getAttribute?.("data-mu-ed-elenco");
+  if (!elenco18) return;
+  const { da, a } = event.detail || {};
+  if (!Number.isInteger(da) || !Number.isInteger(a)) return;
+  if (elenco18 === "pagine") spostaLaPagina(da, a);
+  else {
+    const [i, lista7] = elenco18.split(".");
+    spostaIlPosto(Number(i), lista7, da, a);
+  }
+  ridisegna12();
+  root.setTimeout?.(() => {
+    const css11 = root.CSS?.escape ? root.CSS.escape(elenco18) : elenco18;
+    doc.querySelector(`[data-mu-ed-elenco="${css11}"] > [data-dm-riordina-riga="${a}"] [data-dm-maniglia]`)?.focus?.();
+  }, 0);
+}
 function onClick30(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva9() !== MURO_EDITOR_TAB || !body.contains(event.target)) return;
@@ -128101,26 +128145,11 @@ function onClick30(event) {
     state129.bozza = muroPulito(m);
     state129.aperta = -1;
   } else if (d.muEdPaginaSu !== void 0 || d.muEdPaginaGiu !== void 0) {
-    const m = structuredClone(bozza());
     const i = Number(d.muEdPaginaSu ?? d.muEdPaginaGiu);
-    const verso2 = d.muEdPaginaSu !== void 0 ? i - 1 : i + 1;
-    m.pagine = sposta2(m.pagine, i, verso2);
-    state129.dueTasti = {};
-    if (state129.aperta === i) state129.aperta = verso2;
-    state129.bozza = muroPulito(m);
+    spostaLaPagina(i, d.muEdPaginaSu !== void 0 ? i - 1 : i + 1);
   } else if (d.muEdPostoSu !== void 0 || d.muEdPostoGiu !== void 0) {
     const [i, k] = String(d.muEdPostoSu ?? d.muEdPostoGiu).split(".").map(Number);
-    const m = structuredClone(bozza());
-    const p = m.pagine[i];
-    const lista7 = d.muEdLista === "scene" ? "scene" : "comandi";
-    state129.dueTasti = {};
-    const posti = Array.from(
-      { length: postiDellaPagina(p) },
-      (_, n) => p[lista7][n] || { tipo: "vuoto" }
-    );
-    p[lista7] = sposta2(posti, k, d.muEdPostoSu !== void 0 ? k - 1 : k + 1);
-    if (lista7 === "comandi") p.scelti = true;
-    state129.bozza = muroPulito(m);
+    spostaIlPosto(i, d.muEdLista, k, d.muEdPostoSu !== void 0 ? k - 1 : k + 1);
   } else if (d.muEdSalva !== void 0) {
     salva20();
     return;
@@ -128245,6 +128274,9 @@ html[data-theme="dark"] #ed-body .mu-ed-prova{color:#7dd3fc}
 #ed-body .mu-ed-altro .mu-ed-freccia{grid-row:1/span 2;grid-column:2}
 #ed-body .mu-ed-pagina-testa .ed-del{margin-left:6px}
 #ed-body .mu-ed-frecce{display:inline-flex;gap:4px;margin-left:auto}
+#ed-body .mu-ed-maniglia{flex:0 0 28px;width:28px;height:34px;padding:0;border:0;border-radius:9px;background:transparent;color:var(--text-dim,#94a3b8);font-size:17px;line-height:1;cursor:grab;display:inline-flex;align-items:center;justify-content:center;touch-action:none;user-select:none;-webkit-user-select:none}
+#ed-body .mu-ed-maniglia:hover{color:var(--text,#0f172a);background:color-mix(in srgb,var(--text-dim,#94a3b8) 14%,transparent)}
+#ed-body .mu-ed-maniglia:focus-visible{outline:2px solid var(--accent,#3b82f6);outline-offset:1px}
 #ed-body .mu-ed-posto .mu-ed-frecce{margin-left:0}
 #ed-body .mu-ed-frecce button{width:28px;height:28px;border-radius:50%;border:1px solid var(--divider-color,#dbe4ee);background:none;color:var(--text-dim,#64748b);font-size:10px;cursor:pointer}
 #ed-body .mu-ed-frecce button[disabled]{opacity:.35;cursor:default}
@@ -128339,6 +128371,7 @@ function installPlanciaAMuroEditor() {
   state129.installed = true;
   stili4();
   doc.addEventListener("click", onClick30);
+  doc.addEventListener("dm-riordina", onRiordina2);
   doc.addEventListener("change", onChange9);
   doc.addEventListener(EVENTO_IMMAGINE, onImmagine);
   doc.addEventListener("input", (event) => {
@@ -139822,7 +139855,7 @@ function onChange15(event) {
   else delete sorgenti[chiave2];
   scriviPreferenze({ sorgenti });
 }
-function onRiordina2(event) {
+function onRiordina3(event) {
   const lista7 = event.target;
   if (!lista7?.classList?.contains("dm-widget-pref-list")) return;
   const { da, a } = event.detail || {};
@@ -140049,7 +140082,7 @@ function installTodoEditorSection() {
   ensureTodoEditorTab();
   doc.addEventListener("click", onClick41);
   doc.addEventListener("change", onChange15);
-  doc.addEventListener("dm-riordina", onRiordina2);
+  doc.addEventListener("dm-riordina", onRiordina3);
   onEditorRedraw("__dmTodoEditor", () => {
     root.queueMicrotask?.(() => {
       ensureTodoEditorTab();
@@ -156699,7 +156732,7 @@ function cambiaLaBozza(elenco18, muta) {
   applicaLaDisposizione(m.pagina);
   disegnaLaBarra();
 }
-function onRiordina3(event) {
+function onRiordina4(event) {
   if (onRiordinaLaBarra(event)) return;
   const elenco18 = elencoDi(event.target);
   if (!elenco18) return;
@@ -156943,7 +156976,7 @@ function installDisposizione() {
   for (const tipo of ["pointerdown", "pointermove", "pointerup", "pointercancel"])
     doc.addEventListener(tipo, onPuntatore, { capture: true, passive: false });
   doc.addEventListener("keydown", onKeyDown2);
-  doc.addEventListener("dm-riordina", onRiordina3);
+  doc.addEventListener("dm-riordina", onRiordina4);
   if (root.MutationObserver) {
     state177.osservatore = new root.MutationObserver(() => {
       if (!state177.occupato) inCoda5();
@@ -156999,18 +157032,18 @@ function lOrdineSiTrascina(corpo6) {
     if (!chiave2 || chiave2 === CONFIG) continue;
     riga5.setAttribute("data-dm-riordina-riga", chiave2);
     const nome = riga5.querySelector(".ed-row-new")?.textContent?.trim() || chiave2;
-    const maniglia = doc.createElement("button");
-    maniglia.type = "button";
-    maniglia.className = "dm-ordine-barra-maniglia";
-    maniglia.setAttribute("data-dm-maniglia", "");
-    maniglia.setAttribute("aria-label", `${nome}: ${t("trascina, o usa le frecce su e giù", "drag, or use the up and down arrows")}`);
-    maniglia.title = t("Trascina per spostare", "Drag to move");
-    maniglia.textContent = "⠿";
-    riga5.prepend(maniglia);
+    const maniglia2 = doc.createElement("button");
+    maniglia2.type = "button";
+    maniglia2.className = "dm-ordine-barra-maniglia";
+    maniglia2.setAttribute("data-dm-maniglia", "");
+    maniglia2.setAttribute("aria-label", `${nome}: ${t("trascina, o usa le frecce su e giù", "drag, or use the up and down arrows")}`);
+    maniglia2.title = t("Trascina per spostare", "Drag to move");
+    maniglia2.textContent = "⠿";
+    riga5.prepend(maniglia2);
   }
   return elenco18;
 }
-function onRiordina4(event) {
+function onRiordina5(event) {
   const elenco18 = event.target;
   if (!elenco18?.hasAttribute?.("data-dm-ordine-barra")) return;
   const { da, a } = event.detail || {};
@@ -157110,7 +157143,7 @@ function installDisposizioneNelConfig() {
   if (!doc || state178.installed) return;
   state178.installed = true;
   installStyle("dm-disposizione-nel-config-style", STILE20);
-  doc.addEventListener("dm-riordina", onRiordina4);
+  doc.addEventListener("dm-riordina", onRiordina5);
   doc.addEventListener("click", onClick58, true);
   const presto = () => onEditorRedraw("__dmDisposizioneNelConfig", sistema);
   presto();
@@ -160171,8 +160204,14 @@ var NOMI_DEI_TIPI = () => ({
   antifurto: t("Antifurto", "Alarm"),
   apri: t("Cancello o porta", "Gate or door")
 });
+function elencoMarkup4(dove, voci4) {
+  return `<div class="dm-oc-ed-elenco" data-dm-riordina data-dm-oc-elenco="${esc(dove)}">${voci4}</div>`;
+}
 function frecce2(dove, i, quanti4) {
   return `<span class="dm-oc-ed-frecce">
+    <button type="button" class="ed-del dm-oc-ed-maniglia" data-dm-maniglia aria-label="${esc(
+    `${i + 1}: ${t("trascina, o usa le frecce su e giù", "drag, or use the up and down arrows")}`
+  )}" title="${esc(t("Trascina per spostare", "Drag to move"))}">⠿</button>
     <button type="button" class="ed-del" data-dm-oc-su="${dove}:${i}" ${i === 0 ? "disabled" : ""} aria-label="${esc(t("Su", "Up"))}">↑</button>
     <button type="button" class="ed-del" data-dm-oc-giu="${dove}:${i}" ${i === quanti4 - 1 ? "disabled" : ""} aria-label="${esc(t("Giù", "Down"))}">↓</button>
     <button type="button" class="ed-del" data-dm-oc-togli="${dove}:${i}" aria-label="${esc(t("Togli", "Remove"))}">✕</button>
@@ -160181,7 +160220,7 @@ function frecce2(dove, i, quanti4) {
 function riquadriMarkup2(o) {
   const nomi2 = NOMI_DEI_TIPI();
   const voci4 = o.riquadri.map(
-    (r, i) => `<div class="dm-oc-ed-voce">
+    (r, i) => `<div class="dm-oc-ed-voce" data-dm-riordina-riga="${i}">
         <span class="dm-oc-ed-colore" style="--c:${esc(r.colore)}">${disegnoDelCatalogo(r.disegno, 24) || ""}</span>
         <div class="dm-oc-ed-voce-corpo">
           <strong>${esc(nomi2[r.tipo])}</strong>
@@ -160196,7 +160235,7 @@ function riquadriMarkup2(o) {
       </div>`
   ).join("");
   const pieno = o.riquadri.length >= RIQUADRI_AL_MASSIMO;
-  return `${voci4 || `<p class="dm-oc-ed-nota">${esc(t("Nessun riquadro.", "No tiles."))}</p>`}
+  return `${voci4 ? elencoMarkup4("riquadri", voci4) : `<p class="dm-oc-ed-nota">${esc(t("Nessun riquadro.", "No tiles."))}</p>`}
     <div class="dm-oc-ed-tasti">${TIPI_DI_RIQUADRO.map(
     (tipo) => `<button type="button" class="ed-btn-add" data-dm-oc-aggiungi="${tipo}" ${pieno ? "disabled" : ""}>+ ${esc(nomi2[tipo])}</button>`
   ).join("")}</div>`;
@@ -160227,7 +160266,7 @@ function energiaMarkup(o) {
 }
 function telecamereMarkup(o) {
   const voci4 = o.telecamere.map(
-    (c, i) => `<div class="dm-oc-ed-voce dm-oc-ed-voce-corta">
+    (c, i) => `<div class="dm-oc-ed-voce dm-oc-ed-voce-corta" data-dm-riordina-riga="${i}">
         <div class="dm-oc-ed-righe">
           ${campo5(t("Telecamera", "Camera"), `telecamere.${i}.entity`, c.entity, { elenco: "camera" })}
           ${campo5(t("Nome", "Name"), `telecamere.${i}.nome`, c.nome)}
@@ -160238,7 +160277,7 @@ function telecamereMarkup(o) {
       </div>`
   ).join("");
   const pieno = o.telecamere.length >= TELECAMERE_AL_MASSIMO;
-  return `${voci4}
+  return `${voci4 ? elencoMarkup4("telecamere", voci4) : ""}
     <div class="dm-oc-ed-tasti">
       <button type="button" class="ed-btn-add" data-dm-oc-nuova="telecamere" ${pieno ? "disabled" : ""}>+ ${esc(t("Telecamera", "Camera"))}</button>
       <button type="button" class="ed-btn-add" data-dm-oc-tutte ${pieno ? "disabled" : ""}>${esc(t("Prendi tutte quelle di casa", "Take all of the home's"))}</button>
@@ -160247,7 +160286,7 @@ function telecamereMarkup(o) {
 function antifurtoMarkup(o) {
   const a = o.antifurto;
   const voci4 = a.modi.map(
-    (m, i) => `<div class="dm-oc-ed-voce">
+    (m, i) => `<div class="dm-oc-ed-voce" data-dm-riordina-riga="${i}">
         <span class="dm-oc-ed-colore" style="--c:${esc(m.colore)}">${disegnoDelCatalogo(m.disegno, 24) || ""}</span>
         <div class="dm-oc-ed-voce-corpo"><div class="dm-oc-ed-righe">
           ${campo5(t("Entità che inserisce", "Entity that arms"), `antifurto.modi.${i}.entita`, m.entita, { elenco: "modo" })}
@@ -160276,7 +160315,7 @@ function antifurtoMarkup(o) {
     { elenco: "centrale" }
   )}
     <p class="dm-oc-ed-sotto">${esc(t("Modi su misura: un tasto grande per ognuno", "Custom modes: one big button each"))}</p>
-    ${voci4}
+    ${voci4 ? elencoMarkup4("antifurto.modi", voci4) : ""}
     <div class="dm-oc-ed-tasti"><button type="button" class="ed-btn-add" data-dm-oc-nuova="antifurto.modi" ${a.modi.length >= MODI_AL_MASSIMO ? "disabled" : ""}>+ ${esc(t("Modo", "Mode"))}</button></div>`;
 }
 function chiediLaLicenza2() {
@@ -160377,6 +160416,22 @@ function scrivi5(config, percorso, valore3) {
 }
 function leggiElenco(config, dove) {
   return dove.split(".").reduce((x, k) => x?.[k], config);
+}
+function onRiordina6(event) {
+  const dove = event.target?.getAttribute?.("data-dm-oc-elenco");
+  if (!dove) return;
+  const { da, a } = event.detail || {};
+  const config = occhio();
+  const elenco18 = leggiElenco(config, dove);
+  if (!Array.isArray(elenco18) || !Number.isInteger(da) || !Number.isInteger(a) || !elenco18[da]) return;
+  const nuovo = spostaNellaLista(elenco18, da, a);
+  elenco18.splice(0, elenco18.length, ...nuovo);
+  salva35(config);
+  ridisegna32();
+  root.setTimeout?.(() => {
+    const css11 = root.CSS?.escape ? root.CSS.escape(dove) : dove;
+    doc.querySelector(`[data-dm-oc-elenco="${css11}"] > [data-dm-riordina-riga="${a}"] [data-dm-maniglia]`)?.focus?.();
+  }, 0);
 }
 function onClick60(event) {
   const body = nelCorpo3(event);
@@ -160519,6 +160574,7 @@ function installaLoStile8() {
       #ed-body .dm-oc-ed-colore{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--c)}
       #ed-body .dm-oc-ed-colore svg{width:24px;height:24px}
       #ed-body .dm-oc-ed-frecce{display:flex;gap:4px}
+      #ed-body .dm-oc-ed-maniglia{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;font-size:16px}
       #ed-body .dm-oc-ed-frecce .ed-del[disabled]{opacity:.25;cursor:default}
       #ed-body .dm-oc-ed-tasti{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
       #ed-body .dm-oc-ed-tasti .ed-btn-add{flex:1 1 160px}
@@ -160550,6 +160606,7 @@ function installOcchioEditor() {
   state185.installed = true;
   installaLoStile8();
   doc.addEventListener("click", onClick60);
+  doc.addEventListener("dm-riordina", onRiordina6);
   doc.addEventListener("change", onChange21);
   wrapFunction("apriConfigEntita", "__dmOcchioEditor", () => {
     ensureOcchioEditorTab();
@@ -160741,7 +160798,7 @@ function segnoDelComando(azione) {
   if (azione.service === "stop_cover") return "■";
   return "⏻";
 }
-function elencoMarkup4(casa3, states, guardabili) {
+function elencoMarkup5(casa3, states, guardabili) {
   const p = casa3.piani.find((x) => x.k === state186.vista);
   const righe4 = [];
   const riga5 = (d, dove, segnoPiano) => {
@@ -161022,7 +161079,7 @@ function disegna16() {
   const guardabili = telecamereGuardabili(casa3, states);
   scriviSeCambia(
     nodo3.querySelector(".c3-elenco"),
-    vuota2 ? "" : elencoMarkup4(casa3, states, guardabili)
+    vuota2 ? "" : elencoMarkup5(casa3, states, guardabili)
   );
   const firma2 = JSON.stringify(casa3);
   if (state186.scena && state186.firma !== firma2) spegniLaScena();
