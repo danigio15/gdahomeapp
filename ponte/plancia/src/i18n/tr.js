@@ -8134,4 +8134,6 @@ export default Object.freeze({
   "Smoke detectors": "Duman dedektörleri",
   "Virtual machines": "Sanal makineler",
   "Windows summary": "Pencere özeti",
+  "Zones": "Bölgeler",
+  "Garden": "Bahçe",
 });

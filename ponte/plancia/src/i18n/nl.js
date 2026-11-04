@@ -8168,4 +8168,6 @@ export default Object.freeze({
   "Smoke detectors": "Rookmelders",
   "Virtual machines": "Virtuele machines",
   "Windows summary": "Overzicht ramen",
+  "Zones": "Zones van het klimaat",
+  "Garden": "Tuin",
 });

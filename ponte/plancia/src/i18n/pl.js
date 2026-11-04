@@ -8156,4 +8156,6 @@ export default Object.freeze({
   "Smoke detectors": "Czujniki dymu",
   "Virtual machines": "Maszyny wirtualne",
   "Windows summary": "Podsumowanie okien",
+  "Zones": "Strefy",
+  "Garden": "Ogród",
 });

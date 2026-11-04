@@ -8196,4 +8196,6 @@ export default Object.freeze({
   "Smoke detectors": "Rauchmelder",
   "Virtual machines": "Virtuelle Maschinen",
   "Windows summary": "Fenster-Übersicht",
+  "Zones": "Zonen",
+  "Garden": "Garten",
 });

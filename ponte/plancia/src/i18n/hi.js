@@ -8117,4 +8117,6 @@ export default Object.freeze({
   "Smoke detectors": "धुआँ संसूचक",
   "Virtual machines": "वर्चुअल मशीनें",
   "Windows summary": "खिड़कियों का सारांश",
+  "Zones": "ज़ोन",
+  "Garden": "बगीचा",
 });

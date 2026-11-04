@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-2ZMM5KNI.js";
+} from "../../chunk-DD6BLXJG.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -31709,6 +31709,12 @@ function evVisible() {
   return Boolean(doc?.getElementById("page-ev")?.classList.contains("active"));
 }
 function onClick2(event) {
+  if (state25.dietro)
+    root.requestAnimationFrame?.(() => {
+      if (!state25.dietro || !evVisible()) return;
+      state25.dietro = false;
+      schedule3();
+    });
   const misuraToccata = event.target?.closest?.(
     "#page-ev :is(.dm-termica,.dm-auto-testa) [data-dm-storico]"
   );
@@ -32152,6 +32158,7 @@ function installAutoTermica() {
     });
   root.addEventListener?.("dashboardmodern:state-changed", () => {
     if (evVisible()) schedule3();
+    else state25.dietro = true;
   });
   rinominaLaLinguettaDellAuto();
   ensureTendinaMotore();
@@ -156299,7 +156306,10 @@ function titoloDi2(el) {
     (uno) => !dentroUnaFila(uno, el)
   );
   const testo5 = String(testa2?.textContent || "").replace(/\s+/g, " ").trim();
-  return /[a-zà-ü]{3,}/i.test(testo5) ? testo5.replace(/[\d.,:%°]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 48) : "";
+  return /[a-zà-ü]{3,}/i.test(testo5) ? senzaFigure(testo5.replace(/[\d.,:%°]+/g, " ")).replace(/\s+/g, " ").trim().slice(0, 48) : "";
+}
+function senzaFigure(testo5) {
+  return String(testo5 || "").replace(/[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\uFE0F\u200D\u20E3]/gu, " ").replace(/\s+/g, " ").trim();
 }
 function dentroUnaFila(nodo3, fino) {
   for (let su2 = nodo3; su2 && su2 !== fino; su2 = su2.parentElement) {
@@ -156321,7 +156331,7 @@ function testoBreve2(el) {
   for (const parte of el.querySelectorAll?.("strong,small,label,span,div,p") || []) {
     if (parte.children.length || dentroUnaFila(parte, el)) continue;
     const testo5 = String(parte.textContent || "").replace(/\s+/g, " ").trim();
-    if (/[a-zà-ü]{3,}/i.test(testo5) && !/^[\d.,]|[%°]/.test(testo5) && testo5.length <= 40) return testo5;
+    if (/[a-zà-ü]{3,}/i.test(testo5) && !/^[\d.,]|[%°]/.test(testo5) && testo5.length <= 40) return senzaFigure(testo5);
   }
   return "";
 }
@@ -156388,12 +156398,14 @@ function nomeDiRipiego(el, contenitore5, i) {
 }
 function contenitoreDeiRiquadri(pagina3) {
   const nome = nomeDellaPagina(pagina3);
-  const dichiarato = pagina3.querySelector?.(`[data-dm-disposizione="${nome}"]`);
+  const dichiarato = pagina3.getAttribute?.("data-dm-disposizione") === nome ? pagina3 : pagina3.querySelector?.(`[data-dm-disposizione="${nome}"]`);
   if (dichiarato) return { contenitore: dichiarato, chiave: nome };
   let qui = pagina3;
   let vista2 = "";
   for (let giro = 0; giro < 6; giro += 1) {
-    const tutti = [...qui.children].filter((el) => !eTestata(el) && !el.matches("nav,script,style,template"));
+    const tutti = [...qui.children].filter(
+      (el) => !eTestata(el) && !el.matches(`nav,script,style,template,.dm-riordina-voce,${NOSTRI}`)
+    );
     const figli = tutti.filter(visibile);
     const altezze = figli.map((el) => el.getBoundingClientRect().height);
     const grande = altezze.indexOf(Math.max(...altezze, 0));
@@ -156483,11 +156495,20 @@ var DICHIARATI = Object.freeze([
   ["calendario", ".dm-calp-cose", "da-fare", "Da fare", "To do"],
   ["gdanav", ".dm-gn-capo", "nuovo", "Nuovo viaggio", "New trip"],
   ["gdanav", ".dm-gn-griglia", "viaggi", "Viaggi", "Trips"],
-  ["automazioni", ".ad-kpi", "numeri", "Numeri", "Figures"]
+  ["automazioni", ".ad-kpi", "numeri", "Numeri", "Figures"],
+  ["clima", ".clima-zone", "zone", "Zone", "Zones"],
+  ["irrigazione", "#irr-head", "giardino", "Giardino", "Garden"],
+  ["irrigazione", "#irr-grid", "zone", "Zone", "Zones"]
 ]);
 var CONTENITORI_DICHIARATI = Object.freeze([
   ["security", ".dm-sec-shell"],
-  ["meteo", "#meteo-wrap"]
+  ["meteo", "#meteo-wrap"],
+  ["batterie", "#batterie-wrap"],
+  ["varchi", "#varchi-wrap"],
+  ["presenza", "#presenza-wrap"],
+  ["appliances-main", ".dm-appl-layout"],
+  ["irrigazione", "#irr-head", "su"],
+  ["server", ":scope"]
 ]);
 var DICHIARATI_DALLA_PAGINA = Object.freeze([
   [
@@ -156509,6 +156530,35 @@ var DICHIARATI_DALLA_PAGINA = Object.freeze([
     }
   ],
   [
+    "server",
+    ".srv-tel-card,.srv-status-card",
+    (el) => {
+      const valore3 = el.querySelector?.(".srv-tel-val[id],.srv-status-val[id]");
+      const nome = senzaFigure(el.querySelector?.(".srv-tel-lbl,.srv-status-lbl")?.textContent);
+      return { id: valore3 ? valore3.id.replace(/^v-srv-/, "") : "", nome };
+    }
+  ],
+  [
+    "energy",
+    ".ed-kpi-item,.ed-fin-card",
+    (el) => {
+      const valore3 = el.querySelector?.(".ed-kpi-val[id],.ed-fin-val[id]");
+      const nome = senzaFigure(el.querySelector?.(".ed-kpi-label,.ed-fin-lbl")?.textContent);
+      return { id: valore3 ? valore3.id.replace(/^ed-(kpi|fin)-/, "") : "", nome };
+    }
+  ],
+  [
+    "ev",
+    ".dm-na-dato,.dm-na-tessera",
+    (el) => {
+      const nome = senzaFigure(el.querySelector?.(":scope > span")?.textContent);
+      const entita4 = el.getAttribute?.("data-dm-storico");
+      const parola2 = nome.replace(/[\d.,:%°]+/g, " ").trim();
+      const id = entita4 ? "" : el.getAttribute?.("data-tipo") || (parola2 ? idDellaVoce({ titolo: parola2 }) : "");
+      return { id, nome };
+    }
+  ],
+  [
     "media",
     ".dm-mp-card",
     (el) => {
@@ -156525,9 +156575,11 @@ function marcaIDichiarati(pagina3, nome) {
       if (!el.hasAttribute("data-dm-disp-nome")) el.setAttribute("data-dm-disp-nome", t(it, en));
     }
   }
-  for (const [di, dove] of CONTENITORI_DICHIARATI) {
-    if (di !== nome || pagina3.querySelector?.(`[data-dm-disposizione="${nome}"]`)) continue;
-    pagina3.querySelector?.(dove)?.setAttribute("data-dm-disposizione", nome);
+  for (const [di, dove, su2] of CONTENITORI_DICHIARATI) {
+    if (di !== nome || pagina3.getAttribute?.("data-dm-disposizione") === nome) continue;
+    if (pagina3.querySelector?.(`[data-dm-disposizione="${nome}"]`)) continue;
+    const trovato = dove === ":scope" ? pagina3 : pagina3.querySelector?.(dove);
+    (su2 ? trovato?.parentElement : trovato)?.setAttribute?.("data-dm-disposizione", nome);
   }
   for (const [di, dove, leggi4] of DICHIARATI_DALLA_PAGINA) {
     if (di !== nome) continue;
@@ -157014,6 +157066,8 @@ function mettiITasti() {
     const testata5 = testataPerIlTasto(pagina3);
     if (!testata5) continue;
     const nome = nomeDellaPagina(pagina3);
+    for (const vecchio of pagina3.querySelectorAll("[data-dm-disp-tasto]"))
+      if (vecchio.parentElement !== testata5 && vecchio.getAttribute("data-dm-disp-tasto") !== "home") vecchio.remove();
     const ce = testata5.querySelector(":scope > [data-dm-disp-tasto]");
     if (!si || PAGINE_DA_SALTARE.has(nome)) {
       ce?.remove();

@@ -7998,4 +7998,6 @@ export default Object.freeze({
   "Smoke detectors": "烟雾探测器",
   "Virtual machines": "虚拟机",
   "Windows summary": "窗户概览",
+  "Zones": "区域",
+  "Garden": "花园",
 });

@@ -1450,6 +1450,14 @@ function evVisible() {
 }
 
 function onClick(event) {
+  /* Si arriva all'Auto con un tocco (la barra, una tessera della Home): se
+   * nel frattempo e' cambiato qualcosa, appena la pagina si vede si ridisegna. */
+  if (state.dietro)
+    root.requestAnimationFrame?.(() => {
+      if (!state.dietro || !evVisible()) return;
+      state.dietro = false;
+      schedule();
+    });
   /* Ogni lettura della pagina si tocca per vederne lo storico: le misure del
    * quadro, i dati delle carte, le gomme, le righe degli altri dati,
    * l'autonomia accanto all'anello. */
@@ -1902,8 +1910,14 @@ export function installAutoTermica() {
       });
       renderAutoTermica();
     });
+  /* Uno stato che arriva mentre l'Auto non si vede non ridisegna niente — ma
+   * non va perso: se il primo disegno era stato fatto prima che gli stati ci
+   * fossero, la carta «Temperature» restava fuori finche' non cambiava
+   * qualcos'altro. Si segna, e si ridisegna al primo tocco che apre la pagina
+   * (vedi `onClick`). */
   root.addEventListener?.("dashboardmodern:state-changed", () => {
     if (evVisible()) schedule();
+    else state.dietro = true;
   });
   rinominaLaLinguettaDellAuto();
   ensureTendinaMotore();

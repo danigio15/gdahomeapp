@@ -118,7 +118,21 @@ function titoloDi(el) {
   const testo = String(testa?.textContent || "")
     .replace(/\s+/g, " ")
     .trim();
-  return /[a-zà-ü]{3,}/i.test(testo) ? testo.replace(/[\d.,:%°]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 48) : "";
+  return /[a-zà-ü]{3,}/i.test(testo)
+    ? senzaFigure(testo.replace(/[\d.,:%°]+/g, " "))
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 48)
+    : "";
+}
+
+/* Le figure che la pagina mette davanti ai nomi («🧪 Qualità acqua», «🛋️
+ * Soggiorno») sono disegni, non parole: nella maniglia il nome e' la parola. */
+function senzaFigure(testo) {
+  return String(testo || "")
+    .replace(/[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\uFE0F\u200D\u20E3]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /* Una scritta che sta dentro una fila di carte uguali (i tasti del solare
@@ -150,7 +164,7 @@ function testoBreve(el) {
     if (parte.children.length || dentroUnaFila(parte, el)) continue;
     const testo = String(parte.textContent || "").replace(/\s+/g, " ").trim();
     /* Parole, non misure: «Batteria telefono Persona 3» si', «9 %» no. */
-    if (/[a-zà-ü]{3,}/i.test(testo) && !/^[\d.,]|[%°]/.test(testo) && testo.length <= 40) return testo;
+    if (/[a-zà-ü]{3,}/i.test(testo) && !/^[\d.,]|[%°]/.test(testo) && testo.length <= 40) return senzaFigure(testo);
   }
   return "";
 }
@@ -251,12 +265,19 @@ function testataDi(pagina) {
  * vista entra nel nome: ogni vista ha la sua disposizione. */
 function contenitoreDeiRiquadri(pagina) {
   const nome = nomeDellaPagina(pagina);
-  const dichiarato = pagina.querySelector?.(`[data-dm-disposizione="${nome}"]`);
+  const dichiarato =
+    pagina.getAttribute?.("data-dm-disposizione") === nome ? pagina : pagina.querySelector?.(`[data-dm-disposizione="${nome}"]`);
   if (dichiarato) return { contenitore: dichiarato, chiave: nome };
   let qui = pagina;
   let vista = "";
   for (let giro = 0; giro < 6; giro += 1) {
-    const tutti = [...qui.children].filter((el) => !eTestata(el) && !el.matches("nav,script,style,template"));
+    /* Le nostre cose non contano: la voce che annuncia uno spostamento a chi
+     * non vede si appende alla pagina al primo tasto, e contata faceva di un
+     * involucro solo una «vista» — la chiave cambiava a meta' modifica e la
+     * disposizione salvata non si ritrovava piu' ricaricando. */
+    const tutti = [...qui.children].filter(
+      (el) => !eTestata(el) && !el.matches(`nav,script,style,template,.dm-riordina-voce,${NOSTRI}`),
+    );
     const figli = tutti.filter(visibile);
     /* Un figlio che fa quasi tutta la pagina, accanto a strisce sottili (la
      * scelta dell'auto sopra la sua scheda): i riquadri sono dentro di lui. */
@@ -366,14 +387,33 @@ const DICHIARATI = Object.freeze([
   ["gdanav", ".dm-gn-capo", "nuovo", "Nuovo viaggio", "New trip"],
   ["gdanav", ".dm-gn-griglia", "viaggi", "Viaggi", "Trips"],
   ["automazioni", ".ad-kpi", "numeri", "Numeri", "Figures"],
+  ["clima", ".clima-zone", "zone", "Zone", "Zones"],
+  ["irrigazione", "#irr-head", "giardino", "Giardino", "Garden"],
+  ["irrigazione", "#irr-grid", "zone", "Zone", "Zones"],
 ]);
 
 /* Dove stanno i riquadri, quando non e' il primo involucro che si trova
  * scendendo: la Sicurezza ha l'antifurto, il fumo e le telecamere dentro un
- * guscio solo, e il Meteo un involucro con un figlio solo per volta. */
+ * guscio solo, e il Meteo un involucro con un figlio solo per volta. Batterie,
+ * Porte e finestre e Presenza hanno una testa bassa sopra un elenco lungo: sul
+ * telefono l'elenco e' tanto piu' alto da sembrare la pagina, e la discesa ci
+ * finiva dentro — i riquadri diventavano le voci. Lo stesso per gli
+ * Elettrodomestici, coi consumi accanto alla griglia.
+ *
+ * E le pagine dove un riquadro arriva dopo: l'Irrigazione finche' «Le tue
+ * entita'» non c'era aveva un involucro solo, e la discesa sceglieva un
+ * contenitore diverso — con chiavi diverse — a seconda di quando si guardava;
+ * il MiniPC lo stesso, con le macchine virtuali. «su» vuol dire il genitore di
+ * quello che si trova, «:scope» la pagina stessa. */
 const CONTENITORI_DICHIARATI = Object.freeze([
   ["security", ".dm-sec-shell"],
   ["meteo", "#meteo-wrap"],
+  ["batterie", "#batterie-wrap"],
+  ["varchi", "#varchi-wrap"],
+  ["presenza", "#presenza-wrap"],
+  ["appliances-main", ".dm-appl-layout"],
+  ["irrigazione", "#irr-head", "su"],
+  ["server", ":scope"],
 ]);
 
 /* Riquadri e voci il cui id o nome si legge dalla pagina: i piani delle
@@ -401,6 +441,39 @@ const DICHIARATI_DALLA_PAGINA = Object.freeze([
     },
   ],
   [
+    "server",
+    ".srv-tel-card,.srv-status-card",
+    (el) => {
+      const valore = el.querySelector?.(".srv-tel-val[id],.srv-status-val[id]");
+      const nome = senzaFigure(el.querySelector?.(".srv-tel-lbl,.srv-status-lbl")?.textContent);
+      return { id: valore ? valore.id.replace(/^v-srv-/, "") : "", nome };
+    },
+  ],
+  [
+    "energy",
+    ".ed-kpi-item,.ed-fin-card",
+    (el) => {
+      /* I numeri del banner e i conti: l'id dal valore che la pagina scrive
+       * («ed-kpi-prod», «ed-fin-risp»), il nome dall'etichetta accanto. */
+      const valore = el.querySelector?.(".ed-kpi-val[id],.ed-fin-val[id]");
+      const nome = senzaFigure(el.querySelector?.(".ed-kpi-label,.ed-fin-lbl")?.textContent);
+      return { id: valore ? valore.id.replace(/^ed-(kpi|fin)-/, "") : "", nome };
+    },
+  ],
+  [
+    "ev",
+    ".dm-na-dato,.dm-na-tessera",
+    (el) => {
+      const nome = senzaFigure(el.querySelector?.(":scope > span")?.textContent);
+      /* Chi ha la sua entita' ha gia' l'id da li'; gli altri dal tipo o dalla
+       * parola, senza il numero accanto («Al 80%» resta lo stesso all'85). */
+      const entita = el.getAttribute?.("data-dm-storico");
+      const parola = nome.replace(/[\d.,:%°]+/g, " ").trim();
+      const id = entita ? "" : el.getAttribute?.("data-tipo") || (parola ? idDellaVoce({ titolo: parola }) : "");
+      return { id, nome };
+    },
+  ],
+  [
     "media",
     ".dm-mp-card",
     (el) => {
@@ -418,9 +491,11 @@ function marcaIDichiarati(pagina, nome) {
       if (!el.hasAttribute("data-dm-disp-nome")) el.setAttribute("data-dm-disp-nome", t(it, en));
     }
   }
-  for (const [di, dove] of CONTENITORI_DICHIARATI) {
-    if (di !== nome || pagina.querySelector?.(`[data-dm-disposizione="${nome}"]`)) continue;
-    pagina.querySelector?.(dove)?.setAttribute("data-dm-disposizione", nome);
+  for (const [di, dove, su] of CONTENITORI_DICHIARATI) {
+    if (di !== nome || pagina.getAttribute?.("data-dm-disposizione") === nome) continue;
+    if (pagina.querySelector?.(`[data-dm-disposizione="${nome}"]`)) continue;
+    const trovato = dove === ":scope" ? pagina : pagina.querySelector?.(dove);
+    (su ? trovato?.parentElement : trovato)?.setAttribute?.("data-dm-disposizione", nome);
   }
   for (const [di, dove, leggi] of DICHIARATI_DALLA_PAGINA) {
     if (di !== nome) continue;
@@ -1031,6 +1106,11 @@ function mettiITasti() {
     const testata = testataPerIlTasto(pagina);
     if (!testata) continue;
     const nome = nomeDellaPagina(pagina);
+    /* Un tasto solo per pagina. Il Clima disegna la sua testata dopo: nel
+     * frattempo il tasto finiva sulla striscia del riepilogo, e arrivata la
+     * testata vera ne nasceva un secondo. Quello rimasto indietro se ne va. */
+    for (const vecchio of pagina.querySelectorAll("[data-dm-disp-tasto]"))
+      if (vecchio.parentElement !== testata && vecchio.getAttribute("data-dm-disp-tasto") !== "home") vecchio.remove();
     const ce = testata.querySelector(":scope > [data-dm-disp-tasto]");
     if (!si || PAGINE_DA_SALTARE.has(nome)) {
       ce?.remove();
