@@ -467,7 +467,7 @@ export function conLeModificheInSospeso(remoti = {}, locali = {}, daTenere = [],
  * `cd_disposizione` e' fatta allo stesso modo: una mappa con un elenco per
  * casella (`auto:…`, `ev@dm-na`, `energia>…`). Riordinare l'Auto dal telefono
  * non deve rimettere com'era la Home sistemata dal PC. */
-export const CHIAVI_A_CASELLE = ["cd_entity_overrides", "cd_disposizione"];
+export const CHIAVI_A_CASELLE = ["cd_entity_overrides", "cd_disposizione", "cd_disegni"];
 
 function mappaDa(testo) {
   if (testo === undefined || testo === null) return null;

@@ -60,7 +60,7 @@ const PAGINE_DA_SALTARE = new Set(["home", "config"]);
 
 const TITOLO = "h1,h2,h3,h4,.section-title,.dm-sec-title";
 const DATI_CHE_NOMINANO = /(^|-)(id|uid|key|entity|entita|room|stanza|zona|zone|nome|name|ref|cam|slug|chiave)$/i;
-const NOSTRI = "[data-dm-disp-barra],[data-dm-disp-ctrl],[data-dm-disp-tasto]";
+const NOSTRI = "[data-dm-disp-barra],[data-dm-disp-ctrl],[data-dm-disp-tasto],[data-dm-disegno-strato]";
 
 /* ── leggere e scrivere ─────────────────────────────────────────────────── */
 
@@ -795,8 +795,33 @@ function contaLaBarra() {
   return state.modifica?.barra ? 1 : 0;
 }
 
+/* ── le altre modifiche ──────────────────────────────────────────────────
+ *
+ * Dentro un disegno non c'e' un ordine ma un posto (il collettore del solare
+ * termico, la pompa): lo sposta `disegni-che-si-spostano-section.js`, con la
+ * stessa modalita' ✏️ e la stessa barra. Chi ha altre modifiche si iscrive
+ * qui: le sue si contano con le nostre, si salvano col nostro Salva, se ne
+ * vanno con Annulla e tornano di serie con Ripristina. */
+const ALTRE = (root.__dmDispAltreModifiche ||= []);
+
+/** Chi ha altre modifiche da mettere nella barra: { conta(), salva(),
+ * annulla(), ripristina(pagina), entra(pagina), esci(), haQualcosa(pagina) }. */
+export function aggiungiAltreModifiche(altre) {
+  if (altre && !ALTRE.includes(altre)) ALTRE.push(altre);
+}
+
+function alleAltre(cosa, ...argomenti) {
+  let somma = 0;
+  for (const altre of ALTRE) {
+    try {
+      somma += Number(altre[cosa]?.(...argomenti)) || 0;
+    } catch (_errore) {}
+  }
+  return somma;
+}
+
 function conta() {
-  return state.modifica ? state.modifica.cambiate.size + contaLaBarra() : 0;
+  return state.modifica ? state.modifica.cambiate.size + contaLaBarra() + alleAltre("conta") : 0;
 }
 
 function sceltaInMano(elenco) {
@@ -1082,7 +1107,10 @@ function barraMarkup() {
    * chiama: diceva «niente da spostare» sopra due riquadri con la maniglia. */
   const pagina = state.modifica?.pagina;
   const niente =
-    n === 0 && !pagina?.matches?.("[data-dm-disp-elenco]") && !pagina?.querySelector?.("[data-dm-disp-elenco]");
+    n === 0 &&
+    !pagina?.matches?.("[data-dm-disp-elenco]") &&
+    !pagina?.querySelector?.("[data-dm-disp-elenco]") &&
+    !alleAltre("haQualcosa", pagina);
   return `<div class="dm-disp-barra-dentro">
     <span class="dm-disp-conta"${n === 0 ? " data-vuota" : ""}>${esc(
       n && state.modifica?.escDopo && Date.now() - state.modifica.escDopo < ESC_DI_NUOVO_MS
@@ -1101,6 +1129,12 @@ function barraMarkup() {
       t("Salva", "Save"),
     )}${n ? ` <b class="dm-disp-quante">· ${n}</b>` : ""}</button>
   </div>`;
+}
+
+/** La barra rifatta da fuori: chi ha altre modifiche la chiama quando le sue
+ * cambiano, perche' il conto e Salva dicano il vero. */
+export function ridisegnaLaBarra() {
+  if (state.modifica) disegnaLaBarra();
 }
 
 function disegnaLaBarra() {
@@ -1145,6 +1179,7 @@ export function entraInModifica(pagina = paginaAttiva()) {
   segnaLaBarra(true);
   state.modifica.vociDiPrima = vociDellaBarra();
   state.modifica.mobili = state.modifica.vociDiPrima.filter((voce) => voce.hasAttribute("data-dm-riordina-riga"));
+  alleAltre("entra", pagina);
   disegnaLaBarra();
   annuncia(
     t(
@@ -1158,6 +1193,7 @@ export function esciDallaModifica() {
   const m = state.modifica;
   if (!m) return;
   state.modifica = null;
+  alleAltre("esci");
   doc.documentElement.removeAttribute("data-dm-modifica");
   segnaLaBarra(false);
   state.occupato = true;
@@ -1229,6 +1265,7 @@ function salva() {
       root.cdSyncPush?.();
     } catch (_errore) {}
   }
+  alleAltre("salva");
   esciDallaModifica();
   applicaLaDisposizione();
   if (m.barra) root.cdApplyNavOrder?.();
@@ -1237,6 +1274,7 @@ function salva() {
 function annulla() {
   const m = state.modifica;
   if (!m) return;
+  alleAltre("annulla");
   esciDallaModifica();
   if (m.barra) {
     /* La barra com'era quando si e' entrati: senza un ordine salvato chi lo
@@ -1261,6 +1299,7 @@ function ripristina() {
     m.bozze.set(elenco.chiave, { ordine: [...(elenco.contenitore.__dmDispSerie || [])], nascosti: [], misure: {} });
     m.cambiate.add(elenco.chiave);
   }
+  alleAltre("ripristina", m.pagina);
   applicaLaDisposizione(m.pagina);
   disegnaLaBarra();
 }
@@ -1592,6 +1631,8 @@ export function installDisposizione() {
 
 /* Per le prove e per chi vuole guardare da fuori. */
 root.dmDisposizione = {
+  altreModifiche: ALTRE,
+  ridisegnaLaBarra,
   entraInModifica: () => entraInModifica(),
   esciDallaModifica,
   applicaLaDisposizione: (pagina) => applicaLaDisposizione(pagina || undefined),

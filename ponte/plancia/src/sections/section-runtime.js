@@ -186,6 +186,7 @@ import { installMeteo } from "./meteo-section.js";
 import { installMeteoEditor } from "./meteo-editor-section.js";
 import { installSport } from "./sport-section.js";
 import { installDisposizione } from "./disposizione-section.js";
+import { installDisegniCheSiSpostano } from "./disegni-che-si-spostano-section.js";
 import { installDisposizioneNelConfig } from "./disposizione-nel-config-section.js";
 import { installSalute } from "./salute-section.js";
 import { installSaluteEditor } from "./salute-editor-section.js";
@@ -1280,6 +1281,9 @@ export function installSectionRuntime() {
     /* La disposizione delle sezioni (#379): il tasto ✏️ in testa alle pagine
      * e le scelte salvate rimesse sulla pagina a ogni ridisegno. */
     senzaCadere(installDisposizione);
+    /* E dentro i disegni: con ✏️ i pezzi del solare termico si spostano, e
+     * i tubi li seguono (`cd_disegni`). */
+    senzaCadere(installDisegniCheSiSpostano);
     /* E nel Config: l'«Ordine navbar» che si trascina e le disposizioni
      * salvate, ognuna col suo «Ripristina». */
     senzaCadere(installDisposizioneNelConfig);

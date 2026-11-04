@@ -1661,8 +1661,13 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // ridisegno).
   // 537 con `sections/disposizione-nel-config-section.js`: l'«Ordine navbar»
   // del Config che si trascina e le «Disposizioni salvate» con «Ripristina».
+  // 540 con i pezzi che si spostano dentro i disegni (#379): `core/posizioni-
+  // nei-disegni.js` (la casella `cd_disegni`, la griglia, le guide, i tubi
+  // ridisegnati), `core/il-disegno-del-solare.js` (dove sta ogni pezzo del
+  // solare termico, il primo disegno che si sposta) e `sections/disegni-che-
+  // si-spostano-section.js` (le maniglie con ✏️).
   assert.ok(
-    relative.length <= 537,
+    relative.length <= 540,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
