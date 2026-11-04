@@ -10,6 +10,20 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.9.3
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **La finestra del termostato scorre sul telefono, e il suo fondo resta
+  sopra la barra in basso**: «non c'è lo scroll, non vedo le cose sotto». La
+  finestra (gradi, modalità, Spegni/Accendi, il Programma) era alta l'88%
+  dello schermo e centrata, sotto la barra delle sezioni: su un telefono
+  basso, o nell'app, il Programma finiva dietro la barra e non c'era niente
+  da scorrere. Adesso la finestra si ferma sopra la barra (e sotto la fascia
+  in cima), quello che non ci sta scorre dentro di lei senza trascinare la
+  pagina, e aprendo il Programma la finestra lo porta in vista: «Salva il
+  programma» si raggiunge sempre.
+
 ## 1.18.9.2
 
 _App GdAHome e Home Assistant._
@@ -172,9 +186,9 @@ _Solo Home Assistant: l'app sul telefono non cambia._
     nota» e la sua temperatura; una pompa di calore conosciuta solo dai watt
     raffresca da maggio a settembre e scalda gli altri mesi, e il report lo
     dice.
-  Quando nessuna fonte sa niente il report spiega perché e cosa serve, e che
-  da adesso quei periodi restano. Una stanza la cui richiesta si sa solo per
-  alcuni giorni del periodo porta «dati parziali».
+    Quando nessuna fonte sa niente il report spiega perché e cosa serve, e che
+    da adesso quei periodi restano. Una stanza la cui richiesta si sa solo per
+    alcuni giorni del periodo porta «dati parziali».
 - **Salute: le misure dell'app e quelle del telefono sono una persona
   sola.** «Ora va tutto con il nuovo aggiornamento, però non vanno nella
   plancia.» Sullo stesso iPhone scrivevano in due: GdAHome con le misure di

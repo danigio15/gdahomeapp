@@ -693,6 +693,41 @@ async function salva() {
   }
 }
 
+/* La finestra scorre fino alla testa del Programma, se serve: solo dentro
+ * di se', la pagina sotto resta dov'e'. */
+function mostraIlProgramma() {
+  const finestra = doc?.querySelector?.("#clima-popup-overlay .clima-popup");
+  const nodo = finestra?.querySelector?.("[data-dm-prg]");
+  if (!finestra || !nodo) return;
+  const vai = () => {
+    const sopra = nodo.getBoundingClientRect().top - finestra.getBoundingClientRect().top;
+    const sotto = nodo.getBoundingClientRect().bottom - finestra.getBoundingClientRect().bottom;
+    if (sotto <= 0 && sopra >= 0) return;
+    const quanto = Math.max(0, finestra.scrollTop + sopra - 12);
+    if (typeof finestra.scrollTo === "function") finestra.scrollTo({ top: quanto, behavior: "smooth" });
+    else finestra.scrollTop = quanto;
+  };
+  (root.requestAnimationFrame || ((f) => root.setTimeout?.(f, 0)))(vai);
+}
+
+/* Quanto della parte bassa dello schermo prende la barra delle sezioni,
+ * se in questo momento si vede: la finestra si ferma sopra. Sul computer la
+ * barra sta fuori dallo schermo, e allora non toglie niente. */
+function lasciaLaBarra() {
+  const velo = doc?.getElementById?.("clima-popup-overlay");
+  if (!velo?.style) return;
+  const barra = doc.querySelector?.("nav.tabs.bottom-nav-bar");
+  const alto = root.innerHeight || 0;
+  let prende = 0;
+  if (barra && alto && root.getComputedStyle?.(barra)?.display !== "none") {
+    const r = barra.getBoundingClientRect();
+    if (r.height > 0 && r.top < alto && r.bottom > 0) prende = Math.round(alto - r.top);
+  }
+  const valore = `${Math.max(0, prende)}px`;
+  if (velo.style.getPropertyValue("--dm-clima-barra") !== valore)
+    velo.style.setProperty("--dm-clima-barra", valore);
+}
+
 function suClick(evento) {
   const bersaglio = evento.target?.closest?.("[data-dm-prg] button");
   if (!bersaglio) return;
@@ -701,6 +736,9 @@ function suClick(evento) {
   if (d.dmPrgApri !== undefined) {
     state.aperto = !state.aperto;
     disegna();
+    /* Aperto, si porta in vista: sul telefono il Programma sta in fondo
+     * alla finestra, e si aprirebbe sotto il bordo. */
+    if (state.aperto) mostraIlProgramma();
     return;
   }
   if (d.dmPrgGiorno) {
@@ -786,12 +824,25 @@ function suCambio(evento) {
 
 /* ── l'aspetto ────────────────────────────────────────────────────────── */
 
-/* Col programma aperto la finestra e' piu' alta dello schermo del telefono:
- * si ancora in alto e scorre dentro di se', lasciando libero il fondo dove
- * sta la barra delle sezioni — il tasto Salva non ci finisce mai sotto. */
+/* La finestra del termostato sta sopra a tutto e scorre dentro di se'.
+ *
+ * Dal campo (1.18.9.2, telefono): «non c'è lo scroll, non vedo le cose
+ * sotto». Il velo della finestra stava sotto la barra delle sezioni (9000
+ * contro 9900) e la finestra era alta l'88% dello schermo, centrata: su un
+ * telefono basso — o nell'app, dove lo schermo della plancia e' piu' corto —
+ * il suo fondo, col Programma chiuso, finiva dietro la barra, e non c'era
+ * niente da scorrere perche' la finestra non era piu' alta di se stessa.
+ * Adesso il velo sta sopra la barra e sopra le finestre della Home (9999),
+ * da cui il termostato si puo' aprire, e sotto il report del clima (10050),
+ * che si apre da qui; la finestra si ferma sopra la barra, se la barra si
+ * vede (la misura `lasciaLaBarra`), non supera lo schermo che si vede
+ * davvero (dvh, con le fasce del sistema e quella che la plancia si tiene in
+ * cima) e quello che non ci sta si scorre dentro, senza trascinare la pagina
+ * sotto. */
 const STILE = `
-#clima-popup-overlay.show:has(.dm-prg-corpo){align-items:flex-start}
-#clima-popup-overlay.show .clima-popup:has(.dm-prg-corpo){max-height:calc(100dvh - 150px);overflow-y:auto;overscroll-behavior:contain;margin-top:8px}
+#clima-popup-overlay{z-index:10000;--dm-clima-su:max(10px,env(safe-area-inset-top),var(--dm-cima-libera,0px));--dm-clima-giu:max(10px,env(safe-area-inset-bottom),calc(var(--dm-clima-barra,0px) + 8px))}
+#clima-popup-overlay.show{padding:var(--dm-clima-su) 10px var(--dm-clima-giu);overscroll-behavior:contain}
+#clima-popup-overlay .clima-popup{max-height:calc(100vh - 20px);max-height:calc(100dvh - var(--dm-clima-su) - var(--dm-clima-giu));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 .clima-popup .dm-prg{margin:14px 0 4px;border-radius:16px;background:rgba(148,163,184,.10);border:1px solid var(--card-border,rgba(148,163,184,.25));overflow:hidden}
 .dm-prg-testa{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;width:100%;padding:12px 14px;cursor:pointer;color:var(--text,inherit)}
 .dm-prg-tit{font-weight:800;font-size:14px}
@@ -842,6 +893,7 @@ function avvolgi() {
   if (typeof originale !== "function" || originale.__dmProgramma) return false;
   function avvolto(entity, ...resto) {
     const esito = originale.call(this, entity, ...resto);
+    lasciaLaBarra();
     root.queueMicrotask?.(() => apri(entity));
     return esito;
   }
@@ -896,6 +948,10 @@ export function installProgrammaDelClima() {
   });
   avvolgi();
   avvolgiLaChiusura();
+  /* Il telefono girato, o la tastiera: la barra si sposta, si rimisura. */
+  root.addEventListener?.("resize", () => {
+    if (doc.getElementById("clima-popup-overlay")?.classList?.contains("show")) lasciaLaBarra();
+  });
   for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:runtime-ready"]) {
     root.addEventListener?.(evento, avvolgi);
     root.addEventListener?.(evento, avvolgiLaChiusura);

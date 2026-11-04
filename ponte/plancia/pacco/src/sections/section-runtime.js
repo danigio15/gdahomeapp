@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-LFUIIA76.js";
+} from "../../chunk-IQIFK735.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -114938,6 +114938,34 @@ async function salva19() {
     disegna8();
   }
 }
+function mostraIlProgramma() {
+  const finestra6 = doc?.querySelector?.("#clima-popup-overlay .clima-popup");
+  const nodo3 = finestra6?.querySelector?.("[data-dm-prg]");
+  if (!finestra6 || !nodo3) return;
+  const vai2 = () => {
+    const sopra = nodo3.getBoundingClientRect().top - finestra6.getBoundingClientRect().top;
+    const sotto = nodo3.getBoundingClientRect().bottom - finestra6.getBoundingClientRect().bottom;
+    if (sotto <= 0 && sopra >= 0) return;
+    const quanto = Math.max(0, finestra6.scrollTop + sopra - 12);
+    if (typeof finestra6.scrollTo === "function") finestra6.scrollTo({ top: quanto, behavior: "smooth" });
+    else finestra6.scrollTop = quanto;
+  };
+  (root.requestAnimationFrame || ((f) => root.setTimeout?.(f, 0)))(vai2);
+}
+function lasciaLaBarra() {
+  const velo5 = doc?.getElementById?.("clima-popup-overlay");
+  if (!velo5?.style) return;
+  const barra3 = doc.querySelector?.("nav.tabs.bottom-nav-bar");
+  const alto = root.innerHeight || 0;
+  let prende = 0;
+  if (barra3 && alto && root.getComputedStyle?.(barra3)?.display !== "none") {
+    const r = barra3.getBoundingClientRect();
+    if (r.height > 0 && r.top < alto && r.bottom > 0) prende = Math.round(alto - r.top);
+  }
+  const valore3 = `${Math.max(0, prende)}px`;
+  if (velo5.style.getPropertyValue("--dm-clima-barra") !== valore3)
+    velo5.style.setProperty("--dm-clima-barra", valore3);
+}
 function suClick(evento) {
   const bersaglio = evento.target?.closest?.("[data-dm-prg] button");
   if (!bersaglio) return;
@@ -114946,6 +114974,7 @@ function suClick(evento) {
   if (d.dmPrgApri !== void 0) {
     state108.aperto = !state108.aperto;
     disegna8();
+    if (state108.aperto) mostraIlProgramma();
     return;
   }
   if (d.dmPrgGiorno) {
@@ -115023,8 +115052,9 @@ function suCambio(evento) {
   });
 }
 var STILE15 = `
-#clima-popup-overlay.show:has(.dm-prg-corpo){align-items:flex-start}
-#clima-popup-overlay.show .clima-popup:has(.dm-prg-corpo){max-height:calc(100dvh - 150px);overflow-y:auto;overscroll-behavior:contain;margin-top:8px}
+#clima-popup-overlay{z-index:10000;--dm-clima-su:max(10px,env(safe-area-inset-top),var(--dm-cima-libera,0px));--dm-clima-giu:max(10px,env(safe-area-inset-bottom),calc(var(--dm-clima-barra,0px) + 8px))}
+#clima-popup-overlay.show{padding:var(--dm-clima-su) 10px var(--dm-clima-giu);overscroll-behavior:contain}
+#clima-popup-overlay .clima-popup{max-height:calc(100vh - 20px);max-height:calc(100dvh - var(--dm-clima-su) - var(--dm-clima-giu));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 .clima-popup .dm-prg{margin:14px 0 4px;border-radius:16px;background:rgba(148,163,184,.10);border:1px solid var(--card-border,rgba(148,163,184,.25));overflow:hidden}
 .dm-prg-testa{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;width:100%;padding:12px 14px;cursor:pointer;color:var(--text,inherit)}
 .dm-prg-tit{font-weight:800;font-size:14px}
@@ -115072,6 +115102,7 @@ function avvolgi2() {
   if (typeof originale !== "function" || originale.__dmProgramma) return false;
   function avvolto(entity2, ...resto) {
     const esito2 = originale.call(this, entity2, ...resto);
+    lasciaLaBarra();
     root.queueMicrotask?.(() => apri4(entity2));
     return esito2;
   }
@@ -115118,6 +115149,9 @@ function installProgrammaDelClima() {
   });
   avvolgi2();
   avvolgiLaChiusura();
+  root.addEventListener?.("resize", () => {
+    if (doc.getElementById("clima-popup-overlay")?.classList?.contains("show")) lasciaLaBarra();
+  });
   for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:runtime-ready"]) {
     root.addEventListener?.(evento, avvolgi2);
     root.addEventListener?.(evento, avvolgiLaChiusura);
