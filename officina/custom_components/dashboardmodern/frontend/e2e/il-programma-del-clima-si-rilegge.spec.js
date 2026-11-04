@@ -346,7 +346,9 @@ test("la sera dalle 17 alle 20, come nel video: ricaricata la pagina parte alle 
   /* La seconda partenza della plancia: la pagina ricaricata legge da Home
    * Assistant quello che il ponte ha scritto (la catena vera e' in
    * `ponte/test/il-programma-del-clima-col-ponte-vero.test.js`). */
-  programma = await avvia(page, testInfo, { ritardo: 600, salvato: crono });
+  /* La risposta arriva dopo due secondi e mezzo: con seicento millisecondi,
+   * su una macchina carica, arrivava prima che la prova guardasse «Leggo…». */
+  programma = await avvia(page, testInfo, { ritardo: 2500, salvato: crono });
   await expect(programma).toContainText(/Leggo il programma/);
   await expect.poll(() => orari(programma), { timeout: 10_000 }).toEqual([390, 510, 1200, 1350]);
   /* Uno solo, lo stesso: nessun «altro programma» accanto. */

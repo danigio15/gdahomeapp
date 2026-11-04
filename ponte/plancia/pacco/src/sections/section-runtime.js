@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-CPFSIVU5.js";
+} from "../../chunk-DYKMKD4F.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -2091,10 +2091,6 @@ var SOURCE_INDEX = Object.freeze({
   "${daFare} da fare": "${daFare} to do",
   "${daSistemare} da sistemare": "${daSistemare} to fix",
   "${due(L.nome)}: pronto": "${due(L.nome)}: ready",
-  "${durata} di richiesta": "${durata} of demand",
-  "${durata} di richiesta, dai consumi": "${durata} of demand, from the power draw",
-  "${durata} di richiesta, dai consumi del climatizzatore": "${durata} of demand, from the air conditioner's power draw",
-  "${durata} di richiesta, dalla valvola": "${durata} of demand, from the valve",
   "${entita} entità": "${entita} entities",
   "${esclusioni.esclusi} esclusi": "${esclusioni.esclusi} bypassed",
   "${f.name} è aperto": "${f.name} is open",
@@ -2661,6 +2657,7 @@ var SOURCE_INDEX = Object.freeze({
   "Altre impostazioni": "More settings",
   "Altre letture": "Other readings",
   "Altre misure": "More readings",
+  "Altre modalità": "Other modes",
   "Altre piscine": "Other pools",
   "altre voci": "more items",
   "Altre zone": "Other areas",
@@ -2913,9 +2910,9 @@ var SOURCE_INDEX = Object.freeze({
   "Attive": "Active",
   "attività": "activities",
   "Attività": "Activity",
-  "Attivo · ${prossimo}": "Active · ${prossimo}",
   "Attributi da mostrare": "Attributes to show",
   "Attributo": "Attribute",
+  "attuale": "current",
   "aut.": "og",
   "Aut. Prevista": "Expected range",
   "Auth WebRTC rifiutata": "WebRTC auth rejected",
@@ -5562,6 +5559,7 @@ var SOURCE_INDEX = Object.freeze({
   "Marzo": "March",
   "Massa grassa": "Body fat",
   "Massima": "Max",
+  "Massima (freddo)": "Maximum (cool)",
   "Massimo ${MAX_FLOW_LOADS} carichi nel flusso.": "At most ${MAX_FLOW_LOADS} loads fit in the flow.",
   "massimo di oggi": "today's peak",
   "Materiale": "Material",
@@ -5621,6 +5619,7 @@ var SOURCE_INDEX = Object.freeze({
   "Microonde": "Microwave",
   "min ${cifre(pacco.minima.volt, 3)} V · cella ${pacco.minima.numero}": "min ${cifre(pacco.minima.volt, 3)} V · cell ${pacco.minima.numero}",
   "min fa": "min ago",
+  "Minima (caldo)": "Minimum (heat)",
   "MiniPC": "Server",
   "MiniPC Server": "MiniPC server",
   "Minore di…": "Less than…",
@@ -6111,7 +6110,6 @@ var SOURCE_INDEX = Object.freeze({
   "Non l'ha ricevuto nessuno: i telefoni scelti hanno spento le notifiche o non hanno l'app.": "Nobody received it: the chosen phones have notifications off or no app.",
   "Non leggo il limite di evcc.": "I can't read the evcc limit.",
   "Non leggo la batteria dell'auto.": "I can't read the car's battery.",
-  "Non letto": "Not read",
   "Non lo so": "I do not know",
   "non noto": "unknown",
   "Non pagata": "Unpaid",
@@ -6635,6 +6633,7 @@ var SOURCE_INDEX = Object.freeze({
   "Preferiti": "Favourites",
   "Preferiti di Sonos": "Sonos favourites",
   "Preferito": "Favorite",
+  "Preimpostazione": "Preset",
   "Prelavaggio": "Pre-wash",
   "Preleva dalla rete": "From the grid",
   "Prelevata dalla rete · Oggi": "Taken from the grid · Today",
@@ -7045,6 +7044,10 @@ var SOURCE_INDEX = Object.freeze({
   "Ricariche a casa": "Charging at home",
   "Ricarico…": "Reloading…",
   "Ricci": "Curly",
+  "richiesta dai consumi": "demand from the power draw",
+  "richiesta dai consumi del climatizzatore": "demand from the air conditioner's power draw",
+  "richiesta dal termostato": "demand from the thermostat",
+  "richiesta dalla valvola": "demand from the valve",
   "richiesta non nota": "demand unknown",
   "Richiesta stanze": "Room demand",
   "richiesto": "required",
@@ -73712,6 +73715,9 @@ function rigaClima(states, unit) {
     /* Acceso per Home Assistant, anche se non lavora: un termostato in
      * «auto» fermo e' «in pausa», non spento — e il tasto lo spegne davvero. */
     acceso: Boolean(current) && raw !== "off" && raw !== "unavailable" && raw !== "unknown",
+    /* Un'unita' che Home Assistant non raggiunge non e' «spenta»: non si sa
+     * com'e', e nessun tasto le arriva. */
+    disponibile: Boolean(current) && raw !== "unavailable" && raw !== "unknown" && raw !== "",
     mode: raw,
     ambient: numero66(attributi2.current_temperature),
     /* Per chi ne ha due, quello che la modalita' rende vero — il basso in
@@ -73823,6 +73829,37 @@ function climateRow(entity2) {
   } catch (_error) {
     return null;
   }
+}
+function obiettivoSpostato(riga5, verso2, base) {
+  if (!riga5 || riga5.obiettivi?.doppio) return void 0;
+  const scritto3 = base === null || base === void 0 || base === "" ? NaN : Number(base);
+  const partenza = Number.isFinite(scritto3) ? scritto3 : riga5.target;
+  if (partenza === null || partenza === void 0 || !Number.isFinite(Number(partenza))) return void 0;
+  const passo = Number(riga5.passo) > 0 ? Number(riga5.passo) : 0.5;
+  const minima = Number.isFinite(Number(riga5.minima)) ? Number(riga5.minima) : -Infinity;
+  const massima = Number.isFinite(Number(riga5.massima)) ? Number(riga5.massima) : Infinity;
+  const segno5 = Number(verso2) < 0 ? -1 : 1;
+  const sulPasso = Math.round((Number(partenza) + segno5 * passo) / passo) * passo;
+  const voluta = Math.round(Math.min(massima, Math.max(minima, sulPasso)) * 100) / 100;
+  return voluta === Number(partenza) ? null : voluta;
+}
+var obiettiviInVolo = /* @__PURE__ */ new Map();
+function obiettivoDaMostrare(riga5) {
+  if (!riga5) return null;
+  const volo = obiettiviInVolo.get(riga5.entity);
+  if (volo && volo.fino > Date.now() && riga5.target === volo.da) return volo.valore;
+  obiettiviInVolo.delete(riga5.entity);
+  return riga5.target ?? null;
+}
+function passoDellObiettivo(entity2, verso2, base) {
+  const riga5 = climateRow(entity2);
+  const voluta = obiettivoSpostato(riga5, verso2, base ?? obiettivoDaMostrare(riga5));
+  if (voluta === null || voluta === void 0) return voluta;
+  const prima = obiettiviInVolo.get(riga5.entity);
+  const da = prima && prima.fino > Date.now() && riga5.target === prima.da ? prima.da : riga5.target;
+  obiettiviInVolo.set(riga5.entity, { valore: voluta, da, fino: Date.now() + 5e3 });
+  callHa("climate", "set_temperature", { entity_id: riga5.entity, temperature: voluta });
+  return voluta;
 }
 function coversModel(states) {
   const values = root.getTapparelle?.() || readJson("cd_tapparelle", []);
@@ -77833,6 +77870,12 @@ var nomeDelModo3 = parolaDa(NOMI_BREVI_DEL_MODO);
 var nomeDelPreset = parolaDa(NOMI_DEI_PRESET);
 var nomeDellaVentola = parolaDa(NOMI_DELLE_VENTOLE);
 var nomeDellAletta = parolaDa(NOMI_DELLE_ALETTE);
+function nomeDelModoFra(modo, modi = []) {
+  const m = clean(modo).toLowerCase();
+  if (m === "heat_cool" && !(modi || []).map((voce3) => clean(voce3).toLowerCase()).includes("auto"))
+    return t("Auto", "Auto");
+  return nomeDelModo3(m);
+}
 function tonoDelModo(modo, tipo = "") {
   const m = clean(modo).toLowerCase();
   if (m === "off" || !m) return "spento";
@@ -77847,20 +77890,34 @@ function tonoDelModo(modo, tipo = "") {
 function statoDellaFinestra(riga5) {
   const azione = clean(riga5?.azione).toLowerCase();
   const modo = clean(riga5?.mode).toLowerCase();
+  if (riga5 && riga5.disponibile === false)
+    return { verso: "assente", tono: "spento", parola: t("Non disponibile", "Unavailable"), ripete: false };
   const acceso7 = Boolean(riga5?.acceso || riga5?.on);
-  if (!acceso7 || azione === "off") return { verso: "spento", tono: "spento", parola: t("Spento", "Off") };
+  const nelSegmentato = modiDelSegmentato(riga5?.modi).includes(modo);
+  const comeIlModo = (verso2, tono) => ({
+    verso: verso2,
+    tono,
+    parola: nomeDelModoFra(modo, riga5?.modi),
+    ripete: nelSegmentato
+  });
+  if (!acceso7 || azione === "off")
+    return {
+      verso: "spento",
+      tono: "spento",
+      parola: t("Spento", "Off"),
+      ripete: modo === "off" && nelSegmentato
+    };
   const dalModo = tonoDelModo(modo, riga5?.tipo);
-  if (azione === "heating") return { verso: "caldo", tono: "caldo", parola: t("Scalda", "Heating") };
-  if (azione === "cooling") return { verso: "freddo", tono: "freddo", parola: t("Raffresca", "Cooling") };
-  if (azione === "drying") return { verso: "secco", tono: "secco", parola: t("Deumidifica", "Drying") };
-  if (azione === "fan") return { verso: "ventola", tono: "ventola", parola: t("Ventila", "Fan") };
-  if (azione === "idle")
-    return { verso: "attesa", tono: dalModo, parola: t("In attesa", "Idle") };
-  if (modo === "heat") return { verso: "caldo", tono: "caldo", parola: t("Riscaldamento", "Heating") };
-  if (modo === "cool") return { verso: "freddo", tono: "freddo", parola: t("Raffrescamento", "Cooling") };
-  return { verso: "acceso", tono: dalModo, parola: nomeDelModo3(modo) || t("Acceso", "On") };
+  if (azione === "heating") return { verso: "caldo", tono: "caldo", parola: t("Scalda", "Heating"), ripete: false };
+  if (azione === "cooling")
+    return { verso: "freddo", tono: "freddo", parola: t("Raffresca", "Cooling"), ripete: false };
+  if (azione === "idle") return { verso: "attesa", tono: dalModo, parola: t("In attesa", "Idle"), ripete: false };
+  if (azione === "drying") return comeIlModo("secco", "secco");
+  if (azione === "fan") return comeIlModo("ventola", "ventola");
+  return comeIlModo(modo === "heat" ? "caldo" : modo === "cool" ? "freddo" : "acceso", dalModo);
 }
 function potenzaDellaFinestra(riga5) {
+  if (riga5 && riga5.disponibile === false) return "via";
   const modi = riga5?.modi || [];
   if (modi.includes("off") && modi.some((m) => m !== "off")) return "via";
   return riga5?.acceso ? "spegni" : "accendi";
@@ -77891,14 +77948,21 @@ function chipsDellaFinestra(etichetta3, voci4, scelta3, campo6, nome, entity2, p
       <div class="dm-w-chips dm-cpf-chips">${prima}${(voci4 || []).map((voce3) => chipDellaFinestra(voce3, scelta3, campo6, nome, entity2)).join("")}</div>
     </div>`;
 }
+var NON_DI_UNA_STANZA = /\b(pompa di calore|heat ?pump|boiler|acs|acqua calda|hot water|scaldabagno|scaldacqua|water heater|puffer|accumulo)\b/i;
+function misuraDiStanza(riga5) {
+  if (!clean(riga5?.stanza)) return false;
+  if (/^water_heater\./.test(clean(riga5?.entity))) return false;
+  return !NON_DI_UNA_STANZA.test(`${clean(riga5?.name)} ${clean(riga5?.entity).replace(/[._]/g, " ")}`);
+}
 function oraDellaFinestraMarkup(riga5) {
   const stato3 = statoDellaFinestra(riga5);
   const misure = [
-    riga5.ambient == null ? "" : `<span class="dm-cpf-misura" data-dm-cpf-ambiente>${GLIFO_TERMOMETRO}<b>${esc(`${formatNumber(riga5.ambient, 1)}°`)}</b><small>${esc(t("in stanza", "in the room"))}</small></span>`,
+    riga5.ambient == null ? "" : `<span class="dm-cpf-misura" data-dm-cpf-ambiente>${GLIFO_TERMOMETRO}<b>${esc(`${formatNumber(riga5.ambient, 1)}°`)}</b><small>${esc(misuraDiStanza(riga5) ? t("in stanza", "in the room") : t("attuale", "current"))}</small></span>`,
     riga5.umidita == null ? "" : `<span class="dm-cpf-misura" data-dm-cpf-umidita>${GLIFO_GOCCIA}<b>${esc(`${Math.round(riga5.umidita)}%`)}</b><small>${esc(t("umidità", "humidity"))}</small></span>`,
     riga5.valvola === null || riga5.valvola === void 0 ? "" : `<span class="dm-cpf-misura" data-dm-cpf-valvola>${GLIFO_VALVOLA}<b>${esc(typeof riga5.valvola === "number" ? `${riga5.valvola}%` : "—")}</b><small>${esc(t("valvola", "valve"))}</small></span>`
   ].join("");
-  return `<span class="dm-cpf-stato" data-dm-cpf-verso="${stato3.verso}" data-tono="${stato3.tono}"><i aria-hidden="true"></i>${esc(stato3.parola)}</span>${misure ? `<span class="dm-cpf-misure">${misure}</span>` : ""}`;
+  const pastiglia5 = stato3.ripete ? "" : `<span class="dm-cpf-stato" data-dm-cpf-verso="${stato3.verso}" data-tono="${stato3.tono}"><i aria-hidden="true"></i>${esc(stato3.parola)}</span>`;
+  return `${pastiglia5}${misure ? `<span class="dm-cpf-misure">${misure}</span>` : ""}`;
 }
 function colonneDeiModi(quanti4) {
   if (quanti4 <= 4) return Math.max(1, quanti4);
@@ -77906,7 +77970,13 @@ function colonneDeiModi(quanti4) {
   return 4;
 }
 var modiDelSegmentato = (modi) => modiInOrdine(modi || []).filter((m) => ORDINE_DEI_MODI.includes(m));
-var modiComePreset = (modi) => (modi || []).filter((m) => !ORDINE_DEI_MODI.includes(m));
+var altriModi = (modi) => (modi || []).filter((m) => !ORDINE_DEI_MODI.includes(m));
+function presetDaOffrire(riga5) {
+  const veri = (riga5?.presets || []).filter((voce3) => clean(voce3).toLowerCase() !== "none");
+  if (!veri.length) return [];
+  const giaModi = new Set(altriModi(riga5?.modi).map((modo) => nomeDelModo3(modo).toLowerCase()));
+  return (riga5.presets || []).filter((voce3) => !giaModi.has(nomeDelPreset(voce3).toLowerCase()));
+}
 function modiDellaFinestraMarkup(riga5) {
   const modi = modiDelSegmentato(riga5.modi);
   if (!modi.length) return "";
@@ -77914,8 +77984,9 @@ function modiDellaFinestraMarkup(riga5) {
   const bottoni = modi.map((modo) => {
     const tono = tonoDelModo(modo, riga5.tipo);
     const scelto = modo === corrente2;
+    const nome = nomeDelModoFra(modo, riga5.modi);
     return `<button type="button" class="dm-cpf-modo" data-dm-w-mode="${esc(modo)}" data-dm-w-target="${esc(riga5.entity)}"
-          data-on="${scelto}" aria-pressed="${scelto}" data-tono="${tono}">${glifoDelModo2(tono)}<span>${esc(nomeDelModo3(modo))}</span></button>`;
+          data-on="${scelto}" aria-pressed="${scelto}" data-tono="${tono}"${nome.length > 10 ? " data-lungo" : ""}>${glifoDelModo2(tono)}<span>${esc(nome)}</span></button>`;
   }).join("");
   return `<div class="dm-w-panel-row dm-cpf-riga dm-cpf-riga-modi">
       <span class="dm-w-panel-lbl">${esc(t("Modalità", "Mode"))}</span>
@@ -77933,18 +78004,25 @@ function climaDellaFinestra(entity2) {
   }
   const riga5 = unita3.map((voce3) => rigaClima(allStates(), voce3)).find((voce3) => voce3 && voce3.entity === chiave2);
   if (!riga5) return null;
-  const presets = riga5.presets.length > 1 ? riga5.presets : [];
-  const pannello = [
-    riga5.obiettivi?.doppio ? obiettiviDoppiMarkup(riga5) : "",
+  const disponibile = riga5.disponibile !== false;
+  const corrente2 = clean(riga5.mode).toLowerCase();
+  const pannello = disponibile ? [
     modiDellaFinestraMarkup(riga5),
     chipsDellaFinestra(
-      t("Preset", "Preset"),
-      presets,
+      t("Altre modalità", "Other modes"),
+      altriModi(riga5.modi),
+      corrente2,
+      "data-dm-w-mode",
+      nomeDelModo3,
+      riga5.entity
+    ),
+    chipsDellaFinestra(
+      t("Preimpostazione", "Preset"),
+      presetDaOffrire(riga5),
       riga5.preset,
       "data-dm-w-preset",
       nomeDelPreset,
-      riga5.entity,
-      modiComePreset(riga5.modi).map((modo) => chipDellaFinestra(modo, clean(riga5.mode).toLowerCase(), "data-dm-w-mode", nomeDelModo3, riga5.entity)).join("")
+      riga5.entity
     ),
     chipsDellaFinestra(t("Ventola", "Fan"), riga5.ventole, riga5.ventola, "data-dm-w-fan", nomeDellaVentola, riga5.entity),
     chipsDellaFinestra(
@@ -77963,17 +78041,50 @@ function climaDellaFinestra(entity2) {
       nomeDellAletta,
       riga5.entity
     )
-  ].join("");
+  ].join("") : "";
   const stato3 = statoDellaFinestra(riga5);
+  const doppio = disponibile && Boolean(riga5.obiettivi?.doppio);
   return {
     riga: riga5,
     ora: oraDellaFinestraMarkup(riga5),
     pannello: pannello ? `<div class="dm-w-panel dm-w-panel-solo dm-cpf" data-dm-w-panel="${esc(riga5.entity)}">${pannello}</div>` : "",
-    tono: stato3.verso === "spento" ? tonoDelModo(riga5.modi?.find((m) => m !== "off") || "", riga5.tipo) : stato3.tono,
-    acceso: stato3.verso !== "spento",
-    potenza: potenzaDellaFinestra(riga5)
+    tono: ["spento", "assente"].includes(stato3.verso) ? tonoDelModo(riga5.modi?.find((m) => m !== "off") || "", riga5.tipo) : stato3.tono,
+    acceso: !["spento", "assente"].includes(stato3.verso),
+    potenza: potenzaDellaFinestra(riga5),
+    disponibile,
+    /* L'obiettivo nella testata: la coppia coi suoi due meno e piu', il
+     * numero solo, o niente — una ventola o un deumidificatore senza
+     * `temperature` non hanno un numero da inseguire. */
+    obiettivo: !disponibile ? "nessuno" : doppio ? "doppio" : riga5.target == null ? "nessuno" : "singolo",
+    gradi: doppio ? null : obiettivoDaMostrare(riga5),
+    coppia: doppio ? coppiaDellaFinestraMarkup(riga5) : ""
   };
 }
+function coppiaDellaFinestraMarkup(riga5) {
+  return ["basso", "alto"].map((estremo) => {
+    const caldo = estremo === "basso";
+    const nome = caldo ? t("Minima (caldo)", "Minimum (heat)") : t("Massima (freddo)", "Maximum (cool)");
+    const breve = caldo ? t("Caldo", "Heating") : t("Freddo", "Cooling");
+    const valore3 = riga5.obiettivi[estremo];
+    return `<div class="dm-cpf-estremo" data-dm-w-obiettivo="${estremo}" data-tono="${caldo ? "caldo" : "freddo"}">
+          <span class="dm-cpf-estremo-nome">${esc(nome)}</span>
+          <div class="dm-cpf-estremo-passo">
+            <button type="button" class="dm-cpf-passo" data-dm-w-temp="-1" data-dm-w-obj="${estremo}" data-dm-w-target="${esc(riga5.entity)}"
+              aria-label="${esc(`${t("Abbassa", "Lower")} · ${breve}`)}">${GLIFO_MENO_PICCOLO}</button>
+            <b>${esc(gradiScritti(valore3))}</b>
+            <button type="button" class="dm-cpf-passo" data-dm-w-temp="1" data-dm-w-obj="${estremo}" data-dm-w-target="${esc(riga5.entity)}"
+              aria-label="${esc(`${t("Alza", "Raise")} · ${breve}`)}">${GLIFO_PIU_PICCOLO}</button>
+          </div>
+        </div>`;
+  }).join("");
+}
+function gradiScritti(valore3) {
+  const numero66 = Number(valore3);
+  if (valore3 === null || valore3 === void 0 || !Number.isFinite(numero66)) return "--°";
+  return `${formatNumber(numero66, Number.isInteger(numero66) ? 0 : 1)}°`;
+}
+var GLIFO_MENO_PICCOLO = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg>';
+var GLIFO_PIU_PICCOLO = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M12 5v14"/></svg>';
 function climateDetail(widget) {
   const righe4 = inOrdineFermo("clima", widget.rows, (row) => clean(row.entity), accesePrima);
   const accese = righe4.filter((row) => row.on).length;
@@ -79722,18 +79833,17 @@ function onClick10(event) {
       if (dati) {
         const casella7 = gradi13.parentElement?.querySelector?.("b");
         const nuovo = estremo === "basso" ? dati.target_temp_low : dati.target_temp_high;
-        if (casella7) casella7.textContent = `${formatNumber(nuovo, 1)}°`;
+        if (casella7)
+          casella7.textContent = gradi13.classList.contains("dm-cpf-passo") ? gradiScritti(nuovo) : `${formatNumber(nuovo, 1)}°`;
         callHa("climate", "set_temperature", { entity_id: entity2, ...dati });
         root.setTimeout?.(schedule22, 700);
       }
       return;
     }
-    if (riga5 && riga5.target != null) {
-      const passo = (Number(gradi13.dataset.dmWTemp) || 0) * (riga5.passo || 0.5);
-      const voluta = Math.min(riga5.massima, Math.max(riga5.minima, riga5.target + passo));
+    const voluta = passoDellObiettivo(entity2, Number(gradi13.dataset.dmWTemp) || 0);
+    if (voluta != null) {
       const casella7 = gradi13.parentElement?.querySelector?.("b");
       if (casella7) casella7.textContent = `${formatNumber(voluta, 1)}°`;
-      callHa("climate", "set_temperature", { entity_id: entity2, temperature: voluta });
       root.setTimeout?.(schedule22, 700);
     }
     return;
@@ -81955,8 +82065,8 @@ function zoneButton(zone, labels) {
   const cold = zone === "freddo";
   const faccia = facciaDellaZona(zone, labels);
   return `<button type="button" class="clima-page-mode-btn dm-cl-tab${cold ? " active-freddo" : ""}"
-      id="clima-page-mode-${esc(zone)}" data-dm-cl-zone="${esc(zone)}"
-      aria-pressed="${cold ? "true" : "false"}" onclick="setClimaPageMode(${jsArg(zone)})">
+      id="clima-page-mode-${esc(zone)}" data-dm-cl-zone="${esc(zone)}" role="tab"
+      aria-selected="${cold ? "true" : "false"}" onclick="setClimaPageMode(${jsArg(zone)})">
       <span class="icon dm-cl-tab-ic">${faccia.icona}</span>
       <span class="dm-cl-tab-tx">${esc(faccia.nome)}</span>
       <span class="dm-cl-tab-count" data-dm-cl-count="${zone}">0</span>
@@ -81992,14 +82102,14 @@ function skeletonMarkup3(labels) {
     </div>
   </div>
 
-  <div class="clima-page-mode-switch dm-cl-switch">
+  <div class="clima-page-mode-switch dm-cl-switch" role="tablist">
     ${zoneButton("freddo", labels)}
     ${zoneButton("caldo", labels)}
     ${zoneButton("termostato", labels)}
     <!-- Il report: una linguetta della pagina, come il Report dell'Energia.
          Lo apre report-del-clima-section.js, che ascolta il tocco su tutta
          la pagina, e si disegna nel posto qui sotto. -->
-    <button type="button" class="clima-page-mode-btn dm-cl-tab dm-cl-tab-report" data-dm-rcl-apri aria-pressed="false" aria-label="${esc(labels.report)}" hidden>
+    <button type="button" class="clima-page-mode-btn dm-cl-tab dm-cl-tab-report" data-dm-rcl-apri role="tab" aria-selected="false" aria-label="${esc(labels.report)}" hidden>
       <span class="icon dm-cl-tab-ic">${ICONS3.report}</span>
       <span class="dm-cl-tab-tx">${esc(labels.report)}</span>
     </button>
@@ -82463,27 +82573,31 @@ function muoviIlClimaDoppio(entity2, verso2, zona = "") {
   if (dati) chiamaClima(chiave2, "set_temperature", dati);
   return true;
 }
-function gradiNellaFinestra(entity2) {
+function gradiNellaFinestra(finestra6, info) {
   const casella7 = doc?.getElementById?.("cp-temp-val");
-  if (!casella7 || !clean(entity2)) return false;
-  const reading = climateReading(entity2);
-  const coppia2 = coppiaDelTermostato(reading.attributi);
-  const finestra6 = casella7.closest?.(".clima-popup");
-  if (!coppia2) {
+  const testata5 = finestra6?.querySelector?.(".clima-temp-display");
+  if (!casella7 || !testata5) return false;
+  if (finestra6.dataset.dmCpfObiettivo !== info.obiettivo) finestra6.dataset.dmCpfObiettivo = info.obiettivo;
+  let coppia2 = testata5.querySelector("[data-dm-cpf-coppia]");
+  if (info.obiettivo !== "doppio") {
     if (casella7.dataset.dmClDoppio) delete casella7.dataset.dmClDoppio;
-    if (finestra6?.dataset?.dmClDoppio) delete finestra6.dataset.dmClDoppio;
+    if (finestra6.dataset.dmClDoppio) delete finestra6.dataset.dmClDoppio;
+    coppia2?.remove();
+    if (info.obiettivo === "singolo") {
+      scriviSeCambia(casella7, esc(gradiScritti(info.gradi)));
+    }
     return false;
   }
   casella7.dataset.dmClDoppio = "entrambi";
-  if (finestra6) finestra6.dataset.dmClDoppio = "entrambi";
-  const labels = copy3();
-  const numero66 = (estremo) => `<span class="dm-cl-cp-obj" data-dm-cl-obj="${estremo}" aria-label="${esc(
-    `${estremo === "basso" ? labels.warm : labels.cold} ${gradoScritto(coppia2[estremo])}°`
-  )}">${gradoScritto(coppia2[estremo])}°</span>`;
-  scriviSeCambia(
-    casella7,
-    `${numero66("basso")}<span class="dm-cl-cp-tra" aria-hidden="true">–</span>${numero66("alto")}`
-  );
+  finestra6.dataset.dmClDoppio = "entrambi";
+  if (!coppia2) {
+    coppia2 = doc.createElement("div");
+    coppia2.className = "dm-cpf-coppia";
+    coppia2.setAttribute("data-dm-cpf-coppia", "");
+    testata5.querySelector("[data-dm-cpf-ora]")?.after(coppia2);
+    if (!coppia2.isConnected) testata5.append(coppia2);
+  }
+  scriviSeCambia(coppia2, info.coppia);
   return true;
 }
 function paintModo(card2, unit) {
@@ -82612,6 +82726,8 @@ function paintSummary(shell, units, states, labels) {
   }
   const reportEl = shell.querySelector("[data-dm-rcl-apri]");
   if (reportEl) reportEl.hidden = !units.length;
+  const conReport = units.length ? "1" : "0";
+  if (shell.dataset.dmClReport !== conReport) shell.dataset.dmClReport = conReport;
   const subtitle = shell.querySelector("[data-dm-cl-sub]");
   if (subtitle) {
     const family = zone === "caldo" ? labels.radiators : zone === "termostato" ? labels.thermostats : labels.coolers;
@@ -82638,8 +82754,9 @@ function paintZoneTabs(shell, units) {
     if (has) configured2 += 1;
     const value = has ? "false" : "true";
     if (tab.dataset.dmClEmpty !== value) tab.dataset.dmClEmpty = value;
-    const premuto2 = String(tab.classList.contains(`active-${zone}`));
-    if (tab.getAttribute("aria-pressed") !== premuto2) tab.setAttribute("aria-pressed", premuto2);
+    const scelta3 = String(tab.classList.contains(`active-${zone}`) && !shell.hasAttribute("data-dm-rcl-aperto"));
+    if (tab.getAttribute("aria-selected") !== scelta3) tab.setAttribute("aria-selected", scelta3);
+    if (tab.hasAttribute("aria-pressed")) tab.removeAttribute("aria-pressed");
   }
   const zones = String(configured2);
   if (shell.dataset.dmClZones !== zones) shell.dataset.dmClZones = zones;
@@ -82938,8 +83055,16 @@ function installTemperatureStep() {
   if (typeof current !== "function" || current.__dmClimateThermal) return;
   function cpSetTempThermal(delta) {
     const aperta2 = clean(state61.climaAperta || lexicalGlobal("cpCurrentEntity"));
-    if (muoviIlClimaDoppio(aperta2, Number(delta) < 0 ? -1 : 1)) return void 0;
-    const shown = parseFloat(clean(doc?.getElementById("cp-temp-val")?.textContent));
+    const verso2 = Number(delta) < 0 ? -1 : 1;
+    if (muoviIlClimaDoppio(aperta2, verso2)) return void 0;
+    const casella7 = doc?.getElementById("cp-temp-val");
+    const shown = parseFloat(clean(casella7?.textContent).replace(",", "."));
+    const voluta = passoDellObiettivo(aperta2, verso2, Number.isFinite(shown) ? shown : void 0);
+    if (voluta !== void 0) {
+      root.navigator?.vibrate?.(8);
+      if (voluta !== null && casella7) scriviSeCambia(casella7, esc(gradiScritti(voluta)));
+      return void 0;
+    }
     return current.call(this, wholeDegreeDelta(shown, delta));
   }
   cpSetTempThermal.__dmClimateThermal = true;
@@ -83135,7 +83260,6 @@ function installClimaRapido() {
 function pannelloNellaFinestra(entity2) {
   const finestra6 = doc?.querySelector?.("#clima-popup-overlay .clima-popup");
   if (!finestra6) return false;
-  gradiNellaFinestra(entity2);
   const modalita2 = doc.getElementById("cp-mode-section");
   const ventola2 = doc.getElementById("cp-fan-section");
   const info = climaDellaFinestra(entity2);
@@ -83144,7 +83268,9 @@ function pannelloNellaFinestra(entity2) {
   if (!info) {
     ospite4?.remove();
     finestra6.querySelector("[data-dm-cpf-ora]")?.remove();
-    for (const chiave2 of ["dmCpf", "dmCpfTono", "dmCpfAcceso", "dmCpfPotenza"]) delete finestra6.dataset[chiave2];
+    finestra6.querySelector("[data-dm-cpf-coppia]")?.remove();
+    for (const chiave2 of ["dmCpf", "dmCpfTono", "dmCpfAcceso", "dmCpfPotenza", "dmCpfObiettivo", "dmCpfDisponibile"])
+      delete finestra6.dataset[chiave2];
     for (const nodo3 of [modalita2, ventola2]) nodo3?.style?.removeProperty("display");
     return false;
   }
@@ -83159,6 +83285,7 @@ function pannelloNellaFinestra(entity2) {
     scriviSeCambia(ospite4, markup7);
   } else ospite4?.remove();
   vestiLaFinestra(finestra6, info);
+  gradiNellaFinestra(finestra6, info);
   intestazioneDellaFinestra(entity2);
   return true;
 }
@@ -83172,6 +83299,7 @@ function vestiLaFinestra(finestra6, info) {
   insegna2("dmCpfTono", info.tono);
   insegna2("dmCpfAcceso", String(info.acceso));
   insegna2("dmCpfPotenza", info.potenza);
+  insegna2("dmCpfDisponibile", String(info.disponibile !== false));
   const gradi13 = finestra6.querySelector(".clima-temp-display");
   if (gradi13) {
     let ora8 = gradi13.querySelector("[data-dm-cpf-ora]");
@@ -83223,8 +83351,8 @@ function intestazioneDellaFinestra(entity2) {
   const nomeScritto = clean(unita3.name);
   if (nome && nomeScritto) nome.textContent = nomeScritto;
   const luogo = clean(unita3.room);
-  const nelNome = (parola2) => Boolean(parola2) && nomeScritto.toLowerCase().includes(parola2.toLowerCase());
-  if (stanza2) stanza2.textContent = [nelNome(luogo) ? "" : luogo, nelNome(tipo) ? "" : tipo].filter(Boolean).join(" · ");
+  const ugualeAlNome = (parola2) => Boolean(parola2) && nomeScritto.toLocaleLowerCase() === parola2.toLocaleLowerCase();
+  if (stanza2) stanza2.textContent = [ugualeAlNome(luogo) ? "" : luogo, ugualeAlNome(tipo) ? "" : tipo].filter(Boolean).join(" · ");
   return true;
 }
 function installPannelloDellaFinestra() {
@@ -83444,12 +83572,12 @@ function climateCss() {
    vuota in mezzo a due piene — il tasto vuoto restava li'. */
 #page-clima .dm-cl-shell .clima-page-mode-btn[data-dm-cl-empty="true"],
 #page-clima .dm-cl-shell .clima-page-mode-switch.dm-cl-switch .clima-page-mode-btn[data-dm-cl-empty="true"]{display:none!important}
-#page-clima .dm-cl-shell[data-dm-cl-zones="1"]:not(:has(.dm-cl-tab-report:not([hidden]))) .clima-page-mode-switch,
+#page-clima .dm-cl-shell[data-dm-cl-zones="1"]:not([data-dm-cl-report="1"]) .clima-page-mode-switch{display:none!important}
 #page-clima .dm-cl-shell[data-dm-cl-zones="0"] .clima-page-mode-switch{display:none!important}
 /* La linguetta Report: accanto alle zone, come il Report nell'Energia. Quando
  * il report e' aperto e' lei la premuta, e la pagina mostra solo la scheda. */
 #page-clima .dm-cl-shell .clima-page-mode-switch.dm-cl-switch .dm-cl-tab-report[hidden]{display:none!important}
-#page-clima .dm-cl-shell .clima-page-mode-switch.dm-cl-switch .dm-cl-tab-report[aria-pressed="true"]{
+#page-clima .dm-cl-shell .clima-page-mode-switch.dm-cl-switch .dm-cl-tab-report[aria-selected="true"]{
   background:var(--dm-cl-text)!important;color:var(--dm-cl-card)!important;box-shadow:0 8px 20px rgba(15,23,42,.22)!important}
 #page-clima .dm-cl-shell[data-dm-rcl-aperto] .clima-page-mode-switch .clima-page-mode-btn:is(#clima-page-mode-freddo,#clima-page-mode-caldo,#clima-page-mode-termostato){
   background:transparent!important;color:var(--dm-cl-dim)!important;box-shadow:none!important}
@@ -83724,20 +83852,25 @@ html[data-theme="dark"] .dm-cl-knob{box-shadow:0 3px 8px rgba(0,0,0,.45)}
   .dm-cl-bulk button{flex:1 1 auto;justify-content:center;padding:11px 10px}
 }
 
+/* Due zone e il Report su un telefono stretto: tre linguette pari, il
+ * fiocco e la fiamma se ne vanno (il nome basta) e il Report resta col solo
+ * disegno, largo quanto un pollice. Senza, il fiocco toccava il bordo e le
+ * tre linguette erano larghe ognuna a modo suo. */
+@media(max-width:400px){
+  #page-clima .dm-cl-shell[data-dm-cl-zones="2"][data-dm-cl-report="1"] .clima-page-mode-switch.dm-cl-switch{grid-auto-columns:minmax(0,1fr)!important}
+  #page-clima .dm-cl-shell[data-dm-cl-zones="2"][data-dm-cl-report="1"] .clima-page-mode-switch.dm-cl-switch .clima-page-mode-btn{padding:11px 6px!important;gap:6px!important;font-size:11.5px!important;letter-spacing:.6px!important;min-width:0!important}
+  #page-clima .dm-cl-shell[data-dm-cl-zones="2"][data-dm-cl-report="1"] .clima-page-mode-switch.dm-cl-switch .clima-page-mode-btn[data-dm-cl-zone] .dm-cl-tab-ic{display:none!important}
+  #page-clima .dm-cl-shell[data-dm-cl-zones="2"][data-dm-cl-report="1"] .clima-page-mode-switch.dm-cl-switch .dm-cl-tab-report .dm-cl-tab-tx{display:none!important}
+  #page-clima .dm-cl-shell[data-dm-cl-zones="2"][data-dm-cl-report="1"] .clima-page-mode-switch.dm-cl-switch .dm-cl-tab-report{max-width:56px!important}
+  #page-clima .dm-cl-shell[data-dm-cl-zones="2"][data-dm-cl-report="1"] .dm-cl-tab-count{padding:1px 6px}
+}
+
 @media(prefers-reduced-motion:reduce){
   .dm-cl-shell *,.dm-cl-card *{transition:none!important;animation:none!important}
 }
 
-/* I due obiettivi in cima alla finestra del Clima: i due numeri coi colori
-   del caldo e del freddo, al posto del «--°» che il guscio scriveva. Il meno
-   e il piu' del guscio accanto se ne vanno: il caldo e il freddo hanno i loro,
-   nel pannello sotto. */
-#cp-temp-val[data-dm-cl-doppio="entrambi"]{display:flex;align-items:center;justify-content:center;gap:6px}
-#cp-temp-val .dm-cl-cp-obj{font:inherit;font-size:.82em;line-height:1;color:#ea580c}
-#cp-temp-val .dm-cl-cp-obj[data-dm-cl-obj="alto"]{color:#0284c7}
-html[data-theme="dark"] #cp-temp-val .dm-cl-cp-obj{color:#fb923c}
-html[data-theme="dark"] #cp-temp-val .dm-cl-cp-obj[data-dm-cl-obj="alto"]{color:#38bdf8}
-#cp-temp-val .dm-cl-cp-tra{font-size:.6em;color:var(--text-dim,#64748b)}
+/* Con due obiettivi il meno e il piu' grandi del guscio non dicono quale
+   numero muovono: se ne vanno, e la coppia ha i suoi (sotto, nella testata). */
 .clima-popup[data-dm-cl-doppio="entrambi"] .clima-temp-btn{visibility:hidden;pointer-events:none}
 
 /* ── La finestra del termostato, rifatta ─────────────────────────────────
@@ -83806,16 +83939,44 @@ html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-c
   margin-top:6px;font-size:12.5px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--cpf-dim)}
 #clima-popup-overlay .clima-popup[data-dm-cpf] #cp-temp-curr{display:none}
 
+/* La coppia (caldo e freddo): ognuno col suo nome, il suo meno, il numero e il
+ * suo piu'. Sul telefono una sotto l'altra, dove c'e' posto affiancate. Senza
+ * obiettivo (una ventola, un'unita' che non risponde) la testata tiene solo la
+ * riga «adesso». */
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-obiettivo="doppio"] .clima-temp-display{grid-template-areas:"ora ora ora" "coppia coppia coppia"}
+#clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-cpf-obiettivo="nessuno"] .clima-temp-display{grid-template-areas:"ora ora ora";padding-bottom:14px}
+#clima-popup-overlay .clima-popup[data-dm-cpf]:is([data-dm-cpf-obiettivo="doppio"],[data-dm-cpf-obiettivo="nessuno"]) :is(.clima-temp-btn,.clima-temp-center){display:none!important}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-coppia{grid-area:coppia;display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-estremo{
+  display:grid;grid-template-columns:44px minmax(0,1fr) 44px;grid-template-areas:"nome nome nome" "passo passo passo";gap:6px;
+  padding:10px 10px 12px;border-radius:18px;background:var(--cpf-fondo);
+  border:1px solid color-mix(in srgb,var(--tono) 28%,var(--cpf-linea))}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-estremo-nome{
+  grid-area:nome;font-size:12px;font-weight:800;color:var(--tono);text-align:center;letter-spacing:.2px}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-estremo-passo{grid-area:passo;display:flex;align-items:center;gap:6px;min-width:0}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-estremo-passo b{
+  flex:1;min-width:0;text-align:center;font-size:32px;line-height:1;font-weight:800;font-variant-numeric:tabular-nums;color:var(--cpf-testo);white-space:nowrap}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-passo{
+  flex:none;width:44px;height:44px;display:grid;place-items:center;border-radius:14px;cursor:pointer;
+  border:1px solid var(--cpf-linea);background:var(--cpf-tenue);color:var(--cpf-testo)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-passo:hover{color:var(--tono);border-color:color-mix(in srgb,var(--tono) 55%,var(--cpf-linea))}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-passo:active{transform:scale(.95)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-passo:focus-visible{outline:2px solid var(--tono);outline-offset:2px}
+@media (min-width:460px){
+  #clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-coppia{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
 /* «Adesso»: lo stato colorato a sinistra, le misure a destra. */
 #clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-stato{
   display:inline-flex;align-items:center;gap:7px;min-height:30px;padding:0 12px 0 10px;border-radius:999px;
   font-size:13px;font-weight:800;color:var(--tono);background:color-mix(in srgb,var(--tono) 14%,transparent);white-space:nowrap}
 #clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-stato i{
   width:8px;height:8px;border-radius:50%;background:var(--tono);box-shadow:0 0 0 3px color-mix(in srgb,var(--tono) 22%,transparent)}
-#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-stato:is([data-dm-cpf-verso="spento"],[data-dm-cpf-verso="attesa"]){
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-stato:is([data-dm-cpf-verso="spento"],[data-dm-cpf-verso="attesa"],[data-dm-cpf-verso="assente"]){
   color:var(--cpf-dim);background:color-mix(in srgb,var(--cpf-dim) 12%,transparent)}
 #clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-stato[data-dm-cpf-verso="spento"] i{background:var(--cpf-dim);box-shadow:none}
 #clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-stato[data-dm-cpf-verso="attesa"] i{background:transparent;box-shadow:inset 0 0 0 2px var(--tono)}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-stato[data-dm-cpf-verso="assente"] i{background:transparent;box-shadow:inset 0 0 0 2px var(--cpf-dim)}
 @media (prefers-reduced-motion:no-preference){
   #clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-stato:is([data-dm-cpf-verso="caldo"],[data-dm-cpf-verso="freddo"],[data-dm-cpf-verso="secco"],[data-dm-cpf-verso="ventola"]) i{animation:dm-cpf-respira 2.4s ease-in-out infinite}
 }
@@ -83840,6 +84001,7 @@ html[data-theme="dark"] #clima-popup-overlay .clima-popup[data-dm-cpf][data-dm-c
   border:0;border-radius:14px;background:transparent;color:var(--cpf-dim);font:inherit;font-size:12px;font-weight:750;
   line-height:1.15;text-align:center;cursor:pointer;transition:background .15s ease,color .15s ease,box-shadow .15s ease}
 #clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-modo span{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-modo[data-lungo] span{white-space:normal;line-height:1.1;text-align:center;overflow-wrap:normal}
 #clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-modo:hover{color:var(--cpf-testo)}
 #clima-popup-overlay .clima-popup[data-dm-cpf] .dm-cpf-modo[data-on="true"]{
   color:var(--tono);background:var(--cpf-fondo);
@@ -116119,9 +116281,42 @@ function fasciaNuova(giornata) {
   }
   return { da, a: Math.min(1440, da + 120), gradi: GRADI_NUOVA };
 }
-function coloreDeiGradi2(gradi13) {
+function coloreDeiGradi2(gradi13, verso2 = "caldo") {
+  if (verso2 === "freddo") {
+    const p2 = Math.max(0, Math.min(1, (28 - Number(gradi13)) / 7));
+    return `color-mix(in oklab, #0284c7 ${Math.round(p2 * 100)}%, #bae6fd)`;
+  }
   const p = Math.max(0, Math.min(1, (Number(gradi13) - 16) / 7));
   return `color-mix(in oklab, #ea580c ${Math.round(p * 100)}%, #fcd34d)`;
+}
+function versoDelProgramma({ modo = "", tipo = "", zone = [] } = {}) {
+  const m = clean(modo).toLowerCase();
+  if (m === "cool") return "freddo";
+  if (m === "heat") return "caldo";
+  if (clean(tipo).toLowerCase() === "clima") return "freddo";
+  const zone_ = (zone || []).map((z) => clean(z));
+  if (zone_.length && zone_.every((z) => z === "freddo")) return "freddo";
+  return "caldo";
+}
+function versoDellUnita() {
+  const unita3 = climateUnits().filter((u) => u.entity === state110.entita);
+  let modo = "";
+  try {
+    modo = clean(allStates()?.[state110.entita]?.state);
+  } catch (_errore) {
+  }
+  let grezza = null;
+  try {
+    grezza = readClimateUnits().find(
+      (u) => clean(u?.entity || u?.entity_id || u?.entities?.[0]) === state110.entita
+    );
+  } catch (_errore) {
+  }
+  return versoDelProgramma({
+    modo,
+    tipo: canonicalClimateType(grezza?.type),
+    zone: unita3.map((u) => u.zone)
+  });
 }
 var oraDetta2 = (minuti2) => `${String(Math.floor(minuti2 / 60)).padStart(2, "0")}:${String(minuti2 % 60).padStart(2, "0")}`;
 var gradiDetti = (g) => `${Number(g).toLocaleString(locale(), { maximumFractionDigits: 1 })}°`;
@@ -116165,15 +116360,15 @@ function adessoSullaBarra() {
   if (state110.giorno === "festivi" !== festivo) return null;
   return ora8.getHours() * 60 + ora8.getMinutes();
 }
-function barraMarkup4(giornata, fuori) {
+function barraMarkup4(giornata, fuori, verso2 = "caldo") {
   const pezzi = giornata.map((f) => {
     const largo = (f.a - f.da) / 1440;
-    return `<i style="left:${f.da / 1440 * 100}%;width:${largo * 100}%;--g:${coloreDeiGradi2(f.gradi)}" title="${esc(`${oraDetta2(f.da)}–${oraDetta2(f.a)} · ${gradiDetti(f.gradi)}`)}">${largo >= 0.07 ? `<b>${esc(gradiDetti(f.gradi))}</b>` : ""}</i>`;
+    return `<i style="left:${f.da / 1440 * 100}%;width:${largo * 100}%;--g:${coloreDeiGradi2(f.gradi, verso2)}" title="${esc(`${oraDetta2(f.da)}–${oraDetta2(f.a)} · ${gradiDetti(f.gradi)}`)}">${largo >= 0.07 ? `<b>${esc(gradiDetti(f.gradi))}</b>` : ""}</i>`;
   }).join("");
   const adesso2 = adessoSullaBarra();
   const segno5 = adesso2 === null ? "" : `<span class="dm-prg-adesso" style="left:${adesso2 / 1440 * 100}%" title="${esc(`${t("Adesso", "Now")} · ${oraDetta2(adesso2)}`)}"></span>`;
   const ore3 = [0, 6, 12, 18, 24].map((h) => `<span style="left:${h / 24 * 100}%">${h}</span>`).join("");
-  return `<div class="dm-prg-scala"><div class="dm-prg-barra" style="--fuori:${coloreDeiGradi2(fuori)}">${pezzi}${segno5}</div><div class="dm-prg-ore" aria-hidden="true">${ore3}</div></div>`;
+  return `<div class="dm-prg-scala"><div class="dm-prg-barra" style="--fuori:${coloreDeiGradi2(fuori, verso2)}">${pezzi}${segno5}</div><div class="dm-prg-ore" aria-hidden="true">${ore3}</div></div>`;
 }
 function orarioMarkup(i, chi, valore3, minimo, massimo) {
   const opzioni2 = [];
@@ -116181,11 +116376,11 @@ function orarioMarkup(i, chi, valore3, minimo, massimo) {
     opzioni2.push(`<option value="${m}"${m === valore3 ? " selected" : ""}>${oraDetta2(m)}</option>`);
   return `<select class="dm-prg-ora" data-dm-prg-ora="${i}:${chi}" aria-label="${esc(chi === "da" ? t("Dalle", "From") : t("Alle", "To"))}">${opzioni2.join("")}</select>`;
 }
-function fasceMarkup(giornata) {
+function fasceMarkup(giornata, verso2 = "caldo") {
   if (!giornata.length)
     return `<p class="dm-prg-vuoto">${esc(t("Nessuna fascia: tutto il giorno vale la temperatura fuori dalle fasce.", "No slots: the outside-slot temperature applies all day."))}</p>`;
   return giornata.map(
-    (f, i) => `<div class="dm-prg-fascia" style="--g:${coloreDeiGradi2(f.gradi)}">
+    (f, i) => `<div class="dm-prg-fascia" style="--g:${coloreDeiGradi2(f.gradi, verso2)}">
   <span class="dm-prg-orari">${orarioMarkup(i, "da", f.da, 0, 1410)}<span class="dm-prg-trattino" aria-hidden="true">–</span>${orarioMarkup(i, "a", f.a, 30, 1440)}</span>
   <span class="dm-prg-destra"><span class="dm-prg-gradi"><button type="button" data-dm-prg-gradi="${i}:-0.5" aria-label="−">−</button><b>${esc(gradiDetti(f.gradi))}</b><button type="button" data-dm-prg-gradi="${i}:0.5" aria-label="+">+</button></span>
   <button type="button" class="dm-prg-via" data-dm-prg-via="${i}" aria-label="${esc(t("Togli la fascia", "Remove the slot"))}" title="${esc(t("Togli la fascia", "Remove the slot"))}">${GLIFO_CESTINO}</button></span>
@@ -116207,23 +116402,24 @@ function statoDetto(voce3, bozza3) {
   if (casa().assente) return { testo: t("Serve l'add-on GdAHome", "Needs the GdAHome add-on"), tono: "spento" };
   if (!voce3) return { testo: t("Non attivo", "Not active"), tono: "spento" };
   if (voce3.attiva === false) return { testo: t("Sospeso", "Paused"), tono: "sospeso" };
-  const prossimo = prossimoDetto(bozza3);
-  return {
-    testo: prossimo ? t(`Attivo · ${prossimo}`, `Active · ${prossimo}`) : t("Attivo", "Active"),
-    tono: "attivo"
-  };
+  return { testo: t("Attivo", "Active"), tono: "attivo", sotto: prossimoDetto(bozza3) };
 }
 function testaMarkup10(stato3) {
-  return `<button type="button" class="dm-prg-testa" data-dm-prg-apri aria-expanded="${state110.aperto}"><span class="dm-prg-ic" aria-hidden="true">${GLIFO_CALENDARIO}</span><span class="dm-prg-tit">${esc(t("Programma", "Schedule"))}</span><span class="dm-prg-stato" data-tono="${stato3.tono}">${esc(stato3.testo)}</span><span class="dm-prg-freccia" aria-hidden="true">${GLIFO_GIU2}</span></button>`;
+  const sotto = clean(stato3.sotto);
+  return `<button type="button" class="dm-prg-testa" data-dm-prg-apri aria-expanded="${state110.aperto}"><span class="dm-prg-ic" aria-hidden="true">${GLIFO_CALENDARIO}</span><span class="dm-prg-tit"><span>${esc(t("Programma", "Schedule"))}</span>${sotto ? `<small data-dm-prg-prossimo>${esc(sotto)}</small>` : ""}</span><span class="dm-prg-stato" data-tono="${stato3.tono}">${esc(stato3.testo)}</span><span class="dm-prg-freccia" aria-hidden="true">${GLIFO_GIU2}</span></button>`;
+}
+function bozzaDiversa(voce3, bozza3) {
+  if (!state110.toccata || !bozza3) return false;
+  if (!voce3) return true;
+  const firma2 = (b2) => JSON.stringify({ programma: b2?.programma, fuori: b2?.fuori });
+  return firma2(bozza3) !== firma2(bozzaDalCrono(voce3?.modello?.crono, state110.entita));
 }
 function programmaMarkup() {
   if (!casaHaRisposto()) {
     const guasto = clean(casa().erroreLettura);
-    const testa3 = testaMarkup10(
-      guasto ? { testo: t("Non letto", "Not read"), tono: "errore" } : { testo: t("Leggo…", "Reading…"), tono: "spento" }
-    );
+    const testa3 = testaMarkup10({ testo: t("Leggo…", "Reading…"), tono: "spento" });
     if (!state110.aperto) return testa3;
-    return guasto ? `${testa3}<div class="dm-prg-corpo"><p class="dm-prg-errore" role="alert">${esc(
+    return guasto ? `${testa3}<div class="dm-prg-corpo"><p class="dm-prg-nota" role="status">${esc(
       t(
         `Non riesco a leggere il programma da Home Assistant (${guasto}). Riprovo da solo fra qualche secondo.`,
         `I can't read the schedule from Home Assistant (${guasto}). I'll try again in a few seconds.`
@@ -116256,6 +116452,8 @@ function programmaMarkup() {
   }
   const b2 = laBozza();
   const giornata = b2.programma[state110.giorno];
+  const verso2 = versoDellUnita();
+  const sporca = bozzaDiversa(voce3, b2) && !state110.salvando && !state110.avvisoChiusura;
   const sbloccato = premium() && !casa().assente;
   const testa2 = testaMarkup10(statoDetto(voce3, b2));
   if (!state110.aperto) return testa2;
@@ -116266,8 +116464,8 @@ function programmaMarkup() {
     ([g, nome]) => `<button type="button" role="tab" aria-selected="${state110.giorno === g}" data-dm-prg-giorno="${g}">${esc(nome)}</button>`
   ).join("")}</div>`;
   const corpo6 = `${giorni}
-${barraMarkup4(giornata, b2.fuori)}
-<div class="dm-prg-fasce">${fasceMarkup(giornata)}</div>
+${barraMarkup4(giornata, b2.fuori, verso2)}
+<div class="dm-prg-fasce">${fasceMarkup(giornata, verso2)}</div>
 <div class="dm-prg-azioni">${giornata.length < FASCE_DEL_PROGRAMMA && fasciaNuova(giornata) ? `<button type="button" class="dm-prg-pill dm-prg-aggiungi" data-dm-prg-aggiungi>${GLIFO_PIU2}${esc(t("Aggiungi fascia", "Add slot"))}</button>` : ""}${state110.giorno === "festivi" ? `<button type="button" class="dm-prg-pill dm-prg-copia" data-dm-prg-copia>${esc(t("Copia da Lun – Ven", "Copy from Mon – Fri"))}</button>` : ""}</div>
 <div class="dm-prg-fuori"><span>${esc(t("Fuori dalle fasce", "Outside the slots"))}<small>${esc(t("tutte le altre ore", "all the other hours"))}</small></span><span class="dm-prg-gradi"><button type="button" data-dm-prg-fuori="-0.5" aria-label="−">−</button><b>${esc(gradiDetti(b2.fuori))}</b><button type="button" data-dm-prg-fuori="0.5" aria-label="+">+</button></span></div>
 ${voce3 ? `<div class="dm-prg-fuori"><span>${esc(t("Programma attivo", "Schedule active"))}</span><button type="button" class="dm-prg-int" role="switch" aria-checked="${voce3.attiva !== false}" data-dm-prg-attivo aria-label="${esc(t("Programma attivo", "Schedule active"))}"><i></i></button></div>` : ""}
@@ -116278,10 +116476,11 @@ ${state110.avvisoChiusura ? `<p class="dm-prg-errore" role="alert">${esc(t("Hai 
 ${state110.errore ? `<p class="dm-prg-errore" role="alert">${esc(state110.errore)}</p>` : ""}
 ${state110.esito ? `<p class="dm-prg-esito${state110.esitoInAttesa ? " dm-prg-esito-attesa" : ""}" role="status">${esc(state110.esito)}</p>` : ""}
 ${sbloccato && !puoScrivere2() && casa().ponte ? `<p class="dm-prg-nota">${esc(t("Solo chi amministra Home Assistant può salvarlo.", "Only a Home Assistant administrator can save it."))}</p>` : ""}
+${sporca ? `<p class="dm-prg-sporca" role="status" data-dm-prg-sporca><i aria-hidden="true"></i>${esc(t("Modifiche non salvate", "Unsaved changes"))}</p>` : ""}
 <button type="button" class="dm-prg-salva" data-dm-prg-salva${state110.salvando || casa().ponte && !puoScrivere2() ? " disabled" : ""}>${esc(
     state110.salvando ? t("Salvo…", "Saving…") : state110.salvato ? t("✓ Salvato in Home Assistant", "✓ Saved in Home Assistant") : t("Salva il programma", "Save the schedule")
   )}</button>`;
-  if (sbloccato) return `${testa2}<div class="dm-prg-corpo">${corpo6}</div>`;
+  if (sbloccato) return `${testa2}<div class="dm-prg-corpo" data-verso="${verso2}">${corpo6}</div>`;
   return `${testa2}<div class="dm-prg-velato"><div class="dm-prg-corpo" aria-hidden="true" inert>${corpo6}</div><div class="dm-prg-velo">${casa().assente ? `<p>${esc(t("Il programma lo esegue Home Assistant: serve l'add-on GdAHome.", "Home Assistant runs the schedule: it needs the GdAHome add-on."))}</p>` : `<span class="dm-prg-prem">✨ PREMIUM</span><p>${esc(
     t(
       "Scegli le fasce e le loro temperature, feriali e festivi: il programma orario è con Premium.",
@@ -116557,9 +116756,14 @@ var STILE15 = `
 #clima-popup-overlay.show{padding:var(--dm-clima-su) 10px var(--dm-clima-giu);overscroll-behavior:contain}
 #clima-popup-overlay .clima-popup{max-height:calc(100vh - 20px);max-height:calc(100dvh - var(--dm-clima-su) - var(--dm-clima-giu));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 /* Il Programma: una card della finestra come le altre, con la testa che dice
- * in una pastiglia se il programma lavora, la barra delle 24 ore con il segno
- * di adesso, le fasce in righe ariose e «Salva» ben visibile. I colori delle
- * fasce vengono dai loro gradi (dall'azzurro dei 16° all'arancio dei 23°). */
+ * in una pastiglia se il programma lavora (e sotto il titolo il prossimo
+ * cambio), la barra delle 24 ore con il segno di adesso, le fasce in righe
+ * ariose e «Salva» ben visibile. I colori delle fasce vengono dai loro gradi,
+ * nella palette di chi le esegue: l'ambra dei 16° fino all'arancio dei 23°
+ * per chi scalda, l'azzurro chiaro dei 28° fino al blu dei 21° per chi
+ * raffresca (coloreDeiGradi). Il fondo della barra e' un velo di quel
+ * colore sulla card — al buio un velo leggero, che resta del suo colore e non
+ * diventa marrone. Ogni tasto e ogni orario e' alto almeno 44 px. */
 .clima-popup .dm-prg{
   --prg-testo:var(--text,#0f172a);--prg-dim:var(--text-dim,#64748b);--prg-linea:var(--card-border,#e5eaf1);
   --prg-fondo:var(--card-bg,#fff);--prg-tenue:var(--surface-2,#f5f7fa);--prg-acc:#ea580c;
@@ -116568,7 +116772,9 @@ html[data-theme="dark"] .clima-popup .dm-prg{--prg-acc:#fb923c}
 .dm-prg-testa{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;width:100%;min-height:56px;padding:8px 14px;cursor:pointer;color:var(--prg-testo)}
 .dm-prg-testa:focus-visible{outline:2px solid var(--prg-acc);outline-offset:-2px;border-radius:22px}
 .dm-prg-ic{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border-radius:11px;background:var(--prg-fondo);border:1px solid var(--prg-linea);color:var(--prg-dim)}
-.dm-prg-tit{font-weight:800;font-size:15px}
+.dm-prg-tit{display:flex;flex-direction:column;min-width:0;font-weight:800;font-size:15px;line-height:1.2}
+.dm-prg-tit small{margin-top:2px;font-size:12px;font-weight:650;color:var(--prg-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dm-prg-stato{flex:none}
 .dm-prg-stato{margin-left:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:750;color:var(--prg-dim);background:color-mix(in srgb,var(--prg-dim) 12%,transparent)}
 .dm-prg-stato[data-tono="attivo"]{color:#15803d;background:rgba(34,197,94,.14)}
 .dm-prg-stato[data-tono="sospeso"]{color:#b45309;background:rgba(245,158,11,.16)}
@@ -116585,6 +116791,7 @@ html[data-theme="dark"] .dm-prg-stato[data-tono="errore"]{color:#f87171}
 .dm-prg-giorni button:focus-visible{outline:2px solid var(--prg-acc);outline-offset:1px}
 .dm-prg-scala{padding:2px 0 0}
 .dm-prg-barra{position:relative;height:40px;border-radius:12px;background:color-mix(in srgb,var(--fuori) 16%,var(--prg-fondo));box-shadow:inset 0 0 0 1px var(--prg-linea);overflow:hidden}
+html[data-theme="dark"] .dm-prg-barra{background:color-mix(in oklab,var(--fuori) 10%,var(--prg-fondo))}
 .dm-prg-barra i{position:absolute;top:4px;bottom:4px;margin-left:1px;border-radius:8px;background:var(--g);display:flex;align-items:center;justify-content:center;font-style:normal;box-shadow:inset 0 0 0 1px rgba(124,45,18,.12)}
 .dm-prg-barra i b{font-size:11.5px;font-weight:800;font-style:normal;color:#431407;white-space:nowrap;overflow:hidden;padding:0 4px;font-variant-numeric:tabular-nums}
 .dm-prg-adesso{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--prg-testo);opacity:.75;z-index:1}
@@ -116602,13 +116809,13 @@ html[data-theme="dark"] .dm-prg-stato[data-tono="errore"]{color:#f87171}
 .dm-prg-orari{display:flex;align-items:center;gap:4px;flex:1 0 auto}
 .dm-prg-trattino{flex:0 0 auto;margin:0 2px;color:var(--prg-dim)}
 .dm-prg-destra{display:flex;align-items:center;gap:4px;margin-left:auto}
-.dm-prg-ora{font:inherit;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;padding:0 4px;height:40px;width:74px;flex:0 0 74px;border-radius:11px;border:1px solid var(--prg-linea);background:var(--prg-tenue);color:var(--prg-testo);min-width:0;text-align:center}
+.dm-prg-ora{font:inherit;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;padding:0 4px;height:44px;width:74px;flex:0 0 74px;border-radius:11px;border:1px solid var(--prg-linea);background:var(--prg-tenue);color:var(--prg-testo);min-width:0;text-align:center}
 .dm-prg-ora:focus-visible{outline:2px solid var(--prg-acc);outline-offset:1px}
 .dm-prg-gradi{display:flex;align-items:center;gap:2px;padding:2px;border-radius:12px;background:var(--prg-tenue);border:1px solid var(--prg-linea)}
 .dm-prg-gradi b{min-width:46px;text-align:center;font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--prg-testo)}
-.dm-prg-gradi button,.dm-prg-via{all:unset;box-sizing:border-box;width:38px;height:36px;border-radius:10px;display:grid;place-items:center;cursor:pointer;font-weight:800;font-size:17px;color:var(--prg-testo)}
+.dm-prg-gradi button,.dm-prg-via{all:unset;box-sizing:border-box;width:44px;height:44px;border-radius:10px;display:grid;place-items:center;cursor:pointer;font-weight:800;font-size:17px;color:var(--prg-testo)}
 .dm-prg-gradi button:hover{background:var(--prg-fondo)}
-.dm-prg-via{width:40px;height:40px;color:var(--prg-dim)}
+.dm-prg-via{width:44px;height:44px;color:var(--prg-dim)}
 .dm-prg-via:hover{color:#dc2626;background:rgba(220,38,38,.08)}
 .dm-prg-gradi button:focus-visible,.dm-prg-via:focus-visible,.dm-prg-pill:focus-visible,.dm-prg-salva:focus-visible{outline:2px solid var(--prg-acc);outline-offset:2px}
 /* Dove la riga non tiene tutto (il telefono), la fascia si dispone su due
@@ -116620,7 +116827,7 @@ html[data-theme="dark"] .dm-prg-stato[data-tono="errore"]{color:#f87171}
   .dm-prg-orari{grid-area:orari}
   .dm-prg-via{grid-area:via;justify-self:end}
   .dm-prg-fascia .dm-prg-gradi{grid-area:gradi;justify-content:space-between}
-  .dm-prg-fascia .dm-prg-gradi button{width:56px;height:38px}
+  .dm-prg-fascia .dm-prg-gradi button{width:56px;height:44px}
 }
 .dm-prg-azioni{display:flex;flex-wrap:wrap;gap:8px}
 .dm-prg-pill{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 14px;border-radius:14px;font-size:13px;font-weight:750;cursor:pointer;background:var(--prg-fondo);border:1px solid var(--prg-linea);color:var(--prg-testo)}
@@ -116633,6 +116840,9 @@ html[data-theme="dark"] .dm-prg-stato[data-tono="errore"]{color:#f87171}
 .dm-prg-int i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .2s}
 .dm-prg-int[aria-checked="true"]{background:#22c55e}
 .dm-prg-int[aria-checked="true"] i{left:23px}
+.dm-prg-sporca{display:flex;align-items:center;gap:8px;margin:0;font-size:12.5px;font-weight:750;color:#b45309}
+.dm-prg-sporca i{width:8px;height:8px;border-radius:50%;background:#f59e0b}
+html[data-theme="dark"] .dm-prg-sporca{color:#fbbf24}
 .dm-prg-salva{all:unset;box-sizing:border-box;display:grid;place-items:center;min-height:50px;border-radius:16px;font-weight:800;font-size:15px;cursor:pointer;background:var(--prg-acc);color:#fff;box-shadow:0 8px 18px -10px color-mix(in srgb,var(--prg-acc) 90%,transparent)}
 html[data-theme="dark"] .dm-prg-salva{color:#1b0f06}
 .dm-prg-salva[disabled]{opacity:.5;cursor:default;box-shadow:none}
@@ -117919,7 +118129,7 @@ var valvoleDette = (n) => n === 0 ? t("nessuna valvola", "no valve") : n === 1 ?
 var numeroDetto = (valore3, cifre3 = 1) => valore3.toLocaleString(locale(), { minimumFractionDigits: 0, maximumFractionDigits: cifre3 });
 function tessera3(icona3, etichetta3, valore3, sotto = "", extra = "") {
   return `<div class="dm-rcl-tessera" ${extra}>
-    <span class="dm-rcl-t-et"><i aria-hidden="true">${icona3}</i>${esc(etichetta3)}</span>
+    <span class="dm-rcl-t-et"><i aria-hidden="true">${icona3}</i><span>${esc(etichetta3)}</span></span>
     <b>${esc(valore3)}</b>
     ${sotto ? `<small>${esc(sotto)}</small>` : ""}
   </div>`;
@@ -117935,7 +118145,7 @@ function etichettaDelSecchiello(periodo, secchiello, indice) {
 function graficoIgnotoMarkup(report) {
   const freddo = report.impianto === "freddo";
   return `<div class="dm-rcl-grafico-box" data-dm-rcl-grafico-ignoto>
-    <div class="dm-rcl-grafico-testa"><b>${esc(freddo ? t("Impianto acceso", "System on") : t("Caldaia accesa", "Boiler on"))}</b><span>${esc(t("non noto", "unknown"))}</span></div>
+    <div class="dm-rcl-grafico-testa"><b>${esc(freddo || report.stima ? t("Impianto acceso", "System on") : t("Caldaia accesa", "Boiler on"))}</b><span>${esc(t("non noto", "unknown"))}</span></div>
     <div class="dm-rcl-ignoto"><span aria-hidden="true">❔</span><p>${esc(
     freddo ? t(
       "Per questo periodo Home Assistant non ha dati sull'accensione dei climatizzatori: né la storia, né statistiche di consumo.",
@@ -117967,7 +118177,12 @@ function graficoMarkup2(report) {
   const passate = secchielli2.filter((s) => s.inizio <= adesso2);
   const ignote = passate.filter((s) => s.noto === false).length;
   const accese = passate.filter((s) => s.noto !== false && s.ms > 0).length;
-  const avviso4 = passate.length && ignote === passate.length ? t("Nessun dato per questo periodo: le colonne a righe non sono zero, non si sanno.", "No data for this period: the striped columns are not zero, they are unknown.") : !accese && passate.length ? report.impianto === "freddo" ? t("Nessuna accensione in questo periodo.", "Nothing ran in this period.") : t("La caldaia non si è mai accesa in questo periodo.", "The boiler never ran in this period.") : "";
+  const avviso4 = passate.length && ignote === passate.length ? t("Nessun dato per questo periodo: le colonne a righe non sono zero, non si sanno.", "No data for this period: the striped columns are not zero, they are unknown.") : !accese && passate.length ? (
+    /* «La caldaia» solo quando a dirlo e' la caldaia: una stima fatta
+     * dalle valvole o dai consumi non parla di lei, e una casa senza
+     * caldaia non deve leggerne una. */
+    report.impianto === "freddo" || report.stima ? t("Nessuna accensione in questo periodo.", "Nothing ran in this period.") : t("La caldaia non si è mai accesa in questo periodo.", "The boiler never ran in this period.")
+  ) : "";
   const n = ignote;
   const senzaDati = periodo.vista === "giorno" ? n === 1 ? t("1 ora senza dati", "1 hour without data") : t(`${n} ore senza dati`, `${n} hours without data`) : n === 1 ? t("1 giorno senza dati", "1 day without data") : t(`${n} giorni senza dati`, `${n} days without data`);
   const legenda = ignote && ignote < passate.length ? `<p class="dm-rcl-legenda"><i aria-hidden="true"></i>${esc(senzaDati)}</p>` : "";
@@ -117982,11 +118197,12 @@ function graficoMarkup2(report) {
 }
 function stanzeMarkup2(report) {
   const massimo = Math.max(1, ...report.stanze.map((s) => s.msRichiesta || 0));
+  const classifica = report.stanze.some((s) => (s.msRichiesta || 0) > 0);
   return report.stanze.map((s, i) => {
     const quota = (s.msRichiesta || 0) / massimo * 100;
     const acceso7 = ore2(s.msAccesa);
+    const accesaDiversa = s.msAccesa !== null && s.msAccesa !== void 0 && Math.abs(s.msAccesa - (s.msRichiesta ?? -Infinity)) >= 6e4;
     const aperta2 = percento7(s.valvola);
-    const durata7 = ore2(s.msRichiesta);
     const ambiente = gradi11(s.ambienteComfort);
     const obiettivo2 = gradi11(s.obiettivoComfort);
     const temperatura = s.obiettivoComfort === null || s.ambienteComfort === null ? gradi11(s.ambiente) : t(`${ambiente} su ${obiettivo2} in comfort`, `${ambiente} for ${obiettivo2} in comfort`);
@@ -117996,19 +118212,16 @@ function stanzeMarkup2(report) {
       parziali ? `<em class="dm-rcl-segno" data-dm-rcl-segno="dati">${esc(t("dati parziali", "partial data"))}</em>` : "",
       s.richiestaStimata && !parziali ? `<em class="dm-rcl-segno" data-dm-rcl-segno="stima">${esc(t("stima", "estimate"))}</em>` : ""
     ].join("");
-    const richiestaDetta = s.msRichiesta === null ? t("richiesta non nota", "demand unknown") : s.stimaDa?.includes("valvola") ? t(`${durata7} di richiesta, dalla valvola`, `${durata7} of demand, from the valve`) : s.stimaDa?.includes("dispositivo") ? t(
-      `${durata7} di richiesta, dai consumi del climatizzatore`,
-      `${durata7} of demand, from the air conditioner's power draw`
-    ) : s.stimaDa?.length ? t(`${durata7} di richiesta, dai consumi`, `${durata7} of demand, from the power draw`) : t(`${durata7} di richiesta`, `${durata7} of demand`);
+    const richiestaDetta = s.msRichiesta === null ? t("richiesta non nota", "demand unknown") : s.stimaDa?.includes("valvola") ? t("richiesta dalla valvola", "demand from the valve") : s.stimaDa?.includes("dispositivo") ? t("richiesta dai consumi del climatizzatore", "demand from the air conditioner's power draw") : s.stimaDa?.length ? t("richiesta dai consumi", "demand from the power draw") : t("richiesta dal termostato", "demand from the thermostat");
     const kwh5 = s.kwh === null || s.kwh === void 0 ? "" : `<span data-dm-rcl-kwh>⚡ ${esc(`${numeroDetto(s.kwh)} kWh`)}</span>`;
-    return `<li class="dm-rcl-stanza" data-dm-rcl-stanza="${esc(s.entity)}">
-        <span class="dm-rcl-pos">${i + 1}</span>
+    return `<li class="dm-rcl-stanza" data-dm-rcl-stanza="${esc(s.entity)}"${classifica ? "" : " data-senza-classifica"}>
+        ${classifica ? `<span class="dm-rcl-pos">${i + 1}</span>` : ""}
         <div class="dm-rcl-stanza-corpo">
-          <div class="dm-rcl-stanza-testa"><b>${esc(nome)}</b>${segni}<strong>${esc(ore2(s.msRichiesta))}</strong></div>
-          <div class="dm-rcl-stanza-barra"><i style="width:${quota.toFixed(1)}%"></i></div>
+          <div class="dm-rcl-stanza-testa"><b>${esc(nome)}</b>${segni}<strong data-dm-rcl-ore>${esc(ore2(s.msRichiesta))}</strong></div>
+          ${classifica ? `<div class="dm-rcl-stanza-barra"><i style="width:${quota.toFixed(1)}%"></i></div>` : ""}
           <div class="dm-rcl-stanza-dati">
             <span data-dm-rcl-richiesta${s.msRichiesta === null ? " data-ignota" : ""}>${esc(richiestaDetta)}</span>
-            ${s.msAccesa === null ? "" : `<span>⏻ ${esc(t(`accesa ${acceso7}`, `on ${acceso7}`))}</span>`}
+            ${accesaDiversa ? `<span data-dm-rcl-accesa>⏻ ${esc(t(`accesa ${acceso7}`, `on ${acceso7}`))}</span>` : ""}
             ${s.valvola === null ? "" : `<span data-dm-rcl-valvola>🔧 ${esc(t(`valvola ${aperta2}`, `valve ${aperta2}`))}</span>`}
             <span data-dm-rcl-temperatura>🌡️ ${esc(temperatura)}</span>
             ${kwh5}
@@ -118201,11 +118414,13 @@ function contenutoMarkup(report) {
   const ignoto = tot.msGeneratore === null;
   const titoloGeneratore = ignoto ? t("Impianto", "System") : report.stima ? t("Impianto (stima)", "System (estimate)") : caldo ? report.generatori.length > 1 ? t("Caldaie", "Boilers") : report.generatori[0]?.nome || t("Caldaia", "Boiler") : t("Impianto", "System");
   const sottoGeneratore = tot.msGeneratore === null ? t("non noto", "unknown") : tot.accensioni === null && tot.consumo ? `${numeroDetto(tot.consumo.valore)} ${tot.consumo.unita}` : tot.accensioni === null && tot.kwhStanze !== null && report.stima ? `${numeroDetto(tot.kwhStanze)} kWh` : accensioniDette(tot.accensioni);
-  return `<div class="dm-rcl-tessere">
+  return `<div class="dm-rcl-tessere" data-quante="${caldo ? 4 : 3}">
       ${tessera3(caldo ? "🔥" : "❄️", titoloGeneratore, ore2(tot.msGeneratore), sottoGeneratore, `data-dm-rcl-tessera="generatore"${report.stima && !ignoto ? " data-stima" : ""}${ignoto ? " data-ignoto" : ""}`)}
       ${tessera3("⏱️", t("Richiesta stanze", "Room demand"), ore2(tot.msRichiesta), stanzeDette(quante3), 'data-dm-rcl-tessera="richiesta"')}
-      ${inComfort ? tessera3("🌡️", t("Temperatura in comfort", "Comfort temperature"), gradi11(tot.ambienteComfort), t(`obiettivo in comfort ${obiettivo2}`, `comfort target ${obiettivo2}`), 'data-dm-rcl-tessera="temperatura"') : tessera3("🌡️", t("Temperatura media", "Average temperature"), gradi11(tot.ambiente), t("nel periodo", "over the period"), 'data-dm-rcl-tessera="temperatura"')}
-      ${tessera3("🔧", t("Valvola media", "Average valve"), percento7(tot.valvola), valvoleDette(valvole), 'data-dm-rcl-tessera="valvola"')}
+      ${inComfort ? tessera3("🌡️", t("Temperatura", "Temperature"), gradi11(tot.ambienteComfort), t(`obiettivo in comfort ${obiettivo2}`, `comfort target ${obiettivo2}`), 'data-dm-rcl-tessera="temperatura"') : tessera3("🌡️", t("Temperatura media", "Average temperature"), gradi11(tot.ambiente), t("nel periodo", "over the period"), 'data-dm-rcl-tessera="temperatura"')}
+      ${/* Un climatizzatore non ha valvole: in raffrescamento la tessera non
+   * c'e', invece di un «—» fisso. */
+  caldo ? tessera3("🔧", t("Valvola media", "Average valve"), percento7(tot.valvola), valvoleDette(valvole), 'data-dm-rcl-tessera="valvola"') : ""}
     </div>
     ${generatoriMarkup(report)}
     ${graficoMarkup2(report)}
@@ -118366,8 +118581,20 @@ function tocco2(evento) {
     disegna10();
   }
 }
+function reportDavanti() {
+  const pagina3 = doc.getElementById("page-clima");
+  const nodo3 = doc.getElementById("dm-rcl");
+  if (!pagina3 || !nodo3 || nodo3.hidden) return false;
+  if (pagina3.classList && !pagina3.classList.contains("active")) return false;
+  const sopra = [
+    ...doc.querySelectorAll(
+      '.clima-popup-overlay.show, dialog[open], [aria-modal="true"]:not([hidden]), .modal.show, .overlay.show, .popup-overlay.show'
+    )
+  ].some((nodo4) => !nodo4.contains(pagina3) && !pagina3.contains(nodo4) && nodo4.getClientRects?.().length > 0);
+  return !sopra;
+}
 function tasto3(evento) {
-  if (evento.key === "Escape" && state111.aperto) chiudiIlReport();
+  if (evento.key === "Escape" && state111.aperto && !evento.defaultPrevented && reportDavanti()) chiudiIlReport();
 }
 function segnaLaPagina2(aperto2) {
   const guscio3 = doc.querySelector("#page-clima .dm-cl-shell");
@@ -118376,7 +118603,12 @@ function segnaLaPagina2(aperto2) {
     else guscio3.removeAttribute("data-dm-rcl-aperto");
   }
   for (const linguetta4 of doc.querySelectorAll("#page-clima [data-dm-rcl-apri]"))
-    linguetta4.setAttribute("aria-pressed", String(aperto2));
+    linguetta4.setAttribute("aria-selected", String(aperto2));
+  for (const linguetta4 of doc.querySelectorAll("#page-clima .clima-page-mode-btn[data-dm-cl-zone]")) {
+    const zona = linguetta4.dataset.dmClZone;
+    const scelta3 = String(!aperto2 && linguetta4.classList.contains(`active-${zona}`));
+    if (linguetta4.getAttribute("aria-selected") !== scelta3) linguetta4.setAttribute("aria-selected", scelta3);
+  }
 }
 function apriIlReportDelClima(impianto = "") {
   const zonaVista = doc.querySelector(".clima-zone-freddo.show") ? "freddo" : "caldo";
@@ -118442,10 +118674,15 @@ html[data-theme="dark"] .dm-rcl-scheda[data-dm-rcl-zona="freddo"]{--rcl-c:56,189
 
 /* I numeri in alto: quattro card, due per riga sul telefono. */
 .dm-rcl-tessere{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.dm-rcl-tessere[data-quante="3"]{grid-template-columns:repeat(3,minmax(0,1fr))}
 .dm-rcl-tessera{display:flex;flex-direction:column;gap:4px;padding:14px 16px;min-width:0}
 .dm-rcl-tessera[data-dm-rcl-tessera="generatore"]{background:linear-gradient(180deg,rgba(var(--rcl-c),.12),rgba(var(--rcl-c),.04)),var(--rcl-card);border-color:rgba(var(--rcl-c),.32)}
-.dm-rcl-t-et{display:flex;align-items:center;gap:6px;font-size:12.5px;line-height:1.3;font-weight:700;letter-spacing:0;text-transform:none;color:var(--rcl-dim)}
-.dm-rcl-t-et i{font-style:normal;font-size:14px}
+/* L'etichetta piccola e maiuscola, come nel Report dell'Energia e nei numeri
+ * in cima alla pagina Clima: su una riga sola, perche' le quattro tessere
+ * abbiano i numeri alla stessa altezza. */
+.dm-rcl-t-et{display:flex;align-items:center;gap:6px;min-width:0;font-size:10.5px;line-height:1.3;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--rcl-dim);white-space:nowrap}
+.dm-rcl-t-et i{font-style:normal;font-size:13px;letter-spacing:0}
+.dm-rcl-t-et span{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .dm-rcl-tessera b{font-size:24px;font-weight:800;letter-spacing:-.5px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dm-rcl-tessera small{font-size:12px;font-weight:650;color:var(--rcl-dim)}
 .dm-rcl-tessera[data-ignoto]{background:var(--rcl-card);border-color:var(--rcl-line)}
@@ -118516,7 +118753,8 @@ html[data-theme="dark"] .dm-rcl-segno[data-dm-rcl-segno="dati"]{color:#facc15}
 @media (max-width:640px){
   .dm-rcl-barra-testa{padding:14px}
   .dm-rcl-impianti{flex:1 1 100%}
-  .dm-rcl-tessere{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .dm-rcl-tessere,.dm-rcl-tessere[data-quante="3"]{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .dm-rcl-tessere[data-quante="3"] .dm-rcl-tessera:first-child{grid-column:1/-1}
   .dm-rcl-tessera{padding:12px 14px}
   .dm-rcl-tessera b{font-size:20px}
   .dm-rcl-grafico-box{padding:14px 14px 10px}

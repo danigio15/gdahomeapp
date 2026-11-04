@@ -557,12 +557,12 @@ for (const [schermo, misura] of [
       await expect(page.locator("#dm-rcl .dm-rcl-nota").last()).toContainText(
         "Un'unità non ha mai lavorato",
       );
-      /* Sotto la barra il valore della richiesta, e la temperatura confrontata
-       * con l'obiettivo nelle stesse ore di comfort. */
+      /* Le ore della richiesta una volta sola, a destra; sotto la barra da
+       * dove vengono, e la temperatura confrontata con l'obiettivo nelle
+       * stesse ore di comfort. */
       const sala = page.locator('#dm-rcl [data-dm-rcl-stanza="climate.sala"]');
-      await expect(sala.locator("[data-dm-rcl-richiesta]")).toHaveText(
-        /^\d+ h( \d+ min)? di richiesta$/,
-      );
+      await expect(sala.locator("[data-dm-rcl-ore]")).toHaveText(/^\d+ h( \d+ min)?$/);
+      await expect(sala.locator("[data-dm-rcl-richiesta]")).toHaveText("richiesta dal termostato");
       await expect(sala.locator("[data-dm-rcl-temperatura]")).toContainText(/su 21,0° in comfort/);
       await expect(page.locator('#dm-rcl [data-dm-rcl-tessera="temperatura"]')).toContainText(
         "obiettivo in comfort",
@@ -793,8 +793,8 @@ for (const [schermo, misura] of [
       /* La Sala la sa l'archivio: la richiesta c'e', anche se di tre giorni
        * su sette. */
       await expect(
-        page.locator('#dm-rcl [data-dm-rcl-stanza="climate.sala"] [data-dm-rcl-richiesta]'),
-      ).toHaveText(/^\d+ h( \d+ min)? di richiesta$/);
+        page.locator('#dm-rcl [data-dm-rcl-stanza="climate.sala"] [data-dm-rcl-ore]'),
+      ).toHaveText(/^\d+ h( \d+ min)?$/);
       await foto(page, `03-riscaldamento-settimana-archivio-e-statistiche-${schermo}-${luce}`);
     });
   }

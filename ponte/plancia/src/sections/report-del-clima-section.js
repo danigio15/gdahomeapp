@@ -278,7 +278,7 @@ const numeroDetto = (valore, cifre = 1) =>
 
 function tessera(icona, etichetta, valore, sotto = "", extra = "") {
   return `<div class="dm-rcl-tessera" ${extra}>
-    <span class="dm-rcl-t-et"><i aria-hidden="true">${icona}</i>${esc(etichetta)}</span>
+    <span class="dm-rcl-t-et"><i aria-hidden="true">${icona}</i><span>${esc(etichetta)}</span></span>
     <b>${esc(valore)}</b>
     ${sotto ? `<small>${esc(sotto)}</small>` : ""}
   </div>`;
@@ -299,7 +299,7 @@ function etichettaDelSecchiello(periodo, secchiello, indice) {
 function graficoIgnotoMarkup(report) {
   const freddo = report.impianto === "freddo";
   return `<div class="dm-rcl-grafico-box" data-dm-rcl-grafico-ignoto>
-    <div class="dm-rcl-grafico-testa"><b>${esc(freddo ? t("Impianto acceso", "System on") : t("Caldaia accesa", "Boiler on"))}</b><span>${esc(t("non noto", "unknown"))}</span></div>
+    <div class="dm-rcl-grafico-testa"><b>${esc(freddo || report.stima ? t("Impianto acceso", "System on") : t("Caldaia accesa", "Boiler on"))}</b><span>${esc(t("non noto", "unknown"))}</span></div>
     <div class="dm-rcl-ignoto"><span aria-hidden="true">❔</span><p>${esc(
       freddo
         ? t(
@@ -349,7 +349,10 @@ function graficoMarkup(report) {
     passate.length && ignote === passate.length
       ? t("Nessun dato per questo periodo: le colonne a righe non sono zero, non si sanno.", "No data for this period: the striped columns are not zero, they are unknown.")
       : !accese && passate.length
-        ? report.impianto === "freddo"
+        ? /* «La caldaia» solo quando a dirlo e' la caldaia: una stima fatta
+           * dalle valvole o dai consumi non parla di lei, e una casa senza
+           * caldaia non deve leggerne una. */
+          report.impianto === "freddo" || report.stima
           ? t("Nessuna accensione in questo periodo.", "Nothing ran in this period.")
           : t("La caldaia non si è mai accesa in questo periodo.", "The boiler never ran in this period.")
         : "";
@@ -378,12 +381,17 @@ function graficoMarkup(report) {
 
 function stanzeMarkup(report) {
   const massimo = Math.max(1, ...report.stanze.map((s) => s.msRichiesta || 0));
+  /* Una classifica senza numeri non e' una classifica: se nessuna stanza ha
+   * ore di richiesta, niente 1, 2, 3, 4 e niente barre. */
+  const classifica = report.stanze.some((s) => (s.msRichiesta || 0) > 0);
   return report.stanze
     .map((s, i) => {
       const quota = ((s.msRichiesta || 0) / massimo) * 100;
       const acceso = ore(s.msAccesa);
+      /* «accesa» solo quando dice qualcosa in piu' della richiesta. */
+      const accesaDiversa =
+        s.msAccesa !== null && s.msAccesa !== undefined && Math.abs(s.msAccesa - (s.msRichiesta ?? -Infinity)) >= 60_000;
       const aperta = percento(s.valvola);
-      const durata = ore(s.msRichiesta);
       const ambiente = gradi(s.ambienteComfort);
       const obiettivo = gradi(s.obiettivoComfort);
       /* La temperatura e l'obiettivo delle stesse ore, quelle di comfort; senza
@@ -406,34 +414,31 @@ function stanzeMarkup(report) {
           ? `<em class="dm-rcl-segno" data-dm-rcl-segno="stima">${esc(t("stima", "estimate"))}</em>`
           : "",
       ].join("");
-      /* Da dove viene la richiesta, quando non e' la storia: la valvola, i
-       * watt, o — per una pompa di calore conosciuta solo dai watt — la
-       * stagione. Senza nessuna delle tre, la richiesta non si sa. */
+      /* Da dove viene la richiesta: le ore stanno una volta sola, a destra;
+       * qui la fonte — la storia del termostato, la valvola, i watt. Senza
+       * nessuna, la richiesta non si sa. */
       const richiestaDetta =
         s.msRichiesta === null
           ? t("richiesta non nota", "demand unknown")
           : s.stimaDa?.includes("valvola")
-            ? t(`${durata} di richiesta, dalla valvola`, `${durata} of demand, from the valve`)
+            ? t("richiesta dalla valvola", "demand from the valve")
             : s.stimaDa?.includes("dispositivo")
-              ? t(
-                  `${durata} di richiesta, dai consumi del climatizzatore`,
-                  `${durata} of demand, from the air conditioner's power draw`,
-                )
+              ? t("richiesta dai consumi del climatizzatore", "demand from the air conditioner's power draw")
               : s.stimaDa?.length
-              ? t(`${durata} di richiesta, dai consumi`, `${durata} of demand, from the power draw`)
-              : t(`${durata} di richiesta`, `${durata} of demand`);
+                ? t("richiesta dai consumi", "demand from the power draw")
+                : t("richiesta dal termostato", "demand from the thermostat");
       const kwh =
         s.kwh === null || s.kwh === undefined
           ? ""
           : `<span data-dm-rcl-kwh>⚡ ${esc(`${numeroDetto(s.kwh)} kWh`)}</span>`;
-      return `<li class="dm-rcl-stanza" data-dm-rcl-stanza="${esc(s.entity)}">
-        <span class="dm-rcl-pos">${i + 1}</span>
+      return `<li class="dm-rcl-stanza" data-dm-rcl-stanza="${esc(s.entity)}"${classifica ? "" : " data-senza-classifica"}>
+        ${classifica ? `<span class="dm-rcl-pos">${i + 1}</span>` : ""}
         <div class="dm-rcl-stanza-corpo">
-          <div class="dm-rcl-stanza-testa"><b>${esc(nome)}</b>${segni}<strong>${esc(ore(s.msRichiesta))}</strong></div>
-          <div class="dm-rcl-stanza-barra"><i style="width:${quota.toFixed(1)}%"></i></div>
+          <div class="dm-rcl-stanza-testa"><b>${esc(nome)}</b>${segni}<strong data-dm-rcl-ore>${esc(ore(s.msRichiesta))}</strong></div>
+          ${classifica ? `<div class="dm-rcl-stanza-barra"><i style="width:${quota.toFixed(1)}%"></i></div>` : ""}
           <div class="dm-rcl-stanza-dati">
             <span data-dm-rcl-richiesta${s.msRichiesta === null ? " data-ignota" : ""}>${esc(richiestaDetta)}</span>
-            ${s.msAccesa === null ? "" : `<span>⏻ ${esc(t(`accesa ${acceso}`, `on ${acceso}`))}</span>`}
+            ${accesaDiversa ? `<span data-dm-rcl-accesa>⏻ ${esc(t(`accesa ${acceso}`, `on ${acceso}`))}</span>` : ""}
             ${s.valvola === null ? "" : `<span data-dm-rcl-valvola>🔧 ${esc(t(`valvola ${aperta}`, `valve ${aperta}`))}</span>`}
             <span data-dm-rcl-temperatura>🌡️ ${esc(temperatura)}</span>
             ${kwh}
@@ -704,15 +709,19 @@ export function contenutoMarkup(report) {
         : tot.accensioni === null && tot.kwhStanze !== null && report.stima
           ? `${numeroDetto(tot.kwhStanze)} kWh`
           : accensioniDette(tot.accensioni);
-  return `<div class="dm-rcl-tessere">
+  return `<div class="dm-rcl-tessere" data-quante="${caldo ? 4 : 3}">
       ${tessera(caldo ? "🔥" : "❄️", titoloGeneratore, ore(tot.msGeneratore), sottoGeneratore, `data-dm-rcl-tessera="generatore"${report.stima && !ignoto ? " data-stima" : ""}${ignoto ? " data-ignoto" : ""}`)}
       ${tessera("⏱️", t("Richiesta stanze", "Room demand"), ore(tot.msRichiesta), stanzeDette(quante), 'data-dm-rcl-tessera="richiesta"')}
       ${
         inComfort
-          ? tessera("🌡️", t("Temperatura in comfort", "Comfort temperature"), gradi(tot.ambienteComfort), t(`obiettivo in comfort ${obiettivo}`, `comfort target ${obiettivo}`), 'data-dm-rcl-tessera="temperatura"')
+          ? tessera("🌡️", t("Temperatura", "Temperature"), gradi(tot.ambienteComfort), t(`obiettivo in comfort ${obiettivo}`, `comfort target ${obiettivo}`), 'data-dm-rcl-tessera="temperatura"')
           : tessera("🌡️", t("Temperatura media", "Average temperature"), gradi(tot.ambiente), t("nel periodo", "over the period"), 'data-dm-rcl-tessera="temperatura"')
       }
-      ${tessera("🔧", t("Valvola media", "Average valve"), percento(tot.valvola), valvoleDette(valvole), 'data-dm-rcl-tessera="valvola"')}
+      ${
+        /* Un climatizzatore non ha valvole: in raffrescamento la tessera non
+         * c'e', invece di un «—» fisso. */
+        caldo ? tessera("🔧", t("Valvola media", "Average valve"), percento(tot.valvola), valvoleDette(valvole), 'data-dm-rcl-tessera="valvola"') : ""
+      }
     </div>
     ${generatoriMarkup(report)}
     ${graficoMarkup(report)}
@@ -894,8 +903,26 @@ function tocco(evento) {
   }
 }
 
+/* Esc chiude il report solo quando e' lui la cosa davanti: la pagina Clima
+ * e' quella in vista, e sopra non c'e' una finestra (la finestra del
+ * termostato, una del Config, un dialogo) che l'Esc deve chiudere per prima. */
+function reportDavanti() {
+  const pagina = doc.getElementById("page-clima");
+  const nodo = doc.getElementById("dm-rcl");
+  if (!pagina || !nodo || nodo.hidden) return false;
+  if (pagina.classList && !pagina.classList.contains("active")) return false;
+  /* Conta solo quello che si vede: il guscio tiene nel documento finestre
+   * chiuse con `aria-modal`, nascoste dal CSS. */
+  const sopra = [
+    ...doc.querySelectorAll(
+      ".clima-popup-overlay.show, dialog[open], [aria-modal=\"true\"]:not([hidden]), .modal.show, .overlay.show, .popup-overlay.show",
+    ),
+  ].some((nodo) => !nodo.contains(pagina) && !pagina.contains(nodo) && nodo.getClientRects?.().length > 0);
+  return !sopra;
+}
+
 function tasto(evento) {
-  if (evento.key === "Escape" && state.aperto) chiudiIlReport();
+  if (evento.key === "Escape" && state.aperto && !evento.defaultPrevented && reportDavanti()) chiudiIlReport();
 }
 
 /* La pagina Clima sa che il report e' aperto: nasconde le stanze e i
@@ -907,7 +934,13 @@ function segnaLaPagina(aperto) {
     else guscio.removeAttribute("data-dm-rcl-aperto");
   }
   for (const linguetta of doc.querySelectorAll("#page-clima [data-dm-rcl-apri]"))
-    linguetta.setAttribute("aria-pressed", String(aperto));
+    linguetta.setAttribute("aria-selected", String(aperto));
+  /* E le linguette delle zone: col report aperto la scelta e' lui. */
+  for (const linguetta of doc.querySelectorAll("#page-clima .clima-page-mode-btn[data-dm-cl-zone]")) {
+    const zona = linguetta.dataset.dmClZone;
+    const scelta = String(!aperto && linguetta.classList.contains(`active-${zona}`));
+    if (linguetta.getAttribute("aria-selected") !== scelta) linguetta.setAttribute("aria-selected", scelta);
+  }
 }
 
 /** Apre il report: dell'impianto che la pagina sta mostrando, di serie. */
@@ -977,10 +1010,15 @@ html[data-theme="dark"] .dm-rcl-scheda[data-dm-rcl-zona="freddo"]{--rcl-c:56,189
 
 /* I numeri in alto: quattro card, due per riga sul telefono. */
 .dm-rcl-tessere{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.dm-rcl-tessere[data-quante="3"]{grid-template-columns:repeat(3,minmax(0,1fr))}
 .dm-rcl-tessera{display:flex;flex-direction:column;gap:4px;padding:14px 16px;min-width:0}
 .dm-rcl-tessera[data-dm-rcl-tessera="generatore"]{background:linear-gradient(180deg,rgba(var(--rcl-c),.12),rgba(var(--rcl-c),.04)),var(--rcl-card);border-color:rgba(var(--rcl-c),.32)}
-.dm-rcl-t-et{display:flex;align-items:center;gap:6px;font-size:12.5px;line-height:1.3;font-weight:700;letter-spacing:0;text-transform:none;color:var(--rcl-dim)}
-.dm-rcl-t-et i{font-style:normal;font-size:14px}
+/* L'etichetta piccola e maiuscola, come nel Report dell'Energia e nei numeri
+ * in cima alla pagina Clima: su una riga sola, perche' le quattro tessere
+ * abbiano i numeri alla stessa altezza. */
+.dm-rcl-t-et{display:flex;align-items:center;gap:6px;min-width:0;font-size:10.5px;line-height:1.3;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--rcl-dim);white-space:nowrap}
+.dm-rcl-t-et i{font-style:normal;font-size:13px;letter-spacing:0}
+.dm-rcl-t-et span{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .dm-rcl-tessera b{font-size:24px;font-weight:800;letter-spacing:-.5px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dm-rcl-tessera small{font-size:12px;font-weight:650;color:var(--rcl-dim)}
 .dm-rcl-tessera[data-ignoto]{background:var(--rcl-card);border-color:var(--rcl-line)}
@@ -1051,7 +1089,8 @@ html[data-theme="dark"] .dm-rcl-segno[data-dm-rcl-segno="dati"]{color:#facc15}
 @media (max-width:640px){
   .dm-rcl-barra-testa{padding:14px}
   .dm-rcl-impianti{flex:1 1 100%}
-  .dm-rcl-tessere{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .dm-rcl-tessere,.dm-rcl-tessere[data-quante="3"]{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .dm-rcl-tessere[data-quante="3"] .dm-rcl-tessera:first-child{grid-column:1/-1}
   .dm-rcl-tessera{padding:12px 14px}
   .dm-rcl-tessera b{font-size:20px}
   .dm-rcl-grafico-box{padding:14px 14px 10px}

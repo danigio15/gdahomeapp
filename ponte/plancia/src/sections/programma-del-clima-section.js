@@ -38,6 +38,7 @@ import {
   statoDelleAutomazioni,
 } from "./automazioni-section.js";
 import { climateUnits } from "./climate-thermal-section.js";
+import { canonicalClimateType } from "../core/device-model.js";
 import {
   allStates,
   chiamaServizio,
@@ -47,6 +48,7 @@ import {
   esc,
   installStyle,
   locale,
+  readClimateUnits,
   root,
   scriviSeCambia,
   senzaCadere,
@@ -288,13 +290,52 @@ export function fasciaNuova(giornata) {
   return { da, a: Math.min(1440, da + 120), gradi: GRADI_NUOVA };
 }
 
-/* Il colore di una fascia dai suoi gradi, nella palette del caldo della
- * finestra: dall'ambra chiara dei 16° all'arancio dei 23°. Prima si mescolava
- * l'arancio con l'azzurro, e in mezzo — dove stanno quasi tutte le fasce —
- * veniva un terracotta spento che non era di nessuna delle due. */
-export function coloreDeiGradi(gradi) {
+/* Il colore di una fascia dai suoi gradi, nella palette di chi la esegue.
+ *
+ * Per chi scalda l'ambra: dall'ambra chiara dei 16° all'arancio dei 23° —
+ * piu' caldo, piu' acceso. Per chi raffresca (un condizionatore) l'azzurro:
+ * dall'azzurro chiaro dei 28° al blu dei 21° — piu' freddo, piu' acceso.
+ * Prima si mescolava l'arancio con l'azzurro, e in mezzo — dove stanno quasi
+ * tutte le fasce — veniva un terracotta spento che non era di nessuna delle
+ * due; e un condizionatore aveva le fasce arancioni. */
+export function coloreDeiGradi(gradi, verso = "caldo") {
+  if (verso === "freddo") {
+    const p = Math.max(0, Math.min(1, (28 - Number(gradi)) / 7));
+    return `color-mix(in oklab, #0284c7 ${Math.round(p * 100)}%, #bae6fd)`;
+  }
   const p = Math.max(0, Math.min(1, (Number(gradi) - 16) / 7));
   return `color-mix(in oklab, #ea580c ${Math.round(p * 100)}%, #fcd34d)`;
+}
+
+/** Chi esegue il programma: un condizionatore o un'unita' messa a
+ * raffrescare e' «freddo», tutto il resto «caldo». */
+export function versoDelProgramma({ modo = "", tipo = "", zone = [] } = {}) {
+  const m = clean(modo).toLowerCase();
+  if (m === "cool") return "freddo";
+  if (m === "heat") return "caldo";
+  if (clean(tipo).toLowerCase() === "clima") return "freddo";
+  const zone_ = (zone || []).map((z) => clean(z));
+  if (zone_.length && zone_.every((z) => z === "freddo")) return "freddo";
+  return "caldo";
+}
+
+function versoDellUnita() {
+  const unita = climateUnits().filter((u) => u.entity === state.entita);
+  let modo = "";
+  try {
+    modo = clean(allStates()?.[state.entita]?.state);
+  } catch (_errore) {}
+  let grezza = null;
+  try {
+    grezza = readClimateUnits().find(
+      (u) => clean(u?.entity || u?.entity_id || u?.entities?.[0]) === state.entita,
+    );
+  } catch (_errore) {}
+  return versoDelProgramma({
+    modo,
+    tipo: canonicalClimateType(grezza?.type),
+    zone: unita.map((u) => u.zone),
+  });
 }
 
 export const oraDetta = (minuti) =>
@@ -365,12 +406,12 @@ function adessoSullaBarra() {
   return ora.getHours() * 60 + ora.getMinutes();
 }
 
-function barraMarkup(giornata, fuori) {
+function barraMarkup(giornata, fuori, verso = "caldo") {
   const pezzi = giornata
     .map((f) => {
       const largo = (f.a - f.da) / 1440;
       /* Il numero dentro solo se ci sta: una mezz'ora non tiene «20,5°». */
-      return `<i style="left:${(f.da / 1440) * 100}%;width:${largo * 100}%;--g:${coloreDeiGradi(f.gradi)}" title="${esc(`${oraDetta(f.da)}–${oraDetta(f.a)} · ${gradiDetti(f.gradi)}`)}">${largo >= 0.07 ? `<b>${esc(gradiDetti(f.gradi))}</b>` : ""}</i>`;
+      return `<i style="left:${(f.da / 1440) * 100}%;width:${largo * 100}%;--g:${coloreDeiGradi(f.gradi, verso)}" title="${esc(`${oraDetta(f.da)}–${oraDetta(f.a)} · ${gradiDetti(f.gradi)}`)}">${largo >= 0.07 ? `<b>${esc(gradiDetti(f.gradi))}</b>` : ""}</i>`;
     })
     .join("");
   const adesso = adessoSullaBarra();
@@ -381,7 +422,7 @@ function barraMarkup(giornata, fuori) {
   const ore = [0, 6, 12, 18, 24]
     .map((h) => `<span style="left:${(h / 24) * 100}%">${h}</span>`)
     .join("");
-  return `<div class="dm-prg-scala"><div class="dm-prg-barra" style="--fuori:${coloreDeiGradi(fuori)}">${pezzi}${segno}</div><div class="dm-prg-ore" aria-hidden="true">${ore}</div></div>`;
+  return `<div class="dm-prg-scala"><div class="dm-prg-barra" style="--fuori:${coloreDeiGradi(fuori, verso)}">${pezzi}${segno}</div><div class="dm-prg-ore" aria-hidden="true">${ore}</div></div>`;
 }
 
 function orarioMarkup(i, chi, valore, minimo, massimo) {
@@ -391,12 +432,12 @@ function orarioMarkup(i, chi, valore, minimo, massimo) {
   return `<select class="dm-prg-ora" data-dm-prg-ora="${i}:${chi}" aria-label="${esc(chi === "da" ? t("Dalle", "From") : t("Alle", "To"))}">${opzioni.join("")}</select>`;
 }
 
-function fasceMarkup(giornata) {
+function fasceMarkup(giornata, verso = "caldo") {
   if (!giornata.length)
     return `<p class="dm-prg-vuoto">${esc(t("Nessuna fascia: tutto il giorno vale la temperatura fuori dalle fasce.", "No slots: the outside-slot temperature applies all day."))}</p>`;
   return giornata
     .map(
-      (f, i) => `<div class="dm-prg-fascia" style="--g:${coloreDeiGradi(f.gradi)}">
+      (f, i) => `<div class="dm-prg-fascia" style="--g:${coloreDeiGradi(f.gradi, verso)}">
   <span class="dm-prg-orari">${orarioMarkup(i, "da", f.da, 0, 1410)}<span class="dm-prg-trattino" aria-hidden="true">–</span>${orarioMarkup(i, "a", f.a, 30, 1440)}</span>
   <span class="dm-prg-destra"><span class="dm-prg-gradi"><button type="button" data-dm-prg-gradi="${i}:-0.5" aria-label="−">−</button><b>${esc(gradiDetti(f.gradi))}</b><button type="button" data-dm-prg-gradi="${i}:0.5" aria-label="+">+</button></span>
   <button type="button" class="dm-prg-via" data-dm-prg-via="${i}" aria-label="${esc(t("Togli la fascia", "Remove the slot"))}" title="${esc(t("Togli la fascia", "Remove the slot"))}">${GLIFO_CESTINO}</button></span>
@@ -426,30 +467,37 @@ function statoDetto(voce, bozza) {
   if (casa().assente) return { testo: t("Serve l'add-on GdAHome", "Needs the GdAHome add-on"), tono: "spento" };
   if (!voce) return { testo: t("Non attivo", "Not active"), tono: "spento" };
   if (voce.attiva === false) return { testo: t("Sospeso", "Paused"), tono: "sospeso" };
-  const prossimo = prossimoDetto(bozza);
-  return {
-    testo: prossimo ? t(`Attivo · ${prossimo}`, `Active · ${prossimo}`) : t("Attivo", "Active"),
-    tono: "attivo",
-  };
+  /* La pastiglia dice solo «Attivo»: il prossimo cambio va sotto il titolo,
+   * su una riga sua — nella pastiglia, a 360, diventava «Attivo · dom…». */
+  return { testo: t("Attivo", "Active"), tono: "attivo", sotto: prossimoDetto(bozza) };
 }
 
 function testaMarkup(stato) {
-  return `<button type="button" class="dm-prg-testa" data-dm-prg-apri aria-expanded="${state.aperto}"><span class="dm-prg-ic" aria-hidden="true">${GLIFO_CALENDARIO}</span><span class="dm-prg-tit">${esc(t("Programma", "Schedule"))}</span><span class="dm-prg-stato" data-tono="${stato.tono}">${esc(stato.testo)}</span><span class="dm-prg-freccia" aria-hidden="true">${GLIFO_GIU}</span></button>`;
+  const sotto = clean(stato.sotto);
+  return `<button type="button" class="dm-prg-testa" data-dm-prg-apri aria-expanded="${state.aperto}"><span class="dm-prg-ic" aria-hidden="true">${GLIFO_CALENDARIO}</span><span class="dm-prg-tit"><span>${esc(t("Programma", "Schedule"))}</span>${sotto ? `<small data-dm-prg-prossimo>${esc(sotto)}</small>` : ""}</span><span class="dm-prg-stato" data-tono="${stato.tono}">${esc(stato.testo)}</span><span class="dm-prg-freccia" aria-hidden="true">${GLIFO_GIU}</span></button>`;
+}
+
+/* La bozza e' diversa da quello che Home Assistant esegue? Una bozza toccata
+ * e poi rimessa com'era non e' una modifica. */
+function bozzaDiversa(voce, bozza) {
+  if (!state.toccata || !bozza) return false;
+  if (!voce) return true;
+  const firma = (b) => JSON.stringify({ programma: b?.programma, fuori: b?.fuori });
+  return firma(bozza) !== firma(bozzaDalCrono(voce?.modello?.crono, state.entita));
 }
 
 export function programmaMarkup() {
   if (!casaHaRisposto()) {
     /* La lettura e' andata male (scadenza, filo caduto): lo si dice, con
-     * «Riprova» — e intanto si riprova da soli. */
+     * «Riprova» — e intanto si riprova da soli. Non e' un errore da
+     * allarmare: la pastiglia resta neutra, «Leggo…», e il perche' sta dentro,
+     * a programma aperto. Il rosso e' per quello che non si rimedia da solo
+     * (un salvataggio rifiutato). */
     const guasto = clean(casa().erroreLettura);
-    const testa = testaMarkup(
-      guasto
-        ? { testo: t("Non letto", "Not read"), tono: "errore" }
-        : { testo: t("Leggo…", "Reading…"), tono: "spento" },
-    );
+    const testa = testaMarkup({ testo: t("Leggo…", "Reading…"), tono: "spento" });
     if (!state.aperto) return testa;
     return guasto
-      ? `${testa}<div class="dm-prg-corpo"><p class="dm-prg-errore" role="alert">${esc(
+      ? `${testa}<div class="dm-prg-corpo"><p class="dm-prg-nota" role="status">${esc(
           t(
             `Non riesco a leggere il programma da Home Assistant (${guasto}). Riprovo da solo fra qualche secondo.`,
             `I can't read the schedule from Home Assistant (${guasto}). I'll try again in a few seconds.`,
@@ -498,6 +546,8 @@ export function programmaMarkup() {
   }
   const b = laBozza();
   const giornata = b.programma[state.giorno];
+  const verso = versoDellUnita();
+  const sporca = bozzaDiversa(voce, b) && !state.salvando && !state.avvisoChiusura;
   const sbloccato = premium() && !casa().assente;
   const testa = testaMarkup(statoDetto(voce, b));
   if (!state.aperto) return testa;
@@ -511,8 +561,8 @@ export function programmaMarkup() {
     )
     .join("")}</div>`;
   const corpo = `${giorni}
-${barraMarkup(giornata, b.fuori)}
-<div class="dm-prg-fasce">${fasceMarkup(giornata)}</div>
+${barraMarkup(giornata, b.fuori, verso)}
+<div class="dm-prg-fasce">${fasceMarkup(giornata, verso)}</div>
 <div class="dm-prg-azioni">${
     giornata.length < FASCE_DEL_PROGRAMMA && fasciaNuova(giornata)
       ? `<button type="button" class="dm-prg-pill dm-prg-aggiungi" data-dm-prg-aggiungi>${GLIFO_PIU}${esc(t("Aggiungi fascia", "Add slot"))}</button>`
@@ -543,6 +593,7 @@ ${
     ? `<p class="dm-prg-nota">${esc(t("Solo chi amministra Home Assistant può salvarlo.", "Only a Home Assistant administrator can save it."))}</p>`
     : ""
 }
+${sporca ? `<p class="dm-prg-sporca" role="status" data-dm-prg-sporca><i aria-hidden="true"></i>${esc(t("Modifiche non salvate", "Unsaved changes"))}</p>` : ""}
 <button type="button" class="dm-prg-salva" data-dm-prg-salva${state.salvando || (casa().ponte && !puoScrivere()) ? " disabled" : ""}>${esc(
     state.salvando
       ? t("Salvo…", "Saving…")
@@ -550,7 +601,7 @@ ${
         ? t("✓ Salvato in Home Assistant", "✓ Saved in Home Assistant")
         : t("Salva il programma", "Save the schedule"),
   )}</button>`;
-  if (sbloccato) return `${testa}<div class="dm-prg-corpo">${corpo}</div>`;
+  if (sbloccato) return `${testa}<div class="dm-prg-corpo" data-verso="${verso}">${corpo}</div>`;
   return `${testa}<div class="dm-prg-velato"><div class="dm-prg-corpo" aria-hidden="true" inert>${corpo}</div><div class="dm-prg-velo">${
     casa().assente
       ? `<p>${esc(t("Il programma lo esegue Home Assistant: serve l'add-on GdAHome.", "Home Assistant runs the schedule: it needs the GdAHome add-on."))}</p>`
@@ -888,9 +939,14 @@ const STILE = `
 #clima-popup-overlay.show{padding:var(--dm-clima-su) 10px var(--dm-clima-giu);overscroll-behavior:contain}
 #clima-popup-overlay .clima-popup{max-height:calc(100vh - 20px);max-height:calc(100dvh - var(--dm-clima-su) - var(--dm-clima-giu));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 /* Il Programma: una card della finestra come le altre, con la testa che dice
- * in una pastiglia se il programma lavora, la barra delle 24 ore con il segno
- * di adesso, le fasce in righe ariose e «Salva» ben visibile. I colori delle
- * fasce vengono dai loro gradi (dall'azzurro dei 16° all'arancio dei 23°). */
+ * in una pastiglia se il programma lavora (e sotto il titolo il prossimo
+ * cambio), la barra delle 24 ore con il segno di adesso, le fasce in righe
+ * ariose e «Salva» ben visibile. I colori delle fasce vengono dai loro gradi,
+ * nella palette di chi le esegue: l'ambra dei 16° fino all'arancio dei 23°
+ * per chi scalda, l'azzurro chiaro dei 28° fino al blu dei 21° per chi
+ * raffresca (coloreDeiGradi). Il fondo della barra e' un velo di quel
+ * colore sulla card — al buio un velo leggero, che resta del suo colore e non
+ * diventa marrone. Ogni tasto e ogni orario e' alto almeno 44 px. */
 .clima-popup .dm-prg{
   --prg-testo:var(--text,#0f172a);--prg-dim:var(--text-dim,#64748b);--prg-linea:var(--card-border,#e5eaf1);
   --prg-fondo:var(--card-bg,#fff);--prg-tenue:var(--surface-2,#f5f7fa);--prg-acc:#ea580c;
@@ -899,7 +955,9 @@ html[data-theme="dark"] .clima-popup .dm-prg{--prg-acc:#fb923c}
 .dm-prg-testa{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;width:100%;min-height:56px;padding:8px 14px;cursor:pointer;color:var(--prg-testo)}
 .dm-prg-testa:focus-visible{outline:2px solid var(--prg-acc);outline-offset:-2px;border-radius:22px}
 .dm-prg-ic{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border-radius:11px;background:var(--prg-fondo);border:1px solid var(--prg-linea);color:var(--prg-dim)}
-.dm-prg-tit{font-weight:800;font-size:15px}
+.dm-prg-tit{display:flex;flex-direction:column;min-width:0;font-weight:800;font-size:15px;line-height:1.2}
+.dm-prg-tit small{margin-top:2px;font-size:12px;font-weight:650;color:var(--prg-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dm-prg-stato{flex:none}
 .dm-prg-stato{margin-left:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:750;color:var(--prg-dim);background:color-mix(in srgb,var(--prg-dim) 12%,transparent)}
 .dm-prg-stato[data-tono="attivo"]{color:#15803d;background:rgba(34,197,94,.14)}
 .dm-prg-stato[data-tono="sospeso"]{color:#b45309;background:rgba(245,158,11,.16)}
@@ -916,6 +974,7 @@ html[data-theme="dark"] .dm-prg-stato[data-tono="errore"]{color:#f87171}
 .dm-prg-giorni button:focus-visible{outline:2px solid var(--prg-acc);outline-offset:1px}
 .dm-prg-scala{padding:2px 0 0}
 .dm-prg-barra{position:relative;height:40px;border-radius:12px;background:color-mix(in srgb,var(--fuori) 16%,var(--prg-fondo));box-shadow:inset 0 0 0 1px var(--prg-linea);overflow:hidden}
+html[data-theme="dark"] .dm-prg-barra{background:color-mix(in oklab,var(--fuori) 10%,var(--prg-fondo))}
 .dm-prg-barra i{position:absolute;top:4px;bottom:4px;margin-left:1px;border-radius:8px;background:var(--g);display:flex;align-items:center;justify-content:center;font-style:normal;box-shadow:inset 0 0 0 1px rgba(124,45,18,.12)}
 .dm-prg-barra i b{font-size:11.5px;font-weight:800;font-style:normal;color:#431407;white-space:nowrap;overflow:hidden;padding:0 4px;font-variant-numeric:tabular-nums}
 .dm-prg-adesso{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--prg-testo);opacity:.75;z-index:1}
@@ -933,13 +992,13 @@ html[data-theme="dark"] .dm-prg-stato[data-tono="errore"]{color:#f87171}
 .dm-prg-orari{display:flex;align-items:center;gap:4px;flex:1 0 auto}
 .dm-prg-trattino{flex:0 0 auto;margin:0 2px;color:var(--prg-dim)}
 .dm-prg-destra{display:flex;align-items:center;gap:4px;margin-left:auto}
-.dm-prg-ora{font:inherit;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;padding:0 4px;height:40px;width:74px;flex:0 0 74px;border-radius:11px;border:1px solid var(--prg-linea);background:var(--prg-tenue);color:var(--prg-testo);min-width:0;text-align:center}
+.dm-prg-ora{font:inherit;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;padding:0 4px;height:44px;width:74px;flex:0 0 74px;border-radius:11px;border:1px solid var(--prg-linea);background:var(--prg-tenue);color:var(--prg-testo);min-width:0;text-align:center}
 .dm-prg-ora:focus-visible{outline:2px solid var(--prg-acc);outline-offset:1px}
 .dm-prg-gradi{display:flex;align-items:center;gap:2px;padding:2px;border-radius:12px;background:var(--prg-tenue);border:1px solid var(--prg-linea)}
 .dm-prg-gradi b{min-width:46px;text-align:center;font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--prg-testo)}
-.dm-prg-gradi button,.dm-prg-via{all:unset;box-sizing:border-box;width:38px;height:36px;border-radius:10px;display:grid;place-items:center;cursor:pointer;font-weight:800;font-size:17px;color:var(--prg-testo)}
+.dm-prg-gradi button,.dm-prg-via{all:unset;box-sizing:border-box;width:44px;height:44px;border-radius:10px;display:grid;place-items:center;cursor:pointer;font-weight:800;font-size:17px;color:var(--prg-testo)}
 .dm-prg-gradi button:hover{background:var(--prg-fondo)}
-.dm-prg-via{width:40px;height:40px;color:var(--prg-dim)}
+.dm-prg-via{width:44px;height:44px;color:var(--prg-dim)}
 .dm-prg-via:hover{color:#dc2626;background:rgba(220,38,38,.08)}
 .dm-prg-gradi button:focus-visible,.dm-prg-via:focus-visible,.dm-prg-pill:focus-visible,.dm-prg-salva:focus-visible{outline:2px solid var(--prg-acc);outline-offset:2px}
 /* Dove la riga non tiene tutto (il telefono), la fascia si dispone su due
@@ -951,7 +1010,7 @@ html[data-theme="dark"] .dm-prg-stato[data-tono="errore"]{color:#f87171}
   .dm-prg-orari{grid-area:orari}
   .dm-prg-via{grid-area:via;justify-self:end}
   .dm-prg-fascia .dm-prg-gradi{grid-area:gradi;justify-content:space-between}
-  .dm-prg-fascia .dm-prg-gradi button{width:56px;height:38px}
+  .dm-prg-fascia .dm-prg-gradi button{width:56px;height:44px}
 }
 .dm-prg-azioni{display:flex;flex-wrap:wrap;gap:8px}
 .dm-prg-pill{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 14px;border-radius:14px;font-size:13px;font-weight:750;cursor:pointer;background:var(--prg-fondo);border:1px solid var(--prg-linea);color:var(--prg-testo)}
@@ -964,6 +1023,9 @@ html[data-theme="dark"] .dm-prg-stato[data-tono="errore"]{color:#f87171}
 .dm-prg-int i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .2s}
 .dm-prg-int[aria-checked="true"]{background:#22c55e}
 .dm-prg-int[aria-checked="true"] i{left:23px}
+.dm-prg-sporca{display:flex;align-items:center;gap:8px;margin:0;font-size:12.5px;font-weight:750;color:#b45309}
+.dm-prg-sporca i{width:8px;height:8px;border-radius:50%;background:#f59e0b}
+html[data-theme="dark"] .dm-prg-sporca{color:#fbbf24}
 .dm-prg-salva{all:unset;box-sizing:border-box;display:grid;place-items:center;min-height:50px;border-radius:16px;font-weight:800;font-size:15px;cursor:pointer;background:var(--prg-acc);color:#fff;box-shadow:0 8px 18px -10px color-mix(in srgb,var(--prg-acc) 90%,transparent)}
 html[data-theme="dark"] .dm-prg-salva{color:#1b0f06}
 .dm-prg-salva[disabled]{opacity:.5;cursor:default;box-shadow:none}

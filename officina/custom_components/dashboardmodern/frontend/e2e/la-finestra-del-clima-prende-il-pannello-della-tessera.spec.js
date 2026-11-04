@@ -86,9 +86,10 @@ test("nella finestra ci sono solo le modalita' dell'unita' aperta", async ({ pag
   await expect(page.locator("#cp-fan-section")).toBeHidden();
 
   // E in cima c'e' il nome scelto, non il pezzo dopo il punto dell'entita'.
-  // Sopra, piccolo, che macchina e': la stanza no, perche' il nome la dice gia'.
+  // Sopra, piccolo, sempre «Stanza · Tipo»: si toglie solo un pezzo che e'
+  // il nome stesso, non uno che il nome contiene.
   await expect(page.locator("#cp-name")).toHaveText("Pompa Salone");
-  await expect(page.locator("#cp-room")).toHaveText("Pompa di calore");
+  await expect(page.locator("#cp-room")).toHaveText("Salone · Pompa di calore");
 
   // I tasti comandano davvero: li ascolta il giro dei widget, sul documento.
   await page.evaluate(() => {

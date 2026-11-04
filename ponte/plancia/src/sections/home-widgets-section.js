@@ -1207,6 +1207,9 @@ function rigaClima(states, unit) {
      * «auto» fermo e' «in pausa», non spento — e il tasto lo spegne davvero. */
     acceso:
       Boolean(current) && raw !== "off" && raw !== "unavailable" && raw !== "unknown",
+    /* Un'unita' che Home Assistant non raggiunge non e' «spenta»: non si sa
+     * com'e', e nessun tasto le arriva. */
+    disponibile: Boolean(current) && raw !== "unavailable" && raw !== "unknown" && raw !== "",
     mode: raw,
     ambient: numero(attributi.current_temperature),
     /* Per chi ne ha due, quello che la modalita' rende vero — il basso in
@@ -1349,6 +1352,62 @@ function climateRow(entity) {
   } catch (_error) {
     return null;
   }
+}
+
+/**
+ * Un passo dell'obiettivo singolo, con la regola dell'unita': il suo passo
+ * (`target_temp_step`), la sua scala (`min_temp`/`max_temp`), e il numero
+ * riportato sul passo. Una pompa di calore a 45° col piu' va a 45,5 — non a
+ * 35, il tetto che il guscio scriveva per tutti.
+ *
+ * `base` e' il numero da cui si parte (quello sullo schermo, che puo' essere
+ * gia' avanti di qualche tocco); senza, quello di Home Assistant. Torna il
+ * nuovo numero, `null` a fine corsa, `undefined` se l'unita' non ha un
+ * obiettivo singolo da muovere.
+ */
+export function obiettivoSpostato(riga, verso, base) {
+  if (!riga || riga.obiettivi?.doppio) return undefined;
+  const scritto = base === null || base === undefined || base === "" ? NaN : Number(base);
+  const partenza = Number.isFinite(scritto) ? scritto : riga.target;
+  if (partenza === null || partenza === undefined || !Number.isFinite(Number(partenza))) return undefined;
+  const passo = Number(riga.passo) > 0 ? Number(riga.passo) : 0.5;
+  const minima = Number.isFinite(Number(riga.minima)) ? Number(riga.minima) : -Infinity;
+  const massima = Number.isFinite(Number(riga.massima)) ? Number(riga.massima) : Infinity;
+  const segno = Number(verso) < 0 ? -1 : 1;
+  const sulPasso = Math.round((Number(partenza) + segno * passo) / passo) * passo;
+  const voluta = Math.round(Math.min(massima, Math.max(minima, sulPasso)) * 100) / 100;
+  return voluta === Number(partenza) ? null : voluta;
+}
+
+/* L'ultimo numero mandato, finche' Home Assistant non lo conferma: senza, il
+ * giro di stati di un'altra entita' riscriveva il vecchio numero sotto il
+ * dito, e il tocco dopo ripartiva da li'. */
+const obiettiviInVolo = new Map();
+
+/** Il numero da scrivere per l'obiettivo singolo: quello appena chiesto, se
+ * Home Assistant non l'ha ancora preso, altrimenti il suo. */
+export function obiettivoDaMostrare(riga) {
+  if (!riga) return null;
+  /* Vale finche' Home Assistant dice ancora il numero di prima: appena ne
+   * dice un altro — il nostro, o quello di chi l'ha cambiato altrove — vale
+   * il suo. */
+  const volo = obiettiviInVolo.get(riga.entity);
+  if (volo && volo.fino > Date.now() && riga.target === volo.da) return volo.valore;
+  obiettiviInVolo.delete(riga.entity);
+  return riga.target ?? null;
+}
+
+/** Il passo, mandato: torna il numero chiesto, o `null`/`undefined` come
+ * `obiettivoSpostato` quando non parte niente. */
+export function passoDellObiettivo(entity, verso, base) {
+  const riga = climateRow(entity);
+  const voluta = obiettivoSpostato(riga, verso, base ?? obiettivoDaMostrare(riga));
+  if (voluta === null || voluta === undefined) return voluta;
+  const prima = obiettiviInVolo.get(riga.entity);
+  const da = prima && prima.fino > Date.now() && riga.target === prima.da ? prima.da : riga.target;
+  obiettiviInVolo.set(riga.entity, { valore: voluta, da, fino: Date.now() + 5000 });
+  callHa("climate", "set_temperature", { entity_id: riga.entity, temperature: voluta });
+  return voluta;
 }
 
 function coversModel(states) {
@@ -7875,6 +7934,17 @@ export const nomeDelPreset = parolaDa(NOMI_DEI_PRESET);
 export const nomeDellaVentola = parolaDa(NOMI_DELLE_VENTOLE);
 export const nomeDellAletta = parolaDa(NOMI_DELLE_ALETTE);
 
+/** Il nome di un modo fra quelli che l'unita' dichiara: «Caldo e freddo» non
+ * sta in un segmento da telefono, e se l'unita' non ha anche «auto» e' il suo
+ * automatico — si chiama «Auto». Con tutti e due resta il nome lungo, su due
+ * righe. */
+export function nomeDelModoFra(modo, modi = []) {
+  const m = clean(modo).toLowerCase();
+  if (m === "heat_cool" && !(modi || []).map((voce) => clean(voce).toLowerCase()).includes("auto"))
+    return t("Auto", "Auto");
+  return nomeDelModo(m);
+}
+
 /** Il tono (il colore) di un modo: caldo, freddo, spento, e gli altri. */
 export function tonoDelModo(modo, tipo = "") {
   const m = clean(modo).toLowerCase();
@@ -7890,28 +7960,47 @@ export function tonoDelModo(modo, tipo = "") {
   return tipo === "clima" ? "freddo" : tipo ? "caldo" : "auto";
 }
 
-/** Cosa sta facendo adesso: la parola e il tono della pastiglia in cima. */
+/** Cosa sta facendo adesso: la parola e il tono della pastiglia in cima.
+ *
+ * Una parola per cosa: «Scalda», «Raffresca», «In attesa», «Spento», «Non
+ * disponibile». Senza `hvac_action` non si inventa un'azione: si dice il modo,
+ * con lo stesso nome del segmentato — e la finestra la toglie, perche' il
+ * segmentato lo dice gia' (`ripete`). */
 export function statoDellaFinestra(riga) {
   const azione = clean(riga?.azione).toLowerCase();
   const modo = clean(riga?.mode).toLowerCase();
+  if (riga && riga.disponibile === false)
+    return { verso: "assente", tono: "spento", parola: t("Non disponibile", "Unavailable"), ripete: false };
   const acceso = Boolean(riga?.acceso || riga?.on);
-  if (!acceso || azione === "off") return { verso: "spento", tono: "spento", parola: t("Spento", "Off") };
+  const nelSegmentato = modiDelSegmentato(riga?.modi).includes(modo);
+  const comeIlModo = (verso, tono) => ({
+    verso,
+    tono,
+    parola: nomeDelModoFra(modo, riga?.modi),
+    ripete: nelSegmentato,
+  });
+  if (!acceso || azione === "off")
+    return {
+      verso: "spento",
+      tono: "spento",
+      parola: t("Spento", "Off"),
+      ripete: modo === "off" && nelSegmentato,
+    };
   const dalModo = tonoDelModo(modo, riga?.tipo);
-  if (azione === "heating") return { verso: "caldo", tono: "caldo", parola: t("Scalda", "Heating") };
-  if (azione === "cooling") return { verso: "freddo", tono: "freddo", parola: t("Raffresca", "Cooling") };
-  if (azione === "drying") return { verso: "secco", tono: "secco", parola: t("Deumidifica", "Drying") };
-  if (azione === "fan") return { verso: "ventola", tono: "ventola", parola: t("Ventila", "Fan") };
-  if (azione === "idle")
-    return { verso: "attesa", tono: dalModo, parola: t("In attesa", "Idle") };
-  /* Senza `hvac_action` si dice il modo, non un'azione che non si sa. */
-  if (modo === "heat") return { verso: "caldo", tono: "caldo", parola: t("Riscaldamento", "Heating") };
-  if (modo === "cool") return { verso: "freddo", tono: "freddo", parola: t("Raffrescamento", "Cooling") };
-  return { verso: "acceso", tono: dalModo, parola: nomeDelModo(modo) || t("Acceso", "On") };
+  if (azione === "heating") return { verso: "caldo", tono: "caldo", parola: t("Scalda", "Heating"), ripete: false };
+  if (azione === "cooling")
+    return { verso: "freddo", tono: "freddo", parola: t("Raffresca", "Cooling"), ripete: false };
+  if (azione === "idle") return { verso: "attesa", tono: dalModo, parola: t("In attesa", "Idle"), ripete: false };
+  if (azione === "drying") return comeIlModo("secco", "secco");
+  if (azione === "fan") return comeIlModo("ventola", "ventola");
+  return comeIlModo(modo === "heat" ? "caldo" : modo === "cool" ? "freddo" : "acceso", dalModo);
 }
 
 /** I bottoni di accensione del guscio: via se la modalita' Spento c'e' gia'
- * fra i segmenti, altrimenti uno solo — quello che serve adesso. */
+ * fra i segmenti — o se l'unita' non risponde —, altrimenti uno solo:
+ * quello che serve adesso. */
 export function potenzaDellaFinestra(riga) {
+  if (riga && riga.disponibile === false) return "via";
   const modi = riga?.modi || [];
   if (modi.includes("off") && modi.some((m) => m !== "off")) return "via";
   return riga?.acceso ? "spegni" : "accendi";
@@ -7956,13 +8045,25 @@ function chipsDellaFinestra(etichetta, voci, scelta, campo, nome, entity, prima 
     </div>`;
 }
 
+/* La misura e' «in stanza» solo se l'unita' scalda o raffresca una stanza:
+ * una pompa di calore, un boiler, l'acqua calda sanitaria misurano l'acqua
+ * («44,0° in stanza» era falso). Senza stanza, o con un nome cosi', si dice
+ * «attuale». */
+const NON_DI_UNA_STANZA =
+  /\b(pompa di calore|heat ?pump|boiler|acs|acqua calda|hot water|scaldabagno|scaldacqua|water heater|puffer|accumulo)\b/i;
+export function misuraDiStanza(riga) {
+  if (!clean(riga?.stanza)) return false;
+  if (/^water_heater\./.test(clean(riga?.entity))) return false;
+  return !NON_DI_UNA_STANZA.test(`${clean(riga?.name)} ${clean(riga?.entity).replace(/[._]/g, " ")}`);
+}
+
 /** La riga «adesso» in cima alla finestra: lo stato e le misure. */
 export function oraDellaFinestraMarkup(riga) {
   const stato = statoDellaFinestra(riga);
   const misure = [
     riga.ambient == null
       ? ""
-      : `<span class="dm-cpf-misura" data-dm-cpf-ambiente>${GLIFO_TERMOMETRO}<b>${esc(`${formatNumber(riga.ambient, 1)}°`)}</b><small>${esc(t("in stanza", "in the room"))}</small></span>`,
+      : `<span class="dm-cpf-misura" data-dm-cpf-ambiente>${GLIFO_TERMOMETRO}<b>${esc(`${formatNumber(riga.ambient, 1)}°`)}</b><small>${esc(misuraDiStanza(riga) ? t("in stanza", "in the room") : t("attuale", "current"))}</small></span>`,
     riga.umidita == null
       ? ""
       : `<span class="dm-cpf-misura" data-dm-cpf-umidita>${GLIFO_GOCCIA}<b>${esc(`${Math.round(riga.umidita)}%`)}</b><small>${esc(t("umidità", "humidity"))}</small></span>`,
@@ -7970,7 +8071,12 @@ export function oraDellaFinestraMarkup(riga) {
       ? ""
       : `<span class="dm-cpf-misura" data-dm-cpf-valvola>${GLIFO_VALVOLA}<b>${esc(typeof riga.valvola === "number" ? `${riga.valvola}%` : "—")}</b><small>${esc(t("valvola", "valve"))}</small></span>`,
   ].join("");
-  return `<span class="dm-cpf-stato" data-dm-cpf-verso="${stato.verso}" data-tono="${stato.tono}"><i aria-hidden="true"></i>${esc(stato.parola)}</span>${misure ? `<span class="dm-cpf-misure">${misure}</span>` : ""}`;
+  /* La pastiglia che ripete il segmento scelto («Spento» sopra «Spento») non
+   * si scrive: e' la stessa informazione due volte. */
+  const pastiglia = stato.ripete
+    ? ""
+    : `<span class="dm-cpf-stato" data-dm-cpf-verso="${stato.verso}" data-tono="${stato.tono}"><i aria-hidden="true"></i>${esc(stato.parola)}</span>`;
+  return `${pastiglia}${misure ? `<span class="dm-cpf-misure">${misure}</span>` : ""}`;
 }
 
 /* Quante colonne per i segmenti: tutti in fila fino a quattro, poi due righe
@@ -7982,11 +8088,22 @@ export function colonneDeiModi(quanti) {
 }
 
 /* Le modalita' che Home Assistant conosce stanno nel segmentato; quelle che
- * l'integrazione aggiunge di suo fra le `hvac_modes` («sleep», «eco»…) sono
- * preset nei fatti — una variante, non un modo di funzionare — e stanno con i
- * preset. Si comandano sempre col servizio delle modalita'. */
+ * l'integrazione aggiunge di suo fra le `hvac_modes` («sleep», «eco»…) stanno
+ * su una riga a parte, «Altre modalità»: non sono preset — si comandano col
+ * servizio delle modalita' — e messe fra i preset sembravano la stessa cosa. */
 export const modiDelSegmentato = (modi) => modiInOrdine(modi || []).filter((m) => ORDINE_DEI_MODI.includes(m));
-export const modiComePreset = (modi) => (modi || []).filter((m) => !ORDINE_DEI_MODI.includes(m));
+export const altriModi = (modi) => (modi || []).filter((m) => !ORDINE_DEI_MODI.includes(m));
+
+/* I preset da offrire: «none» non conta (un elenco con «none» e «boost» e' un
+ * preset, non due), e un preset che si chiamerebbe come una delle «Altre
+ * modalità» non si offre — due «Notte» con effetti diversi sono un
+ * indovinello. Chi ne ha uno solo vero ha comunque la riga. */
+export function presetDaOffrire(riga) {
+  const veri = (riga?.presets || []).filter((voce) => clean(voce).toLowerCase() !== "none");
+  if (!veri.length) return [];
+  const giaModi = new Set(altriModi(riga?.modi).map((modo) => nomeDelModo(modo).toLowerCase()));
+  return (riga.presets || []).filter((voce) => !giaModi.has(nomeDelPreset(voce).toLowerCase()));
+}
 
 function modiDellaFinestraMarkup(riga) {
   const modi = modiDelSegmentato(riga.modi);
@@ -7996,8 +8113,9 @@ function modiDellaFinestraMarkup(riga) {
     .map((modo) => {
       const tono = tonoDelModo(modo, riga.tipo);
       const scelto = modo === corrente;
+      const nome = nomeDelModoFra(modo, riga.modi);
       return `<button type="button" class="dm-cpf-modo" data-dm-w-mode="${esc(modo)}" data-dm-w-target="${esc(riga.entity)}"
-          data-on="${scelto}" aria-pressed="${scelto}" data-tono="${tono}">${glifoDelModo(tono)}<span>${esc(nomeDelModo(modo))}</span></button>`;
+          data-on="${scelto}" aria-pressed="${scelto}" data-tono="${tono}"${nome.length > 10 ? " data-lungo" : ""}>${glifoDelModo(tono)}<span>${esc(nome)}</span></button>`;
     })
     .join("");
   return `<div class="dm-w-panel-row dm-cpf-riga dm-cpf-riga-modi">
@@ -8020,52 +8138,109 @@ export function climaDellaFinestra(entity) {
     .map((voce) => rigaClima(allStates(), voce))
     .find((voce) => voce && voce.entity === chiave);
   if (!riga) return null;
-  /* Il preset «none» in un elenco di uno solo non e' una scelta. */
-  const presets = riga.presets.length > 1 ? riga.presets : [];
-  const pannello = [
-    riga.obiettivi?.doppio ? obiettiviDoppiMarkup(riga) : "",
-    modiDellaFinestraMarkup(riga),
-    chipsDellaFinestra(
-      t("Preset", "Preset"),
-      presets,
-      riga.preset,
-      "data-dm-w-preset",
-      nomeDelPreset,
-      riga.entity,
-      modiComePreset(riga.modi)
-        .map((modo) => chipDellaFinestra(modo, clean(riga.mode).toLowerCase(), "data-dm-w-mode", nomeDelModo, riga.entity))
-        .join(""),
-    ),
-    chipsDellaFinestra(t("Ventola", "Fan"), riga.ventole, riga.ventola, "data-dm-w-fan", nomeDellaVentola, riga.entity),
-    chipsDellaFinestra(
-      riga.alette?.length && riga.aletteOrizzontali?.length ? t("Alette verticali", "Vertical swing") : t("Alette", "Swing"),
-      riga.alette,
-      riga.aletta,
-      "data-dm-w-swing",
-      nomeDellAletta,
-      riga.entity,
-    ),
-    chipsDellaFinestra(
-      t("Alette orizzontali", "Horizontal swing"),
-      riga.aletteOrizzontali,
-      riga.alettaOrizzontale,
-      "data-dm-w-swing-h",
-      nomeDellAletta,
-      riga.entity,
-    ),
-  ].join("");
+  const disponibile = riga.disponibile !== false;
+  const corrente = clean(riga.mode).toLowerCase();
+  /* Un'unita' che non risponde non ha comandi: non si sa in che modo sia, e
+   * nessun tasto le arriva. */
+  const pannello = disponibile
+    ? [
+        modiDellaFinestraMarkup(riga),
+        chipsDellaFinestra(
+          t("Altre modalità", "Other modes"),
+          altriModi(riga.modi),
+          corrente,
+          "data-dm-w-mode",
+          nomeDelModo,
+          riga.entity,
+        ),
+        chipsDellaFinestra(
+          t("Preimpostazione", "Preset"),
+          presetDaOffrire(riga),
+          riga.preset,
+          "data-dm-w-preset",
+          nomeDelPreset,
+          riga.entity,
+        ),
+        chipsDellaFinestra(t("Ventola", "Fan"), riga.ventole, riga.ventola, "data-dm-w-fan", nomeDellaVentola, riga.entity),
+        chipsDellaFinestra(
+          riga.alette?.length && riga.aletteOrizzontali?.length
+            ? t("Alette verticali", "Vertical swing")
+            : t("Alette", "Swing"),
+          riga.alette,
+          riga.aletta,
+          "data-dm-w-swing",
+          nomeDellAletta,
+          riga.entity,
+        ),
+        chipsDellaFinestra(
+          t("Alette orizzontali", "Horizontal swing"),
+          riga.aletteOrizzontali,
+          riga.alettaOrizzontale,
+          "data-dm-w-swing-h",
+          nomeDellAletta,
+          riga.entity,
+        ),
+      ].join("")
+    : "";
   const stato = statoDellaFinestra(riga);
+  const doppio = disponibile && Boolean(riga.obiettivi?.doppio);
   return {
     riga,
     ora: oraDellaFinestraMarkup(riga),
     pannello: pannello
       ? `<div class="dm-w-panel dm-w-panel-solo dm-cpf" data-dm-w-panel="${esc(riga.entity)}">${pannello}</div>`
       : "",
-    tono: stato.verso === "spento" ? tonoDelModo(riga.modi?.find((m) => m !== "off") || "", riga.tipo) : stato.tono,
-    acceso: stato.verso !== "spento",
+    tono: ["spento", "assente"].includes(stato.verso)
+      ? tonoDelModo(riga.modi?.find((m) => m !== "off") || "", riga.tipo)
+      : stato.tono,
+    acceso: !["spento", "assente"].includes(stato.verso),
     potenza: potenzaDellaFinestra(riga),
+    disponibile,
+    /* L'obiettivo nella testata: la coppia coi suoi due meno e piu', il
+     * numero solo, o niente — una ventola o un deumidificatore senza
+     * `temperature` non hanno un numero da inseguire. */
+    obiettivo: !disponibile ? "nessuno" : doppio ? "doppio" : riga.target == null ? "nessuno" : "singolo",
+    gradi: doppio ? null : obiettivoDaMostrare(riga),
+    coppia: doppio ? coppiaDellaFinestraMarkup(riga) : "",
   };
 }
+
+/* I due obiettivi nella testata della finestra, ognuno col suo meno e il suo
+ * piu': prima stavano grandi in cima, «20.5° – 24.5°» col punto, e di nuovo
+ * sotto col loro passo — lo stesso numero due volte. Adesso stanno una volta
+ * sola, dove si toccano. */
+export function coppiaDellaFinestraMarkup(riga) {
+  return ["basso", "alto"]
+    .map((estremo) => {
+      const caldo = estremo === "basso";
+      const nome = caldo ? t("Minima (caldo)", "Minimum (heat)") : t("Massima (freddo)", "Maximum (cool)");
+      const breve = caldo ? t("Caldo", "Heating") : t("Freddo", "Cooling");
+      const valore = riga.obiettivi[estremo];
+      return `<div class="dm-cpf-estremo" data-dm-w-obiettivo="${estremo}" data-tono="${caldo ? "caldo" : "freddo"}">
+          <span class="dm-cpf-estremo-nome">${esc(nome)}</span>
+          <div class="dm-cpf-estremo-passo">
+            <button type="button" class="dm-cpf-passo" data-dm-w-temp="-1" data-dm-w-obj="${estremo}" data-dm-w-target="${esc(riga.entity)}"
+              aria-label="${esc(`${t("Abbassa", "Lower")} · ${breve}`)}">${GLIFO_MENO_PICCOLO}</button>
+            <b>${esc(gradiScritti(valore))}</b>
+            <button type="button" class="dm-cpf-passo" data-dm-w-temp="1" data-dm-w-obj="${estremo}" data-dm-w-target="${esc(riga.entity)}"
+              aria-label="${esc(`${t("Alza", "Raise")} · ${breve}`)}">${GLIFO_PIU_PICCOLO}</button>
+          </div>
+        </div>`;
+    })
+    .join("");
+}
+
+/** Un grado come lo si legge: «20°», «20,5°» — con la virgola della lingua. */
+export function gradiScritti(valore) {
+  const numero = Number(valore);
+  if (valore === null || valore === undefined || !Number.isFinite(numero)) return "--°";
+  return `${formatNumber(numero, Number.isInteger(numero) ? 0 : 1)}°`;
+}
+
+const GLIFO_MENO_PICCOLO =
+  '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg>';
+const GLIFO_PIU_PICCOLO =
+  '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M12 5v14"/></svg>';
 
 function climateDetail(widget) {
   /* Come le luci: niente verdetto, caselle e pillole sopra — l'elenco che si
@@ -11062,20 +11237,20 @@ function onClick(event) {
       if (dati) {
         const casella = gradi.parentElement?.querySelector?.("b");
         const nuovo = estremo === "basso" ? dati.target_temp_low : dati.target_temp_high;
-        if (casella) casella.textContent = `${formatNumber(nuovo, 1)}°`;
+        /* Come lo scrive chi l'ha disegnato: la testata «25°», la tessera «25,0°». */
+        if (casella)
+          casella.textContent = gradi.classList.contains("dm-cpf-passo") ? gradiScritti(nuovo) : `${formatNumber(nuovo, 1)}°`;
         callHa("climate", "set_temperature", { entity_id: entity, ...dati });
         root.setTimeout?.(schedule, 700);
       }
       return;
     }
-    if (riga && riga.target != null) {
-      const passo = (Number(gradi.dataset.dmWTemp) || 0) * (riga.passo || 0.5);
-      const voluta = Math.min(riga.massima, Math.max(riga.minima, riga.target + passo));
+    const voluta = passoDellObiettivo(entity, Number(gradi.dataset.dmWTemp) || 0);
+    if (voluta != null) {
       /* Il numero si aggiorna subito sotto il dito: la conferma vera arriva
        * col prossimo giro di stati. */
       const casella = gradi.parentElement?.querySelector?.("b");
       if (casella) casella.textContent = `${formatNumber(voluta, 1)}°`;
-      callHa("climate", "set_temperature", { entity_id: entity, temperature: voluta });
       root.setTimeout?.(schedule, 700);
     }
     return;
