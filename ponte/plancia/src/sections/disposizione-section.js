@@ -89,8 +89,13 @@ function eTestata(el) {
   return TESTATA.test(typeof el?.className === "string" ? el.className : "");
 }
 
+/* Un titolo: un'intestazione, o una riga bassa che fa da testa al gruppo
+ * che segue (la stanza sopra le sue luci). */
+const RIGA_DI_TESTA = /(^|[-_])(room|stanza|group|gruppo|head|header|testa|titolo|title)($|[-_])/i;
 function eTitolo(el) {
-  return Boolean(el?.matches?.(TITOLO));
+  if (el?.matches?.(TITOLO)) return true;
+  const classi = typeof el?.className === "string" ? el.className : "";
+  return RIGA_DI_TESTA.test(classi.split(/\s+/)[0] || "") && (el.getBoundingClientRect?.().height || 0) < 64;
 }
 
 /* Il titolo scritto di una voce: un'intestazione o un «titolo», mai un
@@ -107,7 +112,7 @@ function titoloDi(el) {
 
 function idDellElemento(el, titolo = "") {
   const attributi = [...(el.attributes || [])]
-    .filter((a) => !/^(style|class|aria-|data-dm-)/.test(a.name))
+    .filter((a) => !/^(style|class|aria-|data-dm-(disp|riordina|nascosto|misura|maniglia|tieni|presa|fa-posto))/.test(a.name))
     .map((a) => `${a.name}=${a.value}`)
     .join(" ");
   const dati = [...(el.attributes || [])]
@@ -225,7 +230,12 @@ export function elenchiDellaPagina(pagina) {
   if (!trovato) return fuori;
   const { contenitore, chiave } = trovato;
   fuori.push({ chiave, contenitore, riquadri: true });
-  for (const voce of vociDi(contenitore)) elenchiDentro(voce.el, `${chiave}:${voce.id}`, fuori);
+  for (const voce of vociDi(contenitore)) {
+    /* Un riquadro che e' gia' un elenco (la griglia delle luci di una
+     * stanza): i suoi figli si riordinano li'. */
+    if (eUnElenco(voce.el)) fuori.push({ chiave: `${chiave}:${voce.id}`, contenitore: voce.el, riquadri: false });
+    else elenchiDentro(voce.el, `${chiave}:${voce.id}`, fuori);
+  }
   /* Due elenchi con la stessa chiave nello stesso riquadro si distinguono. */
   const unici = idUnici(fuori.map((e) => e.chiave));
   fuori.forEach((e, i) => (e.chiave = unici[i]));
@@ -296,6 +306,7 @@ export function applicaLaDisposizione(pagina = paginaAttiva()) {
   const ce = inModifica || Object.keys(tutta).some((k) => k === nome || k.startsWith(`${nome}:`));
   if (!ce) return;
   state.occupato = true;
+  state.giri = (state.giri || 0) + 1;
   try {
     for (const elenco of elenchiDellaPagina(pagina)) {
       const scelta = inModifica && state.modifica.bozze.has(elenco.chiave)
@@ -363,6 +374,16 @@ function controlliMarkup(voce, elenco, scelta) {
     }`;
 }
 
+function togliISegni(el) {
+  for (const nome of ["data-dm-disp-voce", "data-dm-riordina-riga", "data-dm-maniglia", "data-dm-tieni"])
+    el.removeAttribute(nome);
+  if (el.hasAttribute("data-dm-disp-tab")) {
+    el.removeAttribute("data-dm-disp-tab");
+    el.removeAttribute("tabindex");
+    el.removeAttribute("aria-label");
+  }
+}
+
 function segnaPerLaModifica(pagina) {
   for (const vecchio of pagina.querySelectorAll("[data-dm-disp-ctrl]")) vecchio.remove();
   for (const el of pagina.querySelectorAll("[data-dm-disp-elenco]")) {
@@ -370,8 +391,7 @@ function segnaPerLaModifica(pagina) {
     el.removeAttribute("data-dm-riordina");
   }
   for (const el of pagina.querySelectorAll("[data-dm-disp-voce]")) {
-    for (const nome of ["data-dm-disp-voce", "data-dm-riordina-riga", "data-dm-maniglia", "data-dm-tieni"])
-      el.removeAttribute(nome);
+    togliISegni(el);
   }
   for (const elenco of elenchiDellaPagina(pagina)) {
     const voci = vociDi(elenco.contenitore);
@@ -385,6 +405,10 @@ function segnaPerLaModifica(pagina) {
       if (!elenco.riquadri) {
         voce.el.setAttribute("data-dm-maniglia", "");
         voce.el.setAttribute("data-dm-tieni", "");
+        /* Si prende anche dalla tastiera: Tab fin li', poi le frecce. */
+        if (!voce.el.hasAttribute("tabindex")) voce.el.setAttribute("data-dm-disp-tab", "");
+        voce.el.setAttribute("tabindex", "0");
+        voce.el.setAttribute("aria-label", t(`Sposta ${voce.nome}`, `Move ${voce.nome}`));
       }
       const ctrl = doc.createElement("div");
       ctrl.setAttribute("data-dm-disp-ctrl", elenco.riquadri ? "riquadro" : "voce");
@@ -449,9 +473,7 @@ export function esciDallaModifica() {
       el.removeAttribute("data-dm-disp-elenco");
       el.removeAttribute("data-dm-riordina");
     }
-    for (const el of m.pagina.querySelectorAll("[data-dm-disp-voce]"))
-      for (const nome of ["data-dm-disp-voce", "data-dm-riordina-riga", "data-dm-maniglia", "data-dm-tieni"])
-        el.removeAttribute(nome);
+    for (const el of m.pagina.querySelectorAll("[data-dm-disp-voce]")) togliISegni(el);
   } finally {
     state.osservatore?.takeRecords?.();
     state.occupato = false;
@@ -659,6 +681,7 @@ root.dmDisposizione = {
   entraInModifica: () => entraInModifica(),
   esciDallaModifica,
   applicaLaDisposizione: () => applicaLaDisposizione(),
+  giri: () => state.giri || 0,
   elenchi: () => elenchiDellaPagina(paginaAttiva()).map((e) => ({ chiave: e.chiave, voci: vociDi(e.contenitore).map((v) => v.id) })),
 };
 

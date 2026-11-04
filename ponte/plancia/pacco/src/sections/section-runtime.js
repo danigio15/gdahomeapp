@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-5UQUU7L7.js";
+} from "../../chunk-PS2YCZJC.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -156120,8 +156120,11 @@ var TESTATA = /(^|[-_\s])(page-)?mast($|[-_\s])|back-home-btn|sub-tabs/;
 function eTestata(el) {
   return TESTATA.test(typeof el?.className === "string" ? el.className : "");
 }
+var RIGA_DI_TESTA = /(^|[-_])(room|stanza|group|gruppo|head|header|testa|titolo|title)($|[-_])/i;
 function eTitolo(el) {
-  return Boolean(el?.matches?.(TITOLO3));
+  if (el?.matches?.(TITOLO3)) return true;
+  const classi = typeof el?.className === "string" ? el.className : "";
+  return RIGA_DI_TESTA.test(classi.split(/\s+/)[0] || "") && (el.getBoundingClientRect?.().height || 0) < 64;
 }
 function titoloDi2(el) {
   const testa2 = el.matches?.(TITOLO3) ? el : el.querySelector?.(`${TITOLO3},[class*='title'],[class*='titolo'],[class*='name'],[class*='nome'],summary`);
@@ -156129,7 +156132,7 @@ function titoloDi2(el) {
   return /[a-zà-ü]{3,}/i.test(testo5) ? testo5.replace(/[\d.,:%°]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 48) : "";
 }
 function idDellElemento(el, titolo3 = "") {
-  const attributi2 = [...el.attributes || []].filter((a) => !/^(style|class|aria-|data-dm-)/.test(a.name)).map((a) => `${a.name}=${a.value}`).join(" ");
+  const attributi2 = [...el.attributes || []].filter((a) => !/^(style|class|aria-|data-dm-(disp|riordina|nascosto|misura|maniglia|tieni|presa|fa-posto))/.test(a.name)).map((a) => `${a.name}=${a.value}`).join(" ");
   const dati = [...el.attributes || []].filter((a) => /^data-/.test(a.name) && DATI_CHE_NOMINANO.test(a.name.slice(5)) && !/^data-dm-disp/.test(a.name)).map((a) => a.value);
   return idDellaVoce({
     dichiarato: el.getAttribute?.("data-dm-blocco") || "",
@@ -156218,7 +156221,10 @@ function elenchiDellaPagina(pagina3) {
   if (!trovato) return fuori;
   const { contenitore: contenitore5, chiave: chiave2 } = trovato;
   fuori.push({ chiave: chiave2, contenitore: contenitore5, riquadri: true });
-  for (const voce3 of vociDi(contenitore5)) elenchiDentro(voce3.el, `${chiave2}:${voce3.id}`, fuori);
+  for (const voce3 of vociDi(contenitore5)) {
+    if (eUnElenco(voce3.el)) fuori.push({ chiave: `${chiave2}:${voce3.id}`, contenitore: voce3.el, riquadri: false });
+    else elenchiDentro(voce3.el, `${chiave2}:${voce3.id}`, fuori);
+  }
   const unici2 = idUnici(fuori.map((e) => e.chiave));
   fuori.forEach((e, i) => e.chiave = unici2[i]);
   return fuori;
@@ -156269,6 +156275,7 @@ function applicaLaDisposizione(pagina3 = paginaAttiva2()) {
   const ce = inModifica || Object.keys(tutta).some((k) => k === nome || k.startsWith(`${nome}:`));
   if (!ce) return;
   state177.occupato = true;
+  state177.giri = (state177.giri || 0) + 1;
   try {
     for (const elenco18 of elenchiDellaPagina(pagina3)) {
       const scelta3 = inModifica && state177.modifica.bozze.has(elenco18.chiave) ? state177.modifica.bozze.get(elenco18.chiave) : tutta[elenco18.chiave];
@@ -156319,6 +156326,15 @@ function controlliMarkup(voce3, elenco18, scelta3) {
       aria-pressed="${!nascosto}" aria-label="${esc(nascosto ? t(`Mostra ${voce3.nome}`, `Show ${voce3.nome}`) : t(`Nascondi ${voce3.nome}`, `Hide ${voce3.nome}`))}">${nascosto ? "🙈" : "👁"}</button>${griglia3 && elenco18.riquadri ? `<button type="button" class="dm-disp-larga" data-dm-non-trascinare data-dm-disp-larga aria-pressed="${larga}"
       aria-label="${esc(t(`Larghezza piena: ${voce3.nome}`, `Full width: ${voce3.nome}`))}">↔</button>` : ""}`;
 }
+function togliISegni(el) {
+  for (const nome of ["data-dm-disp-voce", "data-dm-riordina-riga", "data-dm-maniglia", "data-dm-tieni"])
+    el.removeAttribute(nome);
+  if (el.hasAttribute("data-dm-disp-tab")) {
+    el.removeAttribute("data-dm-disp-tab");
+    el.removeAttribute("tabindex");
+    el.removeAttribute("aria-label");
+  }
+}
 function segnaPerLaModifica(pagina3) {
   for (const vecchio of pagina3.querySelectorAll("[data-dm-disp-ctrl]")) vecchio.remove();
   for (const el of pagina3.querySelectorAll("[data-dm-disp-elenco]")) {
@@ -156326,8 +156342,7 @@ function segnaPerLaModifica(pagina3) {
     el.removeAttribute("data-dm-riordina");
   }
   for (const el of pagina3.querySelectorAll("[data-dm-disp-voce]")) {
-    for (const nome of ["data-dm-disp-voce", "data-dm-riordina-riga", "data-dm-maniglia", "data-dm-tieni"])
-      el.removeAttribute(nome);
+    togliISegni(el);
   }
   for (const elenco18 of elenchiDellaPagina(pagina3)) {
     const voci4 = vociDi(elenco18.contenitore);
@@ -156341,6 +156356,9 @@ function segnaPerLaModifica(pagina3) {
       if (!elenco18.riquadri) {
         voce3.el.setAttribute("data-dm-maniglia", "");
         voce3.el.setAttribute("data-dm-tieni", "");
+        if (!voce3.el.hasAttribute("tabindex")) voce3.el.setAttribute("data-dm-disp-tab", "");
+        voce3.el.setAttribute("tabindex", "0");
+        voce3.el.setAttribute("aria-label", t(`Sposta ${voce3.nome}`, `Move ${voce3.nome}`));
       }
       const ctrl = doc.createElement("div");
       ctrl.setAttribute("data-dm-disp-ctrl", elenco18.riquadri ? "riquadro" : "voce");
@@ -156397,9 +156415,7 @@ function esciDallaModifica() {
       el.removeAttribute("data-dm-disp-elenco");
       el.removeAttribute("data-dm-riordina");
     }
-    for (const el of m.pagina.querySelectorAll("[data-dm-disp-voce]"))
-      for (const nome of ["data-dm-disp-voce", "data-dm-riordina-riga", "data-dm-maniglia", "data-dm-tieni"])
-        el.removeAttribute(nome);
+    for (const el of m.pagina.querySelectorAll("[data-dm-disp-voce]")) togliISegni(el);
   } finally {
     state177.osservatore?.takeRecords?.();
     state177.occupato = false;
@@ -156578,6 +156594,7 @@ root.dmDisposizione = {
   entraInModifica: () => entraInModifica(),
   esciDallaModifica,
   applicaLaDisposizione: () => applicaLaDisposizione(),
+  giri: () => state177.giri || 0,
   elenchi: () => elenchiDellaPagina(paginaAttiva2()).map((e) => ({ chiave: e.chiave, voci: vociDi(e.contenitore).map((v) => v.id) }))
 };
 senzaCadere(installDisposizione);
