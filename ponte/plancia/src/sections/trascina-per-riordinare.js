@@ -59,6 +59,15 @@ export function scorrimentoAlBordo(y, alto, basso, bordo = BORDO, massimo = VELO
   return 0;
 }
 
+/** Di quanto e' rimpicciolita una griglia: la sua larghezza sulla pagina
+ * contro quella che ha per se'. 1 se non lo e'. */
+function scalaDi(lista, base = lista.getBoundingClientRect()) {
+  const propria = lista.offsetWidth;
+  if (!propria || !base.width) return 1;
+  const k = base.width / propria;
+  return Math.abs(k - 1) < 0.01 ? 1 : k;
+}
+
 function righe(lista) {
   return [...lista.children].filter((riga) => riga.hasAttribute?.("data-dm-riordina-riga"));
 }
@@ -99,9 +108,23 @@ function cadi(lista, da, a) {
 
 /* ── il trascinamento ─────────────────────────────────────────────────── */
 
+/* Una griglia (`data-dm-riordina="griglia"`) non e' un elenco: le voci stanno
+ * su piu' colonne, e «fare posto» spostando le altre in verticale non vuol
+ * dire niente. Li' la voce presa resta nella griglia come POSTO DI ARRIVO —
+ * il riquadro tratteggiato — e un fantasma uguale a lei segue il puntatore;
+ * il posto si sposta nella griglia mentre si trascina, e le altre voci
+ * scivolano al loro posto nuovo. */
+const eGriglia = (lista) => lista?.getAttribute?.("data-dm-riordina") === "griglia";
+
+/* Sul dito una voce intera che si trascina ruba lo scorrimento della pagina:
+ * con `data-dm-tieni` il trascinamento parte solo tenendo premuto un attimo,
+ * e un dito che scorre subito scorre la pagina come sempre. */
+const TIENI_MS = 280;
+
 function onPointerDown(event) {
   if (state.presa) return;
   if (event.pointerType === "mouse" && event.button !== 0) return;
+  if (event.target?.closest?.("[data-dm-non-trascinare]")) return;
   const maniglia = event.target?.closest?.("[data-dm-maniglia]");
   const riga = maniglia?.closest?.("[data-dm-riordina-riga]");
   const lista = riga?.parentElement;
@@ -109,28 +132,49 @@ function onPointerDown(event) {
   const tutte = righe(lista);
   const da = tutte.indexOf(riga);
   if (da < 0 || tutte.length < 2) return;
-  event.preventDefault();
-  try {
-    maniglia.setPointerCapture?.(event.pointerId);
-  } catch (_error) {}
+  const tieni = event.pointerType !== "mouse" && maniglia.hasAttribute("data-dm-tieni");
+  if (!tieni) event.preventDefault();
   const scroller = chiScorre(lista);
-  state.presa = {
+  const presa = {
     id: event.pointerId,
     maniglia,
     riga,
     lista,
     tutte,
+    griglia: eGriglia(lista),
     da,
     a: da,
+    x0: event.clientX,
     y0: event.clientY,
+    x: event.clientX,
     y: event.clientY,
     scroll0: scroller.scrollTop,
     scroller,
     partito: false,
+    tieni,
+    pronto: !tieni,
+    timer: 0,
     rect: tutte.map((r) => r.getBoundingClientRect()),
     passo: 0,
     giro: 0,
   };
+  state.presa = presa;
+  if (tieni) {
+    presa.timer = root.setTimeout?.(() => {
+      if (state.presa !== presa) return;
+      presa.pronto = true;
+      try {
+        maniglia.setPointerCapture?.(event.pointerId);
+      } catch (_error) {}
+      root.navigator?.vibrate?.(12);
+      parti(presa);
+      disegna(presa);
+    }, TIENI_MS);
+  } else {
+    try {
+      maniglia.setPointerCapture?.(event.pointerId);
+    } catch (_error) {}
+  }
 }
 
 function parti(presa) {
@@ -144,6 +188,34 @@ function parti(presa) {
   presa.riga.dataset.dmPresa = "true";
   for (const r of presa.tutte) if (r !== presa.riga) r.dataset.dmFaPosto = "true";
   doc.documentElement.dataset.dmTrascinando = "true";
+  if (presa.griglia) {
+    /* Il fantasma sta dentro la griglia, posato in assoluto: cosi' porta gli
+     * stessi stili della voce vera, qualunque sia il foglio che la veste. */
+    const base = presa.lista.getBoundingClientRect();
+    /* Una griglia rimpicciolita (l'anteprima «Telefono» su uno schermo
+     * stretto): le misure della pagina si riportano a quelle della griglia. */
+    const k = scalaDi(presa.lista, base);
+    presa.scala = k;
+    const r = rect[da];
+    const fantasma = presa.riga.cloneNode(true);
+    fantasma.removeAttribute("data-dm-riordina-riga");
+    fantasma.removeAttribute("data-dm-presa");
+    fantasma.removeAttribute("id");
+    fantasma.dataset.dmFantasma = "true";
+    fantasma.setAttribute("aria-hidden", "true");
+    Object.assign(fantasma.style, {
+      position: "absolute",
+      left: `${(r.left - base.left) / k + presa.lista.scrollLeft}px`,
+      top: `${(r.top - base.top) / k + presa.lista.scrollTop}px`,
+      width: `${r.width / k}px`,
+      height: `${r.height / k}px`,
+      margin: "0",
+      pointerEvents: "none",
+    });
+    presa.lista.append(fantasma);
+    presa.fantasma = fantasma;
+    presa.fantasma0 = { left: r.left - base.left, top: r.top - base.top };
+  }
   const scorri = () => {
     if (state.presa !== presa) return;
     const { alto, basso } = bordiDi(presa.scroller);
@@ -157,7 +229,65 @@ function parti(presa) {
   presa.giro = root.requestAnimationFrame?.(scorri) || 0;
 }
 
+/* Le voci si spostano scivolando: si misura dove stavano, si sposta il nodo,
+ * si misura dove stanno, e si parte dalla differenza (FLIP). */
+function scivola(voci, sposta) {
+  const prima = new Map(voci.map((v) => [v, v.getBoundingClientRect()]));
+  sposta();
+  for (const v of voci) {
+    const a = prima.get(v);
+    const b = v.getBoundingClientRect();
+    const dx = a.left - b.left;
+    const dy = a.top - b.top;
+    if (!dx && !dy) continue;
+    v.style.transition = "none";
+    v.style.transform = `translate(${dx}px,${dy}px)`;
+    void v.offsetWidth;
+    v.style.transition = "";
+    v.style.transform = "";
+  }
+}
+
+function disegnaGriglia(presa) {
+  const { lista, riga, fantasma } = presa;
+  const scorso = presa.scroller.scrollTop - presa.scroll0;
+  /* Il fantasma e' la voce sollevata: segue il puntatore, un filo piu' grande
+   * e appena girata, con l'ombra di una cosa tenuta in mano. */
+  const k = presa.scala || 1;
+  fantasma.style.transform = `translate(${(presa.x - presa.x0) / k}px,${(presa.y - presa.y0 + scorso) / k}px) rotate(-2deg) scale(1.05)`;
+  const voci = righe(lista);
+  /* Si guarda dove le voci STANNO, non dove si vedono: mentre scivolano verso
+   * il posto nuovo il loro disegno e' ancora a meta' strada, e chiedere a lui
+   * faceva rimbalzare il posto d'arrivo avanti e indietro. */
+  const base = lista.getBoundingClientRect();
+  const x = (presa.x - base.left) / k + lista.scrollLeft;
+  const y = (presa.y - base.top) / k + lista.scrollTop;
+  const sopra = voci.find(
+    (v) =>
+      v !== riga &&
+      x >= v.offsetLeft &&
+      x <= v.offsetLeft + v.offsetWidth &&
+      y >= v.offsetTop &&
+      y <= v.offsetTop + v.offsetHeight,
+  );
+  if (!sopra) return;
+  const qui = voci.indexOf(riga);
+  const la = voci.indexOf(sopra);
+  scivola(
+    voci.filter((v) => v !== riga),
+    () => {
+      if (qui < la) sopra.after(riga);
+      else sopra.before(riga);
+    },
+  );
+  presa.a = righe(lista).indexOf(riga);
+}
+
 function disegna(presa) {
+  if (presa.griglia) {
+    disegnaGriglia(presa);
+    return;
+  }
   const { rect, da, tutte, riga, passo } = presa;
   const scorso = presa.scroller.scrollTop - presa.scroll0;
   const dy = presa.y - presa.y0 + scorso;
@@ -182,19 +312,42 @@ function disegna(presa) {
 function onPointerMove(event) {
   const presa = state.presa;
   if (!presa || event.pointerId !== presa.id) return;
+  presa.x = event.clientX;
   presa.y = event.clientY;
   if (!presa.partito) {
-    if (Math.abs(presa.y - presa.y0) < SOGLIA) return;
+    const mosso = Math.hypot(presa.x - presa.x0, presa.y - presa.y0);
+    /* Prima che il dito abbia tenuto abbastanza, un movimento e' uno
+     * scorrimento: si lascia stare. */
+    if (!presa.pronto) {
+      if (mosso > 8) annullaLaPresa(presa);
+      return;
+    }
+    if (mosso < SOGLIA) return;
     parti(presa);
   }
   event.preventDefault();
   disegna(presa);
 }
 
-function rilascia(presa) {
+function annullaLaPresa(presa) {
+  root.clearTimeout?.(presa.timer);
+  state.presa = null;
+}
+
+function rilascia(presa, { rimetti = false } = {}) {
+  root.clearTimeout?.(presa.timer);
   root.cancelAnimationFrame?.(presa.giro);
-  for (const r of presa.tutte) {
+  if (presa.griglia && rimetti) {
+    /* Esc: la voce torna dov'era, senza scivolare. */
+    const voci = righe(presa.lista).filter((v) => v !== presa.riga);
+    const dopo = voci[presa.da];
+    if (dopo) dopo.before(presa.riga);
+    else presa.lista.append(presa.riga);
+  }
+  presa.fantasma?.remove();
+  for (const r of righe(presa.lista)) {
     r.style.transform = "";
+    r.style.transition = "";
     delete r.dataset.dmFaPosto;
     delete r.dataset.dmPresa;
   }
@@ -225,49 +378,70 @@ function onPointerUp(event) {
 function onPointerCancel(event) {
   const presa = state.presa;
   if (!presa || event.pointerId !== presa.id) return;
-  rilascia(presa);
+  rilascia(presa, { rimetti: true });
 }
+
+/* Mentre si trascina col dito la pagina non deve scorrere: il gesto e' gia'
+ * di qualcuno. */
+function onTouchMove(event) {
+  if (state.presa?.partito) event.preventDefault();
+}
+
+/* Sul dito, tenere premuto apre il menu del browser: durante la presa no. */
+function onContextMenu(event) {
+  if (state.presa) event.preventDefault();
+}
+
+const AVANTI = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 };
 
 function onKeyDown(event) {
   /* Esc durante il trascinamento: tutto torna com'era, niente si salva. */
   if (event.key === "Escape" && state.presa) {
     event.preventDefault();
     event.stopPropagation();
-    rilascia(state.presa);
+    rilascia(state.presa, { rimetti: true });
     return;
   }
-  /* Dalla tastiera: la maniglia con le frecce su e giu'. */
-  if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+  /* Dalla tastiera: la maniglia con le frecce (su e giu' in un elenco, anche
+   * destra e sinistra in una griglia). */
+  const verso = AVANTI[event.key];
+  if (!verso) return;
   const maniglia = event.target?.closest?.("[data-dm-maniglia]");
   const riga = maniglia?.closest?.("[data-dm-riordina-riga]");
   const lista = riga?.parentElement;
   if (!lista?.hasAttribute?.("data-dm-riordina")) return;
+  if (!eGriglia(lista) && (event.key === "ArrowLeft" || event.key === "ArrowRight")) return;
   const tutte = righe(lista);
   const da = tutte.indexOf(riga);
-  const a = event.key === "ArrowUp" ? da - 1 : da + 1;
+  const a = da + verso;
   if (da < 0 || a < 0 || a >= tutte.length) return;
   event.preventDefault();
+  event.stopPropagation();
   /* Dopo il ridisegno il fuoco torna sulla maniglia della stessa riga, cosi'
    * si puo' continuare a premere la freccia. */
   const chiave = riga.dataset.dmRiordinaRiga;
+  /* L'elenco si riconosce dalle sue classi: nella stessa scheda ce ne puo'
+   * essere piu' d'uno con le stesse voci — l'anteprima e l'elenco sotto — e il
+   * fuoco deve tornare in quello dove si stava premendo. */
+  const esc = (testo) => (root.CSS?.escape ? root.CSS.escape(testo) : testo);
+  const classi = [...lista.classList].map((c) => `.${esc(c)}`).join("");
   cadi(lista, da, a);
   annuncia(lista, `${a + 1} / ${tutte.length}`);
   root.queueMicrotask?.(() => {
-    const nuova = doc.querySelector?.(
-      `[data-dm-riordina] [data-dm-riordina-riga="${root.CSS?.escape ? root.CSS.escape(chiave) : chiave}"] [data-dm-maniglia]`,
-    );
-    nuova?.focus?.();
+    const nuova = doc.querySelector?.(`${classi}[data-dm-riordina] > [data-dm-riordina-riga="${esc(chiave)}"]`);
+    const fuoco = nuova?.matches?.("[data-dm-maniglia]") ? nuova : nuova?.querySelector?.("[data-dm-maniglia]");
+    fuoco?.focus?.();
   });
 }
 
 export const STILE_RIORDINA = `
-  [data-dm-maniglia]{
+  [data-dm-maniglia]:not([data-dm-riordina-riga]){
     flex:0 0 32px;width:32px;height:44px;margin:-6px 0 -6px -6px;padding:0;border:0;border-radius:10px;
     background:transparent;color:var(--text-dim,#94a3b8);font-size:18px;line-height:1;
     display:inline-flex;align-items:center;justify-content:center;cursor:grab;
     touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-  [data-dm-maniglia]:hover{color:var(--text,#0f172a);background:color-mix(in srgb,var(--text-dim,#94a3b8) 14%,transparent)}
-  [data-dm-maniglia]:focus-visible{outline:2px solid var(--accent,#3b82f6);outline-offset:1px}
+  [data-dm-maniglia]:not([data-dm-riordina-riga]):hover{color:var(--text,#0f172a);background:color-mix(in srgb,var(--text-dim,#94a3b8) 14%,transparent)}
+  [data-dm-maniglia]:not([data-dm-riordina-riga]):focus-visible{outline:2px solid var(--accent,#3b82f6);outline-offset:1px}
   [data-dm-riordina][data-dm-trascinando="true"]{user-select:none;-webkit-user-select:none}
   [data-dm-riordina] [data-dm-fa-posto="true"]{transition:transform .18s cubic-bezier(.2,.8,.2,1)}
   [data-dm-riordina] [data-dm-presa="true"]{
@@ -276,8 +450,22 @@ export const STILE_RIORDINA = `
     background:var(--card-bg,#fff)}
   [data-dm-riordina] [data-dm-presa="true"] [data-dm-maniglia]{cursor:grabbing;color:var(--accent,#3b82f6)}
   html[data-dm-trascinando="true"],html[data-dm-trascinando="true"] *{cursor:grabbing!important}
+  [data-dm-riordina="griglia"]{position:relative}
+  [data-dm-riordina="griglia"] [data-dm-riordina-riga]{transition:transform .2s cubic-bezier(.2,.8,.2,1)}
+  [data-dm-riordina="griglia"] [data-dm-presa="true"]{
+    box-shadow:none!important;border-radius:22px;
+    background:color-mix(in srgb,var(--accent,#3b82f6) 12%,transparent)!important;
+    outline:2px dashed var(--accent,#3b82f6);outline-offset:-2px}
+  [data-dm-riordina="griglia"] [data-dm-presa="true"]>*{opacity:0}
+  [data-dm-riordina="griglia"] [data-dm-fantasma="true"]{
+    z-index:20;opacity:.97;transition:none!important;cursor:grabbing;border-radius:22px;
+    filter:drop-shadow(0 22px 26px rgba(15,23,42,.35));
+    box-shadow:0 0 0 2px var(--accent,#3b82f6)!important}
+  [data-dm-riordina="griglia"] [data-dm-fantasma="true"]>:not(button){width:100%!important;height:100%!important;
+    max-width:none!important;margin:0!important;box-sizing:border-box;opacity:1!important}
+  [data-dm-tieni]{touch-action:pan-y;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
   .dm-riordina-voce{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-  @media (prefers-reduced-motion:reduce){[data-dm-riordina] [data-dm-fa-posto="true"]{transition:none}}
+  @media (prefers-reduced-motion:reduce){[data-dm-riordina] [data-dm-fa-posto="true"],[data-dm-riordina="griglia"] [data-dm-riordina-riga]{transition:none}}
 `;
 
 export function installTrascinaPerRiordinare() {
@@ -288,6 +476,8 @@ export function installTrascinaPerRiordinare() {
   doc.addEventListener("pointerup", onPointerUp);
   doc.addEventListener("pointercancel", onPointerCancel);
   doc.addEventListener("keydown", onKeyDown, true);
+  doc.addEventListener("touchmove", onTouchMove, { passive: false });
+  doc.addEventListener("contextmenu", onContextMenu);
 }
 
 senzaCadere(installTrascinaPerRiordinare);

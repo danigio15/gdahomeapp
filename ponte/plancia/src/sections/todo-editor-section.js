@@ -15,11 +15,17 @@ import { oggettoWidget } from "../core/oggetti-widget.js";
 import { TESSERE_A_SCOMPARSA } from "../core/tessere-a-scomparsa.js";
 import { normalizeAlertsEditor } from "./alerts-section.js";
 import { STILE_RIORDINA, spostaNellaLista } from "./trascina-per-riordinare.js";
+import {
+  anteprimaMarkup,
+  dimenticaLaBozza,
+  registraAnteprima,
+} from "./anteprima-modificabile-section.js";
 import { refreshFloodAlerts } from "./flood-alerts-section.js";
 import {
   EVIDENZA_CONFIG_KEY,
   WIDGETS_CONFIG_KEY,
   renderHomeWidgets,
+  tessereDellAnteprima,
   widgetPreferences,
 } from "./home-widgets-section.js";
 import {
@@ -202,6 +208,79 @@ function tessereOrdinate() {
   };
 }
 
+/* ── l'anteprima della Home (#379) ────────────────────────────────────── */
+
+/* Una tessera vera, ma ferma: in plancia e' un bottone che apre la sua
+ * finestra, nell'anteprima e' una cosa da prendere e spostare. */
+function tesseraFerma(html) {
+  return html
+    .replace(/^\s*<button type="button"/, '<div aria-hidden="true"')
+    .replace(/<\/button>\s*$/, "</div>");
+}
+
+registraAnteprima("home", {
+  titolo: () => t("Anteprima della Home", "Home preview"),
+  spiega: () =>
+    t(
+    "Le tessere come le vedi in Home, con i valori di adesso. Trascinale dove le vuoi (sul telefono tieni premuto un attimo), l'occhio le nasconde. La Home cambia quando premi Applica.",
+    "The tiles as you see them on Home, with current values. Drag them where you want (on a phone, press and hold a moment), the eye hides them. Home changes when you press Apply.",
+  ),
+  ambito: "dm-anteprima-home",
+  classeGriglia: "dm-widgets-grid",
+  /* La Home compatta (#224) si vede compatta anche qui, e la larghezza
+   * scelta in testa all'anteprima decide come: «Auto» stringe solo sul
+   * telefono, come in Home. */
+  attributiAmbito: (dispositivo) => {
+    const compatto = widgetPreferences().compatto;
+    const stretta = compatto === "sempre" || (compatto === "auto" && dispositivo === "telefono");
+    return stretta ? { "data-dm-compatto": "sempre" } : {};
+  },
+  leggi: () => {
+    const { hidden, rows } = tessereOrdinate();
+    return { ordine: rows.map(([key]) => key), nascoste: [...hidden] };
+  },
+  predefinito: () => ({
+    /* L'ordine di partenza: quello del catalogo, con l'assistenza in cima
+     * come in Home, e niente di nascosto. */
+    ordine: [...catalogoTessere()]
+      .map(([key]) => key)
+      .sort((a, b) => (a === "assistenza" ? -1 : b === "assistenza" ? 1 : 0)),
+    nascoste: [],
+  }),
+  voci: () => {
+    let vere = new Map();
+    try {
+      vere = tessereDellAnteprima();
+    } catch (_error) {}
+    /* Tutte le tessere che si possono ordinare: quelle che la Home ha adesso
+     * come sono, le altre — gli avvisi che si accendono da soli, le sezioni
+     * senza niente da dire — attenuate, col loro disegno e il perche' non si
+     * vedono. Anche loro si trascinano. */
+    return new Map(
+      catalogoTessere().map(([key, icon, label]) => {
+        const html = vere.get(key);
+        return [
+          key,
+          html
+            ? { nome: label, html: tesseraFerma(html) }
+            : {
+                nome: label,
+                segnaposto: true,
+                icona: oggettoWidget(key, icon, `ant-${key}`),
+                nota: t("Compare quando ha qualcosa da dire", "Shows up when it has something to say"),
+              },
+        ];
+      }),
+    );
+  },
+  salva: (bozza) => {
+    const perChiave = new Map(catalogoTessere().map((riga) => [riga[0], riga]));
+    const rows = bozza.ordine.map((key) => perChiave.get(key)).filter(Boolean);
+    salvaTessere(rows, new Set(bozza.nascoste));
+    ridisegna();
+  },
+});
+
 function salvaTessere(rows, hidden) {
   /* Si riscrivono ordine e visibilita' SENZA buttare il resto della chiave:
    * `cd_widgets` porta anche le esclusioni per entita' e la modalita' compatta,
@@ -321,6 +400,7 @@ function tessereMarkup() {
     "Scegli quali tessere vedere in Home e in che ordine. Le tessere degli avvisi — batterie, allagamenti e avvisi personalizzati — compaiono da sole solo quando hanno qualcosa da dire.",
     "Choose which tiles show on Home and in what order. The alert tiles — batteries, floods and custom alerts — only appear on their own when they have something to say.",
   )}</div>
+  ${anteprimaMarkup("home")}
   ${compattoMarkup()}
   ${avvisiInPopupMarkup()}
   <div class="ed-list dm-widget-pref-list" data-dm-riordina>${rows
@@ -599,6 +679,7 @@ function onRiordina(event) {
   const { da, a } = event.detail || {};
   const { hidden, rows } = tessereOrdinate();
   if (!Number.isInteger(da) || !Number.isInteger(a) || !rows[da]) return;
+  dimenticaLaBozza("home");
   salvaTessere(spostaNellaLista(rows, da, a), hidden);
   ridisegna();
 }
@@ -652,6 +733,7 @@ function onClick(event) {
     } else {
       return;
     }
+    dimenticaLaBozza("home");
     salvaTessere(rows, hidden);
     ridisegna();
     return;
@@ -820,6 +902,9 @@ function installStyles() {
       #ed-body .dm-widget-pref-icon{font-size:17px;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex:0 0 24px}
       #ed-body .dm-widget-pref-icon .dm-oggetto{width:24px;height:24px;display:block}
       #ed-body .dm-widget-move[disabled]{opacity:.3;pointer-events:none}
+      /* L'anteprima della Home «come sul telefono»: due colonne, come la Home
+         vera sotto i 520 pixel, anche quando la si guarda dal computer. */
+      #dm-anteprima-home[data-dispositivo="telefono"] .dm-widgets-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
       ${STILE_RIORDINA}
       #ed-body .dm-widget-shown{
         flex:0 0 40px;width:40px;height:23px;position:relative;border:0;border-radius:999px;cursor:pointer;

@@ -35,12 +35,16 @@ async function apriLeTessere(page) {
     } catch (_errore) {}
   });
   await expect
-    .poll(() => page.locator("#ed-body .dm-widget-pref [data-dm-maniglia]").count(), { timeout: 20_000 })
+    .poll(() => page.locator("#ed-body .dm-widget-pref [data-dm-maniglia]").count(), {
+      timeout: 20_000,
+    })
     .toBeGreaterThan(4);
 }
 
 const ordine = (page) =>
-  page.evaluate(() => [...document.querySelectorAll("#ed-body .dm-widget-pref")].map((r) => r.dataset.widgetKey));
+  page.evaluate(() =>
+    [...document.querySelectorAll("#ed-body .dm-widget-pref")].map((r) => r.dataset.widgetKey),
+  );
 
 /* L'ordine salvato, letto dalla memoria della plancia e non dal disegno. */
 const ordineSalvato = (page) =>
@@ -61,6 +65,9 @@ async function prepara(page, testInfo) {
 }
 
 async function centroDi(page, selettore) {
+  /* Sopra l'elenco c'e' l'anteprima della Home: l'elenco puo' stare sotto il
+   * bordo della finestra, e lo si porta in vista prima di misurarlo. */
+  await page.locator(selettore).scrollIntoViewIfNeeded();
   const box = await page.locator(selettore).boundingBox();
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
@@ -71,7 +78,10 @@ test("col mouse: la quarta tessera presa dalla maniglia va in cima, e l'ordine r
   await prepara(page, testInfo);
   const prima = await ordine(page);
   const presa = prima[3];
-  const da = await centroDi(page, `#ed-body .dm-widget-pref[data-widget-key="${presa}"] [data-dm-maniglia]`);
+  const da = await centroDi(
+    page,
+    `#ed-body .dm-widget-pref[data-widget-key="${presa}"] [data-dm-maniglia]`,
+  );
   const cima = await centroDi(page, `#ed-body .dm-widget-pref[data-widget-key="${prima[0]}"]`);
 
   await page.mouse.move(da.x, da.y);
@@ -79,14 +89,13 @@ test("col mouse: la quarta tessera presa dalla maniglia va in cima, e l'ordine r
   await page.mouse.move(da.x, da.y - 10, { steps: 3 });
   await page.mouse.move(da.x, cima.y - 20, { steps: 12 });
   /* Durante il trascinamento la riga presa si vede presa, e le altre fanno posto. */
-  await expect(page.locator(`#ed-body .dm-widget-pref[data-widget-key="${presa}"]`)).toHaveAttribute(
-    "data-dm-presa",
-    "true",
-  );
+  await expect(
+    page.locator(`#ed-body .dm-widget-pref[data-widget-key="${presa}"]`),
+  ).toHaveAttribute("data-dm-presa", "true");
   const spostate = await page.evaluate(
     () =>
-      [...document.querySelectorAll('#ed-body .dm-widget-pref[data-dm-fa-posto="true"]')].filter((r) =>
-        /translateY\(\d/.test(r.style.transform),
+      [...document.querySelectorAll('#ed-body .dm-widget-pref[data-dm-fa-posto="true"]')].filter(
+        (r) => /translateY\(\d/.test(r.style.transform),
       ).length,
   );
   expect(spostate).toBe(3);
@@ -106,7 +115,10 @@ test("col dito: la prima tessera trascinata giu' di due posti", async ({ page },
   await prepara(page, testInfo);
   const prima = await ordine(page);
   const presa = prima[0];
-  const da = await centroDi(page, `#ed-body .dm-widget-pref[data-widget-key="${presa}"] [data-dm-maniglia]`);
+  const da = await centroDi(
+    page,
+    `#ed-body .dm-widget-pref[data-widget-key="${presa}"] [data-dm-maniglia]`,
+  );
   const terza = await centroDi(page, `#ed-body .dm-widget-pref[data-widget-key="${prima[2]}"]`);
 
   /* Il dito vero di Chromium: i Touch del protocollo diventano Pointer Events
@@ -127,11 +139,16 @@ test("col dito: la prima tessera trascinata giu' di due posti", async ({ page },
   expect(await ordineSalvato(page)).toEqual(atteso);
 });
 
-test("Esc durante il trascinamento rimette tutto com'era, e non salva", async ({ page }, testInfo) => {
+test("Esc durante il trascinamento rimette tutto com'era, e non salva", async ({
+  page,
+}, testInfo) => {
   await prepara(page, testInfo);
   const prima = await ordine(page);
   const salvatoPrima = await ordineSalvato(page);
-  const da = await centroDi(page, `#ed-body .dm-widget-pref[data-widget-key="${prima[4]}"] [data-dm-maniglia]`);
+  const da = await centroDi(
+    page,
+    `#ed-body .dm-widget-pref[data-widget-key="${prima[4]}"] [data-dm-maniglia]`,
+  );
   await page.mouse.move(da.x, da.y);
   await page.mouse.down();
   await page.mouse.move(da.x, da.y - 120, { steps: 10 });
@@ -140,7 +157,9 @@ test("Esc durante il trascinamento rimette tutto com'era, e non salva", async ({
   expect(await ordine(page)).toEqual(prima);
   expect(await ordineSalvato(page)).toEqual(salvatoPrima);
   const trasformate = await page.evaluate(
-    () => [...document.querySelectorAll("#ed-body .dm-widget-pref")].filter((r) => r.style.transform).length,
+    () =>
+      [...document.querySelectorAll("#ed-body .dm-widget-pref")].filter((r) => r.style.transform)
+        .length,
   );
   expect(trasformate).toBe(0);
   /* E la configurazione resta aperta: Esc ha annullato il trascinamento, non
@@ -153,7 +172,9 @@ test("dalla tastiera: la maniglia scende con la freccia giu' e resta col fuoco",
 }, testInfo) => {
   await prepara(page, testInfo);
   const prima = await ordine(page);
-  await page.locator(`#ed-body .dm-widget-pref[data-widget-key="${prima[1]}"] [data-dm-maniglia]`).focus();
+  await page
+    .locator(`#ed-body .dm-widget-pref[data-widget-key="${prima[1]}"] [data-dm-maniglia]`)
+    .focus();
   await page.keyboard.press("ArrowDown");
   await expect.poll(() => ordine(page)).toEqual([prima[0], prima[2], prima[1], ...prima.slice(3)]);
   await page.keyboard.press("ArrowDown");

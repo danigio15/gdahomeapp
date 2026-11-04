@@ -5931,24 +5931,41 @@ export function widgetIncludes(entity, excluded = widgetExcludedEntities()) {
   return !id || !excluded.has(id);
 }
 
+/** Sotto quale voce della scheda Widget sta una tessera: e' la chiave con cui
+ * si ordina e si nasconde. Le tessere energia degli altri impianti (#286)
+ * seguono la posizione di «Energia»: prima solo la prima la seguiva e le
+ * altre restavano in coda. */
+export function chiaveDellaPreferenza(widget) {
+  return widget.key.startsWith("custom-")
+    ? "custom"
+    : widget.key.startsWith("evidenza-")
+      ? "evidenza"
+      : /* Le sezioni che si fa l'utente si spostano e si spengono insieme,
+         * sotto la voce unica «Sezioni mie»: sono tante quante uno se ne fa,
+         * e una riga a testa nel catalogo lo riempirebbe di voci che
+         * cambiano da una casa all'altra. */
+        eUnaSezioneMia(widget.key)
+        ? "mie"
+        : famigliaDellaTessera(widget.key);
+}
+
+/** Le tessere vere, disegnate con lo stato di adesso, per l'anteprima della
+ * Home nella scheda Widget (#379): una per voce, la prima, anche quelle che
+ * la scelta salvata nasconde — nell'anteprima si accendono e si spengono. */
+export function tessereDellAnteprima() {
+  const tessere = new Map();
+  modelliDelleTessere(allStates()).forEach((widget, index) => {
+    const chiave = chiaveDellaPreferenza(widget);
+    if (!tessere.has(chiave)) tessere.set(chiave, tileMarkup(widget, index));
+  });
+  return tessere;
+}
+
 /** L'ordine scelto prima, poi quello naturale; le tessere nascoste non escono.
  * Gli avvisi personalizzati si governano insieme, sotto la chiave `custom`. */
 export function applyWidgetPreferences(models, preferences = widgetPreferences()) {
   const hidden = new Set(preferences.hidden);
-  /* Le tessere energia degli altri impianti (#286) seguono la posizione di
-   * «Energia»: prima solo la prima la seguiva e le altre restavano in coda. */
-  const chiave = (widget) =>
-    widget.key.startsWith("custom-")
-      ? "custom"
-      : widget.key.startsWith("evidenza-")
-        ? "evidenza"
-        : /* Le sezioni che si fa l'utente si spostano e si spengono insieme,
-           * sotto la voce unica «Sezioni mie»: sono tante quante uno se ne fa,
-           * e una riga a testa nel catalogo lo riempirebbe di voci che
-           * cambiano da una casa all'altra. */
-          eUnaSezioneMia(widget.key)
-          ? "mie"
-          : famigliaDellaTessera(widget.key);
+  const chiave = chiaveDellaPreferenza;
   const rank = (widget) => {
     const nome = chiave(widget);
     const index = preferences.order.indexOf(nome);

@@ -1652,8 +1652,11 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // da se', trovati sul suo dispositivo per le ore dei mesi passati.
   // 532 con `sections/trascina-per-riordinare.js`: le righe che si spostano
   // trascinandole dalla maniglia, col mouse e col dito (#379).
+  // 534 con l'anteprima modificabile del Config (#379): `core/anteprima-
+  // modificabile.js` (la bozza) e `sections/anteprima-modificabile-section.js`
+  // (il riquadro con le voci vere, Salva, Annulla e Ripristina).
   assert.ok(
-    relative.length <= 532,
+    relative.length <= 534,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

@@ -8,7 +8,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { doveCade, scorrimentoAlBordo, spostaNellaLista } from "../src/sections/trascina-per-riordinare.js";
+import {
+  doveCade,
+  scorrimentoAlBordo,
+  spostaNellaLista,
+} from "../src/sections/trascina-per-riordinare.js";
 
 /* Cinque righe alte 40 con 8 di spazio: centri a 20, 68, 116, 164, 212. */
 const centri = [20, 68, 116, 164, 212];
@@ -32,8 +36,16 @@ test("l'elenco: la riga presa va nel posto nuovo, le altre scorrono", () => {
   assert.deepEqual(spostaNellaLista(lista, 4, 0), ["energia", "meteo", "luci", "clima", "auto"]);
   assert.deepEqual(spostaNellaLista(lista, 0, 2), ["luci", "clima", "meteo", "auto", "energia"]);
   assert.deepEqual(spostaNellaLista(lista, 1, 1), lista);
-  assert.deepEqual(spostaNellaLista(lista, 9, 0), lista, "un indice che non c'e' non cambia niente");
-  assert.deepEqual(lista, ["meteo", "luci", "clima", "auto", "energia"], "l'originale non si tocca");
+  assert.deepEqual(
+    spostaNellaLista(lista, 9, 0),
+    lista,
+    "un indice che non c'e' non cambia niente",
+  );
+  assert.deepEqual(
+    lista,
+    ["meteo", "luci", "clima", "auto", "energia"],
+    "l'originale non si tocca",
+  );
 });
 
 test("vicino ai bordi l'elenco scorre, piu' in fretta quanto piu' ci si avvicina", () => {
@@ -42,4 +54,63 @@ test("vicino ai bordi l'elenco scorre, piu' in fretta quanto piu' ci si avvicina
   assert.ok(scorrimentoAlBordo(570, 0, 600) > 0, "in basso scende");
   assert.ok(Math.abs(scorrimentoAlBordo(2, 0, 600)) > Math.abs(scorrimentoAlBordo(40, 0, 600)));
   assert.equal(scorrimentoAlBordo(-100, 0, 600), -14, "oltre il bordo non supera il massimo");
+});
+
+/* ── l'anteprima modificabile: la bozza ── */
+import {
+  alternaNellaBozza,
+  bozzaCambiata,
+  bozzaDa,
+  bozzaRiallineata,
+  spostaFraLeVisibili,
+} from "../src/core/anteprima-modificabile.js";
+
+test("la bozza nasce dalla scelta salvata, pulita", () => {
+  assert.deepEqual(
+    bozzaDa({ ordine: ["luci", "clima", "luci", ""], nascoste: ["clima", "fantasma"] }),
+    {
+      ordine: ["luci", "clima"],
+      nascoste: ["clima"],
+    },
+  );
+});
+
+test("spostando fra le sole tessere visibili, quelle che non si vedono tengono il posto", () => {
+  /* In Home si vedono luci, meteo, energia; «allagamenti» c'e' nell'ordine
+   * ma adesso non ha niente da dire. Energia portata in cima alle visibili
+   * va davanti a luci, e allagamenti resta fra meteo ed energia. */
+  const bozza = bozzaDa({ ordine: ["luci", "meteo", "allagamenti", "energia"] });
+  const visibili = ["luci", "meteo", "energia"];
+  assert.deepEqual(spostaFraLeVisibili(bozza, visibili, 2, 0).ordine, [
+    "energia",
+    "luci",
+    "meteo",
+    "allagamenti",
+  ]);
+  assert.deepEqual(spostaFraLeVisibili(bozza, visibili, 0, 1).ordine, [
+    "meteo",
+    "luci",
+    "allagamenti",
+    "energia",
+  ]);
+});
+
+test("l'occhio accende e spegne, e la bozza sa quando e' diversa dalla salvata", () => {
+  const salvata = { ordine: ["luci", "meteo"], nascoste: [] };
+  let bozza = bozzaDa(salvata);
+  assert.equal(bozzaCambiata(bozza, salvata), false);
+  bozza = alternaNellaBozza(bozza, "meteo");
+  assert.deepEqual(bozza.nascoste, ["meteo"]);
+  assert.equal(bozzaCambiata(bozza, salvata), true);
+  bozza = alternaNellaBozza(bozza, "meteo");
+  assert.equal(bozzaCambiata(bozza, salvata), false, "riaccesa, e' di nuovo uguale");
+  assert.equal(bozzaCambiata(null, salvata), false, "senza bozza non c'e' niente da salvare");
+});
+
+test("una voce nata mentre la bozza era in mano entra al suo posto, una sparita esce", () => {
+  const bozza = { ordine: ["meteo", "luci", "vecchia"], nascoste: ["vecchia"] };
+  assert.deepEqual(bozzaRiallineata(bozza, { ordine: ["luci", "nuova", "meteo"] }), {
+    ordine: ["meteo", "nuova", "luci"],
+    nascoste: [],
+  });
 });

@@ -17,6 +17,7 @@
  * impaginazione.
  */
 import { oggettoWidget } from "../core/oggetti-widget.js";
+import { anteprimaMarkup, dimenticaLaBozza, registraAnteprima } from "./anteprima-modificabile-section.js";
 import { spostaNellElenco } from "../core/ordine-a-mano.js";
 import {
   BLOCCHI_DELLA_HOME,
@@ -321,6 +322,67 @@ const OGGETTO_DEL_BLOCCO = Object.freeze({
 const disegnoDelBlocco = (nome) =>
   oggettoWidget(OGGETTO_DEL_BLOCCO[nome] || nome, "", `blocco-${nome}`);
 
+/* ── l'anteprima dei blocchi (#379) ───────────────────────────────────
+ *
+ * La Home in piccolo: un riquadro per blocco, nell'ordine in cui si vedono,
+ * da trascinare dove si vuole. I blocchi veri sono pagine intere — le persone
+ * con le loro foto, le tessere, la griglia dei dispositivi — e rifarli qui in
+ * miniatura vorrebbe dire rifare la Home: l'anteprima ne mostra la sagoma,
+ * col disegno e il nome di ognuno, e l'altezza che hanno in pagina. */
+const ALTEZZA_DEL_BLOCCO = Object.freeze({
+  intestazione: 1,
+  meteo: 2,
+  persone: 2,
+  widget: 3,
+  azioni: 2,
+  stanze: 3,
+  dispositivi: 3,
+});
+
+function bloccoInMiniatura(nome, etichetta) {
+  const righe = ALTEZZA_DEL_BLOCCO[nome] || 2;
+  return `<div class="dm-blocco-mini" data-righe="${righe}">
+    <span class="dm-blocco-mini-icona" aria-hidden="true">${disegnoDelBlocco(nome)}</span>
+    <span class="dm-blocco-mini-testo"><b>${esc(etichetta)}</b>${Array.from(
+      { length: righe },
+      () => '<i aria-hidden="true"></i>',
+    ).join("")}</span>
+  </div>`;
+}
+
+registraAnteprima("home-blocchi", {
+  titolo: () => t("Anteprima: i blocchi della Home", "Preview: the Home blocks"),
+  spiega: () =>
+    t(
+      "Dall'alto in basso, come li vedi in Home. Trascina un blocco dove lo vuoi (sul telefono tieni premuto un attimo) e premi Applica.",
+      "Top to bottom, as you see them on Home. Drag a block where you want it (on a phone, press and hold a moment) and press Apply.",
+    ),
+  classeGriglia: "dm-blocchi-mini",
+  siNasconde: false,
+  leggi: () => ({ ordine: ordineSalvato(), nascoste: [] }),
+  predefinito: () => ({ ordine: ordineDeiBlocchi(null), nascoste: [] }),
+  voci: () => {
+    const nomi = NOMI_DEI_BLOCCHI();
+    return new Map(
+      ordineSalvato().map((nome) => [
+        nome,
+        { nome: nomi[nome] || nome, html: bloccoInMiniatura(nome, nomi[nome] || nome) },
+      ]),
+    );
+  },
+  salva: (bozza) => {
+    /* Come le frecce: una fila che il documento sa mostrare, scritta, e la
+     * Home rimessa in fila subito. */
+    writeJsonIfChanged(CHIAVE_ORDINE_BLOCCHI, ordinePossibile(bozza.ordine));
+    try {
+      rigaDellaTestata();
+      sistemaLaTestata();
+      applicaLOrdineDeiBlocchi();
+    } catch (_error) {}
+    ensurePannelloDeiBlocchi();
+  },
+});
+
 function schedaAperta() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 }
@@ -350,6 +412,7 @@ function pannelloMarkup() {
         "The order they appear in on Home. The first two — the strip with the menu and the weather box — stay above the page as long as they are on top, where they have always been; move them further down and they come into the page with the other blocks. The menu strip only comes down here: on the other pages it goes back up by itself, or the hamburger would disappear. Inside each block the order is set where that block is configured: people in their own tab, tiles in Widgets, quick actions in theirs.",
       ),
     )}</div>
+    ${anteprimaMarkup("home-blocchi")}
     <div class="dm-blocco-list">${righe}</div>
     ${pastiglieMarkup()}
     ${stanzeMarkup()}`;
@@ -508,6 +571,7 @@ function onClickFreccia(event) {
    * freccia su del meteo salvava un ordine e non muoveva niente. */
   const prossima = ordinePossibile(mossa);
   if (prossima.join("\u0000") === fila.join("\u0000")) return;
+  dimenticaLaBozza("home-blocchi");
   writeJsonIfChanged(CHIAVE_ORDINE_BLOCCHI, prossima);
   try {
     /* Il riquadro col meteo (#492) cambia casa prima che si metta in fila:
@@ -533,6 +597,21 @@ function stile() {
   return `
     #ed-body .dm-home-blocchi{display:block;margin-bottom:14px}
     #ed-body .dm-blocco-list{display:grid;gap:6px;margin-bottom:14px}
+    /* L'anteprima: una colonna, come la Home, un riquadro per blocco alto
+       quanto il blocco vero in proporzione. */
+    .dm-blocchi-mini{display:grid;grid-template-columns:1fr;gap:8px;max-width:520px;margin:0 auto}
+    .dm-blocco-mini{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:18px;
+      background:var(--card-bg,#fff);box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 8px 18px -14px rgba(15,23,42,.45);
+      border:1px solid var(--card-border,#e2e8f0)}
+    .dm-blocco-mini-icona{flex:0 0 34px;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;
+      border-radius:11px;background:var(--surface-3,#f1f5f9)}
+    .dm-blocco-mini-icona .dm-oggetto,.dm-blocco-mini-icona svg{width:24px;height:24px;display:block}
+    .dm-blocco-mini-testo{display:grid;gap:6px;flex:1 1 auto;min-width:0;padding-right:4px}
+    .dm-blocco-mini-testo b{font-size:13.5px;font-weight:800;color:var(--text,#0f172a)}
+    .dm-blocco-mini-testo i{display:block;height:8px;border-radius:999px;
+      background:color-mix(in srgb,var(--text-dim,#94a3b8) 22%,transparent)}
+    .dm-blocco-mini-testo i:nth-child(odd){width:72%}
+    .dm-blocco-mini-testo i:nth-child(3n){width:48%}
     #ed-body .dm-blocco-row{display:flex!important;align-items:center;gap:10px;padding:8px 12px!important}
     #ed-body .dm-blocco-icona{font-size:17px;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex:0 0 24px}
     #ed-body .dm-blocco-icona .dm-oggetto{width:24px;height:24px;display:block}
