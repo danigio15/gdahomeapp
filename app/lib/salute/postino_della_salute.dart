@@ -89,7 +89,7 @@ class PostinoDellaSalute {
     _daSpegnere = false;
     final risposto = await lettore.chiediIlPermesso(scelte.misure);
     if (!risposto) return false;
-    await _salva(scelte.con(acceso: true));
+    await _salva(scelte.con(acceso: true).tutteViste());
     await manda(filo, subito: true);
     return true;
   }
@@ -102,7 +102,7 @@ class PostinoDellaSalute {
     if (scelte.acceso && nuove.isNotEmpty) {
       await lettore.chiediIlPermesso(nuove);
     }
-    await _salva(scelte);
+    await _salva(scelte.acceso ? scelte.tutteViste() : scelte);
     if (scelte.acceso) await manda(filo, subito: true);
   }
 
@@ -159,6 +159,14 @@ class PostinoDellaSalute {
     if (filo == null || !filo.dentro) return null;
     _mandando = true;
     try {
+      /* Le misure nuove dell'app, accese da sole: il permesso non c'e'
+       * ancora, e senza Salute le tace. Si chiede una volta, qui, con l'app
+       * davanti. */
+      final daChiedere = _scelte.daChiedere;
+      if (daChiedere.isNotEmpty) {
+        await lettore.chiediIlPermesso(daChiedere);
+        await _salva(_scelte.tutteViste());
+      }
       final lette = await lettore.leggi(_scelte.misure, adesso: _adesso());
       _ultimeLette = lette;
       _letto = true;

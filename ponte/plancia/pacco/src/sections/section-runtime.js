@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-UGOYB3AX.js";
+} from "../../chunk-ZQIRVPGH.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -2344,6 +2344,7 @@ var SOURCE_INDEX = Object.freeze({
   "a riposo": "at rest",
   "A riposo": "Resting",
   "A riposo, di giorno": "Resting, by day",
+  "a riposo, oggi": "resting, today",
   "A scomparsa": "Auto-hide",
   "A scomparsa: appare con swipe/tocco sulla linguetta. Fissa: sempre in vista.": "Auto-hide: appears with a swipe/tap on the handle. Fixed: always in view.",
   "A tappe": "Multi-stop",
@@ -3109,6 +3110,7 @@ var SOURCE_INDEX = Object.freeze({
   "Calendario o sensore unico (facoltativo)": "Single calendar or sensor (optional)",
   "Calore recuperato": "Heat recovered",
   "Calorie": "Calories",
+  "Calorie a riposo": "Resting calories",
   "Calvo": "Bald",
   "Cambia": "Change",
   "Cambia dispositivo": "Change device",
@@ -3943,6 +3945,7 @@ var SOURCE_INDEX = Object.freeze({
   "dispositivo muto": "silent device",
   "Distacco": "Gap",
   "Distanza": "Distance",
+  "Distanza a piedi": "Walking distance",
   "Distanza da casa": "Distance from home",
   "Distanza dell'ultimo fulmine (km)": "Distance of the last strike (km)",
   "Distanza in km (facoltativa)": "Distance in km (optional)",
@@ -4219,6 +4222,7 @@ var SOURCE_INDEX = Object.freeze({
   "Esco": "Leaving",
   "Esegui": "Run",
   "Esegui ora": "Run now",
+  "Esercizio": "Exercise",
   "Esiste già un gruppo con questo nome": "A group with this name already exists",
   "Esiste già un gruppo con questo nome.": "A group with this name already exists.",
   'Esiste già un\'auto "${nomeScritto}": usa la matita per modificarla, o scegli un altro nome': 'A car named "${nomeScritto}" already exists: use the pencil to edit it, or pick another name',
@@ -4878,6 +4882,7 @@ var SOURCE_INDEX = Object.freeze({
   "In pausa: aria già umida": "Paused: the air is already humid",
   "In percentuale diventa il serbatoio disegnato in pagina; in kg si legge in chili.": "As a percentage it becomes the hopper drawn on the page; in kg it is read in kilograms.",
   "In percentuale o in kg, come quello della caldaia; oppure un binary_sensor che si accende quando il pellet sta finendo.": "As a percentage or in kg, like the boiler's; or a binary_sensor that turns on when the pellet is running low.",
+  "In piedi": "Stand",
   "in piedi:": "up:",
   "in più di una tariffa unica": "more than a single rate",
   "in punto": "exactly",
@@ -5294,7 +5299,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le macchine e la rete. Ogni riga è una macchina — l'entità, il nome che vuoi tu, il disegno, e in quale delle due fasce sta — e la pagina MiniPC mostra queste, accese e spente.": "The machines and the network. Each row is a machine — the entity, the name you want, the drawing, and which of the two bands it sits in — and the MiniPC page shows these, up and down.",
   "Le mette qui come righe, una volta sola: da lì in poi sono tue — le rinomini, gli dai il disegno, e quelle che elimini non tornano più.": "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back.",
   "Le misure": "The readings",
-  "Le misure arrivano in Home Assistant dal telefono (Health Connect), dalla bilancia, dall'orologio. Non sono un parere medico.": "Readings reach Home Assistant from the phone (Health Connect), the scale, the watch. They are not medical advice.",
+  "Le misure arrivano in Home Assistant dal telefono (Apple Salute o Health Connect), dalla bilancia, dall'orologio. Non sono un parere medico.": "Readings reach Home Assistant from the phone (Apple Health or Health Connect), the scale, the watch. They are not medical advice.",
   "le misure dalle cose di misura nota (forno, WC, condizionatore...); ogni stanza si corregge a mano": "sizes from things of known size (oven, toilet, air conditioner...); each room can be adjusted by hand",
   "Le misure dell'energia si scelgono nel Config.": "Pick the energy sensors in the Config.",
   "le misure di casa con le ultime 24 ore": "your home's readings with the last 24 hours",
@@ -5593,6 +5598,7 @@ var SOURCE_INDEX = Object.freeze({
   "MiniPC Server": "MiniPC server",
   "Minore di…": "Less than…",
   "minuti": "minutes",
+  "Minuti di esercizio": "Exercise minutes",
   "Minuti di questa corsa": "Minutes for this run",
   "minuti fa": "minutes ago",
   "minuti per ora": "minutes per hour",
@@ -6233,6 +6239,7 @@ var SOURCE_INDEX = Object.freeze({
   "Ore automatiche (temperatura / 2)": "Automatic hours (temperature / 2)",
   "Ore di filtrazione": "Filtration hours",
   "ore fa": "hours ago",
+  "Ore in piedi": "Stand hours",
   "ore per giorno": "hours per day",
   "Organico": "Organic waste",
   "Orientamento": "Orientation",
@@ -6393,11 +6400,13 @@ var SOURCE_INDEX = Object.freeze({
   "pH minimo": "Minimum pH",
   "pH troppo alto": "pH too high",
   "pH troppo basso": "pH too low",
-  "piani": "floors",
+  "piani": "flights",
   "Piani del palazzo": "Floors of the building",
+  "Piani saliti": "Flights climbed",
   "Pianifica i viaggi da qui e ritrovali sul telefono, su CarPlay e su Android Auto, con l'avviso per partire e il clima dell'auto acceso prima. Si sblocca dall'app GdAHome, nella pagina Premium.": "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page.",
   "Pianifica i viaggi da qui: li ritrovi in GdANav sul telefono, su CarPlay e su Android Auto.": "Plan trips from here: you find them in GdANav on the phone, CarPlay and Android Auto.",
   "Pianificatore": "Planner",
+  "piano": "flight",
   "Piano": "Flat",
   "Piano (opz.)": "Floor (opt.)",
   "Piano ${i + 1}": "Floor ${i + 1}",
@@ -67290,15 +67299,50 @@ var MISURE5 = Object.freeze([
     unita: /^(h|hr|hrs|hours?|ore|min|mins|minutes?|minuti|s|sec|seconds?)$/,
     escludi: /deep|profondo|light|leggero|\brem\b|awake|sveglio|score|punteggio|goal|obiettiv|latency|wake|start|end|inizio|fine/
   },
+  /* Le calorie a riposo prima delle attive: «Basal energy burned» ha anche
+   * le parole delle altre. */
+  {
+    chiave: "calorieRiposo",
+    parole: /basal energy|resting energy|resting calories|basal calories|calorie a riposo|calorie basali/,
+    unita: /^(kcal|cal)$/,
+    escludi: /goal|obiettiv|rate|metabolic|metabolismo/
+  },
   {
     chiave: "calorie",
     parole: /calorie|calories|kcal|energy burned|energia bruciata/,
     unita: /^(kcal|cal)$/,
-    escludi: /goal|obiettiv|bmr|basal|basale|intake/
+    escludi: /goal|obiettiv|bmr|basal|basale|intake|resting|riposo/
+  },
+  /* L'anello Attivita' e quello che Salute mostra accanto ai passi. Parole
+   * strette: «distance» da sola e' anche la distanza da casa (proximity),
+   * quella del viaggio in auto, quella dell'aspirapolvere. */
+  {
+    chiave: "distanza",
+    parole: /walking running distance|walking distance|distance walked|walking \+ running|distanza (a piedi|camminata|percorsa a piedi)/,
+    unita: /^(km|m|mi)$/,
+    escludi: /goal|obiettiv|cycling|bici|swim|nuoto/
+  },
+  {
+    chiave: "piani",
+    parole: /flights climbed|floors climbed|floors ascended|piani saliti/,
+    unita: /^(floors?|flights?|piani|)$/,
+    escludi: /goal|obiettiv|descended|scesi/
+  },
+  {
+    chiave: "esercizio",
+    parole: /exercise time|exercise minutes|minuti di esercizio|tempo di esercizio/,
+    unita: /^(min|mins|minutes?|minuti)$/,
+    escludi: /goal|obiettiv/
+  },
+  {
+    chiave: "inPiedi",
+    parole: /stand hours?|ore in piedi/,
+    unita: /^(h|hr|hrs|hours?|ore)$/,
+    escludi: /goal|obiettiv/
   }
 ]);
 var MISURE_SALUTE = Object.freeze(MISURE5.map((m) => m.chiave));
-var PAROLE_DELLE_MISURE = /\b(health connect|apple health|healthkit|health|withings|garmin connect|garmin|fitbit|resting heart rate|heart rate|heart pulse|resting|blood pressure|systolic|diastolic|blood oxygen|oxygen saturation|spo2|body fat|fat ratio|fat percentage|total sleep time|sleep duration|sleep time|sleep|total steps|daily steps|steps today|steps|step count|weight|body mass|calories burned|active calories|total calories|calories|energy burned|today|daily|oggi|giornalieri|passi|peso|battito cardiaco|battito|frequenza cardiaca|pressione|sistolica|diastolica|sonno|ossigeno|saturazione|calorie|massa grassa|grasso|burned|bruciate|active|attive|sensor)\b/gi;
+var PAROLE_DELLE_MISURE = /\b(health connect|apple health|healthkit|health|withings|garmin connect|garmin|fitbit|walking running distance|walking distance|distance walked|flights climbed|floors climbed|floors ascended|exercise time|exercise minutes|stand hours|stand hour|basal energy burned|basal energy|resting energy|resting calories|resting heart rate|heart rate|heart pulse|resting|blood pressure|systolic|diastolic|blood oxygen|oxygen saturation|spo2|body fat|fat ratio|fat percentage|total sleep time|sleep duration|sleep time|sleep|total steps|daily steps|steps today|steps|step count|weight|body mass|calories burned|active calories|total calories|calories|energy burned|today|daily|oggi|giornalieri|passi|peso|battito cardiaco|battito|frequenza cardiaca|pressione|sistolica|diastolica|sonno|ossigeno|saturazione|calorie|massa grassa|grasso|burned|bruciate|active|attive|sensor)\b/gi;
 function chiDalNome(nome) {
   return clean25(
     String(nome).replace(PAROLE_DELLE_MISURE, " ").replace(/[_·:()-]+/g, " ").replace(/\s+/g, " ")
@@ -67362,6 +67406,12 @@ function letturaDi3(entity2, stato3, chiave2) {
   if (valore3 === null) return null;
   let unita3 = clean25(a.unit_of_measurement);
   let v = valore3;
+  if (chiave2 === "distanza") {
+    const u = unita3.toLowerCase();
+    if (u === "m") v = valore3 / 1e3;
+    else if (u === "mi") v = valore3 * 1.609344;
+    unita3 = "km";
+  }
   if (chiave2 === "sonno") {
     const u = unita3.toLowerCase();
     if (/^(h|hr|hrs|hours?|ore)$/.test(u)) v = valore3 * 60;
@@ -67778,7 +67828,14 @@ var NOMI3 = () => ({
   grasso: t("Massa grassa", "Body fat"),
   sonno: t("Sonno", "Sleep"),
   ossigeno: t("Ossigeno", "Blood oxygen"),
-  calorie: t("Calorie", "Calories")
+  calorie: t("Calorie", "Calories"),
+  calorieRiposo: t("A riposo", "Resting"),
+  distanza: t("Distanza", "Distance"),
+  piani: t("Piani saliti", "Flights climbed"),
+  attivita: t("Attività", "Activity"),
+  movimento: t("Movimento", "Move"),
+  esercizio: t("Esercizio", "Exercise"),
+  inPiedi: t("In piedi", "Stand")
 });
 var SEGNI3 = {
   passi: "👟",
@@ -67787,8 +67844,14 @@ var SEGNI3 = {
   peso: "⚖️",
   sonno: "🌙",
   ossigeno: "🫁",
-  calorie: "🔥"
+  calorie: "🔥",
+  attivita: "🏃",
+  distanza: "🚶",
+  piani: "🪜"
 };
+var ANELLI = { movimento: "#fa114f", esercizio: "#65c51b", inPiedi: "#0fb5d6" };
+var pianiTesto = (n) => `${numeroBello2(n)} ${n === 1 ? t("piano", "flight") : t("piani", "flights")}`;
+var piuRecente = (...misure) => misure.filter(Boolean).map((m) => m.quando).sort((a, b2) => (Date.parse(b2) || 0) - (Date.parse(a) || 0))[0] || "";
 var FASCE = () => ({
   ottimale: t("Ottimale", "Optimal"),
   "normale-alta": t("Normale-alta", "High-normal"),
@@ -67970,9 +68033,51 @@ function schedeMarkup(persona) {
     schede.push(schedaMarkup8("sonno", { valore: durataSonno(m.sonno.valore), unita: "", sotto: t("stanotte", "last night"), quando: quandoArrivato(m.sonno.quando) }));
   if (m.ossigeno)
     schede.push(schedaMarkup8("ossigeno", { valore: numeroBello2(m.ossigeno.valore), unita: "%", sotto: "SpO₂", quando: quandoArrivato(m.ossigeno.quando) }));
-  if (m.calorie)
-    schede.push(schedaMarkup8("calorie", { valore: numeroBello2(m.calorie.valore), unita: m.calorie.unita || "kcal", sotto: t("oggi", "today"), quando: quandoArrivato(m.calorie.quando) }));
+  if (!m.passi && m.distanza)
+    schede.push(schedaMarkup8("distanza", { valore: numeroBello2(m.distanza.valore, 2), unita: "km", sotto: t("oggi", "today"), quando: quandoArrivato(m.distanza.quando) }));
+  if (!m.passi && m.piani)
+    schede.push(schedaMarkup8("piani", { valore: numeroBello2(m.piani.valore), unita: "", sotto: t("oggi", "today"), quando: quandoArrivato(m.piani.quando) }));
+  if (m.esercizio || m.inPiedi) schede.push(attivitaMarkup2(m));
+  else if (m.calorie || m.calorieRiposo) {
+    const principale = m.calorie || m.calorieRiposo;
+    const riposo2 = m.calorie && m.calorieRiposo ? ` · ${NOMI3().calorieRiposo.toLowerCase()} ${numeroBello2(m.calorieRiposo.valore)} kcal` : "";
+    schede.push(
+      schedaMarkup8("calorie", {
+        valore: numeroBello2(principale.valore),
+        unita: principale.unita || "kcal",
+        sotto: m.calorie ? `${t("oggi", "today")}${riposo2}` : t("a riposo, oggi", "resting, today"),
+        quando: quandoArrivato(piuRecente(m.calorie, m.calorieRiposo))
+      })
+    );
+  }
   return schede.length ? `<div class="dm-salute-schede">${schede.join("")}</div>` : "";
+}
+function attivitaMarkup2(m) {
+  const voce3 = (chiave2, misura8, unita3) => `<div class="dm-salute-anello-voce" style="--anello:${ANELLI[chiave2]}">
+      <span>${esc(NOMI3()[chiave2])}</span>
+      <b>${misura8 ? esc(numeroBello2(Math.floor(misura8.valore))) : "—"}<small> ${esc(unita3)}</small></b>
+    </div>`;
+  const totale = m.calorie && m.calorieRiposo ? Math.floor(m.calorie.valore + m.calorieRiposo.valore) : null;
+  const riposo2 = m.calorieRiposo ? `<span class="dm-salute-sotto">${esc(
+    `${NOMI3().calorieRiposo}: ${numeroBello2(Math.floor(m.calorieRiposo.valore))} kcal${totale === null ? "" : ` · ${t("totale", "total")} ${numeroBello2(totale)} kcal`}`
+  )}</span>` : "";
+  const quando6 = quandoArrivato(piuRecente(m.calorie, m.esercizio, m.inPiedi, m.calorieRiposo));
+  return `<article class="dm-salute-scheda larga dm-salute-attivita" data-dm-salute-misura="attivita">
+    <div class="dm-salute-testa"><span class="dm-salute-segno" aria-hidden="true">${SEGNI3.attivita}</span><span>${esc(NOMI3().attivita)}</span></div>
+    <div class="dm-salute-anelli">
+      ${voce3("movimento", m.calorie, "kcal")}
+      ${voce3("esercizio", m.esercizio, "min")}
+      ${voce3("inPiedi", m.inPiedi, "h")}
+    </div>
+    ${riposo2}
+    ${quando6 ? `<time>${esc(quando6)}</time>` : ""}
+  </article>`;
+}
+function stradaMarkup(m) {
+  const parti = [];
+  if (m.distanza) parti.push(`<span>${SEGNI3.distanza} ${esc(numeroBello2(m.distanza.valore, 2))} km</span>`);
+  if (m.piani) parti.push(`<span>${SEGNI3.piani} ${esc(pianiTesto(m.piani.valore))}</span>`);
+  return parti.length ? `<span class="dm-salute-eroe-strada">${parti.join("")}</span>` : "";
 }
 function eroeMarkup(persona, obiettivo2, { finestra: finestra6 = false } = {}) {
   const passi2 = persona.misure.passi;
@@ -67987,6 +68092,7 @@ function eroeMarkup(persona, obiettivo2, { finestra: finestra6 = false } = {}) {
         <span class="dm-salute-eroe-sotto">${esc(
     quota >= 1 ? t(`Obiettivo di ${numeroBello2(obiettivo2)} raggiunto`, `${numeroBello2(obiettivo2)} goal reached`) : t(`Ne mancano ${numeroBello2(obiettivo2 - passi2.valore)} a ${numeroBello2(obiettivo2)}`, `${numeroBello2(obiettivo2 - passi2.valore)} to go to ${numeroBello2(obiettivo2)}`)
   )}</span>
+        ${stradaMarkup(persona.misure)}
       </div>
     </div>
     ${finestra6 ? "" : settimanaPassiMarkup(passi2, obiettivo2)}
@@ -68001,8 +68107,8 @@ function corpoMarkup(vista2) {
   return `${persone4}${eroeMarkup(persona, vista2.config.obiettivoPassi)}${schedeMarkup(persona)}
     <p class="dm-salute-fonte">${esc(
     t(
-      "Le misure arrivano in Home Assistant dal telefono (Health Connect), dalla bilancia, dall'orologio. Non sono un parere medico.",
-      "Readings reach Home Assistant from the phone (Health Connect), the scale, the watch. They are not medical advice."
+      "Le misure arrivano in Home Assistant dal telefono (Apple Salute o Health Connect), dalla bilancia, dall'orologio. Non sono un parere medico.",
+      "Readings reach Home Assistant from the phone (Apple Health or Health Connect), the scale, the watch. They are not medical advice."
     )
   )}</p>`;
 }
@@ -68221,6 +68327,14 @@ function foglioSalute(P12) {
     box-shadow:0 0 0 3px var(--card-background-color,#fff)}
   ${P12} .dm-salute-linea figcaption{font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b);margin-top:2px}
   ${P12} .dm-salute-linea.dm-salute-attesa{color:var(--text-dim,#64748b);padding:6px 0}
+  ${P12} .dm-salute-eroe-strada{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:4px;font-size:13.5px;font-weight:800}
+  ${P12} .dm-salute-eroe-strada span{padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.18);white-space:nowrap}
+  ${P12} .dm-salute-anelli{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin:6px 0 2px}
+  ${P12} .dm-salute-anello-voce{display:grid;gap:1px;padding-left:10px;border-left:3px solid var(--anello);min-width:0}
+  ${P12} .dm-salute-anello-voce + .dm-salute-anello-voce{margin-left:6px}
+  ${P12} .dm-salute-anello-voce span{font-size:12.5px;font-weight:850;color:var(--anello);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  ${P12} .dm-salute-anello-voce b{font-size:24px;font-weight:900;color:var(--text,#0f172a);line-height:1.15;white-space:nowrap}
+  ${P12} .dm-salute-anello-voce b small{font-size:13px;font-weight:800;color:var(--text-dim,#64748b)}
   ${P12} .dm-salute-fonte{margin:0;font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b);text-align:center}
   ${P12} .dm-salute-finestra .dm-strava{gap:10px}
   @media (max-width:640px){
@@ -68228,6 +68342,7 @@ function foglioSalute(P12) {
     ${P12} .dm-salute-scheda.larga{grid-column:1 / -1}
     ${P12} .dm-salute-eroe-num{font-size:38px}
     ${P12} .dm-salute-eroe-anello{width:84px;height:84px}
+    ${P12} .dm-salute-anello-voce b{font-size:20px}
   }
   `;
 }
@@ -153905,7 +154020,12 @@ var NOMI_MISURE = () => ({
   diastolica: t("Pressione minima", "Diastolic pressure"),
   ossigeno: t("Ossigeno", "Blood oxygen"),
   sonno: t("Sonno", "Sleep"),
-  calorie: t("Calorie", "Calories")
+  calorie: t("Calorie", "Calories"),
+  calorieRiposo: t("Calorie a riposo", "Resting calories"),
+  distanza: t("Distanza a piedi", "Walking distance"),
+  piani: t("Piani saliti", "Flights climbed"),
+  esercizio: t("Minuti di esercizio", "Exercise minutes"),
+  inPiedi: t("Ore in piedi", "Stand hours")
 });
 function schedaAttiva17() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);

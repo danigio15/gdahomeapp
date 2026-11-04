@@ -317,26 +317,32 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
           child: Column(
             children: [
               for (final misura in MisuraDelCorpo.values)
-                CheckboxListTile.adaptive(
-                  key: Key('salute-misura-${misura.name}'),
-                  value: scelte.misure.contains(misura),
-                  onChanged: _lavorando
-                      ? null
-                      : (si) => _cambiaMisura(misura, si == true),
-                  title: Text(misura.titolo),
-                  subtitle: _sottoLaMisura(
-                    context,
-                    misura,
-                    lette[misura],
-                    manca:
-                        scelte.acceso &&
-                        _postino.letto &&
-                        scelte.misure.contains(misura) &&
-                        lette[misura] == null,
-                    iPhone: dove == DoveSiLegge.appleSalute,
+                if (siPuoLeggere(
+                  misura,
+                  iPhone:
+                      dove != DoveSiLegge.healthConnect &&
+                      dove != DoveSiLegge.healthConnectDaInstallare,
+                ))
+                  CheckboxListTile.adaptive(
+                    key: Key('salute-misura-${misura.name}'),
+                    value: scelte.misure.contains(misura),
+                    onChanged: _lavorando
+                        ? null
+                        : (si) => _cambiaMisura(misura, si == true),
+                    title: Text(misura.titolo),
+                    subtitle: _sottoLaMisura(
+                      context,
+                      misura,
+                      lette[misura],
+                      manca:
+                          scelte.acceso &&
+                          _postino.letto &&
+                          scelte.misure.contains(misura) &&
+                          lette[misura] == null,
+                      iPhone: dove == DoveSiLegge.appleSalute,
+                    ),
+                    secondary: _segno(misura),
                   ),
-                  secondary: _segno(misura),
-                ),
             ],
           ),
         ),
@@ -503,7 +509,15 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
       MisuraDelCorpo.diastolica => '${_numero(v)} mmHg',
       MisuraDelCorpo.sonno =>
         '${v ~/ 60} h ${(v % 60).round().toString().padLeft(2, '0')}',
-      MisuraDelCorpo.calorie => '${_numero(v)} kcal',
+      MisuraDelCorpo.calorie ||
+      MisuraDelCorpo.calorieRiposo => '${_numero(v)} kcal',
+      MisuraDelCorpo.distanza => '${_numero(v, cifre: 2)} km',
+      MisuraDelCorpo.piani => inLingua(
+        it: '${_numero(v)} piani',
+        en: '${_numero(v)} flights',
+      ),
+      MisuraDelCorpo.esercizio => '${_numero(v)} min',
+      MisuraDelCorpo.inPiedi => '${_numero(v)} h',
     };
     final giorno = quandoSeNonOggi(lettura.quando, _postino.adesso);
     return '${misura.comeSiLegge} · $valore${giorno == null ? '' : ' · $giorno'}';
@@ -539,6 +553,23 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
       MisuraDelCorpo.calorie => (
         Icons.local_fire_department_rounded,
         const Color(0xFFEA580C),
+      ),
+      MisuraDelCorpo.calorieRiposo => (
+        Icons.local_fire_department_outlined,
+        const Color(0xFFEA580C),
+      ),
+      MisuraDelCorpo.distanza => (
+        Icons.straighten_rounded,
+        const Color(0xFF16A34A),
+      ),
+      MisuraDelCorpo.piani => (Icons.stairs_rounded, const Color(0xFF16A34A)),
+      MisuraDelCorpo.esercizio => (
+        Icons.directions_run_rounded,
+        const Color(0xFF65A30D),
+      ),
+      MisuraDelCorpo.inPiedi => (
+        Icons.accessibility_new_rounded,
+        const Color(0xFF0891B2),
       ),
     };
     return Container(

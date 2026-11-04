@@ -221,3 +221,38 @@ test("un no si legge nel registro dell'add-on, una volta sola e senza nomi", asy
   ]);
   assert.ok(righe.every((r) => !/marco|tel-/i.test(r)));
 });
+
+test("l'anello Attività: distanza, piani, esercizio, ore in piedi, calorie a riposo", async () => {
+  /* Quello che Salute mostrava alle 07:53 e la plancia no. */
+  const { corpo, chiamate } = prepara();
+  const quando = "2026-10-29T09:51:00Z";
+  const attivita = {
+    distanza: { valore: 0.19, quando },
+    piani: { valore: 6, quando },
+    esercizio: { valore: 0, quando },
+    inPiedi: { valore: 1, quando },
+    calorieRiposo: { valore: 678, quando },
+  };
+  const r = await corpo.rispondi(
+    { id: 1, type: SALUTE_MISURE, persona: "Marco", misure: attivita },
+    { dispositivo: MARCO },
+  );
+  assert.deepEqual(r.result.scritte.sort(), Object.keys(attivita).sort());
+  const radice = radiceDelTelefono("tel-marco");
+  const di = (pezzo) => chiamate.find((c) => c.percorso === `states/sensor.${radice}_${pezzo}`);
+  const distanza = di("distanza");
+  assert.equal(distanza.corpo.state, "0.19");
+  assert.equal(distanza.corpo.attributes.friendly_name, "Marco Walking running distance");
+  assert.equal(distanza.corpo.attributes.unit_of_measurement, "km");
+  assert.equal(distanza.corpo.attributes.device_class, "distance");
+  assert.equal(di("piani").corpo.attributes.friendly_name, "Marco Flights climbed");
+  assert.equal(di("esercizio").corpo.attributes.unit_of_measurement, "min");
+  assert.equal(di("esercizio").corpo.attributes.device_class, "duration");
+  assert.equal(di("in_piedi").corpo.attributes.friendly_name, "Marco Stand hours");
+  const riposo = di("calorie_riposo");
+  assert.equal(riposo.corpo.attributes.friendly_name, "Marco Basal energy burned");
+  for (const c of Object.keys(attivita).map((k) =>
+    k.replace(/[A-Z]/g, (x) => `_${x.toLowerCase()}`),
+  ))
+    assert.equal(di(c).corpo.attributes.state_class, "total_increasing");
+});

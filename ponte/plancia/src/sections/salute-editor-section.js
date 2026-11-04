@@ -47,6 +47,11 @@ const NOMI_MISURE = () => ({
   ossigeno: t("Ossigeno", "Blood oxygen"),
   sonno: t("Sonno", "Sleep"),
   calorie: t("Calorie", "Calories"),
+  calorieRiposo: t("Calorie a riposo", "Resting calories"),
+  distanza: t("Distanza a piedi", "Walking distance"),
+  piani: t("Piani saliti", "Flights climbed"),
+  esercizio: t("Minuti di esercizio", "Exercise minutes"),
+  inPiedi: t("Ore in piedi", "Stand hours"),
 });
 
 function schedaAttiva() {

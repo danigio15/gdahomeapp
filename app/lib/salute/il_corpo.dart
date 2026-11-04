@@ -24,6 +24,8 @@ import '../parole.dart';
 /// Le misure: la chiave e' quella del ponte (`MISURE_DAL_TELEFONO`).
 enum MisuraDelCorpo {
   passi,
+  distanza,
+  piani,
   battito,
   battitoRiposo,
   peso,
@@ -32,10 +34,18 @@ enum MisuraDelCorpo {
   diastolica,
   ossigeno,
   sonno,
-  calorie;
+  calorie,
+  calorieRiposo,
+  esercizio,
+  inPiedi;
 
   String get titolo => switch (this) {
     MisuraDelCorpo.passi => inLingua(it: 'Passi', en: 'Steps'),
+    MisuraDelCorpo.distanza => inLingua(
+      it: 'Distanza a piedi',
+      en: 'Walking distance',
+    ),
+    MisuraDelCorpo.piani => inLingua(it: 'Piani saliti', en: 'Flights climbed'),
     MisuraDelCorpo.battito => inLingua(it: 'Battito', en: 'Heart rate'),
     MisuraDelCorpo.battitoRiposo => inLingua(
       it: 'Battito a riposo',
@@ -57,11 +67,27 @@ enum MisuraDelCorpo {
       it: 'Calorie attive',
       en: 'Active calories',
     ),
+    MisuraDelCorpo.calorieRiposo => inLingua(
+      it: 'Calorie a riposo',
+      en: 'Resting calories',
+    ),
+    MisuraDelCorpo.esercizio => inLingua(
+      it: 'Minuti di esercizio',
+      en: 'Exercise minutes',
+    ),
+    MisuraDelCorpo.inPiedi => inLingua(it: 'Ore in piedi', en: 'Stand hours'),
   };
 
   /// Come si legge, in una riga sotto il nome.
   String get comeSiLegge => switch (this) {
-    MisuraDelCorpo.passi => inLingua(it: 'quelli di oggi', en: "today's"),
+    MisuraDelCorpo.passi ||
+    MisuraDelCorpo.piani ||
+    MisuraDelCorpo.esercizio => inLingua(it: 'quelli di oggi', en: "today's"),
+    MisuraDelCorpo.distanza => inLingua(it: 'quella di oggi', en: "today's"),
+    MisuraDelCorpo.inPiedi || MisuraDelCorpo.calorieRiposo => inLingua(
+      it: 'quelle di oggi',
+      en: "today's",
+    ),
     MisuraDelCorpo.battito => inLingua(it: "l'ultimo", en: 'the latest'),
     MisuraDelCorpo.battitoRiposo => inLingua(it: "l'ultimo", en: 'the latest'),
     MisuraDelCorpo.peso => inLingua(it: "l'ultima pesata", en: 'the latest'),
@@ -100,9 +126,34 @@ Duration? finestraDellUltimo(MisuraDelCorpo misura) => switch (misura) {
   MisuraDelCorpo.sistolica ||
   MisuraDelCorpo.diastolica => limiteDelPonte,
   MisuraDelCorpo.passi ||
+  MisuraDelCorpo.distanza ||
+  MisuraDelCorpo.piani ||
   MisuraDelCorpo.calorie ||
+  MisuraDelCorpo.calorieRiposo ||
+  MisuraDelCorpo.esercizio ||
+  MisuraDelCorpo.inPiedi ||
   MisuraDelCorpo.sonno => null,
 };
+
+/// Le misure «di oggi»: si sommano da mezzanotte, e la casa le conta come
+/// contatori che ripartono ogni mattina.
+bool eDiOggi(MisuraDelCorpo misura) => switch (misura) {
+  MisuraDelCorpo.passi ||
+  MisuraDelCorpo.distanza ||
+  MisuraDelCorpo.piani ||
+  MisuraDelCorpo.calorie ||
+  MisuraDelCorpo.calorieRiposo ||
+  MisuraDelCorpo.esercizio ||
+  MisuraDelCorpo.inPiedi => true,
+  _ => false,
+};
+
+/// Se il telefono la sa dare. I minuti di esercizio e le ore in piedi sono
+/// gli anelli dell'Apple Watch: Health Connect non li ha, e su Android non
+/// si mostrano nemmeno.
+bool siPuoLeggere(MisuraDelCorpo misura, {required bool iPhone}) =>
+    iPhone ||
+    (misura != MisuraDelCorpo.esercizio && misura != MisuraDelCorpo.inPiedi);
 
 /// Gli scalini con cui si cerca: prima l'ultimo giorno, poi la settimana,
 /// poi tutta la finestra. Un Apple Watch scrive un battito ogni pochi minuti:
@@ -124,15 +175,39 @@ const risveglioFinoA = Duration(hours: 2);
 /// Un sonno piu' corto di cosi' e' un pisolino, non la notte.
 const notteAlmeno = Duration(hours: 3);
 
-/// Le misure accese di serie: quelle che quasi ogni orologio ha.
+/// Le misure accese di serie: quelle che quasi ogni orologio ha, e quelle
+/// che Salute mostra per prime («Attività», distanza, piani).
 const misureDiSerie = {
   MisuraDelCorpo.passi,
+  MisuraDelCorpo.distanza,
+  MisuraDelCorpo.piani,
   MisuraDelCorpo.battito,
   MisuraDelCorpo.battitoRiposo,
   MisuraDelCorpo.peso,
   MisuraDelCorpo.sistolica,
   MisuraDelCorpo.diastolica,
   MisuraDelCorpo.sonno,
+  MisuraDelCorpo.calorie,
+  MisuraDelCorpo.calorieRiposo,
+  MisuraDelCorpo.esercizio,
+  MisuraDelCorpo.inPiedi,
+};
+
+/// Le misure che c'erano prima di «Attività» (novembre 2026): chi le ha
+/// scelte allora non ha mai visto le nuove, e le trova accese
+/// ([ScelteDellaSalute.daQuelloCheCEra]). Quelle che si toglie dopo, restano
+/// tolte.
+const misureDiPrima = {
+  MisuraDelCorpo.passi,
+  MisuraDelCorpo.battito,
+  MisuraDelCorpo.battitoRiposo,
+  MisuraDelCorpo.peso,
+  MisuraDelCorpo.grasso,
+  MisuraDelCorpo.sistolica,
+  MisuraDelCorpo.diastolica,
+  MisuraDelCorpo.ossigeno,
+  MisuraDelCorpo.sonno,
+  MisuraDelCorpo.calorie,
 };
 
 /// Le scelte di questo telefono: se e' acceso, il nome, cosa si manda.
@@ -142,6 +217,7 @@ class ScelteDellaSalute {
     this.persona = '',
     this.misure = misureDiSerie,
     this.ultimoInvio,
+    this.viste = const {...MisuraDelCorpo.values},
   });
 
   final bool acceso;
@@ -152,22 +228,37 @@ class ScelteDellaSalute {
   final Set<MisuraDelCorpo> misure;
   final DateTime? ultimoInvio;
 
+  /// Le misure che questo telefono ha gia' visto nell'elenco, e per cui il
+  /// permesso e' gia' stato chiesto. Una misura nuova dell'app, di serie, si
+  /// accende da sola; ma il permesso va chiesto ([daChiedere]).
+  final Set<MisuraDelCorpo> viste;
+
+  /// Le misure accese che il telefono non ha mai visto: di Salute o di
+  /// Health Connect non c'e' ancora il permesso.
+  Set<MisuraDelCorpo> get daChiedere => misure.difference(viste);
+
   ScelteDellaSalute con({
     bool? acceso,
     String? persona,
     Set<MisuraDelCorpo>? misure,
     DateTime? ultimoInvio,
+    Set<MisuraDelCorpo>? viste,
   }) => ScelteDellaSalute(
     acceso: acceso ?? this.acceso,
     persona: persona ?? this.persona,
     misure: misure ?? this.misure,
     ultimoInvio: ultimoInvio ?? this.ultimoInvio,
+    viste: viste ?? this.viste,
   );
+
+  /// Dopo aver chiesto il permesso: tutte viste.
+  ScelteDellaSalute tutteViste() => con(viste: {...MisuraDelCorpo.values});
 
   Map<String, Object?> inJson() => {
     'acceso': acceso,
     'persona': persona,
     'misure': [for (final m in misure) m.name],
+    'viste': [for (final m in viste) m.name],
     if (ultimoInvio != null) 'ultimo': ultimoInvio!.millisecondsSinceEpoch,
   };
 
@@ -183,19 +274,26 @@ class ScelteDellaSalute {
       }
     }
     if (letto is! Map) return const ScelteDellaSalute();
-    final nomi = letto['misure'];
-    final misure = nomi is List
+    Set<MisuraDelCorpo>? daNomi(Object? nomi) => nomi is List
         ? {
             for (final nome in nomi)
               for (final m in MisuraDelCorpo.values)
                 if (m.name == nome) m,
           }
-        : misureDiSerie;
+        : null;
+    final scelte = daNomi(letto['misure']);
+    /* Chi ha scelto prima delle misure nuove non le ha mai viste: quelle
+     * di serie le trova accese, e il permesso si chiede al primo invio. */
+    final viste = daNomi(letto['viste']) ?? misureDiPrima;
+    final misure = scelte == null
+        ? misureDiSerie
+        : {...scelte, ...misureDiSerie.difference(viste)};
     final ultimo = letto['ultimo'];
     return ScelteDellaSalute(
       acceso: letto['acceso'] == true,
       persona: personaPulita('${letto['persona'] ?? ''}'),
       misure: misure,
+      viste: scelte == null ? const {...MisuraDelCorpo.values} : viste,
       ultimoInvio: ultimo is int
           ? DateTime.fromMillisecondsSinceEpoch(ultimo)
           : null,
@@ -218,8 +316,9 @@ class Lettura {
   final double valore;
   final DateTime quando;
 
+  /* Due decimali: 0,19 km di distanza con uno solo sarebbero 0,2. */
   Map<String, Object> inJson() => {
-    'valore': (valore * 10).round() / 10,
+    'valore': (valore * 100).round() / 100,
     'quando': quando.toUtc().toIso8601String(),
   };
 }
@@ -244,6 +343,31 @@ Lettura? lUltimo(Iterable<Campione> campioni) {
 /// Una percentuale: Apple la da' come frazione (0,97), Health Connect come
 /// numero (97). Qui sempre come numero.
 double comePercentuale(double valore) => valore <= 1.0 ? valore * 100 : valore;
+
+/// Le ore in piedi di oggi: le ore in cui l'Apple Watch dice «in piedi»
+/// (`HKCategoryValueAppleStandHour.stood`, che vale 0; «fermo» vale 1).
+/// Un'ora scritta due volte si conta una.
+Lettura? leOreInPiedi(Iterable<Campione> ore, DateTime adesso) {
+  final inPiedi = {
+    for (final o in ore)
+      if (o.valore == 0) DateTime(o.da.year, o.da.month, o.da.day, o.da.hour),
+  };
+  if (ore.isEmpty) return null;
+  return Lettura(inPiedi.length.toDouble(), adesso);
+}
+
+/// La somma di quello che il telefono ha dato per oggi.
+double sommaDiOggi(Iterable<double> valori) =>
+    valori.fold<double>(0, (s, v) => s + v);
+
+/// Le calorie a riposo di oggi su Android: Health Connect le da' solo dentro
+/// le calorie totali (il metabolismo e' un ritmo, non un'energia), e le
+/// attive si tolgono. Senza totali, niente.
+double? caloriaRiposoDaiTotali(double? totali, double? attive) {
+  if (totali == null) return null;
+  final riposo = totali - (attive ?? 0);
+  return riposo < 0 ? 0 : riposo;
+}
 
 /// L'ultima notte di sonno, in minuti. I tratti si mettono in fila e si
 /// uniscono in «sonni»: fra un tratto e l'altro al piu' [risveglioFinoA]
@@ -410,8 +534,7 @@ enum GuastoDellaSalute {
 String nessunValore(MisuraDelCorpo misura, {required bool iPhone}) {
   final finestra = finestraDellUltimo(misura);
   final quando = switch (misura) {
-    MisuraDelCorpo.passi ||
-    MisuraDelCorpo.calorie => inLingua(it: 'oggi', en: 'today'),
+    _ when eDiOggi(misura) => inLingua(it: 'oggi', en: 'today'),
     MisuraDelCorpo.sonno => inLingua(
       it: 'nelle ultime notti',
       en: 'for the last few nights',

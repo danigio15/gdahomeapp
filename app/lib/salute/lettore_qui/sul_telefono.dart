@@ -56,6 +56,26 @@ List<HealthDataType> tipiDi(MisuraDelCorpo misura, {required bool iPhone}) =>
             ? [...sonnoDormitoSuIPhone, ...sonnoALettoSuIPhone]
             : [HealthDataType.SLEEP_SESSION],
       MisuraDelCorpo.calorie => [HealthDataType.ACTIVE_ENERGY_BURNED],
+      MisuraDelCorpo.distanza => [
+        iPhone
+            ? HealthDataType.DISTANCE_WALKING_RUNNING
+            : HealthDataType.DISTANCE_DELTA,
+      ],
+      MisuraDelCorpo.piani => [HealthDataType.FLIGHTS_CLIMBED],
+      /* Su Android il metabolismo e' un ritmo (kcal al giorno), non
+       * un'energia: a riposo = totali - attive (`caloriaRiposoDaiTotali`). */
+      MisuraDelCorpo.calorieRiposo =>
+        iPhone
+            ? [HealthDataType.BASAL_ENERGY_BURNED]
+            : [
+                HealthDataType.TOTAL_CALORIES_BURNED,
+                HealthDataType.ACTIVE_ENERGY_BURNED,
+              ],
+      /* Gli anelli dell'Apple Watch: Health Connect non li ha. */
+      MisuraDelCorpo.esercizio =>
+        iPhone ? [HealthDataType.EXERCISE_TIME] : const [],
+      MisuraDelCorpo.inPiedi =>
+        iPhone ? [HealthDataType.APPLE_STAND_HOUR] : const [],
     };
 
 class LettoreDelTelefono implements LettoreDellaSalute {
@@ -148,6 +168,7 @@ class LettoreDelTelefono implements LettoreDellaSalute {
     DateTime mezzanotte,
   ) async {
     final tipi = tipiDi(misura, iPhone: _iPhone);
+    if (tipi.isEmpty) return null;
     switch (misura) {
       case MisuraDelCorpo.passi:
         /* Il totale lo fa il sistema: telefono e orologio insieme, senza
@@ -155,10 +176,27 @@ class LettoreDelTelefono implements LettoreDellaSalute {
         final passi = await _health.getTotalStepsInInterval(mezzanotte, ora);
         return passi == null ? null : Lettura(passi.toDouble(), ora);
       case MisuraDelCorpo.calorie:
-        final tratti = await _campioni(tipi, mezzanotte, ora);
-        if (tratti.isEmpty) return null;
-        final somma = tratti.fold<double>(0, (s, c) => s + c.valore);
-        return Lettura(somma.roundToDouble(), ora);
+        final kcal = await _diOggi(tipi.single, mezzanotte, ora);
+        return kcal == null ? null : Lettura(kcal.roundToDouble(), ora);
+      case MisuraDelCorpo.distanza:
+        final metri = await _diOggi(tipi.single, mezzanotte, ora);
+        return metri == null ? null : Lettura(metri / 1000, ora);
+      case MisuraDelCorpo.piani:
+      case MisuraDelCorpo.esercizio:
+        final quanti = await _diOggi(tipi.single, mezzanotte, ora);
+        return quanti == null ? null : Lettura(quanti.roundToDouble(), ora);
+      case MisuraDelCorpo.calorieRiposo:
+        if (_iPhone) {
+          final kcal = await _diOggi(tipi.single, mezzanotte, ora);
+          return kcal == null ? null : Lettura(kcal.roundToDouble(), ora);
+        }
+        final riposo = caloriaRiposoDaiTotali(
+          await _diOggi(HealthDataType.TOTAL_CALORIES_BURNED, mezzanotte, ora),
+          await _diOggi(HealthDataType.ACTIVE_ENERGY_BURNED, mezzanotte, ora),
+        );
+        return riposo == null ? null : Lettura(riposo.roundToDouble(), ora);
+      case MisuraDelCorpo.inPiedi:
+        return leOreInPiedi(await _campioni(tipi, mezzanotte, ora), ora);
       case MisuraDelCorpo.sonno:
         final da = mezzanotte.subtract(notteFinoA + const Duration(hours: 6));
         if (!_iPhone) {
@@ -193,6 +231,38 @@ class LettoreDelTelefono implements LettoreDellaSalute {
             ? Lettura(comePercentuale(ultimo.valore), ultimo.quando)
             : ultimo;
     }
+  }
+
+  /* Il totale di oggi, da mezzanotte. Prima lo chiede al sistema, che somma
+   * telefono e orologio senza contare due volte (HealthKit sceglie la fonte
+   * per ogni minuto, Health Connect fa lo stesso con le sue priorita'); se
+   * il sistema non sa fare la somma di quel tipo — i minuti di esercizio su
+   * iPhone, i piani su Android — si sommano i campioni, che li scrive una
+   * fonte sola. `null` se di oggi non c'e' niente. */
+  Future<double?> _diOggi(
+    HealthDataType tipo,
+    DateTime mezzanotte,
+    DateTime ora,
+  ) async {
+    try {
+      final punti = await _health.getHealthIntervalDataFromTypes(
+        startDate: mezzanotte,
+        endDate: ora,
+        types: [tipo],
+        interval: const Duration(days: 1).inSeconds,
+      );
+      final valori = [
+        for (final p in punti)
+          if (p.value is NumericHealthValue)
+            (p.value as NumericHealthValue).numericValue.toDouble(),
+      ];
+      if (valori.isNotEmpty) return sommaDiOggi(valori);
+    } catch (_) {
+      /* Il sistema non lo somma: si sommano i campioni. */
+    }
+    final campioni = await _campioni([tipo], mezzanotte, ora);
+    if (campioni.isEmpty) return null;
+    return sommaDiOggi([for (final c in campioni) c.valore]);
   }
 
   /* L'ultimo valore, cercato a scalini: l'ultimo giorno, la settimana, la

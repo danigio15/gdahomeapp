@@ -86,6 +86,13 @@ const NOMI = () => ({
   sonno: t("Sonno", "Sleep"),
   ossigeno: t("Ossigeno", "Blood oxygen"),
   calorie: t("Calorie", "Calories"),
+  calorieRiposo: t("A riposo", "Resting"),
+  distanza: t("Distanza", "Distance"),
+  piani: t("Piani saliti", "Flights climbed"),
+  attivita: t("Attività", "Activity"),
+  movimento: t("Movimento", "Move"),
+  esercizio: t("Esercizio", "Exercise"),
+  inPiedi: t("In piedi", "Stand"),
 });
 const SEGNI = {
   passi: "👟",
@@ -95,7 +102,24 @@ const SEGNI = {
   sonno: "🌙",
   ossigeno: "🫁",
   calorie: "🔥",
+  attivita: "🏃",
+  distanza: "🚶",
+  piani: "🪜",
 };
+
+/* I colori degli anelli, come li conosce chi ha un Apple Watch. */
+const ANELLI = { movimento: "#fa114f", esercizio: "#65c51b", inPiedi: "#0fb5d6" };
+
+/* «6 piani», «1 piano». */
+const pianiTesto = (n) =>
+  `${numeroBello(n)} ${n === 1 ? t("piano", "flight") : t("piani", "flights")}`;
+
+/* Il piu' recente fra gli istanti di piu' misure. */
+const piuRecente = (...misure) =>
+  misure
+    .filter(Boolean)
+    .map((m) => m.quando)
+    .sort((a, b) => (Date.parse(b) || 0) - (Date.parse(a) || 0))[0] || "";
 const FASCE = () => ({
   ottimale: t("Ottimale", "Optimal"),
   "normale-alta": t("Normale-alta", "High-normal"),
@@ -314,9 +338,68 @@ function schedeMarkup(persona) {
     schede.push(schedaMarkup("sonno", { valore: durataSonno(m.sonno.valore), unita: "", sotto: t("stanotte", "last night"), quando: quandoArrivato(m.sonno.quando) }));
   if (m.ossigeno)
     schede.push(schedaMarkup("ossigeno", { valore: numeroBello(m.ossigeno.valore), unita: "%", sotto: "SpO₂", quando: quandoArrivato(m.ossigeno.quando) }));
-  if (m.calorie)
-    schede.push(schedaMarkup("calorie", { valore: numeroBello(m.calorie.valore), unita: m.calorie.unita || "kcal", sotto: t("oggi", "today"), quando: quandoArrivato(m.calorie.quando) }));
+  /* Senza i passi, la distanza e i piani non hanno la fascia rossa in cui
+   * stare: hanno la loro scheda. */
+  if (!m.passi && m.distanza)
+    schede.push(schedaMarkup("distanza", { valore: numeroBello(m.distanza.valore, 2), unita: "km", sotto: t("oggi", "today"), quando: quandoArrivato(m.distanza.quando) }));
+  if (!m.passi && m.piani)
+    schede.push(schedaMarkup("piani", { valore: numeroBello(m.piani.valore), unita: "", sotto: t("oggi", "today"), quando: quandoArrivato(m.piani.quando) }));
+  if (m.esercizio || m.inPiedi) schede.push(attivitaMarkup(m));
+  else if (m.calorie || m.calorieRiposo) {
+    const principale = m.calorie || m.calorieRiposo;
+    const riposo =
+      m.calorie && m.calorieRiposo ? ` · ${NOMI().calorieRiposo.toLowerCase()} ${numeroBello(m.calorieRiposo.valore)} kcal` : "";
+    schede.push(
+      schedaMarkup("calorie", {
+        valore: numeroBello(principale.valore),
+        unita: principale.unita || "kcal",
+        sotto: m.calorie ? `${t("oggi", "today")}${riposo}` : t("a riposo, oggi", "resting, today"),
+        quando: quandoArrivato(piuRecente(m.calorie, m.calorieRiposo)),
+      }),
+    );
+  }
   return schede.length ? `<div class="dm-salute-schede">${schede.join("")}</div>` : "";
+}
+
+/* L'anello Attivita' dell'Apple Watch: Movimento, Esercizio, In piedi, coi
+ * loro colori, e sotto le calorie a riposo. Niente anelli disegnati: gli
+ * obiettivi li sceglie ognuno sull'orologio, e Salute non li da'. */
+function attivitaMarkup(m) {
+  const voce = (chiave, misura, unita) =>
+    `<div class="dm-salute-anello-voce" style="--anello:${ANELLI[chiave]}">
+      <span>${esc(NOMI()[chiave])}</span>
+      <b>${misura ? esc(numeroBello(Math.floor(misura.valore))) : "—"}<small> ${esc(unita)}</small></b>
+    </div>`;
+  /* Come gli anelli dell'orologio: i numeri interi, troncati (4,6 kcal e'
+   * «4»). */
+  const totale =
+    m.calorie && m.calorieRiposo ? Math.floor(m.calorie.valore + m.calorieRiposo.valore) : null;
+  const riposo = m.calorieRiposo
+    ? `<span class="dm-salute-sotto">${esc(
+        `${NOMI().calorieRiposo}: ${numeroBello(Math.floor(m.calorieRiposo.valore))} kcal${
+          totale === null ? "" : ` · ${t("totale", "total")} ${numeroBello(totale)} kcal`
+        }`,
+      )}</span>`
+    : "";
+  const quando = quandoArrivato(piuRecente(m.calorie, m.esercizio, m.inPiedi, m.calorieRiposo));
+  return `<article class="dm-salute-scheda larga dm-salute-attivita" data-dm-salute-misura="attivita">
+    <div class="dm-salute-testa"><span class="dm-salute-segno" aria-hidden="true">${SEGNI.attivita}</span><span>${esc(NOMI().attivita)}</span></div>
+    <div class="dm-salute-anelli">
+      ${voce("movimento", m.calorie, "kcal")}
+      ${voce("esercizio", m.esercizio, "min")}
+      ${voce("inPiedi", m.inPiedi, "h")}
+    </div>
+    ${riposo}
+    ${quando ? `<time>${esc(quando)}</time>` : ""}
+  </article>`;
+}
+
+/* Sotto i passi: quanta strada, quanti piani. */
+function stradaMarkup(m) {
+  const parti = [];
+  if (m.distanza) parti.push(`<span>${SEGNI.distanza} ${esc(numeroBello(m.distanza.valore, 2))} km</span>`);
+  if (m.piani) parti.push(`<span>${SEGNI.piani} ${esc(pianiTesto(m.piani.valore))}</span>`);
+  return parti.length ? `<span class="dm-salute-eroe-strada">${parti.join("")}</span>` : "";
 }
 
 function eroeMarkup(persona, obiettivo, { finestra = false } = {}) {
@@ -334,6 +417,7 @@ function eroeMarkup(persona, obiettivo, { finestra = false } = {}) {
             ? t(`Obiettivo di ${numeroBello(obiettivo)} raggiunto`, `${numeroBello(obiettivo)} goal reached`)
             : t(`Ne mancano ${numeroBello(obiettivo - passi.valore)} a ${numeroBello(obiettivo)}`, `${numeroBello(obiettivo - passi.valore)} to go to ${numeroBello(obiettivo)}`),
         )}</span>
+        ${stradaMarkup(persona.misure)}
       </div>
     </div>
     ${finestra ? "" : settimanaPassiMarkup(passi, obiettivo)}
@@ -355,8 +439,8 @@ function corpoMarkup(vista) {
   return `${persone}${eroeMarkup(persona, vista.config.obiettivoPassi)}${schedeMarkup(persona)}
     <p class="dm-salute-fonte">${esc(
       t(
-        "Le misure arrivano in Home Assistant dal telefono (Health Connect), dalla bilancia, dall'orologio. Non sono un parere medico.",
-        "Readings reach Home Assistant from the phone (Health Connect), the scale, the watch. They are not medical advice.",
+        "Le misure arrivano in Home Assistant dal telefono (Apple Salute o Health Connect), dalla bilancia, dall'orologio. Non sono un parere medico.",
+        "Readings reach Home Assistant from the phone (Apple Health or Health Connect), the scale, the watch. They are not medical advice.",
       ),
     )}</p>`;
 }
@@ -606,6 +690,14 @@ export function foglioSalute(P) {
     box-shadow:0 0 0 3px var(--card-background-color,#fff)}
   ${P} .dm-salute-linea figcaption{font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b);margin-top:2px}
   ${P} .dm-salute-linea.dm-salute-attesa{color:var(--text-dim,#64748b);padding:6px 0}
+  ${P} .dm-salute-eroe-strada{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:4px;font-size:13.5px;font-weight:800}
+  ${P} .dm-salute-eroe-strada span{padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.18);white-space:nowrap}
+  ${P} .dm-salute-anelli{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin:6px 0 2px}
+  ${P} .dm-salute-anello-voce{display:grid;gap:1px;padding-left:10px;border-left:3px solid var(--anello);min-width:0}
+  ${P} .dm-salute-anello-voce + .dm-salute-anello-voce{margin-left:6px}
+  ${P} .dm-salute-anello-voce span{font-size:12.5px;font-weight:850;color:var(--anello);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  ${P} .dm-salute-anello-voce b{font-size:24px;font-weight:900;color:var(--text,#0f172a);line-height:1.15;white-space:nowrap}
+  ${P} .dm-salute-anello-voce b small{font-size:13px;font-weight:800;color:var(--text-dim,#64748b)}
   ${P} .dm-salute-fonte{margin:0;font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b);text-align:center}
   ${P} .dm-salute-finestra .dm-strava{gap:10px}
   @media (max-width:640px){
@@ -613,6 +705,7 @@ export function foglioSalute(P) {
     ${P} .dm-salute-scheda.larga{grid-column:1 / -1}
     ${P} .dm-salute-eroe-num{font-size:38px}
     ${P} .dm-salute-eroe-anello{width:84px;height:84px}
+    ${P} .dm-salute-anello-voce b{font-size:20px}
   }
   `;
 }
