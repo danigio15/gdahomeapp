@@ -80,9 +80,9 @@
  * ─── Gli abbonamenti ─────────────────────────────────────────────────────
  *
  * La Gestione ha una schermata «Abbonamenti»: quanti pagano, quanti sono in
- * prova gratuita, quanti hanno disdetto — ognuno in un posto solo — mensili
- * e annuali, per App Store e per Google Play, e
- * uno per riga (`abbonamenti`). Per questo una licenza del negozio tiene
+ * prova gratuita, quanti sono finiti — ognuno in un posto solo — e di questi
+ * quanti non rinnovano, mensili e annuali, per App Store e per Google Play,
+ * e uno per riga (`abbonamenti`). Per questo una licenza del negozio tiene
  * anche com'e' fatto l'abbonamento (`negozio.abbonamento`: piano, prezzo,
  * rinnovo automatico, acquisto di prova, da quando, paese — `negozi.js`), e
  * due cose della sua storia: se e' stata in prova gratuita (`fuInProva`) e se
@@ -425,53 +425,76 @@ export function ilPacchettoDetto(detto) {
 /**
  * Lo stato di un abbonamento, uno solo: `scaduto` (non vale piu'), `disdetto`
  * (vale ancora ma non si rinnova), `prova` (prova gratuita che si rinnova),
- * `attivo` (pagato, e si rinnova). E' quello della riga dell'elenco e quello
- * con cui si contano le categorie: cosi' i numeri e le righe non si smentiscono.
+ * `attivo` (pagato, e si rinnova). Lo legge la scheda della casa, che dice
+ * in una frase cosa succede dopo; i conti e l'elenco degli abbonamenti si
+ * fanno per gruppo (`ilGruppoDellAbbonamento`).
  */
 export function loStatoDellAbbonamento({ vale, rinnovo, prova }) {
   return !vale ? "scaduto" : rinnovo === false ? "disdetto" : prova ? "prova" : "attivo";
 }
 
 /**
+ * Il gruppo di un abbonamento, uno solo: `paganti` (il periodo in corso e'
+ * pagato), `prova` (prova gratuita in corso), `finiti` (non vale piu').
+ *
+ * «Vedo che paganti hai ancora 0»: chi ha finito la prova, ha pagato il mese
+ * e poi ha disdetto stava fra i «disdetti», e i paganti restavano a zero con
+ * 4,99 € incassati. Disdire non toglie quello che si e' pagato: e' un
+ * pagante che **non rinnova**. Il rinnovo spento e' un segno sulla riga
+ * (`nonRinnova`), non un gruppo: un pagante resta pagante fino alla
+ * scadenza, una prova resta prova e finisce senza pagare.
+ */
+export function ilGruppoDellAbbonamento({ vale, prova }) {
+  return !vale ? "finiti" : prova ? "prova" : "paganti";
+}
+
+/** Vale ancora, ma col rinnovo spento: finisce alla scadenza. */
+export function nonRinnova({ vale, rinnovo }) {
+  return Boolean(vale) && rinnovo === false;
+}
+
+/**
  * I conti degli abbonamenti, dalle righe di `Licenze.abbonamenti`.
  *
- * Ogni abbonamento sta in **una** categoria sola, quella del suo stato, e le
- * categorie sommano a `tutti`:
+ * Ogni abbonamento sta in **un** gruppo solo (`ilGruppoDellAbbonamento`), e
+ * i gruppi sommano a `tutti`: `paganti + inProva + finiti + test`.
  *
- * - `paganti`: hanno pagato e si rinnovano (stato `attivo`), divisi per piano
- *   in `pagantiMensili` e `pagantiAnnuali`;
- * - `inProva`: in prova gratuita, col rinnovo acceso (stato `prova`): non
- *   hanno ancora pagato; `primaFineProva` e' la prima di queste prove che
- *   finisce, cioe' il primo incasso possibile;
- * - `disdetti`: col rinnovo spento, valgono fino alla scadenza (stato
- *   `disdetto`); `disdettiInProva` sono quelli disdetti durante la prova, che
- *   non pagheranno;
- * - `finiti`: non valgono piu' (stato `scaduto`);
+ * - `paganti`: il periodo in corso l'hanno pagato e sono Premium, che
+ *   rinnovino o no; `pagantiRinnovano` e `pagantiNonRinnovano` (`nonRinnova`)
+ *   li dividono, `primaFinePagantiNonRinnovano` e' il primo che finisce;
+ *   `pagantiMensili` e `pagantiAnnuali` li dividono per piano;
+ * - `inProva`: in prova gratuita, non hanno ancora pagato; `proveNonRinnovano`
+ *   sono quelle col rinnovo spento, che finiscono senza pagare;
+ *   `primaFineProva` e' la prima delle altre che finisce, cioe' il primo
+ *   incasso possibile da una prova;
+ * - `nonRinnovano`: quelli che valgono e non rinnovano, paganti e prove
+ *   insieme: non e' un gruppo, e' un «di cui»;
+ * - `finiti`: non valgono piu';
  * - `test`: gli acquisti di prova (TestFlight, tester di Google). Stanno qui
  *   e in nessun altro numero, nemmeno in quelli che seguono.
  *
- * E quelli di prima, che legge anche la Panoramica:
+ * I nomi di prima restano per chi li legge ancora: `disdetti` (=
+ * `nonRinnovano`), `disdettiInProva` (= `proveNonRinnovano`),
+ * `pagatiDisdetti` (= `pagantiNonRinnovano`), `primaFinePagatiDisdetti`.
  *
- * - `attivi`: quelli che valgono adesso, prova gratuita e disdetti compresi;
- *   `mensili` e `annuali` sono gli stessi divisi per piano, `prova` e' il
- *   «di cui» in prova gratuita (disdetti in prova compresi);
+ * E quelli che legge anche la Panoramica:
+ *
+ * - `attivi`: quelli che valgono adesso (`paganti + inProva`); `mensili` e
+ *   `annuali` sono gli stessi divisi per piano, `prova` e' il «di cui» in
+ *   prova gratuita;
  * - `rinnovi7`: quelli che si rinnovano — o passano a pagamento — entro
  *   sette giorni;
  * - `finiti30`: quelli finiti negli ultimi trenta giorni;
  * - `prove`: le prove gratuite finite, e quante sono passate a pagamento;
- * - `alMese`: il **ricorrente**, quello che pagano al mese i `paganti`,
- *   valuta per valuta, IVA compresa e prima della commissione del negozio —
- *   un annuale conta un dodicesimo. La prova non paga, e chi ha disdetto non
- *   paga piu'.
+ * - `alMese`: il **ricorrente**, quello che pagano al mese i paganti che
+ *   rinnovano, valuta per valuta, IVA compresa e prima della commissione del
+ *   negozio — un annuale conta un dodicesimo. La prova non paga, e chi non
+ *   rinnova non paghera' piu'.
  *
- * E quello che e' **gia' incassato**, che col ricorrente non c'entra: chi ha
- * finito la prova, ha pagato il mese e poi ha disdetto non rinnova — non sta
- * fra i paganti e non conta nel ricorrente — ma quei soldi li ha dati.
+ * E quello che e' **gia' incassato**, che col ricorrente non c'entra:
  *
- * - `pagatiDisdetti`: i disdetti che il periodo in corso l'hanno pagato (non
- *   erano in prova); `primaFinePagatiDisdetti` e' il primo di loro che finisce;
  * - `hannoPagato`: quelli che hanno pagato almeno un periodo, di qualunque
- *   categoria (`haPagato`);
+ *   gruppo (`haPagato`);
  * - `incassato`: i pagamenti del mese, valuta per valuta, IVA compresa e
  *   prima della commissione; `pagamenti` quanti sono (anche quelli di cui il
  *   negozio non ha detto il prezzo), `inizioDelMese` da quando si conta, a
@@ -483,7 +506,7 @@ export function loStatoDellAbbonamento({ vale, rinnovo, prova }) {
  *   al piu' uno, ed e' l'ultimo: il conto del mese si fa;
  * - `prossimoIncasso`: il primo incasso che arriva, `{quando, perche}`, col
  *   perche' «rinnovo» (un pagante che si rinnova) o «fine-prova» (una prova
- *   che finisce, se non disdice), o `null`.
+ *   che finisce col rinnovo acceso), o `null`.
  */
 /* Quanti mesi dura un periodo del piano: `null` se il piano non e' detto. */
 const MESI_DEL_PIANO = { mensile: 1, annuale: 12 };
@@ -554,25 +577,25 @@ export function contaGliAbbonamenti(tutte, ora = Date.now()) {
   const righe = tutte.filter((riga) => !riga.sandbox);
   const valide = righe.filter((riga) => riga.vale);
   const quante = (filtro) => valide.filter(filtro).length;
-  const diStato = (stato) => righe.filter((riga) => loStatoDellAbbonamento(riga) === stato);
-  const paganti = diStato("attivo");
-  const inProva = diStato("prova");
-  const disdetti = diStato("disdetto");
+  const delGruppo = (gruppo) => righe.filter((riga) => ilGruppoDellAbbonamento(riga) === gruppo);
+  const laPrima = (quali) => {
+    const date = quali.map((riga) => riga.pagato).filter((quando) => typeof quando === "number");
+    return date.length ? Math.min(...date) : null;
+  };
+  const paganti = delGruppo("paganti");
+  const pagantiRinnovano = paganti.filter((riga) => !nonRinnova(riga));
+  const pagantiNonRinnovano = paganti.filter(nonRinnova);
+  const inProva = delGruppo("prova");
+  const proveRinnovano = inProva.filter((riga) => !nonRinnova(riga));
+  const proveNonRinnovano = inProva.filter(nonRinnova);
   const alMese = {};
-  for (const riga of paganti) {
+  for (const riga of pagantiRinnovano) {
     if (!(riga.prezzo > 0) || !riga.valuta) continue;
     const alMeseSuo =
       riga.piano === "annuale" ? riga.prezzo / 12 : riga.piano === "mensile" ? riga.prezzo : null;
     if (alMeseSuo === null) continue;
     alMese[riga.valuta] = Math.round(((alMese[riga.valuta] || 0) + alMeseSuo) * 100) / 100;
   }
-  const fineProve = inProva
-    .map((riga) => riga.pagato)
-    .filter((quando) => typeof quando === "number");
-  const pagatiDisdetti = disdetti.filter((riga) => !riga.prova);
-  const finePagatiDisdetti = pagatiDisdetti
-    .map((riga) => riga.pagato)
-    .filter((quando) => typeof quando === "number");
 
   /* Gli incassi del mese: l'ultimo periodo pagato, se e' cominciato da
    * mezzanotte del primo del mese. Un periodo che non e' di prova e' gia'
@@ -591,25 +614,35 @@ export function contaGliAbbonamenti(tutte, ora = Date.now()) {
     incassato[riga.valuta] = Math.round(((incassato[riga.valuta] || 0) + riga.prezzo) * 100) / 100;
   }
 
-  /* Il prossimo incasso: un pagante che si rinnova, o una prova che finisce. */
+  /* Il prossimo incasso: un pagante che si rinnova, o una prova che finisce
+   * col rinnovo acceso. */
   const inArrivo = [
-    ...paganti.map((riga) => ({ quando: riga.pagato, perche: "rinnovo" })),
-    ...inProva.map((riga) => ({ quando: riga.pagato, perche: "fine-prova" })),
+    ...pagantiRinnovano.map((riga) => ({ quando: riga.pagato, perche: "rinnovo" })),
+    ...proveRinnovano.map((riga) => ({ quando: riga.pagato, perche: "fine-prova" })),
   ]
     .filter((uno) => typeof uno.quando === "number" && uno.quando >= ora)
     .sort((a, b) => a.quando - b.quando);
 
+  const primaFinePagantiNonRinnovano = laPrima(pagantiNonRinnovano);
   return {
     tutti: tutte.length,
     paganti: paganti.length,
+    pagantiRinnovano: pagantiRinnovano.length,
+    pagantiNonRinnovano: pagantiNonRinnovano.length,
+    primaFinePagantiNonRinnovano,
     pagantiMensili: paganti.filter((riga) => riga.piano === "mensile").length,
     pagantiAnnuali: paganti.filter((riga) => riga.piano === "annuale").length,
     inProva: inProva.length,
-    primaFineProva: fineProve.length ? Math.min(...fineProve) : null,
-    disdetti: disdetti.length,
-    disdettiInProva: disdetti.filter((riga) => riga.prova).length,
-    finiti: diStato("scaduto").length,
+    proveNonRinnovano: proveNonRinnovano.length,
+    primaFineProva: laPrima(proveRinnovano),
+    nonRinnovano: pagantiNonRinnovano.length + proveNonRinnovano.length,
+    finiti: delGruppo("finiti").length,
     test: tutte.length - righe.length,
+    /* I nomi di prima. */
+    disdetti: pagantiNonRinnovano.length + proveNonRinnovano.length,
+    disdettiInProva: proveNonRinnovano.length,
+    pagatiDisdetti: pagantiNonRinnovano.length,
+    primaFinePagatiDisdetti: primaFinePagantiNonRinnovano,
     attivi: valide.length,
     mensili: quante((riga) => riga.piano === "mensile"),
     annuali: quante((riga) => riga.piano === "annuale"),
@@ -633,8 +666,6 @@ export function contaGliAbbonamenti(tutte, ora = Date.now()) {
       pagate: righe.filter((riga) => riga.fuInProva && riga.pagatoDopoLaProva).length,
     },
     alMese,
-    pagatiDisdetti: pagatiDisdetti.length,
-    primaFinePagatiDisdetti: finePagatiDisdetti.length ? Math.min(...finePagatiDisdetti) : null,
     hannoPagato: righe.filter(haPagato).length,
     incassato,
     pagamenti: pagatiNelMese.length,
@@ -1391,8 +1422,10 @@ export class Licenze {
   /* Un abbonamento del negozio, come lo legge la schermata «Abbonamenti».
    * `pagato` e' la fine del periodo pagato, o della prova: quella che si
    * scrive. Lo stato e' uno solo: scaduto, disdetto (vale ancora ma non si
-   * rinnova), in prova, attivo. Gli acquisti di prova hanno lo stato vero
-   * come gli altri, e in piu' `sandbox`: si vedono, e non si contano. */
+   * rinnova), in prova, attivo; il gruppo anche: paganti, prova, finiti, e
+   * `nonRinnova` dice il rinnovo spento. Gli acquisti di prova hanno lo
+   * stato vero come gli altri, e in piu' `sandbox`: si vedono, e non si
+   * contano. */
   _rigaDellAbbonamento(una, ora) {
     const suo = una.negozio.abbonamento || {};
     const vale = this.vale(una, ora);
@@ -1415,6 +1448,8 @@ export class Licenze {
       pagato: una.scade,
       vale,
       stato: loStatoDellAbbonamento({ vale, rinnovo, prova: una.prova }),
+      gruppo: ilGruppoDellAbbonamento({ vale, prova: una.prova }),
+      nonRinnova: nonRinnova({ vale, rinnovo }),
       prova: Boolean(una.prova),
       fuInProva: Boolean(una.fuInProva),
       pagatoDopoLaProva: Boolean(una.pagatoDopoLaProva),
@@ -1429,14 +1464,20 @@ export class Licenze {
    * fuori dai conti.
    */
   abbonamenti(ora = this.adesso()) {
-    const ORDINE = { prova: 0, attivo: 1, disdetto: 2, scaduto: 3 };
+    /* Prima i paganti, poi le prove, poi i finiti, e i test in fondo. Fra
+     * quelli che valgono prima chi scade prima (e' li' che succede
+     * qualcosa); fra i finiti prima chi e' finito da poco. */
+    const ORDINE = { paganti: 0, prova: 1, finiti: 2 };
     const righe = this.licenze
       .filter((una) => una.origine === "negozio" && una.negozio)
       .map((una) => this._rigaDellAbbonamento(una, ora))
       .sort(
         (a, b) =>
           Number(a.sandbox) - Number(b.sandbox) ||
-          ORDINE[a.stato] - ORDINE[b.stato] ||
+          ORDINE[a.gruppo] - ORDINE[b.gruppo] ||
+          (a.vale
+            ? (a.pagato ?? Infinity) - (b.pagato ?? Infinity)
+            : (b.pagato ?? 0) - (a.pagato ?? 0)) ||
           (b.inizio ?? 0) - (a.inizio ?? 0),
       );
     /* I conti si fanno qui, su tutte: l'elenco puo' essere tagliato. Gli

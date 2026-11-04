@@ -3974,6 +3974,397 @@
         filter: grayscale(1);
       }
 
+      /* Chi non rinnova e' la parte a righe del suo gruppo, nella barra. */
+      .il-conto-barra i.a-righe {
+        background: repeating-linear-gradient(
+          135deg,
+          var(--cat) 0 3px,
+          color-mix(in srgb, var(--cat) 35%, transparent) 3px 7px
+        );
+      }
+
+      .il-conto-nota {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        color: var(--ink-3);
+        font-size: 0.82rem;
+      }
+
+      .a-righe-campione {
+        width: 22px;
+        height: 8px;
+        flex: none;
+        border-radius: 99px;
+        background: repeating-linear-gradient(
+          135deg,
+          var(--ink-3) 0 3px,
+          color-mix(in srgb, var(--ink-3) 30%, transparent) 3px 7px
+        );
+      }
+
+      /* ─── L'elenco degli abbonamenti, a gruppi ───────────────────────── */
+
+      .abb-cerca {
+        flex: 1 1 100%;
+      }
+
+      .abb-gruppo {
+        border-top: 1px solid var(--linea);
+      }
+
+      .abb-gruppo:first-child {
+        border-top: 0;
+      }
+
+      .abb-prossimi + .abb-gruppo {
+        margin-top: 6px;
+      }
+
+      .abb-capo {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 48px;
+        padding: 10px 4px;
+        border: 0;
+        background: none;
+        color: var(--ink);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .abb-capo b {
+        font-size: 0.96rem;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .abb-n {
+        min-width: 26px;
+        padding: 1px 8px;
+        border-radius: 99px;
+        background: var(--cat-soft);
+        color: var(--cat);
+        font-size: 0.82rem;
+        font-weight: 800;
+        text-align: center;
+      }
+
+      .abb-sunto {
+        flex: 1;
+        min-width: 0;
+        color: var(--ink-3);
+        font-size: 0.84rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .abb-capo .freccina {
+        transition: transform 0.2s;
+      }
+
+      .abb-capo[aria-expanded="true"] .freccina {
+        transform: rotate(90deg);
+      }
+
+      .abb-capo:focus-visible {
+        outline: 2px solid var(--accento);
+        outline-offset: 2px;
+        border-radius: var(--r-piccolo);
+      }
+
+      .abb-righe {
+        margin-bottom: 6px;
+      }
+
+      .elenco.si-tocca > li.abb-riga {
+        display: grid;
+        grid-template-columns: 24px minmax(0, 1fr) auto 18px;
+        align-items: center;
+        column-gap: 12px;
+        padding: 8px 12px;
+      }
+
+      .abb-negozio {
+        width: 24px;
+        height: 24px;
+        display: grid;
+        place-items: center;
+        border-radius: 7px;
+        background: var(--linea);
+        color: var(--ink-2);
+        font-size: 0.74rem;
+        font-weight: 800;
+      }
+
+      .abb-chi {
+        min-width: 0;
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+      }
+
+      .abb-chi b,
+      .abb-chi span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .abb-chi b {
+        flex: 0 1 auto;
+        font-size: 0.92rem;
+        font-weight: 750;
+      }
+
+      .abb-chi span {
+        flex: 0 10 auto;
+        color: var(--ink-3);
+        font-size: 0.82rem;
+      }
+
+      .abb-quando {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+        color: var(--ink-2);
+        font-size: 0.84rem;
+        white-space: nowrap;
+      }
+
+      .abb-quando.non-rinnova {
+        --cat: var(--ambra);
+        --cat-soft: var(--ambra-soft);
+      }
+
+      .abb-quando em {
+        font-style: normal;
+        font-weight: 750;
+        color: var(--ambra);
+      }
+
+      .abb-quando em::after {
+        content: "·";
+        margin-left: 6px;
+        color: var(--ink-3);
+        font-weight: 400;
+      }
+
+      .abb-piano-corto {
+        display: none;
+      }
+
+      .abb-altri {
+        display: block;
+        margin: 0 0 8px;
+        padding: 6px 4px;
+        border: 0;
+        background: none;
+        color: var(--accento);
+        font: inherit;
+        font-size: 0.88rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .abb-altri .minuta {
+        font-weight: 500;
+      }
+
+      /* «Nei prossimi 14 giorni»: quello che succede, in ordine di data. */
+      .abb-prossimi {
+        margin: 0 0 6px;
+        padding: 12px 14px 10px;
+        border-radius: var(--r);
+        background: var(--linea);
+      }
+
+      .abb-prossimi-capo {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 2px 10px;
+        margin: 0 0 8px;
+      }
+
+      .abb-prossimi-capo b {
+        font-size: 0.9rem;
+        font-weight: 800;
+      }
+
+      .abb-prossimi-capo span {
+        color: var(--ink-3);
+        font-size: 0.82rem;
+      }
+
+      .abb-prossimi-lista {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+        gap: 6px;
+      }
+
+      .abb-prossimi-lista > li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        padding: 7px 10px;
+        border-radius: var(--r-piccolo);
+        background: var(--vetro-pieno);
+        cursor: pointer;
+      }
+
+      .abb-prossimi-lista > li.ferma {
+        cursor: default;
+      }
+
+      .abb-prossimi-lista > li:not(.ferma):hover {
+        box-shadow: var(--ombra-alta);
+      }
+
+      .abb-giorno {
+        flex: none;
+        width: 46px;
+        display: grid;
+        justify-items: center;
+        line-height: 1.1;
+      }
+
+      .abb-giorno small {
+        color: var(--ink-3);
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .abb-giorno b {
+        font-size: 0.86rem;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .abb-cosa {
+        min-width: 0;
+        display: grid;
+      }
+
+      /* Il nome si puo' tagliare; cosa succede e l'importo no: vanno a capo. */
+      .abb-cosa b {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .abb-cosa b {
+        font-size: 0.86rem;
+        font-weight: 750;
+      }
+
+      .abb-cosa span {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        color: var(--ink-2);
+        font-size: 0.8rem;
+      }
+
+      .abb-cosa .pallino {
+        width: 7px;
+        height: 7px;
+        box-shadow: none;
+        transform: translateY(-1px);
+      }
+
+      .abb-prossimi-altri {
+        margin: 8px 2px 0;
+      }
+
+      @media (max-width: 600px) {
+        /* Sul telefono due righe: il nome, e sotto la data che conta col
+         * piano. «Non rinnova» e' il pallino ambra. */
+        .elenco.si-tocca > li.abb-riga {
+          grid-template-columns: 24px minmax(0, 1fr) 14px;
+          column-gap: 10px;
+          row-gap: 1px;
+        }
+
+        .abb-negozio {
+          grid-row: span 2;
+        }
+
+        .abb-chi > span {
+          display: none;
+        }
+
+        /* La data e il prezzo non si tagliano mai: se non ci stanno, il
+         * piano va a capo. */
+        .abb-quando {
+          grid-column: 2;
+          grid-row: 2;
+          justify-content: flex-start;
+          flex-wrap: wrap;
+          row-gap: 0;
+          min-width: 0;
+          white-space: normal;
+          font-size: 0.8rem;
+        }
+
+        .abb-quando > span,
+        .abb-piano-corto {
+          white-space: nowrap;
+        }
+
+        .abb-piano-corto {
+          display: inline;
+          color: var(--ink-3);
+          font-size: inherit;
+        }
+
+        .abb-piano-corto::before {
+          content: "· ";
+        }
+
+        .abb-quando em {
+          display: none;
+        }
+
+        .elenco.si-tocca > li.abb-riga > .freccina {
+          grid-column: 3;
+          grid-row: 1 / span 2;
+        }
+
+        .abb-capo {
+          flex-wrap: wrap;
+          row-gap: 2px;
+        }
+
+        .abb-capo .freccina {
+          margin-left: auto;
+        }
+
+        .abb-sunto {
+          order: 5;
+          flex: 1 1 100%;
+          padding-left: 19px;
+          white-space: normal;
+        }
+
+        .abb-prossimi-lista {
+          grid-template-columns: 1fr;
+        }
+      }
+
       @media (max-width: 600px) {
         .il-conto-testo {
           display: grid;
@@ -4445,6 +4836,13 @@
       let FILTRO_CASE = "tutte";
       let CERCA_CASE = "";
       let FILTRO_ABBONAMENTI = "tutti";
+      /* L'elenco degli abbonamenti, a gruppi: quali sono aperti, quali si
+       * vedono per intero, e cosa si cerca. */
+      const LO_STATO_DEGLI_ABBONAMENTI = {
+        aperti: { paganti: true, prova: true, finiti: false, test: false },
+        interi: new Set(),
+        cerca: "",
+      };
       /* I conti di tutta la pagina, rifatti a ogni disegno (`iConti`). */
       let CONTI = null;
       /* La scheda aperta di lato, o `null`: di che tipo (`casa`,
@@ -6068,19 +6466,26 @@
         if (A) {
           const c = A.conti || {};
           const disdetto = (A.elenco || []).find((uno) => uno.stato === "disdetto" && !uno.sandbox);
+          /* Paganti e prove: un quadro di prima contava a parte i disdetti. */
+          const nuovi = c.pagantiRinnovano !== undefined;
+          const pagantiQui = nuovi
+            ? Number(c.paganti) || 0
+            : (Number(c.paganti) || 0) + (Number(c.pagatiDisdetti) || 0);
+          const proveQui = Number(c.prova) || 0;
+          const nonRinnovanoQui = Number(c.nonRinnovano ?? c.disdetti) || 0;
           const righe = [
             {
-              titolo: `${plurale(Number(c.attivi) || 0, "attivo", "attivi")}${c.prova ? ` · ${c.prova} in prova gratuita` : ""}`,
-              sotto: `${plurale(Number(c.mensili) || 0, "mensile", "mensili")} · ${plurale(Number(c.annuali) || 0, "annuale", "annuali")}`,
+              titolo: `${plurale(pagantiQui, "pagante", "paganti")}${proveQui ? ` · ${proveQui} in prova gratuita` : ""}`,
+              sotto: `${plurale(Number(c.mensili) || 0, "mensile", "mensili")} · ${plurale(Number(c.annuali) || 0, "annuale", "annuali")}, prove comprese`,
               filtro: "",
             },
-            c.disdetti || c.finiti30
+            nonRinnovanoQui || c.finiti30
               ? {
-                  titolo: `${plurale(Number(c.disdetti) || 0, "disdetto", "disdetti")}, ${plurale(Number(c.finiti30) || 0, "finito", "finiti")} negli ultimi 30 giorni`,
+                  titolo: `${nonRinnovanoQui === 1 ? "1 non rinnova" : `${Number(nonRinnovanoQui)} non rinnovano`}, ${plurale(Number(c.finiti30) || 0, "finito", "finiti")} negli ultimi 30 giorni`,
                   sotto: disdetto
                     ? `${CONTI.nomi.get(disdetto.sog) || "Una casa"}: Premium finisce${disdetto.pagato ? ` ${conLArticolo("il", disdetto.pagato)}` : " alla scadenza"}`
-                    : "Chi ha disdetto resta Premium fino alla scadenza",
-                  filtro: c.disdetti ? "disdetto" : "scaduto",
+                    : "Chi spegne il rinnovo resta Premium fino alla scadenza",
+                  filtro: nonRinnovanoQui ? "nonrinnovano" : "finiti",
                 }
               : {
                   titolo: "Nessuna disdetta",
@@ -6764,87 +7169,106 @@
           : `Rinnovo atteso ${fine("dal")}`;
       }
 
-      /* Le categorie degli abbonamenti. Ognuno sta in una sola, quella del
-       * suo stato, e gli acquisti di test (TestFlight, tester di Google) in
-       * una a parte, fuori da ogni numero. Gli stessi nomi, gli stessi colori
-       * e gli stessi numeri nei riquadri, nel conto, nelle linguette e nelle
-       * pastiglie delle righe. `conto` e' il campo dei conti del quadro. */
+      /* Le categorie degli abbonamenti. Ognuno sta in un gruppo solo —
+       * paganti, in prova gratuita, finiti — e gli acquisti di test
+       * (TestFlight, tester di Google) in uno a parte, fuori da ogni numero.
+       * «Non rinnovano» non e' un gruppo: e' il rinnovo spento, un segno che
+       * hanno paganti e prove (`nonRinnova` della riga); ha la sua linguetta
+       * e il suo riquadro, e nell'elenco un pallino ambra. Gli stessi nomi,
+       * gli stessi colori e gli stessi numeri nei riquadri, nel conto, nelle
+       * linguette e nei gruppi. `conto` e' il campo dei conti del quadro. */
       const LE_CATEGORIE_DEGLI_ABBONAMENTI = {
         paganti: {
           nome: "Paganti",
           pastiglia: "pagante",
           tinta: "c-pag",
           conto: "paganti",
-          stato: "attivo",
         },
         prova: {
           nome: "In prova gratuita",
           pastiglia: "prova gratuita",
           tinta: "c-pro",
           conto: "inProva",
-          stato: "prova",
         },
-        disdetti: {
-          nome: "Disdetti",
-          pastiglia: "disdetto",
+        nonrinnovano: {
+          nome: "Non rinnovano",
+          pastiglia: "non rinnova",
           tinta: "c-dis",
-          conto: "disdetti",
-          stato: "disdetto",
+          conto: "nonRinnovano",
+          segno: true,
         },
         finiti: {
           nome: "Finiti",
           pastiglia: "finito",
           tinta: "c-fin",
           conto: "finiti",
-          stato: "scaduto",
         },
         test: {
           nome: "Acquisti di test",
           pastiglia: "test",
           tinta: "c-tes",
           conto: "test",
-          stato: "",
         },
       };
 
-      /* Le linguette di prima si chiamavano per stato: la Panoramica ci
-       * manda ancora con quei nomi. */
+      /* Le linguette di prima si chiamavano per stato, e c'erano i
+       * «Disdetti»: la Panoramica ci manda ancora con quei nomi. */
       const I_FILTRI_DI_PRIMA = {
         attivo: "paganti",
-        disdetto: "disdetti",
+        disdetto: "nonrinnovano",
+        disdetti: "nonrinnovano",
         scaduto: "finiti",
         sandbox: "test",
       };
 
-      /* La categoria di una riga dell'elenco. */
+      /* Il gruppo di una riga dell'elenco: lo dice il quadro (`gruppo`); un
+       * quadro di prima diceva solo lo stato. */
       function laCategoria(uno) {
         if (uno.sandbox) return "test";
-        return (
-          Object.keys(LE_CATEGORIE_DEGLI_ABBONAMENTI).find(
-            (quale) => LE_CATEGORIE_DEGLI_ABBONAMENTI[quale].stato === uno.stato,
-          ) || "finiti"
-        );
+        if (["paganti", "prova", "finiti"].includes(uno.gruppo)) return uno.gruppo;
+        if (uno.stato === "scaduto" || uno.vale === false) return "finiti";
+        return uno.prova ? "prova" : "paganti";
+      }
+
+      /* Il rinnovo spento: vale ancora, e finisce alla scadenza. */
+      function nonRinnovaPiu(uno) {
+        if (typeof uno.nonRinnova === "boolean") return uno.nonRinnova;
+        return uno.stato === "disdetto";
       }
 
       /* Cosa e' successo e cosa succede, in una frase che dice se ha pagato. */
       function laFraseDellaRiga(uno) {
         const il = conLArticolo("il", uno.pagato);
         const al = conLArticolo("al", uno.pagato);
-        if (uno.stato === "prova") {
+        const cat = laCategoria(uno);
+        if (cat === "finiti" || (cat === "test" && uno.vale === false))
+          return uno.finito === "acquisto-rimborsato" ? "Rimborsato" : `Finito ${il}`;
+        if (uno.prova) {
+          if (nonRinnovaPiu(uno)) return `Disdetto durante la prova: finisce ${il} senza pagare`;
           const prezzo = uno.prezzo
             ? ` a ${iSoldi(uno.prezzo, uno.valuta)}/${uno.piano === "annuale" ? "anno" : "mese"}`
             : "";
           return `Prova gratuita fino ${al}, poi si rinnova${prezzo}`;
         }
-        if (uno.stato === "disdetto")
-          return uno.prova
-            ? `Disdetto durante la prova: finisce ${il} senza pagare`
-            : `Disdetto: ha pagato fino ${al}, poi finisce`;
-        if (uno.stato === "scaduto")
-          return uno.finito === "acquisto-rimborsato" ? "Rimborsato" : `Finito ${il}`;
+        if (nonRinnovaPiu(uno)) return `Disdetto: ha pagato fino ${al}, poi finisce`;
         return uno.pagato >= Date.now()
           ? `Pagato fino ${al}, poi si rinnova`
           : `Rinnovo atteso ${conLArticolo("dal", uno.pagato)}`;
+      }
+
+      /* La data che conta di una riga, corta, per la colonna di destra:
+       * «si rinnova il 2 dic», «finisce il 4 dic», «paga il 9 nov». */
+      function laDataDellaRiga(uno) {
+        const il = conLArticolo("il", uno.pagato);
+        const cat = laCategoria(uno);
+        if (!uno.pagato && cat !== "finiti") return "";
+        if (cat === "finiti" || (cat === "test" && uno.vale === false))
+          return uno.finito === "acquisto-rimborsato" ? "rimborsato" : `finito ${il}`;
+        if (uno.prova) return nonRinnovaPiu(uno) ? `finisce ${il}, senza pagare` : `paga ${il}`;
+        if (nonRinnovaPiu(uno)) return `finisce ${il}`;
+        return uno.pagato >= Date.now()
+          ? `si rinnova ${il}`
+          : `rinnovo atteso ${conLArticolo("dal", uno.pagato)}`;
       }
 
       /* Quando una linguetta non ha nessuno, cosa vuol dire. */
@@ -6852,10 +7276,289 @@
         paganti:
           "Nessuno ha ancora pagato: chi è in prova gratuita passa qui quando la prova finisce.",
         prova: "Nessuna prova gratuita in corso.",
-        disdetti: "Nessuno ha disdetto.",
+        nonrinnovano: "Tutti si rinnovano: nessuno ha spento il rinnovo.",
         finiti: "Nessun abbonamento è finito.",
         test: "Nessun acquisto di test.",
       };
+
+      /* Il nome che si legge di un abbonamento: la casa, o il telefono. */
+      function ilNomeDellAbbonamento(uno) {
+        return String(uno.sog || "").startsWith("casa_")
+          ? CONTI.nomi.get(uno.sog) || `Casa senza nome · ${String(uno.sog).slice(5, 13)}`
+          : `Telefono · ${String(uno.sog || "").slice(4, 12)}`;
+      }
+
+      /* L'elenco degli abbonamenti, a gruppi: paganti, in prova gratuita,
+       * finiti, acquisti di test. Ogni gruppo ha in testa un riassunto e si
+       * apre e si chiude; le righe sono corte — negozio, nome, piano, la data
+       * che conta — e in un gruppo lungo si vedono le prime e «mostra tutti».
+       * In cima, «nei prossimi 14 giorni»: le prove che finiscono (il primo
+       * incasso possibile, o la fine senza pagare) e i paganti che finiscono
+       * o si rinnovano. Si ridisegna da solo mentre si cerca
+       * (`ridisegnaGliAbbonamenti`), cosi' la casella tiene il cursore. */
+      function leRigheDegliAbbonamenti() {
+        const A = ABBONAMENTI || {};
+        const CAT = LE_CATEGORIE_DEGLI_ABBONAMENTI;
+        const S = LO_STATO_DEGLI_ABBONAMENTI;
+        const elenco = A.elenco || [];
+        const detto = I_FILTRI_DI_PRIMA[FILTRO_ABBONAMENTI] || FILTRO_ABBONAMENTI;
+        const ilFiltro = CAT[detto] ? detto : "tutti";
+        const cerca = String(S.cerca || "")
+          .trim()
+          .toLowerCase();
+        const PRIME = 8;
+        const GIORNO = 24 * 60 * 60 * 1000;
+        const adesso = Date.now();
+
+        if (!elenco.length)
+          return `<div class="vuoto"><b>Ancora nessun abbonamento</b> Compaiono qui da soli quando qualcuno compra GdAHome Premium nell'app.</div>`;
+
+        const negozioDi = (uno) =>
+          uno.piattaforma === "ios"
+            ? uno.sandbox
+              ? "App Store (TestFlight)"
+              : "App Store"
+            : uno.sandbox
+              ? "Google Play (tester)"
+              : "Google Play";
+        const pianoDi = (uno) =>
+          `${
+            uno.piano === "mensile"
+              ? "Mensile"
+              : uno.piano === "annuale"
+                ? "Annuale"
+                : uno.piano || "Piano non detto"
+          }${uno.prezzo ? ` ${iSoldi(uno.prezzo, uno.valuta)}` : ""}`;
+        const trovato = (uno) =>
+          !cerca ||
+          [
+            ilNomeDellAbbonamento(uno),
+            uno.sog,
+            negozioDi(uno),
+            pianoDi(uno),
+            uno.app === "gdanav" ? "gdanav" : "",
+            laFraseDellaRiga(uno),
+          ]
+            .join(" ")
+            .toLowerCase()
+            .includes(cerca);
+
+        const riga = (uno) => {
+          const cat = laCategoria(uno);
+          const diUnaCasa = String(uno.sog || "").startsWith("casa_");
+          const di = CONTI.tutte.find((una) => una.matricola === uno.sog)?.chi || "";
+          const ios = uno.piattaforma === "ios";
+          const nonRinnova = nonRinnovaPiu(uno);
+          const quando = laDataDellaRiga(uno);
+          const sotto = [
+            ...(uno.app === "gdanav" ? ["GdANav"] : []),
+            pianoDi(uno),
+            ...(uno.inizio ? [conLArticolo("dal", uno.inizio)] : []),
+          ].join(" · ");
+          return `
+          <li${diUnaCasa ? ` data-apri-casa="${testo(uno.sog)}" data-di="${testo(di)}" role="button" tabindex="0"` : ""} class="abb-riga${diUnaCasa ? "" : " ferma"}${cat === "test" ? " riga-test" : ""}" title="${testo(laFraseDellaRiga(uno))}">
+            <span class="abb-negozio ${ios ? "ios" : "play"}" title="${testo(negozioDi(uno))}" aria-label="${testo(negozioDi(uno))}">${ios ? "A" : "G"}</span>
+            <span class="abb-chi">
+              <b>${testo(ilNomeDellAbbonamento(uno))}</b>
+              <span>${testo(sotto)}</span>
+            </span>
+            <span class="abb-quando${nonRinnova ? " non-rinnova" : ""}">${nonRinnova ? `<i class="pallino" aria-hidden="true"></i><em>non rinnova</em>` : ""}<span>${testo(quando)}</span><small class="abb-piano-corto">${testo(pianoDi(uno))}</small></span>
+            ${diUnaCasa ? `<span class="freccina">${LE_ICONE["freccia"]}</span>` : `<span class="freccina"></span>`}
+          </li>`;
+        };
+
+        /* Il riassunto in testa a un gruppo, dai suoi. */
+        const prima = (righe) => {
+          const date = righe.map((uno) => uno.pagato).filter((q) => typeof q === "number");
+          return date.length ? Math.min(...date) : 0;
+        };
+        const ultima = (righe) => {
+          const date = righe.map((uno) => uno.pagato).filter((q) => typeof q === "number");
+          return date.length ? Math.max(...date) : 0;
+        };
+        const sunto = (quale, righe) => {
+          const fermi = righe.filter(nonRinnovaPiu);
+          const vanno = righe.filter((uno) => !nonRinnovaPiu(uno));
+          const pezzi = [];
+          if (quale === "paganti") {
+            if (vanno.length)
+              pezzi.push(
+                `${vanno.length === 1 ? "1 si rinnova" : `${vanno.length} si rinnovano`}${prima(vanno) ? `, il primo ${conLArticolo("il", prima(vanno))}` : ""}`,
+              );
+            if (fermi.length)
+              pezzi.push(
+                `${fermi.length === 1 ? "1 non rinnova" : `${fermi.length} non rinnovano`}${prima(fermi) ? `: ${fermi.length === 1 ? "finisce" : "il primo finisce"} ${conLArticolo("il", prima(fermi))}` : ""}`,
+              );
+          } else if (quale === "prova") {
+            if (vanno.length && prima(vanno))
+              pezzi.push(`la prima paga ${conLArticolo("il", prima(vanno))}`);
+            if (fermi.length)
+              pezzi.push(
+                `${fermi.length === 1 ? "1 non rinnova" : `${fermi.length} non rinnovano`}: ${fermi.length === 1 ? "finisce" : "finiscono"} senza pagare`,
+              );
+          } else if (quale === "finiti") {
+            if (ultima(righe)) pezzi.push(`l'ultimo ${conLArticolo("il", ultima(righe))}`);
+            const rimborsati = righe.filter((uno) => uno.finito === "acquisto-rimborsato").length;
+            if (rimborsati) pezzi.push(plurale(rimborsati, "rimborsato", "rimborsati"));
+          } else if (quale === "test") {
+            pezzi.push("TestFlight e tester di Google: sono nostri, non contano");
+          }
+          return pezzi.join(" · ");
+        };
+
+        const gruppo = (quale, righe, { quanti = righe.length } = {}) => {
+          const una = CAT[quale];
+          const aperto = Boolean(cerca) || Boolean(S.aperti[quale]);
+          const interi = Boolean(cerca) || S.interi.has(quale);
+          const visti = interi ? righe : righe.slice(0, PRIME);
+          return `
+          <section class="abb-gruppo ${testo(una.tinta)}${aperto ? " aperto" : ""}" data-gruppo="${testo(quale)}">
+            <button type="button" class="abb-capo" data-apri-gruppo="${testo(quale)}" aria-expanded="${aperto ? "true" : "false"}">
+              <i class="pallino" aria-hidden="true"></i>
+              <b>${testo(una.nome)}</b>
+              <span class="abb-n">${numero(quanti)}</span>
+              <span class="abb-sunto">${testo(sunto(quale, righe))}</span>
+              <span class="freccina">${LE_ICONE["freccia"]}</span>
+            </button>
+            ${
+              aperto
+                ? `<ul class="elenco si-tocca abb-righe">${visti.map(riga).join("")}</ul>${
+                    righe.length > visti.length
+                      ? `<button type="button" class="abb-altri" data-tutti-gruppo="${testo(quale)}">Mostra tutti e ${numero(righe.length)}<span class="minuta"> · altri ${numero(righe.length - visti.length)}</span></button>`
+                      : ""
+                  }`
+                : ""
+            }
+          </section>`;
+        };
+
+        const diGruppo = (quale) =>
+          elenco.filter(
+            (uno) =>
+              laCategoria(uno) === quale &&
+              trovato(uno) &&
+              (ilFiltro !== "nonrinnovano" || nonRinnovaPiu(uno)),
+          );
+        const quali =
+          ilFiltro === "tutti"
+            ? ["paganti", "prova", "finiti", "test"]
+            : ilFiltro === "nonrinnovano"
+              ? ["paganti", "prova"]
+              : [ilFiltro];
+        const gruppi = quali
+          .map((quale) => [quale, diGruppo(quale)])
+          .filter(([, righe]) => righe.length);
+
+        /* Nei prossimi 14 giorni: quello che succede, in ordine di data. */
+        const prossimi =
+          ilFiltro === "tutti" && !cerca
+            ? elenco
+                .filter(
+                  (uno) =>
+                    !uno.sandbox &&
+                    laCategoria(uno) !== "finiti" &&
+                    typeof uno.pagato === "number" &&
+                    uno.pagato >= adesso &&
+                    uno.pagato - adesso <= 14 * GIORNO,
+                )
+                .sort((a, b) => a.pagato - b.pagato)
+            : [];
+        const cosaSuccede = (uno) => {
+          const prezzo = uno.prezzo ? ` ${iSoldi(uno.prezzo, uno.valuta)}` : "";
+          if (uno.prova)
+            return nonRinnovaPiu(uno)
+              ? ["c-dis", "fine prova, senza pagare"]
+              : ["c-pro", `fine prova: paga${prezzo}`];
+          return nonRinnovaPiu(uno)
+            ? ["c-dis", "finisce: non rinnova"]
+            : ["c-pag", `si rinnova${prezzo}`];
+        };
+        const ilGiornoDellaSettimana = (quando) =>
+          new Date(quando).toLocaleDateString("it-IT", { weekday: "short" }).replace(".", "");
+        const MOSTRATI = 6;
+        const fascia = prossimi.length
+          ? `
+          <div class="abb-prossimi">
+            <p class="abb-prossimi-capo"><b>Nei prossimi 14 giorni</b><span>${testo(
+              [
+                plurale(prossimi.length, "scadenza", "scadenze"),
+                (() => {
+                  const incassi = prossimi.filter((uno) => !nonRinnovaPiu(uno)).length;
+                  return incassi
+                    ? `${incassi === 1 ? "1 incasso possibile" : `${Number(incassi)} incassi possibili`}`
+                    : "nessun incasso in arrivo";
+                })(),
+              ].join(" · "),
+            )}</span></p>
+            <ol class="abb-prossimi-lista">
+              ${prossimi
+                .slice(0, MOSTRATI)
+                .map((uno) => {
+                  const [tinta, cosa] = cosaSuccede(uno);
+                  const diUnaCasa = String(uno.sog || "").startsWith("casa_");
+                  const di = CONTI.tutte.find((una) => una.matricola === uno.sog)?.chi || "";
+                  return `
+                  <li class="${testo(tinta)}${diUnaCasa ? "" : " ferma"}"${diUnaCasa ? ` data-apri-casa="${testo(uno.sog)}" data-di="${testo(di)}" role="button" tabindex="0"` : ""}>
+                    <span class="abb-giorno"><small>${testo(ilGiornoDellaSettimana(uno.pagato))}</small><b>${testo(ilGiornoCorto(uno.pagato))}</b></span>
+                    <span class="abb-cosa"><b>${testo(ilNomeDellAbbonamento(uno))}</b><span><i class="pallino" aria-hidden="true"></i>${testo(cosa)}</span></span>
+                  </li>`;
+                })
+                .join("")}
+            </ol>
+            ${
+              prossimi.length > MOSTRATI
+                ? `<p class="minuta abb-prossimi-altri">e ${testo(plurale(prossimi.length - MOSTRATI, "altra", "altre"))} nei gruppi qui sotto</p>`
+                : ""
+            }
+          </div>`
+          : "";
+
+        if (!gruppi.length)
+          return `${/* già HTML */ fascia}<div class="vuoto"><b>Nessun abbonamento qui</b> ${testo(
+            cerca
+              ? "Nessuno corrisponde a «" + S.cerca.trim() + "»."
+              : IL_FILTRO_VUOTO[ilFiltro] || "Prova un altro filtro.",
+          )}</div>`;
+        return `${/* già HTML */ fascia}${gruppi.map(([quale, righe]) => gruppo(quale, righe)).join("")}`;
+      }
+
+      /* Una linguetta: si guarda quella, e i suoi gruppi si aprono. */
+      function scegliIlFiltroDegliAbbonamenti(quale) {
+        const detto = I_FILTRI_DI_PRIMA[quale] || quale || "tutti";
+        FILTRO_ABBONAMENTI = LE_CATEGORIE_DEGLI_ABBONAMENTI[detto] ? detto : "tutti";
+        const aperti = LO_STATO_DEGLI_ABBONAMENTI.aperti;
+        if (FILTRO_ABBONAMENTI === "nonrinnovano") aperti.paganti = aperti.prova = true;
+        else if (FILTRO_ABBONAMENTI !== "tutti") aperti[FILTRO_ABBONAMENTI] = true;
+      }
+
+      /* Mentre si scrive nella ricerca si ridisegna l'elenco e basta: la
+       * casella resta dov'e', col cursore dentro. */
+      function ridisegnaGliAbbonamenti() {
+        const dentro = document.getElementById("elenco-abbonamenti");
+        if (!dentro) return;
+        dentro.innerHTML = leRigheDegliAbbonamenti();
+        agganciaGliAbbonamenti(dentro);
+      }
+
+      function agganciaGliAbbonamenti(dentro) {
+        dentro.querySelectorAll("[data-apri-casa]").forEach((riga) => {
+          premibile(riga, () => apriLaCasa(riga.dataset.apriCasa, riga.dataset.di || ""));
+        });
+        dentro.querySelectorAll("[data-apri-gruppo]").forEach((capo) => {
+          capo.onclick = () => {
+            const quale = capo.dataset.apriGruppo;
+            LO_STATO_DEGLI_ABBONAMENTI.aperti[quale] =
+              capo.getAttribute("aria-expanded") !== "true";
+            ridisegnaGliAbbonamenti();
+          };
+        });
+        dentro.querySelectorAll("[data-tutti-gruppo]").forEach((tasto) => {
+          tasto.onclick = () => {
+            LO_STATO_DEGLI_ABBONAMENTI.interi.add(tasto.dataset.tuttiGruppo);
+            ridisegnaGliAbbonamenti();
+          };
+        });
+      }
 
       /* Scrive (o toglie) l'ultima versione pubblicata in un negozio. Prima
        * di avvisare tutti si chiede conferma: una volta partita, la notifica
@@ -6919,31 +7622,43 @@
 
         const CAT = LE_CATEGORIE_DEGLI_ABBONAMENTI;
         /* I numeri vengono dal quadro, che li conta tutti: l'elenco puo'
-         * essere tagliato alle prime righe. */
+         * essere tagliato alle prime righe. Un quadro di prima non dice
+         * i conti nuovi: si ricavano dai nomi di prima. */
         const tutti = A.conti || {};
-        const quanti = (quale) => Number(tutti[CAT[quale].conto]) || 0;
-        const paganti = quanti("paganti");
-        const inProva = quanti("prova");
-        const disdetti = quanti("disdetti");
-        const finiti = quanti("finiti");
-        const diTest = quanti("test");
-        const inTutto = Number(tutti.tutti) || 0;
+        const n = (campo, ...altri) => {
+          for (const quale of [campo, ...altri]) {
+            const valore = Number(tutti[quale]);
+            if (Number.isFinite(valore) && tutti[quale] !== undefined && tutti[quale] !== null)
+              return valore;
+          }
+          return 0;
+        };
+        const nuovi = tutti.pagantiRinnovano !== undefined;
+        const pagantiNonRinnovano = n("pagantiNonRinnovano", "pagatiDisdetti");
+        const pagantiRinnovano = nuovi ? n("pagantiRinnovano") : n("paganti");
+        const paganti = nuovi ? n("paganti") : pagantiRinnovano + pagantiNonRinnovano;
+        const proveNonRinnovano = n("proveNonRinnovano", "disdettiInProva");
+        const inProva = nuovi ? n("inProva") : n("inProva") + proveNonRinnovano;
+        const nonRinnovano = pagantiNonRinnovano + proveNonRinnovano;
+        const finiti = n("finiti");
+        const diTest = n("test");
+        const inTutto = n("tutti");
         const prove = tutti.prove || { finite: 0, pagate: 0 };
-        const primaFineProva = Number(tutti.primaFineProva) || 0;
-        const disdettiInProva = Number(tutti.disdettiInProva) || 0;
-        /* Chi ha pagato e poi disdetto: non rinnova, ma ha pagato. */
-        const pagatiDisdetti = Number(tutti.pagatiDisdetti) || 0;
-        const primaFinePagatiDisdetti = Number(tutti.primaFinePagatiDisdetti) || 0;
-        const hannoPagato = Number(tutti.hannoPagato) || 0;
-        const pagamenti = Number(tutti.pagamenti) || 0;
+        const primaFineProva = n("primaFineProva");
+        const primaFinePagantiNonRinnovano = n(
+          "primaFinePagantiNonRinnovano",
+          "primaFinePagatiDisdetti",
+        );
+        const hannoPagato = n("hannoPagato");
+        const pagamenti = n("pagamenti");
         const ilMese = ilMeseDetto(tutti.inizioDelMese);
         const incassato = lIncassatoDetto(tutti.incassato);
         const prossimo = tutti.prossimoIncasso || null;
-        /* «1 ha pagato e disdetto (finisce il 4 dic)». */
-        const pagatoEDisdetto = pagatiDisdetti
-          ? `${pagatiDisdetti === 1 ? "1 ha" : `${Number(pagatiDisdetti)} hanno`} pagato e disdetto${
-              primaFinePagatiDisdetti
-                ? ` (${pagatiDisdetti === 1 ? "finisce" : "il primo finisce"} ${conLArticolo("il", primaFinePagatiDisdetti)})`
+        /* «1 non rinnova: finisce il 4 dic». */
+        const pagantiCheFiniscono = pagantiNonRinnovano
+          ? `${pagantiNonRinnovano === 1 ? "1 non rinnova" : `${numero(pagantiNonRinnovano)} non rinnovano`}${
+              primaFinePagantiNonRinnovano
+                ? `: ${pagantiNonRinnovano === 1 ? "finisce" : "il primo finisce"} ${conLArticolo("il", primaFinePagantiNonRinnovano)}`
                 : ""
             }`
           : "";
@@ -6959,6 +7674,14 @@
         ];
         const negozio = ([chiave, nome]) => {
           const suoi = A.negozi?.[chiave] || {};
+          const suoiNuovi = suoi.pagantiRinnovano !== undefined;
+          const suoiNonRinnovano = Number(suoi.pagantiNonRinnovano ?? suoi.pagatiDisdetti) || 0;
+          const suoiPaganti = suoiNuovi
+            ? Number(suoi.paganti) || 0
+            : (Number(suoi.paganti) || 0) + suoiNonRinnovano;
+          const suoiInProva = suoiNuovi
+            ? Number(suoi.inProva) || 0
+            : (Number(suoi.inProva) || 0) + (Number(suoi.disdettiInProva) || 0);
           const alMese = alMeseDetto(suoi.alMese);
           const suoIncassato = Number(suoi.pagamenti)
             ? ` · ${lIncassatoDetto(suoi.incassato)} incassati a ${ilMese}`
@@ -6969,7 +7692,7 @@
               <span class="servizio-ic" aria-hidden="true">${LE_ICONE["telefono"]}</span>
               <div class="servizio-chi">
                 <b>${testo(nome)}</b>
-                <span>${testo(plurale(Number(suoi.paganti) || 0, "pagante", "paganti"))}${alMese === "—" ? "" : ` · ${testo(alMese)} al mese`}${testo(suoIncassato)}</span>
+                <span>${testo(plurale(suoiPaganti, "pagante", "paganti"))}${alMese === "—" ? "" : ` · ${testo(alMese)} al mese`}${testo(suoIncassato)}</span>
               </div>
               <span class="pastiglia ${suoi.rinnovi7 ? "posto" : ""}">${
                 suoi.rinnovi7
@@ -6978,61 +7701,16 @@
               }</span>
             </div>
             <div class="servizio-conti">
-              ${/* già HTML */ conto("verde", "abbonamenti", Number(suoi.paganti) || 0, "paganti")}
-              ${/* già HTML */ conto("blu", "licenze", Number(suoi.inProva) || 0, "in prova gratuita")}
-              ${/* già HTML */ conto("ambra", "abbonamenti", Number(suoi.disdetti) || 0, "disdetti: finiscono a scadenza")}
-              ${/* già HTML */ conto("ambra", "abbonamenti", Number(suoi.pagatiDisdetti) || 0, "di cui hanno pagato")}
+              ${/* già HTML */ conto("verde", "abbonamenti", suoiPaganti, "paganti")}
+              ${/* già HTML */ conto("blu", "licenze", suoiInProva, "in prova gratuita")}
+              ${/* già HTML */ conto("ambra", "abbonamenti", Number(suoi.disdetti) || 0, "non rinnovano: finiscono a scadenza")}
+              ${/* già HTML */ conto("ambra", "abbonamenti", suoiNonRinnovano, "di cui paganti")}
               ${/* già HTML */ conto("blu", "abbonamenti", Number(suoi.test) || 0, "acquisti di test, non contano")}
             </div>
           </div>`;
         };
 
-        const riga = (uno) => {
-          const cat = laCategoria(uno);
-          const diUnaCasa = String(uno.sog || "").startsWith("casa_");
-          const nome = diUnaCasa
-            ? CONTI.nomi.get(uno.sog) || `Casa senza nome · ${String(uno.sog).slice(5, 13)}`
-            : `Telefono · ${String(uno.sog || "").slice(4, 12)}`;
-          const dove =
-            uno.piattaforma === "ios"
-              ? uno.sandbox
-                ? "App Store (TestFlight)"
-                : "App Store"
-              : uno.sandbox
-                ? "Google Play (tester)"
-                : "Google Play";
-          /* In prova il prezzo sta nella frase: «poi si rinnova a 44,99 €/anno». */
-          const piano = `${
-            uno.piano === "mensile"
-              ? "Mensile"
-              : uno.piano === "annuale"
-                ? "Annuale"
-                : uno.piano || "Piano non detto"
-          }${uno.prezzo && cat !== "prova" ? ` ${iSoldi(uno.prezzo, uno.valuta)}` : ""}`;
-          const pezzi = [
-            `${uno.app === "gdanav" ? "GdANav · " : ""}${dove}`,
-            piano,
-            ...(uno.inizio ? [conLArticolo("dal", uno.inizio)] : []),
-            ...(uno.pagato && cat !== "test" ? [laFraseDellaRiga(uno)] : []),
-          ];
-          const di = CONTI.tutte.find((una) => una.matricola === uno.sog)?.chi || "";
-          return `
-          <li${diUnaCasa ? ` data-apri-casa="${testo(uno.sog)}" data-di="${testo(di)}" role="button" tabindex="0"` : ""} class="${diUnaCasa ? "" : "ferma"}${cat === "test" ? " riga-test" : ""}">
-            <span class="tondino">${LE_ICONE["telefono"]}</span>
-            <span class="riga-testo">
-              <b>${testo(nome)}</b>
-              <span>${pezzi.map(testo).join(" · ")}</span>
-            </span>
-            <span class="pastiglia ${testo(CAT[cat].tinta)}">${testo(CAT[cat].pastiglia)}</span>
-            ${diUnaCasa ? `<span class="freccina">${LE_ICONE["freccia"]}</span>` : ""}
-          </li>`;
-        };
-
-        const elenco = A.elenco || [];
-        const detto = I_FILTRI_DI_PRIMA[FILTRO_ABBONAMENTI] || FILTRO_ABBONAMENTI;
-        const ilFiltro = CAT[detto] ? detto : "tutti";
-
-        /* I quattro riquadri: tre categorie e quello che incassano. */
+        /* I quattro riquadri: paganti, prove, chi non rinnova, e i soldi. */
         const alMese = alMeseDetto(tutti.alMese);
         /* Gli incassi del mese divisi per negozio, solo se sono due. */
         const dalNegozioIncassato = iNegozi.every(([chiave]) =>
@@ -7053,20 +7731,20 @@
           </div>`;
         const pagate = Number(prove.pagate) || 0;
         /* «Incassi»: quello che e' gia' entrato questo mese, e a parte il
-         * ricorrente, che e' solo di chi rinnova. Chi ha pagato e disdetto sta
-         * nel primo e non nel secondo. */
-        const ricorrente = paganti
+         * ricorrente, che e' solo di chi rinnova. Chi ha pagato e non
+         * rinnova sta nel primo e non nel secondo. */
+        const ricorrente = pagantiRinnovano
           ? alMese === "—"
-            ? `ricorrente: ${plurale(paganti, "pagante", "paganti")}, prezzo non detto dal negozio`
-            : `ricorrente: ${alMese}/mese da ${plurale(paganti, "che rinnova", "che rinnovano")}`
-          : "ricorrente: 0\u00a0€ al mese, nessuno rinnova";
+            ? `ricorrente: ${plurale(pagantiRinnovano, "pagante", "paganti")}, prezzo non detto dal negozio`
+            : `ricorrente: ${alMese}/mese da ${plurale(pagantiRinnovano, "che rinnova", "che rinnovano")}`
+          : "ricorrente: 0 € al mese, nessuno rinnova";
         const ilProssimo = prossimo
           ? prossimo.perche === "fine-prova"
             ? "prossimo incasso possibile " + conLArticolo("il", prossimo.quando) + ", a fine prova"
             : "prossimo incasso " + conLArticolo("il", prossimo.quando) + " (rinnovo)"
           : "nessun incasso in arrivo";
         /* Pagamenti di cui il negozio non ha detto il prezzo: «0 €» mentirebbe. */
-        const senzaPrezzo = pagamenti && incassato === "0\u00a0€";
+        const senzaPrezzo = pagamenti && incassato === "0 €";
         const incassi = riquadro("c-eur", "Incassi", senzaPrezzo ? "—" : incassato, [
           pagamenti
             ? `${plurale(pagamenti, "pagamento", "pagamenti")} a ${ilMese}, ${senzaPrezzo ? "importo non detto dal negozio" : "IVA compresa"}${dalNegozioIncassato ? ` · ${dalNegozioIncassato}` : ""}`
@@ -7079,23 +7757,26 @@
             ${
               /* già HTML */ riquadro(CAT.paganti.tinta, CAT.paganti.nome, numero(paganti), [
                 paganti
-                  ? "hanno pagato e si rinnovano da soli"
-                  : pagatiDisdetti
-                    ? "0 che rinnovano"
-                    : hannoPagato
-                      ? "nessuno che rinnova: chi aveva pagato è finito"
-                      : "nessuno ha ancora pagato",
+                  ? pagantiRinnovano
+                    ? `${pagantiRinnovano === paganti ? "" : `${numero(pagantiRinnovano)} di ${numero(paganti)} `}${pagantiRinnovano === 1 && pagantiRinnovano === paganti ? "ha pagato e si rinnova da solo" : pagantiRinnovano === paganti ? "hanno pagato e si rinnovano da soli" : pagantiRinnovano === 1 ? "si rinnova da solo" : "si rinnovano da soli"}`
+                    : `${paganti === 1 ? "ha pagato il periodo in corso" : "hanno pagato il periodo in corso"}`
+                  : hannoPagato
+                    ? "nessun pagante adesso: chi aveva pagato è finito"
+                    : "nessuno ha ancora pagato",
+                pagantiCheFiniscono,
                 paganti
-                  ? `${plurale(Number(tutti.pagantiMensili) || 0, "mensile", "mensili")} · ${plurale(Number(tutti.pagantiAnnuali) || 0, "annuale", "annuali")}`
+                  ? `${plurale(n("pagantiMensili"), "mensile", "mensili")} · ${plurale(n("pagantiAnnuali"), "annuale", "annuali")}`
                   : "",
-                pagatoEDisdetto ? (paganti ? "in più " : "") + pagatoEDisdetto : "",
               ])
             }
             ${
               /* già HTML */ riquadro(CAT.prova.tinta, CAT.prova.nome, numero(inProva), [
                 inProva ? "non hanno ancora pagato: pagano a fine prova" : "nessuna prova in corso",
-                primaFineProva && inProva
-                  ? "la prima finisce " + conLArticolo("il", primaFineProva)
+                primaFineProva && inProva > proveNonRinnovano
+                  ? "la prima paga " + conLArticolo("il", primaFineProva)
+                  : "",
+                proveNonRinnovano
+                  ? `${proveNonRinnovano === 1 ? "1 non rinnova: finisce" : `${numero(proveNonRinnovano)} non rinnovano: finiscono`} senza pagare`
                   : "",
                 prove.finite
                   ? `${Number(pagate)} ${pagate === 1 ? "prova" : "prove"} su ${Number(prove.finite)} ${pagate === 1 ? "passata" : "passate"} a pagamento`
@@ -7103,38 +7784,48 @@
               ])
             }
             ${
-              /* già HTML */ riquadro(CAT.disdetti.tinta, CAT.disdetti.nome, numero(disdetti), [
-                disdetti ? "" : "nessuno ha disdetto",
-                pagatiDisdetti
-                  ? pagatiDisdetti === 1
-                    ? "1 dopo aver pagato: Premium fino " +
-                      conLArticolo("al", primaFinePagatiDisdetti) +
-                      ", poi finisce"
-                    : `${Number(pagatiDisdetti)} dopo aver pagato: il primo finisce ` +
-                      conLArticolo("il", primaFinePagatiDisdetti)
-                  : "",
-                disdettiInProva
-                  ? `${Number(disdettiInProva)} in prova: ${disdettiInProva === 1 ? "finisce" : "finiscono"} senza pagare`
-                  : "",
-              ])
+              /* già HTML */ riquadro(
+                CAT.nonrinnovano.tinta,
+                CAT.nonrinnovano.nome,
+                numero(nonRinnovano),
+                [
+                  nonRinnovano
+                    ? "hanno spento il rinnovo: finiscono a scadenza"
+                    : "tutti si rinnovano",
+                  pagantiNonRinnovano
+                    ? pagantiNonRinnovano === 1
+                      ? "1 pagante: Premium fino " +
+                        conLArticolo("al", primaFinePagantiNonRinnovano) +
+                        ", poi finisce"
+                      : `${numero(pagantiNonRinnovano)} paganti: il primo finisce ` +
+                        conLArticolo("il", primaFinePagantiNonRinnovano)
+                    : "",
+                  proveNonRinnovano
+                    ? `${numero(proveNonRinnovano)} in prova: ${proveNonRinnovano === 1 ? "finisce" : "finiscono"} senza pagare`
+                    : "",
+                ],
+              )
             }
             ${/* già HTML */ incassi}
           </div>`;
 
-        /* La riga che fa il conto: ogni abbonamento sta in un posto solo. */
+        /* La riga che fa il conto: ogni abbonamento sta in un gruppo solo; chi
+         * non rinnova e' la parte a righe del suo gruppo. */
         const pezzo = (quale, n, uno, molti) =>
           `<span class="conto-pezzo ${testo(CAT[quale].tinta)}"><i class="pallino" aria-hidden="true"></i><b>${Number(n)}</b> ${testo(n === 1 ? uno : molti)}</span>`;
         const piu = `<span class="piu" aria-hidden="true">+</span>`;
         const barra = [
-          ["paganti", paganti],
-          ["prova", inProva],
-          ["disdetti", disdetti],
-          ["finiti", finiti],
-          ["test", diTest],
+          ["paganti", pagantiRinnovano, ""],
+          ["paganti", pagantiNonRinnovano, " a-righe"],
+          ["prova", inProva - proveNonRinnovano, ""],
+          ["prova", proveNonRinnovano, " a-righe"],
+          ["finiti", finiti, ""],
+          ["test", diTest, ""],
         ]
-          .filter(([, n]) => n)
+          .filter(([, n]) => n > 0)
           .map(
-            ([quale, n]) => `<i class="${testo(CAT[quale].tinta)}" style="flex: ${Number(n)}"></i>`,
+            ([quale, n, righe]) =>
+              `<i class="${testo(CAT[quale].tinta)}${testo(righe)}" style="flex: ${Number(n)}"></i>`,
           )
           .join("");
         const ilConto = inTutto
@@ -7146,57 +7837,59 @@
               ${/* già HTML */ pezzo("paganti", paganti, "pagante", "paganti")}
               ${/* già HTML */ piu}
               ${/* già HTML */ pezzo("prova", inProva, "in prova gratuita", "in prova gratuita")}
-              ${/* già HTML */ piu}
-              ${/* già HTML */ pezzo("disdetti", disdetti, "disdetto", "disdetti")}
               ${finiti ? `${/* già HTML */ piu}${/* già HTML */ pezzo("finiti", finiti, "finito", "finiti")}` : ""}
               ${/* già HTML */ piu}
               ${/* già HTML */ pezzo("test", diTest, "acquisto di test", "acquisti di test")}<span class="non-conta">(non contano)</span>
             </div>
             <div class="il-conto-barra" aria-hidden="true">${/* già HTML */ barra}</div>
+            ${
+              nonRinnovano
+                ? `<p class="il-conto-nota"><i class="a-righe-campione" aria-hidden="true"></i>a righe: ${testo(
+                    [
+                      pagantiNonRinnovano
+                        ? `${plurale(pagantiNonRinnovano, "pagante", "paganti")}`
+                        : "",
+                      proveNonRinnovano ? `${plurale(proveNonRinnovano, "prova", "prove")}` : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" e "),
+                  )} che non ${nonRinnovano === 1 ? "rinnova" : "rinnovano"}</p>`
+                : ""
+            }
           </section>`
           : "";
 
-        /* Le linguette: gli stessi nomi, numeri e colori dei riquadri. «Finiti»
-         * si vede solo quando ce n'e'. */
+        /* Le linguette: gli stessi nomi, numeri e colori dei riquadri.
+         * «Finiti» e «Non rinnovano» si vedono solo quando ce n'e'. */
+        const detto = I_FILTRI_DI_PRIMA[FILTRO_ABBONAMENTI] || FILTRO_ABBONAMENTI;
+        const ilFiltro = CAT[detto] ? detto : "tutti";
+        const quanti = {
+          paganti,
+          prova: inProva,
+          nonrinnovano: nonRinnovano,
+          finiti,
+          test: diTest,
+        };
         const lePastiglie = [
           ["tutti", "Tutti", inTutto, ""],
-          ...Object.entries(CAT).map(([quale, una]) => [quale, una.nome, quanti(quale), una.tinta]),
+          ...Object.entries(CAT).map(([quale, una]) => [quale, una.nome, quanti[quale], una.tinta]),
         ]
           .map(([quale, parola, n, tinta]) => {
-            if (quale === "finiti" && !n && ilFiltro !== quale) return "";
+            if ((quale === "finiti" || quale === "nonrinnovano") && !n && ilFiltro !== quale)
+              return "";
             return `<button type="button" class="chip ${testo(tinta)}" data-filtro-abbonamenti="${testo(quale)}" aria-pressed="${quale === ilFiltro}">${tinta ? '<i class="pallino" aria-hidden="true"></i>' : ""}${testo(parola)} <b>${Number(n)}</b></button>`;
           })
           .join("");
 
-        /* L'elenco: quelli veri, e gli acquisti di test in fondo, a parte. */
-        const veri = elenco.filter((uno) =>
-          ilFiltro === "tutti"
-            ? !uno.sandbox
-            : laCategoria(uno) === ilFiltro && ilFiltro !== "test",
-        );
-        const diProva =
-          ilFiltro === "tutti" || ilFiltro === "test" ? elenco.filter((uno) => uno.sandbox) : [];
-        const corpo = !elenco.length
-          ? `<div class="vuoto"><b>Ancora nessun abbonamento</b> Compaiono qui da soli quando qualcuno compra GdAHome Premium nell'app.</div>`
-          : `${
-              veri.length
-                ? `<ul class="elenco si-tocca">${veri.map(riga).join("")}</ul>`
-                : ilFiltro === "test" && diProva.length
-                  ? ""
-                  : `<div class="vuoto"><b>Nessun abbonamento qui</b> ${testo(
-                      ilFiltro === "paganti" && pagatiDisdetti
-                        ? "Nessuno che rinnova: " +
-                            pagatoEDisdetto +
-                            (pagatiDisdetti === 1 ? ", e sta" : ", e stanno") +
-                            " fra i Disdetti."
-                        : IL_FILTRO_VUOTO[ilFiltro] || "Prova un altro filtro.",
-                    )}</div>`
-            }${
-              diProva.length
-                ? `<div class="sotto-test"><span>Acquisti di test</span><em>TestFlight e tester di Google: sono nostri, non entrano in nessun numero sopra</em></div>
-                   <ul class="elenco si-tocca">${diProva.map(riga).join("")}</ul>`
-                : ""
-            }`;
+        const elenco = A.elenco || [];
+        const laCerca =
+          elenco.length > 6
+            ? `<label class="cerca abb-cerca">
+              ${LE_ICONE["cerca"]}
+              <input type="search" id="cerca-abbonamenti" value="${testo(LO_STATO_DEGLI_ABBONAMENTI.cerca)}" placeholder="Cerca una casa o un negozio" autocomplete="off" spellcheck="false" aria-label="Cerca un abbonamento" />
+            </label>`
+            : "";
+        const corpo = `<div id="elenco-abbonamenti">${/* già HTML */ leRigheDegliAbbonamenti()}</div>`;
         const tagliato =
           inTutto > elenco.length
             ? `<p class="minuta" style="margin: 10px 2px 0">Nell'elenco ci sono i primi ${numero(elenco.length)}: i numeri sopra li contano tutti e ${numero(inTutto)}.</p>`
@@ -7432,7 +8125,7 @@
           ${/* già HTML */ ilConto}
 
           <section class="scheda">
-            <div class="filtri">${/* già HTML */ lePastiglie}</div>
+            <div class="filtri">${/* già HTML */ laCerca}${/* già HTML */ lePastiglie}</div>
             ${/* già HTML */ corpo}
             ${/* già HTML */ tagliato}
             <details class="apri-riga">
@@ -7441,13 +8134,15 @@
                 <p class="servizio-titolo">In tutto</p>
                 <div class="servizio-conti">
                   ${/* già HTML */ conto("verde", "abbonamenti", paganti, "paganti")}
-                  ${/* già HTML */ conto("blu", "abbonamenti", Number(tutti.pagantiMensili) || 0, "paganti mensili")}
-                  ${/* già HTML */ conto("blu", "abbonamenti", Number(tutti.pagantiAnnuali) || 0, "paganti annuali")}
+                  ${/* già HTML */ conto("verde", "abbonamenti", pagantiRinnovano, "paganti che si rinnovano")}
+                  ${/* già HTML */ conto("ambra", "abbonamenti", pagantiNonRinnovano, "paganti che non rinnovano: finiscono a scadenza")}
+                  ${/* già HTML */ conto("blu", "abbonamenti", n("pagantiMensili"), "paganti mensili")}
+                  ${/* già HTML */ conto("blu", "abbonamenti", n("pagantiAnnuali"), "paganti annuali")}
                   ${/* già HTML */ conto("blu", "licenze", inProva, "in prova gratuita")}
-                  ${/* già HTML */ conto("ambra", "abbonamenti", disdetti, "disdetti: finiscono a scadenza")}
-                  ${/* già HTML */ conto("blu", "abbonamenti", Number(tutti.finiti30) || 0, "finiti negli ultimi 30 giorni")}
+                  ${/* già HTML */ conto("ambra", "licenze", proveNonRinnovano, "prove che non rinnovano: finiscono senza pagare")}
+                  ${/* già HTML */ conto("blu", "abbonamenti", n("finiti30"), "finiti negli ultimi 30 giorni")}
                   ${/* già HTML */ conto("verde", "licenze", prove.finite ? `${Number(pagate)} su ${Number(prove.finite)}` : "—", "prove finite che sono passate a pagamento")}
-                  ${/* già HTML */ conto("verde", "abbonamenti", pagatiDisdetti, "hanno pagato e poi disdetto")}
+                  ${/* già HTML */ conto("verde", "abbonamenti", hannoPagato, "hanno pagato almeno una volta")}
                   ${/* già HTML */ conto("verde", "euro", incassato, "incassati a " + ilMese + ", IVA compresa")}
                   ${/* già HTML */ conto("verde", "abbonamenti", alMese === "—" ? "0\u00a0€" : alMese, "ricorrente al mese, quello che pagano i clienti che rinnovano")}
                 </div>
@@ -7460,7 +8155,7 @@
           ${/* già HTML */ leVersioni}
 
           <p class="minuta" style="margin: 14px 2px 0">
-            <b>Paganti</b>: hanno pagato e si rinnovano. <b>In prova gratuita</b>: non hanno ancora pagato; pagano quando la prova finisce, se non disdicono. <b>Disdetti</b>: hanno spento il rinnovo e restano Premium fino alla scadenza: chi aveva già pagato il periodo l'ha pagato, chi era in prova finisce senza pagare. Gli <b>acquisti di test</b> (TestFlight e tester di Google) si vedono in fondo all'elenco e non entrano in nessun numero.
+            <b>Paganti</b>: hanno pagato il periodo in corso e sono Premium, che si rinnovino o no. <b>In prova gratuita</b>: non hanno ancora pagato; pagano quando la prova finisce, se non disdicono. <b>Non rinnovano</b>: hanno spento il rinnovo e restano Premium fino alla scadenza — un pagante il periodo l'ha pagato, una prova finisce senza pagare; restano nel loro gruppo, col pallino ambra. Gli <b>acquisti di test</b> (TestFlight e tester di Google) stanno in fondo, a parte, e non entrano in nessun numero.
             <b>Incassati</b>: i pagamenti del mese, anche di chi poi ha disdetto. Il quadro tiene l'ultima ricevuta di ogni abbonamento, non tutte: l'importo è quello dell'ultima transazione su App Store e il prezzo del piano su Google Play, il giorno è quello della transazione su App Store e la scadenza meno un periodo su Google Play. <b>Ricorrente</b>: quello che pagano al mese i paganti che si rinnovano, un annuale conta un dodicesimo.
             Gli importi sono quelli che pagano i clienti, IVA compresa: Apple e Google trattengono la loro commissione (15% o 30%, secondo il programma e l'anzianità dell'abbonamento) e versano il resto. Il quadro non sa quale si applica, e il netto non lo stima: il conto preciso, con le tasse di ogni paese, sta in App Store Connect e nella Play Console.
           </p>`;
@@ -8558,7 +9253,7 @@
       function vaiA(quale, filtro = "") {
         schermata = LE_SCHERMATE.includes(quale) ? quale : "panoramica";
         foglioAperto = null;
-        if (schermata === "abbonamenti") FILTRO_ABBONAMENTI = filtro || "tutti";
+        if (schermata === "abbonamenti") scegliIlFiltroDegliAbbonamenti(filtro || "tutti");
         try {
           history.replaceState(null, "", `#${schermata}`);
         } catch (_niente) {
@@ -8648,10 +9343,18 @@
         });
         dove.querySelectorAll("[data-filtro-abbonamenti]").forEach((pastiglia) => {
           pastiglia.onclick = () => {
-            FILTRO_ABBONAMENTI = pastiglia.dataset.filtroAbbonamenti;
+            scegliIlFiltroDegliAbbonamenti(pastiglia.dataset.filtroAbbonamenti);
             disegna();
           };
         });
+        const elencoAbbonamenti = document.getElementById("elenco-abbonamenti");
+        if (elencoAbbonamenti) agganciaGliAbbonamenti(elencoAbbonamenti);
+        const cercaAbbonamenti = document.getElementById("cerca-abbonamenti");
+        if (cercaAbbonamenti)
+          cercaAbbonamenti.oninput = () => {
+            LO_STATO_DEGLI_ABBONAMENTI.cerca = cercaAbbonamenti.value;
+            ridisegnaGliAbbonamenti();
+          };
         dove.querySelectorAll("[data-regala-a]").forEach((tasto) => {
           tasto.onclick = () => regalaA(tasto.dataset.regalaA);
         });
