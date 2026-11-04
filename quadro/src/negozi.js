@@ -69,7 +69,11 @@
  *    acquisto non si sa ancora, e si scopre al primo giro (`licenze.js`);
  *  - se e' un **acquisto di prova**: Google con `testPurchase`, Apple con
  *    l'ambiente «Sandbox». Non si contano: sono le prove di chi vende;
- *  - **da quando** c'e', e il **paese** del negozio.
+ *  - **da quando** c'e', e il **paese** del negozio;
+ *  - quando e' cominciato il **periodo in corso** (`periodo`): Apple lo dice
+ *    con la data della transazione (`purchaseDate`), che per un rinnovo e' il
+ *    giorno in cui ha incassato; Google non lo dice, e il quadro lo ricava
+ *    dalla scadenza e dal piano (`licenze.js`, `lInizioDelPeriodo`).
  *
  * Niente di questo decide se la licenza vale: lo decide la scadenza, come
  * sempre. E' quello che si legge, non quello che si fa.
@@ -171,6 +175,7 @@ export function lAbbonamento({
   sandbox = false,
   inizio = null,
   paese = "",
+  periodo = null,
 } = {}) {
   return {
     piano: ilPianoDetto(piano),
@@ -180,6 +185,7 @@ export function lAbbonamento({
     sandbox: Boolean(sandbox),
     inizio: Number.isFinite(inizio) && inizio > 0 ? inizio : null,
     paese: String(paese || "").slice(0, 3),
+    periodo: Number.isFinite(periodo) && periodo > 0 ? periodo : null,
   };
 }
 
@@ -604,6 +610,8 @@ export class Negozi {
         sandbox: t.environment === "Sandbox",
         inizio: Number(t.originalPurchaseDate) || null,
         paese: t.storefront || "",
+        /* Il giorno di questa transazione: per un rinnovo, quello dell'incasso. */
+        periodo: Number(t.purchaseDate) || null,
       }),
     };
   }

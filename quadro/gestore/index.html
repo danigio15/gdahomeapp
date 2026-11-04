@@ -5979,6 +5979,8 @@
           premium.filter((una) => una.licenza.buona.origine === origine).length;
         const A = ABBONAMENTI;
         const alMese = A ? alMeseDetto(A.conti?.alMese) : "—";
+        const incassatoQui = A ? lIncassatoDetto(A.conti?.incassato) : "—";
+        const meseQui = ilMeseDetto(A?.conti?.inizioDelMese);
 
         /* «Case» conta quelle che segue un installatore: le altre il quadro le
          * conosce solo per la licenza, e i regali hanno la loro casella. */
@@ -6110,7 +6112,7 @@
             ${/* già HTML */ numerone("installatori", "installatori", "Installatori", numero(INSTALLATORI.length), dettaglioInstallatori)}
             ${/* già HTML */ numerone("case", "stella", "Case Premium", numero(premium.length), dettaglioPremium)}
             ${/* già HTML */ numerone("licenze", "regalo", "Regali", numero(regalate.length), dettaglioRegali)}
-            ${/* già HTML */ numerone("abbonamenti", "euro", "Incassi stimati", alMese, "quello che pagano i clienti, IVA compresa", alMese === "—" ? "" : "/mese")}
+            ${/* già HTML */ numerone("abbonamenti", "euro", "Incassi", incassatoQui, "IVA compresa · ricorrente " + (alMese === "—" ? "0\u00a0€" : alMese) + "/mese", A ? "a " + meseQui : "")}
           </div>
 
           <div class="griglia griglia-2">
@@ -6726,6 +6728,25 @@
           .join(" + ")}`;
       }
 
+      /* Quanto e' gia' entrato, valuta per valuta: «4,99 €», o «0 €». */
+      function lIncassatoDetto(incassato) {
+        const voci = Object.entries(incassato || {}).filter(([, valore]) => valore > 0);
+        if (!voci.length) return "0\u00a0€";
+        return voci.map(([valuta, valore]) => iSoldi(valore, valuta)).join(" + ");
+      }
+
+      /* «novembre»: il mese degli incassi, quello di Roma come lo conta il quadro. */
+      function ilMeseDetto(quando) {
+        try {
+          return new Date(quando || Date.now()).toLocaleDateString("it-IT", {
+            month: "long",
+            timeZone: "Europe/Rome",
+          });
+        } catch (_fusoStrano) {
+          return new Date(quando || Date.now()).toLocaleDateString("it-IT", { month: "long" });
+        }
+      }
+
       /* Cosa succede dopo, in una frase: si rinnova, finisce, e' finito.
        * La legge la scheda della casa; l'elenco degli abbonamenti ha la sua,
        * piu' lunga (`laFraseDellaRiga`). */
@@ -6910,6 +6931,22 @@
         const prove = tutti.prove || { finite: 0, pagate: 0 };
         const primaFineProva = Number(tutti.primaFineProva) || 0;
         const disdettiInProva = Number(tutti.disdettiInProva) || 0;
+        /* Chi ha pagato e poi disdetto: non rinnova, ma ha pagato. */
+        const pagatiDisdetti = Number(tutti.pagatiDisdetti) || 0;
+        const primaFinePagatiDisdetti = Number(tutti.primaFinePagatiDisdetti) || 0;
+        const hannoPagato = Number(tutti.hannoPagato) || 0;
+        const pagamenti = Number(tutti.pagamenti) || 0;
+        const ilMese = ilMeseDetto(tutti.inizioDelMese);
+        const incassato = lIncassatoDetto(tutti.incassato);
+        const prossimo = tutti.prossimoIncasso || null;
+        /* «1 ha pagato e disdetto (finisce il 4 dic)». */
+        const pagatoEDisdetto = pagatiDisdetti
+          ? `${pagatiDisdetti === 1 ? "1 ha" : `${Number(pagatiDisdetti)} hanno`} pagato e disdetto${
+              primaFinePagatiDisdetti
+                ? ` (${pagatiDisdetti === 1 ? "finisce" : "il primo finisce"} ${conLArticolo("il", primaFinePagatiDisdetti)})`
+                : ""
+            }`
+          : "";
 
         const conto = (tinta, disegno, valore, nome) =>
           `<div class="servizio-conto ${testo(tinta)}">
@@ -6923,13 +6960,16 @@
         const negozio = ([chiave, nome]) => {
           const suoi = A.negozi?.[chiave] || {};
           const alMese = alMeseDetto(suoi.alMese);
+          const suoIncassato = Number(suoi.pagamenti)
+            ? ` · ${lIncassatoDetto(suoi.incassato)} incassati a ${ilMese}`
+            : "";
           return `
           <div class="servizio-blocco">
             <div class="servizio-capo">
               <span class="servizio-ic" aria-hidden="true">${LE_ICONE["telefono"]}</span>
               <div class="servizio-chi">
                 <b>${testo(nome)}</b>
-                <span>${testo(plurale(Number(suoi.paganti) || 0, "pagante", "paganti"))}${alMese === "—" ? "" : ` · ${testo(alMese)} al mese`}</span>
+                <span>${testo(plurale(Number(suoi.paganti) || 0, "pagante", "paganti"))}${alMese === "—" ? "" : ` · ${testo(alMese)} al mese`}${testo(suoIncassato)}</span>
               </div>
               <span class="pastiglia ${suoi.rinnovi7 ? "posto" : ""}">${
                 suoi.rinnovi7
@@ -6941,6 +6981,7 @@
               ${/* già HTML */ conto("verde", "abbonamenti", Number(suoi.paganti) || 0, "paganti")}
               ${/* già HTML */ conto("blu", "licenze", Number(suoi.inProva) || 0, "in prova gratuita")}
               ${/* già HTML */ conto("ambra", "abbonamenti", Number(suoi.disdetti) || 0, "disdetti: finiscono a scadenza")}
+              ${/* già HTML */ conto("ambra", "abbonamenti", Number(suoi.pagatiDisdetti) || 0, "di cui hanno pagato")}
               ${/* già HTML */ conto("blu", "abbonamenti", Number(suoi.test) || 0, "acquisti di test, non contano")}
             </div>
           </div>`;
@@ -6993,13 +7034,14 @@
 
         /* I quattro riquadri: tre categorie e quello che incassano. */
         const alMese = alMeseDetto(tutti.alMese);
-        const dalNegozio = iNegozi
-          .map(([chiave, nome]) => {
-            const suo = alMeseDetto(A.negozi?.[chiave]?.alMese);
-            return suo === "—" ? "" : `${nome} ${suo}`;
-          })
-          .filter(Boolean)
-          .join(" · ");
+        /* Gli incassi del mese divisi per negozio, solo se sono due. */
+        const dalNegozioIncassato = iNegozi.every(([chiave]) =>
+          Number(A.negozi?.[chiave]?.pagamenti),
+        )
+          ? iNegozi
+              .map(([chiave, nome]) => `${nome} ${lIncassatoDetto(A.negozi?.[chiave]?.incassato)}`)
+              .join(" · ")
+          : "";
         const riquadro = (tinta, etichetta, valore, righe, piccolo = "") => `
           <div class="numerone nr-cat ${testo(tinta)}">
             <span class="etichetta"><i class="pallino" aria-hidden="true"></i>${testo(etichetta)}</span>
@@ -7010,33 +7052,43 @@
               .join("")}
           </div>`;
         const pagate = Number(prove.pagate) || 0;
-        const incassi = paganti
-          ? riquadro(
-              "c-eur",
-              "Incassi al mese",
-              alMese,
-              [
-                `da ${plurale(paganti, "pagante", "paganti")}, IVA compresa`,
-                alMese === "—" ? "il negozio non ha detto il prezzo" : dalNegozio,
-              ],
-              alMese === "—" ? "" : "/mese",
-            )
-          : riquadro("c-eur", "Incassi al mese", "0 €", [
-              "nessun pagante ancora",
-              primaFineProva
-                ? "il primo incasso possibile " +
-                  conLArticolo("il", primaFineProva) +
-                  ", a fine prova"
-                : "",
-            ]);
+        /* «Incassi»: quello che e' gia' entrato questo mese, e a parte il
+         * ricorrente, che e' solo di chi rinnova. Chi ha pagato e disdetto sta
+         * nel primo e non nel secondo. */
+        const ricorrente = paganti
+          ? alMese === "—"
+            ? `ricorrente: ${plurale(paganti, "pagante", "paganti")}, prezzo non detto dal negozio`
+            : `ricorrente: ${alMese}/mese da ${plurale(paganti, "che rinnova", "che rinnovano")}`
+          : "ricorrente: 0\u00a0€ al mese, nessuno rinnova";
+        const ilProssimo = prossimo
+          ? prossimo.perche === "fine-prova"
+            ? "prossimo incasso possibile " + conLArticolo("il", prossimo.quando) + ", a fine prova"
+            : "prossimo incasso " + conLArticolo("il", prossimo.quando) + " (rinnovo)"
+          : "nessun incasso in arrivo";
+        /* Pagamenti di cui il negozio non ha detto il prezzo: «0 €» mentirebbe. */
+        const senzaPrezzo = pagamenti && incassato === "0\u00a0€";
+        const incassi = riquadro("c-eur", "Incassi", senzaPrezzo ? "—" : incassato, [
+          pagamenti
+            ? `${plurale(pagamenti, "pagamento", "pagamenti")} a ${ilMese}, ${senzaPrezzo ? "importo non detto dal negozio" : "IVA compresa"}${dalNegozioIncassato ? ` · ${dalNegozioIncassato}` : ""}`
+            : `nessun incasso a ${ilMese}`,
+          ricorrente,
+          ilProssimo,
+        ]);
         const riquadri = `
           <div class="griglia griglia-4">
             ${
               /* già HTML */ riquadro(CAT.paganti.tinta, CAT.paganti.nome, numero(paganti), [
-                paganti ? "hanno pagato e si rinnovano da soli" : "nessuno ha ancora pagato",
+                paganti
+                  ? "hanno pagato e si rinnovano da soli"
+                  : pagatiDisdetti
+                    ? "0 che rinnovano"
+                    : hannoPagato
+                      ? "nessuno che rinnova: chi aveva pagato è finito"
+                      : "nessuno ha ancora pagato",
                 paganti
                   ? `${plurale(Number(tutti.pagantiMensili) || 0, "mensile", "mensili")} · ${plurale(Number(tutti.pagantiAnnuali) || 0, "annuale", "annuali")}`
                   : "",
+                pagatoEDisdetto ? (paganti ? "in più " : "") + pagatoEDisdetto : "",
               ])
             }
             ${
@@ -7052,11 +7104,17 @@
             }
             ${
               /* già HTML */ riquadro(CAT.disdetti.tinta, CAT.disdetti.nome, numero(disdetti), [
-                disdetti
-                  ? "restano Premium fino alla scadenza, poi finiscono"
-                  : "nessuno ha disdetto",
+                disdetti ? "" : "nessuno ha disdetto",
+                pagatiDisdetti
+                  ? pagatiDisdetti === 1
+                    ? "1 dopo aver pagato: Premium fino " +
+                      conLArticolo("al", primaFinePagatiDisdetti) +
+                      ", poi finisce"
+                    : `${Number(pagatiDisdetti)} dopo aver pagato: il primo finisce ` +
+                      conLArticolo("il", primaFinePagatiDisdetti)
+                  : "",
                 disdettiInProva
-                  ? `${disdettiInProva === 1 ? "1 era" : `${Number(disdettiInProva)} erano`} ancora in prova: non ${disdettiInProva === 1 ? "pagherà" : "pagheranno"}`
+                  ? `${Number(disdettiInProva)} in prova: ${disdettiInProva === 1 ? "finisce" : "finiscono"} senza pagare`
                   : "",
               ])
             }
@@ -7125,7 +7183,14 @@
                 ? `<ul class="elenco si-tocca">${veri.map(riga).join("")}</ul>`
                 : ilFiltro === "test" && diProva.length
                   ? ""
-                  : `<div class="vuoto"><b>Nessun abbonamento qui</b> ${testo(IL_FILTRO_VUOTO[ilFiltro] || "Prova un altro filtro.")}</div>`
+                  : `<div class="vuoto"><b>Nessun abbonamento qui</b> ${testo(
+                      ilFiltro === "paganti" && pagatiDisdetti
+                        ? "Nessuno che rinnova: " +
+                            pagatoEDisdetto +
+                            (pagatiDisdetti === 1 ? ", e sta" : ", e stanno") +
+                            " fra i Disdetti."
+                        : IL_FILTRO_VUOTO[ilFiltro] || "Prova un altro filtro.",
+                    )}</div>`
             }${
               diProva.length
                 ? `<div class="sotto-test"><span>Acquisti di test</span><em>TestFlight e tester di Google: sono nostri, non entrano in nessun numero sopra</em></div>
@@ -7382,7 +7447,9 @@
                   ${/* già HTML */ conto("ambra", "abbonamenti", disdetti, "disdetti: finiscono a scadenza")}
                   ${/* già HTML */ conto("blu", "abbonamenti", Number(tutti.finiti30) || 0, "finiti negli ultimi 30 giorni")}
                   ${/* già HTML */ conto("verde", "licenze", prove.finite ? `${Number(pagate)} su ${Number(prove.finite)}` : "—", "prove finite che sono passate a pagamento")}
-                  ${/* già HTML */ conto("verde", "abbonamenti", alMeseDetto(tutti.alMese), "al mese, quello che pagano i clienti")}
+                  ${/* già HTML */ conto("verde", "abbonamenti", pagatiDisdetti, "hanno pagato e poi disdetto")}
+                  ${/* già HTML */ conto("verde", "euro", incassato, "incassati a " + ilMese + ", IVA compresa")}
+                  ${/* già HTML */ conto("verde", "abbonamenti", alMese === "—" ? "0\u00a0€" : alMese, "ricorrente al mese, quello che pagano i clienti che rinnovano")}
                 </div>
               </div>
               ${iNegozi.map(negozio).join("")}
@@ -7393,8 +7460,9 @@
           ${/* già HTML */ leVersioni}
 
           <p class="minuta" style="margin: 14px 2px 0">
-            <b>Paganti</b>: hanno pagato e si rinnovano. <b>In prova gratuita</b>: non hanno ancora pagato; pagano quando la prova finisce, se non disdicono. <b>Disdetti</b>: hanno spento il rinnovo, restano Premium fino alla scadenza e poi finiscono. Gli <b>acquisti di test</b> (TestFlight e tester di Google) si vedono in fondo all'elenco e non entrano in nessun numero.
-            Gli importi sono quelli che pagano i clienti, IVA compresa: Apple e Google trattengono la loro commissione e versano il resto. Il conto preciso, con le tasse di ogni paese, sta in App Store Connect e nella Play Console.
+            <b>Paganti</b>: hanno pagato e si rinnovano. <b>In prova gratuita</b>: non hanno ancora pagato; pagano quando la prova finisce, se non disdicono. <b>Disdetti</b>: hanno spento il rinnovo e restano Premium fino alla scadenza: chi aveva già pagato il periodo l'ha pagato, chi era in prova finisce senza pagare. Gli <b>acquisti di test</b> (TestFlight e tester di Google) si vedono in fondo all'elenco e non entrano in nessun numero.
+            <b>Incassati</b>: i pagamenti del mese, anche di chi poi ha disdetto. Il quadro tiene l'ultima ricevuta di ogni abbonamento, non tutte: l'importo è quello dell'ultima transazione su App Store e il prezzo del piano su Google Play, il giorno è quello della transazione su App Store e la scadenza meno un periodo su Google Play. <b>Ricorrente</b>: quello che pagano al mese i paganti che si rinnovano, un annuale conta un dodicesimo.
+            Gli importi sono quelli che pagano i clienti, IVA compresa: Apple e Google trattengono la loro commissione (15% o 30%, secondo il programma e l'anzianità dell'abbonamento) e versano il resto. Il quadro non sa quale si applica, e il netto non lo stima: il conto preciso, con le tasse di ogni paese, sta in App Store Connect e nella Play Console.
           </p>`;
       }
 

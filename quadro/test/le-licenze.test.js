@@ -33,6 +33,8 @@ import {
   OTTO_GIORNI,
   codiceRegaloPulito,
   contaGliAbbonamenti,
+  lInizioDelMese,
+  lInizioDelPeriodo,
   contoDellaCasa,
   firmaIlGettone,
   mesiDopo,
@@ -1998,7 +2000,11 @@ test("Google dice com'e' fatto l'abbonamento, e la Gestione lo conta (e i tester
 
     const detto = await abbonamentiDelGestore(b);
     const inProva = detto.elenco.find((uno) => uno.sog === UNA);
-    assert.deepEqual(detto.conti, {
+    const pagato = detto.elenco.find((uno) => uno.sog === ALTRA);
+    const disdetto = detto.elenco.find((uno) => uno.sog === TERZA);
+    /* Gli incassi del mese dipendono da che giorno e' oggi: si guardano dopo. */
+    const { incassato, pagamenti, inizioDelMese, ...fermi } = detto.conti;
+    assert.deepEqual(fermi, {
       /* Ognuno in un posto solo: 1 + 1 + 1 + 0 + 1 = 4. */
       tutti: 4,
       paganti: 1,
@@ -2022,7 +2028,26 @@ test("Google dice com'e' fatto l'abbonamento, e la Gestione lo conta (e i tester
       prove: { finite: 0, pagate: 0 },
       /* Paga solo il mensile: la prova non paga, e chi ha disdetto nemmeno. */
       alMese: { EUR: 4.99 },
+      /* Ma il disdetto il suo mese l'ha pagato: non rinnova, e ha pagato. */
+      pagatiDisdetti: 1,
+      primaFinePagatiDisdetti: disdetto.pagato,
+      hannoPagato: 2,
+      /* Il primo incasso: il mensile che si rinnova fra cinque giorni, prima
+       * della prova che finisce fra dieci. */
+      prossimoIncasso: { quando: pagato.pagato, perche: "rinnovo" },
     });
+    /* Il mese di Google e' la scadenza meno un mese: conta se e' cominciato
+     * da mezzanotte del primo del mese. */
+    assert.equal(inizioDelMese, lInizioDelMese(Date.now()));
+    const nelMese = [pagato, disdetto].filter((uno) => {
+      const quando = lInizioDelPeriodo(uno);
+      return Math.min(quando, Date.now()) >= inizioDelMese;
+    });
+    assert.equal(pagamenti, nelMese.length);
+    assert.deepEqual(
+      incassato,
+      nelMese.length ? { EUR: Math.round(nelMese.length * 499) / 100 } : {},
+    );
     assert.equal(detto.negozi.android.attivi, 3);
     assert.equal(detto.negozi.android.paganti, 1);
     assert.equal(detto.negozi.android.test, 1);
@@ -2148,6 +2173,7 @@ test("Apple: il piano dal prodotto, il prezzo in millesimi, il sandbox, e il rin
     type: "Auto-Renewable Subscription",
     expiresDate: Date.now() + 300 * GIORNO,
     originalPurchaseDate: comprata,
+    purchaseDate: comprata,
     price: 49990,
     currency: "EUR",
     environment: "Sandbox",
@@ -2179,6 +2205,8 @@ test("Apple: il piano dal prodotto, il prezzo in millesimi, il sandbox, e il rin
       sandbox: true,
       inizio: comprata,
       paese: "ITA",
+      /* Il giorno della transazione: quello in cui Apple ha incassato. */
+      periodo: comprata,
     });
 
     /* Disdetto da TestFlight: lo dicono le informazioni di rinnovo. */

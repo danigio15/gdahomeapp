@@ -459,10 +459,96 @@ export function loStatoDellAbbonamento({ vale, rinnovo, prova }) {
  *   sette giorni;
  * - `finiti30`: quelli finiti negli ultimi trenta giorni;
  * - `prove`: le prove gratuite finite, e quante sono passate a pagamento;
- * - `alMese`: quello che pagano al mese i `paganti`, valuta per valuta, IVA
- *   compresa e prima della commissione del negozio — un annuale conta un
- *   dodicesimo. La prova non paga, e chi ha disdetto non paga piu'.
+ * - `alMese`: il **ricorrente**, quello che pagano al mese i `paganti`,
+ *   valuta per valuta, IVA compresa e prima della commissione del negozio —
+ *   un annuale conta un dodicesimo. La prova non paga, e chi ha disdetto non
+ *   paga piu'.
+ *
+ * E quello che e' **gia' incassato**, che col ricorrente non c'entra: chi ha
+ * finito la prova, ha pagato il mese e poi ha disdetto non rinnova — non sta
+ * fra i paganti e non conta nel ricorrente — ma quei soldi li ha dati.
+ *
+ * - `pagatiDisdetti`: i disdetti che il periodo in corso l'hanno pagato (non
+ *   erano in prova); `primaFinePagatiDisdetti` e' il primo di loro che finisce;
+ * - `hannoPagato`: quelli che hanno pagato almeno un periodo, di qualunque
+ *   categoria (`haPagato`);
+ * - `incassato`: i pagamenti del mese, valuta per valuta, IVA compresa e
+ *   prima della commissione; `pagamenti` quanti sono (anche quelli di cui il
+ *   negozio non ha detto il prezzo), `inizioDelMese` da quando si conta, a
+ *   mezzanotte del primo del mese a Roma. Il quadro non tiene le ricevute di
+ *   ogni periodo: tiene l'ultima. L'importo e' il prezzo dell'ultima
+ *   transazione su App Store, quello del piano su Google Play; il giorno e'
+ *   quello della transazione su App Store, e su Google Play la scadenza meno
+ *   un mese (o un anno). Per un mensile o un annuale il periodo del mese e'
+ *   al piu' uno, ed e' l'ultimo: il conto del mese si fa;
+ * - `prossimoIncasso`: il primo incasso che arriva, `{quando, perche}`, col
+ *   perche' «rinnovo» (un pagante che si rinnova) o «fine-prova» (una prova
+ *   che finisce, se non disdice), o `null`.
  */
+/* Quanti mesi dura un periodo del piano: `null` se il piano non e' detto. */
+const MESI_DEL_PIANO = { mensile: 1, annuale: 12 };
+
+/**
+ * Quando e' cominciato il periodo in corso (o l'ultimo, se e' finito), cioe'
+ * quando il negozio l'ha incassato: il giorno della transazione se il negozio
+ * lo dice (App Store), se no la fine del periodo meno la durata del piano.
+ * `null` se non si sa.
+ */
+export function lInizioDelPeriodo(riga) {
+  if (typeof riga?.periodo === "number" && riga.periodo > 0) return riga.periodo;
+  const mesi = MESI_DEL_PIANO[riga?.piano];
+  if (!mesi || typeof riga?.pagato !== "number") return null;
+  /* `mesiDopo` all'indietro: il 31 marzo meno un mese e' il 28 febbraio. */
+  return mesiDopo(riga.pagato, -mesi);
+}
+
+/**
+ * Il periodo in corso (o l'ultimo) e' stato pagato? Si', se non era una prova
+ * gratuita e non e' stato rimborsato. Gli acquisti di test non pagano.
+ */
+export function haPagatoIlPeriodo(riga) {
+  return !riga.sandbox && !riga.prova && riga.finito !== "acquisto-rimborsato";
+}
+
+/** Ha pagato almeno un periodo: questo, o uno dopo la prova. */
+export function haPagato(riga) {
+  if (riga.sandbox || riga.finito === "acquisto-rimborsato") return false;
+  return !riga.prova || Boolean(riga.pagatoDopoLaProva);
+}
+
+/**
+ * La mezzanotte del primo del mese di `ora`, a Roma: da li' si contano gli
+ * incassi del mese. Lo scarto dell'ora legale si prende a quella mezzanotte,
+ * non adesso: a fine marzo i due sono diversi.
+ */
+export function lInizioDelMese(ora, fuso = "Europe/Rome") {
+  const parti = (quando) =>
+    Object.fromEntries(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: fuso,
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        second: "numeric",
+        hourCycle: "h23",
+      })
+        .formatToParts(quando)
+        .filter((una) => una.type !== "literal")
+        .map((una) => [una.type, Number(una.value)]),
+    );
+  const scarto = (quando) => {
+    const p = parti(quando);
+    const comeSeFosseUtc = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
+    return comeSeFosseUtc - (quando - (((quando % 1000) + 1000) % 1000));
+  };
+  const qui = parti(ora);
+  const mezzanotte = Date.UTC(qui.year, qui.month - 1, 1);
+  const prima = mezzanotte - scarto(ora);
+  return mezzanotte - scarto(prima);
+}
+
 export function contaGliAbbonamenti(tutte, ora = Date.now()) {
   const GIORNO = 24 * 60 * 60 * 1000;
   const righe = tutte.filter((riga) => !riga.sandbox);
@@ -483,6 +569,36 @@ export function contaGliAbbonamenti(tutte, ora = Date.now()) {
   const fineProve = inProva
     .map((riga) => riga.pagato)
     .filter((quando) => typeof quando === "number");
+  const pagatiDisdetti = disdetti.filter((riga) => !riga.prova);
+  const finePagatiDisdetti = pagatiDisdetti
+    .map((riga) => riga.pagato)
+    .filter((quando) => typeof quando === "number");
+
+  /* Gli incassi del mese: l'ultimo periodo pagato, se e' cominciato da
+   * mezzanotte del primo del mese. Un periodo che non e' di prova e' gia'
+   * pagato: se il giorno ricavato dalla scadenza cade dopo adesso (la prova
+   * finita stamattina, con la scadenza a un'ora diversa), l'incasso c'e'
+   * stato lo stesso, e si conta adesso. */
+  const inizioDelMese = lInizioDelMese(ora);
+  const pagatiNelMese = righe.filter((riga) => {
+    if (!haPagatoIlPeriodo(riga)) return false;
+    const quando = lInizioDelPeriodo(riga);
+    return quando !== null && Math.min(quando, ora) >= inizioDelMese;
+  });
+  const incassato = {};
+  for (const riga of pagatiNelMese) {
+    if (!(riga.prezzo > 0) || !riga.valuta) continue;
+    incassato[riga.valuta] = Math.round(((incassato[riga.valuta] || 0) + riga.prezzo) * 100) / 100;
+  }
+
+  /* Il prossimo incasso: un pagante che si rinnova, o una prova che finisce. */
+  const inArrivo = [
+    ...paganti.map((riga) => ({ quando: riga.pagato, perche: "rinnovo" })),
+    ...inProva.map((riga) => ({ quando: riga.pagato, perche: "fine-prova" })),
+  ]
+    .filter((uno) => typeof uno.quando === "number" && uno.quando >= ora)
+    .sort((a, b) => a.quando - b.quando);
+
   return {
     tutti: tutte.length,
     paganti: paganti.length,
@@ -517,6 +633,13 @@ export function contaGliAbbonamenti(tutte, ora = Date.now()) {
       pagate: righe.filter((riga) => riga.fuInProva && riga.pagatoDopoLaProva).length,
     },
     alMese,
+    pagatiDisdetti: pagatiDisdetti.length,
+    primaFinePagatiDisdetti: finePagatiDisdetti.length ? Math.min(...finePagatiDisdetti) : null,
+    hannoPagato: righe.filter(haPagato).length,
+    incassato,
+    pagamenti: pagatiNelMese.length,
+    inizioDelMese,
+    prossimoIncasso: inArrivo[0] ?? null,
   };
 }
 
@@ -1032,6 +1155,7 @@ export class Licenze {
       sandbox: Boolean(detto.sandbox),
       inizio: detto.inizio ?? prima.inizio ?? null,
       paese: detto.paese || prima.paese || "",
+      periodo: detto.periodo ?? prima.periodo ?? null,
     };
     /* Col rinnovo detto, la richiesta di ogni giorno puo' aspettare domani. */
     if (typeof detto.rinnovo === "boolean") una.negozio.aggiornata = this.adesso();
@@ -1286,6 +1410,8 @@ export class Licenze {
       sandbox: Boolean(suo.sandbox),
       paese: suo.paese || "",
       inizio: suo.inizio ?? una.creata ?? null,
+      /* Quando e' cominciato il periodo in corso, se il negozio lo dice. */
+      periodo: suo.periodo ?? null,
       pagato: una.scade,
       vale,
       stato: loStatoDellAbbonamento({ vale, rinnovo, prova: una.prova }),
