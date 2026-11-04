@@ -109,12 +109,14 @@ export async function pronta(page) {
 
 /* Apre una sezione dalla barra, anche se sul telefono la sua voce e' fuori
  * dallo schermo o nel menu: quello che si prova qui e' la pagina, non la barra. */
-export async function apri(page, sezione) {
+export async function apri(page, sezione, tab = sezione) {
+  /* `tab` quando la voce della barra non si chiama come la pagina: le
+   * Automazioni stanno in `page-automazioni-casa`. */
   await page.evaluate((s) => {
     const voce = document.querySelector(`.tab[data-tab="${s}"]`);
     if (voce) voce.click();
     else window.switchTab?.(s);
-  }, sezione);
+  }, tab);
   await page.waitForFunction(
     (s) => {
       const p = document.getElementById(`page-${s}`);

@@ -118,7 +118,17 @@ const GRUPPI = [
         },
       },
       { sezione: "meteo", riquadri: { adesso: "Adesso" } },
-      { sezione: "clima", riquadri: { zone: "Zone" } },
+      {
+        /* Le carte si riordinano dentro il loro piano: un elenco per piano,
+         * col titolo del piano fuori. */
+        sezione: "clima",
+        riquadri: { zone: "Zone" },
+        elenchi: {
+          "clima:zone/freddo-piano-terra": ["#card-climate-soggiorno"],
+          "clima:zone/freddo-primo-piano": ["#card-climate-camera", "#card-climate-cameretta"],
+        },
+        nomi: { "clima:zone/freddo-primo-piano": ["Clima camera", "Clima cameretta"] },
+      },
       {
         /* I numeri del banner si chiamavano tutti «Numeri»: adesso ognuno ha
          * la sua etichetta, e l'id del valore che la pagina ci scrive. */
@@ -129,10 +139,76 @@ const GRUPPI = [
           "energy:#view-panoramica/numeri": ["prod", "cons", "auto"],
           "energy:#view-panoramica/conti": ["pagato", "costo", "risp", "imm", "co2"],
         },
+        riquadri: { "#view-panoramica": "Report" },
         nomi: {
           "energy:#view-panoramica/numeri": ["Produzione FV", "Consumo Totale", "Autosufficienza"],
           "energy:#view-panoramica/conti": ["Senza FV", "Costo Reale", "Risparmio"],
         },
+      },
+    ],
+  },
+  {
+    nome: "Lo sport, i rifiuti, i contatori, gli animali e la salute",
+    sezioni: [
+      {
+        sezione: "sport",
+        riquadri: { "calcio:110": "Internazionale", f1: "Formula 1", motogp: "MotoGP" },
+        elenchi: {
+          "sport:calcio:110/schede": ["prossima", "ultime", "classifica"],
+          "sport:calcio:110/coppa-uefa.champions": ["prossima", "ultime", "classifica"],
+          "sport:f1/schede": ["prossima", "ultima-gara", "piloti", "costruttori"],
+        },
+        nomi: { "sport:calcio:110/schede": ["Ultime partite", "Serie A"] },
+      },
+      {
+        sezione: "rifiuti",
+        riquadri: { prossimo: "Prossimo ritiro", ritiri: "Prossimi ritiri" },
+      },
+      {
+        sezione: "contatori",
+        riquadri: { adesso: "In questo momento", elenco: "Contatori" },
+        elenchi: {
+          "contatori:elenco": [
+            "sensor.contatore_acqua",
+            "sensor.contatore_gas",
+            "sensor.impianto_pressione",
+          ],
+        },
+      },
+      {
+        sezione: "animali",
+        riquadri: { filtri: "Filtri", micio: "Micio Gatto", fido: "Fido Cane" },
+        elenchi: { "animali:micio/.dm-animale-gruppi": ["ciotola", "lettiera"] },
+      },
+      {
+        sezione: "salute",
+        riquadri: { passi: "Passi di oggi", misure: "Misure", fonte: "Da dove arrivano" },
+        elenchi: { "salute:misure": ["battito", "peso", "sonno"] },
+      },
+    ],
+  },
+  {
+    nome: "I viaggi, le automazioni e l'Energia",
+    sezioni: [
+      {
+        sezione: "gdanav",
+        riquadri: { nuovo: "Nuovo viaggio", viaggi: "Viaggi" },
+        elenchi: { "gdanav:viaggi": ["elenco", "viaggio"] },
+        nomi: { "gdanav:viaggi": ["I tuoi viaggi"] },
+      },
+      {
+        /* Nella casa demo le Automazioni stanno sotto il velo del Premium:
+         * si guardano gli id e i nomi, le maniglie no. */
+        sezione: "automazioni-casa",
+        tab: "automazioni",
+        maniglie: false,
+        riquadri: { numeri: "Numeri" },
+        elenchi: { "automazioni-casa:numeri": ["attive", "spente", "prossima"] },
+      },
+      {
+        /* La vista che si apre da sola: il flusso, non «Schema». */
+        sezione: "energy",
+        riquadri: { "#view-ist": "Flusso di energia" },
       },
     ],
   },
@@ -162,9 +238,18 @@ async function ferma(page) {
 
 async function guarda(
   page,
-  { sezione, vista, riquadri = {}, elenchi: attesi = {}, nomi = {}, ancheSe = {} },
+  {
+    sezione,
+    tab,
+    vista,
+    riquadri = {},
+    elenchi: attesi = {},
+    nomi = {},
+    ancheSe = {},
+    maniglie = true,
+  },
 ) {
-  await apri(page, sezione);
+  await apri(page, sezione, tab);
   if (vista) await page.evaluate(vista);
   const ids = Object.keys(riquadri);
   await expect
@@ -207,7 +292,7 @@ async function guarda(
   await page.locator(`#page-${sezione} [data-dm-disp-tasto]`).click();
   await expect(page.locator("html")).toHaveAttribute("data-dm-modifica", sezione);
   /* Con un riquadro solo non c'e' niente da spostare, e niente maniglia. */
-  for (const id of pagina.voci.length > 1 ? pagina.voci : [])
+  for (const id of maniglie && pagina.voci.length > 1 ? pagina.voci : [])
     await expect
       .poll(
         () =>
@@ -250,6 +335,11 @@ for (const [sezione, gruppo] of [
   ["media", "Musica"],
   ["piscina", "Piscina"],
   ["calendario", "Agenda"],
+  ["sport", "Sport"],
+  ["rifiuti", "Rifiuti"],
+  ["contatori", "Acqua e gas"],
+  ["animali", "Animali"],
+  ["salute", "Salute"],
 ])
   test(`${gruppo}: un riquadro spostato e salvato resta dov'e' dopo aver ricaricato`, async ({
     page,
@@ -309,3 +399,57 @@ for (const [sezione, gruppo] of [
     );
     expect(inPagina).toEqual(atteso);
   });
+
+/* Il Clima: le carte di un piano si spostano dentro il piano, il titolo del
+ * piano resta dov'e', e dopo aver ricaricato l'ordine e' quello salvato. */
+test("Clima: una carta spostata nel suo piano resta li' dopo aver ricaricato", async ({ page }) => {
+  test.setTimeout(180_000);
+  const chiave = "clima:zone/freddo-primo-piano";
+  const voci = async () => (await elenchi(page)).find((e) => e.chiave === chiave)?.voci;
+  const inPagina = () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll("#clima-grid-freddo > *")].map((el) =>
+        el.matches(".dm-cl-floor")
+          ? `piano:${el.textContent.trim()}`
+          : [...el.querySelectorAll(".dm-cl-card")].map((c) => c.id).join(","),
+      ),
+    );
+  await nellaCasaDemo(page);
+  await apri(page, "clima");
+  await ferma(page);
+  const prima = await voci();
+  expect(prima).toEqual(["#card-climate-camera", "#card-climate-cameretta"]);
+  const titoli = (await inPagina()).filter((x) => x.startsWith("piano:"));
+  await page.locator("#page-clima [data-dm-disp-tasto]").click();
+  await expect(async () => {
+    if ((await voci())[0] === prima[0]) {
+      /* Una carta di un elenco si prende lei, non una maniglia. */
+      await page.locator(`#page-clima [data-dm-disp-voce="${prima[0]}"]`).focus();
+      await page.keyboard.press("ArrowDown");
+      await page.waitForTimeout(150);
+    }
+    expect(await voci()).toEqual([prima[1], prima[0]]);
+  }).toPass({ timeout: 15_000, intervals: [200, 400, 800] });
+  await page.locator('[data-dm-disp-azione="salva"]').click();
+  await expect(page.locator("html")).not.toHaveAttribute("data-dm-modifica", /./);
+
+  await page.reload();
+  await pronta(page);
+  await apri(page, "clima");
+  await expect.poll(voci, { timeout: 15_000 }).toEqual([prima[1], prima[0]]);
+  const dopo = await inPagina();
+  /* I titoli dei piani sono gli stessi, nello stesso posto; dentro il primo
+   * piano la cameretta viene prima della camera. */
+  expect(dopo.filter((x) => x.startsWith("piano:"))).toEqual(titoli);
+  expect(dopo).toContain("card-climate-cameretta,card-climate-camera");
+  expect(dopo).toContain("card-climate-soggiorno");
+});
+
+/* L'Irrigazione aveva «Le tue entita'» due volte: una volta sola. */
+test("Irrigazione: «Le tue entità» c'e' una volta sola", async ({ page }) => {
+  test.setTimeout(120_000);
+  await nellaCasaDemo(page);
+  await apri(page, "irrigazione");
+  await ferma(page);
+  await expect(page.locator("#page-irrigazione .dm-mie-ent")).toHaveCount(1);
+});
