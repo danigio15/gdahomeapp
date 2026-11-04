@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-S6LV6YUK.js";
+} from "../../chunk-FUPOWOQ7.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -158115,7 +158115,11 @@ function ensureLinguetta() {
 }
 function inFondoAllaFila(linguetta4) {
   const fila2 = linguetta4?.parentElement;
-  if (fila2 && fila2.lastElementChild !== linguetta4) fila2.append(linguetta4);
+  if (!fila2) return;
+  const bollette = fila2.querySelector(':scope > [data-dm-energia-vista="bollette"]');
+  if (bollette) {
+    if (linguetta4.nextElementSibling !== bollette) fila2.insertBefore(linguetta4, bollette);
+  } else if (fila2.lastElementChild !== linguetta4) fila2.append(linguetta4);
 }
 function accendiLaLinguetta() {
   const linguetta4 = ensureLinguetta();

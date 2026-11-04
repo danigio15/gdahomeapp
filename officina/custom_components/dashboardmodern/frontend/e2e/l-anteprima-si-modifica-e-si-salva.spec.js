@@ -127,6 +127,12 @@ const tessereInHome = (page) =>
   );
 
 async function trascinaColMouse(page, id, da, a) {
+  /* Sul telefono l'anteprima dei blocchi sta sotto la piega: il mouse fuori
+   * dallo schermo non prende niente. Si porta la voce in mezzo, prima. */
+  await page
+    .locator(`[data-dm-anteprima="${id}"] .dm-ant-voce`)
+    .nth(da)
+    .evaluate((el) => el.scrollIntoView({ block: "center" }));
   const sorgente = await page
     .locator(`[data-dm-anteprima="${id}"] .dm-ant-voce`)
     .nth(da)

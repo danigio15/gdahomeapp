@@ -121,10 +121,19 @@ export function ensureLinguetta() {
 /* In fondo, dopo Temperature: «i tab nella sezione Energia: Batterie va in
  * fondo dopo Temperature». Stava accanto a Istantanea e spingeva le viste di
  * sempre fuori dal loro posto. Si rimette in coda anche quando qualcuno
- * aggiunge una linguetta dopo di lei. */
+ * aggiunge una linguetta dopo di lei.
+ *
+ * Tranne le Bollette, che vanno in fondo anche loro: volendo l'ultimo posto
+ * tutte e due, a ogni disegno una spostava l'altra, e le due linguette si
+ * scambiavano di posto dieci volte al secondo — lo sfarfallio dell'Energia.
+ * Batterie sta subito prima delle Bollette, le Bollette per ultime. */
 function inFondoAllaFila(linguetta) {
   const fila = linguetta?.parentElement;
-  if (fila && fila.lastElementChild !== linguetta) fila.append(linguetta);
+  if (!fila) return;
+  const bollette = fila.querySelector(':scope > [data-dm-energia-vista="bollette"]');
+  if (bollette) {
+    if (linguetta.nextElementSibling !== bollette) fila.insertBefore(linguetta, bollette);
+  } else if (fila.lastElementChild !== linguetta) fila.append(linguetta);
 }
 
 /* La linguetta c'è quando c'è un pacco. Se sparisce mentre è aperta — l'ultimo
