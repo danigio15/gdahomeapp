@@ -42,6 +42,7 @@ WebViewController costruisciIlControllore({
   void Function()? quandoSiVede,
   void Function(String foto)? quandoFotografaLaCasa,
   void Function(String persona)? quandoApreLaPersona,
+  void Function()? quandoSiPerdeLaPagina,
 }) {
   final controllore = WebViewController();
   /* Chi va avvisato quando la pagina «arriva». Si tiene da parte perche'

@@ -77,4 +77,97 @@ void main() {
       expect(eUnaCorniceAmmessa(Uri.parse(no)), isFalse, reason: no);
     }
   });
+
+  group('il telefono stesso non si apre mai nel browser', () {
+    test('localhost, 127.x e ::1 sono del telefono; il resto no', () {
+      for (final si in [
+        'http://127.0.0.1:0/dashboardmodern_static/x/legacy/dashboard.html',
+        'http://127.0.0.1:43117/',
+        'http://127.0.0.2/',
+        'http://localhost:8080/',
+        'http://LOCALHOST/',
+        'http://[::1]:43117/',
+      ]) {
+        expect(eDelTelefono(Uri.parse(si)), isTrue, reason: si);
+      }
+      for (final no in [
+        'https://github.com/x',
+        'http://192.168.1.10:8123/',
+        'https://embed.windy.com/x',
+        'http://128.0.0.1/',
+      ]) {
+        expect(eDelTelefono(Uri.parse(no)), isFalse, reason: no);
+      }
+    });
+
+    /* «Mi è arrivata la notifica del movimento delle telecamere, mi ha
+     * aperto una pagina web»: Safari su 127.0.0.1, «porta rete limitata».
+     * La pagina servita era sulla 43117; il riquadro chiedeva la stessa
+     * plancia con la porta zero, rifatta mentre il sistema aveva chiuso la
+     * porta, e quello che non era «di casa» finiva nel browser. */
+    const servita = 'http://127.0.0.1:43117';
+    bool diCasa(String indirizzo) => indirizzo.startsWith(servita);
+
+    test('la pagina servita: si va', () {
+      expect(
+        laStradaDelRiquadro(
+          '$servita/dashboardmodern_static/x/legacy/dashboard.html?k=1',
+          paginaIntera: true,
+          siPuoAndare: diCasa,
+        ),
+        StradaDelRiquadro.vai,
+      );
+    });
+
+    test('la stessa plancia con un\'altra porta, o la porta zero: si riapre '
+        'la pagina vera, mai nel browser', () {
+      for (final vecchia in [
+        'http://127.0.0.1:0/dashboardmodern_static/x/legacy/dashboard.html',
+        'http://127.0.0.1:43118/dashboardmodern_static/x/legacy/dashboard.html',
+        'http://localhost:43117/',
+      ]) {
+        expect(
+          laStradaDelRiquadro(vecchia, paginaIntera: true, siPuoAndare: diCasa),
+          StradaDelRiquadro.riapri,
+          reason: vecchia,
+        );
+        expect(
+          laStradaDelRiquadro(
+            vecchia,
+            paginaIntera: false,
+            siPuoAndare: diCasa,
+          ),
+          StradaDelRiquadro.resta,
+          reason: 'un riquadro interno: si ferma e basta',
+        );
+      }
+    });
+
+    test('i collegamenti veri escono ancora; Windy resta cornice', () {
+      expect(
+        laStradaDelRiquadro(
+          'https://www.paypal.com/donate',
+          paginaIntera: true,
+          siPuoAndare: diCasa,
+        ),
+        StradaDelRiquadro.fuori,
+      );
+      expect(
+        laStradaDelRiquadro(
+          'https://embed.windy.com/embed2.html?lat=1',
+          paginaIntera: false,
+          siPuoAndare: diCasa,
+        ),
+        StradaDelRiquadro.vai,
+      );
+      expect(
+        laStradaDelRiquadro(
+          'https://embed.windy.com/embed2.html?lat=1',
+          paginaIntera: true,
+          siPuoAndare: diCasa,
+        ),
+        StradaDelRiquadro.fuori,
+      );
+    });
+  });
 }

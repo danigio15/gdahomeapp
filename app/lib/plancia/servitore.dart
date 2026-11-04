@@ -282,8 +282,22 @@ class Servitore {
   final _inArrivo = <String, Future<_Scaricato>>{};
   final _cuciture = <Cucitura>{};
 
+  /* L'ultima porta su cui si e' ascoltato davvero. */
+  int _ultimaPorta = 0;
+
   /// Su quale porta si ascolta. Solo dopo [alza].
-  int get porta => _server?.port ?? 0;
+  ///
+  /// Anche quando il sistema ha chiuso la porta e [rimettiInPiedi] non l'ha
+  /// ancora rialzata, resta quella di prima, e mai zero. «Mi è arrivata la
+  /// notifica del movimento e mi ha aperto una pagina web: Safari, 127.0.0.1,
+  /// porta rete limitata.» Su iPhone l'app in tasca perde la porta; tornando
+  /// davanti — dal tocco di una notifica — la plancia rifaceva il suo
+  /// indirizzo prima che la porta fosse rialzata, e senza server la porta
+  /// diceva 0: l'indirizzo cambiava in `http://127.0.0.1:0/…`, il riquadro lo
+  /// apriva, e quando il WebView chiedeva se poteva andarci la porta era gia'
+  /// rialzata, l'indirizzo «giusto» era tornato quello vero, e `:0` non era
+  /// piu' «di casa»: finiva nel browser del telefono.
+  int get porta => _server?.port ?? _ultimaPorta;
 
   /// Da dove la pagina viene servita: `http://127.0.0.1:<porta>`.
   Uri get radice => Uri(scheme: 'http', host: '127.0.0.1', port: porta);
@@ -351,6 +365,7 @@ class Servitore {
      * La porta ha la sua chiave: chi la inquadra senza non vede niente. */
     server.defaultResponseHeaders.removeAll('x-frame-options');
     _server = server;
+    _ultimaPorta = server.port;
     unawaited(_ascolta(server));
   }
 

@@ -60,6 +60,7 @@ WebViewController costruisciIlControllore({
   void Function()? quandoSiVede,
   void Function(String foto)? quandoFotografaLaCasa,
   void Function(String persona)? quandoApreLaPersona,
+  void Function()? quandoSiPerdeLaPagina,
 }) {
   final PlatformWebViewControllerCreationParams parametri;
   final iPhone = WebViewPlatform.instance is WebKitWebViewPlatform;
@@ -113,17 +114,27 @@ WebViewController costruisciIlControllore({
           }
         },
         onNavigationRequest: (richiesta) {
-          if (siPuoAndare(richiesta.url)) return NavigationDecision.navigate;
-          /* Il radar di Windy, dentro la plancia: un riquadro, mai la pagina
-           * intera, e solo dalla sua origine (`fuori.dart`). */
-          final quale = Uri.tryParse(richiesta.url);
-          if (!richiesta.isMainFrame &&
-              quale != null &&
-              eUnaCorniceAmmessa(quale)) {
-            return NavigationDecision.navigate;
+          /* Le regole stanno in `fuori.dart` ([laStradaDelRiquadro]). Il
+           * radar di Windy, dentro la plancia, passa come cornice; un
+           * indirizzo del telefono che non e' la pagina servita e' la plancia
+           * con una porta vecchia, e non va mai nel browser — «Safari non può
+           * aprire la pagina» — ma si riapre la pagina vera, qui dentro. */
+          switch (laStradaDelRiquadro(
+            richiesta.url,
+            paginaIntera: richiesta.isMainFrame,
+            siPuoAndare: siPuoAndare,
+          )) {
+            case StradaDelRiquadro.vai:
+              return NavigationDecision.navigate;
+            case StradaDelRiquadro.riapri:
+              quandoSiPerdeLaPagina?.call();
+              return NavigationDecision.prevent;
+            case StradaDelRiquadro.resta:
+              return NavigationDecision.prevent;
+            case StradaDelRiquadro.fuori:
+              unawaited(_fuori(richiesta.url));
+              return NavigationDecision.prevent;
           }
-          unawaited(_fuori(richiesta.url));
-          return NavigationDecision.prevent;
         },
       ),
     );
@@ -383,6 +394,9 @@ List<String> _iTipi(List<String> chiesti) => [
 Future<void> _fuori(String indirizzo) async {
   final dove = Uri.tryParse(indirizzo);
   if (dove == null || !siApreFuori(dove)) return;
+  /* Il telefono stesso, nel browser del telefono, non e' mai un posto: vedi
+   * [eDelTelefono]. */
+  if (eDelTelefono(dove)) return;
   /* Su iPhone non si esce a pagare: vedi [eUnPagamentoFuori]. */
   if (defaultTargetPlatform == TargetPlatform.iOS && eUnPagamentoFuori(dove)) {
     return;

@@ -1089,6 +1089,7 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
       quandoSiVede: () => widget.quandoSiVede?.call(),
       quandoFotografaLaCasa: widget.quandoFotografaLaCasa,
       quandoApreLaPersona: widget.quandoApreLaPersona,
+      quandoSiPerdeLaPagina: _riapriLaPagina,
       /* Il fondo della plancia, se l'ha gia' detto — si riapre la stessa
        * casa, un'altra plancia — se no lo stesso dell'app: sotto la pagina,
        * finche' non arriva, non si vede un lampo di un altro colore. */
@@ -1097,6 +1098,28 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
     );
     _controllore = controllore;
     unawaited(riquadro.apriLaPagina(controllore, widget.pagina));
+  }
+
+  /* Il riquadro voleva andare a un indirizzo del telefono che non e' la
+   * pagina servita: la plancia con un indirizzo vecchio. Si riapre quella
+   * vera, dopo il fotogramma — l'indirizzo giusto puo' essere appena
+   * cambiato — e non piu' di una volta ogni due secondi, che una pagina che
+   * insiste non deve far girare il riquadro in tondo. */
+  DateTime? _riapertaIl;
+
+  void _riapriLaPagina() {
+    final adesso = DateTime.now();
+    final prima = _riapertaIl;
+    if (prima != null &&
+        adesso.difference(prima) < const Duration(seconds: 2)) {
+      return;
+    }
+    _riapertaIl = adesso;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final controllore = _controllore;
+      if (!mounted || controllore == null) return;
+      unawaited(riquadro.apriLaPagina(controllore, widget.pagina));
+    });
   }
 
   @override
