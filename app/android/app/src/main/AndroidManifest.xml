@@ -68,6 +68,12 @@
     <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
     <uses-permission android:name="android.permission.health.READ_DISTANCE" />
     <uses-permission android:name="android.permission.health.READ_FLOORS_CLIMBED" />
+    <!-- Leggere anche ad app chiusa, per mandare le misure alla casa senza
+         aprire GdAHome (`salute/LaSaluteAdAppChiusa.kt`). Si chiede a parte,
+         con l'app davanti, e solo se Health Connect lo conosce; negato, le
+         misure vanno solo ad app aperta. Anche questo va nella dichiarazione
+         dei dati salute del Play Console. -->
+    <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND" />
 
     <!-- La plancia vera dentro l'app passa da un server locale, su
          127.0.0.1: e' l'unico indirizzo in chiaro che il WebView puo'

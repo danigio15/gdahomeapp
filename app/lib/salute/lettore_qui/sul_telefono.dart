@@ -279,6 +279,23 @@ class LettoreDelTelefono implements LettoreDellaSalute {
     return null;
   }
 
+  /* Su Android, il permesso a parte di Health Connect per leggere ad app
+   * chiusa. Dove Health Connect non lo conosce (versioni vecchie) non si
+   * puo': si resta come prima, solo ad app aperta. Sull'iPhone non serve —
+   * basta il permesso di lettura — e la sveglia la da' Salute stessa. */
+  @override
+  Future<bool> chiediIlPermessoDaChiusa() async {
+    if (_iPhone) return true;
+    try {
+      await _preparati();
+      if (!await _health.isHealthDataInBackgroundAvailable()) return false;
+      if (await _health.isHealthDataInBackgroundAuthorized()) return true;
+      return await _health.requestHealthDataInBackgroundAuthorization();
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
   Future<void> installaHealthConnect() async {
     if (_iPhone) return;

@@ -97,6 +97,30 @@ void main() {
     fail('il velo non è mai arrivato');
   }
 
+  testWidgets('partita senza nessuno davanti (la sveglia di Salute): il '
+      'volto si chiede al ritorno, e intanto il velo resta', (tester) async {
+    guardia = _GuardiaFinta();
+    await impostazioni.metti(
+      lucchetto: const IlLucchetto(allAvvio: true, alRitorno: true),
+    );
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pumpWidget(lApp());
+    /* Senza nessuno davanti il telefono non disegna: si lascia girare. */
+    for (var giro = 0; giro < 20; giro += 1) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    expect(guardia.chieste, 0, reason: 'nessuno da riconoscere');
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await finoAlVelo(tester);
+    expect(guardia.chieste, 1);
+    expect(find.text('Colleghiamo la casa'), findsNothing);
+    guardia.risposta.complete(ComeEAndata.si);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.byType(IlVeloDelRiconoscimento), findsNothing);
+  });
+
   testWidgets('all\'apertura la casa non si vede prima del velo', (
     tester,
   ) async {

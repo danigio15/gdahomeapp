@@ -45,3 +45,16 @@ Future<bool> permessoDelMicrofono() async {
     return false;
   }
 }
+
+/// Se l'app sta davanti a qualcuno, o e' partita da sola senza schermo — la
+/// sveglia di Salute (`salute/ad_app_chiusa.dart`). Sull'iPhone lo dice il
+/// sistema (`applicationState`); dove non si sa — Android, il browser, le
+/// prove — si risponde «davanti», cioe' come prima.
+Future<bool> siStaDavanti() async {
+  if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) return true;
+  try {
+    return await canaleDellaFinestra.invokeMethod<bool>('davanti') ?? true;
+  } catch (_) {
+    return true;
+  }
+}

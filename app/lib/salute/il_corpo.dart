@@ -218,9 +218,26 @@ class ScelteDellaSalute {
     this.misure = misureDiSerie,
     this.ultimoInvio,
     this.viste = const {...MisuraDelCorpo.values},
+    this.adAppChiusa = true,
+    this.ultimoDaChiusa = false,
+    this.chiestoDaChiusa = false,
   });
 
   final bool acceso;
+
+  /// Se le misure vanno a casa anche con l'app chiusa
+  /// (`ad_app_chiusa.dart`). Acceso di serie: chi accende la Salute vuole
+  /// la plancia aggiornata, non aggiornata solo quando apre l'app.
+  final bool adAppChiusa;
+
+  /// Se l'ultimo invio ([ultimoInvio]) e' partito ad app chiusa: la pagina
+  /// lo scrive, cosi' si vede che funziona.
+  final bool ultimoDaChiusa;
+
+  /// Se il permesso di leggere ad app chiusa e' gia' stato chiesto: su
+  /// Android e' un permesso a parte di Health Connect, e si chiede una volta
+  /// sola, con l'app davanti. Su iPhone non serve.
+  final bool chiestoDaChiusa;
 
   /// Il nome con cui la casa la chiama: «Marco». Vuoto, il ponte usa quello
   /// di «Di chi è questo telefono?».
@@ -243,12 +260,18 @@ class ScelteDellaSalute {
     Set<MisuraDelCorpo>? misure,
     DateTime? ultimoInvio,
     Set<MisuraDelCorpo>? viste,
+    bool? adAppChiusa,
+    bool? ultimoDaChiusa,
+    bool? chiestoDaChiusa,
   }) => ScelteDellaSalute(
     acceso: acceso ?? this.acceso,
     persona: persona ?? this.persona,
     misure: misure ?? this.misure,
     ultimoInvio: ultimoInvio ?? this.ultimoInvio,
     viste: viste ?? this.viste,
+    adAppChiusa: adAppChiusa ?? this.adAppChiusa,
+    ultimoDaChiusa: ultimoDaChiusa ?? this.ultimoDaChiusa,
+    chiestoDaChiusa: chiestoDaChiusa ?? this.chiestoDaChiusa,
   );
 
   /// Dopo aver chiesto il permesso: tutte viste.
@@ -260,6 +283,9 @@ class ScelteDellaSalute {
     'misure': [for (final m in misure) m.name],
     'viste': [for (final m in viste) m.name],
     if (ultimoInvio != null) 'ultimo': ultimoInvio!.millisecondsSinceEpoch,
+    'chiusa': adAppChiusa,
+    if (ultimoDaChiusa) 'ultimoDaChiusa': true,
+    if (chiestoDaChiusa) 'chiestoDaChiusa': true,
   };
 
   String get comeSiScrive => jsonEncode(inJson());
@@ -297,9 +323,42 @@ class ScelteDellaSalute {
       ultimoInvio: ultimo is int
           ? DateTime.fromMillisecondsSinceEpoch(ultimo)
           : null,
+      /* Chi l'aveva gia' accesa prima che ci fosse: acceso anche lui. */
+      adAppChiusa: letto['chiusa'] != false,
+      ultimoDaChiusa: letto['ultimoDaChiusa'] == true,
+      chiestoDaChiusa: letto['chiestoDaChiusa'] == true,
     );
   }
 }
+
+/// Su iPhone, i tipi di Salute che svegliano l'app chiusa quando arriva un
+/// dato nuovo (`ios/Runner/LaSaluteAdAppChiusa.swift`).
+///
+/// Non tutti quelli che si leggono: ogni tipo osservato e' una sveglia in
+/// piu', e al risveglio si leggono e si mandano comunque **tutte** le misure
+/// scelte. Bastano quelli che cambiano spesso — i passi e le calorie, che
+/// l'iPhone scrive tutto il giorno — e quelli che arrivano di rado ma
+/// contano subito: la notte, la pesata, la pressione.
+Set<String> daOsservareSuIPhone(Set<MisuraDelCorpo> misure) => {
+  for (final m in misure)
+    switch (m) {
+      MisuraDelCorpo.passi ||
+      MisuraDelCorpo.distanza ||
+      MisuraDelCorpo.piani => 'HKQuantityTypeIdentifierStepCount',
+      MisuraDelCorpo.calorie ||
+      MisuraDelCorpo.calorieRiposo ||
+      MisuraDelCorpo.esercizio ||
+      MisuraDelCorpo.inPiedi => 'HKQuantityTypeIdentifierActiveEnergyBurned',
+      MisuraDelCorpo.battito ||
+      MisuraDelCorpo.battitoRiposo ||
+      MisuraDelCorpo.ossigeno => 'HKQuantityTypeIdentifierHeartRate',
+      MisuraDelCorpo.sonno => 'HKCategoryTypeIdentifierSleepAnalysis',
+      MisuraDelCorpo.peso ||
+      MisuraDelCorpo.grasso => 'HKQuantityTypeIdentifierBodyMass',
+      MisuraDelCorpo.sistolica || MisuraDelCorpo.diastolica =>
+        'HKQuantityTypeIdentifierBloodPressureSystolic',
+    },
+};
 
 /// Un nome di persona: parole corte, niente segni strani, al piu' 30.
 String personaPulita(String testo) {

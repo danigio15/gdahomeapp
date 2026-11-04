@@ -15,6 +15,7 @@ import android.view.WindowManager
 import androidx.activity.enableEdgeToEdge
 import com.gdahome.gdahome.auto.IlNavigatoreInAuto
 import com.gdahome.gdahome.orologio.IlTramiteDellOrologio
+import com.gdahome.gdahome.salute.LaSaluteAdAppChiusa
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import androidx.core.app.ActivityCompat
@@ -79,6 +80,8 @@ class MainActivity : FlutterFragmentActivity() {
         /* L'orologio Wear OS. Nella versione col navigatore in auto l'ha gia'
          * collegato `IlNavigatoreInAuto`; rifarlo non fa danni. */
         IlTramiteDellOrologio.collega(flutterEngine.dartExecutor.binaryMessenger, this)
+        /* La salute ad app chiusa: il Dart accende e spegne il giro. */
+        LaSaluteAdAppChiusa.collega(flutterEngine.dartExecutor.binaryMessenger, this)
         val canale = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, FINESTRA)
         canaleDellaFinestra = canale
         canale

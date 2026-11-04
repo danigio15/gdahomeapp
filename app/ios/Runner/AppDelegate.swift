@@ -27,6 +27,10 @@ import gdanav_app
     fuoriDalleCopie()
     /* L'Apple Watch: la fotografia al polso, e i tocchi da li'. */
     LOrologio.shared.accendi(motore: motore)
+    /* La salute ad app chiusa: gli osservatori di Salute si riaprono qui,
+     * all'avvio, perche' un'app svegliata da Salute trovi chi ascolta
+     * (`LaSaluteAdAppChiusa.swift`). */
+    LaSaluteAdAppChiusa.shared.accendi(motore: motore)
     /* Le notifiche della casa (`lib/notifiche/postino.dart`): il centro delle
      * notifiche parla con questa classe, che le gira ai plugin — quello di
      * Firebase e quello che mostra le notifiche gia' aperte, coi loro tasti. */
@@ -50,6 +54,11 @@ import gdanav_app
         let valore = (chiamata.arguments as? NSNumber)?.doubleValue ?? -1
         LaLuceDelMuro.shared.metti(valore < 0 ? nil : CGFloat(min(max(valore, 0), 1)))
         risposta(nil)
+      } else if chiamata.method == "davanti" {
+        /* Se l'app e' partita senza nessuno davanti (la sveglia di Salute,
+         * `LaSaluteAdAppChiusa.swift`): il lucchetto allora non chiede il
+         * volto adesso, ma quando l'app torna davanti (`main.dart`). */
+        risposta(UIApplication.shared.applicationState != .background)
       } else if chiamata.method == "acceso" {
         /* Il campanello del tablet a muro (`lib/casa/lo_schermo.dart`): lo
          * schermo non si spegne da solo finche' il pannello lo chiede. */

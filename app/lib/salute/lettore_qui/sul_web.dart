@@ -23,4 +23,7 @@ class LettoreCheNonCE implements LettoreDellaSalute {
 
   @override
   Future<void> installaHealthConnect() async {}
+
+  @override
+  Future<bool> chiediIlPermessoDaChiusa() async => false;
 }

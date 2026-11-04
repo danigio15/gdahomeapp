@@ -795,6 +795,9 @@ jobs:
           # La Salute c'e' sempre: senza, l'app non puo' chiedere di leggere
           # Salute di iPhone (e' successo con la 1.18.8).
           grep -q com.apple.developer.healthkit build/permessi.txt
+          # E la sveglia di Salute ad app chiusa: senza, iOS non sveglia l'app
+          # quando arriva un dato nuovo (`LaSaluteAdAppChiusa.swift`).
+          grep -q com.apple.developer.healthkit.background-delivery build/permessi.txt
           if [ "$CARPLAY" = "si" ]; then grep -q com.apple.developer.carplay-maps build/permessi.txt; fi
           if [ "$NOTIFICHE" = "si" ]; then grep -q aps-environment build/permessi.txt; fi
 
