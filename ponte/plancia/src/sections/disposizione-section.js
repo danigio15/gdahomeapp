@@ -565,6 +565,13 @@ function onClick(event) {
   if (tasto) {
     event.preventDefault();
     event.stopPropagation();
+    /* In Home la disposizione e' quella delle sue caselle (tessere, blocchi,
+     * stanze), con la loro anteprima nel Config: il tasto porta li'. */
+    if (tasto.getAttribute("data-dm-disp-tasto") === "home") {
+      root.apriConfigEntita?.();
+      root.queueMicrotask?.(() => root.editorSwitch?.("todo"));
+      return;
+    }
     if (state.modifica) esciDallaModifica();
     else entraInModifica(tasto.closest(".page"));
     return;
@@ -629,8 +636,24 @@ function testataPerIlTasto(pagina) {
   );
 }
 
+function tastoInHome(si) {
+  const casa = doc.getElementById("page-home");
+  const ce = casa?.querySelector(":scope > [data-dm-disp-tasto]");
+  if (!casa || !si) return ce?.remove();
+  if (ce) return;
+  const tasto = doc.createElement("button");
+  tasto.type = "button";
+  tasto.className = "dm-disp-tasto dm-disp-tasto-home";
+  tasto.setAttribute("data-dm-disp-tasto", "home");
+  tasto.title = t("Modifica disposizione", "Edit layout");
+  tasto.setAttribute("aria-label", t("Modifica disposizione", "Edit layout"));
+  tasto.textContent = "✏️";
+  casa.prepend(tasto);
+}
+
 function mettiITasti() {
   const si = puoConfigurare();
+  tastoInHome(si);
   for (const pagina of doc.querySelectorAll("section.page[id^='page-']")) {
     const testata = testataPerIlTasto(pagina);
     if (!testata) continue;
@@ -663,6 +686,8 @@ ${STILE_RIORDINA}
 html[data-dm-modifica] [data-dm-nascosto]{display:revert!important;opacity:.38;filter:grayscale(.6)}
 [data-dm-misura="larga"]{grid-column:1/-1!important}
 .dm-page-mast{position:relative}
+#page-home{position:relative}
+.dm-disp-tasto-home{top:0;right:4px}
 .dm-disp-tasto{position:absolute;top:12px;right:12px;z-index:3;width:40px;height:40px;border-radius:14px;
   border:1px solid color-mix(in srgb,var(--text,#0f172a) 12%,transparent);background:var(--card-bg,#fff);
   font-size:18px;line-height:1;cursor:pointer;box-shadow:0 6px 16px -10px rgba(15,23,42,.4)}

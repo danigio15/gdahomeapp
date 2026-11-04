@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-VTG2MOGU.js";
+} from "../../chunk-UPLW4FIL.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -156501,6 +156501,11 @@ function onClick57(event) {
   if (tasto5) {
     event.preventDefault();
     event.stopPropagation();
+    if (tasto5.getAttribute("data-dm-disp-tasto") === "home") {
+      root.apriConfigEntita?.();
+      root.queueMicrotask?.(() => root.editorSwitch?.("todo"));
+      return;
+    }
     if (state177.modifica) esciDallaModifica();
     else entraInModifica(tasto5.closest(".page"));
     return;
@@ -156551,8 +156556,23 @@ function onKeyDown2(event) {
 function testataPerIlTasto(pagina3) {
   return pagina3.querySelector(":scope > .dm-page-mast") || [...pagina3.querySelectorAll("[class*='mast']")].find((el) => eTestata(el) && visibile(el)) || null;
 }
+function tastoInHome(si) {
+  const casa3 = doc.getElementById("page-home");
+  const ce = casa3?.querySelector(":scope > [data-dm-disp-tasto]");
+  if (!casa3 || !si) return ce?.remove();
+  if (ce) return;
+  const tasto5 = doc.createElement("button");
+  tasto5.type = "button";
+  tasto5.className = "dm-disp-tasto dm-disp-tasto-home";
+  tasto5.setAttribute("data-dm-disp-tasto", "home");
+  tasto5.title = t("Modifica disposizione", "Edit layout");
+  tasto5.setAttribute("aria-label", t("Modifica disposizione", "Edit layout"));
+  tasto5.textContent = "✏️";
+  casa3.prepend(tasto5);
+}
 function mettiITasti() {
   const si = puoConfigurare();
+  tastoInHome(si);
   for (const pagina3 of doc.querySelectorAll("section.page[id^='page-']")) {
     const testata5 = testataPerIlTasto(pagina3);
     if (!testata5) continue;
@@ -156580,6 +156600,8 @@ ${STILE_RIORDINA}
 html[data-dm-modifica] [data-dm-nascosto]{display:revert!important;opacity:.38;filter:grayscale(.6)}
 [data-dm-misura="larga"]{grid-column:1/-1!important}
 .dm-page-mast{position:relative}
+#page-home{position:relative}
+.dm-disp-tasto-home{top:0;right:4px}
 .dm-disp-tasto{position:absolute;top:12px;right:12px;z-index:3;width:40px;height:40px;border-radius:14px;
   border:1px solid color-mix(in srgb,var(--text,#0f172a) 12%,transparent);background:var(--card-bg,#fff);
   font-size:18px;line-height:1;cursor:pointer;box-shadow:0 6px 16px -10px rgba(15,23,42,.4)}

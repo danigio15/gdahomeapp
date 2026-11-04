@@ -36,8 +36,19 @@ test("sull'Auto i riquadri si trascinano, si salvano e restano dopo aver ricaric
   /* Il riquadro in cima, preso dalla sua maniglia col mouse e portato giu'. */
   const maniglia = page.locator("#lm-hero-card [data-dm-disp-ctrl] .dm-disp-maniglia");
   const ultimo = page.locator(`#page-ev [data-dm-disp-voce="${prima.at(-1)}"]`);
-  const a = await maniglia.boundingBox();
-  const b = await ultimo.boundingBox();
+  await expect(maniglia).toBeVisible();
+  await expect(ultimo).toBeVisible();
+  /* La pagina puo' ridisegnarsi proprio adesso (lo stato dell'auto arriva dal
+   * ponte finto): si aspetta che tutte e due abbiano una scatola vera. */
+  let a = null;
+  let b = null;
+  await expect
+    .poll(async () => {
+      a = await maniglia.boundingBox().catch(() => null);
+      b = await ultimo.boundingBox().catch(() => null);
+      return Boolean(a && b && a.width > 0 && b.height > 0);
+    })
+    .toBe(true);
   await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
   await page.mouse.down();
   for (let i = 1; i <= 14; i += 1)
@@ -131,9 +142,12 @@ test("le luci di una stanza si riordinano e l'ordine si scrive con le entita'", 
           .find((e) => e.voci.filter((v) => v.startsWith("light.")).length >= 2) || null,
     );
   await expect.poll(elencoDiLuci, { timeout: 15_000 }).not.toBeNull();
-  const prima = await elencoDiLuci();
+  await page.waitForTimeout(600);
   await page.locator("#page-luci [data-dm-disp-tasto]").click();
+  await page.waitForTimeout(300);
+  const prima = await elencoDiLuci();
   const primaLuce = page.locator(`#page-luci [data-dm-disp-voce="${prima.voci[0]}"]`);
+  await expect(primaLuce).toHaveAttribute("data-dm-maniglia", "");
   await primaLuce.focus();
   await page.keyboard.press("ArrowDown");
   await expect
@@ -152,4 +166,17 @@ test("le luci di una stanza si riordinano e l'ordine si scrive con le entita'", 
     JSON.parse(localStorage.getItem("cd_disposizione") || "{}"),
   );
   expect(scritta[prima.chiave].ordine.slice(0, 2)).toEqual([prima.voci[1], prima.voci[0]]);
+});
+
+test("in Home il tasto ✏️ porta all'anteprima delle tessere nel Config", async ({
+  page,
+}, testInfo) => {
+  test.setTimeout(120_000);
+  await pontefinto(page);
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
+  await page.locator("#setup-wizard").evaluateAll((n) => n.forEach((x) => x.remove()));
+  const tasto = page.locator('#page-home [data-dm-disp-tasto="home"]');
+  await expect(tasto).toBeVisible();
+  await tasto.click();
+  await expect(page.locator('[data-dm-anteprima="home"]').first()).toBeVisible({ timeout: 15_000 });
 });
