@@ -327,8 +327,10 @@ function dipingi() {
   const firma = JSON.stringify([lettura, locale()]);
   if (state.firma === firma && dove.firstElementChild) return;
   state.firma = firma;
+  /* `data-dm-in-ordine`: i ritiri vanno per data, e nella disposizione non
+   * si spostano — spostare il vetro prima della carta non cambia il giorno. */
   dove.innerHTML = `${prossimoMarkup(lettura)}
-    <div class="dm-rifiuti-elenco">${lettura.righe.map(rigaMarkup).join("")}${calendarioMarkup(lettura.calendario)}</div>`;
+    <div class="dm-rifiuti-elenco" data-dm-in-ordine>${lettura.righe.map(rigaMarkup).join("")}${calendarioMarkup(lettura.calendario)}</div>`;
 }
 
 function schedule() {

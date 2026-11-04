@@ -235,11 +235,11 @@ function tessere(elenco) {
   const attive = elenco.filter((v) => v.attiva).length;
   const tutte = elenco.length;
   const prossima = prossimaDiCasa(elenco);
-  return `<div class="ad-kpi"><div class="dm-lucip-kpi on" data-auc-attive><span>${esc(t("Attive", "Active"))}</span><b>${attive}</b><small>${esc(
+  return `<div class="ad-kpi"><div class="dm-lucip-kpi on" data-auc-attive data-dm-blocco="attive" data-dm-disp-nome="${esc(t("Attive", "Active"))}"><span>${esc(t("Attive", "Active"))}</span><b>${attive}</b><small>${esc(
     t(`su ${tutte} in casa`, `of ${tutte} at home`),
-  )}</small></div><div class="dm-lucip-kpi" data-auc-spente><span>${esc(t("Spente", "Off"))}</span><b>${elenco.length - attive}</b><small>${esc(
+  )}</small></div><div class="dm-lucip-kpi" data-auc-spente data-dm-blocco="spente" data-dm-disp-nome="${esc(t("Spente", "Off"))}"><span>${esc(t("Spente", "Off"))}</span><b>${elenco.length - attive}</b><small>${esc(
     t("ferme per ora", "stopped for now"),
-  )}</small></div><div class="dm-lucip-kpi pross"><span>${esc(t("Prossima", "Next"))}</span><b>${esc(prossima?.ora || "—")}</b><small>${esc(
+  )}</small></div><div class="dm-lucip-kpi pross" data-dm-blocco="prossima" data-dm-disp-nome="${esc(t("Prossima", "Next"))}"><span>${esc(t("Prossima", "Next"))}</span><b>${esc(prossima?.ora || "—")}</b><small>${esc(
     prossima?.voce?.nome || t("nessuna a un orario", "none on a schedule"),
   )}</small></div></div>`;
 }
@@ -340,14 +340,14 @@ function pianificatoreHtml() {
   const fasce = viste.filter((v) => v.modello.tipo === "fasce");
   const tutteR = tutte.filter((v) => v.modello.tipo === "routine");
   const prossima = prossimaDiCasa(tutte);
-  const kpi = `<div class="ad-kpi"><div class="dm-lucip-kpi on"><span>${esc(t("Routine", "Routines"))}</span><b>${tutteR.length}</b><small>${esc(
+  const kpi = `<div class="ad-kpi"><div class="dm-lucip-kpi on" data-dm-blocco="routine" data-dm-disp-nome="${esc(t("Routine", "Routines"))}"><span>${esc(t("Routine", "Routines"))}</span><b>${tutteR.length}</b><small>${esc(
     (() => {
       const n = tutteR.filter((v) => v.attiva).length;
       return n === 1 ? t("1 attiva", "1 active") : t(`${n} attive`, `${n} active`);
     })(),
-  )}</small></div><div class="dm-lucip-kpi"><span>${esc(t("Calendari", "Calendars"))}</span><b>${tutte.length - tutteR.length}</b><small>${esc(
+  )}</small></div><div class="dm-lucip-kpi" data-dm-blocco="calendari" data-dm-disp-nome="${esc(t("Calendari", "Calendars"))}"><span>${esc(t("Calendari", "Calendars"))}</span><b>${tutte.length - tutteR.length}</b><small>${esc(
     t("a fasce", "time slots"),
-  )}</small></div><div class="dm-lucip-kpi pross"><span>${esc(t("Prossima", "Next"))}</span><b>${esc(prossima?.ora || "—")}</b><small>${esc(
+  )}</small></div><div class="dm-lucip-kpi pross" data-dm-blocco="prossima" data-dm-disp-nome="${esc(t("Prossima", "Next"))}"><span>${esc(t("Prossima", "Next"))}</span><b>${esc(prossima?.ora || "—")}</b><small>${esc(
     prossima?.voce?.nome || t("niente in programma", "nothing planned"),
   )}</small></div></div>`;
   const nuova = puo

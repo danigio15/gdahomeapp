@@ -333,6 +333,15 @@
   function rispondi(presa, detto) {
     if (presa.readyState !== 1) return;
 
+    /* Le risposte del ponte che la casa porta con sé (`DEMO.ponte`, per
+     * comando): lo Sport, per esempio, chiede i risultati al ponte e non a
+     * Home Assistant. Il sito non ne porta; le prove sì. */
+    var dalPonte = DEMO.ponte && Object.prototype.hasOwnProperty.call(DEMO.ponte, detto.type);
+    if (dalPonte) {
+      presa._manda({ id: detto.id, type: "result", success: true, result: DEMO.ponte[detto.type] });
+      return;
+    }
+
     function si(risultato) {
       presa._manda({
         id: detto.id,

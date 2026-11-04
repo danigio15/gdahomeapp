@@ -113,8 +113,17 @@ function casaDelContenuto(pagina) {
 
 function blocco(pagina) {
   const casa = casaDelContenuto(pagina);
-  let nodo = casa.querySelector(":scope > .dm-mie-ent");
-  if (nodo) return nodo;
+  /* Uno solo per pagina, cercato in tutta la pagina: l'Irrigazione sposta la
+   * sua intestazione dentro il contenuto dopo il primo disegno, e cercando
+   * solo fra i figli della casa nuova ne nasceva un secondo («Le tue entita'»
+   * due volte). Quello che c'e' gia' si sposta dove deve stare. */
+  const tutti = [...pagina.querySelectorAll(".dm-mie-ent")];
+  let nodo = tutti.find((uno) => uno.parentElement === casa) || tutti[0];
+  for (const altro of tutti) if (altro !== nodo) altro.remove();
+  if (nodo) {
+    if (nodo.parentElement !== casa) casa.append(nodo);
+    return nodo;
+  }
   nodo = doc.createElement("section");
   nodo.className = "dm-mie-ent";
   nodo.innerHTML = `<div class="dm-mie-testa">

@@ -888,7 +888,19 @@ function floorOf(unit) {
   }
 }
 
-function groupedMarkup(units, labels) {
+/* Il nome di un piano dentro una chiave: «Piano terra» -> «piano-terra». */
+function pianoNellaChiave(floor) {
+  return (
+    String(floor || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "casa"
+  );
+}
+
+function groupedMarkup(units, labels, zona = "") {
   const groups = new Map();
   for (const unit of units) {
     const floor = floorOf(unit);
@@ -921,7 +933,15 @@ function groupedMarkup(units, labels) {
         .sort((sinistra, destra) => stanza(sinistra.room) - stanza(destra.room));
       const heading =
         floor && keys.length > 1 ? `<div class="dm-cl-floor">🏢 ${esc(floor)}</div>` : "";
-      if (!conStanze) return `${heading}${ordinate.map((unit) => cardMarkup(unit, labels)).join("")}`;
+      /* Le carte di un piano stanno in un involucro loro, che la griglia non
+       * vede (prende le sue colonne e i suoi spazi): in modifica le carte si
+       * riordinano dentro il piano e il titolo del piano resta fermo. Prima
+       * titoli e carte erano fratelli, e la disposizione non le prendeva. */
+      const dentro = (corpo) =>
+        `<div class="dm-cl-piano" data-dm-disposizione="${esc(
+          `${zona ? `${zona}-` : ""}${pianoNellaChiave(floor)}`,
+        )}" data-dm-disp-nome="${esc(floor || t("Le carte", "The cards"))}">${corpo}</div>`;
+      if (!conStanze) return `${heading}${dentro(ordinate.map((unit) => cardMarkup(unit, labels)).join(""))}`;
       let ultima = null;
       const corpo = ordinate
         .map((unit) => {
@@ -932,7 +952,7 @@ function groupedMarkup(units, labels) {
           return `${titolo}${cardMarkup(unit, labels)}`;
         })
         .join("");
-      return `${heading}${corpo}`;
+      return `${heading}${dentro(corpo)}`;
     })
     .join("");
 }
@@ -987,7 +1007,7 @@ function syncGrid(grid, units, labels, fuori = []) {
   const current = `${signature(units)}|${signature(fuori)}`;
   if (grid._dmClimaSig === current && grid._dmClimaFigli === grid.childElementCount) return false;
   grid.innerHTML = units.length
-    ? groupedMarkup(units, labels)
+    ? groupedMarkup(units, labels, grid.dataset.dmClZone || "")
     : fuori.length
       ? seasonEmptyMarkup(grid.dataset.dmClZone, fuori, labels)
       : emptyMarkup(grid.dataset.dmClZone, labels);
@@ -2717,6 +2737,7 @@ function climateCss() {
 
 /* ── grids ────────────────────────────────────────────────────────────── */
 .dm-cl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+.dm-cl-piano{grid-column:1/-1;display:grid;grid-template-columns:inherit;gap:inherit;align-items:start;min-width:0}
 .dm-cl-floor{
   grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:6px 2px 0;
   font-size:10px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--dm-cl-dim)

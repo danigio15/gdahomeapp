@@ -2830,6 +2830,174 @@
    },
    "last_changed": "2026-09-08T04:39:21.763Z",
    "last_updated": "2026-09-08T04:39:21.763Z"
+  },
+  {
+   "entity_id": "sensor.contatore_gas",
+   "state": "1834.2",
+   "attributes": {
+    "friendly_name": "Contatore gas",
+    "unit_of_measurement": "m³",
+    "device_class": "gas",
+    "state_class": "total_increasing"
+   },
+   "last_changed": "2026-09-08T04:39:21.763Z",
+   "last_updated": "2026-09-08T04:39:21.763Z"
+  },
+  {
+   "entity_id": "sensor.portata_acqua",
+   "state": "0",
+   "attributes": {
+    "friendly_name": "Portata acqua",
+    "unit_of_measurement": "L/min",
+    "device_class": "volume_flow_rate",
+    "state_class": "measurement"
+   },
+   "last_changed": "2026-09-08T04:39:21.763Z",
+   "last_updated": "2026-09-08T04:39:21.763Z"
+  },
+  {
+   "entity_id": "sensor.ciotola_micio_livello",
+   "state": "64",
+   "attributes": {
+    "friendly_name": "Ciotola Micio livello",
+    "unit_of_measurement": "%"
+   },
+   "last_changed": "2026-09-08T04:39:21.763Z",
+   "last_updated": "2026-09-08T04:39:21.763Z"
+  },
+  {
+   "entity_id": "button.ciotola_micio_eroga",
+   "state": "2026-09-08T06:00:00+00:00",
+   "attributes": {
+    "friendly_name": "Ciotola Micio eroga"
+   },
+   "last_changed": "2026-09-08T04:39:21.763Z",
+   "last_updated": "2026-09-08T04:39:21.763Z"
+  },
+  {
+   "entity_id": "sensor.lettiera_sabbia",
+   "state": "72",
+   "attributes": {
+    "friendly_name": "Lettiera sabbia",
+    "unit_of_measurement": "%"
+   },
+   "last_changed": "2026-09-08T04:39:21.763Z",
+   "last_updated": "2026-09-08T04:39:21.763Z"
+  },
+  {
+   "entity_id": "button.lettiera_pulisci",
+   "state": "2026-09-08T05:00:00+00:00",
+   "attributes": {
+    "friendly_name": "Lettiera pulisci"
+   },
+   "last_changed": "2026-09-08T04:39:21.763Z",
+   "last_updated": "2026-09-08T04:39:21.763Z"
+  },
+  {
+   "entity_id": "binary_sensor.lettiera_cestino",
+   "state": "off",
+   "attributes": {
+    "friendly_name": "Lettiera cestino pieno"
+   },
+   "last_changed": "2026-09-08T04:39:21.763Z",
+   "last_updated": "2026-09-08T04:39:21.763Z"
+  },
+  {
+   "entity_id": "sensor.ciotola_fido_livello",
+   "state": "38",
+   "attributes": {
+    "friendly_name": "Ciotola Fido livello",
+    "unit_of_measurement": "%"
+   },
+   "last_changed": "2026-09-08T04:39:21.763Z",
+   "last_updated": "2026-09-08T04:39:21.763Z"
+  },
+  {
+   "entity_id": "button.ciotola_fido_eroga",
+   "state": "2026-09-08T07:30:00+00:00",
+   "attributes": {
+    "friendly_name": "Ciotola Fido eroga"
+   },
+   "last_changed": "2026-09-08T04:39:21.763Z",
+   "last_updated": "2026-09-08T04:39:21.763Z"
+  },
+  {
+   "entity_id": "sensor.telefono_persona_1_steps",
+   "state": "7842",
+   "attributes": {
+    "friendly_name": "Telefono Persona 1 Steps",
+    "unit_of_measurement": "steps",
+    "state_class": "total",
+    "icon": "mdi:walk"
+   },
+   "last_changed": "2026-09-08T04:39:21.763Z",
+   "last_updated": "2026-09-08T04:39:21.763Z"
+  },
+  {
+   "entity_id": "sensor.telefono_persona_1_heart_rate",
+   "state": "72",
+   "attributes": {
+    "friendly_name": "Telefono Persona 1 Heart rate",
+    "unit_of_measurement": "bpm",
+    "state_class": "measurement"
+   },
+   "last_changed": "2026-09-08T04:39:21.763Z",
+   "last_updated": "2026-09-08T04:39:21.763Z"
+  },
+  {
+   "entity_id": "sensor.telefono_persona_1_resting_heart_rate",
+   "state": "58",
+   "attributes": {
+    "friendly_name": "Telefono Persona 1 Resting heart rate",
+    "unit_of_measurement": "bpm",
+    "state_class": "measurement"
+   },
+   "last_changed": "2026-09-08T04:39:21.763Z",
+   "last_updated": "2026-09-08T04:39:21.763Z"
+  },
+  {
+   "entity_id": "sensor.telefono_persona_1_weight",
+   "state": "78.4",
+   "attributes": {
+    "friendly_name": "Telefono Persona 1 Weight",
+    "unit_of_measurement": "kg",
+    "device_class": "weight",
+    "state_class": "measurement"
+   },
+   "last_changed": "2026-09-08T04:39:21.763Z",
+   "last_updated": "2026-09-08T04:39:21.763Z"
+  },
+  {
+   "entity_id": "sensor.telefono_persona_1_sleep_duration",
+   "state": "452",
+   "attributes": {
+    "friendly_name": "Telefono Persona 1 Sleep duration",
+    "unit_of_measurement": "min",
+    "device_class": "duration"
+   },
+   "last_changed": "2026-09-08T04:39:21.763Z",
+   "last_updated": "2026-09-08T04:39:21.763Z"
+  },
+  {
+   "entity_id": "sensor.telefono_persona_1_oxygen_saturation",
+   "state": "97",
+   "attributes": {
+    "friendly_name": "Telefono Persona 1 Oxygen saturation",
+    "unit_of_measurement": "%"
+   },
+   "last_changed": "2026-09-08T04:39:21.763Z",
+   "last_updated": "2026-09-08T04:39:21.763Z"
+  },
+  {
+   "entity_id": "sensor.telefono_persona_1_active_calories_burned",
+   "state": "386",
+   "attributes": {
+    "friendly_name": "Telefono Persona 1 Active calories burned",
+    "unit_of_measurement": "kcal",
+    "state_class": "total"
+   },
+   "last_changed": "2026-09-08T04:39:21.763Z",
+   "last_updated": "2026-09-08T04:39:21.763Z"
   }
  ],
  "configurazione": {
@@ -2876,7 +3044,12 @@
     "cd_ev_cars": "[{\"id\":\"ev-demo\",\"name\":\"Auto di casa\",\"brand\":\"Tesla\",\"model\":\"Model 3\",\"icon\":\"mdi:car-electric\",\"img\":\"/api/dm_preview/vehicle.png\",\"ov\":{}}]",
     "cd_piscina": "{\"tempEnt\":\"sensor.piscina_temperatura\",\"phEnt\":\"sensor.piscina_ph\",\"clEnt\":\"sensor.piscina_cloro\",\"pumpEnt\":\"switch.piscina_pompa\",\"heatEnt\":\"switch.piscina_riscaldamento\",\"lightEnt\":\"light.piscina\",\"phMin\":7,\"phMax\":7.6,\"clMin\":0.5,\"clMax\":1.5,\"autoHours\":true,\"hours\":8,\"filterStart\":\"09:00\",\"enabled\":true}",
     "cd_irrigazione": "{\"zones\":[{\"id\":\"zone-1\",\"name\":\"Prato fronte\",\"entity\":\"switch.irrigazione_zona_1\",\"mins\":15,\"room\":\"\"},{\"id\":\"zone-2\",\"name\":\"Prato retro\",\"entity\":\"switch.irrigazione_zona_2\",\"mins\":20,\"room\":\"\"},{\"id\":\"zone-3\",\"name\":\"Siepe\",\"entity\":\"switch.irrigazione_zona_3\",\"mins\":8,\"room\":\"Giardino\"},{\"id\":\"zone-4\",\"name\":\"Orto\",\"entity\":\"switch.irrigazione_zona_4\",\"mins\":25,\"room\":\"Giardino\"}],\"rainEnt\":\"binary_sensor.pioggia\",\"weatherEnt\":\"weather.casa\",\"rainThr\":40,\"time\":\"06:30\",\"enabled\":true}",
-    "cd_robot": "[{\"id\":\"robot-piano-terra\",\"name\":\"Robot piano terra\",\"entity\":\"vacuum.robot\",\"room_id\":\"room-soggiorno\"}]"
+    "cd_robot": "[{\"id\":\"robot-piano-terra\",\"name\":\"Robot piano terra\",\"entity\":\"vacuum.robot\",\"room_id\":\"room-soggiorno\"}]",
+    "cd_rifiuti": "{\"turno\":{\"inizio\":\"2026-10-26\",\"giorni\":[[\"organico\"],[\"indifferenziato\"],[\"plastica\"],[\"organico\",\"vetro\"],[\"carta\"],[],[],[\"organico\"],[\"indifferenziato\"],[\"plastica\"],[\"organico\"],[\"carta\",\"verde\"],[],[]]}}",
+    "cd_contatori": "{\"righe\":[{\"entity\":\"sensor.contatore_acqua\",\"genere\":\"acqua\",\"name\":\"Contatore acqua\"},{\"entity\":\"sensor.contatore_gas\",\"genere\":\"gas\",\"name\":\"Gas\"},{\"entity\":\"sensor.impianto_pressione\",\"genere\":\"pressione\",\"name\":\"Pressione\"},{\"entity\":\"sensor.portata_acqua\",\"genere\":\"portata\",\"name\":\"Portata\"}]}",
+    "cd_animali": "[{\"id\":\"micio\",\"nome\":\"Micio\",\"specie\":\"gatto\",\"cibo_livello\":\"sensor.ciotola_micio_livello\",\"cibo_eroga\":\"button.ciotola_micio_eroga\",\"lettiera_sabbia\":\"sensor.lettiera_sabbia\",\"lettiera_pulisci\":\"button.lettiera_pulisci\",\"lettiera_cestino\":\"binary_sensor.lettiera_cestino\"},{\"id\":\"fido\",\"nome\":\"Fido\",\"specie\":\"cane\",\"cibo_livello\":\"sensor.ciotola_fido_livello\",\"cibo_eroga\":\"button.ciotola_fido_eroga\"}]",
+    "cd_sport": "{\"seguiti\":[{\"tipo\":\"calcio\",\"campionato\":\"ita.1\",\"squadra\":\"110\",\"nome\":\"Internazionale\"},{\"tipo\":\"f1\",\"preferito\":\"leclerc\"},{\"tipo\":\"motogp\",\"preferito\":\"\"}]}",
+    "cd_salute": "{\"obiettivoPassi\":10000}"
    }
   },
   "recoverable": [],

@@ -8,6 +8,7 @@
  * chi ha una casa vera, e non ricostruita a pezzi per l'occasione. */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { calcioDaEspn, f1DaJolpica, motoDaPulselive } from "../../../../../../ponte/src/sport.js";
 
 const RADICE = new URL("../../../../../../", import.meta.url);
 const CRUDO = JSON.parse(
@@ -21,7 +22,50 @@ const CASA = {
     attributes: attributes ?? {},
   })),
   configurazione: CRUDO.configurazione,
+  ponte: { "ponte/sport/risultati": { risultati: risultatiDelloSport() } },
 };
+/* Lo Sport chiede i risultati al ponte, non a Home Assistant: qui il ponte
+ * risponde quello che risponderebbe lui un sabato sera di fine ottobre 2026,
+ * con i campioni veri di `ponte/test/sport/` messi in forma dallo stesso
+ * `ponte/src/sport.js` dell'add-on. */
+function risultatiDelloSport() {
+  const campione = (nome) =>
+    JSON.parse(
+      readFileSync(fileURLToPath(new URL(`ponte/test/sport/${nome}.json`, RADICE)), "utf8"),
+    );
+  const adesso = Date.parse("2026-10-24T20:00:00Z");
+  const eventi = campione("moto-eventi");
+  return [
+    calcioDaEspn({
+      id: "110",
+      campionato: "ita.1",
+      giocate: campione("calcio-inter-tutte"),
+      prossime: campione("calcio-inter-tutte-prossime"),
+      classifica: campione("calcio-serie-a-classifica"),
+      classificheDelleCoppe: { "uefa.champions": campione("calcio-champions-classifica") },
+    }),
+    f1DaJolpica({
+      gara: campione("f1-ultima-gara"),
+      sprint: campione("f1-sprint"),
+      calendario: campione("f1-calendario"),
+      piloti: campione("f1-piloti"),
+      costruttori: campione("f1-costruttori"),
+      adesso,
+    }),
+    motoDaPulselive({
+      eventi,
+      eventoGara: eventi.find((e) => e.country?.iso === "AU" && !e.test),
+      tipo: "SPR",
+      gara: campione("moto-sprint"),
+      campionato: campione("moto-classifica"),
+      quando: "2026-10-24T05:00:00+00:00",
+      sessioniProssime: campione("moto-sessioni"),
+      sessioniGara: campione("moto-sessioni"),
+      adesso,
+    }),
+  ];
+}
+
 const IN_PAGINA = readFileSync(fileURLToPath(new URL("sito/casa-in-pagina.js", RADICE)), "utf8");
 
 /* Accende la plancia sulla casa demo.

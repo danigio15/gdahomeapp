@@ -1089,7 +1089,11 @@ export function disegna() {
   const cerca = posto.querySelector("[data-gn-cerca]");
   const fuoco = cerca && doc.activeElement === cerca;
   const cursore = fuoco ? cerca.selectionStart : null;
-  const html = `${testa}<div class="dm-gn-griglia"><div class="dm-gn-card">${elenco()}</div><div class="dm-gn-card">${editor()}</div></div>`;
+  /* Nella disposizione le due carte hanno un id fisso e un nome vero: la
+   * seconda si chiama come il viaggio che si sta guardando — prima erano
+   * «Riquadro 1» e «Riquadro 2». */
+  const nomeDiQuesto = state.bozza ? nomeDelViaggio(state.bozza, lingua()) : t("Il viaggio scelto", "The chosen trip");
+  const html = `${testa}<div class="dm-gn-griglia"><div class="dm-gn-card" data-dm-blocco="elenco" data-dm-disp-nome="${esc(t("I tuoi viaggi", "Your trips"))}">${elenco()}</div><div class="dm-gn-card" data-dm-blocco="viaggio" data-dm-disp-nome="${esc(nomeDiQuesto)}">${editor()}</div></div>`;
   sosteQuandoLAutoRisponde();
   if (!scrivi(posto, html)) return;
   if (fuoco) {

@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-2IRHQ365.js";
+} from "../../chunk-S6LV6YUK.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -3295,6 +3295,7 @@ var SOURCE_INDEX = Object.freeze({
   "Cerca brand…": "Search brand…",
   "Cerca brani, artisti, playlist": "Search songs, artists, playlists",
   "Cerca e ascolta": "Search and play",
+  "Cerca e filtri": "Search and filters",
   "Cerca entità": "Search entity",
   "Cerca fra i dispositivi non connessi": "Search disconnected devices",
   "Cerca icona…": "Search icons…",
@@ -3631,6 +3632,7 @@ var SOURCE_INDEX = Object.freeze({
   "contatore totale": "total meter",
   "Contatore totale": "Total meter",
   "Contatore totale → Recorder": "Total meter → Recorder",
+  "Contatori": "Meters",
   "Contatori · Oggi e il mese": "Meters · Today and this month",
   "contatto": "contact",
   "Conteggio dei fulmini": "Lightning count",
@@ -3757,6 +3759,7 @@ var SOURCE_INDEX = Object.freeze({
   "da controllare": "check them",
   "Da controllare": "Check it",
   "Da decidere": "To decide",
+  "Da dove arrivano": "Where the data comes from",
   "Da dove parti? Scrivi un indirizzo…": "Where do you start? Type an address…",
   "da Elettrodomestici": "from Appliances",
   "da fare": "to do",
@@ -4328,6 +4331,7 @@ var SOURCE_INDEX = Object.freeze({
   "Film": "Movie",
   "Filtra per nome…": "Filter by name…",
   "Filtrazione": "Filtration",
+  "Filtri": "Filters",
   "Filtri a posto": "Filters fine",
   "Filtri da cambiare": "Filters need changing",
   "Filtro": "Filter",
@@ -4637,6 +4641,7 @@ var SOURCE_INDEX = Object.freeze({
   "I tasti dei programmi nel popup della lavatrice: nome, entità (script o switch), icona — quanti ne vuoi. Senza programmi la griglia sparisce.": "The program buttons in the washing machine popup: name, entity (script or switch), icon — as many as you need. With no programs the grid disappears.",
   "I termostati smart espongono la modalità del riscaldamento su un'entità a parte: TADO ha In casa e Fuori, altri aggiungono Vacanza o Boost. La card la mostra, e se l'entità è un select o un input_select la si cambia da lì.": "Smart thermostats publish the heating mode on a separate entity: TADO has Home and Away, others add Holiday or Boost. The card shows it, and if the entity is a select or an input_select you can change it right there.",
   "I tuoi impianti solari": "Your solar plants",
+  "I tuoi viaggi": "Your trips",
   "I valori dell'acqua": "Water values",
   "I varchi di casa: porte, finestre, portone, basculante. Ogni varco ha la sua riga — l'entità del contatto, il nome che vuoi tu, il disegno — e la pagina Varchi mostra queste, in quest'ordine: verde chiuso, rosso aperto, e in cima quanti sono aperti adesso.": "The openings at home: doors, windows, front door, garage door. Each opening has its own row — the contact entity, the name you want, the drawing — and the Openings page shows these, in this order: green closed, red open, and how many are open right now on top.",
   "Ibrida plug-in": "Plug-in hybrid",
@@ -4804,6 +4809,7 @@ var SOURCE_INDEX = Object.freeze({
   "Il verso invertito": "The inverted direction",
   "il viaggio": "the trip",
   "Il viaggio non si è salvato: controlla la meta, il giorno e l'ora.": "The trip was not saved: check destination, day and time.",
+  "Il viaggio scelto": "The chosen trip",
   "Il video del citofono": "The intercom video",
   "Il video non si apre da qui.": "The video cannot open here.",
   "Il video sta arrivando…": "The video is on its way…",
@@ -5291,6 +5297,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le automazioni le crea e le modifica chi amministra Home Assistant: qui si accendono e si spengono.": "Automations are created and edited by whoever administers Home Assistant: here you turn them on and off.",
   "Le azioni rapide": "The quick actions",
   "Le batterie che vuoi tenere d'occhio. Ogni riga è una batteria — l'entità in percentuale, il nome che vuoi tu, il disegno — e la pagina Batterie le mostra dalla più scarica alla più piena, con in cima quante sono da cambiare.": "The batteries you want to keep an eye on. Each row is a battery — the entity in percent, the name you want, the drawing — and the Batteries page shows them from the flattest to the fullest, with how many need replacing on top.",
+  "Le carte": "The cards",
   "Le caselle di una caldaia a pellet o a legna: la combustione, il serbatoio e l'obiettivo della centralina. Lasciale vuote se la tua caldaia va a gas: quello che non mappi non compare in pagina.": "The fields of a pellet or wood boiler: the combustion, the hopper and the controller's own target. Leave them empty if your boiler runs on gas: what you do not map does not appear on the page.",
   "Le casse": "Speakers",
   "Le centrali pubblicano accanto a ogni contatto un interruttore che dice alla centrale di non guardarlo: è quello che serve per inserire l'antifurto con una finestra aperta apposta. Se sta sullo stesso dispositivo del contatto, o si chiama come lui con «bypass» in fondo, la plancia lo trova da sola; altrimenti scrivilo qui. Nella pagina Varchi compare il tasto per escludere o includere questo varco. Acceso vuol dire escluso. Scrivi - per non mostrare il tasto.": "Alarm panels publish a switch next to each contact that tells the panel to ignore it: that is what you need to arm the alarm with a window left open on purpose. If it sits on the same device as the contact, or is named like it with «bypass» at the end, the dashboard finds it by itself; otherwise write it here. The button to bypass or re-include this opening shows up on the Openings page. On means bypassed. Write - to hide the button.",
@@ -5648,6 +5655,7 @@ var SOURCE_INDEX = Object.freeze({
   "Misurato ora per ora su tutto il mese.": "Measured hour by hour for the whole month.",
   "Misurato ora per ora:": "Measured hour by hour:",
   "misure": "readings",
+  "Misure": "Measurements",
   "misure di casa": "readings from home",
   "misure di serie: correggile se le sai": "standard sizes: adjust them if you know them",
   "Misure e previsioni": "Readings and forecast",
@@ -6374,6 +6382,7 @@ var SOURCE_INDEX = Object.freeze({
   "Per arrivare ${alLim} servono ${quanto} a ${kwT} kW: comincia prima o finisci più tardi.": "Reaching ${lim} takes ${quanto} at ${kwT} kW: start earlier or end later.",
   "Per categoria": "By category",
   "Per chi ha due serbatoi: in pagina compaiono affiancati, Pellet 1 e Pellet 2, con la stessa soglia del primo.": "For whoever has two hoppers: the page shows them side by side, Pellet 1 and Pellet 2, with the same threshold as the first.",
+  "Per cominciare": "Getting started",
   "Per dividere i calendari fra le persone servono le persone di Home Assistant, ognuna legata al suo utente.": "To split calendars between people you need Home Assistant persons, each linked to its own user.",
   "Per esempio il sensore della batteria dell'app di Home Assistant. Vuoto: quella che dà il browser del tablet": "For example the battery sensor of the Home Assistant app. Empty: the one the tablet's browser gives",
   "Per esempio: apri cancello": "For example: open the gate",
@@ -6770,6 +6779,7 @@ var SOURCE_INDEX = Object.freeze({
   "Prossime ore": "Next hours",
   "Prossimi": "Upcoming",
   "Prossimi giorni": "Next days",
+  "Prossimi ritiri": "Upcoming collections",
   "prossimità del tablet": "tablet proximity",
   "Prossimo gran premio": "Next grand prix",
   "Prossimo gran premio, ultima gara, classifiche": "Next grand prix, last race, standings",
@@ -36896,7 +36906,7 @@ function dipingi4() {
   if (state31.firma === firma2 && dove.firstElementChild) return;
   state31.firma = firma2;
   dove.innerHTML = `${prossimoMarkup(lettura4)}
-    <div class="dm-rifiuti-elenco">${lettura4.righe.map(rigaMarkup).join("")}${calendarioMarkup(lettura4.calendario)}</div>`;
+    <div class="dm-rifiuti-elenco" data-dm-in-ordine>${lettura4.righe.map(rigaMarkup).join("")}${calendarioMarkup(lettura4.calendario)}</div>`;
 }
 function schedule7() {
   if (state31.frame) return;
@@ -44159,7 +44169,7 @@ function schedaDelGas(come2) {
 }
 function semaforoMarkup(come2, adesso2) {
   const voci4 = [];
-  const voce3 = ({ stato: stato3, icona: icona3, nome, sotto, valore: valore3 }) => `<article class="dm-cont-voce" data-stato="${esc(stato3)}">
+  const voce3 = ({ stato: stato3, icona: icona3, nome, sotto, valore: valore3, entity: entity2 }) => `<article class="dm-cont-voce" data-stato="${esc(stato3)}"${entity2 ? ` data-dm-blocco="${esc(entity2)}"` : ""}>
       <span class="dm-cont-voce-ic" aria-hidden="true">${disegnoDiCasa(icona3, { misura: 30, ripiego: "meter" })}</span>
       <div class="dm-cont-voce-testo"><strong>${esc(nome)}</strong>${sotto ? `<small>${esc(sotto)}</small>` : ""}</div>
       <b class="dm-cont-voce-stato">${esc(valore3)}</b>
@@ -44171,6 +44181,7 @@ function semaforoMarkup(come2, adesso2) {
       voce3({
         stato: colpevole ? "allarme" : "bene",
         icona: lettura4.icon,
+        entity: lettura4.entity,
         nome: lettura4.name,
         sotto: colpevole ? t("Mai ferma in 24 ore", "Never still in 24 hours") : t("Oggi", "Today"),
         valore: volumeInParole(come2.acqua.perContatore[lettura4.entity]?.oggi ?? null)
@@ -44182,6 +44193,7 @@ function semaforoMarkup(come2, adesso2) {
       voce3({
         stato: una.lettura.muto ? "muto" : una.perdita?.perdita ? "allarme" : "bene",
         icona: una.lettura.icon,
+        entity: una.lettura.entity,
         nome: una.lettura.name,
         sotto: parolaDellaPortata(una, adesso2),
         valore: portataInParole(una.lettura)
@@ -44192,6 +44204,7 @@ function semaforoMarkup(come2, adesso2) {
       voce3({
         stato: una.bar === null ? "muto" : una.verdetto === "ok" ? "bene" : "attenzione",
         icona: una.lettura.icon,
+        entity: una.lettura.entity,
         nome: una.lettura.name,
         sotto: una.bar === null ? t("Non risponde", "Not answering") : una.verdetto === "low" ? t("troppo basso", "too low") : una.verdetto === "high" ? t("troppo alto", "too high") : t("nella norma", "in range"),
         valore: una.bar === null ? "—" : barInParole(una.bar)
@@ -44202,6 +44215,7 @@ function semaforoMarkup(come2, adesso2) {
       voce3({
         stato: una.lettura.muto ? "muto" : una.basso ? "attenzione" : "bene",
         icona: una.lettura.icon,
+        entity: una.lettura.entity,
         nome: una.lettura.name,
         sotto: parolaDelSale(una),
         valore: valoreDelSale(una)
@@ -44212,6 +44226,7 @@ function semaforoMarkup(come2, adesso2) {
       voce3({
         stato: "bene",
         icona: lettura4.icon,
+        entity: lettura4.entity,
         nome: lettura4.name,
         sotto: t("Oggi", "Today"),
         valore: metriCubiInParole(come2.gas.perContatore[lettura4.entity]?.oggi ?? null)
@@ -66879,7 +66894,8 @@ function ultimeMarkup(r, titolo3 = t("Ultime partite", "Last matches")) {
   const forma2 = formaRecente(r).map((e) => `<i data-esito="${e}" title="${esc(esiti[e]?.nome || "")}"></i>`).join("");
   return schedaMarkup7(
     `${esc(titolo3)}<span class="dm-sport-forma" aria-label="${esc(t("Forma", "Form"))}">${forma2}</span>`,
-    `<ul class="dm-sport-righe">${righe4}</ul>`
+    `<ul class="dm-sport-righe">${righe4}</ul>`,
+    { classe: "dm-sport-ultime" }
   );
 }
 var zonaDellaRiga = (x) => /^#[0-9a-f]{6}$/i.test(clean(x?.zona?.colore)) ? ` style="--zona:${x.zona.colore}" title="${esc(ZONE()[x.zona.chiave] || "")}"` : "";
@@ -67164,7 +67180,8 @@ function costruttoriMarkup(r) {
       (x) => `<li class="dm-sport-pos dm-sport-barra" style="--q:${(x.quota * 100).toFixed(1)}%;--c:${COLORI_F1[x.id] || "#64748b"}">
         <span class="dm-sport-num">${x.posizione}</span><span class="dm-sport-nome"><span class="dm-sport-con-scud">${scuderia(x.id, 26)}${esc(x.nome)}</span><i class="dm-sport-quota" aria-hidden="true"></i></span><b>${x.punti}</b>
       </li>`
-    ).join("")}</ol>`
+    ).join("")}</ol>`,
+    { classe: "dm-sport-costruttori" }
   );
 }
 function corseMarkup(r, seguito, adesso2, indice = 0) {
@@ -82478,7 +82495,10 @@ function floorOf(unit) {
     return "";
   }
 }
-function groupedMarkup(units, labels) {
+function pianoNellaChiave(floor) {
+  return String(floor || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "casa";
+}
+function groupedMarkup(units, labels, zona = "") {
   const groups = /* @__PURE__ */ new Map();
   for (const unit of units) {
     const floor = floorOf(unit);
@@ -82501,7 +82521,10 @@ function groupedMarkup(units, labels) {
   return keys.map((floor) => {
     const ordinate3 = groups.get(floor).slice().sort((sinistra, destra) => stanza2(sinistra.room) - stanza2(destra.room));
     const heading = floor && keys.length > 1 ? `<div class="dm-cl-floor">🏢 ${esc(floor)}</div>` : "";
-    if (!conStanze) return `${heading}${ordinate3.map((unit) => cardMarkup4(unit, labels)).join("")}`;
+    const dentro3 = (corpo7) => `<div class="dm-cl-piano" data-dm-disposizione="${esc(
+      `${zona ? `${zona}-` : ""}${pianoNellaChiave(floor)}`
+    )}" data-dm-disp-nome="${esc(floor || t("Le carte", "The cards"))}">${corpo7}</div>`;
+    if (!conStanze) return `${heading}${dentro3(ordinate3.map((unit) => cardMarkup4(unit, labels)).join(""))}`;
     let ultima = null;
     const corpo6 = ordinate3.map((unit) => {
       const nome = clean(unit.room);
@@ -82509,7 +82532,7 @@ function groupedMarkup(units, labels) {
       ultima = nome || ultima;
       return `${titolo3}${cardMarkup4(unit, labels)}`;
     }).join("");
-    return `${heading}${corpo6}`;
+    return `${heading}${dentro3(corpo6)}`;
   }).join("");
 }
 function stanzeDaIntitolare(units) {
@@ -82537,7 +82560,7 @@ function signature(units) {
 function syncGrid(grid, units, labels, fuori = []) {
   const current = `${signature(units)}|${signature(fuori)}`;
   if (grid._dmClimaSig === current && grid._dmClimaFigli === grid.childElementCount) return false;
-  grid.innerHTML = units.length ? groupedMarkup(units, labels) : fuori.length ? seasonEmptyMarkup(grid.dataset.dmClZone, fuori, labels) : emptyMarkup(grid.dataset.dmClZone, labels);
+  grid.innerHTML = units.length ? groupedMarkup(units, labels, grid.dataset.dmClZone || "") : fuori.length ? seasonEmptyMarkup(grid.dataset.dmClZone, fuori, labels) : emptyMarkup(grid.dataset.dmClZone, labels);
   grid._dmClimaSig = current;
   grid._dmClimaFigli = grid.childElementCount;
   return true;
@@ -83752,6 +83775,7 @@ function climateCss() {
 
 /* ── grids ────────────────────────────────────────────────────────────── */
 .dm-cl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+.dm-cl-piano{grid-column:1/-1;display:grid;grid-template-columns:inherit;gap:inherit;align-items:start;min-width:0}
 .dm-cl-floor{
   grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:6px 2px 0;
   font-size:10px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--dm-cl-dim)
@@ -132650,7 +132674,8 @@ function disegna11() {
   const cerca6 = posto.querySelector("[data-gn-cerca]");
   const fuoco = cerca6 && doc.activeElement === cerca6;
   const cursore2 = fuoco ? cerca6.selectionStart : null;
-  const html = `${testa2}<div class="dm-gn-griglia"><div class="dm-gn-card">${elenco13()}</div><div class="dm-gn-card">${editor2()}</div></div>`;
+  const nomeDiQuesto = state137.bozza ? nomeDelViaggio(state137.bozza, lingua3()) : t("Il viaggio scelto", "The chosen trip");
+  const html = `${testa2}<div class="dm-gn-griglia"><div class="dm-gn-card" data-dm-blocco="elenco" data-dm-disp-nome="${esc(t("I tuoi viaggi", "Your trips"))}">${elenco13()}</div><div class="dm-gn-card" data-dm-blocco="viaggio" data-dm-disp-nome="${esc(nomeDiQuesto)}">${editor2()}</div></div>`;
   sosteQuandoLAutoRisponde();
   if (!scrivi4(posto, html)) return;
   if (fuoco) {
@@ -141272,11 +141297,11 @@ function tessere(elenco18) {
   const attive = elenco18.filter((v) => v.attiva).length;
   const tutte = elenco18.length;
   const prossima = prossimaDiCasa(elenco18);
-  return `<div class="ad-kpi"><div class="dm-lucip-kpi on" data-auc-attive><span>${esc(t("Attive", "Active"))}</span><b>${attive}</b><small>${esc(
+  return `<div class="ad-kpi"><div class="dm-lucip-kpi on" data-auc-attive data-dm-blocco="attive" data-dm-disp-nome="${esc(t("Attive", "Active"))}"><span>${esc(t("Attive", "Active"))}</span><b>${attive}</b><small>${esc(
     t(`su ${tutte} in casa`, `of ${tutte} at home`)
-  )}</small></div><div class="dm-lucip-kpi" data-auc-spente><span>${esc(t("Spente", "Off"))}</span><b>${elenco18.length - attive}</b><small>${esc(
+  )}</small></div><div class="dm-lucip-kpi" data-auc-spente data-dm-blocco="spente" data-dm-disp-nome="${esc(t("Spente", "Off"))}"><span>${esc(t("Spente", "Off"))}</span><b>${elenco18.length - attive}</b><small>${esc(
     t("ferme per ora", "stopped for now")
-  )}</small></div><div class="dm-lucip-kpi pross"><span>${esc(t("Prossima", "Next"))}</span><b>${esc(prossima?.ora || "—")}</b><small>${esc(
+  )}</small></div><div class="dm-lucip-kpi pross" data-dm-blocco="prossima" data-dm-disp-nome="${esc(t("Prossima", "Next"))}"><span>${esc(t("Prossima", "Next"))}</span><b>${esc(prossima?.ora || "—")}</b><small>${esc(
     prossima?.voce?.nome || t("nessuna a un orario", "none on a schedule")
   )}</small></div></div>`;
 }
@@ -141345,14 +141370,14 @@ function pianificatoreHtml() {
   const fasce = viste2.filter((v) => v.modello.tipo === "fasce");
   const tutteR = tutte.filter((v) => v.modello.tipo === "routine");
   const prossima = prossimaDiCasa(tutte);
-  const kpi = `<div class="ad-kpi"><div class="dm-lucip-kpi on"><span>${esc(t("Routine", "Routines"))}</span><b>${tutteR.length}</b><small>${esc(
+  const kpi = `<div class="ad-kpi"><div class="dm-lucip-kpi on" data-dm-blocco="routine" data-dm-disp-nome="${esc(t("Routine", "Routines"))}"><span>${esc(t("Routine", "Routines"))}</span><b>${tutteR.length}</b><small>${esc(
     (() => {
       const n = tutteR.filter((v) => v.attiva).length;
       return n === 1 ? t("1 attiva", "1 active") : t(`${n} attive`, `${n} active`);
     })()
-  )}</small></div><div class="dm-lucip-kpi"><span>${esc(t("Calendari", "Calendars"))}</span><b>${tutte.length - tutteR.length}</b><small>${esc(
+  )}</small></div><div class="dm-lucip-kpi" data-dm-blocco="calendari" data-dm-disp-nome="${esc(t("Calendari", "Calendars"))}"><span>${esc(t("Calendari", "Calendars"))}</span><b>${tutte.length - tutteR.length}</b><small>${esc(
     t("a fasce", "time slots")
-  )}</small></div><div class="dm-lucip-kpi pross"><span>${esc(t("Prossima", "Next"))}</span><b>${esc(prossima?.ora || "—")}</b><small>${esc(
+  )}</small></div><div class="dm-lucip-kpi pross" data-dm-blocco="prossima" data-dm-disp-nome="${esc(t("Prossima", "Next"))}"><span>${esc(t("Prossima", "Next"))}</span><b>${esc(prossima?.ora || "—")}</b><small>${esc(
     prossima?.voce?.nome || t("niente in programma", "nothing planned")
   )}</small></div></div>`;
   const nuova = puo ? `<button type="button" class="ad-nuova" data-auc-pianifica>＋ ${esc(t("Nuova", "Add new"))}</button>` : "";
@@ -156460,6 +156485,7 @@ function contenitoreDeiRiquadri(pagina3) {
 }
 function eUnElenco(el) {
   if (!el || el.matches?.("svg,canvas,select,ul.sub-tabs,[role=tablist],nav,form")) return false;
+  if (el.hasAttribute?.("data-dm-in-ordine")) return false;
   const figli = [...el.children].filter(visibile);
   if (figli.length < 2) return false;
   const tipi = /* @__PURE__ */ new Map();
@@ -156499,6 +156525,13 @@ var DICHIARATI = Object.freeze([
   ["energy", ".ed-fin-grid", "conti", "Conti", "Money"],
   ["energy", ".ed-auto-row", "autosufficienza", "Autosufficienza", "Self-sufficiency"],
   ["energy", ".ed-chart-card", "andamento", "Andamento giornaliero", "Daily trend"],
+  /* Le viste dell'Energia: solo il nome, l'id resta quello della pagina
+   * («#view-ist») perche' e' gia' nelle disposizioni salvate. */
+  ["energy", "#view-panoramica", "", "Report", "Report"],
+  ["energy", "#view-ist", "", "Flusso di energia", "Energy flow"],
+  ["energy", "#view-day", "", "Giornaliera", "Daily"],
+  ["energy", "#view-month", "", "Mensile", "Monthly"],
+  ["energy", "#view-temp", "", "Temperature", "Temperatures"],
   ["ev", ".dm-na-eroe", "auto", "La mia auto", "My car"],
   ["ev", ".dm-na-pannello", "dettagli", "Dettagli", "Details"],
   ["appliances-main", ".dm-appl-side", "consumi", "Consumi", "Consumption"],
@@ -156534,9 +156567,29 @@ var DICHIARATI = Object.freeze([
   ["gdanav", ".dm-gn-capo", "nuovo", "Nuovo viaggio", "New trip"],
   ["gdanav", ".dm-gn-griglia", "viaggi", "Viaggi", "Trips"],
   ["automazioni", ".ad-kpi", "numeri", "Numeri", "Figures"],
+  /* La pagina delle automazioni nella plancia si chiama «automazioni-casa»:
+   * la riga qui sopra non la prendeva, e l'avviso restava «Riquadro 2». */
+  ["automazioni-casa", ".ad-kpi", "numeri", "Numeri", "Figures"],
+  ["automazioni-casa", ".ad-avviso", "avviso", "Avviso", "Notice"],
+  ["automazioni-casa", ".ad-filtri", "cerca", "Cerca e filtri", "Search and filters"],
+  ["automazioni-casa", ".ad-gruppi", "elenco", "Automazioni", "Automations"],
+  ["automazioni-casa", ".ad-vuoto", "per-cominciare", "Per cominciare", "Getting started"],
   ["clima", ".clima-zone", "zone", "Zone", "Zones"],
   ["irrigazione", "#irr-head", "giardino", "Giardino", "Garden"],
-  ["irrigazione", "#irr-grid", "zone", "Zone", "Zones"]
+  ["irrigazione", "#irr-grid", "zone", "Zone", "Zones"],
+  ["rifiuti", ".dm-rifiuti-prossimo", "prossimo", "Prossimo ritiro", "Next collection"],
+  ["rifiuti", ".dm-rifiuti-elenco", "ritiri", "Prossimi ritiri", "Upcoming collections"],
+  ["contatori", ".dm-cont-testa", "adesso", "In questo momento", "Right now"],
+  ["contatori", ".dm-cont-elenco", "elenco", "Contatori", "Meters"],
+  ["animali", ".dm-animali-filtri", "filtri", "Filtri", "Filters"],
+  ["salute", ".dm-salute-eroe", "passi", "Passi di oggi", "Today's steps"],
+  ["salute", ".dm-salute-schede", "misure", "Misure", "Measurements"],
+  ["salute", ".dm-salute-fonte", "fonte", "Da dove arrivano", "Where the data comes from"],
+  ["sport", ".dm-sport-partita", "prossima", "", ""],
+  ["sport", ".dm-sport-ultime", "ultime", "", ""],
+  ["sport", ".dm-sport-ultima", "ultima-gara", "", ""],
+  ["sport", ".dm-sport-piloti", "piloti", "", ""],
+  ["sport", ".dm-sport-costruttori", "costruttori", "", ""]
 ]);
 var CONTENITORI_DICHIARATI = Object.freeze([
   ["security", ".dm-sec-shell"],
@@ -156597,6 +156650,51 @@ var DICHIARATI_DALLA_PAGINA = Object.freeze([
     }
   ],
   [
+    "sport",
+    ".dm-sport-blocco",
+    (el) => {
+      const nome = senzaFigure(el.querySelector?.(".dm-sport-titolo > span:not(.dm-sport-titolo-ic)")?.textContent);
+      return { id: el.getAttribute?.("data-dm-sport-blocco") || "", nome };
+    }
+  ],
+  [
+    "sport",
+    ".dm-sport-griglia",
+    (el) => {
+      const coppa = el.closest?.(".dm-sport-coppa")?.getAttribute?.("data-dm-sport-coppa");
+      return { id: coppa ? `coppa-${coppa}` : "schede" };
+    }
+  ],
+  [
+    "sport",
+    ".dm-sport-scheda",
+    (el) => {
+      const testa2 = el.querySelector?.(":scope > .dm-sport-sotto-titolo");
+      const nome = senzaFigure([...testa2?.childNodes || []].find((n) => n.nodeType === 3)?.textContent);
+      let id = "";
+      try {
+        if (JSON.parse(el.getAttribute?.("data-dm-sport-apri") || "{}").tipo === "tabella") id = "classifica";
+      } catch (_e) {
+      }
+      return { id, nome };
+    }
+  ],
+  [
+    "animali",
+    ".dm-animale-card",
+    (el) => ({ id: el.getAttribute?.("data-dm-animale") || "" })
+  ],
+  [
+    "animali",
+    ".dm-animale-gruppo",
+    (el) => ({ id: el.getAttribute?.("data-dm-animale-gruppo") || "" })
+  ],
+  [
+    "salute",
+    ".dm-salute-scheda",
+    (el) => ({ id: el.getAttribute?.("data-dm-salute-misura") || "" })
+  ],
+  [
     "media",
     ".dm-mp-card",
     (el) => {
@@ -156609,8 +156707,8 @@ function marcaIDichiarati(pagina3, nome) {
   for (const [di, dove, id, it, en] of DICHIARATI) {
     if (di !== nome) continue;
     for (const el of pagina3.querySelectorAll?.(dove) || []) {
-      if (!el.hasAttribute("data-dm-blocco")) el.setAttribute("data-dm-blocco", id);
-      if (!el.hasAttribute("data-dm-disp-nome")) el.setAttribute("data-dm-disp-nome", t(it, en));
+      if (id && !el.hasAttribute("data-dm-blocco")) el.setAttribute("data-dm-blocco", id);
+      if (it && !el.hasAttribute("data-dm-disp-nome")) el.setAttribute("data-dm-disp-nome", t(it, en));
     }
   }
   for (const [di, dove, su2] of CONTENITORI_DICHIARATI) {
@@ -171737,8 +171835,13 @@ function casaDelContenuto(pagina3) {
 }
 function blocco2(pagina3) {
   const casa3 = casaDelContenuto(pagina3);
-  let nodo3 = casa3.querySelector(":scope > .dm-mie-ent");
-  if (nodo3) return nodo3;
+  const tutti = [...pagina3.querySelectorAll(".dm-mie-ent")];
+  let nodo3 = tutti.find((uno) => uno.parentElement === casa3) || tutti[0];
+  for (const altro of tutti) if (altro !== nodo3) altro.remove();
+  if (nodo3) {
+    if (nodo3.parentElement !== casa3) casa3.append(nodo3);
+    return nodo3;
+  }
   nodo3 = doc.createElement("section");
   nodo3.className = "dm-mie-ent";
   nodo3.innerHTML = `<div class="dm-mie-testa">

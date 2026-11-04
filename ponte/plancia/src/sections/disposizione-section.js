@@ -304,6 +304,9 @@ function contenitoreDeiRiquadri(pagina) {
  * sono carte: alti abbastanza da toccarli, non pallini o tasti. */
 function eUnElenco(el) {
   if (!el || el.matches?.("svg,canvas,select,ul.sub-tabs,[role=tablist],nav,form")) return false;
+  /* Un elenco che ha gia' il suo ordine e lo deve tenere: i ritiri dei
+   * rifiuti vanno per data. */
+  if (el.hasAttribute?.("data-dm-in-ordine")) return false;
   const figli = [...el.children].filter(visibile);
   if (figli.length < 2) return false;
   const tipi = new Map();
@@ -352,6 +355,13 @@ const DICHIARATI = Object.freeze([
   ["energy", ".ed-fin-grid", "conti", "Conti", "Money"],
   ["energy", ".ed-auto-row", "autosufficienza", "Autosufficienza", "Self-sufficiency"],
   ["energy", ".ed-chart-card", "andamento", "Andamento giornaliero", "Daily trend"],
+  /* Le viste dell'Energia: solo il nome, l'id resta quello della pagina
+   * («#view-ist») perche' e' gia' nelle disposizioni salvate. */
+  ["energy", "#view-panoramica", "", "Report", "Report"],
+  ["energy", "#view-ist", "", "Flusso di energia", "Energy flow"],
+  ["energy", "#view-day", "", "Giornaliera", "Daily"],
+  ["energy", "#view-month", "", "Mensile", "Monthly"],
+  ["energy", "#view-temp", "", "Temperature", "Temperatures"],
   ["ev", ".dm-na-eroe", "auto", "La mia auto", "My car"],
   ["ev", ".dm-na-pannello", "dettagli", "Dettagli", "Details"],
   ["appliances-main", ".dm-appl-side", "consumi", "Consumi", "Consumption"],
@@ -387,9 +397,29 @@ const DICHIARATI = Object.freeze([
   ["gdanav", ".dm-gn-capo", "nuovo", "Nuovo viaggio", "New trip"],
   ["gdanav", ".dm-gn-griglia", "viaggi", "Viaggi", "Trips"],
   ["automazioni", ".ad-kpi", "numeri", "Numeri", "Figures"],
+  /* La pagina delle automazioni nella plancia si chiama «automazioni-casa»:
+   * la riga qui sopra non la prendeva, e l'avviso restava «Riquadro 2». */
+  ["automazioni-casa", ".ad-kpi", "numeri", "Numeri", "Figures"],
+  ["automazioni-casa", ".ad-avviso", "avviso", "Avviso", "Notice"],
+  ["automazioni-casa", ".ad-filtri", "cerca", "Cerca e filtri", "Search and filters"],
+  ["automazioni-casa", ".ad-gruppi", "elenco", "Automazioni", "Automations"],
+  ["automazioni-casa", ".ad-vuoto", "per-cominciare", "Per cominciare", "Getting started"],
   ["clima", ".clima-zone", "zone", "Zone", "Zones"],
   ["irrigazione", "#irr-head", "giardino", "Giardino", "Garden"],
   ["irrigazione", "#irr-grid", "zone", "Zone", "Zones"],
+  ["rifiuti", ".dm-rifiuti-prossimo", "prossimo", "Prossimo ritiro", "Next collection"],
+  ["rifiuti", ".dm-rifiuti-elenco", "ritiri", "Prossimi ritiri", "Upcoming collections"],
+  ["contatori", ".dm-cont-testa", "adesso", "In questo momento", "Right now"],
+  ["contatori", ".dm-cont-elenco", "elenco", "Contatori", "Meters"],
+  ["animali", ".dm-animali-filtri", "filtri", "Filtri", "Filters"],
+  ["salute", ".dm-salute-eroe", "passi", "Passi di oggi", "Today's steps"],
+  ["salute", ".dm-salute-schede", "misure", "Misure", "Measurements"],
+  ["salute", ".dm-salute-fonte", "fonte", "Da dove arrivano", "Where the data comes from"],
+  ["sport", ".dm-sport-partita", "prossima", "", ""],
+  ["sport", ".dm-sport-ultime", "ultime", "", ""],
+  ["sport", ".dm-sport-ultima", "ultima-gara", "", ""],
+  ["sport", ".dm-sport-piloti", "piloti", "", ""],
+  ["sport", ".dm-sport-costruttori", "costruttori", "", ""],
 ]);
 
 /* Dove stanno i riquadri, quando non e' il primo involucro che si trova
@@ -474,6 +504,56 @@ const DICHIARATI_DALLA_PAGINA = Object.freeze([
     },
   ],
   [
+    "sport",
+    ".dm-sport-blocco",
+    (el) => {
+      /* Un blocco per ogni cosa seguita: l'id e' quella («calcio:110», «f1»),
+       * il nome la squadra o il campionato, senza il punteggio accanto. */
+      const nome = senzaFigure(el.querySelector?.(".dm-sport-titolo > span:not(.dm-sport-titolo-ic)")?.textContent);
+      return { id: el.getAttribute?.("data-dm-sport-blocco") || "", nome };
+    },
+  ],
+  [
+    "sport",
+    ".dm-sport-griglia",
+    (el) => {
+      /* La griglia della squadra e quelle delle coppe: elenchi diversi, con
+       * chiavi che non dipendono dalle parole scritte nelle schede. */
+      const coppa = el.closest?.(".dm-sport-coppa")?.getAttribute?.("data-dm-sport-coppa");
+      return { id: coppa ? `coppa-${coppa}` : "schede" };
+    },
+  ],
+  [
+    "sport",
+    ".dm-sport-scheda",
+    (el) => {
+      /* Il nome e' il titolo scritto, senza le colonne («G», «Pt») e la forma
+       * che ci stanno accanto. Le classifiche si riconoscono dal tasto. */
+      const testa = el.querySelector?.(":scope > .dm-sport-sotto-titolo");
+      const nome = senzaFigure([...(testa?.childNodes || [])].find((n) => n.nodeType === 3)?.textContent);
+      let id = "";
+      try {
+        if (JSON.parse(el.getAttribute?.("data-dm-sport-apri") || "{}").tipo === "tabella") id = "classifica";
+      } catch (_e) {}
+      return { id, nome };
+    },
+  ],
+  [
+    "animali",
+    ".dm-animale-card",
+    (el) => ({ id: el.getAttribute?.("data-dm-animale") || "" }),
+  ],
+  [
+    "animali",
+    ".dm-animale-gruppo",
+    (el) => ({ id: el.getAttribute?.("data-dm-animale-gruppo") || "" }),
+  ],
+  [
+    "salute",
+    ".dm-salute-scheda",
+    (el) => ({ id: el.getAttribute?.("data-dm-salute-misura") || "" }),
+  ],
+  [
     "media",
     ".dm-mp-card",
     (el) => {
@@ -487,8 +567,8 @@ function marcaIDichiarati(pagina, nome) {
   for (const [di, dove, id, it, en] of DICHIARATI) {
     if (di !== nome) continue;
     for (const el of pagina.querySelectorAll?.(dove) || []) {
-      if (!el.hasAttribute("data-dm-blocco")) el.setAttribute("data-dm-blocco", id);
-      if (!el.hasAttribute("data-dm-disp-nome")) el.setAttribute("data-dm-disp-nome", t(it, en));
+      if (id && !el.hasAttribute("data-dm-blocco")) el.setAttribute("data-dm-blocco", id);
+      if (it && !el.hasAttribute("data-dm-disp-nome")) el.setAttribute("data-dm-disp-nome", t(it, en));
     }
   }
   for (const [di, dove, su] of CONTENITORI_DICHIARATI) {

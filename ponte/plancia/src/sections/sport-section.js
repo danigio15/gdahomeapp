@@ -523,6 +523,7 @@ function ultimeMarkup(r, titolo = t("Ultime partite", "Last matches")) {
   return schedaMarkup(
     `${esc(titolo)}<span class="dm-sport-forma" aria-label="${esc(t("Forma", "Form"))}">${forma}</span>`,
     `<ul class="dm-sport-righe">${righe}</ul>`,
+    { classe: "dm-sport-ultime" },
   );
 }
 
@@ -930,6 +931,7 @@ function costruttoriMarkup(r) {
       </li>`,
       )
       .join("")}</ol>`,
+    { classe: "dm-sport-costruttori" },
   );
 }
 
