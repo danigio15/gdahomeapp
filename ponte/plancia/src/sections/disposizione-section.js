@@ -73,7 +73,10 @@ function nomeDellaPagina(pagina) {
 function visibile(el) {
   if (!el || el.nodeType !== 1) return false;
   if (el.matches?.(`${NOSTRI},script,style,template,link,.dm-riordina-voce`)) return false;
-  if (el.hasAttribute?.("data-dm-nascosto")) return true; /* nascosto da noi: c'e' */
+  /* Nascosto da noi (una voce spenta, o il titolo che in modifica sta
+   * sull'etichetta): c'e', e deve restare lo stesso — il nome di un elenco
+   * viene anche dal titolo che lo precede. */
+  if (el.hasAttribute?.("data-dm-nascosto") || el.hasAttribute?.("data-dm-disp-titolo")) return true;
   if (el.hidden) return false;
   const stile = root.getComputedStyle?.(el);
   if (!stile || stile.display === "none" || stile.visibility === "hidden") return false;
@@ -103,18 +106,42 @@ function eTitolo(el) {
 function titoloDi(el) {
   const testa = el.matches?.(TITOLO)
     ? el
-    : el.querySelector?.(`${TITOLO},[class*='title'],[class*='titolo'],[class*='name'],[class*='nome'],summary`);
+    : [...(el.querySelectorAll?.(`${TITOLO},[class*='title'],[class*='titolo'],[class*='name'],[class*='nome'],summary`) || [])].find(
+        (uno) => !dentroUnaFila(uno, el),
+      );
   const testo = String(testa?.textContent || "")
     .replace(/\s+/g, " ")
     .trim();
   return /[a-zà-ü]{3,}/i.test(testo) ? testo.replace(/[\d.,:%°]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 48) : "";
 }
 
+/* Una scritta che sta dentro una fila di carte uguali (i tasti del solare
+ * termico, le luci) e' il nome di una carta, non del riquadro che le tiene:
+ * «Pompa solare» non e' il nome dei comandi. */
+function dentroUnaFila(nodo, fino) {
+  for (let su = nodo; su && su !== fino; su = su.parentElement) {
+    const padre = su.parentElement;
+    if (!padre || padre === fino.parentElement) break;
+    const fratelli = [...padre.children].filter((f) => f !== su && f.className && f.className === su.className);
+    if (typeof su.className === "string" && su.className && fratelli.length) return true;
+  }
+  return false;
+}
+
+/* Le parole che le classi usano per dire cos'e' un riquadro. */
+const COSA_DALLE_CLASSI = [
+  [/synoptic|sinottic|schema|diagram|flow|flusso/i, () => t("Schema", "Diagram")],
+  [/control|comand|action|azion|button|tasti/i, () => t("Comandi", "Controls")],
+  [/chart|grafic|graph|trend|storia|history/i, () => t("Grafico", "Chart")],
+  [/kpi|stats|numeri|metric/i, () => t("Numeri", "Figures")],
+  [/session|sessione/i, () => t("Sessione", "Session")],
+];
+
 /* Un nome di ripiego per la maniglia: la prima scritta corta fatta di
  * parole («Autonomia»), non di numeri. */
 function testoBreve(el) {
   for (const parte of el.querySelectorAll?.("small,label,span,div,p") || []) {
-    if (parte.children.length) continue;
+    if (parte.children.length || dentroUnaFila(parte, el)) continue;
     const testo = String(parte.textContent || "").replace(/\s+/g, " ").trim();
     if (/^[^\d]*[a-zà-ü]{3,}[^\d]*$/i.test(testo) && testo.length <= 28) return testo;
   }
@@ -159,9 +186,49 @@ function vociDi(contenitore) {
   const unici = idUnici(voci.map((v) => v.id));
   voci.forEach((voce, i) => {
     voce.id = unici[i];
-    if (!voce.nome) voce.nome = testoBreve(voce.el) || t("Riquadro", "Box");
+    voce.vuoto = eVuoto(voce.el);
+    if (!voce.nome) voce.nome = nomeDiRipiego(voce.el, contenitore, i);
+    /* «Luci» dentro la pagina Luci non dice quale riquadro: e' il riepilogo. */
+    const pagina = titoloDellaPagina(contenitore);
+    if (pagina && voce.nome.toLowerCase() === pagina.toLowerCase()) voce.nome = t(`Riepilogo ${pagina}`, `${pagina} summary`);
   });
   return voci;
+}
+
+/* Una voce che adesso non ha niente da mostrare (un riquadro che si riempie
+ * solo in carica): niente scritte, niente immagini. */
+function eVuoto(el) {
+  const testo = [...el.childNodes]
+    .filter((n) => !(n.nodeType === 1 && n.matches?.(NOSTRI)))
+    .map((n) => n.textContent || "")
+    .join("")
+    .trim();
+  return !testo && !el.querySelector?.("img,svg,canvas,video,picture,input,select,button:not([data-dm-disp-ctrl] *)");
+}
+
+/* Il titolo della pagina, per dare un nome ai riquadri che non ne hanno. */
+function titoloDellaPagina(el) {
+  const pagina = el.closest?.("section.page");
+  const testa = pagina?.querySelector?.(".dm-page-mast h1,.dm-page-mast h2,[class*='mast'] h1,h1");
+  const scritto = String(testa?.textContent || "").replace(/\s+/g, " ").trim();
+  if (!scritto) return "";
+  return scritto.charAt(0).toUpperCase() + scritto.slice(1).toLowerCase();
+}
+
+/* Un nome vero anche per chi non ha titolo: l'etichetta che la pagina gli
+ * ha dato, una scritta corta, «Riepilogo …» per la carta in cima, e solo per
+ * ultimo «Riquadro N». */
+function nomeDiRipiego(el, contenitore, i) {
+  const dato = el.getAttribute?.("aria-label") || el.getAttribute?.("title") || el.getAttribute?.("data-title") || "";
+  if (/[a-zà-ü]{3,}/i.test(dato)) return dato.trim().slice(0, 48);
+  const classi = typeof el.className === "string" ? el.className : "";
+  const pagina = titoloDellaPagina(contenitore);
+  if (/(^|[-_\s])(hero|summary|riepilogo|overview)($|[-_\s])/i.test(classi) && pagina)
+    return t(`Riepilogo ${pagina}`, `${pagina} summary`);
+  for (const [prova, nome] of COSA_DALLE_CLASSI) if (prova.test(classi)) return nome();
+  const breve = testoBreve(el);
+  if (breve) return breve;
+  return t(`Riquadro ${i + 1}`, `Box ${i + 1}`);
 }
 
 function testataDi(pagina) {
@@ -187,11 +254,12 @@ function contenitoreDeiRiquadri(pagina) {
     const grande = altezze.indexOf(Math.max(...altezze, 0));
     const resto = altezze.reduce((a, h, i) => (i === grande ? a : a + h), 0);
     const selettore = (el) =>
-      Boolean(el.querySelector?.("select,nav,[role=tablist]")) || /picker|selettore|tabs/i.test(String(el.className || el.id));
+      Boolean(el.querySelector?.("select,nav,[role=tablist]")) ||
+      /picker|selettore|tabs|(^|[-_\s])(head|header|testa|intestazione)($|[-_\s])/i.test(String(el.className || el.id));
     const dominante =
       figli.length >= 2 &&
       altezze[grande] > 2 * resto &&
-      figli.every((el, i) => i === grande || (altezze[i] < 120 && selettore(el)));
+      figli.every((el, i) => i === grande || (altezze[i] < Math.max(120, altezze[grande] / 4) && selettore(el)));
     if (figli.length >= 2 && !dominante) return { contenitore: qui, chiave: vista ? `${nome}@${vista}` : nome };
     if (!figli.length) return null;
     const giu = dominante ? figli[grande] : figli[0];
@@ -373,9 +441,22 @@ function controlliMarkup(voce, elenco, scelta) {
   const larga = scelta.misure[voce.id] === "larga";
   const griglia = root.getComputedStyle?.(elenco.contenitore)?.display?.includes("grid");
   const nome = esc(voce.nome);
-  return `${elenco.riquadri ? `<button type="button" class="dm-disp-maniglia" data-dm-maniglia data-dm-tieni aria-label="${esc(
-    t(`Sposta ${voce.nome}`, `Move ${voce.nome}`),
-  )}">⠿ <span>${nome}</span></button>` : ""}
+  /* Quello che dice come sta la voce adesso, accanto al nome: vuota o
+   * nascosta si vede anche quando la carta e' sbiadita. */
+  const stato = [
+    voce.vuoto ? t("vuoto adesso", "empty now") : "",
+    nascosto ? t("nascosto", "hidden") : "",
+  ].filter(Boolean);
+  const nota = stato.length ? ` <em class="dm-disp-nota">(${esc(stato.join(" · "))})</em>` : "";
+  /* Le voci di un elenco si prendono tutte intere: la loro riga di strumenti
+   * ha il segno «⠿» e il nome (piccolo), e l'occhio subito accanto — mai
+   * sopra i comandi della carta, che restano sotto. */
+  const testa = elenco.riquadri
+    ? `<button type="button" class="dm-disp-maniglia" data-dm-maniglia data-dm-tieni aria-label="${esc(
+        t(`Sposta ${voce.nome}`, `Move ${voce.nome}`),
+      )}">⠿ <span>${nome}</span>${nota}</button>`
+    : `<span class="dm-disp-segno" aria-hidden="true">⠿</span>${nota}`;
+  return `${testa}
     <button type="button" class="dm-disp-occhio" data-dm-non-trascinare data-dm-disp-occhio
       aria-pressed="${!nascosto}" aria-label="${esc(nascosto ? t(`Mostra ${voce.nome}`, `Show ${voce.nome}`) : t(`Nascondi ${voce.nome}`, `Hide ${voce.nome}`))}">${nascosto ? "🙈" : "👁"}</button>${
       griglia && elenco.riquadri
@@ -386,13 +467,40 @@ function controlliMarkup(voce, elenco, scelta) {
 }
 
 function togliISegni(el) {
-  for (const nome of ["data-dm-disp-voce", "data-dm-riordina-riga", "data-dm-maniglia", "data-dm-tieni"])
+  for (const nome of [
+    "data-dm-disp-voce",
+    "data-dm-disp-titolo",
+    "data-dm-disp-vuoto",
+    "data-dm-riordina-riga",
+    "data-dm-maniglia",
+    "data-dm-tieni",
+  ])
     el.removeAttribute(nome);
+  lasciaSu(el);
   if (el.hasAttribute("data-dm-disp-tab")) {
     el.removeAttribute("data-dm-disp-tab");
     el.removeAttribute("tabindex");
     el.removeAttribute("aria-label");
   }
+}
+
+/* Lo spazio in cima per la riga degli strumenti, scritto addosso alla voce:
+ * le pagine fissano il loro `padding` con regole che passano per l'id della
+ * pagina (`#page-ev … !important`), e solo lo stile scritto le batte. Quello
+ * che c'era prima si tiene da parte e si rimette. */
+function spingiGiu(el, quanto) {
+  if (!el.__dmDispPad)
+    el.__dmDispPad = [el.style.getPropertyValue("padding-top"), el.style.getPropertyPriority("padding-top")];
+  const ora = parseFloat(root.getComputedStyle?.(el)?.paddingTop || "0") || 0;
+  el.style.setProperty("padding-top", `${Math.max(quanto, Math.round(ora) + quanto - 12)}px`, "important");
+}
+
+function lasciaSu(el) {
+  const prima = el.__dmDispPad;
+  if (!prima) return;
+  delete el.__dmDispPad;
+  if (prima[0]) el.style.setProperty("padding-top", prima[0], prima[1]);
+  else el.style.removeProperty("padding-top");
 }
 
 function segnaPerLaModifica(pagina) {
@@ -402,7 +510,7 @@ function segnaPerLaModifica(pagina) {
     el.removeAttribute("data-dm-disp-tipo");
     el.removeAttribute("data-dm-riordina");
   }
-  for (const el of pagina.querySelectorAll("[data-dm-disp-voce]")) {
+  for (const el of pagina.querySelectorAll("[data-dm-disp-voce],[data-dm-disp-titolo]")) {
     togliISegni(el);
   }
   for (const elenco of elenchiDellaPagina(pagina)) {
@@ -414,6 +522,10 @@ function segnaPerLaModifica(pagina) {
     elenco.contenitore.setAttribute("data-dm-riordina", "griglia");
     for (const voce of voci) {
       voce.el.setAttribute("data-dm-disp-voce", voce.id);
+      /* Il titolo attaccato si sposta con lei, ma in modifica non si vede: il
+       * suo nome e' gia' sull'etichetta, due volte sarebbe rumore. */
+      for (const el of voce.insieme) if (el !== voce.el) el.setAttribute("data-dm-disp-titolo", "");
+      if (voce.vuoto) voce.el.setAttribute("data-dm-disp-vuoto", "");
       voce.el.setAttribute("data-dm-riordina-riga", voce.id);
       if (!elenco.riquadri) {
         voce.el.setAttribute("data-dm-maniglia", "");
@@ -427,15 +539,21 @@ function segnaPerLaModifica(pagina) {
       ctrl.setAttribute("data-dm-disp-ctrl", elenco.riquadri ? "riquadro" : "voce");
       ctrl.innerHTML = controlliMarkup(voce, elenco, scelta);
       voce.el.prepend(ctrl);
+      spingiGiu(voce.el, elenco.riquadri ? 52 : 40);
     }
   }
 }
 
 function barraMarkup() {
   const n = conta();
+  /* Una vista con un riquadro solo (il flusso dell'Energia): si dice, invece
+   * di lasciare a cercare cosa trascinare. */
+  const niente = n === 0 && !state.modifica?.pagina?.querySelector?.("[data-dm-disp-elenco]");
   return `<div class="dm-disp-barra-dentro">
     <span class="dm-disp-conta"${n === 0 ? " data-vuota" : ""}>${esc(
-      n === 0
+      niente
+        ? t("In questa vista non c'è niente da spostare", "Nothing to move in this view")
+        : n === 0
         ? t("Trascina riquadri ed elementi dove li vuoi", "Drag boxes and items where you want them")
         : n === 1
           ? t("1 modifica", "1 change")
@@ -445,7 +563,7 @@ function barraMarkup() {
     <button type="button" data-dm-disp-azione="ripristina">${esc(t("Ripristina", "Reset"))}</button>
     <button type="button" class="dm-disp-salva" data-dm-disp-azione="salva"${n === 0 ? " disabled" : ""}>${esc(
       t("Salva", "Save"),
-    )}</button>
+    )}${n ? ` <b class="dm-disp-quante">· ${n}</b>` : ""}</button>
   </div>`;
 }
 
@@ -487,7 +605,7 @@ export function esciDallaModifica() {
       el.removeAttribute("data-dm-disp-tipo");
       el.removeAttribute("data-dm-riordina");
     }
-    for (const el of m.pagina.querySelectorAll("[data-dm-disp-voce]")) togliISegni(el);
+    for (const el of m.pagina.querySelectorAll("[data-dm-disp-voce],[data-dm-disp-titolo]")) togliISegni(el);
   } finally {
     state.osservatore?.takeRecords?.();
     state.occupato = false;
@@ -636,6 +754,13 @@ function testataPerIlTasto(pagina) {
   );
 }
 
+/* ✏️ e, dove c'e' posto, la parola: «Modifica». Il suggerimento dice tutto. */
+function vestiIlTasto(tasto) {
+  tasto.title = t("Modifica disposizione", "Edit layout");
+  tasto.setAttribute("aria-label", t("Modifica disposizione", "Edit layout"));
+  tasto.innerHTML = `<span aria-hidden="true">✏️</span><span class="dm-disp-tasto-parola">${esc(t("Modifica", "Edit"))}</span>`;
+}
+
 function tastoInHome(si) {
   const casa = doc.getElementById("page-home");
   const ce = casa?.querySelector(":scope > [data-dm-disp-tasto]");
@@ -645,9 +770,7 @@ function tastoInHome(si) {
   tasto.type = "button";
   tasto.className = "dm-disp-tasto dm-disp-tasto-home";
   tasto.setAttribute("data-dm-disp-tasto", "home");
-  tasto.title = t("Modifica disposizione", "Edit layout");
-  tasto.setAttribute("aria-label", t("Modifica disposizione", "Edit layout"));
-  tasto.textContent = "✏️";
+  vestiIlTasto(tasto);
   casa.prepend(tasto);
 }
 
@@ -668,9 +791,7 @@ function mettiITasti() {
     tasto.type = "button";
     tasto.setAttribute("data-dm-disp-tasto", "");
     tasto.className = "dm-disp-tasto";
-    tasto.title = t("Modifica disposizione", "Edit layout");
-    tasto.setAttribute("aria-label", t("Modifica disposizione", "Edit layout"));
-    tasto.textContent = "✏️";
+    vestiIlTasto(tasto);
     testata.appendChild(tasto);
   }
   /* Si cambia pagina con la modifica aperta: la modifica si chiude, senza
@@ -683,28 +804,45 @@ function mettiITasti() {
 const STILE = `
 ${STILE_RIORDINA}
 [data-dm-nascosto]{display:none!important}
-html[data-dm-modifica] [data-dm-nascosto]{display:revert!important;opacity:.38;filter:grayscale(.6)}
+/* In modifica un nascosto si vede sbiadito, ma la sua etichetta no: si deve
+ * poter leggere per riaccenderlo. */
+html[data-dm-modifica] [data-dm-nascosto]{display:revert!important}
+html[data-dm-modifica] [data-dm-nascosto]>:not([data-dm-disp-ctrl]){opacity:.38;filter:grayscale(.6)}
+html[data-dm-modifica] [data-dm-disp-titolo]{display:none!important}
+html[data-dm-modifica] [data-dm-disp-vuoto]{min-height:56px}
+/* La barra in basso non copre l'ultima riga: la pagina ha spazio sotto. */
+html[data-dm-modifica] section.page.active{padding-bottom:calc(220px + env(safe-area-inset-bottom,0px))!important}
 [data-dm-misura="larga"]{grid-column:1/-1!important}
 .dm-page-mast{position:relative}
 #page-home{position:relative}
 .dm-disp-tasto-home{top:0;right:4px}
-.dm-disp-tasto{position:absolute;top:12px;right:12px;z-index:3;width:40px;height:40px;border-radius:14px;
-  border:1px solid color-mix(in srgb,var(--text,#0f172a) 12%,transparent);background:var(--card-bg,#fff);
-  font-size:18px;line-height:1;cursor:pointer;box-shadow:0 6px 16px -10px rgba(15,23,42,.4)}
+.dm-disp-tasto{position:absolute;top:12px;right:12px;z-index:3;min-width:40px;height:40px;border-radius:14px;padding:0 10px;
+  border:1px solid color-mix(in srgb,var(--text,#0f172a) 12%,transparent);background:var(--card-bg,#fff);color:var(--text,#0f172a);
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  font:600 14px/1 inherit;cursor:pointer;box-shadow:0 6px 16px -10px rgba(15,23,42,.4)}
+.dm-disp-tasto>span[aria-hidden]{font-size:18px}
+.dm-disp-tasto-parola{display:none}
+@media (min-width:720px){.dm-disp-tasto{padding:0 14px 0 12px}.dm-disp-tasto-parola{display:inline}}
 html[data-dm-modifica] .dm-disp-tasto{background:var(--accent,#2563eb);color:#fff}
 html[data-dm-modifica] [data-dm-disp-voce]{position:relative;outline:2px dashed color-mix(in srgb,var(--accent,#2563eb) 55%,transparent);
   outline-offset:2px;border-radius:16px}
 html[data-dm-modifica] [data-dm-disp-elenco]>[data-dm-disp-voce]{cursor:grab}
 /* I riquadri: la barra coi tasti sta in cima al riquadro, dentro (molte
  * carte tagliano quello che esce), e il contenuto scende di quanto serve. */
-html[data-dm-modifica] [data-dm-disp-tipo="riquadri"]>[data-dm-disp-voce]{padding-top:52px!important}
 [data-dm-disp-ctrl]{position:absolute;z-index:6;display:flex;gap:6px;align-items:center}
 [data-dm-disp-ctrl="riquadro"]{top:8px;left:8px;right:8px;height:36px}
-[data-dm-disp-ctrl="voce"]{top:6px;right:6px}
+/* Le voci di un elenco: una riga di strumenti sopra la carta, a sinistra —
+ * il segno «⠿» e l'occhio — e la carta scende di quanto serve, cosi' i suoi
+ * comandi (l'interruttore di una luce) non stanno mai sotto l'occhio. */
+html[data-dm-modifica] [data-dm-disp-tipo="voci"]>[data-dm-disp-voce]{height:auto!important;min-height:0!important}
+[data-dm-disp-ctrl="voce"]{top:6px;left:8px;right:8px;height:30px;gap:8px}
+[data-dm-disp-ctrl="voce"] .dm-disp-segno{font:700 15px/1 inherit;color:var(--accent,#2563eb);letter-spacing:-1px}
+.dm-disp-nota{font:italic 600 12px/1 inherit;opacity:.9;white-space:nowrap}
+[data-dm-disp-ctrl="voce"] .dm-disp-nota{color:var(--text-dim,#64748b);margin-right:auto}
 [data-dm-disp-ctrl] button{height:36px;min-width:36px;border-radius:12px;border:1px solid color-mix(in srgb,var(--text,#0f172a) 14%,transparent);
   background:var(--card-bg,#fff);color:var(--text,#0f172a);font:600 13px/1 inherit;cursor:pointer;
   box-shadow:0 4px 12px -8px rgba(15,23,42,.5);display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 10px}
-[data-dm-disp-ctrl="voce"] button{height:30px;min-width:30px;border-radius:999px;padding:0;font-size:13px}
+[data-dm-disp-ctrl="voce"] button{height:28px;min-width:28px;border-radius:999px;padding:0;font-size:13px}
 [data-dm-disp-ctrl] .dm-disp-maniglia[data-dm-maniglia]{margin:0 auto 0 0;cursor:grab;touch-action:none;
   width:auto;height:36px;flex:0 1 auto;max-width:min(78%,320px);
   background:var(--accent,#2563eb);border-color:transparent;color:#fff;padding:0 14px 0 10px;font-size:13px}
@@ -713,20 +851,26 @@ html[data-dm-modifica] [data-dm-disp-tipo="riquadri"]>[data-dm-disp-voce]{paddin
 [data-dm-disp-ctrl] button[aria-pressed="true"].dm-disp-larga{background:var(--accent,#2563eb);color:#fff}
 /* La barra sta sopra la barra delle sezioni, non sopra le voci. */
 [data-dm-disp-barra]{position:fixed;left:50%;bottom:calc(104px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:9990;
-  max-width:calc(100vw - 24px)}
+  max-width:calc(100vw - 24px);transition:opacity .15s}
+/* Mentre una voce e' in mano la barra si fa da parte, e la voce passa sopra
+ * a tutto: si deve vedere dove la si lascia. */
+html[data-dm-trascinando] [data-dm-disp-barra]{opacity:0;pointer-events:none}
+html[data-dm-modifica] [data-dm-riordina="griglia"] [data-dm-fantasma="true"]{z-index:9995!important}
+html[data-dm-modifica] [data-dm-riordina="griglia"] [data-dm-fantasma="true"]>[data-dm-disp-ctrl]{width:auto!important;height:auto!important;opacity:1!important}
 .dm-disp-barra-dentro{display:flex;gap:8px;align-items:center;flex-wrap:nowrap;justify-content:center;padding:8px 10px;border-radius:20px;
   background:var(--card-bg,#fff);color:var(--text,#0f172a);box-shadow:0 18px 40px -16px rgba(15,23,42,.55);
   border:1px solid color-mix(in srgb,var(--text,#0f172a) 12%,transparent)}
 .dm-disp-barra-dentro .dm-disp-conta{font:600 14px/1.2 inherit;padding:0 6px}
 .dm-disp-barra-dentro button{min-height:44px;padding:0 16px;border-radius:14px;border:1px solid color-mix(in srgb,var(--text,#0f172a) 14%,transparent);
-  background:transparent;color:inherit;font:600 14px/1 inherit;cursor:pointer}
+  background:transparent;color:inherit;font:600 14px/1 inherit;cursor:pointer;white-space:nowrap}
 .dm-disp-barra-dentro .dm-disp-salva{background:var(--accent,#2563eb);border-color:transparent;color:#fff}
 .dm-disp-barra-dentro .dm-disp-salva[disabled]{opacity:.45;cursor:default}
+.dm-disp-quante{font-weight:800}
 @media (max-width:560px){
   .dm-disp-barra-dentro{gap:6px;padding:6px 8px}
-  .dm-disp-barra-dentro .dm-disp-conta{font-size:13px;max-width:96px;white-space:normal}
+  .dm-disp-barra-dentro .dm-disp-conta{font-size:12.5px;white-space:nowrap;padding:0 2px}
   .dm-disp-barra-dentro .dm-disp-conta[data-vuota]{display:none}
-  .dm-disp-barra-dentro button{padding:0 12px;font-size:13px}
+  .dm-disp-barra-dentro button{padding:0 10px;font-size:13px}
 }
 `;
 

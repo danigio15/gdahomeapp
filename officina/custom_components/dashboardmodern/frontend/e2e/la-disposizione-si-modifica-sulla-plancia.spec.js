@@ -144,7 +144,21 @@ test("le luci di una stanza si riordinano e l'ordine si scrive con le entita'", 
   await expect.poll(elencoDiLuci, { timeout: 15_000 }).not.toBeNull();
   await page.waitForTimeout(600);
   await page.locator("#page-luci [data-dm-disp-tasto]").click();
-  await page.waitForTimeout(300);
+  /* La pagina delle luci si ridisegna quando arrivano gli stati: si aspetta
+   * che stia ferma (nessun giro nuovo per mezzo secondo), se no la luce presa
+   * dalla tastiera puo' essere quella di prima del ridisegno. */
+  let giri = -1;
+  await expect
+    .poll(
+      async () => {
+        const ora = await page.evaluate(() => window.dmDisposizione.giri());
+        const fermo = ora === giri;
+        giri = ora;
+        return fermo;
+      },
+      { intervals: [500] },
+    )
+    .toBe(true);
   const prima = await elencoDiLuci();
   const primaLuce = page.locator(`#page-luci [data-dm-disp-voce="${prima.voci[0]}"]`);
   await expect(primaLuce).toHaveAttribute("data-dm-maniglia", "");

@@ -565,7 +565,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-UPLW4FIL.js";
+} from "../../chunk-QVTEXUXZ.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -4499,6 +4499,7 @@ var SOURCE_INDEX = Object.freeze({
   "Gol": "Goals",
   "Gomma": "Eraser",
   "Gradi": "Degrees",
+  "Grafico": "Chart",
   "Grafico non disponibile: Chart.js non è caricato.": "Chart unavailable: Chart.js is not loaded.",
   "Grafite": "Graphite",
   "Graminacee": "Grass",
@@ -4915,6 +4916,7 @@ var SOURCE_INDEX = Object.freeze({
   "In quale fascia consuma": "Which band it draws in",
   "In quale scheda": "On which page",
   "In quelle stanze non c'è nessuno.": "Nobody is in those rooms.",
+  "In questa vista non c'è niente da spostare": "Nothing to move in this view",
   "In questo momento": "Right now",
   "In rete": "On mains",
   "in rete da": "on mains for",
@@ -6174,6 +6176,7 @@ var SOURCE_INDEX = Object.freeze({
   "Notte blu": "Blue night",
   "Notte nella fascia di «Di notte schermo nero», anche con l'interruttore spento": "Night in the hours of “Black screen at night”, even with its switch off",
   "Novembre": "November",
+  "Numeri": "Figures",
   "Numeri grandi, dal vivo. Vuoti, si prendono dalla sezione Energia della plancia di origine, col verso che ha lì.": "Big live numbers. Left empty, they come from the source dashboard's Energy section, with its direction.",
   "Numero": "Number",
   "Nuoto": "Swim",
@@ -7071,6 +7074,7 @@ var SOURCE_INDEX = Object.freeze({
   "Riempie il riquadro al posto del disegno": "Fills the tile instead of the drawing",
   "Riempio io così": "This is what I will write",
   "Rientro": "I'm home",
+  "Riepilogo ${pagina}": "${pagina} summary",
   "Riepilogo:": "Summary:",
   "Rifai questo piano": "Redo this floor",
   "Rifallo da qui": "Redo it here",
@@ -7123,6 +7127,7 @@ var SOURCE_INDEX = Object.freeze({
   "Riprova da «Le mie».": "Try again from «Mine».",
   "Riquadri": "Tiles",
   "Riquadro": "Tile",
+  "Riquadro ${i + 1}": "Box ${i + 1}",
   "Riscaldamento": "Heating",
   "Riscaldamento · Raffrescamento · Zone": "Heating · Cooling · Zones",
   "Riscaldamento a pavimento": "Underfloor heating",
@@ -7362,6 +7367,7 @@ var SOURCE_INDEX = Object.freeze({
   "scende sotto": "drops below",
   "Scene": "Scenes",
   "Scene della stanza": "Room scenes",
+  "Schema": "Diagram",
   "Schermata iniziale della TV": "TV home screen",
   "Scienziato": "Scientist",
   "Sciogli il gruppo": "Ungroup all",
@@ -8646,6 +8652,7 @@ var SOURCE_INDEX = Object.freeze({
   "vuoti: dal tramonto all'alba": "empty: sunset to sunrise",
   "vuoto — aggiungi carichi": "empty — add loads",
   "Vuoto = tariffa della sezione Energia.": "Empty = tariff from the Energy section.",
+  "vuoto adesso": "empty now",
   "Vuoto vale il valore di serie scritto nel campo.": "Empty means the default shown in the field.",
   "Vuoto vuol dire «on».": "Empty means “on”.",
   "Vuoto vuol dire «on». Senza questo il tasto funziona lo stesso: semplicemente non resta acceso.": "Empty means “on”. Without it the button still works: it simply does not stay lit.",
@@ -156115,7 +156122,7 @@ function nomeDellaPagina(pagina3) {
 function visibile(el) {
   if (!el || el.nodeType !== 1) return false;
   if (el.matches?.(`${NOSTRI},script,style,template,link,.dm-riordina-voce`)) return false;
-  if (el.hasAttribute?.("data-dm-nascosto")) return true;
+  if (el.hasAttribute?.("data-dm-nascosto") || el.hasAttribute?.("data-dm-disp-titolo")) return true;
   if (el.hidden) return false;
   const stile7 = root.getComputedStyle?.(el);
   if (!stile7 || stile7.display === "none" || stile7.visibility === "hidden") return false;
@@ -156134,13 +156141,31 @@ function eTitolo(el) {
   return RIGA_DI_TESTA.test(classi.split(/\s+/)[0] || "") && (el.getBoundingClientRect?.().height || 0) < 64;
 }
 function titoloDi2(el) {
-  const testa2 = el.matches?.(TITOLO3) ? el : el.querySelector?.(`${TITOLO3},[class*='title'],[class*='titolo'],[class*='name'],[class*='nome'],summary`);
+  const testa2 = el.matches?.(TITOLO3) ? el : [...el.querySelectorAll?.(`${TITOLO3},[class*='title'],[class*='titolo'],[class*='name'],[class*='nome'],summary`) || []].find(
+    (uno) => !dentroUnaFila(uno, el)
+  );
   const testo5 = String(testa2?.textContent || "").replace(/\s+/g, " ").trim();
   return /[a-zà-ü]{3,}/i.test(testo5) ? testo5.replace(/[\d.,:%°]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 48) : "";
 }
+function dentroUnaFila(nodo3, fino) {
+  for (let su2 = nodo3; su2 && su2 !== fino; su2 = su2.parentElement) {
+    const padre = su2.parentElement;
+    if (!padre || padre === fino.parentElement) break;
+    const fratelli = [...padre.children].filter((f) => f !== su2 && f.className && f.className === su2.className);
+    if (typeof su2.className === "string" && su2.className && fratelli.length) return true;
+  }
+  return false;
+}
+var COSA_DALLE_CLASSI = [
+  [/synoptic|sinottic|schema|diagram|flow|flusso/i, () => t("Schema", "Diagram")],
+  [/control|comand|action|azion|button|tasti/i, () => t("Comandi", "Controls")],
+  [/chart|grafic|graph|trend|storia|history/i, () => t("Grafico", "Chart")],
+  [/kpi|stats|numeri|metric/i, () => t("Numeri", "Figures")],
+  [/session|sessione/i, () => t("Sessione", "Session")]
+];
 function testoBreve2(el) {
   for (const parte of el.querySelectorAll?.("small,label,span,div,p") || []) {
-    if (parte.children.length) continue;
+    if (parte.children.length || dentroUnaFila(parte, el)) continue;
     const testo5 = String(parte.textContent || "").replace(/\s+/g, " ").trim();
     if (/^[^\d]*[a-zà-ü]{3,}[^\d]*$/i.test(testo5) && testo5.length <= 28) return testo5;
   }
@@ -156175,9 +156200,35 @@ function vociDi(contenitore5) {
   const unici2 = idUnici(voci4.map((v) => v.id));
   voci4.forEach((voce3, i) => {
     voce3.id = unici2[i];
-    if (!voce3.nome) voce3.nome = testoBreve2(voce3.el) || t("Riquadro", "Box");
+    voce3.vuoto = eVuoto(voce3.el);
+    if (!voce3.nome) voce3.nome = nomeDiRipiego(voce3.el, contenitore5, i);
+    const pagina3 = titoloDellaPagina5(contenitore5);
+    if (pagina3 && voce3.nome.toLowerCase() === pagina3.toLowerCase()) voce3.nome = t(`Riepilogo ${pagina3}`, `${pagina3} summary`);
   });
   return voci4;
+}
+function eVuoto(el) {
+  const testo5 = [...el.childNodes].filter((n) => !(n.nodeType === 1 && n.matches?.(NOSTRI))).map((n) => n.textContent || "").join("").trim();
+  return !testo5 && !el.querySelector?.("img,svg,canvas,video,picture,input,select,button:not([data-dm-disp-ctrl] *)");
+}
+function titoloDellaPagina5(el) {
+  const pagina3 = el.closest?.("section.page");
+  const testa2 = pagina3?.querySelector?.(".dm-page-mast h1,.dm-page-mast h2,[class*='mast'] h1,h1");
+  const scritto3 = String(testa2?.textContent || "").replace(/\s+/g, " ").trim();
+  if (!scritto3) return "";
+  return scritto3.charAt(0).toUpperCase() + scritto3.slice(1).toLowerCase();
+}
+function nomeDiRipiego(el, contenitore5, i) {
+  const dato2 = el.getAttribute?.("aria-label") || el.getAttribute?.("title") || el.getAttribute?.("data-title") || "";
+  if (/[a-zà-ü]{3,}/i.test(dato2)) return dato2.trim().slice(0, 48);
+  const classi = typeof el.className === "string" ? el.className : "";
+  const pagina3 = titoloDellaPagina5(contenitore5);
+  if (/(^|[-_\s])(hero|summary|riepilogo|overview)($|[-_\s])/i.test(classi) && pagina3)
+    return t(`Riepilogo ${pagina3}`, `${pagina3} summary`);
+  for (const [prova3, nome] of COSA_DALLE_CLASSI) if (prova3.test(classi)) return nome();
+  const breve = testoBreve2(el);
+  if (breve) return breve;
+  return t(`Riquadro ${i + 1}`, `Box ${i + 1}`);
 }
 function contenitoreDeiRiquadri(pagina3) {
   const nome = nomeDellaPagina(pagina3);
@@ -156191,8 +156242,8 @@ function contenitoreDeiRiquadri(pagina3) {
     const altezze = figli.map((el) => el.getBoundingClientRect().height);
     const grande = altezze.indexOf(Math.max(...altezze, 0));
     const resto = altezze.reduce((a, h, i) => i === grande ? a : a + h, 0);
-    const selettore = (el) => Boolean(el.querySelector?.("select,nav,[role=tablist]")) || /picker|selettore|tabs/i.test(String(el.className || el.id));
-    const dominante = figli.length >= 2 && altezze[grande] > 2 * resto && figli.every((el, i) => i === grande || altezze[i] < 120 && selettore(el));
+    const selettore = (el) => Boolean(el.querySelector?.("select,nav,[role=tablist]")) || /picker|selettore|tabs|(^|[-_\s])(head|header|testa|intestazione)($|[-_\s])/i.test(String(el.className || el.id));
+    const dominante = figli.length >= 2 && altezze[grande] > 2 * resto && figli.every((el, i) => i === grande || altezze[i] < Math.max(120, altezze[grande] / 4) && selettore(el));
     if (figli.length >= 2 && !dominante) return { contenitore: qui, chiave: vista2 ? `${nome}@${vista2}` : nome };
     if (!figli.length) return null;
     const giu2 = dominante ? figli[grande] : figli[0];
@@ -156334,21 +156385,48 @@ function controlliMarkup(voce3, elenco18, scelta3) {
   const larga = scelta3.misure[voce3.id] === "larga";
   const griglia3 = root.getComputedStyle?.(elenco18.contenitore)?.display?.includes("grid");
   const nome = esc(voce3.nome);
-  return `${elenco18.riquadri ? `<button type="button" class="dm-disp-maniglia" data-dm-maniglia data-dm-tieni aria-label="${esc(
+  const stato3 = [
+    voce3.vuoto ? t("vuoto adesso", "empty now") : "",
+    nascosto ? t("nascosto", "hidden") : ""
+  ].filter(Boolean);
+  const nota2 = stato3.length ? ` <em class="dm-disp-nota">(${esc(stato3.join(" · "))})</em>` : "";
+  const testa2 = elenco18.riquadri ? `<button type="button" class="dm-disp-maniglia" data-dm-maniglia data-dm-tieni aria-label="${esc(
     t(`Sposta ${voce3.nome}`, `Move ${voce3.nome}`)
-  )}">⠿ <span>${nome}</span></button>` : ""}
+  )}">⠿ <span>${nome}</span>${nota2}</button>` : `<span class="dm-disp-segno" aria-hidden="true">⠿</span>${nota2}`;
+  return `${testa2}
     <button type="button" class="dm-disp-occhio" data-dm-non-trascinare data-dm-disp-occhio
       aria-pressed="${!nascosto}" aria-label="${esc(nascosto ? t(`Mostra ${voce3.nome}`, `Show ${voce3.nome}`) : t(`Nascondi ${voce3.nome}`, `Hide ${voce3.nome}`))}">${nascosto ? "🙈" : "👁"}</button>${griglia3 && elenco18.riquadri ? `<button type="button" class="dm-disp-larga" data-dm-non-trascinare data-dm-disp-larga aria-pressed="${larga}"
       aria-label="${esc(t(`Larghezza piena: ${voce3.nome}`, `Full width: ${voce3.nome}`))}">↔</button>` : ""}`;
 }
 function togliISegni(el) {
-  for (const nome of ["data-dm-disp-voce", "data-dm-riordina-riga", "data-dm-maniglia", "data-dm-tieni"])
+  for (const nome of [
+    "data-dm-disp-voce",
+    "data-dm-disp-titolo",
+    "data-dm-disp-vuoto",
+    "data-dm-riordina-riga",
+    "data-dm-maniglia",
+    "data-dm-tieni"
+  ])
     el.removeAttribute(nome);
+  lasciaSu(el);
   if (el.hasAttribute("data-dm-disp-tab")) {
     el.removeAttribute("data-dm-disp-tab");
     el.removeAttribute("tabindex");
     el.removeAttribute("aria-label");
   }
+}
+function spingiGiu(el, quanto) {
+  if (!el.__dmDispPad)
+    el.__dmDispPad = [el.style.getPropertyValue("padding-top"), el.style.getPropertyPriority("padding-top")];
+  const ora8 = parseFloat(root.getComputedStyle?.(el)?.paddingTop || "0") || 0;
+  el.style.setProperty("padding-top", `${Math.max(quanto, Math.round(ora8) + quanto - 12)}px`, "important");
+}
+function lasciaSu(el) {
+  const prima = el.__dmDispPad;
+  if (!prima) return;
+  delete el.__dmDispPad;
+  if (prima[0]) el.style.setProperty("padding-top", prima[0], prima[1]);
+  else el.style.removeProperty("padding-top");
 }
 function segnaPerLaModifica(pagina3) {
   for (const vecchio of pagina3.querySelectorAll("[data-dm-disp-ctrl]")) vecchio.remove();
@@ -156357,7 +156435,7 @@ function segnaPerLaModifica(pagina3) {
     el.removeAttribute("data-dm-disp-tipo");
     el.removeAttribute("data-dm-riordina");
   }
-  for (const el of pagina3.querySelectorAll("[data-dm-disp-voce]")) {
+  for (const el of pagina3.querySelectorAll("[data-dm-disp-voce],[data-dm-disp-titolo]")) {
     togliISegni(el);
   }
   for (const elenco18 of elenchiDellaPagina(pagina3)) {
@@ -156369,6 +156447,8 @@ function segnaPerLaModifica(pagina3) {
     elenco18.contenitore.setAttribute("data-dm-riordina", "griglia");
     for (const voce3 of voci4) {
       voce3.el.setAttribute("data-dm-disp-voce", voce3.id);
+      for (const el of voce3.insieme) if (el !== voce3.el) el.setAttribute("data-dm-disp-titolo", "");
+      if (voce3.vuoto) voce3.el.setAttribute("data-dm-disp-vuoto", "");
       voce3.el.setAttribute("data-dm-riordina-riga", voce3.id);
       if (!elenco18.riquadri) {
         voce3.el.setAttribute("data-dm-maniglia", "");
@@ -156381,20 +156461,22 @@ function segnaPerLaModifica(pagina3) {
       ctrl.setAttribute("data-dm-disp-ctrl", elenco18.riquadri ? "riquadro" : "voce");
       ctrl.innerHTML = controlliMarkup(voce3, elenco18, scelta3);
       voce3.el.prepend(ctrl);
+      spingiGiu(voce3.el, elenco18.riquadri ? 52 : 40);
     }
   }
 }
 function barraMarkup5() {
   const n = conta2();
+  const niente = n === 0 && !state177.modifica?.pagina?.querySelector?.("[data-dm-disp-elenco]");
   return `<div class="dm-disp-barra-dentro">
     <span class="dm-disp-conta"${n === 0 ? " data-vuota" : ""}>${esc(
-    n === 0 ? t("Trascina riquadri ed elementi dove li vuoi", "Drag boxes and items where you want them") : n === 1 ? t("1 modifica", "1 change") : t(`${n} modifiche`, `${n} changes`)
+    niente ? t("In questa vista non c'è niente da spostare", "Nothing to move in this view") : n === 0 ? t("Trascina riquadri ed elementi dove li vuoi", "Drag boxes and items where you want them") : n === 1 ? t("1 modifica", "1 change") : t(`${n} modifiche`, `${n} changes`)
   )}</span>
     <button type="button" data-dm-disp-azione="annulla">${esc(t("Annulla", "Cancel"))}</button>
     <button type="button" data-dm-disp-azione="ripristina">${esc(t("Ripristina", "Reset"))}</button>
     <button type="button" class="dm-disp-salva" data-dm-disp-azione="salva"${n === 0 ? " disabled" : ""}>${esc(
     t("Salva", "Save")
-  )}</button>
+  )}${n ? ` <b class="dm-disp-quante">· ${n}</b>` : ""}</button>
   </div>`;
 }
 function disegnaLaBarra() {
@@ -156433,7 +156515,7 @@ function esciDallaModifica() {
       el.removeAttribute("data-dm-disp-tipo");
       el.removeAttribute("data-dm-riordina");
     }
-    for (const el of m.pagina.querySelectorAll("[data-dm-disp-voce]")) togliISegni(el);
+    for (const el of m.pagina.querySelectorAll("[data-dm-disp-voce],[data-dm-disp-titolo]")) togliISegni(el);
   } finally {
     state177.osservatore?.takeRecords?.();
     state177.occupato = false;
@@ -156556,6 +156638,11 @@ function onKeyDown2(event) {
 function testataPerIlTasto(pagina3) {
   return pagina3.querySelector(":scope > .dm-page-mast") || [...pagina3.querySelectorAll("[class*='mast']")].find((el) => eTestata(el) && visibile(el)) || null;
 }
+function vestiIlTasto(tasto5) {
+  tasto5.title = t("Modifica disposizione", "Edit layout");
+  tasto5.setAttribute("aria-label", t("Modifica disposizione", "Edit layout"));
+  tasto5.innerHTML = `<span aria-hidden="true">✏️</span><span class="dm-disp-tasto-parola">${esc(t("Modifica", "Edit"))}</span>`;
+}
 function tastoInHome(si) {
   const casa3 = doc.getElementById("page-home");
   const ce = casa3?.querySelector(":scope > [data-dm-disp-tasto]");
@@ -156565,9 +156652,7 @@ function tastoInHome(si) {
   tasto5.type = "button";
   tasto5.className = "dm-disp-tasto dm-disp-tasto-home";
   tasto5.setAttribute("data-dm-disp-tasto", "home");
-  tasto5.title = t("Modifica disposizione", "Edit layout");
-  tasto5.setAttribute("aria-label", t("Modifica disposizione", "Edit layout"));
-  tasto5.textContent = "✏️";
+  vestiIlTasto(tasto5);
   casa3.prepend(tasto5);
 }
 function mettiITasti() {
@@ -156587,9 +156672,7 @@ function mettiITasti() {
     tasto5.type = "button";
     tasto5.setAttribute("data-dm-disp-tasto", "");
     tasto5.className = "dm-disp-tasto";
-    tasto5.title = t("Modifica disposizione", "Edit layout");
-    tasto5.setAttribute("aria-label", t("Modifica disposizione", "Edit layout"));
-    tasto5.textContent = "✏️";
+    vestiIlTasto(tasto5);
     testata5.appendChild(tasto5);
   }
   if (state177.modifica && !state177.modifica.pagina.classList.contains("active")) annulla2();
@@ -156597,28 +156680,45 @@ function mettiITasti() {
 var STILE19 = `
 ${STILE_RIORDINA}
 [data-dm-nascosto]{display:none!important}
-html[data-dm-modifica] [data-dm-nascosto]{display:revert!important;opacity:.38;filter:grayscale(.6)}
+/* In modifica un nascosto si vede sbiadito, ma la sua etichetta no: si deve
+ * poter leggere per riaccenderlo. */
+html[data-dm-modifica] [data-dm-nascosto]{display:revert!important}
+html[data-dm-modifica] [data-dm-nascosto]>:not([data-dm-disp-ctrl]){opacity:.38;filter:grayscale(.6)}
+html[data-dm-modifica] [data-dm-disp-titolo]{display:none!important}
+html[data-dm-modifica] [data-dm-disp-vuoto]{min-height:56px}
+/* La barra in basso non copre l'ultima riga: la pagina ha spazio sotto. */
+html[data-dm-modifica] section.page.active{padding-bottom:calc(220px + env(safe-area-inset-bottom,0px))!important}
 [data-dm-misura="larga"]{grid-column:1/-1!important}
 .dm-page-mast{position:relative}
 #page-home{position:relative}
 .dm-disp-tasto-home{top:0;right:4px}
-.dm-disp-tasto{position:absolute;top:12px;right:12px;z-index:3;width:40px;height:40px;border-radius:14px;
-  border:1px solid color-mix(in srgb,var(--text,#0f172a) 12%,transparent);background:var(--card-bg,#fff);
-  font-size:18px;line-height:1;cursor:pointer;box-shadow:0 6px 16px -10px rgba(15,23,42,.4)}
+.dm-disp-tasto{position:absolute;top:12px;right:12px;z-index:3;min-width:40px;height:40px;border-radius:14px;padding:0 10px;
+  border:1px solid color-mix(in srgb,var(--text,#0f172a) 12%,transparent);background:var(--card-bg,#fff);color:var(--text,#0f172a);
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  font:600 14px/1 inherit;cursor:pointer;box-shadow:0 6px 16px -10px rgba(15,23,42,.4)}
+.dm-disp-tasto>span[aria-hidden]{font-size:18px}
+.dm-disp-tasto-parola{display:none}
+@media (min-width:720px){.dm-disp-tasto{padding:0 14px 0 12px}.dm-disp-tasto-parola{display:inline}}
 html[data-dm-modifica] .dm-disp-tasto{background:var(--accent,#2563eb);color:#fff}
 html[data-dm-modifica] [data-dm-disp-voce]{position:relative;outline:2px dashed color-mix(in srgb,var(--accent,#2563eb) 55%,transparent);
   outline-offset:2px;border-radius:16px}
 html[data-dm-modifica] [data-dm-disp-elenco]>[data-dm-disp-voce]{cursor:grab}
 /* I riquadri: la barra coi tasti sta in cima al riquadro, dentro (molte
  * carte tagliano quello che esce), e il contenuto scende di quanto serve. */
-html[data-dm-modifica] [data-dm-disp-tipo="riquadri"]>[data-dm-disp-voce]{padding-top:52px!important}
 [data-dm-disp-ctrl]{position:absolute;z-index:6;display:flex;gap:6px;align-items:center}
 [data-dm-disp-ctrl="riquadro"]{top:8px;left:8px;right:8px;height:36px}
-[data-dm-disp-ctrl="voce"]{top:6px;right:6px}
+/* Le voci di un elenco: una riga di strumenti sopra la carta, a sinistra —
+ * il segno «⠿» e l'occhio — e la carta scende di quanto serve, cosi' i suoi
+ * comandi (l'interruttore di una luce) non stanno mai sotto l'occhio. */
+html[data-dm-modifica] [data-dm-disp-tipo="voci"]>[data-dm-disp-voce]{height:auto!important;min-height:0!important}
+[data-dm-disp-ctrl="voce"]{top:6px;left:8px;right:8px;height:30px;gap:8px}
+[data-dm-disp-ctrl="voce"] .dm-disp-segno{font:700 15px/1 inherit;color:var(--accent,#2563eb);letter-spacing:-1px}
+.dm-disp-nota{font:italic 600 12px/1 inherit;opacity:.9;white-space:nowrap}
+[data-dm-disp-ctrl="voce"] .dm-disp-nota{color:var(--text-dim,#64748b);margin-right:auto}
 [data-dm-disp-ctrl] button{height:36px;min-width:36px;border-radius:12px;border:1px solid color-mix(in srgb,var(--text,#0f172a) 14%,transparent);
   background:var(--card-bg,#fff);color:var(--text,#0f172a);font:600 13px/1 inherit;cursor:pointer;
   box-shadow:0 4px 12px -8px rgba(15,23,42,.5);display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 10px}
-[data-dm-disp-ctrl="voce"] button{height:30px;min-width:30px;border-radius:999px;padding:0;font-size:13px}
+[data-dm-disp-ctrl="voce"] button{height:28px;min-width:28px;border-radius:999px;padding:0;font-size:13px}
 [data-dm-disp-ctrl] .dm-disp-maniglia[data-dm-maniglia]{margin:0 auto 0 0;cursor:grab;touch-action:none;
   width:auto;height:36px;flex:0 1 auto;max-width:min(78%,320px);
   background:var(--accent,#2563eb);border-color:transparent;color:#fff;padding:0 14px 0 10px;font-size:13px}
@@ -156627,20 +156727,26 @@ html[data-dm-modifica] [data-dm-disp-tipo="riquadri"]>[data-dm-disp-voce]{paddin
 [data-dm-disp-ctrl] button[aria-pressed="true"].dm-disp-larga{background:var(--accent,#2563eb);color:#fff}
 /* La barra sta sopra la barra delle sezioni, non sopra le voci. */
 [data-dm-disp-barra]{position:fixed;left:50%;bottom:calc(104px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:9990;
-  max-width:calc(100vw - 24px)}
+  max-width:calc(100vw - 24px);transition:opacity .15s}
+/* Mentre una voce e' in mano la barra si fa da parte, e la voce passa sopra
+ * a tutto: si deve vedere dove la si lascia. */
+html[data-dm-trascinando] [data-dm-disp-barra]{opacity:0;pointer-events:none}
+html[data-dm-modifica] [data-dm-riordina="griglia"] [data-dm-fantasma="true"]{z-index:9995!important}
+html[data-dm-modifica] [data-dm-riordina="griglia"] [data-dm-fantasma="true"]>[data-dm-disp-ctrl]{width:auto!important;height:auto!important;opacity:1!important}
 .dm-disp-barra-dentro{display:flex;gap:8px;align-items:center;flex-wrap:nowrap;justify-content:center;padding:8px 10px;border-radius:20px;
   background:var(--card-bg,#fff);color:var(--text,#0f172a);box-shadow:0 18px 40px -16px rgba(15,23,42,.55);
   border:1px solid color-mix(in srgb,var(--text,#0f172a) 12%,transparent)}
 .dm-disp-barra-dentro .dm-disp-conta{font:600 14px/1.2 inherit;padding:0 6px}
 .dm-disp-barra-dentro button{min-height:44px;padding:0 16px;border-radius:14px;border:1px solid color-mix(in srgb,var(--text,#0f172a) 14%,transparent);
-  background:transparent;color:inherit;font:600 14px/1 inherit;cursor:pointer}
+  background:transparent;color:inherit;font:600 14px/1 inherit;cursor:pointer;white-space:nowrap}
 .dm-disp-barra-dentro .dm-disp-salva{background:var(--accent,#2563eb);border-color:transparent;color:#fff}
 .dm-disp-barra-dentro .dm-disp-salva[disabled]{opacity:.45;cursor:default}
+.dm-disp-quante{font-weight:800}
 @media (max-width:560px){
   .dm-disp-barra-dentro{gap:6px;padding:6px 8px}
-  .dm-disp-barra-dentro .dm-disp-conta{font-size:13px;max-width:96px;white-space:normal}
+  .dm-disp-barra-dentro .dm-disp-conta{font-size:12.5px;white-space:nowrap;padding:0 2px}
   .dm-disp-barra-dentro .dm-disp-conta[data-vuota]{display:none}
-  .dm-disp-barra-dentro button{padding:0 12px;font-size:13px}
+  .dm-disp-barra-dentro button{padding:0 10px;font-size:13px}
 }
 `;
 function installDisposizione() {
