@@ -8246,4 +8246,7 @@ export default Object.freeze({
   "Tap": "Robinet",
   "The computer keeps its own": "L'ordinateur garde le sien",
   "The phone keeps its own": "Le téléphone garde le sien",
+  "Heater power": "Puissance de la résistance",
+  "Panel reading": "Relevé du panneau",
+  "System state": "État de l'installation",
 });

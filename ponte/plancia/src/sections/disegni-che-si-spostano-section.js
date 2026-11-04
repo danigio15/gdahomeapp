@@ -21,7 +21,10 @@
  * Un disegno si iscrive con `registraIlDisegno({ id, pagina, nome, scatola,
  * variante, nodi, ridisegna })`:
  *   - `scatola()` e' l'elemento in cui il percento e' quello del disegno;
- *   - `nodi()` dice i pezzi: { id, nome, centro: {x, y} di serie, pezzi() };
+ *   - `nodi()` dice i pezzi: { id, nome, centro: {x, y} di serie, pezzi() },
+ *     e se serve `adesso()` (dove sta senza una scelta sua: una misura che
+ *     segue il suo pezzo) e `cede` (una misura: si scosta quando le si lascia
+ *     sopra un pezzo, invece di farlo scostare);
  *   - `ridisegna()` rimette il disegno con `posizioniInUso(id, variante)`.
  */
 
@@ -36,6 +39,7 @@ import {
   posizioniPulite,
   postoLibero,
   rettangolo,
+  siToccano,
   spingi,
   stessePosizioni,
 } from "../core/posizioni-nei-disegni.js";
@@ -151,7 +155,11 @@ function ripristinaIlDisegno(voce) {
 function metti(voce, variante, nodo, punto) {
   const casella = casellaDel(voce.id, variante);
   const posizioni = { ...posizioniInUso(voce.id, variante) };
-  const serie = nodo.centro;
+  delete posizioni[nodo.id];
+  /* Dove starebbe senza una scelta sua: per una misura che segue il suo
+   * pezzo, dove l'ha portata il pezzo. */
+  state.bozza.set(casella, posizioniPulite(posizioni));
+  const serie = nodo.adesso?.() || nodo.centro;
   if (serie && Math.abs(serie.x - punto.x) < 0.05 && Math.abs(serie.y - punto.y) < 0.05)
     delete posizioni[nodo.id];
   else posizioni[nodo.id] = { x: punto.x, y: punto.y };
@@ -161,7 +169,7 @@ function metti(voce, variante, nodo, punto) {
 /* ── misurare ───────────────────────────────────────────────────────────── */
 
 function dove(voce, nodo, variante) {
-  return posizioniInUso(voce.id, variante)[nodo.id] || nodo.centro;
+  return posizioniInUso(voce.id, variante)[nodo.id] || nodo.adesso?.() || nodo.centro;
 }
 
 /** Quanto un pezzo (col suo disegno e le sue etichette) si allarga intorno
@@ -424,9 +432,10 @@ function onPuntatore(event) {
   }
   let { punto, guide, ingombro } = puntoDellaPresa(presa, event);
   if (event.type === "pointerup") {
-    /* Lasciato sopra un altro pezzo: al posto libero piu' vicino. */
+    /* Lasciato sopra un altro pezzo: al posto libero piu' vicino. Una misura
+     * invece non fa scostare il pezzo: si scosta lei (`scostaLeMisure`). */
     const occupati = presa.foto.nodi
-      .filter((n) => n.id !== presa.nodo.id)
+      .filter((n) => n.id !== presa.nodo.id && (presa.nodo.cede || !n.cede))
       .map((n) => rettangolo(presa.foto.centri.get(n.id), presa.foto.ingombri.get(n.id)));
     punto = postoLibero(punto, ingombro, occupati);
     guide = [];
@@ -435,10 +444,43 @@ function onPuntatore(event) {
   presa.voce.ridisegna?.();
   muoviNelloStrato(presa.strato, presa.nodo.id, punto, ingombro, guide);
   if (event.type === "pointerup") {
+    scostaLeMisure(presa.voce, presa.foto, presa.nodo.id);
     annullaLaPresa({ rimetti: false });
     rifaiGliStrati();
     ridisegnaLaBarra();
   }
+}
+
+/* Un pezzo lasciato sopra una misura che stava ferma: la misura va al posto
+ * libero piu' vicino, invece di restare coperta. Si muove solo chi era sotto
+ * a quello che si e' spostato (il pezzo, e le misure che si e' portato
+ * dietro); le altre restano dove sono. */
+function scostaLeMisure(voce, prima, mossoId) {
+  const dopo = fotografia(voce);
+  if (!dopo) return;
+  const spostato = (id) => {
+    const a = prima.centri.get(id);
+    const b = dopo.centri.get(id);
+    return id === mossoId || !a || !b || Math.abs(a.x - b.x) > 0.05 || Math.abs(a.y - b.y) > 0.05;
+  };
+  const centri = new Map(dopo.centri);
+  /* Le misure di quando si e' preso il pezzo: la grandezza non cambia col
+   * posto, e il posto nuovo e' quello scritto, non quello che la pagina sta
+   * ancora raggiungendo (qualche pezzo arriva con una transizione). */
+  const ingombro = (id) => prima.ingombri.get(id) || dopo.ingombri.get(id);
+  const rett = (id) => rettangolo(centri.get(id), ingombro(id));
+  const mossi = dopo.nodi.filter((n) => spostato(n.id)).map((n) => n.id);
+  let scostate = 0;
+  for (const nodo of dopo.nodi) {
+    if (!nodo.cede || mossi.includes(nodo.id)) continue;
+    if (!mossi.some((id) => siToccano(rett(nodo.id), rett(id)))) continue;
+    const occupati = dopo.nodi.filter((n) => n.id !== nodo.id).map((n) => rett(n.id));
+    const punto = postoLibero(centri.get(nodo.id), ingombro(nodo.id), occupati);
+    centri.set(nodo.id, punto);
+    metti(voce, dopo.variante, nodo, punto);
+    scostate += 1;
+  }
+  if (scostate) voce.ridisegna?.();
 }
 
 /* ── la tastiera ────────────────────────────────────────────────────────── */

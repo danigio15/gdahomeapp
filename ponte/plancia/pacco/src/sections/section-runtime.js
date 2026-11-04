@@ -567,7 +567,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-NAOWTSTW.js";
+} from "../../chunk-ASWREPKC.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -5449,6 +5449,7 @@ var SOURCE_INDEX = Object.freeze({
   "Lettore nuovo": "New player",
   "Lettori": "Players",
   "Lettori di casa ed Echo": "Home players and Echos",
+  "Lettura del pannello": "Panel reading",
   "Letture": "Readings",
   "Li crei e li modifichi da qui": "Create and edit them from here",
   "Libere 1": "Practice 1",
@@ -7918,6 +7919,7 @@ var SOURCE_INDEX = Object.freeze({
   "Stato del nodo": "Node status",
   "Stato del pagamento": "Payment status",
   "Stato dell'antifurto": "Alarm state",
+  "Stato dell'impianto": "System state",
   "Stato della caldaia": "Boiler state",
   "Stato della cottura": "Cooking status",
   "Stato di carica (SoC)": "State of charge (SoC)",
@@ -8742,6 +8744,7 @@ var SOURCE_INDEX = Object.freeze({
   "Zoom indietro": "Zoom out",
   "Zoom massimo della pioggia": "Rain zoom cap",
   "zuppa": "soaked",
+  "ΔT solare": "Solar ΔT",
   "ΔT Solare": "Solar ΔT"
 });
 function pivotKey(text) {
@@ -147644,10 +147647,7 @@ var CENTRI = Object.freeze({
 });
 var ARTE_DEL_NODO = Object.freeze({
   collector: "collettore",
-  "lead-collector": "collettore",
   tank: "accumulo",
-  "lead-alto": "accumulo",
-  "lead-basso": "accumulo",
   tap: "rubinetto"
 });
 var POSTI_DEL_NODO = Object.freeze({
@@ -147655,12 +147655,66 @@ var POSTI_DEL_NODO = Object.freeze({
   valve: "valvola",
   rpump: "ricircolo",
   collectorHit: "collettore",
-  chipCollector: "collettore",
   tankNode: "accumulo",
-  chipAlto: "accumulo",
-  chipBasso: "accumulo",
   tapTag: "rubinetto"
 });
+var MISURE7 = Object.freeze({
+  landscape: Object.freeze({
+    lettura: {
+      posto: "chipCollector",
+      segue: "collettore",
+      guida: "collector",
+      centro: [360, 39],
+      scatola: [285, 12, 435, 66]
+    },
+    alto: {
+      posto: "chipAlto",
+      segue: "accumulo",
+      guida: "alto",
+      centro: [893, 179],
+      scatola: [818, 152, 968, 206]
+    },
+    basso: {
+      posto: "chipBasso",
+      segue: "accumulo",
+      guida: "basso",
+      centro: [893, 293],
+      scatola: [818, 266, 968, 320]
+    },
+    delta: { posto: "delta", centro: [470, 236], scatola: [389, 217, 551, 255] },
+    pressione: { posto: "press", centro: [864, 37], scatola: [792, 10, 937, 64] },
+    potenza: { posto: "power", centro: [1021, 37], scatola: [942, 10, 1099, 64] }
+  }),
+  portrait: Object.freeze({
+    lettura: {
+      posto: "chipCollector",
+      segue: "collettore",
+      guida: "collector",
+      centro: [326, 33],
+      scatola: [254, 6, 398, 60]
+    },
+    alto: {
+      posto: "chipAlto",
+      segue: "accumulo",
+      guida: "alto",
+      centro: [88, 295],
+      scatola: [28, 268, 148, 322]
+    },
+    basso: {
+      posto: "chipBasso",
+      segue: "accumulo",
+      guida: "basso",
+      centro: [92, 379],
+      scatola: [28, 352, 156, 406]
+    },
+    delta: { posto: "delta", centro: [113, 24], scatola: [30, 5, 196, 43] },
+    pressione: { posto: "press", centro: [105, 527], scatola: [16, 500, 194, 554] },
+    potenza: { posto: "power", centro: [295, 527], scatola: [206, 500, 384, 554] }
+  })
+});
+function misureDelLayout(base) {
+  return Object.keys(MISURE7[base?.name] || {});
+}
 var PORTE2 = Object.freeze({
   landscape: Object.freeze({
     collettore: { caldo: { p: [378, 116], verso: "e" }, freddo: { p: [130, 300], verso: "s" } },
@@ -147709,15 +147763,23 @@ var RAGGIO = Object.freeze({ landscape: 30, portrait: 20 });
 var STACCO = Object.freeze({ landscape: 18, portrait: 12 });
 var uno2 = (n) => Math.round(n * 10) / 10 + 0;
 function nodiDelLayout(base) {
-  return Object.keys(CENTRI[base?.name] || {});
+  return [...Object.keys(CENTRI[base?.name] || {}), ...misureDelLayout(base)];
 }
+function centroDi(base, nodo3) {
+  return CENTRI[base?.name]?.[nodo3] || MISURE7[base?.name]?.[nodo3]?.centro || null;
+}
+var inPercento = (base, [x, y]) => ({
+  x: uno2(x / base.w * 1e3) / 10,
+  y: uno2(y / base.h * 1e3) / 10
+});
 function centroInPercento(base, nodo3) {
-  const c = CENTRI[base.name]?.[nodo3];
-  return c ? { x: uno2(c[0] / base.w * 1e3) / 10, y: uno2(c[1] / base.h * 1e3) / 10 } : null;
+  const c = centroDi(base, nodo3);
+  return c ? inPercento(base, c) : null;
 }
 function spostamenti(base, posizioni) {
   const uscita = {};
-  for (const [nodo3, [cx, cy]] of Object.entries(CENTRI[base?.name] || {})) {
+  for (const nodo3 of nodiDelLayout(base)) {
+    const [cx, cy] = centroDi(base, nodo3);
     const q = posizioni?.[nodo3];
     if (!q || typeof q.x !== "number" || typeof q.y !== "number") continue;
     const dx = uno2(q.x / 100 * base.w - cx);
@@ -147726,6 +147788,32 @@ function spostamenti(base, posizioni) {
     uscita[nodo3] = [dx, dy];
   }
   return uscita;
+}
+function spostamentoDellaMisura(base, nodo3, spostati) {
+  if (spostati[nodo3]) return spostati[nodo3];
+  const misura8 = MISURE7[base.name]?.[nodo3];
+  const d = misura8?.segue && spostati[misura8.segue];
+  if (!d) return null;
+  const [x0, y0, x1, y1] = misura8.scatola;
+  const tra6 = (v, a, b2) => Math.min(Math.max(v, a), b2);
+  return [uno2(tra6(d[0], -x0, base.w - x1)), uno2(tra6(d[1], -y0, base.h - y1))];
+}
+function centroAdesso(base, posizioni, nodo3) {
+  const c = centroDi(base, nodo3);
+  if (!c) return null;
+  const spostati = spostamenti(base, posizioni);
+  const d = spostati[nodo3] || spostamentoDellaMisura(base, nodo3, spostati);
+  return d ? inPercento(base, [c[0] + d[0], c[1] + d[1]]) : inPercento(base, c);
+}
+function guidaFra(scatola, punto3) {
+  const [x0, y0, x1, y1] = scatola;
+  const [px, py] = punto3;
+  const fuoriX = px < x0 ? x0 - px : px > x1 ? px - x1 : 0;
+  const fuoriY = py < y0 ? y0 - py : py > y1 ? py - y1 : 0;
+  const mx = (x0 + x1) / 2;
+  const my = (y0 + y1) / 2;
+  if (fuoriX >= fuoriY) return [px < mx ? x0 : x1, my];
+  return [mx, py < my ? y0 : y1];
 }
 var piu = (p, d) => d ? [uno2(p[0] + d[0]), uno2(p[1] + d[1])] : p;
 function tappeDelTubo(base, id, spostati) {
@@ -147756,10 +147844,29 @@ function layoutConLePosizioni(base, posizioni) {
     const d = spostati[POSTI_DEL_NODO[nome]];
     places[nome] = d ? [uno2(posto[0] + d[0]), uno2(posto[1] + d[1]), ...posto.slice(2)] : posto;
   }
+  const leaders = { ...base.leaders };
+  for (const [nodo3, misura8] of Object.entries(MISURE7[base.name])) {
+    const d = spostamentoDellaMisura(base, nodo3, spostati);
+    const posto = PLACES[base.name][misura8.posto];
+    if (d) places[misura8.posto] = [uno2(posto[0] + d[0]), uno2(posto[1] + d[1])];
+    if (!misura8.guida) continue;
+    const [x1, y1, x2, y2] = base.leaders[misura8.guida];
+    const dp = spostati[misura8.segue];
+    const fine = dp ? [uno2(x2 + dp[0]), uno2(y2 + dp[1])] : [x2, y2];
+    if (!spostati[nodo3]) {
+      if (dp) leaders[misura8.guida] = [uno2(x1 + d[0]), uno2(y1 + d[1]), ...fine];
+      continue;
+    }
+    const [dx, dy] = spostati[nodo3];
+    const [a, b2, c, e] = misura8.scatola;
+    const inizio = guidaFra([a + dx, b2 + dy, c + dx, e + dy], fine);
+    leaders[misura8.guida] = [uno2(inizio[0]), uno2(inizio[1]), ...fine];
+  }
   return Object.freeze({
     ...base,
     routes: Object.freeze(routes),
     places: Object.freeze(places),
+    leaders: Object.freeze(leaders),
     spostati: Object.freeze(spostati),
     firma: firmaDellePosizioni(posizioni)
   });
@@ -147767,7 +147874,7 @@ function layoutConLePosizioni(base, posizioni) {
 
 // src/core/disposizione.js
 var CHIAVE_DISPOSIZIONE = "cd_disposizione";
-var MISURE7 = Object.freeze(["normale", "larga"]);
+var MISURE8 = Object.freeze(["normale", "larga"]);
 var ID_BUONO3 = /^[^\s"<>]{1,160}$/;
 var pulita2 = (lista7) => [
   ...new Set(
@@ -147780,7 +147887,7 @@ function sceltaPulita(scelta3) {
   const nascosti = pulita2(grezza.nascosti);
   const misure = {};
   for (const [id, misura8] of Object.entries(grezza.misure || {})) {
-    if (ID_BUONO3.test(id) && MISURE7.includes(misura8) && misura8 !== "normale") misure[id] = misura8;
+    if (ID_BUONO3.test(id) && MISURE8.includes(misura8) && misura8 !== "normale") misure[id] = misura8;
   }
   return { ordine, nascosti, misure };
 }
@@ -149293,14 +149400,16 @@ function ripristinaIlDisegno(voce3) {
 function metti5(voce3, variante, nodo3, punto3) {
   const casella7 = casellaDel(voce3.id, variante);
   const posizioni = { ...posizioniInUso(voce3.id, variante) };
-  const serie2 = nodo3.centro;
+  delete posizioni[nodo3.id];
+  state164.bozza.set(casella7, posizioniPulite(posizioni));
+  const serie2 = nodo3.adesso?.() || nodo3.centro;
   if (serie2 && Math.abs(serie2.x - punto3.x) < 0.05 && Math.abs(serie2.y - punto3.y) < 0.05)
     delete posizioni[nodo3.id];
   else posizioni[nodo3.id] = { x: punto3.x, y: punto3.y };
   state164.bozza.set(casella7, posizioniPulite(posizioni));
 }
 function dove2(voce3, nodo3, variante) {
-  return posizioniInUso(voce3.id, variante)[nodo3.id] || nodo3.centro;
+  return posizioniInUso(voce3.id, variante)[nodo3.id] || nodo3.adesso?.() || nodo3.centro;
 }
 function ingombroDi(nodo3, centro2, box2) {
   let x0 = Infinity;
@@ -149511,7 +149620,7 @@ function onPuntatore2(event) {
   }
   let { punto: punto3, guide, ingombro } = puntoDellaPresa(presa, event);
   if (event.type === "pointerup") {
-    const occupati = presa.foto.nodi.filter((n) => n.id !== presa.nodo.id).map((n) => rettangolo(presa.foto.centri.get(n.id), presa.foto.ingombri.get(n.id)));
+    const occupati = presa.foto.nodi.filter((n) => n.id !== presa.nodo.id && (presa.nodo.cede || !n.cede)).map((n) => rettangolo(presa.foto.centri.get(n.id), presa.foto.ingombri.get(n.id)));
     punto3 = postoLibero(punto3, ingombro, occupati);
     guide = [];
   }
@@ -149519,10 +149628,35 @@ function onPuntatore2(event) {
   presa.voce.ridisegna?.();
   muoviNelloStrato(presa.strato, presa.nodo.id, punto3, ingombro, guide);
   if (event.type === "pointerup") {
+    scostaLeMisure(presa.voce, presa.foto, presa.nodo.id);
     annullaLaPresa2({ rimetti: false });
     rifaiGliStrati();
     ridisegnaLaBarra();
   }
+}
+function scostaLeMisure(voce3, prima, mossoId) {
+  const dopo = fotografia(voce3);
+  if (!dopo) return;
+  const spostato = (id) => {
+    const a = prima.centri.get(id);
+    const b2 = dopo.centri.get(id);
+    return id === mossoId || !a || !b2 || Math.abs(a.x - b2.x) > 0.05 || Math.abs(a.y - b2.y) > 0.05;
+  };
+  const centri = new Map(dopo.centri);
+  const ingombro = (id) => prima.ingombri.get(id) || dopo.ingombri.get(id);
+  const rett = (id) => rettangolo(centri.get(id), ingombro(id));
+  const mossi = dopo.nodi.filter((n) => spostato(n.id)).map((n) => n.id);
+  let scostate = 0;
+  for (const nodo3 of dopo.nodi) {
+    if (!nodo3.cede || mossi.includes(nodo3.id)) continue;
+    if (!mossi.some((id) => siToccano(rett(nodo3.id), rett(id)))) continue;
+    const occupati = dopo.nodi.filter((n) => n.id !== nodo3.id).map((n) => rett(n.id));
+    const punto3 = postoLibero(centri.get(nodo3.id), ingombro(nodo3.id), occupati);
+    centri.set(nodo3.id, punto3);
+    metti5(voce3, dopo.variante, nodo3, punto3);
+    scostate += 1;
+  }
+  if (scostate) voce3.ridisegna?.();
 }
 function onTasto(event) {
   if (event.key === "Escape" && state164.presa) {
@@ -149993,6 +150127,9 @@ function stylesheet() {
     text-align:left;
     transform:none;
     overflow:visible;
+    /* The legacy cards ease every property: a moved reading would slide
+       across the drawing, and lag behind the hand while dragged. */
+    transition-property:background-color, border-color, box-shadow, color, opacity;
   }
   #page-boiler .dm-st-plant > .syn-solar-content::before,
   #page-boiler .dm-st-plant .probe::before,
@@ -150703,7 +150840,20 @@ function moveArt(svg3, layout) {
   svg3.dataset.dmStPosizioni = signature4;
   const moved = layout.spostati || {};
   for (const group of svg3.querySelectorAll("[data-dm-st-art]")) {
-    const d = moved[ARTE_DEL_NODO[group.getAttribute("data-dm-st-art")]];
+    const art = group.getAttribute("data-dm-st-art");
+    const leader = art.startsWith("lead-") ? layout.leaders?.[art.slice(5)] : null;
+    if (leader) {
+      const [x1, y1, x2, y2] = leader;
+      const d2 = `M ${x1} ${y1} L ${x2} ${y2}`;
+      const line = group.querySelector(".dm-st-lead");
+      if (line && line.getAttribute("d") !== d2) line.setAttribute("d", d2);
+      const dot = group.querySelector(".dm-st-lead-dot");
+      if (dot && dot.getAttribute("cx") !== String(x2)) dot.setAttribute("cx", String(x2));
+      if (dot && dot.getAttribute("cy") !== String(y2)) dot.setAttribute("cy", String(y2));
+      group.removeAttribute("transform");
+      continue;
+    }
+    const d = moved[ARTE_DEL_NODO[art]];
     if (d) group.setAttribute("transform", `translate(${d[0]} ${d[1]})`);
     else group.removeAttribute("transform");
   }
@@ -150723,6 +150873,9 @@ function movedPlaceRules(layout) {
     chipCollector: ".dm-st-plant > .syn-solar-content",
     chipAlto: '.dm-st-plant .probe[data-dm-st-probe="alto"]',
     chipBasso: '.dm-st-plant .probe[data-dm-st-probe="basso"]',
+    delta: '.dm-st-plant > [data-dm-st-kpi="delta"]',
+    press: '.dm-st-plant > [data-dm-st-kpi="press"]',
+    power: '.dm-st-plant > [data-dm-st-kpi="power"]',
     tapTag: ".dm-st-tap-tag",
     collectorHit: ".dm-st-node-collector"
   };
@@ -150732,6 +150885,25 @@ function movedPlaceRules(layout) {
     if (place && place !== base[name]) rules.push(at(sel2, place));
   }
   return rules.join("\n");
+}
+var PILL = "stato";
+var PILL_SERIE = Object.freeze({ computer: { x: 3.3, y: 6.3 }, telefono: { x: 50, y: 95.2 } });
+function movedPillRule(base) {
+  const q = posizioniInUso(DISEGNO_DEL_SOLARE, VARIANTE_DEL_LAYOUT[base.name])[PILL];
+  if (!q) return "";
+  const pw = `min(100cqw, 100cqh * ${base.w} / ${base.h})`;
+  const ph = `min(100cqh, 100cqw * ${base.h} / ${base.w})`;
+  return `html #page-boiler .dm-st-scene > .dm-st-live{left:calc((100cqw - ${pw}) / 2 + ${pw} * ${q.x / 100}) !important;top:calc((100cqh - ${ph}) / 2 + ${ph} * ${q.y / 100}) !important;right:auto !important;bottom:auto !important;transform:translate(-50%, -50%)}`;
+}
+function pillCentre() {
+  const plant = doc.querySelector("#page-boiler .dm-st-plant")?.getBoundingClientRect?.();
+  const pill = doc.querySelector("#page-boiler .dm-st-live")?.getBoundingClientRect?.();
+  if (!plant || !pill || plant.width < 1 || plant.height < 1 || pill.width < 1) return null;
+  const at = (v) => Math.round(v * 100) / 100;
+  return {
+    x: at((pill.left + pill.width / 2 - plant.left) / plant.width * 100),
+    y: at((pill.top + pill.height / 2 - plant.top) / plant.height * 100)
+  };
 }
 function positionsOf(base) {
   return layoutConLePosizioni(
@@ -150744,7 +150916,7 @@ function placeMovedPieces() {
     [LANDSCAPE, `not all and ${PORTRAIT_QUERY}`],
     [PORTRAIT, PORTRAIT_QUERY]
   ].map(([base, media4]) => {
-    const rules = movedPlaceRules(positionsOf(base));
+    const rules = [movedPlaceRules(positionsOf(base)), movedPillRule(base)].filter(Boolean).join("\n");
     return rules ? `@media ${media4} {
 ${rules}
 }` : "";
@@ -150995,20 +151167,44 @@ var NODE_NAMES = {
   pompa: () => t("Pompa solare", "Solar pump"),
   valvola: () => t("Valvola", "Valve"),
   ricircolo: () => t("Pompa di ricircolo", "Recirculation pump"),
-  rubinetto: () => t("Rubinetto", "Tap")
+  rubinetto: () => t("Rubinetto", "Tap"),
+  lettura: () => t("Lettura del pannello", "Panel reading"),
+  alto: () => t("Accumulo alto", "Tank top"),
+  basso: () => t("Accumulo basso", "Tank bottom"),
+  delta: () => t("ΔT solare", "Solar ΔT"),
+  pressione: () => t("Pressione", "Pressure"),
+  potenza: () => t("Potenza boiler", "Heater power"),
+  [PILL]: () => t("Stato dell'impianto", "System state")
 };
 var NODE_PIECES = {
-  collettore: ['[data-dm-st-art="collector"]', ".dm-st-plant > .syn-solar-content"],
-  accumulo: [
-    '[data-dm-st-art="tank"]',
-    '.dm-st-plant .probe[data-dm-st-probe="alto"]',
-    '.dm-st-plant .probe[data-dm-st-probe="basso"]'
+  /* The still parts only: the light sweeping the glass is clipped to it but
+   * its box runs off the panel, and would make the piece look twice as big. */
+  collettore: [
+    '[data-dm-st-art="collector"] .dm-st-frame',
+    '[data-dm-st-art="collector"] .dm-st-stand'
   ],
-  pompa: ["#syn-p-solare"],
-  valvola: ["#syn-v-chiave"],
-  ricircolo: ["#syn-p-ricircolo"],
-  rubinetto: ['[data-dm-st-art="tap"]']
+  accumulo: [
+    '[data-dm-st-art="tank"] .dm-st-tank-body',
+    '[data-dm-st-art="tank"] .dm-st-tank-cap',
+    ".dm-st-node-tank"
+  ],
+  /* With their names: a reading dropped there would cover them. */
+  pompa: ["#syn-p-solare", "#syn-p-solare .lbl"],
+  valvola: ["#syn-v-chiave", "#syn-v-chiave .lbl"],
+  ricircolo: ["#syn-p-ricircolo", "#syn-p-ricircolo .lbl"],
+  rubinetto: ['[data-dm-st-art="tap"]', ".dm-st-tap-tag"],
+  lettura: [".dm-st-plant > .syn-solar-content"],
+  alto: ['.dm-st-plant .probe[data-dm-st-probe="alto"]'],
+  basso: ['.dm-st-plant .probe[data-dm-st-probe="basso"]'],
+  delta: ['.dm-st-plant > [data-dm-st-kpi="delta"]'],
+  pressione: ['.dm-st-plant > [data-dm-st-kpi="press"]'],
+  potenza: ['.dm-st-plant > [data-dm-st-kpi="power"]'],
+  [PILL]: ["#page-boiler .dm-st-scene > .dm-st-live"]
 };
+function piecesOf(id) {
+  const plant = doc.querySelector("#page-boiler .dm-st-plant");
+  return (NODE_PIECES[id] || []).map((sel2) => sel2.startsWith("#page-boiler") ? doc.querySelector(sel2) : plant?.querySelector(sel2)).filter(visiblePiece);
+}
 function registerTheDrawing() {
   registraIlDisegno({
     id: DISEGNO_DEL_SOLARE,
@@ -151018,15 +151214,32 @@ function registerTheDrawing() {
     variante: () => VARIANTE_DEL_LAYOUT[baseLayout().name],
     nodi: () => {
       const base = baseLayout();
-      const plant = doc.querySelector("#page-boiler .dm-st-plant");
-      return nodiDelLayout(base).filter(
-        (id) => (NODE_PIECES[id] || []).some((sel2) => visiblePiece(plant?.querySelector(sel2)))
-      ).map((id) => ({
+      const variante = VARIANTE_DEL_LAYOUT[base.name];
+      const misure = new Set(misureDelLayout(base));
+      const nodi = nodiDelLayout(base).filter((id) => piecesOf(id).length).map((id) => ({
         id,
         nome: NODE_NAMES[id]?.() || id,
         centro: centroInPercento(base, id),
-        pezzi: () => (NODE_PIECES[id] || []).map((sel2) => plant?.querySelector(sel2)).filter(visiblePiece)
+        /* A reading that follows its piece is where the piece took it. */
+        adesso: () => centroAdesso(base, posizioniInUso(DISEGNO_DEL_SOLARE, variante), id),
+        /* A reading steps aside when a piece is dropped on it. */
+        cede: misure.has(id),
+        pezzi: () => piecesOf(id)
       }));
+      if (piecesOf(PILL).length) {
+        const centro2 = posizioniInUso(DISEGNO_DEL_SOLARE, variante)[PILL] ? state165.pillSerie?.[variante] || PILL_SERIE[variante] : pillCentre();
+        if (centro2) {
+          state165.pillSerie = { ...state165.pillSerie, [variante]: centro2 };
+          nodi.push({
+            id: PILL,
+            nome: NODE_NAMES[PILL](),
+            centro: centro2,
+            cede: true,
+            pezzi: () => piecesOf(PILL)
+          });
+        }
+      }
+      return nodi;
     },
     ridisegna: redrawPositions
   });

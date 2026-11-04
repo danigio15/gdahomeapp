@@ -8200,4 +8200,7 @@ export default Object.freeze({
   "Tap": "Kraan",
   "The computer keeps its own": "De computer houdt zijn eigen",
   "The phone keeps its own": "De telefoon houdt zijn eigen",
+  "Heater power": "Vermogen boilerelement",
+  "Panel reading": "Paneelmeting",
+  "System state": "Status van de installatie",
 });

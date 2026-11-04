@@ -8188,4 +8188,7 @@ export default Object.freeze({
   "Tap": "Kran",
   "The computer keeps its own": "Komputer zachowuje swój",
   "The phone keeps its own": "Telefon zachowuje swój",
+  "Heater power": "Moc grzałki",
+  "Panel reading": "Odczyt panelu",
+  "System state": "Stan instalacji",
 });

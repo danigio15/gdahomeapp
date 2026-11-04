@@ -8140,4 +8140,7 @@ export default Object.freeze({
   "Tap": "수도꼭지",
   "The computer keeps its own": "컴퓨터는 자체 배치를 유지합니다",
   "The phone keeps its own": "휴대폰은 자체 배치를 유지합니다",
+  "Heater power": "히터 출력",
+  "Panel reading": "패널 측정값",
+  "System state": "시스템 상태",
 });

@@ -8030,4 +8030,7 @@ export default Object.freeze({
   "Tap": "水龙头",
   "The computer keeps its own": "电脑保留自己的布局",
   "The phone keeps its own": "手机保留自己的布局",
+  "Heater power": "加热器功率",
+  "Panel reading": "面板读数",
+  "System state": "系统状态",
 });

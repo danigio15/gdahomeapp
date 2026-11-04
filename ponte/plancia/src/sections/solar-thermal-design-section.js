@@ -72,8 +72,10 @@ import {
   PLACES,
   PORTRAIT,
   VARIANTE_DEL_LAYOUT,
+  centroAdesso,
   centroInPercento,
   layoutConLePosizioni,
+  misureDelLayout,
   nodiDelLayout,
 } from "../core/il-disegno-del-solare.js";
 import { posizioniInUso, registraIlDisegno } from "./disegni-che-si-spostano-section.js";
@@ -448,6 +450,9 @@ function stylesheet() {
     text-align:left;
     transform:none;
     overflow:visible;
+    /* The legacy cards ease every property: a moved reading would slide
+       across the drawing, and lag behind the hand while dragged. */
+    transition-property:background-color, border-color, box-shadow, color, opacity;
   }
   #page-boiler .dm-st-plant > .syn-solar-content::before,
   #page-boiler .dm-st-plant .probe::before,
@@ -1199,7 +1204,21 @@ function moveArt(svg, layout) {
   svg.dataset.dmStPosizioni = signature;
   const moved = layout.spostati || {};
   for (const group of svg.querySelectorAll("[data-dm-st-art]")) {
-    const d = moved[ARTE_DEL_NODO[group.getAttribute("data-dm-st-art")]];
+    const art = group.getAttribute("data-dm-st-art");
+    /* A leader runs from its reading to its piece: both ends can move. */
+    const leader = art.startsWith("lead-") ? layout.leaders?.[art.slice(5)] : null;
+    if (leader) {
+      const [x1, y1, x2, y2] = leader;
+      const d = `M ${x1} ${y1} L ${x2} ${y2}`;
+      const line = group.querySelector(".dm-st-lead");
+      if (line && line.getAttribute("d") !== d) line.setAttribute("d", d);
+      const dot = group.querySelector(".dm-st-lead-dot");
+      if (dot && dot.getAttribute("cx") !== String(x2)) dot.setAttribute("cx", String(x2));
+      if (dot && dot.getAttribute("cy") !== String(y2)) dot.setAttribute("cy", String(y2));
+      group.removeAttribute("transform");
+      continue;
+    }
+    const d = moved[ARTE_DEL_NODO[art]];
     if (d) group.setAttribute("transform", `translate(${d[0]} ${d[1]})`);
     else group.removeAttribute("transform");
   }
@@ -1223,6 +1242,9 @@ function movedPlaceRules(layout) {
     chipCollector: ".dm-st-plant > .syn-solar-content",
     chipAlto: '.dm-st-plant .probe[data-dm-st-probe="alto"]',
     chipBasso: '.dm-st-plant .probe[data-dm-st-probe="basso"]',
+    delta: '.dm-st-plant > [data-dm-st-kpi="delta"]',
+    press: '.dm-st-plant > [data-dm-st-kpi="press"]',
+    power: '.dm-st-plant > [data-dm-st-kpi="power"]',
     tapTag: ".dm-st-tap-tag",
     collectorHit: ".dm-st-node-collector",
   };
@@ -1232,6 +1254,31 @@ function movedPlaceRules(layout) {
     if (place && place !== base[name]) rules.push(at(sel, place));
   }
   return rules.join("\n");
+}
+
+/* The live pill sits in the scene, over a corner of the drawing. Moved, it
+ * goes to its point of the drawing, which is centred in the scene. */
+const PILL = "stato";
+const PILL_SERIE = Object.freeze({ computer: { x: 3.3, y: 6.3 }, telefono: { x: 50, y: 95.2 } });
+
+function movedPillRule(base) {
+  const q = posizioniInUso(DISEGNO_DEL_SOLARE, VARIANTE_DEL_LAYOUT[base.name])[PILL];
+  if (!q) return "";
+  const pw = `min(100cqw, 100cqh * ${base.w} / ${base.h})`;
+  const ph = `min(100cqh, 100cqw * ${base.h} / ${base.w})`;
+  return `html #page-boiler .dm-st-scene > .dm-st-live{left:calc((100cqw - ${pw}) / 2 + ${pw} * ${q.x / 100}) !important;top:calc((100cqh - ${ph}) / 2 + ${ph} * ${q.y / 100}) !important;right:auto !important;bottom:auto !important;transform:translate(-50%, -50%)}`;
+}
+
+/** Where the pill stands now, in percent of the drawing. */
+function pillCentre() {
+  const plant = doc.querySelector("#page-boiler .dm-st-plant")?.getBoundingClientRect?.();
+  const pill = doc.querySelector("#page-boiler .dm-st-live")?.getBoundingClientRect?.();
+  if (!plant || !pill || plant.width < 1 || plant.height < 1 || pill.width < 1) return null;
+  const at = (v) => Math.round(v * 100) / 100;
+  return {
+    x: at(((pill.left + pill.width / 2 - plant.left) / plant.width) * 100),
+    y: at(((pill.top + pill.height / 2 - plant.top) / plant.height) * 100),
+  };
 }
 
 function positionsOf(base) {
@@ -1247,7 +1294,9 @@ function placeMovedPieces() {
     [PORTRAIT, PORTRAIT_QUERY],
   ]
     .map(([base, media]) => {
-      const rules = movedPlaceRules(positionsOf(base));
+      const rules = [movedPlaceRules(positionsOf(base)), movedPillRule(base)]
+        .filter(Boolean)
+        .join("\n");
       return rules ? `@media ${media} {\n${rules}\n}` : "";
     })
     .filter(Boolean)
@@ -1553,21 +1602,49 @@ const NODE_NAMES = {
   valvola: () => t("Valvola", "Valve"),
   ricircolo: () => t("Pompa di ricircolo", "Recirculation pump"),
   rubinetto: () => t("Rubinetto", "Tap"),
+  lettura: () => t("Lettura del pannello", "Panel reading"),
+  alto: () => t("Accumulo alto", "Tank top"),
+  basso: () => t("Accumulo basso", "Tank bottom"),
+  delta: () => t("ΔT solare", "Solar ΔT"),
+  pressione: () => t("Pressione", "Pressure"),
+  potenza: () => t("Potenza boiler", "Heater power"),
+  [PILL]: () => t("Stato dell'impianto", "System state"),
 };
 
-/* What moves with each piece, to measure it and outline it. */
+/* What moves with each piece, to measure it and outline it. The readings are
+ * pieces of their own: they follow their piece until moved on their own. */
 const NODE_PIECES = {
-  collettore: ['[data-dm-st-art="collector"]', ".dm-st-plant > .syn-solar-content"],
-  accumulo: [
-    '[data-dm-st-art="tank"]',
-    '.dm-st-plant .probe[data-dm-st-probe="alto"]',
-    '.dm-st-plant .probe[data-dm-st-probe="basso"]',
+  /* The still parts only: the light sweeping the glass is clipped to it but
+   * its box runs off the panel, and would make the piece look twice as big. */
+  collettore: [
+    '[data-dm-st-art="collector"] .dm-st-frame',
+    '[data-dm-st-art="collector"] .dm-st-stand',
   ],
-  pompa: ["#syn-p-solare"],
-  valvola: ["#syn-v-chiave"],
-  ricircolo: ["#syn-p-ricircolo"],
-  rubinetto: ['[data-dm-st-art="tap"]'],
+  accumulo: [
+    '[data-dm-st-art="tank"] .dm-st-tank-body',
+    '[data-dm-st-art="tank"] .dm-st-tank-cap',
+    ".dm-st-node-tank",
+  ],
+  /* With their names: a reading dropped there would cover them. */
+  pompa: ["#syn-p-solare", "#syn-p-solare .lbl"],
+  valvola: ["#syn-v-chiave", "#syn-v-chiave .lbl"],
+  ricircolo: ["#syn-p-ricircolo", "#syn-p-ricircolo .lbl"],
+  rubinetto: ['[data-dm-st-art="tap"]', ".dm-st-tap-tag"],
+  lettura: [".dm-st-plant > .syn-solar-content"],
+  alto: ['.dm-st-plant .probe[data-dm-st-probe="alto"]'],
+  basso: ['.dm-st-plant .probe[data-dm-st-probe="basso"]'],
+  delta: ['.dm-st-plant > [data-dm-st-kpi="delta"]'],
+  pressione: ['.dm-st-plant > [data-dm-st-kpi="press"]'],
+  potenza: ['.dm-st-plant > [data-dm-st-kpi="power"]'],
+  [PILL]: ["#page-boiler .dm-st-scene > .dm-st-live"],
 };
+
+function piecesOf(id) {
+  const plant = doc.querySelector("#page-boiler .dm-st-plant");
+  return (NODE_PIECES[id] || [])
+    .map((sel) => (sel.startsWith("#page-boiler") ? doc.querySelector(sel) : plant?.querySelector(sel)))
+    .filter(visiblePiece);
+}
 
 function registerTheDrawing() {
   registraIlDisegno({
@@ -1578,18 +1655,40 @@ function registerTheDrawing() {
     variante: () => VARIANTE_DEL_LAYOUT[baseLayout().name],
     nodi: () => {
       const base = baseLayout();
-      const plant = doc.querySelector("#page-boiler .dm-st-plant");
-      return nodiDelLayout(base)
-        .filter((id) =>
-          (NODE_PIECES[id] || []).some((sel) => visiblePiece(plant?.querySelector(sel))),
-        )
+      const variante = VARIANTE_DEL_LAYOUT[base.name];
+      const misure = new Set(misureDelLayout(base));
+      const nodi = nodiDelLayout(base)
+        .filter((id) => piecesOf(id).length)
         .map((id) => ({
           id,
           nome: NODE_NAMES[id]?.() || id,
           centro: centroInPercento(base, id),
-          pezzi: () =>
-            (NODE_PIECES[id] || []).map((sel) => plant?.querySelector(sel)).filter(visiblePiece),
+          /* A reading that follows its piece is where the piece took it. */
+          adesso: () =>
+            centroAdesso(base, posizioniInUso(DISEGNO_DEL_SOLARE, variante), id),
+          /* A reading steps aside when a piece is dropped on it. */
+          cede: misure.has(id),
+          pezzi: () => piecesOf(id),
         }));
+      if (piecesOf(PILL).length) {
+        /* Where it stands by the sheet, measured while it is there (it sits in
+         * pixels from the scene's corner); once moved, the last measure, or
+         * about where the sheet puts it. */
+        const centro = posizioniInUso(DISEGNO_DEL_SOLARE, variante)[PILL]
+          ? state.pillSerie?.[variante] || PILL_SERIE[variante]
+          : pillCentre();
+        if (centro) {
+          state.pillSerie = { ...state.pillSerie, [variante]: centro };
+          nodi.push({
+            id: PILL,
+            nome: NODE_NAMES[PILL](),
+            centro,
+            cede: true,
+            pezzi: () => piecesOf(PILL),
+          });
+        }
+      }
+      return nodi;
     },
     ridisegna: redrawPositions,
   });

@@ -34,12 +34,15 @@ import {
 import {
   CENTRI,
   LANDSCAPE,
+  MISURE,
   PLACES,
   PORTE,
   PORTRAIT,
   TUBI,
+  centroAdesso,
   centroInPercento,
   layoutConLePosizioni,
+  misureDelLayout,
   nodiDelLayout,
 } from "../src/core/il-disegno-del-solare.js";
 import { CONFIG_KEYS, CONFIG_KEYS_REVISION } from "../src/core/chiavi-di-configurazione.js";
@@ -321,5 +324,86 @@ test("ogni pezzo del solare ha un centro dentro il disegno e le sue porte", () =
         assert.ok(CENTRI[base.name][nodo], nodo);
         if (porta) assert.ok(PORTE[base.name][nodo][porta]?.verso, `${nodo}.${porta}`);
       }
+  }
+});
+
+/* «anche le misure che oggi restano ferme devono potersi spostare, con le
+ * loro linee guida che seguono» */
+test("le misure del solare si spostano: stanno nel disegno e hanno il loro posto", () => {
+  for (const base of [LANDSCAPE, PORTRAIT]) {
+    assert.deepEqual(misureDelLayout(base), [
+      "lettura",
+      "alto",
+      "basso",
+      "delta",
+      "pressione",
+      "potenza",
+    ]);
+    for (const nodo of misureDelLayout(base)) {
+      const { posto, centro, scatola } = MISURE[base.name][nodo];
+      assert.ok(PLACES[base.name][posto], `${nodo}: ${posto}`);
+      assert.ok(nodiDelLayout(base).includes(nodo));
+      const [x0, y0, x1, y1] = scatola;
+      assert.ok(x0 < centro[0] && centro[0] < x1 && y0 < centro[1] && centro[1] < y1, nodo);
+      assert.ok(x0 >= 0 && y0 >= 0 && x1 <= base.w && y1 <= base.h, nodo);
+    }
+    /* Senza scelta: lo stesso disegno, linee guida comprese. */
+    assert.equal(layoutConLePosizioni(base, {}), base);
+    assert.deepEqual(centroAdesso(base, {}, "alto"), centroInPercento(base, "alto"));
+  }
+});
+
+test("una misura segue il suo pezzo finche' non la si sposta da sola", () => {
+  const base = LANDSCAPE;
+  const scelta = { accumulo: { x: 60, y: 50.23 } };
+  const l = layoutConLePosizioni(base, scelta);
+  const [dx, dy] = l.spostati.accumulo;
+  assert.ok(Math.abs(dx) > 1);
+  /* La sonda e la sua linea si spostano con l'accumulo, tutte e due. */
+  assert.deepEqual(l.places.chipAlto, [818 + dx, 152 + dy]);
+  assert.deepEqual(l.leaders.alto, [818 + dx, 180 + dy, 739 + dx, 140 + dy]);
+  assert.equal(l.spostati.alto, undefined);
+  const qui = centroAdesso(base, scelta, "alto");
+  assert.ok(Math.abs(qui.x - ((893 + dx) / 1100) * 100) < 0.1);
+  /* Le misure da sole restano dove sono. */
+  assert.equal(l.places.delta, PLACES.landscape.delta);
+  assert.equal(l.places.press, PLACES.landscape.press);
+  assert.deepEqual(l.leaders.collector, base.leaders.collector);
+});
+
+test("una misura spostata da sola: la linea va dal suo lato che guarda il pezzo", () => {
+  const base = LANDSCAPE;
+  /* La sonda alta a sinistra dell'accumulo: la linea parte dal lato destro. */
+  const l = layoutConLePosizioni(base, { alto: { x: 40, y: 30 } });
+  const [dx, dy] = l.spostati.alto;
+  assert.deepEqual(l.places.chipAlto, [818 + dx, 152 + dy]);
+  const [x1, y1, x2, y2] = l.leaders.alto;
+  assert.deepEqual([x2, y2], [739, 140]);
+  assert.equal(x1, 968 + dx);
+  assert.equal(y1, (152 + 206) / 2 + dy);
+  /* L'accumulo dopo: la linea arriva al suo punto spostato. */
+  const l2 = layoutConLePosizioni(base, { alto: { x: 40, y: 30 }, accumulo: { x: 65, y: 50 } });
+  const [ax, ay] = l2.spostati.accumulo;
+  assert.deepEqual(l2.leaders.alto.slice(2), [739 + ax, 140 + ay]);
+  assert.deepEqual(l2.places.chipAlto, l.places.chipAlto);
+  /* Pressione, potenza e ΔT hanno il loro posto. */
+  const l3 = layoutConLePosizioni(base, {
+    pressione: { x: 10, y: 80 },
+    delta: { x: 20, y: 20 },
+    potenza: { x: 50, y: 90 },
+  });
+  for (const posto of ["press", "delta", "power"])
+    assert.notDeepEqual(l3.places[posto], PLACES.landscape[posto], posto);
+  for (const id of Object.keys(base.routes)) assert.equal(l3.routes[id], base.routes[id], id);
+});
+
+test("portata dal suo pezzo, una misura non esce dal disegno", () => {
+  for (const base of [LANDSCAPE, PORTRAIT]) {
+    const l = layoutConLePosizioni(base, { collettore: { x: 30, y: 2 } });
+    const [x, y] = l.places.chipCollector;
+    assert.ok(y >= 0 && x >= 0, `${base.name}: ${x},${y}`);
+    const [, , , fondo] = MISURE[base.name].lettura.scatola;
+    const [, alto] = MISURE[base.name].lettura.scatola;
+    assert.ok(y + (fondo - alto) <= base.h);
   }
 });

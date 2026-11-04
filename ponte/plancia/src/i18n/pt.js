@@ -8198,4 +8198,7 @@ export default Object.freeze({
   "Tap": "Torneira",
   "The computer keeps its own": "O computador mantém o seu",
   "The phone keeps its own": "O telemóvel mantém o seu",
+  "Heater power": "Potência do aquecedor",
+  "Panel reading": "Leitura do painel",
+  "System state": "Estado do sistema",
 });

@@ -8149,4 +8149,7 @@ export default Object.freeze({
   "Tap": "नल",
   "The computer keeps its own": "कंप्यूटर अपना रखता है",
   "The phone keeps its own": "फ़ोन अपना रखता है",
+  "Heater power": "हीटर की शक्ति",
+  "Panel reading": "पैनल की रीडिंग",
+  "System state": "सिस्टम की स्थिति",
 });

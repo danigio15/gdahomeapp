@@ -8228,4 +8228,7 @@ export default Object.freeze({
   "Tap": "Zapfstelle",
   "The computer keeps its own": "Der Computer behält seine eigene",
   "The phone keeps its own": "Das Handy behält seine eigene",
+  "Heater power": "Heizstableistung",
+  "Panel reading": "Kollektorwert",
+  "System state": "Anlagenstatus",
 });

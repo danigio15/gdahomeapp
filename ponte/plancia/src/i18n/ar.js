@@ -8113,4 +8113,7 @@ export default Object.freeze({
   "Tap": "الصنبور",
   "The computer keeps its own": "يحتفظ الكمبيوتر برسمه",
   "The phone keeps its own": "يحتفظ الهاتف برسمه",
+  "Heater power": "قدرة السخان",
+  "Panel reading": "قراءة اللوح",
+  "System state": "حالة النظام",
 });

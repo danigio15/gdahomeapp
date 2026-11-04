@@ -8183,4 +8183,7 @@ export default Object.freeze({
   "Tap": "Кран",
   "The computer keeps its own": "На компьютере остаётся своя",
   "The phone keeps its own": "На телефоне остаётся своя",
+  "Heater power": "Мощность ТЭНа",
+  "Panel reading": "Показания панели",
+  "System state": "Состояние системы",
 });

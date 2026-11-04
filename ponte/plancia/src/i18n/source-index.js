@@ -3790,6 +3790,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Lettore nuovo": "New player",
   "Lettori": "Players",
   "Lettori di casa ed Echo": "Home players and Echos",
+  "Lettura del pannello": "Panel reading",
   "Letture": "Readings",
   "Li crei e li modifichi da qui": "Create and edit them from here",
   "Libere 1": "Practice 1",
@@ -6259,6 +6260,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Stato del nodo": "Node status",
   "Stato del pagamento": "Payment status",
   "Stato dell'antifurto": "Alarm state",
+  "Stato dell'impianto": "System state",
   "Stato della caldaia": "Boiler state",
   "Stato della cottura": "Cooking status",
   "Stato di carica (SoC)": "State of charge (SoC)",
@@ -7083,6 +7085,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Zoom indietro": "Zoom out",
   "Zoom massimo della pioggia": "Rain zoom cap",
   "zuppa": "soaked",
+  "ΔT solare": "Solar ΔT",
   "ΔT Solare": "Solar ΔT",
 });
 

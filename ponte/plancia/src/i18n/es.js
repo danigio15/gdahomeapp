@@ -8215,4 +8215,7 @@ export default Object.freeze({
   "Tap": "Grifo",
   "The computer keeps its own": "El ordenador conserva el suyo",
   "The phone keeps its own": "El teléfono conserva el suyo",
+  "Heater power": "Potencia del calentador",
+  "Panel reading": "Lectura del panel",
+  "System state": "Estado de la instalación",
 });

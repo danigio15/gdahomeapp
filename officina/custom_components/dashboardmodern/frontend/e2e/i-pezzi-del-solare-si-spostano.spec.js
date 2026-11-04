@@ -276,3 +276,89 @@ test("sul telefono la scelta e' del telefono: il computer resta com'era", async 
   expect(Object.keys(scritta)).toEqual(["solare:telefono"]);
   expect(scritta["solare:telefono"].pompa).toBeTruthy();
 });
+
+/* «anche le misure che oggi restano ferme devono potersi spostare, con le loro
+ * linee guida che seguono; e se un pezzo spostato finisce sopra una misura
+ * ferma, la misura si scosta invece di sovrapporsi». */
+const rettangolo = (page, sel) =>
+  page.locator(sel).evaluate((n) => {
+    const r = n.getBoundingClientRect();
+    return { x0: r.left, x1: r.right, y0: r.top, y1: r.bottom };
+  });
+const siToccano = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+const DELTA = '#page-boiler .dm-st-plant > [data-dm-st-kpi="delta"]';
+const SONDA_ALTA = '#page-boiler .dm-st-plant .probe[data-dm-st-probe="alto"]';
+
+test("le misure si spostano, le loro linee le seguono, e si scostano dai pezzi", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "il computer");
+  await apri(page, testInfo);
+  const lineaDiSerie = await page
+    .locator('#page-boiler [data-dm-st-art="lead-alto"] .dm-st-lead')
+    .getAttribute("d");
+  await entra(page);
+  for (const nodo of ["lettura", "alto", "basso", "delta", "pressione", "potenza", "stato"])
+    await expect(page.locator(`[data-dm-disegno-nodo="${nodo}"]`)).toBeVisible();
+
+  /* Il collettore lasciato sopra il ΔT: il ΔT va al posto libero accanto. */
+  const delta = await rettangolo(page, DELTA);
+  const collettore = await page.locator('[data-dm-disegno-nodo="collettore"]').boundingBox();
+  await trascina(
+    page,
+    "collettore",
+    (delta.x0 + delta.x1) / 2 - (collettore.x + collettore.width / 2) - 40,
+    0,
+  );
+  await expect
+    .poll(async () => {
+      const pannello = await rettangolo(
+        page,
+        '#page-boiler [data-dm-st-art="collector"] .dm-st-frame',
+      );
+      return siToccano(pannello, await rettangolo(page, DELTA));
+    })
+    .toBe(false);
+  const bozza = await page.evaluate(() =>
+    Object.fromEntries(window.__DASHBOARDMODERN_DISEGNI_CHE_SI_SPOSTANO__.bozza),
+  );
+  expect(bozza["solare:computer"].delta).toBeTruthy();
+  /* La lettura del pannello segue il collettore senza una scelta sua. */
+  expect(bozza["solare:computer"].lettura).toBeUndefined();
+
+  /* La sonda alta portata in alto: la sua linea va dalla sonda all'accumulo. */
+  await trascina(page, "alto", 0, -90);
+  await expect
+    .poll(() =>
+      page.locator('#page-boiler [data-dm-st-art="lead-alto"] .dm-st-lead').getAttribute("d"),
+    )
+    .not.toBe(lineaDiSerie);
+  const linea = await page
+    .locator('#page-boiler [data-dm-st-art="lead-alto"] .dm-st-lead')
+    .evaluate((n) => {
+      const r = n.getBoundingClientRect();
+      return { x0: r.left - 2, x1: r.right + 2, y0: r.top - 2, y1: r.bottom + 2 };
+    });
+  expect(siToccano(linea, await rettangolo(page, SONDA_ALTA))).toBe(true);
+  expect(
+    siToccano(
+      linea,
+      await rettangolo(page, '#page-boiler [data-dm-st-art="tank"] .dm-st-tank-body'),
+    ),
+  ).toBe(true);
+
+  await page.locator('[data-dm-disp-azione="salva"]').click();
+  const scritta = (await salvata(page))["solare:computer"];
+  expect(Object.keys(scritta).sort()).toEqual(["alto", "collettore", "delta"]);
+
+  /* Ripristina: le linee e le misure tornano quelle di serie. */
+  await entra(page);
+  await page.locator('[data-dm-disegno-ripristina="solare"]').first().click();
+  await page.locator('[data-dm-disp-azione="salva"]').click();
+  await expect
+    .poll(() =>
+      page.locator('#page-boiler [data-dm-st-art="lead-alto"] .dm-st-lead').getAttribute("d"),
+    )
+    .toBe(lineaDiSerie);
+  await expect(page.locator("#dm-st-posizioni")).toHaveCount(0);
+});

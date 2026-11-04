@@ -8166,4 +8166,7 @@ export default Object.freeze({
   "Tap": "Musluk",
   "The computer keeps its own": "Bilgisayar kendi çizimini korur",
   "The phone keeps its own": "Telefon kendi çizimini korur",
+  "Heater power": "Isıtıcı gücü",
+  "Panel reading": "Panel ölçümü",
+  "System state": "Sistem durumu",
 });

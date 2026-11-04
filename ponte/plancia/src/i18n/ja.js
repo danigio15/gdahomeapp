@@ -8168,4 +8168,7 @@ export default Object.freeze({
   "Tap": "蛇口",
   "The computer keeps its own": "コンピューターは独自の配置を保持します",
   "The phone keeps its own": "スマートフォンは独自の配置を保持します",
+  "Heater power": "ヒーター出力",
+  "Panel reading": "パネルの測定値",
+  "System state": "システムの状態",
 });
