@@ -45,6 +45,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import com.gdahome.gdahome.R
 import com.gdahome.gdahome.orologio.IlTramiteDellOrologio
+import com.gdahome.gdahome.salute.LaSaluteAdAppChiusa
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.embedding.engine.dart.DartExecutor
@@ -93,6 +94,8 @@ object IlNavigatoreInAuto {
         PonteAuto.collega(messaggi, context.applicationContext)
         /* L'orologio: la fotografia e la guida al polso. */
         IlTramiteDellOrologio.collega(messaggi, context.applicationContext)
+        /* La salute ad app chiusa: il giro, acceso e spento dal Dart. */
+        LaSaluteAdAppChiusa.collega(messaggi, context.applicationContext)
         canale = MethodChannel(messaggi, "gdahome/navigatore").also {
             it.setMethodCallHandler { chiamata, risposta ->
                 when (chiamata.method) {

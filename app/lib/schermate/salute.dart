@@ -112,6 +112,9 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
     if (guasto != null) _avviso(guasto.spiegazione);
   });
 
+  Future<void> _adAppChiusa(bool si) =>
+      _lavora(() => _postino.cambiaAdAppChiusa(si));
+
   Future<void> _cambiaMisura(MisuraDelCorpo misura, bool si) => _lavora(() {
     final misure = {..._postino.scelte.misure};
     si ? misure.add(misura) : misure.remove(misura);
@@ -274,6 +277,45 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
               ),
               if (scelte.acceso && _postino.ultimoGuasto != null)
                 _ilGuasto(context, _postino.ultimoGuasto!),
+              if (scelte.acceso)
+                SwitchListTile.adaptive(
+                  key: const Key('salute-ad-app-chiusa'),
+                  contentPadding: EdgeInsets.zero,
+                  value: scelte.adAppChiusa,
+                  onChanged: _lavorando ? null : _adAppChiusa,
+                  title: Text(
+                    inLingua(
+                      it: 'Manda anche ad app chiusa',
+                      en: 'Also send when the app is closed',
+                    ),
+                    style: testi.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  subtitle: Text(
+                    dove == DoveSiLegge.appleSalute
+                        ? inLingua(
+                            it:
+                                'Quando Salute ha un dato nuovo, l\'iPhone '
+                                'sveglia GdAHome e lo manda alla casa. I tempi '
+                                'li decide l\'iPhone; a telefono bloccato '
+                                'aspetta che lo sblocchi.',
+                            en:
+                                'When Health has new data, the iPhone wakes '
+                                'GdAHome to send it home. The iPhone decides '
+                                'when; while locked it waits until you unlock.',
+                          )
+                        : inLingua(
+                            it:
+                                'Ogni mezz\'ora circa, quando c\'è la rete. '
+                                'Android può rimandare col risparmio '
+                                'energetico.',
+                            en:
+                                'About every half hour, when online. Android '
+                                'may delay it to save battery.',
+                          ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -317,26 +359,32 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
           child: Column(
             children: [
               for (final misura in MisuraDelCorpo.values)
-                CheckboxListTile.adaptive(
-                  key: Key('salute-misura-${misura.name}'),
-                  value: scelte.misure.contains(misura),
-                  onChanged: _lavorando
-                      ? null
-                      : (si) => _cambiaMisura(misura, si == true),
-                  title: Text(misura.titolo),
-                  subtitle: _sottoLaMisura(
-                    context,
-                    misura,
-                    lette[misura],
-                    manca:
-                        scelte.acceso &&
-                        _postino.letto &&
-                        scelte.misure.contains(misura) &&
-                        lette[misura] == null,
-                    iPhone: dove == DoveSiLegge.appleSalute,
+                if (siPuoLeggere(
+                  misura,
+                  iPhone:
+                      dove != DoveSiLegge.healthConnect &&
+                      dove != DoveSiLegge.healthConnectDaInstallare,
+                ))
+                  CheckboxListTile.adaptive(
+                    key: Key('salute-misura-${misura.name}'),
+                    value: scelte.misure.contains(misura),
+                    onChanged: _lavorando
+                        ? null
+                        : (si) => _cambiaMisura(misura, si == true),
+                    title: Text(misura.titolo),
+                    subtitle: _sottoLaMisura(
+                      context,
+                      misura,
+                      lette[misura],
+                      manca:
+                          scelte.acceso &&
+                          _postino.letto &&
+                          scelte.misure.contains(misura) &&
+                          lette[misura] == null,
+                      iPhone: dove == DoveSiLegge.appleSalute,
+                    ),
+                    secondary: _segno(misura),
                   ),
-                  secondary: _segno(misura),
-                ),
             ],
           ),
         ),
@@ -469,10 +517,23 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
     if (ultimo == null) return inLingua(it: 'Acceso.', en: 'On.');
     final ora =
         '${ultimo.hour.toString().padLeft(2, '0')}:${ultimo.minute.toString().padLeft(2, '0')}';
-    return inLingua(
-      it: 'Acceso · ultimo invio alle $ora, ogni quarto d\'ora con l\'app aperta.',
-      en: 'On · last sent at $ora, every quarter hour while the app is open.',
-    );
+    if (scelte.ultimoDaChiusa) {
+      return inLingua(
+        it: 'Acceso · ultimo invio alle $ora, ad app chiusa.',
+        en: 'On · last sent at $ora, with the app closed.',
+      );
+    }
+    return scelte.adAppChiusa
+        ? inLingua(
+            it: 'Acceso · ultimo invio alle $ora, con l\'app aperta.',
+            en: 'On · last sent at $ora, with the app open.',
+          )
+        : inLingua(
+            it:
+                'Acceso · ultimo invio alle $ora, ogni quarto d\'ora con '
+                'l\'app aperta.',
+            en: 'On · last sent at $ora, every quarter hour while the app is open.',
+          );
   }
 
   /* I numeri come li scrive chi legge: «7.842» e «78,4» in italiano,
@@ -503,7 +564,15 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
       MisuraDelCorpo.diastolica => '${_numero(v)} mmHg',
       MisuraDelCorpo.sonno =>
         '${v ~/ 60} h ${(v % 60).round().toString().padLeft(2, '0')}',
-      MisuraDelCorpo.calorie => '${_numero(v)} kcal',
+      MisuraDelCorpo.calorie ||
+      MisuraDelCorpo.calorieRiposo => '${_numero(v)} kcal',
+      MisuraDelCorpo.distanza => '${_numero(v, cifre: 2)} km',
+      MisuraDelCorpo.piani => inLingua(
+        it: '${_numero(v)} piani',
+        en: '${_numero(v)} flights',
+      ),
+      MisuraDelCorpo.esercizio => '${_numero(v)} min',
+      MisuraDelCorpo.inPiedi => '${_numero(v)} h',
     };
     final giorno = quandoSeNonOggi(lettura.quando, _postino.adesso);
     return '${misura.comeSiLegge} · $valore${giorno == null ? '' : ' · $giorno'}';
@@ -539,6 +608,23 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
       MisuraDelCorpo.calorie => (
         Icons.local_fire_department_rounded,
         const Color(0xFFEA580C),
+      ),
+      MisuraDelCorpo.calorieRiposo => (
+        Icons.local_fire_department_outlined,
+        const Color(0xFFEA580C),
+      ),
+      MisuraDelCorpo.distanza => (
+        Icons.straighten_rounded,
+        const Color(0xFF16A34A),
+      ),
+      MisuraDelCorpo.piani => (Icons.stairs_rounded, const Color(0xFF16A34A)),
+      MisuraDelCorpo.esercizio => (
+        Icons.directions_run_rounded,
+        const Color(0xFF65A30D),
+      ),
+      MisuraDelCorpo.inPiedi => (
+        Icons.accessibility_new_rounded,
+        const Color(0xFF0891B2),
       ),
     };
     return Container(

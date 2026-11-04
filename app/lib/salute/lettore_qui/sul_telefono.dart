@@ -19,8 +19,28 @@ LettoreDellaSalute lettoreDiQuestoSistema() =>
     ? LettoreDelTelefono()
     : const LettoreCheNonCE();
 
-/// I tipi da chiedere per ogni misura. Il sonno: su iPhone i tratti
-/// «addormentato», su Android le sessioni di sonno.
+/// Il sonno su iPhone, dormito davvero.
+///
+/// «Salute continua a non prendere i dati»: si chiedeva soltanto
+/// `SLEEP_ASLEEP`, che in HealthKit e' «addormentato, senza fase». Da
+/// watchOS 9 l'Apple Watch non lo scrive piu': scrive le fasi — essenziale
+/// (`SLEEP_LIGHT`), profondo, REM — e il pacchetto `health` filtra per
+/// valore, quindi di una notte col Watch non arrivava niente. Si chiedono
+/// tutte: le app vecchie e le bilance-materasso scrivono ancora la prima.
+const sonnoDormitoSuIPhone = [
+  HealthDataType.SLEEP_ASLEEP,
+  HealthDataType.SLEEP_LIGHT,
+  HealthDataType.SLEEP_DEEP,
+  HealthDataType.SLEEP_REM,
+];
+
+/// Un iPhone senza Watch scrive solo «a letto», dagli orari di Riposo: e'
+/// quello che Salute stessa mostra come sonno, e si usa se di dormito non
+/// c'e' niente.
+const sonnoALettoSuIPhone = [HealthDataType.SLEEP_IN_BED];
+
+/// I tipi da chiedere per ogni misura. Il sonno: su iPhone le fasi del
+/// dormito e il «a letto», su Android le sessioni di sonno.
 List<HealthDataType> tipiDi(MisuraDelCorpo misura, {required bool iPhone}) =>
     switch (misura) {
       MisuraDelCorpo.passi => [HealthDataType.STEPS],
@@ -31,10 +51,31 @@ List<HealthDataType> tipiDi(MisuraDelCorpo misura, {required bool iPhone}) =>
       MisuraDelCorpo.sistolica => [HealthDataType.BLOOD_PRESSURE_SYSTOLIC],
       MisuraDelCorpo.diastolica => [HealthDataType.BLOOD_PRESSURE_DIASTOLIC],
       MisuraDelCorpo.ossigeno => [HealthDataType.BLOOD_OXYGEN],
-      MisuraDelCorpo.sonno => [
-        iPhone ? HealthDataType.SLEEP_ASLEEP : HealthDataType.SLEEP_SESSION,
-      ],
+      MisuraDelCorpo.sonno =>
+        iPhone
+            ? [...sonnoDormitoSuIPhone, ...sonnoALettoSuIPhone]
+            : [HealthDataType.SLEEP_SESSION],
       MisuraDelCorpo.calorie => [HealthDataType.ACTIVE_ENERGY_BURNED],
+      MisuraDelCorpo.distanza => [
+        iPhone
+            ? HealthDataType.DISTANCE_WALKING_RUNNING
+            : HealthDataType.DISTANCE_DELTA,
+      ],
+      MisuraDelCorpo.piani => [HealthDataType.FLIGHTS_CLIMBED],
+      /* Su Android il metabolismo e' un ritmo (kcal al giorno), non
+       * un'energia: a riposo = totali - attive (`caloriaRiposoDaiTotali`). */
+      MisuraDelCorpo.calorieRiposo =>
+        iPhone
+            ? [HealthDataType.BASAL_ENERGY_BURNED]
+            : [
+                HealthDataType.TOTAL_CALORIES_BURNED,
+                HealthDataType.ACTIVE_ENERGY_BURNED,
+              ],
+      /* Gli anelli dell'Apple Watch: Health Connect non li ha. */
+      MisuraDelCorpo.esercizio =>
+        iPhone ? [HealthDataType.EXERCISE_TIME] : const [],
+      MisuraDelCorpo.inPiedi =>
+        iPhone ? [HealthDataType.APPLE_STAND_HOUR] : const [],
     };
 
 class LettoreDelTelefono implements LettoreDellaSalute {
@@ -127,6 +168,7 @@ class LettoreDelTelefono implements LettoreDellaSalute {
     DateTime mezzanotte,
   ) async {
     final tipi = tipiDi(misura, iPhone: _iPhone);
+    if (tipi.isEmpty) return null;
     switch (misura) {
       case MisuraDelCorpo.passi:
         /* Il totale lo fa il sistema: telefono e orologio insieme, senza
@@ -134,17 +176,41 @@ class LettoreDelTelefono implements LettoreDellaSalute {
         final passi = await _health.getTotalStepsInInterval(mezzanotte, ora);
         return passi == null ? null : Lettura(passi.toDouble(), ora);
       case MisuraDelCorpo.calorie:
-        final tratti = await _campioni(tipi, mezzanotte, ora);
-        if (tratti.isEmpty) return null;
-        final somma = tratti.fold<double>(0, (s, c) => s + c.valore);
-        return Lettura(somma.roundToDouble(), ora);
-      case MisuraDelCorpo.sonno:
-        final tratti = await _campioni(
-          tipi,
-          mezzanotte.subtract(notteFinoA + const Duration(hours: 6)),
-          ora,
+        final kcal = await _diOggi(tipi.single, mezzanotte, ora);
+        return kcal == null ? null : Lettura(kcal.roundToDouble(), ora);
+      case MisuraDelCorpo.distanza:
+        final metri = await _diOggi(tipi.single, mezzanotte, ora);
+        return metri == null ? null : Lettura(metri / 1000, ora);
+      case MisuraDelCorpo.piani:
+      case MisuraDelCorpo.esercizio:
+        final quanti = await _diOggi(tipi.single, mezzanotte, ora);
+        return quanti == null ? null : Lettura(quanti.roundToDouble(), ora);
+      case MisuraDelCorpo.calorieRiposo:
+        if (_iPhone) {
+          final kcal = await _diOggi(tipi.single, mezzanotte, ora);
+          return kcal == null ? null : Lettura(kcal.roundToDouble(), ora);
+        }
+        final riposo = caloriaRiposoDaiTotali(
+          await _diOggi(HealthDataType.TOTAL_CALORIES_BURNED, mezzanotte, ora),
+          await _diOggi(HealthDataType.ACTIVE_ENERGY_BURNED, mezzanotte, ora),
         );
-        return ilSonnoDiStanotte(tratti, ora);
+        return riposo == null ? null : Lettura(riposo.roundToDouble(), ora);
+      case MisuraDelCorpo.inPiedi:
+        return leOreInPiedi(await _campioni(tipi, mezzanotte, ora), ora);
+      case MisuraDelCorpo.sonno:
+        final da = mezzanotte.subtract(notteFinoA + const Duration(hours: 6));
+        if (!_iPhone) {
+          return ilSonnoDiStanotte(await _campioni(tipi, da, ora), ora);
+        }
+        /* Ogni tipo per conto suo: uno che non risponde non porta via gli
+         * altri. Le fasi della stessa notte si uniscono in
+         * `ilSonnoDiStanotte`, senza contare due volte. */
+        Future<List<Campione>> dei(List<HealthDataType> quali) async => [
+          for (final tipo in quali)
+            ...await _campioni([tipo], da, ora).catchError((_) => <Campione>[]),
+        ];
+        return ilSonnoDiStanotte(await dei(sonnoDormitoSuIPhone), ora) ??
+            ilSonnoDiStanotte(await dei(sonnoALettoSuIPhone), ora);
       case MisuraDelCorpo.battito:
       case MisuraDelCorpo.battitoRiposo:
       case MisuraDelCorpo.ossigeno:
@@ -167,6 +233,38 @@ class LettoreDelTelefono implements LettoreDellaSalute {
     }
   }
 
+  /* Il totale di oggi, da mezzanotte. Prima lo chiede al sistema, che somma
+   * telefono e orologio senza contare due volte (HealthKit sceglie la fonte
+   * per ogni minuto, Health Connect fa lo stesso con le sue priorita'); se
+   * il sistema non sa fare la somma di quel tipo — i minuti di esercizio su
+   * iPhone, i piani su Android — si sommano i campioni, che li scrive una
+   * fonte sola. `null` se di oggi non c'e' niente. */
+  Future<double?> _diOggi(
+    HealthDataType tipo,
+    DateTime mezzanotte,
+    DateTime ora,
+  ) async {
+    try {
+      final punti = await _health.getHealthIntervalDataFromTypes(
+        startDate: mezzanotte,
+        endDate: ora,
+        types: [tipo],
+        interval: const Duration(days: 1).inSeconds,
+      );
+      final valori = [
+        for (final p in punti)
+          if (p.value is NumericHealthValue)
+            (p.value as NumericHealthValue).numericValue.toDouble(),
+      ];
+      if (valori.isNotEmpty) return sommaDiOggi(valori);
+    } catch (_) {
+      /* Il sistema non lo somma: si sommano i campioni. */
+    }
+    final campioni = await _campioni([tipo], mezzanotte, ora);
+    if (campioni.isEmpty) return null;
+    return sommaDiOggi([for (final c in campioni) c.valore]);
+  }
+
   /* L'ultimo valore, cercato a scalini: l'ultimo giorno, la settimana, la
    * finestra intera (`scaliniFinoA`). Ci si ferma al primo che ne ha. */
   Future<Lettura?> _lUltimoEntro(
@@ -179,6 +277,37 @@ class LettoreDelTelefono implements LettoreDellaSalute {
       if (ultimo != null) return ultimo;
     }
     return null;
+  }
+
+  /* Su Android, il permesso a parte di Health Connect per leggere ad app
+   * chiusa. Dove Health Connect non lo conosce (versioni vecchie) non si
+   * puo': si resta come prima, solo ad app aperta. Sull'iPhone non serve —
+   * basta il permesso di lettura — e la sveglia la da' Salute stessa. */
+  @override
+  Future<bool> chiediIlPermessoDaChiusa() async {
+    if (_iPhone) return true;
+    try {
+      await _preparati();
+      if (!await _health.isHealthDataInBackgroundAvailable()) return false;
+      if (await _health.isHealthDataInBackgroundAuthorized()) return true;
+      return await _health.requestHealthDataInBackgroundAuthorization();
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /* Senza chiedere: per decidere se accendere il giro di Android. Chi ha
+   * detto di no non deve pagare un motore acceso ogni mezz'ora per niente. */
+  @override
+  Future<bool> puoLeggereDaChiusa() async {
+    if (_iPhone) return true;
+    try {
+      await _preparati();
+      return await _health.isHealthDataInBackgroundAvailable() &&
+          await _health.isHealthDataInBackgroundAuthorized();
+    } catch (_) {
+      return false;
+    }
   }
 
   @override

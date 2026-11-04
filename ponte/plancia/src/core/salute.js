@@ -86,11 +86,48 @@ const MISURE = Object.freeze([
     escludi:
       /deep|profondo|light|leggero|\brem\b|awake|sveglio|score|punteggio|goal|obiettiv|latency|wake|start|end|inizio|fine/,
   },
+  /* Le calorie a riposo prima delle attive: «Basal energy burned» ha anche
+   * le parole delle altre. */
+  {
+    chiave: "calorieRiposo",
+    parole:
+      /basal energy|resting energy|resting calories|basal calories|calorie a riposo|calorie basali/,
+    unita: /^(kcal|cal)$/,
+    escludi: /goal|obiettiv|rate|metabolic|metabolismo/,
+  },
   {
     chiave: "calorie",
     parole: /calorie|calories|kcal|energy burned|energia bruciata/,
     unita: /^(kcal|cal)$/,
-    escludi: /goal|obiettiv|bmr|basal|basale|intake/,
+    escludi: /goal|obiettiv|bmr|basal|basale|intake|resting|riposo/,
+  },
+  /* L'anello Attivita' e quello che Salute mostra accanto ai passi. Parole
+   * strette: «distance» da sola e' anche la distanza da casa (proximity),
+   * quella del viaggio in auto, quella dell'aspirapolvere. */
+  {
+    chiave: "distanza",
+    parole:
+      /walking running distance|walking distance|distance walked|walking \+ running|distanza (a piedi|camminata|percorsa a piedi)/,
+    unita: /^(km|m|mi)$/,
+    escludi: /goal|obiettiv|cycling|bici|swim|nuoto/,
+  },
+  {
+    chiave: "piani",
+    parole: /flights climbed|floors climbed|floors ascended|piani saliti/,
+    unita: /^(floors?|flights?|piani|)$/,
+    escludi: /goal|obiettiv|descended|scesi/,
+  },
+  {
+    chiave: "esercizio",
+    parole: /exercise time|exercise minutes|minuti di esercizio|tempo di esercizio/,
+    unita: /^(min|mins|minutes?|minuti)$/,
+    escludi: /goal|obiettiv/,
+  },
+  {
+    chiave: "inPiedi",
+    parole: /stand hours?|ore in piedi/,
+    unita: /^(h|hr|hrs|hours?|ore)$/,
+    escludi: /goal|obiettiv/,
   },
 ]);
 
@@ -100,7 +137,7 @@ export const MISURE_SALUTE = Object.freeze(MISURE.map((m) => m.chiave));
 /* Le parole che dicono la misura, o da dove viene: tolte dal nome, resta chi.
  * «Pixel 8 Resting heart rate» → «Pixel 8»; «Withings Mario Weight» → «Mario». */
 const PAROLE_DELLE_MISURE =
-  /\b(health connect|apple health|healthkit|health|withings|garmin connect|garmin|fitbit|resting heart rate|heart rate|heart pulse|resting|blood pressure|systolic|diastolic|blood oxygen|oxygen saturation|spo2|body fat|fat ratio|fat percentage|total sleep time|sleep duration|sleep time|sleep|total steps|daily steps|steps today|steps|step count|weight|body mass|calories burned|active calories|total calories|calories|energy burned|today|daily|oggi|giornalieri|passi|peso|battito cardiaco|battito|frequenza cardiaca|pressione|sistolica|diastolica|sonno|ossigeno|saturazione|calorie|massa grassa|grasso|burned|bruciate|active|attive|sensor)\b/gi;
+  /\b(health connect|apple health|healthkit|health|withings|garmin connect|garmin|fitbit|walking running distance|walking distance|distance walked|flights climbed|floors climbed|floors ascended|exercise time|exercise minutes|stand hours|stand hour|basal energy burned|basal energy|resting energy|resting calories|resting heart rate|heart rate|heart pulse|resting|blood pressure|systolic|diastolic|blood oxygen|oxygen saturation|spo2|body fat|fat ratio|fat percentage|total sleep time|sleep duration|sleep time|sleep|total steps|daily steps|steps today|steps|step count|weight|body mass|calories burned|active calories|total calories|calories|energy burned|today|daily|oggi|giornalieri|passi|peso|battito cardiaco|battito|frequenza cardiaca|pressione|sistolica|diastolica|sonno|ossigeno|saturazione|calorie|massa grassa|grasso|burned|bruciate|active|attive|sensor)\b/gi;
 
 function chiDalNome(nome) {
   return clean(
@@ -179,6 +216,13 @@ function letturaDi(entity, stato, chiave) {
   if (valore === null) return null;
   let unita = clean(a.unit_of_measurement);
   let v = valore;
+  /* La distanza si legge in chilometri. */
+  if (chiave === "distanza") {
+    const u = unita.toLowerCase();
+    if (u === "m") v = valore / 1000;
+    else if (u === "mi") v = valore * 1.609344;
+    unita = "km";
+  }
   /* Il sonno si legge in minuti, da qualunque unita' arrivi. */
   if (chiave === "sonno") {
     const u = unita.toLowerCase();

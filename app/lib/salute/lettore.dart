@@ -43,4 +43,16 @@ abstract interface class LettoreDellaSalute {
 
   /// Su Android: porta a installare o aggiornare Health Connect.
   Future<void> installaHealthConnect();
+
+  /// Il permesso di leggere anche ad app chiusa. Su Android e' un permesso a
+  /// parte di Health Connect (`READ_HEALTH_DATA_IN_BACKGROUND`), che si
+  /// chiede con l'app davanti; dove non c'e' o non serve — l'iPhone, il
+  /// browser — torna subito. `true` se si potra' leggere ad app chiusa.
+  Future<bool> chiediIlPermessoDaChiusa();
+
+  /// Se adesso si potrebbe leggere ad app chiusa, **senza chiedere niente**.
+  /// Su Android: Health Connect lo conosce e il permesso c'e'. Sull'iPhone
+  /// si': lo decide Salute, che sveglia l'app solo con il permesso di
+  /// lettura. Nel browser no.
+  Future<bool> puoLeggereDaChiusa();
 }

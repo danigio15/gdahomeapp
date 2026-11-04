@@ -33,6 +33,8 @@ import {
   OTTO_GIORNI,
   codiceRegaloPulito,
   contaGliAbbonamenti,
+  lInizioDelMese,
+  lInizioDelPeriodo,
   contoDellaCasa,
   firmaIlGettone,
   mesiDopo,
@@ -1998,41 +2000,80 @@ test("Google dice com'e' fatto l'abbonamento, e la Gestione lo conta (e i tester
 
     const detto = await abbonamentiDelGestore(b);
     const inProva = detto.elenco.find((uno) => uno.sog === UNA);
-    assert.deepEqual(detto.conti, {
-      /* Ognuno in un posto solo: 1 + 1 + 1 + 0 + 1 = 4. */
+    const pagato = detto.elenco.find((uno) => uno.sog === ALTRA);
+    const disdetto = detto.elenco.find((uno) => uno.sog === TERZA);
+    /* Gli incassi del mese dipendono da che giorno e' oggi: si guardano dopo. */
+    const { incassato, pagamenti, inizioDelMese, ...fermi } = detto.conti;
+    assert.deepEqual(fermi, {
+      /* Ognuno in un gruppo solo: 2 paganti + 1 prova + 0 finiti + 1 test. */
       tutti: 4,
-      paganti: 1,
-      pagantiMensili: 1,
+      /* Il disdetto il suo mese l'ha pagato: e' un pagante che non rinnova. */
+      paganti: 2,
+      pagantiRinnovano: 1,
+      pagantiNonRinnovano: 1,
+      primaFinePagantiNonRinnovano: disdetto.pagato,
+      pagantiMensili: 2,
       pagantiAnnuali: 0,
       inProva: 1,
+      proveNonRinnovano: 0,
       primaFineProva: inProva.pagato,
-      disdetti: 1,
-      disdettiInProva: 0,
+      nonRinnovano: 1,
       finiti: 0,
       test: 1,
+      /* I nomi di prima. */
+      disdetti: 1,
+      disdettiInProva: 0,
+      pagatiDisdetti: 1,
+      primaFinePagatiDisdetti: disdetto.pagato,
       /* I conti di prima, che legge la Panoramica: «di cui». */
       attivi: 3,
       mensili: 2,
       annuali: 1,
       prova: 1,
-      disdetti: 1,
       /* Il mensile pagato si rinnova fra cinque giorni; la prova fra dieci. */
       rinnovi7: 1,
       finiti30: 0,
       prove: { finite: 0, pagate: 0 },
-      /* Paga solo il mensile: la prova non paga, e chi ha disdetto nemmeno. */
+      /* Il ricorrente e' solo del mensile che rinnova: la prova non paga, e
+       * chi non rinnova non paghera' piu'. */
       alMese: { EUR: 4.99 },
+      hannoPagato: 2,
+      /* Il primo incasso: il mensile che si rinnova fra cinque giorni, prima
+       * della prova che finisce fra dieci. */
+      prossimoIncasso: { quando: pagato.pagato, perche: "rinnovo" },
     });
+    /* Il mese di Google e' la scadenza meno un mese: conta se e' cominciato
+     * da mezzanotte del primo del mese. */
+    assert.equal(inizioDelMese, lInizioDelMese(Date.now()));
+    const nelMese = [pagato, disdetto].filter((uno) => {
+      const quando = lInizioDelPeriodo(uno);
+      return Math.min(quando, Date.now()) >= inizioDelMese;
+    });
+    assert.equal(pagamenti, nelMese.length);
+    assert.deepEqual(
+      incassato,
+      nelMese.length ? { EUR: Math.round(nelMese.length * 499) / 100 } : {},
+    );
     assert.equal(detto.negozi.android.attivi, 3);
-    assert.equal(detto.negozi.android.paganti, 1);
+    assert.equal(detto.negozi.android.paganti, 2);
+    assert.equal(detto.negozi.android.pagantiRinnovano, 1);
     assert.equal(detto.negozi.android.test, 1);
     assert.equal(detto.negozi.ios.attivi, 0);
     assert.equal(detto.negozi.ios.tutti, 0);
     assert.equal(detto.prove, 1, "il tester sta da parte");
 
     assert.equal(detto.elenco.length, 4);
-    const [primo] = detto.elenco;
-    assert.equal(primo.sog, UNA, "la prova per prima");
+    /* Prima i paganti, in ordine di scadenza (il mensile fra cinque giorni,
+     * il disdetto dopo), poi le prove, poi i test. */
+    assert.deepEqual(
+      detto.elenco.map((uno) => (uno.sandbox ? "test" : uno.gruppo)),
+      ["paganti", "paganti", "prova", "test"],
+    );
+    assert.deepEqual(
+      detto.elenco.slice(0, 3).map((uno) => uno.nonRinnova),
+      [false, true, false],
+    );
+    const primo = detto.elenco.find((uno) => uno.sog === UNA);
     assert.equal(primo.stato, "prova");
     assert.equal(primo.piano, "annuale");
     assert.equal(primo.prezzo, 49.99);
@@ -2117,6 +2158,8 @@ test("la prova passa a pagamento, e chi disdice a meta' periodo si sa il giorno 
     assert.equal(await b.licenze.aggiorna(b.negozi), 1);
     detto = await abbonamentiDelGestore(b);
     assert.equal(detto.conti.disdetti, 1);
+    assert.equal(detto.conti.paganti, 1, "un pagante che non rinnova resta pagante");
+    assert.equal(detto.conti.pagantiNonRinnovano, 1);
     assert.equal(detto.conti.attivi, 1, "disdetto vale ancora");
     assert.deepEqual(detto.conti.alMese, {}, "chi ha disdetto non paga piu'");
     assert.equal(detto.elenco[0].stato, "disdetto");
@@ -2148,6 +2191,7 @@ test("Apple: il piano dal prodotto, il prezzo in millesimi, il sandbox, e il rin
     type: "Auto-Renewable Subscription",
     expiresDate: Date.now() + 300 * GIORNO,
     originalPurchaseDate: comprata,
+    purchaseDate: comprata,
     price: 49990,
     currency: "EUR",
     environment: "Sandbox",
@@ -2179,6 +2223,8 @@ test("Apple: il piano dal prodotto, il prezzo in millesimi, il sandbox, e il rin
       sandbox: true,
       inizio: comprata,
       paese: "ITA",
+      /* Il giorno della transazione: quello in cui Apple ha incassato. */
+      periodo: comprata,
     });
 
     /* Disdetto da TestFlight: lo dicono le informazioni di rinnovo. */
@@ -2189,6 +2235,7 @@ test("Apple: il piano dal prodotto, il prezzo in millesimi, il sandbox, e il rin
     const detto = await abbonamentiDelGestore(b);
     assert.equal(detto.conti.attivi, 0, "un acquisto di prova non si conta");
     assert.equal(detto.conti.disdetti, 0, "nemmeno fra i disdetti");
+    assert.equal(detto.conti.nonRinnovano, 0, "nemmeno fra chi non rinnova");
     assert.equal(detto.conti.test, 1, "si conta solo fra gli acquisti di test");
     assert.equal(detto.conti.tutti, 1);
     assert.equal(detto.prove, 1);
@@ -2245,17 +2292,24 @@ test("ogni abbonamento in una categoria sola, e le categorie fanno il totale", (
   ];
   const c = contaGliAbbonamenti(righe, ora);
   assert.equal(c.tutti, righe.length);
-  assert.equal(c.paganti, 3);
-  assert.equal(c.pagantiMensili, 2);
+  /* Chi ha pagato e disdetto e' un pagante: non rinnova, ma ha pagato. */
+  assert.equal(c.paganti, 4);
+  assert.equal(c.pagantiRinnovano, 3);
+  assert.equal(c.pagantiNonRinnovano, 1);
+  assert.equal(c.pagantiMensili, 3);
   assert.equal(c.pagantiAnnuali, 1);
-  assert.equal(c.inProva, 2, "chi ha disdetto in prova sta fra i disdetti, non qui");
+  /* E chi ha disdetto in prova resta in prova: finisce senza pagare. */
+  assert.equal(c.inProva, 3);
+  assert.equal(c.proveNonRinnovano, 1);
+  /* La prima fine prova che puo' pagare: non quella disdetta, fra un giorno. */
   assert.equal(c.primaFineProva, ora + 3 * GIORNO);
-  assert.equal(c.disdetti, 2);
+  assert.equal(c.nonRinnovano, 2);
+  assert.equal(c.disdetti, 2, "il nome di prima");
   assert.equal(c.disdettiInProva, 1);
   assert.equal(c.finiti, 1);
   assert.equal(c.test, 2);
-  assert.equal(c.paganti + c.inProva + c.disdetti + c.finiti + c.test, c.tutti);
-  /* Gli incassi sono solo dei paganti: un annuale conta un dodicesimo. */
+  assert.equal(c.paganti + c.inProva + c.finiti + c.test, c.tutti);
+  /* Il ricorrente e' solo di chi rinnova: un annuale conta un dodicesimo. */
   assert.deepEqual(c.alMese, { EUR: 13.73 });
   /* I conti di prima restano com'erano: la Panoramica li legge ancora. */
   assert.equal(c.attivi, 7, "attivi: tutti quelli che valgono, prove e disdetti compresi");
@@ -2270,7 +2324,7 @@ test("ogni abbonamento in una categoria sola, e le categorie fanno il totale", (
   assert.deepEqual(vuoti.alMese, {});
 });
 
-test("lo stato della riga e la categoria del conto sono la stessa cosa", async () => {
+test("il gruppo della riga e quello del conto sono la stessa cosa", async () => {
   const b = await banco();
   try {
     const ora = Date.now();
@@ -2300,24 +2354,28 @@ test("lo stato della riga e la categoria del conto sono la stessa cosa", async (
     fai("casa_50000000000000000000000000000005", { scade: ora - 30 * GIORNO });
     fai("casa_60000000000000000000000000000006", { sandbox: true });
     const detto = b.licenze.abbonamenti(ora);
-    const stati = (stato) =>
-      detto.elenco.filter((uno) => !uno.sandbox && uno.stato === stato).length;
-    assert.equal(detto.conti.paganti, stati("attivo"));
-    assert.equal(detto.conti.inProva, stati("prova"));
-    assert.equal(detto.conti.disdetti, stati("disdetto"));
-    assert.equal(detto.conti.finiti, stati("scaduto"));
+    const gruppi = (gruppo) =>
+      detto.elenco.filter((uno) => !uno.sandbox && uno.gruppo === gruppo).length;
+    assert.equal(detto.conti.paganti, gruppi("paganti"));
+    assert.equal(detto.conti.inProva, gruppi("prova"));
+    assert.equal(detto.conti.finiti, gruppi("finiti"));
+    assert.equal(
+      detto.conti.nonRinnovano,
+      detto.elenco.filter((uno) => !uno.sandbox && uno.nonRinnova).length,
+    );
     assert.equal(detto.conti.test, detto.elenco.filter((uno) => uno.sandbox).length);
     assert.deepEqual(
       [
         detto.conti.paganti,
         detto.conti.inProva,
-        detto.conti.disdetti,
         detto.conti.finiti,
         detto.conti.test,
+        detto.conti.nonRinnovano,
       ],
-      [1, 1, 2, 1, 1],
+      [2, 2, 1, 1, 2],
     );
-    assert.equal(detto.conti.disdettiInProva, 1);
+    assert.equal(detto.conti.proveNonRinnovano, 1);
+    assert.equal(detto.conti.pagantiNonRinnovano, 1);
     assert.equal(detto.conti.tutti, 6);
     assert.equal(detto.prove, 1);
   } finally {

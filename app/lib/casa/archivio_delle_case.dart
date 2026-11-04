@@ -18,7 +18,15 @@ import 'questo_dispositivo.dart' show proprietarioPulito;
 const int caseMassime = 10;
 
 class ArchivioDelleCase {
-  ArchivioDelleCase(this._cassaforte);
+  ArchivioDelleCase(this._cassaforte, {this.rileggePrimaDiScrivere = false});
+
+  /// Prima di segnare qualcosa su una casa (l'approdo, il gettone, il
+  /// legame) si rilegge l'archivio dal portachiavi, e il cambiamento si fa
+  /// su quello. Lo vuole un motore che gira **accanto** all'app — la sveglia
+  /// della salute su Android (`saluteAdAppChiusa` in `main.dart`): la sua
+  /// copia in memoria puo' essere vecchia, e riscriverla tutta vorrebbe dire
+  /// riportare in vita una casa appena tolta, o perdere una appena aggiunta.
+  final bool rileggePrimaDiScrivere;
 
   static const _chiave = 'le_case';
 
@@ -324,6 +332,15 @@ class ArchivioDelleCase {
     String id,
     CasaConosciuta Function(CasaConosciuta) come,
   ) async {
+    if (rileggePrimaDiScrivere) {
+      /* Non si rilegge: non si scrive. Meglio un gettone da richiedere la
+       * prossima volta che un archivio vecchio sopra quello buono. */
+      try {
+        await _leggi();
+      } catch (_) {
+        return;
+      }
+    }
     var cambiate = 0;
     for (var dove = 0; dove < _case.length; dove++) {
       if (_case[dove].id != id) continue;

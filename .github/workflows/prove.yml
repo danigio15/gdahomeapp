@@ -226,6 +226,17 @@ jobs:
           # 21 e non 17: la mappa del navigatore (MapLibre, dentro gdanav) si
           # compila solo da Java 21 in su.
           java-version: "21"
+      # Spazio su disco per la costruzione Android: l'NDK, Gradle e R8 ne
+      # vogliono tanto, e la macchina di GitHub arriva quasi piena. Senza, il
+      # passo del pacchetto moriva a meta' senza lasciare registro (il runner
+      # non riesce piu' a scrivere). Si tolgono gli strumenti che qui non
+      # servono; l'SDK di Android (/usr/local/lib/android/sdk) resta.
+      - name: Spazio su disco per Android
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost /opt/hostedtoolcache/CodeQL /usr/local/lib/node_modules "$AGENT_TOOLSDIRECTORY"/PyPy 2>/dev/null || true
+          sudo docker image prune -af >/dev/null 2>&1 || true
+          df -h /
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable

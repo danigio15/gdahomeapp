@@ -371,9 +371,9 @@ function fasceMarkup(giornata) {
   return giornata
     .map(
       (f, i) => `<div class="dm-prg-fascia" style="--g:${coloreDeiGradi(f.gradi)}">
-  <span class="dm-prg-orari">${orarioMarkup(i, "da", f.da, 0, 1410)}<span>–</span>${orarioMarkup(i, "a", f.a, 30, 1440)}</span>
-  <span class="dm-prg-gradi"><button type="button" data-dm-prg-gradi="${i}:-0.5" aria-label="−">−</button><b>${esc(gradiDetti(f.gradi))}</b><button type="button" data-dm-prg-gradi="${i}:0.5" aria-label="+">+</button></span>
-  <button type="button" class="dm-prg-via" data-dm-prg-via="${i}" aria-label="${esc(t("Togli la fascia", "Remove the slot"))}">🗑</button>
+  <span class="dm-prg-orari">${orarioMarkup(i, "da", f.da, 0, 1410)}<span class="dm-prg-trattino" aria-hidden="true">–</span>${orarioMarkup(i, "a", f.a, 30, 1440)}</span>
+  <span class="dm-prg-destra"><span class="dm-prg-gradi"><button type="button" data-dm-prg-gradi="${i}:-0.5" aria-label="−">−</button><b>${esc(gradiDetti(f.gradi))}</b><button type="button" data-dm-prg-gradi="${i}:0.5" aria-label="+">+</button></span>
+  <button type="button" class="dm-prg-via" data-dm-prg-via="${i}" aria-label="${esc(t("Togli la fascia", "Remove the slot"))}">🗑</button></span>
 </div>`,
     )
     .join("");
@@ -693,6 +693,41 @@ async function salva() {
   }
 }
 
+/* La finestra scorre fino alla testa del Programma, se serve: solo dentro
+ * di se', la pagina sotto resta dov'e'. */
+function mostraIlProgramma() {
+  const finestra = doc?.querySelector?.("#clima-popup-overlay .clima-popup");
+  const nodo = finestra?.querySelector?.("[data-dm-prg]");
+  if (!finestra || !nodo) return;
+  const vai = () => {
+    const sopra = nodo.getBoundingClientRect().top - finestra.getBoundingClientRect().top;
+    const sotto = nodo.getBoundingClientRect().bottom - finestra.getBoundingClientRect().bottom;
+    if (sotto <= 0 && sopra >= 0) return;
+    const quanto = Math.max(0, finestra.scrollTop + sopra - 12);
+    if (typeof finestra.scrollTo === "function") finestra.scrollTo({ top: quanto, behavior: "smooth" });
+    else finestra.scrollTop = quanto;
+  };
+  (root.requestAnimationFrame || ((f) => root.setTimeout?.(f, 0)))(vai);
+}
+
+/* Quanto della parte bassa dello schermo prende la barra delle sezioni,
+ * se in questo momento si vede: la finestra si ferma sopra. Sul computer la
+ * barra sta fuori dallo schermo, e allora non toglie niente. */
+function lasciaLaBarra() {
+  const velo = doc?.getElementById?.("clima-popup-overlay");
+  if (!velo?.style) return;
+  const barra = doc.querySelector?.("nav.tabs.bottom-nav-bar");
+  const alto = root.innerHeight || 0;
+  let prende = 0;
+  if (barra && alto && root.getComputedStyle?.(barra)?.display !== "none") {
+    const r = barra.getBoundingClientRect();
+    if (r.height > 0 && r.top < alto && r.bottom > 0) prende = Math.round(alto - r.top);
+  }
+  const valore = `${Math.max(0, prende)}px`;
+  if (velo.style.getPropertyValue("--dm-clima-barra") !== valore)
+    velo.style.setProperty("--dm-clima-barra", valore);
+}
+
 function suClick(evento) {
   const bersaglio = evento.target?.closest?.("[data-dm-prg] button");
   if (!bersaglio) return;
@@ -701,6 +736,9 @@ function suClick(evento) {
   if (d.dmPrgApri !== undefined) {
     state.aperto = !state.aperto;
     disegna();
+    /* Aperto, si porta in vista: sul telefono il Programma sta in fondo
+     * alla finestra, e si aprirebbe sotto il bordo. */
+    if (state.aperto) mostraIlProgramma();
     return;
   }
   if (d.dmPrgGiorno) {
@@ -786,12 +824,25 @@ function suCambio(evento) {
 
 /* ── l'aspetto ────────────────────────────────────────────────────────── */
 
-/* Col programma aperto la finestra e' piu' alta dello schermo del telefono:
- * si ancora in alto e scorre dentro di se', lasciando libero il fondo dove
- * sta la barra delle sezioni — il tasto Salva non ci finisce mai sotto. */
+/* La finestra del termostato sta sopra a tutto e scorre dentro di se'.
+ *
+ * Dal campo (1.18.9.2, telefono): «non c'è lo scroll, non vedo le cose
+ * sotto». Il velo della finestra stava sotto la barra delle sezioni (9000
+ * contro 9900) e la finestra era alta l'88% dello schermo, centrata: su un
+ * telefono basso — o nell'app, dove lo schermo della plancia e' piu' corto —
+ * il suo fondo, col Programma chiuso, finiva dietro la barra, e non c'era
+ * niente da scorrere perche' la finestra non era piu' alta di se stessa.
+ * Adesso il velo sta sopra la barra e sopra le finestre della Home (9999),
+ * da cui il termostato si puo' aprire, e sotto il report del clima (10050),
+ * che si apre da qui; la finestra si ferma sopra la barra, se la barra si
+ * vede (la misura `lasciaLaBarra`), non supera lo schermo che si vede
+ * davvero (dvh, con le fasce del sistema e quella che la plancia si tiene in
+ * cima) e quello che non ci sta si scorre dentro, senza trascinare la pagina
+ * sotto. */
 const STILE = `
-#clima-popup-overlay.show:has(.dm-prg-corpo){align-items:flex-start}
-#clima-popup-overlay.show .clima-popup:has(.dm-prg-corpo){max-height:calc(100dvh - 150px);overflow-y:auto;overscroll-behavior:contain;margin-top:8px}
+#clima-popup-overlay{z-index:10000;--dm-clima-su:max(10px,env(safe-area-inset-top),var(--dm-cima-libera,0px));--dm-clima-giu:max(10px,env(safe-area-inset-bottom),calc(var(--dm-clima-barra,0px) + 8px))}
+#clima-popup-overlay.show{padding:var(--dm-clima-su) 10px var(--dm-clima-giu);overscroll-behavior:contain}
+#clima-popup-overlay .clima-popup{max-height:calc(100vh - 20px);max-height:calc(100dvh - var(--dm-clima-su) - var(--dm-clima-giu));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 .clima-popup .dm-prg{margin:14px 0 4px;border-radius:16px;background:rgba(148,163,184,.10);border:1px solid var(--card-border,rgba(148,163,184,.25));overflow:hidden}
 .dm-prg-testa{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;width:100%;padding:12px 14px;cursor:pointer;color:var(--text,inherit)}
 .dm-prg-tit{font-weight:800;font-size:14px}
@@ -807,8 +858,14 @@ const STILE = `
 .dm-prg-barra i b{font-size:10px;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45);white-space:nowrap;overflow:hidden}
 .dm-prg-ore{display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:var(--text-dim,#64748b);margin-top:-6px}
 .dm-prg-fasce{display:flex;flex-direction:column;gap:6px}
-.dm-prg-fascia{display:flex;align-items:center;gap:4px;padding:6px 6px;border-radius:12px;background:var(--card-bg,rgba(255,255,255,.6));border-left:4px solid var(--g)}
-.dm-prg-orari{display:flex;align-items:center;gap:3px;flex:1 1 auto;min-width:0}
+/* La fascia su uno schermo stretto: gli orari non si stringono sotto la loro
+ * misura (prima i select uscivano dalla riga e il secondo finiva sotto il
+ * «−» dei gradi, a 360 e meno); se non ci sta tutto, gradi e cestino vanno
+ * insieme sulla riga sotto, a destra. */
+.dm-prg-fascia{display:flex;flex-wrap:wrap;align-items:center;gap:6px 4px;padding:6px 6px;border-radius:12px;background:var(--card-bg,rgba(255,255,255,.6));border-left:4px solid var(--g)}
+.dm-prg-orari{display:flex;align-items:center;gap:3px;flex:1 0 auto}
+.dm-prg-trattino{flex:0 0 auto;margin:0 2px;opacity:.7}
+.dm-prg-destra{display:flex;align-items:center;gap:4px;margin-left:auto}
 .dm-prg-ora{font:inherit;font-size:12px;font-weight:700;padding:5px 2px;width:66px;flex:0 0 66px;border-radius:8px;border:1px solid var(--card-border,rgba(148,163,184,.4));background:transparent;color:var(--text,inherit);min-width:0}
 .dm-prg-gradi{display:flex;align-items:center;gap:4px}
 .dm-prg-gradi b{min-width:38px;text-align:center;font-size:14px;font-weight:800;color:var(--text,inherit)}
@@ -842,6 +899,7 @@ function avvolgi() {
   if (typeof originale !== "function" || originale.__dmProgramma) return false;
   function avvolto(entity, ...resto) {
     const esito = originale.call(this, entity, ...resto);
+    lasciaLaBarra();
     root.queueMicrotask?.(() => apri(entity));
     return esito;
   }
@@ -896,6 +954,10 @@ export function installProgrammaDelClima() {
   });
   avvolgi();
   avvolgiLaChiusura();
+  /* Il telefono girato, o la tastiera: la barra si sposta, si rimisura. */
+  root.addEventListener?.("resize", () => {
+    if (doc.getElementById("clima-popup-overlay")?.classList?.contains("show")) lasciaLaBarra();
+  });
   for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:runtime-ready"]) {
     root.addEventListener?.(evento, avvolgi);
     root.addEventListener?.(evento, avvolgiLaChiusura);

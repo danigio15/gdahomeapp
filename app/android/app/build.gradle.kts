@@ -191,4 +191,9 @@ dependencies {
      * (`enableEdgeToEdge` in MainActivity). Arrivava gia' con Flutter, per
      * via dei frammenti; scritto qui non dipende da loro. */
     implementation("androidx.activity:activity:1.9.3")
+
+    /* La salute ad app chiusa (`salute/LaSaluteAdAppChiusa.kt`): un giro ogni
+     * mezz'ora, anche dopo un riavvio, che Android rimanda quando il telefono
+     * dorme. Porta con se' le coroutine di Kotlin. */
+    implementation("androidx.work:work-runtime-ktx:2.10.0")
 }

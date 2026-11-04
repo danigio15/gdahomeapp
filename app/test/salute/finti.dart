@@ -61,6 +61,21 @@ class LettoreFinto implements LettoreDellaSalute {
 
   @override
   Future<void> installaHealthConnect() async {}
+
+  /// Quante volte si e' chiesto il permesso ad app chiusa.
+  int chiestiDaChiusa = 0;
+
+  @override
+  Future<bool> chiediIlPermessoDaChiusa() async {
+    chiestiDaChiusa++;
+    return permesso;
+  }
+
+  /// Se il permesso ad app chiusa c'e' (Android): di serie si'.
+  bool daChiusa = true;
+
+  @override
+  Future<bool> puoLeggereDaChiusa() async => daChiusa;
 }
 
 /// Il filo con la casa: ricorda quello che gli si manda.

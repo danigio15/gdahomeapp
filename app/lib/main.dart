@@ -37,6 +37,7 @@ import 'schermate/navigatore_qui/qui.dart' as navigatore;
 import 'licenza/negozio.dart';
 import 'casa/lo_schermo.dart' show loSchermoRimetti;
 import 'schermate/plancia_vera.dart';
+import 'salute/ad_app_chiusa.dart';
 import 'salute/lettore.dart';
 import 'salute/postino_della_salute.dart';
 import 'schermate/premium.dart';
@@ -67,6 +68,87 @@ const bool _perIlCollaudo = bool.fromEnvironment('COLLAUDO');
 /// nell'altro file; questa e' la porta.
 @pragma('vm:entry-point')
 Future<void> inAuto() => auto.inAuto();
+
+/// Il terzo ingresso: la salute ad app chiusa su Android, in un motore senza
+/// schermo acceso dal giro di WorkManager (`LaSaluteAdAppChiusa.kt`). Un
+/// filo suo con la casa, che si chiude finito il giro; il postino legge lo
+/// stesso file delle scelte dell'app, e il quarto d'ora vale per tutti e due.
+@pragma('vm:entry-point')
+Future<void> saluteAdAppChiusa() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  laLingua = linguaPer([
+    for (final quale in WidgetsBinding.instance.platformDispatcher.locales)
+      quale.languageCode,
+  ]);
+  /* L'archivio delle case si rilegge prima di ogni scrittura: l'app puo'
+   * essere aperta in un altro motore, e una copia vecchia di qui non deve
+   * riscrivere sopra una casa appena aggiunta o tolta. */
+  final collegamento = Collegamento(
+    archivio: ArchivioDelleCase(
+      const CassaforteDelSistema(),
+      rileggePrimaDiScrivere: true,
+    ),
+  );
+  SvegliaDellaSalute(
+    postino: PostinoDellaSalute(lettore: lettoreDiQuestoSistema())
+      ..sbloccata = () {
+        final licenza = collegamento.licenza;
+        return !licenza.controlliAccesi || licenza.premium;
+      }
+      /* Nessuno schermo: nessun permesso da chiedere. */
+      ..siPuoChiedere = (() => false),
+    laCasa: () => collegamento,
+    condiviso: false,
+  ).accendi();
+}
+
+/// Il postino della salute dell'app: uno solo, per la schermata e per la
+/// sveglia ad app chiusa, cosi' il quarto d'ora e l'invio in corso sono gli
+/// stessi per tutti. Di GdAHome Premium: la licenza della casa in uso, come
+/// per le altre voci col lucchetto (`home.dart`, `_bloccate`).
+PostinoDellaSalute postinoDellaSaluteDellApp() => PostinoDellaSalute.istanza ??=
+    PostinoDellaSalute(lettore: lettoreDiQuestoSistema())
+      ..sbloccata = () {
+        final licenza = ilFiloConLaCasa().licenza;
+        return !licenza.controlliAccesi || licenza.premium;
+      }
+      ..davanti = appDavanti
+      ..siPuoChiedere = () =>
+          WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+
+/// Se l'app sta davanti a qualcuno.
+///
+/// `resumed` si'; `paused`, `hidden`, `detached` no. In mezzo — `inactive`,
+/// o nessuno stato ancora — non basta lo stato di Flutter:
+/// - **sull'iPhone** `inactive` arriva anche a un'app svegliata da Salute in
+///   background, se iOS le collega la scena: lo si chiede al telefono
+///   (`siStaDavanti`, una scena del telefono in primo piano);
+/// - **su Android** senza stato vuol dire nessuna activity — il motore di
+///   Android Auto — e allora nessuno davanti; `inactive` e' l'app aperta con
+///   sopra una finestra del sistema, e qualcuno c'e'.
+Future<bool> appDavanti() =>
+    statoDavanti(WidgetsBinding.instance.lifecycleState, android: _android);
+
+bool get _android => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
+/// [appDavanti], con lo stato e il telefono passati da fuori per le prove.
+Future<bool> statoDavanti(
+  AppLifecycleState? stato, {
+  required bool android,
+  Future<bool> Function() chiediAlTelefono = siStaDavanti,
+}) async {
+  switch (stato) {
+    case AppLifecycleState.resumed:
+      return true;
+    case AppLifecycleState.paused ||
+        AppLifecycleState.hidden ||
+        AppLifecycleState.detached:
+      return false;
+    case AppLifecycleState.inactive || null:
+      if (android) return stato == AppLifecycleState.inactive;
+      return chiediAlTelefono();
+  }
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -119,6 +201,23 @@ Future<void> main() async {
    * sopra). */
   if (!kIsWeb) {
     auto.ascoltaIlColpetto(laCasaDellApp: ilFiloConLaCasa);
+  }
+  /* La salute ad app chiusa (`salute/ad_app_chiusa.dart`): sull'iPhone e'
+   * Salute che sveglia l'app, e l'app parte da qui senza schermo davanti;
+   * su Android, nella versione col navigatore in auto, il giro trova acceso
+   * questo motore. Il filo e' quello dell'app: finito l'invio, se nessuno
+   * guarda e non si e' in macchina, torna a riposo. */
+  if (!kIsWeb) {
+    SvegliaDellaSalute(
+      postino: postinoDellaSaluteDellApp(),
+      laCasa: ilFiloConLaCasa,
+      puoRiposare: () {
+        final stato = WidgetsBinding.instance.lifecycleState;
+        return stato != AppLifecycleState.resumed &&
+            stato != AppLifecycleState.inactive &&
+            !navigatore.inMacchina.value;
+      },
+    ).accendi();
   }
   /* Il giorno dei pagamenti: se questa costruzione e' sotto la versione
    * minima, l'app si copre con la pagina «aggiornala». Non si aspetta: la
@@ -462,6 +561,10 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   /// Una domanda per volta: il sistema ne tiene aperta una sola, e chiederne
   /// due vuol dire la seconda che fallisce da sola.
   bool _staChiedendo = false;
+
+  /// La domanda dell'apertura, rimandata perche' l'app era partita senza
+  /// nessuno davanti (vedi [_chiedi]): si fa al primo ritorno.
+  bool _domandaRimandata = false;
   /* Se l'app non torna davanti entro questo tempo, il filo si chiude. */
   Timer? _seNonTorna;
 
@@ -496,18 +599,15 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     /* La salute dal telefono: manda le misure scelte quando il filo si apre,
      * e ogni quarto d'ora con l'app aperta. Spenta finche' non la si accende
      * dalla pagina «Salute»: senza, non legge niente e non chiede niente. */
-    if (!kIsWeb &&
-        widget.cassaforte == null &&
-        PostinoDellaSalute.istanza == null) {
-      final salute = PostinoDellaSalute(lettore: lettoreDiQuestoSistema())
-        /* Di GdAHome Premium: la licenza della casa in uso, come per le
-         * altre voci col lucchetto (`home.dart`, `_bloccate`). */
+    if (!kIsWeb && widget.cassaforte == null) {
+      /* Lo stesso della sveglia ad app chiusa (`postinoDellaSaluteDellApp`):
+       * se l'app l'ha svegliata Salute, c'e' gia'. */
+      postinoDellaSaluteDellApp()
         ..sbloccata = () {
           final licenza = _collegamento.licenza;
           return !licenza.controlliAccesi || licenza.premium;
-        };
-      PostinoDellaSalute.istanza = salute;
-      salute.segui(() => _collegamento.filo, _collegamento.cambiamenti);
+        }
+        ..segui(() => _collegamento.filo, _collegamento.cambiamenti);
     }
     _accendi();
   }
@@ -556,6 +656,14 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
       }
       final riaperta = _chiusa;
       _chiusa = false;
+      if (_domandaRimandata) {
+        _domandaRimandata = false;
+        if (_chiuso) unawaited(_chiedi());
+      }
+      /* Tornata davanti: la salute, se e' ora (partita da sola non mandava:
+       * vedi `PostinoDellaSalute.davanti`). */
+      final salute = PostinoDellaSalute.istanza;
+      if (salute != null) unawaited(salute.forseManda(_collegamento.filo));
       unawaited(_seSiRichiude(riaperta: riaperta));
       return;
     }
@@ -756,8 +864,23 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   /// Chiede, e apre se si passa.
   Future<void> _chiedi() async {
     if (_staChiedendo) return;
+    /* Un'app partita senza nessuno davanti — l'ha svegliata Salute per
+     * mandare le misure (`salute/ad_app_chiusa.dart`), o CarPlay — non ha
+     * nessuno da riconoscere: il volto chiesto adesso fallirebbe, e il velo
+     * direbbe «non sa farlo» con «Entra lo stesso» a chi apre dopo. La
+     * domanda si fa quando l'app torna davanti; intanto il velo resta su. */
     _staChiedendo = true;
     try {
+      final stato = WidgetsBinding.instance.lifecycleState;
+      final via =
+          stato == AppLifecycleState.paused ||
+          stato == AppLifecycleState.hidden ||
+          stato == AppLifecycleState.detached ||
+          (stato != AppLifecycleState.resumed && !await siStaDavanti());
+      if (via) {
+        _domandaRimandata = true;
+        return;
+      }
       final andata = await _guardia.chiedi(perche: perche(null));
       if (!mounted) return;
       _cambiaIlVelo(() {
@@ -858,9 +981,9 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
       WidgetsBinding.instance.addPostFrameCallback((_) => sopra.value = null);
     }
     Misure.io.spegni();
-    /* Il quarto d'ora della salute: con l'app che se ne va, si ferma. */
+    /* Il quarto d'ora della salute: con l'app che se ne va, si ferma. Il
+     * postino resta: la sveglia ad app chiusa lo usa ancora. */
     PostinoDellaSalute.istanza?.ferma();
-    PostinoDellaSalute.istanza = null;
     _impostazioni.chiudi();
     /* Il filo dell'app non si chiude se la macchina lo sta usando: lo schermo
      * dell'auto resta acceso quando l'app sul telefono se ne va, ed e'

@@ -135,6 +135,17 @@ jobs:
           # 21 e non 17: la mappa del navigatore (MapLibre, dentro gdanav) si
           # compila solo da Java 21 in su.
           java-version: "21"
+      # Spazio su disco per la costruzione Android: l'NDK, Gradle e R8 ne
+      # vogliono tanto, e la macchina di GitHub arriva quasi piena. Senza, il
+      # passo del pacchetto moriva a meta' senza lasciare registro (il runner
+      # non riesce piu' a scrivere). Si tolgono gli strumenti che qui non
+      # servono; l'SDK di Android (/usr/local/lib/android/sdk) resta.
+      - name: Spazio su disco per Android
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost /opt/hostedtoolcache/CodeQL /usr/local/lib/node_modules "$AGENT_TOOLSDIRECTORY"/PyPy 2>/dev/null || true
+          sudo docker image prune -af >/dev/null 2>&1 || true
+          df -h /
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
@@ -770,11 +781,12 @@ jobs:
       # resterebbe fuori. Qui l'app si firma «per finta» (ad hoc) col
       # permesso dentro; la firma vera la rimette l'esportazione, che lo
       # tiene perché il profilo di Apple ce l'ha. Lo stesso vale per il
-      # permesso delle notifiche (`aps-environment`), quando c'è Firebase.
-      - name: I permessi nell'archivio (CarPlay, notifiche)
-        if: >-
-          steps.chiavi.outputs.ci-sono == 'si' &&
-          (vars.GDAHOME_CARPLAY == 'si' || steps.firebase.outputs.c-e == 'si')
+      # permesso delle notifiche (`aps-environment`), quando c'è Firebase, e
+      # per quelli della Salute (HealthKit e la sveglia ad app chiusa), che
+      # ci vanno **sempre**: per questo il passo gira anche senza CarPlay e
+      # senza Firebase.
+      - name: I permessi nell'archivio (Salute, CarPlay, notifiche)
+        if: steps.chiavi.outputs.ci-sono == 'si'
         working-directory: app
         env:
           CARPLAY: ${{ vars.GDAHOME_CARPLAY }}
@@ -795,6 +807,9 @@ jobs:
           # La Salute c'e' sempre: senza, l'app non puo' chiedere di leggere
           # Salute di iPhone (e' successo con la 1.18.8).
           grep -q com.apple.developer.healthkit build/permessi.txt
+          # E la sveglia di Salute ad app chiusa: senza, iOS non sveglia l'app
+          # quando arriva un dato nuovo (`LaSaluteAdAppChiusa.swift`).
+          grep -q com.apple.developer.healthkit.background-delivery build/permessi.txt
           if [ "$CARPLAY" = "si" ]; then grep -q com.apple.developer.carplay-maps build/permessi.txt; fi
           if [ "$NOTIFICHE" = "si" ]; then grep -q aps-environment build/permessi.txt; fi
 

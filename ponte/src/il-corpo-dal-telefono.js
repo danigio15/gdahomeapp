@@ -143,6 +143,54 @@ export const MISURE_DAL_TELEFONO = Object.freeze({
     classe: "total_increasing",
     icona: "mdi:fire",
   },
+  /* L'anello Attivita' e quello che Salute mostra accanto ai passi: tutte
+   * «di oggi», contatori che ripartono a mezzanotte. Le calorie a riposo si
+   * chiamano «Basal energy burned», come HealthKit: con «calories» nel nome
+   * la plancia le confonderebbe con le attive. */
+  calorieRiposo: {
+    nome: "Basal energy burned",
+    unita: "kcal",
+    min: 0,
+    max: 20_000,
+    classe: "total_increasing",
+    icona: "mdi:fire-circle",
+  },
+  distanza: {
+    nome: "Walking running distance",
+    unita: "km",
+    /* 0,19 km: col decimale solo sarebbe 0,2. */
+    cifre: 2,
+    min: 0,
+    max: 500,
+    classe: "total_increasing",
+    tipo: "distance",
+    icona: "mdi:map-marker-distance",
+  },
+  piani: {
+    nome: "Flights climbed",
+    unita: "floors",
+    min: 0,
+    max: 2_000,
+    classe: "total_increasing",
+    icona: "mdi:stairs-up",
+  },
+  esercizio: {
+    nome: "Exercise time",
+    unita: "min",
+    min: 0,
+    max: 24 * 60,
+    classe: "total_increasing",
+    tipo: "duration",
+    icona: "mdi:run-fast",
+  },
+  inPiedi: {
+    nome: "Stand hours",
+    unita: "h",
+    min: 0,
+    max: 24,
+    classe: "total_increasing",
+    icona: "mdi:human-handsup",
+  },
 });
 
 const no = (id, code, message) => ({
@@ -184,7 +232,8 @@ export function misurePulite(grezze, adesso = Date.now()) {
     const quando = istante(m.quando);
     if (!Number.isFinite(valore) || valore < aspetto.min || valore > aspetto.max) continue;
     if (quando === null || quando > adesso + 10 * 60_000 || quando < adesso - VECCHIA) continue;
-    fuori[chiave] = { valore: Math.round(valore * 10) / 10, quando };
+    const scala = 10 ** (aspetto.cifre ?? 1);
+    fuori[chiave] = { valore: Math.round(valore * scala) / scala, quando };
   }
   return fuori;
 }

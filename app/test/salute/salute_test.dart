@@ -40,14 +40,15 @@ void main() {
     test('al ponte solo le misure scelte e lette', () {
       final lette = {
         MisuraDelCorpo.passi: Lettura(7842, DateTime.utc(2026, 10, 29, 9, 40)),
-        MisuraDelCorpo.peso: Lettura(78.44, DateTime.utc(2026, 10, 28, 7, 5)),
+        MisuraDelCorpo.peso: Lettura(78.444, DateTime.utc(2026, 10, 28, 7, 5)),
       };
       expect(perIlPonte(lette, {MisuraDelCorpo.passi}), {
         'passi': {'valore': 7842.0, 'quando': '2026-10-29T09:40:00.000Z'},
       });
       expect(
         (perIlPonte(lette, {MisuraDelCorpo.peso})['peso'] as Map)['valore'],
-        78.4,
+        /* Due decimali: 0,19 km non deve diventare 0,2. */
+        78.44,
       );
     });
 
