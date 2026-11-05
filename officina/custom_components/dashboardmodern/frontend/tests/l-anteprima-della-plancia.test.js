@@ -25,6 +25,12 @@ test("le schede dell'Energia e della Sicurezza hanno l'anteprima della loro pagi
   assert.equal(paginaDellaScheda("sez1"), "energy");
   assert.equal(paginaDellaScheda("energy"), "energy");
   assert.equal(paginaDellaScheda("sez4"), "security");
+  assert.equal(paginaDellaScheda("sez3"), "boiler");
+  assert.equal(paginaDellaScheda("irr"), "irrigazione");
+  assert.equal(paginaDellaScheda("agenda"), "calendario");
+  assert.equal(paginaDellaScheda("doors"), "porte");
+  /* La Home ha gia' la sua anteprima, e le Impostazioni non sono una pagina. */
+  assert.equal(paginaDellaScheda("sez0"), "");
   assert.equal(paginaDellaScheda("visib"), "");
   assert.equal(paginaDellaScheda(""), "");
   assert.equal(paginaDellaScheda("toString"), "");

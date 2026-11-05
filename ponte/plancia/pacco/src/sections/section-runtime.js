@@ -568,7 +568,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-IJK35NAO.js";
+} from "../../chunk-F5SGS4NC.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -160111,8 +160111,43 @@ var DISPOSITIVI2 = Object.freeze(Object.keys(SCHERMI));
 var PAGINE_DELLE_SCHEDE = Object.freeze({
   sez1: "energy",
   energy: "energy",
+  sez2: "ev",
+  ev: "ev",
+  ups: "ups",
+  sez9: "clima",
+  clima: "clima",
+  sez7: "temp",
+  temperature: "temp",
+  meteo: "meteo",
+  sez3: "boiler",
+  boiler: "boiler",
+  pool: "piscina",
+  irr: "irrigazione",
+  piante: "piante",
+  contatori: "contatori",
+  stanze: "stanze",
+  luci: "luci",
+  tapp: "tapparelle",
+  appliances: "appliances-main",
+  media: "media",
+  sport: "sport",
+  robot: "robot",
+  stampanti: "stampanti",
+  animali: "animali",
+  batterie: "batterie",
+  salute: "salute",
+  prese: "prese",
   sez4: "security",
-  security: "security"
+  security: "security",
+  varchi: "varchi",
+  presenza: "presenza",
+  doors: "porte",
+  citofono: "citofono",
+  allerte: "allerte",
+  agenda: "calendario",
+  rifiuti: "rifiuti",
+  sez6: "server",
+  server: "server"
 });
 function paginaDellaScheda(scheda9) {
   const chiave2 = String(scheda9 || "").trim();
@@ -160340,7 +160375,7 @@ function apriLaCornice(pannello, pagina3, dispositivo3) {
 function disegnaIlPannello() {
   const corpo6 = doc.getElementById("ed-body");
   const pagina3 = paginaDellaScheda(schedaAttiva17());
-  if (!corpo6 || !pagina3) return;
+  if (!corpo6 || !pagina3 || !doc.getElementById(`page-${pagina3}`)) return;
   const gia = corpo6.querySelector(":scope > [data-dm-anteprima-pannello]");
   if (gia?.getAttribute("data-dm-anteprima-pannello") === pagina3) return;
   gia?.remove();

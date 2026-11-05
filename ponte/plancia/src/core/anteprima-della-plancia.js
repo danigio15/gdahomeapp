@@ -21,13 +21,52 @@ export const SCHERMI = Object.freeze({
 export const DISPOSITIVI = Object.freeze(Object.keys(SCHERMI));
 
 /** Le schede del Config che hanno l'anteprima, e la pagina della plancia che
- * mostrano. I nomi vecchi delle schede (`sez1`) sono gli stessi di quelli
- * nuovi (`energy`). */
+ * mostrano: ogni sezione che ha riquadri, elenchi o disegni da spostare. I
+ * nomi vecchi delle schede (`sez1`) valgono come quelli nuovi (`energy`).
+ *
+ * La Home non c'e': le sue tessere, i suoi blocchi e le stanze hanno gia' la
+ * loro anteprima nelle schede Home e Widget (`anteprima-modificabile-section.js`),
+ * con lo stesso Salva e lo stesso telefono/computer. */
 export const PAGINE_DELLE_SCHEDE = Object.freeze({
   sez1: "energy",
   energy: "energy",
+  sez2: "ev",
+  ev: "ev",
+  ups: "ups",
+  sez9: "clima",
+  clima: "clima",
+  sez7: "temp",
+  temperature: "temp",
+  meteo: "meteo",
+  sez3: "boiler",
+  boiler: "boiler",
+  pool: "piscina",
+  irr: "irrigazione",
+  piante: "piante",
+  contatori: "contatori",
+  stanze: "stanze",
+  luci: "luci",
+  tapp: "tapparelle",
+  appliances: "appliances-main",
+  media: "media",
+  sport: "sport",
+  robot: "robot",
+  stampanti: "stampanti",
+  animali: "animali",
+  batterie: "batterie",
+  salute: "salute",
+  prese: "prese",
   sez4: "security",
   security: "security",
+  varchi: "varchi",
+  presenza: "presenza",
+  doors: "porte",
+  citofono: "citofono",
+  allerte: "allerte",
+  agenda: "calendario",
+  rifiuti: "rifiuti",
+  sez6: "server",
+  server: "server",
 });
 
 /** La pagina della plancia che una scheda del Config mostra in anteprima, o

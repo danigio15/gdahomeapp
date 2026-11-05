@@ -279,7 +279,8 @@ function apriLaCornice(pannello, pagina, dispositivo) {
 function disegnaIlPannello() {
   const corpo = doc.getElementById("ed-body");
   const pagina = paginaDellaScheda(schedaAttiva());
-  if (!corpo || !pagina) return;
+  /* Solo le sezioni che questa plancia ha davvero. */
+  if (!corpo || !pagina || !doc.getElementById(`page-${pagina}`)) return;
   const gia = corpo.querySelector(":scope > [data-dm-anteprima-pannello]");
   if (gia?.getAttribute("data-dm-anteprima-pannello") === pagina) return;
   gia?.remove();
