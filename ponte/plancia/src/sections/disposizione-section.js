@@ -784,7 +784,21 @@ function cambiamentoCheConta(mutazione, attiva) {
 }
 
 function onMutazioni(mutazioni) {
-  if (state.occupato || state.coda) return;
+  if (state.occupato) return;
+  /* La pagina che si accende si mette a posto subito, prima che si veda.
+   *
+   * Una pagina dietro non si puo' sistemare: le sue carte non hanno misura,
+   * e gli elenchi non si riconoscono. Si aspettava il giro in coda, sessanta
+   * millesimi dopo, e per quei quattro fotogrammi la pagina si vedeva di
+   * serie: la disposizione salvata arrivava dopo, a scatto, e una bozza
+   * annullata mentre si era altrove lasciava la carta spenta e poi la
+   * riaccendeva sotto gli occhi. Questa chiamata e' ancora dentro il cambio
+   * di pagina, prima del disegno: chi apre la pagina la trova gia' com'e'. */
+  for (const mutazione of mutazioni) {
+    const pagina = mutazione.type === "attributes" ? mutazione.target : null;
+    if (pagina?.matches?.("section.page.active[id^='page-']")) applicaLaDisposizione(pagina);
+  }
+  if (state.coda) return;
   const attiva = state.modifica?.pagina || paginaAttiva();
   if (mutazioni.some((m) => cambiamentoCheConta(m, attiva))) inCoda();
 }

@@ -567,7 +567,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-ZWZWGCUV.js";
+} from "../../chunk-OILRDDQ4.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -88517,7 +88517,12 @@ function cambiamentoCheConta(mutazione, attiva2) {
   return !nodi.length || !nodi.every((n) => n.nodeType === 1 && n.matches?.(NOSTRI_IN_PAGINA));
 }
 function onMutazioni(mutazioni) {
-  if (state66.occupato || state66.coda) return;
+  if (state66.occupato) return;
+  for (const mutazione of mutazioni) {
+    const pagina3 = mutazione.type === "attributes" ? mutazione.target : null;
+    if (pagina3?.matches?.("section.page.active[id^='page-']")) applicaLaDisposizione(pagina3);
+  }
+  if (state66.coda) return;
   const attiva2 = state66.modifica?.pagina || paginaAttiva2();
   if (mutazioni.some((m) => cambiamentoCheConta(m, attiva2))) inCoda2();
 }

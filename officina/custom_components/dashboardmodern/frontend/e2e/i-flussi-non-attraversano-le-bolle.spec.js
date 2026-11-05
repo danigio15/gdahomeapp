@@ -163,7 +163,18 @@ test("sei carichi: le file si sfalsano e le linee passano nei varchi", async ({
    * la toccano — il disegno è nato così — ma la seconda, che nasce dal quinto
    * carico in poi, ci finiva dentro col numero. Chi apriva Energia vedeva i
    * watt dei suoi ultimi carichi coperti, e per leggerli doveva scorrere senza
-   * sapere che ci fosse qualcosa da scorrere. */
+   * sapere che ci fosse qualcosa da scorrere.
+   *
+   * Si guarda con la pagina scorsa fino in fondo, come la guarda chi vuole
+   * leggere l'ultima fila. A 412×915 il palco comincia a 332 px, sotto la
+   * testata e le linguette su tre righe, ed e' alto 720: la scena intera non
+   * sta in uno schermo, e la prima fila di carichi si vede gia' tagliata
+   * dalla barra — la pagina scorre, e lo si vede. Misurata senza scorrere,
+   * questa prova chiedeva che stesse tutta in 516 px. Quello che non deve
+   * succedere e' che, scorso tutto, la barra copra ancora l'ultimo numero:
+   * e' li' che non c'e' piu' modo di leggerlo. */
+  await page.evaluate(() => window.scrollTo(0, document.scrollingElement.scrollHeight));
+  await page.waitForTimeout(300);
   const laBarra = await page.evaluate(() => {
     const barra =
       document.querySelector("nav.tabs.bottom-nav-bar") || document.querySelector("nav.tabs");

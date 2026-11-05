@@ -87,7 +87,8 @@ test("la batteria segue la casa senza ricaricare", async ({ page }, testInfo) =>
   ]);
   await expect.poll(() => bolla(page)).toContain("201");
   await cambia(page, [potenza("sensor.batteria_power", "-1500")]);
-  const attesa = await quantoCiMette(page, "1500");
+  /* 1500 W si scrivono «1,50 kW»: dal migliaio la bolla sale di unita'. */
+  const attesa = await quantoCiMette(page, "1,50 kW");
   expect(attesa, `la bolla ci ha messo ${attesa} millesimi a dire la cosa nuova`).toBeLessThan(
     PRONTO,
   );
