@@ -123,7 +123,11 @@ test("con le sole due settimane la tessera c'e' anche in Home", async ({ page },
     const due = (n) => String(n).padStart(2, "0");
     const inizio = `${oggi.getFullYear()}-${due(oggi.getMonth() + 1)}-${due(oggi.getDate())}`;
     const giorni = Array.from({ length: 14 }, () => []);
+    /* Oggi e domani: dopo l'ora del cambio (#333) il ritiro di oggi e'
+     * passato e la tessera dice quello di domani. Con la carta solo oggi la
+     * prova era rossa ogni sera, su main come qui. */
     giorni[0] = ["carta"];
+    giorni[1] = ["carta"];
     window.localStorage.setItem("cd_rifiuti", JSON.stringify({ turno: { inizio, giorni } }));
     window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
     window.renderHomeWidgets?.();
@@ -155,7 +159,11 @@ test("un sensore tolto dai widget non rientra dalla porta del turno", async ({
     const due = (n) => String(n).padStart(2, "0");
     const inizio = `${oggi.getFullYear()}-${due(oggi.getMonth() + 1)}-${due(oggi.getDate())}`;
     const giorni = Array.from({ length: 14 }, () => []);
+    /* Oggi e domani: dopo l'ora del cambio (#333) il ritiro di oggi e'
+     * passato e la tessera dice quello di domani. Con la carta solo oggi la
+     * prova era rossa ogni sera, su main come qui. */
     giorni[0] = ["carta"];
+    giorni[1] = ["carta"];
     window.localStorage.setItem(
       "cd_rifiuti",
       JSON.stringify({
