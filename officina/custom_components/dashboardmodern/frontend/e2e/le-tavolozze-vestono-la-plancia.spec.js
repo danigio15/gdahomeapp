@@ -141,12 +141,15 @@ test("la barra in fondo segue la tavolozza, e senza tavolozza resta com'era", as
 
   /* Il metro: com'è senza tavolozza, scuro e chiaro. Questi due non devono
    * muoversi mai — sono la plancia di chi non ha scelto nulla. */
+  /* Pieni, non velati: la barra ferma ha il fondo pieno da quando le si e'
+   * tolto il vetro smerigliato (`navigation-section.js`), che costava un
+   * ricalcolo a ogni fotogramma per un velo che non si vedeva. */
   await vesti("", "dark");
   const scuroDiSerie = await barra();
-  expect(scuroDiSerie.sfondo).toBe("rgba(15, 23, 42, 0.92)");
+  expect(scuroDiSerie.sfondo).toBe("rgb(19, 28, 48)");
   await vesti("", "light");
   const chiaroDiSerie = await barra();
-  expect(chiaroDiSerie.sfondo).toBe("rgba(255, 255, 255, 0.92)");
+  expect(chiaroDiSerie.sfondo).toBe("rgb(255, 255, 255)");
 
   /* Grafite: grigio, non blu. */
   await vesti("grafite", "dark");

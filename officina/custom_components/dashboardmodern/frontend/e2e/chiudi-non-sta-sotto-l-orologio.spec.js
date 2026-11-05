@@ -13,6 +13,7 @@
  * preme davvero.
  */
 import { expect, test } from "@playwright/test";
+import { fingiLaFasciaDiSistema } from "./helpers/fascia-di-sistema.js";
 import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
 
 const SEME = {
@@ -48,12 +49,12 @@ async function telefono(browser) {
 
 /* La plancia rimisura la fascia a 400 e a 1500 millisecondi dall'avvio: si
  * aspetta che abbia finito, e da li' la variabile e' della prova. */
+/* La tacca si finge dove la plancia la misura (`helpers/fascia-di-sistema`):
+ * scritta nella variabile, la rimisura della plancia a tre e a sei secondi la
+ * rimetteva a zero mentre si tornava alla Home, e la fascia finiva sotto
+ * l'orologio solo nella prova. */
 async function fingiLaTacca(page, pixel) {
-  await page.waitForTimeout(1800);
-  await page.evaluate((quanti) => {
-    document.documentElement.style.setProperty("--dm-cima-di-sistema", `${quanti}px`);
-  }, pixel);
-  await page.waitForTimeout(200);
+  await fingiLaFasciaDiSistema(page, "top", pixel);
 }
 
 async function accendiLaPlancia(page, testInfo) {

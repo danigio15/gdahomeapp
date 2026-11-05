@@ -216,9 +216,15 @@ test("una porta finisce nel foglietto dei varchi", async ({ page }, testInfo) =>
    * e quella scheda nel Config si chiama così. */
   await expect(page.locator(".dm-dove-nome")).toHaveText("Varchi");
   await page.locator("[data-dm-dove-salva]").click();
+  /* Nelle righe della scheda, che sono quelle che la sezione legge: il
+   * foglietto vecchio (`aggiunte` e `nomi`) si scriveva e non si vedeva —
+   * «l'ho aggiunto e salvato, ma non l'ho ritrovato nella sezione». */
   const varchi = await page.evaluate(() => JSON.parse(localStorage.getItem("cd_varchi")));
-  expect(varchi.aggiunte).toEqual(["binary_sensor.porta_ingresso"]);
-  expect(varchi.nomi["binary_sensor.porta_ingresso"]).toBe("Porta d'ingresso");
+  const riga = varchi.righe.find((una) => una.entity === "binary_sensor.porta_ingresso");
+  expect(riga?.name).toBe("Porta d'ingresso");
+  expect(varchi.righe.filter((una) => una.entity === "binary_sensor.porta_ingresso")).toHaveLength(
+    1,
+  );
 });
 
 test("di una presa con sei entità va in sezione l'interruttore, non il wattmetro", async ({

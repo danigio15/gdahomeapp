@@ -319,6 +319,29 @@ test("varchi, presenza, fumo e allagamenti", async ({ page }, testInfo) => {
 
 test("chi non risponde e le batterie", async ({ page }, testInfo) => {
   await avvia(page, testInfo);
+  /* Tutta la casa si guarda solo quando si sa di chi e' ogni entita' (#307):
+   * senza i registri l'avviso resta alle entita' della plancia, e la porta
+   * della cantina — che la plancia non mostra — non c'entrerebbe. Coi
+   * registri, ognuna col suo dispositivo, ci sono tutti e tre. */
+  await page.evaluate(() => {
+    localStorage.setItem(
+      "dm_dispositivi_di_home_assistant",
+      JSON.stringify({
+        di: {
+          "binary_sensor.porta_cantina": "dev-porta-cantina",
+          "switch.pompa": "dev-pompa",
+          "switch.vialetto": "dev-vialetto",
+        },
+        nomi: {
+          "dev-porta-cantina": "Porta cantina",
+          "dev-pompa": "Pompa piscina",
+          "dev-vialetto": "Luci vialetto",
+        },
+      }),
+    );
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
+  });
+  await page.waitForTimeout(1600);
 
   let finestra = await apri(page, "nonrisponde");
   /* Le due prese e la porta della cantina: non connessi sono tutti i
