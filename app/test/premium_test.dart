@@ -421,6 +421,19 @@ void main() {
     );
   }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
+  test('«Termini d\'uso»: l\'EULA di Apple sull\'iPhone, i nostri altrove', () {
+    /* Google Play vuole i termini di chi vende, non quelli di Apple: il
+     * link su Android porta alla pagina del sito. */
+    expect(
+      SchermataPremium.condizioni(TargetPlatform.iOS),
+      'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
+    );
+    expect(
+      SchermataPremium.condizioni(TargetPlatform.android),
+      'https://gdahome.org/termini.html',
+    );
+  });
+
   testWidgets('con un regalo, o nel browser, niente «Gestisci abbonamento»', (
     tester,
   ) async {

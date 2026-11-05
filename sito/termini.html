@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-en="GdAHome terms of service">Termini di servizio di GdAHome</title>
+    <meta
+      name="description"
+      content="Con quali regole si usano GdAHome e il suo abbonamento Premium: chi lo fornisce, cosa comprende, come si rinnova e si disdice. In italiano e senza giri."
+      data-en-content="The rules for using GdAHome and its Premium subscription: who provides it, what it includes, how it renews and how you cancel. Plainly, and without going round in circles."
+    />
+    <link rel="icon" href="gdahome.png" />
+    <meta
+      property="og:title"
+      content="Termini di servizio di GdAHome"
+      data-en-content="GdAHome terms of service"
+    />
+    <meta
+      property="og:description"
+      content="Premium si compra e si disdice dal negozio, e la sicurezza della casa resta tua."
+      data-en-content="Premium is bought and cancelled through the store, and your home's safety stays yours."
+    />
+    <meta property="og:image" content="gdahome.png" />
+    <!-- La gemella di docs/TERMINI.md, come privacy.html lo e' di
+         docs/PRIVACY.md: stesso testo, stesse sezioni, stessa data. Questo e'
+         l'indirizzo che il Play Store vuole accanto all'abbonamento, da quando
+         chi vende si e' dichiarato commerciante (DSA), e lo stesso a cui manda
+         «Termini d'uso» nella pagina Premium dell'app per Android. Una prova
+         (centralino/test/sito.test.js) tiene le due copie allineate. -->
+    <!-- Gli stessi due fogli dell'informativa: questa e' anche lei una pagina
+         da leggere e non da guardare. -->
+    <link rel="stylesheet" href="stile.css?v=57de4b3a" />
+    <link rel="stylesheet" href="privacy.css?v=5eb86410" />
+  </head>
+  <body>
+    <div class="dentro">
+      <header class="stretta">
+        <div class="riga-di-testa">
+          <a class="indietro" href="/"
+            ><img src="gdahome.png" alt="" width="40" height="40" />GdAHome</a
+          >
+          <div
+            class="lingue"
+            role="group"
+            aria-label="Lingua della pagina"
+            data-en-aria-label="Page language"
+          >
+            <button type="button" class="lingua" data-lingua="it" aria-pressed="true">IT</button>
+            <button type="button" class="lingua" data-lingua="en" aria-pressed="false">EN</button>
+          </div>
+        </div>
+        <h1 data-en="Terms of service">Termini di servizio</h1>
+        <p class="sottotitolo-informativa" data-en="Last updated: 5 November 2026.">
+          Ultimo aggiornamento: 5 novembre 2026.
+        </p>
+      </header>
+
+      <section>
+        <p
+          data-en="These are the terms for using GdAHome: the app, the Home Assistant add-on and the Premium subscription. They are written like the privacy notice, plainly and without going round in circles. By using GdAHome you accept them; if you buy Premium, they apply together with the rules of the store you buy it from. The Italian text is the one that counts; the English translation is for whoever does not read Italian."
+        >
+          Questi sono i termini con cui si usa GdAHome: l’app, l’add-on per Home Assistant e
+          l’abbonamento Premium. Sono scritti come l’informativa sulla privacy, in modo chiaro e
+          senza giri di parole. Usando GdAHome li accetti; se compri Premium, valgono insieme alle
+          regole del negozio da cui lo compri. Il testo che vale è quello italiano; la traduzione
+          inglese serve a chi non legge l’italiano.
+        </p>
+      </section>
+
+      <section>
+        <h2 data-en="Who provides GdAHome">Chi fornisce GdAHome</h2>
+        <p
+          data-en="GdAHome is provided by &lt;strong&gt;CRV Immobiliare S.r.l.&lt;/strong&gt;, Viale della Libertà 24, 81031 Aversa (CE), Italy, VAT and tax code 03719610614, REA CE-266848, certified e-mail crvimmobiliare@pec.it, website www.crvgroup.it. It is the company that distributes GdAHome and sells Premium. The code was written by Giovanni d’Aniello, who holds its copyright."
+        >
+          GdAHome lo fornisce <strong>CRV Immobiliare S.r.l.</strong>, Viale della Libertà 24, 81031
+          Aversa (CE), P. IVA e C.F. 03719610614, REA CE-266848, PEC crvimmobiliare@pec.it, sito
+          www.crvgroup.it. È la società che distribuisce GdAHome e che vende Premium. Il codice l’ha
+          scritto Giovanni d’Aniello, che ne ha i diritti d’autore.
+        </p>
+        <p
+          data-en='To write to us: domotica@crvgroup.it, the support chat inside the app, or the &lt;a href="/#contatti"&gt;contact form&lt;/a&gt; on gdahome.org. For formal notices, the certified e-mail.'
+        >
+          Per scriverci: domotica@crvgroup.it, la chat di assistenza dentro l’app, o il
+          <a href="/#contatti">modulo dei contatti</a> su gdahome.org. Per le comunicazioni formali,
+          la PEC.
+        </p>
+      </section>
+
+      <section>
+        <h2 data-en="What GdAHome is">Cos'è GdAHome</h2>
+        <p
+          data-en="GdAHome is the app that opens the dashboard of &lt;strong&gt;your&lt;/strong&gt; Home Assistant on your phone, on your watch, in the car and in the browser, together with the add-on that serves it from inside Home Assistant. Inside the app there is also GdANav, the navigator."
+        >
+          GdAHome è l’app che apre la plancia del <strong>tuo</strong> Home Assistant sul telefono,
+          sull’orologio, in auto e nel browser, insieme all’add-on che la serve da dentro Home
+          Assistant. Dentro l’app c’è anche GdANav, il navigatore.
+        </p>
+        <p
+          data-en="It is not a service that keeps your home somewhere: &lt;strong&gt;your home's data stays in your home&lt;/strong&gt;, in your Home Assistant, and the app asks it for them. Away from home the app goes through the relay, which carries the encrypted connection between the phone and the add-on and cannot read it. Home Assistant is not provided by GdAHome: it is yours, and you run it."
+        >
+          Non è un servizio che tiene la tua casa da qualche parte:
+          <strong>i dati della tua casa restano in casa tua</strong>, nel tuo Home Assistant, e
+          l’app li chiede a lui. Da fuori casa l’app passa dal centralino, che porta il collegamento
+          cifrato fra il telefono e l’add-on e non può leggerlo. Home Assistant non lo fornisce
+          GdAHome: è tuo, e lo gestisci tu.
+        </p>
+      </section>
+
+      <section>
+        <h2 data-en="What you need">Cosa ti serve</h2>
+        <ul>
+          <li
+            data-en="&lt;strong&gt;A Home Assistant of your own&lt;/strong&gt;, or one you have the right to use, with the Supervisor (Home Assistant OS or Home Assistant Supervised), and the GdAHome add-on inside it."
+          >
+            <strong>Un Home Assistant tuo</strong>, o che hai il diritto di usare, con il Supervisor
+            (Home Assistant OS o Home Assistant Supervised), e dentro l’add-on GdAHome.
+          </li>
+          <li data-en="An Android phone or an iPhone, or else a browser.">
+            Un telefono Android o un iPhone, oppure un browser.
+          </li>
+          <li
+            data-en="For the home from away, and for the home to know whether it is Premium, an internet connection at home."
+          >
+            Per la casa da fuori casa, e perché la casa sappia se è Premium, una connessione a
+            internet in casa.
+          </li>
+        </ul>
+        <p
+          data-en="&lt;strong&gt;There is no GdAHome account to create.&lt;/strong&gt; The phone pairs with the home by scanning the QR code the add-on shows, and the credential stays on the phone. Keep the pairing code and the paired phone to yourself: whoever has them gets into your home as you. If you lose a phone, remove it from the add-on’s page, “Paired phones → Unpair”. Only pair homes that are yours, or that you have the right to control."
+        >
+          <strong>Non c’è un account GdAHome da fare.</strong> Il telefono si abbina alla casa
+          inquadrando il QR code che mostra l’add-on, e la credenziale resta nel telefono. Tieni per
+          te il codice di abbinamento e il telefono abbinato: chi li ha entra nella tua casa come
+          te. Se perdi un telefono, toglilo dalla pagina dell’add-on, «Telefoni abbinati → Togli
+          associazione». Abbina solo case che sono tue, o che hai il diritto di comandare.
+        </p>
+        <p
+          data-en="To buy Premium you need an Apple or Google account you can make purchases with: the store checks who is paying."
+        >
+          Per comprare Premium serve un account Apple o Google con cui puoi fare acquisti: chi paga
+          lo verifica il negozio.
+        </p>
+      </section>
+
+      <section>
+        <h2 data-en="Premium: what it includes and what it costs">
+          Premium: cosa comprende e quanto costa
+        </h2>
+        <p
+          data-en="GdAHome Base is free, for good. &lt;strong&gt;Premium&lt;/strong&gt; adds, today:"
+        >
+          GdAHome Base è gratis, per sempre. <strong>Premium</strong> aggiunge, oggi:
+        </p>
+        <ul>
+          <li data-en="up to 30 dashboards per home and up to 10 homes in the app;">
+            fino a 30 plance per casa e fino a 10 case nell’app;
+          </li>
+          <li data-en="the home from away, encrypted end to end, with no router ports to open;">
+            la casa da fuori casa, cifrata da un capo all’altro, senza aprire porte sul router;
+          </li>
+          <li data-en="configuring the dashboard from your phone;">
+            la configurazione della plancia dal telefono;
+          </li>
+          <li data-en="automations;">le automazioni;</li>
+          <li data-en="Zigbee devices, paired from the app;">
+            i dispositivi Zigbee, abbinati dall’app;
+          </li>
+          <li data-en="health from your watch, with the readings going to your home;">
+            la salute dall’orologio, con le misure che vanno alla casa;
+          </li>
+          <li
+            data-en="the home on your wrist (Apple Watch and Wear OS) and in the car (Android Auto and CarPlay);"
+          >
+            la casa al polso (Apple Watch e Wear OS) e in auto (Android Auto e CarPlay);
+          </li>
+          <li data-en="GdANav Premium, included.">GdANav Premium, compreso.</li>
+        </ul>
+        <p
+          data-en="&lt;strong&gt;Premium belongs to the home, not to the phone&lt;/strong&gt;: it is switched on for one home, and every phone paired with it gets it together. A subscription covers one home at a time."
+        >
+          <strong>Premium è della casa, non del telefono</strong>: si attiva per una casa, e tutti i
+          telefoni abbinati a lei lo hanno insieme. Un abbonamento vale per una casa alla volta.
+        </p>
+        <p
+          data-en="You buy it from the app, with the App Store or with Google Play, in two plans: &lt;strong&gt;monthly&lt;/strong&gt; or &lt;strong&gt;yearly&lt;/strong&gt;. The price is the one the store shows you when you buy, in your currency and with taxes included; in Italy today it is €4.99 a month or €49.99 a year."
+        >
+          Si compra dall’app, con l’App Store o con Google Play, in due piani:
+          <strong>mensile</strong> o <strong>annuale</strong>. Il prezzo è quello che ti mostra il
+          negozio quando compri, nella tua valuta e con le tasse comprese; in Italia oggi è 4,99 €
+          al mese o 49,99 € all’anno.
+        </p>
+        <p
+          data-en="&lt;strong&gt;The first time, the first 14 days are free.&lt;/strong&gt; If you cancel during the trial you pay nothing; if you do not, the plan you chose starts when the trial ends. The trial is given once only, and whether you are still entitled to it is up to the store."
+        >
+          <strong>La prima volta, i primi 14 giorni sono gratis.</strong> Se disdici durante la
+          prova non paghi nulla; se non disdici, alla fine della prova parte il piano che hai
+          scelto. La prova spetta una volta sola, e se ti spetta ancora lo dice il negozio.
+        </p>
+        <p
+          data-en="You can also get Premium with a &lt;strong&gt;gift code&lt;/strong&gt; (&lt;code&gt;GDA-XXXX-XXXX-XXXX&lt;/code&gt;, it works once only) or from &lt;strong&gt;whoever installed your system&lt;/strong&gt;. There is no subscription there and nothing renews: Premium lasts as long as the code or the licence says."
+        >
+          Premium si può avere anche con un <strong>codice regalo</strong>
+          (<code>GDA-XXXX-XXXX-XXXX</code>, vale una volta sola) o da
+          <strong>chi ha installato il tuo impianto</strong>. Lì non c’è un abbonamento e non si
+          rinnova niente: Premium dura quello che dice il codice o la licenza.
+        </p>
+        <p
+          data-en="To know whether a home is Premium, the add-on asks &lt;code&gt;quadro.gdahome.org&lt;/code&gt; every six hours. A home without internet stays Premium for eight days."
+        >
+          Per sapere se una casa è Premium l’add-on lo chiede a <code>quadro.gdahome.org</code> ogni
+          sei ore. Una casa senza internet resta Premium per otto giorni.
+        </p>
+      </section>
+
+      <section>
+        <h2 data-en="Renewal, cancellation and refunds">Rinnovo, disdetta e rimborsi</h2>
+        <ul>
+          <li
+            data-en="&lt;strong&gt;Renewal is automatic&lt;/strong&gt;: at the end of each month, or of each year, the store charges you for the next period, until you cancel."
+          >
+            <strong>Il rinnovo è automatico</strong>: alla fine di ogni mese, o di ogni anno, il
+            negozio ti addebita il periodo dopo, finché non disdici.
+          </li>
+          <li
+            data-en="&lt;strong&gt;You cancel through the store&lt;/strong&gt;, not the app: on iPhone from Settings › your name › Subscriptions, on Android from the Play Store › Payments &amp; subscriptions › Subscriptions. In the app, “Manage subscription” takes you there, and that is also where you change plan. You can cancel whenever you like: Premium stays until the end of the period already paid, and then the home goes back to Base."
+          >
+            <strong>Si disdice dal negozio</strong>, non dall’app: sull’iPhone da Impostazioni › il
+            tuo nome › Abbonamenti, su Android dal Play Store › Pagamenti e abbonamenti ›
+            Abbonamenti. Nell’app, «Gestisci abbonamento» ti porta lì, e lì si cambia anche piano.
+            Si disdice quando vuoi: Premium resta fino alla fine del periodo già pagato, e poi la
+            casa torna a Base.
+          </li>
+          <li
+            data-en='&lt;strong&gt;The payment is collected by the store&lt;/strong&gt;, and refunds are decided and made by the store, under its own rules: Apple from &lt;a href="https://reportaproblem.apple.com"&gt;reportaproblem.apple.com&lt;/a&gt;, Google from your Google Play order history. If you have a problem with a payment, write to us anyway: we will help you ask for it.'
+          >
+            <strong>Il pagamento lo incassa il negozio</strong>, e i rimborsi li decide e li fa il
+            negozio, con le sue regole: Apple da
+            <a href="https://reportaproblem.apple.com">reportaproblem.apple.com</a>, Google dalla
+            cronologia degli ordini di Google Play. Se hai un problema con un pagamento, scrivici lo
+            stesso: ti aiutiamo a chiederlo.
+          </li>
+          <li data-en="If a purchase is refunded, Premium ends for that home.">
+            Se un acquisto viene rimborsato, Premium per quella casa finisce.
+          </li>
+          <li
+            data-en="If the price changes, for whoever is already subscribed it only applies after the store has told them, under its own rules."
+          >
+            Se il prezzo cambia, per chi è già abbonato vale solo dopo che il negozio glielo ha
+            detto, con le sue regole.
+          </li>
+        </ul>
+        <p
+          data-en='&lt;strong&gt;The right of withdrawal.&lt;/strong&gt; If you are a consumer in the European Union, the law gives you 14 days to withdraw from a distance purchase without giving a reason (Italian Consumer Code, articles 52 and following). For Premium bought in the app, you ask &lt;strong&gt;the store&lt;/strong&gt;, which sold it and collected the payment: Apple accepts it from customers in the European Union within 14 days at &lt;a href="https://reportaproblem.apple.com"&gt;reportaproblem.apple.com&lt;/a&gt;; Google Play handles it under its refund rules. For digital services you start using straight away the law provides for exceptions, and the store tells you about them when you buy. The free trial, in the meantime, gives you 14 days to try it without paying.'
+        >
+          <strong>Il diritto di recesso.</strong> Se sei un consumatore nell’Unione europea, la
+          legge ti dà 14 giorni per recedere da un acquisto fatto a distanza, senza dire perché
+          (Codice del consumo, articoli 52 e seguenti). Per Premium comprato dall’app il recesso si
+          chiede <strong>al negozio</strong>, che ha venduto e incassato: Apple, a chi sta
+          nell’Unione europea, lo accetta entro 14 giorni da
+          <a href="https://reportaproblem.apple.com">reportaproblem.apple.com</a>; Google Play lo
+          gestisce con le sue regole sui rimborsi. Per i servizi digitali che cominci a usare subito
+          la legge prevede delle eccezioni, e il negozio te le dice quando compri. La prova
+          gratuita, intanto, ti lascia 14 giorni per provare senza pagare.
+        </p>
+      </section>
+
+      <section>
+        <h2 data-en="How to use it, and how not to">Come si usa, e come no</h2>
+        <p
+          data-en="Use GdAHome for your home, or for the homes you have the right to control. You may not:"
+        >
+          Usa GdAHome per la tua casa, o per le case che hai il diritto di comandare. Non si può:
+        </p>
+        <ul>
+          <li
+            data-en="use it to get into somebody else’s home, or control it, without their permission;"
+          >
+            usarlo per entrare nella casa di qualcun altro, o comandarla, senza il suo permesso;
+          </li>
+          <li
+            data-en="get around, switch off or forge Premium’s checks: licences, tokens, gift codes, subscriptions;"
+          >
+            aggirare, spegnere o falsificare i controlli di Premium: le licenze, i gettoni, i codici
+            regalo, gli abbonamenti;
+          </li>
+          <li
+            data-en="use the relay, the quadro or the contact form for anything other than GdAHome, try to break into them, or use them in bursts;"
+          >
+            usare il centralino, il quadro o il modulo dei contatti per altro che GdAHome, provare a
+            forzarli, o usarli a raffica;
+          </li>
+          <li
+            data-en="put other people’s data, or illegal or offensive content, in reports, which are public;"
+          >
+            mettere nelle segnalazioni, che sono pubbliche, dati di altre persone o contenuti
+            illegali o offensivi;
+          </li>
+          <li data-en="redistribute or resell the code, as the licence says (further down).">
+            ridistribuire o rivendere il codice, come dice la licenza (più sotto).
+          </li>
+        </ul>
+        <p
+          data-en="If you have cameras at home, or follow where people are, respecting the privacy rules of whoever is filmed or followed is up to you."
+        >
+          Se in casa hai telecamere, o segui dove sono le persone, rispettare le regole sulla
+          privacy di chi viene ripreso o seguito spetta a te.
+        </p>
+        <p
+          data-en="From whoever does not respect these terms we can take away the Premium licence or close the connection through the relay. If a paid subscription is involved we tell you first, unless it is urgent or the law does not allow us to."
+        >
+          A chi non rispetta questi termini possiamo togliere la licenza Premium o chiudere il
+          collegamento dal centralino. Se c’è di mezzo un abbonamento pagato te lo diciamo prima,
+          salvo che sia urgente o che la legge non ce lo permetta.
+        </p>
+      </section>
+
+      <section>
+        <h2 data-en="Your home's safety stays yours">La sicurezza della casa resta tua</h2>
+        <p
+          data-en="GdAHome lets you see and control what is in your Home Assistant: lights, climate, shutters, locks, gates, burglar alarm, cameras, automations. &lt;strong&gt;The automations, the safety devices, the locks and the alarms stay yours, and you are responsible for them&lt;/strong&gt;: how they are set up, what they do when nobody is watching, who can control them."
+        >
+          GdAHome ti fa vedere e comandare quello che c’è nel tuo Home Assistant: luci, clima,
+          tapparelle, serrature, cancelli, antifurto, telecamere, automazioni.
+          <strong
+            >Le automazioni, i dispositivi di sicurezza, le serrature e gli allarmi restano tuoi, e
+            ne rispondi tu</strong
+          >: come sono configurati, cosa fanno quando nessuno guarda, chi li può comandare.
+        </p>
+        <p
+          data-en="&lt;strong&gt;GdAHome is not a certified security or alarm system.&lt;/strong&gt; It does not replace an alarm system, a monitoring service, a smoke or gas detector, or the emergency numbers. A notification can arrive late or not at all, a command can fail to go out: the phone can be without signal, Home Assistant switched off, the internet down. For people’s safety, and wherever a fault can do damage, use devices and systems made and certified for that, and make sure they work without GdAHome too."
+        >
+          <strong>GdAHome non è un sistema di sicurezza o di allarme certificato.</strong> Non
+          sostituisce un impianto d’allarme, una vigilanza, un rilevatore di fumo o di gas, né i
+          numeri di emergenza. Una notifica può arrivare tardi o non arrivare, un comando può non
+          partire: il telefono può essere senza rete, Home Assistant spento, internet fermo. Per la
+          sicurezza delle persone, e dove un guasto può fare danni, usa dispositivi e impianti fatti
+          e certificati per quello, e fai in modo che funzionino anche senza GdAHome.
+        </p>
+        <p
+          data-en="Before opening a gate, a door or a lock from afar, make sure you can do it without risk to whoever is there."
+        >
+          Prima di aprire da lontano un cancello, una porta o una serratura, assicurati di poterlo
+          fare senza rischi per chi è lì.
+        </p>
+      </section>
+
+      <section>
+        <h2 data-en="When it works, and when it changes">Quando funziona, e quando cambia</h2>
+        <p
+          data-en="We do our best for GdAHome to always work, but we cannot promise it will never stop. Away from home the connection depends on the internet, on the relay (&lt;code&gt;tramite.gdahome.org&lt;/code&gt;) and on your Home Assistant; the services of others that GdAHome uses — the maps, the traffic, the rain radar, the stores — can change or stop through no doing of ours."
+        >
+          Facciamo il possibile perché GdAHome funzioni sempre, ma non possiamo promettere che non
+          si fermi mai. Da fuori casa il collegamento dipende da internet, dal centralino
+          (<code>tramite.gdahome.org</code>) e dal tuo Home Assistant; i servizi di altri che
+          GdAHome usa — le mappe, il traffico, il radar della pioggia, i negozi — possono cambiare o
+          fermarsi senza dipendere da noi.
+        </p>
+        <p
+          data-en="GdAHome changes: new versions add features, change some and sometimes remove some. What you have already paid for stays valid for what it included when you bought it. Keep the app and the add-on up to date: a very old version of one can stop understanding the other."
+        >
+          GdAHome cambia: le versioni nuove aggiungono funzioni, ne cambiano e a volte ne tolgono.
+          Quello che hai già pagato resta valido per quello che prevedeva quando l’hai comprato.
+          Tieni aggiornati l’app e l’add-on: una versione molto vecchia dell’uno può smettere di
+          capirsi con l’altro.
+        </p>
+        <p
+          data-en="If one day Premium stopped being sold, subscriptions would no longer renew, and we would say so beforehand, on the site and in the app."
+        >
+          Se un giorno Premium smettesse di essere venduto, gli abbonamenti non si rinnoverebbero
+          più, e lo diremmo prima, sul sito e nell’app.
+        </p>
+      </section>
+
+      <section>
+        <h2 data-en="The code and the trademarks">Il codice e i marchi</h2>
+        <p
+          data-en='GdAHome’s code is public so that anyone can read it and check what it does with their home, but &lt;strong&gt;it is not open source&lt;/strong&gt;: it is distributed under the &lt;strong&gt;GdAHome License, version 2.0&lt;/strong&gt;, in the &lt;a href="https://github.com/danigio15/gdahomeapp/blob/main/LICENSE"&gt;&lt;code&gt;LICENSE&lt;/code&gt; file&lt;/a&gt; of the repository. In short: you may install it and use it for yourself, read its code and modify your copy to use it yourself; you may not redistribute it, publish it in a store, resell it, or use its names and trademarks, such as “GdAHome” and “GdANav”. The text of the licence is what counts. Third-party components have their own licences.'
+        >
+          Il codice di GdAHome è pubblico perché chiunque possa leggerlo e controllare cosa fa con
+          la sua casa, ma <strong>non è open source</strong>: è distribuito con la
+          <strong>Licenza d’uso di GdAHome, versione 2.0</strong>, nel
+          <a href="https://github.com/danigio15/gdahomeapp/blob/main/LICENSE"
+            >file <code>LICENSE</code></a
+          >
+          della repository. In breve: puoi installarlo e usarlo per te, leggerne il codice e
+          modificare la tua copia per usarla tu; non puoi ridistribuirlo, pubblicarlo in un negozio,
+          rivenderlo, né usarne i nomi e i marchi, come «GdAHome» e «GdANav». Quello che vale è il
+          testo della licenza. I componenti di terzi hanno le loro licenze.
+        </p>
+        <p
+          data-en='On iPhone, the app downloaded from the App Store is also governed by &lt;a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"&gt;Apple’s standard licence for apps&lt;/a&gt;.'
+        >
+          Sull’iPhone l’app scaricata dall’App Store è regolata anche dalla
+          <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
+            >licenza standard di Apple per le app</a
+          >.
+        </p>
+      </section>
+
+      <section>
+        <h2 data-en="How far we are liable">Fin dove rispondiamo</h2>
+        <p
+          data-en="We are liable for what the law makes us liable for, and &lt;strong&gt;these terms take away none of the rights the law gives you as a consumer&lt;/strong&gt;: among them the legal guarantee of conformity of digital content and services (Italian Consumer Code, articles 135-octies and following), and liability for wilful misconduct or gross negligence (article 1229 of the Italian Civil Code) and for personal injury, which cannot be excluded."
+        >
+          Rispondiamo di quello di cui la legge ci fa rispondere, e
+          <strong
+            >questi termini non tolgono nessuno dei diritti che la legge ti dà come
+            consumatore</strong
+          >: fra questi la garanzia legale di conformità dei contenuti e dei servizi digitali
+          (Codice del consumo, articoli 135-octies e seguenti), e la responsabilità per dolo o colpa
+          grave (articolo 1229 del codice civile) e per i danni alla persona, che non si possono
+          escludere.
+        </p>
+        <p data-en="Beyond that, within the limits the law allows, we are not liable:">
+          Fuori da questo, nei limiti che la legge consente, non rispondiamo:
+        </p>
+        <ul>
+          <li
+            data-en="for damage that comes from how your Home Assistant, your automations and your devices are set up, or from other people’s devices, services and networks;"
+          >
+            dei danni che vengono da come sono configurati il tuo Home Assistant, le tue automazioni
+            e i tuoi dispositivi, o da dispositivi, servizi e reti di altri;
+          </li>
+          <li
+            data-en="for damage due to use against these terms, or against what “Your home's safety stays yours” says;"
+          >
+            dei danni dovuti a un uso contrario a questi termini, o a quello che dice «La sicurezza
+            della casa resta tua»;
+          </li>
+          <li
+            data-en="for outages of the internet, of the stores or of other people’s services that do not depend on us."
+          >
+            dei disservizi di internet, dei negozi o dei servizi di altri che non dipendono da noi.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 data-en="Privacy">La privacy</h2>
+        <p
+          data-en='Which data is involved, where it sits and who can read it is set out in the &lt;a href="privacy.html"&gt;privacy notice&lt;/a&gt;. In short: your home’s data stays in your home, there is no account, and payment is handled by Apple and Google.'
+        >
+          Quali dati ci sono di mezzo, dove stanno e chi li può leggere lo dice
+          <a href="privacy.html">l’informativa sulla privacy</a>. In breve: i dati della tua casa
+          restano in casa tua, non c’è un account, e il pagamento lo gestiscono Apple e Google.
+        </p>
+      </section>
+
+      <section>
+        <h2 data-en="If these terms change">Se questi termini cambiano</h2>
+        <p
+          data-en="We may change these terms, for example when GdAHome, Premium or the law change. The new version sits here, with the date at the top, and in the repository, where you can also see what changed. If a change affects subscribers in an important way, we say so beforehand in the app or on the site: if you are not happy with it you can cancel, and the period already paid stays."
+        >
+          Possiamo cambiare questi termini, per esempio quando cambiano GdAHome, Premium o la legge.
+          La versione nuova sta qui, con la data in cima, e nella repository, dove si vede anche
+          cosa è cambiato. Se un cambio tocca in modo importante chi ha un abbonamento, lo diciamo
+          prima nell’app o sul sito: se non ti sta bene puoi disdire, e il periodo già pagato resta.
+        </p>
+      </section>
+
+      <section>
+        <h2 data-en="The law and the court">La legge e il giudice</h2>
+        <p
+          data-en="These terms are governed by Italian law. If you are a consumer living in another country of the European Union, you also keep the protections of your country’s law that cannot be set aside by contract (Regulation (EC) No 593/2008, article 6)."
+        >
+          Questi termini sono regolati dalla legge italiana. Se sei un consumatore che vive in un
+          altro Paese dell’Unione europea, restano anche le tutele della legge del tuo Paese che non
+          si possono togliere per contratto (Regolamento (CE) n. 593/2008, articolo 6).
+        </p>
+        <p
+          data-en="For disputes with a consumer, the court of the place where the consumer lives has jurisdiction (Italian Consumer Code, article 66-bis, and Regulation (EU) No 1215/2012); with anyone who is not a consumer, exclusively the Court of Napoli Nord, as in the licence. Before going to court, write to us: it almost always gets sorted out there. If a clause is void, the others remain valid."
+        >
+          Per le controversie con un consumatore è competente il giudice del luogo dove il
+          consumatore risiede (Codice del consumo, articolo 66-bis, e Regolamento (UE) n.
+          1215/2012); con chi non è consumatore, in via esclusiva il Tribunale di Napoli Nord, come
+          nella licenza. Prima del giudice, scrivici: quasi sempre si risolve lì. Se una clausola è
+          nulla, le altre restano valide.
+        </p>
+      </section>
+
+      <footer>
+        <div class="dentro" style="padding: 0">
+          <p><a href="/" data-en="Back to GdAHome">Torna a GdAHome</a></p>
+          <p><a href="privacy.html">Privacy</a></p>
+          <p
+            data-en='The same terms, in the code: &lt;a href="https://github.com/danigio15/gdahomeapp/blob/main/docs/TERMINI.md"&gt;docs/TERMINI.md&lt;/a&gt;.'
+          >
+            Gli stessi termini, nel codice:
+            <a href="https://github.com/danigio15/gdahomeapp/blob/main/docs/TERMINI.md"
+              >docs/TERMINI.md</a
+            >.
+          </p>
+        </div>
+      </footer>
+    </div>
+
+    <script src="sito.js?v=3acf72dc"></script>
+  </body>
+</html>
