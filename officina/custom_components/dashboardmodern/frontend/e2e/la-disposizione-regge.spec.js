@@ -41,7 +41,7 @@ const maniglia = (page, sezione, id) =>
   );
 
 async function inModificaSu(page, sezione) {
-  await page.locator(`#page-${sezione} [data-dm-disp-tasto]`).click();
+  await page.evaluate(() => window.dmDisposizione.entraInModifica());
   await expect(page.locator("html")).toHaveAttribute("data-dm-modifica", sezione);
 }
 
@@ -70,14 +70,16 @@ test("Auto nuova: «Dettagli» nascosto e salvato resta nascosto dopo aver ricar
 
 /* ── 2. quello che non si e' salvato non resta sulla pagina ─────────────── */
 
-test("✏️ ripremuto chiude come «Annulla»: la bozza non resta sulla pagina", async ({ page }) => {
+/* Sulla plancia non c'e' piu' il ✏️ da ripremere (#379): la modifica la
+ * chiude «Annulla», nella barra dell'anteprima del Config come qui. */
+test("«Annulla» chiude la modifica: la bozza non resta sulla pagina", async ({ page }) => {
   test.setTimeout(150_000);
   await nellaCasaDemo(page);
   await apri(page, "security");
   await expect.poll(() => voci(page, "security")).toContain("fumo");
   await inModificaSu(page, "security");
   await occhio(page, "security", "fumo").click();
-  await page.locator("#page-security [data-dm-disp-tasto]").click();
+  await page.locator('[data-dm-disp-azione="annulla"]').click();
   await expect.poll(() => inModifica(page)).toBe("");
   expect(await nascoste(page, "security")).toEqual([]);
   await expect(page.locator("#page-security .dm-sec-smoke")).toBeVisible();
@@ -371,52 +373,4 @@ test("un segno «sto trascinando» rimasto appeso non fa girare la pagina per se
   const giri = await page.evaluate(() => window.dmDisposizione.giri());
   await page.waitForTimeout(800);
   expect(await page.evaluate(() => window.dmDisposizione.giri())).toBeLessThan(giri + 3);
-});
-
-/* ── 6. il ✏️ della Home ───────────────────────────────────────────────── */
-
-test("in Home il ✏️ sta nella testata accanto all'ingranaggio e non copre niente", async ({
-  page,
-}) => {
-  test.setTimeout(120_000);
-  await nellaCasaDemo(page);
-  const tasto = page.locator('[data-dm-disp-tasto="home"]');
-  await expect(tasto).toBeVisible();
-  const dove = await page.evaluate(() => {
-    const t = document.querySelector('[data-dm-disp-tasto="home"]');
-    const casa = document.getElementById("page-home");
-    const r = t.getBoundingClientRect();
-    const tocca = (el) => {
-      const q = el?.getBoundingClientRect();
-      if (!q || !q.width) return false;
-      return (
-        Math.min(r.right, q.right) - Math.max(r.left, q.left) > 1 &&
-        Math.min(r.bottom, q.bottom) - Math.max(r.top, q.top) > 1
-      );
-    };
-    return {
-      nellaHome: casa.contains(t),
-      primoDellaHome: casa.firstElementChild === t,
-      accanto: t.nextElementSibling?.id,
-      fascia: tocca(document.getElementById("dm-casa-fascia")),
-      ingranaggio: tocca(document.getElementById("dm-editor-entry")),
-      testata: [...t.parentElement.children]
-        .filter((el) => el !== t && el.offsetWidth)
-        .some((el) => el.matches(".header-left-wrap,.status-pill") && tocca(el)),
-    };
-  });
-  expect(dove).toEqual({
-    nellaHome: false,
-    primoDellaHome: false,
-    accanto: "dm-editor-entry",
-    fascia: false,
-    ingranaggio: false,
-    testata: false,
-  });
-  /* Fuori dalla Home non si vede: le altre pagine hanno il loro. */
-  await apri(page, "security");
-  await expect(tasto).toBeHidden();
-  await page.evaluate(() => document.querySelector('.tab[data-tab="home"]').click());
-  await expect(page.locator("#page-home")).toHaveClass(/active/);
-  await expect(tasto).toBeVisible();
 });

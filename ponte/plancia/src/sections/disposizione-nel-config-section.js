@@ -1,18 +1,19 @@
 /* La disposizione nel Config (#379).
  *
- * Due cose che sulla plancia si fanno col ✏️ e che il Config deve poter fare
- * anche lui, nella scheda Impostazioni:
+ * Le cose della disposizione che stanno nella scheda Impostazioni del Config
+ * (le sezioni si spostano nell'anteprima della loro scheda, vedi
+ * `anteprima-della-plancia-section.js`; sulla plancia non c'e' nessuna matita):
  *
  * - l'«Ordine navbar», che aveva solo le frecce ▲▼: adesso ogni riga ha la sua
  *   maniglia e si trascina, col dito, col mouse o dalle frecce della
  *   tastiera. L'ordine si scrive nella stessa casella delle frecce,
  *   `cd_navbar_order`, e Config resta l'ultima;
- * - le «Disposizioni salvate»: le pagine cambiate col ✏️, ognuna col suo
+ * - le «Disposizioni salvate»: le pagine cambiate nell'anteprima, ognuna col suo
  *   «Ripristina», e uno per tutte. Senza, una pagina nascosta per sbaglio si
  *   poteva rimettere solo tornando su quella pagina — e un riquadro nascosto,
  *   da fuori della modifica, non si vede;
  * - i «Disegni salvati»: i disegni (il solare, il flusso dell'energia, le
- *   macchine, il prato) a cui col ✏️ si sono spostati i pezzi, uno per ogni
+ *   macchine, il prato) a cui nell'anteprima si sono spostati i pezzi, uno per ogni
  *   disegno e per ogni schermo — computer o telefono — col suo «Ripristina».
  */
 import { CHIAVE_DISPOSIZIONE, pagineCambiate, senzaLaPagina } from "../core/disposizione.js";
@@ -130,8 +131,8 @@ function markupDelleSalvate() {
     )
     .join("");
   return `<div class="ed-intro" style="margin-top:18px;"><b>${t("Disposizioni salvate", "Saved layouts")}</b>: ${t(
-    "le pagine cambiate col ✏️ — l'ordine dei riquadri e quelli nascosti. «Ripristina» la rimette com'era.",
-    "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.",
+    "le pagine cambiate nell'anteprima della loro scheda — l'ordine dei riquadri e quelli nascosti. «Ripristina» la rimette com'era.",
+    "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.",
   )}</div>${
     righe
       ? `${righe}${
@@ -184,8 +185,8 @@ function markupDeiDisegni() {
     )
     .join("");
   return `<div class="ed-intro" style="margin-top:18px;"><b>${t("Disegni salvati", "Saved drawings")}</b>: ${t(
-    "i disegni a cui col ✏️ hai spostato i pezzi, sul computer e sul telefono. «Ripristina» li rimette com'erano.",
-    "the drawings whose pieces you moved with ✏️, on the computer and on the phone. «Reset» puts them back as they were.",
+    "i disegni a cui nell'anteprima hai spostato i pezzi, sul computer e sul telefono. «Ripristina» li rimette com'erano.",
+    "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.",
   )}</div>${
     righe
       ? `${righe}${

@@ -97,7 +97,7 @@ const centro = (page, sel) =>
   });
 
 async function entra(page) {
-  await page.locator("#page-energy [data-dm-disp-tasto]").first().click();
+  await page.evaluate(() => window.dmDisposizione.entraInModifica());
   await expect(page.locator("html")).toHaveAttribute("data-dm-modifica", "energy");
   await expect(page.locator("[data-dm-disegno-strato='energia']")).toBeAttached();
 }
@@ -231,7 +231,7 @@ test("sul telefono la scelta e' del telefono: il computer resta com'era", async 
   test.skip(testInfo.project.name !== "mobile", "il telefono");
   await apri(page, testInfo);
   const prima = await linea(page, "m-line-solar-battery");
-  await page.locator("#page-energy [data-dm-disp-tasto]").first().scrollIntoViewIfNeeded();
+  await page.evaluate(() => document.querySelector("section.page.active")?.scrollIntoView());
   await entra(page);
   await expect(page.locator(".dm-dis-variante").first()).toContainText("telefono");
   await trascina(page, "batteria", -10, 150);

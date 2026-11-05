@@ -120,7 +120,9 @@ export async function apri(page, sezione, tab = sezione) {
   await page.waitForFunction(
     (s) => {
       const p = document.getElementById(`page-${s}`);
-      return Boolean(p && p.offsetHeight > 0 && p.querySelector("[data-dm-disp-tasto]"));
+      return Boolean(
+        p && p.offsetHeight > 0 && p.classList.contains("active") && p.childElementCount > 0,
+      );
     },
     sezione,
     { timeout: 20_000 },

@@ -410,6 +410,10 @@
   }
 
   function explicitBridge() {
+    /* L'anteprima del Config (`storage-namespace.js`) ha gia' il suo filo, quello
+     * senza comandi: quello del genitore, preso qui, li farebbe passare. */
+    if (window.__DASHBOARDMODERN_ANTEPRIMA__ && typeof window.__DASHBOARDMODERN_BRIDGE_WS__ === "function")
+      return window.__DASHBOARDMODERN_BRIDGE_WS__;
     var bridge = parentValue("__DASHBOARDMODERN_BRIDGE_WS__");
     if (typeof bridge === "function") return bridge;
     return typeof window.__DASHBOARDMODERN_BRIDGE_WS__ === "function"

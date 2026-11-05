@@ -3,7 +3,7 @@
  * «Vedi come poter spostare le cose anche nei disegni.» Dopo il solare termico
  * e il flusso dell'energia, le altre scene con dei pezzi e dei tubi fra loro:
  * lo scaldabagno, la caldaia, la stufa a pellet (la pagina della gestione
- * termica) e il gruppo di continuita'. Con ✏️ ogni pezzo ha la sua maniglia
+ * termica) e il gruppo di continuita'. Nell'anteprima del Config ogni pezzo ha la sua maniglia
  * (`disegni-che-si-spostano-section.js`), e i tubi e i cavi che toccano un
  * pezzo spostato si rifanno; gli altri restano quelli disegnati a mano.
  *

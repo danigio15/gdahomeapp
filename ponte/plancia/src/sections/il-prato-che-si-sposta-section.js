@@ -3,7 +3,7 @@
  * «Vedi come poter spostare le cose anche nei disegni.» Il prato della pagina
  * Irrigazione mette un irrigatore per zona su due file, una dietro e una
  * davanti; casa per casa, pero', il vialetto, l'aiuola e l'orto stanno dove
- * stanno. Con ✏️ ogni irrigatore ha la sua maniglia
+ * stanno. Nell'anteprima del Config ogni irrigatore ha la sua maniglia
  * (`disegni-che-si-spostano-section.js`) e si mette dove sta davvero in
  * giardino. Fra le zone non ci sono tubi: si sposta l'irrigatore con la sua
  * etichetta, e l'acqua (il getto, l'erba bagnata) gli va dietro da sola.

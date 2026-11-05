@@ -1,13 +1,17 @@
-/* La disposizione delle sezioni, sulla plancia (#379).
+/* La disposizione delle sezioni (#379).
  *
- * «Il discorso drag & drop deve essere ovunque, non solo nei widget.» Ogni
- * pagina della plancia ha un tasto ✏️ «Modifica disposizione» (per chi puo'
- * configurare): premuto, i riquadri della pagina e gli elementi dei suoi
- * elenchi — le luci di una stanza, le telecamere, le zone — si trascinano li'
- * dove sono, col mouse o tenendo premuto col dito; l'occhio li nasconde,
- * «↔» li fa larghi. In basso una barra: «N modifiche · Annulla · Ripristina ·
- * Salva». «Salva» scrive `cd_disposizione` (vedi `core/disposizione.js`), che
- * viaggia col ponte: la pagina e' cosi' su ogni dispositivo.
+ * «Il drag e drop non deve essere sulla plancia: ti avevo detto di creare
+ * un'anteprima nel Config dove si fa questa cosa. Nella plancia non voglio
+ * vedere alcuna matita con modifica.» Sulla plancia, quindi, nessun tasto: la
+ * plancia mette soltanto la disposizione salvata. Si cambia nel Config, nella
+ * scheda della sezione, dentro l'anteprima (`anteprima-della-plancia-section.js`):
+ * una plancia vera, larga come il telefono o come il computer, dove questa
+ * modalita' resta accesa — i riquadri della pagina e gli elementi dei suoi
+ * elenchi (le luci di una stanza, le telecamere, le zone) si trascinano col
+ * mouse o tenendo premuto col dito, l'occhio li nasconde, «↔» li fa larghi.
+ * La barra dell'anteprima dice «N modifiche · Annulla · Ripristina · Salva»;
+ * «Salva» scrive `cd_disposizione` (vedi `core/disposizione.js`), che viaggia
+ * col ponte: la pagina e' cosi' su ogni dispositivo.
  *
  * Le pagine non sanno niente di tutto questo, e non devono: la disposizione
  * si applica DOPO che hanno disegnato, a ogni ridisegno, e senza scelta
@@ -1183,7 +1187,29 @@ export function ridisegnaLaBarra() {
   if (state.modifica) disegnaLaBarra();
 }
 
+/* Chi ospita l'anteprima (il Config) tiene la sua barra: gli si dice quante
+ * modifiche ci sono, ogni volta che cambiano. */
+function avvisaChiOspita() {
+  if (!root.__DASHBOARDMODERN_ANTEPRIMA__) return;
+  try {
+    root.parent?.postMessage?.({ source: "dm-anteprima", tipo: "conta", n: conta() }, "*");
+  } catch (_errore) {}
+}
+
+/** Quante modifiche ci sono nella bozza (anche quelle dei disegni). */
+export function quanteModifiche() {
+  return conta();
+}
+
+/** Salva, Annulla, Ripristina: dalla barra dell'anteprima del Config. */
+export function azioneDellaModifica(nome) {
+  if (nome === "salva") salva();
+  else if (nome === "annulla") annulla();
+  else if (nome === "ripristina") ripristina();
+}
+
 function disegnaLaBarra() {
+  avvisaChiOspita();
   let barra = doc.querySelector("[data-dm-disp-barra]");
   if (!state.modifica) {
     barra?.remove();
@@ -1258,6 +1284,8 @@ export function esciDallaModifica() {
   }
   doc.querySelector("[data-dm-disp-annuncio]")?.remove();
   disegnaLaBarra();
+  /* Nell'anteprima del Config la modifica resta sempre accesa. */
+  if (root.__DASHBOARDMODERN_ANTEPRIMA__) root.dmAnteprima?.riprendi?.();
 }
 
 function elencoDi(contenitore) {
@@ -1369,24 +1397,6 @@ function onClick(event) {
   const bersaglio = event.target;
   /* Un tocco qualunque puo' aver cambiato pagina: si riguarda. */
   if (!state.modifica) inCoda();
-  const tasto = bersaglio?.closest?.("[data-dm-disp-tasto]");
-  if (tasto) {
-    event.preventDefault();
-    event.stopPropagation();
-    /* In Home la disposizione e' quella delle sue caselle (tessere, blocchi,
-     * stanze), con la loro anteprima nel Config: il tasto porta li'. */
-    if (tasto.getAttribute("data-dm-disp-tasto") === "home") {
-      root.apriConfigEntita?.();
-      root.queueMicrotask?.(() => root.editorSwitch?.("todo"));
-      return;
-    }
-    /* ✏️ ripremuto chiude la modifica come «Annulla»: quello che non si e'
-     * salvato torna com'era. Prima restava sulla pagina, e alla ricarica
-     * spariva: sembrava salvato e non lo era. */
-    if (state.modifica) annulla();
-    else entraInModifica(tasto.closest(".page"));
-    return;
-  }
   const azione = bersaglio?.closest?.("[data-dm-disp-azione]")?.getAttribute("data-dm-disp-azione");
   if (azione === "salva") return salva();
   if (azione === "annulla") return annulla();
@@ -1400,6 +1410,10 @@ function onClick(event) {
   }
   const pagina = state.modifica.pagina;
   if (!pagina.contains(bersaglio)) return;
+  /* Nell'anteprima del Config le linguette della pagina (le viste
+   * dell'Energia) si cambiano: ogni vista ha la sua disposizione. I comandi
+   * alla casa li ferma l'anteprima stessa. */
+  if (root.__DASHBOARDMODERN_ANTEPRIMA__ && bersaglio.closest(".sub-tab-btn,[role='tab']")) return;
   /* In modifica la pagina non si comanda: un tocco su una luce non la
    * accende. Passano solo i nostri tasti. */
   const occhio = bersaglio.closest("[data-dm-disp-occhio]");
@@ -1473,80 +1487,15 @@ function onKeyDown(event) {
   annulla();
 }
 
-/* ── il tasto ✏️ in testa alle pagine ───────────────────────────────────── */
-
-function testataPerIlTasto(pagina) {
-  return (
-    pagina.querySelector(":scope > .dm-page-mast") ||
-    [...pagina.querySelectorAll("[class*='mast']")].find((el) => eTestata(el) && visibile(el)) ||
-    null
-  );
-}
-
-/* ✏️ e, dove c'e' posto, la parola: «Modifica». Il suggerimento dice tutto. */
-function vestiIlTasto(tasto) {
-  tasto.title = t("Modifica disposizione", "Edit layout");
-  tasto.setAttribute("aria-label", t("Modifica disposizione", "Edit layout"));
-  tasto.innerHTML = `<span aria-hidden="true">✏️</span><span class="dm-disp-tasto-parola">${esc(t("Modifica", "Edit"))}</span>`;
-}
-
-/* In Home il tasto sta nella testata, accanto all'ingranaggio: sopra la
- * pagina copriva la striscia della casa, ed essendo il primo figlio della
- * Home rompeva chi guarda il primo titolo. Si vede solo quando la Home e'
- * davanti. */
-function tastoInHome(si) {
-  const ingranaggio = doc.getElementById("dm-editor-entry");
-  const testata = ingranaggio?.parentElement || doc.querySelector("body > header");
-  let tasto = doc.querySelector("[data-dm-disp-tasto='home']");
-  if (!si || !testata) return tasto?.remove();
-  if (!tasto) {
-    tasto = doc.createElement("button");
-    tasto.type = "button";
-    tasto.className = "dm-disp-tasto-home";
-    tasto.setAttribute("data-dm-disp-tasto", "home");
-    vestiIlTasto(tasto);
-  }
-  if (ingranaggio ? tasto.nextElementSibling !== ingranaggio : tasto.parentElement !== testata)
-    ingranaggio ? ingranaggio.before(tasto) : testata.appendChild(tasto);
-  const inCasa = Boolean(doc.getElementById("page-home")?.classList.contains("active"));
-  if (tasto.hidden === inCasa) tasto.hidden = !inCasa;
-}
-
-function mettiIlTasto(pagina) {
-  const testata = testataPerIlTasto(pagina);
-  if (!testata) return;
-  const nome = nomeDellaPagina(pagina);
-  /* Un tasto solo per pagina. Il Clima disegna la sua testata dopo: nel
-   * frattempo il tasto finiva sulla striscia del riepilogo, e arrivata la
-   * testata vera ne nasceva un secondo. Quello rimasto indietro se ne va. */
-  for (const vecchio of pagina.querySelectorAll("[data-dm-disp-tasto]"))
-    if (vecchio.parentElement !== testata) vecchio.remove();
-  const ce = testata.querySelector(":scope > [data-dm-disp-tasto]");
-  if (PAGINE_DA_SALTARE.has(nome)) return ce?.remove();
-  if (ce) return;
-  const tasto = doc.createElement("button");
-  tasto.type = "button";
-  tasto.setAttribute("data-dm-disp-tasto", "");
-  tasto.className = "dm-disp-tasto";
-  vestiIlTasto(tasto);
-  testata.appendChild(tasto);
-}
-
-/* Solo la pagina che si guarda: le altre lo prendono quando tornano davanti
- * (cambiare pagina passa di qui). Prima si misuravano tutte e trentasette a
- * ogni aggiornamento. */
+/* ── niente tasti sulla plancia ──────────────────────────────────────────
+ *
+ * Sulla plancia non c'e' nessuna matita: si cambia la disposizione nel Config.
+ * Qui resta solo la regola di prima: si cambia pagina con la modifica aperta,
+ * o il permesso se ne va, e la modifica si chiude senza salvare — quello che
+ * non si e' salvato non si e' voluto. */
 function mettiITasti() {
-  const si = puoConfigurare();
-  tastoInHome(si);
-  if (!si) for (const vecchio of doc.querySelectorAll("section.page [data-dm-disp-tasto]")) vecchio.remove();
-  else {
-    const pagina = paginaAttiva();
-    if (pagina) mettiIlTasto(pagina);
-  }
-  /* Si cambia pagina con la modifica aperta, o il permesso se ne va: la
-   * modifica si chiude, senza salvare — quello che non si e' salvato non si
-   * e' voluto. */
-  if (state.modifica && (!si || !state.modifica.pagina.classList.contains("active"))) annulla();
+  for (const vecchio of doc?.querySelectorAll?.("[data-dm-disp-tasto]") || []) vecchio.remove();
+  if (state.modifica && (!puoConfigurare() || !state.modifica.pagina.classList.contains("active"))) annulla();
 }
 
 /* La barra delle sezioni ridisegnata mentre la modifica e' aperta (un'altra
@@ -1603,23 +1552,10 @@ html[data-dm-modifica] [data-dm-disp-vuoto]{min-height:56px}
 html[data-dm-modifica] section.page.active{padding-bottom:calc(220px + env(safe-area-inset-bottom,0px))!important}
 [data-dm-misura="larga"]{grid-column:1/-1!important}
 .dm-page-mast{position:relative}
-/* Il ✏️ della Home, nella testata accanto all'ingranaggio e vestito come
- * lui: la parola «Modifica» li' non ci sta. */
-html body header>.dm-disp-tasto-home{display:inline-flex!important;align-items:center;justify-content:center;flex:0 0 auto!important;
-  width:40px;height:40px;margin-left:10px;padding:0;border:1px solid var(--divider-color,rgba(15,23,42,.12));border-radius:14px;
-  background:var(--card-bg,#fff);color:var(--text,#0f172a);font-size:18px;line-height:1;cursor:pointer;box-shadow:0 8px 18px -14px rgba(15,23,42,.6)}
-html body header>.dm-disp-tasto-home[hidden]{display:none!important}
-html body header>.dm-disp-tasto-home:hover{border-color:var(--info-color,#0ea5e9)}
-html body header>.dm-disp-tasto-home .dm-disp-tasto-parola{display:none!important}
-@media(max-width:520px){html body header>.dm-disp-tasto-home{width:34px;height:34px;margin-left:6px;font-size:16px}}
-.dm-disp-tasto{position:absolute;top:12px;right:12px;z-index:3;min-width:40px;height:40px;border-radius:14px;padding:0 10px;
-  border:1px solid color-mix(in srgb,var(--text,#0f172a) 12%,transparent);background:var(--card-bg,#fff);color:var(--text,#0f172a);
-  display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  font:600 14px/1 inherit;cursor:pointer;box-shadow:0 6px 16px -10px rgba(15,23,42,.4)}
-.dm-disp-tasto>span[aria-hidden]{font-size:18px}
-.dm-disp-tasto-parola{display:none}
-@media (min-width:720px){.dm-disp-tasto{padding:0 14px 0 12px}.dm-disp-tasto-parola{display:inline}}
-html[data-dm-modifica] .dm-disp-tasto{background:var(--accent,#2563eb);color:#fff}
+/* Nell'anteprima del Config la barra e' quella del Config: questa non serve, e
+ * nemmeno lo spazio che le si faceva sotto la pagina. */
+html[data-dm-anteprima] [data-dm-disp-barra]{display:none!important}
+html[data-dm-anteprima][data-dm-modifica] section.page.active{padding-bottom:calc(32px + env(safe-area-inset-bottom,0px))!important}
 html[data-dm-modifica] [data-dm-disp-voce]{position:relative;outline:2px dashed color-mix(in srgb,var(--accent,#2563eb) 55%,transparent);
   outline-offset:2px;border-radius:16px}
 html[data-dm-modifica] [data-dm-disp-elenco]>[data-dm-disp-voce]{cursor:grab}

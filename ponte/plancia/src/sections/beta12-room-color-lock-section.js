@@ -220,6 +220,10 @@ function narrowViewport() {
 }
 
 function kioskEnabled() {
+  /* L'anteprima del Config (#379) e' una pagina dentro il Config, non la
+   * plancia a tutto schermo: il chiosco si prenderebbe la sua cornice e la
+   * stirerebbe su tutta la scheda. */
+  if (root.__DASHBOARDMODERN_ANTEPRIMA__) return false;
   const explicit = explicitKioskRequest();
   // A link opened with ?kiosk=0/1 is also the user's new default: the companion
   // app reopens the plancia without any query string.

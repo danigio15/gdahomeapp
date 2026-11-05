@@ -79,6 +79,7 @@ import {
   ROOM_ASSIGN_KEY,
   SA,
   SCOCCA,
+  SCRITTE_DALL_ANTEPRIMA,
   SECTION_KEYS,
   SEZIONI,
   SOGLIA_CHIUSA_MASSIMA,
@@ -567,7 +568,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-ZCCM4YW5.js";
+} from "../../chunk-IJK35NAO.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -1214,25 +1215,25 @@ function installStateEventGate(broker3, root7 = globalThis, { delay = 500, chiav
     if (!pendingIds.size) return;
     const entityIds = [...pendingIds];
     pendingIds.clear();
-    const state206 = lastState;
+    const state207 = lastState;
     lastState = null;
     root7.dispatchEvent?.(
       makeEvent(root7, {
         entity_id: entityIds.at(-1) || "",
         entity_ids: entityIds,
-        state: state206,
+        state: state207,
         coalesced: true
       })
     );
   };
-  const queue = (state206) => {
-    const id = String(state206?.entity_id || "").trim();
+  const queue = (state207) => {
+    const id = String(state207?.entity_id || "").trim();
     if (!id) return;
     const configured2 = currentInterests();
     const visto = inVista(root7, id);
     if (!visto && configured2.size && !configured2.has(id)) return;
     pendingIds.add(id);
-    lastState = state206 || lastState;
+    lastState = state207 || lastState;
     const attesa = Math.max(0, Number(delay) || 0);
     const subito = visto && attesa > SUBITO_MS;
     if (timer && (timerSubito || !subito)) return;
@@ -1241,18 +1242,18 @@ function installStateEventGate(broker3, root7 = globalThis, { delay = 500, chiav
     timer = root7.setTimeout?.(flush, subito ? SUBITO_MS : attesa) || 0;
     if (!timer) root7.queueMicrotask?.(flush);
   };
-  broker3.ingestState = function gatedIngestState(state206, options) {
+  broker3.ingestState = function gatedIngestState(state207, options) {
     const dispatch = root7.dispatchEvent;
-    if (typeof dispatch !== "function") return original.call(this, state206, options);
+    if (typeof dispatch !== "function") return original.call(this, state207, options);
     root7.dispatchEvent = function gatedDispatch(event) {
       if (event?.type === STATE_EVENT) {
-        queue(state206);
+        queue(state207);
         return true;
       }
       return dispatch.call(root7, event);
     };
     try {
-      return original.call(this, state206, options);
+      return original.call(this, state207, options);
     } finally {
       root7.dispatchEvent = dispatch;
     }
@@ -1745,6 +1746,7 @@ var SOURCE_INDEX = Object.freeze({
   "⏳ ORARIE": "⏳ HOURLY",
   "⏳ Verifico…": "⏳ Checking…",
   "▶ «${nome}» eseguita": "▶ «${nome}» run",
+  "▶ Apri l'anteprima": "▶ Open the preview",
   "☀️ Pannello": "☀️ Panel",
   "☀️ Risparmiato anno": "☀️ Saved this year",
   "☀️ Risparmiato grazie al FV": "☀️ Saved thanks to PV",
@@ -1803,6 +1805,7 @@ var SOURCE_INDEX = Object.freeze({
   "✅ Obiettivo salvato": "✅ Goal saved",
   "✅ Perfetto, apri l'editor →": "✅ Great, open the editor →",
   "✅ Squadra aggiunta": "✅ Team added",
+  "✋ Sposta e nascondi": "✋ Move and hide",
   "✓ Chiesto agli Echo: tra un attimo la senti.": "✓ Asked the Echos: you will hear it in a moment.",
   "✓ Fatto": "✓ Done",
   "✓ Inviato a": "✓ Sent to",
@@ -1943,6 +1946,7 @@ var SOURCE_INDEX = Object.freeze({
   "📥 Importa configurazione": "📥 Import configuration",
   "📦 Altre zone": "📦 Other zones",
   "📱 Disegno del telefono": "📱 Phone drawing",
+  "📱 Telefono": "📱 Phone",
   "📹 Telecamere": "📹 Cameras",
   "🔀 Come sta lavorando": "🔀 How it is working",
   "🔀 Scrivi o scegli con 🔍 l'entità da comandare.": "🔀 Type or pick with 🔍 the entity to control.",
@@ -2736,6 +2740,7 @@ var SOURCE_INDEX = Object.freeze({
   'Anteprima ~2 fps · Tocca "Attiva audio" per audio + video': 'Preview ~2 fps · Tap "Enable audio" for audio + video',
   "Anteprima dal vivo": "Live preview",
   "Anteprima della Home": "Home preview",
+  "Anteprima della sezione": "Section preview",
   "Anteprima di una giornata": "Preview of a day",
   "Anteprima: i blocchi della Home": "Preview: the Home blocks",
   "Anteprima: l'ordine delle stanze": "Preview: the order of the rooms",
@@ -4611,7 +4616,7 @@ var SOURCE_INDEX = Object.freeze({
   "I costi e le tariffe": "The costs and the tariffs",
   "I dati arrivano dall'integrazione del fornitore. I sensori si scelgono in Config → Energia → Impostazioni.": "The data comes from the supplier's integration. Pick the sensors in Config → Energy → Settings.",
   "I dati che mostra": "The data it shows",
-  "i disegni a cui col ✏️ hai spostato i pezzi, sul computer e sul telefono. «Ripristina» li rimette com'erano.": "the drawings whose pieces you moved with ✏️, on the computer and on the phone. «Reset» puts them back as they were.",
+  "i disegni a cui nell'anteprima hai spostato i pezzi, sul computer e sul telefono. «Ripristina» li rimette com'erano.": "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.",
   "I dispositivi veri, con tutte le loro entità": "The real devices, with all their entities",
   "I due della pioggia servono a chi ha una stazione meteo: quanto sta venendo giù adesso e quanti millimetri sono caduti oggi. Sono anche quelli che guarda l'irrigazione — se il terreno l'ha già bagnato la pioggia, la pagina Irrigazione lo dice e propone di saltare il giro — quindi si scrivono qui una volta sola.": "The two rain ones are for those with a weather station: how hard it is coming down now, and how many millimetres fell today. They are also the ones irrigation looks at — if the rain has already watered the ground, the Irrigation page says so and offers to skip the run — so you name them here once.",
   "I flussi e le bolle": "The flows and the bubbles",
@@ -5081,6 +5086,7 @@ var SOURCE_INDEX = Object.freeze({
   "L'allarme": "The alarm",
   "L'anello della pagina si chiude a questo numero.": "The page's ring closes at this number.",
   "L'animale": "The pet",
+  "L'anteprima non si apre.": "The preview does not open.",
   "L’anteprima usa la stessa illustrazione della card per il tipo selezionato.": "The preview uses the same card artwork for the selected appliance type.",
   "L’anteprima usa lo stesso renderer dell’icona stanza nella dashboard.": "The preview uses the same room-icon renderer as the dashboard.",
   "l'antifurto": "the alarm",
@@ -5359,7 +5365,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le notifiche arrivano ai telefoni; così le dicono anche gli Echo di casa, per chi è in casa con le mani occupate. Vale per tutta la casa.": "Notifications reach the phones; this way the Echos at home say them too, for whoever is home with their hands full. It applies to the whole home.",
   "Le ore di richiesta sono stimate ${fonti}, e il comfort non si conosce.": "The hours of demand are estimated ${fonti}, and the comfort is unknown.",
   "Le ore più vecchie Home Assistant non le tiene.": "Home Assistant does not keep the oldest hours.",
-  "le pagine cambiate col ✏️ — l'ordine dei riquadri e quelli nascosti. «Ripristina» la rimette com'era.": "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was.",
+  "le pagine cambiate nell'anteprima della loro scheda — l'ordine dei riquadri e quelli nascosti. «Ripristina» la rimette com'era.": "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.",
   "Le pagine di questo tablet": "This tablet's pages",
   "Le pagine in una colonna di tasti grandi a sinistra, come sui pannelli di regia. Solo in orizzontale: in verticale e sugli schermi piccoli restano le linguette in alto": "The pages in a column of big buttons on the left, like on control-room panels. Landscape only: in portrait and on small screens the tabs at the top stay",
   "Le partite e i risultati": "The matches and the results",
@@ -5713,6 +5719,7 @@ var SOURCE_INDEX = Object.freeze({
   "Modifica voce Report": "Edit Report entry",
   "Modifica: ${nome}": "Edit: ${nome}",
   "modificare": "edit",
+  "Modifiche dell'anteprima": "Preview changes",
   "Modifiche non salvate": "Unsaved changes",
   "Modifiche non salvate: il tablet le vede dopo «Salva».": "Unsaved changes: the tablet sees them after «Save».",
   "modifiche) — ricarica per applicare": "changes) — reload to apply",
@@ -5796,6 +5803,7 @@ var SOURCE_INDEX = Object.freeze({
   "nel menu (visibile agli admin)": "page in the menu (visible to admins)",
   "nel periodo": "over the period",
   "Nel widget": "In the widget",
+  "Nell'anteprima ci sono modifiche non salvate. Uscire senza salvarle?": "The preview has unsaved changes. Leave without saving them?",
   "Nella fascia scelta il riposo spegne anche l'orologio": "In the chosen hours rest turns off the clock too",
   "nella norma": "in range",
   "Nella scheda compare il tasto «Ha mangiato»: quando torna l'ora, la pagina e il telefono te lo ricordano. Vuoto: niente promemoria.": "The card shows a «Fed» button: when it's time again, the page and your phone remind you. Empty: no reminder.",
@@ -6710,6 +6718,7 @@ var SOURCE_INDEX = Object.freeze({
   "Prendo in carico": "I'll take it",
   "Prepara l'auto e la casa": "Get the car and home ready",
   "Preparo il riconoscimento degli oggetti, sul dispositivo…": "Getting object recognition ready, on this device…",
+  "Preparo l'anteprima…": "Getting the preview ready…",
   "Preriscaldamento": "Preheating",
   "presa": "socket",
   "Presa": "Socket",
@@ -6939,6 +6948,7 @@ var SOURCE_INDEX = Object.freeze({
   "Quest'anno": "This year",
   "Questa automazione sta in un file di Home Assistant: qui la accendi, la spegni e la esegui, e si cambia lì.": "This automation lives in a Home Assistant file: here you turn it on, off and run it, and it is changed there.",
   "Questa automazione usa funzioni avanzate (una scelta fra casi, un template, un blueprint…): qui puoi accenderla, spegnerla, eseguirla, rinominarla e cambiarle stanza. Per il resto:": "This automation uses advanced features (a choice between cases, a template, a blueprint…): here you can turn it on and off, run it, rename it and change its room. For the rest:",
+  "Questa è la sezione com'è sulla plancia. Trascina i riquadri, gli elementi e i pezzi dei disegni dove li vuoi, nascondi con l'occhio, poi Salva: la plancia sarà così. Il telefono e il computer hanno ognuno la sua.": "This is the section as it looks on the dashboard. Drag boxes, items and drawing pieces where you want them, hide with the eye, then Save: the dashboard will look like this. Phone and computer each have their own.",
   "Questa entità adesso non ha attributi da mostrare.": "This entity has no attributes to show right now.",
   "Questa entità è dentro la tessera della Home: tocca per toglierla.": "This entity is inside the Home tile: tap to leave it out.",
   "Questa entità è già configurata.": "This entity is already configured.",
@@ -7421,6 +7431,7 @@ var SOURCE_INDEX = Object.freeze({
   "Schema": "Diagram",
   "Schema dell'impianto": "System diagram",
   "Schermata iniziale della TV": "TV home screen",
+  "Schermo": "Screen",
   "Scienziato": "Scientist",
   "Sciogli il gruppo": "Ungroup all",
   "Scioperi": "Strikes",
@@ -8276,6 +8287,7 @@ var SOURCE_INDEX = Object.freeze({
   "Trascina per spostare · rotella o pizzico per ingrandire": "Drag to move · wheel or pinch to zoom",
   "Trascina per spostare, l'occhio per nascondere. Niente cambia in plancia finché non applichi.": "Drag to move, the eye to hide. Nothing changes on the dashboard until you apply.",
   "Trascina riquadri ed elementi dove li vuoi": "Drag boxes and items where you want them",
+  "Trascina riquadri, elementi e pezzi dei disegni": "Drag boxes, items and drawing pieces",
   "trascina sulle barre": "drag on the bars",
   "trascina, o usa le frecce su e giù": "drag, or use the up and down arrows",
   "Tre fasce": "Three bands",
@@ -9029,9 +9041,9 @@ function startDomPass(locale3) {
 var KEY3 = "__DASHBOARDMODERN_THEME_FOUNDATION__";
 var STYLE_ID = "dm-theme-foundation-style";
 function installThemeFoundationSection() {
-  const state206 = globalThis[KEY3] ||= { installed: false };
-  if (state206.installed) return false;
-  state206.installed = true;
+  const state207 = globalThis[KEY3] ||= { installed: false };
+  if (state207.installed) return false;
+  state207.installed = true;
   installStyle(STYLE_ID, `
     html[data-theme="dark"]{
       --bg-sculpted:#0b1220;
@@ -12513,15 +12525,15 @@ function beta27SubloadRuntimeConfig() {
     return null;
   }
 }
-function protectBeta27SubloadGroup(groupId, group, state206) {
+function protectBeta27SubloadGroup(groupId, group, state207) {
   if (!group || typeof group !== "object") return false;
   const descriptor = Object.getOwnPropertyDescriptor(group, "items");
   if (descriptor?.get?.__dmBeta27Preserved) return true;
   if (descriptor && !descriptor.configurable) return false;
   const configured2 = configuredSubloadIdentities(groupId);
   const preserved = Array.isArray(group.items) ? group.items.filter((item) => !configured2.has(subloadIdentity(item))) : [];
-  const record2 = state206.groups.get(groupId) || { preserved, current: preserved };
-  if (!state206.groups.has(groupId)) state206.groups.set(groupId, record2);
+  const record2 = state207.groups.get(groupId) || { preserved, current: preserved };
+  if (!state207.groups.has(groupId)) state207.groups.set(groupId, record2);
   function getItems() {
     return record2.current;
   }
@@ -12540,16 +12552,16 @@ function protectBeta27SubloadGroup(groupId, group, state206) {
 function installBeta27SubloadPreservation() {
   const runtime = beta27SubloadRuntimeConfig();
   if (!runtime) return false;
-  const state206 = root4[BETA27_SUBLOAD_KEY] ||= {
+  const state207 = root4[BETA27_SUBLOAD_KEY] ||= {
     installed: false,
     groups: /* @__PURE__ */ new Map()
   };
   let protectedAny = false;
   for (const [groupId, group] of Object.entries(runtime)) {
     if (!group || typeof group !== "object" || !Array.isArray(group.items)) continue;
-    if (protectBeta27SubloadGroup(groupId, group, state206)) protectedAny = true;
+    if (protectBeta27SubloadGroup(groupId, group, state207)) protectedAny = true;
   }
-  state206.installed ||= protectedAny;
+  state207.installed ||= protectedAny;
   return protectedAny;
 }
 function reconcileBeta27EntityPickerContract(scope = doc3) {
@@ -12570,7 +12582,7 @@ function scheduleBeta27EntityPickerContract() {
   root4.queueMicrotask?.(() => reconcileBeta27EntityPickerContract());
 }
 function installBeta27EditorContractBridge() {
-  const state206 = root4[BETA27_PICKER_KEY] ||= { installed: false, wrapped: /* @__PURE__ */ new Set() };
+  const state207 = root4[BETA27_PICKER_KEY] ||= { installed: false, wrapped: /* @__PURE__ */ new Set() };
   for (const name of ["editorSwitch", "apriConfigEntita"]) {
     let beta27PickerContractOwner = function(...args) {
       const result = current.apply(this, args);
@@ -12582,10 +12594,10 @@ function installBeta27EditorContractBridge() {
     beta27PickerContractOwner.__dmBeta27PickerContract = true;
     beta27PickerContractOwner.__dmPrevious = current;
     root4[name] = beta27PickerContractOwner;
-    state206.wrapped.add(name);
+    state207.wrapped.add(name);
   }
-  if (!state206.installed) {
-    state206.installed = true;
+  if (!state207.installed) {
+    state207.installed = true;
     doc3?.addEventListener?.(
       "click",
       (event) => {
@@ -17867,10 +17879,10 @@ function suggestPeople(states = {}, existing = []) {
   const taken = new Set(
     (Array.isArray(existing) ? existing : []).map((person) => clean3(person?.entity)).filter(Boolean)
   );
-  return Object.entries(states).filter(([id]) => id.startsWith("person.")).filter(([id]) => !taken.has(id)).map(([id, state206]) => ({
+  return Object.entries(states).filter(([id]) => id.startsWith("person.")).filter(([id]) => !taken.has(id)).map(([id, state207]) => ({
     entity: id,
-    name: clean3(state206?.attributes?.friendly_name) || clean3(id.split(".")[1]).replace(/_/g, " "),
-    photo: clean3(state206?.attributes?.entity_picture)
+    name: clean3(state207?.attributes?.friendly_name) || clean3(id.split(".")[1]).replace(/_/g, " "),
+    photo: clean3(state207?.attributes?.entity_picture)
   }));
 }
 var AWAY_STATES = /* @__PURE__ */ new Set(["not_home", "unknown", "unavailable", "none", ""]);
@@ -17888,8 +17900,8 @@ function batteryFor(person, states) {
   return readNumber(states?.[source]?.attributes?.battery_level);
 }
 var CHARGING_STATES = /* @__PURE__ */ new Set(["charging", "full", "ac", "usb", "wireless", "dock"]);
-function isCharging(state206) {
-  return CHARGING_STATES.has(clean3(state206).toLowerCase().replace(/\s+/g, "_"));
+function isCharging(state207) {
+  return CHARGING_STATES.has(clean3(state207).toLowerCase().replace(/\s+/g, "_"));
 }
 var MISSING_STATES = /* @__PURE__ */ new Set([
   "",
@@ -18850,16 +18862,16 @@ function letturaValvola({ stato: stato3 = null, attributi: attributi2 = null } =
 var clean5 = (value) => String(value ?? "").trim();
 var CLIMATE_TURN_ON = 256;
 var PREFERITE = Object.freeze(["auto", "heat_cool", "heat", "cool", "dry", "fan_only"]);
-function modalita(state206) {
-  const elenco18 = state206?.attributes?.hvac_modes;
+function modalita(state207) {
+  const elenco18 = state207?.attributes?.hvac_modes;
   return Array.isArray(elenco18) ? elenco18.map(clean5).filter(Boolean) : [];
 }
-function supporta(state206, bit) {
-  const dichiarate = Number(state206?.attributes?.supported_features);
+function supporta(state207, bit) {
+  const dichiarate = Number(state207?.attributes?.supported_features);
   return Number.isFinite(dichiarate) ? (dichiarate & bit) === bit : false;
 }
-function modalitaDiAccensione(state206, precedente = "", richiesta = "", suggerita = "") {
-  const disponibili = modalita(state206);
+function modalitaDiAccensione(state207, precedente = "", richiesta = "", suggerita = "") {
+  const disponibili = modalita(state207);
   const voluta = clean5(richiesta);
   if (voluta && voluta !== "off" && disponibili.includes(voluta)) return voluta;
   const ricordata = clean5(precedente);
@@ -18871,42 +18883,42 @@ function modalitaDiAccensione(state206, precedente = "", richiesta = "", suggeri
   }
   return disponibili.find((voce3) => voce3 !== "off") || "";
 }
-function climatePowerCall(state206, acceso7, precedente = "", richiesta = "", suggerita = "") {
+function climatePowerCall(state207, acceso7, precedente = "", richiesta = "", suggerita = "") {
   if (!acceso7) {
-    if (modalita(state206).includes("off")) {
+    if (modalita(state207).includes("off")) {
       return { service: "set_hvac_mode", data: { hvac_mode: "off" } };
     }
-    const antigelo = presetDiRiposo(state206);
+    const antigelo = presetDiRiposo(state207);
     if (antigelo) return { service: "set_preset_mode", data: { preset_mode: antigelo } };
     return { service: "turn_off", data: {} };
   }
-  if (inAntigelo(state206)) {
-    const programma2 = preset(state206).find((m) => m.toLowerCase() === "schedule");
+  if (inAntigelo(state207)) {
+    const programma2 = preset(state207).find((m) => m.toLowerCase() === "schedule");
     if (programma2) return { service: "set_preset_mode", data: { preset_mode: programma2 } };
   }
-  const scelta3 = modalitaDiAccensione(state206, precedente, richiesta, suggerita);
-  if (scelta3 && (clean5(richiesta) === scelta3 || !supporta(state206, CLIMATE_TURN_ON))) {
+  const scelta3 = modalitaDiAccensione(state207, precedente, richiesta, suggerita);
+  if (scelta3 && (clean5(richiesta) === scelta3 || !supporta(state207, CLIMATE_TURN_ON))) {
     return { service: "set_hvac_mode", data: { hvac_mode: scelta3 } };
   }
-  if (supporta(state206, CLIMATE_TURN_ON)) return { service: "turn_on", data: {} };
+  if (supporta(state207, CLIMATE_TURN_ON)) return { service: "turn_on", data: {} };
   if (scelta3) return { service: "set_hvac_mode", data: { hvac_mode: scelta3 } };
   return { service: "turn_on", data: {} };
 }
-function climateIsOff(state206) {
-  return clean5(state206?.state).toLowerCase() === "off" || inAntigelo(state206);
+function climateIsOff(state207) {
+  return clean5(state207?.state).toLowerCase() === "off" || inAntigelo(state207);
 }
-function preset(state206) {
-  const elenco18 = state206?.attributes?.preset_modes;
+function preset(state207) {
+  const elenco18 = state207?.attributes?.preset_modes;
   return Array.isArray(elenco18) ? elenco18.map(clean5).filter(Boolean) : [];
 }
-function presetDiRiposo(state206) {
-  if (!modalita(state206).length || modalita(state206).includes("off")) return "";
-  const tutti = preset(state206);
+function presetDiRiposo(state207) {
+  if (!modalita(state207).length || modalita(state207).includes("off")) return "";
+  const tutti = preset(state207);
   return tutti.find((m) => m.toLowerCase() === "frost_guard") || tutti.find((m) => m.toLowerCase() === "away") || "";
 }
-function inAntigelo(state206) {
-  const riposo2 = presetDiRiposo(state206);
-  return Boolean(riposo2) && clean5(state206?.attributes?.preset_mode).toLowerCase() === riposo2.toLowerCase();
+function inAntigelo(state207) {
+  const riposo2 = presetDiRiposo(state207);
+  return Boolean(riposo2) && clean5(state207?.attributes?.preset_mode).toLowerCase() === riposo2.toLowerCase();
 }
 
 // src/core/modo-del-clima.js
@@ -20896,9 +20908,9 @@ function normalizeTodoLists(values) {
 }
 function suggestTodoLists(states = {}, existing = []) {
   const known = new Set(normalizeTodoLists(existing).map((item) => item.entity.toLowerCase()));
-  return Object.entries(states).filter(([entity2]) => isTodoEntity(entity2) && !known.has(entity2.toLowerCase())).map(([entity2, state206]) => ({
+  return Object.entries(states).filter(([entity2]) => isTodoEntity(entity2) && !known.has(entity2.toLowerCase())).map(([entity2, state207]) => ({
     entity: entity2,
-    name: clean6(state206?.attributes?.friendly_name) || entity2.split(".")[1].replaceAll("_", " ")
+    name: clean6(state207?.attributes?.friendly_name) || entity2.split(".")[1].replaceAll("_", " ")
   }));
 }
 function parseTodoItemsResponse(result, entity2) {
@@ -24754,8 +24766,8 @@ function alarmModes(stateObj) {
   const inserimenti = maschera === null || maschera === 0 ? ALARM_MODES.filter((voce3) => SENZA_DICHIARAZIONE.includes(voce3.mode)) : ALARM_MODES.filter((voce3) => (maschera & voce3.bit) === voce3.bit);
   return [...inserimenti, ALARM_DISARM];
 }
-function alarmActiveMode(state206, disponibili = null) {
-  const valore3 = String(state206 ?? "").trim().toLowerCase();
+function alarmActiveMode(state207, disponibili = null) {
+  const valore3 = String(state207 ?? "").trim().toLowerCase();
   if (!valore3) return "";
   const elenco18 = Array.isArray(disponibili) && disponibili.length ? disponibili.map(String) : null;
   const disegnato = (mode) => !elenco18 || elenco18.includes(mode);
@@ -25208,9 +25220,9 @@ function modiVisibili(stateObj = alarmStateObject()) {
     readJson(CHIAVE_ANTIFURTO_SU_MISURA, [])
   );
 }
-function modoAcceso(state206, stateObj = alarmStateObject()) {
+function modoAcceso(state207, stateObj = alarmStateObject()) {
   const acceso7 = alarmActiveMode(
-    state206,
+    state207,
     alarmModes(stateObj).map((voce3) => voce3.mode)
   );
   if (!acceso7) {
@@ -25733,7 +25745,7 @@ function publishAlarmHelpers() {
     }
     return alarmCodeNeeded(alarmStateObject(), service);
   };
-  root.dmAlarmActiveMode = (state206) => modoAcceso(state206);
+  root.dmAlarmActiveMode = (state207) => modoAcceso(state207);
   root.dmAlarmModes = () => modiVisibili().map((voce3) => voce3.mode);
   root.dmAlarmOrbMarkup = (chiave2) => disegnoDelCartellone(chiave2, modiSuMisura());
   root.dmAlarmSuMisuraAcceso = () => {
@@ -28991,8 +29003,8 @@ function configured(references, states = {}, resolve = (value) => value) {
       entity2 = reference;
     }
     if (!entity2 || entity2 === reference) continue;
-    const state206 = states?.[entity2]?.state;
-    if (state206 != null && !MUTO2.test(clean9(state206))) return true;
+    const state207 = states?.[entity2]?.state;
+    if (state207 != null && !MUTO2.test(clean9(state207))) return true;
   }
   return false;
 }
@@ -32952,8 +32964,8 @@ function isWaterHeaterEntity(value) {
 }
 var ACCESI = /^(on|true|1|heat|heating|eco|performance|high_demand|electric|gas|heat_pump)$/i;
 var SPENTI = /^(off|false|0|standby|idle|none)$/i;
-function accesoDalloStato2(state206) {
-  const valore3 = clean12(state206);
+function accesoDalloStato2(state207) {
+  const valore3 = clean12(state207);
   if (ACCESI.test(valore3)) return true;
   if (SPENTI.test(valore3)) return false;
   return null;
@@ -33066,9 +33078,9 @@ function suggerisciScaldabagni(states = {}, esistenti = []) {
   const noti = new Set(
     normalizeScaldabagni(esistenti).map((item) => item.entity.toLowerCase()).filter(Boolean)
   );
-  return Object.entries(states).filter(([entity2]) => isWaterHeaterEntity(entity2) && !noti.has(entity2.toLowerCase())).map(([entity2, state206]) => ({
+  return Object.entries(states).filter(([entity2]) => isWaterHeaterEntity(entity2) && !noti.has(entity2.toLowerCase())).map(([entity2, state207]) => ({
     entity: entity2,
-    name: clean12(state206?.attributes?.friendly_name) || entity2.split(".")[1].replaceAll("_", " ")
+    name: clean12(state207?.attributes?.friendly_name) || entity2.split(".")[1].replaceAll("_", " ")
   }));
 }
 
@@ -33100,11 +33112,11 @@ var numero17 = (valore3) => {
 var IN_LINEA = /* @__PURE__ */ new Set(["ol", "online", "on_line", "mains", "utility"]);
 var A_BATTERIA = /* @__PURE__ */ new Set(["ob", "onbatt", "onbattery", "on_battery", "battery", "backup"]);
 var SCARICA = /* @__PURE__ */ new Set(["lb", "lowbatt", "low_battery"]);
-function sigle(state206) {
-  return clean13(state206).toLowerCase().split(/[\s,|/]+/).filter(Boolean);
+function sigle(state207) {
+  return clean13(state207).toLowerCase().split(/[\s,|/]+/).filter(Boolean);
 }
-function reteDalloStato(state206) {
-  const pezzi = sigle(state206);
+function reteDalloStato(state207) {
+  const pezzi = sigle(state207);
   if (!pezzi.length) return null;
   if (pezzi.some((pezzo3) => A_BATTERIA.has(pezzo3))) return false;
   if (pezzi.some((pezzo3) => IN_LINEA.has(pezzo3))) return true;
@@ -33112,8 +33124,8 @@ function reteDalloStato(state206) {
   if (pezzi.includes("off") || pezzi.includes("false")) return false;
   return null;
 }
-function batteriaScaricaDalloStato(state206) {
-  return sigle(state206).some((pezzo3) => SCARICA.has(pezzo3));
+function batteriaScaricaDalloStato(state207) {
+  return sigle(state207).some((pezzo3) => SCARICA.has(pezzo3));
 }
 function normalizzaUps(stored, posizione = 0) {
   const dato2 = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
@@ -33416,9 +33428,9 @@ function calendariAssegnati(calendari = []) {
 }
 function suggerisciCalendari(states = {}, esistenti = []) {
   const noti = new Set(normalizzaCalendari(esistenti).map((voce3) => voce3.entity.toLowerCase()));
-  return Object.entries(states).filter(([entity2]) => isCalendarEntity(entity2) && !noti.has(entity2.toLowerCase())).map(([entity2, state206]) => ({
+  return Object.entries(states).filter(([entity2]) => isCalendarEntity(entity2) && !noti.has(entity2.toLowerCase())).map(([entity2, state207]) => ({
     entity: entity2,
-    name: clean15(state206?.attributes?.friendly_name) || entity2.split(".")[1].replaceAll("_", " ")
+    name: clean15(state207?.attributes?.friendly_name) || entity2.split(".")[1].replaceAll("_", " ")
   }));
 }
 var SOLO_DATA = /^\d{4}-\d{2}-\d{2}$/;
@@ -33487,8 +33499,8 @@ function parseCalendarApiEvents(righe4, entity2) {
   }).filter(Boolean);
 }
 var CAPACITA = Object.freeze({ CREA: 1, CANCELLA: 2, MODIFICA: 4 });
-function capacitaDelCalendario(state206) {
-  const bit = Number(state206?.attributes?.supported_features);
+function capacitaDelCalendario(state207) {
+  const bit = Number(state207?.attributes?.supported_features);
   const valore3 = Number.isFinite(bit) ? bit : 0;
   return Object.freeze({
     crea: (valore3 & CAPACITA.CREA) !== 0,
@@ -41543,20 +41555,20 @@ function applicaLaDisposizione(pagina3 = paginaAttiva2()) {
   }
   const tutta = salvata2();
   const nome = nomeDellaPagina(pagina3);
-  const inModifica = state34.modifica?.pagina === pagina3;
+  const inModifica2 = state34.modifica?.pagina === pagina3;
   const salvataQui = Object.keys(tutta).some((k) => paginaDellElenco(k) === nome);
   const toccata = Boolean(pagina3.__dmDispToccata);
-  if (!inModifica && !salvataQui && !toccata) return;
+  if (!inModifica2 && !salvataQui && !toccata) return;
   state34.occupato = true;
   state34.giri = (state34.giri || 0) + 1;
   try {
     let rimessi = 0;
     for (const elenco18 of elenchiDellaPagina(pagina3)) {
-      const scelta3 = inModifica && state34.modifica.bozze.has(elenco18.chiave) ? state34.modifica.bozze.get(elenco18.chiave) : tutta[elenco18.chiave];
-      if ((scelta3 || inModifica || toccata) && applicaAlContenitore(elenco18, scelta3 || {})) rimessi += 1;
+      const scelta3 = inModifica2 && state34.modifica.bozze.has(elenco18.chiave) ? state34.modifica.bozze.get(elenco18.chiave) : tutta[elenco18.chiave];
+      if ((scelta3 || inModifica2 || toccata) && applicaAlContenitore(elenco18, scelta3 || {})) rimessi += 1;
     }
-    if (!inModifica && !salvataQui && rimessi) pagina3.__dmDispToccata = false;
-    if (inModifica) segnaPerLaModifica(pagina3);
+    if (!inModifica2 && !salvataQui && rimessi) pagina3.__dmDispToccata = false;
+    if (inModifica2) segnaPerLaModifica(pagina3);
   } finally {
     state34.osservatore?.takeRecords?.();
     state34.occupato = false;
@@ -41859,7 +41871,23 @@ function barraMarkup() {
 function ridisegnaLaBarra() {
   if (state34.modifica) disegnaLaBarra();
 }
+function avvisaChiOspita() {
+  if (!root.__DASHBOARDMODERN_ANTEPRIMA__) return;
+  try {
+    root.parent?.postMessage?.({ source: "dm-anteprima", tipo: "conta", n: conta2() }, "*");
+  } catch (_errore) {
+  }
+}
+function quanteModifiche() {
+  return conta2();
+}
+function azioneDellaModifica(nome) {
+  if (nome === "salva") salva3();
+  else if (nome === "annulla") annulla();
+  else if (nome === "ripristina") ripristina();
+}
 function disegnaLaBarra() {
+  avvisaChiOspita();
   let barra3 = doc.querySelector("[data-dm-disp-barra]");
   if (!state34.modifica) {
     barra3?.remove();
@@ -41926,6 +41954,7 @@ function esciDallaModifica() {
   }
   doc.querySelector("[data-dm-disp-annuncio]")?.remove();
   disegnaLaBarra();
+  if (root.__DASHBOARDMODERN_ANTEPRIMA__) root.dmAnteprima?.riprendi?.();
 }
 function elencoDi(contenitore5) {
   const chiave2 = contenitore5?.getAttribute?.("data-dm-disp-elenco");
@@ -42010,19 +42039,6 @@ function ripristina() {
 function onClick5(event) {
   const bersaglio = event.target;
   if (!state34.modifica) inCoda();
-  const tasto5 = bersaglio?.closest?.("[data-dm-disp-tasto]");
-  if (tasto5) {
-    event.preventDefault();
-    event.stopPropagation();
-    if (tasto5.getAttribute("data-dm-disp-tasto") === "home") {
-      root.apriConfigEntita?.();
-      root.queueMicrotask?.(() => root.editorSwitch?.("todo"));
-      return;
-    }
-    if (state34.modifica) annulla();
-    else entraInModifica(tasto5.closest(".page"));
-    return;
-  }
   const azione = bersaglio?.closest?.("[data-dm-disp-azione]")?.getAttribute("data-dm-disp-azione");
   if (azione === "salva") return salva3();
   if (azione === "annulla") return annulla();
@@ -42035,6 +42051,7 @@ function onClick5(event) {
   }
   const pagina3 = state34.modifica.pagina;
   if (!pagina3.contains(bersaglio)) return;
+  if (root.__DASHBOARDMODERN_ANTEPRIMA__ && bersaglio.closest(".sub-tab-btn,[role='tab']")) return;
   const occhio2 = bersaglio.closest("[data-dm-disp-occhio]");
   const larga = bersaglio.closest("[data-dm-disp-larga]");
   event.preventDefault();
@@ -42095,56 +42112,9 @@ function onKeyDown2(event) {
   }
   annulla();
 }
-function testataPerIlTasto(pagina3) {
-  return pagina3.querySelector(":scope > .dm-page-mast") || [...pagina3.querySelectorAll("[class*='mast']")].find((el) => eTestata(el) && visibile(el)) || null;
-}
-function vestiIlTasto(tasto5) {
-  tasto5.title = t("Modifica disposizione", "Edit layout");
-  tasto5.setAttribute("aria-label", t("Modifica disposizione", "Edit layout"));
-  tasto5.innerHTML = `<span aria-hidden="true">✏️</span><span class="dm-disp-tasto-parola">${esc(t("Modifica", "Edit"))}</span>`;
-}
-function tastoInHome(si) {
-  const ingranaggio = doc.getElementById("dm-editor-entry");
-  const testata5 = ingranaggio?.parentElement || doc.querySelector("body > header");
-  let tasto5 = doc.querySelector("[data-dm-disp-tasto='home']");
-  if (!si || !testata5) return tasto5?.remove();
-  if (!tasto5) {
-    tasto5 = doc.createElement("button");
-    tasto5.type = "button";
-    tasto5.className = "dm-disp-tasto-home";
-    tasto5.setAttribute("data-dm-disp-tasto", "home");
-    vestiIlTasto(tasto5);
-  }
-  if (ingranaggio ? tasto5.nextElementSibling !== ingranaggio : tasto5.parentElement !== testata5)
-    ingranaggio ? ingranaggio.before(tasto5) : testata5.appendChild(tasto5);
-  const inCasa = Boolean(doc.getElementById("page-home")?.classList.contains("active"));
-  if (tasto5.hidden === inCasa) tasto5.hidden = !inCasa;
-}
-function mettiIlTasto(pagina3) {
-  const testata5 = testataPerIlTasto(pagina3);
-  if (!testata5) return;
-  const nome = nomeDellaPagina(pagina3);
-  for (const vecchio of pagina3.querySelectorAll("[data-dm-disp-tasto]"))
-    if (vecchio.parentElement !== testata5) vecchio.remove();
-  const ce = testata5.querySelector(":scope > [data-dm-disp-tasto]");
-  if (PAGINE_DA_SALTARE.has(nome)) return ce?.remove();
-  if (ce) return;
-  const tasto5 = doc.createElement("button");
-  tasto5.type = "button";
-  tasto5.setAttribute("data-dm-disp-tasto", "");
-  tasto5.className = "dm-disp-tasto";
-  vestiIlTasto(tasto5);
-  testata5.appendChild(tasto5);
-}
 function mettiITasti() {
-  const si = puoConfigurare();
-  tastoInHome(si);
-  if (!si) for (const vecchio of doc.querySelectorAll("section.page [data-dm-disp-tasto]")) vecchio.remove();
-  else {
-    const pagina3 = paginaAttiva2();
-    if (pagina3) mettiIlTasto(pagina3);
-  }
-  if (state34.modifica && (!si || !state34.modifica.pagina.classList.contains("active"))) annulla();
+  for (const vecchio of doc?.querySelectorAll?.("[data-dm-disp-tasto]") || []) vecchio.remove();
+  if (state34.modifica && (!puoConfigurare() || !state34.modifica.pagina.classList.contains("active"))) annulla();
 }
 function rinfrescaLaBarra() {
   const m = state34.modifica;
@@ -42193,23 +42163,10 @@ html[data-dm-modifica] [data-dm-disp-vuoto]{min-height:56px}
 html[data-dm-modifica] section.page.active{padding-bottom:calc(220px + env(safe-area-inset-bottom,0px))!important}
 [data-dm-misura="larga"]{grid-column:1/-1!important}
 .dm-page-mast{position:relative}
-/* Il ✏️ della Home, nella testata accanto all'ingranaggio e vestito come
- * lui: la parola «Modifica» li' non ci sta. */
-html body header>.dm-disp-tasto-home{display:inline-flex!important;align-items:center;justify-content:center;flex:0 0 auto!important;
-  width:40px;height:40px;margin-left:10px;padding:0;border:1px solid var(--divider-color,rgba(15,23,42,.12));border-radius:14px;
-  background:var(--card-bg,#fff);color:var(--text,#0f172a);font-size:18px;line-height:1;cursor:pointer;box-shadow:0 8px 18px -14px rgba(15,23,42,.6)}
-html body header>.dm-disp-tasto-home[hidden]{display:none!important}
-html body header>.dm-disp-tasto-home:hover{border-color:var(--info-color,#0ea5e9)}
-html body header>.dm-disp-tasto-home .dm-disp-tasto-parola{display:none!important}
-@media(max-width:520px){html body header>.dm-disp-tasto-home{width:34px;height:34px;margin-left:6px;font-size:16px}}
-.dm-disp-tasto{position:absolute;top:12px;right:12px;z-index:3;min-width:40px;height:40px;border-radius:14px;padding:0 10px;
-  border:1px solid color-mix(in srgb,var(--text,#0f172a) 12%,transparent);background:var(--card-bg,#fff);color:var(--text,#0f172a);
-  display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  font:600 14px/1 inherit;cursor:pointer;box-shadow:0 6px 16px -10px rgba(15,23,42,.4)}
-.dm-disp-tasto>span[aria-hidden]{font-size:18px}
-.dm-disp-tasto-parola{display:none}
-@media (min-width:720px){.dm-disp-tasto{padding:0 14px 0 12px}.dm-disp-tasto-parola{display:inline}}
-html[data-dm-modifica] .dm-disp-tasto{background:var(--accent,#2563eb);color:#fff}
+/* Nell'anteprima del Config la barra e' quella del Config: questa non serve, e
+ * nemmeno lo spazio che le si faceva sotto la pagina. */
+html[data-dm-anteprima] [data-dm-disp-barra]{display:none!important}
+html[data-dm-anteprima][data-dm-modifica] section.page.active{padding-bottom:calc(32px + env(safe-area-inset-bottom,0px))!important}
 html[data-dm-modifica] [data-dm-disp-voce]{position:relative;outline:2px dashed color-mix(in srgb,var(--accent,#2563eb) 55%,transparent);
   outline-offset:2px;border-radius:16px}
 html[data-dm-modifica] [data-dm-disp-elenco]>[data-dm-disp-voce]{cursor:grab}
@@ -52244,8 +52201,8 @@ function normalizeSecurityDoors(values) {
   }).filter((item) => isDoorEntity(item.entity));
 }
 var LOCK_SUPPORT_OPEN = 1;
-function serraturaSaAprire(state206) {
-  const features = Number(state206?.attributes?.supported_features);
+function serraturaSaAprire(state207) {
+  const features = Number(state207?.attributes?.supported_features);
   return Number.isFinite(features) && (features & LOCK_SUPPORT_OPEN) === LOCK_SUPPORT_OPEN;
 }
 var GESTI_PORTA = Object.freeze(["apri", "sblocca", "entrambi"]);
@@ -52256,17 +52213,17 @@ function gestoDellaPorta(door) {
 var CHIAMATA_SBLOCCA = Object.freeze({ domain: "lock", service: "unlock", data: {} });
 var CHIAMATA_APRI = Object.freeze({ domain: "lock", service: "open", data: {} });
 var CHIAMATA_BLOCCA = Object.freeze({ domain: "lock", service: "lock", data: {} });
-function azioniDellaPorta(door, state206 = null) {
+function azioniDellaPorta(door, state207 = null) {
   const entity2 = clean20(door?.entity);
   if (!isDoorEntity(entity2)) return [];
   const domain = entity2.toLowerCase().split(".")[0];
   const scelto = gestoDellaPorta(door);
   if (domain !== "lock") {
-    const call = doorOpenCall(entity2, state206, scelto);
+    const call = doorOpenCall(entity2, state207, scelto);
     return call ? [{ gesto: "apri", call }] : [];
   }
   const blocca = { gesto: "blocca", call: CHIAMATA_BLOCCA };
-  if (!serraturaSaAprire(state206)) return [{ gesto: "sblocca", call: CHIAMATA_SBLOCCA }, blocca];
+  if (!serraturaSaAprire(state207)) return [{ gesto: "sblocca", call: CHIAMATA_SBLOCCA }, blocca];
   if (scelto === "sblocca") return [{ gesto: "sblocca", call: CHIAMATA_SBLOCCA }, blocca];
   if (scelto === "entrambi")
     return [
@@ -52276,12 +52233,12 @@ function azioniDellaPorta(door, state206 = null) {
     ];
   return [{ gesto: "apri", call: CHIAMATA_APRI }, blocca];
 }
-function doorOpenCall(entity2, state206 = null, gesto = "") {
+function doorOpenCall(entity2, state207 = null, gesto = "") {
   const id = clean20(entity2).toLowerCase();
   const domain = id.split(".")[0];
   if (!isDoorEntity(id)) return null;
   if (domain === "lock") {
-    if (!serraturaSaAprire(state206)) return { domain, service: "unlock", data: {} };
+    if (!serraturaSaAprire(state207)) return { domain, service: "unlock", data: {} };
     const scelto = gestoDellaPorta({ gesto });
     const sblocca2 = scelto === "sblocca" || scelto === "entrambi";
     return { domain, service: sblocca2 ? "unlock" : "open", data: {} };
@@ -53446,11 +53403,11 @@ function readableName(entity2, states) {
   return tail.charAt(0).toUpperCase() + tail.slice(1);
 }
 function readableValue(entity2, states, locale3) {
-  const state206 = states?.[entity2.entity_id];
-  const raw = clean22(state206?.state);
-  if (!state206 || MUTE.test(raw))
+  const state207 = states?.[entity2.entity_id];
+  const raw = clean22(state207?.state);
+  if (!state207 || MUTE.test(raw))
     return { value: "—", numeric: Boolean(clean22(entity2.unit)), on: false };
-  const unit = clean22(state206.attributes?.unit_of_measurement) || clean22(entity2.unit);
+  const unit = clean22(state207.attributes?.unit_of_measurement) || clean22(entity2.unit);
   const number = Number.parseFloat(raw.replace(",", "."));
   if (Number.isFinite(number) && /^-?\d+([.,]\d+)?$/.test(raw))
     return { value: `${raw}${unit ? ` ${unit}` : ""}`, numeric: true, on: false };
@@ -124040,8 +123997,8 @@ function normalizeEntry(raw) {
   const idTokens = tokenize(foldText(object));
   const nameTokens = tokenize(nameFold);
   const areaTokens = areaFold ? tokenize(areaFold) : [];
-  const state206 = String(raw.state ?? "");
-  const penalty = (UNAVAILABLE.has(state206.toLowerCase()) ? -80 : 0) - Math.min(id.length, 80) * 0.25;
+  const state207 = String(raw.state ?? "");
+  const penalty = (UNAVAILABLE.has(state207.toLowerCase()) ? -80 : 0) - Math.min(id.length, 80) * 0.25;
   return {
     id,
     name,
@@ -124051,7 +124008,7 @@ function normalizeEntry(raw) {
     unit: String(raw.unit || attributes.unit_of_measurement || ""),
     sc: String(raw.sc || attributes.state_class || "").toLowerCase(),
     area: area2,
-    state: state206,
+    state: state207,
     penalty,
     idFold,
     objectFold: foldText(object),
@@ -132224,7 +132181,7 @@ function costruisciSchedaDichiarata(scheda9) {
     salva43(conLaRiga(configurazione26(), aperta2, bozza3(body, aperta2), inPiu));
     return true;
   }
-  function onClick70(event) {
+  function onClick71(event) {
     const body = scheda9.ancora ? doc?.getElementById?.(scheda9.ancora) : doc?.getElementById("ed-body");
     if (!body || !dentroLaScheda() || !body.contains(event.target)) return;
     const lente = event.target.closest("[data-dm-dich-pick]");
@@ -132323,7 +132280,7 @@ function costruisciSchedaDichiarata(scheda9) {
         disegnaScheda();
       });
     });
-    doc.addEventListener("click", onClick70);
+    doc.addEventListener("click", onClick71);
     scheda9.inPiuAllInstallazione?.(doc, { ridisegna: ridisegna40, configurazione: configurazione26, salva: salva43, bozza: bozza3, inPiu });
     for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:editor-rendered"])
       root.addEventListener?.(evento, () => {
@@ -160014,8 +159971,8 @@ function markupDelleSalvate() {
       </div>`
   ).join("");
   return `<div class="ed-intro" style="margin-top:18px;"><b>${t("Disposizioni salvate", "Saved layouts")}</b>: ${t(
-    "le pagine cambiate col ✏️ — l'ordine dei riquadri e quelli nascosti. «Ripristina» la rimette com'era.",
-    "the pages changed with ✏️ — the order of the blocks and the hidden ones. «Reset» puts it back as it was."
+    "le pagine cambiate nell'anteprima della loro scheda — l'ordine dei riquadri e quelli nascosti. «Ripristina» la rimette com'era.",
+    "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was."
   )}</div>${righe4 ? `${righe4}${pagine.length > 1 ? `<button type="button" class="ed-btn-add dm-disp-salvata-tutte" data-dm-disp-ripristina-tutte>↺ ${t("Ripristina tutte", "Reset all")}</button>` : ""}` : `<div class="dm-disp-salvata-vuota">${t("Nessuna pagina cambiata: sono tutte come di serie.", "No page changed: they are all as they came.")}</div>`}`;
 }
 function leSalvate(corpo6, dopo) {
@@ -160049,8 +160006,8 @@ function markupDeiDisegni() {
       </div>`
   ).join("");
   return `<div class="ed-intro" style="margin-top:18px;"><b>${t("Disegni salvati", "Saved drawings")}</b>: ${t(
-    "i disegni a cui col ✏️ hai spostato i pezzi, sul computer e sul telefono. «Ripristina» li rimette com'erano.",
-    "the drawings whose pieces you moved with ✏️, on the computer and on the phone. «Reset» puts them back as they were."
+    "i disegni a cui nell'anteprima hai spostato i pezzi, sul computer e sul telefono. «Ripristina» li rimette com'erano.",
+    "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were."
   )}</div>${righe4 ? `${righe4}${disegni5.length > 1 ? `<button type="button" class="ed-btn-add dm-disp-salvata-tutte" data-dm-disegno-ripristina-tutti>↺ ${t("Ripristina tutti", "Reset all")}</button>` : ""}` : `<div class="dm-disp-salvata-vuota">${t("Nessun disegno cambiato: sono tutti come di serie.", "No drawing changed: they are all as they came.")}</div>`}`;
 }
 function iDisegni(corpo6, dopo) {
@@ -160145,10 +160102,390 @@ function installDisposizioneNelConfig() {
   });
 }
 
+// src/core/anteprima-della-plancia.js
+var SCHERMI = Object.freeze({
+  telefono: Object.freeze({ larghezza: 390, altezza: 844 }),
+  computer: Object.freeze({ larghezza: 1280, altezza: 860 })
+});
+var DISPOSITIVI2 = Object.freeze(Object.keys(SCHERMI));
+var PAGINE_DELLE_SCHEDE = Object.freeze({
+  sez1: "energy",
+  energy: "energy",
+  sez4: "security",
+  security: "security"
+});
+function paginaDellaScheda(scheda9) {
+  const chiave2 = String(scheda9 || "").trim();
+  return Object.prototype.hasOwnProperty.call(PAGINE_DELLE_SCHEDE, chiave2) ? PAGINE_DELLE_SCHEDE[chiave2] : "";
+}
+function schermoDi(dispositivo3) {
+  return SCHERMI[dispositivo3] || SCHERMI.computer;
+}
+function dispositivoDiPartenza2(larghezzaDellaFinestra) {
+  const w = Number(larghezzaDellaFinestra);
+  return Number.isFinite(w) && w > 0 && w < 720 ? "telefono" : "computer";
+}
+function scalaPer(larghezzaDellaColonna, dispositivo3, altezzaDisponibile = 0) {
+  const { larghezza, altezza } = schermoDi(dispositivo3);
+  const colonna = Number(larghezzaDellaColonna);
+  if (!Number.isFinite(colonna) || colonna <= 0) return 1;
+  let scala2 = Math.min(1, colonna / larghezza);
+  const alto = Number(altezzaDisponibile);
+  if (Number.isFinite(alto) && alto > 0) scala2 = Math.min(scala2, alto / altezza);
+  return Math.max(0.3, scala2);
+}
+function guscioPerLaLingua(lingua9) {
+  return /^it(\b|[-_]|$)/i.test(String(lingua9 || "").trim()) ? "dashboard.html" : "dashboard-en.html";
+}
+var ATTRIBUTO3 = (v) => String(v ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+function documentoDellAnteprima(html, { base = "", lingua: lingua9 = "" } = {}) {
+  let testo5 = String(html || "");
+  const codice = String(lingua9 || "").trim();
+  if (codice)
+    testo5 = testo5.replace(
+      /<html\b[^>]*>/i,
+      (tag) => `${tag.replace(/\slang="[^"]*"/i, "").slice(0, -1)} lang="${ATTRIBUTO3(codice)}">`
+    );
+  if (base && !/<base\s/i.test(testo5)) {
+    const segno5 = `<base href="${ATTRIBUTO3(base)}">`;
+    testo5 = /<head(?:\s[^>]*)?>/i.test(testo5) ? testo5.replace(/<head(?:\s[^>]*)?>/i, (testa2) => `${testa2}${segno5}`) : `${segno5}${testo5}`;
+  }
+  return testo5;
+}
+function segnoDellaCornice(pagina3, dispositivo3) {
+  return `${String(pagina3 || "")}:${DISPOSITIVI2.includes(dispositivo3) ? dispositivo3 : "computer"}`;
+}
+
+// src/sections/anteprima-della-plancia-section.js
+var KEY186 = "__DASHBOARDMODERN_ANTEPRIMA_DELLA_PLANCIA__";
+var state183 = root[KEY186] ||= {
+  installed: false,
+  pagina: "",
+  dispositivo: "",
+  cornice: null,
+  aperta: /* @__PURE__ */ new Set(),
+  n: 0,
+  pronta: false
+};
+function nellAnteprima() {
+  return root.__DASHBOARDMODERN_ANTEPRIMA__ || null;
+}
+function diA(chi, messaggio) {
+  try {
+    root.parent?.postMessage?.({ source: "dm-anteprima", ...messaggio }, "*");
+  } catch (_errore) {
+  }
+  return chi;
+}
+var STILE_DENTRO = `
+html[data-dm-anteprima] nav.tabs,
+html[data-dm-anteprima] body>header,
+html[data-dm-anteprima] #setup-wizard,
+html[data-dm-anteprima] #dm-assist-tasto,
+html[data-dm-anteprima] #bottomNavHandle,
+html[data-dm-anteprima] .dm-nav-fab{display:none!important}
+html[data-dm-anteprima] body{padding-bottom:0!important}
+`;
+function paginaDellAnteprima() {
+  const quale = nellAnteprima()?.pagina || "";
+  return quale ? doc.getElementById(`page-${quale}`) : null;
+}
+function inModifica() {
+  return doc.documentElement.hasAttribute("data-dm-modifica");
+}
+function mettiInModifica(tentativi = 0) {
+  const quale = nellAnteprima()?.pagina || "";
+  const pagina3 = paginaDellAnteprima();
+  const voce3 = doc.querySelector(`.tab[data-tab="${quale}"]`);
+  const pronta2 = Boolean(pagina3 && (voce3 || typeof root.switchTab === "function"));
+  if (pronta2) {
+    doc.getElementById("setup-wizard")?.remove();
+    if (!pagina3.classList.contains("active")) {
+      try {
+        if (voce3) voce3.click();
+        else root.switchTab(quale);
+      } catch (_errore) {
+      }
+    }
+    if (pagina3.classList.contains("active") && !inModifica()) entraInModifica(pagina3);
+    if (inModifica()) {
+      if (!state183.pronta) {
+        state183.pronta = true;
+        diA(null, { tipo: "pronta", pagina: quale });
+      }
+      diA(null, { tipo: "conta", n: quanteModifiche() });
+      return;
+    }
+  }
+  if (tentativi < 300) root.setTimeout?.(() => mettiInModifica(tentativi + 1), 200);
+}
+function installaDentro() {
+  const anteprima3 = nellAnteprima();
+  doc.documentElement.setAttribute("data-dm-anteprima", anteprima3.dispositivo || "");
+  installStyle("dm-anteprima-dentro", STILE_DENTRO);
+  root.dmAnteprima = {
+    azione(nome) {
+      azioneDellaModifica(nome);
+      diA(null, { tipo: "conta", n: quanteModifiche() });
+    },
+    conta: () => quanteModifiche(),
+    pronta: () => state183.pronta,
+    /* La modifica si chiude con Salva, Annulla ed Esc, e qui deve restare
+     * accesa: chi la chiude chiama questo (`disposizione-section.js`). */
+    riprendi: () => root.setTimeout?.(() => mettiInModifica(), 0)
+  };
+  mettiInModifica();
+}
+function schedaAttiva17() {
+  return String(doc.querySelector(".ed-tab.active")?.dataset?.tab || "");
+}
+function etichettaDelDispositivo(dispositivo3) {
+  return dispositivo3 === "telefono" ? t("📱 Telefono", "📱 Phone") : t("🖥️ Computer", "🖥️ Computer");
+}
+function contoScritto(n) {
+  if (!state183.pronta) return t("Preparo l'anteprima…", "Getting the preview ready…");
+  if (n === 0) return t("Trascina riquadri, elementi e pezzi dei disegni", "Drag boxes, items and drawing pieces");
+  return n === 1 ? t("1 modifica", "1 change") : t(`${n} modifiche`, `${n} changes`);
+}
+function pannelloMarkup4(pagina3) {
+  const aperta2 = state183.aperta.has(pagina3);
+  const dispositivo3 = state183.dispositivo || dispositivoDiPartenza2(root.innerWidth);
+  return `<div class="dm-ant-testa">
+      <div class="dm-ant-titolo"><b>${esc(t("✋ Sposta e nascondi", "✋ Move and hide"))}</b>
+        <small>${esc(
+    t(
+      "Questa è la sezione com'è sulla plancia. Trascina i riquadri, gli elementi e i pezzi dei disegni dove li vuoi, nascondi con l'occhio, poi Salva: la plancia sarà così. Il telefono e il computer hanno ognuno la sua.",
+      "This is the section as it looks on the dashboard. Drag boxes, items and drawing pieces where you want them, hide with the eye, then Save: the dashboard will look like this. Phone and computer each have their own."
+    )
+  )}</small></div>
+      <div class="dm-ant-schermi" role="group" aria-label="${esc(t("Schermo", "Screen"))}">${DISPOSITIVI2.map(
+    (d) => `<button type="button" data-dm-ant-dispositivo="${d}" aria-pressed="${aperta2 && d === dispositivo3}">${esc(
+      etichettaDelDispositivo(d)
+    )}</button>`
+  ).join("")}</div>
+    </div>
+    ${aperta2 ? `<div class="dm-ant-schermo" data-dm-ant-schermo></div>
+    <div class="dm-ant-barra" role="toolbar" aria-label="${esc(t("Modifiche dell'anteprima", "Preview changes"))}">
+      <span class="dm-ant-conta" aria-live="polite"></span>
+      <button type="button" data-dm-ant-azione="annulla">${esc(t("Annulla", "Cancel"))}</button>
+      <button type="button" data-dm-ant-azione="ripristina">${esc(t("Ripristina", "Reset"))}</button>
+      <button type="button" class="dm-ant-salva" data-dm-ant-azione="salva">${esc(t("Salva", "Save"))}</button>
+    </div>` : `<button type="button" class="dm-ant-apri" data-dm-ant-apri>${esc(
+    t("▶ Apri l'anteprima", "▶ Open the preview")
+  )}</button>`}`;
+}
+function rifaiLaBarra(pannello = doc.querySelector("[data-dm-anteprima-pannello]")) {
+  if (!pannello) return;
+  const n = state183.n;
+  const conta4 = pannello.querySelector(".dm-ant-conta");
+  if (conta4) conta4.textContent = contoScritto(n);
+  for (const tasto5 of pannello.querySelectorAll("[data-dm-ant-azione]")) {
+    const azione = tasto5.getAttribute("data-dm-ant-azione");
+    tasto5.disabled = !state183.pronta || (azione === "salva" || azione === "annulla") && n === 0;
+  }
+  const salva43 = pannello.querySelector(".dm-ant-salva");
+  if (salva43) salva43.textContent = n ? `${t("Salva", "Save")} · ${n}` : t("Salva", "Save");
+}
+function dimensiona(pannello = doc.querySelector("[data-dm-anteprima-pannello]")) {
+  const schermo = pannello?.querySelector?.("[data-dm-ant-schermo]");
+  const cornice = state183.cornice;
+  if (!schermo || !cornice) return;
+  const { larghezza, altezza } = schermoDi(state183.dispositivo);
+  const colonna = pannello.getBoundingClientRect().width - 2;
+  const alto = Math.max(380, (root.innerHeight || 0) - ((root.innerWidth || 0) <= 560 ? 270 : 250));
+  const scala2 = scalaPer(colonna, state183.dispositivo, alto);
+  schermo.style.width = `${Math.round(larghezza * scala2)}px`;
+  schermo.style.height = `${Math.round(altezza * scala2)}px`;
+  cornice.style.width = `${larghezza}px`;
+  cornice.style.height = `${altezza}px`;
+  cornice.style.transform = scala2 === 1 ? "" : `scale(${scala2})`;
+  schermo.setAttribute("data-dm-ant-scala", String(Math.round(scala2 * 1e3) / 1e3));
+}
+async function caricaLaCornice(cornice) {
+  if (root.location?.protocol === "about:") {
+    const lingua9 = root.__DASHBOARDMODERN_LOCALE__ || doc.documentElement.lang || "";
+    const base = doc.baseURI;
+    const risposta = await root.fetch(new URL(guscioPerLaLingua(lingua9), base).href, {
+      credentials: "same-origin",
+      cache: "no-store"
+    });
+    if (!risposta.ok) throw new Error(`anteprima: ${risposta.status}`);
+    cornice.srcdoc = documentoDellAnteprima(await risposta.text(), { base, lingua: lingua9 });
+    return;
+  }
+  cornice.src = String(root.location.href).split("#")[0];
+}
+function apriLaCornice(pannello, pagina3, dispositivo3) {
+  const schermo = pannello.querySelector("[data-dm-ant-schermo]");
+  if (!schermo) return;
+  state183.pagina = pagina3;
+  state183.dispositivo = dispositivo3;
+  state183.n = 0;
+  state183.pronta = false;
+  const cornice = doc.createElement("iframe");
+  cornice.className = "dm-ant-cornice";
+  cornice.setAttribute("data-dm-anteprima", segnoDellaCornice(pagina3, dispositivo3));
+  cornice.setAttribute("title", t("Anteprima della sezione", "Section preview"));
+  cornice.setAttribute("allow", "fullscreen");
+  schermo.replaceChildren(cornice);
+  state183.cornice = cornice;
+  dimensiona(pannello);
+  rifaiLaBarra(pannello);
+  caricaLaCornice(cornice).catch((errore) => {
+    console.warn("[DashboardModern] anteprima", errore);
+    const conta4 = pannello.querySelector(".dm-ant-conta");
+    if (conta4) conta4.textContent = t("L'anteprima non si apre.", "The preview does not open.");
+  });
+}
+function disegnaIlPannello() {
+  const corpo6 = doc.getElementById("ed-body");
+  const pagina3 = paginaDellaScheda(schedaAttiva17());
+  if (!corpo6 || !pagina3) return;
+  const gia = corpo6.querySelector(":scope > [data-dm-anteprima-pannello]");
+  if (gia?.getAttribute("data-dm-anteprima-pannello") === pagina3) return;
+  gia?.remove();
+  const pannello = doc.createElement("section");
+  pannello.className = "dm-ant";
+  pannello.setAttribute("data-dm-anteprima-pannello", pagina3);
+  pannello.innerHTML = pannelloMarkup4(pagina3);
+  corpo6.prepend(pannello);
+  state183.cornice = null;
+  if (state183.aperta.has(pagina3)) apriLaCornice(pannello, pagina3, state183.dispositivo || dispositivoDiPartenza2(root.innerWidth));
+}
+function rifaiIlPannello(pannello, dispositivo3) {
+  const pagina3 = pannello.getAttribute("data-dm-anteprima-pannello");
+  state183.aperta.add(pagina3);
+  state183.dispositivo = dispositivo3;
+  pannello.innerHTML = pannelloMarkup4(pagina3);
+  apriLaCornice(pannello, pagina3, dispositivo3);
+}
+function nonSalvate() {
+  return state183.n > 0 && state183.cornice?.isConnected;
+}
+function lasciareSenzaSalvare() {
+  if (!nonSalvate()) return true;
+  const si = root.confirm?.(
+    t(
+      "Nell'anteprima ci sono modifiche non salvate. Uscire senza salvarle?",
+      "The preview has unsaved changes. Leave without saving them?"
+    )
+  );
+  if (si) state183.n = 0;
+  return Boolean(si);
+}
+function onClick60(event) {
+  const bersaglio = event.target;
+  const pannello = bersaglio?.closest?.("[data-dm-anteprima-pannello]");
+  if (pannello) {
+    if (bersaglio.closest("[data-dm-ant-apri]")) {
+      rifaiIlPannello(pannello, state183.dispositivo || dispositivoDiPartenza2(root.innerWidth));
+      return;
+    }
+    const dispositivo3 = bersaglio.closest("[data-dm-ant-dispositivo]")?.getAttribute("data-dm-ant-dispositivo");
+    if (dispositivo3) {
+      const gia = state183.cornice?.isConnected && dispositivo3 === state183.dispositivo;
+      if (!gia && lasciareSenzaSalvare()) rifaiIlPannello(pannello, dispositivo3);
+      return;
+    }
+    const azione = bersaglio.closest("[data-dm-ant-azione]")?.getAttribute("data-dm-ant-azione");
+    if (azione) {
+      try {
+        state183.cornice?.contentWindow?.dmAnteprima?.azione?.(azione);
+      } catch (_errore) {
+      }
+      return;
+    }
+    return;
+  }
+  const uscita = bersaglio?.closest?.(".ed-tab, .ed-head-close, nav.tabs .tab[data-tab]");
+  if (!uscita || uscita.classList.contains("active")) return;
+  if (!lasciareSenzaSalvare()) {
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation?.();
+  }
+}
+function onMessaggio(event) {
+  const cornice = state183.cornice;
+  if (!cornice || event.source !== cornice.contentWindow) return;
+  const dato2 = event.data;
+  if (dato2?.source !== "dm-anteprima") return;
+  if (dato2.tipo === "pronta") state183.pronta = true;
+  if (dato2.tipo === "conta" || dato2.tipo === "pronta") {
+    if (dato2.tipo === "conta") state183.n = Math.max(0, Number(dato2.n) || 0);
+    rifaiLaBarra();
+  }
+}
+function scriviDallAnteprima(chiave2, valore3) {
+  if (!SCRITTE_DALL_ANTEPRIMA.includes(chiave2)) return false;
+  writeJsonIfChanged(chiave2, valore3);
+  root.queueMicrotask?.(() => {
+    try {
+      root.dmDisposizione?.applicaLaDisposizione?.();
+      ridisegnaIDisegni();
+      if (chiave2 === "cd_navbar_order") root.cdApplyNavOrder?.();
+      root.dispatchEvent?.(new root.CustomEvent("dashboardmodern:anteprima-salvata", { detail: { chiave: chiave2 } }));
+    } catch (_errore) {
+    }
+  });
+  return true;
+}
+var STILE_FUORI = `
+.dm-ant{margin:0 0 16px;padding:14px;border-radius:18px;border:1px solid color-mix(in srgb,var(--text,#0f172a) 12%,transparent);
+  background:color-mix(in srgb,var(--card-bg,#fff) 92%,var(--accent,#2563eb) 8%)}
+.dm-ant-testa{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;justify-content:space-between}
+.dm-ant-titolo{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1 1 260px}
+.dm-ant-titolo b{font-size:15px}
+.dm-ant-titolo small{font-size:12.5px;line-height:1.4;opacity:.8}
+.dm-ant-schermi{display:inline-flex;gap:6px;flex:0 0 auto}
+.dm-ant button{min-height:40px;padding:0 14px;border-radius:12px;border:1px solid color-mix(in srgb,var(--text,#0f172a) 14%,transparent);
+  background:var(--card-bg,#fff);color:var(--text,#0f172a);font:600 13.5px/1 inherit;cursor:pointer;white-space:nowrap}
+.dm-ant button[aria-pressed="true"],.dm-ant .dm-ant-salva:not([disabled]),.dm-ant .dm-ant-apri{background:var(--accent,#2563eb);border-color:transparent;color:#fff}
+.dm-ant button[disabled]{opacity:.45;cursor:default}
+.dm-ant-apri{margin-top:12px;width:100%}
+/* La barra sotto lo schermo, e attaccata al fondo di quello che si vede: con
+ * uno schermo piu' alto della finestra (il telefono) Salva resta a portata. */
+.dm-ant-barra{position:sticky;bottom:0;z-index:2;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px -14px -14px;
+  padding:10px 14px;border-radius:0 0 18px 18px;background:color-mix(in srgb,var(--card-bg,#fff) 94%,var(--accent,#2563eb) 6%);
+  border-top:1px solid color-mix(in srgb,var(--text,#0f172a) 10%,transparent)}
+.dm-ant-conta{flex:1 1 200px;font:600 13.5px/1.3 inherit}
+/* Sul telefono la barra sta in due righe basse: il conto, e i tre tasti in
+ * fila uguali. Lo schermo dell'anteprima resta tutto sopra di lei. */
+@media (max-width:560px){
+  .dm-ant{padding:10px}
+  .dm-ant-barra{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:10px -10px -10px;padding:8px 10px;
+    border-radius:0 0 18px 18px}
+  .dm-ant-conta{grid-column:1/-1;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dm-ant .dm-ant-barra button{min-width:0;width:100%;min-height:38px;padding:0 6px;font-size:13px;overflow:hidden;text-overflow:ellipsis}
+  .dm-ant-schermi button{min-height:36px;padding:0 10px}
+}
+.dm-ant-schermo{position:relative;margin:14px auto 0;overflow:hidden;border-radius:22px;background:#0b1020;
+  box-shadow:0 0 0 6px color-mix(in srgb,var(--text,#0f172a) 10%,transparent),0 18px 40px -22px rgba(15,23,42,.6)}
+.dm-ant-cornice{position:absolute;left:0;top:0;border:0;transform-origin:0 0;background:var(--card-bg,#0f172a)}
+`;
+function installaFuori() {
+  installStyle("dm-anteprima-fuori", STILE_FUORI);
+  root.dmScriviDallAnteprima = scriviDallAnteprima;
+  doc.addEventListener("click", onClick60, true);
+  root.addEventListener?.("message", onMessaggio);
+  root.addEventListener?.("resize", () => dimensiona());
+  tieniIlBloccoNellaScheda("dm-anteprima-della-plancia", disegnaIlPannello);
+}
+function installAnteprimaDellaPlancia() {
+  if (!doc?.body || state183.installed) return;
+  state183.installed = true;
+  if (nellAnteprima()) installaDentro();
+  else installaFuori();
+}
+root.dmAnteprimaDellaPlancia = {
+  stato: () => ({ pagina: state183.pagina, dispositivo: state183.dispositivo, n: state183.n, pronta: state183.pronta })
+};
+senzaCadere(installAnteprimaDellaPlancia);
+
 // src/sections/salute-editor-section.js
 var SALUTE_EDITOR_TAB = SALUTE_TAB;
-var KEY186 = "__DASHBOARDMODERN_SALUTE_EDITOR__";
-var state183 = root[KEY186] ||= { installed: false };
+var KEY187 = "__DASHBOARDMODERN_SALUTE_EDITOR__";
+var state184 = root[KEY187] ||= { installed: false };
 var NOMI_MISURE = () => ({
   passi: t("Passi", "Steps"),
   battito: t("Battito", "Heart rate"),
@@ -160166,7 +160503,7 @@ var NOMI_MISURE = () => ({
   esercizio: t("Minuti di esercizio", "Exercise minutes"),
   inPiedi: t("Ore in piedi", "Stand hours")
 });
-function schedaAttiva17() {
+function schedaAttiva18() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 }
 function configurazione23() {
@@ -160277,7 +160614,7 @@ function sezioneNascosta5() {
 }
 function ensureSaluteEditor() {
   const body = doc?.getElementById("ed-body");
-  if (!body || schedaAttiva17() !== SALUTE_EDITOR_TAB) return false;
+  if (!body || schedaAttiva18() !== SALUTE_EDITOR_TAB) return false;
   const firma2 = `${JSON.stringify(configurazione23())}|${sezioneNascosta5()}|${Object.keys(allStates() || {}).length}`;
   if (body.dataset.dmSaluteEditor === firma2 && body.querySelector(".dm-salute-ed")) return true;
   if (body.querySelector(".dm-salute-ed") && body.contains(doc.activeElement) && doc.activeElement.matches?.("input")) return true;
@@ -160288,7 +160625,7 @@ function ensureSaluteEditor() {
 }
 function nelCorpo(event) {
   const body = doc?.getElementById("ed-body");
-  return body && schedaAttiva17() === SALUTE_EDITOR_TAB && body.contains(event.target) ? body : null;
+  return body && schedaAttiva18() === SALUTE_EDITOR_TAB && body.contains(event.target) ? body : null;
 }
 function onChange19(event) {
   if (!nelCorpo(event)) return;
@@ -160341,8 +160678,8 @@ function installStyles86() {
   );
 }
 function installSaluteEditor() {
-  if (!doc || state183.installed) return false;
-  state183.installed = true;
+  if (!doc || state184.installed) return false;
+  state184.installed = true;
   installStyles86();
   doc.addEventListener("change", onChange19);
   wrapFunction("apriConfigEntita", "__dmSaluteEditor", () => {
@@ -160369,14 +160706,14 @@ function installSaluteEditor() {
 senzaCadere(installSaluteEditor);
 
 // src/sections/sport-editor-section.js
-var KEY187 = "__DASHBOARDMODERN_SPORT_EDITOR__";
-var state184 = root[KEY187] ||= {
+var KEY188 = "__DASHBOARDMODERN_SPORT_EDITOR__";
+var state185 = root[KEY188] ||= {
   installed: false,
   /* La squadra che si sta aggiungendo: il campionato scelto e le sue squadre. */
   nuova: { aperta: false, sport: "calcio", campionato: "ita.1", squadre: {}, caricando: "", guasto: "" }
 };
 var SPORT_EDITOR_TAB = SPORT_TAB;
-function schedaAttiva18() {
+function schedaAttiva19() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 }
 function salvaLoSport(config) {
@@ -160391,7 +160728,7 @@ function salvaLoSport(config) {
   }
 }
 async function caricaLeSquadre(campionato) {
-  const nuova = state184.nuova;
+  const nuova = state185.nuova;
   if (nuova.squadre[campionato] || nuova.caricando === campionato) return;
   nuova.caricando = campionato;
   nuova.guasto = "";
@@ -160459,7 +160796,7 @@ function seguitoMarkup(seguito, indice, quanti4) {
 function aggiungiMarkup(config) {
   const pieno = config.seguiti.length >= QUANTI_AL_MASSIMO;
   const ce = (tipo) => config.seguiti.some((s) => s.tipo === tipo);
-  const nuova = state184.nuova;
+  const nuova = state185.nuova;
   const tasti2 = `<div class="dm-sport-ed-tasti">
       <button type="button" class="ed-btn-add" data-dm-sport-nuova="calcio" ${pieno ? "disabled" : ""}>⚽ ${esc(t("Squadra di calcio", "Football team"))}</button>
       <button type="button" class="ed-btn-add" data-dm-sport-nuova="hockey" ${pieno ? "disabled" : ""}>🏒 ${esc(t("Squadra di hockey", "Hockey team"))}</button>
@@ -160531,17 +160868,17 @@ function sezioneNascosta6() {
 }
 function ensureSportEditor() {
   const body = doc?.getElementById("ed-body");
-  if (!body || schedaAttiva18() !== SPORT_EDITOR_TAB) return false;
+  if (!body || schedaAttiva19() !== SPORT_EDITOR_TAB) return false;
   const piloti = ["f1", "motogp"].map((tipo) => pilotiPer(tipo).length).join(",");
   const firma2 = `${JSON.stringify(configurazioneDelloSport())}|${sezioneNascosta6()}|${JSON.stringify({
-    ...state184.nuova,
-    squadre: Object.keys(state184.nuova.squadre)
+    ...state185.nuova,
+    squadre: Object.keys(state185.nuova.squadre)
   })}|${piloti}`;
   if (body.dataset.dmSportEditor === firma2 && body.querySelector(".dm-sport-ed")) return true;
   body.dataset.dmSportEditor = firma2;
   body.innerHTML = corpoMarkup18();
   body.dataset.renderer = "sport";
-  if (state184.nuova.aperta) caricaLeSquadre(state184.nuova.campionato);
+  if (state185.nuova.aperta) caricaLeSquadre(state185.nuova.campionato);
   return true;
 }
 function ridisegna30() {
@@ -160551,10 +160888,10 @@ function ridisegna30() {
 }
 function nelCorpo2(event) {
   const body = doc?.getElementById("ed-body");
-  if (!body || schedaAttiva18() !== SPORT_EDITOR_TAB || !body.contains(event.target)) return null;
+  if (!body || schedaAttiva19() !== SPORT_EDITOR_TAB || !body.contains(event.target)) return null;
   return body;
 }
-function onClick60(event) {
+function onClick61(event) {
   if (!nelCorpo2(event)) return;
   const config = configurazioneDelloSport();
   const su2 = event.target.closest("[data-dm-sport-su]");
@@ -160586,13 +160923,13 @@ function onClick60(event) {
   if (nuova) {
     event.preventDefault();
     const sport = nuova.dataset.dmSportNuova === "hockey" ? "hockey" : "calcio";
-    if (state184.nuova.aperta && state184.nuova.sport === sport) state184.nuova.aperta = false;
+    if (state185.nuova.aperta && state185.nuova.sport === sport) state185.nuova.aperta = false;
     else {
-      state184.nuova.aperta = true;
-      if (state184.nuova.sport !== sport) {
-        state184.nuova.sport = sport;
-        state184.nuova.campionato = legaDiSerie(sport);
-        state184.nuova.guasto = "";
+      state185.nuova.aperta = true;
+      if (state185.nuova.sport !== sport) {
+        state185.nuova.sport = sport;
+        state185.nuova.campionato = legaDiSerie(sport);
+        state185.nuova.guasto = "";
       }
     }
     ridisegna30();
@@ -160603,8 +160940,8 @@ function onChange20(event) {
   const config = configurazioneDelloSport();
   const campionato = event.target.closest("[data-dm-sport-campionato]");
   if (campionato) {
-    const sport = state184.nuova.sport;
-    state184.nuova.campionato = Object.hasOwn(legheDi(sport), campionato.value) ? campionato.value : legaDiSerie(sport);
+    const sport = state185.nuova.sport;
+    state185.nuova.campionato = Object.hasOwn(legheDi(sport), campionato.value) ? campionato.value : legaDiSerie(sport);
     ridisegna30();
     return;
   }
@@ -160614,10 +160951,10 @@ function onChange20(event) {
     salvaLoSport({
       seguiti: [
         ...config.seguiti,
-        { tipo: state184.nuova.sport, campionato: state184.nuova.campionato, squadra: squadra.value, nome }
+        { tipo: state185.nuova.sport, campionato: state185.nuova.campionato, squadra: squadra.value, nome }
       ]
     });
-    state184.nuova.aperta = false;
+    state185.nuova.aperta = false;
     ridisegna30();
     root.edToast?.(t("✅ Squadra aggiunta", "✅ Team added"));
     return;
@@ -160680,10 +161017,10 @@ function installStyles87() {
   );
 }
 function installSportEditor() {
-  if (!doc || state184.installed) return false;
-  state184.installed = true;
+  if (!doc || state185.installed) return false;
+  state185.installed = true;
   installStyles87();
-  doc.addEventListener("click", onClick60);
+  doc.addEventListener("click", onClick61);
   doc.addEventListener("change", onChange20);
   wrapFunction("apriConfigEntita", "__dmSportEditor", () => {
     ensureSportEditorTab();
@@ -160709,8 +161046,8 @@ function installSportEditor() {
 senzaCadere(installSportEditor);
 
 // src/sections/accumulo-in-energia-section.js
-var KEY188 = "__DASHBOARDMODERN_ACCUMULO__";
-var state185 = root[KEY188] ||= {
+var KEY189 = "__DASHBOARDMODERN_ACCUMULO__";
+var state186 = root[KEY189] ||= {
   installed: false,
   frame: 0,
   firma: "",
@@ -160752,7 +161089,7 @@ function apriLAccumulo() {
   linguetta4.classList.add("active");
   vista2.classList.add("active");
   linguetta4.scrollIntoView?.({ inline: "center", block: "nearest", behavior: "instant" });
-  state185.firma = "";
+  state186.firma = "";
   dipingi19();
   return true;
 }
@@ -160819,18 +161156,18 @@ function dipingi19() {
   const dove3 = laVista()?.querySelector?.("#accumulo-wrap");
   if (!dove3 || !siVede2()) return;
   const markup7 = paginaDellAccumulo(vistaDiAdesso());
-  if (state185.firma === markup7 && dove3.firstElementChild) return;
-  state185.firma = markup7;
+  if (state186.firma === markup7 && dove3.firstElementChild) return;
+  state186.firma = markup7;
   dove3.innerHTML = markup7;
 }
 function schedule44() {
-  if (state185.frame) return;
+  if (state186.frame) return;
   const giro = () => {
-    state185.frame = 0;
+    state186.frame = 0;
     try {
       accendiLaLinguetta();
-      if (state185.richiesto && paginaEnergia2()?.classList.contains("active")) {
-        state185.richiesto = false;
+      if (state186.richiesto && paginaEnergia2()?.classList.contains("active")) {
+        state186.richiesto = false;
         if (ciSonoPacchi()) apriLAccumulo();
       }
       dipingi19();
@@ -160838,11 +161175,11 @@ function schedule44() {
       root.console?.warn?.("[DashboardModern] accumulo", errore);
     }
   };
-  state185.frame = root.requestAnimationFrame?.(giro) || 0;
-  if (!state185.frame) giro();
+  state186.frame = root.requestAnimationFrame?.(giro) || 0;
+  if (!state186.frame) giro();
 }
 function renderAccumulo() {
-  state185.firma = "";
+  state186.firma = "";
   schedule44();
 }
 function installStyles88() {
@@ -160921,8 +161258,8 @@ function installStyles88() {
   );
 }
 function installAccumuloInEnergia() {
-  if (!doc || state185.installed) return false;
-  state185.installed = true;
+  if (!doc || state186.installed) return false;
+  state186.installed = true;
   installStyles88();
   ensureVista();
   ensureLinguetta();
@@ -160939,7 +161276,7 @@ function installAccumuloInEnergia() {
     root[nome] = avvolta;
   }
   root.addEventListener?.(EVENTO_APRI_ACCUMULO, () => {
-    state185.richiesto = true;
+    state186.richiesto = true;
     schedule44();
   });
   for (const evento of [
@@ -161084,8 +161421,8 @@ function mesiAllaScadenza(data, adesso2 = Date.now()) {
 }
 
 // src/sections/la-bolletta-section.js
-var KEY189 = "__DASHBOARDMODERN_BOLLETTE__";
-var state186 = root[KEY189] ||= { installed: false, frame: 0, firma: "" };
+var KEY190 = "__DASHBOARDMODERN_BOLLETTE__";
+var state187 = root[KEY190] ||= { installed: false, frame: 0, firma: "" };
 var BOLLETTE_VIEW_ID = "view-bollette";
 var LINGUETTA = "bollette";
 function nomeDellaVoce(chiave2) {
@@ -161124,7 +161461,7 @@ function apriLeBollette() {
   linguetta4.classList.add("active");
   vista2.classList.add("active");
   linguetta4.scrollIntoView?.({ inline: "center", block: "nearest", behavior: "instant" });
-  state186.firma = "";
+  state187.firma = "";
   dipingi20();
   return true;
 }
@@ -161243,8 +161580,8 @@ function dipingi20(bolletta = laBolletta(allStates() || {}, salvate2())) {
   const dove3 = laVista2()?.querySelector?.("#bollette-wrap");
   if (!dove3 || !siVede3()) return;
   const markup7 = paginaDelleBollette(bolletta);
-  if (state186.firma === markup7 && dove3.firstElementChild) return;
-  state186.firma = markup7;
+  if (state187.firma === markup7 && dove3.firstElementChild) return;
+  state187.firma = markup7;
   dove3.innerHTML = markup7;
 }
 function ensureScheda2() {
@@ -161297,15 +161634,15 @@ function ensureScheda2() {
     root.cdMarkDirty?.();
     root.cdSyncPush?.();
     root.edToast?.(t("Bollette salvate", "Bills saved"));
-    state186.firma = "";
+    state187.firma = "";
     schedule45();
   });
   impostazioni.append(scheda9);
 }
 function schedule45() {
-  if (state186.frame) return;
+  if (state187.frame) return;
   const giro = () => {
-    state186.frame = 0;
+    state187.frame = 0;
     try {
       const bolletta = laBolletta(allStates() || {}, salvate2());
       accendiLaLinguetta2(bolletta);
@@ -161315,8 +161652,8 @@ function schedule45() {
       root.console?.warn?.("[DashboardModern] bollette", errore);
     }
   };
-  state186.frame = root.requestAnimationFrame?.(giro) || 0;
-  if (!state186.frame) giro();
+  state187.frame = root.requestAnimationFrame?.(giro) || 0;
+  if (!state187.frame) giro();
 }
 function installStyles89() {
   const V = `#${BOLLETTE_VIEW_ID}`;
@@ -161357,8 +161694,8 @@ function installStyles89() {
   );
 }
 function installLaBolletta() {
-  if (!doc || state186.installed) return false;
-  state186.installed = true;
+  if (!doc || state187.installed) return false;
+  state187.installed = true;
   installStyles89();
   for (const nome of ["render", "switchEnergyView"]) {
     const precedente = root[nome];
@@ -161389,8 +161726,8 @@ function installLaBolletta() {
 senzaCadere(installLaBolletta);
 
 // src/sections/i-fornitori-di-energia-section.js
-var KEY190 = "__DASHBOARDMODERN_FORNITORI__";
-var state187 = root[KEY190] ||= {
+var KEY191 = "__DASHBOARDMODERN_FORNITORI__";
+var state188 = root[KEY191] ||= {
   installed: false,
   frame: 0,
   stato: null,
@@ -161413,16 +161750,16 @@ function segno3(id) {
 }
 function chiediLoStato(forza = false) {
   const ora8 = Date.now();
-  if (state187.inVolo || !forza && ora8 - state187.alle < 6e4) return;
-  state187.inVolo = true;
-  state187.alle = ora8;
+  if (state188.inVolo || !forza && ora8 - state188.alle < 6e4) return;
+  state188.inVolo = true;
+  state188.alle = ora8;
   chiediAHomeAssistant({ type: "dashboardmodern/fornitori/stato" }, 1e4).then((detto3) => {
-    state187.stato = detto3 && typeof detto3 === "object" ? detto3 : null;
+    state188.stato = detto3 && typeof detto3 === "object" ? detto3 : null;
     schedule46();
   }).catch((errore) => {
-    if (/socket/i.test(String(errore?.message || errore))) state187.alle = 0;
+    if (/socket/i.test(String(errore?.message || errore))) state188.alle = 0;
   }).finally(() => {
-    state187.inVolo = false;
+    state188.inVolo = false;
   });
 }
 function perche4(codice) {
@@ -161588,23 +161925,23 @@ function comanda3(tipo, dati, tasto5, dopo) {
       tasto5.textContent = tasto5.dataset.parola || tasto5.textContent;
     }
     const codice = String(no?.code || no?.message || no || "");
-    if (state187.passo) state187.passo = { ...state187.passo, errore: codice };
+    if (state188.passo) state188.passo = { ...state188.passo, errore: codice };
     else root.edToast?.(perche4(codice));
     schedule46();
   });
 }
 function dopoIlPasso(detto3) {
-  if (detto3.serve === "codice") state187.passo = { ...state187.passo, passo: "codice", errore: "" };
+  if (detto3.serve === "codice") state188.passo = { ...state188.passo, passo: "codice", errore: "" };
   else if (detto3.serve === "incolla")
-    state187.passo = {
-      ...state187.passo,
+    state188.passo = {
+      ...state188.passo,
       passo: "incolla",
       link: detto3.link || "",
       errore: detto3.perche || ""
     };
   else {
-    state187.passo = null;
-    if (detto3.stato) state187.stato = detto3.stato;
+    state188.passo = null;
+    if (detto3.stato) state188.stato = detto3.stato;
     root.edToast?.(t("Fornitore collegato", "Supplier connected"));
   }
   schedule46();
@@ -161616,25 +161953,25 @@ function clic(event) {
   if (scegli7) {
     event.preventDefault();
     const id = scegli7.dataset.dmFornScegli || scegli7.dataset.dmFornRicollega;
-    const f = (state187.stato?.disponibili || []).find((x) => x.id === id);
+    const f = (state188.stato?.disponibili || []).find((x) => x.id === id);
     if (!f) return;
     if (f.modo === "link")
       comanda3("dashboardmodern/fornitori/inizia", { fornitore: id }, scegli7, (detto3) => {
-        state187.passo = { fornitore: id, passo: "incolla", link: detto3.link || "", errore: "" };
+        state188.passo = { fornitore: id, passo: "incolla", link: detto3.link || "", errore: "" };
         schedule46();
       });
     else {
-      state187.passo = { fornitore: id, passo: "credenziali", errore: "" };
+      state188.passo = { fornitore: id, passo: "credenziali", errore: "" };
       schedule46();
     }
     return;
   }
   if (qui("[data-dm-forn-annulla]")) {
     event.preventDefault();
-    if (state187.passo)
+    if (state188.passo)
       chiediAHomeAssistant({ type: "dashboardmodern/fornitori/annulla" }).catch(() => {
       });
-    state187.passo = null;
+    state188.passo = null;
     schedule46();
     return;
   }
@@ -161647,7 +161984,7 @@ function clic(event) {
     if (campo6) campo6.value = "";
     comanda3(
       "dashboardmodern/fornitori/collega",
-      { fornitore: state187.passo.fornitore, email, password },
+      { fornitore: state188.passo.fornitore, email, password },
       entra,
       dopoIlPasso
     );
@@ -161659,7 +161996,7 @@ function clic(event) {
     const codice = clean(scheda9.querySelector("[data-dm-forn-codice]")?.value);
     comanda3(
       "dashboardmodern/fornitori/codice",
-      { fornitore: state187.passo.fornitore, codice },
+      { fornitore: state188.passo.fornitore, codice },
       conferma,
       dopoIlPasso
     );
@@ -161673,7 +162010,7 @@ function clic(event) {
     if (campo6) campo6.value = "";
     comanda3(
       "dashboardmodern/fornitori/incolla",
-      { fornitore: state187.passo.fornitore, indirizzo },
+      { fornitore: state188.passo.fornitore, indirizzo },
       incolla,
       dopoIlPasso
     );
@@ -161687,7 +162024,7 @@ function clic(event) {
       { collegamento: aggiorna2.dataset.dmFornAggiorna },
       aggiorna2,
       (detto3) => {
-        if (detto3.stato) state187.stato = detto3.stato;
+        if (detto3.stato) state188.stato = detto3.stato;
         schedule46();
       }
     );
@@ -161708,7 +162045,7 @@ function clic(event) {
       { collegamento: scollega.dataset.dmFornScollega },
       scollega,
       (detto3) => {
-        if (detto3.stato) state187.stato = detto3.stato;
+        if (detto3.stato) state188.stato = detto3.stato;
         schedule46();
       }
     );
@@ -161721,7 +162058,7 @@ function ensureScheda3() {
   const impostazioni = editor3?.querySelector?.('[data-energy-panel="settings"]');
   if (!impostazioni) return;
   chiediLoStato();
-  if (!state187.stato) return;
+  if (!state188.stato) return;
   let scheda9 = laScheda();
   if (!scheda9) {
     scheda9 = doc.createElement("div");
@@ -161730,23 +162067,23 @@ function ensureScheda3() {
     scheda9.addEventListener("click", clic);
     impostazioni.prepend(scheda9);
   }
-  const markup7 = schedaDeiFornitori(state187.stato, state187.passo);
-  if (state187.firma === markup7 && scheda9.firstElementChild) return;
-  state187.firma = markup7;
+  const markup7 = schedaDeiFornitori(state188.stato, state188.passo);
+  if (state188.firma === markup7 && scheda9.firstElementChild) return;
+  state188.firma = markup7;
   scheda9.innerHTML = markup7;
 }
 function schedule46() {
-  if (state187.frame) return;
+  if (state188.frame) return;
   const giro = () => {
-    state187.frame = 0;
+    state188.frame = 0;
     try {
       ensureScheda3();
     } catch (errore) {
       root.console?.warn?.("[DashboardModern] fornitori", errore);
     }
   };
-  state187.frame = root.requestAnimationFrame?.(giro) || 0;
-  if (!state187.frame) giro();
+  state188.frame = root.requestAnimationFrame?.(giro) || 0;
+  if (!state188.frame) giro();
 }
 function installStyles90() {
   installStyle(
@@ -161795,8 +162132,8 @@ function installStyles90() {
   );
 }
 function installIFornitoriDiEnergia() {
-  if (!doc || state187.installed) return false;
-  state187.installed = true;
+  if (!doc || state188.installed) return false;
+  state188.installed = true;
   installStyles90();
   onEditorRedraw("__dmFornitoriSection", schedule46);
   for (const evento of ["dashboardmodern:editor-rendered", "dashboardmodern:legacy-ready"])
@@ -162053,9 +162390,9 @@ function installAccumuloEditor() {
 senzaCadere(installAccumuloEditor);
 
 // src/sections/colpo-d-occhio-section.js
-var KEY191 = "__DASHBOARDMODERN_COLPO_D_OCCHIO__";
+var KEY192 = "__DASHBOARDMODERN_COLPO_D_OCCHIO__";
 var ID3 = "dm-occhio";
-var state188 = root[KEY191] ||= {
+var state189 = root[KEY192] ||= {
   installed: false,
   frame: 0,
   cameraUrls: /* @__PURE__ */ new Map(),
@@ -162252,7 +162589,7 @@ function meteoFinestra(occhio2, states) {
   const m = meteoDiQui(occhio2, states);
   if (!m) return "";
   const p = previsioniDelMeteo(m.id, () => ridisegna31());
-  const giorno3 = state188.finestra?.giorno || "";
+  const giorno3 = state189.finestra?.giorno || "";
   if (giorno3) {
     const daOra = Date.now() - 36e5;
     const ore3 = p.orarie.filter(
@@ -162283,20 +162620,20 @@ function meteoFinestra(occhio2, states) {
 }
 function energiaFinestra(occhio2, states) {
   const periodi = periodiDellEnergia(occhio2);
-  if (!periodi.includes(state188.periodo)) state188.periodo = periodi[0] || "adesso";
+  if (!periodi.includes(state189.periodo)) state189.periodo = periodi[0] || "adesso";
   const nomi2 = {
     adesso: `⚡ ${t("Istantanea", "Live")}`,
     giorno: `📅 ${t("Giornaliera", "Daily")}`,
     mese: `📆 ${t("Mensile", "Monthly")}`
   };
-  const f = flussoDellEnergia(occhio2, states, state188.periodo);
+  const f = flussoDellEnergia(occhio2, states, state189.periodo);
   if (!f.configurato)
     return finestraMarkup(
       `${segno4("solar", 22)} ${esc(t("Fotovoltaico", "Solar"))}`,
       `<p class="oc-vuoto">${esc(t("Le misure dell'energia si scelgono nel Config.", "Pick the energy sensors in the Config."))}</p>`
     );
   const linguette4 = periodi.length > 1 ? `<div class="oc-linguette-flusso">${periodi.map(
-    (p) => `<button type="button" data-oc="periodo" data-oc-periodo="${p}" aria-pressed="${p === state188.periodo}">${esc(nomi2[p])}</button>`
+    (p) => `<button type="button" data-oc="periodo" data-oc-periodo="${p}" aria-pressed="${p === state189.periodo}">${esc(nomi2[p])}</button>`
   ).join("")}</div>` : "";
   return finestraMarkup(
     `${segno4("solar", 22)} ${esc(t("Fotovoltaico", "Solar"))}`,
@@ -162378,7 +162715,7 @@ function telecamereFinestra(occhio2) {
   });
 }
 function telecameraFinestra(occhio2) {
-  const c = occhio2.telecamere.find((x) => x.entity === state188.finestra?.cam);
+  const c = occhio2.telecamere.find((x) => x.entity === state189.finestra?.cam);
   if (!c) return "";
   return finestraMarkup(
     `<button type="button" class="oc-indietro" data-oc="telecamere" aria-label="${esc(t("Indietro", "Back"))}">←</button>📹 ${esc(
@@ -162431,7 +162768,7 @@ function antifurtoFinestra(occhio2, states) {
   return finestraMarkup(`${segno4("security", 22)} ${esc(t("Antifurto", "Alarm"))}`, corpo6);
 }
 function codiceFinestra(occhio2) {
-  const f = state188.finestra;
+  const f = state189.finestra;
   const m = occhio2.antifurto.modi[f?.modo];
   if (!m) return "";
   const punti = Array.from(
@@ -162452,7 +162789,7 @@ function premiIlModo(occhio2, i, codice = null) {
   if (!m) return;
   if (m.pin && codice === null) return apriFinestra2({ tipo: "codice", modo: i, scritto: "" });
   if (m.pin && codice !== m.pin) {
-    state188.finestra = { tipo: "codice", modo: i, scritto: "", errore: true };
+    state189.finestra = { tipo: "codice", modo: i, scritto: "", errore: true };
     vibra([60, 40, 60]);
     return ridisegna31();
   }
@@ -162474,13 +162811,13 @@ function premiIlModo(occhio2, i, codice = null) {
     return;
   }
   vibra(30);
-  if (state188.finestra?.tipo === "codice") state188.finestra = { tipo: "antifurto" };
+  if (state189.finestra?.tipo === "codice") state189.finestra = { tipo: "antifurto" };
   const chi = m.nome || m.entita;
   avviso2(t(`${chi}: comando inviato`, `${chi}: command sent`));
   ridisegna31();
 }
 function finestraDiAdesso(occhio2, states) {
-  const f = state188.finestra;
+  const f = state189.finestra;
   if (!f) return "";
   if (f.tipo === "meteo") return meteoFinestra(occhio2, states);
   if (f.tipo === "energia") return energiaFinestra(occhio2, states);
@@ -162492,21 +162829,21 @@ function finestraDiAdesso(occhio2, states) {
 }
 var MEZZ_ORA3 = 30 * 60 * 1e3;
 function eCasaPremium() {
-  if (state188.premium === null && premiumRicordato() === true) state188.premium = true;
-  if (state188.premium === null || Date.now() - (state188.chiestaIl || 0) > MEZZ_ORA3) chiediLaLicenza();
-  return state188.premium === true;
+  if (state189.premium === null && premiumRicordato() === true) state189.premium = true;
+  if (state189.premium === null || Date.now() - (state189.chiestaIl || 0) > MEZZ_ORA3) chiediLaLicenza();
+  return state189.premium === true;
 }
 function chiediLaLicenza() {
-  if (state188.chiedendo) return;
-  state188.chiedendo = true;
-  state188.chiestaIl = Date.now();
+  if (state189.chiedendo) return;
+  state189.chiedendo = true;
+  state189.chiestaIl = Date.now();
   premiumDellaCasa().then((premium3) => {
-    const prima = state188.premium;
-    state188.premium = premium3 === true;
-    if (prima !== state188.premium) ridisegna31();
+    const prima = state189.premium;
+    state189.premium = premium3 === true;
+    if (prima !== state189.premium) ridisegna31();
   }).catch(() => {
   }).finally(() => {
-    state188.chiedendo = false;
+    state189.chiedendo = false;
   });
 }
 function editorAperto2() {
@@ -162526,8 +162863,8 @@ function tela2() {
 function togliLaTela2() {
   chiudiIlVideo();
   lasciaLeTelecamere();
-  if (state188.timer) root.clearInterval?.(state188.timer);
-  state188.timer = 0;
+  if (state189.timer) root.clearInterval?.(state189.timer);
+  state189.timer = 0;
   doc?.getElementById(ID3)?.remove();
   doc?.documentElement?.classList?.remove("dm-occhio-acceso");
 }
@@ -162563,27 +162900,27 @@ function disegna15() {
   avviaIlBattito2();
 }
 function ridisegna31() {
-  if (state188.frame) return;
+  if (state189.frame) return;
   const giro = () => {
-    state188.frame = 0;
+    state189.frame = 0;
     try {
       disegna15();
     } catch (errore) {
       root.console?.warn?.("[DashboardModern] colpo d'occhio", errore);
     }
   };
-  state188.frame = root.requestAnimationFrame?.(giro) || 0;
-  if (!state188.frame) giro();
+  state189.frame = root.requestAnimationFrame?.(giro) || 0;
+  if (!state189.frame) giro();
 }
 function avviaIlBattito2() {
-  if (state188.timer) return;
+  if (state189.timer) return;
   let giri = 0;
-  state188.timer = root.setInterval?.(() => {
+  state189.timer = root.setInterval?.(() => {
     giri += 1;
     const nodo3 = doc?.getElementById(ID3);
     if (!nodo3) {
-      root.clearInterval?.(state188.timer);
-      state188.timer = 0;
+      root.clearInterval?.(state189.timer);
+      state189.timer = 0;
       return;
     }
     if (doc.hidden || editorAperto2()) return;
@@ -162612,13 +162949,13 @@ function aggiornaLeTelecamere() {
   const immagini = [...nodo3?.querySelectorAll?.("img[data-oc-foto]") || []];
   if (!immagini.length) return false;
   const adesso2 = Date.now();
-  state188.chieste ||= /* @__PURE__ */ new WeakMap();
+  state189.chieste ||= /* @__PURE__ */ new WeakMap();
   const coda = immagini.filter((image) => {
     if (istantaneaInViaggio(image, adesso2)) return false;
-    const ultima = state188.chieste.get(image) || 0;
+    const ultima = state189.chieste.get(image) || 0;
     const freno = image.dataset.dmCameraState === "ready" ? PASSO_DELLE_TELECAMERE_MS - 500 : RIPROVA_LA_TELECAMERA_MS;
     if (adesso2 - ultima < freno) return false;
-    state188.chieste.set(image, adesso2);
+    state189.chieste.set(image, adesso2);
     return true;
   });
   for (const image of coda) chiediLeCapacita(clean(image.dataset.ocFoto), adesso2).catch(() => {
@@ -162630,7 +162967,7 @@ function aggiornaLeTelecamere() {
       await loadCameraFrame(
         { entity: clean(image.dataset.ocFoto), vivo: image.dataset.ocVivo === "true" },
         image,
-        state188.cameraUrls
+        state189.cameraUrls
       ).catch(() => false);
     }
   };
@@ -162641,12 +162978,12 @@ function aggiornaLeTelecamere() {
   return true;
 }
 function lasciaLeTelecamere() {
-  if (!state188.cameraUrls.size) return;
+  if (!state189.cameraUrls.size) return;
   try {
     fermaIVideo();
   } catch (_errore) {
   }
-  for (const url of state188.cameraUrls.values()) {
+  for (const url of state189.cameraUrls.values()) {
     if (typeof url === "string" && url.startsWith("blob:")) {
       try {
         root.URL?.revokeObjectURL?.(url);
@@ -162654,7 +162991,7 @@ function lasciaLeTelecamere() {
       }
     }
   }
-  state188.cameraUrls.clear();
+  state189.cameraUrls.clear();
 }
 function accendiIlVideo(occhio2, sopra) {
   const posto = sopra.querySelector("[data-oc-video]");
@@ -162667,14 +163004,14 @@ function accendiIlVideo(occhio2, sopra) {
   }
   try {
     apri8({ entity: c.entity, stream: c.stream, name: c.nome }, c.nome || c.entity, posto);
-    state188.videoAperto = true;
+    state189.videoAperto = true;
   } catch (errore) {
     root.console?.warn?.("[DashboardModern] colpo d'occhio, video", errore);
   }
 }
 function chiudiIlVideo() {
-  if (!state188.videoAperto) return;
-  state188.videoAperto = false;
+  if (!state189.videoAperto) return;
+  state189.videoAperto = false;
   try {
     lexicalGlobal("dmCamCleanup")?.();
   } catch (_errore) {
@@ -162692,18 +163029,18 @@ function avviso2(testo5, tipo = "bene") {
   el.textContent = testo5;
   el.dataset.tipo = tipo;
   el.classList.add("visto");
-  root.clearTimeout?.(state188.avviso);
-  state188.avviso = root.setTimeout?.(() => el.classList.remove("visto"), 2200);
+  root.clearTimeout?.(state189.avviso);
+  state189.avviso = root.setTimeout?.(() => el.classList.remove("visto"), 2200);
 }
 function apriFinestra2(finestra6) {
-  if (state188.finestra?.tipo === "telecamera") chiudiIlVideo();
-  state188.finestra = finestra6;
+  if (state189.finestra?.tipo === "telecamera") chiudiIlVideo();
+  state189.finestra = finestra6;
   vibra();
   ridisegna31();
 }
 function chiudi2() {
-  if (state188.finestra?.tipo === "telecamera") chiudiIlVideo();
-  state188.finestra = null;
+  if (state189.finestra?.tipo === "telecamera") chiudiIlVideo();
+  state189.finestra = null;
   ridisegna31();
 }
 function apriIlCancello(r, bottone) {
@@ -162757,7 +163094,7 @@ function alClic4(evento) {
   if (cosa === "giorno") return apriFinestra2({ tipo: "meteo", giorno: el.dataset.ocGiorno });
   if (cosa === "giorni") return apriFinestra2({ tipo: "meteo" });
   if (cosa === "periodo") {
-    state188.periodo = el.dataset.ocPeriodo;
+    state189.periodo = el.dataset.ocPeriodo;
     vibra(6);
     return ridisegna31();
   }
@@ -162773,7 +163110,7 @@ function alClic4(evento) {
   if (cosa === "modo") return premiIlModo(occhio2, Number(el.dataset.ocModo));
   if (cosa === "antifurto") return apriFinestra2({ tipo: "antifurto" });
   if (cosa === "cifra") {
-    const f = state188.finestra;
+    const f = state189.finestra;
     if (f?.tipo !== "codice") return;
     const k = clean(el.dataset.ocCifra);
     if (k === "✓") return premiIlModo(occhio2, f.modo, f.scritto || "");
@@ -163089,8 +163426,8 @@ function installaLoStile7() {
   );
 }
 function installColpoDOcchio() {
-  if (!doc || state188.installed) return false;
-  state188.installed = true;
+  if (!doc || state189.installed) return false;
+  state189.installed = true;
   installaLoStile7();
   for (const evento of [
     "dashboardmodern:legacy-ready",
@@ -163113,7 +163450,7 @@ function installColpoDOcchio() {
     root[nome] = avvolta;
   }
   doc.addEventListener?.("keydown", (evento) => {
-    if (evento.key === "Escape" && state188.finestra) chiudi2();
+    if (evento.key === "Escape" && state189.finestra) chiudi2();
   });
   ridisegna31();
   return true;
@@ -163121,8 +163458,8 @@ function installColpoDOcchio() {
 senzaCadere(installColpoDOcchio);
 
 // src/sections/colpo-d-occhio-editor-section.js
-var KEY192 = "__DASHBOARDMODERN_COLPO_D_OCCHIO_EDITOR__";
-var state189 = root[KEY192] ||= { installed: false, premium: null, chiedendo: false };
+var KEY193 = "__DASHBOARDMODERN_COLPO_D_OCCHIO_EDITOR__";
+var state190 = root[KEY193] ||= { installed: false, premium: null, chiedendo: false };
 var OCCHIO_TAB = "occhio";
 var DOMINI3 = {
   meteo: ["weather"],
@@ -163157,7 +163494,7 @@ var DOMINI3 = {
   apri: ["switch", "button", "input_button", "lock", "cover", "script", "input_boolean"]
 };
 var DISEGNI_DEI_MODI = ["moon", "sun", "home", "security", "lock", "plane", "person", "star"];
-function schedaAttiva19() {
+function schedaAttiva20() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 }
 function grezzo() {
@@ -163315,21 +163652,21 @@ function antifurtoMarkup(o) {
     <div class="dm-oc-ed-tasti"><button type="button" class="ed-btn-add" data-dm-oc-nuova="antifurto.modi" ${a.modi.length >= MODI_AL_MASSIMO ? "disabled" : ""}>+ ${esc(t("Modo", "Mode"))}</button></div>`;
 }
 function chiediLaLicenza2() {
-  if (state189.chiedendo) return;
-  state189.chiedendo = true;
+  if (state190.chiedendo) return;
+  state190.chiedendo = true;
   premiumDellaCasa({ forza: true }).then((premium3) => {
-    state189.premium = premium3 === true;
+    state190.premium = premium3 === true;
   }).catch(() => {
-    state189.premium = false;
+    state190.premium = false;
   }).finally(() => {
-    state189.chiedendo = false;
+    state190.chiedendo = false;
     ridisegna32();
   });
 }
 function corpoMarkup19() {
   const contenuto = contenutoMarkup2();
-  if (state189.premium === true) return `<div class="dm-oc-ed">${contenuto}</div>`;
-  if (state189.premium === null)
+  if (state190.premium === true) return `<div class="dm-oc-ed">${contenuto}</div>`;
+  if (state190.premium === null)
     return `<div class="dm-oc-ed"><p class="dm-oc-ed-nota">${esc(
       t("Controllo la licenza…", "Checking the licence…")
     )}</p>${contenuto}</div>`;
@@ -163375,9 +163712,9 @@ function serve() {
 }
 function ensureOcchioEditor() {
   const body = doc?.getElementById("ed-body");
-  if (!body || schedaAttiva19() !== OCCHIO_TAB) return false;
-  if (state189.premium === null) chiediLaLicenza2();
-  const firma2 = `${state189.premium}:${JSON.stringify(occhio())}`;
+  if (!body || schedaAttiva20() !== OCCHIO_TAB) return false;
+  if (state190.premium === null) chiediLaLicenza2();
+  const firma2 = `${state190.premium}:${JSON.stringify(occhio())}`;
   if (body.dataset.dmOcchioEditor === firma2 && body.querySelector(".dm-oc-ed")) return true;
   if (body.querySelector(".dm-oc-ed") && body.contains(doc.activeElement) && doc.activeElement?.dataset?.dmOcCampo)
     return true;
@@ -163393,7 +163730,7 @@ function ridisegna32() {
 }
 function nelCorpo3(event) {
   const body = doc?.getElementById("ed-body");
-  if (!body || schedaAttiva19() !== OCCHIO_TAB || !body.contains(event.target)) return null;
+  if (!body || schedaAttiva20() !== OCCHIO_TAB || !body.contains(event.target)) return null;
   if (event.target.closest?.(".dm-oc-ed-dietro")) return null;
   return body;
 }
@@ -163429,7 +163766,7 @@ function onRiordina6(event) {
     doc.querySelector(`[data-dm-oc-elenco="${css11}"] > [data-dm-riordina-riga="${a}"] [data-dm-maniglia]`)?.focus?.();
   }, 0);
 }
-function onClick61(event) {
+function onClick62(event) {
   const body = nelCorpo3(event);
   if (!body) return;
   const cerca6 = event.target.closest("[data-dm-oc-cerca]");
@@ -163508,7 +163845,7 @@ function onChange21(event) {
 var SOLO_OCCHIO = "dm-solo-occhio";
 function soloOcchio() {
   try {
-    return serve() && occhio().attiva === true && state189.premium !== false && currentProfile() !== "primary";
+    return serve() && occhio().attiva === true && state190.premium !== false && currentProfile() !== "primary";
   } catch (_errore) {
     return false;
   }
@@ -163523,7 +163860,7 @@ function ensureOcchioEditorTab() {
     presente?.remove();
     return false;
   }
-  if (solo && schedaAttiva19() !== OCCHIO_TAB) root.editorSwitch?.(OCCHIO_TAB);
+  if (solo && schedaAttiva20() !== OCCHIO_TAB) root.editorSwitch?.(OCCHIO_TAB);
   if (presente) return false;
   const linguetta4 = doc.createElement("button");
   linguetta4.className = "ed-tab";
@@ -163531,7 +163868,7 @@ function ensureOcchioEditorTab() {
   linguetta4.textContent = `👁️ ${t("Colpo d'occhio", "At a glance")}`;
   linguetta4.addEventListener("click", () => root.editorSwitch?.(OCCHIO_TAB));
   linguette4.prepend(linguetta4);
-  if (solo && schedaAttiva19() !== OCCHIO_TAB) root.editorSwitch?.(OCCHIO_TAB);
+  if (solo && schedaAttiva20() !== OCCHIO_TAB) root.editorSwitch?.(OCCHIO_TAB);
   return true;
 }
 function installaLoStile8() {
@@ -163598,10 +163935,10 @@ function installaLoStile8() {
   );
 }
 function installOcchioEditor() {
-  if (!doc || state189.installed) return false;
-  state189.installed = true;
+  if (!doc || state190.installed) return false;
+  state190.installed = true;
   installaLoStile8();
-  doc.addEventListener("click", onClick61);
+  doc.addEventListener("click", onClick62);
   doc.addEventListener("dm-riordina", onRiordina6);
   doc.addEventListener("change", onChange21);
   wrapFunction("apriConfigEntita", "__dmOcchioEditor", () => {
@@ -163640,9 +163977,9 @@ function daiVendor(qui, percorso, riserva) {
 }
 
 // src/sections/casa-3d-section.js
-var KEY193 = "__DASHBOARDMODERN_CASA_3D__";
+var KEY194 = "__DASHBOARDMODERN_CASA_3D__";
 var ID4 = "dm-casa3d";
-var state190 = root[KEY193] ||= {
+var state191 = root[KEY194] ||= {
   installed: false,
   frame: 0,
   premium: null,
@@ -163705,9 +164042,9 @@ function temperaturaDelPiano(p, states) {
 var gradi12 = (v) => `${Number(v).toLocaleString(lingua8(), { minimumFractionDigits: 1, maximumFractionDigits: 1 })}°`;
 function testataMarkup3(casa3, admin) {
   const nome = clean(root.__HASS__?.config?.location_name) || t("Casa", "Home");
-  const p = casa3.piani.find((x) => x.k === state190.vista);
+  const p = casa3.piani.find((x) => x.k === state191.vista);
   const sotto = p ? `${p.nome} · ${t("tocca «Esterno» per tornare fuori", "tap «Outside» to step back out")}` : casa3.tipo === "palazzo" ? t("La casa in 3D · il palazzo", "Home in 3D · the building") : t("La casa in 3D · la villa", "Home in 3D · the house");
-  const pillola2 = (k, testo5) => `<button type="button" class="c3-pillola" data-c3s="vista" data-c3s-k="${esc(k)}" aria-pressed="${state190.vista === k}">${esc(testo5)}</button>`;
+  const pillola2 = (k, testo5) => `<button type="button" class="c3-pillola" data-c3s="vista" data-c3s-k="${esc(k)}" aria-pressed="${state191.vista === k}">${esc(testo5)}</button>`;
   const adesso2 = (/* @__PURE__ */ new Date()).toLocaleTimeString(lingua8(), { hour: "2-digit", minute: "2-digit" });
   return `<div class="c3-testa">
       <button type="button" class="c3-menu" data-c3s="menu" aria-label="${esc(t("Apri il menu", "Open menu"))}"><span></span><span></span><span></span></button>
@@ -163719,7 +164056,7 @@ function testataMarkup3(casa3, admin) {
     casa3
   ).map((x) => pillola2(x.k, x.nome)).join("")}</div>
       <span class="c3-spazio"></span>
-      ${admin && casa3.piani.length ? `<button type="button" class="c3-tasto" data-c3s="arreda" aria-pressed="${state190.arreda}">🎨 ${esc(t("Arreda", "Furnish"))}</button>
+      ${admin && casa3.piani.length ? `<button type="button" class="c3-tasto" data-c3s="arreda" aria-pressed="${state191.arreda}">🎨 ${esc(t("Arreda", "Furnish"))}</button>
              <button type="button" class="c3-tasto" data-c3s="crea">🏗️ ${esc(t("Crea / modifica la casa", "Create / edit the house"))}</button>` : ""}
       <span class="c3-ora">${esc(adesso2)}</span>
       ${admin ? `<button type="button" class="c3-config" data-c3s="config" aria-label="${esc(t("Config", "Config"))}">⚙</button>` : ""}
@@ -163749,7 +164086,7 @@ function sinistraMarkup(casa3, states, admin) {
     const dettagli = [`${locali} ${t("locali", "rooms")}`];
     if (luci.tutte) dettagli.push(`💡 ${luci.accese}`);
     if (temp !== null) dettagli.push(`🌡 ${gradi12(temp)}`);
-    return `<button type="button" class="c3-piano" data-c3s="vista" data-c3s-k="${esc(p.k)}" aria-pressed="${state190.vista === p.k}">
+    return `<button type="button" class="c3-piano" data-c3s="vista" data-c3s-k="${esc(p.k)}" aria-pressed="${state191.vista === p.k}">
           <span class="c3-bollo" aria-hidden="true">${p.livello < 0 ? "🚗" : p.livello === 0 ? "🛋️" : "🛏️"}</span>
           <span class="c3-piano-testo"><b>${esc(p.nome)}</b><small>${esc(dettagli.join(" · "))}</small></span>
           <span class="c3-freccia" aria-hidden="true">›</span>
@@ -163795,7 +164132,7 @@ function segnoDelComando(azione) {
   return "⏻";
 }
 function elencoMarkup5(casa3, states, guardabili) {
-  const p = casa3.piani.find((x) => x.k === state190.vista);
+  const p = casa3.piani.find((x) => x.k === state191.vista);
   const righe4 = [];
   const riga5 = (d, dove3, segnoPiano) => {
     const D = DISPOSITIVI_3D[d.k];
@@ -163838,7 +164175,7 @@ function elencoMarkup5(casa3, states, guardabili) {
     </section>`;
 }
 function finestraMarkup2(casa3, states) {
-  const f = state190.finestra;
+  const f = state191.finestra;
   if (f?.tipo !== "telecamera") return "";
   const d = [...casa3.piani.flatMap((p) => p.dispositivi), ...casa3.esterno.telecamere].find(
     (x) => x.entity === f.entity
@@ -163867,14 +164204,14 @@ function accendiIlVideo2(sopra, casa3, states) {
   const nome = d ? nomeDelDispositivo3(d, states) : entity2;
   try {
     apri8({ entity: entity2, name: nome }, nome, posto);
-    state190.videoAperto = true;
+    state191.videoAperto = true;
   } catch (errore) {
     root.console?.warn?.("[DashboardModern] casa 3d, video", errore);
   }
 }
 function chiudiIlVideo2() {
-  if (!state190.videoAperto) return;
-  state190.videoAperto = false;
+  if (!state191.videoAperto) return;
+  state191.videoAperto = false;
   try {
     lexicalGlobal("dmCamCleanup")?.();
   } catch (_errore) {
@@ -163882,21 +164219,21 @@ function chiudiIlVideo2() {
 }
 var MEZZ_ORA4 = 30 * 60 * 1e3;
 function eCasaPremium2() {
-  if (state190.premium === null && premiumRicordato() === true) state190.premium = true;
-  if (state190.premium === null || Date.now() - (state190.chiestaIl || 0) > MEZZ_ORA4) chiediLaLicenza3();
-  return state190.premium === true;
+  if (state191.premium === null && premiumRicordato() === true) state191.premium = true;
+  if (state191.premium === null || Date.now() - (state191.chiestaIl || 0) > MEZZ_ORA4) chiediLaLicenza3();
+  return state191.premium === true;
 }
 function chiediLaLicenza3() {
-  if (state190.chiedendo) return;
-  state190.chiedendo = true;
-  state190.chiestaIl = Date.now();
+  if (state191.chiedendo) return;
+  state191.chiedendo = true;
+  state191.chiestaIl = Date.now();
   premiumDellaCasa().then((premium3) => {
-    const prima = state190.premium;
-    state190.premium = premium3 === true;
-    if (prima !== state190.premium) ridisegna33();
+    const prima = state191.premium;
+    state191.premium = premium3 === true;
+    if (prima !== state191.premium) ridisegna33();
   }).catch(() => {
   }).finally(() => {
-    state190.chiedendo = false;
+    state191.chiedendo = false;
   });
 }
 function areeDelleEntita(states) {
@@ -163920,8 +164257,8 @@ var TRE = (() => {
   }
 })();
 async function avviaLaScena(admin) {
-  state190.caricando = true;
-  state190.guasto = "";
+  state191.caricando = true;
+  state191.guasto = "";
   try {
     const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-DKKNQCMT.js")]);
     const nodo3 = doc.getElementById(ID4);
@@ -163930,7 +164267,7 @@ async function avviaLaScena(admin) {
     const casa3 = casa3dDiQui();
     if (!casa3.attiva) return;
     const states = allStates() || {};
-    state190.scena = creaScena(THREE, {
+    state191.scena = creaScena(THREE, {
       contenitore: posto,
       casa: casa3,
       stati: () => allStates() || {},
@@ -163942,33 +164279,33 @@ async function avviaLaScena(admin) {
       quandoTocchi: alToccoDellaScena,
       quandoSalvi: salvaLaCasa,
       quandoCambiVista: (vista2) => {
-        if (state190.vista === vista2) return;
-        state190.vista = vista2;
+        if (state191.vista === vista2) return;
+        state191.vista = vista2;
         ridisegna33();
       }
     });
-    state190.firma = JSON.stringify(casa3);
-    if (state190.vista !== "esterno" && !state190.scena.apri(state190.vista)) state190.vista = "esterno";
-    if (state190.arreda) state190.scena.arreda(true);
+    state191.firma = JSON.stringify(casa3);
+    if (state191.vista !== "esterno" && !state191.scena.apri(state191.vista)) state191.vista = "esterno";
+    if (state191.arreda) state191.scena.arreda(true);
   } catch (errore) {
-    state190.guasto = String(errore?.message || errore);
+    state191.guasto = String(errore?.message || errore);
     root.console?.warn?.("[DashboardModern] casa 3d", errore);
   } finally {
-    state190.caricando = false;
+    state191.caricando = false;
     ridisegna33();
   }
 }
 function spegniLaScena() {
   try {
-    state190.scena?.distruggi();
+    state191.scena?.distruggi();
   } catch (_errore) {
   }
-  state190.scena = null;
-  state190.firma = "";
+  state191.scena = null;
+  state191.firma = "";
 }
 function salvaLaCasa(nuova) {
   const pulita3 = casa3dPulita(nuova);
-  state190.firma = JSON.stringify(pulita3);
+  state191.firma = JSON.stringify(pulita3);
   try {
     writeJsonIfChanged(CHIAVE_CASA3D, pulita3);
   } catch (_errore) {
@@ -164038,16 +164375,16 @@ function tela3() {
 function togliLaTela3() {
   chiudiIlVideo2();
   spegniLaScena();
-  state190.finestra = null;
-  if (state190.timer) root.clearInterval?.(state190.timer);
-  state190.timer = 0;
+  state191.finestra = null;
+  if (state191.timer) root.clearInterval?.(state191.timer);
+  state191.timer = 0;
   doc?.getElementById(ID4)?.remove();
   doc?.documentElement?.classList?.remove("dm-casa3d-acceso");
 }
 function disegna16() {
   if (!doc?.body) return;
   const casa3 = casa3dDiQui();
-  if (!casa3.attiva || state190.nascosta || !eCasaPremium2() || eLaPrincipale()) {
+  if (!casa3.attiva || state191.nascosta || !eCasaPremium2() || eLaPrincipale()) {
     togliLaTela3();
     return;
   }
@@ -164057,15 +164394,15 @@ function disegna16() {
     admin = puoConfigurare();
   } catch (_errore) {
   }
-  if (!admin && state190.arreda) {
-    state190.arreda = false;
-    state190.scena?.arreda(false);
+  if (!admin && state191.arreda) {
+    state191.arreda = false;
+    state191.scena?.arreda(false);
   }
-  if (!casa3.piani.some((p) => p.k === state190.vista)) state190.vista = "esterno";
+  if (!casa3.piani.some((p) => p.k === state191.vista)) state191.vista = "esterno";
   const nodo3 = tela3();
   doc.documentElement.classList.add("dm-casa3d-acceso");
   nodo3.dataset.tema = doc.documentElement.getAttribute("data-theme") || "light";
-  nodo3.dataset.arreda = String(state190.arreda);
+  nodo3.dataset.arreda = String(state191.arreda);
   scriviSeCambia(nodo3.querySelector(".c3-testa-posto"), testataMarkup3(casa3, admin));
   const vuota2 = !casa3.piani.length;
   scriviSeCambia(
@@ -164078,12 +164415,12 @@ function disegna16() {
     vuota2 ? "" : elencoMarkup5(casa3, states, guardabili)
   );
   const firma2 = JSON.stringify(casa3);
-  if (state190.scena && state190.firma !== firma2) spegniLaScena();
-  if (state190.scena) state190.scena.aggiornaStati(states);
-  else if (!vuota2 && !state190.caricando && !state190.guasto) avviaLaScena(admin);
+  if (state191.scena && state191.firma !== firma2) spegniLaScena();
+  if (state191.scena) state191.scena.aggiornaStati(states);
+  else if (!vuota2 && !state191.caricando && !state191.guasto) avviaLaScena(admin);
   scriviSeCambia(
     nodo3.querySelector(".c3-attesa"),
-    state190.scena ? "" : vuota2 ? casaDaCreareMarkup(admin) : `<p>${esc(state190.guasto ? t("La casa in 3D non si apre su questo dispositivo.", "The 3D house cannot open on this device.") : t("Arriva la casa…", "Loading the house…"))}</p>`
+    state191.scena ? "" : vuota2 ? casaDaCreareMarkup(admin) : `<p>${esc(state191.guasto ? t("La casa in 3D non si apre su questo dispositivo.", "The 3D house cannot open on this device.") : t("Arriva la casa…", "Loading the house…"))}</p>`
   );
   const sopra = nodo3.querySelector(".c3-sopra");
   const video = sopra.querySelector("[data-c3-video]");
@@ -164093,30 +164430,30 @@ function disegna16() {
   }
   if (video) {
     chiudiIlVideo2();
-    state190.finestra = null;
+    state191.finestra = null;
   }
   if (scriviSeCambia(sopra, finestraMarkup2(casa3, states))) accendiIlVideo2(sopra, casa3, states);
   avviaIlBattito3();
 }
 function ridisegna33() {
-  if (state190.frame) return;
+  if (state191.frame) return;
   const giro = () => {
-    state190.frame = 0;
+    state191.frame = 0;
     try {
       disegna16();
     } catch (errore) {
       root.console?.warn?.("[DashboardModern] casa 3d", errore);
     }
   };
-  state190.frame = root.requestAnimationFrame?.(giro) || 0;
-  if (!state190.frame) giro();
+  state191.frame = root.requestAnimationFrame?.(giro) || 0;
+  if (!state191.frame) giro();
 }
 function avviaIlBattito3() {
-  if (state190.timer) return;
-  state190.timer = root.setInterval?.(() => {
+  if (state191.timer) return;
+  state191.timer = root.setInterval?.(() => {
     if (!doc?.getElementById(ID4)) {
-      root.clearInterval?.(state190.timer);
-      state190.timer = 0;
+      root.clearInterval?.(state191.timer);
+      state191.timer = 0;
       return;
     }
     if (doc.hidden || doc.getElementById("editor-modal")) return;
@@ -164135,17 +164472,17 @@ function avviso3(testo5, tipo = "bene") {
   el.textContent = testo5;
   el.dataset.tipo = tipo;
   el.classList.add("visto");
-  root.clearTimeout?.(state190.avviso);
-  state190.avviso = root.setTimeout?.(() => el.classList.remove("visto"), 2200);
+  root.clearTimeout?.(state191.avviso);
+  state191.avviso = root.setTimeout?.(() => el.classList.remove("visto"), 2200);
 }
 function apriFinestra3(finestra6) {
-  if (state190.finestra?.tipo === "telecamera") chiudiIlVideo2();
-  state190.finestra = finestra6;
+  if (state191.finestra?.tipo === "telecamera") chiudiIlVideo2();
+  state191.finestra = finestra6;
   ridisegna33();
 }
 function chiudi3() {
-  if (state190.finestra?.tipo === "telecamera") chiudiIlVideo2();
-  state190.finestra = null;
+  if (state191.finestra?.tipo === "telecamera") chiudiIlVideo2();
+  state191.finestra = null;
   ridisegna33();
 }
 function alClic5(evento) {
@@ -164169,20 +164506,20 @@ function alClic5(evento) {
     apriIlMenu2({
       idTela: ID4,
       tasto: '[data-c3s="menu"]',
-      rimisura: () => state190.scena?.ridimensiona()
+      rimisura: () => state191.scena?.ridimensiona()
     });
     return;
   }
   if (cosa === "vista") {
     const k = clean(el.dataset.c3sK) || "esterno";
     vibra2(6);
-    state190.vista = k;
-    if (state190.scena && !state190.scena.apri(k)) state190.vista = "esterno";
+    state191.vista = k;
+    if (state191.scena && !state191.scena.apri(k)) state191.vista = "esterno";
     return ridisegna33();
   }
   if (cosa === "arreda") {
-    state190.arreda = !state190.arreda;
-    state190.scena?.arreda(state190.arreda);
+    state191.arreda = !state191.arreda;
+    state191.scena?.arreda(state191.arreda);
     vibra2(6);
     return ridisegna33();
   }
@@ -164213,7 +164550,7 @@ function alClic5(evento) {
   }
 }
 function apriCasa3D() {
-  state190.nascosta = false;
+  state191.nascosta = false;
   ridisegna33();
 }
 function installaLoStile9() {
@@ -164357,8 +164694,8 @@ function installaLoStile9() {
   );
 }
 function installCasa3D() {
-  if (!doc || state190.installed) return false;
-  state190.installed = true;
+  if (!doc || state191.installed) return false;
+  state191.installed = true;
   installaLoStile9();
   root.__DM_CASA3D_RIDISEGNA__ = apriCasa3D;
   for (const evento of [
@@ -164382,7 +164719,7 @@ function installCasa3D() {
     root[nome] = avvolta;
   }
   doc.addEventListener?.("keydown", (evento) => {
-    if (evento.key === "Escape" && state190.finestra) chiudi3();
+    if (evento.key === "Escape" && state191.finestra) chiudi3();
   });
   ridisegna33();
   return true;
@@ -167748,10 +168085,10 @@ function riprendiIlPiano(piano2, { margine = 0.6 } = {}) {
 }
 
 // src/sections/casa-3d-editor-section.js
-var KEY194 = "__DASHBOARDMODERN_CASA3D_EDITOR__";
-var state191 = root[KEY194] ||= { installed: false, premium: null, chiedendo: false };
+var KEY195 = "__DASHBOARDMODERN_CASA3D_EDITOR__";
+var state192 = root[KEY195] ||= { installed: false, premium: null, chiedendo: false };
 var CASA3D_TAB = "casa3d";
-function schedaAttiva20() {
+function schedaAttiva21() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 }
 function casa2() {
@@ -167762,14 +168099,14 @@ function salva37(nuova) {
   root.__DM_CASA3D_RIDISEGNA__?.();
 }
 function chiediLaLicenza4() {
-  if (state191.chiedendo) return;
-  state191.chiedendo = true;
+  if (state192.chiedendo) return;
+  state192.chiedendo = true;
   premiumDellaCasa().then((premium3) => {
-    state191.premium = premium3 === true;
+    state192.premium = premium3 === true;
     ridisegna34();
   }).catch(() => {
   }).finally(() => {
-    state191.chiedendo = false;
+    state192.chiedendo = false;
   });
 }
 function dispositivoMarkup(c, p, i, d, states) {
@@ -167793,7 +168130,7 @@ function dispositivoMarkup(c, p, i, d, states) {
 }
 function corpoMarkup20() {
   const c = casa2(), states = allStates() || {}, conti2 = contaCollegati(c);
-  if (state191.premium === false)
+  if (state192.premium === false)
     return `<div class="dm-c3-ed dm-c3-ed-chiuso"><span>🔒</span><b>${esc(t("Casa 3D", "3D Home"))}</b><p>${esc(
       t("La casa in tre dimensioni è una funzione Premium. La configurazione resta salvata.", "The 3D home is a Premium feature. Its configuration stays saved.")
     )}</p></div>`;
@@ -167826,9 +168163,9 @@ function serve2() {
 }
 function ensureCasa3DEditor() {
   const body = doc?.getElementById("ed-body");
-  if (!body || schedaAttiva20() !== CASA3D_TAB) return false;
-  if (state191.premium === null) chiediLaLicenza4();
-  const firma2 = `${state191.premium}:${JSON.stringify(casa2())}:${Object.keys(allStates() || {}).length}`;
+  if (!body || schedaAttiva21() !== CASA3D_TAB) return false;
+  if (state192.premium === null) chiediLaLicenza4();
+  const firma2 = `${state192.premium}:${JSON.stringify(casa2())}:${Object.keys(allStates() || {}).length}`;
   if (body.dataset.dmCasa3dEditor === firma2 && body.querySelector(".dm-c3-ed")) return true;
   if (body.querySelector(".dm-c3-ed") && body.contains(doc.activeElement) && doc.activeElement?.dataset?.dmC3Mano !== void 0) return true;
   body.dataset.dmCasa3dEditor = firma2;
@@ -167860,7 +168197,7 @@ function ensureCasa3DEditorTab() {
     linguetta4.addEventListener("click", () => root.editorSwitch?.(CASA3D_TAB));
     linguette4.appendChild(linguetta4);
   }
-  if (schedaAttiva20() !== CASA3D_TAB) root.editorSwitch?.(CASA3D_TAB);
+  if (schedaAttiva21() !== CASA3D_TAB) root.editorSwitch?.(CASA3D_TAB);
   return !presente;
 }
 function nelCorpo4(event) {
@@ -167871,7 +168208,7 @@ function dispositivo2(c, chi) {
   const p = c.piani.find((x) => x.k === k);
   return p?.dispositivi?.[Number(i)] || null;
 }
-function onClick62(event) {
+function onClick63(event) {
   if (!nelCorpo4(event)) return;
   const modifica = event.target.closest("[data-dm-c3-modifica]");
   if (modifica) {
@@ -167955,10 +168292,10 @@ function installaLoStile10() {
   );
 }
 function installCasa3DEditor() {
-  if (!doc || state191.installed) return false;
-  state191.installed = true;
+  if (!doc || state192.installed) return false;
+  state192.installed = true;
   installaLoStile10();
-  doc.addEventListener("click", onClick62);
+  doc.addEventListener("click", onClick63);
   doc.addEventListener("change", onChange22);
   wrapFunction("apriConfigEntita", "__dmCasa3dEditor", () => {
     ensureCasa3DEditorTab();
@@ -168854,9 +169191,9 @@ function eNomeDiFuori(t2) {
 }
 
 // src/sections/casa-3d-crea-section.js
-var KEY195 = "__DASHBOARDMODERN_CASA3D_CREA__";
+var KEY196 = "__DASHBOARDMODERN_CASA3D_CREA__";
 var ID5 = "dm-c3c";
-var state192 = root[KEY195] ||= { installed: false, S: null, modello: null, premium: null };
+var state193 = root[KEY196] ||= { installed: false, S: null, modello: null, premium: null };
 var due4 = (coppia2) => t(...coppia2);
 var numero64 = (v, cifre3 = 1) => Number(v).toFixed(cifre3).replace(".", t(",", "."));
 var PASSI2 = [
@@ -169265,15 +169602,15 @@ async function scaricaIlRiconoscitore() {
   return { nomi: nomi2, motore, pesi };
 }
 function avanzamento(fatti, totale) {
-  const S = state192.S;
+  const S = state193.S;
   if (!S) return;
   S.caricamento = totale > 0 ? { fatti, totale } : null;
   const n = nodo2()?.querySelector("[data-c3c-rr]");
   if (n) n.textContent = testoDelCaricamento();
-  else disegnaIlPannello();
+  else disegnaIlPannello2();
 }
 function testoDelCaricamento() {
-  const c = state192.S?.caricamento;
+  const c = state193.S?.caricamento;
   if (!c)
     return t(
       "Preparo il riconoscimento degli oggetti, sul dispositivo…",
@@ -169287,26 +169624,26 @@ function testoDelCaricamento() {
 }
 function nonDisponibile(errore, nonScaricato) {
   root.console?.warn?.("[DashboardModern] Casa 3D: riconoscimento non disponibile", errore);
-  const S = state192.S;
+  const S = state193.S;
   if (S) {
     S.riconoscitore = "no";
     S.perche = perche5(errore);
     S.nonScaricato = nonScaricato === true;
     S.caricamento = null;
   }
-  state192.modello = null;
+  state193.modello = null;
   return null;
 }
 function riconoscitore() {
-  if (state192.modello) return state192.modello;
-  state192.modello = (async () => {
-    const S = state192.S;
+  if (state193.modello) return state193.modello;
+  state193.modello = (async () => {
+    const S = state193.S;
     if (S) {
       S.riconoscitore = "carica";
       S.perche = "";
       S.nonScaricato = false;
       S.caricamento = null;
-      disegnaIlPannello();
+      disegnaIlPannello2();
     }
     let file;
     try {
@@ -169319,16 +169656,16 @@ function riconoscitore() {
       let modello2 = await rilevatoreNelLavoratore(file, (errore) => nonDisponibile(errore, false));
       if (!modello2) modello2 = await rilevatoreInPagina(file);
       file.motore = file.pesi = null;
-      if (state192.S) {
-        state192.S.riconoscitore = "pronto";
-        state192.S.caricamento = null;
+      if (state193.S) {
+        state193.S.riconoscitore = "pronto";
+        state193.S.caricamento = null;
       }
       return modello2;
     } catch (errore) {
       return nonDisponibile(errore, false);
     }
   })();
-  return state192.modello;
+  return state193.modello;
 }
 var leggi3 = (file) => new Promise((ok, no) => {
   const r = new FileReader();
@@ -169382,15 +169719,15 @@ function adatta(w, h) {
   const mw = Math.max(80, palco.clientWidth - 24), mh = Math.max(80, palco.clientHeight - 24), s = Math.min(mw / w, mh / h);
   tela4.width = Math.max(1, Math.round(w * s));
   tela4.height = Math.max(1, Math.round(h * s));
-  state192.vista = { s, w, h };
+  state193.vista = { s, w, h };
   return tela4.getContext("2d");
 }
 function daSchermo(ev) {
-  const b2 = pezzo2(".c3c-tela").getBoundingClientRect(), s = state192.vista?.s || 1;
+  const b2 = pezzo2(".c3c-tela").getBoundingClientRect(), s = state193.vista?.s || 1;
   return [(ev.clientX - b2.left) / s, (ev.clientY - b2.top) / s];
 }
 function aSchermo(x, y) {
-  const b2 = pezzo2(".c3c-tela").getBoundingClientRect(), p = pezzo2(".c3c-palco").getBoundingClientRect(), s = state192.vista?.s || 1;
+  const b2 = pezzo2(".c3c-tela").getBoundingClientRect(), p = pezzo2(".c3c-palco").getBoundingClientRect(), s = state193.vista?.s || 1;
   return [b2.left - p.left + x * s, b2.top - p.top + y * s];
 }
 function vuota(testo5) {
@@ -169401,11 +169738,11 @@ function vuota(testo5) {
     g.fillStyle = "#94a3b8";
     g.font = "16px Inter, system-ui, sans-serif";
     g.textAlign = "center";
-    g.fillText(testo5, 400 * state192.vista.s, 300 * state192.vista.s);
+    g.fillText(testo5, 400 * state193.vista.s, 300 * state193.vista.s);
   }
 }
 function disegnaLaTela() {
-  const S = state192.S, sopra = pezzo2(".c3c-sopra");
+  const S = state193.S, sopra = pezzo2(".c3c-sopra");
   if (!S || !sopra) return;
   sopra.innerHTML = "";
   if (S.premium !== true) return vuota("");
@@ -169414,7 +169751,7 @@ function disegnaLaTela() {
   if (S.passo <= P11.scala) {
     if (S.dwg) return vuota(t("Scegli il piano del disegno", "Choose the floor from the drawing"));
     if (!S.dritta) return vuota(t("Carica la planimetria", "Upload the floor plan"));
-    const g = adatta(S.dritta.width, S.dritta.height), s = state192.vista.s;
+    const g = adatta(S.dritta.width, S.dritta.height), s = state193.vista.s;
     g.drawImage(S.dritta, 0, 0, pezzo2(".c3c-tela").width, pezzo2(".c3c-tela").height);
     if (S.passo === P11.scala) {
       for (const p of S.punti) {
@@ -169447,7 +169784,7 @@ function disegnaLaTela() {
   return disegnaPianta();
 }
 function disegnaPianta() {
-  const S = state192.S, { W: W2, H: H7 } = S.griglia, c = S.casa;
+  const S = state193.S, { W: W2, H: H7 } = S.griglia, c = S.casa;
   let x0 = W2, x1 = 0, y0 = H7, y1 = 0;
   for (let i = 0; i < W2 * H7; i++) {
     if (!(S.griglia.muro[i] || c.tipo[i] > 0)) continue;
@@ -169506,9 +169843,9 @@ function disegnaPianta() {
     }
 }
 function disegnaFotoStanza() {
-  const S = state192.S, F = (S.foto[S.sel] || [])[S.fotoSel];
+  const S = state193.S, F = (S.foto[S.sel] || [])[S.fotoSel];
   if (!F) return vuota(t("Aggiungi le foto di questa stanza", "Add photos of this room"));
-  const g = adatta(F.w, F.h), s = state192.vista.s, sopra = pezzo2(".c3c-sopra");
+  const g = adatta(F.w, F.h), s = state193.vista.s, sopra = pezzo2(".c3c-sopra");
   g.drawImage(F.img, 0, 0, pezzo2(".c3c-tela").width, pezzo2(".c3c-tela").height);
   const riquadro2 = (box2, classe3, testo5) => {
     const [x, y] = aSchermo(box2[0], box2[1]);
@@ -169535,13 +169872,13 @@ function disegnaFotoStanza() {
   });
 }
 function disegnaFacciata() {
-  const S = state192.S, E = S.esterno;
+  const S = state193.S, E = S.esterno;
   if (E.foto) {
     const g2 = adatta(E.foto.width, E.foto.height);
     g2.drawImage(E.foto, 0, 0, pezzo2(".c3c-tela").width, pezzo2(".c3c-tela").height);
     return;
   }
-  const g = adatta(800, 600), s = state192.vista.s;
+  const g = adatta(800, 600), s = state193.vista.s;
   g.scale(s, s);
   g.fillStyle = "#16213a";
   g.fillRect(0, 0, 800, 600);
@@ -169569,29 +169906,29 @@ function disegnaFacciata() {
   } else g.rect(x0 - 10, base - piani * hp - 14, w + 20, 14);
   g.fill();
 }
-var stanzeVive = () => (state192.S.casa?.stanze || []).filter((s) => !state192.S.fuori.has(s.id));
-var stanzaDi2 = (id) => (state192.S.casa?.stanze || []).find((s) => s.id === Number(id));
+var stanzeVive = () => (state193.S.casa?.stanze || []).filter((s) => !state193.S.fuori.has(s.id));
+var stanzaDi2 = (id) => (state193.S.casa?.stanze || []).find((s) => s.id === Number(id));
 function nomeDi18(id) {
-  const S = state192.S, dato2 = clean(S.nomi[id]);
+  const S = state193.S, dato2 = clean(S.nomi[id]);
   if (dato2) return dato2;
   const ids = (S.casa?.stanze || []).map((s) => s.id), presi = {};
   for (const k of ids) if (clean(S.nomi[k])) presi[k] = clean(S.nomi[k]);
   return nomiDiRipiego(ids, presi, t("Stanza", "Room"))[id] || `${t("Stanza", "Room")} ${id}`;
 }
 function trova(ref) {
-  const S = state192.S, [tipo, a, b2, c] = clean(ref).split(":");
+  const S = state193.S, [tipo, a, b2, c] = clean(ref).split(":");
   if (tipo === "m") return S.manuali[Number(a)] || null;
   if (tipo === "f") return S.foto[Number(a)]?.[Number(b2)]?.dispositivi?.[Number(c)] || null;
   return null;
 }
 function togli3(ref) {
-  const S = state192.S, [tipo, a, b2, c] = clean(ref).split(":");
+  const S = state193.S, [tipo, a, b2, c] = clean(ref).split(":");
   if (tipo === "m") S.manuali.splice(Number(a), 1);
   if (tipo === "f") S.foto[Number(a)]?.[Number(b2)]?.dispositivi?.splice(Number(c), 1);
   if (S.selDisp === ref) S.selDisp = null;
 }
 function tuttiIDispositivi() {
-  const S = state192.S, out = [];
+  const S = state193.S, out = [];
   if (!S.casa) return out;
   for (const s of stanzeVive()) {
     (S.foto[s.id] || []).forEach((F, fi) => {
@@ -169621,7 +169958,7 @@ function tuttiIDispositivi() {
   return out;
 }
 function usate(tranne) {
-  const S = state192.S, k = pianoDelLivello(S.livello).k;
+  const S = state193.S, k = pianoDelLivello(S.livello).k;
   const altri = { piani: S.salvata.piani.filter((p) => p.k !== k), esterno: S.salvata.esterno };
   const out = entitaUsate(altri);
   for (const s of Object.values(S.foto))
@@ -169631,7 +169968,7 @@ function usate(tranne) {
   return out;
 }
 function contesto2(k, stanzaId, tranne) {
-  const S = state192.S;
+  const S = state193.S;
   return {
     stanza: nomeDi18(stanzaId),
     area: clean(S.aree[stanzaId]),
@@ -169660,7 +169997,7 @@ var PRIVATO = () => `<div class="c3c-privato">🔒 ${esc(
   )
 )}</div>`;
 function pPlanimetria() {
-  const S = state192.S, fatti = new Map(S.salvata.piani.map((p) => [p.k, p]));
+  const S = state193.S, fatti = new Map(S.salvata.piani.map((p) => [p.k, p]));
   if (S.fonte === "stanzeFoto") return pStanzeDalleFoto();
   const livelli = LIVELLI3.map((n) => {
     const L = pianoDelLivello(n), gia2 = fatti.has(L.k);
@@ -169737,7 +170074,7 @@ function notaDellaScala(S) {
   return "";
 }
 function pScala() {
-  const S = state192.S;
+  const S = state193.S;
   return scheda7(
     `📏 <b>${esc(t("La scala", "The scale"))}</b>`,
     `${nota(esc(t("Tocca i due estremi di una misura che conosci: una quota scritta, un muro, una porta (di solito 80 cm).", "Tap both ends of a length you know: a written dimension, a wall, a door (usually 80 cm).")))}
@@ -169748,7 +170085,7 @@ function pScala() {
   ) + avanti2(t("Riconosci i muri →", "Find the walls →"), Boolean(S.mpp));
 }
 function pMuri() {
-  const S = state192.S, c = S.casa;
+  const S = state193.S, c = S.casa;
   const porte = c.aperture.filter((a) => a.tipo === "porta").length, fin = c.aperture.filter((a) => a.tipo === "finestra").length;
   const strumenti = [
     ["dritto", "📏", t("Muro dritto", "Straight wall")],
@@ -169782,7 +170119,7 @@ function pMuri() {
   ) + avanti2();
 }
 function sceltaDellaStanza(s) {
-  const S = state192.S, aree2 = Object.entries(S.registri.aree).sort((a, b2) => a[1].localeCompare(b2[1]));
+  const S = state193.S, aree2 = Object.entries(S.registri.aree).sort((a, b2) => a[1].localeCompare(b2[1]));
   const area2 = clean(S.aree[s.id]), nome = clean(S.nomi[s.id]);
   const voci4 = aree2.length ? aree2.map(
     ([id, n]) => `<option value="a:${esc(id)}"${area2 === id ? " selected" : ""}>${esc(n)}</option>`
@@ -169794,7 +170131,7 @@ function sceltaDellaStanza(s) {
     <input class="c3c-in" data-c3c-nome="${s.id}" value="${libero ? esc(nome) : ""}" placeholder="${esc(t("o scrivi un nome", "or type a name"))}" autocomplete="off">`;
 }
 function pStanze() {
-  const S = state192.S, c = S.casa, ci = Object.keys(S.registri.aree).length;
+  const S = state193.S, c = S.casa, ci = Object.keys(S.registri.aree).length;
   return scheda7(
     `🏷️ <b>${esc(t("Le stanze", "The rooms"))}</b>`,
     `${nota(
@@ -169835,7 +170172,7 @@ function sceltaEntitaMarkup(d, ref, stanzaId) {
     </div>`;
 }
 function dispositivoMarkup2(d, ref, stanzaId, sotto) {
-  const D = DISPOSITIVI_3D[d.k], S = state192.S;
+  const D = DISPOSITIVI_3D[d.k], S = state193.S;
   return `<div class="c3c-disp${d.entity ? " si" : " manca"}${S.selDisp === ref ? " scelto" : ""}" data-c3c-disp="${esc(ref)}">
       <div class="c3c-disp-testa"><span class="c3c-disp-ic">${D.icona}</span><b>${esc(due4(D.nome))}</b><em>${esc(sotto)}</em>
         <span class="c3c-stato">${d.entity ? `✓ ${esc(t("collegato", "linked"))}` : esc(t("da collegare", "to link"))}</span>
@@ -169849,7 +170186,7 @@ function contoMarkup() {
   return `<span class="c3c-conto${c.mancano ? " manca" : ""}">${esc(t(`${c.collegati} collegati · ${c.mancano} mancanti`, `${c.collegati} linked · ${c.mancano} missing`))}</span>`;
 }
 function statoDelRiconoscitore() {
-  const S = state192.S, r = S.riconoscitore;
+  const S = state193.S, r = S.riconoscitore;
   if (r === "carica")
     return `<div class="c3c-lavoro">⏳ <span data-c3c-rr>${esc(testoDelCaricamento())}</span></div>`;
   if (r === "no")
@@ -169865,7 +170202,7 @@ function statoDelRiconoscitore() {
   return "";
 }
 function pFotoStanze() {
-  const S = state192.S, vive = stanzeVive();
+  const S = state193.S, vive = stanzeVive();
   if (!vive.length)
     return scheda7(
       `📷 <b>${esc(t("Foto delle stanze", "Room photos"))}</b>`,
@@ -169893,7 +170230,7 @@ function pFotoStanze() {
   return html + avanti2();
 }
 function schedeDellaFoto(sid, F, nome) {
-  const S = state192.S;
+  const S = state193.S;
   let html = "";
   const frecce3 = { N: "↑", S: "↓", E: "→", O: "←" };
   html += scheda7(
@@ -169948,7 +170285,7 @@ function schedeDellaFoto(sid, F, nome) {
 var SF_MARGINE = 0.8;
 var SF_UNITA = 100;
 function stanzaDalleFoto(nome, area2 = "") {
-  const S = state192.S, tipo = tipoDellaStanza(nome), serie2 = MISURE_DI_SERIE2[tipo];
+  const S = state193.S, tipo = tipoDellaStanza(nome), serie2 = MISURE_DI_SERIE2[tipo];
   const id = S.prossimaStanza++;
   S.nomi[id] = nome;
   S.aree[id] = area2;
@@ -169966,7 +170303,7 @@ function stanzaDalleFoto(nome, area2 = "") {
 }
 var NON_E_UNA_STANZA = /garage|\bbox\b|cantin|soffitt|rimess|magazzin|basement|attic|shed|cellar|outdoor|driveway|vialetto|piscin|pool/i;
 function entraNelleFoto() {
-  const S = state192.S;
+  const S = state193.S;
   S.fonte = "stanzeFoto";
   S.vistaFoto = false;
   S.avviso = "";
@@ -169989,7 +170326,7 @@ function entraNelleFoto() {
   S.fotoSel = 0;
 }
 function esciDalleFoto() {
-  const S = state192.S;
+  const S = state193.S;
   S.fonte = "";
   S.vistaFoto = false;
   const prima = S.primaDelleFoto;
@@ -170010,7 +170347,7 @@ function esciDalleFoto() {
   S.sel = null;
 }
 function rimettiLeFotoProvvisorie() {
-  const S = state192.S;
+  const S = state193.S;
   if (S.foto === S.fotoDelleStanze) return;
   S.foto = S.fotoDelleStanze;
   S.nomi = {};
@@ -170023,7 +170360,7 @@ function rimettiLeFotoProvvisorie() {
   S.sel = S.stanzeFoto[0]?.id ?? null;
   S.fotoSel = 0;
 }
-var fotoScelta = () => (state192.S.foto[state192.S.sel] || [])[state192.S.fotoSel] || null;
+var fotoScelta = () => (state193.S.foto[state193.S.sel] || [])[state193.S.fotoSel] || null;
 function scartaDaiGrezzi(F, box2) {
   if (!F?.grezzi?.length || !box2) return;
   const copre = (b2) => {
@@ -170045,7 +170382,7 @@ function haGiaUnDispositivo(F, o) {
   });
 }
 function aggiornaLeMisure(id) {
-  const S = state192.S, r = S.stanzeFoto.find((x) => x.id === id);
+  const S = state193.S, r = S.stanzeFoto.find((x) => x.id === id);
   if (!r || r.aMano) return;
   const foto = (S.fotoDelleStanze[id] || []).map((F) => ({
     verso: F.verso,
@@ -170063,7 +170400,7 @@ function aggiornaLeMisure(id) {
   });
 }
 function disposteDiAdesso() {
-  const S = state192.S;
+  const S = state193.S;
   return disponiLeStanze(
     S.stanzeFoto.map((r) => ({
       id: r.id,
@@ -170075,21 +170412,21 @@ function disposteDiAdesso() {
   );
 }
 function fissaLOrdine() {
-  const S = state192.S;
+  const S = state193.S;
   if (S.sfOrdinata) return;
   const mostrate = [...disposteDiAdesso()].sort((a, b2) => a.y - b2.y || a.x - b2.x).map((r) => r.id);
   S.stanzeFoto.sort((a, b2) => mostrate.indexOf(a.id) - mostrate.indexOf(b2.id));
   S.sfOrdinata = true;
 }
 function spostaLaStanza(id, di) {
-  const S = state192.S;
+  const S = state193.S;
   fissaLOrdine();
   const i = S.stanzeFoto.findIndex((r) => r.id === id), j = i + di;
   if (i < 0 || j < 0 || j >= S.stanzeFoto.length) return;
   [S.stanzeFoto[i], S.stanzeFoto[j]] = [S.stanzeFoto[j], S.stanzeFoto[i]];
 }
 function pStanzeDalleFoto() {
-  const S = state192.S;
+  const S = state193.S;
   rimettiLeFotoProvvisorie();
   if (S.stanzeFoto.length > 1) fissaLOrdine();
   const aree2 = Object.values(S.registri?.aree || {});
@@ -170146,14 +170483,14 @@ function pStanzeDalleFoto() {
   return html + avanti2(t("Crea la pianta →", "Create the plan →"), S.stanzeFoto.length > 0 && !S.lavoro, false);
 }
 function disegnaPiantaDalleFoto() {
-  const S = state192.S, sopra = pezzo2(".c3c-sopra");
+  const S = state193.S, sopra = pezzo2(".c3c-sopra");
   const d = disposteDiAdesso();
   S.sfDisposte = d;
   if (!d.length)
     return vuota(t("Aggiungi le stanze e le loro foto", "Add the rooms and their photos"));
   const x1 = Math.max(...d.map((r) => r.x + r.larghezza)), y1 = Math.max(...d.map((r) => r.y + r.profondita));
   const U = SF_UNITA, M = SF_MARGINE;
-  const g = adatta((x1 + 2 * M) * U, (y1 + 2 * M) * U), s = state192.vista.s;
+  const g = adatta((x1 + 2 * M) * U, (y1 + 2 * M) * U), s = state193.vista.s;
   g.setTransform(s, 0, 0, s, 0, 0);
   g.fillStyle = "#0f172a";
   g.fillRect(0, 0, (x1 + 2 * M) * U, (y1 + 2 * M) * U);
@@ -170196,13 +170533,13 @@ function disegnaPiantaDalleFoto() {
   }
 }
 function stanzaDispostaSotto(x, y) {
-  const S = state192.S, mx = x / SF_UNITA - SF_MARGINE, my = y / SF_UNITA - SF_MARGINE;
+  const S = state193.S, mx = x / SF_UNITA - SF_MARGINE, my = y / SF_UNITA - SF_MARGINE;
   return (S.sfDisposte || []).find(
     (r) => mx >= r.x && mx <= r.x + r.larghezza && my >= r.y && my <= r.y + r.profondita
   ) || null;
 }
 function creaLaPiantaDalleFoto() {
-  const S = state192.S;
+  const S = state193.S;
   const stanze4 = S.stanzeFoto.filter((r) => r.larghezza > 0 && r.profondita > 0);
   if (!stanze4.length) return;
   const disposte = disponiLeStanze(
@@ -170296,7 +170633,7 @@ function creaLaPiantaDalleFoto() {
   });
 }
 function pDispositivi() {
-  const S = state192.S, tutti = tuttiIDispositivi(), vive = stanzeVive();
+  const S = state193.S, tutti = tuttiIDispositivi(), vive = stanzeVive();
   const perStanza = vive.map((s) => {
     const suoi2 = tutti.filter((d) => d.stanza === s.id);
     if (!suoi2.length) return "";
@@ -170322,7 +170659,7 @@ function pDispositivi() {
   ) + scheda7(`➕ <b>${esc(t("Aggiungi un dispositivo", "Add a device"))}</b>`, aggiungi5) + avanti2();
 }
 function pEsterno() {
-  const S = state192.S, E = S.esterno;
+  const S = state193.S, E = S.esterno;
   const chip = (attr, v, testo5, si) => `<button type="button" class="c3c-ch${si ? " si" : ""}" data-c3c-${attr}="${v}">${testo5}</button>`;
   let forma2 = `<div>${chip("tipo", "villa", `🏡 ${esc(t("Villa", "House"))}`, S.tipo === "villa")}${chip("tipo", "palazzo", `🏢 ${esc(t("Palazzo", "Apartment block"))}`, S.tipo === "palazzo")}</div>`;
   if (S.tipo === "palazzo") {
@@ -170348,7 +170685,7 @@ function pEsterno() {
   ) + avanti2(t("Crea la casa →", "Create the home →"));
 }
 function pFine() {
-  const S = state192.S, L = pianoDelLivello(S.livello), c = conti();
+  const S = state193.S, L = pianoDelLivello(S.livello), c = conti();
   const vive = stanzeVive(), foto = Object.values(S.foto).flat(), arredi = foto.reduce((a, f) => a + f.oggetti.length, 0);
   const altri = S.salvata.piani.filter((p) => p.k !== L.k);
   return scheda7(
@@ -170372,7 +170709,7 @@ function pFine() {
   ) + `<div class="c3c-riga-btn"><button type="button" class="c3c-btn" data-c3c="indietro">${esc(t("← Indietro", "← Back"))}</button></div>`;
 }
 function bloccata() {
-  const S = state192.S;
+  const S = state193.S;
   if (S.premium === null)
     return scheda7(
       `⏳ <b>${esc(t("Un momento", "One moment"))}</b>`,
@@ -170390,8 +170727,8 @@ function bloccata() {
     )
   );
 }
-function disegnaIlPannello() {
-  const S = state192.S, n = nodo2();
+function disegnaIlPannello2() {
+  const S = state193.S, n = nodo2();
   if (!S || !n) return;
   n.dataset.passo = String(S.passo);
   const passi2 = n.querySelector(".c3c-passi");
@@ -170415,13 +170752,13 @@ function disegnaIlPannello() {
   pannello.scrollTop = sopra;
 }
 function disegna17() {
-  disegnaIlPannello();
+  disegnaIlPannello2();
   disegnaLaTela();
 }
 async function usaPlanimetria(src) {
-  const S = state192.S;
+  const S = state193.S;
   S.lavoro = t("Raddrizzo la planimetria…", "Straightening the floor plan…");
-  disegnaIlPannello();
+  disegnaIlPannello2();
   await new Promise((ok) => setTimeout(ok, 30));
   try {
     let img = typeof src === "string" ? await immagine2(src) : src;
@@ -170519,14 +170856,14 @@ async function caricaPdfjs() {
   }
 }
 async function usaPdf(file) {
-  const S = state192.S;
+  const S = state193.S;
   Object.assign(S, {
     dwg: null,
     avviso: "",
     dettaglio: "",
     lavoro: t("Apro il PDF…", "Opening the PDF…")
   });
-  disegnaIlPannello();
+  disegnaIlPannello2();
   try {
     const [lib, dati] = await Promise.all([caricaPdfjs(), file.arrayBuffer()]);
     const documento = await lib.getDocument({ data: new Uint8Array(dati) }).promise;
@@ -170628,7 +170965,7 @@ function avvisoDelCatasto() {
   );
 }
 async function usaPiantaDelFoglio(p) {
-  const S = state192.S;
+  const S = state193.S;
   if (!p) return;
   S.dwg = null;
   await usaPlanimetria(p.tela);
@@ -170695,14 +171032,14 @@ function perche5(errore) {
   return testo5 ? testo5.slice(0, 160) : "";
 }
 async function usaDwg(file) {
-  const S = state192.S;
+  const S = state193.S;
   Object.assign(S, {
     dwg: null,
     avviso: "",
     dettaglio: "",
     lavoro: t("Leggo il disegno DWG…", "Reading the DWG drawing…")
   });
-  disegnaIlPannello();
+  disegnaIlPannello2();
   let motore;
   try {
     motore = await caricaLibreDwg();
@@ -170797,7 +171134,7 @@ function tavolaDelPiano(p, lungo = 2400) {
   return { tela: tela4, vetri, porte, mpp: p.metriPerUnita / ppu, etichette };
 }
 async function usaPianoDwg(p) {
-  const S = state192.S;
+  const S = state193.S;
   if (!p) return;
   const { tela: tela4, vetri, porte, mpp, etichette } = tavolaDelPiano(p);
   S.dwg = null;
@@ -170806,18 +171143,18 @@ async function usaPianoDwg(p) {
   return pronta(mpp, etichette);
 }
 function pronta(mpp, etichette = []) {
-  const S = state192.S;
+  const S = state193.S;
   Object.assign(S, { mpp, etichette, avviso: "", dettaglio: "" });
   S.passo = P11.scala;
   vaiAvanti();
 }
 function misureAMano() {
-  const S = state192.S, n = (v) => parseFloat(String(v || "").replace(",", "."));
+  const S = state193.S, n = (v) => parseFloat(String(v || "").replace(",", "."));
   const w = n(S?.aMano?.w), h = n(S?.aMano?.h);
   return w >= 2 && w <= 60 && h >= 2 && h <= 60 ? { w, h } : null;
 }
 async function disegnaAMano() {
-  const S = state192.S, m = misureAMano();
+  const S = state193.S, m = misureAMano();
   if (!m) return;
   const ppm = Math.min(120, 2e3 / Math.max(m.w, m.h) / 1.1), margine = 0.6, spesso = 0.3;
   const tela4 = tela2d(Math.round((m.w + 2 * margine) * ppm), Math.round((m.h + 2 * margine) * ppm));
@@ -170838,7 +171175,7 @@ async function disegnaAMano() {
   return pronta(1 / ppm);
 }
 function dwgScelta() {
-  const S = state192.S;
+  const S = state193.S;
   if (!S.dwg?.piani?.length) return "";
   const domanda2 = S.dwg.foglio ? t(
     "Nel foglio ci sono più piante: quale fai adesso?",
@@ -170853,7 +171190,7 @@ function dwgScelta() {
   ).join("")}</div></div>`;
 }
 function riconosci() {
-  const S = state192.S;
+  const S = state193.S;
   if (!S.griglia) {
     const im = S.dritta.getContext("2d").getImageData(0, 0, S.dritta.width, S.dritta.height);
     const mappa2 = (tela4) => {
@@ -170872,7 +171209,7 @@ function riconosci() {
   ricalcola2();
 }
 function ricalcola2() {
-  const S = state192.S;
+  const S = state193.S;
   const vecchi = S.casa ? Object.fromEntries(
     S.casa.stanze.map((s) => [
       s.cuori.join(","),
@@ -170912,7 +171249,7 @@ function ricalcola2() {
   if (S.sel && !S.casa.stanze.some((s) => s.id === S.sel)) S.sel = null;
 }
 function aggiornaScala() {
-  const S = state192.S;
+  const S = state193.S;
   const auto = S.mppMuri || null;
   S.scalaAvviso = null;
   S.centimetri = false;
@@ -170935,7 +171272,7 @@ function aggiornaScala() {
   S.griglia = null;
 }
 function pennello(ev) {
-  const S = state192.S;
+  const S = state193.S;
   const [x, y] = daSchermo(ev), cx = Math.round(x + S.ritaglio.x0), cy = Math.round(y + S.ritaglio.y0), { W: W2, H: H7, muro, barriera } = S.griglia;
   const r = S.strumento === "muro" ? 2 : 4;
   for (let dy = -r; dy <= r; dy++)
@@ -170945,12 +171282,12 @@ function pennello(ev) {
       const i = yy * W2 + xx;
       muro[i] = barriera[i] = S.strumento === "muro" ? 1 : 0;
     }
-  const g = pezzo2(".c3c-tela").getContext("2d"), s = state192.vista.s;
+  const g = pezzo2(".c3c-tela").getContext("2d"), s = state193.vista.s;
   g.fillStyle = S.strumento === "muro" ? "#0f172a" : "#f8fafc";
   g.fillRect((x - r) * s, (y - r) * s, 2 * r * s, 2 * r * s);
 }
 function apriVarco(x, y, largo) {
-  const S = state192.S, cx = Math.round(x + S.ritaglio.x0), cy = Math.round(y + S.ritaglio.y0), { W: W2, H: H7, muro, barriera } = S.griglia;
+  const S = state193.S, cx = Math.round(x + S.ritaglio.x0), cy = Math.round(y + S.ritaglio.y0), { W: W2, H: H7, muro, barriera } = S.griglia;
   const m = (xx, yy) => xx >= 0 && yy >= 0 && xx < W2 && yy < H7 ? muro[yy * W2 + xx] : 0;
   let oriz = 0, vert = 0;
   for (let d = -15; d <= 15; d++) {
@@ -170996,7 +171333,7 @@ async function rilevaNeiRitagli(modello2, img) {
   return tutti;
 }
 async function riconosciNellaFoto(F, stanza2) {
-  const S = state192.S;
+  const S = state193.S;
   S.fotoInCorso++;
   S.lavoro = t(
     "Cerco arredi e dispositivi nella foto…",
@@ -171029,15 +171366,15 @@ async function riconosciNellaFoto(F, stanza2) {
   }
   S.fotoInCorso = Math.max(0, S.fotoInCorso - 1);
   if (!S.fotoInCorso) S.lavoro = "";
-  if (state192.S === S) {
+  if (state193.S === S) {
     if (S.fonte === "stanzeFoto" && S.passo === P11.planimetria) aggiornaLeMisure(stanza2);
     disegna17();
   }
 }
 async function riprovaIlRiconoscimento() {
-  const S = state192.S;
+  const S = state193.S;
   if (!S || S.riconoscitore === "carica") return;
-  state192.modello = null;
+  state193.modello = null;
   S.riconoscitore = "fermo";
   S.perche = "";
   S.nonScaricato = false;
@@ -171046,16 +171383,16 @@ async function riprovaIlRiconoscimento() {
     for (const F of foto || []) if (F?.img && !F.riconosciuta) daGuardare.push([id, F]);
   if (!daGuardare.length) {
     await riconoscitore();
-    if (state192.S === S) disegna17();
+    if (state193.S === S) disegna17();
     return;
   }
   for (const [id, F] of daGuardare) {
-    if (state192.S !== S) return;
+    if (state193.S !== S) return;
     await riconosciNellaFoto(F, isNaN(Number(id)) ? id : Number(id));
   }
 }
-async function aggiungiFotoStanza(src, f35 = null, stanza2 = state192.S.sel) {
-  const S = state192.S;
+async function aggiungiFotoStanza(src, f35 = null, stanza2 = state193.S.sel) {
+  const S = state193.S;
   const img = await immagine2(src);
   const F = {
     src,
@@ -171082,7 +171419,7 @@ async function aggiungiFotoStanza(src, f35 = null, stanza2 = state192.S.sel) {
   await riconosciNellaFoto(F, stanza2);
 }
 function segnaNellaFoto(x, y) {
-  const S = state192.S, F = (S.foto[S.sel] || [])[S.fotoSel], A2 = S.aggiungi;
+  const S = state193.S, F = (S.foto[S.sel] || [])[S.fotoSel], A2 = S.aggiungi;
   if (!F || !A2) return;
   if (A2.tipo === "arredo") {
     const w = F.w * 0.22, h = F.h * 0.14;
@@ -171101,7 +171438,7 @@ function segnaNellaFoto(x, y) {
   S.aggiungi = null;
 }
 function pianoDiAdesso() {
-  const S = state192.S, fotoDerivate = {};
+  const S = state193.S, fotoDerivate = {};
   for (const [id, sue] of Object.entries(S.foto))
     fotoDerivate[id] = sue.map((F) => ({
       verso: F.verso,
@@ -171129,7 +171466,7 @@ function pianoDiAdesso() {
   });
 }
 function salva38() {
-  const S = state192.S, piano2 = pianoDiAdesso();
+  const S = state193.S, piano2 = pianoDiAdesso();
   if (!piano2) {
     S.avviso = t("Non trovo nessuna stanza da salvare.", "I can't find any room to save.");
     return null;
@@ -171155,8 +171492,8 @@ function ridisegnaLaCasa() {
   }
 }
 function nuovoPiano(livello) {
-  const S = state192.S, salvata3 = S.salvata, tipo = S.tipo, esterno = S.esterno;
-  state192.S = {
+  const S = state193.S, salvata3 = S.salvata, tipo = S.tipo, esterno = S.esterno;
+  state193.S = {
     ...statoNuovo(salvata3, livello),
     tipo,
     esterno: { ...esterno, foto: null },
@@ -171166,15 +171503,15 @@ function nuovoPiano(livello) {
   };
 }
 function prossimoLivello2() {
-  const fatti = new Set(state192.S.salvata.piani.map((p) => p.livello));
+  const fatti = new Set(state193.S.salvata.piani.map((p) => p.livello));
   for (const n of [0, 1, 2, 3, 4, 5, -1]) if (!fatti.has(n)) return n;
-  return state192.S.livello + 1;
+  return state193.S.livello + 1;
 }
 function vaiAvanti() {
-  const S = state192.S;
+  const S = state193.S;
   if (S.passo === P11.scala) {
     S.lavoro = t("Riconosco muri e stanze…", "Finding walls and rooms…");
-    disegnaIlPannello();
+    disegnaIlPannello2();
     setTimeout(() => {
       try {
         riconosci();
@@ -171192,7 +171529,7 @@ function vaiAvanti() {
   S.aggiungi = null;
 }
 async function alClic6(ev) {
-  const S = state192.S;
+  const S = state193.S;
   if (!S) return;
   const b2 = ev.target.closest("button,[data-c3c-fotosel],[data-c3c-stanza],[data-c3c-sffoto]");
   if (!b2 || !nodo2()?.contains(b2)) return;
@@ -171344,7 +171681,7 @@ async function alClic6(ev) {
   if (d.c3cTetto) S.esterno.tetto = d.c3cTetto;
   if (d.c3cScelta) S.esterno.scelta = d.c3cScelta;
   if (d.c3cCol) S.esterno[S.esterno.scelta] = d.c3cCol;
-  if (state192.S) disegna17();
+  if (state193.S) disegna17();
 }
 function aggiornaLaScheda(ref, disp, aMano) {
   const n = nodo2();
@@ -171379,7 +171716,7 @@ function aggiornaLaScheda(ref, disp, aMano) {
   disegnaLaTela();
 }
 function alCambio5(ev) {
-  const S = state192.S, e = ev.target, d = e.dataset;
+  const S = state193.S, e = ev.target, d = e.dataset;
   if (!S || !nodo2()?.contains(e)) return;
   if (d.c3cTipo !== void 0) {
     const F = fotoScelta(), o = F?.oggetti?.[Number(d.c3cTipo)];
@@ -171435,7 +171772,7 @@ function alCambio5(ev) {
   if (d.c3cFile !== void 0) return alFile(e);
 }
 async function alFile(e) {
-  const S = state192.S, quale = e.dataset.c3cFile, file = [...e.files || []];
+  const S = state193.S, quale = e.dataset.c3cFile, file = [...e.files || []];
   e.value = "";
   if (!file.length) return;
   if (quale === "pianta" && (/\.pdf$/i.test(file[0].name || "") || file[0].type === "application/pdf"))
@@ -171445,7 +171782,7 @@ async function alFile(e) {
   if (quale === "stanza") {
     const stanza2 = S.sel;
     for (const f of file) {
-      if (state192.S !== S) break;
+      if (state193.S !== S) break;
       let f35 = null;
       try {
         f35 = focaleDallaFoto(await f.slice(0, 512 * 1024).arrayBuffer())?.f35 ?? null;
@@ -171456,7 +171793,7 @@ async function alFile(e) {
         await aggiungiFotoStanza(await leggi3(f), f35, stanza2);
       } catch (errore) {
         root.console?.warn?.("[DashboardModern] Casa 3D: foto", errore);
-        if (state192.S !== S) break;
+        if (state193.S !== S) break;
         const nome = f.name || "?";
         S.avviso = t(`Foto non leggibile: ${nome}`, `Photo not readable: ${nome}`);
         disegna17();
@@ -171470,7 +171807,7 @@ async function alFile(e) {
   }
 }
 function alScrivere(ev) {
-  const S = state192.S, e = ev.target;
+  const S = state193.S, e = ev.target;
   if (S && e.dataset.c3cSfnome !== void 0) {
     const r = S.stanzeFoto.find((x) => x.id === Number(e.dataset.c3cSfnome));
     if (!r) return;
@@ -171523,7 +171860,7 @@ function alScrivere(ev) {
 }
 var premuto = false;
 function giu(ev) {
-  const S = state192.S;
+  const S = state193.S;
   if (!S || S.premium !== true) return;
   const [x, y] = daSchermo(ev);
   if (S.passo === P11.planimetria && S.fonte === "stanzeFoto") {
@@ -171580,12 +171917,12 @@ function giu(ev) {
   }
 }
 function muovi(ev) {
-  if (premuto && state192.S?.passo === P11.muri && state192.S.strumento !== "dritto") pennello(ev);
+  if (premuto && state193.S?.passo === P11.muri && state193.S.strumento !== "dritto") pennello(ev);
 }
 function su(ev) {
   if (!premuto) return;
   premuto = false;
-  const S = state192.S;
+  const S = state193.S;
   if (S?.passo === P11.planimetria && S.fonte === "stanzeFoto" && S.sfTrascino) {
     const da = S.sfTrascino;
     S.sfTrascino = null;
@@ -171608,7 +171945,7 @@ function su(ev) {
   disegna17();
 }
 function muroDritto([x0, y0], [x1, y1]) {
-  const S = state192.S, { W: W2, H: H7, muro, barriera } = S.griglia;
+  const S = state193.S, { W: W2, H: H7, muro, barriera } = S.griglia;
   let dx = x1 - x0, dy = y1 - y0;
   if (Math.abs(dx) > 4 * Math.abs(dy)) dy = 0;
   else if (Math.abs(dy) > 4 * Math.abs(dx)) dx = 0;
@@ -171654,7 +171991,7 @@ function montaLaTela() {
   return n;
 }
 function chiudi4(salvato2 = false) {
-  const S = state192.S;
+  const S = state193.S;
   const conFoto = S?.fonte === "stanzeFoto" && Object.values(S.fotoDelleStanze).some((f) => f?.length);
   if (!salvato2 && S && (S.passo > 0 || conFoto) && S.premium === true) {
     const ok = root.confirm?.(
@@ -171665,20 +172002,20 @@ function chiudi4(salvato2 = false) {
     );
     if (ok === false) return;
   }
-  state192.S = null;
+  state193.S = null;
   premuto = false;
   root.removeEventListener?.("pointerup", su);
   nodo2()?.remove();
   doc?.documentElement?.classList?.remove("dm-c3c-aperta");
 }
 function alTasto(ev) {
-  if (ev.key === "Escape" && state192.S) chiudi4();
+  if (ev.key === "Escape" && state193.S) chiudi4();
 }
 function alRidimensionare() {
-  if (state192.S) disegnaLaTela();
+  if (state193.S) disegnaLaTela();
 }
 function riprendi(dato2) {
-  const S = state192.S, r = riprendiIlPiano(dato2);
+  const S = state193.S, r = riprendiIlPiano(dato2);
   if (!r?.casa?.stanze?.length) return false;
   const { W: W2, H: H7, muro, vetro } = r.griglia;
   const tela4 = tela2d(W2, H7), g = tela4.getContext("2d"), im = g.createImageData(W2, H7);
@@ -171725,20 +172062,20 @@ function apriCreaCasa({ piano: piano2 = null, modifica = false } = {}) {
   const chiave2 = clean(typeof piano2 === "string" ? piano2 : piano2?.k);
   const dato2 = salvata3.piani.find((p) => p.k === chiave2);
   const livello = dato2 ? dato2.livello : Number.isFinite(Number(piano2?.livello)) ? Number(piano2.livello) : salvata3.piani.length ? null : 0;
-  state192.S = statoNuovo(salvata3, 0);
-  state192.S.registri = registri();
-  state192.S.riconoscitore = state192.modello ? "pronto" : "fermo";
-  state192.S.livello = livello ?? prossimoLivello2();
-  state192.S.premium = premiumRicordato() === true || state192.premium === true ? true : null;
+  state193.S = statoNuovo(salvata3, 0);
+  state193.S.registri = registri();
+  state193.S.riconoscitore = state193.modello ? "pronto" : "fermo";
+  state193.S.livello = livello ?? prossimoLivello2();
+  state193.S.premium = premiumRicordato() === true || state193.premium === true ? true : null;
   premiumDellaCasa().then((premium3) => {
-    state192.premium = premium3 === true;
-    if (!state192.S) return;
-    const prima = state192.S.premium;
-    state192.S.premium = premium3 === true;
-    if (prima !== state192.S.premium) disegna17();
+    state193.premium = premium3 === true;
+    if (!state193.S) return;
+    const prima = state193.S.premium;
+    state193.S.premium = premium3 === true;
+    if (prima !== state193.S.premium) disegna17();
   }).catch(() => {
-    if (state192.S && state192.S.premium === null) {
-      state192.S.premium = false;
+    if (state193.S && state193.S.premium === null) {
+      state193.S.premium = false;
       disegna17();
     }
   });
@@ -171926,8 +172263,8 @@ function installaLoStile11() {
   );
 }
 function installCasa3DCrea() {
-  if (!doc || state192.installed) return false;
-  state192.installed = true;
+  if (!doc || state193.installed) return false;
+  state193.installed = true;
   root.__DM_CASA3D_CREA__ = apriCreaCasa;
   doc.addEventListener?.("keydown", alTasto);
   root.addEventListener?.("resize", alRidimensionare);
@@ -171936,8 +172273,8 @@ function installCasa3DCrea() {
 senzaCadere(installCasa3DCrea);
 
 // src/sections/macchine-editor-section.js
-var KEY196 = "__DASHBOARDMODERN_MACCHINE_EDITOR__";
-var state193 = root[KEY196] ||= { catalogoChiesto: false };
+var KEY197 = "__DASHBOARDMODERN_MACCHINE_EDITOR__";
+var state194 = root[KEY197] ||= { catalogoChiesto: false };
 var ANCORA3 = "dm-macchine-ed";
 var DISEGNI_DELLA_MACCHINA = Object.freeze([
   "server",
@@ -172163,8 +172500,8 @@ var scheda8 = costruisciSchedaDichiarata({
   primaDiDisegnare() {
     const candidate = candidateDaChiedere(allStates());
     if (candidate.length) scopriLePiattaforme(candidate);
-    if (state193.catalogoChiesto) return;
-    state193.catalogoChiesto = true;
+    if (state194.catalogoChiesto) return;
+    state194.catalogoChiesto = true;
     caricaCatalogo().catch(() => {
     });
   },
@@ -172561,8 +172898,8 @@ function bindNodoToDevice({
 }
 
 // src/sections/nodi-section.js
-var KEY197 = "__DASHBOARDMODERN_NODI__";
-var state194 = root[KEY197] ||= { installed: false, frame: 0, firma: "" };
+var KEY198 = "__DASHBOARDMODERN_NODI__";
+var state195 = root[KEY198] ||= { installed: false, frame: 0, firma: "" };
 var FASCIA_ID = "dm-nodi-fascia";
 var STYLE_ID32 = "dm-nodi-style";
 function nodiConfigurati() {
@@ -172637,32 +172974,32 @@ function dipingi21() {
   if (!pagina3) return;
   if (!letture2.length) {
     pagina3.querySelector(`#${FASCIA_ID}`)?.remove();
-    state194.firma = "";
+    state195.firma = "";
     return;
   }
   if (!pagina3.classList.contains("active")) return;
   const dove3 = ospite3();
   if (!dove3) return;
   const firma2 = JSON.stringify([letture2, t("Altri nodi", "Other nodes")]);
-  if (state194.firma === firma2) return;
-  state194.firma = firma2;
+  if (state195.firma === firma2) return;
+  state195.firma = firma2;
   dove3.innerHTML = fasciaMarkup11(letture2);
 }
 function schedule47() {
-  if (state194.frame) return;
+  if (state195.frame) return;
   const giro = () => {
-    state194.frame = 0;
+    state195.frame = 0;
     try {
       dipingi21();
     } catch (errore) {
       root.console?.warn?.("[DashboardModern] nodi", errore);
     }
   };
-  state194.frame = root.requestAnimationFrame?.(giro) || 0;
-  if (!state194.frame) giro();
+  state195.frame = root.requestAnimationFrame?.(giro) || 0;
+  if (!state195.frame) giro();
 }
 function renderNodi() {
-  state194.firma = "";
+  state195.firma = "";
   schedule47();
 }
 function installaStile2() {
@@ -172706,8 +173043,8 @@ function installaStile2() {
   );
 }
 function installNodiSection() {
-  if (!doc || state194.installed) return;
-  state194.installed = true;
+  if (!doc || state195.installed) return;
+  state195.installed = true;
   installaStile2();
   for (const evento of [
     "dashboardmodern:legacy-ready",
@@ -172724,8 +173061,8 @@ function installNodiSection() {
 }
 
 // src/sections/nodi-editor-section.js
-var KEY198 = "__DASHBOARDMODERN_NODI_EDITOR__";
-var state195 = root[KEY198] ||= { installed: false, aperto: -1 };
+var KEY199 = "__DASHBOARDMODERN_NODI_EDITOR__";
+var state196 = root[KEY199] ||= { installed: false, aperto: -1 };
 var ANCORA4 = "dm-nodi-editor";
 function elenco17() {
   const salvato2 = readJson(CHIAVE_NODI, []);
@@ -172761,7 +173098,7 @@ function campoMarkup8(indice, campo6, valore3) {
     <span class="ed-form-row"><input id="${esc(id)}" class="ed-input mono" data-dm-nodo-campo="${esc(campo6)}" value="${esc(valore3)}" placeholder="${esc(esempio3)}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-dm-nodo-pick="${esc(id)}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span></label>`;
 }
 function rigaMarkup25(nodo3, indice) {
-  const aperto2 = state195.aperto === indice;
+  const aperto2 = state196.aperto === indice;
   const quante3 = CAMPI_DEL_NODO.filter((campo6) => clean(nodo3?.[campo6])).length;
   return `<article class="ed-row dm-nodo-ed-riga" data-dm-nodo-indice="${indice}" data-open="${aperto2}">
     <div class="dm-nodo-ed-head">
@@ -172858,13 +173195,13 @@ function creaDaDispositivo5({ device, entities, integration }) {
     );
     return;
   }
-  state195.aperto = lista7.length;
+  state196.aperto = lista7.length;
   salva39([...lista7, nato]);
   ridisegna35();
   const daChi = clean(integration?.name) || t("un'integrazione", "an integration");
   root.edToast?.(`${nato.nome || device.name} — ${t("aggiunto da", "added from")} ${daChi}`);
 }
-function onClick63(event) {
+function onClick64(event) {
   const dentro3 = event.target?.closest?.(`#${ANCORA4}`);
   if (!dentro3) return;
   const lista7 = elenco17();
@@ -172884,7 +173221,7 @@ function onClick63(event) {
   if (event.target.closest("[data-dm-nodo-aggiungi]")) {
     event.preventDefault();
     if (lista7.length >= NODI_MASSIMI) return;
-    state195.aperto = lista7.length;
+    state196.aperto = lista7.length;
     salva39([...lista7, { id: `nodo-${Date.now().toString(36)}`, nome: "" }]);
     ridisegna35();
     return;
@@ -172904,14 +173241,14 @@ function onClick63(event) {
     event.preventDefault();
     const prossima = lista7.slice();
     prossima[indice] = leggiLaRiga2(riga5, lista7[indice]);
-    state195.aperto = state195.aperto === indice ? -1 : indice;
+    state196.aperto = state196.aperto === indice ? -1 : indice;
     salva39(prossima);
     ridisegna35();
     return;
   }
   if (event.target.closest("[data-dm-nodo-togli]")) {
     event.preventDefault();
-    state195.aperto = -1;
+    state196.aperto = -1;
     salva39(lista7.filter((_nodo, posizione) => posizione !== indice));
     ridisegna35();
     return;
@@ -172950,10 +173287,10 @@ function installaStile3() {
   );
 }
 function installNodiEditor() {
-  if (!doc || state195.installed) return;
-  state195.installed = true;
+  if (!doc || state196.installed) return;
+  state196.installed = true;
   installaStile3();
-  doc.addEventListener("click", onClick63);
+  doc.addEventListener("click", onClick64);
   onEditorRedraw("__dmNodiEditor", () => root.queueMicrotask?.(ensureNodiEditor));
   for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:editor-rendered"])
     root.addEventListener?.(evento, () => root.queueMicrotask?.(ensureNodiEditor));
@@ -172961,12 +173298,12 @@ function installNodiEditor() {
 }
 
 // src/sections/agenda-editor-section.js
-var KEY199 = "__DASHBOARDMODERN_AGENDA_EDITOR__";
-var state196 = root[KEY199] ||= { installed: false, calAperto: -1, todoAperto: -1 };
+var KEY200 = "__DASHBOARDMODERN_AGENDA_EDITOR__";
+var state197 = root[KEY200] ||= { installed: false, calAperto: -1, todoAperto: -1 };
 var AGENDA_EDITOR_TAB = "agenda";
 var CHIAVE_SEZIONE4 = "calendario";
 var CONFIG_TODO = "cd_todo";
-function schedaAttiva21() {
+function schedaAttiva22() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 }
 function calendariGrezzi() {
@@ -173035,7 +173372,7 @@ function personeMarkup2(voce3, index) {
   </div>`;
 }
 function rigaCalendarioMarkup(voce3, index) {
-  const aperto2 = state196.calAperto === index;
+  const aperto2 = state197.calAperto === index;
   const colore2 = clean(voce3?.colore);
   return `<article class="ed-row dm-todo-ed-row dm-cal-ed-row" data-cal-index="${index}" data-open="${aperto2}">
     <div class="dm-todo-ed-head">
@@ -173070,7 +173407,7 @@ function calendariMarkup() {
   <button type="button" class="ed-btn-add" data-cal-detect>🪄 ${t("Rileva da Home Assistant", "Detect from Home Assistant")}</button>`;
 }
 function rigaListaMarkup(list, index) {
-  const aperto2 = state196.todoAperto === index;
+  const aperto2 = state197.todoAperto === index;
   return `<article class="ed-row dm-todo-ed-row" data-todo-index="${index}" data-open="${aperto2}">
     <div class="dm-todo-ed-head">
       <span class="dm-todo-ed-icon" aria-hidden="true">✅</span>
@@ -173112,10 +173449,10 @@ function bodyMarkup7() {
 }
 function ensureAgendaEditor() {
   const body = doc?.getElementById("ed-body");
-  if (!body || schedaAttiva21() !== AGENDA_EDITOR_TAB) return false;
+  if (!body || schedaAttiva22() !== AGENDA_EDITOR_TAB) return false;
   const firma2 = [
-    state196.calAperto,
-    state196.todoAperto,
+    state197.calAperto,
+    state197.todoAperto,
     sezioneNascosta7(),
     ...calendariGrezzi().map(
       (voce3) => `📅${voce3?.name}~${voce3?.entity}~${voce3?.colore}~${persone(voce3).join("+")}`
@@ -173133,13 +173470,13 @@ function ridisegna36() {
   if (body) delete body.dataset.dmAgendaEditor;
   ensureAgendaEditor();
 }
-function onClick64(event) {
+function onClick65(event) {
   const body = doc?.getElementById("ed-body");
-  if (!body || schedaAttiva21() !== AGENDA_EDITOR_TAB || !body.contains(event.target)) return;
+  if (!body || schedaAttiva22() !== AGENDA_EDITOR_TAB || !body.contains(event.target)) return;
   const calendari = calendariGrezzi();
   if (event.target.closest("[data-cal-add]")) {
     event.preventDefault();
-    state196.calAperto = calendari.length;
+    state197.calAperto = calendari.length;
     salvaCalendari([...calendari, { id: `cal-${Date.now().toString(36)}`, name: "", entity: "" }]);
     ridisegna36();
     return;
@@ -173151,7 +173488,7 @@ function onClick64(event) {
       root.edToast?.(t("Nessun calendario nuovo", "No new calendar"));
       return;
     }
-    state196.calAperto = -1;
+    state197.calAperto = -1;
     salvaCalendari([
       ...calendari,
       ...trovati.map((voce3, indice2) => ({
@@ -173177,7 +173514,7 @@ function onClick64(event) {
     if (!Number.isFinite(indice2) || !calendari[indice2]) return;
     if (event.target.closest("[data-cal-edit]")) {
       event.preventDefault();
-      state196.calAperto = state196.calAperto === indice2 ? -1 : indice2;
+      state197.calAperto = state197.calAperto === indice2 ? -1 : indice2;
       ridisegna36();
       return;
     }
@@ -173185,7 +173522,7 @@ function onClick64(event) {
       event.preventDefault();
       const nome = nomeDelCalendario(calendari[indice2], indice2);
       if (root.confirm && !root.confirm(t(`Tolgo "${nome}"?`, `Remove "${nome}"?`))) return;
-      state196.calAperto = -1;
+      state197.calAperto = -1;
       salvaCalendari(calendari.filter((_voce, posto) => posto !== indice2));
       ridisegna36();
       return;
@@ -173229,7 +173566,7 @@ function onClick64(event) {
       }
       if (errore) errore.textContent = "";
       prossimi[indice2] = letta2;
-      state196.calAperto = -1;
+      state197.calAperto = -1;
       salvaCalendari(prossimi);
       ridisegna36();
       root.edToast?.(t("💾 Calendario salvato", "💾 Calendar saved"));
@@ -173239,7 +173576,7 @@ function onClick64(event) {
   const liste2 = listeGrezze();
   if (event.target.closest("[data-todo-add]")) {
     event.preventDefault();
-    state196.todoAperto = liste2.length;
+    state197.todoAperto = liste2.length;
     salvaListe([...liste2, { id: `todo-${Date.now().toString(36)}`, name: "", entity: "" }]);
     ridisegna36();
     return;
@@ -173251,7 +173588,7 @@ function onClick64(event) {
       root.edToast?.(t("Nessuna lista todo.* trovata", "No todo.* list found"));
       return;
     }
-    state196.todoAperto = -1;
+    state197.todoAperto = -1;
     salvaListe([
       ...liste2,
       ...trovate.map((voce3, indice2) => ({
@@ -173277,7 +173614,7 @@ function onClick64(event) {
   if (!Number.isFinite(indice) || !liste2[indice]) return;
   if (event.target.closest("[data-todo-edit]")) {
     event.preventDefault();
-    state196.todoAperto = state196.todoAperto === indice ? -1 : indice;
+    state197.todoAperto = state197.todoAperto === indice ? -1 : indice;
     ridisegna36();
     return;
   }
@@ -173285,7 +173622,7 @@ function onClick64(event) {
     event.preventDefault();
     const nome = nomeDellaLista3(liste2[indice], indice);
     if (root.confirm && !root.confirm(t(`Elimino "${nome}"?`, `Remove "${nome}"?`))) return;
-    state196.todoAperto = -1;
+    state197.todoAperto = -1;
     salvaListe(liste2.filter((_voce, posto) => posto !== indice));
     ridisegna36();
     return;
@@ -173304,7 +173641,7 @@ function onClick64(event) {
     }
     if (errore) errore.textContent = "";
     prossime[indice] = letta2;
-    state196.todoAperto = -1;
+    state197.todoAperto = -1;
     salvaListe(prossime);
     ridisegna36();
     root.edToast?.(t("💾 Lista salvata", "💾 List saved"));
@@ -173355,15 +173692,15 @@ function installStyles91() {
   );
 }
 function installAgendaEditorSection() {
-  if (!doc || state196.installed) return false;
-  state196.installed = true;
+  if (!doc || state197.installed) return false;
+  state197.installed = true;
   installStyles91();
   wrapFunction("apriConfigEntita", "__dmAgendaEditorTab", () => {
     ensureAgendaEditorTab();
     ensureAgendaEditor();
   });
   ensureAgendaEditorTab();
-  doc.addEventListener("click", onClick64);
+  doc.addEventListener("click", onClick65);
   onEditorRedraw("__dmAgendaEditor", () => {
     root.queueMicrotask?.(() => {
       ensureAgendaEditorTab();
@@ -173383,11 +173720,11 @@ function installAgendaEditorSection() {
 senzaCadere(installAgendaEditorSection);
 
 // src/sections/lingua-section.js
-var KEY200 = "__DASHBOARDMODERN_LINGUA__";
-var state197 = root[KEY200] ||= { installed: false };
+var KEY201 = "__DASHBOARDMODERN_LINGUA__";
+var state198 = root[KEY201] ||= { installed: false };
 var SCHEDA8 = "visib";
 var AUTO = "auto";
-function schedaAttiva22() {
+function schedaAttiva23() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 }
 function linguaScelta() {
@@ -173432,7 +173769,7 @@ function rigaMarkup26() {
 }
 function ensureLingua() {
   const corpo6 = doc?.getElementById("ed-body");
-  if (!corpo6 || schedaAttiva22() !== SCHEDA8) return false;
+  if (!corpo6 || schedaAttiva23() !== SCHEDA8) return false;
   const gia = corpo6.querySelector("[data-dm-lingua]");
   if (gia) {
     const scelta3 = gia.querySelector("[data-dm-lingua-scelta]");
@@ -173486,8 +173823,8 @@ function onChange23(evento) {
   });
 }
 function installLinguaSection() {
-  if (!doc || state197.installed) return false;
-  state197.installed = true;
+  if (!doc || state198.installed) return false;
+  state198.installed = true;
   doc.addEventListener("change", onChange23);
   wrapFunction("apriConfigEntita", "__dmLingua", () => ensureLingua());
   onEditorRedraw("__dmLingua", () => {
@@ -173503,8 +173840,8 @@ function installLinguaSection() {
 senzaCadere(installLinguaSection);
 
 // src/sections/sezioni-mie-section.js
-var KEY201 = "__DASHBOARDMODERN_SEZIONI_MIE__";
-var state198 = root[KEY201] ||= { installed: false, frame: 0, firme: /* @__PURE__ */ new Map() };
+var KEY202 = "__DASHBOARDMODERN_SEZIONI_MIE__";
+var state199 = root[KEY202] ||= { installed: false, frame: 0, firme: /* @__PURE__ */ new Map() };
 var SEZIONI_MIE_TAB = "mie";
 var PAGINA3 = (id) => `page-${chiaveDellaSezione(id)}`;
 var TINTE3 = Object.freeze([
@@ -173668,7 +174005,7 @@ function dipingi22() {
   const sezioni2 = accesa3 ? sezioniMie() : [];
   const vive = new Set(sezioni2.map((sezione2) => sezione2.id));
   toglieteLeVecchie(vive);
-  for (const [id] of state198.firme) if (!vive.has(id)) state198.firme.delete(id);
+  for (const [id] of state199.firme) if (!vive.has(id)) state199.firme.delete(id);
   const states = allStates();
   const resolve = root.resolveEntity || ((valore3) => valore3);
   for (const [indice, sezione2] of sezioni2.entries()) {
@@ -173682,8 +174019,8 @@ function dipingi22() {
     const letture2 = lettureDellaSezione2(sezione2, states, resolve);
     annunciaLaPagina(sezione2, indice, letture2);
     const firma2 = JSON.stringify([sezione2.titolo, sezione2.icona, sezione2.formato, letture2]);
-    if (state198.firme.get(sezione2.id) === firma2) continue;
-    state198.firme.set(sezione2.id, firma2);
+    if (state199.firme.get(sezione2.id) === firma2) continue;
+    state199.firme.set(sezione2.id, firma2);
     dove3.innerHTML = paginaMarkup3(letture2, sezione2.formato);
   }
 }
@@ -173699,7 +174036,7 @@ async function chiamaHa2(dominio7, servizio3, payload) {
     return void 0;
   }
 }
-function onClick65(event) {
+function onClick66(event) {
   const parti2 = event.target?.closest?.("[data-dm-mia-parti]");
   if (parti2) {
     event.preventDefault();
@@ -173734,9 +174071,9 @@ function onClick65(event) {
   chiamaHa2(comando2.domain, comando2.service, comando2.data);
 }
 function schedule48() {
-  if (state198.frame) return;
-  state198.frame = root.requestAnimationFrame?.(() => {
-    state198.frame = 0;
+  if (state199.frame) return;
+  state199.frame = root.requestAnimationFrame?.(() => {
+    state199.frame = 0;
     try {
       dipingi22();
     } catch (errore) {
@@ -173745,7 +174082,7 @@ function schedule48() {
   }) || 0;
 }
 function ridisegnaSezioniMie() {
-  state198.firme.clear();
+  state199.firme.clear();
   schedule48();
 }
 function installStyles92() {
@@ -173906,10 +174243,10 @@ function installStyles92() {
   );
 }
 function installSezioniMie() {
-  if (!doc || state198.installed) return false;
-  state198.installed = true;
+  if (!doc || state199.installed) return false;
+  state199.installed = true;
   installStyles92();
-  doc.addEventListener("click", onClick65);
+  doc.addEventListener("click", onClick66);
   for (const nome of ["render", "cdApplyNavVis"]) {
     const precedente = root[nome];
     if (typeof precedente !== "function" || precedente.__dmSezioniMie) continue;
@@ -173935,12 +174272,12 @@ function installSezioniMie() {
 }
 
 // src/sections/sezioni-mie-editor-section.js
-var KEY202 = "__DASHBOARDMODERN_SEZIONI_MIE_EDITOR__";
-var state199 = root[KEY202] ||= { installed: false, aperta: 0 };
-state199.attributiAperti ||= /* @__PURE__ */ new Set();
+var KEY203 = "__DASHBOARDMODERN_SEZIONI_MIE_EDITOR__";
+var state200 = root[KEY203] ||= { installed: false, aperta: 0 };
+state200.attributiAperti ||= /* @__PURE__ */ new Set();
 var SEZIONI_MIE_EDITOR_TAB = "mie";
 var CHIAVE_SEZIONE5 = SEZIONI_MIE_TAB;
-function schedaAttiva23() {
+function schedaAttiva24() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 }
 function sezioni() {
@@ -174042,7 +174379,7 @@ function corpoAttributiMarkup(righe4) {
 function attributiMarkup2(voce3, chiaveBlocco) {
   const scelti = normalizzaAttributi(voce3?.attributi);
   const righe4 = righeDegliAttributi(voce3?.entity, scelti);
-  const aperto2 = state199.attributiAperti.has(chiaveBlocco);
+  const aperto2 = state200.attributiAperti.has(chiaveBlocco);
   return `<div class="dm-mia-ed-attr" data-mia-attr-blocco="${esc(chiaveBlocco)}" data-open="${aperto2}"
     data-mia-attr-entita="${esc(clean(voce3?.entity))}">
     <button type="button" class="dm-mia-ed-attr-testa" data-mia-attr-apri aria-expanded="${aperto2}">
@@ -174092,7 +174429,7 @@ function cambiaLaSpunta(spunta2) {
 }
 function onChange24(event) {
   const body = doc?.getElementById("ed-body");
-  if (!body || schedaAttiva23() !== SEZIONI_MIE_EDITOR_TAB || !body.contains(event.target)) return;
+  if (!body || schedaAttiva24() !== SEZIONI_MIE_EDITOR_TAB || !body.contains(event.target)) return;
   const spunta2 = event.target.closest?.("[data-mia-attr-spunta]");
   if (spunta2) {
     cambiaLaSpunta(spunta2);
@@ -174123,7 +174460,7 @@ function rigaVoceMarkup(voce3, sezione2, riga5) {
   </div>`;
 }
 function rigaSezioneMarkup(sezione2, indice) {
-  const aperta2 = state199.aperta === indice;
+  const aperta2 = state200.aperta === indice;
   const voci4 = vociDi2(sezione2);
   const titolo3 = clean(sezione2?.titolo) || `${t("Sezione", "Section")} ${indice + 1}`;
   return `<article class="ed-row dm-todo-ed-row dm-mia-ed-riga" data-mia-sezione="${indice}" data-open="${aperta2}">
@@ -174187,9 +174524,9 @@ function corpoMarkup21() {
 }
 function ensureSezioniMieEditor() {
   const body = doc?.getElementById("ed-body");
-  if (!body || schedaAttiva23() !== SEZIONI_MIE_EDITOR_TAB) return false;
+  if (!body || schedaAttiva24() !== SEZIONI_MIE_EDITOR_TAB) return false;
   const quali = sezioni().flatMap((sezione2) => vociDi2(sezione2)).map((voce3) => Object.keys(statoDellEntita(clean(voce3?.entity))?.attributes || {}).join(","));
-  const firma2 = `${JSON.stringify(sezioni())}|${state199.aperta}|${sezioneNascosta8()}|${quali.join(";")}`;
+  const firma2 = `${JSON.stringify(sezioni())}|${state200.aperta}|${sezioneNascosta8()}|${quali.join(";")}`;
   if (body.dataset.dmMieEditor === firma2 && body.querySelector(".dm-mia-ed")) return true;
   body.dataset.dmMieEditor = firma2;
   body.innerHTML = corpoMarkup21();
@@ -174228,9 +174565,9 @@ function sostituisci(indice, voce3) {
   lista7[indice] = voce3;
   salva40(lista7);
 }
-function onClick66(event) {
+function onClick67(event) {
   const body = doc?.getElementById("ed-body");
-  if (!body || schedaAttiva23() !== SEZIONI_MIE_EDITOR_TAB || !body.contains(event.target)) return;
+  if (!body || schedaAttiva24() !== SEZIONI_MIE_EDITOR_TAB || !body.contains(event.target)) return;
   if (event.target.closest("[data-mia-add]")) {
     event.preventDefault();
     const lista7 = sezioni().slice();
@@ -174243,7 +174580,7 @@ function onClick66(event) {
       formato: FORMATI_SEZIONE[0],
       voci: [{}]
     });
-    state199.aperta = lista7.length - 1;
+    state200.aperta = lista7.length - 1;
     salva40(lista7);
     ridisegna37();
     return;
@@ -174263,9 +174600,9 @@ function onClick66(event) {
     event.preventDefault();
     const blocco3 = apriAttributi.closest("[data-mia-attr-blocco]");
     const chiave2 = clean(blocco3?.dataset?.miaAttrBlocco);
-    const aperto2 = !state199.attributiAperti.has(chiave2);
-    if (aperto2) state199.attributiAperti.add(chiave2);
-    else state199.attributiAperti.delete(chiave2);
+    const aperto2 = !state200.attributiAperti.has(chiave2);
+    if (aperto2) state200.attributiAperti.add(chiave2);
+    else state200.attributiAperti.delete(chiave2);
     blocco3.dataset.open = String(aperto2);
     apriAttributi.setAttribute("aria-expanded", String(aperto2));
     const corpo6 = blocco3.querySelector(".dm-mia-ed-attr-corpo");
@@ -174283,7 +174620,7 @@ function onClick66(event) {
   }
   if (event.target.closest("[data-mia-edit]")) {
     event.preventDefault();
-    state199.aperta = state199.aperta === indice ? -1 : indice;
+    state200.aperta = state200.aperta === indice ? -1 : indice;
     ridisegna37();
     return;
   }
@@ -174291,7 +174628,7 @@ function onClick66(event) {
     event.preventDefault();
     const lista7 = sezioni().slice();
     lista7.splice(indice, 1);
-    state199.aperta = -1;
+    state200.aperta = -1;
     salva40(lista7);
     ridisegna37();
     return;
@@ -174431,10 +174768,10 @@ function installStyles93() {
   );
 }
 function installSezioniMieEditor() {
-  if (!doc || state199.installed) return false;
-  state199.installed = true;
+  if (!doc || state200.installed) return false;
+  state200.installed = true;
   installStyles93();
-  doc.addEventListener("click", onClick66);
+  doc.addEventListener("click", onClick67);
   doc.addEventListener("change", onChange24);
   wrapFunction("apriConfigEntita", "__dmSezioniMieEditor", () => {
     ensureSezioniMieTab();
@@ -174459,9 +174796,9 @@ function installSezioniMieEditor() {
 }
 
 // src/sections/entita-mie-section.js
-var KEY203 = "__DASHBOARDMODERN_ENTITA_MIE__";
+var KEY204 = "__DASHBOARDMODERN_ENTITA_MIE__";
 var STYLE_ID33 = "dm-entita-mie-style";
-var state200 = root[KEY203] ||= { installed: false, frame: 0, firme: /* @__PURE__ */ new Map() };
+var state201 = root[KEY204] ||= { installed: false, frame: 0, firme: /* @__PURE__ */ new Map() };
 var voci2 = () => readJson(CHIAVE_ENTITA_MIE, []);
 function valoreMarkup2(riga5) {
   if (riga5.muto) return `<b class="dm-mie-muta">${esc(t("Non risponde", "Not reporting"))}</b>`;
@@ -174525,7 +174862,7 @@ function renderEntitaMie() {
     const quale = clean(pagina3?.id).replace(/^page-/, "");
     if (!conVoci.has(quale)) {
       nodo3.remove();
-      state200.firme.delete(quale);
+      state201.firme.delete(quale);
     }
   }
   const states = allStates();
@@ -174539,8 +174876,8 @@ function renderEntitaMie() {
     const casa3 = nodo3.parentElement;
     if (casa3 && casa3.lastElementChild !== nodo3) casa3.append(nodo3);
     const firma2 = JSON.stringify(letture2);
-    if (state200.firme.get(sezione2) === firma2) continue;
-    state200.firme.set(sezione2, firma2);
+    if (state201.firme.get(sezione2) === firma2) continue;
+    state201.firme.set(sezione2, firma2);
     const lista7 = nodo3.querySelector(".dm-mie-lista");
     if (lista7) lista7.innerHTML = letture2.map(rigaMarkup28).join("");
   }
@@ -174558,7 +174895,7 @@ async function chiamaHa3(dominio7, servizio3, payload) {
     return void 0;
   }
 }
-function onClick67(event) {
+function onClick68(event) {
   const scegli7 = event.target?.closest?.("[data-dm-mie-scegli]");
   if (scegli7) {
     event.preventDefault();
@@ -174585,9 +174922,9 @@ function onClick67(event) {
   chiamaHa3(comando2.domain, comando2.service, comando2.data);
 }
 function schedule49() {
-  if (state200.frame) return;
-  state200.frame = root.requestAnimationFrame?.(() => {
-    state200.frame = 0;
+  if (state201.frame) return;
+  state201.frame = root.requestAnimationFrame?.(() => {
+    state201.frame = 0;
     try {
       renderEntitaMie();
     } catch (errore) {
@@ -174596,7 +174933,7 @@ function schedule49() {
   }) || 0;
 }
 function ridisegnaEntitaMie() {
-  state200.firme.clear();
+  state201.firme.clear();
   schedule49();
 }
 function installStyles94() {
@@ -174648,10 +174985,10 @@ function installStyles94() {
   );
 }
 function installEntitaMie() {
-  if (!doc || state200.installed) return false;
-  state200.installed = true;
+  if (!doc || state201.installed) return false;
+  state201.installed = true;
   installStyles94();
-  doc.addEventListener("click", onClick67);
+  doc.addEventListener("click", onClick68);
   for (const nome of ["render", "cdApplyNavVis"]) wrapFunction(nome, "__dmEntitaMie", schedule49);
   for (const evento of [
     "dashboardmodern:legacy-ready",
@@ -174666,10 +175003,10 @@ function installEntitaMie() {
 }
 
 // src/sections/entita-mie-editor-section.js
-var KEY204 = "__DASHBOARDMODERN_ENTITA_MIE_EDITOR__";
-var state201 = root[KEY204] ||= { installed: false, aperta: -1 };
+var KEY205 = "__DASHBOARDMODERN_ENTITA_MIE_EDITOR__";
+var state202 = root[KEY205] ||= { installed: false, aperta: -1 };
 var ENTITA_MIE_EDITOR_TAB = "entita";
-function schedaAttiva24() {
+function schedaAttiva25() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 }
 function voci3() {
@@ -174712,7 +175049,7 @@ function nomeDellaSezione3(tab, sezioni2) {
   return sezioni2.find((sezione2) => sezione2.tab === quale)?.nome || quale;
 }
 function rigaMarkup29(voce3, indice, sezioni2, troppe) {
-  const aperta2 = state201.aperta === indice;
+  const aperta2 = state202.aperta === indice;
   const id = `dm-mia-ent-${indice}`;
   const nome = clean(voce3?.nome) || clean(voce3?.entity) || t("Entità nuova", "New entity");
   return `<article class="ed-row dm-todo-ed-row dm-mia-ent-riga" data-mia-ent="${indice}" data-open="${aperta2}">
@@ -174800,8 +175137,8 @@ function corpoMarkup22() {
 }
 function ensureEntitaMieEditor() {
   const body = doc?.getElementById("ed-body");
-  if (!body || schedaAttiva24() !== ENTITA_MIE_EDITOR_TAB) return false;
-  const firma2 = `${JSON.stringify(voci3())}|${state201.aperta}|${sezioniDisponibili().map((sezione2) => sezione2.tab).join(",")}`;
+  if (!body || schedaAttiva25() !== ENTITA_MIE_EDITOR_TAB) return false;
+  const firma2 = `${JSON.stringify(voci3())}|${state202.aperta}|${sezioniDisponibili().map((sezione2) => sezione2.tab).join(",")}`;
   if (body.dataset.dmEntitaMie === firma2 && body.querySelector(".dm-mia-ent-ed")) return true;
   body.dataset.dmEntitaMie = firma2;
   body.innerHTML = corpoMarkup22();
@@ -174823,9 +175160,9 @@ function leggiLaRiga4(riga5) {
 function righeDalDocumento(body) {
   return righeDelDocumento(body, "data-mia-ent", voci3(), (riga5) => leggiLaRiga4(riga5));
 }
-function onClick68(event) {
+function onClick69(event) {
   const body = doc?.getElementById("ed-body");
-  if (!body || schedaAttiva24() !== ENTITA_MIE_EDITOR_TAB || !body.contains(event.target)) return;
+  if (!body || schedaAttiva25() !== ENTITA_MIE_EDITOR_TAB || !body.contains(event.target)) return;
   if (event.target.closest("[data-mia-ent-add]")) {
     event.preventDefault();
     const lista7 = voci3().slice();
@@ -174838,7 +175175,7 @@ function onClick68(event) {
       sezione: dove3 && dove3 !== "config" ? dove3 : "",
       room_id: ""
     });
-    state201.aperta = lista7.length - 1;
+    state202.aperta = lista7.length - 1;
     salva41(lista7);
     ridisegna38();
     return;
@@ -174855,7 +175192,7 @@ function onClick68(event) {
   }
   if (event.target.closest("[data-mia-ent-edit]")) {
     event.preventDefault();
-    state201.aperta = state201.aperta === indice ? -1 : indice;
+    state202.aperta = state202.aperta === indice ? -1 : indice;
     ridisegna38();
     return;
   }
@@ -174863,7 +175200,7 @@ function onClick68(event) {
     event.preventDefault();
     const lista7 = voci3().slice();
     lista7.splice(indice, 1);
-    state201.aperta = -1;
+    state202.aperta = -1;
     salva41(lista7);
     ridisegna38();
     return;
@@ -174913,10 +175250,10 @@ function installStyles95() {
   );
 }
 function installEntitaMieEditor() {
-  if (!doc || state201.installed) return false;
-  state201.installed = true;
+  if (!doc || state202.installed) return false;
+  state202.installed = true;
   installStyles95();
-  doc.addEventListener("click", onClick68);
+  doc.addEventListener("click", onClick69);
   wrapFunction("apriConfigEntita", "__dmEntitaMieEditor", () => {
     ensureEntitaMieTab();
     ensureEntitaMieEditor();
@@ -174940,10 +175277,10 @@ function installEntitaMieEditor() {
 }
 
 // src/sections/media-player-editor-section.js
-var KEY205 = "__DASHBOARDMODERN_MEDIA_EDITOR__";
-var state202 = root[KEY205] ||= { installed: false, aperta: -1 };
+var KEY206 = "__DASHBOARDMODERN_MEDIA_EDITOR__";
+var state203 = root[KEY206] ||= { installed: false, aperta: -1 };
 var MEDIA_EDITOR_TAB = "media";
-function schedaAttiva25() {
+function schedaAttiva26() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 }
 var LISTE3 = Object.freeze({
@@ -175084,7 +175421,7 @@ function aggiornaLEsito(riga5) {
 }
 function aggiornaGliEsiti() {
   const body = doc?.getElementById("ed-body");
-  if (!body || schedaAttiva25() !== MEDIA_EDITOR_TAB) return;
+  if (!body || schedaAttiva26() !== MEDIA_EDITOR_TAB) return;
   for (const riga5 of body.querySelectorAll("[data-mp-voce]")) aggiornaLEsito(riga5);
 }
 function imparaLaRiga(voce3) {
@@ -175116,7 +175453,7 @@ function sezioneNascosta9() {
   }
 }
 function rigaMarkup30(voce3, indice) {
-  const aperta2 = state202.aperta === indice;
+  const aperta2 = state203.aperta === indice;
   const id = `dm-mp-ed-${indice}`;
   const nome = clean(voce3?.nome) || clean(voce3?.entity) || t("Lettore nuovo", "New player");
   return `<article class="ed-row dm-todo-ed-row dm-mp-ed-riga" data-mp-voce="${indice}" data-open="${aperta2}">
@@ -175194,9 +175531,9 @@ function corpoMarkup23() {
 }
 function ensureMediaEditor() {
   const body = doc?.getElementById("ed-body");
-  if (!body || schedaAttiva25() !== MEDIA_EDITOR_TAB) return false;
-  if (state202.aperta >= 0) imparaLaRiga(lettori()[state202.aperta]);
-  const firma2 = `${JSON.stringify(lettori())}|${state202.aperta}|${sezioneNascosta9()}`;
+  if (!body || schedaAttiva26() !== MEDIA_EDITOR_TAB) return false;
+  if (state203.aperta >= 0) imparaLaRiga(lettori()[state203.aperta]);
+  const firma2 = `${JSON.stringify(lettori())}|${state203.aperta}|${sezioneNascosta9()}`;
   if (body.dataset.dmMediaEditor === firma2 && body.querySelector(".dm-mp-ed")) return true;
   body.dataset.dmMediaEditor = firma2;
   body.innerHTML = corpoMarkup23();
@@ -175256,15 +175593,15 @@ function creaDaDispositivo6({ device, entities, integration }) {
     (voce3) => clean(voce3?.name).toLowerCase() === area2.toLowerCase()
   );
   if (stanza2) nato.room_id = clean(stanza2.id) || clean(stanza2.name);
-  state202.aperta = lista7.length;
+  state203.aperta = lista7.length;
   salva42([...lista7, nato]);
   ridisegna39();
   const daChi = clean(integration?.name) || t("un'integrazione", "an integration");
   root.edToast?.(`${nato.nome || device.name} — ${t("aggiunto da", "added from")} ${daChi}`);
 }
-function onClick69(event) {
+function onClick70(event) {
   const body = doc?.getElementById("ed-body");
-  if (!body || schedaAttiva25() !== MEDIA_EDITOR_TAB || !body.contains(event.target)) return;
+  if (!body || schedaAttiva26() !== MEDIA_EDITOR_TAB || !body.contains(event.target)) return;
   if (event.target.closest("[data-mp-integ]")) {
     event.preventDefault();
     apriMenuIntegrazioni({
@@ -175282,7 +175619,7 @@ function onClick69(event) {
     event.preventDefault();
     const lista7 = lettori().slice();
     lista7.push({ id: `lettore-${Date.now().toString(36)}`, entity: "", nome: "", icona: "" });
-    state202.aperta = lista7.length - 1;
+    state203.aperta = lista7.length - 1;
     salva42(lista7);
     ridisegna39();
     return;
@@ -175299,7 +175636,7 @@ function onClick69(event) {
   }
   if (event.target.closest("[data-mp-edit]")) {
     event.preventDefault();
-    state202.aperta = state202.aperta === indice ? -1 : indice;
+    state203.aperta = state203.aperta === indice ? -1 : indice;
     ridisegna39();
     return;
   }
@@ -175346,7 +175683,7 @@ function onClick69(event) {
     event.preventDefault();
     const lista7 = lettori().slice();
     lista7.splice(indice, 1);
-    state202.aperta = -1;
+    state203.aperta = -1;
     salva42(lista7);
     ridisegna39();
     return;
@@ -175362,7 +175699,7 @@ function onClick69(event) {
 }
 function onChange25(event) {
   const body = doc?.getElementById("ed-body");
-  if (!body || schedaAttiva25() !== MEDIA_EDITOR_TAB || !body.contains(event.target)) return;
+  if (!body || schedaAttiva26() !== MEDIA_EDITOR_TAB || !body.contains(event.target)) return;
   const campo6 = clean(event.target?.dataset?.mpCampo);
   if (campo6 !== "telecomando" && campo6 !== "entity") return;
   const riga5 = event.target.closest("[data-mp-voce]");
@@ -175429,10 +175766,10 @@ function installStyles96() {
   );
 }
 function installMediaEditor() {
-  if (!doc || state202.installed) return false;
-  state202.installed = true;
+  if (!doc || state203.installed) return false;
+  state203.installed = true;
   installStyles96();
-  doc.addEventListener("click", onClick69);
+  doc.addEventListener("click", onClick70);
   doc.addEventListener("change", onChange25);
   root.addEventListener?.(EVENTO_PIATTAFORME, aggiornaGliEsiti);
   wrapFunction("apriConfigEntita", "__dmMediaEditor", () => {
@@ -175458,9 +175795,9 @@ function installMediaEditor() {
 }
 
 // src/sections/media-in-azioni-section.js
-var KEY206 = "__DASHBOARDMODERN_MEDIA_AZIONI__";
+var KEY207 = "__DASHBOARDMODERN_MEDIA_AZIONI__";
 var STYLE_ID34 = "dm-media-azioni-style";
-var state203 = root[KEY206] ||= { installed: false, frame: 0 };
+var state204 = root[KEY207] ||= { installed: false, frame: 0 };
 var TIPO_MEDIA = "media";
 function azioni() {
   try {
@@ -175608,9 +175945,9 @@ function insegnaLaCasella() {
   return true;
 }
 function schedule50() {
-  if (state203.frame) return;
-  state203.frame = root.requestAnimationFrame?.(() => {
-    state203.frame = 0;
+  if (state204.frame) return;
+  state204.frame = root.requestAnimationFrame?.(() => {
+    state204.frame = 0;
     try {
       vestiLeAzioni();
       ensureVoceNellaTendina();
@@ -175717,8 +176054,8 @@ function installStyles97() {
   );
 }
 function installMediaInAzioni() {
-  if (!doc || state203.installed) return false;
-  state203.installed = true;
+  if (!doc || state204.installed) return false;
+  state204.installed = true;
   installStyles97();
   const aggancia5 = () => {
     avvolgiLaCostruzione();
@@ -175953,8 +176290,8 @@ function rispostaComeRest(risultato, entityIds = []) {
 }
 
 // src/sections/indirizzo-di-casa-section.js
-var KEY207 = "__DASHBOARDMODERN_INDIRIZZO_DI_CASA__";
-var state204 = root[KEY207] ||= { installed: false };
+var KEY208 = "__DASHBOARDMODERN_INDIRIZZO_DI_CASA__";
+var state205 = root[KEY208] ||= { installed: false };
 var DA_RETE = /^https?:\/\//i;
 function baseDelDocumento() {
   const base = String(doc?.baseURI ?? "").trim();
@@ -176052,10 +176389,10 @@ function bussaSenzaCredenziali(indirizzo) {
   return !haUnaCredenzialeNellIndirizzo(indirizzo);
 }
 function installIndirizzoDiCasa() {
-  if (state204.installed) return false;
+  if (state205.installed) return false;
   const originale = root.fetch;
   if (typeof originale !== "function" || originale.__dmIndirizzoDiCasa) return false;
-  state204.installed = true;
+  state205.installed = true;
   const nostra = function fetch2(risorsa, init) {
     if (typeof risorsa !== "string" || !versoLApi(risorsa))
       return originale.call(this, risorsa, init);
@@ -176079,8 +176416,8 @@ function installIndirizzoDiCasa() {
 }
 
 // src/sections/stanze-per-nome-section.js
-var KEY208 = "__DASHBOARDMODERN_STANZE_PER_NOME__";
-var state205 = root[KEY208] ||= { installed: false, frame: 0 };
+var KEY209 = "__DASHBOARDMODERN_STANZE_PER_NOME__";
+var state206 = root[KEY209] ||= { installed: false, frame: 0 };
 var ID_STANZA = /\broom_[a-z0-9]{4,}\b/gi;
 function testoConINomi(testo5, nome = roomLabel) {
   return String(testo5 ?? "").replace(ID_STANZA, (id) => {
@@ -176136,9 +176473,9 @@ function insegnaIlPiano() {
   return true;
 }
 function schedule51() {
-  if (state205.frame) return;
-  state205.frame = root.requestAnimationFrame?.(() => {
-    state205.frame = 0;
+  if (state206.frame) return;
+  state206.frame = root.requestAnimationFrame?.(() => {
+    state206.frame = 0;
     try {
       raddrizzaLeStanze();
     } catch (errore) {
@@ -176147,8 +176484,8 @@ function schedule51() {
   }) || 0;
 }
 function installStanzePerNome() {
-  if (!doc || state205.installed) return false;
-  state205.installed = true;
+  if (!doc || state206.installed) return false;
+  state206.installed = true;
   insegnaIlPiano();
   for (const evento of [
     "dashboardmodern:legacy-ready",
@@ -176229,7 +176566,7 @@ function callFirst(names, args = []) {
   return void 0;
 }
 function createAdapter(definition) {
-  const { key, pageId, renderers, refreshers, state: state206 } = definition;
+  const { key, pageId, renderers, refreshers, state: state207 } = definition;
   return Object.freeze({
     key,
     pageId,
@@ -176244,7 +176581,7 @@ function createAdapter(definition) {
       return callFirst(refreshers.length ? refreshers : renderers, args);
     },
     snapshot() {
-      return Object.fromEntries(state206.map((name) => [name, root5[name]]));
+      return Object.fromEntries(state207.map((name) => [name, root5[name]]));
     }
   });
 }
@@ -176708,19 +177045,19 @@ function installApplianceKpiPopupStyle() {
 function installApplianceKpiPopups() {
   const doc4 = root6.document;
   if (!doc4) return;
-  const state206 = root6[APPLIANCE_KPI_STATE_KEY] ||= { installed: false, frame: 0 };
-  if (state206.installed) return;
-  state206.installed = true;
+  const state207 = root6[APPLIANCE_KPI_STATE_KEY] ||= { installed: false, frame: 0 };
+  if (state207.installed) return;
+  state207.installed = true;
   installApplianceKpiPopupStyle();
   ensureApplianceKpiPopup("running");
   ensureApplianceKpiPopup("power");
   const schedule52 = () => {
-    if (state206.frame) return;
+    if (state207.frame) return;
     const run2 = () => {
-      state206.frame = 0;
+      state207.frame = 0;
       syncApplianceKpis();
     };
-    state206.frame = root6.requestAnimationFrame?.(run2) || root6.setTimeout?.(run2, 0);
+    state207.frame = root6.requestAnimationFrame?.(run2) || root6.setTimeout?.(run2, 0);
   };
   for (const name of ["renderAppliances", "renderApplianceSection", "render"]) {
     wrapFunction(name, "__dmApplianceKpiPopups", schedule52);
@@ -176998,6 +177335,7 @@ function installSectionRuntime() {
     senzaCadere(installDisposizione);
     senzaCadere(installDisegniCheSiSpostano);
     senzaCadere(installDisposizioneNelConfig);
+    senzaCadere(installAnteprimaDellaPlancia);
     senzaCadere(installSalute);
     senzaCadere(installSaluteEditor);
     senzaCadere(installAcquario);

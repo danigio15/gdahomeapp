@@ -98,7 +98,7 @@ for (const tipo of ["scaldabagno", "caldaia", "stufa"])
     await expect(scena).toBeVisible({ timeout: 20_000 });
     /* Il disegno parte basso, sotto dove arriveranno le barre. */
     await page.evaluate(() => window.scrollTo(0, 0));
-    await page.locator("#page-boiler [data-dm-disp-tasto]").first().click();
+    await page.evaluate(() => window.dmDisposizione.entraInModifica());
     await expect(page.locator(`[data-dm-disegno-strato="${tipo}"]`)).toBeAttached();
     await expect
       .poll(async () => {

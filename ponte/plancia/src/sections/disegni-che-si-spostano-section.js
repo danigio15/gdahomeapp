@@ -1,7 +1,7 @@
 /* Spostare i pezzi dentro i disegni.
  *
  * «Vedi come poter spostare le cose anche nei disegni, tipo i tubi nel solare
- * termico, i cerchi nel flusso energetico.» Con ✏️ (la modalita' della
+ * termico, i cerchi nel flusso energetico.» Nell'anteprima del Config (la modalita' della
  * disposizione, `disposizione-section.js`) un disegno che si e' iscritto qui
  * mostra una maniglia su ogni pezzo: si prende col mouse o col dito, si
  * sposta (si ferma sulla griglia, o allineato a un altro pezzo, e una guida

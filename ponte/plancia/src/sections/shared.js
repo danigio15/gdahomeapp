@@ -968,8 +968,18 @@ export function inserisciInOrdine(dentro, riga, ordine, ancora) {
   return riga;
 }
 
+/* Le caselle che l'anteprima del Config (#379) salva per davvero: dentro la
+ * cornice si scrive in memoria (`storage-namespace.js`), e queste tre le
+ * scrive chi la ospita, con la sua sincronia. */
+export const SCRITTE_DALL_ANTEPRIMA = Object.freeze(["cd_disposizione", "cd_disegni", "cd_navbar_order"]);
+
 export function writeJsonIfChanged(key, value, { sync = true } = {}) {
   const serialized = JSON.stringify(value);
+  if (root.__DASHBOARDMODERN_ANTEPRIMA__ && SCRITTE_DALL_ANTEPRIMA.includes(key)) {
+    try {
+      root.parent?.dmScriviDallAnteprima?.(key, value);
+    } catch (_error) {}
+  }
   if (root.localStorage?.getItem(key) === serialized) return false;
   root.localStorage?.setItem(key, serialized);
   if (sync) {

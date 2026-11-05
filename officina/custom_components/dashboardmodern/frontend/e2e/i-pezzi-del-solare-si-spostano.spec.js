@@ -101,7 +101,7 @@ const salvata = (page) =>
   page.evaluate(() => JSON.parse(localStorage.getItem("cd_disegni") || "{}"));
 
 async function entra(page) {
-  await page.locator("#page-boiler [data-dm-disp-tasto]").click();
+  await page.evaluate(() => window.dmDisposizione.entraInModifica());
   await expect(page.locator("html")).toHaveAttribute("data-dm-modifica", "boiler");
   await expect(page.locator("[data-dm-disegno-strato='solare']")).toBeAttached();
 }
@@ -265,7 +265,7 @@ test("sul telefono la scelta e' del telefono: il computer resta com'era", async 
   test.skip(testInfo.project.name !== "mobile", "il telefono");
   await apri(page, testInfo);
   expect(await tubo(page, "flow-sol-cold")).toBe(A_MANO.telefono["flow-sol-cold"]);
-  await page.locator("#page-boiler [data-dm-disp-tasto]").scrollIntoViewIfNeeded();
+  await page.evaluate(() => document.querySelector("section.page.active")?.scrollIntoView());
   await entra(page);
   await expect(page.locator(".dm-dis-variante").first()).toContainText("telefono");
   await page.locator('[data-dm-disegno-nodo="pompa"]').scrollIntoViewIfNeeded();

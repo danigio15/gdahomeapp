@@ -289,7 +289,7 @@ async function guarda(
     }
 
   /* In modifica: ogni maniglia si vede e, toccata nel mezzo, e' lei. */
-  await page.locator(`#page-${sezione} [data-dm-disp-tasto]`).click();
+  await page.evaluate(() => window.dmDisposizione.entraInModifica());
   await expect(page.locator("html")).toHaveAttribute("data-dm-modifica", sezione);
   /* Con un riquadro solo non c'e' niente da spostare, e niente maniglia. */
   for (const id of maniglie && pagina.voci.length > 1 ? pagina.voci : [])
@@ -350,7 +350,7 @@ for (const [sezione, gruppo] of [
     await ferma(page);
     const prima = (await elenchi(page)).find((e) => e.chiave === sezione).voci;
     expect(prima.length).toBeGreaterThan(1);
-    await page.locator(`#page-${sezione} [data-dm-disp-tasto]`).click();
+    await page.evaluate(() => window.dmDisposizione.entraInModifica());
     /* Una freccia per volta, aspettando che la pagina si sia ridisegnata: se
      * la maniglia presa e' stata appena rifatta, il tasto cade nel vuoto e si
      * ripreme. */
@@ -420,7 +420,7 @@ test("Clima: una carta spostata nel suo piano resta li' dopo aver ricaricato", a
   const prima = await voci();
   expect(prima).toEqual(["#card-climate-camera", "#card-climate-cameretta"]);
   const titoli = (await inPagina()).filter((x) => x.startsWith("piano:"));
-  await page.locator("#page-clima [data-dm-disp-tasto]").click();
+  await page.evaluate(() => window.dmDisposizione.entraInModifica());
   await expect(async () => {
     if ((await voci())[0] === prima[0]) {
       /* Una carta di un elenco si prende lei, non una maniglia. */

@@ -1672,8 +1672,13 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // tubi dello scaldabagno, della caldaia, della stufa e dell'UPS.
   // 543 con `sections/il-prato-che-si-sposta-section.js`: le zone sul prato
   // dell'irrigazione.
+  // 545 con l'anteprima della plancia nel Config (#379): `core/anteprima-
+  // della-plancia.js` (gli schermi, la scala, il documento della cornice) e
+  // `sections/anteprima-della-plancia-section.js` (la cornice nella scheda,
+  // la barra, e la modifica sempre accesa dentro la cornice). Sulla plancia
+  // non c'e' piu' nessuna matita.
   assert.ok(
-    relative.length <= 543,
+    relative.length <= 545,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

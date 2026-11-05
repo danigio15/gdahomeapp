@@ -1,10 +1,14 @@
 /* La disposizione si modifica sulla plancia (#379).
  *
- * «Il discorso drag & drop deve essere ovunque, non solo nei widget.» In testa
- * a ogni pagina c'e' il tasto ✏️: i riquadri e gli elementi degli elenchi si
- * trascinano li' dove sono, l'occhio li nasconde, «Salva» scrive
- * `cd_disposizione` e la pagina resta cosi' anche ricaricandola; «Ripristina»
- * la rimette com'era.
+ * «Il discorso drag & drop deve essere ovunque, non solo nei widget.» I
+ * riquadri e gli elementi degli elenchi si trascinano, l'occhio li nasconde,
+ * «Salva» scrive `cd_disposizione` e la pagina resta cosi' anche
+ * ricaricandola; «Ripristina» la rimette com'era.
+ *
+ * Sulla plancia non c'e' piu' nessuna matita: la modifica la apre l'anteprima
+ * del Config (`l-anteprima-nel-config.spec.js`). Qui la si accende come la
+ * accende lei (`dmDisposizione.entraInModifica`), per provare il motore sulle
+ * pagine che l'anteprima non ha ancora.
  */
 import { expect, test } from "@playwright/test";
 import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
@@ -24,12 +28,13 @@ test("sull'Auto i riquadri si trascinano, si salvano e restano dopo aver ricaric
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
   await lAuto(page);
   await clickBottomTab(page, "ev", testInfo);
-  await expect(page.locator("#page-ev [data-dm-disp-tasto]")).toBeVisible();
+  /* Sulla plancia nessuna matita: si entra come entra l'anteprima del Config. */
+  await expect(page.locator("#page-ev [data-dm-disp-tasto]")).toHaveCount(0);
   await expect.poll(() => riquadri(page)).toContain("auto");
   const prima = await riquadri(page);
   expect(prima[0]).toBe("auto");
 
-  await page.locator("#page-ev [data-dm-disp-tasto]").click();
+  await page.evaluate(() => window.dmDisposizione.entraInModifica());
   await expect(page.locator("html")).toHaveAttribute("data-dm-modifica", "ev");
   await expect(page.locator("[data-dm-disp-barra]")).toBeVisible();
 
@@ -85,7 +90,7 @@ test("sull'Auto i riquadri si trascinano, si salvano e restano dopo aver ricaric
   await expect.poll(async () => (await riquadri(page)).at(-1)).toBe("auto");
 
   /* Ripristina, Salva: la pagina com'era e niente scritto. */
-  await page.locator("#page-ev [data-dm-disp-tasto]").click();
+  await page.evaluate(() => window.dmDisposizione.entraInModifica());
   await page.locator('[data-dm-disp-azione="ripristina"]').click();
   await page.locator('[data-dm-disp-azione="salva"]').click();
   /* Dopo il ricaricamento l'auto mostra anche i riquadri dei dati arrivati
@@ -108,7 +113,7 @@ test("Annulla rimette tutto com'era e non scrive niente", async ({ page }, testI
   await clickBottomTab(page, "ev", testInfo);
   await expect.poll(() => riquadri(page)).toContain("auto");
   const prima = await riquadri(page);
-  await page.locator("#page-ev [data-dm-disp-tasto]").click();
+  await page.evaluate(() => window.dmDisposizione.entraInModifica());
   await page.locator(`#page-ev [data-dm-disp-voce="${prima[0]}"] [data-dm-disp-occhio]`).click();
   await page.locator('[data-dm-disp-azione="annulla"]').click();
   await expect(page.locator("[data-dm-disp-barra]")).toHaveCount(0);
@@ -143,7 +148,7 @@ test("le luci di una stanza si riordinano e l'ordine si scrive con le entita'", 
     );
   await expect.poll(elencoDiLuci, { timeout: 15_000 }).not.toBeNull();
   await page.waitForTimeout(600);
-  await page.locator("#page-luci [data-dm-disp-tasto]").click();
+  await page.evaluate(() => window.dmDisposizione.entraInModifica());
   /* La pagina delle luci si ridisegna quando arrivano gli stati: si aspetta
    * che stia ferma (nessun giro nuovo per mezzo secondo), se no la luce presa
    * dalla tastiera puo' essere quella di prima del ridisegno. */
@@ -182,19 +187,6 @@ test("le luci di una stanza si riordinano e l'ordine si scrive con le entita'", 
   expect(scritta[prima.chiave].ordine.slice(0, 2)).toEqual([prima.voci[1], prima.voci[0]]);
 });
 
-test("in Home il tasto ✏️ porta all'anteprima delle tessere nel Config", async ({
-  page,
-}, testInfo) => {
-  test.setTimeout(120_000);
-  await pontefinto(page);
-  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
-  await page.locator("#setup-wizard").evaluateAll((n) => n.forEach((x) => x.remove()));
-  const tasto = page.locator('header [data-dm-disp-tasto="home"]');
-  await expect(tasto).toBeVisible();
-  await tasto.click();
-  await expect(page.locator('[data-dm-anteprima="home"]').first()).toBeVisible({ timeout: 15_000 });
-});
-
 /* Piu' voci nella barra: le sezioni che si mostrano anche senza niente
  * dentro, oltre all'Auto. */
 const SEME_BARRA = {
@@ -219,7 +211,7 @@ test("in modifica la barra delle sezioni si riordina e resta cosi'", async ({ pa
     );
   const prima = await ordine();
   expect(prima.length).toBeGreaterThanOrEqual(3);
-  await page.locator("#page-ev [data-dm-disp-tasto]").click();
+  await page.evaluate(() => window.dmDisposizione.entraInModifica());
   await expect(page.locator("nav.tabs [data-dm-disp-barra-sezioni]")).toHaveCount(1);
   const mobili = prima.filter((k) => k !== "config");
   await expect(page.locator('nav.tabs .tab[data-tab="config"]')).not.toHaveAttribute(
@@ -268,7 +260,7 @@ test("Annulla rimette la barra delle sezioni com'era", async ({ page }, testInfo
       [...document.querySelectorAll("nav.tabs .tab[data-tab]")].map((t) => t.dataset.tab),
     );
   const prima = await ordine();
-  await page.locator("#page-ev [data-dm-disp-tasto]").click();
+  await page.evaluate(() => window.dmDisposizione.entraInModifica());
   const prima_mobile = await page
     .locator("nav.tabs .tab[data-dm-riordina-riga]")
     .first()
@@ -314,7 +306,7 @@ test("sul telefono una voce della barra si trascina col dito", async ({ page }, 
         .filter((t) => getComputedStyle(t).display !== "none")
         .map((t) => t.dataset.tab),
     );
-  await page.locator("#page-ev [data-dm-disp-tasto]").click();
+  await page.evaluate(() => window.dmDisposizione.entraInModifica());
   await expect(page.locator("nav.tabs [data-dm-disp-barra-sezioni]")).toHaveCount(1);
   const larghezza = page.viewportSize().width;
   const voci = page.locator("nav.tabs .tab[data-dm-riordina-riga]");

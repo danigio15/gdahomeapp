@@ -69,7 +69,7 @@ const salvata = (page) =>
   page.evaluate(() => JSON.parse(localStorage.getItem("cd_disegni") || "{}"));
 
 async function entra(page) {
-  await page.locator("#page-irrigazione [data-dm-disp-tasto]").first().click();
+  await page.evaluate(() => window.dmDisposizione.entraInModifica());
   await expect(page.locator("html")).toHaveAttribute("data-dm-modifica", "irrigazione");
   await expect(page.locator("[data-dm-disegno-strato='irrigazione']")).toBeAttached();
 }

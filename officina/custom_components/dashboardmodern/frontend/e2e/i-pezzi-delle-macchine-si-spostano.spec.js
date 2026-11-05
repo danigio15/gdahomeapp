@@ -128,7 +128,7 @@ async function apriLUps(page) {
 }
 
 async function entra(page, pagina, disegno) {
-  await page.locator(`#page-${pagina} [data-dm-disp-tasto]`).first().click();
+  await page.evaluate(() => window.dmDisposizione.entraInModifica());
   await expect(page.locator("html")).toHaveAttribute("data-dm-modifica", pagina);
   await expect(page.locator(`[data-dm-disegno-strato='${disegno}']`)).toBeAttached();
 }
@@ -319,7 +319,7 @@ test("sul telefono la scelta e' del telefono, e l'UPS in colonna non ha maniglie
   test.skip(testInfo.project.name !== "mobile", "il telefono");
   await avvia(page, testInfo);
   await apriLaMacchina(page, "stufa");
-  await page.locator("#page-boiler [data-dm-disp-tasto]").first().scrollIntoViewIfNeeded();
+  await page.evaluate(() => document.querySelector("section.page.active")?.scrollIntoView());
   await entra(page, "boiler", "stufa");
   await expect(page.locator(".dm-dis-variante").first()).toContainText("telefono");
   await trascina(page, "stufa", 60, 30);
@@ -328,7 +328,7 @@ test("sul telefono la scelta e' del telefono, e l'UPS in colonna non ha maniglie
 
   /* L'UPS sul telefono si alza in colonna: li' non c'e' un posto da scegliere. */
   await apriLUps(page);
-  await page.locator("#page-ups [data-dm-disp-tasto]").first().click();
+  await page.evaluate(() => window.dmDisposizione.entraInModifica());
   await expect(page.locator("html")).toHaveAttribute("data-dm-modifica", "ups");
   await expect(page.locator("[data-dm-disegno-strato='ups']")).toHaveCount(0);
 });

@@ -434,6 +434,8 @@ const LOCALE_IDENTITIES = {
     "Boiler",
     "Browser",
     "Computer",
+    /* Lo schermo dell'anteprima del Config (#379), con la sua figura. */
+    "🖥️ Computer",
     "Cyan",
     "DETAILS",
     "DIMMER",
@@ -566,6 +568,8 @@ const LOCALE_IDENTITIES = {
     "Browser",
     "Camera",
     "Computer",
+    /* Lo schermo dell'anteprima del Config (#379), con la sua figura. */
+    "🖥️ Computer",
     "Console",
     "December",
     "DETAILS",

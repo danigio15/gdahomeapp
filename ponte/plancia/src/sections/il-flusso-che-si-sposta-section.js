@@ -1,7 +1,7 @@
 /* I cerchi del Flusso energetico si spostano (#379).
  *
  * «Vedi come poter spostare le cose anche nei disegni, tipo i tubi nel solare
- * termico, i cerchi nel Flusso energetico.» Con ✏️ sulla pagina Energia ogni
+ * termico, i cerchi nel Flusso energetico.» Nell'anteprima dell'Energia, nel Config, ogni
  * cerchio ha la sua maniglia: Solare, Rete, Batteria, Casa e ogni carico.
  *
  * Chi fa cosa:

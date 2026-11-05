@@ -49,7 +49,7 @@ const ordineVisto = (page, pagina) =>
 
 async function inModifica(page, pagina) {
   await apri(page, pagina);
-  await page.locator(`#page-${pagina} [data-dm-disp-tasto]`).first().click();
+  await page.evaluate(() => window.dmDisposizione.entraInModifica());
   await expect(page.locator("html")).toHaveAttribute("data-dm-modifica", pagina);
   await expect(page.locator(`#page-${pagina} [data-dm-disp-tipo="riquadri"]`)).toBeVisible();
 }

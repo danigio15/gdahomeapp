@@ -1426,6 +1426,18 @@ function disableLegacySyncState() {
 }
 
 export function installConfigPersistenceSection() {
+  /* L'anteprima del Config (#379) legge la configurazione che la plancia di
+   * fuori ha gia' portato a casa, e non ne manda nessuna: quello che si salva
+   * li' dentro lo scrive chi la ospita. Due plance che spingono la stessa
+   * configurazione sarebbero due padroni dello stesso formato. */
+  if (root.__DASHBOARDMODERN_ANTEPRIMA__) {
+    state.installed = true;
+    disableLegacySyncState();
+    root.cdMarkDirty = () => false;
+    root.cdSyncPush = () => Promise.resolve(false);
+    root.cdSyncPull = () => Promise.resolve(false);
+    return;
+  }
   if (state.installed) {
     disableLegacySyncState();
     installResetOwner();

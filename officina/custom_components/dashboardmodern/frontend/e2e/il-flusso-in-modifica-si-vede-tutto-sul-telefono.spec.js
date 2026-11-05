@@ -21,7 +21,7 @@ test("in modifica la fila in fondo del flusso si vede e si prende", async ({ pag
   await apri(page, "energy");
   await expect(page.locator("#page-energy .flow-stage").first()).toBeVisible();
 
-  await page.locator("#page-energy [data-dm-disp-tasto]").first().tap();
+  await page.evaluate(() => window.dmDisposizione.entraInModifica());
   await expect(page.locator("html")).toHaveAttribute("data-dm-modifica", "energy");
   /* L'ingresso fa scorrere due volte: subito e quando la pagina si assesta. */
   await page.waitForTimeout(800);
