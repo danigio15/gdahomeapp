@@ -749,7 +749,7 @@ function selettoreDelPeriodo(vista, { mese, dal, al }, gruppo) {
         ? `<div class="dm-na-date"><label>${esc(t("Dal", "From"))}<input type="date" data-na-dal value="${esc(dal)}" max="${giornoScritto(Date.now())}"></label>
         <label>${esc(t("Al", "To"))}<input type="date" data-na-al value="${esc(al)}" max="${giornoScritto(Date.now())}"></label></div>`
         : "";
-  return `<div class="dm-na-periodo"><div class="dm-na-segmenti">${viste
+  return `<div class="dm-na-periodo" data-dm-naviga><div class="dm-na-segmenti">${viste
     .map(
       ([id, nome]) =>
         `<button type="button" data-na-vista="${id}" data-na-gruppo="${gruppo}" aria-pressed="${id === vista}">${esc(nome)}</button>`,

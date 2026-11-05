@@ -209,7 +209,7 @@ export function filtriPresenti(voci = []) {
 
 export function filtriMarkup(filtri, scelto) {
   if (!filtri.length) return "";
-  return `<div class="dm-animali-filtri" role="toolbar" aria-label="${esc(t("Mostra", "Show"))}">${filtri
+  return `<div class="dm-animali-filtri" data-dm-naviga role="toolbar" aria-label="${esc(t("Mostra", "Show"))}">${filtri
     .map(
       ({ filtro, quante }) =>
         `<button type="button" class="dm-animali-filtro" data-dm-animali-filtro="${esc(filtro)}"

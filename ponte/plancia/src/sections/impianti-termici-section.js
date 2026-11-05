@@ -137,7 +137,7 @@ export function impiantiDiCasa() {
 function stripMarkup(scelti, attiva) {
   return scelti
     .map(
-      (tipo) => `<button type="button" class="dm-it-tab" data-dm-it-tab="${esc(tipo)}"
+      (tipo) => `<button type="button" class="dm-it-tab" data-dm-naviga data-dm-it-tab="${esc(tipo)}"
         aria-pressed="${tipo === attiva}"${tipo === attiva ? ' data-on="true"' : ""}>
         <span class="dm-it-tab-ic" aria-hidden="true">${ICONE[tipo] || ""}</span>
         <span>${esc(t(...ETICHETTE_TERMICHE[tipo]))}</span>

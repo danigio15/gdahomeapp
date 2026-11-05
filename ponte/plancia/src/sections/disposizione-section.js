@@ -1393,6 +1393,8 @@ function ripristina() {
   disegnaLaBarra();
 }
 
+export const NAVIGAZIONE_NELLA_PAGINA = "[data-dm-naviga],.sub-tab-btn,[role='tab']";
+
 function onClick(event) {
   const bersaglio = event.target;
   /* Un tocco qualunque puo' aver cambiato pagina: si riguarda. */
@@ -1410,10 +1412,13 @@ function onClick(event) {
   }
   const pagina = state.modifica.pagina;
   if (!pagina.contains(bersaglio)) return;
-  /* Nell'anteprima del Config le linguette della pagina (le viste
-   * dell'Energia) si cambiano: ogni vista ha la sua disposizione. I comandi
-   * alla casa li ferma l'anteprima stessa. */
-  if (root.__DASHBOARDMODERN_ANTEPRIMA__ && bersaglio.closest(".sub-tab-btn,[role='tab']")) return;
+  /* Nell'anteprima del Config ci si muove dentro la pagina: le linguette
+   * (le viste dell'Energia, Solare/Caldaia/Stufa, gli impianti), i periodi,
+   * i filtri. Ogni vista ha la sua disposizione e i suoi disegni. Una pagina
+   * dice cosa e' navigazione con `data-dm-naviga` (sul tasto o sul gruppo);
+   * le linguette vere (`role="tab"`, `.sub-tab-btn`) lo sono gia'. Tutto il
+   * resto resta fermo: un tocco su un comando non comanda. */
+  if (root.__DASHBOARDMODERN_ANTEPRIMA__ && bersaglio.closest(NAVIGAZIONE_NELLA_PAGINA)) return;
   /* In modifica la pagina non si comanda: un tocco su una luce non la
    * accende. Passano solo i nostri tasti. */
   const occhio = bersaglio.closest("[data-dm-disp-occhio]");

@@ -342,7 +342,7 @@ function periodoMarkup(modo, finestra) {
       modo === quale ? ' class="on"' : ""
     }>${esc(parola)}</button>`;
   return `<div class="dm-ur-periodo">
-    <div class="dm-ur-seg" role="group" aria-label="${esc(t("Periodo", "Period"))}">
+    <div class="dm-ur-seg" data-dm-naviga role="group" aria-label="${esc(t("Periodo", "Period"))}">
       ${tasto("24h", t("Ultime 24 ore", "Last 24 hours"))}${tasto("ieri", t("Ieri", "Yesterday"))}
     </div>
     <div class="dm-ur-quando">${esc(quando)}</div>

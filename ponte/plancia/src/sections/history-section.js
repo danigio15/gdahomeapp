@@ -533,7 +533,7 @@ export function parolaDelPeriodo(periodo) {
 function periodiMarkup() {
   return PERIODI.map(
     (periodo) =>
-      `<button type="button" class="hist-time-btn" data-hours="${periodo.ore}" data-dm-hist-periodo="${esc(periodo.chiave)}">${esc(parolaDelPeriodo(periodo))}</button>`,
+      `<button type="button" class="hist-time-btn" data-dm-naviga data-hours="${periodo.ore}" data-dm-hist-periodo="${esc(periodo.chiave)}">${esc(parolaDelPeriodo(periodo))}</button>`,
   ).join("");
 }
 

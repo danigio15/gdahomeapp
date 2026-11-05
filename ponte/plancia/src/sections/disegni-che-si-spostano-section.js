@@ -156,6 +156,8 @@ function salva() {
 function esci() {
   annullaLaPresa();
   state.pagina = null;
+  root.clearTimeout?.(state.guarda);
+  state.guarda = null;
   state.bozza.clear();
   rifaiGliStrati();
   ridisegnaTutti();
@@ -228,12 +230,24 @@ function ingombroDi(nodo, centro, box) {
   };
 }
 
+/* Un pezzo ha la sua maniglia solo se si vede: un pezzo che il disegno non
+ * mostra (nella casa demo la pompa di ricircolo e il rubinetto, senza il
+ * ricircolo) non lascia una maniglia sul vuoto. */
+function siVede(el) {
+  const r = el?.getBoundingClientRect?.();
+  return Boolean(r && (r.width > 0 || r.height > 0));
+}
+
+function nodiChiSiVedono(voce) {
+  return (voce.nodi() || []).filter((nodo) => typeof nodo.pezzi !== "function" || nodo.pezzi().some(siVede));
+}
+
 function fotografia(voce) {
   const scatola = voce.scatola?.();
   const box = scatola?.getBoundingClientRect?.();
   if (!box || box.width < 10 || box.height < 10) return null;
   const variante = voce.variante();
-  const nodi = voce.nodi() || [];
+  const nodi = nodiChiSiVedono(voce);
   const centri = new Map(nodi.map((nodo) => [nodo.id, dove(voce, nodo, variante)]));
   const ingombri = new Map(
     nodi.map((nodo) => [nodo.id, ingombroDi(nodo, centri.get(nodo.id), box)]),
@@ -582,6 +596,42 @@ export function mostraSopraLeBarre() {
   else root.scrollBy?.(0, passo);
 }
 
+/* ── le maniglie che seguono il disegno ─────────────────────────────────── */
+
+/* Un disegno mostra e nasconde i suoi pezzi quando arrivano gli stati: la
+ * pompa di ricircolo c'e' solo se c'e' il ricircolo. Entrando in modifica
+ * (nell'anteprima, appena la pagina c'e') gli stati possono non essere ancora
+ * arrivati: le maniglie si fanno sui pezzi di quel momento, e un pezzo
+ * nascosto dopo lasciava la sua maniglia sul vuoto. Finche' la modifica e'
+ * aperta si guarda ogni tanto se i pezzi che si vedono sono ancora quelli
+ * delle maniglie, e se no lo strato si rifa'. */
+const OGNI_QUANTO_MS = 700;
+
+function maniglieDaRifare() {
+  for (const voce of vociDellaPagina(state.pagina)) {
+    const strato = voce.scatola?.()?.querySelector?.(":scope > [data-dm-disegno-strato]");
+    if (!strato) return true;
+    const ci = [...strato.querySelectorAll("[data-dm-disegno-nodo]")].map((m) =>
+      m.getAttribute("data-dm-disegno-nodo"),
+    );
+    const vanno = nodiChiSiVedono(voce).map((nodo) => nodo.id);
+    if (ci.length !== vanno.length || vanno.some((id, i) => ci[i] !== id)) return true;
+  }
+  return false;
+}
+
+function guardaLeManiglie() {
+  root.clearTimeout?.(state.guarda);
+  state.guarda = null;
+  if (!state.pagina) return;
+  if (!state.presa) {
+    try {
+      if (maniglieDaRifare()) rifaiGliStrati();
+    } catch (_errore) {}
+  }
+  state.guarda = root.setTimeout?.(guardaLeManiglie, OGNI_QUANTO_MS) ?? null;
+}
+
 /* ── installare ─────────────────────────────────────────────────────────── */
 
 const MODIFICHE = Object.freeze({
@@ -599,6 +649,7 @@ const MODIFICHE = Object.freeze({
     /* E di nuovo quando la pagina si e' assestata (le maniglie, le etichette
      * dei riquadri e un disegno che si rifa' per lo spazio nuovo). */
     root.setTimeout?.(mostraSopraLeBarre, 350);
+    guardaLeManiglie();
   },
   haQualcosa: (pagina) => vociDellaPagina(pagina).length > 0,
 });
@@ -634,6 +685,11 @@ root.dmDisegni = {
   posizioniInUso,
   conta,
   voci: () => [...state.registro.keys()],
+  /* I pezzi che hanno diritto a una maniglia adesso. */
+  chiSiVede: (id) => {
+    const voce = state.registro.get(id);
+    return voce ? nodiChiSiVedono(voce).map((nodo) => nodo.id) : [];
+  },
 };
 
 senzaCadere(installDisegniCheSiSpostano);

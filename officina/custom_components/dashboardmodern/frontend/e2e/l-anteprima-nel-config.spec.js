@@ -245,6 +245,92 @@ test.describe("sul computer", () => {
     await expect.poll(async () => (await fondo()).every((c) => c.dentro && c.disegnato)).toBe(true);
   });
 
+  /* ── Gestione termica ───────────────────────────────────────────────── */
+
+  /* Le maniglie di ogni disegno della pagina sono quelle dei pezzi che si
+   * vedono, ne' una di piu' ne' una di meno. */
+  const maniglieSulVuoto = (dentro) =>
+    dentro.evaluate(() =>
+      [...document.querySelectorAll("[data-dm-disegno-strato]")]
+        .filter((strato) => strato.getBoundingClientRect().width > 0)
+        .flatMap((strato) => {
+          const id = strato.getAttribute("data-dm-disegno-strato");
+          const vanno = window.dmDisegni.chiSiVede(id);
+          return [...strato.querySelectorAll("[data-dm-disegno-nodo]")]
+            .map((m) => m.getAttribute("data-dm-disegno-nodo"))
+            .filter((nodo) => !vanno.includes(nodo))
+            .map((nodo) => `${id}:${nodo}`);
+        }),
+    );
+
+  test("Gestione termica: nel solare niente maniglie sul vuoto (ricircolo e rubinetto non disegnati)", async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await nellaCasaDemo(page);
+    const { dentro } = await lAnteprima(page, "sez3", "computer");
+    await expect(
+      dentro.locator('[data-dm-disegno-strato="solare"] [data-dm-disegno-nodo]').first(),
+    ).toBeAttached();
+    /* Nella casa demo il ricircolo non c'e': la pompa e il rubinetto non si
+     * disegnano, e non hanno maniglia. */
+    await expect(dentro.locator("#page-boiler #syn-p-ricircolo")).toBeHidden();
+    await expect(
+      dentro.locator('[data-dm-disegno-nodo="ricircolo"],[data-dm-disegno-nodo="rubinetto"]'),
+    ).toHaveCount(0);
+    await expect.poll(() => maniglieSulVuoto(dentro)).toEqual([]);
+    /* E restano cosi', mentre arrivano gli stati. */
+    await page.waitForTimeout(2_000);
+    expect(await maniglieSulVuoto(dentro)).toEqual([]);
+  });
+
+  test("Gestione termica: nell'anteprima Caldaia e Stufa si aprono, e i loro pezzi si spostano", async ({
+    page,
+  }) => {
+    test.setTimeout(240_000);
+    await nellaCasaDemo(page);
+    /* Il solare, la caldaia e la stufa: tre linguette in cima alla pagina. */
+    await page.evaluate(() => {
+      const metti = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+      metti("cd_impianti_termici", {
+        solare: true,
+        scaldabagno: false,
+        caldaia: true,
+        stufa: true,
+      });
+      metti("cd_caldaia", [
+        { id: "k", name: "Caldaia", stato: "sensor.k_stato", mandata: "sensor.k_mandata" },
+      ]);
+      metti("cd_stufe", [{ name: "Stufa", clima: "climate.stufa", temperatura: "sensor.s_temp" }]);
+    });
+    const { pannello, dentro } = await lAnteprima(page, "sez3", "computer");
+    for (const tipo of ["caldaia", "stufa"]) {
+      const linguetta = dentro.locator(`#page-boiler .dm-it-tab[data-dm-it-tab="${tipo}"]`);
+      await linguetta.evaluate((el) => el.scrollIntoView({ block: "center" }));
+      await linguetta.click();
+      await expect(linguetta).toHaveAttribute("aria-pressed", "true");
+      const strato = dentro.locator(`[data-dm-disegno-strato="${tipo}"]`);
+      await expect(strato).toBeVisible();
+      await expect.poll(() => maniglieSulVuoto(dentro)).toEqual([]);
+      const maniglia = strato.locator("[data-dm-disegno-nodo]:visible").first();
+      await expect(maniglia).toBeVisible();
+      const nodo = await maniglia.getAttribute("data-dm-disegno-nodo");
+      /* Dove sta nel disegno, in percento: non cambia scorrendo. */
+      const dove = () =>
+        strato
+          .locator(`[data-dm-disegno-nodo="${nodo}"]`)
+          .evaluate((m) => `${m.style.left} ${m.style.top}`);
+      const prima = await dove();
+      await trascina(page, maniglia, 70, 40);
+      await expect.poll(dove).not.toBe(prima);
+      await expect(pannello.locator(".dm-ant-conta")).toContainText(/modific/);
+    }
+    await pannello.locator('[data-dm-ant-azione="salva"]').click();
+    await expect
+      .poll(async () => Object.keys(await scritta(page, "cd_disegni")).sort())
+      .toEqual(["caldaia:computer", "stufa:computer"]);
+  });
+
   /* ── Sicurezza ──────────────────────────────────────────────────────── */
 
   test("Sicurezza: il fumo portato sopra l'antifurto resta sopra, anche se la pagina si ridisegna, e la plancia e' cosi'", async ({

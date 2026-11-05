@@ -243,7 +243,7 @@ function fasciaMarkup(giorni, adesso, lingua, calendari) {
         : eventi
             .map((evento) => `<i style="background:${esc(tintaDi(evento, calendari))}"></i>`)
             .join("");
-    celle.push(`<button type="button" class="dm-calp-cella" data-dm-calp-giorno="${esc(chiave)}"
+    celle.push(`<button type="button" class="dm-calp-cella" data-dm-naviga data-dm-calp-giorno="${esc(chiave)}"
       data-oggi="${passo === 0}" data-vuoto="${eventi.length === 0}"
       data-scelto="${state.giorno === chiave}">
       <span class="dm-calp-sett">${esc(settimana)}</span>

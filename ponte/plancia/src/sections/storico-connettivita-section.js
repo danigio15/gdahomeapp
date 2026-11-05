@@ -197,6 +197,7 @@ export function ensureBarra() {
     barra = doc.createElement("div");
     barra.id = "dm-srv-periodi";
     barra.className = "dm-srv-periodi";
+    barra.setAttribute("data-dm-naviga", "");
     barra.innerHTML = barraMarkup();
     sottotitolo.after(barra);
   }

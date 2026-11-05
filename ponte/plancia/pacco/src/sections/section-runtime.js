@@ -568,7 +568,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-OKGGBFQU.js";
+} from "../../chunk-5QFUOCJ2.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -42033,6 +42033,7 @@ function ripristina() {
   applicaLaDisposizione(m.pagina);
   disegnaLaBarra();
 }
+var NAVIGAZIONE_NELLA_PAGINA = "[data-dm-naviga],.sub-tab-btn,[role='tab']";
 function onClick5(event) {
   const bersaglio = event.target;
   if (!state34.modifica) inCoda();
@@ -42048,7 +42049,7 @@ function onClick5(event) {
   }
   const pagina3 = state34.modifica.pagina;
   if (!pagina3.contains(bersaglio)) return;
-  if (root.__DASHBOARDMODERN_ANTEPRIMA__ && bersaglio.closest(".sub-tab-btn,[role='tab']")) return;
+  if (root.__DASHBOARDMODERN_ANTEPRIMA__ && bersaglio.closest(NAVIGAZIONE_NELLA_PAGINA)) return;
   const occhio2 = bersaglio.closest("[data-dm-disp-occhio]");
   const larga = bersaglio.closest("[data-dm-disp-larga]");
   event.preventDefault();
@@ -42331,6 +42332,8 @@ function salva4() {
 function esci() {
   annullaLaPresa2();
   state35.pagina = null;
+  root.clearTimeout?.(state35.guarda);
+  state35.guarda = null;
   state35.bozza.clear();
   rifaiGliStrati();
   ridisegnaTutti();
@@ -42388,12 +42391,19 @@ function ingombroDi(nodo3, centro2, box2) {
     sotto: Math.max(minimo.sotto, y1 - centro2.y)
   };
 }
+function siVede(el) {
+  const r = el?.getBoundingClientRect?.();
+  return Boolean(r && (r.width > 0 || r.height > 0));
+}
+function nodiChiSiVedono(voce3) {
+  return (voce3.nodi() || []).filter((nodo3) => typeof nodo3.pezzi !== "function" || nodo3.pezzi().some(siVede));
+}
 function fotografia(voce3) {
   const scatola2 = voce3.scatola?.();
   const box2 = scatola2?.getBoundingClientRect?.();
   if (!box2 || box2.width < 10 || box2.height < 10) return null;
   const variante2 = voce3.variante();
-  const nodi2 = voce3.nodi() || [];
+  const nodi2 = nodiChiSiVedono(voce3);
   const centri = new Map(nodi2.map((nodo3) => [nodo3.id, dove2(voce3, nodo3, variante2)]));
   const ingombri = new Map(
     nodi2.map((nodo3) => [nodo3.id, ingombroDi(nodo3, centri.get(nodo3.id), box2)])
@@ -42669,6 +42679,31 @@ function mostraSopraLeBarre() {
   if (scorre) scorre.scrollTop += passo;
   else root.scrollBy?.(0, passo);
 }
+var OGNI_QUANTO_MS = 700;
+function maniglieDaRifare() {
+  for (const voce3 of vociDellaPagina(state35.pagina)) {
+    const strato = voce3.scatola?.()?.querySelector?.(":scope > [data-dm-disegno-strato]");
+    if (!strato) return true;
+    const ci = [...strato.querySelectorAll("[data-dm-disegno-nodo]")].map(
+      (m) => m.getAttribute("data-dm-disegno-nodo")
+    );
+    const vanno = nodiChiSiVedono(voce3).map((nodo3) => nodo3.id);
+    if (ci.length !== vanno.length || vanno.some((id, i) => ci[i] !== id)) return true;
+  }
+  return false;
+}
+function guardaLeManiglie() {
+  root.clearTimeout?.(state35.guarda);
+  state35.guarda = null;
+  if (!state35.pagina) return;
+  if (!state35.presa) {
+    try {
+      if (maniglieDaRifare()) rifaiGliStrati();
+    } catch (_errore) {
+    }
+  }
+  state35.guarda = root.setTimeout?.(guardaLeManiglie, OGNI_QUANTO_MS) ?? null;
+}
 var MODIFICHE = Object.freeze({
   conta: conta3,
   salva: salva4,
@@ -42681,6 +42716,7 @@ var MODIFICHE = Object.freeze({
     rifaiGliStrati();
     root.requestAnimationFrame?.(() => root.requestAnimationFrame?.(mostraSopraLeBarre));
     root.setTimeout?.(mostraSopraLeBarre, 350);
+    guardaLeManiglie();
   },
   haQualcosa: (pagina3) => vociDellaPagina(pagina3).length > 0
 });
@@ -42706,7 +42742,12 @@ function installDisegniCheSiSpostano() {
 root.dmDisegni = {
   posizioniInUso,
   conta: conta3,
-  voci: () => [...state35.registro.keys()]
+  voci: () => [...state35.registro.keys()],
+  /* I pezzi che hanno diritto a una maniglia adesso. */
+  chiSiVede: (id) => {
+    const voce3 = state35.registro.get(id);
+    return voce3 ? nodiChiSiVedono(voce3).map((nodo3) => nodo3.id) : [];
+  }
 };
 senzaCadere(installDisegniCheSiSpostano);
 
@@ -44578,7 +44619,7 @@ var state39 = root[KEY43] ||= {
 var VASCHE_PAGE_ID = "page-animali";
 var TESSERA_DELLE_VASCHE = "acquario";
 var EVENTO_ACQUARIO = "dashboardmodern:acquario-letto";
-var OGNI_QUANTO_MS = 30 * 6e4;
+var OGNI_QUANTO_MS2 = 30 * 6e4;
 var DOPO_UN_ERRORE_MS = 6e4;
 var ATTESA_MS2 = 3e4;
 var ANNULLA_MS = 5e3;
@@ -44621,7 +44662,7 @@ async function aggiornaIDati({ forza = false } = {}) {
   if (!livelli.length || letture2.every((lettura4) => lettura4.muto) || state39.inVolo) return;
   const adesso2 = Date.now();
   if (!forza) {
-    if (state39.dati && adesso2 - state39.chiestoAlle < OGNI_QUANTO_MS) return;
+    if (state39.dati && adesso2 - state39.chiestoAlle < OGNI_QUANTO_MS2) return;
     if (!state39.dati && adesso2 - state39.fallitoAlle < DOPO_UN_ERRORE_MS) return;
   }
   state39.inVolo = true;
@@ -44657,7 +44698,7 @@ function prossimoGiro() {
   state39.sveglia = root.setTimeout?.(() => {
     state39.sveglia = 0;
     schedule9();
-  }, OGNI_QUANTO_MS) || 0;
+  }, OGNI_QUANTO_MS2) || 0;
 }
 function commuta(entity2) {
   if (!entity2 || !siComanda(entity2)) return false;
@@ -45304,7 +45345,7 @@ function filtriPresenti(voci4 = []) {
 }
 function filtriMarkup(filtri2, scelto) {
   if (!filtri2.length) return "";
-  return `<div class="dm-animali-filtri" role="toolbar" aria-label="${esc(t("Mostra", "Show"))}">${filtri2.map(
+  return `<div class="dm-animali-filtri" data-dm-naviga role="toolbar" aria-label="${esc(t("Mostra", "Show"))}">${filtri2.map(
     ({ filtro, quante: quante3 }) => `<button type="button" class="dm-animali-filtro" data-dm-animali-filtro="${esc(filtro)}"
           aria-pressed="${filtro === scelto}">${esc(parolaFiltro(filtro))}<b>${quante3}</b></button>`
   ).join("")}</div>`;
@@ -46366,7 +46407,7 @@ var state41 = root[KEY45] ||= {
 var CONTATORI_PAGE_ID = "page-contatori";
 var CONTATORI_TAB = "contatori";
 var EVENTO_CONTATORI = "dashboardmodern:contatori-letti";
-var OGNI_QUANTO_MS2 = 5 * 6e4;
+var OGNI_QUANTO_MS3 = 5 * 6e4;
 var DOPO_UN_ERRORE_MS2 = 6e4;
 var ATTESA_MS3 = 3e4;
 var H3 = 36e5;
@@ -46483,7 +46524,7 @@ async function aggiornaIDati2({ forza = false } = {}) {
   const portate = firmaDellePortate(letture2);
   const cambiate = Boolean(state41.dati) && portate !== state41.scorrevano && adesso2 - state41.chiestoAlle > 6e4;
   if (!forza && !cambiate) {
-    if (state41.dati && adesso2 - state41.chiestoAlle < OGNI_QUANTO_MS2) return;
+    if (state41.dati && adesso2 - state41.chiestoAlle < OGNI_QUANTO_MS3) return;
     if (!state41.dati && adesso2 - state41.fallitoAlle < DOPO_UN_ERRORE_MS2) return;
   }
   state41.inVolo = true;
@@ -46515,7 +46556,7 @@ function prossimoGiro2() {
   state41.sveglia = root.setTimeout?.(() => {
     state41.sveglia = 0;
     schedule11();
-  }, OGNI_QUANTO_MS2) || 0;
+  }, OGNI_QUANTO_MS3) || 0;
 }
 function ultimaPagina5() {
   const pagine = doc?.querySelectorAll?.(".page");
@@ -48324,7 +48365,7 @@ var state44 = root[KEY48] ||= {
 var PIANTE_PAGE_ID = "page-piante";
 var PIANTE_TAB = "piante";
 var EVENTO_PIANTE = "dashboardmodern:piante-lette";
-var OGNI_QUANTO_MS3 = 30 * 6e4;
+var OGNI_QUANTO_MS4 = 30 * 6e4;
 var DOPO_UN_ERRORE_MS3 = 6e4;
 var ATTESA_MS4 = 3e4;
 function configurazione6() {
@@ -48403,7 +48444,7 @@ async function aggiornaIDati3({ forza = false } = {}) {
   if (!letture2.length || letture2.every((lettura4) => lettura4.muta) || state44.inVolo) return;
   const adesso2 = Date.now();
   if (!forza) {
-    if (state44.dati && adesso2 - state44.chiestoAlle < OGNI_QUANTO_MS3) return;
+    if (state44.dati && adesso2 - state44.chiestoAlle < OGNI_QUANTO_MS4) return;
     if (!state44.dati && adesso2 - state44.fallitoAlle < DOPO_UN_ERRORE_MS3) return;
   }
   state44.inVolo = true;
@@ -48432,7 +48473,7 @@ function prossimoGiro3() {
   state44.sveglia = root.setTimeout?.(() => {
     state44.sveglia = 0;
     schedule12();
-  }, OGNI_QUANTO_MS3) || 0;
+  }, OGNI_QUANTO_MS4) || 0;
 }
 function ultimaPagina6() {
   const pagine = doc?.querySelectorAll?.(".page");
@@ -51541,7 +51582,7 @@ function parolaDelPeriodo(periodo) {
 }
 function periodiMarkup() {
   return PERIODI.map(
-    (periodo) => `<button type="button" class="hist-time-btn" data-hours="${periodo.ore}" data-dm-hist-periodo="${esc(periodo.chiave)}">${esc(parolaDelPeriodo(periodo))}</button>`
+    (periodo) => `<button type="button" class="hist-time-btn" data-dm-naviga data-hours="${periodo.ore}" data-dm-hist-periodo="${esc(periodo.chiave)}">${esc(parolaDelPeriodo(periodo))}</button>`
   ).join("");
 }
 function ensureControlli() {
@@ -63961,7 +64002,7 @@ function periodoMarkup(modo, finestra6) {
   const quando6 = modo === "ieri" ? dataBreve(finestra6.start) : `${t("ieri", "yesterday")} ${orario2(finestra6.start)} → ${t("oggi", "today")} ${orario2(finestra6.end)}`;
   const tasto5 = (quale, parola2) => `<button type="button" data-ur-modo="${quale}" aria-pressed="${modo === quale}"${modo === quale ? ' class="on"' : ""}>${esc(parola2)}</button>`;
   return `<div class="dm-ur-periodo">
-    <div class="dm-ur-seg" role="group" aria-label="${esc(t("Periodo", "Period"))}">
+    <div class="dm-ur-seg" data-dm-naviga role="group" aria-label="${esc(t("Periodo", "Period"))}">
       ${tasto5("24h", t("Ultime 24 ore", "Last 24 hours"))}${tasto5("ieri", t("Ieri", "Yesterday"))}
     </div>
     <div class="dm-ur-quando">${esc(quando6)}</div>
@@ -84670,7 +84711,7 @@ function skeletonMarkup3(labels) {
     </div>
   </div>
 
-  <div class="clima-page-mode-switch dm-cl-switch" role="tablist">
+  <div class="clima-page-mode-switch dm-cl-switch" data-dm-naviga role="tablist">
     ${zoneButton("freddo", labels)}
     ${zoneButton("caldo", labels)}
     ${zoneButton("termostato", labels)}
@@ -96311,6 +96352,7 @@ function ensureBarra() {
     barra3 = doc.createElement("div");
     barra3.id = "dm-srv-periodi";
     barra3.className = "dm-srv-periodi";
+    barra3.setAttribute("data-dm-naviga", "");
     barra3.innerHTML = barraMarkup4();
     sottotitolo5.after(barra3);
   }
@@ -101123,7 +101165,7 @@ var TESSERA = "minipc";
 function schedaAperta3() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab) === SCHEDA;
 }
-function siVede() {
+function siVede2() {
   return !new Set(widgetPreferences().hidden).has(TESSERA);
 }
 function salva12(mostra3) {
@@ -101171,7 +101213,7 @@ function ensureTesseraDallaScheda() {
   } else if (blocco3.parentElement !== corpo6 || blocco3.nextElementSibling !== piede) {
     corpo6.insertBefore(blocco3, piede);
   }
-  const acceso7 = siVede();
+  const acceso7 = siVede2();
   const firma2 = acceso7 ? "1" : "0";
   if (blocco3.dataset.firma === firma2) return false;
   blocco3.dataset.firma = firma2;
@@ -148527,7 +148569,7 @@ function selettoreDelPeriodo(vista2, { mese, dal, al }, gruppo2) {
       <b>${esc(nomiDeiMesi(m.anno, m.mese))}</b>
       <button type="button" data-na-mese="1" data-na-gruppo="${gruppo2}" ${ultimo ? "disabled" : ""} aria-label="${esc(t("Mese dopo", "Next month"))}">›</button></div>` : vista2 === "periodo" ? `<div class="dm-na-date"><label>${esc(t("Dal", "From"))}<input type="date" data-na-dal value="${esc(dal)}" max="${giornoScritto(Date.now())}"></label>
         <label>${esc(t("Al", "To"))}<input type="date" data-na-al value="${esc(al)}" max="${giornoScritto(Date.now())}"></label></div>` : "";
-  return `<div class="dm-na-periodo"><div class="dm-na-segmenti">${viste2.map(
+  return `<div class="dm-na-periodo" data-dm-naviga><div class="dm-na-segmenti">${viste2.map(
     ([id, nome]) => `<button type="button" data-na-vista="${id}" data-na-gruppo="${gruppo2}" aria-pressed="${id === vista2}">${esc(nome)}</button>`
   ).join("")}</div>${naviga}</div>`;
 }
@@ -152327,7 +152369,7 @@ function impiantiDiCasa() {
 }
 function stripMarkup(scelti, attiva2) {
   return scelti.map(
-    (tipo) => `<button type="button" class="dm-it-tab" data-dm-it-tab="${esc(tipo)}"
+    (tipo) => `<button type="button" class="dm-it-tab" data-dm-naviga data-dm-it-tab="${esc(tipo)}"
         aria-pressed="${tipo === attiva2}"${tipo === attiva2 ? ' data-on="true"' : ""}>
         <span class="dm-it-tab-ic" aria-hidden="true">${ICONE2[tipo] || ""}</span>
         <span>${esc(t(...ETICHETTE_TERMICHE[tipo]))}</span>
@@ -155629,7 +155671,7 @@ function fasciaMarkup4(giorni, adesso2, lingua9, calendari) {
       settimana = "";
     }
     const pallini2 = eventi.length > 3 ? `<b class="dm-calp-tanti">${eventi.length}</b>` : eventi.map((evento) => `<i style="background:${esc(tintaDi(evento, calendari))}"></i>`).join("");
-    celle.push(`<button type="button" class="dm-calp-cella" data-dm-calp-giorno="${esc(chiave2)}"
+    celle.push(`<button type="button" class="dm-calp-cella" data-dm-naviga data-dm-calp-giorno="${esc(chiave2)}"
       data-oggi="${passo === 0}" data-vuoto="${eventi.length === 0}"
       data-scelto="${state172.giorno === chiave2}">
       <span class="dm-calp-sett">${esc(settimana)}</span>
@@ -161115,7 +161157,7 @@ function accendiLaLinguetta() {
     doc.getElementById("view-ist")?.classList.add("active");
   }
 }
-function siVede2() {
+function siVede3() {
   if (!planciaVisibile()) return false;
   return Boolean(
     paginaEnergia2()?.classList.contains("active") && laVista()?.classList.contains("active")
@@ -161131,7 +161173,7 @@ function vistaDiAdesso() {
 }
 function dipingi19() {
   const dove3 = laVista()?.querySelector?.("#accumulo-wrap");
-  if (!dove3 || !siVede2()) return;
+  if (!dove3 || !siVede3()) return;
   const markup7 = paginaDellAccumulo(vistaDiAdesso());
   if (state186.firma === markup7 && dove3.firstElementChild) return;
   state186.firma = markup7;
@@ -161548,14 +161590,14 @@ function paginaDelleBollette(bolletta, adesso2 = Date.now()) {
     )
   )}</p>`;
 }
-function siVede3() {
+function siVede4() {
   return Boolean(
     planciaVisibile() && paginaEnergia3()?.classList.contains("active") && laVista2()?.classList.contains("active")
   );
 }
 function dipingi20(bolletta = laBolletta(allStates() || {}, salvate2())) {
   const dove3 = laVista2()?.querySelector?.("#bollette-wrap");
-  if (!dove3 || !siVede3()) return;
+  if (!dove3 || !siVede4()) return;
   const markup7 = paginaDelleBollette(bolletta);
   if (state187.firma === markup7 && dove3.firstElementChild) return;
   state187.firma = markup7;

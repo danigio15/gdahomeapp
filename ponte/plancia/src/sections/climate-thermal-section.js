@@ -549,7 +549,7 @@ function skeletonMarkup(labels) {
     </div>
   </div>
 
-  <div class="clima-page-mode-switch dm-cl-switch" role="tablist">
+  <div class="clima-page-mode-switch dm-cl-switch" data-dm-naviga role="tablist">
     ${zoneButton("freddo", labels)}
     ${zoneButton("caldo", labels)}
     ${zoneButton("termostato", labels)}
