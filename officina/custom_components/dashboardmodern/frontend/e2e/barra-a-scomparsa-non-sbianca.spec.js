@@ -174,8 +174,11 @@ test("scegliere la barra a scomparsa non sbianca la plancia", async ({ page }, t
    * che questa prova costruisce, senza niente configurato — e' legittimamente
    * piu' corta. Il bianco che questa prova cerca non lascia centoventi pixel
    * di pagina: ne lascia zero. */
+  /* La prima pagina si accende poco dopo che il guscio dice «pronto»: con la
+   * macchina carica la prova la guardava in quel momento e la trovava ancora
+   * spenta. Si aspetta come si aspetta dopo, poi si misura. */
+  await expect.poll(() => planciaDipinta(page).then((v) => v.pagineVisibili)).toBeGreaterThan(0);
   const prima = await planciaDipinta(page);
-  expect(prima.pagineVisibili).toBeGreaterThan(0);
   expect(prima.altezzaPaginaAttiva).toBeGreaterThan(120);
 
   await page
