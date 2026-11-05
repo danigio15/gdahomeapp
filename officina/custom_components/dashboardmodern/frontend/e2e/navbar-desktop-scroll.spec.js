@@ -81,6 +81,11 @@ const portMetrics = (page) =>
 // The dock slides in and out on hover, and a bar that is mid-transition is not
 // a stable click target. The shipped "barra fissa" mode pins it open, which is
 // the same layout with the animation out of the way.
+//
+// Pinned, it rests 8 px above the bottom edge on a computer: since 1.11.1 the
+// gap is `max(8px, system inset)` (navigation-section.js), not 18 px plus the
+// inset — the spec `la-barra-scansa-i-tasti-del-telefono` pins that rule. The
+// 18 here was the old gap, and the wait never ended.
 async function pinDock(page) {
   const nav = page.locator("nav.tabs.bottom-nav-bar");
   await page.evaluate(() => document.body.classList.add("cd-nav-fixed"));
@@ -90,7 +95,7 @@ async function pinDock(page) {
       const box = await nav.boundingBox();
       return Math.round((await page.evaluate(() => window.innerHeight)) - box.y - box.height);
     })
-    .toBe(18);
+    .toBe(8);
   return nav;
 }
 
