@@ -8254,4 +8254,5 @@ export default Object.freeze({
   "No drawing changed: they are all as they came.": "Aucun dessin modifié : ils sont tous d'origine.",
   "Saved drawings": "Dessins enregistrés",
   "the drawings whose pieces you moved with ✏️, on the computer and on the phone. «Reset» puts them back as they were.": "les dessins dont tu as déplacé des éléments avec ✏️, sur l'ordinateur et sur le téléphone. «Réinitialiser» les remet comme avant.",
+  "Traction battery (%), not the 12 V one": "Batterie de traction (%), pas celle de 12 V",
 });

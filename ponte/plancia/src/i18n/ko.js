@@ -8148,4 +8148,5 @@ export default Object.freeze({
   "No drawing changed: they are all as they came.": "바뀐 그림이 없습니다: 모두 기본 상태입니다.",
   "Saved drawings": "저장된 그림",
   "the drawings whose pieces you moved with ✏️, on the computer and on the phone. «Reset» puts them back as they were.": "✏️로 부품을 옮긴 그림(컴퓨터와 휴대폰). «재설정»은 원래대로 되돌립니다.",
+  "Traction battery (%), not the 12 V one": "구동 배터리 (%), 12 V 배터리 아님",
 });

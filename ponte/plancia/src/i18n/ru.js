@@ -8191,4 +8191,5 @@ export default Object.freeze({
   "No drawing changed: they are all as they came.": "Ни один рисунок не изменён: все как по умолчанию.",
   "Saved drawings": "Сохранённые рисунки",
   "the drawings whose pieces you moved with ✏️, on the computer and on the phone. «Reset» puts them back as they were.": "рисунки, в которых вы переместили элементы с помощью ✏️, на компьютере и на телефоне. «Сбросить» вернёт их как было.",
+  "Traction battery (%), not the 12 V one": "Тяговая батарея (%), не 12-вольтовая",
 });

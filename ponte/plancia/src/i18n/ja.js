@@ -8176,4 +8176,5 @@ export default Object.freeze({
   "No drawing changed: they are all as they came.": "変更された図はありません：すべて初期状態です。",
   "Saved drawings": "保存した図",
   "the drawings whose pieces you moved with ✏️, on the computer and on the phone. «Reset» puts them back as they were.": "✏️でパーツを動かした図（パソコンとスマートフォン）。「リセット」で元に戻します。",
+  "Traction battery (%), not the 12 V one": "駆動用バッテリー（%）、12 V バッテリーではありません",
 });

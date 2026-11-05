@@ -302,6 +302,34 @@ export function kmDeiGiorni(righe = [], inizio, fine) {
 }
 
 /**
+ * I km di ogni giorno dalla storia del contachilometri, quando le statistiche
+ * non ci sono.
+ *
+ * Il Recorder tiene le statistiche a lungo termine solo dei sensori con uno
+ * `state_class`, e non tutte le integrazioni lo mettono: quella che legge il
+ * portale europeo dei dati delle auto (EU Data Act) pubblica il
+ * contachilometri nudo. Le statistiche tornavano vuote, e la pagina scriveva
+ * «Percorsi 0 km» a chi la macchina l'aveva usata. La storia degli stati
+ * c'e' sempre (dieci giorni, di serie): fra una lettura e la successiva la
+ * crescita va al giorno della seconda.
+ *
+ * `righe` sono `{ stato, quando }` (`righeDellaStoria`), con lo stato al bordo
+ * della finestra; torna la stessa forma di `kmDeiGiorni`.
+ */
+export function kmDeiGiorniDallaStoria(righe = [], inizio, fine) {
+  const letture = (Array.isArray(righe) ? righe : [])
+    .map((r) => ({ quando: Number(r?.quando), n: numero(r?.stato) }))
+    .filter((r) => Number.isFinite(r.quando) && r.n !== null)
+    .sort((a, b) => a.quando - b.quando);
+  const crescite = [];
+  for (let i = 1; i < letture.length; i += 1) {
+    const salto = letture[i].n - letture[i - 1].n;
+    if (salto > 0) crescite.push({ start: letture[i].quando, change: salto });
+  }
+  return kmDeiGiorni(crescite, inizio, fine);
+}
+
+/**
  * I km di oggi: «in Energia di oggi deve mettere anche i km effettuati».
  *
  * `righe` sono le righe della storia del contachilometri da mezzanotte, con lo

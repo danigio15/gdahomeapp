@@ -6535,6 +6535,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "Total range (km)",
   "Total time",
   "Tracks:",
+  "Traction battery (%), not the 12 V one",
   "Train",
   "Train cancelled",
   "Trains",

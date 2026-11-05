@@ -8121,4 +8121,5 @@ export default Object.freeze({
   "No drawing changed: they are all as they came.": "لم يتغير أي رسم: كلها كما جاءت.",
   "Saved drawings": "الرسومات المحفوظة",
   "the drawings whose pieces you moved with ✏️, on the computer and on the phone. «Reset» puts them back as they were.": "الرسومات التي نقلت قطعها باستخدام ✏️، على الكمبيوتر وعلى الهاتف. «إعادة الضبط» تعيدها كما كانت.",
+  "Traction battery (%), not the 12 V one": "بطارية الجر (%)، وليست بطارية 12 فولت",
 });

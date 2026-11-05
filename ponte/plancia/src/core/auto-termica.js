@@ -582,15 +582,63 @@ export function allarmeDalloStato(stato) {
  * «mV» sono una tensione, e una tensione non si taglia a cento — sono i
  * numeri di un alternatore. Torna il numero e l'unita' con cui mostrarlo, o
  * null se non c'e' un numero. */
-export function batteriaDalloStato(stato, unita = "") {
+export function batteriaDalloStato(stato, unita = "", { classe = "" } = {}) {
   const n = numero(minuscolo(stato));
   if (n === null) return null;
   const dichiarata = pulito(unita);
   if (/^mv$/i.test(dichiarata)) return { valore: n / 1000, unita: "V" };
   if (/^v$/i.test(dichiarata)) return { valore: n, unita: "V" };
+  /* Senza unita' ma con la classe `voltage`, o con i decimali di una tensione
+   * da 12 V — «12.25» — e' una tensione: un livello non si scrive cosi'. */
+  if (!dichiarata && (minuscolo(classe) === "voltage" || sembraUnaTensione(n)))
+    return { valore: n, unita: "V" };
+  /* Senza unita', un intero da zero a cinque e' un gradino, non un
+   * percento: «Livello batteria ausiliaria» a «2» non e' una 12 V al 2%. Si
+   * mostra com'e', senza simbolo. */
+  if (!dichiarata && minuscolo(classe) !== "battery" && sembraUnGradino(n))
+    return { valore: n, unita: "" };
   if (!dichiarata || dichiarata === "%")
     return { valore: Math.max(0, Math.min(100, n)), unita: "%" };
   return { valore: n, unita: dichiarata };
+}
+
+/* I volt di una batteria da 12 V, scritti senza unita': fra 9 e 16, coi
+ * decimali. Un livello in percento e' un intero. */
+const sembraUnaTensione = (n) => !Number.isInteger(n) && n >= 9 && n <= 16;
+const sembraUnGradino = (n) => Number.isInteger(n) && n >= 0 && n <= 5;
+
+/* Le parole della batteria da 12 V, nell'entity_id o nel nome. */
+const DI_SERVIZIO =
+  /(^|[\s_.])(12\s?v|aux\w*|ausiliari\w*|servizio|starter|bordbatterie|lv)([\s_.]|$)/i;
+
+/**
+ * La «Batteria auto (%)» e' davvero la batteria di trazione?
+ *
+ * «Ho messo l'entita' della batteria ausiliaria [...] ma non li prende
+ * tutti.» Nella casella della batteria di trazione era finita la 12 V di una
+ * Cupra: `sensor.garage_cupra_..._batteria_12v` a 12,25 volt. Letta come
+ * percentuale diventava un'auto al 12%; con il motore «termica» la casella non
+ * si guardava nemmeno, e la 12 V spariva. Qui si guarda cosa dice il sensore:
+ * una tensione — l'unita' V o mV, la classe `voltage`, o una 12 V per nome —
+ * e' la batteria di servizio, e va mostrata come tale; tutto il resto e' il
+ * livello di carica, come sempre.
+ *
+ * @returns {{ soc: number|null, servizio: {valore:number, unita:string}|null }}
+ */
+export function laBatteriaDellaCasella(stato, entita = "") {
+  const grezzo = pulito(stato?.state);
+  if (!stato || /^(unknown|unavailable|none|)$/i.test(grezzo)) return { soc: null, servizio: null };
+  const attributi = stato.attributes || {};
+  const unita = pulito(attributi.unit_of_measurement);
+  const classe = minuscolo(attributi.device_class);
+  const n = numero(grezzo.replace(",", "."));
+  if (n === null) return { soc: null, servizio: null };
+  const nomi = `${pulito(entita || stato.entity_id)} ${pulito(attributi.friendly_name)}`;
+  const tensione = /^m?v$/i.test(unita) || classe === "voltage";
+  const perNome = (!unita || unita === "%") && DI_SERVIZIO.test(nomi);
+  if (tensione || perNome || (!unita && sembraUnaTensione(n)))
+    return { soc: null, servizio: batteriaDalloStato(String(n), unita, { classe }) };
+  return { soc: n, servizio: null };
 }
 
 /* La marcia, comunque la scriva l'integrazione: la lettera del cambio, che si
@@ -713,7 +761,9 @@ export function letturaTermica(mappa = {}, states = {}, resolve = null) {
           break;
         }
         case "batteria":
-          valore = batteriaDalloStato(grezzo, unita);
+          valore = batteriaDalloStato(grezzo, unita, {
+            classe: stato?.attributes?.device_class,
+          });
           break;
         case "gradi":
         case "km":

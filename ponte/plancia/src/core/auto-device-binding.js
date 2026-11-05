@@ -111,7 +111,7 @@ export const eDiGdaauto = (voce) =>
  * si riconosce con certezza. */
 const PAROLE = Object.freeze({
   batteria:
-    /\b(soc|state of charge|batteria(?! di servizio| 12)|battery(?! voltage| 12)|hv batt|traction batt)\b/i,
+    /\b(soc|state of charge|batteria(?! di servizio| 12| ausiliari)|battery(?! voltage| 12)|hv batt|traction batt)\b/i,
   batteriaServizio:
     /\b(12\s?v|aux(iliary)? batt|batteria (di )?servizio|batteria ausiliaria|starter batt|bordbatterie)\b/i,
   carburante:
@@ -140,6 +140,13 @@ const PAROLE = Object.freeze({
   esterna: /\b(outside|outdoor|external|ambient|esterna|au(ss|ß)en|exterior|ext[ée]rieur)\b/i,
   interna: /\b(interior|inside|indoor|cabin|abitacolo|interna|innen\w*|habitacle|int[ée]rieur)\b/i,
   pneumatici: /\b(tyre|tire|pneumatic|pneumatici|reifen|neum[áa]tic|pneu)\b/i,
+  freno:
+    /\b(parking brake|hand ?brake|freno (di )?stazionamento|freno a mano|feststellbremse|handbremse|frein (de stationnement|à main)|freno de (mano|estacionamiento))\b/i,
+  aggiornamento:
+    /\b(last update\w*|updated at|last (seen|report\w*|contact)|ultimo (aggiornamento|report|snapshot)|aggiornat\w*|letzte aktualisierung|derni[èe]re mise à jour|[úu]ltima actualizaci[óo]n)\b/i,
+  /* Chi parla dell'auto che manda, e chi di quello che arriva. */
+  dallAuto: /\b(veicolo|vehicle|car|auto|report\w*|fahrzeug|v[ée]hicule)\b/i,
+  ricevuto: /\b(ricevut\w*|received|snapshot|fetched|polled|empfangen|re[çc]u)\b/i,
   /* Le autonomie che NON sono quella di adesso (#2d del resoconto): quella
    * di omologazione, quella a carburante, quella totale di un'ibrida e quella
    * al limite di carica. Prima arrivavano in ordine alfabetico, e «Autonomia
@@ -299,6 +306,21 @@ export function legaLAutoAlDispositivo({ entities = [], states = {} } = {}) {
       (conClasse("voltage")(voce) || /^m?v$/i.test(unita(voce, states))) &&
       PAROLE.batteriaServizio.test(parole(voce, states)),
   );
+  /* O in volt senza dirlo: «Batteria 12V» a «12.25», senza unita' ne'
+   * classe, come la pubblica chi legge il portale europeo dei dati. I
+   * decimali di una tensione, non l'intero di un livello. */
+  prendi("dm.ev_batteria_servizio", (voce) => {
+    const n = Number(states?.[clean(voce?.entity_id)]?.state);
+    return (
+      dominio(voce) === "sensor" &&
+      !unita(voce, states) &&
+      /\b12\s?v\b/i.test(parole(voce, states)) &&
+      Number.isFinite(n) &&
+      !Number.isInteger(n) &&
+      n >= 9 &&
+      n <= 16
+    );
+  });
   /* La classe `battery` non basta da sola: ce l'hanno anche la 12 V e il
    * traguardo della ricarica, e chi arrivava prima in ordine alfabetico
    * diventava la batteria di trazione. */
@@ -599,6 +621,17 @@ export function legaLAutoAlDispositivo({ entities = [], states = {} } = {}) {
    * dell'abitacolo sono quattro gradi diversi. */
   prendi("dm.ev_temperatura_olio", (voce) => gradi(voce) && conParola("olio")(voce));
   prendi("dm.ev_temperatura_esterna", (voce) => gradi(voce) && conParola("esterna")(voce));
+  /* Anche senza unita': «Temperatura esterna» a «7.0» e' in gradi, se il
+   * nome dice temperatura e lo stato e' un numero. */
+  prendi(
+    "dm.ev_temperatura_esterna",
+    (voce) =>
+      dominio(voce) === "sensor" &&
+      !unita(voce, states) &&
+      /\b(temperatur\w*|temp)\b/i.test(parole(voce, states)) &&
+      conParola("esterna")(voce) &&
+      Number.isFinite(Number(states?.[clean(voce?.entity_id)]?.state)),
+  );
   prendi("dm.ev_temperatura_interna", (voce) => gradi(voce) && conParola("interna")(voce));
   prendi(
     "dm.ev_temperatura_batteria",
@@ -621,6 +654,42 @@ export function legaLAutoAlDispositivo({ entities = [], states = {} } = {}) {
   for (const [ref, ruota] of RUOTE)
     prendi(ref, (voce) => unaGomma(voce) && ruota.test(parole(voce, states)));
   prendi("dm.ev_pneumatici", unaGomma);
+
+  /* Il freno di stazionamento e l'ultimo aggiornamento: le caselle c'erano,
+   * ma solo GdAAuto le riempiva. Un'altra integrazione che li pubblica —
+   * «Freno di stazionamento» acceso/spento, «Ultimo aggiornamento» come
+   * istante — restava da scegliere a mano. */
+  prendi(
+    "dm.ev_freno_stazionamento",
+    (voce) =>
+      ["binary_sensor", "sensor"].includes(dominio(voce)) &&
+      !unita(voce, states) &&
+      PAROLE.freno.test(parole(voce, states)),
+  );
+  /* Di istanti un'auto connessa ne pubblica piu' d'uno: quando l'AUTO ha
+   * mandato i dati e quando sono ARRIVATI. Quello che conta e' il primo —
+   * «Veicolo ultimo report» di tre giorni fa, non «Ultimo snapshot ricevuto»
+   * di un minuto fa, che direbbe fresca un'auto ferma da giorni. */
+  const unIstante = (voce) => dominio(voce) === "sensor" && conClasse("timestamp")(voce);
+  prendi(
+    "dm.ev_ultimo_aggiornamento",
+    (voce) =>
+      unIstante(voce) &&
+      PAROLE.aggiornamento.test(parole(voce, states)) &&
+      PAROLE.dallAuto.test(parole(voce, states)) &&
+      !PAROLE.ricevuto.test(parole(voce, states)),
+  );
+  prendi(
+    "dm.ev_ultimo_aggiornamento",
+    (voce) =>
+      unIstante(voce) &&
+      PAROLE.aggiornamento.test(parole(voce, states)) &&
+      !PAROLE.ricevuto.test(parole(voce, states)),
+  );
+  prendi(
+    "dm.ev_ultimo_aggiornamento",
+    (voce) => unIstante(voce) && PAROLE.aggiornamento.test(parole(voce, states)),
+  );
 
   /* Un'auto a benzina non ha un'autonomia elettrica da distinguere: la sua
    * autonomia «a carburante» e' l'autonomia e basta, e la pagina la cerca

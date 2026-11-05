@@ -8038,4 +8038,5 @@ export default Object.freeze({
   "No drawing changed: they are all as they came.": "没有修改任何图：全部为默认状态。",
   "Saved drawings": "已保存的图",
   "the drawings whose pieces you moved with ✏️, on the computer and on the phone. «Reset» puts them back as they were.": "用 ✏️ 移动过部件的图，包括电脑和手机。「重置」会将其恢复原样。",
+  "Traction battery (%), not the 12 V one": "动力电池（%），不是 12 V 电池",
 });

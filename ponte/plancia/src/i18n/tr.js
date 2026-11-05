@@ -8174,4 +8174,5 @@ export default Object.freeze({
   "No drawing changed: they are all as they came.": "Hiçbir çizim değişmedi: hepsi varsayılan halinde.",
   "Saved drawings": "Kayıtlı çizimler",
   "the drawings whose pieces you moved with ✏️, on the computer and on the phone. «Reset» puts them back as they were.": "parçalarını ✏️ ile taşıdığın çizimler, bilgisayarda ve telefonda. «Sıfırla» onları eski haline getirir.",
+  "Traction battery (%), not the 12 V one": "Çekiş bataryası (%), 12 V akü değil",
 });

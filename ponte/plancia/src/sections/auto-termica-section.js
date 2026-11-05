@@ -187,6 +187,11 @@ export function nomeDelMotore(tipo) {
  * la chiave, cosi' chi la rinomina dalla scheda la ritrova con il suo nome. */
 export function etichettaDellaCasella(ref) {
   switch (ref) {
+    case "dm.ev_batteria_auto":
+      return t(
+        "Batteria di trazione (%), non la 12 V",
+        "Traction battery (%), not the 12 V one",
+      );
     case "dm.ev_carburante":
       return t("Livello carburante (%)", "Fuel level (%)");
     case "dm.ev_motore":
@@ -291,6 +296,12 @@ export function mettiLeCaselle() {
    * mentre dentro ci sta una moto dice il falso a chi la apre. */
   if (/auto elettrica|electric|^.?\s*auto$|^.?\s*car$/i.test(String(sezione.label || "")))
     sezione.label = `🚗 ${t("Veicoli", "Vehicles")}`;
+  /* «Batteria auto (%)» non diceva QUALE batteria: nella casa di una Cupra
+   * ci era finita la 12 V, e il livello della ausiliaria nello stato della
+   * ricarica. L'etichetta di serie dice quale si sceglie qui; quella
+   * rinominata da chi configura resta la sua (`cd_slot_labels`). */
+  const trazione = sezione.slots.find((slot) => slot?.ref === "dm.ev_batteria_auto");
+  if (trazione) trazione.lbl = etichettaDellaCasella("dm.ev_batteria_auto");
   let aggiunte = 0;
   const aggiungi = (voce) => {
     if (sezione.slots.some((slot) => slot?.ref === voce.ref)) return;
@@ -960,7 +971,7 @@ export function datiMarkup(lettura, { tipo = "", aperti = false } = {}) {
         etichettaScelta("dm.ev_batteria_servizio", t("Batteria 12 V", "12 V battery")),
         lettura.batteriaServizio,
         lettura.batteriaServizioUnita,
-        lettura.batteriaServizioUnita === "%" ? 0 : 1,
+        lettura.batteriaServizioUnita === "V" ? 1 : 0,
       );
     if (lettura.odometro !== null && lettura.odometro !== undefined)
       riga("🧭", "dm.ev_odometro", etichettaScelta("dm.ev_odometro", t("Odometro", "Odometer")), lettura.odometro, lettura.odometroUnita, 0);
@@ -1284,7 +1295,7 @@ function quadroMarkup(lettura, tipo, pillole = [], { conAltro = false } = {}) {
       lettura.batteriaServizio,
       lettura.batteriaServizioUnita === "%" ? "%" : ` ${lettura.batteriaServizioUnita}`,
       "dm.ev_batteria_servizio",
-      lettura.batteriaServizioUnita === "%" ? 0 : 1,
+      lettura.batteriaServizioUnita === "V" ? 1 : 0,
     ),
     misura("⛽", t("Consumato in totale", "Total fuel used"), lettura.carburanteTotale, " L", "dm.ev_carburante_totale"),
   ].join("");
