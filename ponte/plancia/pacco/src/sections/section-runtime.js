@@ -568,7 +568,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-F5SGS4NC.js";
+} from "../../chunk-OKGGBFQU.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -1722,7 +1722,6 @@ var SOURCE_INDEX = Object.freeze({
   "← Indietro": "← Back",
   "← Tutte le conversazioni": "← All conversations",
   "→ in fondo": "tab → at the bottom",
-  "↺ Ripristina il disegno": "↺ Reset drawing",
   "↻ Riprova": "↻ Retry",
   "＋ Aggiungi al Quadro Avvisi": "＋ Add to Alerts Panel",
   "＋ Aggiungi al Report": "＋ Add to Report",
@@ -8009,12 +8008,10 @@ var SOURCE_INDEX = Object.freeze({
   "Sugli Echo": "To the Echos",
   "Sugli Echo adesso": "On the Echos now",
   "Sul climatizzatore c'è ${trovato.entity}, ma è di tutta la macchina (${trovato.zone.length} zone): il report non lo divide fra le stanze. Se ogni zona ha la sua presa, scrivila qui.": "The air conditioner has ${trovato.entity}, but it covers the whole machine (${trovato.zone.length} zones): the report does not split it between rooms. If each zone has its own plug, write it here.",
-  "Sul computer resta com'è": "The computer keeps its own",
   "Sul PDF non ho trovato la scala: tocca i due capi di una misura che conosci.": "No scale found on the PDF: tap both ends of a length you know.",
   "Sul riposo: quanto è carica e se è attaccata alla corrente": "On the rest screen: how charged it is and whether it is plugged in",
   "Sul secondo": "Ahead of 2nd",
   "sul tablet": "on the tablet",
-  "Sul telefono resta com'è": "The phone keeps its own",
   "Sul telefono, prima di partire": "On the phone, before leaving",
   "Sull'iPad la luce della stanza non si legge: giorno e notte li dice il sole o l'orario.": "On the iPad the room light cannot be read: the sun or the hours tell day from night.",
   "Sull'iPad non c'è.": "The iPad does not have one.",
@@ -42348,16 +42345,12 @@ function vociDellaPagina(pagina3) {
   });
 }
 function ripristina2(pagina3) {
-  for (const voce3 of vociDellaPagina(pagina3))
-    for (const variante2 of VARIANTI) state35.bozza.set(casellaDel(voce3.id, variante2), {});
+  for (const voce3 of vociDellaPagina(pagina3)) {
+    const variante2 = voce3.variante?.();
+    if (VARIANTI.includes(variante2)) state35.bozza.set(casellaDel(voce3.id, variante2), {});
+  }
   rifaiGliStrati();
   ridisegnaTutti();
-}
-function ripristinaIlDisegno(voce3) {
-  state35.bozza.set(casellaDel(voce3.id, voce3.variante()), {});
-  voce3.ridisegna?.();
-  rifaiGliStrati();
-  ridisegnaLaBarra();
 }
 function metti(voce3, variante2, nodo3, punto3) {
   const casella7 = casellaDel(voce3.id, variante2);
@@ -42411,16 +42404,8 @@ var pc = (n) => `${Number(n).toFixed(3)}%`;
 function etichettaDellaVariante(variante2) {
   return variante2 === "telefono" ? t("📱 Disegno del telefono", "📱 Phone drawing") : t("🖥 Disegno del computer", "🖥 Computer drawing");
 }
-function testaMarkup4(voce3, foto) {
-  const altra = foto.variante === "telefono" ? t("Sul computer resta com'è", "The computer keeps its own") : t("Sul telefono resta com'è", "The phone keeps its own");
-  const toccato = Object.keys(posizioniInUso(voce3.id, foto.variante)).length > 0;
-  return `<span class="dm-dis-variante" title="${esc(altra)}">${esc(etichettaDellaVariante(foto.variante))}</span>
-    <button type="button" class="dm-dis-ripristina" data-dm-disegno-ripristina="${esc(voce3.id)}"${toccato ? "" : " disabled"}>${esc(
-    t("↺ Ripristina il disegno", "↺ Reset drawing")
-  )}</button>`;
-}
 function stratoMarkup(voce3, foto) {
-  let html = `<div class="dm-dis-testa">${testaMarkup4(voce3, foto)}</div><div class="dm-dis-guide" aria-hidden="true"></div>`;
+  let html = `<div class="dm-dis-guide" aria-hidden="true"></div>`;
   const px = (v, lato) => (v * foto.box[lato] / 100).toFixed(1);
   for (const nodo3 of foto.nodi) {
     const c = foto.centri.get(nodo3.id);
@@ -42469,22 +42454,6 @@ function rifaiGliStrati() {
     if (fuoco && strato?.contains?.(doc.activeElement) !== true)
       nuovo.querySelector(`[data-dm-disegno-nodo="${fuoco}"]`)?.focus?.({ preventScroll: true });
   }
-  rifaiLaTesta();
-}
-function rifaiLaTesta() {
-  let testa2 = doc.querySelector("body > [data-dm-disegno-testa]");
-  const righe4 = state35.pagina ? vociDellaPagina(state35.pagina).map((voce3) => [voce3, fotografia(voce3)]).filter(([, foto]) => foto) : [];
-  if (!righe4.length) {
-    testa2?.remove();
-    return;
-  }
-  if (!testa2) {
-    testa2 = doc.createElement("div");
-    testa2.setAttribute("data-dm-disegno-testa", "");
-    testa2.setAttribute("data-dm-non-trascinare", "");
-    doc.body.append(testa2);
-  }
-  testa2.innerHTML = righe4.map(([voce3, foto]) => `<div class="dm-dis-testa-riga">${testaMarkup4(voce3, foto)}</div>`).join("");
 }
 function muoviNelloStrato(strato, nodoId, punto3, ingombro, guide = []) {
   const maniglia2 = strato.querySelector(`[data-dm-disegno-nodo="${nodoId}"]`);
@@ -42497,10 +42466,6 @@ function muoviNelloStrato(strato, nodoId, punto3, ingombro, guide = []) {
     contenitore5.innerHTML = guide.map(
       (g) => `<i class="dm-dis-guida" data-asse="${g.asse}" style="${g.asse === "x" ? "left" : "top"}:${pc(g.valore)}"></i>`
     ).join("");
-  for (const ripristina3 of doc.querySelectorAll(
-    `[data-dm-disegno-ripristina="${strato.getAttribute("data-dm-disegno-strato")}"]`
-  ))
-    ripristina3.disabled = false;
 }
 var SOGLIA_PX = 3;
 function annullaLaPresa2({ rimetti: rimetti2 = true } = {}) {
@@ -42647,35 +42612,13 @@ function onTasto(event) {
   ridisegnaLaBarra();
 }
 function onClick6(event) {
-  const bersaglio = event.target;
-  if (!bersaglio?.closest?.("[data-dm-disegno-strato],[data-dm-disegno-testa]")) return;
+  if (!event.target?.closest?.("[data-dm-disegno-strato]")) return;
   event.preventDefault();
   event.stopPropagation();
-  const tasto5 = bersaglio.closest("[data-dm-disegno-ripristina]");
-  const voce3 = state35.registro.get(tasto5?.getAttribute("data-dm-disegno-ripristina"));
-  if (voce3 && !tasto5.disabled) ripristinaIlDisegno(voce3);
 }
 var STILE6 = `
 [data-dm-disegno-strato]{position:absolute;inset:0;z-index:30;pointer-events:none}
 [data-dm-disegno-in-modifica]{outline:2px dashed color-mix(in srgb,#0ea5e9 55%,transparent);outline-offset:4px;border-radius:12px}
-.dm-dis-testa{position:absolute;right:6px;bottom:6px;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;align-items:center;pointer-events:none;max-width:calc(100% - 12px)}
-.dm-dis-testa > *{pointer-events:auto}
-[data-dm-disegno-testa]{display:none}
-@media (max-width:600px){
-  .dm-dis-testa{display:none}
-  [data-dm-disegno-testa]{display:flex;flex-direction:column;align-items:center;gap:6px;position:fixed;left:50%;transform:translateX(-50%);
-    bottom:calc(172px + env(safe-area-inset-bottom,0px));z-index:9989;max-width:calc(100vw - 24px)}
-  .dm-dis-testa-riga{display:flex;gap:6px;align-items:center;padding:4px;border-radius:999px;
-    background:color-mix(in srgb,var(--card-bg,#fff) 88%,transparent);box-shadow:0 6px 18px rgba(15,23,42,.22);
-    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
-  html[data-dm-disegno-trascinando] [data-dm-disegno-testa]{opacity:0;pointer-events:none}
-}
-.dm-dis-variante{display:inline-flex;align-items:center;min-height:30px;padding:0 12px;border-radius:999px;font-weight:700;font-size:12.5px;line-height:1;font-family:inherit;
-  background:color-mix(in srgb,#0ea5e9 14%,var(--card-bg,#fff));color:color-mix(in srgb,#0369a1 80%,var(--text,#0f172a));
-  border:1px solid color-mix(in srgb,#0ea5e9 40%,transparent);white-space:nowrap}
-.dm-dis-ripristina{min-height:30px;padding:0 12px;border-radius:999px;font-weight:600;font-size:12.5px;line-height:1;font-family:inherit;cursor:pointer;white-space:nowrap;
-  background:var(--card-bg,#fff);color:inherit;border:1px solid color-mix(in srgb,var(--text,#0f172a) 16%,transparent)}
-.dm-dis-ripristina[disabled]{opacity:.45;cursor:default}
 .dm-dis-ombra{position:absolute;display:block;border-radius:10px;pointer-events:none;opacity:0;transition:opacity .15s ease;
   border:1.5px dashed color-mix(in srgb,#0ea5e9 70%,transparent);background:color-mix(in srgb,#0ea5e9 6%,transparent)}
 .dm-dis-maniglia:is(:hover,:focus-visible,[data-dm-presa]) .dm-dis-ombra{opacity:1}
@@ -42694,12 +42637,11 @@ html[data-dm-disegno-trascinando] [data-dm-disp-barra]{opacity:0;pointer-events:
 .dm-dis-guida{position:absolute;display:block}
 .dm-dis-guida[data-asse="x"]{top:-6px;bottom:-6px;width:0;border-left:1.5px dashed #f59e0b}
 .dm-dis-guida[data-asse="y"]{left:-6px;right:-6px;height:0;border-top:1.5px dashed #f59e0b}
-html[data-theme="dark"] .dm-dis-variante{color:#7dd3fc}
 `;
 var MARGINE_PX = 12;
 function tettoDelleBarre() {
   let tetto = root.innerHeight || doc.documentElement.clientHeight || 0;
-  for (const barra3 of doc.querySelectorAll("[data-dm-disp-barra],body > [data-dm-disegno-testa]")) {
+  for (const barra3 of doc.querySelectorAll("[data-dm-disp-barra]")) {
     const r = barra3.getBoundingClientRect?.();
     if (r && r.width > 0 && r.height > 0) tetto = Math.min(tetto, r.top);
   }
@@ -44901,7 +44843,7 @@ function gravitaDellaVasca(come2) {
   if (come2.stato === "livello" || come2.stato === "cambio") return "attenzione";
   return "quiete";
 }
-function testaMarkup5(testa2) {
+function testaMarkup4(testa2) {
   return `<div class="dm-acq-testa" data-stato="${esc(testa2.stato)}">
     <small>${esc(t("In questo momento", "Right now"))}</small>
     <strong>${esc(testa2.grande)}</strong>
@@ -45010,7 +44952,7 @@ function corpoDellaVasca(vista2) {
   const mattonelle = come2.comandi.map(mattonellaMarkup).join("");
   const testa2 = testaDellAcquario(come2);
   const nomi2 = testa2.stato === "bene" ? "" : testa2.stato === "cambio" ? cambioInParole(come2.cambio, come2.tipo) : testa2.nomi;
-  return `${testaMarkup5({ ...testa2, nomi: nomi2 })}
+  return `${testaMarkup4({ ...testa2, nomi: nomi2 })}
     ${mattonelle ? `<div class="dm-pool-tiles dm-acq-mattonelle">${mattonelle}</div>` : ""}
     ${qualitaMarkup(come2)}${cambioMarkup(come2, id)}`;
 }
@@ -46965,7 +46907,7 @@ function semaforoMarkup(come2, adesso2) {
     );
   return `<div class="dm-cont-elenco">${voci4.join("")}</div>`;
 }
-function testaMarkup6(testa2) {
+function testaMarkup5(testa2) {
   return `<div class="dm-cont-testa" data-stato="${esc(testa2.stato)}">
     <small>${esc(t("In questo momento", "Right now"))}</small>
     <strong>${esc(testa2.grande)}</strong>
@@ -46982,9 +46924,9 @@ function paginaDeiContatori(vista2) {
   if (!vista2) return vuotoMarkup5();
   const { come: come2, adesso: adesso2 } = vista2;
   const testa2 = testaDeiContatori(come2, adesso2);
-  if (come2.stato !== "normale") return `${testaMarkup6(testa2)}${semaforoMarkup(come2, adesso2)}`;
+  if (come2.stato !== "normale") return `${testaMarkup5(testa2)}${semaforoMarkup(come2, adesso2)}`;
   const schede = `${schedaDellAcqua(come2, adesso2)}${schedaDelGas(come2)}`;
-  return `${testaMarkup6(testa2)}${schede ? `<div class="dm-cont-schede">${schede}</div>` : ""}`;
+  return `${testaMarkup5(testa2)}${schede ? `<div class="dm-cont-schede">${schede}</div>` : ""}`;
 }
 function rigaDellaTessera(lettura4, come2) {
   const riga5 = {
@@ -48645,7 +48587,7 @@ function testaDellePiante(come2) {
     };
   return { stato: "attesa", grande: t("Nessuna risponde", "None answering"), nomi: "", sotto: "" };
 }
-function testaMarkup7(testa2) {
+function testaMarkup6(testa2) {
   return `<div class="dm-pian-testa" data-stato="${esc(testa2.stato)}">
     <small>${esc(t("In questo momento", "Right now"))}</small>
     <strong>${esc(testa2.grande)}</strong>
@@ -48702,7 +48644,7 @@ function paginaDellePiante(vista2) {
   if (!vista2) return vuotoMarkup6();
   const { come: come2, adesso: adesso2 } = vista2;
   const schede = come2.piante.map(schedaMarkup6).join("");
-  return `${testaMarkup7(testaDellePiante(come2))}
+  return `${testaMarkup6(testaDellePiante(come2))}
     <div class="dm-pian-elenco">${come2.piante.map((pianta) => rigaMarkup3(pianta, adesso2)).join("")}</div>
     ${schede ? `<div class="dm-pian-schede">${schede}</div>` : ""}`;
 }
@@ -49438,7 +49380,7 @@ function testaDellAccumulo(vista2) {
 function percento3(valore3) {
   return Math.max(0, Math.min(100, Math.round(valore3 ?? 0)));
 }
-function testaMarkup8(testa2) {
+function testaMarkup7(testa2) {
   const soc = testa2.soc === null ? "" : `<b class="dm-accu-soc">${esc(String(percento3(testa2.soc)))}<i>%</i></b>`;
   return `<div class="dm-accu-testa" data-stato="${esc(testa2.stato)}">
     <small>${esc(t("In questo momento", "Right now"))}</small>
@@ -49569,7 +49511,7 @@ function vuotoMarkup7() {
 }
 function paginaDellAccumulo(vista2) {
   if (!vista2) return vuotoMarkup7();
-  return `${testaMarkup8(testaDellAccumulo(vista2))}
+  return `${testaMarkup7(testaDellAccumulo(vista2))}
     <div class="dm-pool-cards dm-accu-pacchi">${vista2.pacchi.map(paccoMarkup).join("")}</div>`;
 }
 function tesseraDellAccumulo(vista2) {
@@ -61178,7 +61120,7 @@ var URGENZE = () => ({
   idea: t("idea", "idea")
 });
 var scintilla = () => `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5l1.9 5.2 5.2 1.9-5.2 1.9L12 16.7l-1.9-5.2-5.2-1.9 5.2-1.9zM18.5 14l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9zM5.5 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg>`;
-function testaMarkup9(quanti4) {
+function testaMarkup8(quanti4) {
   return `<div class="dm-ass-testa">
     <span class="dm-ass-scintilla" aria-hidden="true">${scintilla()}</span>
     <strong>${esc(t("Assistente di casa", "House assistant"))}</strong>
@@ -61212,13 +61154,13 @@ function cardMarkup3() {
   const tutti = state56.suggerimenti;
   const primo = tutti[0];
   if (!primo)
-    return `${testaMarkup9(0)}
+    return `${testaMarkup8(0)}
     <div class="dm-ass-calma"><span aria-hidden="true">${disegnoDelCatalogo("check", 28)}</span>
       <div><b>${esc(t("In casa è tutto in ordine.", "Everything is fine at home."))}</b>
       <small>${esc(t("Ti scrivo qui se c'è qualcosa da fare.", "I'll write here if something needs doing."))}</small></div>
       <button type="button" class="dm-ass-vedi" data-ass-fa="apri">${esc(t("Chiedi", "Ask"))} ›</button></div>`;
   const altri = tutti.slice(1);
-  return `${testaMarkup9(tutti.length)}
+  return `${testaMarkup8(tutti.length)}
     <div class="dm-ass-messaggio" data-urgenza="${esc(primo.urgenza)}">
       <i class="dm-ass-punto" aria-hidden="true"></i>
       <p><b>${esc(conIlPunto(primo.titolo))}</b> ${esc(primo.motivo)}</p>
@@ -63948,7 +63890,7 @@ function letta(dati, modo, adesso2) {
   if (analisi.vuoto) return { esito: "vuoto", finestra: finestra6, chiesta };
   return { esito: "pronta", finestra: finestra6, chiesta, analisi };
 }
-function testaMarkup10(dati) {
+function testaMarkup9(dati) {
   const briciole = [
     tipoTesto(dati),
     dati.stanza && dati.stanza !== dati.nome ? dati.stanza : "",
@@ -64344,7 +64286,7 @@ function disegna3() {
   const chiaveFuoco = fuoco ? `[${fuoco.name}${fuoco.value ? `="${fuoco.value}"` : ""}]` : "";
   const scorso = foglio6.scrollTop;
   foglio6.innerHTML = `<div class="dm-ur-maniglia" aria-hidden="true"></div>
-    ${testaMarkup10(dati)}
+    ${testaMarkup9(dati)}
     <div class="dm-ur-corpo">
       <div class="dm-ur-sx">
         ${adessoMarkup(dati, lettura4, vivo2, adesso2, aperto2.modo === "ieri" ? null : storia)}
@@ -119454,7 +119396,7 @@ function statoDetto(voce3, bozza3) {
   if (voce3.attiva === false) return { testo: t("Sospeso", "Paused"), tono: "sospeso" };
   return { testo: t("Attivo", "Active"), tono: "attivo", sotto: prossimoDetto(bozza3) };
 }
-function testaMarkup11(stato3) {
+function testaMarkup10(stato3) {
   const sotto = clean(stato3.sotto);
   return `<button type="button" class="dm-prg-testa" data-dm-prg-apri aria-expanded="${state114.aperto}"><span class="dm-prg-ic" aria-hidden="true">${GLIFO_CALENDARIO}</span><span class="dm-prg-tit"><span>${esc(t("Programma", "Schedule"))}</span>${sotto ? `<small data-dm-prg-prossimo>${esc(sotto)}</small>` : ""}</span><span class="dm-prg-stato" data-tono="${stato3.tono}">${esc(stato3.testo)}</span><span class="dm-prg-freccia" aria-hidden="true">${GLIFO_GIU2}</span></button>`;
 }
@@ -119467,7 +119409,7 @@ function bozzaDiversa(voce3, bozza3) {
 function programmaMarkup() {
   if (!casaHaRisposto()) {
     const guasto = clean(casa().erroreLettura);
-    const testa3 = testaMarkup11({ testo: t("Leggo…", "Reading…"), tono: "spento" });
+    const testa3 = testaMarkup10({ testo: t("Leggo…", "Reading…"), tono: "spento" });
     if (!state114.aperto) return testa3;
     return guasto ? `${testa3}<div class="dm-prg-corpo"><p class="dm-prg-nota" role="status">${esc(
       t(
@@ -119484,7 +119426,7 @@ function programmaMarkup() {
   const altri = programmiDelTermostato(elenco18, state114.entita).length - (voce3 ? 1 : 0) + comandano.length - (illeggibile ? 1 : 0);
   const blocco3 = !voce3 && !state114.appenaSalvato && (illeggibile || comandano.length) && !state114.scelta;
   if (blocco3) {
-    const testa3 = testaMarkup11({
+    const testa3 = testaMarkup10({
       testo: illeggibile ? t("Da rifare", "To redo") : t("C'è già chi lo comanda", "Already controlled"),
       tono: "sospeso"
     });
@@ -119505,7 +119447,7 @@ function programmaMarkup() {
   const verso2 = versoDellUnita();
   const sporca = bozzaDiversa(voce3, b2) && !state114.salvando && !state114.avvisoChiusura;
   const sbloccato = premium() && !casa().assente;
-  const testa2 = testaMarkup11(statoDetto(voce3, b2));
+  const testa2 = testaMarkup10(statoDetto(voce3, b2));
   if (!state114.aperto) return testa2;
   const giorni = `<div class="dm-prg-giorni" role="tablist">${[
     ["feriali", t("Lun – Ven", "Mon – Fri")],
@@ -131849,7 +131791,7 @@ function vuotoMarkup9() {
   )}</span>
   </div>`;
 }
-function testaMarkup12(conto, soglia3) {
+function testaMarkup11(conto, soglia3) {
   const stato3 = conto.scariche ? "scariche" : conto.quante ? "cariche" : "vuoto";
   const sotto = [
     conto.minima ? `${conto.minima.name} ${Math.round(conto.minima.level)}%` : "",
@@ -131883,7 +131825,7 @@ function dipingi13() {
   ).join(",")}`;
   if (state135.firma === firma2) return;
   state135.firma = firma2;
-  dove3.innerHTML = `${testaMarkup12(conto, soglia3)}
+  dove3.innerHTML = `${testaMarkup11(conto, soglia3)}
     <div class="dm-batt-elenco">${righe4.map((riga5) => rigaMarkup14(riga5, states)).join("")}</div>`;
 }
 function schedule29() {
@@ -157422,7 +157364,7 @@ function vuotoMarkup12() {
   )}</span>
   </div>`;
 }
-function testaMarkup13(conto, esclusioni) {
+function testaMarkup12(conto, esclusioni) {
   const stato3 = conto.aperti ? "aperti" : conto.totale ? "chiusi" : "vuoto";
   const sotto = [
     conto.chiusi ? conto.chiusi === 1 ? t("1 chiuso", "1 closed") : t(`${conto.chiusi} chiusi`, `${conto.chiusi} closed`) : "",
@@ -157469,7 +157411,7 @@ function dipingi16() {
   ]);
   if (state176.firma !== firma2 || !dove3.firstElementChild) {
     state176.firma = firma2;
-    dove3.innerHTML = `${testaMarkup13(conto, esclusioni)}
+    dove3.innerHTML = `${testaMarkup12(conto, esclusioni)}
       <div class="dm-varchi-elenco">${righe4.map((riga5) => rigaMarkup21(riga5, states)).join("")}</div>`;
   }
   svegliamiQuandoCambia(righe4);
@@ -158058,7 +158000,7 @@ function ultimoMovimentoTesto(righe4) {
   if (quando6 == null) return "";
   return `${t("Ultimo movimento", "Last movement")} · ${quantoTempoInParole(Math.max(0, (Date.now() - quando6) / 6e4))}`;
 }
-function testaMarkup14(conto, righe4) {
+function testaMarkup13(conto, righe4) {
   const stato3 = conto.attivi ? "attivi" : conto.totale ? "liberi" : "vuoto";
   const sotto = [
     conto.liberi ? conto.liberi === 1 ? t("1 libera", "1 free") : t(`${conto.liberi} libere`, `${conto.liberi} free`) : "",
@@ -158094,7 +158036,7 @@ function dipingi17() {
   ]);
   if (state177.firma !== firma2 || !dove3.firstElementChild) {
     state177.firma = firma2;
-    dove3.innerHTML = `${testaMarkup14(conto, righe4)}
+    dove3.innerHTML = `${testaMarkup13(conto, righe4)}
       <div class="dm-presenza-elenco">${righe4.map(rigaMarkup22).join("")}</div>`;
   }
   svegliamiQuandoCambia2(righe4);
@@ -158784,7 +158726,7 @@ function vuotoMarkup14() {
     <strong>${esc(t("Nessuna stampante configurata", "No printer configured"))}</strong>
   </div>`;
 }
-function testaMarkup15(riassunto4) {
+function testaMarkup14(riassunto4) {
   const sotto = [
     riassunto4.quante === 1 ? t("1 stampante", "1 printer") : t(`${riassunto4.quante} stampanti`, `${riassunto4.quante} printers`),
     riassunto4.mute.length ? riassunto4.mute.length === 1 ? t("1 non risponde", "1 not answering") : t(`${riassunto4.mute.length} non rispondono`, `${riassunto4.mute.length} not answering`) : ""
@@ -158812,7 +158754,7 @@ function dipingi18() {
   const firma2 = JSON.stringify([letture2, t("Pronta", "Ready")]);
   if (state179.firma !== firma2 || !dove3.firstElementChild) {
     state179.firma = firma2;
-    dove3.innerHTML = `${testaMarkup15(riassunto4)}
+    dove3.innerHTML = `${testaMarkup14(riassunto4)}
       <div class="dm-stampanti-elenco">${letture2.map(cartaMarkup).join("")}</div>`;
   }
 }

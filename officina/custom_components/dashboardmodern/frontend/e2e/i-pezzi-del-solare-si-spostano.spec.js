@@ -5,7 +5,7 @@
  * l'accumulo, la pompa si trascinano (col mouse o dalla tastiera), i tubi che
  * li toccano si ridisegnano mentre si muovono e l'acqua continua a correrci
  * dentro. Salva scrive `cd_disegni`, una scelta per il computer e una per il
- * telefono; Annulla ed Esc non scrivono niente; «↺ Ripristina il disegno»
+ * telefono; Annulla ed Esc non scrivono niente; Ripristina
  * rimette i tubi fatti a mano, gli stessi di prima.
  */
 import { expect, test } from "@playwright/test";
@@ -138,7 +138,10 @@ test("sul computer il collettore si trascina, i tubi lo seguono, Salva lo tiene"
   test.skip(testInfo.project.name !== "desktop", "il computer");
   await apri(page, testInfo);
   await entra(page);
-  await expect(page.locator(".dm-dis-variante").first()).toContainText("computer");
+  await expect(page.locator("[data-dm-disegno-strato]").first()).toHaveAttribute(
+    "data-dm-variante",
+    "computer",
+  );
   /* Dentro il disegno non c'e' un elenco da riordinare: solo le maniglie. */
   await expect(page.locator("#page-boiler .dm-st-plant [data-dm-disp-voce]")).toHaveCount(0);
   for (const nodo of ["collettore", "accumulo", "pompa", "valvola"])
@@ -221,7 +224,7 @@ test("dalla tastiera; Esc due volte esce senza scrivere niente", async ({ page }
   await expect.poll(async () => (await pompa.boundingBox()).x).toBeLessThan(prima.x + 2);
 });
 
-test("Annulla rimette tutto; «↺ Ripristina il disegno» rimette i tubi fatti a mano", async ({
+test("Annulla rimette tutto; Ripristina rimette i tubi fatti a mano", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "il computer");
@@ -247,13 +250,13 @@ test("Annulla rimette tutto; «↺ Ripristina il disegno» rimette i tubi fatti 
   expect(await tubo(page, "flow-sol-hot")).toBe(spostato);
   expect(Object.keys((await salvata(page))["solare:computer"])).toEqual(["accumulo"]);
 
-  /* ↺ Ripristina il disegno, e Salva: i tubi tornano quelli di prima, lettera per lettera. */
+  /* Ripristina, e Salva: i tubi tornano quelli di prima, lettera per lettera. */
   await entra(page);
-  await page.locator(".dm-dis-testa [data-dm-disegno-ripristina]").click();
+  await page.locator('[data-dm-disp-azione="ripristina"]').click();
   await expect.poll(() => tubo(page, "flow-sol-hot")).toBe(A_MANO.computer["flow-sol-hot"]);
   expect(await tubo(page, "flow-sol-cold")).toBe(A_MANO.computer["flow-sol-cold"]);
   expect(await trasla(page, "tank")).toBeNull();
-  await expect(page.locator(".dm-disp-conta")).toContainText("1 modifica");
+  await expect(page.locator(".dm-disp-conta")).toContainText(/modific/);
   await page.locator('[data-dm-disp-azione="salva"]').click();
   expect(await salvata(page)).toEqual({});
   await expect(page.locator("#dm-st-posizioni")).toHaveCount(0);
@@ -267,7 +270,10 @@ test("sul telefono la scelta e' del telefono: il computer resta com'era", async 
   expect(await tubo(page, "flow-sol-cold")).toBe(A_MANO.telefono["flow-sol-cold"]);
   await page.evaluate(() => document.querySelector("section.page.active")?.scrollIntoView());
   await entra(page);
-  await expect(page.locator(".dm-dis-variante").first()).toContainText("telefono");
+  await expect(page.locator("[data-dm-disegno-strato]").first()).toHaveAttribute(
+    "data-dm-variante",
+    "telefono",
+  );
   await page.locator('[data-dm-disegno-nodo="pompa"]').scrollIntoViewIfNeeded();
   await trascina(page, "pompa", 60, -30);
   await expect.poll(() => tubo(page, "flow-sol-cold")).not.toBe(A_MANO.telefono["flow-sol-cold"]);
@@ -353,7 +359,7 @@ test("le misure si spostano, le loro linee le seguono, e si scostano dai pezzi",
 
   /* Ripristina: le linee e le misure tornano quelle di serie. */
   await entra(page);
-  await page.locator('[data-dm-disegno-ripristina="solare"]').first().click();
+  await page.locator('[data-dm-disp-azione="ripristina"]').click();
   await page.locator('[data-dm-disp-azione="salva"]').click();
   await expect
     .poll(() =>

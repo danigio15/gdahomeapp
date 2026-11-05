@@ -134,7 +134,10 @@ test("sul computer la batteria si trascina, le sue linee la seguono, Salva la ti
   const prima = await linea(page, "line-solar-battery");
   const casaPrima = await linea(page, "line-solar-home");
   await entra(page);
-  await expect(page.locator(".dm-dis-variante").first()).toContainText("computer");
+  await expect(page.locator("[data-dm-disegno-strato]").first()).toHaveAttribute(
+    "data-dm-variante",
+    "computer",
+  );
   /* Ogni cerchio ha la sua maniglia: i quattro e i carichi. */
   for (const nodo of ["solare", "rete", "batteria", "casa", "carico:frigo", "carico:clima"])
     await expect(page.locator(`[data-dm-disegno-nodo="${nodo}"]`)).toHaveCount(1);
@@ -191,7 +194,7 @@ test("un carico si trascina e la sua linea da Casa lo segue; Annulla rimette tut
   await expect.poll(async () => (await centro(page, frigo)).y).toBeLessThan(daDove.y - 5);
 });
 
-test("«↺ Ripristina il disegno» rimette i cerchi e le linee di serie, lettera per lettera", async ({
+test("Ripristina rimette i cerchi e le linee di serie, lettera per lettera", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "il computer");
@@ -216,7 +219,7 @@ test("«↺ Ripristina il disegno» rimette i cerchi e le linee di serie, letter
     .toBe(85);
 
   await entra(page);
-  await page.locator(".dm-dis-testa [data-dm-disegno-ripristina]").click();
+  await page.locator('[data-dm-disp-azione="ripristina"]').click();
   await expect.poll(() => linea(page, "line-solar-battery")).toBe(diSerie);
   expect(await linea(page, "line-solar-grid")).toBe(reteDiSerie);
   await page.locator('[data-dm-disp-azione="salva"]').click();
@@ -233,7 +236,10 @@ test("sul telefono la scelta e' del telefono: il computer resta com'era", async 
   const prima = await linea(page, "m-line-solar-battery");
   await page.evaluate(() => document.querySelector("section.page.active")?.scrollIntoView());
   await entra(page);
-  await expect(page.locator(".dm-dis-variante").first()).toContainText("telefono");
+  await expect(page.locator("[data-dm-disegno-strato]").first()).toHaveAttribute(
+    "data-dm-variante",
+    "telefono",
+  );
   await trascina(page, "batteria", -10, 150);
   await expect.poll(() => linea(page, "m-line-solar-battery")).not.toBe(prima);
   await page.locator('[data-dm-disp-azione="salva"]').click();

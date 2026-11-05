@@ -114,7 +114,10 @@ test.describe("sul computer", () => {
     await nellaCasaDemo(page);
     const { pannello, dentro } = await lAnteprima(page, "sez1", "computer");
     await expect(dentro.locator("[data-dm-disegno-strato='energia']")).toBeAttached();
-    await expect(dentro.locator(".dm-dis-variante").first()).toContainText("computer");
+    await expect(dentro.locator("[data-dm-disegno-strato]").first()).toHaveAttribute(
+      "data-dm-variante",
+      "computer",
+    );
     expect(await dentro.evaluate(() => innerWidth)).toBe(1280);
 
     const linea = () => dentro.locator("#line-solar-battery").getAttribute("d");
@@ -159,7 +162,10 @@ test.describe("sul computer", () => {
     await nellaCasaDemo(page);
     const { pannello, dentro } = await lAnteprima(page, "sez1", "telefono");
     expect(await dentro.evaluate(() => innerWidth)).toBe(390);
-    await expect(dentro.locator(".dm-dis-variante").first()).toContainText("telefono");
+    await expect(dentro.locator("[data-dm-disegno-strato]").first()).toHaveAttribute(
+      "data-dm-variante",
+      "telefono",
+    );
     await trascina(page, dentro.locator('[data-dm-disegno-nodo="batteria"]'), -20, 60);
     await expect(pannello.locator(".dm-ant-conta")).toContainText("1 modifica");
     await pannello.locator('[data-dm-ant-azione="salva"]').click();
@@ -167,6 +173,42 @@ test.describe("sul computer", () => {
       .poll(() => scritta(page, "cd_disegni"))
       .toHaveProperty(["energia:telefono", "batteria"]);
     expect(Object.keys(await scritta(page, "cd_disegni"))).toEqual(["energia:telefono"]);
+  });
+
+  test("Energia: nel disegno solo le maniglie; Ripristina della barra rimette il disegno del telefono, il computer resta", async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await nellaCasaDemo(page);
+    await page.evaluate(() =>
+      localStorage.setItem(
+        "cd_disegni",
+        JSON.stringify({
+          "energia:computer": { batteria: { x: 70, y: 50 } },
+          "energia:telefono": { batteria: { x: 40, y: 60 } },
+        }),
+      ),
+    );
+    const { pannello, dentro } = await lAnteprima(page, "sez1", "telefono");
+    await expect(dentro.locator('[data-dm-disegno-nodo="batteria"]')).toBeAttached();
+    /* Niente etichetta del disegno e niente «Ripristina» suo: c'e' la barra. */
+    await expect(
+      dentro.locator(
+        ".dm-dis-variante,.dm-dis-ripristina,[data-dm-disegno-ripristina],[data-dm-disegno-testa]",
+      ),
+    ).toHaveCount(0);
+
+    await pannello.locator('[data-dm-ant-azione="ripristina"]').click();
+    await expect(pannello.locator(".dm-ant-conta")).toContainText(/modific/);
+    /* Una bozza: finche' non si salva resta tutto com'era. */
+    expect(Object.keys(await scritta(page, "cd_disegni")).sort()).toEqual([
+      "energia:computer",
+      "energia:telefono",
+    ]);
+    await pannello.locator('[data-dm-ant-azione="salva"]').click();
+    await expect
+      .poll(() => scritta(page, "cd_disegni"))
+      .toEqual({ "energia:computer": { batteria: { x: 70, y: 50 } } });
   });
 
   test("Energia: nell'anteprima del telefono la fila in fondo del flusso si vede e si prende", async ({

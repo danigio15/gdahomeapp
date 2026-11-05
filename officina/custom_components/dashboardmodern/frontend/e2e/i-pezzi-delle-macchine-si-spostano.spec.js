@@ -195,7 +195,7 @@ test("senza scelta le scene sono quelle di sempre: nessuno stile e nessun tubo t
   await expect(page.locator("#page-ups [data-dm-serie]")).toHaveCount(0);
 });
 
-test("la caldaia si trascina, mandata e ritorno la seguono; Salva la tiene, «Ripristina il disegno» la rimette", async ({
+test("la caldaia si trascina, mandata e ritorno la seguono; Salva la tiene, Ripristina la rimette", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "il computer");
@@ -203,7 +203,10 @@ test("la caldaia si trascina, mandata e ritorno la seguono; Salva la tiene, «Ri
   await apriLaMacchina(page, "caldaia");
   const diSerie = await tubi(page, CALDAIA);
   await entra(page, "boiler", "caldaia");
-  await expect(page.locator(".dm-dis-variante").first()).toContainText("computer");
+  await expect(page.locator("[data-dm-disegno-strato]").first()).toHaveAttribute(
+    "data-dm-variante",
+    "computer",
+  );
   for (const nodo of ["caldaia", "impianto", "mandata", "ritorno", "pressione"])
     await expect(page.locator(`[data-dm-disegno-nodo="${nodo}"]`)).toHaveCount(1);
   await trascina(page, "caldaia", 160, 140);
@@ -222,10 +225,10 @@ test("la caldaia si trascina, mandata e ritorno la seguono; Salva la tiene, «Ri
   expect(Math.abs(qui.y - posto.y)).toBeLessThan(1);
   expect(await tubi(page, CALDAIA)).toEqual(spostati);
 
-  /* «↺ Ripristina il disegno»: i tubi tornano quelli scritti a mano, lettera
+  /* Ripristina: i tubi tornano quelli scritti a mano, lettera
    * per lettera, e gli stili di serie. */
   await entra(page, "boiler", "caldaia");
-  await page.locator(".dm-dis-testa [data-dm-disegno-ripristina]").click();
+  await page.locator('[data-dm-disp-azione="ripristina"]').click();
   await expect.poll(() => tubi(page, CALDAIA)).toEqual(diSerie);
   await page.locator('[data-dm-disp-azione="salva"]').click();
   expect(await salvata(page)).toEqual({});
@@ -321,7 +324,10 @@ test("sul telefono la scelta e' del telefono, e l'UPS in colonna non ha maniglie
   await apriLaMacchina(page, "stufa");
   await page.evaluate(() => document.querySelector("section.page.active")?.scrollIntoView());
   await entra(page, "boiler", "stufa");
-  await expect(page.locator(".dm-dis-variante").first()).toContainText("telefono");
+  await expect(page.locator("[data-dm-disegno-strato]").first()).toHaveAttribute(
+    "data-dm-variante",
+    "telefono",
+  );
   await trascina(page, "stufa", 60, 30);
   await page.locator('[data-dm-disp-azione="salva"]').click();
   expect(Object.keys(await salvata(page))).toEqual(["stufa:telefono"]);
