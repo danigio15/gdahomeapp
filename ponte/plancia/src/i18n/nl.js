@@ -8203,4 +8203,9 @@ export default Object.freeze({
   "Heater power": "Vermogen boilerelement",
   "Panel reading": "Paneelmeting",
   "System state": "Status van de installatie",
+  "Irrigation lawn": "Gazon van de beregening",
+  "Moved pieces": "Verplaatste onderdelen",
+  "No drawing changed: they are all as they came.": "Geen tekening gewijzigd: ze zijn allemaal zoals ze kwamen.",
+  "Saved drawings": "Opgeslagen tekeningen",
+  "the drawings whose pieces you moved with ✏️, on the computer and on the phone. «Reset» puts them back as they were.": "de tekeningen waarvan je onderdelen met ✏️ hebt verplaatst, op de computer en op de telefoon. «Herstellen» zet ze terug zoals ze waren.",
 });

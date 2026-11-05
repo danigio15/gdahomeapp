@@ -8169,4 +8169,9 @@ export default Object.freeze({
   "Heater power": "Isıtıcı gücü",
   "Panel reading": "Panel ölçümü",
   "System state": "Sistem durumu",
+  "Irrigation lawn": "Sulama çimi",
+  "Moved pieces": "Taşınan parçalar",
+  "No drawing changed: they are all as they came.": "Hiçbir çizim değişmedi: hepsi varsayılan halinde.",
+  "Saved drawings": "Kayıtlı çizimler",
+  "the drawings whose pieces you moved with ✏️, on the computer and on the phone. «Reset» puts them back as they were.": "parçalarını ✏️ ile taşıdığın çizimler, bilgisayarda ve telefonda. «Sıfırla» onları eski haline getirir.",
 });

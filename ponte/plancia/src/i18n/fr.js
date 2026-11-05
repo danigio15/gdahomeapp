@@ -8249,4 +8249,9 @@ export default Object.freeze({
   "Heater power": "Puissance de la résistance",
   "Panel reading": "Relevé du panneau",
   "System state": "État de l'installation",
+  "Irrigation lawn": "Pelouse de l'arrosage",
+  "Moved pieces": "Éléments déplacés",
+  "No drawing changed: they are all as they came.": "Aucun dessin modifié : ils sont tous d'origine.",
+  "Saved drawings": "Dessins enregistrés",
+  "the drawings whose pieces you moved with ✏️, on the computer and on the phone. «Reset» puts them back as they were.": "les dessins dont tu as déplacé des éléments avec ✏️, sur l'ordinateur et sur le téléphone. «Réinitialiser» les remet comme avant.",
 });

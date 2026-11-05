@@ -83,6 +83,38 @@ export function posizioniInUso(disegno, variante) {
   return salvate()[casella] || {};
 }
 
+/* I nomi dei disegni anche prima che la loro pagina si apra (il Config li
+ * elenca da subito): gli stessi che il disegno si da' iscrivendosi. */
+const NOMI = Object.freeze({
+  solare: () => t("Solare termico", "Solar thermal"),
+  energia: () => t("Flusso energetico", "Energy flow"),
+  scaldabagno: () => t("Scaldabagno", "Water heater"),
+  caldaia: () => t("Caldaia", "Boiler"),
+  stufa: () => t("Stufa a pellet", "Pellet stove"),
+  irrigazione: () => t("Prato dell'irrigazione", "Irrigation lawn"),
+});
+
+/** Il nome di un disegno, per chi lo elenca. */
+export function nomeDelDisegno(id) {
+  try {
+    const nome = state.registro.get(id)?.nome?.();
+    if (nome) return nome;
+  } catch (_errore) {}
+  if (NOMI[id]) return NOMI[id]();
+  const ups = /^ups(?:-(\d+))?$/.exec(id || "");
+  if (ups) return ups[1] ? `${t("UPS", "UPS")} ${ups[1]}` : t("UPS", "UPS");
+  return id;
+}
+
+/** I disegni rimessi come dice `cd_disegni` adesso: dopo che qualcuno da fuori
+ * (il Config) ne ha tolto uno. */
+export function ridisegnaIDisegni() {
+  ridisegnaTutti();
+  if (state.pagina && !state.presa) rifaiGliStrati();
+}
+
+export { etichettaDellaVariante };
+
 /** Un disegno che sa farsi spostare i pezzi. */
 export function registraIlDisegno(voce) {
   if (!voce?.id) return;
@@ -556,6 +588,7 @@ const STILE = `
 .dm-dis-maniglia:hover{filter:brightness(1.08)}
 .dm-dis-maniglia:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
 html[data-dm-disegno-trascinando] .dm-dis-maniglia{cursor:grabbing}
+html[data-dm-disegno-trascinando] [data-dm-disp-barra]{opacity:0;pointer-events:none}
 [data-dm-in-mano] .dm-dis-maniglia:not([data-dm-presa]){opacity:.55}
 @media (pointer:coarse){.dm-dis-maniglia{width:44px;height:44px;margin:-22px 0 0 -22px}}
 .dm-dis-guide{position:absolute;inset:0;pointer-events:none}
@@ -564,6 +597,51 @@ html[data-dm-disegno-trascinando] .dm-dis-maniglia{cursor:grabbing}
 .dm-dis-guida[data-asse="y"]{left:-6px;right:-6px;height:0;border-top:1.5px dashed #f59e0b}
 html[data-theme="dark"] .dm-dis-variante{color:#7dd3fc}
 `;
+
+/* ── il disegno sopra le barre ──────────────────────────────────────────── */
+
+/* Entrando in modifica le barre (quella della disposizione e, sul telefono,
+ * la riga del disegno) galleggiano sul fondo dello schermo: un disegno che ci
+ * finiva sotto restava mezzo coperto, con le maniglie difficili da prendere.
+ * Si fa scorrere la pagina quanto basta perche' il disegno stia tutto sopra
+ * le barre; se e' piu' alto dello spazio che resta, si porta in cima e il
+ * resto si raggiunge scorrendo (la pagina in modifica ha il margine sotto per
+ * arrivarci). Solo entrando: dopo, la pagina la scorre chi la usa. */
+const MARGINE_PX = 12;
+
+function tettoDelleBarre() {
+  let tetto = root.innerHeight || doc.documentElement.clientHeight || 0;
+  for (const barra of doc.querySelectorAll("[data-dm-disp-barra],body > [data-dm-disegno-testa]")) {
+    const r = barra.getBoundingClientRect?.();
+    if (r && r.width > 0 && r.height > 0) tetto = Math.min(tetto, r.top);
+  }
+  return tetto;
+}
+
+function chiScorre(el) {
+  for (let n = el?.parentElement; n && n !== doc.body && n !== doc.documentElement; n = n.parentElement) {
+    const stile = root.getComputedStyle?.(n);
+    if (stile && /(auto|scroll)/.test(stile.overflowY) && n.scrollHeight > n.clientHeight + 1) return n;
+  }
+  return null;
+}
+
+export function mostraSopraLeBarre() {
+  if (!state.pagina || state.presa) return;
+  const voce = vociDellaPagina(state.pagina).find((v) => fotografia(v));
+  const scatola = voce?.scatola?.();
+  const r = scatola?.getBoundingClientRect?.();
+  if (!r) return;
+  const tetto = tettoDelleBarre();
+  if (r.top >= MARGINE_PX && r.bottom <= tetto - MARGINE_PX) return;
+  /* Ci sta: tutto sopra le barre. Non ci sta: la cima in cima. */
+  const ciSta = r.height <= tetto - 2 * MARGINE_PX;
+  const passo = ciSta && r.top >= MARGINE_PX ? r.bottom - (tetto - MARGINE_PX) : r.top - MARGINE_PX;
+  if (!passo || Math.abs(passo) < 1) return;
+  const scorre = chiScorre(scatola);
+  if (scorre) scorre.scrollTop += passo;
+  else root.scrollBy?.(0, passo);
+}
 
 /* ── installare ─────────────────────────────────────────────────────────── */
 
@@ -577,6 +655,11 @@ const MODIFICHE = Object.freeze({
     state.pagina = pagina || null;
     state.bozza.clear();
     rifaiGliStrati();
+    /* Dopo che la disposizione ha messo la sua barra. */
+    root.requestAnimationFrame?.(() => root.requestAnimationFrame?.(mostraSopraLeBarre));
+    /* E di nuovo quando la pagina si e' assestata (le maniglie, le etichette
+     * dei riquadri e un disegno che si rifa' per lo spazio nuovo). */
+    root.setTimeout?.(mostraSopraLeBarre, 350);
   },
   haQualcosa: (pagina) => vociDellaPagina(pagina).length > 0,
 });

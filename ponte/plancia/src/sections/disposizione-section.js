@@ -612,6 +612,8 @@ export function elenchiDellaPagina(pagina) {
   const trovato = contenitoreDeiRiquadri(pagina);
   if (!trovato) return fuori;
   const { contenitore, chiave } = trovato;
+  /* Per accorgersi subito di quando la pagina lo riscrive (`riquadriRiscritti`). */
+  pagina.__dmDispContenitore = contenitore;
   fuori.push({ chiave, contenitore, riquadri: true });
   for (const voce of vociDi(contenitore)) {
     /* Un riquadro che e' gia' un elenco (la griglia delle luci di una
@@ -783,6 +785,28 @@ function cambiamentoCheConta(mutazione, attiva) {
   return !nodi.length || !nodi.every((n) => n.nodeType === 1 && n.matches?.(NOSTRI_IN_PAGINA));
 }
 
+/* I riquadri della pagina davanti rifatti da capo: se ne va un riquadro che
+ * avevamo riconosciuto, o arriva qualcosa dentro il contenitore dei riquadri
+ * (o al suo posto: il primo disegno vero dopo «Arriva…»). Quello che cambia
+ * dentro una carta — un numero, un'icona — non conta. */
+function riquadriRiscritti(mutazione, attiva) {
+  if (mutazione.type !== "childList" || !attiva.contains(mutazione.target)) return false;
+  if (mutazione.target.closest?.(NOSTRI_IN_PAGINA)) return false;
+  for (const nodo of mutazione.removedNodes)
+    if (nodo.nodeType === 1 && (nodo.hasAttribute?.("data-dm-blocco") || nodo.querySelector?.("[data-dm-blocco]")))
+      return true;
+  const arrivato = [...mutazione.addedNodes].some(
+    (nodo) => nodo.nodeType === 1 && !nodo.matches?.(NOSTRI_IN_PAGINA),
+  );
+  if (!arrivato) return false;
+  /* Il contenitore non si e' ancora trovato (la pagina era vuota, o diceva
+   * «Arriva…»): qualunque cosa arrivi puo' essere il primo disegno vero. Se la
+   * pagina non ha una scelta salvata, `applicaLaDisposizione` esce subito. */
+  const contenitore = attiva.__dmDispContenitore;
+  if (!contenitore) return true;
+  return !contenitore.isConnected || mutazione.target === contenitore || mutazione.target.contains(contenitore);
+}
+
 function onMutazioni(mutazioni) {
   if (state.occupato) return;
   /* La pagina che si accende si mette a posto subito, prima che si veda.
@@ -798,8 +822,15 @@ function onMutazioni(mutazioni) {
     const pagina = mutazione.type === "attributes" ? mutazione.target : null;
     if (pagina?.matches?.("section.page.active[id^='page-']")) applicaLaDisposizione(pagina);
   }
-  if (state.coda) return;
   const attiva = state.modifica?.pagina || paginaAttiva();
+  /* E la pagina davanti che si riscrive da sola (lo Sport quando arrivano i
+   * risultati, una sezione che rifa' le sue carte): i riquadri nuovi nascono
+   * nell'ordine di serie, e aspettando il giro in coda per sessanta millesimi
+   * la pagina si vedeva di serie e poi tornava, a scatto, come l'ha messa
+   * l'utente. Se fra quello che se ne va c'e' un riquadro che avevamo
+   * riconosciuto, la pagina si rimette adesso, prima del disegno. */
+  if (attiva && mutazioni.some((m) => riquadriRiscritti(m, attiva))) applicaLaDisposizione(attiva);
+  if (state.coda) return;
   if (mutazioni.some((m) => cambiamentoCheConta(m, attiva))) inCoda();
 }
 

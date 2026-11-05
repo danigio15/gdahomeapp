@@ -125,3 +125,49 @@ test("le disposizioni salvate si vedono nel Config e si ripristinano una per una
   await expect(page.locator("[data-dm-disp-salvate]")).toContainText("Nessuna pagina cambiata");
   expect(await page.evaluate(() => localStorage.getItem("cd_disposizione"))).toBe("{}");
 });
+
+test("i disegni salvati si vedono nel Config, e si ripristinano uno per uno", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "il computer");
+  test.setTimeout(150_000);
+  await pontefinto(page);
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME_CONFIG);
+  await page.evaluate(() => {
+    localStorage.setItem(
+      "cd_disegni",
+      JSON.stringify({
+        "energia:computer": { solare: { x: 30, y: 20 }, "carico:frigo": { x: 70, y: 80 } },
+        "energia:telefono": { batteria: { x: 60, y: 50 } },
+        "irrigazione:computer": { "zona:switch.orto": { x: 40, y: 60 } },
+      }),
+    );
+  });
+  await lAuto(page);
+  await apriLeImpostazioni(page);
+  const disegni = page.locator("[data-dm-disegno-salvato]");
+  await expect(disegni).toHaveCount(3);
+  /* Ogni disegno col suo nome, lo schermo e quanti pezzi si sono spostati. */
+  const computer = page.locator('[data-dm-disegno-salvato="energia:computer"]');
+  await expect(computer).toContainText("Flusso energetico");
+  await expect(computer).toContainText("Disegno del computer");
+  await expect(computer).toContainText("Pezzi spostati: 2");
+  await expect(page.locator('[data-dm-disegno-salvato="energia:telefono"]')).toContainText(
+    "Disegno del telefono",
+  );
+  await expect(page.locator('[data-dm-disegno-salvato="irrigazione:computer"]')).toContainText(
+    "Prato dell'irrigazione",
+  );
+  /* Il disegno del computer se ne va, quello del telefono resta. */
+  await page.locator('[data-dm-disegno-ripristina-salvato="energia:computer"]').click();
+  await expect(disegni).toHaveCount(2);
+  expect(
+    Object.keys(await page.evaluate(() => JSON.parse(localStorage.getItem("cd_disegni") || "{}"))),
+  ).toEqual(["energia:telefono", "irrigazione:computer"]);
+  /* E tutti insieme. */
+  await page.locator("[data-dm-disegno-ripristina-tutti]").click();
+  await expect(page.locator("[data-dm-disegni-salvati]")).toContainText("Nessun disegno cambiato");
+  expect(await page.evaluate(() => localStorage.getItem("cd_disegni"))).toBe("{}");
+  /* Le disposizioni delle pagine non si toccano. */
+  await expect(page.locator("[data-dm-disp-salvate]")).toBeVisible();
+});

@@ -8143,4 +8143,9 @@ export default Object.freeze({
   "Heater power": "히터 출력",
   "Panel reading": "패널 측정값",
   "System state": "시스템 상태",
+  "Irrigation lawn": "관개 잔디밭",
+  "Moved pieces": "옮긴 부품",
+  "No drawing changed: they are all as they came.": "바뀐 그림이 없습니다: 모두 기본 상태입니다.",
+  "Saved drawings": "저장된 그림",
+  "the drawings whose pieces you moved with ✏️, on the computer and on the phone. «Reset» puts them back as they were.": "✏️로 부품을 옮긴 그림(컴퓨터와 휴대폰). «재설정»은 원래대로 되돌립니다.",
 });

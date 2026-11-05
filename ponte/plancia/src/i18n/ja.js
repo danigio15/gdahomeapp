@@ -8171,4 +8171,9 @@ export default Object.freeze({
   "Heater power": "ヒーター出力",
   "Panel reading": "パネルの測定値",
   "System state": "システムの状態",
+  "Irrigation lawn": "散水の芝生",
+  "Moved pieces": "移動したパーツ",
+  "No drawing changed: they are all as they came.": "変更された図はありません：すべて初期状態です。",
+  "Saved drawings": "保存した図",
+  "the drawings whose pieces you moved with ✏️, on the computer and on the phone. «Reset» puts them back as they were.": "✏️でパーツを動かした図（パソコンとスマートフォン）。「リセット」で元に戻します。",
 });

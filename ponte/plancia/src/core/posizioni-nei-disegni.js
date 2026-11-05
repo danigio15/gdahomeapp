@@ -123,6 +123,21 @@ export function senzaIlDisegno(tutta, disegno, variante) {
   return uscita;
 }
 
+/** Il nome di un pezzo per una zona del prato dell'irrigazione: la sua
+ * elettrovalvola (`zona:switch.orto`), cosi' riordinando le zone nel Config
+ * ognuna resta dove l'ha messa l'utente; senza valvola il suo posto
+ * nell'elenco. Due zone con la stessa valvola si distinguono col posto. */
+export function pezzoDellaZona(zona = {}, indice = 0, visti = new Set()) {
+  const valvola = String(zona?.entity || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_.@-]/g, "");
+  let id = /^[a-z0-9]/.test(valvola) ? `zona:${valvola}`.slice(0, 110) : `zona-${indice + 1}`;
+  if (visti.has(id)) id = `${id}@${indice + 1}`;
+  visti.add(id);
+  return id;
+}
+
 /** Una firma corta delle posizioni: uguale per due scelte uguali, vuota
  * senza scelta. */
 export function firmaDellePosizioni(posizioni) {

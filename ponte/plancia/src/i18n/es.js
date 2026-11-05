@@ -8218,4 +8218,9 @@ export default Object.freeze({
   "Heater power": "Potencia del calentador",
   "Panel reading": "Lectura del panel",
   "System state": "Estado de la instalación",
+  "Irrigation lawn": "Césped del riego",
+  "Moved pieces": "Piezas movidas",
+  "No drawing changed: they are all as they came.": "Ningún dibujo cambiado: todos están como venían.",
+  "Saved drawings": "Dibujos guardados",
+  "the drawings whose pieces you moved with ✏️, on the computer and on the phone. «Reset» puts them back as they were.": "los dibujos cuyas piezas moviste con ✏️, en el ordenador y en el teléfono. «Restablecer» los deja como estaban.",
 });

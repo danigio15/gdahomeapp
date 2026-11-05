@@ -8231,4 +8231,9 @@ export default Object.freeze({
   "Heater power": "Heizstableistung",
   "Panel reading": "Kollektorwert",
   "System state": "Anlagenstatus",
+  "Irrigation lawn": "Rasen der Bewässerung",
+  "Moved pieces": "Verschobene Teile",
+  "No drawing changed: they are all as they came.": "Keine Zeichnung geändert: alle sind wie ab Werk.",
+  "Saved drawings": "Gespeicherte Zeichnungen",
+  "the drawings whose pieces you moved with ✏️, on the computer and on the phone. «Reset» puts them back as they were.": "die Zeichnungen, deren Teile du mit ✏️ verschoben hast, am Computer und am Telefon. «Zurücksetzen» stellt sie wieder her, wie sie waren.",
 });

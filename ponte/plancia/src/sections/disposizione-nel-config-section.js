@@ -10,9 +10,18 @@
  * - le «Disposizioni salvate»: le pagine cambiate col ✏️, ognuna col suo
  *   «Ripristina», e uno per tutte. Senza, una pagina nascosta per sbaglio si
  *   poteva rimettere solo tornando su quella pagina — e un riquadro nascosto,
- *   da fuori della modifica, non si vede.
+ *   da fuori della modifica, non si vede;
+ * - i «Disegni salvati»: i disegni (il solare, il flusso dell'energia, le
+ *   macchine, il prato) a cui col ✏️ si sono spostati i pezzi, uno per ogni
+ *   disegno e per ogni schermo — computer o telefono — col suo «Ripristina».
  */
 import { CHIAVE_DISPOSIZIONE, pagineCambiate, senzaLaPagina } from "../core/disposizione.js";
+import { CHIAVE_DISEGNI, disegniPuliti, senzaIlDisegno } from "../core/posizioni-nei-disegni.js";
+import {
+  etichettaDellaVariante,
+  nomeDelDisegno,
+  ridisegnaIDisegni,
+} from "./disegni-che-si-spostano-section.js";
 import { spostaNellaLista } from "./trascina-per-riordinare.js";
 import { doc, esc, installStyle, onEditorRedraw, readJson, root, t, writeJsonIfChanged } from "./shared.js";
 
@@ -148,6 +157,75 @@ function leSalvate(corpo, dopo) {
   }
 }
 
+/* ── i disegni salvati ──────────────────────────────────────────────────── */
+
+function disegniSalvati() {
+  return Object.entries(disegniPuliti(readJson(CHIAVE_DISEGNI, {})))
+    .map(([casella, posizioni]) => {
+      const [disegno, variante] = casella.split(":");
+      return { casella, disegno, variante, pezzi: Object.keys(posizioni).length };
+    })
+    .sort(
+      (a, b) =>
+        nomeDelDisegno(a.disegno).localeCompare(nomeDelDisegno(b.disegno)) ||
+        a.variante.localeCompare(b.variante),
+    );
+}
+
+function markupDeiDisegni() {
+  const disegni = disegniSalvati();
+  const righe = disegni
+    .map(
+      ({ casella, disegno, variante, pezzi }) => `<div class="ed-row dm-disp-salvata" data-dm-disegno-salvato="${esc(casella)}">
+        <div class="ed-row-main"><div class="ed-row-new">${esc(nomeDelDisegno(disegno))}</div>
+        <div class="dm-disp-salvata-cosa">${esc(etichettaDellaVariante(variante))} · ${t("Pezzi spostati", "Moved pieces")}: ${pezzi}</div></div>
+        <button type="button" class="ed-btn-add dm-disp-salvata-tasto" data-dm-disegno-ripristina-salvato="${esc(casella)}">↺ ${t("Ripristina", "Reset")}</button>
+      </div>`,
+    )
+    .join("");
+  return `<div class="ed-intro" style="margin-top:18px;"><b>${t("Disegni salvati", "Saved drawings")}</b>: ${t(
+    "i disegni a cui col ✏️ hai spostato i pezzi, sul computer e sul telefono. «Ripristina» li rimette com'erano.",
+    "the drawings whose pieces you moved with ✏️, on the computer and on the phone. «Reset» puts them back as they were.",
+  )}</div>${
+    righe
+      ? `${righe}${
+          disegni.length > 1
+            ? `<button type="button" class="ed-btn-add dm-disp-salvata-tutte" data-dm-disegno-ripristina-tutti>↺ ${t("Ripristina tutti", "Reset all")}</button>`
+            : ""
+        }`
+      : `<div class="dm-disp-salvata-vuota">${t("Nessun disegno cambiato: sono tutti come di serie.", "No drawing changed: they are all as they came.")}</div>`
+  }`;
+}
+
+function iDisegni(corpo, dopo) {
+  let blocco = corpo.querySelector("[data-dm-disegni-salvati]");
+  if (!blocco) {
+    blocco = doc.createElement("div");
+    blocco.setAttribute("data-dm-disegni-salvati", "");
+    dopo.after(blocco);
+  }
+  const html = markupDeiDisegni();
+  if (blocco.__dmHtml !== html) {
+    blocco.innerHTML = html;
+    blocco.__dmHtml = html;
+  }
+}
+
+function rimettiIlDisegno(casella) {
+  let tutta = readJson(CHIAVE_DISEGNI, {});
+  const caselle = casella ? [casella] : disegniSalvati().map((d) => d.casella);
+  for (const una of caselle) {
+    const [disegno, variante] = una.split(":");
+    tutta = senzaIlDisegno(tutta, disegno, variante);
+  }
+  writeJsonIfChanged(CHIAVE_DISEGNI, tutta);
+  /* I disegni si rimettono subito, anche quelli delle pagine dietro. */
+  try {
+    ridisegnaIDisegni();
+  } catch (_errore) {}
+  sistema();
+}
+
 function rimettiLaPagina(pagina) {
   const pagine = pagina ? [pagina] : pagineCambiate(readJson(CHIAVE_DISPOSIZIONE, {})).map((p) => p.pagina);
   let tutta = readJson(CHIAVE_DISPOSIZIONE, {});
@@ -163,6 +241,15 @@ function rimettiLaPagina(pagina) {
 }
 
 function onClick(event) {
+  const disegno = event.target?.closest?.(
+    "[data-dm-disegno-ripristina-salvato],[data-dm-disegno-ripristina-tutti]",
+  );
+  if (disegno?.closest("#ed-body")) {
+    event.preventDefault();
+    event.stopPropagation();
+    rimettiIlDisegno(disegno.getAttribute("data-dm-disegno-ripristina-salvato") || null);
+    return;
+  }
   const tasto = event.target?.closest?.("[data-dm-disp-ripristina],[data-dm-disp-ripristina-tutte]");
   if (!tasto || !tasto.closest("#ed-body")) return;
   event.preventDefault();
@@ -176,7 +263,9 @@ function sistema() {
   const corpo = doc?.getElementById("ed-body");
   if (!corpo) return;
   const elenco = lOrdineSiTrascina(corpo);
-  if (elenco) leSalvate(corpo, elenco);
+  if (!elenco) return;
+  leSalvate(corpo, elenco);
+  iDisegni(corpo, corpo.querySelector("[data-dm-disp-salvate]") || elenco);
 }
 
 const STILE = `
@@ -204,6 +293,6 @@ export function installDisposizioneNelConfig() {
   presto();
   root.addEventListener?.("dashboardmodern:legacy-ready", presto);
   root.addEventListener?.("storage", (event) => {
-    if (event.key === CHIAVE_DISPOSIZIONE) sistema();
+    if (event.key === CHIAVE_DISPOSIZIONE || event.key === CHIAVE_DISEGNI) sistema();
   });
 }

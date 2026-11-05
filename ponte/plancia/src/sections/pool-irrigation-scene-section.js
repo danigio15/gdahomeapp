@@ -14,8 +14,10 @@ import {
   poolTargetHours as modelTargetHours,
 } from "../core/pool-model.js";
 import { inMillimetri, siPuoSaltare, verdettoDellaPioggia } from "../core/pioggia-caduta.js";
+import { pezzoDellaZona } from "../core/posizioni-nei-disegni.js";
 import { letturePioggia } from "./come-sta-la-casa-section.js";
 import { decorateEntityFields } from "./editor-slots-section.js";
+import { dopoIlPrato } from "./il-prato-che-si-sposta-section.js";
 import { extraPoolCommand } from "./pool-extra-section.js";
 import {
   allStates,
@@ -638,9 +640,9 @@ export function lawnPlacement(count, index) {
   return { x, y: back ? 40 : 76, scale: back ? 0.76 : 1 };
 }
 
-function zoneMarkup(zone, index, count) {
+function zoneMarkup(zone, index, count, pezzo) {
   const place = lawnPlacement(count, index);
-  return `<div class="dm-zone" data-dm-zone="${index}" data-state="off"
+  return `<div class="dm-zone" data-dm-zone="${index}" data-dm-pezzo="${esc(pezzo)}" data-state="off"
       style="--zx:${place.x.toFixed(2)}%;--zy:${place.y.toFixed(2)}%;--zs:${place.scale}">
     <span class="dm-zone-wet"></span>
     <span class="dm-zone-fan"></span>
@@ -654,6 +656,9 @@ function zoneMarkup(zone, index, count) {
 
 function lawnMarkup(zones) {
   const shown = zones.slice(0, MAX_LAWN_ZONES);
+  /* Il nome che la zona porta nel disegno che si sposta: la sua valvola. */
+  const visti = new Set();
+  const pezzi = shown.map((zone, index) => pezzoDellaZona(zone, index, visti));
   return `<section class="dm-lawn" data-dm-lawn aria-hidden="true">
     <span class="dm-lawn-sky"></span>
     <span class="dm-lawn-sun"></span>
@@ -665,7 +670,7 @@ function lawnMarkup(zones) {
       <span class="dm-lawn-texture"></span>
       <span class="dm-lawn-path"></span>
       <span class="dm-lawn-flowers">${repeat(9, (index) => `<i style="left:${(6 + index * 10.4).toFixed(1)}%;top:${(24 + (index % 4) * 17).toFixed(0)}%"></i>`)}</span>
-      <div class="dm-lawn-zones" data-dm-lawn-zones>${shown.map((zone, index) => zoneMarkup(zone, index, shown.length)).join("")}</div>
+      <div class="dm-lawn-zones" data-dm-lawn-zones>${shown.map((zone, index) => zoneMarkup(zone, index, shown.length, pezzi[index])).join("")}</div>
       <span class="dm-lawn-blades">${repeat(26, (index) => `<i style="left:${(index * 4).toFixed(0)}%;height:${13 + (index % 4) * 5}px;animation-delay:${(index * -0.17).toFixed(2)}s"></i>`)}</span>
     </div>
   </section>`;
@@ -912,6 +917,8 @@ function renderIrrigation() {
       ${config.zones.length > MAX_LAWN_ZONES ? `<p class="dm-irr-overflow">${esc(t(`Il prato mostra le prime ${MAX_LAWN_ZONES} zone; sotto trovi tutte le ${config.zones.length}.`, `The lawn shows the first ${MAX_LAWN_ZONES} zones; all ${config.zones.length} are listed below.`))}</p>` : ""}
     </div>`;
     grid.innerHTML = config.zones.map((zone, index) => zoneCardMarkup(zone, index)).join("");
+    /* Le zone dove le ha messe l'utente (e le maniglie, se si modifica). */
+    dopoIlPrato();
   }
 
   syncIrrigationValues(head.querySelector("[data-dm-irrigation-scene]") || head, grid, config);

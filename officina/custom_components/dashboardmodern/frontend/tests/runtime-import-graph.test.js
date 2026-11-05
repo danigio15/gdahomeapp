@@ -1670,8 +1670,10 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // energetico che si spostano, e le linee che li seguono.
   // 542 con `sections/le-macchine-che-si-spostano-section.js`: i pezzi e i
   // tubi dello scaldabagno, della caldaia, della stufa e dell'UPS.
+  // 543 con `sections/il-prato-che-si-sposta-section.js`: le zone sul prato
+  // dell'irrigazione.
   assert.ok(
-    relative.length <= 542,
+    relative.length <= 543,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

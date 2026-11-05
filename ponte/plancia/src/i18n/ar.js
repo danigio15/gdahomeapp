@@ -8116,4 +8116,9 @@ export default Object.freeze({
   "Heater power": "قدرة السخان",
   "Panel reading": "قراءة اللوح",
   "System state": "حالة النظام",
+  "Irrigation lawn": "مرج الري",
+  "Moved pieces": "قطع منقولة",
+  "No drawing changed: they are all as they came.": "لم يتغير أي رسم: كلها كما جاءت.",
+  "Saved drawings": "الرسومات المحفوظة",
+  "the drawings whose pieces you moved with ✏️, on the computer and on the phone. «Reset» puts them back as they were.": "الرسومات التي نقلت قطعها باستخدام ✏️، على الكمبيوتر وعلى الهاتف. «إعادة الضبط» تعيدها كما كانت.",
 });
