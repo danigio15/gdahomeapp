@@ -32,6 +32,10 @@ export const PASSO = 2.5;
 export const PASSO_FINE = 0.5;
 
 const ID_BUONO = /^[a-z0-9][a-z0-9_-]{0,63}$/i;
+/* Il nome di un pezzo: quelli del solare sono parole, quelli del flusso
+ * dell'energia portano l'id del carico che disegnano (`carico:frigo`,
+ * `carico:ev@dm-na`), che viene dal Config. */
+const NODO_BUONO = /^[a-z0-9][a-z0-9_.:@-]{0,127}$/i;
 const MASSIMO_NODI = 64;
 const MASSIMO_DISEGNI = 64;
 
@@ -57,7 +61,7 @@ export function posizioniPulite(mappa) {
   let quanti = 0;
   for (const [nodo, punto] of Object.entries(oggetto(mappa) || {})) {
     if (quanti >= MASSIMO_NODI) break;
-    if (!ID_BUONO.test(nodo)) continue;
+    if (!NODO_BUONO.test(nodo)) continue;
     const p = puntoPulito(punto);
     if (!p) continue;
     uscita[nodo] = p;
@@ -411,8 +415,15 @@ export function tuboIsometrico(tappe, { raggio = 16, uscita = 14 } = {}) {
 
 /** Una curva morbida fra due cerchi, dal bordo dell'uno al bordo dell'altro
  * (i cerchi del flusso dell'energia). Due cerchi che si toccano non hanno
- * curva fra loro. */
-export function curvaFraCerchi(a, ra, b, rb, { piega = 0.12 } = {}) {
+ * curva fra loro.
+ *
+ * I centri e i raggi sono in pixel, dove i cerchi sono tondi davvero; `scala`
+ * ([sx, sy]) porta il risultato nelle unita' del disegno, che possono essere
+ * stirate (`preserveAspectRatio="none"`): cosi' la linea si ferma al bordo
+ * vero anche su un disegno allungato. `verso` e' un punto da cui la curva si
+ * lascia tirare (l'angolo «prima in orizzontale, poi giu'» delle linee di
+ * serie): la piega va dalla sua parte. */
+export function curvaFraCerchi(a, ra, b, rb, { piega = 0.12, verso = null, scala = null } = {}) {
   const dx = b[0] - a[0];
   const dy = b[1] - a[1];
   const distanza = Math.hypot(dx, dy);
@@ -422,8 +433,16 @@ export function curvaFraCerchi(a, ra, b, rb, { piega = 0.12 } = {}) {
   const s = [a[0] + ux * ra, a[1] + uy * ra];
   const e = [b[0] - ux * rb, b[1] - uy * rb];
   const l = distanza - ra - rb;
-  const n = [-uy * piega * l, ux * piega * l];
+  let p = piega;
+  if (verso) {
+    const m = [(s[0] + e[0]) / 2, (s[1] + e[1]) / 2];
+    const lato = -uy * (verso[0] - m[0]) + ux * (verso[1] - m[1]);
+    p = Math.abs(lato) < 0.5 ? 0 : Math.sign(lato) * Math.abs(piega);
+  }
+  const n = [-uy * p * l, ux * p * l];
   const c1 = [s[0] + (e[0] - s[0]) / 3 + n[0], s[1] + (e[1] - s[1]) / 3 + n[1]];
   const c2 = [s[0] + ((e[0] - s[0]) * 2) / 3 + n[0], s[1] + ((e[1] - s[1]) * 2) / 3 + n[1]];
-  return `M ${uno(s[0])} ${uno(s[1])} C ${uno(c1[0])} ${uno(c1[1])}, ${uno(c2[0])} ${uno(c2[1])}, ${uno(e[0])} ${uno(e[1])}`;
+  const [sx, sy] = scala || [1, 1];
+  const q = (punto) => `${uno(punto[0] * sx)} ${uno(punto[1] * sy)}`;
+  return `M ${q(s)} C ${q(c1)}, ${q(c2)}, ${q(e)}`;
 }

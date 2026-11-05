@@ -18,6 +18,7 @@
 
 import { laPotenzaInParole, lEnergiaInParole } from "./le-unita-della-corrente.js";
 import { wattsFromState } from "./signed-energy.js";
+import { curvaFraCerchi, postoLibero, rettangolo } from "./posizioni-nei-disegni.js";
 
 export const FLOW_MAX_LOADS = 8;
 
@@ -818,4 +819,139 @@ export function flowStageModel(options = {}) {
     peak: round(peak, 3),
     nodes,
   };
+}
+
+/* ── I cerchi spostati ─────────────────────────────────────────────────────
+ *
+ * «Spostare le cose anche nei disegni, tipo i cerchi nel Flusso energetico.»
+ * Con ✏️ ogni cerchio si trascina: i quattro principali (Solare, Rete,
+ * Batteria, Casa) e ogni carico, stanze comprese — un cerchio di stanza ha un
+ * id che viene dalla stanza, e resta suo anche quando cambiano i suoi
+ * elettrodomestici. Una disposizione per il computer e una per il telefono
+ * (`cd_disegni`, «energia:computer» ed «energia:telefono»), la stessa per le
+ * tre viste: Istantaneo, Giorno e Mese hanno lo stesso disegno.
+ *
+ * Le posizioni sono il centro del cerchio in percento del palco. Le linee si
+ * ridisegnano solo quando tocca a loro — un capo spostato — e in pixel, dove
+ * i cerchi sono tondi: il palco e' stirato (`preserveAspectRatio="none"`), e
+ * una curva fatta nelle unita' del disegno si fermerebbe dentro il cerchio o
+ * prima del bordo.
+ */
+export const DISEGNO_DELL_ENERGIA = "energia";
+export const CERCHI_PRINCIPALI = Object.freeze(["solare", "rete", "batteria", "casa"]);
+export const VARIANTE_DEL_PALCO = Object.freeze({ desktop: "computer", mobile: "telefono" });
+
+/** Il nome di un carico nel disegno. */
+export const nodoDelCarico = (id) => `carico:${id}`;
+
+/* Quando il palco non si vede (la variante dell'altro schermo) le misure non
+ * ci sono: bastano quelle di serie, e quando torna visibile si rifa' tutto. */
+const MISURE_DI_SERIE = Object.freeze({
+  desktop: { larghezza: 1000, altezza: 550, casa: { x: 50, y: 50, r: 62 }, raggio: 45 },
+  mobile: { larghezza: 390, altezza: 750, casa: { x: 50, y: 46, r: 62 }, raggio: 40 },
+});
+
+const PIEGA_DEL_CARICO = 0.16;
+
+function dentroIlPalco(p) {
+  return p && Number.isFinite(p.x) && Number.isFinite(p.y);
+}
+
+/** La linea da Casa a un cerchio, dal bordo al bordo, nelle unita' del
+ * disegno di quella variante. */
+export function lineaFraCerchi(variant, da, ra, a, rb, misure, opzioni = {}) {
+  const geometry = variant === "mobile" ? MOBILE : DESKTOP;
+  const { larghezza: W, altezza: H } = misure;
+  const px = (p) => [(p.x / 100) * W, (p.y / 100) * H];
+  const [A, B] = [px(da), px(a)];
+  return curvaFraCerchi(A, ra, B, rb, {
+    piega: opzioni.piega ?? PIEGA_DEL_CARICO,
+    /* Prima in orizzontale, poi verso il cerchio: come le linee di serie. */
+    verso: opzioni.verso === undefined ? [B[0], A[1]] : opzioni.verso,
+    scala: [geometry.width / W, geometry.height / H],
+  });
+}
+
+/** Il modello con i cerchi dove li ha messi l'utente. Senza scelte (o per la
+ * variante che non ne ha) e' `model` stesso, lo stesso oggetto.
+ *
+ * `posizioni` e' { computer: {...}, telefono: {...} }; `misure` per ogni
+ * variante dice il palco in pixel, Casa (centro di serie in percento e
+ * raggio), i raggi dei carichi (`raggi`) e i cerchi principali
+ * (`principali`: { solare: { x, y, r } }), per non mettere un carico nuovo
+ * sopra un altro. */
+export function conLePosizioni(model, posizioni = {}, misure = {}) {
+  if (!model?.nodes?.length) return model;
+  let nodes = null;
+  for (const variant of ["desktop", "mobile"]) {
+    const P = posizioni?.[VARIANTE_DEL_PALCO[variant]] || {};
+    if (!Object.keys(P).length) continue;
+    const m = { ...MISURE_DI_SERIE[variant], ...(misure?.[variant] || {}) };
+    if (!(m.larghezza > 0) || !(m.altezza > 0)) continue;
+    const casa = dentroIlPalco(P.casa) ? { ...m.casa, ...P.casa } : m.casa;
+    const raggioDi = (node) => m.raggi?.[nodoDelCarico(node.id)] || m.raggio;
+    const ingombro = (r) => {
+      const x = (r / m.larghezza) * 100;
+      const y = (r / m.altezza) * 100;
+      return { sinistra: x, destra: x, sopra: y, sotto: y };
+    };
+    /* Dove sta ogni cerchio: chi ha una scelta li', gli altri dove stanno. */
+    const centri = new Map();
+    for (const node of model.nodes) {
+      const scelto = P[nodoDelCarico(node.id)];
+      centri.set(
+        node.id,
+        dentroIlPalco(scelto) ? scelto : { x: node[variant].left, y: node[variant].top },
+      );
+    }
+    const occupati = (tranne) => [
+      ...CERCHI_PRINCIPALI.map((id) => {
+        const c = dentroIlPalco(P[id]) ? P[id] : m.principali?.[id];
+        return c && rettangolo(c, ingombro(c.r || m.casa.r));
+      }).filter(Boolean),
+      ...model.nodes
+        .filter((node) => node.id !== tranne)
+        .map((node) => rettangolo(centri.get(node.id), ingombro(raggioDi(node)))),
+    ];
+    const toccati = new Set();
+    const nuovi = new Set();
+    /* Un cerchio senza posto suo, in un disegno che l'utente ha gia'
+     * sistemato (un elettrodomestico arrivato dopo, una stanza nuova): se
+     * cade sopra un altro va al posto libero piu' vicino, e in modifica si
+     * vede col bordo tratteggiato. */
+    for (const node of model.nodes) {
+      if (dentroIlPalco(P[nodoDelCarico(node.id)])) {
+        toccati.add(node.id);
+        continue;
+      }
+      const qui = centri.get(node.id);
+      const libero = postoLibero(qui, ingombro(raggioDi(node)), occupati(node.id));
+      if (Math.abs(libero.x - qui.x) > 0.01 || Math.abs(libero.y - qui.y) > 0.01) {
+        centri.set(node.id, libero);
+        toccati.add(node.id);
+        nuovi.add(node.id);
+      }
+    }
+    const casaSpostata = dentroIlPalco(P.casa);
+    const geometry = variant === "mobile" ? MOBILE : DESKTOP;
+    nodes = (nodes || model.nodes).map((node) => {
+      if (!casaSpostata && !toccati.has(node.id)) return node;
+      const c = centri.get(node.id);
+      const path =
+        lineaFraCerchi(variant, casa, casa.r, c, raggioDi(node), m) || node[variant].path;
+      return {
+        ...node,
+        ...(nuovi.has(node.id) ? { nuovo: true } : {}),
+        [variant]: {
+          ...node[variant],
+          left: round(c.x, 3),
+          top: round(c.y, 3),
+          x: round((c.x / 100) * geometry.width, 1),
+          y: round((c.y / 100) * geometry.height, 1),
+          path,
+        },
+      };
+    });
+  }
+  return nodes ? { ...model, nodes } : model;
 }

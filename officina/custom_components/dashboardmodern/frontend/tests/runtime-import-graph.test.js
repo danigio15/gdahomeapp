@@ -1666,8 +1666,10 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // ridisegnati), `core/il-disegno-del-solare.js` (dove sta ogni pezzo del
   // solare termico, il primo disegno che si sposta) e `sections/disegni-che-
   // si-spostano-section.js` (le maniglie con ✏️).
+  // 541 con `sections/il-flusso-che-si-sposta-section.js`: i cerchi del Flusso
+  // energetico che si spostano, e le linee che li seguono.
   assert.ok(
-    relative.length <= 540,
+    relative.length <= 541,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
