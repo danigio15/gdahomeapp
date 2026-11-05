@@ -4504,13 +4504,40 @@
         margin: 2px 0 2px 46px;
       }
 
-      .regole .spiega {
+      /* La spiegazione di un tasto in due tempi (`inDueTempi`) va a capo,
+         sotto la riga, in ogni elenco che la porta: nelle regole come nei
+         regali e nei codici della schermata Licenze. Stava accanto al testo,
+         come una colonna in piu', e il testo della riga — che cede tutto il
+         posto — si stringeva a una lettera per riga. Sotto l'icona, se c'e',
+         non ci va: comincia dove comincia il testo. */
+      .elenco > li[data-spiega] {
+        flex-wrap: wrap;
+      }
+
+      /* E il tasto, quando diventa «Premi ancora per confermare» (la riga
+         e' `.in-conferma`), in una colonna stretta non ruba il posto al
+         testo: il testo tiene almeno dodici rem, e se non ci stanno tutti e
+         due il tasto va a capo, a destra come gli altri. A riposo la riga
+         resta com'era. */
+      .elenco > li.in-conferma > .riga-testo {
+        flex: 1 1 12rem;
+      }
+
+      .elenco > li[data-spiega] > .riga-fine {
+        margin-left: auto;
+      }
+
+      .elenco > li[data-spiega] > .spiega {
         flex-basis: 100%;
-        margin: 0 0 0 46px;
+        margin: 0;
         color: var(--rosso);
         font-size: 0.84rem;
         font-weight: 600;
         line-height: 1.5;
+      }
+
+      .elenco > li[data-spiega] > .tondino ~ .spiega {
+        margin-left: 46px;
       }
 
       .riquadro.rischio {
@@ -9193,10 +9220,12 @@
        * che sul telefono si apre come un guasto di sistema. La spiegazione
        * va nella riga del tasto: quella che porta `data-spiega`. */
       function inDueTempi(tasto, parola, spiegazione, poi) {
-        const spiega = tasto.closest("[data-spiega]")?.querySelector(".spiega");
+        const riga = tasto.closest("[data-spiega]");
+        const spiega = riga?.querySelector(".spiega");
         if (tasto.dataset.sicuro !== "sì") {
           tasto.dataset.sicuro = "sì";
           tasto.textContent = "Premi ancora per confermare";
+          riga?.classList.add("in-conferma");
           if (spiega && spiegazione) {
             spiega.textContent = spiegazione;
             spiega.hidden = false;
@@ -9205,6 +9234,7 @@
             if (!tasto.isConnected) return;
             tasto.dataset.sicuro = "";
             tasto.textContent = parola;
+            riga?.classList.remove("in-conferma");
             if (spiega) spiega.hidden = true;
           }, 6000);
           return;
@@ -9446,20 +9476,28 @@
             CODICI_APPENA = null;
             disegna();
           };
+        /* La revoca e' subito, per una casa collegata: il centralino chiede
+         * ogni minuto al quadro le licenze tolte, chiude il fuori casa e dice
+         * alla casa di ricontrollare, e il quadro non le da' piu' il gettone
+         * (`centralino/src/revoche.js`, `test/la-revoca-arriva-subito-alla-casa`).
+         * Gli otto giorni restano solo a una casa senza internet, col gettone
+         * che ha in mano: e' quello che la tiene Premium quando la rete manca. */
+        const LA_REVOCA =
+          "La licenza smette di valere subito: il fuori casa si chiude entro un minuto e la casa torna Base appena ricontrolla. Solo una casa senza internet resta Premium finché non torna in rete, al massimo otto giorni.";
         dove.querySelectorAll("[data-revoca]").forEach((tasto) => {
           tasto.onclick = () =>
             inDueTempi(
               tasto,
               "Revoca",
               tasto.hasAttribute("data-dal-negozio")
-                ? "La licenza smette di valere entro otto giorni. È del negozio: se l'abbonamento è pagato, al rinnovo torna da sola."
-                : "La licenza smette di valere entro otto giorni: la casa torna Base quando ricontrolla.",
+                ? `${LA_REVOCA} È del negozio: se l'abbonamento è pagato, al rinnovo torna da sola.`
+                : LA_REVOCA,
               async () => {
                 await faiEpoi(tasto, async () => {
                   await chiedi(`/licenze/${encodeURIComponent(tasto.dataset.revoca)}`, {
                     method: "DELETE",
                   });
-                  avvisa("Licenza revocata: smette di valere entro otto giorni");
+                  avvisa("Licenza revocata: il fuori casa si chiude entro un minuto");
                 });
               },
             );

@@ -26,9 +26,11 @@
  * Un gettone vale al massimo **otto giorni** dalla firma, e mai oltre la
  * scadenza della licenza. La casa lo rinnova ogni sei ore: una licenza tolta
  * smette di valere entro otto giorni anche su una casa che non risponde, e una
- * casa senza internet resta Premium per otto giorni. Per il fuori casa si fa
- * prima: il centralino chiede qui le licenze tolte («Le licenze tolte, per il
- * centralino»), e chiude entro qualche minuto.
+ * casa senza internet resta Premium per otto giorni. Una casa collegata invece
+ * la perde subito: il centralino chiede qui le licenze tolte ogni minuto («Le
+ * licenze tolte, per il centralino»), chiude il fuori casa e dice alla casa di
+ * ricontrollare, e qui la casa non trova piu' il gettone
+ * (`test/la-revoca-arriva-subito-alla-casa.test.js`).
  *
  * ─── Il pacchetto ────────────────────────────────────────────────────────
  *
