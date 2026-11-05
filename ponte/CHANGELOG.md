@@ -10,6 +10,55 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.11
+
+_App GdAHome e Home Assistant._
+
+**Nell'app:**
+
+- **Una notifica non apre più Safari su «127.0.0.1»**: toccando un avviso,
+  per esempio il movimento di una telecamera, l'iPhone poteva aprire Safari
+  su un indirizzo interno che non porta da nessuna parte. Adesso la notifica
+  apre sempre la plancia dentro l'app.
+- **I termini di servizio**: su Android «Termini d'uso» nella schermata
+  Premium apre gdahome.org/termini.html; su iPhone restano quelli di Apple.
+- Gli acquisti su iPhone usano la versione aggiornata del componente di Apple.
+
+**In Home Assistant:**
+
+- **Si sposta tutto, dal Config.** In ogni sezione del Config c'è
+  l'«Anteprima»: la sezione vera, coi dati veri, dove si trascinano i
+  riquadri e gli elementi degli elenchi (col mouse, col dito o con la
+  tastiera), si nascondono con 👁, e «Salva · N» la rende così sulla plancia.
+  Si sceglie se sistemare la vista del 📱 telefono o del 🖥️ computer:
+  ognuno ha la sua. Dall'anteprima non parte nessun comando alla casa, e
+  uscendo senza salvare lo chiede. Sulla plancia non c'è nessuna matita:
+  si guarda e basta. Anche l'ordine della barra si trascina, nel Config.
+- **Si spostano anche i pezzi dei disegni**: i collettori e il serbatoio del
+  solare termico, i cerchi del flusso energetico (anche i carichi e le
+  stanze), lo scaldabagno, la caldaia, la stufa, l'UPS e le zone
+  dell'irrigazione. I tubi, i cavi e le linee si ridisegnano mentre trascini,
+  e le misure si scostano dai pezzi spostati. Se non sposti niente, i disegni
+  restano esattamente quelli di prima. In Impostazioni, «Disposizioni
+  salvate» e «Disegni salvati» elencano quello che hai cambiato, con
+  «Ripristina».
+- **Il clima rifatto**: la finestra del termostato più chiara, il Programma
+  che si legge, il report del clima come scheda e non più come finestra.
+- **L'auto legge quello che le dai**: un'integrazione che prende i dati dal
+  portale europeo (EU Data Act), come quella delle Cupra, adesso arriva tutta
+  sulla pagina Auto. La batteria 12 V in volt («12,3 V», non «12%»), il
+  contachilometri al posto dell'autonomia se l'autonomia non c'è, i km del
+  giorno dalla cronologia anche senza statistiche, la temperatura esterna e
+  l'ora in cui l'auto ha mandato i dati. Nel Config il campo dice «Batteria
+  di trazione (%), non la 12 V».
+- **La revoca di una licenza è subito**: nel quadro una licenza revocata
+  chiude il fuori casa entro un minuto e la casa torna Base appena
+  ricontrolla, anche per GdANav, senza toccare l'altra app. La riga della
+  revoca si legge, anche sul telefono.
+- Una pagina personalizzata si apre già disposta, senza mostrare per un
+  attimo quella di serie; nel Config torna il ✏️ per rinominare le voci della
+  barra; con una tavolozza scelta anche la barra in basso prende i suoi colori.
+
 ## 1.18.10
 
 _App GdAHome e Home Assistant._
