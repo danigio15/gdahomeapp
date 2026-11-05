@@ -446,3 +446,41 @@ export function curvaFraCerchi(a, ra, b, rb, { piega = 0.12, verso = null, scala
   const q = (punto) => `${uno(punto[0] * sx)} ${uno(punto[1] * sy)}`;
   return `M ${q(s)} C ${q(c1)}, ${q(c2)}, ${q(e)}`;
 }
+
+/* ── i tubi delle macchine ──────────────────────────────────────────────── *
+ *
+ * Le scene delle macchine (scaldabagno, caldaia, stufa, UPS) hanno tubi e
+ * cavi disegnati a mano fra un pezzo e l'altro, su un foglio di 1000 × 600
+ * stirato sul palco. Quando un pezzo si sposta il tubo che lo tocca si rifa'
+ * con questi conti; quello che non tocca niente di spostato resta di serie.
+ */
+
+/** Da che lato due pezzi si guardano: in orizzontale se sono piu' lontani
+ * di lato che in altezza (in pixel, dove le distanze sono vere). Il primo
+ * esce verso il secondo, il secondo guarda verso il primo. */
+export function latiFra(a, b) {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  if (Math.abs(dx) >= Math.abs(dy)) return dx >= 0 ? ["e", "w"] : ["w", "e"];
+  return dy >= 0 ? ["s", "n"] : ["n", "s"];
+}
+
+/** La canna fumaria di una stufa che sta in `centro` (unita' del foglio): sale
+ * da dietro il corpo, piega in assonometria e esce dal bordo di sopra. Con la
+ * stufa al suo posto di serie (300, 330) e' la canna di sempre. */
+export function cannaFumaria(centro) {
+  const x = centro[0];
+  const parte = centro[1] - 30;
+  const piega = Math.min(92, parte - 40);
+  return `M ${uno(x)} ${uno(parte)} L ${uno(x)} ${uno(piega)} L ${uno(x + 60)} ${uno(piega - 30)} L ${uno(x + 60)} -20`;
+}
+
+/** L'aria calda che va da `a` a `b`: una curva che esce in orizzontale e
+ * arriva in orizzontale. */
+export function soffioFra(a, b) {
+  const dx = b[0] - a[0];
+  const c1 = [a[0] + dx * 0.5, a[1]];
+  const c2 = [b[0] - dx * 0.3, b[1]];
+  const q = (p) => `${uno(p[0])} ${uno(p[1])}`;
+  return `M ${q(a)} C ${q(c1)}, ${q(c2)}, ${q(b)}`;
+}
