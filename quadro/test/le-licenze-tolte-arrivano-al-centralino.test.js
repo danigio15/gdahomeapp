@@ -11,7 +11,10 @@
  *     piu' di otto giorni;
  *  4. l'elenco e' firmato come un gettone, con `tipo: "revoche"`, e si
  *     verifica con la stessa pubblica;
- *  5. la via risponde senza chiave, e 503 a licenze spente.
+ *  5. la via risponde senza chiave, e 503 a licenze spente;
+ *  6. le gdanav di una casa ci vanno a parte, in `gdanav`, con le stesse
+ *     regole guardate fra le gdanav: una gdahome buona non tiene fuori una
+ *     gdanav tolta, e una gdanav buona non tiene fuori una gdahome tolta.
  */
 
 import { test } from "node:test";
@@ -97,12 +100,12 @@ test("dopo otto giorni non serve piu': ogni suo gettone e' gia' scaduto da se'",
   });
 });
 
-test("le scadute, i telefoni e gdanav non ci vanno", () => {
+test("le scadute, i telefoni e gdanav non ci vanno, fra le gdahome", () => {
   conLeLicenze((licenze, orologio) => {
     /* Scaduta e basta: il suo gettone porta gia' la scadenza. */
     licenze.regala({ app: "gdahome", casa: ALTRA, mesi: 1 });
     orologio.ora += 40 * GIORNO;
-    /* gdanav di una casa, tolta: al centralino non serve. */
+    /* gdanav di una casa, tolta: non e' una gdahome (sta in `gdanav`). */
     const nav = licenze.regala({ app: "gdanav", casa: TERZA, mesi: 1 });
     licenze.togli(nav.lic);
     /* E una licenza di un telefono, tolta a mano. */
@@ -114,6 +117,79 @@ test("le scadute, i telefoni e gdanav non ci vanno", () => {
     });
     licenze.togli(delTelefono.lic);
     assert.deepEqual(licenze.tolte(), []);
+    assert.deepEqual(licenze.tolte(orologio.ora, "gdahome"), []);
+  });
+});
+
+test("una gdanav tolta a una casa che non ne ha altre va fra le gdanav", () => {
+  conLeLicenze((licenze, orologio) => {
+    const nav = licenze.regala({ app: "gdanav", casa: UNA, mesi: 12 });
+    assert.deepEqual(licenze.tolte(orologio.ora, "gdanav"), [], "una gdanav buona non e' tolta");
+    licenze.togli(nav.lic);
+    assert.deepEqual(licenze.tolte(orologio.ora, "gdanav"), [nav.lic]);
+    /* E non fra le gdahome: non chiude il fuori casa. */
+    assert.deepEqual(licenze.tolte(), []);
+  });
+});
+
+test("gdanav: un'altra gdanav buona la tiene fuori, una gdahome buona no", () => {
+  conLeLicenze((licenze, orologio) => {
+    /* Due gdanav sulla stessa casa: tolta una, l'altra basta. */
+    const prima = licenze.regala({ app: "gdanav", casa: UNA, mesi: 1 });
+    licenze.regala({ app: "gdanav", casa: UNA, mesi: null });
+    licenze.togli(prima.lic);
+    assert.deepEqual(licenze.tolte(orologio.ora, "gdanav"), []);
+
+    /* gdahome buona e gdanav tolta: la gdanav ci va (la casa ricontrolla e
+     * basta), e la gdahome no — nessun fuori casa che si chiude. */
+    licenze.regala({ app: "gdahome", casa: ALTRA, mesi: 12 });
+    const nav = licenze.regala({ app: "gdanav", casa: ALTRA, mesi: 12 });
+    licenze.togli(nav.lic);
+    assert.deepEqual(licenze.tolte(orologio.ora, "gdanav"), [nav.lic]);
+    assert.deepEqual(licenze.tolte(orologio.ora, "gdahome"), []);
+
+    /* gdanav buona e gdahome tolta: la gdahome ci va, la gdanav no. */
+    const home = licenze.regala({ app: "gdahome", casa: TERZA, mesi: 12 });
+    licenze.regala({ app: "gdanav", casa: TERZA, mesi: 12 });
+    licenze.togli(home.lic);
+    assert.deepEqual(licenze.tolte(orologio.ora, "gdahome"), [home.lic]);
+    assert.deepEqual(licenze.tolte(orologio.ora, "gdanav"), [nav.lic]);
+  });
+});
+
+test("gdanav: dopo otto giorni non ci va piu', e quelle dei telefoni mai", () => {
+  conLeLicenze((licenze, orologio) => {
+    const nav = licenze.regala({ app: "gdanav", casa: UNA, mesi: 12 });
+    licenze.togli(nav.lic);
+    const delTelefono = licenze._nuova({ app: "gdanav", sog: TEL, origine: "regalo", scade: null });
+    licenze.togli(delTelefono.lic);
+    assert.deepEqual(licenze.tolte(orologio.ora, "gdanav"), [nav.lic]);
+    orologio.ora += OTTO_GIORNI;
+    assert.deepEqual(licenze.tolte(orologio.ora, "gdanav"), []);
+  });
+});
+
+test("gdanav: un abbonamento finito davvero ci va nei giorni del margine, uno che rinnova no", () => {
+  conLeLicenze((licenze, orologio) => {
+    const negozio = (sog, rinnovo) =>
+      licenze._nuova({
+        app: "gdanav",
+        sog,
+        origine: "negozio",
+        scade: orologio.ora + GIORNO,
+        negozio: { piattaforma: "android", abbonamento: { rinnovo } },
+      });
+    const disdetto = negozio(UNA, false);
+    const rinnova = negozio(ALTRA, true);
+    assert.deepEqual(licenze.tolte(orologio.ora, "gdanav"), []);
+    /* Periodo pagato finito: chi non rinnova esce subito, chi rinnova ha i
+     * suoi tre giorni. */
+    orologio.ora += GIORNO + 1;
+    assert.equal(licenze.vale(rinnova), true);
+    assert.deepEqual(licenze.tolte(orologio.ora, "gdanav"), [disdetto.lic]);
+    /* Finito il margine il gettone e' scaduto da se': non serve piu'. */
+    orologio.ora += 3 * GIORNO;
+    assert.deepEqual(licenze.tolte(orologio.ora, "gdanav"), []);
   });
 });
 
@@ -121,8 +197,18 @@ test("l'elenco e' firmato come un gettone, e non si confonde con un gettone", ()
   conLeLicenze((licenze, orologio) => {
     const una = licenze.regala({ app: "gdahome", casa: UNA, mesi: 12 });
     licenze.togli(una.lic);
+    const nav = licenze.regala({ app: "gdanav", casa: ALTRA, mesi: 12 });
+    licenze.togli(nav.lic);
     const detto = apri(licenze.elencoDelleTolte());
-    assert.deepEqual(detto, { v: 1, tipo: "revoche", emesso: orologio.ora, lic: [una.lic] });
+    /* Le gdahome in `lic`, come sempre: un centralino di prima legge quello e
+     * basta. Le gdanav a parte. */
+    assert.deepEqual(detto, {
+      v: 1,
+      tipo: "revoche",
+      emesso: orologio.ora,
+      lic: [una.lic],
+      gdanav: [nav.lic],
+    });
     /* Niente `sog` e niente `fino`: nessuno lo puo' prendere per un gettone. */
     assert.equal(detto.sog, undefined);
     assert.equal(detto.fino, undefined);

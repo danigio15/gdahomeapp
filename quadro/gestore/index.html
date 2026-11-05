@@ -8257,7 +8257,7 @@
               <span class="riga-testo"><b>${testo(diChi(una.sog))}</b><span>${testo(sotto)}</span></span>
               <span class="riga-fine">${
                 una.vale
-                  ? `<button type="button" class="tasto piccolo male" data-revoca="${testo(una.lic)}">Revoca</button>`
+                  ? `<button type="button" class="tasto piccolo male" data-revoca="${testo(una.lic)}" data-app="${testo(una.app)}"${String(una.sog || "").startsWith("tel_") ? " data-del-telefono" : ""}>Revoca</button>`
                   : '<span class="pastiglia">finita</span>'
               }</span>
               <p class="spiega" hidden></p>
@@ -8628,7 +8628,7 @@
               <span class="tondino ${suo?.stato === "disdetto" ? "ambra" : ""}">${LE_ICONE["stella"]}</span>
               <span class="riga-testo"><b>Premium · ${testo(come)}</b><span>${testo(sotto)}</span></span>
               <span class="riga-fine">
-                <button type="button" class="tasto piccolo male" data-revoca="${testo(una.lic)}"${una.origine === "negozio" ? " data-dal-negozio" : ""}>Revoca</button>
+                <button type="button" class="tasto piccolo male" data-revoca="${testo(una.lic)}" data-app="${testo(una.app)}"${una.origine === "negozio" ? " data-dal-negozio" : ""}>Revoca</button>
               </span>
               <p class="spiega" hidden></p>
             </li>`;
@@ -9481,23 +9481,49 @@
          * alla casa di ricontrollare, e il quadro non le da' piu' il gettone
          * (`centralino/src/revoche.js`, `test/la-revoca-arriva-subito-alla-casa`).
          * Gli otto giorni restano solo a una casa senza internet, col gettone
-         * che ha in mano: e' quello che la tiene Premium quando la rete manca. */
+         * che ha in mano: e' quello che la tiene Premium quando la rete manca.
+         *
+         * Una gdanav di una casa e' subito anche lei, ma il fuori casa non lo
+         * chiude: la casa ricontrolla e perde GdANav, e se ha GdAHome resta
+         * Premium (`test/la-revoca-arriva-subito-alla-casa`). Una gdanav di un
+         * telefono la richiede GdANav da se', ogni quarto d'ora e ogni volta
+         * che torna aperta. */
         const LA_REVOCA =
           "La licenza smette di valere subito: il fuori casa si chiude entro un minuto e la casa torna Base appena ricontrolla. Solo una casa senza internet resta Premium finché non torna in rete, al massimo otto giorni.";
+        const LA_REVOCA_DI_GDANAV =
+          "La licenza smette di valere subito: la casa perde GdANav Premium entro un minuto, appena ricontrolla. Il fuori casa e GdAHome Premium, se la casa ce l'ha, restano come sono. Solo una casa senza internet resta Premium finché non torna in rete, al massimo otto giorni.";
+        const LA_REVOCA_DEL_TELEFONO =
+          "La licenza smette di valere subito: GdANav la perde appena ricontrolla, quando torna aperta e comunque entro un quarto d'ora. Solo un telefono senza internet resta Premium finché non torna in rete, al massimo otto giorni.";
+        const laRevocaDi = (tasto) =>
+          tasto.dataset.app !== "gdanav"
+            ? {
+                spiega: LA_REVOCA,
+                fatto: "Licenza revocata: il fuori casa si chiude entro un minuto",
+              }
+            : tasto.hasAttribute("data-del-telefono")
+              ? {
+                  spiega: LA_REVOCA_DEL_TELEFONO,
+                  fatto: "Licenza revocata: GdANav la perde appena ricontrolla",
+                }
+              : {
+                  spiega: LA_REVOCA_DI_GDANAV,
+                  fatto: "Licenza revocata: la casa perde GdANav entro un minuto",
+                };
         dove.querySelectorAll("[data-revoca]").forEach((tasto) => {
+          const { spiega, fatto } = laRevocaDi(tasto);
           tasto.onclick = () =>
             inDueTempi(
               tasto,
               "Revoca",
               tasto.hasAttribute("data-dal-negozio")
-                ? `${LA_REVOCA} È del negozio: se l'abbonamento è pagato, al rinnovo torna da sola.`
-                : LA_REVOCA,
+                ? `${spiega} È del negozio: se l'abbonamento è pagato, al rinnovo torna da sola.`
+                : spiega,
               async () => {
                 await faiEpoi(tasto, async () => {
                   await chiedi(`/licenze/${encodeURIComponent(tasto.dataset.revoca)}`, {
                     method: "DELETE",
                   });
-                  avvisa("Licenza revocata: il fuori casa si chiude entro un minuto");
+                  avvisa(fatto);
                 });
               },
             );

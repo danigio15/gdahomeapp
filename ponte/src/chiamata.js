@@ -63,10 +63,17 @@
  * le conosce, e a un telefono che bussa in quel millisecondo non dice
  * «aggiorna l'add-on» per sbaglio.
  *
+ * Accanto al gettone gdahome va quello della gdanav di questa casa, se ne ha
+ * una sua — `"gdanav": "…"`, vuoto se no. Al fuori casa non serve: serve al
+ * centralino per sapere che e' di questa casa, quando il quadro la dice tolta.
+ * Un centralino di ieri non lo legge, e per lui il messaggio e' quello di
+ * sempre.
+ *
  * Il centralino chiede ogni minuto al quadro le licenze tolte. Se c'e' quella
- * di questa casa le manda `{"t": "ricontrolla-licenza"}`, e la casa richiede
- * subito i suoi gettoni al quadro: una licenza tolta toglie il Premium anche
- * in casa in un minuto, non al giro delle sei ore.
+ * di questa casa — la gdahome o la gdanav — le manda
+ * `{"t": "ricontrolla-licenza"}`, e la casa richiede subito i suoi gettoni al
+ * quadro: una licenza tolta toglie il Premium anche in casa in un minuto, non
+ * al giro delle sei ore.
  *
  * ─── La ricevuta di chi compra fuori casa ─────────────────────────────────
  *
@@ -164,6 +171,7 @@ export class Chiamata {
     /* L'ultimo gettone da dire al centralino. `null` vuol dire «licenze
      * spente»: non si manda niente, e il filo e' quello di sempre. */
     this._licenza = null;
+    this._gdanav = "";
     /* Chi risponde alle ricevute girate dal centralino: `index.js`. */
     this.alRicevere = null;
     /* I gettoni delle notifiche dei telefoni, per il centralino: `null` vuol
@@ -299,16 +307,18 @@ export class Chiamata {
     return this.dentro;
   }
 
-  /* La casa ha un gettone nuovo (o non ne ha piu': stringa vuota). Si dice
-   * subito se il filo e' su, e in ogni caso a ogni rientro. */
-  diLaLicenza(gettone) {
+  /* La casa ha un gettone nuovo (o non ne ha piu': stringa vuota), e accanto
+   * quello della sua gdanav. Si dice subito se il filo e' su, e in ogni caso
+   * a ogni rientro. */
+  diLaLicenza(gettone, gdanav = "") {
     this._licenza = String(gettone ?? "");
+    this._gdanav = String(gdanav ?? "");
     if (this.dentro) this._mandaLaLicenza();
   }
 
   _mandaLaLicenza() {
     if (this._licenza === null) return;
-    this._manda({ t: "licenza", tipo: "licenza", gettone: this._licenza });
+    this._manda({ t: "licenza", tipo: "licenza", gettone: this._licenza, gdanav: this._gdanav });
   }
 
   get accesa() {
@@ -398,7 +408,7 @@ export class Chiamata {
         casa: this.identita.casa,
         segreto: this.identita.segreto,
         /* Con le licenze accese, anche vuoto: vedi in cima. */
-        ...(this._licenza === null ? {} : { gettone: this._licenza }),
+        ...(this._licenza === null ? {} : { gettone: this._licenza, gdanav: this._gdanav }),
       });
     });
 

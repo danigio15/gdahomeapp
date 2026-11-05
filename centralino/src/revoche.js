@@ -21,10 +21,29 @@
  *     GET <QUADRO_REVOCHE>   →   {"elenco": "<pezzo>.<firma>"}
  *
  * firmato con la stessa chiave dei gettoni, nella stessa forma: base64url del
- * JSON `{v: 1, tipo: "revoche", emesso, lic: ["lic_…", …]}`, un punto, e la
- * firma Ed25519. Qui si verifica con la pubblica di `chiave-licenze.js`: chi
- * sta in mezzo non puo' aggiungere una licenza all'elenco, e quindi non puo'
- * chiudere fuori nessuno.
+ * JSON `{v: 1, tipo: "revoche", emesso, lic: ["lic_…", …], gdanav: […]}`,
+ * un punto, e la firma Ed25519. Qui si verifica con la pubblica di
+ * `chiave-licenze.js`: chi sta in mezzo non puo' aggiungere una licenza
+ * all'elenco, e quindi non puo' chiudere fuori nessuno.
+ *
+ * ─── gdanav ───────────────────────────────────────────────────────────────
+ *
+ * In `lic` ci sono le gdahome, e sono le sole che chiudono il fuori casa. Le
+ * gdanav tolte a una casa stanno in `gdanav`, a parte: per quelle il
+ * centralino dice alla casa di ricontrollare (`ricontrolla-licenza`), e
+ * basta, perche' gdanav il fuori casa non lo apre. La casa la sua gdanav la
+ * dice accanto al gettone gdahome (`laLicenzaDi`). Cosi' va bene in tutti e
+ * quattro i versi:
+ *
+ *  - un centralino di prima legge un elenco di adesso: `gdanav` non lo
+ *    conosce e lo lascia, e `lic` e' quello di sempre;
+ *  - un centralino di adesso legge un elenco di prima: senza `gdanav` nessuna
+ *    gdanav e' tolta, e si fa quello che si faceva;
+ *  - una casa di prima la sua gdanav non la dice: non la si ricontrolla, e
+ *    resta il giro delle sei ore;
+ *  - una gdanav tolta non chiude il fuori casa e non tocca il gdahome
+ *    Premium della casa, e una gdahome tolta non tocca la sua gdanav: il
+ *    quadro le guarda ognuna con le sue.
  *
  * ─── Perche' non chiude fuori chi non c'entra ────────────────────────────
  *
@@ -74,7 +93,8 @@ const PEZZO = /^[A-Za-z0-9_-]+$/;
 
 /**
  * Cosa dice un elenco firmato, se la firma e' giusta e la forma anche. Torna
- * `{emesso, lic}` oppure `null`. Non guarda l'ora: quello lo fa chi lo tiene.
+ * `{emesso, lic, gdanav}` oppure `null`. Non guarda l'ora: quello lo fa chi lo
+ * tiene. Un elenco di prima `gdanav` non ce l'ha: vuoto.
  */
 export function leggiLElenco(firmato, chiave) {
   if (typeof firmato !== "string" || firmato.length > RISPOSTA_MASSIMA) return null;
@@ -105,10 +125,10 @@ export function leggiLElenco(firmato, chiave) {
   if (!detto || detto.v !== 1 || detto.tipo !== "revoche") return null;
   if (!Number.isFinite(detto.emesso) || !Array.isArray(detto.lic)) return null;
   if (detto.lic.length > LICENZE_AL_MASSIMO) return null;
-  return {
-    emesso: detto.emesso,
-    lic: detto.lic.filter((una) => typeof una === "string" && LICENZA.test(una)),
-  };
+  const gdanav = Array.isArray(detto.gdanav) ? detto.gdanav : [];
+  if (gdanav.length > LICENZE_AL_MASSIMO) return null;
+  const buone = (elenco) => elenco.filter((una) => typeof una === "string" && LICENZA.test(una));
+  return { emesso: detto.emesso, lic: buone(detto.lic), gdanav: buone(gdanav) };
 }
 
 export class Revoche {
@@ -120,7 +140,8 @@ export class Revoche {
     ogni = OGNI_QUANTO,
     prendi = (...argomenti) => fetch(...argomenti),
     /* Chi vuole sapere quali licenze sono appena entrate nell'elenco: il
-     * centralino, che chiude e avvisa le case. */
+     * centralino, che chiude e avvisa le case. Si chiama con le gdahome
+     * nuove, e le gdanav nuove accanto. */
     alleNuove = null,
   } = {}) {
     this.dove = String(dove || "");
@@ -132,6 +153,8 @@ export class Revoche {
     this.alleNuove = alleNuove;
     /** Le licenze tolte dell'ultimo elenco buono, e quando l'ha firmato il quadro. */
     this.tolte = new Set();
+    /** E le gdanav tolte alle case, dello stesso elenco: non chiudono niente. */
+    this.tolteGdanav = new Set();
     this.emesso = 0;
     /** Quando l'ultimo elenco buono e' arrivato qui, per `/salute`. */
     this.arrivatoIl = null;
@@ -155,6 +178,12 @@ export class Revoche {
     return this.tolte.has(lic);
   }
 
+  /** Se questa gdanav di una casa e' stata tolta, per quello che si sa adesso. */
+  toltaGdanav(lic) {
+    if (typeof lic !== "string" || !this.vale) return false;
+    return this.tolteGdanav.has(lic);
+  }
+
   quante() {
     return this.vale ? this.tolte.size : 0;
   }
@@ -175,13 +204,16 @@ export class Revoche {
     }
     if (detto.emesso < this.emesso) return false;
     const prima = this.vale ? this.tolte : new Set();
+    const primaGdanav = this.vale ? this.tolteGdanav : new Set();
     this.tolte = new Set(detto.lic);
+    this.tolteGdanav = new Set(detto.gdanav);
     this.emesso = detto.emesso;
     this.arrivatoIl = ora;
     const nuove = detto.lic.filter((una) => !prima.has(una));
-    if (nuove.length) {
+    const nuoveGdanav = detto.gdanav.filter((una) => !primaGdanav.has(una));
+    if (nuove.length || nuoveGdanav.length) {
       try {
-        this.alleNuove?.(nuove);
+        this.alleNuove?.(nuove, nuoveGdanav);
       } catch (errore) {
         this.registro.attenzione(`le licenze appena tolte: ${errore?.message || errore}`);
       }

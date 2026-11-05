@@ -251,6 +251,14 @@ export class Licenze extends EventEmitter {
     return typeof gettone === "string" ? gettone : "";
   }
 
+  /* E quello della gdanav di questa casa, se ne ha una sua: il centralino non
+   * ci apre niente, ma cosi' sa a quale casa dire di ricontrollare quando il
+   * quadro la dice tolta (`centralino/src/revoche.js`). */
+  get gettoneGdanavPerIlCentralino() {
+    const gettone = this.gettoni.gdanav;
+    return typeof gettone === "string" ? gettone : "";
+  }
+
   /* Com'e' messa questa casa, per l'app (`ponte/licenza/stato`) e per la
    * console. La forma e' quella del contratto — `{gdahome: {attiva, scade,
    * origine}, gdanav: {…}, gettoni: {…}}` — con due righe in piu' che servono a
@@ -345,8 +353,8 @@ export class Licenze extends EventEmitter {
     return this.rinnova();
   }
 
-  /** Il centralino dice che la licenza di questa casa e' stata tolta
-   * (`chiamata.js`, `ricontrolla-licenza`). Si richiede subito; se una
+  /** Il centralino dice che una licenza di questa casa — la gdahome o la
+   * gdanav — e' stata tolta (`chiamata.js`, `ricontrolla-licenza`). Si richiede subito; se una
    * domanda e' appena partita si richiede appena il freno del quadro lo
    * lascia fare, perche' quella poteva essere di un attimo prima della
    * revoca. Non toglie niente da se': i gettoni li cambia solo il quadro. */
