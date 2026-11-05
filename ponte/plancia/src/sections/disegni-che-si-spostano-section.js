@@ -618,8 +618,14 @@ function tettoDelleBarre() {
   return tetto;
 }
 
+/* Anche il `body` puo' essere chi scorre: sul telefono la plancia lo tiene
+ * alto quanto lo schermo, con `overflow-y:auto`, e la pagina scorre li'
+ * dentro. Scorrendo la finestra al suo posto il `body` saliva tutto intero e
+ * tagliava quello che aveva sotto il suo bordo: nella casa demo, in modifica,
+ * la fila in fondo al flusso energetico (Boiler, Climatizzazione, Wallbox)
+ * spariva a meta' schermo, con una fascia vuota fino alle barre. */
 function chiScorre(el) {
-  for (let n = el?.parentElement; n && n !== doc.body && n !== doc.documentElement; n = n.parentElement) {
+  for (let n = el?.parentElement; n && n !== doc.documentElement; n = n.parentElement) {
     const stile = root.getComputedStyle?.(n);
     if (stile && /(auto|scroll)/.test(stile.overflowY) && n.scrollHeight > n.clientHeight + 1) return n;
   }

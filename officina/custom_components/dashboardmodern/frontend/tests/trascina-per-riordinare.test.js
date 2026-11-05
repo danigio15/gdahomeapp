@@ -13,6 +13,7 @@ import {
   riduzioneDelFantasma,
   scorrimentoAlBordo,
   spostaNellaLista,
+  versoIlBordo,
 } from "../src/sections/trascina-per-riordinare.js";
 
 /* Cinque righe alte 40 con 8 di spazio: centri a 20, 68, 116, 164, 212. */
@@ -130,4 +131,15 @@ test("il fantasma sta nello schermo: largo al piu' lo schermo, alto al piu' il 4
     0.35,
     "mai cosi' piccolo da non leggersi",
   );
+});
+
+test("la pagina scorre solo verso dove va il puntatore", () => {
+  /* Una voce presa gia' dentro il bordo in basso (sopra la barra della
+   * modifica): finche' il puntatore non scende, la pagina non corre giu'. */
+  assert.equal(versoIlBordo(12, 0), 0, "fermo nel bordo: niente");
+  assert.equal(versoIlBordo(12, -200), 0, "sta salendo: il bordo in basso non conta");
+  assert.equal(versoIlBordo(12, 30), 12, "scende davvero: scorre");
+  assert.equal(versoIlBordo(-12, 5), 0, "in alto, appena preso: niente");
+  assert.equal(versoIlBordo(-12, -40), -12, "sale davvero: scorre su");
+  assert.equal(versoIlBordo(0, 300), 0, "lontano dai bordi resta fermo");
 });

@@ -33,6 +33,7 @@ import {
   chiaveCorta,
   conLaScelta,
   disposizioneDelleVoci,
+  ordineDaCuiSiParte,
   disposizionePulita,
   idDellaVoce,
   idUnici,
@@ -1265,11 +1266,26 @@ function elencoDi(contenitore) {
   return elenchiDellaPagina(state.modifica.pagina).find((e) => e.chiave === chiave) || null;
 }
 
+/* L'ordine da cui parte uno spostamento: quello che la bozza (o la scelta
+ * salvata) vuole, non quello che si legge nel DOM.
+ *
+ * Trascinando col dito o col mouse la griglia sposta la voce **mentre** si
+ * trascina — il posto di arrivo tratteggiato — e al rilascio dice «da 1 a 0»
+ * su una fila che e' gia' «0, 1». Leggere il DOM e rifare lo spostamento lo
+ * faceva due volte: uno spostamento di un posto tornava indietro (il fumo
+ * sopra l'antifurto restava sotto, e Salva scriveva `{}`), uno piu' lungo
+ * finiva nel posto sbagliato. Dalla tastiera il DOM resta fermo fino al
+ * rilascio, e l'ordine voluto e' lo stesso: vale per tutti e due. */
+function ordineVoluto(contenitore, voci, scelta) {
+  const presenti = voci.map((v) => v.id);
+  return ordineDaCuiSiParte(contenitore.__dmDispSerie, presenti, scelta);
+}
+
 function cambiaLaBozza(elenco, muta) {
   const m = state.modifica;
   const scelta = sceltaInMano(elenco);
   const voci = vociDi(elenco.contenitore);
-  scelta.ordine = voci.map((v) => v.id);
+  scelta.ordine = ordineVoluto(elenco.contenitore, voci, scelta);
   muta(scelta, voci);
   m.bozze.set(elenco.chiave, scelta);
   m.cambiate.add(elenco.chiave);

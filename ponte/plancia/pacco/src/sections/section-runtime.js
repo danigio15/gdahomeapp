@@ -567,7 +567,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-ASSZUM7H.js";
+} from "../../chunk-ZCCM4YW5.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -12995,6 +12995,11 @@ function onPointerDown(event) {
     }
   }
 }
+function versoIlBordo(passo, spostato, soglia3 = 8) {
+  if (passo > 0 && spostato <= soglia3) return 0;
+  if (passo < 0 && spostato >= -soglia3) return 0;
+  return passo;
+}
 function parti(presa) {
   presa.partito = true;
   const { rect, da } = presa;
@@ -13039,14 +13044,14 @@ function parti(presa) {
     if (presa.griglia) piazzaIlFantasma(presa);
     if (presa.diLato) {
       const r = presa.diLato.getBoundingClientRect();
-      const passo = scorrimentoAlBordo(presa.x, r.left, r.right);
+      const passo = versoIlBordo(scorrimentoAlBordo(presa.x, r.left, r.right), presa.x - presa.x0);
       if (passo) {
         presa.diLato.scrollLeft += passo;
         disegna2(presa);
       }
     } else if (!presa.ferma) {
       const { alto, basso } = bordiDi(presa.scroller);
-      const passo = scorrimentoAlBordo(presa.y, alto, basso);
+      const passo = versoIlBordo(scorrimentoAlBordo(presa.y, alto, basso), presa.y - presa.y0);
       if (passo) {
         presa.scroller.scrollTop += passo;
         disegna2(presa);
@@ -13230,6 +13235,7 @@ var STILE_RIORDINA = `
   [data-dm-maniglia]:not([data-dm-riordina-riga]):hover{color:var(--text,#0f172a);background:color-mix(in srgb,var(--text-dim,#94a3b8) 14%,transparent)}
   [data-dm-maniglia]:not([data-dm-riordina-riga]):focus-visible{outline:2px solid var(--accent,#3b82f6);outline-offset:1px}
   [data-dm-riordina][data-dm-trascinando="true"]{user-select:none;-webkit-user-select:none}
+  html[data-dm-trascinando="true"],html[data-dm-trascinando="true"] *{overflow-anchor:none}
   [data-dm-riordina] [data-dm-fa-posto="true"]{transition:transform .18s cubic-bezier(.2,.8,.2,1)}
   [data-dm-riordina] [data-dm-presa="true"]{
     position:relative;z-index:5;cursor:grabbing;
@@ -40644,6 +40650,13 @@ function disposizioneDelleVoci(diSerie, scelta3) {
     misura: pulito76.misure[id] || "normale"
   }));
 }
+function ordineDaCuiSiParte(diSerie, presenti, scelta3) {
+  const ci = new Set(presenti);
+  const serie2 = (Array.isArray(diSerie) ? diSerie : presenti).filter((id) => ci.has(id));
+  for (const id of presenti)
+    if (!serie2.includes(id)) serie2.splice(Math.min(presenti.indexOf(id), serie2.length), 0, id);
+  return disposizioneDelleVoci(serie2, scelta3).map((d) => d.id);
+}
 function eComeDiSerie(diSerie, scelta3) {
   const voci4 = pulita2(diSerie);
   const pulito76 = sceltaPulita(scelta3);
@@ -41919,11 +41932,15 @@ function elencoDi(contenitore5) {
   if (!chiave2 || !state34.modifica) return null;
   return elenchiDellaPagina(state34.modifica.pagina).find((e) => e.chiave === chiave2) || null;
 }
+function ordineVoluto(contenitore5, voci4, scelta3) {
+  const presenti = voci4.map((v) => v.id);
+  return ordineDaCuiSiParte(contenitore5.__dmDispSerie, presenti, scelta3);
+}
 function cambiaLaBozza(elenco18, muta) {
   const m = state34.modifica;
   const scelta3 = sceltaInMano(elenco18);
   const voci4 = vociDi(elenco18.contenitore);
-  scelta3.ordine = voci4.map((v) => v.id);
+  scelta3.ordine = ordineVoluto(elenco18.contenitore, voci4, scelta3);
   muta(scelta3, voci4);
   m.bozze.set(elenco18.chiave, scelta3);
   m.cambiate.add(elenco18.chiave);
@@ -42732,7 +42749,7 @@ function tettoDelleBarre() {
   return tetto;
 }
 function chiScorre2(el) {
-  for (let n = el?.parentElement; n && n !== doc.body && n !== doc.documentElement; n = n.parentElement) {
+  for (let n = el?.parentElement; n && n !== doc.documentElement; n = n.parentElement) {
     const stile8 = root.getComputedStyle?.(n);
     if (stile8 && /(auto|scroll)/.test(stile8.overflowY) && n.scrollHeight > n.clientHeight + 1) return n;
   }

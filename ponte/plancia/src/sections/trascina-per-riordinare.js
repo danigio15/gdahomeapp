@@ -331,6 +331,24 @@ function onPointerDown(event) {
   }
 }
 
+/* La pagina scorre da sola solo verso dove il puntatore sta andando. Una
+ * voce presa vicino al fondo (sopra la barra della modifica, il riquadro
+ * della Formula 1 nello Sport) partiva gia' dentro il bordo: la pagina
+ * correva fino in fondo appena si cominciava a trascinare, e la voce che si
+ * voleva portare su finiva sotto a tutto. */
+export function versoIlBordo(passo, spostato, soglia = 8) {
+  if (passo > 0 && spostato <= soglia) return 0;
+  if (passo < 0 && spostato >= -soglia) return 0;
+  return passo;
+}
+
+/* Mentre si trascina il browser non tiene ferma la pagina sulle carte che
+ * si vedono (lo «scroll anchoring»): nella griglia la voce presa cambia posto
+ * mentre la si porta, e una voce alta come lo schermo (un riquadro dello
+ * Sport) che passava sopra quella che si guardava faceva saltare la pagina di
+ * tutta la sua altezza — la Formula 1 portata sopra il calcio finiva in fondo
+ * alla pagina, e tornava sotto. Lo spegne la regola su
+ * `html[data-dm-trascinando]` in `STILE_RIORDINA`. */
 function parti(presa) {
   presa.partito = true;
   const { rect, da } = presa;
@@ -393,14 +411,14 @@ function parti(presa) {
     if (presa.griglia) piazzaIlFantasma(presa);
     if (presa.diLato) {
       const r = presa.diLato.getBoundingClientRect();
-      const passo = scorrimentoAlBordo(presa.x, r.left, r.right);
+      const passo = versoIlBordo(scorrimentoAlBordo(presa.x, r.left, r.right), presa.x - presa.x0);
       if (passo) {
         presa.diLato.scrollLeft += passo;
         disegna(presa);
       }
     } else if (!presa.ferma) {
       const { alto, basso } = bordiDi(presa.scroller);
-      const passo = scorrimentoAlBordo(presa.y, alto, basso);
+      const passo = versoIlBordo(scorrimentoAlBordo(presa.y, alto, basso), presa.y - presa.y0);
       if (passo) {
         presa.scroller.scrollTop += passo;
         disegna(presa);
@@ -617,6 +635,7 @@ export const STILE_RIORDINA = `
   [data-dm-maniglia]:not([data-dm-riordina-riga]):hover{color:var(--text,#0f172a);background:color-mix(in srgb,var(--text-dim,#94a3b8) 14%,transparent)}
   [data-dm-maniglia]:not([data-dm-riordina-riga]):focus-visible{outline:2px solid var(--accent,#3b82f6);outline-offset:1px}
   [data-dm-riordina][data-dm-trascinando="true"]{user-select:none;-webkit-user-select:none}
+  html[data-dm-trascinando="true"],html[data-dm-trascinando="true"] *{overflow-anchor:none}
   [data-dm-riordina] [data-dm-fa-posto="true"]{transition:transform .18s cubic-bezier(.2,.8,.2,1)}
   [data-dm-riordina] [data-dm-presa="true"]{
     position:relative;z-index:5;cursor:grabbing;

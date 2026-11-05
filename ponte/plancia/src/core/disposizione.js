@@ -169,6 +169,19 @@ export function disposizioneDelleVoci(diSerie, scelta) {
   }));
 }
 
+/** L'ordine da cui parte uno spostamento: la serie (le voci di adesso, nel
+ * loro ordine di serie) con la scelta sopra. Non il DOM: trascinando, la
+ * griglia ha gia' spostato la voce quando arriva «da 1 a 0», e rifare lo
+ * spostamento sul DOM lo faceva due volte. Una voce che la serie non conosce
+ * ancora sta dove la pagina l'ha messa. */
+export function ordineDaCuiSiParte(diSerie, presenti, scelta) {
+  const ci = new Set(presenti);
+  const serie = (Array.isArray(diSerie) ? diSerie : presenti).filter((id) => ci.has(id));
+  for (const id of presenti)
+    if (!serie.includes(id)) serie.splice(Math.min(presenti.indexOf(id), serie.length), 0, id);
+  return disposizioneDelleVoci(serie, scelta).map((d) => d.id);
+}
+
 /** Se una scelta, per queste voci, non cambia niente rispetto alla serie. */
 export function eComeDiSerie(diSerie, scelta) {
   const voci = pulita(diSerie);
