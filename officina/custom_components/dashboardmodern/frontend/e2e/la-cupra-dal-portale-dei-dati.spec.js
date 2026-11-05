@@ -46,7 +46,7 @@ const s = (entity_id, state, attributes = {}) => ({
   last_updated: "2026-11-05T10:41:00+00:00",
 });
 
-const C = "garage_cupra_031285";
+const C = "garage_cupra_000001";
 /* Gli stati, come li scrive l'integrazione: niente `state_class`, e quindi
  * niente statistiche a lungo termine del contachilometri. */
 const STATI = [

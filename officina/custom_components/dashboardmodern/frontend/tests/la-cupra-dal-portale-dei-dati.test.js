@@ -17,7 +17,7 @@ import { batteriaDalloStato, laBatteriaDellaCasella } from "../src/core/auto-ter
 import { legaLAutoAlDispositivo } from "../src/core/auto-device-binding.js";
 import { finestraDelloStorico, kmDeiGiorniDallaStoria } from "../src/core/la-nuova-auto.js";
 
-const C = "garage_cupra_031285";
+const C = "garage_cupra_000001";
 const stato = (entity_id, state, attributes = {}) => ({ entity_id, state, attributes });
 
 test("la 12 V nella casella della carica non e' la carica: e' la 12 V", () => {
