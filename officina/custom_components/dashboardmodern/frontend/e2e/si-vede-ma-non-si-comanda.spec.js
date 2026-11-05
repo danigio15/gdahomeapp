@@ -76,7 +76,10 @@ test("una presa bloccata si vede, si legge, e non si comanda", async ({ page }, 
    * finestra che racconta la presa — «puoi mettere un popup al click che apre
    * piu' informazioni, ma mai accendere o spegnere» — e li' dentro, al posto
    * del tasto, c'e' il lucchetto. */
-  await frigo.locator("[data-dm-lucip-toggle]").click({ force: true });
+  /* La levetta non c'e' nemmeno: la card bloccata e' tutta un tasto che apre
+   * le informazioni. */
+  await expect(frigo.locator("[data-dm-lucip-toggle]")).toHaveCount(0);
+  await frigo.locator("[data-dm-lucip-open]").click();
   await page.waitForTimeout(250);
   expect(await page.evaluate(() => window.__comandi)).toEqual([]);
 
